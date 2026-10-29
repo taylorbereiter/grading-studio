@@ -205,7 +205,7 @@ async function intake(entries, label, assignment, fromKeep) {   // entries: [{ p
   keepPapers(batch, label, fromKeep ? null : keepList);
   cur = 0; undoStack = []; selected = null;
   $('#start').hidden = true; $('#app').hidden = false;
-  $('#batchName').textContent = batch.name + ' · ' + students.length + (students.length === 1 ? ' student' : ' students');
+  setBatchName();
   $('#trAllBtn').hidden = !CAN_TRANSCRIBE || !students.some(st => st.files.some(f => f.kind === 'media'));
   renderTools(); renderList(); renderTopAtlas(); openStudent(batch.restoredCur || 0);
   scanned = false; scanAll();
@@ -631,7 +631,12 @@ async function openStudent(i, filePath) {
     '<button class="btn sm" id="addFileBtn" title="Add a late or forgotten file to this student. You can also drop files on the paper or on a name.">+ Add file</button>' +
     (st.files.some(viewable) || fileSeq(st).length > 1 ? '<button class="btn sm" id="arrangeBtn">Arrange pages</button>' : '') + '</div>';
   paper.scrollTop = 0;
-  if (!st.files.length) paper.insertAdjacentHTML('beforeend', '<div class="nofile"><b>No file in this folder.</b> Nothing was turned in, so there’s nothing to mark. You can still give a score.</div>');
+  if (!st.files.length) {
+    paper.insertAdjacentHTML('beforeend', '<div class="nofile"><b>Nothing turned in yet.</b> Add their paper here, or drop the file on the page or on their name. You can still give a score without one.' +
+      '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button class="btn sm primary" id="gapFile">Add their file…</button>' + (st.gap || batch.students.some(x => x.files.length) ? '<button class="btn sm" id="gapScan">From a scan…</button>' : '') + '</div></div>');
+    $('#gapFile').onclick = () => pickAdd(st);
+    const gs = $('#gapScan'); if (gs) gs.onclick = () => { scanInto = true; scanFor = null; $('#scanIn').click(); };
+  }
   curMedia = null;
   for (const f of st.files.filter(f => f.kind === 'media')) { if (f.added) paper.insertAdjacentHTML('beforeend', '<div class="fhead"><span style="color:var(--fg)">' + esc(f.name) + '</span>' + addTag(f) + '</div>'); paper.appendChild(mediaCard(st, f)); }
   const rd = refDoc();
@@ -1424,7 +1429,7 @@ function renderList() {
       : hasMarks(st) ? '<span class="dot" title="Marked"></span>' : '';
     const nAdd = st.files.filter(f => f.added).length;
     return '<button class="stu' + (i === cur ? ' on' : '') + (st.files.length ? '' : ' empty') + '" data-i="' + i + '"><span class="num">' + (pos + 1) + '</span><span class="nm" title="' + esc(shownName(st, i)) + '">' + esc(shownName(st, i)) + '</span>' +
-      '<span style="display:inline-flex;align-items:center;gap:4px">' + (nAdd ? '<span class="add" title="' + nAdd + (nAdd === 1 ? ' file' : ' files') + ' added by you">+' + nAdd + '</span>' : '') + right + '</span></button>';
+      '<span style="display:inline-flex;align-items:center;gap:4px">' + (st.files.length ? '' : '<span class="muted" style="font-size:11px">no paper</span>') + (nAdd ? '<span class="add" title="' + nAdd + (nAdd === 1 ? ' file' : ' files') + ' added by you">+' + nAdd + '</span>' : '') + right + '</span></button>';
   }).join('');
   const on = $('#stuList .on'); if (on) on.scrollIntoView({ block: 'nearest' });
   const nExp = exportPlan(true).length;
@@ -3516,12 +3521,23 @@ function rosterSort() {
     for (const k of lib.classes) if (k.names.length) { const n = rosterMatch(k.names).size; if (n > bn) { bn = n; best = k; } }
     if (best && bn >= Math.max(2, batch.students.length / 2)) { c = best; batch.classId = best.id; }
   }
+  // Everyone on the roster is in the list, even with nothing turned in yet; their paper can be added from their name.
+  // A roster place-holder that never got a file goes away if the roster changes.
+  batch.students = batch.students.filter(st => !(st.gap && !st.files.length && !(c && c.names.includes(st.key))));
+  if (c && c.names.length) {
+    const have = rosterMatch(c.names), saved = store.get(batch.id, null) || batch.keptWork || null;
+    for (const nm of c.names) if (!have.has(nm)) {
+      const s = saved && saved.s && saved.s[nm];
+      batch.students.push({ key: nm, files: [], grade: { rubric: [], points: '', comment: '', ...(s && s.g) }, layout: null, inc: (s && s.inc) || {}, gap: true });
+    }
+  }
   const byFolder = [...batch.students].sort((a, b) => natural(a.key, b.key));
   if (!c || !c.names.length) { batch.students = byFolder; return; }
   batch.students = byFolder;
   const m = rosterMatch(c.names), first = c.names.filter(n => m.has(n)).map(n => m.get(n)), used = new Set(first);
   batch.students = first.concat(byFolder.filter(st => !used.has(st)));
 }
+function setBatchName() { $('#batchName').textContent = batch.name + ' · ' + batch.students.length + (batch.students.length === 1 ? ' student' : ' students'); }
 function batchClass() { const id = batch && (batch.classId != null ? batch.classId : batch.assignment && batch.assignment.classId); return id ? classById(id) : null; }
 function renderClassSel() {
   const sel = $('#classSel'), c = batchClass();
@@ -3537,7 +3553,7 @@ $('#classSel').onchange = e => {
     f.u.items.splice(f.u.items.indexOf(a), 1); u.items.push(a); a.classId = batch.classId; saveLib();
   } else if (a) { a.classId = batch.classId; saveLib(); }
   const st = batch.students[cur]; rosterSort(); cur = Math.max(0, batch.students.indexOf(st));
-  renderList(); renderTopAtlas(); openStudent(cur); saveSoon();
+  setBatchName(); renderList(); renderTopAtlas(); openStudent(cur); saveSoon();
 };
 
 /* ---------------- late or forgotten files: added to a student's submission, kept in this browser ---------------- */
@@ -4794,7 +4810,7 @@ async function splitGo(btn) {
       first ||= st;
     }
     rosterSort(); cur = Math.max(0, batch.students.indexOf(keep));
-    $('#batchName').textContent = batch.name + ' · ' + batch.students.length + (batch.students.length === 1 ? ' student' : ' students');
+    setBatchName();
     saveNow(); renderList();
     if (first) openStudent(batch.students.indexOf(first));
     return toast('Added pages for ' + entries.length + (entries.length === 1 ? ' student' : ' students'));
