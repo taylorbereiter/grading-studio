@@ -4557,10 +4557,10 @@ function openCalc() {
 }
 
 /* ---------------- lighting: brightness, contrast and darker writing for washed-out scans (view only; the student's file is not changed) ---------------- */
-const LIGHT0 = { b: 0, c: 0, d: 0 };
+const LIGHT0 = { b: 0, c: 0, d: 0, s: 0 };
 const lightKey = st => (batch.light && st && batch.light[st.key]) ? st.key : '*';
 const lightFor = st => (batch && batch.light && ((st && batch.light[st.key]) || batch.light['*'])) || LIGHT0;
-const lightOn = L => !!(L.b || L.c || L.d);
+const lightOn = L => !!(L.b || L.c || L.d || L.s);
 // One lookup table per setting: contrast pulls ink away from white paper (white stays white), brightness lifts
 // or dims everything, then a curve darkens faint pencil.
 function lightLut(L) {
@@ -4594,12 +4594,24 @@ function lightCanvas(ctx, w, h, L) {
   const im = ctx.getImageData(0, 0, w, h), d = im.data, t = lightLut(L);
   // Change each pixel's lightness and keep its color, so a slightly yellow scan doesn't turn bright yellow.
   for (let i = 0; i < d.length; i += 4) { const y = (d[i] * 77 + d[i + 1] * 150 + d[i + 2] * 29) >> 8, sh = t[y] - y; d[i] += sh; d[i + 1] += sh; d[i + 2] += sh; }
+  if (L.s) lightSharpen(d, w, h, L.s);
   ctx.putImageData(im, 0, 0);
+}
+// Sharpen: each pixel's lightness pushed away from its neighbours' average (an unsharp mask), so soft edges of writing get crisp.
+function lightSharpen(d, w, h, s) {
+  const n = w * h, Y = new Float32Array(n), A = new Float32Array(n), B = new Float32Array(n), r = w > 1800 ? 2 : 1, k = s / 100 * 1.6, span = 2 * r + 1;
+  for (let i = 0, j = 0; i < n; i++, j += 4) Y[i] = d[j] * .299 + d[j + 1] * .587 + d[j + 2] * .114;
+  for (let y = 0; y < h; y++) {   // average across, then down
+    const o = y * w;
+    for (let x = 0; x < w; x++) { let a = 0; for (let q = -r; q <= r; q++) a += Y[o + Math.min(w - 1, Math.max(0, x + q))]; A[o + x] = a / span; }
+  }
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { let a = 0; for (let q = -r; q <= r; q++) a += A[Math.min(h - 1, Math.max(0, y + q)) * w + x]; B[y * w + x] = a / span; }
+  for (let i = 0, j = 0; i < n; i++, j += 4) { const sh = (Y[i] - B[i]) * k; d[j] += sh; d[j + 1] += sh; d[j + 2] += sh; }
 }
 function lightBmp(pg) {
   const L = lightForPage(batch && batch.students[cur], pg.file, pg.idx);
   if (!L) return pg.bmp;
-  const key = L.b + '|' + L.c + '|' + L.d;
+  const key = L.b + '|' + L.c + '|' + L.d + '|' + (L.s || 0);
   if (pg.adj && pg.adjSrc === pg.bmp && pg.adjKey === key) return pg.adj;
   const c = pg.adj && pg.adj.width === pg.bmp.width && pg.adj.height === pg.bmp.height ? pg.adj : document.createElement('canvas');
   c.width = pg.bmp.width; c.height = pg.bmp.height;
@@ -4708,11 +4720,11 @@ function openLight() {
     const L = lightFor(batch.students[cur]), o = lightOpts();
     const offs = Object.entries(batch.lightPg || {}).filter(([, v]) => v === false).map(([k]) => k);
     const offAll = offs.length, offHere = offs.filter(k => k.startsWith(batch.students[cur].key + '|')).length;
-    const row = (k, label, min, max) => '<label><span>' + label + '</span><input type="range" min="' + min + '" max="' + max + '" step="1" data-l="' + k + '" value="' + L[k] + '"><b>' + L[k] + '</b></label>';
+    const row = (k, label, min, max) => '<label><span>' + label + '</span><input type="range" min="' + min + '" max="' + max + '" step="1" data-l="' + k + '" value="' + (L[k] || 0) + '"><b>' + (L[k] || 0) + '</b></label>';
     p.innerHTML = '<div class="lph"><b>Lighting</b><span style="flex:1"></span><button class="anonsw" data-lon role="switch" aria-checked="' + o.on + '"><i></i>' + (o.on ? 'On' : 'Off') + '</button><button class="icon" data-lx aria-label="Close" style="margin-left:8px">✕</button></div>' +
       '<div class="lpbody' + (o.on ? '' : ' off') + '">' +
       '<button class="btn sm primary" data-lauto style="width:100%">Auto fix this scan</button>' +
-      row('b', 'Brightness', -60, 60) + row('c', 'Contrast', 0, 400) + row('d', 'Darken writing', 0, 100) +
+      row('b', 'Brightness', -60, 60) + row('c', 'Contrast', 0, 400) + row('d', 'Darken writing', 0, 100) + row('s', 'Sharpen', 0, 100) +
       '<span class="seg" style="width:100%"><button data-lo="0" aria-pressed="' + !only + '" style="flex:1">All students</button><button data-lo="1" aria-pressed="' + only + '" style="flex:1">Only ' + esc(shownName(batch.students[cur], cur)) + '</button></span>' +
       '<div><button class="link" data-lreset>Back to normal</button></div>' +
       '<div class="lpsec"><div class="dl">Pages</div>' +
@@ -4730,7 +4742,7 @@ function openLight() {
     if (e.target.closest('[data-lon]')) return opt('on', !lightOpts().on);
     const rb = e.target.closest('[data-lrub]'); if (rb) return opt('rub', rb.dataset.lrub === '1');
     if (e.target.closest('[data-lpgreset]')) { for (const [k, v] of Object.entries(batch.lightPg || {})) if (v === false) delete batch.lightPg[k]; lightApply(); return render(); }
-    if (e.target.closest('[data-lauto]')) { const pg = pages.find(q => q.bmp && q.file.kind !== 'docx'); if (!pg) return toast('No scanned page to fix here'); set(lightAuto(pg)); return render(); }
+    if (e.target.closest('[data-lauto]')) { const pg = pages.find(q => q.bmp && q.file.kind !== 'docx'); if (!pg) return toast('No scanned page to fix here'); set({ ...lightAuto(pg), s: lightFor(batch.students[cur]).s || 0 }); return render(); }
     if (e.target.closest('[data-lreset]')) { set({ ...LIGHT0 }); if (only) { delete batch.light[batch.students[cur].key]; only = false; lightApply(); } return render(); }
     const o = e.target.closest('[data-lo]');
     if (o) { const want = o.dataset.lo === '1', stc = batch.students[cur]; if (want && !only) { batch.light = batch.light || {}; batch.light[stc.key] = { ...lightFor(stc) }; } if (!want && only) { delete batch.light[stc.key]; lightApply(); } only = want; return render(); }
