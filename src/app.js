@@ -239,9 +239,11 @@ async function walkEntry(entry, prefix, out) {
 
 /* ---------------- keeping work in this browser ---------------- */
 let saveT;
-function saveSoon() { clearTimeout(saveT); saveT = setTimeout(saveNow, 500); }
+function saveSoon() { clearTimeout(saveT); saveT = setTimeout(saveNow, 500); const el = $('#saveState'); if (el && batch) el.textContent = 'Saving…'; }
 function saveNow() {
   if (!batch) return;
+  clearTimeout(saveT);
+  { const el = $('#saveState'); if (el) el.textContent = '✓ Saved'; }
   const data = { t: Date.now(), cur, setup, cls: batch.classId, share: batch.share, drive: batch.drive, light: batch.light, lightOpt: batch.lightOpt, lightPg: batch.lightPg, anon: batch.anon, moved: batch.moved, s: {} };
   for (const st of batch.students) {
     const f = {};
@@ -251,8 +253,9 @@ function saveNow() {
     for (const fl of st.files) if (fl.hand) hb[fl.path] = fl.hand;
     const inc = st.inc && Object.keys(st.inc).length ? st.inc : undefined;
     const tr = {}; for (const fl of st.files) if (fl.tr) tr[fl.path] = fl.tr;
-    if (Object.keys(tr).length || Object.keys(hb).length || st.layout || st.forder || inc || Object.keys(f).length || g.rubric.some(v => v != null) || g.points !== '' || g.comment || g.sheet)
-      data.s[st.key] = { f, g, h: hb, L: st.layout || undefined, o: st.forder || undefined, inc, tr: Object.keys(tr).length ? tr : undefined };
+    const rt = {}; for (const fl of st.files) if (fl.rot && Object.keys(fl.rot).length) rt[fl.path] = fl.rot;
+    if (Object.keys(rt).length || Object.keys(tr).length || Object.keys(hb).length || st.layout || st.forder || inc || Object.keys(f).length || g.rubric.some(v => v != null) || g.points !== '' || g.comment || g.sheet)
+      data.s[st.key] = { f, g, h: hb, L: st.layout || undefined, o: st.forder || undefined, inc, tr: Object.keys(tr).length ? tr : undefined, r: Object.keys(rt).length ? rt : undefined };
   }
   keepWork(batch, data);
   const idx = store.get('gs.batches', {}); idx[batch.id] = data.t;
@@ -278,7 +281,7 @@ function restore() {
     const s = data.s[st.key]; if (!s) continue;
     if (s.o) st.forder = s.o;
     st.grade = { rubric: [], points: '', comment: '', ...s.g };
-    for (const fl of st.files) { if (s.f[fl.path]) fl.marks = s.f[fl.path]; if (s.h && s.h[fl.path]) fl.hand = s.h[fl.path]; if (s.tr && s.tr[fl.path]) fl.tr = s.tr[fl.path]; }
+    for (const fl of st.files) { if (s.f[fl.path]) fl.marks = s.f[fl.path]; if (s.h && s.h[fl.path]) fl.hand = s.h[fl.path]; if (s.tr && s.tr[fl.path]) fl.tr = s.tr[fl.path]; if (s.r && s.r[fl.path]) fl.rot = s.r[fl.path]; }
     if (s.L) st.layout = s.L.map(d => ({ ...d, pages: d.pages.filter(([path]) => st.files.some(f => f.path === path)) }));
     if (s.inc) st.inc = s.inc;
     n++;
@@ -459,6 +462,10 @@ function hitMark(pg, x, y, slop) {
 // A student's "layout" is the list of files that go back to them, each a list of [source path, page].
 // Untouched, it is just their files as turned in. Marks stay tied to the source page, so moving pages keeps them.
 const thumbCache = new Map();
+// A page turned by Taylor (f.rot[page]: 90, 180 or 270, clockwise) on top of the PDF's own turn. Marks are kept
+// in the turned page's points, so every place that draws a page asks for its viewport here.
+const rotOf = (f, p) => (f && f.rot && f.rot[p]) || 0;
+const vpRot = (f, p, page, scale) => page.getViewport({ scale, rotation: ((page.rotate || 0) + rotOf(f, p)) % 360 });
 const viewable = f => f.kind === 'pdf' || f.kind === 'img';
 const fileByPath = (st, path) => st.files.find(f => f.path === path);
 function defaultLayout(st) {
@@ -609,7 +616,7 @@ async function openStudent(i, filePath) {
     const head = document.createElement('div'); head.className = 'fhead';
     head.innerHTML = '<span style="color:var(--fg)">' + esc(d.name) + '</span><span>' + d.pages.length + (d.pages.length === 1 ? ' page' : ' pages') + '</span>' + (af && af.added ? addTag(af) : '') +
       (on ? '' : '<span class="pill warn" style="font-size:12px;padding:2px 8px;border-radius:999px;background:var(--warn-soft);color:var(--warn)">' + (auto ? 'No marks, left out' : 'Left out') + '</span>') +
-      '<span style="flex:1"></span>' + (one ? moveLink(af) : '') + '<button class="link" style="font-size:13px" data-inout="' + di + '">' + (on ? 'Leave out' : 'Bring back') + '</button>';
+      '<span style="flex:1"></span>' + (on || auto ? '<button class="link" style="font-size:13px;margin-right:10px" data-rotdoc="' + di + '" title="Turn every page of this file a quarter turn to the right">⟳ Turn all pages</button>' : '') + (one ? moveLink(af) : '') + '<button class="link" style="font-size:13px" data-inout="' + di + '">' + (on ? 'Leave out' : 'Bring back') + '</button>';
     paper.appendChild(head);
     if (!on && !auto) continue;   // left out on purpose: just the bar
     for (const [path, p] of d.pages) {
@@ -618,7 +625,7 @@ async function openStudent(i, filePath) {
       if (!f || !doc || p >= doc.numPages) continue;
       const page = await doc.getPage(p + 1);
       if (token !== openToken) return;
-      const vp = page.getViewport({ scale: 1 });
+      const vp = vpRot(f, p, page, 1);
       const pg = { file: f, idx: p, page, W: vp.width, H: vp.height, side: sideFor(vp.width), marks: () => (f.marks[p] ||= []) };
       const wrap = document.createElement('div'); wrap.className = 'pg';
       if (!on) wrap.style.opacity = '.75';
@@ -626,7 +633,7 @@ async function openStudent(i, filePath) {
       wrap.appendChild(c); paper.appendChild(wrap);
       pg.wrap = wrap; pg.canvas = c;
       pages.push(pg);
-      lightChip(pg); lightChips();
+      lightChip(pg); lightChips(); rotChip(pg, d.pages.length > 1 ? d.pages.findIndex(x => x[0] === path && x[1] === p) + 1 : 0);
       pg.extra = (f.kami && f.kami[p] && f.kami[p].notes) || [];
       bindPage(pg);
       await renderPage(pg);
@@ -640,6 +647,15 @@ $('#paper').addEventListener('click', e => {
   const lm = e.target.closest('[data-lm]'); if (lm) return lightMenuDo(lm.dataset.lm);
   const lc = e.target.closest('.lchip'); if (lc) return lightChipClick(e, pages.find(q => q.chip === lc));
   if (e.target.closest('#arrangeBtn')) return openArrange();
+  const rb = e.target.closest('[data-rot]');
+  if (rb) { const pg = pages.find(q => q.rchip === rb.parentNode); if (pg) turnPages(pg.file, [pg.idx], +rb.dataset.rot); return; }
+  const rd = e.target.closest('[data-rotdoc]');
+  if (rd) {
+    const st = batch.students[cur], d = layoutOf(st)[+rd.dataset.rotdoc]; if (!d) return;
+    const by = new Map(); for (const [path, p] of d.pages) { if (!by.has(path)) by.set(path, []); by.get(path).push(p); }
+    (async () => { for (const [path, list] of by) await turnPages(fileByPath(st, path), list, 1); })();
+    return;
+  }
   const mvf = e.target.closest('[data-mvfile]'); if (mvf) return openMoveFile(batch.students[cur], mvf.dataset.mvfile);
   if (e.target.closest('#addFileBtn')) return pickAdd(batch.students[cur]);
   const ra = e.target.closest('[data-rmadd]');
@@ -655,12 +671,12 @@ $('#paper').addEventListener('click', e => {
 });
 
 /* ---------------- arrange pages: combine files, drag pages, take pages out ---------------- */
-async function thumbFor(path, p) {
-  const k = path + '|' + p;
+async function thumbFor(path, p, extra) {
+  const f = batch && fileByPath(batch.students[cur], path), r = (rotOf(f, p) + (extra || 0)) % 360, k = path + '|' + p + '|' + r;
   if (thumbCache.has(k)) return thumbCache.get(k);
   const doc = docMap.get(path); if (!doc) return '';
-  const page = await doc.getPage(p + 1);
-  const vp = page.getViewport({ scale: 180 / page.getViewport({ scale: 1 }).width });
+  const page = await doc.getPage(p + 1), at = sc => page.getViewport({ scale: sc, rotation: ((page.rotate || 0) + r) % 360 });
+  const vp = at(180 / at(1).width);
   const c = document.createElement('canvas'); c.width = Math.ceil(vp.width); c.height = Math.ceil(vp.height);
   const ctx = c.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
   await page.render({ canvasContext: ctx, viewport: vp, annotationMode: pdfjsLib.AnnotationMode.ENABLE }).promise;
@@ -675,6 +691,8 @@ function openArrange() {
   const lp = { ...(batch.lightPg || {}) }, lit = lightLive(st);   // page lighting choices, kept on Save
   const nameOf = path => (fileByPath(st, path) || { name: path }).name;
   let drag = null, sel = new Set(), anchor = null, size = +store.get('gs.arrsize', 1);
+  const turns = new Map();   // pages turned here, in quarter turns to the right; done on Save
+  const turnKey = ([path, p]) => path + '|' + p;
   const lists = () => L.map(d => d.pages).concat([tray]);
   const listOf = w => w === 'tray' ? tray : L[+w].pages;
   const itemAt = el => listOf(el.dataset.where)[+el.dataset.i];
@@ -713,7 +731,7 @@ function openArrange() {
       col(tray, 'tray', '<div class="ahead"><b>Taken out</b><div class="muted" style="font-size:12px">Drag back to use again</div></div>') + '</div>';
     for (const img of $('#arrBody').querySelectorAll('img[data-th]')) {
       const [path, p] = [img.dataset.th.slice(0, img.dataset.th.lastIndexOf('|')), +img.dataset.th.slice(img.dataset.th.lastIndexOf('|') + 1)];
-      thumbFor(path, p).then(u => { img.src = u; });
+      thumbFor(path, p, 90 * (turns.get(path + '|' + p) || 0)).then(u => { img.src = u; });
     }
     for (const b of document.querySelectorAll('#arrSize [data-asz]')) b.setAttribute('aria-pressed', +b.dataset.asz === size);
     drawStrip(); drawSel();
@@ -724,7 +742,7 @@ function openArrange() {
     const n = sel.size;
     $('#arrSelInfo').textContent = n ? n + (n === 1 ? ' page picked' : ' pages picked') : 'No pages picked';
     $('#arrSelInfo').classList.toggle('on', !!n);
-    for (const b of document.querySelectorAll('#arrBar [data-mv],#arrBar [data-aout],#arrBar [data-alight]')) b.disabled = !n;
+    for (const b of document.querySelectorAll('#arrBar [data-mv],#arrBar [data-aout],#arrBar [data-alight],#arrBar [data-aturn]')) b.disabled = !n;
   };
   const move = how => {
     if (!sel.size) return toast('Pick pages first');
@@ -733,6 +751,11 @@ function openArrange() {
       else if (how < 0) { for (let i = 1; i < l.length; i++) if (sel.has(l[i]) && !sel.has(l[i - 1])) [l[i - 1], l[i]] = [l[i], l[i - 1]]; }
       else { for (let i = l.length - 2; i >= 0; i--) if (sel.has(l[i]) && !sel.has(l[i + 1])) [l[i], l[i + 1]] = [l[i + 1], l[i]]; }
     }
+    render();
+  };
+  const turn = () => {
+    if (!sel.size) return toast('Pick pages first');
+    for (const it of picked()) turns.set(turnKey(it), ((turns.get(turnKey(it)) || 0) + 1) % 4);
     render();
   };
   const takeOut = () => {
@@ -745,6 +768,7 @@ function openArrange() {
       '<button class="btn sm" data-mv="start" title="Move the picked pages to the start of their file">⇤ To start</button><button class="btn sm" data-mv="-1" title="Move the picked pages one place earlier (← key)">← Earlier</button>' +
       '<button class="btn sm" data-mv="1" title="Move the picked pages one place later (→ key)">Later →</button><button class="btn sm" data-mv="end" title="Move the picked pages to the end of their file">To end ⇥</button>' +
       '<button class="btn sm" data-aout title="Take the picked pages out (Delete key)">Take out</button>' +
+      '<button class="btn sm" data-aturn title="Turn the picked pages a quarter turn to the right (R key)">⟳ Turn</button>' +
       (lit ? '<button class="btn sm" data-alight title="Turn lighting off or on for the picked pages">☀ Lighting on/off</button>' : '') +
       '<span class="sp"></span><span id="arrSelInfo"></span></div>' +
     '<div id="arrSeq" class="aseq" hidden></div>' +
@@ -799,6 +823,7 @@ function openArrange() {
     if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); move(-1); }
     else if (e.key === 'ArrowRight' || e.key === 'ArrowDown') { e.preventDefault(); move(1); }
     else if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); takeOut(); }
+    else if (e.key.toLowerCase() === 'r' && !e.metaKey && !e.ctrlKey) { e.preventDefault(); turn(); }
   };
   box.onclick = e => {
     if (e.target.closest('[data-cancel]')) return closeDlg();
@@ -821,6 +846,7 @@ function openArrange() {
     const mv = e.target.closest('[data-mv]');
     if (mv) return move(/^-?\d+$/.test(mv.dataset.mv) ? +mv.dataset.mv : mv.dataset.mv);
     if (e.target.closest('[data-aout]')) return takeOut();
+    if (e.target.closest('[data-aturn]')) return turn();
     if (e.target.closest('[data-alight]')) {
       const its = picked().map(([path, p]) => [fileByPath(st, path), p]).filter(([f]) => f);
       const on = !its.every(([f, p]) => pageLit(st, f, p, lp));
@@ -863,7 +889,12 @@ function openArrange() {
         toast('Same order for ' + (n + 1) + ' students');
       }
       batch.lightPg = lp;
-      saveSoon(); closeDlg(); renderList(); openStudent(cur);
+      const todo = [...turns].filter(([, q]) => q);
+      saveSoon(); closeDlg(); renderList();
+      (async () => {
+        for (const [key, q] of todo) { const i = key.lastIndexOf('|'), f = fileByPath(st, key.slice(0, i)); for (let k = 0; k < q; k++) await turnPages(f, [+key.slice(i + 1)], 1); }
+        openStudent(cur);
+      })();
       toast('Saved. Export uses this order.');
     }
   };
@@ -878,7 +909,7 @@ function fitScale(pg) {
 async function renderPage(pg) {
   const s = fitScale(pg), dpr = window.devicePixelRatio || 1;
   pg.s = s;
-  const vp = pg.page.getViewport({ scale: s * dpr });
+  const vp = vpRot(pg.file, pg.idx, pg.page, s * dpr);
   const bmp = document.createElement('canvas');
   bmp.width = Math.ceil(vp.width); bmp.height = Math.ceil(vp.height);
   const bctx = bmp.getContext('2d'); bctx.fillStyle = '#fff'; bctx.fillRect(0, 0, bmp.width, bmp.height);
@@ -888,6 +919,7 @@ async function renderPage(pg) {
   const c = pg.canvas;
   c.width = Math.ceil((pg.W + pg.side) * s * dpr); c.height = Math.ceil(pg.H * s * dpr);
   c.style.width = (pg.W + pg.side) * s + 'px'; c.style.height = pg.H * s + 'px';
+  if (pg.rchip) pg.rchip.style.left = pg.W * s + 'px';
   draw(pg);
 }
 function draw(pg, live) {
@@ -908,16 +940,81 @@ function redrawAll() { for (const pg of pages) draw(pg); }
 let resizeT;
 window.addEventListener('resize', () => { clearTimeout(resizeT); resizeT = setTimeout(() => pages.forEach(renderPage), 150); });
 
-/* ---------------- undo ---------------- */
-function snap(pg) { undoStack.push({ file: pg.file, idx: pg.idx, before: JSON.stringify(pg.marks()) }); if (undoStack.length > 200) undoStack.shift(); renderTools(); }
+/* ---------------- undo and redo ---------------- */
+// Each step remembers one page's marks as they were (and its turn, for a rotation), so undo and redo swap them back.
+let redoStack = [];
+const stepOf = (file, idx, withRot) => ({ file, idx, before: JSON.stringify(file.marks[idx] || []), rot: withRot ? rotOf(file, idx) : undefined });
+function pushUndo(u) { undoStack.push(u); if (undoStack.length > 200) undoStack.shift(); redoStack = []; renderTools(); }
+function snap(pg) { pushUndo(stepOf(pg.file, pg.idx)); }
 function changed(pg) { draw(pg); saveSoon(); renderList(); }
-function undo() {
-  const u = undoStack.pop(); if (!u) return;
+function undo() { swapStep(undoStack, redoStack); }
+function redo() { swapStep(redoStack, undoStack); }
+function swapStep(from, to) {
+  commitEditors();
+  const u = from.pop(); if (!u) return;
+  to.push(stepOf(u.file, u.idx, u.rot !== undefined));
   u.file.marks[u.idx] = JSON.parse(u.before);
   selected = null;
+  const turned = u.rot !== undefined && u.rot !== rotOf(u.file, u.idx);
+  if (turned) setRot(u.file, u.idx, u.rot);
   const pg = pages.find(p => p.file === u.file && p.idx === u.idx);
-  if (pg) draw(pg); else { const si = batch.students.findIndex(s => s.files.includes(u.file)); if (si >= 0 && si !== cur) openStudent(si); }
+  if (pg) { if (turned) reshape(pg); else draw(pg); }
+  else { const si = batch.students.findIndex(s => s.files.includes(u.file)); if (si >= 0 && si !== cur) openStudent(si); }
+  if (turned) rescanFile(u.file);
   saveSoon(); renderList(); renderTools();
+}
+
+/* ---------------- turning pages ---------------- */
+// A turn of 90° clockwise (dir 1) or counterclockwise (dir -1). Marks turn with the page; text stays upright.
+function setRot(f, p, r) { r = ((r % 360) + 360) % 360; f.rot ||= {}; if (r) f.rot[p] = r; else delete f.rot[p]; }
+function turnMarks(marks, W, H, dir) {
+  const pt = ([x, y]) => dir > 0 ? [r1(H - y), r1(x)] : [r1(y), r1(W - x)];
+  const box = b => { const [ax, ay] = pt([b.x, b.y]), [bx, by] = pt([b.x + b.w, b.y + b.h]); return { x: Math.min(ax, bx), y: Math.min(ay, by), w: Math.abs(bx - ax), h: Math.abs(by - ay) }; };
+  for (const m of marks) {
+    if (m.t === 'pen') m.pts = m.pts.map(pt);
+    else if (m.t === 'hl' || m.t === 'oval') Object.assign(m, box(m));
+    else if (m.t === 'check') [m.x, m.y] = pt([m.x, m.y]);
+    else if (m.t === 'note') { [m.ax, m.ay] = pt([m.ax, m.ay]); if (m.hl) m.hl = box(m.hl); }
+    else if (m.t === 'text') {
+      const L = textLayout(m, W), [cx, cy] = pt([m.x + L.w / 2, m.y + L.h / 2]);
+      if (m.bw) m.bw = Math.min(m.bw, H - 12);
+      const L2 = textLayout({ ...m, x: 0 }, H);
+      m.x = r1(cx - L2.w / 2); m.y = r1(cy - L2.h / 2); keepOnPage(m, H, W);
+    }
+  }
+}
+// Turns pages of one file; with no page list, every page. One undo step per page, undone together.
+async function turnPages(f, list, dir) {
+  if (!f || !viewable(f)) return;
+  commitEditors();
+  if (!list) list = [...Array(f.numPages || 0).keys()];
+  const steps = [];
+  for (const p of list) {
+    const pg = pages.find(q => q.file === f && q.idx === p);
+    let W = pg && pg.W, H = pg && pg.H;
+    if (!pg && docMap.get(f.path)) { try { const vp = vpRot(f, p, await docMap.get(f.path).getPage(p + 1), 1); W = vp.width; H = vp.height; } catch {} }
+    steps.push(stepOf(f, p, true));
+    if (W && f.marks[p] && f.marks[p].length) turnMarks(f.marks[p], W, H, dir);
+    setRot(f, p, rotOf(f, p) + 90 * dir);
+    if (pg) reshape(pg);
+  }
+  if (steps.length === 1) pushUndo(steps[0]);
+  else for (const u of steps) pushUndo(u);   // undo turns them back one page at a time
+  selected = null; thumbCache.clear();
+  rescanFile(f); saveSoon(); renderList();
+}
+// Re-measures a page after a turn and draws it again.
+function reshape(pg) {
+  const vp = vpRot(pg.file, pg.idx, pg.page, 1);
+  pg.W = vp.width; pg.H = vp.height; pg.side = sideFor(vp.width); pg.covers = null; pg.adj = null; pg.extra = [];
+  renderPage(pg);
+}
+// Kami notes and typed grades are found again on the turned page.
+async function rescanFile(f) {
+  const st = batch && batch.students.find(s => s.files.includes(f)); if (!st || !viewable(f)) return;
+  try { f.scan = await scanFile(f, f.hand || setup.spot || null); if (f.hand) f.scan.hand = true; f.kami = f.scan.kami; } catch (e) { console.error(e); return; }
+  refound(st); renderList();
+  for (const pg of pages) if (pg.file === f) { pg.extra = (f.kami && f.kami[pg.idx] && f.kami[pg.idx].notes) || []; draw(pg); }
 }
 
 /* ---------------- pointer input on a page ---------------- */
@@ -980,8 +1077,12 @@ function bindPage(pg) {
       g.resize.bw = r1(clamp(x - g.resize.x, 24, pg.W - g.resize.x - 6));
       draw(pg);
     } else if (g.m && g.m.t === 'pen') {
-      const p = g.m.pts, last = p[p.length - 1];
-      if (Math.hypot(x - last[0], y - last[1]) > 0.7) p.push([r1(clamp(x, 0, pg.W)), r1(clamp(y, 0, pg.H))]);
+      const p = g.m.pts, last = p[p.length - 1], pt = [r1(clamp(x, 0, pg.W)), r1(clamp(y, 0, pg.H))];
+      if (e.shiftKey) {   // Shift: a straight line, level or upright when it's close
+        const dx = Math.abs(pt[0] - p[0][0]), dy = Math.abs(pt[1] - p[0][1]);
+        if (dy < dx * 0.15) pt[1] = p[0][1]; else if (dx < dy * 0.15) pt[0] = p[0][0];
+        g.m.pts = [p[0], pt];
+      } else if (Math.hypot(x - last[0], y - last[1]) > 0.7) p.push(pt);
       draw(pg, [g.m]);
     } else if (g.m && (g.m.t === 'hl' || g.m.t === 'oval')) {
       const x1 = clamp(x, 0, pg.W), y1 = clamp(y, 0, pg.H);
@@ -1052,6 +1153,31 @@ function eraseAt(pg, x, y, g) {
   if (!g.snapped) { snap(pg); g.snapped = true; }
   const a = pg.marks(); a.splice(a.indexOf(hit), 1);
   changed(pg);
+}
+// Copy a mark (⌘C) and paste it (⌘V) on the page in view, even on another student's paper; ⌘D duplicates.
+let markClip = null;
+function copyMark(quiet) {
+  if (!selected) return;
+  markClip = { m: JSON.parse(JSON.stringify(selected.mark)), file: selected.page.file, idx: selected.page.idx, n: 0 };
+  delete markClip.m.ro;
+  if (!quiet) toast('Copied. ⌘V pastes it on the page you’re looking at.');
+}
+function pageInView() {
+  if (selected && pages.includes(selected.page)) return selected.page;
+  const P = $('#paper').getBoundingClientRect(), mid = P.top + P.height / 3;
+  let best = null, bd = 1e9;
+  for (const pg of pages) { const r = pg.canvas.getBoundingClientRect(), d = mid < r.top ? r.top - mid : mid > r.bottom ? mid - r.bottom : 0; if (d < bd) { bd = d; best = pg; } }
+  return best;
+}
+function pasteMark() {
+  const pg = pageInView(); if (!pg || !markClip) return;
+  const m = JSON.parse(JSON.stringify(markClip.m));
+  if (pg.file === markClip.file && pg.idx === markClip.idx) { markClip.n++; moveMark(m, 12 * markClip.n, 12 * markClip.n); }
+  const bb = bboxOf(m, pg.W);   // keep it on the page
+  if (bb) moveMark(m, clamp(bb.x, 0, Math.max(0, pg.W - bb.w)) - bb.x, clamp(bb.y, 0, Math.max(0, pg.H - bb.h)) - bb.y);
+  if (m.t === 'text') keepOnPage(m, pg.W, pg.H);
+  snap(pg); pg.marks().push(m);
+  setTool('select'); selected = { page: pg, mark: m }; changed(pg); redrawAll();
 }
 function deleteSelected() {
   if (!selected) return;
@@ -1179,6 +1305,7 @@ const IC = {
   oval: '<ellipse cx="12" cy="12" rx="9" ry="6.5"/>',
   erase: '<path d="M8 20h12"/><path d="M4 15l9-9 6 6-7 7H8z"/>',
   undo: '<path d="M9 7L4 12l5 5"/><path d="M4 12h11a5 5 0 0 1 0 10h-3"/>',
+  redo: '<path d="M15 7l5 5-5 5"/><path d="M20 12H9a5 5 0 0 0 0 10h3"/>',
   minus: '<path d="M5 12h14"/>', plus: '<path d="M5 12h14M12 5v14"/>',
 };
 const svg = p => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + p + '</svg>';
@@ -1191,7 +1318,8 @@ function renderTools() {
     '<span class="sep"></span><span class="swatches">' + (tool === 'select' || tool === 'erase' ? '' : sw) + '</span>' +
     (tool === 'pen' ? '<span class="seg" style="margin-left:4px"><button data-w="1.2" aria-pressed="' + (penW === 1.2) + '">Fine</button><button data-w="2" aria-pressed="' + (penW === 2) + '">Medium</button><button data-w="3.5" aria-pressed="' + (penW === 3.5) + '">Bold</button></span>' : '') +
     '<button class="icon" id="undoBtn" title="Undo (⌘Z)" aria-label="Undo" ' + (undoStack.length ? '' : 'disabled') + '>' + svg(IC.undo) + '</button>' +
-    '<span class="zoom"><button class="icon" data-z="-1" aria-label="Zoom out">' + svg(IC.minus) + '</button><span>' + Math.round(zoom * 100) + '%</span><button class="icon" data-z="1" aria-label="Zoom in">' + svg(IC.plus) + '</button></span>';
+    '<button class="icon" id="redoBtn" title="Redo (⇧⌘Z)" aria-label="Redo" ' + (redoStack.length ? '' : 'disabled') + '>' + svg(IC.redo) + '</button>' +
+    '<span class="zoom"><button class="icon" data-z="-1" aria-label="Zoom out" title="Zoom out (⌘−)">' + svg(IC.minus) + '</button><span data-z0 title="Back to 100% (⌘0). Pinch or ⌘-scroll on the paper to zoom.">' + Math.round(zoom * 100) + '%</span><button class="icon" data-z="1" aria-label="Zoom in" title="Zoom in (⌘+)">' + svg(IC.plus) + '</button></span>';
   for (const pg of pages) pg.canvas.style.cursor = tool === 'select' ? 'default' : tool === 'text' ? 'text' : 'crosshair';
 }
 $('#tools').addEventListener('click', e => {
@@ -1200,9 +1328,31 @@ $('#tools').addEventListener('click', e => {
   const h = e.target.closest('[data-hl]'); if (h) { hlColor = h.dataset.hl; store.set('gs.hl', hlColor); renderTools(); return; }
   const w = e.target.closest('[data-w]'); if (w) { penW = +w.dataset.w; store.set('gs.penW', penW); renderTools(); return; }
   if (e.target.closest('#undoBtn')) { undo(); return; }
+  if (e.target.closest('#redoBtn')) { redo(); return; }
   const z = e.target.closest('[data-z]');
-  if (z) { zoom = clamp(Math.round((zoom + (+z.dataset.z) * 0.15) * 100) / 100, 0.5, 2.5); store.set('gs.zoom', zoom); renderTools(); pages.forEach(renderPage); }
+  if (z) setZoom(Math.round((zoom + (+z.dataset.z) * 0.15) * 100) / 100);
+  if (e.target.closest('[data-z0]')) setZoom(1);
 });
+// Zoom keeps the spot under the mouse (or the middle of the view) in place.
+let zoomT = null;
+function setZoom(z, at) {
+  z = clamp(Math.round(z * 100) / 100, 0.5, 3);
+  if (z === zoom) return;
+  const P = $('#paper'), r = P.getBoundingClientRect(), ay = at ? at.y - r.top : P.clientHeight / 2, ax = at ? at.x - r.left : P.clientWidth / 2;
+  const fy = (P.scrollTop + ay) / Math.max(1, P.scrollHeight), fx = (P.scrollLeft + ax) / Math.max(1, P.scrollWidth), k = z / zoom;
+  zoom = z; store.set('gs.zoom', zoom); renderTools();
+  // Stretch what's on screen right away, then draw it sharp once the zooming stops.
+  commitEditors();
+  for (const pg of pages) { const c = pg.canvas; if (c.style.width && pg.s) { pg.s *= k; c.style.width = parseFloat(c.style.width) * k + 'px'; c.style.height = parseFloat(c.style.height) * k + 'px'; if (pg.rchip) pg.rchip.style.left = pg.W * pg.s + 'px'; } }
+  P.scrollTop = fy * P.scrollHeight - ay; P.scrollLeft = fx * P.scrollWidth - ax;
+  clearTimeout(zoomT);
+  zoomT = setTimeout(async () => { for (const pg of pages) await renderPage(pg); P.scrollTop = fy * P.scrollHeight - ay; }, 180);
+}
+$('#paper').addEventListener('wheel', e => {   // a trackpad pinch arrives as ⌘/Ctrl + scroll
+  if (!e.ctrlKey && !e.metaKey) return;
+  e.preventDefault();
+  setZoom(zoom * Math.exp(-clamp(e.deltaY * (e.deltaMode ? 20 : 1), -40, 40) * 0.005), { x: e.clientX, y: e.clientY });
+}, { passive: false });
 function setTool(t) { commitEditors(); tool = t; if (t !== 'select') { selected = null; redrawAll(); } renderTools(); }
 function recolorSelected(col) {
   if (!selected || selected.mark.t === 'hl') return;
@@ -1217,7 +1367,9 @@ function renderList() {
   if (!batch) return;
   renderAnonHead();
   const order = anonOn() ? anonOrder() : batch.students.map((_, i) => i);
+  const q = ($('#stuFind').value || '').trim().toLowerCase();
   $('#stuList').innerHTML = order.map((i, pos) => { const st = batch.students[i];
+    if (q && !shownName(st, i).toLowerCase().includes(q)) return '';
     const g = gradeOf(st);
     const val = g.total != null ? g.total : g.pct != null ? g.pct + '%' : null;
     const right = val != null ? '<span class="sc" title="' + (g.paper ? 'Read from the paper' : g.done ? 'Scored' : 'Partly scored') + '"' + (g.paper ? ' style="color:var(--muted);font-weight:600"' : g.done ? '' : ' style="color:var(--warn)"') + '>' + fmtNum(g.total != null ? g.total : g.pct) + (g.total == null ? '%' : '') + '</span>'
@@ -1244,6 +1396,12 @@ function nextUnscored() {
 }
 $('#progS').addEventListener('click', e => { if (e.target.closest('#nextUn')) nextUnscored(); });
 $('#stuList').addEventListener('click', e => { const b = e.target.closest('.stu'); if (b) openStudent(+b.dataset.i); });
+// Find a student: type part of a name; Enter opens the first match, Esc clears it.
+$('#stuFind').addEventListener('input', () => { renderList(); if (!$('#stuList .stu')) $('#stuList').innerHTML = '<div class="muted" style="font-size:13px;padding:6px 8px">No one matches.</div>'; });
+$('#stuFind').addEventListener('keydown', e => {
+  if (e.key === 'Enter') { const b = $('#stuList .stu'); if (b) openStudent(+b.dataset.i); e.target.value = ''; renderList(); e.target.blur(); }
+  if (e.key === 'Escape') { e.target.value = ''; renderList(); e.target.blur(); }
+});
 
 /* ---------------- grade panel ---------------- */
 function renderGrade() {
@@ -1262,7 +1420,7 @@ function renderGrade() {
   { const rd = store.get(refKey(), null), items = (rd ? ['<b>' + esc(rd.name) + '</b> <button class="link" data-refdel>Remove</button>'] : []).concat(refFiles.map(r => '<b>' + esc(r.name) + '</b> <button class="link" data-refrm="' + esc(r.path) + '">Remove</button>'));
     h += '<div class="refl">' + (items.length ? 'With every paper: ' + items.join(' · ') + '<br>' : '') + '<button class="link" data-refdoc>' + (items.length ? '+ Add another file for everyone…' : 'Add a reading or file for everyone…') + '</button></div>'; }
   h += '<div class="nav"><button class="btn" id="prevBtn" ' + (cur ? '' : 'disabled') + '>◀ Previous</button><button class="btn primary" id="nextBtn" ' + (cur < batch.students.length - 1 ? '' : 'disabled') + '>Next ▶</button></div>';
-  h += '<div class="hint">Keys: <kbd>←</kbd> <kbd>→</kbd> or <kbd>↑</kbd> <kbd>↓</kbd> students · <kbd>N</kbd> next unscored · <kbd>=</kbd> calculator · V P H O T C K E tools · Space play · J L back/ahead 5s · ⌘Z undo · Delete removes the selected mark</div>';
+  h += '<div class="hint">Keys: <kbd>←</kbd> <kbd>→</kbd> or <kbd>↑</kbd> <kbd>↓</kbd> students · <kbd>N</kbd> next unscored · <kbd>=</kbd> calculator · V P H O T C K E tools · ⌘Z undo, ⇧⌘Z redo · <button class="link" data-keys style="font-size:12.5px">All keys ( ? )</button></div>';
   $('#grade').innerHTML = h;
 }
 function totalHtml(st) {
@@ -1289,6 +1447,7 @@ $('#grade').addEventListener('click', e => {
   if (e.target.closest('#prevBtn')) stepStudent(-1);
   if (e.target.closest('#nextBtn')) stepStudent(1);
   if (e.target.closest('#editRubric')) openSetup();
+  if (e.target.closest('[data-keys]')) openKeys();
   if (e.target.closest('[data-refdoc]')) pickRefs();
   { const rr = e.target.closest('[data-refrm]'); if (rr) dropRef(rr.dataset.refrm); }
   if (e.target.closest('[data-refdel]')) { store.del(refKey()); renderGrade(); openStudent(cur); }
@@ -1304,6 +1463,21 @@ $('#grade').addEventListener('input', e => {
 $('#grade').addEventListener('keydown', e => {   // Enter or Escape leaves the box, so the arrow keys go back to moving between students
   if ((e.target.id === 'ptsIn' && e.key === 'Enter') || (e.target.id === 'cmtIn' && e.key === 'Escape')) { e.preventDefault(); e.target.blur(); }
 });
+
+/* ---------------- every key, in one list ( ? ) ---------------- */
+function openKeys() {
+  const row = (k, t) => '<span>' + k.split(' ').map(x => '<kbd>' + esc(x) + '</kbd>').join(' ') + '</span><span>' + t + '</span>';
+  openDlg('<div class="bh"><h2>Keys</h2><button class="icon" data-close aria-label="Close">✕</button></div><div class="bb"><div class="keys">' +
+    '<h4>Students</h4>' + row('← →', 'Previous / next student (also ↑ ↓)') + row('N', 'Next student without a full score') + row('/', 'Find a student by name') +
+    '<h4>Marking</h4>' + row('V', 'Select') + row('P', 'Pen (hold Shift for a straight line)') + row('H', 'Highlight') + row('O', 'Circle') + row('T', 'Text') + row('C', 'Comment') + row('K', 'Check mark') + row('E', 'Eraser') +
+    row('⌘Z', 'Undo') + row('⇧⌘Z', 'Redo (⌘Y works too)') +
+    '<h4>A picked mark (Select tool)</h4>' + row('← → ↑ ↓', 'Nudge it (Shift for bigger steps)') + row('⌘C ⌘V', 'Copy it, then paste on the page you’re looking at, even on another student’s paper') + row('⌘D', 'Make a copy of it') + row('Delete', 'Remove it') + row('Esc', 'Let go of it (the arrows go back to moving between students)') +
+    '<h4>The paper</h4>' + row('⌘+ ⌘−', 'Zoom in / out (or pinch, or ⌘-scroll)') + row('⌘0', 'Back to 100%') + row('[ ]', 'Fold away the student list / score panel') +
+    'Turn a page: point at it and use ⟲ ⟳ in its top corner, or “Turn all pages” above the file. In Arrange pages, pick pages and press R.'.replace(/^/, '<h4>Turning pages</h4><span style="grid-column:1/-1">') + '</span>' +
+    '<h4>Other</h4>' + row('=', 'Calculator') + row('Space', 'Play / pause a recording') + row('J L', 'Back / ahead 5 seconds') + row('?', 'This list') +
+    '</div></div><div class="bf"><button class="btn primary" data-close>Close</button></div>', true);
+  $('#dlgBox').onclick = e => { if (e.target.closest('[data-close]')) closeDlg(); };
+}
 
 /* ---------------- dialogs ---------------- */
 function openDlg(html, narrow) {
@@ -1534,15 +1708,19 @@ async function flattenDoc(st, d, dpi) {
       const marks = (f.marks[p] || []).concat((f.kami && f.kami[p] && f.kami[p].notes) || []);
       const Lx = lightOpts().exp ? lightForPage(st, f, p) : null;
       // A locked (encrypted) PDF can't be copied page for page; its copies come out blank, so those pages are redrawn instead.
-      if (!marks.length && !(f.kami && f.kami[p]) && !Lx && !lib.isEncrypted) { const [cp] = await out.copyPages(lib, [p]); out.addPage(cp); continue; }
+      if (!marks.length && !(f.kami && f.kami[p]) && !Lx && !lib.isEncrypted) {
+        const [cp] = await out.copyPages(lib, [p]);
+        if (rotOf(f, p)) cp.setRotation(PDFLib.degrees((cp.getRotation().angle + rotOf(f, p)) % 360));
+        out.addPage(cp); continue;
+      }
       const page = await js.getPage(p + 1);
-      const vp1 = page.getViewport({ scale: 1 }), W = vp1.width, H = vp1.height;
+      const vp1 = vpRot(f, p, page, 1), W = vp1.width, H = vp1.height;
       const side = marks.some(m => m.t === 'note') ? sideFor(W) : 0;
       const scale = dpi / 72;
       const c = document.createElement('canvas');
       c.width = Math.ceil((W + side) * scale); c.height = Math.ceil(H * scale);
       const ctx = c.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
-      await page.render({ canvasContext: ctx, viewport: page.getViewport({ scale }), annotationMode: pdfjsLib.AnnotationMode.ENABLE }).promise;
+      await page.render({ canvasContext: ctx, viewport: vpRot(f, p, page, scale), annotationMode: pdfjsLib.AnnotationMode.ENABLE }).promise;
       if (Lx) lightCanvas(ctx, Math.min(c.width, Math.ceil(W * scale)), c.height, Lx);   // the page only, before her marks
       ctx.setTransform(scale, 0, 0, scale, 0, 0);
       drawMarks(ctx, marks, W, H, side, null);
@@ -1708,7 +1886,7 @@ async function scanFile(f, spot) {
     const pick = spot ? [typeof spot.page === 'number' ? Math.min(spot.page, doc.numPages - 1) : spot.page === 'last' ? doc.numPages - 1 : 0] : [...Array(doc.numPages).keys()];
     for (let p = 0; p < doc.numPages; p++) {
       const page = await doc.getPage(p + 1);
-      const vp = page.getViewport({ scale: 1 });
+      const vp = vpRot(f, p, page, 1);
       const annots = (await page.getAnnotations({ intent: 'display' })).filter(a => !SKIP_TYPES.has(a.subtype) && !(a.annotationFlags & 2) && !(a.annotationFlags & 32));
       if (annots.length) kami[p] = { notes: annots.filter(isPopupComment).map(a => kamiNote(a, vp)) };
       if (!pick.includes(p)) { page.cleanup(); continue; }
@@ -1750,7 +1928,7 @@ async function scanFile(f, spot) {
     // pictures: one per grade found, or just the picked spot when nothing was read there
     const shots = found.length ? found : spot ? [{ page: pick[0], rect: null, none: true }] : [];
     for (const g of shots) {
-      const page = await doc.getPage(g.page + 1), vp1 = page.getViewport({ scale: 1 });
+      const page = await doc.getPage(g.page + 1), vp1 = vpRot(f, g.page, page, 1);
       let x, y, w, h;
       if (spot) { x = spot.x * vp1.width; y = spot.y * vp1.height; w = spot.w * vp1.width; h = spot.h * vp1.height; }
       else {
@@ -1763,7 +1941,7 @@ async function scanFile(f, spot) {
       c.width = Math.ceil(w * k); c.height = Math.ceil(h * k);
       const ctx = c.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
       ctx.translate(-x * k, -y * k);
-      await page.render({ canvasContext: ctx, viewport: page.getViewport({ scale: k }), annotationMode: pdfjsLib.AnnotationMode.ENABLE }).promise;
+      await page.render({ canvasContext: ctx, viewport: vpRot(f, g.page, page, k), annotationMode: pdfjsLib.AnnotationMode.ENABLE }).promise;
       ctx.setTransform(k, 0, 0, k, -x * k, -y * k);
       const mk = ((f.marks || {})[g.page] || []).filter(m => m.t !== 'note');
       if (mk.length) drawMarks(ctx, mk, vp1.width, vp1.height, 0, null);
@@ -1991,8 +2169,8 @@ async function pickEach(start) {
     for (let p = 0; p < doc.numPages; p++) {
       if (my !== token) break;
       const page = await doc.getPage(p + 1);
-      const v1 = page.getViewport({ scale: 1 }), k = f.kind === 'docx' ? Math.min(1.5, avail / v1.width) : Math.min(1.8, avail / v1.width, Math.max(body.clientHeight - 50, 480) / v1.height), dpr = window.devicePixelRatio || 1;
-      const vp = page.getViewport({ scale: k * dpr });
+      const v1 = vpRot(f, p, page, 1), k = f.kind === 'docx' ? Math.min(1.5, avail / v1.width) : Math.min(1.8, avail / v1.width, Math.max(body.clientHeight - 50, 480) / v1.height), dpr = window.devicePixelRatio || 1;
+      const vp = vpRot(f, p, page, k * dpr);
       const c = document.createElement('canvas');
       c.width = Math.ceil(vp.width); c.height = Math.ceil(vp.height);
       Object.assign(c.style, { width: v1.width * k + 'px', height: v1.height * k + 'px', display: 'block', margin: '0 auto 14px', background: '#fff', boxShadow: 'var(--shadow)', cursor: 'crosshair', touchAction: 'none' });
@@ -2059,9 +2237,9 @@ function pickSpot() {
   };
   const load = async () => {
     const doc = await pdfjsLib.getDocument({ data: f.data.slice(), isEvalSupported: false }).promise;
-    const page = await doc.getPage(which === 'last' ? doc.numPages : 1);
-    const v1 = page.getViewport({ scale: 1 }); const k = Math.min(1.4, 640 / v1.width);
-    const vp = page.getViewport({ scale: k }); W = vp.width; H = vp.height;
+    const pn = which === 'last' ? doc.numPages - 1 : 0, page = await doc.getPage(pn + 1);
+    const v1 = vpRot(f, pn, page, 1); const k = Math.min(1.4, 640 / v1.width);
+    const vp = vpRot(f, pn, page, k); W = vp.width; H = vp.height;
     bmp = document.createElement('canvas'); bmp.width = W; bmp.height = H;
     const bc = bmp.getContext('2d'); bc.fillStyle = '#fff'; bc.fillRect(0, 0, W, H);
     await page.render({ canvasContext: bc, viewport: vp, annotationMode: pdfjsLib.AnnotationMode.ENABLE }).promise;
@@ -2180,13 +2358,13 @@ const scrubMarks = (marks, rx) => marks.map(m => m.text != null ? { ...m, text: 
 // Renders one page the way Claude will see it: her marks (names scrubbed from her text) and black covers.
 async function sharePage(st, f, js, p, scale, rx) {
   const page = await js.getPage(p + 1);
-  const vp = page.getViewport({ scale: 1 }), W = vp.width, H = vp.height;
+  const vp = vpRot(f, p, page, 1), W = vp.width, H = vp.height;
   const marks = scrubMarks((f.marks[p] || []).concat((f.kami && f.kami[p] && f.kami[p].notes) || []), rx);
   const side = marks.some(m => m.t === 'note') ? sideFor(W) : 0;
   const c = document.createElement('canvas');
   c.width = Math.ceil((W + side) * scale); c.height = Math.ceil(H * scale);
   const ctx = c.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
-  await page.render({ canvasContext: ctx, viewport: page.getViewport({ scale }), annotationMode: pdfjsLib.AnnotationMode.ENABLE }).promise;
+  await page.render({ canvasContext: ctx, viewport: vpRot(f, p, page, scale), annotationMode: pdfjsLib.AnnotationMode.ENABLE }).promise;
   ctx.setTransform(scale, 0, 0, scale, 0, 0);
   drawMarks(ctx, marks, W, H, side, null);
   const covers = (await autoCovers(page, vp, rx)).concat(ownCovers(f.path, p, W, H));
@@ -2249,7 +2427,7 @@ async function checkCovers(start, onDone) {
         const f = fileByPath(st, path);
         if (!js.has(path)) js.set(path, await pdfjsLib.getDocument({ data: f.data.slice(), isEvalSupported: false }).promise);
         const avail = body.clientWidth - 40, dpr = window.devicePixelRatio || 1;
-        const pg0 = await js.get(path).getPage(p + 1), v1 = pg0.getViewport({ scale: 1 });
+        const pg0 = await js.get(path).getPage(p + 1), v1 = vpRot(f, p, pg0, 1);
         const kk = Math.min(1.6, avail / (v1.width * 1.4));
         const r = await sharePage(st, f, js.get(path), p, kk * dpr, rx);
         if (my !== token) break;
@@ -2776,12 +2954,17 @@ function addStamp(st, t) {
 let mammothP = null;
 async function docxHtml(bytes) {
   const r = await mammoth.convertToHtml({ arrayBuffer: bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) });
-  return r.value;
+  // A link in a student's Word file keeps only web or email addresses, so a planted script link can't run here.
+  const t = document.createElement('template'); t.innerHTML = r.value;
+  for (const el of t.content.querySelectorAll('*')) for (const at of [...el.attributes]) if (/^on/i.test(at.name)) el.removeAttribute(at.name);
+  for (const a of t.content.querySelectorAll('a[href]')) if (!/^(https?:|mailto:|#)/i.test(a.getAttribute('href').trim())) a.removeAttribute('href');
+  for (const im of t.content.querySelectorAll('img[src]')) if (!/^data:image\//i.test(im.getAttribute('src'))) im.removeAttribute('src');
+  return t.innerHTML;
 }
 async function docxCard(f, title) {
   const el = document.createElement('div'); el.className = 'docx';
   el.innerHTML = '<div class="fhead"><span style="color:var(--fg)">' + esc(title || f.name) + '</span><span>Word file</span></div><div class="dpage"><p class="muted">Opening…</p></div>';
-  try { el.querySelector('.dpage').innerHTML = await docxHtml(f.data); for (const a of el.querySelectorAll('a')) { if (!/^(https?:|mailto:|#)/i.test((a.getAttribute('href') || '').trim())) a.removeAttribute('href'); a.target = '_blank'; a.rel = 'noopener noreferrer'; } }
+  try { el.querySelector('.dpage').innerHTML = await docxHtml(f.data); for (const a of el.querySelectorAll('a')) { a.target = '_blank'; a.rel = 'noopener noreferrer'; } }
   catch { el.querySelector('.dpage').innerHTML = '<p>This Word file couldn’t be opened.</p>'; }
   return el;
 }
@@ -3244,6 +3427,7 @@ let keptMeta = new Map();
 async function loadKept() {
   try { const all = await kdo('meta', 'readonly', o => o.getAll()); keepOk = true; keptMeta = new Map((all || []).map(m => [m.id, m])); } catch { keptMeta = new Map(); }
   if (!batch) renderLib();
+  renderBackup();
 }
 let askedKeep = false;
 function askToKeep() {   // asks the browser not to clear this site's storage when the disk gets full
@@ -3429,7 +3613,7 @@ function stepStudent(d) {
 const anonRx = st => wordRx(coverWords(st));
 // Black boxes (page points) over typed names, Kami boxes with names, and the boxes she drew in Check the covers.
 async function anonCovers(st, pg) {
-  try { return (await autoCovers(pg.page, pg.page.getViewport({ scale: 1 }), anonRx(st))).concat(ownCovers(pg.file.path, pg.idx, pg.W, pg.H)); }
+  try { return (await autoCovers(pg.page, vpRot(pg.file, pg.idx, pg.page, 1), anonRx(st))).concat(ownCovers(pg.file.path, pg.idx, pg.W, pg.H)); }
   catch { return ownCovers(pg.file.path, pg.idx, pg.W, pg.H); }
 }
 // File names, Word and text files: names in headings are swapped for [name], and any line of a document that has a
@@ -3659,6 +3843,12 @@ function lightChip(pg) {
   const b = document.createElement('div'); b.className = 'lchip';
   b.innerHTML = '<button data-lpg title="Turn lighting off or on for this page. Shift-click another page’s ☀ to do every page in between.">☀ <span></span></button><button data-lmenu title="More: the rest of the file, the whole file, or the same page on every paper" aria-label="More lighting choices">▾</button>';
   pg.wrap.appendChild(b); pg.chip = b;
+}
+// Turn buttons in the top corner of each page (they show when the mouse is over the page).
+function rotChip(pg, n) {
+  const b = document.createElement('div'); b.className = 'rchip';
+  b.innerHTML = (n ? '<span>p. ' + n + '</span>' : '') + '<button data-rot="-1" title="Turn this page to the left" aria-label="Turn this page to the left">⟲</button><button data-rot="1" title="Turn this page to the right" aria-label="Turn this page to the right">⟳</button>';
+  pg.wrap.appendChild(b); pg.rchip = b;
 }
 function lightChips() {
   const st = batch && batch.students[cur], live = lightLive(st);
@@ -4741,9 +4931,30 @@ $('#closeBtn').onclick = () => {
 };
 document.addEventListener('keydown', e => {
   if (!batch || !$('#dlg').hidden) { if (e.key === 'Escape' && !$('#dlg').hidden && !SP) closeDlg(); return; }
-  const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement && document.activeElement.tagName);
-  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'z' && !typing) { e.preventDefault(); undo(); return; }
+  const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement && document.activeElement.tagName) || (document.activeElement && document.activeElement.isContentEditable);
+  const cmd = e.metaKey || e.ctrlKey, key = e.key.toLowerCase();
+  if (cmd && !typing && !e.altKey) {
+    if (key === 'z') { e.preventDefault(); e.shiftKey ? redo() : undo(); return; }
+    if (key === 'y') { e.preventDefault(); redo(); return; }
+    if (key === '=' || key === '+') { e.preventDefault(); setZoom(zoom + 0.15); return; }
+    if (key === '-' || key === '_') { e.preventDefault(); setZoom(zoom - 0.15); return; }
+    if (key === '0') { e.preventDefault(); setZoom(1); return; }
+    if (key === 'c' && selected && !String(getSelection())) { e.preventDefault(); copyMark(); return; }
+    if (key === 'v' && markClip) { e.preventDefault(); pasteMark(); return; }
+    if (key === 'd' && selected) { e.preventDefault(); copyMark(true); pasteMark(); return; }
+  }
   if (typing || e.metaKey || e.ctrlKey || e.altKey) return;
+  if (e.key === '?') { e.preventDefault(); openKeys(); return; }
+  if (e.key === '/') { e.preventDefault(); $('#stuFind').focus(); return; }
+  // A picked mark moves with the arrow keys (Shift for bigger steps); Esc lets go of it.
+  if (selected && /^Arrow/.test(e.key)) {
+    e.preventDefault();
+    const d = e.shiftKey ? 10 : 1, dx = e.key === 'ArrowLeft' ? -d : e.key === 'ArrowRight' ? d : 0, dy = e.key === 'ArrowUp' ? -d : e.key === 'ArrowDown' ? d : 0;
+    const pg = selected.page;
+    if (!e.repeat || !nudging) { snap(pg); nudging = true; }
+    moveMark(selected.mark, dx, dy); if (selected.mark.t === 'text') keepOnPage(selected.mark, pg.W, pg.H);
+    changed(pg); return;
+  }
   if (curMedia && curMedia.isConnected) {
     if (e.key === ' ') { e.preventDefault(); curMedia.paused ? curMedia.play().catch(() => {}) : curMedia.pause(); return; }
     if (e.key.toLowerCase() === 'j') { curMedia.currentTime = Math.max(0, curMedia.currentTime - 5); return; }
@@ -4760,6 +4971,8 @@ document.addEventListener('keydown', e => {
   if ((e.key === 'Delete' || e.key === 'Backspace') && selected) { e.preventDefault(); deleteSelected(); }
   if (e.key === 'Escape' && selected) { selected = null; redrawAll(); }
 });
+let nudging = false;
+document.addEventListener('keyup', e => { if (/^Arrow/.test(e.key)) nudging = false; });
 window.addEventListener('beforeunload', saveNow);
 applyDisp();
 renderLib(); renderGoogle(); loadKept();
@@ -4828,6 +5041,10 @@ function renderBackup() {
   const el = $('#backupInfo'); if (!el) return;
   const t = store.get('gs.lastBackup', 0);
   el.textContent = t ? 'Last backup: ' + new Date(t).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : 'No backup made from this link yet.';
+  // A nudge once a week has gone by since the last backup, when there's work kept here.
+  const due = keptMeta.size > 0 && Date.now() - t > 7 * 864e5;
+  el.classList.toggle('due', due);
+  if (due) el.textContent += t ? ' · It’s been over a week; a fresh backup keeps your work safe.' : ' A backup keeps your work safe if this browser is cleared.';
 }
 $('#backupBtn').onclick = makeBackup;
 $('#restoreBtn').onclick = () => $('#restoreIn').click();

@@ -18,6 +18,16 @@ Open a ManageBac download, mark each paper, score it, read off the grades in fol
 8. **Share with Claude**: makes a ZIP with no names. Each student gets a random code (S-XXXX); the key stays in your browser. Every page becomes a picture, typed names and long ID numbers are covered in black, names in your comments become [name]. **Check the covers** walks paper by paper so you can box handwriting it missed ("Use my last box on every paper" for a fixed name spot). The ZIP holds papers/S-XXXX.pdf, scores.csv, comments.json, rubric.json and a README telling Claude how to answer.
 9. **Bring back from Claude**: paste Claude's reply (blocks starting with a code) or drop its CSV/ZIP. It shows code, student and feedback for you to read, then puts each one in that student's comment box. PDFs named by code can be downloaded sorted into student folders.
 
+## Handy extras
+- **Turn a page**: point at a page and use ⟲ ⟳ in its top corner, or **⟳ Turn all pages** above a file. In Arrange pages, pick pages and press R (or ⟳ Turn). Your marks turn with the page, the turn is kept, and the export comes out turned.
+- **Undo and redo**: ⌘Z and ⇧⌘Z (or ⌘Y), also on the toolbar.
+- **Zoom**: pinch or ⌘-scroll on the paper, ⌘+ / ⌘− / ⌘0, or click the percent to go back to 100%.
+- **Picked marks** (Select tool): arrow keys nudge (Shift for bigger steps), ⌘C / ⌘V copies a mark to the page you're looking at (even another student's), ⌘D duplicates, Delete removes, Esc lets go.
+- **Straight lines**: hold Shift while drawing with the pen.
+- **Find a student**: type in the box above the list, or press /.
+- **All keys**: press ? for the full list.
+- The top bar shows "Saved" once your marks are kept, and the start screen reminds you when your last backup is more than a week old.
+
 ## Audio, video and Word files
 - Recordings (mp3, m4a, wav, mp4, mov, webm…) play at the top of each student with 10s skips, 1× to 2× speed, and **+ Time to comment** (adds [2:15] to the ManageBac comment). Keys: Space play/pause, J/L back/ahead 5s.
 - **Make transcript** runs speech-to-text in your browser (Whisper, same as the Interview Transcriber; a one-time engine download). Words light up as it plays; click a word to jump there. Transcripts are kept with your marks. Not in the claude.ai preview copy.

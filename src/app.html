@@ -71,6 +71,19 @@ h1 i,.top .title i{font-style:normal;font-weight:500;color:var(--accent)}
 .top .title{font-family:var(--f-display);font-weight:700;font-size:17px;letter-spacing:-.02em;white-space:nowrap}
 .top .batch{color:var(--muted);font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
 .top .sp{flex:1}
+.top{flex-wrap:wrap;row-gap:6px}
+.savest{font-size:12.5px;color:var(--faint);white-space:nowrap}
+.stufind{width:calc(100% - 12px);margin:0 6px 8px;border:1px solid var(--line-strong);border-radius:7px;padding:6px 9px;font-size:13.5px;background:var(--surface)}
+.rchip{position:absolute;top:6px;z-index:3;display:flex;align-items:center;transform:translateX(calc(-100% - 6px));border-radius:999px;background:#fff;border:1px solid #c9d3df;box-shadow:0 2px 6px rgba(0,0,0,.12);opacity:0;transition:opacity .15s;overflow:hidden;font-size:12px;color:#555}
+.pg:hover .rchip,.rchip:focus-within{opacity:.92}
+.rchip span{padding:0 4px 0 9px;font-weight:600}
+.rchip button{border:0;background:none;padding:2px 8px;font-size:15px;line-height:1.3;color:#1F6FB2;cursor:pointer}
+.rchip button:hover{background:#eef3f9}
+.zoom [data-z0]{cursor:pointer}
+.keys{display:grid;grid-template-columns:auto 1fr;gap:6px 16px;font-size:14px;align-items:baseline}
+.keys h4{grid-column:1/-1;margin:10px 0 0;font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--faint)}
+.keys kbd{font:600 12px var(--f-body);border:1px solid var(--line-strong);border-bottom-width:2px;border-radius:4px;padding:1px 6px;background:var(--surface);white-space:nowrap}
+#backupInfo.due{color:var(--warn);font-weight:600}
 .cols{display:grid;grid-template-columns:calc(232px * var(--uz)) minmax(0,1fr) calc(310px * var(--uz));min-height:0}
 
 .side{border-right:1px solid var(--line);background:var(--bg);overflow:auto;padding:14px 10px 10px;zoom:var(--uz)}
@@ -469,7 +482,7 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
 <div class="app" id="app" hidden>
   <div class="top">
     <span class="title">Grading <i>Studio</i></span>
-    <span class="batch" id="batchName"></span>
+    <span class="batch" id="batchName"></span><span class="savest" id="saveState" title="Your marks and scores are kept in this browser as you go"></span>
     <select id="classSel" class="btn sm" style="max-width:180px" aria-label="Roster for this download"></select>
     <span class="sp"></span>
     <button class="btn sm ghost" id="trAllBtn" hidden title="Make a transcript for every recording in this download">Transcripts</button><button class="btn sm ghost" id="bringBtn" title="Add many files at once; each goes to its student by the name in the file name">Bring in files</button><button class="btn sm ghost" id="lightBtn" title="Make a pale or too-bright scan easier to read">☀ Lighting</button><button class="btn sm ghost" id="calcBtn" title="Calculator for scores and percents (= key)" aria-label="Calculator"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" style="vertical-align:-3px"><rect x="2.5" y="1.5" width="11" height="13" rx="2"/><rect x="4.5" y="3.5" width="7" height="3" rx=".5"/><path d="M5 9h.01M8 9h.01M11 9h.01M5 12h.01M8 12h.01M11 12h.01" stroke-width="2" stroke-linecap="round"/></svg></button><button class="btn sm ghost" id="dispBtn" title="Text size and zoom">Aa Display</button>
@@ -485,7 +498,7 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
   <div class="cols" id="cols">
     <button class="pbtn" id="colL" title="Hide the student list ( [ )" aria-label="Hide the student list"><span class="pa">‹</span><span class="pl">Students</span></button>
     <button class="pbtn" id="colR" title="Hide the score panel ( ] )" aria-label="Hide the score panel"><span class="pa">›</span><span class="pl">Score</span></button>
-    <nav class="side"><div class="prog-s" id="progS"></div><div class="hd" id="sideHd">Students, in folder order</div><div id="stuList"></div></nav>
+    <nav class="side"><div class="prog-s" id="progS"></div><div class="hd" id="sideHd">Students, in folder order</div><input type="search" id="stuFind" class="stufind" placeholder="Find a student  ( / )" aria-label="Find a student" autocomplete="off"><div id="stuList"></div></nav>
     <section class="main">
       <div class="tools" id="tools"></div>
       <div class="paper" id="paper"></div>
