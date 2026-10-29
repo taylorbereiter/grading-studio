@@ -2668,6 +2668,7 @@ function addStamp(st, t) {
   const ta = $('#cmtIn'); if (ta) { ta.focus(); ta.selectionStart = ta.selectionEnd = ta.value.length; }
 }
 // Word (.docx) files show as a readable page. Old .doc files can't be read in a browser.
+// A link in a student's Word file keeps only web or email addresses, so a planted script link can't run here.
 let mammothP = null;
 async function docxHtml(bytes) {
   const r = await mammoth.convertToHtml({ arrayBuffer: bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) });
@@ -2676,7 +2677,7 @@ async function docxHtml(bytes) {
 async function docxCard(f, title) {
   const el = document.createElement('div'); el.className = 'docx';
   el.innerHTML = '<div class="fhead"><span style="color:var(--fg)">' + esc(title || f.name) + '</span><span>Word file</span></div><div class="dpage"><p class="muted">Opening…</p></div>';
-  try { el.querySelector('.dpage').innerHTML = await docxHtml(f.data); for (const a of el.querySelectorAll('a')) { a.target = '_blank'; a.rel = 'noopener noreferrer'; } }
+  try { el.querySelector('.dpage').innerHTML = await docxHtml(f.data); for (const a of el.querySelectorAll('a')) { if (!/^(https?:|mailto:|#)/i.test((a.getAttribute('href') || '').trim())) a.removeAttribute('href'); a.target = '_blank'; a.rel = 'noopener noreferrer'; } }
   catch { el.querySelector('.dpage').innerHTML = '<p>This Word file couldn’t be opened.</p>'; }
   return el;
 }
