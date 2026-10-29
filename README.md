@@ -1,5 +1,7 @@
 # Grading Studio
 
+> A small personal grading tool made by a teacher for her own classes. It stores nothing online; all files stay in your browser. Not maintained for public use.
+
 Open a ManageBac download, mark each paper, score it, read off the grades in folder order, and export the marked files back into the same student folders.
 
 **Open it:** https://taylorbereiter.github.io/grading-studio/ (GitHub Pages, serves `index.html`), or double-click `Grading Studio.html` to run it offline. Student files stay in your browser and never go to a server or to Claude.
