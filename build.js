@@ -13,6 +13,7 @@ fs.mkdirSync('out', { recursive: true });
 const fullHtml = '<!doctype html>\n<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body>\n' + h + '\n</body></html>';
 fs.writeFileSync('Grading Studio.html', fullHtml);
 fs.writeFileSync('out/Grading Studio.html', fullHtml);
+fs.writeFileSync('index.html', fullHtml.replace('</head>', '<meta name="robots" content="noindex"></head>'));
 fs.mkdirSync('out/netlify', { recursive: true });
 fs.writeFileSync('out/netlify/index.html', '<!doctype html>\n<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"></head><body>\n' + h + '\n</body></html>');
 fs.writeFileSync('out/artifact.html', h.split('\uFFFD').join('\\uFFFD'));

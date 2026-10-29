@@ -2,7 +2,7 @@
 
 Open a ManageBac download, mark each paper, score it, read off the grades in folder order, and export the marked files back into the same student folders.
 
-**Open it:** double-click `Grading Studio.html` to run it offline, or host the built page yourself to add Google sign-in. Student files stay in your browser and never go to a server or to Claude.
+**Open it:** https://taylorbereiter.github.io/grading-studio/ (GitHub Pages, serves `index.html`), or double-click `Grading Studio.html` to run it offline. Student files stay in your browser and never go to a server or to Claude.
 
 ## How to use
 1. Download the submissions from ManageBac. Drop the ZIP (or the unzipped folder) onto the page.
