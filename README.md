@@ -41,7 +41,7 @@ Open a ManageBac download, mark each paper, score it, read off the grades in fol
 - Needs a Google Client ID (Web application, origin = the address where you host it) built in as GCID: `GCID=… npm run build`.
 
 ## Classes, units and rosters
-- The start screen is organized by class. Each class has its roster and its own units, and each unit holds its assignments. Drag an assignment to another unit or class, drag a unit's name to move it, and use ↑ ↓ to reorder classes. Each unit has a "+ Link to Atlas" spot under its name for that unit's Atlas page.
+- The start screen is organized by class. Each class has its roster and its own units, and each unit holds its assignments. Drag an assignment to another unit or class, drag a unit's name to move it, and use ↑ ↓ to reorder classes. Each unit has a "+ Link to Atlas" spot under its name for that unit's Atlas page, and while grading an assignment the top bar shows "Atlas ↗" (or "+ Atlas link") for its unit.
 - Students always appear in the order of the class roster you pasted. Anyone the roster doesn't name goes at the end, in folder order. With no class picked, the class whose roster matches the most folders is used. Changing the roster in the top bar re-sorts the list (and moves the assignment to that class).
 
 ## Good to know

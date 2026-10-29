@@ -380,6 +380,7 @@ table.gl{border-collapse:collapse;width:100%;font-size:14px}
 .clshead .sp{flex:1}
 .atl{display:flex;gap:10px;align-items:baseline;font-size:13px;padding:0 4px;margin-top:-4px}
 .atl a{color:var(--accent);font-weight:600}
+.top .atl{margin:0;white-space:nowrap}
 .atl .link{font-size:13px}
 .cls .board.insEnd{box-shadow:inset -3px 0 0 var(--accent)}
 .rcard{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px;min-width:170px;box-shadow:var(--shadow);cursor:grab;display:flex;flex-direction:column;gap:2px}
@@ -486,7 +487,7 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
 <div class="app" id="app" hidden>
   <div class="top">
     <span class="title">Grading <i>Studio</i></span>
-    <span class="batch" id="batchName"></span><span class="savest" id="saveState" title="Your marks and scores are kept in this browser as you go"></span>
+    <span class="batch" id="batchName"></span><span class="atl" id="topAtlas"></span><span class="savest" id="saveState" title="Your marks and scores are kept in this browser as you go"></span>
     <select id="classSel" class="btn sm" style="max-width:180px" aria-label="Roster for this download"></select>
     <span class="sp"></span>
     <button class="btn sm ghost" id="trAllBtn" hidden title="Make a transcript for every recording in this download">Transcripts</button><button class="btn sm ghost" id="bringBtn" title="Add many files at once; each goes to its student by the name in the file name">Bring in files</button><button class="btn sm ghost" id="lightBtn" title="Make a pale or too-bright scan easier to read">☀ Lighting</button><button class="btn sm ghost" id="calcBtn" title="Calculator for scores and percents (= key)" aria-label="Calculator"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" style="vertical-align:-3px"><rect x="2.5" y="1.5" width="11" height="13" rx="2"/><rect x="4.5" y="3.5" width="7" height="3" rx=".5"/><path d="M5 9h.01M8 9h.01M11 9h.01M5 12h.01M8 12h.01M11 12h.01" stroke-width="2" stroke-linecap="round"/></svg></button><button class="btn sm ghost" id="dispBtn" title="Text size and zoom">Aa Display</button>

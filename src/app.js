@@ -191,7 +191,7 @@ async function intake(entries, label, assignment, fromKeep) {   // entries: [{ p
   $('#start').hidden = true; $('#app').hidden = false;
   $('#batchName').textContent = batch.name + ' · ' + students.length + (students.length === 1 ? ' student' : ' students');
   $('#trAllBtn').hidden = !CAN_TRANSCRIBE || !students.some(st => st.files.some(f => f.kind === 'media'));
-  renderTools(); renderList(); openStudent(batch.restoredCur || 0);
+  renderTools(); renderList(); renderTopAtlas(); openStudent(batch.restoredCur || 0);
   scanned = false; scanAll();
   setTimeout(wordScoresAll, 50);
 }
@@ -3336,15 +3336,7 @@ $('#start').addEventListener('click', e => {
   if (b.id === 'addClass') return editClass(-1);
   if (b.dataset.cmove) { const [ci, d] = b.dataset.cmove.split(':').map(Number), j = ci + d; if (j >= 0 && j < lib.classes.length) { [lib.classes[ci], lib.classes[j]] = [lib.classes[j], lib.classes[ci]]; saveLib(); renderLib(); } return; }
   if (b.dataset.urename != null) { const f = findUnit(b.dataset.urename); if (!f) return; const name = prompt('Unit name', f.u.name); if (name && name.trim()) { f.u.name = name.trim(); saveLib(); renderLib(); } return; }
-  if (b.dataset.uatlas != null) {   // the unit's page in Atlas (web links only); empty removes it
-    const f = findUnit(b.dataset.uatlas); if (!f) return;
-    let v = prompt('Paste the Atlas link for ' + f.u.name + ' (leave empty to remove it)', f.u.atlas || '');
-    if (v == null) return; v = v.trim();
-    if (v && !/^https?:\/\//i.test(v)) v = 'https://' + v;
-    if (v && !/^https?:\/\/[^\s]+$/i.test(v)) return toast('That doesn’t look like a web link');
-    if (v) f.u.atlas = v; else delete f.u.atlas;
-    saveLib(); renderLib(); return;
-  }
+  if (b.dataset.uatlas != null) return askAtlas(b.dataset.uatlas);
   if (b.dataset.udel != null) {
     const f = findUnit(b.dataset.udel); if (!f) return; const u = f.u;
     if (u.items.length && !confirm('Delete “' + u.name + '” and its ' + u.items.length + ' assignment' + (u.items.length === 1 ? '' : 's') + '? Saved marks for those downloads stay in this browser.')) return;
@@ -3366,6 +3358,23 @@ $('#start').addEventListener('click', e => {
   }
   if (b.dataset.editClass != null) return editClass(+b.dataset.editClass);
 });
+// The unit's page in Atlas (web links only); empty removes it. Shown on the unit and in the top bar while grading.
+function askAtlas(unitId) {
+  const f = findUnit(unitId); if (!f) return;
+  let v = prompt('Paste the Atlas link for ' + f.u.name + ' (leave empty to remove it)', f.u.atlas || '');
+  if (v == null) return; v = v.trim();
+  if (v && !/^https?:\/\//i.test(v)) v = 'https://' + v;
+  if (v && !/^https?:\/\/[^\s]+$/i.test(v)) return toast('That doesn’t look like a web link');
+  if (v) f.u.atlas = v; else delete f.u.atlas;
+  saveLib(); if (batch) renderTopAtlas(); else renderLib();
+}
+function renderTopAtlas() {
+  const el = $('#topAtlas'); if (!el) return;
+  const f = batch && batch.assignment && findItem(batch.assignment.id);
+  el.innerHTML = !f ? '' : f.u.atlas ? '<a href="' + esc(f.u.atlas) + '" target="_blank" rel="noopener noreferrer" title="' + esc(f.u.name) + ' in Atlas">Atlas ↗</a>'
+    : '<button class="link" data-uatlas="' + f.u.id + '" title="Link ' + esc(f.u.name) + ' to its Atlas page">+ Atlas link</button>';
+}
+$('#topAtlas').addEventListener('click', e => { const b = e.target.closest('[data-uatlas]'); if (b) askAtlas(b.dataset.uatlas); });
 // The unit list follows the class picked; a class with no units gets a "Unit 1" when the assignment is saved.
 function editAssignment(id, unitId) {
   const f = id ? findItem(id) : null, start = f ? f : findUnit(unitId) || { c: lib.classes[0] || lib.loose, u: null };
@@ -3472,7 +3481,7 @@ $('#classSel').onchange = e => {
     f.u.items.splice(f.u.items.indexOf(a), 1); u.items.push(a); a.classId = batch.classId; saveLib();
   } else if (a) { a.classId = batch.classId; saveLib(); }
   const st = batch.students[cur]; rosterSort(); cur = Math.max(0, batch.students.indexOf(st));
-  renderList(); openStudent(cur); saveSoon();
+  renderList(); renderTopAtlas(); openStudent(cur); saveSoon();
 };
 
 /* ---------------- late or forgotten files: added to a student's submission, kept in this browser ---------------- */
