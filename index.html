@@ -787,6 +787,7 @@ async function intake(entries, label, assignment, fromKeep) {   // entries: [{ p
   // One student per top-level folder; loose files are one student each.
   const map = new Map();
   for (const r of raw) {
+    if (/^Grade sheet - [^/]*\.pdf$/i.test(r.path)) continue;   // the grade sheet from an earlier export isn't a student
     const parts = r.path.split('/').filter(Boolean);
     const key = parts.length > 1 ? parts[0] : parts[0].replace(/\.[^.]+$/, '');
     if (!map.has(key)) map.set(key, []);
@@ -836,8 +837,37 @@ async function makeFile(path, data) {
   const magic = data && data.length > 4 && data[0] === 0x25 && data[1] === 0x50 && data[2] === 0x44 && data[3] === 0x46;   // "%PDF"
   let kind = isPdf(name) || magic ? 'pdf' : isImg(name) || IMG_MORE.test(name) ? 'img' : MEDIA_RX.test(name) ? 'media' : WORD_RX.test(name) ? 'docx' : TEXT_RX.test(name) ? 'text' : 'other';
   let pdf = kind === 'pdf' ? data : null;
+  if (kind === 'pdf' && hasGsTail(data)) {   // a file exported from here with its marks kept: back to the original pages and the marks
+    const back = await unpackExport(data);
+    if (back) return { path, name, kind, data: back.data, size: data.length, marks: back.marks, rot: back.rot, pages: null };
+  }
   if (kind === 'img') { try { pdf = isImg(name) ? await imageToPdf(data, name) : await anyImageToPdf(data); } catch { kind = 'other'; } }
   return { path, name, kind, data: kind === 'pdf' || kind === 'img' ? pdf : data, size: data ? data.length : 0, marks: {}, pages: null };
+}
+// An editable export carries its original pages and its marks as attachments, and ends with this line so it's found without opening it.
+const GS_TAIL = '%GradingStudio-editable';
+const hasGsTail = d => !!d && d.length > 64 && new TextDecoder().decode(d.subarray(d.length - 64)).includes(GS_TAIL);
+async function unpackExport(data) {
+  try {
+    await workerReady;
+    const js = await pdfjsLib.getDocument({ data: data.slice(), isEvalSupported: false }).promise;
+    const att = (await js.getAttachments()) || {}; js.destroy();
+    const meta = att['grading-studio.json']; if (!meta) return null;
+    const info = JSON.parse(new TextDecoder().decode(meta.content)), srcs = [], marks = {}, rot = {};
+    info.pages.forEach(([, , m, r], i) => { if (m && m.length) marks[i] = m; if (r) rot[i] = r; });
+    const orig = k => att['gs-original-' + (k + 1) + '.pdf'].content;
+    const one = info.pages.every(([s]) => s === 0) && info.pages.every(([, p], i) => p === i);
+    if (one) {   // the whole original in order: kept exactly as it was
+      const src = await PDFLib.PDFDocument.load(orig(0), { ignoreEncryption: true, updateMetadata: false });
+      if (src.getPageCount() === info.pages.length) return { data: orig(0), marks, rot };
+    }
+    const out = await PDFLib.PDFDocument.create();
+    for (const [s, p] of info.pages) {
+      srcs[s] ||= await PDFLib.PDFDocument.load(orig(s), { ignoreEncryption: true, updateMetadata: false });
+      const [cp] = await out.copyPages(srcs[s], [p]); out.addPage(cp);
+    }
+    return { data: await out.save(), marks, rot };
+  } catch (e) { console.error(e); return null; }
 }
 // Pictures other than PNG and JPEG (GIF, WebP, BMP, and HEIC/TIFF where the browser can read them) become a JPEG page.
 const IMG_MORE = /\.(gif|webp|bmp|heic|heif|tiff?|avif)$/i, TEXT_RX = /\.(txt|md|rtf)$/i;
@@ -2304,7 +2334,8 @@ async function copy(text, msg) {
 }
 
 /* ---------------- export ---------------- */
-const xAll = () => !!store.get('gs.xall', false);   // "Also include files with no marks"
+const xAll = () => !!store.get('gs.xall', false);
+const xEdit = () => store.get('gs.xedit', true) !== false;   // "Keep marks editable"   // "Also include files with no marks"
 // Word files you edited or scored, any file you added; with "include everything", every file.
 const rawOut = f => !viewable(f) && !!f.data && !f.virtual && (xAll() || !!f.edited || !!f.added || !!(wordScore(f) && f.wscore.total != null));
 const docAdded = (st, d) => d.pages.some(([path]) => { const f = fileByPath(st, path); return !!f && !!f.added; });
@@ -2329,7 +2360,7 @@ function exportPlan(keepFolders) {
   return out;
 }
 // Builds one returned file from its pages (possibly from several turned-in files), baking in every mark.
-async function flattenDoc(st, d, dpi) {
+async function flattenDoc(st, d, dpi, edit) {
   await workerReady;
   const srcs = new Map();
   const src = async path => {
@@ -2367,8 +2398,17 @@ async function flattenDoc(st, d, dpi) {
       out.addPage([W + side, H]).drawImage(img, { x: 0, y: 0, width: W + side, height: H });
       c.width = c.height = 0; page.cleanup();
     }
+    if (edit) {   // the original pages and her own marks go along, so bringing the file back in opens it ready to change
+      const paths = [...new Set(d.pages.map(([path]) => path))];
+      const info = { v: 1, pages: d.pages.map(([path, p]) => { const f = fileByPath(st, path); return [paths.indexOf(path), p, f.marks[p] || [], rotOf(f, p)]; }) };
+      for (let k = 0; k < paths.length; k++) await out.attach(fileByPath(st, paths[k]).data, 'gs-original-' + (k + 1) + '.pdf', { mimeType: 'application/pdf', description: 'Original pages, for reopening in Grading Studio' });
+      await out.attach(new TextEncoder().encode(JSON.stringify(info)), 'grading-studio.json', { mimeType: 'application/json', description: 'Marks, for reopening in Grading Studio' });
+    }
   } finally { for (const v of srcs.values()) v.js.destroy(); }
-  return await out.save();
+  const bytes = await out.save();
+  if (!edit) return bytes;
+  const tail = new TextEncoder().encode('\n' + GS_TAIL + '\n'), all = new Uint8Array(bytes.length + tail.length);
+  all.set(bytes); all.set(tail, bytes.length); return all;
 }
 async function openExport() {
   saveNow(); commitEditors(); wordScoresAll();
@@ -2383,13 +2423,14 @@ async function openExport() {
       (nLeft ? ' <span class="muted">' + nLeft + (nLeft === 1 ? ' file is' : ' files are') + ' left out (no marks, or you left it out).</span>' : '') + '</p>' +
       '<label class="chk"><input type="checkbox" id="xKeep" checked> Keep student folders</label>' +
       '<label class="chk"><input type="checkbox" id="xAll"' + (xAll() ? ' checked' : '') + '> Also include files with no marks (Word files, other files and unmarked pages)</label>' +
+      '<label class="chk"><input type="checkbox" id="xEdit"' + (xEdit() ? ' checked' : '') + '> Keep marks editable: bring a file back in later and change its marks (files are about twice as big)</label>' +
       '<label class="chk"><input type="checkbox" id="xSheet" checked> Add the grade sheet (a crop of each typed grade, in folder order)</label>' +
       '<div class="chk" style="cursor:default">Sharpness <span class="seg" id="xDpi"><button data-dpi="150" aria-pressed="true">Standard</button><button data-dpi="220" aria-pressed="false">Extra sharp</button></span></div>' +
       '<p class="muted" style="font-size:13px;margin-bottom:0">Your original files aren’t changed. Grades are read and cropped first, then every marked file is flattened, including marks made in Kami. A file you marked anywhere comes back whole, every page in order, including the pages you didn’t mark. Word rubrics you scored come back as Word files. ' + (xAll() ? 'Files with no marks come too.' : 'Files you didn’t mark at all stay out.') + ' Comments go in a right-hand margin.</p><div class="prog" hidden><i></i></div><p class="muted" id="xStatus" style="font-size:13px"></p>'
       : '<p style="margin-top:0">Nothing is marked yet. Mark a paper and it will show up here.</p><label class="chk"><input type="checkbox" id="xAll"' + (xAll() ? ' checked' : '') + '> Also include files with no marks (Word files, other files and unmarked pages)</label>') +
     '</div><div class="bf"><button class="btn" data-close>Close</button>' + (plan.length ? ((window.showDirectoryPicker && window.self === window.top) ? '<button class="btn" data-go="dir">Save into a folder…</button>' : '') + (G.email ? '<button class="btn" data-go="drive">Save to Google Drive</button>' : '') + '<button class="btn primary" data-go="zip">Download ZIP</button>' : '') + '</div>', true);
   const box = $('#dlgBox');
-  box.onchange = e => { if (e.target.id === 'xAll') { store.set('gs.xall', e.target.checked); renderTools(); openExport(); } };
+  box.onchange = e => { if (e.target.id === 'xEdit') store.set('gs.xedit', e.target.checked); if (e.target.id === 'xAll') { store.set('gs.xall', e.target.checked); renderTools(); openExport(); } };
   box.onclick = async e => {
     if (e.target.closest('[data-close]')) return closeDlg();
     const d = e.target.closest('[data-dpi]');
@@ -2420,7 +2461,7 @@ async function openExport() {
       for (let i = 0; i < items.length; i++) {
         $('#xStatus').textContent = 'Baking in marks ' + (i + 1) + ' of ' + items.length + '…';
         bar.firstChild.style.width = (30 + 70 * i / items.length) + '%';
-        const bytes = items[i].raw ? items[i].f.data : await flattenDoc(items[i].st, items[i].d, dpi);
+        const bytes = items[i].raw ? items[i].f.data : await flattenDoc(items[i].st, items[i].d, dpi, $('#xEdit').checked);
         if (dir) {
           const parts = items[i].path.split('/'); let h = dir;
           for (const part of parts.slice(0, -1)) h = await h.getDirectoryHandle(part, { create: true });
