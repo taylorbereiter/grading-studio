@@ -28,7 +28,7 @@ Open a ManageBac download, mark each paper, score it, read off the grades in fol
 - **Open from Google Drive**: pick the download folder (one folder per student) or the ZIP; Google Docs come down as PDFs.
 - **Export → Save to Google Drive**: a "Marked - …" folder with the student folders, inside the folder you opened (or My Drive).
 - **Sync**: units, assignments, rosters, setup, saved comments and each download's marks and scores are kept in a hidden app file in your own Drive, newest copy wins, so every computer matches.
-- Needs a Google Client ID (Web application, origin = the address where you host it) built in as GCID: `GCID=… npm run build`, then deploy out/netlify with netlify.toml.
+- Needs a Google Client ID (Web application, origin = the address where you host it) built in as GCID: `GCID=… npm run build`.
 
 ## Good to know
 - Classes 12EL-1, 12EL-2 and 11EL-2 are there from the start; add the student names when you want roster order.
@@ -36,4 +36,4 @@ Open a ManageBac download, mark each paper, score it, read off the grades in fol
 - Saved comments ("Save for reuse" in a comment) are kept in this browser too.
 - Word files can't be opened here; they're listed so you can still give a score.
 
-Rebuild: `npm install && npm run build` (pdfjs-dist 3.11.174, pdf-lib 1.17.1, fflate 0.8.2, mammoth 1.11.0) builds `Grading Studio.html` from src/app.html + src/app.js.
+Rebuild: `npm install && npm run build` (pdfjs-dist 3.11.174, pdf-lib 1.17.1, fflate 0.8.2, mammoth 1.11.0, html2canvas 1.4.1) builds `Grading Studio.html` from src/app.html + src/app.js.

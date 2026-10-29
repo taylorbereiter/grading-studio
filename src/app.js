@@ -52,18 +52,20 @@ document.addEventListener('click', e => {
 /* ---------------- grading setup ---------------- */
 // Taylor's grading scale for a 12-point rubric. Half points fall halfway between two rows.
 const SCALE12 = { 12: 100, 11: 95, 10: 91, 9: 86, 8: 82, 7: 77, 6: 73, 5: 68, 4: 64, 3: 60 };
-const RUBRIC_STEPS = [4, 3.5, 3, 2.5, 2, 1.5, 1];
+const RUBRIC_STEPS = [1, 1.5, 2, 2.5, 3, 3.5, 4];
 const SCALE_FIVES = { 12: 100, 11: 95, 10: 90, 9: 85, 8: 80, 7: 75, 6: 70, 5: 65, 4: 60, 3: 55, 2: 50, 1: 45, 0: 40 };
 const DEFAULT_SETUP = { mode: 'rubric', criteria: ['Criterion 1', 'Criterion 2', 'Criterion 3'], outOf: 10, scale: SCALE12 };
 let setup = { ...DEFAULT_SETUP, ...store.get('gs.setup', {}) };
 
 function maxPoints() { return setup.mode === 'rubric' ? setup.criteria.length * 4 : +setup.outOf || 0; }
 // Uses the grading scale when its top score matches the total possible; half points fall between two rows.
-function percentFor(total) {
+// Percents are whole numbers, with halves rounded up (10.5 between 95 and 90 is 92.5, so 93%), as on Taylor's rubrics.
+const roundPct = v => Math.max(0, Math.round(v + 1e-9));
+function percentFor(total) { return percentWith(total, maxPoints(), setup.scale); }
+function percentWith(total, max, sc) {
   if (total == null || total === '' || isNaN(total)) return null;
-  const max = maxPoints();
   if (!max) return null;
-  const sc = setup.scale, keys = sc ? Object.keys(sc).map(Number).filter(k => sc[k] !== '' && sc[k] != null && !isNaN(+sc[k])).sort((a, b) => a - b) : [];
+  const keys = sc ? Object.keys(sc).map(Number).filter(k => sc[k] !== '' && sc[k] != null && !isNaN(+sc[k])).sort((a, b) => a - b) : [];
   if (keys.length >= 2 && keys[keys.length - 1] === max) {
     const val = k => +sc[k];
     if (total >= max) return val(max);
@@ -74,13 +76,16 @@ function percentFor(total) {
       const lo = keys[i], hi = keys[i + 1];
       v = total === lo ? val(lo) : val(lo) + (val(hi) - val(lo)) * (total - lo) / (hi - lo);
     }
-    return Math.max(0, Math.round(v * 10) / 10);
+    return roundPct(v);
   }
-  return Math.round(total / max * 1000) / 10;
+  return roundPct(total / max * 100);
 }
 function gradeOf(st) {
   const own = ownGrade(st);
-  if (own.total != null || !st.found || !st.found.found) return own;
+  if (own.total != null) return own;
+  const ty = st.grade.sheet;   // typed on the Grade sheet from the picture, for handwritten grades
+  if (ty !== '' && ty != null && !isNaN(+ty)) return { total: +ty, pct: percentFor(+ty), done: true, paper: true };
+  if (!st.found || !st.found.found) return own;
   const fd = st.found;   // a grade typed on the paper (Grade sheet), used until she scores it here
   return { total: fd.score, pct: fd.pct != null ? fd.pct : percentFor(fd.score), done: true, paper: true };
 }
@@ -105,7 +110,9 @@ let tool = 'pen';
 const COLORS = { red: '#D7263D', blue: '#1F5FD1', green: '#1E8A4C', purple: '#7B3FC4', black: '#1B1F27' };
 const HL = { yellow: '#FFE45C', green: '#B4F0A8', pink: '#FFB8D6', blue: '#B0E0FF' };
 let inkColor = store.get('gs.ink', 'red'), hlColor = store.get('gs.hl', 'yellow'), penW = store.get('gs.penW', 2);
-let zoom = 1;
+const DISP0 = { ui: 1, tsize: 14, fit: 'width', dfs: 15, dlh: 1.45, trim: true };
+let disp = { ...DISP0, ...store.get('gs.disp', {}) };   // Display panel: app text size, new text box size, paper fit, Word doc text
+let zoom = store.get('gs.zoom', 1);
 let undoStack = [];
 let selected = null;     // { page, mark }
 let bank = store.get('gs.bank', []);   // Taylor's saved comments (her own words, no student data)
@@ -126,7 +133,7 @@ function unzipInto(data, prefix, raw, depth) {
     raw.push({ path: q, data: un[p] });
   }
 }
-async function intake(entries, label, assignment) {   // entries: [{ path, file|data }]
+async function intake(entries, label, assignment, fromKeep) {   // entries: [{ path, file|data }]
   const raw = [];
   for (const e of entries) {
     if (junk(e.path)) continue;
@@ -150,17 +157,13 @@ async function intake(entries, label, assignment) {   // entries: [{ path, file|
     map.get(key).push(r);
   }
   const keys = [...map.keys()].sort(natural);
-  const students = [];
+  const students = [], keepList = [];
   for (const key of keys) {
     const files = [];
     for (const r of map.get(key).sort((a, b) => natural(a.path, b.path))) {
-      const name = r.path.split('/').pop();
       const data = r.data || (r.file ? new Uint8Array(await r.file.arrayBuffer()) : null);
-      const magic = data && data.length > 4 && data[0] === 0x25 && data[1] === 0x50 && data[2] === 0x44 && data[3] === 0x46;   // "%PDF"
-      let kind = isPdf(name) || magic ? 'pdf' : isImg(name) ? 'img' : MEDIA_RX.test(name) ? 'media' : /\.docx$/i.test(name) ? 'docx' : 'other';
-      let pdf = kind === 'pdf' ? data : null;
-      if (kind === 'img') { try { pdf = await imageToPdf(data, name); } catch { kind = 'other'; } }
-      files.push({ path: r.path, name, kind, data: kind === 'media' || kind === 'docx' ? data : pdf, size: data ? data.length : 0, marks: {}, pages: null });
+      keepList.push({ path: r.path, data });
+      files.push(await makeFile(r.path, data));
     }
     students.push({ key, files, grade: { rubric: [], points: '', comment: '' }, layout: null, inc: {} });
   }
@@ -169,18 +172,44 @@ async function intake(entries, label, assignment) {   // entries: [{ path, file|
   delete setup.spot;   // the grade spot belongs to one download
   if (assignment) { setup = { ...DEFAULT_SETUP, ...(assignment.setup || store.get('gs.setup', {})) }; delete setup.spot; }
   thumbCache.clear();
-  const saved = store.get(id, null);
+  askToKeep();
+  if (!store.get(id, null)) batch.keptWork = await kget('work', id);   // this browser's backup copy of the work
+  const saved = store.get(id, null) || batch.keptWork || null;
   if (!assignment && saved && saved.setup) setup = { ...DEFAULT_SETUP, ...saved.setup };
   await applyRubricPage();
+  await loadAdded();
+  await loadRefs();
+  await loadEdits();
   restore();
   if (saved && saved.cls != null) batch.classId = saved.cls;
   renderClassSel();
   if (assignment) { assignment.batchId = id; assignment.opened = Date.now(); saveLib(); }
+  keepPapers(batch, label, fromKeep ? null : keepList);
   cur = 0; undoStack = []; selected = null;
   $('#start').hidden = true; $('#app').hidden = false;
   $('#batchName').textContent = batch.name + ' · ' + students.length + (students.length === 1 ? ' student' : ' students');
+  $('#trAllBtn').hidden = !CAN_TRANSCRIBE || !students.some(st => st.files.some(f => f.kind === 'media'));
   renderTools(); renderList(); openStudent(batch.restoredCur || 0);
   scanned = false; scanAll();
+  setTimeout(wordScoresAll, 50);
+}
+async function makeFile(path, data) {
+  const name = path.split('/').pop();
+  const magic = data && data.length > 4 && data[0] === 0x25 && data[1] === 0x50 && data[2] === 0x44 && data[3] === 0x46;   // "%PDF"
+  let kind = isPdf(name) || magic ? 'pdf' : isImg(name) || IMG_MORE.test(name) ? 'img' : MEDIA_RX.test(name) ? 'media' : WORD_RX.test(name) ? 'docx' : TEXT_RX.test(name) ? 'text' : 'other';
+  let pdf = kind === 'pdf' ? data : null;
+  if (kind === 'img') { try { pdf = isImg(name) ? await imageToPdf(data, name) : await anyImageToPdf(data); } catch { kind = 'other'; } }
+  return { path, name, kind, data: kind === 'pdf' || kind === 'img' ? pdf : data, size: data ? data.length : 0, marks: {}, pages: null };
+}
+// Pictures other than PNG and JPEG (GIF, WebP, BMP, and HEIC/TIFF where the browser can read them) become a JPEG page.
+const IMG_MORE = /\.(gif|webp|bmp|heic|heif|tiff?|avif)$/i, TEXT_RX = /\.(txt|md|rtf)$/i;
+async function anyImageToPdf(bytes) {
+  const bmp = await createImageBitmap(new Blob([bytes]));
+  const c = document.createElement('canvas'); c.width = bmp.width; c.height = bmp.height;
+  const ctx = c.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height); ctx.drawImage(bmp, 0, 0);
+  const jpg = await new Promise(res => c.toBlob(b => b.arrayBuffer().then(x => res(new Uint8Array(x))), 'image/jpeg', 0.92));
+  c.width = c.height = 0;
+  return imageToPdf(jpg, 'page.jpg');
 }
 async function imageToPdf(bytes, name) {
   const doc = await PDFLib.PDFDocument.create();
@@ -213,7 +242,7 @@ let saveT;
 function saveSoon() { clearTimeout(saveT); saveT = setTimeout(saveNow, 500); }
 function saveNow() {
   if (!batch) return;
-  const data = { t: Date.now(), cur, setup, cls: batch.classId, share: batch.share, drive: batch.drive, s: {} };
+  const data = { t: Date.now(), cur, setup, cls: batch.classId, share: batch.share, drive: batch.drive, light: batch.light, lightOpt: batch.lightOpt, lightPg: batch.lightPg, anon: batch.anon, moved: batch.moved, s: {} };
   for (const st of batch.students) {
     const f = {};
     for (const fl of st.files) if (Object.values(fl.marks).some(a => a.length)) f[fl.path] = fl.marks;
@@ -222,23 +251,32 @@ function saveNow() {
     for (const fl of st.files) if (fl.hand) hb[fl.path] = fl.hand;
     const inc = st.inc && Object.keys(st.inc).length ? st.inc : undefined;
     const tr = {}; for (const fl of st.files) if (fl.tr) tr[fl.path] = fl.tr;
-    if (Object.keys(tr).length || Object.keys(hb).length || st.layout || inc || Object.keys(f).length || g.rubric.some(v => v != null) || g.points !== '' || g.comment)
-      data.s[st.key] = { f, g, h: hb, L: st.layout || undefined, inc, tr: Object.keys(tr).length ? tr : undefined };
+    if (Object.keys(tr).length || Object.keys(hb).length || st.layout || st.forder || inc || Object.keys(f).length || g.rubric.some(v => v != null) || g.points !== '' || g.comment || g.sheet)
+      data.s[st.key] = { f, g, h: hb, L: st.layout || undefined, o: st.forder || undefined, inc, tr: Object.keys(tr).length ? tr : undefined };
   }
-  if (!store.set(batch.id, data)) toast('This browser is out of room to keep your marks. Export soon.');
+  keepWork(batch, data);
   const idx = store.get('gs.batches', {}); idx[batch.id] = data.t;
-  const old = Object.entries(idx).sort((a, b) => b[1] - a[1]).slice(12);   // keep the 12 most recent downloads
-  for (const [k] of old) { store.del(k); delete idx[k]; }
+  let ok = store.set(batch.id, data);
+  // The full copy of every download lives in IndexedDB (keepWork). Only once that works are older quick copies
+  // in localStorage let go, so nothing is ever only in one place that gets cleared.
+  if (keepOk) {
+    const order = Object.entries(idx).sort((a, b) => b[1] - a[1]).map(([k]) => k);
+    for (const k of order.slice(12)) { store.del(k); delete idx[k]; }
+    while (!ok && order.length > 1) { const k = order.pop(); if (k === batch.id) continue; store.del(k); delete idx[k]; ok = store.set(batch.id, data); }
+  } else if (!ok) toast('This browser is out of room to keep your marks. Export soon.');
   store.set('gs.batches', idx);
 }
 function restore() {
-  const data = store.get(batch.id, null);
+  const data = store.get(batch.id, null) || batch.keptWork || null;
   if (!data) return;
   if (data.setup && !batch.assignment) setup = { ...DEFAULT_SETUP, ...data.setup };
   else if (data.setup && data.setup.spot) setup.spot = data.setup.spot;
+  batch.moved = data.moved || {};
+  for (const [path, key] of Object.entries(batch.moved)) moveFileNow(path, key);
   let n = 0;
   for (const st of batch.students) {
     const s = data.s[st.key]; if (!s) continue;
+    if (s.o) st.forder = s.o;
     st.grade = { rubric: [], points: '', comment: '', ...s.g };
     for (const fl of st.files) { if (s.f[fl.path]) fl.marks = s.f[fl.path]; if (s.h && s.h[fl.path]) fl.hand = s.h[fl.path]; if (s.tr && s.tr[fl.path]) fl.tr = s.tr[fl.path]; }
     if (s.L) st.layout = s.L.map(d => ({ ...d, pages: d.pages.filter(([path]) => st.files.some(f => f.path === path)) }));
@@ -246,6 +284,10 @@ function restore() {
     n++;
   }
   if (data.share) batch.share = data.share;
+  if (data.light) batch.light = data.light;
+  if (data.lightOpt) batch.lightOpt = data.lightOpt;
+  if (data.lightPg) batch.lightPg = data.lightPg;
+  if (data.anon) batch.anon = data.anon;
   if (data.drive && !batch.drive) batch.drive = data.drive;
   batch.restoredCur = Math.min(data.cur || 0, batch.students.length - 1);
   if (n) setTimeout(() => toast('Picked up where you left off (' + n + (n === 1 ? ' student' : ' students') + ' started)'), 300);
@@ -274,9 +316,9 @@ function wrapText(ctx, text, maxW) {
 const rgb = hex => [parseInt(hex.slice(1, 3), 16), parseInt(hex.slice(3, 5), 16), parseInt(hex.slice(5, 7), 16)];
 function textLayout(m, W) {
   measureCtx.font = m.size + 'px ' + FONT;
-  const maxW = Math.max(40, W - m.x - 6);
+  const room = Math.max(40, W - m.x - 6), maxW = m.bw ? Math.max(24, Math.min(m.bw, room)) : room;
   const lines = wrapText(measureCtx, m.text || '', maxW);
-  const w = Math.max(10, ...lines.map(l => measureCtx.measureText(l).width));
+  const w = m.bw ? maxW : Math.max(10, ...lines.map(l => measureCtx.measureText(l).width));
   return { lines, w, h: Math.max(1, lines.length) * m.size * 1.25, maxW };
 }
 // Comment boxes in the right margin, each with a line to its spot (the look Taylor liked from Kami's flattened files).
@@ -317,7 +359,10 @@ function drawMarks(ctx, marks, W, H, side, screen) {
   }
   // highlights under everything, multiplied so the writing stays dark
   ctx.save(); ctx.globalCompositeOperation = 'multiply';
-  for (const m of marks) if (m.t === 'hl') { ctx.fillStyle = m.color; ctx.fillRect(m.x, m.y, m.w, m.h); }
+  for (const m of marks) {
+    if (m.t === 'hl') { ctx.fillStyle = m.color; ctx.fillRect(m.x, m.y, m.w, m.h); }
+    else if (m.t === 'note' && m.hl) { ctx.fillStyle = m.hc || HL.yellow; ctx.fillRect(m.hl.x, m.hl.y, m.hl.w, m.hl.h); }
+  }
   ctx.restore();
   for (const m of marks) {
     if (m.t === 'pen') {
@@ -359,7 +404,14 @@ function drawMarks(ctx, marks, W, H, side, screen) {
   }
   if (screen && screen.sel) {
     const bb = bboxOf(screen.sel, W);
-    if (bb) { ctx.save(); ctx.strokeStyle = '#2747D0'; ctx.setLineDash([3, 2]); ctx.lineWidth = 0.8; ctx.strokeRect(bb.x - 3, bb.y - 3, bb.w + 6, bb.h + 6); ctx.restore(); }
+    if (bb) {
+      ctx.save(); ctx.strokeStyle = '#1F6FB2'; ctx.setLineDash([3, 2]); ctx.lineWidth = 0.8; ctx.strokeRect(bb.x - 3, bb.y - 3, bb.w + 6, bb.h + 6);
+      if (screen.sel.t === 'text') {   // drag this edge to set where the text wraps
+        const h = textHandle(screen.sel, W);
+        ctx.setLineDash([]); ctx.fillStyle = '#fff'; ctx.lineWidth = 1.2; ctx.fillRect(h.x - 2.5, h.y - 6, 5, 12); ctx.strokeRect(h.x - 2.5, h.y - 6, 5, 12);
+      }
+      ctx.restore();
+    }
   }
   return boxes;
 }
@@ -372,8 +424,15 @@ function bboxOf(m, W) {
   if (m.t === 'hl' || m.t === 'oval') return { x: m.x, y: m.y, w: m.w, h: m.h };
   if (m.t === 'text') { const L = textLayout(m, W); return { x: m.x, y: m.y, w: L.w, h: L.h }; }
   if (m.t === 'check') { const s = m.size || 22; return { x: m.x - s * 0.45, y: m.y - s * 0.4, w: s * 0.95, h: s * 0.75 }; }
-  if (m.t === 'note') return { x: m.ax - 5, y: m.ay - 5, w: 10, h: 10 };
+  if (m.t === 'note') return m.hl ? { ...m.hl } : { x: m.ax - 5, y: m.ay - 5, w: 10, h: 10 };
   return null;
+}
+function textHandle(m, W) { const bb = bboxOf(m, W); return { x: bb.x + bb.w + 3, y: bb.y + Math.min(bb.h / 2, 10), top: bb.y, bottom: bb.y + bb.h }; }
+// A text box never runs off the page: it stays inside on the right and moves up from the bottom edge.
+function keepOnPage(m, W, H) {
+  m.x = r1(clamp(m.x, 0, W - 30));
+  if (m.bw) m.bw = r1(Math.min(m.bw, W - m.x - 6));
+  m.y = r1(clamp(m.y, 0, Math.max(0, H - textLayout(m, W).h - 2)));
 }
 function distToSeg(px, py, a, b) {
   const dx = b[0] - a[0], dy = b[1] - a[1], L = dx * dx + dy * dy;
@@ -404,7 +463,7 @@ const viewable = f => f.kind === 'pdf' || f.kind === 'img';
 const fileByPath = (st, path) => st.files.find(f => f.path === path);
 function defaultLayout(st) {
   const L = st.files.filter(f => viewable(f) && !f.virtual && f.numPages).map(f => ({ name: f.name, file: f.path, pages: [...Array(f.numPages).keys()].map(p => [f.path, p]) }));
-  const v = st.files.find(f => f.virtual);
+  const v = st.files.find(f => f.virtual && viewable(f));
   if (v && L.length) { const pg = [...Array(v.numPages).keys()].map(p => [v.path, p]); L[0].pages = setup.rubricPos === 'start' ? pg.concat(L[0].pages) : L[0].pages.concat(pg); }
   return L;
 }
@@ -416,6 +475,7 @@ function batchHasMarks() { return !!batch && batch.students.some(st => st.files.
 function docIn(st, d) {
   if (d.out != null) return !d.out;
   if (d.file && st.inc && st.inc[d.file] != null) return st.inc[d.file];
+  if (docAdded(st, d)) return true;   // a file you added goes back unless you leave it out
   const read = d.pages.every(([path]) => { const f = fileByPath(st, path); return f && f.kami !== undefined; });
   if (!read) return true;
   return docMarked(st, d) || !batchHasMarks();
@@ -428,6 +488,74 @@ function setDocIn(st, d, on) {
 }
 function fileIn(st, f) { return layoutOf(st).some(d => docIn(st, d) && d.pages.some(([path]) => path === f.path)); }
 
+/* ---------------- the order of a student's files on screen: Word and other files among the PDF files ---------------- */
+// Ids: 'f:<path>' for a file shown as one card (Word, text, other), 'd<n>' for the n-th file of pages in the layout.
+// Untouched, cards come first and her Rubric setup Word rubric goes where Rubric setup puts it.
+function fileSeq(st) {
+  const L = layoutOf(st), rl = setup.rubricPos === 'end', of = k => st.files.filter(f => f.kind === k);
+  const def = [...of('other'), ...of('text'), ...of('docx').filter(f => !(f.rubric && rl))].map(f => ({ id: 'f:' + f.path, f }))
+    .concat(L.map((d, di) => ({ id: 'd' + di, d, di })))
+    .concat(of('docx').filter(f => f.rubric && rl).map(f => ({ id: 'f:' + f.path, f })));
+  const o = st.forder; if (!o) return def;
+  const rank = (it, k) => { const i = o.indexOf(it.id); return i >= 0 ? i : o.length + k; };
+  return def.map((it, k) => [rank(it, k), k, it]).sort((a, b) => a[0] - b[0] || a[1] - b[1]).map(x => x[2]);
+}
+// A kind of file, to line up the same order on every student's paper: "their Word file you added", "the PDF they turned in"…
+const seqSig = (st, it) => it.f ? it.f.kind + (it.f.rubric ? 'R' : '') + (it.f.added ? 'A' : '') : 'doc' + (it.d.pages.length && (fileByPath(st, it.d.pages[0][0]) || {}).added ? 'A' : '') + ((fileByPath(st, (it.d.pages[0] || [])[0]) || {}).virtual ? 'R' : '');
+
+/* ---------------- a file in the wrong student's folder: move it to the right one ---------------- */
+// The file keeps its path, marks and edits; batch.moved remembers the move so it holds when the download is opened again.
+const moveLink = f => '<button class="link" style="font-size:13px;margin-right:10px" data-mvfile="' + esc(f.path) + '" title="This file belongs to someone else? Move it to the right student">Move to…</button>';
+function moveFileNow(path, key) {
+  const src = batch.students.find(s => s.files.some(f => f.path === path)), dst = batch.students.find(s => s.key === key);
+  if (!src || !dst || src === dst || dst.files.some(f => f.path === path)) return null;
+  const f = fileByPath(src, path);
+  src.files.splice(src.files.indexOf(f), 1); dst.files.push(f);
+  return { src, dst, f };
+}
+function moveFile(st, path, dst) {
+  const L0 = layoutOf(st), m = moveFileNow(path, dst.key);
+  if (!m) return toast(dst.files.some(f => f.path === path) ? dst.key + ' already has this file' : 'Couldn’t move that file');
+  const { f } = m;
+  // a scored Word rubric that was in the wrong folder takes its score with it
+  const ws = wordScore(f);
+  if (ws && ws.total != null && ownGrade(st).total === ws.total) { st.grade.points = ''; st.grade.rubric = []; }
+  if (st.layout || L0.some(d => d.pages.some(([q]) => q !== path) && d.pages.some(([q]) => q === path))) {
+    st.layout = L0.map(d => ({ ...d, pages: d.pages.filter(([q]) => q !== path) })).filter(d => d.pages.length);
+    if (!st.layout.length) st.layout = null;
+  }
+  if (dst.layout && viewable(f) && f.numPages) dst.layout.push({ name: f.name, file: f.path, pages: [...Array(f.numPages).keys()].map(p => [f.path, p]) });
+  if (st.inc && st.inc[path] != null) { (dst.inc ||= {})[path] = st.inc[path]; delete st.inc[path]; }
+  if (st.forder) st.forder = st.forder.filter(x => x !== 'f:' + path);
+  if (batch.lightPg) for (const k of Object.keys(batch.lightPg)) if (k.startsWith(st.key + '|' + path + '|')) { batch.lightPg[dst.key + k.slice(st.key.length)] = batch.lightPg[k]; delete batch.lightPg[k]; }
+  (batch.moved ||= {})[path] = dst.key;
+  refound(st); refound(dst); wordScoresAll(); saveNow(); renderList(); openStudent(cur);
+  toast('Moved ' + f.name + ' to ' + shownName(dst, batch.students.indexOf(dst)));
+}
+function openMoveFile(st, path) {
+  const f = fileByPath(st, path); if (!f) return;
+  const others = batch.students.map((s, i) => ({ s, i })).filter(x => x.s !== st);
+  openDlg('<div class="bh"><h2>Move ' + esc(f.name) + '</h2><button class="icon" data-cancel aria-label="Close" style="margin-left:auto">✕</button></div>' +
+    '<div class="bb"><p class="muted" style="margin:0 0 10px;font-size:14px">The file goes to that student with your marks on it. Moving it back works the same way.</p>' +
+    '<input class="btn" id="mvFind" placeholder="Type a name" autocomplete="off" style="width:100%;margin-bottom:8px"><div id="mvList" class="mvlist"></div></div>' +
+    '<div class="bf"><button class="btn" data-cancel>Cancel</button></div>', true);
+  const draw = () => {
+    const q = $('#mvFind').value.toLowerCase().split(/\s+/).filter(Boolean);
+    const list = others.filter(x => q.every(w => x.s.key.toLowerCase().split(/[\s,_-]+/).some(y => y.startsWith(w))));
+    $('#mvList').innerHTML = list.length ? list.map((x, k) => '<button class="mvrow' + (k === 0 && q.length ? ' top' : '') + '" data-mvto="' + x.i + '">' + esc(x.s.key) + '<span class="muted">' + x.s.files.length + (x.s.files.length === 1 ? ' file' : ' files') + '</span></button>').join('') : '<p class="muted">No name matches.</p>';
+  };
+  draw();
+  const box = $('#dlgBox');
+  $('#mvFind').oninput = draw;
+  $('#mvFind').onkeydown = e => { if (e.key === 'Enter') { const b = $('#mvList [data-mvto]'); if (b) b.click(); } };
+  box.onclick = e => {
+    if (e.target.closest('[data-cancel]')) return closeDlg();
+    const b = e.target.closest('[data-mvto]'); if (!b) return;
+    closeDlg(); moveFile(st, path, batch.students[+b.dataset.mvto]);
+  };
+  $('#mvFind').focus();
+}
+
 /* ---------------- the open student ---------------- */
 let pages = [];          // on-screen pages for the open student
 let docs = [];           // pdf.js documents for the open student
@@ -438,23 +566,23 @@ async function openStudent(i, filePath) {
   commitEditors();
   cur = Math.max(0, Math.min(batch.students.length - 1, i));
   selected = null;
+  if ($('#lightPanel')) $('#lightPanel').refresh();
   const token = ++openToken;
   for (const d of docs) d.destroy();
   docs = []; pages = []; docMap = new Map();
   renderList(); renderGrade(); saveSoon();
   const st = batch.students[cur];
   const paper = $('#paper');
-  paper.innerHTML = '<div class="who"><h2>' + esc(st.key) + '</h2><span>' + (cur + 1) + ' of ' + batch.students.length + '</span><span style="flex:1"></span>' +
-    (st.files.some(viewable) ? '<button class="btn sm" id="arrangeBtn">Arrange pages</button>' : '') + '</div>';
+  paper.innerHTML = '<div class="who"><h2>' + esc(shownName(st, cur)) + '</h2><span>' + ((anonOn() ? anonPos(cur) : cur) + 1) + ' of ' + batch.students.length + '</span><span style="flex:1"></span>' +
+    '<button class="btn sm" id="addFileBtn" title="Add a late or forgotten file to this student. You can also drop files on the paper or on a name.">+ Add file</button>' +
+    (st.files.some(viewable) || fileSeq(st).length > 1 ? '<button class="btn sm" id="arrangeBtn">Arrange pages</button>' : '') + '</div>';
   paper.scrollTop = 0;
   if (!st.files.length) paper.insertAdjacentHTML('beforeend', '<div class="nofile"><b>No file in this folder.</b> Nothing was turned in, so there’s nothing to mark. You can still give a score.</div>');
   curMedia = null;
-  for (const f of st.files.filter(f => f.kind === 'media')) paper.appendChild(mediaCard(st, f));
+  for (const f of st.files.filter(f => f.kind === 'media')) { if (f.added) paper.insertAdjacentHTML('beforeend', '<div class="fhead"><span style="color:var(--fg)">' + esc(f.name) + '</span>' + addTag(f) + '</div>'); paper.appendChild(mediaCard(st, f)); }
   const rd = refDoc();
   if (rd) { const det = document.createElement('details'); det.className = 'refd'; det.open = store.get('gs.rdOpen', true); det.innerHTML = '<summary>Your document: ' + esc(rd.name) + '</summary>'; det.ontoggle = () => store.set('gs.rdOpen', det.open); paper.appendChild(det); docxCard(rd, rd.name).then(c => { c.querySelector('.fhead').remove(); det.appendChild(c); }); }
-  for (const f of st.files.filter(f => f.kind === 'other'))
-    paper.insertAdjacentHTML('beforeend', '<div class="nofile" style="margin-bottom:12px"><b>' + esc(f.name) + '</b> can’t be opened here' + (/\.doc$/i.test(f.name) ? ' (an older Word file). Open it in Word, or save it as .docx or PDF.' : '.') + ' You can still give a score.</div>');
-  for (const f of st.files.filter(f => f.kind === 'docx')) { const c = await docxCard(f); if (token !== openToken) return; paper.appendChild(c); }
+  for (const r of refFiles) { const hold = document.createElement('div'); paper.appendChild(hold); refCard(r).then(c => { if (token === openToken) hold.replaceWith(c); }); }
   await workerReady;
   for (const f of st.files.filter(viewable)) {
     try {
@@ -467,13 +595,21 @@ async function openStudent(i, filePath) {
     }
   }
   if (token !== openToken) return;
-  const L = layoutOf(st);
-  for (let di = 0; di < L.length; di++) {
-    const d = L[di], on = docIn(st, d), auto = docAuto(st, d);
+  for (const it of fileSeq(st)) {
+    if (it.f) {   // a Word, text or other file, as one card
+      const f = it.f, c = f.kind === 'docx' ? await wordCard(st, f) : f.kind === 'text' ? textCard(f) : otherCard(f);
+      if (token !== openToken) return;
+      const fh = c.querySelector('.fhead'); if (fh && !f.virtual && !f.rubric) fh.insertAdjacentHTML('beforeend', moveLink(f));
+      paper.appendChild(c);
+      if (filePath && f.path === filePath) c.scrollIntoView({ block: 'start' });
+      continue;
+    }
+    const d = it.d, di = it.di, on = docIn(st, d), auto = docAuto(st, d), af = d.file && fileByPath(st, d.file);
+    const one = af && d.pages.every(([q]) => q === af.path) && !af.virtual;
     const head = document.createElement('div'); head.className = 'fhead';
-    head.innerHTML = '<span style="color:var(--fg)">' + esc(d.name) + '</span><span>' + d.pages.length + (d.pages.length === 1 ? ' page' : ' pages') + '</span>' +
+    head.innerHTML = '<span style="color:var(--fg)">' + esc(d.name) + '</span><span>' + d.pages.length + (d.pages.length === 1 ? ' page' : ' pages') + '</span>' + (af && af.added ? addTag(af) : '') +
       (on ? '' : '<span class="pill warn" style="font-size:12px;padding:2px 8px;border-radius:999px;background:var(--warn-soft);color:var(--warn)">' + (auto ? 'No marks, left out' : 'Left out') + '</span>') +
-      '<span style="flex:1"></span><button class="link" style="font-size:13px" data-inout="' + di + '">' + (on ? 'Leave out' : 'Bring back') + '</button>';
+      '<span style="flex:1"></span>' + (one ? moveLink(af) : '') + '<button class="link" style="font-size:13px" data-inout="' + di + '">' + (on ? 'Leave out' : 'Bring back') + '</button>';
     paper.appendChild(head);
     if (!on && !auto) continue;   // left out on purpose: just the bar
     for (const [path, p] of d.pages) {
@@ -490,6 +626,7 @@ async function openStudent(i, filePath) {
       wrap.appendChild(c); paper.appendChild(wrap);
       pg.wrap = wrap; pg.canvas = c;
       pages.push(pg);
+      lightChip(pg); lightChips();
       pg.extra = (f.kami && f.kami[p] && f.kami[p].notes) || [];
       bindPage(pg);
       await renderPage(pg);
@@ -499,7 +636,17 @@ async function openStudent(i, filePath) {
   renderTools();
 }
 $('#paper').addEventListener('click', e => {
+  if (!e.target.closest('#lmenu, [data-lmenu]') && $('#lmenu')) $('#lmenu').remove();
+  const lm = e.target.closest('[data-lm]'); if (lm) return lightMenuDo(lm.dataset.lm);
+  const lc = e.target.closest('.lchip'); if (lc) return lightChipClick(e, pages.find(q => q.chip === lc));
   if (e.target.closest('#arrangeBtn')) return openArrange();
+  const mvf = e.target.closest('[data-mvfile]'); if (mvf) return openMoveFile(batch.students[cur], mvf.dataset.mvfile);
+  if (e.target.closest('#addFileBtn')) return pickAdd(batch.students[cur]);
+  const ra = e.target.closest('[data-rmadd]');
+  if (ra) {   // two clicks, so a stray click can't throw a file away
+    if (!ra.dataset.armed) { ra.dataset.armed = '1'; ra.textContent = 'Click again to remove'; setTimeout(() => { if (ra.isConnected) { delete ra.dataset.armed; ra.textContent = 'Remove'; } }, 4000); return; }
+    return removeAdded(batch.students[cur], ra.dataset.rmadd);
+  }
   const io = e.target.closest('[data-inout]');
   if (io) {
     const st = batch.students[cur], d = layoutOf(st)[+io.dataset.inout];
@@ -525,14 +672,40 @@ function openArrange() {
   const st = batch.students[cur];
   const start = layoutOf(st).map(d => ({ name: d.name, file: d.file, pages: d.pages.map(x => x.slice()), out: docAuto(st, d) ? null : !docIn(st, d) }));
   let L = JSON.parse(JSON.stringify(start)), tray = [];
+  const lp = { ...(batch.lightPg || {}) }, lit = lightLive(st);   // page lighting choices, kept on Save
   const nameOf = path => (fileByPath(st, path) || { name: path }).name;
-  let drag = null;
+  let drag = null, sel = new Set(), anchor = null, size = +store.get('gs.arrsize', 1);
+  const lists = () => L.map(d => d.pages).concat([tray]);
+  const listOf = w => w === 'tray' ? tray : L[+w].pages;
+  const itemAt = el => listOf(el.dataset.where)[+el.dataset.i];
+  const picked = () => lists().flatMap(l => l.filter(it => sel.has(it)));
+  const many = st.files.filter(viewable).length > 1;
+  // The order of whole files on screen: Word and other files (by 'f:<path>') among the files of pages (the objects in L).
+  const seqNow = () => fileSeq(st).map(it => it.f ? 'f:' + it.f.path : L[it.di]);
+  let strip = seqNow(), everyone = false;
+  const seqDefault = () => { const keep = st.forder; st.forder = null; const v = fileSeq(st).map(it => it.f ? 'f:' + it.f.path : L[it.di]); st.forder = keep; return v; };
+  const cardName = id => { const f = fileByPath(st, id.slice(2)); return f ? f.name : id.slice(2); };
+  const kindOf = id => { const f = fileByPath(st, id.slice(2)); return !f ? '' : f.kind === 'docx' ? 'Word' : f.kind === 'text' ? 'Text' : 'File'; };
+  const drawStrip = () => {
+    strip = strip.filter(x => typeof x === 'string' || L.includes(x));
+    for (const d of L) if (!strip.includes(d)) strip.push(d);
+    const el = $('#arrSeq'); if (!el) return;
+    el.hidden = !strip.some(x => typeof x === 'string');
+    el.innerHTML = '<div class="aseqh"><b>Order of files</b><span class="muted">Word and other files sit among the page files in this order.</span><span class="sp"></span>' +
+      '<label class="chk" style="margin:0;font-size:13px"><input type="checkbox" data-sqall' + (everyone ? ' checked' : '') + '> Use this order for every student</label></div>' +
+      '<div class="aseqr">' + strip.map((x, k) => '<span class="aseqc' + (typeof x === 'string' ? ' card' : '') + '"><b>' + (k + 1) + '</b> ' + esc(typeof x === 'string' ? cardName(x) : x.name) + '<span class="muted">' + (typeof x === 'string' ? kindOf(x) : x.pages.length + (x.pages.length === 1 ? ' page' : ' pages')) + '</span>' +
+        '<button data-sq="' + k + ':-1" title="Earlier"' + (k ? '' : ' disabled') + '>←</button><button data-sq="' + k + ':1" title="Later"' + (k < strip.length - 1 ? '' : ' disabled') + '>→</button></span>').join('') + '</div>';
+  };
   const render = () => {
     const col = (items, where, head) => '<div class="acol" data-where="' + where + '">' + head +
-      '<div class="adrop" data-where="' + where + '">' + items.map(([path, p], i) =>
-        '<div class="ath" draggable="true" data-where="' + where + '" data-i="' + i + '"><img data-th="' + esc(path) + '|' + p + '" alt=""><div class="cap">p. ' + (p + 1) + (st.files.filter(viewable).length > 1 ? ' · ' + esc(nameOf(path)) : '') + '</div>' +
-        (where === 'tray' ? '' : '<button class="rm" data-rm="' + where + ':' + i + '" title="Take this page out" aria-label="Take this page out">×</button>') + '</div>').join('') +
+      '<div class="adrop" data-where="' + where + '">' + items.map(([path, p], i) => {
+        const f = fileByPath(st, path), off = lit && f && !pageLit(st, f, p, lp);
+        return '<div class="ath" draggable="true" data-where="' + where + '" data-i="' + i + '"><img data-th="' + esc(path) + '|' + p + '" alt=""><div class="cap">' + (where === 'tray' ? '' : '<b>' + (i + 1) + '</b> · ') + 'p. ' + (p + 1) + (many ? ' · ' + esc(nameOf(path)) : '') + '</div>' +
+          (off ? '<span class="aoff">☀ off</span>' : '') +
+          (where === 'tray' ? '' : '<button class="rm" data-rm="' + where + ':' + i + '" title="Take this page out" aria-label="Take this page out">×</button>') + '</div>';
+      }).join('') +
       (items.length ? '' : '<div class="empty">' + (where === 'tray' ? 'Pages you take out land here.' : 'Drag pages here') + '</div>') + '</div></div>';
+    $('#arrBody').style.setProperty('--aw', ([90, 130, 190][size] || 130) + 'px');
     $('#arrBody').innerHTML = '<div class="acols">' + L.map((d, di) => col(d.pages, di,
       '<div class="ahead"><input type="text" data-name="' + di + '" value="' + esc(d.name) + '" aria-label="File name">' +
       '<label class="chk" style="margin:4px 0 0;font-size:13px"><input type="checkbox" data-in="' + di + '"' + (docIn(st, d) ? ' checked' : '') + '> Send back to the student</label>' +
@@ -542,19 +715,54 @@ function openArrange() {
       const [path, p] = [img.dataset.th.slice(0, img.dataset.th.lastIndexOf('|')), +img.dataset.th.slice(img.dataset.th.lastIndexOf('|') + 1)];
       thumbFor(path, p).then(u => { img.src = u; });
     }
+    for (const b of document.querySelectorAll('#arrSize [data-asz]')) b.setAttribute('aria-pressed', +b.dataset.asz === size);
+    drawStrip(); drawSel();
   };
-  const listOf = w => w === 'tray' ? tray : L[+w].pages;
-  openDlg('<div class="bh"><h2>Arrange pages</h2><span class="muted">' + esc(st.key) + '</span><button class="icon" data-cancel aria-label="Close">✕</button></div>' +
+  // Selection only, in place, so a double-click still lands on the same page.
+  const drawSel = () => {
+    for (const el of $('#arrBody').querySelectorAll('.ath')) el.classList.toggle('sel', sel.has(itemAt(el)));
+    const n = sel.size;
+    $('#arrSelInfo').textContent = n ? n + (n === 1 ? ' page picked' : ' pages picked') : 'No pages picked';
+    $('#arrSelInfo').classList.toggle('on', !!n);
+    for (const b of document.querySelectorAll('#arrBar [data-mv],#arrBar [data-aout],#arrBar [data-alight]')) b.disabled = !n;
+  };
+  const move = how => {
+    if (!sel.size) return toast('Pick pages first');
+    for (const l of lists()) {
+      if (how === 'start' || how === 'end') { const a = l.filter(it => sel.has(it)), b = l.filter(it => !sel.has(it)); l.splice(0, l.length, ...(how === 'start' ? a.concat(b) : b.concat(a))); }
+      else if (how < 0) { for (let i = 1; i < l.length; i++) if (sel.has(l[i]) && !sel.has(l[i - 1])) [l[i - 1], l[i]] = [l[i], l[i - 1]]; }
+      else { for (let i = l.length - 2; i >= 0; i--) if (sel.has(l[i]) && !sel.has(l[i + 1])) [l[i], l[i + 1]] = [l[i + 1], l[i]]; }
+    }
+    render();
+  };
+  const takeOut = () => {
+    if (!sel.size) return toast('Pick pages first');
+    for (const d of L) { const out = d.pages.filter(it => sel.has(it)); d.pages = d.pages.filter(it => !sel.has(it)); tray.push(...out); }
+    render();
+  };
+  openDlg('<div class="bh"><h2>Arrange pages</h2><span class="muted">' + esc(shownName(st, cur)) + '</span><button class="icon" data-cancel aria-label="Close">✕</button></div>' +
+    '<div class="arrbar" id="arrBar"><span class="seg" id="arrSize"><button data-asz="0">S</button><button data-asz="1">M</button><button data-asz="2">L</button></span>' +
+      '<button class="btn sm" data-mv="start" title="Move the picked pages to the start of their file">⇤ To start</button><button class="btn sm" data-mv="-1" title="Move the picked pages one place earlier (← key)">← Earlier</button>' +
+      '<button class="btn sm" data-mv="1" title="Move the picked pages one place later (→ key)">Later →</button><button class="btn sm" data-mv="end" title="Move the picked pages to the end of their file">To end ⇥</button>' +
+      '<button class="btn sm" data-aout title="Take the picked pages out (Delete key)">Take out</button>' +
+      (lit ? '<button class="btn sm" data-alight title="Turn lighting off or on for the picked pages">☀ Lighting on/off</button>' : '') +
+      '<span class="sp"></span><span id="arrSelInfo"></span></div>' +
+    '<div id="arrSeq" class="aseq" hidden></div>' +
+    '<p class="muted sphint" style="margin:8px 18px 0">Click a page to pick it, Shift-click to pick a run, ⌘/Ctrl-click to add one. Drag the picked pages, or use the buttons or the ← → keys. Double-click a page to see it big.</p>' +
     '<div class="bb" id="arrBody"></div>' +
     '<div class="bf" style="justify-content:space-between"><span style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" data-combine>Combine into one file</button><button class="btn" data-newfile>+ New file</button><button class="btn" data-reset>Back to how it was turned in</button></span>' +
     '<span style="display:flex;gap:8px"><button class="btn" data-cancel>Cancel</button><button class="btn primary" data-save>Save</button></span></div>');
+  const box = $('#dlgBox'); box.classList.add('arrbox');
   render();
-  const box = $('#dlgBox');
+  box.tabIndex = -1; box.focus();
   box.addEventListener('dragstart', e => {
     const t = e.target.closest('.ath'); if (!t) return;
-    drag = { from: t.dataset.where, i: +t.dataset.i };
+    const it = itemAt(t);
+    if (!sel.has(it)) { sel = new Set([it]); anchor = it; drawSel(); }
+    drag = { item: it };
     e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', 'page');
-    setTimeout(() => t.classList.add('dragging'), 0);
+    if (sel.size > 1) { const gh = document.createElement('div'); gh.className = 'spghost'; gh.textContent = sel.size + ' pages'; document.body.appendChild(gh); e.dataTransfer.setDragImage(gh, 20, 20); setTimeout(() => gh.remove(), 0); }
+    setTimeout(() => { for (const el of box.querySelectorAll('.ath.sel')) el.classList.add('dragging'); }, 0);
   });
   box.addEventListener('dragend', () => { drag = null; for (const x of box.querySelectorAll('.dragging,.ins,.insEnd')) x.classList.remove('dragging', 'ins', 'insEnd'); });
   const dropIndex = (zone, e) => {
@@ -576,19 +784,49 @@ function openArrange() {
   box.addEventListener('drop', e => {
     const zone = e.target.closest('.adrop'); if (!zone || !drag) return;
     e.preventDefault();
-    let k = dropIndex(zone, e);
-    const src = listOf(drag.from), dst = listOf(zone.dataset.where);
-    const [item] = src.splice(drag.i, 1);
-    if (src === dst && drag.i < k) k--;
-    dst.splice(k, 0, item);
+    const dst = listOf(zone.dataset.where), k = dropIndex(zone, e), moving = picked();
+    // Land in front of the first page at the drop spot that isn't itself moving.
+    let before = null; for (let j = k; j < dst.length; j++) if (!sel.has(dst[j])) { before = dst[j]; break; }
+    for (const l of lists()) for (let j = l.length - 1; j >= 0; j--) if (sel.has(l[j])) l.splice(j, 1);
+    dst.splice(before ? dst.indexOf(before) : dst.length, 0, ...moving);
     drag = null; render();
   });
   box.addEventListener('input', e => { if (e.target.dataset.name != null) L[+e.target.dataset.name].name = e.target.value; });
-  box.addEventListener('change', e => { if (e.target.dataset.in != null) L[+e.target.dataset.in].out = !e.target.checked; });
+  box.addEventListener('change', e => { if (e.target.dataset.in != null) L[+e.target.dataset.in].out = !e.target.checked; if (e.target.dataset.sqall != null) everyone = e.target.checked; });
+  box.ondblclick = e => { const th = e.target.closest('.ath'); if (th && !e.target.closest('[data-rm]')) { const [path, p] = itemAt(th); bigPage(docMap.get(path), p, thumbCache.get(path + '|' + p)); } };
+  box.onkeydown = e => {
+    if (/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName) || !sel.size || $('#spBig')) return;
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); move(-1); }
+    else if (e.key === 'ArrowRight' || e.key === 'ArrowDown') { e.preventDefault(); move(1); }
+    else if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); takeOut(); }
+  };
   box.onclick = e => {
     if (e.target.closest('[data-cancel]')) return closeDlg();
+    if (e.target.closest('#spBig')) return splitZoomClose();
+    const sq = e.target.closest('[data-sq]');
+    if (sq) { const [k, dk] = sq.dataset.sq.split(':').map(Number), j = k + dk; if (j >= 0 && j < strip.length) [strip[k], strip[j]] = [strip[j], strip[k]]; return drawStrip(); }
     const rm = e.target.closest('[data-rm]');
     if (rm) { const [w, i] = rm.dataset.rm.split(':'); tray.push(...listOf(w).splice(+i, 1)); return render(); }
+    const th = e.target.closest('.ath');
+    if (th) {
+      const it = itemAt(th), l = listOf(th.dataset.where);
+      if (e.shiftKey && anchor && l.includes(anchor)) { const a = l.indexOf(anchor), b = l.indexOf(it); sel = new Set(l.slice(Math.min(a, b), Math.max(a, b) + 1)); }
+      else if (e.metaKey || e.ctrlKey) { sel.has(it) ? sel.delete(it) : sel.add(it); anchor = it; }
+      else { sel = new Set([it]); anchor = it; }
+      return drawSel();
+    }
+    if (e.target.closest('.adrop') && !e.target.closest('button,input')) { sel = new Set(); return drawSel(); }
+    const sz = e.target.closest('[data-asz]');
+    if (sz) { size = +sz.dataset.asz; store.set('gs.arrsize', size); return render(); }
+    const mv = e.target.closest('[data-mv]');
+    if (mv) return move(/^-?\d+$/.test(mv.dataset.mv) ? +mv.dataset.mv : mv.dataset.mv);
+    if (e.target.closest('[data-aout]')) return takeOut();
+    if (e.target.closest('[data-alight]')) {
+      const its = picked().map(([path, p]) => [fileByPath(st, path), p]).filter(([f]) => f);
+      const on = !its.every(([f, p]) => pageLit(st, f, p, lp));
+      for (const [f, p] of its) setPageLit(st, f, p, on, lp);
+      return render();
+    }
     const df = e.target.closest('[data-delfile]');
     if (df) { tray.push(...L[+df.dataset.delfile].pages); L.splice(+df.dataset.delfile, 1); return render(); }
     if (e.target.closest('[data-combine]')) {
@@ -599,13 +837,32 @@ function openArrange() {
       return render();
     }
     if (e.target.closest('[data-newfile]')) { L.push({ name: 'New file ' + (L.length + 1) + '.pdf', pages: [], out: false }); return render(); }
-    if (e.target.closest('[data-reset]')) { L = defaultLayout(st).map(d => ({ ...d, out: null })); tray = []; return render(); }
+    if (e.target.closest('[data-reset]')) { L = defaultLayout(st).map(d => ({ ...d, pages: d.pages.map(x => x.slice()), out: null })); tray = []; sel = new Set(); strip = seqDefault(); return render(); }
     if (e.target.closest('[data-save]')) {
+      drawStrip();
+      const inStrip = strip.filter(x => typeof x !== 'string' && x.pages.length);
+      L = inStrip.concat(L.filter(d => !inStrip.includes(d) && d.pages.length));
+      const ord = strip.filter(x => typeof x === 'string' || L.includes(x)).map(x => typeof x === 'string' ? x : 'd' + L.indexOf(x));
       L = L.filter(d => d.pages.length).map(d => ({ name: (d.name.trim() || 'File') .replace(/(\.pdf)?$/i, '.pdf'), file: d.file, pages: d.pages, out: d.out }));
       const def = defaultLayout(st);
       const same = L.length === def.length && L.every((d, k) => d.file === def[k].file && d.name === def[k].name && JSON.stringify(d.pages) === JSON.stringify(def[k].pages) && d.out == null);
       st.layout = same ? null : L.map(d => ({ ...d, out: d.out == null ? undefined : d.out }));
       if (st.layout) for (const d of st.layout) if (d.out === undefined) delete d.out;
+      const plain = fileSeq({ ...st, forder: null }).map(it => it.id);
+      st.forder = JSON.stringify(ord) === JSON.stringify(plain) ? null : ord;
+      if (everyone) {   // line the others up the same way, matching files by kind
+        const tmpl = fileSeq(st).map(it => seqSig(st, it));
+        let n = 0;
+        for (const o of batch.students) {
+          if (o === st) continue;
+          const used = new Set(), sq = fileSeq({ ...o, forder: null });
+          const at = it => { const sig = seqSig(o, it); for (let k = 0; k < tmpl.length; k++) if (tmpl[k] === sig && !used.has(k)) { used.add(k); return k; } return tmpl.length; };
+          const ranked = sq.map((it, k) => [at(it), k, it]).sort((a, b) => a[0] - b[0] || a[1] - b[1]).map(x => x[2].id);
+          o.forder = JSON.stringify(ranked) === JSON.stringify(sq.map(it => it.id)) ? null : ranked; n++;
+        }
+        toast('Same order for ' + (n + 1) + ' students');
+      }
+      batch.lightPg = lp;
       saveSoon(); closeDlg(); renderList(); openStudent(cur);
       toast('Saved. Export uses this order.');
     }
@@ -613,8 +870,10 @@ function openArrange() {
 }
 
 function fitScale(pg) {
-  const avail = $('#paper').clientWidth - 40;
-  return Math.max(0.3, Math.min(2.2, avail / (pg.W + pg.side))) * zoom;
+  const P = $('#paper');
+  let s = (P.clientWidth - 40) / (pg.W + pg.side);
+  if (disp.fit === 'page') s = Math.min(s, (P.clientHeight - 40) / pg.H);
+  return Math.max(0.3, Math.min(2.2, s)) * zoom;
 }
 async function renderPage(pg) {
   const s = fitScale(pg), dpr = window.devicePixelRatio || 1;
@@ -625,6 +884,7 @@ async function renderPage(pg) {
   const bctx = bmp.getContext('2d'); bctx.fillStyle = '#fff'; bctx.fillRect(0, 0, bmp.width, bmp.height);
   try { await pg.page.render({ canvasContext: bctx, viewport: vp, annotationMode: pdfjsLib.AnnotationMode.ENABLE }).promise; } catch (e) { if (e && e.name === 'RenderingCancelledException') return; }
   pg.bmp = bmp;
+  if (anonOn() && !pg.covers) pg.covers = await anonCovers(batch.students[cur], pg);
   const c = pg.canvas;
   c.width = Math.ceil((pg.W + pg.side) * s * dpr); c.height = Math.ceil(pg.H * s * dpr);
   c.style.width = (pg.W + pg.side) * s + 'px'; c.style.height = pg.H * s + 'px';
@@ -635,10 +895,14 @@ function draw(pg, live) {
   const c = pg.canvas, ctx = c.getContext('2d'), k = c.width / (pg.W + pg.side);
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
-  ctx.drawImage(pg.bmp, 0, 0, pg.bmp.width, pg.bmp.height, 0, 0, pg.W * k, pg.H * k);
+  const src = lightBmp(pg);
+  ctx.drawImage(src, 0, 0, src.width, src.height, 0, 0, pg.W * k, pg.H * k);
   ctx.setTransform(k, 0, 0, k, 0, 0);
-  const marks = pg.marks().concat(pg.extra || [], live || []);
+  const anon = anonOn() && batch.students[cur];
+  if (anon && pg.covers) { ctx.fillStyle = '#111'; for (const r of pg.covers) ctx.fillRect(r.x, r.y, r.w, r.h); }
+  const marks = pg.marks().concat(anon ? scrubMarks(pg.extra || [], anonRx(anon)) : pg.extra || [], live || [], pg.pending ? [pg.pending] : []);
   pg.boxes = drawMarks(ctx, marks, pg.W, pg.H, pg.side, { sel: selected && selected.page === pg ? selected.mark : null, editing: pg.editing });
+  if (pg.ghost) { const b = pg.ghost; ctx.save(); ctx.strokeStyle = '#1F6FB2'; ctx.setLineDash([4, 3]); ctx.lineWidth = 1; ctx.strokeRect(b.x, b.y, b.w, b.h); ctx.restore(); }
 }
 function redrawAll() { for (const pg of pages) draw(pg); }
 let resizeT;
@@ -662,9 +926,17 @@ function bindPage(pg) {
   const pt = e => { const r = c.getBoundingClientRect(); return [(e.clientX - r.left) / pg.s, (e.clientY - r.top) / pg.s]; };
   const onPage = (x, y) => x >= 0 && x <= pg.W && y >= 0 && y <= pg.H;
   let g = null;   // the gesture in progress
+  const onHandle = (x, y) => {
+    if (!selected || selected.page !== pg || selected.mark.t !== 'text') return false;
+    const h = textHandle(selected.mark, pg.W);
+    return Math.abs(x - h.x) < 6 && y >= h.top - 4 && y <= h.bottom + 4;
+  };
   c.addEventListener('pointerdown', e => {
     if (e.button !== 0) return;
     commitEditors();
+    // Clicking the paper leaves the score or comment box, so the arrow keys move between students again.
+    const ae = document.activeElement;
+    if (ae && /^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName) && !pg.wrap.contains(ae)) ae.blur();
     const [x, y] = pt(e);
     // A comment box in the margin always opens for editing, whatever the tool.
     const box = (pg.boxes || []).find(b => x >= b.x && x <= b.x + b.w && y >= b.y && y <= b.y + b.h);
@@ -680,11 +952,10 @@ function bindPage(pg) {
     else if (tool === 'text') {
       const hit = hitMark(pg, x, y, 3);
       if (hit && hit.t === 'text') editText(pg, hit);
-      else { snap(pg); const m = { t: 'text', color: COLORS[inkColor], x: r1(x), y: r1(y - 7), size: 14, text: '' }; pg.marks().push(m); editText(pg, m, true); }
-    } else if (tool === 'note') {
-      const m = { t: 'note', color: COLORS[inkColor], ax: r1(x), ay: r1(y), text: '' };
-      openNote(pg, m, true);
-    } else if (tool === 'select') {
+      else g = { text: true, x0: x, y0: y, x1: x };   // click for a box, or drag across to set its width
+    } else if (tool === 'note') g = { note: true, x0: x, y0: y, m: null };   // click a point, or drag over words to highlight them
+    else if (tool === 'select') {
+      if (onHandle(x, y)) { g = { resize: selected.mark, moved: false }; return; }
       const hit = hitMark(pg, x, y, 4);
       selected = hit ? { page: pg, mark: hit } : null;
       redrawAll();
@@ -692,9 +963,23 @@ function bindPage(pg) {
     }
   });
   c.addEventListener('pointermove', e => {
-    if (!g) { if (tool === 'select') { const [x, y] = pt(e); c.style.cursor = hitMark(pg, x, y, 4) ? 'move' : 'default'; } return; }
+    if (!g) { if (tool === 'select') { const [x, y] = pt(e); c.style.cursor = onHandle(x, y) ? 'ew-resize' : hitMark(pg, x, y, 4) ? 'move' : 'default'; } return; }
     const [x, y] = pt(e);
-    if (g.m && g.m.t === 'pen') {
+    if (g.text) {
+      g.x1 = clamp(x, 0, pg.W);
+      const w = Math.abs(g.x1 - g.x0);
+      pg.ghost = w > 8 ? { x: Math.min(g.x0, g.x1), y: g.y0 - disp.tsize * 0.65, w, h: disp.tsize * 1.3 } : null;
+      draw(pg);
+    } else if (g.note) {
+      const x1 = clamp(x, 0, pg.W), y1 = clamp(y, 0, pg.H);
+      if (!g.m && Math.hypot(x1 - g.x0, y1 - g.y0) < 5) return;
+      g.m = { t: 'hl', color: HL[hlColor], x: Math.min(g.x0, x1), y: Math.min(g.y0, y1), w: Math.abs(x1 - g.x0), h: Math.abs(y1 - g.y0) };
+      draw(pg, [g.m]);
+    } else if (g.resize) {
+      if (!g.moved) { snap(pg); g.moved = true; }
+      g.resize.bw = r1(clamp(x - g.resize.x, 24, pg.W - g.resize.x - 6));
+      draw(pg);
+    } else if (g.m && g.m.t === 'pen') {
       const p = g.m.pts, last = p[p.length - 1];
       if (Math.hypot(x - last[0], y - last[1]) > 0.7) p.push([r1(clamp(x, 0, pg.W)), r1(clamp(y, 0, pg.H))]);
       draw(pg, [g.m]);
@@ -706,11 +991,29 @@ function bindPage(pg) {
     else if (g.move) {
       const dx = x - g.x, dy = y - g.y;
       if (!g.moved) { if (Math.hypot(dx, dy) < 1.5) return; snap(pg); g.moved = true; }
-      moveMark(g.move, dx, dy); g.x = x; g.y = y; draw(pg);
+      moveMark(g.move, dx, dy); if (g.move.t === 'text') keepOnPage(g.move, pg.W, pg.H); g.x = x; g.y = y; draw(pg);
     }
   });
   const end = () => {
     if (!g) return;
+    if (g.text) {
+      pg.ghost = null;
+      const w = Math.abs(g.x1 - g.x0), m = { t: 'text', color: COLORS[inkColor], x: r1(w > 24 ? Math.min(g.x0, g.x1) : Math.min(g.x0, pg.W - 106)), y: r1(g.y0 - disp.tsize / 2), size: disp.tsize, text: '' };
+      if (w > 24) m.bw = r1(w);
+      keepOnPage(m, pg.W, pg.H);
+      g = null; snap(pg); pg.marks().push(m); editText(pg, m, true);
+      return;
+    }
+    if (g.note) {
+      let m;
+      if (g.m && g.m.w >= 4) {
+        const h = Math.max(6, g.m.h), hl = { x: r1(g.m.x), y: r1(g.m.y - (h - g.m.h) / 2), w: r1(g.m.w), h: r1(h) };
+        m = { t: 'note', color: COLORS[inkColor], ax: r1(hl.x + hl.w), ay: r1(hl.y + hl.h / 2), hl, hc: HL[hlColor], text: '' };
+      } else m = { t: 'note', color: COLORS[inkColor], ax: r1(g.x0), ay: r1(g.y0), text: '' };
+      g = null; openNote(pg, m, true);
+      return;
+    }
+    if (g.resize) { const m = g.resize; if (g.moved) { keepOnPage(m, pg.W, pg.H); changed(pg); } g = null; return; }
     if (g.m && g.m.t === 'pen') { snap(pg); pg.marks().push(g.m); changed(pg); }
     else if (g.m && g.m.t === 'oval') {
       if (g.m.w >= 6 && g.m.h >= 6) { for (const k of ['x', 'y', 'w', 'h']) g.m[k] = r1(g.m[k]); snap(pg); pg.marks().push(g.m); changed(pg); }
@@ -740,7 +1043,7 @@ const r1 = v => Math.round(v * 10) / 10;
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 function moveMark(m, dx, dy) {
   if (m.t === 'pen') m.pts = m.pts.map(([x, y]) => [r1(x + dx), r1(y + dy)]);
-  else if (m.t === 'note') { m.ax = r1(m.ax + dx); m.ay = r1(m.ay + dy); }
+  else if (m.t === 'note') { m.ax = r1(m.ax + dx); m.ay = r1(m.ay + dy); if (m.hl) m.hl = { ...m.hl, x: r1(m.hl.x + dx), y: r1(m.hl.y + dy) }; }
   else { m.x = r1(m.x + dx); m.y = r1(m.y + dy); }
 }
 function eraseAt(pg, x, y, g) {
@@ -765,18 +1068,42 @@ function editText(pg, m, isNew) {
   const ta = document.createElement('textarea');
   ta.className = 'ed'; ta.value = m.text;
   const s = pg.s;
-  Object.assign(ta.style, { left: m.x * s + 'px', top: m.y * s + 'px', fontSize: m.size * s + 'px', color: m.color, width: Math.max(60, (pg.W - m.x - 6) * s) + 'px' });
-  const fit = () => { ta.style.height = '0'; ta.style.height = Math.max(m.size * 1.3 * s, ta.scrollHeight) + 'px'; };
-  pg.wrap.appendChild(ta); fit(); ta.focus();
+  const hd = document.createElement('div'); hd.className = 'edh'; hd.title = 'Drag to set where the text wraps';
+  const bar = document.createElement('div'); bar.className = 'edbar';
+  const fit = () => {
+    const L = textLayout(m, pg.W);
+    Object.assign(ta.style, { left: m.x * s + 'px', top: m.y * s + 'px', fontSize: m.size * s + 'px', color: m.color, width: L.maxW * s + 'px' });
+    ta.style.height = '0'; ta.style.height = Math.max(m.size * 1.3 * s, ta.scrollHeight) + 'px';
+    Object.assign(hd.style, { left: (m.x + L.maxW) * s + 'px', top: m.y * s + Math.min(ta.offsetHeight / 2, 18) + 'px' });
+    Object.assign(bar.style, { left: m.x * s + 'px', top: m.y * s + 'px' });
+    bar.innerHTML = '<button data-sz="-1" title="Smaller text">A−</button><b>' + m.size + '</b><button data-sz="1" title="Bigger text">A+</button>' +
+      '<span style="width:1px;height:16px;background:rgba(255,255,255,.25);margin:0 3px"></span><button data-full class="' + (m.bw ? '' : 'on') + '" title="Wrap at the edge of the page">Page width</button>';
+  };
+  pg.wrap.append(ta, hd, bar); fit(); ta.focus();
   if (!isNew) snap(pg);
   ta.addEventListener('input', fit);
+  hd.addEventListener('pointerdown', e => {
+    e.preventDefault(); e.stopPropagation(); hd.setPointerCapture(e.pointerId);
+    const r = pg.canvas.getBoundingClientRect();
+    const mv = ev => { m.bw = r1(clamp((ev.clientX - r.left) / s - m.x, 24, pg.W - m.x - 6)); fit(); };
+    const up = () => { hd.removeEventListener('pointermove', mv); hd.removeEventListener('pointerup', up); hd.removeEventListener('pointercancel', up); ta.focus(); };
+    hd.addEventListener('pointermove', mv); hd.addEventListener('pointerup', up); hd.addEventListener('pointercancel', up);
+  });
+  bar.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); });
+  bar.addEventListener('click', e => {
+    const z = e.target.closest('[data-sz]');
+    if (z) { m.size = clamp(m.size + 2 * z.dataset.sz, 8, 40); disp.tsize = m.size; store.set('gs.disp', disp); }   // the next new box uses this size too
+    if (e.target.closest('[data-full]')) delete m.bw;
+    fit(); ta.focus();
+  });
   ta.addEventListener('keydown', e => {
     if (e.key === 'Escape' || (e.key === 'Enter' && (e.metaKey || e.ctrlKey))) { e.preventDefault(); commitEditors(); }
     e.stopPropagation();
   });
   const me = { commit() {
     m.text = ta.value.replace(/\s+$/, '');
-    ta.remove(); pg.editing = null;
+    ta.remove(); hd.remove(); bar.remove(); pg.editing = null;
+    keepOnPage(m, pg.W, pg.H);
     if (!m.text) { const a = pg.marks(), i = a.indexOf(m); if (i >= 0) a.splice(i, 1); if (isNew) undoStack.pop(); }
     changed(pg); renderTools();
   } };
@@ -802,17 +1129,19 @@ function openNote(pg, m, isNew) {
     pop.querySelector('[data-bank]').hidden = !bank.length;
   };
   chips();
-  // place next to the spot, inside the page frame
-  const left = Math.min(Math.max(0, m.ax * s + 12), Math.max(0, (pg.W + pg.side) * s - 300));
-  pop.style.left = left + 'px'; pop.style.top = Math.max(0, m.ay * s + 12) + 'px';
+  // place next to the spot (below a highlight), inside the page frame
+  const left = Math.min(Math.max(0, (m.hl ? m.hl.x : m.ax) * s + 12), Math.max(0, (pg.W + pg.side) * s - 300));
+  pop.style.left = left + 'px'; pop.style.top = Math.max(0, (m.hl ? m.hl.y + m.hl.h : m.ay) * s + 12) + 'px';
   pg.wrap.appendChild(pop);
   ta.focus();
+  if (isNew) { pg.pending = m; draw(pg); }
   const close = save => {
     pop.remove(); activeEditor = null;
+    if (pg.pending === m) pg.pending = null;
     const text = ta.value.trim();
-    if (!save) return;
+    if (!save) { draw(pg); return; }
     const a = pg.marks(), i = a.indexOf(m);
-    if (!text) { if (i >= 0) { snap(pg); a.splice(i, 1); changed(pg); } return; }
+    if (!text) { if (i >= 0) { snap(pg); a.splice(i, 1); changed(pg); } else draw(pg); return; }
     if (text === m.text && i >= 0) return;
     snap(pg); m.text = text; if (i < 0) a.push(m); changed(pg);
   };
@@ -872,7 +1201,7 @@ $('#tools').addEventListener('click', e => {
   const w = e.target.closest('[data-w]'); if (w) { penW = +w.dataset.w; store.set('gs.penW', penW); renderTools(); return; }
   if (e.target.closest('#undoBtn')) { undo(); return; }
   const z = e.target.closest('[data-z]');
-  if (z) { zoom = clamp(Math.round((zoom + (+z.dataset.z) * 0.15) * 100) / 100, 0.5, 2.5); renderTools(); pages.forEach(renderPage); }
+  if (z) { zoom = clamp(Math.round((zoom + (+z.dataset.z) * 0.15) * 100) / 100, 0.5, 2.5); store.set('gs.zoom', zoom); renderTools(); pages.forEach(renderPage); }
 });
 function setTool(t) { commitEditors(); tool = t; if (t !== 'select') { selected = null; redrawAll(); } renderTools(); }
 function recolorSelected(col) {
@@ -883,21 +1212,37 @@ function recolorSelected(col) {
 /* ---------------- student list ---------------- */
 // Counts as marked: marks made here, marks already on the file (Kami), a grade found in its text, or a grade boxed by hand.
 const fileMarked = f => viewable(f) && (Object.values(f.marks).some(a => a.length) || (f.kami && Object.keys(f.kami).length > 0) || !!(f.scan && f.scan.found && f.scan.found.length) || !!f.hand);
-function hasMarks(st) { return st.files.some(fileMarked); }
+function hasMarks(st) { return st.files.some(f => fileMarked(f) || f.edited); }
 function renderList() {
   if (!batch) return;
-  $('#stuList').innerHTML = batch.students.map((st, i) => {
+  renderAnonHead();
+  const order = anonOn() ? anonOrder() : batch.students.map((_, i) => i);
+  $('#stuList').innerHTML = order.map((i, pos) => { const st = batch.students[i];
     const g = gradeOf(st);
     const val = g.total != null ? g.total : g.pct != null ? g.pct + '%' : null;
     const right = val != null ? '<span class="sc" title="' + (g.paper ? 'Read from the paper' : g.done ? 'Scored' : 'Partly scored') + '"' + (g.paper ? ' style="color:var(--muted);font-weight:600"' : g.done ? '' : ' style="color:var(--warn)"') + '>' + fmtNum(g.total != null ? g.total : g.pct) + (g.total == null ? '%' : '') + '</span>'
       : st.foundCount > 1 ? '<span class="sc" style="color:var(--warn)" title="More than one grade found on the paper. Check the Grade sheet.">?</span>'
       : hasMarks(st) ? '<span class="dot" title="Marked"></span>' : '';
-    return '<button class="stu' + (i === cur ? ' on' : '') + (st.files.length ? '' : ' empty') + '" data-i="' + i + '"><span class="num">' + (i + 1) + '</span><span class="nm" title="' + esc(st.key) + '">' + esc(st.key) + '</span>' + right + '</button>';
+    const nAdd = st.files.filter(f => f.added).length;
+    return '<button class="stu' + (i === cur ? ' on' : '') + (st.files.length ? '' : ' empty') + '" data-i="' + i + '"><span class="num">' + (pos + 1) + '</span><span class="nm" title="' + esc(shownName(st, i)) + '">' + esc(shownName(st, i)) + '</span>' +
+      '<span style="display:inline-flex;align-items:center;gap:4px">' + (nAdd ? '<span class="add" title="' + nAdd + (nAdd === 1 ? ' file' : ' files') + ' added by you">+' + nAdd + '</span>' : '') + right + '</span></button>';
   }).join('');
   const on = $('#stuList .on'); if (on) on.scrollIntoView({ block: 'nearest' });
-  const nExp = batch.students.reduce((a, st) => a + st.files.filter(fileMarked).length, 0);
+  const nExp = exportPlan(true).length;
   $('#exportBtn').textContent = 'Export marked' + (nExp ? ' (' + nExp + ')' : '');
+  renderProg();
 }
+function renderProg() {
+  const N = batch.students.length, n = batch.students.filter(s => gradeOf(s).done).length;
+  $('#progS').innerHTML = '<div class="ph">' + n + ' of ' + N + ' <span>scored</span></div><div class="pb"><i style="width:' + (N ? 100 * n / N : 0) + '%"></i></div>' +
+    (n < N ? '<button class="btn sm" id="nextUn" title="Opens the next student without a full score">Next unscored <kbd>N</kbd></button>' : '<div class="muted" style="font-size:13px;margin-bottom:6px">Everyone has a score.</div>');
+}
+function nextUnscored() {
+  const N = batch.students.length, o = anonOn() ? anonOrder() : batch.students.map((_, i) => i), p = o.indexOf(cur);
+  for (let k = 1; k <= N; k++) { const i = o[(p + k) % N]; if (!gradeOf(batch.students[i]).done) return openStudent(i); }
+  toast('Everyone has a score');
+}
+$('#progS').addEventListener('click', e => { if (e.target.closest('#nextUn')) nextUnscored(); });
 $('#stuList').addEventListener('click', e => { const b = e.target.closest('.stu'); if (b) openStudent(+b.dataset.i); });
 
 /* ---------------- grade panel ---------------- */
@@ -906,18 +1251,33 @@ function renderGrade() {
   let h = '';
   if (setup.mode === 'rubric') {
     h += '<h3>Rubric <button class="link" id="editRubric" style="font-size:12px;text-transform:none;letter-spacing:0">Edit</button></h3>';
-    h += setup.criteria.map((c, i) => '<div class="crit"><div class="cn">' + esc(c) + '</div><div class="scores" data-c="' + i + '">' +
+    h += setup.criteria.map((c, i) => '<div class="crit"><div class="cn"><span>' + esc(c) + '</span><em>' + (g.rubric[i] == null ? '' : fmtNum(g.rubric[i]) + ' / 4') + '</em></div><div class="scores" data-c="' + i + '">' +
       RUBRIC_STEPS.map(v => '<button class="' + (v % 1 ? 'half' : '') + '" data-v="' + v + '" aria-pressed="' + (g.rubric[i] === v) + '">' + v + '</button>').join('') + '</div></div>').join('');
   } else {
     h += '<h3>Score <button class="link" id="editRubric" style="font-size:12px;text-transform:none;letter-spacing:0">Edit</button></h3>' +
       '<div class="pts"><input type="number" step="0.5" min="0" id="ptsIn" value="' + esc(g.points) + '" aria-label="Points"><span class="muted">out of ' + esc(setup.outOf) + '</span></div>';
   }
-  h += '<div class="total"><b>' + (gr.total == null ? '–' : fmtNum(gr.total)) + '</b><span>/ ' + maxPoints() + '</span><span>' + (gr.pct == null ? '' : '= ' + fmtPct(gr.pct)) + '</span></div>';
+  h += '<div class="total">' + totalHtml(st) + '</div>';
   h += '<div class="cmt"><h3 style="margin-bottom:6px">Comment for ManageBac</h3><textarea id="cmtIn" placeholder="Optional. Shows in the Grades list so you can copy it.">' + esc(g.comment) + '</textarea></div>';
-  { const rd = store.get(refKey(), null); h += '<div class="refl">' + (rd ? 'Beside every paper: <b>' + esc(rd.name) + '</b> <button class="link" data-refdoc>Change</button> · <button class="link" data-refdel>Remove</button>' : '<button class="link" data-refdoc>Keep a Word doc beside every paper…</button>') + '</div>'; }
+  { const rd = store.get(refKey(), null), items = (rd ? ['<b>' + esc(rd.name) + '</b> <button class="link" data-refdel>Remove</button>'] : []).concat(refFiles.map(r => '<b>' + esc(r.name) + '</b> <button class="link" data-refrm="' + esc(r.path) + '">Remove</button>'));
+    h += '<div class="refl">' + (items.length ? 'With every paper: ' + items.join(' · ') + '<br>' : '') + '<button class="link" data-refdoc>' + (items.length ? '+ Add another file for everyone…' : 'Add a reading or file for everyone…') + '</button></div>'; }
   h += '<div class="nav"><button class="btn" id="prevBtn" ' + (cur ? '' : 'disabled') + '>◀ Previous</button><button class="btn primary" id="nextBtn" ' + (cur < batch.students.length - 1 ? '' : 'disabled') + '>Next ▶</button></div>';
-  h += '<div class="hint">Keys: ← → students · V P H O T C K E tools · Space play · J L back/ahead 5s · ⌘Z undo · Delete removes the selected mark</div>';
+  h += '<div class="hint">Keys: <kbd>←</kbd> <kbd>→</kbd> or <kbd>↑</kbd> <kbd>↓</kbd> students · <kbd>N</kbd> next unscored · <kbd>=</kbd> calculator · V P H O T C K E tools · Space play · J L back/ahead 5s · ⌘Z undo · Delete removes the selected mark</div>';
   $('#grade').innerHTML = h;
+}
+function totalHtml(st) {
+  const gr = gradeOf(st), own = ownGrade(st);
+  let h = '<b>' + (gr.total == null ? '–' : fmtNum(gr.total)) + '</b><span>/ ' + maxPoints() + '</span><span class="pc">' + (gr.pct == null ? '' : fmtPct(gr.pct)) + '</span>';
+  if (gr.paper) h += '<span style="width:100%;font-size:12.5px">From the paper (Grade sheet)</span>';
+  const ps = paperScore(st);
+  if (own.total != null && ps != null && Math.abs(ps - own.total) > 0.001) h += '<span class="sc-warn" style="width:100%">The paper says ' + fmtNum(ps) + '</span>';
+  return h;
+}
+// The score on the paper: read from typed text, or typed by her on the Grade sheet from the picture.
+function paperScore(st) {
+  if (st.found && st.found.found && st.found.score != null) return st.found.score;
+  const ty = st.grade.sheet;
+  return ty !== '' && ty != null && !isNaN(+ty) ? +ty : null;
 }
 $('#grade').addEventListener('click', e => {
   const b = e.target.closest('.scores button');
@@ -926,10 +1286,11 @@ $('#grade').addEventListener('click', e => {
     st.grade.rubric[i] = st.grade.rubric[i] === v ? null : v;
     renderGrade(); renderList(); saveSoon(); return;
   }
-  if (e.target.closest('#prevBtn')) openStudent(cur - 1);
-  if (e.target.closest('#nextBtn')) openStudent(cur + 1);
+  if (e.target.closest('#prevBtn')) stepStudent(-1);
+  if (e.target.closest('#nextBtn')) stepStudent(1);
   if (e.target.closest('#editRubric')) openSetup();
-  if (e.target.closest('[data-refdoc]')) pickRefDoc();
+  if (e.target.closest('[data-refdoc]')) pickRefs();
+  { const rr = e.target.closest('[data-refrm]'); if (rr) dropRef(rr.dataset.refrm); }
   if (e.target.closest('[data-refdel]')) { store.del(refKey()); renderGrade(); openStudent(cur); }
 });
 $('#grade').addEventListener('input', e => {
@@ -937,9 +1298,11 @@ $('#grade').addEventListener('input', e => {
   if (e.target.id === 'cmtIn') { st.grade.comment = e.target.value; saveSoon(); }
   if (e.target.id === 'ptsIn') {
     st.grade.points = e.target.value; saveSoon(); renderList();
-    const gr = gradeOf(st);
-    $('#grade .total').innerHTML = '<b>' + (gr.total == null ? '–' : fmtNum(gr.total)) + '</b><span>/ ' + maxPoints() + '</span><span>' + (gr.pct == null ? '' : '= ' + fmtPct(gr.pct)) + '</span>';
+    $('#grade .total').innerHTML = totalHtml(st);
   }
+});
+$('#grade').addEventListener('keydown', e => {   // Enter or Escape leaves the box, so the arrow keys go back to moving between students
+  if ((e.target.id === 'ptsIn' && e.key === 'Enter') || (e.target.id === 'cmtIn' && e.key === 'Escape')) { e.preventDefault(); e.target.blur(); }
 });
 
 /* ---------------- dialogs ---------------- */
@@ -963,7 +1326,8 @@ function openSetup() {
     return h + '</div><p class="muted" style="font-size:12.5px;margin:6px 0 0">Leave a row blank if you never use it. Half points land between two rows.</p>';
   };
   const body = () => {
-    let h = '<div class="field"><label>How do you score this one?</label><span class="seg"><button data-m="rubric" aria-pressed="' + (draft.mode === 'rubric') + '">Rubric, 4 to 1 per row</button><button data-m="points" aria-pressed="' + (draft.mode === 'points') + '">Plain points</button></span></div>';
+    let h = '<div class="field"><label>How do you score this one?</label><span class="seg"><button data-m="points" aria-pressed="' + (draft.mode === 'points') + '">Just the total</button><button data-m="rubric" aria-pressed="' + (draft.mode === 'rubric') + '">Rubric rows, 1 to 4</button></span>' +
+      '<span class="muted" style="font-size:12.5px;margin-top:4px">Grading right on your own rubric? Use Just the total: one score box, and the Grades list and percents still work.</span></div>';
     if (draft.mode === 'rubric') {
       h += '<div class="field"><label>Rubric rows</label>' + draft.criteria.map((c, i) => '<div class="critrow"><input type="text" data-ci="' + i + '" value="' + esc(c) + '">' + (draft.criteria.length > 1 ? '<button class="btn sm" data-rm="' + i + '" aria-label="Remove row">×</button>' : '') + '</div>').join('') +
         (draft.criteria.length < 6 ? '<div><button class="btn sm" data-add>+ Add a row</button></div>' : '') + '</div>';
@@ -972,10 +1336,10 @@ function openSetup() {
     }
     h += '<div class="field"><label>Grading scale</label><span style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn sm" data-preset="usual">12 = 100, 11 = 95, 10 = 91…</button><button class="btn sm" data-preset="fives">Steps of 5 (9 = 85%)</button><button class="btn sm" data-preset="none">No scale</button></span>' + scaleRows() + '</div>';
     const rp = newPage === undefined ? draft.rubricPage : newPage;
-    h += '<div class="field"><label>Rubric page for every student</label><span class="muted" style="font-size:13px">Upload your blank rubric (PDF or picture) and it’s added to each student’s paper, so you can circle and type on it. It goes back with their file.</span>' +
-      '<span style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:4px"><button class="btn sm" data-rpup>' + (rp ? 'Replace…' : 'Upload rubric page…') + '</button>' +
+    h += '<div class="field"><label>Your rubric, for every student</label><span class="muted" style="font-size:13px">Bring in your rubric once and every student gets their own copy to grade on. A Word rubric (.docx or .docm) stays a Word file: type in it, check its boxes and shade its cells. A PDF or picture is added as a page you can mark up. Each copy goes back with that student’s work.</span>' +
+      '<span style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:4px"><button class="btn sm" data-rpup>' + (rp ? 'Replace…' : 'Bring in my rubric…') + '</button>' +
       (rp ? '<span style="font-size:13px;font-weight:600">' + esc(rp.name || 'Rubric page') + '</span><span class="seg"><button data-pos="end" aria-pressed="' + ((draft.rubricPos || 'end') === 'end') + '">After their work</button><button data-pos="start" aria-pressed="' + (draft.rubricPos === 'start') + '">Before</button></span><button class="link" data-rprm>Remove</button>' : '') +
-      '</span><input type="file" id="rpIn" accept=".pdf,.png,.jpg,.jpeg,application/pdf,image/png,image/jpeg" hidden></div>';
+      '</span><input type="file" id="rpIn" hidden></div>';
     h += '<p class="muted" style="font-size:13px;margin:0">Scores you already gave stay put if you rename rows.' + (batch && batch.assignment ? ' This setup is remembered for “' + esc(batch.assignment.name) + '”.' : '') + '</p>';
     return h;
   };
@@ -990,10 +1354,18 @@ function openSetup() {
     if (e.target.id !== 'rpIn' || !e.target.files[0]) return;
     const f = e.target.files[0], bytes = new Uint8Array(await f.arrayBuffer());
     try {
-      const pdf = isImg(f.name) ? await imageToPdf(bytes, f.name) : bytes;
-      await PDFLib.PDFDocument.load(pdf, { ignoreEncryption: true });
-      newPage = { bytes: pdf, name: f.name }; re();
-    } catch { toast('That file couldn’t be opened as a PDF or picture'); }
+      if (WORD_RX.test(f.name)) {
+        openWord(bytes);
+        newPage = { bytes, name: f.name };
+        if (!draft.rubricPos) draft.rubricPos = 'start';   // a Word rubric sits above their work unless she moves it
+      } else {
+        const pdf = isImg(f.name) ? await imageToPdf(bytes, f.name) : IMG_MORE.test(f.name) ? await anyImageToPdf(bytes) : bytes;
+        await PDFLib.PDFDocument.load(pdf, { ignoreEncryption: true });
+        newPage = { bytes: pdf, name: f.name };
+      }
+      if (draft.mode === 'rubric' && draft.criteria.every((c, i) => c === 'Criterion ' + (i + 1))) { draft.outOf = draft.criteria.length * 4; draft.mode = 'points'; }   // her rubric replaces the generic rows
+      re();
+    } catch { toast('That file couldn’t be opened as a Word file, PDF or picture'); }
   });
   box.addEventListener('click', e => {
     const m = e.target.closest('[data-m]'); if (m) { draft.mode = m.dataset.m; return re(); }
@@ -1033,14 +1405,20 @@ function openSetup() {
 const RUBRIC_NAME = 'Rubric page.pdf';
 const rubricBytes = () => { const rp = setup.rubricPage; if (!rp) return null; const b64 = store.get('gs.rp.' + rp.id, null); if (!b64) return null; const bin = atob(b64), u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); return u; };
 async function applyRubricPage() {
-  const bytes = rubricBytes();
+  const bytes = rubricBytes(), rp = setup.rubricPage, isWord = !!rp && WORD_RX.test(rp.name || '');
   let n = 0;
-  if (bytes) { try { n = (await PDFLib.PDFDocument.load(bytes, { ignoreEncryption: true })).getPageCount(); } catch {} }
+  if (bytes && !isWord) { try { n = (await PDFLib.PDFDocument.load(bytes, { ignoreEncryption: true })).getPageCount(); } catch {} }
   for (const st of batch.students) {
     const old = st.files.find(f => f.virtual);
     st.files = st.files.filter(f => !f.virtual);
     const real = st.files.filter(viewable);
     if (st.layout) for (const d of st.layout) d.pages = d.pages.filter(([path]) => !old || path !== old.path);
+    if (bytes && isWord) {   // each student gets their own copy of her Word rubric, edited and returned like any Word file
+      const any = st.files.find(f => f.path.includes('/')), dir = any ? any.path.slice(0, any.path.lastIndexOf('/') + 1) : st.key + '/';
+      const path = dir + rp.name.replace(/[\\/]+/g, '-'), keep = old && old.path === path && old.edited ? old : null;
+      st.files.push({ path, name: rp.name, kind: 'docx', data: keep ? keep.data : bytes, orig: keep ? keep.orig : null, edited: keep ? keep.edited : 0, size: bytes.length, marks: {}, virtual: true, rubric: true });
+      continue;
+    }
     if (!bytes || !n || !real.length) continue;
     const dir = real[0].path.includes('/') ? real[0].path.slice(0, real[0].path.lastIndexOf('/') + 1) : st.key + '/';
     const f = { path: dir + RUBRIC_NAME, name: 'Rubric page', kind: 'pdf', data: bytes, size: bytes.length, marks: old && old.path === dir + RUBRIC_NAME ? old.marks : {}, hand: old && old.hand, virtual: true, numPages: n };
@@ -1114,18 +1492,28 @@ async function copy(text, msg) {
 }
 
 /* ---------------- export ---------------- */
+const xAll = () => !!store.get('gs.xall', false);   // "Also include files with no marks"
+// Word files you edited or scored, any file you added; with "include everything", every file.
+const rawOut = f => !viewable(f) && !!f.data && !f.virtual && (xAll() || !!f.edited || !!f.added || !!(wordScore(f) && f.wscore.total != null));
+const docAdded = (st, d) => d.pages.some(([path]) => { const f = fileByPath(st, path); return !!f && !!f.added; });
+// A file you moved to another student goes back in that student's folder.
+const outPath = (st, path) => batch.moved && batch.moved[path] === st.key && path.includes('/') ? st.key + path.slice(path.indexOf('/')) : path;
 function exportPlan(keepFolders) {
   const out = [];
+  for (const st of batch.students) for (const f of st.files.filter(rawOut)) {
+    const fp = outPath(st, f.path), dir = fp.includes('/') ? fp.slice(0, fp.lastIndexOf('/') + 1) : '';
+    out.push({ st, f, raw: true, path: (keepFolders ? fp : (dir ? st.key + ' - ' : '') + f.name).replace(/[\\:*?"<>|]+/g, '-') });
+  }
   for (const st of batch.students) for (const d of layoutOf(st)) {
-    if (!docIn(st, d) || !docMarked(st, d)) continue;
-    const first = d.pages[0][0], dir = first.includes('/') ? first.slice(0, first.lastIndexOf('/') + 1) : '';
+    if (xAll() ? !(docIn(st, d) || docAuto(st, d)) : (!docIn(st, d) || !(docMarked(st, d) || docAdded(st, d)))) continue;
+    const first = outPath(st, d.pages[0][0]), dir = first.includes('/') ? first.slice(0, first.lastIndexOf('/') + 1) : '';
     let path = dir + d.name.replace(/\.(png|jpe?g)$/i, '.pdf');
     if (!/\.pdf$/i.test(path)) path += '.pdf';
     if (!keepFolders) path = (dir ? st.key + ' - ' : '') + path.split('/').pop();
     out.push({ st, d, path: path.replace(/[\\:*?"<>|]+/g, '-') });
   }
   const used = new Set();
-  for (const o of out) { let p = o.path, k = 2; while (used.has(p.toLowerCase())) p = o.path.replace(/(\.pdf)?$/i, ' (' + k++ + ').pdf'); used.add(p.toLowerCase()); o.path = p; }
+  for (const o of out) { let p = o.path, k = 2; while (used.has(p.toLowerCase())) p = o.path.replace(/(\.[^./]+)?$/, ' (' + k++ + ')$1'); used.add(p.toLowerCase()); o.path = p; }
   return out;
 }
 // Builds one returned file from its pages (possibly from several turned-in files), baking in every mark.
@@ -1144,7 +1532,9 @@ async function flattenDoc(st, d, dpi) {
     for (const [path, p] of d.pages) {
       const { f, js, lib } = await src(path);
       const marks = (f.marks[p] || []).concat((f.kami && f.kami[p] && f.kami[p].notes) || []);
-      if (!marks.length && !(f.kami && f.kami[p])) { const [cp] = await out.copyPages(lib, [p]); out.addPage(cp); continue; }
+      const Lx = lightOpts().exp ? lightForPage(st, f, p) : null;
+      // A locked (encrypted) PDF can't be copied page for page; its copies come out blank, so those pages are redrawn instead.
+      if (!marks.length && !(f.kami && f.kami[p]) && !Lx && !lib.isEncrypted) { const [cp] = await out.copyPages(lib, [p]); out.addPage(cp); continue; }
       const page = await js.getPage(p + 1);
       const vp1 = page.getViewport({ scale: 1 }), W = vp1.width, H = vp1.height;
       const side = marks.some(m => m.t === 'note') ? sideFor(W) : 0;
@@ -1153,6 +1543,7 @@ async function flattenDoc(st, d, dpi) {
       c.width = Math.ceil((W + side) * scale); c.height = Math.ceil(H * scale);
       const ctx = c.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
       await page.render({ canvasContext: ctx, viewport: page.getViewport({ scale }), annotationMode: pdfjsLib.AnnotationMode.ENABLE }).promise;
+      if (Lx) lightCanvas(ctx, Math.min(c.width, Math.ceil(W * scale)), c.height, Lx);   // the page only, before her marks
       ctx.setTransform(scale, 0, 0, scale, 0, 0);
       drawMarks(ctx, marks, W, H, side, null);
       const jpg = await new Promise(res => c.toBlob(b => b.arrayBuffer().then(x => res(new Uint8Array(x))), 'image/jpeg', 0.88));
@@ -1164,7 +1555,7 @@ async function flattenDoc(st, d, dpi) {
   return await out.save();
 }
 async function openExport() {
-  saveNow(); commitEditors();
+  saveNow(); commitEditors(); wordScoresAll();
   if (!scanned || scanP) { toast('Reading the files first…'); await scanAll(); }
   let keep = true, dpi = 150;
   const plan = exportPlan(true);
@@ -1175,12 +1566,14 @@ async function openExport() {
       (skipped ? ' <span class="muted">' + skipped + ' ' + (skipped === 1 ? 'student has' : 'students have') + ' nothing marked, so they’re not in it.</span>' : '') +
       (nLeft ? ' <span class="muted">' + nLeft + (nLeft === 1 ? ' file is' : ' files are') + ' left out (no marks, or you left it out).</span>' : '') + '</p>' +
       '<label class="chk"><input type="checkbox" id="xKeep" checked> Keep student folders</label>' +
+      '<label class="chk"><input type="checkbox" id="xAll"' + (xAll() ? ' checked' : '') + '> Also include files with no marks (Word files, other files and unmarked pages)</label>' +
       '<label class="chk"><input type="checkbox" id="xSheet" checked> Add the grade sheet (a crop of each typed grade, in folder order)</label>' +
       '<div class="chk" style="cursor:default">Sharpness <span class="seg" id="xDpi"><button data-dpi="150" aria-pressed="true">Standard</button><button data-dpi="220" aria-pressed="false">Extra sharp</button></span></div>' +
-      '<p class="muted" style="font-size:13px;margin-bottom:0">Your original files aren’t changed. Grades are read and cropped first, then every marked file is flattened, including marks made in Kami. Pages with no marks are copied as they are, and comments go in a right-hand margin.</p><div class="prog" hidden><i></i></div><p class="muted" id="xStatus" style="font-size:13px"></p>'
-      : '<p style="margin-top:0">Nothing is marked yet. Mark a paper and it will show up here.</p>') +
+      '<p class="muted" style="font-size:13px;margin-bottom:0">Your original files aren’t changed. Grades are read and cropped first, then every marked file is flattened, including marks made in Kami. A file you marked anywhere comes back whole, every page in order, including the pages you didn’t mark. Word rubrics you scored come back as Word files. ' + (xAll() ? 'Files with no marks come too.' : 'Files you didn’t mark at all stay out.') + ' Comments go in a right-hand margin.</p><div class="prog" hidden><i></i></div><p class="muted" id="xStatus" style="font-size:13px"></p>'
+      : '<p style="margin-top:0">Nothing is marked yet. Mark a paper and it will show up here.</p><label class="chk"><input type="checkbox" id="xAll"' + (xAll() ? ' checked' : '') + '> Also include files with no marks (Word files, other files and unmarked pages)</label>') +
     '</div><div class="bf"><button class="btn" data-close>Close</button>' + (plan.length ? ((window.showDirectoryPicker && window.self === window.top) ? '<button class="btn" data-go="dir">Save into a folder…</button>' : '') + (G.email ? '<button class="btn" data-go="drive">Save to Google Drive</button>' : '') + '<button class="btn primary" data-go="zip">Download ZIP</button>' : '') + '</div>', true);
   const box = $('#dlgBox');
+  box.onchange = e => { if (e.target.id === 'xAll') { store.set('gs.xall', e.target.checked); renderTools(); openExport(); } };
   box.onclick = async e => {
     if (e.target.closest('[data-close]')) return closeDlg();
     const d = e.target.closest('[data-dpi]');
@@ -1211,7 +1604,7 @@ async function openExport() {
       for (let i = 0; i < items.length; i++) {
         $('#xStatus').textContent = 'Baking in marks ' + (i + 1) + ' of ' + items.length + '…';
         bar.firstChild.style.width = (30 + 70 * i / items.length) + '%';
-        const bytes = await flattenDoc(items[i].st, items[i].d, dpi);
+        const bytes = items[i].raw ? items[i].f.data : await flattenDoc(items[i].st, items[i].d, dpi);
         if (dir) {
           const parts = items[i].path.split('/'); let h = dir;
           for (const part of parts.slice(0, -1)) h = await h.getDirectoryHandle(part, { create: true });
@@ -1279,11 +1672,39 @@ const annText = a => {
 const inside = (r, s) => !s || (r[0] < s.x + s.w && r[2] > s.x && r[1] < s.y + s.h && r[3] > s.y);
 // Reads one file: Kami (or other) marks already on it, and every grade typed on it, each with a cropped picture.
 // Never changes the file itself.
+// A Word file drawn as letter-size page pictures (a PDF kept in memory), for boxing its grade like a paper's.
+async function wordPdf(f) {
+  if (f.wpdfOf === f.data && f.wpdf) return f.wpdf;
+  const host = document.createElement('div');
+  host.style.cssText = 'position:fixed;left:-20000px;top:0;width:816px;pointer-events:none';
+  const page = document.createElement('div'); page.className = 'dpage';
+  page.style.cssText = 'max-width:none;width:816px;margin:0;box-shadow:none;overflow:visible;border-radius:0';
+  host.appendChild(page); document.body.appendChild(host);
+  try {
+    try { const w = openWord(f.data); w.pRuns = []; renderWord(w, page); } catch { page.innerHTML = await docxHtml(f.data); }
+    await Promise.all([...page.querySelectorAll('img')].map(im => im.complete ? 0 : new Promise(r => { im.onload = im.onerror = r; })));
+    const c = await html2canvas(page, { scale: 2, backgroundColor: '#ffffff', logging: false, useCORS: true });
+    const pdf = await PDFLib.PDFDocument.create(), sh = Math.round(c.width * 11 / 8.5);
+    for (let y = 0, n = 0; y < c.height && n < 30; y += sh, n++) {
+      const s = document.createElement('canvas'); s.width = c.width; s.height = sh;
+      const x = s.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, s.width, s.height);
+      x.drawImage(c, 0, y, c.width, Math.min(sh, c.height - y), 0, 0, c.width, Math.min(sh, c.height - y));
+      const jpg = await pdf.embedJpg(await (await new Promise(r => s.toBlob(r, 'image/jpeg', 0.9))).arrayBuffer());
+      pdf.addPage([612, 792]).drawImage(jpg, { x: 0, y: 0, width: 612, height: 792 });
+      s.width = s.height = 0;
+    }
+    c.width = c.height = 0;
+    f.wpdf = await pdf.save(); f.wpdfOf = f.data;
+    return f.wpdf;
+  } finally { host.remove(); }
+}
+// The pages to look at for a grade: the PDF itself, or a Word file drawn as pages.
+const paperBytes = async f => f.kind === 'docx' ? wordPdf(f) : f.data;
 async function scanFile(f, spot) {
-  const doc = await pdfjsLib.getDocument({ data: f.data.slice(), isEvalSupported: false }).promise;
+  const doc = await pdfjsLib.getDocument({ data: (await paperBytes(f)).slice(), isEvalSupported: false }).promise;
   const found = [], kami = {}, seen = [];
   try {
-    f.numPages = doc.numPages;
+    if (f.kind !== 'docx') f.numPages = doc.numPages;
     const pick = spot ? [typeof spot.page === 'number' ? Math.min(spot.page, doc.numPages - 1) : spot.page === 'last' ? doc.numPages - 1 : 0] : [...Array(doc.numPages).keys()];
     for (let p = 0; p < doc.numPages; p++) {
       const page = await doc.getPage(p + 1);
@@ -1301,7 +1722,7 @@ async function scanFile(f, spot) {
         found.push({ ...g, page: p, rect: r, from, hover: !!hover, full: text, text: text.length > 140 ? text.slice(0, 140) + '…' : text });
       };
       for (const a of annots) { const t = annText(a); if (t && seen.length < 4) seen.push(t.length > 60 ? t.slice(0, 60) + '…' : t); if (t) add(parseGrade(t, false), vp.convertToViewportRectangle(a.rect), 'note', t, isPopupComment(a)); }
-      for (const m of f.marks[p] || []) {
+      for (const m of (f.marks || {})[p] || []) {
         if (m.t === 'text') { const L = textLayout(m, vp.width); add(parseGrade(m.text, false), [m.x, m.y, m.x + L.w, m.y + L.h], 'note', m.text); }
         if (m.t === 'note') add(parseGrade(m.text, false), [m.ax - 4, m.ay - 4, m.ax + 4, m.ay + 4], 'note', m.text, true);
       }
@@ -1344,7 +1765,7 @@ async function scanFile(f, spot) {
       ctx.translate(-x * k, -y * k);
       await page.render({ canvasContext: ctx, viewport: page.getViewport({ scale: k }), annotationMode: pdfjsLib.AnnotationMode.ENABLE }).promise;
       ctx.setTransform(k, 0, 0, k, -x * k, -y * k);
-      const mk = (f.marks[g.page] || []).filter(m => m.t !== 'note');
+      const mk = ((f.marks || {})[g.page] || []).filter(m => m.t !== 'note');
       if (mk.length) drawMarks(ctx, mk, vp1.width, vp1.height, 0, null);
       if (g.hover) {   // a comment that only shows on hover: print its words next to the spot so the picture shows them
         ctx.font = '11px ' + FONT;
@@ -1353,11 +1774,31 @@ async function scanFile(f, spot) {
         ctx.fillStyle = '#FFF6D6'; ctx.fillRect(bx, by, bw, bh); ctx.strokeStyle = '#C99A00'; ctx.lineWidth = 0.8; ctx.strokeRect(bx, by, bw, bh);
         ctx.fillStyle = '#1B1F27'; lines.forEach((ln, i) => ctx.fillText(ln, bx + 6, by + 15 + i * 14));
       }
-      g.img = c.toDataURL('image/jpeg', 0.85);
+      const t = spot && disp.trim && f.kind !== 'docx' ? trimToInk(c, k) : null;   // a loose spot box shrinks to the marks inside it
+      g.img = (t || c).toDataURL('image/jpeg', 0.85);
+      if (t) t.width = t.height = 0;
       c.width = c.height = 0;
     }
     return { found, shots, kami, seen, nAnnots: Object.keys(kami).length, hasText: seen.length > 0 };
   } finally { doc.destroy(); }
+}
+// Finds the marks inside a picked spot: her colored ink first (red pen, highlights), or dark ink when nothing is colored.
+// Returns a tighter copy with a little room around them, or null to keep the whole spot.
+function trimToInk(c, k) {
+  const W = c.width, H = c.height, d = c.getContext('2d').getImageData(0, 0, W, H).data;
+  const box = () => ({ x1: W, y1: H, x2: -1, y2: -1, n: 0 }), col = box(), dark = box();
+  const grow = (b, x, y) => { if (x < b.x1) b.x1 = x; if (x > b.x2) b.x2 = x; if (y < b.y1) b.y1 = y; if (y > b.y2) b.y2 = y; b.n++; };
+  for (let y = 0; y < H; y += 2) for (let x = 0; x < W; x += 2) {
+    const i = (y * W + x) * 4, hi = Math.max(d[i], d[i + 1], d[i + 2]), lo = Math.min(d[i], d[i + 1], d[i + 2]);
+    if (hi - lo > 70) grow(col, x, y); else if (hi < 140) grow(dark, x, y);
+  }
+  const b = col.n > 8 ? col : dark.n > 8 ? dark : null;
+  if (!b) return null;
+  const pad = 12 * k, x1 = Math.max(0, b.x1 - pad), y1 = Math.max(0, b.y1 - pad), x2 = Math.min(W, b.x2 + pad), y2 = Math.min(H, b.y2 + pad);
+  if ((x2 - x1) * (y2 - y1) > W * H * 0.8) return null;
+  const o = document.createElement('canvas'); o.width = Math.ceil(x2 - x1); o.height = Math.ceil(y2 - y1);
+  o.getContext('2d').drawImage(c, x1, y1, o.width, o.height, 0, 0, o.width, o.height);
+  return o;
 }
 function kamiNote(a, vp) {
   const [x1, y1, x2, y2] = vp.convertToViewportRectangle(a.rect);
@@ -1393,9 +1834,11 @@ async function scanRun(onStep) {
       f.kami = f.scan.kami;
       onStep && onStep(++n, files.length);
     }
-    const all = st.files.filter(f => fileIn(st, f)).flatMap(f => (f.scan && f.scan.found) || []);
-    st.found = all.length === 1 ? { ...all[0], found: true } : null;
-    st.foundCount = all.length;
+    for (const f of st.files.filter(f => f.kind === 'docx' && f.hand)) {
+      if (batch !== b0) return;
+      try { f.scan = await scanFile(f, f.hand); f.scan.hand = true; } catch (e) { console.error(e); f.scan = { found: [], shots: [], kami: {}, err: true }; }
+    }
+    wordScoresOf(st); refound(st);
   }
   scanned = true;
   renderList();
@@ -1408,14 +1851,21 @@ function foundLabel(fd) {
 }
 // One row per file (and one for each empty folder), always in folder order.
 let sheetShowOut = false;
-function sheetRows(all) {
+// The sheet lists only files with a grade on them (read, boxed or highlighted); "Show files with no grade" lists every file.
+let sheetAll = !!store.get('gs.sheetall', false);
+const rowGraded = r => r.word ? !!((r.f.wscore && r.f.wscore.total != null) || wordFound(r.f).length || (r.f.hand && r.f.scan && r.f.scan.shots.length))
+  : !!(r.f.scan && (r.f.scan.found.length || r.f.scan.shots.length));
+// box: every file to look through for "Box each grade by hand", graded or not.
+function sheetRows(box) {
   const rows = [];
   batch.students.forEach((st, i) => {
-    const fs = st.files.filter(viewable);
+    const fs = st.files.filter(viewable), words = st.files.filter(f => f.kind === 'docx');
     const inc = fs.filter(f => fileIn(st, f)), out = fs.filter(f => !fileIn(st, f));
-    if (!inc.length && (!out.length || !(all || sheetShowOut))) rows.push({ st, i, f: null, none: !fs.length });
-    for (const f of inc) rows.push({ st, i, f });
-    if (all || sheetShowOut) for (const f of out) rows.push({ st, i, f, out: true });
+    const cand = words.map(f => ({ st, i, f, word: true })).concat(inc.map(f => ({ st, i, f })));
+    const shown = box || sheetAll ? cand : cand.filter(rowGraded);
+    if (!shown.length && (!out.length || !sheetShowOut)) rows.push({ st, i, f: null, none: !fs.length && !st.files.length, nograde: cand.length > 0, first: cand[0] && cand[0].f });
+    rows.push(...shown);
+    if (sheetShowOut) for (const f of out) rows.push({ st, i, f, out: true });
   });
   return rows;
 }
@@ -1429,14 +1879,14 @@ async function openSheet(rescan) {
     if (e.target.closest('[data-close]')) return closeDlg();
     if (e.target.closest('[data-spot]')) return pickSpot();
     if (e.target.closest('[data-each]')) return pickEach();
-    const rb = e.target.closest('[data-rebox]'); if (rb) return pickEach(+rb.dataset.rebox);
+    const rb = e.target.closest('[data-rebox]'); if (rb) return pickEach(rb.dataset.rebox);
+    if (e.target.matches('[data-sheetall]')) { sheetAll = e.target.checked; store.set('gs.sheetall', sheetAll); return renderSheet(); }
     if (e.target.closest('[data-showout]')) { sheetShowOut = !sheetShowOut; return renderSheet(); }
     const io = e.target.closest('[data-bring],[data-leave]');
     if (io) {
       const v = io.dataset.bring || io.dataset.leave, bar = v.indexOf('|'), st = batch.students[+v.slice(0, bar)], path = v.slice(bar + 1);
       for (const d of layoutOf(st)) if (d.pages.some(([q]) => q === path)) setDocIn(st, d, !!io.dataset.bring);
-      const all = st.files.filter(f => fileIn(st, f)).flatMap(f => (f.scan && f.scan.found) || []);
-      st.found = all.length === 1 ? { ...all[0], found: true } : null; st.foundCount = all.length;
+      refound(st);
       renderList(); return renderSheet();
     }
     if (e.target.closest('[data-auto]')) { delete setup.spot; store.set('gs.setup', { ...setup, spot: undefined }); saveSoon(); return openSheet(true); }
@@ -1445,8 +1895,15 @@ async function openSheet(rescan) {
     if (e.target.closest('[data-cp]')) return copy(batch.students.map(st => { const g = gradeOf(st); return fmtNum(g.total != null ? g.total : g.pct); }).join('\n'), 'Copied ' + batch.students.length + ' scores in folder order (blank where unsure)');
     if (e.target.closest('[data-pdf]')) return saveBlob('Grade sheet - ' + batch.name + '.pdf', new Blob([await buildSheetPdf()], { type: 'application/pdf' }));
   };
+  box.oninput = e => {
+    const t = e.target.closest('[data-typed]'); if (!t) return;
+    const st = batch.students[+t.dataset.typed];
+    st.grade.sheet = t.value.trim().replace(',', '.'); saveSoon(); renderList(); if (st === batch.students[cur]) renderGrade();
+  };
+  box.onchange = e => { if (e.target.matches('[data-trim]')) { disp.trim = e.target.checked; store.set('gs.disp', disp); openSheet(true); } };
   const bar = box.querySelector('.prog i');
   await scanAll((n, t) => { if (bar) bar.style.width = (100 * n / t) + '%'; });
+  wordScoresAll();
   if ($('#dlg').hidden || !$('#shBody')) return;
   renderSheet();
 }
@@ -1455,12 +1912,31 @@ function renderSheet() {
   const nOut = batch.students.reduce((a, st) => a + st.files.filter(f => viewable(f) && !fileIn(st, f)).length, 0);
   const nOne = batch.students.filter(st => st.foundCount === 1).length, nMany = batch.students.filter(st => st.foundCount > 1).length;
   $('#shSub').textContent = (setup.spot ? 'Same spot on every paper · ' : '') + nOne + ' of ' + batch.students.length + ' read' + (nMany ? ' · ' + nMany + ' to check' : '');
+  const spotted = !!setup.spot || batch.students.some(st => st.files.some(f => f.hand));
+  const nHidden = sheetAll ? 0 : batch.students.reduce((a, st) => a + st.files.filter(f => f.kind === 'docx').map(f => ({ f, word: true })).concat(st.files.filter(f => viewable(f) && fileIn(st, f)).map(f => ({ f }))).filter(r => !rowGraded(r)).length, 0);
   $('#shBody').innerHTML = '<p class="muted" style="margin:0 0 10px;font-size:14px">Every row is made from the file named on it, inside that student’s folder. Click a picture to open that exact file. Click a score to copy it.</p>' +
+    '<label class="chk" style="margin:0 0 10px;font-size:14px"><input type="checkbox" data-sheetall' + (sheetAll ? ' checked' : '') + '> Show files with no grade' + (sheetAll ? '' : nHidden ? ' (' + nHidden + ' hidden)' : '') + '<span class="muted" style="font-weight:400">&nbsp;· the downloaded sheet shows the same rows</span></label>' +
+    (spotted ? '<label class="chk" style="margin:0 0 10px;font-size:14px"><input type="checkbox" data-trim' + (disp.trim ? ' checked' : '') + '> Trim each spot down to your marks</label>' : '') +
     (nOut ? '<p style="margin:0 0 10px;font-size:14px;background:var(--warn-soft);padding:8px 10px;border-radius:8px">' + nOut + (nOut === 1 ? ' file has' : ' files have') + ' no marks, so ' + (nOut === 1 ? 'it’s' : 'they’re') + ' left out as extra papers. <button class="link" data-showout>' + (sheetShowOut ? 'Hide them' : 'Show them') + '</button></p>' : '') +
     '<table class="gl"><thead><tr><th>#</th><th>Folder and file</th><th>On the paper</th><th>Read as</th></tr></thead><tbody>' +
-    rows.map(({ st, i, f, out, none }) => {
+    rows.map(({ st, i, f, out, none, word, nograde, first }) => {
       const where = '<div style="font-weight:600">' + esc(st.key) + '</div>' + (f ? '<div class="muted" style="font-size:13px;overflow-wrap:anywhere">' + esc(f.path) + '</div>' : '');
-      if (!f) return '<tr><td class="n">' + (i + 1) + '</td><td>' + where + '</td><td class="muted">' + (none ? 'Nothing turned in' : 'Only unmarked files, left out') + '</td><td></td></tr>';
+      if (word) {   // her Word rubric: the highlighted boxes, read straight from the file
+        const w = f.wscore, ty = wordFound(f), hs = (f.hand && f.scan && f.scan.shots) || [], ri = rows.findIndex(r => r.f === f);
+        const info = w ? w.crits.map((c, k) => esc(c.length > 28 ? c.slice(0, 28) + '…' : c) + ' <b>' + (w.per[k] == null ? '–' : fmtNum(w.per[k])) + '</b>').join(' · ') + (w.total != null && !w.done ? '<div class="muted" style="font-size:12px">Not every criterion is highlighted yet</div>' : '') : '';
+        const pics = hs.map(g => '<div style="margin-bottom:6px"><img src="' + g.img + '" alt="" data-open="' + i + '" data-file="' + esc(f.path) + '" title="Open this file" style="display:block;max-width:360px;max-height:150px;border:1px solid var(--line);border-radius:4px;cursor:pointer;background:#fff"><div class="muted" style="font-size:12px">Page ' + (g.page + 1) + '</div></div>').join('');
+        const big = (v, of, pct) => '<div class="big-sc" data-copy="' + esc(fmtNum(v)) + '" title="Click to copy">' + fmtNum(v) + (of ? '<small>/ ' + fmtNum(of) + '</small>' : '') + '</div>' + (pct != null ? '<div class="muted" style="font-size:13px;margin-top:4px;font-weight:500">= ' + fmtNum(pct) + '%</div>' : '');
+        const hf = (f.hand && f.scan && f.scan.found) || [];
+        const reads = w && w.total != null ? big(w.total, w.max, w.pct)
+          : ty.length ? (ty.length > 1 ? '<span class="pill warn" style="display:inline-block;font-size:12px;font-weight:700;padding:3px 9px;border-radius:999px;background:var(--warn-soft);color:var(--warn);margin-bottom:6px">' + ty.length + ' grades found, check</span>' : '') + ty.map(g => '<div class="big-sc" data-copy="' + esc(fmtNum(g.score != null ? g.score : g.pct)) + '" title="Click to copy">' + esc(foundLabel(g)) + '</div>').join('')
+          : hf.length === 1 ? big(hf[0].score != null ? hf[0].score : hf[0].pct, hf[0].outOf, hf[0].score != null ? hf[0].pct : null)
+          : hs.length ? '<input class="sc-in" type="text" inputmode="decimal" data-typed="' + i + '" value="' + esc(st.grade.sheet || '') + '" placeholder="Score" aria-label="Type the score you see in the picture"><div class="muted" style="font-size:12px;margin-top:4px;font-weight:400">Type what you see</div>'
+          : '<span class="muted" style="font-weight:400">No grade found yet</span>';
+        return '<tr><td class="n">' + (i + 1) + '</td><td>' + where + '</td><td>' + pics + '<button class="link" data-open="' + i + '" data-file="' + esc(f.path) + '" style="text-align:left">' + (w ? 'Word rubric' : 'Word file') + '</button>' +
+          (info ? '<div class="muted" style="font-size:13px">' + info + '</div>' : '') + ty.map(g => '<div class="muted" style="font-size:13px;max-width:360px">Typed: “' + esc(g.text) + '”</div>').join('') +
+          '<div style="margin-top:4px"><button class="link" style="font-size:12px" data-rebox="' + i + '|' + esc(f.path) + '">' + (f.hand ? 'Boxed by hand · redo' : 'Box it by hand') + '</button></div></td><td style="font-weight:700">' + reads + '</td></tr>';
+      }
+      if (!f) return '<tr><td class="n">' + (i + 1) + '</td><td>' + where + '</td><td class="muted">' + (none ? 'Nothing turned in' : nograde ? 'No grade yet. <button class="link" style="font-size:13px" data-rebox="' + i + '|' + esc(first.path) + '">Box it by hand</button>' : 'Only unmarked files, left out') + '</td><td></td></tr>';
       if (out) return '<tr style="opacity:.7"><td class="n">' + (i + 1) + '</td><td>' + where + '</td><td class="muted">Left out (no marks). <button class="link" data-bring="' + i + '|' + esc(f.path) + '">Bring back</button></td><td></td></tr>';
       const sc = f.scan || { found: [], shots: [] };
       const many = sc.found.length > 1;
@@ -1468,8 +1944,17 @@ function renderSheet() {
         (g.text && g.from === 'note' ? '<div class="muted" style="font-size:12px;max-width:360px">Typed: “' + esc(g.text) + '” · page ' + (g.page + 1) + '</div>' : '<div class="muted" style="font-size:12px">Page ' + (g.page + 1) + '</div>') + '</div>').join('') ||
         '<span class="muted">' + (f.hand ? 'Boxed by hand' : sc.err ? 'Couldn’t read this file' : sc.seen && sc.seen.length ? 'No grade in the typed text I found: “' + esc(sc.seen.join('” · “')) + '”' : sc.nAnnots ? 'There are marks here but no typed text, so the grade may be handwritten or flattened. Try Box it by hand.' : 'No marks or typed text in this file. If you marked it in Kami, the marks may not have been saved into the file. Try Box it by hand.') + '</span>';
       const ri = rows.findIndex(r => r.f === f);
-      const handNote = '<div style="margin-top:4px;display:flex;gap:14px"><button class="link" style="font-size:12px" data-rebox="' + ri + '">' + (f.hand ? 'Boxed by hand · redo' : 'Box it by hand') + '</button><button class="link" style="font-size:12px;color:var(--muted)" data-leave="' + i + '|' + esc(f.path) + '">Leave out</button></div>';
-      const reads = sc.found.map(g => '<div class="c" data-copy="' + esc(fmtNum(g.score != null ? g.score : g.pct)) + '" style="cursor:copy">' + esc(foundLabel(g)) + '</div>').join('');
+      const handNote = '<div style="margin-top:4px;display:flex;gap:14px"><button class="link" style="font-size:12px" data-rebox="' + i + '|' + esc(f.path) + '">' + (f.hand ? 'Boxed by hand · redo' : 'Box it by hand') + '</button><button class="link" style="font-size:12px;color:var(--muted)" data-leave="' + i + '|' + esc(f.path) + '">Leave out</button></div>';
+      let reads;
+      if (sc.found.length === 1) {   // clearly one score: show it big beside the picture
+        const g0 = sc.found[0];
+        reads = '<div class="big-sc" data-copy="' + esc(fmtNum(g0.score != null ? g0.score : g0.pct)) + '" title="Click to copy">' + (g0.score != null ? fmtNum(g0.score) + (g0.outOf ? '<small>/ ' + fmtNum(g0.outOf) + '</small>' : '') : fmtNum(g0.pct) + '<small>%</small>') + '</div>' +
+          (g0.score != null && g0.pct != null ? '<div class="muted" style="font-size:13px;margin-top:4px;font-weight:500">= ' + fmtNum(g0.pct) + '%</div>' : '');
+      } else if (sc.found.length) reads = sc.found.map(g => '<div class="c" data-copy="' + esc(fmtNum(g.score != null ? g.score : g.pct)) + '" style="cursor:copy">' + esc(foundLabel(g)) + '</div>').join('');
+      else if (sc.shots.length) reads = '<input class="sc-in" type="text" inputmode="decimal" data-typed="' + i + '" value="' + esc(st.grade.sheet || '') + '" placeholder="Score" aria-label="Type the score you see in the picture"><div class="muted" style="font-size:12px;margin-top:4px;font-weight:400">Type what you see</div>';
+      else reads = '';
+      const own = ownGrade(st), ps = sc.found.length === 1 ? sc.found[0].score : sc.found.length ? null : paperScore(st);
+      if (own.total != null && ps != null && Math.abs(own.total - ps) > 0.001) reads += '<span class="sc-warn">Your score in Grading Studio is ' + fmtNum(own.total) + '</span>';
       return '<tr><td class="n">' + (i + 1) + '</td><td>' + where + '</td><td>' + pics + handNote + '</td><td style="font-weight:700">' +
         (many ? '<span class="pill warn" style="display:inline-block;font-size:12px;font-weight:700;padding:3px 9px;border-radius:999px;background:var(--warn-soft);color:var(--warn);margin-bottom:6px">' + sc.found.length + ' grades found, check</span>' : '') + reads + '</td></tr>';
     }).join('') + '</tbody></table>';
@@ -1477,10 +1962,10 @@ function renderSheet() {
 // Box each grade by hand: one paper at a time, drag a box around the grade, and it moves to the next paper.
 let eachKeys = null;
 async function pickEach(start) {
-  const rows = sheetRows();
-  const fileRows = rows.map((r, k) => ({ ...r, k })).filter(r => r.f);
+  const rows = sheetRows(true);
+  const fileRows = rows.map((r, k) => ({ ...r, k })).filter(r => r.f && (viewable(r.f) || r.f.kind === 'docx'));
   if (!fileRows.length) return toast('No papers to box');
-  let pos = start != null ? Math.max(0, fileRows.findIndex(r => r.k === start)) : Math.max(0, fileRows.findIndex(r => !r.f.hand));
+  let pos = start != null ? Math.max(0, fileRows.findIndex(r => r.i + '|' + r.f.path === start)) : Math.max(0, fileRows.findIndex(r => !r.f.hand));
   let token = 0;
   openDlg('<div class="bh"><h2 id="peTitle">Box the grade</h2><span class="muted" id="peCount"></span><button class="icon" data-done aria-label="Done">✕</button></div>' +
     '<div class="bb" id="peBody" style="background:var(--surface-2)"></div>' +
@@ -1497,13 +1982,16 @@ async function pickEach(start) {
     body.scrollTop = 0;
     box.querySelector('[data-back]').disabled = pos === 0;
     let doc;
-    try { doc = await pdfjsLib.getDocument({ data: f.data.slice(), isEvalSupported: false }).promise; }
-    catch { body.insertAdjacentHTML('beforeend', '<p>This file couldn’t be opened. Click Skip.</p>'); return; }
+    if (f.kind === 'docx' && f.wpdfOf !== f.data) body.insertAdjacentHTML('beforeend', '<p class="muted" data-wwait>Getting the Word file ready…</p>');
+    try { doc = await pdfjsLib.getDocument({ data: (await paperBytes(f)).slice(), isEvalSupported: false }).promise; }
+    catch (e) { console.error(e); if (my === token) body.insertAdjacentHTML('beforeend', '<p>This file couldn’t be opened. Click Skip.</p>'); return; }
+    if (my !== token) { doc.destroy(); return; }
+    const ww = body.querySelector('[data-wwait]'); if (ww) ww.remove();
     const avail = body.clientWidth - 40;
     for (let p = 0; p < doc.numPages; p++) {
       if (my !== token) break;
       const page = await doc.getPage(p + 1);
-      const v1 = page.getViewport({ scale: 1 }), k = Math.min(1.8, avail / v1.width, Math.max(body.clientHeight - 50, 480) / v1.height), dpr = window.devicePixelRatio || 1;
+      const v1 = page.getViewport({ scale: 1 }), k = f.kind === 'docx' ? Math.min(1.5, avail / v1.width) : Math.min(1.8, avail / v1.width, Math.max(body.clientHeight - 50, 480) / v1.height), dpr = window.devicePixelRatio || 1;
       const vp = page.getViewport({ scale: k * dpr });
       const c = document.createElement('canvas');
       c.width = Math.ceil(vp.width); c.height = Math.ceil(vp.height);
@@ -1511,14 +1999,14 @@ async function pickEach(start) {
       const ctx = c.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
       await page.render({ canvasContext: ctx, viewport: vp, annotationMode: pdfjsLib.AnnotationMode.ENABLE }).promise;
       if (my !== token) break;
-      const mk = (f.marks[p] || []).filter(m => m.t !== 'note');
+      const mk = ((f.marks || {})[p] || []).filter(m => m.t !== 'note');
       if (mk.length) { ctx.save(); ctx.scale(k * dpr, k * dpr); drawMarks(ctx, mk, v1.width, v1.height, 0, null); ctx.restore(); }
       const base = ctx.getImageData(0, 0, c.width, c.height);
       const paint = sel => {
         ctx.putImageData(base, 0, 0);
         if (!sel) return;
-        ctx.fillStyle = 'rgba(39,71,208,.14)'; ctx.fillRect(sel.x * c.width, sel.y * c.height, sel.w * c.width, sel.h * c.height);
-        ctx.strokeStyle = '#2747D0'; ctx.lineWidth = 2 * dpr; ctx.strokeRect(sel.x * c.width, sel.y * c.height, sel.w * c.width, sel.h * c.height);
+        ctx.fillStyle = 'rgba(31,111,178,.14)'; ctx.fillRect(sel.x * c.width, sel.y * c.height, sel.w * c.width, sel.h * c.height);
+        ctx.strokeStyle = '#1F6FB2'; ctx.lineWidth = 2 * dpr; ctx.strokeRect(sel.x * c.width, sel.y * c.height, sel.w * c.width, sel.h * c.height);
       };
       if (f.hand && f.hand.page === p) paint(f.hand);
       let d0 = null, sel = null;
@@ -1567,7 +2055,7 @@ function pickSpot() {
   let bmp = null, sel = null, W = 0, H = 0;
   const paint = () => {
     const ctx = c.getContext('2d'); ctx.drawImage(bmp, 0, 0);
-    if (sel) { ctx.fillStyle = 'rgba(39,71,208,.12)'; ctx.fillRect(sel.x * c.width, sel.y * c.height, sel.w * c.width, sel.h * c.height); ctx.strokeStyle = '#2747D0'; ctx.lineWidth = 2; ctx.strokeRect(sel.x * c.width, sel.y * c.height, sel.w * c.width, sel.h * c.height); }
+    if (sel) { ctx.fillStyle = 'rgba(31,111,178,.12)'; ctx.fillRect(sel.x * c.width, sel.y * c.height, sel.w * c.width, sel.h * c.height); ctx.strokeStyle = '#1F6FB2'; ctx.lineWidth = 2; ctx.strokeRect(sel.x * c.width, sel.y * c.height, sel.w * c.width, sel.h * c.height); }
   };
   const load = async () => {
     const doc = await pdfjsLib.getDocument({ data: f.data.slice(), isEvalSupported: false }).promise;
@@ -1607,10 +2095,10 @@ async function buildSheetPdf() {
     ctx.fillStyle = '#151922'; ctx.font = 'bold 13px ' + FONT; ctx.fillText(batch.name + ' · grade sheet' + (pageNo ? ' (continued)' : ''), M, M - 8);
     let y = M + 6;
     while (ri < rows.length) {
-      const { st, i, f } = rows[ri], sc = f && f.scan ? f.scan : { found: [], shots: [] };
+      const { st, i, f, word } = rows[ri], sc = word ? { found: f.wscore && f.wscore.total != null ? [{ score: f.wscore.total, outOf: f.wscore.max, pct: f.wscore.pct }] : wordFound(f).length ? wordFound(f) : (f.hand && f.scan && f.scan.found) || [], shots: (f.hand && f.scan && f.scan.shots) || [] } : f && f.scan ? f.scan : { found: [], shots: [] };
       const imgs = [];
       for (const g of sc.shots) { const im = await loadImg(g.img); if (im) imgs.push({ im, h: Math.min(90, maxW * im.height / im.width) }); }
-      const rh = Math.max(56, imgs.reduce((a, o) => a + o.h + 6, 0)) + 10;
+      const rh = Math.max(64, imgs.reduce((a, o) => a + o.h + 6, 0) + (word && imgs.length && f.wscore ? 44 : 0)) + 10;
       if (y + rh > PH - M && y > M + 6) break;
       ctx.fillStyle = '#8A90A0'; ctx.font = '11px ' + FONT; ctx.fillText(String(i + 1), M, y + 13);
       ctx.fillStyle = '#151922'; ctx.font = 'bold 12px ' + FONT;
@@ -1621,10 +2109,13 @@ async function buildSheetPdf() {
       ctx.font = 'bold 12px ' + FONT;
       if (sc.found.length > 1) { ctx.fillStyle = '#9A6411'; ctx.fillText(sc.found.length + ' grades found, check', M + 20, ly + 4); ly += 16; }
       ctx.fillStyle = '#1C7F54';
-      for (const g of sc.found) { ctx.fillText(foundLabel(g), M + 20, ly + 4); ly += 15; }
+      if (sc.found.length === 1) { ctx.font = 'bold 18px ' + FONT; ctx.fillText(foundLabel(sc.found[0]), M + 20, ly + 12); ly += 22; }
+      else for (const g of sc.found) { ctx.fillText(foundLabel(g), M + 20, ly + 4); ly += 15; }
+      if (f && !sc.found.length && st.grade.sheet) { ctx.font = 'bold 18px ' + FONT; ctx.fillText(st.grade.sheet, M + 20, ly + 12); ctx.font = '9.5px ' + FONT; ctx.fillStyle = '#5D6475'; ctx.fillText('typed from the picture', M + 20, ly + 24); }
       let iy = y;
       for (const { im, h } of imgs) { const w = h * im.width / im.height; ctx.drawImage(im, X, iy, w, h); ctx.strokeStyle = sc.found.length > 1 ? '#E8B451' : '#DADDE6'; ctx.strokeRect(X, iy, w, h); iy += h + 6; }
-      if (!imgs.length) { ctx.fillStyle = '#8A90A0'; ctx.font = 'italic 11px ' + FONT; ctx.fillText(f ? 'No typed grade found' : 'Nothing turned in', X, y + 13); }
+      if (word) { ctx.fillStyle = '#151922'; ctx.font = '11px ' + FONT; let wy = (imgs.length ? iy : y) + 13; for (const ln of wrapText(ctx, !f.wscore || wordFound(f).length ? (wordFound(f).length ? 'Word file, typed: ' + wordFound(f).map(g => '“' + g.text + '”').join(' · ') : imgs.length ? '' : 'Word file') : 'Word rubric: ' + f.wscore.crits.map((c, k) => c + ' ' + (f.wscore.per[k] == null ? '–' : fmtNum(f.wscore.per[k]))).join(' · '), maxW).slice(0, 4)) { ctx.fillText(ln, X, wy); wy += 14; } }
+      else if (!imgs.length) { ctx.fillStyle = '#8A90A0'; ctx.font = 'italic 11px ' + FONT; ctx.fillText(f ? 'No typed grade found' : rows[ri].nograde ? 'No grade yet' : 'Nothing turned in', X, y + 13); }
       y += rh; ctx.strokeStyle = '#ECEEF3'; ctx.beginPath(); ctx.moveTo(M, y - 5); ctx.lineTo(PW - M, y - 5); ctx.stroke();
       ri++;
     }
@@ -1733,7 +2224,7 @@ function openShare() {
 }
 
 // Paper by paper: every page with its covers; drag to add a cover, click one of yours to remove it.
-async function checkCovers(start) {
+async function checkCovers(start, onDone) {
   const list = [];
   for (const st of batch.students) shareDocs(st).forEach((d, k) => list.push({ st, d, k }));
   if (!list.length) return toast('No papers to share');
@@ -1742,7 +2233,7 @@ async function checkCovers(start) {
     '<div class="bb" id="ccBody" style="background:var(--surface-2)"></div>' +
     '<div class="bf" style="justify-content:space-between"><span class="muted" style="font-size:13px;align-self:center;max-width:46%">Drag a box over a name it missed. Click one of your boxes to take it off.</span><span style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end"><button class="btn" data-every hidden>Use my last box on every paper</button><button class="btn" data-back>◀ Back</button><button class="btn primary" data-next>Next ▶</button></span></div>');
   const box = $('#dlgBox');
-  const finish = () => { if (eachKeys) document.removeEventListener('keydown', eachKeys, true); eachKeys = null; saveSoon(); openShare(); };
+  const finish = () => { if (eachKeys) document.removeEventListener('keydown', eachKeys, true); eachKeys = null; saveSoon(); (onDone || openShare)(); };
   const go = d => { pos += d; if (pos >= list.length) { toast('That was the last paper'); return finish(); } pos = Math.max(0, pos); show(); };
   async function show() {
     const my = ++token, { st, d, k } = list[pos], rx = wordRx(coverWords(st));
@@ -1882,7 +2373,7 @@ async function makeSharePackage(onStep) {
   const enc = s => new TextEncoder().encode(s);
   files['scores.csv'] = enc('﻿' + [head].concat(rows).map(r => r.map(q).join(',')).join('\r\n'));
   files['comments.json'] = enc(JSON.stringify(notes, null, 1));
-  files['rubric.json'] = enc(JSON.stringify({ mode: setup.mode, criteria: crit, levels: setup.mode === 'rubric' ? '4 to 1 per row, half points allowed' : undefined, outOf: maxPoints(), scale: setup.scale || null }, null, 1));
+  files['rubric.json'] = enc(JSON.stringify({ mode: setup.mode, criteria: crit, levels: setup.mode === 'rubric' ? '1 to 4 per row, half points allowed' : undefined, outOf: maxPoints(), scale: setup.scale || null }, null, 1));
   files['README.txt'] = enc(README_FOR_CLAUDE(seen.size));
   saveBlob(('For Claude - ' + batch.name + '.zip'), new Blob([fflate.zipSync(files)], { type: 'application/zip' }));
 }
@@ -2282,7 +2773,6 @@ function addStamp(st, t) {
   const ta = $('#cmtIn'); if (ta) { ta.focus(); ta.selectionStart = ta.selectionEnd = ta.value.length; }
 }
 // Word (.docx) files show as a readable page. Old .doc files can't be read in a browser.
-// A link in a student's Word file keeps only web or email addresses, so a planted script link can't run here.
 let mammothP = null;
 async function docxHtml(bytes) {
   const r = await mammoth.convertToHtml({ arrayBuffer: bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) });
@@ -2299,7 +2789,7 @@ async function docxCard(f, title) {
 const refKey = () => 'gs.rd.' + batch.id;
 function refDoc() { const r = store.get(refKey(), null); if (!r) return null; const bin = atob(r.b64), u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); return { name: r.name, data: u }; }
 async function pickRefDoc() {
-  const inp = document.createElement('input'); inp.type = 'file'; inp.accept = '.docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+  const inp = document.createElement('input'); inp.type = 'file'; inp.accept = '.docx,.docm,.dotx,.dotm';
   inp.onchange = async () => {
     const f = inp.files[0]; if (!f) return;
     const u = new Uint8Array(await f.arrayBuffer());
@@ -2308,6 +2798,68 @@ async function pickRefDoc() {
     toast('“' + f.name + '” now shows above every paper'); openStudent(cur);
   };
   inp.click();
+}
+
+/* ---------------- readings: any file shown above every student's paper (kept with this download, never exported) ---------------- */
+const REF_KEY = '\u0001reading';   // can't be a student's folder name
+let refFiles = [];   // [{ path, name, data }]
+const refId = path => batch.id + '|' + REF_KEY + '|' + path;
+async function loadRefs() {
+  refFiles = [];
+  let recs = [];
+  try { recs = (await idbDo('readonly', o => o.getAll())) || []; } catch { return; }
+  for (const r of recs.filter(r => r.bid === batch.id && r.key === REF_KEY).sort((a, b) => a.added - b.added)) refFiles.push({ path: r.path, name: r.name, data: r.data });
+}
+function pickRefs() {
+  const inp = document.createElement('input'); inp.type = 'file'; inp.multiple = true;   // any kind of file
+  inp.onchange = () => addRefs([...inp.files]);
+  inp.click();
+}
+async function addRefs(files) {
+  let n = 0;
+  for (const f of files) {
+    const data = new Uint8Array(await f.arrayBuffer()), path = f.name;
+    try { await idbDo('readwrite', o => o.put({ bid: batch.id, key: REF_KEY, path, name: f.name, data, added: Date.now() }, refId(path))); }
+    catch { toast('This browser is out of room to keep ' + f.name); continue; }
+    refFiles = refFiles.filter(r => r.path !== path).concat({ path, name: f.name, data }); n++;
+  }
+  if (!n) return;
+  renderGrade(); openStudent(cur);
+  toast(n === 1 ? '“' + files[0].name + '” now shows above every paper' : n + ' files now show above every paper');
+}
+async function dropRef(path) {
+  try { await idbDo('readwrite', o => o.delete(refId(path))); } catch {}
+  refFiles = refFiles.filter(r => r.path !== path);
+  renderGrade(); openStudent(cur);
+}
+// A folded-open card with the reading: PDF and picture pages, a Word file, text, a recording, or a download link.
+async function refCard(r) {
+  const det = document.createElement('details'); det.className = 'refd';
+  const k = 'gs.refOpen.' + r.path; det.open = store.get(k, true); det.ontoggle = () => store.set(k, det.open);
+  det.innerHTML = '<summary>' + esc(r.name) + ' <span class="muted" style="font-weight:400;font-size:13px">· shown with every paper, not sent back</span></summary><div class="refbody"></div>';
+  const body = det.querySelector('.refbody');
+  const f = await makeFile('reading/' + r.path, r.data.slice());
+  try {
+    if (f.kind === 'docx') { const c = await docxCard({ name: r.name, data: r.data }, r.name); const h = c.querySelector('.fhead'); if (h) h.remove(); body.appendChild(c); }
+    else if (viewable(f)) {
+      await workerReady;
+      const doc = await pdfjsLib.getDocument({ data: f.data.slice(), isEvalSupported: false }).promise;
+      const box = document.createElement('div'); box.className = 'refpages'; body.appendChild(box);
+      const dpr = window.devicePixelRatio || 1, w = Math.min(860, ($('#paper').clientWidth || 900) - 80);
+      for (let i = 1; i <= doc.numPages; i++) {
+        const page = await doc.getPage(i), v1 = page.getViewport({ scale: 1 }), s = w / v1.width, vp = page.getViewport({ scale: s * dpr });
+        const c = document.createElement('canvas'); c.width = Math.ceil(vp.width); c.height = Math.ceil(vp.height); c.style.width = w + 'px';
+        const ctx = c.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
+        await page.render({ canvasContext: ctx, viewport: vp, annotationMode: pdfjsLib.AnnotationMode.ENABLE }).promise;
+        box.appendChild(c); page.cleanup();
+      }
+      doc.destroy();
+    }
+    else if (f.kind === 'text') { const c = textCard(f); const h = c.querySelector('.fhead'); if (h) h.remove(); body.appendChild(c); }
+    else if (f.kind === 'media') { const v = document.createElement(/\.(mp4|mov|webm|m4v)$/i.test(r.name) ? 'video' : 'audio'); v.controls = true; v.src = URL.createObjectURL(new Blob([r.data])); v.style.width = '100%'; body.appendChild(v); }
+    else body.appendChild(otherCard(f));
+  } catch { body.innerHTML = '<p class="muted">This file couldn’t be shown here.</p>'; }
+  return det;
 }
 
 /* the speech engine (same as the Interview Transcriber), in a worker so the page stays smooth */
@@ -2417,6 +2969,51 @@ async function transcribeFile(f, say) {
   f.tr = { w: words };
 }
 
+// Every recording in the download, one after another. Each transcript is saved as soon as it's done,
+// so stopping (or closing the tab) keeps the ones already made.
+let trAll = null;
+function openTranscripts() {
+  const all = batch.students.flatMap((st, i) => st.files.filter(f => f.kind === 'media').map(f => ({ st, i, f })));
+  const have = all.filter(x => x.f.tr).length;
+  const render = (msg) => {
+    $('#trBody').innerHTML = '<p style="margin-top:0"><b>' + all.length + (all.length === 1 ? ' recording' : ' recordings') + '</b> in this download' + (have ? ', ' + have + ' with a transcript already' : '') + '.</p>' +
+      (have && !trAll ? '<label class="chk"><input type="checkbox" id="trRedo"> Make the existing ones again too</label>' : '') +
+      '<p class="muted" style="font-size:13px">Runs in this browser (nothing is uploaded). The speech engine downloads once. Keep this tab open while it works; you can keep grading in the meantime.</p>' +
+      '<div class="prog"' + (trAll ? '' : ' hidden') + '><i style="width:' + (trAll ? trAll.pct : 0) + '%"></i></div><p id="trMsg" style="font-size:14px">' + esc(msg || '') + '</p>';
+  };
+  openDlg('<div class="bh"><h2>Transcripts</h2><button class="icon" data-close aria-label="Close">✕</button></div><div class="bb" id="trBody"></div>' +
+    '<div class="bf"><button class="btn" data-close>Close</button><button class="btn primary" data-go>' + (trAll ? 'Stop' : 'Make transcripts') + '</button></div>', true);
+  render(trAll ? trAll.msg : '');
+  const box = $('#dlgBox');
+  box.onclick = async e => {
+    if (e.target.closest('[data-close]')) return closeDlg();
+    if (!e.target.closest('[data-go]')) return;
+    if (trAll) { trAll.stop = true; e.target.textContent = 'Stopping after this one…'; return; }
+    const redo = !!($('#trRedo') && $('#trRedo').checked), todo = all.filter(x => redo || !x.f.tr);
+    if (!todo.length) return toast('Every recording already has a transcript');
+    e.target.closest('[data-go]').textContent = 'Stop';
+    trAll = { stop: false, pct: 0, msg: '' };
+    let lock = null; try { lock = await navigator.wakeLock.request('screen'); } catch {}
+    const say = m => { trAll.msg = m; const el = $('#trMsg'); if (el) el.textContent = m; const bar = $('#trBody .prog'); if (bar) { bar.hidden = false; bar.firstChild.style.width = trAll.pct + '%'; } };
+    let done = 0, failed = 0;
+    for (let k = 0; k < todo.length && !trAll.stop; k++) {
+      const { st, i, f } = todo[k];
+      trAll.pct = Math.round(100 * k / todo.length);
+      try {
+        await transcribeFile(f, m => say('Student ' + (i + 1) + ' (' + (k + 1) + ' of ' + todo.length + ') · ' + f.name + ' · ' + m));
+        done++; saveNow();
+        if (i === cur && $('#dlg').hidden) openStudent(cur);
+      } catch (er) { failed++; console.error(er); }
+    }
+    try { lock && lock.release(); } catch {}
+    const stopped = trAll.stop; trAll = null;
+    const msg = (stopped ? 'Stopped. ' : 'Done. ') + done + (done === 1 ? ' transcript' : ' transcripts') + ' made' + (failed ? ', ' + failed + ' couldn’t be read (try Chrome, or convert those to .mp4 or .m4a)' : '') + '.';
+    toast(msg);
+    if (!$('#dlg').hidden && $('#trBody')) { render(msg); const g = box.querySelector('[data-go]'); if (g) g.textContent = 'Make transcripts'; }
+    renderList(); if ($('#dlg').hidden) openStudent(cur);
+  };
+}
+
 /* ---------------- units, assignments and rosters (kept in this browser only) ---------------- */
 const uid = () => Math.random().toString(36).slice(2, 10);
 const fresh = store.get('gs.lib', null) == null;
@@ -2437,9 +3034,12 @@ function batchSummary(it) {
   const d = new Date(it.opened || (data && data.t) || Date.now());
   let n = 0;
   if (data) for (const k in data.s) { const g = data.s[k].g; if (g && (g.rubric.some(v => v != null) || g.points !== '')) n++; }
+  const m = keptMeta.get(it.batchId);
+  if (m) return 'Last worked on ' + fmtDay(m.t) + ' · ' + (m.scored || 0) + ' of ' + m.n + ' scored' + (m.papers ? '' : ' · drop the same ZIP to keep going');
   return 'Opened ' + d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) + (data ? ' · ' + n + ' scored' : '') + ' · drop the same ZIP to keep going';
 }
 function renderLib() {
+  renderKept();
   $('#board').innerHTML = lib.units.map((u, ui) => '<div class="unit" draggable="true" data-unit="' + ui + '">' +
     '<div class="uhead" title="Drag to move this unit"><span class="nm">' + esc(u.name) + '</span><button class="icon" data-urename="' + ui + '" title="Rename unit" aria-label="Rename unit">✎</button>' +
     '<button class="icon" data-udel="' + ui + '" title="Delete unit" aria-label="Delete unit">✕</button></div>' +
@@ -2447,7 +3047,8 @@ function renderLib() {
       const c = classById(it.classId);
       return '<div class="card" draggable="true" data-card="' + ui + ':' + ii + '"><div class="t">' + esc(it.name) + '</div>' +
         '<div class="m">' + (c ? '<span class="tag">' + esc(c.name) + '</span> ' : '') + esc(batchSummary(it)) + '</div>' +
-        '<div class="row"><button class="btn sm primary" data-open-asg="' + it.id + '">Open download…</button><button class="btn sm" data-edit-asg="' + it.id + '">Edit</button></div></div>';
+        '<div class="row">' + (it.batchId && (keptMeta.get(it.batchId) || {}).papers ? '<button class="btn sm primary" data-kopen="' + esc(it.batchId) + '" data-kasg="' + it.id + '">Open</button><button class="btn sm" data-open-asg="' + it.id + '">Other download…</button>'
+          : '<button class="btn sm primary" data-open-asg="' + it.id + '">Open download…</button>') + '<button class="btn sm" data-edit-asg="' + it.id + '">Edit</button></div></div>';
     }).join('') + '</div>' +
     '<button class="addcard" data-additem="' + ui + '">+ Assignment</button></div>').join('') ||
     '<div class="empty-note">No units yet. Click + Unit.</div>';
@@ -2514,6 +3115,11 @@ document.addEventListener('drop', async e => {
 }, true);
 
 let asgTarget = null;
+$('#asgDirIn').onchange = e => {
+  const fs = [...e.target.files], top = fs.length ? (fs[0].webkitRelativePath || '').split('/')[0] : '';
+  if (asgTarget && fs.length) intake(fs.map(f => ({ path: (f.webkitRelativePath || f.name).split('/').slice(1).join('/') || f.name, file: f })), top, asgTarget);
+  e.target.value = '';
+};
 $('#asgIn').onchange = e => { const fs = [...e.target.files]; if (asgTarget && fs.length) intake(fs.map(f => ({ path: f.name, file: f })), fs.length === 1 ? fs[0].name.replace(/\.[^.]+$/, '') : '', asgTarget); e.target.value = ''; };
 $('#start').addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return;
@@ -2527,11 +3133,16 @@ $('#start').addEventListener('click', e => {
   }
   if (b.dataset.additem != null) return editAssignment(null, +b.dataset.additem);
   if (b.dataset.editAsg) return editAssignment(b.dataset.editAsg);
+  if (b.dataset.kopen) { const f = b.dataset.kasg ? findItem(b.dataset.kasg) : null; b.disabled = true; b.textContent = 'Opening…'; return reopenKept(b.dataset.kopen, f ? f.it : null).finally(() => { b.disabled = false; }); }
+  if (b.dataset.kforget) {   // two clicks, so a stray click can't throw work away
+    if (!b.dataset.armed) { b.dataset.armed = '1'; b.textContent = 'Click again to forget it'; setTimeout(() => { if (b.isConnected) { delete b.dataset.armed; b.textContent = 'Forget'; } }, 4000); return; }
+    return forgetKept(b.dataset.kforget);
+  }
   if (b.dataset.openAsg) {
     asgTarget = findItem(b.dataset.openAsg).it;
-    if (!G.email) { $('#asgIn').click(); return; }
-    openDlg('<div class="bh"><h2>Open “' + esc(asgTarget.name) + '”</h2></div><div class="bb"><p style="margin-top:0">Where is the ManageBac download?</p></div><div class="bf"><button class="btn" data-cancel>Cancel</button><button class="btn" data-pc>On this computer…</button><button class="btn primary" data-dv>In Google Drive…</button></div>', true);
-    $('#dlgBox').onclick = ev => { if (ev.target.closest('[data-cancel]')) return closeDlg(); if (ev.target.closest('[data-pc]')) { closeDlg(); $('#asgIn').click(); } if (ev.target.closest('[data-dv]')) { closeDlg(); openFromDrive(asgTarget); } };
+    openDlg('<div class="bh"><h2>Open “' + esc(asgTarget.name) + '”</h2></div><div class="bb"><p style="margin-top:0">Where is the ManageBac download? You can also drop the ZIP or the folder straight onto this assignment’s card.</p></div>' +
+      '<div class="bf"><button class="btn" data-cancel>Cancel</button><button class="btn" data-pc>The ZIP or files…</button><button class="btn" data-dir>A whole folder…</button><button class="btn" data-scan>A scan of everyone’s papers…</button><button class="btn" data-match>Files to match to a roster…</button>' + (gcid() ? '<button class="btn primary" data-dv>From Google Drive…</button>' : '') + '</div>', true);
+    $('#dlgBox').onclick = ev => { if (ev.target.closest('[data-cancel]')) return closeDlg(); if (ev.target.closest('[data-pc]')) { closeDlg(); $('#asgIn').click(); } if (ev.target.closest('[data-dir]')) { closeDlg(); pickDir('#asgDirIn'); } if (ev.target.closest('[data-scan]')) { closeDlg(); scanFor = asgTarget; $('#scanIn').click(); } if (ev.target.closest('[data-match]')) { const a = asgTarget; askFilesOrFolder('Match files to a roster', 'Each file is matched to a student by the name in its file name or folder name, and you can fix any match.', list => matchToRoster(list, a)); } if (ev.target.closest('[data-dv]')) { closeDlg(); openFromDrive(asgTarget); } };
     return;
   }
   if (b.dataset.editClass != null) return editClass(+b.dataset.editClass);
@@ -2610,6 +3221,1399 @@ function renderClassSel() {
 }
 $('#classSel').onchange = e => { batch.classId = e.target.value; if (batch.assignment) { batch.assignment.classId = e.target.value; saveLib(); } saveSoon(); };
 
+/* ---------------- late or forgotten files: added to a student's submission, kept in this browser ---------------- */
+// The download itself never changes. Added files live in IndexedDB under this download's id, so they come back
+// when the same download is opened again, and they export with the student's other files.
+let addDbP = null;
+const addDb = () => addDbP ||= new Promise((res, rej) => { const r = indexedDB.open('grading-studio-added', 1); r.onupgradeneeded = () => r.result.createObjectStore('files'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
+/* ---------------- keeping every download: papers and work in this browser's IndexedDB ---------------- */
+// papers: the files as opened (so a download reopens in one click), work: a full copy of marks and scores,
+// meta: a small summary per download for the list. All of it stays on this computer.
+let keepDbP = null, keepOk = false;
+const keepDb = () => keepDbP ||= new Promise((res, rej) => {
+  const r = indexedDB.open('grading-studio-keep', 2);
+  r.onupgradeneeded = () => { for (const n of ['papers', 'work', 'meta', 'edits']) if (!r.result.objectStoreNames.contains(n)) r.result.createObjectStore(n); };
+  r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
+});
+async function kdo(name, mode, fn) {
+  const db = await keepDb();
+  return new Promise((res, rej) => { const tx = db.transaction(name, mode), req = fn(tx.objectStore(name)); tx.oncomplete = () => res(req && req.result); tx.onerror = () => rej(tx.error); tx.onabort = () => rej(tx.error); });
+}
+const kget = (name, k) => kdo(name, 'readonly', o => o.get(k)).catch(() => null);
+let keptMeta = new Map();
+async function loadKept() {
+  try { const all = await kdo('meta', 'readonly', o => o.getAll()); keepOk = true; keptMeta = new Map((all || []).map(m => [m.id, m])); } catch { keptMeta = new Map(); }
+  if (!batch) renderLib();
+}
+let askedKeep = false;
+function askToKeep() {   // asks the browser not to clear this site's storage when the disk gets full
+  if (askedKeep || !navigator.storage || !navigator.storage.persist) return;
+  askedKeep = true; navigator.storage.persist().catch(() => {});
+}
+async function keepPapers(b, label, list) {
+  const m = { ...(keptMeta.get(b.id) || {}), id: b.id, name: b.name, n: b.students.length, t: Date.now(), asg: b.assignment ? b.assignment.id : (keptMeta.get(b.id) || {}).asg };
+  try {
+    if (list && !(keptMeta.get(b.id) || {}).papers) {
+      await kdo('papers', 'readwrite', o => o.put({ id: b.id, label: label || '', entries: list }, b.id));
+      m.papers = true; m.size = list.reduce((a, e) => a + (e.data ? e.data.length : 0), 0);
+    }
+    await kdo('meta', 'readwrite', o => o.put(m, b.id)); keepOk = true; keptMeta.set(b.id, m);
+  } catch (e) {
+    console.error(e);
+    if (list) toast('This browser has no room to keep these papers. Your marks are still saved; drop the download in again to reopen it.');
+  }
+}
+let keepT = null;
+function keepWork(b, data) {
+  const n = Object.values(data.s).filter(x => x.g && ((x.g.rubric || []).some(v => v != null) || x.g.points !== '' || x.g.sheet)).length;
+  const m = { ...(keptMeta.get(b.id) || { id: b.id, name: b.name, n: b.students.length }), t: data.t, scored: n };
+  keptMeta.set(b.id, m);
+  kdo('work', 'readwrite', o => o.put(data, b.id)).then(() => kdo('meta', 'readwrite', o => o.put(m, b.id))).then(() => { keepOk = true; })
+    .catch(e => { keepOk = false; console.error(e); });
+}
+async function reopenKept(id, assignment) {
+  const rec = await kget('papers', id);
+  if (!rec) { toast('The papers for this one aren’t kept in this browser. Drop the download in again.'); return; }
+  const m = keptMeta.get(id), f = !assignment && m && m.asg ? findItem(m.asg) : null;
+  await intake(rec.entries, rec.label, assignment || (f ? f.it : null), true);
+}
+async function forgetKept(id) {
+  try {
+    for (const n of ['papers', 'work', 'meta']) await kdo(n, 'readwrite', o => o.delete(id));
+    await kdo('edits', 'readwrite', o => o.delete(IDBKeyRange.bound(id + '|', id + '|\uffff')));
+    const recs = (await idbDo('readonly', o => o.getAll())) || [];
+    await idbDo('readwrite', o => { for (const r of recs) if (r.bid === id) o.delete(r.bid + '|' + r.key + '|' + r.path); });
+  } catch {}
+  store.del(id); const idx = store.get('gs.batches', {}); delete idx[id]; store.set('gs.batches', idx);
+  keptMeta.delete(id); renderLib();
+}
+const fmtSize = b => b > 1e9 ? (b / 1e9).toFixed(1) + ' GB' : b > 1e6 ? Math.round(b / 1e6) + ' MB' : Math.max(1, Math.round(b / 1e3)) + ' KB';
+function renderKept() {
+  const el = $('#kept'); if (!el) return;
+  const list = [...keptMeta.values()].sort((a, b) => b.t - a.t);
+  el.closest('section').hidden = !list.length;
+  el.innerHTML = list.map(m => '<div class="krow"><div class="kn"><b>' + esc(m.name) + '</b><span class="muted">' + m.n + (m.n === 1 ? ' student' : ' students') + ' · ' + (m.scored || 0) + ' scored · last worked on ' + fmtDay(m.t) + (m.size ? ' · ' + fmtSize(m.size) : '') + (m.papers ? '' : ' · papers not kept, drop the download again') + '</span></div>' +
+    (m.papers ? '<button class="btn sm primary" data-kopen="' + esc(m.id) + '">Open</button>' : '') + '<button class="btn sm" data-kforget="' + esc(m.id) + '" title="Removes the papers, your marks and scores for this download from this browser">Forget</button></div>').join('');
+}
+async function idbDo(mode, fn) {
+  const db = await addDb();
+  return new Promise((res, rej) => { const tx = db.transaction('files', mode), req = fn(tx.objectStore('files')); tx.oncomplete = () => res(req && req.result); tx.onerror = () => rej(tx.error); });
+}
+const addKey = (st, path) => batch.id + '|' + st.key + '|' + path;
+const fmtDay = t => new Date(t).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+const addTag = f => '<span class="addtag" title="You added this file">Added by you · ' + fmtDay(f.added) + '</span><button class="link" style="font-size:13px" data-rmadd="' + esc(f.path) + '">Remove</button>';
+async function loadAdded() {
+  let recs = [];
+  try { recs = (await idbDo('readonly', o => o.getAll())) || []; } catch { return; }
+  for (const r of recs.filter(r => r.bid === batch.id).sort((a, b) => a.added - b.added)) {
+    const st = batch.students.find(s => s.key === r.key);
+    if (!st || st.files.some(f => f.path === r.path)) continue;
+    const f = await makeFile(r.path, r.data); f.added = r.added; f.akey = r.key; st.files.push(f);
+  }
+}
+function pickAdd(st) {
+  const inp = document.createElement('input');
+  inp.type = 'file'; inp.multiple = true;   // any kind of file
+  inp.onchange = () => addFiles(st, [...inp.files].map(f => ({ path: f.name, file: f })));
+  inp.click();
+}
+async function addFiles(st, list, quiet) {
+  list = list.filter(e => e.file && !junk(e.path));
+  if (!list.length) return;
+  commitEditors();
+  let last = null;
+  for (const e of list) {
+    const bytes = new Uint8Array(await e.file.arrayBuffer());
+    const name = e.file.name.replace(/[\\/]+/g, '-'), base = st.key + '/' + name;
+    let path = base, k = 2;
+    while (st.files.some(f => f.path === path)) path = base.replace(/(\.[^./]+)?$/, ' (added ' + k++ + ')$1');
+    const f = await makeFile(path, bytes); f.added = Date.now(); f.akey = st.key;
+    if (viewable(f)) {
+      try { await workerReady; const d = await pdfjsLib.getDocument({ data: f.data.slice(), isEvalSupported: false }).promise; f.numPages = d.numPages; d.destroy(); } catch {}
+      if (st.layout && f.numPages) st.layout.push({ name: f.name, file: f.path, pages: [...Array(f.numPages).keys()].map(p => [f.path, p]) });
+      try { f.scan = await scanFile(f, f.hand || setup.spot || null); f.kami = f.scan.kami; } catch {}
+    }
+    st.files.push(f); last = f;
+    try { await idbDo('readwrite', o => o.put({ bid: batch.id, key: st.key, path: f.path, name: f.name, data: bytes, added: f.added }, addKey(st, f.path))); }
+    catch { toast('This browser couldn’t keep ' + f.name + ' for next time. It’s here until you close the download.'); }
+  }
+  refound(st); saveSoon(); renderList(); wordScoresAll();
+  $('#trAllBtn').hidden = !CAN_TRANSCRIBE || !batch.students.some(x => x.files.some(f => f.kind === 'media'));
+  if (quiet) return;
+  const i = batch.students.indexOf(st);
+  toast('Added ' + list.length + (list.length === 1 ? ' file' : ' files') + ' to ' + st.key);
+  openStudent(i, last && last.path);
+}
+async function removeAdded(st, path) {
+  const f = fileByPath(st, path); if (!f || !f.added) return;
+  st.files.splice(st.files.indexOf(f), 1);
+  if (st.layout) { st.layout = st.layout.map(d => ({ ...d, pages: d.pages.filter(([q]) => q !== path) })).filter(d => d.pages.length); if (!st.layout.length) st.layout = null; }
+  if (st.inc) delete st.inc[path];
+  try { await idbDo('readwrite', o => o.delete(batch.id + '|' + (f.akey || st.key) + '|' + path)); } catch {}
+  if (st.forder) st.forder = st.forder.filter(x => x !== 'f:' + path);
+  refound(st); saveSoon(); renderList(); openStudent(cur);
+  toast('Removed ' + f.name);
+}
+function refound(st) {
+  const all = st.files.filter(f => f.kind !== 'docx' && fileIn(st, f)).flatMap(f => (f.scan && f.scan.found) || []).concat(st.files.flatMap(wordFound));
+  st.found = all.length === 1 ? { ...all[0], found: true } : null; st.foundCount = all.length;
+}
+
+/* ---------------- display: app text size, text box size, paper fit, Word documents ---------------- */
+function applyDisp() {
+  const r = document.documentElement.style;
+  r.setProperty('--uz', disp.ui); r.setProperty('--dfs', disp.dfs + 'px'); r.setProperty('--dlh', disp.dlh);
+}
+function dispChanged(k) {
+  store.set('gs.disp', disp); applyDisp();
+  if (k === 'zoom') store.set('gs.zoom', zoom);
+  if (k === 'fit' || k === 'zoom' || k === 'ui') { clearTimeout(resizeT); resizeT = setTimeout(() => { if (batch) renderTools(); pages.forEach(renderPage); }, 120); }
+}
+function openDisplay() {
+  const seg = (key, opts) => '<span class="seg">' + opts.map(([v, l]) => '<button data-k="' + key + '" data-v="' + v + '" aria-pressed="' + (String(disp[key]) === String(v)) + '">' + l + '</button>').join('') + '</span>';
+  const range = (key, min, max, step, val, unit) => '<div class="rv"><input type="range" min="' + min + '" max="' + max + '" step="' + step + '" data-r="' + key + '" value="' + val + '" aria-label="' + key + '"><b>' + val + unit + '</b></div>';
+  const render = () => {
+    $('#dispBody').innerHTML =
+      '<div class="dset"><div class="dl">App text size</div>' + seg('ui', [[0.9, 'Small'], [1, 'Normal'], [1.15, 'Large'], [1.3, 'Extra large']]) +
+        '<div class="muted" style="font-size:12.5px;margin-top:6px">The student list, toolbar, grade panel and windows. Papers keep their own zoom.</div></div>' +
+      '<div class="dset"><div class="dl">New text boxes on the paper</div>' + range('tsize', 8, 32, 1, disp.tsize, ' pt') +
+        '<div id="tsPrev" style="margin-top:6px;font:' + disp.tsize + 'px Helvetica,Arial,sans-serif;color:' + COLORS[inkColor] + '">Aa Bb 123</div></div>' +
+      '<div class="dset"><div class="dl">Paper</div>' + seg('fit', [['width', 'Fit width'], ['page', 'Fit whole page']]) +
+        '<div style="margin-top:8px">' + range('zoom', 50, 250, 5, Math.round(zoom * 100), '%') + '</div></div>' +
+      '<div class="dset"><div class="dl">Word documents</div>' + range('dfs', 12, 24, 1, disp.dfs, ' px') +
+        '<div style="margin-top:8px;display:flex;align-items:center;gap:8px"><span class="muted" style="font-size:13px">Line spacing</span>' + seg('dlh', [[1.3, 'Tight'], [1.45, 'Normal'], [1.8, 'Roomy']]) + '</div></div>';
+  };
+  openDlg('<div class="bh"><h2>Display</h2><button class="icon" data-close aria-label="Close">✕</button></div><div class="bb" id="dispBody"></div>' +
+    '<div class="bf"><button class="btn" data-reset>Back to normal</button><button class="btn primary" data-close>Done</button></div>', true);
+  render();
+  const box = $('#dlgBox');
+  box.onclick = e => {
+    if (e.target.closest('[data-close]')) return closeDlg();
+    if (e.target.closest('[data-reset]')) { disp = { ...DISP0, trim: disp.trim }; zoom = 1; dispChanged('zoom'); dispChanged('ui'); return render(); }
+    const b = e.target.closest('[data-k]');
+    if (b) { const v = b.dataset.v; disp[b.dataset.k] = isNaN(+v) ? v : +v; dispChanged(b.dataset.k); render(); }
+  };
+  box.oninput = e => {
+    const k = e.target.dataset.r; if (!k) return;
+    const v = +e.target.value;
+    if (k === 'zoom') zoom = v / 100; else disp[k] = v;
+    e.target.nextElementSibling.textContent = v + (k === 'zoom' ? '%' : k === 'tsize' ? ' pt' : ' px');
+    if (k === 'tsize') $('#tsPrev').style.fontSize = v + 'px';
+    dispChanged(k);
+  };
+}
+
+/* ---------------- anonymous grading: papers as Paper 1, 2, 3… in a random order, names covered; scores still go to the right student ---------------- */
+const anonOn = () => !!(batch && batch.anon && batch.anon.on);
+// The shuffled order, as student indexes. Students added later go in at random places.
+function anonOrder() {
+  const A = batch.anon || (batch.anon = { on: false, order: [] }), keys = batch.students.map(st => st.key), have = new Set(keys);
+  A.order = A.order.filter(k => have.has(k));
+  for (const k of keys) if (!A.order.includes(k)) A.order.splice(Math.floor(Math.random() * (A.order.length + 1)), 0, k);
+  const at = new Map(keys.map((k, i) => [k, i]));
+  return A.order.map(k => at.get(k));
+}
+function anonShuffle() {
+  const k = batch.students.map(st => st.key);
+  for (let i = k.length - 1; i > 0; i--) { const j = crypto.getRandomValues(new Uint32Array(1))[0] % (i + 1); [k[i], k[j]] = [k[j], k[i]]; }
+  batch.anon = { ...(batch.anon || {}), order: k };
+}
+const anonPos = i => anonOrder().indexOf(i);
+const shownName = (st, i) => anonOn() ? 'Paper ' + (anonPos(i) + 1) : st.key;
+// Next or previous student in the order on screen.
+function stepStudent(d) {
+  if (!anonOn()) { const n = cur + d; if (n >= 0 && n < batch.students.length) openStudent(n); return; }
+  const o = anonOrder(), p = o.indexOf(cur) + d;
+  if (p >= 0 && p < o.length) openStudent(o[p]);
+}
+const anonRx = st => wordRx(coverWords(st));
+// Black boxes (page points) over typed names, Kami boxes with names, and the boxes she drew in Check the covers.
+async function anonCovers(st, pg) {
+  try { return (await autoCovers(pg.page, pg.page.getViewport({ scale: 1 }), anonRx(st))).concat(ownCovers(pg.file.path, pg.idx, pg.W, pg.H)); }
+  catch { return ownCovers(pg.file.path, pg.idx, pg.W, pg.H); }
+}
+// File names, Word and text files: names in headings are swapped for [name], and any line of a document that has a
+// name is blacked out on screen (the file itself isn't changed).
+function anonScrub() {
+  if (!anonOn()) return;
+  const st = batch.students[cur], rx = anonRx(st); if (!rx) return;
+  for (const el of document.querySelectorAll('#paper .fhead > span:first-child, #paper .refd > summary')) {
+    rx.lastIndex = 0; if (rx.test(el.textContent)) el.textContent = scrub(el.textContent, rx);
+  }
+  for (const el of document.querySelectorAll('#paper .dpage p, #paper .dpage td, #paper .dpage li, #paper .dpage')) {
+    if (el.classList.contains('anonhide') || (el.classList.contains('dpage') && el.querySelector('p,td,li'))) continue;
+    rx.lastIndex = 0; if (rx.test(el.textContent)) el.classList.add('anonhide');
+  }
+}
+let anonT = 0;
+new MutationObserver(() => { if (anonOn()) { clearTimeout(anonT); anonT = setTimeout(anonScrub, 30); } }).observe($('#paper'), { childList: true, subtree: true });
+function setAnon(on) {
+  if (on && !(batch.anon && batch.anon.order && batch.anon.order.length)) anonShuffle();
+  batch.anon.on = on; saveNow();
+  openStudent(on ? anonOrder()[0] : cur);
+  toast(on ? 'Anonymous: papers in a random order, names covered' : 'Names are back, in folder order');
+}
+function openAnon() {
+  if (anonOn()) return setAnon(false);
+  const seen = batch.anon && batch.anon.order && batch.anon.order.length;
+  openDlg('<div class="bh"><h2>Anonymous grading</h2><button class="icon" data-cancel aria-label="Close">✕</button></div><div class="bb">' +
+    '<p style="margin-top:0">Papers show up as <b>Paper 1, Paper 2…</b> in a random order, with names covered. Every mark and score still goes to the right student, and you can switch back any time.</p>' +
+    '<ol style="margin:0 0 12px;padding-left:20px;line-height:1.6">' +
+    '<li><b>Get everything in order first:</b> late files, split scans, your rubric.</li>' +
+    '<li><b>Cover the names.</b> Typed names (from the folder names' + (batchClass() ? ' and your roster' : '') + ') are covered on their own. For handwritten names, check the covers: drag a box over the name once, then use it on every paper.</li>' +
+    '<li><b>Start.</b> ' + (seen ? 'It keeps the same random order as last time, or you can shuffle a new one.' : 'The order is shuffled once and kept, so you can stop and come back.') + '</li></ol>' +
+    '<p class="muted" style="font-size:13px;margin:0">The Grades list, Grade sheet and export still use names, since that’s where you copy grades out.</p></div>' +
+    '<div class="bf"><button class="btn" data-check style="margin-right:auto">Check the covers…</button>' + (seen ? '<button class="btn" data-shuf>Shuffle a new order and start</button>' : '') + '<button class="btn primary" data-go>Start anonymous grading</button></div>', true);
+  $('#dlgBox').onclick = e => {
+    if (e.target.closest('[data-cancel]')) return closeDlg();
+    if (e.target.closest('[data-check]')) return checkCovers(0, openAnon);
+    if (e.target.closest('[data-shuf]')) { anonShuffle(); closeDlg(); return setAnon(true); }
+    if (e.target.closest('[data-go]')) { closeDlg(); return setAnon(true); }
+  };
+}
+function renderAnonHead() {
+  const on = anonOn();
+  $('#sideHd').innerHTML = '<span>' + (on ? 'Papers, shuffled' : 'Students') + '</span>' +
+    '<button class="anonsw" id="anonSw" role="switch" aria-checked="' + on + '" title="Grade without names, in a random order"><i></i>Anonymous</button>' +
+    (on ? '<button class="btn sm" id="anonShuf" title="Put the papers in a new random order">⤮ Shuffle</button>' : '');
+}
+$('#sideHd').addEventListener('click', e => {
+  if (e.target.closest('#anonSw')) openAnon();
+  if (e.target.closest('#anonShuf')) { anonShuffle(); saveNow(); openStudent(anonOrder()[0]); toast('Shuffled: a new random order'); }
+});
+
+/* ---------------- calculator: a small floating calculator with grade helpers; it opens from the top bar or the = key ---------------- */
+// Reads + − × ÷ ^ ( ) and %, plus sum(), avg(), min(), max(), round(), sqrt(). No eval: a small parser.
+function calcEval(src) {
+  const s = String(src).replace(/[×xX*]/g, '*').replace(/[÷:]/g, '/').replace(/[−–]/g, '-').replace(/,(?=\d{3}\b)/g, '').replace(/\s+/g, '');
+  let i = 0;
+  const peek = () => s[i], eat = c => { if (s[i] === c) { i++; return true; } return false; };
+  const FN = { sum: a => a.reduce((x, y) => x + y, 0), avg: a => a.reduce((x, y) => x + y, 0) / a.length, min: a => Math.min(...a), max: a => Math.max(...a), round: a => a.length > 1 ? Math.round(a[0] * 10 ** a[1]) / 10 ** a[1] : Math.round(a[0]), sqrt: a => Math.sqrt(a[0]) };
+  function atom() {
+    if (eat('(')) { const v = add(); if (!eat(')')) throw 0; return v; }
+    if (eat('-')) return -power();
+    if (eat('+')) return power();
+    const m = /^[a-z]+/i.exec(s.slice(i));
+    if (m) {
+      const f = FN[m[0].toLowerCase()]; if (!f) throw 0; i += m[0].length;
+      if (!eat('(')) throw 0; const args = [add()]; while (eat(',') || eat(';')) args.push(add()); if (!eat(')')) throw 0;
+      return f(args);
+    }
+    const n = /^(\d+\.?\d*|\.\d+)/.exec(s.slice(i)); if (!n) throw 0; i += n[0].length;
+    return +n[0];
+  }
+  function post() { let v = atom(); while (eat('%')) v /= 100; return v; }
+  function power() { const v = post(); return eat('^') ? v ** power() : v; }
+  function mul() { let v = power(); for (;;) { if (eat('*')) v *= power(); else if (eat('/')) v /= power(); else if (peek() === '(') v *= power(); else return v; } }
+  function add() { let v = mul(); for (;;) { if (eat('+')) v += mul(); else if (eat('-')) v -= mul(); else return v; } }
+  if (!s) return null;
+  const v = add(); if (i < s.length || !isFinite(v)) throw 0;
+  return v;
+}
+const calcFmt = v => v == null ? '' : String(+(+v).toFixed(4));
+function openCalc() {
+  const old = $('#calcPanel'); if (old) { old.remove(); return; }
+  const p = document.createElement('div'); p.id = 'calcPanel'; document.body.appendChild(p);
+  const pos = store.get('gs.calcpos', null); if (pos) { p.style.left = pos.x + 'px'; p.style.top = pos.y + 'px'; p.style.right = 'auto'; }
+  let hist = store.get('gs.calchist', []), last = null;
+  const max = maxPoints();
+  const keys = ['C', '(', ')', '÷', '7', '8', '9', '×', '4', '5', '6', '−', '1', '2', '3', '+', '0', '.', '⌫', '='];
+  p.innerHTML = '<div class="cph"><b>Calculator</b><span style="flex:1"></span><button class="icon" data-cx aria-label="Close">✕</button></div>' +
+    '<input id="calcIn" autocomplete="off" spellcheck="false" placeholder="Type or tap, e.g. 3.5+4+3" aria-label="Calculation">' +
+    '<div id="calcOut" aria-live="polite"></div>' +
+    '<div class="cpk">' + keys.map(k => '<button data-ck="' + k + '"' + (k === '=' ? ' class="eq"' : /[÷×−+]/.test(k) ? ' class="op"' : '') + '>' + k + '</button>').join('') + '</div>' +
+    '<div class="cpsec"><div class="dl">Score to percent</div>' +
+      '<div class="cprow"><input id="calcPts" type="number" step="0.5" min="0" placeholder="Score"><span>out of</span><input id="calcMax" type="number" step="0.5" min="0" value="' + (max || '') + '"></div>' +
+      '<div id="calcPct" class="muted"></div></div>' +
+    '<div class="cpsec"><div class="dl">Average</div><input id="calcAvg" placeholder="Numbers with spaces, e.g. 4 3.5 3" autocomplete="off"><div id="calcAvgOut" class="muted"></div></div>' +
+    '<div class="cpsec"><div class="dl">History</div><div id="calcHist"></div></div>';
+  const inp = $('#calcIn'), out = $('#calcOut');
+  const show = () => {
+    let v = null, bad = false; try { v = calcEval(inp.value); } catch { bad = !!inp.value.trim(); }
+    last = v;
+    out.innerHTML = bad ? '<span class="muted">…</span>' : v == null ? '<span class="muted">0</span>' : '= <b>' + calcFmt(v) + '</b>' +
+      ($('#ptsIn') ? ' <button class="link" data-cuse title="Put this number in the open student’s score box">Use as score</button>' : '');
+  };
+  const drawHist = () => { $('#calcHist').innerHTML = hist.length ? hist.map((h, k) => '<button class="cphi" data-ch="' + k + '"><span>' + esc(h.e) + '</span><b>' + esc(h.v) + '</b></button>').join('') + '<button class="link" data-chclear style="font-size:12px">Clear history</button>' : '<span class="muted" style="font-size:12px">Your answers show here. Click one to use it again.</span>'; };
+  const done = () => {
+    if (last == null) return;
+    const e = inp.value.trim(), v = calcFmt(last);
+    if (e !== v) { hist.unshift({ e, v }); hist = hist.slice(0, 12); store.set('gs.calchist', hist); drawHist(); }
+    inp.value = v; show(); inp.select();
+  };
+  const pct = () => {
+    const t = $('#calcPts').value, m = +$('#calcMax').value;
+    if (t === '' || !m) { $('#calcPct').textContent = 'Type a score to see its percent.'; return; }
+    const straight = +t / m * 100, onScale = m === max ? percentFor(+t) : null;
+    $('#calcPct').innerHTML = onScale != null ? '<b>' + onScale + '%</b> on your grading scale · ' + calcFmt(straight) + '% straight' : '<b>' + roundPct(straight) + '%</b> (' + calcFmt(straight) + '%)';
+  };
+  const avg = () => {
+    const ns = ($('#calcAvg').value.match(/-?\d+(\.\d+)?/g) || []).map(Number);
+    $('#calcAvgOut').innerHTML = ns.length ? 'Average <b>' + calcFmt(ns.reduce((a, b) => a + b, 0) / ns.length) + '</b> · Total ' + calcFmt(ns.reduce((a, b) => a + b, 0)) + ' · ' + ns.length + (ns.length === 1 ? ' number' : ' numbers') : '';
+  };
+  inp.oninput = show;
+  inp.onkeydown = e => {
+    if (e.key === 'Enter' || e.key === '=') { e.preventDefault(); done(); }
+    else if (e.key === 'Escape') { e.preventDefault(); p.remove(); }
+  };
+  p.oninput = e => { if (e.target.id === 'calcPts' || e.target.id === 'calcMax') pct(); if (e.target.id === 'calcAvg') avg(); };
+  p.onclick = e => {
+    if (e.target.closest('[data-cx]')) return p.remove();
+    const k = e.target.closest('[data-ck]');
+    if (k) {
+      const c = k.dataset.ck;
+      if (c === 'C') inp.value = '';
+      else if (c === '⌫') inp.value = inp.value.slice(0, -1);
+      else if (c === '=') return done();
+      else inp.value += c;
+      show(); inp.focus(); return;
+    }
+    if (e.target.closest('[data-cuse]')) {
+      const box = $('#ptsIn'); if (!box || last == null) return;
+      box.value = calcFmt(last); box.dispatchEvent(new Event('input', { bubbles: true })); box.dispatchEvent(new Event('change', { bubbles: true }));
+      return toast('Score set to ' + calcFmt(last));
+    }
+    const h = e.target.closest('[data-ch]'); if (h) { inp.value = hist[+h.dataset.ch].v; show(); inp.focus(); return; }
+    if (e.target.closest('[data-chclear]')) { hist = []; store.set('gs.calchist', hist); drawHist(); }
+  };
+  // Drag the title bar to move it out of the way; it stays there next time.
+  p.querySelector('.cph').onpointerdown = e => {
+    if (e.target.closest('button')) return;
+    const r = p.getBoundingClientRect(), dx = e.clientX - r.left, dy = e.clientY - r.top;
+    const mv = ev => { p.style.left = Math.max(0, Math.min(innerWidth - 60, ev.clientX - dx)) + 'px'; p.style.top = Math.max(0, Math.min(innerHeight - 40, ev.clientY - dy)) + 'px'; p.style.right = 'auto'; };
+    const up = () => { removeEventListener('pointermove', mv); removeEventListener('pointerup', up); store.set('gs.calcpos', { x: parseInt(p.style.left), y: parseInt(p.style.top) }); };
+    addEventListener('pointermove', mv); addEventListener('pointerup', up);
+  };
+  show(); pct(); drawHist(); inp.focus();
+}
+
+/* ---------------- lighting: brightness, contrast and darker writing for washed-out scans (view only; the student's file is not changed) ---------------- */
+const LIGHT0 = { b: 0, c: 0, d: 0 };
+const lightKey = st => (batch.light && st && batch.light[st.key]) ? st.key : '*';
+const lightFor = st => (batch && batch.light && ((st && batch.light[st.key]) || batch.light['*'])) || LIGHT0;
+const lightOn = L => !!(L.b || L.c || L.d);
+// One lookup table per setting: contrast pulls ink away from white paper (white stays white), brightness lifts
+// or dims everything, then a curve darkens faint pencil.
+function lightLut(L) {
+  const t = new Uint8ClampedArray(256), k = 1 + L.c / 100, g = 1 + L.d / 40;
+  for (let v = 0; v < 256; v++) { let x = 1 - (1 - v / 255) * k + L.b / 200; x = Math.min(1, Math.max(0, x)); t[v] = Math.round(Math.pow(x, g) * 255); }
+  return t;
+}
+// Lighting switches for the whole download: on/off, her setup rubric left alone unless she says so, used in the export.
+const lightOpts = () => ({ on: true, rub: false, exp: true, ...((batch && batch.lightOpt) || {}) });
+// Her rubric from Rubric setup.
+const isRubricPage = f => !!(f.rubric || f.virtual);
+// Pages she switched by hand, by student, file and page, so a choice moves with the page when pages are rearranged.
+const lightPgKey = (st, f, p) => st.key + '|' + f.path + '|' + p;
+const pageLitDefault = f => lightOpts().rub || !isRubricPage(f);
+function pageLit(st, f, p, map) {
+  const v = (map || (batch && batch.lightPg) || {})[lightPgKey(st, f, p)];
+  return v != null ? v : pageLitDefault(f);
+}
+function setPageLit(st, f, p, on, map) {
+  if (!map) map = batch.lightPg || (batch.lightPg = {});
+  const k = lightPgKey(st, f, p);
+  if (on === pageLitDefault(f)) delete map[k]; else map[k] = on;
+}
+const lightLive = st => { const o = lightOpts(); return !!st && o.on && lightOn(lightFor(st)); };
+// The setting for one page, or null when lighting doesn't touch it.
+function lightForPage(st, f, p) {
+  if (!lightLive(st) || f.kind === 'docx') return null;
+  return pageLit(st, f, p) ? lightFor(st) : null;
+}
+function lightCanvas(ctx, w, h, L) {
+  const im = ctx.getImageData(0, 0, w, h), d = im.data, t = lightLut(L);
+  // Change each pixel's lightness and keep its color, so a slightly yellow scan doesn't turn bright yellow.
+  for (let i = 0; i < d.length; i += 4) { const y = (d[i] * 77 + d[i + 1] * 150 + d[i + 2] * 29) >> 8, sh = t[y] - y; d[i] += sh; d[i + 1] += sh; d[i + 2] += sh; }
+  ctx.putImageData(im, 0, 0);
+}
+function lightBmp(pg) {
+  const L = lightForPage(batch && batch.students[cur], pg.file, pg.idx);
+  if (!L) return pg.bmp;
+  const key = L.b + '|' + L.c + '|' + L.d;
+  if (pg.adj && pg.adjSrc === pg.bmp && pg.adjKey === key) return pg.adj;
+  const c = pg.adj && pg.adj.width === pg.bmp.width && pg.adj.height === pg.bmp.height ? pg.adj : document.createElement('canvas');
+  c.width = pg.bmp.width; c.height = pg.bmp.height;
+  const x = c.getContext('2d'); x.drawImage(pg.bmp, 0, 0);
+  lightCanvas(x, c.width, c.height, L);
+  pg.adj = c; pg.adjSrc = pg.bmp; pg.adjKey = key;
+  return c;
+}
+// Auto: stretch the page so its faintest writing goes near black and the paper goes white.
+function lightAuto(pg) {
+  const b = pg.bmp, s = Math.min(1, 400 / b.width), c = document.createElement('canvas'); c.width = Math.round(b.width * s); c.height = Math.round(b.height * s);
+  const x = c.getContext('2d'); x.drawImage(b, 0, 0, c.width, c.height);
+  const d = x.getImageData(0, 0, c.width, c.height).data, h = new Uint32Array(256); let n = 0;
+  for (let i = 0; i < d.length; i += 4) { h[Math.round(d[i] * .3 + d[i + 1] * .59 + d[i + 2] * .11)]++; n++; }
+  const pct = p => { let a = 0; for (let v = 0; v < 256; v++) { a += h[v]; if (a >= n * p) return v / 255; } return 1; };
+  const lo = pct(.002), hi = pct(.5);   // the darkest writing, and the paper
+  if (hi - lo < .03) return { b: 0, c: 0, d: 30 };
+  const k = Math.max(1, Math.min(5, .9 / (hi - lo))), bb = (1 - hi) * k * 200;
+  return { b: Math.round(Math.max(-60, Math.min(60, bb))), c: Math.round((k - 1) * 100), d: 20 };
+}
+let lightRaf = 0;
+function lightApply() { cancelAnimationFrame(lightRaf); lightRaf = requestAnimationFrame(() => { redrawAll(); lightChips(); saveSoon(); }); }
+function lightPagesChanged() { lightApply(); const lp = $('#lightPanel'); if (lp) lp.refresh(); }
+// A ☀ tag in the corner of each page while lighting is on: click it to switch lighting off or on for that page.
+function lightChip(pg) {
+  const b = document.createElement('div'); b.className = 'lchip';
+  b.innerHTML = '<button data-lpg title="Turn lighting off or on for this page. Shift-click another page’s ☀ to do every page in between.">☀ <span></span></button><button data-lmenu title="More: the rest of the file, the whole file, or the same page on every paper" aria-label="More lighting choices">▾</button>';
+  pg.wrap.appendChild(b); pg.chip = b;
+}
+function lightChips() {
+  const st = batch && batch.students[cur], live = lightLive(st);
+  for (const pg of pages) {
+    if (!pg.chip) continue;
+    const ok = live && pg.file.kind !== 'docx', on = ok && pageLit(st, pg.file, pg.idx);
+    pg.chip.hidden = !ok; pg.chip.classList.toggle('off', !on);
+    pg.chip.querySelector('span').textContent = on ? 'Lighting on' : 'Lighting off';
+  }
+}
+let lightLast = null;   // the last page she switched, for Shift-click runs
+function lightChipClick(e, pg) {
+  if (!pg) return;
+  if (e.target.closest('[data-lmenu]')) return lightMenu(pg);
+  const st = batch.students[cur], want = !pageLit(st, pg.file, pg.idx);
+  let run = [pg];
+  if (e.shiftKey && lightLast && lightLast !== pg && pages.includes(lightLast)) { const a = pages.indexOf(lightLast), b = pages.indexOf(pg); run = pages.slice(Math.min(a, b), Math.max(a, b) + 1); }
+  for (const q of run) setPageLit(st, q.file, q.idx, want);
+  lightLast = pg;
+  lightPagesChanged();
+  if (run.length > 1) toast('Lighting ' + (want ? 'on' : 'off') + ' for ' + run.length + ' pages');
+}
+function lightMenu(pg) {
+  const old = $('#lmenu'); if (old) { old.remove(); if (old._pg === pg) return; }
+  const st = batch.students[cur], want = !pageLit(st, pg.file, pg.idx);
+  const L = layoutOf(st), di = L.findIndex(d => d.pages.some(([q, p]) => q === pg.file.path && p === pg.idx)), d = L[di];
+  const pos = d ? d.pages.findIndex(([q, p]) => q === pg.file.path && p === pg.idx) : -1, back = d ? d.pages.length - 1 - pos : -1;
+  const nth = k => k === 0 ? 'last page' : k === 1 ? '2nd-to-last page' : k === 2 ? '3rd-to-last page' : (k + 1) + 'th-to-last page';
+  const m = document.createElement('div'); m.id = 'lmenu'; m._pg = pg; m._at = { di, pos, back, want };
+  m.innerHTML = '<div class="dl">Turn lighting ' + (want ? 'on' : 'off') + ' for</div><button data-lm="page">Just this page</button>' +
+    (d ? '<button data-lm="rest">This page and the rest of this file</button><button data-lm="file">Every page of this file</button>' +
+      '<div class="dl">Every paper</div><button data-lm="from">Page ' + (pos + 1) + ' on every paper</button>' + (back !== pos ? '<button data-lm="back">The ' + nth(back) + ' on every paper</button>' : '') : '');
+  pg.wrap.appendChild(m);
+}
+// Every student's page count, so "every paper" reaches students not opened yet.
+async function ensureCounts() {
+  await workerReady;
+  for (const s of batch.students) for (const f of s.files) {
+    if (!viewable(f) || f.numPages || f.bad) continue;
+    try { const d = await pdfjsLib.getDocument({ data: f.data.slice(), isEvalSupported: false }).promise; f.numPages = d.numPages; d.destroy(); } catch { f.bad = 'it couldn’t be opened'; }
+  }
+}
+async function lightMenuDo(how) {
+  const m = $('#lmenu'); if (!m) return;
+  const pg = m._pg, { di, pos, back, want } = m._at, st = batch.students[cur]; m.remove();
+  const L = layoutOf(st), d = L[di];
+  const setList = (s, list) => { let n = 0; for (const [path, p] of list) { const f = fileByPath(s, path); if (f) { setPageLit(s, f, p, want); n++; } } return n; };
+  if (how === 'page' || !d) setPageLit(st, pg.file, pg.idx, want);
+  else if (how === 'rest') setList(st, d.pages.slice(pos));
+  else if (how === 'file') setList(st, d.pages);
+  else {
+    await ensureCounts();
+    let n = 0;
+    for (const s of batch.students) {
+      const ds = layoutOf(s)[di]; if (!ds) continue;
+      const it = how === 'from' ? ds.pages[pos] : ds.pages[ds.pages.length - 1 - back];
+      if (it) n += setList(s, [it]);
+    }
+    toast('Lighting ' + (want ? 'on' : 'off') + ' for ' + (how === 'from' ? 'page ' + (pos + 1) : 'that page') + ' on ' + n + (n === 1 ? ' paper' : ' papers'));
+  }
+  lightLast = pg;
+  lightPagesChanged();
+}
+
+function openLight() {
+  const old = $('#lightPanel'); if (old) { old.remove(); return; }
+  const p = document.createElement('div'); p.id = 'lightPanel'; document.body.appendChild(p);
+  let only = lightKey(batch.students[cur]) !== '*';
+  const set = L => { batch.light = batch.light || {}; if (only) batch.light[batch.students[cur].key] = L; else { batch.light['*'] = L; } lightApply(); };
+  const opt = (k, v) => { batch.lightOpt = { ...lightOpts(), [k]: v }; lightApply(); render(); };
+  const render = () => {
+    const L = lightFor(batch.students[cur]), o = lightOpts();
+    const offs = Object.entries(batch.lightPg || {}).filter(([, v]) => v === false).map(([k]) => k);
+    const offAll = offs.length, offHere = offs.filter(k => k.startsWith(batch.students[cur].key + '|')).length;
+    const row = (k, label, min, max) => '<label><span>' + label + '</span><input type="range" min="' + min + '" max="' + max + '" step="1" data-l="' + k + '" value="' + L[k] + '"><b>' + L[k] + '</b></label>';
+    p.innerHTML = '<div class="lph"><b>Lighting</b><span style="flex:1"></span><button class="anonsw" data-lon role="switch" aria-checked="' + o.on + '"><i></i>' + (o.on ? 'On' : 'Off') + '</button><button class="icon" data-lx aria-label="Close" style="margin-left:8px">✕</button></div>' +
+      '<div class="lpbody' + (o.on ? '' : ' off') + '">' +
+      '<button class="btn sm primary" data-lauto style="width:100%">Auto fix this scan</button>' +
+      row('b', 'Brightness', -60, 60) + row('c', 'Contrast', 0, 400) + row('d', 'Darken writing', 0, 100) +
+      '<span class="seg" style="width:100%"><button data-lo="0" aria-pressed="' + !only + '" style="flex:1">All students</button><button data-lo="1" aria-pressed="' + only + '" style="flex:1">Only ' + esc(batch.students[cur].key) + '</button></span>' +
+      '<div><button class="link" data-lreset>Back to normal</button></div>' +
+      '<div class="lpsec"><div class="dl">Pages</div>' +
+        '<div class="muted" style="font-size:12px">Click ☀ in a page’s corner to turn lighting off just there. Shift-click another page’s ☀ to do every page in between. ▾ does the rest of a file, a whole file, or the same page on every paper.</div>' +
+        '<div style="font-size:13px">Your rubric from Rubric setup</div><span class="seg" style="width:100%"><button data-lrub="0" aria-pressed="' + !o.rub + '" style="flex:1">Leave alone</button><button data-lrub="1" aria-pressed="' + o.rub + '" style="flex:1">Fix it too</button></span>' +
+        (offAll ? '<div style="font-size:13px">Turned off by you: ' + offHere + ' on this paper, ' + offAll + ' in all. <button class="link" data-lpgreset>Turn them all back on</button></div>' : '') + '</div>' +
+      '<label class="lprow lpchk"><input type="checkbox" data-lexp' + (o.exp ? ' checked' : '') + '> Use in the export too</label>' +
+      '<div class="muted" style="font-size:12px;margin-top:-4px">' + (o.exp ? 'Exported files come out with this lighting. The student’s original file isn’t changed.' : 'Only changes how you see the paper here; the export stays as scanned.') + '</div></div>';
+  };
+  render();
+  p.onchange = e => { if (e.target.dataset.lexp != null) opt('exp', e.target.checked); };
+  p.oninput = e => { const k = e.target.dataset.l; if (!k) return; const L = { ...lightFor(batch.students[cur]), [k]: +e.target.value }; e.target.nextElementSibling.textContent = e.target.value; set(L); };
+  p.onclick = e => {
+    if (e.target.closest('[data-lx]')) return p.remove();
+    if (e.target.closest('[data-lon]')) return opt('on', !lightOpts().on);
+    const rb = e.target.closest('[data-lrub]'); if (rb) return opt('rub', rb.dataset.lrub === '1');
+    if (e.target.closest('[data-lpgreset]')) { for (const [k, v] of Object.entries(batch.lightPg || {})) if (v === false) delete batch.lightPg[k]; lightApply(); return render(); }
+    if (e.target.closest('[data-lauto]')) { const pg = pages.find(q => q.bmp && q.file.kind !== 'docx'); if (!pg) return toast('No scanned page to fix here'); set(lightAuto(pg)); return render(); }
+    if (e.target.closest('[data-lreset]')) { set({ ...LIGHT0 }); if (only) { delete batch.light[batch.students[cur].key]; only = false; lightApply(); } return render(); }
+    const o = e.target.closest('[data-lo]');
+    if (o) { const want = o.dataset.lo === '1', stc = batch.students[cur]; if (want && !only) { batch.light = batch.light || {}; batch.light[stc.key] = { ...lightFor(stc) }; } if (!want && only) { delete batch.light[stc.key]; lightApply(); } only = want; return render(); }
+  };
+  p.refresh = () => { only = lightKey(batch.students[cur]) !== '*'; render(); };
+}
+
+/* ---------------- Word files (.docx, .docm with macros, .dotx): shown as pages, and edited in place ---------------- */
+// Edits go straight into the file's own document.xml; every other part of the file (styles, pictures, the macro
+// project in a .docm) is kept byte for byte, so the file still opens in Word with its formatting and macros.
+// Macros can't run in a browser.
+const W_NS = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
+const W14_NS = 'http://schemas.microsoft.com/office/word/2010/wordml';
+const R_NS = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
+const WORD_RX = /\.(docx|docm|dotx|dotm)$/i;
+const wkids = (el, name) => el ? [...el.children].filter(c => c.localName === name) : [];
+const wkid = (el, name) => wkids(el, name)[0] || null;
+const wval = el => el ? (el.getAttributeNS(W_NS, 'val') ?? el.getAttribute('w:val')) : null;
+const won = el => !!el && !/^(0|false|off|none)$/i.test(wval(el) || '');
+const HLC = { yellow: '#FFFF00', green: '#00FF00', cyan: '#00FFFF', magenta: '#FF00FF', blue: '#0000FF', red: '#FF0000', darkBlue: '#00008B', darkCyan: '#008B8B', darkGreen: '#006400', darkMagenta: '#800080', darkRed: '#8B0000', darkYellow: '#808000', darkGray: '#A9A9A9', lightGray: '#D3D3D3', black: '#000000', white: '#FFFFFF' };
+function openWord(bytes) {
+  const files = fflate.unzipSync(bytes);
+  const xml = files['word/document.xml']; if (!xml) throw new Error('no document.xml');
+  const doc = new DOMParser().parseFromString(new TextDecoder().decode(xml), 'application/xml');
+  if (doc.getElementsByTagName('parsererror').length) throw new Error('bad xml');
+  const rels = {}, rx = files['word/_rels/document.xml.rels'];
+  if (rx) for (const r of new DOMParser().parseFromString(new TextDecoder().decode(rx), 'application/xml').getElementsByTagName('Relationship')) rels[r.getAttribute('Id')] = r.getAttribute('Target');
+  return { files, doc, rels, paras: [], runs: [], cells: [], boxes: [], urls: [], macros: !!files['word/vbaProject.bin'] };
+}
+function wordBytes(w) {
+  const xml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\r\n' + new XMLSerializer().serializeToString(w.doc.documentElement);
+  return fflate.zipSync({ ...w.files, 'word/document.xml': new TextEncoder().encode(xml) });
+}
+function renderWord(w, host) {
+  for (const u of w.urls) URL.revokeObjectURL(u);
+  w.paras = []; w.runs = []; w.cells = []; w.boxes = []; w.urls = [];
+  host.innerHTML = '';
+  const body = wkid(w.doc.documentElement, 'body');
+  wBlocks(w, body, host);
+}
+function wBlocks(w, node, out) {
+  for (const c of node ? node.children : []) {
+    if (c.localName === 'p') out.appendChild(wPara(w, c));
+    else if (c.localName === 'tbl') out.appendChild(wTable(w, c));
+    else if (c.localName === 'sdt') wBlocks(w, wkid(c, 'sdtContent'), out);
+    else if (c.localName === 'customXml' || c.localName === 'ins') wBlocks(w, c, out);
+  }
+}
+function wPara(w, p) {
+  const el = document.createElement('p'); el.className = 'wp';
+  el.dataset.pi = w.paras.push(p) - 1;
+  const pPr = wkid(p, 'pPr');
+  const jc = wval(wkid(pPr, 'jc')); if (jc) el.style.textAlign = jc === 'both' ? 'justify' : jc === 'end' ? 'right' : jc === 'start' ? 'left' : jc;
+  const st = wval(wkid(pPr, 'pStyle')) || '', hm = /heading\s*(\d)|^title$/i.exec(st);
+  if (hm) { el.style.fontWeight = '700'; el.style.fontSize = (hm[1] ? Math.max(1.05, 1.6 - hm[1] * 0.15) : 1.9) + 'em'; }
+  const ind = wkid(pPr, 'ind'); if (ind) { const l = +(ind.getAttributeNS(W_NS, 'left') || ind.getAttributeNS(W_NS, 'start') || 0); if (l) el.style.paddingLeft = Math.round(l / 15) + 'px'; }
+  const shd = wkid(pPr, 'shd'), fill = shd && shd.getAttributeNS(W_NS, 'fill'); if (fill && /^[0-9a-f]{6}$/i.test(fill)) el.style.background = '#' + fill;
+  if (wkid(pPr, 'numPr')) { const b = document.createElement('span'); b.className = 'wbul'; b.contentEditable = 'false'; b.textContent = '•\t'; el.appendChild(b); }
+  wInline(w, p, el);
+  return el;
+}
+function wInline(w, node, el) {
+  for (const c of node.children) {
+    const n = c.localName;
+    if (n === 'r') wRun(w, c, el);
+    else if (n === 'sdt') {
+      const pr = wkid(c, 'sdtPr'), cb = pr && [...pr.children].find(x => x.localName === 'checkbox' && x.namespaceURI === W14_NS);
+      if (cb) el.appendChild(wCheck(w, { kind: 'sdt', sdt: c, cb }));
+      else wInline(w, wkid(c, 'sdtContent') || c, el);
+    } else if (['hyperlink', 'ins', 'smartTag', 'fldSimple', 'customXml', 'sdtContent'].includes(n)) wInline(w, c, el);
+  }
+}
+function wRun(w, r, el) {
+  const rPr = wkid(r, 'rPr');
+  // an old-style form checkbox: its field starts in this run
+  const fc = wkid(r, 'fldChar'), cbx = fc && wkid(wkid(fc, 'ffData'), 'checkBox');
+  if (cbx) { el.appendChild(wCheck(w, { kind: 'ff', cbx })); return; }
+  for (const d of [...wkids(r, 'drawing'), ...wkids(r, 'pict')]) {
+    const blip = d.getElementsByTagNameNS('*', 'blip')[0] || d.getElementsByTagNameNS('*', 'imagedata')[0];
+    const id = blip && (blip.getAttributeNS(R_NS, 'embed') || blip.getAttributeNS(R_NS, 'id'));
+    const tgt = id && w.rels[id], data = tgt && w.files['word/' + tgt.replace(/^\/?word\//, '').replace(/^\.\//, '')];
+    if (data) {
+      const ext = /\.(\w+)$/.exec(tgt), u = URL.createObjectURL(new Blob([data], { type: 'image/' + (ext ? ext[1].toLowerCase().replace('jpg', 'jpeg') : 'png') }));
+      w.urls.push(u);
+      const img = document.createElement('img'); img.src = u; img.alt = ''; img.contentEditable = 'false';
+      const ext2 = d.getElementsByTagNameNS('*', 'extent')[0];
+      if (ext2) img.style.width = Math.round(+ext2.getAttribute('cx') / 9525) + 'px';
+      el.appendChild(img);
+    }
+  }
+  let text = '', hasText = false;
+  for (const c of r.children) {
+    const n = c.localName;
+    if (n === 't') { text += c.textContent; hasText = true; }
+    else if (n === 'tab') { text += '\t'; hasText = true; }
+    else if (n === 'br' || n === 'cr') { text += '\n'; hasText = true; }
+    else if (n === 'noBreakHyphen') { text += '‑'; hasText = true; }
+  }
+  if (!hasText) return;
+  const s = document.createElement('span');
+  s.dataset.ri = w.runs.push(r) - 1;
+  s.textContent = text;
+  if (rPr) {
+    if (won(wkid(rPr, 'b'))) s.style.fontWeight = '700';
+    if (won(wkid(rPr, 'i'))) s.style.fontStyle = 'italic';
+    const u = wkid(rPr, 'u'), deco = [];
+    if (u && wval(u) !== 'none') deco.push('underline');
+    if (won(wkid(rPr, 'strike')) || won(wkid(rPr, 'dstrike'))) deco.push('line-through');
+    if (deco.length) s.style.textDecoration = deco.join(' ');
+    const col = wval(wkid(rPr, 'color')); if (col && /^[0-9a-f]{6}$/i.test(col)) s.style.color = '#' + col;
+    const hl = wval(wkid(rPr, 'highlight')); if (hl && HLC[hl]) s.style.background = HLC[hl];
+    const sh = wkid(rPr, 'shd'), sf = sh && sh.getAttributeNS(W_NS, 'fill'); if (sf && /^[0-9a-f]{6}$/i.test(sf)) s.style.background = '#' + sf;
+    const sz = +wval(wkid(rPr, 'sz')); if (sz) s.style.fontSize = (sz / 22).toFixed(2) + 'em';
+    const va = wval(wkid(rPr, 'vertAlign')); if (va === 'superscript' || va === 'subscript') { s.style.verticalAlign = va === 'superscript' ? 'super' : 'sub'; s.style.fontSize = '0.75em'; }
+  }
+  el.appendChild(s);
+}
+function wCheck(w, box) {
+  const b = document.createElement('button'); b.type = 'button'; b.className = 'wchk'; b.contentEditable = 'false';
+  b.dataset.ki = w.boxes.push(box) - 1;
+  b.textContent = wChecked(box) ? '☒' : '☐';
+  b.setAttribute('aria-pressed', wChecked(box));
+  return b;
+}
+function wChecked(box) {
+  if (box.kind === 'sdt') { const c = [...box.cb.children].find(x => x.localName === 'checked'); return !!c && /^(1|true)$/i.test(c.getAttributeNS(W14_NS, 'val') || ''); }
+  const ch = wkid(box.cbx, 'checked'); if (ch) return wval(ch) == null || won(ch);
+  return won(wkid(box.cbx, 'default'));
+}
+function wToggle(w, box) {
+  const on = !wChecked(box);
+  if (box.kind === 'sdt') {
+    let c = [...box.cb.children].find(x => x.localName === 'checked');
+    if (!c) { c = w.doc.createElementNS(W14_NS, 'w14:checked'); box.cb.insertBefore(c, box.cb.firstChild); }
+    c.setAttributeNS(W14_NS, 'w14:val', on ? '1' : '0');
+    const st = [...box.cb.children].find(x => x.localName === (on ? 'checkedState' : 'uncheckedState'));
+    const glyph = st && st.getAttributeNS(W14_NS, 'val') ? String.fromCharCode(parseInt(st.getAttributeNS(W14_NS, 'val'), 16)) : on ? '☒' : '☐';
+    const t = box.sdt.getElementsByTagNameNS(W_NS, 't')[0]; if (t) t.textContent = glyph;
+  } else {
+    let ch = wkid(box.cbx, 'checked');
+    if (!ch) { ch = w.doc.createElementNS(W_NS, 'w:checked'); box.cbx.appendChild(ch); }
+    ch.setAttributeNS(W_NS, 'w:val', on ? '1' : '0');
+  }
+  return on;
+}
+function wTable(w, tbl) {
+  const t = document.createElement('table'); t.className = 'wt';
+  const grid = wkids(wkid(tbl, 'tblGrid'), 'gridCol').map(g => +(g.getAttributeNS(W_NS, 'w') || 0));
+  if (grid.length && grid.every(Boolean)) { const cg = document.createElement('colgroup'); for (const g of grid) { const c = document.createElement('col'); c.style.width = Math.round(g / 15) + 'px'; cg.appendChild(c); } t.appendChild(cg); }
+  const tb = document.createElement('tbody'); t.appendChild(tb);
+  const above = [];   // per grid column: the cell a vertical merge continues
+  for (const tr of wkids(tbl, 'tr')) {
+    const row = document.createElement('tr'); tb.appendChild(row);
+    let col = 0;
+    for (const tc of wkids(tr, 'tc')) {
+      const pr = wkid(tc, 'tcPr'), span = +(wval(wkid(pr, 'gridSpan')) || 1), vm = wkid(pr, 'vMerge');
+      if (vm && wval(vm) !== 'restart' && above[col]) { above[col].rowSpan++; col += span; continue; }
+      const td = document.createElement('td'); if (span > 1) td.colSpan = span;
+      td.dataset.ci = w.cells.push(tc) - 1;
+      const sh = wkid(pr, 'shd'), fill = sh && sh.getAttributeNS(W_NS, 'fill'); if (fill && /^[0-9a-f]{6}$/i.test(fill)) td.style.background = '#' + fill;
+      wBlocks(w, tc, td);
+      row.appendChild(td);
+      for (let k = 0; k < span; k++) above[col + k] = vm ? td : null;
+      col += span;
+    }
+  }
+  return t;
+}
+// Puts what is on screen in one paragraph back into its runs (each run keeps its own formatting).
+function wApplyPara(w, el) {
+  const p = w.paras[+el.dataset.pi]; if (!p) return;
+  const mine = [...el.querySelectorAll('[data-ri]')].map(s => w.runs[+s.dataset.ri]);
+  let last = null;
+  const place = r => { if (last && last.parentNode) last.parentNode.insertBefore(r, last.nextSibling); else { const pPr = wkid(p, 'pPr'); p.insertBefore(r, pPr ? pPr.nextSibling : p.firstChild); } last = r; };
+  const loose = text => {
+    if (!text) return;
+    if (last) { wSetText(w, last, wRunText(last) + text); return; }
+    const r = w.doc.createElementNS(W_NS, 'w:r');
+    const like = mine[0] || p.getElementsByTagNameNS(W_NS, 'r')[0], rPr = like && wkid(like, 'rPr');
+    if (rPr) r.appendChild(rPr.cloneNode(true));
+    place(r); wSetText(w, r, text);
+  };
+  const walk = node => {
+    for (const c of [...node.childNodes]) {
+      if (c.nodeType === 3) { loose(c.textContent); continue; }
+      if (c.nodeType !== 1 || c.contentEditable === 'false' || c.tagName === 'BR') continue;
+      if (c.dataset.ri != null) { const r = w.runs[+c.dataset.ri]; if (r.parentNode !== p && !p.contains(r)) place(r); wSetText(w, r, c.textContent); last = r; continue; }
+      walk(c);   // something the browser wrapped text in
+    }
+  };
+  walk(el);
+  const keep = new Set(mine);
+  for (const r of w.pRuns[+el.dataset.pi] || []) if (!keep.has(r) && r.parentNode) r.parentNode.removeChild(r);
+  w.pRuns[+el.dataset.pi] = [...el.querySelectorAll('[data-ri]')].map(s => w.runs[+s.dataset.ri]);
+}
+const wRunText = r => [...r.children].map(c => c.localName === 't' ? c.textContent : c.localName === 'tab' ? '\t' : c.localName === 'br' || c.localName === 'cr' ? '\n' : '').join('');
+function wSetText(w, r, text) {
+  for (const c of [...r.children]) if (['t', 'tab', 'br', 'cr', 'noBreakHyphen'].includes(c.localName)) r.removeChild(c);
+  text.split(/(\t|\n)/).forEach(part => {
+    if (!part) return;
+    if (part === '\t') r.appendChild(w.doc.createElementNS(W_NS, 'w:tab'));
+    else if (part === '\n') r.appendChild(w.doc.createElementNS(W_NS, 'w:br'));
+    else { const t = w.doc.createElementNS(W_NS, 'w:t'); t.setAttributeNS('http://www.w3.org/XML/1998/namespace', 'xml:space', 'preserve'); t.textContent = part; r.appendChild(t); }
+  });
+}
+function wShadeCell(w, tc, hex) {
+  let pr = wkid(tc, 'tcPr');
+  if (!pr) { pr = w.doc.createElementNS(W_NS, 'w:tcPr'); tc.insertBefore(pr, tc.firstChild); }
+  let sh = wkid(pr, 'shd');
+  if (!hex) { if (sh) pr.removeChild(sh); return; }
+  if (!sh) {
+    sh = w.doc.createElementNS(W_NS, 'w:shd');
+    // shd sits after the other cell settings Word expects before it
+    const after = [...pr.children].find(c => ['noWrap', 'tcMar', 'textDirection', 'tcFitText', 'vAlign', 'hideMark', 'headers', 'cellIns', 'cellDel', 'cellMerge', 'tcPrChange'].includes(c.localName));
+    pr.insertBefore(sh, after || null);
+  }
+  sh.setAttributeNS(W_NS, 'w:val', 'clear'); sh.setAttributeNS(W_NS, 'w:color', 'auto'); sh.setAttributeNS(W_NS, 'w:fill', hex.replace('#', '').toUpperCase());
+}
+const CELL_COLORS = [['#FFF59D', 'Yellow'], ['#C8E6C9', 'Green'], ['#BBDEFB', 'Blue'], ['#F8BBD0', 'Pink'], ['', 'No color']];
+// One Word file on screen. Editing: click any text and type; click a table cell then a color to shade it.
+async function wordCard(st, f, opts) {
+  opts = opts || {};
+  const el = document.createElement('div'); el.className = 'docx';
+  el.innerHTML = '<div class="fhead"><span style="color:var(--fg)">' + esc(opts.title || f.name) + '</span><span>' + (/\.docm$|\.dotm$/i.test(f.name) ? 'Word file with macros' : 'Word file') + '</span>' +
+    (f.rubric ? '<span class="addtag" style="background:var(--accent-soft);color:var(--accent)">Your rubric</span>' : '') + (f.edited ? '<span class="addtag" style="background:var(--accent-soft);color:var(--accent)">Edited by you</span>' : '') + (f.added ? addTag(f) : '') + '<span style="flex:1"></span>' +
+    (opts.readOnly ? '' : '<button class="btn sm" data-wedit>Edit</button>') + '<button class="btn sm ghost" data-wdl>Download</button></div>' +
+    '<div class="wbar" hidden></div><div class="dpage"><p class="muted">Opening…</p></div>';
+  const page = el.querySelector('.dpage'), bar = el.querySelector('.wbar');
+  let w;
+  try { w = openWord(f.data); w.pRuns = []; renderWord(w, page); }
+  catch (e) {
+    console.error(e);
+    try { page.innerHTML = await docxHtml(f.data); } catch { page.innerHTML = '<p>This Word file couldn’t be opened here. Download it to open it in Word.</p>'; }
+    const eb = el.querySelector('[data-wedit]'); if (eb) eb.remove();
+  }
+  if (w && !opts.readOnly) setTimeout(() => wireRubric(st, f, w, page, el, () => soon()), 0);
+  if (w) w.pRuns = w.paras.map((_, i) => [...page.querySelectorAll('p[data-pi="' + i + '"] > [data-ri], p[data-pi="' + i + '"] [data-ri]')].map(s => w.runs[+s.dataset.ri]));
+  for (const a of page.querySelectorAll('a')) { a.target = '_blank'; a.rel = 'noopener noreferrer'; }
+  let editing = false, cell = null, saveT = null;
+  const dirty = new Set();
+  const saveNowW = async () => {
+    clearTimeout(saveT); saveT = null;
+    if (!w) return;
+    for (const p of dirty) if (p.isConnected) wApplyPara(w, p);
+    dirty.clear();
+    if (!f.orig) f.orig = f.data;
+    f.data = wordBytes(w); f.edited = Date.now(); f.size2 = f.data.length;
+    await keepEdit(st, f);
+    renderList();
+  };
+  const soon = () => { clearTimeout(saveT); saveT = setTimeout(saveNowW, 700); };
+  const setEditing = on => {
+    editing = on;
+    page.classList.toggle('editing', on);
+    for (const p of page.querySelectorAll('p.wp')) p.contentEditable = on ? 'true' : 'false';
+    el.querySelector('[data-wedit]').textContent = on ? 'Done editing' : 'Edit';
+    bar.hidden = !on;
+    bar.innerHTML = '<span>Click any text to type. Click a table cell, then a color to shade it:</span>' + CELL_COLORS.map(([c, l]) => '<button class="sw" data-cell="' + c + '" title="' + l + '" style="background:' + (c || '#fff') + '">' + (c ? '' : '⦸') + '</button>').join('') +
+      (f.orig || f.edited ? '<span style="flex:1"></span><button class="link" data-wreset>Back to the original</button>' : '') +
+      (w && w.macros ? '<div class="muted" style="width:100%;font-size:12.5px">Macros can’t run in a browser, but they stay in the file, so they work again when you open it in Word.</div>' : '');
+    if (!on) saveNowW();
+  };
+  el.addEventListener('click', async e => {
+    if (e.target.closest('[data-wdl]')) { await saveNowW(); return saveBlob(f.name, new Blob([f.data])); }
+    if (e.target.closest('[data-wedit]')) return setEditing(!editing);
+    if (e.target.closest('[data-wreset]')) {
+      const orig = f.orig || await origBytes(st, f); if (!orig) return toast('The original isn’t kept in this browser');
+      f.data = orig; f.orig = null; f.edited = 0; await dropEdit(st, f); toast('Back to the original'); return openStudent(cur, f.path);
+    }
+    const k = e.target.closest('.wchk');
+    if (k && w) { if (!editing) return toast('Click Edit first to change the file'); const on = wToggle(w, w.boxes[+k.dataset.ki]); k.textContent = on ? '☒' : '☐'; k.setAttribute('aria-pressed', on); soon(); return; }
+    const sw = e.target.closest('[data-cell]');
+    if (sw && w) { if (!cell) return toast('Click a table cell first'); wShadeCell(w, w.cells[+cell.dataset.ci], sw.dataset.cell); cell.style.background = sw.dataset.cell || ''; soon(); return; }
+    const td = e.target.closest('td[data-ci]');
+    if (td && editing) { if (cell) cell.classList.remove('wsel'); cell = td; td.classList.add('wsel'); }
+  });
+  page.addEventListener('input', e => { const p = e.target.closest('p.wp'); if (p) { dirty.add(p); soon(); } });
+  page.addEventListener('keydown', e => {
+    if (!editing) return;
+    e.stopPropagation();   // typing here never triggers the app's shortcut keys
+    if (e.key === 'Enter') { e.preventDefault(); document.execCommand('insertText', false, '\n'); }
+    if ((e.metaKey || e.ctrlKey) && /^[biu]$/i.test(e.key)) e.preventDefault();   // formatting stays as it is in the file
+  });
+  page.addEventListener('paste', e => { if (!editing) return; e.preventDefault(); document.execCommand('insertText', false, (e.clipboardData.getData('text/plain') || '').replace(/\r\n?/g, '\n')); });
+  page.addEventListener('focusout', () => { if (dirty.size) saveNowW(); });
+  return el;
+}
+// Edited Word files are kept in this browser (per download), so the edits come back next time.
+async function keepEdit(st, f) {
+  try { await kdo('edits', 'readwrite', o => o.put({ data: f.data, orig: f.orig || null, t: f.edited }, batch.id + '|' + f.path)); }
+  catch { toast('This browser couldn’t keep your edit. Download the file to keep it.'); }
+}
+async function dropEdit(st, f) { try { await kdo('edits', 'readwrite', o => o.delete(batch.id + '|' + f.path)); } catch {} }
+async function origBytes(st, f) { const r = await kget('edits', batch.id + '|' + f.path); return r && r.orig; }
+async function loadEdits() {
+  let recs = [], keys = [];
+  try {
+    const range = IDBKeyRange.bound(batch.id + '|', batch.id + '|￿');
+    recs = await kdo('edits', 'readonly', o => o.getAll(range)) || [];
+    keys = await kdo('edits', 'readonly', o => o.getAllKeys(range)) || [];
+  } catch { return; }
+  keys.forEach((k, i) => {
+    const path = k.slice(batch.id.length + 1);
+    for (const st of batch.students) { const f = st.files.find(x => x.path === path); if (f && recs[i]) { f.orig = recs[i].orig || f.data; f.data = recs[i].data; f.edited = recs[i].t || 1; } }
+  });
+}
+
+/* ---------------- scoring on her own Word rubric (what her rubric macros do) ---------------- */
+// Click a score box to highlight it; two neighbouring boxes in one criterion = the half point between them.
+// The highlighted boxes are added up, the percent comes from the grading scale in the rubric (or Rubric setup),
+// halves round up (92.5 → 93), and the score goes into Grading Studio and into the rubric's own Total blank.
+const RUB_HL = '#FFF59D';
+const cellNum = td => { const m = /(\d+(?:\.\d+)?)/.exec(td.textContent || ''); return m ? +m[1] : null; };
+const isShaded = td => { const b = (td.style.backgroundColor || '').replace(/\s/g, ''); return !!b && b !== 'rgb(255,255,255)' && b !== 'transparent' && b !== 'white'; };
+function rubricModel(page) {
+  let best = null, scale = null;
+  for (const t of page.querySelectorAll('table.wt')) {
+    if (t.parentElement.closest('table.wt')) continue;
+    const rows = [...t.rows].map(r => [...r.cells]);
+    if (rows.length < 2) continue;
+    // a grading scale table: "12 | 100%", "11 | 95%" …
+    const sc = {}; let ns = 0;
+    for (const r of rows) if (r.length >= 2) { const a = cellNum(r[0]), b = cellNum(r[1]); if (a != null && b != null && /%/.test(r[1].textContent + r[0].textContent + (rows[0][1] ? rows[0][1].textContent : '')) && b >= 30 && b <= 100) { sc[a] = b; ns++; } }
+    if (ns >= 4) { scale = sc; continue; }
+    const lvl = v => v != null && v >= 0 && v <= 6;
+    // levels down the side (Score 4 / Score 3 … rows, criteria across the top)
+    const side = rows.slice(1).map(r => cellNum(r[0]));
+    if (side.filter(lvl).length >= 2 && rows[0].length >= 2) {
+      const cells = [];
+      rows.slice(1).forEach((r, k) => { if (!lvl(side[k])) return; r.slice(1).forEach((td, c) => cells.push({ td, crit: c, val: side[k] })); });
+      const crits = rows[0].slice(1).map(td => td.textContent.trim() || 'Criterion');
+      const m = { cells, crits, levels: [...new Set(side.filter(lvl))] };
+      if (!best || cells.length > best.cells.length) best = m;
+      continue;
+    }
+    // levels across the top (4 | 3 | 2 | 1 columns, criteria down the side)
+    const top = rows[0].map((td, c) => c ? cellNum(td) : null);
+    if (top.filter(lvl).length >= 2) {
+      const cells = [];
+      rows.slice(1).forEach((r, k) => r.forEach((td, c) => { if (c && lvl(top[c])) cells.push({ td, crit: k, val: top[c] }); }));
+      const m = { cells, crits: rows.slice(1).map(r => r[0] ? r[0].textContent.trim() : 'Criterion'), levels: [...new Set(top.filter(lvl))] };
+      if (!best || cells.length > best.cells.length) best = m;
+    }
+  }
+  if (best) { best.scale = scale; best.max = best.crits.length * Math.max(...best.levels); }
+  return best;
+}
+function rubricScore(m) {
+  const per = m.crits.map((_, i) => { const v = m.cells.filter(c => c.crit === i && isShaded(c.td)).map(c => c.val); return v.length ? v.reduce((a, b) => a + b, 0) / v.length : null; });
+  const done = per.filter(v => v != null);
+  const total = done.length ? Math.round(done.reduce((a, b) => a + b, 0) * 100) / 100 : null;
+  return { per, total, done: done.length === per.length, pct: total == null ? null : percentWith(total, m.max, m.scale || (maxPoints() === m.max ? setup.scale : null)) };
+}
+// Writes the total (and percent) into the rubric's own blank, like "Total: ____ / 12 = ____%", when there is exactly one.
+function fillTotalBlank(w, page, m, s) {
+  const re = new RegExp('(^|[^\\d])([_\\s.\\d]*)\\/\\s*' + m.max + '(?!\\d)');
+  const spots = [...page.querySelectorAll('p.wp')].filter(p => !m.cells.some(c => c.td.contains(p)) && re.test(p.textContent) && /score|total|grade|points/i.test((p.closest('td') || p).textContent));
+  if (spots.length !== 1 || s.total == null) return false;
+  const p = spots[0];
+  const sp = [...p.querySelectorAll('[data-ri]')].find(x => re.test(x.textContent)) ;
+  if (!sp) return false;
+  sp.textContent = sp.textContent.replace(re, (all, a, blank) => a + (blank && /\S/.test(blank) && !/[_\d]/.test(blank) ? blank : ' ') + fmtNum(s.total) + ' /' + (all.match(/\/(\s*)/)[1] || ' ') + m.max);
+  const pc = [...p.querySelectorAll('[data-ri]')].find(x => /[_\d.]*\s*%/.test(x.textContent) && x !== sp) || (/%/.test(sp.textContent) ? sp : null);
+  if (pc && s.pct != null) pc.textContent = pc.textContent.replace(/([=:]?\s*)[_\d.]*\s*%/, (a, pre) => (pre || '') + fmtNum(s.pct) + '%');
+  wApplyPara(w, p);
+  return true;
+}
+// The score panel follows the rubric.
+function rubricToGrade(st, s, max, nCrit) {
+  if (setup.mode === 'points') { if (+setup.outOf !== max) { setup.outOf = max; store.set('gs.setup', { ...setup, spot: undefined, rubricPage: undefined }); if (batch.assignment) { batch.assignment.setup = { ...setup, spot: undefined }; saveLib(); } } st.grade.points = String(s.total); }
+  else if (setup.criteria.length === nCrit) st.grade.rubric = s.per.map(v => v == null ? null : v);
+  else st.grade.points = String(s.total);
+}
+// A Word rubric's score without opening it: the boxes already highlighted, read the same way as on screen.
+function wordScore(f) {
+  if (f.kind !== 'docx' || !f.data) return null;
+  if (f.wsOf === f.data) return f.wscore;
+  let s = null;
+  try {
+    const w = openWord(f.data), page = document.createElement('div'); page.className = 'dpage'; w.pRuns = []; renderWord(w, page);
+    const m = rubricModel(page);
+    if (m) s = { ...rubricScore(m), max: m.max, nCrit: m.crits.length, crits: m.crits, scale: m.scale };
+    f.wtyped = wordTyped(page, m);
+  } catch (e) { console.error(e); f.wtyped = []; }
+  f.wsOf = f.data; f.wscore = s;
+  return s;
+}
+// Grades typed in a Word file, like "10/12 = 85%" or "9.5/12". Rubric tables and grading-scale tables are skipped.
+function wordTyped(page, m) {
+  const rub = m && m.cells.length ? m.cells[0].td.closest('table.wt') : null, out = [];
+  const skip = new Set(rub ? [rub] : []);
+  for (const t of page.querySelectorAll('table.wt')) if ([...t.querySelectorAll('td')].filter(td => { const g = parseGrade(td.textContent, false); return g && g.rank >= 1; }).length >= 3) skip.add(t);
+  for (const p of page.querySelectorAll('p')) {
+    const t = p.closest('table.wt'); if (t && [...skip].some(k => k.contains(t))) continue;
+    const text = p.textContent.replace(/\s+/g, ' ').trim(); if (!text) continue;
+    const g = parseGrade(text, false); if (!g || g.rank < 2) continue;
+    out.push({ score: g.score, outOf: g.outOf, pct: g.pct != null ? g.pct : g.score != null && g.outOf ? percentWith(g.score, g.outOf, setup.scale) : null, text: text.length > 80 ? text.slice(0, 80) + '…' : text, word: true });
+  }
+  return out;
+}
+// What a Word file adds to the grade sheet: a highlighted rubric gives the score, otherwise a grade typed in it.
+const wordFound = f => f.kind === 'docx' && f.wsOf === f.data ? (f.wscore && f.wscore.total != null ? [] : f.wtyped || []) : [];
+// Every student's Word rubrics: a rubric already highlighted gives the score, like opening it would.
+function wordScoresOf(st) { for (const f of st.files) wordScore(f); }
+function wordScoresAll() {
+  if (!batch) return;
+  let n = 0;
+  for (const st of batch.students) { wordScoresOf(st); if (st.files.some(f => wordFound(f).length)) refound(st); }
+  for (const st of batch.students) for (const f of st.files) {
+    const s = wordScore(f); if (!s || s.total == null) continue;
+    if (s.scale && setup.mode === 'points' && JSON.stringify(s.scale) !== JSON.stringify(setup.scale)) { setup.scale = s.scale; store.set('gs.setup', { ...setup, spot: undefined, rubricPage: undefined }); if (batch.assignment) { batch.assignment.setup = { ...setup, spot: undefined }; saveLib(); } }
+    if (ownGrade(st).total == null) { rubricToGrade(st, s, s.max, s.nCrit); n++; }
+  }
+  if (n) { saveSoon(); renderList(); renderGrade(); }
+}
+function wireRubric(st, f, w, page, el, soon) {
+  const m = rubricModel(page); if (!m) return;
+  for (const c of m.cells) { c.td.classList.add('rcell'); c.td.title = 'Click to highlight this score (two neighbouring boxes = half point)'; }
+  const info = document.createElement('div'); info.className = 'rinfo'; el.insertBefore(info, page);
+  const show = s => {
+    info.innerHTML = '<b>' + (s.total == null ? '–' : fmtNum(s.total)) + '</b> / ' + m.max + (s.pct != null ? ' <b style="color:var(--accent)">' + fmtNum(s.pct) + '%</b>' : '') +
+      '<span class="muted">' + m.crits.map((c, i) => esc(c.length > 24 ? c.slice(0, 24) + '…' : c) + ' ' + (s.per[i] == null ? '–' : fmtNum(s.per[i]))).join(' · ') + '</span>' +
+      (s.done ? '' : '<span class="muted">Click a score box in each criterion</span>');
+  };
+  const push = (s, write) => {
+    show(s);
+    if (s.total == null) return;
+    rubricToGrade(st, s, m.max, m.crits.length);
+    if (write && fillTotalBlank(w, page, m, s)) soon();
+    saveSoon(); renderList(); if (st === batch.students[cur]) renderGrade();
+  };
+  if (m.scale && JSON.stringify(m.scale) !== JSON.stringify(setup.scale) && setup.mode === 'points') {   // the scale printed on her rubric wins
+    setup.scale = m.scale; store.set('gs.setup', { ...setup, spot: undefined, rubricPage: undefined }); if (batch.assignment) { batch.assignment.setup = { ...setup, spot: undefined }; saveLib(); }
+  }
+  const s0 = rubricScore(m); show(s0);
+  if (s0.total != null && ownGrade(st).total == null) push(s0, false);   // a rubric already highlighted in Word brings its score in
+  page.addEventListener('click', e => {
+    if (page.classList.contains('editing')) return;   // while editing, clicks place the cursor; use the color buttons
+    const td = e.target.closest('td.rcell'); if (!td) return;
+    const c = m.cells.find(x => x.td === td), same = m.cells.filter(x => x.crit === c.crit && x !== c && isShaded(x.td));
+    const set = (x, on) => { wShadeCell(w, w.cells[+x.td.dataset.ci], on ? RUB_HL : ''); x.td.style.background = on ? RUB_HL : ''; };
+    if (isShaded(td)) set(c, false);
+    else {
+      // a neighbour already picked makes the half point; anything else in this criterion is replaced
+      const keep = same.length === 1 && Math.abs(same[0].val - c.val) === 1;
+      for (const x of same) if (!keep) set(x, false);
+      set(c, true);
+    }
+    push(rubricScore(m), true); soon();
+  });
+}
+
+/* ---------------- split a scan: one PDF of everyone's papers (any order), pages dragged onto names on the roster ---------------- */
+let SP = null;   // { name, data, doc, n, thumbs[], ink[], owner[], skip:Set, sel:Set, anchor, names[], classId, asg, last, size }
+async function openSplit(file, assignment) {
+  const data = new Uint8Array(await file.arrayBuffer());
+  await workerReady;
+  let doc;
+  try { doc = await pdfjsLib.getDocument({ data: data.slice(), isEvalSupported: false }).promise; }
+  catch { return toast('Couldn’t open ' + file.name + ' as a PDF'); }
+  const c = assignment && assignment.classId ? classById(assignment.classId) : (lib.classes.find(k => k.names.length) || null);
+  SP = { name: file.name.replace(/\.pdf$/i, ''), data, doc, n: doc.numPages, thumbs: [], ink: [], owner: Array(doc.numPages).fill(''), skip: new Set(), sel: new Set(), anchor: 0,
+    names: c ? c.names.slice() : [], classId: c ? c.id : '', asg: assignment || null, last: 1, size: +(store.get('gs.spsize', 1)) };
+  splitPick(0, splitGuess());
+  splitShell(); splitRender();
+}
+const spClass = () => SP.classId ? classById(SP.classId) : null;
+// A first guess at pages per student, so the first pick is a whole paper: page count over roster size when it comes out even.
+function splitGuess() {
+  const r = SP.names.length;
+  if (!r || SP.n < r) return 1;
+  return SP.n % r === 0 ? SP.n / r : 1;
+}
+const spFree = i => !SP.owner[i] && !SP.skip.has(i);
+// Select k pages that nobody has yet, starting at page i.
+function splitPick(i, k) {
+  SP.sel = new Set();
+  for (let p = i; p < SP.n && SP.sel.size < k; p++) if (spFree(p)) SP.sel.add(p);
+  SP.anchor = SP.sel.size ? Math.min(...SP.sel) : 0;
+}
+async function splitRender() {
+  const me = SP;
+  for (let i = 0; i < me.n && SP === me; i++) {
+    if (me.thumbs[i]) continue;
+    const page = await me.doc.getPage(i + 1), vp0 = page.getViewport({ scale: 1 });
+    const vp = page.getViewport({ scale: 520 / vp0.width });
+    const cv = document.createElement('canvas'); cv.width = Math.round(vp.width); cv.height = Math.round(vp.height);
+    const ctx = cv.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, cv.width, cv.height);
+    try { await page.render({ canvasContext: ctx, viewport: vp, annotationMode: pdfjsLib.AnnotationMode.ENABLE }).promise; } catch {}
+    me.ink[i] = splitInk(ctx, cv.width, cv.height);
+    me.thumbs[i] = cv.toDataURL('image/jpeg', .78);
+    if (SP !== me) return;
+    const im = document.querySelector('#spPages img[data-th="' + i + '"]'); if (im) im.src = me.thumbs[i];
+    const st = $('#spStat'); if (st) st.textContent = i + 1 < me.n ? 'Reading pages… ' + (i + 1) + ' of ' + me.n : '';
+  }
+}
+// Share of dark pixels, ignoring a margin where scanners leave edge shadows.
+function splitInk(ctx, w, h) {
+  const m = Math.round(w * .06), d = ctx.getImageData(m, m, w - 2 * m, h - 2 * m).data; let dark = 0;
+  for (let i = 0; i < d.length; i += 16) if (d[i] + d[i + 1] + d[i + 2] < 400) dark++;
+  return dark / (d.length / 16);
+}
+const spPagesOf = nm => SP.owner.map((o, i) => o === nm ? i : -1).filter(i => i >= 0);
+// "1-3, 7" from [0,1,2,6]
+function spRange(list) {
+  const out = []; let a = null, b = null;
+  for (const p of list) { if (a != null && p === b + 1) { b = p; continue; } if (a != null) out.push(a === b ? a + 1 : (a + 1) + '–' + (b + 1)); a = b = p; }
+  if (a != null) out.push(a === b ? a + 1 : (a + 1) + '–' + (b + 1));
+  return out.join(', ');
+}
+function splitShell() {
+  const c = spClass();
+  openDlg('<div class="bh"><h2>Split a scan: ' + esc(SP.name) + '</h2><span class="muted" id="spStat"></span><span class="muted">' + SP.n + ' pages</span></div>' +
+    '<div class="spwrap"><div class="spleft">' +
+      '<div class="spbar"><span class="seg" id="spSize"><button data-sz="0">S</button><button data-sz="1">M</button><button data-sz="2">L</button></span>' +
+        '<button class="btn sm" id="spBlank">Leave out blank pages</button><button class="btn sm" id="spSkip">Leave out selected</button><span class="sp"></span><span id="spSelInfo"></span></div>' +
+      '<p class="muted sphint">Click a page, then Shift-click another to pick a range (⌘/Ctrl-click adds one page). Drag the pages onto a name, click the name, or type it and press Enter. After that, one Shift-click picks from the next page up to the one you click. Double-click a page to see it big.</p>' +
+      '<div id="spPages"></div></div>' +
+    '<div class="spright"><div class="spbar"><label>Class <select class="btn" id="spCls"><option value="">No roster</option>' + lib.classes.map(k => '<option value="' + k.id + '"' + (c && c.id === k.id ? ' selected' : '') + '>' + esc(k.name) + ' (' + k.names.length + ')</option>').join('') + '</select></label></div>' +
+      '<input class="btn" id="spFind" placeholder="Type a name, Enter to give it the pages" autocomplete="off">' +
+      '<div id="spNames"></div><button class="link" id="spAdd" style="margin-top:8px">+ Add a name</button></div></div>' +
+    '<div class="bf" style="justify-content:space-between;align-items:center"><span class="muted" id="spFoot" style="font-size:13px"></span>' +
+      '<span style="display:flex;gap:8px"><button class="btn" data-cancel>Cancel</button><button class="btn primary" id="spGo">Open for grading</button></span></div>');
+  const box = $('#dlgBox'); box.classList.add('spbox');
+  splitDraw();
+  box.ondblclick = ev => { const pg = ev.target.closest('.spg'); if (pg) splitZoom(+pg.dataset.spg); };
+  box.onclick = ev => {
+    const t = ev.target;
+    if (t.closest('[data-cancel]')) { SP = null; splitZoomClose(); return closeDlg(); }
+    const pg = t.closest('.spg');
+    if (pg) {
+      const i = +pg.dataset.spg;
+      if (t.closest('[data-zoom]')) return splitZoom(i);
+      if (t.closest('[data-unpg]')) { SP.owner[i] = ''; SP.skip.delete(i); return splitDraw(); }
+      if (ev.shiftKey) { SP.sel = new Set(); const [a, b] = [Math.min(SP.anchor, i), Math.max(SP.anchor, i)]; for (let p = a; p <= b; p++) if (spFree(p) || a === b) SP.sel.add(p); ev.preventDefault(); }
+      else if (ev.metaKey || ev.ctrlKey) { SP.sel.has(i) ? SP.sel.delete(i) : SP.sel.add(i); SP.anchor = i; }
+      else { SP.sel = new Set([i]); SP.anchor = i; }
+      return splitDrawSel();
+    }
+    const nr = t.closest('[data-spn]');
+    if (nr) {
+      if (t.closest('[data-unall]')) { const nm = SP.names[+nr.dataset.spn]; SP.owner = SP.owner.map(o => o === nm ? '' : o); return splitDraw(); }
+      return splitGive(SP.names[+nr.dataset.spn]);
+    }
+    if (t.closest('#spBig')) return splitZoomClose();
+    const sz = t.closest('[data-sz]');
+    if (sz) { SP.size = +sz.dataset.sz; store.set('gs.spsize', SP.size); return splitDraw(); }
+    if (t.id === 'spSkip') { if (!SP.sel.size) return toast('Pick the pages to leave out first'); for (const p of SP.sel) { SP.skip.add(p); SP.owner[p] = ''; } const last = Math.max(...SP.sel); splitPick(last + 1, SP.last); return splitDraw(); }
+    if (t.id === 'spBlank') {
+      if (SP.ink.filter(v => v != null).length < SP.n) return toast('Still reading the pages, try again in a moment');
+      const blank = SP.ink.map((v, i) => v < .0015 && !SP.owner[i] ? i : -1).filter(i => i >= 0);
+      if (!blank.length) return toast('No blank pages found');
+      for (const i of blank) { SP.skip.add(i); SP.sel.delete(i); }
+      toast(blank.length + ' blank ' + (blank.length === 1 ? 'page' : 'pages') + ' left out'); return splitDraw();
+    }
+    if (t.id === 'spAdd') { const nm = (prompt('Student’s name') || '').trim(); if (nm && !SP.names.includes(nm)) SP.names.push(nm); return splitDraw(); }
+    if (t.id === 'spGo') return splitGo(t);
+  };
+  box.onchange = ev => {
+    if (ev.target.id !== 'spCls') return;
+    SP.classId = ev.target.value; const k = spClass();
+    const extra = [...new Set(SP.owner.filter(Boolean))].filter(nm => !(k ? k.names : []).includes(nm));
+    SP.names = (k ? k.names.slice() : []).concat(extra);
+    splitDraw();
+  };
+  box.addEventListener('dragstart', ev => {
+    const pg = ev.target.closest && ev.target.closest('.spg'); if (!pg) return;
+    const i = +pg.dataset.spg; if (!SP.sel.has(i)) { SP.sel = new Set([i]); SP.anchor = i; splitDraw(); }
+    ev.dataTransfer.setData('text/plain', 'pages'); ev.dataTransfer.effectAllowed = 'move';
+    const sel = [...SP.sel].sort((a, b) => a - b), gh = document.createElement('div'); gh.className = 'spghost';
+    gh.textContent = (sel.length === 1 ? 'Page ' : sel.length + ' pages: ') + spRange(sel); document.body.appendChild(gh);
+    ev.dataTransfer.setDragImage(gh, 20, 20); setTimeout(() => gh.remove(), 0);
+  });
+  box.addEventListener('dragover', ev => { const nr = ev.target.closest && ev.target.closest('[data-spn]'); if (!nr) return; ev.preventDefault(); for (const x of box.querySelectorAll('.spname.over')) if (x !== nr) x.classList.remove('over'); nr.classList.add('over'); });
+  box.addEventListener('dragleave', ev => { const nr = ev.target.closest && ev.target.closest('[data-spn]'); if (nr && !nr.contains(ev.relatedTarget)) nr.classList.remove('over'); });
+  box.addEventListener('drop', ev => { const nr = ev.target.closest && ev.target.closest('[data-spn]'); if (!nr) return; ev.preventDefault(); nr.classList.remove('over'); splitGive(SP.names[+nr.dataset.spn]); });
+  const find = $('#spFind');
+  find.oninput = () => splitDrawNames();
+  find.onkeydown = ev => {
+    if (ev.key !== 'Enter') return; ev.preventDefault();
+    const m = splitMatches(); if (m.length) { splitGive(SP.names[m[0]]); find.value = ''; splitDrawNames(); }
+  };
+}
+// One page big enough to read a handwritten name; any click or Esc closes it.
+const splitZoom = i => bigPage(SP.doc, i, SP.thumbs[i]);
+async function bigPage(doc, i, thumb) {
+  splitZoomClose();
+  if (!doc) return;
+  const d = document.createElement('div'); d.id = 'spBig'; d.innerHTML = '<img alt="Page ' + (i + 1) + '" src="' + (thumb || '') + '"><span>Page ' + (i + 1) + ' · click or Esc to close</span>';
+  $('#dlgBox').appendChild(d);
+  const esc1 = e => { if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); splitZoomClose(); } };
+  window.addEventListener('keydown', esc1, true); d._esc = esc1;
+  const page = await doc.getPage(i + 1), vp0 = page.getViewport({ scale: 1 }), vp = page.getViewport({ scale: 1400 / vp0.width });
+  const cv = document.createElement('canvas'); cv.width = Math.round(vp.width); cv.height = Math.round(vp.height);
+  const ctx = cv.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, cv.width, cv.height);
+  try { await page.render({ canvasContext: ctx, viewport: vp }).promise; } catch {}
+  if (d.isConnected) d.querySelector('img').src = cv.toDataURL('image/jpeg', .85);
+}
+function splitZoomClose() { const d = $('#spBig'); if (d) { window.removeEventListener('keydown', d._esc, true); d.remove(); } }
+function splitMatches() {
+  const q = ($('#spFind') && $('#spFind').value || '').toLowerCase().split(/\s+/).filter(Boolean);
+  const idx = SP.names.map((_, i) => i);
+  if (!q.length) return idx;
+  const words = nm => nm.toLowerCase().split(/[\s,]+/).filter(Boolean);
+  return idx.filter(i => q.every(w => words(SP.names[i]).some(x => x.startsWith(w))))
+    .sort((a, b) => (spPagesOf(SP.names[a]).length ? 1 : 0) - (spPagesOf(SP.names[b]).length ? 1 : 0));
+}
+function splitGive(nm) {
+  if (!nm) return;
+  if (!SP.sel.size) return toast('Pick the pages first');
+  const list = [...SP.sel].sort((a, b) => a - b);
+  for (const p of list) { SP.owner[p] = nm; SP.skip.delete(p); }
+  SP.last = list.length;
+  SP.sel = new Set();
+  let nx = list[list.length - 1] + 1; while (nx < SP.n && !spFree(nx)) nx++;
+  if (nx >= SP.n) { nx = 0; while (nx < SP.n && !spFree(nx)) nx++; }
+  SP.anchor = nx < SP.n ? nx : 0;
+  splitDraw();
+}
+function splitDraw() {
+  const W = [110, 160, 230][SP.size] || 160;
+  for (const b of document.querySelectorAll('#spSize [data-sz]')) b.setAttribute('aria-pressed', +b.dataset.sz === SP.size);
+  $('#spPages').style.setProperty('--spw', W + 'px');
+  $('#spPages').innerHTML = Array.from({ length: SP.n }, (_, i) => {
+    const o = SP.owner[i], sk = SP.skip.has(i);
+    return '<div class="spg' + (SP.sel.has(i) ? ' sel' : '') + (o ? ' own' : '') + (sk ? ' skip' : '') + '" data-spg="' + i + '" draggable="true">' +
+      '<img data-th="' + i + '" src="' + (SP.thumbs[i] || '') + '" alt="Page ' + (i + 1) + '" draggable="false">' +
+      '<span class="sppick"></span><button class="spzoom" data-zoom title="See this page big">⤢</button>' +
+      '<div class="spf"><span class="spno">' + (i + 1) + '</span>' +
+      (o || sk ? '<span class="spown">' + (sk ? 'Left out' : esc(o)) + '</span><button data-unpg title="Take this page back">×</button>' : '') + '</div></div>';
+  }).join('');
+  splitDrawSel();
+  splitDrawNames();
+}
+// Selection only: the page cards stay in place, so a double-click still lands on them.
+function splitDrawSel() {
+  const sel = [...SP.sel].sort((a, b) => a - b);
+  for (const el of document.querySelectorAll('#spPages .spg')) {
+    const k = sel.indexOf(+el.dataset.spg); el.classList.toggle('sel', k >= 0);
+    el.querySelector('.sppick').textContent = k >= 0 ? (sel.length > 1 ? (k + 1) + ' of ' + sel.length : 'Picked') : '';
+  }
+  const info = $('#spSelInfo');
+  info.textContent = sel.length ? (sel.length === 1 ? 'Page ' : 'Pages ') + spRange(sel) + ' picked' : (spFree(SP.anchor) && SP.owner.some(Boolean) ? 'Next starts at page ' + (SP.anchor + 1) + ': Shift-click its last page' : 'No pages picked');
+  info.classList.toggle('on', !!sel.length);
+}
+function splitDrawNames() {
+  const m = splitMatches(), q = $('#spFind').value.trim();
+  $('#spNames').innerHTML = (m.length ? m.map((i, k) => {
+    const nm = SP.names[i], pg = spPagesOf(nm);
+    return '<div class="spname' + (pg.length ? ' has' : '') + (q && k === 0 ? ' top' : '') + '" data-spn="' + i + '"><span class="spck">' + (pg.length ? '✓' : '') + '</span><b>' + esc(nm) + '</b>' +
+      (pg.length ? '<span class="muted">p. ' + spRange(pg) + '</span><button class="link" data-unall title="Take these pages back">undo</button>' : '') + '</div>';
+  }).join('') : '<p class="muted" style="font-size:13px">' + (SP.names.length ? 'No name matches.' : 'Pick a class above, or add names.') + '</p>');
+  const given = SP.owner.filter(Boolean).length, left = SP.n - given - SP.skip.size, who = new Set(SP.owner.filter(Boolean)).size;
+  const none = SP.names.filter(nm => !spPagesOf(nm).length);
+  $('#spFoot').innerHTML = who + (who === 1 ? ' student' : ' students') + ' · ' + given + ' of ' + SP.n + ' pages given' +
+    (left ? ' · <b style="color:var(--warn)">' + left + (left === 1 ? ' page' : ' pages') + ' not given to anyone yet (left out if you open now)</b>' : '') +
+    (none.length && who ? ' · No pages: ' + esc(none.join(', ')) : '');
+  $('#spGo').disabled = !who;
+}
+// One page drawn as a picture into a new PDF, at its own size.
+async function rasterInto(out, jsDoc, i, dpi) {
+  const page = await jsDoc.getPage(i + 1), vp1 = page.getViewport({ scale: 1 }), k = dpi / 72;
+  const c = document.createElement('canvas'); c.width = Math.ceil(vp1.width * k); c.height = Math.ceil(vp1.height * k);
+  const ctx = c.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
+  await page.render({ canvasContext: ctx, viewport: page.getViewport({ scale: k }), annotationMode: pdfjsLib.AnnotationMode.ENABLE }).promise;
+  const jpg = await new Promise(res => c.toBlob(b => b.arrayBuffer().then(x => res(new Uint8Array(x))), 'image/jpeg', 0.9));
+  out.addPage([vp1.width, vp1.height]).drawImage(await out.embedJpg(jpg), { x: 0, y: 0, width: vp1.width, height: vp1.height });
+  c.width = c.height = 0; page.cleanup();
+}
+async function splitGo(btn) {
+  btn.disabled = true; btn.textContent = 'Making each student’s paper…';
+  const me = SP, src = await PDFLib.PDFDocument.load(me.data, { ignoreEncryption: true, updateMetadata: false });
+  const file = ((me.asg && me.asg.name) || me.name).replace(/[\\/:*?"<>|]+/g, ' ').trim() || 'Scan';
+  const entries = [];
+  for (const nm of new Set(me.owner.filter(Boolean))) {
+    const out = await PDFLib.PDFDocument.create();
+    if (!src.isEncrypted) { for (const pg of await out.copyPages(src, spPagesOf(nm))) out.addPage(pg); }
+    else for (const i of spPagesOf(nm)) await rasterInto(out, me.doc, i, 200);   // a locked PDF copies as blank pages
+    entries.push({ path: nm.replace(/[\\/:*?"<>|]+/g, ' ').trim() + '/' + file + '.pdf', data: await out.save() });
+  }
+  SP = null; closeDlg(); me.doc.destroy();
+  await intake(entries, me.name, me.asg);
+  if (me.classId && batch) { batch.classId = me.classId; renderClassSel(); saveNow(); renderList(); }
+}
+
+/* ---------------- other files: kept with the student, downloadable, returned in the export if you added them ---------------- */
+function textCard(f) {
+  const el = document.createElement('div'); el.className = 'docx';
+  let t = new TextDecoder().decode(f.data);
+  if (/\.rtf$/i.test(f.name)) t = t.replace(/\\par[d]?/g, '\n').replace(/\{\\\*[^{}]*\}|\\[a-z]+-?\d* ?|[{}]/gi, '').replace(/\n{3,}/g, '\n\n').trim();
+  el.innerHTML = '<div class="fhead"><span style="color:var(--fg)">' + esc(f.name) + '</span><span>Text</span>' + (f.added ? addTag(f) : '') + '<span style="flex:1"></span><button class="btn sm ghost" data-odl>Download</button></div><div class="dpage" style="white-space:pre-wrap"></div>';
+  el.querySelector('.dpage').textContent = t;
+  el.querySelector('[data-odl]').onclick = () => saveBlob(f.name, new Blob([f.data]));
+  return el;
+}
+function otherCard(f) {
+  const el = document.createElement('div'); el.className = 'nofile'; el.style.marginBottom = '12px'; el.style.maxWidth = '640px';
+  const ext = (/\.(\w+)$/.exec(f.name) || [, ''])[1].toLowerCase();
+  const why = ext === 'doc' ? 'An older Word file. It can’t be shown in a browser; download it to open it in Word (saving it as .docx lets you edit it here).'
+    : /^(pptx?|key)$/.test(ext) ? 'Slides can’t be shown here; download to open them.'
+    : /^(xlsx?|numbers|csv)$/.test(ext) ? 'A spreadsheet. Download to open it.'
+    : /^(heic|heif|tiff?)$/.test(ext) ? 'This browser can’t show this picture type (Safari can). Download to open it.'
+    : 'This kind of file can’t be shown here. Download to open it.';
+  el.innerHTML = '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><b>' + esc(f.name) + '</b>' + (f.added ? addTag(f) : '') + '<span style="flex:1"></span>' + (f.data ? '<button class="btn sm" data-odl>Download</button>' : '') + '</div><div style="margin-top:6px">' + why + ' You can still give a score.' + (f.added ? ' It goes back with the export because you added it.' : '') + '</div>';
+  const b = el.querySelector('[data-odl]'); if (b) b.onclick = () => saveBlob(f.name, new Blob([f.data]));
+  return el;
+}
+
+/* ---------------- bringing in many files at once: each one sorted to its student by name ---------------- */
+const SORT_STOP = new Set(['pdf', 'docx', 'docm', 'doc', 'rubric', 'final', 'draft', 'copy', 'marked', 'graded', 'feedback', 'interview', 'summative', 'formative', 'assignment', 'the', 'and', 'of', 'for', 'version', 'v', 'el', 'grade', 'resume', 'cover', 'letter', 'essay', 'paragraph', 'analysis', 'notes', 'comments', 'scan', 'img', 'image', 'page']);
+function sortGuess(path) {
+  const c = batchClass(), extra = new Map();
+  if (c) for (const [n, s] of rosterMatch(c.names)) extra.set(s, nameWords(n));
+  return guessAmong(path, batch.students.map(st => [nameWords(st.key), extra.get(st) || []]));
+}
+async function bringIn(list) {
+  list = list.filter(e => e.file && !junk(e.path));
+  if (!list.length) return;
+  const rows = list.map(e => ({ e, ...sortGuess(e.path) }));
+  const opts = i => '<option value="-1"' + (i < 0 ? ' selected' : '') + '>Choose a student…</option>' + batch.students.map((st, k) => '<option value="' + k + '"' + (k === i ? ' selected' : '') + '>' + (k + 1) + '. ' + esc(st.key) + '</option>').join('') + '<option value="-2">Skip this file</option>';
+  const count = () => rows.filter(r => r.i >= 0).length;
+  openDlg('<div class="bh"><h2>Bring in files</h2><span class="muted">' + list.length + (list.length === 1 ? ' file' : ' files') + ', sorted by the names in the file names</span><button class="icon" data-close aria-label="Close" style="margin-left:auto">✕</button></div>' +
+    '<div class="bb"><p class="muted" style="margin:0 0 10px;font-size:14px">Each file goes into that student’s submission in this download, tagged “Added by you”. Check the ones marked “Check” or “Choose”.</p>' +
+    '<table class="gl"><thead><tr><th>File</th><th>Goes to</th><th></th></tr></thead><tbody>' +
+    rows.map((r, k) => '<tr><td style="overflow-wrap:anywhere">' + esc(r.e.path) + '</td><td><select class="btn" data-row="' + k + '" style="max-width:280px">' + opts(r.i) + '</select></td><td data-tag="' + k + '">' + sortTag(r) + '</td></tr>').join('') +
+    '</tbody></table></div><div class="bf"><button class="btn" data-close>Cancel</button><button class="btn primary" data-go>Add ' + count() + (count() === 1 ? ' file' : ' files') + '</button></div>');
+  const box = $('#dlgBox');
+  box.onchange = e => { const s = e.target.closest('[data-row]'); if (!s) return; const r = rows[+s.dataset.row]; r.i = +s.value; r.sure = true; r.set = true; box.querySelector('[data-tag="' + s.dataset.row + '"]').innerHTML = sortTag(r); const n = count(); box.querySelector('[data-go]').textContent = 'Add ' + n + (n === 1 ? ' file' : ' files'); };
+  box.onclick = async e => {
+    if (e.target.closest('[data-close]')) return closeDlg();
+    if (!e.target.closest('[data-go]')) return;
+    const groups = new Map();
+    for (const r of rows) if (r.i >= 0) { if (!groups.has(r.i)) groups.set(r.i, []); groups.get(r.i).push(r.e); }
+    if (!groups.size) return toast('Choose a student for at least one file');
+    closeDlg();
+    let n = 0, lastI = cur;
+    for (const [i, fl] of groups) { await addFiles(batch.students[i], fl, true); n += fl.length; lastI = i; }
+    renderList(); openStudent(groups.has(cur) ? cur : lastI);
+    toast('Added ' + n + (n === 1 ? ' file' : ' files') + ' to ' + groups.size + (groups.size === 1 ? ' student' : ' students'));
+  };
+}
+const sortTag = r => r.i === -2 ? '<span class="muted">Skipped</span>' : r.i < 0 ? '<span class="pill" style="font-size:12px;padding:2px 8px;border-radius:999px;background:var(--warn-soft);color:var(--warn)">Choose</span>'
+  : r.set ? '<span class="muted">Chosen by you</span>' : r.sure ? '<span style="color:var(--good, #1C7F54);font-size:13px;font-weight:600">Matched by name</span>' : '<span class="pill" style="font-size:12px;padding:2px 8px;border-radius:999px;background:var(--warn-soft);color:var(--warn)">Check</span>';
+
+/* ---------------- folder import: many files (a folder, a ZIP), each matched to a student by the name in its file or folder name ---------------- */
+// Picked files as [{ path, file }], keeping folder names (they often hold the student's name) and opening ZIPs.
+async function expandPicked(files) {
+  const out = [];
+  for (const f of files) {
+    const path = f.webkitRelativePath || f.name;
+    if (junk(path)) continue;
+    if (/\.zip$/i.test(f.name)) {
+      const raw = [];
+      try { unzipInto(new Uint8Array(await f.arrayBuffer()), '', raw, 0); } catch { toast('Couldn’t open ' + f.name + ' as a ZIP'); continue; }
+      for (const r of raw) if (r.data && !junk(r.path)) out.push({ path: f.name.replace(/\.zip$/i, '') + '/' + r.path, file: new File([r.data], r.path.split('/').pop()) });
+      continue;
+    }
+    out.push({ path, file: f });
+  }
+  return out;
+}
+// The Mac app chooses folders through macOS itself; files come back with their folder path, like the web picker's.
+async function nativeFolder() {
+  const p = await window.gsNative.pickFolder(); if (!p) return null;
+  toast('Opening ' + p.name + '…');
+  const r = await window.gsNative.readFolder(); if (!r) return null;
+  if (r.error) { toast(r.error === 'perm' ? 'macOS didn’t let Grading Studio open that folder. Allow it in System Settings → Privacy & Security → Files and Folders.' : 'Couldn’t open that folder: ' + r.error, 8000); return null; }
+  if (!r.files.length) { toast('No files found in ' + r.name, 6000); return null; }
+  return r.files.map(f => { const file = new File([f.data], f.rel.split('/').pop(), { lastModified: f.mtime }); Object.defineProperty(file, 'webkitRelativePath', { value: r.name + '/' + f.rel }); return file; });
+}
+// A folder for one of the folder inputs: the web picker, or macOS's own in the Mac app.
+function pickDir(sel) {
+  if (!window.gsNative) return $(sel).click();
+  nativeFolder().then(fs => { if (fs) $(sel).onchange({ target: { files: fs, value: '' } }); }, e => toast('Couldn’t open that folder: ' + (e.message || e), 8000));
+}
+function pickMany(folder) {
+  if (folder && window.gsNative) return nativeFolder().then(fs => fs ? expandPicked(fs) : new Promise(() => {}), e => { toast('Couldn’t open that folder: ' + (e.message || e), 8000); return new Promise(() => {}); });
+  return new Promise(res => {
+    const inp = document.createElement('input'); inp.type = 'file'; inp.multiple = true;
+    if (folder) inp.webkitdirectory = true;
+    inp.onchange = async () => res(await expandPicked([...inp.files]));
+    inp.click();
+  });
+}
+// Files or folder? Then hands the files on.
+function askFilesOrFolder(title, text, then) {
+  openDlg('<div class="bh"><h2>' + esc(title) + '</h2><button class="icon" data-cancel aria-label="Close">✕</button></div><div class="bb"><p style="margin:0">' + text + '</p></div>' +
+    '<div class="bf"><button class="btn" data-cancel>Cancel</button><button class="btn" data-pf>Files or a ZIP…</button><button class="btn primary" data-pd>A whole folder…</button></div>', true);
+  $('#dlgBox').onclick = async e => {
+    if (e.target.closest('[data-cancel]')) return closeDlg();
+    const pf = e.target.closest('[data-pf]'), pd = e.target.closest('[data-pd]');
+    if (!pf && !pd) return;
+    closeDlg();
+    const list = await pickMany(!!pd);
+    if (!list.length) return toast('No files found there');
+    then(list);
+  };
+}
+// Best match among people, each given as one or more lists of name words. Same scoring as Bring in files.
+function guessAmong(path, people) {
+  const fw = new Set(nameWords(path.replace(/\.[^./]+$/, '')).filter(x => !SORT_STOP.has(x)));
+  let best = [], bestScore = 0;
+  people.forEach((lists, i) => {
+    let sc = 0;
+    for (const ws0 of lists) {
+      const ws = ws0.filter(x => x.length >= 2 || /[^\x00-\x7f]/.test(x) || /^\d+$/.test(x)); if (!ws.length) continue;
+      const hit = ws.filter(x => fw.has(x)).length;
+      sc = Math.max(sc, hit === ws.length && hit >= 2 ? 100 + hit : hit);
+      if (ws.some(x => /^\d{4,}$/.test(x) && fw.has(x))) sc = Math.max(sc, 150);   // a student ID number in the file name
+    }
+    if (sc > bestScore) { bestScore = sc; best = [i]; } else if (sc === bestScore && sc > 0) best.push(i);
+  });
+  if (best.length !== 1 || !bestScore) return { i: -1, sure: false };
+  return { i: best[0], sure: bestScore >= 2 };
+}
+// Outside files with no ManageBac download: match them to a roster and open them as a new download.
+function matchToRoster(list, assignment) {
+  let c = assignment && assignment.classId ? classById(assignment.classId) : (lib.classes.find(k => k.names.length) || null);
+  let rows = [];
+  const guess = () => { const names = c ? c.names : []; rows = list.map(e => ({ e, ...guessAmong(e.path, names.map(n => [nameWords(n)])) })); };
+  guess();
+  const render = () => {
+    const names = c ? c.names : [];
+    const opts = i => '<option value="-1"' + (i < 0 ? ' selected' : '') + '>Choose a student…</option>' + names.map((n, k) => '<option value="' + k + '"' + (k === i ? ' selected' : '') + '>' + esc(n) + '</option>').join('') + '<option value="-2"' + (i === -2 ? ' selected' : '') + '>Skip this file</option>';
+    const n = rows.filter(r => r.i >= 0).length, who = new Set(rows.filter(r => r.i >= 0).map(r => r.i)).size;
+    const missing = names.filter((_, k) => !rows.some(r => r.i === k));
+    openDlg('<div class="bh"><h2>Match files to students</h2><span class="muted">' + list.length + (list.length === 1 ? ' file' : ' files') + '</span><button class="icon" data-close aria-label="Close" style="margin-left:auto">✕</button></div>' +
+      '<div class="bb"><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px"><label style="display:flex;gap:6px;align-items:center;font-weight:500">Class <select class="btn" id="mrCls">' +
+        lib.classes.map(k => '<option value="' + k.id + '"' + (c && c.id === k.id ? ' selected' : '') + '>' + esc(k.name) + ' (' + k.names.length + ')</option>').join('') + '</select></label>' +
+        '<span class="muted" style="font-size:13px">Matched by the names in the file and folder names. Check the ones marked “Check” or “Choose”.</span></div>' +
+      (names.length ? '<table class="gl"><thead><tr><th>File</th><th>Student</th><th></th></tr></thead><tbody>' +
+        rows.map((r, k) => '<tr><td style="overflow-wrap:anywhere">' + esc(r.e.path) + '</td><td><select class="btn" data-row="' + k + '" style="max-width:280px">' + opts(r.i) + '</select></td><td>' + sortTag(r) + '</td></tr>').join('') + '</tbody></table>'
+        : '<p>Add a roster for this class first (Rosters, + Class on the start screen), then try again.</p>') +
+      (missing.length && names.length ? '<p class="muted" style="font-size:13px;margin:10px 0 0">No file yet: ' + esc(missing.join(', ')) + '</p>' : '') + '</div>' +
+      '<div class="bf"><button class="btn" data-close>Cancel</button><button class="btn primary" data-go' + (n ? '' : ' disabled') + '>Open ' + n + (n === 1 ? ' file' : ' files') + ' for ' + who + (who === 1 ? ' student' : ' students') + '</button></div>');
+  };
+  render();
+  const box = $('#dlgBox');
+  box.onchange = e => {
+    if (e.target.id === 'mrCls') { c = classById(e.target.value); guess(); return render(); }
+    const s = e.target.closest('[data-row]'); if (!s) return;
+    Object.assign(rows[+s.dataset.row], { i: +s.value, sure: true, set: true }); render();
+  };
+  box.onclick = async e => {
+    if (e.target.closest('[data-close]')) return closeDlg();
+    if (!e.target.closest('[data-go]')) return;
+    const used = new Set(), entries = [];
+    for (const r of rows) if (r.i >= 0) {
+      const base = c.names[r.i].replace(/[\\/:*?"<>|]+/g, ' ').trim() + '/' + r.e.path.split('/').pop();
+      let p = base, k = 2; while (used.has(p.toLowerCase())) p = base.replace(/(\.[^./]+)?$/, ' (' + k++ + ')$1');
+      used.add(p.toLowerCase()); entries.push({ path: p, file: r.e.file });
+    }
+    closeDlg();
+    await intake(entries, (assignment && assignment.name) || 'Matched files', assignment || null);
+    if (batch) { batch.classId = c.id; renderClassSel(); saveNow(); renderList(); }
+  };
+}
+
 /* ---------------- sample papers (made-up names) ---------------- */
 async function makeSample() {
   const names = ['Sample Student 01', 'Sample Student 02', 'Sample Student 03', 'Sample Student 04', 'Sample Student 05'];
@@ -2637,16 +4641,20 @@ async function makeSample() {
 
 /* ---------------- wiring ---------------- */
 let toastT;
-function toast(msg) {
+function toast(msg, ms) {
   let t = $('.toast');
   if (!t) { t = document.createElement('div'); t.className = 'toast'; t.setAttribute('role', 'status'); document.body.appendChild(t); }
   t.textContent = msg; t.hidden = false;
-  clearTimeout(toastT); toastT = setTimeout(() => { t.hidden = true; }, 3000);
+  clearTimeout(toastT); toastT = setTimeout(() => { t.hidden = true; }, ms || 3000);
 }
 $('#pickFiles').onclick = () => $('#fileIn').click();
-$('#pickFolder').onclick = () => $('#dirIn').click();
+$('#pickFolder').onclick = () => pickDir('#dirIn');
 $('#pickDrive').onclick = () => openFromDrive(null);
 $('#sample').onclick = makeSample;
+let scanFor = null;
+$('#pickScan').onclick = () => { scanFor = null; $('#scanIn').click(); };
+$('#pickMatch').onclick = () => askFilesOrFolder('Match files to a roster', 'For files that aren’t a ManageBac download, like rubrics you marked outside Grading Studio. Each file is matched to a student on your roster by the name in its file name or folder name, and you can fix any match.', list => matchToRoster(list, null));
+$('#scanIn').onchange = e => { const f = e.target.files[0]; e.target.value = ''; if (f) openSplit(f, scanFor); };
 $('#fileIn').onchange = e => { const fs = [...e.target.files]; intake(fs.map(f => ({ path: f.name, file: f })), fs.length === 1 ? fs[0].name.replace(/\.[^.]+$/, '') : ''); e.target.value = ''; };
 $('#dirIn').onchange = e => {
   const fs = [...e.target.files];
@@ -2677,6 +4685,48 @@ document.addEventListener('drop', async e => {
   const r = await entriesFromDrop(e.dataTransfer);
   intake(r.list, r.label);
 });
+// With a download open, files dropped on the paper or on a student's name are added to that student.
+let dropEl = null;
+const setDropEl = el => { if (dropEl === el) return; if (dropEl) dropEl.classList.remove('drop-on'); dropEl = el; if (el) el.classList.add('drop-on'); };
+const hasFiles = e => !!e.dataTransfer && [...(e.dataTransfer.types || [])].includes('Files');
+const dropTarget = e => {
+  if (!e.target.closest) return null;
+  const s = e.target.closest('.stu'); if (s) return { el: s, i: +s.dataset.i };
+  const p = e.target.closest('#paper'); return p ? { el: p, i: cur } : null;
+};
+document.addEventListener('dragover', e => {
+  if (!batch || ldrag || !hasFiles(e)) return;
+  e.preventDefault();   // never let a dropped file replace the page
+  const t = $('#dlg').hidden ? dropTarget(e) : null;
+  setDropEl(t && t.el); e.dataTransfer.dropEffect = t ? 'copy' : 'none';
+});
+document.addEventListener('dragleave', e => { if (batch && !e.relatedTarget) setDropEl(null); });
+document.addEventListener('drop', async e => {
+  if (!batch || !hasFiles(e)) return;
+  e.preventDefault(); setDropEl(null);
+  const t = $('#dlg').hidden ? dropTarget(e) : null; if (!t) return;
+  const onName = t.el.classList.contains('stu');
+  const r = await entriesFromDrop(e.dataTransfer);
+  if (!onName && r.list.length > 1) return bringIn(r.list);
+  addFiles(batch.students[t.i], r.list);
+});
+$('#trAllBtn').onclick = openTranscripts;
+$('#dispBtn').onclick = openDisplay;
+// Side panels fold away to give the paper more room; remembered in this browser. [ and ] also fold them.
+function setPanels(L, R) {
+  const c = $('#cols'); c.classList.toggle('noL', !!L); c.classList.toggle('noR', !!R);
+  $('#colL').querySelector('.pa').textContent = L ? '›' : '‹'; $('#colR').querySelector('.pa').textContent = R ? '‹' : '›';
+  $('#colL').title = L ? 'Show the student list ( [ )' : 'Hide the student list ( [ )'; $('#colR').title = R ? 'Show the score panel ( ] )' : 'Hide the score panel ( ] )';
+  store.set('gs.panels', { L: !!L, R: !!R });
+  clearTimeout(resizeT); resizeT = setTimeout(() => pages.forEach(renderPage), 60);
+}
+const panelsNow = () => ({ L: $('#cols').classList.contains('noL'), R: $('#cols').classList.contains('noR') });
+$('#colL').onclick = () => { const p = panelsNow(); setPanels(!p.L, p.R); };
+$('#colR').onclick = () => { const p = panelsNow(); setPanels(p.L, !p.R); };
+{ const p = store.get('gs.panels', {}); setPanels(p.L, p.R); }
+$('#lightBtn').onclick = openLight;
+$('#calcBtn').onclick = openCalc;
+$('#bringBtn').onclick = () => askFilesOrFolder('Bring in files', 'Each file goes to its student by the name in its file name or folder name, for example your marked rubrics. You check the matches before anything is added.', bringIn);
 $('#setupBtn').onclick = openSetup;
 $('#gradesBtn').onclick = openGrades;
 $('#sheetBtn').onclick = () => openSheet(false);
@@ -2687,10 +4737,10 @@ $('#closeBtn').onclick = () => {
   saveNow(); commitEditors();
   for (const d of docs) d.destroy();
   batch = null; pages = []; docs = [];
-  $('#app').hidden = true; $('#start').hidden = false; $('#paper').innerHTML = ''; renderLib();
+  $('#app').hidden = true; $('#start').hidden = false; $('#paper').innerHTML = ''; renderLib(); loadKept();
 };
 document.addEventListener('keydown', e => {
-  if (!batch || !$('#dlg').hidden) { if (e.key === 'Escape' && !$('#dlg').hidden) closeDlg(); return; }
+  if (!batch || !$('#dlg').hidden) { if (e.key === 'Escape' && !$('#dlg').hidden && !SP) closeDlg(); return; }
   const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement && document.activeElement.tagName);
   if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'z' && !typing) { e.preventDefault(); undo(); return; }
   if (typing || e.metaKey || e.ctrlKey || e.altKey) return;
@@ -2701,11 +4751,88 @@ document.addEventListener('keydown', e => {
   }
   const map = { v: 'select', p: 'pen', h: 'hl', o: 'oval', t: 'text', c: 'note', k: 'check', e: 'erase' };
   if (map[e.key.toLowerCase()]) { setTool(map[e.key.toLowerCase()]); return; }
-  if (e.key === 'ArrowRight') { e.preventDefault(); openStudent(cur + 1); }
-  if (e.key === 'ArrowLeft') { e.preventDefault(); openStudent(cur - 1); }
+  if (e.key.toLowerCase() === 'n') { nextUnscored(); return; }
+  if (e.key === '=') { e.preventDefault(); if ($('#calcPanel')) $('#calcIn').focus(); else openCalc(); return; }
+  if (e.key === '[' && !e.metaKey && !e.ctrlKey) { e.preventDefault(); const p = panelsNow(); return setPanels(!p.L, p.R); }
+  if (e.key === ']' && !e.metaKey && !e.ctrlKey) { e.preventDefault(); const p = panelsNow(); return setPanels(p.L, !p.R); }
+  if (e.key === 'ArrowRight' || e.key === 'ArrowDown') { e.preventDefault(); stepStudent(1); }
+  if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); stepStudent(-1); }
   if ((e.key === 'Delete' || e.key === 'Backspace') && selected) { e.preventDefault(); deleteSelected(); }
   if (e.key === 'Escape' && selected) { selected = null; redrawAll(); }
 });
 window.addEventListener('beforeunload', saveNow);
-renderLib(); renderGoogle();
-window.__gs = { intake, parseGrade, scanFile, scanAll, state: () => ({ batch, cur, setup, pages }), gradeOf, percentFor, flattenDoc, exportPlan, layoutOf, docIn, openStudent, setTool };
+applyDisp();
+renderLib(); renderGoogle(); loadKept();
+/* ---------------- backup: everything this browser keeps, in one file, to carry to another link or computer ---------------- */
+// Browsers keep a site's storage per address, so the Netlify link, the offline file and the claude.ai copy each have
+// their own. A backup holds the downloads (papers and work), added files, Word edits, units, rosters and settings.
+async function storeDump(open, name) {
+  const db = await open();
+  return new Promise((res, rej) => {
+    const tx = db.transaction(name, 'readonly'), o = tx.objectStore(name), out = {};
+    const a = o.getAll(), b = o.getAllKeys();
+    tx.oncomplete = () => { out.v = a.result || []; out.k = b.result || []; res(out); }; tx.onerror = () => rej(tx.error);
+  });
+}
+async function makeBackup() {
+  toast('Making the backup…');
+  const bins = [], files = {};
+  // Byte arrays go in the ZIP as their own files; the rest is JSON.
+  const pack = v => {
+    if (v instanceof Uint8Array || v instanceof ArrayBuffer) { const u = v instanceof Uint8Array ? v : new Uint8Array(v); bins.push(u); return { __bin: bins.length - 1 }; }
+    if (Array.isArray(v)) return v.map(pack);
+    if (v && typeof v === 'object') { const o = {}; for (const [k, x] of Object.entries(v)) o[k] = pack(x); return o; }
+    return v;
+  };
+  const ls = {};
+  for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k && k.startsWith('gs.') && k !== 'gs.syncT') ls[k] = localStorage.getItem(k); }
+  const keep = {};
+  for (const n of ['papers', 'work', 'meta', 'edits']) { try { keep[n] = pack(await storeDump(keepDb, n)); } catch { keep[n] = { v: [], k: [] }; } }
+  let added = { v: [], k: [] }; try { added = pack(await storeDump(addDb, 'files')); } catch {}
+  const info = { app: 'Grading Studio', v: 1, t: Date.now(), from: location.origin === 'null' ? 'offline file' : location.host, downloads: keep.meta.v.length };
+  files['backup.json'] = new TextEncoder().encode(JSON.stringify({ info, ls, keep, added }));
+  bins.forEach((u, i) => { files['bin/' + i] = [u, { level: 0 }]; });
+  const day = new Date().toISOString().slice(0, 10);
+  await saveBlob('Grading Studio backup ' + day + '.zip', new Blob([fflate.zipSync(files)], { type: 'application/zip' }));
+  store.set('gs.lastBackup', Date.now()); renderBackup();
+}
+async function restoreBackup(file) {
+  let z, data;
+  try { z = fflate.unzipSync(new Uint8Array(await file.arrayBuffer())); data = JSON.parse(new TextDecoder().decode(z['backup.json'])); } catch { return toast('That isn’t a Grading Studio backup'); }
+  if (!data || !data.info || data.info.app !== 'Grading Studio') return toast('That isn’t a Grading Studio backup');
+  const unpack = v => {
+    if (v && typeof v === 'object' && !Array.isArray(v) && Object.keys(v).length === 1 && typeof v.__bin === 'number') return z['bin/' + v.__bin] || new Uint8Array(0);
+    if (Array.isArray(v)) return v.map(unpack);
+    if (v && typeof v === 'object') { const o = {}; for (const [k, x] of Object.entries(v)) o[k] = unpack(x); return o; }
+    return v;
+  };
+  const n = data.info.downloads || 0;
+  if (!confirm('Restore this backup from ' + new Date(data.info.t).toLocaleString() + ' (' + n + (n === 1 ? ' download' : ' downloads') + ')?\n\nIts downloads, marks and scores are added to this browser. Units, rosters and settings are replaced with the backup’s.')) return;
+  toast('Restoring…');
+  for (const [k, v] of Object.entries(data.ls || {})) {
+    if (k.startsWith('gs.b.')) { const cur = store.get(k, null), bk = JSON.parse(v); if (cur && cur.t && bk && bk.t && cur.t > bk.t) continue; }   // keep the newer work
+    try { localStorage.setItem(k, v); } catch {}
+  }
+  const put = async (open, name, d) => {
+    const db = await open(), recs = unpack(d);
+    await new Promise((res, rej) => { const tx = db.transaction(name, 'readwrite'), o = tx.objectStore(name); recs.k.forEach((k, i) => o.put(recs.v[i], k)); tx.oncomplete = res; tx.onerror = () => rej(tx.error); });
+  };
+  try {
+    for (const nm of ['papers', 'work', 'meta', 'edits']) if (data.keep && data.keep[nm]) await put(keepDb, nm, data.keep[nm]);
+    if (data.added) await put(addDb, 'files', data.added);
+  } catch (e) { console.error(e); return toast('This browser had no room for the whole backup'); }
+  toast('Restored. Reloading…');
+  setTimeout(() => location.reload(), 700);
+}
+function renderBackup() {
+  const el = $('#backupInfo'); if (!el) return;
+  const t = store.get('gs.lastBackup', 0);
+  el.textContent = t ? 'Last backup: ' + new Date(t).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : 'No backup made from this link yet.';
+}
+$('#backupBtn').onclick = makeBackup;
+$('#restoreBtn').onclick = () => $('#restoreIn').click();
+$('#restoreIn').onchange = () => { const f = $('#restoreIn').files[0]; $('#restoreIn').value = ''; if (f) restoreBackup(f); };
+renderBackup();
+
+window.__gs_pickMany = pickMany;
+window.__gs = { wordScore, wordScoresAll, makeBackup, restoreBackup, fileSeq, moveFile, openMoveFile, calcEval, openCalc, pageLit, setPageLit, lightMenuDo, lightChips, ensureCounts, addRefs, refs: () => refFiles, matchToRoster, guessAmong, expandPicked, lightOpts, isRubricPage, openAnon, setAnon, anonOrder, anonOn, openLight, lightFor, lightAuto, openSplit, sp: () => SP, bringIn, sortGuess, openWord, wordBytes, reopenKept, forgetKept, kept: () => keptMeta, addFiles, removeAdded, nextUnscored, openDisplay, trimToInk, intake, parseGrade, scanFile, scanAll, state: () => ({ batch, cur, setup, pages }), gradeOf, percentFor, flattenDoc, exportPlan, layoutOf, docIn, openStudent, setTool };

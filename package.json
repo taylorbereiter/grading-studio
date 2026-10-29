@@ -1,4 +1,4 @@
-﻿{
+{
   "name": "grading-studio",
   "version": "1.0.0",
   "private": true,
@@ -8,6 +8,7 @@
   },
   "dependencies": {
     "fflate": "0.8.2",
+    "html2canvas": "1.4.1",
     "mammoth": "1.11.0",
     "pdf-lib": "1.17.1",
     "pdfjs-dist": "3.11.174"
