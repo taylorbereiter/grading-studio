@@ -3248,6 +3248,8 @@ function renderLib() {
   const unit = u => '<div class="unit" draggable="true" data-unit="' + u.id + '">' +
     '<div class="uhead" title="Drag to move this unit"><span class="nm">' + esc(u.name) + '</span><button class="icon" data-urename="' + u.id + '" title="Rename unit" aria-label="Rename unit">✎</button>' +
     '<button class="icon" data-udel="' + u.id + '" title="Delete unit" aria-label="Delete unit">✕</button></div>' +
+    '<div class="atl">' + (u.atlas ? '<a href="' + esc(u.atlas) + '" target="_blank" rel="noopener noreferrer" title="' + esc(u.atlas) + '">Open in Atlas ↗</a><button class="link" data-uatlas="' + u.id + '">Change</button>'
+      : '<button class="link" data-uatlas="' + u.id + '">+ Link to Atlas</button>') + '</div>' +
     '<div class="cards">' + u.items.map(card).join('') + '</div>' +
     '<button class="addcard" data-additem="' + u.id + '">+ Assignment</button></div>';
   const block = (c, ci) => '<div class="cls" data-cls="' + esc(c.id) + '"><div class="clshead"><h3>' + esc(ci < 0 ? 'No class' : c.name) + '</h3>' +
@@ -3334,6 +3336,15 @@ $('#start').addEventListener('click', e => {
   if (b.id === 'addClass') return editClass(-1);
   if (b.dataset.cmove) { const [ci, d] = b.dataset.cmove.split(':').map(Number), j = ci + d; if (j >= 0 && j < lib.classes.length) { [lib.classes[ci], lib.classes[j]] = [lib.classes[j], lib.classes[ci]]; saveLib(); renderLib(); } return; }
   if (b.dataset.urename != null) { const f = findUnit(b.dataset.urename); if (!f) return; const name = prompt('Unit name', f.u.name); if (name && name.trim()) { f.u.name = name.trim(); saveLib(); renderLib(); } return; }
+  if (b.dataset.uatlas != null) {   // the unit's page in Atlas (web links only); empty removes it
+    const f = findUnit(b.dataset.uatlas); if (!f) return;
+    let v = prompt('Paste the Atlas link for ' + f.u.name + ' (leave empty to remove it)', f.u.atlas || '');
+    if (v == null) return; v = v.trim();
+    if (v && !/^https?:\/\//i.test(v)) v = 'https://' + v;
+    if (v && !/^https?:\/\/[^\s]+$/i.test(v)) return toast('That doesn’t look like a web link');
+    if (v) f.u.atlas = v; else delete f.u.atlas;
+    saveLib(); renderLib(); return;
+  }
   if (b.dataset.udel != null) {
     const f = findUnit(b.dataset.udel); if (!f) return; const u = f.u;
     if (u.items.length && !confirm('Delete “' + u.name + '” and its ' + u.items.length + ' assignment' + (u.items.length === 1 ? '' : 's') + '? Saved marks for those downloads stay in this browser.')) return;
