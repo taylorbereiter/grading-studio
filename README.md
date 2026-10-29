@@ -23,6 +23,7 @@ Open a ManageBac download, mark each paper, score it, read off the grades in fol
 - **Undo and redo**: ⌘Z and ⇧⌘Z (or ⌘Y), also on the toolbar.
 - **Zoom**: pinch or ⌘-scroll on the paper, ⌘+ / ⌘− / ⌘0, or click the percent to go back to 100%.
 - **Picked marks** (Select tool): arrow keys nudge (Shift for bigger steps), ⌘C / ⌘V copies a mark to the page you're looking at (even another student's), ⌘D duplicates, Delete removes, Esc lets go.
+- **A makeup scan**: with a download open, **Bring in files → A scan to split…** splits another scan into it. Drag pages onto names like the first split; students already in the download get the pages as an extra file, and roster students who weren't in it yet are added in roster order.
 - **Straight lines**: hold Shift while drawing with the pen.
 - **Find a student**: type in the box above the list, or press /.
 - **All keys**: press ? for the full list.

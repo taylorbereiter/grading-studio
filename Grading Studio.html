@@ -4206,8 +4206,9 @@ async function loadAdded() {
   let recs = [];
   try { recs = (await idbDo('readonly', o => o.getAll())) || []; } catch { return; }
   for (const r of recs.filter(r => r.bid === batch.id).sort((a, b) => a.added - b.added)) {
-    const st = batch.students.find(s => s.key === r.key);
-    if (!st || st.files.some(f => f.path === r.path)) continue;
+    let st = batch.students.find(s => s.key === r.key);
+    if (!st) { st = { key: r.key, files: [], grade: { rubric: [], points: '', comment: '' }, layout: null, inc: {} }; batch.students.push(st); }   // added from a later scan
+    if (st.files.some(f => f.path === r.path)) continue;
     const f = await makeFile(r.path, r.data); f.added = r.added; f.akey = r.key; st.files.push(f);
   }
 }
@@ -5127,16 +5128,23 @@ function wireRubric(st, f, w, page, el, soon) {
 
 /* ---------------- split a scan: one PDF of everyone's papers (any order), pages dragged onto names on the roster ---------------- */
 let SP = null;   // { name, data, doc, n, thumbs[], ink[], owner[], skip:Set, sel:Set, anchor, names[], classId, asg, last, size }
-async function openSplit(file, assignment) {
+// With a download open (into), the pages go to students in it, like a makeup scan for students who missed the day.
+// Names are the roster's plus anyone in the download the roster doesn't name.
+function splitIntoNames(c) {
+  const r = c ? c.names.slice() : [], m = rosterMatch(r), used = new Set(m.values());
+  return r.concat(batch.students.filter(st => !used.has(st)).map(st => st.key));
+}
+async function openSplit(file, assignment, into) {
   const data = new Uint8Array(await file.arrayBuffer());
   await workerReady;
   let doc;
   try { doc = await pdfjsLib.getDocument({ data: data.slice(), isEvalSupported: false }).promise; }
   catch { return toast('Couldn’t open ' + file.name + ' as a PDF'); }
-  const c = assignment && assignment.classId ? classById(assignment.classId) : (lib.classes.find(k => k.names.length) || null);
+  const c = into ? batchClass() : assignment && assignment.classId ? classById(assignment.classId) : (lib.classes.find(k => k.names.length) || null);
   SP = { name: file.name.replace(/\.pdf$/i, ''), data, doc, n: doc.numPages, thumbs: [], ink: [], owner: Array(doc.numPages).fill(''), skip: new Set(), sel: new Set(), anchor: 0,
-    names: c ? c.names.slice() : [], classId: c ? c.id : '', asg: assignment || null, last: 1, size: +(store.get('gs.spsize', 1)) };
-  splitPick(0, splitGuess());
+    names: into ? splitIntoNames(c) : c ? c.names.slice() : [], classId: c ? c.id : '', asg: assignment || null, into: !!into, last: 1, size: +(store.get('gs.spsize', 1)) };
+  if (into) splitPick(0, 1);
+  if (!into) splitPick(0, splitGuess());
   splitShell(); splitRender();
 }
 const spClass = () => SP.classId ? classById(SP.classId) : null;
@@ -5195,7 +5203,7 @@ function splitShell() {
       '<input class="btn" id="spFind" placeholder="Type a name, Enter to give it the pages" autocomplete="off">' +
       '<div id="spNames"></div><button class="link" id="spAdd" style="margin-top:8px">+ Add a name</button></div></div>' +
     '<div class="bf" style="justify-content:space-between;align-items:center"><span class="muted" id="spFoot" style="font-size:13px"></span>' +
-      '<span style="display:flex;gap:8px"><button class="btn" data-cancel>Cancel</button><button class="btn primary" id="spGo">Open for grading</button></span></div>');
+      '<span style="display:flex;gap:8px"><button class="btn" data-cancel>Cancel</button><button class="btn primary" id="spGo">' + (SP.into ? 'Add to this download' : 'Open for grading') + '</button></span></div>');
   const box = $('#dlgBox'); box.classList.add('spbox');
   splitDraw();
   box.ondblclick = ev => { const pg = ev.target.closest('.spg'); if (pg) splitZoom(+pg.dataset.spg); };
@@ -5235,7 +5243,8 @@ function splitShell() {
     if (ev.target.id !== 'spCls') return;
     SP.classId = ev.target.value; const k = spClass();
     const extra = [...new Set(SP.owner.filter(Boolean))].filter(nm => !(k ? k.names : []).includes(nm));
-    SP.names = (k ? k.names.slice() : []).concat(extra);
+    SP.names = SP.into ? splitIntoNames(k) : (k ? k.names.slice() : []);
+    SP.names = SP.names.concat(extra.filter(nm => !SP.names.includes(nm)));
     splitDraw();
   };
   box.addEventListener('dragstart', ev => {
@@ -5354,6 +5363,22 @@ async function splitGo(btn) {
     entries.push({ path: nm.replace(/[\\/:*?"<>|]+/g, ' ').trim() + '/' + file + '.pdf', data: await out.save() });
   }
   SP = null; closeDlg(); me.doc.destroy();
+  if (me.into && batch) {   // each student's pages are added to them as a file of their own; someone new to the download is added
+    const c = me.classId ? classById(me.classId) : null, m = c ? rosterMatch(c.names) : new Map(), keep = batch.students[cur];
+    let first = null;
+    for (const e of entries) {
+      const nm = e.path.slice(0, e.path.indexOf('/')), owner = [...new Set(me.owner.filter(Boolean))].find(o => o.replace(/[\\/:*?"<>|]+/g, ' ').trim() === nm) || nm;
+      let st = batch.students.find(x => x.key === owner) || m.get(owner);
+      if (!st) { st = { key: nm, files: [], grade: { rubric: [], points: '', comment: '' }, layout: null, inc: {} }; batch.students.push(st); }
+      await addFiles(st, [{ path: e.path, file: new File([e.data], me.name + '.pdf', { type: 'application/pdf' }) }], true);
+      first ||= st;
+    }
+    rosterSort(); cur = Math.max(0, batch.students.indexOf(keep));
+    $('#batchName').textContent = batch.name + ' · ' + batch.students.length + (batch.students.length === 1 ? ' student' : ' students');
+    saveNow(); renderList();
+    if (first) openStudent(batch.students.indexOf(first));
+    return toast('Added pages for ' + entries.length + (entries.length === 1 ? ' student' : ' students'));
+  }
   await intake(entries, me.name, me.asg);
   if (me.classId && batch) { batch.classId = me.classId; renderClassSel(); saveNow(); renderList(); }
 }
@@ -5571,9 +5596,10 @@ $('#pickFolder').onclick = () => pickDir('#dirIn');
 $('#pickDrive').onclick = () => openFromDrive(null);
 $('#sample').onclick = makeSample;
 let scanFor = null;
-$('#pickScan').onclick = () => { scanFor = null; $('#scanIn').click(); };
+let scanInto = false;
+$('#pickScan').onclick = () => { scanFor = null; scanInto = false; $('#scanIn').click(); };
 $('#pickMatch').onclick = () => askFilesOrFolder('Match files to a roster', 'For files that aren’t a ManageBac download, like rubrics you marked outside Grading Studio. Each file is matched to a student on your roster by the name in its file name or folder name, and you can fix any match.', list => matchToRoster(list, null));
-$('#scanIn').onchange = e => { const f = e.target.files[0]; e.target.value = ''; if (f) openSplit(f, scanFor); };
+$('#scanIn').onchange = e => { const f = e.target.files[0]; e.target.value = ''; const into = scanInto && !!batch; scanInto = false; if (f) openSplit(f, scanFor, into); };
 $('#fileIn').onchange = e => { const fs = [...e.target.files]; intake(fs.map(f => ({ path: f.name, file: f })), fs.length === 1 ? fs[0].name.replace(/\.[^.]+$/, '') : ''); e.target.value = ''; };
 $('#dirIn').onchange = e => {
   const fs = [...e.target.files];
@@ -5645,7 +5671,12 @@ $('#colR').onclick = () => { const p = panelsNow(); setPanels(p.L, !p.R); };
 { const p = store.get('gs.panels', {}); setPanels(p.L, p.R); }
 $('#lightBtn').onclick = openLight;
 $('#calcBtn').onclick = openCalc;
-$('#bringBtn').onclick = () => askFilesOrFolder('Bring in files', 'Each file goes to its student by the name in its file name or folder name, for example your marked rubrics. You check the matches before anything is added.', bringIn);
+$('#bringBtn').onclick = () => {
+  askFilesOrFolder('Bring in files', 'Each file goes to its student by the name in its file name or folder name, for example your marked rubrics. You check the matches before anything is added.<br><br><b>A scan of papers</b> (like a makeup day): split it page by page onto names, and each student’s pages are added to them here.', bringIn);
+  $('#dlgBox .bf').insertAdjacentHTML('afterbegin', '<button class="btn" data-scanin style="margin-right:auto">A scan to split…</button>');
+  const box = $('#dlgBox'), was = box.onclick;
+  box.onclick = e => { if (e.target.closest('[data-scanin]')) { closeDlg(); scanInto = true; return $('#scanIn').click(); } return was(e); };
+};
 $('#setupBtn').onclick = openSetup;
 $('#gradesBtn').onclick = openGrades;
 $('#sheetBtn').onclick = () => openSheet(false);
