@@ -4294,7 +4294,7 @@ async function addFiles(st, list, quiet) {
   $('#trAllBtn').hidden = !CAN_TRANSCRIBE || !batch.students.some(x => x.files.some(f => f.kind === 'media'));
   if (quiet) return;
   const i = batch.students.indexOf(st);
-  toast('Added ' + list.length + (list.length === 1 ? ' file' : ' files') + ' to ' + st.key);
+  toast('Added ' + list.length + (list.length === 1 ? ' file' : ' files') + ' to ' + shownName(st, batch.students.indexOf(st)));
   openStudent(i, last && last.path);
 }
 async function removeAdded(st, path) {
@@ -4697,7 +4697,7 @@ function openLight() {
       '<div class="lpbody' + (o.on ? '' : ' off') + '">' +
       '<button class="btn sm primary" data-lauto style="width:100%">Auto fix this scan</button>' +
       row('b', 'Brightness', -60, 60) + row('c', 'Contrast', 0, 400) + row('d', 'Darken writing', 0, 100) +
-      '<span class="seg" style="width:100%"><button data-lo="0" aria-pressed="' + !only + '" style="flex:1">All students</button><button data-lo="1" aria-pressed="' + only + '" style="flex:1">Only ' + esc(batch.students[cur].key) + '</button></span>' +
+      '<span class="seg" style="width:100%"><button data-lo="0" aria-pressed="' + !only + '" style="flex:1">All students</button><button data-lo="1" aria-pressed="' + only + '" style="flex:1">Only ' + esc(shownName(batch.students[cur], cur)) + '</button></span>' +
       '<div><button class="link" data-lreset>Back to normal</button></div>' +
       '<div class="lpsec"><div class="dl">Pages</div>' +
         '<div class="muted" style="font-size:12px">Click ☀ in a page’s corner to turn lighting off just there. Shift-click another page’s ☀ to do every page in between. ▾ does the rest of a file, a whole file, or the same page on every paper.</div>' +
