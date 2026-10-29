@@ -40,6 +40,10 @@ Open a ManageBac download, mark each paper, score it, read off the grades in fol
 - **Sync**: units, assignments, rosters, setup, saved comments and each download's marks and scores are kept in a hidden app file in your own Drive, newest copy wins, so every computer matches.
 - Needs a Google Client ID (Web application, origin = the address where you host it) built in as GCID: `GCID=… npm run build`.
 
+## Classes, units and rosters
+- The start screen is organized by class. Each class has its roster and its own units, and each unit holds its assignments. Drag an assignment to another unit or class, drag a unit's name to move it, and use ↑ ↓ to reorder classes.
+- Students always appear in the order of the class roster you pasted. Anyone the roster doesn't name goes at the end, in folder order. With no class picked, the class whose roster matches the most folders is used. Changing the roster in the top bar re-sorts the list (and moves the assignment to that class).
+
 ## Good to know
 - Classes 12EL-1, 12EL-2 and 11EL-2 are there from the start; add the student names when you want roster order.
 - Your marks, scores and comments are kept in this browser (localStorage), per download, and in your own Drive when signed in. Drop the same download in again to pick up where you left off.

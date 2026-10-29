@@ -374,6 +374,11 @@ table.gl{border-collapse:collapse;width:100%;font-size:14px}
 .addcard{border:1.5px dashed var(--line-strong);background:none;border-radius:9px;padding:8px;color:var(--muted);font-weight:600;font-size:13px}
 .addcard:hover{color:var(--fg);border-color:var(--fg)}
 .rosters{display:flex;gap:10px;flex-wrap:wrap}
+.cls{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:14px}
+.clshead{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 2px 10px}
+.clshead h3{font-family:var(--f-display);font-size:18px;margin:0}
+.clshead .sp{flex:1}
+.cls .board.insEnd{box-shadow:inset -3px 0 0 var(--accent)}
 .rcard{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px;min-width:170px;box-shadow:var(--shadow);cursor:grab;display:flex;flex-direction:column;gap:2px}
 .rcard.ins{box-shadow:-4px 0 0 var(--accent)}
 .rcard b{overflow-wrap:anywhere}
@@ -454,12 +459,8 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
     <div class="kept" id="kept"></div>
   </section>
   <section class="lib">
-    <div class="lhead"><h2>Units</h2><span class="muted">Drag assignments between units, and drag a unit’s name to move the unit. Drop a ManageBac ZIP on an assignment to open it there.</span><span class="sp"></span><button class="btn sm" id="addUnit">+ Unit</button></div>
-    <div class="board" id="board"></div>
-  </section>
-  <section class="lib">
-    <div class="lhead"><h2>Rosters</h2><span class="muted">Your class lists, kept in this browser (and your own Google Drive if you sign in). Used to put grades in roster order and spot who’s missing.</span><span class="sp"></span><button class="btn sm" id="addClass">+ Class</button></div>
-    <div class="rosters" id="rosters"></div>
+    <div class="lhead"><h2>Classes</h2><span class="muted">Each class has its roster and its own units. Drag assignments between units or into another class, and drag a unit’s name to move the unit. Drop a ManageBac ZIP on an assignment to open it there.</span><span class="sp"></span><button class="btn sm" id="addClass">+ Class</button></div>
+    <div id="classes"></div>
   </section>
   <section class="lib">
     <div class="lhead"><h2>Backup</h2><span class="muted">Everything above lives in this browser at this address. A backup file carries all of it (downloads, marks, scores, units, rosters) to another link or computer. Keep it in your own files: it holds student work.</span><span class="sp"></span><button class="btn sm" id="backupBtn">Back up everything</button><button class="btn sm" id="restoreBtn">Restore a backup…</button></div>

@@ -376,6 +376,11 @@ table.gl{border-collapse:collapse;width:100%;font-size:14px}
 .addcard{border:1.5px dashed var(--line-strong);background:none;border-radius:9px;padding:8px;color:var(--muted);font-weight:600;font-size:13px}
 .addcard:hover{color:var(--fg);border-color:var(--fg)}
 .rosters{display:flex;gap:10px;flex-wrap:wrap}
+.cls{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:14px}
+.clshead{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 2px 10px}
+.clshead h3{font-family:var(--f-display);font-size:18px;margin:0}
+.clshead .sp{flex:1}
+.cls .board.insEnd{box-shadow:inset -3px 0 0 var(--accent)}
 .rcard{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px;min-width:170px;box-shadow:var(--shadow);cursor:grab;display:flex;flex-direction:column;gap:2px}
 .rcard.ins{box-shadow:-4px 0 0 var(--accent)}
 .rcard b{overflow-wrap:anywhere}
@@ -456,12 +461,8 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
     <div class="kept" id="kept"></div>
   </section>
   <section class="lib">
-    <div class="lhead"><h2>Units</h2><span class="muted">Drag assignments between units, and drag a unit’s name to move the unit. Drop a ManageBac ZIP on an assignment to open it there.</span><span class="sp"></span><button class="btn sm" id="addUnit">+ Unit</button></div>
-    <div class="board" id="board"></div>
-  </section>
-  <section class="lib">
-    <div class="lhead"><h2>Rosters</h2><span class="muted">Your class lists, kept in this browser (and your own Google Drive if you sign in). Used to put grades in roster order and spot who’s missing.</span><span class="sp"></span><button class="btn sm" id="addClass">+ Class</button></div>
-    <div class="rosters" id="rosters"></div>
+    <div class="lhead"><h2>Classes</h2><span class="muted">Each class has its roster and its own units. Drag assignments between units or into another class, and drag a unit’s name to move the unit. Drop a ManageBac ZIP on an assignment to open it there.</span><span class="sp"></span><button class="btn sm" id="addClass">+ Class</button></div>
+    <div id="classes"></div>
   </section>
   <section class="lib">
     <div class="lhead"><h2>Backup</h2><span class="muted">Everything above lives in this browser at this address. A backup file carries all of it (downloads, marks, scores, units, rosters) to another link or computer. Keep it in your own files: it holds student work.</span><span class="sp"></span><button class="btn sm" id="backupBtn">Back up everything</button><button class="btn sm" id="restoreBtn">Restore a backup…</button></div>
@@ -798,6 +799,8 @@ async function intake(entries, label, assignment, fromKeep) {   // entries: [{ p
   await loadEdits();
   restore();
   if (saved && saved.cls != null) batch.classId = saved.cls;
+  rosterSort();
+  if (batch.restoredKey) { const k = batch.students.findIndex(st => st.key === batch.restoredKey); if (k >= 0) batch.restoredCur = k; }
   renderClassSel();
   if (assignment) { assignment.batchId = id; assignment.opened = Date.now(); saveLib(); }
   keepPapers(batch, label, fromKeep ? null : keepList);
@@ -860,7 +863,7 @@ function saveNow() {
   if (!batch) return;
   clearTimeout(saveT);
   { const el = $('#saveState'); if (el) el.textContent = '✓ Saved'; }
-  const data = { t: Date.now(), cur, setup, cls: batch.classId, share: batch.share, drive: batch.drive, light: batch.light, lightOpt: batch.lightOpt, lightPg: batch.lightPg, anon: batch.anon, moved: batch.moved, s: {} };
+  const data = { t: Date.now(), cur, ck: batch.students[cur] && batch.students[cur].key, setup, cls: batch.classId, share: batch.share, drive: batch.drive, light: batch.light, lightOpt: batch.lightOpt, lightPg: batch.lightPg, anon: batch.anon, moved: batch.moved, s: {} };
   for (const st of batch.students) {
     const f = {};
     for (const fl of st.files) if (Object.values(fl.marks).some(a => a.length)) f[fl.path] = fl.marks;
@@ -908,7 +911,7 @@ function restore() {
   if (data.lightPg) batch.lightPg = data.lightPg;
   if (data.anon) batch.anon = data.anon;
   if (data.drive && !batch.drive) batch.drive = data.drive;
-  batch.restoredCur = Math.min(data.cur || 0, batch.students.length - 1);
+  batch.restoredCur = Math.min(data.cur || 0, batch.students.length - 1); batch.restoredKey = data.ck;
   if (n) setTimeout(() => toast('Picked up where you left off (' + n + (n === 1 ? ' student' : ' students') + ' started)'), 300);
 }
 
@@ -2219,11 +2222,11 @@ async function applyRubricPage() {
     }
   }
 }
-let gradesOrder = 'folder';
+let gradesOrder = 'roster';
 // Rows in folder order, or in roster order with gaps for students who turned nothing in.
 function gradeRows() {
   const c = batchClass();
-  if (gradesOrder !== 'roster' || !c || !c.names.length) return batch.students.map((st, i) => ({ st, i }));
+  if (gradesOrder !== 'roster' || !c || !c.names.length) return batch.students.map((st, i) => ({ st, i })).sort((a, b) => gradesOrder === 'folder' ? natural(a.st.key, b.st.key) : 0);
   const m = rosterMatch(c.names), used = new Set(m.values());
   return c.names.map(n => m.has(n) ? { st: m.get(n), i: batch.students.indexOf(m.get(n)), rn: n } : { missing: n })
     .concat(batch.students.filter(st => !used.has(st)).map(st => ({ st, i: batch.students.indexOf(st), off: true })));
@@ -3469,7 +3472,7 @@ async function syncPull() {
     }
     try { localStorage.setItem('gs.syncT', JSON.stringify(local)); } catch {}
     if (changed) {
-      const l = store.get('gs.lib', null); if (l) lib = l;
+      const l = store.get('gs.lib', null); if (l) lib = migrateLib(l);
       bank = store.get('gs.bank', bank);
       if (!batch) { const s = store.get('gs.setup', null); if (s) setup = { ...DEFAULT_SETUP, ...s }; }
       renderLib(); if (batch) renderClassSel();
@@ -3816,16 +3819,32 @@ function openTranscripts() {
 /* ---------------- units, assignments and rosters (kept in this browser only) ---------------- */
 const uid = () => Math.random().toString(36).slice(2, 10);
 const fresh = store.get('gs.lib', null) == null;
-let lib = store.get('gs.lib', null) || { units: [{ id: uid(), name: 'Unit 1', items: [] }, { id: uid(), name: 'Unit 2', items: [] }], classes: [] };
+// Each class holds its roster and its own units; each unit holds assignment cards. Assignments with no class sit in
+// lib.loose. (Before 10/29 units were shared by every class; migrateLib moves each card into its class's unit of the same name.)
+function migrateLib(l) {
+  l.classes ||= []; for (const c of l.classes) { c.units ||= []; c.names ||= []; }
+  l.loose ||= { id: '', units: [] };
+  for (const u of l.units || []) for (const it of u.items || []) {
+    const c = l.classes.find(k => k.id === it.classId) || l.loose;
+    let cu = c.units.find(x => x.name === u.name); if (!cu) c.units.push(cu = { id: uid(), name: u.name, items: [] });
+    cu.items.push(it);
+  }
+  l.units = [];
+  return l;
+}
+let lib = migrateLib(store.get('gs.lib', null) || { classes: [] });
 // Taylor's 2026-27 classes are there from the start (empty until she adds a roster); added once, so deleting one sticks.
 if (!lib.seed2627) {
-  for (const n of ['12EL-1', '12EL-2', '11EL-2']) if (!lib.classes.some(c => c.name.replace(/\s+/g, '').toLowerCase() === n.toLowerCase())) lib.classes.push({ id: uid(), name: n, names: [] });
+  for (const n of ['12EL-1', '12EL-2', '11EL-2']) if (!lib.classes.some(c => c.name.replace(/\s+/g, '').toLowerCase() === n.toLowerCase())) lib.classes.push({ id: uid(), name: n, names: [], units: [] });
   lib.seed2627 = true; store.set('gs.lib', lib);
   // A brand-new browser's starter list never wins over units and rosters already synced from another computer.
   if (fresh) { const t = syncTimes(); t['gs.lib'] = 1; try { localStorage.setItem('gs.syncT', JSON.stringify(t)); } catch {} }
 }
 function saveLib() { if (!store.set('gs.lib', lib)) toast('This browser is out of room to keep your units and rosters.'); }
-const findItem = id => { for (const u of lib.units) { const it = u.items.find(x => x.id === id); if (it) return { u, it }; } return null; };
+const holders = () => lib.classes.concat([lib.loose]);
+const holderById = id => id ? lib.classes.find(c => c.id === id) || null : lib.loose;
+const findItem = id => { for (const c of holders()) for (const u of c.units) { const it = u.items.find(x => x.id === id); if (it) return { c, u, it }; } return null; };
+const findUnit = id => { for (const c of holders()) { const u = c.units.find(x => x.id === id); if (u) return { c, u }; } return null; };
 const classById = id => lib.classes.find(c => c.id === id);
 function batchSummary(it) {
   if (!it.batchId) return 'No download opened yet';
@@ -3839,30 +3858,32 @@ function batchSummary(it) {
 }
 function renderLib() {
   renderKept();
-  $('#board').innerHTML = lib.units.map((u, ui) => '<div class="unit" draggable="true" data-unit="' + ui + '">' +
-    '<div class="uhead" title="Drag to move this unit"><span class="nm">' + esc(u.name) + '</span><button class="icon" data-urename="' + ui + '" title="Rename unit" aria-label="Rename unit">✎</button>' +
-    '<button class="icon" data-udel="' + ui + '" title="Delete unit" aria-label="Delete unit">✕</button></div>' +
-    '<div class="cards" data-cards="' + ui + '">' + u.items.map((it, ii) => {
-      const c = classById(it.classId);
-      return '<div class="card" draggable="true" data-card="' + ui + ':' + ii + '"><div class="t">' + esc(it.name) + '</div>' +
-        '<div class="m">' + (c ? '<span class="tag">' + esc(c.name) + '</span> ' : '') + esc(batchSummary(it)) + '</div>' +
-        '<div class="row">' + (it.batchId && (keptMeta.get(it.batchId) || {}).papers ? '<button class="btn sm primary" data-kopen="' + esc(it.batchId) + '" data-kasg="' + it.id + '">Open</button><button class="btn sm" data-open-asg="' + it.id + '">Other download…</button>'
-          : '<button class="btn sm primary" data-open-asg="' + it.id + '">Open download…</button>') + '<button class="btn sm" data-edit-asg="' + it.id + '">Edit</button></div></div>';
-    }).join('') + '</div>' +
-    '<button class="addcard" data-additem="' + ui + '">+ Assignment</button></div>').join('') ||
-    '<div class="empty-note">No units yet. Click + Unit.</div>';
-  $('#rosters').innerHTML = lib.classes.map((c, ci) => '<div class="rcard" draggable="true" data-class="' + ci + '"><b>' + esc(c.name) + '</b><span class="muted" style="font-size:13px">' + c.names.length + ' students</span>' +
-    '<div style="display:flex;gap:6px;margin-top:6px"><button class="btn sm" data-edit-class="' + ci + '">Edit</button></div></div>').join('') ||
-    '<div class="empty-note">No rosters yet. Click + Class and paste or upload a class list.</div>';
+  const card = it => '<div class="card" draggable="true" data-card="' + it.id + '"><div class="t">' + esc(it.name) + '</div>' +
+    '<div class="m">' + esc(batchSummary(it)) + '</div>' +
+    '<div class="row">' + (it.batchId && (keptMeta.get(it.batchId) || {}).papers ? '<button class="btn sm primary" data-kopen="' + esc(it.batchId) + '" data-kasg="' + it.id + '">Open</button><button class="btn sm" data-open-asg="' + it.id + '">Other download…</button>'
+      : '<button class="btn sm primary" data-open-asg="' + it.id + '">Open download…</button>') + '<button class="btn sm" data-edit-asg="' + it.id + '">Edit</button></div></div>';
+  const unit = u => '<div class="unit" draggable="true" data-unit="' + u.id + '">' +
+    '<div class="uhead" title="Drag to move this unit"><span class="nm">' + esc(u.name) + '</span><button class="icon" data-urename="' + u.id + '" title="Rename unit" aria-label="Rename unit">✎</button>' +
+    '<button class="icon" data-udel="' + u.id + '" title="Delete unit" aria-label="Delete unit">✕</button></div>' +
+    '<div class="cards">' + u.items.map(card).join('') + '</div>' +
+    '<button class="addcard" data-additem="' + u.id + '">+ Assignment</button></div>';
+  const block = (c, ci) => '<div class="cls" data-cls="' + esc(c.id) + '"><div class="clshead"><h3>' + esc(ci < 0 ? 'No class' : c.name) + '</h3>' +
+    (ci < 0 ? '<span class="muted">Assignments with no roster. Drag them into a class.</span>' :
+      '<span class="muted">' + (c.names.length ? c.names.length + ' students on the roster' : 'No roster yet') + '</span><button class="btn sm" data-edit-class="' + ci + '">' + (c.names.length ? 'Edit roster' : 'Add roster') + '</button>' +
+      '<button class="icon" data-cmove="' + ci + ':-1" title="Move this class up" aria-label="Move this class up"' + (ci ? '' : ' disabled') + '>↑</button><button class="icon" data-cmove="' + ci + ':1" title="Move this class down" aria-label="Move this class down"' + (ci < lib.classes.length - 1 ? '' : ' disabled') + '>↓</button>') +
+    '<span class="sp"></span><button class="btn sm" data-addunit="' + esc(c.id) + '">+ Unit</button></div>' +
+    '<div class="board">' + (c.units.map(unit).join('') || '<div class="empty-note">No units yet. Click + Unit.</div>') + '</div></div>';
+  const loose = lib.loose.units.some(u => u.items.length);
+  $('#classes').innerHTML = lib.classes.map(block).join('') + (loose ? block(lib.loose, -1) : '') ||
+    '<div class="empty-note">No classes yet. Click + Class and paste or upload a class list.</div>';
 }
-// Drag and drop for units (whole columns), assignment cards (between units) and roster cards.
+// Drag and drop: assignment cards between units (in any class), and units between classes.
 let ldrag = null;
 document.addEventListener('dragstart', e => {
   if (!$('#start') || $('#start').hidden) return;
-  const card = e.target.closest('.card'), unit = e.target.closest('.unit'), rc = e.target.closest('.rcard');
-  if (card) { const [u, i] = card.dataset.card.split(':').map(Number); ldrag = { kind: 'card', u, i, el: card }; }
-  else if (rc) ldrag = { kind: 'class', i: +rc.dataset.class, el: rc };
-  else if (unit) ldrag = { kind: 'unit', i: +unit.dataset.unit, el: unit };
+  const card = e.target.closest('.card'), unit = e.target.closest('.unit');
+  if (card) ldrag = { kind: 'card', id: card.dataset.card, el: card };
+  else if (unit) ldrag = { kind: 'unit', id: unit.dataset.unit, el: unit };
   else return;
   e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', ldrag.kind);
   setTimeout(() => ldrag && ldrag.el.classList.add('dragging'), 0);
@@ -3874,10 +3895,9 @@ function slot(list, e, horiz) {
   return list.length;
 }
 function libDragTarget(e) {
-  if (!ldrag) return null;
-  if (ldrag.kind === 'card') { const z = e.target.closest('.unit'); if (!z) return null; const cards = z.querySelector('.cards'); const list = [...cards.querySelectorAll('.card')]; return { u: +z.dataset.unit, k: slot(list, e, false), list, cards }; }
-  if (ldrag.kind === 'unit') { if (!e.target.closest('#board')) return null; const list = [...$('#board').querySelectorAll('.unit')]; return { k: slot(list, e, true), list }; }
-  if (ldrag.kind === 'class') { if (!e.target.closest('#rosters')) return null; const list = [...$('#rosters').querySelectorAll('.rcard')]; return { k: slot(list, e, true), list }; }
+  if (!ldrag || !e.target.closest) return null;
+  if (ldrag.kind === 'card') { const z = e.target.closest('.unit'); if (!z) return null; const cards = z.querySelector('.cards'); const list = [...cards.querySelectorAll('.card')]; return { unit: z.dataset.unit, k: slot(list, e, false), list, cards }; }
+  if (ldrag.kind === 'unit') { const z = e.target.closest('.cls'); if (!z) return null; const board = z.querySelector('.board'), list = [...board.querySelectorAll('.unit')]; return { cls: z.dataset.cls, k: slot(list, e, true), list, cards: board }; }
 }
 document.addEventListener('dragover', e => {
   const t = libDragTarget(e); if (!t) return;
@@ -3889,12 +3909,17 @@ document.addEventListener('drop', e => {
   e.preventDefault(); e.stopPropagation(); clearIns();
   let k = t.k;
   if (ldrag.kind === 'card') {
-    const [item] = lib.units[ldrag.u].items.splice(ldrag.i, 1);
-    if (ldrag.u === t.u && ldrag.i < k) k--;
-    lib.units[t.u].items.splice(k, 0, item);
+    const from = findItem(ldrag.id), to = findUnit(t.unit); if (!from || !to) return;
+    const i = from.u.items.indexOf(from.it);
+    from.u.items.splice(i, 1); if (from.u === to.u && i < k) k--;
+    to.u.items.splice(k, 0, from.it);
+    from.it.classId = to.c.id;   // moved to another class: it uses that class's roster
   } else {
-    const arr = ldrag.kind === 'unit' ? lib.units : lib.classes;
-    const [x] = arr.splice(ldrag.i, 1); if (ldrag.i < k) k--; arr.splice(k, 0, x);
+    const from = findUnit(ldrag.id), to = holderById(t.cls); if (!from || !to) return;
+    const i = from.c.units.indexOf(from.u);
+    from.c.units.splice(i, 1); if (from.c === to && i < k) k--;
+    to.units.splice(k, 0, from.u);
+    for (const it of from.u.items) it.classId = to.id;
   }
   ldrag = null; saveLib(); renderLib();
 }, true);
@@ -3908,9 +3933,9 @@ document.addEventListener('drop', async e => {
   if (ldrag || batch) return;
   const card = e.target.closest('.card'); if (!card || !e.dataTransfer || !e.dataTransfer.files.length) return;
   e.preventDefault(); e.stopPropagation(); clearIns(); $('#drop').classList.remove('over');
-  const [u, i] = card.dataset.card.split(':').map(Number);
+  const f = findItem(card.dataset.card); if (!f) return;
   const out = await entriesFromDrop(e.dataTransfer);
-  intake(out.list, out.label, lib.units[u].items[i]);
+  intake(out.list, out.label, f.it);
 }, true);
 
 let asgTarget = null;
@@ -3922,15 +3947,16 @@ $('#asgDirIn').onchange = e => {
 $('#asgIn').onchange = e => { const fs = [...e.target.files]; if (asgTarget && fs.length) intake(fs.map(f => ({ path: f.name, file: f })), fs.length === 1 ? fs[0].name.replace(/\.[^.]+$/, '') : '', asgTarget); e.target.value = ''; };
 $('#start').addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return;
-  if (b.id === 'addUnit') { const name = prompt('Unit name', 'Unit ' + (lib.units.length + 1)); if (name && name.trim()) { lib.units.push({ id: uid(), name: name.trim(), items: [] }); saveLib(); renderLib(); } return; }
+  if (b.dataset.addunit != null) { const c = holderById(b.dataset.addunit); const name = prompt('Unit name', 'Unit ' + (c.units.length + 1)); if (name && name.trim()) { c.units.push({ id: uid(), name: name.trim(), items: [] }); saveLib(); renderLib(); } return; }
   if (b.id === 'addClass') return editClass(-1);
-  if (b.dataset.urename != null) { const u = lib.units[+b.dataset.urename]; const name = prompt('Unit name', u.name); if (name && name.trim()) { u.name = name.trim(); saveLib(); renderLib(); } return; }
+  if (b.dataset.cmove) { const [ci, d] = b.dataset.cmove.split(':').map(Number), j = ci + d; if (j >= 0 && j < lib.classes.length) { [lib.classes[ci], lib.classes[j]] = [lib.classes[j], lib.classes[ci]]; saveLib(); renderLib(); } return; }
+  if (b.dataset.urename != null) { const f = findUnit(b.dataset.urename); if (!f) return; const name = prompt('Unit name', f.u.name); if (name && name.trim()) { f.u.name = name.trim(); saveLib(); renderLib(); } return; }
   if (b.dataset.udel != null) {
-    const u = lib.units[+b.dataset.udel];
+    const f = findUnit(b.dataset.udel); if (!f) return; const u = f.u;
     if (u.items.length && !confirm('Delete “' + u.name + '” and its ' + u.items.length + ' assignment' + (u.items.length === 1 ? '' : 's') + '? Saved marks for those downloads stay in this browser.')) return;
-    lib.units.splice(+b.dataset.udel, 1); saveLib(); renderLib(); return;
+    f.c.units.splice(f.c.units.indexOf(u), 1); saveLib(); renderLib(); return;
   }
-  if (b.dataset.additem != null) return editAssignment(null, +b.dataset.additem);
+  if (b.dataset.additem != null) return editAssignment(null, b.dataset.additem);
   if (b.dataset.editAsg) return editAssignment(b.dataset.editAsg);
   if (b.dataset.kopen) { const f = b.dataset.kasg ? findItem(b.dataset.kasg) : null; b.disabled = true; b.textContent = 'Opening…'; return reopenKept(b.dataset.kopen, f ? f.it : null).finally(() => { b.disabled = false; }); }
   if (b.dataset.kforget) {   // two clicks, so a stray click can't throw work away
@@ -3946,23 +3972,32 @@ $('#start').addEventListener('click', e => {
   }
   if (b.dataset.editClass != null) return editClass(+b.dataset.editClass);
 });
-function editAssignment(id, unitIndex) {
-  const f = id ? findItem(id) : null;
-  const it = f ? f.it : { id: uid(), name: '', classId: lib.classes[0] ? lib.classes[0].id : '' };
+// The unit list follows the class picked; a class with no units gets a "Unit 1" when the assignment is saved.
+function editAssignment(id, unitId) {
+  const f = id ? findItem(id) : null, start = f ? f : findUnit(unitId) || { c: lib.classes[0] || lib.loose, u: null };
+  const it = f ? f.it : { id: uid(), name: '', classId: start.c.id };
   openDlg('<div class="bh"><h2>' + (f ? 'Edit assignment' : 'New assignment') + '</h2></div><div class="bb">' +
     '<div class="field"><label for="aName">Name</label><input type="text" id="aName" value="' + esc(it.name) + '" placeholder="e.g. Ch 3 Analysis Paragraph"></div>' +
-    '<div class="field"><label for="aClass">Class</label><select id="aClass" class="btn" style="justify-content:flex-start"><option value="">No roster</option>' + lib.classes.map(c => '<option value="' + c.id + '"' + (c.id === it.classId ? ' selected' : '') + '>' + esc(c.name) + '</option>').join('') + '</select></div>' +
-    '<div class="field"><label for="aUnit">Unit</label><select id="aUnit" class="btn" style="justify-content:flex-start">' + lib.units.map((u, k) => '<option value="' + k + '"' + ((f ? f.u === u : k === unitIndex) ? ' selected' : '') + '>' + esc(u.name) + '</option>').join('') + '</select></div>' +
+    '<div class="field"><label for="aClass">Class</label><select id="aClass" class="btn" style="justify-content:flex-start">' + lib.classes.map(c => '<option value="' + c.id + '"' + (c === start.c ? ' selected' : '') + '>' + esc(c.name) + '</option>').join('') + '<option value=""' + (start.c === lib.loose ? ' selected' : '') + '>No class</option></select></div>' +
+    '<div class="field"><label for="aUnit">Unit</label><select id="aUnit" class="btn" style="justify-content:flex-start"></select></div>' +
     '<p class="muted" style="font-size:13px;margin:0">The rubric is set the first time you open a download for it, with Rubric setup, and it’s remembered for this assignment.</p></div>' +
     '<div class="bf">' + (f ? '<button class="btn" data-del style="margin-right:auto">Delete</button>' : '') + '<button class="btn" data-cancel>Cancel</button><button class="btn primary" data-ok>Save</button></div>', true);
+  const fillUnits = keep => {
+    const c = holderById($('#aClass').value);
+    $('#aUnit').innerHTML = c.units.map(u => '<option value="' + u.id + '"' + (keep && u === keep ? ' selected' : '') + '>' + esc(u.name) + '</option>').join('') || '<option value="">Unit 1 (new)</option>';
+  };
+  fillUnits(start.u);
+  $('#aClass').onchange = () => fillUnits(null);
   setTimeout(() => $('#aName').focus(), 0);
   $('#dlgBox').onclick = e => {
     if (e.target.closest('[data-cancel]')) return closeDlg();
     if (e.target.closest('[data-del]')) { if (!confirm('Delete “' + it.name + '”?')) return; f.u.items.splice(f.u.items.indexOf(it), 1); saveLib(); closeDlg(); return renderLib(); }
     if (e.target.closest('[data-ok]')) {
       const name = $('#aName').value.trim(); if (!name) { $('#aName').focus(); return; }
-      it.name = name; it.classId = $('#aClass').value;
-      const to = lib.units[+$('#aUnit').value];
+      const c = holderById($('#aClass').value);
+      let to = c.units.find(u => u.id === $('#aUnit').value);
+      if (!to) c.units.push(to = { id: uid(), name: 'Unit 1', items: [] });
+      it.name = name; it.classId = c.id;
       if (f && f.u !== to) f.u.items.splice(f.u.items.indexOf(it), 1);
       if (!f || f.u !== to) to.items.push(it);
       saveLib(); closeDlg(); renderLib();
@@ -3980,7 +4015,7 @@ function parseRoster(text) {
   return out;
 }
 function editClass(ci) {
-  const c = ci >= 0 ? lib.classes[ci] : { id: uid(), name: '', names: [] };
+  const c = ci >= 0 ? lib.classes[ci] : { id: uid(), name: '', names: [], units: [] };
   openDlg('<div class="bh"><h2>' + (ci >= 0 ? 'Edit roster' : 'New roster') + '</h2></div><div class="bb">' +
     '<div class="field"><label for="cName">Class name</label><input type="text" id="cName" value="' + esc(c.name) + '" placeholder="e.g. 11EL-2"></div>' +
     '<div class="field"><label for="cNames">Students, one per line, in the order you want (ManageBac order works well)</label><textarea class="big" id="cNames" placeholder="Paste from a spreadsheet or ManageBac, or upload a file">' + esc(c.names.join('\n')) + '</textarea></div>' +
@@ -3991,7 +4026,7 @@ function editClass(ci) {
   $('#dlgBox').onclick = e => {
     if (e.target.closest('[data-up]')) return $('#cFile').click();
     if (e.target.closest('[data-cancel]')) return closeDlg();
-    if (e.target.closest('[data-del]')) { if (!confirm('Delete the ' + c.name + ' roster?')) return; lib.classes.splice(ci, 1); saveLib(); closeDlg(); return renderLib(); }
+    if (e.target.closest('[data-del]')) { if (!confirm('Delete the ' + c.name + ' class? Its assignments move to “No class”.')) return; for (const u of c.units) { for (const it of u.items) it.classId = ''; lib.loose.units.push(u); } lib.classes.splice(ci, 1); saveLib(); closeDlg(); return renderLib(); }
     if (e.target.closest('[data-ok]')) {
       const name = $('#cName').value.trim(); if (!name) { $('#cName').focus(); return; }
       c.name = name; c.names = parseRoster($('#cNames').value);
@@ -4012,13 +4047,39 @@ function rosterMatch(names) {
   }
   return map;
 }
+// Students always go in the order of the class roster: matched names first, in roster order, then anyone the roster
+// doesn't name, in folder order. With no class picked, the class whose roster names most of the folders is used.
+function rosterSort() {
+  if (!batch) return;
+  let c = batchClass();
+  if (!c && batch.classId !== '') {
+    let best = null, bn = 0;
+    for (const k of lib.classes) if (k.names.length) { const n = rosterMatch(k.names).size; if (n > bn) { bn = n; best = k; } }
+    if (best && bn >= Math.max(2, batch.students.length / 2)) { c = best; batch.classId = best.id; }
+  }
+  const byFolder = [...batch.students].sort((a, b) => natural(a.key, b.key));
+  if (!c || !c.names.length) { batch.students = byFolder; return; }
+  batch.students = byFolder;
+  const m = rosterMatch(c.names), first = c.names.filter(n => m.has(n)).map(n => m.get(n)), used = new Set(first);
+  batch.students = first.concat(byFolder.filter(st => !used.has(st)));
+}
 function batchClass() { const id = batch && (batch.classId != null ? batch.classId : batch.assignment && batch.assignment.classId); return id ? classById(id) : null; }
 function renderClassSel() {
   const sel = $('#classSel'), c = batchClass();
   sel.hidden = !lib.classes.length;
   sel.innerHTML = '<option value="">No roster</option>' + lib.classes.map(k => '<option value="' + k.id + '"' + (c && c.id === k.id ? ' selected' : '') + '>' + esc(k.name) + '</option>').join('');
 }
-$('#classSel').onchange = e => { batch.classId = e.target.value; if (batch.assignment) { batch.assignment.classId = e.target.value; saveLib(); } saveSoon(); };
+$('#classSel').onchange = e => {
+  batch.classId = e.target.value;
+  const a = batch.assignment, f = a && findItem(a.id);
+  if (f && f.c.id !== batch.classId) {   // the assignment card moves to that class, into a unit of the same name
+    const to = holderById(batch.classId);
+    let u = to.units.find(x => x.name === f.u.name); if (!u) to.units.push(u = { id: uid(), name: f.u.name, items: [] });
+    f.u.items.splice(f.u.items.indexOf(a), 1); u.items.push(a); a.classId = batch.classId; saveLib();
+  } else if (a) { a.classId = batch.classId; saveLib(); }
+  const st = batch.students[cur]; rosterSort(); cur = Math.max(0, batch.students.indexOf(st));
+  renderList(); openStudent(cur); saveSoon();
+};
 
 /* ---------------- late or forgotten files: added to a student's submission, kept in this browser ---------------- */
 // The download itself never changes. Added files live in IndexedDB under this download's id, so they come back
@@ -4251,7 +4312,7 @@ function setAnon(on) {
   if (on && !(batch.anon && batch.anon.order && batch.anon.order.length)) anonShuffle();
   batch.anon.on = on; saveNow();
   openStudent(on ? anonOrder()[0] : cur);
-  toast(on ? 'Anonymous: papers in a random order, names covered' : 'Names are back, in folder order');
+  toast(on ? 'Anonymous: papers in a random order, names covered' : 'Names are back');
 }
 function openAnon() {
   if (anonOn()) return setAnon(false);
@@ -4273,7 +4334,7 @@ function openAnon() {
 }
 function renderAnonHead() {
   const on = anonOn();
-  $('#sideHd').innerHTML = '<span>' + (on ? 'Papers, shuffled' : 'Students') + '</span>' +
+  $('#sideHd').innerHTML = '<span>' + (on ? 'Papers, shuffled' : 'Students') + (on ? '' : batchClass() && batchClass().names.length ? ' <i style="font-style:normal;font-weight:500;text-transform:none;letter-spacing:0">· roster order</i>' : ' <i style="font-style:normal;font-weight:500;text-transform:none;letter-spacing:0">· folder order</i>') + '</span>' +
     '<button class="anonsw" id="anonSw" role="switch" aria-checked="' + on + '" title="Grade without names, in a random order"><i></i>Anonymous</button>' +
     (on ? '<button class="btn sm" id="anonShuf" title="Put the papers in a new random order">⤮ Shuffle</button>' : '');
 }
@@ -5442,7 +5503,7 @@ async function makeSample() {
   entries.push({ path: names[3] + '/', data: null });
   await intake(entries.filter(e => e.data), 'Sample assignment');
   // the empty folder: add the student with no files so the list shows the gap
-  if (!batch.students.find(s => s.key === names[3])) { batch.students.splice(3, 0, { key: names[3], files: [], grade: { rubric: [], points: '', comment: '' } }); restore(); renderList(); $('#batchName').textContent = batch.name + ' · ' + batch.students.length + ' students'; }
+  if (!batch.students.find(s => s.key === names[3])) { const st0 = batch.students[cur]; batch.students.splice(3, 0, { key: names[3], files: [], grade: { rubric: [], points: '', comment: '' } }); restore(); rosterSort(); cur = Math.max(0, batch.students.indexOf(st0)); renderList(); $('#batchName').textContent = batch.name + ' · ' + batch.students.length + ' students'; }
 }
 
 /* ---------------- wiring ---------------- */
