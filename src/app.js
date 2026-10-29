@@ -120,8 +120,17 @@ let bank = store.get('gs.bank', []);   // Taylor's saved comments (her own words
 /* ---------------- intake ---------------- */
 const isPdf = n => /\.pdf$/i.test(n), isImg = n => /\.(png|jpe?g)$/i.test(n);
 const junk = p => /(^|\/)(__MACOSX|\.)/.test(p);
+// Names in ZIPs made without the "UTF-8" flag (Mac and Windows often skip it) come out garbled, like "JosÃ©";
+// read them back as UTF-8 when they are.
+function zipName(n) {
+  if (!/[\u0080-\u00ff]/.test(n) || /[^\u0000-\u00ff]/.test(n)) return n;
+  try { return new TextDecoder('utf-8', { fatal: true }).decode(Uint8Array.from(n, c => c.charCodeAt(0))); } catch { return n; }
+}
+// Files packed in a way a browser can't unpack (anything but the usual "deflate" or no packing) are skipped and counted.
+let zipSkipped = 0;
 function unzipInto(data, prefix, raw, depth) {
-  const un = fflate.unzipSync(data, { filter: f => !junk(f.name) && !f.name.endsWith('/') });
+  const un0 = fflate.unzipSync(data, { filter: f => { if (junk(f.name) || f.name.endsWith('/')) return false; if (f.compression !== 0 && f.compression !== 8) { zipSkipped++; return false; } return true; } });
+  const un = {}; for (const [k, v] of Object.entries(un0)) un[zipName(k)] = v;
   const inner = Object.keys(un);
   // Drive and ManageBac often wrap everything in one top folder; drop that layer.
   const tops = new Set(inner.map(p => p.split('/')[0]));
@@ -134,19 +143,25 @@ function unzipInto(data, prefix, raw, depth) {
   }
 }
 async function intake(entries, label, assignment, fromKeep) {   // entries: [{ path, file|data }]
-  const raw = [];
+  const raw = [], zipProblems = []; zipSkipped = 0;
   for (const e of entries) {
     if (junk(e.path)) continue;
     if (/\.zip$/i.test(e.path)) {
       const data = e.data || new Uint8Array(await e.file.arrayBuffer());
-      try { unzipInto(data, '', raw, 0); }
-      catch { toast('Couldn’t open ' + e.path.split('/').pop() + ' as a ZIP'); continue; }
-      if (!label) label = e.path.split('/').pop().replace(/\.zip$/i, '');
+      // A ZIP inside a student's folder (they turned in a ZIP) opens inside that folder, not as new students.
+      const dir = e.path.includes('/') ? e.path.slice(0, e.path.lastIndexOf('/') + 1) : '';
+      if (data.length > 30e6) { toast('Opening the ZIP…', 20000); await new Promise(r => setTimeout(r, 30)); }
+      try { unzipInto(data, dir, raw, dir ? 1 : 0); }
+      catch (er) { console.error(er); zipProblems.push(e.path.split('/').pop()); if (dir) raw.push({ path: e.path, data }); continue; }
+      if (!label && !dir) label = e.path.split('/').pop().replace(/\.zip$/i, '');
       continue;
     }
     raw.push({ path: e.path, file: e.file, data: e.data });
   }
-  if (!raw.length) { toast('Nothing found in what you dropped'); return; }
+  const zipNote = zipProblems.length ? zipProblems.join(', ') + (zipProblems.length === 1 ? ' couldn’t be opened. It may be damaged or still downloading.' : ' couldn’t be opened.') + ' Try unzipping it in Finder (double-click it), then choose the folder.'
+    : zipSkipped ? zipSkipped + (zipSkipped === 1 ? ' file in the ZIP is' : ' files in the ZIP are') + ' packed in a way a browser can’t open. Unzip it in Finder (double-click it), then choose the folder.' : '';
+  if (!raw.length) { toast(zipNote || 'Nothing found in what you dropped', zipNote ? 9000 : 3000); return; }
+  if (zipNote) setTimeout(() => toast(zipNote, 9000), 900);
 
   // One student per top-level folder; loose files are one student each.
   const map = new Map();
@@ -3583,6 +3598,17 @@ function pickAdd(st) {
 }
 async function addFiles(st, list, quiet) {
   list = list.filter(e => e.file && !junk(e.path));
+  // A ZIP added to a student is opened and its files added. A ZIP with a folder per student goes through Bring in files.
+  if (list.some(e => /\.zip$/i.test(e.file.name))) {
+    const out = [];
+    for (const e of list) {
+      if (!/\.zip$/i.test(e.file.name)) { out.push(e); continue; }
+      const got = await expandPicked([e.file]), tops = new Set(got.map(g => g.path.split('/')[1]).filter((x, i) => got[i].path.split('/').length > 2));
+      if (!quiet && tops.size >= 2) return bringIn(got);
+      out.push(...got.map(g => ({ path: g.path, file: g.file })));
+    }
+    list = out;
+  }
   if (!list.length) return;
   commitEditors();
   let last = null;
@@ -4779,7 +4805,9 @@ async function expandPicked(files) {
     if (junk(path)) continue;
     if (/\.zip$/i.test(f.name)) {
       const raw = [];
-      try { unzipInto(new Uint8Array(await f.arrayBuffer()), '', raw, 0); } catch { toast('Couldn’t open ' + f.name + ' as a ZIP'); continue; }
+      zipSkipped = 0;
+      try { unzipInto(new Uint8Array(await f.arrayBuffer()), '', raw, 0); } catch { toast('Couldn’t open ' + f.name + '. Try unzipping it in Finder (double-click it), then choose the folder.', 9000); continue; }
+      if (zipSkipped) toast(zipSkipped + ' files in ' + f.name + ' are packed in a way a browser can’t open. Unzip it in Finder first.', 9000);
       for (const r of raw) if (r.data && !junk(r.path)) out.push({ path: f.name.replace(/\.zip$/i, '') + '/' + r.path, file: new File([r.data], r.path.split('/').pop()) });
       continue;
     }
