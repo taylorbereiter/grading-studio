@@ -27,6 +27,7 @@ Open a ManageBac download, mark each paper, score it, read off the grades in fol
 - **A makeup scan**: with a download open, **Bring in files → A scan to split…** splits another scan into it. Drag pages onto names like the first split; students already in the download get the pages as an extra file, and roster students who weren't in it yet are added in roster order.
 - **Change marks after exporting**: with **Keep marks editable** ticked (the default), each exported PDF also carries the original pages and your marks. Open the exported ZIP or folder like any download, or add one exported file to a student, and the marks come back as marks you can move, change or delete. The files are about twice as big. Marks baked in by an older export can't be taken apart.
 - **Lighting** (☀ in the top bar): brightness, contrast, darken writing and sharpen (for fuzzy scans), for all students or just one. Auto fix keeps your sharpen setting.
+- **Readings** (button above each paper): files shown above the papers while you grade, never sent back. Add one for everyone, untick it for one student, or add a file just for that student (a different reading for a makeup). "Hide for this student" on a reading does the same in one click.
 - **Straight lines**: hold Shift while drawing with the pen.
 - **Find a student**: type in the box above the list, or press /.
 - **All keys**: press ? for the full list.

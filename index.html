@@ -426,7 +426,9 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
 .refd .dpage{box-shadow:none;border:1px solid var(--line);margin-top:8px;max-height:46vh;overflow:auto;padding:28px 32px}
 #paper .refd .refpages{max-height:62vh;overflow:auto;margin-top:8px;display:flex;flex-direction:column;align-items:center;gap:10px;background:var(--surface-2);padding:10px;border-radius:8px}
 #paper .refd .refpages canvas{box-shadow:var(--shadow);background:#fff}
-.refl{font-size:13px;color:var(--muted);margin:10px 0 0;overflow-wrap:anywhere}
+.rdl{display:flex;flex-direction:column;gap:6px;margin:0 0 10px}
+.rdrow{display:flex;align-items:center;gap:8px;padding:6px 10px;border:1px solid var(--line);border-radius:8px;overflow-wrap:anywhere}
+.rdrow .sp{flex:1}
 .paper.drop-on{outline:3px dashed var(--accent);outline-offset:-10px;background:var(--accent-soft)}
 .addtag{font-size:12px;font-weight:600;padding:2px 8px;border-radius:999px;background:var(--bad-soft);color:var(--bad)}
 .dset{border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:10px}
@@ -912,7 +914,7 @@ function saveNow() {
   if (!batch) return;
   clearTimeout(saveT);
   { const el = $('#saveState'); if (el) el.textContent = '✓ Saved'; }
-  const data = { t: Date.now(), cur, ck: batch.students[cur] && batch.students[cur].key, setup, cls: batch.classId, share: batch.share, drive: batch.drive, light: batch.light, lightOpt: batch.lightOpt, lightPg: batch.lightPg, anon: batch.anon, moved: batch.moved, s: {} };
+  const data = { t: Date.now(), cur, ck: batch.students[cur] && batch.students[cur].key, setup, cls: batch.classId, share: batch.share, drive: batch.drive, light: batch.light, lightOpt: batch.lightOpt, lightPg: batch.lightPg, anon: batch.anon, moved: batch.moved, refSkip: batch.refSkip, s: {} };
   for (const st of batch.students) {
     const f = {};
     for (const fl of st.files) if (Object.values(fl.marks).some(a => a.length)) f[fl.path] = fl.marks;
@@ -959,6 +961,7 @@ function restore() {
   if (data.lightOpt) batch.lightOpt = data.lightOpt;
   if (data.lightPg) batch.lightPg = data.lightPg;
   if (data.anon) batch.anon = data.anon;
+  if (data.refSkip) batch.refSkip = data.refSkip;
   if (data.drive && !batch.drive) batch.drive = data.drive;
   batch.restoredCur = Math.min(data.cur || 0, batch.students.length - 1); batch.restoredKey = data.ck;
   if (n) setTimeout(() => toast('Picked up where you left off (' + n + (n === 1 ? ' student' : ' students') + ' started)'), 300);
@@ -1249,6 +1252,7 @@ async function openStudent(i, filePath) {
   const st = batch.students[cur];
   const paper = $('#paper');
   paper.innerHTML = '<div class="who"><h2>' + esc(shownName(st, cur)) + '</h2><span>' + ((anonOn() ? anonPos(cur) : cur) + 1) + ' of ' + batch.students.length + '</span><span style="flex:1"></span>' +
+    '<button class="btn sm" id="readBtn" title="A reading, prompt or other file shown above the papers: for everyone, or a different one for this student">Readings' + (refsFor(st).length ? ' (' + refsFor(st).length + ')' : '') + '</button>' +
     '<button class="btn sm" id="addFileBtn" title="Add a late or forgotten file to this student. You can also drop files on the paper or on a name.">+ Add file</button>' +
     (st.files.some(viewable) || fileSeq(st).length > 1 ? '<button class="btn sm" id="arrangeBtn">Arrange pages</button>' : '') + '</div>';
   paper.scrollTop = 0;
@@ -1262,7 +1266,8 @@ async function openStudent(i, filePath) {
   for (const f of st.files.filter(f => f.kind === 'media')) { if (f.added) paper.insertAdjacentHTML('beforeend', '<div class="fhead"><span style="color:var(--fg)">' + esc(f.name) + '</span>' + addTag(f) + '</div>'); paper.appendChild(mediaCard(st, f)); }
   const rd = refDoc();
   if (rd) { const det = document.createElement('details'); det.className = 'refd'; det.open = store.get('gs.rdOpen', true); det.innerHTML = '<summary>Your document: ' + esc(rd.name) + '</summary>'; det.ontoggle = () => store.set('gs.rdOpen', det.open); paper.appendChild(det); docxCard(rd, rd.name).then(c => { c.querySelector('.fhead').remove(); det.appendChild(c); }); }
-  for (const r of refFiles) { const hold = document.createElement('div'); paper.appendChild(hold); refCard(r).then(c => { if (token === openToken) hold.replaceWith(c); }); }
+  for (const r of refsFor(st)) { const hold = document.createElement('div'); paper.appendChild(hold); refCard(r, st).then(c => { if (token === openToken) hold.replaceWith(c); }); }
+  $('#readBtn').onclick = () => openReadings();
   await workerReady;
   for (const f of st.files.filter(viewable)) {
     try {
@@ -2090,8 +2095,6 @@ function renderGrade() {
   }
   h += '<div class="total">' + totalHtml(st) + '</div>';
   h += '<div class="cmt"><h3 style="margin-bottom:6px">Comment for ManageBac</h3><textarea id="cmtIn" placeholder="Optional. Shows in the Grades list so you can copy it.">' + esc(g.comment) + '</textarea></div>';
-  { const rd = store.get(refKey(), null), items = (rd ? ['<b>' + esc(rd.name) + '</b> <button class="link" data-refdel>Remove</button>'] : []).concat(refFiles.map(r => '<b>' + esc(r.name) + '</b> <button class="link" data-refrm="' + esc(r.path) + '">Remove</button>'));
-    h += '<div class="refl">' + (items.length ? 'With every paper: ' + items.join(' · ') + '<br>' : '') + '<button class="link" data-refdoc>' + (items.length ? '+ Add another file for everyone…' : 'Add a reading or file for everyone…') + '</button></div>'; }
   h += '<div class="nav"><button class="btn" id="prevBtn" ' + (cur ? '' : 'disabled') + '>◀ Previous</button><button class="btn primary" id="nextBtn" ' + (cur < batch.students.length - 1 ? '' : 'disabled') + '>Next ▶</button></div>';
   h += '<div class="hint">Keys: <kbd>←</kbd> <kbd>→</kbd> or <kbd>↑</kbd> <kbd>↓</kbd> students · <kbd>N</kbd> next unscored · <kbd>=</kbd> calculator · V P H O T C K E tools · ⌘Z undo, ⇧⌘Z redo · <button class="link" data-keys style="font-size:12.5px">All keys ( ? )</button></div>';
   $('#grade').innerHTML = h;
@@ -2121,9 +2124,6 @@ $('#grade').addEventListener('click', e => {
   if (e.target.closest('#nextBtn')) stepStudent(1);
   if (e.target.closest('#editRubric')) openSetup();
   if (e.target.closest('[data-keys]')) openKeys();
-  if (e.target.closest('[data-refdoc]')) pickRefs();
-  { const rr = e.target.closest('[data-refrm]'); if (rr) dropRef(rr.dataset.refrm); }
-  if (e.target.closest('[data-refdel]')) { store.del(refKey()); renderGrade(); openStudent(cur); }
 });
 $('#grade').addEventListener('input', e => {
   const st = batch.students[cur];
@@ -3669,41 +3669,85 @@ async function pickRefDoc() {
 
 /* ---------------- readings: any file shown above every student's paper (kept with this download, never exported) ---------------- */
 const REF_KEY = '\u0001reading';   // can't be a student's folder name
-let refFiles = [];   // [{ path, name, data }]
+let refFiles = [];   // [{ path, name, data, for }]: for = a student's key when the file is only for that student
+// One student can have an everyone-file left off (batch.refSkip[key] = [paths]) and files of their own,
+// like a different reading for a student who wrote a different summative.
+const refSkipped = (st, r) => !r.for && !!(batch.refSkip && batch.refSkip[st.key] || []).includes(r.path);
+const refsFor = st => refFiles.filter(r => (r.for ? r.for === st.key : true) && !refSkipped(st, r));
+function setRefSkip(st, path, off) {
+  const m = batch.refSkip || (batch.refSkip = {}), l = new Set(m[st.key] || []);
+  off ? l.add(path) : l.delete(path);
+  if (l.size) m[st.key] = [...l]; else delete m[st.key];
+  saveNow();
+}
 const refId = path => batch.id + '|' + REF_KEY + '|' + path;
 async function loadRefs() {
   refFiles = [];
   let recs = [];
   try { recs = (await idbDo('readonly', o => o.getAll())) || []; } catch { return; }
-  for (const r of recs.filter(r => r.bid === batch.id && r.key === REF_KEY).sort((a, b) => a.added - b.added)) refFiles.push({ path: r.path, name: r.name, data: r.data });
+  for (const r of recs.filter(r => r.bid === batch.id && r.key === REF_KEY).sort((a, b) => a.added - b.added)) refFiles.push({ path: r.path, name: r.name, data: r.data, for: r.for || '' });
 }
-function pickRefs() {
+function pickRefs(st) {
   const inp = document.createElement('input'); inp.type = 'file'; inp.multiple = true;   // any kind of file
-  inp.onchange = () => addRefs([...inp.files]);
+  inp.onchange = () => addRefs([...inp.files], st);
   inp.click();
 }
-async function addRefs(files) {
+async function addRefs(files, st) {
   let n = 0;
+  const who = st ? st.key : '';
   for (const f of files) {
-    const data = new Uint8Array(await f.arrayBuffer()), path = f.name;
-    try { await idbDo('readwrite', o => o.put({ bid: batch.id, key: REF_KEY, path, name: f.name, data, added: Date.now() }, refId(path))); }
+    const data = new Uint8Array(await f.arrayBuffer()), path = (who ? who + '/' : '') + f.name;
+    try { await idbDo('readwrite', o => o.put({ bid: batch.id, key: REF_KEY, path, name: f.name, data, added: Date.now(), for: who }, refId(path))); }
     catch { toast('This browser is out of room to keep ' + f.name); continue; }
-    refFiles = refFiles.filter(r => r.path !== path).concat({ path, name: f.name, data }); n++;
+    refFiles = refFiles.filter(r => r.path !== path).concat({ path, name: f.name, data, for: who }); n++;
   }
   if (!n) return;
-  renderGrade(); openStudent(cur);
-  toast(n === 1 ? '“' + files[0].name + '” now shows above every paper' : n + ' files now show above every paper');
+  openStudent(cur); refreshReadings();
+  const where = st ? ' for ' + shownName(st, batch.students.indexOf(st)) : ' above every paper';
+  toast((n === 1 ? '“' + files[0].name + '” now shows' : n + ' files now show') + where);
 }
 async function dropRef(path) {
   try { await idbDo('readwrite', o => o.delete(refId(path))); } catch {}
   refFiles = refFiles.filter(r => r.path !== path);
-  renderGrade(); openStudent(cur);
+  if (batch.refSkip) for (const k of Object.keys(batch.refSkip)) { batch.refSkip[k] = batch.refSkip[k].filter(p => p !== path); if (!batch.refSkip[k].length) delete batch.refSkip[k]; }
+  saveNow(); openStudent(cur); refreshReadings();
 }
+// Readings, from the button above the paper: the files for everyone, and this student's own set.
+function openReadings() {
+  const st = batch.students[cur], nm = esc(shownName(st, cur)), rd = store.get(refKey(), null);
+  const all = refFiles.filter(r => !r.for), own = refFiles.filter(r => r.for === st.key);
+  openDlg('<div class="bh"><h2>Readings</h2><button class="icon" data-close aria-label="Close">✕</button></div><div class="bb">' +
+    '<p class="muted" style="margin-top:0;font-size:14px">Files shown above the papers while you grade, like the reading or the prompt. They stay in this browser and are never sent back to students.</p>' +
+    '<h3 style="margin:14px 0 6px">For everyone</h3>' +
+    (all.length || rd ? '<div class="rdl">' + (rd ? '<div class="rdrow"><b>' + esc(rd.name) + '</b><span class="sp"></span><button class="btn sm" data-refdel>Remove</button></div>' : '') +
+      all.map(r => '<div class="rdrow"><b>' + esc(r.name) + '</b><span class="sp"></span><button class="btn sm" data-refrm="' + esc(r.path) + '">Remove for everyone</button></div>').join('') + '</div>'
+      : '<p class="muted" style="font-size:14px">None yet.</p>') +
+    '<button class="btn sm primary" data-refadd>+ Add a file for everyone…</button>' +
+    '<h3 style="margin:22px 0 6px">For ' + nm + '</h3>' +
+    (all.length ? '<div class="rdl">' + all.map(r => '<label class="chk rdrow" style="margin:0"><input type="checkbox" data-refon="' + esc(r.path) + '"' + (refSkipped(st, r) ? '' : ' checked') + '> Show ' + esc(r.name) + '</label>').join('') + '</div>' : '') +
+    (own.length ? '<div class="rdl">' + own.map(r => '<div class="rdrow"><b>' + esc(r.name) + '</b> <span class="muted" style="font-size:13px">only for ' + nm + '</span><span class="sp"></span><button class="btn sm" data-refrm="' + esc(r.path) + '">Remove</button></div>').join('') + '</div>' : '') +
+    '<button class="btn sm" data-refmine>+ Add a file just for ' + nm + '…</button>' +
+    (all.length ? '<p class="muted" style="font-size:13px;margin-bottom:0">For a student with a different reading: untick the everyone file above, then add theirs.</p>' : '') +
+    '</div><div class="bf"><button class="btn primary" data-close>Done</button></div>', true);
+  const box = $('#dlgBox');
+  box.onclick = e => {
+    if (e.target.closest('[data-close]')) return closeDlg();
+    if (e.target.closest('[data-refadd]')) return pickRefs();
+    if (e.target.closest('[data-refmine]')) return pickRefs(st);
+    const rr = e.target.closest('[data-refrm]'); if (rr) return dropRef(rr.dataset.refrm);
+    if (e.target.closest('[data-refdel]')) { store.del(refKey()); openStudent(cur); return refreshReadings(); }
+  };
+  box.onchange = e => { const c = e.target.closest('[data-refon]'); if (!c) return; setRefSkip(st, c.dataset.refon, !c.checked); openStudent(cur); };
+}
+function refreshReadings() { if ($('#dlgBox') && $('#dlgBox').querySelector('[data-refmine]')) openReadings(); }
 // A folded-open card with the reading: PDF and picture pages, a Word file, text, a recording, or a download link.
-async function refCard(r) {
+async function refCard(r, st) {
   const det = document.createElement('details'); det.className = 'refd';
   const k = 'gs.refOpen.' + r.path; det.open = store.get(k, true); det.ontoggle = () => store.set(k, det.open);
-  det.innerHTML = '<summary>' + esc(r.name) + ' <span class="muted" style="font-weight:400;font-size:13px">· shown with every paper, not sent back</span></summary><div class="refbody"></div>';
+  det.innerHTML = '<summary>' + esc(r.name) + ' <span class="muted" style="font-weight:400;font-size:13px">· ' + (r.for ? 'only for this student' : 'shown with every paper') + ', not sent back</span>' +
+    (st ? ' <button class="link" data-refhide style="font-size:13px;font-weight:400">' + (r.for ? 'Remove' : 'Hide for this student') + '</button>' : '') + '</summary><div class="refbody"></div>';
+  const hb = det.querySelector('[data-refhide]');
+  if (hb) hb.onclick = e => { e.preventDefault(); if (r.for) return dropRef(r.path); setRefSkip(st, r.path, true); openStudent(cur); toast('Hidden for this student. Readings… brings it back or adds a different file.'); };
   const body = det.querySelector('.refbody');
   const f = await makeFile('reading/' + r.path, r.data.slice());
   try {
