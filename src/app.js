@@ -1310,11 +1310,15 @@ function openNote(pg, m, isNew) {
     pop.querySelector('[data-bank]').hidden = !bank.length;
   };
   chips();
-  // place next to the spot (below a highlight), inside the page frame
-  const left = Math.min(Math.max(0, (m.hl ? m.hl.x : m.ax) * s + 12), Math.max(0, (pg.W + pg.side) * s - 300));
-  pop.style.left = left + 'px'; pop.style.top = Math.max(0, (m.hl ? m.hl.y + m.hl.h : m.ay) * s + 12) + 'px';
+  // Next to the spot (below a highlight), kept inside the part of the paper on screen, so it's right there when zoomed in.
   pg.wrap.appendChild(pop);
-  ta.focus();
+  const P = $('#paper').getBoundingClientRect(), R = pg.wrap.getBoundingClientRect(), pw = pop.offsetWidth, ph = pop.offsetHeight;
+  const sx = (m.hl ? m.hl.x : m.ax) * s, sy = (m.hl ? m.hl.y + m.hl.h : m.ay) * s, top0 = (m.hl ? m.hl.y : m.ay) * s;
+  const x0 = Math.max(0, P.left - R.left) + 8, x1 = Math.min(R.width, P.right - R.left) - pw - 8;
+  const y0 = Math.max(0, P.top - R.top) + 8, y1 = P.bottom - R.top - ph - 8;
+  let y = sy + 12; if (y > y1 && top0 - ph - 12 >= y0) y = top0 - ph - 12;   // above the spot when there's no room below
+  pop.style.left = clamp(sx + 12, x0, Math.max(x0, x1)) + 'px'; pop.style.top = clamp(y, y0, Math.max(y0, y1)) + 'px';
+  ta.focus({ preventScroll: true });
   if (isNew) { pg.pending = m; draw(pg); }
   const close = save => {
     pop.remove(); activeEditor = null;
