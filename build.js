@@ -8,7 +8,7 @@ rep('/*@@H2C@@*/', fs.readFileSync(nm + 'html2canvas/dist/html2canvas.min.js', '
 rep('/*@@MAMMOTH@@*/', fs.readFileSync(nm + 'mammoth/mammoth.browser.min.js', 'utf8'));
 rep('/*@@FFLATE@@*/', fs.readFileSync(nm + 'fflate/umd/index.js', 'utf8'));
 rep('/*@@WORKER@@*/', fs.readFileSync(nm + 'pdfjs-dist/build/pdf.worker.min.js', 'utf8'));
-rep('/*@@APP@@*/', fs.readFileSync('src/app.js', 'utf8'));
+rep('/*@@APP@@*/', fs.readFileSync('src/app.js', 'utf8') + '\n' + fs.readFileSync('src/lessons.js', 'utf8'));
 rep("'/*@@GCID@@*/'", JSON.stringify(process.env.GCID || ''));
 fs.mkdirSync('out', { recursive: true });
 const fullHtml = '<!doctype html>\n<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body>\n' + h + '\n</body></html>';

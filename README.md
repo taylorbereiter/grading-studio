@@ -49,6 +49,16 @@ Open a ManageBac download, mark each paper, score it, read off the grades in fol
 - The start screen is organized by class. Each class has its roster and its own units, and each unit holds its assignments. Drag an assignment to another unit or class, drag a unit's name to move it, and use ↑ ↓ to reorder classes. Each unit has a "+ Link to Atlas" spot under its name for that unit's Atlas page, and while grading an assignment the top bar shows "Atlas ↗" (or "+ Atlas link") for its unit.
 - Students always appear in the order of the class roster you pasted. Anyone the roster doesn't name goes at the end, in folder order. With no class picked, the class whose roster matches the most folders is used. Changing the roster in the top bar re-sorts the list (and moves the assignment to that class).
 
+## Lessons (slide maker)
+
+Click **Lessons** on the start screen. Lessons are kept in their own place in the browser, apart from grading, and nothing in Lessons reads grading data.
+
+- **Timetable.** Load a setup file (classes, meeting times, days off, dates to show, and a .pptx template), or type classes in under Timetable. The week view shows each class meeting; click **+ New lesson** on one. Classes with the same course share one deck: a new lesson also goes on the other section's matching class that week.
+- **Slides.** Title, Agenda, Bullets, Plain text and Picture layouts. Click text on the slide to edit it; Tab makes a sub-point. Text size is 28 to 36 pt only. When text runs past the slide you get a button to move the extra lines to a new slide. Speaker notes go under each slide. Drag thumbnails to reorder.
+- **Download .pptx** fills the template from the setup file, so slides keep its masters and layouts.
+- **Lesson folder (Chrome).** Link a folder and each lesson is saved there as a `.lesson.json` file (pictures in `images/`), with `timetable.json` and a README that explains the format. Changes made to those files outside the app (for example by Claude) come back in when you return to the tab or click the folder button. Only lessons go in this folder.
+- **Ask Claude** copies the open lesson as text and opens Claude. **More ▸ Save lesson file** and **Import** move a single lesson in and out.
+
 ## Good to know
 - Classes 12EL-1, 12EL-2 and 11EL-2 are there from the start; add the student names when you want roster order.
 - Your marks, scores and comments are kept in this browser (localStorage), per download, and in your own Drive when signed in. Drop the same download in again to pick up where you left off.

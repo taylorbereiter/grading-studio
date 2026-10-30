@@ -441,11 +441,100 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
 .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:8px;font-weight:600;font-size:14px;box-shadow:var(--shadow);z-index:40;max-width:calc(100vw - 32px)}
 @media (max-width:1100px){.cols{grid-template-columns:calc(190px * var(--uz)) minmax(0,1fr) calc(260px * var(--uz))}.tool .lb{display:none}}
 @media (max-width:760px){.cols{grid-template-columns:1fr}.side{max-height:160px;border-right:0;border-bottom:1px solid var(--line)}.grade{border-left:0;border-top:1px solid var(--line)}.app{height:auto;min-height:100vh}.top{flex-wrap:wrap}}
+/* ---------- lessons (slide maker) ---------- */
+.lsn{min-height:100vh;display:flex;flex-direction:column;background:var(--bg)}
+.lsn .ls-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:9px 14px;background:var(--surface);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+.lsn .ls-top .title{font-family:var(--f-display);font-weight:700;font-size:17px;letter-spacing:-.02em;margin-right:8px}
+.lsn .sp{flex:1}
+.lsn .muted{color:var(--muted)}
+.ls-wk{font-weight:600;min-width:110px;text-align:center}
+.ls-fold{font-size:13px}
+.ls-empty{max-width:640px;margin:60px auto;padding:28px;background:var(--surface);border:1px solid var(--line);border-radius:14px;text-align:center}
+.ls-empty h2{margin:0 0 8px;font-size:22px}.ls-empty p{color:var(--muted)}
+.ls-empty .row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:14px}
+.ls-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;padding:14px}
+.ls-day{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px;min-height:220px;display:flex;flex-direction:column;gap:8px}
+.ls-day.today{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.ls-day.off{background:var(--surface-2)}
+.ls-dh{font-size:14px;color:var(--muted)}.ls-dh b{color:var(--fg);font-size:15px}
+.ls-off{font-weight:600;color:var(--muted);padding:8px;border-radius:8px;background:var(--bg);text-align:center}
+.ls-ev{font-size:12.5px;color:var(--warn);background:var(--warn-soft);border-radius:6px;padding:3px 7px}
+.ls-none{color:var(--faint);font-size:13px}
+.ls-slot{border-left:4px solid var(--cc);background:var(--bg);border-radius:8px;padding:7px 8px;display:flex;flex-direction:column;gap:6px}
+.ls-sh{display:flex;flex-direction:column;font-size:13px}.ls-sh span{color:var(--muted);font-size:12.5px}
+.ls-card{display:flex;flex-direction:column;align-items:flex-start;text-align:left;gap:2px;border:1px solid var(--line-strong);background:var(--surface);border-radius:8px;padding:7px 9px;width:100%}
+.ls-card:hover{border-color:var(--accent)}
+.ls-card b{font-size:14px}.ls-card span{font-size:12px;color:var(--muted)}
+.ls-add{display:flex;flex-wrap:wrap;gap:2px}
+.ls-loose{margin:4px 14px 30px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.ls-loose .lhead{display:flex;gap:8px;align-items:center;margin-bottom:8px}.ls-loose h2{font-size:16px;margin:0}
+.ls-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px}
+.ls-pick{display:flex;flex-direction:column;gap:6px}
+.ls-row{display:flex;gap:6px;align-items:center}
+.ls-more{display:flex;flex-direction:column;align-items:flex-start}.ls-more p{margin:4px 0 14px;font-size:13px}
+.ls-f{display:flex;flex-direction:column;gap:4px;margin-bottom:10px;font-weight:500}
+.ls-tc{border:1px solid var(--line);border-radius:10px;padding:8px;margin-bottom:8px}
+.ls-mrow{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:6px}
+.ls-title-in{font:600 16px var(--f-body);border:1px solid transparent;border-radius:7px;padding:5px 8px;background:none;min-width:180px;max-width:340px}
+.ls-title-in:hover,.ls-title-in:focus{border-color:var(--line-strong);background:var(--surface)}
+.ls-slots{display:flex;gap:4px;flex-wrap:wrap;align-items:center}
+.ls-chip{display:inline-flex;align-items:center;gap:2px;font-size:12.5px;border-left:3px solid var(--cc);background:var(--surface-2);border-radius:6px;padding:2px 2px 2px 7px}
+.ls-chip button{border:0;background:none;color:var(--muted);padding:0 5px;font-size:15px}
+.ls-ed-cols{display:grid;grid-template-columns:200px minmax(0,1fr);flex:1;min-height:0}
+.ls-thumbs{border-right:1px solid var(--line);background:var(--surface);padding:10px;overflow:auto;max-height:calc(100vh - 52px);position:sticky;top:52px}
+.ls-th{display:flex;gap:6px;align-items:flex-start;margin-bottom:8px;cursor:pointer}
+.ls-th .n{font-size:12px;color:var(--muted);width:16px;text-align:right}
+.ls-mini{width:150px;height:84.4px;overflow:hidden;border-radius:4px;border:2px solid transparent;flex:none}
+.ls-th.on .ls-mini{border-color:var(--accent)}
+.ls-mini .ls-slide{transform:scale(calc(146/1280));transform-origin:0 0}
+.ls-addslide{display:flex;flex-direction:column;gap:4px;margin-top:10px}
+.ls-main{padding:12px 18px 30px;min-width:0}
+.ls-tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px;font-size:13.5px}
+.ls-tools label{display:flex;gap:6px;align-items:center}
+.ls-stagewrap{width:100%}
+.ls-stage{position:relative;box-shadow:var(--shadow);border-radius:4px;overflow:hidden}
+.ls-stage .ls-slide{transform:scale(var(--k));transform-origin:0 0}
+.ls-warn{margin-top:8px;padding:8px 12px;border-radius:8px;background:var(--bad-soft);color:var(--bad);font-weight:500;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.ls-notes{display:flex;flex-direction:column;gap:4px;margin-top:12px;font-weight:600;font-size:13.5px}
+.ls-notes textarea{font-weight:400;border:1px solid var(--line-strong);border-radius:8px;padding:8px;background:var(--surface);resize:vertical}
+.ls-hint{font-size:12.5px;margin:8px 0 0}
+/* the slide itself: always the deck's own light colors, Arial like the template */
+.ls-slide{position:relative;width:1280px;height:720px;overflow:hidden;font-family:Arial,Helvetica,sans-serif;color:#000;background:#DFDBD5}
+.ls-bg{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 50%,#ECEAE6 0%,#E2DED9 45%,#B9B6B1 100%)}
+.ls-fade{position:absolute;left:0;right:0;top:212px;height:431px;background:linear-gradient(to bottom,rgba(223,219,213,0),#DFDBD5)}
+.ls-wood{position:absolute;left:0;right:0;top:643px;height:78px;background:repeating-linear-gradient(90deg,#7A4E2D 0 90px,#8B5A35 90px 180px,#6E4528 180px 260px);background-size:cover;background-position:center}
+.ls-t{position:absolute;left:152px;top:84px;width:1008px;height:110px;padding:10px 10px 0;font-size:42.7px;line-height:.95;text-transform:uppercase;overflow:hidden}
+.ls-rule,.ls-trule{position:absolute;height:3.3px;background:#B71E42}
+.ls-rule{left:153px;top:192px;width:1009px}
+.ls-ttl{position:absolute;left:254px;top:84px;width:907px;height:266px;padding:6px 10px;display:flex;align-items:flex-end;font-size:78px;line-height:.92;text-transform:uppercase;overflow:hidden}
+.ls-trule{left:254px;top:369px;width:907px}
+.ls-sub{position:absolute;left:254px;top:373px;width:907px;height:103px;padding:8px 10px;font-size:24px;line-height:1.25;text-transform:uppercase}
+.ls-body{position:absolute;left:152px;top:211px;width:1008px;height:362px;padding:5px 10px;overflow:hidden;line-height:1.2}
+.ls-body ul,.ls-body ol{margin:0;padding:0;list-style:none}
+.ls-body li{position:relative;padding-left:.86em;margin-top:13px}
+.ls-body li.l1{margin-left:1.9em;margin-top:7px}
+.ls-body ul li::before{content:"•";position:absolute;left:0;color:#B71E42}
+.ls-body ol{counter-reset:ag}
+.ls-body ol li{counter-increment:ag;padding-left:1.45em}
+.ls-body ol li::before{content:counter(ag) ".";position:absolute;left:0;color:#B71E42}
+.ls-body p{margin:13px 0 0}
+.ls-pic{position:absolute;left:152px;top:211px;width:1008px;height:410px;display:flex;align-items:flex-start;justify-content:center}
+.ls-pic img{max-width:100%;max-height:100%;object-fit:contain}
+.ls-src{position:absolute;left:152px;top:622px;width:1008px;height:20px;text-align:center;font-size:13.3px;color:#222}
+.ls-ed{cursor:text;outline:1.5px dashed transparent;outline-offset:2px;border-radius:3px}
+.ls-ed:hover,.ls-ed:focus{outline-color:rgba(31,111,178,.55)}
+.ls-pic.ls-ed{cursor:pointer}
+.ls-ph{color:#8a8580;text-transform:none}
+.ls-ta{position:absolute;border:0;outline:2px solid #1F6FB2;outline-offset:2px;background:rgba(255,255,255,.55);resize:none;font-family:Arial,Helvetica,sans-serif;color:#000;tab-size:2;-moz-tab-size:2}
+.ls-ta.ls-t{text-transform:none;line-height:1.1}.ls-ta.ls-ttl{text-transform:none;display:block;line-height:1.05}.ls-ta.ls-sub{text-transform:none}
+.ls-ta.ls-body{line-height:1.45}
+:root[data-theme="dark"] .lsn .ls-slot{background:var(--surface-2)}
+@media (max-width:900px){.ls-grid{grid-template-columns:1fr}.ls-ed-cols{grid-template-columns:1fr}.ls-thumbs{position:static;max-height:none;display:flex;gap:8px;overflow:auto;border-right:0;border-bottom:1px solid var(--line)}.ls-addslide{flex-direction:row}}
 </style>
 
 <!-- start -->
 <div class="start" id="start">
-  <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap"><h1>Grading <i>Studio</i></h1><span style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><span class="gAcct"></span><button class="btn sm themeBtn">Dark mode</button></span></div>
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap"><h1>Grading <i>Studio</i></h1><span style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><span class="gAcct"></span><button class="btn sm primary" id="lessonsBtn" title="Make lesson slides for your classes">Lessons</button><button class="btn sm themeBtn">Dark mode</button></span></div>
   <p class="sub">Open a ManageBac download, mark each paper, score it, and get everything back out in the same folders. Nothing goes anywhere except your own Google Drive, if you sign in.</p>
   <div class="drop" id="drop">
     <h2>Open a ManageBac download</h2>
