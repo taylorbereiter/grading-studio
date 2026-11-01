@@ -250,11 +250,9 @@ test('working with Claude: notes and comments go out, Claude’s changes come ba
     await page.click('[data-a="versions"]');
     await page.waitForSelector('[data-rv="1"]'); await page.click('[data-rv="1"]');
     await page.waitForFunction(() => window.__planner.L.open.slides[1].title === 'Warm-up');
-    // approve is a marker only, and only the teacher's
-    await page.click('[data-a="approve"]');
-    await page.waitForSelector('.pl-st.st-approved');
-    assert.equal(await page.evaluate(() => window.__planner.L.open.status), 'approved');
-    await page.click('.ls-stage .ls-body');   // still editable
+    // there's no Approve: the lesson is always editable
+    assert.equal(await page.$('[data-a="approve"]'), null);
+    await page.click('.ls-stage .ls-body');
     await page.waitForSelector('.ls-ta');
     // the file never carries the pending copy
     const file = await page.evaluate(async () => { const P = window.__planner; await new Promise(r => setTimeout(r, 1200)); return JSON.parse(await (await (await P.L.dir.getFileHandle(P.L.open._file)).getFile()).text()); });
@@ -356,6 +354,36 @@ test('looks and teaching layouts: every layout in every look, edited in place, a
     // the template's own look keeps the template's background
     const wood = await page.evaluate(() => { const P = window.__planner, z = fflate.unzipSync(P.buildPptx({ ...P.L.open, look: 'wood' })); return new TextDecoder().decode(z['ppt/slides/slide2.xml']); });
     assert.ok(!/showMasterSp/.test(wood) && !/<p:bg>/.test(wood));
+    assert.deepEqual(errors, []);
+  } finally { await a.done(); }
+});
+
+test('the layout picker shows pictures, changes a slide and keeps its text; lessons link to Atlas', async () => {
+  const a = await open();
+  try {
+    const { page, errors } = a;
+    await page.evaluate(async s => { await window.__planner.applySetup(s); }, SETUP);
+    await page.evaluate(async () => {
+      const P = window.__planner, u = P.normUnit({ course: 'Course A', title: 'Unit 2: Argument', start: '2026-10-26', atlas: 'https://example.org/unit2', weeks: [{ focus: 'Claims' }, { focus: 'Evidence' }] });
+      await P.unitPut(u, true);
+      const l = P.normLesson({ title: 'Claims', slots: [{ classId: 'A1', date: '2026-11-03' }], slides: [{ layout: 'title', title: 'Claims' }, { layout: 'content', title: 'Big question', body: 'Is a claim the same as an opinion?' }] });
+      P.L.lessons.push(l); P.openLessonForTest(l, 1);
+    });
+    await page.waitForSelector('.ls-stage');
+    // the unit's Atlas link shows on the lesson; a lesson's own link wins
+    assert.equal(await page.$eval('.ls-top a[href^="https://example.org"]', x => x.getAttribute('href')), 'https://example.org/unit2');
+    await page.click('[data-a="atlas"]'); await page.waitForSelector('#atU'); await page.type('#atU', 'https://example.org/lesson'); await page.click('#dlgBox [data-ok]');
+    await page.waitForFunction(() => document.querySelector('.ls-top a[href="https://example.org/lesson"]'));
+    // Layout: pictures of every layout, the current one marked
+    await page.click('[data-a="layout"]');
+    await page.waitForSelector('#dlgBox .pl-look.on[data-addslide="content"] .pl-lmini');
+    assert.equal(await page.$$eval('#dlgBox [data-addslide]', b => b.length), 15);
+    await page.click('#dlgBox [data-addslide="discuss"]');
+    await page.waitForSelector('#lsStage .ls-bx[data-k="foot"]');
+    const s = await page.evaluate(() => window.__planner.L.open.slides[1]);
+    assert.equal(s.layout, 'discuss'); assert.equal(s.title, 'Big question'); assert.equal(s.body, 'Is a claim the same as an opinion?');
+    assert.match(s.foot, /Talk with a partner/);
+    assert.match(await page.$eval('[data-a="layout"]', b => b.textContent), /Discussion question/);
     assert.deepEqual(errors, []);
   } finally { await a.done(); }
 });

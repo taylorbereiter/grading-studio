@@ -2,11 +2,11 @@
    All of this is optional: a lesson can be made by the teacher alone, by Claude alone, or passed back and forth.
    - Each slide can carry "ask" (what the teacher wants on it, for Claude) and "talk" (comments both ways).
    - A lesson's "status" is just a marker: '' (no marker), 'claude' (sent to Claude), 'review' (Claude says it's
-     ready for the teacher), 'approved' (the teacher's call, and only the teacher's). Nothing is locked by it.
-   - Versions: a copy is kept when it's sent, before Claude's changes come in, when it's approved, and on request.
+     ready for the teacher). Nothing is locked by it.
+   - Versions: a copy is kept when it's sent, before Claude's changes come in, and on request.
    - When Claude changes a lesson in the Planner folder, the teacher's copy from just before is kept, and the
      editor offers a side-by-side look with Keep Claude's / Keep mine for each slide. */
-const STATUS = { claude: 'With Claude', review: 'Ready for you', approved: 'Approved' };
+const STATUS = { claude: 'With Claude', review: 'Ready for you' };
 const MAX_VERSIONS = 30;
 const statusChip = l => l.status && STATUS[l.status] ? '<span class="pl-st st-' + l.status + '">' + STATUS[l.status] + '</span>' : '';
 
@@ -48,14 +48,8 @@ async function sendToClaude(l) {
       'Build the lesson out from my outline and those notes. Keep my wording where I wrote it. When you\'re done, reply to my comments in "talk", put a short summary in "claudeNote", and set "status" to "review". Don\'t change "id" or "slots". I\'ll look at your version slide by slide in the Planner.'
     : 'Here is a lesson from my Planner. Each slide may have "What I want here" notes and comments for you. Build it out, keep my wording where I wrote it, and slide text stays 28 to 36 pt.\n\n' + lessonText(l);
   await copyText(msg);
-  window.open(claudeLink(), '_blank', 'noopener');
-  toast(L.dir && L.dirOk ? 'Message copied. Paste it into Claude. Claude’s changes show up here when it saves.' : 'Lesson copied. Paste it into Claude. Link the Planner folder so Claude can save straight back.', 7000);
+  toast(L.dir && L.dirOk ? 'Copied. Paste it into Claude. Claude’s changes show up here when it saves.' : 'Lesson copied. Paste it into Claude. Link the Planner folder so Claude can save straight back.', 7000);
   renderEditor();
-}
-async function setApproved(l, on) {
-  editorCommit();
-  if (on) { await saveVersion(l, 'Approved'); l.status = 'approved'; } else l.status = '';
-  await lPut(l); renderEditor(); toast(on ? 'Approved. You can still change it any time.' : 'No longer marked approved');
 }
 
 /* ---------- Claude's changes, slide by slide ---------- */
@@ -137,7 +131,6 @@ async function reviewClick(t) {
   const a = t.dataset.a, l = L.open; if (!l) return false;
   if (t.dataset.talkdone != null) { const m = l.slides[L.cur].talk[+t.dataset.talkdone]; m.done = !m.done; lessonChanged(false); renderEditor(); return true; }
   if (a === 'send') { await sendToClaude(l); return true; }
-  if (a === 'approve') { await setApproved(l, l.status !== 'approved'); return true; }
   if (a === 'versions') { editorCommit(); await versionsDlg(l); return true; }
   if (a === 'cmp') { editorCommit(); compareDlg(l); return true; }
   if (a === 'keepall') { delete l.pending; lessonChanged(false); renderEditor(); toast('Kept all of Claude’s changes. Your version is under Versions.'); return true; }

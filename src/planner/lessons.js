@@ -78,6 +78,7 @@ function normLesson(x) {
   const out = { id: typeof x.id === 'string' && x.id ? x.id : lid(), title: String(x.title || 'Untitled lesson'), slots, slides, created: +x.created || Date.now(), updated: +x.updated || Date.now(), note: String(x.note || ''),
     status: STATUS[x.status] ? x.status : '', claudeNote: String(x.claudeNote || '') };
   if (LOOKS[x.look]) out.look = x.look;
+  if (/^https?:\/\//.test(x.atlas || '')) out.atlas = String(x.atlas);
   if (x.pending && Array.isArray(x.pending.before)) out.pending = { at: +x.pending.at || Date.now(), before: x.pending.before.map(normSlide), title: String(x.pending.title || '') };
   if (x._file) out._file = x._file; if (x._mod) out._mod = x._mod;
   return out;
@@ -296,16 +297,15 @@ function renderEditor() {
   let h = '<div class="ls-top"><button class="btn sm ghost" data-a="back">‹ ' + ({ semester: 'Semester', units: 'Units', unit: 'Unit', activities: 'Activities' }[L.backTo] || 'Week') + '</button>' +
     '<input class="ls-title-in" data-f="ltitle" value="' + esc(l.title) + '" aria-label="Lesson name">' +
     '<span class="ls-slots">' + l.slots.map((t, i) => '<span class="ls-chip" style="--cc:' + esc((classById(t.classId) || {}).color || '#1F6FB2') + '">' + esc(className(t.classId)) + ' · ' + shortDate(t.date) + '<button data-unslot="' + i + '" title="Take it off this class" aria-label="Remove">×</button></span>').join('') + '<button class="btn sm ghost" data-a="addslot">+ Class</button></span>' +
-    '<span class="sp"></span>' + statusChip(l) + '<span class="savest" id="lsSaved">Saved</span>' +
-    '<button class="btn sm" data-a="send" title="Copy a message for Claude about this lesson and open Claude">Send to Claude</button>' +
+    atlasChip(l) + '<span class="sp"></span>' + statusChip(l) + '<span class="savest" id="lsSaved">Saved</span>' +
+    '<button class="btn sm" data-a="send" title="Copy this lesson for Claude, to paste where you’re working with Claude">Copy for Claude</button>' +
     '<button class="btn sm ghost" data-a="versions">Versions</button>' +
-    '<button class="btn sm ghost" data-a="approve" title="Only a marker: you can still change it">' + (l.status === 'approved' ? '✓ Approved' : 'Approve') + '</button>' +
     '<button class="btn sm ghost" data-a="more">More ▾</button>' +
     '<button class="btn sm primary" data-a="pptx">Download .pptx</button></div>' + pendingBar(l);
   h += '<div class="ls-ed-cols"><nav class="ls-thumbs" id="lsThumbs">' + l.slides.map((x, i) => thumbHtml(x, l, i)).join('') +
     '<div class="ls-addslide"><button class="btn sm" data-a="addslide">+ Add slide</button></div></nav>';
   h += '<section class="ls-main"><div class="ls-tools">' +
-    '<label>Layout <select data-f="layout" class="btn sm">' + Object.entries(LAYOUTS).map(([k, v]) => '<option value="' + k + '"' + (k === s.layout ? ' selected' : '') + '>' + v + '</option>').join('') + '</select></label>' +
+    '<button class="btn sm" data-a="layout" title="Pick a layout for this slide">Layout: ' + esc(LAYOUTS[s.layout]) + ' ▾</button>' +
     '<button class="btn sm" data-a="look" title="Colors and background for this lesson">Look: ' + esc(LOOKS[lookOf(l)].name) + '</button>' +
     (s.layout !== 'title' && s.layout !== 'picture' && s.layout !== 'video' ? '<label>Text <select data-f="size" class="btn sm">' + SIZES.map(z => '<option value="' + z + '"' + (z === s.size ? ' selected' : '') + '>' + z + ' pt</option>').join('') + '</select></label>' : '') +
     (s.layout === 'picture' || s.layout === 'picprompt' ? '<button class="btn sm" data-a="pic">' + (s.img ? 'Change picture' : 'Add picture') + '</button>' : '') +
@@ -320,6 +320,33 @@ function renderEditor() {
   $('#lessons').innerHTML = h;
   fitStage(); checkFit();
   const th = $('#lsThumbs .ls-th.on'); if (th) th.scrollIntoView({ block: 'nearest' });
+}
+// The lesson's Atlas page: its own link, or else the link of the unit it falls in.
+function atlasOf(l) {
+  if (l.atlas) return { url: l.atlas, own: true };
+  for (const t of l.slots) {
+    const c = classById(t.classId), hit = c && c.course && unitAt(c.course, ymd(mondayOf(parseYmd(t.date))));
+    if (hit && hit.u.atlas) return { url: hit.u.atlas, own: false, unit: hit.u.title };
+  }
+  return null;
+}
+function atlasChip(l) {
+  const a = atlasOf(l);
+  return a ? '<a class="btn sm ghost" href="' + esc(a.url) + '" target="_blank" rel="noopener" title="' + (a.own ? 'This lesson’s Atlas page' : 'Atlas page of ' + esc(a.unit)) + '">Atlas ↗</a><button class="btn sm ghost" data-a="atlas" title="Change the Atlas link" aria-label="Change the Atlas link">✎</button>'
+    : '<button class="btn sm ghost" data-a="atlas">+ Atlas link</button>';
+}
+function atlasDlg(l) {
+  const a = atlasOf(l);
+  openDlg('<div class="bh"><h2>Atlas link</h2></div><div class="bb"><label class="ls-f">This lesson’s page in Atlas<input id="atU" class="btn" style="justify-content:flex-start;cursor:text" placeholder="https://…" value="' + esc(l.atlas || '') + '"></label>' +
+    '<p class="muted">' + (a && !a.own ? 'Leave it empty to use the unit’s link (' + esc(a.unit) + ').' : 'Tip: a unit’s Atlas link is used for all its lessons, so you only need this for a lesson with its own page.') + '</p></div><div class="bf"><button class="btn" data-x>Cancel</button><button class="btn primary" data-ok>Save</button></div>', true);
+  $('#dlgBox').onclick = e => {
+    if (e.target.closest('[data-x]')) return closeDlg();
+    if (!e.target.closest('[data-ok]')) return;
+    const v = $('#atU').value.trim();
+    if (v && !/^https?:\/\//.test(v)) return toast('Paste the whole link, starting with https://');
+    if (v) l.atlas = v; else delete l.atlas;
+    closeDlg(); lessonChanged(false); renderEditor();
+  };
 }
 function thumbHtml(x, l, i) {
   return '<div class="ls-th' + (i === L.cur ? ' on' : '') + '" data-go="' + i + '" draggable="true"><span class="n">' + (i + 1) + '</span><div class="ls-mini"><div class="ls-slide">' + slideHtml(x, l, false) + '</div></div></div>';
@@ -440,6 +467,8 @@ async function onLessonsClick(e) {
   if (a === 'addslot') return addSlotDlg();
   if (a === 'pic') return pickPicture();
   if (a === 'addslide') return addSlideDlg();
+  if (a === 'layout') return addSlideDlg('change');
+  if (a === 'atlas') return atlasDlg(L.open);
   if (a === 'look') return lookDlg();
   if (a === 'vid') return videoDlg();
   if (a === 'split') return splitOverflow();
@@ -658,11 +687,10 @@ function lessonText(l) {
   });
   return t;
 }
-// Ask Claude: copies this lesson only (nothing from grading) and opens Claude in a new tab.
+// Ask Claude: copies this lesson only (nothing from grading), to paste where the teacher is working with Claude.
 async function askClaude(l) {
   const where = L.dir && L.dirOk ? 'It is saved in my Planner folder as "' + fileBase(l) + '.lesson.json". Edit that file directly (keep the same id), and I will pick up your changes in the Planner.\n\n' : '';
   await copyText('Here is a lesson from my Planner. ' + where + 'Slide text stays 28 to 36 pt; keep my simple bullet style.\n\n' + lessonText(l));
-  window.open(claudeLink(), '_blank', 'noopener');
   toast('Lesson copied. Paste it into Claude and say what you want.', 5000);
 }
 
@@ -717,8 +745,7 @@ function openTimetable() {
       c.meets.map((m, mi) => meetRow(ci, mi, m)).join('') + '<button class="btn sm ghost" data-addm="' + ci + '">+ Meeting</button></div>').join('') +
       '<button class="btn sm" data-addc>+ Class</button><h3 style="margin:18px 0 6px;font-size:15px">Semester</h3><div class="ls-mrow"><label>First week <input type="date" id="ttS" class="btn sm" value="' + esc(draft.semStart) + '"></label><label>Last week <input type="date" id="ttE" class="btn sm" value="' + esc(draft.semEnd) + '"></label></div>' +
       '<h3 style="margin:18px 0 6px;font-size:15px">Days off</h3><textarea id="ttOff" rows="4" style="width:100%" placeholder="One per line: 2026-12-25 Christmas">' + esc(draft.daysOff.map(d => d.date + ' ' + d.label).join('\n')) + '</textarea>' +
-      '<h3 style="margin:14px 0 6px;font-size:15px">Dates to show (not days off)</h3><textarea id="ttEv" rows="4" style="width:100%" placeholder="One per line: 2026-11-09 to 2026-11-13 Midterms">' + esc(draft.events.map(e => e.date + (e.to ? ' to ' + e.to : '') + ' ' + e.label).join('\n')) + '</textarea>' +
-      '<h3 style="margin:14px 0 6px;font-size:15px">Where Send to Claude opens</h3><input id="ttC" class="btn sm" style="width:100%" placeholder="https://claude.ai/new" value="' + esc(draft.claudeUrl) + '"><p class="muted" style="font-size:12.5px;margin:4px 0 0">Paste the link to the Claude project or chat you plan in. Left empty, it opens a new chat.</p>';
+      '<h3 style="margin:14px 0 6px;font-size:15px">Dates to show (not days off)</h3><textarea id="ttEv" rows="4" style="width:100%" placeholder="One per line: 2026-11-09 to 2026-11-13 Midterms">' + esc(draft.events.map(e => e.date + (e.to ? ' to ' + e.to : '') + ' ' + e.label).join('\n')) + '</textarea>' ;
   };
   openDlg('<div class="bh"><h2>Timetable</h2><button class="btn sm" data-load>Load setup file…</button></div><div class="bb" id="ttBody"></div><div class="bf"><button class="btn" data-x>Cancel</button><button class="btn primary" data-ok>Save</button></div>');
   draw();
@@ -737,7 +764,7 @@ function openTimetable() {
     draft.daysOff = lines('#ttOff').map(x => { const m = /^(\d{4}-\d\d-\d\d)\s*(.*)$/.exec(x); return m && { date: m[1], label: m[2] || 'No school' }; }).filter(Boolean);
     draft.events = lines('#ttEv').map(x => { const m = /^(\d{4}-\d\d-\d\d)(?:\s+to\s+(\d{4}-\d\d-\d\d))?\s*(.*)$/.exec(x); return m && { date: m[1], to: m[2] || '', label: m[3] }; }).filter(Boolean);
     draft.classes = draft.classes.filter(c => c.name.trim()).map(c => ({ ...c, id: c.id || lid() }));
-    draft.semStart = $('#ttS').value; draft.semEnd = $('#ttE').value; draft.claudeUrl = $('#ttC').value.trim();
+    draft.semStart = $('#ttS').value; draft.semEnd = $('#ttE').value; 
     closeDlg(); await applySetup({ ...draft, template: s.template });
   };
 }
@@ -909,7 +936,8 @@ never are, and nothing here should point to a student.
     { "layout": "vocab", "title": "Word of the day", "word": "ethos", "pos": "noun", "body": "Meaning", "foot": "Example sentence" },
     { "layout": "exit", "title": "Exit ticket", "tag": "On a sticky note", "body": "The question" }
   ],
-  "look": "wood"
+  "look": "wood",
+  "atlas": "https://…"              // optional: this lesson's Atlas page (otherwise its unit's link is used)
 }
 "look" is the lesson's colors: wood (the teacher's template), white, cream, sage, sky, blush, charcoal, navy,
 stripe, band, bigtype, framed, notebook, chalk. Leave it out to use the teacher's default; change it only when asked.
@@ -917,8 +945,8 @@ stripe, band, bigtype, framed, notebook, chalk. Leave it out to use the teacher'
 - A slide's "ask" is what the teacher wants on that slide. Use it, and leave it as it is.
 - A slide's "talk" is comments: { "by": "you" | "claude", "text": "…" }. Reply by adding one with "by": "claude".
   Don't edit or remove the teacher's comments.
-- "status": "claude" means the teacher sent it to you; set it to "review" when you're done. Never set "approved";
-  only the teacher approves. "claudeNote" is your short summary of what you did.
+- "status": "claude" means the teacher sent it to you; set it to "review" when you're done.
+  "claudeNote" is your short summary of what you did.
 The teacher sees your changes slide by slide and keeps theirs or yours for each, so change what the lesson needs and leave the rest.
 For a video, give just "url" (and "start" in seconds, if it should start partway); the app adds the title, channel and picture.
 Rules: "size" is 28 to 36 (pt). Body lines are separated by \\n; a line starting with a tab is a sub-point.

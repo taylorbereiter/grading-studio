@@ -14,7 +14,6 @@ function topBar(view, extra) {
     '<button class="btn sm ghost" data-a="import">Import…</button><button class="btn sm ghost" data-a="setup">Timetable</button><button class="btn sm ghost themeBtn">' + (document.documentElement.dataset.theme === 'dark' ? 'Light mode' : 'Dark mode') + '</button>' +
     '<button class="btn sm" data-a="close" title="Go to grading. The Planner and grading keep their work apart.">Grading Studio</button></div>';
 }
-const claudeLink = () => (L.setup && L.setup.claudeUrl) || 'https://claude.ai/new';
 
 // The Planner folder must never be the grading folder, or hold it: Claude reads everything in the Planner folder.
 async function notGradingFolder(h) {
@@ -242,7 +241,7 @@ function askWeeks(u) {
   const msg = 'Please fill in the weeks of my ' + u.course + ' unit "' + u.title + '" from its Atlas screenshots. ' + where +
     'It starts the week of ' + shortDate(u.start) + ' and has ' + u.weeks.length + ' weeks. Read the screenshots and write each week\'s focus (and standards, if shown) into "weeks" in the unit file, one entry per week, in order. Keep my notes. Then tell me what you filled in and anything you weren\'t sure of.' +
     (where ? '' : '\n\n(My Planner folder isn\'t linked yet, so I\'ll attach the screenshots.)');
-  copyText(msg).then(() => { window.open(claudeLink(), '_blank', 'noopener'); toast(where ? 'Message copied. Paste it into Claude.' : 'Message copied. Link the Planner folder so Claude can read the screenshots, or attach them.', 6000); });
+  copyText(msg).then(() => { toast(where ? 'Message copied. Paste it into Claude.' : 'Message copied. Link the Planner folder so Claude can read the screenshots, or attach them.', 6000); });
 }
 function pasteWeeksDlg(u) {
   openDlg('<div class="bh"><h2>Weeks of ' + esc(u.title) + '</h2></div><div class="bb"><p class="muted" style="margin-top:0">One line per week: what that week is about. You can copy the week list straight out of Atlas. Lines starting with “Week 3:” or similar are fine.</p>' +
