@@ -379,6 +379,14 @@ h1 i,.top .title i{font-style:normal;font-weight:500;color:var(--accent)}
 .pl-file{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:9px;padding:7px 10px;background:var(--surface)}
 .pl-ft{width:38px;height:38px;border-radius:7px;background:var(--accent-soft);color:var(--accent);font-weight:700;font-size:11px;display:flex;align-items:center;justify-content:center;flex:none}
 .pl-fn{flex:1;min-width:0;display:flex;flex-direction:column}.pl-fn b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14px}.pl-fn span{font-size:12.5px;color:var(--muted)}
+.pl-lib{padding:14px;display:flex;flex-direction:column;gap:12px;max-width:1280px;width:100%;margin:0 auto;box-sizing:border-box}
+.pl-libq{min-width:220px;justify-content:flex-start;cursor:text}
+.pl-lib-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:8px}
+.pl-lib-card{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:10px;background:var(--surface);overflow:hidden}
+.pl-lib-card>.ls-card{border:0;border-radius:0;width:100%;box-sizing:border-box}
+.pl-lib-files{display:flex;flex-wrap:wrap;gap:4px;padding:0 8px 8px;align-items:center}
+.pl-lib-f{all:unset;cursor:pointer;display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--muted);max-width:100%;border:1px solid var(--line);border-radius:6px;padding:2px 6px 2px 2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pl-lib-f:hover,.pl-lib-f:focus-visible{border-color:var(--accent);color:var(--fg)}.pl-lib-f .pl-ft{width:24px;height:20px;font-size:9px;border-radius:4px}
 .pl-mats{margin:14px 0 4px;border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--surface)}
 .pl-mats-h{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px}.pl-mats-h h3{margin:0;font-size:15px}
 .pl-mats .pl-file{padding:5px 8px}.pl-mats .pl-ft{width:32px;height:32px}
@@ -1163,6 +1171,8 @@ function normLesson(x) {
     status: STATUS[x.status] ? x.status : '', claudeNote: String(x.claudeNote || '') };
   if (LOOKS[x.look]) out.look = x.look;
   if (/^https?:\/\//.test(x.atlas || '')) out.atlas = String(x.atlas);
+  if (x.library) out.library = String(x.library).slice(0, 120);
+  if (x.unit) out.unit = String(x.unit);
   const files = (Array.isArray(x.files) ? x.files : []).filter(f => f && typeof f.id === 'string' && typeof f.name === 'string').map(f => ({ id: f.id, name: f.name, kind: f.kind === 'doc' ? 'doc' : 'other', type: String(f.type || ''), size: +f.size || 0, added: +f.added || 0 }));
   if (files.length) out.files = files;
   if (x.pending && Array.isArray(x.pending.before)) out.pending = { at: +x.pending.at || Date.now(), before: x.pending.before.map(normSlide), title: String(x.pending.title || '') };
@@ -1311,7 +1321,7 @@ async function openLessons() {
   await panelInit();
   await tplPreview();
   if (!L.weekOf) L.weekOf = ymd(mondayOf(new Date()));
-  try { const v = localStorage.getItem('gsp.view'); if (v === 'week' || v === 'semester' || v === 'units' || v === 'activities' || v === 'bank') L.view = v; } catch { }
+  try { const v = localStorage.getItem('gsp.view'); if (v === 'week' || v === 'semester' || v === 'units' || v === 'activities' || v === 'bank' || v === 'library') L.view = v; } catch { }
   renderLessons();
   await folderReconnect(false);
 }
@@ -1320,13 +1330,14 @@ function renderLessons() {
   if (L.view === 'doc' && L.doc) return renderDoc();
   if (L.view === 'edit' && L.open) return renderEditor();
   if (L.view === 'unit' && L.unit) return renderUnit();
-  if (!['semester', 'units', 'activities', 'bank'].includes(L.view)) L.view = 'week';
+  if (!['semester', 'units', 'activities', 'bank', 'library'].includes(L.view)) L.view = 'week';
   try { localStorage.setItem('gsp.view', L.view); } catch { }
   panelContext();
   if (L.view === 'semester') return renderSemester();
   if (L.view === 'units') return renderUnits();
   if (L.view === 'activities') return renderActivities();
   if (L.view === 'bank') return renderBank();
+  if (L.view === 'library') return renderLibrary();
   renderWeek();
 }
 
@@ -1365,7 +1376,7 @@ function renderWeek() {
       h += '</div>';
     }
     h += '</div>';
-    const loose = L.lessons.filter(l => !l.slots.length).sort((a, b) => b.updated - a.updated);
+    const loose = L.lessons.filter(l => !l.slots.length && !l.library).sort((a, b) => b.updated - a.updated);
     h += '<div class="ls-loose"><div class="lhead"><h2>Not on the timetable</h2><span class="sp"></span><button class="btn sm" data-a="newfree">+ New lesson</button><button class="btn sm ghost" data-a="all">All lessons</button></div>' +
       (loose.length ? '<div class="ls-cards">' + loose.map(l => '<button class="ls-card" data-open="' + l.id + '"><b>' + esc(l.title) + '</b><span>' + l.slides.length + ' slides</span></button>').join('') + '</div>' : '<p class="muted" style="margin:0;font-size:13.5px">Lessons you haven’t put on a class show up here.</p>') + '</div>';
   }
@@ -1377,7 +1388,7 @@ function renderEditor() {
   const l = L.open; if (!l) return renderWeek();
   L.cur = Math.max(0, Math.min(L.cur, l.slides.length - 1));
   const s = l.slides[L.cur];
-  let h = '<div class="ls-top"><button class="btn sm ghost" data-a="back">‹ ' + ({ semester: 'Semester', units: 'Units', unit: 'Unit', activities: 'Activities' }[L.backTo] || 'Week') + '</button>' +
+  let h = '<div class="ls-top"><button class="btn sm ghost" data-a="back">‹ ' + ({ semester: 'Semester', units: 'Units', unit: 'Unit', activities: 'Activities', library: 'Past lessons' }[L.backTo] || 'Week') + '</button>' +
     '<input class="ls-title-in" data-f="ltitle" value="' + esc(l.title) + '" aria-label="Lesson name">' +
     '<span class="ls-slots">' + l.slots.map((t, i) => '<span class="ls-chip" style="--cc:' + esc((classById(t.classId) || {}).color || '#1F6FB2') + '">' + esc(className(t.classId)) + ' · ' + shortDate(t.date) + '<button data-unslot="' + i + '" title="Take it off this class" aria-label="Remove">×</button></span>').join('') + '<button class="btn sm ghost" data-a="addslot">+ Class</button></span>' +
     atlasChip(l) + '<span class="sp"></span>' + statusChip(l) + '<span class="savest" id="lsSaved">Saved</span>' +
@@ -1517,6 +1528,7 @@ function newSlide(layout) {
 async function onLessonsClick(e) {
   if (e.target.closest('[data-a="panel"]')) return panelToggle();
   if (await docClick(e)) return;
+  if (await libraryClick(e)) return;
   const mt = e.target.closest('[data-ma]'); if (mt && await matClick(mt)) return;
   if (await bankClick(e)) return;
   if (await unitsClick(e)) return;
@@ -1570,7 +1582,7 @@ async function onLessonsClick(e) {
   }
 }
 function onLessonsInput(e) {
-  if (docInput(e)) return;
+  if (docInput(e) || libraryInput(e)) return;
   if (unitsInput(e) || activitiesInput(e)) return;
   const f = e.target.dataset.f; if (!f || !L.open) return;
   if (f === 'ltitle') { L.open.title = e.target.value; lessonChanged(false); }
@@ -1594,6 +1606,8 @@ function undoToast(msg, fn) {
 }
 document.addEventListener('dragstart', e => { const th = e.target.closest && e.target.closest('#lsThumbs .ls-th'); if (!th) return; e.dataTransfer.setData('text/x-slide', th.dataset.go); e.dataTransfer.effectAllowed = 'move'; });
 async function onLessonDrop(e) {
+  const zf = [...(e.dataTransfer.files || [])].find(f => /\.zip$/i.test(f.name));
+  if (zf && !(e.target.closest && e.target.closest('[data-owner]'))) return packImport(zf);
   if (await matDrop(e)) return;
   const pf = [...(e.dataTransfer.files || [])].find(f => /\.json$/i.test(f.name));
   if (pf && !L.open) { try { const j = JSON.parse(await pf.text()); if (Array.isArray(j.classes)) return applySetup(j); } catch { } }
@@ -1782,11 +1796,11 @@ async function askClaude(l) {
 
 /* ---------- import ---------- */
 function importLesson() {
-  openDlg('<div class="bh"><h2>Import a lesson</h2></div><div class="bb"><p class="muted" style="margin-top:0">Choose a .lesson.json file (from Claude or another computer), or paste one below. A lesson with the same id replaces the one here.</p>' +
-    '<button class="btn" id="imF">Choose a file…</button><input type="file" id="imIn" accept=".json,application/json" hidden><textarea id="imT" rows="8" style="width:100%;margin-top:10px" placeholder="Or paste the lesson here"></textarea></div>' +
+  openDlg('<div class="bh"><h2>Import a lesson</h2></div><div class="bb"><p class="muted" style="margin-top:0">Choose a .lesson.json file (from Claude or another computer), or a lesson pack (.zip) of past lessons with their files. You can also paste a lesson below. A lesson with the same id replaces the one here; a pack leaves lessons you already have alone.</p>' +
+    '<button class="btn" id="imF">Choose a file…</button><input type="file" id="imIn" accept=".json,application/json,.zip,application/zip" hidden><textarea id="imT" rows="8" style="width:100%;margin-top:10px" placeholder="Or paste the lesson here"></textarea></div>' +
     '<div class="bf"><button class="btn" data-x>Cancel</button><button class="btn primary" data-ok>Import pasted text</button></div>', true);
   $('#imF').onclick = () => $('#imIn').click();
-  $('#imIn').onchange = async () => { const f = $('#imIn').files[0]; if (f) { closeDlg(); importLessonText(await f.text(), f.name); } };
+  $('#imIn').onchange = async () => { const f = $('#imIn').files[0]; if (!f) return; closeDlg(); if (/\.zip$/i.test(f.name)) return packImport(f); importLessonText(await f.text(), f.name); };
   $('#dlgBox').onclick = e => { if (e.target.closest('[data-x]')) return closeDlg(); if (e.target.closest('[data-ok]')) { const v = $('#imT').value; closeDlg(); importLessonText(v, ''); } };
 }
 async function importLessonText(text, name) {
@@ -1820,7 +1834,11 @@ async function applySetup(j) {
   L.setup = setup; await kvSet('setup', setup); await tplPreview();
   folderWriteSchedule();
   let nu = 0;
-  for (const x of Array.isArray(j.units) ? j.units : []) { const u = normUnit(x); if (x.id && !L.units.some(v => v.id === u.id)) { await unitPut(u, true); nu++; } }
+  for (const x of Array.isArray(j.units) ? j.units : []) {
+    const u = normUnit(x), had = L.units.find(v => v.id === u.id);
+    if (x.id && !had) { await unitPut(u, true); nu++; }
+    else if (had && !had.atlas && u.atlas) { had.atlas = u.atlas; await unitPut(had, true); }   // fill in a missing Atlas link, nothing else
+  }
   if (LOOKS[j.look] && !L.defLook) { L.defLook = j.look; await kvSet('deflook', j.look); }
   toast((setup.profile ? setup.profile + ' loaded: ' : 'Timetable loaded: ') + setup.classes.length + ' classes' + (nu ? ', ' + nu + ' units' : '') + (setup.template ? ', your slide template' : ''), 5000);
   renderLessons();
@@ -3000,6 +3018,86 @@ function printWeek() {
   w.document.close(); w.focus(); setTimeout(() => w.print(), 300);
 }
 
+/* ---------- past lessons: the library, a unit's lessons, and lesson packs ---------- */
+
+let libQ = '';
+const libGroups = () => [...new Set(L.lessons.filter(l => l.library).map(l => l.library))].sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+const MAT_ICON = f => fileIcon(f);
+function libCard(l) {
+  const files = l.files || [];
+  return '<div class="pl-lib-card"><button class="ls-card" data-open="' + l.id + '"><b>' + esc(l.title) + '</b><span>' + l.slides.length + ' slide' + (l.slides.length === 1 ? '' : 's') +
+    (l.slots.length ? ' · ' + esc(l.slots.map(s => className(s.classId) + ' ' + shortDate(s.date)).join(', ')) : '') + '</span></button>' +
+    (files.length ? '<div class="pl-lib-files">' + files.slice(0, 6).map(f => '<button class="pl-lib-f" data-libf="' + l.id + '|' + f.id + '" title="Open ' + esc(f.name) + '"><span class="pl-ft">' + MAT_ICON(f) + '</span>' + esc(f.name.replace(/\.[^.]+$/, '')) + '</button>').join('') + (files.length > 6 ? '<span class="muted sp-small">+' + (files.length - 6) + ' more</span>' : '') + '</div>' : '') + '</div>';
+}
+function renderLibrary() {
+  const q = libQ.trim().toLowerCase();
+  const match = l => !q || (l.title + ' ' + l.library + ' ' + (l.files || []).map(f => f.name).join(' ')).toLowerCase().includes(q);
+  let h = topBar('library', '<input type="search" class="btn sm pl-libq" data-libq placeholder="Filter past lessons" value="' + esc(libQ) + '" aria-label="Filter past lessons">') + '<div class="pl-lib">';
+  const gs = libGroups();
+  if (!gs.length) h += '<div class="ls-empty"><h2>Your past lessons</h2><p>Old decks and their handouts show up here once you import a lesson pack (a .zip made for the Planner). Each deck becomes a lesson you can edit, with the original PowerPoint and PDF one click away.</p><div class="row"><button class="btn primary" data-a="import">Import a lesson pack…</button></div></div>';
+  for (const g of gs) {
+    const ls = L.lessons.filter(l => l.library === g && match(l)).sort((a, b) => a.title.localeCompare(b.title, undefined, { numeric: true }));
+    if (!ls.length) continue;
+    h += '<section class="pl-card"><div class="lhead"><h2>' + esc(g) + '</h2><span class="muted">' + ls.length + ' lesson' + (ls.length === 1 ? '' : 's') + '</span></div><div class="pl-lib-grid">' + ls.map(libCard).join('') + '</div></section>';
+  }
+  if (gs.length && q && !L.lessons.some(l => l.library && match(l))) h += '<p class="muted" style="padding:0 6px">Nothing matches “' + esc(libQ) + '”.</p>';
+  $('#lessons').innerHTML = h + '</div>';
+}
+function unitLessonsSection(u) {
+  const ls = L.lessons.filter(l => l.unit === u.id).sort((a, b) => ((b.slots[0] || {}).date || '').localeCompare((a.slots[0] || {}).date || '') || a.title.localeCompare(b.title, undefined, { numeric: true }));
+  if (!ls.length) return '';
+  return '<section class="pl-card"><div class="lhead"><h2>Lessons for this unit</h2><span class="muted">' + ls.length + '</span></div><div class="pl-lib-grid">' + ls.map(libCard).join('') + '</div></section>';
+}
+async function libraryClick(e) {
+  const f = e.target.closest('[data-libf]'); if (!f) return false;
+  const [lid_, fid] = f.dataset.libf.split('|'); await matOpen({ t: 'lesson', id: lid_ }, fid); return true;
+}
+function libraryInput(e) {
+  if (e.target.dataset.libq == null) return false;
+  libQ = e.target.value; const pos = e.target.selectionStart; renderLibrary();
+  const i = document.querySelector('[data-libq]'); if (i) { i.focus(); i.setSelectionRange(pos, pos); }
+  return true;
+}
+
+/* ---------- lesson packs ---------- */
+const unzipAsync = (u8, filter) => new Promise((res, rej) => fflate.unzip(u8, { filter }, (e, d) => e ? rej(e) : res(d)));
+async function packImport(file) {
+  toast('Opening ' + file.name + '…', 60000);
+  let z;
+  try { z = await unzipAsync(new Uint8Array(await file.arrayBuffer()), f => f.name === 'pack.json'); } catch { return toast('That .zip couldn’t be opened'); }
+  let p; try { p = JSON.parse(fflate.strFromU8(z['pack.json'])); } catch { return toast('That .zip isn’t a lesson pack'); }
+  if (!p || p.kind !== 'grading-studio-lesson-pack') return toast('That .zip isn’t a lesson pack');
+  const lessons = (Array.isArray(p.lessons) ? p.lessons : []).filter(x => x && Array.isArray(x.slides) && !L.lessons.some(l => l.id === x.id));
+  const units = (Array.isArray(p.units) ? p.units : []).filter(x => x && L.units.some(u => u.id === x.id));
+  const want = new Set();
+  for (const x of lessons) for (const f of x.files || []) if (f && f.path) want.add(f.path);
+  for (const x of units) for (const f of x.files || []) if (f && f.path) want.add(f.path);
+  toast('Unpacking ' + want.size + ' files…', 60000);
+  try { z = await unzipAsync(new Uint8Array(await file.arrayBuffer()), f => want.has(f.name)); } catch { return toast('That .zip couldn’t be opened'); }
+  const store = async f => { const d = z[f.path]; if (!d || d.length > MAX_FILE) return null; const id = lid(); const b = new Blob([d], { type: f.type || '' }); await kvSet('file:' + id, b); return { id, b }; };
+  let nl = 0, nf = 0, na = 0;
+  for (const x of lessons) {
+    const files = [];
+    for (const f of x.files || []) { const s = await store(f); if (s) { files.push({ id: s.id, name: String(f.name || 'File'), kind: 'other', type: s.b.type, size: s.b.size, added: Date.now() }); nf++; } }
+    const l = normLesson({ ...x, files }); l.slides.forEach(s => { if (s.img && !imgSrc(s.img.src)) delete s.img; });
+    L.lessons.push(l); await lPut(l); nl++;
+  }
+  for (const x of units) {
+    const u = L.units.find(v => v.id === x.id); let ch = false;
+    if (!u.atlas && /^https?:\/\//.test(x.atlas || '')) { u.atlas = String(x.atlas); ch = true; na++; }
+    for (const f of x.files || []) {
+      if (u.files.some(g => g.name === f.name)) continue;
+      const s = await store(f); if (!s) continue;
+      u.files.push({ id: s.id, name: uniqueName(u, String(f.name || 'File')), kind: ['atlas', 'summative', 'other'].includes(f.kind) ? f.kind : 'other', type: s.b.type, size: s.b.size, added: Date.now() }); ch = true; nf++;
+    }
+    if (ch) await unitPut(u, true);
+  }
+  const skipped = (p.lessons || []).length - lessons.length;
+  toast((p.name ? p.name + ': ' : '') + (nl ? nl + ' lesson' + (nl === 1 ? '' : 's') : 'no new lessons') + (nf ? ', ' + nf + ' files' : '') + (na ? ', ' + na + ' Atlas link' + (na === 1 ? '' : 's') : '') + (skipped > 0 ? ' (' + skipped + ' already here)' : ''), 6000);
+  if (nl && L.view !== 'edit') { L.view = 'library'; }
+  renderLessons();
+}
+
 /* ================= Planner: the side panel =================
    A panel beside whatever the teacher is working on, kept outside #lessons so redrawing a lesson never
    resets it. Tabs:
@@ -3336,7 +3434,7 @@ const MAX_FILE = 40 * 1024 * 1024;
 /* ---------- top bar shared by every Planner view ---------- */
 function topBar(view, extra) {
   const tab = (v, t) => '<button class="pl-tab' + (view === v ? ' on' : '') + '" data-a="tab" data-v="' + v + '"' + (view === v ? ' aria-current="page"' : '') + '>' + t + '</button>';
-  return '<div class="ls-top"><span class="title">Planner</span><nav class="pl-tabs" aria-label="Views">' + tab('semester', 'Semester') + tab('week', 'Week') + tab('units', 'Units') + tab('activities', 'Activities') + tab('bank', 'Rubrics') + '</nav>' +
+  return '<div class="ls-top"><span class="title">Planner</span><nav class="pl-tabs" aria-label="Views">' + tab('semester', 'Semester') + tab('week', 'Week') + tab('units', 'Units') + tab('library', 'Past lessons') + tab('activities', 'Activities') + tab('bank', 'Rubrics') + '</nav>' +
     (extra || '') + '<span class="sp"></span><input type="search" id="plFind" class="pl-find" placeholder="Search lessons…" aria-label="Search lessons, slides, documents and units">' + folderChip() +
     panelBtn() + '<button class="btn sm ghost" data-a="import">Import…</button><button class="btn sm ghost" data-a="setup">Timetable</button><button class="btn sm ghost themeBtn">' + (document.documentElement.dataset.theme === 'dark' ? 'Light mode' : 'Dark mode') + '</button>' +
     '<button class="btn sm" data-a="close" title="Go to grading. The Planner and grading keep their work apart.">Grading Studio</button></div>';
@@ -3514,6 +3612,7 @@ function renderUnit() {
       (f.kind === 'doc' ? '<button class="btn sm ghost" data-ma="claude" data-id="' + f.id + '" title="Put this in the Claude box">+ Claude box</button>' : '<select class="btn sm" data-fkind="' + f.id + '" aria-label="Kind"><option value="summative"' + (f.kind === 'summative' ? ' selected' : '') + '>Summative</option><option value="other"' + (f.kind === 'other' ? ' selected' : '') + '>Unit file</option></select>') +
       '<button class="btn sm" data-a="viewfile" data-fid="' + f.id + '">Open</button><button class="btn sm ghost" data-a="dlfile" data-fid="' + f.id + '">Download</button><button class="btn sm ghost" data-a="rmfile" data-fid="' + f.id + '">Remove</button></div>').join('') + '</div>' : '') +
     '<p class="muted">Drop task sheets, rubrics or exemplars here. Planning files only: never student work. They go to the Planner folder, where Claude can read them.</p></div></section>';
+  h += unitLessonsSection(u);
   h += bankUnitSection(u);
   h += '</div><input type="file" id="plFileIn" multiple hidden><input type="file" id="plShotIn" accept="image/*" multiple hidden>';
   $('#lessons').innerHTML = h;
@@ -3697,7 +3796,7 @@ async function unitsFolderRead() {
   return out;
 }
 
-window.__planner = { bankPut, normRubric, slideHtml, LOOKS, TEACH, TEACH_SAMPLE, versions: versionsOf, ytIds: us => us.map(u => [ytId(u), ytStart(u)]), openLessonForTest: (l, i) => { openLesson(l); goSlide(i || 0); }, L, applySetup, renderLessons, setPicture, folderWriteAll, folderRead, buildPptx, normLesson, normUnit, unitPut, unitAt, addUnitFiles, notGradingFolder, unitsFolderRead, semesterMondays, openUnit, docxOf, findAll, copyLesson };
+window.__planner = { bankPut, normRubric, slideHtml, LOOKS, TEACH, TEACH_SAMPLE, versions: versionsOf, ytIds: us => us.map(u => [ytId(u), ytStart(u)]), openLessonForTest: (l, i) => { openLesson(l); goSlide(i || 0); }, L, applySetup, renderLessons, setPicture, folderWriteAll, folderRead, buildPptx, normLesson, normUnit, unitPut, unitAt, addUnitFiles, notGradingFolder, unitsFolderRead, semesterMondays, openUnit, docxOf, findAll, copyLesson, packImport };
 openLessons();
 
 })();

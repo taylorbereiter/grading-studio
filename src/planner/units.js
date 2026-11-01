@@ -9,7 +9,7 @@ const MAX_FILE = 40 * 1024 * 1024;
 /* ---------- top bar shared by every Planner view ---------- */
 function topBar(view, extra) {
   const tab = (v, t) => '<button class="pl-tab' + (view === v ? ' on' : '') + '" data-a="tab" data-v="' + v + '"' + (view === v ? ' aria-current="page"' : '') + '>' + t + '</button>';
-  return '<div class="ls-top"><span class="title">Planner</span><nav class="pl-tabs" aria-label="Views">' + tab('semester', 'Semester') + tab('week', 'Week') + tab('units', 'Units') + tab('activities', 'Activities') + tab('bank', 'Rubrics') + '</nav>' +
+  return '<div class="ls-top"><span class="title">Planner</span><nav class="pl-tabs" aria-label="Views">' + tab('semester', 'Semester') + tab('week', 'Week') + tab('units', 'Units') + tab('library', 'Past lessons') + tab('activities', 'Activities') + tab('bank', 'Rubrics') + '</nav>' +
     (extra || '') + '<span class="sp"></span><input type="search" id="plFind" class="pl-find" placeholder="Search lessons…" aria-label="Search lessons, slides, documents and units">' + folderChip() +
     panelBtn() + '<button class="btn sm ghost" data-a="import">Import…</button><button class="btn sm ghost" data-a="setup">Timetable</button><button class="btn sm ghost themeBtn">' + (document.documentElement.dataset.theme === 'dark' ? 'Light mode' : 'Dark mode') + '</button>' +
     '<button class="btn sm" data-a="close" title="Go to grading. The Planner and grading keep their work apart.">Grading Studio</button></div>';
@@ -191,6 +191,7 @@ function renderUnit() {
       (f.kind === 'doc' ? '<button class="btn sm ghost" data-ma="claude" data-id="' + f.id + '" title="Put this in the Claude box">+ Claude box</button>' : '<select class="btn sm" data-fkind="' + f.id + '" aria-label="Kind"><option value="summative"' + (f.kind === 'summative' ? ' selected' : '') + '>Summative</option><option value="other"' + (f.kind === 'other' ? ' selected' : '') + '>Unit file</option></select>') +
       '<button class="btn sm" data-a="viewfile" data-fid="' + f.id + '">Open</button><button class="btn sm ghost" data-a="dlfile" data-fid="' + f.id + '">Download</button><button class="btn sm ghost" data-a="rmfile" data-fid="' + f.id + '">Remove</button></div>').join('') + '</div>' : '') +
     '<p class="muted">Drop task sheets, rubrics or exemplars here. Planning files only: never student work. They go to the Planner folder, where Claude can read them.</p></div></section>';
+  h += unitLessonsSection(u);
   h += bankUnitSection(u);
   h += '</div><input type="file" id="plFileIn" multiple hidden><input type="file" id="plShotIn" accept="image/*" multiple hidden>';
   $('#lessons').innerHTML = h;
@@ -377,5 +378,5 @@ async function unitsFolderRead() {
   return out;
 }
 
-window.__planner = { bankPut, normRubric, slideHtml, LOOKS, TEACH, TEACH_SAMPLE, versions: versionsOf, ytIds: us => us.map(u => [ytId(u), ytStart(u)]), openLessonForTest: (l, i) => { openLesson(l); goSlide(i || 0); }, L, applySetup, renderLessons, setPicture, folderWriteAll, folderRead, buildPptx, normLesson, normUnit, unitPut, unitAt, addUnitFiles, notGradingFolder, unitsFolderRead, semesterMondays, openUnit, docxOf, findAll, copyLesson };
+window.__planner = { bankPut, normRubric, slideHtml, LOOKS, TEACH, TEACH_SAMPLE, versions: versionsOf, ytIds: us => us.map(u => [ytId(u), ytStart(u)]), openLessonForTest: (l, i) => { openLesson(l); goSlide(i || 0); }, L, applySetup, renderLessons, setPicture, folderWriteAll, folderRead, buildPptx, normLesson, normUnit, unitPut, unitAt, addUnitFiles, notGradingFolder, unitsFolderRead, semesterMondays, openUnit, docxOf, findAll, copyLesson, packImport };
 openLessons();

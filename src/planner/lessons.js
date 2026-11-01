@@ -80,6 +80,8 @@ function normLesson(x) {
     status: STATUS[x.status] ? x.status : '', claudeNote: String(x.claudeNote || '') };
   if (LOOKS[x.look]) out.look = x.look;
   if (/^https?:\/\//.test(x.atlas || '')) out.atlas = String(x.atlas);
+  if (x.library) out.library = String(x.library).slice(0, 120);
+  if (x.unit) out.unit = String(x.unit);
   const files = (Array.isArray(x.files) ? x.files : []).filter(f => f && typeof f.id === 'string' && typeof f.name === 'string').map(f => ({ id: f.id, name: f.name, kind: f.kind === 'doc' ? 'doc' : 'other', type: String(f.type || ''), size: +f.size || 0, added: +f.added || 0 }));
   if (files.length) out.files = files;
   if (x.pending && Array.isArray(x.pending.before)) out.pending = { at: +x.pending.at || Date.now(), before: x.pending.before.map(normSlide), title: String(x.pending.title || '') };
@@ -233,7 +235,7 @@ async function openLessons() {
   await panelInit();
   await tplPreview();
   if (!L.weekOf) L.weekOf = ymd(mondayOf(new Date()));
-  try { const v = localStorage.getItem('gsp.view'); if (v === 'week' || v === 'semester' || v === 'units' || v === 'activities' || v === 'bank') L.view = v; } catch { }
+  try { const v = localStorage.getItem('gsp.view'); if (v === 'week' || v === 'semester' || v === 'units' || v === 'activities' || v === 'bank' || v === 'library') L.view = v; } catch { }
   renderLessons();
   await folderReconnect(false);
 }
@@ -243,13 +245,14 @@ function renderLessons() {
   if (L.view === 'doc' && L.doc) return renderDoc();
   if (L.view === 'edit' && L.open) return renderEditor();
   if (L.view === 'unit' && L.unit) return renderUnit();
-  if (!['semester', 'units', 'activities', 'bank'].includes(L.view)) L.view = 'week';
+  if (!['semester', 'units', 'activities', 'bank', 'library'].includes(L.view)) L.view = 'week';
   try { localStorage.setItem('gsp.view', L.view); } catch { }
   panelContext();
   if (L.view === 'semester') return renderSemester();
   if (L.view === 'units') return renderUnits();
   if (L.view === 'activities') return renderActivities();
   if (L.view === 'bank') return renderBank();
+  if (L.view === 'library') return renderLibrary();
   renderWeek();
 }
 
@@ -288,7 +291,7 @@ function renderWeek() {
       h += '</div>';
     }
     h += '</div>';
-    const loose = L.lessons.filter(l => !l.slots.length).sort((a, b) => b.updated - a.updated);
+    const loose = L.lessons.filter(l => !l.slots.length && !l.library).sort((a, b) => b.updated - a.updated);
     h += '<div class="ls-loose"><div class="lhead"><h2>Not on the timetable</h2><span class="sp"></span><button class="btn sm" data-a="newfree">+ New lesson</button><button class="btn sm ghost" data-a="all">All lessons</button></div>' +
       (loose.length ? '<div class="ls-cards">' + loose.map(l => '<button class="ls-card" data-open="' + l.id + '"><b>' + esc(l.title) + '</b><span>' + l.slides.length + ' slides</span></button>').join('') + '</div>' : '<p class="muted" style="margin:0;font-size:13.5px">Lessons you haven’t put on a class show up here.</p>') + '</div>';
   }
@@ -300,7 +303,7 @@ function renderEditor() {
   const l = L.open; if (!l) return renderWeek();
   L.cur = Math.max(0, Math.min(L.cur, l.slides.length - 1));
   const s = l.slides[L.cur];
-  let h = '<div class="ls-top"><button class="btn sm ghost" data-a="back">‹ ' + ({ semester: 'Semester', units: 'Units', unit: 'Unit', activities: 'Activities' }[L.backTo] || 'Week') + '</button>' +
+  let h = '<div class="ls-top"><button class="btn sm ghost" data-a="back">‹ ' + ({ semester: 'Semester', units: 'Units', unit: 'Unit', activities: 'Activities', library: 'Past lessons' }[L.backTo] || 'Week') + '</button>' +
     '<input class="ls-title-in" data-f="ltitle" value="' + esc(l.title) + '" aria-label="Lesson name">' +
     '<span class="ls-slots">' + l.slots.map((t, i) => '<span class="ls-chip" style="--cc:' + esc((classById(t.classId) || {}).color || '#1F6FB2') + '">' + esc(className(t.classId)) + ' · ' + shortDate(t.date) + '<button data-unslot="' + i + '" title="Take it off this class" aria-label="Remove">×</button></span>').join('') + '<button class="btn sm ghost" data-a="addslot">+ Class</button></span>' +
     atlasChip(l) + '<span class="sp"></span>' + statusChip(l) + '<span class="savest" id="lsSaved">Saved</span>' +
@@ -443,6 +446,7 @@ function newSlide(layout) {
 async function onLessonsClick(e) {
   if (e.target.closest('[data-a="panel"]')) return panelToggle();
   if (await docClick(e)) return;
+  if (await libraryClick(e)) return;
   const mt = e.target.closest('[data-ma]'); if (mt && await matClick(mt)) return;
   if (await bankClick(e)) return;
   if (await unitsClick(e)) return;
@@ -496,7 +500,7 @@ async function onLessonsClick(e) {
   }
 }
 function onLessonsInput(e) {
-  if (docInput(e)) return;
+  if (docInput(e) || libraryInput(e)) return;
   if (unitsInput(e) || activitiesInput(e)) return;
   const f = e.target.dataset.f; if (!f || !L.open) return;
   if (f === 'ltitle') { L.open.title = e.target.value; lessonChanged(false); }
@@ -521,6 +525,8 @@ function undoToast(msg, fn) {
 // Thumbnails drag to reorder.
 document.addEventListener('dragstart', e => { const th = e.target.closest && e.target.closest('#lsThumbs .ls-th'); if (!th) return; e.dataTransfer.setData('text/x-slide', th.dataset.go); e.dataTransfer.effectAllowed = 'move'; });
 async function onLessonDrop(e) {
+  const zf = [...(e.dataTransfer.files || [])].find(f => /\.zip$/i.test(f.name));
+  if (zf && !(e.target.closest && e.target.closest('[data-owner]'))) return packImport(zf);
   if (await matDrop(e)) return;
   const pf = [...(e.dataTransfer.files || [])].find(f => /\.json$/i.test(f.name));
   if (pf && !L.open) { try { const j = JSON.parse(await pf.text()); if (Array.isArray(j.classes)) return applySetup(j); } catch { } }
@@ -713,11 +719,11 @@ async function askClaude(l) {
 
 /* ---------- import ---------- */
 function importLesson() {
-  openDlg('<div class="bh"><h2>Import a lesson</h2></div><div class="bb"><p class="muted" style="margin-top:0">Choose a .lesson.json file (from Claude or another computer), or paste one below. A lesson with the same id replaces the one here.</p>' +
-    '<button class="btn" id="imF">Choose a file…</button><input type="file" id="imIn" accept=".json,application/json" hidden><textarea id="imT" rows="8" style="width:100%;margin-top:10px" placeholder="Or paste the lesson here"></textarea></div>' +
+  openDlg('<div class="bh"><h2>Import a lesson</h2></div><div class="bb"><p class="muted" style="margin-top:0">Choose a .lesson.json file (from Claude or another computer), or a lesson pack (.zip) of past lessons with their files. You can also paste a lesson below. A lesson with the same id replaces the one here; a pack leaves lessons you already have alone.</p>' +
+    '<button class="btn" id="imF">Choose a file…</button><input type="file" id="imIn" accept=".json,application/json,.zip,application/zip" hidden><textarea id="imT" rows="8" style="width:100%;margin-top:10px" placeholder="Or paste the lesson here"></textarea></div>' +
     '<div class="bf"><button class="btn" data-x>Cancel</button><button class="btn primary" data-ok>Import pasted text</button></div>', true);
   $('#imF').onclick = () => $('#imIn').click();
-  $('#imIn').onchange = async () => { const f = $('#imIn').files[0]; if (f) { closeDlg(); importLessonText(await f.text(), f.name); } };
+  $('#imIn').onchange = async () => { const f = $('#imIn').files[0]; if (!f) return; closeDlg(); if (/\.zip$/i.test(f.name)) return packImport(f); importLessonText(await f.text(), f.name); };
   $('#dlgBox').onclick = e => { if (e.target.closest('[data-x]')) return closeDlg(); if (e.target.closest('[data-ok]')) { const v = $('#imT').value; closeDlg(); importLessonText(v, ''); } };
 }
 async function importLessonText(text, name) {
@@ -752,7 +758,11 @@ async function applySetup(j) {
   folderWriteSchedule();
   // A profile can also bring units (only ones not here yet, so your edits stay) and a default look.
   let nu = 0;
-  for (const x of Array.isArray(j.units) ? j.units : []) { const u = normUnit(x); if (x.id && !L.units.some(v => v.id === u.id)) { await unitPut(u, true); nu++; } }
+  for (const x of Array.isArray(j.units) ? j.units : []) {
+    const u = normUnit(x), had = L.units.find(v => v.id === u.id);
+    if (x.id && !had) { await unitPut(u, true); nu++; }
+    else if (had && !had.atlas && u.atlas) { had.atlas = u.atlas; await unitPut(had, true); }   // fill in a missing Atlas link, nothing else
+  }
   if (LOOKS[j.look] && !L.defLook) { L.defLook = j.look; await kvSet('deflook', j.look); }
   toast((setup.profile ? setup.profile + ' loaded: ' : 'Timetable loaded: ') + setup.classes.length + ' classes' + (nu ? ', ' + nu + ' units' : '') + (setup.template ? ', your slide template' : ''), 5000);
   renderLessons();

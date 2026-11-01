@@ -584,3 +584,54 @@ test('right-click a slide or a lesson to comment for Claude; search finds slides
     assert.deepEqual(errors, []);
   } finally { await a.done(); }
 });
+
+test('past lessons: a lesson pack brings lessons with their files into the library and the unit, fills Atlas links, and loads twice safely', async () => {
+  const a = await open();
+  try {
+    const { page, errors } = a;
+    await page.evaluate(async s => {
+      const P = window.__planner; await P.applySetup(s);
+      await P.unitPut(P.normUnit({ id: 'u-arg', course: 'Course A', title: 'Unit 2: Argument', start: '2026-10-26', weeks: [{}, {}] }), true);
+      await P.unitPut(P.normUnit({ id: 'u-poe', course: 'Course B', title: 'Unit 1: Poetry', start: '2026-08-31', atlas: 'https://example.org/mine', weeks: [{}] }), true);
+    }, SETUP);
+    const pack = await page.evaluate(() => {
+      const enc = s => fflate.strToU8(s);
+      const p = { kind: 'grading-studio-lesson-pack', version: 1, name: 'Old decks', lessons: [
+        { id: 'past-1', title: 'Claims intro', library: 'Course A · Unit 2 (last year)', unit: 'u-arg', slides: [{ layout: 'title', title: 'Claims intro' }, { layout: 'content', title: 'What is a claim?', body: 'A sentence you can argue', notes: 'Ask for examples' }],
+          files: [{ name: 'Claims intro.pptx', path: 'files/1.pptx', type: 'application/vnd.openxmlformats-officedocument.presentationml.presentation' }, { name: 'Claims intro.pdf', path: 'files/1.pdf', type: 'application/pdf' }] },
+        { id: 'past-2', title: 'Counterclaims', library: 'Course A · Unit 2 (last year)', unit: 'u-arg', slots: [{ classId: 'A1', date: '2026-10-27' }], slides: [{ layout: 'content', title: 'Counterclaims', body: 'The other side' }], files: [] }],
+        units: [{ id: 'u-arg', atlas: 'https://example.org/atlas/arg', files: [{ name: 'Unit plan.pdf', path: 'files/plan.pdf', type: 'application/pdf' }] }, { id: 'u-poe', atlas: 'https://example.org/other' }, { id: 'nope', atlas: 'https://example.org/x' }] };
+      const z = fflate.zipSync({ 'pack.json': enc(JSON.stringify(p)), 'files/1.pptx': enc('PPTX'), 'files/1.pdf': enc('%PDF-1.4 fake'), 'files/plan.pdf': enc('%PDF plan') });
+      window.__pack = new File([z], 'Old decks.zip', { type: 'application/zip' });
+      window.__opened = []; window.open = u => { window.__opened.push(u); return null; };
+      return true;
+    });
+    assert.ok(pack);
+    await page.evaluate(() => window.__planner.packImport(window.__pack));
+    await page.waitForFunction(() => window.__planner.L.view === 'library' && document.querySelector('.pl-lib-card'));
+    assert.match(await page.$eval('.pl-lib', e => e.textContent), /Course A · Unit 2 \(last year\)2 lessons[\s\S]*Claims intro2 slides[\s\S]*Claims intro[\s\S]*Counterclaims1 slide · Course A-1 Tue 10\/27/);
+    // files open from the card: a PDF in a new tab
+    await page.click('[data-libf$="|' + await page.evaluate(() => window.__planner.L.lessons.find(l => l.id === 'past-1').files[1].id) + '"]');
+    await page.waitForFunction(() => window.__opened.length === 1);
+    // past lessons stay out of the week's loose list; the dated one shows on its day
+    const st = await page.evaluate(async () => {
+      const P = window.__planner, u = P.L.units.find(x => x.id === 'u-arg'), v = P.L.units.find(x => x.id === 'u-poe');
+      return { atlas: u.atlas, files: u.files.map(f => f.name), keep: v.atlas, lessons: P.L.lessons.length, files1: P.L.lessons.find(l => l.id === 'past-1').files.map(f => f.name + ' ' + f.size) };
+    });
+    assert.deepEqual(st, { atlas: 'https://example.org/atlas/arg', files: ['Unit plan.pdf'], keep: 'https://example.org/mine', lessons: 2, files1: ['Claims intro.pptx 4', 'Claims intro.pdf 13'] });
+    // the unit page lists its lessons
+    await page.evaluate(() => { const P = window.__planner; P.openUnit(P.L.units.find(u => u.id === 'u-arg')); });
+    await page.waitForFunction(() => /Lessons for this unit2Counterclaims[\s\S]*Claims intro/.test(document.querySelector('#lessons').textContent));
+    // the filter
+    await page.evaluate(() => { const P = window.__planner; P.L.view = 'library'; P.renderLessons(); });
+    await page.type('[data-libq]', 'counter');
+    await page.waitForFunction(() => document.querySelectorAll('.pl-lib-card').length === 1);
+    // loading the same pack again adds nothing
+    await page.evaluate(() => window.__planner.packImport(window.__pack));
+    assert.equal(await page.evaluate(() => window.__planner.L.lessons.length + ' ' + window.__planner.L.units.find(u => u.id === 'u-arg').files.length), '2 1');
+    // a profile fills a missing Atlas link on a unit already here, and leaves the rest alone
+    await page.evaluate(async s => { const P = window.__planner; P.L.units.find(u => u.id === 'u-arg').atlas = ''; await P.applySetup({ ...s, units: [{ id: 'u-arg', course: 'Course A', title: 'Renamed', start: '2026-10-26', atlas: 'https://example.org/atlas/new' }] }); }, SETUP);
+    assert.equal(await page.evaluate(() => { const u = window.__planner.L.units.find(u => u.id === 'u-arg'); return u.atlas + ' ' + u.title; }), 'https://example.org/atlas/new Unit 2: Argument');
+    assert.deepEqual(errors, []);
+  } finally { await a.done(); }
+});
