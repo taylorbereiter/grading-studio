@@ -262,8 +262,8 @@ function renderWeek() {
     '<button class="btn sm ghost" data-a="wk" data-n="7" aria-label="Next week">›</button><button class="btn sm ghost" data-a="today">This week</button>' +
     '<input type="date" class="btn sm" data-a="jump" value="' + L.weekOf + '" aria-label="Go to a date">');
   if (!L.setup) {
-    h += '<div class="ls-empty"><h2>Load your timetable</h2><p>Lessons line up with your classes once the app knows when they meet. Load the setup file (it has your timetable, days off and slide template), or type your classes in.</p>' +
-      '<div class="row"><button class="btn primary" data-a="loadsetup">Load setup file…</button><button class="btn" data-a="setup">Type in my classes</button><button class="btn" data-a="newfree">Make a lesson without a class</button></div></div>';
+    h += '<div class="ls-empty"><h2>Load your profile</h2><p>Lessons line up with your classes once the app knows when they meet. Load your profile file (your timetable, school calendar, units and slide template), drop it on this page, or type your classes in. You do this once on each computer.</p>' +
+      '<div class="row"><button class="btn primary" data-a="loadsetup">Load my profile…</button><button class="btn" data-a="setup">Type in my classes</button><button class="btn" data-a="newfree">Make a lesson without a class</button></div></div>';
   } else {
     h += weekUnitsBar(L.weekOf) + '<div class="ls-grid">';
     for (const d of days) {
@@ -509,6 +509,8 @@ function undoToast(msg, fn) {
 // Thumbnails drag to reorder.
 document.addEventListener('dragstart', e => { const th = e.target.closest && e.target.closest('#lsThumbs .ls-th'); if (!th) return; e.dataTransfer.setData('text/x-slide', th.dataset.go); e.dataTransfer.effectAllowed = 'move'; });
 async function onLessonDrop(e) {
+  const pf = [...(e.dataTransfer.files || [])].find(f => /\.json$/i.test(f.name));
+  if (pf && !L.open) { try { const j = JSON.parse(await pf.text()); if (Array.isArray(j.classes)) return applySetup(j); } catch { } }
   if (await bankDrop(e)) return;
   if (await unitsDrop(e)) return;
   const from = e.dataTransfer.getData('text/x-slide');
@@ -721,19 +723,23 @@ async function importLessonText(text, name) {
 /* ---------- timetable + setup file ---------- */
 function loadSetupFile() {
   const i = document.createElement('input'); i.type = 'file'; i.accept = '.json,application/json';
-  i.onchange = async () => { const f = i.files[0]; if (!f) return; try { applySetup(JSON.parse(await f.text())); } catch { toast('That isn’t a setup file'); } };
+  i.onchange = async () => { const f = i.files[0]; if (!f) return; try { applySetup(JSON.parse(await f.text())); } catch { toast('That isn’t a profile file'); } };
   i.click();
 }
 async function applySetup(j) {
-  if (!j || !Array.isArray(j.classes)) return toast('That isn’t a setup file');
+  if (!j || !Array.isArray(j.classes)) return toast('That isn’t a profile file');
   const setup = { classes: j.classes.map(c => ({ id: String(c.id), name: String(c.name || c.id), course: String(c.course || ''), color: /^#[0-9a-f]{6}$/i.test(c.color) ? c.color : '#1F6FB2', meets: (c.meets || []).map(m => ({ dow: +m.dow, start: String(m.start || ''), end: String(m.end || ''), label: String(m.label || '') })) })),
     daysOff: (j.daysOff || []).map(d => ({ date: String(d.date), label: String(d.label || 'No school') })), events: (j.events || []).map(e => ({ date: String(e.date), to: e.to ? String(e.to) : '', label: String(e.label || '') })),
     template: typeof j.template === 'string' ? j.template : (L.setup && L.setup.template) || '',
     semStart: /^\d{4}-\d\d-\d\d$/.test(j.semStart) ? ymd(mondayOf(parseYmd(j.semStart))) : '', semEnd: /^\d{4}-\d\d-\d\d$/.test(j.semEnd) ? ymd(mondayOf(parseYmd(j.semEnd))) : '',
-    claudeUrl: /^https:\/\/claude\.ai\//.test(j.claudeUrl) ? String(j.claudeUrl) : '' };
+    claudeUrl: /^https:\/\/claude\.ai\//.test(j.claudeUrl) ? String(j.claudeUrl) : '', profile: String(j.profile || '').slice(0, 80) };
   L.setup = setup; await kvSet('setup', setup); await tplPreview();
   folderWriteSchedule();
-  toast('Timetable loaded: ' + setup.classes.length + ' classes' + (setup.template ? ', with your slide template' : ''));
+  // A profile can also bring units (only ones not here yet, so your edits stay) and a default look.
+  let nu = 0;
+  for (const x of Array.isArray(j.units) ? j.units : []) { const u = normUnit(x); if (x.id && !L.units.some(v => v.id === u.id)) { await unitPut(u, true); nu++; } }
+  if (LOOKS[j.look] && !L.defLook) { L.defLook = j.look; await kvSet('deflook', j.look); }
+  toast((setup.profile ? setup.profile + ' loaded: ' : 'Timetable loaded: ') + setup.classes.length + ' classes' + (nu ? ', ' + nu + ' units' : '') + (setup.template ? ', your slide template' : ''), 5000);
   renderLessons();
 }
 function openTimetable() {
@@ -747,7 +753,7 @@ function openTimetable() {
       '<h3 style="margin:18px 0 6px;font-size:15px">Days off</h3><textarea id="ttOff" rows="4" style="width:100%" placeholder="One per line: 2026-12-25 Christmas">' + esc(draft.daysOff.map(d => d.date + ' ' + d.label).join('\n')) + '</textarea>' +
       '<h3 style="margin:14px 0 6px;font-size:15px">Dates to show (not days off)</h3><textarea id="ttEv" rows="4" style="width:100%" placeholder="One per line: 2026-11-09 to 2026-11-13 Midterms">' + esc(draft.events.map(e => e.date + (e.to ? ' to ' + e.to : '') + ' ' + e.label).join('\n')) + '</textarea>' ;
   };
-  openDlg('<div class="bh"><h2>Timetable</h2><button class="btn sm" data-load>Load setup file…</button></div><div class="bb" id="ttBody"></div><div class="bf"><button class="btn" data-x>Cancel</button><button class="btn primary" data-ok>Save</button></div>');
+  openDlg('<div class="bh"><h2>Timetable</h2><button class="btn sm" data-load>Load my profile…</button></div><div class="bb" id="ttBody"></div><div class="bf"><button class="btn" data-x>Cancel</button><button class="btn primary" data-ok>Save</button></div>');
   draw();
   const box = $('#dlgBox');
   box.oninput = e => { const t = e.target, ci = +t.dataset.ci; if (t.dataset.c) draft.classes[ci][t.dataset.c] = t.value; if (t.dataset.m) draft.classes[ci].meets[+t.dataset.mi][t.dataset.m] = t.dataset.m === 'dow' ? +t.value : t.value; };
@@ -905,6 +911,7 @@ this folder: lessons, units, the timetable, files the teacher added to a unit, a
 never are, and nothing here should point to a student.
 
 ## Files
+- \`profile.json\` (if there): the teacher's profile; the app loads it when it changes. Don't edit it.
 - \`timetable.json\`: classes (id, name, course, meets: dow 1=Mon..5=Fri, start, end, label), days off,
   dates to show, and the semester's first and last Monday. Read it; the teacher changes it in the app.
 - \`*.lesson.json\`: one lesson each. Edit in place and keep the "id". To add a lesson, write a new file
@@ -1023,6 +1030,13 @@ async function folderWriteAll() {
   await actFolderWrite();
   await bankWriteAll();
 }
+// A profile.json in the Planner folder loads by itself when it's new or changed, so each computer picks it up.
+async function profileFolderRead() {
+  let f; try { f = await (await L.dir.getFileHandle('profile.json')).getFile(); } catch { return; }
+  const seen = await kvGet('profMod'); if (seen === f.lastModified) return;
+  const j = JSON.parse(await f.text()); if (!Array.isArray(j.classes)) return;
+  await kvSet('profMod', f.lastModified); await applySetup(j);
+}
 // Picks up lessons Claude added or changed in the folder. A file changed since the app last wrote it wins.
 async function folderRead(say) {
   if (!L.dir || !L.dirOk) return;
@@ -1053,6 +1067,7 @@ async function folderRead(say) {
   } catch (e) { console.warn(e); if (say) toast('Couldn’t read the Planner folder'); return; }
   try { const u = await unitsFolderRead(); added += u.added; changed += u.changed; } catch (e) { console.warn(e); }
   try { changed += await actFolderRead(); } catch (e) { console.warn(e); }
+  try { await profileFolderRead(); } catch (e) { console.warn(e); }
   try { const r = await bankFolderRead(); added += r.added; changed += r.changed; } catch (e) { console.warn(e); }
   if (added || changed) { toast((added ? added + ' new' : '') + (added && changed ? ', ' : '') + (changed ? changed + ' updated' : '') + ' from the Planner folder'); renderLessons(); }
   else if (say) toast('No changes in the Planner folder');

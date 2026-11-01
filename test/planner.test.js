@@ -387,3 +387,24 @@ test('the layout picker shows pictures, changes a slide and keeps its text; less
     assert.deepEqual(errors, []);
   } finally { await a.done(); }
 });
+
+test('a profile brings the timetable, units and a default look, and never replaces units already here', async () => {
+  const a = await open();
+  try {
+    const { page, errors } = a;
+    const prof = { ...SETUP, profile: 'Test profile', look: 'sage', units: [
+      { id: 'p-a-u1', course: 'Course A', title: 'Unit 1: Stories', start: '2026-08-31', weeks: [{ focus: 'Openings' }, { focus: 'Endings' }] },
+      { id: 'p-b-u1', course: 'Course B', title: 'Unit 1: Poems', start: '2026-09-07', weeks: [{ focus: 'Sound' }] }] };
+    assert.match(await page.$eval('#lessons', d => d.textContent), /Load your profile/);
+    // dropped on the page
+    await page.evaluate(p => { const dt = new DataTransfer(); dt.items.add(new File([JSON.stringify(p)], 'My profile.json', { type: 'application/json' })); document.querySelector('#lessons').dispatchEvent(new DragEvent('drop', { dataTransfer: dt, bubbles: true, cancelable: true })); }, prof);
+    await page.waitForFunction(() => window.__planner.L.setup && window.__planner.L.units.length === 2);
+    assert.match(await page.$eval('.toast', t => t.textContent), /Test profile loaded: 3 classes, 2 units/);
+    assert.equal(await page.evaluate(() => window.__planner.L.defLook), 'sage');
+    // loading it again keeps a unit she changed
+    await page.evaluate(async p => { const P = window.__planner; P.L.units[0].weeks[0].notes = 'mine'; await P.applySetup(p); }, prof);
+    assert.equal(await page.evaluate(() => window.__planner.L.units.length), 2);
+    assert.equal(await page.evaluate(() => window.__planner.L.units[0].weeks[0].notes), 'mine');
+    assert.deepEqual(errors, []);
+  } finally { await a.done(); }
+});

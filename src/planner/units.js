@@ -118,8 +118,8 @@ function renderSemester() {
   const cur = document.querySelector('.pl-row.now'); if (cur) cur.scrollIntoView({ block: 'center' });
 }
 function setupNeeded() {
-  return '<div class="ls-empty"><h2>Load your timetable</h2><p>The Planner lines lessons and units up with your classes once it knows when they meet. Load a setup file (timetable, days off, semester dates and slide template), or type your classes in.</p>' +
-    '<div class="row"><button class="btn primary" data-a="loadsetup">Load setup file…</button><button class="btn" data-a="setup">Type in my classes</button></div></div>';
+  return '<div class="ls-empty"><h2>Load your profile</h2><p>The Planner lines lessons and units up with your classes once it knows when they meet. Load your profile file (timetable, school calendar, semester dates, units and slide template), drop it on this page, or type your classes in. You do this once on each computer.</p>' +
+    '<div class="row"><button class="btn primary" data-a="loadsetup">Load my profile…</button><button class="btn" data-a="setup">Type in my classes</button></div></div>';
 }
 
 /* ---------- the unit strip above the week view ---------- */
