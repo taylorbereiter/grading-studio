@@ -87,6 +87,7 @@ test('when nothing at all could be made: it says so, and there’s no empty ZIP'
   await scribble(page, 0); await settle(page);
   await breakFile(page, 0);
   await runExport(page);
+  await page.click('#xOpts summary');
   await page.click('#xSheet');
   await page.evaluate(() => { window.__blobs = 0; const u = URL.createObjectURL; URL.createObjectURL = b => { window.__blobs++; return u.call(URL, b); }; });
   await page.click('#dlgBox [data-go="zip"]');

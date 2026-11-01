@@ -598,6 +598,7 @@ test('a comment typed with the Text tool since the last read is in the check bef
   await page.click('#exportBtn');
   await page.waitForSelector('#xCheck', { timeout: 60000 });
   assert.match(await page.$eval('#xCheck', e => e.textContent), /Grades to confirm \(1\).*Is “10\/15” the grade\?/s);
+  await page.click('#xCheck summary');
   await page.click('#xCheck [data-chksheet]');
   await page.waitForSelector('.rd-ask', { timeout: 60000 });
   noErrors(page); await close();
@@ -734,8 +735,9 @@ test('the pre-export check names unfinished scores, no paper, disagreements, unm
   assert.ok(!c.unmarked.some(o => o.name === 'Cleo Fixture'), 'a grade on the paper counts as marked');
   assert.deepEqual(c.doubts.map(o => o.name), ['Bram Sample']);
   const html = await page.$eval('#xCheck', e => e.textContent);
-  for (const t of ['Before you export', 'Scores not finished (4)', 'No paper (1)', 'Scores that disagree with the paper (1)', 'Grades to confirm (1)', 'Your score is 9, the paper says 9.5']) assert.ok(html.includes(t), t);
+  for (const t of ['to look at before you export', 'Scores not finished (4)', 'No paper (1)', 'Scores that disagree with the paper (1)', 'Grades to confirm (1)', 'Your score is 9, the paper says 9.5']) assert.ok(html.includes(t), t);
   // a name goes to that student, and the dialog gets out of the way
+  await page.click('#xCheck summary');
   await page.click('#xCheck [data-chk="2"]');
   await page.waitForFunction(() => window.__gs.state().cur === 2 && document.querySelector('#dlg').hidden);
   noErrors(page); await close();

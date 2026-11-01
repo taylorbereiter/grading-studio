@@ -322,7 +322,7 @@ test('Export says how many files, without two counts that disagree', async () =>
   await page.click('#exportBtn');
   await page.waitForSelector('#dlgBox [data-go="zip"]', { timeout: 60000 });
   const t = await page.$eval('#dlgBox', e => e.textContent);
-  assert.match(t, /\d files? from \d students?/);
+  assert.match(t, /\d files? ready\s*From \d students?/);
   assert.doesNotMatch(t, /no marks, or you left it out/);
   assert.doesNotMatch(t, /\d marked files?\b/);
   assert.deepEqual(page.errors, []);
