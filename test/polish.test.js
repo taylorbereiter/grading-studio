@@ -279,15 +279,14 @@ test('dark mode: the progress bar isn’t full at 0, and the rubric buttons can 
   await close();
 });
 
-test('papers and slides keep their own light colors in dark mode', async () => {
+test('papers keep their own light colors in dark mode (slides: planner.test.js)', async () => {
   const { page, close } = await openApp(browser);
   await setTheme(page, 'dark');
-  const slide = await page.evaluate(() => {
-    const s = document.createElement('div'); s.className = 'ls-slide'; document.body.appendChild(s);
+  const paper = await page.evaluate(() => {
     const d = document.createElement('div'); d.className = 'dpage'; document.body.appendChild(d);
-    const out = [getComputedStyle(s).backgroundColor, getComputedStyle(d).backgroundColor, getComputedStyle(d).color]; s.remove(); d.remove(); return out;
+    const out = [getComputedStyle(d).backgroundColor, getComputedStyle(d).color]; d.remove(); return out;
   });
-  assert.deepEqual(slide, ['rgb(223, 219, 213)', 'rgb(255, 255, 255)', 'rgb(21, 25, 34)']);
+  assert.deepEqual(paper, ['rgb(255, 255, 255)', 'rgb(21, 25, 34)']);
   await close();
 });
 
@@ -330,14 +329,14 @@ for (const [platform, wanted, unwanted] of [['mac', '⌘', /Ctrl/], ['win', 'Ctr
 });
 
 test('the source has no bare ⌘ in a label outside keyLabel', () => {
-  const src = ['app', 'marking', 'grades', 'saving', 'carryover', 'exportreport', 'lessons'].flatMap(f => fs.readFileSync(path.join(ROOT, 'src', f + '.js'), 'utf8').split('\n'));
+  const src = ['app', 'marking', 'grades', 'saving', 'carryover', 'exportreport', 'planner/lessons'].flatMap(f => fs.readFileSync(path.join(ROOT, 'src', f + '.js'), 'utf8').split('\n'));
   const bare = src.filter(l => /⌘/.test(l) && !/^\s*\/\//.test(l) && !/keyLabel\(|row\('/.test(l) && !/\/\/.*⌘/.test(l));
   assert.deepEqual(bare, []);
 });
 
 /* ---------------- the app's own pop-ups ---------------- */
 test('nothing in the app uses a browser pop-up any more', async () => {
-  for (const f of ['app.js', 'marking.js', 'grades.js', 'saving.js', 'carryover.js', 'exportreport.js', 'lessons.js', 'polish.js']) {
+  for (const f of ['app.js', 'marking.js', 'grades.js', 'saving.js', 'carryover.js', 'exportreport.js', 'planner/lessons.js', 'planner/units.js', 'planner/base.js', 'polish.js']) {
     const s = fs.readFileSync(path.join(ROOT, 'src', f), 'utf8');
     assert.doesNotMatch(s, /(^|[^.\w])(window\.)?(confirm|prompt|alert)\(/m, f);
   }
@@ -491,7 +490,7 @@ test('Inter is built in, and opening the app contacts nobody', async () => {
 
 test('the built file stays a sensible size with the font in it', () => {
   const size = fs.statSync(path.join(ROOT, 'Grading Studio.html')).size;
-  assert.ok(size < 4.85e6, 'it’s ' + (size / 1e6).toFixed(2) + ' MB');   // about 4.78 MB: the iPhone photo decoder (about 0.7 MB), the Inter font (about 0.2 MB) and the stickers (about 0.15 MB) are bundled so the one file works offline
+  assert.ok(size < 4.8e6, 'it’s ' + (size / 1e6).toFixed(2) + ' MB');   // about 4.73 MB: the iPhone photo decoder (about 0.7 MB), the Inter font (about 0.2 MB) and the stickers (about 0.15 MB) are bundled so the one file works offline
 });
 
 test('the build only leaves out lines that really are comments', () => {   // a // line inside a multi-line string would be lost from the app

@@ -14,7 +14,7 @@ after(async () => { await browser.close(); });
 
 test('the version number shows, and is set in one place', async () => {
   assert.match(VERSION, /^\d+\.\d+\.\d+$/);
-  for (const f of ['app.js', 'app.html', 'migrate.js', 'lessons.js']) assert.ok(!fs.readFileSync(path.join(ROOT, 'src', f), 'utf8').includes(VERSION), f + ' shouldn’t have the number written in it');
+  for (const f of ['app.js', 'app.html', 'migrate.js', 'planner/lessons.js', 'planner/units.js', 'planner/planner.html']) assert.ok(!fs.readFileSync(path.join(ROOT, 'src', f), 'utf8').includes(VERSION), f + ' shouldn’t have the number written in it');
   const { page, close } = await openApp(browser);
   assert.equal(await page.evaluate(() => window.__gs.gsData.APP_VERSION), VERSION);
   assert.ok((await page.$eval('#start .gsVer', e => e.textContent)).includes('version ' + VERSION), 'on the start screen');
@@ -27,15 +27,16 @@ test('the version number shows, and is set in one place', async () => {
   await close();
 });
 
-test('the app starts cleanly, and Lessons, Dark mode and the sample papers still work', async () => {
+test('the app starts cleanly, and the Planner button, Dark mode and the sample papers still work', async () => {
   const { page, close } = await openApp(browser);
   await page.click('#start .themeBtn');
   assert.equal(await page.evaluate(() => document.documentElement.dataset.theme), 'dark');
   await page.click('#start .themeBtn');
-  await page.click('#lessonsBtn');
-  await page.waitForFunction(() => { const l = document.querySelector('#lessons'); return l && !l.hidden; });
-  assert.ok(await page.evaluate(() => !!window.__lessons && !!window.__lessons.L));
-  await page.reload(); await appReady(page);
+  // The Planner is its own page next to this one (planner.test.js tries it); grading only links to it.
+  await Promise.all([page.waitForNavigation(), page.click('#lessonsBtn')]);
+  assert.match(page.url(), /\/planner\.html$/);
+  await page.goBack(); await appReady(page);
+  assert.ok(await page.evaluate(() => !window.__lessons && !document.querySelector('#lessons')), 'no Planner code in the grading page');
   await page.click('#sample');
   await waitPaper(page);
   assert.ok(await page.evaluate(() => window.__gs.state().batch.students.length > 0));
