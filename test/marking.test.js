@@ -253,6 +253,7 @@ test('highlighting over a highlight: the same color stays the same, a new color 
       overYellow: at([{ t: 'hl', color: Y, x: 10, y: 10, w: 80, h: 20 }, { t: 'hl', color: P, x: 40, y: 10, w: 60, h: 20 }], [20, 20], [50, 20], [95, 20]),
       freeOverRect: at([{ t: 'hl', color: Y, x: 10, y: 10, w: 80, h: 20 }, { t: 'hl', color: B, sw: 14, pts: [[30, 20], [70, 20]], x: 23, y: 13, w: 54, h: 14 }], [50, 20]),
       noteOverHl: at([{ t: 'hl', color: Y, x: 10, y: 10, w: 80, h: 20 }, { t: 'note', color: '#D92D20', ax: 90, ay: 20, hl: { x: 10, y: 10, w: 80, h: 20 }, hc: P, text: 'x' }], [50, 20]),
+      noteAlone: at([{ t: 'note', color: '#D92D20', ax: 90, ay: 20, hl: { x: 10, y: 10, w: 80, h: 20 }, hc: P, text: 'x' }], [50, 20]),
     };
   });
   assert.deepEqual(px.thrice, px.once, 'the same color three times looks like once');
@@ -260,7 +261,7 @@ test('highlighting over a highlight: the same color stays the same, a new color 
   assert.deepEqual(px.overYellow[0], px.once, 'the yellow it does not cover stays yellow');
   assert.deepEqual(px.overYellow[2], px.pinkAlone, 'and past the yellow it is the same pink');
   assert.notDeepEqual(px.freeOverRect[0], px.once, 'a freehand highlight over a typed-line one shows its own color');
-  assert.deepEqual(px.noteOverHl[0], px.pinkAlone, "a comment's highlight replaces the color under it too");
+  assert.deepEqual(px.noteOverHl[0], px.noteAlone[0], "a comment's highlight replaces the color under it too");
   // Through her own mouse moves: the same words three times in yellow, then again in pink.
   await setTool(page, 'hl');
   const spot = [wx(0, 2) + 4, lineY(0) - 6, 10, 4];

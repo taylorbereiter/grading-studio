@@ -322,7 +322,7 @@ async function makeFile(path, data) {
 const GS_TAIL = '%GradingStudio-editable';
 const hasGsTail = d => !!d && d.length > 64 && new TextDecoder().decode(d.subarray(d.length - 64)).includes(GS_TAIL);
 // Marks read from a file could say anything, so only ones that can be drawn come in. One bad mark would stop that student's page drawing.
-const markFits = m => !!m && typeof m === 'object' && ['pen', 'hl', 'text', 'check', 'oval', 'note'].includes(m.t) && (m.t !== 'pen' || Array.isArray(m.pts)) && (m.t !== 'text' || typeof m.text === 'string') && (m.t !== 'note' || (typeof m.text === 'string' && /^#[0-9a-f]{6}$/i.test(m.color))) && (m.t !== 'hl' || Array.isArray(m.pts) || Array.isArray(m.rects) || m.x != null);
+const markFits = m => !!m && typeof m === 'object' && ['pen', 'hl', 'text', 'check', 'oval', 'note', 'stamp'].includes(m.t) && (m.t !== 'stamp' || (typeof m.k === 'string' && isFinite(m.x) && isFinite(m.y))) && (m.t !== 'pen' || Array.isArray(m.pts)) && (m.t !== 'text' || typeof m.text === 'string') && (m.t !== 'note' || (typeof m.text === 'string' && /^#[0-9a-f]{6}$/i.test(m.color))) && (m.t !== 'hl' || Array.isArray(m.pts) || Array.isArray(m.rects) || m.x != null);
 async function unpackExport(data) {
   try {
     await workerReady;
@@ -506,6 +506,24 @@ function drawCheck(ctx, m) {
   ctx.beginPath(); ctx.moveTo(m.x - s * 0.4, m.y); ctx.lineTo(m.x - s * 0.1, m.y + s * 0.3); ctx.lineTo(m.x + s * 0.45, m.y - s * 0.35); ctx.stroke();
   ctx.restore();
 }
+const noteInk = n => { const [r, g, b] = rgb(n.color), dk = v => Math.round(v * 0.72); return 'rgb(' + dk(r) + ',' + dk(g) + ',' + dk(b) + ')'; };
+// A comment's highlight is a lighter tint of the highlight color, so it reads as different from a plain highlight.
+const noteTint = hex => { const c = rgb(hex).map(v => Math.round(v + (255 - v) * 0.45)); return '#' + c.map(v => v.toString(16).padStart(2, '0')).join(''); };
+function numberBadge(ctx, cx, cy, n, col) {
+  if (!n) return;
+  const t = String(n), r = t.length > 1 ? 6 : 5.2;
+  ctx.save(); ctx.fillStyle = col; ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#fff'; ctx.font = '700 ' + (t.length > 1 ? 6.5 : 7.5) + 'px ' + FONT; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(t, cx, cy + 0.3); ctx.restore();
+}
+function noteMarkings(ctx, n, num) {
+  const rects = n.rects || [n.hl], col = noteInk(n);
+  ctx.save(); ctx.strokeStyle = col; ctx.lineWidth = 1.3; ctx.lineCap = 'butt';
+  for (const r of rects) { ctx.beginPath(); ctx.moveTo(r.x, r.y + r.h + 0.4); ctx.lineTo(r.x + r.w, r.y + r.h + 0.4); ctx.stroke(); }
+  ctx.restore();
+  const last = rects[rects.length - 1];
+  numberBadge(ctx, last.x + last.w + 1, last.y - 1, num, col);
+}
 // ctx is in PDF points (page at 0,0, margin to the right of W). Returns the comment boxes for hit testing.
 function drawMarks(ctx, marks, W, H, side, screen) {
   const notes = marks.filter(m => m.t === 'note');
@@ -518,7 +536,7 @@ function drawMarks(ctx, marks, W, H, side, screen) {
     }
   }
   // highlights under everything, multiplied so the writing stays dark. Where they overlap, the newest one wins (hlLayer).
-  drawHls(ctx, marks.filter(m => m.t === 'hl' || (m.t === 'note' && m.hl)).map(m => m.t === 'hl' ? m : { color: m.hc || HL.yellow, ...m.hl, rects: m.rects }));
+  drawHls(ctx, marks.filter(m => m.t === 'hl' || (m.t === 'note' && m.hl)).map(m => m.t === 'hl' ? m : { color: noteTint(m.hc || HL.yellow), ...m.hl, rects: m.rects }));
   for (const m of marks) {
     if (m.t === 'pen') {
       ctx.save(); ctx.strokeStyle = m.color; ctx.lineWidth = m.w; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
@@ -530,11 +548,15 @@ function drawMarks(ctx, marks, W, H, side, screen) {
       L.lines.forEach((ln, i) => ctx.fillText(ln, m.x, m.y + i * m.size * 1.25 + m.size * 0.1));
       ctx.textBaseline = 'alphabetic';
     } else if (m.t === 'check') drawCheck(ctx, m);
+    else if (m.t === 'stamp') drawStamp(ctx, m);
     else if (m.t === 'oval') {
       ctx.save(); ctx.strokeStyle = m.color; ctx.lineWidth = m.sw || 1.6;
       ctx.beginPath(); ctx.ellipse(m.x + m.w / 2, m.y + m.h / 2, Math.max(1, m.w / 2), Math.max(1, m.h / 2), 0, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
     }
   }
+  // A comment's words: a lighter tint, a line under them in the comment's color, and its number, the same as on its card.
+  const order = side ? notes.filter(n => n.hl).sort((p, q) => p.ay - q.ay || p.ax - q.ax) : [];
+  for (const n of notes) if (n.hl) noteMarkings(ctx, n, side ? order.indexOf(n) + 1 : 0);
   let boxes = [];
   if (side && notes.length) {
     boxes = layoutNotes(notes, W, H, side);
@@ -550,6 +572,7 @@ function drawMarks(ctx, marks, W, H, side, screen) {
       ctx.fillStyle = col; ctx.fillRect(b.x, b.y, 2.5, b.h);
       ctx.fillStyle = '#1B1F27'; ctx.font = b.fs + 'px ' + FONT;
       b.lines.forEach((ln, i) => ctx.fillText(ln, b.x + b.pad, b.y + b.pad + b.fs * 0.95 + i * b.lh));
+      if (b.n.hl) numberBadge(ctx, b.x + 1.25, b.y, order.indexOf(b.n) + 1, col);
     }
   }
   if (screen && screen.sel) {
@@ -571,6 +594,7 @@ function bboxOf(m, W) {
   if (m.t === 'hl' || m.t === 'oval') return { x: m.x, y: m.y, w: m.w, h: m.h };
   if (m.t === 'text') { const L = textLayout(m, W); return { x: m.x, y: m.y, w: L.w, h: L.h }; }
   if (m.t === 'check') { const s = m.size || 22; return { x: m.x - s * 0.45, y: m.y - s * 0.4, w: s * 0.95, h: s * 0.75 }; }
+  if (m.t === 'stamp') return stampBox(m);
   if (m.t === 'note') return m.hl ? { ...m.hl } : { x: m.ax - 5, y: m.ay - 5, w: 10, h: 10 };
   return null;
 }
@@ -1167,7 +1191,7 @@ function turnMarks(marks, W, H, dir) {
   for (const m of marks) {
     if (m.t === 'pen') m.pts = m.pts.map(pt);
     else if (m.t === 'hl' || m.t === 'oval') { Object.assign(m, box(m)); if (m.rects) m.rects = m.rects.map(box); if (m.pts) m.pts = m.pts.map(pt); }
-    else if (m.t === 'check') [m.x, m.y] = pt([m.x, m.y]);
+    else if (m.t === 'check' || m.t === 'stamp') [m.x, m.y] = pt([m.x, m.y]);
     else if (m.t === 'note') { [m.ax, m.ay] = pt([m.ax, m.ay]); if (m.hl) m.hl = box(m.hl); if (m.rects) m.rects = m.rects.map(box); }
     else if (m.t === 'text') {
       const L = textLayout(m, W), [cx, cy] = pt([m.x + L.ink / 2, m.y + L.h / 2]);   // turns about the words, not the empty part of a wide box
@@ -1359,6 +1383,13 @@ function bindPage(pg) {
   };
   c.addEventListener('pointerup', end);
   c.addEventListener('pointercancel', end);
+  // A right-click on the page: proofreading marks, stickers, or a comment right there.
+  c.addEventListener('contextmenu', e => {
+    const [x, y] = pt(e);
+    if (!onPage(x, y) || pg.editing || activeEditor) return;
+    e.preventDefault(); commitEditors();
+    openStampMenu(pg, x, y, e.clientX, e.clientY);
+  });
   c.addEventListener('dblclick', e => {
     if (tool !== 'select' || pg.editing || activeEditor) return;
     const [x, y] = pt(e);

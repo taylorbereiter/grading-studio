@@ -308,7 +308,7 @@ function skewMarks(marks, W, H, by) {
   for (const m of marks) {
     if (m.t === 'pen') m.pts = m.pts.map(pt);
     else if (m.t === 'hl' || m.t === 'oval') { Object.assign(m, box(m)); if (m.rects) m.rects = m.rects.map(box); if (m.pts) m.pts = m.pts.map(pt); }
-    else if (m.t === 'check') [m.x, m.y] = pt([m.x, m.y]);
+    else if (m.t === 'check' || m.t === 'stamp') [m.x, m.y] = pt([m.x, m.y]);
     else if (m.t === 'note') { [m.ax, m.ay] = pt([m.ax, m.ay]); if (m.hl) m.hl = box(m.hl); if (m.rects) m.rects = m.rects.map(box); }
     else if (m.t === 'text') { const L = textLayout(m, W), [x, y] = pt([m.x + L.ink / 2, m.y + L.h / 2]); m.x = r1(x - L.ink / 2); m.y = r1(y - L.h / 2); keepOnPage(m, W, H); }
   }
