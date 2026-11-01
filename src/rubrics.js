@@ -45,7 +45,7 @@ const setupSnap = d => JSON.stringify({ ...d, levels: tidyLevels(d), rubricName:
 // from: where each row in the draft came from, by its place when the dialog opened (null for a new row). told: the scoring mode she's already been asked about.
 function rubricsSetup(draft, re, pageNew) {
   rubDlg = { draft, re, was: setupSnap(draft), pageNew, from: draft.criteria.map((_, i) => i), n0: draft.criteria.length, told: null, bankKey: null };
-  const me = rubDlg; bankRead(true).catch(() => { gBank = { rubrics: savedRubrics(), scales: [], gone: {}, units: [] }; }).then(() => { if (rubDlg === me) bankRedraw(); });
+  const me = rubDlg; bankJob(() => bankRead(true).catch(() => { gBank = { rubrics: savedRubrics(), scales: [], gone: {}, units: [] }; }).then(() => { if (rubDlg === me) bankRedraw(); }));
 }
 // Esc or a click outside. All that writing only lives in the dialog until Save, so Rubric setup asks first. Its Cancel button is already a clear choice.
 async function leaveDlg() {
@@ -71,6 +71,9 @@ const savedRubrics = () => { const a = store.get('gs.rubrics', []); return Array
    rubric's wording and a scale's percents: never a score, a name or anything about a student. Grading opens that one
    record and the Planner's unit list, and nothing of grading's ever goes the other way. gs.rubrics stays as it was,
    so older copies and the take-home file still carry saved rubrics; any it has that the bank doesn't come in. */
+// How many bank reads and saves are still going, with their redraws. Tests wait for 0 before clicking in the bank.
+let bankBusyN = 0;
+const bankJob = async f => { bankBusyN++; try { return await f(); } finally { bankBusyN--; } };
 let gBank = null;   // { rubrics, scales, gone, units } while Rubric setup is open
 let bankChan = null; try { bankChan = new BroadcastChannel('gs-bank'); } catch {}
 const tidyBank = b => ({ rubrics: Array.isArray(b && b.rubrics) ? b.rubrics : [], scales: Array.isArray(b && b.scales) ? b.scales : [], gone: (b && b.gone && typeof b.gone === 'object') ? b.gone : {} });
@@ -295,7 +298,8 @@ async function rubricUse(r) {
   levelEditOpen.clear(); re();
   toast('“' + r.name + '” is filled in. Press Save to keep it.');
 }
-async function rubricSave() {
+function rubricSave() { return bankJob(() => rubricSaveNow()); }
+async function rubricSaveNow() {
   const { draft: d, re } = rubDlg;
   const got = await askSaveDlg('Save this rubric to the bank', d.rubricName || (batch && batch.assignment && batch.assignment.name) || '', rubDlg.bankKey && rubDlg.bankKey !== '*' ? rubDlg.bankKey : defaultUnitKey());
   if (!got || !got.name) return;
@@ -312,14 +316,16 @@ async function rubricSave() {
   bankRedraw();
   toast('Saved “' + name + '” to ' + unitKeyLabel(got.key));
 }
-async function rubricDelete(r) {
+function rubricDelete(r) { return bankJob(() => rubricDeleteNow(r)); }
+async function rubricDeleteNow(r) {
   if (!await askDlg('Delete “' + r.name + '” from your bank?\n\nAssignments already using it keep their rows and what each score means.', { ok: 'Delete', cancel: 'Keep it', danger: true })) return;
   try { await bankWrite(b => { b.rubrics = b.rubrics.filter(x => x.id !== r.id); b.gone[r.id] = Date.now(); }); } catch {}
   store.set('gs.rubricsGone', { ...store.get('gs.rubricsGone', {}), [r.id]: Date.now() });   // so an older copy of her work doesn't bring it back
   store.set('gs.rubrics', savedRubrics().filter(x => x.id !== r.id));
   rubDlg.re();
 }
-async function scaleSave() {
+function scaleSave() { return bankJob(() => scaleSaveNow()); }
+async function scaleSaveNow() {
   const { draft: d, re } = rubDlg, max = d.mode === 'rubric' ? d.criteria.length * 4 : Math.round(+d.outOf || 0);
   const got = await askSaveDlg('Save this grading scale to the bank (top score ' + max + ')', 'Out of ' + max, rubDlg.bankKey && rubDlg.bankKey !== '*' ? rubDlg.bankKey : defaultUnitKey());
   if (!got || !got.name) return;
@@ -499,4 +505,4 @@ $('#dlgBox').addEventListener('focusout', e => { if (ovMark(e)) ovTipHide(); });
 $('#dlgBox').addEventListener('scroll', ovTipHide, true);
 $('#overviewBtn').onclick = openOverview;
 
-Object.assign(window.__gs, { classStats, openOverview, openSetup, savedRubrics, levelOf, tidyLevels, spreadBins });
+Object.assign(window.__gs, { bankBusy: () => bankBusyN, classStats, openOverview, openSetup, savedRubrics, levelOf, tidyLevels, spreadBins });
