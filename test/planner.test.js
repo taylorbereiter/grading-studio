@@ -29,7 +29,7 @@ async function open() {
 
 test('the Planner page carries none of the grading code', () => {
   const html = PAGE();
-  for (const s of ['gs-folder.json', 'PDFLib', 'mammoth', 'gsData', 'indexedDB.open(\'gs\'']) {
+  for (const s of ['gs-folder.json', 'PDFLib', 'gsData', 'indexedDB.open(\'gs\'']) {
     if (s === 'gs-folder.json') continue;   // named once, only to refuse the grading folder
     assert.ok(!html.includes(s), 'planner.html should not contain ' + s);
   }
@@ -448,6 +448,67 @@ test('the side panel: a book with its chapters and search, pages and slides into
     assert.match(await page.$eval('#spBody', b => b.textContent), /YouTube doesn’t allow its search inside other sites/);
     await page.type('[data-sf="vid"]', 'https://youtu.be/dQw4w9WgXcQ?t=30'); await page.keyboard.press('Enter');
     await page.waitForSelector('.sp-vid iframe[src="https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ?start=30"]');
+    assert.deepEqual(errors, []);
+  } finally { await a.done(); }
+});
+
+test('materials: a new document typed on a page, downloaded as Word, read back in, and put in the Claude box; units get documents too', async () => {
+  const a = await open();
+  try {
+    const { page, errors } = a;
+    await page.evaluate(async s => { await window.__planner.applySetup(s); }, SETUP);
+    await page.evaluate(() => {
+      window.__dl = [];
+      HTMLAnchorElement.prototype.click = function () { if (this.download) window.__dl.push({ name: this.download, href: this.href }); };
+      navigator.clipboard.writeText = t => { window.__copied = t; return Promise.resolve(); };
+      const P = window.__planner, l = P.normLesson({ title: 'Talk', slides: [{ layout: 'title', title: 'Talk' }] }); P.L.lessons.push(l); P.openLessonForTest(l, 0);
+    });
+    await page.waitForSelector('.pl-mats [data-ma="newdoc"]');
+    await page.click('.pl-mats [data-ma="newdoc"]');
+    await page.waitForSelector('#docPage');
+    assert.equal(await page.$eval('[data-df="name"]', i => i.value), 'Talk handout');
+    await page.evaluate(() => { const h = document.querySelector('#docPage h1'); const r = document.createRange(); r.selectNodeContents(h); r.collapse(false); const s = getSelection(); s.removeAllRanges(); s.addRange(r); });
+    await page.keyboard.type(' exit ticket'); await page.keyboard.press('Enter');
+    await page.click('[data-dt="ul"]');
+    await page.keyboard.type('Name one claim'); await page.keyboard.press('Enter'); await page.keyboard.type('Give one reason');
+    await page.click('[data-dt="table"]');
+    // download as Word: the text and the list are in the .docx
+    await page.click('[data-da="docx"]');
+    await page.waitForFunction(() => window.__dl.length === 1);
+    const xml = await page.evaluate(async () => { const b = new Uint8Array(await (await fetch(window.__dl[0].href)).arrayBuffer()); const z = fflate.unzipSync(b); window.__docx = b; return { names: Object.keys(z), doc: fflate.strFromU8(z['word/document.xml']) }; });
+    assert.equal(await page.evaluate(() => window.__dl[0].name), 'Talk handout.docx');
+    for (const n of ['[Content_Types].xml', 'word/document.xml', 'word/styles.xml', 'word/numbering.xml']) assert.ok(xml.names.includes(n), n);
+    assert.match(xml.doc, /Talk handout exit ticket/);
+    assert.match(xml.doc, /<w:numPr>[\s\S]*Name one claim[\s\S]*Give one reason/);
+    assert.match(xml.doc, /<w:tbl>/);
+    // into the Claude box as text
+    await page.click('[data-da="claude"]');
+    await page.click('.ls-top [data-a="panel"]');
+    await page.waitForSelector('#side:not([hidden]) [data-st="claude"]'); await page.click('[data-st="claude"]');
+    await page.waitForSelector('[data-sa="boxcopy"]');
+    assert.match(await page.$eval('#spChips', c => c.textContent), /Talk handout/);
+    await page.click('[data-sa="boxcopy"]'); await page.waitForFunction(() => window.__copied);
+    assert.match(await page.evaluate(() => window.__copied), /^\[Document: Talk handout\]\nTalk handout exit ticket\nName one claim\nGive one reason/);
+    // back to the lesson: the document is listed and kept after a reload of the lesson
+    await page.click('[data-da="back"]');
+    await page.waitForSelector('.pl-mats .pl-file');
+    assert.match(await page.$eval('.pl-mats', m => m.textContent), /DOCTalk handout\s*Document/);
+    // a Word file dropped in comes in as a file, and "Edit a copy" turns it into a document
+    await page.evaluate(() => { const dt = new DataTransfer(); dt.items.add(new File([window.__docx], 'Reading guide.docx', { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' })); document.querySelector('.pl-mats').dispatchEvent(new DragEvent('drop', { dataTransfer: dt, bubbles: true, cancelable: true })); });
+    await page.waitForFunction(() => /Reading guide\.docx/.test(document.querySelector('.pl-mats').textContent));
+    await page.click('.pl-mats [data-ma="editdocx"]');
+    await page.waitForSelector('#docPage');
+    assert.equal(await page.$eval('[data-df="name"]', i => i.value), 'Reading guide');
+    assert.match(await page.$eval('#docPage', p => p.innerHTML), /<h1>Talk handout exit ticket<\/h1>[\s\S]*<li>Name one claim<\/li>/);
+    await page.click('[data-da="back"]');
+    await page.waitForFunction(() => document.querySelectorAll('.pl-mats .pl-file').length === 3);
+    // a unit makes its own documents next to its files, and goes back to the unit
+    await page.evaluate(async () => { const P = window.__planner, u = P.normUnit({ course: 'Course A', title: 'Unit 2: Argument', start: '2026-10-26', weeks: [{}] }); await P.unitPut(u, true); P.openUnit(P.L.units.find(x => x.id === u.id)); });
+    await page.waitForSelector('[data-owner^="unit|"] [data-ma="newdoc"]');
+    await page.click('[data-owner^="unit|"] [data-ma="newdoc"]');
+    await page.waitForSelector('#docPage');
+    await page.click('[data-da="back"]');
+    await page.waitForFunction(() => { const s = document.querySelector('[data-owner^="unit|"]'); return s && /Unit 2- Argument handout\s*Document/.test(s.textContent); });
     assert.deepEqual(errors, []);
   } finally { await a.done(); }
 });

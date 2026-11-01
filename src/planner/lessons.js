@@ -80,6 +80,8 @@ function normLesson(x) {
     status: STATUS[x.status] ? x.status : '', claudeNote: String(x.claudeNote || '') };
   if (LOOKS[x.look]) out.look = x.look;
   if (/^https?:\/\//.test(x.atlas || '')) out.atlas = String(x.atlas);
+  const files = (Array.isArray(x.files) ? x.files : []).filter(f => f && typeof f.id === 'string' && typeof f.name === 'string').map(f => ({ id: f.id, name: f.name, kind: f.kind === 'doc' ? 'doc' : 'other', type: String(f.type || ''), size: +f.size || 0, added: +f.added || 0 }));
+  if (files.length) out.files = files;
   if (x.pending && Array.isArray(x.pending.before)) out.pending = { at: +x.pending.at || Date.now(), before: x.pending.before.map(normSlide), title: String(x.pending.title || '') };
   if (x._file) out._file = x._file; if (x._mod) out._mod = x._mod;
   return out;
@@ -238,6 +240,7 @@ async function openLessons() {
 // Grading Studio sits next to this page: index.html online, "Grading Studio.html" for the double-click copy.
 function closeLessons() { editorCommit(); location.href = /Planner\.html$/i.test(decodeURIComponent(location.pathname)) ? 'Grading Studio.html' : './'; }
 function renderLessons() {
+  if (L.view === 'doc' && L.doc) return renderDoc();
   if (L.view === 'edit' && L.open) return renderEditor();
   if (L.view === 'unit' && L.unit) return renderUnit();
   if (!['semester', 'units', 'activities', 'bank'].includes(L.view)) L.view = 'week';
@@ -317,7 +320,7 @@ function renderEditor() {
     '<div class="ls-stagewrap" id="lsWrap"><div class="ls-stage" id="lsStage"><div class="ls-slide">' + slideHtml(s, l, true) + '</div></div></div>' +
     '<div class="ls-warn" id="lsWarn" hidden></div>' +
     '<label class="ls-notes">Speaker notes<textarea data-f="notes" rows="3" placeholder="Notes for you, not shown on the slide">' + esc(s.notes) + '</textarea></label>' +
-    slideTalkHtml(s) +
+    slideTalkHtml(s) + materialsHtml(l, 'lesson') +
     '<p class="muted ls-hint">Click any text on the slide to edit it. In bullets, start a line with Tab for a smaller point under the one above. Arrow keys move between slides when you’re not typing. Drag a picture in from another tab, or paste a picture or a YouTube link.</p>' +
     '</section></div><input type="file" id="lsPicIn" accept="image/*" hidden>';
   $('#lessons').innerHTML = h;
@@ -438,6 +441,8 @@ function newSlide(layout) {
 
 async function onLessonsClick(e) {
   if (e.target.closest('[data-a="panel"]')) return panelToggle();
+  if (await docClick(e)) return;
+  const mt = e.target.closest('[data-ma]'); if (mt && await matClick(mt)) return;
   if (await bankClick(e)) return;
   if (await unitsClick(e)) return;
   const t = e.target.closest('[data-a],[data-open],[data-new],[data-attach],[data-go],[data-addslide],[data-unslot],[data-talkdone],.ls-ed');
@@ -489,6 +494,7 @@ async function onLessonsClick(e) {
   }
 }
 function onLessonsInput(e) {
+  if (docInput(e)) return;
   if (unitsInput(e) || activitiesInput(e)) return;
   const f = e.target.dataset.f; if (!f || !L.open) return;
   if (f === 'ltitle') { L.open.title = e.target.value; lessonChanged(false); }
@@ -513,6 +519,7 @@ function undoToast(msg, fn) {
 // Thumbnails drag to reorder.
 document.addEventListener('dragstart', e => { const th = e.target.closest && e.target.closest('#lsThumbs .ls-th'); if (!th) return; e.dataTransfer.setData('text/x-slide', th.dataset.go); e.dataTransfer.effectAllowed = 'move'; });
 async function onLessonDrop(e) {
+  if (await matDrop(e)) return;
   const pf = [...(e.dataTransfer.files || [])].find(f => /\.json$/i.test(f.name));
   if (pf && !L.open) { try { const j = JSON.parse(await pf.text()); if (Array.isArray(j.classes)) return applySetup(j); } catch { } }
   if (await bankDrop(e)) return;

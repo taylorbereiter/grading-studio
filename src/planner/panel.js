@@ -182,7 +182,7 @@ function lessonUnit(l) {
   return null;
 }
 async function atlasHtml() {
-  const l = L.open, hits = l ? [lessonUnit(l)].filter(Boolean) : (L.view === 'unit' && L.unit ? [{ u: L.units.find(u => u.id === L.unit), n: -1 }].filter(h => h.u) : courses().map(c => unitAt(c, L.weekOf)).filter(Boolean));
+  const l = L.open, hits = l ? [lessonUnit(l)].filter(Boolean) : (L.view === 'unit' && L.unit ? [{ u: L.unit, n: -1 }] : courses().map(c => unitAt(c, L.weekOf)).filter(Boolean));
   const a = l && atlasOf(l);
   let h = '<div class="sp-pad">';
   if (a) h += '<a class="btn" href="' + esc(a.url) + '" target="_blank" rel="noopener">Open Atlas ↗</a><p class="muted sp-small">Atlas asks for your school sign-in and can’t be shown inside another page, so it opens in its own tab.</p>';
@@ -199,7 +199,7 @@ async function atlasHtml() {
 }
 
 /* ---------- the Claude box ---------- */
-const CHIP_ICON = { slide: '▭', page: '📖', video: '▶', week: '📅' };
+const CHIP_ICON = { slide: '▭', page: '📖', video: '▶', week: '📅', file: '📄' };
 function boxHtml() {
   return '<div class="sp-pad sp-box"><p class="muted sp-small">Drag slides, book pages and chapters here, or use the “+ Claude box” buttons. Then say or type what you want, and copy it all for Claude.</p>' +
     '<div class="sp-chips" id="spChips">' + (SP.box.chips.length ? SP.box.chips.map((c, i) => '<span class="sp-chip">' + (CHIP_ICON[c.kind] || '•') + ' ' + esc(c.label) + '<button data-schip="' + i + '" aria-label="Remove">×</button></span>').join('') : '<span class="muted sp-small">Nothing here yet.</span>') + '</div>' +
@@ -211,6 +211,7 @@ async function boxAdd(c) {
   if (!c || !c.kind) return;
   if (c.kind === 'page') { const bk = (await booksList()).find(x => x.id === c.book); c.label = (bk ? bk.name + ', ' : '') + (c.title && !/^p\. \d+$/.test(c.title) ? c.title + ' (p. ' + c.page + ')' : 'p. ' + c.page); }
   if (c.kind === 'slide') { const l = L.lessons.find(x => x.id === c.lesson), s = l && l.slides[c.i]; if (!s) return; c.label = (l.title || 'Lesson') + ', slide ' + (c.i + 1) + (s.title ? ': ' + s.title : ''); }
+  if (c.kind === 'file') { const o = ownerOf({ t: c.t, id: c.owner }), f = o && (o.files || []).find(x => x.id === c.id); if (!f) return; c.label = f.name; }
   SP.box.chips.push(c); await boxSave();
   if (SP.open && SP.tab === 'claude') panelRender(); else { if (SP.open) panelRender(); toast('Added to the Claude box'); }
 }
@@ -221,6 +222,13 @@ async function chipText(c) {
     let t = '[Slide ' + (c.i + 1) + ' of "' + l.title + '" (' + LAYOUTS[s.layout] + ')]\n' + (s.title ? 'Title: ' + s.title + '\n' : '') + (s.body ? s.body + '\n' : '');
     for (const k of EXTRA) if (s[k] && k !== 'body') t += k + ': ' + s[k] + '\n';
     return t.trim();
+  }
+  if (c.kind === 'file') {
+    const o = ownerOf({ t: c.t, id: c.owner }), f = o && (o.files || []).find(x => x.id === c.id); if (!f) return '';
+    if (f.kind !== 'doc') return '[File: ' + f.name + ']';
+    const b = await fileBlob(f.id), d = document.createElement('div'); d.innerHTML = b ? docClean(await b.text()) : '';
+    for (const el of d.querySelectorAll('p,h1,h2,li,tr,div')) el.append('\n');
+    return '[Document: ' + f.name + ']\n' + d.textContent.replace(/\n{3,}/g, '\n\n').trim();
   }
   if (c.kind === 'video') return '[Video] ' + c.url;
   if (c.kind === 'week') return '[' + c.label + ']' + (c.text ? '\n' + c.text : '');
@@ -306,7 +314,7 @@ async function panelInit() {
 // The Atlas tab follows what's open: redraw it when the lesson or view changes.
 let spCtx = '';
 function panelContext() {
-  const k = L.view + '|' + (L.open ? L.open.id : '') + '|' + (L.unit || '') + '|' + L.weekOf;
+  const k = L.view + '|' + (L.open ? L.open.id : '') + '|' + (L.unit ? L.unit.id : '') + '|' + L.weekOf;
   if (k === spCtx) return; spCtx = k;
   if (SP.open && SP.tab === 'atlas') panelRender();
 }
