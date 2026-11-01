@@ -517,13 +517,8 @@ function drawMarks(ctx, marks, W, H, side, screen) {
       ctx.fillText('Comments appear here', W + side / 2, 22); ctx.textAlign = 'left';
     }
   }
-  // highlights under everything, multiplied so the writing stays dark
-  ctx.save(); ctx.globalCompositeOperation = 'multiply';
-  for (const m of marks) {
-    if (m.t === 'hl') fillHl(ctx, m);
-    else if (m.t === 'note' && m.hl) fillHl(ctx, { color: m.hc || HL.yellow, ...m.hl, rects: m.rects });
-  }
-  ctx.restore();
+  // highlights under everything, multiplied so the writing stays dark. Where they overlap, the newest one wins (hlLayer).
+  drawHls(ctx, marks.filter(m => m.t === 'hl' || (m.t === 'note' && m.hl)).map(m => m.t === 'hl' ? m : { color: m.hc || HL.yellow, ...m.hl, rects: m.rects }));
   for (const m of marks) {
     if (m.t === 'pen') {
       ctx.save(); ctx.strokeStyle = m.color; ctx.lineWidth = m.w; ctx.lineCap = 'round'; ctx.lineJoin = 'round';

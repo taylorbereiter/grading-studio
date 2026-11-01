@@ -235,6 +235,51 @@ test('lines overlapping in tight spacing do not darken where they meet', async (
   await close();
 });
 
+test('highlighting over a highlight: the same color stays the same, a new color replaces the old one', async () => {
+  const { page, close } = await openApp(browser);
+  await open(page);
+  const px = await page.evaluate(() => {
+    const at = (marks, ...pts) => {   // drawn at 2x and shifted, the way the screen and the export draw
+      const c = document.createElement('canvas'); c.width = 240; c.height = 120; const x = c.getContext('2d', { willReadFrequently: true });
+      x.fillStyle = '#fff'; x.fillRect(0, 0, 240, 120); x.setTransform(2, 0, 0, 2, 10, 0);
+      window.__gs.drawMarks(x, marks, 110, 60, 0, null);
+      return pts.map(([X, Y]) => [...x.getImageData(X * 2 + 10, Y * 2, 1, 1).data].slice(0, 3));
+    };
+    const Y = '#FFE45C', P = '#FFB8D6', B = '#B0E0FF';
+    return {
+      once: at([{ t: 'hl', color: Y, x: 10, y: 10, w: 80, h: 20 }], [50, 20])[0],
+      thrice: at([1, 2, 3].map(() => ({ t: 'hl', color: Y, x: 10, y: 10, w: 80, h: 20 })), [50, 20])[0],
+      pinkAlone: at([{ t: 'hl', color: P, x: 10, y: 10, w: 80, h: 20 }], [50, 20])[0],
+      overYellow: at([{ t: 'hl', color: Y, x: 10, y: 10, w: 80, h: 20 }, { t: 'hl', color: P, x: 40, y: 10, w: 60, h: 20 }], [20, 20], [50, 20], [95, 20]),
+      freeOverRect: at([{ t: 'hl', color: Y, x: 10, y: 10, w: 80, h: 20 }, { t: 'hl', color: B, sw: 14, pts: [[30, 20], [70, 20]], x: 23, y: 13, w: 54, h: 14 }], [50, 20]),
+      noteOverHl: at([{ t: 'hl', color: Y, x: 10, y: 10, w: 80, h: 20 }, { t: 'note', color: '#D92D20', ax: 90, ay: 20, hl: { x: 10, y: 10, w: 80, h: 20 }, hc: P, text: 'x' }], [50, 20]),
+    };
+  });
+  assert.deepEqual(px.thrice, px.once, 'the same color three times looks like once');
+  assert.deepEqual(px.overYellow[1], px.pinkAlone, 'pink over yellow is pink, not a mix');
+  assert.deepEqual(px.overYellow[0], px.once, 'the yellow it does not cover stays yellow');
+  assert.deepEqual(px.overYellow[2], px.pinkAlone, 'and past the yellow it is the same pink');
+  assert.notDeepEqual(px.freeOverRect[0], px.once, 'a freehand highlight over a typed-line one shows its own color');
+  assert.deepEqual(px.noteOverHl[0], px.pinkAlone, "a comment's highlight replaces the color under it too");
+  // Through her own mouse moves: the same words three times in yellow, then again in pink.
+  await setTool(page, 'hl');
+  const spot = [wx(0, 2) + 4, lineY(0) - 6, 10, 4];
+  const drag3 = () => drag(page, 0, [[wx(0, 1) + 2, lineY(0) - 4], [wEnd(4) - 2, lineY(0) - 4]]);
+  await drag3();
+  const one = (await probeScreen(page, 0, [spot]))[0];
+  await drag3(); await drag3();
+  assert.equal((await marks(page)).length, 3);
+  const three = (await probeScreen(page, 0, [spot]))[0];
+  near(three.yellow, one.yellow, 1, 'no darker after three passes');
+  assert.equal(three.dark, one.dark, 'and the words are not darker either');
+  await page.click('[data-hl="pink"]');
+  await drag3();
+  const pink = (await probeScreen(page, 0, [spot]))[0];
+  assert.equal(pink.yellow, 0, 'pink over yellow leaves no yellow showing');
+  assert.deepEqual(page.errors, []);
+  await close();
+});
+
 test('with no typed text the highlighter is freehand by itself, and the choice is easy to change', async () => {
   const { page, close } = await openApp(browser);
   await open(page);

@@ -2664,12 +2664,7 @@ function drawMarks(ctx, marks, W, H, side, screen) {
       ctx.fillText('Comments appear here', W + side / 2, 22); ctx.textAlign = 'left';
     }
   }
-  ctx.save(); ctx.globalCompositeOperation = 'multiply';
-  for (const m of marks) {
-    if (m.t === 'hl') fillHl(ctx, m);
-    else if (m.t === 'note' && m.hl) fillHl(ctx, { color: m.hc || HL.yellow, ...m.hl, rects: m.rects });
-  }
-  ctx.restore();
+  drawHls(ctx, marks.filter(m => m.t === 'hl' || (m.t === 'note' && m.hl)).map(m => m.t === 'hl' ? m : { color: m.hc || HL.yellow, ...m.hl, rects: m.rects }));
   for (const m of marks) {
     if (m.t === 'pen') {
       ctx.save(); ctx.strokeStyle = m.color; ctx.lineWidth = m.w; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
@@ -8074,6 +8069,19 @@ function fillHl(ctx, m) {
   ctx.fillStyle = m.color;
   if (!m.rects) { ctx.fillRect(m.x, m.y, m.w, m.h); return; }
   ctx.beginPath(); for (const r of m.rects) ctx.rect(r.x, r.y, r.w, r.h); ctx.fill();
+}
+let hlSheet = null;
+function drawHls(ctx, hls) {
+  if (!hls.length) return;
+  if (hls.length === 1) { ctx.save(); ctx.globalCompositeOperation = 'multiply'; fillHl(ctx, hls[0]); ctx.restore(); return; }
+  const cw = ctx.canvas.width, ch = ctx.canvas.height;
+  if (!hlSheet) hlSheet = typeof OffscreenCanvas === 'function' ? new OffscreenCanvas(cw, ch) : document.createElement('canvas');
+  if (hlSheet.width !== cw || hlSheet.height !== ch) { hlSheet.width = cw; hlSheet.height = ch; }
+  const hc = hlSheet.getContext('2d');
+  hc.setTransform(1, 0, 0, 1, 0, 0); hc.clearRect(0, 0, cw, ch);
+  hc.setTransform(ctx.getTransform());
+  for (const m of hls) fillHl(hc, m);
+  ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalCompositeOperation = 'multiply'; ctx.drawImage(hlSheet, 0, 0); ctx.restore();
 }
 const rectBox = rs => { const x = Math.min(...rs.map(r => r.x)), y = Math.min(...rs.map(r => r.y)); return { x, y, w: r1(Math.max(...rs.map(r => r.x + r.w)) - x), h: r1(Math.max(...rs.map(r => r.y + r.h)) - y) }; };
 function moveExtras(m, dx, dy) {

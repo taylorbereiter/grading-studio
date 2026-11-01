@@ -13,12 +13,28 @@ function strokePath(ctx, p) {
   for (let i = 1; i < p.length - 1; i++) { const mx = (p[i][0] + p[i + 1][0]) / 2, my = (p[i][1] + p[i + 1][1]) / 2; ctx.quadraticCurveTo(p[i][0], p[i][1], mx, my); }
   if (p.length > 1) ctx.lineTo(p[p.length - 1][0], p[p.length - 1][1]);
 }
-// Inside the multiply pass of drawMarks. One fill or one stroke, so lines that overlap don't darken where they meet.
+// Painted by drawHls. One fill or one stroke, so lines that overlap don't darken where they meet.
 function fillHl(ctx, m) {
   if (m.pts) { ctx.save(); ctx.strokeStyle = m.color; ctx.lineWidth = m.sw; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; strokePath(ctx, m.pts); ctx.stroke(); ctx.restore(); return; }
   ctx.fillStyle = m.color;
   if (!m.rects) { ctx.fillRect(m.x, m.y, m.w, m.h); return; }
   ctx.beginPath(); for (const r of m.rects) ctx.rect(r.x, r.y, r.w, r.h); ctx.fill();
+}
+// Highlighting over a highlight swaps its color, the way a real highlighter can't but she expects: the same color
+// again stays the same, and a new color covers the old one instead of mixing with it. So all of a page's highlights
+// are painted plainly onto one sheet, newest on top, and that sheet is multiplied onto the page once.
+let hlSheet = null;
+function drawHls(ctx, hls) {
+  if (!hls.length) return;
+  if (hls.length === 1) { ctx.save(); ctx.globalCompositeOperation = 'multiply'; fillHl(ctx, hls[0]); ctx.restore(); return; }
+  const cw = ctx.canvas.width, ch = ctx.canvas.height;
+  if (!hlSheet) hlSheet = typeof OffscreenCanvas === 'function' ? new OffscreenCanvas(cw, ch) : document.createElement('canvas');
+  if (hlSheet.width !== cw || hlSheet.height !== ch) { hlSheet.width = cw; hlSheet.height = ch; }
+  const hc = hlSheet.getContext('2d');
+  hc.setTransform(1, 0, 0, 1, 0, 0); hc.clearRect(0, 0, cw, ch);
+  hc.setTransform(ctx.getTransform());
+  for (const m of hls) fillHl(hc, m);
+  ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalCompositeOperation = 'multiply'; ctx.drawImage(hlSheet, 0, 0); ctx.restore();
 }
 const rectBox = rs => { const x = Math.min(...rs.map(r => r.x)), y = Math.min(...rs.map(r => r.y)); return { x, y, w: r1(Math.max(...rs.map(r => r.x + r.w)) - x), h: r1(Math.max(...rs.map(r => r.y + r.h)) - y) }; };
 // moveMark and turnMarks handle the box; these are the extras.
