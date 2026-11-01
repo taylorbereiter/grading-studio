@@ -202,14 +202,22 @@ function lookDlg() {
   $('#dlgBox').onchange = async e => { if (e.target.id === 'lkDef') { L.defLook = e.target.checked ? lookOf(l) : ''; await kvSet('deflook', L.defLook); } };
 }
 const LAYOUT_GROUPS = [['Start and end', ['title', 'agenda', 'objectives', 'warmup', 'exit']], ['Teach and practice', ['steps', 'discuss', 'content', 'twocol', 'text', 'passage', 'vocab']], ['Pictures and video', ['picture', 'picprompt', 'video']]];
-function addSlideDlg() {
+// The layout picker: a picture of every layout in the lesson's look. 'add' puts a new slide after this one; 'change' changes this one.
+function addSlideDlg(mode) {
   const l = L.open; if (!l) return;
-  openDlg('<div class="bh"><h2>Add a slide</h2></div><div class="bb">' + LAYOUT_GROUPS.map(([g, ks]) => '<h3 class="pl-h3">' + g + '</h3><div class="pl-looks">' +
-    ks.map(k => '<button class="pl-look" data-addslide="' + k + '">' + miniSlide(normSlide({ layout: k, ...(TEACH[k] || {}), ...(TEACH_SAMPLE[k] || {}) }), l, lookOf(l), 164) + '<span>' + esc(LAYOUTS[k]) + '</span></button>').join('') + '</div>').join('') +
+  const change = mode === 'change', cur = l.slides[L.cur];
+  openDlg('<div class="bh"><h2>' + (change ? 'Layout for this slide' : 'Add a slide') + '</h2></div><div class="bb">' + (change ? '<p class="muted" style="margin-top:0">Your text stays. Boxes the new layout has that this slide doesn’t start with their usual words.</p>' : '') + LAYOUT_GROUPS.map(([g, ks]) => '<h3 class="pl-h3">' + g + '</h3><div class="pl-looks">' +
+    ks.map(k => '<button class="pl-look' + (change && k === cur.layout ? ' on' : '') + '" data-addslide="' + k + '">' + miniSlide(normSlide({ layout: k, ...(TEACH[k] || {}), ...(TEACH_SAMPLE[k] || {}) }), l, lookOf(l), 164) + '<span>' + esc(LAYOUTS[k]) + '</span></button>').join('') + '</div>').join('') +
     '</div><div class="bf"><button class="btn" data-x>Cancel</button></div>');
   $('#dlgBox').onclick = e => {
     if (e.target.closest('[data-x]')) return closeDlg();
     const b = e.target.closest('[data-addslide]'); if (!b) return;
-    closeDlg(); newSlide(b.dataset.addslide);
+    closeDlg();
+    if (!change) return newSlide(b.dataset.addslide);
+    const k = b.dataset.addslide, s = l.slides[L.cur];
+    s.layout = k;
+    for (const [f, v] of Object.entries(TEACH[k] || {})) if (f !== 'size' && f !== 'title' && !s[f]) s[f] = v;
+    if (!s.title && TEACH[k] && TEACH[k].title) s.title = TEACH[k].title;
+    lessonChanged(); renderEditor();
   };
 }

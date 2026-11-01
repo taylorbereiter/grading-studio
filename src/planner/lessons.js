@@ -42,6 +42,7 @@ async function lTx(store, mode, fn) {
 const reqP = r => new Promise((res, rej) => { r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
 const kvGet = k => lTx('kv', 'readonly', s => reqP(s.get(k)));
 const kvSet = (k, v) => lTx('kv', 'readwrite', s => { s.put(v, k); });
+const kvDel = k => lTx('kv', 'readwrite', s => { s.delete(k); });
 async function lLoadAll() { L.lessons = (await lTx('lessons', 'readonly', s => reqP(s.getAll()))) || []; }
 async function lPut(lesson) {
   lesson.updated = Date.now();
@@ -78,6 +79,9 @@ function normLesson(x) {
   const out = { id: typeof x.id === 'string' && x.id ? x.id : lid(), title: String(x.title || 'Untitled lesson'), slots, slides, created: +x.created || Date.now(), updated: +x.updated || Date.now(), note: String(x.note || ''),
     status: STATUS[x.status] ? x.status : '', claudeNote: String(x.claudeNote || '') };
   if (LOOKS[x.look]) out.look = x.look;
+  if (/^https?:\/\//.test(x.atlas || '')) out.atlas = String(x.atlas);
+  const files = (Array.isArray(x.files) ? x.files : []).filter(f => f && typeof f.id === 'string' && typeof f.name === 'string').map(f => ({ id: f.id, name: f.name, kind: f.kind === 'doc' ? 'doc' : 'other', type: String(f.type || ''), size: +f.size || 0, added: +f.added || 0 }));
+  if (files.length) out.files = files;
   if (x.pending && Array.isArray(x.pending.before)) out.pending = { at: +x.pending.at || Date.now(), before: x.pending.before.map(normSlide), title: String(x.pending.title || '') };
   if (x._file) out._file = x._file; if (x._mod) out._mod = x._mod;
   return out;
@@ -226,6 +230,7 @@ async function openLessons() {
   await lOpenDb(); await lLoadAll(); await unitsLoad(); await bankLoad();
   L.setup = (await kvGet('setup')) || null;
   L.defLook = (await kvGet('deflook')) || '';
+  await panelInit();
   await tplPreview();
   if (!L.weekOf) L.weekOf = ymd(mondayOf(new Date()));
   try { const v = localStorage.getItem('gsp.view'); if (v === 'week' || v === 'semester' || v === 'units' || v === 'activities' || v === 'bank') L.view = v; } catch { }
@@ -235,10 +240,12 @@ async function openLessons() {
 // Grading Studio sits next to this page: index.html online, "Grading Studio.html" for the double-click copy.
 function closeLessons() { editorCommit(); location.href = /Planner\.html$/i.test(decodeURIComponent(location.pathname)) ? 'Grading Studio.html' : './'; }
 function renderLessons() {
+  if (L.view === 'doc' && L.doc) return renderDoc();
   if (L.view === 'edit' && L.open) return renderEditor();
   if (L.view === 'unit' && L.unit) return renderUnit();
   if (!['semester', 'units', 'activities', 'bank'].includes(L.view)) L.view = 'week';
   try { localStorage.setItem('gsp.view', L.view); } catch { }
+  panelContext();
   if (L.view === 'semester') return renderSemester();
   if (L.view === 'units') return renderUnits();
   if (L.view === 'activities') return renderActivities();
@@ -259,10 +266,10 @@ function renderWeek() {
   let h = topBar('week', '<button class="btn sm ghost" data-a="wk" data-n="-7" aria-label="Previous week">‹</button>' +
     '<span class="ls-wk">' + LMONTHS[mon.getMonth()].slice(0, 3) + ' ' + mon.getDate() + ' – ' + (fri.getMonth() !== mon.getMonth() ? LMONTHS[fri.getMonth()].slice(0, 3) + ' ' : '') + fri.getDate() + '</span>' +
     '<button class="btn sm ghost" data-a="wk" data-n="7" aria-label="Next week">›</button><button class="btn sm ghost" data-a="today">This week</button>' +
-    '<input type="date" class="btn sm" data-a="jump" value="' + L.weekOf + '" aria-label="Go to a date">');
+    '<input type="date" class="btn sm" data-a="jump" value="' + L.weekOf + '" aria-label="Go to a date">' + (L.setup ? '<button class="btn sm ghost" data-a="printweek">Print week</button>' : ''));
   if (!L.setup) {
-    h += '<div class="ls-empty"><h2>Load your timetable</h2><p>Lessons line up with your classes once the app knows when they meet. Load the setup file (it has your timetable, days off and slide template), or type your classes in.</p>' +
-      '<div class="row"><button class="btn primary" data-a="loadsetup">Load setup file…</button><button class="btn" data-a="setup">Type in my classes</button><button class="btn" data-a="newfree">Make a lesson without a class</button></div></div>';
+    h += '<div class="ls-empty"><h2>Load your profile</h2><p>Lessons line up with your classes once the app knows when they meet. Load your profile file (your timetable, school calendar, units and slide template), drop it on this page, or type your classes in. You do this once on each computer.</p>' +
+      '<div class="row"><button class="btn primary" data-a="loadsetup">Load my profile…</button><button class="btn" data-a="setup">Type in my classes</button><button class="btn" data-a="newfree">Make a lesson without a class</button></div></div>';
   } else {
     h += weekUnitsBar(L.weekOf) + '<div class="ls-grid">';
     for (const d of days) {
@@ -296,16 +303,15 @@ function renderEditor() {
   let h = '<div class="ls-top"><button class="btn sm ghost" data-a="back">‹ ' + ({ semester: 'Semester', units: 'Units', unit: 'Unit', activities: 'Activities' }[L.backTo] || 'Week') + '</button>' +
     '<input class="ls-title-in" data-f="ltitle" value="' + esc(l.title) + '" aria-label="Lesson name">' +
     '<span class="ls-slots">' + l.slots.map((t, i) => '<span class="ls-chip" style="--cc:' + esc((classById(t.classId) || {}).color || '#1F6FB2') + '">' + esc(className(t.classId)) + ' · ' + shortDate(t.date) + '<button data-unslot="' + i + '" title="Take it off this class" aria-label="Remove">×</button></span>').join('') + '<button class="btn sm ghost" data-a="addslot">+ Class</button></span>' +
-    '<span class="sp"></span>' + statusChip(l) + '<span class="savest" id="lsSaved">Saved</span>' +
-    '<button class="btn sm" data-a="send" title="Copy a message for Claude about this lesson and open Claude">Send to Claude</button>' +
-    '<button class="btn sm ghost" data-a="versions">Versions</button>' +
-    '<button class="btn sm ghost" data-a="approve" title="Only a marker: you can still change it">' + (l.status === 'approved' ? '✓ Approved' : 'Approve') + '</button>' +
+    atlasChip(l) + '<span class="sp"></span>' + statusChip(l) + '<span class="savest" id="lsSaved">Saved</span>' +
+    '<button class="btn sm" data-a="send" title="Copy this lesson for Claude, to paste where you’re working with Claude">Copy for Claude</button>' +
+    '<button class="btn sm ghost" data-a="versions">Versions</button>' + panelBtn() +
     '<button class="btn sm ghost" data-a="more">More ▾</button>' +
     '<button class="btn sm primary" data-a="pptx">Download .pptx</button></div>' + pendingBar(l);
   h += '<div class="ls-ed-cols"><nav class="ls-thumbs" id="lsThumbs">' + l.slides.map((x, i) => thumbHtml(x, l, i)).join('') +
     '<div class="ls-addslide"><button class="btn sm" data-a="addslide">+ Add slide</button></div></nav>';
   h += '<section class="ls-main"><div class="ls-tools">' +
-    '<label>Layout <select data-f="layout" class="btn sm">' + Object.entries(LAYOUTS).map(([k, v]) => '<option value="' + k + '"' + (k === s.layout ? ' selected' : '') + '>' + v + '</option>').join('') + '</select></label>' +
+    '<button class="btn sm" data-a="layout" title="Pick a layout for this slide">Layout: ' + esc(LAYOUTS[s.layout]) + ' ▾</button>' +
     '<button class="btn sm" data-a="look" title="Colors and background for this lesson">Look: ' + esc(LOOKS[lookOf(l)].name) + '</button>' +
     (s.layout !== 'title' && s.layout !== 'picture' && s.layout !== 'video' ? '<label>Text <select data-f="size" class="btn sm">' + SIZES.map(z => '<option value="' + z + '"' + (z === s.size ? ' selected' : '') + '>' + z + ' pt</option>').join('') + '</select></label>' : '') +
     (s.layout === 'picture' || s.layout === 'picprompt' ? '<button class="btn sm" data-a="pic">' + (s.img ? 'Change picture' : 'Add picture') + '</button>' : '') +
@@ -314,12 +320,39 @@ function renderEditor() {
     '<div class="ls-stagewrap" id="lsWrap"><div class="ls-stage" id="lsStage"><div class="ls-slide">' + slideHtml(s, l, true) + '</div></div></div>' +
     '<div class="ls-warn" id="lsWarn" hidden></div>' +
     '<label class="ls-notes">Speaker notes<textarea data-f="notes" rows="3" placeholder="Notes for you, not shown on the slide">' + esc(s.notes) + '</textarea></label>' +
-    slideTalkHtml(s) +
+    slideTalkHtml(s) + materialsHtml(l, 'lesson') +
     '<p class="muted ls-hint">Click any text on the slide to edit it. In bullets, start a line with Tab for a smaller point under the one above. Arrow keys move between slides when you’re not typing. Drag a picture in from another tab, or paste a picture or a YouTube link.</p>' +
     '</section></div><input type="file" id="lsPicIn" accept="image/*" hidden>';
   $('#lessons').innerHTML = h;
-  fitStage(); checkFit();
+  fitStage(); checkFit(); panelContext();
   const th = $('#lsThumbs .ls-th.on'); if (th) th.scrollIntoView({ block: 'nearest' });
+}
+// The lesson's Atlas page: its own link, or else the link of the unit it falls in.
+function atlasOf(l) {
+  if (l.atlas) return { url: l.atlas, own: true };
+  for (const t of l.slots) {
+    const c = classById(t.classId), hit = c && c.course && unitAt(c.course, ymd(mondayOf(parseYmd(t.date))));
+    if (hit && hit.u.atlas) return { url: hit.u.atlas, own: false, unit: hit.u.title };
+  }
+  return null;
+}
+function atlasChip(l) {
+  const a = atlasOf(l);
+  return a ? '<a class="btn sm ghost" href="' + esc(a.url) + '" target="_blank" rel="noopener" title="' + (a.own ? 'This lesson’s Atlas page' : 'Atlas page of ' + esc(a.unit)) + '">Atlas ↗</a><button class="btn sm ghost" data-a="atlas" title="Change the Atlas link" aria-label="Change the Atlas link">✎</button>'
+    : '<button class="btn sm ghost" data-a="atlas">+ Atlas link</button>';
+}
+function atlasDlg(l) {
+  const a = atlasOf(l);
+  openDlg('<div class="bh"><h2>Atlas link</h2></div><div class="bb"><label class="ls-f">This lesson’s page in Atlas<input id="atU" class="btn" style="justify-content:flex-start;cursor:text" placeholder="https://…" value="' + esc(l.atlas || '') + '"></label>' +
+    '<p class="muted">' + (a && !a.own ? 'Leave it empty to use the unit’s link (' + esc(a.unit) + ').' : 'Tip: a unit’s Atlas link is used for all its lessons, so you only need this for a lesson with its own page.') + '</p></div><div class="bf"><button class="btn" data-x>Cancel</button><button class="btn primary" data-ok>Save</button></div>', true);
+  $('#dlgBox').onclick = e => {
+    if (e.target.closest('[data-x]')) return closeDlg();
+    if (!e.target.closest('[data-ok]')) return;
+    const v = $('#atU').value.trim();
+    if (v && !/^https?:\/\//.test(v)) return toast('Paste the whole link, starting with https://');
+    if (v) l.atlas = v; else delete l.atlas;
+    closeDlg(); lessonChanged(false); renderEditor();
+  };
 }
 function thumbHtml(x, l, i) {
   return '<div class="ls-th' + (i === L.cur ? ' on' : '') + '" data-go="' + i + '" draggable="true"><span class="n">' + (i + 1) + '</span><div class="ls-mini"><div class="ls-slide">' + slideHtml(x, l, false) + '</div></div></div>';
@@ -392,6 +425,7 @@ function onLessonsKey(e) {
     return;
   }
   if (e.key === 'Enter' && e.target.dataset && e.target.dataset.f === 'say') { e.preventDefault(); return addComment(); }
+  if (e.key === 'Enter' && e.target.id === 'plFind') { e.preventDefault(); return findDlg(e.target.value); }
   const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName);
   if (L.view === 'edit' && !typing && !e.metaKey && !e.ctrlKey) {
     if (e.key === 'ArrowDown' || e.key === 'ArrowRight' || e.key === 'PageDown') { e.preventDefault(); goSlide(L.cur + 1); }
@@ -407,6 +441,9 @@ function newSlide(layout) {
 }
 
 async function onLessonsClick(e) {
+  if (e.target.closest('[data-a="panel"]')) return panelToggle();
+  if (await docClick(e)) return;
+  const mt = e.target.closest('[data-ma]'); if (mt && await matClick(mt)) return;
   if (await bankClick(e)) return;
   if (await unitsClick(e)) return;
   const t = e.target.closest('[data-a],[data-open],[data-new],[data-attach],[data-go],[data-addslide],[data-unslot],[data-talkdone],.ls-ed');
@@ -425,6 +462,7 @@ async function onLessonsClick(e) {
   if (a === 'wk') { L.weekOf = ymd(addDays(parseYmd(L.weekOf), +t.dataset.n)); return renderWeek(); }
   if (a === 'today') { L.weekOf = ymd(mondayOf(new Date())); return renderWeek(); }
   if (a === 'back') { editorCommit(); clearTimeout(lSaveT); if (L.open) await lPut(L.open); L.open = null; L.view = L.backTo || 'week'; L.backTo = null; return renderLessons(); }
+  if (a === 'printweek') return printWeek();
   if (a === 'newfree') return createLesson([]);
   if (a === 'all') return showAllLessons();
   if (a === 'setup') return openTimetable();
@@ -440,6 +478,8 @@ async function onLessonsClick(e) {
   if (a === 'addslot') return addSlotDlg();
   if (a === 'pic') return pickPicture();
   if (a === 'addslide') return addSlideDlg();
+  if (a === 'layout') return addSlideDlg('change');
+  if (a === 'atlas') return atlasDlg(L.open);
   if (a === 'look') return lookDlg();
   if (a === 'vid') return videoDlg();
   if (a === 'split') return splitOverflow();
@@ -456,6 +496,7 @@ async function onLessonsClick(e) {
   }
 }
 function onLessonsInput(e) {
+  if (docInput(e)) return;
   if (unitsInput(e) || activitiesInput(e)) return;
   const f = e.target.dataset.f; if (!f || !L.open) return;
   if (f === 'ltitle') { L.open.title = e.target.value; lessonChanged(false); }
@@ -480,6 +521,9 @@ function undoToast(msg, fn) {
 // Thumbnails drag to reorder.
 document.addEventListener('dragstart', e => { const th = e.target.closest && e.target.closest('#lsThumbs .ls-th'); if (!th) return; e.dataTransfer.setData('text/x-slide', th.dataset.go); e.dataTransfer.effectAllowed = 'move'; });
 async function onLessonDrop(e) {
+  if (await matDrop(e)) return;
+  const pf = [...(e.dataTransfer.files || [])].find(f => /\.json$/i.test(f.name));
+  if (pf && !L.open) { try { const j = JSON.parse(await pf.text()); if (Array.isArray(j.classes)) return applySetup(j); } catch { } }
   if (await bankDrop(e)) return;
   if (await unitsDrop(e)) return;
   const from = e.dataTransfer.getData('text/x-slide');
@@ -629,12 +673,14 @@ function moreMenu() {
   const l = L.open;
   openDlg('<div class="bh"><h2>' + esc(l.title) + '</h2></div><div class="bb ls-more">' +
     '<button class="btn" data-m="export">Save lesson file (for Claude)…</button><p class="muted">A .lesson.json file with just this lesson. Give it to Claude, then bring Claude’s version back with Import.</p>' +
+    '<button class="btn" data-m="copyto">Copy to another class or day…</button><p class="muted">A separate copy with its own slides and materials.</p>' +
     '<button class="btn" data-m="copy">Copy lesson as text</button><p class="muted">The slides and notes as plain text, to paste anywhere.</p>' +
     '<button class="btn" data-m="delete">Delete this lesson</button></div><div class="bf"><button class="btn" data-x>Close</button></div>', true);
   $('#dlgBox').onclick = async e => {
     if (e.target.closest('[data-x]')) return closeDlg();
     const m = e.target.closest('[data-m]'); if (!m) return;
     if (m.dataset.m === 'export') { closeDlg(); return saveBlob(fileBase(l) + '.lesson.json', new Blob([JSON.stringify(lessonForFile(l, null), null, 2)], { type: 'application/json' })); }
+    if (m.dataset.m === 'copyto') { closeDlg(); return copyLessonDlg(l); }
     if (m.dataset.m === 'copy') { await copyText(lessonText(l)); closeDlg(); return toast('Copied'); }
     if (m.dataset.m === 'delete') {
       if (m.dataset.sure !== '1') { m.dataset.sure = '1'; m.textContent = 'Click again to delete it for good'; return; }
@@ -658,11 +704,10 @@ function lessonText(l) {
   });
   return t;
 }
-// Ask Claude: copies this lesson only (nothing from grading) and opens Claude in a new tab.
+// Ask Claude: copies this lesson only (nothing from grading), to paste where the teacher is working with Claude.
 async function askClaude(l) {
   const where = L.dir && L.dirOk ? 'It is saved in my Planner folder as "' + fileBase(l) + '.lesson.json". Edit that file directly (keep the same id), and I will pick up your changes in the Planner.\n\n' : '';
   await copyText('Here is a lesson from my Planner. ' + where + 'Slide text stays 28 to 36 pt; keep my simple bullet style.\n\n' + lessonText(l));
-  window.open(claudeLink(), '_blank', 'noopener');
   toast('Lesson copied. Paste it into Claude and say what you want.', 5000);
 }
 
@@ -693,19 +738,23 @@ async function importLessonText(text, name) {
 /* ---------- timetable + setup file ---------- */
 function loadSetupFile() {
   const i = document.createElement('input'); i.type = 'file'; i.accept = '.json,application/json';
-  i.onchange = async () => { const f = i.files[0]; if (!f) return; try { applySetup(JSON.parse(await f.text())); } catch { toast('That isn’t a setup file'); } };
+  i.onchange = async () => { const f = i.files[0]; if (!f) return; try { applySetup(JSON.parse(await f.text())); } catch { toast('That isn’t a profile file'); } };
   i.click();
 }
 async function applySetup(j) {
-  if (!j || !Array.isArray(j.classes)) return toast('That isn’t a setup file');
+  if (!j || !Array.isArray(j.classes)) return toast('That isn’t a profile file');
   const setup = { classes: j.classes.map(c => ({ id: String(c.id), name: String(c.name || c.id), course: String(c.course || ''), color: /^#[0-9a-f]{6}$/i.test(c.color) ? c.color : '#1F6FB2', meets: (c.meets || []).map(m => ({ dow: +m.dow, start: String(m.start || ''), end: String(m.end || ''), label: String(m.label || '') })) })),
     daysOff: (j.daysOff || []).map(d => ({ date: String(d.date), label: String(d.label || 'No school') })), events: (j.events || []).map(e => ({ date: String(e.date), to: e.to ? String(e.to) : '', label: String(e.label || '') })),
     template: typeof j.template === 'string' ? j.template : (L.setup && L.setup.template) || '',
     semStart: /^\d{4}-\d\d-\d\d$/.test(j.semStart) ? ymd(mondayOf(parseYmd(j.semStart))) : '', semEnd: /^\d{4}-\d\d-\d\d$/.test(j.semEnd) ? ymd(mondayOf(parseYmd(j.semEnd))) : '',
-    claudeUrl: /^https:\/\/claude\.ai\//.test(j.claudeUrl) ? String(j.claudeUrl) : '' };
+    claudeUrl: /^https:\/\/claude\.ai\//.test(j.claudeUrl) ? String(j.claudeUrl) : '', profile: String(j.profile || '').slice(0, 80) };
   L.setup = setup; await kvSet('setup', setup); await tplPreview();
   folderWriteSchedule();
-  toast('Timetable loaded: ' + setup.classes.length + ' classes' + (setup.template ? ', with your slide template' : ''));
+  // A profile can also bring units (only ones not here yet, so your edits stay) and a default look.
+  let nu = 0;
+  for (const x of Array.isArray(j.units) ? j.units : []) { const u = normUnit(x); if (x.id && !L.units.some(v => v.id === u.id)) { await unitPut(u, true); nu++; } }
+  if (LOOKS[j.look] && !L.defLook) { L.defLook = j.look; await kvSet('deflook', j.look); }
+  toast((setup.profile ? setup.profile + ' loaded: ' : 'Timetable loaded: ') + setup.classes.length + ' classes' + (nu ? ', ' + nu + ' units' : '') + (setup.template ? ', your slide template' : ''), 5000);
   renderLessons();
 }
 function openTimetable() {
@@ -717,10 +766,9 @@ function openTimetable() {
       c.meets.map((m, mi) => meetRow(ci, mi, m)).join('') + '<button class="btn sm ghost" data-addm="' + ci + '">+ Meeting</button></div>').join('') +
       '<button class="btn sm" data-addc>+ Class</button><h3 style="margin:18px 0 6px;font-size:15px">Semester</h3><div class="ls-mrow"><label>First week <input type="date" id="ttS" class="btn sm" value="' + esc(draft.semStart) + '"></label><label>Last week <input type="date" id="ttE" class="btn sm" value="' + esc(draft.semEnd) + '"></label></div>' +
       '<h3 style="margin:18px 0 6px;font-size:15px">Days off</h3><textarea id="ttOff" rows="4" style="width:100%" placeholder="One per line: 2026-12-25 Christmas">' + esc(draft.daysOff.map(d => d.date + ' ' + d.label).join('\n')) + '</textarea>' +
-      '<h3 style="margin:14px 0 6px;font-size:15px">Dates to show (not days off)</h3><textarea id="ttEv" rows="4" style="width:100%" placeholder="One per line: 2026-11-09 to 2026-11-13 Midterms">' + esc(draft.events.map(e => e.date + (e.to ? ' to ' + e.to : '') + ' ' + e.label).join('\n')) + '</textarea>' +
-      '<h3 style="margin:14px 0 6px;font-size:15px">Where Send to Claude opens</h3><input id="ttC" class="btn sm" style="width:100%" placeholder="https://claude.ai/new" value="' + esc(draft.claudeUrl) + '"><p class="muted" style="font-size:12.5px;margin:4px 0 0">Paste the link to the Claude project or chat you plan in. Left empty, it opens a new chat.</p>';
+      '<h3 style="margin:14px 0 6px;font-size:15px">Dates to show (not days off)</h3><textarea id="ttEv" rows="4" style="width:100%" placeholder="One per line: 2026-11-09 to 2026-11-13 Midterms">' + esc(draft.events.map(e => e.date + (e.to ? ' to ' + e.to : '') + ' ' + e.label).join('\n')) + '</textarea>' ;
   };
-  openDlg('<div class="bh"><h2>Timetable</h2><button class="btn sm" data-load>Load setup file…</button></div><div class="bb" id="ttBody"></div><div class="bf"><button class="btn" data-x>Cancel</button><button class="btn primary" data-ok>Save</button></div>');
+  openDlg('<div class="bh"><h2>Timetable</h2><button class="btn sm" data-load>Load my profile…</button></div><div class="bb" id="ttBody"></div><div class="bf"><button class="btn" data-x>Cancel</button><button class="btn primary" data-ok>Save</button></div>');
   draw();
   const box = $('#dlgBox');
   box.oninput = e => { const t = e.target, ci = +t.dataset.ci; if (t.dataset.c) draft.classes[ci][t.dataset.c] = t.value; if (t.dataset.m) draft.classes[ci].meets[+t.dataset.mi][t.dataset.m] = t.dataset.m === 'dow' ? +t.value : t.value; };
@@ -737,7 +785,7 @@ function openTimetable() {
     draft.daysOff = lines('#ttOff').map(x => { const m = /^(\d{4}-\d\d-\d\d)\s*(.*)$/.exec(x); return m && { date: m[1], label: m[2] || 'No school' }; }).filter(Boolean);
     draft.events = lines('#ttEv').map(x => { const m = /^(\d{4}-\d\d-\d\d)(?:\s+to\s+(\d{4}-\d\d-\d\d))?\s*(.*)$/.exec(x); return m && { date: m[1], to: m[2] || '', label: m[3] }; }).filter(Boolean);
     draft.classes = draft.classes.filter(c => c.name.trim()).map(c => ({ ...c, id: c.id || lid() }));
-    draft.semStart = $('#ttS').value; draft.semEnd = $('#ttE').value; draft.claudeUrl = $('#ttC').value.trim();
+    draft.semStart = $('#ttS').value; draft.semEnd = $('#ttE').value; 
     closeDlg(); await applySetup({ ...draft, template: s.template });
   };
 }
@@ -878,6 +926,7 @@ this folder: lessons, units, the timetable, files the teacher added to a unit, a
 never are, and nothing here should point to a student.
 
 ## Files
+- \`profile.json\` (if there): the teacher's profile; the app loads it when it changes. Don't edit it.
 - \`timetable.json\`: classes (id, name, course, meets: dow 1=Mon..5=Fri, start, end, label), days off,
   dates to show, and the semester's first and last Monday. Read it; the teacher changes it in the app.
 - \`*.lesson.json\`: one lesson each. Edit in place and keep the "id". To add a lesson, write a new file
@@ -909,7 +958,8 @@ never are, and nothing here should point to a student.
     { "layout": "vocab", "title": "Word of the day", "word": "ethos", "pos": "noun", "body": "Meaning", "foot": "Example sentence" },
     { "layout": "exit", "title": "Exit ticket", "tag": "On a sticky note", "body": "The question" }
   ],
-  "look": "wood"
+  "look": "wood",
+  "atlas": "https://…"              // optional: this lesson's Atlas page (otherwise its unit's link is used)
 }
 "look" is the lesson's colors: wood (the teacher's template), white, cream, sage, sky, blush, charcoal, navy,
 stripe, band, bigtype, framed, notebook, chalk. Leave it out to use the teacher's default; change it only when asked.
@@ -917,8 +967,8 @@ stripe, band, bigtype, framed, notebook, chalk. Leave it out to use the teacher'
 - A slide's "ask" is what the teacher wants on that slide. Use it, and leave it as it is.
 - A slide's "talk" is comments: { "by": "you" | "claude", "text": "…" }. Reply by adding one with "by": "claude".
   Don't edit or remove the teacher's comments.
-- "status": "claude" means the teacher sent it to you; set it to "review" when you're done. Never set "approved";
-  only the teacher approves. "claudeNote" is your short summary of what you did.
+- "status": "claude" means the teacher sent it to you; set it to "review" when you're done.
+  "claudeNote" is your short summary of what you did.
 The teacher sees your changes slide by slide and keeps theirs or yours for each, so change what the lesson needs and leave the rest.
 For a video, give just "url" (and "start" in seconds, if it should start partway); the app adds the title, channel and picture.
 Rules: "size" is 28 to 36 (pt). Body lines are separated by \\n; a line starting with a tab is a sub-point.
@@ -995,6 +1045,13 @@ async function folderWriteAll() {
   await actFolderWrite();
   await bankWriteAll();
 }
+// A profile.json in the Planner folder loads by itself when it's new or changed, so each computer picks it up.
+async function profileFolderRead() {
+  let f; try { f = await (await L.dir.getFileHandle('profile.json')).getFile(); } catch { return; }
+  const seen = await kvGet('profMod'); if (seen === f.lastModified) return;
+  const j = JSON.parse(await f.text()); if (!Array.isArray(j.classes)) return;
+  await kvSet('profMod', f.lastModified); await applySetup(j);
+}
 // Picks up lessons Claude added or changed in the folder. A file changed since the app last wrote it wins.
 async function folderRead(say) {
   if (!L.dir || !L.dirOk) return;
@@ -1025,6 +1082,7 @@ async function folderRead(say) {
   } catch (e) { console.warn(e); if (say) toast('Couldn’t read the Planner folder'); return; }
   try { const u = await unitsFolderRead(); added += u.added; changed += u.changed; } catch (e) { console.warn(e); }
   try { changed += await actFolderRead(); } catch (e) { console.warn(e); }
+  try { await profileFolderRead(); } catch (e) { console.warn(e); }
   try { const r = await bankFolderRead(); added += r.added; changed += r.changed; } catch (e) { console.warn(e); }
   if (added || changed) { toast((added ? added + ' new' : '') + (added && changed ? ', ' : '') + (changed ? changed + ' updated' : '') + ' from the Planner folder'); renderLessons(); }
   else if (say) toast('No changes in the Planner folder');

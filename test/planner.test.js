@@ -29,7 +29,7 @@ async function open() {
 
 test('the Planner page carries none of the grading code', () => {
   const html = PAGE();
-  for (const s of ['gs-folder.json', 'pdfjsLib', 'PDFLib', 'mammoth', 'gsData', 'indexedDB.open(\'gs\'']) {
+  for (const s of ['gs-folder.json', 'PDFLib', 'gsData', 'indexedDB.open(\'gs\'']) {
     if (s === 'gs-folder.json') continue;   // named once, only to refuse the grading folder
     assert.ok(!html.includes(s), 'planner.html should not contain ' + s);
   }
@@ -250,11 +250,9 @@ test('working with Claude: notes and comments go out, Claude’s changes come ba
     await page.click('[data-a="versions"]');
     await page.waitForSelector('[data-rv="1"]'); await page.click('[data-rv="1"]');
     await page.waitForFunction(() => window.__planner.L.open.slides[1].title === 'Warm-up');
-    // approve is a marker only, and only the teacher's
-    await page.click('[data-a="approve"]');
-    await page.waitForSelector('.pl-st.st-approved');
-    assert.equal(await page.evaluate(() => window.__planner.L.open.status), 'approved');
-    await page.click('.ls-stage .ls-body');   // still editable
+    // there's no Approve: the lesson is always editable
+    assert.equal(await page.$('[data-a="approve"]'), null);
+    await page.click('.ls-stage .ls-body');
     await page.waitForSelector('.ls-ta');
     // the file never carries the pending copy
     const file = await page.evaluate(async () => { const P = window.__planner; await new Promise(r => setTimeout(r, 1200)); return JSON.parse(await (await (await P.L.dir.getFileHandle(P.L.open._file)).getFile()).text()); });
@@ -356,6 +354,233 @@ test('looks and teaching layouts: every layout in every look, edited in place, a
     // the template's own look keeps the template's background
     const wood = await page.evaluate(() => { const P = window.__planner, z = fflate.unzipSync(P.buildPptx({ ...P.L.open, look: 'wood' })); return new TextDecoder().decode(z['ppt/slides/slide2.xml']); });
     assert.ok(!/showMasterSp/.test(wood) && !/<p:bg>/.test(wood));
+    assert.deepEqual(errors, []);
+  } finally { await a.done(); }
+});
+
+test('the layout picker shows pictures, changes a slide and keeps its text; lessons link to Atlas', async () => {
+  const a = await open();
+  try {
+    const { page, errors } = a;
+    await page.evaluate(async s => { await window.__planner.applySetup(s); }, SETUP);
+    await page.evaluate(async () => {
+      const P = window.__planner, u = P.normUnit({ course: 'Course A', title: 'Unit 2: Argument', start: '2026-10-26', atlas: 'https://example.org/unit2', weeks: [{ focus: 'Claims' }, { focus: 'Evidence' }] });
+      await P.unitPut(u, true);
+      const l = P.normLesson({ title: 'Claims', slots: [{ classId: 'A1', date: '2026-11-03' }], slides: [{ layout: 'title', title: 'Claims' }, { layout: 'content', title: 'Big question', body: 'Is a claim the same as an opinion?' }] });
+      P.L.lessons.push(l); P.openLessonForTest(l, 1);
+    });
+    await page.waitForSelector('.ls-stage');
+    // the unit's Atlas link shows on the lesson; a lesson's own link wins
+    assert.equal(await page.$eval('.ls-top a[href^="https://example.org"]', x => x.getAttribute('href')), 'https://example.org/unit2');
+    await page.click('[data-a="atlas"]'); await page.waitForSelector('#atU'); await page.type('#atU', 'https://example.org/lesson'); await page.click('#dlgBox [data-ok]');
+    await page.waitForFunction(() => document.querySelector('.ls-top a[href="https://example.org/lesson"]'));
+    // Layout: pictures of every layout, the current one marked
+    await page.click('[data-a="layout"]');
+    await page.waitForSelector('#dlgBox .pl-look.on[data-addslide="content"] .pl-lmini');
+    assert.equal(await page.$$eval('#dlgBox [data-addslide]', b => b.length), 15);
+    await page.click('#dlgBox [data-addslide="discuss"]');
+    await page.waitForSelector('#lsStage .ls-bx[data-k="foot"]');
+    const s = await page.evaluate(() => window.__planner.L.open.slides[1]);
+    assert.equal(s.layout, 'discuss'); assert.equal(s.title, 'Big question'); assert.equal(s.body, 'Is a claim the same as an opinion?');
+    assert.match(s.foot, /Talk with a partner/);
+    assert.match(await page.$eval('[data-a="layout"]', b => b.textContent), /Discussion question/);
+    assert.deepEqual(errors, []);
+  } finally { await a.done(); }
+});
+
+test('a profile brings the timetable, units and a default look, and never replaces units already here', async () => {
+  const a = await open();
+  try {
+    const { page, errors } = a;
+    const prof = { ...SETUP, profile: 'Test profile', look: 'sage', units: [
+      { id: 'p-a-u1', course: 'Course A', title: 'Unit 1: Stories', start: '2026-08-31', weeks: [{ focus: 'Openings' }, { focus: 'Endings' }] },
+      { id: 'p-b-u1', course: 'Course B', title: 'Unit 1: Poems', start: '2026-09-07', weeks: [{ focus: 'Sound' }] }] };
+    assert.match(await page.$eval('#lessons', d => d.textContent), /Load your profile/);
+    // dropped on the page
+    await page.evaluate(p => { const dt = new DataTransfer(); dt.items.add(new File([JSON.stringify(p)], 'My profile.json', { type: 'application/json' })); document.querySelector('#lessons').dispatchEvent(new DragEvent('drop', { dataTransfer: dt, bubbles: true, cancelable: true })); }, prof);
+    await page.waitForFunction(() => window.__planner.L.setup && window.__planner.L.units.length === 2);
+    assert.match(await page.$eval('.toast', t => t.textContent), /Test profile loaded: 3 classes, 2 units/);
+    assert.equal(await page.evaluate(() => window.__planner.L.defLook), 'sage');
+    // loading it again keeps a unit she changed
+    await page.evaluate(async p => { const P = window.__planner; P.L.units[0].weeks[0].notes = 'mine'; await P.applySetup(p); }, prof);
+    assert.equal(await page.evaluate(() => window.__planner.L.units.length), 2);
+    assert.equal(await page.evaluate(() => window.__planner.L.units[0].weeks[0].notes), 'mine');
+    assert.deepEqual(errors, []);
+  } finally { await a.done(); }
+});
+
+test('the side panel: a book with its chapters and search, pages and slides into the Claude box, copied in one go', async () => {
+  const a = await open();
+  try {
+    const { page, errors } = a;
+    await page.evaluate(async s => { await window.__planner.applySetup(s); }, SETUP);
+    await page.evaluate(async () => { const P = window.__planner, l = P.normLesson({ title: 'Talk', slides: [{ layout: 'title', title: 'Talk' }, { layout: 'content', title: 'Partners', body: 'Talk with a partner' }] }); P.L.lessons.push(l); P.openLessonForTest(l, 1); });
+    await page.waitForSelector('.ls-stage');
+    await page.click('.ls-top [data-a="panel"]');
+    await page.waitForSelector('#side:not([hidden]) [data-sa="addbook"]');
+    const [chooser] = await Promise.all([page.waitForFileChooser(), page.click('[data-sa="addbook"]')]);
+    await chooser.accept([path.join(__dirname, 'fixtures', 'routines-sample.pdf')]);
+    // the PDF's own chapter list, with page numbers
+    await page.waitForFunction(() => document.querySelectorAll('#spToc .sp-toci').length === 4);
+    assert.deepEqual(await page.$$eval('#spToc .sp-toci', b => b.map(x => x.textContent)), ['Chapter 1: Talking p. 1', 'Think, pair, share p. 2', 'Chapter 2: Writing p. 3', 'Quick write p. 4']);
+    await page.waitForSelector('#spCanvas canvas');
+    await page.click('#spToc .sp-toci:nth-child(4)');
+    await page.waitForFunction(() => /Page 4 of 4/.test(document.querySelector('#spPg').textContent));
+    // search
+    await page.type('[data-sf="find"]', 'partner'); await page.keyboard.press('Enter');
+    await page.waitForFunction(() => /1 page with/.test(document.querySelector('#spToc').textContent));
+    await page.click('#spToc .sp-toci'); await page.waitForFunction(() => /Page 2 of 4/.test(document.querySelector('#spPg').textContent));
+    // the page goes to the Claude box with its chapter, and a slide dragged in from the left
+    await page.click('[data-sa="pagebox"]');
+    await page.waitForFunction(() => (document.querySelector('.sp-tabs .sp-n') || {}).textContent === '1');
+    await page.evaluate(() => { const dt = new DataTransfer(); dt.setData('text/x-slide', '1'); document.querySelector('#side').dispatchEvent(new DragEvent('drop', { dataTransfer: dt, bubbles: true, cancelable: true })); });
+    await page.waitForFunction(() => document.querySelectorAll('#spChips .sp-chip').length === 2);
+    assert.match(await page.$eval('#spChips', c => c.textContent), /routines-sample, Think, pair, share \(p\. 2\)[\s\S]*Talk, slide 2: Partners/);
+    await page.type('#spText', 'Make a warm-up from these');
+    await page.evaluate(() => { navigator.clipboard.writeText = t => { window.__copied = t; return Promise.resolve(); }; });
+    await page.click('[data-sa="boxcopy"]');
+    await page.waitForFunction(() => window.__copied);
+    const t = await page.evaluate(() => window.__copied);
+    assert.match(t, /^Make a warm-up from these\n\n\[routines-sample, Think, pair, share, page 2\]\nThink pair share\. Students think alone,\s+then talk with a partner\./);
+    assert.match(t, /\[Slide 2 of "Talk" \(Bullets\)\]\nTitle: Partners\nTalk with a partner/);
+    // the panel stays open while the lesson redraws, and Video says what it can do
+    await page.click('[data-st="video"]');
+    assert.match(await page.$eval('#spBody', b => b.textContent), /YouTube doesn’t allow its search inside other sites/);
+    await page.type('[data-sf="vid"]', 'https://youtu.be/dQw4w9WgXcQ?t=30'); await page.keyboard.press('Enter');
+    await page.waitForSelector('.sp-vid iframe[src="https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ?start=30"]');
+    assert.deepEqual(errors, []);
+  } finally { await a.done(); }
+});
+
+test('materials: a new document typed on a page, downloaded as Word, read back in, and put in the Claude box; units get documents too', async () => {
+  const a = await open();
+  try {
+    const { page, errors } = a;
+    await page.evaluate(async s => { await window.__planner.applySetup(s); }, SETUP);
+    await page.evaluate(() => {
+      window.__dl = [];
+      HTMLAnchorElement.prototype.click = function () { if (this.download) window.__dl.push({ name: this.download, href: this.href }); };
+      navigator.clipboard.writeText = t => { window.__copied = t; return Promise.resolve(); };
+      const P = window.__planner, l = P.normLesson({ title: 'Talk', slides: [{ layout: 'title', title: 'Talk' }] }); P.L.lessons.push(l); P.openLessonForTest(l, 0);
+    });
+    await page.waitForSelector('.pl-mats [data-ma="newdoc"]');
+    await page.click('.pl-mats [data-ma="newdoc"]');
+    await page.waitForSelector('#docPage');
+    assert.equal(await page.$eval('[data-df="name"]', i => i.value), 'Talk handout');
+    await page.evaluate(() => { const h = document.querySelector('#docPage h1'); const r = document.createRange(); r.selectNodeContents(h); r.collapse(false); const s = getSelection(); s.removeAllRanges(); s.addRange(r); });
+    await page.keyboard.type(' exit ticket'); await page.keyboard.press('Enter');
+    await page.click('[data-dt="ul"]');
+    await page.keyboard.type('Name one claim'); await page.keyboard.press('Enter'); await page.keyboard.type('Give one reason');
+    await page.click('[data-dt="table"]');
+    // download as Word: the text and the list are in the .docx
+    await page.click('[data-da="docx"]');
+    await page.waitForFunction(() => window.__dl.length === 1);
+    const xml = await page.evaluate(async () => { const b = new Uint8Array(await (await fetch(window.__dl[0].href)).arrayBuffer()); const z = fflate.unzipSync(b); window.__docx = b; return { names: Object.keys(z), doc: fflate.strFromU8(z['word/document.xml']) }; });
+    assert.equal(await page.evaluate(() => window.__dl[0].name), 'Talk handout.docx');
+    for (const n of ['[Content_Types].xml', 'word/document.xml', 'word/styles.xml', 'word/numbering.xml']) assert.ok(xml.names.includes(n), n);
+    assert.match(xml.doc, /Talk handout exit ticket/);
+    assert.match(xml.doc, /<w:numPr>[\s\S]*Name one claim[\s\S]*Give one reason/);
+    assert.match(xml.doc, /<w:tbl>/);
+    // into the Claude box as text
+    await page.click('[data-da="claude"]');
+    await page.click('.ls-top [data-a="panel"]');
+    await page.waitForSelector('#side:not([hidden]) [data-st="claude"]'); await page.click('[data-st="claude"]');
+    await page.waitForSelector('[data-sa="boxcopy"]');
+    assert.match(await page.$eval('#spChips', c => c.textContent), /Talk handout/);
+    await page.click('[data-sa="boxcopy"]'); await page.waitForFunction(() => window.__copied);
+    assert.match(await page.evaluate(() => window.__copied), /^\[Document: Talk handout\]\nTalk handout exit ticket\nName one claim\nGive one reason/);
+    // back to the lesson: the document is listed and kept after a reload of the lesson
+    await page.click('[data-da="back"]');
+    await page.waitForSelector('.pl-mats .pl-file');
+    assert.match(await page.$eval('.pl-mats', m => m.textContent), /DOCTalk handout\s*Document/);
+    // a Word file dropped in comes in as a file, and "Edit a copy" turns it into a document
+    await page.evaluate(() => { const dt = new DataTransfer(); dt.items.add(new File([window.__docx], 'Reading guide.docx', { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' })); document.querySelector('.pl-mats').dispatchEvent(new DragEvent('drop', { dataTransfer: dt, bubbles: true, cancelable: true })); });
+    await page.waitForFunction(() => /Reading guide\.docx/.test(document.querySelector('.pl-mats').textContent));
+    await page.click('.pl-mats [data-ma="editdocx"]');
+    await page.waitForSelector('#docPage');
+    assert.equal(await page.$eval('[data-df="name"]', i => i.value), 'Reading guide');
+    assert.match(await page.$eval('#docPage', p => p.innerHTML), /<h1>Talk handout exit ticket<\/h1>[\s\S]*<li>Name one claim<\/li>/);
+    await page.click('[data-da="back"]');
+    await page.waitForFunction(() => document.querySelectorAll('.pl-mats .pl-file').length === 3);
+    // a unit makes its own documents next to its files, and goes back to the unit
+    await page.evaluate(async () => { const P = window.__planner, u = P.normUnit({ course: 'Course A', title: 'Unit 2: Argument', start: '2026-10-26', weeks: [{}] }); await P.unitPut(u, true); P.openUnit(P.L.units.find(x => x.id === u.id)); });
+    await page.waitForSelector('[data-owner^="unit|"] [data-ma="newdoc"]');
+    await page.click('[data-owner^="unit|"] [data-ma="newdoc"]');
+    await page.waitForSelector('#docPage');
+    await page.click('[data-da="back"]');
+    await page.waitForFunction(() => { const s = document.querySelector('[data-owner^="unit|"]'); return s && /Unit 2- Argument handout\s*Document/.test(s.textContent); });
+    assert.deepEqual(errors, []);
+  } finally { await a.done(); }
+});
+
+test('right-click a slide or a lesson to comment for Claude; search finds slides and documents; copy a lesson; print the week', async () => {
+  const a = await open();
+  try {
+    const { page, errors } = a;
+    await page.evaluate(async s => { await window.__planner.applySetup(s); }, SETUP);
+    await page.evaluate(async () => {
+      navigator.clipboard.writeText = t => { window.__copied = t; return Promise.resolve(); };
+      window.__printed = [];
+      window.open = () => ({ document: { write: h => window.__printed.push(h), close() { } }, focus() { }, print() { } });
+      const P = window.__planner;
+      P.L.weekOf = '2026-11-02';
+      const l = P.normLesson({ title: 'Claims', slots: [{ classId: 'A1', date: '2026-11-03' }], slides: [{ layout: 'title', title: 'Claims' }, { layout: 'content', title: 'Counterclaims', body: 'Find the counterclaim in paragraph 3' }] });
+      P.L.lessons.push(l); P.L.view = 'week'; P.renderLessons();
+    });
+    // right-click the lesson card on the week: comment for Claude
+    await page.waitForSelector('.ls-card[data-open]');
+    await page.click('.ls-card[data-open]', { button: 'right' });
+    await page.waitForSelector('.pl-ctx [data-cx="note"]');
+    assert.match(await page.$eval('.pl-ctx', m => m.textContent), /Comment for Claude on this lesson[\s\S]*Copy this lesson to another day/);
+    await page.click('.pl-ctx [data-cx="note"]');
+    await page.waitForSelector('#plNoteT');
+    await page.type('#plNoteT', 'Add a warm-up about rebuttals');
+    await page.click('.pl-note [data-nok]');
+    await page.waitForFunction(() => !document.querySelector('.pl-ctx'));
+    // open the lesson, right-click slide 2 in the list and add it with a comment
+    await page.click('.ls-card[data-open]');
+    await page.waitForSelector('.ls-th[data-go="1"]');
+    await page.click('.ls-th[data-go="1"]', { button: 'right' });
+    await page.click('.pl-ctx [data-cx="note"]');
+    await page.type('#plNoteT', 'Make this a two-column slide');
+    await page.keyboard.down('Control'); await page.keyboard.press('Enter'); await page.keyboard.up('Control');
+    await page.waitForFunction(() => !document.querySelector('.pl-ctx'));
+    await page.click('.ls-top [data-a="panel"]');
+    await page.waitForSelector('#side:not([hidden]) [data-st="claude"]'); await page.click('[data-st="claude"]');
+    await page.waitForFunction(() => document.querySelectorAll('#spChips .sp-chip').length === 2);
+    assert.match(await page.$eval('#spChips', c => c.textContent), /Comment on Claims[\s\S]*Comment on Claims, slide 2: Counterclaims/);
+    await page.click('[data-sa="boxcopy"]'); await page.waitForFunction(() => window.__copied);
+    const t = await page.evaluate(() => window.__copied);
+    assert.match(t, /My comment: Add a warm-up about rebuttals\nOn: \[Lesson\]\n# Claims\nCourse A-1, /);
+    assert.match(t, /My comment: Make this a two-column slide\nOn: \[Slide 2 of "Claims" \(Bullets\)\]\nTitle: Counterclaims\nFind the counterclaim in paragraph 3/);
+    // copy to another day: its own slides, on the new class
+    await page.click('.ls-th[data-go="1"]', { button: 'right' });
+    await page.click('.pl-ctx [data-cx="copy"]');
+    await page.waitForSelector('#cpC');
+    await page.select('#cpC', 'B1');
+    await page.$eval('#cpD', i => { i.value = '2026-11-03'; });
+    await page.click('#dlgBox [data-ok]');
+    await page.waitForFunction(() => window.__planner.L.lessons.length === 2 && window.__planner.L.open && window.__planner.L.open.slots[0].classId === 'B1');
+    const both = await page.evaluate(() => { const [x, y] = window.__planner.L.lessons; return { ids: x.id !== y.id && x.slides[1].id !== y.slides[1].id, title: y.title, body: y.slides[1].body }; });
+    assert.deepEqual(both, { ids: true, title: 'Claims', body: 'Find the counterclaim in paragraph 3' });
+    // search finds the slide text
+    const hits = await page.evaluate(async () => (await window.__planner.findAll('counterclaim')).map(r => r.kind + ' ' + r.title));
+    assert.deepEqual(hits, ['slide Claims, slide 2', 'slide Claims, slide 2']);
+    await page.click('[data-a="back"]');
+    await page.waitForSelector('#plFind');
+    await page.type('#plFind', 'paragraph 3'); await page.keyboard.press('Enter');
+    await page.waitForSelector('#fdL .pl-hit');
+    assert.match(await page.$eval('#fdL', b => b.textContent), /Claims, slide 2Course A-1 Tue 11\/3…[^▭]*Find the counterclaim in paragraph 3/);
+    await page.click('#fdL .pl-hit');
+    await page.waitForFunction(() => window.__planner.L.view === 'edit' && window.__planner.L.cur === 1);
+    // print the week: both classes with their lessons and slide titles
+    await page.click('[data-a="back"]');
+    await page.waitForSelector('[data-a="printweek"]');
+    await page.click('[data-a="printweek"]');
+    const pr = await page.evaluate(() => window.__printed[0]);
+    assert.match(pr, /<h1>Week of November 2<\/h1>/);
+    assert.match(pr, /Tue 11\/3[\s\S]*Course A-1[\s\S]*Claims[\s\S]*<li>Counterclaims<\/li>[\s\S]*Course B-1[\s\S]*Claims/);
+    assert.match(pr, /Fri 11\/6 · Day off/);
     assert.deepEqual(errors, []);
   } finally { await a.done(); }
 });

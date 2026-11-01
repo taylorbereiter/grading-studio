@@ -10,11 +10,10 @@ const MAX_FILE = 40 * 1024 * 1024;
 function topBar(view, extra) {
   const tab = (v, t) => '<button class="pl-tab' + (view === v ? ' on' : '') + '" data-a="tab" data-v="' + v + '"' + (view === v ? ' aria-current="page"' : '') + '>' + t + '</button>';
   return '<div class="ls-top"><span class="title">Planner</span><nav class="pl-tabs" aria-label="Views">' + tab('semester', 'Semester') + tab('week', 'Week') + tab('units', 'Units') + tab('activities', 'Activities') + tab('bank', 'Rubrics') + '</nav>' +
-    (extra || '') + '<span class="sp"></span>' + folderChip() +
-    '<button class="btn sm ghost" data-a="import">Import…</button><button class="btn sm ghost" data-a="setup">Timetable</button><button class="btn sm ghost themeBtn">' + (document.documentElement.dataset.theme === 'dark' ? 'Light mode' : 'Dark mode') + '</button>' +
+    (extra || '') + '<span class="sp"></span><input type="search" id="plFind" class="pl-find" placeholder="Search lessons…" aria-label="Search lessons, slides, documents and units">' + folderChip() +
+    panelBtn() + '<button class="btn sm ghost" data-a="import">Import…</button><button class="btn sm ghost" data-a="setup">Timetable</button><button class="btn sm ghost themeBtn">' + (document.documentElement.dataset.theme === 'dark' ? 'Light mode' : 'Dark mode') + '</button>' +
     '<button class="btn sm" data-a="close" title="Go to grading. The Planner and grading keep their work apart.">Grading Studio</button></div>';
 }
-const claudeLink = () => (L.setup && L.setup.claudeUrl) || 'https://claude.ai/new';
 
 // The Planner folder must never be the grading folder, or hold it: Claude reads everything in the Planner folder.
 async function notGradingFolder(h) {
@@ -31,7 +30,7 @@ async function unitsSave() { await kvSet('units', L.units.map(u => { const c = {
 function normUnit(x) {
   x = x && typeof x === 'object' ? x : {};
   const weeks = (Array.isArray(x.weeks) ? x.weeks : []).map(w => ({ focus: String((w && w.focus) || ''), notes: String((w && w.notes) || ''), standards: String((w && w.standards) || '') }));
-  const files = (Array.isArray(x.files) ? x.files : []).filter(f => f && typeof f.name === 'string').map(f => ({ id: typeof f.id === 'string' ? f.id : '', name: f.name, kind: ['atlas', 'summative', 'other'].includes(f.kind) ? f.kind : 'other', type: String(f.type || ''), size: +f.size || 0, added: +f.added || 0 }));
+  const files = (Array.isArray(x.files) ? x.files : []).filter(f => f && typeof f.name === 'string').map(f => ({ id: typeof f.id === 'string' ? f.id : '', name: f.name, kind: ['atlas', 'summative', 'other', 'doc'].includes(f.kind) ? f.kind : 'other', type: String(f.type || ''), size: +f.size || 0, added: +f.added || 0 }));
   const start = /^\d{4}-\d\d-\d\d$/.test(x.start) ? ymd(mondayOf(parseYmd(x.start))) : ymd(mondayOf(new Date()));
   const u = { id: typeof x.id === 'string' && x.id ? x.id : lid(), course: String(x.course || ''), title: String(x.title || 'New unit'), start, weeks: weeks.length ? weeks : [{ focus: '', notes: '', standards: '' }],
     atlas: /^https?:\/\//.test(x.atlas) ? String(x.atlas) : '', color: /^#[0-9a-f]{6}$/i.test(x.color) ? x.color : '', files, updated: +x.updated || Date.now() };
@@ -119,8 +118,8 @@ function renderSemester() {
   const cur = document.querySelector('.pl-row.now'); if (cur) cur.scrollIntoView({ block: 'center' });
 }
 function setupNeeded() {
-  return '<div class="ls-empty"><h2>Load your timetable</h2><p>The Planner lines lessons and units up with your classes once it knows when they meet. Load a setup file (timetable, days off, semester dates and slide template), or type your classes in.</p>' +
-    '<div class="row"><button class="btn primary" data-a="loadsetup">Load setup file…</button><button class="btn" data-a="setup">Type in my classes</button></div></div>';
+  return '<div class="ls-empty"><h2>Load your profile</h2><p>The Planner lines lessons and units up with your classes once it knows when they meet. Load your profile file (timetable, school calendar, semester dates, units and slide template), drop it on this page, or type your classes in. You do this once on each computer.</p>' +
+    '<div class="row"><button class="btn primary" data-a="loadsetup">Load my profile…</button><button class="btn" data-a="setup">Type in my classes</button></div></div>';
 }
 
 /* ---------- the unit strip above the week view ---------- */
@@ -187,9 +186,9 @@ function renderUnit() {
   });
   h += '</div></section>';
   // files
-  h += '<section class="pl-card"><div class="lhead"><h2>Summative and unit files</h2><span class="sp"></span><button class="btn sm" data-a="addfile">Add files…</button></div>' +
-    '<div class="pl-drop" id="plFileDrop">' + (other.length ? '<div class="pl-files">' + other.map(f => '<div class="pl-file"><span class="pl-ft">' + esc((f.name.split('.').pop() || '').slice(0, 4).toUpperCase()) + '</span><div class="pl-fn"><b>' + esc(f.name) + '</b><span>' + (f.kind === 'summative' ? 'Summative' : 'Unit file') + ' · ' + kb(f.size) + '</span></div>' +
-      '<select class="btn sm" data-fkind="' + f.id + '" aria-label="Kind"><option value="summative"' + (f.kind === 'summative' ? ' selected' : '') + '>Summative</option><option value="other"' + (f.kind === 'other' ? ' selected' : '') + '>Unit file</option></select>' +
+  h += '<section class="pl-card" data-owner="unit|' + esc(u.id) + '"><div class="lhead"><h2>Summative and unit files</h2><span class="sp"></span><button class="btn sm" data-ma="newdoc">+ New document</button><button class="btn sm" data-a="addfile">Add files…</button></div>' +
+    '<div class="pl-drop" id="plFileDrop">' + (other.length ? '<div class="pl-files">' + other.map(f => '<div class="pl-file"><span class="pl-ft">' + (f.kind === 'doc' ? 'DOC' : esc((f.name.split('.').pop() || '').slice(0, 4).toUpperCase())) + '</span><div class="pl-fn"><b>' + esc(f.name) + '</b><span>' + (f.kind === 'doc' ? 'Document' : (f.kind === 'summative' ? 'Summative' : 'Unit file') + ' · ' + kb(f.size)) + '</span></div>' +
+      (f.kind === 'doc' ? '<button class="btn sm ghost" data-ma="claude" data-id="' + f.id + '" title="Put this in the Claude box">+ Claude box</button>' : '<select class="btn sm" data-fkind="' + f.id + '" aria-label="Kind"><option value="summative"' + (f.kind === 'summative' ? ' selected' : '') + '>Summative</option><option value="other"' + (f.kind === 'other' ? ' selected' : '') + '>Unit file</option></select>') +
       '<button class="btn sm" data-a="viewfile" data-fid="' + f.id + '">Open</button><button class="btn sm ghost" data-a="dlfile" data-fid="' + f.id + '">Download</button><button class="btn sm ghost" data-a="rmfile" data-fid="' + f.id + '">Remove</button></div>').join('') + '</div>' : '') +
     '<p class="muted">Drop task sheets, rubrics or exemplars here. Planning files only: never student work. They go to the Planner folder, where Claude can read them.</p></div></section>';
   h += bankUnitSection(u);
@@ -228,6 +227,7 @@ async function addUnitFiles(u, files, kind) {
 }
 async function viewFile(u, id) {
   const f = u.files.find(x => x.id === id), b = await fileBlob(id); if (!f || !b) return toast('That file is missing');
+  if (f.kind === 'doc' && u.id) return docOpen({ t: 'unit', id: u.id }, id);
   if (/^image\//.test(b.type || f.type)) {
     const url = URL.createObjectURL(b);
     openDlg('<div class="bh"><h2>' + esc(f.name) + '</h2></div><div class="bb pl-big"><img src="' + url + '" alt=""></div><div class="bf"><button class="btn" data-x>Close</button></div>');
@@ -242,7 +242,7 @@ function askWeeks(u) {
   const msg = 'Please fill in the weeks of my ' + u.course + ' unit "' + u.title + '" from its Atlas screenshots. ' + where +
     'It starts the week of ' + shortDate(u.start) + ' and has ' + u.weeks.length + ' weeks. Read the screenshots and write each week\'s focus (and standards, if shown) into "weeks" in the unit file, one entry per week, in order. Keep my notes. Then tell me what you filled in and anything you weren\'t sure of.' +
     (where ? '' : '\n\n(My Planner folder isn\'t linked yet, so I\'ll attach the screenshots.)');
-  copyText(msg).then(() => { window.open(claudeLink(), '_blank', 'noopener'); toast(where ? 'Message copied. Paste it into Claude.' : 'Message copied. Link the Planner folder so Claude can read the screenshots, or attach them.', 6000); });
+  copyText(msg).then(() => { toast(where ? 'Message copied. Paste it into Claude.' : 'Message copied. Link the Planner folder so Claude can read the screenshots, or attach them.', 6000); });
 }
 function pasteWeeksDlg(u) {
   openDlg('<div class="bh"><h2>Weeks of ' + esc(u.title) + '</h2></div><div class="bb"><p class="muted" style="margin-top:0">One line per week: what that week is about. You can copy the week list straight out of Atlas. Lines starting with “Week 3:” or similar are fine.</p>' +
@@ -279,7 +279,7 @@ async function unitsClick(e) {
   if (a === 'addshot') { const i = $('#plShotIn'); i.onchange = () => { const fs = [...i.files]; i.value = ''; addUnitFiles(u, fs, 'atlas'); }; i.click(); return true; }
   if (a === 'addfile') { const i = $('#plFileIn'); i.onchange = () => { const fs = [...i.files]; i.value = ''; addUnitFiles(u, fs, null); }; i.click(); return true; }
   if (a === 'viewfile') { await viewFile(u, t.dataset.fid); return true; }
-  if (a === 'dlfile') { const f = u.files.find(x => x.id === t.dataset.fid), b = await fileBlob(t.dataset.fid); if (f && b) saveBlob(f.name, b); return true; }
+  if (a === 'dlfile') { const f = u.files.find(x => x.id === t.dataset.fid), b = await fileBlob(t.dataset.fid); if (f && b) { if (f.kind === 'doc') saveBlob(f.name + '.docx', await docxOf(await b.text(), f.name)); else saveBlob(f.name, b); } return true; }
   if (a === 'rmfile') {
     if (t.dataset.sure !== '1') { t.dataset.sure = '1'; t.textContent = 'Click again to remove'; return true; }
     const f = u.files.find(x => x.id === t.dataset.fid); u.files = u.files.filter(x => x.id !== t.dataset.fid);
@@ -342,6 +342,8 @@ async function unitFolderWrite(u) {
   if (u.files.length) {
     const fd = await dir.getDirectoryHandle(unitBase(u) + ' files', { create: true });
     for (const f of u.files) {
+      // documents go to the folder as Word files, so Claude and Word can both open them
+      if (f.kind === 'doc') { const b = await fileBlob(f.id); if (b) await writeFile(fd, f.name + '.docx', await docxOf(await b.text(), f.name)); continue; }
       let have = null; try { have = await (await fd.getFileHandle(f.name)).getFile(); } catch { }
       if (have && have.size === f.size) continue;
       const b = await fileBlob(f.id); if (b) await writeFile(fd, f.name, b);
@@ -375,5 +377,5 @@ async function unitsFolderRead() {
   return out;
 }
 
-window.__planner = { bankPut, normRubric, slideHtml, LOOKS, TEACH, TEACH_SAMPLE, versions: versionsOf, ytIds: us => us.map(u => [ytId(u), ytStart(u)]), openLessonForTest: (l, i) => { openLesson(l); goSlide(i || 0); }, L, applySetup, renderLessons, setPicture, folderWriteAll, folderRead, buildPptx, normLesson, normUnit, unitPut, unitAt, addUnitFiles, notGradingFolder, unitsFolderRead, semesterMondays };
+window.__planner = { bankPut, normRubric, slideHtml, LOOKS, TEACH, TEACH_SAMPLE, versions: versionsOf, ytIds: us => us.map(u => [ytId(u), ytStart(u)]), openLessonForTest: (l, i) => { openLesson(l); goSlide(i || 0); }, L, applySetup, renderLessons, setPicture, folderWriteAll, folderRead, buildPptx, normLesson, normUnit, unitPut, unitAt, addUnitFiles, notGradingFolder, unitsFolderRead, semesterMondays, openUnit, docxOf, findAll, copyLesson };
 openLessons();
