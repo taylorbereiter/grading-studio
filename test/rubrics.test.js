@@ -23,7 +23,7 @@ after(async () => { await browser.close(); });
 
 const LV = { 4: 'Clear thesis, argued all the way through', 3: 'Clear thesis, mostly argued', 2: 'A thesis that wanders', 1: 'Hard to find a thesis', 0: 'No thesis' };
 const lvSel = (r, v) => '[data-lvi="' + r + '"][data-lvv="' + v + '"]';
-const openSetup = async page => { await page.evaluate(() => window.__gs.openSetup()); await page.waitForSelector('#setupBody'); };
+const openSetup = async page => { await page.evaluate(() => window.__gs.openSetup()); await page.waitForSelector('#setupBody'); await page.waitForFunction(() => !window.__gs.bankBusy()); };
 const openDetails = (page, r) => page.$eval('[data-lvrow="' + r + '"]', d => { d.open = true; });
 async function typeLevels(page, r, lv) {
   await openDetails(page, r);
@@ -152,7 +152,7 @@ async function saveRubricAs(page, name, opts) {
   await page.click('#dlgBox [data-rbsave]');
   await answerDlg(page, { typed: name });
   if (opts && opts.replace != null) await answerDlg(page, { yes: opts.replace });
-  await page.waitForFunction(() => !document.querySelector('#askDlg'));
+  await page.waitForFunction(() => !document.querySelector('#askDlg') && !window.__gs.bankBusy());
 }
 
 const setupClosed = page => page.waitForFunction(() => document.querySelector('#dlg').hidden);
