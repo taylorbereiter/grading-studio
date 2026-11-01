@@ -4,9 +4,10 @@ let h = fs.readFileSync('src/app.html', 'utf8');
 const rep = (k, v) => { h = h.split(k).join(v); };
 // Inter (SIL Open Font License, which asks that its text travels with the font), built in so nothing is fetched on load.
 const face = (file, range) => '@font-face{font-family:"Inter";font-style:normal;font-weight:100 900;font-display:swap;src:url(data:font/woff2;base64,' + fs.readFileSync('src/fonts/' + file).toString('base64') + ') format("woff2");unicode-range:' + range + '}\n';
-rep('/*@@FONT@@*/', '/*\n' + fs.readFileSync('src/fonts/OFL.txt', 'utf8') + '*/\n' +
+const fontCss = ('/*\n' + fs.readFileSync('src/fonts/OFL.txt', 'utf8') + '*/\n' +
   face('inter-latin-wght-normal.woff2', 'U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD') +
   face('inter-latin-ext-wght-normal.woff2', 'U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF'));
+rep('/*@@FONT@@*/', fontCss);
 rep('/*@@POLISHCSS@@*/', fs.readFileSync('src/polish.css', 'utf8') + fs.readFileSync('src/scans.css', 'utf8'));
 rep('/*@@RUBRICSCSS@@*/', fs.readFileSync('src/rubrics.css', 'utf8'));
 rep('/*@@INSIGHTCSS@@*/', fs.readFileSync('src/insight.css', 'utf8'));
@@ -25,7 +26,7 @@ rep('/*@@HEICLICENSE@@*/', 'libheif-js ' + require('./' + nm + 'libheif-js/packa
   rep('/*@@HEIC@@*/', require('zlib').deflateRawSync(Buffer.concat([head, wasm, Buffer.from(js.replace(b64, () => '@@WASM@@'))]), { level: 9, memLevel: 9 }).toString('base64'));
 }
 // Lines that are only a comment stay in src/ but don't ship, to keep the one file from growing. A test in polish.test.js checks each one really is a comment.
-rep('/*@@APP@@*/', (fs.readFileSync('src/migrate.js', 'utf8') + '\ngsData.boot(function () {\n' + ['app', 'names', 'marking', 'grades', 'saving', 'carryover', 'exportreport', 'rubrics', 'intake', 'polish', 'insight', 'scans', 'merge', 'folder', 'takehome', 'lessons'].map(n => fs.readFileSync('src/' + n + '.js', 'utf8')).join('\n') + '\n});').replace(/^[ \t]*\/\/.*\r?\n/gm, ''));
+rep('/*@@APP@@*/', (fs.readFileSync('src/migrate.js', 'utf8') + '\ngsData.boot(function () {\n' + ['app', 'names', 'marking', 'grades', 'saving', 'carryover', 'exportreport', 'rubrics', 'intake', 'polish', 'insight', 'scans', 'merge', 'folder', 'takehome'].map(n => fs.readFileSync('src/' + n + '.js', 'utf8')).join('\n') + '\n});').replace(/^[ \t]*\/\/.*\r?\n/gm, ''));
 rep("'/*@@GCID@@*/'", JSON.stringify(process.env.GCID || ''));
 rep("'/*@@VERSION@@*/'", JSON.stringify(require('./package.json').version));   // the version shown in the app: set it in package.json
 fs.mkdirSync('out', { recursive: true });
@@ -37,3 +38,15 @@ fs.mkdirSync('out/netlify', { recursive: true });
 fs.writeFileSync('out/netlify/index.html', '<!doctype html>\n<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"></head><body>\n' + h + '\n</body></html>');
 fs.writeFileSync('out/artifact.html', h.split('�').join('\\uFFFD'));
 console.log((h.length / 1e6).toFixed(2) + 'MB');
+// The Planner: its own page, built only from src/planner. No grading code goes into it.
+{
+  let p = fs.readFileSync('src/planner/planner.html', 'utf8');
+  const prep = (k, v) => { p = p.split(k).join(v); };
+  prep('/*@@FONT@@*/', fontCss);
+  prep('/*@@FFLATE@@*/', fs.readFileSync(nm + 'fflate/umd/index.js', 'utf8'));
+  prep('/*@@PLANNER@@*/', ('(() => {\n' + ['base', 'review', 'lessons', 'looks', 'activities', 'units'].map(n => fs.readFileSync('src/planner/' + n + '.js', 'utf8')).join('\n') + '\n})();').replace(/^[ \t]*\/\/.*\r?\n/gm, ''));
+  const page = '<!doctype html>\n<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"></head><body>\n' + p + '\n</body></html>';
+  fs.writeFileSync('planner.html', page);
+  fs.writeFileSync('Planner.html', page);
+  console.log('Planner ' + (p.length / 1e6).toFixed(2) + 'MB');
+}
