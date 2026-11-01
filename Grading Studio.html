@@ -258,6 +258,20 @@ body{padding-bottom:var(--savebar,0px)}.app{height:calc(100vh - var(--savebar,0p
 .crit .cn{font-weight:600;font-size:14px;margin-bottom:7px;display:flex;justify-content:space-between}
 .crit .cn em{font-style:normal;color:var(--accent);font-weight:600}
 .scores{display:grid;grid-template-columns:repeat(8,1fr);gap:3px}
+.scores.slide{display:block;position:relative;padding:2px 0 0;--th:20px}
+.srange{-webkit-appearance:none;appearance:none;width:100%;height:24px;margin:0;background:none;cursor:pointer;display:block}
+.srange::-webkit-slider-runnable-track{height:6px;border-radius:3px;background:var(--track)}
+.srange::-moz-range-track{height:6px;border-radius:3px;background:var(--track)}
+.srange::-webkit-slider-thumb{-webkit-appearance:none;width:var(--th);height:var(--th);border-radius:50%;background:var(--accent);border:2px solid var(--surface);box-shadow:0 0 0 3px var(--accent-soft);margin-top:-7px}
+.srange::-moz-range-thumb{width:var(--th);height:var(--th);border-radius:50%;background:var(--accent);border:2px solid var(--surface);box-shadow:0 0 0 3px var(--accent-soft)}
+.srange.unset::-webkit-slider-thumb{background:var(--surface);border-color:var(--line-strong);box-shadow:none}
+.srange.unset::-moz-range-thumb{background:var(--surface);border-color:var(--line-strong);box-shadow:none}
+.srange:focus-visible{outline:none}.srange:focus-visible::-webkit-slider-thumb{outline:2px solid var(--accent);outline-offset:2px}
+.sticks{position:relative;height:24px}
+.scores.slide .sticks button{position:absolute;top:0;left:calc(var(--th) / 2 + var(--k) * (100% - var(--th)) / 7);transform:translateX(-50%);min-width:26px;padding:2px 3px;border:0;background:none;border-radius:5px;font-size:12.5px}
+.scores.slide .sticks button.half{font-size:11.5px}
+.scores.slide .sticks button:hover{background:var(--surface-2)}
+.scores.slide .sticks button[aria-pressed=true]{background:none;box-shadow:none;color:var(--accent);font-weight:700}
 .scores button{border:1px solid var(--line);background:var(--surface);border-radius:6px;padding:6px 0;font-size:13px;font-weight:600;font-variant-numeric:tabular-nums;color:var(--fg-2)}
 .scores button.half{font-weight:500;color:var(--muted);font-size:12px}
 .scores button[aria-pressed=true]{background:var(--accent);border-color:var(--accent);color:var(--accent-fg);box-shadow:0 0 0 3px var(--accent-soft)}
@@ -730,6 +744,15 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
 #ovTip b{font-size:14px;font-weight:700;color:var(--fg)}
 #ovTip em{font-style:normal;color:var(--muted)}
 #ovTip em[hidden]{display:none}
+
+/* the bank in Rubric setup */
+.rbunit{align-self:flex-start;max-width:100%;border:1px solid var(--line-strong);border-radius:6px;padding:4px 6px;background:var(--surface);font-size:13px;margin-bottom:4px}
+.rlg{font-size:12px;font-weight:600;color:var(--muted);margin-top:6px;text-transform:none}
+.rlg:first-child{margin-top:0}
+.rbscales{display:inline-flex;gap:6px;flex-wrap:wrap;align-items:center}
+.rbscales select{border:1px solid var(--line-strong);border-radius:6px;background:var(--surface)}
+.rbask{display:flex;flex-direction:column;gap:4px;font-weight:600;font-size:13.5px;margin-bottom:10px}
+.rbask input,.rbask select{border:1px solid var(--line-strong);border-radius:6px;padding:6px 8px;background:var(--surface);font-weight:400}
 
 /* the dots: the accent in light; a step deeper in dark, inside the range that reads as a mark on a dark surface */
 :root{--dot:var(--accent)}
@@ -1869,7 +1892,7 @@ SOFTWARE.
 <script>/* ---------------- saved-data versions: a safety copy, then any format changes, before the app starts ---------------- */
 const gsData = (() => {
   'use strict';
-  const APP_VERSION = "1.2.0";   // from package.json, the one place it's set
+  const APP_VERSION = "1.3.0";   // from package.json, the one place it's set
   const MIGRATIONS = [
   ];
   const DATA_V = Math.max(1, ...MIGRATIONS.map(s => s.to));
@@ -3667,8 +3690,10 @@ function renderGrade() {
   let h = '';
   if (setup.mode === 'rubric') {
     h += '<h3>Rubric <button class="link" id="editRubric" style="font-size:12px;text-transform:none;letter-spacing:0">Edit</button></h3>';
-    h += setup.criteria.map((c, i) => '<div class="crit"><div class="cn"><span>' + esc(c) + '</span><em>' + (g.rubric[i] == null ? '' : fmtNum(g.rubric[i]) + ' / 4') + '</em></div><div class="scores" data-c="' + i + '">' +
-      RUBRIC_STEPS.map(v => '<button class="' + (v % 1 ? 'half' : '') + '" data-v="' + v + '" aria-pressed="' + (g.rubric[i] === v) + '">' + v + '</button>').join('') + '</div>' + levelsHtml(i, g.rubric[i]) + '</div>').join('');
+    h += setup.criteria.map((c, i) => { const v = g.rubric[i], k = RUBRIC_STEPS.indexOf(v);
+      return '<div class="crit"><div class="cn"><span>' + esc(c) + '</span><em>' + (v == null ? '' : fmtNum(v) + ' / 4') + '</em></div><div class="scores slide" data-c="' + i + '">' +
+        '<input type="range" class="srange' + (v == null ? ' unset' : '') + '" min="0" max="' + (RUBRIC_STEPS.length - 1) + '" step="1" value="' + Math.max(0, k) + '" aria-label="Score for ' + esc(c) + '" aria-valuetext="' + (v == null ? 'Not scored' : fmtNum(v) + ' out of 4') + '">' +
+        '<div class="sticks">' + RUBRIC_STEPS.map((w, j) => '<button class="' + (w % 1 ? 'half' : '') + '" style="--k:' + j + '" data-v="' + w + '" tabindex="-1" aria-pressed="' + (v === w) + '">' + w + '</button>').join('') + '</div></div>' + levelsHtml(i, v) + '</div>'; }).join('');
   } else {
     h += '<h3>Score <button class="link" id="editRubric" style="font-size:12px;text-transform:none;letter-spacing:0">Edit</button></h3>' +
       '<div class="pts"><input type="number" step="0.5" min="0" id="ptsIn" value="' + esc(g.points) + '" aria-label="Points"><span class="muted">out of ' + esc(setup.outOf) + '</span></div>';
@@ -3709,6 +3734,33 @@ $('#grade').addEventListener('click', e => {
   if (e.target.closest('#nextBtn')) stepStudent(1);
   if (e.target.closest('#editRubric')) openSetup();
   if (e.target.closest('[data-keys]')) openKeys();
+});
+function slideTo(r, v) {
+  const st = batch.students[cur], i = +r.closest('.scores').dataset.c;
+  if (st.grade.rubric[i] === v && !r.classList.contains('unset')) return;
+  st.grade.rubric[i] = v; scoreTouched(st, i);
+  r.classList.remove('unset'); r.setAttribute('aria-valuetext', fmtNum(v) + ' out of 4');
+  const crit = r.closest('.crit'), em = crit.querySelector('.cn em'); if (em) em.textContent = fmtNum(v) + ' / 4';
+  for (const t of crit.querySelectorAll('.sticks button')) t.setAttribute('aria-pressed', String(+t.dataset.v === v));
+  const lv = crit.querySelector('.lvtxt'); if (lv) lv.innerHTML = levelHint(i, v);
+  const tot = $('#grade .total'); if (tot) tot.innerHTML = totalHtml(st);
+  const gs = $('#gstat'); if (gs) gs.outerHTML = statusHtml(st);
+  renderList(); saveSoon();
+}
+let slidePtr = false;
+function slideDone(r) { const i = r.closest('.scores').dataset.c, kb = !slidePtr; slidePtr = false; renderGrade(); const again = $('#grade .scores[data-c="' + i + '"] .srange'); if (again && kb) again.focus({ preventScroll: true }); }
+$('#grade').addEventListener('pointerdown', e => { if (e.target.closest && e.target.closest('.srange')) slidePtr = true; });
+$('#grade').addEventListener('input', e => { if (e.target.classList.contains('srange')) slideTo(e.target, RUBRIC_STEPS[+e.target.value]); });
+$('#grade').addEventListener('change', e => { if (e.target.classList.contains('srange')) slideDone(e.target); });
+$('#grade').addEventListener('pointerup', e => {
+  const r = e.target.closest && e.target.closest('.srange'); if (!r || !r.classList.contains('unset')) return;
+  setTimeout(() => { if (r.isConnected && r.classList.contains('unset')) { slideTo(r, RUBRIC_STEPS[+r.value]); slideDone(r); } }, 0);
+});
+$('#grade').addEventListener('keydown', e => {
+  if (!e.target.classList || !e.target.classList.contains('srange') || (e.key !== 'Delete' && e.key !== 'Backspace')) return;
+  e.preventDefault(); e.stopPropagation();
+  const st = batch.students[cur], i = +e.target.closest('.scores').dataset.c; if (st.grade.rubric[i] == null) return;
+  st.grade.rubric[i] = null; scoreTouched(st, i); renderList(); saveSoon(); slideDone(e.target);
 });
 $('#grade').addEventListener('input', e => {
   const st = batch.students[cur];
@@ -3778,7 +3830,7 @@ function openSetup() {
     } else {
       h += '<div class="field"><label for="outOf">Out of</label><input type="number" id="outOf" min="1" step="0.5" value="' + esc(draft.outOf) + '" style="width:120px"></div>';
     }
-    h += '<div class="field"><label>Grading scale</label><span style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn sm" data-preset="usual">12 = 100, 11 = 95, 10 = 91…</button><button class="btn sm" data-preset="fives">Steps of 5 (9 = 85%)</button><button class="btn sm" data-preset="none">No scale</button></span>' + scaleRows() + '</div>';
+    h += '<div class="field"><label>Grading scale</label><span style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn sm" data-preset="usual">12 = 100, 11 = 95, 10 = 91…</button><button class="btn sm" data-preset="fives">Steps of 5 (9 = 85%)</button><button class="btn sm" data-preset="none">No scale</button>' + scaleBankHtml(draft, draft.mode === 'rubric' ? draft.criteria.length * 4 : Math.round(+draft.outOf || 0)) + '</span>' + scaleRows() + '</div>';
     const rp = newPage === undefined ? draft.rubricPage : newPage;
     h += '<div class="field"><label>Your rubric, for every student</label><span class="muted" style="font-size:13px">Bring in your rubric once and every student gets their own copy to grade on. A Word rubric (.docx or .docm) stays a Word file: type in it, check its boxes and shade its cells. A PDF or picture is added as a page you can mark up. Each copy goes back with that student’s work.</span>' +
       '<span style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:4px"><button class="btn sm" data-rpup>' + (rp ? 'Replace…' : 'Bring in my rubric…') + '</button>' +
@@ -8927,7 +8979,10 @@ $('#grade').addEventListener('click', e => {
 /* In Rubric setup. */
 let rubDlg = null;   // the setup being edited: { draft, re, was, pageNew, from, n0, told }
 const setupSnap = d => JSON.stringify({ ...d, levels: tidyLevels(d), rubricName: undefined });
-function rubricsSetup(draft, re, pageNew) { rubDlg = { draft, re, was: setupSnap(draft), pageNew, from: draft.criteria.map((_, i) => i), n0: draft.criteria.length, told: null }; }
+function rubricsSetup(draft, re, pageNew) {
+  rubDlg = { draft, re, was: setupSnap(draft), pageNew, from: draft.criteria.map((_, i) => i), n0: draft.criteria.length, told: null, bankKey: null };
+  const me = rubDlg; bankRead(true).catch(() => { gBank = { rubrics: savedRubrics(), scales: [], gone: {}, units: [] }; }).then(() => { if (rubDlg === me) bankRedraw(); });
+}
 async function leaveDlg() {
   if ($('#setupBody') && (rubDlg.pageNew() || setupSnap(rubDlg.draft) !== rubDlg.was) && !await askDlg('Leave Rubric setup without saving? The changes you made here won’t be kept.', { ok: 'Leave', cancel: 'Keep editing', danger: true })) return;
   closeDlg();
@@ -8944,14 +8999,159 @@ function tidyLevels(d) {
   return out.some(r => Object.keys(r).length) ? out : undefined;
 }
 const savedRubrics = () => { const a = store.get('gs.rubrics', []); return Array.isArray(a) ? a.filter(r => r && r.id && r.name && Array.isArray(r.criteria) && r.criteria.length) : []; };
-function rubricLibHtml(d) {
-  const list = savedRubrics();
-  if (!list.length && d.mode !== 'rubric') return '';
+
+/* The bank: saved rubrics and grading scales, sorted by unit. It's the Planner's (kv 'bank' in the 'gs-lessons'
+   database: { rubrics, scales, gone }), so the Planner and Claude's Planner folder can see it, and it holds only a
+   rubric's wording and a scale's percents: never a score, a name or anything about a student. Grading opens that one
+   record and the Planner's unit list, and nothing of grading's ever goes the other way. gs.rubrics stays as it was,
+   so older copies and the take-home file still carry saved rubrics; any it has that the bank doesn't come in. */
+let gBank = null;   // { rubrics, scales, gone, units } while Rubric setup is open
+let bankChan = null; try { bankChan = new BroadcastChannel('gs-bank'); } catch {}
+const tidyBank = b => ({ rubrics: Array.isArray(b && b.rubrics) ? b.rubrics : [], scales: Array.isArray(b && b.scales) ? b.scales : [], gone: (b && b.gone && typeof b.gone === 'object') ? b.gone : {} });
+function planDb(make) {
+  return new Promise(res => {
+    let r; try { r = indexedDB.open('gs-lessons'); } catch { return res(null); }
+    r.onupgradeneeded = () => {
+      if (!make) { try { r.transaction.abort(); } catch {} return; }
+      r.result.createObjectStore('lessons', { keyPath: 'id' }); r.result.createObjectStore('kv');
+    };
+    r.onsuccess = () => { const db = r.result; db.onversionchange = () => db.close(); res(db.objectStoreNames.contains('kv') ? db : (db.close(), null)); };
+    r.onerror = r.onblocked = () => res(null);
+  });
+}
+const idbP = q => new Promise((res, rej) => { q.onsuccess = () => res(q.result); q.onerror = () => rej(q.error); });
+async function bankRead(takeIn) {
+  const db = await planDb(false); let b = null, units = [];
+  if (db) {
+    try { const t = db.transaction('kv'), kv = t.objectStore('kv'); [b, units] = await Promise.all([idbP(kv.get('bank')), idbP(kv.get('units'))]); } catch {}
+    db.close();
+  }
+  b = tidyBank(b);
+  gBank = { ...b, units: (Array.isArray(units) ? units : []).filter(u => u && u.id).map(u => ({ id: String(u.id), course: String(u.course || ''), title: String(u.title || 'Unit'), start: String(u.start || ''), weeks: Array.isArray(u.weeks) ? u.weeks.length : 1 })) };
+  const fresh = savedRubrics().filter(r => !b.rubrics.some(x => x.id === r.id) && !(b.gone[r.id] >= (r.at || 0)));
+  if (takeIn && fresh.length) try { await bankWrite(x => { for (const r of fresh) x.rubrics.push(r); }); } catch {}
+  return gBank;
+}
+async function bankWrite(fn) {
+  const db = await planDb(true); if (!db) throw new Error('no bank');
+  let out;
+  try {
+    await new Promise((res, rej) => {
+      const t = db.transaction('kv', 'readwrite'), kv = t.objectStore('kv');
+      idbP(kv.get('bank')).then(b => { out = tidyBank(b); fn(out); out.rubrics.sort((x, y) => natural(x.name, y.name)); out.scales.sort((x, y) => natural(x.name, y.name)); kv.put(out, 'bank'); });
+      t.oncomplete = res; t.onerror = t.onabort = () => rej(t.error);
+    });
+  } finally { db.close(); }
+  gBank = { ...out, units: gBank ? gBank.units : [] };
+  try { bankChan && bankChan.postMessage('changed'); } catch {}
+  return gBank;
+}
+setTimeout(() => bankRead().catch(() => {}), 0);   // ready before Rubric setup first opens
+const bankStamp = (h, id) => h.replace('id="' + id + '"', 'id="' + id + '" data-h="' + hash(h) + '"');
+function bankRedraw() {
+  if (!rubDlg || !$('#setupBody')) return;
+  const d = rubDlg.draft, a = $('#rbBank'), b = $('#rbScales');
+  const nb = rubricLibHtml(d), ns = scaleBankHtml(d, d.mode === 'rubric' ? d.criteria.length * 4 : Math.round(+d.outOf || 0));
+  if (a && a.dataset.h !== /data-h="([^"]*)"/.exec(nb)[1]) a.outerHTML = nb;
+  if (b && b.dataset.h !== /data-h="([^"]*)"/.exec(ns)[1]) b.outerHTML = ns;
+}
+if (bankChan) bankChan.onmessage = () => { if (rubDlg && $('#setupBody')) bankRead().then(bankRedraw); };
+function bankRubrics() {
+  const ok = r => r && r.id && r.name && Array.isArray(r.criteria) && r.criteria.length;
+  const own = ((gBank && gBank.rubrics) || []).filter(ok), gone = { ...store.get('gs.rubricsGone', {}), ...((gBank && gBank.gone) || {}) };
+  const more = savedRubrics().filter(r => !own.some(x => x.id === r.id) && !(gone[r.id] >= (r.at || 0)));
+  return more.length ? own.concat(more).sort((a, b) => natural(a.name, b.name)) : own;
+}
+const bankScales = () => ((gBank && gBank.scales) || []).filter(s => s && s.id && s.name && s.scale && typeof s.scale === 'object');
+const scaleTop = s => s ? Math.max(...Object.keys(s).map(Number)) : 0;
+
+/* Units: the Planner's, or grading's own class units when the Planner has none. A rubric names its unit as { id, course, title }. */
+function bankUnits() {
+  if (gBank && gBank.units.length) return gBank.units;
+  const out = [];
+  for (const c of (lib && lib.classes) || []) for (const u of c.units) out.push({ id: 'g:' + u.id, course: c.name, title: u.name });
+  return out;
+}
+const slug = t => String(t || '').toLowerCase().replace(/[^a-z0-9]+/g, '');
+const refUnit = ref => { if (!ref) return null; const us = bankUnits(); return us.find(u => u.id === ref.id) || us.find(u => u.course === ref.course && slug(u.title) === slug(ref.title)) || null; };
+const unitKeyOf = ref => { if (!ref || !(ref.id || ref.title)) return ''; const u = refUnit(ref); return u ? u.id : 'ref:' + (ref.course || '') + '|' + (ref.title || ''); };
+const unitKeyLabel = k => { if (!k) return 'Not in a unit'; const u = bankUnits().find(x => x.id === k); if (u) return (u.course ? u.course + ' · ' : '') + u.title; const [c, ...t] = k.slice(4).split('|'); return (c ? c + ' · ' : '') + t.join('|'); };
+function keyRef(k, was) {
+  if (!k) return null;
+  const u = bankUnits().find(x => x.id === k); if (u) return { id: u.id, course: u.course, title: u.title };
+  return was && unitKeyOf(was) === k ? { id: was.id || '', course: was.course || '', title: was.title || '' } : null;
+}
+function defaultUnitKey() {
+  const us = bankUnits(), f = batch && batch.assignment ? findItem(batch.assignment.id) : null;
+  if (f) {
+    const cls = slug(f.c && f.c.name).replace(/\d+$/, ''), inCourse = u => cls && slug(u.course) && (cls.startsWith(slug(u.course)) || slug(u.course).startsWith(cls));
+    const named = us.filter(u => slug(u.title) === slug(f.u.name) || slug(u.title).startsWith(slug(f.u.name)));
+    const pick = named.find(inCourse) || (named.length === 1 ? named[0] : null);
+    if (pick) return pick.id;
+    const today = new Date(), now = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
+    const running = us.filter(u => u.start && inCourse(u) && u.start <= now && new Date(u.start + 'T00:00').getTime() + (u.weeks || 1) * 7 * 864e5 > today.getTime());
+    if (running.length === 1) return running[0].id;
+  }
+  const last = lsRaw('gsc.bankUnit');
+  return last && us.some(u => u.id === last) ? last : '';
+}
+function unitOptionsHtml(sel, withAll) {
+  const us = bankUnits(), by = new Map();
+  for (const u of us) { if (!by.has(u.course)) by.set(u.course, []); by.get(u.course).push(u); }
+  let h = withAll ? '<option value="*"' + (sel === '*' ? ' selected' : '') + '>Every unit</option>' : '';
+  h += '<option value=""' + (sel === '' ? ' selected' : '') + '>Not in a unit</option>';
+  for (const [c, list] of by) h += '<optgroup label="' + esc(c || 'Units') + '">' + list.slice().sort((a, b) => (a.start || '').localeCompare(b.start || '') || natural(a.title, b.title)).map(u => '<option value="' + esc(u.id) + '"' + (u.id === sel ? ' selected' : '') + '>' + esc(u.title) + '</option>').join('') + '</optgroup>';
+  const extra = new Set([...bankRubrics(), ...bankScales()].map(r => unitKeyOf(r.unit)).filter(k => k.startsWith('ref:')));
+  if (sel && sel.startsWith('ref:')) extra.add(sel);
+  for (const k of extra) h += '<option value="' + esc(k) + '"' + (k === sel ? ' selected' : '') + '>' + esc(unitKeyLabel(k)) + '</option>';
+  return h;
+}
+
+function rubricLibHtml(d) { return bankStamp(rubricLibRaw(d), 'rbBank'); }
+function rubricLibRaw(d) {
+  const list = bankRubrics();
+  if (!list.length && d.mode !== 'rubric') return '<div id="rbBank" hidden></div>';
+  const mine = rubDlg && rubDlg.draft === d;   // the first drawing comes before Rubric setup has said what it's editing
+  if (mine && rubDlg.bankKey == null && gBank) { const k = defaultUnitKey(); rubDlg.bankKey = k && list.some(r => unitKeyOf(r.unit) === k) ? k : '*'; }
+  const key = !mine || rubDlg.bankKey == null ? '*' : rubDlg.bankKey, shown = key === '*' ? list : list.filter(r => unitKeyOf(r.unit) === key);
   const about = r => r.criteria.length + (r.criteria.length === 1 ? ' row' : ' rows') + (r.levels ? ', with what each score means' : '');
-  return '<div class="field"><label>Saved rubrics</label>' +
-    (list.length ? '<div class="rlib">' + list.map(r => '<div class="rl"><span class="rln"><b>' + esc(r.name) + '</b><span class="muted">' + about(r) + '</span></span><button class="btn sm" data-rbuse="' + esc(r.id) + '">Use</button><button class="btn sm" data-rbdel="' + esc(r.id) + '" aria-label="Delete ' + esc(r.name) + '">×</button></div>').join('') + '</div>'
-      : '<span class="muted" style="font-size:13px">Save this rubric to use it again on another assignment. It keeps the rows, what each score means and the grading scale.</span>') +
-    (d.mode === 'rubric' ? '<div style="margin-top:4px"><button class="btn sm" data-rbsave>Save this rubric…</button></div>' : '') + '</div>';
+  const row = r => '<div class="rl"><span class="rln"><b>' + esc(r.name) + '</b><span class="muted">' + about(r) + '</span></span><button class="btn sm" data-rbuse="' + esc(r.id) + '">Use</button><button class="btn sm" data-rbdel="' + esc(r.id) + '" aria-label="Delete ' + esc(r.name) + '">×</button></div>';
+  let rows = '';
+  if (key === '*') {
+    const groups = new Map(); for (const r of list) { const k = unitKeyOf(r.unit); if (!groups.has(k)) groups.set(k, []); groups.get(k).push(r); }
+    rows = [...groups.keys()].sort((a, b) => !a ? 1 : !b ? -1 : natural(unitKeyLabel(a), unitKeyLabel(b))).map(k => '<div class="rlg">' + esc(unitKeyLabel(k)) + '</div>' + groups.get(k).map(row).join('')).join('');
+  } else rows = shown.map(row).join('');
+  return '<div class="field" id="rbBank"><label for="rbUnit">Rubric bank</label>' +
+    (list.length ? '<select id="rbUnit" class="rbunit" aria-label="Show rubrics from">' + unitOptionsHtml(key, true) + '</select>' : '') +
+    (shown.length ? '<div class="rlib">' + rows + '</div>' : list.length ? '<span class="muted" style="font-size:13px">Nothing saved for this unit yet.</span>'
+      : '<span class="muted" style="font-size:13px">Save this rubric to the bank to use it again. It keeps the rows, what each score means and the grading scale, sorted by unit. The Planner’s Rubrics tab shows the same bank.</span>') +
+    (d.mode === 'rubric' ? '<div style="margin-top:4px"><button class="btn sm" data-rbsave>Save to the bank…</button></div>' : '') + '</div>';
+}
+function scaleBankHtml(d, max) { return bankStamp(scaleBankRaw(d, max), 'rbScales'); }
+function scaleBankRaw(d, max) {
+  if (!gBank) return '<span class="rbscales" id="rbScales"></span>';
+  const fit = bankScales().filter(s => scaleTop(s.scale) === max), other = bankScales().length - fit.length;
+  return '<span class="rbscales" id="rbScales">' + (fit.length ? '<select class="btn sm" data-scuse aria-label="Use a saved grading scale"><option value="">My saved scales…</option>' + fit.map(s => '<option value="' + esc(s.id) + '">' + esc(s.name) + (s.unit ? ' (' + esc(unitKeyLabel(unitKeyOf(s.unit))) + ')' : '') + '</option>').join('') + '</select>' : '') +
+    (d.scale && max <= 40 ? '<button class="btn sm" data-scsave>Save this scale…</button>' : '') +
+    (!fit.length && other ? '<span class="muted" style="font-size:12.5px">' + (other === 1 ? '1 saved scale is' : other + ' saved scales are') + ' for a different total</span>' : '') + '</span>';
+}
+function askSaveDlg(title, name, key) {
+  const run = () => new Promise(done => {
+    const back = document.activeElement, el = document.createElement('div');
+    el.className = 'dlg askdlg'; el.id = 'askDlg';
+    el.innerHTML = '<div class="box narrow" role="dialog" aria-modal="true" aria-labelledby="askText" tabindex="-1"><div class="bb"><p id="askText"></p>' +
+      '<label class="rbask">Name<input type="text" id="askIn" autocomplete="off"></label><label class="rbask">Unit<select id="askUnit">' + unitOptionsHtml(key, false) + '</select></label>' +
+      '<span class="muted" style="font-size:12.5px">Units come from the Planner. Only the wording and the scale are saved: never scores or anything about a student.</span></div>' +
+      '<div class="bf"><button class="btn" data-no>Cancel</button><button class="btn primary" data-ok>Save to the bank</button></div></div>';
+    const box = el.firstChild, inp = el.querySelector('#askIn');
+    el.querySelector('#askText').textContent = title; inp.value = name;
+    const finish = yes => { document.removeEventListener('keydown', keys, true); const out = yes ? { name: inp.value.trim(), key: el.querySelector('#askUnit').value } : null; el.remove(); if (back && back.isConnected) back.focus({ preventScroll: true }); done(out); };
+    const keys = e => { e.stopPropagation(); if (e.key === 'Tab') trapTab(e, box); else if (e.key === 'Escape') { e.preventDefault(); finish(false); } else if (e.key === 'Enter' && e.target === inp) { e.preventDefault(); finish(true); } };
+    el.querySelector('[data-ok]').onclick = () => finish(true); el.querySelector('[data-no]').onclick = () => finish(false);
+    el.addEventListener('pointerdown', e => { if (e.target === el) finish(false); });
+    document.addEventListener('keydown', keys, true); document.body.appendChild(el); inp.focus(); inp.select();
+  });
+  const p = askQ.then(run); askQ = p; return p;
 }
 function rubricUseNote(r, d) {
   if (!batch) return '';
@@ -9019,22 +9219,40 @@ async function rubricUse(r) {
 }
 async function rubricSave() {
   const { draft: d, re } = rubDlg;
-  const name = ((await askTextDlg('What should this rubric be called?', d.rubricName || (batch && batch.assignment && batch.assignment.name) || '', { ok: 'Save rubric' })) || '').trim();
-  if (!name) return;
-  const list = savedRubrics(), at = list.findIndex(r => r.name.toLowerCase() === name.toLowerCase());
-  if (at >= 0 && !await askDlg('You already have a rubric called “' + list[at].name + '”. Replace it with this one?', { ok: 'Replace it', cancel: 'Keep the old one', danger: true })) return;
-  const r = { id: at >= 0 ? list[at].id : uid(), name, criteria: d.criteria.map((c, i) => c.trim() || 'Criterion ' + (i + 1)), levels: tidyLevels(d), scale: d.scale ? { ...d.scale } : null, at: Date.now() };
-  if (at >= 0) list[at] = r; else list.push(r);
-  list.sort((a, b) => natural(a.name, b.name));
-  if (!store.set('gs.rubrics', list)) return sayDlg('This browser is out of room, so that rubric wasn’t saved.');
-  d.rubricName = name; re();
-  toast('Saved “' + name + '”');
+  const got = await askSaveDlg('Save this rubric to the bank', d.rubricName || (batch && batch.assignment && batch.assignment.name) || '', rubDlg.bankKey && rubDlg.bankKey !== '*' ? rubDlg.bankKey : defaultUnitKey());
+  if (!got || !got.name) return;
+  const name = got.name, list = bankRubrics(), old = list.find(r => r.name.toLowerCase() === name.toLowerCase());
+  if (old && !await askDlg('You already have a rubric called “' + old.name + '”. Replace it with this one?', { ok: 'Replace it', cancel: 'Keep the old one', danger: true })) return;
+  const r = { id: old ? old.id : uid(), name, criteria: d.criteria.map((c, i) => c.trim() || 'Criterion ' + (i + 1)), levels: tidyLevels(d), scale: d.scale ? { ...d.scale } : null, at: Date.now() };
+  const unit = keyRef(got.key, old && old.unit); if (unit) r.unit = unit;
+  const legacy = savedRubrics().filter(x => x.id !== r.id && x.name.toLowerCase() !== name.toLowerCase()); legacy.push(r); legacy.sort((a, b) => natural(a.name, b.name));
+  store.set('gs.rubrics', legacy);   // so the take-home file still carries it, and so it's listed right away
+  d.rubricName = name; rubDlg.bankKey = got.key || '*'; re();
+  try { await bankWrite(b => { b.rubrics = b.rubrics.filter(x => x.id !== r.id && x.name.toLowerCase() !== name.toLowerCase()); b.rubrics.push(r); delete b.gone[r.id]; }); }
+  catch { return sayDlg('That rubric couldn’t be saved to the bank. The browser may be out of room.'); }
+  try { localStorage.setItem('gsc.bankUnit', got.key); } catch {}
+  bankRedraw();
+  toast('Saved “' + name + '” to ' + unitKeyLabel(got.key));
 }
 async function rubricDelete(r) {
-  if (!await askDlg('Delete “' + r.name + '” from your saved rubrics?\n\nAssignments already using it keep their rows and what each score means.', { ok: 'Delete', cancel: 'Keep it', danger: true })) return;
+  if (!await askDlg('Delete “' + r.name + '” from your bank?\n\nAssignments already using it keep their rows and what each score means.', { ok: 'Delete', cancel: 'Keep it', danger: true })) return;
+  try { await bankWrite(b => { b.rubrics = b.rubrics.filter(x => x.id !== r.id); b.gone[r.id] = Date.now(); }); } catch {}
   store.set('gs.rubricsGone', { ...store.get('gs.rubricsGone', {}), [r.id]: Date.now() });   // so an older copy of her work doesn't bring it back
   store.set('gs.rubrics', savedRubrics().filter(x => x.id !== r.id));
   rubDlg.re();
+}
+async function scaleSave() {
+  const { draft: d, re } = rubDlg, max = d.mode === 'rubric' ? d.criteria.length * 4 : Math.round(+d.outOf || 0);
+  const got = await askSaveDlg('Save this grading scale to the bank (top score ' + max + ')', 'Out of ' + max, rubDlg.bankKey && rubDlg.bankKey !== '*' ? rubDlg.bankKey : defaultUnitKey());
+  if (!got || !got.name) return;
+  const old = bankScales().find(s => s.name.toLowerCase() === got.name.toLowerCase());
+  if (old && !await askDlg('You already have a scale called “' + old.name + '”. Replace it with this one?', { ok: 'Replace it', cancel: 'Keep the old one', danger: true })) return;
+  const scale = {}; for (let k = max; k >= 0; k--) if (d.scale[k] != null && d.scale[k] !== '' && isFinite(+d.scale[k])) scale[k] = +d.scale[k];
+  if (scale[max] == null) scale[max] = 100;   // so its top score is always known
+  const s = { id: old ? old.id : uid(), name: got.name, scale, at: Date.now() }, unit = keyRef(got.key, old && old.unit); if (unit) s.unit = unit;
+  try { await bankWrite(b => { b.scales = b.scales.filter(x => x.id !== s.id); b.scales.push(s); delete b.gone[s.id]; }); }
+  catch { return sayDlg('That scale couldn’t be saved to the bank. The browser may be out of room.'); }
+  re(); toast('Saved “' + s.name + '”');
 }
 $('#dlgBox').addEventListener('input', e => {
   const t = e.target; if (t.dataset.lvi == null || !rubDlg) return;
@@ -9047,8 +9265,14 @@ $('#dlgBox').addEventListener('toggle', e => {   // re-drawing the setup keeps a
   const i = +e.target.dataset.lvrow;
   if (e.target.open) levelEditOpen.add(i); else levelEditOpen.delete(i);
 }, true);
+$('#dlgBox').addEventListener('change', e => {
+  if (!rubDlg || !$('#setupBody')) return;
+  if (e.target.id === 'rbUnit') { rubDlg.bankKey = e.target.value; rubDlg.re(); const b = $('#rbUnit'); if (b) b.focus(); return; }
+  if (e.target.matches('[data-scuse]') && e.target.value) { const sc = bankScales().find(x => x.id === e.target.value); if (sc) { rubDlg.draft.scale = { ...sc.scale }; rubDlg.re(); toast('Using “' + sc.name + '”. Press Save to keep it.'); } }
+});
 $('#dlgBox').addEventListener('click', e => {
-  const find = id => savedRubrics().find(r => r.id === id);
+  if (e.target.closest('[data-scsave]') && rubDlg) { scaleSave(); return; }
+  const find = id => bankRubrics().find(r => r.id === id);
   const u = e.target.closest('[data-rbuse]'); if (u) { const r = find(u.dataset.rbuse); if (r) rubricUse(r); return; }
   const x = e.target.closest('[data-rbdel]'); if (x) { const r = find(x.dataset.rbdel); if (r) rubricDelete(r); return; }
   if (e.target.closest('[data-rbsave]')) rubricSave();
