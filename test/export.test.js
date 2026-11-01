@@ -19,6 +19,7 @@ const { PEN, HL, OVAL, CHECK, TEXT, BLANK } = MARK_BOXES;
 async function exportZip(page, dl, opts = {}) {
   await page.click('#exportBtn');
   await page.waitForSelector('#dlgBox [data-go="zip"]', { timeout: 60000 });
+  if (opts.notEditable || opts.all) await page.evaluate(() => { document.querySelector('#xOpts').open = true; });
   if (opts.notEditable) await page.click('#xEdit');
   if (opts.all) { await page.click('#xAll'); await page.waitForFunction(() => document.querySelector('#xAll') && document.querySelector('#xAll').checked); await page.waitForSelector('#dlgBox [data-go="zip"]'); }
   const got = await dl.next(() => page.click('#dlgBox [data-go="zip"]'));

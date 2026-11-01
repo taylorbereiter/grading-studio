@@ -2088,26 +2088,50 @@ async function openExport() {
   const plan = exportPlan(true);
   const nStu = new Set(plan.map(o => o.st)).size, skipped = batch.students.length - nStu;
   const nLeft = batch.students.reduce((a, st) => a + layoutOf(st).filter(d => !docAuto(st, d) && !docIn(st, d)).length, 0);   // left out by her; the check above lists files with no marks
-  openDlg('<div class="bh"><h2>Export marked files</h2><button class="icon" data-close aria-label="Close">✕</button></div><div class="bb">' + exportCheckHtml(exportCheck()) +
-    (plan.length ? '<p style="margin-top:0"><b>' + plan.length + (plan.length === 1 ? ' file' : ' files') + '</b> from ' + nStu + (nStu === 1 ? ' student' : ' students') + ', in their own folders, ready to upload back on ManageBac.' +
-      (skipped ? ' <span class="muted">' + skipped + ' ' + (skipped === 1 ? 'student has' : 'students have') + ' nothing marked, so they’re not in it.</span>' : '') +
-      (nLeft ? ' <span class="muted">' + nLeft + (nLeft === 1 ? ' file you left out isn’t' : ' files you left out aren’t') + ' in it.</span>' : '') + '</p>' +
-      '<label class="chk"><input type="checkbox" id="xKeep" checked> Keep student folders</label>' +
-      '<label class="chk"><input type="checkbox" id="xAll"' + (xAll() ? ' checked' : '') + '> Also include files with no marks (Word files, other files and unmarked pages)</label>' +
-      '<label class="chk"><input type="checkbox" id="xEdit"' + (xEdit() ? ' checked' : '') + '> Keep marks editable: bring a file back in later and change its marks (files are about twice as big)</label>' +
-      '<label class="chk"><input type="checkbox" id="xSheet" checked> Add the grade sheet (a crop of each typed grade, in ' + listOrder() + ')</label>' +
-      '<div class="chk" style="cursor:default">Sharpness <span class="seg" id="xDpi"><button data-dpi="150" aria-pressed="true">Standard</button><button data-dpi="220" aria-pressed="false">Extra sharp</button></span></div>' +
-      '<p class="muted" style="font-size:13px;margin-bottom:0">Your original files aren’t changed. Grades are read and cropped first, then every file going back is flattened, including marks made in Kami. A file you marked anywhere, or with a grade read off it, comes back whole, every page in order, including the pages you didn’t mark. Word rubrics you scored come back as Word files. ' + (xAll() ? 'Files with no marks come too.' : 'Files you didn’t mark at all stay out.') + ' Comments go in a right-hand margin.</p><div class="prog" hidden><i></i></div><p class="muted" id="xStatus" style="font-size:13px"></p>'
-      : '<p style="margin-top:0">Nothing is marked yet. Mark a paper and it will show up here.</p><label class="chk"><input type="checkbox" id="xAll"' + (xAll() ? ' checked' : '') + '> Also include files with no marks (Word files, other files and unmarked pages)</label>') +
-    '</div><div class="bf"><button class="btn" data-close>Close</button>' + (plan.length ? ((window.showDirectoryPicker && window.self === window.top) ? '<button class="btn" data-go="dir">Save into a folder…</button>' : '') + (G.email ? '<button class="btn" data-go="drive">Save to Google Drive</button>' : '') + '<button class="btn primary" data-go="zip">Download ZIP</button>' : '') + '</div>', true);
+  const optsOpen = !!store.get('gs.xopts', false);
+  const canDir = !!(window.showDirectoryPicker && window.self === window.top);
+  const allBox = '<label class="chk"><input type="checkbox" id="xAll"' + (xAll() ? ' checked' : '') + '> Also send back files with no marks (Word files, other files and unmarked pages)</label>';
+  openDlg('<div class="bh"><h2>Export marked files</h2><button class="icon" data-close aria-label="Close">✕</button></div><div class="bb xp">' +
+    (plan.length
+      ? '<p class="xbig">' + plan.length + (plan.length === 1 ? ' file' : ' files') + ' ready</p>' +
+        '<p class="xsub">From ' + nStu + (nStu === 1 ? ' student' : ' students') + ', in their own folders, ready to upload back on ManageBac.' +
+          (skipped ? ' ' + skipped + ' ' + (skipped === 1 ? 'student has' : 'students have') + ' nothing marked, so they’re left out.' : '') +
+          (nLeft ? ' ' + nLeft + (nLeft === 1 ? ' file you left out isn’t' : ' files you left out aren’t') + ' in it.' : '') + '</p>' +
+        exportCheckHtml(exportCheck()) +
+        '<button class="btn primary xgo" data-go="zip">Download ZIP</button>' +
+        ((canDir || G.email) ? '<p class="xalt">or ' + [canDir ? '<button class="link" data-go="dir">save into a folder…</button>' : '', G.email ? '<button class="link" data-go="drive">save to Google Drive</button>' : ''].filter(Boolean).join(' or ') + '</p>' : '') +
+        '<div class="prog" hidden><i></i></div><p class="muted" id="xStatus" style="font-size:13px"></p>' +
+        '<details class="xopts" id="xOpts"' + (optsOpen ? ' open' : '') + '><summary>Options: <span id="xOptsSay"></span></summary>' +
+          '<label class="chk"><input type="checkbox" id="xKeep" checked> Keep student folders</label>' +
+          '<label class="chk"><input type="checkbox" id="xSheet" checked> Add the grade sheet (a crop of each typed grade, in ' + listOrder() + ')</label>' +
+          '<label class="chk"><input type="checkbox" id="xEdit"' + (xEdit() ? ' checked' : '') + '> Keep marks editable</label><p class="xhint">Bring a file back in later and change its marks. Files are about twice as big.</p>' +
+          allBox +
+          '<div class="chk" style="cursor:default">Sharpness <span class="seg" id="xDpi"><button data-dpi="150" aria-pressed="true">Standard</button><button data-dpi="220" aria-pressed="false">Extra sharp</button></span></div>' +
+        '</details>' +
+        '<p class="xfoot">Your original files don’t change. A file you marked anywhere goes back whole, every page in order. Word rubrics you scored go back as Word files. ' + (xAll() ? 'Files with no marks go too.' : 'Files with no marks stay out.') + ' Comments go in a right-hand margin.</p>'
+      : '<p style="margin-top:0">Nothing is marked yet. Mark a paper and it will show up here.</p>' + exportCheckHtml(exportCheck()) + allBox) +
+    '</div><div class="bf"><button class="btn" data-close>Close</button></div>', true);
   const box = $('#dlgBox');
-  box.onchange = e => { if (e.target.id === 'xEdit') store.set('gs.xedit', e.target.checked); if (e.target.id === 'xAll') { store.set('gs.xall', e.target.checked); renderTools(); openExport(); } };
+  // The Options line says what's on, so she doesn't have to open it to know.
+  const optsSay = () => {
+    const el = $('#xOptsSay'); if (!el) return;
+    const on = [];
+    if ($('#xKeep').checked) on.push('student folders');
+    if ($('#xSheet').checked) on.push('grade sheet');
+    if ($('#xEdit').checked) on.push('marks stay editable');
+    if (xAll()) on.push('files with no marks too');
+    if (dpi > 150) on.push('extra sharp');
+    el.textContent = on.length ? on.join(', ') : 'none';
+  };
+  optsSay();
+  const xo = $('#xOpts'); if (xo) xo.ontoggle = () => store.set('gs.xopts', xo.open);
+  box.onchange = e => { optsSay(); if (e.target.id === 'xEdit') store.set('gs.xedit', e.target.checked); if (e.target.id === 'xAll') { store.set('gs.xall', e.target.checked); renderTools(); openExport(); } };
   box.onclick = async e => {
     if (e.target.closest('[data-close]')) return closeDlg();
     const ck = e.target.closest('[data-chk]'); if (ck) { closeDlg(); return openStudent(+ck.dataset.chk, ck.dataset.file || undefined); }
     if (e.target.closest('[data-chksheet]')) return openSheet();
     const d = e.target.closest('[data-dpi]');
-    if (d) { dpi = +d.dataset.dpi; for (const x of $('#xDpi').children) x.setAttribute('aria-pressed', x === d); return; }
+    if (d) { dpi = +d.dataset.dpi; for (const x of $('#xDpi').children) x.setAttribute('aria-pressed', x === d); optsSay(); return; }
     const go = e.target.closest('[data-go]'); if (!go) return;
     if (xBusy) return toast('The last export is still going. It will say when it’s done.');
     keep = $('#xKeep').checked;
