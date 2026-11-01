@@ -5721,6 +5721,8 @@ function toast(msg, ms) {
   t.textContent = msg; t.hidden = false;
   clearTimeout(toastT); toastT = setTimeout(() => { t.hidden = true; t.textContent = ''; }, ms || 3000);
 }
+// The Planner is its own page beside this one, with its own code and saved work: nothing from grading goes there.
+$('#lessonsBtn').onclick = () => { location.href = /Grading Studio\.html$/i.test(decodeURIComponent(location.pathname)) ? 'Planner.html' : 'planner.html'; };
 $('#pickFiles').onclick = () => $('#fileIn').click();
 $('#pickFolder').onclick = () => pickDir('#dirIn');
 $('#pickDrive').onclick = () => openFromDrive(null);

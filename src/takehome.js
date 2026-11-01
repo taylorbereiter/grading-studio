@@ -177,7 +177,7 @@ const papersLacking = () => [...keptMeta.values()].filter(m => !m.papers).map(m 
 function openTake() {
   if (batch) saveNow();
   openDlg('<div class="bh"><h2>Take my work with me</h2><button class="icon" data-close aria-label="Close">✕</button></div><div class="bb" id="takeBox">' +
-    '<p style="margin-top:0">Makes one protected file with everything you need to grade on another computer: student files, marks, scores, comments, rosters, rubrics, readings, Word edits and added files. Lessons stay here.</p>' +
+    '<p style="margin-top:0">Makes one protected file with everything you need to grade on another computer: student files, marks, scores, comments, rosters, rubrics, readings, Word edits and added files. Planner work stays here.</p>' +
     '<p class="muted" style="font-size:14px">Choose a passphrase of a few words. If you forget it, nobody can open this file, you included, but your work here isn’t affected. Keep the file somewhere private all the same.</p>' +
     passFields() + '<label class="tkf">Again, to be sure<input type="password" id="takeP2" autocomplete="off"></label><p class="tkerr" id="takeErr" role="alert" hidden></p></div>' +
     '<div class="bf"><button class="btn" data-close>Cancel</button><button class="btn primary" id="takeGo">Make the file</button></div>', true);
@@ -490,7 +490,7 @@ async function removeHere() {
   const folderLine = linked ? '\n\nYour linked folder “' + fld.name + '” isn’t touched: its files stay where they are, and this browser stops saving to it. To delete them, delete that folder yourself.' : '';
   const warn = !list.length ? '' : !last ? '\n\nYou haven’t made a take-home file from this browser, so anything done here may not be anywhere else.'
     : newer.length ? '\n\n' + newer.length + (newer.length === 1 ? ' download has' : ' downloads have') + ' changes since your last take-home file (' + whenOf(last) + '). Those changes aren’t in that file.' : '\n\nYour last take-home file was made ' + whenOf(last) + ', after your last change.';
-  const typed = await askTextDlg('This removes all student work from this browser: ' + list.length + (list.length === 1 ? ' download' : ' downloads') + ' with their papers, marks, scores and comments, plus rosters, units, rubrics, late files, readings, Word edits and safety copies.' + warn + folderLine + '\n\nLessons aren’t touched. This can’t be undone.\n\nType REMOVE to go ahead.', '', { ok: 'Remove from this computer', cancel: 'Keep it', danger: true });
+  const typed = await askTextDlg('This removes all student work from this browser: ' + list.length + (list.length === 1 ? ' download' : ' downloads') + ' with their papers, marks, scores and comments, plus rosters, units, rubrics, late files, readings, Word edits and safety copies.' + warn + folderLine + '\n\nPlanner work isn’t touched. This can’t be undone.\n\nType REMOVE to go ahead.', '', { ok: 'Remove from this computer', cancel: 'Keep it', danger: true });
   if (typed == null) return;
   if (typed.trim().toUpperCase() !== 'REMOVE') return sayDlg('That didn’t say REMOVE, so nothing was removed.');
   await keepWait;   // papers still going in would land after the clearing
