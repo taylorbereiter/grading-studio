@@ -263,3 +263,99 @@ test('working with Claude: notes and comments go out, Claude’s changes come ba
     assert.deepEqual(a.errors, []);
   } finally { await a.done(); }
 });
+
+test('the activity bank: filter, add one to a lesson as a steps slide, and keep my own activities', async () => {
+  const a = await open();
+  try {
+    const { page, errors } = a;
+    await page.evaluate(async s => { await window.__planner.applySetup(s); }, SETUP);
+    await page.click('[data-a="tab"][data-v="activities"]');
+    await page.waitForSelector('.pl-act');
+    const all = await page.$$eval('.pl-act', c => c.length);
+    assert.ok(all >= 30, 'the bank starts with plenty of activities');
+    await page.click('[data-a="actpart"][data-v="warmup"]');
+    await page.waitForSelector('[data-a="actpart"][data-v="warmup"].on');
+    const warm = await page.$$eval('.pl-act', c => c.length);
+    assert.ok(warm > 0 && warm < all, 'the warm-up filter narrows the list');
+    await page.click('[data-a="actpart"][data-v=""]');
+    await page.waitForSelector('[data-a="actpart"][data-v=""].on');
+    await page.type('[data-f="actq"]', 'fishbowl');
+    await page.waitForFunction(() => document.querySelectorAll('.pl-act').length === 1);
+    assert.match(await page.$eval('.pl-act h3', h => h.textContent), /Fishbowl/i);
+
+    // into a new lesson: a slide with the student steps, the how-to in the notes
+    await page.click('[data-a="useact"]');
+    await page.waitForSelector('#dlgBox [data-newl]');
+    await page.click('#dlgBox [data-newl]');
+    await page.waitForFunction(() => window.__planner.L.view === 'edit');
+    const s = await page.evaluate(() => { const L = window.__planner.L, s = L.open.slides[L.cur]; return { n: L.open.slides.length, layout: s.layout, body: s.body, notes: s.notes }; });
+    assert.equal(s.n, 2); assert.equal(s.layout, 'steps'); assert.ok(s.body.split('\n').length >= 2); assert.match(s.notes, /^How to run it:/);
+    assert.match(await page.$eval('[data-a="back"]', b => b.textContent), /Activities/);
+    await page.click('[data-a="back"]');
+    await page.waitForSelector('.pl-bank');
+
+    // my own activity
+    await page.click('[data-a="newact"]');
+    await page.waitForSelector('#aeN');
+    await page.type('#aeN', 'Four corners debate');
+    await page.type('#aeH', 'Post four positions\nStudents move\nEach corner explains');
+    await page.type('#aeS', 'Pick a corner\nTalk with your corner');
+    await page.click('#dlgBox [data-ok]');
+    await page.waitForFunction(() => [...document.querySelectorAll('.pl-act h3')].some(h => h.textContent === 'Four corners debate'));
+    assert.ok(await page.$('.pl-act [data-a="editact"]'));
+    assert.deepEqual(errors, []);
+  } finally { await a.done(); }
+});
+
+test('looks and teaching layouts: every layout in every look, edited in place, and the same boxes in the .pptx', async () => {
+  const a = await open();
+  try {
+    const { page, errors } = a;
+    const tpl = fs.readFileSync(path.join(__dirname, 'fixtures', 'lesson-template.b64'), 'utf8').trim();
+    await page.evaluate(async (s, tpl) => { await window.__planner.applySetup({ ...s, template: tpl }); }, SETUP, tpl);
+    // every layout draws in every look, and text stays between 28 and 36 pt (only a picture's source line is smaller)
+    const r = await page.evaluate(() => {
+      const P = window.__planner, out = { n: 0, bad: [] };
+      for (const look of Object.keys(P.LOOKS)) for (const k of Object.keys(P.TEACH_SAMPLE)) {
+        const s = P.normLesson({ slides: [{ layout: k, ...(P.TEACH[k] || {}), ...P.TEACH_SAMPLE[k] }] }).slides[0];
+        const d = document.createElement('div'); d.className = 'ls-slide'; d.innerHTML = P.slideHtml(s, { slots: [], slides: [s], look }, false);
+        document.querySelector('#lessons').appendChild(d);
+        if (!d.querySelector('.lk-' + look)) out.bad.push(look + '/' + k + ' no look');
+        for (const b of d.querySelectorAll('.ls-bx')) { const pt = parseFloat(getComputedStyle(b).fontSize) * 3 / 4; if (pt < 27.9 || pt > 36.1) out.bad.push(look + '/' + k + ' ' + pt); }
+        d.remove(); out.n++;
+      }
+      return out;
+    });
+    assert.equal(r.n, 14 * 15); assert.deepEqual(r.bad, []);
+
+    // a lesson in Sage: add a Two columns slide from the picker and type into a heading and the right side
+    await page.evaluate(async () => { const P = window.__planner, l = P.normLesson({ title: 'Looks', slides: [{ layout: 'title', title: 'Looks' }] }); P.L.lessons.push(l); P.openLessonForTest(l, 0); });
+    await page.waitForSelector('.ls-stage');
+    await page.click('[data-a="look"]'); await page.waitForSelector('[data-look="sage"]'); await page.click('[data-look="sage"]'); await page.click('#dlgBox [data-x]');
+    assert.match(await page.$eval('[data-a="look"]', b => b.textContent), /Sage/);
+    await page.click('[data-a="addslide"]'); await page.waitForSelector('#dlgBox [data-addslide="twocol"]'); await page.click('#dlgBox [data-addslide="twocol"]');
+    await page.waitForSelector('#lsStage .ls-bx[data-k="h1"]');
+    await page.click('#lsStage .ls-bx[data-k="h1"]'); await page.keyboard.down('Control'); await page.keyboard.press('a'); await page.keyboard.up('Control'); await page.keyboard.type('Claim'); await page.keyboard.press('Enter');
+    await page.waitForFunction(() => window.__planner.L.open.slides[1].h1 === 'Claim' && document.querySelector('#lsStage .ls-bx[data-k="h1"]'));
+    await page.click('#lsStage .ls-bx[data-k="body2"]'); await page.keyboard.type('First reason\nSecond reason');
+    await page.click('.ls-notes textarea');
+    await page.waitForFunction(() => window.__planner.L.open.slides[1].body2 === 'First reason\nSecond reason');
+    const s = await page.evaluate(() => window.__planner.L.open.slides[1]);
+    assert.equal(s.layout, 'twocol'); assert.equal(s.h1, 'Claim');
+    assert.ok(await page.$('#lsStage .lk-sage'));
+
+    // the .pptx: the look's background with the template's pictures hidden; the teaching slide on Title Only, its boxes as text
+    const x = await page.evaluate(() => { const P = window.__planner, z = fflate.unzipSync(P.buildPptx(P.L.open)), td = new TextDecoder(); return { xml: td.decode(z['ppt/slides/slide2.xml']), rels: td.decode(z['ppt/slides/_rels/slide2.xml.rels']), title: td.decode(z['ppt/slides/slide1.xml']) }; });
+    assert.match(x.xml, /<p:sld [^>]*showMasterSp="0"><p:cSld><p:bg><p:bgPr><a:solidFill><a:srgbClr val="EEF3EC"\/>/);
+    assert.match(x.xml, />Claim<\/a:t>/); assert.match(x.xml, />First reason<\/a:t>[\s\S]*>Second reason<\/a:t>/);
+    assert.match(x.xml, /<a:buChar char="•"\/>/);
+    for (const m of x.xml.matchAll(/ sz="(\d+)"/g)) assert.ok(+m[1] >= 2800 && +m[1] <= 3600, 'text size ' + m[1]);
+    assert.match(x.title, /showMasterSp="0"/);
+    const only = await page.evaluate(() => { const z = fflate.unzipSync(window.__planner.buildPptx(window.__planner.L.open)), td = new TextDecoder(); const t = /Target="\.\.\/slideLayouts\/([^"]+)"/.exec(td.decode(z['ppt/slides/_rels/slide2.xml.rels']))[1]; return /<p:cSld name="([^"]+)"/.exec(td.decode(z['ppt/slideLayouts/' + t]))[1]; });
+    assert.equal(only, 'Title Only');
+    // the template's own look keeps the template's background
+    const wood = await page.evaluate(() => { const P = window.__planner, z = fflate.unzipSync(P.buildPptx({ ...P.L.open, look: 'wood' })); return new TextDecoder().decode(z['ppt/slides/slide2.xml']); });
+    assert.ok(!/showMasterSp/.test(wood) && !/<p:bg>/.test(wood));
+    assert.deepEqual(errors, []);
+  } finally { await a.done(); }
+});
