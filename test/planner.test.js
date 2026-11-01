@@ -512,3 +512,75 @@ test('materials: a new document typed on a page, downloaded as Word, read back i
     assert.deepEqual(errors, []);
   } finally { await a.done(); }
 });
+
+test('right-click a slide or a lesson to comment for Claude; search finds slides and documents; copy a lesson; print the week', async () => {
+  const a = await open();
+  try {
+    const { page, errors } = a;
+    await page.evaluate(async s => { await window.__planner.applySetup(s); }, SETUP);
+    await page.evaluate(async () => {
+      navigator.clipboard.writeText = t => { window.__copied = t; return Promise.resolve(); };
+      window.__printed = [];
+      window.open = () => ({ document: { write: h => window.__printed.push(h), close() { } }, focus() { }, print() { } });
+      const P = window.__planner;
+      P.L.weekOf = '2026-11-02';
+      const l = P.normLesson({ title: 'Claims', slots: [{ classId: 'A1', date: '2026-11-03' }], slides: [{ layout: 'title', title: 'Claims' }, { layout: 'content', title: 'Counterclaims', body: 'Find the counterclaim in paragraph 3' }] });
+      P.L.lessons.push(l); P.L.view = 'week'; P.renderLessons();
+    });
+    // right-click the lesson card on the week: comment for Claude
+    await page.waitForSelector('.ls-card[data-open]');
+    await page.click('.ls-card[data-open]', { button: 'right' });
+    await page.waitForSelector('.pl-ctx [data-cx="note"]');
+    assert.match(await page.$eval('.pl-ctx', m => m.textContent), /Comment for Claude on this lesson[\s\S]*Copy this lesson to another day/);
+    await page.click('.pl-ctx [data-cx="note"]');
+    await page.waitForSelector('#plNoteT');
+    await page.type('#plNoteT', 'Add a warm-up about rebuttals');
+    await page.click('.pl-note [data-nok]');
+    await page.waitForFunction(() => !document.querySelector('.pl-ctx'));
+    // open the lesson, right-click slide 2 in the list and add it with a comment
+    await page.click('.ls-card[data-open]');
+    await page.waitForSelector('.ls-th[data-go="1"]');
+    await page.click('.ls-th[data-go="1"]', { button: 'right' });
+    await page.click('.pl-ctx [data-cx="note"]');
+    await page.type('#plNoteT', 'Make this a two-column slide');
+    await page.keyboard.down('Control'); await page.keyboard.press('Enter'); await page.keyboard.up('Control');
+    await page.waitForFunction(() => !document.querySelector('.pl-ctx'));
+    await page.click('.ls-top [data-a="panel"]');
+    await page.waitForSelector('#side:not([hidden]) [data-st="claude"]'); await page.click('[data-st="claude"]');
+    await page.waitForFunction(() => document.querySelectorAll('#spChips .sp-chip').length === 2);
+    assert.match(await page.$eval('#spChips', c => c.textContent), /Comment on Claims[\s\S]*Comment on Claims, slide 2: Counterclaims/);
+    await page.click('[data-sa="boxcopy"]'); await page.waitForFunction(() => window.__copied);
+    const t = await page.evaluate(() => window.__copied);
+    assert.match(t, /My comment: Add a warm-up about rebuttals\nOn: \[Lesson\]\n# Claims\nCourse A-1, /);
+    assert.match(t, /My comment: Make this a two-column slide\nOn: \[Slide 2 of "Claims" \(Bullets\)\]\nTitle: Counterclaims\nFind the counterclaim in paragraph 3/);
+    // copy to another day: its own slides, on the new class
+    await page.click('.ls-th[data-go="1"]', { button: 'right' });
+    await page.click('.pl-ctx [data-cx="copy"]');
+    await page.waitForSelector('#cpC');
+    await page.select('#cpC', 'B1');
+    await page.$eval('#cpD', i => { i.value = '2026-11-03'; });
+    await page.click('#dlgBox [data-ok]');
+    await page.waitForFunction(() => window.__planner.L.lessons.length === 2 && window.__planner.L.open && window.__planner.L.open.slots[0].classId === 'B1');
+    const both = await page.evaluate(() => { const [x, y] = window.__planner.L.lessons; return { ids: x.id !== y.id && x.slides[1].id !== y.slides[1].id, title: y.title, body: y.slides[1].body }; });
+    assert.deepEqual(both, { ids: true, title: 'Claims', body: 'Find the counterclaim in paragraph 3' });
+    // search finds the slide text
+    const hits = await page.evaluate(async () => (await window.__planner.findAll('counterclaim')).map(r => r.kind + ' ' + r.title));
+    assert.deepEqual(hits, ['slide Claims, slide 2', 'slide Claims, slide 2']);
+    await page.click('[data-a="back"]');
+    await page.waitForSelector('#plFind');
+    await page.type('#plFind', 'paragraph 3'); await page.keyboard.press('Enter');
+    await page.waitForSelector('#fdL .pl-hit');
+    assert.match(await page.$eval('#fdL', b => b.textContent), /Claims, slide 2Course A-1 Tue 11\/3…[^▭]*Find the counterclaim in paragraph 3/);
+    await page.click('#fdL .pl-hit');
+    await page.waitForFunction(() => window.__planner.L.view === 'edit' && window.__planner.L.cur === 1);
+    // print the week: both classes with their lessons and slide titles
+    await page.click('[data-a="back"]');
+    await page.waitForSelector('[data-a="printweek"]');
+    await page.click('[data-a="printweek"]');
+    const pr = await page.evaluate(() => window.__printed[0]);
+    assert.match(pr, /<h1>Week of November 2<\/h1>/);
+    assert.match(pr, /Tue 11\/3[\s\S]*Course A-1[\s\S]*Claims[\s\S]*<li>Counterclaims<\/li>[\s\S]*Course B-1[\s\S]*Claims/);
+    assert.match(pr, /Fri 11\/6 · Day off/);
+    assert.deepEqual(errors, []);
+  } finally { await a.done(); }
+});

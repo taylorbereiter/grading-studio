@@ -266,7 +266,7 @@ function renderWeek() {
   let h = topBar('week', '<button class="btn sm ghost" data-a="wk" data-n="-7" aria-label="Previous week">‹</button>' +
     '<span class="ls-wk">' + LMONTHS[mon.getMonth()].slice(0, 3) + ' ' + mon.getDate() + ' – ' + (fri.getMonth() !== mon.getMonth() ? LMONTHS[fri.getMonth()].slice(0, 3) + ' ' : '') + fri.getDate() + '</span>' +
     '<button class="btn sm ghost" data-a="wk" data-n="7" aria-label="Next week">›</button><button class="btn sm ghost" data-a="today">This week</button>' +
-    '<input type="date" class="btn sm" data-a="jump" value="' + L.weekOf + '" aria-label="Go to a date">');
+    '<input type="date" class="btn sm" data-a="jump" value="' + L.weekOf + '" aria-label="Go to a date">' + (L.setup ? '<button class="btn sm ghost" data-a="printweek">Print week</button>' : ''));
   if (!L.setup) {
     h += '<div class="ls-empty"><h2>Load your profile</h2><p>Lessons line up with your classes once the app knows when they meet. Load your profile file (your timetable, school calendar, units and slide template), drop it on this page, or type your classes in. You do this once on each computer.</p>' +
       '<div class="row"><button class="btn primary" data-a="loadsetup">Load my profile…</button><button class="btn" data-a="setup">Type in my classes</button><button class="btn" data-a="newfree">Make a lesson without a class</button></div></div>';
@@ -425,6 +425,7 @@ function onLessonsKey(e) {
     return;
   }
   if (e.key === 'Enter' && e.target.dataset && e.target.dataset.f === 'say') { e.preventDefault(); return addComment(); }
+  if (e.key === 'Enter' && e.target.id === 'plFind') { e.preventDefault(); return findDlg(e.target.value); }
   const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName);
   if (L.view === 'edit' && !typing && !e.metaKey && !e.ctrlKey) {
     if (e.key === 'ArrowDown' || e.key === 'ArrowRight' || e.key === 'PageDown') { e.preventDefault(); goSlide(L.cur + 1); }
@@ -461,6 +462,7 @@ async function onLessonsClick(e) {
   if (a === 'wk') { L.weekOf = ymd(addDays(parseYmd(L.weekOf), +t.dataset.n)); return renderWeek(); }
   if (a === 'today') { L.weekOf = ymd(mondayOf(new Date())); return renderWeek(); }
   if (a === 'back') { editorCommit(); clearTimeout(lSaveT); if (L.open) await lPut(L.open); L.open = null; L.view = L.backTo || 'week'; L.backTo = null; return renderLessons(); }
+  if (a === 'printweek') return printWeek();
   if (a === 'newfree') return createLesson([]);
   if (a === 'all') return showAllLessons();
   if (a === 'setup') return openTimetable();
@@ -671,12 +673,14 @@ function moreMenu() {
   const l = L.open;
   openDlg('<div class="bh"><h2>' + esc(l.title) + '</h2></div><div class="bb ls-more">' +
     '<button class="btn" data-m="export">Save lesson file (for Claude)…</button><p class="muted">A .lesson.json file with just this lesson. Give it to Claude, then bring Claude’s version back with Import.</p>' +
+    '<button class="btn" data-m="copyto">Copy to another class or day…</button><p class="muted">A separate copy with its own slides and materials.</p>' +
     '<button class="btn" data-m="copy">Copy lesson as text</button><p class="muted">The slides and notes as plain text, to paste anywhere.</p>' +
     '<button class="btn" data-m="delete">Delete this lesson</button></div><div class="bf"><button class="btn" data-x>Close</button></div>', true);
   $('#dlgBox').onclick = async e => {
     if (e.target.closest('[data-x]')) return closeDlg();
     const m = e.target.closest('[data-m]'); if (!m) return;
     if (m.dataset.m === 'export') { closeDlg(); return saveBlob(fileBase(l) + '.lesson.json', new Blob([JSON.stringify(lessonForFile(l, null), null, 2)], { type: 'application/json' })); }
+    if (m.dataset.m === 'copyto') { closeDlg(); return copyLessonDlg(l); }
     if (m.dataset.m === 'copy') { await copyText(lessonText(l)); closeDlg(); return toast('Copied'); }
     if (m.dataset.m === 'delete') {
       if (m.dataset.sure !== '1') { m.dataset.sure = '1'; m.textContent = 'Click again to delete it for good'; return; }

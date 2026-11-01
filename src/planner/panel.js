@@ -199,7 +199,7 @@ async function atlasHtml() {
 }
 
 /* ---------- the Claude box ---------- */
-const CHIP_ICON = { slide: '▭', page: '📖', video: '▶', week: '📅', file: '📄' };
+const CHIP_ICON = { slide: '▭', page: '📖', video: '▶', week: '📅', file: '📄', lesson: '📘', quote: '❝', note: '💬' };
 function boxHtml() {
   return '<div class="sp-pad sp-box"><p class="muted sp-small">Drag slides, book pages and chapters here, or use the “+ Claude box” buttons. Then say or type what you want, and copy it all for Claude.</p>' +
     '<div class="sp-chips" id="spChips">' + (SP.box.chips.length ? SP.box.chips.map((c, i) => '<span class="sp-chip">' + (CHIP_ICON[c.kind] || '•') + ' ' + esc(c.label) + '<button data-schip="' + i + '" aria-label="Remove">×</button></span>').join('') : '<span class="muted sp-small">Nothing here yet.</span>') + '</div>' +
@@ -207,13 +207,19 @@ function boxHtml() {
     '<div class="sp-bar"><button class="btn sm" data-dict="#spText">🎤 Dictate</button><span class="sp"></span><button class="btn sm ghost" data-sa="boxclear">Clear</button><button class="btn sm primary" data-sa="boxcopy">Copy for Claude</button></div></div>';
 }
 async function boxSave() { await kvSet('cbox', SP.box); }
-async function boxAdd(c) {
-  if (!c || !c.kind) return;
+// Gives a chip its name; false if what it points at is gone.
+async function chipLabel(c) {
   if (c.kind === 'page') { const bk = (await booksList()).find(x => x.id === c.book); c.label = (bk ? bk.name + ', ' : '') + (c.title && !/^p\. \d+$/.test(c.title) ? c.title + ' (p. ' + c.page + ')' : 'p. ' + c.page); }
-  if (c.kind === 'slide') { const l = L.lessons.find(x => x.id === c.lesson), s = l && l.slides[c.i]; if (!s) return; c.label = (l.title || 'Lesson') + ', slide ' + (c.i + 1) + (s.title ? ': ' + s.title : ''); }
-  if (c.kind === 'file') { const o = ownerOf({ t: c.t, id: c.owner }), f = o && (o.files || []).find(x => x.id === c.id); if (!f) return; c.label = f.name; }
+  if (c.kind === 'slide') { const l = L.lessons.find(x => x.id === c.lesson), s = l && l.slides[c.i]; if (!s) return false; c.label = (l.title || 'Lesson') + ', slide ' + (c.i + 1) + (s.title ? ': ' + s.title : ''); }
+  if (c.kind === 'file') { const o = ownerOf({ t: c.t, id: c.owner }), f = o && (o.files || []).find(x => x.id === c.id); if (!f) return false; c.label = f.name; }
+  if (c.kind === 'lesson' || c.kind === 'quote') c.label = chipLabelNow(c);
+  if (c.kind === 'note') { if (!c.about || !(await chipLabel(c.about))) return false; c.label = 'Comment on ' + c.about.label; }
+  return true;
+}
+async function boxAdd(c) {
+  if (!c || !c.kind || !(await chipLabel(c))) return;
   SP.box.chips.push(c); await boxSave();
-  if (SP.open && SP.tab === 'claude') panelRender(); else { if (SP.open) panelRender(); toast('Added to the Claude box'); }
+  if (SP.open && SP.tab === 'claude') panelRender(); else { if (SP.open) panelRender(); toast(c.kind === 'note' ? 'Comment added to the Claude box' : 'Added to the Claude box'); }
 }
 async function chipText(c) {
   if (c.kind === 'page') { const bk = (await booksList()).find(x => x.id === c.book); const t = await pageText(c.book, c.page).catch(() => ''); return '[' + (bk ? bk.name : 'Book') + ', ' + (c.title && !/^p\. \d+$/.test(c.title) ? c.title + ', ' : '') + 'page ' + c.page + ']\n' + (t || '(no text on this page)'); }
@@ -231,6 +237,9 @@ async function chipText(c) {
     return '[Document: ' + f.name + ']\n' + d.textContent.replace(/\n{3,}/g, '\n\n').trim();
   }
   if (c.kind === 'video') return '[Video] ' + c.url;
+  if (c.kind === 'lesson') { const l = L.lessons.find(x => x.id === c.lesson); return l ? '[Lesson]\n' + lessonText(l).trim() : ''; }
+  if (c.kind === 'quote') return '[' + c.label + ']' + (c.text ? '\n' + c.text : '');
+  if (c.kind === 'note') return 'My comment: ' + c.text + '\nOn: ' + (await chipText(c.about) || c.label);
   if (c.kind === 'week') return '[' + c.label + ']' + (c.text ? '\n' + c.text : '');
   return c.label || '';
 }
