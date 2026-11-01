@@ -223,12 +223,12 @@ function lessonsShell() {
 }
 async function openLessons() {
   lessonsShell();
-  await lOpenDb(); await lLoadAll(); await unitsLoad();
+  await lOpenDb(); await lLoadAll(); await unitsLoad(); await bankLoad();
   L.setup = (await kvGet('setup')) || null;
   L.defLook = (await kvGet('deflook')) || '';
   await tplPreview();
   if (!L.weekOf) L.weekOf = ymd(mondayOf(new Date()));
-  try { const v = localStorage.getItem('gsp.view'); if (v === 'week' || v === 'semester' || v === 'units') L.view = v; } catch { }
+  try { const v = localStorage.getItem('gsp.view'); if (v === 'week' || v === 'semester' || v === 'units' || v === 'activities' || v === 'bank') L.view = v; } catch { }
   renderLessons();
   await folderReconnect(false);
 }
@@ -237,11 +237,12 @@ function closeLessons() { editorCommit(); location.href = /Planner\.html$/i.test
 function renderLessons() {
   if (L.view === 'edit' && L.open) return renderEditor();
   if (L.view === 'unit' && L.unit) return renderUnit();
-  if (!['semester', 'units', 'activities'].includes(L.view)) L.view = 'week';
+  if (!['semester', 'units', 'activities', 'bank'].includes(L.view)) L.view = 'week';
   try { localStorage.setItem('gsp.view', L.view); } catch { }
   if (L.view === 'semester') return renderSemester();
   if (L.view === 'units') return renderUnits();
   if (L.view === 'activities') return renderActivities();
+  if (L.view === 'bank') return renderBank();
   renderWeek();
 }
 
@@ -406,6 +407,7 @@ function newSlide(layout) {
 }
 
 async function onLessonsClick(e) {
+  if (await bankClick(e)) return;
   if (await unitsClick(e)) return;
   const t = e.target.closest('[data-a],[data-open],[data-new],[data-attach],[data-go],[data-addslide],[data-unslot],[data-talkdone],.ls-ed');
   if (!t) return;
@@ -478,6 +480,7 @@ function undoToast(msg, fn) {
 // Thumbnails drag to reorder.
 document.addEventListener('dragstart', e => { const th = e.target.closest && e.target.closest('#lsThumbs .ls-th'); if (!th) return; e.dataTransfer.setData('text/x-slide', th.dataset.go); e.dataTransfer.effectAllowed = 'move'; });
 async function onLessonDrop(e) {
+  if (await bankDrop(e)) return;
   if (await unitsDrop(e)) return;
   const from = e.dataTransfer.getData('text/x-slide');
   if (from !== '' && L.open) {
@@ -871,7 +874,7 @@ const FOLDER_MARK = 'planner-folder.json';
 const FOLDER_README = `# Planner folder
 
 The Planner (part of Grading Studio) keeps planning here so Claude can read and edit it. Only planning is in
-this folder: lessons, units, the timetable and files the teacher added to a unit. Student work and grades
+this folder: lessons, units, the timetable, files the teacher added to a unit, and rubrics and grading scales. Student work and grades
 never are, and nothing here should point to a student.
 
 ## Files
@@ -932,7 +935,7 @@ An empty title-slide body means the app fills in the course and dates. Bump "upd
 To fill a unit's weeks from its Atlas screenshots: read the "atlas" files in its files folder and write each
 week's focus (and standards, if shown) into "weeks", in order, one entry per week. Keep the teacher's "notes".
 Don't add, rename or remove files in the files folder; the teacher adds those in the app.
-`;
+` + BANK_README;
 async function folderLink() {
   try {
     const h = await window.showDirectoryPicker({ id: 'gs-lessons', mode: 'readwrite', startIn: 'documents' });
@@ -985,11 +988,12 @@ async function folderWriteSchedule() {
 async function folderWriteAll() {
   if (!L.dir || !L.dirOk) return;
   await writeFile(L.dir, 'README - for Claude.md', FOLDER_README);
-  await writeFile(L.dir, FOLDER_MARK, JSON.stringify({ kind: 'grading-studio-planner-folder', note: 'Planning only: lessons, units, the timetable and files added to units. Never student work or grades.' }, null, 2));
+  await writeFile(L.dir, FOLDER_MARK, JSON.stringify({ kind: 'grading-studio-planner-folder', note: 'Planning only: lessons, units, the timetable, files added to units, rubrics and grading scales. Never student work or grades.' }, null, 2));
   await folderWriteSchedule();
   for (const l of L.lessons) await folderWrite(l);
   for (const u of L.units) await unitFolderWrite(u);
   await actFolderWrite();
+  await bankWriteAll();
 }
 // Picks up lessons Claude added or changed in the folder. A file changed since the app last wrote it wins.
 async function folderRead(say) {
@@ -1021,6 +1025,7 @@ async function folderRead(say) {
   } catch (e) { console.warn(e); if (say) toast('Couldn’t read the Planner folder'); return; }
   try { const u = await unitsFolderRead(); added += u.added; changed += u.changed; } catch (e) { console.warn(e); }
   try { changed += await actFolderRead(); } catch (e) { console.warn(e); }
+  try { const r = await bankFolderRead(); added += r.added; changed += r.changed; } catch (e) { console.warn(e); }
   if (added || changed) { toast((added ? added + ' new' : '') + (added && changed ? ', ' : '') + (changed ? changed + ' updated' : '') + ' from the Planner folder'); renderLessons(); }
   else if (say) toast('No changes in the Planner folder');
 }

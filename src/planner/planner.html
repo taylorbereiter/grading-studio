@@ -229,6 +229,30 @@ h1 i,.top .title i{font-style:normal;font-weight:500;color:var(--accent)}
 .pl-units{padding:14px;display:flex;flex-direction:column;gap:18px}
 .pl-units h2{font-size:17px;margin:0 0 8px}
 .pl-ucard{border-left:5px solid var(--uc)}
+/* ---------- the bank: rubrics and grading scales by unit ---------- */
+.pl-bank{max-width:1100px;margin:0 auto;width:100%}
+.pl-bnote{margin:0;font-size:13.5px;max-width:80ch}
+.pl-bunit{border-left:4px solid var(--uc,var(--line-strong));background:var(--surface);border-radius:10px;padding:10px 12px;margin-bottom:8px;border-top:1px solid var(--line);border-right:1px solid var(--line);border-bottom:1px solid var(--line)}
+.pl-bunit.loose{border-left-style:dashed}
+.pl-bunit.over{box-shadow:0 0 0 2px var(--accent)}
+.pl-bh{display:flex;align-items:center;gap:6px;margin-bottom:8px}.pl-bh .sp{flex:1}
+.pl-bempty{font-size:13px}
+.pl-bcard{cursor:grab}
+.pl-bcard.scale{border-style:dashed}
+.pl-bbox{width:min(720px,100%)!important}
+.pl-bed .pl-fl{display:flex;flex-direction:column;gap:4px;margin-bottom:10px;font-weight:600;font-size:13.5px}
+.pl-bed .pl-fl .muted{font-weight:400}
+.pl-bed div.pl-fl{flex-direction:row;flex-wrap:wrap;align-items:center;gap:6px}
+.pl-brow{border:1px solid var(--line);border-radius:8px;padding:8px 10px;margin-bottom:8px}
+.pl-brh{display:flex;align-items:center;gap:8px}.pl-brh input{flex:1;text-align:left;justify-content:flex-start;font-weight:600}
+.pl-brow summary{cursor:pointer;font-size:13px;color:var(--muted);margin-top:6px}
+.pl-blv{display:flex;gap:8px;align-items:flex-start;margin-top:6px}.pl-blv b{width:16px;text-align:right;padding-top:6px}
+.pl-blv textarea{flex:1;border:1px solid var(--line-strong);border-radius:6px;padding:6px 8px;background:var(--surface);resize:vertical}
+.pl-scale{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:6px}
+.pl-scale label{display:flex;align-items:center;gap:4px;font-size:13px;font-weight:600}
+.pl-scale label span{width:22px;text-align:right}
+.pl-scale input{width:62px;border:1px solid var(--line-strong);border-radius:6px;padding:4px;background:var(--surface)}
+.pl-pre{display:inline-flex;gap:6px;flex-wrap:wrap}
 .pl-unit{padding:14px;display:flex;flex-direction:column;gap:12px;max-width:1180px;width:100%;margin:0 auto}
 .pl-card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
 .pl-card .lhead{display:flex;align-items:center;gap:8px;margin-bottom:10px}.pl-card .lhead h2{font-size:17px}

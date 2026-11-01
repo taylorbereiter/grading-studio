@@ -70,3 +70,12 @@
 #ovTip b{font-size:14px;font-weight:700;color:var(--fg)}
 #ovTip em{font-style:normal;color:var(--muted)}
 #ovTip em[hidden]{display:none}
+
+/* the bank in Rubric setup */
+.rbunit{align-self:flex-start;max-width:100%;border:1px solid var(--line-strong);border-radius:6px;padding:4px 6px;background:var(--surface);font-size:13px;margin-bottom:4px}
+.rlg{font-size:12px;font-weight:600;color:var(--muted);margin-top:6px;text-transform:none}
+.rlg:first-child{margin-top:0}
+.rbscales{display:inline-flex;gap:6px;flex-wrap:wrap;align-items:center}
+.rbscales select{border:1px solid var(--line-strong);border-radius:6px;background:var(--surface)}
+.rbask{display:flex;flex-direction:column;gap:4px;font-weight:600;font-size:13.5px;margin-bottom:10px}
+.rbask input,.rbask select{border:1px solid var(--line-strong);border-radius:6px;padding:6px 8px;background:var(--surface);font-weight:400}

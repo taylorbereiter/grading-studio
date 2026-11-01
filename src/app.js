@@ -1648,8 +1648,11 @@ function renderGrade() {
   let h = '';
   if (setup.mode === 'rubric') {
     h += '<h3>Rubric <button class="link" id="editRubric" style="font-size:12px;text-transform:none;letter-spacing:0">Edit</button></h3>';
-    h += setup.criteria.map((c, i) => '<div class="crit"><div class="cn"><span>' + esc(c) + '</span><em>' + (g.rubric[i] == null ? '' : fmtNum(g.rubric[i]) + ' / 4') + '</em></div><div class="scores" data-c="' + i + '">' +
-      RUBRIC_STEPS.map(v => '<button class="' + (v % 1 ? 'half' : '') + '" data-v="' + v + '" aria-pressed="' + (g.rubric[i] === v) + '">' + v + '</button>').join('') + '</div>' + levelsHtml(i, g.rubric[i]) + '</div>').join('');
+    // Each row is a slider over the steps 0, 1, 1.5 … 4, with its numbers underneath to click straight to one. Not scored yet: the slider waits, faded, for her first touch.
+    h += setup.criteria.map((c, i) => { const v = g.rubric[i], k = RUBRIC_STEPS.indexOf(v);
+      return '<div class="crit"><div class="cn"><span>' + esc(c) + '</span><em>' + (v == null ? '' : fmtNum(v) + ' / 4') + '</em></div><div class="scores slide" data-c="' + i + '">' +
+        '<input type="range" class="srange' + (v == null ? ' unset' : '') + '" min="0" max="' + (RUBRIC_STEPS.length - 1) + '" step="1" value="' + Math.max(0, k) + '" aria-label="Score for ' + esc(c) + '" aria-valuetext="' + (v == null ? 'Not scored' : fmtNum(v) + ' out of 4') + '">' +
+        '<div class="sticks">' + RUBRIC_STEPS.map((w, j) => '<button class="' + (w % 1 ? 'half' : '') + '" style="--k:' + j + '" data-v="' + w + '" tabindex="-1" aria-pressed="' + (v === w) + '">' + w + '</button>').join('') + '</div></div>' + levelsHtml(i, v) + '</div>'; }).join('');
   } else {
     h += '<h3>Score <button class="link" id="editRubric" style="font-size:12px;text-transform:none;letter-spacing:0">Edit</button></h3>' +
       '<div class="pts"><input type="number" step="0.5" min="0" id="ptsIn" value="' + esc(g.points) + '" aria-label="Points"><span class="muted">out of ' + esc(setup.outOf) + '</span></div>';
@@ -1691,6 +1694,37 @@ $('#grade').addEventListener('click', e => {
   if (e.target.closest('#nextBtn')) stepStudent(1);
   if (e.target.closest('#editRubric')) openSetup();
   if (e.target.closest('[data-keys]')) openKeys();
+});
+// Dragging a row's slider: the score, the total and the list keep up without redrawing the slider under her pointer. Letting go redraws the panel.
+function slideTo(r, v) {
+  const st = batch.students[cur], i = +r.closest('.scores').dataset.c;
+  if (st.grade.rubric[i] === v && !r.classList.contains('unset')) return;
+  st.grade.rubric[i] = v; scoreTouched(st, i);
+  r.classList.remove('unset'); r.setAttribute('aria-valuetext', fmtNum(v) + ' out of 4');
+  const crit = r.closest('.crit'), em = crit.querySelector('.cn em'); if (em) em.textContent = fmtNum(v) + ' / 4';
+  for (const t of crit.querySelectorAll('.sticks button')) t.setAttribute('aria-pressed', String(+t.dataset.v === v));
+  const lv = crit.querySelector('.lvtxt'); if (lv) lv.innerHTML = levelHint(i, v);
+  const tot = $('#grade .total'); if (tot) tot.innerHTML = totalHtml(st);
+  const gs = $('#gstat'); if (gs) gs.outerHTML = statusHtml(st);
+  renderList(); saveSoon();
+}
+// After the mouse, focus leaves the slider so ← → go on moving between students. After the keyboard, it stays.
+let slidePtr = false;
+function slideDone(r) { const i = r.closest('.scores').dataset.c, kb = !slidePtr; slidePtr = false; renderGrade(); const again = $('#grade .scores[data-c="' + i + '"] .srange'); if (again && kb) again.focus({ preventScroll: true }); }
+$('#grade').addEventListener('pointerdown', e => { if (e.target.closest && e.target.closest('.srange')) slidePtr = true; });
+$('#grade').addEventListener('input', e => { if (e.target.classList.contains('srange')) slideTo(e.target, RUBRIC_STEPS[+e.target.value]); });
+$('#grade').addEventListener('change', e => { if (e.target.classList.contains('srange')) slideDone(e.target); });
+// A first touch on the very spot the faded slider rests on changes nothing, so it wouldn't count. This counts it.
+$('#grade').addEventListener('pointerup', e => {
+  const r = e.target.closest && e.target.closest('.srange'); if (!r || !r.classList.contains('unset')) return;
+  setTimeout(() => { if (r.isConnected && r.classList.contains('unset')) { slideTo(r, RUBRIC_STEPS[+r.value]); slideDone(r); } }, 0);
+});
+// Delete or Backspace clears the row, the way clicking its score again does.
+$('#grade').addEventListener('keydown', e => {
+  if (!e.target.classList || !e.target.classList.contains('srange') || (e.key !== 'Delete' && e.key !== 'Backspace')) return;
+  e.preventDefault(); e.stopPropagation();
+  const st = batch.students[cur], i = +e.target.closest('.scores').dataset.c; if (st.grade.rubric[i] == null) return;
+  st.grade.rubric[i] = null; scoreTouched(st, i); renderList(); saveSoon(); slideDone(e.target);
 });
 $('#grade').addEventListener('input', e => {
   const st = batch.students[cur];
@@ -1762,7 +1796,7 @@ function openSetup() {
     } else {
       h += '<div class="field"><label for="outOf">Out of</label><input type="number" id="outOf" min="1" step="0.5" value="' + esc(draft.outOf) + '" style="width:120px"></div>';
     }
-    h += '<div class="field"><label>Grading scale</label><span style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn sm" data-preset="usual">12 = 100, 11 = 95, 10 = 91…</button><button class="btn sm" data-preset="fives">Steps of 5 (9 = 85%)</button><button class="btn sm" data-preset="none">No scale</button></span>' + scaleRows() + '</div>';
+    h += '<div class="field"><label>Grading scale</label><span style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn sm" data-preset="usual">12 = 100, 11 = 95, 10 = 91…</button><button class="btn sm" data-preset="fives">Steps of 5 (9 = 85%)</button><button class="btn sm" data-preset="none">No scale</button>' + scaleBankHtml(draft, draft.mode === 'rubric' ? draft.criteria.length * 4 : Math.round(+draft.outOf || 0)) + '</span>' + scaleRows() + '</div>';
     const rp = newPage === undefined ? draft.rubricPage : newPage;
     h += '<div class="field"><label>Your rubric, for every student</label><span class="muted" style="font-size:13px">Bring in your rubric once and every student gets their own copy to grade on. A Word rubric (.docx or .docm) stays a Word file: type in it, check its boxes and shade its cells. A PDF or picture is added as a page you can mark up. Each copy goes back with that student’s work.</span>' +
       '<span style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:4px"><button class="btn sm" data-rpup>' + (rp ? 'Replace…' : 'Bring in my rubric…') + '</button>' +
