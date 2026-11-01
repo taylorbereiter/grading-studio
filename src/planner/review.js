@@ -118,7 +118,7 @@ async function claudeChanged(old, l) {
 
 /* ---------- the slide's "for Claude" note and comments ---------- */
 function slideTalkHtml(s) {
-  return '<div class="pl-ask"><label class="ls-notes">What I want on this slide <span class="muted" style="font-weight:400">(for Claude, not shown on the slide)</span><textarea data-f="ask" rows="2" placeholder="Like: a short video on ethos here, or three examples from Ch 4">' + esc(s.ask) + '</textarea></label>' +
+  return '<div class="pl-ask"><label class="ls-notes">What I want on this slide <span class="muted" style="font-weight:400">(for Claude, not shown on the slide)</span><textarea data-f="ask" rows="2" placeholder="Like: a short video on ethos here, or three examples from Ch 4">' + esc(s.ask) + '</textarea></label><button class="btn sm ghost pl-mic" data-dict="[data-f=&quot;ask&quot;]" title="Say it instead of typing">🎤 Dictate</button>' +
     '<div class="pl-talk">' + s.talk.map((t, i) => '<div class="pl-msg ' + (t.by === 'claude' ? 'cl' : 'me') + (t.done ? ' done' : '') + '"><b>' + (t.by === 'claude' ? 'Claude' : 'You') + '</b><span>' + esc(t.text) + '</span><button class="btn sm ghost" data-talkdone="' + i + '">' + (t.done ? 'Open again' : 'Done') + '</button></div>').join('') +
     '<div class="pl-say"><input class="btn sm" data-f="say" placeholder="Comment on this slide…" aria-label="Comment on this slide"><button class="btn sm" data-a="say">Add</button></div></div></div>';
 }

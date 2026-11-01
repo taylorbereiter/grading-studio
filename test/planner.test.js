@@ -29,7 +29,7 @@ async function open() {
 
 test('the Planner page carries none of the grading code', () => {
   const html = PAGE();
-  for (const s of ['gs-folder.json', 'pdfjsLib', 'PDFLib', 'mammoth', 'gsData', 'indexedDB.open(\'gs\'']) {
+  for (const s of ['gs-folder.json', 'PDFLib', 'mammoth', 'gsData', 'indexedDB.open(\'gs\'']) {
     if (s === 'gs-folder.json') continue;   // named once, only to refuse the grading folder
     assert.ok(!html.includes(s), 'planner.html should not contain ' + s);
   }
@@ -405,6 +405,49 @@ test('a profile brings the timetable, units and a default look, and never replac
     await page.evaluate(async p => { const P = window.__planner; P.L.units[0].weeks[0].notes = 'mine'; await P.applySetup(p); }, prof);
     assert.equal(await page.evaluate(() => window.__planner.L.units.length), 2);
     assert.equal(await page.evaluate(() => window.__planner.L.units[0].weeks[0].notes), 'mine');
+    assert.deepEqual(errors, []);
+  } finally { await a.done(); }
+});
+
+test('the side panel: a book with its chapters and search, pages and slides into the Claude box, copied in one go', async () => {
+  const a = await open();
+  try {
+    const { page, errors } = a;
+    await page.evaluate(async s => { await window.__planner.applySetup(s); }, SETUP);
+    await page.evaluate(async () => { const P = window.__planner, l = P.normLesson({ title: 'Talk', slides: [{ layout: 'title', title: 'Talk' }, { layout: 'content', title: 'Partners', body: 'Talk with a partner' }] }); P.L.lessons.push(l); P.openLessonForTest(l, 1); });
+    await page.waitForSelector('.ls-stage');
+    await page.click('.ls-top [data-a="panel"]');
+    await page.waitForSelector('#side:not([hidden]) [data-sa="addbook"]');
+    const [chooser] = await Promise.all([page.waitForFileChooser(), page.click('[data-sa="addbook"]')]);
+    await chooser.accept([path.join(__dirname, 'fixtures', 'routines-sample.pdf')]);
+    // the PDF's own chapter list, with page numbers
+    await page.waitForFunction(() => document.querySelectorAll('#spToc .sp-toci').length === 4);
+    assert.deepEqual(await page.$$eval('#spToc .sp-toci', b => b.map(x => x.textContent)), ['Chapter 1: Talking p. 1', 'Think, pair, share p. 2', 'Chapter 2: Writing p. 3', 'Quick write p. 4']);
+    await page.waitForSelector('#spCanvas canvas');
+    await page.click('#spToc .sp-toci:nth-child(4)');
+    await page.waitForFunction(() => /Page 4 of 4/.test(document.querySelector('#spPg').textContent));
+    // search
+    await page.type('[data-sf="find"]', 'partner'); await page.keyboard.press('Enter');
+    await page.waitForFunction(() => /1 page with/.test(document.querySelector('#spToc').textContent));
+    await page.click('#spToc .sp-toci'); await page.waitForFunction(() => /Page 2 of 4/.test(document.querySelector('#spPg').textContent));
+    // the page goes to the Claude box with its chapter, and a slide dragged in from the left
+    await page.click('[data-sa="pagebox"]');
+    await page.waitForFunction(() => (document.querySelector('.sp-tabs .sp-n') || {}).textContent === '1');
+    await page.evaluate(() => { const dt = new DataTransfer(); dt.setData('text/x-slide', '1'); document.querySelector('#side').dispatchEvent(new DragEvent('drop', { dataTransfer: dt, bubbles: true, cancelable: true })); });
+    await page.waitForFunction(() => document.querySelectorAll('#spChips .sp-chip').length === 2);
+    assert.match(await page.$eval('#spChips', c => c.textContent), /routines-sample, Think, pair, share \(p\. 2\)[\s\S]*Talk, slide 2: Partners/);
+    await page.type('#spText', 'Make a warm-up from these');
+    await page.evaluate(() => { navigator.clipboard.writeText = t => { window.__copied = t; return Promise.resolve(); }; });
+    await page.click('[data-sa="boxcopy"]');
+    await page.waitForFunction(() => window.__copied);
+    const t = await page.evaluate(() => window.__copied);
+    assert.match(t, /^Make a warm-up from these\n\n\[routines-sample, Think, pair, share, page 2\]\nThink pair share\. Students think alone,\s+then talk with a partner\./);
+    assert.match(t, /\[Slide 2 of "Talk" \(Bullets\)\]\nTitle: Partners\nTalk with a partner/);
+    // the panel stays open while the lesson redraws, and Video says what it can do
+    await page.click('[data-st="video"]');
+    assert.match(await page.$eval('#spBody', b => b.textContent), /YouTube doesn’t allow its search inside other sites/);
+    await page.type('[data-sf="vid"]', 'https://youtu.be/dQw4w9WgXcQ?t=30'); await page.keyboard.press('Enter');
+    await page.waitForSelector('.sp-vid iframe[src="https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ?start=30"]');
     assert.deepEqual(errors, []);
   } finally { await a.done(); }
 });

@@ -42,6 +42,7 @@ async function lTx(store, mode, fn) {
 const reqP = r => new Promise((res, rej) => { r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
 const kvGet = k => lTx('kv', 'readonly', s => reqP(s.get(k)));
 const kvSet = (k, v) => lTx('kv', 'readwrite', s => { s.put(v, k); });
+const kvDel = k => lTx('kv', 'readwrite', s => { s.delete(k); });
 async function lLoadAll() { L.lessons = (await lTx('lessons', 'readonly', s => reqP(s.getAll()))) || []; }
 async function lPut(lesson) {
   lesson.updated = Date.now();
@@ -227,6 +228,7 @@ async function openLessons() {
   await lOpenDb(); await lLoadAll(); await unitsLoad(); await bankLoad();
   L.setup = (await kvGet('setup')) || null;
   L.defLook = (await kvGet('deflook')) || '';
+  await panelInit();
   await tplPreview();
   if (!L.weekOf) L.weekOf = ymd(mondayOf(new Date()));
   try { const v = localStorage.getItem('gsp.view'); if (v === 'week' || v === 'semester' || v === 'units' || v === 'activities' || v === 'bank') L.view = v; } catch { }
@@ -240,6 +242,7 @@ function renderLessons() {
   if (L.view === 'unit' && L.unit) return renderUnit();
   if (!['semester', 'units', 'activities', 'bank'].includes(L.view)) L.view = 'week';
   try { localStorage.setItem('gsp.view', L.view); } catch { }
+  panelContext();
   if (L.view === 'semester') return renderSemester();
   if (L.view === 'units') return renderUnits();
   if (L.view === 'activities') return renderActivities();
@@ -299,7 +302,7 @@ function renderEditor() {
     '<span class="ls-slots">' + l.slots.map((t, i) => '<span class="ls-chip" style="--cc:' + esc((classById(t.classId) || {}).color || '#1F6FB2') + '">' + esc(className(t.classId)) + ' · ' + shortDate(t.date) + '<button data-unslot="' + i + '" title="Take it off this class" aria-label="Remove">×</button></span>').join('') + '<button class="btn sm ghost" data-a="addslot">+ Class</button></span>' +
     atlasChip(l) + '<span class="sp"></span>' + statusChip(l) + '<span class="savest" id="lsSaved">Saved</span>' +
     '<button class="btn sm" data-a="send" title="Copy this lesson for Claude, to paste where you’re working with Claude">Copy for Claude</button>' +
-    '<button class="btn sm ghost" data-a="versions">Versions</button>' +
+    '<button class="btn sm ghost" data-a="versions">Versions</button>' + panelBtn() +
     '<button class="btn sm ghost" data-a="more">More ▾</button>' +
     '<button class="btn sm primary" data-a="pptx">Download .pptx</button></div>' + pendingBar(l);
   h += '<div class="ls-ed-cols"><nav class="ls-thumbs" id="lsThumbs">' + l.slides.map((x, i) => thumbHtml(x, l, i)).join('') +
@@ -318,7 +321,7 @@ function renderEditor() {
     '<p class="muted ls-hint">Click any text on the slide to edit it. In bullets, start a line with Tab for a smaller point under the one above. Arrow keys move between slides when you’re not typing. Drag a picture in from another tab, or paste a picture or a YouTube link.</p>' +
     '</section></div><input type="file" id="lsPicIn" accept="image/*" hidden>';
   $('#lessons').innerHTML = h;
-  fitStage(); checkFit();
+  fitStage(); checkFit(); panelContext();
   const th = $('#lsThumbs .ls-th.on'); if (th) th.scrollIntoView({ block: 'nearest' });
 }
 // The lesson's Atlas page: its own link, or else the link of the unit it falls in.
@@ -434,6 +437,7 @@ function newSlide(layout) {
 }
 
 async function onLessonsClick(e) {
+  if (e.target.closest('[data-a="panel"]')) return panelToggle();
   if (await bankClick(e)) return;
   if (await unitsClick(e)) return;
   const t = e.target.closest('[data-a],[data-open],[data-new],[data-attach],[data-go],[data-addslide],[data-unslot],[data-talkdone],.ls-ed');
