@@ -197,3 +197,69 @@ test('light by default; slides keep their own light colors in dark mode', async 
     assert.deepEqual(a.errors, []);
   } finally { await a.done(); }
 });
+
+test('working with Claude: notes and comments go out, Claude’s changes come back slide by slide, and nothing is forced', async () => {
+  const a = await open();
+  try {
+    const { page } = a;
+    await page.evaluate(async s => { await window.__planner.applySetup(s); window.open = () => null; }, SETUP);
+    const setupDir = await page.evaluate(async () => {
+      const P = window.__planner, root = await navigator.storage.getDirectory(), dir = await root.getDirectoryHandle('loop-' + Date.now(), { create: true });
+      P.L.dir = dir; P.L.dirOk = true;
+      const l = P.normLesson({ title: 'Appeals', slots: [{ classId: 'A1', date: '2026-11-03' }], slides: [{ id: 's1', layout: 'title', title: 'Appeals' }, { id: 's2', layout: 'content', title: 'Warm-up', body: 'An ad you remember' }, { id: 's3', layout: 'content', title: 'Old slide', body: 'Cut me?' }] });
+      P.L.lessons.push(l); await P.folderWriteAll(); P.openLessonForTest(l, 1); return true;
+    });
+    assert.ok(setupDir);
+    await page.waitForSelector('[data-f="ask"]');
+    await page.type('[data-f="ask"]', 'Make this a journal prompt');
+    await page.type('[data-f="say"]', 'Shorter, please'); await page.keyboard.press('Enter');
+    await page.waitForSelector('.pl-msg.me');
+    await page.click('[data-a="send"]');
+    await page.waitForSelector('.pl-st.st-claude');
+    let r = await page.evaluate(async () => { const P = window.__planner, l = P.L.open; return { status: l.status, vers: ((await P.versions(l)) || []).map(v => v.label), ask: l.slides[1].ask, talk: l.slides[1].talk.length }; });
+    assert.deepEqual(r, { status: 'claude', vers: ['Sent to Claude'], ask: 'Make this a journal prompt', talk: 1 });
+
+    // Claude edits the file: changes slide 2, takes out slide 3, adds a slide, replies, sets review
+    await new Promise(res => setTimeout(res, 3200));
+    await page.evaluate(async () => {
+      const P = window.__planner, l = P.L.open, fh = await P.L.dir.getFileHandle(l._file), j = JSON.parse(await (await fh.getFile()).text());
+      j.slides[1].body = 'Think of an ad that made you want something.\nWhat did it do to convince you?'; j.slides[1].title = 'Warm-up: journal';
+      j.slides[1].talk.push({ by: 'claude', text: 'Made it two short lines.' });
+      j.slides.splice(2, 1); j.slides.push({ id: 's4', layout: 'content', title: 'Exit ticket', body: 'Which appeal was strongest?' });
+      j.status = 'review'; j.claudeNote = 'Turned slide 2 into a journal prompt and added an exit ticket.';
+      const w = await fh.createWritable(); await w.write(JSON.stringify(j)); await w.close();
+      await P.folderRead(false); P.renderLessons();
+    });
+    await page.waitForSelector('.pl-claude.pending');
+    assert.match(await page.$eval('.pl-claude.pending', e => e.textContent), /3 slides changed.*journal prompt/);
+    assert.match(await page.$eval('.ls-top', e => e.textContent), /Ready for you/);
+    // keep Claude's slide 2 and new slide, but keep my slide 3
+    await page.click('[data-a="cmp"]');
+    await page.waitForSelector('.pl-crow');
+    assert.equal(await page.$$eval('.pl-crow', r => r.length), 3);
+    const kinds = await page.$$eval('.pl-crow .pl-ch', h => h.map(x => x.textContent));
+    assert.deepEqual(kinds, ['Slide 2 changed', 'Claude added a slide', 'Claude took out a slide']);
+    await page.click('.pl-crow[data-i="2"] .pl-side input[value="mine"]');
+    await page.click('[data-ok]');
+    await page.waitForFunction(() => !document.querySelector('.pl-claude.pending'));
+    r = await page.evaluate(() => { const l = window.__planner.L.open; return { ids: l.slides.map(s => s.id), t2: l.slides[1].title, talk: l.slides[1].talk.map(t => t.by), pending: !!l.pending }; });
+    assert.deepEqual(r, { ids: ['s1', 's2', 's3', 's4'], t2: 'Warm-up: journal', talk: ['you', 'claude'], pending: false });
+    // versions: going back to the one sent to Claude
+    const back = await page.evaluate(async () => { const P = window.__planner; return (await P.versions(P.L.open)).map(v => v.label); });
+    assert.deepEqual(back, ['Before Claude’s changes', 'Sent to Claude']);
+    await page.click('[data-a="versions"]');
+    await page.waitForSelector('[data-rv="1"]'); await page.click('[data-rv="1"]');
+    await page.waitForFunction(() => window.__planner.L.open.slides[1].title === 'Warm-up');
+    // approve is a marker only, and only the teacher's
+    await page.click('[data-a="approve"]');
+    await page.waitForSelector('.pl-st.st-approved');
+    assert.equal(await page.evaluate(() => window.__planner.L.open.status), 'approved');
+    await page.click('.ls-stage .ls-body');   // still editable
+    await page.waitForSelector('.ls-ta');
+    // the file never carries the pending copy
+    const file = await page.evaluate(async () => { const P = window.__planner; await new Promise(r => setTimeout(r, 1200)); return JSON.parse(await (await (await P.L.dir.getFileHandle(P.L.open._file)).getFile()).text()); });
+    assert.equal(file.pending, undefined);
+    assert.equal(file.slides[1].ask, 'Make this a journal prompt');
+    assert.deepEqual(a.errors, []);
+  } finally { await a.done(); }
+});

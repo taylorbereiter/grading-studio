@@ -255,6 +255,30 @@ h1 i,.top .title i{font-style:normal;font-weight:500;color:var(--accent)}
 .ls-vlink{align-self:center;font-size:28px;color:#1A4F8A;text-decoration:underline;word-break:break-all;padding:20px}
 .ls-play{position:absolute;left:50%;top:50%;width:96px;height:68px;margin:-34px 0 0 -48px;border-radius:16px;background:rgba(200,0,0,.9)}
 .ls-play::after{content:"";position:absolute;left:38px;top:20px;border-left:28px solid #fff;border-top:14px solid transparent;border-bottom:14px solid transparent}
+.pl-st{font-size:12px;font-weight:600;border-radius:999px;padding:2px 9px;white-space:nowrap;align-self:center}
+.ls-card .pl-st{align-self:flex-start;margin:2px 0}
+.st-claude{background:var(--accent-soft);color:var(--accent)}.st-review{background:var(--warn-soft);color:var(--warn)}.st-approved{background:var(--ok-soft);color:var(--ok)}
+.pl-claude{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:10px 14px 0;padding:10px 14px;border-radius:10px;background:var(--surface);border:1px solid var(--line);font-size:14px}
+.pl-claude.pending{background:var(--accent-soft);border-color:var(--accent)}
+.pl-claude>div,.pl-claude{min-width:0}.pl-claude b{margin-right:8px}.pl-claude span{color:var(--fg-2)}
+.pl-ask{margin-top:12px;display:flex;flex-direction:column;gap:8px}
+.pl-ask textarea{background:var(--warn-soft)!important}
+.pl-talk{display:flex;flex-direction:column;gap:6px}
+.pl-msg{display:flex;gap:8px;align-items:baseline;font-size:14px;padding:6px 10px;border-radius:8px;background:var(--surface);border:1px solid var(--line)}
+.pl-msg.cl{background:var(--accent-soft);border-color:transparent}
+.pl-msg span{flex:1}.pl-msg.done{opacity:.55}.pl-msg.done span{text-decoration:line-through}
+.pl-say{display:flex;gap:6px}.pl-say input{flex:1;justify-content:flex-start;text-align:left}
+.pl-cmp{display:flex;flex-direction:column;gap:16px}
+.pl-crow{border:1px solid var(--line);border-radius:10px;padding:10px}
+.pl-ch{font-weight:600;margin-bottom:8px}
+.pl-cpair{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.pl-side{display:flex;flex-direction:column;gap:6px;align-items:center;border:2px solid var(--line);border-radius:10px;padding:8px;cursor:pointer;font-weight:600;font-size:14px}
+.pl-side.on{border-color:var(--accent);background:var(--accent-soft)}
+.pl-side input{position:absolute;opacity:0;pointer-events:none}
+.pl-cmini{width:384px;height:216px;overflow:hidden;border-radius:4px;max-width:100%}
+.pl-cmini .ls-slide{transform:scale(.3);transform-origin:0 0;font-weight:400}
+.pl-cmini.none{display:flex;align-items:center;justify-content:center;background:var(--surface-2);color:var(--muted);font-weight:500}
+.pl-ctalk{margin-top:8px;font-size:13.5px;color:var(--fg-2);display:flex;flex-direction:column;gap:2px}
 .pl-tabs{display:inline-flex;background:var(--surface-2);border-radius:9px;padding:3px;gap:2px;margin-right:6px}
 .pl-tab{border:0;background:none;border-radius:7px;padding:5px 12px;font-weight:600;font-size:13.5px;color:var(--muted)}
 .pl-tab:hover{color:var(--fg)}
@@ -373,6 +397,153 @@ function setTheme(t) {
 }
 document.addEventListener('click', e => { if (e.target.closest('.themeBtn')) setTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'); });
 
+/* ================= Working on a lesson with Claude =================
+   All of this is optional: a lesson can be made by the teacher alone, by Claude alone, or passed back and forth.
+   - Each slide can carry "ask" (what the teacher wants on it, for Claude) and "talk" (comments both ways).
+   - A lesson's "status" is just a marker: '' (no marker), 'claude' (sent to Claude), 'review' (Claude says it's
+     ready for the teacher), 'approved' (the teacher's call, and only the teacher's). Nothing is locked by it.
+   - Versions: a copy is kept when it's sent, before Claude's changes come in, when it's approved, and on request.
+   - When Claude changes a lesson in the Planner folder, the teacher's copy from just before is kept, and the
+     editor offers a side-by-side look with Keep Claude's / Keep mine for each slide. */
+const STATUS = { claude: 'With Claude', review: 'Ready for you', approved: 'Approved' };
+const MAX_VERSIONS = 30;
+const statusChip = l => l.status && STATUS[l.status] ? '<span class="pl-st st-' + l.status + '">' + STATUS[l.status] + '</span>' : '';
+
+/* ---------- versions: kv 'ver:<lesson id>' ---------- */
+const snap = l => { const c = JSON.parse(JSON.stringify(l)); delete c._file; delete c._mod; delete c.pending; return c; };
+async function versionsOf(l) { return (await kvGet('ver:' + l.id)) || []; }
+async function saveVersion(l, label, from) {
+  const vs = await versionsOf(l);
+  vs.unshift({ at: Date.now(), label, lesson: snap(from || l) });
+  await kvSet('ver:' + l.id, vs.slice(0, MAX_VERSIONS));
+}
+async function versionsDlg(l) {
+  const vs = await versionsOf(l);
+  openDlg('<div class="bh"><h2>Versions of “' + esc(l.title) + '”</h2><button class="btn sm" data-sv>Save a version now</button></div><div class="bb"><div class="ls-pick">' +
+    (vs.length ? vs.map((v, i) => '<div class="ls-row"><div class="ls-card" style="flex:1;cursor:default"><b>' + esc(v.label) + '</b><span>' + new Date(v.at).toLocaleString() + ' · ' + v.lesson.slides.length + ' slides</span></div><button class="btn sm" data-rv="' + i + '">Go back to this</button></div>').join('') : '<p class="muted">No versions yet. One is kept each time you send the lesson to Claude, when Claude’s changes come in, and when you approve it.</p>') +
+    '</div></div><div class="bf"><button class="btn" data-x>Close</button></div>');
+  $('#dlgBox').onclick = async e => {
+    if (e.target.closest('[data-x]')) return closeDlg();
+    if (e.target.closest('[data-sv]')) { await saveVersion(l, 'Saved by you'); closeDlg(); return toast('Version saved'); }
+    const b = e.target.closest('[data-rv]'); if (!b) return;
+    const v = vs[+b.dataset.rv];
+    await saveVersion(l, 'Before going back to “' + v.label + '”');
+    const back = normLesson({ ...v.lesson, id: l.id, slots: l.slots, created: l.created });
+    Object.assign(l, back, { _file: l._file, _mod: l._mod }); delete l.pending;
+    closeDlg(); L.cur = Math.min(L.cur, l.slides.length - 1); lessonChanged(false); renderEditor(); toast('Back to “' + v.label + '”. The version you left is saved too.');
+  };
+}
+
+/* ---------- sending to Claude, approving ---------- */
+async function sendToClaude(l) {
+  editorCommit();
+  await saveVersion(l, 'Sent to Claude');
+  l.status = 'claude'; await lPut(l);
+  const asks = l.slides.filter(s => s.ask.trim()).length, talks = l.slides.filter(s => s.talk.some(t => t.by === 'you' && !t.done)).length;
+  const file = fileBase(l) + '.lesson.json';
+  const msg = L.dir && L.dirOk
+    ? 'Please work on my lesson "' + l.title + '" in my Planner folder ("' + L.dir.name + '"), file "' + file + '". Read "README - for Claude.md" there first.\n\n' +
+      (asks ? asks + ' slide' + (asks === 1 ? ' has' : 's have') + ' an "ask" saying what I want on it. ' : '') + (talks ? talks + ' slide' + (talks === 1 ? ' has' : 's have') + ' comments from me in "talk". ' : '') +
+      'Build the lesson out from my outline and those notes. Keep my wording where I wrote it. When you\'re done, reply to my comments in "talk", put a short summary in "claudeNote", and set "status" to "review". Don\'t change "id" or "slots". I\'ll look at your version slide by slide in the Planner.'
+    : 'Here is a lesson from my Planner. Each slide may have "What I want here" notes and comments for you. Build it out, keep my wording where I wrote it, and slide text stays 28 to 36 pt.\n\n' + lessonText(l);
+  await copyText(msg);
+  window.open(claudeLink(), '_blank', 'noopener');
+  toast(L.dir && L.dirOk ? 'Message copied. Paste it into Claude. Claude’s changes show up here when it saves.' : 'Lesson copied. Paste it into Claude. Link the Planner folder so Claude can save straight back.', 7000);
+  renderEditor();
+}
+async function setApproved(l, on) {
+  editorCommit();
+  if (on) { await saveVersion(l, 'Approved'); l.status = 'approved'; } else l.status = '';
+  await lPut(l); renderEditor(); toast(on ? 'Approved. You can still change it any time.' : 'No longer marked approved');
+}
+
+/* ---------- Claude's changes, slide by slide ---------- */
+const slideKey = s => JSON.stringify({ l: s.layout, t: s.title, b: s.body, z: s.size, n: s.notes, i: s.img && s.img.src.length + ':' + s.img.source, v: s.video && s.video.url + s.video.start });
+function changesOf(l) {
+  if (!l.pending) return [];
+  const before = l.pending.before, out = [];
+  for (const s of l.slides) { const o = before.find(x => x.id === s.id); if (!o) out.push({ kind: 'added', now: s }); else if (slideKey(o) !== slideKey(s)) out.push({ kind: 'changed', now: s, was: o }); }
+  for (const o of before) if (!l.slides.some(s => s.id === o.id)) out.push({ kind: 'removed', was: o });
+  return out;
+}
+function pendingBar(l) {
+  if (!l.pending) return l.claudeNote && l.status === 'review' ? '<div class="pl-claude"><b>Claude’s note</b><span>' + esc(l.claudeNote) + '</span></div>' : '';
+  const ch = changesOf(l);
+  return '<div class="pl-claude pending"><div><b>Claude changed this lesson</b><span>' + (ch.length ? ch.length + ' slide' + (ch.length === 1 ? '' : 's') + ' changed, added or taken out.' : 'No slides changed.') + (l.claudeNote ? ' “' + esc(l.claudeNote) + '”' : '') + '</span></div>' +
+    '<span class="sp"></span>' + (ch.length ? '<button class="btn sm primary" data-a="cmp">Look slide by slide</button>' : '') + '<button class="btn sm" data-a="keepall">Keep all of it</button><button class="btn sm ghost" data-a="undoall">Go back to mine</button></div>';
+}
+function compareDlg(l) {
+  const ch = changesOf(l), pick = ch.map(() => 'claude');
+  const mini = s => s ? '<div class="pl-cmini"><div class="ls-slide">' + slideHtml(s, l, false) + '</div></div>' : '<div class="pl-cmini none">Not there</div>';
+  const row = (c, i) => '<div class="pl-crow" data-i="' + i + '"><div class="pl-ch">' + (c.kind === 'added' ? 'Claude added a slide' : c.kind === 'removed' ? 'Claude took out a slide' : 'Slide ' + (l.slides.indexOf(c.now) + 1) + ' changed') + '</div>' +
+    '<div class="pl-cpair"><label class="pl-side' + (pick[i] === 'mine' ? ' on' : '') + '"><input type="radio" name="c' + i + '" value="mine"' + (pick[i] === 'mine' ? ' checked' : '') + '>' + mini(c.was) + '<span>' + (c.kind === 'added' ? 'Leave it out' : 'Keep mine') + '</span></label>' +
+    '<label class="pl-side' + (pick[i] === 'claude' ? ' on' : '') + '"><input type="radio" name="c' + i + '" value="claude"' + (pick[i] === 'claude' ? ' checked' : '') + '>' + mini(c.now) + '<span>' + (c.kind === 'removed' ? 'Take it out' : 'Keep Claude’s') + '</span></label></div>' +
+    (c.now && c.now.talk.some(t => t.by === 'claude') ? '<div class="pl-ctalk">' + c.now.talk.filter(t => t.by === 'claude').map(t => '<span>Claude: ' + esc(t.text) + '</span>').join('') + '</div>' : '') + '</div>';
+  openDlg('<div class="bh"><h2>Claude’s changes</h2><span class="muted" style="font-size:13px">Yours on the left, Claude’s on the right. Pick one for each.</span></div><div class="bb pl-cmp">' + ch.map(row).join('') + '</div>' +
+    '<div class="bf"><button class="btn" data-all="mine">All mine</button><button class="btn" data-all="claude">All Claude’s</button><span class="sp" style="flex:1"></span><button class="btn" data-x>Later</button><button class="btn primary" data-ok>Done</button></div>');
+  const box = $('#dlgBox');
+  box.onchange = e => { const r = e.target.closest('.pl-crow'); if (!r) return; pick[+r.dataset.i] = e.target.value; for (const s of r.querySelectorAll('.pl-side')) s.classList.toggle('on', s.querySelector('input').checked); };
+  box.onclick = async e => {
+    if (e.target.closest('[data-x]')) return closeDlg();
+    const all = e.target.closest('[data-all]');
+    if (all) { pick.fill(all.dataset.all); for (const r of box.querySelectorAll('.pl-crow')) for (const s of r.querySelectorAll('.pl-side')) { const inp = s.querySelector('input'); inp.checked = inp.value === all.dataset.all; s.classList.toggle('on', inp.checked); } return; }
+    if (!e.target.closest('[data-ok]')) return;
+    applyPicks(l, ch, pick); closeDlg();
+  };
+}
+function applyPicks(l, ch, pick) {
+  ch.forEach((c, i) => {
+    if (pick[i] !== 'mine') return;
+    if (c.kind === 'added') l.slides = l.slides.filter(s => s !== c.now);
+    else if (c.kind === 'changed') { const k = l.slides.indexOf(c.now); l.slides[k] = normSlide({ ...c.was, talk: c.now.talk }); }   // the comments stay either way
+    else if (c.kind === 'removed') {   // put it back after the slide that came before it in her version
+      const before = l.pending.before, j = before.indexOf(c.was);
+      let at = 0; for (let k = j - 1; k >= 0; k--) { const p = l.slides.findIndex(s => s.id === before[k].id); if (p >= 0) { at = p + 1; break; } }
+      l.slides.splice(at, 0, normSlide(c.was));
+    }
+  });
+  const mine = pick.filter(p => p === 'mine').length;
+  delete l.pending; L.cur = Math.min(L.cur, l.slides.length - 1);
+  lessonChanged(false); renderEditor();
+  toast(mine ? 'Done. Kept yours on ' + mine + ', Claude’s on ' + (pick.length - mine) + '.' : 'Done. Kept all of Claude’s changes.');
+}
+async function undoAll(l) {
+  const before = l.pending.before, title = l.pending.title;
+  await saveVersion(l, 'Claude’s version (you went back to yours)');
+  l.slides = before.map(normSlide); if (title) l.title = title; delete l.pending;
+  L.cur = Math.min(L.cur, l.slides.length - 1); lessonChanged(false); renderEditor(); toast('Back to your version. Claude’s is under Versions.');
+}
+async function claudeChanged(old, l) {
+  if (!old) return;
+  if (JSON.stringify(old.slides.map(slideKey)) === JSON.stringify(l.slides.map(slideKey)) && old.title === l.title) { if (old.pending) l.pending = old.pending; return; }
+  await saveVersion(old, 'Before Claude’s changes');
+  l.pending = old.pending || { at: Date.now(), before: JSON.parse(JSON.stringify(old.slides)), title: old.title };
+}
+
+/* ---------- the slide's "for Claude" note and comments ---------- */
+function slideTalkHtml(s) {
+  return '<div class="pl-ask"><label class="ls-notes">What I want on this slide <span class="muted" style="font-weight:400">(for Claude, not shown on the slide)</span><textarea data-f="ask" rows="2" placeholder="Like: a short video on ethos here, or three examples from Ch 4">' + esc(s.ask) + '</textarea></label>' +
+    '<div class="pl-talk">' + s.talk.map((t, i) => '<div class="pl-msg ' + (t.by === 'claude' ? 'cl' : 'me') + (t.done ? ' done' : '') + '"><b>' + (t.by === 'claude' ? 'Claude' : 'You') + '</b><span>' + esc(t.text) + '</span><button class="btn sm ghost" data-talkdone="' + i + '">' + (t.done ? 'Open again' : 'Done') + '</button></div>').join('') +
+    '<div class="pl-say"><input class="btn sm" data-f="say" placeholder="Comment on this slide…" aria-label="Comment on this slide"><button class="btn sm" data-a="say">Add</button></div></div></div>';
+}
+function addComment() {
+  const i = document.querySelector('[data-f="say"]'), v = i && i.value.trim(); if (!v) return;
+  L.open.slides[L.cur].talk.push({ by: 'you', text: v, at: Date.now() }); lessonChanged(false); renderEditor();
+  const n = document.querySelector('[data-f="say"]'); if (n) n.focus();
+}
+async function reviewClick(t) {
+  const a = t.dataset.a, l = L.open; if (!l) return false;
+  if (t.dataset.talkdone != null) { const m = l.slides[L.cur].talk[+t.dataset.talkdone]; m.done = !m.done; lessonChanged(false); renderEditor(); return true; }
+  if (a === 'send') { await sendToClaude(l); return true; }
+  if (a === 'approve') { await setApproved(l, l.status !== 'approved'); return true; }
+  if (a === 'versions') { editorCommit(); await versionsDlg(l); return true; }
+  if (a === 'cmp') { editorCommit(); compareDlg(l); return true; }
+  if (a === 'keepall') { delete l.pending; lessonChanged(false); renderEditor(); toast('Kept all of Claude’s changes. Your version is under Versions.'); return true; }
+  if (a === 'undoall') { await undoAll(l); return true; }
+  if (a === 'say') { addComment(); return true; }
+  return false;
+}
+
 /* ================= Lessons =================
    A slide maker tied to the teacher's timetable, on the Planner page. Kept apart from grading on purpose:
    lessons live in their own IndexedDB ('gs-lessons'), and nothing here reads grading data.
@@ -435,7 +606,8 @@ function normSlide(s) {
   s = s && typeof s === 'object' ? s : {};
   const layout = LAYOUTS[s.layout] ? s.layout : 'content';
   const size = SIZES.includes(+s.size) ? +s.size : 28;
-  const out = { id: typeof s.id === 'string' ? s.id : lid(), layout, title: String(s.title || ''), body: String(s.body || '').replace(/\r/g, ''), size, notes: String(s.notes || '') };
+  const out = { id: typeof s.id === 'string' ? s.id : lid(), layout, title: String(s.title || ''), body: String(s.body || '').replace(/\r/g, ''), size, notes: String(s.notes || ''),
+    ask: String(s.ask || ''), talk: (Array.isArray(s.talk) ? s.talk : []).filter(t => t && t.text).map(t => ({ by: t.by === 'claude' ? 'claude' : 'you', text: String(t.text), at: +t.at || 0, ...(t.done ? { done: true } : {}) })) };
   if (s.img && typeof s.img === 'object' && typeof s.img.src === 'string') out.img = { src: s.img.src, w: +s.img.w || 0, h: +s.img.h || 0, source: String(s.img.source || '') };
   if (s.video && typeof s.video === 'object' && /^https?:\/\//.test(s.video.url)) {
     const v = s.video;
@@ -448,7 +620,11 @@ function normLesson(x) {
   x = x && typeof x === 'object' ? x : {};
   const slots = Array.isArray(x.slots) ? x.slots.filter(t => t && typeof t.classId === 'string' && /^\d{4}-\d\d-\d\d$/.test(t.date)).map(t => ({ classId: t.classId, date: t.date })) : [];
   const slides = Array.isArray(x.slides) && x.slides.length ? x.slides.map(normSlide) : [normSlide({ layout: 'title' })];
-  return { id: typeof x.id === 'string' && x.id ? x.id : lid(), title: String(x.title || 'Untitled lesson'), slots, slides, created: +x.created || Date.now(), updated: +x.updated || Date.now(), note: String(x.note || '') };
+  const out = { id: typeof x.id === 'string' && x.id ? x.id : lid(), title: String(x.title || 'Untitled lesson'), slots, slides, created: +x.created || Date.now(), updated: +x.updated || Date.now(), note: String(x.note || ''),
+    status: STATUS[x.status] ? x.status : '', claudeNote: String(x.claudeNote || '') };
+  if (x.pending && Array.isArray(x.pending.before)) out.pending = { at: +x.pending.at || Date.now(), before: x.pending.before.map(normSlide), title: String(x.pending.title || '') };
+  if (x._file) out._file = x._file; if (x._mod) out._mod = x._mod;
+  return out;
 }
 
 /* ---------- timetable ---------- */
@@ -627,7 +803,7 @@ function renderWeek() {
       for (const { c, m } of ms) {
         const ls = lessonsAt(c.id, d);
         h += '<div class="ls-slot" style="--cc:' + esc(c.color || '#1F6FB2') + '"><div class="ls-sh"><b>' + esc(c.name) + '</b><span>' + hm(m.start) + '–' + hm(m.end) + (m.label ? ' · ' + esc(m.label) : '') + '</span></div>';
-        for (const l of ls) h += '<button class="ls-card" data-open="' + l.id + '"><b>' + esc(l.title) + '</b><span>' + l.slides.length + ' slide' + (l.slides.length === 1 ? '' : 's') + (l.slots.length > 1 ? ' · also ' + esc(l.slots.filter(s => !(s.classId === c.id && s.date === d)).map(s => className(s.classId) + ' ' + shortDate(s.date)).join(', ')) : '') + '</span></button>';
+        for (const l of ls) h += '<button class="ls-card" data-open="' + l.id + '"><b>' + esc(l.title) + '</b>' + statusChip(l) + '<span>' + l.slides.length + ' slide' + (l.slides.length === 1 ? '' : 's') + (l.slots.length > 1 ? ' · also ' + esc(l.slots.filter(s => !(s.classId === c.id && s.date === d)).map(s => className(s.classId) + ' ' + shortDate(s.date)).join(', ')) : '') + '</span></button>';
         h += '<div class="ls-add"><button class="btn sm ghost" data-new="' + esc(c.id) + '|' + d + '">+ New lesson</button>' + (L.lessons.length ? '<button class="btn sm ghost" data-attach="' + esc(c.id) + '|' + d + '">Use a lesson…</button>' : '') + '</div></div>';
       }
       h += '</div>';
@@ -648,10 +824,12 @@ function renderEditor() {
   let h = '<div class="ls-top"><button class="btn sm ghost" data-a="back">‹ Week</button>' +
     '<input class="ls-title-in" data-f="ltitle" value="' + esc(l.title) + '" aria-label="Lesson name">' +
     '<span class="ls-slots">' + l.slots.map((t, i) => '<span class="ls-chip" style="--cc:' + esc((classById(t.classId) || {}).color || '#1F6FB2') + '">' + esc(className(t.classId)) + ' · ' + shortDate(t.date) + '<button data-unslot="' + i + '" title="Take it off this class" aria-label="Remove">×</button></span>').join('') + '<button class="btn sm ghost" data-a="addslot">+ Class</button></span>' +
-    '<span class="sp"></span><span class="savest" id="lsSaved">Saved</span>' +
-    '<button class="btn sm" data-a="ask" title="Copy this lesson and open Claude">Ask Claude</button>' +
+    '<span class="sp"></span>' + statusChip(l) + '<span class="savest" id="lsSaved">Saved</span>' +
+    '<button class="btn sm" data-a="send" title="Copy a message for Claude about this lesson and open Claude">Send to Claude</button>' +
+    '<button class="btn sm ghost" data-a="versions">Versions</button>' +
+    '<button class="btn sm ghost" data-a="approve" title="Only a marker: you can still change it">' + (l.status === 'approved' ? '✓ Approved' : 'Approve') + '</button>' +
     '<button class="btn sm ghost" data-a="more">More ▾</button>' +
-    '<button class="btn sm primary" data-a="pptx">Download .pptx</button></div>';
+    '<button class="btn sm primary" data-a="pptx">Download .pptx</button></div>' + pendingBar(l);
   h += '<div class="ls-ed-cols"><nav class="ls-thumbs" id="lsThumbs">' + l.slides.map((x, i) => thumbHtml(x, l, i)).join('') +
     '<div class="ls-addslide">' + Object.entries(LAYOUTS).map(([k, v]) => '<button class="btn sm" data-addslide="' + k + '">+ ' + v + '</button>').join('') + '</div></nav>';
   h += '<section class="ls-main"><div class="ls-tools">' +
@@ -663,6 +841,7 @@ function renderEditor() {
     '<div class="ls-stagewrap" id="lsWrap"><div class="ls-stage" id="lsStage"><div class="ls-slide">' + slideHtml(s, l, true) + '</div></div></div>' +
     '<div class="ls-warn" id="lsWarn" hidden></div>' +
     '<label class="ls-notes">Speaker notes<textarea data-f="notes" rows="3" placeholder="Notes for you, not shown on the slide">' + esc(s.notes) + '</textarea></label>' +
+    slideTalkHtml(s) +
     '<p class="muted ls-hint">Click any text on the slide to edit it. In bullets, start a line with Tab for a smaller point under the one above. Arrow keys move between slides when you’re not typing. Drag a picture in from another tab, or paste a picture or a YouTube link.</p>' +
     '</section></div><input type="file" id="lsPicIn" accept="image/*" hidden>';
   $('#lessons').innerHTML = h;
@@ -734,6 +913,7 @@ function onLessonsKey(e) {
     if (lEditing.k !== 'body' && e.key === 'Enter') { e.preventDefault(); lEditing.ta.blur(); }
     return;
   }
+  if (e.key === 'Enter' && e.target.dataset && e.target.dataset.f === 'say') { e.preventDefault(); return addComment(); }
   const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName);
   if (L.view === 'edit' && !typing && !e.metaKey && !e.ctrlKey) {
     if (e.key === 'ArrowDown' || e.key === 'ArrowRight' || e.key === 'PageDown') { e.preventDefault(); goSlide(L.cur + 1); }
@@ -749,8 +929,9 @@ function newSlide(layout) {
 
 async function onLessonsClick(e) {
   if (await unitsClick(e)) return;
-  const t = e.target.closest('[data-a],[data-open],[data-new],[data-attach],[data-go],[data-addslide],[data-unslot],.ls-ed');
+  const t = e.target.closest('[data-a],[data-open],[data-new],[data-attach],[data-go],[data-addslide],[data-unslot],[data-talkdone],.ls-ed');
   if (!t) return;
+  if (L.view === 'edit' && await reviewClick(t)) return;
   if (t.classList.contains('ls-ed') && !t.dataset.a) return startEdit(t);
   if (t.dataset.open) return openLesson(L.lessons.find(l => l.id === t.dataset.open));
   if (t.dataset.new) { const [c, d] = t.dataset.new.split('|'); return createLesson([{ classId: c, date: d }, ...partnerSlots(c, d)]); }
@@ -796,6 +977,7 @@ function onLessonsInput(e) {
   const f = e.target.dataset.f; if (!f || !L.open) return;
   if (f === 'ltitle') { L.open.title = e.target.value; lessonChanged(false); }
   if (f === 'notes') { L.open.slides[L.cur].notes = e.target.value; lessonChanged(false); }
+  if (f === 'ask') { L.open.slides[L.cur].ask = e.target.value; lessonChanged(false); }
 }
 function onLessonsChange(e) {
   if (unitsChange(e)) return;
@@ -981,6 +1163,8 @@ function lessonText(l) {
     if (s.img) t += '[Picture' + (s.img.source ? ': ' + s.img.source : '') + ']\n';
     if (s.video) t += '[Video: ' + s.video.url + (s.video.title ? ' (' + videoSource(s.video) + ')' : '') + ']\n';
     if (s.notes) t += 'Notes: ' + s.notes + '\n';
+    if (s.ask) t += 'What I want on this slide: ' + s.ask + '\n';
+    for (const m of s.talk) if (!m.done) t += (m.by === 'claude' ? 'Claude: ' : 'My comment: ') + m.text + '\n';
   });
   return t;
 }
@@ -1208,6 +1392,13 @@ never are, and nothing here should point to a student.
     { "layout": "video", "title": "Watch for the appeals", "video": { "url": "https://www.youtube.com/watch?v=…", "start": 30 } }
   ]
 }
+"ask", "talk", "status" and "claudeNote" are for working together, and are all optional:
+- A slide's "ask" is what the teacher wants on that slide. Use it, and leave it as it is.
+- A slide's "talk" is comments: { "by": "you" | "claude", "text": "…" }. Reply by adding one with "by": "claude".
+  Don't edit or remove the teacher's comments.
+- "status": "claude" means the teacher sent it to you; set it to "review" when you're done. Never set "approved";
+  only the teacher approves. "claudeNote" is your short summary of what you did.
+The teacher sees your changes slide by slide and keeps theirs or yours for each, so change what the lesson needs and leave the rest.
 For a video, give just "url" (and "start" in seconds, if it should start partway); the app adds the title, channel and picture.
 Rules: "size" is 28 to 36 (pt). Body lines are separated by \\n; a line starting with a tab is a sub-point.
 An empty title-slide body means the app fills in the course and dates. Bump "updated" (milliseconds) when you change a lesson.
@@ -1254,7 +1445,7 @@ function lessonForFile(l, imgs) {   // imgs: Map to collect pictures as separate
     const name = 'images/' + s.id + '-' + hash(s.img.src).slice(0, 8) + (m[1] === 'png' ? '.png' : '.jpg');
     imgs.set(name, s.img.src); s.img.src = name;
   }
-  delete c._file; delete c._mod;
+  delete c._file; delete c._mod; delete c.pending;
   return c;
 }
 const wTimers = new Map();
@@ -1300,6 +1491,7 @@ async function folderRead(say) {
       l.slides.forEach(s => { if (s.img && !imgSrc(s.img.src)) delete s.img; });
       for (const s of l.slides) if (s.video && ytId(s.video.url) && !s.video.thumb) { const v = await videoFrom(s.video.url); s.video = { ...v, start: s.video.start || v.start, title: s.video.title || v.title }; }   // Claude gives just the link
       l._file = name; l._mod = f.lastModified; l.updated = Date.now(); if (old) l.created = old.created;
+      await claudeChanged(old, l);
       await lTx('lessons', 'readwrite', s => { s.put(l); });
       const i = L.lessons.findIndex(x => x.id === l.id); if (i >= 0) L.lessons[i] = l; else L.lessons.push(l);
       if (L.open && L.open.id === l.id) L.open = l;
@@ -1684,7 +1876,7 @@ async function unitsFolderRead() {
   return out;
 }
 
-window.__planner = { ytIds: us => us.map(u => [ytId(u), ytStart(u)]), openLessonForTest: (l, i) => { openLesson(l); goSlide(i || 0); }, L, applySetup, renderLessons, setPicture, folderWriteAll, folderRead, buildPptx, normLesson, normUnit, unitPut, unitAt, addUnitFiles, notGradingFolder, unitsFolderRead, semesterMondays };
+window.__planner = { versions: versionsOf, ytIds: us => us.map(u => [ytId(u), ytStart(u)]), openLessonForTest: (l, i) => { openLesson(l); goSlide(i || 0); }, L, applySetup, renderLessons, setPicture, folderWriteAll, folderRead, buildPptx, normLesson, normUnit, unitPut, unitAt, addUnitFiles, notGradingFolder, unitsFolderRead, semesterMondays };
 openLessons();
 
 })();

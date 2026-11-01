@@ -60,7 +60,8 @@ function normSlide(s) {
   s = s && typeof s === 'object' ? s : {};
   const layout = LAYOUTS[s.layout] ? s.layout : 'content';
   const size = SIZES.includes(+s.size) ? +s.size : 28;
-  const out = { id: typeof s.id === 'string' ? s.id : lid(), layout, title: String(s.title || ''), body: String(s.body || '').replace(/\r/g, ''), size, notes: String(s.notes || '') };
+  const out = { id: typeof s.id === 'string' ? s.id : lid(), layout, title: String(s.title || ''), body: String(s.body || '').replace(/\r/g, ''), size, notes: String(s.notes || ''),
+    ask: String(s.ask || ''), talk: (Array.isArray(s.talk) ? s.talk : []).filter(t => t && t.text).map(t => ({ by: t.by === 'claude' ? 'claude' : 'you', text: String(t.text), at: +t.at || 0, ...(t.done ? { done: true } : {}) })) };
   if (s.img && typeof s.img === 'object' && typeof s.img.src === 'string') out.img = { src: s.img.src, w: +s.img.w || 0, h: +s.img.h || 0, source: String(s.img.source || '') };
   if (s.video && typeof s.video === 'object' && /^https?:\/\//.test(s.video.url)) {
     const v = s.video;
@@ -73,7 +74,11 @@ function normLesson(x) {
   x = x && typeof x === 'object' ? x : {};
   const slots = Array.isArray(x.slots) ? x.slots.filter(t => t && typeof t.classId === 'string' && /^\d{4}-\d\d-\d\d$/.test(t.date)).map(t => ({ classId: t.classId, date: t.date })) : [];
   const slides = Array.isArray(x.slides) && x.slides.length ? x.slides.map(normSlide) : [normSlide({ layout: 'title' })];
-  return { id: typeof x.id === 'string' && x.id ? x.id : lid(), title: String(x.title || 'Untitled lesson'), slots, slides, created: +x.created || Date.now(), updated: +x.updated || Date.now(), note: String(x.note || '') };
+  const out = { id: typeof x.id === 'string' && x.id ? x.id : lid(), title: String(x.title || 'Untitled lesson'), slots, slides, created: +x.created || Date.now(), updated: +x.updated || Date.now(), note: String(x.note || ''),
+    status: STATUS[x.status] ? x.status : '', claudeNote: String(x.claudeNote || '') };
+  if (x.pending && Array.isArray(x.pending.before)) out.pending = { at: +x.pending.at || Date.now(), before: x.pending.before.map(normSlide), title: String(x.pending.title || '') };
+  if (x._file) out._file = x._file; if (x._mod) out._mod = x._mod;
+  return out;
 }
 
 /* ---------- timetable ---------- */
@@ -258,7 +263,7 @@ function renderWeek() {
       for (const { c, m } of ms) {
         const ls = lessonsAt(c.id, d);
         h += '<div class="ls-slot" style="--cc:' + esc(c.color || '#1F6FB2') + '"><div class="ls-sh"><b>' + esc(c.name) + '</b><span>' + hm(m.start) + '–' + hm(m.end) + (m.label ? ' · ' + esc(m.label) : '') + '</span></div>';
-        for (const l of ls) h += '<button class="ls-card" data-open="' + l.id + '"><b>' + esc(l.title) + '</b><span>' + l.slides.length + ' slide' + (l.slides.length === 1 ? '' : 's') + (l.slots.length > 1 ? ' · also ' + esc(l.slots.filter(s => !(s.classId === c.id && s.date === d)).map(s => className(s.classId) + ' ' + shortDate(s.date)).join(', ')) : '') + '</span></button>';
+        for (const l of ls) h += '<button class="ls-card" data-open="' + l.id + '"><b>' + esc(l.title) + '</b>' + statusChip(l) + '<span>' + l.slides.length + ' slide' + (l.slides.length === 1 ? '' : 's') + (l.slots.length > 1 ? ' · also ' + esc(l.slots.filter(s => !(s.classId === c.id && s.date === d)).map(s => className(s.classId) + ' ' + shortDate(s.date)).join(', ')) : '') + '</span></button>';
         h += '<div class="ls-add"><button class="btn sm ghost" data-new="' + esc(c.id) + '|' + d + '">+ New lesson</button>' + (L.lessons.length ? '<button class="btn sm ghost" data-attach="' + esc(c.id) + '|' + d + '">Use a lesson…</button>' : '') + '</div></div>';
       }
       h += '</div>';
@@ -279,10 +284,12 @@ function renderEditor() {
   let h = '<div class="ls-top"><button class="btn sm ghost" data-a="back">‹ Week</button>' +
     '<input class="ls-title-in" data-f="ltitle" value="' + esc(l.title) + '" aria-label="Lesson name">' +
     '<span class="ls-slots">' + l.slots.map((t, i) => '<span class="ls-chip" style="--cc:' + esc((classById(t.classId) || {}).color || '#1F6FB2') + '">' + esc(className(t.classId)) + ' · ' + shortDate(t.date) + '<button data-unslot="' + i + '" title="Take it off this class" aria-label="Remove">×</button></span>').join('') + '<button class="btn sm ghost" data-a="addslot">+ Class</button></span>' +
-    '<span class="sp"></span><span class="savest" id="lsSaved">Saved</span>' +
-    '<button class="btn sm" data-a="ask" title="Copy this lesson and open Claude">Ask Claude</button>' +
+    '<span class="sp"></span>' + statusChip(l) + '<span class="savest" id="lsSaved">Saved</span>' +
+    '<button class="btn sm" data-a="send" title="Copy a message for Claude about this lesson and open Claude">Send to Claude</button>' +
+    '<button class="btn sm ghost" data-a="versions">Versions</button>' +
+    '<button class="btn sm ghost" data-a="approve" title="Only a marker: you can still change it">' + (l.status === 'approved' ? '✓ Approved' : 'Approve') + '</button>' +
     '<button class="btn sm ghost" data-a="more">More ▾</button>' +
-    '<button class="btn sm primary" data-a="pptx">Download .pptx</button></div>';
+    '<button class="btn sm primary" data-a="pptx">Download .pptx</button></div>' + pendingBar(l);
   h += '<div class="ls-ed-cols"><nav class="ls-thumbs" id="lsThumbs">' + l.slides.map((x, i) => thumbHtml(x, l, i)).join('') +
     '<div class="ls-addslide">' + Object.entries(LAYOUTS).map(([k, v]) => '<button class="btn sm" data-addslide="' + k + '">+ ' + v + '</button>').join('') + '</div></nav>';
   h += '<section class="ls-main"><div class="ls-tools">' +
@@ -294,6 +301,7 @@ function renderEditor() {
     '<div class="ls-stagewrap" id="lsWrap"><div class="ls-stage" id="lsStage"><div class="ls-slide">' + slideHtml(s, l, true) + '</div></div></div>' +
     '<div class="ls-warn" id="lsWarn" hidden></div>' +
     '<label class="ls-notes">Speaker notes<textarea data-f="notes" rows="3" placeholder="Notes for you, not shown on the slide">' + esc(s.notes) + '</textarea></label>' +
+    slideTalkHtml(s) +
     '<p class="muted ls-hint">Click any text on the slide to edit it. In bullets, start a line with Tab for a smaller point under the one above. Arrow keys move between slides when you’re not typing. Drag a picture in from another tab, or paste a picture or a YouTube link.</p>' +
     '</section></div><input type="file" id="lsPicIn" accept="image/*" hidden>';
   $('#lessons').innerHTML = h;
@@ -367,6 +375,7 @@ function onLessonsKey(e) {
     if (lEditing.k !== 'body' && e.key === 'Enter') { e.preventDefault(); lEditing.ta.blur(); }
     return;
   }
+  if (e.key === 'Enter' && e.target.dataset && e.target.dataset.f === 'say') { e.preventDefault(); return addComment(); }
   const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName);
   if (L.view === 'edit' && !typing && !e.metaKey && !e.ctrlKey) {
     if (e.key === 'ArrowDown' || e.key === 'ArrowRight' || e.key === 'PageDown') { e.preventDefault(); goSlide(L.cur + 1); }
@@ -382,8 +391,9 @@ function newSlide(layout) {
 
 async function onLessonsClick(e) {
   if (await unitsClick(e)) return;
-  const t = e.target.closest('[data-a],[data-open],[data-new],[data-attach],[data-go],[data-addslide],[data-unslot],.ls-ed');
+  const t = e.target.closest('[data-a],[data-open],[data-new],[data-attach],[data-go],[data-addslide],[data-unslot],[data-talkdone],.ls-ed');
   if (!t) return;
+  if (L.view === 'edit' && await reviewClick(t)) return;
   if (t.classList.contains('ls-ed') && !t.dataset.a) return startEdit(t);
   if (t.dataset.open) return openLesson(L.lessons.find(l => l.id === t.dataset.open));
   if (t.dataset.new) { const [c, d] = t.dataset.new.split('|'); return createLesson([{ classId: c, date: d }, ...partnerSlots(c, d)]); }
@@ -429,6 +439,7 @@ function onLessonsInput(e) {
   const f = e.target.dataset.f; if (!f || !L.open) return;
   if (f === 'ltitle') { L.open.title = e.target.value; lessonChanged(false); }
   if (f === 'notes') { L.open.slides[L.cur].notes = e.target.value; lessonChanged(false); }
+  if (f === 'ask') { L.open.slides[L.cur].ask = e.target.value; lessonChanged(false); }
 }
 function onLessonsChange(e) {
   if (unitsChange(e)) return;
@@ -618,6 +629,8 @@ function lessonText(l) {
     if (s.img) t += '[Picture' + (s.img.source ? ': ' + s.img.source : '') + ']\n';
     if (s.video) t += '[Video: ' + s.video.url + (s.video.title ? ' (' + videoSource(s.video) + ')' : '') + ']\n';
     if (s.notes) t += 'Notes: ' + s.notes + '\n';
+    if (s.ask) t += 'What I want on this slide: ' + s.ask + '\n';
+    for (const m of s.talk) if (!m.done) t += (m.by === 'claude' ? 'Claude: ' : 'My comment: ') + m.text + '\n';
   });
   return t;
 }
@@ -848,6 +861,13 @@ never are, and nothing here should point to a student.
     { "layout": "video", "title": "Watch for the appeals", "video": { "url": "https://www.youtube.com/watch?v=…", "start": 30 } }
   ]
 }
+"ask", "talk", "status" and "claudeNote" are for working together, and are all optional:
+- A slide's "ask" is what the teacher wants on that slide. Use it, and leave it as it is.
+- A slide's "talk" is comments: { "by": "you" | "claude", "text": "…" }. Reply by adding one with "by": "claude".
+  Don't edit or remove the teacher's comments.
+- "status": "claude" means the teacher sent it to you; set it to "review" when you're done. Never set "approved";
+  only the teacher approves. "claudeNote" is your short summary of what you did.
+The teacher sees your changes slide by slide and keeps theirs or yours for each, so change what the lesson needs and leave the rest.
 For a video, give just "url" (and "start" in seconds, if it should start partway); the app adds the title, channel and picture.
 Rules: "size" is 28 to 36 (pt). Body lines are separated by \\n; a line starting with a tab is a sub-point.
 An empty title-slide body means the app fills in the course and dates. Bump "updated" (milliseconds) when you change a lesson.
@@ -894,7 +914,7 @@ function lessonForFile(l, imgs) {   // imgs: Map to collect pictures as separate
     const name = 'images/' + s.id + '-' + hash(s.img.src).slice(0, 8) + (m[1] === 'png' ? '.png' : '.jpg');
     imgs.set(name, s.img.src); s.img.src = name;
   }
-  delete c._file; delete c._mod;
+  delete c._file; delete c._mod; delete c.pending;
   return c;
 }
 const wTimers = new Map();
@@ -941,6 +961,7 @@ async function folderRead(say) {
       l.slides.forEach(s => { if (s.img && !imgSrc(s.img.src)) delete s.img; });
       for (const s of l.slides) if (s.video && ytId(s.video.url) && !s.video.thumb) { const v = await videoFrom(s.video.url); s.video = { ...v, start: s.video.start || v.start, title: s.video.title || v.title }; }   // Claude gives just the link
       l._file = name; l._mod = f.lastModified; l.updated = Date.now(); if (old) l.created = old.created;
+      await claudeChanged(old, l);
       await lTx('lessons', 'readwrite', s => { s.put(l); });
       const i = L.lessons.findIndex(x => x.id === l.id); if (i >= 0) L.lessons[i] = l; else L.lessons.push(l);
       if (L.open && L.open.id === l.id) L.open = l;
