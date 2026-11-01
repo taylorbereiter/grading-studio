@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Grading Studio: a redesign to compare</title>
+<style>
+/* A static picture to compare with the refined Calm Desk look now in the app. Nothing here works, and all the names and scores are made up.
+   The idea: "One Desk". The paper takes the whole screen. Students run across the top, tools sit in a dock at the bottom, and the score is a card you can fold away. */
+:root{--bg:#E8EBEF;--card:#FFFFFF;--line:#D9DDE3;--fg:#1E2024;--muted:#5C616A;--accent:#1A67A8;--accent-fg:#FFFFFF;--soft:#E6F0F9;--shadow:0 2px 6px rgba(20,25,40,.08),0 12px 32px rgba(20,25,40,.12)}
+[data-theme=dark]{--bg:#0B0D12;--card:#171A22;--line:#2A2F3B;--fg:#E7E9EF;--muted:#A9B0C0;--accent:#5AA6E6;--accent-fg:#0C1520;--soft:#16283A;--shadow:0 2px 6px rgba(0,0,0,.4),0 12px 32px rgba(0,0,0,.45)}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--fg);font:14px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;display:grid;grid-template-rows:auto auto 1fr;overflow:hidden}
+button{font:inherit;color:inherit;cursor:pointer}
+.note{background:var(--soft);color:var(--fg);padding:6px 16px;font-size:13px;display:flex;gap:12px;align-items:center}
+.note span{flex:1}
+.note button{border:1px solid var(--line);background:var(--card);border-radius:7px;padding:3px 10px;font-size:13px}
+.strip{display:flex;align-items:center;gap:6px;padding:8px 14px;background:var(--card);border-bottom:1px solid var(--line);min-width:0}
+.strip b.t{font-size:15px;white-space:nowrap;margin-right:8px}
+.who{display:flex;gap:4px;flex:1;min-width:0;overflow:hidden}
+.who button{border:1px solid transparent;background:none;border-radius:999px;padding:4px 11px;white-space:nowrap;font-size:13px;color:var(--muted)}
+.who button.done::after{content:" ✓";color:var(--accent);font-weight:700}
+.who button.on{background:var(--soft);color:var(--accent);font-weight:600}
+.act{border:1px solid var(--line);background:none;border-radius:8px;padding:6px 12px;font-size:13px;font-weight:500;white-space:nowrap}
+.act.p{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+.desk{position:relative;overflow:auto;padding:22px 0 96px;display:flex;justify-content:center}
+.sheet{width:min(720px,calc(100% - 700px + 340px));min-width:520px;margin-right:320px;height:930px;background:#fff;color:#151922;box-shadow:var(--shadow);border-radius:3px;padding:64px 70px;font:15px/1.7 Georgia,"Times New Roman",serif;position:relative;flex:none}
+.sheet h1{font:600 19px/1.3 Georgia,serif;margin:0 0 18px}
+.sheet p{margin:0 0 14px}
+.sheet mark{background:#FFE45C;color:inherit;padding:0 1px}
+.sheet .cm{position:absolute;right:-6px;top:236px;transform:translateX(100%);width:112px;background:#FBE1E4;border-left:3px solid #D7263D;color:#151922;padding:6px 8px;font:12px/1.35 -apple-system,"Segoe UI",sans-serif}
+.sheet .ink{position:absolute;left:68px;top:320px;width:240px;height:26px;border-bottom:2px solid #D7263D;border-radius:0 0 60% 40%}
+.card{position:fixed;right:18px;top:128px;width:300px;background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:16px;display:flex;flex-direction:column;gap:12px}
+.tot{display:flex;align-items:baseline;gap:8px}
+.tot b{font-size:38px;font-weight:700;letter-spacing:-.03em;line-height:1}
+.tot i{font-style:normal;color:var(--muted)}
+.tot em{font-style:normal;margin-left:auto;font-size:24px;font-weight:600;color:var(--accent)}
+.row h3{margin:0 0 6px;font-size:13px;font-weight:600;display:flex;justify-content:space-between}
+.row h3 span{color:var(--accent)}
+.sc{display:grid;grid-template-columns:repeat(8,1fr);gap:3px}
+.sc button{border:1px solid var(--line);background:none;border-radius:6px;padding:5px 0;font-size:12.5px;font-weight:600}
+.sc button.h{font-weight:500;color:var(--muted)}
+.sc button.on{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+textarea{width:100%;height:84px;border:1px solid var(--line);border-radius:8px;background:none;color:inherit;padding:8px;font:inherit;font-size:13px;resize:none}
+.next{display:flex;gap:8px}
+.next .act{flex:1}
+.dock{position:fixed;left:50%;bottom:18px;transform:translateX(calc(-50% - 160px));display:flex;align-items:center;gap:2px;background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:6px}
+.dock button{border:0;background:none;border-radius:9px;padding:7px 11px;font-size:13px;font-weight:500}
+.dock button.on{background:var(--soft);color:var(--accent);font-weight:600}
+.dock i{width:1px;height:22px;background:var(--line);margin:0 4px}
+.dock .c{width:20px;height:20px;padding:0;border-radius:50%;margin:0 2px}
+</style>
+</head>
+<body>
+<div class="note"><span><b>A redesign to compare.</b> A still picture with made-up names: the paper takes the whole screen, students run across the top, and the tools float in a dock. The app itself now uses the refined Calm Desk look.</span><button onclick="var d=document.documentElement;d.dataset.theme=d.dataset.theme==='dark'?'':'dark'">Light / dark</button></div>
+<header class="strip">
+  <b class="t">River essay</b>
+  <div class="who">
+    <button class="done">Aria T.</button><button class="done">Bram S.</button><button class="on">Cleo F.</button><button>Dov M.</button><button>Esme R.</button><button>Finn O.</button><button>Gia P.</button><button>Hugo L.</button><button>Ines V.</button>
+  </div>
+  <span style="color:var(--muted);font-size:13px;white-space:nowrap">✓ Saved · 2 of 9</span>
+  <button class="act">Grades</button><button class="act p">Export</button><button class="act">☰</button>
+</header>
+<main class="desk">
+  <article class="sheet">
+    <h1>Cleo Fixture: What the river keeps</h1>
+    <p>The river in this story stands for time, and the narrator returns to it whenever the family is about to change. Each visit, the water has moved on while the stones stay where they were.</p>
+    <p>At first the narrator only sees the surface. <mark>By the last chapter she notices what the current has carried off</mark>, and what it has left behind on the bank.</p>
+    <p>The author never says this outright. The reader has to put the visits side by side.</p>
+    <p>That is why the ending feels earned, even though almost nothing happens in it.</p>
+    <span class="ink"></span>
+    <div class="cm">Nice point. Quote one line here to back it up.</div>
+  </article>
+  <aside class="card" aria-label="Score">
+    <div class="tot"><b>9.5</b><i>/ 12</i><em>88%</em></div>
+    <div class="row"><h3>Ideas <span>3.5</span></h3><div class="sc"><button>0</button><button>1</button><button class="h">1.5</button><button>2</button><button class="h">2.5</button><button>3</button><button class="h on">3.5</button><button>4</button></div></div>
+    <div class="row"><h3>Evidence <span>3</span></h3><div class="sc"><button>0</button><button>1</button><button class="h">1.5</button><button>2</button><button class="h">2.5</button><button class="on">3</button><button class="h">3.5</button><button>4</button></div></div>
+    <div class="row"><h3>Language <span>3</span></h3><div class="sc"><button>0</button><button>1</button><button class="h">1.5</button><button>2</button><button class="h">2.5</button><button class="on">3</button><button class="h">3.5</button><button>4</button></div></div>
+    <textarea placeholder="Comment for ManageBac">Strong reading of the river. Add one quotation in the second paragraph.</textarea>
+    <div class="next"><button class="act">Previous</button><button class="act p">Next student</button></div>
+  </aside>
+  <nav class="dock" aria-label="Tools">
+    <button>Select</button><button class="on">Pen</button><button>Highlight</button><button>Text</button><button>Comment</button><button>Check</button><button>Eraser</button>
+    <i></i><button class="c" style="background:#D7263D" aria-label="Red"></button><button class="c" style="background:#1F5FD0" aria-label="Blue"></button><button class="c" style="background:#1C8A4C" aria-label="Green"></button>
+    <i></i><button>Undo</button><button>100%</button>
+  </nav>
+</main>
+</body>
+</html>

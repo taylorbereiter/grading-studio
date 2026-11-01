@@ -1,16 +1,26 @@
 {
   "name": "grading-studio",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
   "description": "Offline and browser-based grading studio for ManageBac downloads, PDF/Word/media submissions, half-point rubrics, grade sheets, and de-identified Claude handoffs.",
   "scripts": {
-    "build": "node build.js"
+    "build": "node build.js",
+    "test": "node --test --test-concurrency=1 --test-timeout=300000 \"test/*.test.js\"",
+    "check": "npm run build && npm test",
+    "preview": "npm run build && node test/preview.js"
   },
   "dependencies": {
     "fflate": "0.8.2",
     "html2canvas": "1.4.1",
+    "libheif-js": "1.23.5",
     "mammoth": "1.11.0",
     "pdf-lib": "1.17.1",
     "pdfjs-dist": "3.11.174"
+  },
+  "devDependencies": {
+    "puppeteer-core": "25.16.0"
+  },
+  "engines": {
+    "node": ">=22"
   }
 }

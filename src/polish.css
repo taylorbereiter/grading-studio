@@ -1,0 +1,82 @@
+/* ---------- polish: one top bar row, the More menu, pop-ups, the start screen ---------- */
+.top{flex-wrap:nowrap}
+.top .title,.top .btn,.top .icon,.savest{flex:none}
+.top .batch{flex:0 1000 auto}
+@media (max-width:760px){.top{flex-wrap:wrap}}
+.morewrap{position:relative;flex:none}
+.more{position:absolute;top:calc(100% + 6px);right:0;z-index:28;width:264px;background:var(--surface);border:1px solid var(--line-strong);border-radius:12px;box-shadow:0 12px 32px rgba(10,14,25,.22);padding:6px;display:flex;flex-direction:column;gap:2px;max-height:calc((100vh - var(--savebar,0px)) / var(--uz) - 66px);overflow:auto}
+#lightPanel,#calcPanel{max-height:calc((100vh - var(--savebar,0px)) / var(--uz) - 72px);overflow:auto}
+#lightPanel:focus{outline:none}
+.mgrp{display:flex;flex-direction:column;padding:4px 0}
+.mgrp+.mgrp{border-top:1px solid var(--line)}
+.mhd{font-size:11.5px;font-weight:600;color:var(--faint);text-transform:uppercase;letter-spacing:.05em;padding:4px 10px 3px}
+.mitem,.mlink a,.mlink button{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;border:0;background:none;text-align:left;padding:7px 10px;border-radius:7px;font-size:14px;font-weight:500;color:var(--fg);text-decoration:none;line-height:1.3}
+.mitem:hover,.mitem:focus-visible,.mlink a:hover,.mlink button:hover{background:var(--hover)}
+.mitem kbd{font:600 11px var(--f-body);border:1px solid var(--line-strong);border-bottom-width:2px;border-radius:4px;padding:0 5px;color:var(--muted)}
+.mlink{display:block}.mlink:empty{display:none}
+.mrow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:4px 10px;font-size:14px;font-weight:500}
+.mrow select{min-width:0;max-width:150px;flex:1}
+.toast{transition:opacity .15s}
+.toast[hidden]{display:block!important;opacity:0;pointer-events:none}
+.toast:empty{padding:0}
+
+/* the red save bar keeps its own strip at the bottom: dialogs and toasts stay above it */
+.dlg{bottom:var(--savebar,0px)}
+/* the box is zoomed with the app text, its lengths too, so what must fit the window is divided back by the zoom */
+.dlg .box{max-height:calc((100vh - 32px - var(--savebar,0px)) / var(--uz))}
+.dlg .box.spbox,.dlg .box.arrbox{height:calc((100vh - 32px - var(--savebar,0px)) / var(--uz))}
+.toast{bottom:calc(24px + var(--savebar,0px))}
+
+::placeholder{color:var(--muted)}
+.dlg .box:focus{outline:none}
+.chk input{flex:none}
+.askdlg{z-index:35}
+.askdlg .box{width:min(440px,100%)}
+#askText{margin:0;white-space:pre-line;overflow-wrap:anywhere;line-height:1.5}
+#askIn{width:100%;margin-top:12px;border:1px solid var(--line-strong);border-radius:7px;padding:8px 10px;background:var(--surface)}
+.btn.danger{background:var(--warn);border-color:var(--warn);color:var(--warn-fg)}
+.btn.danger:hover{background:var(--warn);opacity:.88}
+
+/* a smaller, even tool bar when the middle column is narrow, so the tools don't crowd the paper */
+@media (max-width:1360px){
+  .tools{margin:10px 10px 0;padding:5px 6px;gap:2px}
+  .tool{padding:7px}
+  .tool .lb{display:none}
+  .sep{margin:0 2px}
+  .swatches{gap:2px}
+  .sw{width:20px;height:20px}
+  .tools .seg button{padding:5px 8px;font-size:12.5px}
+  .tools .icon{width:26px}
+  .zoom span{min-width:36px;font-size:12.5px}
+}
+
+/* a narrow student list keeps room for the name: the tags go under the score */
+@media (max-width:1100px){.stu .sc small{display:block;margin-left:0}}
+
+/* start screen: today's work first */
+.start{padding-top:26px}
+.start .sub{margin:4px 0 20px}
+.start .lib.today{margin:0 0 20px}
+.today .lhead{margin-bottom:8px}
+.krow.first{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent);padding:13px 14px}
+.krow.first .kn b{font-size:16px}
+#kept:not(.all) .krow:nth-child(n+6){display:none}
+#keptAll{margin-top:8px;font-size:13px}
+.today:not([hidden])~.drop{padding:14px 18px;text-align:left;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 16px;align-items:center}
+.today:not([hidden])~.drop h2{font-size:15px;margin:0;grid-column:1}
+.today:not([hidden])~.drop p{font-size:13px;margin:0;grid-column:1}
+.today:not([hidden])~.drop .row{grid-column:2;grid-row:1/3;justify-content:flex-end}
+.today:not([hidden])~.drop .btn{padding:6px 11px;font-size:13px}
+.today:not([hidden])~.drop .btn.primary{background:var(--surface);border-color:var(--line-strong);color:var(--fg)}
+.today:not([hidden])~.drop .btn.primary:hover{background:var(--surface-2)}
+@media (max-width:1100px){.today:not([hidden])~.drop{grid-template-columns:1fr}.today:not([hidden])~.drop .row{grid-column:1;grid-row:auto;justify-content:flex-start;margin-top:8px}}
+/* where work is saved, and the take-home file */
+.savewhere{flex:0 1 auto;min-width:0;max-width:48ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12.5px;color:var(--faint);text-decoration:none}
+.savewhere:hover{text-decoration:underline}
+.savewhere.warn,.wtext.warn{color:var(--warn);font-weight:600}
+.tkf{display:block;margin:10px 0;font-size:14px}.tkf input{display:block;width:100%;margin-top:4px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--fg);font:inherit}
+.tkerr{color:var(--bad);font-size:14px;font-weight:600}
+.cfrow{border-top:1px solid var(--line);padding:10px 0}.cfrow h3{margin:0 0 6px;font-size:15px}
+.cfcols{display:grid;grid-template-columns:1fr 1fr;gap:10px}.cfside{display:block;border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:13.5px;cursor:pointer}
+.cfside:has(input:checked){border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}.cfc{overflow-wrap:anywhere;white-space:pre-wrap}
+#bringBox ul{margin:4px 0 8px;padding-left:18px}#bringBox p{margin:10px 0 2px}

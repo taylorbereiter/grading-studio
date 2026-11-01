@@ -52,7 +52,7 @@ document.addEventListener('click', e => {
 /* ---------------- grading setup ---------------- */
 // Taylor's grading scale for a 12-point rubric. Half points fall halfway between two rows.
 const SCALE12 = { 12: 100, 11: 95, 10: 91, 9: 86, 8: 82, 7: 77, 6: 73, 5: 68, 4: 64, 3: 60 };
-const RUBRIC_STEPS = [1, 1.5, 2, 2.5, 3, 3.5, 4];
+const RUBRIC_STEPS = [0, 1, 1.5, 2, 2.5, 3, 3.5, 4];
 const SCALE_FIVES = { 12: 100, 11: 95, 10: 90, 9: 85, 8: 80, 7: 75, 6: 70, 5: 65, 4: 60, 3: 55, 2: 50, 1: 45, 0: 40 };
 const DEFAULT_SETUP = { mode: 'rubric', criteria: ['Criterion 1', 'Criterion 2', 'Criterion 3'], outOf: 10, scale: SCALE12 };
 let setup = { ...DEFAULT_SETUP, ...store.get('gs.setup', {}) };
@@ -81,13 +81,20 @@ function percentWith(total, max, sc) {
   return roundPct(total / max * 100);
 }
 function gradeOf(st) {
+  if (noScore(st)) return { total: null, pct: null, done: true, status: st.grade.status };   // missing or excused: settled, with no number
+  const g = scoreOf(st);
+  return st.grade.status === 'late' ? { ...g, status: 'late' } : g;
+}
+function scoreOf(st) {
   const own = ownGrade(st);
   if (own.total != null) return own;
   const ty = st.grade.sheet;   // typed on the Grade sheet from the picture, for handwritten grades
   if (ty !== '' && ty != null && !isNaN(+ty)) return { total: +ty, pct: percentFor(+ty), done: true, paper: true };
   if (!st.found || !st.found.found) return own;
   const fd = st.found;   // a grade typed on the paper (Grade sheet), used until she scores it here
-  return { total: fd.score, pct: fd.pct != null ? fd.pct : percentFor(fd.score), done: true, paper: true };
+  const off = fd.outOf != null && fd.outOf !== maxPoints();   // a confirmed 10/15 is out of 15, and says so wherever it shows
+  const pct = fd.pct != null ? fd.pct : off ? percentWith(fd.score, fd.outOf, setup.scale) : percentFor(fd.score);
+  return off ? { total: fd.score, pct, done: true, paper: true, outOf: fd.outOf } : { total: fd.score, pct, done: true, paper: true };
 }
 function ownGrade(st) {
   const g = st.grade;
@@ -95,9 +102,10 @@ function ownGrade(st) {
     const sc = setup.criteria.map((_, i) => g.rubric[i]);
     if (sc.every(v => v == null)) return { total: null, pct: null, done: false };
     const total = sc.reduce((a, v) => a + (v || 0), 0);
-    return { total, pct: percentFor(total), done: sc.every(v => v != null) };
+    return sc.every(v => v != null) ? { total, pct: percentFor(total), done: true } : { total, pct: percentFor(total), done: false, partial: true };
   }
   const t = g.points === '' || g.points == null ? null : +g.points;
+  if (t != null && !isNaN(t) && wordPart(st, t)) return { total: t, pct: percentFor(t), done: false, partial: true };   // from a Word rubric that isn't fully highlighted
   return { total: t, pct: t == null || isNaN(t) ? null : percentFor(t), done: t != null && !isNaN(t) };
 }
 const fmtNum = n => n == null ? '' : (Math.round(n * 100) / 100).toString();
@@ -120,6 +128,8 @@ let bank = store.get('gs.bank', []);   // Taylor's saved comments (her own words
 /* ---------------- intake ---------------- */
 const isPdf = n => /\.pdf$/i.test(n), isImg = n => /\.(png|jpe?g)$/i.test(n);
 const junk = p => /(^|\/)(__MACOSX|\.)/.test(p);
+// What Windows and Word leave beside a paper. These still count toward knowing the download again, so saved work finds its way back, but they aren't anyone's files.
+const houseFile = p => /(^|\/)(Thumbs\.db|ehthumbs\.db|desktop\.ini|~\$[^/]*)$/i.test(p);
 // Names in ZIPs made without the "UTF-8" flag (Mac and Windows often skip it) come out garbled, like "JosÃ©";
 // read them back as UTF-8 when they are.
 function zipName(n) {
@@ -143,6 +153,7 @@ function unzipInto(data, prefix, raw, depth) {
   }
 }
 async function intake(entries, label, assignment, fromKeep) {   // entries: [{ path, file|data }]
+  if (entries.length === 1 && /\.gswork$/i.test(entries[0].path)) return sayDlg('That’s a take-home file, not papers. To bring it in, use Bring work in under Saving and carrying on the start screen.');
   const raw = [], zipProblems = []; zipSkipped = 0;
   for (const e of entries) {
     if (junk(e.path)) continue;
@@ -152,18 +163,120 @@ async function intake(entries, label, assignment, fromKeep) {   // entries: [{ p
       const dir = e.path.includes('/') ? e.path.slice(0, e.path.lastIndexOf('/') + 1) : '';
       if (data.length > 30e6) { toast('Opening the ZIP…', 20000); await new Promise(r => setTimeout(r, 30)); }
       try { unzipInto(data, dir, raw, dir ? 1 : 0); }
-      catch (er) { console.error(er); zipProblems.push(e.path.split('/').pop()); if (dir) raw.push({ path: e.path, data }); continue; }
+      catch (er) { console.error(er); if (dir) raw.push({ path: e.path, data }); else zipProblems.push(e.path.split('/').pop()); continue; }
       if (!label && !dir) label = e.path.split('/').pop().replace(/\.zip$/i, '');
       continue;
     }
     raw.push({ path: e.path, file: e.file, data: e.data });
   }
-  const zipNote = zipProblems.length ? zipProblems.join(', ') + (zipProblems.length === 1 ? ' couldn’t be opened. It may be damaged or still downloading.' : ' couldn’t be opened.') + ' Try unzipping it in Finder (double-click it), then choose the folder.'
-    : zipSkipped ? zipSkipped + (zipSkipped === 1 ? ' file in the ZIP is' : ' files in the ZIP are') + ' packed in a way a browser can’t open. Unzip it in Finder (double-click it), then choose the folder.' : '';
-  if (!raw.length) { toast(zipNote || 'Nothing found in what you dropped', zipNote ? 9000 : 3000); return; }
-  if (zipNote) setTimeout(() => toast(zipNote, 9000), 900);
+  const zipBad = zipProblems.length ? { names: zipProblems, n: zipProblems.length } : zipSkipped ? { skip: zipSkipped, n: zipSkipped } : null;   // told in the opening report, or now if that's all there is
+  if (!raw.length) { toast(zipBad ? zipSay(zipBad) : 'Nothing found in what you dropped', zipBad ? 9000 : 3000); return; }
 
-  // One student per top-level folder; loose files are one student each.
+  await spellLikeSaved(raw);
+  const map = groupRaw(raw), keys = [...map.keys()].sort(natural);
+  const students = [], keepList = [];
+  for (const key of keys) {
+    const files = [];
+    for (const r of map.get(key).sort((a, b) => natural(a.path, b.path))) {
+      const data = r.data || (r.file ? new Uint8Array(await r.file.arrayBuffer()) : null);
+      keepList.push({ path: r.path, data });
+      if (!houseFile(r.path)) files.push(await makeFile(r.path, data));
+    }
+    if (!files.length && map.get(key).every(r => houseFile(r.path))) continue;
+    students.push({ key, files, grade: { rubric: [], points: '', comment: '' }, layout: null, inc: {} });
+  }
+  if (!students.length) { toast('Nothing found in what you dropped'); return; }
+  const id = batchIdOf(raw);
+  const paperList = keepList.filter(e => !houseFile(e.path));
+  const sameSize = fromKeep ? [] : await changedInPlace(id, paperList).catch(e => { console.error(e); return []; });   // same names and sizes, different bytes
+  const earlier = fromKeep ? null : await findEarlier(id, paperList, assignment).catch(e => { console.error(e); return null; });   // an older copy of this download, already worked on?
+  if (earlier && earlier.asg) assignment = earlier.asg;
+  if (!assignment && !fromKeep) assignment = cardOfKept(id);   // the same download dropped again still belongs to its card, the same as opening it from the list
+  const rub = await rubricAtOpen(assignment, earlier ? earlier.d : newestWork(store.get(id, null), await kget('work', id)), (assignment && assignment.name) || label || 'This download');
+  if (!rub) { toast('Nothing was opened. It will ask again when you open it.', 5000); return; }
+  batch = { id, name: (assignment && assignment.name) || label || 'Your download', students, assignment: assignment || null, zipBad, seen: lsRaw(savedKey(id)), opened: Date.now() };   // seen: from before the work is read, so a save by another tab from here on is noticed
+  if (rub.su) setup = { ...DEFAULT_SETUP, ...rub.su };
+  delete setup.spot;   // the grade spot belongs to one download, and restore() brings its own back
+  thumbCache.clear();
+  askToKeep();
+  batch.keptWork = await kget('work', id);   // this browser's fuller copy of the work
+  if (earlier) await carryInto(earlier, paperList);   // or the work from the older copy of this download
+  else if (!fromKeep && !batch.keptWork && !store.get(id, null)) { const scan = await carryScan(id, paperList).catch(e => { console.error(e); return null; }); if (scan) batch.keptWork = { t: Date.now(), s: {}, scan }; }   // or, with no work to carry, what she said about the same pages
+  const saved = newestWork(store.get(id, null), batch.keptWork);
+  await applyRubricPage();
+  if (earlier) await carryRubric(earlier);
+  await loadAdded();
+  if (setup.rubricPage) await applyRubricPage(batch.students.filter(st => !st.files.some(f => f.virtual)));   // a late file can be the first thing of theirs it can sit with
+  await loadRefs();
+  await loadEdits();
+  batch.revs = revsOf(revsBase(saved));   // from before anything can change it: a record's lists are shared with her live marks and scores
+  batch.lastS = saved && saved.s;
+  restore();
+  if (sameSize.length) flagInPlace(sameSize);
+  await photoTurns();
+  if (saved && saved.cls != null) batch.classId = saved.cls;
+  rosterSort();
+  if (batch.classId && (!saved || saved.cls == null)) Object.assign(batch.revs.ph, partHashes({ cls: batch.classId }));   // the app worked out the class just now, so she hasn't changed it
+  if (earlier) carryRoster(earlier);
+  if (batch.restoredKey) { const k = batch.students.findIndex(st => st.key === batch.restoredKey); if (k >= 0) batch.restoredCur = k; }
+  renderClassSel();
+  if (assignment) { assignment.batchId = id; assignment.opened = Date.now(); if (!assignment.setup || rub.toCard) assignment.setup = { ...setup, spot: undefined }; saveLib(); }
+  keepWait = keepPapers(batch, label, fromKeep ? null : keepList, sameSize.length > 0);
+  cur = 0; undoStack = []; selected = null;
+  $('#start').hidden = true; $('#app').hidden = false;
+  setBatchName();
+  $('#trAllBtn').hidden = !CAN_TRANSCRIBE || !students.some(st => st.files.some(f => f.kind === 'media'));
+  renderTools(); renderList(); renderTopAtlas(); openStudent(batch.restoredCur || 0);
+  scanned = false; scanAll();
+  setTimeout(wordScoresAll, 50);
+  if (earlier) carrySay();
+  if (rub.said) saveSoon();   // what she chose goes with the work, so it isn't a question next time
+  openingReport();
+}
+// Which rubric a download opens with, decided only here: { su }, with nothing in su meaning the one in use now. The card's, or with no card, what the work was scored with, or for a card with neither, the last one saved.
+// If going by the card would change a total or a percent, she's asked, and nothing opens until she says: null is "not now". Row names and what each score means come from the card, with nothing asked.
+async function rubricAtOpen(card, work, name) {
+  const mine = card && card.setup, own = work && work.setup, ask = async (q, intro) => {
+    const ans = await showConflicts([{ key: SET_ASK + 'setup', part: 'setup', id: 'open', name, ...q }], { title: 'Which rubric should this use?', intro, other: '', cancel: 'Not now', noNewest: true });
+    return ans && ans['open|' + SET_ASK + 'setup'];
+  };
+  if (mine && own && rubricsDiffer(mine, own) && workScored(work)) {
+    const said = await ask({ a: mine, b: own, la: 'On the assignment card', lb: 'Saved with this download', ta: fieldT({ node: card }, 'setup'), tb: partT(work, 'setup') }, 'The assignment card and this download’s saved work have different rubrics, so their scores would come out differently. Whichever you pick, the card and the download both use it from now on.');
+    return said && (said === 'a' ? { su: mine, said } : { su: own, said, toCard: true });
+  }
+  if (mine || own) return { su: mine || own };
+  const last = { ...DEFAULT_SETUP, ...(card ? store.get('gs.setup', {}) : setup) }, fit = workScored(work) ? rubricFitting(work, last) : null;
+  if (fit) {
+    const said = await ask({ a: last, b: fit, la: 'The last rubric you saved', lb: 'One that fits these scores' }, 'This work doesn’t say which rubric its scores were given with, and they don’t fit the last one you saved.');
+    return said && { su: said === 'a' ? last : fit, said };
+  }
+  return { su: card ? last : null };
+}
+// Work too old to say what rubric it was scored with: a rubric its scores fit, if the one given isn't. Null if it is.
+function rubricFitting(work, last) {
+  let n = 0, pts = false;
+  for (const r of Object.values(work.s || {})) {
+    const g = (r && r.g) || {};
+    (g.rubric || []).forEach((v, i) => { if (v != null && i >= n) n = i + 1; });
+    if (g.points != null && g.points !== '') pts = true;
+  }
+  if (last.mode === 'points' ? pts || !n : n === last.criteria.length || (!n && !pts)) return null;
+  if (!n) return { ...last, mode: 'points' };
+  return { ...last, mode: 'rubric', criteria: Array.from({ length: n }, (_, i) => last.criteria[i] || 'Criterion ' + (i + 1)), levels: undefined };
+}
+// The first save writes a few things old work doesn't have: the time of a Word edit, and a setup with its defaults filled in. Those aren't changes she made.
+function revsBase(saved) {
+  if (!saved) return saved;
+  const w = { ...saved, s: { ...saved.s } };
+  if (w.setup) w.setup = { ...DEFAULT_SETUP, ...w.setup };
+  for (const st of batch.students) for (const f of st.files) {
+    const r = w.s[st.key];
+    if (f.edited && !(r && r.v) && !(r && r.e && r.e[f.path])) w.s[st.key] = { ...(r || { f: {}, g: st.grade, h: {} }), e: { ...(r && r.e), [f.path]: f.edited } };
+  }
+  return w;
+}
+// One student per top-level folder; loose files are one student each.
+function groupRaw(raw) {
   const map = new Map();
   for (const r of raw) {
     if (/^Grade sheet - [^/]*\.pdf$/i.test(r.path)) continue;   // the grade sheet from an earlier export isn't a student
@@ -172,80 +285,64 @@ async function intake(entries, label, assignment, fromKeep) {   // entries: [{ p
     if (!map.has(key)) map.set(key, []);
     map.get(key).push(r);
   }
-  const keys = [...map.keys()].sort(natural);
-  const students = [], keepList = [];
-  for (const key of keys) {
-    const files = [];
-    for (const r of map.get(key).sort((a, b) => natural(a.path, b.path))) {
-      const data = r.data || (r.file ? new Uint8Array(await r.file.arrayBuffer()) : null);
-      keepList.push({ path: r.path, data });
-      files.push(await makeFile(r.path, data));
-    }
-    students.push({ key, files, grade: { rubric: [], points: '', comment: '' }, layout: null, inc: {} });
+  return map;
+}
+// A download is known by its file names and sizes, which is how the same one is found again.
+function batchIdOf(raw) {
+  const map = groupRaw(raw), size = r => r.data ? r.data.length : r.file ? r.file.size : 0;
+  return 'gs.b.' + hash([...map.keys()].sort(natural).map(k => map.get(k).sort((a, b) => natural(a.path, b.path)).map(r => r.path + ':' + size(r)).join('|')).join('/'));
+}
+// An accented name can be spelled two ways under the hood: Macs often split "é" into "e" and an accent, Windows doesn't.
+// Work already saved under either spelling is found and keeps it. Anything new takes the Windows spelling, so both computers agree.
+// Two files or folders that differ only in this spelling (one student uploading from both computers) are really two, so that download stays exactly as it came.
+async function spellLikeSaved(raw) {
+  if (raw.every(r => r.path === r.path.normalize('NFC') && r.path === r.path.normalize('NFD'))) return;
+  const one = raw.map(r => ({ ...r, path: r.path.normalize('NFC') }));
+  if (new Set(one.map(r => r.path)).size < new Set(raw.map(r => r.path)).size || groupRaw(one).size < groupRaw(raw).size) return;
+  for (const form of [null, 'NFC', 'NFD']) {
+    const id = batchIdOf(raw.map(r => ({ ...r, path: form ? r.path.normalize(form) : r.path })));
+    if (store.get(id, null) || keptMeta.has(id) || await kget('work', id)) { if (form) for (const r of raw) r.path = r.path.normalize(form); return; }
   }
-  const id = 'gs.b.' + hash(students.map(s => s.files.map(f => f.path + ':' + f.size).join('|')).join('/'));
-  batch = { id, name: (assignment && assignment.name) || label || 'Your download', students, assignment: assignment || null };
-  delete setup.spot;   // the grade spot belongs to one download
-  if (assignment) { setup = { ...DEFAULT_SETUP, ...(assignment.setup || store.get('gs.setup', {})) }; delete setup.spot; }
-  thumbCache.clear();
-  askToKeep();
-  if (!store.get(id, null)) batch.keptWork = await kget('work', id);   // this browser's backup copy of the work
-  const saved = store.get(id, null) || batch.keptWork || null;
-  if (!assignment && saved && saved.setup) setup = { ...DEFAULT_SETUP, ...saved.setup };
-  await applyRubricPage();
-  await loadAdded();
-  await loadRefs();
-  await loadEdits();
-  restore();
-  if (saved && saved.cls != null) batch.classId = saved.cls;
-  rosterSort();
-  if (batch.restoredKey) { const k = batch.students.findIndex(st => st.key === batch.restoredKey); if (k >= 0) batch.restoredCur = k; }
-  renderClassSel();
-  if (assignment) { assignment.batchId = id; assignment.opened = Date.now(); saveLib(); }
-  keepPapers(batch, label, fromKeep ? null : keepList);
-  cur = 0; undoStack = []; selected = null;
-  $('#start').hidden = true; $('#app').hidden = false;
-  setBatchName();
-  $('#trAllBtn').hidden = !CAN_TRANSCRIBE || !students.some(st => st.files.some(f => f.kind === 'media'));
-  renderTools(); renderList(); renderTopAtlas(); openStudent(batch.restoredCur || 0);
-  scanned = false; scanAll();
-  setTimeout(wordScoresAll, 50);
+  for (const r of raw) r.path = r.path.normalize('NFC');
 }
 async function makeFile(path, data) {
   const name = path.split('/').pop();
   const magic = data && data.length > 4 && data[0] === 0x25 && data[1] === 0x50 && data[2] === 0x44 && data[3] === 0x46;   // "%PDF"
-  let kind = isPdf(name) || magic ? 'pdf' : isImg(name) || IMG_MORE.test(name) ? 'img' : MEDIA_RX.test(name) ? 'media' : WORD_RX.test(name) ? 'docx' : TEXT_RX.test(name) ? 'text' : 'other';
+  let kind = trueKind(isPdf(name) || magic ? 'pdf' : isImg(name) || IMG_MORE.test(name) ? 'img' : MEDIA_RX.test(name) ? 'media' : WORD_RX.test(name) ? 'docx' : TEXT_RX.test(name) ? 'text' : 'other', name, data);
   let pdf = kind === 'pdf' ? data : null;
   if (kind === 'pdf' && hasGsTail(data)) {   // a file exported from here with its marks kept: back to the original pages and the marks
     const back = await unpackExport(data);
-    if (back) return { path, name, kind, data: back.data, size: data.length, marks: back.marks, rot: back.rot, pages: null };
+    if (back) return { path, name, kind, data: back.data, size: data.length, marks: back.marks, rot: back.rot, skew: back.skew, noauto: true, pages: null };
   }
-  if (kind === 'img') { try { pdf = isImg(name) ? await imageToPdf(data, name) : await anyImageToPdf(data); } catch { kind = 'other'; } }
-  return { path, name, kind, data: kind === 'pdf' || kind === 'img' ? pdf : data, size: data ? data.length : 0, marks: {}, pages: null };
+  let pic = null;
+  if (kind === 'img') { try { pic = await pictureToPdf(data, name); pdf = pic.pdf; if (pic.hurt) kind = 'other'; } catch { kind = 'other'; } }
+  return { path, name, kind, data: kind === 'pdf' || kind === 'img' ? pdf : data, size: data ? data.length : 0, marks: {}, pages: null, photoTurn: (pic && pic.turn) || 0, was: !!(pic && pic.was), hurt: !!(pic && pic.hurt) };
 }
 // An editable export carries its original pages and its marks as attachments, and ends with this line so it's found without opening it.
 const GS_TAIL = '%GradingStudio-editable';
 const hasGsTail = d => !!d && d.length > 64 && new TextDecoder().decode(d.subarray(d.length - 64)).includes(GS_TAIL);
+// Marks read from a file could say anything, so only ones that can be drawn come in. One bad mark would stop that student's page drawing.
+const markFits = m => !!m && typeof m === 'object' && ['pen', 'hl', 'text', 'check', 'oval', 'note'].includes(m.t) && (m.t !== 'pen' || Array.isArray(m.pts)) && (m.t !== 'text' || typeof m.text === 'string') && (m.t !== 'note' || (typeof m.text === 'string' && /^#[0-9a-f]{6}$/i.test(m.color))) && (m.t !== 'hl' || Array.isArray(m.pts) || Array.isArray(m.rects) || m.x != null);
 async function unpackExport(data) {
   try {
     await workerReady;
     const js = await pdfjsLib.getDocument({ data: data.slice(), isEvalSupported: false }).promise;
     const att = (await js.getAttachments()) || {}; js.destroy();
     const meta = att['grading-studio.json']; if (!meta) return null;
-    const info = JSON.parse(new TextDecoder().decode(meta.content)), srcs = [], marks = {}, rot = {};
-    info.pages.forEach(([, , m, r], i) => { if (m && m.length) marks[i] = m; if (r) rot[i] = r; });
+    const info = JSON.parse(new TextDecoder().decode(meta.content)), srcs = [], marks = {}, rot = {}, skew = {};
+    info.pages.forEach(([, , m, r, k], i) => { const ok = Array.isArray(m) ? m.filter(markFits) : []; if (ok.length) marks[i] = ok; if (r) rot[i] = r; if (k) skew[i] = k; });
     const orig = k => att['gs-original-' + (k + 1) + '.pdf'].content;
     const one = info.pages.every(([s]) => s === 0) && info.pages.every(([, p], i) => p === i);
     if (one) {   // the whole original in order: kept exactly as it was
       const src = await PDFLib.PDFDocument.load(orig(0), { ignoreEncryption: true, updateMetadata: false });
-      if (src.getPageCount() === info.pages.length) return { data: orig(0), marks, rot };
+      if (src.getPageCount() === info.pages.length) return { data: orig(0), marks, rot, skew };
     }
     const out = await PDFLib.PDFDocument.create();
     for (const [s, p] of info.pages) {
       srcs[s] ||= await PDFLib.PDFDocument.load(orig(s), { ignoreEncryption: true, updateMetadata: false });
       const [cp] = await out.copyPages(srcs[s], [p]); out.addPage(cp);
     }
-    return { data: await out.save(), marks, rot };
+    return { data: await out.save(), marks, rot, skew };
   } catch (e) { console.error(e); return null; }
 }
 // Pictures other than PNG and JPEG (GIF, WebP, BMP, and HEIC/TIFF where the browser can read them) become a JPEG page.
@@ -254,7 +351,7 @@ async function anyImageToPdf(bytes) {
   const bmp = await createImageBitmap(new Blob([bytes]));
   const c = document.createElement('canvas'); c.width = bmp.width; c.height = bmp.height;
   const ctx = c.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height); ctx.drawImage(bmp, 0, 0);
-  const jpg = await new Promise(res => c.toBlob(b => b.arrayBuffer().then(x => res(new Uint8Array(x))), 'image/jpeg', 0.92));
+  const jpg = await canvasJpg(c, 0.92);
   c.width = c.height = 0;
   return imageToPdf(jpg, 'page.jpg');
 }
@@ -285,13 +382,13 @@ async function walkEntry(entry, prefix, out) {
 }
 
 /* ---------------- keeping work in this browser ---------------- */
-let saveT;
-function saveSoon() { clearTimeout(saveT); saveT = setTimeout(saveNow, 500); const el = $('#saveState'); if (el && batch) el.textContent = 'Saving…'; }
-function saveNow() {
-  if (!batch) return;
-  clearTimeout(saveT);
-  { const el = $('#saveState'); if (el) el.textContent = '✓ Saved'; }
-  const data = { t: Date.now(), cur, ck: batch.students[cur] && batch.students[cur].key, setup, cls: batch.classId, share: batch.share, drive: batch.drive, light: batch.light, lightOpt: batch.lightOpt, lightPg: batch.lightPg, anon: batch.anon, moved: batch.moved, refSkip: batch.refSkip, s: {} };
+let saveT, saveDue = false;
+function saveSoon() { clearTimeout(saveT); saveSeq++; saveDue = true; saveT = setTimeout(saveNow, 500); const el = $('#saveState'); if (el && batch) el.textContent = 'Saving…'; }
+function saveNow(leaving) {
+  if (!batch || !tabLive()) return;
+  clearTimeout(saveT); saveDue = false;
+  if (batch.revs && tabForgot(batch)) return tabLetGo();
+  const data = { t: Date.now(), carry: batch.carry, cur, ck: batch.students[cur] && batch.students[cur].key, setup, cls: batch.classId, share: batch.share, drive: batch.drive, light: batch.light, lightOpt: batch.lightOpt, lightPg: batch.lightPg, anon: batch.anon, moved: batch.moved, refSkip: batch.refSkip, read: (batch.read = paperReads()), s: {} };
   for (const st of batch.students) {
     const f = {};
     for (const fl of st.files) if (Object.values(fl.marks).some(a => a.length)) f[fl.path] = fl.marks;
@@ -300,40 +397,52 @@ function saveNow() {
     for (const fl of st.files) if (fl.hand) hb[fl.path] = fl.hand;
     const inc = st.inc && Object.keys(st.inc).length ? st.inc : undefined;
     const tr = {}; for (const fl of st.files) if (fl.tr) tr[fl.path] = fl.tr;
-    const rt = {}; for (const fl of st.files) if (fl.rot && Object.keys(fl.rot).length) rt[fl.path] = fl.rot;
-    if (Object.keys(rt).length || Object.keys(tr).length || Object.keys(hb).length || st.layout || st.forder || inc || Object.keys(f).length || g.rubric.some(v => v != null) || g.points !== '' || g.comment || g.sheet)
-      data.s[st.key] = { f, g, h: hb, L: st.layout || undefined, o: st.forder || undefined, inc, tr: Object.keys(tr).length ? tr : undefined, r: Object.keys(rt).length ? rt : undefined };
+    const rt = scanOwn(st, 'rot', 'didTurn', rotToSave), sk = scanOwn(st, 'skew', 'didSkew');
+    if (Object.keys(rt).length || Object.keys(sk).length || Object.keys(tr).length || Object.keys(hb).length || st.layout || st.forder || inc || Object.keys(f).length || g.rubric.some(v => v != null) || g.points !== '' || g.comment || hasSheet(g) || g.status || g.at)
+      data.s[st.key] = { f, g, h: hb, L: st.layout || undefined, Lp: st.layout ? 1 : undefined, o: st.forder || undefined, inc, tr: Object.keys(tr).length ? tr : undefined, r: Object.keys(rt).length ? rt : undefined, sk: Object.keys(sk).length ? sk : undefined };
   }
-  keepWork(batch, data);
-  const idx = store.get('gs.batches', {}); idx[batch.id] = data.t;
-  let ok = store.set(batch.id, data);
-  // The full copy of every download lives in IndexedDB (keepWork). Only once that works are older quick copies
-  // in localStorage let go, so nothing is ever only in one place that gets cleared.
-  if (keepOk) {
-    const order = Object.entries(idx).sort((a, b) => b[1] - a[1]).map(([k]) => k);
-    for (const k of order.slice(12)) { store.del(k); delete idx[k]; }
-    while (!ok && order.length > 1) { const k = order.pop(); if (k === batch.id) continue; store.del(k); delete idx[k]; ok = store.set(batch.id, data); }
-  } else if (!ok) toast('This browser is out of room to keep your marks. Export soon.');
-  store.set('gs.batches', idx);
+  data.scan = scanSave();
+  // Someone with work saved who isn't on the list just now (no paper, and not on the roster here) keeps it: they'd only be off the list until the roster comes.
+  const listed = new Set(batch.students.map(st => st.key));
+  for (const [k, r] of Object.entries(batch.lastS || {})) if (!listed.has(k)) data.s[k] = r;
+  batch.lastS = data.s;
+  if (!saveBad.has(batch.id)) batch.wasOk = batch.revs;   // a change whose save failed still has to count as this tab's own, until one works
+  const was = batch.wasOk;
+  stampWork(batch, data);
+  if (tabsBehind(batch)) return saveBehind(batch, data, was, leaving);
+  return writeWork(batch, data);
 }
 function restore() {
-  const data = store.get(batch.id, null) || batch.keptWork || null;
+  const data = newestWork(store.get(batch.id, null), batch.keptWork);
   if (!data) return;
-  if (data.setup && !batch.assignment) setup = { ...DEFAULT_SETUP, ...data.setup };
-  else if (data.setup && data.setup.spot) setup.spot = data.setup.spot;
+  if (data.carry) batch.carry = data.carry;
+  if (data.setup && data.setup.spot) setup.spot = data.setup.spot;
   batch.moved = data.moved || {};
-  for (const [path, key] of Object.entries(batch.moved)) moveFileNow(path, key);
+  // Someone with no folder is only here because of the work on them: a paper that was moved to them, or a score, comment or status. They come back before anything is put on them.
+  for (const [path, key] of Object.entries(batch.moved)) {
+    if (!batch.students.some(s => s.key === key) && batch.students.some(s => s.files.some(f => f.path === path))) batch.students.push(gapStudent(key));
+    moveFileNow(path, key);
+  }
+  for (const [key, s] of Object.entries(data.s)) if (gradeHasWork(s.g) && !batch.students.some(st => st.key === key)) batch.students.push(gapStudent(key));
   let n = 0;
   for (const st of batch.students) {
     const s = data.s[st.key]; if (!s) continue;
     if (s.o) st.forder = s.o;
     st.grade = { rubric: [], points: '', comment: '', ...s.g };
-    for (const fl of st.files) { if (s.f[fl.path]) fl.marks = s.f[fl.path]; if (s.h && s.h[fl.path]) fl.hand = s.h[fl.path]; if (s.tr && s.tr[fl.path]) fl.tr = s.tr[fl.path]; if (s.r && s.r[fl.path]) fl.rot = s.r[fl.path]; }
-    if (s.L) st.layout = s.L.map(d => ({ ...d, pages: d.pages.filter(([path]) => st.files.some(f => f.path === path)) }));
+    for (const fl of st.files) { if (s.f[fl.path]) fl.marks = s.f[fl.path]; if (s.h && s.h[fl.path]) fl.hand = s.h[fl.path]; if (s.tr && s.tr[fl.path]) fl.tr = s.tr[fl.path]; if (s.r && s.r[fl.path]) fl.rot = s.r[fl.path]; if (s.sk && s.sk[fl.path]) fl.skew = s.sk[fl.path]; }
+    if (s.L) { st.layout = s.L.map(d => ({ ...d, pages: d.pages.filter(([path]) => st.files.some(f => f.path === path)) })); st.layoutOld = !s.Lp; }
     if (s.inc) st.inc = s.inc;
     n++;
   }
+  // A file moved on one computer and marked on the other: the marks follow the file.
+  for (const [path, key] of Object.entries(batch.moved)) {
+    const st = batch.students.find(x => x.key === key), fl = st && st.files.find(f => f.path === path);
+    if (!fl || Object.values(fl.marks).some(a => a.length)) continue;
+    for (const [k, r] of Object.entries(data.s)) if (k !== key && r.f && r.f[path]) { fl.marks = r.f[path]; break; }
+  }
+  scanRestore(data.scan);
   if (data.share) batch.share = data.share;
+  if (data.read) batch.read = data.read;
   if (data.light) batch.light = data.light;
   if (data.lightOpt) batch.lightOpt = data.lightOpt;
   if (data.lightPg) batch.lightPg = data.lightPg;
@@ -370,7 +479,7 @@ function textLayout(m, W) {
   const room = Math.max(40, W - m.x - 6), maxW = m.bw ? Math.max(24, Math.min(m.bw, room)) : room;
   const lines = wrapText(measureCtx, m.text || '', maxW);
   const w = m.bw ? maxW : Math.max(10, ...lines.map(l => measureCtx.measureText(l).width));
-  return { lines, w, h: Math.max(1, lines.length) * m.size * 1.25, maxW };
+  return { lines, w, h: Math.max(1, lines.length) * m.size * 1.25, maxW, ink: Math.max(10, ...lines.map(l => measureCtx.measureText(l).width)) };
 }
 // Comment boxes in the right margin, each with a line to its spot (the look Taylor liked from Kami's flattened files).
 function layoutNotes(notes, W, H, side) {
@@ -411,19 +520,14 @@ function drawMarks(ctx, marks, W, H, side, screen) {
   // highlights under everything, multiplied so the writing stays dark
   ctx.save(); ctx.globalCompositeOperation = 'multiply';
   for (const m of marks) {
-    if (m.t === 'hl') { ctx.fillStyle = m.color; ctx.fillRect(m.x, m.y, m.w, m.h); }
-    else if (m.t === 'note' && m.hl) { ctx.fillStyle = m.hc || HL.yellow; ctx.fillRect(m.hl.x, m.hl.y, m.hl.w, m.hl.h); }
+    if (m.t === 'hl') fillHl(ctx, m);
+    else if (m.t === 'note' && m.hl) fillHl(ctx, { color: m.hc || HL.yellow, ...m.hl, rects: m.rects });
   }
   ctx.restore();
   for (const m of marks) {
     if (m.t === 'pen') {
       ctx.save(); ctx.strokeStyle = m.color; ctx.lineWidth = m.w; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-      ctx.beginPath();
-      const p = m.pts;
-      ctx.moveTo(p[0][0], p[0][1]);
-      if (p.length === 1) ctx.lineTo(p[0][0] + 0.01, p[0][1]);
-      for (let i = 1; i < p.length - 1; i++) { const mx = (p[i][0] + p[i + 1][0]) / 2, my = (p[i][1] + p[i + 1][1]) / 2; ctx.quadraticCurveTo(p[i][0], p[i][1], mx, my); }
-      if (p.length > 1) ctx.lineTo(p[p.length - 1][0], p[p.length - 1][1]);
+      strokePath(ctx, m.pts);
       ctx.stroke(); ctx.restore();
     } else if (m.t === 'text' && !(screen && screen.editing === m)) {
       const L = textLayout(m, W);
@@ -457,10 +561,7 @@ function drawMarks(ctx, marks, W, H, side, screen) {
     const bb = bboxOf(screen.sel, W);
     if (bb) {
       ctx.save(); ctx.strokeStyle = '#1F6FB2'; ctx.setLineDash([3, 2]); ctx.lineWidth = 0.8; ctx.strokeRect(bb.x - 3, bb.y - 3, bb.w + 6, bb.h + 6);
-      if (screen.sel.t === 'text') {   // drag this edge to set where the text wraps
-        const h = textHandle(screen.sel, W);
-        ctx.setLineDash([]); ctx.fillStyle = '#fff'; ctx.lineWidth = 1.2; ctx.fillRect(h.x - 2.5, h.y - 6, 5, 12); ctx.strokeRect(h.x - 2.5, h.y - 6, 5, 12);
-      }
+      if (screen.sel.t === 'text') drawGrips(ctx, screen.sel, W, screen.s || 1);   // drag these edges to set where the text wraps
       ctx.restore();
     }
   }
@@ -478,11 +579,15 @@ function bboxOf(m, W) {
   if (m.t === 'note') return m.hl ? { ...m.hl } : { x: m.ax - 5, y: m.ay - 5, w: 10, h: 10 };
   return null;
 }
-function textHandle(m, W) { const bb = bboxOf(m, W); return { x: bb.x + bb.w + 3, y: bb.y + Math.min(bb.h / 2, 10), top: bb.y, bottom: bb.y + bb.h }; }
-// A text box never runs off the page: it stays inside on the right and moves up from the bottom edge.
+// A text box never runs off the page: it stays inside on the right, keeping its width if it has one, and moves up from the bottom edge.
+// One line of words only needs room for the words: near the edge the empty part of its box gives way, and m.bwFull remembers the width to go back to.
 function keepOnPage(m, W, H) {
-  m.x = r1(clamp(m.x, 0, W - 30));
-  if (m.bw) m.bw = r1(Math.min(m.bw, W - m.x - 6));
+  if (m.bw) {
+    const want = m.bwFull || m.bw, one = textLayout({ ...m, x: 0, bw: want }, 1e6), need = one.lines.length === 1 ? Math.min(m.bw, Math.ceil(one.ink) + 1) : m.bw;
+    m.x = r1(clamp(m.x, 0, Math.max(0, W - need - 6)));
+    m.bw = r1(Math.min(want, W - m.x - 6));
+    if (m.bw < want) m.bwFull = want; else delete m.bwFull;
+  } else { delete m.bwFull; m.x = r1(clamp(m.x, 0, W - 30)); }
   m.y = r1(clamp(m.y, 0, Math.max(0, H - textLayout(m, W).h - 2)));
 }
 function distToSeg(px, py, a, b) {
@@ -495,10 +600,9 @@ function hitMark(pg, x, y, slop) {
   for (const b of pg.boxes || []) if (!b.n.ro && x >= b.x && x <= b.x + b.w && y >= b.y && y <= b.y + b.h) return b.n;
   for (let i = marks.length - 1; i >= 0; i--) {
     const m = marks[i];
-    if (m.t === 'pen') {
-      const p = m.pts;
-      for (let j = 0; j < p.length; j++) if (distToSeg(x, y, p[j], p[Math.min(j + 1, p.length - 1)]) <= m.w / 2 + slop) return m;
-    } else {
+    const shape = hitShape(m, x, y, slop, pg.W);
+    if (shape) return m;
+    if (shape === null) {
       const bb = bboxOf(m, pg.W);
       if (bb && x >= bb.x - slop && x <= bb.x + bb.w + slop && y >= bb.y - slop && y <= bb.y + bb.h + slop) return m;
     }
@@ -514,6 +618,11 @@ const thumbCache = new Map();
 // in the turned page's points, so every place that draws a page asks for its viewport here.
 const rotOf = (f, p) => (f && f.rot && f.rot[p]) || 0;
 const vpRot = (f, p, page, scale) => page.getViewport({ scale, rotation: ((page.rotate || 0) + rotOf(f, p)) % 360 });
+// A crooked scan straightened (f.skew[page]: a small turn in degrees, clockwise, about the middle of the page). The page keeps its size and marks are
+// kept in the straightened page's points, so every place that draws a page passes this on to pdf.js, and the screen and the export come out the same.
+const skewOf = (f, p) => (f && f.skew && f.skew[p]) || 0;
+const skewXf = (f, p, vp) => { const a = skewOf(f, p) * Math.PI / 180; if (!a) return undefined; const c = Math.cos(a), s = Math.sin(a), x = vp.width / 2, y = vp.height / 2; return [c, s, -s, c, x - c * x + s * y, y - s * x - c * y]; };
+const vpDraw = (f, p, page, scale) => { const viewport = vpRot(f, p, page, scale); return { viewport, transform: skewXf(f, p, viewport) }; };
 const viewable = f => f.kind === 'pdf' || f.kind === 'img';
 const fileByPath = (st, path) => st.files.find(f => f.path === path);
 function defaultLayout(st) {
@@ -524,7 +633,7 @@ function defaultLayout(st) {
 }
 const layoutOf = st => st.layout || defaultLayout(st);
 function pageMarked(st, path, p) { const f = fileByPath(st, path); return !!f && (((f.marks[p] || []).length > 0) || !!(f.kami && f.kami[p]) || !!(f.scan && f.scan.found && f.scan.found.some(g => g.page === p)) || !!(f.hand && f.hand.page === p)); }
-const docMarked = (st, d) => d.pages.some(([path, p]) => pageMarked(st, path, p));
+const docMarked = (st, d) => d.pages.some(([path, p]) => pageMarked(st, path, p) || lostPages(fileByPath(st, path)).length > 0);
 function batchHasMarks() { return !!batch && batch.students.some(st => st.files.some(f => fileMarked(f))); }
 // Left out: chosen by Taylor, or (by default) a file with no marks at all while other papers are marked.
 function docIn(st, d) {
@@ -568,13 +677,29 @@ function moveFileNow(path, key) {
   src.files.splice(src.files.indexOf(f), 1); dst.files.push(f);
   return { src, dst, f };
 }
-function moveFile(st, path, dst) {
+const wordCopy = st => st.files.find(f => f.virtual && f.kind === 'docx');   // this student's copy of her Word rubric
+async function moveFile(st, path, dst) {
+  const a = shownName(st, batch.students.indexOf(st)), b = shownName(dst, batch.students.indexOf(dst)), f0 = fileByPath(st, path);
+  if (!f0 || st === dst || dst.files.some(f => f.path === path)) return toast(dst.files.some(f => f.path === path) ? b + ' already has this file' : 'Couldn’t move that file');
+  await Promise.all([...wordSaves].map(s => s()));   // boxes highlighted a moment ago count
+  // a scored Word rubric that was in the wrong folder takes its score with it, if there's room for it there. If not, the score stays and she's told below.
+  const ws = wordScore(f0), carried = !!ws && ws.total != null && ownGrade(st).total === ws.total && !hasOwnScore(dst) && !noScore(dst);
+  if (carried) { st.grade.points = ''; st.grade.rubric.forEach((_, k) => touchGrade(st, k)); st.grade.rubric = []; touchGrade(st); }
+  // Her score, comment and status may be about this file or about another one the student keeps, so she says. What's already on the other student is never written over.
+  const said = gradeWords(st), others = st.files.filter(x => !x.virtual && x !== f0).length, clash = said.length > 0 && gradeHasWork(dst.grade);
+  const take = said.length > 0 && !clash && await askDlg(a + ' has ' + wordsJoin(said) + '.\n\nMove ' + (said.length > 1 ? 'them' : 'it') + ' to ' + b + ' with this file?' + (others ? '\n\n' + a + ' still has ' + others + ' other file' + (others === 1 ? '' : 's') + '. Leave ' + (said.length > 1 ? 'them' : 'it') + ' if ' + (said.length > 1 ? 'they’re' : 'it’s') + ' about ' + (others === 1 ? 'that one' : 'those') + '.' : ''), { ok: 'Move to ' + b, cancel: 'Leave on ' + a });
   const L0 = layoutOf(st), m = moveFileNow(path, dst.key);
-  if (!m) return toast(dst.files.some(f => f.path === path) ? dst.key + ' already has this file' : 'Couldn’t move that file');
+  if (!m) return toast('Couldn’t move that file');
   const { f } = m;
-  // a scored Word rubric that was in the wrong folder takes its score with it
-  const ws = wordScore(f);
-  if (ws && ws.total != null && ownGrade(st).total === ws.total) { st.grade.points = ''; st.grade.rubric = []; }
+  if (take) {   // answers about what's written on the papers stay with both, since she may keep another paper
+    const g = st.grade;
+    dst.grade = g; st.grade = { rubric: [], points: '', comment: '', ...(g.reads ? { reads: { ...g.reads } } : {}) };
+    touchGrade(st);
+    // Her Word rubric copy holds the score as highlights. Left behind it would give the score straight back, so the two copies change places.
+    const c = wordCopy(st), c2 = wordCopy(dst);
+    if (c && c.edited) for (const [x, to] of [[c, dst], [c2, st]]) if (x && moveFileNow(x.path, to.key)) (batch.moved ||= {})[x.path] = to.key;
+  }
+  if (carried && !f0.virtual) (dst.grade.reads ||= {})[readKey(wordTableRead(f0))] = 1;   // her OK goes with the score: it's the same boxes she already counted, so they don't wait for a question on the new student
   if (st.layout || L0.some(d => d.pages.some(([q]) => q !== path) && d.pages.some(([q]) => q === path))) {
     st.layout = L0.map(d => ({ ...d, pages: d.pages.filter(([q]) => q !== path) })).filter(d => d.pages.length);
     if (!st.layout.length) st.layout = null;
@@ -585,24 +710,26 @@ function moveFile(st, path, dst) {
   if (batch.lightPg) for (const k of Object.keys(batch.lightPg)) if (k.startsWith(st.key + '|' + path + '|')) { batch.lightPg[dst.key + k.slice(st.key.length)] = batch.lightPg[k]; delete batch.lightPg[k]; }
   (batch.moved ||= {})[path] = dst.key;
   refound(st); refound(dst); wordScoresAll(); saveNow(); renderList(); openStudent(cur);
-  toast('Moved ' + f.name + ' to ' + shownName(dst, batch.students.indexOf(dst)));
+  toast('Moved ' + fileShown(st, f.name) + ' to ' + b + (take ? ' with ' + wordsJoin(said) : ''));
+  if (clash) sayDlg(a + ' keeps ' + wordsJoin(said) + ', because ' + b + ' already has their own. Nothing was written over. Change either one if it belongs with this file.');
 }
 function openMoveFile(st, path) {
   const f = fileByPath(st, path); if (!f) return;
-  const others = batch.students.map((s, i) => ({ s, i })).filter(x => x.s !== st);
-  openDlg('<div class="bh"><h2>Move ' + esc(f.name) + '</h2><button class="icon" data-cancel aria-label="Close" style="margin-left:auto">✕</button></div>' +
-    '<div class="bb"><p class="muted" style="margin:0 0 10px;font-size:14px">The file goes to that student with your marks on it. Moving it back works the same way.</p>' +
-    '<input class="btn" id="mvFind" placeholder="Type a name" autocomplete="off" style="width:100%;margin-bottom:8px"><div id="mvList" class="mvlist"></div></div>' +
+  const anon = anonOn(), others = batch.students.map((s, i) => ({ s, i, label: shownName(s, i) })).filter(x => x.s !== st);
+  if (anon) others.sort((a, b) => anonPos(a.i) - anonPos(b.i));
+  openDlg('<div class="bh"><h2>Move ' + esc(fileShown(st, f.name)) + '</h2><button class="icon" data-cancel aria-label="Close" style="margin-left:auto">✕</button></div>' +
+    '<div class="bb"><p class="muted" style="margin:0 0 10px;font-size:14px">The file goes to that student with your marks on it. If this student has a score or comment, you’ll be asked whether it goes too. Moving it back works the same way.</p>' +
+    '<input class="btn" id="mvFind" placeholder="' + (anon ? 'Type a paper number' : 'Type a name') + '" autocomplete="off" style="width:100%;margin-bottom:8px"><div id="mvList" class="mvlist"></div></div>' +
     '<div class="bf"><button class="btn" data-cancel>Cancel</button></div>', true);
   const draw = () => {
     const q = $('#mvFind').value.toLowerCase().split(/\s+/).filter(Boolean);
-    const list = others.filter(x => q.every(w => x.s.key.toLowerCase().split(/[\s,_-]+/).some(y => y.startsWith(w))));
-    $('#mvList').innerHTML = list.length ? list.map((x, k) => '<button class="mvrow' + (k === 0 && q.length ? ' top' : '') + '" data-mvto="' + x.i + '">' + esc(x.s.key) + '<span class="muted">' + x.s.files.length + (x.s.files.length === 1 ? ' file' : ' files') + '</span></button>').join('') : '<p class="muted">No name matches.</p>';
+    const list = others.filter(x => q.every(w => x.label.toLowerCase().split(/[\s,_-]+/).some(y => y.startsWith(w))));
+    $('#mvList').innerHTML = list.length ? list.map((x, k) => '<button class="mvrow' + (k === 0 && q.length ? ' top' : '') + '" data-mvto="' + x.i + '">' + esc(x.label) + '<span class="muted">' + x.s.files.length + (x.s.files.length === 1 ? ' file' : ' files') + '</span></button>').join('') : '<p class="muted">No name matches.</p>';
   };
   draw();
   const box = $('#dlgBox');
   $('#mvFind').oninput = draw;
-  $('#mvFind').onkeydown = e => { if (e.key === 'Enter') { const b = $('#mvList [data-mvto]'); if (b) b.click(); } };
+  $('#mvFind').onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); const b = $('#mvList [data-mvto]'); if (b) b.click(); } };   // or this Enter would also press the button on the question that comes next
   box.onclick = e => {
     if (e.target.closest('[data-cancel]')) return closeDlg();
     const b = e.target.closest('[data-mvto]'); if (!b) return;
@@ -640,7 +767,7 @@ async function openStudent(i, filePath) {
     const gs = $('#gapScan'); if (gs) gs.onclick = () => { scanInto = true; scanFor = null; $('#scanIn').click(); };
   }
   curMedia = null;
-  for (const f of st.files.filter(f => f.kind === 'media')) { if (f.added) paper.insertAdjacentHTML('beforeend', '<div class="fhead"><span style="color:var(--fg)">' + esc(f.name) + '</span>' + addTag(f) + '</div>'); paper.appendChild(mediaCard(st, f)); }
+  for (const f of st.files.filter(f => f.kind === 'media')) { if (f.added || carryTag(f)) paper.insertAdjacentHTML('beforeend', '<div class="fhead"><span style="color:var(--fg)">' + esc(f.name) + '</span>' + (f.added ? addTag(f) : '') + carryTag(f) + '</div>'); paper.appendChild(mediaCard(st, f)); }
   const rd = refDoc();
   if (rd) { const det = document.createElement('details'); det.className = 'refd'; det.open = store.get('gs.rdOpen', true); det.innerHTML = '<summary>Your document: ' + esc(rd.name) + '</summary>'; det.ontoggle = () => store.set('gs.rdOpen', det.open); paper.appendChild(det); docxCard(rd, rd.name).then(c => { c.querySelector('.fhead').remove(); det.appendChild(c); }); }
   for (const r of refsFor(st)) { const hold = document.createElement('div'); paper.appendChild(hold); refCard(r, st).then(c => { if (token === openToken) hold.replaceWith(c); }); }
@@ -652,8 +779,8 @@ async function openStudent(i, filePath) {
       if (token !== openToken) { doc.destroy(); return; }
       docs.push(doc); docMap.set(f.path, doc); f.numPages = doc.numPages;
     } catch (e) {
-      f.bad = /password/i.test(e && e.message) ? 'it’s password-protected' : 'it couldn’t be opened';
-      paper.insertAdjacentHTML('beforeend', '<div class="nofile" style="margin-bottom:12px"><b>' + esc(f.name) + '</b>: ' + f.bad + '.</div>');
+      pdfBad(f, e);
+      paper.appendChild(otherCard(f));
     }
   }
   if (token !== openToken) return;
@@ -661,7 +788,7 @@ async function openStudent(i, filePath) {
     if (it.f) {   // a Word, text or other file, as one card
       const f = it.f, c = f.kind === 'docx' ? await wordCard(st, f) : f.kind === 'text' ? textCard(f) : otherCard(f);
       if (token !== openToken) return;
-      const fh = c.querySelector('.fhead'); if (fh && !f.virtual && !f.rubric) fh.insertAdjacentHTML('beforeend', moveLink(f));
+      const fh = c.querySelector('.fhead'); if (fh && !f.virtual && !f.rubric) fh.insertAdjacentHTML('beforeend', carryTag(f) + moveLink(f));
       paper.appendChild(c);
       if (filePath && f.path === filePath) c.scrollIntoView({ block: 'start' });
       continue;
@@ -669,7 +796,7 @@ async function openStudent(i, filePath) {
     const d = it.d, di = it.di, on = docIn(st, d), auto = docAuto(st, d), af = d.file && fileByPath(st, d.file);
     const one = af && d.pages.every(([q]) => q === af.path) && !af.virtual;
     const head = document.createElement('div'); head.className = 'fhead';
-    head.innerHTML = '<span style="color:var(--fg)">' + esc(d.name) + '</span><span>' + d.pages.length + (d.pages.length === 1 ? ' page' : ' pages') + '</span>' + (af && af.added ? addTag(af) : '') +
+    head.innerHTML = '<span style="color:var(--fg)">' + esc(d.name) + '</span><span>' + d.pages.length + (d.pages.length === 1 ? ' page' : ' pages') + '</span>' + (af && af.added ? addTag(af) : '') + carryTag(batch.carry && d.pages.map(([q]) => fileByPath(st, q)).find(f => f && !f.virtual && batch.carry.flags[f.path])) +
       (on ? '' : '<span class="pill warn" style="font-size:12px;padding:2px 8px;border-radius:999px;background:var(--warn-soft);color:var(--warn)">' + (auto ? 'No marks, left out' : 'Left out') + '</span>') +
       '<span style="flex:1"></span>' + (on || auto ? '<button class="link" style="font-size:13px;margin-right:10px" data-rotdoc="' + di + '" title="Turn every page of this file a quarter turn to the right">⟳ Turn all pages</button>' : '') + (one ? moveLink(af) : '') + '<button class="link" style="font-size:13px" data-inout="' + di + '">' + (on ? 'Leave out' : 'Bring back') + '</button>';
     paper.appendChild(head);
@@ -678,7 +805,10 @@ async function openStudent(i, filePath) {
       if (token !== openToken) return;
       const f = fileByPath(st, path), doc = docMap.get(path);
       if (!f || !doc || p >= doc.numPages) continue;
-      const page = await doc.getPage(p + 1);
+      let page;
+      try { page = await doc.getPage(p + 1); } catch (e) { if (token !== openToken) return; (f.badPages ||= []).includes(p + 1) || f.badPages.push(p + 1); paper.insertAdjacentHTML('beforeend', '<div class="nofile" style="margin-bottom:12px">Page ' + (p + 1) + ' of <b>' + esc(f.name) + '</b> couldn’t be read. The student may need to turn it in again.</div>'); continue; }   // she moved on, which closes this student's files; or the page is damaged
+      if (token !== openToken) return;
+      await scanCheck(f, p, page);
       if (token !== openToken) return;
       const vp = vpRot(f, p, page, 1);
       const pg = { file: f, idx: p, page, W: vp.width, H: vp.height, side: sideFor(vp.width), marks: () => (f.marks[p] ||= []) };
@@ -688,11 +818,11 @@ async function openStudent(i, filePath) {
       wrap.appendChild(c); paper.appendChild(wrap);
       pg.wrap = wrap; pg.canvas = c;
       pages.push(pg);
-      lightChip(pg); lightChips(); rotChip(pg, d.pages.length > 1 ? d.pages.findIndex(x => x[0] === path && x[1] === p) + 1 : 0);
+      lightChip(pg); lightChips(); rotChip(pg, d.pages.length > 1 ? d.pages.findIndex(x => x[0] === path && x[1] === p) + 1 : 0); scanNote(pg);
       pg.extra = (f.kami && f.kami[p] && f.kami[p].notes) || [];
       bindPage(pg);
       await renderPage(pg);
-      if (filePath && f.path === filePath && p === 0) wrap.scrollIntoView({ block: 'start' });
+      if (filePath && f.path === filePath && p === 0) (d.pages[0][0] === filePath ? head : wrap).scrollIntoView({ block: 'start' });   // from its bar, with Mark late and Remove in view
     }
   }
   renderTools();
@@ -727,16 +857,18 @@ $('#paper').addEventListener('click', e => {
 
 /* ---------------- arrange pages: combine files, drag pages, take pages out ---------------- */
 async function thumbFor(path, p, extra) {
-  const f = batch && fileByPath(batch.students[cur], path), r = (rotOf(f, p) + (extra || 0)) % 360, k = path + '|' + p + '|' + r;
-  if (thumbCache.has(k)) return thumbCache.get(k);
+  const f = batch && fileByPath(batch.students[cur], path), r = (rotOf(f, p) + (extra || 0)) % 360, k = path + '|' + p + '|' + r + (skewOf(f, p) ? '|' + skewOf(f, p) : '');
+  const anon = anonOn();   // these carry their covers, which can change, so they're drawn each time
+  if (!anon && thumbCache.has(k)) return thumbCache.get(k);
   const doc = docMap.get(path); if (!doc) return '';
   const page = await doc.getPage(p + 1), at = sc => page.getViewport({ scale: sc, rotation: ((page.rotate || 0) + r) % 360 });
   const vp = at(180 / at(1).width);
   const c = document.createElement('canvas'); c.width = Math.ceil(vp.width); c.height = Math.ceil(vp.height);
   const ctx = c.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
-  await page.render({ canvasContext: ctx, viewport: vp, annotationMode: pdfjsLib.AnnotationMode.ENABLE }).promise;
+  await page.render({ canvasContext: ctx, viewport: vp, transform: skewXf(f, p, vp), annotationMode: pdfjsLib.AnnotationMode.ENABLE }).promise;
+  if (anon) await anonPaint(ctx, batch.students[cur], f, p, page, vp, extra);
   const u = c.toDataURL('image/jpeg', 0.7);
-  thumbCache.set(k, u);
+  if (!anon) thumbCache.set(k, u);
   return u;
 }
 function openArrange() {
@@ -744,7 +876,7 @@ function openArrange() {
   const start = layoutOf(st).map(d => ({ name: d.name, file: d.file, pages: d.pages.map(x => x.slice()), out: docAuto(st, d) ? null : !docIn(st, d) }));
   let L = JSON.parse(JSON.stringify(start)), tray = [];
   const lp = { ...(batch.lightPg || {}) }, lit = lightLive(st);   // page lighting choices, kept on Save
-  const nameOf = path => (fileByPath(st, path) || { name: path }).name;
+  const nameOf = path => fileShown(st, (fileByPath(st, path) || { name: path }).name);
   let drag = null, sel = new Set(), anchor = null, size = +store.get('gs.arrsize', 1);
   const turns = new Map();   // pages turned here, in quarter turns to the right; done on Save
   const turnKey = ([path, p]) => path + '|' + p;
@@ -757,7 +889,7 @@ function openArrange() {
   const seqNow = () => fileSeq(st).map(it => it.f ? 'f:' + it.f.path : L[it.di]);
   let strip = seqNow(), everyone = false;
   const seqDefault = () => { const keep = st.forder; st.forder = null; const v = fileSeq(st).map(it => it.f ? 'f:' + it.f.path : L[it.di]); st.forder = keep; return v; };
-  const cardName = id => { const f = fileByPath(st, id.slice(2)); return f ? f.name : id.slice(2); };
+  const cardName = id => { const f = fileByPath(st, id.slice(2)); return fileShown(st, f ? f.name : id.slice(2)); };
   const kindOf = id => { const f = fileByPath(st, id.slice(2)); return !f ? '' : f.kind === 'docx' ? 'Word' : f.kind === 'text' ? 'Text' : 'File'; };
   const drawStrip = () => {
     strip = strip.filter(x => typeof x === 'string' || L.includes(x));
@@ -766,7 +898,7 @@ function openArrange() {
     el.hidden = !strip.some(x => typeof x === 'string');
     el.innerHTML = '<div class="aseqh"><b>Order of files</b><span class="muted">Word and other files sit among the page files in this order.</span><span class="sp"></span>' +
       '<label class="chk" style="margin:0;font-size:13px"><input type="checkbox" data-sqall' + (everyone ? ' checked' : '') + '> Use this order for every student</label></div>' +
-      '<div class="aseqr">' + strip.map((x, k) => '<span class="aseqc' + (typeof x === 'string' ? ' card' : '') + '"><b>' + (k + 1) + '</b> ' + esc(typeof x === 'string' ? cardName(x) : x.name) + '<span class="muted">' + (typeof x === 'string' ? kindOf(x) : x.pages.length + (x.pages.length === 1 ? ' page' : ' pages')) + '</span>' +
+      '<div class="aseqr">' + strip.map((x, k) => '<span class="aseqc' + (typeof x === 'string' ? ' card' : '') + '"><b>' + (k + 1) + '</b> ' + esc(typeof x === 'string' ? cardName(x) : fileShown(st, x.name)) + '<span class="muted">' + (typeof x === 'string' ? kindOf(x) : x.pages.length + (x.pages.length === 1 ? ' page' : ' pages')) + '</span>' +
         '<button data-sq="' + k + ':-1" title="Earlier"' + (k ? '' : ' disabled') + '>←</button><button data-sq="' + k + ':1" title="Later"' + (k < strip.length - 1 ? '' : ' disabled') + '>→</button></span>').join('') + '</div>';
   };
   const render = () => {
@@ -780,7 +912,7 @@ function openArrange() {
       (items.length ? '' : '<div class="empty">' + (where === 'tray' ? 'Pages you take out land here.' : 'Drag pages here') + '</div>') + '</div></div>';
     $('#arrBody').style.setProperty('--aw', ([90, 130, 190][size] || 130) + 'px');
     $('#arrBody').innerHTML = '<div class="acols">' + L.map((d, di) => col(d.pages, di,
-      '<div class="ahead"><input type="text" data-name="' + di + '" value="' + esc(d.name) + '" aria-label="File name">' +
+      '<div class="ahead"><input type="text" data-name="' + di + '" value="' + esc(fileShown(st, d.name)) + '" aria-label="File name"' + (anonOn() ? ' readonly title="File names can’t be changed while names are hidden"' : '') + '>' +
       '<label class="chk" style="margin:4px 0 0;font-size:13px"><input type="checkbox" data-in="' + di + '"' + (docIn(st, d) ? ' checked' : '') + '> Send back to the student</label>' +
       (L.length > 1 ? '<button class="link" style="font-size:12px" data-delfile="' + di + '">Remove this file (pages go to the tray)</button>' : '') + '</div>')).join('') +
       col(tray, 'tray', '<div class="ahead"><b>Taken out</b><div class="muted" style="font-size:12px">Drag back to use again</div></div>') + '</div>';
@@ -827,13 +959,14 @@ function openArrange() {
       (lit ? '<button class="btn sm" data-alight title="Turn lighting off or on for the picked pages">☀ Lighting on/off</button>' : '') +
       '<span class="sp"></span><span id="arrSelInfo"></span></div>' +
     '<div id="arrSeq" class="aseq" hidden></div>' +
-    '<p class="muted sphint" style="margin:8px 18px 0">Click a page to pick it, Shift-click to pick a run, ⌘/Ctrl-click to add one. Drag the picked pages, or use the buttons or the ← → keys. Double-click a page to see it big.</p>' +
+    '<p class="muted sphint" style="margin:8px 18px 0">Click a page to pick it, Shift-click to pick a run, ' + modKey() + '-click to add one. Drag the picked pages, or use the buttons or the ← → keys. Double-click a page to see it big.</p>' +
     '<div class="bb" id="arrBody"></div>' +
     '<div class="bf" style="justify-content:space-between"><span style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" data-combine>Combine into one file</button><button class="btn" data-newfile>+ New file</button><button class="btn" data-reset>Back to how it was turned in</button></span>' +
     '<span style="display:flex;gap:8px"><button class="btn" data-cancel>Cancel</button><button class="btn primary" data-save>Save</button></span></div>');
   const box = $('#dlgBox'); box.classList.add('arrbox');
   render();
   box.tabIndex = -1; box.focus();
+  const live = { signal: dlgOff.signal };
   box.addEventListener('dragstart', e => {
     const t = e.target.closest('.ath'); if (!t) return;
     const it = itemAt(t);
@@ -842,8 +975,8 @@ function openArrange() {
     e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', 'page');
     if (sel.size > 1) { const gh = document.createElement('div'); gh.className = 'spghost'; gh.textContent = sel.size + ' pages'; document.body.appendChild(gh); e.dataTransfer.setDragImage(gh, 20, 20); setTimeout(() => gh.remove(), 0); }
     setTimeout(() => { for (const el of box.querySelectorAll('.ath.sel')) el.classList.add('dragging'); }, 0);
-  });
-  box.addEventListener('dragend', () => { drag = null; for (const x of box.querySelectorAll('.dragging,.ins,.insEnd')) x.classList.remove('dragging', 'ins', 'insEnd'); });
+  }, live);
+  box.addEventListener('dragend', () => { drag = null; for (const x of box.querySelectorAll('.dragging,.ins,.insEnd')) x.classList.remove('dragging', 'ins', 'insEnd'); }, live);
   const dropIndex = (zone, e) => {
     const kids = [...zone.querySelectorAll('.ath')];
     for (let k = 0; k < kids.length; k++) {
@@ -859,7 +992,7 @@ function openArrange() {
     for (const x of box.querySelectorAll('.ins,.insEnd')) x.classList.remove('ins', 'insEnd');
     const k = dropIndex(zone, e), kids = zone.querySelectorAll('.ath');
     if (kids[k]) kids[k].classList.add('ins'); else zone.classList.add('insEnd');
-  });
+  }, live);
   box.addEventListener('drop', e => {
     const zone = e.target.closest('.adrop'); if (!zone || !drag) return;
     e.preventDefault();
@@ -869,10 +1002,10 @@ function openArrange() {
     for (const l of lists()) for (let j = l.length - 1; j >= 0; j--) if (sel.has(l[j])) l.splice(j, 1);
     dst.splice(before ? dst.indexOf(before) : dst.length, 0, ...moving);
     drag = null; render();
-  });
-  box.addEventListener('input', e => { if (e.target.dataset.name != null) L[+e.target.dataset.name].name = e.target.value; });
-  box.addEventListener('change', e => { if (e.target.dataset.in != null) L[+e.target.dataset.in].out = !e.target.checked; if (e.target.dataset.sqall != null) everyone = e.target.checked; });
-  box.ondblclick = e => { const th = e.target.closest('.ath'); if (th && !e.target.closest('[data-rm]')) { const [path, p] = itemAt(th); bigPage(docMap.get(path), p, thumbCache.get(path + '|' + p)); } };
+  }, live);
+  box.addEventListener('input', e => { if (e.target.dataset.name != null) L[+e.target.dataset.name].name = e.target.value; }, live);
+  box.addEventListener('change', e => { if (e.target.dataset.in != null) L[+e.target.dataset.in].out = !e.target.checked; if (e.target.dataset.sqall != null) everyone = e.target.checked; }, live);
+  box.ondblclick = e => { const th = e.target.closest('.ath'); if (th && !e.target.closest('[data-rm]')) { const [path, p] = itemAt(th); bigPage(docMap.get(path), p, thumbCache.get(path + '|' + p), null, { st, f: fileByPath(st, path), turned: 90 * (turns.get(path + '|' + p) || 0) }); } };
   box.onkeydown = e => {
     if (/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName) || !sel.size || $('#spBig')) return;
     if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); move(-1); }
@@ -962,25 +1095,33 @@ function fitScale(pg) {
   return Math.max(0.3, Math.min(2.2, s)) * zoom;
 }
 async function renderPage(pg) {
-  const s = fitScale(pg), dpr = window.devicePixelRatio || 1;
+  const s = fitScale(pg), dpr = window.devicePixelRatio || 1, job = pg.job = (pg.job || 0) + 1;
   pg.s = s;
-  const vp = vpRot(pg.file, pg.idx, pg.page, s * dpr);
-  const bmp = document.createElement('canvas');
-  bmp.width = Math.ceil(vp.width); bmp.height = Math.ceil(vp.height);
-  const bctx = bmp.getContext('2d'); bctx.fillStyle = '#fff'; bctx.fillRect(0, 0, bmp.width, bmp.height);
-  try { await pg.page.render({ canvasContext: bctx, viewport: vp, annotationMode: pdfjsLib.AnnotationMode.ENABLE }).promise; } catch (e) { if (e && e.name === 'RenderingCancelledException') return; }
-  pg.bmp = bmp;
-  if (anonOn() && !pg.covers) pg.covers = await anonCovers(batch.students[cur], pg);
+  // The page takes its new size at once, so a stroke started now lands where it's drawn. The old picture stands in until the new one is ready.
   const c = pg.canvas;
   c.width = Math.ceil((pg.W + pg.side) * s * dpr); c.height = Math.ceil(pg.H * s * dpr);
   c.style.width = (pg.W + pg.side) * s + 'px'; c.style.height = pg.H * s + 'px';
   if (pg.rchip) pg.rchip.style.left = pg.W * s + 'px';
+  if (anonOn() && !pg.covers) pg.bmp = null;   // nothing shows until its name covers are ready
+  draw(pg);
+  const vp = vpRot(pg.file, pg.idx, pg.page, s * dpr);
+  const bmp = document.createElement('canvas');
+  bmp.width = Math.ceil(vp.width); bmp.height = Math.ceil(vp.height);
+  const bctx = bmp.getContext('2d'); bctx.fillStyle = '#fff'; bctx.fillRect(0, 0, bmp.width, bmp.height);
+  try { await pg.page.render({ canvasContext: bctx, viewport: vp, transform: skewXf(pg.file, pg.idx, vp), annotationMode: pdfjsLib.AnnotationMode.ENABLE }).promise; } catch (e) { if (e && e.name === 'RenderingCancelledException') return; }
+  if (job !== pg.job) return;   // a newer size or turn came along while this one was drawing
+  loadLines(pg);
+  if (anonOn() && !pg.covers) pg.covers = await anonCovers(batch.students[cur], pg);
+  if (job !== pg.job) return;
+  pg.bmp = bmp;
   draw(pg);
 }
-function draw(pg, live) {
+// part: just this box of the page (in points) is drawn again, which keeps a pen stroke quick on a large page.
+function draw(pg, live, part) {
   if (!pg.bmp) return;
   const c = pg.canvas, ctx = c.getContext('2d'), k = c.width / (pg.W + pg.side);
   ctx.setTransform(1, 0, 0, 1, 0, 0);
+  if (part) { const x = Math.floor(part.x * k), y = Math.floor(part.y * k); ctx.save(); ctx.beginPath(); ctx.rect(x, y, Math.ceil((part.x + part.w) * k) - x, Math.ceil((part.y + part.h) * k) - y); ctx.clip(); }
   ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
   const src = lightBmp(pg);
   ctx.drawImage(src, 0, 0, src.width, src.height, 0, 0, pg.W * k, pg.H * k);
@@ -988,8 +1129,9 @@ function draw(pg, live) {
   const anon = anonOn() && batch.students[cur];
   if (anon && pg.covers) { ctx.fillStyle = '#111'; for (const r of pg.covers) ctx.fillRect(r.x, r.y, r.w, r.h); }
   const marks = pg.marks().concat(anon ? scrubMarks(pg.extra || [], anonRx(anon)) : pg.extra || [], live || [], pg.pending ? [pg.pending] : []);
-  pg.boxes = drawMarks(ctx, marks, pg.W, pg.H, pg.side, { sel: selected && selected.page === pg ? selected.mark : null, editing: pg.editing });
+  pg.boxes = drawMarks(ctx, marks, pg.W, pg.H, pg.side, { sel: selected && selected.page === pg && selected.mark !== pg.editing ? selected.mark : null, editing: pg.editing, s: pg.s });
   if (pg.ghost) { const b = pg.ghost; ctx.save(); ctx.strokeStyle = '#1F6FB2'; ctx.setLineDash([4, 3]); ctx.lineWidth = 1; ctx.strokeRect(b.x, b.y, b.w, b.h); ctx.restore(); }
+  if (part) ctx.restore();
 }
 function redrawAll() { for (const pg of pages) draw(pg); }
 let resizeT;
@@ -998,43 +1140,48 @@ window.addEventListener('resize', () => { clearTimeout(resizeT); resizeT = setTi
 /* ---------------- undo and redo ---------------- */
 // Each step remembers one page's marks as they were (and its turn, for a rotation), so undo and redo swap them back.
 let redoStack = [];
-const stepOf = (file, idx, withRot) => ({ file, idx, before: JSON.stringify(file.marks[idx] || []), rot: withRot ? rotOf(file, idx) : undefined });
+const stepOf = (file, idx, withRot) => ({ file, idx, before: JSON.stringify(file.marks[idx] || []), rot: withRot ? rotOf(file, idx) : undefined, skew: withRot ? skewOf(file, idx) : 0, cov: withRot ? coverCopy(file, idx) : undefined });
 function pushUndo(u) { undoStack.push(u); if (undoStack.length > 200) undoStack.shift(); redoStack = []; renderTools(); }
 function snap(pg) { pushUndo(stepOf(pg.file, pg.idx)); }
-function changed(pg) { draw(pg); saveSoon(); renderList(); }
+function changed(pg) { scanned = false; draw(pg); gradeMarksChanged(pg.file); saveSoon(); renderList(); }
 function undo() { swapStep(undoStack, redoStack); }
 function redo() { swapStep(redoStack, undoStack); }
 function swapStep(from, to) {
   commitEditors();
   const u = from.pop(); if (!u) return;
+  scanned = false;
   to.push(stepOf(u.file, u.idx, u.rot !== undefined));
   u.file.marks[u.idx] = JSON.parse(u.before);
   selected = null;
-  const turned = u.rot !== undefined && u.rot !== rotOf(u.file, u.idx);
-  if (turned) setRot(u.file, u.idx, u.rot);
+  const turned = u.rot !== undefined && (u.rot !== rotOf(u.file, u.idx) || (u.skew || 0) !== skewOf(u.file, u.idx));
+  if (turned) { setRot(u.file, u.idx, u.rot); setSkew(u.file, u.idx, u.skew); coverPut(u.file, u.idx, u.cov); thumbCache.clear(); }
   const pg = pages.find(p => p.file === u.file && p.idx === u.idx);
   if (pg) { if (turned) reshape(pg); else draw(pg); }
   else { const si = batch.students.findIndex(s => s.files.includes(u.file)); if (si >= 0 && si !== cur) openStudent(si); }
-  if (turned) rescanFile(u.file);
+  if (turned) rescanFile(u.file); else gradeMarksChanged(u.file);
   saveSoon(); renderList(); renderTools();
 }
 
 /* ---------------- turning pages ---------------- */
 // A turn of 90° clockwise (dir 1) or counterclockwise (dir -1). Marks turn with the page; text stays upright.
-function setRot(f, p, r) { r = ((r % 360) + 360) % 360; f.rot ||= {}; if (r) f.rot[p] = r; else delete f.rot[p]; }
+function setRot(f, p, r) { r = ((r % 360) + 360) % 360; coverTurn(f, p, r - rotOf(f, p)); f.rot ||= {}; if (r) f.rot[p] = r; else delete f.rot[p]; }
+function setSkew(f, p, a) { f.skew ||= {}; if (a) f.skew[p] = a; else delete f.skew[p]; }
 function turnMarks(marks, W, H, dir) {
   const pt = ([x, y]) => dir > 0 ? [r1(H - y), r1(x)] : [r1(y), r1(W - x)];
   const box = b => { const [ax, ay] = pt([b.x, b.y]), [bx, by] = pt([b.x + b.w, b.y + b.h]); return { x: Math.min(ax, bx), y: Math.min(ay, by), w: Math.abs(bx - ax), h: Math.abs(by - ay) }; };
   for (const m of marks) {
     if (m.t === 'pen') m.pts = m.pts.map(pt);
-    else if (m.t === 'hl' || m.t === 'oval') Object.assign(m, box(m));
+    else if (m.t === 'hl' || m.t === 'oval') { Object.assign(m, box(m)); if (m.rects) m.rects = m.rects.map(box); if (m.pts) m.pts = m.pts.map(pt); }
     else if (m.t === 'check') [m.x, m.y] = pt([m.x, m.y]);
-    else if (m.t === 'note') { [m.ax, m.ay] = pt([m.ax, m.ay]); if (m.hl) m.hl = box(m.hl); }
+    else if (m.t === 'note') { [m.ax, m.ay] = pt([m.ax, m.ay]); if (m.hl) m.hl = box(m.hl); if (m.rects) m.rects = m.rects.map(box); }
     else if (m.t === 'text') {
-      const L = textLayout(m, W), [cx, cy] = pt([m.x + L.w / 2, m.y + L.h / 2]);
-      if (m.bw) m.bw = Math.min(m.bw, H - 12);
+      const L = textLayout(m, W), [cx, cy] = pt([m.x + L.ink / 2, m.y + L.h / 2]);   // turns about the words, not the empty part of a wide box
+      const want = m.bwFull || m.bw;
+      if (m.bw) m.bw = Math.min(want, H - 12);
       const L2 = textLayout({ ...m, x: 0 }, H);
-      m.x = r1(cx - L2.w / 2); m.y = r1(cy - L2.h / 2); keepOnPage(m, H, W);
+      m.x = r1(cx - L2.ink / 2); m.y = r1(cy - L2.h / 2);
+      if (m.bw) { m.bw = Math.min(m.bw, Math.max(Math.ceil(L2.ink) + 1, 24, H - m.x - 6)); if (m.bw < want) m.bwFull = want; else delete m.bwFull; }   // near the edge a box gives up its empty part, so the words needn't move
+      keepOnPage(m, H, W);
     }
   }
 }
@@ -1062,14 +1209,52 @@ async function turnPages(f, list, dir) {
 function reshape(pg) {
   const vp = vpRot(pg.file, pg.idx, pg.page, 1);
   pg.W = vp.width; pg.H = vp.height; pg.side = sideFor(vp.width); pg.covers = null; pg.adj = null; pg.extra = [];
-  renderPage(pg);
+  renderPage(pg); scanNote(pg);
 }
 // Kami notes and typed grades are found again on the turned page.
 async function rescanFile(f) {
   const st = batch && batch.students.find(s => s.files.includes(f)); if (!st || !viewable(f)) return;
   try { f.scan = await scanFile(f, f.hand || setup.spot || null); if (f.hand) f.scan.hand = true; f.kami = f.scan.kami; } catch (e) { console.error(e); return; }
-  refound(st); renderList();
+  refound(st); renderList(); gradeShown(st);
   for (const pg of pages) if (pg.file === f) { pg.extra = (f.kami && f.kami[pg.idx] && f.kami[pg.idx].notes) || []; draw(pg); }
+}
+// The panel's total, without touching the comment box she may be typing in.
+function gradeShown(st) { const t = $('#grade .total'); if (t && st === batch.students[cur]) t.innerHTML = totalHtml(st); }
+// A grade lives in the mark that holds it. "page|words" for each of her marks with a grade in it.
+const gradeMarks = f => Object.entries(f.marks || {}).flatMap(([p, a]) => a.filter(m => (m.t === 'text' || m.t === 'note') && m.text && parseGrade(m.text, false)).map(m => p + '|' + m.text)).sort();
+const rereadTimers = new Map();
+let rereadQ = Promise.resolve(), rereadsLeft = 0;
+// When those marks change, the old reading goes this moment and the file is read again for the new one. Pen strokes and plain comments change nothing here.
+function gradeMarksChanged(f) {
+  if (!batch || !f || !viewable(f)) return;
+  const keys = gradeMarks(f);
+  if (keys.join('\0') === ((f.scan && f.scan.marksSig) || '')) return;
+  const st = batch.students.find(s => s.files.includes(f));
+  if (st && f.scan && f.scan.found) {
+    const stale = g => g.mark && !keys.includes(g.page + '|' + g.full);
+    if (f.scan.found.some(stale)) { f.scan.found = f.scan.found.filter(g => !stale(g)); f.scan.shots = f.scan.shots.filter(g => !stale(g)); refound(st); gradeShown(st); }
+  }
+  clearTimeout(rereadTimers.get(f));
+  rereadTimers.set(f, setTimeout(() => rereadNow(f), 250));
+}
+function rereadNow(f) {
+  clearTimeout(rereadTimers.get(f)); rereadTimers.delete(f);
+  rereadsLeft++;
+  rereadQ = rereadQ.then(async () => {
+    while (scanP) await scanP;
+    const was = f.scan;
+    await rescanFile(f);
+    if (batch && f.scan && f.scan !== was) gradeMarksChanged(f);   // marks she changed during the read
+  }).catch(e => console.error(e)).then(() => { rereadsLeft--; });
+  return rereadQ;
+}
+// Waits until everything she has marked so far has been read.
+const rereadsPending = () => rereadsLeft > 0 || rereadTimers.size > 0;
+async function rereadsDone() {
+  while (rereadsPending()) {
+    for (const f of [...rereadTimers.keys()]) rereadNow(f);
+    await rereadQ;
+  }
 }
 
 /* ---------------- pointer input on a page ---------------- */
@@ -1078,11 +1263,6 @@ function bindPage(pg) {
   const pt = e => { const r = c.getBoundingClientRect(); return [(e.clientX - r.left) / pg.s, (e.clientY - r.top) / pg.s]; };
   const onPage = (x, y) => x >= 0 && x <= pg.W && y >= 0 && y <= pg.H;
   let g = null;   // the gesture in progress
-  const onHandle = (x, y) => {
-    if (!selected || selected.page !== pg || selected.mark.t !== 'text') return false;
-    const h = textHandle(selected.mark, pg.W);
-    return Math.abs(x - h.x) < 6 && y >= h.top - 4 && y <= h.bottom + 4;
-  };
   c.addEventListener('pointerdown', e => {
     if (e.button !== 0) return;
     commitEditors();
@@ -1096,26 +1276,30 @@ function bindPage(pg) {
     if (tool !== 'select' && tool !== 'erase' && !onPage(x, y)) return;
     e.preventDefault();
     c.setPointerCapture(e.pointerId);
-    if (tool === 'pen') g = { m: { t: 'pen', color: COLORS[inkColor], w: penW, pts: [[r1(x), r1(y)]] } };
-    else if (tool === 'hl') g = { x0: x, y0: y, m: { t: 'hl', color: HL[hlColor], x, y, w: 0, h: 0 } };
+    if (tool === 'pen') g = inkBegin({ t: 'pen', color: COLORS[inkColor], w: penW, pts: [[r1(x), r1(y)]] }, x, y, e, pg.s);
+    else if (tool === 'hl') g = hlBegin(pg, x, y, e);
     else if (tool === 'oval') g = { x0: x, y0: y, m: { t: 'oval', color: COLORS[inkColor], sw: Math.max(1.2, penW * 0.8), x, y, w: 0, h: 0 } };
     else if (tool === 'erase') { g = { erase: true, snapped: false }; eraseAt(pg, x, y, g); }
     else if (tool === 'check') { snap(pg); pg.marks().push({ t: 'check', color: COLORS[inkColor], x: r1(x), y: r1(y), size: 22 }); changed(pg); }
     else if (tool === 'text') {
+      const grip = gripAt(pg, x, y); if (grip) { g = gripBegin(pg, grip); return; }
       const hit = hitMark(pg, x, y, 3);
-      if (hit && hit.t === 'text') editText(pg, hit);
-      else g = { text: true, x0: x, y0: y, x1: x };   // click for a box, or drag across to set its width
-    } else if (tool === 'note') g = { note: true, x0: x, y0: y, m: null };   // click a point, or drag over words to highlight them
-    else if (tool === 'select') {
-      if (onHandle(x, y)) { g = { resize: selected.mark, moved: false }; return; }
-      const hit = hitMark(pg, x, y, 4);
+      if (hit && hit.t === 'text') g = pickToGrab(pg, hit, x, y, true);   // drag it to move it, click it to type in it
+      else { if (selected) { selected = null; redrawAll(); } g = { text: true, x0: x, y0: y, x1: x }; }   // click for a box, or drag across to set its width
+    } else if (tool === 'note') {
+      const hit = hitMark(pg, x, y, 3);
+      if (hit && hit.t === 'note') g = pickToGrab(pg, hit, x, y, true);
+      else { g = { note: true, x0: x, y0: y, m: null }; noteHlBegin(pg, g); }   // click a point, or drag over words to highlight them
+    } else if (tool === 'select') {
+      const grip = gripAt(pg, x, y); if (grip) { g = gripBegin(pg, grip); return; }
+      const hit = hitMark(pg, x, y, 4), again = !!hit && !!selected && !selected.fresh && selected.mark === hit && (hit.t === 'text' || hit.t === 'note');   // clicking what's already picked opens it
       selected = hit ? { page: pg, mark: hit } : null;
       redrawAll();
-      if (hit) g = { move: hit, x, y, moved: false };
+      if (hit) g = { move: hit, x, y, moved: false, edit: again };
     }
   });
   c.addEventListener('pointermove', e => {
-    if (!g) { if (tool === 'select') { const [x, y] = pt(e); c.style.cursor = onHandle(x, y) ? 'ew-resize' : hitMark(pg, x, y, 4) ? 'move' : 'default'; } return; }
+    if (!g) { const [x, y] = pt(e), cu = hoverCursor(pg, x, y); if (cu) c.style.cursor = cu; return; }
     const [x, y] = pt(e);
     if (g.text) {
       g.x1 = clamp(x, 0, pg.W);
@@ -1124,22 +1308,17 @@ function bindPage(pg) {
       draw(pg);
     } else if (g.note) {
       const x1 = clamp(x, 0, pg.W), y1 = clamp(y, 0, pg.H);
+      if (g.snapA != null) { if (Math.hypot(x1 - g.x0, y1 - g.y0) < 5 && !g.dragged) return; g.dragged = true; noteHlMove(pg, g, x1, y1); draw(pg, [g.m]); return; }
       if (!g.m && Math.hypot(x1 - g.x0, y1 - g.y0) < 5) return;
       g.m = { t: 'hl', color: HL[hlColor], x: Math.min(g.x0, x1), y: Math.min(g.y0, y1), w: Math.abs(x1 - g.x0), h: Math.abs(y1 - g.y0) };
       draw(pg, [g.m]);
     } else if (g.resize) {
       if (!g.moved) { snap(pg); g.moved = true; }
-      g.resize.bw = r1(clamp(x - g.resize.x, 24, pg.W - g.resize.x - 6));
+      gripMove(pg, g, x);
       draw(pg);
-    } else if (g.m && g.m.t === 'pen') {
-      const p = g.m.pts, last = p[p.length - 1], pt = [r1(clamp(x, 0, pg.W)), r1(clamp(y, 0, pg.H))];
-      if (e.shiftKey) {   // Shift: a straight line, level or upright when it's close
-        const dx = Math.abs(pt[0] - p[0][0]), dy = Math.abs(pt[1] - p[0][1]);
-        if (dy < dx * 0.15) pt[1] = p[0][1]; else if (dx < dy * 0.15) pt[0] = p[0][0];
-        g.m.pts = [p[0], pt];
-      } else if (Math.hypot(x - last[0], y - last[1]) > 0.7) p.push(pt);
-      draw(pg, [g.m]);
-    } else if (g.m && (g.m.t === 'hl' || g.m.t === 'oval')) {
+    } else if (g.m && g.m.t === 'pen') inkMove(pg, g, e, pt);
+    else if (g.m && g.m.t === 'hl') hlMove(pg, g, e, pt);
+    else if (g.m && g.m.t === 'oval') {
       const x1 = clamp(x, 0, pg.W), y1 = clamp(y, 0, pg.H);
       Object.assign(g.m, { x: Math.min(g.x0, x1), y: Math.min(g.y0, y1), w: Math.abs(x1 - g.x0), h: Math.abs(y1 - g.y0) });
       draw(pg, [g.m]);
@@ -1155,14 +1334,15 @@ function bindPage(pg) {
     if (g.text) {
       pg.ghost = null;
       const w = Math.abs(g.x1 - g.x0), m = { t: 'text', color: COLORS[inkColor], x: r1(w > 24 ? Math.min(g.x0, g.x1) : Math.min(g.x0, pg.W - 106)), y: r1(g.y0 - disp.tsize / 2), size: disp.tsize, text: '' };
-      if (w > 24) m.bw = r1(w);
+      m.bw = w > 24 ? r1(w) : newTextW(pg, m.x);
       keepOnPage(m, pg.W, pg.H);
       g = null; snap(pg); pg.marks().push(m); editText(pg, m, true);
       return;
     }
     if (g.note) {
       let m;
-      if (g.m && g.m.w >= 4) {
+      if (g.dragged) m = noteFromSnap(g, COLORS[inkColor]);
+      else if (g.snapA == null && g.m && g.m.w >= 4) {
         const h = Math.max(6, g.m.h), hl = { x: r1(g.m.x), y: r1(g.m.y - (h - g.m.h) / 2), w: r1(g.m.w), h: r1(h) };
         m = { t: 'note', color: COLORS[inkColor], ax: r1(hl.x + hl.w), ay: r1(hl.y + hl.h / 2), hl, hc: HL[hlColor], text: '' };
       } else m = { t: 'note', color: COLORS[inkColor], ax: r1(g.x0), ay: r1(g.y0), text: '' };
@@ -1170,25 +1350,22 @@ function bindPage(pg) {
       return;
     }
     if (g.resize) { const m = g.resize; if (g.moved) { keepOnPage(m, pg.W, pg.H); changed(pg); } g = null; return; }
-    if (g.m && g.m.t === 'pen') { snap(pg); pg.marks().push(g.m); changed(pg); }
+    if (g.m && g.m.t === 'pen') { inkEnd(pg, g); snap(pg); pg.marks().push(g.m); changed(pg); }
     else if (g.m && g.m.t === 'oval') {
       if (g.m.w >= 6 && g.m.h >= 6) { for (const k of ['x', 'y', 'w', 'h']) g.m[k] = r1(g.m[k]); snap(pg); pg.marks().push(g.m); changed(pg); }
       else draw(pg);
     }
     else if (g.m && g.m.t === 'hl') {
-      if (g.m.w < 4 && g.m.h < 4) {   // a click: highlight one line-height strip
-        Object.assign(g.m, { x: g.x0 - 30, y: g.y0 - 7, w: 60, h: 14 });
-      }
-      if (g.m.h < 6) { g.m.y -= (6 - g.m.h) / 2; g.m.h = 6; }
-      for (const k of ['x', 'y', 'w', 'h']) g.m[k] = r1(g.m[k]);
+      hlEnd(pg, g);
       snap(pg); pg.marks().push(g.m); changed(pg);
     } else if (g.move && g.moved) changed(pg);
+    else if (g.move && g.edit) { const m = g.move; g = null; editMark(pg, m); return; }
     g = null;
   };
   c.addEventListener('pointerup', end);
   c.addEventListener('pointercancel', end);
   c.addEventListener('dblclick', e => {
-    if (tool !== 'select') return;
+    if (tool !== 'select' || pg.editing || activeEditor) return;
     const [x, y] = pt(e);
     const hit = hitMark(pg, x, y, 3);
     if (hit && hit.t === 'text') editText(pg, hit);
@@ -1199,8 +1376,8 @@ const r1 = v => Math.round(v * 10) / 10;
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 function moveMark(m, dx, dy) {
   if (m.t === 'pen') m.pts = m.pts.map(([x, y]) => [r1(x + dx), r1(y + dy)]);
-  else if (m.t === 'note') { m.ax = r1(m.ax + dx); m.ay = r1(m.ay + dy); if (m.hl) m.hl = { ...m.hl, x: r1(m.hl.x + dx), y: r1(m.hl.y + dy) }; }
-  else { m.x = r1(m.x + dx); m.y = r1(m.y + dy); }
+  else if (m.t === 'note') { m.ax = r1(m.ax + dx); m.ay = r1(m.ay + dy); if (m.hl) m.hl = { ...m.hl, x: r1(m.hl.x + dx), y: r1(m.hl.y + dy) }; moveExtras(m, dx, dy); }
+  else { m.x = r1(m.x + dx); m.y = r1(m.y + dy); moveExtras(m, dx, dy); }
 }
 function eraseAt(pg, x, y, g) {
   const hit = hitMark(pg, x, y, 3);
@@ -1215,7 +1392,7 @@ function copyMark(quiet) {
   if (!selected) return;
   markClip = { m: JSON.parse(JSON.stringify(selected.mark)), file: selected.page.file, idx: selected.page.idx, n: 0 };
   delete markClip.m.ro;
-  if (!quiet) toast('Copied. ⌘V pastes it on the page you’re looking at.');
+  if (!quiet) toast(keyLabel('Copied. ⌘V pastes it on the page you’re looking at.'));
 }
 function pageInView() {
   if (selected && pages.includes(selected.page)) return selected.page;
@@ -1257,7 +1434,7 @@ function editText(pg, m, isNew) {
     ta.style.height = '0'; ta.style.height = Math.max(m.size * 1.3 * s, ta.scrollHeight) + 'px';
     Object.assign(hd.style, { left: (m.x + L.maxW) * s + 'px', top: m.y * s + Math.min(ta.offsetHeight / 2, 18) + 'px' });
     Object.assign(bar.style, { left: m.x * s + 'px', top: m.y * s + 'px' });
-    bar.innerHTML = '<button data-sz="-1" title="Smaller text">A−</button><b>' + m.size + '</b><button data-sz="1" title="Bigger text">A+</button>' +
+    bar.innerHTML = '<span class="edgrip" data-grip title="Drag to move this box">⠿ Move</span><button data-sz="-1" title="Smaller text">A−</button><b>' + m.size + '</b><button data-sz="1" title="Bigger text">A+</button>' +
       '<span style="width:1px;height:16px;background:rgba(255,255,255,.25);margin:0 3px"></span><button data-full class="' + (m.bw ? '' : 'on') + '" title="Wrap at the edge of the page">Page width</button>';
   };
   pg.wrap.append(ta, hd, bar); fit(); ta.focus();
@@ -1266,11 +1443,11 @@ function editText(pg, m, isNew) {
   hd.addEventListener('pointerdown', e => {
     e.preventDefault(); e.stopPropagation(); hd.setPointerCapture(e.pointerId);
     const r = pg.canvas.getBoundingClientRect();
-    const mv = ev => { m.bw = r1(clamp((ev.clientX - r.left) / s - m.x, 24, pg.W - m.x - 6)); fit(); };
+    const mv = ev => { delete m.bwFull; m.bw = r1(clamp((ev.clientX - r.left) / s - m.x, 24, pg.W - m.x - 6)); fit(); };
     const up = () => { hd.removeEventListener('pointermove', mv); hd.removeEventListener('pointerup', up); hd.removeEventListener('pointercancel', up); ta.focus(); };
     hd.addEventListener('pointermove', mv); hd.addEventListener('pointerup', up); hd.addEventListener('pointercancel', up);
   });
-  bar.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); });
+  bar.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); if (e.target.closest('[data-grip]')) gripDrag(e, bar, pg, m, fit, ta); });
   bar.addEventListener('click', e => {
     const z = e.target.closest('[data-sz]');
     if (z) { m.size = clamp(m.size + 2 * z.dataset.sz, 8, 40); disp.tsize = m.size; store.set('gs.disp', disp); }   // the next new box uses this size too
@@ -1285,7 +1462,8 @@ function editText(pg, m, isNew) {
     m.text = ta.value.replace(/\s+$/, '');
     ta.remove(); hd.remove(); bar.remove(); pg.editing = null;
     keepOnPage(m, pg.W, pg.H);
-    if (!m.text) { const a = pg.marks(), i = a.indexOf(m); if (i >= 0) a.splice(i, 1); if (isNew) undoStack.pop(); }
+    if (!m.text) { const a = pg.marks(), i = a.indexOf(m); if (i >= 0) a.splice(i, 1); if (isNew) undoStack.pop(); if (selected && selected.mark === m) selected = null; }
+    else if (pages.includes(pg)) selected = { page: pg, mark: m, fresh: true };   // it keeps its handles, but until she clicks it keys and swatches leave it alone, and a click beside its words starts a new box
     changed(pg); renderTools();
   } };
   activeEditor = me;
@@ -1326,7 +1504,7 @@ function openNote(pg, m, isNew) {
     const text = ta.value.trim();
     if (!save) { draw(pg); return; }
     const a = pg.marks(), i = a.indexOf(m);
-    if (!text) { if (i >= 0) { snap(pg); a.splice(i, 1); changed(pg); } else draw(pg); return; }
+    if (!text) { if (selected && selected.mark === m) selected = null; if (i >= 0) { snap(pg); a.splice(i, 1); changed(pg); } else draw(pg); return; }
     if (text === m.text && i >= 0) return;
     snap(pg); m.text = text; if (i < 0) a.push(m); changed(pg);
   };
@@ -1375,16 +1553,17 @@ function renderTools() {
     : Object.entries(COLORS).map(([k, v]) => '<button class="sw" data-ink="' + k + '" style="background:' + v + '" aria-pressed="' + (k === inkColor) + '" title="' + k + '"></button>').join('');
   $('#tools').innerHTML = TOOLS.map(([k, l, key]) => '<button class="tool" data-tool="' + k + '" aria-pressed="' + (tool === k) + '" title="' + l + ' (' + key + ')">' + svg(IC[k]) + '<span class="lb">' + l + '</span></button>').join('') +
     '<span class="sep"></span><span class="swatches">' + (tool === 'select' || tool === 'erase' ? '' : sw) + '</span>' +
-    (tool === 'pen' ? '<span class="seg" style="margin-left:4px"><button data-w="1.2" aria-pressed="' + (penW === 1.2) + '">Fine</button><button data-w="2" aria-pressed="' + (penW === 2) + '">Medium</button><button data-w="3.5" aria-pressed="' + (penW === 3.5) + '">Bold</button></span>' : '') +
-    '<button class="icon" id="undoBtn" title="Undo (⌘Z)" aria-label="Undo" ' + (undoStack.length ? '' : 'disabled') + '>' + svg(IC.undo) + '</button>' +
-    '<button class="icon" id="redoBtn" title="Redo (⇧⌘Z)" aria-label="Redo" ' + (redoStack.length ? '' : 'disabled') + '>' + svg(IC.redo) + '</button>' +
-    '<span class="zoom"><button class="icon" data-z="-1" aria-label="Zoom out" title="Zoom out (⌘−)">' + svg(IC.minus) + '</button><span data-z0 title="Back to 100% (⌘0). Pinch or ⌘-scroll on the paper to zoom.">' + Math.round(zoom * 100) + '%</span><button class="icon" data-z="1" aria-label="Zoom in" title="Zoom in (⌘+)">' + svg(IC.plus) + '</button></span>';
+    (tool === 'pen' ? '<span class="seg" style="margin-left:4px"><button data-w="1.2" aria-pressed="' + (penW === 1.2) + '">Fine</button><button data-w="2" aria-pressed="' + (penW === 2) + '">Medium</button><button data-w="3.5" aria-pressed="' + (penW === 3.5) + '">Bold</button></span>' : '') + (isHl ? hlBar() : '') +
+    '<button class="icon" id="undoBtn" title="Undo (' + keyLabel('⌘Z') + ')" aria-label="Undo" ' + (undoStack.length ? '' : 'disabled') + '>' + svg(IC.undo) + '</button>' +
+    '<button class="icon" id="redoBtn" title="Redo (' + keyLabel('⇧⌘Z') + ')" aria-label="Redo" ' + (redoStack.length ? '' : 'disabled') + '>' + svg(IC.redo) + '</button>' +
+    '<span class="zoom"><button class="icon" data-z="-1" aria-label="Zoom out" title="Zoom out (' + keyLabel('⌘−') + ')">' + svg(IC.minus) + '</button><span data-z0 title="' + keyLabel('Back to 100% (⌘0). Pinch or ⌘-scroll on the paper to zoom.') + '">' + Math.round(zoom * 100) + '%</span><button class="icon" data-z="1" aria-label="Zoom in" title="Zoom in (' + keyLabel('⌘+') + ')">' + svg(IC.plus) + '</button></span>';
   for (const pg of pages) pg.canvas.style.cursor = tool === 'select' ? 'default' : tool === 'text' ? 'text' : 'crosshair';
 }
 $('#tools').addEventListener('click', e => {
   const t = e.target.closest('[data-tool]'); if (t) { setTool(t.dataset.tool); return; }
   const i = e.target.closest('[data-ink]'); if (i) { inkColor = i.dataset.ink; store.set('gs.ink', inkColor); recolorSelected(COLORS[inkColor]); renderTools(); return; }
   const h = e.target.closest('[data-hl]'); if (h) { hlColor = h.dataset.hl; store.set('gs.hl', hlColor); renderTools(); return; }
+  if (hlBarClick(e)) return;
   const w = e.target.closest('[data-w]'); if (w) { penW = +w.dataset.w; store.set('gs.penW', penW); renderTools(); return; }
   if (e.target.closest('#undoBtn')) { undo(); return; }
   if (e.target.closest('#redoBtn')) { redo(); return; }
@@ -1414,7 +1593,7 @@ $('#paper').addEventListener('wheel', e => {   // a trackpad pinch arrives as �
 }, { passive: false });
 function setTool(t) { commitEditors(); tool = t; if (t !== 'select') { selected = null; redrawAll(); } renderTools(); }
 function recolorSelected(col) {
-  if (!selected || selected.mark.t === 'hl') return;
+  if (!selected || selected.fresh || selected.mark.t === 'hl') return;
   snap(selected.page); selected.mark.color = col; changed(selected.page);
 }
 
@@ -1431,12 +1610,13 @@ function renderList() {
     if (q && !shownName(st, i).toLowerCase().includes(q)) return '';
     const g = gradeOf(st);
     const val = g.total != null ? g.total : g.pct != null ? g.pct + '%' : null;
-    const right = val != null ? '<span class="sc" title="' + (g.paper ? 'Read from the paper' : g.done ? 'Scored' : 'Partly scored') + '"' + (g.paper ? ' style="color:var(--muted);font-weight:600"' : g.done ? '' : ' style="color:var(--warn)"') + '>' + fmtNum(g.total != null ? g.total : g.pct) + (g.total == null ? '%' : '') + '</span>'
-      : st.foundCount > 1 ? '<span class="sc" style="color:var(--warn)" title="More than one grade found on the paper. Check the Grade sheet.">?</span>'
+    const right = noScore(st) ? '<span class="stag" title="You marked this student ' + g.status + '. No score counts.">' + STATUS_LABEL[g.status] + '</span>' : val != null ? '<span class="sc" title="' + (g.paper ? 'Read from the paper' : g.done ? 'Scored' : 'Partly scored') + '"' + (g.paper ? ' style="color:var(--muted);font-weight:600"' : g.done ? '' : ' style="color:var(--warn)"') + '>' + fmtNum(g.total != null ? g.total : g.pct) + (g.total == null ? '%' : g.outOf != null ? '/' + fmtNum(g.outOf) : '') + (g.partial ? '<small>partial</small>' : '') + '</span>'
+      : manyReads(st) ? '<span class="sc" style="color:var(--warn)" title="More than one grade found on the paper. Check the Grade sheet.">?</span>'
+      : st.doubts && st.doubts.length ? '<span class="sc" style="color:var(--warn)" title="A reading on the paper may not be a grade. Confirm it on the Grade sheet.">?</span>'
       : hasMarks(st) ? '<span class="dot" title="Marked"></span>' : '';
     const nAdd = st.files.filter(f => f.added).length;
     return '<button class="stu' + (i === cur ? ' on' : '') + (st.files.length ? '' : ' empty') + '" data-i="' + i + '"><span class="num">' + (pos + 1) + '</span><span class="nm" title="' + esc(shownName(st, i)) + '">' + esc(shownName(st, i)) + '</span>' +
-      '<span style="display:inline-flex;align-items:center;gap:4px">' + (st.files.length ? '' : '<span class="muted" style="font-size:11px">no paper</span>') + (nAdd ? '<span class="add" title="' + nAdd + (nAdd === 1 ? ' file' : ' files') + ' added by you">+' + nAdd + '</span>' : '') + right + '</span></button>';
+      '<span style="display:inline-flex;align-items:center;gap:4px">' + (st.files.length || noScore(st) ? '' : '<span class="muted" style="font-size:11px">no paper</span>') + (g.status === 'late' ? '<span class="stag" title="You marked this student late">late</span>' : '') + (nAdd ? '<span class="add" title="' + nAdd + (nAdd === 1 ? ' file' : ' files') + ' added by you">+' + nAdd + '</span>' : '') + carryPill(st) + right + '</span></button>';
   }).join('');
   const on = $('#stuList .on'); if (on) on.scrollIntoView({ block: 'nearest' });
   const nExp = exportPlan(true).length;
@@ -1444,9 +1624,9 @@ function renderList() {
   renderProg();
 }
 function renderProg() {
-  const N = batch.students.length, n = batch.students.filter(s => gradeOf(s).done).length;
-  $('#progS').innerHTML = '<div class="ph">' + n + ' of ' + N + ' <span>scored</span></div><div class="pb"><i style="width:' + (N ? 100 * n / N : 0) + '%"></i></div>' +
-    (n < N ? '<button class="btn sm" id="nextUn" title="Opens the next student without a full score">Next unscored <kbd>N</kbd></button>' : '<div class="muted" style="font-size:13px;margin-bottom:6px">Everyone has a score.</div>');
+  const on = batch.students.filter(s => !noScore(s)), N = on.length, n = on.filter(s => gradeOf(s).done).length, nOff = batch.students.length - N;
+  $('#progS').innerHTML = '<div class="ph">' + n + ' of ' + N + ' <span>scored' + (nOff ? ' · ' + nOff + ' missing or excused' : '') + '</span></div><div class="pb"><i style="width:' + (N ? 100 * n / N : 0) + '%"></i></div>' +
+    (n < N ? '<button class="btn sm" id="nextUn" title="Opens the next student without a full score">Next unscored <kbd>N</kbd></button>' : '<div class="muted" style="font-size:13px;margin-bottom:6px">Everyone ' + (nOff ? 'else ' : '') + 'has a score.</div>');
 }
 function nextUnscored() {
   const N = batch.students.length, o = anonOn() ? anonOrder() : batch.students.map((_, i) => i), p = o.indexOf(cur);
@@ -1469,20 +1649,24 @@ function renderGrade() {
   if (setup.mode === 'rubric') {
     h += '<h3>Rubric <button class="link" id="editRubric" style="font-size:12px;text-transform:none;letter-spacing:0">Edit</button></h3>';
     h += setup.criteria.map((c, i) => '<div class="crit"><div class="cn"><span>' + esc(c) + '</span><em>' + (g.rubric[i] == null ? '' : fmtNum(g.rubric[i]) + ' / 4') + '</em></div><div class="scores" data-c="' + i + '">' +
-      RUBRIC_STEPS.map(v => '<button class="' + (v % 1 ? 'half' : '') + '" data-v="' + v + '" aria-pressed="' + (g.rubric[i] === v) + '">' + v + '</button>').join('') + '</div></div>').join('');
+      RUBRIC_STEPS.map(v => '<button class="' + (v % 1 ? 'half' : '') + '" data-v="' + v + '" aria-pressed="' + (g.rubric[i] === v) + '">' + v + '</button>').join('') + '</div>' + levelsHtml(i, g.rubric[i]) + '</div>').join('');
   } else {
     h += '<h3>Score <button class="link" id="editRubric" style="font-size:12px;text-transform:none;letter-spacing:0">Edit</button></h3>' +
       '<div class="pts"><input type="number" step="0.5" min="0" id="ptsIn" value="' + esc(g.points) + '" aria-label="Points"><span class="muted">out of ' + esc(setup.outOf) + '</span></div>';
   }
-  h += '<div class="total">' + totalHtml(st) + '</div>';
+  h += '<div class="total">' + totalHtml(st) + '</div>' + statusHtml(st);
   h += '<div class="cmt"><h3 style="margin-bottom:6px">Comment for ManageBac</h3><textarea id="cmtIn" placeholder="Optional. Shows in the Grades list so you can copy it.">' + esc(g.comment) + '</textarea></div>';
-  h += '<div class="nav"><button class="btn" id="prevBtn" ' + (cur ? '' : 'disabled') + '>◀ Previous</button><button class="btn primary" id="nextBtn" ' + (cur < batch.students.length - 1 ? '' : 'disabled') + '>Next ▶</button></div>';
-  h += '<div class="hint">Keys: <kbd>←</kbd> <kbd>→</kbd> or <kbd>↑</kbd> <kbd>↓</kbd> students · <kbd>N</kbd> next unscored · <kbd>=</kbd> calculator · V P H O T C K E tools · ⌘Z undo, ⇧⌘Z redo · <button class="link" data-keys style="font-size:12.5px">All keys ( ? )</button></div>';
+  const navAt = anonOn() ? anonPos(cur) : cur;   // the order on screen
+  h += '<div class="nav"><button class="btn" id="prevBtn" ' + (navAt ? '' : 'disabled') + '>◀ Previous</button><button class="btn primary" id="nextBtn" ' + (navAt < batch.students.length - 1 ? '' : 'disabled') + '>Next ▶</button></div>';
+  h += histSlot(st);
+  h += '<div class="hint">Keys: <kbd>←</kbd> <kbd>→</kbd> or <kbd>↑</kbd> <kbd>↓</kbd> students · <kbd>N</kbd> next unscored · <kbd>=</kbd> calculator · V P H O T C K E tools · ' + keyLabel('⌘Z undo, ⇧⌘Z redo') + ' · <button class="link" data-keys style="font-size:12.5px">All keys ( ? )</button></div>';
   $('#grade').innerHTML = h;
 }
 function totalHtml(st) {
   const gr = gradeOf(st), own = ownGrade(st);
-  let h = '<b>' + (gr.total == null ? '–' : fmtNum(gr.total)) + '</b><span>/ ' + maxPoints() + '</span><span class="pc">' + (gr.pct == null ? '' : fmtPct(gr.pct)) + '</span>';
+  if (noScore(st)) return '<b>' + STATUS_LABEL[gr.status] + '</b><span style="width:100%;font-size:12.5px">No score counts. Giving a score takes this off.</span>';
+  let h = '<b>' + (gr.total == null ? '–' : fmtNum(gr.total)) + '</b><span>/ ' + (gr.outOf != null ? fmtNum(gr.outOf) : maxPoints()) + '</span><span class="pc">' + (gr.pct == null ? '' : fmtPct(gr.pct)) + '</span>';
+  if (gr.partial) h += '<span class="sc-warn" style="width:100%">Partial: ' + partNote(st) + '. This total isn’t final.</span>';
   if (gr.paper) h += '<span style="width:100%;font-size:12.5px">From the paper (Grade sheet)</span>';
   const ps = paperScore(st);
   if (own.total != null && ps != null && Math.abs(ps - own.total) > 0.001) h += '<span class="sc-warn" style="width:100%">The paper says ' + fmtNum(ps) + '</span>';
@@ -1499,8 +1683,10 @@ $('#grade').addEventListener('click', e => {
   if (b) {
     const st = batch.students[cur], i = +b.closest('.scores').dataset.c, v = +b.dataset.v;
     st.grade.rubric[i] = st.grade.rubric[i] === v ? null : v;
+    scoreTouched(st, i);
     renderGrade(); renderList(); saveSoon(); return;
   }
+  const sb = e.target.closest('[data-status]'); if (sb) return setStatus(batch.students[cur], sb.dataset.status);
   if (e.target.closest('#prevBtn')) stepStudent(-1);
   if (e.target.closest('#nextBtn')) stepStudent(1);
   if (e.target.closest('#editRubric')) openSetup();
@@ -1508,39 +1694,52 @@ $('#grade').addEventListener('click', e => {
 });
 $('#grade').addEventListener('input', e => {
   const st = batch.students[cur];
-  if (e.target.id === 'cmtIn') { st.grade.comment = e.target.value; saveSoon(); }
+  if (e.target.id === 'cmtIn') { st.grade.comment = e.target.value; touchGrade(st); saveSoon(); }
   if (e.target.id === 'ptsIn') {
-    st.grade.points = e.target.value; saveSoon(); renderList();
+    st.grade.points = e.target.value; const was = st.grade.status; scoreTouched(st); saveSoon(); renderList();
+    if (was !== st.grade.status) { $('#gstat').outerHTML = statusHtml(st); }
     $('#grade .total').innerHTML = totalHtml(st);
   }
 });
 $('#grade').addEventListener('keydown', e => {   // Enter or Escape leaves the box, so the arrow keys go back to moving between students
   if ((e.target.id === 'ptsIn' && e.key === 'Enter') || (e.target.id === 'cmtIn' && e.key === 'Escape')) { e.preventDefault(); e.target.blur(); }
+  if (e.target.id === 'ptsIn' && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) { e.preventDefault(); e.stopPropagation(); stepStudent(e.key === 'ArrowDown' ? 1 : -1); }   // not half a point up or down: these keys move between students
 });
+$('#grade').addEventListener('wheel', e => { if (e.target.id === 'ptsIn') e.target.blur(); }, { passive: true });   // scrolling past the box mustn't change the score in it
 
 /* ---------------- every key, in one list ( ? ) ---------------- */
 function openKeys() {
-  const row = (k, t) => '<span>' + k.split(' ').map(x => '<kbd>' + esc(x) + '</kbd>').join(' ') + '</span><span>' + t + '</span>';
+  const row = (k, t) => '<span>' + keyLabel(k).split(' ').map(x => '<kbd>' + esc(x) + '</kbd>').join(' ') + '</span><span>' + keyLabel(t) + '</span>';
   openDlg('<div class="bh"><h2>Keys</h2><button class="icon" data-close aria-label="Close">✕</button></div><div class="bb"><div class="keys">' +
     '<h4>Students</h4>' + row('← →', 'Previous / next student (also ↑ ↓)') + row('N', 'Next student without a full score') + row('/', 'Find a student by name') +
-    '<h4>Marking</h4>' + row('V', 'Select') + row('P', 'Pen (hold Shift for a straight line)') + row('H', 'Highlight') + row('O', 'Circle') + row('T', 'Text') + row('C', 'Comment') + row('K', 'Check mark') + row('E', 'Eraser') +
+    '<h4>Marking</h4>' + row('V', 'Select') + row('P', 'Pen (hold Shift for a straight line)') + row('H', 'Highlight, snapping to typed lines. Press H again for freehand (Shift for straight)') + row('O', 'Circle') + row('T', 'Text') + row('C', 'Comment') + row('K', 'Check mark') + row('E', 'Eraser') +
     row('⌘Z', 'Undo') + row('⇧⌘Z', 'Redo (⌘Y works too)') +
     '<h4>A picked mark (Select tool)</h4>' + row('← → ↑ ↓', 'Nudge it (Shift for bigger steps)') + row('⌘C ⌘V', 'Copy it, then paste on the page you’re looking at, even on another student’s paper') + row('⌘D', 'Make a copy of it') + row('Delete', 'Remove it') + row('Esc', 'Let go of it (the arrows go back to moving between students)') +
     '<h4>The paper</h4>' + row('⌘+ ⌘−', 'Zoom in / out (or pinch, or ⌘-scroll)') + row('⌘0', 'Back to 100%') + row('[ ]', 'Fold away the student list / score panel') +
     'Turn a page: point at it and use ⟲ ⟳ in its top corner, or “Turn all pages” above the file. In Arrange pages, pick pages and press R.'.replace(/^/, '<h4>Turning pages</h4><span style="grid-column:1/-1">') + '</span>' +
     '<h4>Other</h4>' + row('=', 'Calculator') + row('Space', 'Play / pause a recording') + row('J L', 'Back / ahead 5 seconds') + row('?', 'This list') +
-    '</div></div><div class="bf"><button class="btn primary" data-close>Close</button></div>', true);
+    '</div></div><div class="bf"><span class="muted gsVer" style="margin-right:auto;font-size:13px">' + esc(versionLabel()) + '</span><button class="btn primary" data-close>Close</button></div>', true);
   $('#dlgBox').onclick = e => { if (e.target.closest('[data-close]')) closeDlg(); };
 }
+// The preview copy says so, because its saved work is separate from the real link's.
+const versionLabel = () => 'Grading Studio version ' + gsData.APP_VERSION + (/^(localhost|127\.0\.0\.1)$/.test(location.hostname) ? ' · preview copy, with its own saved work' : '');
 
 /* ---------------- dialogs ---------------- */
-function openDlg(html, narrow) {
-  commitEditors();
-  $('#dlgBox').className = 'box' + (narrow ? ' narrow' : '');
-  $('#dlgBox').innerHTML = html; $('#dlg').hidden = false;
+// #dlgBox stays for good and each dialog hangs its own handlers on it. They all go when that dialog goes, so a leftover can't answer the next dialog's buttons or keys.
+let dlgOff = new AbortController();   // for the handlers a dialog adds with addEventListener
+let dlgGone = null;   // for a dialog someone's waiting on: what to do when it goes, however it goes
+function dlgClear() {
+  dlgOff.abort(); dlgOff = new AbortController();
+  const box = $('#dlgBox'); box.onclick = box.onchange = box.oninput = box.ondblclick = box.onkeydown = null;
+  const gone = dlgGone; dlgGone = null; if (gone) gone();
 }
-function closeDlg() { if (eachKeys) { document.removeEventListener('keydown', eachKeys, true); eachKeys = null; } $('#dlg').hidden = true; $('#dlgBox').innerHTML = ''; }
-$('#dlg').addEventListener('pointerdown', e => { if (e.target.id === 'dlg') closeDlg(); });
+function openDlg(html, narrow) {
+  commitEditors(); dlgClear(); ovTipHide();
+  $('#dlgBox').className = 'box' + (narrow ? ' narrow' : '');
+  $('#dlgBox').innerHTML = html; $('#dlg').hidden = false; dlgShown();
+}
+function closeDlg() { ovTipHide(); dlgClear(); if (eachKeys) { document.removeEventListener('keydown', eachKeys, true); eachKeys = null; } $('#dlg').hidden = true; $('#dlgBox').innerHTML = ''; dlgFocusBack(); }
+$('#dlg').addEventListener('pointerdown', e => { if (e.target.id === 'dlg') { if (SP) splitLeave(); else leaveDlg(); } });
 
 function openSetup() {
   let draft = JSON.parse(JSON.stringify(setup));
@@ -1549,15 +1748,16 @@ function openSetup() {
     const max = draft.mode === 'rubric' ? draft.criteria.length * 4 : Math.round(+draft.outOf || 0);
     if (!draft.scale) return '<p class="muted" style="font-size:13px;margin:4px 0 0">No scale: percent is the plain share of points.</p>';
     if (max > 40) return '<p class="muted" style="font-size:13px">A scale needs a total of 40 or less.</p>';
-    let h = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:6px;margin-top:6px">';
+    let h = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:6px 10px;margin-top:6px">';
     for (let k = max; k >= 0; k--) h += '<label style="display:flex;align-items:center;gap:4px;font-size:13px;font-weight:600"><span style="width:22px;text-align:right">' + k + '</span>=<input type="number" step="0.5" data-sk="' + k + '" value="' + esc(draft.scale[k] == null ? '' : draft.scale[k]) + '" style="width:54px;border:1px solid var(--line-strong);border-radius:6px;padding:4px;background:var(--surface)">%</label>';
     return h + '</div><p class="muted" style="font-size:12.5px;margin:6px 0 0">Leave a row blank if you never use it. Half points land between two rows.</p>';
   };
   const body = () => {
-    let h = '<div class="field"><label>How do you score this one?</label><span class="seg"><button data-m="points" aria-pressed="' + (draft.mode === 'points') + '">Just the total</button><button data-m="rubric" aria-pressed="' + (draft.mode === 'rubric') + '">Rubric rows, 1 to 4</button></span>' +
+    let h = '<div class="field"><label>How do you score this one?</label><span class="seg"><button data-m="points" aria-pressed="' + (draft.mode === 'points') + '">Just the total</button><button data-m="rubric" aria-pressed="' + (draft.mode === 'rubric') + '">Rubric rows, 0 to 4</button></span>' +
       '<span class="muted" style="font-size:12.5px;margin-top:4px">Grading right on your own rubric? Use Just the total: one score box, and the Grades list and percents still work.</span></div>';
+    h += rubricLibHtml(draft);
     if (draft.mode === 'rubric') {
-      h += '<div class="field"><label>Rubric rows</label>' + draft.criteria.map((c, i) => '<div class="critrow"><input type="text" data-ci="' + i + '" value="' + esc(c) + '">' + (draft.criteria.length > 1 ? '<button class="btn sm" data-rm="' + i + '" aria-label="Remove row">×</button>' : '') + '</div>').join('') +
+      h += '<div class="field"><label>Rubric rows</label>' + draft.criteria.map((c, i) => '<div class="critrow"><input type="text" data-ci="' + i + '" value="' + esc(c) + '">' + (draft.criteria.length > 1 ? '<button class="btn sm" data-rm="' + i + '" aria-label="Remove row">×</button>' : '') + '</div>' + levelsEditHtml(draft, i)).join('') +
         (draft.criteria.length < 6 ? '<div><button class="btn sm" data-add>+ Add a row</button></div>' : '') + '</div>';
     } else {
       h += '<div class="field"><label for="outOf">Out of</label><input type="number" id="outOf" min="1" step="0.5" value="' + esc(draft.outOf) + '" style="width:120px"></div>';
@@ -1573,11 +1773,13 @@ function openSetup() {
   };
   openDlg('<div class="bh"><h2>Rubric setup</h2></div><div class="bb" id="setupBody">' + body() + '</div><div class="bf"><button class="btn" data-cancel>Cancel</button><button class="btn primary" data-save>Save</button></div>', true);
   const box = $('#dlgBox'), re = () => { $('#setupBody').innerHTML = body(); };
+  rubricsSetup(draft, re, () => newPage !== undefined);
+  const live = { signal: dlgOff.signal };
   box.addEventListener('input', e => {
     if (e.target.dataset.ci != null) draft.criteria[+e.target.dataset.ci] = e.target.value;
     if (e.target.id === 'outOf') draft.outOf = e.target.value;
     if (e.target.dataset.sk != null && draft.scale) { const v = e.target.value; if (v === '') delete draft.scale[e.target.dataset.sk]; else draft.scale[e.target.dataset.sk] = +v; }
-  });
+  }, live);
   box.addEventListener('change', async e => {
     if (e.target.id !== 'rpIn' || !e.target.files[0]) return;
     const f = e.target.files[0], bytes = new Uint8Array(await f.arrayBuffer());
@@ -1587,6 +1789,7 @@ function openSetup() {
         newPage = { bytes, name: f.name };
         if (!draft.rubricPos) draft.rubricPos = 'start';   // a Word rubric sits above their work unless she moves it
       } else {
+        if (isImg(f.name) && !await picReads(bytes)) throw new Error('damaged');
         const pdf = isImg(f.name) ? await imageToPdf(bytes, f.name) : IMG_MORE.test(f.name) ? await anyImageToPdf(bytes) : bytes;
         await PDFLib.PDFDocument.load(pdf, { ignoreEncryption: true });
         newPage = { bytes: pdf, name: f.name };
@@ -1594,11 +1797,11 @@ function openSetup() {
       if (draft.mode === 'rubric' && draft.criteria.every((c, i) => c === 'Criterion ' + (i + 1))) { draft.outOf = draft.criteria.length * 4; draft.mode = 'points'; }   // her rubric replaces the generic rows
       re();
     } catch { toast('That file couldn’t be opened as a Word file, PDF or picture'); }
-  });
-  box.addEventListener('click', e => {
+  }, live);
+  box.addEventListener('click', async e => {
     const m = e.target.closest('[data-m]'); if (m) { draft.mode = m.dataset.m; return re(); }
-    const rm = e.target.closest('[data-rm]'); if (rm) { draft.criteria.splice(+rm.dataset.rm, 1); return re(); }
-    if (e.target.closest('[data-add]')) { draft.criteria.push('Criterion ' + (draft.criteria.length + 1)); return re(); }
+    const rm = e.target.closest('[data-rm]'); if (rm) { draft.criteria.splice(+rm.dataset.rm, 1); levelsRowGone(draft, +rm.dataset.rm); return re(); }
+    if (e.target.closest('[data-add]')) { draft.criteria.push('Criterion ' + (draft.criteria.length + 1)); rubDlg.from.push(null); return re(); }
     const pr = e.target.closest('[data-preset]');
     if (pr) {
       const max = draft.mode === 'rubric' ? draft.criteria.length * 4 : Math.round(+draft.outOf || 0);
@@ -1612,7 +1815,11 @@ function openSetup() {
     if (e.target.closest('[data-rprm]')) { newPage = null; return re(); }
     if (e.target.closest('[data-cancel]')) return closeDlg();
     if (e.target.closest('[data-save]')) {
+      if (newPage !== undefined) await Promise.all([...wordSaves].map(s => s()));   // boxes highlighted a moment ago count
+      const note = setupSaveNote(draft, newPage);   // the dialog stays open behind this, so "Go back" loses nothing
+      if (note && !await askDlg(note, { ok: 'Save', cancel: 'Go back' })) return;
       draft.criteria = draft.criteria.map((c, i) => c.trim() || 'Criterion ' + (i + 1));
+      draft.levels = tidyLevels(draft);
       if (newPage === null) { if (draft.rubricPage) store.del('gs.rp.' + draft.rubricPage.id); draft.rubricPage = null; }
       else if (newPage) {
         const id = uid();
@@ -1622,29 +1829,36 @@ function openSetup() {
         draft.rubricPage = { id, name: newPage.name };
       }
       const pageChanged = JSON.stringify(draft.rubricPage) !== JSON.stringify(setup.rubricPage) || draft.rubricPos !== setup.rubricPos;
+      rowsTakenOut();
       setup = draft; store.set('gs.setup', { ...setup, spot: undefined, rubricPage: undefined });
       if (batch && batch.assignment) { batch.assignment.setup = { ...setup, spot: undefined }; saveLib(); }
+      if (batch) batch.students.forEach(refound);
       closeDlg(); renderGrade(); renderList(); saveSoon();
-      if (pageChanged && batch) applyRubricPage().then(() => { scanned = false; openStudent(cur); scanAll(); });
+      for (const el of document.querySelectorAll('.docx')) if (el.wordShow) el.wordShow();   // the percent over an open Word rubric follows the new setup
+      if (pageChanged && batch) applyRubricPage().then(() => { scanned = false; openStudent(cur); scanAll(); wordLinesFollow(); });
+      else wordLinesFollow();
     }
-  });
+  }, live);
 }
 // The rubric page is added to every student as a file of its own ("Rubric page"), placed inside their first file.
 const RUBRIC_NAME = 'Rubric page.pdf';
 const rubricBytes = () => { const rp = setup.rubricPage; if (!rp) return null; const b64 = store.get('gs.rp.' + rp.id, null); if (!b64) return null; const bin = atob(b64), u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); return u; };
-async function applyRubricPage() {
+async function applyRubricPage(only) {
   const bytes = rubricBytes(), rp = setup.rubricPage, isWord = !!rp && WORD_RX.test(rp.name || '');
   let n = 0;
   if (bytes && !isWord) { try { n = (await PDFLib.PDFDocument.load(bytes, { ignoreEncryption: true })).getPageCount(); } catch {} }
-  for (const st of batch.students) {
+  for (const st of only || batch.students) {
     const old = st.files.find(f => f.virtual);
     st.files = st.files.filter(f => !f.virtual);
     const real = st.files.filter(viewable);
     if (st.layout) for (const d of st.layout) d.pages = d.pages.filter(([path]) => !old || path !== old.path);
     if (bytes && isWord) {   // each student gets their own copy of her Word rubric, edited and returned like any Word file
       const any = st.files.find(f => f.path.includes('/')), dir = any ? any.path.slice(0, any.path.lastIndexOf('/') + 1) : st.key + '/';
-      const path = dir + rp.name.replace(/[\\/]+/g, '-'), keep = old && old.path === path && old.edited ? old : null;
-      st.files.push({ path, name: rp.name, kind: 'docx', data: keep ? keep.data : bytes, orig: keep ? keep.orig : null, edited: keep ? keep.edited : 0, size: bytes.length, marks: {}, virtual: true, rubric: true });
+      const name = rp.name.replace(/[\\/]+/g, '-'), mv = batch.moved || {}, path = old && old.path.endsWith('/' + name) && mv[old.path] === st.key ? old.path : dir + name, keep = old && old.kind === 'docx' && old.edited ? old : null;   // a copy that went with its score keeps its path, like any moved file. A copy she's worked on stays hers, even under a rubric with a new name
+      if (mv[path] && mv[path] !== st.key) continue;   // this one went with its score to someone with no copy of their own
+      const nf = { path, name: rp.name, kind: 'docx', data: keep ? keep.data : bytes, orig: keep ? bytes : null, edited: keep ? keep.edited : 0, size: bytes.length, marks: {}, virtual: true, rubric: true };   // its original is the rubric as it is now, so Back to the original starts her over on it
+      st.files.push(nf);
+      if (keep && await keepEdit(st, nf) && keep.path !== path) await dropEdit(st, keep);
       continue;
     }
     if (!bytes || !n || !real.length) continue;
@@ -1667,48 +1881,51 @@ function gradeRows() {
     .concat(batch.students.filter(st => !used.has(st)).map(st => ({ st, i: batch.students.indexOf(st), off: true })));
 }
 function openGrades() {
+  if (rereadsPending()) { rereadsDone().then(openGrades); return; }   // a grade she just typed or changed counts here
   const rub = setup.mode === 'rubric', c = batchClass();
   const rows = gradeRows().map(({ st, i, missing, off }, k) => {
     if (missing) return '<tr><td class="n">' + (k + 1) + '</td><td class="nm" style="cursor:default">' + esc(missing) + ' <span class="muted" style="font-weight:400">(no folder: nothing turned in)</span></td>' + (rub ? setup.criteria.map(() => '<td></td>').join('') : '') + '<td></td><td></td><td></td></tr>';
     const g = gradeOf(st);
-    const cells = rub ? setup.criteria.map((_, q) => '<td class="c" data-copy="' + fmtNum(st.grade.rubric[q]) + '">' + fmtNum(st.grade.rubric[q]) + '</td>').join('') : '';
+    const cells = rub ? setup.criteria.map((_, q) => '<td class="c" data-copy="' + fmtNum(rowShown(st, q)) + '">' + fmtNum(rowShown(st, q)) + '</td>').join('') : '';
     return '<tr class="go" data-i="' + i + '"><td class="n">' + (k + 1) + '</td><td class="nm">' + esc(st.key) + (st.files.length ? '' : ' <span class="muted" style="font-weight:400">(nothing turned in)</span>') + (off ? ' <span class="pill" style="font-size:11px;padding:2px 7px;border-radius:999px;background:var(--warn-soft);color:var(--warn)">not on roster</span>' : '') + '</td>' + cells +
-      '<td class="c" data-copy="' + fmtNum(g.total) + '">' + fmtNum(g.total) + (g.paper ? ' <span class="muted" style="font-weight:400;font-size:12px" title="Read from the paper">(paper)</span>' : '') + '</td><td class="c" data-copy="' + fmtNum(g.pct) + '">' + fmtPct(g.pct) + '</td>' +
+      '<td class="c' + (g.partial ? ' part" data-partial="1' : '') + '" data-copy="' + esc(cellCopy(g, 'total')) + '">' + totalText(g) + statusPills(g) + (g.total == null && g.pct == null && ((st.doubts && st.doubts.length) || manyReads(st)) ? ' <span class="stag" title="Confirm it on the Grade sheet">to confirm</span>' : '') + (g.paper ? ' <span class="muted" style="font-weight:400;font-size:12px" title="Read from the paper">(paper)</span>' : '') + '</td><td class="c' + (g.partial ? ' part" data-partial="1' : '') + '" data-copy="' + esc(cellCopy(g, 'pct')) + '">' + fmtPct(g.pct) + '</td>' +
       '<td class="cm" data-copy="' + esc(st.grade.comment) + '">' + esc(st.grade.comment) + '</td></tr>';
   }).join('');
-  const done = batch.students.filter(s => gradeOf(s).done).length;
-  openDlg('<div class="bh"><h2>Grades list</h2><span class="muted">' + done + ' of ' + batch.students.length + ' scored</span>' +
+  openDlg('<div class="bh"><h2>Grades list</h2><span class="muted">' + gradesSummary() + '</span>' +
     (c ? '<span class="seg" style="margin-left:8px"><button data-ord="folder" aria-pressed="' + (gradesOrder === 'folder') + '">Folder order</button><button data-ord="roster" aria-pressed="' + (gradesOrder === 'roster') + '">' + esc(c.name) + ' roster order</button></span>' : '') +
     '<button class="icon" data-close aria-label="Close" style="margin-left:auto">✕</button></div>' +
-    '<div class="bb"><p class="muted" style="margin:0 0 10px;font-size:14px">Click any score or comment to copy it, then paste it into ManageBac. Click a name to open that paper.' + (c ? '' : ' Pick a roster at the top of the screen to see this list in roster order.') + '</p>' +
+    '<div class="bb"><p class="muted" style="margin:0 0 10px;font-size:14px">Click any score or comment to copy it, then paste it into ManageBac. Click a name to open that paper.' + (c ? '' : ' Pick a roster under More to see this list in roster order.') + '</p>' +
     '<table class="gl"><thead><tr><th>#</th><th>Student</th>' + (rub ? setup.criteria.map(x => '<th>' + esc(x) + '</th>').join('') : '') + '<th>Total /' + maxPoints() + '</th><th>%</th><th>Comment</th></tr></thead><tbody>' + rows + '</tbody></table></div>' +
-    '<div class="bf"><button class="btn" data-cp="total">Copy all totals</button><button class="btn" data-cp="pct">Copy all percents</button><button class="btn" data-cp="tsv">Copy as a table</button><button class="btn primary" data-csv>Download spreadsheet (CSV)</button></div>');
+    '<div class="bf"><button class="btn" data-ovopen style="margin-right:auto">Class overview</button><button class="btn" data-cp="total">Copy all totals</button><button class="btn" data-cp="pct">Copy all percents</button><button class="btn" data-cp="tsv">Copy as a table</button><button class="btn primary" data-csv>Download spreadsheet (CSV)</button></div>');
   const box = $('#dlgBox');
-  box.onclick = e => {
+  box.onclick = async e => {
     if (e.target.closest('[data-close]')) return closeDlg();
+    if (e.target.closest('[data-ovopen]')) return openOverview();
     const o = e.target.closest('[data-ord]'); if (o) { gradesOrder = o.dataset.ord; return openGrades(); }
     const cc = e.target.closest('[data-copy]');
+    if (cc && cc.dataset.partial && !await okCellPartial(+cc.closest('tr').dataset.i, cc.dataset.copy)) return;
     if (cc) { copy(cc.dataset.copy, cc.dataset.copy ? 'Copied “' + (cc.dataset.copy.length > 40 ? cc.dataset.copy.slice(0, 40) + '…' : cc.dataset.copy) + '”' : 'That cell is empty'); return; }
     const nm = e.target.closest('tr.go td.nm');
     if (nm) { closeDlg(); openStudent(+nm.parentElement.dataset.i); return; }
     const cp = e.target.closest('[data-cp]');
     if (cp) {
       const k = cp.dataset.cp, R = gradeRows();
-      const lines = R.map(r => { if (r.missing) return k === 'tsv' ? [String(R.indexOf(r) + 1), r.missing].join('\t') : ''; const g = gradeOf(r.st); return k === 'total' ? fmtNum(g.total) : k === 'pct' ? fmtNum(g.pct) : tableRow(r.st, R.indexOf(r)).join('\t'); });
-      if (k === 'tsv') lines.unshift(tableHead().join('\t'));
-      copy(lines.join('\n'), 'Copied ' + R.length + ' rows in ' + (gradesOrder === 'roster' && c ? 'roster' : 'folder') + ' order');
+      if (!await okPartial(R.filter(r => !r.missing).map(r => r.st))) return;
+      const lines = R.map(r => { if (r.missing) return k === 'tsv' ? tsvLine([String(R.indexOf(r) + 1), r.missing]) : ''; return k === 'tsv' ? tsvLine(tableRow(r.st, R.indexOf(r))) : scoreText(gradeOf(r.st), k); });
+      if (k === 'tsv') lines.unshift(tsvLine(tableHead()));
+      copy(lines.join('\n'), 'Copied ' + R.length + ' rows in ' + (gradesOrder === 'folder' ? 'folder order' : listOrder()));
     }
     if (e.target.closest('[data-csv]')) {
-      const q = v => /[",\n]/.test(v) ? '"' + String(v).replace(/"/g, '""') + '"' : v, R = gradeRows();
-      const csv = [tableHead()].concat(R.map((r, k) => r.missing ? [String(k + 1), r.missing] : tableRow(r.st, k))).map(r => r.map(q).join(',')).join('\r\n');
+      const R = gradeRows();
+      const csv = [tableHead()].concat(R.map((r, k) => r.missing ? [String(k + 1), r.missing] : tableRow(r.st, k))).map(r => r.map(csvCell).join(',')).join('\r\n');
       saveBlob('Grades - ' + batch.name + '.csv', new Blob(['﻿' + csv], { type: 'text/csv' }));
     }
   };
 }
-function tableHead() { return ['#', 'Student'].concat(setup.mode === 'rubric' ? setup.criteria : [], ['Total / ' + maxPoints(), 'Percent', 'Comment']); }
+function tableHead() { return ['#', 'Student'].concat(setup.mode === 'rubric' ? setup.criteria : [], ['Total / ' + maxPoints(), 'Percent', 'Status', 'Comment']); }
 function tableRow(st, pos) {
   const g = gradeOf(st), i = pos != null ? pos : batch.students.indexOf(st);
-  return [String(i + 1), st.key].concat(setup.mode === 'rubric' ? setup.criteria.map((_, k) => fmtNum(st.grade.rubric[k])) : [], [fmtNum(g.total), fmtNum(g.pct), st.grade.comment.replace(/\s*\n\s*/g, ' ')]);
+  return [String(i + 1), st.key].concat(setup.mode === 'rubric' ? setup.criteria.map((_, k) => fmtNum(rowShown(st, k))) : [], [cellOut(g, 'total'), cellOut(g, 'pct'), statusText(st), st.grade.comment.replace(/\s*\n\s*/g, ' ')]);
 }
 async function copy(text, msg) {
   try { await navigator.clipboard.writeText(text); }
@@ -1720,10 +1937,12 @@ async function copy(text, msg) {
 }
 
 /* ---------------- export ---------------- */
+let xBusy = false;
 const xAll = () => !!store.get('gs.xall', false);
 const xEdit = () => store.get('gs.xedit', true) !== false;   // "Keep marks editable"   // "Also include files with no marks"
 // Word files you edited or scored, any file you added; with "include everything", every file.
-const rawOut = f => !viewable(f) && !!f.data && !f.virtual && (xAll() || !!f.edited || !!f.added || !!(wordScore(f) && f.wscore.total != null));
+// A student's copy of her own Word rubric goes back once she has highlighted or typed in it, and stays out while it's still blank.
+const rawOut = f => !viewable(f) && !!f.data && (f.virtual ? f.kind === 'docx' && (!!f.edited || !!(wordScore(f) && f.wscore.total != null)) : xAll() || !!f.edited || !!f.added || !!(wordScore(f) && f.wscore.total != null));
 const docAdded = (st, d) => d.pages.some(([path]) => { const f = fileByPath(st, path); return !!f && !!f.added; });
 // A file you moved to another student goes back in that student's folder.
 const outPath = (st, path) => batch.moved && batch.moved[path] === st.key && path.includes('/') ? st.key + path.slice(path.indexOf('/')) : path;
@@ -1736,7 +1955,7 @@ function exportPlan(keepFolders) {
   for (const st of batch.students) for (const d of layoutOf(st)) {
     if (xAll() ? !(docIn(st, d) || docAuto(st, d)) : (!docIn(st, d) || !(docMarked(st, d) || docAdded(st, d)))) continue;
     const first = outPath(st, d.pages[0][0]), dir = first.includes('/') ? first.slice(0, first.lastIndexOf('/') + 1) : '';
-    let path = dir + d.name.replace(/\.(png|jpe?g)$/i, '.pdf');
+    let path = dir + d.name.replace(/\.(png|jpe?g|gif|webp|bmp|heic|heif|tiff?|avif)$/i, '.pdf');
     if (!/\.pdf$/i.test(path)) path += '.pdf';
     if (!keepFolders) path = (dir ? st.key + ' - ' : '') + path.split('/').pop();
     out.push({ st, d, path: path.replace(/[\\:*?"<>|]+/g, '-') });
@@ -1763,7 +1982,7 @@ async function flattenDoc(st, d, dpi, edit) {
       const marks = (f.marks[p] || []).concat((f.kami && f.kami[p] && f.kami[p].notes) || []);
       const Lx = lightOpts().exp ? lightForPage(st, f, p) : null;
       // A locked (encrypted) PDF can't be copied page for page; its copies come out blank, so those pages are redrawn instead.
-      if (!marks.length && !(f.kami && f.kami[p]) && !Lx && !lib.isEncrypted) {
+      if (!marks.length && !(f.kami && f.kami[p]) && !Lx && !lib.isEncrypted && !skewOf(f, p)) {
         const [cp] = await out.copyPages(lib, [p]);
         if (rotOf(f, p)) cp.setRotation(PDFLib.degrees((cp.getRotation().angle + rotOf(f, p)) % 360));
         out.addPage(cp); continue;
@@ -1775,18 +1994,19 @@ async function flattenDoc(st, d, dpi, edit) {
       const c = document.createElement('canvas');
       c.width = Math.ceil((W + side) * scale); c.height = Math.ceil(H * scale);
       const ctx = c.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
-      await page.render({ canvasContext: ctx, viewport: vpRot(f, p, page, scale), annotationMode: pdfjsLib.AnnotationMode.ENABLE }).promise;
+      await page.render({ canvasContext: ctx, ...vpDraw(f, p, page, scale), annotationMode: pdfjsLib.AnnotationMode.ENABLE }).promise;
+      scanClip(ctx, f, p, W * scale, c.width, c.height);
       if (Lx) lightCanvas(ctx, Math.min(c.width, Math.ceil(W * scale)), c.height, Lx);   // the page only, before her marks
       ctx.setTransform(scale, 0, 0, scale, 0, 0);
       drawMarks(ctx, marks, W, H, side, null);
-      const jpg = await new Promise(res => c.toBlob(b => b.arrayBuffer().then(x => res(new Uint8Array(x))), 'image/jpeg', 0.88));
+      const jpg = await canvasJpg(c, 0.88);
       const img = await out.embedJpg(jpg);
       out.addPage([W + side, H]).drawImage(img, { x: 0, y: 0, width: W + side, height: H });
       c.width = c.height = 0; page.cleanup();
     }
     if (edit) {   // the original pages and her own marks go along, so bringing the file back in opens it ready to change
       const paths = [...new Set(d.pages.map(([path]) => path))];
-      const info = { v: 1, pages: d.pages.map(([path, p]) => { const f = fileByPath(st, path); return [paths.indexOf(path), p, f.marks[p] || [], rotOf(f, p)]; }) };
+      const info = { v: 1, pages: d.pages.map(([path, p]) => { const f = fileByPath(st, path); return [paths.indexOf(path), p, f.marks[p] || [], rotOf(f, p), skewOf(f, p)]; }) };
       for (let k = 0; k < paths.length; k++) await out.attach(fileByPath(st, paths[k]).data, 'gs-original-' + (k + 1) + '.pdf', { mimeType: 'application/pdf', description: 'Original pages, for reopening in Grading Studio' });
       await out.attach(new TextEncoder().encode(JSON.stringify(info)), 'grading-studio.json', { mimeType: 'application/json', description: 'Marks, for reopening in Grading Studio' });
     }
@@ -1798,32 +2018,42 @@ async function flattenDoc(st, d, dpi, edit) {
 }
 async function openExport() {
   saveNow(); commitEditors(); wordScoresAll();
-  if (!scanned || scanP) { toast('Reading the files first…'); await scanAll(); }
+  if (batch.lineBusy) await batch.lineRun;
+  if (!scanned || scanP) {
+    const wait = waitDlg('Export marked files', 'Reading the files first…');
+    await scanAll();
+    if (!wait.isConnected) return;   // she closed it while it read
+  }
   let keep = true, dpi = 150;
   const plan = exportPlan(true);
   const nStu = new Set(plan.map(o => o.st)).size, skipped = batch.students.length - nStu;
-  const nLeft = batch.students.reduce((a, st) => a + layoutOf(st).filter(d => !docIn(st, d)).length, 0);
-  openDlg('<div class="bh"><h2>Export marked files</h2><button class="icon" data-close aria-label="Close">✕</button></div><div class="bb">' +
-    (plan.length ? '<p style="margin-top:0"><b>' + plan.length + (plan.length === 1 ? ' marked file' : ' marked files') + '</b> from ' + nStu + (nStu === 1 ? ' student' : ' students') + ', in their own folders, ready to upload back on ManageBac.' +
+  const nLeft = batch.students.reduce((a, st) => a + layoutOf(st).filter(d => !docAuto(st, d) && !docIn(st, d)).length, 0);   // left out by her; the check above lists files with no marks
+  openDlg('<div class="bh"><h2>Export marked files</h2><button class="icon" data-close aria-label="Close">✕</button></div><div class="bb">' + exportCheckHtml(exportCheck()) +
+    (plan.length ? '<p style="margin-top:0"><b>' + plan.length + (plan.length === 1 ? ' file' : ' files') + '</b> from ' + nStu + (nStu === 1 ? ' student' : ' students') + ', in their own folders, ready to upload back on ManageBac.' +
       (skipped ? ' <span class="muted">' + skipped + ' ' + (skipped === 1 ? 'student has' : 'students have') + ' nothing marked, so they’re not in it.</span>' : '') +
-      (nLeft ? ' <span class="muted">' + nLeft + (nLeft === 1 ? ' file is' : ' files are') + ' left out (no marks, or you left it out).</span>' : '') + '</p>' +
+      (nLeft ? ' <span class="muted">' + nLeft + (nLeft === 1 ? ' file you left out isn’t' : ' files you left out aren’t') + ' in it.</span>' : '') + '</p>' +
       '<label class="chk"><input type="checkbox" id="xKeep" checked> Keep student folders</label>' +
       '<label class="chk"><input type="checkbox" id="xAll"' + (xAll() ? ' checked' : '') + '> Also include files with no marks (Word files, other files and unmarked pages)</label>' +
       '<label class="chk"><input type="checkbox" id="xEdit"' + (xEdit() ? ' checked' : '') + '> Keep marks editable: bring a file back in later and change its marks (files are about twice as big)</label>' +
-      '<label class="chk"><input type="checkbox" id="xSheet" checked> Add the grade sheet (a crop of each typed grade, in folder order)</label>' +
+      '<label class="chk"><input type="checkbox" id="xSheet" checked> Add the grade sheet (a crop of each typed grade, in ' + listOrder() + ')</label>' +
       '<div class="chk" style="cursor:default">Sharpness <span class="seg" id="xDpi"><button data-dpi="150" aria-pressed="true">Standard</button><button data-dpi="220" aria-pressed="false">Extra sharp</button></span></div>' +
-      '<p class="muted" style="font-size:13px;margin-bottom:0">Your original files aren’t changed. Grades are read and cropped first, then every marked file is flattened, including marks made in Kami. A file you marked anywhere comes back whole, every page in order, including the pages you didn’t mark. Word rubrics you scored come back as Word files. ' + (xAll() ? 'Files with no marks come too.' : 'Files you didn’t mark at all stay out.') + ' Comments go in a right-hand margin.</p><div class="prog" hidden><i></i></div><p class="muted" id="xStatus" style="font-size:13px"></p>'
+      '<p class="muted" style="font-size:13px;margin-bottom:0">Your original files aren’t changed. Grades are read and cropped first, then every file going back is flattened, including marks made in Kami. A file you marked anywhere, or with a grade read off it, comes back whole, every page in order, including the pages you didn’t mark. Word rubrics you scored come back as Word files. ' + (xAll() ? 'Files with no marks come too.' : 'Files you didn’t mark at all stay out.') + ' Comments go in a right-hand margin.</p><div class="prog" hidden><i></i></div><p class="muted" id="xStatus" style="font-size:13px"></p>'
       : '<p style="margin-top:0">Nothing is marked yet. Mark a paper and it will show up here.</p><label class="chk"><input type="checkbox" id="xAll"' + (xAll() ? ' checked' : '') + '> Also include files with no marks (Word files, other files and unmarked pages)</label>') +
     '</div><div class="bf"><button class="btn" data-close>Close</button>' + (plan.length ? ((window.showDirectoryPicker && window.self === window.top) ? '<button class="btn" data-go="dir">Save into a folder…</button>' : '') + (G.email ? '<button class="btn" data-go="drive">Save to Google Drive</button>' : '') + '<button class="btn primary" data-go="zip">Download ZIP</button>' : '') + '</div>', true);
   const box = $('#dlgBox');
   box.onchange = e => { if (e.target.id === 'xEdit') store.set('gs.xedit', e.target.checked); if (e.target.id === 'xAll') { store.set('gs.xall', e.target.checked); renderTools(); openExport(); } };
   box.onclick = async e => {
     if (e.target.closest('[data-close]')) return closeDlg();
+    const ck = e.target.closest('[data-chk]'); if (ck) { closeDlg(); return openStudent(+ck.dataset.chk, ck.dataset.file || undefined); }
+    if (e.target.closest('[data-chksheet]')) return openSheet();
     const d = e.target.closest('[data-dpi]');
     if (d) { dpi = +d.dataset.dpi; for (const x of $('#xDpi').children) x.setAttribute('aria-pressed', x === d); return; }
     const go = e.target.closest('[data-go]'); if (!go) return;
+    if (xBusy) return toast('The last export is still going. It will say when it’s done.');
     keep = $('#xKeep').checked;
-    const withSheet = $('#xSheet').checked;
+    const withSheet = $('#xSheet').checked, editable = $('#xEdit').checked;
+    // Closing the box doesn't stop the export: it finishes, and the last word comes up on its own.
+    const say = (t, last) => { const el = $('#xStatus'); if (el) el.textContent = t; else if (last) toast(t, 6000); };
     let dir = null;
     if (go.dataset.go === 'dir') {
       try { dir = await window.showDirectoryPicker({ mode: 'readwrite', id: 'grading-studio' }); }
@@ -1831,42 +2061,53 @@ async function openExport() {
     }
     for (const b of box.querySelectorAll('[data-go]')) b.disabled = true;
     const bar = box.querySelector('.prog'); bar.hidden = false;
-    const files = {};
+    xBusy = true;
+    const files = {}, failed = [];
     let items = [];
+    // One file that can't be made or written is noted for the end, and the rest carry on.
+    const putOut = async (path, make, st) => {
+      try {
+        const bytes = await make();
+        if (dir) {
+          const parts = path.split('/'); let h = dir;
+          for (const part of parts.slice(0, -1)) h = await h.getDirectoryHandle(part, { create: true });
+          const w = await (await h.getFileHandle(parts[parts.length - 1], { create: true })).createWritable(); await w.write(bytes); await w.close();
+        } else files[path] = [bytes, { level: 0 }];
+        return true;
+      } catch (er) { console.error(path, er); failed.push({ path, st, why: exportWhy(er, !!dir) }); return false; }
+    };
     try {
       // Grades are read and cropped first, from the files as they are now; then everything is flattened.
-      $('#xStatus').textContent = 'Reading the grades…';
+      say('Reading the grades…');
       await scanAll((n, t) => { bar.firstChild.style.width = (30 * n / t) + '%'; });
       items = exportPlan(keep);
       if (withSheet) {
         const name = ('Grade sheet - ' + batch.name + '.pdf').replace(/[\\/:*?"<>|]+/g, '-');
-        const bytes = await buildSheetPdf();
-        if (dir) { const w = await (await dir.getFileHandle(name, { create: true })).createWritable(); await w.write(bytes); await w.close(); }
-        else files[name] = [bytes, { level: 0 }];
+        await putOut(name, buildSheetPdf);
       }
+      let nOut = 0;
       for (let i = 0; i < items.length; i++) {
-        $('#xStatus').textContent = 'Baking in marks ' + (i + 1) + ' of ' + items.length + '…';
+        say('Baking in marks ' + (i + 1) + ' of ' + items.length + '…');
         bar.firstChild.style.width = (30 + 70 * i / items.length) + '%';
-        const bytes = items[i].raw ? items[i].f.data : await flattenDoc(items[i].st, items[i].d, dpi, $('#xEdit').checked);
-        if (dir) {
-          const parts = items[i].path.split('/'); let h = dir;
-          for (const part of parts.slice(0, -1)) h = await h.getDirectoryHandle(part, { create: true });
-          const w = await (await h.getFileHandle(parts[parts.length - 1], { create: true })).createWritable(); await w.write(bytes); await w.close();
-        } else files[items[i].path] = [bytes, { level: 0 }];
+        if (await putOut(items[i].path, () => items[i].raw ? items[i].f.data : flattenDoc(items[i].st, items[i].d, dpi, editable), items[i].st)) nOut++;
       }
+      await unopenable(failed);
       bar.firstChild.style.width = '100%';
-      if (go.dataset.go === 'drive') {
+      if (!dir && !Object.keys(files).length) say('Nothing could be exported.', true);
+      else if (go.dataset.go === 'drive') {
         const plain = {}; for (const [k, v] of Object.entries(files)) plain[k] = v[0];
         const fname = 'Marked - ' + batch.name;
-        await saveToDrive(fname, plain, (n, t) => { $('#xStatus').textContent = 'Saving to Google Drive ' + n + ' of ' + t + '…'; });
-        $('#xStatus').textContent = 'Done. Saved to Google Drive in “' + fname + '”' + (batch.drive && batch.drive.kind === 'folder' ? ', inside the folder you opened.' : batch.drive ? ', next to the ZIP you opened.' : ', in My Drive.');
+        await saveToDrive(fname, plain, (n, t) => { say('Saving to Google Drive ' + n + ' of ' + t + '…'); });
+        say('Done. Saved to Google Drive in “' + fname + '”' + (batch.drive && batch.drive.kind === 'folder' ? ', inside the folder you opened.' : batch.drive ? ', next to the ZIP you opened.' : ', in My Drive.'), true);
       } else {
         if (!dir) saveBlob('Marked - ' + batch.name + '.zip', new Blob([fflate.zipSync(files)], { type: 'application/zip' }));
-        $('#xStatus').textContent = 'Done. ' + items.length + (items.length === 1 ? ' file' : ' files') + (dir ? ' saved into “' + dir.name + '”.' : ' in the ZIP.');
+        say('Done. ' + nOut + (nOut === 1 ? ' file' : ' files') + (dir ? ' saved into “' + dir.name + '”.' : ' in the ZIP.'), true);
       }
+      exportReport(failed);
     } catch (er) {
-      console.error(er); $('#xStatus').textContent = 'Something went wrong: ' + (er.message || er);
+      console.error(er); say('Something went wrong: ' + (er.message || er), true);
     }
+    xBusy = false;
     for (const b of box.querySelectorAll('[data-go]')) b.disabled = false;
   };
 }
@@ -1889,26 +2130,52 @@ async function saveBlob(name, blob) {
 // Looks for what Taylor types on a paper, like "9.5 = 88%", "9.5/12 = 88%", "10/12" or "88%".
 // Typed comments (Kami text boxes, sticky notes) are checked first, then the page's own text.
 const NUM = '(\\d{1,3}(?:[.,]\\d{1,2})?)';
-const RX_FULL = new RegExp(NUM + '\\s*(?:(?:\\/|out of|of)\\s*' + NUM + ')?\\s*(?:=|:|→|->|–|—|-|\\(|,)\\s*' + NUM + '\\s*%');
-const RX_OUTOF = new RegExp(NUM + '\\s*(?:\\/|out of)\\s*' + NUM + '(?![\\d/])', 'i');
+const NOT_MID = '(?<![\\d.,/])';   // not the tail of a longer number or date
+const RX_FULL = new RegExp(NOT_MID + NUM + '\\s*(?:(?:\\/|out of|of)\\s*' + NUM + ')?\\s*(?:=|:|→|->|–|—|-|\\(|,)\\s*' + NUM + '\\s*%');
+const RX_OUTOF = new RegExp(NOT_MID + NUM + '\\s*(?:\\/|out of)\\s*' + NUM + '(?![\\d/])', 'i');
 const RX_PCT_ANY = new RegExp(NUM + '\\s*%');
 const RX_OUT = new RegExp(NUM + '\\s*\\/\\s*' + NUM + '(?![\\d/])');
 const RX_PCT = new RegExp('^\\s*' + NUM + '\\s*%\\s*$');
+const RX_NAMED = new RegExp(NOT_MID + NUM + '(?:\\s+of\\s+' + NUM + ')?(?![\\d/%]|[.,]\\d|[ \\t]*(?:[/%:=]|[-–—][ \\t]*\\d))', 'i');
 const num = v => v == null ? null : +String(v).replace(',', '.');
 function parseGrade(str, strict) {
-  let m = RX_FULL.exec(str);
-  if (m) return { rank: 3, score: num(m[1]), outOf: num(m[2]), pct: num(m[3]), at: m.index, len: m[0].length };
+  // Each form takes its best match in the text: "Due 10/12" and the like are skipped, and a labelled grade beats one inside a sentence.
+  const sure = [], maybe = [], used = [];
+  const all = (rx, keep, read) => {
+    const out = [];
+    for (const m of str.matchAll(new RegExp(rx.source, rx.flags.replace('g', '') + 'g'))) {
+      const end = m.index + m[0].length, c = gradeContext(str.slice(0, m.index), str.slice(end), m[0]);
+      if (c.no || !keep(m) || used.some(u => m.index < u[1] && end > u[0])) continue;   // the 10/12 inside "10/12 = 91%" isn't another grade
+      const g = { ...read(m, c), at: m.index, len: m[0].length, loose: c.loose };
+      out.push(g); used.push([m.index, end]);
+      if (!c.loose || c.eq || REDONE_BEFORE.test(str.slice(0, m.index))) sure.push(g); else if (!COUNTS_AFTER.test(str.slice(end))) maybe.push(g); else g.counts = true;
+    }
+    return out;
+  };
+  const forms = [all(RX_FULL, () => true, (m, c) => ({ rank: 3, score: num(m[1]), outOf: num(m[2]), pct: num(m[3]), eq: c.eq }))];
+  if (!strict) forms.push(all(RX_OUTOF, m => num(m[1]) <= num(m[2]) && num(m[2]) <= 200, m => ({ rank: 2, score: num(m[1]), outOf: num(m[2]), pct: null })), all(RX_PCT_ANY, m => num(m[1]) <= 110, m => ({ rank: 1, score: null, outOf: null, pct: num(m[1]) })));
+  // A labelled number with no slash or percent ("Revised: 10", "10 points", "Revised: 10 of 12", or "10 of 12" alone). It can be the class ("Grade 10"), so it never stands by itself: she's always asked.
+  if (!strict) forms.push(all(RX_NAMED, m => (m[2] == null ? num(m[1]) <= 200 : num(m[1]) <= num(m[2]) && num(m[2]) <= 200) && (labelledNumber(str.slice(0, m.index), str.slice(m.index + m[0].length)) || (m[2] != null && m[0] === str.trim())), m => ({ rank: 0.5, score: num(m[1]), outOf: num(m[2]), pct: null })).map(g => Object.assign(g, { loose: true })));
+  // Two grades that differ ("First draft: 8/12. Revised: 10/12", "Grade: 8/12, now 10/12", "Total: 10/12. Grade: 95%"): she has to say. The one offered is the last one on this assignment's total, or else the last one.
+  // An unlabelled number out of something else is a part of the grade ("Thesis 3/4. Total 10/12"). A percent agrees with a score if it's that score on the scale or plainly worked out.
+  const pctOff = (p, s, of = s.outOf == null ? maxPoints() : s.outOf) => p.score == null && s.score != null && s.pct == null && Math.abs(p.pct - s.score / of * 100) > 1 && Math.abs(p.pct - percentWith(s.score, of, setup.scale)) > 1;
+  const differ = (a, b) => (a.score != null && b.score != null && (a.score !== b.score || (a.outOf != null && b.outOf != null && a.outOf !== b.outOf))) || (a.pct != null && b.pct != null && a.pct !== b.pct) || pctOff(a, b) || pctOff(b, a);
+  const reads = sure.concat(maybe.filter(g => g.outOf == null || g.outOf === maxPoints() || sure.some(s => s.outOf === g.outOf)));
+  if (reads.some(a => reads.some(b => differ(a, b)))) {
+    const late = reads.sort((a, b) => b.at - a.at);
+    return { ...(late.find(g => g.outOf === maxPoints() || (g.rank === 0.5 && g.outOf == null)) || late[0]), several: true };
+  }
+  // A labelled grade first, then one that may be a grade, so a count or a part earlier in the comment ("Only 3/12 sources cited. Good rewrite, 10/12") doesn't hide it.
+  const any = forms.flat(), best = any.find(g => !g.loose) || any.find(g => reads.includes(g)) || any[0];
+  if (best) return best;
   if (strict) return null;
-  m = RX_OUTOF.exec(str);
-  if (m && num(m[1]) <= num(m[2]) && num(m[2]) <= 200) return { rank: 2, score: num(m[1]), outOf: num(m[2]), pct: null, at: m.index, len: m[0].length };
-  m = RX_PCT.exec(str) || RX_PCT_ANY.exec(str);
-  if (m && num(m[1]) <= 110) return { rank: 1, score: null, outOf: null, pct: num(m[1]), at: m.index, len: m[0].length };
+  let m;
   m = /^\s*(\d{1,2}(?:[.,]\d)?)\s*$/.exec(str);   // a text box with only a number, like "9.5"
   if (m) return { rank: 0.5, score: num(m[1]), outOf: null, pct: null, at: m.index, len: m[0].length };
   return null;
 }
-const annText = a => {
-  const sq = t => String(t || '').replace(/\s+/g, ' ').trim();
+const annText = (a, lines) => {   // lines: keep its line breaks, for reading a grade
+  const sq = t => lines ? String(t || '').replace(/\r\n?/g, '\n').trim() : String(t || '').replace(/\s+/g, ' ').trim();
   const c = sq((a.contentsObj && a.contentsObj.str) || a.contents) || sq(a.richText && a.richText.str), t = sq(Array.isArray(a.textContent) ? a.textContent.join(' ') : '');
   return !t || t === c ? c : !c ? t : c + ' ' + t;
 };
@@ -1945,7 +2212,7 @@ async function wordPdf(f) {
 const paperBytes = async f => f.kind === 'docx' ? wordPdf(f) : f.data;
 async function scanFile(f, spot) {
   const doc = await pdfjsLib.getDocument({ data: (await paperBytes(f)).slice(), isEvalSupported: false }).promise;
-  const found = [], kami = {}, seen = [];
+  const found = [], kami = {}, seen = [], marksSig = gradeMarks(f).join('\0');
   try {
     if (f.kind !== 'docx') f.numPages = doc.numPages;
     const pick = spot ? [typeof spot.page === 'number' ? Math.min(spot.page, doc.numPages - 1) : spot.page === 'last' ? doc.numPages - 1 : 0] : [...Array(doc.numPages).keys()];
@@ -1956,33 +2223,38 @@ async function scanFile(f, spot) {
       if (annots.length) kami[p] = { notes: annots.filter(isPopupComment).map(a => kamiNote(a, vp)) };
       if (!pick.includes(p)) { page.cleanup(); continue; }
       const area = spot ? { x: spot.x * vp.width, y: spot.y * vp.height, w: spot.w * vp.width, h: spot.h * vp.height } : null;
+      const ofMark = t => { const g = parseGrade(t, false); return g && { ...g, mark: true }; };
       const add = (g, rect, from, text, hover) => {
         if (!g) return;
         const r = [Math.min(rect[0], rect[2]), Math.min(rect[1], rect[3]), Math.max(rect[0], rect[2]), Math.max(rect[1], rect[3])];
         if (!inside(r, area)) return;
         // the same grade at the same place counts once
         if (found.some(o => o.page === p && o.score === g.score && o.pct === g.pct && Math.abs(o.rect[0] - r[0]) < 20 && Math.abs(o.rect[1] - r[1]) < 20)) return;
-        found.push({ ...g, page: p, rect: r, from, hover: !!hover, full: text, text: text.length > 140 ? text.slice(0, 140) + '…' : text });
+        found.push({ ...g, boxed: !!spot, page: p, rect: r, from, hover: !!hover, full: text, text: text.length > 140 ? text.slice(0, 140) + '…' : text });
       };
-      for (const a of annots) { const t = annText(a); if (t && seen.length < 4) seen.push(t.length > 60 ? t.slice(0, 60) + '…' : t); if (t) add(parseGrade(t, false), vp.convertToViewportRectangle(a.rect), 'note', t, isPopupComment(a)); }
+      for (const a of annots) { const t = annText(a); if (t && seen.length < 4) seen.push(t.length > 60 ? t.slice(0, 60) + '…' : t); if (t && !f.virtual) add(parseGrade(annText(a, true), false), vp.convertToViewportRectangle(a.rect), 'note', t, isPopupComment(a)); }
       for (const m of (f.marks || {})[p] || []) {
-        if (m.t === 'text') { const L = textLayout(m, vp.width); add(parseGrade(m.text, false), [m.x, m.y, m.x + L.w, m.y + L.h], 'note', m.text); }
-        if (m.t === 'note') add(parseGrade(m.text, false), [m.ax - 4, m.ay - 4, m.ax + 4, m.ay + 4], 'note', m.text, true);
+        if (m.t === 'text') { const L = textLayout(m, vp.width); add(ofMark(m.text), [m.x, m.y, m.x + L.ink, m.y + L.h], 'note', m.text); }
+        if (m.t === 'note') add(ofMark(m.text), [m.ax - 4, m.ay - 4, m.ax + 4, m.ay + 4], 'note', m.text, true);
       }
-      // text in the page itself (already flattened files): strict "9.5 = 88%" form only, so essay numbers don't count
+      // text in the page itself (already flattened files): strict "9.5 = 88%" form only, so essay numbers don't count.
+      // A student could type this, so it's only offered, unless she boxed this very paper by hand. A rubric page's own printing isn't anyone's grade.
       const tc = await page.getTextContent();
       let str = '';
       const spans = [];
       for (const it of tc.items) {
-        if (!it.str) { if (it.hasEOL) str += ' '; continue; }
+        if (!it.str) { if (it.hasEOL) str += '\n'; continue; }
         const [, , , d, e, fy] = it.transform;
         spans.push({ a: str.length, b: str.length + it.str.length, r: vp.convertToViewportRectangle([e, fy, e + it.width, fy + (it.height || Math.abs(d))]) });
-        str += it.str + (it.hasEOL ? ' ' : '');
+        str += it.str + (it.hasEOL ? '\n' : '');
       }
       const re = new RegExp(RX_FULL.source, 'g');
       let m;
-      while ((m = re.exec(str))) {
+      while (!f.virtual && (m = re.exec(str))) {
         const g = parseGrade(m[0], true); if (!g) continue;
+        const cx = gradeContext(str.slice(0, m.index), str.slice(m.index + m[0].length), m[0]);
+        if (cx.no || (cx.loose && !cx.eq && g.outOf == null)) continue;   // "Of 200, 50% agreed" is the essay talking
+        g.loose = cx.loose; g.eq = cx.eq; g.theirs = !(spot && spot === f.hand);
         const hit = spans.filter(s => s.b > m.index && s.a < m.index + m[0].length);
         if (!hit.length) continue;
         const xs = hit.flatMap(s => [s.r[0], s.r[2]]), ys = hit.flatMap(s => [s.r[1], s.r[3]]);
@@ -2006,7 +2278,7 @@ async function scanFile(f, spot) {
       c.width = Math.ceil(w * k); c.height = Math.ceil(h * k);
       const ctx = c.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
       ctx.translate(-x * k, -y * k);
-      await page.render({ canvasContext: ctx, viewport: vpRot(f, g.page, page, k), annotationMode: pdfjsLib.AnnotationMode.ENABLE }).promise;
+      await page.render({ canvasContext: ctx, ...vpDraw(f, g.page, page, k), annotationMode: pdfjsLib.AnnotationMode.ENABLE }).promise;
       ctx.setTransform(k, 0, 0, k, -x * k, -y * k);
       const mk = ((f.marks || {})[g.page] || []).filter(m => m.t !== 'note');
       if (mk.length) drawMarks(ctx, mk, vp1.width, vp1.height, 0, null);
@@ -2022,7 +2294,7 @@ async function scanFile(f, spot) {
       if (t) t.width = t.height = 0;
       c.width = c.height = 0;
     }
-    return { found, shots, kami, seen, nAnnots: Object.keys(kami).length, hasText: seen.length > 0 };
+    return { found, shots, kami, seen, marksSig, nAnnots: Object.keys(kami).length, hasText: seen.length > 0 };
   } finally { doc.destroy(); }
 }
 // Finds the marks inside a picked spot: her colored ink first (red pen, highlights), or dark ink when nothing is colored.
@@ -2083,7 +2355,9 @@ async function scanRun(onStep) {
     }
     wordScoresOf(st); refound(st);
   }
+  if (batch !== b0) return;   // she closed it during the last file
   scanned = true;
+  if (JSON.stringify(paperReads()) !== JSON.stringify(batch.read)) saveSoon();
   renderList();
   for (const pg of pages) { pg.extra = (pg.file.kami && pg.file.kami[pg.idx] && pg.file.kami[pg.idx].notes) || []; draw(pg); }
 }
@@ -2092,7 +2366,7 @@ function foundLabel(fd) {
   if (!fd) return '';
   return (fd.score != null ? fmtNum(fd.score) + (fd.outOf ? '/' + fmtNum(fd.outOf) : '') : '') + (fd.pct != null ? (fd.score != null ? ' = ' : '') + fmtNum(fd.pct) + '%' : '');
 }
-// One row per file (and one for each empty folder), always in folder order.
+// One row per file (and one for each empty folder), in the order of the student list.
 let sheetShowOut = false;
 // The sheet lists only files with a grade on them (read, boxed or highlighted); "Show files with no grade" lists every file.
 let sheetAll = !!store.get('gs.sheetall', false);
@@ -2135,13 +2409,15 @@ async function openSheet(rescan) {
     if (e.target.closest('[data-auto]')) { delete setup.spot; store.set('gs.setup', { ...setup, spot: undefined }); saveSoon(); return openSheet(true); }
     const c = e.target.closest('[data-copy]'); if (c) return copy(c.dataset.copy, c.dataset.copy ? 'Copied ' + c.dataset.copy : 'Nothing to copy');
     const go = e.target.closest('[data-open]'); if (go) { closeDlg(); return openStudent(+go.dataset.open, go.dataset.file); }
-    if (e.target.closest('[data-cp]')) return copy(batch.students.map(st => { const g = gradeOf(st); return fmtNum(g.total != null ? g.total : g.pct); }).join('\n'), 'Copied ' + batch.students.length + ' scores in folder order (blank where unsure)');
+    const rd = e.target.closest('[data-rd]'); if (rd) { setReading(batch.students[+rd.dataset.rdi], rd.dataset.rdk, rd.dataset.rd); return renderSheet(); }
+    if (e.target.closest('[data-cp]') && !await okPartial(batch.students)) return;
+    if (e.target.closest('[data-cp]')) return copy(batch.students.map(st => scoreText(gradeOf(st), 'any')).join('\n'), 'Copied ' + batch.students.length + ' scores in ' + listOrder() + ' (blank where unsure)');
     if (e.target.closest('[data-pdf]')) return saveBlob('Grade sheet - ' + batch.name + '.pdf', new Blob([await buildSheetPdf()], { type: 'application/pdf' }));
   };
   box.oninput = e => {
     const t = e.target.closest('[data-typed]'); if (!t) return;
     const st = batch.students[+t.dataset.typed];
-    st.grade.sheet = t.value.trim().replace(',', '.'); saveSoon(); renderList(); if (st === batch.students[cur]) renderGrade();
+    st.grade.sheet = t.value.trim().replace(',', '.'); scoreTouched(st); saveSoon(); renderList(); if (st === batch.students[cur]) renderGrade();
   };
   box.onchange = e => { if (e.target.matches('[data-trim]')) { disp.trim = e.target.checked; store.set('gs.disp', disp); openSheet(true); } };
   const bar = box.querySelector('.prog i');
@@ -2153,8 +2429,8 @@ async function openSheet(rescan) {
 function renderSheet() {
   const rows = sheetRows();
   const nOut = batch.students.reduce((a, st) => a + st.files.filter(f => viewable(f) && !fileIn(st, f)).length, 0);
-  const nOne = batch.students.filter(st => st.foundCount === 1).length, nMany = batch.students.filter(st => st.foundCount > 1).length;
-  $('#shSub').textContent = (setup.spot ? 'Same spot on every paper · ' : '') + nOne + ' of ' + batch.students.length + ' read' + (nMany ? ' · ' + nMany + ' to check' : '');
+  const nOne = batch.students.filter(st => st.found).length, nMany = batch.students.filter(manyReads).length, nAsk = batch.students.reduce((a, st) => a + (st.doubts && !manyReads(st) ? st.doubts.length : 0), 0);
+  $('#shSub').textContent = (setup.spot ? 'Same spot on every paper · ' : '') + nOne + ' of ' + batch.students.length + ' read' + (nMany ? ' · ' + nMany + ' to check' : '') + (nAsk ? ' · ' + nAsk + ' to confirm' : '');
   const spotted = !!setup.spot || batch.students.some(st => st.files.some(f => f.hand));
   const nHidden = sheetAll ? 0 : batch.students.reduce((a, st) => a + st.files.filter(f => f.kind === 'docx').map(f => ({ f, word: true })).concat(st.files.filter(f => viewable(f) && fileIn(st, f)).map(f => ({ f }))).filter(r => !rowGraded(r)).length, 0);
   $('#shBody').innerHTML = '<p class="muted" style="margin:0 0 10px;font-size:14px">Every row is made from the file named on it, inside that student’s folder. Click a picture to open that exact file. Click a score to copy it.</p>' +
@@ -2165,41 +2441,41 @@ function renderSheet() {
     rows.map(({ st, i, f, out, none, word, nograde, first }) => {
       const where = '<div style="font-weight:600">' + esc(st.key) + '</div>' + (f ? '<div class="muted" style="font-size:13px;overflow-wrap:anywhere">' + esc(f.path) + '</div>' : '');
       if (word) {   // her Word rubric: the highlighted boxes, read straight from the file
-        const w = f.wscore, ty = wordFound(f), hs = (f.hand && f.scan && f.scan.shots) || [], ri = rows.findIndex(r => r.f === f);
+        const w = f.wscore, tyAll = wordFound(f), rdw = splitReads(st, tyAll), ty = rdw.ok, hs = (f.hand && f.scan && f.scan.shots) || [], ri = rows.findIndex(r => r.f === f);
         const info = w ? w.crits.map((c, k) => esc(c.length > 28 ? c.slice(0, 28) + '…' : c) + ' <b>' + (w.per[k] == null ? '–' : fmtNum(w.per[k])) + '</b>').join(' · ') + (w.total != null && !w.done ? '<div class="muted" style="font-size:12px">Not every criterion is highlighted yet</div>' : '') : '';
         const pics = hs.map(g => '<div style="margin-bottom:6px"><img src="' + g.img + '" alt="" data-open="' + i + '" data-file="' + esc(f.path) + '" title="Open this file" style="display:block;max-width:360px;max-height:150px;border:1px solid var(--line);border-radius:4px;cursor:pointer;background:#fff"><div class="muted" style="font-size:12px">Page ' + (g.page + 1) + '</div></div>').join('');
         const big = (v, of, pct) => '<div class="big-sc" data-copy="' + esc(fmtNum(v)) + '" title="Click to copy">' + fmtNum(v) + (of ? '<small>/ ' + fmtNum(of) + '</small>' : '') + '</div>' + (pct != null ? '<div class="muted" style="font-size:13px;margin-top:4px;font-weight:500">= ' + fmtNum(pct) + '%</div>' : '');
         const hf = (f.hand && f.scan && f.scan.found) || [];
-        const reads = w && w.total != null ? big(w.total, w.max, w.pct)
-          : ty.length ? (ty.length > 1 ? '<span class="pill warn" style="display:inline-block;font-size:12px;font-weight:700;padding:3px 9px;border-radius:999px;background:var(--warn-soft);color:var(--warn);margin-bottom:6px">' + ty.length + ' grades found, check</span>' : '') + ty.map(g => '<div class="big-sc" data-copy="' + esc(fmtNum(g.score != null ? g.score : g.pct)) + '" title="Click to copy">' + esc(foundLabel(g)) + '</div>').join('')
+        const reads = w && w.total != null && (f.virtual || ty.length) ? big(w.total, w.max, w.pct)
+          : ty.length ? (manyReads(st) ? '<span class="pill warn" style="display:inline-block;font-size:12px;font-weight:700;padding:3px 9px;border-radius:999px;background:var(--warn-soft);color:var(--warn);margin-bottom:6px">' + readsCount(st) + ' grades found, check</span>' : ty.map(g => '<div class="big-sc" data-copy="' + esc(fmtNum(g.score != null ? g.score : g.pct)) + '" title="Click to copy">' + esc(foundLabel(g)) + '</div>').join(''))
           : hf.length === 1 ? big(hf[0].score != null ? hf[0].score : hf[0].pct, hf[0].outOf, hf[0].score != null ? hf[0].pct : null)
-          : hs.length ? '<input class="sc-in" type="text" inputmode="decimal" data-typed="' + i + '" value="' + esc(st.grade.sheet || '') + '" placeholder="Score" aria-label="Type the score you see in the picture"><div class="muted" style="font-size:12px;margin-top:4px;font-weight:400">Type what you see</div>'
-          : '<span class="muted" style="font-weight:400">No grade found yet</span>';
+          : hs.length ? '<input class="sc-in" type="text" inputmode="decimal" data-typed="' + i + '" value="' + esc(st.grade.sheet ?? '') + '" placeholder="Score" aria-label="Type the score you see in the picture"><div class="muted" style="font-size:12px;margin-top:4px;font-weight:400">Type what you see</div>'
+          : rdw.ask.length ? '' : '<span class="muted" style="font-weight:400">No grade found yet</span>';
         return '<tr><td class="n">' + (i + 1) + '</td><td>' + where + '</td><td>' + pics + '<button class="link" data-open="' + i + '" data-file="' + esc(f.path) + '" style="text-align:left">' + (w ? 'Word rubric' : 'Word file') + '</button>' +
-          (info ? '<div class="muted" style="font-size:13px">' + info + '</div>' : '') + ty.map(g => '<div class="muted" style="font-size:13px;max-width:360px">Typed: “' + esc(g.text) + '”</div>').join('') +
-          '<div style="margin-top:4px"><button class="link" style="font-size:12px" data-rebox="' + i + '|' + esc(f.path) + '">' + (f.hand ? 'Boxed by hand · redo' : 'Box it by hand') + '</button></div></td><td style="font-weight:700">' + reads + '</td></tr>';
+          (info ? '<div class="muted" style="font-size:13px">' + info + '</div>' : '') + tyAll.filter(g => !g.table).map(g => '<div class="muted" style="font-size:13px;max-width:360px">Typed: “' + esc(g.text) + '”</div>').join('') +
+          '<div style="margin-top:4px"><button class="link" style="font-size:12px" data-rebox="' + i + '|' + esc(f.path) + '">' + (f.hand ? 'Boxed by hand · redo' : 'Box it by hand') + '</button></div></td><td style="font-weight:700">' + reads + readsHtml(i, rdw) + '</td></tr>';
       }
       if (!f) return '<tr><td class="n">' + (i + 1) + '</td><td>' + where + '</td><td class="muted">' + (none ? 'Nothing turned in' : nograde ? 'No grade yet. <button class="link" style="font-size:13px" data-rebox="' + i + '|' + esc(first.path) + '">Box it by hand</button>' : 'Only unmarked files, left out') + '</td><td></td></tr>';
       if (out) return '<tr style="opacity:.7"><td class="n">' + (i + 1) + '</td><td>' + where + '</td><td class="muted">Left out (no marks). <button class="link" data-bring="' + i + '|' + esc(f.path) + '">Bring back</button></td><td></td></tr>';
       const sc = f.scan || { found: [], shots: [] };
-      const many = sc.found.length > 1;
+      const rdf = splitReads(st, sc.found), okF = rdf.ok, many = manyReads(st);
       const pics = sc.shots.map(g => '<div style="margin-bottom:6px"><img src="' + g.img + '" alt="" data-open="' + i + '" data-file="' + esc(f.path) + '" title="Open this file" style="display:block;max-width:360px;max-height:150px;border:1px solid ' + (many ? 'var(--warn)' : 'var(--line)') + ';border-radius:4px;cursor:pointer;background:#fff">' +
         (g.text && g.from === 'note' ? '<div class="muted" style="font-size:12px;max-width:360px">Typed: “' + esc(g.text) + '” · page ' + (g.page + 1) + '</div>' : '<div class="muted" style="font-size:12px">Page ' + (g.page + 1) + '</div>') + '</div>').join('') ||
         '<span class="muted">' + (f.hand ? 'Boxed by hand' : sc.err ? 'Couldn’t read this file' : sc.seen && sc.seen.length ? 'No grade in the typed text I found: “' + esc(sc.seen.join('” · “')) + '”' : sc.nAnnots ? 'There are marks here but no typed text, so the grade may be handwritten or flattened. Try Box it by hand.' : 'No marks or typed text in this file. If you marked it in Kami, the marks may not have been saved into the file. Try Box it by hand.') + '</span>';
       const ri = rows.findIndex(r => r.f === f);
       const handNote = '<div style="margin-top:4px;display:flex;gap:14px"><button class="link" style="font-size:12px" data-rebox="' + i + '|' + esc(f.path) + '">' + (f.hand ? 'Boxed by hand · redo' : 'Box it by hand') + '</button><button class="link" style="font-size:12px;color:var(--muted)" data-leave="' + i + '|' + esc(f.path) + '">Leave out</button></div>';
       let reads;
-      if (sc.found.length === 1) {   // clearly one score: show it big beside the picture
-        const g0 = sc.found[0];
+      if (okF.length === 1 && !many) {   // clearly one score: show it big beside the picture
+        const g0 = okF[0];
         reads = '<div class="big-sc" data-copy="' + esc(fmtNum(g0.score != null ? g0.score : g0.pct)) + '" title="Click to copy">' + (g0.score != null ? fmtNum(g0.score) + (g0.outOf ? '<small>/ ' + fmtNum(g0.outOf) + '</small>' : '') : fmtNum(g0.pct) + '<small>%</small>') + '</div>' +
           (g0.score != null && g0.pct != null ? '<div class="muted" style="font-size:13px;margin-top:4px;font-weight:500">= ' + fmtNum(g0.pct) + '%</div>' : '');
-      } else if (sc.found.length) reads = sc.found.map(g => '<div class="c" data-copy="' + esc(fmtNum(g.score != null ? g.score : g.pct)) + '" style="cursor:copy">' + esc(foundLabel(g)) + '</div>').join('');
-      else if (sc.shots.length) reads = '<input class="sc-in" type="text" inputmode="decimal" data-typed="' + i + '" value="' + esc(st.grade.sheet || '') + '" placeholder="Score" aria-label="Type the score you see in the picture"><div class="muted" style="font-size:12px;margin-top:4px;font-weight:400">Type what you see</div>';
+      } else if (okF.length && !many) reads = okF.map(g => '<div class="c" data-copy="' + esc(fmtNum(g.score != null ? g.score : g.pct)) + '" style="cursor:copy">' + esc(foundLabel(g)) + '</div>').join('');
+      else if (!okF.length && sc.shots.length && !rdf.ask.length) reads = '<input class="sc-in" type="text" inputmode="decimal" data-typed="' + i + '" value="' + esc(st.grade.sheet ?? '') + '" placeholder="Score" aria-label="Type the score you see in the picture"><div class="muted" style="font-size:12px;margin-top:4px;font-weight:400">Type what you see</div>';
       else reads = '';
-      const own = ownGrade(st), ps = sc.found.length === 1 ? sc.found[0].score : sc.found.length ? null : paperScore(st);
-      if (own.total != null && ps != null && Math.abs(own.total - ps) > 0.001) reads += '<span class="sc-warn">Your score in Grading Studio is ' + fmtNum(own.total) + '</span>';
+      const own = ownGrade(st), ps = okF.length === 1 ? okF[0].score : okF.length ? null : paperScore(st);
+      if (own.total != null && ps != null && Math.abs(own.total - ps) > 0.001) reads += '<span class="sc-warn">Your score in Grading Studio is ' + fmtNum(own.total) + (own.partial ? ' (partial)' : '') + '</span>';
       return '<tr><td class="n">' + (i + 1) + '</td><td>' + where + '</td><td>' + pics + handNote + '</td><td style="font-weight:700">' +
-        (many ? '<span class="pill warn" style="display:inline-block;font-size:12px;font-weight:700;padding:3px 9px;border-radius:999px;background:var(--warn-soft);color:var(--warn);margin-bottom:6px">' + sc.found.length + ' grades found, check</span>' : '') + reads + '</td></tr>';
+        (many ? '<span class="pill warn" style="display:inline-block;font-size:12px;font-weight:700;padding:3px 9px;border-radius:999px;background:var(--warn-soft);color:var(--warn);margin-bottom:6px">' + readsCount(st) + ' grades found, check</span>' : '') + reads + readsHtml(i, rdf) + '</td></tr>';
     }).join('') + '</tbody></table>';
 }
 // Box each grade by hand: one paper at a time, drag a box around the grade, and it moves to the next paper.
@@ -2240,7 +2516,7 @@ async function pickEach(start) {
       c.width = Math.ceil(vp.width); c.height = Math.ceil(vp.height);
       Object.assign(c.style, { width: v1.width * k + 'px', height: v1.height * k + 'px', display: 'block', margin: '0 auto 14px', background: '#fff', boxShadow: 'var(--shadow)', cursor: 'crosshair', touchAction: 'none' });
       const ctx = c.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
-      await page.render({ canvasContext: ctx, viewport: vp, annotationMode: pdfjsLib.AnnotationMode.ENABLE }).promise;
+      await page.render({ canvasContext: ctx, viewport: vp, transform: skewXf(f, p, vp), annotationMode: pdfjsLib.AnnotationMode.ENABLE }).promise;
       if (my !== token) break;
       const mk = ((f.marks || {})[p] || []).filter(m => m.t !== 'note');
       if (mk.length) { ctx.save(); ctx.scale(k * dpr, k * dpr); drawMarks(ctx, mk, v1.width, v1.height, 0, null); ctx.restore(); }
@@ -2307,7 +2583,7 @@ function pickSpot() {
     const vp = vpRot(f, pn, page, k); W = vp.width; H = vp.height;
     bmp = document.createElement('canvas'); bmp.width = W; bmp.height = H;
     const bc = bmp.getContext('2d'); bc.fillStyle = '#fff'; bc.fillRect(0, 0, W, H);
-    await page.render({ canvasContext: bc, viewport: vp, annotationMode: pdfjsLib.AnnotationMode.ENABLE }).promise;
+    await page.render({ canvasContext: bc, viewport: vp, transform: skewXf(f, pn, vp), annotationMode: pdfjsLib.AnnotationMode.ENABLE }).promise;
     doc.destroy();
     c.width = W; c.height = H; paint();
   };
@@ -2324,7 +2600,16 @@ function pickSpot() {
     if (e.target.closest('[data-use]') && sel) { setup.spot = { page: which, ...sel }; store.set('gs.setup', { ...setup, spot: undefined }); saveSoon(); openSheet(true); }
   };
 }
-// One PDF with every row of the grade sheet, in folder order, drawn on a canvas so any name prints correctly.
+// What she's said about a student, for the printed sheet: her score, or missing or excused, and where her score and the paper differ. [text, warn]
+function sheetOwnLines(st, said) {
+  if (said.has(st)) return [];
+  if (noScore(st)) return [[STATUS_LABEL[st.grade.status], false]];
+  const own = ownGrade(st), out = [];
+  if (own.total != null) out.push(['Your score: ' + fmtNum(own.total) + ' / ' + maxPoints() + (own.pct != null ? ' = ' + fmtPct(own.pct) : '') + (own.partial ? ' (partial)' : ''), false]);
+  const d = disagreeNote(st); if (d) out.push([d.replace(/^.*, t/, 'T'), true]);   // "The paper says 10", which fits the column
+  return out;
+}
+// One PDF with every row of the grade sheet, in the order of the student list, drawn on a canvas so any name prints correctly.
 async function buildSheetPdf() {
   if (!scanned) await scanAll();
   const doc = await PDFLib.PDFDocument.create();
@@ -2332,16 +2617,19 @@ async function buildSheetPdf() {
   const rows = sheetRows().filter(r => !r.out);
   const loadImg = src => new Promise(res => { const im = new Image(); im.onload = () => res(im); im.onerror = () => res(null); im.src = src; });
   let ri = 0, pageNo = 0;
+  const sheetSaid = new Set();   // her own score prints once per student, on their first row
   while (ri < rows.length) {
     const c = document.createElement('canvas'); c.width = PW * k; c.height = PH * k;
     const ctx = c.getContext('2d'); ctx.scale(k, k); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, PW, PH);
     ctx.fillStyle = '#151922'; ctx.font = 'bold 13px ' + FONT; ctx.fillText(batch.name + ' · grade sheet' + (pageNo ? ' (continued)' : ''), M, M - 8);
     let y = M + 6;
     while (ri < rows.length) {
-      const { st, i, f, word } = rows[ri], sc = word ? { found: f.wscore && f.wscore.total != null ? [{ score: f.wscore.total, outOf: f.wscore.max, pct: f.wscore.pct }] : wordFound(f).length ? wordFound(f) : (f.hand && f.scan && f.scan.found) || [], shots: (f.hand && f.scan && f.scan.shots) || [] } : f && f.scan ? f.scan : { found: [], shots: [] };
+      const { st, i, f, word } = rows[ri], wty = word ? wordFound(f).filter(g => !g.table) : [], sc = word ? { found: f.virtual && f.wscore && f.wscore.total != null ? [{ score: f.wscore.total, outOf: f.wscore.max, pct: f.wscore.pct }] : wordFound(f).length ? wordFound(f) : (f.hand && f.scan && f.scan.found) || [], shots: (f.hand && f.scan && f.scan.shots) || [] } : f && f.scan ? f.scan : { found: [], shots: [] };
+      const rd = splitReads(st, sc.found), okF = rd.ok;
       const imgs = [];
       for (const g of sc.shots) { const im = await loadImg(g.img); if (im) imgs.push({ im, h: Math.min(90, maxW * im.height / im.width) }); }
-      const rh = Math.max(64, imgs.reduce((a, o) => a + o.h + 6, 0) + (word && imgs.length && f.wscore ? 44 : 0)) + 10;
+      const mine = sheetOwnLines(st, sheetSaid);
+      const rh = Math.max(64 + mine.length * 15, imgs.reduce((a, o) => a + o.h + 6, 0) + (word && imgs.length && f.wscore ? 44 : 0)) + 10;
       if (y + rh > PH - M && y > M + 6) break;
       ctx.fillStyle = '#8A90A0'; ctx.font = '11px ' + FONT; ctx.fillText(String(i + 1), M, y + 13);
       ctx.fillStyle = '#151922'; ctx.font = 'bold 12px ' + FONT;
@@ -2350,19 +2638,21 @@ async function buildSheetPdf() {
       ctx.fillStyle = '#5D6475'; ctx.font = '9.5px ' + FONT;
       if (f) for (const ln of wrapText(ctx, f.path, 170).slice(0, 2)) { ctx.fillText(ln, M + 20, ly); ly += 12; }
       ctx.font = 'bold 12px ' + FONT;
-      if (sc.found.length > 1) { ctx.fillStyle = '#9A6411'; ctx.fillText(sc.found.length + ' grades found, check', M + 20, ly + 4); ly += 16; }
+      for (const [ln, warn] of mine) { sheetSaid.add(st); ctx.fillStyle = warn ? '#9A6411' : '#151922'; ctx.fillText(ln, M + 20, ly + 4); ly += 15; }
+      if (manyReads(st)) { ctx.fillStyle = '#9A6411'; ctx.fillText(readsCount(st) + ' grades found, check', M + 20, ly + 4); ly += 16; }
+      if (rd.ask.length) { ctx.fillStyle = '#9A6411'; ctx.fillText('To confirm: ' + rd.ask.map(foundLabel).join(', '), M + 20, ly + 4); ly += 16; }
       ctx.fillStyle = '#1C7F54';
-      if (sc.found.length === 1) { ctx.font = 'bold 18px ' + FONT; ctx.fillText(foundLabel(sc.found[0]), M + 20, ly + 12); ly += 22; }
-      else for (const g of sc.found) { ctx.fillText(foundLabel(g), M + 20, ly + 4); ly += 15; }
-      if (f && !sc.found.length && st.grade.sheet) { ctx.font = 'bold 18px ' + FONT; ctx.fillText(st.grade.sheet, M + 20, ly + 12); ctx.font = '9.5px ' + FONT; ctx.fillStyle = '#5D6475'; ctx.fillText('typed from the picture', M + 20, ly + 24); }
+      if (okF.length === 1 && !manyReads(st)) { ctx.font = 'bold 18px ' + FONT; ctx.fillText(foundLabel(okF[0]), M + 20, ly + 12); ly += 22; }
+      else for (const g of okF) { ctx.fillText(foundLabel(g), M + 20, ly + 4); ly += 15; }
+      if (f && !okF.length && hasSheet(st.grade)) { ctx.font = 'bold 18px ' + FONT; ctx.fillText(String(st.grade.sheet), M + 20, ly + 12); ctx.font = '9.5px ' + FONT; ctx.fillStyle = '#5D6475'; ctx.fillText('typed from the picture', M + 20, ly + 24); }
       let iy = y;
-      for (const { im, h } of imgs) { const w = h * im.width / im.height; ctx.drawImage(im, X, iy, w, h); ctx.strokeStyle = sc.found.length > 1 ? '#E8B451' : '#DADDE6'; ctx.strokeRect(X, iy, w, h); iy += h + 6; }
-      if (word) { ctx.fillStyle = '#151922'; ctx.font = '11px ' + FONT; let wy = (imgs.length ? iy : y) + 13; for (const ln of wrapText(ctx, !f.wscore || wordFound(f).length ? (wordFound(f).length ? 'Word file, typed: ' + wordFound(f).map(g => '“' + g.text + '”').join(' · ') : imgs.length ? '' : 'Word file') : 'Word rubric: ' + f.wscore.crits.map((c, k) => c + ' ' + (f.wscore.per[k] == null ? '–' : fmtNum(f.wscore.per[k]))).join(' · '), maxW).slice(0, 4)) { ctx.fillText(ln, X, wy); wy += 14; } }
+      for (const { im, h } of imgs) { const w = h * im.width / im.height; ctx.drawImage(im, X, iy, w, h); ctx.strokeStyle = manyReads(st) ? '#E8B451' : '#DADDE6'; ctx.strokeRect(X, iy, w, h); iy += h + 6; }
+      if (word) { ctx.fillStyle = '#151922'; ctx.font = '11px ' + FONT; let wy = (imgs.length ? iy : y) + 13; for (const ln of wrapText(ctx, !f.wscore || wty.length ? (wty.length ? 'Word file, typed: ' + wty.map(g => '“' + g.text + '”').join(' · ') : imgs.length ? '' : 'Word file') : 'Word rubric: ' + f.wscore.crits.map((c, k) => c + ' ' + (f.wscore.per[k] == null ? '–' : fmtNum(f.wscore.per[k]))).join(' · '), maxW).slice(0, 4)) { ctx.fillText(ln, X, wy); wy += 14; } }
       else if (!imgs.length) { ctx.fillStyle = '#8A90A0'; ctx.font = 'italic 11px ' + FONT; ctx.fillText(f ? 'No typed grade found' : rows[ri].nograde ? 'No grade yet' : 'Nothing turned in', X, y + 13); }
       y += rh; ctx.strokeStyle = '#ECEEF3'; ctx.beginPath(); ctx.moveTo(M, y - 5); ctx.lineTo(PW - M, y - 5); ctx.stroke();
       ri++;
     }
-    const jpg = await new Promise(res => c.toBlob(b => b.arrayBuffer().then(x => res(new Uint8Array(x))), 'image/jpeg', 0.9));
+    const jpg = await canvasJpg(c, 0.9);
     doc.addPage([PW, PH]).drawImage(await doc.embedJpg(jpg), { x: 0, y: 0, width: PW, height: PH });
     c.width = c.height = 0; pageNo++;
   }
@@ -2374,7 +2664,7 @@ async function buildSheetPdf() {
 const CODE_ABC = 'ACDEFGHJKMNPQRTUVWXY34679';
 function shareState() {
   if (!batch.share) batch.share = { codes: {}, boxes: {} };
-  const sh = batch.share, used = new Set(Object.values(sh.codes));
+  const sh = batch.share, used = new Set([...Object.values(sh.codes), ...Object.keys(sh.also || {})]);
   for (const st of batch.students) if (!sh.codes[st.key]) {
     let c; do { c = 'S-' + Array.from(crypto.getRandomValues(new Uint8Array(4)), b => CODE_ABC[b % CODE_ABC.length]).join(''); } while (used.has(c));
     used.add(c); sh.codes[st.key] = c;
@@ -2382,37 +2672,75 @@ function shareState() {
   return sh;
 }
 const codeOf = st => shareState().codes[st.key];
-// Words that could name the student: from the folder name and the matching roster name. Long numbers (IDs) count too.
-function coverWords(st) {
-  const w = new Set(nameWords(st.key));
-  const c = batchClass();
-  if (c) for (const [n, s] of rosterMatch(c.names)) if (s === st) for (const x of nameWords(n)) w.add(x);
-  return [...w].filter(x => /^\d+$/.test(x) ? x.length >= 4 : x.length >= 2 && !/^(the|and|of|de|da|van|von|le|la)$/.test(x));
-}
 const rxEsc = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-const wordRx = words => words.length ? new RegExp(words.map(w => /^[\x00-\x7f]+$/.test(w) ? '(?<![\\p{L}\\p{N}])' + rxEsc(w) + '(?![\\p{L}\\p{N}])' : rxEsc(w)).join('|'), 'giu') : null;
 const scrub = (text, rx) => rx ? String(text || '').replace(rx, '[name]') : String(text || '');
+const RIGHT_TO_LEFT = /[\p{Script=Arabic}\p{Script=Hebrew}]/u, RTL_STRETCH = /[\p{Script=Arabic}\p{Script=Hebrew}](?:[^\p{L}\p{N}]*[\p{Script=Arabic}\p{Script=Hebrew}])*/gu;
+// How far from an item's left edge letters a to b sit. x(k) is how wide its first k letters are. pdf.js gives Hebrew and Arabic in reading order, so those letters run leftwards, and a stretch of the other direction inside them runs its own way.
+function acrossItem(it, a, b, x, W) {
+  if (!RIGHT_TO_LEFT.test(it.str)) return [x(a), x(b)];
+  const back = it.dir === 'rtl', sides = [];
+  const stretch = (s, e, rtl) => {
+    if (Math.max(a, s) >= Math.min(b, e)) return;
+    for (const k of [Math.max(a, s), Math.min(b, e)]) { const along = rtl === back ? x(k) : x(s) + x(e) - x(k); sides.push(back ? W - along : along); }
+  };
+  let at = 0;
+  for (const m of it.str.matchAll(RTL_STRETCH)) { stretch(at, m.index, false); stretch(m.index, m.index + m[0].length, true); at = m.index + m[0].length; }
+  stretch(at, it.str.length, false);
+  return [Math.min(...sides), Math.max(...sides)];
+}
 // Covers (in page points) for one page: every name word in the page text, any Kami box whose text names them, plus her own boxes.
-async function autoCovers(page, vp, rx) {
+// Each box lies along its words, however the page or the text is turned. xf: the page's straightening, if it has one.
+const textWidth = (s, font) => { measureCtx.font = '100px ' + font; return measureCtx.measureText(s).width; };
+async function autoCovers(page, vp, rx, xf) {
   const out = [];
   if (!rx) return out;
   const tc = await page.getTextContent();
-  for (const it of tc.items) {
-    if (!it.str) continue;
-    const tx = pdfjsLib.Util.transform(vp.transform, it.transform), fh = Math.hypot(tx[2], tx[3]) || 10;
-    const W = it.width * vp.scale, L = it.str.length || 1;
-    rx.lastIndex = 0; let m;
-    while ((m = rx.exec(it.str))) {
-      const cw = W / L;
-      out.push({ x: tx[4] + cw * m.index - cw - 2, y: tx[5] - fh * 1.05 - 2, w: cw * (m[0].length + 2) + 4, h: fh * 1.45 + 4 });
-      if (!m[0].length) rx.lastIndex++;
+  const cover = (it, from, n) => {
+    const tx = pdfjsLib.Util.transform(vp.transform, it.transform), fh = Math.hypot(tx[2], tx[3]) || 10, run = Math.hypot(tx[0], tx[1]) || 1;
+    const W = it.width * vp.scale, L = it.str.length || 1, at = (a, b) => [tx[4] + tx[0] / run * a + tx[2] / fh * b, tx[5] + tx[1] / run * a + tx[3] / fh * b];
+    // Letters aren't all as wide, so where a word sits is its share of the measured line, not a count of letters.
+    const font = ((tc.styles || {})[it.fontName] || {}).fontFamily || 'sans-serif', whole = textWidth(it.str, font), x = k => whole ? W * textWidth(it.str.slice(0, k), font) / whole : W * k / L;
+    const pad = W / L + 2, [left, right] = acrossItem(it, from, from + n, x, W), a0 = left - pad, a1 = right + pad, up = fh * 1.05 + 2, dn = -fh * .4 - 2;
+    out.push(coverRound([at(a0, up), at(a1, up), at(a1, dn), at(a0, dn)], xf));
+  };
+  const hits = text => { const list = []; rx.lastIndex = 0; let m; while ((m = rx.exec(text))) { if (m[0].length) list.push([m.index, m[0].length]); else rx.lastIndex++; } return list; };
+  const items = tc.items.filter(it => it.str), done = new Map();
+  // Reads these items as one text and covers each name where it sits, piece by piece. A letter stored in a special form, like ⼩ for 小 or a shaped Arabic letter, is read as the plain one.
+  const coverIn = list => {
+    let text = ''; const from = [];
+    for (const it of list) { let i = 0; for (const c of it.str) { const plain = c.normalize('NFKC'); text += plain; for (let k = 0; k < plain.length; k++) from.push([it, i, i + c.length]); i += c.length; } }
+    for (const [start, len] of hits(text)) {
+      const piece = new Map();
+      for (const [it, a, b] of from.slice(start, start + len)) { const p = piece.get(it); piece.set(it, p ? [Math.min(p[0], a), Math.max(p[1], b)] : [a, b]); }
+      for (const [it, [a, b]] of piece) { const seen = done.get(it) || new Set(), key = a + '-' + b; done.set(it, seen); if (!seen.has(key)) { seen.add(key); cover(it, a, b - a); } }
     }
+  };
+  for (const it of items) coverIn([it]);
+  // A name can come in pieces on one line, as when a letter like ễ comes from another font: read neighbours together.
+  const nextTo = (a, b) => {
+    const [p, q] = [a.transform, b.transform], fh = Math.hypot(p[2], p[3]) || 10, len = Math.hypot(p[0], p[1]) || 1, ux = p[0] / len, uy = p[1] / len;
+    if (Math.abs(p[0] - q[0]) + Math.abs(p[1] - q[1]) > fh * .5) return false;
+    const dx = q[4] - p[4], dy = q[5] - p[5], along = dx * ux + dy * uy, off = -dx * uy + dy * ux;
+    return Math.abs(off) < fh * .3 && Math.abs(along - a.width) < fh * .25;
+  };
+  for (let i = 0; i < items.length;) {
+    let j = i + 1; while (j < items.length && nextTo(items[j - 1], items[j])) j++;
+    if (j - i > 1) {
+      const run = items.slice(i, j);
+      coverIn(run);
+      // Arabic and Hebrew letters can come one by one in the order they sit on the line, which is backwards.
+      if (run.some(it => RIGHT_TO_LEFT.test(it.str))) coverIn([...run].reverse());
+    }
+    i = j;
   }
   for (const a of await page.getAnnotations()) {
     rx.lastIndex = 0;
-    if (!SKIP_TYPES.has(a.subtype) && rx.test(annText(a) || '')) {
+    // A form box is drawn on the page with what's typed in it, so a name there counts too.
+    const says = a.subtype === 'Widget' ? [a.fieldValue].flat().filter(v => typeof v === 'string').join(' ') : SKIP_TYPES.has(a.subtype) ? '' : annText(a) || '';
+    if (rx.test(says)) {
       const [x1, y1, x2, y2] = vp.convertToViewportRectangle(a.rect);
-      out.push({ x: Math.min(x1, x2) - 2, y: Math.min(y1, y2) - 2, w: Math.abs(x2 - x1) + 4, h: Math.abs(y2 - y1) + 4 });
+      const L = Math.min(x1, x2) - 2, T = Math.min(y1, y2) - 2, R = Math.max(x1, x2) + 2, B = Math.max(y1, y2) + 2;
+      out.push(coverRound([[L, T], [R, T], [R, B], [L, B]], xf));
     }
   }
   return out;
@@ -2429,10 +2757,11 @@ async function sharePage(st, f, js, p, scale, rx) {
   const c = document.createElement('canvas');
   c.width = Math.ceil((W + side) * scale); c.height = Math.ceil(H * scale);
   const ctx = c.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
-  await page.render({ canvasContext: ctx, viewport: vpRot(f, p, page, scale), annotationMode: pdfjsLib.AnnotationMode.ENABLE }).promise;
+  await page.render({ canvasContext: ctx, ...vpDraw(f, p, page, scale), annotationMode: pdfjsLib.AnnotationMode.ENABLE }).promise;
+  scanClip(ctx, f, p, W * scale, c.width, c.height);
   ctx.setTransform(scale, 0, 0, scale, 0, 0);
   drawMarks(ctx, marks, W, H, side, null);
-  const covers = (await autoCovers(page, vp, rx)).concat(ownCovers(f.path, p, W, H));
+  const covers = (await autoCovers(page, vp, rx, skewXf(f, p, vp))).concat(ownCovers(f.path, p, W, H));
   ctx.fillStyle = '#111';
   for (const r of covers) ctx.fillRect(r.x, r.y, r.w, r.h);
   page.cleanup();
@@ -2442,24 +2771,28 @@ const shareDocs = st => layoutOf(st).filter(d => docIn(st, d)).map(d => ({ ...d,
 
 function openShare() {
   saveNow(); commitEditors(); shareState(); saveSoon();
-  const who = batch.students.filter(st => shareDocs(st).length);
   openDlg('<div class="bh"><h2>Share with Claude</h2><button class="icon" data-close aria-label="Close">✕</button></div><div class="bb">' +
-    '<p style="margin-top:0">This makes a ZIP you can give to Claude with <b>no names in it</b>. ' + who.length + (who.length === 1 ? ' student' : ' students') + ' get a random code, like <b>' + esc(codeOf(who[0] || batch.students[0])) + '</b>. The list of who is who stays only in this browser.</p>' +
-    '<ul style="margin:0 0 12px;padding-left:20px;line-height:1.55">' +
+    '<p style="margin-top:0">This makes a ZIP you can give to Claude with <b>no names in it</b><span id="shPromise">' + esc(namePromise()) + '</span>. <span id="shWho"></span> The list of who is who stays only in this browser.</p>' +
+    '<details class="cclist" style="margin:0 0 12px"><summary>What goes in it</summary><ul style="list-style:disc;margin:6px 0 0;padding-left:20px;line-height:1.55;max-height:none">' +
     '<li>Every page becomes a picture, so no hidden text or file details go with it.</li>' +
     '<li>Names are covered in black wherever they’re typed on the page' + (batchClass() ? ' (folder names and your roster names)' : ' (from the folder names)') + ', and in any Kami box that has a name.</li>' +
-    '<li>Your scores, rubric and comments go too, with names swapped for [name].</li></ul>' +
-    '<p style="margin:0 0 12px;padding:10px 12px;border-radius:10px;background:var(--warn-soft);color:var(--warn);font-size:14px"><b>Check the covers first.</b> The automatic cover can’t see handwriting or a name inside a picture. In the check, drag a box over anything it missed. If students write their name in the same spot, box it once and use it on every paper.</p>' +
+    '<li>Email addresses and long ID numbers typed on the page are covered too.</li>' +
+    '<li>Your scores, rubric and comments go too, with names swapped for [name].</li>' +
+    '<li><b>Only PDFs and pictures go in.</b> A Word file stays out until it’s saved as a PDF.</li></ul></details>' +
+    '<div id="shSteps"></div>' +
     '<div class="prog" hidden><i></i></div><p class="muted" id="shStatus" style="font-size:13px;margin:0"></p></div>' +
     '<div class="bf"><button class="btn" data-check>Check the covers</button><button class="btn primary" data-make>Download ZIP for Claude</button></div>', true);
   const box = $('#dlgBox');
+  shareSteps();
+  ensureCounts().then(() => { if ($('#shSteps')) shareSteps(); findNames(); });
   box.onclick = async e => {
     if (e.target.closest('[data-close]')) return closeDlg();
-    if (e.target.closest('[data-check]')) return checkCovers(0);
+    if (shareStepClick(e)) return;
+    if (e.target.closest('[data-check]')) return ensureCounts().then(() => checkCovers(coverFirst()));
     if (e.target.closest('[data-make]')) {
       for (const b of box.querySelectorAll('.bf .btn')) b.disabled = true;
       const bar = box.querySelector('.prog'); bar.hidden = false;
-      try { await makeSharePackage((n, t) => { bar.firstChild.style.width = (100 * n / t) + '%'; $('#shStatus').textContent = 'Covering names and making pictures ' + n + ' of ' + t + '…'; }); $('#shStatus').textContent = 'Done. Give the ZIP to Claude, then use Bring back from Claude with what it sends.'; }
+      try { await makeSharePackage((n, t) => { bar.firstChild.style.width = (100 * n / t) + '%'; $('#shStatus').textContent = 'Covering names and making pictures ' + n + ' of ' + t + '…'; }); $('#shStatus').textContent = 'Done. Give the ZIP to Claude, then use Bring back from Claude with what it sends.'; shareMade(); }
       catch (er) { console.error(er); $('#shStatus').textContent = 'Something went wrong: ' + (er.message || er); }
       for (const b of box.querySelectorAll('.bf .btn')) b.disabled = false;
     }
@@ -2468,22 +2801,37 @@ function openShare() {
 
 // Paper by paper: every page with its covers; drag to add a cover, click one of yours to remove it.
 async function checkCovers(start, onDone) {
-  const list = [];
-  for (const st of batch.students) shareDocs(st).forEach((d, k) => list.push({ st, d, k }));
+  await ensureCounts();
+  const list = coverList();
   if (!list.length) return toast('No papers to share');
-  let pos = Math.min(start || 0, list.length - 1), token = 0, last = null;
-  openDlg('<div class="bh"><h2 id="ccTitle">Check the covers</h2><span class="muted" id="ccCount"></span><button class="icon" data-done aria-label="Done">✕</button></div>' +
+  let pos = Math.min(start || 0, list.length - 1), token = 0, last = null, drawn = 0;
+  openDlg('<div class="bh"><h2 id="ccTitle">Check the covers</h2><span class="muted" id="ccCount"></span><span class="ccstate" id="ccState"></span><span class="ccstate stag" id="ccFlag" hidden></span><button class="icon" data-done aria-label="Done">✕</button></div>' +
     '<div class="bb" id="ccBody" style="background:var(--surface-2)"></div>' +
     '<div class="bf" style="justify-content:space-between"><span class="muted" style="font-size:13px;align-self:center;max-width:46%">Drag a box over a name it missed. Click one of your boxes to take it off.</span><span style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end"><button class="btn" data-every hidden>Use my last box on every paper</button><button class="btn" data-back>◀ Back</button><button class="btn primary" data-next>Next ▶</button></span></div>');
   const box = $('#dlgBox');
   const finish = () => { if (eachKeys) document.removeEventListener('keydown', eachKeys, true); eachKeys = null; saveSoon(); (onDone || openShare)(); };
   const go = d => { pos += d; if (pos >= list.length) { toast('That was the last paper'); return finish(); } pos = Math.max(0, pos); show(); };
+  // She says this one looks right, once she's seen it all. Then on to the next paper not checked yet.
+  const looked = () => {
+    if (drawn !== token) return toast('Still drawing this paper');
+    coverMark(list[pos].st, list[pos].d, true);
+    const n = list.findIndex((x, i) => i > pos && !coverOk(x.st, x.d));
+    if (n >= 0) { pos = n; return show(); }
+    toast(list.every(x => coverOk(x.st, x.d)) ? 'Every paper is checked' : 'That was the last paper');
+    finish();
+  };
+  // What the name search says about this paper, until she's checked it.
+  const showFlag = () => { const el = $('#ccFlag'); if (!el) return; const { st, d } = list[pos]; el.textContent = coverOk(st, d) ? '' : nameFlag(st, d); el.hidden = !el.textContent; };
+  findNames().then(showFlag);
   async function show() {
-    const my = ++token, { st, d, k } = list[pos], rx = wordRx(coverWords(st));
-    $('#ccTitle').textContent = st.key + ' → ' + codeOf(st) + (k ? '-' + (k + 1) : '');
+    const my = ++token, { st, d, k } = list[pos], rx = coverRx(st);
+    $('#ccTitle').textContent = coverName(st, 0) + ' → ' + codeOf(st) + (k ? '-' + (k + 1) : '');
+    $('#ccState').textContent = coverOk(st, d) ? '✓ Checked' : 'Not checked yet';
+    $('#ccState').className = coverOk(st, d) ? 'ccstate' : 'ccstate stag';
+    showFlag();
     $('#ccCount').textContent = 'paper ' + (pos + 1) + ' of ' + list.length;
     box.querySelector('[data-back]').disabled = pos === 0;
-    box.querySelector('[data-next]').textContent = pos === list.length - 1 ? 'Done' : 'Next ▶';
+    box.querySelector('[data-next]').textContent = pos === list.length - 1 ? 'Covers look right, done' : 'Covers look right ▶';
     const body = $('#ccBody'); body.innerHTML = ''; body.scrollTop = 0;
     const js = new Map();
     try {
@@ -2510,24 +2858,25 @@ async function checkCovers(start, onDone) {
           if (!sel || sel.w < 4 || sel.h < 3) {
             sel = null; paint();
             const [x, y] = start, arr = own(), hit = arr.findIndex(b => x >= b[0] * r.W && x <= (b[0] + b[2]) * r.W && y >= b[1] * r.H && y <= (b[1] + b[3]) * r.H);
-            if (hit >= 0) { arr.splice(hit, 1); saveSoon(); show(); }
+            if (hit >= 0) { arr.splice(hit, 1); coverMark(st, d, false); show(); }
             return;
           }
           const fx = v => Math.round(v * 10000) / 10000;
           const b = [fx(clamp(sel.x / r.W, 0, 1)), fx(clamp(sel.y / r.H, 0, 1)), fx(Math.min(sel.w / r.W, 1)), fx(Math.min(sel.h / r.H, 1))];
-          own().push(b); last = { b, first: d.pages[0][0] === path && d.pages[0][1] === p, p }; saveSoon();
+          own().push(b); last = { b, first: d.pages[0][0] === path && d.pages[0][1] === p, p }; coverMark(st, d, false);
           box.querySelector('[data-every]').hidden = false;
           show();
         };
         body.appendChild(c);
         if (pg0) pg0.cleanup();
       }
+      if (my === token) drawn = my;
     } finally { for (const v of js.values()) v.destroy(); }
   }
   box.onclick = e => {
     if (e.target.closest('[data-done]')) return finish();
     if (e.target.closest('[data-back]')) return go(-1);
-    if (e.target.closest('[data-next]')) return go(1);
+    if (e.target.closest('[data-next]')) return looked();
     if (e.target.closest('[data-every]') && last) {
       // Same spot on every paper: the first page of each paper (or the same page number when the box wasn't on a first page).
       let n = 0;
@@ -2535,7 +2884,7 @@ async function checkCovers(start, onDone) {
         const at = last.first ? d.pages[0] : d.pages.find(([, p]) => p === last.p);
         if (!at) continue;
         const arr = shareState().boxes[boxKey(at[0], at[1])] || (shareState().boxes[boxKey(at[0], at[1])] = []);
-        if (!arr.some(b => b.join() === last.b.join())) { arr.push(last.b.slice()); n++; }
+        if (!arr.some(b => b.join() === last.b.join())) { arr.push(last.b.slice()); n++; coverAgain(at[0], at[1]); }
       }
       saveSoon(); toast('Added that cover to ' + n + ' more ' + (n === 1 ? 'paper' : 'papers')); show();
     }
@@ -2545,6 +2894,7 @@ async function checkCovers(start, onDone) {
     if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); finish(); }
     else if (e.key === 'ArrowLeft') { e.preventDefault(); e.stopPropagation(); go(-1); }
     else if (e.key === 'ArrowRight') { e.preventDefault(); e.stopPropagation(); go(1); }
+    else if (e.key === 'Enter' && !e.target.closest('button')) { e.preventDefault(); e.stopPropagation(); looked(); }
   };
   document.addEventListener('keydown', eachKeys, true);
   show();
@@ -2553,13 +2903,13 @@ async function checkCovers(start, onDone) {
 const README_FOR_CLAUDE = (n) => [
   'Grading Studio package for Claude',
   '',
-  'Assignment: ' + batch.name.replace(/[\r\n]+/g, ' '),
-  'Papers: ' + n + ' students, each named by a random code (S-XXXX). Names are covered and swapped for [name].',
+  'Assignment: ' + nameFreeText(batch.name).replace(/[\r\n]+/g, ' '),
+  'Papers: ' + n + (n === 1 ? ' student' : ' students') + ', each named by a random code (S-XXXX). Names are covered and swapped for [name].',
   'A second paper from the same student is S-XXXX-2, and so on.',
   '',
   'Files',
   '  papers/        one PDF per paper, as pictures, with the teacher\'s marks and comments drawn on',
-  '  scores.csv     code, rubric scores, total, percent, the teacher\'s comment',
+  '  scores.csv     code, rubric scores, total, percent, status (partial, missing, excused or late), the teacher\'s comment',
   '  comments.json  every typed comment and text mark the teacher left, by code, page and kind',
   '  rubric.json    the rubric rows and grading scale',
   '',
@@ -2579,14 +2929,13 @@ async function makeSharePackage(onStep) {
   if (!scanned || scanP) await scanAll();
   const files = {}, rows = [], notes = {};
   const crit = setup.mode === 'rubric' ? setup.criteria : [];
-  const q = v => /[",\n\r]/.test(v) ? '"' + String(v).replace(/"/g, '""') + '"' : String(v);
   const jobs = [];
   for (const st of batch.students) shareDocs(st).forEach((d, k) => jobs.push({ st, d, k }));
   const total = jobs.reduce((a, j) => a + j.d.pages.length, 0);
   let done = 0;
   const seen = new Set();
   for (const { st, d, k } of jobs) {
-    const rx = wordRx(coverWords(st)), code = codeOf(st);
+    const rx = coverRx(st), code = codeOf(st);
     const out = await PDFLib.PDFDocument.create();
     out.setTitle(code); out.setAuthor(''); out.setCreator('Grading Studio'); out.setProducer('');
     const js = new Map();
@@ -2594,8 +2943,10 @@ async function makeSharePackage(onStep) {
       for (const [path, p] of d.pages) {
         const f = fileByPath(st, path);
         if (!js.has(path)) js.set(path, await pdfjsLib.getDocument({ data: f.data.slice(), isEvalSupported: false }).promise);
-        const r = await sharePage(st, f, js.get(path), p, 120 / 72, rx);
-        const jpg = await new Promise(res => r.c.toBlob(b => b.arrayBuffer().then(x => res(new Uint8Array(x))), 'image/jpeg', 0.85));
+        // A poster-size page is drawn smaller: a canvas that big can't be turned into a picture.
+        const v1 = vpRot(f, p, await js.get(path).getPage(p + 1), 1);
+        const r = await sharePage(st, f, js.get(path), p, Math.min(120 / 72, 8000 / Math.max(v1.width * 1.5, v1.height)), rx);
+        const jpg = await canvasJpg(r.c, 0.85);
         out.addPage([r.W + r.side, r.H]).drawImage(await out.embedJpg(jpg), { x: 0, y: 0, width: r.W + r.side, height: r.H });
         r.c.width = r.c.height = 0;
         const list = (notes[code] = notes[code] || []);
@@ -2609,16 +2960,16 @@ async function makeSharePackage(onStep) {
     if (!seen.has(st)) {
       seen.add(st);
       const g = gradeOf(st);
-      rows.push([code].concat(crit.map((_, i) => fmtNum(st.grade.rubric[i])), [fmtNum(g.total), fmtNum(g.pct), scrub(st.grade.comment, rx).replace(/\s*\n\s*/g, ' ')]));
+      rows.push([code].concat(crit.map((_, i) => fmtNum(rowShown(st, i))), [cellOut(g, 'total'), cellOut(g, 'pct'), statusText(st), scrub(st.grade.comment, rx).replace(/\s*\n\s*/g, ' ')]));
     }
   }
-  const head = ['code'].concat(crit, ['total / ' + maxPoints(), 'percent', 'teacher comment']);
+  const head = ['code'].concat(crit, ['total / ' + maxPoints(), 'percent', 'status', 'teacher comment']);
   const enc = s => new TextEncoder().encode(s);
-  files['scores.csv'] = enc('﻿' + [head].concat(rows).map(r => r.map(q).join(',')).join('\r\n'));
+  files['scores.csv'] = enc('﻿' + [head].concat(rows).map(r => r.map(csvCell).join(',')).join('\r\n'));
   files['comments.json'] = enc(JSON.stringify(notes, null, 1));
-  files['rubric.json'] = enc(JSON.stringify({ mode: setup.mode, criteria: crit, levels: setup.mode === 'rubric' ? '1 to 4 per row, half points allowed' : undefined, outOf: maxPoints(), scale: setup.scale || null }, null, 1));
+  files['rubric.json'] = enc(JSON.stringify({ mode: setup.mode, criteria: crit, levels: setup.mode === 'rubric' ? '0 to 4 per row, half points allowed from 1 up' : undefined, outOf: maxPoints(), scale: setup.scale || null }, null, 1));
   files['README.txt'] = enc(README_FOR_CLAUDE(seen.size));
-  saveBlob(('For Claude - ' + batch.name + '.zip'), new Blob([fflate.zipSync(files)], { type: 'application/zip' }));
+  saveBlob(('For Claude - ' + nameFreeText(batch.name) + '.zip'), new Blob([fflate.zipSync(files)], { type: 'application/zip' }));
 }
 
 // Claude's reply: blocks that start with a code, a code,feedback CSV, JSON, or a ZIP with those and/or papers named by code.
@@ -2655,6 +3006,7 @@ function parseFeedback(text) {
 function openBringBack() {
   shareState();
   const byCode = new Map(batch.students.map(st => [codeOf(st), st]));
+  for (const [c, k] of Object.entries(shareState().also || {})) { const st = batch.students.find(s => s.key === k); if (st && !byCode.has(c)) byCode.set(c, st); }   // made on another computer: its ZIP can still come back
   let fb = new Map(), papers = [];
   openDlg('<div class="bh"><h2>Bring back from Claude</h2><button class="icon" data-close aria-label="Close">✕</button></div><div class="bb">' +
     '<p style="margin-top:0">Paste Claude’s reply here, or drop the file it gave you (CSV, text or ZIP). Each code is matched to its student in this browser.</p>' +
@@ -2664,9 +3016,9 @@ function openBringBack() {
     '<div class="bf"><label class="chk" style="margin:0 auto 0 0"><input type="checkbox" id="bbAdd" checked> Add below what’s already in the comment box (untick to replace it)</label><button class="btn" data-papers hidden>Download papers in student folders</button><button class="btn primary" data-apply disabled>Put in comment boxes</button></div>');
   const box = $('#dlgBox');
   const show = () => {
-    const rows = [...fb].map(([c, v]) => { const st = byCode.get(c); return '<tr><td class="n" style="white-space:nowrap">' + esc(c) + '</td><td class="nm" style="cursor:default">' + (st ? esc(st.key) : '<span style="color:var(--warn)">not in this download</span>') + '</td><td class="cm" style="white-space:pre-wrap">' + esc(v) + '</td></tr>'; }).join('');
-    const nOk = [...fb.keys()].filter(c => byCode.has(c)).length, nP = papers.filter(p => byCode.has(p.code)).length;
-    $('#bbOut').innerHTML = (fb.size ? '<p style="margin:0 0 8px"><b>' + nOk + ' of ' + batch.students.length + '</b> students matched.' + (fb.size > nOk ? ' <span style="color:var(--warn)">' + (fb.size - nOk) + ' code' + (fb.size - nOk === 1 ? ' doesn’t' : 's don’t') + ' belong to this download.</span>' : '') + ' Read it over before you put it in.</p><table class="gl"><thead><tr><th>Code</th><th>Student</th><th>Feedback</th></tr></thead><tbody>' + rows + '</tbody></table>' : '') +
+    const rows = [...fb].map(([c, v]) => { const st = byCode.get(c); return '<tr><td class="n" style="white-space:nowrap">' + esc(c) + '</td><td class="nm" style="cursor:default">' + (st ? esc(shownName(st, batch.students.indexOf(st))) : '<span style="color:var(--warn)">not in this download</span>') + '</td><td class="cm" style="white-space:pre-wrap">' + esc(v) + '</td></tr>'; }).join('');
+    const nOk = [...fb.keys()].filter(c => byCode.has(c)).length, nP = papers.filter(p => byCode.has(p.code)).length, nSent = new Set((shareState().sent || []).map(c => byCode.get(c)).filter(Boolean)).size;
+    $('#bbOut').innerHTML = bringBackNotes(fb, byCode) + (fb.size ? '<p style="margin:0 0 8px"><b>' + nOk + ' of ' + (nSent || batch.students.length) + '</b> students matched.' + (fb.size > nOk ? ' <span style="color:var(--warn)">' + (fb.size - nOk) + ' code' + (fb.size - nOk === 1 ? ' doesn’t' : 's don’t') + ' belong to this download.</span>' : '') + ' Read it over before you put it in.</p><table class="gl"><thead><tr><th>Code</th><th>Student</th><th>Feedback</th></tr></thead><tbody>' + rows + '</tbody></table>' : '') +
       (papers.length ? '<p class="muted" style="font-size:14px">' + nP + ' paper' + (nP === 1 ? '' : 's') + ' named by code can be sorted back into student folders.</p>' : '') +
       (!fb.size && !papers.length ? '<p class="muted" style="font-size:14px">No codes found yet. Each block should start with a code like S-7QK4.</p>' : '');
     box.querySelector('[data-apply]').disabled = !nOk;
@@ -2693,7 +3045,7 @@ function openBringBack() {
     if (e.target.closest('[data-read]')) return readText($('#bbText').value);
     if (e.target.closest('[data-apply]')) {
       const add = $('#bbAdd').checked; let n = 0;
-      for (const [c, v] of fb) { const st = byCode.get(c); if (!st || !v) continue; st.grade.comment = add && st.grade.comment.trim() ? st.grade.comment.replace(/\s+$/, '') + '\n\n' + v : v; n++; }
+      for (const [c, v] of fb) { const st = byCode.get(c); if (!st || !v || (add && ('\n\n' + st.grade.comment.trim() + '\n\n').includes('\n\n' + v.trim() + '\n\n'))) continue; st.grade.comment = add && st.grade.comment.trim() ? st.grade.comment.replace(/\s+$/, '') + '\n\n' + v : v; touchGrade(st); n++; }
       saveNow(); renderList(); renderGrade();
       toast('Put feedback in ' + n + (n === 1 ? ' comment box' : ' comment boxes') + '. It’s in the Grades list too.');
       closeDlg();
@@ -2773,8 +3125,8 @@ function signOut() {
 // Google sign-in only works on the hosted copy (not a downloaded file or a preview frame).
 const GOK = /^https?:$/.test(location.protocol) && window.self === window.top;
 function renderGoogle() {
-  for (const el of document.querySelectorAll('.gAcct, #pickDrive')) el.hidden = !GOK;
-  if (!GOK) return;
+  for (const el of document.querySelectorAll('.gAcct, #pickDrive')) el.hidden = !GOK || !gcid();   // no key built in: nothing to sign in to
+  if (!GOK || !gcid()) return;
   for (const el of document.querySelectorAll('.gAcct')) el.innerHTML = G.email
     ? '<span class="muted" style="font-size:13px">Google: ' + esc(G.email) + ' · <span id="syncState">' + (syncState || 'synced') + '</span></span> <button class="link" data-gout>Sign out</button>'
     : '<button class="btn sm" data-gin>Sign in with Google</button>';
@@ -2974,7 +3326,7 @@ function mediaCard(st, f) {
   const m = el.querySelector('audio,video');
   m.src = mediaUrl(f); m.playbackRate = store.get('gs.rate', 1);
   m.onratechange = () => {};
-  m.onerror = () => { el.querySelector('.trstat').textContent = 'This browser can’t play this file. Chrome or Edge play most phone recordings; a .mov from an iPhone may need Safari or a convert to .mp4.'; };
+  mediaWatch(el, m, f);
   if (!curMedia) curMedia = m;
   const tr = el.querySelector('.trans');
   const showTr = () => {
@@ -3000,7 +3352,7 @@ function mediaCard(st, f) {
     if (e.target.closest('[data-stamp]')) { addStamp(st, m.currentTime); return; }
     const w = e.target.closest('.trans [data-t]'); if (w) { m.currentTime = +w.dataset.t; if (m.paused) m.play().catch(() => {}); return; }
     if (e.target.closest('[data-tr]')) {
-      if (f.tr && !confirm('Make the transcript again? The one you have will be replaced.')) return;
+      if (f.tr && !await askDlg('Make the transcript again? The one you have will be replaced.', { ok: 'Make it again' })) return;
       const btn = el.querySelector('[data-tr]'); btn.disabled = true;
       try { await transcribeFile(f, msg => { el.querySelector('.trstat').textContent = msg; }); btn.textContent = 'Transcript ✓'; showTr(); el.querySelector('.trstat').textContent = ''; saveSoon(); }
       catch (er) { el.querySelector('.trstat').textContent = er.message || String(er); }
@@ -3012,6 +3364,7 @@ function mediaCard(st, f) {
 function addStamp(st, t) {
   const tag = '[' + fmtTime(t) + '] ';
   st.grade.comment = (st.grade.comment && !/\s$/.test(st.grade.comment) ? st.grade.comment + '\n' : st.grade.comment || '') + tag;
+  touchGrade(st);
   saveSoon(); renderGrade(); renderList();
   const ta = $('#cmtIn'); if (ta) { ta.focus(); ta.selectionStart = ta.selectionEnd = ta.value.length; }
 }
@@ -3042,7 +3395,7 @@ async function pickRefDoc() {
     const f = inp.files[0]; if (!f) return;
     const u = new Uint8Array(await f.arrayBuffer());
     let s = ''; for (let i = 0; i < u.length; i += 0x8000) s += String.fromCharCode.apply(null, u.subarray(i, i + 0x8000));
-    if (!store.set(refKey(), { name: f.name, b64: btoa(s) })) return toast('That document is too big to keep in this browser');
+    if (!store.set(refKey(), { name: f.name, b64: btoa(s), at: Date.now() })) return toast('That document is too big to keep in this browser');
     toast('“' + f.name + '” now shows above every paper'); openStudent(cur);
   };
   inp.click();
@@ -3065,7 +3418,7 @@ const refId = path => batch.id + '|' + REF_KEY + '|' + path;
 async function loadRefs() {
   refFiles = [];
   let recs = [];
-  try { recs = (await idbDo('readonly', o => o.getAll())) || []; } catch { return; }
+  try { recs = (await idbDo('readonly', o => o.getAll(underId(batch.id)))) || []; } catch { return; }
   for (const r of recs.filter(r => r.bid === batch.id && r.key === REF_KEY).sort((a, b) => a.added - b.added)) refFiles.push({ path: r.path, name: r.name, data: r.data, for: r.for || '' });
 }
 function pickRefs(st) {
@@ -3081,14 +3434,16 @@ async function addRefs(files, st) {
     try { await idbDo('readwrite', o => o.put({ bid: batch.id, key: REF_KEY, path, name: f.name, data, added: Date.now(), for: who }, refId(path))); }
     catch { toast('This browser is out of room to keep ' + f.name); continue; }
     refFiles = refFiles.filter(r => r.path !== path).concat({ path, name: f.name, data, for: who }); n++;
+    noteAdded(batch, REF_KEY + '|' + path);
   }
   if (!n) return;
-  openStudent(cur); refreshReadings();
+  saveSoon(); openStudent(cur); refreshReadings();
   const where = st ? ' for ' + shownName(st, batch.students.indexOf(st)) : ' above every paper';
   toast((n === 1 ? '“' + files[0].name + '” now shows' : n + ' files now show') + where);
 }
 async function dropRef(path) {
   try { await idbDo('readwrite', o => o.delete(refId(path))); } catch {}
+  noteGone(batch, REF_KEY + '|' + path);
   refFiles = refFiles.filter(r => r.path !== path);
   if (batch.refSkip) for (const k of Object.keys(batch.refSkip)) { batch.refSkip[k] = batch.refSkip[k].filter(p => p !== path); if (!batch.refSkip[k].length) delete batch.refSkip[k]; }
   saveNow(); openStudent(cur); refreshReadings();
@@ -3139,7 +3494,7 @@ async function refCard(r, st) {
       const box = document.createElement('div'); box.className = 'refpages'; body.appendChild(box);
       const dpr = window.devicePixelRatio || 1, w = Math.min(860, ($('#paper').clientWidth || 900) - 80);
       for (let i = 1; i <= doc.numPages; i++) {
-        const page = await doc.getPage(i), v1 = page.getViewport({ scale: 1 }), s = w / v1.width, vp = page.getViewport({ scale: s * dpr });
+        const page = await doc.getPage(i), turn = { rot: f.photoTurn ? { 0: f.photoTurn } : null }, v1 = vpRot(turn, i - 1, page, 1), s = w / v1.width, vp = vpRot(turn, i - 1, page, s * dpr);
         const c = document.createElement('canvas'); c.width = Math.ceil(vp.width); c.height = Math.ceil(vp.height); c.style.width = w + 'px';
         const ctx = c.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
         await page.render({ canvasContext: ctx, viewport: vp, annotationMode: pdfjsLib.AnnotationMode.ENABLE }).promise;
@@ -3336,6 +3691,8 @@ const holderById = id => id ? lib.classes.find(c => c.id === id) || null : lib.l
 const findItem = id => { for (const c of holders()) for (const u of c.units) { const it = u.items.find(x => x.id === id); if (it) return { c, u, it }; } return null; };
 const findUnit = id => { for (const c of holders()) { const u = c.units.find(x => x.id === id); if (u) return { c, u }; } return null; };
 const classById = id => lib.classes.find(c => c.id === id);
+// The same words as the Grades list's own summary.
+const keptMore = m => (m.partial ? ' · ' + m.partial + ' partial' : '') + (m.off ? ' · ' + m.off + ' missing or excused' : '');
 function batchSummary(it) {
   if (!it.batchId) return 'No download opened yet';
   const data = store.get(it.batchId, null);
@@ -3343,7 +3700,7 @@ function batchSummary(it) {
   let n = 0;
   if (data) for (const k in data.s) { const g = data.s[k].g; if (g && (g.rubric.some(v => v != null) || g.points !== '')) n++; }
   const m = keptMeta.get(it.batchId);
-  if (m) return 'Last worked on ' + fmtDay(m.t) + ' · ' + (m.scored || 0) + ' of ' + m.n + ' scored' + (m.papers ? '' : ' · drop the same ZIP to keep going');
+  if (m) return 'Last worked on ' + fmtDay(m.t) + ' · ' + (m.scored || 0) + ' of ' + (m.n - (m.off || 0)) + ' scored' + keptMore(m) + (m.papers ? '' : ' · drop the same ZIP to keep going');
   return 'Opened ' + d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) + (data ? ' · ' + n + ' scored' : '') + ' · drop the same ZIP to keep going';
 }
 function renderLib() {
@@ -3437,21 +3794,21 @@ $('#asgDirIn').onchange = e => {
   e.target.value = '';
 };
 $('#asgIn').onchange = e => { const fs = [...e.target.files]; if (asgTarget && fs.length) intake(fs.map(f => ({ path: f.name, file: f })), fs.length === 1 ? fs[0].name.replace(/\.[^.]+$/, '') : '', asgTarget); e.target.value = ''; };
-$('#start').addEventListener('click', e => {
+$('#start').addEventListener('click', async e => {
   const b = e.target.closest('button'); if (!b) return;
-  if (b.dataset.addunit != null) { const c = holderById(b.dataset.addunit); const name = prompt('Unit name', 'Unit ' + (c.units.length + 1)); if (name && name.trim()) { c.units.push({ id: uid(), name: name.trim(), items: [] }); saveLib(); renderLib(); } return; }
+  if (b.dataset.addunit != null) { const c = holderById(b.dataset.addunit); const name = await askTextDlg('Unit name', 'Unit ' + (c.units.length + 1), { ok: 'Add unit' }); if (name && name.trim()) { c.units.push({ id: uid(), name: name.trim(), items: [] }); saveLib(); renderLib(); } return; }
   if (b.id === 'addClass') return editClass(-1);
   if (b.dataset.cmove) { const [ci, d] = b.dataset.cmove.split(':').map(Number), j = ci + d; if (j >= 0 && j < lib.classes.length) { [lib.classes[ci], lib.classes[j]] = [lib.classes[j], lib.classes[ci]]; saveLib(); renderLib(); } return; }
-  if (b.dataset.urename != null) { const f = findUnit(b.dataset.urename); if (!f) return; const name = prompt('Unit name', f.u.name); if (name && name.trim()) { f.u.name = name.trim(); saveLib(); renderLib(); } return; }
+  if (b.dataset.urename != null) { const f = findUnit(b.dataset.urename); if (!f) return; const name = await askTextDlg('Unit name', f.u.name, { ok: 'Rename' }); if (name && name.trim()) { f.u.name = name.trim(); saveLib(); renderLib(); } return; }
   if (b.dataset.uatlas != null) return askAtlas(b.dataset.uatlas);
   if (b.dataset.udel != null) {
     const f = findUnit(b.dataset.udel); if (!f) return; const u = f.u;
-    if (u.items.length && !confirm('Delete “' + u.name + '” and its ' + u.items.length + ' assignment' + (u.items.length === 1 ? '' : 's') + '? Saved marks for those downloads stay in this browser.')) return;
+    if (u.items.length && !await askDlg('Delete “' + u.name + '” and its ' + u.items.length + ' assignment' + (u.items.length === 1 ? '' : 's') + '? Saved marks for those downloads stay in this browser.', { ok: 'Delete', danger: true })) return;
     f.c.units.splice(f.c.units.indexOf(u), 1); saveLib(); renderLib(); return;
   }
   if (b.dataset.additem != null) return editAssignment(null, b.dataset.additem);
   if (b.dataset.editAsg) return editAssignment(b.dataset.editAsg);
-  if (b.dataset.kopen) { const f = b.dataset.kasg ? findItem(b.dataset.kasg) : null; b.disabled = true; b.textContent = 'Opening…'; return reopenKept(b.dataset.kopen, f ? f.it : null).finally(() => { b.disabled = false; }); }
+  if (b.dataset.kopen) { const f = b.dataset.kasg ? findItem(b.dataset.kasg) : null; const was = b.textContent; b.disabled = true; b.textContent = 'Opening…'; return reopenKept(b.dataset.kopen, f ? f.it : null).finally(() => { b.disabled = false; b.textContent = was; }); }
   if (b.dataset.kforget) {   // two clicks, so a stray click can't throw work away
     if (!b.dataset.armed) { b.dataset.armed = '1'; b.textContent = 'Click again to forget it'; setTimeout(() => { if (b.isConnected) { delete b.dataset.armed; b.textContent = 'Forget'; } }, 4000); return; }
     return forgetKept(b.dataset.kforget);
@@ -3466,9 +3823,9 @@ $('#start').addEventListener('click', e => {
   if (b.dataset.editClass != null) return editClass(+b.dataset.editClass);
 });
 // The unit's page in Atlas (web links only); empty removes it. Shown on the unit and in the top bar while grading.
-function askAtlas(unitId) {
+async function askAtlas(unitId) {
   const f = findUnit(unitId); if (!f) return;
-  let v = prompt('Paste the Atlas link for ' + f.u.name + ' (leave empty to remove it)', f.u.atlas || '');
+  let v = await askTextDlg('Paste the Atlas link for ' + f.u.name + ' (leave empty to remove it)', f.u.atlas || '', { ok: 'Save' });
   if (v == null) return; v = v.trim();
   if (v && !/^https?:\/\//i.test(v)) v = 'https://' + v;
   if (v && !/^https?:\/\/[^\s]+$/i.test(v)) return toast('That doesn’t look like a web link');
@@ -3499,9 +3856,9 @@ function editAssignment(id, unitId) {
   fillUnits(start.u);
   $('#aClass').onchange = () => fillUnits(null);
   setTimeout(() => $('#aName').focus(), 0);
-  $('#dlgBox').onclick = e => {
+  $('#dlgBox').onclick = async e => {
     if (e.target.closest('[data-cancel]')) return closeDlg();
-    if (e.target.closest('[data-del]')) { if (!confirm('Delete “' + it.name + '”?')) return; f.u.items.splice(f.u.items.indexOf(it), 1); saveLib(); closeDlg(); return renderLib(); }
+    if (e.target.closest('[data-del]')) { if (!await askDlg('Delete “' + it.name + '”?', { ok: 'Delete', danger: true })) return; f.u.items.splice(f.u.items.indexOf(it), 1); saveLib(); closeDlg(); return renderLib(); }
     if (e.target.closest('[data-ok]')) {
       const name = $('#aName').value.trim(); if (!name) { $('#aName').focus(); return; }
       const c = holderById($('#aClass').value);
@@ -3530,13 +3887,13 @@ function editClass(ci) {
     '<div class="field"><label for="cName">Class name</label><input type="text" id="cName" value="' + esc(c.name) + '" placeholder="e.g. 11EL-2"></div>' +
     '<div class="field"><label for="cNames">Students, one per line, in the order you want (ManageBac order works well)</label><textarea class="big" id="cNames" placeholder="Paste from a spreadsheet or ManageBac, or upload a file">' + esc(c.names.join('\n')) + '</textarea></div>' +
     '<button class="btn sm" data-up>Upload a list (.csv or .txt)…</button><input type="file" id="cFile" accept=".csv,.txt,text/csv,text/plain" hidden>' +
-    '<p class="muted" style="font-size:13px">Kept in this browser, and in your own Google Drive if you sign in.</p></div>' +
+    '<p class="muted" style="font-size:13px">Kept in this browser.</p></div>' +
     '<div class="bf">' + (ci >= 0 ? '<button class="btn" data-del style="margin-right:auto">Delete</button>' : '') + '<button class="btn" data-cancel>Cancel</button><button class="btn primary" data-ok>Save</button></div>', true);
   $('#cFile').onchange = async e => { const f = e.target.files[0]; if (!f) return; $('#cNames').value = parseRoster(await f.text()).join('\n'); e.target.value = ''; };
-  $('#dlgBox').onclick = e => {
+  $('#dlgBox').onclick = async e => {
     if (e.target.closest('[data-up]')) return $('#cFile').click();
     if (e.target.closest('[data-cancel]')) return closeDlg();
-    if (e.target.closest('[data-del]')) { if (!confirm('Delete the ' + c.name + ' class? Its assignments move to “No class”.')) return; for (const u of c.units) { for (const it of u.items) it.classId = ''; lib.loose.units.push(u); } lib.classes.splice(ci, 1); saveLib(); closeDlg(); return renderLib(); }
+    if (e.target.closest('[data-del]')) { if (!await askDlg('Delete the ' + c.name + ' class? Its assignments move to “No class”.', { ok: 'Delete', danger: true })) return; for (const u of c.units) { for (const it of u.items) it.classId = ''; lib.loose.units.push(u); } lib.classes.splice(ci, 1); saveLib(); closeDlg(); return renderLib(); }
     if (e.target.closest('[data-ok]')) {
       const name = $('#cName').value.trim(); if (!name) { $('#cName').focus(); return; }
       c.name = name; c.names = parseRoster($('#cNames').value);
@@ -3546,16 +3903,34 @@ function editClass(ci) {
   };
 }
 // Matching folder names to roster names: every word of one appears in the other, in any order ("Doe, Sam" = "Sam Doe").
-const nameWords = s => (String(s).toLowerCase().normalize('NFKD').replace(/[̀-ͯ]/g, '').match(/[a-z0-9]+|[^\x00-\x7f\s,.()_-]+/g) || []);
+const LETTER_PLAIN = { ø: 'o', đ: 'd', ð: 'd', ł: 'l', ħ: 'h', ı: 'i', ŧ: 't', æ: 'ae', œ: 'oe', ß: 'ss', þ: 'th' };
+const nameFold = s => String(s).toLowerCase().normalize('NFKD').replace(/[̀-ͯ]/g, '').replace(/[øđðłħıŧæœßþ]/g, c => LETTER_PLAIN[c]);
+const nameWords = s => (nameFold(s).match(/[a-z0-9]+|[^\x00-\x7f\s,.()_-]+/g) || []);
+// The closest fit goes first, so a name inside another ("Wei Chen", "Wei Chen Lin") can't take the other's folder. A fit by some of the words has to be the only one both ways.
 function rosterMatch(names) {
-  const used = new Set(), map = new Map();
+  const used = new Set(), map = new Map(), left = () => [...new Set(names)].filter(n => !map.has(n));
   const studs = batch.students.map(st => ({ st, w: new Set(nameWords(st.key)) }));
-  for (const n of names) {
-    const w = nameWords(n); if (!w.length) continue;
-    const hits = studs.filter(x => !used.has(x.st) && (w.every(t => x.w.has(t)) || ([...x.w].length >= 2 && [...x.w].every(t => w.includes(t)))));
-    if (hits.length === 1) { used.add(hits[0].st); map.set(n, hits[0].st); }
+  const give = (n, x) => { used.add(x.st); map.set(n, x.st); };
+  for (const n of left()) { const x = studs.find(x => !used.has(x.st) && x.st.key === n); if (x) give(n, x); }
+  for (const n of left()) {
+    const w = new Set(nameWords(n)), hits = studs.filter(x => !used.has(x.st) && x.w.size === w.size && [...w].every(t => x.w.has(t)));
+    if (w.size && hits.length === 1) give(n, hits[0]);
+  }
+  const fits = (w, x) => w.every(t => x.w.has(t)) || (x.w.size >= 2 && [...x.w].every(t => w.includes(t)));
+  const rest = left().map(n => ({ n, w: nameWords(n) })).filter(r => r.w.length);
+  for (const { n, w } of rest) {
+    const hits = studs.filter(x => !used.has(x.st) && fits(w, x));
+    if (hits.length === 1 && rest.filter(r => fits(r.w, hits[0])).length === 1) give(n, hits[0]);
   }
   return map;
+}
+// Someone on the roster with no folder. s: their saved record, if there is one.
+const gapStudent = (key, s) => ({ key, files: [], grade: { rubric: [], points: '', comment: '', ...(s && s.g) }, layout: null, inc: (s && s.inc) || {}, gap: true });
+// The order the student list, and so the Grade sheet, is really in.
+function listOrder() {
+  const c = batchClass();
+  if (!c || !c.names.length) return 'folder order';
+  return rosterMatch(c.names).size < batch.students.length ? 'roster order, then anyone not on it' : 'roster order';
 }
 // Students always go in the order of the class roster: matched names first, in roster order, then anyone the roster
 // doesn't name, in folder order. With no class picked, the class whose roster names most of the folders is used.
@@ -3568,20 +3943,20 @@ function rosterSort() {
     if (best && bn >= Math.max(2, batch.students.length / 2)) { c = best; batch.classId = best.id; }
   }
   // Everyone on the roster is in the list, even with nothing turned in yet; their paper can be added from their name.
-  // A roster place-holder that never got a file goes away if the roster changes.
-  batch.students = batch.students.filter(st => !(st.gap && !st.files.length && !(c && c.names.includes(st.key))));
+  // A roster place-holder goes away if the roster changes, unless it has a file, score, comment or status: then it stays in the list, as not on the roster.
+  batch.students = batch.students.filter(st => !(st.gap && !st.files.length && !gradeHasWork(st.grade) && !(c && c.names.includes(st.key))));
   if (c && c.names.length) {
-    const have = rosterMatch(c.names), saved = store.get(batch.id, null) || batch.keptWork || null;
+    const have = rosterMatch(c.names), saved = newestWork(store.get(batch.id, null), batch.keptWork);
     for (const nm of c.names) if (!have.has(nm)) {
       const s = saved && saved.s && saved.s[nm];
-      batch.students.push({ key: nm, files: [], grade: { rubric: [], points: '', comment: '', ...(s && s.g) }, layout: null, inc: (s && s.inc) || {}, gap: true });
+      batch.students.push(gapStudent(nm, s));
     }
   }
   const byFolder = [...batch.students].sort((a, b) => natural(a.key, b.key));
   if (!c || !c.names.length) { batch.students = byFolder; return; }
   batch.students = byFolder;
-  const m = rosterMatch(c.names), first = c.names.filter(n => m.has(n)).map(n => m.get(n)), used = new Set(first);
-  batch.students = first.concat(byFolder.filter(st => !used.has(st)));
+  const m = rosterMatch(c.names), used = new Set(c.names.filter(n => m.has(n)).map(n => m.get(n)));
+  batch.students = [...used].concat(byFolder.filter(st => !used.has(st)));
 }
 function setBatchName() { $('#batchName').textContent = batch.name + ' · ' + batch.students.length + (batch.students.length === 1 ? ' student' : ' students'); }
 function batchClass() { const id = batch && (batch.classId != null ? batch.classId : batch.assignment && batch.assignment.classId); return id ? classById(id) : null; }
@@ -3632,41 +4007,97 @@ function askToKeep() {   // asks the browser not to clear this site's storage wh
   if (askedKeep || !navigator.storage || !navigator.storage.persist) return;
   askedKeep = true; navigator.storage.persist().catch(() => {});
 }
-async function keepPapers(b, label, list) {
-  const m = { ...(keptMeta.get(b.id) || {}), id: b.id, name: b.name, n: b.students.length, t: Date.now(), asg: b.assignment ? b.assignment.id : (keptMeta.get(b.id) || {}).asg };
+// A browser refuses one record over about 130 MB. A larger download is kept in pieces: under its id a list with nothing big in it, { path, data: null, parts, size } for each file,
+// and each file's bytes under "id|file number|piece number". The list goes in last, so it never names a piece that isn't there. A download that fits stays one record, as it always was.
+const PAPER_ONE = 100e6, PAPER_PIECE = 64e6;
+const underId = id => IDBKeyRange.bound(id + '|', id + '|\uffff');
+const paperHeads = async () => ((await kdo('papers', 'readonly', o => o.getAllKeys())) || []).filter(k => !String(k).includes('|'));
+const paperDrop = id => kdo('papers', 'readwrite', o => { o.delete(id); o.delete(underId(id)); });
+async function paperPut(id, rec) {
+  const held = e => e.data ? e.data.buffer.byteLength : 0;   // a view is stored with its whole buffer
+  if (rec.entries.reduce((a, e) => a + held(e), 0) <= PAPER_ONE) return kdo('papers', 'readwrite', o => { o.delete(underId(id)); o.put(rec, id); });
   try {
-    if (list && !(keptMeta.get(b.id) || {}).papers) {
-      await kdo('papers', 'readwrite', o => o.put({ id: b.id, label: label || '', entries: list }, b.id));
-      m.papers = true; m.size = list.reduce((a, e) => a + (e.data ? e.data.length : 0), 0);
+    const entries = [];
+    for (let i = 0; i < rec.entries.length; i++) {
+      const e = rec.entries[i], d = e.data;
+      if (!d) { entries.push(e); continue; }
+      let n = 0;
+      for (let at = 0; at < d.length; at += PAPER_PIECE, n++) { const part = d.slice(at, at + PAPER_PIECE); await kdo('papers', 'readwrite', o => o.put(part, id + '|' + i + '|' + n)); }
+      entries.push({ path: e.path, data: null, parts: n, size: d.length });
     }
+    await kdo('papers', 'readwrite', o => o.put({ ...rec, entries }, id));
+  } catch (e) { await paperDrop(id).catch(() => {}); throw e; }
+}
+// One file's bytes, one file at a time. A piece gone missing throws, so nothing goes on as if the file were whole.
+async function keptBytes(id, i, e) {
+  if (e.parts == null) return e.data || null;
+  const out = new Uint8Array(e.size);
+  for (let n = 0, at = 0; n < e.parts; n++) {
+    const part = await kdo('papers', 'readonly', o => o.get(id + '|' + i + '|' + n));
+    if (!part) throw new Error('A piece of a kept file is missing: ' + e.path);
+    out.set(part, at); at += part.length;
+  }
+  return out;
+}
+async function paperGet(id) {
+  const rec = await kget('papers', id);
+  if (!rec || !rec.entries || !rec.entries.some(e => e.parts != null)) return rec;
+  try {
+    const entries = [];
+    for (let i = 0; i < rec.entries.length; i++) entries.push({ path: rec.entries[i].path, data: await keptBytes(id, i, rec.entries[i]) });
+    return { ...rec, entries };
+  } catch (e) { console.error(e); return null; }
+}
+let keepWait = null;   // the papers still going into the browser
+async function keepPapers(b, label, list, again) {
+  try {
+    const more = {};
+    if (list && (again || !(keptMeta.get(b.id) || {}).papers)) {
+      await paperPut(b.id, { id: b.id, label: label || '', entries: list });
+      more.papers = true; more.size = list.reduce((a, e) => a + (e.data ? e.data.length : 0), 0);
+    }
+    const m = { ...(keptMeta.get(b.id) || {}), id: b.id, name: b.name, n: b.students.length, t: Date.now(), asg: b.assignment ? b.assignment.id : (keptMeta.get(b.id) || {}).asg, ...more };   // only now: a big download takes a while, and she may have saved since
     await kdo('meta', 'readwrite', o => o.put(m, b.id)); keepOk = true; keptMeta.set(b.id, m);
+    folderPapers(b);
   } catch (e) {
     console.error(e);
-    if (list) toast('This browser has no room to keep these papers. Your marks are still saved; drop the download in again to reopen it.');
+    if (list) toast('This browser couldn’t keep these papers, usually because it’s out of room. Your marks are still saved, but the papers won’t reopen by themselves or go in a take-home file: drop the download in again to reopen it.', 12000);
   }
 }
 let keepT = null;
 function keepWork(b, data) {
-  const n = Object.values(data.s).filter(x => x.g && ((x.g.rubric || []).some(v => v != null) || x.g.points !== '' || x.g.sheet)).length;
-  const m = { ...(keptMeta.get(b.id) || { id: b.id, name: b.name, n: b.students.length }), t: data.t, scored: n };
+  const m = { ...(keptMeta.get(b.id) || { id: b.id, name: b.name }), n: b.students.length, t: data.t, ...workCounts(data) };
   keptMeta.set(b.id, m);
-  kdo('work', 'readwrite', o => o.put(data, b.id)).then(() => kdo('meta', 'readwrite', o => o.put(m, b.id))).then(() => { keepOk = true; })
-    .catch(e => { keepOk = false; console.error(e); });
+  return kdo('work', 'readwrite', o => o.put(data, b.id)).then(() => kdo('meta', 'readwrite', o => o.put(m, b.id))).then(() => { keepOk = true; return true; })
+    .catch(e => { keepOk = false; console.error(e); if (e && e.name === 'InvalidStateError') keepDbP = null; keepDb().catch(() => { keepDbP = null; }); return false; });   // so Try again reopens a store that went away
+}
+// The card a download belongs to: the one it was last opened through, or else one that opens it. Its rubric lives on the card, so every way in has to find it.
+function cardOfKept(id) {
+  const m = keptMeta.get(id), f = m && m.asg ? findItem(m.asg) : null;
+  if (f) return f.it;
+  for (const c of holders()) for (const u of c.units) { const it = u.items.find(x => x.batchId === id); if (it) return it; }
+  return null;
 }
 async function reopenKept(id, assignment) {
-  const rec = await kget('papers', id);
+  const rec = await paperGet(id);
   if (!rec) { toast('The papers for this one aren’t kept in this browser. Drop the download in again.'); return; }
-  const m = keptMeta.get(id), f = !assignment && m && m.asg ? findItem(m.asg) : null;
-  await intake(rec.entries, rec.label, assignment || (f ? f.it : null), true);
+  await intake(rec.entries, rec.label, assignment || cardOfKept(id), true);
 }
 async function forgetKept(id) {
+  try { await gsData.forget(id); }   // first, so if this fails it can simply be clicked again
+  catch (e) { console.error(e); return toast('That didn’t work, so nothing was forgotten. Try again.'); }
+  lsPut(forgotKey(id), String(Date.now()));   // any tab with it open lets go now
+  await noteForgotten(id);
   try {
-    for (const n of ['papers', 'work', 'meta']) await kdo(n, 'readwrite', o => o.delete(id));
+    await paperDrop(id);
+    for (const n of ['work', 'meta']) await kdo(n, 'readwrite', o => o.delete(id));
     await kdo('edits', 'readwrite', o => o.delete(IDBKeyRange.bound(id + '|', id + '|\uffff')));
     const recs = (await idbDo('readonly', o => o.getAll())) || [];
     await idbDo('readwrite', o => { for (const r of recs) if (r.bid === id) o.delete(r.bid + '|' + r.key + '|' + r.path); });
   } catch {}
-  store.del(id); const idx = store.get('gs.batches', {}); delete idx[id]; store.set('gs.batches', idx);
+  store.del(id); store.del('gs.rd.' + id); const idx = store.get('gs.batches', {}); delete idx[id]; store.set('gs.batches', idx);
+  try { localStorage.removeItem(savedKey(id)); } catch {}
+  const seen = store.get('gs.openSeen', {}); if (seen[id]) { delete seen[id]; store.set('gs.openSeen', seen); }
   keptMeta.delete(id); renderLib();
 }
 const fmtSize = b => b > 1e9 ? (b / 1e9).toFixed(1) + ' GB' : b > 1e6 ? Math.round(b / 1e6) + ' MB' : Math.max(1, Math.round(b / 1e3)) + ' KB';
@@ -3674,8 +4105,9 @@ function renderKept() {
   const el = $('#kept'); if (!el) return;
   const list = [...keptMeta.values()].sort((a, b) => b.t - a.t);
   el.closest('section').hidden = !list.length;
-  el.innerHTML = list.map(m => '<div class="krow"><div class="kn"><b>' + esc(m.name) + '</b><span class="muted">' + m.n + (m.n === 1 ? ' student' : ' students') + ' · ' + (m.scored || 0) + ' scored · last worked on ' + fmtDay(m.t) + (m.size ? ' · ' + fmtSize(m.size) : '') + (m.papers ? '' : ' · papers not kept, drop the download again') + '</span></div>' +
-    (m.papers ? '<button class="btn sm primary" data-kopen="' + esc(m.id) + '">Open</button>' : '') + '<button class="btn sm" data-kforget="' + esc(m.id) + '" title="Removes the papers, your marks and scores for this download from this browser">Forget</button></div>').join('');
+  keptTidy(list.length);
+  el.innerHTML = list.map((m, i) => '<div class="krow' + (i ? '' : ' first') + '"><div class="kn"><b>' + esc(m.name || 'A download') + '</b><span class="muted">' + m.n + (m.n === 1 ? ' student' : ' students') + ' · ' + (m.scored || 0) + ' scored' + keptMore(m) + ' · last worked on ' + fmtDay(m.t) + (m.size ? ' · ' + fmtSize(m.size) : '') + (m.newer && keptMeta.has(m.newer) ? ' · an older copy: your work went on in a newer one' : '') + (m.papers ? '' : ' · papers not kept, drop the download again') + '</span></div>' +
+    (m.papers ? '<button class="btn sm' + (i ? '' : ' primary') + '" data-kopen="' + esc(m.id) + '">' + (i ? 'Open' : 'Continue') + '</button>' : '') + '<button class="btn sm" data-kforget="' + esc(m.id) + '" title="Removes the papers, your marks and scores for this download from this browser and any linked folder">Forget</button></div>').join('');
 }
 async function idbDo(mode, fn) {
   const db = await addDb();
@@ -3683,11 +4115,11 @@ async function idbDo(mode, fn) {
 }
 const addKey = (st, path) => batch.id + '|' + st.key + '|' + path;
 const fmtDay = t => new Date(t).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-const addTag = f => '<span class="addtag" title="You added this file">Added by you · ' + fmtDay(f.added) + '</span><button class="link" style="font-size:13px" data-rmadd="' + esc(f.path) + '">Remove</button>';
+const addTag = f => '<span class="addtag" title="You added this file">Added by you · ' + fmtDay(f.added) + '</span><button class="link" style="font-size:13px" data-rmadd="' + esc(f.path) + '">Remove</button>' + lateLink(f);
 async function loadAdded() {
   let recs = [];
-  try { recs = (await idbDo('readonly', o => o.getAll())) || []; } catch { return; }
-  for (const r of recs.filter(r => r.bid === batch.id).sort((a, b) => a.added - b.added)) {
+  try { recs = (await idbDo('readonly', o => o.getAll(underId(batch.id)))) || []; } catch { return; }
+  for (const r of recs.filter(r => r.bid === batch.id && r.key !== REF_KEY).sort((a, b) => a.added - b.added)) {   // readings sit in the same store, and aren't a student
     let st = batch.students.find(s => s.key === r.key);
     if (!st) { st = { key: r.key, files: [], grade: { rubric: [], points: '', comment: '' }, layout: null, inc: {} }; batch.students.push(st); }   // added from a later scan
     if (st.files.some(f => f.path === r.path)) continue;
@@ -3701,7 +4133,7 @@ function pickAdd(st) {
   inp.click();
 }
 async function addFiles(st, list, quiet) {
-  list = list.filter(e => e.file && !junk(e.path));
+  list = list.filter(e => e.file && !junk(e.path) && !houseFile(e.path));
   // A ZIP added to a student is opened and its files added. A ZIP with a folder per student goes through Bring in files.
   if (list.some(e => /\.zip$/i.test(e.file.name))) {
     const out = [];
@@ -3722,6 +4154,7 @@ async function addFiles(st, list, quiet) {
     let path = base, k = 2;
     while (st.files.some(f => f.path === path)) path = base.replace(/(\.[^./]+)?$/, ' (added ' + k++ + ')$1');
     const f = await makeFile(path, bytes); f.added = Date.now(); f.akey = st.key;
+    if (f.photoTurn) f.rot = { 0: f.photoTurn };
     if (viewable(f)) {
       try { await workerReady; const d = await pdfjsLib.getDocument({ data: f.data.slice(), isEvalSupported: false }).promise; f.numPages = d.numPages; d.destroy(); } catch {}
       if (st.layout && f.numPages) st.layout.push({ name: f.name, file: f.path, pages: [...Array(f.numPages).keys()].map(p => [f.path, p]) });
@@ -3744,13 +4177,17 @@ async function removeAdded(st, path) {
   if (st.layout) { st.layout = st.layout.map(d => ({ ...d, pages: d.pages.filter(([q]) => q !== path) })).filter(d => d.pages.length); if (!st.layout.length) st.layout = null; }
   if (st.inc) delete st.inc[path];
   try { await idbDo('readwrite', o => o.delete(batch.id + '|' + (f.akey || st.key) + '|' + path)); } catch {}
+  noteGone(batch, (f.akey || st.key) + '|' + path);
   if (st.forder) st.forder = st.forder.filter(x => x !== 'f:' + path);
   refound(st); saveSoon(); renderList(); openStudent(cur);
-  toast('Removed ' + f.name);
+  toast('Removed ' + fileShown(st, f.name));
 }
 function refound(st) {
   const all = st.files.filter(f => f.kind !== 'docx' && fileIn(st, f)).flatMap(f => (f.scan && f.scan.found) || []).concat(st.files.flatMap(wordFound));
-  st.found = all.length === 1 ? { ...all[0], found: true } : null; st.foundCount = all.length;
+  // Doubtful readings wait for her OK and don't count until then, and while one is waiting nothing beside it stands either. The same words she's already said yes to, written twice on a page, are one answer.
+  const r = splitReads(st, all), rd = st.grade.reads || {}, ok = r.ok.filter(g => !r.mine.includes(g)).filter((g, n, a) => rd[readKey(g)] !== 1 || a.findIndex(o => readKey(o) === readKey(g)) === n);
+  st.foundCount = ok.length; st.doubts = r.ask; st.foundAll = ok;
+  st.found = ok.length === 1 && !rivalReads(st).length ? { ...ok[0], found: true } : null;
 }
 
 /* ---------------- display: app text size, text box size, paper fit, Word documents ---------------- */
@@ -3771,7 +4208,7 @@ function openDisplay() {
       '<div class="dset"><div class="dl">App text size</div>' + seg('ui', [[0.9, 'Small'], [1, 'Normal'], [1.15, 'Large'], [1.3, 'Extra large']]) +
         '<div class="muted" style="font-size:12.5px;margin-top:6px">The student list, toolbar, grade panel and windows. Papers keep their own zoom.</div></div>' +
       '<div class="dset"><div class="dl">New text boxes on the paper</div>' + range('tsize', 8, 32, 1, disp.tsize, ' pt') +
-        '<div id="tsPrev" style="margin-top:6px;font:' + disp.tsize + 'px Helvetica,Arial,sans-serif;color:' + COLORS[inkColor] + '">Aa Bb 123</div></div>' +
+        '<div id="tsPrev" style="margin-top:6px;padding:4px 8px;border-radius:6px;background:#fff;font:' + disp.tsize + 'px Helvetica,Arial,sans-serif;color:' + COLORS[inkColor] + '">Aa Bb 123</div></div>' +
       '<div class="dset"><div class="dl">Paper</div>' + seg('fit', [['width', 'Fit width'], ['page', 'Fit whole page']]) +
         '<div style="margin-top:8px">' + range('zoom', 50, 250, 5, Math.round(zoom * 100), '%') + '</div></div>' +
       '<div class="dset"><div class="dl">Word documents</div>' + range('dfs', 12, 24, 1, disp.dfs, ' px') +
@@ -3820,24 +4257,36 @@ function stepStudent(d) {
   const o = anonOrder(), p = o.indexOf(cur) + d;
   if (p >= 0 && p < o.length) openStudent(o[p]);
 }
-const anonRx = st => wordRx(coverWords(st));
+const anonRx = st => coverRx(st);
 // Black boxes (page points) over typed names, Kami boxes with names, and the boxes she drew in Check the covers.
 async function anonCovers(st, pg) {
-  try { return (await autoCovers(pg.page, vpRot(pg.file, pg.idx, pg.page, 1), anonRx(st))).concat(ownCovers(pg.file.path, pg.idx, pg.W, pg.H)); }
+  try { const vp = vpRot(pg.file, pg.idx, pg.page, 1); return (await autoCovers(pg.page, vp, anonRx(st), skewXf(pg.file, pg.idx, vp))).concat(ownCovers(pg.file.path, pg.idx, pg.W, pg.H)); }
   catch { return ownCovers(pg.file.path, pg.idx, pg.W, pg.H); }
+}
+// The same covers on a small or big picture of a page, drawn at vp. turned: a turn she hasn't saved yet.
+async function anonPaint(ctx, st, f, p, page, vp, turned) {
+  let cs = [];
+  try { cs = await autoCovers(page, vp, anonRx(st), skewXf(f, p, vp)); } catch (er) { console.error(er); }
+  ctx.fillStyle = '#111';
+  for (const r of cs) ctx.fillRect(r.x, r.y, r.w, r.h);
+  for (let b of shareState().boxes[boxKey(f.path, p)] || []) {
+    for (let n = turned || 0; n > 0; n -= 90) b = [1 - b[1] - b[3], b[0], b[3], b[2]];
+    ctx.fillRect(b[0] * vp.width, b[1] * vp.height, b[2] * vp.width, b[3] * vp.height);
+  }
 }
 // File names, Word and text files: names in headings are swapped for [name], and any line of a document that has a
 // name is blacked out on screen (the file itself isn't changed).
 function anonScrub() {
   if (!anonOn()) return;
-  const st = batch.students[cur], rx = anonRx(st); if (!rx) return;
-  for (const el of document.querySelectorAll('#paper .fhead > span:first-child, #paper .refd > summary')) {
-    rx.lastIndex = 0; if (rx.test(el.textContent)) el.textContent = scrub(el.textContent, rx);
+  const st = batch.students[cur], rx = anonRx(st), rf = fileRx(st);
+  for (const el of document.querySelectorAll('#paper .fhead > span:first-child, #paper .refd > summary, #paper .nofile b, #paper .mhead b')) {
+    rf.lastIndex = 0; if (rf.test(el.textContent)) el.textContent = scrub(el.textContent, rf);
   }
   for (const el of document.querySelectorAll('#paper .dpage p, #paper .dpage td, #paper .dpage li, #paper .dpage')) {
     if (el.classList.contains('anonhide') || (el.classList.contains('dpage') && el.querySelector('p,td,li'))) continue;
     rx.lastIndex = 0; if (rx.test(el.textContent)) el.classList.add('anonhide');
   }
+  for (const el of document.querySelectorAll('#paper .docx')) if (el.wordF && el.querySelector('.fhead') && !el.querySelector('.anonnote') && wordNoName(st, el.wordF)) el.querySelector('.fhead').insertAdjacentHTML('afterend', '<p class="muted anonnote" style="margin:6px 0;font-size:13px">This student’s name wasn’t found in this file, so a nickname or initials could still show here.</p>');
 }
 let anonT = 0;
 new MutationObserver(() => { if (anonOn()) { clearTimeout(anonT); anonT = setTimeout(anonScrub, 30); } }).observe($('#paper'), { childList: true, subtree: true });
@@ -3854,13 +4303,16 @@ function openAnon() {
     '<p style="margin-top:0">Papers show up as <b>Paper 1, Paper 2…</b> in a random order, with names covered. Every mark and score still goes to the right student, and you can switch back any time.</p>' +
     '<ol style="margin:0 0 12px;padding-left:20px;line-height:1.6">' +
     '<li><b>Get everything in order first:</b> late files, split scans, your rubric.</li>' +
-    '<li><b>Cover the names.</b> Typed names (from the folder names' + (batchClass() ? ' and your roster' : '') + ') are covered on their own. For handwritten names, check the covers: drag a box over the name once, then use it on every paper.</li>' +
+    '<li><b>Cover the names.</b> Typed names (from the folder names' + (batchClass() ? ' and your roster' : '') + ') are covered on their own. For handwritten names, check the covers: drag a box over the name once, then use it on every paper. <span id="anCover">' + esc(coverLine()) + '</span>' + nameWarnings() + '<div id="nameFlags" data-before="before you start" style="margin-top:8px">' + nameFlagsHtml('before you start') + '</div></li>' +
     '<li><b>Start.</b> ' + (seen ? 'It keeps the same random order as last time, or you can shuffle a new one.' : 'The order is shuffled once and kept, so you can stop and come back.') + '</li></ol>' +
     '<p class="muted" style="font-size:13px;margin:0">The Grades list, Grade sheet and export still use names, since that’s where you copy grades out.</p></div>' +
     '<div class="bf"><button class="btn" data-check style="margin-right:auto">Check the covers…</button>' + (seen ? '<button class="btn" data-shuf>Shuffle a new order and start</button>' : '') + '<button class="btn primary" data-go>Start anonymous grading</button></div>', true);
+  ensureCounts().then(() => { const el = $('#anCover'); if (el) el.textContent = coverLine(); findNames(); });
   $('#dlgBox').onclick = e => {
     if (e.target.closest('[data-cancel]')) return closeDlg();
-    if (e.target.closest('[data-check]')) return checkCovers(0, openAnon);
+    const cc = e.target.closest('[data-cc]'); if (cc) return checkCovers(+cc.dataset.cc, openAnon);
+    const wp = e.target.closest('[data-wp]'); if (wp) { closeDlg(); return openStudent(+wp.dataset.wp); }
+    if (e.target.closest('[data-check]')) return ensureCounts().then(() => checkCovers(coverFirst(), openAnon));
     if (e.target.closest('[data-shuf]')) { anonShuffle(); closeDlg(); return setAnon(true); }
     if (e.target.closest('[data-go]')) { closeDlg(); return setAnon(true); }
   };
@@ -3907,7 +4359,7 @@ function calcEval(src) {
 const calcFmt = v => v == null ? '' : String(+(+v).toFixed(4));
 function openCalc() {
   const old = $('#calcPanel'); if (old) { old.remove(); return; }
-  const p = document.createElement('div'); p.id = 'calcPanel'; document.body.appendChild(p);
+  const p = document.createElement('div'); p.id = 'calcPanel'; p.setAttribute('role', 'dialog'); p.setAttribute('aria-label', 'Calculator'); document.body.appendChild(p);
   const pos = store.get('gs.calcpos', null); if (pos) { p.style.left = pos.x + 'px'; p.style.top = pos.y + 'px'; p.style.right = 'auto'; }
   let hist = store.get('gs.calchist', []), last = null;
   const max = maxPoints();
@@ -4058,7 +4510,7 @@ function lightAuto(pg) {
   return { b: Math.round(Math.max(-60, Math.min(60, bb))), c: Math.round((k - 1) * 100), d: 20 };
 }
 let lightRaf = 0;
-function lightApply() { cancelAnimationFrame(lightRaf); lightRaf = requestAnimationFrame(() => { redrawAll(); lightChips(); saveSoon(); }); }
+function lightApply() { cancelAnimationFrame(lightRaf); lightRaf = requestAnimationFrame(() => { redrawAll(); lightChips(); for (const q of pages) scanNote(q); saveSoon(); }); }
 function lightPagesChanged() { lightApply(); const lp = $('#lightPanel'); if (lp) lp.refresh(); }
 // A ☀ tag in the corner of each page while lighting is on: click it to switch lighting off or on for that page.
 function lightChip(pg) {
@@ -4110,7 +4562,7 @@ async function ensureCounts() {
   await workerReady;
   for (const s of batch.students) for (const f of s.files) {
     if (!viewable(f) || f.numPages || f.bad) continue;
-    try { const d = await pdfjsLib.getDocument({ data: f.data.slice(), isEvalSupported: false }).promise; f.numPages = d.numPages; d.destroy(); } catch { f.bad = 'it couldn’t be opened'; }
+    try { const d = await pdfjsLib.getDocument({ data: f.data.slice(), isEvalSupported: false }).promise; f.numPages = d.numPages; d.destroy(); } catch (e) { pdfBad(f, e); }
   }
 }
 async function lightMenuDo(how) {
@@ -4137,7 +4589,7 @@ async function lightMenuDo(how) {
 
 function openLight() {
   const old = $('#lightPanel'); if (old) { old.remove(); return; }
-  const p = document.createElement('div'); p.id = 'lightPanel'; document.body.appendChild(p);
+  const p = document.createElement('div'); p.id = 'lightPanel'; p.setAttribute('role', 'dialog'); p.setAttribute('aria-label', 'Lighting'); document.body.appendChild(p);
   let only = lightKey(batch.students[cur]) !== '*';
   const set = L => { batch.light = batch.light || {}; if (only) batch.light[batch.students[cur].key] = L; else { batch.light['*'] = L; } lightApply(); };
   const opt = (k, v) => { batch.lightOpt = { ...lightOpts(), [k]: v }; lightApply(); render(); };
@@ -4173,6 +4625,7 @@ function openLight() {
     if (o) { const want = o.dataset.lo === '1', stc = batch.students[cur]; if (want && !only) { batch.light = batch.light || {}; batch.light[stc.key] = { ...lightFor(stc) }; } if (!want && only) { delete batch.light[stc.key]; lightApply(); } only = want; return render(); }
   };
   p.refresh = () => { only = lightKey(batch.students[cur]) !== '*'; render(); };
+  p.tabIndex = -1; p.focus({ preventScroll: true });   // so Escape closes it
 }
 
 /* ---------------- Word files (.docx, .docm with macros, .dotx): shown as pages, and edited in place ---------------- */
@@ -4387,10 +4840,11 @@ function wShadeCell(w, tc, hex) {
   sh.setAttributeNS(W_NS, 'w:val', 'clear'); sh.setAttributeNS(W_NS, 'w:color', 'auto'); sh.setAttributeNS(W_NS, 'w:fill', hex.replace('#', '').toUpperCase());
 }
 const CELL_COLORS = [['#FFF59D', 'Yellow'], ['#C8E6C9', 'Green'], ['#BBDEFB', 'Blue'], ['#F8BBD0', 'Pink'], ['', 'No color']];
+const wordSaves = new Set();   // Word edits waiting out their short pause before they're saved
 // One Word file on screen. Editing: click any text and type; click a table cell then a color to shade it.
 async function wordCard(st, f, opts) {
   opts = opts || {};
-  const el = document.createElement('div'); el.className = 'docx';
+  const el = document.createElement('div'); el.className = 'docx'; el.wordF = f;
   el.innerHTML = '<div class="fhead"><span style="color:var(--fg)">' + esc(opts.title || f.name) + '</span><span>' + (/\.docm$|\.dotm$/i.test(f.name) ? 'Word file with macros' : 'Word file') + '</span>' +
     (f.rubric ? '<span class="addtag" style="background:var(--accent-soft);color:var(--accent)">Your rubric</span>' : '') + (f.edited ? '<span class="addtag" style="background:var(--accent-soft);color:var(--accent)">Edited by you</span>' : '') + (f.added ? addTag(f) : '') + '<span style="flex:1"></span>' +
     (opts.readOnly ? '' : '<button class="btn sm" data-wedit>Edit</button>') + '<button class="btn sm ghost" data-wdl>Download</button></div>' +
@@ -4400,7 +4854,7 @@ async function wordCard(st, f, opts) {
   try { w = openWord(f.data); w.pRuns = []; renderWord(w, page); }
   catch (e) {
     console.error(e);
-    try { page.innerHTML = await docxHtml(f.data); } catch { page.innerHTML = '<p>This Word file couldn’t be opened here. Download it to open it in Word.</p>'; }
+    try { page.innerHTML = await docxHtml(f.data); } catch { page.innerHTML = '<p>' + (troubleText(troubleOf(f)) || 'This Word file couldn’t be opened here. Download it to open it in Word.') + '</p>'; }
     const eb = el.querySelector('[data-wedit]'); if (eb) eb.remove();
   }
   if (w && !opts.readOnly) setTimeout(() => wireRubric(st, f, w, page, el, () => soon()), 0);
@@ -4409,16 +4863,18 @@ async function wordCard(st, f, opts) {
   let editing = false, cell = null, saveT = null;
   const dirty = new Set();
   const saveNowW = async () => {
-    clearTimeout(saveT); saveT = null;
+    clearTimeout(saveT); saveT = null; wordSaves.delete(saveNowW);
     if (!w) return;
     for (const p of dirty) if (p.isConnected) wApplyPara(w, p);
     dirty.clear();
     if (!f.orig) f.orig = f.data;
     f.data = wordBytes(w); f.edited = Date.now(); f.size2 = f.data.length;
+    wordScore(f);
     await keepEdit(st, f);
+    refound(st); gradeShown(st);
     renderList();
   };
-  const soon = () => { clearTimeout(saveT); saveT = setTimeout(saveNowW, 700); };
+  const soon = () => { clearTimeout(saveT); saveT = setTimeout(saveNowW, 700); wordSaves.add(saveNowW); };
   const setEditing = on => {
     editing = on;
     page.classList.toggle('editing', on);
@@ -4434,13 +4890,17 @@ async function wordCard(st, f, opts) {
     if (e.target.closest('[data-wdl]')) { await saveNowW(); return saveBlob(f.name, new Blob([f.data])); }
     if (e.target.closest('[data-wedit]')) return setEditing(!editing);
     if (e.target.closest('[data-wreset]')) {
+      if (saveT) await saveNowW();
       const orig = f.orig || await origBytes(st, f); if (!orig) return toast('The original isn’t kept in this browser');
-      f.data = orig; f.orig = null; f.edited = 0; await dropEdit(st, f); toast('Back to the original'); return openStudent(cur, f.path);
+      const was = wordScore(f);
+      f.data = orig; f.orig = null; f.edited = 0; await dropEdit(st, f); toast('Back to the original');
+      wordScoreGone(st, was); wordScore(f); refound(st); renderList();   // if the original has boxes highlighted, its score comes in as the card opens
+      return openStudent(cur, f.path);
     }
     const k = e.target.closest('.wchk');
     if (k && w) { if (!editing) return toast('Click Edit first to change the file'); const on = wToggle(w, w.boxes[+k.dataset.ki]); k.textContent = on ? '☒' : '☐'; k.setAttribute('aria-pressed', on); soon(); return; }
     const sw = e.target.closest('[data-cell]');
-    if (sw && w) { if (!cell) return toast('Click a table cell first'); wShadeCell(w, w.cells[+cell.dataset.ci], sw.dataset.cell); cell.style.background = sw.dataset.cell || ''; soon(); return; }
+    if (sw && w) { if (!cell) return toast('Click a table cell first'); wShadeCell(w, w.cells[+cell.dataset.ci], sw.dataset.cell); cell.style.background = sw.dataset.cell || ''; if (el.wordPush) el.wordPush(); soon(); return; }
     const td = e.target.closest('td[data-ci]');
     if (td && editing) { if (cell) cell.classList.remove('wsel'); cell = td; td.classList.add('wsel'); }
   });
@@ -4457,10 +4917,10 @@ async function wordCard(st, f, opts) {
 }
 // Edited Word files are kept in this browser (per download), so the edits come back next time.
 async function keepEdit(st, f) {
-  try { await kdo('edits', 'readwrite', o => o.put({ data: f.data, orig: f.orig || null, t: f.edited }, batch.id + '|' + f.path)); }
+  try { await kdo('edits', 'readwrite', o => o.put({ data: f.data, orig: f.orig || null, t: f.edited }, batch.id + '|' + f.path)); saveSoon(); return true; }
   catch { toast('This browser couldn’t keep your edit. Download the file to keep it.'); }
 }
-async function dropEdit(st, f) { try { await kdo('edits', 'readwrite', o => o.delete(batch.id + '|' + f.path)); } catch {} }
+async function dropEdit(st, f) { try { await kdo('edits', 'readwrite', o => o.delete(batch.id + '|' + f.path)); noteGone(batch, EDIT_OFF + f.path); saveSoon(); } catch {} }
 async function origBytes(st, f) { const r = await kget('edits', batch.id + '|' + f.path); return r && r.orig; }
 async function loadEdits() {
   let recs = [], keys = [];
@@ -4473,6 +4933,15 @@ async function loadEdits() {
     const path = k.slice(batch.id.length + 1);
     for (const st of batch.students) { const f = st.files.find(x => x.path === path); if (f && recs[i]) { f.orig = recs[i].orig || f.data; f.data = recs[i].data; f.edited = recs[i].t || 1; } }
   });
+  // Highlights on a rubric that was replaced under a new name on the other computer: kept, but no file here shows them, so she's told. Their scores stay.
+  const b0 = batch, lost = new Set();
+  for (const k of keys) {
+    const path = k.slice(b0.id.length + 1);
+    if (b0.students.some(st => st.files.some(x => x.path === path))) continue;
+    const st = b0.students.find(st => path.startsWith(st.key + '/'));
+    if (st && st.files.some(f => f.virtual && f.kind === 'docx')) lost.add(st.key);
+  }
+  if (lost.size) setTimeout(() => { if (batch === b0) toast('A highlighted copy of an older rubric is kept for ' + lost.size + (lost.size === 1 ? ' student' : ' students') + ', but this rubric doesn’t show it. Their scores stay, so check them against this rubric.', 12000); }, 1200);
 }
 
 /* ---------------- scoring on her own Word rubric (what her rubric macros do) ---------------- */
@@ -4515,32 +4984,85 @@ function rubricModel(page) {
   if (best) { best.scale = scale; best.max = best.crits.length * Math.max(...best.levels); }
   return best;
 }
+// Worked out each time it's asked for, since Rubric setup can change after the file was read.
+const wordPct = (total, max, scale) => total == null ? null : percentWith(total, max, scale || (maxPoints() === max ? setup.scale : null));
 function rubricScore(m) {
   const per = m.crits.map((_, i) => { const v = m.cells.filter(c => c.crit === i && isShaded(c.td)).map(c => c.val); return v.length ? v.reduce((a, b) => a + b, 0) / v.length : null; });
   const done = per.filter(v => v != null);
   const total = done.length ? Math.round(done.reduce((a, b) => a + b, 0) * 100) / 100 : null;
-  return { per, total, done: done.length === per.length, pct: total == null ? null : percentWith(total, m.max, m.scale || (maxPoints() === m.max ? setup.scale : null)) };
+  return { per, total, done: done.length === per.length, pct: wordPct(total, m.max, m.scale) };
 }
-// Writes the total (and percent) into the rubric's own blank, like "Total: ____ / 12 = ____%", when there is exactly one.
-function fillTotalBlank(w, page, m, s) {
+// Writes the total (and percent) into the rubric's own blank, like "Total: ____ / 12 = ____%", when there is exactly one. True if that changed it.
+// filled: only a line that already has a percent in it, which is one that should follow the grading scale. A blank line waits for a click.
+function fillTotalBlank(w, page, m, s, filled) {
   const re = new RegExp('(^|[^\\d])([_\\s.\\d]*)\\/\\s*' + m.max + '(?!\\d)');
   const spots = [...page.querySelectorAll('p.wp')].filter(p => !m.cells.some(c => c.td.contains(p)) && re.test(p.textContent) && /score|total|grade|points/i.test((p.closest('td') || p).textContent));
-  if (spots.length !== 1 || s.total == null) return false;
-  const p = spots[0];
+  if (spots.length !== 1) return false;
+  const p = spots[0], was = p.textContent;
+  if (filled && (s.total == null || !/\d\s*%/.test(was))) return false;
   const sp = [...p.querySelectorAll('[data-ri]')].find(x => re.test(x.textContent)) ;
   if (!sp) return false;
-  sp.textContent = sp.textContent.replace(re, (all, a, blank) => a + (blank && /\S/.test(blank) && !/[_\d]/.test(blank) ? blank : ' ') + fmtNum(s.total) + ' /' + (all.match(/\/(\s*)/)[1] || ' ') + m.max);
+  sp.textContent = sp.textContent.replace(re, (all, a, blank) => a + (blank && /\S/.test(blank) && !/[_\d]/.test(blank) ? blank : ' ') + (s.total == null ? '____' : fmtNum(s.total)) + ' /' + (all.match(/\/(\s*)/)[1] || ' ') + m.max);
   const pc = [...p.querySelectorAll('[data-ri]')].find(x => /[_\d.]*\s*%/.test(x.textContent) && x !== sp) || (/%/.test(sp.textContent) ? sp : null);
-  if (pc && s.pct != null) pc.textContent = pc.textContent.replace(/([=:]?\s*)[_\d.]*\s*%/, (a, pre) => (pre || '') + fmtNum(s.pct) + '%');
+  if (pc) pc.textContent = pc.textContent.replace(/([=:]?\s*)[_\d.]*\s*%/, (a, pre) => (pre || '') + (s.pct == null ? '____' : fmtNum(s.pct)) + '%');
+  if (p.textContent === was) return false;
   wApplyPara(w, p);
   return true;
 }
-// The score panel follows the rubric.
-function rubricToGrade(st, s, max, nCrit) {
-  if (setup.mode === 'points') { if (+setup.outOf !== max) { setup.outOf = max; store.set('gs.setup', { ...setup, spot: undefined, rubricPage: undefined }); if (batch.assignment) { batch.assignment.setup = { ...setup, spot: undefined }; saveLib(); } } st.grade.points = String(s.total); }
-  else if (setup.criteria.length === nCrit) st.grade.rubric = s.per.map(v => v == null ? null : v);
-  else st.grade.points = String(s.total);
+// The Total line in every Word file she's scored follows the grading scale, as the panel does, so the file that goes back agrees with the gradebook. Goes through them once for each setup that changes a percent.
+function wordLinesFollow() {
+  if (!batch) return;
+  const sig = rubricKey(setup);
+  if (batch.lineSig === sig) return;
+  const b = batch; b.lineSig = sig; b.lineBusy = true;
+  b.lineRun = wordLinesNow(b).catch(e => console.error(e)).finally(() => { b.lineBusy = false; });
 }
+// Only a file whose score is this student's, since a table in a student's own file isn't her score until she says so.
+const wordLineHers = (st, s) => s.total != null && ownGrade(st).total === s.total;
+async function wordLinesNow(b) {
+  await Promise.all([...wordSaves].map(s => s()));
+  let n = 0;
+  for (const st of b.students) for (const f of st.files) {
+    if (batch !== b) return;
+    if (f.kind !== 'docx' || !f.edited) continue;
+    const card = [...document.querySelectorAll('.docx')].find(el => el.wordF === f);
+    if (card) { if (card.wordLine) card.wordLine(); continue; }   // on screen, and it writes its own; one still opening does it when it's ready
+    const w = openWord(f.data), page = document.createElement('div'); page.className = 'dpage'; w.pRuns = []; renderWord(w, page);
+    w.pRuns = w.paras.map((_, i) => [...page.querySelectorAll('p[data-pi="' + i + '"] > [data-ri], p[data-pi="' + i + '"] [data-ri]')].map(s => w.runs[+s.dataset.ri]));
+    const m = rubricModel(page), s = m && rubricScore(m);
+    if (!m || !wordLineHers(st, s) || !fillTotalBlank(w, page, m, s, true)) continue;
+    if (!f.orig) f.orig = f.data;
+    f.data = wordBytes(w); f.edited = Date.now(); f.size2 = f.data.length;
+    wordScore(f);
+    await keepEdit(st, f);
+    refound(st); n++;
+  }
+  if (n && batch === b) renderList();
+}
+// The score panel follows the rubric.
+// Out of a different total on a points setup, it stays out of the panel: the whole class's Out of only changes for her own rubric page, or when she says so.
+function rubricToGrade(st, s, max, nCrit) {
+  if (setup.mode === 'points') { if (+setup.outOf === max) setWordPoints(st, s); }
+  else if (setup.criteria.length === nCrit) { const was = st.grade.rubric; st.grade.rubric = s.per.map(v => v == null ? null : v); s.per.forEach((v, k) => { if ((was[k] ?? null) !== (v ?? null)) touchGrade(st, k); }); }
+  else setWordPoints(st, s);
+}
+// A Word rubric stopped giving a score. What it put in the score panel goes too; a score she gave herself stays.
+function wordScoreGone(st, was) {
+  if (!was || was.total == null) return;
+  const g = st.grade;
+  if (setup.mode === 'rubric' && setup.criteria.length === was.per.length) { was.per.forEach((v, k) => { if (v != null && g.rubric[k] === v) { g.rubric[k] = null; touchGrade(st, k); } }); return; }
+  if (String(g.points) === String(was.total)) { g.points = ''; touchGrade(st); }
+}
+function setClassOutOf(max) {
+  setup.outOf = max; store.set('gs.setup', { ...setup, spot: undefined, rubricPage: undefined }); if (batch.assignment) { batch.assignment.setup = { ...setup, spot: undefined }; saveLib(); }
+  batch.students.forEach(refound);
+  wordLinesFollow();
+}
+function setClassScale(scale) {
+  setup.scale = scale; store.set('gs.setup', { ...setup, spot: undefined, rubricPage: undefined }); if (batch.assignment) { batch.assignment.setup = { ...setup, spot: undefined }; saveLib(); }
+  wordLinesFollow();
+}
+const scaleDiffers = scale => !!scale && setup.mode === 'points' && JSON.stringify(scale) !== JSON.stringify(setup.scale);
 // A Word rubric's score without opening it: the boxes already highlighted, read the same way as on screen.
 function wordScore(f) {
   if (f.kind !== 'docx' || !f.data) return null;
@@ -4549,9 +5071,10 @@ function wordScore(f) {
   try {
     const w = openWord(f.data), page = document.createElement('div'); page.className = 'dpage'; w.pRuns = []; renderWord(w, page);
     const m = rubricModel(page);
-    if (m) s = { ...rubricScore(m), max: m.max, nCrit: m.crits.length, crits: m.crits, scale: m.scale };
+    if (m) s = { ...rubricScore(m), max: m.max, nCrit: m.crits.length, crits: m.crits, scale: m.scale, get pct() { return wordPct(this.total, this.max, this.scale); } };
     f.wtyped = wordTyped(page, m);
-  } catch (e) { console.error(e); f.wtyped = []; }
+    f.wtext = [...page.querySelectorAll('p')].map(p => p.textContent).join('\n') || page.textContent; f.wpic = !!page.querySelector('img');
+  } catch (e) { console.error(e); f.wtyped = []; f.wtext = null; }
   f.wsOf = f.data; f.wscore = s;
   return s;
 }
@@ -4564,24 +5087,41 @@ function wordTyped(page, m) {
     const t = p.closest('table.wt'); if (t && [...skip].some(k => k.contains(t))) continue;
     const text = p.textContent.replace(/\s+/g, ' ').trim(); if (!text) continue;
     const g = parseGrade(text, false); if (!g || g.rank < 2) continue;
-    out.push({ score: g.score, outOf: g.outOf, pct: g.pct != null ? g.pct : g.score != null && g.outOf ? percentWith(g.score, g.outOf, setup.scale) : null, text: text.length > 80 ? text.slice(0, 80) + '…' : text, word: true });
+    out.push({ rank: g.rank, loose: g.loose, eq: g.eq, several: g.several, counts: g.counts, score: g.score, outOf: g.outOf, pct: g.pct, text: text.length > 80 ? text.slice(0, 80) + '…' : text, word: true });
   }
   return out;
 }
-// What a Word file adds to the grade sheet: a highlighted rubric gives the score, otherwise a grade typed in it.
-const wordFound = f => f.kind === 'docx' && f.wsOf === f.data ? (f.wscore && f.wscore.total != null ? [] : f.wtyped || []) : [];
+// Shaded boxes in a Word table, as a reading for her to confirm. It could be her rubric or a student's own table, and only she can tell.
+function wordTableRead(f) {
+  const w = f.wscore, t = 'Shaded boxes in a table: ' + w.per.map(v => v == null ? '–' : fmtNum(v)).join(', ') + ' (' + w.crits.join(', ') + ')';
+  return { rank: 3, score: w.total, outOf: w.max, pct: w.pct, table: true, word: true, text: t.length > 140 ? t.slice(0, 140) + '…' : t };
+}
+// What a Word file adds to the grade sheet: highlighted boxes, otherwise a grade typed in it. A student wrote all of that, so all of it waits for her.
+// Her own Word rubric page isn't a student's: its boxes score it directly (wordScoresAll), and only what she has typed into her copy counts.
+const wordFound = f => {
+  if (f.kind !== 'docx' || f.wsOf !== f.data) return [];
+  if (f.wscore && f.wscore.total != null) return f.virtual ? [] : [wordTableRead(f)];
+  if (f.virtual) return f.edited ? f.wtyped || [] : [];
+  return (f.wtyped || []).map(g => ({ ...g, theirs: true }));
+};
 // Every student's Word rubrics: a rubric already highlighted gives the score, like opening it would.
 function wordScoresOf(st) { for (const f of st.files) wordScore(f); }
 function wordScoresAll() {
   if (!batch) return;
   let n = 0;
-  for (const st of batch.students) { wordScoresOf(st); if (st.files.some(f => wordFound(f).length)) refound(st); }
+  let asks = 0;
+  for (const st of batch.students) { wordScoresOf(st); if (st.files.some(f => wordFound(f).length)) { refound(st); asks++; } }
   for (const st of batch.students) for (const f of st.files) {
     const s = wordScore(f); if (!s || s.total == null) continue;
-    if (s.scale && setup.mode === 'points' && JSON.stringify(s.scale) !== JSON.stringify(setup.scale)) { setup.scale = s.scale; store.set('gs.setup', { ...setup, spot: undefined, rubricPage: undefined }); if (batch.assignment) { batch.assignment.setup = { ...setup, spot: undefined }; saveLib(); } }
-    if (ownGrade(st).total == null) { rubricToGrade(st, s, s.max, s.nCrit); n++; }
+    if (f.virtual) {   // her own rubric page, so the assignment follows it
+      if (scaleDiffers(s.scale)) setClassScale(s.scale);
+      if (!hasOwnScore(st) && setup.mode === 'points' && +setup.outOf !== s.max) setClassOutOf(s.max);
+    } else if ((st.grade.reads || {})[readKey(wordTableRead(f))] !== 1) continue;   // a table in a student's file waits for her OK
+    if (!hasOwnScore(st)) { rubricToGrade(st, s, s.max, s.nCrit); n++; }
   }
   if (n) { saveSoon(); renderList(); renderGrade(); }
+  else if (asks) renderList();
+  wordLinesFollow();
 }
 function wireRubric(st, f, w, page, el, soon) {
   const m = rubricModel(page); if (!m) return;
@@ -4590,21 +5130,42 @@ function wireRubric(st, f, w, page, el, soon) {
   const show = s => {
     info.innerHTML = '<b>' + (s.total == null ? '–' : fmtNum(s.total)) + '</b> / ' + m.max + (s.pct != null ? ' <b style="color:var(--accent)">' + fmtNum(s.pct) + '%</b>' : '') +
       '<span class="muted">' + m.crits.map((c, i) => esc(c.length > 24 ? c.slice(0, 24) + '…' : c) + ' ' + (s.per[i] == null ? '–' : fmtNum(s.per[i]))).join(' · ') + '</span>' +
-      (s.done ? '' : '<span class="muted">Click a score box in each criterion</span>');
+      (s.done ? '' : '<span class="muted">Click a score box in each criterion</span>') +
+      (setup.mode === 'rubric' && m.max !== maxPoints() ? '<span class="sc-warn" style="width:100%">This rubric is out of ' + m.max + ', but Rubric setup is out of ' + maxPoints() + ', so the score panel won’t match it. To score from this rubric, choose Just the total in Rubric setup.</span>' : '');
   };
   const push = (s, write) => {
     show(s);
-    if (s.total == null) return;
-    rubricToGrade(st, s, m.max, m.crits.length);
+    if (s.total == null) wordScoreGone(st, last); else rubricToGrade(st, s, m.max, m.crits.length);
+    last = s;
+    if (write && s.total != null && ownGrade(st).total != null) liftStatus(st);
     if (write && fillTotalBlank(w, page, m, s)) soon();
     saveSoon(); renderList(); if (st === batch.students[cur]) renderGrade();
   };
-  if (m.scale && JSON.stringify(m.scale) !== JSON.stringify(setup.scale) && setup.mode === 'points') {   // the scale printed on her rubric wins
-    setup.scale = m.scale; store.set('gs.setup', { ...setup, spot: undefined, rubricPage: undefined }); if (batch.assignment) { batch.assignment.setup = { ...setup, spot: undefined }; saveLib(); }
-  }
+  if (f.virtual && scaleDiffers(m.scale)) setClassScale(m.scale);   // the scale printed on her rubric page wins
   const s0 = rubricScore(m); show(s0);
-  if (s0.total != null && ownGrade(st).total == null) push(s0, false);   // a rubric already highlighted in Word brings its score in
-  page.addEventListener('click', e => {
+  let last = s0;   // what this rubric last gave, to take back if it stops giving a score
+  el.wordPush = () => push(rubricScore(m), true);
+  el.wordShow = () => show(rubricScore(m));
+  el.wordLine = () => { const s = rubricScore(m); if (wordLineHers(st, s) && fillTotalBlank(w, page, m, s, true)) soon(); };
+  if (f.virtual && s0.total != null && !hasOwnScore(st)) {   // her rubric page, already highlighted, brings its score in
+    if (setup.mode === 'points' && +setup.outOf !== m.max) setClassOutOf(m.max);
+    push(s0, false);
+  }
+  if (f.edited) el.wordLine();
+  // A table in a student's file changes nothing for the class unless she says so. Asked once each time the file is opened.
+  let asked = !!f.virtual;
+  const askClass = async () => {
+    if (asked || setup.mode !== 'points') return;
+    asked = true;
+    const outOf = +setup.outOf !== m.max, scale = scaleDiffers(m.scale);
+    if (!outOf && !scale) return;
+    const what = outOf ? 'This table adds up to ' + m.max + ', but this assignment is out of ' + setup.outOf + '.\n\nMake the whole class out of ' + m.max + (scale ? ', and use the grading scale in this file' : '') + '?' : 'This file prints its own grading scale, and it isn’t the one this assignment uses.\n\nUse it for the whole class?';
+    if (!await askDlg(what, { ok: 'Yes, the whole class', cancel: 'No, leave it' })) return;
+    if (scale) setClassScale(m.scale);
+    if (outOf) setClassOutOf(m.max);
+    renderGrade();
+  };
+  page.addEventListener('click', async e => {
     if (page.classList.contains('editing')) return;   // while editing, clicks place the cursor; use the color buttons
     const td = e.target.closest('td.rcell'); if (!td) return;
     const c = m.cells.find(x => x.td === td), same = m.cells.filter(x => x.crit === c.crit && x !== c && isShaded(x.td));
@@ -4616,6 +5177,7 @@ function wireRubric(st, f, w, page, el, soon) {
       for (const x of same) if (!keep) set(x, false);
       set(c, true);
     }
+    await askClass();
     push(rubricScore(m), true); soon();
   });
 }
@@ -4635,7 +5197,7 @@ async function openSplit(file, assignment, into) {
   try { doc = await pdfjsLib.getDocument({ data: data.slice(), isEvalSupported: false }).promise; }
   catch { return toast('Couldn’t open ' + file.name + ' as a PDF'); }
   const c = into ? batchClass() : assignment && assignment.classId ? classById(assignment.classId) : (lib.classes.find(k => k.names.length) || null);
-  SP = { name: file.name.replace(/\.pdf$/i, ''), data, doc, n: doc.numPages, thumbs: [], ink: [], owner: Array(doc.numPages).fill(''), skip: new Set(), sel: new Set(), anchor: 0,
+  SP = { name: file.name.replace(/\.pdf$/i, ''), data, doc, n: doc.numPages, thumbs: [], ink: [], sc: {}, rot: {}, skew: {}, owner: Array(doc.numPages).fill(''), skip: new Set(), sel: new Set(), anchor: 0,
     names: into ? splitIntoNames(c) : c ? c.names.slice() : [], classId: c ? c.id : '', asg: assignment || null, into: !!into, last: 1, size: +(store.get('gs.spsize', 1)) };
   if (into) splitPick(0, 1);
   if (!into) splitPick(0, splitGuess());
@@ -4659,17 +5221,20 @@ async function splitRender() {
   const me = SP;
   for (let i = 0; i < me.n && SP === me; i++) {
     if (me.thumbs[i]) continue;
-    const page = await me.doc.getPage(i + 1), vp0 = page.getViewport({ scale: 1 });
-    const vp = page.getViewport({ scale: 520 / vp0.width });
+    const page = await me.doc.getPage(i + 1);
+    await scanSplitLook(me, i, page);
+    if (SP !== me) return;
+    const vp0 = spView(me, i, page, 1), vp = spView(me, i, page, 520 / vp0.width);
     const cv = document.createElement('canvas'); cv.width = Math.round(vp.width); cv.height = Math.round(vp.height);
     const ctx = cv.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, cv.width, cv.height);
-    try { await page.render({ canvasContext: ctx, viewport: vp, annotationMode: pdfjsLib.AnnotationMode.ENABLE }).promise; } catch {}
+    try { await page.render({ canvasContext: ctx, viewport: vp, transform: spXf(me, i, vp), annotationMode: pdfjsLib.AnnotationMode.ENABLE }).promise; } catch {}
     me.ink[i] = splitInk(ctx, cv.width, cv.height);
     me.thumbs[i] = cv.toDataURL('image/jpeg', .78);
     if (SP !== me) return;
     const im = document.querySelector('#spPages img[data-th="' + i + '"]'); if (im) im.src = me.thumbs[i];
     const st = $('#spStat'); if (st) st.textContent = i + 1 < me.n ? 'Reading pages… ' + (i + 1) + ' of ' + me.n : '';
   }
+  if (SP === me && $('#spStat')) $('#spStat').textContent = scanSplitSays(me);
 }
 // Share of dark pixels, ignoring a margin where scanners leave edge shadows.
 function splitInk(ctx, w, h) {
@@ -4691,7 +5256,7 @@ function splitShell() {
     '<div class="spwrap"><div class="spleft">' +
       '<div class="spbar"><span class="seg" id="spSize"><button data-sz="0">S</button><button data-sz="1">M</button><button data-sz="2">L</button></span>' +
         '<button class="btn sm" id="spBlank">Leave out blank pages</button><button class="btn sm" id="spSkip">Leave out selected</button><span class="sp"></span><span id="spSelInfo"></span></div>' +
-      '<p class="muted sphint">Click a page, then Shift-click another to pick a range (⌘/Ctrl-click adds one page). Drag the pages onto a name, click the name, or type it and press Enter. After that, one Shift-click picks from the next page up to the one you click. Double-click a page to see it big.</p>' +
+      '<p class="muted sphint">Click a page, then Shift-click another to pick a range (' + modKey() + '-click adds one page). Drag the pages onto a name, click the name, or type it and press Enter. After that, one Shift-click picks from the next page up to the one you click. Double-click a page to see it big.</p>' +
       '<div id="spPages"></div></div>' +
     '<div class="spright"><div class="spbar"><label>Class <select class="btn" id="spCls"><option value="">No roster</option>' + lib.classes.map(k => '<option value="' + k.id + '"' + (c && c.id === k.id ? ' selected' : '') + '>' + esc(k.name) + ' (' + k.names.length + ')</option>').join('') + '</select></label></div>' +
       '<input class="btn" id="spFind" placeholder="Type a name, Enter to give it the pages" autocomplete="off">' +
@@ -4701,12 +5266,14 @@ function splitShell() {
   const box = $('#dlgBox'); box.classList.add('spbox');
   splitDraw();
   box.ondblclick = ev => { const pg = ev.target.closest('.spg'); if (pg) splitZoom(+pg.dataset.spg); };
-  box.onclick = ev => {
+  box.onclick = async ev => {
     const t = ev.target;
+    if (t.closest('#spBlankView')) return;
     if (t.closest('[data-cancel]')) { SP = null; splitZoomClose(); return closeDlg(); }
     const pg = t.closest('.spg');
     if (pg) {
-      const i = +pg.dataset.spg;
+      const i = +pg.dataset.spg, fx = t.closest('[data-spfix]');
+      if (fx) return scanSplitFix(i, fx.dataset.spfix);
       if (t.closest('[data-zoom]')) return splitZoom(i);
       if (t.closest('[data-unpg]')) { SP.owner[i] = ''; SP.skip.delete(i); return splitDraw(); }
       if (ev.shiftKey) { SP.sel = new Set(); const [a, b] = [Math.min(SP.anchor, i), Math.max(SP.anchor, i)]; for (let p = a; p <= b; p++) if (spFree(p) || a === b) SP.sel.add(p); ev.preventDefault(); }
@@ -4725,13 +5292,12 @@ function splitShell() {
     if (t.id === 'spSkip') { if (!SP.sel.size) return toast('Pick the pages to leave out first'); for (const p of SP.sel) { SP.skip.add(p); SP.owner[p] = ''; } const last = Math.max(...SP.sel); splitPick(last + 1, SP.last); return splitDraw(); }
     if (t.id === 'spBlank') {
       if (SP.ink.filter(v => v != null).length < SP.n) return toast('Still reading the pages, try again in a moment');
-      const blank = SP.ink.map((v, i) => v < .0015 && !SP.owner[i] ? i : -1).filter(i => i >= 0);
+      const blank = SP.ink.map((v, i) => (SP.sc[i] ? SP.sc[i].blank : v < .0015) && !SP.owner[i] && !SP.skip.has(i) ? i : -1).filter(i => i >= 0);
       if (!blank.length) return toast('No blank pages found');
-      for (const i of blank) { SP.skip.add(i); SP.sel.delete(i); }
-      toast(blank.length + ' blank ' + (blank.length === 1 ? 'page' : 'pages') + ' left out'); return splitDraw();
+      return splitBlankView(blank);
     }
-    if (t.id === 'spAdd') { const nm = (prompt('Student’s name') || '').trim(); if (nm && !SP.names.includes(nm)) SP.names.push(nm); return splitDraw(); }
-    if (t.id === 'spGo') return splitGo(t);
+    if (t.id === 'spAdd') { const nm = (await askTextDlg('Student’s name', '', { ok: 'Add' }) || '').trim(); if (nm && !SP.names.includes(nm)) SP.names.push(nm); return splitDraw(); }
+    if (t.id === 'spGo') { const was = t.textContent; return splitGo(t).catch(er => { console.error(er); t.disabled = false; t.textContent = was; toast('A page is too big to turn into a picture. Nothing was opened.'); }); }
   };
   box.onchange = ev => {
     if (ev.target.id !== 'spCls') return;
@@ -4741,6 +5307,7 @@ function splitShell() {
     SP.names = SP.names.concat(extra.filter(nm => !SP.names.includes(nm)));
     splitDraw();
   };
+  const live = { signal: dlgOff.signal };
   box.addEventListener('dragstart', ev => {
     const pg = ev.target.closest && ev.target.closest('.spg'); if (!pg) return;
     const i = +pg.dataset.spg; if (!SP.sel.has(i)) { SP.sel = new Set([i]); SP.anchor = i; splitDraw(); }
@@ -4748,10 +5315,10 @@ function splitShell() {
     const sel = [...SP.sel].sort((a, b) => a - b), gh = document.createElement('div'); gh.className = 'spghost';
     gh.textContent = (sel.length === 1 ? 'Page ' : sel.length + ' pages: ') + spRange(sel); document.body.appendChild(gh);
     ev.dataTransfer.setDragImage(gh, 20, 20); setTimeout(() => gh.remove(), 0);
-  });
-  box.addEventListener('dragover', ev => { const nr = ev.target.closest && ev.target.closest('[data-spn]'); if (!nr) return; ev.preventDefault(); for (const x of box.querySelectorAll('.spname.over')) if (x !== nr) x.classList.remove('over'); nr.classList.add('over'); });
-  box.addEventListener('dragleave', ev => { const nr = ev.target.closest && ev.target.closest('[data-spn]'); if (nr && !nr.contains(ev.relatedTarget)) nr.classList.remove('over'); });
-  box.addEventListener('drop', ev => { const nr = ev.target.closest && ev.target.closest('[data-spn]'); if (!nr) return; ev.preventDefault(); nr.classList.remove('over'); splitGive(SP.names[+nr.dataset.spn]); });
+  }, live);
+  box.addEventListener('dragover', ev => { const nr = ev.target.closest && ev.target.closest('[data-spn]'); if (!nr) return; ev.preventDefault(); for (const x of box.querySelectorAll('.spname.over')) if (x !== nr) x.classList.remove('over'); nr.classList.add('over'); }, live);
+  box.addEventListener('dragleave', ev => { const nr = ev.target.closest && ev.target.closest('[data-spn]'); if (nr && !nr.contains(ev.relatedTarget)) nr.classList.remove('over'); }, live);
+  box.addEventListener('drop', ev => { const nr = ev.target.closest && ev.target.closest('[data-spn]'); if (!nr) return; ev.preventDefault(); nr.classList.remove('over'); splitGive(SP.names[+nr.dataset.spn]); }, live);
   const find = $('#spFind');
   find.oninput = () => splitDrawNames();
   find.onkeydown = ev => {
@@ -4760,21 +5327,71 @@ function splitShell() {
   };
 }
 // One page big enough to read a handwritten name; any click or Esc closes it.
-const splitZoom = i => bigPage(SP.doc, i, SP.thumbs[i]);
-async function bigPage(doc, i, thumb) {
+const splitZoom = i => bigPage(SP.doc, i, SP.thumbs[i], SP);
+async function bigPage(doc, i, thumb, sp, cov) {
   splitZoomClose();
   if (!doc) return;
   const d = document.createElement('div'); d.id = 'spBig'; d.innerHTML = '<img alt="Page ' + (i + 1) + '" src="' + (thumb || '') + '"><span>Page ' + (i + 1) + ' · click or Esc to close</span>';
   $('#dlgBox').appendChild(d);
   const esc1 = e => { if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); splitZoomClose(); } };
   window.addEventListener('keydown', esc1, true); d._esc = esc1;
-  const page = await doc.getPage(i + 1), vp0 = page.getViewport({ scale: 1 }), vp = page.getViewport({ scale: 1400 / vp0.width });
+  const page = await doc.getPage(i + 1), hide = cov && anonOn(), plainVp = scale => hide ? page.getViewport({ scale, rotation: ((page.rotate || 0) + rotOf(cov.f, i) + (cov.turned || 0)) % 360 }) : page.getViewport({ scale });
+  const vp0 = sp ? spView(sp, i, page, 1) : plainVp(1), vp = sp ? spView(sp, i, page, 1400 / vp0.width) : plainVp(1400 / vp0.width);
   const cv = document.createElement('canvas'); cv.width = Math.round(vp.width); cv.height = Math.round(vp.height);
   const ctx = cv.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, cv.width, cv.height);
-  try { await page.render({ canvasContext: ctx, viewport: vp }).promise; } catch {}
+  try { await page.render({ canvasContext: ctx, viewport: vp, transform: sp ? spXf(sp, i, vp) : hide ? skewXf(cov.f, i, vp) : undefined }).promise; } catch {}
+  if (hide) await anonPaint(ctx, cov.st, cov.f, i, page, vp, cov.turned);
   if (d.isConnected) d.querySelector('img').src = cv.toDataURL('image/jpeg', .85);
 }
 function splitZoomClose() { const d = $('#spBig'); if (d) { window.removeEventListener('keydown', d._esc, true); d.remove(); } }
+// Leave out blank pages shows her the pages first. Very faint writing can still be called blank, so nothing goes until she has seen each page and pressed the button here.
+async function splitBlankView(list) {
+  const me = SP, kept = new Set(), v = document.createElement('div'); v.id = 'spBlankView';
+  v.innerHTML = '<div class="bh"><h2>Leave out these pages?</h2><span class="muted">They look blank</span></div>' +
+    '<div class="bb"><p style="margin-top:0">Check each page before it goes. They’re drawn darker here so faint writing shows up, and the student’s file doesn’t change. If you see any writing, press <b>Keep this page</b>. Click a page to see it big, as it was scanned.</p>' +
+    '<div id="spBlankPages">' + list.map(i => '<div class="spbk" data-bk="' + i + '"><img src="' + (me.thumbs[i] || '') + '" alt="Page ' + (i + 1) + '"><div class="spbf"><b>Page ' + (i + 1) + '</b><button class="btn sm" data-bkkeep aria-pressed="false">Keep this page</button></div></div>').join('') + '</div></div>' +
+    '<div class="bf"><button class="btn" id="spBlankNo">Keep them all</button><button class="btn primary" id="spBlankGo" disabled>Getting the pages ready…</button></div>';
+  $('#dlgBox').appendChild(v);
+  let ready = false;
+  const go = v.querySelector('#spBlankGo'), left = () => list.filter(i => !kept.has(i));
+  const count = () => { if (!ready) return; const n = left().length; go.disabled = !n; go.textContent = 'Leave out ' + n + (n === 1 ? ' page' : ' pages'); };
+  const shut = () => { window.removeEventListener('keydown', esc1, true); v.remove(); };
+  const esc1 = e => { if (e.key === 'Escape' && !$('#spBig')) { e.preventDefault(); e.stopPropagation(); shut(); } };
+  window.addEventListener('keydown', esc1, { capture: true, signal: dlgOff.signal });
+  v.onclick = ev => {
+    const t = ev.target, card = t.closest('[data-bk]');
+    if (t.id === 'spBlankNo') return shut();
+    if (t.id === 'spBlankGo') {
+      const out = left().filter(i => !me.owner[i]);
+      for (const i of out) { me.skip.add(i); me.sel.delete(i); }
+      shut(); toast(out.length + ' blank ' + (out.length === 1 ? 'page' : 'pages') + ' left out'); return splitDraw();
+    }
+    if (!card) return;
+    const i = +card.dataset.bk, b = t.closest('[data-bkkeep]');
+    if (!b) return t.tagName === 'IMG' && !card.classList.contains('bad') ? splitZoom(i) : undefined;
+    const keep = !kept.has(i); keep ? kept.add(i) : kept.delete(i);
+    card.classList.toggle('kept', keep); b.setAttribute('aria-pressed', keep); b.textContent = keep ? 'Kept · leave it out after all' : 'Keep this page';
+    count();
+  };
+  v.querySelector('#spBlankNo').focus();
+  for (const i of list) {
+    const card = v.querySelector('[data-bk="' + i + '"]');
+    try {
+      const page = await me.doc.getPage(i + 1), vp0 = spView(me, i, page, 1), vp = spView(me, i, page, 900 / vp0.width);
+      const cv = document.createElement('canvas'); cv.width = Math.round(vp.width); cv.height = Math.round(vp.height);
+      const ctx = cv.getContext('2d', { willReadFrequently: true }); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, cv.width, cv.height);
+      await page.render({ canvasContext: ctx, viewport: vp, transform: spXf(me, i, vp), annotationMode: pdfjsLib.AnnotationMode.ENABLE }).promise;
+      scanDarken(ctx, cv.width, cv.height);
+      card.querySelector('img').src = cv.toDataURL('image/jpeg', .85);
+      cv.width = cv.height = 0; page.cleanup();
+    } catch (e) {   // a page that can't be drawn can't be checked, so it stays
+      console.warn(e); kept.add(i); card.classList.add('kept', 'bad');
+      card.querySelector('.spbf').innerHTML = '<b>Page ' + (i + 1) + '</b> <span class="muted">Couldn’t draw this page, so it stays in.</span>';
+    }
+    if (SP !== me || !v.isConnected) return;
+  }
+  ready = true; count();
+}
 function splitMatches() {
   const q = ($('#spFind') && $('#spFind').value || '').toLowerCase().split(/\s+/).filter(Boolean);
   const idx = SP.names.map((_, i) => i);
@@ -4803,7 +5420,7 @@ function splitDraw() {
     const o = SP.owner[i], sk = SP.skip.has(i);
     return '<div class="spg' + (SP.sel.has(i) ? ' sel' : '') + (o ? ' own' : '') + (sk ? ' skip' : '') + '" data-spg="' + i + '" draggable="true">' +
       '<img data-th="' + i + '" src="' + (SP.thumbs[i] || '') + '" alt="Page ' + (i + 1) + '" draggable="false">' +
-      '<span class="sppick"></span><button class="spzoom" data-zoom title="See this page big">⤢</button>' +
+      '<span class="sppick"></span><button class="spzoom" data-zoom title="See this page big">⤢</button><button class="spturn" data-spfix="right" title="Turn this page to the right" aria-label="Turn this page to the right">⟳</button><span class="spfl" data-fl="' + i + '">' + scanCard(i) + '</span>' +
       '<div class="spf"><span class="spno">' + (i + 1) + '</span>' +
       (o || sk ? '<span class="spown">' + (sk ? 'Left out' : esc(o)) + '</span><button data-unpg title="Take this page back">×</button>' : '') + '</div></div>';
   }).join('');
@@ -4841,7 +5458,7 @@ async function rasterInto(out, jsDoc, i, dpi) {
   const c = document.createElement('canvas'); c.width = Math.ceil(vp1.width * k); c.height = Math.ceil(vp1.height * k);
   const ctx = c.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
   await page.render({ canvasContext: ctx, viewport: page.getViewport({ scale: k }), annotationMode: pdfjsLib.AnnotationMode.ENABLE }).promise;
-  const jpg = await new Promise(res => c.toBlob(b => b.arrayBuffer().then(x => res(new Uint8Array(x))), 'image/jpeg', 0.9));
+  const jpg = await canvasJpg(c, 0.9);
   out.addPage([vp1.width, vp1.height]).drawImage(await out.embedJpg(jpg), { x: 0, y: 0, width: vp1.width, height: vp1.height });
   c.width = c.height = 0; page.cleanup();
 }
@@ -4854,7 +5471,8 @@ async function splitGo(btn) {
     const out = await PDFLib.PDFDocument.create();
     if (!src.isEncrypted) { for (const pg of await out.copyPages(src, spPagesOf(nm))) out.addPage(pg); }
     else for (const i of spPagesOf(nm)) await rasterInto(out, me.doc, i, 200);   // a locked PDF copies as blank pages
-    entries.push({ path: nm.replace(/[\\/:*?"<>|]+/g, ' ').trim() + '/' + file + '.pdf', data: await out.save() });
+    const made = await out.save(); scanHint(me, made, spPagesOf(nm));
+    entries.push({ path: nm.replace(/[\\/:*?"<>|]+/g, ' ').trim() + '/' + file + '.pdf', data: made });
   }
   SP = null; closeDlg(); me.doc.destroy();
   if (me.into && batch) {   // each student's pages are added to them as a file of their own; someone new to the download is added
@@ -4867,6 +5485,7 @@ async function splitGo(btn) {
       await addFiles(st, [{ path: e.path, file: new File([e.data], me.name + '.pdf', { type: 'application/pdf' }) }], true);
       first ||= st;
     }
+    scanHintsAll();
     rosterSort(); cur = Math.max(0, batch.students.indexOf(keep));
     setBatchName();
     saveNow(); renderList();
@@ -4874,14 +5493,14 @@ async function splitGo(btn) {
     return toast('Added pages for ' + entries.length + (entries.length === 1 ? ' student' : ' students'));
   }
   await intake(entries, me.name, me.asg);
+  scanHintsAll();
   if (me.classId && batch) { batch.classId = me.classId; renderClassSel(); saveNow(); renderList(); }
 }
 
 /* ---------------- other files: kept with the student, downloadable, returned in the export if you added them ---------------- */
 function textCard(f) {
-  const el = document.createElement('div'); el.className = 'docx';
-  let t = new TextDecoder().decode(f.data);
-  if (/\.rtf$/i.test(f.name)) t = t.replace(/\\par[d]?/g, '\n').replace(/\{\\\*[^{}]*\}|\\[a-z]+-?\d* ?|[{}]/gi, '').replace(/\n{3,}/g, '\n\n').trim();
+  const el = document.createElement('div'); el.className = 'docx'; el.wordF = f;
+  const t = textOf(f);
   el.innerHTML = '<div class="fhead"><span style="color:var(--fg)">' + esc(f.name) + '</span><span>Text</span>' + (f.added ? addTag(f) : '') + '<span style="flex:1"></span><button class="btn sm ghost" data-odl>Download</button></div><div class="dpage" style="white-space:pre-wrap"></div>';
   el.querySelector('.dpage').textContent = t;
   el.querySelector('[data-odl]').onclick = () => saveBlob(f.name, new Blob([f.data]));
@@ -4889,13 +5508,8 @@ function textCard(f) {
 }
 function otherCard(f) {
   const el = document.createElement('div'); el.className = 'nofile'; el.style.marginBottom = '12px'; el.style.maxWidth = '640px';
-  const ext = (/\.(\w+)$/.exec(f.name) || [, ''])[1].toLowerCase();
-  const why = ext === 'doc' ? 'An older Word file. It can’t be shown in a browser; download it to open it in Word (saving it as .docx lets you edit it here).'
-    : /^(pptx?|key)$/.test(ext) ? 'Slides can’t be shown here; download to open them.'
-    : /^(xlsx?|numbers|csv)$/.test(ext) ? 'A spreadsheet. Download to open it.'
-    : /^(heic|heif|tiff?)$/.test(ext) ? 'This browser can’t show this picture type (Safari can). Download to open it.'
-    : 'This kind of file can’t be shown here. Download to open it.';
-  el.innerHTML = '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><b>' + esc(f.name) + '</b>' + (f.added ? addTag(f) : '') + '<span style="flex:1"></span>' + (f.data ? '<button class="btn sm" data-odl>Download</button>' : '') + '</div><div style="margin-top:6px">' + why + ' You can still give a score.' + (f.added ? ' It goes back with the export because you added it.' : '') + '</div>';
+  const why = (troubleText(troubleOf(f)) || 'This kind of file can’t be shown here. Download to open it.') + (f.hurt && photoHasWork(f) ? ' Your marks on it are still saved.' : '');
+  el.innerHTML = '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><b>' + esc(f.name) + '</b>' + (f.added ? addTag(f) : '') + carryTag(f) + '<span style="flex:1"></span>' + (f.data ? '<button class="btn sm" data-odl>Download</button>' : '') + '</div><div style="margin-top:6px">' + why + ' You can still give a score.' + (f.added ? ' It goes back with the export because you added it.' : '') + '</div>';
   const b = el.querySelector('[data-odl]'); if (b) b.onclick = () => saveBlob(f.name, new Blob([f.data]));
   return el;
 }
@@ -4908,33 +5522,55 @@ function sortGuess(path) {
   return guessAmong(path, batch.students.map(st => [nameWords(st.key), extra.get(st) || []]));
 }
 async function bringIn(list) {
-  list = list.filter(e => e.file && !junk(e.path));
+  list = list.filter(e => e.file && !junk(e.path) && !houseFile(e.path));
   if (!list.length) return;
-  const rows = list.map(e => ({ e, ...sortGuess(e.path) }));
-  const opts = i => '<option value="-1"' + (i < 0 ? ' selected' : '') + '>Choose a student…</option>' + batch.students.map((st, k) => '<option value="' + k + '"' + (k === i ? ' selected' : '') + '>' + (k + 1) + '. ' + esc(st.key) + '</option>').join('') + '<option value="-2">Skip this file</option>';
-  const count = () => rows.filter(r => r.i >= 0).length;
-  openDlg('<div class="bh"><h2>Bring in files</h2><span class="muted">' + list.length + (list.length === 1 ? ' file' : ' files') + ', sorted by the names in the file names</span><button class="icon" data-close aria-label="Close" style="margin-left:auto">✕</button></div>' +
-    '<div class="bb"><p class="muted" style="margin:0 0 10px;font-size:14px">Each file goes into that student’s submission in this download, tagged “Added by you”. Check the ones marked “Check” or “Choose”.</p>' +
-    '<table class="gl"><thead><tr><th>File</th><th>Goes to</th><th></th></tr></thead><tbody>' +
-    rows.map((r, k) => '<tr><td style="overflow-wrap:anywhere">' + esc(r.e.path) + '</td><td><select class="btn" data-row="' + k + '" style="max-width:280px">' + opts(r.i) + '</select></td><td data-tag="' + k + '">' + sortTag(r) + '</td></tr>').join('') +
+  const { fresh: rows, dups } = await freshRows(list.map(e => ({ e, ...sortGuess(e.path) })));
+  if (!rows.length) return toast('Those files are already here, so there’s nothing new to add');
+  const opts = i => '<option value="-1"' + (i < 0 ? ' selected' : '') + '>Choose a student…</option>' + (anonOn() ? anonOrder() : batch.students.map((_, k) => k)).map(k => '<option value="' + k + '"' + (k === i ? ' selected' : '') + '>' + (anonOn() ? '' : (k + 1) + '. ') + esc(shownName(batch.students[k], k)) + '</option>').join('') + '<option value="-3">New student…</option><option value="-2">Skip this file</option>';
+  const count = () => rows.filter(r => r.i >= 0 || r.newKey).length;
+  openDlg('<div class="bh"><h2>Bring in files</h2><span class="muted">' + rows.length + (rows.length === 1 ? ' file' : ' files') + ', sorted by the names in the file names</span><button class="icon" data-close aria-label="Close" style="margin-left:auto">✕</button></div>' +
+    '<div class="bb"><p class="muted" style="margin:0 0 10px;font-size:14px">Each file goes into that student’s submission in this download, tagged “Added by you”. Check the ones marked “Check” or “Choose”. Tick <b>Late</b> beside anyone you want marked late; nothing is taken off.' + (dups ? ' ' + dups + (dups === 1 ? ' file is' : ' files are') + ' already here, so ' + (dups === 1 ? 'it’s' : 'they’re') + ' left out.' : '') + '</p>' +
+    '<table class="gl"><thead><tr><th>File</th><th>Goes to</th><th></th><th><label style="white-space:nowrap"><input type="checkbox" data-lateall aria-label="Mark all late"> Late</label></th></tr></thead><tbody>' +
+    rows.map((r, k) => '<tr><td style="overflow-wrap:anywhere">' + esc(r.e.path) + '</td><td><select class="btn" data-row="' + k + '" style="max-width:280px">' + opts(r.i) + '</select></td><td data-tag="' + k + '">' + sortTag(r) + rowNote(r) + '</td><td><input type="checkbox" data-late="' + k + '" aria-label="Mark late"></td></tr>').join('') +
     '</tbody></table></div><div class="bf"><button class="btn" data-close>Cancel</button><button class="btn primary" data-go>Add ' + count() + (count() === 1 ? ' file' : ' files') + '</button></div>');
   const box = $('#dlgBox');
-  box.onchange = e => { const s = e.target.closest('[data-row]'); if (!s) return; const r = rows[+s.dataset.row]; r.i = +s.value; r.sure = true; r.set = true; box.querySelector('[data-tag="' + s.dataset.row + '"]').innerHTML = sortTag(r); const n = count(); box.querySelector('[data-go]').textContent = 'Add ' + n + (n === 1 ? ' file' : ' files'); };
+  box.onchange = async e => {
+    if (e.target.closest('[data-lateall]')) { for (const c of box.querySelectorAll('[data-late]')) { c.checked = e.target.checked; rows[+c.dataset.late].late = c.checked; } return; }
+    const l = e.target.closest('[data-late]'); if (l) { rows[+l.dataset.late].late = l.checked; return; }
+    const s = e.target.closest('[data-row]'); if (!s) return; const r = rows[+s.dataset.row];
+    r.newKey = '';
+    if (s.value === '-3') {   // someone who isn't in this download yet
+      const nk = (await askTextDlg('The new student’s name', guessNewName(r.e.path)) || '').replace(/[\\/]+/g, ' ').trim();
+      if (!nk) { s.value = String(r.i); return; }
+      r.newKey = nk;
+    }
+    r.i = +s.value; r.sure = true; r.set = true; box.querySelector('[data-tag="' + s.dataset.row + '"]').innerHTML = (r.newKey ? '' : sortTag(r)) + rowNote(r); const n = count(); box.querySelector('[data-go]').textContent = 'Add ' + n + (n === 1 ? ' file' : ' files');
+  };
   box.onclick = async e => {
     if (e.target.closest('[data-close]')) return closeDlg();
     if (!e.target.closest('[data-go]')) return;
-    const groups = new Map();
-    for (const r of rows) if (r.i >= 0) { if (!groups.has(r.i)) groups.set(r.i, []); groups.get(r.i).push(r.e); }
-    if (!groups.size) return toast('Choose a student for at least one file');
+    if (!count()) return toast('Choose a student for at least one file');
+    const groups = new Map(), late = new Set(), keep = batch.students[cur], t0 = Date.now();
+    let made = false;
+    for (const r of rows) {
+      let st = r.i >= 0 ? batch.students[r.i] : null;
+      if (r.newKey) { st = batch.students.find(x => x.key === r.newKey); if (!st) { st = { key: r.newKey, files: [], grade: { rubric: [], points: '', comment: '' }, layout: null, inc: {} }; batch.students.push(st); made = true; } }
+      if (!st) continue;
+      if (!groups.has(st)) groups.set(st, []);
+      groups.get(st).push(r.e);
+      if (r.late) late.add(st);
+    }
     closeDlg();
-    let n = 0, lastI = cur;
-    for (const [i, fl] of groups) { await addFiles(batch.students[i], fl, true); n += fl.length; lastI = i; }
-    renderList(); openStudent(groups.has(cur) ? cur : lastI);
-    toast('Added ' + n + (n === 1 ? ' file' : ' files') + ' to ' + groups.size + (groups.size === 1 ? ' student' : ' students'));
+    let last = keep;
+    for (const [st, fl] of groups) { await addFiles(st, fl, true); last = st; }
+    late.forEach(markLate);
+    if (made) { rosterSort(); cur = Math.max(0, batch.students.indexOf(keep)); setBatchName(); saveNow(); }
+    renderList(); openStudent(batch.students.indexOf(groups.has(keep) ? keep : last));
+    bringInDone([...groups.keys()], t0, late.size);
   };
 }
 const sortTag = r => r.i === -2 ? '<span class="muted">Skipped</span>' : r.i < 0 ? '<span class="pill" style="font-size:12px;padding:2px 8px;border-radius:999px;background:var(--warn-soft);color:var(--warn)">Choose</span>'
-  : r.set ? '<span class="muted">Chosen by you</span>' : r.sure ? '<span style="color:var(--good, #1C7F54);font-size:13px;font-weight:600">Matched by name</span>' : '<span class="pill" style="font-size:12px;padding:2px 8px;border-radius:999px;background:var(--warn-soft);color:var(--warn)">Check</span>';
+  : r.set ? '<span class="muted">Chosen by you</span>' : r.sure ? '<span style="color:var(--ok);font-size:13px;font-weight:600">Matched by name</span>' : '<span class="pill" style="font-size:12px;padding:2px 8px;border-radius:999px;background:var(--warn-soft);color:var(--warn)">Check</span>';
 
 /* ---------------- folder import: many files (a folder, a ZIP), each matched to a student by the name in its file or folder name ---------------- */
 // Picked files as [{ path, file }], keeping folder names (they often hold the student's name) and opening ZIPs.
@@ -4946,8 +5582,8 @@ async function expandPicked(files) {
     if (/\.zip$/i.test(f.name)) {
       const raw = [];
       zipSkipped = 0;
-      try { unzipInto(new Uint8Array(await f.arrayBuffer()), '', raw, 0); } catch { toast('Couldn’t open ' + f.name + '. Try unzipping it in Finder (double-click it), then choose the folder.', 9000); continue; }
-      if (zipSkipped) toast(zipSkipped + ' files in ' + f.name + ' are packed in a way a browser can’t open. Unzip it in Finder first.', 9000);
+      try { unzipInto(new Uint8Array(await f.arrayBuffer()), '', raw, 0); } catch { toast(zipSay({ names: [f.name] }), 9000); continue; }
+      if (zipSkipped) toast(zipSay({ skip: zipSkipped }), 9000);
       for (const r of raw) if (r.data && !junk(r.path)) out.push({ path: f.name.replace(/\.zip$/i, '') + '/' + r.path, file: new File([r.data], r.path.split('/').pop()) });
       continue;
     }
@@ -5029,15 +5665,15 @@ function matchToRoster(list, assignment) {
         : '<p>Add a roster for this class first (Rosters, + Class on the start screen), then try again.</p>') +
       (missing.length && names.length ? '<p class="muted" style="font-size:13px;margin:10px 0 0">No file yet: ' + esc(missing.join(', ')) + '</p>' : '') + '</div>' +
       '<div class="bf"><button class="btn" data-close>Cancel</button><button class="btn primary" data-go' + (n ? '' : ' disabled') + '>Open ' + n + (n === 1 ? ' file' : ' files') + ' for ' + who + (who === 1 ? ' student' : ' students') + '</button></div>');
+    box.onchange = changed; box.onclick = clicked;   // openDlg takes the handlers off, so each redraw puts them back
   };
-  render();
   const box = $('#dlgBox');
-  box.onchange = e => {
+  const changed = e => {
     if (e.target.id === 'mrCls') { c = classById(e.target.value); guess(); return render(); }
     const s = e.target.closest('[data-row]'); if (!s) return;
     Object.assign(rows[+s.dataset.row], { i: +s.value, sure: true, set: true }); render();
   };
-  box.onclick = async e => {
+  const clicked = async e => {
     if (e.target.closest('[data-close]')) return closeDlg();
     if (!e.target.closest('[data-go]')) return;
     const used = new Set(), entries = [];
@@ -5050,6 +5686,7 @@ function matchToRoster(list, assignment) {
     await intake(entries, (assignment && assignment.name) || 'Matched files', assignment || null);
     if (batch) { batch.classId = c.id; renderClassSel(); saveNow(); renderList(); }
   };
+  render();
 }
 
 /* ---------------- sample papers (made-up names) ---------------- */
@@ -5080,10 +5717,9 @@ async function makeSample() {
 /* ---------------- wiring ---------------- */
 let toastT;
 function toast(msg, ms) {
-  let t = $('.toast');
-  if (!t) { t = document.createElement('div'); t.className = 'toast'; t.setAttribute('role', 'status'); document.body.appendChild(t); }
+  const t = $('.toast');
   t.textContent = msg; t.hidden = false;
-  clearTimeout(toastT); toastT = setTimeout(() => { t.hidden = true; }, ms || 3000);
+  clearTimeout(toastT); toastT = setTimeout(() => { t.hidden = true; t.textContent = ''; }, ms || 3000);
 }
 $('#pickFiles').onclick = () => $('#fileIn').click();
 $('#pickFolder').onclick = () => pickDir('#dirIn');
@@ -5166,7 +5802,7 @@ $('#colR').onclick = () => { const p = panelsNow(); setPanels(p.L, !p.R); };
 $('#lightBtn').onclick = openLight;
 $('#calcBtn').onclick = openCalc;
 $('#bringBtn').onclick = () => {
-  askFilesOrFolder('Bring in files', 'Each file goes to its student by the name in its file name or folder name, for example your marked rubrics. You check the matches before anything is added.<br><br><b>A scan of papers</b> (like a makeup day): split it page by page onto names, and each student’s pages are added to them here.', bringIn);
+  askFilesOrFolder('Bring in files', 'Each file goes to its student by the name in its file name or folder name, for example your marked rubrics. You check the matches before anything is added.<br><br><b>Late work:</b> pick the late files, or the whole new download. What’s already here is left out, and you can mark anyone late as you add them.<br><br><b>A scan of papers</b> (like a makeup day): split it page by page onto names, and each student’s pages are added to them here.', bringIn);
   $('#dlgBox .bf').insertAdjacentHTML('afterbegin', '<button class="btn" data-scanin style="margin-right:auto">A scan to split…</button>');
   const box = $('#dlgBox'), was = box.onclick;
   box.onclick = e => { if (e.target.closest('[data-scanin]')) { closeDlg(); scanInto = true; return $('#scanIn').click(); } return was(e); };
@@ -5177,14 +5813,18 @@ $('#sheetBtn').onclick = () => openSheet(false);
 $('#exportBtn').onclick = openExport;
 $('#shareBtn').onclick = openShare;
 $('#backBtn').onclick = openBringBack;
-$('#closeBtn').onclick = () => {
-  saveNow(); commitEditors();
+function closeDownload() {
   for (const d of docs) d.destroy();
-  batch = null; pages = []; docs = [];
+  batch = null; pages = []; docs = []; openToken++;   // a student still opening stops there
+  histAll = null;   // Past work is read again next time: she may forget a download from the start screen
   $('#app').hidden = true; $('#start').hidden = false; $('#paper').innerHTML = ''; renderLib(); loadKept();
+}
+$('#closeBtn').onclick = () => {
+  commitEditors(); saveNow();   // what she's still typing first, so it's in this save
+  if (batch) closeDownload();
 };
 document.addEventListener('keydown', e => {
-  if (!batch || !$('#dlg').hidden) { if (e.key === 'Escape' && !$('#dlg').hidden && !SP) closeDlg(); return; }
+  if (!batch || !$('#dlg').hidden) { if (e.key === 'Escape' && !$('#dlg').hidden) { if (SP) splitLeave(); else leaveDlg(); } return; }
   const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement && document.activeElement.tagName) || (document.activeElement && document.activeElement.isContentEditable);
   const cmd = e.metaKey || e.ctrlKey, key = e.key.toLowerCase();
   if (cmd && !typing && !e.altKey) {
@@ -5201,7 +5841,7 @@ document.addEventListener('keydown', e => {
   if (e.key === '?') { e.preventDefault(); openKeys(); return; }
   if (e.key === '/') { e.preventDefault(); $('#stuFind').focus(); return; }
   // A picked mark moves with the arrow keys (Shift for bigger steps); Esc lets go of it.
-  if (selected && /^Arrow/.test(e.key)) {
+  if (selected && tool === 'select' && /^Arrow/.test(e.key)) {
     e.preventDefault();
     const d = e.shiftKey ? 10 : 1, dx = e.key === 'ArrowLeft' ? -d : e.key === 'ArrowRight' ? d : 0, dy = e.key === 'ArrowUp' ? -d : e.key === 'ArrowDown' ? d : 0;
     const pg = selected.page;
@@ -5215,6 +5855,7 @@ document.addEventListener('keydown', e => {
     if (e.key.toLowerCase() === 'l') { curMedia.currentTime += 5; return; }
   }
   const map = { v: 'select', p: 'pen', h: 'hl', o: 'oval', t: 'text', c: 'note', k: 'check', e: 'erase' };
+  if (e.key.toLowerCase() === 'h' && tool === 'hl') { setHlMode(hlMode === 'free' ? 'auto' : 'free', true); return; }
   if (map[e.key.toLowerCase()]) { setTool(map[e.key.toLowerCase()]); return; }
   if (e.key.toLowerCase() === 'n') { nextUnscored(); return; }
   if (e.key === '=') { e.preventDefault(); if ($('#calcPanel')) $('#calcIn').focus(); else openCalc(); return; }
@@ -5222,88 +5863,44 @@ document.addEventListener('keydown', e => {
   if (e.key === ']' && !e.metaKey && !e.ctrlKey) { e.preventDefault(); const p = panelsNow(); return setPanels(p.L, !p.R); }
   if (e.key === 'ArrowRight' || e.key === 'ArrowDown') { e.preventDefault(); stepStudent(1); }
   if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); stepStudent(-1); }
-  if ((e.key === 'Delete' || e.key === 'Backspace') && selected) { e.preventDefault(); deleteSelected(); }
+  if ((e.key === 'Delete' || e.key === 'Backspace') && selected && !selected.fresh) { e.preventDefault(); deleteSelected(); }
   if (e.key === 'Escape' && selected) { selected = null; redrawAll(); }
 });
 let nudging = false;
 document.addEventListener('keyup', e => { if (/^Arrow/.test(e.key)) nudging = false; });
-window.addEventListener('beforeunload', saveNow);
+window.addEventListener('beforeunload', () => { if (!batch || !tabLive()) return; try { commitEditors(); } catch (e) { console.error(e); } saveNow(true); });
 applyDisp();
 renderLib(); renderGoogle(); loadKept();
-/* ---------------- backup: everything this browser keeps, in one file, to carry to another link or computer ---------------- */
-// Browsers keep a site's storage per address, so the Netlify link, the offline file and the claude.ai copy each have
-// their own. A backup holds the downloads (papers and work), added files, Word edits, units, rosters and settings.
-async function storeDump(open, name) {
-  const db = await open();
-  return new Promise((res, rej) => {
-    const tx = db.transaction(name, 'readonly'), o = tx.objectStore(name), out = {};
-    const a = o.getAll(), b = o.getAllKeys();
-    tx.oncomplete = () => { out.v = a.result || []; out.k = b.result || []; res(out); }; tx.onerror = () => rej(tx.error);
-  });
-}
-async function makeBackup() {
-  toast('Making the backup…');
-  const bins = [], files = {};
-  // Byte arrays go in the ZIP as their own files; the rest is JSON.
-  const pack = v => {
-    if (v instanceof Uint8Array || v instanceof ArrayBuffer) { const u = v instanceof Uint8Array ? v : new Uint8Array(v); bins.push(u); return { __bin: bins.length - 1 }; }
-    if (Array.isArray(v)) return v.map(pack);
-    if (v && typeof v === 'object') { const o = {}; for (const [k, x] of Object.entries(v)) o[k] = pack(x); return o; }
-    return v;
-  };
-  const ls = {};
-  for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k && k.startsWith('gs.') && k !== 'gs.syncT') ls[k] = localStorage.getItem(k); }
-  const keep = {};
-  for (const n of ['papers', 'work', 'meta', 'edits']) { try { keep[n] = pack(await storeDump(keepDb, n)); } catch { keep[n] = { v: [], k: [] }; } }
-  let added = { v: [], k: [] }; try { added = pack(await storeDump(addDb, 'files')); } catch {}
-  const info = { app: 'Grading Studio', v: 1, t: Date.now(), from: location.origin === 'null' ? 'offline file' : location.host, downloads: keep.meta.v.length };
-  files['backup.json'] = new TextEncoder().encode(JSON.stringify({ info, ls, keep, added }));
-  bins.forEach((u, i) => { files['bin/' + i] = [u, { level: 0 }]; });
-  const day = new Date().toISOString().slice(0, 10);
-  await saveBlob('Grading Studio backup ' + day + '.zip', new Blob([fflate.zipSync(files)], { type: 'application/zip' }));
-  store.set('gs.lastBackup', Date.now()); renderBackup();
-}
-async function restoreBackup(file) {
-  let z, data;
-  try { z = fflate.unzipSync(new Uint8Array(await file.arrayBuffer())); data = JSON.parse(new TextDecoder().decode(z['backup.json'])); } catch { return toast('That isn’t a Grading Studio backup'); }
-  if (!data || !data.info || data.info.app !== 'Grading Studio') return toast('That isn’t a Grading Studio backup');
-  const unpack = v => {
-    if (v && typeof v === 'object' && !Array.isArray(v) && Object.keys(v).length === 1 && typeof v.__bin === 'number') return z['bin/' + v.__bin] || new Uint8Array(0);
-    if (Array.isArray(v)) return v.map(unpack);
-    if (v && typeof v === 'object') { const o = {}; for (const [k, x] of Object.entries(v)) o[k] = unpack(x); return o; }
-    return v;
-  };
-  const n = data.info.downloads || 0;
-  if (!confirm('Restore this backup from ' + new Date(data.info.t).toLocaleString() + ' (' + n + (n === 1 ? ' download' : ' downloads') + ')?\n\nIts downloads, marks and scores are added to this browser. Units, rosters and settings are replaced with the backup’s.')) return;
-  toast('Restoring…');
-  for (const [k, v] of Object.entries(data.ls || {})) {
-    if (k.startsWith('gs.b.')) { const cur = store.get(k, null), bk = JSON.parse(v); if (cur && cur.t && bk && bk.t && cur.t > bk.t) continue; }   // keep the newer work
-    try { localStorage.setItem(k, v); } catch {}
-  }
-  const put = async (open, name, d) => {
-    const db = await open(), recs = unpack(d);
-    await new Promise((res, rej) => { const tx = db.transaction(name, 'readwrite'), o = tx.objectStore(name); recs.k.forEach((k, i) => o.put(recs.v[i], k)); tx.oncomplete = res; tx.onerror = () => rej(tx.error); });
-  };
-  try {
-    for (const nm of ['papers', 'work', 'meta', 'edits']) if (data.keep && data.keep[nm]) await put(keepDb, nm, data.keep[nm]);
-    if (data.added) await put(addDb, 'files', data.added);
-  } catch (e) { console.error(e); return toast('This browser had no room for the whole backup'); }
-  toast('Restored. Reloading…');
-  setTimeout(() => location.reload(), 700);
-}
+/* ---------------- the Saving and carrying section of the start screen (src/folder.js and src/takehome.js do the work) ---------------- */
 function renderBackup() {
   const el = $('#backupInfo'); if (!el) return;
   const t = store.get('gs.lastBackup', 0);
-  el.textContent = t ? 'Last backup: ' + new Date(t).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : 'No backup made from this link yet.';
-  // A nudge once a week has gone by since the last backup, when there's work kept here.
-  const due = keptMeta.size > 0 && Date.now() - t > 7 * 864e5;
+  el.textContent = t ? 'Last take-home file: ' + new Date(t).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : 'No take-home file made from this link yet.';
+  // A nudge once a week has gone by since the last one, when there's work kept here and no folder holding a second copy.
+  const due = keptMeta.size > 0 && Date.now() - t > 7 * 864e5 && fld.state === 'none';
   el.classList.toggle('due', due);
-  if (due) el.textContent += t ? ' · It’s been over a week; a fresh backup keeps your work safe.' : ' A backup keeps your work safe if this browser is cleared.';
+  if (due) el.textContent += t ? ' · It’s been over a week; a fresh one, or linking a folder, keeps your work safe.' : ' Linking a folder, or a take-home file, keeps your work safe if this browser is cleared.';
+  renderSafety();
 }
-$('#backupBtn').onclick = makeBackup;
+// Safety copies made automatically before an update to how work is saved, or before putting one back (src/migrate.js). Only shown once there is one.
+async function renderSafety() {
+  const el = $('#safetyList'); if (!el) return;
+  let list = []; try { list = await gsData.snapshots(); } catch {}
+  el.hidden = !list.length;
+  el.innerHTML = list.map(s => '<p class="muted" style="margin:6px 0 0;font-size:13px">Safety copy from ' + esc(new Date(s.t).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', second: '2-digit' })) + '. ' + esc(s.why) + (s.state && s.state !== 'done' ? ', which didn’t finish' : '') + '. <button class="link" style="font-size:13px" data-putback="' + esc(s.id) + '">Put back</button></p>').join('');
+}
+$('#safetyList').onclick = async e => {
+  const b = e.target.closest('[data-putback]'); if (!b) return;
+  if (!await askDlg('Put back this safety copy?\n\nYour marks, scores, comments, late files, readings, units, rosters and settings in this browser go back to how they were then. The papers from each download stay. A safety copy of how things are now is made first, so this can be undone.', { ok: 'Put back' })) return;
+  try { batch = null; await tabsFinish(); tabsOver('go'); await gsData.putBack(b.dataset.putback); carryAfterPutBack(); tabsOver('done'); toast('Put back. Reloading…'); setTimeout(() => location.reload(), 700); }
+  catch (er) { console.error(er); tabsOver('done'); toast('That didn’t finish, so some of your work may have gone back and some not. Reload, then use Put back on the newest safety copy (“Before putting back”) to return to how things were.', 15000); }
+};
 $('#restoreBtn').onclick = () => $('#restoreIn').click();
-$('#restoreIn').onchange = () => { const f = $('#restoreIn').files[0]; $('#restoreIn').value = ''; if (f) restoreBackup(f); };
+$('#restoreIn').onchange = () => { const f = $('#restoreIn').files[0]; $('#restoreIn').value = ''; if (f) bringFile(f); };
 renderBackup();
+for (const el of document.querySelectorAll('.gsVer')) el.textContent = versionLabel();
+{ const t = $('#app .title'); if (t) t.title = versionLabel(); }
+if (gsData.info.note) { const el = $('#bootNote'); el.textContent = gsData.info.note; el.hidden = false; toast(gsData.info.note, 15000); }
 
 window.__gs_pickMany = pickMany;
-window.__gs = { wordScore, wordScoresAll, makeBackup, restoreBackup, fileSeq, moveFile, openMoveFile, calcEval, openCalc, pageLit, setPageLit, lightMenuDo, lightChips, ensureCounts, addRefs, refs: () => refFiles, matchToRoster, guessAmong, expandPicked, lightOpts, isRubricPage, openAnon, setAnon, anonOrder, anonOn, openLight, lightFor, lightAuto, openSplit, sp: () => SP, bringIn, sortGuess, openWord, wordBytes, reopenKept, forgetKept, kept: () => keptMeta, addFiles, removeAdded, nextUnscored, openDisplay, trimToInk, intake, parseGrade, scanFile, scanAll, state: () => ({ batch, cur, setup, pages }), gradeOf, percentFor, flattenDoc, exportPlan, layoutOf, docIn, openStudent, setTool };
+window.__gs = { saveTrouble, batchIdOf, wordScore, wordScoresAll, restoreBackup, fileSeq, moveFile, openMoveFile, calcEval, openCalc, pageLit, setPageLit, lightMenuDo, lightChips, ensureCounts, addRefs, refs: () => refFiles, matchToRoster, guessAmong, expandPicked, lightOpts, isRubricPage, openAnon, setAnon, anonOrder, anonOn, openLight, lightFor, lightAuto, openSplit, sp: () => SP, bringIn, sortGuess, openWord, wordBytes, reopenKept, forgetKept, kept: () => keptMeta, addFiles, removeAdded, nextUnscored, openDisplay, trimToInk, intake, parseGrade, scanFile, scanAll, state: () => ({ batch, cur, setup, pages, zoom, lib }), SCALE12, SCALE_FIVES, RUBRIC_STEPS, percentWith, ownGrade, roundPct, fmtNum, fmtPct, saveNow, undo, redo, gsData, gradeOf, percentFor, flattenDoc, exportPlan, layoutOf, docIn, openStudent, setTool };

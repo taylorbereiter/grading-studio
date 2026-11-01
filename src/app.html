@@ -1,33 +1,27 @@
 <title>Grading Studio</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<script>try{document.documentElement.dataset.theme=JSON.parse(localStorage.getItem('gs.theme'))||'light'}catch(e){document.documentElement.dataset.theme='light'}</script>
 <style>
+/*@@FONT@@*/
 /* Three columns: students in folder order, the paper, the grade. A start screen takes the ManageBac download.
    Look: "Calm Desk" in ocean blue (Taylor, 10/21): white and cool gray, one blue accent, red only for marks on the paper. */
 :root{
-  --bg:#F4F5F7; --surface:#FFFFFF; --surface-2:#EEF0F3; --line:#E4E6EA; --line-strong:#D3D7DE;
-  --fg:#1E2024; --muted:#6B7079; --faint:#9AA0A8;
-  --accent:#1F6FB2; --accent-hover:#195C94; --accent-fg:#FFFFFF; --accent-soft:#E6F0F9;
-  --warn:#9A6411; --warn-soft:#FBF0D9; --ok:#1C7F54; --ok-soft:#DFF3E9; --bad:#B4321F; --bad-soft:#FCE7E3;
+  --bg:#F4F5F7; --surface:#FFFFFF; --surface-2:#EEF0F3; --hover:#EBEDF1; --track:#DDE0E6; --line:#E4E6EA; --line-strong:#CDD1D9;
+  --fg:#1E2024; --fg-2:#3F444C; --muted:#5C616A; --faint:#666B74;
+  --accent:#1A67A8; --accent-hover:#15568C; --accent-fg:#FFFFFF; --accent-soft:#E6F0F9;
+  --warn:#8A5A0E; --warn-soft:#FBF0D9; --ok:#17704A; --ok-soft:#DFF3E9; --bad:#B4321F; --bad-soft:#FCE7E3; --warn-fg:#FFFFFF;
+  --paper-chip:#FFFFFF;
   --shadow:0 1px 2px rgba(20,25,40,.06),0 4px 14px rgba(20,25,40,.06);
   --f-display:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
   --f-body:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
   --uz:1; --dfs:15px; --dlh:1.45;
   --r:10px; --r-sm:7px;
 }
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --bg:#0F1117; --surface:#171A22; --surface-2:#1E222C; --line:#2A2F3B; --line-strong:#3A404E;
-  --fg:#E7E9EF; --muted:#9BA2B3; --faint:#6F7687;
-  --accent:#5AA6E6; --accent-hover:#7DB9EC; --accent-fg:#0C1520; --accent-soft:#16283A;
-  --warn:#E8B451; --warn-soft:#352A14; --ok:#4FC690; --ok-soft:#15302A; --bad:#FF7A64; --bad-soft:#3A1E1A;
-  --shadow:0 1px 2px rgba(0,0,0,.3),0 4px 14px rgba(0,0,0,.25);
-  color-scheme:dark;
-}}
 :root[data-theme="dark"]{
-  --bg:#0F1117; --surface:#171A22; --surface-2:#1E222C; --line:#2A2F3B; --line-strong:#3A404E;
-  --fg:#E7E9EF; --muted:#9BA2B3; --faint:#6F7687;
+  --bg:#0F1117; --surface:#171A22; --surface-2:#1E222C; --hover:#272C38; --track:#343A47; --line:#2A2F3B; --line-strong:#454C5B;
+  --fg:#E7E9EF; --fg-2:#CDD2DE; --muted:#A9B0C0; --faint:#8E95A6;
   --accent:#5AA6E6; --accent-hover:#7DB9EC; --accent-fg:#0C1520; --accent-soft:#16283A;
-  --warn:#E8B451; --warn-soft:#352A14; --ok:#4FC690; --ok-soft:#15302A; --bad:#FF7A64; --bad-soft:#3A1E1A;
+  --warn:#E8B451; --warn-soft:#352A14; --ok:#4FC690; --ok-soft:#15302A; --bad:#FF7A64; --bad-soft:#3A1E1A; --warn-fg:#1C1405;
+  --paper-chip:#1E222C;
   --shadow:0 1px 2px rgba(0,0,0,.3),0 4px 14px rgba(0,0,0,.25);
   color-scheme:dark;
 }
@@ -64,6 +58,7 @@ h1 i,.top .title i{font-style:normal;font-weight:500;color:var(--accent)}
 .steps b{color:var(--fg)}
 .steps .n{width:26px;height:26px;border-radius:50%;background:var(--accent-soft);color:var(--accent);font-weight:700;display:flex;align-items:center;justify-content:center;font-size:13px}
 .start .foot{margin-top:24px;color:var(--faint);font-size:13px}
+.bootnote{background:var(--warn-soft);color:var(--warn);padding:10px 14px;border-radius:10px;font-size:14px;margin:0 0 18px;max-width:80ch}
 
 /* ---------- app ---------- */
 .app{height:100vh;display:grid;grid-template-rows:auto 1fr}
@@ -71,14 +66,20 @@ h1 i,.top .title i{font-style:normal;font-weight:500;color:var(--accent)}
 .top .title{font-family:var(--f-display);font-weight:700;font-size:17px;letter-spacing:-.02em;white-space:nowrap}
 .top .batch{color:var(--muted);font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
 .top .sp{flex:1}
-.top{flex-wrap:wrap;row-gap:6px}
 .savest{font-size:12.5px;color:var(--faint);white-space:nowrap}
+.savest.warn{color:var(--warn);font-weight:600}.savest.bad{color:var(--bad);font-weight:700}
+.savewarn{position:fixed;left:0;right:0;bottom:0;z-index:70;display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:12px 18px;background:#B4321F;color:#fff;font-size:15px;font-weight:600;box-shadow:var(--shadow)}
+body{padding-bottom:var(--savebar,0px)}.app{height:calc(100vh - var(--savebar,0px))}
+.savewarn span{flex:1;min-width:280px}.savewarn .btn{white-space:nowrap;color:#1B1F27;background:#fff;border-color:#fff}
+.xfails{margin:8px 0 0;padding:10px 12px;border-radius:8px;background:var(--bad-soft);color:var(--bad);font-size:13.5px}
+.xfails ul{margin:6px 0 0;padding-left:18px}.xfails li{margin:3px 0;overflow-wrap:anywhere}
+.carrytag{font-size:12px;font-weight:600;padding:2px 8px;border-radius:999px;background:var(--warn-soft);color:var(--warn);white-space:nowrap}
 .stufind{width:calc(100% - 12px);margin:0 6px 8px;border:1px solid var(--line-strong);border-radius:7px;padding:6px 9px;font-size:13.5px;background:var(--surface)}
-.rchip{position:absolute;top:6px;z-index:3;display:flex;align-items:center;transform:translateX(calc(-100% - 6px));border-radius:999px;background:#fff;border:1px solid #c9d3df;box-shadow:0 2px 6px rgba(0,0,0,.12);opacity:0;transition:opacity .15s;overflow:hidden;font-size:12px;color:#555}
+.rchip{position:absolute;top:6px;z-index:3;display:flex;align-items:center;transform:translateX(calc(-100% - 6px));border-radius:999px;background:var(--paper-chip);border:1px solid var(--line-strong);box-shadow:0 2px 6px rgba(0,0,0,.12);opacity:0;transition:opacity .15s;overflow:hidden;font-size:12px;color:var(--muted)}
 .pg:hover .rchip,.rchip:focus-within{opacity:.92}
 .rchip span{padding:0 4px 0 9px;font-weight:600}
-.rchip button{border:0;background:none;padding:2px 8px;font-size:15px;line-height:1.3;color:#1F6FB2;cursor:pointer}
-.rchip button:hover{background:#eef3f9}
+.rchip button{border:0;background:none;padding:2px 8px;font-size:15px;line-height:1.3;color:var(--accent);cursor:pointer}
+.rchip button:hover{background:var(--accent-soft)}
 .zoom [data-z0]{cursor:pointer}
 .keys{display:grid;grid-template-columns:auto 1fr;gap:6px 16px;font-size:14px;align-items:baseline}
 .keys h4{grid-column:1/-1;margin:10px 0 0;font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--faint)}
@@ -90,16 +91,16 @@ h1 i,.top .title i{font-style:normal;font-weight:500;color:var(--accent)}
 .side .hd{font-size:12px;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:.05em;margin:6px 8px 8px}
 .stu{display:grid;grid-template-columns:24px 1fr auto;gap:6px;align-items:center;width:100%;text-align:left;border:0;background:none;padding:7px 8px;border-radius:8px;font-size:14px;margin-bottom:1px}
 .stu.drop-on{background:var(--accent-soft);box-shadow:0 0 0 2px var(--accent)}
-.stu:hover{background:#E9EBEF}
+.stu:hover{background:var(--hover)}
 .stu.on{background:var(--surface);color:var(--fg);font-weight:600;box-shadow:0 1px 2px rgba(20,25,35,.08),0 0 0 1px var(--line)}
 .stu.on .num{color:var(--accent)}
 .stu .num{color:var(--faint);font-size:12px;font-variant-numeric:tabular-nums}
 .stu .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .stu .sc{font-weight:600;font-size:13px;color:var(--accent);font-variant-numeric:tabular-nums}
-.stu .add{font-size:10.5px;font-weight:600;color:var(--bad);background:var(--bad-soft);border-radius:999px;padding:1px 6px;margin-left:4px}
+.stu .add{font-size:10.5px;font-weight:600;color:var(--warn);background:var(--warn-soft);border-radius:999px;padding:1px 6px;margin-left:4px}
 .prog-s{padding:0 6px 4px}
 .prog-s .ph{font-weight:600;font-size:15px}.prog-s .ph span{font-weight:400;font-size:12.5px;color:var(--muted)}
-.prog-s .pb{height:5px;border-radius:3px;background:#E1E3E8;margin:8px 0 10px;overflow:hidden}.prog-s .pb i{display:block;height:100%;background:var(--accent);border-radius:3px}
+.prog-s .pb{height:5px;border-radius:3px;background:var(--track);margin:8px 0 10px;overflow:hidden}.prog-s .pb i{display:block;height:100%;background:var(--accent);border-radius:3px}
 .prog-s .btn{width:100%;color:var(--accent);font-weight:600}
 .prog-s kbd,.hint kbd{font:500 10.5px var(--f-body);border:1px solid var(--line-strong);border-bottom-width:2px;border-radius:4px;padding:0 4px;background:var(--surface);color:var(--muted)}
 .stu .dot{width:8px;height:8px;border-radius:50%;background:var(--accent);display:inline-block}
@@ -107,7 +108,7 @@ h1 i,.top .title i{font-style:normal;font-weight:500;color:var(--accent)}
 
 .main{display:flex;flex-direction:column;min-width:0;min-height:0;background:var(--bg)}
 .tools{display:flex;gap:4px;align-items:center;flex-wrap:wrap;padding:6px 8px;margin:12px 16px 0;background:var(--surface);border:1px solid var(--line);border-radius:12px;zoom:var(--uz)}
-.tool{display:inline-flex;align-items:center;gap:6px;border:1px solid transparent;background:none;border-radius:8px;padding:7px 10px;font-size:13px;font-weight:500;color:#3F444C}
+.tool{display:inline-flex;align-items:center;gap:6px;border:1px solid transparent;background:none;border-radius:8px;padding:7px 10px;font-size:13px;font-weight:500;color:var(--fg-2)}
 .tool svg{width:16px;height:16px}
 .tool:hover{color:var(--fg);background:var(--surface-2)}
 .tool[aria-pressed=true]{color:var(--accent);background:var(--accent-soft);font-weight:600}
@@ -132,12 +133,13 @@ h1 i,.top .title i{font-style:normal;font-weight:500;color:var(--accent)}
 .pg{position:relative;margin:0 0 16px;box-shadow:var(--shadow);border-radius:3px;width:max-content}
 .pg canvas{display:block;border-radius:3px;touch-action:none}
 .pg .ed{position:absolute;border:1px dashed var(--accent);background:rgba(255,255,255,.85);resize:none;overflow:hidden;padding:0;margin:0;line-height:1.25;font-family:Helvetica,Arial,sans-serif;outline:none;min-width:20px;color-scheme:light;white-space:pre-wrap;overflow-wrap:anywhere}
-.pg .edh{position:absolute;width:10px;height:28px;margin:-14px 0 0 -5px;border-radius:5px;background:#fff;border:2px solid var(--accent);cursor:ew-resize;touch-action:none;z-index:4;box-shadow:0 0 0 3px rgba(31,111,178,.18)}
+.pg .edh{position:absolute;width:10px;height:28px;margin:-14px 0 0 -5px;border-radius:5px;background:#fff;border:2px solid var(--accent);cursor:ew-resize;touch-action:none;z-index:4;box-shadow:0 0 0 3px rgba(26,103,168,.18)}
 .pg .edbar{position:absolute;z-index:4;display:flex;align-items:center;gap:2px;background:#1E2024;color:#fff;border-radius:8px;padding:3px 4px;font-size:12px;box-shadow:0 6px 16px -6px rgba(0,0,0,.4);white-space:nowrap;transform:translateY(-100%);margin-top:-6px}
 .pg .edbar button{background:none;border:0;color:#fff;padding:3px 7px;border-radius:5px;font-size:12px;font-weight:600}
 .pg .edbar button:hover{background:rgba(255,255,255,.15)}
 .pg .edbar b{min-width:22px;text-align:center;font-weight:600}
 .pg .edbar .on{background:#fff;color:#1E2024}
+.pg .edbar .edgrip{cursor:move;padding:3px 8px 3px 5px;font-size:12px;font-weight:600;touch-action:none;user-select:none;border-right:1px solid rgba(255,255,255,.25);margin-right:3px}
 .nofile{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px;color:var(--muted);max-width:520px}
 .nofile b{color:var(--fg)}
 
@@ -156,8 +158,8 @@ h1 i,.top .title i{font-style:normal;font-weight:500;color:var(--accent)}
 .crit{border:1px solid var(--line);border-radius:10px;padding:9px 10px 10px}
 .crit .cn{font-weight:600;font-size:14px;margin-bottom:7px;display:flex;justify-content:space-between}
 .crit .cn em{font-style:normal;color:var(--accent);font-weight:600}
-.scores{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
-.scores button{border:1px solid var(--line);background:var(--surface);border-radius:6px;padding:6px 0;font-size:13px;font-weight:600;font-variant-numeric:tabular-nums;color:#3F444C}
+.scores{display:grid;grid-template-columns:repeat(8,1fr);gap:3px}
+.scores button{border:1px solid var(--line);background:var(--surface);border-radius:6px;padding:6px 0;font-size:13px;font-weight:600;font-variant-numeric:tabular-nums;color:var(--fg-2)}
 .scores button.half{font-weight:500;color:var(--muted);font-size:12px}
 .scores button[aria-pressed=true]{background:var(--accent);border-color:var(--accent);color:var(--accent-fg);box-shadow:0 0 0 3px var(--accent-soft)}
 .total{padding:4px 2px;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
@@ -167,7 +169,7 @@ h1 i,.top .title i{font-style:normal;font-weight:500;color:var(--accent)}
 .pts{display:flex;align-items:center;gap:8px}
 .pts input{width:90px;border:1px solid var(--line-strong);border-radius:7px;padding:8px;font-size:18px;font-weight:700;background:var(--surface)}
 .cmt textarea{width:100%;min-height:110px;border:1px solid var(--line-strong);border-radius:8px;padding:8px;font-size:14px;background:var(--surface);resize:vertical}
-.nav{display:flex;gap:8px;margin-top:auto}
+.nav{display:flex;gap:8px;margin-top:auto;position:sticky;bottom:-16px;padding:6px 0;background:var(--surface);z-index:1}
 .nav .btn{flex:1}
 .hint{font-size:12.5px;color:var(--faint)}
 
@@ -195,17 +197,17 @@ h1 i,.top .title i{font-style:normal;font-weight:500;color:var(--accent)}
 .spg.sel{border-color:var(--accent);border-width:4px;margin:-2px;box-shadow:0 0 0 4px var(--accent-soft),0 6px 16px rgba(31,111,178,.25)}
 .spg.sel::after{content:"";position:absolute;inset:0;background:rgba(31,111,178,.16);pointer-events:none}
 .spg.sel .spf{background:var(--accent);border-top-color:var(--accent)}
-.spg.sel .spno,.spg.sel .spown,.spg.sel .spf button{color:#fff}
+.spg.sel .spno,.spg.sel .spown,.spg.sel .spf button{color:var(--accent-fg)}
 .sppick{display:none}
-.spg.sel .sppick{display:block;position:absolute;bottom:5px;right:8px;z-index:1;color:#fff;font-size:12px;font-weight:700}
+.spg.sel .sppick{display:block;position:absolute;bottom:5px;right:8px;z-index:1;color:var(--accent-fg);font-size:12px;font-weight:700}
 .spg.sel .sppick::before{content:"✓ "}
 #spSelInfo{font-size:13px;font-weight:600;color:var(--muted);padding:5px 12px;border-radius:999px;background:var(--surface-2)}
-#spSelInfo.on{background:var(--accent);color:#fff}
-.spghost{position:fixed;top:-100px;left:0;background:var(--accent);color:#fff;font:600 14px/1 Inter,system-ui,sans-serif;padding:9px 14px;border-radius:999px;box-shadow:0 6px 18px rgba(0,0,0,.25)}
+#spSelInfo.on{background:var(--accent);color:var(--accent-fg)}
+.spghost{position:fixed;top:-100px;left:0;background:var(--accent);color:var(--accent-fg);font:600 14px/1 Inter,system-ui,sans-serif;padding:9px 14px;border-radius:999px;box-shadow:0 6px 18px rgba(0,0,0,.25)}
 .spown{flex:1;min-width:0;font-size:12px;font-weight:600;color:var(--ok);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .spg.skip .spown{color:var(--muted)}
 .spf button{border:0;background:none;color:var(--muted);font-weight:700;padding:0 2px;cursor:pointer}
-.spzoom{position:absolute;top:4px;right:4px;width:26px;height:26px;border:1px solid var(--line-strong);border-radius:6px;background:rgba(255,255,255,.92);color:#333;font-size:14px;line-height:1;cursor:zoom-in;opacity:0}
+.spzoom{position:absolute;top:4px;right:4px;width:26px;height:26px;border:1px solid var(--line-strong);border-radius:6px;background:var(--paper-chip);color:var(--fg);font-size:14px;line-height:1;cursor:zoom-in;opacity:0}
 .spg:hover .spzoom{opacity:1}
 #spBig{position:absolute;inset:0;z-index:5;background:rgba(10,14,25,.6);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;cursor:zoom-out;border-radius:14px}
 #spBig img{max-width:94%;max-height:calc(100% - 50px);background:#fff;box-shadow:0 10px 40px rgba(0,0,0,.4)}
@@ -220,13 +222,13 @@ h1 i,.top .title i{font-style:normal;font-weight:500;color:var(--accent)}
 .spname .muted{font-size:12px}
 .spck{width:14px;color:var(--ok);font-weight:700}
 @media (max-width:900px){.spwrap{grid-template-columns:1fr}}
-.lchip{position:absolute;top:6px;left:6px;z-index:3;display:flex;border-radius:999px;background:#fff;border:1px solid #c9d3df;box-shadow:0 2px 6px rgba(0,0,0,.12);opacity:.8;overflow:hidden;font-size:12px}
+.lchip{position:absolute;top:6px;left:6px;z-index:3;display:flex;border-radius:999px;background:var(--paper-chip);border:1px solid var(--line-strong);box-shadow:0 2px 6px rgba(0,0,0,.12);opacity:.8;overflow:hidden;font-size:12px}
 .lchip:hover{opacity:1}
 .lchip[hidden]{display:none}
-.lchip button{border:0;background:none;padding:3px 9px;font:inherit;font-weight:600;color:#1F6FB2;cursor:pointer}
-.lchip button+button{border-left:1px solid #c9d3df;padding:3px 7px;color:#555}
-.lchip.off{background:#f1f2f4;border-color:#b7bcc4}
-.lchip.off button[data-lpg]{color:#6b7280}
+.lchip button{border:0;background:none;padding:3px 9px;font:inherit;font-weight:600;color:var(--accent);cursor:pointer}
+.lchip button+button{border-left:1px solid var(--line-strong);padding:3px 7px;color:var(--muted)}
+.lchip.off{background:var(--surface-2);border-color:var(--line-strong)}
+.lchip.off button[data-lpg]{color:var(--muted)}
 #lmenu{position:absolute;top:34px;left:6px;z-index:6;background:var(--surface);border:1px solid var(--line-strong);border-radius:10px;box-shadow:0 12px 32px rgba(0,0,0,.18);padding:6px;display:flex;flex-direction:column;min-width:260px}
 #lmenu .dl{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;padding:6px 8px 2px}
 #lmenu button{border:0;background:none;text-align:left;padding:7px 8px;border-radius:6px;font:inherit;font-size:14px;color:var(--fg);cursor:pointer}
@@ -248,7 +250,7 @@ h1 i,.top .title i{font-style:normal;font-weight:500;color:var(--accent)}
 #arrSelInfo{font-size:13px;color:var(--muted)}
 #arrSelInfo.on{color:var(--accent);font-weight:600}
 .ath.sel{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent);background:var(--accent-soft)}
-.ath .aoff{position:absolute;top:4px;left:4px;font-size:11px;font-weight:600;background:#f1f2f4;color:#555;border:1px solid #b7bcc4;border-radius:999px;padding:0 6px}
+.ath .aoff{position:absolute;top:4px;left:4px;font-size:11px;font-weight:600;background:var(--surface-2);color:var(--muted);border:1px solid var(--line-strong);border-radius:999px;padding:0 6px}
 .mvlist{display:flex;flex-direction:column;gap:2px;max-height:50vh;overflow:auto}
 .mvrow{display:flex;justify-content:space-between;align-items:center;gap:8px;border:1px solid transparent;background:none;text-align:left;padding:9px 10px;border-radius:8px;font:inherit;font-size:15px;color:var(--fg);cursor:pointer}
 .mvrow:hover,.mvrow.top{background:var(--accent-soft);border-color:var(--accent)}
@@ -287,7 +289,7 @@ h1 i,.top .title i{font-style:normal;font-weight:500;color:var(--accent)}
 #anonShuf{width:100%;text-transform:none;letter-spacing:0;margin-top:4px}
 .anonsw{display:inline-flex;align-items:center;gap:6px;border:0;background:none;padding:2px 0;font:inherit;font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);cursor:pointer}
 .anonsw i{width:26px;height:15px;border-radius:999px;background:var(--line-strong);position:relative;transition:background .15s}
-.anonsw i::after{content:"";position:absolute;top:2px;left:2px;width:11px;height:11px;border-radius:50%;background:#fff;transition:left .15s}
+.anonsw i::after{content:"";position:absolute;top:2px;left:2px;width:11px;height:11px;border-radius:50%;background:var(--surface);transition:left .15s}
 .anonsw[aria-checked=true]{color:var(--accent)}
 .anonsw[aria-checked=true] i{background:var(--accent)}
 .anonsw[aria-checked=true] i::after{left:13px}
@@ -428,7 +430,7 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
 .rdrow{display:flex;align-items:center;gap:8px;padding:6px 10px;border:1px solid var(--line);border-radius:8px;overflow-wrap:anywhere}
 .rdrow .sp{flex:1}
 .paper.drop-on{outline:3px dashed var(--accent);outline-offset:-10px;background:var(--accent-soft)}
-.addtag{font-size:12px;font-weight:600;padding:2px 8px;border-radius:999px;background:var(--bad-soft);color:var(--bad)}
+.addtag{font-size:12px;font-weight:600;padding:2px 8px;border-radius:999px;background:var(--warn-soft);color:var(--warn)}
 .dset{border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:10px}
 .dset .dl{font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
 .dset .seg button{min-width:44px}
@@ -438,7 +440,22 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
 .big-sc small{font-size:13px;font-weight:500;color:var(--muted);letter-spacing:0;margin-left:4px}
 .sc-in{width:84px;border:1px dashed var(--warn);background:var(--warn-soft);border-radius:7px;padding:6px 8px;font-size:16px;font-weight:600}
 .sc-warn{display:block;margin-top:6px;font-size:12.5px;font-weight:500;color:var(--warn)}
-.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:8px;font-weight:600;font-size:14px;box-shadow:var(--shadow);z-index:40;max-width:calc(100vw - 32px)}
+.stag{display:inline-block;font-size:11px;font-weight:600;line-height:1.3;padding:1px 6px;border-radius:999px;background:var(--warn-soft);color:var(--warn);white-space:nowrap}
+.stu .sc small{font-size:10.5px;font-weight:600;margin-left:4px}
+.gstat{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:8px 0 2px;font-size:13px}
+.gstat .seg{margin-left:auto}
+.gl td.part{background:var(--warn-soft);color:var(--warn)}
+.rd-ask{margin-top:8px;padding:8px 10px;border-radius:8px;background:var(--warn-soft);font-weight:400;font-size:13px;max-width:260px}
+.rd-ask b{display:block;font-size:15px;margin:2px 0}
+.rd-ask .btn{margin:6px 6px 0 0}
+.rd-no{margin-top:6px;font-size:12px;font-weight:400;color:var(--muted)}
+.xchk{margin:0 0 14px;padding:10px 12px;border-radius:10px;background:var(--warn-soft);font-size:14px}
+.xchk.ok{background:var(--ok-soft);color:var(--ok);font-weight:500}
+.xchk details{margin-top:6px}
+.xchk summary{cursor:pointer;font-weight:600}
+.xchk ul{margin:4px 0 0;padding-left:18px}
+.xchk li{margin:2px 0}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);pointer-events:none;background:var(--fg);color:var(--surface);padding:10px 16px;border-radius:8px;font-weight:600;font-size:14px;box-shadow:var(--shadow);z-index:40;max-width:calc(100vw - 32px)}
 @media (max-width:1100px){.cols{grid-template-columns:calc(190px * var(--uz)) minmax(0,1fr) calc(260px * var(--uz))}.tool .lb{display:none}}
 @media (max-width:760px){.cols{grid-template-columns:1fr}.side{max-height:160px;border-right:0;border-bottom:1px solid var(--line)}.grade{border-left:0;border-top:1px solid var(--line)}.app{height:auto;min-height:100vh}.top{flex-wrap:wrap}}
 /* ---------- lessons (slide maker) ---------- */
@@ -494,7 +511,7 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
 .ls-stagewrap{width:100%}
 .ls-stage{position:relative;box-shadow:var(--shadow);border-radius:4px;overflow:hidden}
 .ls-stage .ls-slide{transform:scale(var(--k));transform-origin:0 0}
-.ls-warn{margin-top:8px;padding:8px 12px;border-radius:8px;background:var(--bad-soft);color:var(--bad);font-weight:500;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.ls-warn{margin-top:8px;padding:8px 12px;border-radius:8px;background:var(--warn-soft);color:var(--warn);font-weight:500;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .ls-notes{display:flex;flex-direction:column;gap:4px;margin-top:12px;font-weight:600;font-size:13.5px}
 .ls-notes textarea{font-weight:400;border:1px solid var(--line-strong);border-radius:8px;padding:8px;background:var(--surface);resize:vertical}
 .ls-hint{font-size:12.5px;margin:8px 0 0}
@@ -530,12 +547,21 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
 .ls-ta.ls-body{line-height:1.45}
 :root[data-theme="dark"] .lsn .ls-slot{background:var(--surface-2)}
 @media (max-width:900px){.ls-grid{grid-template-columns:1fr}.ls-ed-cols{grid-template-columns:1fr}.ls-thumbs{position:static;max-height:none;display:flex;gap:8px;overflow:auto;border-right:0;border-bottom:1px solid var(--line)}.ls-addslide{flex-direction:row}}
+/*@@POLISHCSS@@*/
+/*@@RUBRICSCSS@@*/
+/*@@INSIGHTCSS@@*/
 </style>
 
 <!-- start -->
 <div class="start" id="start">
-  <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap"><h1>Grading <i>Studio</i></h1><span style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><span class="gAcct"></span><button class="btn sm primary" id="lessonsBtn" title="Make lesson slides for your classes">Lessons</button><button class="btn sm themeBtn">Dark mode</button></span></div>
-  <p class="sub">Open a ManageBac download, mark each paper, score it, and get everything back out in the same folders. Nothing goes anywhere except your own Google Drive, if you sign in.</p>
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap"><h1>Grading <i>Studio</i></h1><span style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><span class="gAcct"></span><button class="btn sm" id="lessonsBtn" title="Make lesson slides for your classes">Lessons</button><button class="btn sm themeBtn">Dark mode</button></span></div>
+  <p class="sub">Open a ManageBac download, mark each paper, score it, and get everything back out in the same folders. Your work stays on this computer.</p>
+  <p class="bootnote" id="bootNote" role="alert" hidden></p>
+  <section class="lib today" hidden>
+    <div class="lhead"><h2>Pick up where you left off</h2><span class="muted">Newest first. Kept in this browser until you click Forget.</span></div>
+    <div class="kept" id="kept"></div>
+    <button class="link" id="keptAll" hidden></button>
+  </section>
   <div class="drop" id="drop">
     <h2>Open a ManageBac download</h2>
     <p>The ZIP, or the unzipped folder with one folder per student.</p>
@@ -549,28 +575,28 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
     <input type="file" id="fileIn" multiple hidden>
     <input type="file" id="dirIn" webkitdirectory multiple hidden>
   </div>
-  <section class="lib" hidden>
-    <div class="lhead"><h2>Your downloads</h2><span class="muted">Kept in this browser with your marks and scores, so you can pick up where you left off. Nothing is cleared unless you click Forget.</span></div>
-    <div class="kept" id="kept"></div>
-  </section>
+  <p id="whereTop" hidden style="margin:10px 0 14px;font-size:14px"></p>
   <section class="lib">
     <div class="lhead"><h2>Classes</h2><span class="muted">Each class has its roster and its own units. Drag assignments between units or into another class, and drag a unit’s name to move the unit. Drop a ManageBac ZIP on an assignment to open it there.</span><span class="sp"></span><button class="btn sm" id="addClass">+ Class</button></div>
     <div id="classes"></div>
   </section>
   <section class="lib">
-    <div class="lhead"><h2>Backup</h2><span class="muted">Everything above lives in this browser at this address. A backup file carries all of it (downloads, marks, scores, units, rosters) to another link or computer. Keep it in your own files: it holds student work.</span><span class="sp"></span><button class="btn sm" id="backupBtn">Back up everything</button><button class="btn sm" id="restoreBtn">Restore a backup…</button></div>
-    <p class="muted" id="backupInfo" style="margin:0;font-size:13px"></p><input type="file" id="restoreIn" accept=".zip,application/zip" hidden>
+    <div class="lhead"><h2>Saving and carrying</h2><span class="muted">Everything above lives in this browser at this address. A linked folder keeps a second copy by itself. A take-home file carries all of it to another computer and back, protected by a passphrase.</span><span class="sp"></span><button class="btn sm" id="takeBtn">Take my work with me</button><button class="btn sm" id="restoreBtn">Bring work in…</button><button class="btn sm" id="removeBtn">Remove from this computer</button></div>
+    <p id="whereLine" style="margin:0 0 6px;font-size:14px"></p>
+    <p class="muted" id="backupInfo" style="margin:0;font-size:13px"></p><input type="file" id="restoreIn" accept=".gswork,.zip,application/zip" hidden>
+    <div id="safetyList" hidden></div>
   </section>
   <details class="how">
     <summary>How it works</summary>
     <ol class="steps">
       <li><span class="n">1</span><span><b>Mark.</b> Pen, highlight, text, check marks, and comments that sit in the margin with a line to the spot. Arrange pages lets you combine a student’s files and drag pages into order.</span></li>
-      <li><span class="n">2</span><span><b>Score.</b> Type a total, or click 1 to 4 on each rubric row (half points too). Or bring in your own rubric (Word, PDF or picture) once and grade right on each student’s copy. Students stay in their folder order.</span></li>
+      <li><span class="n">2</span><span><b>Score.</b> Type a total, or click 0 to 4 on each rubric row (half points too). Or bring in your own rubric (Word, PDF or picture) once and grade right on each student’s copy. Students stay in their folder order.</span></li>
       <li><span class="n">3</span><span><b>Enter grades.</b> Open the Grades list and go down it in ManageBac. Click any score or comment to copy it. Marked in Kami instead? The Grade sheet finds what you typed, like “9 = 85%”, and shows a crop of it for every student. Files with no marks are left out as extra papers, and you can bring them back.</span></li>
       <li><span class="n">4</span><span><b>Return.</b> Export gives you the marked files in the same student folders.</span></li>
     </ol>
   </details>
-  <p class="foot">Your marks, scores, units and rosters are kept in this browser, and synced through your own Google Drive when you sign in, so you can close the tab and drop the same download in again to pick up where you left off. <button class="link" id="sample">Try it with sample papers</button></p>
+  <p class="foot">Your marks, scores, units and rosters are kept in this browser, so you can close the tab and drop the same download in again to pick up where you left off. <button class="link" id="sample">Try it with sample papers</button></p>
+  <p class="foot gsVer"></p>
   <input type="file" id="asgIn" multiple hidden><input type="file" id="scanIn" accept=".pdf,application/pdf" hidden><input type="file" id="asgDirIn" webkitdirectory multiple hidden>
 </div>
 
@@ -578,32 +604,54 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
 <div class="app" id="app" hidden>
   <div class="top">
     <span class="title">Grading <i>Studio</i></span>
-    <span class="batch" id="batchName"></span><span class="atl" id="topAtlas"></span><span class="savest" id="saveState" title="Your marks and scores are kept in this browser as you go"></span>
-    <select id="classSel" class="btn sm" style="max-width:180px" aria-label="Roster for this download"></select>
+    <span class="batch" id="batchName"></span><span class="savest" id="saveState" title="Your marks and scores are kept in this browser as you go"></span><button class="savewhere link" id="saveWhere"></button>
     <span class="sp"></span>
-    <button class="btn sm ghost" id="trAllBtn" hidden title="Make a transcript for every recording in this download">Transcripts</button><button class="btn sm ghost" id="bringBtn" title="Add many files at once; each goes to its student by the name in the file name">Bring in files</button><button class="btn sm ghost" id="lightBtn" title="Make a pale or too-bright scan easier to read">☀ Lighting</button><button class="btn sm ghost" id="calcBtn" title="Calculator for scores and percents (= key)" aria-label="Calculator"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" style="vertical-align:-3px"><rect x="2.5" y="1.5" width="11" height="13" rx="2"/><rect x="4.5" y="3.5" width="7" height="3" rx=".5"/><path d="M5 9h.01M8 9h.01M11 9h.01M5 12h.01M8 12h.01M11 12h.01" stroke-width="2" stroke-linecap="round"/></svg></button><button class="btn sm ghost" id="dispBtn" title="Text size and zoom">Aa Display</button>
-    <button class="btn sm ghost themeBtn">Dark mode</button>
-    <button class="btn sm ghost" id="setupBtn">Rubric setup</button>
     <button class="btn sm ghost" id="sheetBtn">Grade sheet</button>
     <button class="btn sm ghost" id="gradesBtn">Grades list</button>
-    <button class="btn sm" id="shareBtn" title="Papers with names covered, by code">Share with Claude</button>
-    <button class="btn sm" id="backBtn" title="Put Claude’s feedback with the right students">Bring back from Claude</button>
     <button class="btn sm primary" id="exportBtn">Export marked</button>
+    <div class="morewrap">
+      <button class="btn sm" id="moreBtn" aria-haspopup="true" aria-expanded="false" aria-controls="moreMenu">More <span aria-hidden="true">▾</span></button>
+      <div class="more" id="moreMenu" hidden>
+        <div class="mgrp" role="group" aria-labelledby="mhA"><div class="mhd" id="mhA">This assignment</div>
+          <label class="mrow">Roster <select id="classSel" class="btn sm" aria-label="Roster for this download"></select></label>
+          <button class="mitem" id="setupBtn">Rubric setup</button>
+          <button class="mitem" id="bringBtn" title="Late work, or many files at once; each goes to its student by the name in the file name">Bring in files</button>
+          <button class="mitem" id="openRepBtn" title="What opened from this download, what didn’t, who has nothing, and anything odd">What opened</button>
+          <button class="mitem" id="trAllBtn" hidden title="Make a transcript for every recording in this download">Transcripts</button>
+          <span class="mlink" id="topAtlas"></span>
+        </div>
+        <div class="mgrp" role="group" aria-labelledby="mhB"><div class="mhd" id="mhB">Claude</div>
+          <button class="mitem" id="shareBtn" title="Papers with names covered, by code">Share with Claude</button>
+          <button class="mitem" id="backBtn" title="Put Claude’s feedback with the right students">Bring back from Claude</button>
+        </div>
+        <div class="mgrp" role="group" aria-labelledby="mhC"><div class="mhd" id="mhC">View and tools</div>
+          <button class="mitem" id="overviewBtn" title="The spread of scores, the hardest rubric rows, and who isn’t finished">Class overview</button>
+          <button class="mitem" id="consBtn" title="Same-score papers side by side, and whether you got harder or softer as you went">Consistency check</button>
+          <button class="mitem" id="lightBtn" title="Make a pale or too-bright scan easier to read">Lighting</button>
+          <button class="mitem" id="dispBtn" title="Text size and zoom">Display</button>
+          <button class="mitem" id="calcBtn" title="Calculator for scores and percents">Calculator <kbd>=</kbd></button>
+          <button class="mitem themeBtn">Dark mode</button>
+          <button class="mitem" id="keysBtn">All keys <kbd>?</kbd></button>
+        </div>
+      </div>
+    </div>
     <button class="icon" id="closeBtn" title="Open a different download" aria-label="Open a different download"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
   </div>
   <div class="cols" id="cols">
     <button class="pbtn" id="colL" title="Hide the student list ( [ )" aria-label="Hide the student list"><span class="pa">‹</span><span class="pl">Students</span></button>
     <button class="pbtn" id="colR" title="Hide the score panel ( ] )" aria-label="Hide the score panel"><span class="pa">›</span><span class="pl">Score</span></button>
     <nav class="side"><div class="prog-s" id="progS"></div><div class="hd" id="sideHd">Students, in folder order</div><input type="search" id="stuFind" class="stufind" placeholder="Find a student  ( / )" aria-label="Find a student" autocomplete="off"><div id="stuList"></div></nav>
-    <section class="main">
+    <section class="main" style="position:relative">
       <div class="tools" id="tools"></div>
+      <div id="openRep" hidden role="status" style="position:absolute;left:16px;right:28px;bottom:12px;z-index:5;align-items:center;gap:10px;padding:8px 12px;border-radius:10px;background:var(--surface);border:1px solid var(--warn);box-shadow:var(--shadow);font-size:14px"></div>
       <div class="paper" id="paper"></div>
     </section>
     <aside class="grade" id="grade"></aside>
   </div>
 </div>
 
-<div class="dlg" id="dlg" hidden><div class="box" id="dlgBox"></div></div>
+<div class="dlg" id="dlg" hidden><div class="box" id="dlgBox" role="dialog" aria-modal="true" tabindex="-1"></div></div>
+<div class="toast" role="status" aria-live="polite" aria-atomic="true" hidden></div>
 
 <script>/*@@PDFJS@@*/</script>
 <script>/*@@PDFLIB@@*/</script>
@@ -611,4 +659,6 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
 <script>/*@@MAMMOTH@@*/</script>
 <script>/*@@H2C@@*/</script>
 <script type="text/plain" id="pdfWorkerSrc">/*@@WORKER@@*/</script>
+<script type="text/plain" id="heicLicense">/*@@HEICLICENSE@@*/</script>
+<script type="text/plain" id="heicSrc">/*@@HEIC@@*/</script>
 <script>/*@@APP@@*/</script>
