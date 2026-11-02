@@ -34,6 +34,7 @@ function normUnit(x) {
   const start = /^\d{4}-\d\d-\d\d$/.test(x.start) ? ymd(mondayOf(parseYmd(x.start))) : ymd(mondayOf(new Date()));
   const u = { id: typeof x.id === 'string' && x.id ? x.id : lid(), course: String(x.course || ''), title: String(x.title || 'New unit'), start, weeks: weeks.length ? weeks : [{ focus: '', notes: '', standards: '' }],
     atlas: /^https?:\/\//.test(x.atlas) ? String(x.atlas) : '', color: /^#[0-9a-f]{6}$/i.test(x.color) ? x.color : '', files, updated: +x.updated || Date.now() };
+  if (typeof x.notebook === 'string' && x.notebook.trim()) u.notebook = nbClean(x.notebook);
   if (x._file) u._file = x._file; if (x._mod) u._mod = x._mod;
   return u;
 }
@@ -322,7 +323,7 @@ async function unitsDrop(e) {
 // A screenshot on the clipboard goes straight in as an Atlas picture.
 document.addEventListener('paste', e => {
   if (L.view !== 'unit' || !L.unit) return;
-  if (/^(INPUT|TEXTAREA)$/.test(e.target.tagName)) return;
+  if (/^(INPUT|TEXTAREA)$/.test(e.target.tagName) || e.target.isContentEditable) return;
   const fs = [...((e.clipboardData && e.clipboardData.files) || [])].filter(f => /^image\//.test(f.type));
   if (!fs.length) return;
   e.preventDefault(); addUnitFiles(L.unit, fs, 'atlas');

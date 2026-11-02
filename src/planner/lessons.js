@@ -86,6 +86,7 @@ function normLesson(x) {
   if (/^https?:\/\//.test(x.atlas || '')) out.atlas = String(x.atlas);
   if (x.library) out.library = String(x.library).slice(0, 120);
   if (x.unit) out.unit = String(x.unit);
+  if (typeof x.notebook === 'string' && x.notebook.trim()) out.notebook = nbClean(x.notebook);
   const files = (Array.isArray(x.files) ? x.files : []).filter(f => f && typeof f.id === 'string' && typeof f.name === 'string').map(f => ({ id: f.id, name: f.name, kind: f.kind === 'doc' ? 'doc' : 'other', type: String(f.type || ''), size: +f.size || 0, added: +f.added || 0 }));
   if (files.length) out.files = files;
   if (x.pending && Array.isArray(x.pending.before)) out.pending = { at: +x.pending.at || Date.now(), before: x.pending.before.map(ns), title: String(x.pending.title || '') };
@@ -438,7 +439,7 @@ function onLessonsKey(e) {
   }
   if (e.key === 'Enter' && e.target.dataset && e.target.dataset.f === 'say') { e.preventDefault(); return addComment(); }
   if (e.key === 'Enter' && e.target.id === 'plFind') { e.preventDefault(); return findDlg(e.target.value); }
-  const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName);
+  const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName) || e.target.isContentEditable;
   if (L.view === 'edit' && !typing && !e.metaKey && !e.ctrlKey) {
     if (e.key === 'ArrowDown' || e.key === 'ArrowRight' || e.key === 'PageDown') { e.preventDefault(); goSlide(L.cur + 1); }
     else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); goSlide(L.cur - 1); }
@@ -590,7 +591,7 @@ async function addVideoLink(url, askFirst) {
 }
 // Paste on the editor: a picture goes on a slide, a YouTube link makes a video slide.
 document.addEventListener('paste', e => {
-  if (L.view !== 'edit' || !L.open || lEditing || /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName) || !$('#dlg').hidden) return;
+  if (L.view !== 'edit' || !L.open || lEditing || /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName) || e.target.isContentEditable || !$('#dlg').hidden) return;
   const cd = e.clipboardData; if (!cd) return;
   const f = [...cd.files].find(x => /^image\//.test(x.type));
   if (f) { e.preventDefault(); pictureSlide(); return setPicture(f, ''); }
@@ -715,6 +716,7 @@ function lessonText(l) {
     if (s.ask) t += 'What I want on this slide: ' + s.ask + '\n';
     for (const m of s.talk) if (!m.done) t += (m.by === 'claude' ? 'Claude: ' : 'My comment: ') + m.text + '\n';
   });
+  if (l.notebook) t += '\n## My notebook for this lesson\n' + nbText(l.notebook) + '\n';
   return t;
 }
 // Ask Claude: copies this lesson only (nothing from grading), to paste where the teacher is working with Claude.
@@ -975,6 +977,7 @@ never are, and nothing here should point to a student.
 "look" is the lesson's colors: wood (the teacher's template), white, cream, sage, sky, blush, charcoal, navy,
 stripe, band, bigtype, framed, notebook, chalk. Leave it out to use the teacher's default; change it only when asked.
 "ask", "talk", "status" and "claudeNote" are for working together, and are all optional:
+- "notebook" (on a lesson or unit) is the teacher's own jotted thoughts, as simple HTML. Read it for ideas; don't edit it.
 - A slide's "ask" is what the teacher wants on that slide. Use it, and leave it as it is.
 - A slide's "talk" is comments: { "by": "you" | "claude", "text": "…" }. Reply by adding one with "by": "claude".
   Don't edit or remove the teacher's comments.

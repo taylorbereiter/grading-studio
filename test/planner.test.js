@@ -710,3 +710,55 @@ test('slide text tools: bullets, numbers, indents, bold, italic and underline ar
     assert.deepEqual(errors, []);
   } finally { await a.done(); }
 });
+
+test('the notebook: a page per lesson in the side panel, with lists, links, videos and pictures, saved with the lesson', async () => {
+  const a = await open();
+  try {
+    const { page, errors } = a;
+    await page.evaluate(async s => { const P = window.__planner; await P.applySetup(s);
+      const l = P.normLesson({ id: 'nb-l', title: 'Appeals', slides: [{ layout: 'title', title: 'Appeals', fmt: 2 }, { layout: 'content', title: 'Ethos', body: '• Trust', fmt: 2 }] }); P.L.lessons.push(l); P.openLessonForTest(l, 1); }, SETUP);
+    await page.click('[data-a="panel"]'); await page.waitForSelector('[data-st="notes"]'); await page.click('[data-st="notes"]');
+    await page.waitForSelector('#nbPage');
+    assert.match(await page.$eval('.nb-head b', b => b.textContent), /^Appeals$/);
+    await page.click('#nbPage');
+    await page.keyboard.type('Start with the ad sort');
+    await page.keyboard.press('ArrowLeft');   // typing in the notebook never moves the slides
+    assert.equal(await page.evaluate(() => window.__planner.L.cur), 1);
+    await page.keyboard.press('End'); await page.keyboard.press('Enter');
+    await page.click('[data-nb="ul"]'); await page.keyboard.type('Groups of 3'); await page.keyboard.press('Enter'); await page.keyboard.press('Enter');
+    await page.click('[data-nb="link"]'); await page.type('#nbAskIn', 'https://example.org/ads'); await page.keyboard.press('Enter');
+    await page.click('[data-nb="video"]'); await page.type('#nbAskIn', 'https://youtu.be/dQw4w9WgXcQ?t=30'); await page.keyboard.press('Enter');
+    await page.waitForSelector('#nbPage .nb-vid iframe[src*="dQw4w9WgXcQ?start=30"]');
+    // a pasted picture goes into the notebook, not onto a new slide
+    await page.evaluate(async () => { const c = document.createElement('canvas'); c.width = 40; c.height = 20; const b = await new Promise(r => c.toBlob(r, 'image/png')); const dt = new DataTransfer(); dt.items.add(new File([b], 'p.png', { type: 'image/png' })); document.querySelector('#nbPage').dispatchEvent(new ClipboardEvent('paste', { clipboardData: dt, bubbles: true, cancelable: true })); });
+    await page.waitForSelector('#nbPage img[src^="data:image/png"]');
+    assert.equal(await page.evaluate(() => window.__planner.L.open.slides.length), 2);
+    await page.waitForFunction(() => /nb-vid/.test(window.__planner.L.open.notebook || '') && /<img/.test(window.__planner.L.open.notebook) && /✓ Saved/.test(document.querySelector('#nbSaved').textContent));
+    const nb = await page.evaluate(() => window.__planner.L.open.notebook);
+    assert.match(nb, /Start with the ad sort[^]*<ul><li>Groups of 3<\/li><\/ul>[^]*<a href="https:\/\/example\.org\/ads" target="_blank" rel="noopener">[^]*<div class="nb-vid" data-yt="dQw4w9WgXcQ" data-t="30"><\/div>/);
+    assert.doesNotMatch(nb, /iframe|contenteditable/);
+    // it is saved with the lesson, travels in the lesson file, and Claude sees the words
+    const back = await page.evaluate(() => { const P = window.__planner, l = P.normLesson(JSON.parse(JSON.stringify(P.L.open))); return l.notebook === P.L.open.notebook; });
+    assert.ok(back);
+    // pasted HTML can't run anything
+    const clean = await page.evaluate(() => window.__planner.normLesson({ title: 'x', notebook: '<p onclick="x()">Hi <a href="javascript:alert(1)">bad</a> <img src="x" onerror="alert(1)"><script>alert(1)</script><iframe src="https://evil.example"></iframe><div class="nb-vid" data-yt="bad"></div></p>' }).notebook);
+    assert.equal(clean, '<p>Hi bad </p><p></p>');   // nothing that runs, loads from elsewhere or fakes a video is left
+    // the general page, for when no lesson is open
+    await page.click('[data-sa="nbswap"]'); await page.waitForFunction(() => document.querySelector('.nb-head b').textContent === 'General notes');
+    await page.click('#nbPage'); await page.keyboard.type('Ideas for next unit');
+    await page.click('[data-sa="nbswap"]'); await page.waitForFunction(() => document.querySelector('.nb-head b').textContent === 'Appeals');
+    assert.match(await page.$eval('#nbPage', e => e.textContent), /Start with the ad sort/);
+    // into the Claude box and the lesson text
+    await page.click('[data-sa="nbbox"]');
+    const t = await page.evaluate(async () => { window.__copied = ''; navigator.clipboard.writeText = async x => { window.__copied = x; }; return true; });
+    assert.ok(t);
+    await page.waitForSelector('[data-st="claude"] .sp-n');
+    await page.click('[data-st="claude"]'); await page.waitForSelector('#spChips');
+    assert.match(await page.$eval('#spChips', c => c.textContent), /Notebook: Appeals/);
+    await page.click('[data-sa="boxcopy"]'); await page.waitForFunction(() => window.__copied);
+    const cp = await page.evaluate(() => window.__copied);
+    assert.match(cp, /\[My notebook: Appeals\]\nStart with the ad sort\n• Groups of 3\n[^]*https:\/\/example\.org\/ads[^]*\[Video: https:\/\/www\.youtube\.com\/watch\?v=dQw4w9WgXcQ&t=30s\][^]*\[Picture\]/);
+    assert.equal(await page.evaluate(async () => (await window.__planner.findAll('ad sort')).map(r => r.title).join()), 'Appeals, notebook');
+    assert.deepEqual(errors, []);
+  } finally { await a.done(); }
+});
