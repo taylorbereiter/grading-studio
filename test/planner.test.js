@@ -1069,3 +1069,30 @@ test('downloads from the calendar: ↓ on each card, Finished ✓, a lesson with
     assert.deepEqual(errors, []);
   } finally { await a.done(); }
 });
+
+test('the activity bank in the side panel: search and filter next to the lesson, read the steps, add one after the slide I am on', async () => {
+  const a = await open();
+  try {
+    const { page, errors } = a;
+    await page.evaluate(() => { const P = window.__planner, l = P.normLesson({ title: 'Claims', fmt: 2, slides: [{ layout: 'title', title: 'Claims' }, { layout: 'content', title: 'Warm-up' }, { layout: 'content', title: 'Exit' }] }); P.L.lessons.push(l); P.openLessonForTest(l, 1); });
+    await page.click('.ls-top [data-a="panel"]');
+    await page.waitForSelector('#side:not([hidden]) [data-st="acts"]'); await page.click('[data-st="acts"]');
+    await page.waitForSelector('#spActList .sp-act');
+    const all = await page.$$eval('#spActList .sp-act', x => x.length);
+    await page.type('[data-sf="actq"]', 'fishbowl');
+    await page.waitForFunction(() => document.querySelectorAll('#spActList .sp-act').length === 1);
+    await page.click('#spActList [data-sact="fishbowl"]');
+    await page.waitForSelector('[data-sactadd="fishbowl"]');
+    assert.match(await page.$eval('#spActList .sp-act.open', d => d.textContent), /How to run it[\s\S]*On the slide for students[\s\S]*Inner circle/);
+    await page.click('[data-sactadd="fishbowl"]');
+    await page.waitForFunction(() => window.__planner.L.open.slides.length === 4);
+    const s = await page.evaluate(() => { const P = window.__planner, x = P.L.open.slides[2]; return { cur: P.L.cur, layout: x.layout, title: x.title, first: x.body.split('\n')[0], notes: /^How to run it/.test(x.notes) }; });
+    assert.deepEqual(s, { cur: 2, layout: 'steps', title: 'Fishbowl discussion', first: '1. Inner circle: talk about the question, using the text', notes: true });
+    // filters
+    await page.$eval('[data-sf="actq"]', i => { i.value = ''; i.dispatchEvent(new Event('input', { bubbles: true })); });
+    await page.waitForFunction(n => document.querySelectorAll('#spActList .sp-act').length === n, {}, all);
+    await page.click('[data-sactp="warmup"]');
+    await page.waitForFunction(n => { const k = document.querySelectorAll('#spActList .sp-act').length; return k > 0 && k < n; }, {}, all);
+    assert.deepEqual(errors, []);
+  } finally { await a.done(); }
+});
