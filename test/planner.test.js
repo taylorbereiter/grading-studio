@@ -826,3 +826,38 @@ test('ManageBac links: added on a class in the week, shown on its lessons, kept 
     assert.deepEqual(errors, []);
   } finally { await a.done(); }
 });
+
+test('screenshots for context: pasted or dropped on a slide’s Claude box, noted, kept off the slide, put on a slide in one click, and saved for Claude', async () => {
+  const a = await open();
+  try {
+    const { page, errors } = a;
+    await page.evaluate(() => { const P = window.__planner, l = P.normLesson({ title: 'Shots', slides: [{ layout: 'title', fmt: 2 }, { layout: 'content', title: 'Task', body: '• Read it', fmt: 2 }] }); P.L.lessons.push(l); P.openLessonForTest(l, 1); });
+    await page.waitForSelector('.pl-cs');
+    const shot = (sel, kind) => page.evaluate(async ([sel, kind]) => { const c = document.createElement('canvas'); c.width = 60; c.height = 30; const b = await new Promise(r => c.toBlob(r, 'image/png')); const dt = new DataTransfer(); dt.items.add(new File([b], 's.png', { type: 'image/png' })); const el = document.querySelector(sel);
+      el.dispatchEvent(kind === 'paste' ? new ClipboardEvent('paste', { clipboardData: dt, bubbles: true, cancelable: true }) : new DragEvent('drop', { dataTransfer: dt, bubbles: true, cancelable: true })); }, [sel, kind]);
+    // pasted while typing what I want: it goes with the slide's context, not onto a new slide
+    await page.focus('[data-f="ask"]'); await shot('[data-f="ask"]', 'paste');
+    await page.waitForSelector('.pl-csi img[src^="data:image/png"]');
+    await page.type('[data-f="ctxnote"]', 'Task sheet instructions');
+    await shot('.pl-cs', 'drop');
+    await page.waitForFunction(() => document.querySelectorAll('.pl-csi').length === 2);
+    let st = await page.evaluate(() => { const s = window.__planner.L.open.slides[1]; return { n: window.__planner.L.open.slides.length, ctx: s.ctx.map(x => x.note), img: !!s.img, stage: !!document.querySelector('#lsStage img') }; });
+    assert.deepEqual(st, { n: 2, ctx: ['Task sheet instructions', ''], img: false, stage: false });
+    // Claude sees it in the lesson text and gets the picture as a file in the folder
+    const txt = await page.evaluate(() => window.__planner.lessonText(window.__planner.L.open));
+    assert.match(txt, /\[Screenshot for context, not on the slide: Task sheet instructions\]/);
+    const file = await page.evaluate(() => { const imgs = new Map(), c = window.__planner.lessonForFile(window.__planner.L.open, imgs); return { src: c.slides[1].ctx[0].src, has: imgs.has(c.slides[1].ctx[0].src), keep: /^data:/.test(window.__planner.L.open.slides[1].ctx[0].src) }; });
+    assert.match(file.src, /^images\/ctx-.+\.png$/); assert.ok(file.has && file.keep);
+    // it survives a save and reload of the lesson
+    assert.equal(await page.evaluate(() => window.__planner.normLesson(JSON.parse(JSON.stringify(window.__planner.L.open))).slides[1].ctx.length), 2);
+    // one click makes a picture slide of it for students
+    await page.click('[data-ctxput="0"]');
+    st = await page.evaluate(() => { const P = window.__planner, l = P.L.open; return { n: l.slides.length, cur: P.L.cur, layout: l.slides[2].layout, title: l.slides[2].title, img: /^data:image/.test(l.slides[2].img.src), still: l.slides[1].ctx.length }; });
+    assert.deepEqual(st, { n: 3, cur: 2, layout: 'picture', title: 'Task sheet instructions', img: true, still: 2 });
+    // removing one, with undo
+    await page.evaluate(() => window.__planner.openLessonForTest(window.__planner.L.open, 1));
+    await page.waitForSelector('[data-ctxdel="1"]'); await page.click('[data-ctxdel="1"]');
+    assert.equal(await page.evaluate(() => window.__planner.L.open.slides[1].ctx.length), 1);
+    assert.deepEqual(errors, []);
+  } finally { await a.done(); }
+});

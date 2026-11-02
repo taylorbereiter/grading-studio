@@ -65,6 +65,8 @@ function normSlide(s) {
     ask: String(s.ask || ''), talk: (Array.isArray(s.talk) ? s.talk : []).filter(t => t && t.text).map(t => ({ by: t.by === 'claude' ? 'claude' : 'you', text: String(t.text), at: +t.at || 0, ...(t.done ? { done: true } : {}) })) };
   for (const k of EXTRA) if (s[k]) out[k] = String(s[k]).replace(/\r/g, '');
   if (s.img && typeof s.img === 'object' && typeof s.img.src === 'string') out.img = { src: s.img.src, w: +s.img.w || 0, h: +s.img.h || 0, source: String(s.img.source || '') };
+  const ctx = (Array.isArray(s.ctx) ? s.ctx : []).filter(c => c && typeof c.src === 'string').map(c => ({ id: typeof c.id === 'string' && c.id ? c.id : lid(), src: c.src, w: +c.w || 0, h: +c.h || 0, note: String(c.note || '') }));
+  if (ctx.length) out.ctx = ctx;
   if (s.video && typeof s.video === 'object' && /^https?:\/\//.test(s.video.url)) {
     const v = s.video;
     out.video = { url: String(v.url), title: String(v.title || ''), by: String(v.by || ''), start: Math.max(0, Math.round(+v.start || 0)) };
@@ -483,7 +485,7 @@ async function onLessonsClick(e) {
   const mt = e.target.closest('[data-ma]'); if (mt && await matClick(mt)) return;
   if (await bankClick(e)) return;
   if (await unitsClick(e)) return;
-  const t = e.target.closest('[data-a],[data-mbset],[data-open],[data-new],[data-attach],[data-go],[data-addslide],[data-unslot],[data-talkdone],.ls-ed');
+  const t = e.target.closest('[data-a],[data-mbset],[data-open],[data-new],[data-attach],[data-go],[data-addslide],[data-unslot],[data-talkdone],[data-ctxview],[data-ctxcopy],[data-ctxput],[data-ctxdel],.ls-ed');
   if (t && t.dataset.mbset) return mbDlg(t.dataset.mbset);
   if (!t) return;
   if (L.view === 'edit' && await reviewClick(t)) return;
@@ -540,6 +542,7 @@ function onLessonsInput(e) {
   if (f === 'ltitle') { L.open.title = e.target.value; lessonChanged(false); }
   if (f === 'notes') { L.open.slides[L.cur].notes = e.target.value; lessonChanged(false); }
   if (f === 'ask') { L.open.slides[L.cur].ask = e.target.value; lessonChanged(false); }
+  if (f === 'ctxnote') { const c = (L.open.slides[L.cur].ctx || [])[+e.target.dataset.i]; if (c) { c.note = e.target.value; lessonChanged(false); } }
 }
 function onLessonsChange(e) {
   if (unitsChange(e)) return;
@@ -561,6 +564,7 @@ document.addEventListener('dragstart', e => { const th = e.target.closest && e.t
 async function onLessonDrop(e) {
   const zf = [...(e.dataTransfer.files || [])].find(f => /\.zip$/i.test(f.name));
   if (zf && !(e.target.closest && e.target.closest('[data-owner]'))) return packImport(zf);
+  if (e.target.closest && e.target.closest('.pl-ask') && L.open) { const fs = [...(e.dataTransfer.files || [])].filter(f => /^image\//.test(f.type)); if (fs.length) return addCtxShots(fs); }
   if (await matDrop(e)) return;
   const pf = [...(e.dataTransfer.files || [])].find(f => /\.json$/i.test(f.name));
   if (pf && !L.open) { try { const j = JSON.parse(await pf.text()); if (Array.isArray(j.classes)) return applySetup(j); } catch { } }
@@ -615,6 +619,10 @@ async function addVideoLink(url, askFirst) {
 }
 // Paste on the editor: a picture goes on a slide, a YouTube link makes a video slide.
 document.addEventListener('paste', e => {
+  if (L.view === 'edit' && L.open && e.target.closest && e.target.closest('.pl-ask') && e.clipboardData) {
+    const fs = [...e.clipboardData.files].filter(x => /^image\//.test(x.type));
+    if (fs.length) { e.preventDefault(); return addCtxShots(fs); }
+  }
   if (L.view !== 'edit' || !L.open || lEditing || /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName) || e.target.isContentEditable || !$('#dlg').hidden) return;
   const cd = e.clipboardData; if (!cd) return;
   const f = [...cd.files].find(x => /^image\//.test(x.type));
@@ -635,19 +643,24 @@ function splitOverflow() {
 
 /* ---------- pictures ---------- */
 function pickPicture() { const i = $('#lsPicIn'); if (!i) return; i.onchange = () => { const f = i.files[0]; i.value = ''; if (f) setPicture(f); }; i.click(); }
-async function setPicture(file, source) {
+// A picture file made small enough to keep in a lesson: 1600 px is plenty for a slide.
+async function shrinkPic(file) {
   const url = URL.createObjectURL(file);
   try {
     const im = await new Promise((res, rej) => { const x = new Image(); x.onload = () => res(x); x.onerror = rej; x.src = url; });
-    const k = Math.min(1, 1600 / Math.max(im.naturalWidth, im.naturalHeight));   // keep lessons light: 1600 px is plenty for a slide
+    const k = Math.min(1, 1600 / Math.max(im.naturalWidth, im.naturalHeight));
     const c = document.createElement('canvas'); c.width = Math.round(im.naturalWidth * k); c.height = Math.round(im.naturalHeight * k);
     const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height); g.drawImage(im, 0, 0, c.width, c.height);
     const png = /png|gif|webp/.test(file.type) && c.width * c.height < 1.2e6;
-    const s = L.open.slides[L.cur];
-    s.img = { src: c.toDataURL(png ? 'image/png' : 'image/jpeg', 0.86), w: c.width, h: c.height, source: source || (s.img ? s.img.source : '') };
+    return { src: c.toDataURL(png ? 'image/png' : 'image/jpeg', 0.86), w: c.width, h: c.height };
+  } finally { URL.revokeObjectURL(url); }
+}
+async function setPicture(file, source) {
+  try {
+    const p = await shrinkPic(file), s = L.open.slides[L.cur];
+    s.img = { ...p, source: source || (s.img ? s.img.source : '') };
     lessonChanged(); renderEditor();
   } catch { toast('That picture couldn’t be opened'); }
-  finally { URL.revokeObjectURL(url); }
 }
 
 /* ---------- lessons: create, attach, list ---------- */
@@ -738,6 +751,7 @@ function lessonText(l) {
     if (s.video) t += '[Video: ' + s.video.url + (s.video.title ? ' (' + videoSource(s.video) + ')' : '') + ']\n';
     if (s.notes) t += 'Notes: ' + s.notes + '\n';
     if (s.ask) t += 'What I want on this slide: ' + s.ask + '\n';
+    for (const c of s.ctx || []) t += '[Screenshot for context, not on the slide' + (c.note ? ': ' + c.note : '') + (L.dir && L.dirOk && ctxFile(s, c) ? ' (in my Planner folder: ' + ctxFile(s, c) + ')' : '') + ']\n';
     for (const m of s.talk) if (!m.done) t += (m.by === 'claude' ? 'Claude: ' : 'My comment: ') + m.text + '\n';
   });
   if (l.notebook) t += '\n## My notebook for this lesson\n' + nbText(l.notebook) + '\n';
@@ -747,7 +761,8 @@ function lessonText(l) {
 async function askClaude(l) {
   const where = L.dir && L.dirOk ? 'It is saved in my Planner folder as "' + fileBase(l) + '.lesson.json". Edit that file directly (keep the same id), and I will pick up your changes in the Planner.\n\n' : '';
   await copyText('Here is a lesson from my Planner. ' + where + 'Slide text stays 28 to 36 pt; keep my simple bullet style. In slide text, a line starting with "• " is a bullet and "1. " is a number (only where I put them), a tab indents, **bold**, *italic* and __underline__ work, and {red}words{/} are colored (red, orange, green, blue, purple, gray).\n\n' + lessonText(l));
-  toast('Lesson copied. Paste it into Claude and say what you want.', 5000);
+  const shots = l.slides.reduce((n, s) => n + (s.ctx || []).length, 0);
+  toast('Lesson copied. Paste it into Claude and say what you want.' + (shots && !(L.dir && L.dirOk) ? ' Its ' + (shots === 1 ? 'screenshot doesn’t' : shots + ' screenshots don’t') + ' come along as text: use Copy on each one and paste it in too.' : ''), 7000);
 }
 
 /* ---------- import ---------- */
@@ -1005,6 +1020,9 @@ stripe, band, bigtype, framed, notebook, chalk. Leave it out to use the teacher'
 "ask", "talk", "status" and "claudeNote" are for working together, and are all optional:
 - "notebook" (on a lesson or unit) is the teacher's own jotted thoughts, as simple HTML. Read it for ideas; don't edit it.
 - A slide's "ask" is what the teacher wants on that slide. Use it, and leave it as it is.
+- A slide's "ctx" is screenshots the teacher added for context (like assignment instructions), not shown on the slide:
+  [{ "id", "src": "images/ctx-….png", "w", "h", "note": "what it is" }]. Open the image files and use them; leave "ctx" as it is.
+  To put one on a slide, use its "src" as a picture slide's "img.src".
 - A slide's "talk" is comments: { "by": "you" | "claude", "text": "…" }. Reply by adding one with "by": "claude".
   Don't edit or remove the teacher's comments.
 - "status": "claude" means the teacher sent it to you; set it to "review" when you're done.
@@ -1053,12 +1071,18 @@ async function folderReconnect(ask) {
   if (L.view === 'week') renderWeek(); else { const c = document.querySelector('#lessons [data-a="reconnect"],#lessons [data-a="sync"],#lessons [data-a="link"]'); if (c) c.outerHTML = folderChip(); }
 }
 async function writeFile(dir, name, data) { const fh = await dir.getFileHandle(name, { create: true }); const w = await fh.createWritable(); await w.write(data); await w.close(); return (await fh.getFile()).lastModified; }
+// Where a slide's context screenshot is saved in the Planner folder.
+const ctxFile = (s, x) => { const m = /^data:image\/(png|jpeg);base64,/.exec(x.src); return m ? 'images/ctx-' + s.id + '-' + hash(x.src).slice(0, 8) + (m[1] === 'png' ? '.png' : '.jpg') : /^images\//.test(x.src) ? x.src : ''; };
 function lessonForFile(l, imgs) {   // imgs: Map to collect pictures as separate files; null = keep them inline
   const c = JSON.parse(JSON.stringify(l));
   for (const s of c.slides) if (s.img && imgs) {
     const m = /^data:image\/(png|jpeg);base64,/.exec(s.img.src); if (!m) continue;
     const name = 'images/' + s.id + '-' + hash(s.img.src).slice(0, 8) + (m[1] === 'png' ? '.png' : '.jpg');
     imgs.set(name, s.img.src); s.img.src = name;
+  }
+  for (const s of c.slides) for (const x of s.ctx || []) if (imgs) {
+    const m = /^data:image\/(png|jpeg);base64,/.exec(x.src); if (!m) continue;
+    const name = ctxFile(s, x); imgs.set(name, x.src); x.src = name;
   }
   delete c._file; delete c._mod; delete c.pending;
   return c;
@@ -1109,11 +1133,13 @@ async function folderRead(say) {
       let j; try { j = JSON.parse(await f.text()); } catch { continue; }
       const l = normLesson(j), old = L.lessons.find(x => x.id === l.id);
       if (old && old._file && old._file !== name) { continue; }   // a stale copy under an old name
+      const fromImages = async p => { const idir = await L.dir.getDirectoryHandle('images'); const b = await (await idir.getFileHandle(p.slice(7))).getFile(); return new Promise(r => { const fr = new FileReader(); fr.onload = () => r(fr.result); fr.readAsDataURL(b); }); };
       for (const s of l.slides) if (s.img && /^images\//.test(s.img.src)) {
-        try { const idir = await L.dir.getDirectoryHandle('images'); const b = await (await idir.getFileHandle(s.img.src.slice(7))).getFile(); s.img.src = await new Promise(r => { const fr = new FileReader(); fr.onload = () => r(fr.result); fr.readAsDataURL(b); }); if (!s.img.w) { const im = new Image(); im.src = s.img.src; await im.decode(); s.img.w = im.naturalWidth; s.img.h = im.naturalHeight; } }
+        try { s.img.src = await fromImages(s.img.src); if (!s.img.w) { const im = new Image(); im.src = s.img.src; await im.decode(); s.img.w = im.naturalWidth; s.img.h = im.naturalHeight; } }
         catch { delete s.img; }
       }
-      l.slides.forEach(s => { if (s.img && !imgSrc(s.img.src)) delete s.img; });
+      for (const s of l.slides) for (const x of s.ctx || []) if (/^images\//.test(x.src)) { try { x.src = await fromImages(x.src); } catch { x.src = ''; } }
+      l.slides.forEach(s => { if (s.img && !imgSrc(s.img.src)) delete s.img; if (s.ctx) { s.ctx = s.ctx.filter(x => imgSrc(x.src)); if (!s.ctx.length) delete s.ctx; } });
       for (const s of l.slides) if (s.video && ytId(s.video.url) && !s.video.thumb) { const v = await videoFrom(s.video.url); s.video = { ...v, start: s.video.start || v.start, title: s.video.title || v.title }; }   // Claude gives just the link
       l._file = name; l._mod = f.lastModified; l.updated = Date.now(); if (old) l.created = old.created;
       await claudeChanged(old, l);
