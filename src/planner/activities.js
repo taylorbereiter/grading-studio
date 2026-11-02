@@ -150,6 +150,47 @@ function actCard(a) {
     '<p>' + esc(a.what) + '</p><details><summary>How to run it</summary><ol>' + a.how.map(x => '<li>' + esc(x) + '</li>').join('') + '</ol>' + (a.tip ? '<p class="muted">' + esc(a.tip) + '</p>' : '') + '</details>' +
     '<div class="pl-aa"><button class="btn sm primary" data-a="useact" data-id="' + esc(a.id) + '">Add to a lesson…</button>' + (a.mine ? '<button class="btn sm ghost" data-a="editact" data-id="' + esc(a.id) + '">Edit</button>' : '') + '</div></article>';
 }
+const actSlide = a => normSlide({ layout: 'steps', title: a.name, body: a.slide.map((x, i) => (i + 1) + '. ' + x).join('\n'), size: 32, fmt: 2, notes: 'How to run it:\n' + a.how.map((x, i) => (i + 1) + '. ' + x).join('\n') + (a.book ? '\n(' + BOOK + ', routine ' + a.book + ')' : '') });
+
+/* ---------- the bank in the side panel, next to the lesson you're on ---------- */
+const SA = { q: '', part: '', kind: '', open: '' };
+async function spActsList() {
+  const q = SA.q.toLowerCase();
+  const list = (await allActivities()).filter(a => (!SA.part || a.parts.includes(SA.part)) && (!SA.kind || a.kind === SA.kind) && (!q || (a.name + ' ' + a.what + ' ' + a.group + (a.book ? ' routine ' + a.book : '')).toLowerCase().includes(q)));
+  if (!list.length) return '<p class="muted sp-small">Nothing matches. Try another word or filter.</p>';
+  const can = L.view === 'edit' && L.open;
+  return list.map(a => {
+    const open = SA.open === a.id;
+    return '<div class="sp-act' + (open ? ' open' : '') + '"><button class="sp-act-h" data-sact="' + esc(a.id) + '"><b>' + esc(a.name) + '</b><span>' + a.parts.map(p => PARTS[p]).join(' · ') + ' · ' + esc(a.group) + (a.book ? ' · Routine ' + a.book : '') + (a.mine ? ' · Mine' : '') + '</span></button>' +
+      (open ? '<div class="sp-act-b"><p>' + esc(a.what) + '</p><b class="sp-small">How to run it</b><ol>' + a.how.map(x => '<li>' + esc(x) + '</li>').join('') + '</ol>' + (a.tip ? '<p class="muted sp-small">' + esc(a.tip) + '</p>' : '') +
+        '<b class="sp-small">On the slide for students</b><ol>' + a.slide.map(x => '<li>' + esc(x) + '</li>').join('') + '</ol>' +
+        (can ? '<button class="btn sm primary" data-sactadd="' + esc(a.id) + '">+ Add after the slide I’m on</button>' : '<button class="btn sm" data-sactuse="' + esc(a.id) + '">Add to a lesson…</button>') + '</div>' : '') + '</div>';
+  }).join('');
+}
+async function spActsHtml() {
+  return '<div class="sp-acts"><input type="search" class="btn sm" data-sf="actq" placeholder="Find an activity, or a routine number" value="' + esc(SA.q) + '" style="width:100%;justify-content:flex-start">' +
+    '<div class="pl-chips">' + ['', ...Object.keys(PARTS)].map(p => '<button class="pl-chip' + (SA.part === p ? ' on' : '') + '" data-sactp="' + p + '">' + (p ? PARTS[p] : 'Any part') + '</button>').join('') + '</div>' +
+    '<div class="pl-chips">' + ['', ...Object.keys(KINDS)].map(k => '<button class="pl-chip' + (SA.kind === k ? ' on' : '') + '" data-sactk="' + k + '">' + (k ? KINDS[k] : 'Any kind') + '</button>').join('') + '</div>' +
+    '<div id="spActList">' + await spActsList() + '</div><p class="muted sp-small">Routine numbers are from ' + esc(BOOK) + '. Open the book under Books for the full version.</p></div>';
+}
+async function spActsRefresh() { const el = $('#spActList'); if (el) el.innerHTML = await spActsList(); }
+async function spActsClick(e) {
+  const t = e.target.closest('[data-sact],[data-sactp],[data-sactk],[data-sactadd],[data-sactuse]'); if (!t) return false;
+  if (t.dataset.sact != null) { SA.open = SA.open === t.dataset.sact ? '' : t.dataset.sact; await spActsRefresh(); return true; }
+  if (t.dataset.sactp != null) { SA.part = t.dataset.sactp; panelRender(); return true; }
+  if (t.dataset.sactk != null) { SA.kind = t.dataset.sactk; panelRender(); return true; }
+  const a = (await allActivities()).find(x => x.id === (t.dataset.sactadd || t.dataset.sactuse)); if (!a) return true;
+  if (t.dataset.sactuse) { await useActivity(a.id); return true; }
+  const l = L.open; if (!l) return true;
+  editorCommit();
+  const at = L.cur + 1; l.slides.splice(at, 0, actSlide(a)); L.cur = at;
+  lessonChanged(false); renderEditor(); await spActsRefresh();
+  toast('Added “' + a.name + '” as slide ' + (at + 1) + '. The how-to steps are in the speaker notes.', 5000);
+  return true;
+}
+let spActT;
+function spActsInput(e) { if (e.target.dataset.sf !== 'actq') return false; SA.q = e.target.value; clearTimeout(spActT); spActT = setTimeout(spActsRefresh, 150); return true; }
+
 // A Directions slide made from the activity's student steps, put after the current slide of a lesson.
 async function useActivity(id) {
   const a = (await allActivities()).find(x => x.id === id); if (!a) return;
@@ -165,7 +206,7 @@ async function useActivity(id) {
     let l = null;
     if (e.target.closest('[data-newl]')) { l = normLesson({ title: a.name, slots: [], slides: [{ layout: 'title', title: a.name }] }); }
     else { const b = e.target.closest('[data-pk]'); if (!b) return; l = L.lessons.find(x => x.id === b.dataset.pk); }
-    const s = normSlide({ layout: 'steps', title: a.name, body: a.slide.join('\n'), size: 32, notes: 'How to run it:\n' + a.how.map((x, i) => (i + 1) + '. ' + x).join('\n') + (a.book ? '\n(' + BOOK + ', routine ' + a.book + ')' : '') });
+    const s = actSlide(a);
     const at = L.open === l ? L.cur + 1 : l.slides.length;
     l.slides.splice(at, 0, s);
     await lPut(l); closeDlg();

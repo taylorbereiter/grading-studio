@@ -10,7 +10,7 @@
    - Claude: things gathered for Claude (slides, pages, a video, a unit week) plus what the teacher types or
      says, copied in one go to paste into Claude. */
 const SP = { open: false, tab: 'books', w: 420, view: 'page', book: null, pdf: null, page: 1, outline: null, find: '', hits: null, texts: {}, video: '', box: { text: '', chips: [] } };
-const SP_TABS = { books: 'Books', video: 'Video', atlas: 'Atlas', notes: 'Notebook', claude: 'Claude' };
+const SP_TABS = { books: 'Books', acts: 'Activities', video: 'Video', atlas: 'Atlas', notes: 'Notebook', claude: 'Claude' };
 try { const v = JSON.parse(localStorage.getItem('gsp.panel') || '{}'); if (SP_TABS[v.tab]) SP.tab = v.tab; SP.open = !!v.open; if (v.w >= 300 && v.w <= 900) SP.w = v.w; } catch { }
 const spKeep = () => { try { localStorage.setItem('gsp.panel', JSON.stringify({ open: SP.open, tab: SP.tab, w: SP.w })); } catch { } };
 
@@ -51,6 +51,7 @@ async function panelRender() {
   if (SP.tab === 'video') b.innerHTML = videoHtml();
   if (SP.tab === 'atlas') b.innerHTML = await atlasHtml();
   if (SP.tab === 'claude') b.innerHTML = boxHtml();
+  if (SP.tab === 'acts') b.innerHTML = await spActsHtml();
   if (SP.tab === 'notes') { b.innerHTML = await notebookHtml(); notebookWire(); }
   if (SP.tab === 'books' && SP.pdf) bookPage(SP.page);
 }
@@ -281,6 +282,7 @@ document.addEventListener('click', e => { const b = e.target.closest('[data-dict
 /* ---------- events ---------- */
 async function panelClick(e) {
   if (notebookClick(e)) return;
+  if (await spActsClick(e)) return;
   const t = e.target.closest('[data-st],[data-sa],[data-sbook],[data-sdel],[data-pg],[data-schip],[data-shot]'); if (!t) return;
   if (t.dataset.st) { SP.tab = t.dataset.st; spKeep(); return panelRender(); }
   if (t.dataset.sbook) return bookOpen(t.dataset.sbook);
@@ -311,6 +313,7 @@ async function panelClick(e) {
 }
 let boxT;
 function panelInput(e) {
+  if (spActsInput(e)) return;
   if (e.target.dataset.sf === 'boxtext') { SP.box.text = e.target.value; clearTimeout(boxT); boxT = setTimeout(boxSave, 300); }
 }
 async function panelDrop(e) {
