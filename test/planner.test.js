@@ -861,3 +861,34 @@ test('screenshots for context: pasted or dropped on a slide’s Claude box, note
     assert.deepEqual(errors, []);
   } finally { await a.done(); }
 });
+
+test('comments I made on slides: right-click comments stay on the slide, thumbnails show a count, and Comments lists them all', async () => {
+  const a = await open();
+  try {
+    const { page, errors } = a;
+    await page.evaluate(() => { const P = window.__planner, l = P.normLesson({ title: 'Claims', slides: [{ layout: 'title', title: 'Claims', fmt: 2 }, { layout: 'content', title: 'Counterclaims', fmt: 2, talk: [{ by: 'you', text: 'Use the ad from Tuesday' }] }, { layout: 'content', title: 'Exit', fmt: 2 }] }); P.L.lessons.push(l); P.openLessonForTest(l, 0); });
+    await page.waitForSelector('.ls-th[data-go="1"] .ls-thc');
+    assert.equal(await page.$eval('.ls-th[data-go="1"] .ls-thc', b => b.textContent), '💬 1');
+    assert.equal(await page.$eval('[data-a="comments"]', b => b.textContent), 'Comments (1)');
+    // a right-click comment on slide 3 is kept on that slide too
+    await page.click('.ls-th[data-go="2"]', { button: 'right' });
+    await page.click('.pl-ctx [data-cx="note"]');
+    await page.type('#plNoteT', 'Make this a sticky-note exit ticket');
+    await page.click('.pl-note [data-nok]');
+    await page.waitForSelector('.ls-th[data-go="2"] .ls-thc');
+    assert.deepEqual(await page.evaluate(() => window.__planner.L.open.slides[2].talk.map(t => t.text)), ['Make this a sticky-note exit ticket']);
+    // the list: both, by slide; Done hides one; clicking a slide goes there
+    await page.click('[data-a="comments"]');
+    await page.waitForSelector('.pl-cmts');
+    assert.match(await page.$eval('.pl-cmts', d => d.textContent), /Slide 2: Counterclaims[\s\S]*Use the ad from Tuesday[\s\S]*Slide 3: Exit[\s\S]*sticky-note exit ticket/);
+    await page.click('[data-cdone="1:0"]');
+    await page.waitForFunction(() => !/Use the ad/.test(document.querySelector('.pl-cmts').textContent));
+    await page.click('[data-cshow]');
+    await page.waitForFunction(() => /Use the ad/.test(document.querySelector('.pl-cmts').textContent));
+    await page.click('[data-cgo="2"]');
+    await page.waitForFunction(() => window.__planner.L.cur === 2 && document.querySelector('#dlg').hidden);
+    assert.equal(await page.$eval('[data-a="comments"]', b => b.textContent), 'Comments (1)');
+    assert.equal(await page.$('.ls-th[data-go="1"] .ls-thc'), null);
+    assert.deepEqual(errors, []);
+  } finally { await a.done(); }
+});

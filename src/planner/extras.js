@@ -56,7 +56,16 @@ function noteOpen(c, x, y) {
     '<div class="sp-bar"><button class="btn sm" data-dict="#plNoteT">🎤 Dictate</button><span class="sp"></span><button class="btn sm ghost" data-nx>Cancel</button><button class="btn sm primary" data-nok>Add to Claude box</button></div>';
   ctxEl = box; ctxPlace(box, x, y);
   const t = box.querySelector('textarea'); t.focus();
-  const ok = async () => { const v = t.value.trim(); if (!v) return t.focus(); ctxClose(); await boxAdd({ kind: 'note', about: c, text: v }); };
+  const ok = async () => {
+    const v = t.value.trim(); if (!v) return t.focus(); ctxClose();
+    // A comment on a slide is also kept on that slide, so it shows under the slide and in Comments.
+    const l = c.kind === 'slide' && L.lessons.find(x => x.id === c.lesson), s = l && l.slides[c.i];
+    if (s) {
+      s.talk.push({ by: 'you', text: v, at: Date.now() });
+      if (L.open && L.open.id === l.id) { lessonChanged(false); if (L.view === 'edit') renderEditor(); } else { l.updated = Date.now(); await lPut(l); }
+    }
+    await boxAdd({ kind: 'note', about: c, text: v });
+  };
   t.onkeydown = ev => { if (ev.key === 'Enter' && (ev.metaKey || ev.ctrlKey)) { ev.preventDefault(); ok(); } };
   box.onclick = ev => { if (ev.target.closest('[data-nx]')) ctxClose(); else if (ev.target.closest('[data-nok]')) ok(); };
 }
