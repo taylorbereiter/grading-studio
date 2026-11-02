@@ -307,6 +307,10 @@ h1 i,.top .title i{font-style:normal;font-weight:500;color:var(--accent)}
 .pl-vt.on{background:var(--accent-soft);border-color:var(--accent);font-weight:600;cursor:default;display:inline-flex;align-items:center;gap:6px}
 .pl-vr{border:0;background:none;padding:0;cursor:pointer;color:var(--muted);font-size:12px}
 .pl-vtag{display:inline-block;margin-left:6px;font-size:11.5px;padding:1px 7px;border-radius:999px;background:var(--accent-soft);color:var(--fg);font-weight:500}
+.ls-cardw{position:relative}.ls-cardw>.ls-card{padding-right:34px}
+.ls-dl{position:absolute;top:5px;right:5px;width:26px;height:26px;border:1px solid var(--line-strong);border-radius:6px;background:var(--surface);cursor:pointer;font-size:14px;line-height:1;color:var(--fg)}
+.ls-dl:hover{background:var(--accent-soft)}
+.pl-done{font-size:11.5px;font-weight:600;color:#2B8A3E}
 .pl-fin{margin-top:14px;border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:var(--surface)}
 .pl-fin-h{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.pl-fin-h h3{margin:0;font-size:15px}
 .pl-fin .pl-files{margin-top:10px}.pl-fin-old{margin-top:8px;font-size:13px}.pl-fin-old summary{cursor:pointer;color:var(--muted)}
@@ -1503,7 +1507,7 @@ function renderWeek() {
   let h = topBar('week', '<button class="btn sm ghost" data-a="wk" data-n="-7" aria-label="Previous week">‹</button>' +
     '<span class="ls-wk">' + LMONTHS[mon.getMonth()].slice(0, 3) + ' ' + mon.getDate() + ' – ' + (fri.getMonth() !== mon.getMonth() ? LMONTHS[fri.getMonth()].slice(0, 3) + ' ' : '') + fri.getDate() + '</span>' +
     '<button class="btn sm ghost" data-a="wk" data-n="7" aria-label="Next week">›</button><button class="btn sm ghost" data-a="today">This week</button>' +
-    '<input type="date" class="btn sm" data-a="jump" value="' + L.weekOf + '" aria-label="Go to a date">' + (L.setup ? '<button class="btn sm ghost" data-a="printweek">Print week</button>' : ''));
+    '<input type="date" class="btn sm" data-a="jump" value="' + L.weekOf + '" aria-label="Go to a date">' + (L.setup ? '<button class="btn sm ghost" data-a="dlweek" title="Every lesson on the calendar this week, with its PowerPoint and materials, in one .zip">↓ Download week</button><button class="btn sm ghost" data-a="printweek">Print week</button>' : ''));
   if (!L.setup) {
     h += '<div class="ls-empty"><h2>Load your profile</h2><p>Lessons line up with your classes once the app knows when they meet. Load your profile file (your timetable, school calendar, units and slide template), drop it on this page, or type your classes in. You do this once on each computer.</p>' +
       '<div class="row"><button class="btn primary" data-a="loadsetup">Load my profile…</button><button class="btn" data-a="setup">Type in my classes</button><button class="btn" data-a="newfree">Make a lesson without a class</button></div></div>';
@@ -1519,7 +1523,8 @@ function renderWeek() {
       for (const { c, m } of ms) {
         const ls = lessonsAt(c.id, d);
         h += '<div class="ls-slot" style="--cc:' + esc(c.color || '#1F6FB2') + '"><div class="ls-sh"><b>' + esc(c.name) + '</b><span>' + hm(m.start) + '–' + hm(m.end) + (m.label ? ' · ' + esc(m.label) : '') + '</span>' + mbBtn(c) + '</div>';
-        for (const l of ls) h += '<button class="ls-card" data-open="' + l.id + '"><b>' + esc(l.title) + '</b>' + varTag(l) + statusChip(l) + '<span>' + l.slides.length + ' slide' + (l.slides.length === 1 ? '' : 's') + (l.slots.length > 1 ? ' · also ' + esc(l.slots.filter(s => !(s.classId === c.id && s.date === d)).map(s => className(s.classId) + ' ' + shortDate(s.date)).join(', ')) : '') + '</span></button>';
+        for (const l of ls) h += '<div class="ls-cardw"><button class="ls-card" data-open="' + l.id + '"><b>' + esc(l.title) + '</b>' + varTag(l) + statusChip(l) + (l.final ? '<span class="pl-done" title="' + esc(l.final.name) + '">Finished ✓</span>' : '') + '<span>' + l.slides.length + ' slide' + (l.slides.length === 1 ? '' : 's') + (l.slots.length > 1 ? ' · also ' + esc(l.slots.filter(s => !(s.classId === c.id && s.date === d)).map(s => className(s.classId) + ' ' + shortDate(s.date)).join(', ')) : '') + '</span></button>' +
+          '<button class="ls-dl" data-dl="' + l.id + '" title="' + (l.final ? 'Download ' + esc(l.final.name) : 'Download a PowerPoint made from these slides') + '" aria-label="Download">↓</button></div>';
         h += '<div class="ls-add"><button class="btn sm ghost" data-new="' + esc(c.id) + '|' + d + '">+ New lesson</button>' + (L.lessons.length ? '<button class="btn sm ghost" data-attach="' + esc(c.id) + '|' + d + '">Use a lesson…</button>' : '') + '</div></div>';
       }
       h += '</div>';
@@ -1545,6 +1550,7 @@ function renderEditor() {
     '<button class="btn sm" data-a="send" title="Copy this lesson for Claude, to paste where you’re working with Claude">Copy for Claude</button>' +
     commentsBtn(l) + '<button class="btn sm ghost" data-a="versions">Versions</button>' + panelBtn() +
     '<button class="btn sm ghost" data-a="more">More ▾</button>' +
+    '<button class="btn sm" data-a="finzip" title="Upload the finished PowerPoint and its files as one .zip">↑ Upload lesson .zip</button>' +
     '<button class="btn sm primary" data-a="pptx">Download .pptx</button></div>' + pendingBar(l) + variantBar(l);
   h += '<div class="ls-ed-cols"><nav class="ls-thumbs" id="lsThumbs">' + l.slides.map((x, i) => thumbHtml(x, l, i)).join('') +
     '<div class="ls-addslide"><button class="btn sm" data-a="addslide">+ Add slide</button></div></nav>';
@@ -1693,8 +1699,9 @@ async function onLessonsClick(e) {
   const mt = e.target.closest('[data-ma]'); if (mt && await matClick(mt)) return;
   if (await bankClick(e)) return;
   if (await unitsClick(e)) return;
-  const t = e.target.closest('[data-a],[data-mbset],[data-open],[data-new],[data-attach],[data-go],[data-addslide],[data-unslot],[data-talkdone],[data-ctxview],[data-ctxcopy],[data-ctxput],[data-ctxdel],[data-var],.ls-ed');
+  const t = e.target.closest('[data-a],[data-mbset],[data-open],[data-new],[data-attach],[data-go],[data-addslide],[data-unslot],[data-talkdone],[data-ctxview],[data-ctxcopy],[data-ctxput],[data-ctxdel],[data-var],[data-dl],.ls-ed');
   if (t && t.dataset.mbset) return mbDlg(t.dataset.mbset);
+  if (t && t.dataset.dl) return dlCard(t.dataset.dl);
   if (!t) return;
   if (L.view === 'edit' && (await reviewClick(t) || await finishedClick(t) || await variantsClick(t))) return;
   if (L.view === 'activities' && t.dataset.a && await activitiesClick(t)) return;
@@ -1711,6 +1718,7 @@ async function onLessonsClick(e) {
   if (a === 'today') { L.weekOf = ymd(mondayOf(new Date())); return renderWeek(); }
   if (a === 'back') { editorCommit(); clearTimeout(lSaveT); if (L.open) await lPut(L.open); L.open = null; L.view = L.backTo || 'week'; L.backTo = null; return renderLessons(); }
   if (a === 'printweek') return printWeek();
+  if (a === 'dlweek') return dlWeek();
   if (a === 'newfree') return createLesson([]);
   if (a === 'all') return showAllLessons();
   if (a === 'setup') return openTimetable();
@@ -3283,7 +3291,7 @@ function finishedHtml(l) {
   const f = l.final, old = l.finals || [];
   return '<div class="pl-fin" id="plFin"><div class="pl-fin-h"><h3>Finished PowerPoint</h3><span class="muted sp-small">' +
     (f ? 'The deck you’ll teach from. Uploading a new one replaces it; the old one is kept below.' : 'Upload the deck when it’s done. Its slides replace the ones here, and this version is kept under Versions.') +
-    '</span><span class="sp"></span><button class="btn sm' + (f ? ' ghost' : ' primary') + '" data-a="finup">' + (f ? 'Upload a newer one…' : 'Upload finished .pptx…') + '</button><button class="btn sm ghost" data-a="finzip" title="A .zip with the finished PowerPoint and the lesson’s handouts and files">Upload lesson .zip…</button><input type="file" id="finIn" accept=".pptx,.zip,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/zip" hidden></div>' +
+    '</span><span class="sp"></span><button class="btn sm' + (f ? ' ghost' : ' primary') + '" data-a="finup">' + (f ? 'Upload a newer one…' : 'Upload finished .pptx…') + '</button><button class="btn sm ghost" data-a="finall" title="The PowerPoint and every file in Materials, in one .zip">↓ Download all (.zip)</button><button class="btn sm ghost" data-a="finzip" title="A .zip with the finished PowerPoint and the lesson’s handouts and files">Upload lesson .zip…</button><input type="file" id="finIn" accept=".pptx,.zip,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/zip" hidden></div>' +
     (f ? '<div class="pl-files"><div class="pl-file"><span class="pl-ft">PPT</span><span class="pl-fn"><b>' + esc(f.name) + '</b><span>' + finSize(f.size) + ' · uploaded ' + finWhen(f.at) + (finFresh(l) ? '' : ' · slides changed here since') + '</span></span>' +
       '<button class="btn sm" data-a="findl" data-id="' + f.id + '">Download</button></div></div>' : '') +
     (old.length ? '<details class="pl-fin-old"><summary>Older finished decks (' + old.length + ')</summary><div class="pl-files">' + old.map(o => '<div class="pl-file"><span class="pl-ft">PPT</span><span class="pl-fn"><b>' + esc(o.name) + '</b><span>' + finSize(o.size) + ' · uploaded ' + finWhen(o.at) + '</span></span>' +
@@ -3373,6 +3381,7 @@ async function finishedClick(t) {
   const a = t.dataset.a, l = L.open; if (!l) return false;
   if (a === 'finup') { finPick(); return true; }
   if (a === 'finzip') { finPick(); return true; }
+  if (a === 'finall') { await dlLessonZip(l); return true; }
   if (a === 'findl') { const f = [l.final, ...(l.finals || [])].find(x => x && x.id === t.dataset.id); if (f) await finDownload(f.id, f.name); return true; }
   if (a === 'finback') { await finBack(l, t.dataset.id); return true; }
   return false;
@@ -3493,6 +3502,45 @@ async function pptxToSlides(u8) {
     out.push(s);
   }
   return out;
+}
+
+/* ---------- downloads from the calendar: one lesson, one lesson with its files, a whole week ---------- */
+const safeName = s => String(s || '').replace(/[\\/:*?"<>|\u0000-\u001f]+/g, '-').replace(/\s+/g, ' ').trim().slice(0, 90) || 'Lesson';
+async function deckFor(l) {
+  if (l.final) { const b = await fileBlob(l.final.id); if (b) return { name: l.final.name, u8: new Uint8Array(await b.arrayBuffer()) }; }
+  if (!L.setup || !L.setup.template) return null;
+  try { return { name: fileBase(l) + '.pptx', u8: buildPptx(l) }; } catch (e) { console.warn(e); return null; }
+}
+async function lessonEntries(l, dir) {
+  const out = {}, used = new Set(), put = (name, u8) => { let n = safeName(name), k = 2; while (used.has(n.toLowerCase())) n = safeName(name).replace(/(\.\w+)?$/, m => ' (' + (k++) + ')' + m); used.add(n.toLowerCase()); out[(dir ? dir + '/' : '') + n] = [u8, { level: 0 }]; };
+  const d = await deckFor(l); if (d) put(d.name, d.u8);
+  for (const f of l.files || []) {
+    const b = await fileBlob(f.id); if (!b) continue;
+    if (f.kind === 'doc') put(f.name + '.docx', new Uint8Array(await (await docxOf(await b.text(), f.name)).arrayBuffer()));
+    else put(f.name, new Uint8Array(await b.arrayBuffer()));
+  }
+  return out;
+}
+async function dlLessonZip(l) {
+  const e = await lessonEntries(l, ''); if (!Object.keys(e).length) return toast('Nothing to download yet: load your profile (for the slide template) or upload a finished deck');
+  saveBlob(fileBase(l) + '.zip', new Blob([fflate.zipSync(e)], { type: 'application/zip' }));
+}
+async function dlWeek() {
+  const mon = parseYmd(L.weekOf), days = [0, 1, 2, 3, 4].map(i => ymd(addDays(mon, i)));
+  const all = {}; let n = 0;
+  toast('Getting the week’s lessons ready…', 60000);
+  for (const d of days) for (const { c } of meetingsOn(d)) for (const l of lessonsAt(c.id, d)) {
+    const dt = parseYmd(d), dir = safeName(LDAYS[dt.getDay()].slice(0, 3) + ' ' + (dt.getMonth() + 1) + '-' + dt.getDate() + ' · ' + c.name + ' · ' + l.title + (l.variantOf || l.variant ? ' (' + varName(l) + ')' : ''));
+    Object.assign(all, await lessonEntries(l, dir)); n++;
+  }
+  if (!n) return toast('No lessons on the calendar this week');
+  saveBlob(safeName('Lessons week of ' + LMONTHS[mon.getMonth()].slice(0, 3) + ' ' + mon.getDate()) + '.zip', new Blob([fflate.zipSync(all)], { type: 'application/zip' }));
+  toast(n + ' lesson' + (n === 1 ? '' : 's') + ' downloaded in one .zip', 5000);
+}
+async function dlCard(id) {
+  const l = L.lessons.find(x => x.id === id); if (!l) return;
+  if (l.final) return finDownload(l.final.id, l.final.name);
+  return downloadPptx(l);
 }
 
 /* ================= Planner: alternative versions of a lesson =================
@@ -4719,7 +4767,7 @@ async function unitsFolderRead() {
   return out;
 }
 
-window.__planner = { bankPut, normRubric, slideHtml, LOOKS, TEACH, TEACH_SAMPLE, versions: versionsOf, ytIds: us => us.map(u => [ytId(u), ytStart(u)]), openLessonForTest: (l, i) => { openLesson(l); goSlide(i || 0); }, L, applySetup, renderLessons, setPicture, folderWriteAll, folderRead, buildPptx, normLesson, normUnit, unitPut, unitAt, addUnitFiles, notGradingFolder, unitsFolderRead, semesterMondays, openUnit, docxOf, findAll, copyLesson, packImport, createLesson, lessonText, lessonForFile, pptxToSlides, finUpload, versionsOf, SP, lessonZip, variantsOf };
+window.__planner = { bankPut, normRubric, slideHtml, LOOKS, TEACH, TEACH_SAMPLE, versions: versionsOf, ytIds: us => us.map(u => [ytId(u), ytStart(u)]), openLessonForTest: (l, i) => { openLesson(l); goSlide(i || 0); }, L, applySetup, renderLessons, setPicture, folderWriteAll, folderRead, buildPptx, normLesson, normUnit, unitPut, unitAt, addUnitFiles, notGradingFolder, unitsFolderRead, semesterMondays, openUnit, docxOf, findAll, copyLesson, packImport, createLesson, lessonText, lessonForFile, pptxToSlides, finUpload, versionsOf, SP, lessonZip, variantsOf, lessonEntries, dlWeek };
 openLessons();
 
 })();
