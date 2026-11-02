@@ -97,6 +97,7 @@ async function findAll(q) {
       const t = [s.title, s.body && rtStrip(s.body), s.body2 && rtStrip(s.body2), s.notes, s.ask, ...EXTRA.map(k => s[k])].filter(Boolean).join(' · ');
       if (findNorm(t).includes(q)) out.push({ kind: 'slide', id: l.id, i, title: l.title + ', slide ' + (i + 1), where: when, snip: findSnip(t, q) });
     });
+    if (l.notebook) { const t = nbText(l.notebook); if (findNorm(t).includes(q)) out.push({ kind: 'lesson', id: l.id, i: 0, title: l.title + ', notebook', where: when, snip: findSnip(t, q) }); }
     for (const f of l.files || []) {
       let t = f.name;
       if (f.kind === 'doc') { const b = await fileBlob(f.id); if (b) { const tp = document.createElement('template'); tp.innerHTML = docClean(await b.text()); t += ' · ' + tp.content.textContent; } }

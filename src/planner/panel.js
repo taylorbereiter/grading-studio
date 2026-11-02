@@ -10,7 +10,7 @@
    - Claude: things gathered for Claude (slides, pages, a video, a unit week) plus what the teacher types or
      says, copied in one go to paste into Claude. */
 const SP = { open: false, tab: 'books', w: 420, view: 'page', book: null, pdf: null, page: 1, outline: null, find: '', hits: null, texts: {}, video: '', box: { text: '', chips: [] } };
-const SP_TABS = { books: 'Books', video: 'Video', atlas: 'Atlas', claude: 'Claude' };
+const SP_TABS = { books: 'Books', video: 'Video', atlas: 'Atlas', notes: 'Notebook', claude: 'Claude' };
 try { const v = JSON.parse(localStorage.getItem('gsp.panel') || '{}'); if (SP_TABS[v.tab]) SP.tab = v.tab; SP.open = !!v.open; if (v.w >= 300 && v.w <= 900) SP.w = v.w; } catch { }
 const spKeep = () => { try { localStorage.setItem('gsp.panel', JSON.stringify({ open: SP.open, tab: SP.tab, w: SP.w })); } catch { } };
 
@@ -42,6 +42,7 @@ const panelBtn = () => '<button class="btn sm ghost' + (SP.open ? ' on' : '') + 
 
 async function panelRender() {
   const d = $('#side'); if (!d || !SP.open) return;
+  await nbFlush();
   const n = SP.box.chips.length;
   d.innerHTML = '<div class="sp-edge" title="Drag to resize"></div><div class="sp-head"><nav class="sp-tabs">' + Object.entries(SP_TABS).map(([k, v]) => '<button class="' + (k === SP.tab ? 'on' : '') + '" data-st="' + k + '">' + v + (k === 'claude' && n ? ' <span class="sp-n">' + n + '</span>' : '') + '</button>').join('') +
     '</nav><button class="btn sm ghost" data-sa="close" aria-label="Close the side panel">×</button></div><div class="sp-body" id="spBody"></div>';
@@ -50,6 +51,7 @@ async function panelRender() {
   if (SP.tab === 'video') b.innerHTML = videoHtml();
   if (SP.tab === 'atlas') b.innerHTML = await atlasHtml();
   if (SP.tab === 'claude') b.innerHTML = boxHtml();
+  if (SP.tab === 'notes') { b.innerHTML = await notebookHtml(); notebookWire(); }
   if (SP.tab === 'books' && SP.pdf) bookPage(SP.page);
 }
 
@@ -199,7 +201,7 @@ async function atlasHtml() {
 }
 
 /* ---------- the Claude box ---------- */
-const CHIP_ICON = { slide: '▭', page: '📖', video: '▶', week: '📅', file: '📄', lesson: '📘', quote: '❝', note: '💬' };
+const CHIP_ICON = { notebook: '📓', slide: '▭', page: '📖', video: '▶', week: '📅', file: '📄', lesson: '📘', quote: '❝', note: '💬' };
 function boxHtml() {
   return '<div class="sp-pad sp-box"><p class="muted sp-small">Drag slides, book pages and chapters here, or use the “+ Claude box” buttons. Then say or type what you want, and copy it all for Claude.</p>' +
     '<div class="sp-chips" id="spChips">' + (SP.box.chips.length ? SP.box.chips.map((c, i) => '<span class="sp-chip">' + (CHIP_ICON[c.kind] || '•') + ' ' + esc(c.label) + '<button data-schip="' + i + '" aria-label="Remove">×</button></span>').join('') : '<span class="muted sp-small">Nothing here yet.</span>') + '</div>' +
@@ -213,6 +215,7 @@ async function chipLabel(c) {
   if (c.kind === 'slide') { const l = L.lessons.find(x => x.id === c.lesson), s = l && l.slides[c.i]; if (!s) return false; c.label = (l.title || 'Lesson') + ', slide ' + (c.i + 1) + (s.title ? ': ' + s.title : ''); }
   if (c.kind === 'file') { const o = ownerOf({ t: c.t, id: c.owner }), f = o && (o.files || []).find(x => x.id === c.id); if (!f) return false; c.label = f.name; }
   if (c.kind === 'lesson' || c.kind === 'quote') c.label = chipLabelNow(c);
+  if (c.kind === 'notebook') { const o = c.t === 'lesson' ? L.lessons.find(x => x.id === c.id) : c.t === 'unit' ? L.units.find(x => x.id === c.id) : null; if (c.t !== 'general' && !o) return false; c.label = 'Notebook: ' + (o ? o.title : 'General notes'); }
   if (c.kind === 'note') { if (!c.about || !(await chipLabel(c.about))) return false; c.label = 'Comment on ' + c.about.label; }
   return true;
 }
@@ -240,6 +243,7 @@ async function chipText(c) {
   if (c.kind === 'lesson') { const l = L.lessons.find(x => x.id === c.lesson); return l ? '[Lesson]\n' + lessonText(l).trim() : ''; }
   if (c.kind === 'quote') return '[' + c.label + ']' + (c.text ? '\n' + c.text : '');
   if (c.kind === 'note') return 'My comment: ' + c.text + '\nOn: ' + (await chipText(c.about) || c.label);
+  if (c.kind === 'notebook') { const o = c.t === 'lesson' ? L.lessons.find(x => x.id === c.id) : c.t === 'unit' ? L.units.find(x => x.id === c.id) : null; const h = c.t === 'general' ? await nbGet({ t: 'general' }) : o && o.notebook; return '[My notebook: ' + (o ? o.title : 'General notes') + ']\n' + (nbText(h || '') || '(empty)'); }
   if (c.kind === 'week') return '[' + c.label + ']' + (c.text ? '\n' + c.text : '');
   return c.label || '';
 }
@@ -258,12 +262,14 @@ function dictate(target, btn) {
   if (!R) return toast('Voice typing needs Chrome or Edge');
   if (dictRec) { dictRec.stop(); return; }
   const r = new R(); dictRec = r; r.lang = navigator.language || 'en-US'; r.continuous = true; r.interimResults = true;
-  const base = target.value, sep = base && !/\s$/.test(base) ? ' ' : '';
+  const ce = target.isContentEditable;
+  const base = ce ? '' : target.value, sep = base && !/\s$/.test(base) ? ' ' : '';
   let done = '';
   btn.classList.add('rec'); btn.textContent = '■ Stop';
   r.onresult = e => {
     let interim = '';
-    for (let i = e.resultIndex; i < e.results.length; i++) { const t = e.results[i][0].transcript; if (e.results[i].isFinal) done += t; else interim += t; }
+    for (let i = e.resultIndex; i < e.results.length; i++) { const t = e.results[i][0].transcript; if (e.results[i].isFinal) { done += t; if (ce) { target.focus(); document.execCommand('insertText', false, t.trim() + ' '); } } else interim += t; }
+    if (ce) return;
     target.value = base + sep + (done + interim).trim(); target.dispatchEvent(new Event('input', { bubbles: true }));
   };
   r.onerror = e => { if (e.error === 'not-allowed') toast('Allow the microphone for this page to use voice typing'); };
@@ -274,6 +280,7 @@ document.addEventListener('click', e => { const b = e.target.closest('[data-dict
 
 /* ---------- events ---------- */
 async function panelClick(e) {
+  if (notebookClick(e)) return;
   const t = e.target.closest('[data-st],[data-sa],[data-sbook],[data-sdel],[data-pg],[data-schip],[data-shot]'); if (!t) return;
   if (t.dataset.st) { SP.tab = t.dataset.st; spKeep(); return panelRender(); }
   if (t.dataset.sbook) return bookOpen(t.dataset.sbook);
@@ -299,6 +306,8 @@ async function panelClick(e) {
   if (a === 'weekbox') { const u = L.units.find(x => x.id === t.dataset.u), n = +t.dataset.n, w = u && u.weeks[n]; if (!w) return; return boxAdd({ kind: 'week', label: u.title + ', week ' + (n + 1) + ' of ' + u.weeks.length, text: [w.focus && 'Focus: ' + w.focus, w.standards && 'Standards: ' + w.standards, w.notes && 'Notes: ' + w.notes].filter(Boolean).join('\n') }); }
   if (a === 'boxclear') { SP.box = { text: '', chips: [] }; await boxSave(); return panelRender(); }
   if (a === 'boxcopy') return boxCopy();
+  if (a === 'nbswap') { await nbFlush(); SP.nbGeneral = !SP.nbGeneral; return panelRender(); }
+  if (a === 'nbbox') { await nbFlush(); const r = nbRef(); return boxAdd({ kind: 'notebook', t: r.t, id: r.o ? r.o.id : '' }); }
 }
 let boxT;
 function panelInput(e) {
@@ -325,5 +334,5 @@ let spCtx = '';
 function panelContext() {
   const k = L.view + '|' + (L.open ? L.open.id : '') + '|' + (L.unit ? L.unit.id : '') + '|' + L.weekOf;
   if (k === spCtx) return; spCtx = k;
-  if (SP.open && SP.tab === 'atlas') panelRender();
+  if (SP.open && (SP.tab === 'atlas' || SP.tab === 'notes')) { SP.nbGeneral = false; panelRender(); }
 }

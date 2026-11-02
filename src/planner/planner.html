@@ -360,6 +360,18 @@ body.has-side .lsn{margin-right:var(--sidew,420px)}
 .pl-hit{text-align:left}.pl-snip{display:block;font-size:12.5px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .sp-chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line-strong);background:var(--surface);border-radius:999px;padding:3px 4px 3px 10px;font-size:13px;max-width:100%}
 .sp-chip button{border:0;background:none;color:var(--muted);cursor:pointer;font-size:15px;line-height:1}
+.nb{height:100%;box-sizing:border-box;gap:6px}
+.nb-head{display:flex;align-items:center;gap:8px}.nb-head b{font-size:14.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.nb-head .sp{flex:1}
+.nb-tools{display:flex;flex-wrap:wrap;gap:2px;align-items:center;padding:3px;border:1px solid var(--line);border-radius:8px}
+.nb-tools .nb-tb{min-width:30px;padding-left:7px;padding-right:7px}
+.nb-ask{display:flex;gap:6px}.nb-ask[hidden]{display:none}.nb-ask input{flex:1;min-width:0;text-align:left;cursor:text}
+.nb-page{flex:1;min-height:260px;overflow:auto;border:1px solid var(--line-strong);border-radius:9px;padding:10px 12px;background:var(--surface);color:var(--fg);font:14.5px/1.5 var(--f-body);outline:none}
+.nb-page:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.nb-page:empty::before{content:attr(data-ph);color:var(--muted)}
+.nb-page p{margin:0 0 6px}.nb-page ul,.nb-page ol{margin:2px 0 6px;padding-left:1.4em}.nb-page h3{margin:8px 0 4px;font-size:15px}
+.nb-page a{color:var(--accent);text-decoration:underline;cursor:pointer}
+.nb-page img{display:block;max-width:100%;height:auto;border-radius:6px;margin:6px 0}
+.nb-page .nb-vid{position:relative;aspect-ratio:16/9;background:#000;border-radius:8px;overflow:hidden;margin:6px 0}.nb-page .nb-vid iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
 .sp-box textarea{width:100%;box-sizing:border-box;font:14px/1.45 var(--f-body);border:1px solid var(--line-strong);border-radius:9px;padding:8px;background:var(--surface);color:var(--fg);resize:vertical}
 .btn.rec{background:var(--danger,#c0392b);color:#fff;border-color:transparent}
 .pl-mic{margin-top:4px}
