@@ -94,7 +94,7 @@ async function findAll(q) {
     const when = l.slots.length ? l.slots.map(s => className(s.classId) + ' ' + shortDate(s.date)).join(', ') : 'Not on a class';
     if (findNorm(l.title).includes(q)) out.push({ kind: 'lesson', id: l.id, i: 0, title: l.title, where: when, snip: '' });
     l.slides.forEach((s, i) => {
-      const t = [s.title, s.body, s.body2, s.notes, s.ask, ...EXTRA.map(k => s[k])].filter(Boolean).join(' · ');
+      const t = [s.title, s.body && rtStrip(s.body), s.body2 && rtStrip(s.body2), s.notes, s.ask, ...EXTRA.map(k => s[k])].filter(Boolean).join(' · ');
       if (findNorm(t).includes(q)) out.push({ kind: 'slide', id: l.id, i, title: l.title + ', slide ' + (i + 1), where: when, snip: findSnip(t, q) });
     });
     for (const f of l.files || []) {

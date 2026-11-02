@@ -253,7 +253,7 @@ test('working with Claude: notes and comments go out, Claude’s changes come ba
     // there's no Approve: the lesson is always editable
     assert.equal(await page.$('[data-a="approve"]'), null);
     await page.click('.ls-stage .ls-body');
-    await page.waitForSelector('.ls-ta');
+    await page.waitForSelector('.ls-rted');
     // the file never carries the pending copy
     const file = await page.evaluate(async () => { const P = window.__planner; await new Promise(r => setTimeout(r, 1200)); return JSON.parse(await (await (await P.L.dir.getFileHandle(P.L.open._file)).getFile()).text()); });
     assert.equal(file.pending, undefined);
@@ -381,8 +381,9 @@ test('the layout picker shows pictures, changes a slide and keeps its text; less
     await page.click('#dlgBox [data-addslide="discuss"]');
     await page.waitForSelector('#lsStage .ls-bx[data-k="foot"]');
     const s = await page.evaluate(() => window.__planner.L.open.slides[1]);
-    assert.equal(s.layout, 'discuss'); assert.equal(s.title, 'Big question'); assert.equal(s.body, 'Is a claim the same as an opinion?');
-    assert.match(s.foot, /Talk with a partner/);
+    assert.equal(s.layout, 'discuss'); assert.equal(s.title, 'Big question'); assert.equal(s.body, '• Is a claim the same as an opinion?');   // a bullet stays a bullet; the new layout adds nothing
+    assert.equal(s.foot, undefined);   // the new box starts empty, with a gray hint
+    assert.ok(await page.$('#lsStage .ls-bx[data-k="foot"] .ls-ph'));
     assert.match(await page.$eval('[data-a="layout"]', b => b.textContent), /Discussion question/);
     assert.deepEqual(errors, []);
   } finally { await a.done(); }
@@ -442,7 +443,7 @@ test('the side panel: a book with its chapters and search, pages and slides into
     await page.waitForFunction(() => window.__copied);
     const t = await page.evaluate(() => window.__copied);
     assert.match(t, /^Make a warm-up from these\n\n\[routines-sample, Think, pair, share, page 2\]\nThink pair share\. Students think alone,\s+then talk with a partner\./);
-    assert.match(t, /\[Slide 2 of "Talk" \(Bullets\)\]\nTitle: Partners\nTalk with a partner/);
+    assert.match(t, /\[Slide 2 of "Talk" \(Title and text\)\]\nTitle: Partners\n• Talk with a partner/);
     // the panel stays open while the lesson redraws, and Video says what it can do
     await page.click('[data-st="video"]');
     assert.match(await page.$eval('#spBody', b => b.textContent), /YouTube doesn’t allow its search inside other sites/);
@@ -552,7 +553,7 @@ test('right-click a slide or a lesson to comment for Claude; search finds slides
     await page.click('[data-sa="boxcopy"]'); await page.waitForFunction(() => window.__copied);
     const t = await page.evaluate(() => window.__copied);
     assert.match(t, /My comment: Add a warm-up about rebuttals\nOn: \[Lesson\]\n# Claims\nCourse A-1, /);
-    assert.match(t, /My comment: Make this a two-column slide\nOn: \[Slide 2 of "Claims" \(Bullets\)\]\nTitle: Counterclaims\nFind the counterclaim in paragraph 3/);
+    assert.match(t, /My comment: Make this a two-column slide\nOn: \[Slide 2 of "Claims" \(Title and text\)\]\nTitle: Counterclaims\n• Find the counterclaim in paragraph 3/);
     // copy to another day: its own slides, on the new class
     await page.click('.ls-th[data-go="1"]', { button: 'right' });
     await page.click('.pl-ctx [data-cx="copy"]');
@@ -562,7 +563,7 @@ test('right-click a slide or a lesson to comment for Claude; search finds slides
     await page.click('#dlgBox [data-ok]');
     await page.waitForFunction(() => window.__planner.L.lessons.length === 2 && window.__planner.L.open && window.__planner.L.open.slots[0].classId === 'B1');
     const both = await page.evaluate(() => { const [x, y] = window.__planner.L.lessons; return { ids: x.id !== y.id && x.slides[1].id !== y.slides[1].id, title: y.title, body: y.slides[1].body }; });
-    assert.deepEqual(both, { ids: true, title: 'Claims', body: 'Find the counterclaim in paragraph 3' });
+    assert.deepEqual(both, { ids: true, title: 'Claims', body: '• Find the counterclaim in paragraph 3' });
     // search finds the slide text
     const hits = await page.evaluate(async () => (await window.__planner.findAll('counterclaim')).map(r => r.kind + ' ' + r.title));
     assert.deepEqual(hits, ['slide Claims, slide 2', 'slide Claims, slide 2']);
@@ -632,6 +633,80 @@ test('past lessons: a lesson pack brings lessons with their files into the libra
     // a profile fills a missing Atlas link on a unit already here, and leaves the rest alone
     await page.evaluate(async s => { const P = window.__planner; P.L.units.find(u => u.id === 'u-arg').atlas = ''; await P.applySetup({ ...s, units: [{ id: 'u-arg', course: 'Course A', title: 'Renamed', start: '2026-10-26', atlas: 'https://example.org/atlas/new' }] }); }, SETUP);
     assert.equal(await page.evaluate(() => { const u = window.__planner.L.units.find(u => u.id === 'u-arg'); return u.atlas + ' ' + u.title; }), 'https://example.org/atlas/new Unit 2: Argument');
+    assert.deepEqual(errors, []);
+  } finally { await a.done(); }
+});
+
+test('slide text tools: bullets, numbers, indents, bold, italic and underline are mine to add; nothing is added for me', async () => {
+  const a = await open();
+  try {
+    const { page, errors } = a;
+    const tpl = fs.readFileSync(path.join(__dirname, 'fixtures', 'lesson-template.b64'), 'utf8').trim();
+    await page.evaluate(async (s, tpl) => { await window.__planner.applySetup({ ...s, template: tpl }); }, SETUP, tpl);
+    // a new lesson: a title slide and one empty slide, no agenda written for me
+    await page.evaluate(() => window.__planner.createLesson([]));
+    await page.waitForFunction(() => window.__planner.L.view === 'edit');
+    const fresh = await page.evaluate(() => window.__planner.L.open.slides.map(s => s.layout + '|' + s.title + '|' + s.body));
+    assert.deepEqual(fresh, ['title|New lesson|', 'content||']);
+    // an agenda slide starts empty, with gray hints
+    await page.evaluate(() => window.__planner.openLessonForTest(window.__planner.L.open, 1));
+    await page.click('[data-a="addslide"]'); await page.waitForSelector('#dlgBox [data-addslide="agenda"]'); await page.click('#dlgBox [data-addslide="agenda"]');
+    await page.waitForFunction(() => window.__planner.L.open.slides.length === 3 && window.__planner.L.cur === 2);
+    const ag = await page.evaluate(() => { const s = window.__planner.L.open.slides[2]; return s.title + '|' + s.body + '|' + document.querySelector('#lsStage .ls-body').textContent + '|' + document.querySelector('#lsStage .ls-t').textContent; });
+    assert.equal(ag, '||What you’ll do today, one line each|Agenda');
+    // typed lines stay plain until I ask for a list
+    await page.click('#lsStage .ls-body'); await page.waitForSelector('.ls-rted');
+    await page.keyboard.type('Warm-up'); await page.keyboard.press('Enter'); await page.keyboard.type('Read together');
+    await page.waitForFunction(() => document.querySelector('.rt-tools.live'));
+    assert.equal(await page.$$eval('.ls-rted .rt-n, .ls-rted .rt-b', x => x.length), 0);
+    // select both lines, numbers on from the toolbar
+    await page.evaluate(() => { const r = document.createRange(); r.selectNodeContents(document.querySelector('.ls-rted')); const s = getSelection(); s.removeAllRanges(); s.addRange(r); });
+    await page.click('[data-rt="numbers"]');
+    assert.deepEqual(await page.$$eval('.ls-rted .rt', x => x.map(d => d.className + ' ' + (d.dataset.n || ''))), ['rt l0 rt-n 1', 'rt l0 rt-n 2']);
+    assert.ok(await page.$('[data-rt="numbers"].on'));
+    // Enter at the end keeps numbering; Tab indents; Shift+Ctrl+8 makes it a bullet
+    await page.evaluate(() => { const d = document.querySelectorAll('.ls-rted .rt')[1], r = document.createRange(); r.selectNodeContents(d); r.collapse(false); const s = getSelection(); s.removeAllRanges(); s.addRange(r); });
+    await page.keyboard.press('Enter'); await page.keyboard.type('Partner talk');
+    await page.keyboard.press('Tab');
+    await page.keyboard.down('Control'); await page.keyboard.down('Shift'); await page.keyboard.press('8'); await page.keyboard.up('Shift'); await page.keyboard.up('Control');
+    // bold a word with the toolbar, underline with the keyboard
+    await page.keyboard.press('Enter'); await page.keyboard.press('Backspace');   // the new line: bullet off first
+    await page.keyboard.type('Key ');
+    await page.click('[data-rt="bold"]'); await page.keyboard.type('word'); await page.click('[data-rt="bold"]');
+    await page.keyboard.type(' and ');
+    await page.keyboard.down('Control'); await page.keyboard.press('u'); await page.keyboard.up('Control');
+    await page.keyboard.type('this');
+    await page.keyboard.down('Control'); await page.keyboard.press('u'); await page.keyboard.up('Control');
+    // click off: it saves as plain text with the marks written out
+    await page.click('.ls-notes textarea');
+    await page.waitForFunction(() => !document.querySelector('.ls-rted'));
+    const body = await page.evaluate(() => window.__planner.L.open.slides[2].body);
+    assert.equal(body, '1. Warm-up\n2. Read together\n\t• Partner talk\n\tKey **word** and __this__');
+    assert.deepEqual(await page.$$eval('#lsStage .ls-body .rt', x => x.map(d => d.className + '|' + d.innerHTML)),
+      ['rt rt-n l0|Warm-up', 'rt rt-n l0|Read together', 'rt rt-b l1|Partner talk', 'rt rt-p l1|Key <b>word</b> and <u>this</u>']);
+    // with nothing being edited, a list button works on the whole slide text
+    await page.click('[data-rt="bullets"]');
+    await page.click('.ls-notes textarea');
+    await page.waitForFunction(() => /^• Warm-up\n• Read together\n\t• Partner talk\n\t• Key/.test(window.__planner.L.open.slides[2].body));
+    // italic and escapes survive a round trip
+    await page.evaluate(() => { const P = window.__planner; P.L.open.slides[1].body = '*Read* 2\\*3 carefully'; P.openLessonForTest(P.L.open, 1); });
+    assert.equal(await page.$eval('#lsStage .ls-body .rt', d => d.innerHTML), '<i>Read</i> 2*3 carefully');
+    // the .pptx: real bullets, numbers, levels and runs
+    const x = await page.evaluate(() => { const P = window.__planner, z = fflate.unzipSync(P.buildPptx(P.L.open)), td = new TextDecoder(); return td.decode(z['ppt/slides/slide3.xml']); });
+    assert.match(x, /<a:buChar char="•"\/>[\s\S]*Warm-up/);
+    assert.match(x, /marL="305816"[^]*Read together<\/a:t>[^]*marL="763016"[^]*Partner talk/);   // the indent moves the line in
+    assert.match(x, /b="1"[^>]*>(<[^>]+>)*<a:t>word<\/a:t>/);
+    assert.match(x, /u="sng"[^>]*>(<[^>]+>)*<a:t>this<\/a:t>/);
+    assert.doesNotMatch(x, /\*\*|__/);
+    await page.evaluate(() => { const P = window.__planner; P.L.open.slides[2].body = '1. One\n2. Two'; });
+    const n = await page.evaluate(() => { const P = window.__planner, z = fflate.unzipSync(P.buildPptx(P.L.open)); return new TextDecoder().decode(z['ppt/slides/slide3.xml']); });
+    assert.match(n, /<a:buAutoNum type="arabicPeriod"\/>[\s\S]*One/);
+    // slides saved before this keep their look: the layout's bullets and numbers are written in
+    const old = await page.evaluate(() => window.__planner.normLesson({ title: 'Old', slides: [{ layout: 'content', title: 'A', body: 'One\n\tTwo' }, { layout: 'agenda', title: 'B', body: 'Warm-up\n\nReview' }, { layout: 'steps', title: 'C', body: 'Go\nStop', foot: 'Done' }, { layout: 'text', title: 'D', body: 'Plain *star*' }] }).slides.map(s => s.body + '|' + (s.foot || '')));
+    assert.deepEqual(old, ['• One\n\t• Two|', '1. Warm-up\n2. Review|', '1. Go\n2. Stop|Done', 'Plain \\*star\\*|']);
+    // a lesson file from Claude marked fmt 2 is taken as written
+    const cl = await page.evaluate(() => window.__planner.normLesson({ title: 'From Claude', fmt: 2, slides: [{ layout: 'content', title: 'A', body: 'Just a line' }] }).slides[0].body);
+    assert.equal(cl, 'Just a line');
     assert.deepEqual(errors, []);
   } finally { await a.done(); }
 });

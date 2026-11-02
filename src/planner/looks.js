@@ -40,35 +40,32 @@ function lookShapes(k, titleSlide) {
 /* ---------- teaching layouts ---------- */
 // Extra text a teaching layout keeps on a slide, besides title and body.
 const EXTRA = ['tag', 'foot', 'h1', 'h2', 'body2', 'cite', 'word', 'pos'];
+// Each teaching layout's text size. A new slide starts empty: the gray hints show what goes where, and nothing
+// is typed in for her (no titles, no bullets, no numbers) until she does it.
 const TEACH = {
-  warmup: { title: 'Warm-up', tag: 'Journal', size: 36 },
-  objectives: { title: 'Today we will', size: 32 },
-  steps: { title: 'Directions', foot: 'When you’re done: ', size: 32 },
-  discuss: { title: 'Let’s talk', foot: 'Think on your own · Talk with a partner · Share with the class', size: 36 },
-  twocol: { title: '', h1: 'One side', h2: 'The other side', size: 28 },
-  passage: { title: 'Close read', size: 30 },
-  picprompt: { title: 'See · Think · Wonder', body: 'What do you see?\nWhat do you think is happening?\nWhat do you wonder?', size: 28 },
-  vocab: { title: 'Word of the day', size: 32 },
-  exit: { title: 'Exit ticket', tag: 'On a sticky note', size: 36 }
+  warmup: { size: 36 }, objectives: { size: 32 }, steps: { size: 32 }, discuss: { size: 36 }, twocol: { size: 28 },
+  passage: { size: 30 }, picprompt: { size: 28 }, vocab: { size: 32 }, exit: { size: 36 }
 };
+const TITLE_PH = { agenda: 'Agenda', objectives: 'Today we will', warmup: 'Warm-up', steps: 'Directions', discuss: 'Let’s talk', passage: 'Close read', picprompt: 'See · Think · Wonder', vocab: 'Word of the day', exit: 'Exit ticket' };
+const BODY_PH = { agenda: 'What you’ll do today, one line each', objectives: 'Your objectives, one line each', content: 'Click to add text', text: 'Click to add text' };
 // Example text for the Add slide picker only; the picture is a plain gray stand-in.
 const SAMPLE_PIC = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 100"><rect width="160" height="100" fill="#C9C4BC"/><path d="M20 85 L60 40 L90 70 L110 55 L140 85 Z" fill="#A39C91"/><circle cx="115" cy="28" r="10" fill="#A39C91"/></svg>');
 const TEACH_SAMPLE = {
+  warmup: { title: 'Warm-up', tag: 'Journal', body: 'Think of an ad that made you want something you didn’t need. What did it do?' },
   title: { title: 'Lesson name', body: 'Course\nTuesday, November 3' },
   agenda: { title: '11/3 Agenda', body: 'Warm-up\nRead together\nGroup work\nReview' },
-  objectives: { body: 'Name the three appeals in a short ad\nExplain how one appeal works on its audience' },
-  warmup: { body: 'Think of an ad that made you want something you didn’t need. What did it do?' },
-  steps: { body: 'Visit each poster with your group\nLeave one sticky note: the appeal you see\nBack at your seat, pick the strongest one', foot: 'When you’re done: be ready to say why.' },
-  discuss: { body: 'Is the main character a hero, or a warning?' },
-  content: { title: 'Bullets', body: 'A point\n\tA smaller point\nAnother point' },
+  objectives: { title: 'Today we will', body: 'Name the three appeals in a short ad\nExplain how one appeal works on its audience' },
+  steps: { title: 'Directions', body: 'Visit each poster with your group\nLeave one sticky note: the appeal you see\nBack at your seat, pick the strongest one', foot: 'When you’re done: be ready to say why.' },
+  discuss: { title: 'Let’s talk', foot: 'Think on your own · Talk with a partner · Share with the class', body: 'Is the main character a hero, or a warning?' },
+  content: { title: 'Slide title', body: 'A point\n\tA smaller point\nAnother point' },
   twocol: { title: 'Logos vs. pathos', h1: 'Logos', h2: 'Pathos', body: 'Facts and numbers\n“Studies show…”', body2: 'Feelings and stories\n“Imagine if…”' },
   text: { title: 'Plain text', body: 'A paragraph of plain text, with no bullets.' },
-  passage: { body: '“A short passage from the text goes here, in quotation marks.”', cite: 'Author, Title, page', foot: 'What does this show about the speaker?' },
+  passage: { title: 'Close read', body: '“A short passage from the text goes here, in quotation marks.”', cite: 'Author, Title, page', foot: 'What does this show about the speaker?' },
   picture: { title: 'Picture', img: { src: SAMPLE_PIC, w: 16, h: 10 } },
-  picprompt: { img: { src: SAMPLE_PIC, w: 16, h: 10 } },
-  vocab: { word: 'ethos', pos: 'noun', body: 'Trust in the speaker: why we should believe them.', foot: '“As a doctor for 20 years, I can tell you…”' },
+  picprompt: { title: 'See · Think · Wonder', body: 'What do you see?\nWhat do you think is happening?\nWhat do you wonder?', img: { src: SAMPLE_PIC, w: 16, h: 10 } },
+  vocab: { title: 'Word of the day', word: 'ethos', pos: 'noun', body: 'Trust in the speaker: why we should believe them.', foot: '“As a doctor for 20 years, I can tell you…”' },
   video: { title: 'Video' },
-  exit: { body: 'Which appeal was strongest today, and what’s one detail that shows it?' }
+  exit: { title: 'Exit ticket', tag: 'On a sticky note', body: 'Which appeal was strongest today, and what’s one detail that shows it?' }
 };
 const isTeach = s => !!TEACH[s.layout] && s.layout !== 'objectives';
 
@@ -123,13 +120,12 @@ function teachHtml(s, edit, look) {
     h += '<div class="ls-src' + (edit ? ' ls-ed' : '') + '" data-k="source" style="left:' + P.x + 'px;top:' + (P.y + P.h + 6) + 'px;width:' + P.w + 'px"' + (edit ? ' tabindex="0"' : '') + '>' + (s.img && s.img.source ? esc(s.img.source) : edit && s.img ? '<span class="ls-ph">Add the source line</span>' : '') + '</div>';
   }
   for (const b of teachBoxes(s)) {
-    const v = fieldOf(s, b.k), lines = b.list ? lineList(v) : v.split('\n');
+    const v = fieldOf(s, b.k), lines = v.split('\n');
     const st = 'left:' + b.x + 'px;top:' + b.y + 'px;width:' + b.w + 'px;height:' + b.h + 'px;font-size:' + (b.sz * PT).toFixed(1) + 'px;text-align:' + (b.algn === 'ctr' ? 'center' : 'left') + ';justify-content:' + (b.anchor === 'ctr' ? 'center' : 'flex-start') +
       (b.b ? ';font-weight:700' : '') + (b.i ? ';font-style:italic' : '') + (b.caps ? ';text-transform:uppercase' : '') + (b.serif ? ';font-family:Georgia,serif' : '') + ';color:var(--' + (b.col === 'accent' ? 'la' : 'lt') + ')' + (b.col === 'muted' ? ';opacity:.78' : '') + ';--gap:' + ((b.gap || 0) * PT).toFixed(1) + 'px';
     let inner = '';
     if (!v.trim()) inner = edit ? '<span class="ls-ph">' + esc(b.ph || 'Click to add text') + '</span>' : '';
-    else if (b.list === 'num') inner = '<ol>' + lines.map(x => '<li>' + esc(x) + '</li>').join('') + '</ol>';
-    else if (b.list === 'bullet') inner = '<ul>' + lines.map(x => '<li>' + esc(x) + '</li>').join('') + '</ul>';
+    else if (RT_KEYS.includes(b.k)) inner = rtHtml(v);
     else inner = lines.map(x => '<p>' + (esc(x) || '&nbsp;') + '</p>').join('');
     h += '<div class="ls-bx' + (edit ? ' ls-ed' : '') + '" data-k="' + b.k + '" style="' + st + '"' + (edit ? ' tabindex="0"' : '') + '>' + inner + '</div>';
   }
@@ -149,14 +145,14 @@ function shapeXml(id, [x, y, w, h, fill, line]) {
 function lookRun(t, sz, o, look) {
   const L0 = LOOKS[look], c = o.title ? (L0.title || L0.text) : o.col === 'accent' ? L0.accent : o.col === 'muted' ? mix(L0.text, L0.bg, .78) : L0.text;
   const font = o.serif || (o.title && L0.serif) ? '<a:latin typeface="Georgia"/>' : '';
-  return '<a:r><a:rPr lang="en-US"' + (sz ? ' sz="' + Math.round(sz * 100) + '"' : '') + (o.b || (o.title && !L0.serif && !L0.caps) ? ' b="1"' : '') + (o.i ? ' i="1"' : '') + (o.caps ? ' cap="all"' : (o.title || o.sub) && !L0.caps ? ' cap="none"' : '') + ' dirty="0">' + fillX(c) + font + '</a:rPr><a:t>' + xe(t) + '</a:t></a:r>';
+  return '<a:r><a:rPr lang="en-US"' + (sz ? ' sz="' + Math.round(sz * 100) + '"' : '') + (o.b || (o.title && !L0.serif && !L0.caps) ? ' b="1"' : '') + (o.i ? ' i="1"' : '') + (o.u ? ' u="sng"' : '') + (o.caps ? ' cap="all"' : (o.title || o.sub) && !L0.caps ? ' cap="none"' : '') + ' dirty="0">' + fillX(c) + font + '</a:rPr><a:t>' + xe(t) + '</a:t></a:r>';
 }
 // The muted color: the text color moved toward the background, as the editor shows it with opacity.
 function mix(a, b, k) { const p = c => [1, 3, 5].map(i => parseInt(hex(c).slice(i - 1, i + 1), 16)); const x = p(a), y = p(b); return '#' + x.map((v, i) => Math.round(v * k + y[i] * (1 - k)).toString(16).padStart(2, '0')).join(''); }
 function teachBoxXml(id, b, s, look) {
-  const v = fieldOf(s, b.k), lines = b.list ? lineList(v) : v.split('\n'), acc = hex(LOOKS[look].accent);
+  const v = fieldOf(s, b.k), lines = v.split('\n'), acc = hex(LOOKS[look].accent);
   const mar = Math.round((b.list === 'num' ? 1.45 : .86) * b.sz * 12700);
-  const ps = (v.trim() ? lines : ['']).map((x, i) => {
+  const ps = RT_KEYS.includes(b.k) && v.trim() ? rtParasXml(v, { sz: b.sz, algn: b.algn === 'ctr' ? 'ctr' : '', lvlMar: Math.round(1.6 * b.sz * 12700), bulMar: Math.round(.86 * b.sz * 12700), numMar: Math.round(1.45 * b.sz * 12700), gap: b.gap || 0, buClr: '<a:buClr><a:srgbClr val="' + acc + '"/></a:buClr>', runFn: (t, f) => lookRun(t, b.sz, { ...b, b: b.b || f.b, i: b.i || f.i, u: f.u }, look) }) : (v.trim() ? lines : ['']).map((x, i) => {
     let pPr = '<a:pPr' + (b.algn === 'ctr' ? ' algn="ctr"' : '') + (b.list ? ' marL="' + mar + '" indent="-' + mar + '"' : ' marL="0" indent="0"') + '>' + (i && b.gap ? '<a:spcBef><a:spcPts val="' + Math.round(b.gap * 100) + '"/></a:spcBef>' : '<a:spcBef><a:spcPts val="0"/></a:spcBef>');
     pPr += b.list ? '<a:buClr><a:srgbClr val="' + acc + '"/></a:buClr>' + (b.list === 'num' ? '<a:buFont typeface="+mj-lt"/><a:buAutoNum type="arabicPeriod"/>' : '<a:buFont typeface="Arial"/><a:buChar char="•"/>') : '<a:buNone/>';
     return '<a:p>' + pPr + '</a:pPr>' + (x ? lookRun(x, b.sz, b, look) : '<a:endParaRPr lang="en-US" sz="' + b.sz * 100 + '"/>') + '</a:p>';
@@ -206,8 +202,8 @@ const LAYOUT_GROUPS = [['Start and end', ['title', 'agenda', 'objectives', 'warm
 function addSlideDlg(mode) {
   const l = L.open; if (!l) return;
   const change = mode === 'change', cur = l.slides[L.cur];
-  openDlg('<div class="bh"><h2>' + (change ? 'Layout for this slide' : 'Add a slide') + '</h2></div><div class="bb">' + (change ? '<p class="muted" style="margin-top:0">Your text stays. Boxes the new layout has that this slide doesn’t start with their usual words.</p>' : '') + LAYOUT_GROUPS.map(([g, ks]) => '<h3 class="pl-h3">' + g + '</h3><div class="pl-looks">' +
-    ks.map(k => '<button class="pl-look' + (change && k === cur.layout ? ' on' : '') + '" data-addslide="' + k + '">' + miniSlide(normSlide({ layout: k, ...(TEACH[k] || {}), ...(TEACH_SAMPLE[k] || {}) }), l, lookOf(l), 164) + '<span>' + esc(LAYOUTS[k]) + '</span></button>').join('') + '</div>').join('') +
+  openDlg('<div class="bh"><h2>' + (change ? 'Layout for this slide' : 'Add a slide') + '</h2></div><div class="bb">' + (change ? '<p class="muted" style="margin-top:0">Your text stays. Any new boxes start empty, with a gray hint of what goes there.</p>' : '') + LAYOUT_GROUPS.map(([g, ks]) => '<h3 class="pl-h3">' + g + '</h3><div class="pl-looks">' +
+    ks.map(k => '<button class="pl-look' + (change && k === cur.layout ? ' on' : '') + '" data-addslide="' + k + '">' + miniSlide(normSlide({ layout: k, size: (TEACH[k] || {}).size, ...(TEACH_SAMPLE[k] || {}) }), l, lookOf(l), 164) + '<span>' + esc(LAYOUTS[k]) + '</span></button>').join('') + '</div>').join('') +
     '</div><div class="bf"><button class="btn" data-x>Cancel</button></div>');
   $('#dlgBox').onclick = e => {
     if (e.target.closest('[data-x]')) return closeDlg();
@@ -216,8 +212,6 @@ function addSlideDlg(mode) {
     if (!change) return newSlide(b.dataset.addslide);
     const k = b.dataset.addslide, s = l.slides[L.cur];
     s.layout = k;
-    for (const [f, v] of Object.entries(TEACH[k] || {})) if (f !== 'size' && f !== 'title' && !s[f]) s[f] = v;
-    if (!s.title && TEACH[k] && TEACH[k].title) s.title = TEACH[k].title;
     lessonChanged(); renderEditor();
   };
 }
