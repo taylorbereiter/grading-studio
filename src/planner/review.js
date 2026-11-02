@@ -41,7 +41,7 @@ async function versionsDlg(l) {
 
 /* ---------- sending to Claude, approving ---------- */
 async function sendToClaude(l) {
-  editorCommit();
+  editorCommit(); boxNotesToSlides(l);
   await saveVersion(l, 'Sent to Claude');
   l.status = 'claude'; await lPut(l);
   const asks = l.slides.filter(s => s.ask.trim()).length, talks = l.slides.filter(s => s.talk.some(t => t.by === 'you' && !t.done)).length;
@@ -49,6 +49,7 @@ async function sendToClaude(l) {
   const msg = L.dir && L.dirOk
     ? 'Please work on my lesson "' + l.title + '" in my Planner folder ("' + L.dir.name + '"), file "' + file + '". Read "README - for Claude.md" there first.\n\n' +
       (asks ? asks + ' slide' + (asks === 1 ? ' has' : 's have') + ' an "ask" saying what I want on it. ' : '') + (talks ? talks + ' slide' + (talks === 1 ? ' has' : 's have') + ' comments from me in "talk". ' : '') +
+      lessonNotes(l).map(x => 'My comment on the whole lesson: ' + x + '\n').join('') +
       'Build the lesson out from my outline and those notes. Keep my wording where I wrote it. When you\'re done, reply to my comments in "talk", put a short summary in "claudeNote", and set "status" to "review". Don\'t change "id" or "slots". I\'ll look at your version slide by slide in the Planner.'
     : 'Here is a lesson from my Planner. Each slide may have "What I want here" notes and comments for you. Build it out, keep my wording where I wrote it, and slide text stays 28 to 36 pt.\n\n' + lessonText(l);
   await copyText(msg);

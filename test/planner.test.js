@@ -946,3 +946,33 @@ test('finished PowerPoint: upload one to a lesson, its slides take over, the les
     assert.deepEqual(errors, []);
   } finally { await a.done(); }
 });
+
+test('Copy for Claude brings every comment: ones typed under a slide, right-click ones from before they were kept on the slide, and whole-lesson ones', async () => {
+  const a = await open();
+  try {
+    const { page, errors } = a;
+    await page.evaluate(() => {
+      navigator.clipboard.writeText = t => { window.__copied = t; return Promise.resolve(); };
+      const P = window.__planner, l = P.normLesson({ id: 'bc1', title: 'Book Cover Prep', slides: [{ layout: 'title', title: 'Book Cover Prep', fmt: 2 }, { layout: 'content', title: 'Advice', body: '• Theme', fmt: 2 }, { layout: 'content', title: 'More advice', fmt: 2 }] });
+      P.L.lessons.push(l);
+      // right-click comments made before they were saved on slides: only in the Claude box
+      P.SP.box.chips.push({ kind: 'note', about: { kind: 'slide', lesson: 'bc1', i: 1 }, text: 'Add the triangle here' }, { kind: 'note', about: { kind: 'lesson', lesson: 'bc1' }, text: 'Keep it short, they need work time' });
+      P.openLessonForTest(l, 2);
+    });
+    await page.waitForSelector('[data-f="say"]');
+    // they count and show in Comments too
+    assert.equal(await page.$eval('[data-a="comments"]', b => b.textContent), 'Comments (1)');
+    assert.ok(await page.$('.ls-th[data-go="1"] .ls-thc'));
+    assert.deepEqual(await page.evaluate(() => window.__planner.L.open.slides[1].talk.map(t => t.text)), ['Add the triangle here']);
+    // typed, never pressed Add
+    await page.type('[data-f="say"]', 'Make the red line bigger');
+    await page.click('[data-a="send"]');
+    await page.waitForFunction(() => window.__copied);
+    const t = await page.evaluate(() => window.__copied);
+    assert.match(t, /My comment on the whole lesson: Keep it short, they need work time/);
+    assert.match(t, /## Slide 2[^#]*My comment: Add the triangle here/);
+    assert.match(t, /## Slide 3[^#]*My comment: Make the red line bigger/);
+    assert.equal((t.match(/Add the triangle here/g) || []).length, 1);
+    assert.deepEqual(errors, []);
+  } finally { await a.done(); }
+});
