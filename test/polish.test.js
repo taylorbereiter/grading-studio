@@ -550,9 +550,21 @@ test('each class can keep its ManageBac link: set on the roster, opened from the
     await page.waitForFunction(() => document.querySelector('#dlg').hidden);
     assert.equal(await page.$('[data-cls="' + c.id + '"] .clshead a'), null);
     assert.equal(await page.evaluate(() => 'mb' in window.__gs.state().lib.classes.find(c => c.name === 'MB-Class')), false);
+    // without opening the roster: + ManageBac link right on the class
+    await page.click('[data-cls="' + c.id + '"] [data-mbset]');
+    await answerDlg(page, { typed: 'https://school.example.org/classes/456' });
+    await page.waitForSelector('[data-cls="' + c.id + '"] a.mb-go');
+    assert.equal(await page.$eval('[data-cls="' + c.id + '"] a.mb-go', a => a.href), 'https://school.example.org/classes/456');
+    assert.equal(await page.evaluate(() => JSON.parse(localStorage.getItem('gs.mblinks')).mbclass), 'https://school.example.org/classes/456');   // the Planner finds it by name
     // the Grades list of an assignment in a class with a link
     await twoRosters(page);
-    await page.evaluate(() => { window.__gs.state().lib.classes.find(c => c.name === '9EL-A').mb = 'https://school.example.org/classes/9'; });
+    // while grading, the top bar offers it next to Atlas
+    assert.match(await page.$eval('#topAtlas', e => e.textContent), /\+ ManageBac link/);
+    assert.equal(await page.$eval('#topMb', e => e.textContent), '');
+    await page.click('#moreBtn'); await page.click('#topAtlas [data-mbset]'); await answerDlg(page, { typed: 'school.example.org/classes/9a' });
+    await page.waitForSelector('#topMb a.mb-go');   // then it sits in the top bar, beside the Grades list
+    assert.equal(await page.$eval('#topMb a', a => a.href), 'https://school.example.org/classes/9a');
+    await page.evaluate(() => window.__gs.state().lib.classes.find(c => c.name === '9EL-A').mb = 'https://school.example.org/classes/9');
     await page.click('#gradesBtn'); await page.waitForSelector('.gl');
     assert.equal(await page.$eval('#dlgBox .bf a', a => a.href), 'https://school.example.org/classes/9');
   } finally { await close(); }

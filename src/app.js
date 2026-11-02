@@ -3802,7 +3802,7 @@ function renderLib() {
     '<button class="addcard" data-additem="' + u.id + '">+ Assignment</button></div>';
   const block = (c, ci) => '<div class="cls" data-cls="' + esc(c.id) + '"><div class="clshead"><h3>' + esc(ci < 0 ? 'No class' : c.name) + '</h3>' +
     (ci < 0 ? '<span class="muted">Assignments with no roster. Drag them into a class.</span>' :
-      '<span class="muted">' + (c.names.length ? c.names.length + ' students on the roster' : 'No roster yet') + '</span><button class="btn sm" data-edit-class="' + ci + '">' + (c.names.length ? 'Edit roster' : 'Add roster') + '</button>' + mbLink(c) +
+      '<span class="muted">' + (c.names.length ? c.names.length + ' students on the roster' : 'No roster yet') + '</span><button class="btn sm" data-edit-class="' + ci + '">' + (c.names.length ? 'Edit roster' : 'Add roster') + '</button>' + mbClassBtns(c, ci) +
       '<button class="icon" data-cmove="' + ci + ':-1" title="Move this class up" aria-label="Move this class up"' + (ci ? '' : ' disabled') + '>↑</button><button class="icon" data-cmove="' + ci + ':1" title="Move this class down" aria-label="Move this class down"' + (ci < lib.classes.length - 1 ? '' : ' disabled') + '>↓</button>') +
     '<span class="sp"></span><button class="btn sm" data-addunit="' + esc(c.id) + '">+ Unit</button></div>' +
     '<div class="board">' + (c.units.map(unit).join('') || '<div class="empty-note">No units yet. Click + Unit.</div>') + '</div></div>';
@@ -3905,6 +3905,7 @@ $('#start').addEventListener('click', async e => {
     return;
   }
   if (b.dataset.editClass != null) return editClass(+b.dataset.editClass);
+  if (b.dataset.mbset != null) return askMb(+b.dataset.mbset);
 });
 // The unit's page in Atlas (web links only); empty removes it. Shown on the unit and in the top bar while grading.
 async function askAtlas(unitId) {
@@ -3921,8 +3922,12 @@ function renderTopAtlas() {
   const f = batch && batch.assignment && findItem(batch.assignment.id);
   el.innerHTML = !f ? '' : f.u.atlas ? '<a href="' + esc(f.u.atlas) + '" target="_blank" rel="noopener noreferrer" title="' + esc(f.u.name) + ' in Atlas">Atlas ↗</a>'
     : '<button class="link" data-uatlas="' + f.u.id + '" title="Link ' + esc(f.u.name) + ' to its Atlas page">+ Atlas link</button>';
+  // the class's ManageBac page, where the grades go
+  const c = batchClass(), ci = c ? lib.classes.indexOf(c) : -1;
+  const tm = $('#topMb'); if (tm) tm.innerHTML = c && mbOf(c) ? mbLink(c) : '';   // in the top bar, beside the Grades list
+  if (c) el.innerHTML += mbOf(c) ? ' <a href="' + esc(mbOf(c)) + '" target="_blank" rel="noopener" title="' + esc(c.name) + ' on ManageBac">ManageBac ↗</a>' : ' <button class="link" data-mbset="' + ci + '" title="Link ' + esc(c.name) + ' to its ManageBac page">+ ManageBac link</button>';
 }
-$('#topAtlas').addEventListener('click', e => { const b = e.target.closest('[data-uatlas]'); if (b) askAtlas(b.dataset.uatlas); });
+$('#topAtlas').addEventListener('click', e => { const b = e.target.closest('[data-uatlas]'); if (b) askAtlas(b.dataset.uatlas); const m = e.target.closest('[data-mbset]'); if (m) askMb(+m.dataset.mbset); });
 // The unit list follows the class picked; a class with no units gets a "Unit 1" when the assignment is saved.
 function editAssignment(id, unitId) {
   const f = id ? findItem(id) : null, start = f ? f : findUnit(unitId) || { c: lib.classes[0] || lib.loose, u: null };
@@ -3967,12 +3972,27 @@ function parseRoster(text) {
 }
 // A class's ManageBac page, so it opens in one click from the class and its Grades list.
 function mbUrl(v) { v = String(v || '').trim(); if (/^[\w.-]+\.[a-z]{2,}\//i.test(v)) v = 'https://' + v; return /^https?:\/\/[^\s"<>]+$/i.test(v) ? v : ''; }
-const mbLink = (c, cls) => c && c.mb && mbUrl(c.mb) ? '<a class="' + (cls || 'btn sm') + '" href="' + esc(mbUrl(c.mb)) + '" target="_blank" rel="noopener" title="Open this class on ManageBac">ManageBac ↗</a>' : '';
+// Links are also remembered by class name in this browser, so the Planner shows the same link for "11 EL-2" as grading does for "11EL-2".
+const MB_KEY = 'gs.mblinks', mbNorm = s => String(s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+function mbMap() { try { return JSON.parse(localStorage.getItem(MB_KEY) || '{}') || {}; } catch { return {}; } }
+function mbRemember(name, url) { try { const m = mbMap(), k = mbNorm(name); if (!k) return; if (url) m[k] = url; else delete m[k]; localStorage.setItem(MB_KEY, JSON.stringify(m)); } catch { } }
+const mbOf = c => (c && (mbUrl(c.mb) || mbUrl(mbMap()[mbNorm(c.name)]))) || '';
+const mbLink = (c, cls) => mbOf(c) ? '<a class="' + (cls || 'btn sm') + ' mb-go" href="' + esc(mbOf(c)) + '" target="_blank" rel="noopener" title="Open ' + esc(c.name) + ' on ManageBac">ManageBac ↗</a>' : '';
+// On the class itself: the link, or a button to add one. ✎ changes it.
+const mbClassBtns = (c, ci) => mbOf(c) ? mbLink(c) + '<button class="icon" data-mbset="' + ci + '" title="Change the ManageBac link" aria-label="Change the ManageBac link">✎</button>' : '<button class="btn sm ghost mb-add" data-mbset="' + ci + '">+ ManageBac link</button>';
+async function askMb(ci) {
+  const c = lib.classes[ci]; if (!c) return;
+  const v = await askTextDlg('Paste the ManageBac page for ' + c.name + ' (leave empty to remove it)', mbOf(c), { ok: 'Save' });
+  if (v == null) return;
+  const u = mbUrl(v); if (v.trim() && !u) return toast('That doesn’t look like a web link');
+  if (u) c.mb = u; else delete c.mb; mbRemember(c.name, u);
+  saveLib(); if (batch) renderTopAtlas(); else renderLib();
+}
 function editClass(ci) {
   const c = ci >= 0 ? lib.classes[ci] : { id: uid(), name: '', names: [], units: [] };
   openDlg('<div class="bh"><h2>' + (ci >= 0 ? 'Edit roster' : 'New roster') + '</h2></div><div class="bb">' +
     '<div class="field"><label for="cName">Class name</label><input type="text" id="cName" value="' + esc(c.name) + '" placeholder="e.g. 11EL-2"></div>' +
-    '<div class="field"><label for="cMb">ManageBac link <span class="muted" style="font-weight:400">(optional)</span></label><input type="url" id="cMb" value="' + esc(c.mb || '') + '" placeholder="Paste this class’s ManageBac page address"></div>' +
+    '<div class="field"><label for="cMb">ManageBac link <span class="muted" style="font-weight:400">(optional)</span></label><input type="url" id="cMb" value="' + esc(mbOf(c)) + '" placeholder="Paste this class’s ManageBac page address"></div>' +
     '<div class="field"><label for="cNames">Students, one per line, in the order you want (ManageBac order works well)</label><textarea class="big" id="cNames" placeholder="Paste from a spreadsheet or ManageBac, or upload a file">' + esc(c.names.join('\n')) + '</textarea></div>' +
     '<button class="btn sm" data-up>Upload a list (.csv or .txt)…</button><input type="file" id="cFile" accept=".csv,.txt,text/csv,text/plain" hidden>' +
     '<p class="muted" style="font-size:13px">Kept in this browser.</p></div>' +
@@ -3986,7 +4006,7 @@ function editClass(ci) {
       const name = $('#cName').value.trim(); if (!name) { $('#cName').focus(); return; }
       const mb = mbUrl($('#cMb').value); if ($('#cMb').value.trim() && !mb) { toast('That ManageBac link isn’t a web address'); $('#cMb').focus(); return; }
       c.name = name; c.names = parseRoster($('#cNames').value);
-      if (mb) c.mb = mb; else delete c.mb;
+      if (mb) c.mb = mb; else delete c.mb; mbRemember(name, mb);
       if (ci < 0) lib.classes.push(c);
       saveLib(); closeDlg(); renderLib();
     }
