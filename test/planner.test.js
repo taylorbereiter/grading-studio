@@ -999,6 +999,7 @@ test('a lesson .zip: the finished PowerPoint goes to Finished, every other file 
     assert.equal(r.final, 'v2.pptx'); assert.deepEqual(r.older, ['Book Cover Prep.pptx']);
     assert.deepEqual(r.files, [['Exit ticket.docx', 4], ['Triangle handout.pdf', 14]]);
     await page.waitForSelector('#plFin [data-a="finzip"]');
+    assert.ok(await page.$('.ls-top [data-a="finzip"] + [data-a="pptx"]'));   // next to Download, top right
     assert.match(await page.$eval('.pl-mats', d => d.textContent), /Exit ticket\.docx[\s\S]*Triangle handout\.pdf/);
     assert.deepEqual(errors, []);
   } finally { await a.done(); }
@@ -1035,6 +1036,36 @@ test('alternative versions: made from the lesson I am on, named, switched from t
     await page.evaluate(() => { const P = window.__planner; P.L.open = null; P.L.weekOf = '2026-11-02'; P.L.view = 'week'; P.renderLessons(); });
     await page.waitForSelector('.ls-card .pl-vtag');
     assert.deepEqual(await page.$$eval('.ls-card .pl-vtag', t => t.map(x => x.textContent).sort()), ['Full Tuesday', 'Shorter Friday']);
+    assert.deepEqual(errors, []);
+  } finally { await a.done(); }
+});
+
+test('downloads from the calendar: ↓ on each card, Finished ✓, a lesson with its files, and the whole week in one .zip', async () => {
+  const a = await open();
+  try {
+    const { page, errors } = a;
+    const tpl = fs.readFileSync(path.join(__dirname, 'fixtures', 'lesson-template.b64'), 'utf8').trim();
+    await page.evaluate(async (s, tpl) => {
+      const P = window.__planner; await P.applySetup({ ...s, template: tpl });
+      window.__saved = []; const o = URL.createObjectURL; URL.createObjectURL = b => { window.__saved.push(b); return o(b); };
+      const deck = P.buildPptx(P.normLesson({ title: 'Deck', fmt: 2, slides: [{ layout: 'title', title: 'Deck' }] }));
+      const done = P.normLesson({ title: 'Book Cover Prep', fmt: 2, slots: [{ classId: 'A1', date: '2026-11-03' }], slides: [{ layout: 'title', title: 'X' }] });
+      const plain = P.normLesson({ title: 'Poster day', fmt: 2, slots: [{ classId: 'A1', date: '2026-11-05' }], slides: [{ layout: 'title', title: 'Poster day' }] });
+      P.L.lessons.push(done, plain);
+      await P.lessonZip(done, new File([fflate.zipSync({ 'Book Cover Prep FINAL.pptx': deck, 'Handout.pdf': new TextEncoder().encode('%PDF') })], 'b.zip'));
+      P.L.open = null; P.L.weekOf = '2026-11-02'; P.L.view = 'week'; P.renderLessons();
+    }, SETUP, tpl);
+    await page.waitForSelector('.ls-cardw .ls-dl');
+    assert.equal(await page.$$eval('.ls-card .pl-done', d => d.length), 1);
+    // ↓ on the finished one gives the uploaded file; on the other, a deck made from its slides
+    await page.click('.ls-dl[data-dl]');
+    await page.waitForFunction(() => window.__saved.length === 1);
+    assert.equal(await page.evaluate(() => [...document.querySelectorAll('.ls-dl')].length), 2);
+    // the week: a folder per class and day, each with the deck and the files
+    await page.click('[data-a="dlweek"]');
+    await page.waitForFunction(() => window.__saved.some(b => b.type === 'application/zip'));
+    const names = await page.evaluate(async () => { const b = window.__saved.find(b => b.type === 'application/zip'); return Object.keys(fflate.unzipSync(new Uint8Array(await b.arrayBuffer()))).sort(); });
+    assert.deepEqual(names, ['Thu 11-5 · Course A-1 · Poster day/11-05 Thu - Poster day.pptx', 'Tue 11-3 · Course A-1 · Book Cover Prep/Book Cover Prep FINAL.pptx', 'Tue 11-3 · Course A-1 · Book Cover Prep/Handout.pdf']);
     assert.deepEqual(errors, []);
   } finally { await a.done(); }
 });

@@ -14,7 +14,7 @@ function finishedHtml(l) {
   const f = l.final, old = l.finals || [];
   return '<div class="pl-fin" id="plFin"><div class="pl-fin-h"><h3>Finished PowerPoint</h3><span class="muted sp-small">' +
     (f ? 'The deck you’ll teach from. Uploading a new one replaces it; the old one is kept below.' : 'Upload the deck when it’s done. Its slides replace the ones here, and this version is kept under Versions.') +
-    '</span><span class="sp"></span><button class="btn sm' + (f ? ' ghost' : ' primary') + '" data-a="finup">' + (f ? 'Upload a newer one…' : 'Upload finished .pptx…') + '</button><button class="btn sm ghost" data-a="finzip" title="A .zip with the finished PowerPoint and the lesson’s handouts and files">Upload lesson .zip…</button><input type="file" id="finIn" accept=".pptx,.zip,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/zip" hidden></div>' +
+    '</span><span class="sp"></span><button class="btn sm' + (f ? ' ghost' : ' primary') + '" data-a="finup">' + (f ? 'Upload a newer one…' : 'Upload finished .pptx…') + '</button><button class="btn sm ghost" data-a="finall" title="The PowerPoint and every file in Materials, in one .zip">↓ Download all (.zip)</button><button class="btn sm ghost" data-a="finzip" title="A .zip with the finished PowerPoint and the lesson’s handouts and files">Upload lesson .zip…</button><input type="file" id="finIn" accept=".pptx,.zip,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/zip" hidden></div>' +
     (f ? '<div class="pl-files"><div class="pl-file"><span class="pl-ft">PPT</span><span class="pl-fn"><b>' + esc(f.name) + '</b><span>' + finSize(f.size) + ' · uploaded ' + finWhen(f.at) + (finFresh(l) ? '' : ' · slides changed here since') + '</span></span>' +
       '<button class="btn sm" data-a="findl" data-id="' + f.id + '">Download</button></div></div>' : '') +
     (old.length ? '<details class="pl-fin-old"><summary>Older finished decks (' + old.length + ')</summary><div class="pl-files">' + old.map(o => '<div class="pl-file"><span class="pl-ft">PPT</span><span class="pl-fn"><b>' + esc(o.name) + '</b><span>' + finSize(o.size) + ' · uploaded ' + finWhen(o.at) + '</span></span>' +
@@ -108,6 +108,7 @@ async function finishedClick(t) {
   const a = t.dataset.a, l = L.open; if (!l) return false;
   if (a === 'finup') { finPick(); return true; }
   if (a === 'finzip') { finPick(); return true; }
+  if (a === 'finall') { await dlLessonZip(l); return true; }
   if (a === 'findl') { const f = [l.final, ...(l.finals || [])].find(x => x && x.id === t.dataset.id); if (f) await finDownload(f.id, f.name); return true; }
   if (a === 'finback') { await finBack(l, t.dataset.id); return true; }
   return false;
@@ -233,4 +234,47 @@ async function pptxToSlides(u8) {
     out.push(s);
   }
   return out;
+}
+
+/* ---------- downloads from the calendar: one lesson, one lesson with its files, a whole week ---------- */
+const safeName = s => String(s || '').replace(/[\\/:*?"<>|\u0000-\u001f]+/g, '-').replace(/\s+/g, ' ').trim().slice(0, 90) || 'Lesson';
+// The deck to hand out: the finished file if there is one, otherwise one made from the slides (null if neither).
+async function deckFor(l) {
+  if (l.final) { const b = await fileBlob(l.final.id); if (b) return { name: l.final.name, u8: new Uint8Array(await b.arrayBuffer()) }; }
+  if (!L.setup || !L.setup.template) return null;
+  try { return { name: fileBase(l) + '.pptx', u8: buildPptx(l) }; } catch (e) { console.warn(e); return null; }
+}
+// Everything for one lesson as zip entries under a folder ('' = top level).
+async function lessonEntries(l, dir) {
+  const out = {}, used = new Set(), put = (name, u8) => { let n = safeName(name), k = 2; while (used.has(n.toLowerCase())) n = safeName(name).replace(/(\.\w+)?$/, m => ' (' + (k++) + ')' + m); used.add(n.toLowerCase()); out[(dir ? dir + '/' : '') + n] = [u8, { level: 0 }]; };
+  const d = await deckFor(l); if (d) put(d.name, d.u8);
+  for (const f of l.files || []) {
+    const b = await fileBlob(f.id); if (!b) continue;
+    if (f.kind === 'doc') put(f.name + '.docx', new Uint8Array(await (await docxOf(await b.text(), f.name)).arrayBuffer()));
+    else put(f.name, new Uint8Array(await b.arrayBuffer()));
+  }
+  return out;
+}
+async function dlLessonZip(l) {
+  const e = await lessonEntries(l, ''); if (!Object.keys(e).length) return toast('Nothing to download yet: load your profile (for the slide template) or upload a finished deck');
+  saveBlob(fileBase(l) + '.zip', new Blob([fflate.zipSync(e)], { type: 'application/zip' }));
+}
+// Every lesson on the calendar this week, a folder per class and day.
+async function dlWeek() {
+  const mon = parseYmd(L.weekOf), days = [0, 1, 2, 3, 4].map(i => ymd(addDays(mon, i)));
+  const all = {}; let n = 0;
+  toast('Getting the week’s lessons ready…', 60000);
+  for (const d of days) for (const { c } of meetingsOn(d)) for (const l of lessonsAt(c.id, d)) {
+    const dt = parseYmd(d), dir = safeName(LDAYS[dt.getDay()].slice(0, 3) + ' ' + (dt.getMonth() + 1) + '-' + dt.getDate() + ' · ' + c.name + ' · ' + l.title + (l.variantOf || l.variant ? ' (' + varName(l) + ')' : ''));
+    Object.assign(all, await lessonEntries(l, dir)); n++;
+  }
+  if (!n) return toast('No lessons on the calendar this week');
+  saveBlob(safeName('Lessons week of ' + LMONTHS[mon.getMonth()].slice(0, 3) + ' ' + mon.getDate()) + '.zip', new Blob([fflate.zipSync(all)], { type: 'application/zip' }));
+  toast(n + ' lesson' + (n === 1 ? '' : 's') + ' downloaded in one .zip', 5000);
+}
+// A card's ↓: the finished deck (or one made from the slides), straight away.
+async function dlCard(id) {
+  const l = L.lessons.find(x => x.id === id); if (!l) return;
+  if (l.final) return finDownload(l.final.id, l.final.name);
+  return downloadPptx(l);
 }

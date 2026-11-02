@@ -300,7 +300,7 @@ function renderWeek() {
   let h = topBar('week', '<button class="btn sm ghost" data-a="wk" data-n="-7" aria-label="Previous week">‹</button>' +
     '<span class="ls-wk">' + LMONTHS[mon.getMonth()].slice(0, 3) + ' ' + mon.getDate() + ' – ' + (fri.getMonth() !== mon.getMonth() ? LMONTHS[fri.getMonth()].slice(0, 3) + ' ' : '') + fri.getDate() + '</span>' +
     '<button class="btn sm ghost" data-a="wk" data-n="7" aria-label="Next week">›</button><button class="btn sm ghost" data-a="today">This week</button>' +
-    '<input type="date" class="btn sm" data-a="jump" value="' + L.weekOf + '" aria-label="Go to a date">' + (L.setup ? '<button class="btn sm ghost" data-a="printweek">Print week</button>' : ''));
+    '<input type="date" class="btn sm" data-a="jump" value="' + L.weekOf + '" aria-label="Go to a date">' + (L.setup ? '<button class="btn sm ghost" data-a="dlweek" title="Every lesson on the calendar this week, with its PowerPoint and materials, in one .zip">↓ Download week</button><button class="btn sm ghost" data-a="printweek">Print week</button>' : ''));
   if (!L.setup) {
     h += '<div class="ls-empty"><h2>Load your profile</h2><p>Lessons line up with your classes once the app knows when they meet. Load your profile file (your timetable, school calendar, units and slide template), drop it on this page, or type your classes in. You do this once on each computer.</p>' +
       '<div class="row"><button class="btn primary" data-a="loadsetup">Load my profile…</button><button class="btn" data-a="setup">Type in my classes</button><button class="btn" data-a="newfree">Make a lesson without a class</button></div></div>';
@@ -316,7 +316,8 @@ function renderWeek() {
       for (const { c, m } of ms) {
         const ls = lessonsAt(c.id, d);
         h += '<div class="ls-slot" style="--cc:' + esc(c.color || '#1F6FB2') + '"><div class="ls-sh"><b>' + esc(c.name) + '</b><span>' + hm(m.start) + '–' + hm(m.end) + (m.label ? ' · ' + esc(m.label) : '') + '</span>' + mbBtn(c) + '</div>';
-        for (const l of ls) h += '<button class="ls-card" data-open="' + l.id + '"><b>' + esc(l.title) + '</b>' + varTag(l) + statusChip(l) + '<span>' + l.slides.length + ' slide' + (l.slides.length === 1 ? '' : 's') + (l.slots.length > 1 ? ' · also ' + esc(l.slots.filter(s => !(s.classId === c.id && s.date === d)).map(s => className(s.classId) + ' ' + shortDate(s.date)).join(', ')) : '') + '</span></button>';
+        for (const l of ls) h += '<div class="ls-cardw"><button class="ls-card" data-open="' + l.id + '"><b>' + esc(l.title) + '</b>' + varTag(l) + statusChip(l) + (l.final ? '<span class="pl-done" title="' + esc(l.final.name) + '">Finished ✓</span>' : '') + '<span>' + l.slides.length + ' slide' + (l.slides.length === 1 ? '' : 's') + (l.slots.length > 1 ? ' · also ' + esc(l.slots.filter(s => !(s.classId === c.id && s.date === d)).map(s => className(s.classId) + ' ' + shortDate(s.date)).join(', ')) : '') + '</span></button>' +
+          '<button class="ls-dl" data-dl="' + l.id + '" title="' + (l.final ? 'Download ' + esc(l.final.name) : 'Download a PowerPoint made from these slides') + '" aria-label="Download">↓</button></div>';
         h += '<div class="ls-add"><button class="btn sm ghost" data-new="' + esc(c.id) + '|' + d + '">+ New lesson</button>' + (L.lessons.length ? '<button class="btn sm ghost" data-attach="' + esc(c.id) + '|' + d + '">Use a lesson…</button>' : '') + '</div></div>';
       }
       h += '</div>';
@@ -342,6 +343,7 @@ function renderEditor() {
     '<button class="btn sm" data-a="send" title="Copy this lesson for Claude, to paste where you’re working with Claude">Copy for Claude</button>' +
     commentsBtn(l) + '<button class="btn sm ghost" data-a="versions">Versions</button>' + panelBtn() +
     '<button class="btn sm ghost" data-a="more">More ▾</button>' +
+    '<button class="btn sm" data-a="finzip" title="Upload the finished PowerPoint and its files as one .zip">↑ Upload lesson .zip</button>' +
     '<button class="btn sm primary" data-a="pptx">Download .pptx</button></div>' + pendingBar(l) + variantBar(l);
   h += '<div class="ls-ed-cols"><nav class="ls-thumbs" id="lsThumbs">' + l.slides.map((x, i) => thumbHtml(x, l, i)).join('') +
     '<div class="ls-addslide"><button class="btn sm" data-a="addslide">+ Add slide</button></div></nav>';
@@ -493,8 +495,9 @@ async function onLessonsClick(e) {
   const mt = e.target.closest('[data-ma]'); if (mt && await matClick(mt)) return;
   if (await bankClick(e)) return;
   if (await unitsClick(e)) return;
-  const t = e.target.closest('[data-a],[data-mbset],[data-open],[data-new],[data-attach],[data-go],[data-addslide],[data-unslot],[data-talkdone],[data-ctxview],[data-ctxcopy],[data-ctxput],[data-ctxdel],[data-var],.ls-ed');
+  const t = e.target.closest('[data-a],[data-mbset],[data-open],[data-new],[data-attach],[data-go],[data-addslide],[data-unslot],[data-talkdone],[data-ctxview],[data-ctxcopy],[data-ctxput],[data-ctxdel],[data-var],[data-dl],.ls-ed');
   if (t && t.dataset.mbset) return mbDlg(t.dataset.mbset);
+  if (t && t.dataset.dl) return dlCard(t.dataset.dl);
   if (!t) return;
   if (L.view === 'edit' && (await reviewClick(t) || await finishedClick(t) || await variantsClick(t))) return;
   if (L.view === 'activities' && t.dataset.a && await activitiesClick(t)) return;
@@ -511,6 +514,7 @@ async function onLessonsClick(e) {
   if (a === 'today') { L.weekOf = ymd(mondayOf(new Date())); return renderWeek(); }
   if (a === 'back') { editorCommit(); clearTimeout(lSaveT); if (L.open) await lPut(L.open); L.open = null; L.view = L.backTo || 'week'; L.backTo = null; return renderLessons(); }
   if (a === 'printweek') return printWeek();
+  if (a === 'dlweek') return dlWeek();
   if (a === 'newfree') return createLesson([]);
   if (a === 'all') return showAllLessons();
   if (a === 'setup') return openTimetable();
