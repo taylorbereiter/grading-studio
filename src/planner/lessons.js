@@ -330,6 +330,7 @@ function renderWeek() {
 /* ---------- editor ---------- */
 function renderEditor() {
   const l = L.open; if (!l) return renderWeek();
+  if (boxNotesToSlides(l)) lessonChanged(false);
   L.cur = Math.max(0, Math.min(L.cur, l.slides.length - 1));
   const s = l.slides[L.cur];
   let h = '<div class="ls-top"><button class="btn sm ghost" data-a="back">‹ ' + ({ semester: 'Semester', units: 'Units', unit: 'Unit', activities: 'Activities', library: 'Past lessons' }[L.backTo] || 'Week') + '</button>' +
@@ -439,6 +440,7 @@ function startEdit(box) {
   ta.addEventListener('blur', () => setTimeout(() => { if (lEditing && lEditing.ta === ta) editorCommit(); }, 0));
 }
 function editorCommit() {
+  keepTypedComment();
   if (!lEditing || !L.open) return;
   const { ta, k } = lEditing; lEditing = null;
   const s = L.open.slides[L.cur], v = ta.isContentEditable ? rtRead(ta) : ta.value;
@@ -679,6 +681,23 @@ async function createLesson(slots) {
   if (slots.length > 1) toast('Also on ' + slots.slice(1).map(s => className(s.classId) + ' ' + shortDate(s.date)).join(', ') + ' (one deck for both)', 4500);
 }
 function openLesson(l) { if (!l) return; if (L.view !== 'edit') L.backTo = L.view; L.open = l; L.cur = 0; L.view = 'edit'; renderEditor(); }
+const lessonNotes = l => ((SP.box && SP.box.chips) || []).filter(c => c && c.kind === 'note' && c.about && c.about.kind === 'lesson' && c.about.lesson === l.id && String(c.text || '').trim()).map(c => String(c.text).trim());
+// A comment typed under a slide but not yet added (no Enter or Add) is kept when you move on or copy the lesson.
+function keepTypedComment() {
+  const i = document.querySelector('#lessons [data-f="say"]'), v = i && i.value.trim(); if (!v || !L.open || L.view !== 'edit') return;
+  const s = L.open.slides[L.cur]; if (!s) return;
+  s.talk.push({ by: 'you', text: v, at: Date.now() }); i.value = ''; lessonChanged(false);
+}
+// Right-click comments on a slide used to go only into the Claude box. Put any of those on their slide too, once.
+function boxNotesToSlides(l) {
+  let n = 0;
+  for (const c of (SP.box && SP.box.chips) || []) {
+    const a = c && c.kind === 'note' && c.about; if (!a || a.kind !== 'slide' || a.lesson !== l.id) continue;
+    const s = l.slides[a.i], t = String(c.text || '').trim(); if (!s || !t || s.talk.some(m => m.text === t)) continue;
+    s.talk.push({ by: 'you', text: t, at: +c.at || Date.now() }); n++;
+  }
+  return n;
+}
 function pickLessonFor(classId, date) {
   const ls = [...L.lessons].sort((a, b) => b.updated - a.updated);
   openDlg('<div class="bh"><h2>Use a lesson on ' + esc(className(classId)) + ' · ' + shortDate(date) + '</h2></div><div class="bb"><div class="ls-pick">' +
@@ -746,7 +765,10 @@ function moreMenu() {
 }
 async function copyText(t) { try { await navigator.clipboard.writeText(t); } catch { const a = document.createElement('textarea'); a.value = t; document.body.appendChild(a); a.select(); document.execCommand('copy'); a.remove(); } }
 function lessonText(l) {
+  boxNotesToSlides(l);
   let t = '# ' + l.title + '\n' + (l.slots.length ? l.slots.map(s => className(s.classId) + ', ' + longDate(s.date)).join('; ') + '\n' : '');
+  // Right-click comments on the whole lesson live in the Claude box; Claude needs them with the lesson too.
+  for (const x of lessonNotes(l)) t += 'My comment on the whole lesson: ' + x + '\n';
   l.slides.forEach((s, i) => {
     t += '\n## Slide ' + (i + 1) + ' (' + LAYOUTS[s.layout] + (s.layout !== 'title' && s.layout !== 'picture' ? ', ' + s.size + ' pt' : '') + ')\n' + (s.title ? 'Title: ' + s.title + '\n' : '');
     for (const k of EXTRA) if (s[k] && k !== 'body2') t += k + ': ' + s[k] + '\n';
