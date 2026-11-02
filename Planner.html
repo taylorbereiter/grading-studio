@@ -228,14 +228,6 @@ h1 i,.top .title i{font-style:normal;font-weight:500;color:var(--accent)}
 .ls-trule{left:254px;top:369px;width:907px}
 .ls-sub{position:absolute;left:254px;top:373px;width:907px;height:103px;padding:8px 10px;font-size:24px;line-height:1.25;text-transform:uppercase}
 .ls-body{position:absolute;left:152px;top:211px;width:1008px;height:362px;padding:5px 10px;overflow:hidden;line-height:1.2}
-.ls-body ul,.ls-body ol{margin:0;padding:0;list-style:none}
-.ls-body li{position:relative;padding-left:.86em;margin-top:13px}
-.ls-body li.l1{margin-left:1.9em;margin-top:7px}
-.ls-body ul li::before{content:"•";position:absolute;left:0;color:var(--la,#B71E42)}
-.ls-body ol{counter-reset:ag}
-.ls-body ol li{counter-increment:ag;padding-left:1.45em}
-.ls-body ol li::before{content:counter(ag) ".";position:absolute;left:0;color:var(--la,#B71E42)}
-.ls-body p{margin:13px 0 0}
 .ls-pic{position:absolute;left:152px;top:211px;width:1008px;height:410px;display:flex;align-items:flex-start;justify-content:center}
 .ls-pic img{max-width:100%;max-height:100%;object-fit:contain}
 .ls-src{position:absolute;left:152px;top:622px;width:1008px;height:20px;text-align:center;font-size:13.3px;color:#222}
@@ -248,10 +240,13 @@ h1 i,.top .title i{font-style:normal;font-weight:500;color:var(--accent)}
 .ls-lk .ls-src{color:var(--lt);opacity:.85}
 .ls-shape{position:absolute}
 .ls-bx{position:absolute;display:flex;flex-direction:column;line-height:1.2;overflow:hidden}
-.ls-bx p{margin:0}.ls-bx p+p{margin-top:var(--gap)}
-.ls-bx ul,.ls-bx ol{margin:0;padding:0;list-style:none}.ls-bx li{position:relative;padding-left:.86em}.ls-bx li+li{margin-top:var(--gap)}
-.ls-bx ul li::before{content:"•";position:absolute;left:0;color:var(--la)}
-.ls-bx ol{counter-reset:st}.ls-bx ol li{counter-increment:st;padding-left:1.45em}.ls-bx ol li::before{content:counter(st) ".";position:absolute;left:0;color:var(--la)}
+.rt{position:relative;min-height:1.2em}
+.rt.l1{margin-left:1.9em}.rt.l2{margin-left:3.8em}
+.rt-b{padding-left:.86em}.rt-b::before{content:"\2022";position:absolute;left:0;color:var(--la,#B71E42)}
+.rt-n{padding-left:1.45em}.rt-n::before{content:attr(data-n) ".";position:absolute;left:0;color:var(--la,#B71E42)}
+.rt b,.rt strong{font-weight:700}.rt u{text-decoration:underline}
+.ls-body .rt{margin-top:13px}.ls-body .rt.l1,.ls-body .rt.l2{margin-top:7px}
+.ls-bx .rt+.rt{margin-top:var(--gap)}
 .ls-ta.ls-bx{display:block;line-height:1.3}
 .ls-ed{cursor:text;outline:1.5px dashed transparent;outline-offset:2px;border-radius:3px}
 .ls-ed:hover,.ls-ed:focus{outline-color:rgba(31,111,178,.55)}
@@ -260,6 +255,13 @@ h1 i,.top .title i{font-style:normal;font-weight:500;color:var(--accent)}
 .ls-ta{position:absolute;border:0;outline:2px solid #1F6FB2;outline-offset:2px;background:rgba(255,255,255,.55);resize:none;font-family:Arial,Helvetica,sans-serif;color:#000;tab-size:2;-moz-tab-size:2}
 .ls-ta.ls-t{text-transform:none;line-height:1.1}.ls-ta.ls-ttl{text-transform:none;display:block;line-height:1.05}.ls-ta.ls-sub{text-transform:none}
 .ls-ta.ls-body{line-height:1.45}
+.ls-rted{position:absolute;outline:2px solid #1F6FB2;outline-offset:2px;background:rgba(255,255,255,.55);text-transform:none;cursor:text;overflow:auto;z-index:2}
+.ls-rted:focus{outline:2px solid #1F6FB2}.ls-rted.ls-bx{display:block}
+.rt-tools{display:inline-flex;gap:2px;align-items:center;padding:2px 4px;border:1px solid var(--line);border-radius:8px;opacity:.55;transition:opacity .15s}
+.rt-tools.live{opacity:1}
+.rt-tools .rt-tb{min-width:30px;padding-left:7px;padding-right:7px}
+.rt-tools .rt-tb.on{background:var(--accent-soft,rgba(31,111,178,.15));color:var(--accent)}
+.rt-sep{width:1px;height:18px;background:var(--line-strong);margin:0 3px}
 :root[data-theme="dark"] .lsn .ls-slot{background:var(--surface-2)}
 @media (max-width:900px){.ls-grid{grid-template-columns:1fr}.ls-ed-cols{grid-template-columns:1fr}.ls-thumbs{position:static;max-height:none;display:flex;gap:8px;overflow:auto;border-right:0;border-bottom:1px solid var(--line)}.ls-addslide{flex-direction:row}}
 /* ---------- Planner ---------- */
@@ -1098,7 +1100,7 @@ const L = { db: null, lessons: [], units: [], setup: null, view: 'semester', wee
 const LDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const LDAYS_LONG = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 const LMONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-const LAYOUTS = { title: 'Title', agenda: 'Agenda', objectives: 'Objectives', warmup: 'Warm-up', exit: 'Exit ticket', steps: 'Directions with steps', discuss: 'Discussion question', content: 'Bullets', twocol: 'Two columns', text: 'Plain text', passage: 'Passage', vocab: 'Vocabulary', picture: 'Picture', picprompt: 'Picture + questions', video: 'Video' };
+const LAYOUTS = { title: 'Title', agenda: 'Agenda', objectives: 'Objectives', warmup: 'Warm-up', exit: 'Exit ticket', steps: 'Directions with steps', discuss: 'Discussion question', content: 'Title and text', twocol: 'Two columns', text: 'Plain text', passage: 'Passage', vocab: 'Vocabulary', picture: 'Picture', picprompt: 'Picture + questions', video: 'Video' };
 const SIZES = [28, 30, 32, 34, 36];   // slide text stays between 28 and 36 pt, big enough to read from the back of the room
 const lid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
 
@@ -1161,21 +1163,24 @@ function normSlide(s) {
     out.video = { url: String(v.url), title: String(v.title || ''), by: String(v.by || ''), start: Math.max(0, Math.round(+v.start || 0)) };
     if (typeof v.thumb === 'string' && /^data:image\/(png|jpeg);base64,/.test(v.thumb)) out.video.thumb = v.thumb;
   }
+  if (+s.fmt !== 2) rtMigrate(out);
+  out.fmt = 2;
   return out;
 }
 function normLesson(x) {
   x = x && typeof x === 'object' ? x : {};
   const slots = Array.isArray(x.slots) ? x.slots.filter(t => t && typeof t.classId === 'string' && /^\d{4}-\d\d-\d\d$/.test(t.date)).map(t => ({ classId: t.classId, date: t.date })) : [];
-  const slides = Array.isArray(x.slides) && x.slides.length ? x.slides.map(normSlide) : [normSlide({ layout: 'title' })];
+  const fmt = +x.fmt === 2, ns = s => normSlide(fmt && s && typeof s === 'object' ? { ...s, fmt: 2 } : s);
+  const slides = Array.isArray(x.slides) && x.slides.length ? x.slides.map(ns) : [normSlide({ layout: 'title', fmt: 2 })];
   const out = { id: typeof x.id === 'string' && x.id ? x.id : lid(), title: String(x.title || 'Untitled lesson'), slots, slides, created: +x.created || Date.now(), updated: +x.updated || Date.now(), note: String(x.note || ''),
-    status: STATUS[x.status] ? x.status : '', claudeNote: String(x.claudeNote || '') };
+    status: STATUS[x.status] ? x.status : '', claudeNote: String(x.claudeNote || ''), fmt: 2 };
   if (LOOKS[x.look]) out.look = x.look;
   if (/^https?:\/\//.test(x.atlas || '')) out.atlas = String(x.atlas);
   if (x.library) out.library = String(x.library).slice(0, 120);
   if (x.unit) out.unit = String(x.unit);
   const files = (Array.isArray(x.files) ? x.files : []).filter(f => f && typeof f.id === 'string' && typeof f.name === 'string').map(f => ({ id: f.id, name: f.name, kind: f.kind === 'doc' ? 'doc' : 'other', type: String(f.type || ''), size: +f.size || 0, added: +f.added || 0 }));
   if (files.length) out.files = files;
-  if (x.pending && Array.isArray(x.pending.before)) out.pending = { at: +x.pending.at || Date.now(), before: x.pending.before.map(normSlide), title: String(x.pending.title || '') };
+  if (x.pending && Array.isArray(x.pending.before)) out.pending = { at: +x.pending.at || Date.now(), before: x.pending.before.map(ns), title: String(x.pending.title || '') };
   if (x._file) out._file = x._file; if (x._mod) out._mod = x._mod;
   return out;
 }
@@ -1225,7 +1230,7 @@ function slideInner(s, lesson, edit, look) {
     h += '<div class="ls-sub' + (edit ? ' ls-ed' : '') + '" data-k="body"' + (edit ? ' tabindex="0"' : '') + '>' + sub.split('\n').map(esc).join('<br>') + '</div>';
     return h;
   }
-  h += ed('title', 'ls-t', s.title, 'Click to add a title') + '<div class="ls-rule"></div>';
+  h += ed('title', 'ls-t', s.title, TITLE_PH[s.layout] || 'Click to add a title') + '<div class="ls-rule"></div>';
   if (isTeach(s)) return h + teachHtml(s, edit, look);
   if (s.layout === 'video') {
     const v = s.video, yt = v && ytId(v.url), th = v && (v.thumb || (yt ? 'https://i.ytimg.com/vi/' + yt + '/hqdefault.jpg' : ''));
@@ -1238,12 +1243,7 @@ function slideInner(s, lesson, edit, look) {
     h += '<div class="ls-src' + (edit ? ' ls-ed' : '') + '" data-k="source"' + (edit ? ' tabindex="0"' : '') + '>' + (s.img && s.img.source ? esc(s.img.source) : edit && s.img ? '<span class="ls-ph">Add the source line for this picture</span>' : '') + '</div>';
     return h;
   }
-  const lines = bodyLines(s.body);
-  let inner = '';
-  if (!lines.length) inner = edit ? '<span class="ls-ph">Click to add text</span>' : '';
-  else if (s.layout === 'agenda' || s.layout === 'objectives') inner = '<ol>' + lines.filter(x => x.text).map(x => '<li>' + esc(x.text) + '</li>').join('') + '</ol>';
-  else if (s.layout === 'text') inner = lines.map(x => '<p>' + (esc(x.text) || '&nbsp;') + '</p>').join('');
-  else inner = '<ul>' + lines.map(x => '<li class="l' + x.lvl + '">' + (esc(x.text) || '&nbsp;') + '</li>').join('') + '</ul>';
+  const inner = s.body.trim() ? rtHtml(s.body) : edit ? '<span class="ls-ph">' + (BODY_PH[s.layout] || 'Click to add text') + '</span>' : '';
   h += '<div class="ls-body ls-' + (s.layout === 'objectives' ? 'agenda' : s.layout) + (edit ? ' ls-ed' : '') + '" data-k="body" style="font-size:' + sz + 'px"' + (edit ? ' tabindex="0"' : '') + '>' + inner + '</div>';
   return h;
 }
@@ -1400,7 +1400,7 @@ function renderEditor() {
     '<div class="ls-addslide"><button class="btn sm" data-a="addslide">+ Add slide</button></div></nav>';
   h += '<section class="ls-main"><div class="ls-tools">' +
     '<button class="btn sm" data-a="layout" title="Pick a layout for this slide">Layout: ' + esc(LAYOUTS[s.layout]) + ' ▾</button>' +
-    '<button class="btn sm" data-a="look" title="Colors and background for this lesson">Look: ' + esc(LOOKS[lookOf(l)].name) + '</button>' +
+    '<button class="btn sm" data-a="look" title="Colors and background for this lesson">Look: ' + esc(LOOKS[lookOf(l)].name) + '</button>' + rtToolHtml() +
     (s.layout !== 'title' && s.layout !== 'picture' && s.layout !== 'video' ? '<label>Text <select data-f="size" class="btn sm">' + SIZES.map(z => '<option value="' + z + '"' + (z === s.size ? ' selected' : '') + '>' + z + ' pt</option>').join('') + '</select></label>' : '') +
     (s.layout === 'picture' || s.layout === 'picprompt' ? '<button class="btn sm" data-a="pic">' + (s.img ? 'Change picture' : 'Add picture') + '</button>' : '') +
     (s.layout === 'video' ? '<button class="btn sm" data-a="vid">' + (s.video ? 'Change video' : 'Add video link') + '</button>' + (s.video ? '<a class="btn sm ghost" href="' + esc(videoLink(s.video)) + '" target="_blank" rel="noopener">Watch</a>' : '') : '') +
@@ -1475,6 +1475,14 @@ function startEdit(box) {
   const s = L.open.slides[L.cur], k = box.dataset.k;
   if (k === 'img') return pickPicture();
   if (k === 'video') return videoDlg();
+  if (RT_KEYS.includes(k) && !(s.layout === 'title' && k === 'body')) {
+    const el = rtEditor(box, s[k] || '');
+    box.replaceWith(el); el.focus();
+    const r = document.createRange(); r.selectNodeContents(el.lastChild || el); r.collapse(false); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r);
+    lEditing = { ta: el, k, rich: true }; rtToolState();
+    el.addEventListener('blur', () => setTimeout(() => { if (lEditing && lEditing.ta === el && document.activeElement !== el) editorCommit(); }, 0));
+    return;
+  }
   const ta = document.createElement('textarea'); ta.className = 'ls-ta ' + box.className.replace('ls-ed', '');
   ta.style.cssText = box.getAttribute('style') || '';
   ta.value = k === 'title' ? s.title : k === 'source' ? (s.img ? s.img.source : '') : EXTRA.includes(k) ? (s[k] || '') : (s.layout === 'title' && !s.body ? titleSubtitle(L.open) : s.body);
@@ -1486,7 +1494,8 @@ function startEdit(box) {
 function editorCommit() {
   if (!lEditing || !L.open) return;
   const { ta, k } = lEditing; lEditing = null;
-  const s = L.open.slides[L.cur], v = ta.value;
+  const s = L.open.slides[L.cur], v = ta.isContentEditable ? rtRead(ta) : ta.value;
+  if (ta.isContentEditable) { if (v.trim()) s[k] = v; else if (k === 'body') s.body = ''; else delete s[k]; lessonChanged(); renderStage(); rtToolState(); return; }
   if (k === 'title') s.title = v.replace(/\n+/g, ' ');
   else if (k === 'source') { if (s.img) s.img.source = v.replace(/\n+/g, ' '); }
   else if (EXTRA.includes(k)) { const t = k === 'body2' ? v : v.replace(/\n+/g, ' '); if (t) s[k] = t; else delete s[k]; }
@@ -1498,6 +1507,7 @@ function renderStage() {   // redraw just the slide, so a click into the notes b
   st.innerHTML = slideHtml(L.open.slides[L.cur], L.open, true); checkFit();
 }
 function onLessonsKey(e) {
+  if (lEditing && lEditing.rich && lEditing.ta.contains(e.target)) { if (e.key === 'Escape') { e.preventDefault(); lEditing.ta.blur(); } return; }
   if (lEditing && e.target === lEditing.ta) {
     if (e.key === 'Escape') { e.preventDefault(); lEditing.ta.blur(); return; }
     if (e.key === 'Tab' && lEditing.k === 'body' && !isTeach(L.open.slides[L.cur])) {   // Tab / Shift-Tab indent the current line
@@ -1521,7 +1531,7 @@ function onLessonsKey(e) {
 function goSlide(i) { editorCommit(); if (!L.open) return; L.cur = Math.max(0, Math.min(L.open.slides.length - 1, i)); renderEditor(); }
 function newSlide(layout) {
   const first = (L.open.slots[0] || {}).date, d = first ? (parseYmd(first).getMonth() + 1) + '/' + parseYmd(first).getDate() + ' ' : '';
-  const s = normSlide({ layout, ...(TEACH[layout] || {}), ...(layout === 'agenda' ? { title: d + 'Agenda' } : {}) });
+  const s = normSlide({ layout, fmt: 2, size: (TEACH[layout] || {}).size });
   L.open.slides.splice(L.cur + 1, 0, s); L.cur++; lessonChanged(false); renderEditor();
 }
 
@@ -1668,13 +1678,12 @@ document.addEventListener('paste', e => {
 });
 function splitOverflow() {
   const s = L.open.slides[L.cur], b = $('#lsStage .ls-body'); if (!b) return;
-  const items = [...b.querySelectorAll('li,p')], lim = b.getBoundingClientRect().bottom;
+  const items = [...b.querySelectorAll('.rt')], lim = b.getBoundingClientRect().bottom;
   let k = items.findIndex(it => it.getBoundingClientRect().bottom > lim + 1);
   if (k <= 0) k = Math.max(1, Math.ceil(items.length / 2));
-  const lines = s.body.split('\n'); let seen = -1, cut = lines.length;
-  for (let i = 0; i < lines.length; i++) { if (s.layout === 'agenda' && !lines[i].trim()) continue; seen++; if (seen === k) { cut = i; break; } }
+  const lines = s.body.split('\n'), cut = Math.min(k, lines.length);
   const rest = lines.slice(cut).join('\n'); s.body = lines.slice(0, cut).join('\n').replace(/\n+$/, '');
-  const n = normSlide({ layout: s.layout, title: s.title + (/(continued)/i.test(s.title) ? '' : ' (continued)'), body: rest, size: s.size });
+  const n = normSlide({ layout: s.layout, title: s.title + (/(continued)/i.test(s.title) ? '' : ' (continued)'), body: rest, size: s.size, fmt: 2 });
   L.open.slides.splice(L.cur + 1, 0, n); lessonChanged(false); renderEditor();
 }
 
@@ -1699,9 +1708,8 @@ async function setPicture(file, source) {
 async function createLesson(slots) {
   const first = slots[0];
   const l = normLesson({ title: 'New lesson', slots, slides: [
-    { layout: 'title', title: 'New lesson' },
-    { layout: 'agenda', title: (first ? (parseYmd(first.date).getMonth() + 1) + '/' + parseYmd(first.date).getDate() + ' ' : '') + 'Agenda', body: '' },
-    { layout: 'content', title: '', body: '' }
+    { layout: 'title', title: 'New lesson', fmt: 2 },
+    { layout: 'content', title: '', body: '', fmt: 2 }
   ] });
   await lPut(l); openLesson(l);
   if (slots.length > 1) toast('Also on ' + slots.slice(1).map(s => className(s.classId) + ' ' + shortDate(s.date)).join(', ') + ' (one deck for both)', 4500);
@@ -1779,7 +1787,7 @@ function lessonText(l) {
     t += '\n## Slide ' + (i + 1) + ' (' + LAYOUTS[s.layout] + (s.layout !== 'title' && s.layout !== 'picture' ? ', ' + s.size + ' pt' : '') + ')\n' + (s.title ? 'Title: ' + s.title + '\n' : '');
     for (const k of EXTRA) if (s[k] && k !== 'body2') t += k + ': ' + s[k] + '\n';
     if (s.body2) t += 'body2:\n' + s.body2 + '\n';
-    if (s.body) t += s.body.split('\n').map(x => (s.layout === 'content' ? (x.startsWith('\t') ? '    - ' : '- ') : '') + x.replace(/^\t/, '')).join('\n') + '\n';
+    if (s.body) t += s.body + '\n';
     if (s.img) t += '[Picture' + (s.img.source ? ': ' + s.img.source : '') + ']\n';
     if (s.video) t += '[Video: ' + s.video.url + (s.video.title ? ' (' + videoSource(s.video) + ')' : '') + ']\n';
     if (s.notes) t += 'Notes: ' + s.notes + '\n';
@@ -1790,7 +1798,7 @@ function lessonText(l) {
 }
 async function askClaude(l) {
   const where = L.dir && L.dirOk ? 'It is saved in my Planner folder as "' + fileBase(l) + '.lesson.json". Edit that file directly (keep the same id), and I will pick up your changes in the Planner.\n\n' : '';
-  await copyText('Here is a lesson from my Planner. ' + where + 'Slide text stays 28 to 36 pt; keep my simple bullet style.\n\n' + lessonText(l));
+  await copyText('Here is a lesson from my Planner. ' + where + 'Slide text stays 28 to 36 pt; keep my simple bullet style. In slide text, a line starting with "• " is a bullet and "1. " is a number (only where I put them), a tab indents, and **bold**, *italic* and __underline__ work.\n\n' + lessonText(l));
   toast('Lesson copied. Paste it into Claude and say what you want.', 5000);
 }
 
@@ -1901,7 +1909,7 @@ function tplLayouts(z) {   // which layout file is Title Slide / Title and Conte
 const NS = 'xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"';
 const spPh = (id, name, ph, body, bodyPr) => '<p:sp><p:nvSpPr><p:cNvPr id="' + id + '" name="' + name + '"/><p:cNvSpPr><a:spLocks noGrp="1"/></p:cNvSpPr><p:nvPr>' + ph + '</p:nvPr></p:nvSpPr><p:spPr/><p:txBody>' + (bodyPr || '<a:bodyPr/>') + '<a:lstStyle/>' + body + '</p:txBody></p:sp>';
 let pxLook = 'wood';
-const run = (t, sz, o) => pxLook !== 'wood' ? lookRun(t, sz, o || {}, pxLook) : '<a:r><a:rPr lang="en-US"' + (sz ? ' sz="' + sz * 100 + '"' : '') + ' dirty="0"/><a:t>' + xe(t) + '</a:t></a:r>';
+const run = (t, sz, o) => pxLook !== 'wood' ? lookRun(t, sz, o || {}, pxLook) : '<a:r><a:rPr lang="en-US"' + (sz ? ' sz="' + sz * 100 + '"' : '') + (o && o.b ? ' b="1"' : '') + (o && o.i ? ' i="1"' : '') + (o && o.u ? ' u="sng"' : '') + ' dirty="0"/><a:t>' + xe(t) + '</a:t></a:r>';
 const buClr = () => pxLook !== 'wood' ? '<a:buClr><a:srgbClr val="' + hex(LOOKS[pxLook].accent) + '"/></a:buClr>' : '';
 function slideXml(s, lesson, media) {
   pxLook = lookOf(lesson);
@@ -1935,13 +1943,7 @@ function slideXmlIn(s, lesson, media) {
         if (s.img.source) tree += '<p:sp><p:nvSpPr><p:cNvPr id="5" name="Source 4"/><p:cNvSpPr txBox="1"/><p:nvPr/></p:nvSpPr><p:spPr><a:xfrm><a:off x="' + X + '" y="' + (Y + h + 30000) + '"/><a:ext cx="' + W + '" cy="260000"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom><a:noFill/></p:spPr><p:txBody><a:bodyPr wrap="square" lIns="0" tIns="0" rIns="0" bIns="0"><a:noAutofit/></a:bodyPr><a:lstStyle/><a:p><a:pPr algn="ctr"/>' + run(s.img.source, 10) + '</a:p></p:txBody></p:sp>';
       }
     } else {
-      const ag = s.layout === 'agenda' || s.layout === 'objectives', lines = bodyLines(s.body).filter(x => !ag || x.text);
-      let ps = '';
-      for (const x of lines) {
-        const pPr = ag ? '<a:pPr marL="514350" indent="-514350">' + buClr() + '<a:buFont typeface="+mj-lt"/><a:buAutoNum type="arabicPeriod"/></a:pPr>'
-          : s.layout === 'text' ? '<a:pPr marL="0" indent="0"><a:buNone/></a:pPr>' : '<a:pPr' + (x.lvl ? ' lvl="1"' : '') + '>' + buClr() + '</a:pPr>';
-        ps += '<a:p>' + pPr + (x.text ? run(x.text, s.size) : '<a:endParaRPr lang="en-US" sz="' + s.size * 100 + '"/>') + '</a:p>';
-      }
+      const ps = s.body.trim() ? rtParasXml(s.body, { sz: s.size, lvlMar: 457200, bulMar: Math.round(.86 * s.size * 12700), numMar: Math.round(1.45 * s.size * 12700), gap: 10, buClr: buClr(), runFn: (t, f) => run(t, s.size, f) }) : '';
       tree += spPh(3, 'Content Placeholder 2', '<p:ph idx="1"/>', ps || '<a:p><a:endParaRPr lang="en-US"/></a:p>', '<a:bodyPr><a:noAutofit/></a:bodyPr>');
     }
   }
@@ -2021,18 +2023,18 @@ never are, and nothing here should point to a student.
 
 ## Lesson shape
 {
-  "id": "…", "title": "Lesson name",
+  "id": "…", "title": "Lesson name", "fmt": 2,
   "slots": [{ "classId": "<id from timetable.json>", "date": "2026-11-03" }],
   "slides": [
     { "layout": "title", "title": "Lesson name", "body": "" },
-    { "layout": "agenda", "title": "11/3 Agenda", "body": "Warm-up\\nActivity\\nReview", "size": 28 },
-    { "layout": "content", "title": "Slide title", "body": "Point one\\n\\tSmaller point under it", "size": 28, "notes": "Speaker notes" },
+    { "layout": "agenda", "title": "11/3 Agenda", "body": "1. Warm-up\\n2. Activity\\n3. Review", "size": 28 },
+    { "layout": "content", "title": "Slide title", "body": "• Point one\\n\\t• Smaller point under it", "size": 28, "notes": "Speaker notes" },
     { "layout": "text", "title": "The passage", "body": "Plain paragraphs, no bullets", "size": 28 },
     { "layout": "picture", "title": "Title", "img": { "src": "images/x.jpg", "w": 1600, "h": 900, "source": "Source line" } },
     { "layout": "video", "title": "Watch for the appeals", "video": { "url": "https://www.youtube.com/watch?v=…", "start": 30 } },
     { "layout": "warmup", "title": "Warm-up", "tag": "Journal", "body": "The prompt", "size": 36 },
-    { "layout": "objectives", "title": "Today we will", "body": "First objective\\nSecond objective" },
-    { "layout": "steps", "title": "Gallery walk", "body": "Step one\\nStep two\\nStep three", "foot": "When you’re done: …" },
+    { "layout": "objectives", "title": "Today we will", "body": "1. First objective\\n2. Second objective" },
+    { "layout": "steps", "title": "Gallery walk", "body": "1. Step one\\n2. Step two\\n3. Step three", "foot": "When you’re done: …" },
     { "layout": "discuss", "title": "Let’s talk", "body": "The question", "foot": "Think · Pair · Share" },
     { "layout": "twocol", "title": "…", "h1": "Left heading", "body": "Left points", "h2": "Right heading", "body2": "Right points" },
     { "layout": "passage", "title": "Close read", "body": "“The passage”", "cite": "Author, title, page", "foot": "The question" },
@@ -2053,7 +2055,10 @@ stripe, band, bigtype, framed, notebook, chalk. Leave it out to use the teacher'
   "claudeNote" is your short summary of what you did.
 The teacher sees your changes slide by slide and keeps theirs or yours for each, so change what the lesson needs and leave the rest.
 For a video, give just "url" (and "start" in seconds, if it should start partway); the app adds the title, channel and picture.
-Rules: "size" is 28 to 36 (pt). Body lines are separated by \\n; a line starting with a tab is a sub-point.
+Rules: "size" is 28 to 36 (pt). Text lines ("body", "body2", "foot") are separated by \\n and show exactly as written:
+a line starting with "• " is a bullet, "1. " (any number) is a numbered line, anything else is plain. One or two
+leading tabs indent the line. **bold**, *italic* and __underline__ work inside a line (a backslash shows a * or _ as is).
+No layout adds bullets or numbers by itself, so add them only where the teacher would. Keep "fmt": 2 on the lesson.
 An empty title-slide body means the app fills in the course and dates. Bump "updated" (milliseconds) when you change a lesson.
 
 ## Unit shape
@@ -2210,33 +2215,28 @@ function lookShapes(k, titleSlide) {
 /* ---------- teaching layouts ---------- */
 const EXTRA = ['tag', 'foot', 'h1', 'h2', 'body2', 'cite', 'word', 'pos'];
 const TEACH = {
-  warmup: { title: 'Warm-up', tag: 'Journal', size: 36 },
-  objectives: { title: 'Today we will', size: 32 },
-  steps: { title: 'Directions', foot: 'When you’re done: ', size: 32 },
-  discuss: { title: 'Let’s talk', foot: 'Think on your own · Talk with a partner · Share with the class', size: 36 },
-  twocol: { title: '', h1: 'One side', h2: 'The other side', size: 28 },
-  passage: { title: 'Close read', size: 30 },
-  picprompt: { title: 'See · Think · Wonder', body: 'What do you see?\nWhat do you think is happening?\nWhat do you wonder?', size: 28 },
-  vocab: { title: 'Word of the day', size: 32 },
-  exit: { title: 'Exit ticket', tag: 'On a sticky note', size: 36 }
+  warmup: { size: 36 }, objectives: { size: 32 }, steps: { size: 32 }, discuss: { size: 36 }, twocol: { size: 28 },
+  passage: { size: 30 }, picprompt: { size: 28 }, vocab: { size: 32 }, exit: { size: 36 }
 };
+const TITLE_PH = { agenda: 'Agenda', objectives: 'Today we will', warmup: 'Warm-up', steps: 'Directions', discuss: 'Let’s talk', passage: 'Close read', picprompt: 'See · Think · Wonder', vocab: 'Word of the day', exit: 'Exit ticket' };
+const BODY_PH = { agenda: 'What you’ll do today, one line each', objectives: 'Your objectives, one line each', content: 'Click to add text', text: 'Click to add text' };
 const SAMPLE_PIC = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 100"><rect width="160" height="100" fill="#C9C4BC"/><path d="M20 85 L60 40 L90 70 L110 55 L140 85 Z" fill="#A39C91"/><circle cx="115" cy="28" r="10" fill="#A39C91"/></svg>');
 const TEACH_SAMPLE = {
+  warmup: { title: 'Warm-up', tag: 'Journal', body: 'Think of an ad that made you want something you didn’t need. What did it do?' },
   title: { title: 'Lesson name', body: 'Course\nTuesday, November 3' },
   agenda: { title: '11/3 Agenda', body: 'Warm-up\nRead together\nGroup work\nReview' },
-  objectives: { body: 'Name the three appeals in a short ad\nExplain how one appeal works on its audience' },
-  warmup: { body: 'Think of an ad that made you want something you didn’t need. What did it do?' },
-  steps: { body: 'Visit each poster with your group\nLeave one sticky note: the appeal you see\nBack at your seat, pick the strongest one', foot: 'When you’re done: be ready to say why.' },
-  discuss: { body: 'Is the main character a hero, or a warning?' },
-  content: { title: 'Bullets', body: 'A point\n\tA smaller point\nAnother point' },
+  objectives: { title: 'Today we will', body: 'Name the three appeals in a short ad\nExplain how one appeal works on its audience' },
+  steps: { title: 'Directions', body: 'Visit each poster with your group\nLeave one sticky note: the appeal you see\nBack at your seat, pick the strongest one', foot: 'When you’re done: be ready to say why.' },
+  discuss: { title: 'Let’s talk', foot: 'Think on your own · Talk with a partner · Share with the class', body: 'Is the main character a hero, or a warning?' },
+  content: { title: 'Slide title', body: 'A point\n\tA smaller point\nAnother point' },
   twocol: { title: 'Logos vs. pathos', h1: 'Logos', h2: 'Pathos', body: 'Facts and numbers\n“Studies show…”', body2: 'Feelings and stories\n“Imagine if…”' },
   text: { title: 'Plain text', body: 'A paragraph of plain text, with no bullets.' },
-  passage: { body: '“A short passage from the text goes here, in quotation marks.”', cite: 'Author, Title, page', foot: 'What does this show about the speaker?' },
+  passage: { title: 'Close read', body: '“A short passage from the text goes here, in quotation marks.”', cite: 'Author, Title, page', foot: 'What does this show about the speaker?' },
   picture: { title: 'Picture', img: { src: SAMPLE_PIC, w: 16, h: 10 } },
-  picprompt: { img: { src: SAMPLE_PIC, w: 16, h: 10 } },
-  vocab: { word: 'ethos', pos: 'noun', body: 'Trust in the speaker: why we should believe them.', foot: '“As a doctor for 20 years, I can tell you…”' },
+  picprompt: { title: 'See · Think · Wonder', body: 'What do you see?\nWhat do you think is happening?\nWhat do you wonder?', img: { src: SAMPLE_PIC, w: 16, h: 10 } },
+  vocab: { title: 'Word of the day', word: 'ethos', pos: 'noun', body: 'Trust in the speaker: why we should believe them.', foot: '“As a doctor for 20 years, I can tell you…”' },
   video: { title: 'Video' },
-  exit: { body: 'Which appeal was strongest today, and what’s one detail that shows it?' }
+  exit: { title: 'Exit ticket', tag: 'On a sticky note', body: 'Which appeal was strongest today, and what’s one detail that shows it?' }
 };
 const isTeach = s => !!TEACH[s.layout] && s.layout !== 'objectives';
 
@@ -2289,13 +2289,12 @@ function teachHtml(s, edit, look) {
     h += '<div class="ls-src' + (edit ? ' ls-ed' : '') + '" data-k="source" style="left:' + P.x + 'px;top:' + (P.y + P.h + 6) + 'px;width:' + P.w + 'px"' + (edit ? ' tabindex="0"' : '') + '>' + (s.img && s.img.source ? esc(s.img.source) : edit && s.img ? '<span class="ls-ph">Add the source line</span>' : '') + '</div>';
   }
   for (const b of teachBoxes(s)) {
-    const v = fieldOf(s, b.k), lines = b.list ? lineList(v) : v.split('\n');
+    const v = fieldOf(s, b.k), lines = v.split('\n');
     const st = 'left:' + b.x + 'px;top:' + b.y + 'px;width:' + b.w + 'px;height:' + b.h + 'px;font-size:' + (b.sz * PT).toFixed(1) + 'px;text-align:' + (b.algn === 'ctr' ? 'center' : 'left') + ';justify-content:' + (b.anchor === 'ctr' ? 'center' : 'flex-start') +
       (b.b ? ';font-weight:700' : '') + (b.i ? ';font-style:italic' : '') + (b.caps ? ';text-transform:uppercase' : '') + (b.serif ? ';font-family:Georgia,serif' : '') + ';color:var(--' + (b.col === 'accent' ? 'la' : 'lt') + ')' + (b.col === 'muted' ? ';opacity:.78' : '') + ';--gap:' + ((b.gap || 0) * PT).toFixed(1) + 'px';
     let inner = '';
     if (!v.trim()) inner = edit ? '<span class="ls-ph">' + esc(b.ph || 'Click to add text') + '</span>' : '';
-    else if (b.list === 'num') inner = '<ol>' + lines.map(x => '<li>' + esc(x) + '</li>').join('') + '</ol>';
-    else if (b.list === 'bullet') inner = '<ul>' + lines.map(x => '<li>' + esc(x) + '</li>').join('') + '</ul>';
+    else if (RT_KEYS.includes(b.k)) inner = rtHtml(v);
     else inner = lines.map(x => '<p>' + (esc(x) || '&nbsp;') + '</p>').join('');
     h += '<div class="ls-bx' + (edit ? ' ls-ed' : '') + '" data-k="' + b.k + '" style="' + st + '"' + (edit ? ' tabindex="0"' : '') + '>' + inner + '</div>';
   }
@@ -2313,13 +2312,13 @@ function shapeXml(id, [x, y, w, h, fill, line]) {
 function lookRun(t, sz, o, look) {
   const L0 = LOOKS[look], c = o.title ? (L0.title || L0.text) : o.col === 'accent' ? L0.accent : o.col === 'muted' ? mix(L0.text, L0.bg, .78) : L0.text;
   const font = o.serif || (o.title && L0.serif) ? '<a:latin typeface="Georgia"/>' : '';
-  return '<a:r><a:rPr lang="en-US"' + (sz ? ' sz="' + Math.round(sz * 100) + '"' : '') + (o.b || (o.title && !L0.serif && !L0.caps) ? ' b="1"' : '') + (o.i ? ' i="1"' : '') + (o.caps ? ' cap="all"' : (o.title || o.sub) && !L0.caps ? ' cap="none"' : '') + ' dirty="0">' + fillX(c) + font + '</a:rPr><a:t>' + xe(t) + '</a:t></a:r>';
+  return '<a:r><a:rPr lang="en-US"' + (sz ? ' sz="' + Math.round(sz * 100) + '"' : '') + (o.b || (o.title && !L0.serif && !L0.caps) ? ' b="1"' : '') + (o.i ? ' i="1"' : '') + (o.u ? ' u="sng"' : '') + (o.caps ? ' cap="all"' : (o.title || o.sub) && !L0.caps ? ' cap="none"' : '') + ' dirty="0">' + fillX(c) + font + '</a:rPr><a:t>' + xe(t) + '</a:t></a:r>';
 }
 function mix(a, b, k) { const p = c => [1, 3, 5].map(i => parseInt(hex(c).slice(i - 1, i + 1), 16)); const x = p(a), y = p(b); return '#' + x.map((v, i) => Math.round(v * k + y[i] * (1 - k)).toString(16).padStart(2, '0')).join(''); }
 function teachBoxXml(id, b, s, look) {
-  const v = fieldOf(s, b.k), lines = b.list ? lineList(v) : v.split('\n'), acc = hex(LOOKS[look].accent);
+  const v = fieldOf(s, b.k), lines = v.split('\n'), acc = hex(LOOKS[look].accent);
   const mar = Math.round((b.list === 'num' ? 1.45 : .86) * b.sz * 12700);
-  const ps = (v.trim() ? lines : ['']).map((x, i) => {
+  const ps = RT_KEYS.includes(b.k) && v.trim() ? rtParasXml(v, { sz: b.sz, algn: b.algn === 'ctr' ? 'ctr' : '', lvlMar: Math.round(1.6 * b.sz * 12700), bulMar: Math.round(.86 * b.sz * 12700), numMar: Math.round(1.45 * b.sz * 12700), gap: b.gap || 0, buClr: '<a:buClr><a:srgbClr val="' + acc + '"/></a:buClr>', runFn: (t, f) => lookRun(t, b.sz, { ...b, b: b.b || f.b, i: b.i || f.i, u: f.u }, look) }) : (v.trim() ? lines : ['']).map((x, i) => {
     let pPr = '<a:pPr' + (b.algn === 'ctr' ? ' algn="ctr"' : '') + (b.list ? ' marL="' + mar + '" indent="-' + mar + '"' : ' marL="0" indent="0"') + '>' + (i && b.gap ? '<a:spcBef><a:spcPts val="' + Math.round(b.gap * 100) + '"/></a:spcBef>' : '<a:spcBef><a:spcPts val="0"/></a:spcBef>');
     pPr += b.list ? '<a:buClr><a:srgbClr val="' + acc + '"/></a:buClr>' + (b.list === 'num' ? '<a:buFont typeface="+mj-lt"/><a:buAutoNum type="arabicPeriod"/>' : '<a:buFont typeface="Arial"/><a:buChar char="•"/>') : '<a:buNone/>';
     return '<a:p>' + pPr + '</a:pPr>' + (x ? lookRun(x, b.sz, b, look) : '<a:endParaRPr lang="en-US" sz="' + b.sz * 100 + '"/>') + '</a:p>';
@@ -2366,8 +2365,8 @@ const LAYOUT_GROUPS = [['Start and end', ['title', 'agenda', 'objectives', 'warm
 function addSlideDlg(mode) {
   const l = L.open; if (!l) return;
   const change = mode === 'change', cur = l.slides[L.cur];
-  openDlg('<div class="bh"><h2>' + (change ? 'Layout for this slide' : 'Add a slide') + '</h2></div><div class="bb">' + (change ? '<p class="muted" style="margin-top:0">Your text stays. Boxes the new layout has that this slide doesn’t start with their usual words.</p>' : '') + LAYOUT_GROUPS.map(([g, ks]) => '<h3 class="pl-h3">' + g + '</h3><div class="pl-looks">' +
-    ks.map(k => '<button class="pl-look' + (change && k === cur.layout ? ' on' : '') + '" data-addslide="' + k + '">' + miniSlide(normSlide({ layout: k, ...(TEACH[k] || {}), ...(TEACH_SAMPLE[k] || {}) }), l, lookOf(l), 164) + '<span>' + esc(LAYOUTS[k]) + '</span></button>').join('') + '</div>').join('') +
+  openDlg('<div class="bh"><h2>' + (change ? 'Layout for this slide' : 'Add a slide') + '</h2></div><div class="bb">' + (change ? '<p class="muted" style="margin-top:0">Your text stays. Any new boxes start empty, with a gray hint of what goes there.</p>' : '') + LAYOUT_GROUPS.map(([g, ks]) => '<h3 class="pl-h3">' + g + '</h3><div class="pl-looks">' +
+    ks.map(k => '<button class="pl-look' + (change && k === cur.layout ? ' on' : '') + '" data-addslide="' + k + '">' + miniSlide(normSlide({ layout: k, size: (TEACH[k] || {}).size, ...(TEACH_SAMPLE[k] || {}) }), l, lookOf(l), 164) + '<span>' + esc(LAYOUTS[k]) + '</span></button>').join('') + '</div>').join('') +
     '</div><div class="bf"><button class="btn" data-x>Cancel</button></div>');
   $('#dlgBox').onclick = e => {
     if (e.target.closest('[data-x]')) return closeDlg();
@@ -2376,10 +2375,209 @@ function addSlideDlg(mode) {
     if (!change) return newSlide(b.dataset.addslide);
     const k = b.dataset.addslide, s = l.slides[L.cur];
     s.layout = k;
-    for (const [f, v] of Object.entries(TEACH[k] || {})) if (f !== 'size' && f !== 'title' && !s[f]) s[f] = v;
-    if (!s.title && TEACH[k] && TEACH[k].title) s.title = TEACH[k].title;
     lessonChanged(); renderEditor();
   };
+}
+
+/* ---------- slide text the teacher formats herself ---------- */
+const RT_LVL = 2, RT_KEYS = ['body', 'body2', 'foot'];
+const rtEsc = t => String(t).replace(/\\/g, '\\\\').replace(/\*/g, '\\*').replace(/_/g, '\\_');
+function rtParse(text) {
+  const out = String(text || '').replace(/\r/g, '').split('\n').map(raw => {
+    const tabs = /^\t*/.exec(raw)[0].length; let t = raw.slice(tabs), kind = 'p';
+    if (/^•\s?/.test(t)) { kind = 'b'; t = t.replace(/^•\s?/, ''); }
+    else if (/^\d{1,3}[.)] /.test(t)) { kind = 'n'; t = t.replace(/^\d{1,3}[.)] /, ''); }
+    return { lvl: Math.min(RT_LVL, tabs), kind, text: t };
+  });
+  return rtNumber(out);
+}
+function rtNumber(lines) {
+  const cnt = [0, 0, 0];
+  for (const x of lines) {
+    if (x.kind === 'n') { x.n = ++cnt[x.lvl]; for (let k = x.lvl + 1; k <= RT_LVL; k++) cnt[k] = 0; }
+    else for (let k = x.lvl; k <= RT_LVL; k++) cnt[k] = 0;
+  }
+  return lines;
+}
+function rtLineText(x) { return '\t'.repeat(x.lvl) + (x.kind === 'b' ? '• ' : x.kind === 'n' ? (x.n || 1) + '. ' : '') + x.text; }
+const rtToText = lines => { const a = rtNumber(lines).map(rtLineText); while (a.length && !a[a.length - 1].trim()) a.pop(); return a.join('\n'); };
+function rtSegs(text) {
+  const out = [], f = { b: 0, i: 0, u: 0 };
+  for (const tok of String(text).split(/(\\.|\*\*|__|\*)/)) {
+    if (!tok) continue;
+    if (tok === '**') f.b ^= 1; else if (tok === '*') f.i ^= 1; else if (tok === '__') f.u ^= 1;
+    else { const t = tok[0] === '\\' && tok.length === 2 ? tok[1] : tok; const p = out[out.length - 1]; if (p && p.b === f.b && p.i === f.i && p.u === f.u) p.t += t; else out.push({ t, ...f }); }
+  }
+  return out;
+}
+const rtPlain = text => rtSegs(text).map(s => s.t).join('');
+function rtInlineHtml(text) { return rtSegs(text).map(s => { let h = esc(s.t); if (s.u) h = '<u>' + h + '</u>'; if (s.i) h = '<i>' + h + '</i>'; if (s.b) h = '<b>' + h + '</b>'; return h; }).join(''); }
+function rtLineHtml(x, edit) { return '<div class="rt rt-' + x.kind + ' l' + x.lvl + '"' + (x.kind === 'n' ? ' data-n="' + x.n + '"' : '') + '>' + (rtInlineHtml(x.text) || (edit ? '<br>' : '&nbsp;')) + '</div>'; }
+function rtHtml(text, edit) { const ls = rtParse(text); while (!edit && ls.length > 1 && !ls[ls.length - 1].text && ls[ls.length - 1].kind === 'p') ls.pop(); return ls.map(x => rtLineHtml(x, edit)).join(''); }
+const rtStrip = text => rtParse(text).map(x => '\t'.repeat(x.lvl) + (x.kind === 'b' ? '• ' : x.kind === 'n' ? x.n + '. ' : '') + rtPlain(x.text)).join('\n');
+
+function rtMigrate(s) {
+  const list = {};
+  if (s.layout === 'content') list.body = 'b';
+  if (s.layout === 'agenda' || s.layout === 'objectives') list.body = 'n';
+  if (TEACH[s.layout] && s.layout !== 'objectives') for (const b of teachBoxes({ ...s, size: s.size || 28 })) if (b.list && RT_KEYS.includes(b.k)) list[b.k] = b.list === 'num' ? 'n' : 'b';
+  for (const k of RT_KEYS) {
+    if (typeof s[k] !== 'string' || !s[k]) continue;
+    if (s.layout === 'title' && k === 'body') continue;
+    let n = 0;
+    s[k] = s[k].replace(/\r/g, '').split('\n').filter(t => !(list[k] === 'n' && !t.trim())).map(t => {
+      const m = /^(\t| {2,})/.exec(t), lvl = m ? 1 : 0, w = t.replace(/^\s+/, '');
+      if (!w) return '';
+      return '\t'.repeat(lvl) + (list[k] === 'b' ? '• ' : list[k] === 'n' ? (++n) + '. ' : '') + rtEsc(w);
+    }).join('\n');
+  }
+}
+
+/* ---------- editing a text box ---------- */
+function rtEditor(box, value) {
+  const el = document.createElement('div');
+  el.className = 'ls-rted ' + box.className.replace(/\bls-ed\b/, '');
+  el.style.cssText = box.getAttribute('style') || '';
+  el.contentEditable = 'true'; el.spellcheck = true;
+  el.dataset.k = box.dataset.k;
+  el.innerHTML = rtHtml(value || '', true) || rtLineHtml({ lvl: 0, kind: 'p', text: '' }, true);
+  el.addEventListener('input', () => { rtTidy(el); rtRenumber(el); rtToolState(); });
+  el.addEventListener('keydown', rtKey);
+  el.addEventListener('paste', rtPaste);
+  return el;
+}
+function rtRead(el) {
+  const lines = [];
+  const lineOf = n => {
+    const cl = n.classList || { contains: () => false };
+    const kind = cl.contains('rt-b') ? 'b' : cl.contains('rt-n') ? 'n' : 'p', lvl = cl.contains('l2') ? 2 : cl.contains('l1') ? 1 : 0;
+    return { kind, lvl, text: rtFromNodes(n.nodeType === 1 && !/^(B|I|U|STRONG|EM|SPAN|FONT)$/.test(n.tagName) ? n.childNodes : [n]) };
+  };
+  for (const n of el.childNodes) {
+    if (n.nodeType === 3 && !n.nodeValue.trim()) continue;
+    if (n.nodeType === 1 && n.tagName === 'BR') continue;
+    lines.push(lineOf(n));
+  }
+  return rtToText(lines);
+}
+function rtFromNodes(nodes) {
+  const segs = [];
+  (function walk(ns, f) {
+    for (const n of ns) {
+      if (n.nodeType === 3) { if (n.nodeValue) segs.push({ t: n.nodeValue.replace(/\u00a0/g, ' ').replace(/\n/g, ' '), ...f }); continue; }
+      if (n.nodeType !== 1 || n.tagName === 'BR') continue;
+      const st = n.getAttribute('style') || '';
+      walk(n.childNodes, { b: f.b || /^(B|STRONG)$/.test(n.tagName) || /font-weight:\s*(bold|[6-9]00)/.test(st) ? 1 : 0, i: f.i || /^(I|EM)$/.test(n.tagName) || /font-style:\s*italic/.test(st) ? 1 : 0, u: f.u || n.tagName === 'U' || /underline/.test(st) ? 1 : 0 });
+    }
+  })(nodes, { b: 0, i: 0, u: 0 });
+  let out = '', cur = { b: 0, i: 0, u: 0 };
+  const close = () => (cur.u ? '__' : '') + (cur.i ? '*' : '') + (cur.b ? '**' : '');
+  for (const s of segs) {
+    if (s.b !== cur.b || s.i !== cur.i || s.u !== cur.u) { out += close(); cur = s; out += (s.b ? '**' : '') + (s.i ? '*' : '') + (s.u ? '__' : ''); }
+    out += rtEsc(s.t);
+  }
+  return out + close();
+}
+function rtTidy(el) {
+  let wrap = null;
+  for (const n of [...el.childNodes]) {
+    const isLine = n.nodeType === 1 && n.classList.contains('rt');
+    if (isLine) { wrap = null; continue; }
+    if (n.nodeType === 1 && /^(DIV|P)$/.test(n.tagName)) { n.className = 'rt rt-p l0'; wrap = null; continue; }
+    if (!wrap) { wrap = document.createElement('div'); wrap.className = 'rt rt-p l0'; n.before(wrap); }
+    wrap.appendChild(n);
+  }
+  if (!el.firstChild) el.innerHTML = rtLineHtml({ lvl: 0, kind: 'p', text: '' }, true);
+}
+function rtRenumber(el) {
+  const cnt = [0, 0, 0];
+  for (const d of el.querySelectorAll(':scope > .rt')) {
+    const lvl = d.classList.contains('l2') ? 2 : d.classList.contains('l1') ? 1 : 0;
+    if (d.classList.contains('rt-n')) { d.dataset.n = ++cnt[lvl]; for (let k = lvl + 1; k <= RT_LVL; k++) cnt[k] = 0; }
+    else { delete d.dataset.n; for (let k = lvl; k <= RT_LVL; k++) cnt[k] = 0; }
+  }
+}
+const rtActive = () => lEditing && lEditing.rich ? lEditing.ta : null;
+function rtCurLines(el) {
+  const sel = getSelection(); if (!sel.rangeCount) return [];
+  const r = sel.getRangeAt(0), ls = [...el.querySelectorAll(':scope > .rt')];
+  const hit = ls.filter(d => r.intersectsNode(d));
+  if (hit.length) return hit;
+  let n = r.startContainer; while (n && n.parentNode !== el) n = n.parentNode;
+  return n && n.classList && n.classList.contains('rt') ? [n] : ls.slice(-1);
+}
+const rtLvl = d => d.classList.contains('l2') ? 2 : d.classList.contains('l1') ? 1 : 0;
+function rtSetKind(d, k) { d.classList.remove('rt-p', 'rt-b', 'rt-n'); d.classList.add('rt-' + k); }
+function rtSetLvl(d, v) { d.classList.remove('l0', 'l1', 'l2'); d.classList.add('l' + Math.max(0, Math.min(RT_LVL, v))); }
+function rtDo(cmd) {
+  let el = rtActive();
+  if (!el) {   // nothing open: start on the slide's main text box, all of it
+    const box = document.querySelector('#lsStage .ls-ed[data-k="body"]:not(.ls-sub)') || document.querySelector('#lsStage .ls-ed[data-k="body2"]');
+    if (!box) return toast('Click into a text box first');
+    startEdit(box); el = rtActive(); if (!el) return;
+    const r = document.createRange(); r.selectNodeContents(el); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r);
+  }
+  el.focus();
+  if (cmd === 'bold' || cmd === 'italic' || cmd === 'underline') { document.execCommand(cmd); rtToolState(); return; }
+  const ls = rtCurLines(el); if (!ls.length) return;
+  if (cmd === 'bullets' || cmd === 'numbers') {
+    const k = cmd === 'bullets' ? 'b' : 'n', all = ls.every(d => d.classList.contains('rt-' + k));
+    for (const d of ls) rtSetKind(d, all ? 'p' : k);
+  }
+  if (cmd === 'indent') for (const d of ls) rtSetLvl(d, rtLvl(d) + 1);
+  if (cmd === 'outdent') for (const d of ls) rtSetLvl(d, rtLvl(d) - 1);
+  if (cmd === 'plain') { for (const d of ls) { rtSetKind(d, 'p'); rtSetLvl(d, 0); d.innerHTML = esc(d.textContent) || '<br>'; } }
+  rtRenumber(el); rtToolState();
+}
+function rtKey(e) {
+  const el = e.currentTarget;
+  const mod = e.metaKey || e.ctrlKey;
+  if (mod && e.shiftKey && (e.key === '8' || e.key === '*')) { e.preventDefault(); return rtDo('bullets'); }
+  if (mod && e.shiftKey && (e.key === '7' || e.key === '&')) { e.preventDefault(); return rtDo('numbers'); }
+  if (e.key === 'Tab') { e.preventDefault(); return rtDo(e.shiftKey ? 'outdent' : 'indent'); }
+  const sel = getSelection(); if (!sel.isCollapsed) return;
+  const [d] = rtCurLines(el); if (!d) return;
+  const atStart = (() => { const r = sel.getRangeAt(0), p = document.createRange(); p.selectNodeContents(d); p.setEnd(r.startContainer, r.startOffset); return !p.toString().length; })();
+  if (e.key === 'Enter' && !e.shiftKey && !d.textContent.trim() && !d.classList.contains('rt-p')) { e.preventDefault(); if (rtLvl(d)) rtSetLvl(d, rtLvl(d) - 1); else rtSetKind(d, 'p'); rtRenumber(el); return rtToolState(); }
+  if (e.key === 'Backspace' && atStart && (!d.classList.contains('rt-p') || rtLvl(d))) { e.preventDefault(); if (!d.classList.contains('rt-p')) rtSetKind(d, 'p'); else rtSetLvl(d, rtLvl(d) - 1); rtRenumber(el); return rtToolState(); }
+  if (e.key === 'Enter' && e.shiftKey) { e.preventDefault(); document.execCommand('insertParagraph'); }
+}
+function rtPaste(e) {
+  const t = (e.clipboardData && e.clipboardData.getData('text/plain')) || ''; if (!t) return;
+  e.preventDefault();
+  t.replace(/\r/g, '').split('\n').forEach((line, i) => { if (i) document.execCommand('insertParagraph'); if (line) document.execCommand('insertText', false, line); });
+}
+function rtToolHtml() {
+  const B = (c, t, tip, st) => '<button class="btn sm ghost rt-tb" data-rt="' + c + '" title="' + tip + '"' + (st ? ' style="' + st + '"' : '') + '>' + t + '</button>';
+  return '<span class="rt-tools" role="toolbar" aria-label="Text">' + B('bold', 'B', 'Bold (Ctrl/⌘ B)', 'font-weight:800') + B('italic', 'I', 'Italic (Ctrl/⌘ I)', 'font-style:italic;font-family:Georgia,serif') + B('underline', 'U', 'Underline (Ctrl/⌘ U)', 'text-decoration:underline') +
+    '<span class="rt-sep"></span>' + B('bullets', '• List', 'Bullets on or off (Ctrl/⌘ Shift 8)') + B('numbers', '1. List', 'Numbers on or off (Ctrl/⌘ Shift 7)') + B('outdent', '⇤', 'Move left (Shift Tab)') + B('indent', '⇥', 'Indent (Tab)') + '</span>';
+}
+function rtToolState() {
+  const el = rtActive(), bar = document.querySelector('.rt-tools'); if (!bar) return;
+  bar.classList.toggle('live', !!el);
+  const ls = el ? rtCurLines(el) : [];
+  const on = (c, v) => { const b = bar.querySelector('[data-rt="' + c + '"]'); if (b) b.classList.toggle('on', !!v); };
+  on('bullets', ls.length && ls.every(d => d.classList.contains('rt-b')));
+  on('numbers', ls.length && ls.every(d => d.classList.contains('rt-n')));
+  let st = { b: 0, i: 0, u: 0 };
+  if (el) try { st = { b: document.queryCommandState('bold'), i: document.queryCommandState('italic'), u: document.queryCommandState('underline') }; } catch { }
+  on('bold', st.b); on('italic', st.i); on('underline', st.u);
+}
+document.addEventListener('selectionchange', () => { if (rtActive()) rtToolState(); });
+document.addEventListener('mousedown', e => { const b = e.target.closest && e.target.closest('[data-rt]'); if (b) { e.preventDefault(); rtDo(b.dataset.rt); } });
+
+/* ---------- .pptx paragraphs ---------- */
+function rtParasXml(text, o) {
+  const ls = rtParse(text);
+  while (ls.length > 1 && !ls[ls.length - 1].text && ls[ls.length - 1].kind === 'p') ls.pop();
+  return ls.map((x, i) => {
+    const base = x.lvl * o.lvlMar, mar = x.kind === 'n' ? o.numMar : o.bulMar;
+    let p = '<a:pPr' + (o.algn ? ' algn="' + o.algn + '"' : '') + (x.kind === 'p' ? ' marL="' + base + '" indent="0"' : ' marL="' + (base + mar) + '" indent="-' + mar + '"') + '>';
+    p += i && o.gap ? '<a:spcBef><a:spcPts val="' + Math.round(o.gap * 100) + '"/></a:spcBef>' : o.gap != null ? '<a:spcBef><a:spcPts val="0"/></a:spcBef>' : '';
+    p += x.kind === 'p' ? '<a:buNone/>' : o.buClr + (x.kind === 'n' ? '<a:buFont typeface="+mj-lt"/><a:buAutoNum type="arabicPeriod"' + (x.n > 1 ? ' startAt="' + x.n + '"' : '') + '/>' : '<a:buFont typeface="Arial"/><a:buChar char="•"/>');
+    const segs = rtSegs(x.text);
+    return '<a:p>' + p + '</a:pPr>' + (segs.length ? segs.map(sg => o.runFn(sg.t, sg)).join('') : '<a:endParaRPr lang="en-US" sz="' + Math.round(o.sz * 100) + '"/>') + '</a:p>';
+  }).join('');
 }
 
 /* ================= Activity bank =================
@@ -2926,7 +3124,7 @@ async function findAll(q) {
     const when = l.slots.length ? l.slots.map(s => className(s.classId) + ' ' + shortDate(s.date)).join(', ') : 'Not on a class';
     if (findNorm(l.title).includes(q)) out.push({ kind: 'lesson', id: l.id, i: 0, title: l.title, where: when, snip: '' });
     l.slides.forEach((s, i) => {
-      const t = [s.title, s.body, s.body2, s.notes, s.ask, ...EXTRA.map(k => s[k])].filter(Boolean).join(' · ');
+      const t = [s.title, s.body && rtStrip(s.body), s.body2 && rtStrip(s.body2), s.notes, s.ask, ...EXTRA.map(k => s[k])].filter(Boolean).join(' · ');
       if (findNorm(t).includes(q)) out.push({ kind: 'slide', id: l.id, i, title: l.title + ', slide ' + (i + 1), where: when, snip: findSnip(t, q) });
     });
     for (const f of l.files || []) {
@@ -3796,7 +3994,7 @@ async function unitsFolderRead() {
   return out;
 }
 
-window.__planner = { bankPut, normRubric, slideHtml, LOOKS, TEACH, TEACH_SAMPLE, versions: versionsOf, ytIds: us => us.map(u => [ytId(u), ytStart(u)]), openLessonForTest: (l, i) => { openLesson(l); goSlide(i || 0); }, L, applySetup, renderLessons, setPicture, folderWriteAll, folderRead, buildPptx, normLesson, normUnit, unitPut, unitAt, addUnitFiles, notGradingFolder, unitsFolderRead, semesterMondays, openUnit, docxOf, findAll, copyLesson, packImport };
+window.__planner = { bankPut, normRubric, slideHtml, LOOKS, TEACH, TEACH_SAMPLE, versions: versionsOf, ytIds: us => us.map(u => [ytId(u), ytStart(u)]), openLessonForTest: (l, i) => { openLesson(l); goSlide(i || 0); }, L, applySetup, renderLessons, setPicture, folderWriteAll, folderRead, buildPptx, normLesson, normUnit, unitPut, unitAt, addUnitFiles, notGradingFolder, unitsFolderRead, semesterMondays, openUnit, docxOf, findAll, copyLesson, packImport, createLesson };
 openLessons();
 
 })();
