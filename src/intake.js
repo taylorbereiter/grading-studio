@@ -374,13 +374,12 @@ async function freshRows(rows) {
 }
 // What she should know beside a file before adding it.
 function rowNote(r) {
-  const st = r.i >= 0 ? batch.students[r.i] : null; if (!st) return r.newKey ? '<div class="muted" style="font-size:13px">New: ' + esc(r.newKey) + '</div>' : '';
+  const st = r.i >= 0 ? batch.students[r.i] : null; if (!st) return '';
   const name = nfc(r.e.file.name), out = [];
   if (st.files.some(f => !f.virtual && nfc(f.name) === name)) out.push('They have a different file with this name. Both stay.');
   if (st.grade.status === 'missing' || st.grade.status === 'excused') out.push('Now marked ' + st.grade.status + '.');
   return out.length ? '<div class="muted" style="font-size:13px">' + out.join(' ') + '</div>' : '';
 }
-const guessNewName = path => { const p = path.split('/').filter(Boolean); return (p.length > 2 ? p[p.length - 2] : p.length > 1 ? p[0] : p[0].replace(/\.[^.]+$/, '')).trim(); };
 // After Bring in files: the count, who's now late, and plain words for anything that came in but won't open.
 async function bringInDone(sts, t0, nLate) {
   const added = sts.flatMap(st => st.files.filter(f => f.added >= t0).map(f => ({ st, f })));

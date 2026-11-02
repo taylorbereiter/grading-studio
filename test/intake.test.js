@@ -567,29 +567,26 @@ test('Late work: the whole new download goes through Bring in files, only whatâ€
   assert.deepEqual(page.errors, []);
   await close();
 });
-test('Late work: the Late box up top ticks everyone, a file with a new version keeps both, and someone new can be added', async () => {
+test('Late work: the Late box up top ticks everyone, a file with a new version keeps both, and nobody new is made from a file', async () => {
   const { page, close } = await openApp(browser);
   await openZip(page, zipOf({ 'Aria Testwell/Essay.pdf': paper, 'Bram Sample/Essay.pdf': paper }));
   const fresh = await makePaper({ title: 'A second go' });
   await bring(page, [['x/Aria Testwell/Essay.pdf', fresh], ['x/Bram Sample/Late bit.pdf', fresh], ['x/Nia Newcomer/Essay.pdf', fresh]]);
   await page.waitForSelector('#dlgBox [data-go]');
   assert.match(await page.$eval('#dlgBox', e => e.textContent), /different file with this name\. Both stay/);
+  assert.ok(!(await page.$$eval('#dlgBox select[data-row="2"] option', o => o.map(x => x.textContent))).some(t => /New student/.test(t)), 'no New student choice');
+  assert.match(await page.$eval('#dlgBox [data-go]', e => e.textContent), /Add 2 files/, 'the unmatched file waits for a student');
   await page.click('#dlgBox [data-lateall]');
   assert.equal(await page.$$eval('#dlgBox [data-late]:checked', r => r.length), 3);
-  await page.select('#dlgBox select[data-row="2"]', '-3');
-  await answerDlg(page, { typed: 'Nia Newcomer' });
+  await page.select('#dlgBox select[data-row="2"]', '1');   // it was Bram's after all
   await page.waitForFunction(() => /Add 3 files/.test(document.querySelector('#dlgBox [data-go]').textContent));
-  assert.match(await page.$eval('#dlgBox', e => e.textContent), /New: Nia Newcomer/);
   await page.click('#dlgBox [data-go]');
-  await page.waitForFunction(() => window.__gs.state().batch.students.some(s => s.key === 'Nia Newcomer' && s.files.length === 1), { timeout: 30000 });
+  await page.waitForFunction(() => window.__gs.state().batch.students.find(s => s.key === 'Bram Sample').files.length === 3, { timeout: 30000 });
   await page.waitForFunction(() => window.__gs.state().batch.students.every(s => s.grade.status === 'late'));
   const a = await page.evaluate(() => window.__gs.state().batch.students.find(s => s.key === 'Aria Testwell').files.map(f => f.name));
   assert.equal(a.length, 2, 'both versions: ' + a);
-  assert.match(await page.$eval('#batchName', e => e.textContent), /3 students/);
-  await settle(page);
-  await page.reload(); await page.waitForFunction(() => !!(window.__gs && window.__gs.state));
-  await openZip(page, zipOf({ 'Aria Testwell/Essay.pdf': paper, 'Bram Sample/Essay.pdf': paper }));
-  assert.ok(await page.evaluate(() => window.__gs.state().batch.students.some(s => s.key === 'Nia Newcomer' && s.grade.status === 'late' && s.files.length === 1)), 'the new student is still there');
+  assert.match(await page.$eval('#batchName', e => e.textContent), /2 students/);
+  assert.ok(!(await page.evaluate(() => window.__gs.state().batch.students.some(s => s.key === 'Nia Newcomer'))));
   assert.deepEqual(page.errors, []);
   await close();
 });
