@@ -681,6 +681,10 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
 .stampmenu .st-proof canvas{background:#fff;border-radius:6px;flex:none}
 .stampmenu .st-stick{padding:3px;line-height:0}
 .stampmenu .st-note{display:block;width:100%;text-align:left;padding:8px 8px;margin-top:6px;border-top:1px solid var(--line)!important;border-radius:0 0 8px 8px}
+.stampmenu .st-puncs{display:grid;grid-template-columns:repeat(5,1fr);gap:2px}
+.stampmenu .st-punc{display:flex;flex-direction:column;align-items:center;gap:1px;padding:3px 0 4px;font-size:10.5px;line-height:1.1;color:var(--muted)}
+.stampmenu .st-punc canvas{background:#fff;border-radius:6px}
+.stampmenu .st-tick{width:100%;margin-bottom:2px}
 .stampmenu .st-mini canvas{background:#fff;border-radius:6px}
 
 /* paper scans: the strip above a page, and the tags on a page in the split */
@@ -2688,6 +2692,7 @@ function drawMarks(ctx, marks, W, H, side, screen) {
     if (bb) {
       ctx.save(); ctx.strokeStyle = '#1F6FB2'; ctx.setLineDash([3, 2]); ctx.lineWidth = 0.8; ctx.strokeRect(bb.x - 3, bb.y - 3, bb.w + 6, bb.h + 6);
       if (screen.sel.t === 'text') drawGrips(ctx, screen.sel, W, screen.s || 1);   // drag these edges to set where the text wraps
+      if (canResize(screen.sel)) drawCorner(ctx, screen.sel, W, screen.s || 1);   // and this corner to make it bigger or smaller
       ctx.restore();
     }
   }
@@ -3362,20 +3367,24 @@ function bindPage(pg) {
   let g = null;   // the gesture in progress
   c.addEventListener('pointerdown', e => {
     if (e.button !== 0) return;
+    const wasNote = !!(activeEditor && activeEditor.note);   // a comment was open: this click only closes it
     commitEditors();
     const ae = document.activeElement;
     if (ae && /^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName) && !pg.wrap.contains(ae)) ae.blur();
     const [x, y] = pt(e);
     const box = (pg.boxes || []).find(b => x >= b.x && x <= b.x + b.w && y >= b.y && y <= b.y + b.h);
     if (box && !box.n.ro && tool !== 'erase') { e.preventDefault(); openNote(pg, box.n); return; }
+    if (wasNote) { e.preventDefault(); return; }
+    if (tool !== 'erase') { const cg = cornerAt(pg, x, y); if (cg) { e.preventDefault(); c.setPointerCapture(e.pointerId); g = cg; return; } }
     if (tool !== 'select' && tool !== 'erase' && !onPage(x, y)) return;
     e.preventDefault();
     c.setPointerCapture(e.pointerId);
+    const pick = clickToPick(pg, x, y); if (pick) { g = pick; return; }
     if (tool === 'pen') g = inkBegin({ t: 'pen', color: COLORS[inkColor], w: penW, pts: [[r1(x), r1(y)]] }, x, y, e, pg.s);
     else if (tool === 'hl') g = hlBegin(pg, x, y, e);
     else if (tool === 'oval') g = { x0: x, y0: y, m: { t: 'oval', color: COLORS[inkColor], sw: Math.max(1.2, penW * 0.8), x, y, w: 0, h: 0 } };
     else if (tool === 'erase') { g = { erase: true, snapped: false }; eraseAt(pg, x, y, g); }
-    else if (tool === 'check') { snap(pg); pg.marks().push({ t: 'check', color: COLORS[inkColor], x: r1(x), y: r1(y), size: 22 }); changed(pg); }
+    else if (tool === 'check') { snap(pg); pg.marks().push({ t: 'check', color: COLORS[inkColor], x: r1(x), y: r1(y), size: newCheckSize() }); changed(pg); }
     else if (tool === 'text') {
       const grip = gripAt(pg, x, y); if (grip) { g = gripBegin(pg, grip); return; }
       const hit = hitMark(pg, x, y, 3);
@@ -3407,6 +3416,10 @@ function bindPage(pg) {
       if (!g.m && Math.hypot(x1 - g.x0, y1 - g.y0) < 5) return;
       g.m = { t: 'hl', color: HL[hlColor], x: Math.min(g.x0, x1), y: Math.min(g.y0, y1), w: Math.abs(x1 - g.x0), h: Math.abs(y1 - g.y0) };
       draw(pg, [g.m]);
+    } else if (g.scale) {
+      if (!g.moved) { snap(pg); g.moved = true; }
+      cornerMove(pg, g, x, y);
+      draw(pg);
     } else if (g.resize) {
       if (!g.moved) { snap(pg); g.moved = true; }
       gripMove(pg, g, x);
@@ -3444,6 +3457,7 @@ function bindPage(pg) {
       g = null; openNote(pg, m, true);
       return;
     }
+    if (g.scale) { const m = g.scale; if (g.moved) { rememberSize(m); changed(pg); } g = null; return; }
     if (g.resize) { const m = g.resize; if (g.moved) { keepOnPage(m, pg.W, pg.H); changed(pg); } g = null; return; }
     if (g.m && g.m.t === 'pen') { inkEnd(pg, g); snap(pg); pg.marks().push(g.m); changed(pg); }
     else if (g.m && g.m.t === 'oval') {
@@ -3607,7 +3621,7 @@ function openNote(pg, m, isNew) {
     if (text === m.text && i >= 0) return;
     snap(pg); m.text = text; if (i < 0) a.push(m); changed(pg);
   };
-  activeEditor = { commit: () => close(true) };
+  activeEditor = { commit: () => close(true), note: true };
   pop.addEventListener('pointerdown', e => e.stopPropagation());
   pop.addEventListener('keydown', e => {
     e.stopPropagation();
@@ -3837,7 +3851,7 @@ function openKeys() {
     '<h4>Students</h4>' + row('← →', 'Previous / next student (also ↑ ↓)') + row('N', 'Next student without a full score') + row('/', 'Find a student by name') +
     '<h4>Marking</h4>' + row('V', 'Select') + row('P', 'Pen (hold Shift for a straight line)') + row('H', 'Highlight, snapping to typed lines. Press H again for freehand (Shift for straight)') + row('O', 'Circle') + row('T', 'Text') + row('C', 'Comment') + row('K', 'Check mark') + row('E', 'Eraser') +
     row('⌘Z', 'Undo') + row('⇧⌘Z', 'Redo (⌘Y works too)') +
-    '<h4>A picked mark (Select tool)</h4>' + row('← → ↑ ↓', 'Nudge it (Shift for bigger steps)') + row('⌘C ⌘V', 'Copy it, then paste on the page you’re looking at, even on another student’s paper') + row('⌘D', 'Make a copy of it') + row('Delete', 'Remove it') + row('Esc', 'Let go of it (the arrows go back to moving between students)') +
+    '<h4>A picked mark (Select tool)</h4>' + row('← → ↑ ↓', 'Nudge it (Shift for bigger steps)') + row('⌘C ⌘V', 'Copy it, then paste on the page you’re looking at, even on another student’s paper') + row('⌘D', 'Make a copy of it') + row('+ −', 'Make it bigger or smaller (or drag the square at its corner)') + row('Delete', 'Remove it') + row('Esc', 'Let go of it (the arrows go back to moving between students)') +
     '<h4>The paper</h4>' + row('⌘+ ⌘−', 'Zoom in / out (or pinch, or ⌘-scroll)') + row('⌘0', 'Back to 100%') + row('[ ]', 'Fold away the student list / score panel') +
     'Turn a page: point at it and use ⟲ ⟳ in its top corner, or “Turn all pages” above the file. In Arrange pages, pick pages and press R.'.replace(/^/, '<h4>Turning pages</h4><span style="grid-column:1/-1">') + '</span>' +
     '<h4>Other</h4>' + row('=', 'Calculator') + row('Space', 'Play / pause a recording') + row('J L', 'Back / ahead 5 seconds') + row('?', 'This list') +
@@ -7868,6 +7882,7 @@ document.addEventListener('keydown', e => {
   }
   if (typing || e.metaKey || e.ctrlKey || e.altKey) return;
   if (e.key === '?') { e.preventDefault(); openKeys(); return; }
+  if ((e.key === '+' || e.key === '=' || e.key === '-' || e.key === '_') && selected && !(selected.fresh && selected.mark.t === 'text') && canResize(selected.mark)) { e.preventDefault(); stepSize(e.key === '+' || e.key === '=' ? 1 : -1); return; }
   if (e.key === '/') { e.preventDefault(); $('#stuFind').focus(); return; }
   if (selected && tool === 'select' && /^Arrow/.test(e.key)) {
     e.preventDefault();
@@ -8414,6 +8429,60 @@ function gripMove(pg, g, x) {
   if (g.side === 'l') { m.x = r1(clamp(x + 3, 0, g.right - 24)); m.bw = r1(g.right - m.x); }   // the grips sit 3 points outside the box
   else m.bw = r1(clamp(x - 3 - m.x, 24, pg.W - m.x - 6));
 }
+/* ---------------- resizing: a corner handle on a picked sticker, mark, check, circle or text box ---------------- */
+const RESIZABLE = new Set(['stamp', 'check', 'text', 'oval']);
+const canResize = m => !!m && RESIZABLE.has(m.t) && !m.ro;
+function cornerPt(m, W) { const bb = bboxOf(m, W), o = m.t === 'text' ? 4 : 3; return [bb.x + bb.w + o, bb.y + bb.h + o]; }
+function drawCorner(ctx, m, W, s) {   // the same size on screen at any zoom
+  const [x, y] = cornerPt(m, W), h = 9 / s;
+  ctx.setLineDash([]); ctx.fillStyle = '#fff'; ctx.strokeStyle = '#1F6FB2'; ctx.lineWidth = 1.5 / s;
+  ctx.beginPath(); ctx.roundRect(x - h / 2, y - h / 2, h, h, 2 / s); ctx.fill(); ctx.stroke();
+}
+function cornerAt(pg, x, y) {
+  if (!selected || selected.page !== pg || !canResize(selected.mark) || pg.editing === selected.mark) return null;
+  const m = selected.mark, [cx, cy] = cornerPt(m, pg.W);
+  if (Math.hypot(x - cx, y - cy) > 9 / pg.s) return null;
+  const mid = [m.x, m.y];   // text grows from its top-left corner, stickers, marks and checks from their middle (circles use the drag itself)
+  return { scale: m, moved: false, mid, d0: Math.max(4, Math.hypot(x - mid[0], y - mid[1])), size0: m.size || (m.t === 'check' ? 22 : 16), bw0: m.bw, x0: x, y0: y, w0: m.w, h0: m.h };
+}
+const SIZE_RANGE = m => m.t === 'text' ? [8, 40] : m.t === 'check' ? SIZE_LIMITS.check : SIZE_LIMITS[sizeKind(m.k)];
+function setMarkSize(m, size, W, H, g) {
+  const [a, b] = SIZE_RANGE(m), was = m.size;
+  m.size = m.t === 'text' ? Math.round(clamp(size, a, b)) : r1(clamp(size, a, b));
+  if (m.t === 'text') { const bw0 = g ? g.bw0 : m.bw, s0 = g ? g.size0 : was; if (bw0) { delete m.bwFull; m.bw = r1(clamp(bw0 * m.size / s0, 24, W - m.x - 6)); } keepOnPage(m, W, H); }
+}
+function cornerMove(pg, g, x, y) {
+  const m = g.scale;
+  if (m.t === 'oval') { m.w = r1(clamp(g.w0 + x - g.x0, 6, pg.W - m.x)); m.h = r1(clamp(g.h0 + y - g.y0, 6, pg.H - m.y)); return; }
+  setMarkSize(m, g.size0 * Math.hypot(x - g.mid[0], y - g.mid[1]) / g.d0, pg.W, pg.H, g);
+}
+function rememberSize(m) {
+  if (m.t === 'stamp') rememberStampSize(m);
+  else if (m.t === 'text') { disp.tsize = m.size; store.set('gs.disp', disp); }
+  else if (m.t === 'check') rememberSizeOf('$check', m.size);
+}
+function stepSize(dir) {
+  if (!selected || !canResize(selected.mark)) return false;
+  const pg = selected.page, m = selected.mark;
+  snap(pg);
+  if (m.t === 'oval') { const f = dir > 0 ? 1.15 : 1 / 1.15, cx = m.x + m.w / 2, cy = m.y + m.h / 2; m.w = r1(clamp(m.w * f, 6, pg.W)); m.h = r1(clamp(m.h * f, 6, pg.H)); m.x = r1(clamp(cx - m.w / 2, 0, pg.W - m.w)); m.y = r1(clamp(cy - m.h / 2, 0, pg.H - m.h)); }
+  else if (m.t === 'text') setMarkSize(m, m.size + 2 * dir, pg.W, pg.H);
+  else setMarkSize(m, m.size * (dir > 0 ? 1.15 : 1 / 1.15), pg.W, pg.H);
+  rememberSize(m); changed(pg);
+  return true;
+}
+function clickToPick(pg, x, y) {
+  if (tool === 'select' || tool === 'erase') return null;
+  const hit = hitMark(pg, x, y, 2);
+  if (!hit || hit.ro) return null;
+  if (hit.t === 'text') return tool === 'text' ? null : (setTool('text'), pickToGrab(pg, hit, x, y, true));
+  if (hit.t === 'oval') {   // only its line: drawing inside a circle still draws
+    const rx = hit.w / 2, ry = hit.h / 2, d = Math.hypot((x - hit.x - rx) / rx, (y - hit.y - ry) / ry);
+    if (Math.abs(d - 1) * Math.min(rx, ry) > 4) return null;
+  } else if (hit.t !== 'stamp' && hit.t !== 'check') return null;
+  setTool('select');
+  return pickToGrab(pg, hit, x, y, false);
+}
 function pickToGrab(pg, hit, x, y, edit) {
   selected = { page: pg, mark: hit };
   redrawAll();
@@ -8421,6 +8490,7 @@ function pickToGrab(pg, hit, x, y, edit) {
 }
 const editMark = (pg, m) => { if (m.t === 'text') editText(pg, m); else if (m.t === 'note') openNote(pg, m); };
 function hoverCursor(pg, x, y) {
+  if (tool !== 'erase' && cornerAt(pg, x, y)) return 'nwse-resize';
   const grip = gripAt(pg, x, y);
   if (tool === 'select') return grip ? 'ew-resize' : hitMark(pg, x, y, 4) ? (x > pg.W ? 'pointer' : 'move') : 'default';
   if (tool === 'text') { const h = hitMark(pg, x, y, 3); return grip ? 'ew-resize' : h && h.t === 'text' ? 'move' : h && x > pg.W ? 'pointer' : 'text'; }
@@ -8435,16 +8505,22 @@ function gripDrag(e, bar, pg, m, fit, ta) {
   const up = () => { bar.removeEventListener('pointermove', mv); bar.removeEventListener('pointerup', up); bar.removeEventListener('pointercancel', up); ta.focus(); };
   bar.addEventListener('pointermove', mv); bar.addEventListener('pointerup', up); bar.addEventListener('pointercancel', up);
 }
-Object.assign(window.__gs, { inkFilter, thinStroke, groupLines, snapRects, strokePath, hlMode: () => hlMode, setHlMode, draw, bboxOf, hitMark, drawMarks, sharePage });
+Object.assign(window.__gs, { stepSize, cornerAt, ui: () => ({ tool, picked: selected ? JSON.parse(JSON.stringify(selected.mark)) : null, editing: !!activeEditor }), inkFilter, thinStroke, groupLines, snapRects, strokePath, hlMode: () => hlMode, setHlMode, draw, bboxOf, hitMark, drawMarks, sharePage });
 
 /* ---------------- stamps: proofreading marks and stickers, from a right-click on the paper ---------------- */
 const PROOF = [
-  ['cap', 'Capitalize'], ['lower', 'Make lowercase'], ['insert', 'Insert'], ['para', 'New paragraph'],
+  ['gr', 'Grammar'], ['cap', 'Capitalize'], ['lower', 'Make lowercase'], ['insert', 'Insert'], ['para', 'New paragraph'],
   ['delete', 'Delete'], ['swap', 'Swap order'], ['space', 'Add a space'], ['close', 'Close up'],
-  ['period', 'Add a period'], ['sp', 'Spelling'], ['ro', 'Run-on'], ['frag', 'Fragment'],
+  ['sp', 'Spelling'], ['ro', 'Run-on'], ['frag', 'Fragment'],
   ['wc', 'Word choice'], ['awk', 'Awkward'], ['vt', 'Verb tense'], ['unclear', 'Unclear'],
 ];
-const PROOF_TAG = { sp: 'sp', ro: 'RO', frag: 'frag', wc: 'WC', awk: 'awk', vt: 'VT', unclear: '?' };   // the ones written in a circle
+const PUNCT = [
+  ['period', 'Add a period', 'Period'], ['comma', 'Add a comma', 'Comma'], ['apos', 'Add an apostrophe', 'Apostrophe'], ['quote', 'Add quotation marks', 'Quotes'], ['semi', 'Add a semicolon', 'Semicolon'],
+  ['colon', 'Add a colon', 'Colon'], ['qmark', 'Add a question mark', 'Question'], ['excl', 'Add an exclamation mark', 'Exclamation'], ['hyphen', 'Add a hyphen', 'Hyphen'], ['dash', 'Add a dash', 'Dash'],
+];
+const PUNCT_SIGN = { comma: [',', 1], apos: ['\u2019', -1], quote: ['\u201C \u201D', -1], semi: [';', 1], colon: [':', 1], qmark: ['?', 1], excl: ['!', 1], hyphen: ['=', 1], dash: ['\u2014', 1] };   // [sign, 1 caret / -1 upside down]
+const isProof = k => PROOF.some(p => p[0] === k) || PUNCT.some(p => p[0] === k);
+const PROOF_TAG = { gr: 'gr', sp: 'sp', ro: 'RO', frag: 'frag', wc: 'WC', awk: 'awk', vt: 'VT', unclear: '?' };   // the ones written in a circle
 const STICKERS = [
   ['star', 'Star', 0.895], ['check', 'Check', 0.86], ['thumbsup', 'Thumbs up', 0.985], ['lightbulb', 'Great idea', 1.02],
   ['evidence', 'Add evidence', 0.97], ['sideeye', 'Look here', 0.535], ['question', 'Unclear', 1.282], ['rocket', 'Big improvement', 0.975],
@@ -8460,11 +8536,27 @@ const stickersReady = Promise.all(STICKERS.map(([k]) => new Promise(done => {
 })));
 const isSticker = k => STICKERS.some(s => s[0] === k);
 const stickerAspect = k => (STICKERS.find(s => s[0] === k) || [0, 0, 1])[2];
-const stampName = k => ((PROOF.find(p => p[0] === k) || STICKERS.find(p => p[0] === k)) || [k, k])[1];
+const stampName = k => ((PROOF.find(p => p[0] === k) || PUNCT.find(p => p[0] === k) || STICKERS.find(p => p[0] === k)) || [k, k])[1];
+const MARK_SIZES = 'gs.markSizes', SIZE0 = { proof: 16, sticker: 44 };
+const sizeKind = k => isSticker(k) ? 'sticker' : 'proof';
+const SIZE_LIMITS = { proof: [8, 80], sticker: [16, 240], check: [8, 120] };
+const sizesHere = () => { const all = store.get(MARK_SIZES, {}) || {}; return (batch && all[batch.id]) || {}; };
+function lastSize(key, lim, dflt) { const v = +sizesHere()[key]; return v >= lim[0] && v <= lim[1] ? v : dflt; }
+const newStampSize = k => lastSize(k, SIZE_LIMITS[sizeKind(k)], SIZE0[sizeKind(k)]);
+const newCheckSize = () => lastSize('$check', SIZE_LIMITS.check, 22);
+function rememberSizeOf(key, size) {
+  if (!batch) return;
+  const all = { ...(store.get(MARK_SIZES, {}) || {}) }, mine = { ...(all[batch.id] || {}), [key]: size, at: Date.now() };
+  delete all[batch.id];
+  const keep = Object.entries(all).filter(([, v]) => v && typeof v === 'object').sort((p, q) => (q[1].at || 0) - (p[1].at || 0)).slice(0, 11);
+  store.set(MARK_SIZES, Object.fromEntries([[batch.id, mine], ...keep]));
+}
+const rememberStampSize = m => rememberSizeOf(m.k, m.size);
 
 function stampBox(m) {
   const s = m.size || 16, x = m.x, y = m.y;
   if (isSticker(m.k)) { const h = s * stickerAspect(m.k); return { x: x - s / 2, y: y - h / 2, w: s, h }; }
+  if (PUNCT_SIGN[m.k]) return { x: x - 0.42 * s, y: y - 0.62 * s, w: 0.84 * s, h: 1.2 * s };
   if (PROOF_TAG[m.k]) { const r = tagRadii(m.k, s); return { x: x - r[0] - 1, y: y - r[1] - 1, w: r[0] * 2 + 2, h: r[1] * 2 + 2 }; }
   const half = { cap: [0.4, 0.3], lower: [0.3, 0.5], insert: [0.35, 0.4], para: [0.4, 0.55], delete: [0.7, 0.5], swap: [0.65, 0.6], space: [0.3, 0.95], close: [0.35, 0.55], period: [0.3, 0.3] }[m.k] || [0.5, 0.5];
   return { x: x - half[0] * s, y: y - half[1] * s, w: half[0] * s * 2, h: half[1] * s * 2 };
@@ -8510,7 +8602,11 @@ function drawStamp(ctx, m) {
       ctx.beginPath(); ctx.arc(x, y, 0.26 * s, 0, Math.PI * 2); ctx.stroke();
       ctx.beginPath(); ctx.arc(x, y, 0.07 * s, 0, Math.PI * 2); ctx.fill(); break;
     default:
-      if (PROOF_TAG[m.k]) {
+      if (PUNCT_SIGN[m.k]) {
+        const [sign, way] = PUNCT_SIGN[m.k];
+        if (way > 0) { line(-0.3, 0.55, 0, 0.12, 0.3, 0.55); text(sign, s * (sign === '=' ? 0.7 : 0.95), -0.25 * s); }   // the caret, the mark above its point
+        else { line(-0.32, -0.45, 0, 0.5, 0.32, -0.45); text(sign, s * (sign.length > 1 ? 0.55 : 0.8), -0.1 * s); }   // the mark sitting inside an upside-down caret
+      } else if (PROOF_TAG[m.k]) {
         const [rx, ry] = tagRadii(m.k, s);
         ctx.beginPath(); ctx.ellipse(x, y, rx, ry, 0, 0, Math.PI * 2); ctx.stroke();
         text(PROOF_TAG[m.k], s * 0.62, s * 0.02);
@@ -8521,11 +8617,11 @@ function drawStamp(ctx, m) {
 
 /* ---------------- the right-click menu ---------------- */
 const RECENT_STAMPS = 'gs.recentStamps';
-function stampPicture(k, color) {   // a small picture of a mark for the menu, drawn the same way as on the paper
+function stampPicture(k, color, big) {   // a small picture of a mark for the menu, drawn the same way as on the paper
   const c = document.createElement('canvas'), dpr = window.devicePixelRatio || 1, sz = isSticker(k) ? 40 : 34;
   c.width = c.height = Math.round(sz * dpr); c.style.width = c.style.height = sz + 'px';
   const ctx = c.getContext('2d'); ctx.scale(dpr, dpr);
-  const m = { t: 'stamp', k, x: sz / 2, y: sz / 2, size: isSticker(k) ? sz - 6 : 16, color };
+  const m = { t: 'stamp', k, x: sz / 2, y: sz / 2, size: isSticker(k) ? sz - 6 : big ? 22 : 16, color };
   if (isSticker(m.k) && stickerAspect(k) > 1) m.size = (sz - 6) / stickerAspect(k);
   drawStamp(ctx, m);
   return c;
@@ -8533,11 +8629,11 @@ function stampPicture(k, color) {   // a small picture of a mark for the menu, d
 let stampMenuEl = null;
 function closeStampMenu() { if (stampMenuEl) { stampMenuEl.remove(); stampMenuEl = null; } }
 function placeStamp(pg, k, x, y) {
-  const m = isSticker(k) ? { t: 'stamp', k, x: r1(x), y: r1(y), size: 44, rot: Math.round((Math.random() * 10 - 5) * 10) / 10 } : { t: 'stamp', k, x: r1(x), y: r1(y), size: 16, color: COLORS[inkColor] };
+  const m = isSticker(k) ? { t: 'stamp', k, x: r1(x), y: r1(y), size: newStampSize(k), rot: Math.round((Math.random() * 10 - 5) * 10) / 10 } : { t: 'stamp', k, x: r1(x), y: r1(y), size: newStampSize(k), color: COLORS[inkColor] };
   const bb = stampBox(m);   // keep it on the page
   m.x = r1(m.x + Math.max(0, -bb.x) - Math.max(0, bb.x + bb.w - pg.W)); m.y = r1(m.y + Math.max(0, -bb.y) - Math.max(0, bb.y + bb.h - pg.H));
   snap(pg); pg.marks().push(m); changed(pg);
-  const recent = [k, ...store.get(RECENT_STAMPS, []).filter(r => r !== k && (isSticker(r) || PROOF_TAG[r] || PROOF.some(p => p[0] === r)))].slice(0, 6);
+  const recent = [k, ...store.get(RECENT_STAMPS, []).filter(r => r !== k && (isSticker(r) || isProof(r)))].slice(0, 6);
   store.set(RECENT_STAMPS, recent);
   return m;
 }
@@ -8554,8 +8650,18 @@ function openStampMenu(pg, x, y, cx, cy) {
   };
   const head = t => { const h = document.createElement('div'); h.className = 'st-head'; h.textContent = t; return h; };
   const grid = (cls, list, sticker) => { const g = document.createElement('div'); g.className = cls; for (const k of list) g.append(btn(k, sticker)); return g; };
-  const recent = store.get(RECENT_STAMPS, []).filter(k => isSticker(k) || PROOF.some(p => p[0] === k));
+  const tick = document.createElement('button'); tick.type = 'button'; tick.className = 'st-proof st-tick'; tick.dataset.tick = '1'; tick.setAttribute('role', 'menuitem'); tick.title = 'Check mark';
+  const tc = document.createElement('canvas'), dpr = window.devicePixelRatio || 1; tc.width = tc.height = Math.round(34 * dpr); tc.style.width = tc.style.height = '34px';
+  const tx = tc.getContext('2d'); tx.scale(dpr, dpr); drawCheck(tx, { t: 'check', color, x: 17, y: 18, size: 22 });
+  const tl = document.createElement('span'); tl.textContent = 'Check mark'; tick.append(tc, tl); el.append(tick);
+  const recent = store.get(RECENT_STAMPS, []).filter(k => isSticker(k) || isProof(k));
   if (recent.length) { el.append(head('Recent')); const g = document.createElement('div'); g.className = 'st-recent'; for (const k of recent) { const b = btn(k, true); b.className = isSticker(k) ? 'st-stick' : 'st-stick st-mini'; g.append(b); } el.append(g); }
+  const punct = document.createElement('div'); punct.className = 'st-puncs';
+  for (const [k, , short] of PUNCT) {
+    const b = btn(k, true); b.className = 'st-punc'; b.firstChild.replaceWith(stampPicture(k, color, true));
+    const s = document.createElement('span'); s.textContent = short; b.append(s); punct.append(b);
+  }
+  el.append(head('Punctuation'), punct);
   el.append(head('Proofreading marks'), grid('st-proofs', PROOF.map(p => p[0]), false));
   el.append(head('Stickers'), grid('st-sticks', STICKERS.filter(s => !BRAINROT.has(s[0])).map(s => s[0]), true));
   el.append(head('Just for fun'), grid('st-sticks', STICKERS.filter(s => BRAINROT.has(s[0])).map(s => s[0]), true));
@@ -8564,6 +8670,11 @@ function openStampMenu(pg, x, y, cx, cy) {
   el.addEventListener('click', e => {
     const b = e.target.closest('[data-mark]');
     if (b) { closeStampMenu(); const m = placeStamp(pg, b.dataset.mark, x, y); selected = { page: pg, mark: m, fresh: true }; redrawAll(); return; }
+    if (e.target.closest('[data-tick]')) {
+      closeStampMenu();
+      const m = { t: 'check', color: COLORS[inkColor], x: r1(x), y: r1(y), size: newCheckSize() };
+      snap(pg); pg.marks().push(m); selected = { page: pg, mark: m, fresh: true }; changed(pg); redrawAll(); return;
+    }
     if (e.target.closest('[data-note]')) { closeStampMenu(); openNote(pg, { t: 'note', color: COLORS[inkColor], ax: r1(x), ay: r1(y), text: '' }, true); }
   });
   el.addEventListener('keydown', e => {
@@ -8582,7 +8693,7 @@ function openStampMenu(pg, x, y, cx, cy) {
 document.addEventListener('pointerdown', e => { if (stampMenuEl && !stampMenuEl.contains(e.target)) closeStampMenu(); }, true);
 window.addEventListener('blur', closeStampMenu);
 document.addEventListener('scroll', closeStampMenu, true);
-Object.assign(window.__gs, { turnMarks, drawStamp, stampBox, placeStamp, openStampMenu, closeStampMenu, stickersReady, STAMP_KINDS: { proof: PROOF.map(p => p[0]), stickers: STICKERS.map(s => s[0]) } });
+Object.assign(window.__gs, { turnMarks, drawStamp, stampBox, placeStamp, openStampMenu, closeStampMenu, stickersReady, STAMP_KINDS: { proof: PROOF.map(p => p[0]), punct: PUNCT.map(p => p[0]), stickers: STICKERS.map(s => s[0]) } });
 
 /* ---------------- scores: statuses, when a score last changed, partial scores, doubtful readings, the pre-export check, safe CSV ---------------- */
 const STATUS_LABEL = { missing: 'Missing', excused: 'Excused', late: 'Late' };

@@ -580,6 +580,7 @@ function drawMarks(ctx, marks, W, H, side, screen) {
     if (bb) {
       ctx.save(); ctx.strokeStyle = '#1F6FB2'; ctx.setLineDash([3, 2]); ctx.lineWidth = 0.8; ctx.strokeRect(bb.x - 3, bb.y - 3, bb.w + 6, bb.h + 6);
       if (screen.sel.t === 'text') drawGrips(ctx, screen.sel, W, screen.s || 1);   // drag these edges to set where the text wraps
+      if (canResize(screen.sel)) drawCorner(ctx, screen.sel, W, screen.s || 1);   // and this corner to make it bigger or smaller
       ctx.restore();
     }
   }
@@ -1284,6 +1285,7 @@ function bindPage(pg) {
   let g = null;   // the gesture in progress
   c.addEventListener('pointerdown', e => {
     if (e.button !== 0) return;
+    const wasNote = !!(activeEditor && activeEditor.note);   // a comment was open: this click only closes it
     commitEditors();
     // Clicking the paper leaves the score or comment box, so the arrow keys move between students again.
     const ae = document.activeElement;
@@ -1292,14 +1294,17 @@ function bindPage(pg) {
     // A comment box in the margin always opens for editing, whatever the tool.
     const box = (pg.boxes || []).find(b => x >= b.x && x <= b.x + b.w && y >= b.y && y <= b.y + b.h);
     if (box && !box.n.ro && tool !== 'erase') { e.preventDefault(); openNote(pg, box.n); return; }
+    if (wasNote) { e.preventDefault(); return; }
+    if (tool !== 'erase') { const cg = cornerAt(pg, x, y); if (cg) { e.preventDefault(); c.setPointerCapture(e.pointerId); g = cg; return; } }
     if (tool !== 'select' && tool !== 'erase' && !onPage(x, y)) return;
     e.preventDefault();
     c.setPointerCapture(e.pointerId);
+    const pick = clickToPick(pg, x, y); if (pick) { g = pick; return; }
     if (tool === 'pen') g = inkBegin({ t: 'pen', color: COLORS[inkColor], w: penW, pts: [[r1(x), r1(y)]] }, x, y, e, pg.s);
     else if (tool === 'hl') g = hlBegin(pg, x, y, e);
     else if (tool === 'oval') g = { x0: x, y0: y, m: { t: 'oval', color: COLORS[inkColor], sw: Math.max(1.2, penW * 0.8), x, y, w: 0, h: 0 } };
     else if (tool === 'erase') { g = { erase: true, snapped: false }; eraseAt(pg, x, y, g); }
-    else if (tool === 'check') { snap(pg); pg.marks().push({ t: 'check', color: COLORS[inkColor], x: r1(x), y: r1(y), size: 22 }); changed(pg); }
+    else if (tool === 'check') { snap(pg); pg.marks().push({ t: 'check', color: COLORS[inkColor], x: r1(x), y: r1(y), size: newCheckSize() }); changed(pg); }
     else if (tool === 'text') {
       const grip = gripAt(pg, x, y); if (grip) { g = gripBegin(pg, grip); return; }
       const hit = hitMark(pg, x, y, 3);
@@ -1331,6 +1336,10 @@ function bindPage(pg) {
       if (!g.m && Math.hypot(x1 - g.x0, y1 - g.y0) < 5) return;
       g.m = { t: 'hl', color: HL[hlColor], x: Math.min(g.x0, x1), y: Math.min(g.y0, y1), w: Math.abs(x1 - g.x0), h: Math.abs(y1 - g.y0) };
       draw(pg, [g.m]);
+    } else if (g.scale) {
+      if (!g.moved) { snap(pg); g.moved = true; }
+      cornerMove(pg, g, x, y);
+      draw(pg);
     } else if (g.resize) {
       if (!g.moved) { snap(pg); g.moved = true; }
       gripMove(pg, g, x);
@@ -1368,6 +1377,7 @@ function bindPage(pg) {
       g = null; openNote(pg, m, true);
       return;
     }
+    if (g.scale) { const m = g.scale; if (g.moved) { rememberSize(m); changed(pg); } g = null; return; }
     if (g.resize) { const m = g.resize; if (g.moved) { keepOnPage(m, pg.W, pg.H); changed(pg); } g = null; return; }
     if (g.m && g.m.t === 'pen') { inkEnd(pg, g); snap(pg); pg.marks().push(g.m); changed(pg); }
     else if (g.m && g.m.t === 'oval') {
@@ -1534,7 +1544,7 @@ function openNote(pg, m, isNew) {
     if (text === m.text && i >= 0) return;
     snap(pg); m.text = text; if (i < 0) a.push(m); changed(pg);
   };
-  activeEditor = { commit: () => close(true) };
+  activeEditor = { commit: () => close(true), note: true };
   pop.addEventListener('pointerdown', e => e.stopPropagation());
   pop.addEventListener('keydown', e => {
     e.stopPropagation();
@@ -1774,7 +1784,7 @@ function openKeys() {
     '<h4>Students</h4>' + row('← →', 'Previous / next student (also ↑ ↓)') + row('N', 'Next student without a full score') + row('/', 'Find a student by name') +
     '<h4>Marking</h4>' + row('V', 'Select') + row('P', 'Pen (hold Shift for a straight line)') + row('H', 'Highlight, snapping to typed lines. Press H again for freehand (Shift for straight)') + row('O', 'Circle') + row('T', 'Text') + row('C', 'Comment') + row('K', 'Check mark') + row('E', 'Eraser') +
     row('⌘Z', 'Undo') + row('⇧⌘Z', 'Redo (⌘Y works too)') +
-    '<h4>A picked mark (Select tool)</h4>' + row('← → ↑ ↓', 'Nudge it (Shift for bigger steps)') + row('⌘C ⌘V', 'Copy it, then paste on the page you’re looking at, even on another student’s paper') + row('⌘D', 'Make a copy of it') + row('Delete', 'Remove it') + row('Esc', 'Let go of it (the arrows go back to moving between students)') +
+    '<h4>A picked mark (Select tool)</h4>' + row('← → ↑ ↓', 'Nudge it (Shift for bigger steps)') + row('⌘C ⌘V', 'Copy it, then paste on the page you’re looking at, even on another student’s paper') + row('⌘D', 'Make a copy of it') + row('+ −', 'Make it bigger or smaller (or drag the square at its corner)') + row('Delete', 'Remove it') + row('Esc', 'Let go of it (the arrows go back to moving between students)') +
     '<h4>The paper</h4>' + row('⌘+ ⌘−', 'Zoom in / out (or pinch, or ⌘-scroll)') + row('⌘0', 'Back to 100%') + row('[ ]', 'Fold away the student list / score panel') +
     'Turn a page: point at it and use ⟲ ⟳ in its top corner, or “Turn all pages” above the file. In Arrange pages, pick pages and press R.'.replace(/^/, '<h4>Turning pages</h4><span style="grid-column:1/-1">') + '</span>' +
     '<h4>Other</h4>' + row('=', 'Calculator') + row('Space', 'Play / pause a recording') + row('J L', 'Back / ahead 5 seconds') + row('?', 'This list') +
@@ -5990,6 +6000,8 @@ document.addEventListener('keydown', e => {
   }
   if (typing || e.metaKey || e.ctrlKey || e.altKey) return;
   if (e.key === '?') { e.preventDefault(); openKeys(); return; }
+  // A picked sticker, mark, check, circle or text box: + and − make it bigger or smaller.
+  if ((e.key === '+' || e.key === '=' || e.key === '-' || e.key === '_') && selected && !(selected.fresh && selected.mark.t === 'text') && canResize(selected.mark)) { e.preventDefault(); stepSize(e.key === '+' || e.key === '=' ? 1 : -1); return; }
   if (e.key === '/') { e.preventDefault(); $('#stuFind').focus(); return; }
   // A picked mark moves with the arrow keys (Shift for bigger steps); Esc lets go of it.
   if (selected && tool === 'select' && /^Arrow/.test(e.key)) {
