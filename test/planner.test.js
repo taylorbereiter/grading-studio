@@ -803,3 +803,26 @@ test('text color: red from the toolbar, saved as {red}…{/}, shown on the slide
     assert.deepEqual(errors, []);
   } finally { await a.done(); }
 });
+
+test('ManageBac links: added on a class in the week, shown on its lessons, kept in the timetable, shared with grading by class name', async () => {
+  const a = await open();
+  try {
+    const { page, errors } = a;
+    await page.evaluate(async s => { localStorage.setItem('gs.mblinks', JSON.stringify({ courseb1: 'https://school.example.org/b1' })); const P = window.__planner; await P.applySetup(s); P.L.weekOf = '2026-11-02'; P.L.view = 'week'; P.renderLessons(); }, SETUP);
+    // Course B-1's link was set in grading as "CourseB1": it shows here; Course A-1 has none yet
+    await page.waitForSelector('.ls-slot a.pl-mb[href="https://school.example.org/b1"]');
+    await page.click('.ls-slot [data-mbset="A1"]'); await page.waitForSelector('#mbU');
+    await page.type('#mbU', 'school.example.org/a1'); await page.keyboard.press('Enter');
+    await page.waitForSelector('.ls-slot a.pl-mb[href="https://school.example.org/a1"]');
+    const st = await page.evaluate(() => ({ mb: window.__planner.L.setup.classes.find(c => c.id === 'A1').mb, map: JSON.parse(localStorage.getItem('gs.mblinks')) }));
+    assert.deepEqual(st, { mb: 'https://school.example.org/a1', map: { courseb1: 'https://school.example.org/b1', coursea1: 'https://school.example.org/a1' } });
+    // on a lesson for that class, next to the class
+    await page.evaluate(() => { const P = window.__planner, l = P.normLesson({ title: 'L', slots: [{ classId: 'A1', date: '2026-11-03' }, { classId: 'A2', date: '2026-11-04' }], slides: [{ layout: 'title', fmt: 2 }] }); P.L.lessons.push(l); P.openLessonForTest(l, 0); });
+    await page.waitForSelector('.ls-chip a.pl-mb[href="https://school.example.org/a1"]');
+    assert.ok(await page.$('.ls-chip [data-mbset="A2"]'));
+    // loading the profile again keeps links the profile doesn't have
+    await page.evaluate(async s => { await window.__planner.applySetup(s); }, SETUP);
+    assert.equal(await page.evaluate(() => window.__planner.L.setup.classes.find(c => c.id === 'A1').mb), 'https://school.example.org/a1');
+    assert.deepEqual(errors, []);
+  } finally { await a.done(); }
+});

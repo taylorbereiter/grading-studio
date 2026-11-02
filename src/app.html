@@ -36,6 +36,7 @@ h1{font-family:var(--f-display);font-size:28px;font-weight:700;letter-spacing:-.
 h1 i,.top .title i{font-style:normal;font-weight:500;color:var(--accent)}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;border:1px solid var(--line-strong);background:var(--surface);border-radius:var(--r-sm);padding:8px 14px;font-weight:500;font-size:14px;line-height:1.2;white-space:nowrap}
 a.btn{color:var(--fg);text-decoration:none;cursor:pointer}
+a.btn.mb-go{color:var(--accent);border-color:var(--accent);font-weight:600}.mb-add{color:var(--accent)}
 .btn.ghost{border-color:transparent;background:none}
 .btn.ghost:hover{background:var(--surface-2)}
 .btn:hover{background:var(--surface-2)}
@@ -548,6 +549,7 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
     <span class="sp"></span>
     <button class="btn sm ghost" id="sheetBtn">Grade sheet</button>
     <button class="btn sm ghost" id="gradesBtn">Grades list</button>
+    <span id="topMb"></span>
     <button class="btn sm primary" id="exportBtn">Export marked</button>
     <div class="morewrap">
       <button class="btn sm" id="moreBtn" aria-haspopup="true" aria-expanded="false" aria-controls="moreMenu">More <span aria-hidden="true">▾</span></button>
