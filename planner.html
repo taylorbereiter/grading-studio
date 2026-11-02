@@ -257,10 +257,18 @@ h1 i,.top .title i{font-style:normal;font-weight:500;color:var(--accent)}
 .ls-ta.ls-body{line-height:1.45}
 .ls-rted{position:absolute;outline:2px solid #1F6FB2;outline-offset:2px;background:rgba(255,255,255,.55);text-transform:none;cursor:text;overflow:auto;z-index:2}
 .ls-rted:focus{outline:2px solid #1F6FB2}.ls-rted.ls-bx{display:block}
-.rt-tools{display:inline-flex;gap:2px;align-items:center;padding:2px 4px;border:1px solid var(--line);border-radius:8px;opacity:.55;transition:opacity .15s}
+.rt-tools{position:relative;z-index:4;display:inline-flex;gap:2px;align-items:center;padding:2px 4px;border:1px solid var(--line);border-radius:8px;opacity:.55;transition:opacity .15s}
 .rt-tools.live{opacity:1}
 .rt-tools .rt-tb{min-width:30px;padding-left:7px;padding-right:7px}
 .rt-tools .rt-tb.on{background:var(--accent-soft,rgba(31,111,178,.15));color:var(--accent)}
+.rt-cwrap{position:relative;display:inline-flex}
+.rt-tb .rt-cbar{position:absolute;left:8px;right:22px;bottom:3px;height:3px;border-radius:2px;background:#C00000}
+.rt-tools .rt-tb[data-rt="colormenu"]{position:relative;padding-bottom:7px}
+.rt-pal{position:absolute;top:calc(100% + 4px);left:0;z-index:20;display:flex;flex-wrap:wrap;gap:6px;width:150px;padding:8px;background:var(--surface);border:1px solid var(--line-strong);border-radius:10px;box-shadow:var(--shadow)}
+.rt-pal[hidden]{display:none}
+.rt-sw{width:28px;height:28px;border-radius:6px;border:2px solid var(--surface);outline:1px solid var(--line-strong);cursor:pointer;padding:0}
+.rt-sw:hover{outline:2px solid var(--accent)}
+.rt-auto{width:100%}
 .rt-sep{width:1px;height:18px;background:var(--line-strong);margin:0 3px}
 :root[data-theme="dark"] .lsn .ls-slot{background:var(--surface-2)}
 @media (max-width:900px){.ls-grid{grid-template-columns:1fr}.ls-ed-cols{grid-template-columns:1fr}.ls-thumbs{position:static;max-height:none;display:flex;gap:8px;overflow:auto;border-right:0;border-bottom:1px solid var(--line)}.ls-addslide{flex-direction:row}}
@@ -1812,7 +1820,7 @@ function lessonText(l) {
 }
 async function askClaude(l) {
   const where = L.dir && L.dirOk ? 'It is saved in my Planner folder as "' + fileBase(l) + '.lesson.json". Edit that file directly (keep the same id), and I will pick up your changes in the Planner.\n\n' : '';
-  await copyText('Here is a lesson from my Planner. ' + where + 'Slide text stays 28 to 36 pt; keep my simple bullet style. In slide text, a line starting with "• " is a bullet and "1. " is a number (only where I put them), a tab indents, and **bold**, *italic* and __underline__ work.\n\n' + lessonText(l));
+  await copyText('Here is a lesson from my Planner. ' + where + 'Slide text stays 28 to 36 pt; keep my simple bullet style. In slide text, a line starting with "• " is a bullet and "1. " is a number (only where I put them), a tab indents, **bold**, *italic* and __underline__ work, and {red}words{/} are colored (red, orange, green, blue, purple, gray).\n\n' + lessonText(l));
   toast('Lesson copied. Paste it into Claude and say what you want.', 5000);
 }
 
@@ -1923,7 +1931,7 @@ function tplLayouts(z) {   // which layout file is Title Slide / Title and Conte
 const NS = 'xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"';
 const spPh = (id, name, ph, body, bodyPr) => '<p:sp><p:nvSpPr><p:cNvPr id="' + id + '" name="' + name + '"/><p:cNvSpPr><a:spLocks noGrp="1"/></p:cNvSpPr><p:nvPr>' + ph + '</p:nvPr></p:nvSpPr><p:spPr/><p:txBody>' + (bodyPr || '<a:bodyPr/>') + '<a:lstStyle/>' + body + '</p:txBody></p:sp>';
 let pxLook = 'wood';
-const run = (t, sz, o) => pxLook !== 'wood' ? lookRun(t, sz, o || {}, pxLook) : '<a:r><a:rPr lang="en-US"' + (sz ? ' sz="' + sz * 100 + '"' : '') + (o && o.b ? ' b="1"' : '') + (o && o.i ? ' i="1"' : '') + (o && o.u ? ' u="sng"' : '') + ' dirty="0"/><a:t>' + xe(t) + '</a:t></a:r>';
+const run = (t, sz, o) => pxLook !== 'wood' ? lookRun(t, sz, o || {}, pxLook) : '<a:r><a:rPr lang="en-US"' + (sz ? ' sz="' + sz * 100 + '"' : '') + (o && o.b ? ' b="1"' : '') + (o && o.i ? ' i="1"' : '') + (o && o.u ? ' u="sng"' : '') + ' dirty="0"' + (o && RT_COLORS[o.c] ? '><a:solidFill><a:srgbClr val="' + RT_COLORS[o.c].slice(1) + '"/></a:solidFill></a:rPr>' : '/>') + '<a:t>' + xe(t) + '</a:t></a:r>';
 const buClr = () => pxLook !== 'wood' ? '<a:buClr><a:srgbClr val="' + hex(LOOKS[pxLook].accent) + '"/></a:buClr>' : '';
 function slideXml(s, lesson, media) {
   pxLook = lookOf(lesson);
@@ -2072,7 +2080,8 @@ The teacher sees your changes slide by slide and keeps theirs or yours for each,
 For a video, give just "url" (and "start" in seconds, if it should start partway); the app adds the title, channel and picture.
 Rules: "size" is 28 to 36 (pt). Text lines ("body", "body2", "foot") are separated by \\n and show exactly as written:
 a line starting with "• " is a bullet, "1. " (any number) is a numbered line, anything else is plain. One or two
-leading tabs indent the line. **bold**, *italic* and __underline__ work inside a line (a backslash shows a * or _ as is).
+leading tabs indent the line. **bold**, *italic*, __underline__ and {red}colored words{/} (red, orange, green, blue,
+purple, gray) work inside a line (a backslash shows a *, _ or { as is).
 No layout adds bullets or numbers by itself, so add them only where the teacher would. Keep "fmt": 2 on the lesson.
 An empty title-slide body means the app fills in the course and dates. Bump "updated" (milliseconds) when you change a lesson.
 
@@ -2325,7 +2334,7 @@ function shapeXml(id, [x, y, w, h, fill, line]) {
     (fill ? fillX(fill) : '<a:noFill/>') + (line ? '<a:ln w="' + Math.round(line[1] * EX) + '">' + fillX(line[0]) + '</a:ln>' : '<a:ln><a:noFill/></a:ln>') + '</p:spPr><p:txBody><a:bodyPr/><a:lstStyle/><a:p><a:endParaRPr lang="en-US"/></a:p></p:txBody></p:sp>';
 }
 function lookRun(t, sz, o, look) {
-  const L0 = LOOKS[look], c = o.title ? (L0.title || L0.text) : o.col === 'accent' ? L0.accent : o.col === 'muted' ? mix(L0.text, L0.bg, .78) : L0.text;
+  const L0 = LOOKS[look], c = RT_COLORS[o.c] ? RT_COLORS[o.c] : o.title ? (L0.title || L0.text) : o.col === 'accent' ? L0.accent : o.col === 'muted' ? mix(L0.text, L0.bg, .78) : L0.text;
   const font = o.serif || (o.title && L0.serif) ? '<a:latin typeface="Georgia"/>' : '';
   return '<a:r><a:rPr lang="en-US"' + (sz ? ' sz="' + Math.round(sz * 100) + '"' : '') + (o.b || (o.title && !L0.serif && !L0.caps) ? ' b="1"' : '') + (o.i ? ' i="1"' : '') + (o.u ? ' u="sng"' : '') + (o.caps ? ' cap="all"' : (o.title || o.sub) && !L0.caps ? ' cap="none"' : '') + ' dirty="0">' + fillX(c) + font + '</a:rPr><a:t>' + xe(t) + '</a:t></a:r>';
 }
@@ -2333,7 +2342,7 @@ function mix(a, b, k) { const p = c => [1, 3, 5].map(i => parseInt(hex(c).slice(
 function teachBoxXml(id, b, s, look) {
   const v = fieldOf(s, b.k), lines = v.split('\n'), acc = hex(LOOKS[look].accent);
   const mar = Math.round((b.list === 'num' ? 1.45 : .86) * b.sz * 12700);
-  const ps = RT_KEYS.includes(b.k) && v.trim() ? rtParasXml(v, { sz: b.sz, algn: b.algn === 'ctr' ? 'ctr' : '', lvlMar: Math.round(1.6 * b.sz * 12700), bulMar: Math.round(.86 * b.sz * 12700), numMar: Math.round(1.45 * b.sz * 12700), gap: b.gap || 0, buClr: '<a:buClr><a:srgbClr val="' + acc + '"/></a:buClr>', runFn: (t, f) => lookRun(t, b.sz, { ...b, b: b.b || f.b, i: b.i || f.i, u: f.u }, look) }) : (v.trim() ? lines : ['']).map((x, i) => {
+  const ps = RT_KEYS.includes(b.k) && v.trim() ? rtParasXml(v, { sz: b.sz, algn: b.algn === 'ctr' ? 'ctr' : '', lvlMar: Math.round(1.6 * b.sz * 12700), bulMar: Math.round(.86 * b.sz * 12700), numMar: Math.round(1.45 * b.sz * 12700), gap: b.gap || 0, buClr: '<a:buClr><a:srgbClr val="' + acc + '"/></a:buClr>', runFn: (t, f) => lookRun(t, b.sz, { ...b, b: b.b || f.b, i: b.i || f.i, u: f.u, c: f.c }, look) }) : (v.trim() ? lines : ['']).map((x, i) => {
     let pPr = '<a:pPr' + (b.algn === 'ctr' ? ' algn="ctr"' : '') + (b.list ? ' marL="' + mar + '" indent="-' + mar + '"' : ' marL="0" indent="0"') + '>' + (i && b.gap ? '<a:spcBef><a:spcPts val="' + Math.round(b.gap * 100) + '"/></a:spcBef>' : '<a:spcBef><a:spcPts val="0"/></a:spcBef>');
     pPr += b.list ? '<a:buClr><a:srgbClr val="' + acc + '"/></a:buClr>' + (b.list === 'num' ? '<a:buFont typeface="+mj-lt"/><a:buAutoNum type="arabicPeriod"/>' : '<a:buFont typeface="Arial"/><a:buChar char="•"/>') : '<a:buNone/>';
     return '<a:p>' + pPr + '</a:pPr>' + (x ? lookRun(x, b.sz, b, look) : '<a:endParaRPr lang="en-US" sz="' + b.sz * 100 + '"/>') + '</a:p>';
@@ -2396,7 +2405,11 @@ function addSlideDlg(mode) {
 
 /* ---------- slide text the teacher formats herself ---------- */
 const RT_LVL = 2, RT_KEYS = ['body', 'body2', 'foot'];
-const rtEsc = t => String(t).replace(/\\/g, '\\\\').replace(/\*/g, '\\*').replace(/_/g, '\\_');
+const rtEsc = t => String(t).replace(/\\/g, '\\\\').replace(/\*/g, '\\*').replace(/_/g, '\\_').replace(/\{/g, '\\{');
+const RT_COLORS = { red: '#C00000', orange: '#D9480F', green: '#2B8A3E', blue: '#1C5DB8', purple: '#7B2CBF', gray: '#6B6B6B' };
+const RT_CNAME = { red: 'Red', orange: 'Orange', green: 'Green', blue: 'Blue', purple: 'Purple', gray: 'Gray' };
+const RT_TOK = new RegExp('(\\\\.|\\*\\*|__|\\*|\\{(?:' + Object.keys(RT_COLORS).join('|') + '|/)\\})');
+const RT_NOCOLOR = '#010203';   // what "Automatic" paints with for a moment, before it is taken off
 function rtParse(text) {
   const out = String(text || '').replace(/\r/g, '').split('\n').map(raw => {
     const tabs = /^\t*/.exec(raw)[0].length; let t = raw.slice(tabs), kind = 'p';
@@ -2417,16 +2430,23 @@ function rtNumber(lines) {
 function rtLineText(x) { return '\t'.repeat(x.lvl) + (x.kind === 'b' ? '• ' : x.kind === 'n' ? (x.n || 1) + '. ' : '') + x.text; }
 const rtToText = lines => { const a = rtNumber(lines).map(rtLineText); while (a.length && !a[a.length - 1].trim()) a.pop(); return a.join('\n'); };
 function rtSegs(text) {
-  const out = [], f = { b: 0, i: 0, u: 0 };
-  for (const tok of String(text).split(/(\\.|\*\*|__|\*)/)) {
+  const out = [], f = { b: 0, i: 0, u: 0, c: '' };
+  for (const tok of String(text).split(RT_TOK)) {
     if (!tok) continue;
     if (tok === '**') f.b ^= 1; else if (tok === '*') f.i ^= 1; else if (tok === '__') f.u ^= 1;
-    else { const t = tok[0] === '\\' && tok.length === 2 ? tok[1] : tok; const p = out[out.length - 1]; if (p && p.b === f.b && p.i === f.i && p.u === f.u) p.t += t; else out.push({ t, ...f }); }
+    else if (tok[0] === '{' && tok.length > 2) f.c = tok === '{/}' ? '' : tok.slice(1, -1);
+    else { const t = tok[0] === '\\' && tok.length === 2 ? tok[1] : tok; const p = out[out.length - 1]; if (p && p.b === f.b && p.i === f.i && p.u === f.u && p.c === f.c) p.t += t; else out.push({ t, ...f }); }
   }
   return out;
 }
 const rtPlain = text => rtSegs(text).map(s => s.t).join('');
-function rtInlineHtml(text) { return rtSegs(text).map(s => { let h = esc(s.t); if (s.u) h = '<u>' + h + '</u>'; if (s.i) h = '<i>' + h + '</i>'; if (s.b) h = '<b>' + h + '</b>'; return h; }).join(''); }
+function rtInlineHtml(text) { return rtSegs(text).map(s => { let h = esc(s.t); if (s.u) h = '<u>' + h + '</u>'; if (s.i) h = '<i>' + h + '</i>'; if (s.b) h = '<b>' + h + '</b>'; if (s.c) h = '<span class="rt-c" data-c="' + s.c + '" style="color:' + RT_COLORS[s.c] + '">' + h + '</span>'; return h; }).join(''); }
+function rtColorName(v) {
+  v = String(v || '').trim().toLowerCase(); let h = '';
+  const m = /^rgba?\((\d+),\s*(\d+),\s*(\d+)/.exec(v);
+  if (m) h = '#' + [m[1], m[2], m[3]].map(x => (+x).toString(16).padStart(2, '0')).join(''); else if (/^#[0-9a-f]{6}$/.test(v)) h = v;
+  return Object.keys(RT_COLORS).find(k => RT_COLORS[k].toLowerCase() === h) || '';
+}
 function rtLineHtml(x, edit) { return '<div class="rt rt-' + x.kind + ' l' + x.lvl + '"' + (x.kind === 'n' ? ' data-n="' + x.n + '"' : '') + '>' + (rtInlineHtml(x.text) || (edit ? '<br>' : '&nbsp;')) + '</div>'; }
 function rtHtml(text, edit) { const ls = rtParse(text); while (!edit && ls.length > 1 && !ls[ls.length - 1].text && ls[ls.length - 1].kind === 'p') ls.pop(); return ls.map(x => rtLineHtml(x, edit)).join(''); }
 const rtStrip = text => rtParse(text).map(x => '\t'.repeat(x.lvl) + (x.kind === 'b' ? '• ' : x.kind === 'n' ? x.n + '. ' : '') + rtPlain(x.text)).join('\n');
@@ -2481,14 +2501,18 @@ function rtFromNodes(nodes) {
     for (const n of ns) {
       if (n.nodeType === 3) { if (n.nodeValue) segs.push({ t: n.nodeValue.replace(/\u00a0/g, ' ').replace(/\n/g, ' '), ...f }); continue; }
       if (n.nodeType !== 1 || n.tagName === 'BR') continue;
-      const st = n.getAttribute('style') || '';
-      walk(n.childNodes, { b: f.b || /^(B|STRONG)$/.test(n.tagName) || /font-weight:\s*(bold|[6-9]00)/.test(st) ? 1 : 0, i: f.i || /^(I|EM)$/.test(n.tagName) || /font-style:\s*italic/.test(st) ? 1 : 0, u: f.u || n.tagName === 'U' || /underline/.test(st) ? 1 : 0 });
+      const st = n.getAttribute('style') || '', cm = /(?:^|;)\s*color:\s*([^;]+)/.exec(st);
+      const c = n.dataset && (n.dataset.c === '' || RT_COLORS[n.dataset.c]) ? n.dataset.c : n.tagName === 'FONT' && n.getAttribute('color') ? rtColorName(n.getAttribute('color')) : cm ? rtColorName(cm[1]) : null;
+      walk(n.childNodes, { c: c == null ? f.c : c, b: f.b || /^(B|STRONG)$/.test(n.tagName) || /font-weight:\s*(bold|[6-9]00)/.test(st) ? 1 : 0, i: f.i || /^(I|EM)$/.test(n.tagName) || /font-style:\s*italic/.test(st) ? 1 : 0, u: f.u || n.tagName === 'U' || /underline/.test(st) ? 1 : 0 });
     }
-  })(nodes, { b: 0, i: 0, u: 0 });
-  let out = '', cur = { b: 0, i: 0, u: 0 };
-  const close = () => (cur.u ? '__' : '') + (cur.i ? '*' : '') + (cur.b ? '**' : '');
+  })(nodes, { b: 0, i: 0, u: 0, c: '' });
+  let out = '', cur = { b: 0, i: 0, u: 0, c: '' };
+  const shut = () => (cur.u ? '__' : '') + (cur.i ? '*' : '') + (cur.b ? '**' : ''), close = () => shut() + (cur.c ? '{/}' : '');
   for (const s of segs) {
-    if (s.b !== cur.b || s.i !== cur.i || s.u !== cur.u) { out += close(); cur = s; out += (s.b ? '**' : '') + (s.i ? '*' : '') + (s.u ? '__' : ''); }
+    if (s.b !== cur.b || s.i !== cur.i || s.u !== cur.u || s.c !== cur.c) {   // a color stays open while only bold, italic or underline change
+      out += s.c === cur.c ? shut() : close() + (s.c ? '{' + s.c + '}' : '');
+      cur = s; out += (s.b ? '**' : '') + (s.i ? '*' : '') + (s.u ? '__' : '');
+    }
     out += rtEsc(s.t);
   }
   return out + close();
@@ -2525,6 +2549,9 @@ const rtLvl = d => d.classList.contains('l2') ? 2 : d.classList.contains('l1') ?
 function rtSetKind(d, k) { d.classList.remove('rt-p', 'rt-b', 'rt-n'); d.classList.add('rt-' + k); }
 function rtSetLvl(d, v) { d.classList.remove('l0', 'l1', 'l2'); d.classList.add('l' + Math.max(0, Math.min(RT_LVL, v))); }
 function rtDo(cmd) {
+  const pal = document.querySelector('.rt-pal');
+  if (cmd === 'colormenu') { if (pal) pal.hidden = !pal.hidden; return; }
+  if (pal) pal.hidden = true;
   let el = rtActive();
   if (!el) {   // nothing open: start on the slide's main text box, all of it
     const box = document.querySelector('#lsStage .ls-ed[data-k="body"]:not(.ls-sub)') || document.querySelector('#lsStage .ls-ed[data-k="body2"]');
@@ -2534,6 +2561,15 @@ function rtDo(cmd) {
   }
   el.focus();
   if (cmd === 'bold' || cmd === 'italic' || cmd === 'underline') { document.execCommand(cmd); rtToolState(); return; }
+  if (cmd.startsWith('color:')) {
+    const c = cmd.slice(6);
+    document.execCommand('styleWithCSS', false, false);
+    document.execCommand('foreColor', false, RT_COLORS[c] || RT_NOCOLOR);
+    if (!RT_COLORS[c]) for (const n of [...el.querySelectorAll('font[color]')]) if (n.getAttribute('color').toLowerCase() === RT_NOCOLOR) { const sp = document.createElement('span'); sp.dataset.c = ''; sp.style.color = getComputedStyle(el).color; sp.append(...n.childNodes); n.replaceWith(sp); }
+    for (const n of el.querySelectorAll('span[data-c]')) if (!n.style.color) { delete n.dataset.c; n.classList.remove('rt-c'); }   // the browser took its color off
+    const bar = document.querySelector('.rt-cbar'); if (bar && RT_COLORS[c]) bar.style.background = RT_COLORS[c];
+    rtToolState(); return;
+  }
   const ls = rtCurLines(el); if (!ls.length) return;
   if (cmd === 'bullets' || cmd === 'numbers') {
     const k = cmd === 'bullets' ? 'b' : 'n', all = ls.every(d => d.classList.contains('rt-' + k));
@@ -2565,6 +2601,9 @@ function rtPaste(e) {
 function rtToolHtml() {
   const B = (c, t, tip, st) => '<button class="btn sm ghost rt-tb" data-rt="' + c + '" title="' + tip + '"' + (st ? ' style="' + st + '"' : '') + '>' + t + '</button>';
   return '<span class="rt-tools" role="toolbar" aria-label="Text">' + B('bold', 'B', 'Bold (Ctrl/⌘ B)', 'font-weight:800') + B('italic', 'I', 'Italic (Ctrl/⌘ I)', 'font-style:italic;font-family:Georgia,serif') + B('underline', 'U', 'Underline (Ctrl/⌘ U)', 'text-decoration:underline') +
+    '<span class="rt-cwrap">' + B('colormenu', 'A<span class="rt-cbar"></span> ▾', 'Text color') +
+    '<span class="rt-pal" hidden>' + Object.entries(RT_COLORS).map(([k, v]) => '<button class="rt-sw" data-rt="color:' + k + '" title="' + RT_CNAME[k] + '" aria-label="' + RT_CNAME[k] + '" style="background:' + v + '"></button>').join('') +
+    '<button class="btn sm ghost rt-auto" data-rt="color:">Automatic</button></span></span>' +
     '<span class="rt-sep"></span>' + B('bullets', '• List', 'Bullets on or off (Ctrl/⌘ Shift 8)') + B('numbers', '1. List', 'Numbers on or off (Ctrl/⌘ Shift 7)') + B('outdent', '⇤', 'Move left (Shift Tab)') + B('indent', '⇥', 'Indent (Tab)') + '</span>';
 }
 function rtToolState() {
@@ -2579,7 +2618,10 @@ function rtToolState() {
   on('bold', st.b); on('italic', st.i); on('underline', st.u);
 }
 document.addEventListener('selectionchange', () => { if (rtActive()) rtToolState(); });
-document.addEventListener('mousedown', e => { const b = e.target.closest && e.target.closest('[data-rt]'); if (b) { e.preventDefault(); rtDo(b.dataset.rt); } });
+document.addEventListener('mousedown', e => {
+  const b = e.target.closest && e.target.closest('[data-rt]'); if (b) { e.preventDefault(); return rtDo(b.dataset.rt); }
+  const pal = document.querySelector('.rt-pal'); if (pal && !pal.hidden && !(e.target.closest && e.target.closest('.rt-cwrap'))) pal.hidden = true;
+});
 
 /* ---------- .pptx paragraphs ---------- */
 function rtParasXml(text, o) {
