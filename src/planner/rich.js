@@ -1,9 +1,14 @@
 /* ---------- slide text the teacher formats herself ---------- */
 // One line per paragraph. Leading tabs set the indent (0 to 2). "• " starts a bullet, "1. " (any number) a
-// numbered line, anything else is plain. Inside a line: **bold**, *italic*, __underline__; \ keeps a * or _ as is.
+// numbered line, anything else is plain. Inside a line: **bold**, *italic*, __underline__, {red}colored{/}; \ keeps a * _ or { as is.
 // No layout adds bullets or numbers on its own: they are only there if she turned them on.
 const RT_LVL = 2, RT_KEYS = ['body', 'body2', 'foot'];
-const rtEsc = t => String(t).replace(/\\/g, '\\\\').replace(/\*/g, '\\*').replace(/_/g, '\\_');
+const rtEsc = t => String(t).replace(/\\/g, '\\\\').replace(/\*/g, '\\*').replace(/_/g, '\\_').replace(/\{/g, '\\{');
+// Text colors: a few that read well on every look and in PowerPoint.
+const RT_COLORS = { red: '#C00000', orange: '#D9480F', green: '#2B8A3E', blue: '#1C5DB8', purple: '#7B2CBF', gray: '#6B6B6B' };
+const RT_CNAME = { red: 'Red', orange: 'Orange', green: 'Green', blue: 'Blue', purple: 'Purple', gray: 'Gray' };
+const RT_TOK = new RegExp('(\\\\.|\\*\\*|__|\\*|\\{(?:' + Object.keys(RT_COLORS).join('|') + '|/)\\})');
+const RT_NOCOLOR = '#010203';   // what "Automatic" paints with for a moment, before it is taken off
 function rtParse(text) {
   const out = String(text || '').replace(/\r/g, '').split('\n').map(raw => {
     const tabs = /^\t*/.exec(raw)[0].length; let t = raw.slice(tabs), kind = 'p';
@@ -24,18 +29,26 @@ function rtNumber(lines) {
 }
 function rtLineText(x) { return '\t'.repeat(x.lvl) + (x.kind === 'b' ? '• ' : x.kind === 'n' ? (x.n || 1) + '. ' : '') + x.text; }
 const rtToText = lines => { const a = rtNumber(lines).map(rtLineText); while (a.length && !a[a.length - 1].trim()) a.pop(); return a.join('\n'); };
-// The words of a line in pieces: [{ t, b, i, u }]
+// The words of a line in pieces: [{ t, b, i, u, c }] (c: a color name or '')
 function rtSegs(text) {
-  const out = [], f = { b: 0, i: 0, u: 0 };
-  for (const tok of String(text).split(/(\\.|\*\*|__|\*)/)) {
+  const out = [], f = { b: 0, i: 0, u: 0, c: '' };
+  for (const tok of String(text).split(RT_TOK)) {
     if (!tok) continue;
     if (tok === '**') f.b ^= 1; else if (tok === '*') f.i ^= 1; else if (tok === '__') f.u ^= 1;
-    else { const t = tok[0] === '\\' && tok.length === 2 ? tok[1] : tok; const p = out[out.length - 1]; if (p && p.b === f.b && p.i === f.i && p.u === f.u) p.t += t; else out.push({ t, ...f }); }
+    else if (tok[0] === '{' && tok.length > 2) f.c = tok === '{/}' ? '' : tok.slice(1, -1);
+    else { const t = tok[0] === '\\' && tok.length === 2 ? tok[1] : tok; const p = out[out.length - 1]; if (p && p.b === f.b && p.i === f.i && p.u === f.u && p.c === f.c) p.t += t; else out.push({ t, ...f }); }
   }
   return out;
 }
 const rtPlain = text => rtSegs(text).map(s => s.t).join('');
-function rtInlineHtml(text) { return rtSegs(text).map(s => { let h = esc(s.t); if (s.u) h = '<u>' + h + '</u>'; if (s.i) h = '<i>' + h + '</i>'; if (s.b) h = '<b>' + h + '</b>'; return h; }).join(''); }
+function rtInlineHtml(text) { return rtSegs(text).map(s => { let h = esc(s.t); if (s.u) h = '<u>' + h + '</u>'; if (s.i) h = '<i>' + h + '</i>'; if (s.b) h = '<b>' + h + '</b>'; if (s.c) h = '<span class="rt-c" data-c="' + s.c + '" style="color:' + RT_COLORS[s.c] + '">' + h + '</span>'; return h; }).join(''); }
+// A color the browser wrote (#c00000, rgb(192, 0, 0), a <font color>) back to its name; anything else is no color.
+function rtColorName(v) {
+  v = String(v || '').trim().toLowerCase(); let h = '';
+  const m = /^rgba?\((\d+),\s*(\d+),\s*(\d+)/.exec(v);
+  if (m) h = '#' + [m[1], m[2], m[3]].map(x => (+x).toString(16).padStart(2, '0')).join(''); else if (/^#[0-9a-f]{6}$/.test(v)) h = v;
+  return Object.keys(RT_COLORS).find(k => RT_COLORS[k].toLowerCase() === h) || '';
+}
 function rtLineHtml(x, edit) { return '<div class="rt rt-' + x.kind + ' l' + x.lvl + '"' + (x.kind === 'n' ? ' data-n="' + x.n + '"' : '') + '>' + (rtInlineHtml(x.text) || (edit ? '<br>' : '&nbsp;')) + '</div>'; }
 function rtHtml(text, edit) { const ls = rtParse(text); while (!edit && ls.length > 1 && !ls[ls.length - 1].text && ls[ls.length - 1].kind === 'p') ls.pop(); return ls.map(x => rtLineHtml(x, edit)).join(''); }
 // Text with the markers taken out, for search, the Claude box and anything else that wants just the words.
@@ -93,14 +106,18 @@ function rtFromNodes(nodes) {
     for (const n of ns) {
       if (n.nodeType === 3) { if (n.nodeValue) segs.push({ t: n.nodeValue.replace(/\u00a0/g, ' ').replace(/\n/g, ' '), ...f }); continue; }
       if (n.nodeType !== 1 || n.tagName === 'BR') continue;
-      const st = n.getAttribute('style') || '';
-      walk(n.childNodes, { b: f.b || /^(B|STRONG)$/.test(n.tagName) || /font-weight:\s*(bold|[6-9]00)/.test(st) ? 1 : 0, i: f.i || /^(I|EM)$/.test(n.tagName) || /font-style:\s*italic/.test(st) ? 1 : 0, u: f.u || n.tagName === 'U' || /underline/.test(st) ? 1 : 0 });
+      const st = n.getAttribute('style') || '', cm = /(?:^|;)\s*color:\s*([^;]+)/.exec(st);
+      const c = n.dataset && (n.dataset.c === '' || RT_COLORS[n.dataset.c]) ? n.dataset.c : n.tagName === 'FONT' && n.getAttribute('color') ? rtColorName(n.getAttribute('color')) : cm ? rtColorName(cm[1]) : null;
+      walk(n.childNodes, { c: c == null ? f.c : c, b: f.b || /^(B|STRONG)$/.test(n.tagName) || /font-weight:\s*(bold|[6-9]00)/.test(st) ? 1 : 0, i: f.i || /^(I|EM)$/.test(n.tagName) || /font-style:\s*italic/.test(st) ? 1 : 0, u: f.u || n.tagName === 'U' || /underline/.test(st) ? 1 : 0 });
     }
-  })(nodes, { b: 0, i: 0, u: 0 });
-  let out = '', cur = { b: 0, i: 0, u: 0 };
-  const close = () => (cur.u ? '__' : '') + (cur.i ? '*' : '') + (cur.b ? '**' : '');
+  })(nodes, { b: 0, i: 0, u: 0, c: '' });
+  let out = '', cur = { b: 0, i: 0, u: 0, c: '' };
+  const shut = () => (cur.u ? '__' : '') + (cur.i ? '*' : '') + (cur.b ? '**' : ''), close = () => shut() + (cur.c ? '{/}' : '');
   for (const s of segs) {
-    if (s.b !== cur.b || s.i !== cur.i || s.u !== cur.u) { out += close(); cur = s; out += (s.b ? '**' : '') + (s.i ? '*' : '') + (s.u ? '__' : ''); }
+    if (s.b !== cur.b || s.i !== cur.i || s.u !== cur.u || s.c !== cur.c) {   // a color stays open while only bold, italic or underline change
+      out += s.c === cur.c ? shut() : close() + (s.c ? '{' + s.c + '}' : '');
+      cur = s; out += (s.b ? '**' : '') + (s.i ? '*' : '') + (s.u ? '__' : '');
+    }
     out += rtEsc(s.t);
   }
   return out + close();
@@ -139,6 +156,9 @@ function rtSetKind(d, k) { d.classList.remove('rt-p', 'rt-b', 'rt-n'); d.classLi
 function rtSetLvl(d, v) { d.classList.remove('l0', 'l1', 'l2'); d.classList.add('l' + Math.max(0, Math.min(RT_LVL, v))); }
 // The toolbar and keys: bullets, numbers, indent, bold, italic, underline.
 function rtDo(cmd) {
+  const pal = document.querySelector('.rt-pal');
+  if (cmd === 'colormenu') { if (pal) pal.hidden = !pal.hidden; return; }
+  if (pal) pal.hidden = true;
   let el = rtActive();
   if (!el) {   // nothing open: start on the slide's main text box, all of it
     const box = document.querySelector('#lsStage .ls-ed[data-k="body"]:not(.ls-sub)') || document.querySelector('#lsStage .ls-ed[data-k="body2"]');
@@ -148,6 +168,16 @@ function rtDo(cmd) {
   }
   el.focus();
   if (cmd === 'bold' || cmd === 'italic' || cmd === 'underline') { document.execCommand(cmd); rtToolState(); return; }
+  if (cmd.startsWith('color:')) {
+    const c = cmd.slice(6);
+    document.execCommand('styleWithCSS', false, false);
+    document.execCommand('foreColor', false, RT_COLORS[c] || RT_NOCOLOR);
+    // Automatic: the words go back to the slide's own text color (marked so a color around them doesn't count)
+    if (!RT_COLORS[c]) for (const n of [...el.querySelectorAll('font[color]')]) if (n.getAttribute('color').toLowerCase() === RT_NOCOLOR) { const sp = document.createElement('span'); sp.dataset.c = ''; sp.style.color = getComputedStyle(el).color; sp.append(...n.childNodes); n.replaceWith(sp); }
+    for (const n of el.querySelectorAll('span[data-c]')) if (!n.style.color) { delete n.dataset.c; n.classList.remove('rt-c'); }   // the browser took its color off
+    const bar = document.querySelector('.rt-cbar'); if (bar && RT_COLORS[c]) bar.style.background = RT_COLORS[c];
+    rtToolState(); return;
+  }
   const ls = rtCurLines(el); if (!ls.length) return;
   if (cmd === 'bullets' || cmd === 'numbers') {
     const k = cmd === 'bullets' ? 'b' : 'n', all = ls.every(d => d.classList.contains('rt-' + k));
@@ -180,6 +210,9 @@ function rtPaste(e) {
 function rtToolHtml() {
   const B = (c, t, tip, st) => '<button class="btn sm ghost rt-tb" data-rt="' + c + '" title="' + tip + '"' + (st ? ' style="' + st + '"' : '') + '>' + t + '</button>';
   return '<span class="rt-tools" role="toolbar" aria-label="Text">' + B('bold', 'B', 'Bold (Ctrl/⌘ B)', 'font-weight:800') + B('italic', 'I', 'Italic (Ctrl/⌘ I)', 'font-style:italic;font-family:Georgia,serif') + B('underline', 'U', 'Underline (Ctrl/⌘ U)', 'text-decoration:underline') +
+    '<span class="rt-cwrap">' + B('colormenu', 'A<span class="rt-cbar"></span> ▾', 'Text color') +
+    '<span class="rt-pal" hidden>' + Object.entries(RT_COLORS).map(([k, v]) => '<button class="rt-sw" data-rt="color:' + k + '" title="' + RT_CNAME[k] + '" aria-label="' + RT_CNAME[k] + '" style="background:' + v + '"></button>').join('') +
+    '<button class="btn sm ghost rt-auto" data-rt="color:">Automatic</button></span></span>' +
     '<span class="rt-sep"></span>' + B('bullets', '• List', 'Bullets on or off (Ctrl/⌘ Shift 8)') + B('numbers', '1. List', 'Numbers on or off (Ctrl/⌘ Shift 7)') + B('outdent', '⇤', 'Move left (Shift Tab)') + B('indent', '⇥', 'Indent (Tab)') + '</span>';
 }
 function rtToolState() {
@@ -195,7 +228,10 @@ function rtToolState() {
 }
 document.addEventListener('selectionchange', () => { if (rtActive()) rtToolState(); });
 // Toolbar buttons keep the cursor where it is.
-document.addEventListener('mousedown', e => { const b = e.target.closest && e.target.closest('[data-rt]'); if (b) { e.preventDefault(); rtDo(b.dataset.rt); } });
+document.addEventListener('mousedown', e => {
+  const b = e.target.closest && e.target.closest('[data-rt]'); if (b) { e.preventDefault(); return rtDo(b.dataset.rt); }
+  const pal = document.querySelector('.rt-pal'); if (pal && !pal.hidden && !(e.target.closest && e.target.closest('.rt-cwrap'))) pal.hidden = true;
+});
 
 /* ---------- .pptx paragraphs ---------- */
 // o: { lvlMar (EMU per indent level), list mar for numbers/bullets, algn, gap (pt), buClr xml, runFn(seg text, flags) }

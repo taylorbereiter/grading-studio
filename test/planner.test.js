@@ -762,3 +762,44 @@ test('the notebook: a page per lesson in the side panel, with lists, links, vide
     assert.deepEqual(errors, []);
   } finally { await a.done(); }
 });
+
+test('text color: red from the toolbar, saved as {red}…{/}, shown on the slide and in the .pptx; Automatic takes it off', async () => {
+  const a = await open();
+  try {
+    const { page, errors } = a;
+    const tpl = fs.readFileSync(path.join(__dirname, 'fixtures', 'lesson-template.b64'), 'utf8').trim();
+    await page.evaluate(async (s, tpl) => { const P = window.__planner; await P.applySetup({ ...s, template: tpl });
+      const l = P.normLesson({ title: 'Colors', fmt: 2, slides: [{ layout: 'title', title: 'Colors' }, { layout: 'agenda', title: '11/3 Agenda', body: '1. Warm-up\nNext class: the test' }, { layout: 'steps', title: 'Do', body: 'Read {curly} braces' }] }); P.L.lessons.push(l); P.openLessonForTest(l, 1); }, SETUP, tpl);
+    await page.click('#lsStage .ls-body'); await page.waitForSelector('.ls-rted');
+    // select the second line and make it red
+    await page.evaluate(() => { const d = document.querySelectorAll('.ls-rted .rt')[1], r = document.createRange(); r.selectNodeContents(d); const s = getSelection(); s.removeAllRanges(); s.addRange(r); });
+    await page.click('[data-rt="colormenu"]'); await page.waitForSelector('.rt-pal:not([hidden])');
+    assert.equal(await page.$$eval('.rt-pal .rt-sw', b => b.length), 6);
+    await page.click('[data-rt="color:red"]');
+    assert.equal(await page.$eval('.rt-pal', p => p.hidden), true);
+    await page.click('.ls-notes textarea'); await page.waitForFunction(() => !document.querySelector('.ls-rted'));
+    assert.equal(await page.evaluate(() => window.__planner.L.open.slides[1].body), '1. Warm-up\n{red}Next class: the test{/}');
+    assert.equal(await page.$eval('#lsStage .ls-body .rt:nth-child(2) span', s => s.dataset.c + ' ' + getComputedStyle(s).color), 'red rgb(192, 0, 0)');
+    // red and bold together, in the .pptx
+    await page.evaluate(() => { const P = window.__planner; P.L.open.slides[1].body = '1. Warm-up\n{red}**Next** class{/} plain'; });
+    const x = await page.evaluate(() => { const P = window.__planner, z = fflate.unzipSync(P.buildPptx(P.L.open)); return new TextDecoder().decode(z['ppt/slides/slide2.xml']); });
+    assert.match(x, /b="1" dirty="0"><a:solidFill><a:srgbClr val="C00000"\/><\/a:solidFill><\/a:rPr><a:t>Next<\/a:t>/);
+    assert.match(x, /dirty="0"><a:solidFill><a:srgbClr val="C00000"\/><\/a:solidFill><\/a:rPr><a:t> class<\/a:t>/);
+    assert.match(x, /dirty="0"\/><a:t> plain<\/a:t>/);
+    // Automatic takes the color off again
+    await page.evaluate(() => window.__planner.openLessonForTest(window.__planner.L.open, 1));
+    await page.click('#lsStage .ls-body'); await page.waitForSelector('.ls-rted');
+    await page.evaluate(() => { const r = document.createRange(); r.selectNodeContents(document.querySelector('.ls-rted')); const s = getSelection(); s.removeAllRanges(); s.addRange(r); });
+    await page.click('[data-rt="colormenu"]'); await page.click('[data-rt="color:"]');
+    await page.click('.ls-notes textarea'); await page.waitForFunction(() => !document.querySelector('.ls-rted'));
+    assert.equal(await page.evaluate(() => window.__planner.L.open.slides[1].body), '1. Warm-up\n**Next** class plain');
+    // a teaching layout in another look: the color is in its run; a typed { stays a {
+    await page.evaluate(() => { const P = window.__planner; P.L.open.look = 'navy'; P.L.open.slides[2].body = 'Read {blue}this{/} and \\{this\\}'; });
+    const y = await page.evaluate(() => { const P = window.__planner, z = fflate.unzipSync(P.buildPptx(P.L.open)); return new TextDecoder().decode(z['ppt/slides/slide3.xml']); });
+    assert.match(y, /<a:srgbClr val="1C5DB8"\/><\/a:solidFill><\/a:rPr><a:t>this<\/a:t>/);
+    assert.match(y, /<a:t> and \{this\}<\/a:t>/);
+    // a slide made before this, with a { in it, keeps it as text
+    assert.equal(await page.evaluate(() => window.__planner.normLesson({ slides: [{ layout: 'text', body: 'Use {red} here' }] }).slides[0].body), 'Use \\{red} here');
+    assert.deepEqual(errors, []);
+  } finally { await a.done(); }
+});
