@@ -528,3 +528,32 @@ test('the start screen puts today’s work first', async () => {
   assert.deepEqual(page.errors, []);
   await close();
 });
+
+test('each class can keep its ManageBac link: set on the roster, opened from the class and its Grades list', async () => {
+  const { page, close } = await openApp(browser);
+  try {
+    await page.click('#addClass'); await page.waitForSelector('#cMb');
+    await page.type('#cName', 'MB-Class'); await page.type('#cNames', 'Aria Testwell');
+    await page.type('#cMb', 'not a link'); await page.click('#dlgBox [data-ok]');
+    assert.equal(await page.$eval('#dlg', d => d.hidden), false, 'a bad address keeps the dialog open');
+    await page.$eval('#cMb', i => { i.value = ''; }); await page.type('#cMb', 'school.example.org/classes/123');
+    await page.click('#dlgBox [data-ok]'); await page.waitForFunction(() => document.querySelector('#dlg').hidden);
+    const c = await page.evaluate(() => window.__gs.state().lib.classes.find(c => c.name === 'MB-Class'));
+    assert.equal(c.mb, 'https://school.example.org/classes/123');
+    const a = await page.$eval('[data-cls="' + c.id + '"] .clshead a', a => [a.textContent, a.href, a.target]);
+    assert.deepEqual(a, ['ManageBac ↗', 'https://school.example.org/classes/123', '_blank']);
+    // clearing it takes the button away
+    const ci = await page.evaluate(() => window.__gs.state().lib.classes.findIndex(c => c.name === 'MB-Class'));
+    await page.click('[data-edit-class="' + ci + '"]'); await page.waitForSelector('#cMb');
+    assert.equal(await page.$eval('#cMb', i => i.value), 'https://school.example.org/classes/123');
+    await page.$eval('#cMb', i => { i.value = ''; }); await page.click('#dlgBox [data-ok]');
+    await page.waitForFunction(() => document.querySelector('#dlg').hidden);
+    assert.equal(await page.$('[data-cls="' + c.id + '"] .clshead a'), null);
+    assert.equal(await page.evaluate(() => 'mb' in window.__gs.state().lib.classes.find(c => c.name === 'MB-Class')), false);
+    // the Grades list of an assignment in a class with a link
+    await twoRosters(page);
+    await page.evaluate(() => { window.__gs.state().lib.classes.find(c => c.name === '9EL-A').mb = 'https://school.example.org/classes/9'; });
+    await page.click('#gradesBtn'); await page.waitForSelector('.gl');
+    assert.equal(await page.$eval('#dlgBox .bf a', a => a.href), 'https://school.example.org/classes/9');
+  } finally { await close(); }
+});
