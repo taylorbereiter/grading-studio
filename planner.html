@@ -302,6 +302,11 @@ h1 i,.top .title i{font-style:normal;font-weight:500;color:var(--accent)}
 .pl-csi-img img{width:100%;height:110px;object-fit:contain;background:#f4f4f4;border-radius:4px;display:block}
 .pl-csi-b{display:flex;gap:4px;flex-wrap:wrap}
 .pl-cs-tip{margin:0;font-size:12px}
+.pl-var{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:8px 16px;border-bottom:1px solid var(--line);font-size:13.5px;background:var(--surface)}
+.pl-vt{border:1px solid var(--line);border-radius:999px;padding:3px 12px;background:var(--surface);font:inherit;cursor:pointer;color:var(--fg)}
+.pl-vt.on{background:var(--accent-soft);border-color:var(--accent);font-weight:600;cursor:default;display:inline-flex;align-items:center;gap:6px}
+.pl-vr{border:0;background:none;padding:0;cursor:pointer;color:var(--muted);font-size:12px}
+.pl-vtag{display:inline-block;margin-left:6px;font-size:11.5px;padding:1px 7px;border-radius:999px;background:var(--accent-soft);color:var(--fg);font-weight:500}
 .pl-fin{margin-top:14px;border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:var(--surface)}
 .pl-fin-h{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.pl-fin-h h3{margin:0;font-size:15px}
 .pl-fin .pl-files{margin-top:10px}.pl-fin-old{margin-top:8px;font-size:13px}.pl-fin-old summary{cursor:pointer;color:var(--muted)}
@@ -1293,6 +1298,8 @@ function normLesson(x) {
   if (/^https?:\/\//.test(x.atlas || '')) out.atlas = String(x.atlas);
   if (x.library) out.library = String(x.library).slice(0, 120);
   if (x.unit) out.unit = String(x.unit);
+  if (typeof x.variantOf === 'string' && x.variantOf && x.variantOf !== out.id) out.variantOf = x.variantOf;
+  if (x.variant) out.variant = String(x.variant).slice(0, 60);
   if (typeof x.notebook === 'string' && x.notebook.trim()) out.notebook = nbClean(x.notebook);
   const files = (Array.isArray(x.files) ? x.files : []).filter(f => f && typeof f.id === 'string' && typeof f.name === 'string').map(f => ({ id: f.id, name: f.name, kind: f.kind === 'doc' ? 'doc' : 'other', type: String(f.type || ''), size: +f.size || 0, added: +f.added || 0 }));
   if (files.length) out.files = files;
@@ -1512,7 +1519,7 @@ function renderWeek() {
       for (const { c, m } of ms) {
         const ls = lessonsAt(c.id, d);
         h += '<div class="ls-slot" style="--cc:' + esc(c.color || '#1F6FB2') + '"><div class="ls-sh"><b>' + esc(c.name) + '</b><span>' + hm(m.start) + '–' + hm(m.end) + (m.label ? ' · ' + esc(m.label) : '') + '</span>' + mbBtn(c) + '</div>';
-        for (const l of ls) h += '<button class="ls-card" data-open="' + l.id + '"><b>' + esc(l.title) + '</b>' + statusChip(l) + '<span>' + l.slides.length + ' slide' + (l.slides.length === 1 ? '' : 's') + (l.slots.length > 1 ? ' · also ' + esc(l.slots.filter(s => !(s.classId === c.id && s.date === d)).map(s => className(s.classId) + ' ' + shortDate(s.date)).join(', ')) : '') + '</span></button>';
+        for (const l of ls) h += '<button class="ls-card" data-open="' + l.id + '"><b>' + esc(l.title) + '</b>' + varTag(l) + statusChip(l) + '<span>' + l.slides.length + ' slide' + (l.slides.length === 1 ? '' : 's') + (l.slots.length > 1 ? ' · also ' + esc(l.slots.filter(s => !(s.classId === c.id && s.date === d)).map(s => className(s.classId) + ' ' + shortDate(s.date)).join(', ')) : '') + '</span></button>';
         h += '<div class="ls-add"><button class="btn sm ghost" data-new="' + esc(c.id) + '|' + d + '">+ New lesson</button>' + (L.lessons.length ? '<button class="btn sm ghost" data-attach="' + esc(c.id) + '|' + d + '">Use a lesson…</button>' : '') + '</div></div>';
       }
       h += '</div>';
@@ -1520,7 +1527,7 @@ function renderWeek() {
     h += '</div>';
     const loose = L.lessons.filter(l => !l.slots.length && !l.library).sort((a, b) => b.updated - a.updated);
     h += '<div class="ls-loose"><div class="lhead"><h2>Not on the timetable</h2><span class="sp"></span><button class="btn sm" data-a="newfree">+ New lesson</button><button class="btn sm ghost" data-a="all">All lessons</button></div>' +
-      (loose.length ? '<div class="ls-cards">' + loose.map(l => '<button class="ls-card" data-open="' + l.id + '"><b>' + esc(l.title) + '</b><span>' + l.slides.length + ' slides</span></button>').join('') + '</div>' : '<p class="muted" style="margin:0;font-size:13.5px">Lessons you haven’t put on a class show up here.</p>') + '</div>';
+      (loose.length ? '<div class="ls-cards">' + loose.map(l => '<button class="ls-card" data-open="' + l.id + '"><b>' + esc(l.title) + '</b>' + varTag(l) + '<span>' + l.slides.length + ' slides</span></button>').join('') + '</div>' : '<p class="muted" style="margin:0;font-size:13.5px">Lessons you haven’t put on a class show up here.</p>') + '</div>';
   }
   el.innerHTML = h;
 }
@@ -1538,7 +1545,7 @@ function renderEditor() {
     '<button class="btn sm" data-a="send" title="Copy this lesson for Claude, to paste where you’re working with Claude">Copy for Claude</button>' +
     commentsBtn(l) + '<button class="btn sm ghost" data-a="versions">Versions</button>' + panelBtn() +
     '<button class="btn sm ghost" data-a="more">More ▾</button>' +
-    '<button class="btn sm primary" data-a="pptx">Download .pptx</button></div>' + pendingBar(l);
+    '<button class="btn sm primary" data-a="pptx">Download .pptx</button></div>' + pendingBar(l) + variantBar(l);
   h += '<div class="ls-ed-cols"><nav class="ls-thumbs" id="lsThumbs">' + l.slides.map((x, i) => thumbHtml(x, l, i)).join('') +
     '<div class="ls-addslide"><button class="btn sm" data-a="addslide">+ Add slide</button></div></nav>';
   h += '<section class="ls-main"><div class="ls-tools">' +
@@ -1686,10 +1693,10 @@ async function onLessonsClick(e) {
   const mt = e.target.closest('[data-ma]'); if (mt && await matClick(mt)) return;
   if (await bankClick(e)) return;
   if (await unitsClick(e)) return;
-  const t = e.target.closest('[data-a],[data-mbset],[data-open],[data-new],[data-attach],[data-go],[data-addslide],[data-unslot],[data-talkdone],[data-ctxview],[data-ctxcopy],[data-ctxput],[data-ctxdel],.ls-ed');
+  const t = e.target.closest('[data-a],[data-mbset],[data-open],[data-new],[data-attach],[data-go],[data-addslide],[data-unslot],[data-talkdone],[data-ctxview],[data-ctxcopy],[data-ctxput],[data-ctxdel],[data-var],.ls-ed');
   if (t && t.dataset.mbset) return mbDlg(t.dataset.mbset);
   if (!t) return;
-  if (L.view === 'edit' && (await reviewClick(t) || await finishedClick(t))) return;
+  if (L.view === 'edit' && (await reviewClick(t) || await finishedClick(t) || await variantsClick(t))) return;
   if (L.view === 'activities' && t.dataset.a && await activitiesClick(t)) return;
   if (t.classList.contains('ls-ed') && !t.dataset.a) return startEdit(t);
   if (t.dataset.open) return openLesson(L.lessons.find(l => l.id === t.dataset.open));
@@ -1918,7 +1925,7 @@ function addSlotDlg() {
 function showAllLessons() {
   const ls = [...L.lessons].sort((a, b) => ((b.slots[0] || {}).date || '').localeCompare((a.slots[0] || {}).date || '') || b.updated - a.updated);
   openDlg('<div class="bh"><h2>All lessons</h2><input type="search" id="alF" class="btn sm" placeholder="Find"></div><div class="bb"><div class="ls-pick" id="alL">' +
-    ls.map(l => '<div class="ls-row" data-t="' + esc(l.title.toLowerCase()) + '"><button class="ls-card" data-pk="' + l.id + '"><b>' + esc(l.title) + '</b><span>' + (l.slots.length ? esc(l.slots.map(s => className(s.classId) + ' ' + shortDate(s.date)).join(', ')) : 'Not on a class') + ' · ' + l.slides.length + ' slides</span></button><button class="btn sm ghost" data-del="' + l.id + '">Delete</button></div>').join('') +
+    ls.map(l => '<div class="ls-row" data-t="' + esc(l.title.toLowerCase()) + '"><button class="ls-card" data-pk="' + l.id + '"><b>' + esc(l.title) + '</b>' + varTag(l) + '<span>' + (l.slots.length ? esc(l.slots.map(s => className(s.classId) + ' ' + shortDate(s.date)).join(', ')) : 'Not on a class') + ' · ' + l.slides.length + ' slides</span></button><button class="btn sm ghost" data-del="' + l.id + '">Delete</button></div>').join('') +
     (ls.length ? '' : '<p class="muted">No lessons yet.</p>') + '</div></div><div class="bf"><button class="btn" data-x>Close</button></div>');
   $('#alF').oninput = () => { const q = $('#alF').value.toLowerCase(); for (const r of document.querySelectorAll('#alL .ls-row')) r.hidden = !r.dataset.t.includes(q); };
   $('#dlgBox').onclick = async e => {
@@ -1952,9 +1959,10 @@ function moreMenu() {
   };
 }
 async function copyText(t) { try { await navigator.clipboard.writeText(t); } catch { const a = document.createElement('textarea'); a.value = t; document.body.appendChild(a); a.select(); document.execCommand('copy'); a.remove(); } }
+const varTag = l => (l.variantOf || variantsOf(l).length > 1) ? '<span class="pl-vtag">' + esc(varName(l)) + '</span>' : '';
 function lessonText(l) {
   boxNotesToSlides(l);
-  let t = '# ' + l.title + '\n' + (l.slots.length ? l.slots.map(s => className(s.classId) + ', ' + longDate(s.date)).join('; ') + '\n' : '');
+  let t = '# ' + l.title + (l.variantOf || l.variant ? ' (version: ' + varName(l) + ')' : '') + '\n' + (l.slots.length ? l.slots.map(s => className(s.classId) + ', ' + longDate(s.date)).join('; ') + '\n' : '');
   for (const x of lessonNotes(l)) t += 'My comment on the whole lesson: ' + x + '\n';
   l.slides.forEach((s, i) => {
     t += '\n## Slide ' + (i + 1) + ' (' + LAYOUTS[s.layout] + (s.layout !== 'title' && s.layout !== 'picture' ? ', ' + s.size + ' pt' : '') + ')\n' + (s.title ? 'Title: ' + s.title + '\n' : '');
@@ -2229,6 +2237,8 @@ stripe, band, bigtype, framed, notebook, chalk. Leave it out to use the teacher'
 - A lesson .zip (the teacher uploads it on a lesson): the finished .pptx plus handouts and files, flat or in folders.
   The .pptx becomes the finished PowerPoint; every other file goes into the lesson's materials. An optional lesson.json
   { "kind": "grading-studio-lesson-zip", "finished": "Deck.pptx", "materials": ["Handout.docx"] } picks the deck and the files.
+- "variantOf" and "variant" (on a lesson) mark an alternative version of another lesson ("variantOf" is that lesson's id,
+  "variant" its name, like "Shorter Friday"). It is a full lesson of its own; edit only the one you were asked about.
 - "final" and "finals" (on a lesson) are the teacher's finished PowerPoint and older ones (the files stay in the app). Leave them as they are.
 - "notebook" (on a lesson or unit) is the teacher's own jotted thoughts, as simple HTML. Read it for ideas; don't edit it.
 - A slide's "ask" is what the teacher wants on that slide. Use it, and leave it as it is.
@@ -3485,6 +3495,61 @@ async function pptxToSlides(u8) {
   return out;
 }
 
+/* ================= Planner: alternative versions of a lesson =================
+   A variant is its own lesson, made as a copy of the one you're on (slides, notes, comments, materials and
+   finished deck), with "variantOf" (the first lesson's id) and "variant" (its name, like "Shorter Friday").
+   The lessons of one family show as tabs above the slides, so you can switch between them. Each one has its
+   own classes and dates, history and finished PowerPoint. Different from Versions, which is one lesson's history. */
+const famId = l => l.variantOf || l.id;
+const varName = l => l.variant || (l.variantOf ? 'Alternative' : 'Original');
+function variantsOf(l) {
+  const f = famId(l);
+  return L.lessons.filter(x => x.id === f || x.variantOf === f).sort((a, b) => (a.id === f ? -1 : b.id === f ? 1 : a.created - b.created));
+}
+function variantBar(l) {
+  const vs = variantsOf(l);
+  return '<div class="pl-var"><span class="muted">' + (vs.length > 1 ? 'Versions of this lesson:' : 'This lesson:') + '</span>' +
+    vs.map(v => v.id === l.id
+      ? '<span class="pl-vt on">' + esc(varName(v)) + '<button class="pl-vr" data-a="varname" title="Rename this version" aria-label="Rename">✎</button></span>'
+      : '<button class="pl-vt" data-var="' + v.id + '" title="' + esc(v.slots.length ? v.slots.map(s => className(s.classId) + ' ' + shortDate(s.date)).join(', ') : 'Not on a class') + '">' + esc(varName(v)) + '</button>').join('') +
+    '<button class="btn sm ghost" data-a="varnew" title="Copy this lesson as a starting point for a revised or alternative version">+ Alternative version</button></div>';
+}
+function varNameDlg(title, val, hint, extra, onOk) {
+  openDlg('<div class="bh"><h2>' + title + '</h2></div><div class="bb"><label class="ls-f">Name<input id="varN" class="btn" style="justify-content:flex-start;cursor:text" value="' + esc(val) + '" placeholder="' + esc(hint) + '"></label>' + (extra || '') + '</div>' +
+    '<div class="bf"><button class="btn" data-x>Cancel</button><button class="btn primary" data-ok>OK</button></div>', true);
+  const ok = () => { const v = $('#varN').value.trim().slice(0, 60); if (!v) return $('#varN').focus(); const same = $('#varSame') && $('#varSame').checked; closeDlg(); onOk(v, same); };
+  $('#dlgBox').onclick = e => { if (e.target.closest('[data-x]')) return closeDlg(); if (e.target.closest('[data-ok]')) ok(); };
+  $('#dlgBox').onkeydown = e => { if (e.key === 'Enter' && e.target.id === 'varN') { e.preventDefault(); ok(); } };
+  const i = $('#varN'); i.focus(); if (val) i.select();
+}
+async function makeVariant(l, name, sameSlots) {
+  editorCommit();
+  const n = await copyLesson(l, null, l.title);
+  n.variantOf = famId(l); n.variant = name; if (sameSlots) n.slots = l.slots.map(s => ({ ...s }));
+  for (const k of ['final', 'finals']) delete n[k];
+  const cp = async f => { const b = await fileBlob(f.id); if (!b) return null; const id = lid(); await kvSet('file:' + id, b); return { ...f, id }; };
+  if (l.final) { n.final = await cp(l.final); if (n.final) n.final.sig = finSig(n); else delete n.final; }
+  const older = []; for (const f of l.finals || []) { const c = await cp(f); if (c) older.push(c); } if (older.length) n.finals = older;
+  await lPut(n);
+  if (!l.variantOf && !l.variant) { l.variant = 'Original'; await lPut(l); }
+  L.open = n; L.cur = Math.min(L.cur, n.slides.length - 1); renderEditor();
+  toast('Made “' + name + '” from “' + varName(l) + '”. Switch between them above the slides.', 6000);
+}
+async function variantsClick(t) {
+  const l = L.open; if (!l) return false;
+  if (t.dataset.var) { editorCommit(); clearTimeout(lSaveT); await lPut(l); const v = L.lessons.find(x => x.id === t.dataset.var); if (v) { const i = L.cur; L.open = v; L.cur = Math.min(i, v.slides.length - 1); renderEditor(); } return true; }
+  const a = t.dataset.a;
+  if (a === 'varnew') {
+    varNameDlg('New version of “' + esc(l.title) + '”', '', 'Like: Shorter Friday version, or Alt activity',
+      '<p class="muted" style="margin:6px 0 0">It starts as a copy of “' + esc(varName(l)) + '”: slides, notes, comments, materials and the finished PowerPoint. Change it without touching this one.</p>' +
+      (l.slots.length ? '<label style="display:flex;gap:8px;align-items:center;margin-top:10px"><input type="checkbox" id="varSame"> Also put it on ' + esc(l.slots.map(s => className(s.classId) + ' ' + shortDate(s.date)).join(', ')) + '</label>' : ''),
+      (v, same) => makeVariant(l, v, same));
+    return true;
+  }
+  if (a === 'varname') { varNameDlg('Rename this version', varName(l), 'Like: Shorter Friday version', '', async v => { l.variant = v; await lPut(l); renderEditor(); }); return true; }
+  return false;
+}
+
 /* ---------- right-click for Claude, search, copy a lesson, print a week ---------- */
 
 function ctxTarget(el) {
@@ -4654,7 +4719,7 @@ async function unitsFolderRead() {
   return out;
 }
 
-window.__planner = { bankPut, normRubric, slideHtml, LOOKS, TEACH, TEACH_SAMPLE, versions: versionsOf, ytIds: us => us.map(u => [ytId(u), ytStart(u)]), openLessonForTest: (l, i) => { openLesson(l); goSlide(i || 0); }, L, applySetup, renderLessons, setPicture, folderWriteAll, folderRead, buildPptx, normLesson, normUnit, unitPut, unitAt, addUnitFiles, notGradingFolder, unitsFolderRead, semesterMondays, openUnit, docxOf, findAll, copyLesson, packImport, createLesson, lessonText, lessonForFile, pptxToSlides, finUpload, versionsOf, SP, lessonZip };
+window.__planner = { bankPut, normRubric, slideHtml, LOOKS, TEACH, TEACH_SAMPLE, versions: versionsOf, ytIds: us => us.map(u => [ytId(u), ytStart(u)]), openLessonForTest: (l, i) => { openLesson(l); goSlide(i || 0); }, L, applySetup, renderLessons, setPicture, folderWriteAll, folderRead, buildPptx, normLesson, normUnit, unitPut, unitAt, addUnitFiles, notGradingFolder, unitsFolderRead, semesterMondays, openUnit, docxOf, findAll, copyLesson, packImport, createLesson, lessonText, lessonForFile, pptxToSlides, finUpload, versionsOf, SP, lessonZip, variantsOf };
 openLessons();
 
 })();
