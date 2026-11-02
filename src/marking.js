@@ -287,6 +287,65 @@ function gripMove(pg, g, x) {
   if (g.side === 'l') { m.x = r1(clamp(x + 3, 0, g.right - 24)); m.bw = r1(g.right - m.x); }   // the grips sit 3 points outside the box
   else m.bw = r1(clamp(x - 3 - m.x, 24, pg.W - m.x - 6));
 }
+/* ---------------- resizing: a corner handle on a picked sticker, mark, check, circle or text box ---------------- */
+// Drag the square at its bottom-right corner to make it bigger or smaller; + and − do the same from the keyboard.
+const RESIZABLE = new Set(['stamp', 'check', 'text', 'oval']);
+const canResize = m => !!m && RESIZABLE.has(m.t) && !m.ro;
+function cornerPt(m, W) { const bb = bboxOf(m, W), o = m.t === 'text' ? 4 : 3; return [bb.x + bb.w + o, bb.y + bb.h + o]; }
+function drawCorner(ctx, m, W, s) {   // the same size on screen at any zoom
+  const [x, y] = cornerPt(m, W), h = 9 / s;
+  ctx.setLineDash([]); ctx.fillStyle = '#fff'; ctx.strokeStyle = '#1F6FB2'; ctx.lineWidth = 1.5 / s;
+  ctx.beginPath(); ctx.roundRect(x - h / 2, y - h / 2, h, h, 2 / s); ctx.fill(); ctx.stroke();
+}
+function cornerAt(pg, x, y) {
+  if (!selected || selected.page !== pg || !canResize(selected.mark) || pg.editing === selected.mark) return null;
+  const m = selected.mark, [cx, cy] = cornerPt(m, pg.W);
+  if (Math.hypot(x - cx, y - cy) > 9 / pg.s) return null;
+  const mid = [m.x, m.y];   // text grows from its top-left corner, stickers, marks and checks from their middle (circles use the drag itself)
+  return { scale: m, moved: false, mid, d0: Math.max(4, Math.hypot(x - mid[0], y - mid[1])), size0: m.size || (m.t === 'check' ? 22 : 16), bw0: m.bw, x0: x, y0: y, w0: m.w, h0: m.h };
+}
+const SIZE_RANGE = m => m.t === 'text' ? [8, 40] : m.t === 'check' ? SIZE_LIMITS.check : SIZE_LIMITS[sizeKind(m.k)];
+function setMarkSize(m, size, W, H, g) {
+  const [a, b] = SIZE_RANGE(m), was = m.size;
+  m.size = m.t === 'text' ? Math.round(clamp(size, a, b)) : r1(clamp(size, a, b));
+  if (m.t === 'text') { const bw0 = g ? g.bw0 : m.bw, s0 = g ? g.size0 : was; if (bw0) { delete m.bwFull; m.bw = r1(clamp(bw0 * m.size / s0, 24, W - m.x - 6)); } keepOnPage(m, W, H); }
+}
+function cornerMove(pg, g, x, y) {
+  const m = g.scale;
+  if (m.t === 'oval') { m.w = r1(clamp(g.w0 + x - g.x0, 6, pg.W - m.x)); m.h = r1(clamp(g.h0 + y - g.y0, 6, pg.H - m.y)); return; }
+  setMarkSize(m, g.size0 * Math.hypot(x - g.mid[0], y - g.mid[1]) / g.d0, pg.W, pg.H, g);
+}
+// The next one of its kind comes out this size too.
+function rememberSize(m) {
+  if (m.t === 'stamp') rememberStampSize(m);
+  else if (m.t === 'text') { disp.tsize = m.size; store.set('gs.disp', disp); }
+  else if (m.t === 'check') rememberSizeOf('$check', m.size);
+}
+// + and − on a picked mark: a step bigger or smaller.
+function stepSize(dir) {
+  if (!selected || !canResize(selected.mark)) return false;
+  const pg = selected.page, m = selected.mark;
+  snap(pg);
+  if (m.t === 'oval') { const f = dir > 0 ? 1.15 : 1 / 1.15, cx = m.x + m.w / 2, cy = m.y + m.h / 2; m.w = r1(clamp(m.w * f, 6, pg.W)); m.h = r1(clamp(m.h * f, 6, pg.H)); m.x = r1(clamp(cx - m.w / 2, 0, pg.W - m.w)); m.y = r1(clamp(cy - m.h / 2, 0, pg.H - m.h)); }
+  else if (m.t === 'text') setMarkSize(m, m.size + 2 * dir, pg.W, pg.H);
+  else setMarkSize(m, m.size * (dir > 0 ? 1.15 : 1 / 1.15), pg.W, pg.H);
+  rememberSize(m); changed(pg);
+  return true;
+}
+// With any drawing tool, a click on a sticker, mark, check or circle line picks it up (Select, ready to move or resize),
+// and a click on her own text box goes to the Text tool to type in it. Pen strokes and highlights never do this, so drawing over them works as before.
+function clickToPick(pg, x, y) {
+  if (tool === 'select' || tool === 'erase') return null;
+  const hit = hitMark(pg, x, y, 2);
+  if (!hit || hit.ro) return null;
+  if (hit.t === 'text') return tool === 'text' ? null : (setTool('text'), pickToGrab(pg, hit, x, y, true));
+  if (hit.t === 'oval') {   // only its line: drawing inside a circle still draws
+    const rx = hit.w / 2, ry = hit.h / 2, d = Math.hypot((x - hit.x - rx) / rx, (y - hit.y - ry) / ry);
+    if (Math.abs(d - 1) * Math.min(rx, ry) > 4) return null;
+  } else if (hit.t !== 'stamp' && hit.t !== 'check') return null;
+  setTool('select');
+  return pickToGrab(pg, hit, x, y, false);
+}
 function pickToGrab(pg, hit, x, y, edit) {
   selected = { page: pg, mark: hit };
   redrawAll();
@@ -295,6 +354,7 @@ function pickToGrab(pg, hit, x, y, edit) {
 const editMark = (pg, m) => { if (m.t === 'text') editText(pg, m); else if (m.t === 'note') openNote(pg, m); };
 // What the pointer can do here, shown by its shape. Empty: leave it as the tool set it.
 function hoverCursor(pg, x, y) {
+  if (tool !== 'erase' && cornerAt(pg, x, y)) return 'nwse-resize';
   const grip = gripAt(pg, x, y);
   if (tool === 'select') return grip ? 'ew-resize' : hitMark(pg, x, y, 4) ? (x > pg.W ? 'pointer' : 'move') : 'default';
   if (tool === 'text') { const h = hitMark(pg, x, y, 3); return grip ? 'ew-resize' : h && h.t === 'text' ? 'move' : h && x > pg.W ? 'pointer' : 'text'; }
@@ -310,4 +370,4 @@ function gripDrag(e, bar, pg, m, fit, ta) {
   const up = () => { bar.removeEventListener('pointermove', mv); bar.removeEventListener('pointerup', up); bar.removeEventListener('pointercancel', up); ta.focus(); };
   bar.addEventListener('pointermove', mv); bar.addEventListener('pointerup', up); bar.addEventListener('pointercancel', up);
 }
-Object.assign(window.__gs, { inkFilter, thinStroke, groupLines, snapRects, strokePath, hlMode: () => hlMode, setHlMode, draw, bboxOf, hitMark, drawMarks, sharePage });
+Object.assign(window.__gs, { stepSize, cornerAt, ui: () => ({ tool, picked: selected ? JSON.parse(JSON.stringify(selected.mark)) : null, editing: !!activeEditor }), inkFilter, thinStroke, groupLines, snapRects, strokePath, hlMode: () => hlMode, setHlMode, draw, bboxOf, hitMark, drawMarks, sharePage });

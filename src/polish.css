@@ -92,4 +92,8 @@
 .stampmenu .st-proof canvas{background:#fff;border-radius:6px;flex:none}
 .stampmenu .st-stick{padding:3px;line-height:0}
 .stampmenu .st-note{display:block;width:100%;text-align:left;padding:8px 8px;margin-top:6px;border-top:1px solid var(--line)!important;border-radius:0 0 8px 8px}
+.stampmenu .st-puncs{display:grid;grid-template-columns:repeat(5,1fr);gap:2px}
+.stampmenu .st-punc{display:flex;flex-direction:column;align-items:center;gap:1px;padding:3px 0 4px;font-size:10.5px;line-height:1.1;color:var(--muted)}
+.stampmenu .st-punc canvas{background:#fff;border-radius:6px}
+.stampmenu .st-tick{width:100%;margin-bottom:2px}
 .stampmenu .st-mini canvas{background:#fff;border-radius:6px}

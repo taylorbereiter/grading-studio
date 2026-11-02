@@ -2,12 +2,19 @@
 // A stamp is { t: 'stamp', k, x, y, size } with (x, y) its middle, in page points. A proofreading mark is drawn in its
 // color, like the check; a sticker is a picture (rot: its small tilt, in degrees). Both stay upright when a page turns.
 const PROOF = [
-  ['cap', 'Capitalize'], ['lower', 'Make lowercase'], ['insert', 'Insert'], ['para', 'New paragraph'],
+  ['gr', 'Grammar'], ['cap', 'Capitalize'], ['lower', 'Make lowercase'], ['insert', 'Insert'], ['para', 'New paragraph'],
   ['delete', 'Delete'], ['swap', 'Swap order'], ['space', 'Add a space'], ['close', 'Close up'],
-  ['period', 'Add a period'], ['sp', 'Spelling'], ['ro', 'Run-on'], ['frag', 'Fragment'],
+  ['sp', 'Spelling'], ['ro', 'Run-on'], ['frag', 'Fragment'],
   ['wc', 'Word choice'], ['awk', 'Awkward'], ['vt', 'Verb tense'], ['unclear', 'Unclear'],
 ];
-const PROOF_TAG = { sp: 'sp', ro: 'RO', frag: 'frag', wc: 'WC', awk: 'awk', vt: 'VT', unclear: '?' };   // the ones written in a circle
+// Quick punctuation: a caret under the line with the mark to add above it, or (for marks that sit up high) the mark in an upside-down caret.
+const PUNCT = [
+  ['period', 'Add a period', 'Period'], ['comma', 'Add a comma', 'Comma'], ['apos', 'Add an apostrophe', 'Apostrophe'], ['quote', 'Add quotation marks', 'Quotes'], ['semi', 'Add a semicolon', 'Semicolon'],
+  ['colon', 'Add a colon', 'Colon'], ['qmark', 'Add a question mark', 'Question'], ['excl', 'Add an exclamation mark', 'Exclamation'], ['hyphen', 'Add a hyphen', 'Hyphen'], ['dash', 'Add a dash', 'Dash'],
+];
+const PUNCT_SIGN = { comma: [',', 1], apos: ['\u2019', -1], quote: ['\u201C \u201D', -1], semi: [';', 1], colon: [':', 1], qmark: ['?', 1], excl: ['!', 1], hyphen: ['=', 1], dash: ['\u2014', 1] };   // [sign, 1 caret / -1 upside down]
+const isProof = k => PROOF.some(p => p[0] === k) || PUNCT.some(p => p[0] === k);
+const PROOF_TAG = { gr: 'gr', sp: 'sp', ro: 'RO', frag: 'frag', wc: 'WC', awk: 'awk', vt: 'VT', unclear: '?' };   // the ones written in a circle
 const STICKERS = [
   ['star', 'Star', 0.895], ['check', 'Check', 0.86], ['thumbsup', 'Thumbs up', 0.985], ['lightbulb', 'Great idea', 1.02],
   ['evidence', 'Add evidence', 0.97], ['sideeye', 'Look here', 0.535], ['question', 'Unclear', 1.282], ['rocket', 'Big improvement', 0.975],
@@ -23,12 +30,30 @@ const stickersReady = Promise.all(STICKERS.map(([k]) => new Promise(done => {
 })));
 const isSticker = k => STICKERS.some(s => s[0] === k);
 const stickerAspect = k => (STICKERS.find(s => s[0] === k) || [0, 0, 1])[2];
-const stampName = k => ((PROOF.find(p => p[0] === k) || STICKERS.find(p => p[0] === k)) || [k, k])[1];
+const stampName = k => ((PROOF.find(p => p[0] === k) || PUNCT.find(p => p[0] === k) || STICKERS.find(p => p[0] === k)) || [k, k])[1];
+// How big a new one is: the size she last gave that kind (each sticker, each mark, the check) in this download.
+// A new download starts back at the usual sizes. Kept on this computer, for the dozen most recent downloads.
+const MARK_SIZES = 'gs.markSizes', SIZE0 = { proof: 16, sticker: 44 };
+const sizeKind = k => isSticker(k) ? 'sticker' : 'proof';
+const SIZE_LIMITS = { proof: [8, 80], sticker: [16, 240], check: [8, 120] };
+const sizesHere = () => { const all = store.get(MARK_SIZES, {}) || {}; return (batch && all[batch.id]) || {}; };
+function lastSize(key, lim, dflt) { const v = +sizesHere()[key]; return v >= lim[0] && v <= lim[1] ? v : dflt; }
+const newStampSize = k => lastSize(k, SIZE_LIMITS[sizeKind(k)], SIZE0[sizeKind(k)]);
+const newCheckSize = () => lastSize('$check', SIZE_LIMITS.check, 22);
+function rememberSizeOf(key, size) {
+  if (!batch) return;
+  const all = { ...(store.get(MARK_SIZES, {}) || {}) }, mine = { ...(all[batch.id] || {}), [key]: size, at: Date.now() };
+  delete all[batch.id];
+  const keep = Object.entries(all).filter(([, v]) => v && typeof v === 'object').sort((p, q) => (q[1].at || 0) - (p[1].at || 0)).slice(0, 11);
+  store.set(MARK_SIZES, Object.fromEntries([[batch.id, mine], ...keep]));
+}
+const rememberStampSize = m => rememberSizeOf(m.k, m.size);
 
 // The box around a stamp, before any tilt.
 function stampBox(m) {
   const s = m.size || 16, x = m.x, y = m.y;
   if (isSticker(m.k)) { const h = s * stickerAspect(m.k); return { x: x - s / 2, y: y - h / 2, w: s, h }; }
+  if (PUNCT_SIGN[m.k]) return { x: x - 0.42 * s, y: y - 0.62 * s, w: 0.84 * s, h: 1.2 * s };
   if (PROOF_TAG[m.k]) { const r = tagRadii(m.k, s); return { x: x - r[0] - 1, y: y - r[1] - 1, w: r[0] * 2 + 2, h: r[1] * 2 + 2 }; }
   const half = { cap: [0.4, 0.3], lower: [0.3, 0.5], insert: [0.35, 0.4], para: [0.4, 0.55], delete: [0.7, 0.5], swap: [0.65, 0.6], space: [0.3, 0.95], close: [0.35, 0.55], period: [0.3, 0.3] }[m.k] || [0.5, 0.5];
   return { x: x - half[0] * s, y: y - half[1] * s, w: half[0] * s * 2, h: half[1] * s * 2 };
@@ -74,7 +99,11 @@ function drawStamp(ctx, m) {
       ctx.beginPath(); ctx.arc(x, y, 0.26 * s, 0, Math.PI * 2); ctx.stroke();
       ctx.beginPath(); ctx.arc(x, y, 0.07 * s, 0, Math.PI * 2); ctx.fill(); break;
     default:
-      if (PROOF_TAG[m.k]) {
+      if (PUNCT_SIGN[m.k]) {
+        const [sign, way] = PUNCT_SIGN[m.k];
+        if (way > 0) { line(-0.3, 0.55, 0, 0.12, 0.3, 0.55); text(sign, s * (sign === '=' ? 0.7 : 0.95), -0.25 * s); }   // the caret, the mark above its point
+        else { line(-0.32, -0.45, 0, 0.5, 0.32, -0.45); text(sign, s * (sign.length > 1 ? 0.55 : 0.8), -0.1 * s); }   // the mark sitting inside an upside-down caret
+      } else if (PROOF_TAG[m.k]) {
         const [rx, ry] = tagRadii(m.k, s);
         ctx.beginPath(); ctx.ellipse(x, y, rx, ry, 0, 0, Math.PI * 2); ctx.stroke();
         text(PROOF_TAG[m.k], s * 0.62, s * 0.02);
@@ -85,11 +114,11 @@ function drawStamp(ctx, m) {
 
 /* ---------------- the right-click menu ---------------- */
 const RECENT_STAMPS = 'gs.recentStamps';
-function stampPicture(k, color) {   // a small picture of a mark for the menu, drawn the same way as on the paper
+function stampPicture(k, color, big) {   // a small picture of a mark for the menu, drawn the same way as on the paper
   const c = document.createElement('canvas'), dpr = window.devicePixelRatio || 1, sz = isSticker(k) ? 40 : 34;
   c.width = c.height = Math.round(sz * dpr); c.style.width = c.style.height = sz + 'px';
   const ctx = c.getContext('2d'); ctx.scale(dpr, dpr);
-  const m = { t: 'stamp', k, x: sz / 2, y: sz / 2, size: isSticker(k) ? sz - 6 : 16, color };
+  const m = { t: 'stamp', k, x: sz / 2, y: sz / 2, size: isSticker(k) ? sz - 6 : big ? 22 : 16, color };
   if (isSticker(m.k) && stickerAspect(k) > 1) m.size = (sz - 6) / stickerAspect(k);
   drawStamp(ctx, m);
   return c;
@@ -97,11 +126,11 @@ function stampPicture(k, color) {   // a small picture of a mark for the menu, d
 let stampMenuEl = null;
 function closeStampMenu() { if (stampMenuEl) { stampMenuEl.remove(); stampMenuEl = null; } }
 function placeStamp(pg, k, x, y) {
-  const m = isSticker(k) ? { t: 'stamp', k, x: r1(x), y: r1(y), size: 44, rot: Math.round((Math.random() * 10 - 5) * 10) / 10 } : { t: 'stamp', k, x: r1(x), y: r1(y), size: 16, color: COLORS[inkColor] };
+  const m = isSticker(k) ? { t: 'stamp', k, x: r1(x), y: r1(y), size: newStampSize(k), rot: Math.round((Math.random() * 10 - 5) * 10) / 10 } : { t: 'stamp', k, x: r1(x), y: r1(y), size: newStampSize(k), color: COLORS[inkColor] };
   const bb = stampBox(m);   // keep it on the page
   m.x = r1(m.x + Math.max(0, -bb.x) - Math.max(0, bb.x + bb.w - pg.W)); m.y = r1(m.y + Math.max(0, -bb.y) - Math.max(0, bb.y + bb.h - pg.H));
   snap(pg); pg.marks().push(m); changed(pg);
-  const recent = [k, ...store.get(RECENT_STAMPS, []).filter(r => r !== k && (isSticker(r) || PROOF_TAG[r] || PROOF.some(p => p[0] === r)))].slice(0, 6);
+  const recent = [k, ...store.get(RECENT_STAMPS, []).filter(r => r !== k && (isSticker(r) || isProof(r)))].slice(0, 6);
   store.set(RECENT_STAMPS, recent);
   return m;
 }
@@ -118,8 +147,19 @@ function openStampMenu(pg, x, y, cx, cy) {
   };
   const head = t => { const h = document.createElement('div'); h.className = 'st-head'; h.textContent = t; return h; };
   const grid = (cls, list, sticker) => { const g = document.createElement('div'); g.className = cls; for (const k of list) g.append(btn(k, sticker)); return g; };
-  const recent = store.get(RECENT_STAMPS, []).filter(k => isSticker(k) || PROOF.some(p => p[0] === k));
+  // The check first: the same one as the Check tool, in her ink color, at the size she last gave a check.
+  const tick = document.createElement('button'); tick.type = 'button'; tick.className = 'st-proof st-tick'; tick.dataset.tick = '1'; tick.setAttribute('role', 'menuitem'); tick.title = 'Check mark';
+  const tc = document.createElement('canvas'), dpr = window.devicePixelRatio || 1; tc.width = tc.height = Math.round(34 * dpr); tc.style.width = tc.style.height = '34px';
+  const tx = tc.getContext('2d'); tx.scale(dpr, dpr); drawCheck(tx, { t: 'check', color, x: 17, y: 18, size: 22 });
+  const tl = document.createElement('span'); tl.textContent = 'Check mark'; tick.append(tc, tl); el.append(tick);
+  const recent = store.get(RECENT_STAMPS, []).filter(k => isSticker(k) || isProof(k));
   if (recent.length) { el.append(head('Recent')); const g = document.createElement('div'); g.className = 'st-recent'; for (const k of recent) { const b = btn(k, true); b.className = isSticker(k) ? 'st-stick' : 'st-stick st-mini'; g.append(b); } el.append(g); }
+  const punct = document.createElement('div'); punct.className = 'st-puncs';
+  for (const [k, , short] of PUNCT) {
+    const b = btn(k, true); b.className = 'st-punc'; b.firstChild.replaceWith(stampPicture(k, color, true));
+    const s = document.createElement('span'); s.textContent = short; b.append(s); punct.append(b);
+  }
+  el.append(head('Punctuation'), punct);
   el.append(head('Proofreading marks'), grid('st-proofs', PROOF.map(p => p[0]), false));
   el.append(head('Stickers'), grid('st-sticks', STICKERS.filter(s => !BRAINROT.has(s[0])).map(s => s[0]), true));
   el.append(head('Just for fun'), grid('st-sticks', STICKERS.filter(s => BRAINROT.has(s[0])).map(s => s[0]), true));
@@ -128,6 +168,11 @@ function openStampMenu(pg, x, y, cx, cy) {
   el.addEventListener('click', e => {
     const b = e.target.closest('[data-mark]');
     if (b) { closeStampMenu(); const m = placeStamp(pg, b.dataset.mark, x, y); selected = { page: pg, mark: m, fresh: true }; redrawAll(); return; }
+    if (e.target.closest('[data-tick]')) {
+      closeStampMenu();
+      const m = { t: 'check', color: COLORS[inkColor], x: r1(x), y: r1(y), size: newCheckSize() };
+      snap(pg); pg.marks().push(m); selected = { page: pg, mark: m, fresh: true }; changed(pg); redrawAll(); return;
+    }
     if (e.target.closest('[data-note]')) { closeStampMenu(); openNote(pg, { t: 'note', color: COLORS[inkColor], ax: r1(x), ay: r1(y), text: '' }, true); }
   });
   el.addEventListener('keydown', e => {
@@ -146,4 +191,4 @@ function openStampMenu(pg, x, y, cx, cy) {
 document.addEventListener('pointerdown', e => { if (stampMenuEl && !stampMenuEl.contains(e.target)) closeStampMenu(); }, true);
 window.addEventListener('blur', closeStampMenu);
 document.addEventListener('scroll', closeStampMenu, true);
-Object.assign(window.__gs, { turnMarks, drawStamp, stampBox, placeStamp, openStampMenu, closeStampMenu, stickersReady, STAMP_KINDS: { proof: PROOF.map(p => p[0]), stickers: STICKERS.map(s => s[0]) } });
+Object.assign(window.__gs, { turnMarks, drawStamp, stampBox, placeStamp, openStampMenu, closeStampMenu, stickersReady, STAMP_KINDS: { proof: PROOF.map(p => p[0]), punct: PUNCT.map(p => p[0]), stickers: STICKERS.map(s => s[0]) } });
