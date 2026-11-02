@@ -30,6 +30,10 @@ async function versionsDlg(l) {
     const v = vs[+b.dataset.rv];
     await saveVersion(l, 'Before going back to “' + v.label + '”');
     const back = normLesson({ ...v.lesson, id: l.id, slots: l.slots, created: l.created });
+    // Finished decks are never lost by going back: any the older version doesn't have stay under older ones.
+    const seen = new Set([back.final && back.final.id, ...(back.finals || []).map(f => f.id)]);
+    const extra = [l.final, ...(l.finals || [])].filter(f => f && !seen.has(f.id));
+    if (extra.length) back.finals = [...extra, ...(back.finals || [])];
     Object.assign(l, back, { _file: l._file, _mod: l._mod }); delete l.pending;
     closeDlg(); L.cur = Math.min(L.cur, l.slides.length - 1); lessonChanged(false); renderEditor(); toast('Back to “' + v.label + '”. The version you left is saved too.');
   };
