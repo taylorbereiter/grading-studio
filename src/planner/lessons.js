@@ -88,6 +88,8 @@ function normLesson(x) {
   if (/^https?:\/\//.test(x.atlas || '')) out.atlas = String(x.atlas);
   if (x.library) out.library = String(x.library).slice(0, 120);
   if (x.unit) out.unit = String(x.unit);
+  if (typeof x.variantOf === 'string' && x.variantOf && x.variantOf !== out.id) out.variantOf = x.variantOf;
+  if (x.variant) out.variant = String(x.variant).slice(0, 60);
   if (typeof x.notebook === 'string' && x.notebook.trim()) out.notebook = nbClean(x.notebook);
   const files = (Array.isArray(x.files) ? x.files : []).filter(f => f && typeof f.id === 'string' && typeof f.name === 'string').map(f => ({ id: f.id, name: f.name, kind: f.kind === 'doc' ? 'doc' : 'other', type: String(f.type || ''), size: +f.size || 0, added: +f.added || 0 }));
   if (files.length) out.files = files;
@@ -314,7 +316,7 @@ function renderWeek() {
       for (const { c, m } of ms) {
         const ls = lessonsAt(c.id, d);
         h += '<div class="ls-slot" style="--cc:' + esc(c.color || '#1F6FB2') + '"><div class="ls-sh"><b>' + esc(c.name) + '</b><span>' + hm(m.start) + '–' + hm(m.end) + (m.label ? ' · ' + esc(m.label) : '') + '</span>' + mbBtn(c) + '</div>';
-        for (const l of ls) h += '<button class="ls-card" data-open="' + l.id + '"><b>' + esc(l.title) + '</b>' + statusChip(l) + '<span>' + l.slides.length + ' slide' + (l.slides.length === 1 ? '' : 's') + (l.slots.length > 1 ? ' · also ' + esc(l.slots.filter(s => !(s.classId === c.id && s.date === d)).map(s => className(s.classId) + ' ' + shortDate(s.date)).join(', ')) : '') + '</span></button>';
+        for (const l of ls) h += '<button class="ls-card" data-open="' + l.id + '"><b>' + esc(l.title) + '</b>' + varTag(l) + statusChip(l) + '<span>' + l.slides.length + ' slide' + (l.slides.length === 1 ? '' : 's') + (l.slots.length > 1 ? ' · also ' + esc(l.slots.filter(s => !(s.classId === c.id && s.date === d)).map(s => className(s.classId) + ' ' + shortDate(s.date)).join(', ')) : '') + '</span></button>';
         h += '<div class="ls-add"><button class="btn sm ghost" data-new="' + esc(c.id) + '|' + d + '">+ New lesson</button>' + (L.lessons.length ? '<button class="btn sm ghost" data-attach="' + esc(c.id) + '|' + d + '">Use a lesson…</button>' : '') + '</div></div>';
       }
       h += '</div>';
@@ -322,7 +324,7 @@ function renderWeek() {
     h += '</div>';
     const loose = L.lessons.filter(l => !l.slots.length && !l.library).sort((a, b) => b.updated - a.updated);
     h += '<div class="ls-loose"><div class="lhead"><h2>Not on the timetable</h2><span class="sp"></span><button class="btn sm" data-a="newfree">+ New lesson</button><button class="btn sm ghost" data-a="all">All lessons</button></div>' +
-      (loose.length ? '<div class="ls-cards">' + loose.map(l => '<button class="ls-card" data-open="' + l.id + '"><b>' + esc(l.title) + '</b><span>' + l.slides.length + ' slides</span></button>').join('') + '</div>' : '<p class="muted" style="margin:0;font-size:13.5px">Lessons you haven’t put on a class show up here.</p>') + '</div>';
+      (loose.length ? '<div class="ls-cards">' + loose.map(l => '<button class="ls-card" data-open="' + l.id + '"><b>' + esc(l.title) + '</b>' + varTag(l) + '<span>' + l.slides.length + ' slides</span></button>').join('') + '</div>' : '<p class="muted" style="margin:0;font-size:13.5px">Lessons you haven’t put on a class show up here.</p>') + '</div>';
   }
   el.innerHTML = h;
 }
@@ -340,7 +342,7 @@ function renderEditor() {
     '<button class="btn sm" data-a="send" title="Copy this lesson for Claude, to paste where you’re working with Claude">Copy for Claude</button>' +
     commentsBtn(l) + '<button class="btn sm ghost" data-a="versions">Versions</button>' + panelBtn() +
     '<button class="btn sm ghost" data-a="more">More ▾</button>' +
-    '<button class="btn sm primary" data-a="pptx">Download .pptx</button></div>' + pendingBar(l);
+    '<button class="btn sm primary" data-a="pptx">Download .pptx</button></div>' + pendingBar(l) + variantBar(l);
   h += '<div class="ls-ed-cols"><nav class="ls-thumbs" id="lsThumbs">' + l.slides.map((x, i) => thumbHtml(x, l, i)).join('') +
     '<div class="ls-addslide"><button class="btn sm" data-a="addslide">+ Add slide</button></div></nav>';
   h += '<section class="ls-main"><div class="ls-tools">' +
@@ -491,10 +493,10 @@ async function onLessonsClick(e) {
   const mt = e.target.closest('[data-ma]'); if (mt && await matClick(mt)) return;
   if (await bankClick(e)) return;
   if (await unitsClick(e)) return;
-  const t = e.target.closest('[data-a],[data-mbset],[data-open],[data-new],[data-attach],[data-go],[data-addslide],[data-unslot],[data-talkdone],[data-ctxview],[data-ctxcopy],[data-ctxput],[data-ctxdel],.ls-ed');
+  const t = e.target.closest('[data-a],[data-mbset],[data-open],[data-new],[data-attach],[data-go],[data-addslide],[data-unslot],[data-talkdone],[data-ctxview],[data-ctxcopy],[data-ctxput],[data-ctxdel],[data-var],.ls-ed');
   if (t && t.dataset.mbset) return mbDlg(t.dataset.mbset);
   if (!t) return;
-  if (L.view === 'edit' && (await reviewClick(t) || await finishedClick(t))) return;
+  if (L.view === 'edit' && (await reviewClick(t) || await finishedClick(t) || await variantsClick(t))) return;
   if (L.view === 'activities' && t.dataset.a && await activitiesClick(t)) return;
   if (t.classList.contains('ls-ed') && !t.dataset.a) return startEdit(t);
   if (t.dataset.open) return openLesson(L.lessons.find(l => l.id === t.dataset.open));
@@ -730,7 +732,7 @@ function addSlotDlg() {
 function showAllLessons() {
   const ls = [...L.lessons].sort((a, b) => ((b.slots[0] || {}).date || '').localeCompare((a.slots[0] || {}).date || '') || b.updated - a.updated);
   openDlg('<div class="bh"><h2>All lessons</h2><input type="search" id="alF" class="btn sm" placeholder="Find"></div><div class="bb"><div class="ls-pick" id="alL">' +
-    ls.map(l => '<div class="ls-row" data-t="' + esc(l.title.toLowerCase()) + '"><button class="ls-card" data-pk="' + l.id + '"><b>' + esc(l.title) + '</b><span>' + (l.slots.length ? esc(l.slots.map(s => className(s.classId) + ' ' + shortDate(s.date)).join(', ')) : 'Not on a class') + ' · ' + l.slides.length + ' slides</span></button><button class="btn sm ghost" data-del="' + l.id + '">Delete</button></div>').join('') +
+    ls.map(l => '<div class="ls-row" data-t="' + esc(l.title.toLowerCase()) + '"><button class="ls-card" data-pk="' + l.id + '"><b>' + esc(l.title) + '</b>' + varTag(l) + '<span>' + (l.slots.length ? esc(l.slots.map(s => className(s.classId) + ' ' + shortDate(s.date)).join(', ')) : 'Not on a class') + ' · ' + l.slides.length + ' slides</span></button><button class="btn sm ghost" data-del="' + l.id + '">Delete</button></div>').join('') +
     (ls.length ? '' : '<p class="muted">No lessons yet.</p>') + '</div></div><div class="bf"><button class="btn" data-x>Close</button></div>');
   $('#alF').oninput = () => { const q = $('#alF').value.toLowerCase(); for (const r of document.querySelectorAll('#alL .ls-row')) r.hidden = !r.dataset.t.includes(q); };
   $('#dlgBox').onclick = async e => {
@@ -764,9 +766,11 @@ function moreMenu() {
   };
 }
 async function copyText(t) { try { await navigator.clipboard.writeText(t); } catch { const a = document.createElement('textarea'); a.value = t; document.body.appendChild(a); a.select(); document.execCommand('copy'); a.remove(); } }
+// A version's name next to the lesson's, when it has alternatives.
+const varTag = l => (l.variantOf || variantsOf(l).length > 1) ? '<span class="pl-vtag">' + esc(varName(l)) + '</span>' : '';
 function lessonText(l) {
   boxNotesToSlides(l);
-  let t = '# ' + l.title + '\n' + (l.slots.length ? l.slots.map(s => className(s.classId) + ', ' + longDate(s.date)).join('; ') + '\n' : '');
+  let t = '# ' + l.title + (l.variantOf || l.variant ? ' (version: ' + varName(l) + ')' : '') + '\n' + (l.slots.length ? l.slots.map(s => className(s.classId) + ', ' + longDate(s.date)).join('; ') + '\n' : '');
   // Right-click comments on the whole lesson live in the Claude box; Claude needs them with the lesson too.
   for (const x of lessonNotes(l)) t += 'My comment on the whole lesson: ' + x + '\n';
   l.slides.forEach((s, i) => {
@@ -1048,6 +1052,8 @@ stripe, band, bigtype, framed, notebook, chalk. Leave it out to use the teacher'
 - A lesson .zip (the teacher uploads it on a lesson): the finished .pptx plus handouts and files, flat or in folders.
   The .pptx becomes the finished PowerPoint; every other file goes into the lesson's materials. An optional lesson.json
   { "kind": "grading-studio-lesson-zip", "finished": "Deck.pptx", "materials": ["Handout.docx"] } picks the deck and the files.
+- "variantOf" and "variant" (on a lesson) mark an alternative version of another lesson ("variantOf" is that lesson's id,
+  "variant" its name, like "Shorter Friday"). It is a full lesson of its own; edit only the one you were asked about.
 - "final" and "finals" (on a lesson) are the teacher's finished PowerPoint and older ones (the files stay in the app). Leave them as they are.
 - "notebook" (on a lesson or unit) is the teacher's own jotted thoughts, as simple HTML. Read it for ideas; don't edit it.
 - A slide's "ask" is what the teacher wants on that slide. Use it, and leave it as it is.

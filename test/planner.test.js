@@ -1003,3 +1003,38 @@ test('a lesson .zip: the finished PowerPoint goes to Finished, every other file 
     assert.deepEqual(errors, []);
   } finally { await a.done(); }
 });
+
+test('alternative versions: made from the lesson I am on, named, switched from tabs above the slides, each with its own classes and files', async () => {
+  const a = await open();
+  try {
+    const { page, errors } = a;
+    await page.evaluate(async s => {
+      const P = window.__planner; await P.applySetup(s);
+      const l = P.normLesson({ title: 'Book Cover Prep', fmt: 2, slots: [{ classId: 'A1', date: '2026-11-03' }], slides: [{ layout: 'title', title: 'Book Cover Prep' }, { layout: 'content', title: 'Advice', body: '• One', ask: 'Add the triangle', talk: [{ by: 'you', text: 'keep' }] }] });
+      P.L.lessons.push(l); await P.createLesson; P.openLessonForTest(l, 1);
+    }, SETUP);
+    await page.waitForSelector('.pl-var [data-a="varnew"]');
+    await page.click('.pl-var [data-a="varnew"]'); await page.waitForSelector('#varN');
+    await page.type('#varN', 'Shorter Friday');
+    await page.click('#varSame'); await page.click('[data-ok]');
+    await page.waitForFunction(() => window.__planner.L.open.variant === 'Shorter Friday');
+    const st = await page.evaluate(() => { const P = window.__planner, v = P.L.open, fam = P.variantsOf(v); return { cur: P.L.cur, n: fam.length, names: [...document.querySelectorAll('.pl-var .pl-vt')].map(b => b.textContent.replace('✎', '')), slots: v.slots, slides: v.slides.map(s => s.title), ask: v.slides[1].ask, newIds: v.slides[0].id !== fam[0].slides[0].id, base: fam[0].variant }; });
+    assert.deepEqual(st, { cur: 1, n: 2, names: ['Original', 'Shorter Friday'], slots: [{ classId: 'A1', date: '2026-11-03' }], slides: ['Book Cover Prep', 'Advice'], ask: 'Add the triangle', newIds: true, base: 'Original' });
+    // changing the version leaves the original alone; tabs switch
+    await page.evaluate(() => { const P = window.__planner; P.L.open.slides[1].title = 'Advice (short)'; });
+    await page.click('.pl-var [data-var]');
+    await page.waitForFunction(() => window.__planner.L.open.variant === 'Original');
+    assert.equal(await page.evaluate(() => window.__planner.L.open.slides[1].title), 'Advice');
+    // rename
+    await page.click('[data-a="varname"]'); await page.waitForSelector('#varN');
+    await page.$eval('#varN', i => { i.value = ''; }); await page.type('#varN', 'Full Tuesday'); await page.keyboard.press('Enter');
+    await page.waitForFunction(() => window.__planner.L.open.variant === 'Full Tuesday');
+    // Claude sees which version it is
+    assert.match(await page.evaluate(() => window.__planner.lessonText(window.__planner.L.open)), /^# Book Cover Prep \(version: Full Tuesday\)/);
+    // the week shows both, named
+    await page.evaluate(() => { const P = window.__planner; P.L.open = null; P.L.weekOf = '2026-11-02'; P.L.view = 'week'; P.renderLessons(); });
+    await page.waitForSelector('.ls-card .pl-vtag');
+    assert.deepEqual(await page.$$eval('.ls-card .pl-vtag', t => t.map(x => x.textContent).sort()), ['Full Tuesday', 'Shorter Friday']);
+    assert.deepEqual(errors, []);
+  } finally { await a.done(); }
+});
