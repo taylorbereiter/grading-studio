@@ -1956,7 +1956,7 @@ function openGrades() {
     '<button class="icon" data-close aria-label="Close" style="margin-left:auto">✕</button></div>' +
     '<div class="bb"><p class="muted" style="margin:0 0 10px;font-size:14px">Click any score or comment to copy it, then paste it into ManageBac. Click a name to open that paper.' + (c ? '' : ' Pick a roster under More to see this list in roster order.') + '</p>' +
     '<table class="gl"><thead><tr><th>#</th><th>Student</th>' + (rub ? setup.criteria.map(x => '<th>' + esc(x) + '</th>').join('') : '') + '<th>Total /' + maxPoints() + '</th><th>%</th><th>Comment</th></tr></thead><tbody>' + rows + '</tbody></table></div>' +
-    '<div class="bf"><button class="btn" data-ovopen style="margin-right:auto">Class overview</button><button class="btn" data-cp="total">Copy all totals</button><button class="btn" data-cp="pct">Copy all percents</button><button class="btn" data-cp="tsv">Copy as a table</button><button class="btn primary" data-csv>Download spreadsheet (CSV)</button></div>');
+    '<div class="bf"><button class="btn" data-ovopen>Class overview</button>' + mbLink(c, 'btn') + '<span style="margin-right:auto"></span><button class="btn" data-cp="total">Copy all totals</button><button class="btn" data-cp="pct">Copy all percents</button><button class="btn" data-cp="tsv">Copy as a table</button><button class="btn primary" data-csv>Download spreadsheet (CSV)</button></div>');
   const box = $('#dlgBox');
   box.onclick = async e => {
     if (e.target.closest('[data-close]')) return closeDlg();
@@ -3802,7 +3802,7 @@ function renderLib() {
     '<button class="addcard" data-additem="' + u.id + '">+ Assignment</button></div>';
   const block = (c, ci) => '<div class="cls" data-cls="' + esc(c.id) + '"><div class="clshead"><h3>' + esc(ci < 0 ? 'No class' : c.name) + '</h3>' +
     (ci < 0 ? '<span class="muted">Assignments with no roster. Drag them into a class.</span>' :
-      '<span class="muted">' + (c.names.length ? c.names.length + ' students on the roster' : 'No roster yet') + '</span><button class="btn sm" data-edit-class="' + ci + '">' + (c.names.length ? 'Edit roster' : 'Add roster') + '</button>' +
+      '<span class="muted">' + (c.names.length ? c.names.length + ' students on the roster' : 'No roster yet') + '</span><button class="btn sm" data-edit-class="' + ci + '">' + (c.names.length ? 'Edit roster' : 'Add roster') + '</button>' + mbLink(c) +
       '<button class="icon" data-cmove="' + ci + ':-1" title="Move this class up" aria-label="Move this class up"' + (ci ? '' : ' disabled') + '>↑</button><button class="icon" data-cmove="' + ci + ':1" title="Move this class down" aria-label="Move this class down"' + (ci < lib.classes.length - 1 ? '' : ' disabled') + '>↓</button>') +
     '<span class="sp"></span><button class="btn sm" data-addunit="' + esc(c.id) + '">+ Unit</button></div>' +
     '<div class="board">' + (c.units.map(unit).join('') || '<div class="empty-note">No units yet. Click + Unit.</div>') + '</div></div>';
@@ -3965,10 +3965,14 @@ function parseRoster(text) {
   }
   return out;
 }
+// A class's ManageBac page, so it opens in one click from the class and its Grades list.
+function mbUrl(v) { v = String(v || '').trim(); if (/^[\w.-]+\.[a-z]{2,}\//i.test(v)) v = 'https://' + v; return /^https?:\/\/[^\s"<>]+$/i.test(v) ? v : ''; }
+const mbLink = (c, cls) => c && c.mb && mbUrl(c.mb) ? '<a class="' + (cls || 'btn sm') + '" href="' + esc(mbUrl(c.mb)) + '" target="_blank" rel="noopener" title="Open this class on ManageBac">ManageBac ↗</a>' : '';
 function editClass(ci) {
   const c = ci >= 0 ? lib.classes[ci] : { id: uid(), name: '', names: [], units: [] };
   openDlg('<div class="bh"><h2>' + (ci >= 0 ? 'Edit roster' : 'New roster') + '</h2></div><div class="bb">' +
     '<div class="field"><label for="cName">Class name</label><input type="text" id="cName" value="' + esc(c.name) + '" placeholder="e.g. 11EL-2"></div>' +
+    '<div class="field"><label for="cMb">ManageBac link <span class="muted" style="font-weight:400">(optional)</span></label><input type="url" id="cMb" value="' + esc(c.mb || '') + '" placeholder="Paste this class’s ManageBac page address"></div>' +
     '<div class="field"><label for="cNames">Students, one per line, in the order you want (ManageBac order works well)</label><textarea class="big" id="cNames" placeholder="Paste from a spreadsheet or ManageBac, or upload a file">' + esc(c.names.join('\n')) + '</textarea></div>' +
     '<button class="btn sm" data-up>Upload a list (.csv or .txt)…</button><input type="file" id="cFile" accept=".csv,.txt,text/csv,text/plain" hidden>' +
     '<p class="muted" style="font-size:13px">Kept in this browser.</p></div>' +
@@ -3980,7 +3984,9 @@ function editClass(ci) {
     if (e.target.closest('[data-del]')) { if (!await askDlg('Delete the ' + c.name + ' class? Its assignments move to “No class”.', { ok: 'Delete', danger: true })) return; for (const u of c.units) { for (const it of u.items) it.classId = ''; lib.loose.units.push(u); } lib.classes.splice(ci, 1); saveLib(); closeDlg(); return renderLib(); }
     if (e.target.closest('[data-ok]')) {
       const name = $('#cName').value.trim(); if (!name) { $('#cName').focus(); return; }
+      const mb = mbUrl($('#cMb').value); if ($('#cMb').value.trim() && !mb) { toast('That ManageBac link isn’t a web address'); $('#cMb').focus(); return; }
       c.name = name; c.names = parseRoster($('#cNames').value);
+      if (mb) c.mb = mb; else delete c.mb;
       if (ci < 0) lib.classes.push(c);
       saveLib(); closeDlg(); renderLib();
     }
