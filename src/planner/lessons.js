@@ -91,6 +91,10 @@ function normLesson(x) {
   if (typeof x.notebook === 'string' && x.notebook.trim()) out.notebook = nbClean(x.notebook);
   const files = (Array.isArray(x.files) ? x.files : []).filter(f => f && typeof f.id === 'string' && typeof f.name === 'string').map(f => ({ id: f.id, name: f.name, kind: f.kind === 'doc' ? 'doc' : 'other', type: String(f.type || ''), size: +f.size || 0, added: +f.added || 0 }));
   if (files.length) out.files = files;
+  const fin = f => f && typeof f.id === 'string' && typeof f.name === 'string' ? { id: f.id, name: f.name, size: +f.size || 0, at: +f.at || 0, sig: String(f.sig || '') } : null;
+  if (fin(x.final)) out.final = fin(x.final);
+  const finals = (Array.isArray(x.finals) ? x.finals : []).map(fin).filter(Boolean);
+  if (finals.length) out.finals = finals;
   if (x.pending && Array.isArray(x.pending.before)) out.pending = { at: +x.pending.at || Date.now(), before: x.pending.before.map(ns), title: String(x.pending.title || '') };
   if (x._file) out._file = x._file; if (x._mod) out._mod = x._mod;
   return out;
@@ -348,7 +352,7 @@ function renderEditor() {
     '<div class="ls-stagewrap" id="lsWrap"><div class="ls-stage" id="lsStage"><div class="ls-slide">' + slideHtml(s, l, true) + '</div></div></div>' +
     '<div class="ls-warn" id="lsWarn" hidden></div>' +
     '<label class="ls-notes">Speaker notes<textarea data-f="notes" rows="3" placeholder="Notes for you, not shown on the slide">' + esc(s.notes) + '</textarea></label>' +
-    slideTalkHtml(s) + materialsHtml(l, 'lesson') +
+    slideTalkHtml(s) + finishedHtml(l) + materialsHtml(l, 'lesson') +
     '<p class="muted ls-hint">Click any text on the slide to edit it. In bullets, start a line with Tab for a smaller point under the one above. Arrow keys move between slides when you’re not typing. Drag a picture in from another tab, or paste a picture or a YouTube link.</p>' +
     '</section></div><input type="file" id="lsPicIn" accept="image/*" hidden>';
   $('#lessons').innerHTML = h;
@@ -488,7 +492,7 @@ async function onLessonsClick(e) {
   const t = e.target.closest('[data-a],[data-mbset],[data-open],[data-new],[data-attach],[data-go],[data-addslide],[data-unslot],[data-talkdone],[data-ctxview],[data-ctxcopy],[data-ctxput],[data-ctxdel],.ls-ed');
   if (t && t.dataset.mbset) return mbDlg(t.dataset.mbset);
   if (!t) return;
-  if (L.view === 'edit' && await reviewClick(t)) return;
+  if (L.view === 'edit' && (await reviewClick(t) || await finishedClick(t))) return;
   if (L.view === 'activities' && t.dataset.a && await activitiesClick(t)) return;
   if (t.classList.contains('ls-ed') && !t.dataset.a) return startEdit(t);
   if (t.dataset.open) return openLesson(L.lessons.find(l => l.id === t.dataset.open));
@@ -512,7 +516,7 @@ async function onLessonsClick(e) {
   if (a === 'reconnect') return folderReconnect(true);
   if (a === 'sync') { await folderRead(true); return; }
   if (!l) return;
-  if (a === 'pptx') { editorCommit(); return downloadPptx(l); }
+  if (a === 'pptx') { editorCommit(); return finOrMake(l); }
   if (a === 'ask') { editorCommit(); return askClaude(l); }
   if (a === 'more') return moreMenu(t);
   if (a === 'addslot') return addSlotDlg();
@@ -565,6 +569,7 @@ async function onLessonDrop(e) {
   const zf = [...(e.dataTransfer.files || [])].find(f => /\.zip$/i.test(f.name));
   if (zf && !(e.target.closest && e.target.closest('[data-owner]'))) return packImport(zf);
   if (e.target.closest && e.target.closest('.pl-ask') && L.open) { const fs = [...(e.dataTransfer.files || [])].filter(f => /^image\//.test(f.type)); if (fs.length) return addCtxShots(fs); }
+  if (await finishedDrop(e)) return;
   if (await matDrop(e)) return;
   const pf = [...(e.dataTransfer.files || [])].find(f => /\.json$/i.test(f.name));
   if (pf && !L.open) { try { const j = JSON.parse(await pf.text()); if (Array.isArray(j.classes)) return applySetup(j); } catch { } }
@@ -1018,6 +1023,7 @@ never are, and nothing here should point to a student.
 "look" is the lesson's colors: wood (the teacher's template), white, cream, sage, sky, blush, charcoal, navy,
 stripe, band, bigtype, framed, notebook, chalk. Leave it out to use the teacher's default; change it only when asked.
 "ask", "talk", "status" and "claudeNote" are for working together, and are all optional:
+- "final" and "finals" (on a lesson) are the teacher's finished PowerPoint and older ones (the files stay in the app). Leave them as they are.
 - "notebook" (on a lesson or unit) is the teacher's own jotted thoughts, as simple HTML. Read it for ideas; don't edit it.
 - A slide's "ask" is what the teacher wants on that slide. Use it, and leave it as it is.
 - A slide's "ctx" is screenshots the teacher added for context (like assignment instructions), not shown on the slide:

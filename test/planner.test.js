@@ -892,3 +892,57 @@ test('comments I made on slides: right-click comments stay on the slide, thumbna
     assert.deepEqual(errors, []);
   } finally { await a.done(); }
 });
+
+test('finished PowerPoint: upload one to a lesson, its slides take over, the lesson before is a version, Download gives the file, older decks are kept', async () => {
+  const a = await open();
+  try {
+    const { page, errors } = a;
+    const tpl = fs.readFileSync(path.join(__dirname, 'fixtures', 'lesson-template.b64'), 'utf8').trim();
+    const r = await page.evaluate(async (s, tpl) => {
+      const P = window.__planner; await P.applySetup({ ...s, template: tpl });
+      // a deck as if finished in PowerPoint: made from another lesson
+      const src = P.normLesson({ title: 'Prep', fmt: 2, slides: [{ layout: 'title', title: 'Book Cover Prep' }, { layout: 'agenda', title: '11/03 Agenda', body: '1. Using AI\n\t• Think **before** generating\n2. Work time', size: 28 },
+        { layout: 'content', title: 'Reminders', body: '{red}Turn it in as Google Slides{/}\n{blue}Film your talk{/}', notes: 'Show the folder' }] });
+      const deck = P.buildPptx(src);
+      window.__deck = deck;
+      const l = P.normLesson({ title: 'Prep', fmt: 2, slides: [{ layout: 'title', title: 'Draft' }, { layout: 'content', title: 'Old', body: 'old text', ask: 'Put the triangle here', talk: [{ by: 'you', text: 'keep this' }] }] });
+      P.L.lessons.push(l); P.openLessonForTest(l, 0);
+      // speaker notes come along (this test template has no notes page, so add one by hand)
+      const z = fflate.unzipSync(deck), te = new TextEncoder(), A = 'xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"';
+      z['ppt/slides/_rels/slide3.xml.rels'] = te.encode(new TextDecoder().decode(z['ppt/slides/_rels/slide3.xml.rels']).replace('</Relationships>', '<Relationship Id="rIdN" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/notesSlide" Target="../notesSlides/notesSlide3.xml"/></Relationships>'));
+      z['ppt/notesSlides/notesSlide3.xml'] = te.encode('<p:notes ' + A + '><p:cSld><p:spTree><p:sp><p:nvSpPr><p:nvPr><p:ph type="sldNum"/></p:nvPr></p:nvSpPr><p:txBody><a:p><a:r><a:t>3</a:t></a:r></a:p></p:txBody></p:sp><p:sp><p:nvSpPr><p:nvPr><p:ph type="body" idx="1"/></p:nvPr></p:nvSpPr><p:txBody><a:p><a:r><a:t>Show the folder</a:t></a:r></a:p></p:txBody></p:sp></p:spTree></p:cSld></p:notes>');
+      const notes = (await P.pptxToSlides(fflate.zipSync(z)))[2].notes;
+      return { n: (await P.pptxToSlides(deck)).length, notes };
+    }, SETUP, tpl);
+    assert.deepEqual(r, { n: 3, notes: 'Show the folder' });
+    await page.waitForSelector('#plFin [data-a="finup"]');
+    // upload through the file picker
+    await page.evaluate(() => { const i = document.querySelector('#finIn'), dt = new DataTransfer(); dt.items.add(new File([window.__deck], 'Book Cover Prep FINAL.pptx', { type: 'application/vnd.openxmlformats-officedocument.presentationml.presentation' })); i.files = dt.files; });
+    await page.click('#plFin [data-a="finup"]');
+    await page.evaluate(() => document.querySelector('#finIn').dispatchEvent(new Event('change')));
+    await page.waitForFunction(() => window.__planner.L.open.final);
+    const st = await page.evaluate(async () => { const P = window.__planner, l = P.L.open; return { name: l.final.name, slides: l.slides.map(s => [s.layout, s.title, s.body, s.notes]), ask: l.slides[1].ask, talk: l.slides[1].talk.length, vers: (await P.versionsOf(l)).map(v => [v.label, v.lesson.slides[1].title]) }; });
+    assert.equal(st.name, 'Book Cover Prep FINAL.pptx');
+    assert.deepEqual(st.slides[0].slice(0, 2), ['title', 'Book Cover Prep']);
+    assert.deepEqual(st.slides[1].slice(1, 3), ['11/03 Agenda', '1. Using AI\n\t• Think **before** generating\n2. Work time']);
+    assert.deepEqual(st.slides[2].slice(1, 3), ['Reminders', '{red}Turn it in as Google Slides{/}\n{blue}Film your talk{/}']);
+    assert.equal(st.ask, 'Put the triangle here'); assert.equal(st.talk, 1);
+    assert.deepEqual(st.vers, [['Before the finished PowerPoint', 'Old']]);
+    assert.match(await page.$eval('#plFin', d => d.textContent), /Book Cover Prep FINAL\.pptx/);
+    // Download .pptx gives the finished file itself
+    await page.evaluate(() => { window.__saved = []; const o = URL.createObjectURL; URL.createObjectURL = b => { window.__saved.push(b.size); return o(b); }; });
+    await page.click('[data-a="pptx"]');
+    await page.waitForFunction(() => window.__saved.length);
+    assert.equal(await page.evaluate(() => window.__saved[0] === window.__deck.length), true);
+    // a newer deck replaces it; the first one is kept under older decks
+    await page.evaluate(async () => { await window.__planner.finUpload(window.__planner.L.open, new File([window.__deck], 'v2.pptx')); });
+    await page.waitForFunction(() => window.__planner.L.open.final.name === 'v2.pptx');
+    assert.deepEqual(await page.evaluate(() => window.__planner.L.open.finals.map(f => f.name)), ['Book Cover Prep FINAL.pptx']);
+    assert.match(await page.$eval('.pl-fin-old', d => d.textContent), /Older finished decks \(1\)[\s\S]*Book Cover Prep FINAL/);
+    // after editing a slide here, Download asks which one
+    await page.evaluate(() => { const P = window.__planner; P.L.open.slides[1].title = 'Changed'; P.renderLessons(); });
+    await page.click('[data-a="pptx"]'); await page.waitForSelector('[data-fin]');
+    await page.click('[data-x]');
+    assert.deepEqual(errors, []);
+  } finally { await a.done(); }
+});
