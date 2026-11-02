@@ -976,3 +976,30 @@ test('Copy for Claude brings every comment: ones typed under a slide, right-clic
     assert.deepEqual(errors, []);
   } finally { await a.done(); }
 });
+
+test('a lesson .zip: the finished PowerPoint goes to Finished, every other file to Materials, a newer zip replaces same-named files', async () => {
+  const a = await open();
+  try {
+    const { page, errors } = a;
+    const tpl = fs.readFileSync(path.join(__dirname, 'fixtures', 'lesson-template.b64'), 'utf8').trim();
+    const r = await page.evaluate(async (s, tpl) => {
+      const P = window.__planner; await P.applySetup({ ...s, template: tpl });
+      const deck = P.buildPptx(P.normLesson({ title: 'Prep', fmt: 2, slides: [{ layout: 'title', title: 'Book Cover Prep' }, { layout: 'content', title: 'Advice', body: '• One' }] }));
+      const te = new TextEncoder();
+      const zip1 = fflate.zipSync({ 'Book Cover Prep/Book Cover Prep.pptx': deck, 'Book Cover Prep/handouts/Triangle handout.pdf': te.encode('%PDF-1.4 a'), 'Book Cover Prep/Exit ticket.docx': te.encode('docx'), '__MACOSX/._x': te.encode('junk'), 'Book Cover Prep/.DS_Store': te.encode('junk') });
+      const l = P.normLesson({ title: 'Prep', fmt: 2, slides: [{ layout: 'title', title: 'Draft' }] }); P.L.lessons.push(l); P.openLessonForTest(l, 0);
+      await P.lessonZip(l, new File([zip1], 'Book Cover Prep.zip'));
+      const first = { final: l.final.name, slides: l.slides.length, files: l.files.map(f => [f.name, f.type]) };
+      // a second zip with lesson.json picks the deck and only the listed files; same name replaces
+      const zip2 = fflate.zipSync({ 'v2.pptx': deck, 'old.pptx': deck, 'Triangle handout.pdf': te.encode('%PDF-1.4 newer'), 'Notes.txt': te.encode('skip me'), 'lesson.json': te.encode(JSON.stringify({ kind: 'grading-studio-lesson-zip', finished: 'v2.pptx', materials: ['Triangle handout.pdf'] })) });
+      await P.lessonZip(l, new File([zip2], 'v2.zip'));
+      return { first, final: l.final.name, older: l.finals.map(f => f.name), files: l.files.map(f => [f.name, f.size]) };
+    }, SETUP, tpl);
+    assert.deepEqual(r.first, { final: 'Book Cover Prep.pptx', slides: 2, files: [['Triangle handout.pdf', 'application/pdf'], ['Exit ticket.docx', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']] });
+    assert.equal(r.final, 'v2.pptx'); assert.deepEqual(r.older, ['Book Cover Prep.pptx']);
+    assert.deepEqual(r.files, [['Exit ticket.docx', 4], ['Triangle handout.pdf', 14]]);
+    await page.waitForSelector('#plFin [data-a="finzip"]');
+    assert.match(await page.$eval('.pl-mats', d => d.textContent), /Exit ticket\.docx[\s\S]*Triangle handout\.pdf/);
+    assert.deepEqual(errors, []);
+  } finally { await a.done(); }
+});

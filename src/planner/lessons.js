@@ -569,9 +569,9 @@ function undoToast(msg, fn) {
 document.addEventListener('dragstart', e => { const th = e.target.closest && e.target.closest('#lsThumbs .ls-th'); if (!th) return; e.dataTransfer.setData('text/x-slide', th.dataset.go); e.dataTransfer.effectAllowed = 'move'; });
 async function onLessonDrop(e) {
   const zf = [...(e.dataTransfer.files || [])].find(f => /\.zip$/i.test(f.name));
+  if (await finishedDrop(e)) return;
   if (zf && !(e.target.closest && e.target.closest('[data-owner]'))) return packImport(zf);
   if (e.target.closest && e.target.closest('.pl-ask') && L.open) { const fs = [...(e.dataTransfer.files || [])].filter(f => /^image\//.test(f.type)); if (fs.length) return addCtxShots(fs); }
-  if (await finishedDrop(e)) return;
   if (await matDrop(e)) return;
   const pf = [...(e.dataTransfer.files || [])].find(f => /\.json$/i.test(f.name));
   if (pf && !L.open) { try { const j = JSON.parse(await pf.text()); if (Array.isArray(j.classes)) return applySetup(j); } catch { } }
@@ -1045,6 +1045,9 @@ never are, and nothing here should point to a student.
 "look" is the lesson's colors: wood (the teacher's template), white, cream, sage, sky, blush, charcoal, navy,
 stripe, band, bigtype, framed, notebook, chalk. Leave it out to use the teacher's default; change it only when asked.
 "ask", "talk", "status" and "claudeNote" are for working together, and are all optional:
+- A lesson .zip (the teacher uploads it on a lesson): the finished .pptx plus handouts and files, flat or in folders.
+  The .pptx becomes the finished PowerPoint; every other file goes into the lesson's materials. An optional lesson.json
+  { "kind": "grading-studio-lesson-zip", "finished": "Deck.pptx", "materials": ["Handout.docx"] } picks the deck and the files.
 - "final" and "finals" (on a lesson) are the teacher's finished PowerPoint and older ones (the files stay in the app). Leave them as they are.
 - "notebook" (on a lesson or unit) is the teacher's own jotted thoughts, as simple HTML. Read it for ideas; don't edit it.
 - A slide's "ask" is what the teacher wants on that slide. Use it, and leave it as it is.

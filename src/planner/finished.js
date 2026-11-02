@@ -14,14 +14,58 @@ function finishedHtml(l) {
   const f = l.final, old = l.finals || [];
   return '<div class="pl-fin" id="plFin"><div class="pl-fin-h"><h3>Finished PowerPoint</h3><span class="muted sp-small">' +
     (f ? 'The deck you’ll teach from. Uploading a new one replaces it; the old one is kept below.' : 'Upload the deck when it’s done. Its slides replace the ones here, and this version is kept under Versions.') +
-    '</span><span class="sp"></span><button class="btn sm' + (f ? ' ghost' : ' primary') + '" data-a="finup">' + (f ? 'Upload a newer one…' : 'Upload finished .pptx…') + '</button><input type="file" id="finIn" accept=".pptx,application/vnd.openxmlformats-officedocument.presentationml.presentation" hidden></div>' +
+    '</span><span class="sp"></span><button class="btn sm' + (f ? ' ghost' : ' primary') + '" data-a="finup">' + (f ? 'Upload a newer one…' : 'Upload finished .pptx…') + '</button><button class="btn sm ghost" data-a="finzip" title="A .zip with the finished PowerPoint and the lesson’s handouts and files">Upload lesson .zip…</button><input type="file" id="finIn" accept=".pptx,.zip,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/zip" hidden></div>' +
     (f ? '<div class="pl-files"><div class="pl-file"><span class="pl-ft">PPT</span><span class="pl-fn"><b>' + esc(f.name) + '</b><span>' + finSize(f.size) + ' · uploaded ' + finWhen(f.at) + (finFresh(l) ? '' : ' · slides changed here since') + '</span></span>' +
       '<button class="btn sm" data-a="findl" data-id="' + f.id + '">Download</button></div></div>' : '') +
     (old.length ? '<details class="pl-fin-old"><summary>Older finished decks (' + old.length + ')</summary><div class="pl-files">' + old.map(o => '<div class="pl-file"><span class="pl-ft">PPT</span><span class="pl-fn"><b>' + esc(o.name) + '</b><span>' + finSize(o.size) + ' · uploaded ' + finWhen(o.at) + '</span></span>' +
       '<button class="btn sm ghost" data-a="findl" data-id="' + o.id + '">Download</button><button class="btn sm ghost" data-a="finback" data-id="' + o.id + '" title="Make this the finished deck again, and its slides the lesson’s slides">Use this one again</button></div>').join('') + '</div></details>' : '') +
     '</div>';
 }
-function finPick() { const i = $('#finIn'); if (!i) return; i.onchange = () => { const f = i.files[0]; i.value = ''; if (f) finUpload(L.open, f); }; i.click(); }
+function finPick() { const i = $('#finIn'); if (!i) return; i.onchange = () => { const f = i.files[0]; i.value = ''; if (f) (/\.zip$/i.test(f.name) ? lessonZip(L.open, f) : finUpload(L.open, f)); }; i.click(); }
+
+/* ---------- a lesson .zip: the finished deck plus the lesson's materials, in one upload ----------
+   Layout (folders inside are fine; they're ignored):
+     <anything>.pptx        the finished PowerPoint (if there are several, lesson.json says which)
+     everything else        goes into the lesson's Materials (a file with the same name is replaced)
+     lesson.json (optional) { "kind": "grading-studio-lesson-zip", "finished": "Deck.pptx",
+                              "materials": ["Handout.docx", "Exit ticket.pdf"] }   (only these, in this order)
+   A .zip with pack.json is a lesson pack instead (many lessons), and goes to Past lessons. */
+const ZIP_SKIP = n => /(^|\/)(__MACOSX\/|\.DS_Store$|Thumbs\.db$|desktop\.ini$|~\$)/i.test(n) || /(^|\/)\.[^/]/.test(n);
+const MIME = { pdf: 'application/pdf', docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', doc: 'application/msword', pptx: 'application/vnd.openxmlformats-officedocument.presentationml.presentation', xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif', txt: 'text/plain', md: 'text/markdown', html: 'text/html', mp3: 'audio/mpeg', mp4: 'video/mp4' };
+const mimeOf = n => MIME[((/\.(\w+)$/.exec(n) || [])[1] || '').toLowerCase()] || '';
+const baseName = n => String(n).split('/').pop();
+async function lessonZip(l, file) {
+  let z;
+  try { z = fflate.unzipSync(new Uint8Array(await file.arrayBuffer())); } catch { return toast('That .zip couldn’t be opened'); }
+  if (z['pack.json']) return packImport(file);
+  const names = Object.keys(z).filter(n => !n.endsWith('/') && !ZIP_SKIP(n) && z[n].length);
+  let man = {}; const mf = names.find(n => baseName(n).toLowerCase() === 'lesson.json');
+  if (mf) { try { man = JSON.parse(fflate.strFromU8(z[mf])) || {}; } catch { } }
+  const files = names.filter(n => n !== mf);
+  const byBase = b => files.find(n => baseName(n).toLowerCase() === baseName(b || '').toLowerCase());
+  const decks = files.filter(n => /\.pptx$/i.test(n));
+  const deck = byBase(man.finished) || (decks.length === 1 ? decks[0] : decks.find(n => !n.includes('/')) || decks[0]);
+  let mats = Array.isArray(man.materials) ? man.materials.map(byBase).filter(Boolean) : files.filter(n => n !== deck);
+  mats = mats.filter((n, i) => mats.indexOf(n) === i && n !== deck);
+  const big = mats.filter(n => z[n].length > MAX_FILE); mats = mats.filter(n => z[n].length <= MAX_FILE);
+  if (!deck && !mats.length) return toast('Nothing to add in that .zip');
+  // Materials first, so the deck's redraw shows them. A file with the same name is the newer copy.
+  if (mats.length) {
+    l.files = l.files || [];
+    for (const n of mats) {
+      const name = baseName(n), old = l.files.find(f => f.kind !== 'doc' && f.name === name);
+      if (old) { await kvDel('file:' + old.id); l.files = l.files.filter(f => f !== old); }
+      const id = lid(), b = new Blob([z[n]], { type: mimeOf(name) });
+      await kvSet('file:' + id, b);
+      l.files.push({ id, name, kind: 'other', type: b.type, size: b.size, added: Date.now() });
+    }
+    await lPut(l);
+  }
+  if (deck) await finUpload(l, new File([z[deck]], baseName(deck), { type: MIME.pptx }));
+  else renderEditor();
+  toast((deck ? 'Finished deck “' + baseName(deck) + '”' : 'No PowerPoint') + ' and ' + mats.length + ' material' + (mats.length === 1 ? '' : 's') + ' added from ' + file.name + '.' +
+    (big.length ? ' Too big to keep (over 40 MB): ' + big.map(baseName).join(', ') + '.' : '') + (deck ? ' The lesson before is under Versions.' : ''), 8000);
+}
 
 // Puts a finished deck on the lesson. file: a File or Blob with a name; keepId: reuse stored bytes (going back to an older one).
 async function finUpload(l, file, keepId) {
@@ -63,13 +107,19 @@ async function finOrMake(l) {
 async function finishedClick(t) {
   const a = t.dataset.a, l = L.open; if (!l) return false;
   if (a === 'finup') { finPick(); return true; }
+  if (a === 'finzip') { finPick(); return true; }
   if (a === 'findl') { const f = [l.final, ...(l.finals || [])].find(x => x && x.id === t.dataset.id); if (f) await finDownload(f.id, f.name); return true; }
   if (a === 'finback') { await finBack(l, t.dataset.id); return true; }
   return false;
 }
 async function finishedDrop(e) {
-  const box = e.target.closest && e.target.closest('#plFin'), f = [...(e.dataTransfer.files || [])].find(x => /\.pptx$/i.test(x.name));
-  if (!box || !f || !L.open) return false;
+  const box = e.target.closest && e.target.closest('#plFin'), fs = [...(e.dataTransfer.files || [])];
+  if (!L.open || L.view !== 'edit') return false;
+  // A .zip dropped anywhere on an open lesson (but Materials) is a lesson .zip; packs still go to Past lessons.
+  const zf = fs.find(x => /\.zip$/i.test(x.name));
+  if (zf && !(e.target.closest && e.target.closest('[data-owner]'))) { await lessonZip(L.open, zf); return true; }
+  const f = fs.find(x => /\.pptx$/i.test(x.name));
+  if (!box || !f) return false;
   await finUpload(L.open, f); return true;
 }
 
