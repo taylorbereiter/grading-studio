@@ -6,7 +6,7 @@ const fs = require('fs');
 const { PDFDocument, StandardFonts, rgb } = require('pdf-lib');
 const { unzipSync } = require('fflate');
 const { launch } = require('./helpers/chrome');
-const { openApp, openZip, appReady, at, clickAt, drag, setTool, settle, catchDownloads, probePdf } = require('./helpers/app');
+const { openApp, menuPick, openZip, appReady, at, clickAt, drag, setTool, settle, catchDownloads, probePdf } = require('./helpers/app');
 const { zipOf } = require('./helpers/fixtures');
 
 const LINE = 'The quick brown fox jumps over the lazy dog and keeps on running far away';
@@ -58,7 +58,7 @@ test('right-click opens the menu; a proofreading mark and a sticker land where s
     assert.ok(names.includes(n), n + ' is in the menu');
   assert.ok(!names.some(n => /heart|proud/i.test(n)), 'no heart and no "proud of you"');
   // The proofreading mark: in her ink color, at the spot.
-  await page.click('.stampmenu [data-mark="cap"]');
+  await menuPick(page, '[data-mark="cap"]');
   assert.equal(await page.$('.stampmenu'), null, 'the menu closes');
   let ms = await marks(page);
   assert.equal(ms.length, 1);
@@ -68,7 +68,7 @@ test('right-click opens the menu; a proofreading mark and a sticker land where s
   assert.ok(await colorIn(page, 0, [140, 294, 20, 12]) > 5, 'the three lines show');
   // A sticker.
   await rightClick(page, 0, 400, 500);
-  await page.click('.stampmenu [data-mark="star"]');
+  await menuPick(page, '[data-mark="star"]');
   ms = await marks(page);
   assert.deepEqual([ms[1].t, ms[1].k], ['stamp', 'star']);
   assert.ok(Math.abs(ms[1].x - 400) < 1.5 && Math.abs(ms[1].y - 500) < 1.5, 'where she clicked: ' + [ms[1].x, ms[1].y]);
@@ -121,8 +121,8 @@ test('stamps survive saving and reopening, turn with the page staying upright, a
   const { page, close } = await openApp(browser);
   const dl = await catchDownloads(page);
   await open(page);
-  await rightClick(page, 0, 120, 200); await page.click('.stampmenu [data-mark="sp"]');
-  await rightClick(page, 0, 400, 600); await page.click('.stampmenu [data-mark="lightbulb"]');
+  await rightClick(page, 0, 120, 200); await menuPick(page, '[data-mark="sp"]');
+  await rightClick(page, 0, 400, 600); await menuPick(page, '[data-mark="lightbulb"]');
   await settle(page);
   const was = await marks(page);
   // Back in from saved work.

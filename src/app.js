@@ -82,8 +82,8 @@ function percentWith(total, max, sc) {
 }
 function gradeOf(st) {
   if (noScore(st)) return { total: null, pct: null, done: true, status: st.grade.status };   // missing or excused: settled, with no number
-  const g = scoreOf(st);
-  return st.grade.status === 'late' ? { ...g, status: 'late' } : g;
+  const g = scoreOf(st), r = st.grade.status === 'late' ? { ...g, status: 'late' } : g;
+  return st.grade.outAvg ? { ...r, out: true } : r;   // left out of the average: the score stays and copies, it just isn't counted
 }
 function scoreOf(st) {
   const own = ownGrade(st);
@@ -115,6 +115,7 @@ const fmtPct = p => p == null ? '' : fmtNum(p) + '%';
 let batch = null;        // { id, name, students:[...] }
 let cur = 0;             // index of the open student
 let tool = 'pen';
+let once = null, onceEl = null;   // a tool picked from the right-click for one go: { k, prev } (src/stamps.js)
 const COLORS = { red: '#D7263D', blue: '#1F5FD1', green: '#1E8A4C', purple: '#7B3FC4', black: '#1B1F27' };
 const HL = { yellow: '#FFE45C', green: '#B4F0A8', pink: '#FFB8D6', blue: '#B0E0FF' };
 let inkColor = store.get('gs.ink', 'red'), hlColor = store.get('gs.hl', 'yellow'), penW = store.get('gs.penW', 2);
@@ -1326,11 +1327,11 @@ function bindPage(pg) {
     const box = (pg.boxes || []).find(b => x >= b.x && x <= b.x + b.w && y >= b.y && y <= b.y + b.h);
     if (box && !box.n.ro && tool !== 'erase') { e.preventDefault(); openNote(pg, box.n); return; }
     if (wasNote) { e.preventDefault(); return; }
-    if (tool !== 'erase') { const cg = cornerAt(pg, x, y); if (cg) { e.preventDefault(); c.setPointerCapture(e.pointerId); g = cg; return; } }
+    if (tool !== 'erase' && !once) { const cg = cornerAt(pg, x, y); if (cg) { e.preventDefault(); c.setPointerCapture(e.pointerId); g = cg; return; } }
     if (tool !== 'select' && tool !== 'erase' && !onPage(x, y)) return;
     e.preventDefault();
     c.setPointerCapture(e.pointerId);
-    const pick = clickToPick(pg, x, y); if (pick) { g = pick; return; }
+    const pick = once ? null : clickToPick(pg, x, y); if (pick) { g = pick; return; }   // a one-time circle or highlight draws over marks
     if (tool === 'pen') g = inkBegin({ t: 'pen', color: COLORS[inkColor], w: penW, pts: [[r1(x), r1(y)]] }, x, y, e, pg.s);
     else if (tool === 'hl') g = hlBegin(pg, x, y, e);
     else if (tool === 'oval') g = { x0: x, y0: y, m: { t: 'oval', color: COLORS[inkColor], sw: Math.max(1.2, penW * 0.8), x, y, w: 0, h: 0 } };
@@ -1421,14 +1422,16 @@ function bindPage(pg) {
     } else if (g.move && g.moved) changed(pg);
     else if (g.move && g.edit) { const m = g.move; g = null; editMark(pg, m); return; }
     g = null;
+    if (once && once.k !== 'pen') endOnce();   // a circle or highlight from the right-click: one, then back to her tool
   };
   c.addEventListener('pointerup', end);
   c.addEventListener('pointercancel', end);
-  // A right-click on the page: proofreading marks, stickers, or a comment right there.
+  // A right-click on the page: a comment right there, or any other mark or tool, used once.
   c.addEventListener('contextmenu', e => {
     const [x, y] = pt(e);
     if (!onPage(x, y) || pg.editing || activeEditor) return;
     e.preventDefault(); commitEditors();
+    if (once) endOnce();   // a right-click ends a one-time tool (the pen's writing, say) and opens the menu
     openStampMenu(pg, x, y, e.clientX, e.clientY);
   });
   c.addEventListener('dblclick', e => {
@@ -1615,12 +1618,13 @@ const IC = {
 const svg = p => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + p + '</svg>';
 const TOOLS = [['select', 'Select', 'V'], ['pen', 'Pen', 'P'], ['hl', 'Highlight', 'H'], ['oval', 'Circle', 'O'], ['text', 'Text', 'T'], ['note', 'Comment', 'C'], ['check', 'Check', 'K'], ['erase', 'Eraser', 'E']];
 function renderTools() {
-  const isHl = tool === 'hl';
+  const bar = once ? once.prev : tool;   // a one-time tool keeps her own tool's bar, so the toolbar doesn't jump
+  const isHl = bar === 'hl';
   const sw = isHl ? Object.entries(HL).map(([k, v]) => '<button class="sw" data-hl="' + k + '" style="background:' + v + '" aria-pressed="' + (k === hlColor) + '" title="' + k + '"></button>').join('')
     : Object.entries(COLORS).map(([k, v]) => '<button class="sw" data-ink="' + k + '" style="background:' + v + '" aria-pressed="' + (k === inkColor) + '" title="' + k + '"></button>').join('');
-  $('#tools').innerHTML = TOOLS.map(([k, l, key]) => '<button class="tool" data-tool="' + k + '" aria-pressed="' + (tool === k) + '" title="' + l + ' (' + key + ')">' + svg(IC[k]) + '<span class="lb">' + l + '</span></button>').join('') +
-    '<span class="sep"></span><span class="swatches">' + (tool === 'select' || tool === 'erase' ? '' : sw) + '</span>' +
-    (tool === 'pen' ? '<span class="seg" style="margin-left:4px"><button data-w="1.2" aria-pressed="' + (penW === 1.2) + '">Fine</button><button data-w="2" aria-pressed="' + (penW === 2) + '">Medium</button><button data-w="3.5" aria-pressed="' + (penW === 3.5) + '">Bold</button></span>' : '') + (isHl ? hlBar() : '') +
+  $('#tools').innerHTML = TOOLS.map(([k, l, key]) => '<button class="tool' + (once && once.k === k ? ' once' : '') + '" data-tool="' + k + '" aria-pressed="' + ((once ? once.prev : tool) === k) + '" title="' + l + ' (' + key + ')">' + svg(IC[k]) + '<span class="lb">' + l + '</span></button>').join('') +
+    '<span class="sep"></span><span class="swatches">' + (bar === 'select' || bar === 'erase' ? '' : sw) + '</span>' +
+    (bar === 'pen' ? '<span class="seg" style="margin-left:4px"><button data-w="1.2" aria-pressed="' + (penW === 1.2) + '">Fine</button><button data-w="2" aria-pressed="' + (penW === 2) + '">Medium</button><button data-w="3.5" aria-pressed="' + (penW === 3.5) + '">Bold</button></span>' : '') + (isHl ? hlBar() : '') +
     '<button class="icon" id="undoBtn" title="Undo (' + keyLabel('⌘Z') + ')" aria-label="Undo" ' + (undoStack.length ? '' : 'disabled') + '>' + svg(IC.undo) + '</button>' +
     '<button class="icon" id="redoBtn" title="Redo (' + keyLabel('⇧⌘Z') + ')" aria-label="Redo" ' + (redoStack.length ? '' : 'disabled') + '>' + svg(IC.redo) + '</button>' +
     '<span class="zoom"><button class="icon" data-z="-1" aria-label="Zoom out" title="Zoom out (' + keyLabel('⌘−') + ')">' + svg(IC.minus) + '</button><span data-z0 title="' + keyLabel('Back to 100% (⌘0). Pinch or ⌘-scroll on the paper to zoom.') + '">' + Math.round(zoom * 100) + '%</span><button class="icon" data-z="1" aria-label="Zoom in" title="Zoom in (' + keyLabel('⌘+') + ')">' + svg(IC.plus) + '</button></span>';
@@ -1658,7 +1662,7 @@ $('#paper').addEventListener('wheel', e => {   // a trackpad pinch arrives as �
   e.preventDefault();
   setZoom(zoom * Math.exp(-clamp(e.deltaY * (e.deltaMode ? 20 : 1), -40, 40) * 0.005), { x: e.clientX, y: e.clientY });
 }, { passive: false });
-function setTool(t) { commitEditors(); tool = t; if (t !== 'select') { selected = null; redrawAll(); } renderTools(); }
+function setTool(t) { commitEditors(); if (once) dropOnce(); tool = t; if (t !== 'select') { selected = null; redrawAll(); } renderTools(); }
 function recolorSelected(col) {
   if (!selected || selected.fresh || selected.mark.t === 'hl') return;
   snap(selected.page); selected.mark.color = col; changed(selected.page);
@@ -1677,22 +1681,32 @@ function renderList() {
     if (q && !shownName(st, i).toLowerCase().includes(q)) return '';
     const g = gradeOf(st);
     const val = g.total != null ? g.total : g.pct != null ? g.pct + '%' : null;
-    const right = noScore(st) ? '<span class="stag" title="You marked this student ' + g.status + '. No score counts.">' + STATUS_LABEL[g.status] + '</span>' : val != null ? '<span class="sc" title="' + (g.paper ? 'Read from the paper' : g.done ? 'Scored' : 'Partly scored') + '"' + (g.paper ? ' style="color:var(--muted);font-weight:600"' : g.done ? '' : ' style="color:var(--warn)"') + '>' + fmtNum(g.total != null ? g.total : g.pct) + (g.total == null ? '%' : g.outOf != null ? '/' + fmtNum(g.outOf) : '') + (g.partial ? '<small>partial</small>' : '') + '</span>'
+    const right = noScore(st) ? '<span class="stag" title="You marked this student ' + g.status + '. No score counts.">' + STATUS_LABEL[g.status] + '</span>' : val != null ? '<span class="sc" title="' + (g.paper ? 'Read from the paper' : g.done ? 'Scored' : 'Partly scored') + '"' + (g.paper || g.out ? ' style="color:var(--muted);font-weight:600"' : g.done ? '' : ' style="color:var(--warn)"') + '>' + fmtNum(g.total != null ? g.total : g.pct) + (g.total == null ? '%' : g.outOf != null ? '/' + fmtNum(g.outOf) : '') + (g.partial ? '<small>partial</small>' : '') + '</span>'
       : manyReads(st) ? '<span class="sc" style="color:var(--warn)" title="More than one grade found on the paper. Check the Grade sheet.">?</span>'
       : st.doubts && st.doubts.length ? '<span class="sc" style="color:var(--warn)" title="A reading on the paper may not be a grade. Confirm it on the Grade sheet.">?</span>'
       : hasMarks(st) ? '<span class="dot" title="Marked"></span>' : '';
     const nAdd = st.files.filter(f => f.added && !f.from).length, re = st.files.some(f => Object.values(f.sc || {}).some(r => r.re)), grp = st.files.some(f => f.from || Object.values(f.sc || {}).some(r => r.w)) || st.files.some(f => !f.added && shareCopies(st, f).length);
     return '<button class="stu' + (i === cur ? ' on' : '') + (st.files.length ? '' : ' empty') + '" data-i="' + i + '"><span class="num">' + (pos + 1) + '</span><span class="nm" title="' + esc(shownName(st, i)) + '">' + esc(shownName(st, i)) + '</span>' +
-      '<span style="display:inline-flex;align-items:center;gap:4px">' + (st.files.length || noScore(st) ? '' : '<span class="muted" style="font-size:11px">no paper</span>') + (g.status === 'late' ? '<span class="stag" title="You marked this student late">late</span>' : '') + (nAdd ? '<span class="add" title="' + nAdd + (nAdd === 1 ? ' file' : ' files') + ' added by you">+' + nAdd + '</span>' : '') + (re ? '<span class="add" title="A page needs a rescan">⚑</span>' : '') + (grp ? '<span class="add grp" title="Group work: shares pages or a file with another student">shared</span>' : '') + carryPill(st) + right + '</span></button>';
+      '<span style="display:inline-flex;align-items:center;gap:4px">' + (st.files.length || noScore(st) ? '' : '<span class="muted" style="font-size:11px">no paper</span>') + (g.status === 'late' ? '<span class="stag" title="You marked this student late">late</span>' : '') + (g.out ? '<span class="stag out" title="Left out of the average">left out</span>' : '') + (nAdd ? '<span class="add" title="' + nAdd + (nAdd === 1 ? ' file' : ' files') + ' added by you">+' + nAdd + '</span>' : '') + (re ? '<span class="add" title="A page needs a rescan">⚑</span>' : '') + (grp ? '<span class="add grp" title="Group work: shares pages or a file with another student">shared</span>' : '') + carryPill(st) + right + '</span></button>';
   }).join('');
   const on = $('#stuList .on'); if (on) on.scrollIntoView({ block: 'nearest' });
   const nExp = exportPlan(true).length;
   $('#exportBtn').textContent = 'Export marked' + (nExp ? ' (' + nExp + ')' : '');
   renderProg();
 }
+// The top left: how many are scored, the class average so far (the same one Class overview gives), how many are left, and the papers left out of the average.
+let outOpen = false;
 function renderProg() {
   const on = batch.students.filter(s => !noScore(s)), N = on.length, n = on.filter(s => gradeOf(s).done).length, nOff = batch.students.length - N;
+  const cs = classStats(), outs = batch.students.map((st, i) => i).filter(i => batch.students[i].grade.outAvg && !noScore(batch.students[i]));
+  if (!outs.length) outOpen = false;
+  const outList = (anonOn() ? anonOrder().filter(i => outs.includes(i)) : outs).map(i => { const g = gradeOf(batch.students[i]);
+    return '<button class="po" data-pgo="' + i + '"><span>' + esc(shownName(batch.students[i], i)) + '</span><span>' + (g.total != null ? fmtNum(g.total) + ' / ' + fmtNum(g.outOf != null ? g.outOf : maxPoints()) : g.pct != null ? fmtPct(g.pct) : 'No score') + '</span></button>'; }).join('');
   $('#progS').innerHTML = '<div class="ph">' + n + ' of ' + N + ' <span>scored' + (nOff ? ' · ' + nOff + ' missing or excused' : '') + '</span></div><div class="pb"><i style="width:' + (N ? 100 * n / N : 0) + '%"></i></div>' +
+    '<div class="ptiles"><div class="pt" id="pAvg" title="' + (cs.n ? 'Average of ' + people(cs.n, 'finished score') + '. Partial, missing, excused and left-out papers don’t count.' : 'No finished scores yet') + '"><div class="k">Average</div><div class="v">' + (cs.n ? oneDp(cs.mean) + ' <small>/ ' + fmtNum(cs.max) + '</small>' + (cs.meanPct != null ? ' <small class="pp">' + cs.meanPct + '%</small>' : '') : '–') + '</div></div>' +
+    '<div class="pt" id="pLeft" title="Papers with no score or only part of one"><div class="k">Left</div><div class="v">' + (N - n) + '</div></div>' +
+    (outs.length ? '<button class="pt click" id="pOut" aria-expanded="' + outOpen + '" title="Papers you left out of the average. Click to see them."><div class="k">Left out</div><div class="v">' + outs.length + '</div></button>' : '<div class="pt" id="pOut" title="Leave a paper out with the switch under Mark as"><div class="k">Left out</div><div class="v">0</div></div>') + '</div>' +
+    (outOpen ? '<div class="poutbox"><div class="h">Click one to open it</div>' + outList + '</div>' : '') +
     (n < N ? '<button class="btn sm" id="nextUn" title="Opens the next student without a full score">Next unscored <kbd>N</kbd></button>' : '<div class="muted" style="font-size:13px;margin-bottom:6px">Everyone ' + (nOff ? 'else ' : '') + 'has a score.</div>');
 }
 function nextUnscored() {
@@ -1700,7 +1714,11 @@ function nextUnscored() {
   for (let k = 1; k <= N; k++) { const i = o[(p + k) % N]; if (!gradeOf(batch.students[i]).done) return openStudent(i); }
   toast('Everyone has a score');
 }
-$('#progS').addEventListener('click', e => { if (e.target.closest('#nextUn')) nextUnscored(); });
+$('#progS').addEventListener('click', e => {
+  if (e.target.closest('#nextUn')) nextUnscored();
+  if (e.target.closest('button#pOut')) { outOpen = !outOpen; renderProg(); }
+  const go = e.target.closest('[data-pgo]'); if (go) openStudent(+go.dataset.pgo);
+});
 $('#stuList').addEventListener('click', e => { const b = e.target.closest('.stu'); if (b) openStudent(+b.dataset.i); });
 // Find a student: type part of a name; Enter opens the first match, Esc clears it.
 $('#stuFind').addEventListener('input', () => { renderList(); if (!$('#stuList .stu')) $('#stuList').innerHTML = '<div class="muted" style="font-size:13px;padding:6px 8px">No one matches.</div>'; });
@@ -1757,6 +1775,7 @@ $('#grade').addEventListener('click', e => {
     renderGrade(); renderList(); saveSoon(); return;
   }
   const sb = e.target.closest('[data-status]'); if (sb) return setStatus(batch.students[cur], sb.dataset.status);
+  if (e.target.closest('#outAvg')) return setOutAvg(batch.students[cur]);
   if (e.target.closest('#prevBtn')) stepStudent(-1);
   if (e.target.closest('#nextBtn')) stepStudent(1);
   if (e.target.closest('#editRubric')) openSetup();
@@ -6049,6 +6068,7 @@ document.addEventListener('keydown', e => {
     if (key === 'd' && selected) { e.preventDefault(); copyMark(true); pasteMark(); return; }
   }
   if (typing || e.metaKey || e.ctrlKey || e.altKey) return;
+  if (e.key === 'Escape' && once) { e.preventDefault(); endOnce(); return; }
   if (e.key === '?') { e.preventDefault(); openKeys(); return; }
   // A picked sticker, mark, check, circle or text box: + and − make it bigger or smaller.
   if ((e.key === '+' || e.key === '=' || e.key === '-' || e.key === '_') && selected && !(selected.fresh && selected.mark.t === 'text') && canResize(selected.mark)) { e.preventDefault(); stepSize(e.key === '+' || e.key === '=' ? 1 : -1); return; }

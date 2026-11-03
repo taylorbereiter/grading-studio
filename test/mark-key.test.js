@@ -5,7 +5,7 @@ const assert = require('node:assert/strict');
 const { PDFDocument, StandardFonts, rgb } = require('pdf-lib');
 const { unzipSync } = require('fflate');
 const { launch } = require('./helpers/chrome');
-const { openApp, openZip, at, settle, catchDownloads, probePdf } = require('./helpers/app');
+const { openApp, menuPick, openZip, at, settle, catchDownloads, probePdf } = require('./helpers/app');
 const { zipOf } = require('./helpers/fixtures');
 
 let browser, zip;
@@ -31,7 +31,7 @@ async function stamp(page, k, x, y) {
     await page.mouse.click(p.x, p.y, { button: 'right' });
     if (await page.waitForSelector('.stampmenu', { timeout: 1500 }).catch(() => null)) break;
   }
-  await page.click('.stampmenu [data-mark="' + k + '"]');
+  await menuPick(page, '[data-mark="' + k + '"]');
 }
 async function exportZip(page, dl, { key } = {}) {
   await page.click('#exportBtn');
