@@ -16,3 +16,6 @@
 .spbf{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;padding:6px 8px;background:var(--surface);border-top:1px solid var(--line);font-size:13px}
 .spbk.kept{border-color:var(--accent)}
 .spbk.kept img{opacity:.55}
+/* a page flagged for a rescan: in the split, and the strip above it once it's open */
+.spfl .spre{background:var(--warn-soft);color:var(--warn);border-color:var(--warn);font-weight:600}
+.scnote.re{background:var(--warn-soft)}
