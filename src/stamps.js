@@ -40,7 +40,101 @@ function scoreSize(m) {
   return { w: Math.max(s * 1.5, Math.max(wa, wb) + s * 0.4), h: b ? s : s * 0.6, two: !!b };
 }
 const stickerAspect = k => (STICKERS.find(s => s[0] === k) || [0, 0, 1])[2];
-const stampName = k => ((PROOF.find(p => p[0] === k) || PUNCT.find(p => p[0] === k) || STICKERS.find(p => p[0] === k)) || [k, k])[1];
+const stampName = k => isProof(k) ? markLabel(k) : ((STICKERS.find(p => p[0] === k)) || [k, k])[1];
+
+/* ---------------- the mark key: a page at the end of a returned file saying what each mark on it means ---------------- */
+// Each teacher writes the words in More > Mark key; until then these are used. Kept as gs.markKey = { on, names: { k }, means: { k } }.
+const MARK_MEAN = {
+  gr: 'A grammar mistake here, such as a verb that doesn’t match its subject.',
+  cap: 'Make this letter a capital.', lower: 'Make this letter lowercase.',
+  insert: 'Something is missing here. Add the word or letter written above it.',
+  para: 'Start a new paragraph here.', delete: 'Take this out.', swap: 'Switch the order of these words or letters.',
+  space: 'Put a space here.', close: 'Take out the space and join these together.',
+  sp: 'This word is spelled wrong.', ro: 'Two sentences run together. Split them, or join them with the right punctuation.',
+  frag: 'This isn’t a full sentence. It’s missing a subject or a verb, or the thought isn’t finished.',
+  wc: 'A different word would fit better here.', awk: 'This is hard to read. Try saying it out loud and rewording it.',
+  vt: 'The verb is in the wrong tense. Keep the tense the same.', unclear: 'I’m not sure what you mean here.',
+  period: 'Add a period where the mark points.', comma: 'Add a comma where the mark points.', apos: 'Add an apostrophe here.',
+  quote: 'Add quotation marks here.', semi: 'Add a semicolon here.', colon: 'Add a colon here.', qmark: 'Add a question mark here.',
+  excl: 'Add an exclamation mark here.', hyphen: 'Add a hyphen here.', dash: 'Add a dash here.',
+};
+const MARK_KEY = 'gs.markKey';
+const KEY_KINDS = PROOF.map(p => p[0]).concat(PUNCT.map(p => p[0]));
+const keySet = () => { const v = store.get(MARK_KEY, null); return v && typeof v === 'object' ? v : {}; };
+const keyOn = () => keySet().on !== false;
+const markLabel0 = k => ((PROOF.find(p => p[0] === k) || PUNCT.find(p => p[0] === k)) || [k, k])[1];
+const markLabel = k => { const v = (keySet().names || {})[k]; return typeof v === 'string' && v.trim() ? v.trim() : markLabel0(k); };
+const markMean = k => { const m = keySet().means || {}; return typeof m[k] === 'string' ? m[k].trim() : (MARK_MEAN[k] || ''); };
+function setKey(change) { const v = { ...keySet() }; change(v); store.set(MARK_KEY, v); }
+// The marks a key lists for a set of marks: proofreading and punctuation only, in menu order, each in the ink it was first used in.
+function keyRows(marks) {
+  const seen = new Map();
+  for (const m of marks) if (m && m.t === 'stamp' && isProof(m.k) && !seen.has(m.k)) seen.set(m.k, m.color || '#D92D20');
+  return KEY_KINDS.filter(k => seen.has(k)).map(k => ({ k, color: seen.get(k), name: markLabel(k), mean: markMean(k) }));
+}
+// Draws the key onto pages of W x H points (ctx already scaled to points). Returns how many rows went on this page, from row `from`.
+function drawKeyPage(ctx, rows, from, W, H) {
+  const M = Math.max(36, Math.round(W * 0.09)), pic = 46, tx = M + pic + 10, tw = W - M - tx, UI = 'Inter, ' + FONT;
+  ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, W, H);
+  ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+  ctx.fillStyle = '#1E2024'; ctx.font = '600 17px ' + UI; ctx.fillText(from ? 'Marks on this paper (continued)' : 'Marks on this paper', M, M + 14);
+  ctx.fillStyle = '#5C616A'; ctx.font = '12.5px ' + UI; ctx.fillText('What each mark your teacher used means.', M, M + 34);
+  const wrap = (t, font) => {
+    ctx.font = font; const out = []; let line = '';
+    for (const w of t.split(/\s+/).filter(Boolean)) { const tryL = line ? line + ' ' + w : w; if (line && ctx.measureText(tryL).width > tw) { out.push(line); line = w; } else line = tryL; }
+    if (line) out.push(line); return out;
+  };
+  let y = M + 50, n = 0;
+  const rule = yy => { ctx.fillStyle = '#E4E6EA'; ctx.fillRect(M, yy, W - 2 * M, 1); };
+  rule(y);
+  for (let i = from; i < rows.length; i++) {
+    const r = rows[i], nm = wrap(r.name, '600 13px ' + UI), mn = r.mean ? wrap(r.mean, '12.5px ' + UI) : [];
+    const h = Math.max(pic - 6, 10 + nm.length * 17 + mn.length * 17 + 6);
+    if (n && y + h > H - M) break;
+    drawStamp(ctx, { t: 'stamp', k: r.k, x: M + pic / 2, y: y + h / 2, size: 20, color: r.color });
+    let ty = y + 10 + 12;
+    ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+    ctx.fillStyle = '#1E2024'; ctx.font = '600 13px ' + UI; for (const l of nm) { ctx.fillText(l, tx, ty); ty += 17; }
+    ctx.fillStyle = '#3F444C'; ctx.font = '12.5px ' + UI; for (const l of mn) { ctx.fillText(l, tx, ty); ty += 17; }
+    y += h; rule(y); n++;
+  }
+  return n;
+}
+
+function openMarkKey(back) {
+  const row = k => {
+    const s = keySet(), named = typeof (s.names || {})[k] === 'string' && s.names[k].trim(), meant = typeof (s.means || {})[k] === 'string';
+    return '<div class="mkrow" data-k="' + k + '"><span class="mkpic"></span>' +
+      '<input type="text" maxlength="40" data-n="' + k + '" aria-label="Name for this mark" value="' + esc(markLabel(k)) + '">' +
+      '<div><textarea maxlength="300" rows="2" data-m="' + k + '" aria-label="What it means">' + esc(markMean(k)) + '</textarea>' +
+      '<button class="link mkusual" data-usual="' + k + '"' + (named || meant ? '' : ' hidden') + '>Back to the usual wording</button></div></div>';
+  };
+  openDlg('<div class="bh"><h2>Mark key</h2><button class="icon" data-close aria-label="Close">✕</button></div><div class="bb mk">' +
+    '<label class="chk"><input type="checkbox" id="mkOn"' + (keyOn() ? ' checked' : '') + '> Add a key to returned papers</label>' +
+    '<p class="mkhint">A page at the end of each returned file, listing only the proofreading and punctuation marks used on it, with what they mean. Stickers and check marks are left out. Leave a meaning blank to show just the name.</p>' +
+    '<div class="mkgrp">Proofreading marks</div>' + PROOF.map(p => row(p[0])).join('') +
+    '<div class="mkgrp">Punctuation</div>' + PUNCT.map(p => row(p[0])).join('') +
+    '</div><div class="bf">' + (back ? '<button class="btn" data-back>Back to Export</button>' : '') + '<button class="btn primary" data-close>Done</button></div>', true);
+  const box = $('#dlgBox');
+  for (const el of box.querySelectorAll('.mkrow')) el.querySelector('.mkpic').append(stampPicture(el.dataset.k, COLORS[inkColor]));
+  box.oninput = e => {
+    const t = e.target, k = t.dataset.n || t.dataset.m; if (!k) return;
+    if (t.dataset.n) setKey(v => { v.names = { ...(v.names || {}) }; if (t.value.trim() && t.value.trim() !== markLabel0(k)) v.names[k] = t.value; else delete v.names[k]; });
+    else setKey(v => { v.means = { ...(v.means || {}) }; if (t.value.trim() !== (MARK_MEAN[k] || '')) v.means[k] = t.value; else delete v.means[k]; });
+    const s = keySet(); box.querySelector('[data-usual="' + k + '"]').hidden = !(((s.names || {})[k]) || k in (s.means || {}));
+  };
+  box.onchange = e => { if (e.target.id === 'mkOn') setKey(v => { v.on = e.target.checked; }); };
+  box.onclick = e => {
+    if (e.target.closest('[data-close]')) return closeDlg();
+    if (e.target.closest('[data-back]')) { closeDlg(); return back(); }
+    const u = e.target.closest('[data-usual]');
+    if (u) {
+      const k = u.dataset.usual;
+      setKey(v => { v.names = { ...(v.names || {}) }; v.means = { ...(v.means || {}) }; delete v.names[k]; delete v.means[k]; });
+      box.querySelector('[data-n="' + k + '"]').value = markLabel(k); box.querySelector('[data-m="' + k + '"]').value = markMean(k); u.hidden = true;
+    }
+  };
+}
 // How big a new one is: the size she last gave that kind (each sticker, each mark, the check) in this download.
 // A new download starts back at the usual sizes. Kept on this computer, for the dozen most recent downloads.
 const MARK_SIZES = 'gs.markSizes', SIZE0 = { proof: 16, sticker: 44, score: 52 };
@@ -354,4 +448,4 @@ function openStampMenu(pg, x, y, cx, cy) {
 document.addEventListener('pointerdown', e => { if (stampMenuEl && !stampMenuEl.contains(e.target)) closeStampMenu(); }, true);
 window.addEventListener('blur', closeStampMenu);
 document.addEventListener('scroll', closeStampMenu, true);
-Object.assign(window.__gs, { turnMarks, drawStamp, stampBox, placeStamp, openStampMenu, closeStampMenu, endOnce, once: () => once && { ...once }, stickersReady, STAMP_KINDS: { proof: PROOF.map(p => p[0]), punct: PUNCT.map(p => p[0]), stickers: STICKERS.map(s => s[0]) } });
+Object.assign(window.__gs, { unpackExport, keyRows, drawKeyPage, openMarkKey, markLabel, markMean, turnMarks, drawStamp, stampBox, placeStamp, openStampMenu, closeStampMenu, endOnce, once: () => once && { ...once }, stickersReady, STAMP_KINDS: { proof: PROOF.map(p => p[0]), punct: PUNCT.map(p => p[0]), stickers: STICKERS.map(s => s[0]) } });
