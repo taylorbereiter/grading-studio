@@ -1787,7 +1787,7 @@ function openKeys() {
     '<h4>A picked mark (Select tool)</h4>' + row('← → ↑ ↓', 'Nudge it (Shift for bigger steps)') + row('⌘C ⌘V', 'Copy it, then paste on the page you’re looking at, even on another student’s paper') + row('⌘D', 'Make a copy of it') + row('+ −', 'Make it bigger or smaller (or drag the square at its corner)') + row('Delete', 'Remove it') + row('Esc', 'Let go of it (the arrows go back to moving between students)') +
     '<h4>The paper</h4>' + row('⌘+ ⌘−', 'Zoom in / out (or pinch, or ⌘-scroll)') + row('⌘0', 'Back to 100%') + row('[ ]', 'Fold away the student list / score panel') +
     'Turn a page: point at it and use ⟲ ⟳ in its top corner, or “Turn all pages” above the file. In Arrange pages, pick pages and press R.'.replace(/^/, '<h4>Turning pages</h4><span style="grid-column:1/-1">') + '</span>' +
-    '<h4>Other</h4>' + row('=', 'Calculator') + row('Space', 'Play / pause a recording') + row('J L', 'Back / ahead 5 seconds') + row('?', 'This list') +
+    '<h4>Other</h4>' + row('=', 'Calculator') + row('⇧=', 'Answer, in the calculator (= on its own adds, Enter answers too)') + row('Space', 'Play / pause a recording') + row('J L', 'Back / ahead 5 seconds') + row('?', 'This list') +
     '</div></div><div class="bf"><span class="muted gsVer" style="margin-right:auto;font-size:13px">' + esc(versionLabel()) + '</span><button class="btn primary" data-close>Close</button></div>', true);
   $('#dlgBox').onclick = e => { if (e.target.closest('[data-close]')) closeDlg(); };
 }
@@ -4477,6 +4477,15 @@ function calcEval(src) {
   return v;
 }
 const calcFmt = v => v == null ? '' : String(+(+v).toFixed(4));
+// What a key press means in the calculator: '=' for the answer, '+' for the =/+ key without Shift, the character to
+// type for other calculator keys, 'Escape', or null to let the key do its usual thing.
+function calcKeyOf(e) {
+  if (e.key === 'Enter' || e.code === 'NumpadEnter' || e.code === 'NumpadEqual') return '=';
+  if (e.key === 'Escape') return 'Escape';
+  if (e.code === 'Equal' || e.key === '=') return e.shiftKey ? '=' : '+';
+  if (e.key.length === 1 && /[\d.+\-*/()^%x×÷]/.test(e.key)) return e.key;
+  return null;
+}
 function openCalc() {
   const old = $('#calcPanel'); if (old) { old.remove(); return; }
   const p = document.createElement('div'); p.id = 'calcPanel'; p.setAttribute('role', 'dialog'); p.setAttribute('aria-label', 'Calculator'); document.body.appendChild(p);
@@ -4518,10 +4527,21 @@ function openCalc() {
     $('#calcAvgOut').innerHTML = ns.length ? 'Average <b>' + calcFmt(ns.reduce((a, b) => a + b, 0) / ns.length) + '</b> · Total ' + calcFmt(ns.reduce((a, b) => a + b, 0)) + ' · ' + ns.length + (ns.length === 1 ? ' number' : ' numbers') : '';
   };
   inp.oninput = show;
+  // Keys: the =/+ key on its own adds (it's the one she reaches for most); Shift with it, or Enter, gives the answer.
+  // Right after an answer, + − × ÷ carry on from it; a number starts over.
   inp.onkeydown = e => {
-    if (e.key === 'Enter' || e.key === '=') { e.preventDefault(); done(); }
-    else if (e.key === 'Escape') { e.preventDefault(); p.remove(); }
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    const k = calcKeyOf(e);
+    if (k === '=') { e.preventDefault(); done(); }
+    else if (k === 'Escape') { e.preventDefault(); p.remove(); }
+    else if (k) { e.preventDefault(); typeIn(k); }
   };
+  const typeIn = c => {
+    const all = inp.value && inp.selectionStart === 0 && inp.selectionEnd === inp.value.length;
+    if (all && /^[+\-*/^%)]$/.test(c)) inp.setSelectionRange(inp.value.length, inp.value.length);
+    inp.setRangeText(c, inp.selectionStart, inp.selectionEnd, 'end'); show();
+  };
+  p.typeIn = c => { inp.focus(); if (c === '=') return done(); if (document.activeElement !== inp || inp.selectionStart == null) inp.setSelectionRange(inp.value.length, inp.value.length); typeIn(c); };
   p.oninput = e => { if (e.target.id === 'calcPts' || e.target.id === 'calcMax') pct(); if (e.target.id === 'calcAvg') avg(); };
   p.onclick = e => {
     if (e.target.closest('[data-cx]')) return p.remove();
@@ -5982,7 +6002,10 @@ document.addEventListener('keydown', e => {
   if (e.key.toLowerCase() === 'h' && tool === 'hl') { setHlMode(hlMode === 'free' ? 'auto' : 'free', true); return; }
   if (map[e.key.toLowerCase()]) { setTool(map[e.key.toLowerCase()]); return; }
   if (e.key.toLowerCase() === 'n') { nextUnscored(); return; }
-  if (e.key === '=') { e.preventDefault(); if ($('#calcPanel')) $('#calcIn').focus(); else openCalc(); return; }
+  if (e.key === '=' && !$('#calcPanel')) { e.preventDefault(); openCalc(); return; }
+  // With the calculator open, numbers and + − × ÷ ( ) go straight into it, even after a click on the paper.
+  // ( / still finds a student, and − with a picked mark still makes it smaller, above.)
+  if ($('#calcPanel') && e.key !== '/' && !(e.key === 'x' || e.key === 'X')) { const k = calcKeyOf(e); if (k && k !== 'Escape' && (k !== '=' || e.code === 'Equal' || e.code === 'NumpadEqual')) { e.preventDefault(); $('#calcPanel').typeIn(k); return; } }
   if (e.key === '[' && !e.metaKey && !e.ctrlKey) { e.preventDefault(); const p = panelsNow(); return setPanels(!p.L, p.R); }
   if (e.key === ']' && !e.metaKey && !e.ctrlKey) { e.preventDefault(); const p = panelsNow(); return setPanels(p.L, !p.R); }
   if (e.key === 'ArrowRight' || e.key === 'ArrowDown') { e.preventDefault(); stepStudent(1); }
