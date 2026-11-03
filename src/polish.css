@@ -97,3 +97,13 @@
 .stampmenu .st-punc canvas{background:#fff;border-radius:6px}
 .stampmenu .st-tick{width:100%;margin-bottom:2px}
 .stampmenu .st-mini canvas{background:#fff;border-radius:6px}
+/* More > Mark key: each mark with its name and what it means */
+.mk .mkhint{margin:-2px 0 8px 26px;color:var(--muted);font-size:13px}
+.mk .mkgrp{font-size:11.5px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin:14px 0 2px}
+.mk .mkrow{display:grid;grid-template-columns:40px 140px 1fr;gap:10px;align-items:start;padding:9px 0;border-top:1px solid var(--line)}
+.mk .mkpic{display:flex;justify-content:center;padding-top:1px}
+.mk input[type=text],.mk textarea{width:100%;box-sizing:border-box;font:13px/1.4 var(--f-body);color:var(--fg);background:var(--surface);border:1px solid var(--line-strong);border-radius:var(--r-sm);padding:6px 8px}
+.mk textarea{resize:vertical;min-height:38px}
+.mk .mkusual{font-size:12px;margin-top:3px}
+@media (max-width:560px){.mk .mkrow{grid-template-columns:36px 1fr}.mk .mkrow>div{grid-column:2}}
+.mk .mkpic canvas{background:#fff;border-radius:6px}

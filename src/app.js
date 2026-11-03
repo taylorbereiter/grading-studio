@@ -2066,7 +2066,7 @@ function exportPlan(keepFolders) {
   return out;
 }
 // Builds one returned file from its pages (possibly from several turned-in files), baking in every mark.
-async function flattenDoc(st, d, dpi, edit) {
+async function flattenDoc(st, d, dpi, edit, key) {
   await workerReady;
   const srcs = new Map();
   const src = async path => {
@@ -2105,6 +2105,22 @@ async function flattenDoc(st, d, dpi, edit) {
       out.addPage([W + side, H]).drawImage(img, { x: 0, y: 0, width: W + side, height: H });
       c.width = c.height = 0; page.cleanup();
     }
+    // The mark key: what each proofreading mark on this file means, on its own page(s) after the last one, the last page's size.
+    // Reopening an editable export rebuilds from the original pages, so the key never comes back in as a page.
+    const rows = key ? keyRows(d.pages.flatMap(([path, p]) => fileByPath(st, path).marks[p] || [])) : [];
+    if (rows.length) {
+      const [lp, lpn] = d.pages[d.pages.length - 1], { f: lf, js: ljs } = await src(lp), lv = vpRot(lf, lpn, await ljs.getPage(lpn + 1), 1);
+      let W = lv.width, H = lv.height;
+      if (W < 300 || H < 300 || W > 2000 || H > 2000) { W = 612; H = 792; }
+      const scale = dpi / 72;
+      for (let from = 0; from < rows.length;) {
+        const c = document.createElement('canvas'); c.width = Math.ceil(W * scale); c.height = Math.ceil(H * scale);
+        const ctx = c.getContext('2d'); ctx.setTransform(scale, 0, 0, scale, 0, 0);
+        from += drawKeyPage(ctx, rows, from, W, H);
+        out.addPage([W, H]).drawImage(await out.embedJpg(await canvasJpg(c, 0.9)), { x: 0, y: 0, width: W, height: H });
+        c.width = c.height = 0;
+      }
+    }
     if (edit) {   // the original pages and her own marks go along, so bringing the file back in opens it ready to change
       const paths = [...new Set(d.pages.map(([path]) => path))];
       const info = { v: 1, pages: d.pages.map(([path, p]) => { const f = fileByPath(st, path); return [paths.indexOf(path), p, f.marks[p] || [], rotOf(f, p), skewOf(f, p)]; }) };
@@ -2129,6 +2145,7 @@ async function openExport() {
   const plan = exportPlan(true);
   const nStu = new Set(plan.map(o => o.st)).size, skipped = batch.students.length - nStu;
   const nLeft = batch.students.reduce((a, st) => a + layoutOf(st).filter(d => !docAuto(st, d) && !docIn(st, d)).length, 0);   // left out by her; the check above lists files with no marks
+  const nKey = plan.filter(o => o.d && keyRows(o.d.pages.flatMap(([path, p]) => fileByPath(o.st, path).marks[p] || [])).length).length;
   const optsOpen = !!store.get('gs.xopts', false);
   const canDir = !!(window.showDirectoryPicker && window.self === window.top);
   const allBox = '<label class="chk"><input type="checkbox" id="xAll"' + (xAll() ? ' checked' : '') + '> Also send back files with no marks (Word files, other files and unmarked pages)</label>';
@@ -2146,6 +2163,7 @@ async function openExport() {
           '<label class="chk"><input type="checkbox" id="xKeep" checked> Keep student folders</label>' +
           '<label class="chk"><input type="checkbox" id="xSheet" checked> Add the grade sheet (a crop of each typed grade, in ' + listOrder() + ')</label>' +
           '<label class="chk"><input type="checkbox" id="xEdit"' + (xEdit() ? ' checked' : '') + '> Keep marks editable</label><p class="xhint">Bring a file back in later and change its marks. Files are about twice as big.</p>' +
+          '<label class="chk"><input type="checkbox" id="xKey"' + (keyOn() ? ' checked' : '') + '> Add a key to the marks used on each paper</label><p class="xhint">' + (!nKey ? 'No file has proofreading marks yet. ' : nKey === plan.length ? (nKey === 1 ? 'The file gets one. ' : 'All ' + nKey + ' files get one. ') : nKey + ' of the ' + plan.length + ' files ' + (nKey === 1 ? 'gets' : 'get') + ' one. ') + '<button class="link" data-mkey>Change what they mean…</button></p>' +
           allBox +
           '<div class="chk" style="cursor:default">Sharpness <span class="seg" id="xDpi"><button data-dpi="150" aria-pressed="true">Standard</button><button data-dpi="220" aria-pressed="false">Extra sharp</button></span></div>' +
         '</details>' +
@@ -2160,23 +2178,25 @@ async function openExport() {
     if ($('#xKeep').checked) on.push('student folders');
     if ($('#xSheet').checked) on.push('grade sheet');
     if ($('#xEdit').checked) on.push('marks stay editable');
+    if ($('#xKey').checked) on.push('mark key');
     if (xAll()) on.push('files with no marks too');
     if (dpi > 150) on.push('extra sharp');
     el.textContent = on.length ? on.join(', ') : 'none';
   };
   optsSay();
   const xo = $('#xOpts'); if (xo) xo.ontoggle = () => store.set('gs.xopts', xo.open);
-  box.onchange = e => { optsSay(); if (e.target.id === 'xEdit') store.set('gs.xedit', e.target.checked); if (e.target.id === 'xAll') { store.set('gs.xall', e.target.checked); renderTools(); openExport(); } };
+  box.onchange = e => { optsSay(); if (e.target.id === 'xEdit') store.set('gs.xedit', e.target.checked); if (e.target.id === 'xKey') setKey(v => { v.on = e.target.checked; }); if (e.target.id === 'xAll') { store.set('gs.xall', e.target.checked); renderTools(); openExport(); } };
   box.onclick = async e => {
     if (e.target.closest('[data-close]')) return closeDlg();
     const ck = e.target.closest('[data-chk]'); if (ck) { closeDlg(); return openStudent(+ck.dataset.chk, ck.dataset.file || undefined); }
     if (e.target.closest('[data-chksheet]')) return openSheet();
+    if (e.target.closest('[data-mkey]')) { if (xBusy) return toast('The last export is still going. It will say when it’s done.'); closeDlg(); return openMarkKey(openExport); }
     const d = e.target.closest('[data-dpi]');
     if (d) { dpi = +d.dataset.dpi; for (const x of $('#xDpi').children) x.setAttribute('aria-pressed', x === d); optsSay(); return; }
     const go = e.target.closest('[data-go]'); if (!go) return;
     if (xBusy) return toast('The last export is still going. It will say when it’s done.');
     keep = $('#xKeep').checked;
-    const withSheet = $('#xSheet').checked, editable = $('#xEdit').checked;
+    const withSheet = $('#xSheet').checked, editable = $('#xEdit').checked, withKey = $('#xKey').checked;
     // Closing the box doesn't stop the export: it finishes, and the last word comes up on its own.
     const say = (t, last) => { const el = $('#xStatus'); if (el) el.textContent = t; else if (last) toast(t, 6000); };
     let dir = null;
@@ -2214,7 +2234,7 @@ async function openExport() {
       for (let i = 0; i < items.length; i++) {
         say('Baking in marks ' + (i + 1) + ' of ' + items.length + '…');
         bar.firstChild.style.width = (30 + 70 * i / items.length) + '%';
-        if (await putOut(items[i].path, () => items[i].raw ? items[i].f.data : flattenDoc(items[i].st, items[i].d, dpi, editable), items[i].st)) nOut++;
+        if (await putOut(items[i].path, () => items[i].raw ? items[i].f.data : flattenDoc(items[i].st, items[i].d, dpi, editable, withKey), items[i].st)) nOut++;
       }
       await unopenable(failed);
       bar.firstChild.style.width = '100%';
@@ -5976,6 +5996,7 @@ document.addEventListener('drop', async e => {
 });
 $('#trAllBtn').onclick = openTranscripts;
 $('#dispBtn').onclick = openDisplay;
+$('#mkeyBtn').onclick = () => openMarkKey();
 // Side panels fold away to give the paper more room; remembered in this browser. [ and ] also fold them.
 function setPanels(L, R) {
   const c = $('#cols'); c.classList.toggle('noL', !!L); c.classList.toggle('noR', !!R);
