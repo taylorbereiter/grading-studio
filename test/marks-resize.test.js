@@ -4,7 +4,7 @@ const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const { PDFDocument, StandardFonts, rgb } = require('pdf-lib');
 const { launch } = require('./helpers/chrome');
-const { openApp, openZip, at, clickAt, drag, setTool } = require('./helpers/app');
+const { openApp, menuPick, openZip, at, clickAt, drag, setTool } = require('./helpers/app');
 const { zipOf } = require('./helpers/fixtures');
 
 const LINE = 'The quick brown fox jumps over the lazy dog and keeps on running far away';
@@ -46,11 +46,11 @@ test('the menu has quick punctuation and a Grammar mark, and each one draws', as
   const punct = await page.$$eval('.stampmenu .st-puncs [data-mark]', bs => bs.map(b => b.title));
   assert.deepEqual(punct, ['Add a period', 'Add a comma', 'Add an apostrophe', 'Add quotation marks', 'Add a semicolon', 'Add a colon', 'Add a question mark', 'Add an exclamation mark', 'Add a hyphen', 'Add a dash']);
   assert.equal(await page.$eval('.stampmenu .st-proofs [data-mark]', b => b.title), 'Grammar', 'Grammar comes first');
-  await page.click('.stampmenu [data-mark="gr"]');
+  await menuPick(page, '[data-mark="gr"]');
   let ms = await marks(page);
   assert.equal(ms[0].k, 'gr'); assert.ok(Math.abs(ms[0].x - 150) < 1.5 && Math.abs(ms[0].y - 400) < 1.5, 'where she clicked');
   await rightClick(page, 300, 400);
-  await page.click('.stampmenu [data-mark="comma"]');
+  await menuPick(page, '[data-mark="comma"]');
   assert.equal((await marks(page))[1].k, 'comma');
   const kinds = await page.evaluate(() => window.__gs.STAMP_KINDS.punct);
   await page.evaluate(kinds => { const pg = window.__gs.state().pages[0]; kinds.forEach((k, i) => window.__gs.placeStamp(pg, k, 60 + i * 50, 600)); }, kinds);
@@ -64,7 +64,7 @@ test('a sticker grows by its corner, the next one comes out that size, and + / â
   const { page, close } = await openApp(browser);
   await open(page);
   await rightClick(page, 300, 500);
-  await page.click('.stampmenu [data-mark="star"]');
+  await menuPick(page, '[data-mark="star"]');
   let st = (await marks(page))[0];
   assert.equal(st.size, 44);
   const corner = await page.evaluate(() => { const s = window.__gs.state().pages[0].marks()[0], bb = window.__gs.stampBox(s); return [bb.x + bb.w + 3, bb.y + bb.h + 3]; });
@@ -78,10 +78,10 @@ test('a sticker grows by its corner, the next one comes out that size, and + / â
   await page.evaluate(() => window.__gs.redo());
   const big = (await marks(page))[0].size;
   await rightClick(page, 150, 200);
-  await page.click('.stampmenu [data-mark="star"]');
+  await menuPick(page, '[data-mark="star"]');
   assert.equal((await marks(page))[1].size, big, 'the next star comes out the same size');
   await rightClick(page, 500, 200);
-  await page.click('.stampmenu [data-mark="thumbsup"]');
+  await menuPick(page, '[data-mark="thumbsup"]');
   assert.equal((await marks(page))[2].size, 44, 'another sticker keeps its own size');
   await page.evaluate(() => window.__gs.undo());
   await clickAt(page, 0, 150, 200);   // pick the second star again (undo let go of it)
@@ -92,7 +92,7 @@ test('a sticker grows by its corner, the next one comes out that size, and + / â
   assert.ok(Math.abs((await marks(page))[1].size - big) < 0.5, 'and = puts it back');
   // A proofreading mark keeps its own size.
   await rightClick(page, 450, 300);
-  await page.click('.stampmenu [data-mark="sp"]');
+  await menuPick(page, '[data-mark="sp"]');
   assert.equal((await marks(page))[2].size, 16);
   // A different download starts back at the usual sizes.
   const fresh = await page.evaluate(() => { const b = window.__gs.state().batch, id = b.id; b.id = 'gs.b.other'; const m = window.__gs.placeStamp(window.__gs.state().pages[0], 'star', 300, 300); b.id = id; return m.size; });
@@ -105,7 +105,7 @@ test('the right-click menu has the check mark, in her ink color, at the size she
   const { page, close } = await openApp(browser);
   await open(page);
   await rightClick(page, 200, 300);
-  assert.equal(await page.$eval('.stampmenu button', b => b.title), 'Check mark', 'it comes first');
+  assert.deepEqual(await page.$$eval('.stampmenu > button', bs => bs.slice(0, 2).map(b => b.textContent)), ['Add a comment here', 'Check mark'], 'it comes right after Add a comment');
   await page.click('.stampmenu [data-tick]');
   let ms = await marks(page);
   assert.equal(ms[0].t, 'check'); assert.equal(ms[0].size, 22); assert.match(ms[0].color, /^#[0-9A-F]{6}$/i);

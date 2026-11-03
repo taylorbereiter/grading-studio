@@ -80,20 +80,44 @@
 .cfcols{display:grid;grid-template-columns:1fr 1fr;gap:10px}.cfside{display:block;border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:13.5px;cursor:pointer}
 .cfside:has(input:checked){border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}.cfc{overflow-wrap:anywhere;white-space:pre-wrap}
 #bringBox ul{margin:4px 0 8px;padding-left:18px}#bringBox p{margin:10px 0 2px}
-/* the right-click menu of proofreading marks and stickers */
-.stampmenu{position:fixed;z-index:60;width:340px;max-height:calc(100vh - 16px);overflow:auto;background:var(--surface);border:1px solid var(--line-strong);border-radius:12px;box-shadow:0 12px 32px rgba(10,14,25,.22);padding:8px;font:13px var(--f-body);color:var(--fg)}
-.stampmenu .st-head{font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin:6px 4px 4px}
-.stampmenu .st-proofs{display:grid;grid-template-columns:1fr 1fr;gap:2px}
-.stampmenu .st-sticks,.stampmenu .st-recent{display:flex;flex-wrap:wrap;gap:2px}
+/* the right-click menu: a short list, with the long ones (punctuation, proofreading marks, stickers) in panels beside it */
+.stampmenu{position:fixed;z-index:60;width:240px;max-height:calc(100vh - 16px);overflow:auto;background:var(--surface);border:1px solid var(--line-strong);border-radius:12px;box-shadow:0 12px 32px rgba(10,14,25,.22);padding:6px;font:13px var(--f-body);color:var(--fg)}
+.stampmenu:focus{outline:none}
+.stampmenu .st-fly{position:fixed;z-index:61;width:max-content;max-width:calc(100vw - 16px);max-height:calc(100vh - 16px);overflow:auto;background:var(--surface);border:1px solid var(--line-strong);border-radius:12px;box-shadow:0 12px 32px rgba(10,14,25,.22);padding:6px}
+.stampmenu .st-fly[hidden]{display:none}
+.stampmenu .st-fly[data-fly=circle],.stampmenu .st-fly[data-fly=hl]{width:230px}
+.stampmenu .st-fly[data-fly=proof]{width:320px}
+.stampmenu .st-fly[data-fly=stick]{width:248px}
+.stampmenu .st-head{font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin:4px 6px 4px}
 .stampmenu button{border:0;background:none;color:inherit;font:inherit;border-radius:8px;cursor:pointer}
-.stampmenu button:hover,.stampmenu button:focus-visible{background:var(--hover);outline:none}
+.stampmenu button:hover,.stampmenu button:focus-visible,.stampmenu .st-item.on{background:var(--hover);outline:none}
 .stampmenu button:focus-visible{box-shadow:0 0 0 2px var(--accent)}
+.stampmenu .st-item{display:flex;align-items:center;gap:9px;width:100%;min-height:32px;padding:5px 8px;text-align:left}
+.stampmenu .st-item svg{width:18px;height:18px;flex:none;color:var(--fg-2)}
+.stampmenu .st-item canvas{flex:none}
+.stampmenu .st-item small{display:block;color:var(--muted);font-size:11.5px;line-height:1.3}
+.stampmenu .st-lb{flex:1;min-width:0}
+.stampmenu .st-chev{color:var(--muted);font-size:16px;line-height:1}
+.stampmenu .st-pri{font-weight:600;color:var(--accent)}.stampmenu .st-pri svg{color:var(--accent)}
+.stampmenu .st-sep{height:1px;background:var(--line);margin:5px 4px}
+.stampmenu .st-rl{font-size:11.5px;color:var(--muted);font-weight:500;margin-right:auto}
+.stampmenu .st-recent{display:flex;flex-wrap:wrap;align-items:center;gap:2px;padding:2px 4px 2px 8px}
+.stampmenu .st-recent .st-rl{margin-right:4px}
+.stampmenu .st-recent canvas{width:28px!important;height:28px!important;background:#fff;border-radius:6px}
+.stampmenu .st-inks,.stampmenu .st-hls{display:flex;align-items:center;gap:6px;padding:4px 8px}
+.stampmenu .st-sw{width:18px;height:18px;border-radius:50%!important;padding:0;flex:none}
+.stampmenu .st-sw.sq{border-radius:5px!important}
+.stampmenu .st-sw[aria-pressed=true]{box-shadow:0 0 0 2px var(--surface),0 0 0 4px var(--accent)}
+.stampmenu .st-proofs{display:grid;grid-template-columns:1fr 1fr;gap:2px}
+.stampmenu .st-sticks{display:flex;flex-wrap:wrap;gap:2px}
 .stampmenu .st-proof{display:flex;align-items:center;gap:6px;padding:2px 6px 2px 2px;text-align:left}
 .stampmenu .st-proof canvas{background:#fff;border-radius:6px;flex:none}
 .stampmenu .st-stick{padding:3px;line-height:0}
-.stampmenu .st-note{display:block;width:100%;text-align:left;padding:8px 8px;margin-top:6px;border-top:1px solid var(--line)!important;border-radius:0 0 8px 8px}
-.stampmenu .st-puncs{display:grid;grid-template-columns:repeat(5,1fr);gap:2px}
+.stampmenu .st-puncs{display:grid;grid-template-columns:repeat(5,52px);gap:2px}
 .stampmenu .st-punc{display:flex;flex-direction:column;align-items:center;gap:1px;padding:3px 0 4px;font-size:10.5px;line-height:1.1;color:var(--muted)}
 .stampmenu .st-punc canvas{background:#fff;border-radius:6px}
-.stampmenu .st-tick{width:100%;margin-bottom:2px}
-.stampmenu .st-mini canvas{background:#fff;border-radius:6px}
+/* a tool picked from the right-click for one go: its toolbar button is outlined, and a small note says so */
+.tool.once{border-color:var(--accent);color:var(--accent)}
+.oncepill{position:fixed;z-index:59;display:flex;align-items:center;gap:8px;background:#1E2024;color:#fff;font:500 12.5px var(--f-body);padding:6px 8px 6px 12px;border-radius:999px;box-shadow:0 4px 14px rgba(0,0,0,.18);white-space:nowrap;pointer-events:none}
+.oncepill u{text-decoration:none;opacity:.7;padding-right:4px}
+.oncepill button{pointer-events:auto;border:0;border-radius:999px;background:#fff;color:#1E2024;font:600 12px var(--f-body);padding:3px 10px;cursor:pointer}
