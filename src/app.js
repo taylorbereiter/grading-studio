@@ -105,7 +105,8 @@ function ownGrade(st) {
     return sc.every(v => v != null) ? { total, pct: percentFor(total), done: true } : { total, pct: percentFor(total), done: false, partial: true };
   }
   const t = g.points === '' || g.points == null ? null : +g.points;
-  if (t != null && !isNaN(t) && wordPart(st, t)) return { total: t, pct: percentFor(t), done: false, partial: true };   // from a Word rubric that isn't fully highlighted
+  if (t != null && !isNaN(t) && wordPart(st, t)) return { total: t, pct: percentFor(t), done: false, partial: true };
+  if (t != null && !isNaN(t) && quizPart(st)) return { total: t, pct: percentFor(t), done: false, partial: true };   // Quick mark with questions still to mark   // from a Word rubric that isn't fully highlighted
   return { total: t, pct: t == null || isNaN(t) ? null : percentFor(t), done: t != null && !isNaN(t) };
 }
 const fmtNum = n => n == null ? '' : (Math.round(n * 100) / 100).toString();
@@ -225,7 +226,7 @@ async function intake(entries, label, assignment, fromKeep) {   // entries: [{ p
   keepWait = keepPapers(batch, label, fromKeep ? null : keepList, sameSize.length > 0);
   cur = 0; undoStack = []; selected = null;
   $('#start').hidden = true; $('#app').hidden = false;
-  setBatchName();
+  setBatchName(); qzForget(); quizBtn();
   $('#trAllBtn').hidden = !CAN_TRANSCRIBE || !students.some(st => st.files.some(f => f.kind === 'media'));
   renderTools(); renderList(); renderTopAtlas(); openStudent(batch.restoredCur || 0);
   scanned = false; scanAll();
@@ -389,7 +390,7 @@ function saveNow(leaving) {
   if (!batch || !tabLive()) return;
   clearTimeout(saveT); saveDue = false;
   if (batch.revs && tabForgot(batch)) return tabLetGo();
-  const data = { t: Date.now(), carry: batch.carry, cur, ck: batch.students[cur] && batch.students[cur].key, setup, cls: batch.classId, share: batch.share, drive: batch.drive, light: batch.light, lightOpt: batch.lightOpt, lightPg: batch.lightPg, anon: batch.anon, moved: batch.moved, refSkip: batch.refSkip, read: (batch.read = paperReads()), s: {} };
+  const data = { t: Date.now(), carry: batch.carry, cur, ck: batch.students[cur] && batch.students[cur].key, setup, cls: batch.classId, share: batch.share, drive: batch.drive, light: batch.light, lightOpt: batch.lightOpt, lightPg: batch.lightPg, anon: batch.anon, moved: batch.moved, refSkip: batch.refSkip, quiz: batch.quiz, read: (batch.read = paperReads()), s: {} };
   for (const st of batch.students) {
     const f = {};
     for (const fl of st.files) if (Object.values(fl.marks).some(a => a.length)) f[fl.path] = fl.marks;
@@ -449,6 +450,7 @@ function restore() {
   if (data.lightPg) batch.lightPg = data.lightPg;
   if (data.anon) batch.anon = data.anon;
   if (data.refSkip) batch.refSkip = data.refSkip;
+  if (data.quiz) batch.quiz = data.quiz;
   if (data.drive && !batch.drive) batch.drive = data.drive;
   batch.restoredCur = Math.min(data.cur || 0, batch.students.length - 1); batch.restoredKey = data.ck;
   if (n) setTimeout(() => toast('Picked up where you left off (' + n + (n === 1 ? ' student' : ' students') + ' started)'), 300);
