@@ -1273,7 +1273,7 @@ async function rescanFile(f) {
 // The panel's total, without touching the comment box she may be typing in.
 function gradeShown(st) { const t = $('#grade .total'); if (t && st === batch.students[cur]) t.innerHTML = totalHtml(st); }
 // A grade lives in the mark that holds it. "page|words" for each of her marks with a grade in it.
-const gradeMarks = f => Object.entries(f.marks || {}).flatMap(([p, a]) => a.filter(m => (m.t === 'text' || m.t === 'note') && m.text && parseGrade(m.text, false)).map(m => p + '|' + m.text)).sort();
+const gradeMarks = f => Object.entries(f.marks || {}).flatMap(([p, a]) => a.filter(m => (m.t === 'text' || m.t === 'note' || (m.t === 'stamp' && m.k === 'score')) && m.text && parseGrade(m.text, false)).map(m => p + '|' + m.text)).sort();
 const rereadTimers = new Map();
 let rereadQ = Promise.resolve(), rereadsLeft = 0;
 // When those marks change, the old reading goes this moment and the file is read again for the new one. Pen strokes and plain comments change nothing here.
@@ -1323,6 +1323,7 @@ function bindPage(pg) {
     const ae = document.activeElement;
     if (ae && /^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName) && !pg.wrap.contains(ae)) ae.blur();
     const [x, y] = pt(e);
+    if (scorePlacing) { e.preventDefault(); if (onPage(x, y)) placeScore(pg, x, y); else stopScorePlace(); return; }
     // A comment box in the margin always opens for editing, whatever the tool.
     const box = (pg.boxes || []).find(b => x >= b.x && x <= b.x + b.w && y >= b.y && y <= b.y + b.h);
     if (box && !box.n.ro && tool !== 'erase') { e.preventDefault(); openNote(pg, box.n); return; }
@@ -1837,7 +1838,7 @@ function openKeys() {
     '<h4>A picked mark (Select tool)</h4>' + row('← → ↑ ↓', 'Nudge it (Shift for bigger steps)') + row('⌘C ⌘V', 'Copy it, then paste on the page you’re looking at, even on another student’s paper') + row('⌘D', 'Make a copy of it') + row('+ −', 'Make it bigger or smaller (or drag the square at its corner)') + row('Delete', 'Remove it') + row('Esc', 'Let go of it (the arrows go back to moving between students)') +
     '<h4>The paper</h4>' + row('⌘+ ⌘−', 'Zoom in / out (or pinch, or ⌘-scroll)') + row('⌘0', 'Back to 100%') + row('[ ]', 'Fold away the student list / score panel') +
     'Turn a page: point at it and use ⟲ ⟳ in its top corner, or “Turn all pages” above the file. In Arrange pages, pick pages and press R.'.replace(/^/, '<h4>Turning pages</h4><span style="grid-column:1/-1">') + '</span>' +
-    '<h4>Other</h4>' + row('=', 'Calculator') + row('Space', 'Play / pause a recording') + row('J L', 'Back / ahead 5 seconds') + row('?', 'This list') +
+    '<h4>Other</h4>' + row('=', 'Calculator') + row('Shift =', 'Answer, in the calculator (= on its own adds, Enter answers too)') + row('Space', 'Play / pause a recording') + row('J L', 'Back / ahead 5 seconds') + row('?', 'This list') +
     '</div></div><div class="bf"><span class="muted gsVer" style="margin-right:auto;font-size:13px">' + esc(versionLabel()) + '</span><button class="btn primary" data-close>Close</button></div>', true);
   $('#dlgBox').onclick = e => { if (e.target.closest('[data-close]')) closeDlg(); };
 }
@@ -2400,6 +2401,7 @@ async function scanFile(f, spot) {
       for (const m of (f.marks || {})[p] || []) {
         if (m.t === 'text') { const L = textLayout(m, vp.width); add(ofMark(m.text), [m.x, m.y, m.x + L.ink, m.y + L.h], 'note', m.text); }
         if (m.t === 'note') add(ofMark(m.text), [m.ax - 4, m.ay - 4, m.ax + 4, m.ay + 4], 'note', m.text, true);
+        if (m.t === 'stamp' && m.k === 'score') { const b = stampBox(m); add(ofMark(m.text), [b.x, b.y, b.x + b.w, b.y + b.h], 'note', m.text); }   // her score sticker
       }
       // text in the page itself (already flattened files): strict "9.5 = 88%" form only, so essay numbers don't count.
       // A student could type this, so it's only offered, unless she boxed this very paper by hand. A rubric page's own printing isn't anyone's grade.
@@ -4547,6 +4549,15 @@ function calcEval(src) {
   return v;
 }
 const calcFmt = v => v == null ? '' : String(+(+v).toFixed(4));
+// What a key press means in the calculator: '=' for the answer, '+' for the =/+ key without Shift, the character to
+// type for other calculator keys, 'Escape', or null to let the key do its usual thing.
+function calcKeyOf(e) {
+  if (e.key === 'Enter' || e.code === 'NumpadEnter' || e.code === 'NumpadEqual') return '=';
+  if (e.key === 'Escape') return 'Escape';
+  if (e.code === 'Equal' || e.key === '=') return e.shiftKey ? '=' : '+';
+  if (e.key.length === 1 && /[\d.+\-*/()^%x×÷]/.test(e.key)) return e.key;
+  return null;
+}
 function openCalc() {
   const old = $('#calcPanel'); if (old) { old.remove(); return; }
   const p = document.createElement('div'); p.id = 'calcPanel'; p.setAttribute('role', 'dialog'); p.setAttribute('aria-label', 'Calculator'); document.body.appendChild(p);
@@ -4556,7 +4567,7 @@ function openCalc() {
   const keys = ['C', '(', ')', '÷', '7', '8', '9', '×', '4', '5', '6', '−', '1', '2', '3', '+', '0', '.', '⌫', '='];
   p.innerHTML = '<div class="cph"><b>Calculator</b><span style="flex:1"></span><button class="icon" data-cx aria-label="Close">✕</button></div>' +
     '<input id="calcIn" autocomplete="off" spellcheck="false" placeholder="Type or tap, e.g. 3.5+4+3" aria-label="Calculation">' +
-    '<div id="calcOut" aria-live="polite"></div>' +
+    '<div id="calcOut" aria-live="polite"></div><div id="calcStick" class="muted"></div>' +
     '<div class="cpk">' + keys.map(k => '<button data-ck="' + k + '"' + (k === '=' ? ' class="eq"' : /[÷×−+]/.test(k) ? ' class="op"' : '') + '>' + k + '</button>').join('') + '</div>' +
     '<div class="cpsec"><div class="dl">Score to percent</div>' +
       '<div class="cprow"><input id="calcPts" type="number" step="0.5" min="0" placeholder="Score"><span>out of</span><input id="calcMax" type="number" step="0.5" min="0" value="' + (max || '') + '"></div>' +
@@ -4568,7 +4579,10 @@ function openCalc() {
     let v = null, bad = false; try { v = calcEval(inp.value); } catch { bad = !!inp.value.trim(); }
     last = v;
     out.innerHTML = bad ? '<span class="muted">…</span>' : v == null ? '<span class="muted">0</span>' : '= <b>' + calcFmt(v) + '</b>' +
-      ($('#ptsIn') ? ' <button class="link" data-cuse title="Put this number in the open student’s score box">Use as score</button>' : '');
+      ($('#ptsIn') ? ' <button class="link" data-cuse title="Put this number in the open student’s score box">Use as score</button>' : '') +
+      (pages.length ? ' <button class="link" data-cstick title="' + ($('#ptsIn') ? 'Use it as the score, then click' : 'Click') + ' where it goes on the paper">Score sticker</button>' : '');
+    const lab = v == null ? null : stickerText(v);
+    $('#calcStick').textContent = lab && pages.length ? 'Sticker: ' + lab.replace('/', ' / ').replace(' = ', ' · ') : '';
   };
   const drawHist = () => { $('#calcHist').innerHTML = hist.length ? hist.map((h, k) => '<button class="cphi" data-ch="' + k + '"><span>' + esc(h.e) + '</span><b>' + esc(h.v) + '</b></button>').join('') + '<button class="link" data-chclear style="font-size:12px">Clear history</button>' : '<span class="muted" style="font-size:12px">Your answers show here. Click one to use it again.</span>'; };
   const done = () => {
@@ -4588,10 +4602,21 @@ function openCalc() {
     $('#calcAvgOut').innerHTML = ns.length ? 'Average <b>' + calcFmt(ns.reduce((a, b) => a + b, 0) / ns.length) + '</b> · Total ' + calcFmt(ns.reduce((a, b) => a + b, 0)) + ' · ' + ns.length + (ns.length === 1 ? ' number' : ' numbers') : '';
   };
   inp.oninput = show;
+  // Keys: the =/+ key on its own adds (it's the one she reaches for most); Shift with it, or Enter, gives the answer.
+  // Right after an answer, + − × ÷ carry on from it; a number starts over.
   inp.onkeydown = e => {
-    if (e.key === 'Enter' || e.key === '=') { e.preventDefault(); done(); }
-    else if (e.key === 'Escape') { e.preventDefault(); p.remove(); }
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    const k = calcKeyOf(e);
+    if (k === '=') { e.preventDefault(); done(); }
+    else if (k === 'Escape') { e.preventDefault(); p.remove(); }
+    else if (k) { e.preventDefault(); typeIn(k); }
   };
+  const typeIn = c => {
+    const all = inp.value && inp.selectionStart === 0 && inp.selectionEnd === inp.value.length;
+    if (all && /^[+\-*/^%)]$/.test(c)) inp.setSelectionRange(inp.value.length, inp.value.length);
+    inp.setRangeText(c, inp.selectionStart, inp.selectionEnd, 'end'); show();
+  };
+  p.typeIn = c => { inp.focus(); if (c === '=') return done(); if (document.activeElement !== inp || inp.selectionStart == null) inp.setSelectionRange(inp.value.length, inp.value.length); typeIn(c); };
   p.oninput = e => { if (e.target.id === 'calcPts' || e.target.id === 'calcMax') pct(); if (e.target.id === 'calcAvg') avg(); };
   p.onclick = e => {
     if (e.target.closest('[data-cx]')) return p.remove();
@@ -4604,10 +4629,15 @@ function openCalc() {
       else inp.value += c;
       show(); inp.focus(); return;
     }
+    const useIt = () => { const box = $('#ptsIn'); if (!box) return false; box.value = calcFmt(last); box.dispatchEvent(new Event('input', { bubbles: true })); box.dispatchEvent(new Event('change', { bubbles: true })); return true; };
     if (e.target.closest('[data-cuse]')) {
-      const box = $('#ptsIn'); if (!box || last == null) return;
-      box.value = calcFmt(last); box.dispatchEvent(new Event('input', { bubbles: true })); box.dispatchEvent(new Event('change', { bubbles: true }));
+      if (last == null || !useIt()) return;
       return toast('Score set to ' + calcFmt(last));
+    }
+    if (e.target.closest('[data-cstick]')) {
+      if (last == null) return;
+      done();
+      useIt(); return startScorePlace(stickerText(last));
     }
     const h = e.target.closest('[data-ch]'); if (h) { inp.value = hist[+h.dataset.ch].v; show(); inp.focus(); return; }
     if (e.target.closest('[data-chclear]')) { hist = []; store.set('gs.calchist', hist); drawHist(); }
@@ -4621,6 +4651,44 @@ function openCalc() {
     addEventListener('pointermove', mv); addEventListener('pointerup', up);
   };
   show(); pct(); drawHist(); inp.focus();
+}
+
+// The words on a score sticker: "12.5/15 = 83%" with the percent from her grading scale, or just the number with no total set.
+function stickerText(v) {
+  const max = maxPoints(), pct = max ? percentFor(v) : null;
+  return calcFmt(v) + (max ? '/' + calcFmt(max) : '') + (pct != null ? ' = ' + pct + '%' : '');
+}
+// Placing a score sticker: it follows the pointer over the paper until she clicks; Esc or a click off the paper lets go.
+let scorePlacing = null;
+function startScorePlace(text) {
+  stopScorePlace();
+  const gh = document.createElement('canvas'); gh.id = 'scoreGhost'; gh.hidden = true;
+  const bar = document.createElement('div'); bar.className = 'toast'; bar.id = 'scoreBar'; bar.textContent = 'Click where the score goes · Esc to cancel';
+  document.body.append(gh, bar);
+  const panel = $('#calcPanel'); if (panel) panel.classList.add('placing');
+  const move = e => {
+    const pg = pages.find(q => q.canvas === e.target);
+    if (!pg) { gh.hidden = true; return; }
+    const m = { t: 'stamp', k: 'score', x: 0, y: 0, size: newStampSize('score'), color: COLORS[inkColor], text }, b = stampBox(m), dpr = window.devicePixelRatio || 1, k = pg.s;
+    gh.width = Math.ceil(b.w * k * dpr) + 2; gh.height = Math.ceil(b.h * k * dpr) + 2;
+    gh.style.width = gh.width / dpr + 'px'; gh.style.height = gh.height / dpr + 'px';
+    gh.style.left = (e.clientX - gh.width / dpr / 2) + 'px'; gh.style.top = (e.clientY - gh.height / dpr / 2) + 'px';
+    const ctx = gh.getContext('2d'); ctx.setTransform(k * dpr, 0, 0, k * dpr, gh.width / 2, gh.height / 2); drawStamp(ctx, m);
+    gh.hidden = false;
+  };
+  const key = e => { if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); stopScorePlace(); } };
+  const away = e => { if (!pages.some(q => q.canvas === e.target)) stopScorePlace(); };
+  document.addEventListener('pointermove', move, true); document.addEventListener('keydown', key, true); document.addEventListener('pointerdown', away, true);
+  scorePlacing = { text, stop: () => { document.removeEventListener('pointermove', move, true); document.removeEventListener('keydown', key, true); document.removeEventListener('pointerdown', away, true); gh.remove(); bar.remove(); if (panel) panel.classList.remove('placing'); } };
+}
+function stopScorePlace() { if (scorePlacing) { scorePlacing.stop(); scorePlacing = null; } }
+function placeScore(pg, x, y) {
+  const text = scorePlacing.text; stopScorePlace();
+  const m = { t: 'stamp', k: 'score', x: r1(x), y: r1(y), size: newStampSize('score'), color: COLORS[inkColor], text };
+  const bb = stampBox(m);   // keep it on the page
+  m.x = r1(m.x + Math.max(0, -bb.x) - Math.max(0, bb.x + bb.w - pg.W)); m.y = r1(m.y + Math.max(0, -bb.y) - Math.max(0, bb.y + bb.h - pg.H));
+  snap(pg); pg.marks().push(m); selected = { page: pg, mark: m, fresh: true }; changed(pg); redrawAll();
+  return m;
 }
 
 /* ---------------- lighting: brightness, contrast and darker writing for washed-out scans (view only; the student's file is not changed) ---------------- */
@@ -6091,7 +6159,10 @@ document.addEventListener('keydown', e => {
   if (e.key.toLowerCase() === 'h' && tool === 'hl') { setHlMode(hlMode === 'free' ? 'auto' : 'free', true); return; }
   if (map[e.key.toLowerCase()]) { setTool(map[e.key.toLowerCase()]); return; }
   if (e.key.toLowerCase() === 'n') { nextUnscored(); return; }
-  if (e.key === '=') { e.preventDefault(); if ($('#calcPanel')) $('#calcIn').focus(); else openCalc(); return; }
+  if (e.key === '=' && !$('#calcPanel')) { e.preventDefault(); openCalc(); return; }
+  // With the calculator open, numbers and + − × ÷ ( ) go straight into it, even after a click on the paper.
+  // ( / still finds a student, and − with a picked mark still makes it smaller, above.)
+  if ($('#calcPanel') && e.key !== '/' && !(e.key === 'x' || e.key === 'X')) { const k = calcKeyOf(e); if (k && k !== 'Escape' && (k !== '=' || e.code === 'Equal' || e.code === 'NumpadEqual')) { e.preventDefault(); $('#calcPanel').typeIn(k); return; } }
   if (e.key === '[' && !e.metaKey && !e.ctrlKey) { e.preventDefault(); const p = panelsNow(); return setPanels(!p.L, p.R); }
   if (e.key === ']' && !e.metaKey && !e.ctrlKey) { e.preventDefault(); const p = panelsNow(); return setPanels(p.L, !p.R); }
   if (e.key === 'ArrowRight' || e.key === 'ArrowDown') { e.preventDefault(); stepStudent(1); }
@@ -6136,4 +6207,4 @@ for (const el of document.querySelectorAll('.gsVer')) el.textContent = versionLa
 if (gsData.info.note) { const el = $('#bootNote'); el.textContent = gsData.info.note; el.hidden = false; toast(gsData.info.note, 15000); }
 
 window.__gs_pickMany = pickMany;
-window.__gs = { saveTrouble, batchIdOf, wordScore, wordScoresAll, restoreBackup, fileSeq, moveFile, openMoveFile, calcEval, openCalc, pageLit, setPageLit, lightMenuDo, lightChips, ensureCounts, addRefs, refs: () => refFiles, matchToRoster, guessAmong, expandPicked, lightOpts, isRubricPage, openAnon, setAnon, anonOrder, anonOn, openLight, lightFor, lightAuto, openSplit, sp: () => SP, bringIn, sortGuess, openWord, wordBytes, reopenKept, forgetKept, kept: () => keptMeta, addFiles, removeAdded, nextUnscored, openDisplay, trimToInk, intake, parseGrade, scanFile, scanAll, state: () => ({ batch, cur, setup, pages, zoom, lib }), SCALE12, SCALE_FIVES, RUBRIC_STEPS, percentWith, ownGrade, roundPct, fmtNum, fmtPct, saveNow, undo, redo, gsData, gradeOf, percentFor, flattenDoc, exportPlan, layoutOf, docIn, openStudent, setTool };
+window.__gs = { stickerText, startScorePlace, stopScorePlace, saveTrouble, batchIdOf, wordScore, wordScoresAll, restoreBackup, fileSeq, moveFile, openMoveFile, calcEval, openCalc, pageLit, setPageLit, lightMenuDo, lightChips, ensureCounts, addRefs, refs: () => refFiles, matchToRoster, guessAmong, expandPicked, lightOpts, isRubricPage, openAnon, setAnon, anonOrder, anonOn, openLight, lightFor, lightAuto, openSplit, sp: () => SP, bringIn, sortGuess, openWord, wordBytes, reopenKept, forgetKept, kept: () => keptMeta, addFiles, removeAdded, nextUnscored, openDisplay, trimToInk, intake, parseGrade, scanFile, scanAll, state: () => ({ batch, cur, setup, pages, zoom, lib }), SCALE12, SCALE_FIVES, RUBRIC_STEPS, percentWith, ownGrade, roundPct, fmtNum, fmtPct, saveNow, undo, redo, gsData, gradeOf, percentFor, flattenDoc, exportPlan, layoutOf, docIn, openStudent, setTool };
