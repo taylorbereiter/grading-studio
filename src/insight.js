@@ -232,7 +232,7 @@ function consData() {
   const timed = [], noTime = [], groups = new Map(), order = anonOn() ? anonOrder() : batch.students.map((_, i) => i);
   for (const i of order) {
     const st = batch.students[i], g = gradeOf(st);
-    if (noScore(st) || !g.done || g.total == null) continue;
+    if (noScore(st) || !g.done || g.total == null || g.out) continue;
     const out = g.paper && st.found && st.found.outOf != null && st.found.outOf !== maxPoints() ? st.found.outOf : null, key = out == null ? g.total : g.total + '/' + out;   // 10 out of 15 isn't the same score as 10 out of 12
     if (!groups.has(key)) groups.set(key, []);
     groups.get(key).push(i);
@@ -247,7 +247,7 @@ function rowDrifts() {
   const max = 4, cut = 0.05 / setup.criteria.length;
   return setup.criteria.map((name, r) => {
     const pts = [];
-    for (const st of batch.students) { const v = st.grade.rubric[r], t = st.grade.atR && st.grade.atR[r]; if (!noScore(st) && v != null && t) pts.push({ v, t }); }
+    for (const st of batch.students) { const v = st.grade.rubric[r], t = st.grade.atR && st.grade.atR[r]; if (!noScore(st) && !st.grade.outAvg && v != null && t) pts.push({ v, t }); }
     const { out } = dropBatched(pts.sort((a, b) => a.t - b.t));
     return { name, read: driftRead(out.map(p => p.v), max, cut) };
   });

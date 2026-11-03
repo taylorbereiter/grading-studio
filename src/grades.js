@@ -43,8 +43,14 @@ function setStatus(st, s) {
   touchGrade(st); saveSoon(); renderGrade(); renderList();
 }
 function statusHtml(st) {
-  const on = st.grade.status || '';
-  return '<div class="gstat" id="gstat"><span class="muted">Mark as</span><span class="seg">' + Object.keys(STATUS_LABEL).map(k => '<button data-status="' + k + '" aria-pressed="' + (on === k) + '">' + STATUS_LABEL[k] + '</button>').join('') + '</span></div>';
+  const on = st.grade.status || '', out = !!st.grade.outAvg;
+  return '<div id="gstat"><div class="gstat"><span class="muted">Mark as</span><span class="seg">' + Object.keys(STATUS_LABEL).map(k => '<button data-status="' + k + '" aria-pressed="' + (on === k) + '">' + STATUS_LABEL[k] + '</button>').join('') + '</span></div>' +
+    (noScore(st) ? '' : '<button class="outsw" id="outAvg" role="switch" aria-checked="' + out + '"><i></i><span><b>Leave out of the average</b><small>The score stays and still copies. It doesn’t count in the average, Class overview or Consistency check.</small></span></button>') + '</div>';
+}
+// Left out of the average: for a one-off case, a placeholder 0, or a paper graded somewhere else. Nothing about the score changes.
+function setOutAvg(st) {
+  if (st.grade.outAvg) delete st.grade.outAvg; else st.grade.outAvg = true;
+  touchGrade(st); saveSoon(); renderGrade(); renderList();
 }
 
 /* ---------------- partial scores ---------------- */
@@ -79,11 +85,12 @@ const cellCopy = (g, k) => g.status === 'missing' || g.status === 'excused' ? (k
 function statusText(st) {
   const g = gradeOf(st), out = [];
   if (g.status) out.push(STATUS_LABEL[g.status]);
+  if (g.out) out.push('Left out of the average');
   if (g.partial) out.push('Partial: ' + partNote(st));
   return out.join(', ');
 }
 function statusPills(g) {
-  return (g.status ? ' <span class="stag">' + STATUS_LABEL[g.status].toLowerCase() + '</span>' : '') + (g.partial ? ' <span class="stag">partial</span>' : '');
+  return (g.status ? ' <span class="stag">' + STATUS_LABEL[g.status].toLowerCase() + '</span>' : '') + (g.out ? ' <span class="stag out">left out</span>' : '') + (g.partial ? ' <span class="stag">partial</span>' : '');
 }
 function gradesSummary() {
   const all = batch.students, on = all.filter(s => !noScore(s)), nOff = all.length - on.length, nPart = on.filter(s => gradeOf(s).partial).length;

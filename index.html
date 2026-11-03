@@ -203,6 +203,22 @@ body{padding-bottom:var(--savebar,0px)}.app{height:calc(100vh - var(--savebar,0p
 .prog-s .ph{font-weight:600;font-size:15px}.prog-s .ph span{font-weight:400;font-size:12.5px;color:var(--muted)}
 .prog-s .pb{height:5px;border-radius:3px;background:var(--track);margin:8px 0 10px;overflow:hidden}.prog-s .pb i{display:block;height:100%;background:var(--accent);border-radius:3px}
 .prog-s .btn{width:100%;color:var(--accent);font-weight:600}
+.ptiles{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(0,1fr) minmax(0,1.15fr);gap:5px;margin:0 0 10px}
+.pt{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:5px 7px;text-align:left;font:inherit;color:var(--fg);min-width:0}
+.pt .k{font-size:11.5px;color:var(--muted);white-space:nowrap}
+.pt .v{font-weight:600;font-size:15px;font-variant-numeric:tabular-nums;line-height:1.3}.pt .v small{font-weight:400;font-size:11.5px;color:var(--muted)}.pt .v .pp{color:var(--fg-2)}
+.pt.click{cursor:pointer}.pt.click .v{color:var(--accent)}.pt.click:hover,.pt.click[aria-expanded=true]{border-color:var(--accent)}
+.poutbox{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:4px;margin:0 0 10px}
+.poutbox .h{font-size:11.5px;color:var(--muted);padding:3px 6px}
+.po{display:flex;width:100%;justify-content:space-between;gap:8px;border:0;background:none;font:inherit;font-size:13px;color:var(--fg);padding:5px 6px;border-radius:6px;cursor:pointer;text-align:left}
+.po:hover{background:var(--hover)}.po span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.po span:last-child{color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.stag.out{background:var(--surface-2);color:var(--muted)}
+.outsw{display:flex;align-items:flex-start;gap:9px;width:100%;margin:10px 0 2px;padding:9px 11px;border:1px solid var(--line);border-radius:8px;background:var(--bg);font:inherit;color:var(--fg);text-align:left;cursor:pointer}
+.outsw[aria-checked=true]{border-color:var(--accent);background:var(--accent-soft)}
+.outsw i{flex:none;width:30px;height:17px;border-radius:999px;background:var(--line-strong);position:relative;margin-top:1px;transition:background .15s}
+.outsw i::after{content:"";position:absolute;top:2px;left:2px;width:13px;height:13px;border-radius:50%;background:var(--surface);transition:left .15s}
+.outsw[aria-checked=true] i{background:var(--accent)}.outsw[aria-checked=true] i::after{left:15px}
+.outsw b{font-weight:600;font-size:13.5px;display:block}.outsw small{font-size:12px;color:var(--muted);display:block;line-height:1.4;margin-top:1px}
 .prog-s kbd,.hint kbd{font:500 10.5px var(--f-body);border:1px solid var(--line-strong);border-bottom-width:2px;border-radius:4px;padding:0 4px;background:var(--surface);color:var(--muted)}
 .stu .dot{width:8px;height:8px;border-radius:50%;background:var(--accent);display:inline-block}
 .stu.empty .nm{color:var(--faint)}
@@ -2233,8 +2249,8 @@ function percentWith(total, max, sc) {
 }
 function gradeOf(st) {
   if (noScore(st)) return { total: null, pct: null, done: true, status: st.grade.status };   // missing or excused: settled, with no number
-  const g = scoreOf(st);
-  return st.grade.status === 'late' ? { ...g, status: 'late' } : g;
+  const g = scoreOf(st), r = st.grade.status === 'late' ? { ...g, status: 'late' } : g;
+  return st.grade.outAvg ? { ...r, out: true } : r;   // left out of the average: the score stays and copies, it just isn't counted
 }
 function scoreOf(st) {
   const own = ownGrade(st);
@@ -3762,22 +3778,31 @@ function renderList() {
     if (q && !shownName(st, i).toLowerCase().includes(q)) return '';
     const g = gradeOf(st);
     const val = g.total != null ? g.total : g.pct != null ? g.pct + '%' : null;
-    const right = noScore(st) ? '<span class="stag" title="You marked this student ' + g.status + '. No score counts.">' + STATUS_LABEL[g.status] + '</span>' : val != null ? '<span class="sc" title="' + (g.paper ? 'Read from the paper' : g.done ? 'Scored' : 'Partly scored') + '"' + (g.paper ? ' style="color:var(--muted);font-weight:600"' : g.done ? '' : ' style="color:var(--warn)"') + '>' + fmtNum(g.total != null ? g.total : g.pct) + (g.total == null ? '%' : g.outOf != null ? '/' + fmtNum(g.outOf) : '') + (g.partial ? '<small>partial</small>' : '') + '</span>'
+    const right = noScore(st) ? '<span class="stag" title="You marked this student ' + g.status + '. No score counts.">' + STATUS_LABEL[g.status] + '</span>' : val != null ? '<span class="sc" title="' + (g.paper ? 'Read from the paper' : g.done ? 'Scored' : 'Partly scored') + '"' + (g.paper || g.out ? ' style="color:var(--muted);font-weight:600"' : g.done ? '' : ' style="color:var(--warn)"') + '>' + fmtNum(g.total != null ? g.total : g.pct) + (g.total == null ? '%' : g.outOf != null ? '/' + fmtNum(g.outOf) : '') + (g.partial ? '<small>partial</small>' : '') + '</span>'
       : manyReads(st) ? '<span class="sc" style="color:var(--warn)" title="More than one grade found on the paper. Check the Grade sheet.">?</span>'
       : st.doubts && st.doubts.length ? '<span class="sc" style="color:var(--warn)" title="A reading on the paper may not be a grade. Confirm it on the Grade sheet.">?</span>'
       : hasMarks(st) ? '<span class="dot" title="Marked"></span>' : '';
     const nAdd = st.files.filter(f => f.added && !f.from).length, re = st.files.some(f => Object.values(f.sc || {}).some(r => r.re)), grp = st.files.some(f => f.from || Object.values(f.sc || {}).some(r => r.w)) || st.files.some(f => !f.added && shareCopies(st, f).length);
     return '<button class="stu' + (i === cur ? ' on' : '') + (st.files.length ? '' : ' empty') + '" data-i="' + i + '"><span class="num">' + (pos + 1) + '</span><span class="nm" title="' + esc(shownName(st, i)) + '">' + esc(shownName(st, i)) + '</span>' +
-      '<span style="display:inline-flex;align-items:center;gap:4px">' + (st.files.length || noScore(st) ? '' : '<span class="muted" style="font-size:11px">no paper</span>') + (g.status === 'late' ? '<span class="stag" title="You marked this student late">late</span>' : '') + (nAdd ? '<span class="add" title="' + nAdd + (nAdd === 1 ? ' file' : ' files') + ' added by you">+' + nAdd + '</span>' : '') + (re ? '<span class="add" title="A page needs a rescan">⚑</span>' : '') + (grp ? '<span class="add grp" title="Group work: shares pages or a file with another student">shared</span>' : '') + carryPill(st) + right + '</span></button>';
+      '<span style="display:inline-flex;align-items:center;gap:4px">' + (st.files.length || noScore(st) ? '' : '<span class="muted" style="font-size:11px">no paper</span>') + (g.status === 'late' ? '<span class="stag" title="You marked this student late">late</span>' : '') + (g.out ? '<span class="stag out" title="Left out of the average">left out</span>' : '') + (nAdd ? '<span class="add" title="' + nAdd + (nAdd === 1 ? ' file' : ' files') + ' added by you">+' + nAdd + '</span>' : '') + (re ? '<span class="add" title="A page needs a rescan">⚑</span>' : '') + (grp ? '<span class="add grp" title="Group work: shares pages or a file with another student">shared</span>' : '') + carryPill(st) + right + '</span></button>';
   }).join('');
   const on = $('#stuList .on'); if (on) on.scrollIntoView({ block: 'nearest' });
   const nExp = exportPlan(true).length;
   $('#exportBtn').textContent = 'Export marked' + (nExp ? ' (' + nExp + ')' : '');
   renderProg();
 }
+let outOpen = false;
 function renderProg() {
   const on = batch.students.filter(s => !noScore(s)), N = on.length, n = on.filter(s => gradeOf(s).done).length, nOff = batch.students.length - N;
+  const cs = classStats(), outs = batch.students.map((st, i) => i).filter(i => batch.students[i].grade.outAvg && !noScore(batch.students[i]));
+  if (!outs.length) outOpen = false;
+  const outList = (anonOn() ? anonOrder().filter(i => outs.includes(i)) : outs).map(i => { const g = gradeOf(batch.students[i]);
+    return '<button class="po" data-pgo="' + i + '"><span>' + esc(shownName(batch.students[i], i)) + '</span><span>' + (g.total != null ? fmtNum(g.total) + ' / ' + fmtNum(g.outOf != null ? g.outOf : maxPoints()) : g.pct != null ? fmtPct(g.pct) : 'No score') + '</span></button>'; }).join('');
   $('#progS').innerHTML = '<div class="ph">' + n + ' of ' + N + ' <span>scored' + (nOff ? ' · ' + nOff + ' missing or excused' : '') + '</span></div><div class="pb"><i style="width:' + (N ? 100 * n / N : 0) + '%"></i></div>' +
+    '<div class="ptiles"><div class="pt" id="pAvg" title="' + (cs.n ? 'Average of ' + people(cs.n, 'finished score') + '. Partial, missing, excused and left-out papers don’t count.' : 'No finished scores yet') + '"><div class="k">Average</div><div class="v">' + (cs.n ? oneDp(cs.mean) + ' <small>/ ' + fmtNum(cs.max) + '</small>' + (cs.meanPct != null ? ' <small class="pp">' + cs.meanPct + '%</small>' : '') : '–') + '</div></div>' +
+    '<div class="pt" id="pLeft" title="Papers with no score or only part of one"><div class="k">Left</div><div class="v">' + (N - n) + '</div></div>' +
+    (outs.length ? '<button class="pt click" id="pOut" aria-expanded="' + outOpen + '" title="Papers you left out of the average. Click to see them."><div class="k">Left out</div><div class="v">' + outs.length + '</div></button>' : '<div class="pt" id="pOut" title="Leave a paper out with the switch under Mark as"><div class="k">Left out</div><div class="v">0</div></div>') + '</div>' +
+    (outOpen ? '<div class="poutbox"><div class="h">Click one to open it</div>' + outList + '</div>' : '') +
     (n < N ? '<button class="btn sm" id="nextUn" title="Opens the next student without a full score">Next unscored <kbd>N</kbd></button>' : '<div class="muted" style="font-size:13px;margin-bottom:6px">Everyone ' + (nOff ? 'else ' : '') + 'has a score.</div>');
 }
 function nextUnscored() {
@@ -3785,7 +3810,11 @@ function nextUnscored() {
   for (let k = 1; k <= N; k++) { const i = o[(p + k) % N]; if (!gradeOf(batch.students[i]).done) return openStudent(i); }
   toast('Everyone has a score');
 }
-$('#progS').addEventListener('click', e => { if (e.target.closest('#nextUn')) nextUnscored(); });
+$('#progS').addEventListener('click', e => {
+  if (e.target.closest('#nextUn')) nextUnscored();
+  if (e.target.closest('button#pOut')) { outOpen = !outOpen; renderProg(); }
+  const go = e.target.closest('[data-pgo]'); if (go) openStudent(+go.dataset.pgo);
+});
 $('#stuList').addEventListener('click', e => { const b = e.target.closest('.stu'); if (b) openStudent(+b.dataset.i); });
 $('#stuFind').addEventListener('input', () => { renderList(); if (!$('#stuList .stu')) $('#stuList').innerHTML = '<div class="muted" style="font-size:13px;padding:6px 8px">No one matches.</div>'; });
 $('#stuFind').addEventListener('keydown', e => {
@@ -3839,6 +3868,7 @@ $('#grade').addEventListener('click', e => {
     renderGrade(); renderList(); saveSoon(); return;
   }
   const sb = e.target.closest('[data-status]'); if (sb) return setStatus(batch.students[cur], sb.dataset.status);
+  if (e.target.closest('#outAvg')) return setOutAvg(batch.students[cur]);
   if (e.target.closest('#prevBtn')) stepStudent(-1);
   if (e.target.closest('#nextBtn')) stepStudent(1);
   if (e.target.closest('#editRubric')) openSetup();
@@ -8776,8 +8806,13 @@ function setStatus(st, s) {
   touchGrade(st); saveSoon(); renderGrade(); renderList();
 }
 function statusHtml(st) {
-  const on = st.grade.status || '';
-  return '<div class="gstat" id="gstat"><span class="muted">Mark as</span><span class="seg">' + Object.keys(STATUS_LABEL).map(k => '<button data-status="' + k + '" aria-pressed="' + (on === k) + '">' + STATUS_LABEL[k] + '</button>').join('') + '</span></div>';
+  const on = st.grade.status || '', out = !!st.grade.outAvg;
+  return '<div id="gstat"><div class="gstat"><span class="muted">Mark as</span><span class="seg">' + Object.keys(STATUS_LABEL).map(k => '<button data-status="' + k + '" aria-pressed="' + (on === k) + '">' + STATUS_LABEL[k] + '</button>').join('') + '</span></div>' +
+    (noScore(st) ? '' : '<button class="outsw" id="outAvg" role="switch" aria-checked="' + out + '"><i></i><span><b>Leave out of the average</b><small>The score stays and still copies. It doesn’t count in the average, Class overview or Consistency check.</small></span></button>') + '</div>';
+}
+function setOutAvg(st) {
+  if (st.grade.outAvg) delete st.grade.outAvg; else st.grade.outAvg = true;
+  touchGrade(st); saveSoon(); renderGrade(); renderList();
 }
 
 /* ---------------- partial scores ---------------- */
@@ -8806,11 +8841,12 @@ const cellCopy = (g, k) => g.status === 'missing' || g.status === 'excused' ? (k
 function statusText(st) {
   const g = gradeOf(st), out = [];
   if (g.status) out.push(STATUS_LABEL[g.status]);
+  if (g.out) out.push('Left out of the average');
   if (g.partial) out.push('Partial: ' + partNote(st));
   return out.join(', ');
 }
 function statusPills(g) {
-  return (g.status ? ' <span class="stag">' + STATUS_LABEL[g.status].toLowerCase() + '</span>' : '') + (g.partial ? ' <span class="stag">partial</span>' : '');
+  return (g.status ? ' <span class="stag">' + STATUS_LABEL[g.status].toLowerCase() + '</span>' : '') + (g.out ? ' <span class="stag out">left out</span>' : '') + (g.partial ? ' <span class="stag">partial</span>' : '');
 }
 function gradesSummary() {
   const all = batch.students, on = all.filter(s => !noScore(s)), nOff = all.length - on.length, nPart = on.filter(s => gradeOf(s).partial).length;
@@ -9745,19 +9781,20 @@ function spreadBins(counted, max) {
   return bins;
 }
 function classStats() {
-  const max = maxPoints(), s = { counted: [], partial: [], notScored: [], missing: [], excused: [], offScale: [], ownOff: [], rosterOnly: [], rows: [] };
+  const max = maxPoints(), s = { counted: [], partial: [], notScored: [], missing: [], excused: [], offScale: [], ownOff: [], leftOut: [], rosterOnly: [], rows: [] };
   batch.students.forEach((st, i) => {
     const g = gradeOf(st), who = { i, name: shownName(st, i) };
     if (g.status === 'missing' || g.status === 'excused') s[g.status].push(who);
     else if (g.partial) s.partial.push({ ...who, note: partNote(st) });
     else if (!g.done || (g.total == null && g.pct == null)) s.notScored.push({ ...who, note: !st.files.length ? 'No paper' : st.foundCount > 1 || (st.doubts && st.doubts.length) ? 'A grade on the paper to confirm' : '' });
+    else if (g.out) s.leftOut.push(who);   // left out of the average by the teacher; one with no score yet is still "not scored"
     else if (!onThisScale(st, g, max) && !g.paper) s.ownOff.push({ ...who, note: 'You gave ' + fmtNum(g.total) + ', out of ' + fmtNum(max) });
     else if (!onThisScale(st, g, max)) s.offScale.push({ ...who, note: g.total != null ? 'The paper says ' + (g.paper && st.found && st.found.outOf != null ? fmtNum(g.total) + ' out of ' + fmtNum(st.found.outOf) : fmtNum(g.total)) : 'The paper says ' + fmtPct(g.pct) });
     else s.counted.push({ ...who, total: g.total, pct: g.pct, late: g.status === 'late', paper: !!g.paper });
   });
   const c = batchClass();
   if (c && c.names.length) { const m = rosterMatch(c.names); s.rosterOnly = c.names.filter(n => !m.has(n)); }
-  if (anonOn()) for (const k of ['counted', 'partial', 'notScored', 'missing', 'excused', 'offScale', 'ownOff']) s[k].sort((a, b) => natural(a.name, b.name));   // never in folder order while names are hidden
+  if (anonOn()) for (const k of ['counted', 'partial', 'notScored', 'missing', 'excused', 'offScale', 'ownOff', 'leftOut']) s[k].sort((a, b) => natural(a.name, b.name));   // never in folder order while names are hidden
   const tot = s.counted.map(x => x.total).sort((a, b) => a - b), n = tot.length, pcts = s.counted.map(x => x.pct).filter(v => v != null);
   const mean = a => a.reduce((x, y) => x + y, 0) / a.length;
   s.n = n; s.everyone = batch.students.length + s.rosterOnly.length; s.max = max;
@@ -9766,7 +9803,7 @@ function classStats() {
   s.bins = spreadBins(s.counted, max);
   if (setup.mode === 'rubric') {
     s.rows = setup.criteria.map((name, r) => {
-      const v = batch.students.map(st => rowShown(st, r)).filter(x => x != null);
+      const v = batch.students.map(st => st.grade.outAvg ? null : rowShown(st, r)).filter(x => x != null);
       return { r, name, n: v.length, avg: v.length ? mean(v) : null, low: v.filter(x => x <= 2).length };
     }).sort((a, b) => (a.avg == null ? 9 : a.avg) - (b.avg == null ? 9 : b.avg) || a.r - b.r);
     const av = s.rows.filter(x => x.n).map(x => x.avg), least = Math.min(...av);
@@ -9778,7 +9815,7 @@ function classStats() {
 const oneDp = v => fmtNum(Math.round(v * 10) / 10);
 const people = (n, one, many) => n + ' ' + (n === 1 ? one : many || one + 's');
 function leftOutText(s) {
-  const parts = [[s.missing.length, 'marked missing'], [s.excused.length, 'excused'], [s.partial.length, 'partial'], [s.notScored.length, 'not scored yet'], [s.offScale.length, 'from the paper, not on this scale'], [s.ownOff.length, 'above the total or below 0'], [s.rosterOnly.length, 'on the roster with nothing here']].filter(p => p[0]).map(p => p[0] + ' ' + p[1]);
+  const parts = [[s.missing.length, 'marked missing'], [s.excused.length, 'excused'], [s.partial.length, 'partial'], [s.notScored.length, 'not scored yet'], [s.offScale.length, 'from the paper, not on this scale'], [s.ownOff.length, 'above the total or below 0'], [s.leftOut.length, 'left out of the average by you'], [s.rosterOnly.length, 'on the roster with nothing here']].filter(p => p[0]).map(p => p[0] + ' ' + p[1]);
   let t = 'Counted: ' + s.n + ' of ' + people(s.everyone, 'student') + '.';
   if (parts.length) t += ' Left out: ' + parts.join(', ') + '.';
   if (s.missing.length || s.excused.length) t += ' Missing and excused don’t count as 0.';
@@ -9821,7 +9858,7 @@ function rowsHtml(s) {
 function whoHtml(s) {
   const item = o => '<li><button class="link" data-ovgo="' + o.i + '">' + esc(o.name) + '</button>' + (o.note ? ' <span class="muted">' + esc(o.note) + '</span>' : '') + '</li>';
   const late = s.counted.filter(x => x.late);
-  const groups = [['Not scored yet', s.notScored], ['Partial: some rows scored', s.partial], ['Marked missing', s.missing], ['Excused', s.excused], ['Read from the paper, not on this scale', s.offScale], ['Your score is above the total or below 0', s.ownOff], ['Late, and counted', late]].filter(g => g[1].length);
+  const groups = [['Not scored yet', s.notScored], ['Partial: some rows scored', s.partial], ['Marked missing', s.missing], ['Excused', s.excused], ['Read from the paper, not on this scale', s.offScale], ['Your score is above the total or below 0', s.ownOff], ['Left out of the average by you', s.leftOut], ['Late, and counted', late]].filter(g => g[1].length);
   let h = groups.map(([t, list]) => '<details class="ovg" data-group="' + esc(t) + '" open><summary>' + esc(t) + ' (' + list.length + ')</summary><ul>' + list.map(item).join('') + '</ul></details>').join('');
   if (s.rosterOnly.length) h += '<details class="ovg" data-group="On the roster" open><summary>On the roster, nothing here (' + s.rosterOnly.length + ')</summary>' + (anonOn() ? '<p class="muted" style="margin:4px 0 0">Names stay hidden during anonymous grading.</p>' : '<ul>' + s.rosterOnly.map(n => '<li>' + esc(n) + '</li>').join('') + '</ul>') + '</details>';
   const open = s.notScored.length + s.partial.length + s.rosterOnly.length;
@@ -10595,7 +10632,7 @@ function consData() {
   const timed = [], noTime = [], groups = new Map(), order = anonOn() ? anonOrder() : batch.students.map((_, i) => i);
   for (const i of order) {
     const st = batch.students[i], g = gradeOf(st);
-    if (noScore(st) || !g.done || g.total == null) continue;
+    if (noScore(st) || !g.done || g.total == null || g.out) continue;
     const out = g.paper && st.found && st.found.outOf != null && st.found.outOf !== maxPoints() ? st.found.outOf : null, key = out == null ? g.total : g.total + '/' + out;   // 10 out of 15 isn't the same score as 10 out of 12
     if (!groups.has(key)) groups.set(key, []);
     groups.get(key).push(i);
@@ -10609,7 +10646,7 @@ function rowDrifts() {
   const max = 4, cut = 0.05 / setup.criteria.length;
   return setup.criteria.map((name, r) => {
     const pts = [];
-    for (const st of batch.students) { const v = st.grade.rubric[r], t = st.grade.atR && st.grade.atR[r]; if (!noScore(st) && v != null && t) pts.push({ v, t }); }
+    for (const st of batch.students) { const v = st.grade.rubric[r], t = st.grade.atR && st.grade.atR[r]; if (!noScore(st) && !st.grade.outAvg && v != null && t) pts.push({ v, t }); }
     const { out } = dropBatched(pts.sort((a, b) => a.t - b.t));
     return { name, read: driftRead(out.map(p => p.v), max, cut) };
   });
