@@ -241,11 +241,12 @@ function scanFree(f, p) {
 // Looks once at each page she opens, before it's drawn. A page already looked at, here or in the split, keeps what was decided.
 async function scanCheck(f, p, page) {
   if (f.virtual) return;
-  scanTakeHint(f);
+  scanTakeHint(f, batch.students[cur]);
   if (!f.sc) f.sc = {};
-  if (f.sc[p]) return;
+  if (f.sc[p] && !f.sc[p].later) return;
   let rec;
   try { rec = await scanLook(page, rotOf(f, p)); } catch (e) { return; }   // she moved on, which closes this student's files
+  const was = f.sc[p]; if (was) { delete was.later; Object.assign(rec, was); }   // a rescan flag or group work set before the page was looked at
   f.sc[p] = rec;
   if (rec.typed) return;
   if (scanFree(f, p)) {
@@ -279,7 +280,7 @@ function scanSave() {
     if (!f.sc) continue;
     const rec = {}, at = {};
     for (const [p, r] of Object.entries(f.sc)) {
-      if (r.typed) continue;
+      if (r.typed && !r.re && !r.w) continue;
       rec[p] = r;
       const o = {};
       if (r.didTurn && rotOf(f, p) === r.didTurn && !scanMine(f, 'didTurn', p, r.didTurn)) o.r = r.didTurn;
@@ -362,8 +363,11 @@ function scanNote(pg) {
   // Straightened pages can always be put back from the corner, after the strip has gone.
   const was = pg.rchip && pg.rchip.querySelector('[data-scun]'); if (was) was.remove();
   if (pg.rchip && skewOf(f, p)) pg.rchip.insertAdjacentHTML('beforeend', '<button data-scun title="Put this page back as it was scanned" aria-label="Put this page back as it was scanned">⟂</button>');
-  if (!r || r.typed) return;
+  if (!r) return;
   const off = r.off || {}, lines = [], btn = (a, t) => '<button class="link" data-sc="' + a + '">' + t + '</button>';
+  if (r.re) lines.push('⚑ This page needs a rescan. You can still mark and score it.' + btn('rescan', 'Bring in the rescan…') + btn('unre', 'It’s fine now'));
+  if (r.w && r.w.length && !anonOn()) lines.push('Group work: this page also went to ' + esc(r.w.join(', ')) + '. Your marks here stay on this copy.');
+  if (r.typed) return scanNoteOut(pg, lines, r.re);
   const turned = !!r.didTurn && rotOf(f, p) === r.didTurn, straight = !!skewOf(f, p);
   if ((turned || straight) && !off.done) lines.push((turned && straight ? 'Turned and straightened this page.' : turned ? 'Turned this page so it reads the right way up.' : 'Straightened this page.') + btn('back', 'Put back') + btn('done', 'Looks right'));
   if (scanAsks(f, p, r) && !off.turn) lines.push((r.turn === 180 ? 'This page may be upside down.' : 'This page may be on its side.') + btn('turn', 'Turn it') + btn('noturn', 'It’s fine'));
@@ -374,9 +378,38 @@ function scanNote(pg) {
   if (r.lit && !live) delete r.lit;   // she switched it off herself
   if (r.lit) lines.push('Lighting is on for this student.' + btn('unlit', 'Put back') + btn('lit', 'Looks right'));
   else if (r.faint && !off.faint && !live) lines.push('This page looks faint.' + btn('light', 'Fix the lighting') + btn('nofaint', 'It’s fine'));
+  scanNoteOut(pg, lines, r.re);
+}
+function scanNoteOut(pg, lines, re) {
   if (!lines.length) return;
-  const el = document.createElement('div'); el.className = 'scnote'; el.innerHTML = lines.map(t => '<div>' + t + '</div>').join('');
+  const el = document.createElement('div'); el.className = 'scnote' + (re ? ' re' : ''); el.innerHTML = lines.map(t => '<div>' + t + '</div>').join('');
   pg.wrap.before(el); pg.snote = el;
+}
+// ⚑ in a page's corner: flag it for a rescan, or take the flag off.
+function scanFlag(pg) {
+  const f = pg.file; if (f.virtual) return;
+  const r = (f.sc ||= {})[pg.idx] ||= { later: 1 };
+  if (r.re) delete r.re; else r.re = 1;
+  toast(r.re ? 'Flagged for a rescan. Rescans under More lists everyone waiting.' : 'Rescan flag taken off');
+  saveSoon(); scanNote(pg); renderList();
+}
+// Every page waiting on a rescan: [{ i, st, f, p }], in list order.
+const scanRescans = () => batch ? batch.students.flatMap((st, i) => st.files.flatMap(f => Object.entries(f.sc || {}).filter(([, r]) => r.re).map(([p]) => ({ i, st, f, p: +p })))) : [];
+function openRescans() {
+  const all = scanRescans(), by = new Map();
+  for (const x of all) { if (!by.has(x.i)) by.set(x.i, []); by.get(x.i).push(x); }
+  const order = [...by.keys()].sort((a, b) => anonOn() ? anonPos(a) - anonPos(b) : a - b);
+  const line = i => shownName(batch.students[i], i) + ': ' + by.get(i).map(x => 'page ' + (x.p + 1) + ' of ' + fileShown(x.st, x.f.name)).join(', ');
+  openDlg('<div class="bh"><h2>Rescans' + (all.length ? ' (' + by.size + ')' : '') + '</h2><button class="icon" data-cancel aria-label="Close" style="margin-left:auto">✕</button></div>' +
+    '<div class="bb">' + (all.length ? '<p class="muted" style="margin:0 0 10px;font-size:14px">Pages you flagged as needing a rescan. Click a name to go to that paper. When the rescan comes in, add it to the student or split it in with Bring in files, then press It’s fine now on the old page.</p>' +
+      order.map(i => '<button class="mvrow" data-rsgo="' + i + '">' + esc(shownName(batch.students[i], i)) + '<span class="muted">' + by.get(i).map(x => 'p. ' + (x.p + 1)).join(', ') + '</span></button>').join('')
+      : '<p class="muted" style="margin:0">No pages are waiting on a rescan. Flag one with ⚑ Needs rescan in the split, or ⚑ in a page’s corner.</p>') + '</div>' +
+    '<div class="bf">' + (all.length ? '<button class="btn" data-rscopy style="margin-right:auto">Copy the list</button>' : '') + '<button class="btn" data-cancel>Close</button></div>', true);
+  $('#dlgBox').onclick = e => {
+    if (e.target.closest('[data-cancel]')) return closeDlg();
+    if (e.target.closest('[data-rscopy]')) return copy(order.map(line).join('\n'), 'Copied the list');
+    const g = e.target.closest('[data-rsgo]'); if (g) { closeDlg(); openStudent(+g.dataset.rsgo); }
+  };
 }
 $('#paper').addEventListener('click', e => {
   const un = e.target.closest('[data-scun]');
@@ -392,6 +425,8 @@ $('#paper').addEventListener('click', e => {
   else if (a === 'skew') scanStraighten(pg, r.skew);
   else if (a === 'light') scanLight(pg, r);
   else if (a === 'unlit') { off.faint = 1; scanLightBack(r); }
+  else if (a === 'unre') { delete r.re; renderList(); }
+  else if (a === 'rescan') { pickAdd(batch.students[cur]); return; }
   else if (a === 'lit') { delete r.lit; off.faint = 1; for (const o of scanLits(r)) o.lit.on = true; }   // she wants Lighting on now, whichever page goes back
   else off[a.slice(2)] = 1;   // noturn, noskew, noblank, nofaint
   saveSoon();
@@ -412,8 +447,11 @@ async function scanSplitLook(me, i, page) {
 }
 // The tags on one page in the split: what was done, with a way back, or what to look at.
 function scanCard(i) {
-  const r = SP.sc[i]; if (!r) return '';
-  const off = r.off || {}, turned = !!r.didTurn && SP.rot[i] === r.didTurn, straight = !!SP.skew[i], out = [];
+  const r = SP.sc[i], out = [];
+  if (SP.re.has(i)) out.push('<button class="spre" data-spfix="unre" title="Take the rescan flag off">⚑ Needs rescan</button>');
+  if (spLight(SP, i)) out.push('<span title="Lighting is on for this page. The scan itself isn’t changed.">☀ Lighting</span>');
+  if (!r) return out.join('');
+  const off = r.off || {}, turned = !!r.didTurn && SP.rot[i] === r.didTurn, straight = !!SP.skew[i];
   if (turned || straight) out.push('<button data-spfix="back" title="Put this page back as it was scanned">' + (turned && straight ? 'Turned, straightened' : turned ? 'Turned' : 'Straightened') + ' · put back</button>');
   if (r.turn && !r.didTurn && !SP.rot[i] && !off.turn) out.push('<button data-spfix="turn">' + (r.turn === 180 ? 'Upside down?' : 'On its side?') + ' Turn it</button>');
   else if (r.side && !r.turn && !SP.rot[i] && !off.turn) out.push('<button data-spfix="right">On its side? Turn it</button>');
@@ -441,6 +479,7 @@ function scanDarken(ctx, w, h) {
   ctx.putImageData(im, 0, 0);
 }
 function scanSplitFix(i, how) {
+  if (how === 'unre') { SP.re.delete(i); return splitDraw(); }
   const r = SP.sc[i] || (SP.sc[i] = { typed: 1 }), off = r.off ||= {};
   if (how === 'back') { if (r.didTurn && SP.rot[i] === r.didTurn) { delete SP.rot[i]; off.turn = 1; } if (SP.skew[i]) { delete SP.skew[i]; off.skew = 1; } }
   else if (how === 'turn') { SP.rot[i] = r.turn; r.didTurn = r.turn; }   // shows the same tag as a page turned by itself, with its way back
@@ -456,16 +495,99 @@ function scanSplitSays(me) {
 // What was decided in the split goes along with each student's new file, which is found again by its bytes when it opens.
 const scanHints = new Map();
 function scanBytes(d) { let h = 0x811c9dc5; for (let i = 0; i < d.length; i++) h = Math.imul(h ^ d[i], 16777619); return d.length + ':' + (h >>> 0); }
-function scanHint(me, bytes, list) {
-  const pages = {}; list.forEach((i, j) => { pages[j] = { rec: me.sc[i] || null, rot: me.rot[i] || 0, skew: me.skew[i] || 0 }; });
+// Each student's copy has its own record, so group work's copies don't share a Put back or a flag. w: who else got the page; L: its lighting from the split.
+function scanHint(me, bytes, list, nm, lit) {
+  const pages = {}; list.forEach((i, j) => {
+    const rec = me.sc[i] ? JSON.parse(JSON.stringify(me.sc[i])) : null, w = spWho(me, i).filter(x => x !== nm);
+    pages[j] = { rec, rot: me.rot[i] || 0, skew: me.skew[i] || 0, re: me.re.has(i), w: w.length ? w : null, L: lit ? spLight(me, i) : null };
+  });
   scanHints.set(scanBytes(bytes), pages);
 }
-function scanTakeHint(f) {
+function scanTakeHint(f, st) {
   if (!scanHints.size || f.sc) return;
   const k = scanBytes(f.data), h = scanHints.get(k); if (!h) return;
   scanHints.delete(k); f.sc = {};
-  for (const [p, x] of Object.entries(h)) { if (x.rec) f.sc[p] = x.rec; if (x.rot) setRot(f, p, x.rot); if (x.skew) setSkew(f, p, x.skew); }
+  const lit = Object.values(h).find(x => x.L);
+  for (const [p, x] of Object.entries(h)) {
+    const rec = x.rec || ((x.re || x.w) && { later: 1 });
+    if (rec) { if (x.re) rec.re = 1; if (x.w) rec.w = x.w; f.sc[p] = rec; }
+    if (x.rot) setRot(f, p, x.rot); if (x.skew) setSkew(f, p, x.skew);
+    if (lit && st && !x.L) setPageLit(st, f, p, false);   // lighting goes where she set it in the split
+  }
+  if (lit && st) { batch.light ||= {}; batch.light[st.key] ||= { ...lit.L }; batch.lightOpt = { ...lightOpts(), on: true }; }
   scanned = false; saveSoon();
 }
-function scanHintsAll() { if (batch) for (const st of batch.students) for (const f of st.files) if (viewable(f) && !f.virtual) scanTakeHint(f); scanHints.clear(); }
-Object.assign(window.__gs, { scanRead, scanLook, skewOf, setSkew, scanStraighten, scanTurn, scanNote, skewMarks, scanDarken });
+function scanHintsAll() { if (batch) for (const st of batch.students) for (const f of st.files) if (viewable(f) && !f.virtual) scanTakeHint(f, st); scanHints.clear(); }
+
+/* ---------------- lighting in the split: only how the pages look there and in the big view ---------------- */
+const spLight = (me, i) => { const L = me.Lp[i] || me.L; return lightOn(L) ? L : null; };
+function spLightOpen() {
+  const old = $('#spLightP'); if (old) return spLightClose();
+  const v = document.createElement('div'); v.id = 'spLightP'; v.setAttribute('role', 'dialog'); v.setAttribute('aria-label', 'Lighting for this scan');
+  const box = $('#dlgBox'), b = $('#spLight'), r = b.getBoundingClientRect(), o = box.getBoundingClientRect();
+  v.style.left = Math.max(8, r.left - o.left) + 'px'; v.style.top = (r.bottom - o.top + 6) + 'px';
+  box.appendChild(v); b.setAttribute('aria-pressed', 'true');
+  SP.Lsel ??= SP.sel.size ? 'sel' : 'all';
+  const esc1 = e => { if (e.key === 'Escape' && !$('#spBig')) { e.preventDefault(); e.stopPropagation(); spLightClose(); } };
+  window.addEventListener('keydown', esc1, { capture: true, signal: dlgOff.signal }); v._esc = esc1;
+  v.oninput = e => { const k = e.target.dataset.spl; if (!k) return; e.target.nextElementSibling.textContent = e.target.value; spLightSet({ ...spLightNow(), [k]: +e.target.value }); };
+  v.onchange = e => { if (e.target.dataset.splg != null) spLightSet({ ...spLightNow(), g: e.target.checked ? 1 : 0 }); if (e.target.dataset.splkeep != null) SP.keepL = e.target.checked; };
+  spLightDraw();
+}
+function spLightClose() { const v = $('#spLightP'); if (!v) return; window.removeEventListener('keydown', v._esc, true); v.remove(); const b = $('#spLight'); if (b) b.setAttribute('aria-pressed', 'false'); }
+// The setting the sliders show: the whole scan's, or the first picked page's.
+function spLightNow() {
+  if (SP.Lsel === 'sel') { const p = [...SP.sel].sort((a, b) => a - b)[0]; return { ...LIGHT0, ...((p != null && SP.Lp[p]) || SP.L || {}) }; }
+  return { ...LIGHT0, ...(SP.L || {}) };
+}
+function spLightDraw() {
+  const v = $('#spLightP'); if (!v) return;
+  const L = spLightNow(), n = SP.sel.size;
+  const row = (k, label, min, max) => '<label><span>' + label + '</span><input type="range" min="' + min + '" max="' + max + '" step="1" data-spl="' + k + '" value="' + (L[k] || 0) + '"><b>' + (L[k] || 0) + '</b></label>';
+  v.innerHTML = '<div class="lph"><b>Lighting</b><span style="flex:1"></span><button class="btn sm" data-splauto>Auto fix</button><button class="icon" data-splx aria-label="Close" style="margin-left:6px">✕</button></div>' +
+    '<span class="seg" style="width:100%"><button data-spls="all" aria-pressed="' + (SP.Lsel === 'all') + '" style="flex:1">Whole scan</button><button data-spls="sel" aria-pressed="' + (SP.Lsel === 'sel') + '" style="flex:1"' + (n ? '' : ' disabled') + '>Picked pages' + (n ? ' (' + n + ')' : '') + '</button></span>' +
+    row('b', 'Brightness', -60, 60) + row('c', 'Contrast', 0, 400) + row('d', 'Darken writing', 0, 100) + row('s', 'Sharpen', 0, 100) +
+    '<label class="lpchk"><input type="checkbox" data-splg' + (L.g ? ' checked' : '') + '> Black and white</label>' +
+    '<div class="muted" style="font-size:12px">Changes how the pages look here and in the big view. The scan itself isn’t changed.</div>' +
+    '<label class="lpchk"><input type="checkbox" data-splkeep' + (SP.keepL ? ' checked' : '') + '> Keep it for grading: students who get these pages open with the same lighting</label>' +
+    '<div><button class="link" data-splreset>Back to normal</button></div>';
+}
+function spLightSet(L) {
+  const on = lightOn(L) ? L : null, list = [];
+  if (SP.Lsel === 'sel' && SP.sel.size) for (const p of SP.sel) { if (on) SP.Lp[p] = on; else delete SP.Lp[p]; list.push(p); }
+  else { SP.L = on; for (let i = 0; i < SP.n; i++) if (!SP.Lp[i]) list.push(i); }
+  spRelight(list);
+}
+function spLightClick(ev) {
+  const t = ev.target;
+  if (t.closest('[data-splx]')) return spLightClose();
+  const sc = t.closest('[data-spls]'); if (sc && !sc.disabled) { SP.Lsel = sc.dataset.spls; return spLightDraw(); }
+  if (t.closest('[data-splreset]')) { if (SP.Lsel === 'sel') spLightSet(LIGHT0); else { const all = [...Array(SP.n).keys()]; SP.L = null; SP.Lp = {}; spRelight(all); } return spLightDraw(); }
+  if (t.closest('[data-splauto]')) {
+    const p = SP.Lsel === 'sel' && SP.sel.size ? Math.min(...SP.sel) : SP.raw.findIndex(Boolean);
+    if (p < 0 || !SP.raw[p]) return toast('Still reading the pages, try again in a moment');
+    const im = new Image(); im.onload = () => { const c = document.createElement('canvas'); c.width = im.width; c.height = im.height; c.getContext('2d').drawImage(im, 0, 0); const L = spLightNow(); spLightSet({ ...L, ...lightAuto({ bmp: c }) }); spLightDraw(); }; im.src = SP.raw[p];
+  }
+}
+// Redraws the thumbnails from the page as it was read, a few at a time, so the sliders stay quick.
+let spLitRun = 0;
+function spRelight(list) {
+  const me = SP, run = ++spLitRun;
+  clearTimeout(me.litT); me.litT = setTimeout(async () => {
+    for (const i of list) {
+      if (SP !== me || run !== spLitRun) return;
+      if (!me.raw[i]) continue;
+      const L = spLight(me, i);
+      if (L) {
+        const im = new Image(); im.src = me.raw[i]; await im.decode().catch(() => {});
+        if (SP !== me || run !== spLitRun) return;
+        const c = document.createElement('canvas'); c.width = im.naturalWidth; c.height = im.naturalHeight;
+        const x = c.getContext('2d', { willReadFrequently: true }); x.drawImage(im, 0, 0); lightCanvas(x, c.width, c.height, L);
+        me.thumbs[i] = c.toDataURL('image/jpeg', .78); c.width = c.height = 0;
+      } else me.thumbs[i] = me.raw[i];
+      const el = document.querySelector('#spPages img[data-th="' + i + '"]'); if (el) el.src = me.thumbs[i];
+      const fl = document.querySelector('#spPages [data-fl="' + i + '"]'); if (fl) fl.innerHTML = scanCard(i);
+    }
+  }, 120);
+}
+Object.assign(window.__gs, { spLight, scanRescans, lightCanvas, scanRead, scanLook, skewOf, setSkew, scanStraighten, scanTurn, scanNote, skewMarks, scanDarken });

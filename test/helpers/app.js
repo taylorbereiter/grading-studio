@@ -180,4 +180,17 @@ const workOf = page => page.evaluate(() => {
   const s = window.__gs.state();
   return Object.fromEntries(s.batch.students.map(st => [st.key, { grade: st.grade, computed: window.__gs.gradeOf(st), inc: st.inc, files: Object.fromEntries(st.files.map(f => [f.path, { kind: f.kind, marks: Object.fromEntries(Object.entries(f.marks).filter(([, a]) => a.length)), rot: f.rot || null, added: !!f.added, edited: !!f.edited }])) }]));
 });
-module.exports = { MARK_BOXES, ROOT, BUILT, builtHtml, tmpDir, openApp, answerDlg, appReady, plant, idbRead, pickFile, openZip, waitPaper, goToStudent, at, drag, clickAt, setTool, score, markPage, settle, catchDownloads, probePdf, probeScreen, workOf };
+// Picks something in the right-click menu: right there if it's in the menu, or by pointing at the panel it's in first.
+async function menuPick(page, sel) {
+  const where = await page.evaluate(sel => {
+    const all = [...document.querySelectorAll('.stampmenu ' + sel)];
+    if (all.some(b => !b.closest('.st-fly'))) return '';
+    const f = all.length && all[0].closest('.st-fly'); if (!f) throw new Error('not in the menu: ' + sel);
+    return f.dataset.fly;
+  }, sel);
+  if (!where) return page.click('.stampmenu ' + sel + ':not(.st-fly *)');
+  await page.hover('.stampmenu [data-sub="' + where + '"]');
+  await page.waitForSelector('.stampmenu [data-fly="' + where + '"]:not([hidden])');
+  await page.click('.stampmenu [data-fly="' + where + '"] ' + sel);
+}
+module.exports = { menuPick, MARK_BOXES, ROOT, BUILT, builtHtml, tmpDir, openApp, answerDlg, appReady, plant, idbRead, pickFile, openZip, waitPaper, goToStudent, at, drag, clickAt, setTool, score, markPage, settle, catchDownloads, probePdf, probeScreen, workOf };

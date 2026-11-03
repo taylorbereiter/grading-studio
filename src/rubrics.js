@@ -378,19 +378,20 @@ function spreadBins(counted, max) {
   return bins;
 }
 function classStats() {
-  const max = maxPoints(), s = { counted: [], partial: [], notScored: [], missing: [], excused: [], offScale: [], ownOff: [], rosterOnly: [], rows: [] };
+  const max = maxPoints(), s = { counted: [], partial: [], notScored: [], missing: [], excused: [], offScale: [], ownOff: [], leftOut: [], rosterOnly: [], rows: [] };
   batch.students.forEach((st, i) => {
     const g = gradeOf(st), who = { i, name: shownName(st, i) };
     if (g.status === 'missing' || g.status === 'excused') s[g.status].push(who);
     else if (g.partial) s.partial.push({ ...who, note: partNote(st) });
     else if (!g.done || (g.total == null && g.pct == null)) s.notScored.push({ ...who, note: !st.files.length ? 'No paper' : st.foundCount > 1 || (st.doubts && st.doubts.length) ? 'A grade on the paper to confirm' : '' });
+    else if (g.out) s.leftOut.push(who);   // left out of the average by the teacher; one with no score yet is still "not scored"
     else if (!onThisScale(st, g, max) && !g.paper) s.ownOff.push({ ...who, note: 'You gave ' + fmtNum(g.total) + ', out of ' + fmtNum(max) });
     else if (!onThisScale(st, g, max)) s.offScale.push({ ...who, note: g.total != null ? 'The paper says ' + (g.paper && st.found && st.found.outOf != null ? fmtNum(g.total) + ' out of ' + fmtNum(st.found.outOf) : fmtNum(g.total)) : 'The paper says ' + fmtPct(g.pct) });
     else s.counted.push({ ...who, total: g.total, pct: g.pct, late: g.status === 'late', paper: !!g.paper });
   });
   const c = batchClass();
   if (c && c.names.length) { const m = rosterMatch(c.names); s.rosterOnly = c.names.filter(n => !m.has(n)); }
-  if (anonOn()) for (const k of ['counted', 'partial', 'notScored', 'missing', 'excused', 'offScale', 'ownOff']) s[k].sort((a, b) => natural(a.name, b.name));   // never in folder order while names are hidden
+  if (anonOn()) for (const k of ['counted', 'partial', 'notScored', 'missing', 'excused', 'offScale', 'ownOff', 'leftOut']) s[k].sort((a, b) => natural(a.name, b.name));   // never in folder order while names are hidden
   const tot = s.counted.map(x => x.total).sort((a, b) => a - b), n = tot.length, pcts = s.counted.map(x => x.pct).filter(v => v != null);
   const mean = a => a.reduce((x, y) => x + y, 0) / a.length;
   s.n = n; s.everyone = batch.students.length + s.rosterOnly.length; s.max = max;
@@ -400,7 +401,7 @@ function classStats() {
   // Rows use every row with a score, partial papers included, since those rows are real scores. Scores of a missing or excused student stay out.
   if (setup.mode === 'rubric') {
     s.rows = setup.criteria.map((name, r) => {
-      const v = batch.students.map(st => rowShown(st, r)).filter(x => x != null);
+      const v = batch.students.map(st => st.grade.outAvg ? null : rowShown(st, r)).filter(x => x != null);
       return { r, name, n: v.length, avg: v.length ? mean(v) : null, low: v.filter(x => x <= 2).length };
     }).sort((a, b) => (a.avg == null ? 9 : a.avg) - (b.avg == null ? 9 : b.avg) || a.r - b.r);
     const av = s.rows.filter(x => x.n).map(x => x.avg), least = Math.min(...av);
@@ -412,7 +413,7 @@ function classStats() {
 const oneDp = v => fmtNum(Math.round(v * 10) / 10);
 const people = (n, one, many) => n + ' ' + (n === 1 ? one : many || one + 's');
 function leftOutText(s) {
-  const parts = [[s.missing.length, 'marked missing'], [s.excused.length, 'excused'], [s.partial.length, 'partial'], [s.notScored.length, 'not scored yet'], [s.offScale.length, 'from the paper, not on this scale'], [s.ownOff.length, 'above the total or below 0'], [s.rosterOnly.length, 'on the roster with nothing here']].filter(p => p[0]).map(p => p[0] + ' ' + p[1]);
+  const parts = [[s.missing.length, 'marked missing'], [s.excused.length, 'excused'], [s.partial.length, 'partial'], [s.notScored.length, 'not scored yet'], [s.offScale.length, 'from the paper, not on this scale'], [s.ownOff.length, 'above the total or below 0'], [s.leftOut.length, 'left out of the average by you'], [s.rosterOnly.length, 'on the roster with nothing here']].filter(p => p[0]).map(p => p[0] + ' ' + p[1]);
   let t = 'Counted: ' + s.n + ' of ' + people(s.everyone, 'student') + '.';
   if (parts.length) t += ' Left out: ' + parts.join(', ') + '.';
   if (s.missing.length || s.excused.length) t += ' Missing and excused don’t count as 0.';
@@ -455,7 +456,7 @@ function rowsHtml(s) {
 function whoHtml(s) {
   const item = o => '<li><button class="link" data-ovgo="' + o.i + '">' + esc(o.name) + '</button>' + (o.note ? ' <span class="muted">' + esc(o.note) + '</span>' : '') + '</li>';
   const late = s.counted.filter(x => x.late);
-  const groups = [['Not scored yet', s.notScored], ['Partial: some rows scored', s.partial], ['Marked missing', s.missing], ['Excused', s.excused], ['Read from the paper, not on this scale', s.offScale], ['Your score is above the total or below 0', s.ownOff], ['Late, and counted', late]].filter(g => g[1].length);
+  const groups = [['Not scored yet', s.notScored], ['Partial: some rows scored', s.partial], ['Marked missing', s.missing], ['Excused', s.excused], ['Read from the paper, not on this scale', s.offScale], ['Your score is above the total or below 0', s.ownOff], ['Left out of the average by you', s.leftOut], ['Late, and counted', late]].filter(g => g[1].length);
   let h = groups.map(([t, list]) => '<details class="ovg" data-group="' + esc(t) + '" open><summary>' + esc(t) + ' (' + list.length + ')</summary><ul>' + list.map(item).join('') + '</ul></details>').join('');
   if (s.rosterOnly.length) h += '<details class="ovg" data-group="On the roster" open><summary>On the roster, nothing here (' + s.rosterOnly.length + ')</summary>' + (anonOn() ? '<p class="muted" style="margin:4px 0 0">Names stay hidden during anonymous grading.</p>' : '<ul>' + s.rosterOnly.map(n => '<li>' + esc(n) + '</li>').join('') + '</ul>') + '</details>';
   const open = s.notScored.length + s.partial.length + s.rosterOnly.length;

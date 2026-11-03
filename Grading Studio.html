@@ -203,6 +203,22 @@ body{padding-bottom:var(--savebar,0px)}.app{height:calc(100vh - var(--savebar,0p
 .prog-s .ph{font-weight:600;font-size:15px}.prog-s .ph span{font-weight:400;font-size:12.5px;color:var(--muted)}
 .prog-s .pb{height:5px;border-radius:3px;background:var(--track);margin:8px 0 10px;overflow:hidden}.prog-s .pb i{display:block;height:100%;background:var(--accent);border-radius:3px}
 .prog-s .btn{width:100%;color:var(--accent);font-weight:600}
+.ptiles{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(0,1fr) minmax(0,1.15fr);gap:5px;margin:0 0 10px}
+.pt{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:5px 7px;text-align:left;font:inherit;color:var(--fg);min-width:0}
+.pt .k{font-size:11.5px;color:var(--muted);white-space:nowrap}
+.pt .v{font-weight:600;font-size:15px;font-variant-numeric:tabular-nums;line-height:1.3}.pt .v small{font-weight:400;font-size:11.5px;color:var(--muted)}.pt .v .pp{color:var(--fg-2)}
+.pt.click{cursor:pointer}.pt.click .v{color:var(--accent)}.pt.click:hover,.pt.click[aria-expanded=true]{border-color:var(--accent)}
+.poutbox{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:4px;margin:0 0 10px}
+.poutbox .h{font-size:11.5px;color:var(--muted);padding:3px 6px}
+.po{display:flex;width:100%;justify-content:space-between;gap:8px;border:0;background:none;font:inherit;font-size:13px;color:var(--fg);padding:5px 6px;border-radius:6px;cursor:pointer;text-align:left}
+.po:hover{background:var(--hover)}.po span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.po span:last-child{color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.stag.out{background:var(--surface-2);color:var(--muted)}
+.outsw{display:flex;align-items:flex-start;gap:9px;width:100%;margin:10px 0 2px;padding:9px 11px;border:1px solid var(--line);border-radius:8px;background:var(--bg);font:inherit;color:var(--fg);text-align:left;cursor:pointer}
+.outsw[aria-checked=true]{border-color:var(--accent);background:var(--accent-soft)}
+.outsw i{flex:none;width:30px;height:17px;border-radius:999px;background:var(--line-strong);position:relative;margin-top:1px;transition:background .15s}
+.outsw i::after{content:"";position:absolute;top:2px;left:2px;width:13px;height:13px;border-radius:50%;background:var(--surface);transition:left .15s}
+.outsw[aria-checked=true] i{background:var(--accent)}.outsw[aria-checked=true] i::after{left:15px}
+.outsw b{font-weight:600;font-size:13.5px;display:block}.outsw small{font-size:12px;color:var(--muted);display:block;line-height:1.4;margin-top:1px}
 .prog-s kbd,.hint kbd{font:500 10.5px var(--f-body);border:1px solid var(--line-strong);border-bottom-width:2px;border-radius:4px;padding:0 4px;background:var(--surface);color:var(--muted)}
 .stu .dot{width:8px;height:8px;border-radius:50%;background:var(--accent);display:inline-block}
 .stu.empty .nm{color:var(--faint)}
@@ -394,6 +410,14 @@ body{padding-bottom:var(--savebar,0px)}.app{height:calc(100vh - var(--savebar,0p
 #calcPanel .cphi span{color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #lightPanel{position:fixed;top:60px;right:16px;z-index:25;width:300px;background:var(--surface);border:1px solid var(--line-strong);border-radius:12px;box-shadow:0 12px 32px rgba(0,0,0,.18);padding:12px 14px;display:flex;flex-direction:column;gap:10px;zoom:var(--uz)}
 #lightPanel .lph{display:flex;align-items:center}
+#spLightP{position:absolute;z-index:3;width:300px;background:var(--surface);border:1px solid var(--line-strong);border-radius:12px;box-shadow:0 12px 32px rgba(0,0,0,.18);padding:12px 14px;display:flex;flex-direction:column;gap:10px}
+#spLightP .lph{display:flex;align-items:center}
+#spLightP label:not(.lpchk){display:grid;grid-template-columns:104px 1fr 34px;align-items:center;gap:8px;font-size:13px}
+#spLightP label b{text-align:right;font-weight:500;color:var(--muted);font-variant-numeric:tabular-nums}
+#spLightP .lpchk{display:flex;gap:7px;align-items:flex-start;font-size:13px}
+#spLightP input[type=range]{width:100%;min-width:0}
+.spbar .btn[aria-pressed=true]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent);font-weight:600}
+.stu .add.grp{color:var(--accent);background:var(--accent-soft)}
 #lightPanel .lpbody{display:flex;flex-direction:column;gap:10px}
 #lightPanel .lpbody.off{opacity:.45}
 #lightPanel .lpsec{display:flex;flex-direction:column;gap:6px;padding-top:8px;border-top:1px solid var(--line)}
@@ -672,23 +696,47 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
 .cfcols{display:grid;grid-template-columns:1fr 1fr;gap:10px}.cfside{display:block;border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:13.5px;cursor:pointer}
 .cfside:has(input:checked){border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}.cfc{overflow-wrap:anywhere;white-space:pre-wrap}
 #bringBox ul{margin:4px 0 8px;padding-left:18px}#bringBox p{margin:10px 0 2px}
-/* the right-click menu of proofreading marks and stickers */
-.stampmenu{position:fixed;z-index:60;width:340px;max-height:calc(100vh - 16px);overflow:auto;background:var(--surface);border:1px solid var(--line-strong);border-radius:12px;box-shadow:0 12px 32px rgba(10,14,25,.22);padding:8px;font:13px var(--f-body);color:var(--fg)}
-.stampmenu .st-head{font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin:6px 4px 4px}
-.stampmenu .st-proofs{display:grid;grid-template-columns:1fr 1fr;gap:2px}
-.stampmenu .st-sticks,.stampmenu .st-recent{display:flex;flex-wrap:wrap;gap:2px}
+/* the right-click menu: a short list, with the long ones (punctuation, proofreading marks, stickers) in panels beside it */
+.stampmenu{position:fixed;z-index:60;width:240px;max-height:calc(100vh - 16px);overflow:auto;background:var(--surface);border:1px solid var(--line-strong);border-radius:12px;box-shadow:0 12px 32px rgba(10,14,25,.22);padding:6px;font:13px var(--f-body);color:var(--fg)}
+.stampmenu:focus{outline:none}
+.stampmenu .st-fly{position:fixed;z-index:61;width:max-content;max-width:calc(100vw - 16px);max-height:calc(100vh - 16px);overflow:auto;background:var(--surface);border:1px solid var(--line-strong);border-radius:12px;box-shadow:0 12px 32px rgba(10,14,25,.22);padding:6px}
+.stampmenu .st-fly[hidden]{display:none}
+.stampmenu .st-fly[data-fly=circle],.stampmenu .st-fly[data-fly=hl]{width:230px}
+.stampmenu .st-fly[data-fly=proof]{width:320px}
+.stampmenu .st-fly[data-fly=stick]{width:248px}
+.stampmenu .st-head{font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin:4px 6px 4px}
 .stampmenu button{border:0;background:none;color:inherit;font:inherit;border-radius:8px;cursor:pointer}
-.stampmenu button:hover,.stampmenu button:focus-visible{background:var(--hover);outline:none}
+.stampmenu button:hover,.stampmenu button:focus-visible,.stampmenu .st-item.on{background:var(--hover);outline:none}
 .stampmenu button:focus-visible{box-shadow:0 0 0 2px var(--accent)}
+.stampmenu .st-item{display:flex;align-items:center;gap:9px;width:100%;min-height:32px;padding:5px 8px;text-align:left}
+.stampmenu .st-item svg{width:18px;height:18px;flex:none;color:var(--fg-2)}
+.stampmenu .st-item canvas{flex:none}
+.stampmenu .st-item small{display:block;color:var(--muted);font-size:11.5px;line-height:1.3}
+.stampmenu .st-lb{flex:1;min-width:0}
+.stampmenu .st-chev{color:var(--muted);font-size:16px;line-height:1}
+.stampmenu .st-pri{font-weight:600;color:var(--accent)}.stampmenu .st-pri svg{color:var(--accent)}
+.stampmenu .st-sep{height:1px;background:var(--line);margin:5px 4px}
+.stampmenu .st-rl{font-size:11.5px;color:var(--muted);font-weight:500;margin-right:auto}
+.stampmenu .st-recent{display:flex;flex-wrap:wrap;align-items:center;gap:2px;padding:2px 4px 2px 8px}
+.stampmenu .st-recent .st-rl{margin-right:4px}
+.stampmenu .st-recent canvas{width:28px!important;height:28px!important;background:#fff;border-radius:6px}
+.stampmenu .st-inks,.stampmenu .st-hls{display:flex;align-items:center;gap:6px;padding:4px 8px}
+.stampmenu .st-sw{width:18px;height:18px;border-radius:50%!important;padding:0;flex:none}
+.stampmenu .st-sw.sq{border-radius:5px!important}
+.stampmenu .st-sw[aria-pressed=true]{box-shadow:0 0 0 2px var(--surface),0 0 0 4px var(--accent)}
+.stampmenu .st-proofs{display:grid;grid-template-columns:1fr 1fr;gap:2px}
+.stampmenu .st-sticks{display:flex;flex-wrap:wrap;gap:2px}
 .stampmenu .st-proof{display:flex;align-items:center;gap:6px;padding:2px 6px 2px 2px;text-align:left}
 .stampmenu .st-proof canvas{background:#fff;border-radius:6px;flex:none}
 .stampmenu .st-stick{padding:3px;line-height:0}
-.stampmenu .st-note{display:block;width:100%;text-align:left;padding:8px 8px;margin-top:6px;border-top:1px solid var(--line)!important;border-radius:0 0 8px 8px}
-.stampmenu .st-puncs{display:grid;grid-template-columns:repeat(5,1fr);gap:2px}
+.stampmenu .st-puncs{display:grid;grid-template-columns:repeat(5,52px);gap:2px}
 .stampmenu .st-punc{display:flex;flex-direction:column;align-items:center;gap:1px;padding:3px 0 4px;font-size:10.5px;line-height:1.1;color:var(--muted)}
 .stampmenu .st-punc canvas{background:#fff;border-radius:6px}
-.stampmenu .st-tick{width:100%;margin-bottom:2px}
-.stampmenu .st-mini canvas{background:#fff;border-radius:6px}
+/* a tool picked from the right-click for one go: its toolbar button is outlined, and a small note says so */
+.tool.once{border-color:var(--accent);color:var(--accent)}
+.oncepill{position:fixed;z-index:59;display:flex;align-items:center;gap:8px;background:#1E2024;color:#fff;font:500 12.5px var(--f-body);padding:6px 8px 6px 12px;border-radius:999px;box-shadow:0 4px 14px rgba(0,0,0,.18);white-space:nowrap;pointer-events:none}
+.oncepill u{text-decoration:none;opacity:.7;padding-right:4px}
+.oncepill button{pointer-events:auto;border:0;border-radius:999px;background:#fff;color:#1E2024;font:600 12px var(--f-body);padding:3px 10px;cursor:pointer}
 
 /* paper scans: the strip above a page, and the tags on a page in the split */
 .scnote{display:flex;flex-direction:column;gap:2px;margin:0 0 6px;padding:5px 10px;border-radius:6px;background:var(--accent-soft);color:var(--fg);font-size:13px;width:fit-content;max-width:100%}
@@ -707,6 +755,9 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
 .spbf{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;padding:6px 8px;background:var(--surface);border-top:1px solid var(--line);font-size:13px}
 .spbk.kept{border-color:var(--accent)}
 .spbk.kept img{opacity:.55}
+/* a page flagged for a rescan: in the split, and the strip above it once it's open */
+.spfl .spre{background:var(--warn-soft);color:var(--warn);border-color:var(--warn);font-weight:600}
+.scnote.re{background:var(--warn-soft)}
 
 /* ---------- rubric library: what each score means, under the score buttons and in Rubric setup ---------- */
 .lvrow{display:flex;gap:8px;align-items:flex-start;margin-top:6px}
@@ -924,6 +975,7 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
           <button class="mitem" id="overviewBtn" title="The spread of scores, the hardest rubric rows, and who isn’t finished">Class overview</button>
           <button class="mitem" id="consBtn" title="Same-score papers side by side, and whether you got harder or softer as you went">Consistency check</button>
           <button class="mitem" id="lightBtn" title="Make a pale or too-bright scan easier to read">Lighting</button>
+          <button class="mitem" id="rescanBtn" title="Pages you flagged as needing a rescan, and who they belong to">Rescans</button>
           <button class="mitem" id="dispBtn" title="Text size and zoom">Display</button>
           <button class="mitem" id="calcBtn" title="Calculator for scores and percents">Calculator <kbd>=</kbd></button>
           <button class="mitem themeBtn">Dark mode</button>
@@ -2224,8 +2276,8 @@ function percentWith(total, max, sc) {
 }
 function gradeOf(st) {
   if (noScore(st)) return { total: null, pct: null, done: true, status: st.grade.status };   // missing or excused: settled, with no number
-  const g = scoreOf(st);
-  return st.grade.status === 'late' ? { ...g, status: 'late' } : g;
+  const g = scoreOf(st), r = st.grade.status === 'late' ? { ...g, status: 'late' } : g;
+  return st.grade.outAvg ? { ...r, out: true } : r;   // left out of the average: the score stays and copies, it just isn't counted
 }
 function scoreOf(st) {
   const own = ownGrade(st);
@@ -2257,6 +2309,7 @@ const fmtPct = p => p == null ? '' : fmtNum(p) + '%';
 let batch = null;        // { id, name, students:[...] }
 let cur = 0;             // index of the open student
 let tool = 'pen';
+let once = null, onceEl = null;   // a tool picked from the right-click for one go: { k, prev } (src/stamps.js)
 const COLORS = { red: '#D7263D', blue: '#1F5FD1', green: '#1E8A4C', purple: '#7B3FC4', black: '#1B1F27' };
 const HL = { yellow: '#FFE45C', green: '#B4F0A8', pink: '#FFB8D6', blue: '#B0E0FF' };
 let inkColor = store.get('gs.ink', 'red'), hlColor = store.get('gs.hl', 'yellow'), penW = store.get('gs.penW', 2);
@@ -2791,7 +2844,35 @@ function fileSeq(st) {
 const seqSig = (st, it) => it.f ? it.f.kind + (it.f.rubric ? 'R' : '') + (it.f.added ? 'A' : '') : 'doc' + (it.d.pages.length && (fileByPath(st, it.d.pages[0][0]) || {}).added ? 'A' : '') + ((fileByPath(st, (it.d.pages[0] || [])[0]) || {}).virtual ? 'R' : '');
 
 /* ---------------- a file in the wrong student's folder: move it to the right one ---------------- */
-const moveLink = f => '<button class="link" style="font-size:13px;margin-right:10px" data-mvfile="' + esc(f.path) + '" title="This file belongs to someone else? Move it to the right student">Move to…</button>';
+const moveLink = f => shareLink(f) + '<button class="link" style="font-size:13px;margin-right:10px" data-mvfile="' + esc(f.path) + '" title="This file belongs to someone else? Move it to the right student">Move to…</button>';
+const shareCopies = (st, f) => batch.students.filter(s => s !== st && s.files.some(x => x.from === st.key && x.name === f.name));
+const shareLink = f => { const st = batch.students[cur], n = st ? shareCopies(st, f).length : 0; return '<button class="link" style="font-size:13px;margin-right:10px" data-shfile="' + esc(f.path) + '" title="Group work: give a copy of this file to other students, each to mark on their own">Share with…' + (n ? ' (' + n + ')' : '') + '</button>'; };
+function openShareFile(st, path) {
+  const f = fileByPath(st, path); if (!f || !f.data) return;
+  const anon = anonOn(), others = batch.students.map((s, i) => ({ s, i, label: shownName(s, i) })).filter(x => x.s !== st);
+  if (anon) others.sort((a, b) => anonPos(a.i) - anonPos(b.i));
+  openDlg('<div class="bh"><h2>Share ' + esc(fileShown(st, f.name)) + '</h2><button class="icon" data-cancel aria-label="Close" style="margin-left:auto">✕</button></div>' +
+    '<div class="bb"><p class="muted" style="margin:0 0 10px;font-size:14px">For group work. Click each student who worked on it: they get their own copy of the file as it was turned in, to mark and score on their own. Your marks on this copy stay here. Remove on a copy takes it back.</p>' +
+    '<input class="btn" id="mvFind" placeholder="' + (anon ? 'Type a paper number' : 'Type a name') + '" autocomplete="off" style="width:100%;margin-bottom:8px"><div id="mvList" class="mvlist"></div></div>' +
+    '<div class="bf"><button class="btn primary" data-cancel>Done</button></div>', true);
+  const has = s => s.files.some(x => x.from === st.key && x.name === f.name);
+  const draw = () => {
+    const q = $('#mvFind').value.toLowerCase().split(/\s+/).filter(Boolean);
+    const list = others.filter(x => q.every(w => x.label.toLowerCase().split(/[\s,_-]+/).some(y => y.startsWith(w))));
+    $('#mvList').innerHTML = list.length ? list.map((x, k) => '<button class="mvrow' + (k === 0 && q.length ? ' top' : '') + '" data-shto="' + x.i + '"' + (has(x.s) ? ' disabled' : '') + '>' + esc(x.label) + '<span class="muted">' + (has(x.s) ? '✓ Has a copy' : x.s.files.length + (x.s.files.length === 1 ? ' file' : ' files')) + '</span></button>').join('') : '<p class="muted">No name matches.</p>';
+  };
+  draw();
+  $('#mvFind').oninput = draw;
+  $('#mvFind').onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); const b = $('#mvList [data-shto]:not([disabled])'); if (b) b.click(); } };
+  $('#dlgBox').onclick = async e => {
+    if (e.target.closest('[data-cancel]')) { closeDlg(); return openStudent(cur); }
+    const b = e.target.closest('[data-shto]'); if (!b || b.disabled) return;
+    const to = batch.students[+b.dataset.shto]; b.disabled = true;
+    await addFiles(to, [{ path: f.name, file: new File([f.data], f.name), from: st.key }], true);
+    toast('Shared with ' + shownName(to, +b.dataset.shto)); draw(); $('#mvFind').focus();
+  };
+  $('#mvFind').focus();
+}
 function moveFileNow(path, key) {
   const src = batch.students.find(s => s.files.some(f => f.path === path)), dst = batch.students.find(s => s.key === key);
   if (!src || !dst || src === dst || dst.files.some(f => f.path === path)) return null;
@@ -2953,6 +3034,8 @@ $('#paper').addEventListener('click', e => {
   if (e.target.closest('#arrangeBtn')) return openArrange();
   const rb = e.target.closest('[data-rot]');
   if (rb) { const pg = pages.find(q => q.rchip === rb.parentNode); if (pg) turnPages(pg.file, [pg.idx], +rb.dataset.rot); return; }
+  const rf = e.target.closest('[data-reflag]'); if (rf) { const pg = pages.find(q => q.rchip === rf.parentNode); if (pg) scanFlag(pg); return; }
+  const shf = e.target.closest('[data-shfile]'); if (shf) return openShareFile(batch.students[cur], shf.dataset.shfile);
   const rd = e.target.closest('[data-rotdoc]');
   if (rd) {
     const st = batch.students[cur], d = layoutOf(st)[+rd.dataset.rotdoc]; if (!d) return;
@@ -3379,11 +3462,11 @@ function bindPage(pg) {
     const box = (pg.boxes || []).find(b => x >= b.x && x <= b.x + b.w && y >= b.y && y <= b.y + b.h);
     if (box && !box.n.ro && tool !== 'erase') { e.preventDefault(); openNote(pg, box.n); return; }
     if (wasNote) { e.preventDefault(); return; }
-    if (tool !== 'erase') { const cg = cornerAt(pg, x, y); if (cg) { e.preventDefault(); c.setPointerCapture(e.pointerId); g = cg; return; } }
+    if (tool !== 'erase' && !once) { const cg = cornerAt(pg, x, y); if (cg) { e.preventDefault(); c.setPointerCapture(e.pointerId); g = cg; return; } }
     if (tool !== 'select' && tool !== 'erase' && !onPage(x, y)) return;
     e.preventDefault();
     c.setPointerCapture(e.pointerId);
-    const pick = clickToPick(pg, x, y); if (pick) { g = pick; return; }
+    const pick = once ? null : clickToPick(pg, x, y); if (pick) { g = pick; return; }   // a one-time circle or highlight draws over marks
     if (tool === 'pen') g = inkBegin({ t: 'pen', color: COLORS[inkColor], w: penW, pts: [[r1(x), r1(y)]] }, x, y, e, pg.s);
     else if (tool === 'hl') g = hlBegin(pg, x, y, e);
     else if (tool === 'oval') g = { x0: x, y0: y, m: { t: 'oval', color: COLORS[inkColor], sw: Math.max(1.2, penW * 0.8), x, y, w: 0, h: 0 } };
@@ -3474,6 +3557,7 @@ function bindPage(pg) {
     } else if (g.move && g.moved) changed(pg);
     else if (g.move && g.edit) { const m = g.move; g = null; editMark(pg, m); return; }
     g = null;
+    if (once && once.k !== 'pen') endOnce();   // a circle or highlight from the right-click: one, then back to her tool
   };
   c.addEventListener('pointerup', end);
   c.addEventListener('pointercancel', end);
@@ -3481,6 +3565,7 @@ function bindPage(pg) {
     const [x, y] = pt(e);
     if (!onPage(x, y) || pg.editing || activeEditor) return;
     e.preventDefault(); commitEditors();
+    if (once) endOnce();   // a right-click ends a one-time tool (the pen's writing, say) and opens the menu
     openStampMenu(pg, x, y, e.clientX, e.clientY);
   });
   c.addEventListener('dblclick', e => {
@@ -3665,12 +3750,13 @@ const IC = {
 const svg = p => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + p + '</svg>';
 const TOOLS = [['select', 'Select', 'V'], ['pen', 'Pen', 'P'], ['hl', 'Highlight', 'H'], ['oval', 'Circle', 'O'], ['text', 'Text', 'T'], ['note', 'Comment', 'C'], ['check', 'Check', 'K'], ['erase', 'Eraser', 'E']];
 function renderTools() {
-  const isHl = tool === 'hl';
+  const bar = once ? once.prev : tool;   // a one-time tool keeps her own tool's bar, so the toolbar doesn't jump
+  const isHl = bar === 'hl';
   const sw = isHl ? Object.entries(HL).map(([k, v]) => '<button class="sw" data-hl="' + k + '" style="background:' + v + '" aria-pressed="' + (k === hlColor) + '" title="' + k + '"></button>').join('')
     : Object.entries(COLORS).map(([k, v]) => '<button class="sw" data-ink="' + k + '" style="background:' + v + '" aria-pressed="' + (k === inkColor) + '" title="' + k + '"></button>').join('');
-  $('#tools').innerHTML = TOOLS.map(([k, l, key]) => '<button class="tool" data-tool="' + k + '" aria-pressed="' + (tool === k) + '" title="' + l + ' (' + key + ')">' + svg(IC[k]) + '<span class="lb">' + l + '</span></button>').join('') +
-    '<span class="sep"></span><span class="swatches">' + (tool === 'select' || tool === 'erase' ? '' : sw) + '</span>' +
-    (tool === 'pen' ? '<span class="seg" style="margin-left:4px"><button data-w="1.2" aria-pressed="' + (penW === 1.2) + '">Fine</button><button data-w="2" aria-pressed="' + (penW === 2) + '">Medium</button><button data-w="3.5" aria-pressed="' + (penW === 3.5) + '">Bold</button></span>' : '') + (isHl ? hlBar() : '') +
+  $('#tools').innerHTML = TOOLS.map(([k, l, key]) => '<button class="tool' + (once && once.k === k ? ' once' : '') + '" data-tool="' + k + '" aria-pressed="' + ((once ? once.prev : tool) === k) + '" title="' + l + ' (' + key + ')">' + svg(IC[k]) + '<span class="lb">' + l + '</span></button>').join('') +
+    '<span class="sep"></span><span class="swatches">' + (bar === 'select' || bar === 'erase' ? '' : sw) + '</span>' +
+    (bar === 'pen' ? '<span class="seg" style="margin-left:4px"><button data-w="1.2" aria-pressed="' + (penW === 1.2) + '">Fine</button><button data-w="2" aria-pressed="' + (penW === 2) + '">Medium</button><button data-w="3.5" aria-pressed="' + (penW === 3.5) + '">Bold</button></span>' : '') + (isHl ? hlBar() : '') +
     '<button class="icon" id="undoBtn" title="Undo (' + keyLabel('⌘Z') + ')" aria-label="Undo" ' + (undoStack.length ? '' : 'disabled') + '>' + svg(IC.undo) + '</button>' +
     '<button class="icon" id="redoBtn" title="Redo (' + keyLabel('⇧⌘Z') + ')" aria-label="Redo" ' + (redoStack.length ? '' : 'disabled') + '>' + svg(IC.redo) + '</button>' +
     '<span class="zoom"><button class="icon" data-z="-1" aria-label="Zoom out" title="Zoom out (' + keyLabel('⌘−') + ')">' + svg(IC.minus) + '</button><span data-z0 title="' + keyLabel('Back to 100% (⌘0). Pinch or ⌘-scroll on the paper to zoom.') + '">' + Math.round(zoom * 100) + '%</span><button class="icon" data-z="1" aria-label="Zoom in" title="Zoom in (' + keyLabel('⌘+') + ')">' + svg(IC.plus) + '</button></span>';
@@ -3706,7 +3792,7 @@ $('#paper').addEventListener('wheel', e => {   // a trackpad pinch arrives as �
   e.preventDefault();
   setZoom(zoom * Math.exp(-clamp(e.deltaY * (e.deltaMode ? 20 : 1), -40, 40) * 0.005), { x: e.clientX, y: e.clientY });
 }, { passive: false });
-function setTool(t) { commitEditors(); tool = t; if (t !== 'select') { selected = null; redrawAll(); } renderTools(); }
+function setTool(t) { commitEditors(); if (once) dropOnce(); tool = t; if (t !== 'select') { selected = null; redrawAll(); } renderTools(); }
 function recolorSelected(col) {
   if (!selected || selected.fresh || selected.mark.t === 'hl') return;
   snap(selected.page); selected.mark.color = col; changed(selected.page);
@@ -3724,22 +3810,31 @@ function renderList() {
     if (q && !shownName(st, i).toLowerCase().includes(q)) return '';
     const g = gradeOf(st);
     const val = g.total != null ? g.total : g.pct != null ? g.pct + '%' : null;
-    const right = noScore(st) ? '<span class="stag" title="You marked this student ' + g.status + '. No score counts.">' + STATUS_LABEL[g.status] + '</span>' : val != null ? '<span class="sc" title="' + (g.paper ? 'Read from the paper' : g.done ? 'Scored' : 'Partly scored') + '"' + (g.paper ? ' style="color:var(--muted);font-weight:600"' : g.done ? '' : ' style="color:var(--warn)"') + '>' + fmtNum(g.total != null ? g.total : g.pct) + (g.total == null ? '%' : g.outOf != null ? '/' + fmtNum(g.outOf) : '') + (g.partial ? '<small>partial</small>' : '') + '</span>'
+    const right = noScore(st) ? '<span class="stag" title="You marked this student ' + g.status + '. No score counts.">' + STATUS_LABEL[g.status] + '</span>' : val != null ? '<span class="sc" title="' + (g.paper ? 'Read from the paper' : g.done ? 'Scored' : 'Partly scored') + '"' + (g.paper || g.out ? ' style="color:var(--muted);font-weight:600"' : g.done ? '' : ' style="color:var(--warn)"') + '>' + fmtNum(g.total != null ? g.total : g.pct) + (g.total == null ? '%' : g.outOf != null ? '/' + fmtNum(g.outOf) : '') + (g.partial ? '<small>partial</small>' : '') + '</span>'
       : manyReads(st) ? '<span class="sc" style="color:var(--warn)" title="More than one grade found on the paper. Check the Grade sheet.">?</span>'
       : st.doubts && st.doubts.length ? '<span class="sc" style="color:var(--warn)" title="A reading on the paper may not be a grade. Confirm it on the Grade sheet.">?</span>'
       : hasMarks(st) ? '<span class="dot" title="Marked"></span>' : '';
-    const nAdd = st.files.filter(f => f.added).length;
+    const nAdd = st.files.filter(f => f.added && !f.from).length, re = st.files.some(f => Object.values(f.sc || {}).some(r => r.re)), grp = st.files.some(f => f.from || Object.values(f.sc || {}).some(r => r.w)) || st.files.some(f => !f.added && shareCopies(st, f).length);
     return '<button class="stu' + (i === cur ? ' on' : '') + (st.files.length ? '' : ' empty') + '" data-i="' + i + '"><span class="num">' + (pos + 1) + '</span><span class="nm" title="' + esc(shownName(st, i)) + '">' + esc(shownName(st, i)) + '</span>' +
-      '<span style="display:inline-flex;align-items:center;gap:4px">' + (st.files.length || noScore(st) ? '' : '<span class="muted" style="font-size:11px">no paper</span>') + (g.status === 'late' ? '<span class="stag" title="You marked this student late">late</span>' : '') + (nAdd ? '<span class="add" title="' + nAdd + (nAdd === 1 ? ' file' : ' files') + ' added by you">+' + nAdd + '</span>' : '') + carryPill(st) + right + '</span></button>';
+      '<span style="display:inline-flex;align-items:center;gap:4px">' + (st.files.length || noScore(st) ? '' : '<span class="muted" style="font-size:11px">no paper</span>') + (g.status === 'late' ? '<span class="stag" title="You marked this student late">late</span>' : '') + (g.out ? '<span class="stag out" title="Left out of the average">left out</span>' : '') + (nAdd ? '<span class="add" title="' + nAdd + (nAdd === 1 ? ' file' : ' files') + ' added by you">+' + nAdd + '</span>' : '') + (re ? '<span class="add" title="A page needs a rescan">⚑</span>' : '') + (grp ? '<span class="add grp" title="Group work: shares pages or a file with another student">shared</span>' : '') + carryPill(st) + right + '</span></button>';
   }).join('');
   const on = $('#stuList .on'); if (on) on.scrollIntoView({ block: 'nearest' });
   const nExp = exportPlan(true).length;
   $('#exportBtn').textContent = 'Export marked' + (nExp ? ' (' + nExp + ')' : '');
   renderProg();
 }
+let outOpen = false;
 function renderProg() {
   const on = batch.students.filter(s => !noScore(s)), N = on.length, n = on.filter(s => gradeOf(s).done).length, nOff = batch.students.length - N;
+  const cs = classStats(), outs = batch.students.map((st, i) => i).filter(i => batch.students[i].grade.outAvg && !noScore(batch.students[i]));
+  if (!outs.length) outOpen = false;
+  const outList = (anonOn() ? anonOrder().filter(i => outs.includes(i)) : outs).map(i => { const g = gradeOf(batch.students[i]);
+    return '<button class="po" data-pgo="' + i + '"><span>' + esc(shownName(batch.students[i], i)) + '</span><span>' + (g.total != null ? fmtNum(g.total) + ' / ' + fmtNum(g.outOf != null ? g.outOf : maxPoints()) : g.pct != null ? fmtPct(g.pct) : 'No score') + '</span></button>'; }).join('');
   $('#progS').innerHTML = '<div class="ph">' + n + ' of ' + N + ' <span>scored' + (nOff ? ' · ' + nOff + ' missing or excused' : '') + '</span></div><div class="pb"><i style="width:' + (N ? 100 * n / N : 0) + '%"></i></div>' +
+    '<div class="ptiles"><div class="pt" id="pAvg" title="' + (cs.n ? 'Average of ' + people(cs.n, 'finished score') + '. Partial, missing, excused and left-out papers don’t count.' : 'No finished scores yet') + '"><div class="k">Average</div><div class="v">' + (cs.n ? oneDp(cs.mean) + ' <small>/ ' + fmtNum(cs.max) + '</small>' + (cs.meanPct != null ? ' <small class="pp">' + cs.meanPct + '%</small>' : '') : '–') + '</div></div>' +
+    '<div class="pt" id="pLeft" title="Papers with no score or only part of one"><div class="k">Left</div><div class="v">' + (N - n) + '</div></div>' +
+    (outs.length ? '<button class="pt click" id="pOut" aria-expanded="' + outOpen + '" title="Papers you left out of the average. Click to see them."><div class="k">Left out</div><div class="v">' + outs.length + '</div></button>' : '<div class="pt" id="pOut" title="Leave a paper out with the switch under Mark as"><div class="k">Left out</div><div class="v">0</div></div>') + '</div>' +
+    (outOpen ? '<div class="poutbox"><div class="h">Click one to open it</div>' + outList + '</div>' : '') +
     (n < N ? '<button class="btn sm" id="nextUn" title="Opens the next student without a full score">Next unscored <kbd>N</kbd></button>' : '<div class="muted" style="font-size:13px;margin-bottom:6px">Everyone ' + (nOff ? 'else ' : '') + 'has a score.</div>');
 }
 function nextUnscored() {
@@ -3747,7 +3842,11 @@ function nextUnscored() {
   for (let k = 1; k <= N; k++) { const i = o[(p + k) % N]; if (!gradeOf(batch.students[i]).done) return openStudent(i); }
   toast('Everyone has a score');
 }
-$('#progS').addEventListener('click', e => { if (e.target.closest('#nextUn')) nextUnscored(); });
+$('#progS').addEventListener('click', e => {
+  if (e.target.closest('#nextUn')) nextUnscored();
+  if (e.target.closest('button#pOut')) { outOpen = !outOpen; renderProg(); }
+  const go = e.target.closest('[data-pgo]'); if (go) openStudent(+go.dataset.pgo);
+});
 $('#stuList').addEventListener('click', e => { const b = e.target.closest('.stu'); if (b) openStudent(+b.dataset.i); });
 $('#stuFind').addEventListener('input', () => { renderList(); if (!$('#stuList .stu')) $('#stuList').innerHTML = '<div class="muted" style="font-size:13px;padding:6px 8px">No one matches.</div>'; });
 $('#stuFind').addEventListener('keydown', e => {
@@ -3801,6 +3900,7 @@ $('#grade').addEventListener('click', e => {
     renderGrade(); renderList(); saveSoon(); return;
   }
   const sb = e.target.closest('[data-status]'); if (sb) return setStatus(batch.students[cur], sb.dataset.status);
+  if (e.target.closest('#outAvg')) return setOutAvg(batch.students[cur]);
   if (e.target.closest('#prevBtn')) stepStudent(-1);
   if (e.target.closest('#nextBtn')) stepStudent(1);
   if (e.target.closest('#editRubric')) openSetup();
@@ -6200,7 +6300,7 @@ async function idbDo(mode, fn) {
 }
 const addKey = (st, path) => batch.id + '|' + st.key + '|' + path;
 const fmtDay = t => new Date(t).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-const addTag = f => '<span class="addtag" title="You added this file">Added by you · ' + fmtDay(f.added) + '</span><button class="link" style="font-size:13px" data-rmadd="' + esc(f.path) + '">Remove</button>' + lateLink(f);
+const addTag = f => '<span class="addtag" title="You added this file">' + (f.from ? (anonOn() ? 'Group work copy' : 'Group work, shared from ' + esc(f.from)) : 'Added by you') + ' · ' + fmtDay(f.added) + '</span><button class="link" style="font-size:13px" data-rmadd="' + esc(f.path) + '">Remove</button>' + lateLink(f);
 async function loadAdded() {
   let recs = [];
   try { recs = (await idbDo('readonly', o => o.getAll(underId(batch.id)))) || []; } catch { return; }
@@ -6208,7 +6308,7 @@ async function loadAdded() {
     let st = batch.students.find(s => s.key === r.key);
     if (!st) { st = { key: r.key, files: [], grade: { rubric: [], points: '', comment: '' }, layout: null, inc: {} }; batch.students.push(st); }   // added from a later scan
     if (st.files.some(f => f.path === r.path)) continue;
-    const f = await makeFile(r.path, r.data); f.added = r.added; f.akey = r.key; st.files.push(f);
+    const f = await makeFile(r.path, r.data); f.added = r.added; f.akey = r.key; if (r.from) f.from = r.from; st.files.push(f);
   }
 }
 function pickAdd(st) {
@@ -6237,7 +6337,7 @@ async function addFiles(st, list, quiet) {
     const name = e.file.name.replace(/[\\/]+/g, '-'), base = st.key + '/' + name;
     let path = base, k = 2;
     while (st.files.some(f => f.path === path)) path = base.replace(/(\.[^./]+)?$/, ' (added ' + k++ + ')$1');
-    const f = await makeFile(path, bytes); f.added = Date.now(); f.akey = st.key;
+    const f = await makeFile(path, bytes); f.added = Date.now(); f.akey = st.key; if (e.from) f.from = e.from;
     if (f.photoTurn) f.rot = { 0: f.photoTurn };
     if (viewable(f)) {
       try { await workerReady; const d = await pdfjsLib.getDocument({ data: f.data.slice(), isEvalSupported: false }).promise; f.numPages = d.numPages; d.destroy(); } catch {}
@@ -6245,7 +6345,7 @@ async function addFiles(st, list, quiet) {
       try { f.scan = await scanFile(f, f.hand || setup.spot || null); f.kami = f.scan.kami; } catch {}
     }
     st.files.push(f); last = f;
-    try { await idbDo('readwrite', o => o.put({ bid: batch.id, key: st.key, path: f.path, name: f.name, data: bytes, added: f.added }, addKey(st, f.path))); }
+    try { await idbDo('readwrite', o => o.put({ bid: batch.id, key: st.key, path: f.path, name: f.name, data: bytes, added: f.added, ...(f.from ? { from: f.from } : {}) }, addKey(st, f.path))); }
     catch { toast('This browser couldn’t keep ' + f.name + ' for next time. It’s here until you close the download.'); }
   }
   refound(st); saveSoon(); renderList(); wordScoresAll();
@@ -6569,10 +6669,10 @@ function placeScore(pg, x, y) {
 }
 
 /* ---------------- lighting: brightness, contrast and darker writing for washed-out scans (view only; the student's file is not changed) ---------------- */
-const LIGHT0 = { b: 0, c: 0, d: 0, s: 0 };
+const LIGHT0 = { b: 0, c: 0, d: 0, s: 0, g: 0 };
 const lightKey = st => (batch.light && st && batch.light[st.key]) ? st.key : '*';
 const lightFor = st => (batch && batch.light && ((st && batch.light[st.key]) || batch.light['*'])) || LIGHT0;
-const lightOn = L => !!(L.b || L.c || L.d || L.s);
+const lightOn = L => !!(L && (L.b || L.c || L.d || L.s || L.g));
 function lightLut(L) {
   const t = new Uint8ClampedArray(256), k = 1 + L.c / 100, g = 1 + L.d / 40;
   for (let v = 0; v < 256; v++) { let x = 1 - (1 - v / 255) * k + L.b / 200; x = Math.min(1, Math.max(0, x)); t[v] = Math.round(Math.pow(x, g) * 255); }
@@ -6598,7 +6698,7 @@ function lightForPage(st, f, p) {
 }
 function lightCanvas(ctx, w, h, L) {
   const im = ctx.getImageData(0, 0, w, h), d = im.data, t = lightLut(L);
-  for (let i = 0; i < d.length; i += 4) { const y = (d[i] * 77 + d[i + 1] * 150 + d[i + 2] * 29) >> 8, sh = t[y] - y; d[i] += sh; d[i + 1] += sh; d[i + 2] += sh; }
+  for (let i = 0; i < d.length; i += 4) { const y = (d[i] * 77 + d[i + 1] * 150 + d[i + 2] * 29) >> 8, sh = t[y] - y; if (L.g) d[i] = d[i + 1] = d[i + 2] = t[y]; else { d[i] += sh; d[i + 1] += sh; d[i + 2] += sh; } }   // black and white: the color goes, for a tinted page or colored paper
   if (L.s) lightSharpen(d, w, h, L.s);
   ctx.putImageData(im, 0, 0);
 }
@@ -6615,7 +6715,7 @@ function lightSharpen(d, w, h, s) {
 function lightBmp(pg) {
   const L = lightForPage(batch && batch.students[cur], pg.file, pg.idx);
   if (!L) return pg.bmp;
-  const key = L.b + '|' + L.c + '|' + L.d + '|' + (L.s || 0);
+  const key = L.b + '|' + L.c + '|' + L.d + '|' + (L.s || 0) + '|' + (L.g || 0);
   if (pg.adj && pg.adjSrc === pg.bmp && pg.adjKey === key) return pg.adj;
   const c = pg.adj && pg.adj.width === pg.bmp.width && pg.adj.height === pg.bmp.height ? pg.adj : document.createElement('canvas');
   c.width = pg.bmp.width; c.height = pg.bmp.height;
@@ -6645,7 +6745,7 @@ function lightChip(pg) {
 }
 function rotChip(pg, n) {
   const b = document.createElement('div'); b.className = 'rchip';
-  b.innerHTML = (n ? '<span>p. ' + n + '</span>' : '') + '<button data-rot="-1" title="Turn this page to the left" aria-label="Turn this page to the left">⟲</button><button data-rot="1" title="Turn this page to the right" aria-label="Turn this page to the right">⟳</button>';
+  b.innerHTML = (n ? '<span>p. ' + n + '</span>' : '') + '<button data-rot="-1" title="Turn this page to the left" aria-label="Turn this page to the left">⟲</button><button data-rot="1" title="Turn this page to the right" aria-label="Turn this page to the right">⟳</button><button data-reflag title="Needs a rescan: flag this page, or take the flag off" aria-label="Flag this page as needing a rescan">⚑</button>';
   pg.wrap.appendChild(b); pg.rchip = b;
 }
 function lightChips() {
@@ -6725,6 +6825,7 @@ function openLight() {
       '<div class="lpbody' + (o.on ? '' : ' off') + '">' +
       '<button class="btn sm primary" data-lauto style="width:100%">Auto fix this scan</button>' +
       row('b', 'Brightness', -60, 60) + row('c', 'Contrast', 0, 400) + row('d', 'Darken writing', 0, 100) + row('s', 'Sharpen', 0, 100) +
+      '<label class="lprow lpchk"><input type="checkbox" data-lg' + (L.g ? ' checked' : '') + '> Black and white</label>' +
       '<span class="seg" style="width:100%"><button data-lo="0" aria-pressed="' + !only + '" style="flex:1">All students</button><button data-lo="1" aria-pressed="' + only + '" style="flex:1">Only ' + esc(shownName(batch.students[cur], cur)) + '</button></span>' +
       '<div><button class="link" data-lreset>Back to normal</button></div>' +
       '<div class="lpsec"><div class="dl">Pages</div>' +
@@ -6735,14 +6836,14 @@ function openLight() {
       '<div class="muted" style="font-size:12px;margin-top:-4px">' + (o.exp ? 'Exported files come out with this lighting. The student’s original file isn’t changed.' : 'Only changes how you see the paper here; the export stays as scanned.') + '</div></div>';
   };
   render();
-  p.onchange = e => { if (e.target.dataset.lexp != null) opt('exp', e.target.checked); };
+  p.onchange = e => { if (e.target.dataset.lexp != null) opt('exp', e.target.checked); if (e.target.dataset.lg != null) set({ ...lightFor(batch.students[cur]), g: e.target.checked ? 1 : 0 }); };
   p.oninput = e => { const k = e.target.dataset.l; if (!k) return; const L = { ...lightFor(batch.students[cur]), [k]: +e.target.value }; e.target.nextElementSibling.textContent = e.target.value; set(L); };
   p.onclick = e => {
     if (e.target.closest('[data-lx]')) return p.remove();
     if (e.target.closest('[data-lon]')) return opt('on', !lightOpts().on);
     const rb = e.target.closest('[data-lrub]'); if (rb) return opt('rub', rb.dataset.lrub === '1');
     if (e.target.closest('[data-lpgreset]')) { for (const [k, v] of Object.entries(batch.lightPg || {})) if (v === false) delete batch.lightPg[k]; lightApply(); return render(); }
-    if (e.target.closest('[data-lauto]')) { const pg = pages.find(q => q.bmp && q.file.kind !== 'docx'); if (!pg) return toast('No scanned page to fix here'); set({ ...lightAuto(pg), s: lightFor(batch.students[cur]).s || 0 }); return render(); }
+    if (e.target.closest('[data-lauto]')) { const pg = pages.find(q => q.bmp && q.file.kind !== 'docx'); if (!pg) return toast('No scanned page to fix here'); set({ ...lightAuto(pg), s: lightFor(batch.students[cur]).s || 0, g: lightFor(batch.students[cur]).g || 0 }); return render(); }
     if (e.target.closest('[data-lreset]')) { set({ ...LIGHT0 }); if (only) { delete batch.light[batch.students[cur].key]; only = false; lightApply(); } return render(); }
     const o = e.target.closest('[data-lo]');
     if (o) { const want = o.dataset.lo === '1', stc = batch.students[cur]; if (want && !only) { batch.light = batch.light || {}; batch.light[stc.key] = { ...lightFor(stc) }; } if (!want && only) { delete batch.light[stc.key]; lightApply(); } only = want; return render(); }
@@ -7275,7 +7376,7 @@ function wireRubric(st, f, w, page, el, soon) {
 }
 
 /* ---------------- split a scan: one PDF of everyone's papers (any order), pages dragged onto names on the roster ---------------- */
-let SP = null;   // { name, data, doc, n, thumbs[], ink[], owner[], skip:Set, sel:Set, anchor, names[], classId, asg, last, size }
+let SP = null;   // { name, data, doc, n, thumbs[], raw[], ink[], owner[], more{}, skip:Set, sel:Set, re:Set, L, Lp{}, keepL, several, anchor, names[], classId, asg, last, size }
 function splitIntoNames(c) {
   const r = c ? c.names.slice() : [], m = rosterMatch(r), used = new Set(m.values());
   return r.concat(batch.students.filter(st => !used.has(st)).map(st => st.key));
@@ -7287,7 +7388,7 @@ async function openSplit(file, assignment, into) {
   try { doc = await pdfjsLib.getDocument({ data: data.slice(), isEvalSupported: false }).promise; }
   catch { return toast('Couldn’t open ' + file.name + ' as a PDF'); }
   const c = into ? batchClass() : assignment && assignment.classId ? classById(assignment.classId) : (lib.classes.find(k => k.names.length) || null);
-  SP = { name: file.name.replace(/\.pdf$/i, ''), data, doc, n: doc.numPages, thumbs: [], ink: [], sc: {}, rot: {}, skew: {}, owner: Array(doc.numPages).fill(''), skip: new Set(), sel: new Set(), anchor: 0,
+  SP = { name: file.name.replace(/\.pdf$/i, ''), data, doc, n: doc.numPages, thumbs: [], ink: [], sc: {}, rot: {}, skew: {}, owner: Array(doc.numPages).fill(''), more: {}, raw: [], re: new Set(), L: null, Lp: {}, keepL: true, several: false, skip: new Set(), sel: new Set(), anchor: 0,
     names: into ? splitIntoNames(c) : c ? c.names.slice() : [], classId: c ? c.id : '', asg: assignment || null, into: !!into, last: 1, size: +(store.get('gs.spsize', 1)) };
   if (into) splitPick(0, 1);
   if (!into) splitPick(0, splitGuess());
@@ -7317,7 +7418,9 @@ async function splitRender() {
     const ctx = cv.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, cv.width, cv.height);
     try { await page.render({ canvasContext: ctx, viewport: vp, transform: spXf(me, i, vp), annotationMode: pdfjsLib.AnnotationMode.ENABLE }).promise; } catch {}
     me.ink[i] = splitInk(ctx, cv.width, cv.height);
-    me.thumbs[i] = cv.toDataURL('image/jpeg', .78);
+    me.raw[i] = cv.toDataURL('image/jpeg', .78);
+    const L = spLight(me, i); if (L) lightCanvas(ctx, cv.width, cv.height, L);
+    me.thumbs[i] = L ? cv.toDataURL('image/jpeg', .78) : me.raw[i];
     if (SP !== me) return;
     const im = document.querySelector('#spPages img[data-th="' + i + '"]'); if (im) im.src = me.thumbs[i];
     const st = $('#spStat'); if (st) st.textContent = i + 1 < me.n ? 'Reading pages… ' + (i + 1) + ' of ' + me.n : '';
@@ -7329,7 +7432,14 @@ function splitInk(ctx, w, h) {
   for (let i = 0; i < d.length; i += 16) if (d[i] + d[i + 1] + d[i + 2] < 400) dark++;
   return dark / (d.length / 16);
 }
-const spPagesOf = nm => SP.owner.map((o, i) => o === nm ? i : -1).filter(i => i >= 0);
+const spWho = (me, i) => me.owner[i] ? [me.owner[i], ...(me.more[i] || [])] : [];
+const spPagesOf = nm => SP.owner.map((o, i) => spWho(SP, i).includes(nm) ? i : -1).filter(i => i >= 0);
+const spAll = me => [...new Set(me.owner.flatMap((_, i) => spWho(me, i)))];
+function spTakeOff(i, nm) {
+  if (SP.owner[i] === nm) SP.owner[i] = (SP.more[i] || []).shift() || '';
+  else if (SP.more[i]) SP.more[i] = SP.more[i].filter(x => x !== nm);
+  if (SP.more[i] && !SP.more[i].length) delete SP.more[i];
+}
 function spRange(list) {
   const out = []; let a = null, b = null;
   for (const p of list) { if (a != null && p === b + 1) { b = p; continue; } if (a != null) out.push(a === b ? a + 1 : (a + 1) + '–' + (b + 1)); a = b = p; }
@@ -7341,8 +7451,11 @@ function splitShell() {
   openDlg('<div class="bh"><h2>Split a scan: ' + esc(SP.name) + '</h2><span class="muted" id="spStat"></span><span class="muted">' + SP.n + ' pages</span></div>' +
     '<div class="spwrap"><div class="spleft">' +
       '<div class="spbar"><span class="seg" id="spSize"><button data-sz="0">S</button><button data-sz="1">M</button><button data-sz="2">L</button></span>' +
+        '<button class="btn sm" id="spLight" aria-pressed="false" title="Brightness, contrast, darker writing, sharpen and black and white, for hard-to-read pages">☀ Lighting</button>' +
+        '<button class="btn sm" id="spRe" title="Flag the picked pages as needing a rescan. You can still give them to a student.">⚑ Needs rescan</button>' +
+        '<button class="btn sm" id="spSev" aria-pressed="false" title="Group work: clicking a name adds that student to the picked pages and keeps the ones already on them">Give to several</button>' +
         '<button class="btn sm" id="spBlank">Leave out blank pages</button><button class="btn sm" id="spSkip">Leave out selected</button><span class="sp"></span><span id="spSelInfo"></span></div>' +
-      '<p class="muted sphint">Click a page, then Shift-click another to pick a range (' + modKey() + '-click adds one page). Drag the pages onto a name, click the name, or type it and press Enter. After that, one Shift-click picks from the next page up to the one you click. Double-click a page to see it big.</p>' +
+      '<p class="muted sphint">Click a page, then Shift-click another to pick a range (' + modKey() + '-click adds one page). Drag the pages onto a name, click the name, or type it and press Enter. After that, one Shift-click picks from the next page up to the one you click. Double-click a page to see it big. For group work, turn on Give to several and click each name.</p>' +
       '<div id="spPages"></div></div>' +
     '<div class="spright"><div class="spbar"><label>Class <select class="btn" id="spCls"><option value="">No roster</option>' + lib.classes.map(k => '<option value="' + k.id + '"' + (c && c.id === k.id ? ' selected' : '') + '>' + esc(k.name) + ' (' + k.names.length + ')</option>').join('') + '</select></label></div>' +
       '<input class="btn" id="spFind" placeholder="Type a name, Enter to give it the pages" autocomplete="off">' +
@@ -7355,13 +7468,15 @@ function splitShell() {
   box.onclick = async ev => {
     const t = ev.target;
     if (t.closest('#spBlankView')) return;
+    if (t.closest('#spLightP')) return spLightClick(ev);
+    if (t.closest('#spLight')) return spLightOpen();
     if (t.closest('[data-cancel]')) { SP = null; splitZoomClose(); return closeDlg(); }
     const pg = t.closest('.spg');
     if (pg) {
       const i = +pg.dataset.spg, fx = t.closest('[data-spfix]');
       if (fx) return scanSplitFix(i, fx.dataset.spfix);
       if (t.closest('[data-zoom]')) return splitZoom(i);
-      if (t.closest('[data-unpg]')) { SP.owner[i] = ''; SP.skip.delete(i); return splitDraw(); }
+      if (t.closest('[data-unpg]')) { SP.owner[i] = ''; delete SP.more[i]; SP.skip.delete(i); return splitDraw(); }
       if (ev.shiftKey) { SP.sel = new Set(); const [a, b] = [Math.min(SP.anchor, i), Math.max(SP.anchor, i)]; for (let p = a; p <= b; p++) if (spFree(p) || a === b) SP.sel.add(p); ev.preventDefault(); }
       else if (ev.metaKey || ev.ctrlKey) { SP.sel.has(i) ? SP.sel.delete(i) : SP.sel.add(i); SP.anchor = i; }
       else { SP.sel = new Set([i]); SP.anchor = i; }
@@ -7369,13 +7484,20 @@ function splitShell() {
     }
     const nr = t.closest('[data-spn]');
     if (nr) {
-      if (t.closest('[data-unall]')) { const nm = SP.names[+nr.dataset.spn]; SP.owner = SP.owner.map(o => o === nm ? '' : o); return splitDraw(); }
+      if (t.closest('[data-unall]')) { const nm = SP.names[+nr.dataset.spn]; for (let i = 0; i < SP.n; i++) spTakeOff(i, nm); return splitDraw(); }
       return splitGive(SP.names[+nr.dataset.spn]);
     }
     if (t.closest('#spBig')) return splitZoomClose();
     const sz = t.closest('[data-sz]');
     if (sz) { SP.size = +sz.dataset.sz; store.set('gs.spsize', SP.size); return splitDraw(); }
-    if (t.id === 'spSkip') { if (!SP.sel.size) return toast('Pick the pages to leave out first'); for (const p of SP.sel) { SP.skip.add(p); SP.owner[p] = ''; } const last = Math.max(...SP.sel); splitPick(last + 1, SP.last); return splitDraw(); }
+    if (t.id === 'spSev') { SP.several = !SP.several; t.setAttribute('aria-pressed', SP.several); return toast(SP.several ? 'Give to several is on: each name you click is added to the picked pages' : 'Give to several is off'); }
+    if (t.id === 'spRe') {
+      if (!SP.sel.size) return toast('Pick the pages that need a rescan first');
+      const all = [...SP.sel].every(p => SP.re.has(p));
+      for (const p of SP.sel) all ? SP.re.delete(p) : SP.re.add(p);
+      return splitDraw();
+    }
+    if (t.id === 'spSkip') { if (!SP.sel.size) return toast('Pick the pages to leave out first'); for (const p of SP.sel) { SP.skip.add(p); SP.owner[p] = ''; delete SP.more[p]; } const last = Math.max(...SP.sel); splitPick(last + 1, SP.last); return splitDraw(); }
     if (t.id === 'spBlank') {
       if (SP.ink.filter(v => v != null).length < SP.n) return toast('Still reading the pages, try again in a moment');
       const blank = SP.ink.map((v, i) => (SP.sc[i] ? SP.sc[i].blank : v < .0015) && !SP.owner[i] && !SP.skip.has(i) ? i : -1).filter(i => i >= 0);
@@ -7388,7 +7510,7 @@ function splitShell() {
   box.onchange = ev => {
     if (ev.target.id !== 'spCls') return;
     SP.classId = ev.target.value; const k = spClass();
-    const extra = [...new Set(SP.owner.filter(Boolean))].filter(nm => !(k ? k.names : []).includes(nm));
+    const extra = spAll(SP).filter(nm => !(k ? k.names : []).includes(nm));
     SP.names = SP.into ? splitIntoNames(k) : (k ? k.names.slice() : []);
     SP.names = SP.names.concat(extra.filter(nm => !SP.names.includes(nm)));
     splitDraw();
@@ -7426,6 +7548,7 @@ async function bigPage(doc, i, thumb, sp, cov) {
   const ctx = cv.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, cv.width, cv.height);
   try { await page.render({ canvasContext: ctx, viewport: vp, transform: sp ? spXf(sp, i, vp) : hide ? skewXf(cov.f, i, vp) : undefined }).promise; } catch {}
   if (hide) await anonPaint(ctx, cov.st, cov.f, i, page, vp, cov.turned);
+  const L = sp && spLight(sp, i); if (L) lightCanvas(ctx, cv.width, cv.height, L);
   if (d.isConnected) d.querySelector('img').src = cv.toDataURL('image/jpeg', .85);
 }
 function splitZoomClose() { const d = $('#spBig'); if (d) { window.removeEventListener('keydown', d._esc, true); d.remove(); } }
@@ -7488,7 +7611,11 @@ function splitGive(nm) {
   if (!nm) return;
   if (!SP.sel.size) return toast('Pick the pages first');
   const list = [...SP.sel].sort((a, b) => a - b);
-  for (const p of list) { SP.owner[p] = nm; SP.skip.delete(p); }
+  if (SP.several) {   // group work: the pages stay picked, so the next name clicked is added too
+    for (const p of list) { SP.skip.delete(p); if (!SP.owner[p]) SP.owner[p] = nm; else if (!spWho(SP, p).includes(nm)) (SP.more[p] ||= []).push(nm); }
+    return splitDraw();
+  }
+  for (const p of list) { SP.owner[p] = nm; delete SP.more[p]; SP.skip.delete(p); }
   SP.last = list.length;
   SP.sel = new Set();
   let nx = list[list.length - 1] + 1; while (nx < SP.n && !spFree(nx)) nx++;
@@ -7506,7 +7633,7 @@ function splitDraw() {
       '<img data-th="' + i + '" src="' + (SP.thumbs[i] || '') + '" alt="Page ' + (i + 1) + '" draggable="false">' +
       '<span class="sppick"></span><button class="spzoom" data-zoom title="See this page big">⤢</button><button class="spturn" data-spfix="right" title="Turn this page to the right" aria-label="Turn this page to the right">⟳</button><span class="spfl" data-fl="' + i + '">' + scanCard(i) + '</span>' +
       '<div class="spf"><span class="spno">' + (i + 1) + '</span>' +
-      (o || sk ? '<span class="spown">' + (sk ? 'Left out' : esc(o)) + '</span><button data-unpg title="Take this page back">×</button>' : '') + '</div></div>';
+      (o || sk ? (sk ? '<span class="spown">Left out</span>' : '<span class="spown" title="' + esc(spWho(SP, i).join(', ')) + '">' + esc(o) + (SP.more[i] ? ' +' + SP.more[i].length : '') + '</span>') + '<button data-unpg title="Take this page back">×</button>' : '') + '</div></div>';
   }).join('');
   splitDrawSel();
   splitDrawNames();
@@ -7526,11 +7653,12 @@ function splitDrawNames() {
   $('#spNames').innerHTML = (m.length ? m.map((i, k) => {
     const nm = SP.names[i], pg = spPagesOf(nm);
     return '<div class="spname' + (pg.length ? ' has' : '') + (q && k === 0 ? ' top' : '') + '" data-spn="' + i + '"><span class="spck">' + (pg.length ? '✓' : '') + '</span><b>' + esc(nm) + '</b>' +
-      (pg.length ? '<span class="muted">p. ' + spRange(pg) + '</span><button class="link" data-unall title="Take these pages back">undo</button>' : '') + '</div>';
+      (pg.length ? '<span class="muted">p. ' + spRange(pg) + (pg.some(p => SP.more[p]) ? ' · shared' : '') + (pg.some(p => SP.re.has(p)) ? ' · ⚑' : '') + '</span><button class="link" data-unall title="Take these pages back">undo</button>' : '') + '</div>';
   }).join('') : '<p class="muted" style="font-size:13px">' + (SP.names.length ? 'No name matches.' : 'Pick a class above, or add names.') + '</p>');
-  const given = SP.owner.filter(Boolean).length, left = SP.n - given - SP.skip.size, who = new Set(SP.owner.filter(Boolean)).size;
+  const given = SP.owner.filter(Boolean).length, left = SP.n - given - SP.skip.size, who = spAll(SP).length, shared = Object.keys(SP.more).length, re = SP.re.size;
   const none = SP.names.filter(nm => !spPagesOf(nm).length);
   $('#spFoot').innerHTML = who + (who === 1 ? ' student' : ' students') + ' · ' + given + ' of ' + SP.n + ' pages given' +
+    (shared ? ' · ' + shared + (shared === 1 ? ' page' : ' pages') + ' shared' : '') + (re ? ' · ' + re + (re === 1 ? ' page needs' : ' pages need') + ' a rescan' : '') +
     (left ? ' · <b style="color:var(--warn)">' + left + (left === 1 ? ' page' : ' pages') + ' not given to anyone yet (left out if you open now)</b>' : '') +
     (none.length && who ? ' · No pages: ' + esc(none.join(', ')) : '');
   $('#spGo').disabled = !who;
@@ -7548,12 +7676,14 @@ async function splitGo(btn) {
   btn.disabled = true; btn.textContent = 'Making each student’s paper…';
   const me = SP, src = await PDFLib.PDFDocument.load(me.data, { ignoreEncryption: true, updateMetadata: false });
   const file = ((me.asg && me.asg.name) || me.name).replace(/[\\/:*?"<>|]+/g, ' ').trim() || 'Scan';
-  const entries = [];
-  for (const nm of new Set(me.owner.filter(Boolean))) {
-    const out = await PDFLib.PDFDocument.create();
-    if (!src.isEncrypted) { for (const pg of await out.copyPages(src, spPagesOf(nm))) out.addPage(pg); }
-    else for (const i of spPagesOf(nm)) await rasterInto(out, me.doc, i, 200);   // a locked PDF copies as blank pages
-    const made = await out.save(); scanHint(me, made, spPagesOf(nm));
+  const entries = [], t0 = Date.now(), all = spAll(me), pagesOf = nm => me.owner.map((_, i) => spWho(me, i).includes(nm) ? i : -1).filter(i => i >= 0);
+  const wide = me.keepL && me.L && !Object.keys(me.Lp).length && !me.into;
+  for (const [k, nm] of all.entries()) {
+    const out = await PDFLib.PDFDocument.create(), mine = pagesOf(nm);
+    out.setModificationDate(new Date(t0 + k * 1000));   // group work: two students' copies of the same pages are still two files, each found again by its own bytes (the date is kept to the second)
+    if (!src.isEncrypted) { for (const pg of await out.copyPages(src, mine)) out.addPage(pg); }
+    else for (const i of mine) await rasterInto(out, me.doc, i, 200);   // a locked PDF copies as blank pages
+    const made = await out.save(); scanHint(me, made, mine, nm, me.keepL && !wide);
     entries.push({ path: nm.replace(/[\\/:*?"<>|]+/g, ' ').trim() + '/' + file + '.pdf', data: made });
   }
   SP = null; closeDlg(); me.doc.destroy();
@@ -7561,13 +7691,13 @@ async function splitGo(btn) {
     const c = me.classId ? classById(me.classId) : null, m = c ? rosterMatch(c.names) : new Map(), keep = batch.students[cur];
     let first = null;
     for (const e of entries) {
-      const nm = e.path.slice(0, e.path.indexOf('/')), owner = [...new Set(me.owner.filter(Boolean))].find(o => o.replace(/[\\/:*?"<>|]+/g, ' ').trim() === nm) || nm;
+      const nm = e.path.slice(0, e.path.indexOf('/')), owner = all.find(o => o.replace(/[\\/:*?"<>|]+/g, ' ').trim() === nm) || nm;
       let st = batch.students.find(x => x.key === owner) || m.get(owner);
       if (!st) { st = { key: nm, files: [], grade: { rubric: [], points: '', comment: '' }, layout: null, inc: {} }; batch.students.push(st); }
       await addFiles(st, [{ path: e.path, file: new File([e.data], me.name + '.pdf', { type: 'application/pdf' }) }], true);
       first ||= st;
     }
-    scanHintsAll();
+    scanHintsAll(); if (Object.keys(me.Lp).length || me.L) lightPagesChanged();
     rosterSort(); cur = Math.max(0, batch.students.indexOf(keep));
     setBatchName();
     saveNow(); renderList();
@@ -7575,7 +7705,10 @@ async function splitGo(btn) {
     return toast('Added pages for ' + entries.length + (entries.length === 1 ? ' student' : ' students'));
   }
   await intake(entries, me.name, me.asg);
+  if (wide && batch) { batch.light = { ...(batch.light || {}), '*': { ...me.L } }; batch.lightOpt = { ...lightOpts(), on: true }; }
   scanHintsAll();
+  if (batch && me.keepL && (me.L || Object.keys(me.Lp).length)) lightPagesChanged();
+  if (batch) renderList();   // the ⚑ and shared tags
   if (me.classId && batch) { batch.classId = me.classId; renderClassSel(); saveNow(); renderList(); }
 }
 
@@ -7874,6 +8007,7 @@ $('#colL').onclick = () => { const p = panelsNow(); setPanels(!p.L, p.R); };
 $('#colR').onclick = () => { const p = panelsNow(); setPanels(p.L, !p.R); };
 { const p = store.get('gs.panels', {}); setPanels(p.L, p.R); }
 $('#lightBtn').onclick = openLight;
+$('#rescanBtn').onclick = openRescans;
 $('#calcBtn').onclick = openCalc;
 $('#bringBtn').onclick = () => {
   askFilesOrFolder('Bring in files', 'Each file goes to its student by the name in its file name or folder name, for example your marked rubrics. You check the matches before anything is added.<br><br><b>Late work:</b> pick the late files, or the whole new download. What’s already here is left out, and you can mark anyone late as you add them.<br><br><b>A scan of papers</b> (like a makeup day): split it page by page onto names, and each student’s pages are added to them here.', bringIn);
@@ -7912,6 +8046,7 @@ document.addEventListener('keydown', e => {
     if (key === 'd' && selected) { e.preventDefault(); copyMark(true); pasteMark(); return; }
   }
   if (typing || e.metaKey || e.ctrlKey || e.altKey) return;
+  if (e.key === 'Escape' && once) { e.preventDefault(); endOnce(); return; }
   if (e.key === '?') { e.preventDefault(); openKeys(); return; }
   if ((e.key === '+' || e.key === '=' || e.key === '-' || e.key === '_') && selected && !(selected.fresh && selected.mark.t === 'text') && canResize(selected.mark)) { e.preventDefault(); stepSize(e.key === '+' || e.key === '=' ? 1 : -1); return; }
   if (e.key === '/') { e.preventDefault(); $('#stuFind').focus(); return; }
@@ -8690,10 +8825,69 @@ function placeStamp(pg, k, x, y) {
   store.set(RECENT_STAMPS, recent);
   return m;
 }
+function wordUnder(pg, x, y) {
+  if (!pg.tl || !pg.tl.length) return null;
+  const i = nearestSeg(pg.tl, x, y); if (i < 0) return null;
+  const s = pg.tl[i]; if (segFar(s, x, y)[0] > s.fh * 0.5) return null;
+  const w = wordAt(s, x); if (!w || x < w[0] - 4 || x > w[1] + 4) return null;
+  return { i, s, w };
+}
+function circleWord(pg, u) {
+  const { s, w } = u, px = Math.max(3, s.fh * 0.35), py = s.fh * 0.3;
+  const m = { t: 'oval', color: COLORS[inkColor], sw: Math.max(1.2, penW * 0.8), x: r1(w[0] - px), y: r1(s.top - py), w: r1(w[1] - w[0] + px * 2), h: r1(s.bot - s.top + py * 2) };
+  snap(pg); pg.marks().push(m); changed(pg); return m;
+}
+function highlightWord(pg, u, x) {
+  const m = setRects({ t: 'hl', color: HL[hlColor] }, snapRects(pg.tl, u.i, x, u.i, x));
+  snap(pg); pg.marks().push(m); changed(pg); return m;
+}
+function textBoxHere(pg, x, y) {
+  const m = { t: 'text', color: COLORS[inkColor], x: r1(Math.min(x, pg.W - 106)), y: r1(y - disp.tsize / 2), size: disp.tsize, text: '' };
+  m.bw = newTextW(pg, m.x); keepOnPage(m, pg.W, pg.H);
+  snap(pg); pg.marks().push(m); editText(pg, m, true);
+}
+
+/* ---------------- one go with a tool, from the right-click ---------------- */
+const toolName = k => (TOOLS.find(t => t[0] === k) || [k, k])[1];
+function dropOnce() { once = null; if (onceEl) { onceEl.remove(); onceEl = null; } }
+function startOnce(k, cx, cy) {
+  const prev = once ? once.prev : tool;
+  if (prev === k) { setTool(k); return; }   // already on it: nothing to come back to
+  setTool(k); once = { k, prev }; renderTools();
+  const el = document.createElement('div'); el.className = 'oncepill'; el.setAttribute('role', 'status');
+  el.innerHTML = k === 'pen' ? '<span>Writing with the pen</span><button type="button" data-done>Done</button>'
+    : '<span>' + (k === 'oval' ? 'Drag to circle once' : 'Drag to highlight once') + '</span><u>Esc to cancel</u>';
+  el.addEventListener('click', e => { if (e.target.closest('[data-done]')) endOnce(); });
+  document.body.append(el); onceEl = el;
+  const r = el.getBoundingClientRect();
+  el.style.left = Math.max(8, Math.min(cx + 14, innerWidth - r.width - 8)) + 'px';
+  el.style.top = Math.max(8, Math.min(cy + 18, innerHeight - r.height - 8)) + 'px';
+}
+function endOnce() { if (!once) return; const p = once.prev; dropOnce(); setTool(p); }
+
+/* ---------------- the menu itself ---------------- */
+const MI = {
+  del: '<path d="M5 7h14M10 7V5h4v2M7 7l1 12h8l1-12"/>', edit: '<path d="M4 20l4-1L19 8l-3-3L5 16z"/>',
+  punct: '<path d="M8 17.5v.5M16 6c0 3-3 3-3 6"/><path d="M13 17.5v.5"/>', proof: '<path d="M5 18l7-12 7 12"/>',
+  stick: '<rect x="4" y="4" width="16" height="16" rx="4"/><path d="M9 14c1.5 1.5 4.5 1.5 6 0"/><path d="M9 9.5h.01M15 9.5h.01"/>',
+};
 function openStampMenu(pg, x, y, cx, cy) {
   closeStampMenu();
-  const color = COLORS[inkColor], el = document.createElement('div');
+  const color = COLORS[inkColor], el = document.createElement('div'), u = wordUnder(pg, x, y);
+  const hit = hitMark(pg, x, y, 3), on = hit && !hit.ro ? hit : null, back = toolName(once ? once.prev : tool);
   el.className = 'stampmenu'; el.setAttribute('role', 'menu'); el.setAttribute('aria-label', 'Add a mark');
+  const item = (attrs, icon, label, opts = {}) => {
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'st-item' + (opts.cls ? ' ' + opts.cls : ''); b.setAttribute('role', 'menuitem');
+    for (const [k, v] of Object.entries(attrs)) b.dataset[k] = v;
+    if (opts.title) b.title = opts.title;
+    if (typeof icon === 'string') b.insertAdjacentHTML('beforeend', svg(icon)); else if (icon) b.append(icon);
+    const t = document.createElement('span'); t.className = 'st-lb'; t.textContent = label;
+    if (opts.sub) { const sm = document.createElement('small'); sm.textContent = opts.sub; t.append(sm); }
+    b.append(t);
+    if (attrs.sub) { b.setAttribute('aria-haspopup', 'menu'); b.setAttribute('aria-expanded', 'false'); b.insertAdjacentHTML('beforeend', '<span class="st-chev" aria-hidden="true">›</span>'); }
+    return b;
+  };
+  const sep = () => { const d = document.createElement('div'); d.className = 'st-sep'; return d; };
   const btn = (k, sticker) => {
     const b = document.createElement('button'); b.type = 'button'; b.className = sticker ? 'st-stick' : 'st-proof'; b.dataset.mark = k;
     b.setAttribute('role', 'menuitem'); b.title = stampName(k); b.setAttribute('aria-label', stampName(k));
@@ -8703,24 +8897,81 @@ function openStampMenu(pg, x, y, cx, cy) {
   };
   const head = t => { const h = document.createElement('div'); h.className = 'st-head'; h.textContent = t; return h; };
   const grid = (cls, list, sticker) => { const g = document.createElement('div'); g.className = cls; for (const k of list) g.append(btn(k, sticker)); return g; };
-  const tick = document.createElement('button'); tick.type = 'button'; tick.className = 'st-proof st-tick'; tick.dataset.tick = '1'; tick.setAttribute('role', 'menuitem'); tick.title = 'Check mark';
-  const tc = document.createElement('canvas'), dpr = window.devicePixelRatio || 1; tc.width = tc.height = Math.round(34 * dpr); tc.style.width = tc.style.height = '34px';
-  const tx = tc.getContext('2d'); tx.scale(dpr, dpr); drawCheck(tx, { t: 'check', color, x: 17, y: 18, size: 22 });
-  const tl = document.createElement('span'); tl.textContent = 'Check mark'; tick.append(tc, tl); el.append(tick);
+  const fly = (name, label, ...kids) => { const f = document.createElement('div'); f.className = 'st-fly'; f.dataset.fly = name; f.setAttribute('role', 'menu'); f.setAttribute('aria-label', label); f.hidden = true; f.append(...kids); return f; };
+
+  if (on) {
+    el.append(item({ act: 'del' }, MI.del, 'Delete this mark'));
+    if (on.t === 'note' || on.t === 'text') el.append(item({ act: 'edit' }, MI.edit, on.t === 'note' ? 'Edit this comment' : 'Edit this text'));
+    el.append(sep());
+  }
+  el.append(item({ note: '1' }, IC.note, 'Add a comment here', { cls: 'st-pri' }));
+  const tc = document.createElement('canvas'), dpr = window.devicePixelRatio || 1; tc.width = tc.height = Math.round(22 * dpr); tc.style.width = tc.style.height = '22px';
+  const tx = tc.getContext('2d'); tx.scale(dpr, dpr); drawCheck(tx, { t: 'check', color, x: 11, y: 12, size: 16 });
+  el.append(item({ tick: '1' }, tc, 'Check mark', { title: 'Check mark' }));
   const recent = store.get(RECENT_STAMPS, []).filter(k => isSticker(k) || isProof(k));
-  if (recent.length) { el.append(head('Recent')); const g = document.createElement('div'); g.className = 'st-recent'; for (const k of recent) { const b = btn(k, true); b.className = isSticker(k) ? 'st-stick' : 'st-stick st-mini'; g.append(b); } el.append(g); }
+  if (recent.length) {
+    const g = document.createElement('div'); g.className = 'st-recent'; g.innerHTML = '<span class="st-rl">Recent</span>';
+    for (const k of recent) { const b = btn(k, true); b.className = isSticker(k) ? 'st-stick' : 'st-stick st-mini'; g.append(b); }
+    el.append(g);
+  }
+  el.append(sep());
+  const drawOnce = 'Drag once, then back to ' + back;
+  if (u) el.append(item({ sub: 'circle' }, IC.oval, 'Circle'));
+  else el.append(item({ act: 'oval' }, IC.oval, 'Draw a circle', { title: drawOnce }));
+  el.append(item({ sub: 'hl' }, IC.hl, 'Highlight'));
+  el.append(item({ act: 'text' }, IC.text, 'Text box here'));
+  el.append(item({ act: 'pen' }, IC.pen, 'Write with the pen', { title: 'The pen until you press Done or Esc, then back to ' + back }));
+  el.append(sep());
+  el.append(item({ sub: 'punct' }, MI.punct, 'Punctuation'), item({ sub: 'proof' }, MI.proof, 'Proofreading marks'), item({ sub: 'stick' }, MI.stick, 'Stickers'));
+  el.append(sep());
+  const inks = document.createElement('div'); inks.className = 'st-inks'; inks.innerHTML = '<span class="st-rl">Ink</span>';
+  for (const [k, v] of Object.entries(COLORS)) { const b = document.createElement('button'); b.type = 'button'; b.className = 'st-sw'; b.dataset.inkPick = k; b.style.background = v; b.title = k; b.setAttribute('aria-label', 'Ink ' + k); b.setAttribute('aria-pressed', k === inkColor); inks.append(b); }
+  el.append(inks);
+
+  if (u) el.append(fly('circle', 'Circle', item({ act: 'circleWord' }, IC.oval, 'Circle this word', { sub: 'One click' }), item({ act: 'oval' }, IC.oval, 'Draw a circle', { sub: drawOnce })));
+  const hls = document.createElement('div'); hls.className = 'st-hls';
+  for (const [k, v] of Object.entries(HL)) { const b = document.createElement('button'); b.type = 'button'; b.className = 'st-sw sq'; b.dataset.hlc = k; b.style.background = v; b.title = k; b.setAttribute('aria-label', 'Highlight ' + k); b.setAttribute('aria-pressed', k === hlColor); hls.append(b); }
+  el.append(fly('hl', 'Highlight', ...(u ? [item({ act: 'hlWord' }, IC.hl, 'Highlight this word', { sub: 'One click' })] : []), item({ act: 'hl' }, IC.hl, 'Draw a highlight', { sub: drawOnce }), hls));
   const punct = document.createElement('div'); punct.className = 'st-puncs';
   for (const [k, , short] of PUNCT) {
     const b = btn(k, true); b.className = 'st-punc'; b.firstChild.replaceWith(stampPicture(k, color, true));
     const s = document.createElement('span'); s.textContent = short; b.append(s); punct.append(b);
   }
-  el.append(head('Punctuation'), punct);
-  el.append(head('Proofreading marks'), grid('st-proofs', PROOF.map(p => p[0]), false));
-  el.append(head('Stickers'), grid('st-sticks', STICKERS.filter(s => !BRAINROT.has(s[0])).map(s => s[0]), true));
-  el.append(head('Just for fun'), grid('st-sticks', STICKERS.filter(s => BRAINROT.has(s[0])).map(s => s[0]), true));
-  const note = document.createElement('button'); note.type = 'button'; note.className = 'st-note'; note.dataset.note = '1'; note.setAttribute('role', 'menuitem'); note.textContent = 'Add a comment here';
-  el.append(note);
+  el.append(fly('punct', 'Punctuation', head('Punctuation'), punct));
+  el.append(fly('proof', 'Proofreading marks', head('Proofreading marks'), grid('st-proofs', PROOF.map(p => p[0]), false)));
+  el.append(fly('stick', 'Stickers', head('Stickers'), grid('st-sticks', STICKERS.filter(s => !BRAINROT.has(s[0])).map(s => s[0]), true),
+    head('Just for fun'), grid('st-sticks', STICKERS.filter(s => BRAINROT.has(s[0])).map(s => s[0]), true)));
+
+  let flyRow = null, flyT = 0;
+  const hideFly = () => {
+    if (!flyRow) return;
+    el.querySelector('[data-fly="' + flyRow.dataset.sub + '"]').hidden = true;
+    flyRow.classList.remove('on'); flyRow.setAttribute('aria-expanded', 'false'); flyRow = null;
+  };
+  const showFly = (row, focus) => {
+    clearTimeout(flyT);
+    if (flyRow !== row) {
+      hideFly();
+      const f = el.querySelector('[data-fly="' + row.dataset.sub + '"]'); f.hidden = false;
+      const rr = row.getBoundingClientRect(), mr = el.getBoundingClientRect(), fr = f.getBoundingClientRect(), vw = innerWidth, vh = innerHeight;
+      let left = mr.right + 4; if (left + fr.width > vw - 8) left = mr.left - 4 - fr.width;
+      f.style.left = Math.max(8, left) + 'px'; f.style.top = Math.max(8, Math.min(rr.top - 7, vh - fr.height - 8)) + 'px';
+      row.classList.add('on'); row.setAttribute('aria-expanded', 'true'); flyRow = row;
+    }
+    if (focus) { const first = el.querySelector('[data-fly="' + row.dataset.sub + '"] button'); if (first) first.focus({ preventScroll: true }); }
+  };
+  el.addEventListener('mouseover', e => {
+    if (e.target.closest('.st-fly')) { clearTimeout(flyT); return; }
+    const row = e.target.closest('button'); if (!row || row === flyRow) { clearTimeout(flyT); return; }
+    clearTimeout(flyT);
+    flyT = setTimeout(() => { if (!el.isConnected) return; if (row.dataset.sub) showFly(row); else hideFly(); }, flyRow ? 220 : 60);
+  });
   el.addEventListener('click', e => {
+    const sub = e.target.closest('[data-sub]'); if (sub) { showFly(sub, e.detail === 0); return; }
+    const ink = e.target.closest('[data-ink-pick]');
+    if (ink) { inkColor = ink.dataset.inkPick; store.set('gs.ink', inkColor); renderTools(); openStampMenu(pg, x, y, cx, cy); return; }   // drawn again, in the new color
+    const hc = e.target.closest('[data-hlc]');
+    if (hc) { hlColor = hc.dataset.hlc; store.set('gs.hl', hlColor); renderTools(); for (const s of el.querySelectorAll('[data-hlc]')) s.setAttribute('aria-pressed', s === hc); return; }
     const b = e.target.closest('[data-mark]');
     if (b) { closeStampMenu(); const m = placeStamp(pg, b.dataset.mark, x, y); selected = { page: pg, mark: m, fresh: true }; redrawAll(); return; }
     if (e.target.closest('[data-tick]')) {
@@ -8728,25 +8979,41 @@ function openStampMenu(pg, x, y, cx, cy) {
       const m = { t: 'check', color: COLORS[inkColor], x: r1(x), y: r1(y), size: newCheckSize() };
       snap(pg); pg.marks().push(m); selected = { page: pg, mark: m, fresh: true }; changed(pg); redrawAll(); return;
     }
-    if (e.target.closest('[data-note]')) { closeStampMenu(); openNote(pg, { t: 'note', color: COLORS[inkColor], ax: r1(x), ay: r1(y), text: '' }, true); }
+    if (e.target.closest('[data-note]')) { closeStampMenu(); openNote(pg, { t: 'note', color: COLORS[inkColor], ax: r1(x), ay: r1(y), text: '' }, true); return; }
+    const a = e.target.closest('[data-act]'); if (!a) return;
+    closeStampMenu();
+    switch (a.dataset.act) {
+      case 'del': { const arr = pg.marks(), i = arr.indexOf(on); if (i >= 0) { snap(pg); arr.splice(i, 1); if (selected && selected.mark === on) selected = null; changed(pg); redrawAll(); } break; }
+      case 'edit': editMark(pg, on); break;
+      case 'circleWord': { const m = circleWord(pg, u); selected = { page: pg, mark: m, fresh: true }; redrawAll(); break; }
+      case 'hlWord': highlightWord(pg, u, x); redrawAll(); break;
+      case 'text': textBoxHere(pg, x, y); break;
+      case 'oval': case 'hl': case 'pen': startOnce(a.dataset.act, cx, cy); break;
+    }
   });
   el.addEventListener('keydown', e => {
-    if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); closeStampMenu(); pg.canvas.focus && pg.canvas.focus({ preventScroll: true }); return; }
-    const items = [...el.querySelectorAll('button')], i = items.indexOf(document.activeElement);
-    if (e.key === 'ArrowDown' || e.key === 'ArrowRight') { e.preventDefault(); items[(i + 1) % items.length].focus(); }
-    if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') { e.preventDefault(); items[(i - 1 + items.length) % items.length].focus(); }
+    const inFly = document.activeElement && document.activeElement.closest('.st-fly');
+    if (e.key === 'Escape' || (e.key === 'ArrowLeft' && inFly)) {
+      e.preventDefault(); e.stopPropagation();
+      if (inFly && flyRow) { const r = flyRow; hideFly(); r.focus({ preventScroll: true }); return; }
+      closeStampMenu(); pg.canvas.focus && pg.canvas.focus({ preventScroll: true }); return;
+    }
+    if (!inFly && e.key === 'ArrowRight' && document.activeElement.dataset.sub) { e.preventDefault(); showFly(document.activeElement, true); return; }
+    const scope = inFly || el, items = [...scope.querySelectorAll('button')].filter(b => !b.closest('.st-fly') === !inFly && !b.closest('[hidden]')), i = items.indexOf(document.activeElement);
+    if (e.key === 'ArrowDown' || (inFly && e.key === 'ArrowRight')) { e.preventDefault(); items[(i + 1) % items.length].focus(); }
+    if (e.key === 'ArrowUp' || (inFly && e.key === 'ArrowLeft')) { e.preventDefault(); items[(i < 0 ? items.length - 1 : i - 1 + items.length) % items.length].focus(); }
   });
   document.body.append(el);
   stampMenuEl = el;
   const r = el.getBoundingClientRect(), vw = window.innerWidth, vh = window.innerHeight;
   el.style.left = Math.max(8, Math.min(cx, vw - r.width - 8)) + 'px';
   el.style.top = Math.max(8, Math.min(cy, vh - r.height - 8)) + 'px';
-  (el.querySelector('button') || el).focus({ preventScroll: true });
+  el.tabIndex = -1; el.focus({ preventScroll: true });   // the arrow keys go from here; no ring around the first line for the mouse
 }
 document.addEventListener('pointerdown', e => { if (stampMenuEl && !stampMenuEl.contains(e.target)) closeStampMenu(); }, true);
 window.addEventListener('blur', closeStampMenu);
 document.addEventListener('scroll', closeStampMenu, true);
-Object.assign(window.__gs, { turnMarks, drawStamp, stampBox, placeStamp, openStampMenu, closeStampMenu, stickersReady, STAMP_KINDS: { proof: PROOF.map(p => p[0]), punct: PUNCT.map(p => p[0]), stickers: STICKERS.map(s => s[0]) } });
+Object.assign(window.__gs, { turnMarks, drawStamp, stampBox, placeStamp, openStampMenu, closeStampMenu, endOnce, once: () => once && { ...once }, stickersReady, STAMP_KINDS: { proof: PROOF.map(p => p[0]), punct: PUNCT.map(p => p[0]), stickers: STICKERS.map(s => s[0]) } });
 
 /* ---------------- scores: statuses, when a score last changed, partial scores, doubtful readings, the pre-export check, safe CSV ---------------- */
 const STATUS_LABEL = { missing: 'Missing', excused: 'Excused', late: 'Late' };
@@ -8787,8 +9054,13 @@ function setStatus(st, s) {
   touchGrade(st); saveSoon(); renderGrade(); renderList();
 }
 function statusHtml(st) {
-  const on = st.grade.status || '';
-  return '<div class="gstat" id="gstat"><span class="muted">Mark as</span><span class="seg">' + Object.keys(STATUS_LABEL).map(k => '<button data-status="' + k + '" aria-pressed="' + (on === k) + '">' + STATUS_LABEL[k] + '</button>').join('') + '</span></div>';
+  const on = st.grade.status || '', out = !!st.grade.outAvg;
+  return '<div id="gstat"><div class="gstat"><span class="muted">Mark as</span><span class="seg">' + Object.keys(STATUS_LABEL).map(k => '<button data-status="' + k + '" aria-pressed="' + (on === k) + '">' + STATUS_LABEL[k] + '</button>').join('') + '</span></div>' +
+    (noScore(st) ? '' : '<button class="outsw" id="outAvg" role="switch" aria-checked="' + out + '"><i></i><span><b>Leave out of the average</b><small>The score stays and still copies. It doesn’t count in the average, Class overview or Consistency check.</small></span></button>') + '</div>';
+}
+function setOutAvg(st) {
+  if (st.grade.outAvg) delete st.grade.outAvg; else st.grade.outAvg = true;
+  touchGrade(st); saveSoon(); renderGrade(); renderList();
 }
 
 /* ---------------- partial scores ---------------- */
@@ -8817,11 +9089,12 @@ const cellCopy = (g, k) => g.status === 'missing' || g.status === 'excused' ? (k
 function statusText(st) {
   const g = gradeOf(st), out = [];
   if (g.status) out.push(STATUS_LABEL[g.status]);
+  if (g.out) out.push('Left out of the average');
   if (g.partial) out.push('Partial: ' + partNote(st));
   return out.join(', ');
 }
 function statusPills(g) {
-  return (g.status ? ' <span class="stag">' + STATUS_LABEL[g.status].toLowerCase() + '</span>' : '') + (g.partial ? ' <span class="stag">partial</span>' : '');
+  return (g.status ? ' <span class="stag">' + STATUS_LABEL[g.status].toLowerCase() + '</span>' : '') + (g.out ? ' <span class="stag out">left out</span>' : '') + (g.partial ? ' <span class="stag">partial</span>' : '');
 }
 function gradesSummary() {
   const all = batch.students, on = all.filter(s => !noScore(s)), nOff = all.length - on.length, nPart = on.filter(s => gradeOf(s).partial).length;
@@ -9756,19 +10029,20 @@ function spreadBins(counted, max) {
   return bins;
 }
 function classStats() {
-  const max = maxPoints(), s = { counted: [], partial: [], notScored: [], missing: [], excused: [], offScale: [], ownOff: [], rosterOnly: [], rows: [] };
+  const max = maxPoints(), s = { counted: [], partial: [], notScored: [], missing: [], excused: [], offScale: [], ownOff: [], leftOut: [], rosterOnly: [], rows: [] };
   batch.students.forEach((st, i) => {
     const g = gradeOf(st), who = { i, name: shownName(st, i) };
     if (g.status === 'missing' || g.status === 'excused') s[g.status].push(who);
     else if (g.partial) s.partial.push({ ...who, note: partNote(st) });
     else if (!g.done || (g.total == null && g.pct == null)) s.notScored.push({ ...who, note: !st.files.length ? 'No paper' : st.foundCount > 1 || (st.doubts && st.doubts.length) ? 'A grade on the paper to confirm' : '' });
+    else if (g.out) s.leftOut.push(who);   // left out of the average by the teacher; one with no score yet is still "not scored"
     else if (!onThisScale(st, g, max) && !g.paper) s.ownOff.push({ ...who, note: 'You gave ' + fmtNum(g.total) + ', out of ' + fmtNum(max) });
     else if (!onThisScale(st, g, max)) s.offScale.push({ ...who, note: g.total != null ? 'The paper says ' + (g.paper && st.found && st.found.outOf != null ? fmtNum(g.total) + ' out of ' + fmtNum(st.found.outOf) : fmtNum(g.total)) : 'The paper says ' + fmtPct(g.pct) });
     else s.counted.push({ ...who, total: g.total, pct: g.pct, late: g.status === 'late', paper: !!g.paper });
   });
   const c = batchClass();
   if (c && c.names.length) { const m = rosterMatch(c.names); s.rosterOnly = c.names.filter(n => !m.has(n)); }
-  if (anonOn()) for (const k of ['counted', 'partial', 'notScored', 'missing', 'excused', 'offScale', 'ownOff']) s[k].sort((a, b) => natural(a.name, b.name));   // never in folder order while names are hidden
+  if (anonOn()) for (const k of ['counted', 'partial', 'notScored', 'missing', 'excused', 'offScale', 'ownOff', 'leftOut']) s[k].sort((a, b) => natural(a.name, b.name));   // never in folder order while names are hidden
   const tot = s.counted.map(x => x.total).sort((a, b) => a - b), n = tot.length, pcts = s.counted.map(x => x.pct).filter(v => v != null);
   const mean = a => a.reduce((x, y) => x + y, 0) / a.length;
   s.n = n; s.everyone = batch.students.length + s.rosterOnly.length; s.max = max;
@@ -9777,7 +10051,7 @@ function classStats() {
   s.bins = spreadBins(s.counted, max);
   if (setup.mode === 'rubric') {
     s.rows = setup.criteria.map((name, r) => {
-      const v = batch.students.map(st => rowShown(st, r)).filter(x => x != null);
+      const v = batch.students.map(st => st.grade.outAvg ? null : rowShown(st, r)).filter(x => x != null);
       return { r, name, n: v.length, avg: v.length ? mean(v) : null, low: v.filter(x => x <= 2).length };
     }).sort((a, b) => (a.avg == null ? 9 : a.avg) - (b.avg == null ? 9 : b.avg) || a.r - b.r);
     const av = s.rows.filter(x => x.n).map(x => x.avg), least = Math.min(...av);
@@ -9789,7 +10063,7 @@ function classStats() {
 const oneDp = v => fmtNum(Math.round(v * 10) / 10);
 const people = (n, one, many) => n + ' ' + (n === 1 ? one : many || one + 's');
 function leftOutText(s) {
-  const parts = [[s.missing.length, 'marked missing'], [s.excused.length, 'excused'], [s.partial.length, 'partial'], [s.notScored.length, 'not scored yet'], [s.offScale.length, 'from the paper, not on this scale'], [s.ownOff.length, 'above the total or below 0'], [s.rosterOnly.length, 'on the roster with nothing here']].filter(p => p[0]).map(p => p[0] + ' ' + p[1]);
+  const parts = [[s.missing.length, 'marked missing'], [s.excused.length, 'excused'], [s.partial.length, 'partial'], [s.notScored.length, 'not scored yet'], [s.offScale.length, 'from the paper, not on this scale'], [s.ownOff.length, 'above the total or below 0'], [s.leftOut.length, 'left out of the average by you'], [s.rosterOnly.length, 'on the roster with nothing here']].filter(p => p[0]).map(p => p[0] + ' ' + p[1]);
   let t = 'Counted: ' + s.n + ' of ' + people(s.everyone, 'student') + '.';
   if (parts.length) t += ' Left out: ' + parts.join(', ') + '.';
   if (s.missing.length || s.excused.length) t += ' Missing and excused don’t count as 0.';
@@ -9832,7 +10106,7 @@ function rowsHtml(s) {
 function whoHtml(s) {
   const item = o => '<li><button class="link" data-ovgo="' + o.i + '">' + esc(o.name) + '</button>' + (o.note ? ' <span class="muted">' + esc(o.note) + '</span>' : '') + '</li>';
   const late = s.counted.filter(x => x.late);
-  const groups = [['Not scored yet', s.notScored], ['Partial: some rows scored', s.partial], ['Marked missing', s.missing], ['Excused', s.excused], ['Read from the paper, not on this scale', s.offScale], ['Your score is above the total or below 0', s.ownOff], ['Late, and counted', late]].filter(g => g[1].length);
+  const groups = [['Not scored yet', s.notScored], ['Partial: some rows scored', s.partial], ['Marked missing', s.missing], ['Excused', s.excused], ['Read from the paper, not on this scale', s.offScale], ['Your score is above the total or below 0', s.ownOff], ['Left out of the average by you', s.leftOut], ['Late, and counted', late]].filter(g => g[1].length);
   let h = groups.map(([t, list]) => '<details class="ovg" data-group="' + esc(t) + '" open><summary>' + esc(t) + ' (' + list.length + ')</summary><ul>' + list.map(item).join('') + '</ul></details>').join('');
   if (s.rosterOnly.length) h += '<details class="ovg" data-group="On the roster" open><summary>On the roster, nothing here (' + s.rosterOnly.length + ')</summary>' + (anonOn() ? '<p class="muted" style="margin:4px 0 0">Names stay hidden during anonymous grading.</p>' : '<ul>' + s.rosterOnly.map(n => '<li>' + esc(n) + '</li>').join('') + '</ul>') + '</details>';
   const open = s.notScored.length + s.partial.length + s.rosterOnly.length;
@@ -10606,7 +10880,7 @@ function consData() {
   const timed = [], noTime = [], groups = new Map(), order = anonOn() ? anonOrder() : batch.students.map((_, i) => i);
   for (const i of order) {
     const st = batch.students[i], g = gradeOf(st);
-    if (noScore(st) || !g.done || g.total == null) continue;
+    if (noScore(st) || !g.done || g.total == null || g.out) continue;
     const out = g.paper && st.found && st.found.outOf != null && st.found.outOf !== maxPoints() ? st.found.outOf : null, key = out == null ? g.total : g.total + '/' + out;   // 10 out of 15 isn't the same score as 10 out of 12
     if (!groups.has(key)) groups.set(key, []);
     groups.get(key).push(i);
@@ -10620,7 +10894,7 @@ function rowDrifts() {
   const max = 4, cut = 0.05 / setup.criteria.length;
   return setup.criteria.map((name, r) => {
     const pts = [];
-    for (const st of batch.students) { const v = st.grade.rubric[r], t = st.grade.atR && st.grade.atR[r]; if (!noScore(st) && v != null && t) pts.push({ v, t }); }
+    for (const st of batch.students) { const v = st.grade.rubric[r], t = st.grade.atR && st.grade.atR[r]; if (!noScore(st) && !st.grade.outAvg && v != null && t) pts.push({ v, t }); }
     const { out } = dropBatched(pts.sort((a, b) => a.t - b.t));
     return { name, read: driftRead(out.map(p => p.v), max, cut) };
   });
@@ -11051,11 +11325,12 @@ function scanFree(f, p) {
 }
 async function scanCheck(f, p, page) {
   if (f.virtual) return;
-  scanTakeHint(f);
+  scanTakeHint(f, batch.students[cur]);
   if (!f.sc) f.sc = {};
-  if (f.sc[p]) return;
+  if (f.sc[p] && !f.sc[p].later) return;
   let rec;
   try { rec = await scanLook(page, rotOf(f, p)); } catch (e) { return; }   // she moved on, which closes this student's files
+  const was = f.sc[p]; if (was) { delete was.later; Object.assign(rec, was); }   // a rescan flag or group work set before the page was looked at
   f.sc[p] = rec;
   if (rec.typed) return;
   if (scanFree(f, p)) {
@@ -11085,7 +11360,7 @@ function scanSave() {
     if (!f.sc) continue;
     const rec = {}, at = {};
     for (const [p, r] of Object.entries(f.sc)) {
-      if (r.typed) continue;
+      if (r.typed && !r.re && !r.w) continue;
       rec[p] = r;
       const o = {};
       if (r.didTurn && rotOf(f, p) === r.didTurn && !scanMine(f, 'didTurn', p, r.didTurn)) o.r = r.didTurn;
@@ -11163,8 +11438,11 @@ function scanNote(pg) {
   const f = pg.file, p = pg.idx, r = f.sc && f.sc[p];
   const was = pg.rchip && pg.rchip.querySelector('[data-scun]'); if (was) was.remove();
   if (pg.rchip && skewOf(f, p)) pg.rchip.insertAdjacentHTML('beforeend', '<button data-scun title="Put this page back as it was scanned" aria-label="Put this page back as it was scanned">⟂</button>');
-  if (!r || r.typed) return;
+  if (!r) return;
   const off = r.off || {}, lines = [], btn = (a, t) => '<button class="link" data-sc="' + a + '">' + t + '</button>';
+  if (r.re) lines.push('⚑ This page needs a rescan. You can still mark and score it.' + btn('rescan', 'Bring in the rescan…') + btn('unre', 'It’s fine now'));
+  if (r.w && r.w.length && !anonOn()) lines.push('Group work: this page also went to ' + esc(r.w.join(', ')) + '. Your marks here stay on this copy.');
+  if (r.typed) return scanNoteOut(pg, lines, r.re);
   const turned = !!r.didTurn && rotOf(f, p) === r.didTurn, straight = !!skewOf(f, p);
   if ((turned || straight) && !off.done) lines.push((turned && straight ? 'Turned and straightened this page.' : turned ? 'Turned this page so it reads the right way up.' : 'Straightened this page.') + btn('back', 'Put back') + btn('done', 'Looks right'));
   if (scanAsks(f, p, r) && !off.turn) lines.push((r.turn === 180 ? 'This page may be upside down.' : 'This page may be on its side.') + btn('turn', 'Turn it') + btn('noturn', 'It’s fine'));
@@ -11175,9 +11453,36 @@ function scanNote(pg) {
   if (r.lit && !live) delete r.lit;   // she switched it off herself
   if (r.lit) lines.push('Lighting is on for this student.' + btn('unlit', 'Put back') + btn('lit', 'Looks right'));
   else if (r.faint && !off.faint && !live) lines.push('This page looks faint.' + btn('light', 'Fix the lighting') + btn('nofaint', 'It’s fine'));
+  scanNoteOut(pg, lines, r.re);
+}
+function scanNoteOut(pg, lines, re) {
   if (!lines.length) return;
-  const el = document.createElement('div'); el.className = 'scnote'; el.innerHTML = lines.map(t => '<div>' + t + '</div>').join('');
+  const el = document.createElement('div'); el.className = 'scnote' + (re ? ' re' : ''); el.innerHTML = lines.map(t => '<div>' + t + '</div>').join('');
   pg.wrap.before(el); pg.snote = el;
+}
+function scanFlag(pg) {
+  const f = pg.file; if (f.virtual) return;
+  const r = (f.sc ||= {})[pg.idx] ||= { later: 1 };
+  if (r.re) delete r.re; else r.re = 1;
+  toast(r.re ? 'Flagged for a rescan. Rescans under More lists everyone waiting.' : 'Rescan flag taken off');
+  saveSoon(); scanNote(pg); renderList();
+}
+const scanRescans = () => batch ? batch.students.flatMap((st, i) => st.files.flatMap(f => Object.entries(f.sc || {}).filter(([, r]) => r.re).map(([p]) => ({ i, st, f, p: +p })))) : [];
+function openRescans() {
+  const all = scanRescans(), by = new Map();
+  for (const x of all) { if (!by.has(x.i)) by.set(x.i, []); by.get(x.i).push(x); }
+  const order = [...by.keys()].sort((a, b) => anonOn() ? anonPos(a) - anonPos(b) : a - b);
+  const line = i => shownName(batch.students[i], i) + ': ' + by.get(i).map(x => 'page ' + (x.p + 1) + ' of ' + fileShown(x.st, x.f.name)).join(', ');
+  openDlg('<div class="bh"><h2>Rescans' + (all.length ? ' (' + by.size + ')' : '') + '</h2><button class="icon" data-cancel aria-label="Close" style="margin-left:auto">✕</button></div>' +
+    '<div class="bb">' + (all.length ? '<p class="muted" style="margin:0 0 10px;font-size:14px">Pages you flagged as needing a rescan. Click a name to go to that paper. When the rescan comes in, add it to the student or split it in with Bring in files, then press It’s fine now on the old page.</p>' +
+      order.map(i => '<button class="mvrow" data-rsgo="' + i + '">' + esc(shownName(batch.students[i], i)) + '<span class="muted">' + by.get(i).map(x => 'p. ' + (x.p + 1)).join(', ') + '</span></button>').join('')
+      : '<p class="muted" style="margin:0">No pages are waiting on a rescan. Flag one with ⚑ Needs rescan in the split, or ⚑ in a page’s corner.</p>') + '</div>' +
+    '<div class="bf">' + (all.length ? '<button class="btn" data-rscopy style="margin-right:auto">Copy the list</button>' : '') + '<button class="btn" data-cancel>Close</button></div>', true);
+  $('#dlgBox').onclick = e => {
+    if (e.target.closest('[data-cancel]')) return closeDlg();
+    if (e.target.closest('[data-rscopy]')) return copy(order.map(line).join('\n'), 'Copied the list');
+    const g = e.target.closest('[data-rsgo]'); if (g) { closeDlg(); openStudent(+g.dataset.rsgo); }
+  };
 }
 $('#paper').addEventListener('click', e => {
   const un = e.target.closest('[data-scun]');
@@ -11193,6 +11498,8 @@ $('#paper').addEventListener('click', e => {
   else if (a === 'skew') scanStraighten(pg, r.skew);
   else if (a === 'light') scanLight(pg, r);
   else if (a === 'unlit') { off.faint = 1; scanLightBack(r); }
+  else if (a === 'unre') { delete r.re; renderList(); }
+  else if (a === 'rescan') { pickAdd(batch.students[cur]); return; }
   else if (a === 'lit') { delete r.lit; off.faint = 1; for (const o of scanLits(r)) o.lit.on = true; }   // she wants Lighting on now, whichever page goes back
   else off[a.slice(2)] = 1;   // noturn, noskew, noblank, nofaint
   saveSoon();
@@ -11212,8 +11519,11 @@ async function scanSplitLook(me, i, page) {
   const el = SP === me && document.querySelector('#spPages [data-fl="' + i + '"]'); if (el) el.innerHTML = scanCard(i);
 }
 function scanCard(i) {
-  const r = SP.sc[i]; if (!r) return '';
-  const off = r.off || {}, turned = !!r.didTurn && SP.rot[i] === r.didTurn, straight = !!SP.skew[i], out = [];
+  const r = SP.sc[i], out = [];
+  if (SP.re.has(i)) out.push('<button class="spre" data-spfix="unre" title="Take the rescan flag off">⚑ Needs rescan</button>');
+  if (spLight(SP, i)) out.push('<span title="Lighting is on for this page. The scan itself isn’t changed.">☀ Lighting</span>');
+  if (!r) return out.join('');
+  const off = r.off || {}, turned = !!r.didTurn && SP.rot[i] === r.didTurn, straight = !!SP.skew[i];
   if (turned || straight) out.push('<button data-spfix="back" title="Put this page back as it was scanned">' + (turned && straight ? 'Turned, straightened' : turned ? 'Turned' : 'Straightened') + ' · put back</button>');
   if (r.turn && !r.didTurn && !SP.rot[i] && !off.turn) out.push('<button data-spfix="turn">' + (r.turn === 180 ? 'Upside down?' : 'On its side?') + ' Turn it</button>');
   else if (r.side && !r.turn && !SP.rot[i] && !off.turn) out.push('<button data-spfix="right">On its side? Turn it</button>');
@@ -11239,6 +11549,7 @@ function scanDarken(ctx, w, h) {
   ctx.putImageData(im, 0, 0);
 }
 function scanSplitFix(i, how) {
+  if (how === 'unre') { SP.re.delete(i); return splitDraw(); }
   const r = SP.sc[i] || (SP.sc[i] = { typed: 1 }), off = r.off ||= {};
   if (how === 'back') { if (r.didTurn && SP.rot[i] === r.didTurn) { delete SP.rot[i]; off.turn = 1; } if (SP.skew[i]) { delete SP.skew[i]; off.skew = 1; } }
   else if (how === 'turn') { SP.rot[i] = r.turn; r.didTurn = r.turn; }   // shows the same tag as a page turned by itself, with its way back
@@ -11253,19 +11564,99 @@ function scanSplitSays(me) {
 }
 const scanHints = new Map();
 function scanBytes(d) { let h = 0x811c9dc5; for (let i = 0; i < d.length; i++) h = Math.imul(h ^ d[i], 16777619); return d.length + ':' + (h >>> 0); }
-function scanHint(me, bytes, list) {
-  const pages = {}; list.forEach((i, j) => { pages[j] = { rec: me.sc[i] || null, rot: me.rot[i] || 0, skew: me.skew[i] || 0 }; });
+function scanHint(me, bytes, list, nm, lit) {
+  const pages = {}; list.forEach((i, j) => {
+    const rec = me.sc[i] ? JSON.parse(JSON.stringify(me.sc[i])) : null, w = spWho(me, i).filter(x => x !== nm);
+    pages[j] = { rec, rot: me.rot[i] || 0, skew: me.skew[i] || 0, re: me.re.has(i), w: w.length ? w : null, L: lit ? spLight(me, i) : null };
+  });
   scanHints.set(scanBytes(bytes), pages);
 }
-function scanTakeHint(f) {
+function scanTakeHint(f, st) {
   if (!scanHints.size || f.sc) return;
   const k = scanBytes(f.data), h = scanHints.get(k); if (!h) return;
   scanHints.delete(k); f.sc = {};
-  for (const [p, x] of Object.entries(h)) { if (x.rec) f.sc[p] = x.rec; if (x.rot) setRot(f, p, x.rot); if (x.skew) setSkew(f, p, x.skew); }
+  const lit = Object.values(h).find(x => x.L);
+  for (const [p, x] of Object.entries(h)) {
+    const rec = x.rec || ((x.re || x.w) && { later: 1 });
+    if (rec) { if (x.re) rec.re = 1; if (x.w) rec.w = x.w; f.sc[p] = rec; }
+    if (x.rot) setRot(f, p, x.rot); if (x.skew) setSkew(f, p, x.skew);
+    if (lit && st && !x.L) setPageLit(st, f, p, false);   // lighting goes where she set it in the split
+  }
+  if (lit && st) { batch.light ||= {}; batch.light[st.key] ||= { ...lit.L }; batch.lightOpt = { ...lightOpts(), on: true }; }
   scanned = false; saveSoon();
 }
-function scanHintsAll() { if (batch) for (const st of batch.students) for (const f of st.files) if (viewable(f) && !f.virtual) scanTakeHint(f); scanHints.clear(); }
-Object.assign(window.__gs, { scanRead, scanLook, skewOf, setSkew, scanStraighten, scanTurn, scanNote, skewMarks, scanDarken });
+function scanHintsAll() { if (batch) for (const st of batch.students) for (const f of st.files) if (viewable(f) && !f.virtual) scanTakeHint(f, st); scanHints.clear(); }
+
+/* ---------------- lighting in the split: only how the pages look there and in the big view ---------------- */
+const spLight = (me, i) => { const L = me.Lp[i] || me.L; return lightOn(L) ? L : null; };
+function spLightOpen() {
+  const old = $('#spLightP'); if (old) return spLightClose();
+  const v = document.createElement('div'); v.id = 'spLightP'; v.setAttribute('role', 'dialog'); v.setAttribute('aria-label', 'Lighting for this scan');
+  const box = $('#dlgBox'), b = $('#spLight'), r = b.getBoundingClientRect(), o = box.getBoundingClientRect();
+  v.style.left = Math.max(8, r.left - o.left) + 'px'; v.style.top = (r.bottom - o.top + 6) + 'px';
+  box.appendChild(v); b.setAttribute('aria-pressed', 'true');
+  SP.Lsel ??= SP.sel.size ? 'sel' : 'all';
+  const esc1 = e => { if (e.key === 'Escape' && !$('#spBig')) { e.preventDefault(); e.stopPropagation(); spLightClose(); } };
+  window.addEventListener('keydown', esc1, { capture: true, signal: dlgOff.signal }); v._esc = esc1;
+  v.oninput = e => { const k = e.target.dataset.spl; if (!k) return; e.target.nextElementSibling.textContent = e.target.value; spLightSet({ ...spLightNow(), [k]: +e.target.value }); };
+  v.onchange = e => { if (e.target.dataset.splg != null) spLightSet({ ...spLightNow(), g: e.target.checked ? 1 : 0 }); if (e.target.dataset.splkeep != null) SP.keepL = e.target.checked; };
+  spLightDraw();
+}
+function spLightClose() { const v = $('#spLightP'); if (!v) return; window.removeEventListener('keydown', v._esc, true); v.remove(); const b = $('#spLight'); if (b) b.setAttribute('aria-pressed', 'false'); }
+function spLightNow() {
+  if (SP.Lsel === 'sel') { const p = [...SP.sel].sort((a, b) => a - b)[0]; return { ...LIGHT0, ...((p != null && SP.Lp[p]) || SP.L || {}) }; }
+  return { ...LIGHT0, ...(SP.L || {}) };
+}
+function spLightDraw() {
+  const v = $('#spLightP'); if (!v) return;
+  const L = spLightNow(), n = SP.sel.size;
+  const row = (k, label, min, max) => '<label><span>' + label + '</span><input type="range" min="' + min + '" max="' + max + '" step="1" data-spl="' + k + '" value="' + (L[k] || 0) + '"><b>' + (L[k] || 0) + '</b></label>';
+  v.innerHTML = '<div class="lph"><b>Lighting</b><span style="flex:1"></span><button class="btn sm" data-splauto>Auto fix</button><button class="icon" data-splx aria-label="Close" style="margin-left:6px">✕</button></div>' +
+    '<span class="seg" style="width:100%"><button data-spls="all" aria-pressed="' + (SP.Lsel === 'all') + '" style="flex:1">Whole scan</button><button data-spls="sel" aria-pressed="' + (SP.Lsel === 'sel') + '" style="flex:1"' + (n ? '' : ' disabled') + '>Picked pages' + (n ? ' (' + n + ')' : '') + '</button></span>' +
+    row('b', 'Brightness', -60, 60) + row('c', 'Contrast', 0, 400) + row('d', 'Darken writing', 0, 100) + row('s', 'Sharpen', 0, 100) +
+    '<label class="lpchk"><input type="checkbox" data-splg' + (L.g ? ' checked' : '') + '> Black and white</label>' +
+    '<div class="muted" style="font-size:12px">Changes how the pages look here and in the big view. The scan itself isn’t changed.</div>' +
+    '<label class="lpchk"><input type="checkbox" data-splkeep' + (SP.keepL ? ' checked' : '') + '> Keep it for grading: students who get these pages open with the same lighting</label>' +
+    '<div><button class="link" data-splreset>Back to normal</button></div>';
+}
+function spLightSet(L) {
+  const on = lightOn(L) ? L : null, list = [];
+  if (SP.Lsel === 'sel' && SP.sel.size) for (const p of SP.sel) { if (on) SP.Lp[p] = on; else delete SP.Lp[p]; list.push(p); }
+  else { SP.L = on; for (let i = 0; i < SP.n; i++) if (!SP.Lp[i]) list.push(i); }
+  spRelight(list);
+}
+function spLightClick(ev) {
+  const t = ev.target;
+  if (t.closest('[data-splx]')) return spLightClose();
+  const sc = t.closest('[data-spls]'); if (sc && !sc.disabled) { SP.Lsel = sc.dataset.spls; return spLightDraw(); }
+  if (t.closest('[data-splreset]')) { if (SP.Lsel === 'sel') spLightSet(LIGHT0); else { const all = [...Array(SP.n).keys()]; SP.L = null; SP.Lp = {}; spRelight(all); } return spLightDraw(); }
+  if (t.closest('[data-splauto]')) {
+    const p = SP.Lsel === 'sel' && SP.sel.size ? Math.min(...SP.sel) : SP.raw.findIndex(Boolean);
+    if (p < 0 || !SP.raw[p]) return toast('Still reading the pages, try again in a moment');
+    const im = new Image(); im.onload = () => { const c = document.createElement('canvas'); c.width = im.width; c.height = im.height; c.getContext('2d').drawImage(im, 0, 0); const L = spLightNow(); spLightSet({ ...L, ...lightAuto({ bmp: c }) }); spLightDraw(); }; im.src = SP.raw[p];
+  }
+}
+let spLitRun = 0;
+function spRelight(list) {
+  const me = SP, run = ++spLitRun;
+  clearTimeout(me.litT); me.litT = setTimeout(async () => {
+    for (const i of list) {
+      if (SP !== me || run !== spLitRun) return;
+      if (!me.raw[i]) continue;
+      const L = spLight(me, i);
+      if (L) {
+        const im = new Image(); im.src = me.raw[i]; await im.decode().catch(() => {});
+        if (SP !== me || run !== spLitRun) return;
+        const c = document.createElement('canvas'); c.width = im.naturalWidth; c.height = im.naturalHeight;
+        const x = c.getContext('2d', { willReadFrequently: true }); x.drawImage(im, 0, 0); lightCanvas(x, c.width, c.height, L);
+        me.thumbs[i] = c.toDataURL('image/jpeg', .78); c.width = c.height = 0;
+      } else me.thumbs[i] = me.raw[i];
+      const el = document.querySelector('#spPages img[data-th="' + i + '"]'); if (el) el.src = me.thumbs[i];
+      const fl = document.querySelector('#spPages [data-fl="' + i + '"]'); if (fl) fl.innerHTML = scanCard(i);
+    }
+  }, 120);
+}
+Object.assign(window.__gs, { spLight, scanRescans, lightCanvas, scanRead, scanLook, skewOf, setSkew, scanStraighten, scanTurn, scanNote, skewMarks, scanDarken });
 
 /* ---------------- merging two copies of her work: nothing here touches the page or storage ---------------- */
 const mHash = s => {
