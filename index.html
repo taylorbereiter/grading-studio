@@ -734,6 +734,16 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
 .oncepill{position:fixed;z-index:59;display:flex;align-items:center;gap:8px;background:#1E2024;color:#fff;font:500 12.5px var(--f-body);padding:6px 8px 6px 12px;border-radius:999px;box-shadow:0 4px 14px rgba(0,0,0,.18);white-space:nowrap;pointer-events:none}
 .oncepill u{text-decoration:none;opacity:.7;padding-right:4px}
 .oncepill button{pointer-events:auto;border:0;border-radius:999px;background:#fff;color:#1E2024;font:600 12px var(--f-body);padding:3px 10px;cursor:pointer}
+/* More > Mark key: each mark with its name and what it means */
+.mk .mkhint{margin:-2px 0 8px 26px;color:var(--muted);font-size:13px}
+.mk .mkgrp{font-size:11.5px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin:14px 0 2px}
+.mk .mkrow{display:grid;grid-template-columns:40px 140px 1fr;gap:10px;align-items:start;padding:9px 0;border-top:1px solid var(--line)}
+.mk .mkpic{display:flex;justify-content:center;padding-top:1px}
+.mk input[type=text],.mk textarea{width:100%;box-sizing:border-box;font:13px/1.4 var(--f-body);color:var(--fg);background:var(--surface);border:1px solid var(--line-strong);border-radius:var(--r-sm);padding:6px 8px}
+.mk textarea{resize:vertical;min-height:38px}
+.mk .mkusual{font-size:12px;margin-top:3px}
+@media (max-width:560px){.mk .mkrow{grid-template-columns:36px 1fr}.mk .mkrow>div{grid-column:2}}
+.mk .mkpic canvas{background:#fff;border-radius:6px}
 
 /* paper scans: the strip above a page, and the tags on a page in the split */
 .scnote{display:flex;flex-direction:column;gap:2px;margin:0 0 6px;padding:5px 10px;border-radius:6px;background:var(--accent-soft);color:var(--fg);font-size:13px;width:fit-content;max-width:100%}
@@ -974,6 +984,7 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
           <button class="mitem" id="lightBtn" title="Make a pale or too-bright scan easier to read">Lighting</button>
           <button class="mitem" id="rescanBtn" title="Pages you flagged as needing a rescan, and who they belong to">Rescans</button>
           <button class="mitem" id="dispBtn" title="Text size and zoom">Display</button>
+          <button class="mitem" id="mkeyBtn" title="What each proofreading mark means, for the key on returned papers">Mark key</button>
           <button class="mitem" id="calcBtn" title="Calculator for scores and percents">Calculator <kbd>=</kbd></button>
           <button class="mitem themeBtn">Dark mode</button>
           <button class="mitem" id="keysBtn">All keys <kbd>?</kbd></button>
@@ -4194,7 +4205,7 @@ function exportPlan(keepFolders) {
   for (const o of out) { let p = o.path, k = 2; while (used.has(p.toLowerCase())) p = o.path.replace(/(\.[^./]+)?$/, ' (' + k++ + ')$1'); used.add(p.toLowerCase()); o.path = p; }
   return out;
 }
-async function flattenDoc(st, d, dpi, edit) {
+async function flattenDoc(st, d, dpi, edit, key) {
   await workerReady;
   const srcs = new Map();
   const src = async path => {
@@ -4232,6 +4243,20 @@ async function flattenDoc(st, d, dpi, edit) {
       out.addPage([W + side, H]).drawImage(img, { x: 0, y: 0, width: W + side, height: H });
       c.width = c.height = 0; page.cleanup();
     }
+    const rows = key ? keyRows(d.pages.flatMap(([path, p]) => fileByPath(st, path).marks[p] || [])) : [];
+    if (rows.length) {
+      const [lp, lpn] = d.pages[d.pages.length - 1], { f: lf, js: ljs } = await src(lp), lv = vpRot(lf, lpn, await ljs.getPage(lpn + 1), 1);
+      let W = lv.width, H = lv.height;
+      if (W < 300 || H < 300 || W > 2000 || H > 2000) { W = 612; H = 792; }
+      const scale = dpi / 72;
+      for (let from = 0; from < rows.length;) {
+        const c = document.createElement('canvas'); c.width = Math.ceil(W * scale); c.height = Math.ceil(H * scale);
+        const ctx = c.getContext('2d'); ctx.setTransform(scale, 0, 0, scale, 0, 0);
+        from += drawKeyPage(ctx, rows, from, W, H);
+        out.addPage([W, H]).drawImage(await out.embedJpg(await canvasJpg(c, 0.9)), { x: 0, y: 0, width: W, height: H });
+        c.width = c.height = 0;
+      }
+    }
     if (edit) {   // the original pages and her own marks go along, so bringing the file back in opens it ready to change
       const paths = [...new Set(d.pages.map(([path]) => path))];
       const info = { v: 1, pages: d.pages.map(([path, p]) => { const f = fileByPath(st, path); return [paths.indexOf(path), p, f.marks[p] || [], rotOf(f, p), skewOf(f, p)]; }) };
@@ -4256,6 +4281,7 @@ async function openExport() {
   const plan = exportPlan(true);
   const nStu = new Set(plan.map(o => o.st)).size, skipped = batch.students.length - nStu;
   const nLeft = batch.students.reduce((a, st) => a + layoutOf(st).filter(d => !docAuto(st, d) && !docIn(st, d)).length, 0);   // left out by her; the check above lists files with no marks
+  const nKey = plan.filter(o => o.d && keyRows(o.d.pages.flatMap(([path, p]) => fileByPath(o.st, path).marks[p] || [])).length).length;
   const optsOpen = !!store.get('gs.xopts', false);
   const canDir = !!(window.showDirectoryPicker && window.self === window.top);
   const allBox = '<label class="chk"><input type="checkbox" id="xAll"' + (xAll() ? ' checked' : '') + '> Also send back files with no marks (Word files, other files and unmarked pages)</label>';
@@ -4273,6 +4299,7 @@ async function openExport() {
           '<label class="chk"><input type="checkbox" id="xKeep" checked> Keep student folders</label>' +
           '<label class="chk"><input type="checkbox" id="xSheet" checked> Add the grade sheet (a crop of each typed grade, in ' + listOrder() + ')</label>' +
           '<label class="chk"><input type="checkbox" id="xEdit"' + (xEdit() ? ' checked' : '') + '> Keep marks editable</label><p class="xhint">Bring a file back in later and change its marks. Files are about twice as big.</p>' +
+          '<label class="chk"><input type="checkbox" id="xKey"' + (keyOn() ? ' checked' : '') + '> Add a key to the marks used on each paper</label><p class="xhint">' + (!nKey ? 'No file has proofreading marks yet. ' : nKey === plan.length ? (nKey === 1 ? 'The file gets one. ' : 'All ' + nKey + ' files get one. ') : nKey + ' of the ' + plan.length + ' files ' + (nKey === 1 ? 'gets' : 'get') + ' one. ') + '<button class="link" data-mkey>Change what they mean…</button></p>' +
           allBox +
           '<div class="chk" style="cursor:default">Sharpness <span class="seg" id="xDpi"><button data-dpi="150" aria-pressed="true">Standard</button><button data-dpi="220" aria-pressed="false">Extra sharp</button></span></div>' +
         '</details>' +
@@ -4286,23 +4313,25 @@ async function openExport() {
     if ($('#xKeep').checked) on.push('student folders');
     if ($('#xSheet').checked) on.push('grade sheet');
     if ($('#xEdit').checked) on.push('marks stay editable');
+    if ($('#xKey').checked) on.push('mark key');
     if (xAll()) on.push('files with no marks too');
     if (dpi > 150) on.push('extra sharp');
     el.textContent = on.length ? on.join(', ') : 'none';
   };
   optsSay();
   const xo = $('#xOpts'); if (xo) xo.ontoggle = () => store.set('gs.xopts', xo.open);
-  box.onchange = e => { optsSay(); if (e.target.id === 'xEdit') store.set('gs.xedit', e.target.checked); if (e.target.id === 'xAll') { store.set('gs.xall', e.target.checked); renderTools(); openExport(); } };
+  box.onchange = e => { optsSay(); if (e.target.id === 'xEdit') store.set('gs.xedit', e.target.checked); if (e.target.id === 'xKey') setKey(v => { v.on = e.target.checked; }); if (e.target.id === 'xAll') { store.set('gs.xall', e.target.checked); renderTools(); openExport(); } };
   box.onclick = async e => {
     if (e.target.closest('[data-close]')) return closeDlg();
     const ck = e.target.closest('[data-chk]'); if (ck) { closeDlg(); return openStudent(+ck.dataset.chk, ck.dataset.file || undefined); }
     if (e.target.closest('[data-chksheet]')) return openSheet();
+    if (e.target.closest('[data-mkey]')) { if (xBusy) return toast('The last export is still going. It will say when it’s done.'); closeDlg(); return openMarkKey(openExport); }
     const d = e.target.closest('[data-dpi]');
     if (d) { dpi = +d.dataset.dpi; for (const x of $('#xDpi').children) x.setAttribute('aria-pressed', x === d); optsSay(); return; }
     const go = e.target.closest('[data-go]'); if (!go) return;
     if (xBusy) return toast('The last export is still going. It will say when it’s done.');
     keep = $('#xKeep').checked;
-    const withSheet = $('#xSheet').checked, editable = $('#xEdit').checked;
+    const withSheet = $('#xSheet').checked, editable = $('#xEdit').checked, withKey = $('#xKey').checked;
     const say = (t, last) => { const el = $('#xStatus'); if (el) el.textContent = t; else if (last) toast(t, 6000); };
     let dir = null;
     if (go.dataset.go === 'dir') {
@@ -4337,7 +4366,7 @@ async function openExport() {
       for (let i = 0; i < items.length; i++) {
         say('Baking in marks ' + (i + 1) + ' of ' + items.length + '…');
         bar.firstChild.style.width = (30 + 70 * i / items.length) + '%';
-        if (await putOut(items[i].path, () => items[i].raw ? items[i].f.data : flattenDoc(items[i].st, items[i].d, dpi, editable), items[i].st)) nOut++;
+        if (await putOut(items[i].path, () => items[i].raw ? items[i].f.data : flattenDoc(items[i].st, items[i].d, dpi, editable, withKey), items[i].st)) nOut++;
       }
       await unopenable(failed);
       bar.firstChild.style.width = '100%';
@@ -7930,6 +7959,7 @@ document.addEventListener('drop', async e => {
 });
 $('#trAllBtn').onclick = openTranscripts;
 $('#dispBtn').onclick = openDisplay;
+$('#mkeyBtn').onclick = () => openMarkKey();
 function setPanels(L, R) {
   const c = $('#cols'); c.classList.toggle('noL', !!L); c.classList.toggle('noR', !!R);
   $('#colL').querySelector('.pa').textContent = L ? '›' : '‹'; $('#colR').querySelector('.pa').textContent = R ? '‹' : '›';
@@ -8637,7 +8667,98 @@ const stickersReady = Promise.all(STICKERS.map(([k]) => new Promise(done => {
 })));
 const isSticker = k => STICKERS.some(s => s[0] === k);
 const stickerAspect = k => (STICKERS.find(s => s[0] === k) || [0, 0, 1])[2];
-const stampName = k => ((PROOF.find(p => p[0] === k) || PUNCT.find(p => p[0] === k) || STICKERS.find(p => p[0] === k)) || [k, k])[1];
+const stampName = k => isProof(k) ? markLabel(k) : ((STICKERS.find(p => p[0] === k)) || [k, k])[1];
+
+/* ---------------- the mark key: a page at the end of a returned file saying what each mark on it means ---------------- */
+const MARK_MEAN = {
+  gr: 'A grammar mistake here, such as a verb that doesn’t match its subject.',
+  cap: 'Make this letter a capital.', lower: 'Make this letter lowercase.',
+  insert: 'Something is missing here. Add the word or letter written above it.',
+  para: 'Start a new paragraph here.', delete: 'Take this out.', swap: 'Switch the order of these words or letters.',
+  space: 'Put a space here.', close: 'Take out the space and join these together.',
+  sp: 'This word is spelled wrong.', ro: 'Two sentences run together. Split them, or join them with the right punctuation.',
+  frag: 'This isn’t a full sentence. It’s missing a subject or a verb, or the thought isn’t finished.',
+  wc: 'A different word would fit better here.', awk: 'This is hard to read. Try saying it out loud and rewording it.',
+  vt: 'The verb is in the wrong tense. Keep the tense the same.', unclear: 'I’m not sure what you mean here.',
+  period: 'Add a period where the mark points.', comma: 'Add a comma where the mark points.', apos: 'Add an apostrophe here.',
+  quote: 'Add quotation marks here.', semi: 'Add a semicolon here.', colon: 'Add a colon here.', qmark: 'Add a question mark here.',
+  excl: 'Add an exclamation mark here.', hyphen: 'Add a hyphen here.', dash: 'Add a dash here.',
+};
+const MARK_KEY = 'gs.markKey';
+const KEY_KINDS = PROOF.map(p => p[0]).concat(PUNCT.map(p => p[0]));
+const keySet = () => { const v = store.get(MARK_KEY, null); return v && typeof v === 'object' ? v : {}; };
+const keyOn = () => keySet().on !== false;
+const markLabel0 = k => ((PROOF.find(p => p[0] === k) || PUNCT.find(p => p[0] === k)) || [k, k])[1];
+const markLabel = k => { const v = (keySet().names || {})[k]; return typeof v === 'string' && v.trim() ? v.trim() : markLabel0(k); };
+const markMean = k => { const m = keySet().means || {}; return typeof m[k] === 'string' ? m[k].trim() : (MARK_MEAN[k] || ''); };
+function setKey(change) { const v = { ...keySet() }; change(v); store.set(MARK_KEY, v); }
+function keyRows(marks) {
+  const seen = new Map();
+  for (const m of marks) if (m && m.t === 'stamp' && isProof(m.k) && !seen.has(m.k)) seen.set(m.k, m.color || '#D92D20');
+  return KEY_KINDS.filter(k => seen.has(k)).map(k => ({ k, color: seen.get(k), name: markLabel(k), mean: markMean(k) }));
+}
+function drawKeyPage(ctx, rows, from, W, H) {
+  const M = Math.max(36, Math.round(W * 0.09)), pic = 46, tx = M + pic + 10, tw = W - M - tx, UI = 'Inter, ' + FONT;
+  ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, W, H);
+  ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+  ctx.fillStyle = '#1E2024'; ctx.font = '600 17px ' + UI; ctx.fillText(from ? 'Marks on this paper (continued)' : 'Marks on this paper', M, M + 14);
+  ctx.fillStyle = '#5C616A'; ctx.font = '12.5px ' + UI; ctx.fillText('What each mark your teacher used means.', M, M + 34);
+  const wrap = (t, font) => {
+    ctx.font = font; const out = []; let line = '';
+    for (const w of t.split(/\s+/).filter(Boolean)) { const tryL = line ? line + ' ' + w : w; if (line && ctx.measureText(tryL).width > tw) { out.push(line); line = w; } else line = tryL; }
+    if (line) out.push(line); return out;
+  };
+  let y = M + 50, n = 0;
+  const rule = yy => { ctx.fillStyle = '#E4E6EA'; ctx.fillRect(M, yy, W - 2 * M, 1); };
+  rule(y);
+  for (let i = from; i < rows.length; i++) {
+    const r = rows[i], nm = wrap(r.name, '600 13px ' + UI), mn = r.mean ? wrap(r.mean, '12.5px ' + UI) : [];
+    const h = Math.max(pic - 6, 10 + nm.length * 17 + mn.length * 17 + 6);
+    if (n && y + h > H - M) break;
+    drawStamp(ctx, { t: 'stamp', k: r.k, x: M + pic / 2, y: y + h / 2, size: 20, color: r.color });
+    let ty = y + 10 + 12;
+    ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+    ctx.fillStyle = '#1E2024'; ctx.font = '600 13px ' + UI; for (const l of nm) { ctx.fillText(l, tx, ty); ty += 17; }
+    ctx.fillStyle = '#3F444C'; ctx.font = '12.5px ' + UI; for (const l of mn) { ctx.fillText(l, tx, ty); ty += 17; }
+    y += h; rule(y); n++;
+  }
+  return n;
+}
+
+function openMarkKey(back) {
+  const row = k => {
+    const s = keySet(), named = typeof (s.names || {})[k] === 'string' && s.names[k].trim(), meant = typeof (s.means || {})[k] === 'string';
+    return '<div class="mkrow" data-k="' + k + '"><span class="mkpic"></span>' +
+      '<input type="text" maxlength="40" data-n="' + k + '" aria-label="Name for this mark" value="' + esc(markLabel(k)) + '">' +
+      '<div><textarea maxlength="300" rows="2" data-m="' + k + '" aria-label="What it means">' + esc(markMean(k)) + '</textarea>' +
+      '<button class="link mkusual" data-usual="' + k + '"' + (named || meant ? '' : ' hidden') + '>Back to the usual wording</button></div></div>';
+  };
+  openDlg('<div class="bh"><h2>Mark key</h2><button class="icon" data-close aria-label="Close">✕</button></div><div class="bb mk">' +
+    '<label class="chk"><input type="checkbox" id="mkOn"' + (keyOn() ? ' checked' : '') + '> Add a key to returned papers</label>' +
+    '<p class="mkhint">A page at the end of each returned file, listing only the proofreading and punctuation marks used on it, with what they mean. Stickers and check marks are left out. Leave a meaning blank to show just the name.</p>' +
+    '<div class="mkgrp">Proofreading marks</div>' + PROOF.map(p => row(p[0])).join('') +
+    '<div class="mkgrp">Punctuation</div>' + PUNCT.map(p => row(p[0])).join('') +
+    '</div><div class="bf">' + (back ? '<button class="btn" data-back>Back to Export</button>' : '') + '<button class="btn primary" data-close>Done</button></div>', true);
+  const box = $('#dlgBox');
+  for (const el of box.querySelectorAll('.mkrow')) el.querySelector('.mkpic').append(stampPicture(el.dataset.k, COLORS[inkColor]));
+  box.oninput = e => {
+    const t = e.target, k = t.dataset.n || t.dataset.m; if (!k) return;
+    if (t.dataset.n) setKey(v => { v.names = { ...(v.names || {}) }; if (t.value.trim() && t.value.trim() !== markLabel0(k)) v.names[k] = t.value; else delete v.names[k]; });
+    else setKey(v => { v.means = { ...(v.means || {}) }; if (t.value.trim() !== (MARK_MEAN[k] || '')) v.means[k] = t.value; else delete v.means[k]; });
+    const s = keySet(); box.querySelector('[data-usual="' + k + '"]').hidden = !(((s.names || {})[k]) || k in (s.means || {}));
+  };
+  box.onchange = e => { if (e.target.id === 'mkOn') setKey(v => { v.on = e.target.checked; }); };
+  box.onclick = e => {
+    if (e.target.closest('[data-close]')) return closeDlg();
+    if (e.target.closest('[data-back]')) { closeDlg(); return back(); }
+    const u = e.target.closest('[data-usual]');
+    if (u) {
+      const k = u.dataset.usual;
+      setKey(v => { v.names = { ...(v.names || {}) }; v.means = { ...(v.means || {}) }; delete v.names[k]; delete v.means[k]; });
+      box.querySelector('[data-n="' + k + '"]').value = markLabel(k); box.querySelector('[data-m="' + k + '"]').value = markMean(k); u.hidden = true;
+    }
+  };
+}
 const MARK_SIZES = 'gs.markSizes', SIZE0 = { proof: 16, sticker: 44 };
 const sizeKind = k => isSticker(k) ? 'sticker' : 'proof';
 const SIZE_LIMITS = { proof: [8, 80], sticker: [16, 240], check: [8, 120] };
@@ -8926,7 +9047,7 @@ function openStampMenu(pg, x, y, cx, cy) {
 document.addEventListener('pointerdown', e => { if (stampMenuEl && !stampMenuEl.contains(e.target)) closeStampMenu(); }, true);
 window.addEventListener('blur', closeStampMenu);
 document.addEventListener('scroll', closeStampMenu, true);
-Object.assign(window.__gs, { turnMarks, drawStamp, stampBox, placeStamp, openStampMenu, closeStampMenu, endOnce, once: () => once && { ...once }, stickersReady, STAMP_KINDS: { proof: PROOF.map(p => p[0]), punct: PUNCT.map(p => p[0]), stickers: STICKERS.map(s => s[0]) } });
+Object.assign(window.__gs, { unpackExport, keyRows, drawKeyPage, openMarkKey, markLabel, markMean, turnMarks, drawStamp, stampBox, placeStamp, openStampMenu, closeStampMenu, endOnce, once: () => once && { ...once }, stickersReady, STAMP_KINDS: { proof: PROOF.map(p => p[0]), punct: PUNCT.map(p => p[0]), stickers: STICKERS.map(s => s[0]) } });
 
 /* ---------------- scores: statuses, when a score last changed, partial scores, doubtful readings, the pre-export check, safe CSV ---------------- */
 const STATUS_LABEL = { missing: 'Missing', excused: 'Excused', late: 'Late' };
