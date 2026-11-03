@@ -64,6 +64,7 @@ function setWordPoints(st, s) {
   st.grade.points = v;
 }
 function partNote(st) {
+  if (setup.mode !== 'rubric' && quizPart(st)) return quizCount(st) + ' of ' + batch.quiz.qs.length + ' questions marked in Quick mark';
   const w = setup.mode === 'rubric' ? null : wordPart(st, +st.grade.points);
   const per = w ? w.per : setup.criteria.map((_, i) => st.grade.rubric[i]);
   return per.filter(v => v != null).length + ' of ' + per.length + ' rows scored';
