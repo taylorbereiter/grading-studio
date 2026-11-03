@@ -292,6 +292,14 @@ body{padding-bottom:var(--savebar,0px)}.app{height:calc(100vh - var(--savebar,0p
 #calcPanel .cphi span{color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #lightPanel{position:fixed;top:60px;right:16px;z-index:25;width:300px;background:var(--surface);border:1px solid var(--line-strong);border-radius:12px;box-shadow:0 12px 32px rgba(0,0,0,.18);padding:12px 14px;display:flex;flex-direction:column;gap:10px;zoom:var(--uz)}
 #lightPanel .lph{display:flex;align-items:center}
+#spLightP{position:absolute;z-index:3;width:300px;background:var(--surface);border:1px solid var(--line-strong);border-radius:12px;box-shadow:0 12px 32px rgba(0,0,0,.18);padding:12px 14px;display:flex;flex-direction:column;gap:10px}
+#spLightP .lph{display:flex;align-items:center}
+#spLightP label:not(.lpchk){display:grid;grid-template-columns:104px 1fr 34px;align-items:center;gap:8px;font-size:13px}
+#spLightP label b{text-align:right;font-weight:500;color:var(--muted);font-variant-numeric:tabular-nums}
+#spLightP .lpchk{display:flex;gap:7px;align-items:flex-start;font-size:13px}
+#spLightP input[type=range]{width:100%;min-width:0}
+.spbar .btn[aria-pressed=true]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent);font-weight:600}
+.stu .add.grp{color:var(--accent);background:var(--accent-soft)}
 #lightPanel .lpbody{display:flex;flex-direction:column;gap:10px}
 #lightPanel .lpbody.off{opacity:.45}
 #lightPanel .lpsec{display:flex;flex-direction:column;gap:6px;padding-top:8px;border-top:1px solid var(--line)}
@@ -570,6 +578,7 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
           <button class="mitem" id="overviewBtn" title="The spread of scores, the hardest rubric rows, and who isn’t finished">Class overview</button>
           <button class="mitem" id="consBtn" title="Same-score papers side by side, and whether you got harder or softer as you went">Consistency check</button>
           <button class="mitem" id="lightBtn" title="Make a pale or too-bright scan easier to read">Lighting</button>
+          <button class="mitem" id="rescanBtn" title="Pages you flagged as needing a rescan, and who they belong to">Rescans</button>
           <button class="mitem" id="dispBtn" title="Text size and zoom">Display</button>
           <button class="mitem" id="calcBtn" title="Calculator for scores and percents">Calculator <kbd>=</kbd></button>
           <button class="mitem themeBtn">Dark mode</button>
