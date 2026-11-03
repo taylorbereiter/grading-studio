@@ -29,13 +29,23 @@ const stickersReady = Promise.all(STICKERS.map(([k]) => new Promise(done => {
   const im = new Image(); im.onload = im.onerror = () => done(); im.src = STICKER_SRC[k]; stickerImg[k] = im;
 })));
 const isSticker = k => STICKERS.some(s => s[0] === k);
+// A score sticker from the calculator: { k: 'score', text: '12.5/15 = 83%', color }. A boxed stamp, the score over the percent,
+// in her ink color. Its text reads like a typed grade, so the grade sheet finds it on the paper by itself.
+const isScoreStamp = k => k === 'score';
+const scoreLines = m => String(m.text || '').split(' = ').map(t => t.replace('/', ' / '));
+function scoreSize(m) {
+  const s = m.size || 52, [a, b] = scoreLines(m);
+  measureCtx.font = '700 ' + (s * 0.34) + 'px ' + FONT; const wa = measureCtx.measureText(a || '').width;
+  measureCtx.font = '600 ' + (s * 0.26) + 'px ' + FONT; const wb = b ? measureCtx.measureText(b).width : 0;
+  return { w: Math.max(s * 1.5, Math.max(wa, wb) + s * 0.4), h: b ? s : s * 0.6, two: !!b };
+}
 const stickerAspect = k => (STICKERS.find(s => s[0] === k) || [0, 0, 1])[2];
 const stampName = k => ((PROOF.find(p => p[0] === k) || PUNCT.find(p => p[0] === k) || STICKERS.find(p => p[0] === k)) || [k, k])[1];
 // How big a new one is: the size she last gave that kind (each sticker, each mark, the check) in this download.
 // A new download starts back at the usual sizes. Kept on this computer, for the dozen most recent downloads.
-const MARK_SIZES = 'gs.markSizes', SIZE0 = { proof: 16, sticker: 44 };
-const sizeKind = k => isSticker(k) ? 'sticker' : 'proof';
-const SIZE_LIMITS = { proof: [8, 80], sticker: [16, 240], check: [8, 120] };
+const MARK_SIZES = 'gs.markSizes', SIZE0 = { proof: 16, sticker: 44, score: 52 };
+const sizeKind = k => isSticker(k) ? 'sticker' : isScoreStamp(k) ? 'score' : 'proof';
+const SIZE_LIMITS = { proof: [8, 80], sticker: [16, 240], check: [8, 120], score: [20, 160] };
 const sizesHere = () => { const all = store.get(MARK_SIZES, {}) || {}; return (batch && all[batch.id]) || {}; };
 function lastSize(key, lim, dflt) { const v = +sizesHere()[key]; return v >= lim[0] && v <= lim[1] ? v : dflt; }
 const newStampSize = k => lastSize(k, SIZE_LIMITS[sizeKind(k)], SIZE0[sizeKind(k)]);
@@ -53,6 +63,7 @@ const rememberStampSize = m => rememberSizeOf(m.k, m.size);
 function stampBox(m) {
   const s = m.size || 16, x = m.x, y = m.y;
   if (isSticker(m.k)) { const h = s * stickerAspect(m.k); return { x: x - s / 2, y: y - h / 2, w: s, h }; }
+  if (isScoreStamp(m.k)) { const z = scoreSize(m); return { x: x - z.w / 2, y: y - z.h / 2, w: z.w, h: z.h }; }
   if (PUNCT_SIGN[m.k]) return { x: x - 0.42 * s, y: y - 0.62 * s, w: 0.84 * s, h: 1.2 * s };
   if (PROOF_TAG[m.k]) { const r = tagRadii(m.k, s); return { x: x - r[0] - 1, y: y - r[1] - 1, w: r[0] * 2 + 2, h: r[1] * 2 + 2 }; }
   const half = { cap: [0.4, 0.3], lower: [0.3, 0.5], insert: [0.35, 0.4], para: [0.4, 0.55], delete: [0.7, 0.5], swap: [0.65, 0.6], space: [0.3, 0.95], close: [0.35, 0.55], period: [0.3, 0.3] }[m.k] || [0.5, 0.5];
@@ -74,6 +85,18 @@ function drawStamp(ctx, m) {
     ctx.drawImage(im, -s / 2, -h / 2, s, h);
     ctx.restore();
     return;
+  }
+  if (isScoreStamp(m.k)) {
+    const z = scoreSize(m), [a, b] = scoreLines(m), l = x - z.w / 2, t = y - z.h / 2, r = s * 0.14;
+    ctx.save(); ctx.lineWidth = Math.max(1, s * 0.04);
+    ctx.beginPath(); ctx.roundRect(l, t, z.w, z.h, r); ctx.fillStyle = '#fff'; ctx.fill(); ctx.strokeStyle = m.color; ctx.stroke();
+    ctx.fillStyle = m.color; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.font = '700 ' + (s * 0.34) + 'px ' + FONT; ctx.fillText(a || '', x, z.two ? t + s * 0.31 : y + s * 0.01);
+    if (z.two) {
+      ctx.lineWidth = Math.max(0.8, s * 0.022); ctx.beginPath(); ctx.moveTo(l, t + s * 0.6); ctx.lineTo(l + z.w, t + s * 0.6); ctx.stroke();
+      ctx.font = '600 ' + (s * 0.26) + 'px ' + FONT; ctx.fillText(b, x, t + s * 0.8);
+    }
+    ctx.restore(); return;
   }
   ctx.save(); ctx.strokeStyle = ctx.fillStyle = m.color; ctx.lineWidth = Math.max(1.1, s * 0.085); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
   const line = (...p) => { ctx.beginPath(); ctx.moveTo(x + p[0] * s, y + p[1] * s); for (let i = 2; i < p.length; i += 2) ctx.lineTo(x + p[i] * s, y + p[i + 1] * s); ctx.stroke(); };

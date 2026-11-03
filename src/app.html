@@ -277,6 +277,9 @@ body{padding-bottom:var(--savebar,0px)}.app{height:calc(100vh - var(--savebar,0p
 #calcIn{font-size:18px!important;text-align:right;font-variant-numeric:tabular-nums}
 #calcOut{text-align:right;font-size:20px;min-height:28px;font-variant-numeric:tabular-nums}
 #calcOut .link{font-size:12px;margin-left:6px}
+#calcStick{text-align:right;font-size:12px;margin-top:-6px}#calcStick:empty{display:none}
+#calcPanel.placing{opacity:.35;pointer-events:none}
+#scoreGhost{position:fixed;z-index:30;pointer-events:none;opacity:.6}
 #calcPanel .cpk{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
 #calcPanel .cpk button{border:1px solid var(--line);background:var(--surface-2);color:var(--fg);border-radius:8px;padding:9px 0;font:inherit;font-size:16px;font-weight:600;cursor:pointer}
 #calcPanel .cpk button:hover{border-color:var(--line-strong)}
