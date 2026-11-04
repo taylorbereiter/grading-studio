@@ -7,14 +7,22 @@
 // Every weight has a reason beside it. Revisions were made by looking at mistakes on made-up papers only (test/tools/redact).
 
 // Two lists it knows (see redact-lists-LICENSE.txt): everyday English words (SCOWL, up to size 35) and given and family names in the Latin alphabet from many countries (Faker).
-let RD_WORDS = null, RD_NAMES = new Set();
+let RD_WORDS = null, RD_NAMES = new Set(), RD_FAMOUS = new Set(), RD_TITLES = null;
 // Apps and brands students name all the time, capitalized but identifying no one.
 const RD_BRANDS = 'instagram tiktok youtube snapchat google discord whatsapp netflix spotify minecraft roblox fortnite iphone ipad xbox playstation nintendo zoom kahoot canva quizlet chatgpt wikipedia facebook twitter reddit pinterest amazon'.split(' ');
 // School subjects, languages and nationalities: always capitalized in English, never a person.
 const RD_COMMON_PROPER = 'english math maths science history geography biology chemistry physics economics psychology spanish french german chinese mandarin cantonese japanese korean arabic hindi urdu thai vietnamese russian italian portuguese dutch turkish persian hebrew latin greek swahili american british canadian mexican brazilian african european asian australian indian nigerian egyptian christmas easter ramadan eid diwali hanukkah lunar christian muslim jewish hindu buddhist god internet'.split(' ');
-function redactWords(words, names) {
+function redactWords(words, names, famous) {
   RD_WORDS = new Set(words.split('\n').concat(RD_BRANDS, RD_COMMON_PROPER));
   if (names) RD_NAMES = new Set(names.split('\n'));
+  // authors, characters and famous people (src/redact-public.txt): lines starting with # are notes
+  if (famous) {
+    const lines = famous.split('\n').filter(l => l && !/^#/.test(l));
+    RD_FAMOUS = new Set(lines.filter(l => !/^= /.test(l)).join(' ').split(/\s+/).filter(Boolean).map(w => w.replace(/['’]s$/, '')));
+    // titles: a cover inside one (Things Fall Apart) is the book's
+    const esc = t => t.slice(2).trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/'/g, "['’]");
+    RD_TITLES = new RegExp('(?<![\\p{L}])(?:' + lines.filter(l => /^= /.test(l)).map(esc).sort((a, b) => b.length - a.length).join('|') + ')(?![\\p{L}])', 'gu');
+  }
 }
 const rdSet = s => new Set(s.split(' '));
 const RD_FUNC = rdSet('a an the and or but if so of to in on at by for from with as is are was were be been am i you he she it we they me him her us them my your his its our their this that these those not no yes did does have has had would can could should might must there here what when where who why how all any some each very just also than then too');
@@ -121,10 +129,11 @@ function rdClues(t, i, words, toks, text, nicks) {
     // what comes before
     afterTitle: prev && RD_TITLE.has(lowP) && !/[,;:]/.test(pb) ? 1 : 0,
     afterRel: prev && RD_REL.has(lowP) && !/[.!?;:]/.test(pb) ? 1 : 0,
-    afterGreet: prev && RD_GREET.has(lowP) && /^,?\s*\n?\s*$/.test(pb) ? 1 : 0,
+    // "by" signs a paper only at the start of a line or after written, submitted, essay (a speech by Ella Baker is not a signature)
+    afterGreet: prev && RD_GREET.has(lowP) && /^,?\s*\n?\s*$/.test(pb) && (lowP !== 'by' || !prev2 || /\n\s*$/.test(text.slice(Math.max(0, prev.a - 3), prev.a)) || /^(written|submitted|essay|homework|work|report|draft|poem|story|love|made|all)$/.test(lowP2)) ? 1 : 0,
     afterNamed: prev && RD_NAMED.has(lowP) && /^\s*:?\s*$/.test(pb) || prev && lowP === 'by' && prev2 && lowP2 === 'submitted' ? 1 : 0,
     callsMe: prev && prev2 && (/^(me|him|her)$/.test(lowP) && /^(calls?|called|call)$/.test(lowP2) || lowP === 'as' && lowP2 === 'known' || lowP === 'by' && /^(go|goes|went)$/.test(lowP2) || lowP === 'is' && lowP2 === 'name' || /^i[’']m$/.test(lowP)) ? 1 : 0,
-    dashSign: /^\s*[-–—]\s*$/.test(pb) && (!prev || /\n\s*[-–—]\s*$/.test(text.slice(Math.max(0, t.a - 4), t.a)) || i === 0) ? 1 : 0,
+    dashSign: /^\s*[-–—]\s*$/.test(pb) && (!prev || /\n\s*[-–—]\s*$/.test(text.slice(Math.max(0, t.a - 4), t.a)) || i === 0) || /(^|\n)[ \t]*[-–—][ \t]*$/.test(text.slice(Math.max(0, t.a - 8), t.a)) ? 1 : 0,
     afterLabel: prev && RD_LABEL.has(lowP) && /^\s*:\s*$/.test(pb) ? 1 : 0,
     label: /^\s*:/.test(nb) || !next && /^\s*:/.test(after) ? 1 : 0,
     // the words of "Student ID #123" or "Candidate number" themselves
@@ -132,7 +141,7 @@ function rdClues(t, i, words, toks, text, nicks) {
     afterPlace: prev && RD_PLACE_BEFORE.has(lowP) ? 1 : 0,
     afterNumber: prev && /^\d{1,5}$/.test(prev.s) ? 1 : 0,
     afterPerson: prev && RD_PERSON_PREP.has(lowP) && !/[.!?;:]/.test(pb) ? 1 : 0,
-    afterIdCue: prev && (RD_ID_CUE.has(lowP) || /#\s*$/.test(pb)) && /\d/.test(w) ? 1 : 0,
+    afterIdCue: prev && (RD_ID_CUE.has(lowP) || /#\s*$/.test(pb) || prev2 && RD_ID_CUE.has(lowP2) && /^(is|was|=)$/.test(lowP)) && w.replace(/\D/g, "").length >= 3 ? 1 : 0,
     // what comes after
     beforeRel: next && /^,\s*$/.test(nb) && (lowN === 'my' || lowN === 'our') ? 1 : 0,
     beforeDoes: next && /^ $/.test(text.slice(t.b, next.a)) && RD_DOES.has(lowN) || RD_IS_WHO.test(after.replace(/^ /, '')) ? 1 : 0,
@@ -330,10 +339,29 @@ const RD_DROP = [
   { why: 'class', w: { manyPapers: 1, weak: 1, sureElsewhere: -3, rosterWord: -3, fair: -3, mostlyMine: -3 }, b: -1, out: 3 },
   // a word the class mostly writes about in sentences about the book (the author shows, Ponyboy's speech, the narrator)
   { why: 'book', w: { mostlyBook: 1, thrice: 1, weak: 1, sureElsewhere: -3, rosterWord: -3, mostlyMine: -3 }, b: -2, out: 2.5 },
+  // an author, a character or a famous person (Gatsby, Steinbeck, Lady Macbeth) in a sentence that isn't about the student's own life;
+  // a name people also have (George, Jack, Elizabeth) only when the sentence is about the book too (Lennie and George, the narrator)
+  { why: 'famous', w: { famous: 1, notSure: 1, shape: -5, mineHere: -1, rosterWord: -3, sureElsewhere: -3, peopleName: -1, bookHere: 1, famousNext: 1 }, b: -1, out: 3 },
+  // a word inside the title of a book, play or poem (Things Fall Apart, Nineteen Eighty-Four)
+  { why: 'famous', w: { inTitle: 1, notSure: 1, shape: -5, rosterWord: -3 }, b: -1, out: 4 },
   // a place after "in" that the class mostly writes about as the book's setting, on several papers (the setting of Thornfield)
   { why: 'book', w: { mostlyBook: 1, manyPapers: 1, fair: 1, sureElsewhere: -3, rosterWord: -3, mostlyMine: -3 }, b: -2, out: 2.5 },
 ];
 
+// what the sentence around a cover is about: the student's own life (I, my, we), or the book (the narrator, another author or character, a word from the task sheet)
+function rdHere(text, h, w, taskCaps = []) {
+  const sen = rdSentence(text, h.start, h.end), sw = sen.match(/[\p{L}'’]+/gu) || [];
+  const mine = sw.some(x => RD_MINE.has(x.toLowerCase())) ? 1 : 0;
+  // another famous name counts only if it isn't the word right next to this one (Echo Ikemefuna is one person, whatever Ikemefuna is)
+  const near = new Set([(text.slice(h.end).match(/^ (\p{Lu}[\p{L}'’-]+)/u) || [])[1], (text.slice(0, h.start).match(/(\p{Lu}[\p{L}'’-]+) $/u) || [])[1]]);
+  const book = sw.some(x => RD_BOOKTALK.has(x.toLowerCase()) || x !== w && !near.has(x) && /^\p{Lu}/u.test(x) && RD_FAMOUS.has(x.replace(/['’]s$/, '')) && !RD_NAMES.has(x.toLowerCase())) ? 1 : 0;
+  return { mine, book };
+}
+// the word right before or after is an author's or a famous person's family name that is nobody's given name (Albert Einstein, Isaac Newton)
+function rdFamousNext(text, h) {
+  const after = text.slice(h.end).match(/^ (\p{Lu}[\p{L}'’-]+)/u), before = text.slice(0, h.start).match(/(\p{Lu}[\p{L}'’-]+) $/u);
+  return [after, before].some(m => m && RD_FAMOUS.has(m[1].replace(/['’]s$/, '')) && !RD_NAMES.has(m[1].toLowerCase()));
+}
 function rdSentence(text, a, b) {
   let s = a; while (s > 0 && !/[.!?\n]/.test(text[s - 1])) s--;
   let e = b; while (e < text.length && !/[.!?\n]/.test(text[e])) e++;
@@ -365,21 +393,23 @@ function reviewCovers(papers, opts = {}) {
   return papers.map(p => {
     const keep = [], off = [];
     let prevPlace = -1;
+    const titles = RD_TITLES ? [...p.text.matchAll(RD_TITLES)].map(m => [m.index, m.index + m[0].length]) : [];
     for (const h of p.hits) {
       const w = word(p, h), o = seen.get(w);
       // the same word elsewhere, and the word right after it (the Larkspur Owls), is that place too, unless something says it's a person
       if (!h.person && !roster.has(w.toLowerCase()) && (places.has(w) || prevPlace >= 0 && /^ $/.test(p.text.slice(prevPlace, h.start)))) { prevPlace = h.end; continue; }
       prevPlace = -1;
-      const shape = o ? 0 : 1;
+      const shape = o ? 0 : 1, here = rdHere(p.text, h, w);
       const c = {
         shape, inTask: taskWords.has(w) ? 1 : 0, rosterWord: roster.has(w.toLowerCase()) ? 1 : 0,
         weak: h.sure === 0 ? 1 : 0, fair: h.sure === 1 ? 1 : 0, sureElsewhere: o && o.sure > 0 && o.sure >= .15 * o.uses ? 1 : 0,
         manyPapers: o && big && o.papers.size >= .25 * papers.length ? 1 : 0, thrice: o && o.papers.size >= 3 ? 1 : 0,
         mostlyBook: o && o.book >= .6 * o.uses ? 1 : 0, mostlyMine: o && o.mine >= .3 * o.uses ? 1 : 0,
+        famous: RD_FAMOUS.has(w) ? 1 : 0, notSure: h.sure < 2 ? 1 : 0, inTitle: titles.some(([a, b]) => h.start >= a && h.end <= b) ? 1 : 0, famousNext: rdFamousNext(p.text, h) && RD_NAMES.has(w.toLowerCase()) && !here.mine ? 1 : 0, peopleName: RD_NAMES.has(w.toLowerCase()) ? 1 : 0, mineHere: here.mine, bookHere: here.book,
       };
       let sum = 0, why = '', best = 0;
       for (const u of RD_DROP) { let a = u.b; for (const k in u.w) a += u.w[k] * c[k]; const v = Math.max(0, a) * u.out; sum += v; if (v > best) { best = v; why = u.why; } }
-      if (sum >= RD_FIRE) off.push({ ...h, reason: why === 'task' ? 'in your task sheet' : why === 'class' ? 'on ' + o.papers.size + ' of ' + papers.length + ' papers' : 'talked about as part of the book' });
+      if (sum >= RD_FIRE) off.push({ ...h, reason: why === 'task' ? 'in your task sheet' : why === 'class' ? 'on ' + o.papers.size + ' of ' + papers.length + ' papers' : why === 'famous' ? 'an author, character or famous person' : 'talked about as part of the book' });
       else keep.push(h);
     }
     // the other way round: a word the class surely covers somewhere (Mr Marsh, St. Brannoc College) is covered wherever the class writes it

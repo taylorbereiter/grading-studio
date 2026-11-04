@@ -75,7 +75,7 @@ if (require.main === module) {
   let cache = {}; try { cache = JSON.parse(fs.readFileSync(cacheFile, 'utf8')); } catch (e) {}
   let live = null;
   const roster = p => cache[p.id] ||= (live ||= rosterCover())(p);
-  let net = null; try { net = require(path.join(root, 'src/redact.js')); net.redactWords(fs.readFileSync(path.join(root, 'src/redact-words.txt'), 'utf8'), fs.readFileSync(path.join(root, 'src/redact-names.txt'), 'utf8')); } catch (e) { if (e.code !== 'MODULE_NOT_FOUND') throw e; }
+  let net = null; try { net = require(path.join(root, 'src/redact.js')); net.redactWords(fs.readFileSync(path.join(root, 'src/redact-words.txt'), 'utf8'), fs.readFileSync(path.join(root, 'src/redact-names.txt'), 'utf8'), fs.readFileSync(path.join(root, 'src/redact-public.txt'), 'utf8')); } catch (e) { if (e.code !== 'MODULE_NOT_FOUND') throw e; }
   const systems = { roster };
   if (net) {
     systems.network = p => net.findPrivate(p.text, { roster: p.roster, student: p.student, places: WIDE }).map(s => [s.start, s.end]);
