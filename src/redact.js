@@ -31,7 +31,7 @@ const RD_MONTH = rdSet('january february march april may june july august septem
 const RD_OPENER = rdSet('even also only just still then now maybe perhaps sometimes today yesterday tomorrow later soon after before since while once unlike every both either neither without according like ask tell thank dear honestly finally overall however next last first second third');
 const RD_PARTICLE = rdSet('de van von der den da di del della dos das du le la al el bin ibn bint ben ter');
 // What people do in a sentence: a capitalized word right before one of these is very likely someone (Mateo recorded, Grace quizzed me).
-const RD_DOES = rdSet('said says told tells asked asks thinks thought helped helps gave gives took takes wants wanted likes liked loves loved lives lived came comes went goes recorded measured wrote writes drew taught teaches quizzed explained explains pointed agreed disagreed laughed cried called calls texted sent brought made makes showed shows sat sits played plays works worked studied practised practiced drove drives picked picks visited reminds reminded');
+const RD_DOES = rdSet('said says told tells lent lends asked asks thinks thought helped helps gave gives took takes wants wanted likes liked loves loved lives lived came comes went goes recorded measured wrote writes drew taught teaches quizzed explained explains pointed agreed disagreed laughed cried called calls texted sent brought made makes showed shows sat sits played plays works worked studied practised practiced drove drives picked picks visited reminds reminded');
 // "Mo is my nickname", "Mo is what my friends call me", "Mo and I"
 const RD_IS_WHO = /^(?:is|was) (?:my|what|our|the one)\b|^and I\b|^'s\b|^’s\b/;
 // Before a name: "help from May", "reminds me of Dawn", "with Robin"
@@ -207,7 +207,7 @@ const RD_UNITS = [
   { why: 'address', w: { afterNumber: 1, cap: 1, beforeStreet: 1 }, b: -2, out: 4 },
   { why: 'address', w: { digits: 1, nextCapStreet: 1 }, b: -1, out: 4 },
   // a capitalized word before School, Academy, House: a school's name (Sunridge Middle School, Phoenix House)
-  { why: 'school', w: { cap: 1, beforeSchool: 1, start: -1 }, b: -1, out: 3 },
+  { why: 'school', w: { cap: 1, beforeSchool: 1 }, b: -1, out: 3 },
   { why: 'team', w: { afterJoinThe: 1, cap: 1, start: -3, func: -3 }, b: -1, out: 2.5 },
   // after House: or Team: on a paper's heading
   { why: 'school', w: { afterLabel: 1, cap: 1 }, b: -1, out: 4 },
@@ -277,6 +277,11 @@ function findPrivate(text, opts = {}) {
       const touch = [i - 1, i + 1].some(k => words[k] && was[k] >= RD_FIRE && glued(k, i));
       // an everyday short word only joins a name it ends (Yasmin Do, then the line ends)
       if (touch && (!c.func || c.partEnd && !c.start) && (!c.ordinary || !c.start || c.listed && !c.opener || c.schoolWord || c.streetWord)) s += c.func || c.single ? 8.5 : 2.5;
+      // the first word of a school's name, even an everyday word at the start of a line or after "(" (Kingfisher Bay High School)
+      else if (c.ordinary && !c.func && !c.opener && words[i + 1] && was[i + 1] >= RD_FIRE && z[i + 1].why === 'school' && glued(i + 1, i)) s += 2.5;
+      // a name the list knows at the start of a sentence, before "and" and a name already found (Major and Paloma came)
+      const n1 = words[i + 1], n2 = words[i + 2];
+      if (c.start && c.listed && !c.opener && !c.func && n1 && n2 && n1.s === 'and' && was[i + 2] >= RD_FIRE && gap(words[i], n1) === ' ' && gap(n1, n2) === ' ') s += 2.5;
       // the next name in a list after one already found (Mateo, Lila and I / thank Mia and May)
       const p1 = words[i - 1], p2 = words[i - 2];
       if (!c.start && (!c.ordinary || c.listed)) {
@@ -320,7 +325,7 @@ function rdSentence(text, a, b) {
 // papers: [{ text, hits (from findPrivate), roster }], all from one class. opts.task: the task sheet's text.
 // Returns, for each paper, the hits to keep and the hits taken off, each with the reason to show the teacher.
 function reviewCovers(papers, opts = {}) {
-  const taskWords = new Set((opts.task || '').match(/[\p{L}\p{M}'’.-]+/gu) || []);
+  const taskWords = new Set(((opts.task || '').match(/[\p{L}\p{M}'’.-]+/gu) || []).map(w => w.replace(/[.'’]+$|['’]s$/g, '')));
   const taskCaps = [...taskWords].filter(w => /^\p{Lu}/u.test(w) && !RD_FUNC.has(w.toLowerCase()));
   const roster = new Set((papers[0] && papers[0].roster || []).flatMap(n => n.toLowerCase().split(/[\s-]+/)));
   const word = (p, h) => p.text.slice(h.start, h.end).replace(/['’]s$/, '');
@@ -352,6 +357,16 @@ function reviewCovers(papers, opts = {}) {
       for (const u of RD_DROP) { let a = u.b; for (const k in u.w) a += u.w[k] * c[k]; const v = Math.max(0, a) * u.out; sum += v; if (v > best) { best = v; why = u.why; } }
       if (sum >= RD_FIRE) off.push({ ...h, reason: why === 'task' ? 'in your task sheet' : why === 'class' ? 'on ' + o.papers.size + ' of ' + papers.length + ' papers' : 'talked about as part of the book' });
       else keep.push(h);
+    }
+    // the other way round: a word the class surely covers somewhere (Mr Marsh, St. Brannoc College) is covered wherever the class writes it
+    // with a capital, even where it looks like an everyday word (As Marsh told us)
+    const have = new Set(p.hits.map(h => h.start));
+    for (const m of p.text.matchAll(/\p{Lu}[\p{L}\p{M}'’-]*/gu)) {
+      const w = m[0].replace(/['’]s$/, ''), o = seen.get(w);
+      if (!o || !o.sure || o.sure < .15 * o.uses || have.has(m.index) || taskWords.has(w) || RD_FUNC.has(w.toLowerCase()) || RD_TITLE.has(w.toLowerCase()) || RD_SCHOOL.has(w.toLowerCase()) || RD_STREET.has(w.toLowerCase()) || RD_LABEL.has(w.toLowerCase()) || w.length < 2) continue;
+      // not at the start of a sentence, where any word has a capital (Chapter 3 begins...)
+      if (/(^|[.!?:\n"“(|-]\s*)$/.test(p.text.slice(Math.max(0, m.index - 3), m.index))) continue;
+      keep.push({ start: m.index, end: m.index + m[0].length, why: 'name', sure: 2, spread: true });
     }
     return { keep, off };
   });
