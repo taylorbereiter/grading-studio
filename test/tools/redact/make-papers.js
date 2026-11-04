@@ -3,7 +3,8 @@
 // Every student, relative, teacher, school, town, phone number and ID is invented and mixed at random.
 // The "test" set also uses sentences the "dev" set never has, so revisions made by looking at dev mistakes can't simply learn the test set's wording.
 'use strict';
-const P = require('./pools');
+let P = require('./pools');
+const BLIND = require('./blind');
 
 function rng(seed) { let s = seed >>> 0; return () => { s = (s + 0x6D2B79F5) >>> 0; let t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
 
@@ -143,14 +144,14 @@ const FRESH = {
 const MONTH = 'January February March April May June July August September October November December'.split(' ');
 const DAY = 'Monday Tuesday Wednesday Thursday Friday Saturday Sunday'.split(' ');
 
-function paper(r, split, roster, studentIdx) {
+function paper(r, split, roster, studentIdx, cls) {
   const pick = a => a[Math.floor(r() * a.length)], n = () => 1 + Math.floor(r() * 9);
   const self = roster[studentIdx], mates = roster.filter((_, i) => i !== studentIdx);
   const relFirst = () => r() < .15 ? pick(P.FIRST_WORD) : pick(P.FIRST);
   const digits = k => Array.from({ length: k }, () => Math.floor(r() * 10)).join('');
   const phoneFmt = [() => '0' + digits(2) + ' ' + digits(3) + ' ' + digits(4), () => '+' + digits(2) + ' ' + digits(2) + ' ' + digits(4) + ' ' + digits(4), () => '(' + digits(3) + ') ' + digits(3) + '-' + digits(4), () => digits(3) + '-' + digits(3) + '-' + digits(4), () => '0' + digits(9)];
-  const genre = split === 'fresh' ? 'fresh' : pick(Object.keys(BODY));
-  const sentences = split === 'fresh' ? FRESH.body : BODY[genre].filter(t => typeof t === 'string' || split === 'test').map(t => typeof t === 'string' ? t : t.s);
+  const genre = split === 'fresh' || split === 'blind' ? split : pick(Object.keys(BODY));
+  const sentences = split === 'blind' ? BLIND.body : split === 'fresh' ? FRESH.body : BODY[genre].filter(t => typeof t === 'string' || split === 'test').map(t => typeof t === 'string' ? t : t.s);
   let text = '', spans = [];
   // fill a template, recording where each slot's value lands
   const fill = tpl => {
@@ -169,6 +170,23 @@ function paper(r, split, roster, studentIdx) {
       pub: [pick(P.PUBLIC), 'PUBLIC'], pubL: [pick(['Arrhenius', 'Curie', 'Haber', 'Pasteur']), 'PUBLIC'], pplace: [pick(P.PUBLIC_PLACE), 'PUBLIC'], book: [pick(P.BOOK), 'PUBLIC'], topic: [pick(P.TOPIC)],
       month: [pick(MONTH)], day: [pick(DAY)], d: [String(n() + Math.floor(r() * 20))], n: [String(n())], n2: [String(n() + 9)], room: [String(100 + Math.floor(r() * 300))],
     };
+    if (split === 'blind') {   // the blind set's own slots; the other sets never draw these, so their papers stay as they were
+      const mate2 = pick(mates.filter(m => m !== mate)), pp = () => r() < .85 ? pick(cls.people) : pick(BLIND.pools.BOOKS.flatMap(b => b.people));
+      const two = k => String(k).padStart(2, '0'), y = 2008 + Math.floor(r() * 5), mo = Math.floor(r() * 12), dd = 1 + Math.floor(r() * 28);
+      const dob2 = pick([() => two(dd) + '/' + two(mo + 1) + '/' + y, () => y + '-' + two(mo + 1) + '-' + two(dd), () => 'the ' + dd + (dd % 10 === 1 && dd !== 11 ? 'st' : dd % 10 === 2 && dd !== 12 ? 'nd' : dd % 10 === 3 && dd !== 13 ? 'rd' : 'th') + ' of ' + MONTH[mo] + ' ' + y, () => MONTH[mo] + ' ' + dd + 'th, ' + y, () => dd + ' ' + MONTH[mo].slice(0, 3) + ' ' + y])();
+      const L = () => 'ABCDEFGHJKLMNPRSTWXY'[Math.floor(r() * 20)];
+      Object.assign(v, {
+        nick: [P.NICK[self.first] || self.first, 'PERSON', 'nick'],
+        mate2: [mate2.first + ' ' + mate2.last, 'PERSON', 'mate'], mate2F: [mate2.first, 'PERSON', 'mate'],
+        pub: [pp(), 'PUBLIC'], pub2: [pp(), 'PUBLIC'], book: [cls.book, 'PUBLIC'], pplace: [r() < .7 ? pick(cls.places) : pick(['Lagos', 'Chicago', 'Lisbon', 'Seoul', 'Peru']), 'PUBLIC'],
+        dob2: [dob2, 'DATE'], postcode: [L() + L() + (1 + Math.floor(r() * 9)) + ' ' + Math.floor(r() * 10) + L() + L(), 'PLACE'],
+        cand: [pick([() => L().toLowerCase() + L().toLowerCase() + L().toLowerCase() + digits(3), () => digits(4) + '-' + digits(3), () => digits(7)])(), 'ID'],
+        selfCaps: [(self.last + ' ' + self.first).toUpperCase(), 'PERSON', 'self'],
+        phone: [pick([() => '07' + digits(3) + ' ' + digits(6), () => '+1 (' + digits(3) + ') ' + digits(3) + '-' + digits(4), () => digits(4) + ' ' + digits(4), () => digits(3) + '.' + digits(3) + '.' + digits(4)])(), 'CONTACT'],
+        email: [self.first.toLowerCase().normalize('NFD').replace(/[^a-z]/g, '') + pick(['', '.', '_']) + self.last.toLowerCase().normalize('NFD').replace(/[^a-z]/g, '').slice(0, 5) + pick(['', digits(2)]) + '@' + pick(['icloud.com', 'yahoo.com', 'whitlow.edu', 'mail.com']), 'CONTACT'],
+        handle: ['@' + pick(['team', 'project', 'class']) + '_' + self.first.toLowerCase().normalize('NFD').replace(/[^a-z]/g, ''), 'CONTACT'],
+      });
+    }
     const tl = r() < .2 ? pick(P.LAST_WORD) : pick(P.LAST);
     let out = '';
     tpl.replace(/\{(\w+)\}|([^{]+)/g, (m, slot, lit) => {
@@ -183,7 +201,7 @@ function paper(r, split, roster, studentIdx) {
     });
     return out;
   };
-  text += fill(pick(split === 'fresh' ? FRESH.headers : HEADERS));
+  text += fill(pick(split === 'blind' ? BLIND.headers : split === 'fresh' ? FRESH.headers : HEADERS));
   const k = 4 + Math.floor(r() * 9), used = new Set();
   const body = [];
   for (let i = 0; i < k; i++) { let t; do t = pick(sentences); while (used.has(t) && used.size < sentences.length); used.add(t); body.push(t); }
@@ -204,11 +222,12 @@ function makeRoster(r, size) {
 }
 
 function make(count, seed, split) {
+  P = split === 'blind' ? { ...require('./pools'), ...BLIND.pools } : require('./pools');
   const r = rng(seed), papers = [];
-  let roster = null, names = null;
+  let roster = null, names = null, cls = null, c = 0;
   for (let i = 0; i < count; i++) {
-    if (i % 20 === 0) { roster = makeRoster(r, 20); names = roster.map(s => s.first + ' ' + s.last); }
-    const p = paper(r, split, roster, i % 20);
+    if (i % 20 === 0) { roster = makeRoster(r, 20); names = roster.map(s => s.first + ' ' + s.last); cls = split === 'blind' ? BLIND.pools.BOOKS[c++ % BLIND.pools.BOOKS.length] : null; }
+    const p = paper(r, split, roster, i % 20, cls);
     p.id = split + '-' + i; p.roster = names;
     papers.push(p);
   }

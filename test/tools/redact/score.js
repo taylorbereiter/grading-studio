@@ -58,7 +58,7 @@ function report(name, r) {
 }
 
 if (require.main === module) {
-  const [split = 'dev', count = 500, ...flags] = process.argv.slice(2), seed = { dev: 1, test: 7, fresh: 13 }[split];
+  const [split = 'dev', count = 500, ...flags] = process.argv.slice(2), seed = { dev: 1, test: 7, fresh: 13, blind: 29 }[split];
   const papers = make(+count, seed, split);
   // the roster covering is slow outside the browser, so what it finds is kept in out/ between runs
   const cacheFile = path.join(root, 'out/redact-roster-' + split + '-' + count + '.json');
