@@ -10,12 +10,22 @@ def overlap(a, b):
 def area(a): return max(1, (a[2] - a[0] + 1) * (a[3] - a[1] + 1))
 def covered(g, cs): return sum(overlap(g, c['box']) for c in cs) >= 0.5 * area(g)
 
+INK = float(os.environ.get('HW_INK', '0.7'))
+def ink_covered(pts, cs):
+    # GNHK's word outlines are loose, so judge on the word's own ink: at least INK of it under covers
+    if not cs: return False
+    p = np.array(pts); inside = np.zeros(len(p), bool)
+    for c in cs:
+        b = c['box']; inside |= (p[:, 0] >= b[0]) & (p[:, 0] <= b[2]) & (p[:, 1] >= b[1]) & (p[:, 1] <= b[3])
+    return inside.mean() >= INK
+
 def gnhk(res, thr):
     hit = tot = fc = 0
     for t in res:
         cs = [c for c in t['covers'] if c['score'] >= thr]
         for g in t['gt']:
-            tot += 1; hit += covered(g['box'], cs)
+            tot += 1
+            hit += ink_covered(g['ink'], cs) if len(g.get('ink', [])) >= 10 else covered(g['box'], cs)
         for c in cs:
             if all(overlap(c['box'], g['box']) < 0.3 * area(c['box']) for g in t['gt']): fc += 1
     return hit / max(tot, 1), fc / max(len(res), 1), len(res), tot

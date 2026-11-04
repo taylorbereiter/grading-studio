@@ -11,15 +11,31 @@ def binarize(gray):
     # ruled lines, underlines and box edges: long thin runs
     h, w = bw.shape
     u8 = bw.astype(np.uint8)
-    hl = cv2.morphologyEx(u8, cv2.MORPH_OPEN, np.ones((1, max(40, w // 25)), np.uint8))
+    hk = np.ones((1, max(40, w // 25)), np.uint8)
+    hl = cv2.morphologyEx(u8, cv2.MORPH_OPEN, hk)
+    if LINES >= 2:
+        # ruled lines on photos are often a few degrees off level: straighten at a few angles and look again
+        for ang in (-4, -2, 2, 4):
+            M = cv2.getRotationMatrix2D((w / 2, h / 2), ang, 1.0)
+            r = cv2.warpAffine(u8, M, (w, h), flags=cv2.INTER_NEAREST)
+            o = cv2.morphologyEx(r, cv2.MORPH_OPEN, hk)
+            if o.any():
+                hl |= cv2.warpAffine(o, cv2.invertAffineTransform(M), (w, h), flags=cv2.INTER_NEAREST) & u8
     vl = cv2.morphologyEx(u8, cv2.MORPH_OPEN, np.ones((max(40, h // 25), 1), np.uint8))
     thick = cv2.morphologyEx(u8, cv2.MORPH_OPEN, np.ones((5, 1), np.uint8))
     lines = (hl > 0) & ~(thick > 0) | (vl > 0)
     return bw & ~lines
 
+LINES = int(os.environ.get('HW_LINES', '2'))
+MAXH = float(os.environ.get('HW_MAXH', '99'))    # drop boxes taller than this many letter heights (drawings)
+MASK = os.environ.get('HW_MASK', '0') == '1'      # crop margins filled with paper instead of the neighbours' ink
+OTHER_LABELS = ['class', 'date', 'period', 'form', 'teacher', 'grade', 'subject', 'block', 'group', 'section', 'score', 'mark', 'marks', 'total']
+KX = float(os.environ.get('HW_KX', '0.9'))    # how far apart letters can be and still join into one box, in letter heights
+KY = float(os.environ.get('HW_KY', '0.15'))
+
 def _group(clean, hmed, line_h, depth=0):
     """Word boxes inside a binary region; a box taller than about two lines is split at its emptiest row."""
-    k = cv2.getStructuringElement(cv2.MORPH_RECT, (max(3, int(0.6 * hmed)), max(1, int(0.15 * hmed))))
+    k = cv2.getStructuringElement(cv2.MORPH_RECT, (max(3, int(KX * hmed)), max(1, int(KY * hmed))))
     blobs = cv2.morphologyEx(clean.astype(np.uint8), cv2.MORPH_CLOSE, k)
     blobs = cv2.dilate(blobs, np.ones((1, 3), np.uint8))
     n2, lab2, st2, _ = cv2.connectedComponentsWithStats(blobs, 8)
@@ -76,6 +92,7 @@ def word_boxes(gray):
     for b in boxes:
         w, h = b[2] - b[0] + 1, b[3] - b[1] + 1
         if h > 4 * w or w > 30 * h: continue
+        if h > MAXH * hmed: continue
         if b[0] <= 1 or b[1] <= 1 or b[2] >= W - 2 or b[3] >= H - 2: continue
         if pm is not None and not pm[(b[1] + b[3]) // 2, (b[0] + b[2]) // 2]: continue
         out.append(b)
@@ -100,7 +117,23 @@ def crop(gray, b, hmed):
     x0, y0, x1, y1 = b
     py = int(0.25 * hmed); px = int(0.2 * hmed)
     H, W = gray.shape
+    if MASK:
+        inner = gray[y0:y1 + 1, x0:x1 + 1]
+        out = np.full((y1 - y0 + 1 + 2 * py, x1 - x0 + 1 + 2 * px), np.uint8(np.percentile(inner, 90)), np.uint8)
+        out[py:py + inner.shape[0], px:px + inner.shape[1]] = inner
+        return out
     return gray[max(0, y0 - py): min(H, y1 + py + 1), max(0, x0 - px): min(W, x1 + px + 1)]
+
+def narrow(b, lp, s0, s1, hmed):
+    """Cover only the matched part (reader columns s0 to s1) when the box holds more than one word."""
+    T = lp.shape[0]
+    x0, y0, x1, y1 = b
+    if T > 4 and (s0 > 1 or s1 < T - 2):
+        pad = int(0.2 * hmed)
+        cw = (x1 - x0 + 1) + 2 * pad
+        nx0 = x0 - pad + int(cw * max(0, s0 - 1) / T); nx1 = x0 - pad + int(cw * min(T, s1 + 2) / T)
+        return [max(x0, nx0), y0, min(x1, nx1), y1]
+    return list(b)
 
 def same_line(a, b, hmed):
     ca, cb = (a[1] + a[3]) / 2, (b[1] + b[3]) / 2
@@ -117,24 +150,17 @@ def find(gray, roster, R, thr, spot_rule=True, lp_cache=None):
         if lp_cache is not None: lp_cache['lps'] = lps
     labs = [label(r) for r in roster]
     names_lab = label('name')
+    other_labs = [label(w) for w in OTHER_LABELS]
     covers, reads = [], []
     for b, lp in zip(boxes, lps):
         res = [spot_any(lp, lb) for lb in labs]
         sc = [r[0] / max(1, len(lb)) for r, lb in zip(res, labs)]
         j = int(np.argmax(sc)) if sc else -1
         reads.append(dict(box=b, best=roster[j] if j >= 0 else '', score=sc[j] if j >= 0 else -99, scores=[round(float(v), 4) for v in sc],
-                          name_label=spot(lp, names_lab, LETTER)[0] / 4))
+                          name_label=spot(lp, names_lab, LETTER)[0] / 4,
+                          other_label=max(spot(lp, ol, LETTER)[0] / len(ol) for ol in other_labs)))
         if j >= 0 and sc[j] >= thr:
-            # cover only the matched part when the box holds more than one word
-            T = lp.shape[0]
-            s0, s1 = res[j][1], res[j][2]
-            x0, y0, x1, y1 = b
-            if T > 4 and (s0 > 1 or s1 < T - 2):
-                pad = int(0.2 * hmed)
-                cw = (x1 - x0 + 1) + 2 * pad
-                nx0 = x0 - pad + int(cw * max(0, s0 - 1) / T); nx1 = x0 - pad + int(cw * min(T, s1 + 2) / T)
-                b = [max(x0, nx0), y0, min(x1, nx1), y1]
-            covers.append(dict(box=b, why='roster', name=roster[j], score=float(sc[j])))
+            covers.append(dict(box=narrow(b, lp, res[j][1], res[j][2], hmed), why='roster', name=roster[j], score=float(sc[j])))
     if spot_rule:
         H = gray.shape[0]
         for r in reads:
@@ -145,7 +171,7 @@ def find(gray, roster, R, thr, spot_rule=True, lp_cache=None):
             x = b[2]
             for q in right:
                 if q['box'][0] - x > 4 * hmed: break
-                if q['name_label'] > -0.5: break
+                if q['name_label'] > -0.5 or q['other_label'] > -0.5: break   # the next printed label on the line
                 covers.append(dict(box=q['box'], why='name spot', name='', score=0.0))
                 x = q['box'][2]
     return covers, reads

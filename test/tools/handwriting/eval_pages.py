@@ -2,7 +2,7 @@
 # the word boxes come from the page finder, not from the dataset.
 # Usage: python -I eval_pages.py <synth|gnhk|danish> <pages.pkl or split> <model.pt> <out.json>
 import sys, os, re, json, pickle, random, time
-import numpy as np
+import numpy as np, cv2
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import hwlib, find_names
 from reader import Reader, spot, spot_any, label, LETTER
@@ -63,10 +63,18 @@ elif kind == 'gnhk':
         boxes, hmed = find_names.word_boxes(p['page'])
         if not boxes: continue
         lps = R.logprobs([find_names.crop(p['page'], b, hmed) for b in boxes])
+        bw = find_names.binarize(p['page'])
         gtb = []
         for w in p['words']:
             q = np.array(w['quad'], np.float32) * p['scale']
-            gtb.append(dict(text=hwlib.fold(w['text']), box=[int(q[:, 0].min()), int(q[:, 1].min()), int(q[:, 0].max()), int(q[:, 1].max())]))
+            t = re.sub(r'^[^a-z0-9]+|[^a-z0-9]+$', '', hwlib.fold(w['text']))
+            g = dict(text=t, box=[int(q[:, 0].min()), int(q[:, 1].min()), int(q[:, 0].max()), int(q[:, 1].max())])
+            if t in cands[:3]:
+                m = np.zeros(bw.shape, np.uint8); cv2.fillPoly(m, [q.astype(np.int32)], 1)
+                ys, xs = np.nonzero(bw & (m > 0))
+                k = max(1, len(xs) // 400)
+                g['ink'] = [[int(x), int(y)] for x, y in zip(xs[::k], ys[::k])]
+            gtb.append(g)
         for target in cands[:3]:
             roster = [target] + rng.sample([n for n in POOL if n not in texts], 24)
             labs = [label(r) for r in roster]
@@ -75,7 +83,7 @@ elif kind == 'gnhk':
                 res = [spot_any(lp, lb) for lb in labs]
                 s = [r[0] / max(1, len(lb)) for r, lb in zip(res, labs)]
                 j = int(np.argmax(s))
-                cov.append(dict(box=b, name=roster[j], score=float(s[j])))
+                cov.append(dict(box=find_names.narrow(b, lp, res[j][1], res[j][2], hmed), name=roster[j], score=float(s[j])))
             out.append(dict(page=p['file'], target=target, roster=roster, gt=[g for g in gtb if g['text'] == target], allgt=len(gtb), covers=cov))
         if len(out) % 30 < 3: print(len(out), 'trials %.0fs' % (time.time() - t0), flush=True)
 else:   # danish scans: no word boxes, so a hit is a cover for the stand-in inside a line that has that word
@@ -98,7 +106,7 @@ else:   # danish scans: no word boxes, so a hit is a cover for the stand-in insi
                 res = [spot_any(lp, lb) for lb in labs]
                 s = [r[0] / max(1, len(lb)) for r, lb in zip(res, labs)]
                 j = int(np.argmax(s))
-                cov.append(dict(box=b, name=roster[j], score=float(s[j])))
+                cov.append(dict(box=find_names.narrow(b, lp, res[j][1], res[j][2], hmed), name=roster[j], score=float(s[j])))
             n_inst = sum(1 for l in p['lines'] for w in re.findall(r"[^\s.,;:!?()\"'-]+", l['text']) if hwlib.fold(w) == target)
             out.append(dict(page=p['file'], target=target, roster=roster, lines=lines_with, n_inst=n_inst, covers=cov))
         if len(out) % 30 < 3: print(len(out), 'trials %.0fs' % (time.time() - t0), flush=True)

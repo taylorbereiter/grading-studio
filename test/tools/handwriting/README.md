@@ -25,28 +25,32 @@ Real English handwriting, GNHK test split (172 pages, adults' notes photographed
 
 On the same 58 pages the trained reader covers 76.5% (0.20), 77.9% (0.36) and 80.9% (0.56). TrOCR is not usable here in any case: it is far too big and it was fine-tuned on IAM, which is research-only.
 
-Whole pages, words found by `find_names.py` (nothing given away):
+Whole pages, words found by `find_names.py` (nothing given away). A stand-in word counts as covered when at least 70% of its ink is under covers (`metrics_pages.py`, `HW_INK`), because GNHK's word outlines are loose; a word written with punctuation attached ("Bonds:") counts as the word; and covers are narrowed to the matched part of a box, as `find_names.find` does in the app. Cut-offs from the held-back pages for 0.1, 0.25, 0.5 and 1 wrong covers per page:
 
 | Test | Names covered (wrong covers per page) |
 |---|---|
-| GNHK test, 172 pages | 42.6% (0.05), 50.8% (0.11), 57.7% (0.34), 65.1% (1.01) |
-| Danish scans, 223 pages, a language the reader never saw | 47.0% (0.02), 58.7% (0.03), 67.3% (0.08), 77.8% (0.18) |
-
-The gap between the two tables is the word finder: on the held-back pages only 66% of words get a clean box of their own (14% are merged with a neighbour, 5% split, 3% missed, the rest only partly boxed).
+| GNHK test, 172 pages | 58.0% (0.06), 64.9% (0.18), 68.8% (0.47), 74.5% (1.04) |
+| Danish scans, 223 pages, a language the reader never saw | 59.8% (0.03), 66.3% (0.06), 73.4% (0.15), 78.3% (0.24) |
 
 Practice pages in the 31 held-out fonts (`final200.pkl`, 200 pages, roster of 50 name words), with the Name label rule and the full-name rule (`pair=0.8`, picked on `test200.pkl`):
 
 | Cut-off (from the GNHK held-back pages) | Whole student name covered | With a printed Name label | Top line of lined paper | Corner | Signed at the end | Classmates' names | Wrong covers per page |
 |---|---|---|---|---|---|---|---|
-| -0.709 | 77.0% | 96.1% | 63.6% | 56.2% | 72.3% | 75.6% | 0.13 |
-| -1.025 | 81.0% | 97.4% | 65.9% | 62.5% | 80.9% | 80.5% | 0.16 |
-| -1.429 | 83.5% | 100% | 68.2% | 65.6% | 83.0% | 87.8% | 0.30 |
+| -0.914 | 79.5% | 98.7% | 68.2% | 56.2% | 74.5% | 84.6% | 0.07 |
+| -1.174 | 82.0% | 100% | 68.2% | 62.5% | 78.7% | 88.6% | 0.09 |
+| -1.462 | 83.0% | 100% | 70.5% | 65.6% | 78.7% | 92.7% | 0.19 |
 
-Chinese names written in Chinese characters (`make_pages_zh.py`, 100 pages, four open Chinese handwriting fonts, the roster holding the student's English name): the reader only knows Latin letters, so these are covered only by the Name label rule. With a printed Name label the name was covered on 91% of pages; on lined paper with no label, on none. Pages that also carried lines of Chinese writing had 0 to 0.14 wrong covers per page at the -0.709 cut-off and 0.10 to 0.45 at -1.025.
+Chinese names written in Chinese characters (`make_pages_zh.py`, 100 pages, four open Chinese handwriting fonts, the roster holding the student's English name): the reader only knows Latin letters, so these are covered only by the Name label rule. With a printed Name label the name was covered on 93% of pages; on lined paper with no label, on almost none. Pages that also carried lines of Chinese writing had 0.09 to 0.13 wrong covers per page at the -0.914 cut-off and 0.16 to 0.5 at -1.174.
+
+How this version came about. The first scoring run (same reader, `KX` 0.6, no slanted-line search, the old page scoring) gave GNHK 42.6% (0.05), 50.8% (0.11), 57.7% (0.34), 65.1% (1.01); Danish 47.0% (0.02), 58.7% (0.03), 67.3% (0.08), 77.8% (0.18); and on the practice pages a whole name 81.0% at 0.16 wrong covers per page. Then, choosing every change on the held-back GNHK pages and `test200.pkl` only:
+- the page scoring was made to judge what the app would do (narrowed covers, punctuation, ink). With the old word finder that alone gives GNHK 55.8% (0.17) and 68.0% (1.09) at the 0.25 and 1.0 cut-offs;
+- `find_names.py` joins letters up to 0.9 letter heights apart instead of 0.6 (`HW_KX`) and also removes ruled lines tilted up to 4 degrees (`HW_LINES=2`);
+- the Name label rule stops at the next printed label (Class, Date and similar), which took most wrong covers off the worksheet pages.
+The test pages were then scored a second time; the numbers above are that second look. `box_quality.py` measures word boxes against GNHK's own outlines without reading anything.
 
 Speed of `hwreader.js` in Node on one core: about 35 ms for a short word, 125 ms for a 128-pixel-wide strip. Reading only the name spots (about 20 to 40 word boxes at the top of a page) takes 1 to 1.5 seconds a paper. The int8 file is 507,749 bytes; against the Python reader it picks the same top letter in every column of the check strip, and the likely letters' log-chances differ by at most 0.2.
 
-Note: the first scoring run picked cut-offs on a coarse grid; `metrics_pages.py pick` was then changed to an exact search on the held-back pages, and the tests were read again at the new cut-offs.
+Also: the first scoring run picked cut-offs on a coarse grid; `metrics_pages.py pick` now searches the held-back pages exactly.
 
 ## Data
 
