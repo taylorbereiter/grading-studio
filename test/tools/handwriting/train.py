@@ -22,6 +22,10 @@ def clean_line(t):
     for s in SPECIAL: t = t.replace(s, '~')
     return t
 
+AUG2 = os.environ.get('AUG2', '0') == '1'          # stronger photo-like changes to the real crops
+INIT = os.environ.get('INIT', '')                   # start from an earlier reader of ours (not anyone else's)
+PEAK = float(os.environ.get('PEAK', '2e-3'))
+
 def ok_ratio(crop, text):
     if crop is None or not text: return False
     h, w = crop.shape
@@ -68,8 +72,17 @@ def aug_real(crop, rng):
     mn, mx = cs.min(0), cs.max(0); M[:, 2] -= mn
     img = cv2.warpAffine(img, M, (int(mx[0] - mn[0]) + 1, int(mx[1] - mn[1]) + 1), borderMode=cv2.BORDER_REPLICATE)
     if rng.random() < 0.3: img = cv2.GaussianBlur(img, (0, 0), rng.uniform(0.4, 1.3))
+    if AUG2:
+        # phone photos: faint pencil, dim or uneven light, heavy JPEG
+        if rng.random() < 0.3:
+            bg = np.percentile(img, 90); img = bg - (bg - img) * rng.uniform(0.3, 0.8)
+        if rng.random() < 0.25:
+            hh_, ww_ = img.shape; gy, gx = np.mgrid[0:hh_, 0:ww_].astype(np.float32)
+            img = img * (1 + rng.normal(0, 0.15) * gx / max(1, ww_) + rng.normal(0, 0.15) * gy / max(1, hh_)) - rng.uniform(0, 40)
     if rng.random() < 0.3: img = img + rng.normal(0, rng.uniform(2, 10), img.shape)
     img = np.clip(img, 0, 255).astype(np.uint8)
+    if AUG2 and rng.random() < 0.2:
+        img = cv2.imdecode(cv2.imencode('.jpg', img, [cv2.IMWRITE_JPEG_QUALITY, int(rng.integers(25, 70))])[1], cv2.IMREAD_GRAYSCALE)
     if rng.random() < 0.05:
         img = cv2.adaptiveThreshold(img, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 31, 10)
     return hwlib.to_model(img)
@@ -157,8 +170,10 @@ def evaluate(net):
 
 net = Net(hwlib.C)
 say('parameters', sum(p.numel() for p in net.parameters()))
-opt = torch.optim.AdamW(net.parameters(), lr=2e-3, weight_decay=1e-4)
-warm = 800
+if INIT:
+    net.load_state_dict(torch.load(INIT, map_location='cpu', weights_only=False)['net']); say('started from', INIT)
+opt = torch.optim.AdamW(net.parameters(), lr=PEAK, weight_decay=1e-4)
+warm = 800 if not INIT else 300
 sched = torch.optim.lr_scheduler.LambdaLR(opt, lambda s: min(1.0, (s + 1) / warm) * (0.5 * (1 + math.cos(math.pi * min(1.0, s / steps)))) * 0.97 + 0.03)
 ctc = nn.CTCLoss(blank=0, zero_infinity=True)
 rng = np.random.default_rng(1)

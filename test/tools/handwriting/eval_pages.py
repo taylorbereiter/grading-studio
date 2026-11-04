@@ -83,7 +83,9 @@ elif kind == 'gnhk':
                 res = [spot_any(lp, lb) for lb in labs]
                 s = [r[0] / max(1, len(lb)) for r, lb in zip(res, labs)]
                 j = int(np.argmax(s))
-                cov.append(dict(box=find_names.narrow(b, lp, res[j][1], res[j][2], hmed), name=roster[j], score=float(s[j])))
+                seg = lp[max(0, res[j][1]):max(res[j][1] + 1, res[j][2] + 1)]
+                cov.append(dict(box=find_names.narrow(b, lp, res[j][1], res[j][2], hmed), name=roster[j], score=float(s[j]),
+                                conf=round(float(seg.max(-1).mean()) if len(seg) else -9.0, 3)))
             out.append(dict(page=p['file'], target=target, roster=roster, gt=[g for g in gtb if g['text'] == target], allgt=len(gtb), covers=cov))
         if len(out) % 30 < 3: print(len(out), 'trials %.0fs' % (time.time() - t0), flush=True)
 else:   # danish scans: no word boxes, so a hit is a cover for the stand-in inside a line that has that word
@@ -106,7 +108,9 @@ else:   # danish scans: no word boxes, so a hit is a cover for the stand-in insi
                 res = [spot_any(lp, lb) for lb in labs]
                 s = [r[0] / max(1, len(lb)) for r, lb in zip(res, labs)]
                 j = int(np.argmax(s))
-                cov.append(dict(box=find_names.narrow(b, lp, res[j][1], res[j][2], hmed), name=roster[j], score=float(s[j])))
+                seg = lp[max(0, res[j][1]):max(res[j][1] + 1, res[j][2] + 1)]
+                cov.append(dict(box=find_names.narrow(b, lp, res[j][1], res[j][2], hmed), name=roster[j], score=float(s[j]),
+                                conf=round(float(seg.max(-1).mean()) if len(seg) else -9.0, 3)))
             n_inst = sum(1 for l in p['lines'] for w in re.findall(r"[^\s.,;:!?()\"'-]+", l['text']) if hwlib.fold(w) == target)
             out.append(dict(page=p['file'], target=target, roster=roster, lines=lines_with, n_inst=n_inst, covers=cov))
         if len(out) % 30 < 3: print(len(out), 'trials %.0fs' % (time.time() - t0), flush=True)

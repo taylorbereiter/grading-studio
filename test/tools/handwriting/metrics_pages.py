@@ -19,10 +19,12 @@ def ink_covered(pts, cs):
         b = c['box']; inside |= (p[:, 0] >= b[0]) & (p[:, 0] <= b[2]) & (p[:, 1] >= b[1]) & (p[:, 1] <= b[3])
     return inside.mean() >= INK
 
+RCONF = float(os.environ.get('HW_RCONF', '-0.5'))   # how sure the reader must be of its own reading under a roster cover
+
 def gnhk(res, thr):
     hit = tot = fc = 0
     for t in res:
-        cs = [c for c in t['covers'] if c['score'] >= thr]
+        cs = [c for c in t['covers'] if c['score'] >= thr and c.get('conf', 0) >= RCONF]
         for g in t['gt']:
             tot += 1
             hit += ink_covered(g['ink'], cs) if len(g.get('ink', [])) >= 10 else covered(g['box'], cs)
@@ -33,7 +35,7 @@ def gnhk(res, thr):
 def danish(res, thr):
     hit = tot = fc = 0
     for t in res:
-        cs = [c for c in t['covers'] if c['score'] >= thr]
+        cs = [c for c in t['covers'] if c['score'] >= thr and c.get('conf', 0) >= RCONF]
         def inside(c, L):
             cx, cy = (c['box'][0] + c['box'][2]) / 2, (c['box'][1] + c['box'][3]) / 2
             return L[0] <= cx <= L[2] and L[1] <= cy <= L[3]
