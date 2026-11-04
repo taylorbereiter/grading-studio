@@ -229,6 +229,8 @@ function make(count, seed, split) {
     if (i % 20 === 0) { roster = makeRoster(r, 20); names = roster.map(s => s.first + ' ' + s.last); cls = split === 'blind' ? BLIND.pools.BOOKS[c++ % BLIND.pools.BOOKS.length] : null; }
     const p = paper(r, split, roster, i % 20, cls);
     p.id = split + '-' + i; p.roster = names;
+    // the class's task sheet, made from its book without drawing on the random numbers so the papers stay as they were
+    if (cls) p.task = cls.book + ' essay: write about ' + cls.people[0] + ' and ' + cls.people[1] + ' and what ' + cls.people[cls.people.length - 1] + ' wanted readers to see.';
     papers.push(p);
   }
   return papers;

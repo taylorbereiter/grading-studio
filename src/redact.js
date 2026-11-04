@@ -26,7 +26,7 @@ const RD_LABEL = rdSet('house school team homeroom tutor form club candidate');
 const RD_PLACE_BEFORE = rdSet('in from near to at town city village lived live lives moved born outside visited visit stayed left leave leaving toward towards past across into around');
 const RD_STREET = rdSet('road rd street st lane ln avenue ave drive dr close way court ct crescent place pl boulevard blvd terrace gardens grove row square mews walk circle highway hwy parkway');
 const RD_SCHOOL = rdSet('school academy high college secondary international university elementary primary middle institute house campus');
-const RD_MONTH = rdSet('january february march april may june july august september october november december jan feb mar apr jun jul aug sep sept oct nov dec monday tuesday wednesday thursday friday saturday sunday');
+const RD_MONTH = rdSet('january february march april may june july august september october november december jan feb mar apr jun jul aug sep sept oct nov dec monday tuesday wednesday thursday friday saturday sunday mondays tuesdays wednesdays thursdays fridays saturdays sundays');
 // Words that often open a sentence and are also someone's given name somewhere (Even is Norwegian): at the start, these never join a name after them.
 const RD_OPENER = rdSet('even also only just still then now maybe perhaps sometimes today yesterday tomorrow later soon after before since while once unlike every both either neither without according like ask tell thank dear honestly finally overall however next last first second third');
 const RD_PARTICLE = rdSet('de van von der den da di del della dos das du le la al el bin ibn bint ben ter');
@@ -127,6 +127,8 @@ function rdClues(t, i, words, toks, text, nicks) {
     dashSign: /^\s*[-–—]\s*$/.test(pb) && (!prev || /\n\s*[-–—]\s*$/.test(text.slice(Math.max(0, t.a - 4), t.a)) || i === 0) ? 1 : 0,
     afterLabel: prev && RD_LABEL.has(lowP) && /^\s*:\s*$/.test(pb) ? 1 : 0,
     label: /^\s*:/.test(nb) || !next && /^\s*:/.test(after) ? 1 : 0,
+    // the words of "Student ID #123" or "Candidate number" themselves
+    idLabel: /^(student|candidate)$/.test(low) && /^\s*(id|number|no)\b/i.test(after) || low === 'id' && /^\s*[#:]?\s*[a-z]{0,2}\d/i.test(after) ? 1 : 0,
     afterPlace: prev && RD_PLACE_BEFORE.has(lowP) ? 1 : 0,
     afterNumber: prev && /^\d{1,5}$/.test(prev.s) ? 1 : 0,
     afterPerson: prev && RD_PERSON_PREP.has(lowP) && !/[.!?;:]/.test(pb) ? 1 : 0,
@@ -220,10 +222,16 @@ const RD_UNITS = [
   // a single capital letter on its own (P.S., a), unless it joins a name as an initial in layer 2
   { why: '', w: { single: 1, afterTitle: -1, afterGreet: -1, dashSign: -1 }, b: 0, out: -6 },
   { why: '', w: { titleWord: 1 }, b: 0, out: -20 },
+  { why: '', w: { idLabel: 1 }, b: 0, out: -20 },
   // words that label a line (House:, Date:)
   { why: '', w: { label: 1, afterLabel: -1, afterNamed: -1 }, b: 0, out: -6 },
 ];
 const RD_FIRE = 2;   // the output needed to cover a word
+// Clues that say outright that a word is someone's name, a school or a number (after Mr, my sister, Dear, Name:, before School).
+// A cover made by these is sure, and the decision model below never takes it off. A town after "in" or a team after "join the" is fairly sure.
+const RD_SURE = new Set('afterTitle afterRel afterGreet afterNamed callsMe dashSign beforeRel nameLine otherScript beforeStreet nextCapStreet beforeSchool afterLabel nick longDigits codeLike afterIdCue'.split(' '));
+const RD_FAIR = new Set(['afterPlace', 'afterJoinThe']);
+RD_UNITS.forEach(u => { const k = Object.keys(u.w).filter(k => u.w[k] > 0); u.sure = k.some(k => RD_SURE.has(k)) ? 2 : k.some(k => RD_FAIR.has(k)) ? 1 : 0; });
 
 function findPrivate(text, opts = {}) {
   const toks = rdTokens(text); toks.forEach((t, j) => t.j = j);
@@ -242,12 +250,12 @@ function findPrivate(text, opts = {}) {
   // layer 1: each word on its own
   const z = words.map((t, i) => {
     const c = rdClues(t, i, words, toks, text, nicks); c.latinPaper = latinPaper;
-    let sum = 0, why = '', best = 0;
+    let sum = 0, why = '', best = 0; const by = [0, 0, 0];
     for (const u of RD_UNITS) {
       let a = u.b; for (const k in u.w) a += u.w[k] * (c[k] || 0);
-      const v = Math.max(0, a) * u.out; sum += v; if (v > best) { best = v; why = u.why; }
+      const v = Math.max(0, a) * u.out; sum += v; if (v > 0) by[u.sure] += v; if (v > best) { best = v; why = u.why; }
     }
-    return { sum, why, c };
+    return { sum, why, c, sure: by[2] >= RD_FIRE ? 2 : by[1] >= RD_FIRE ? 1 : 0 };
   });
   // layer 2, run until nothing changes: a capitalized word next to one already found joins it (a first name before a family name, the rest of
   // "Cedar Hill", "Middle School", the second of "Mia and May"). Only spaces between them, or "Last, First" at the start of a line, or the dot of St.;
@@ -260,7 +268,7 @@ function findPrivate(text, opts = {}) {
     const was = s2;
     s2 = z.map((x, i) => {
       let s = x.sum; const c = x.c;
-      if (c.titleWord || c.label || c.pronounI || c.month && (c.nextDigit || !c.listed || /\d\s*$/.test(text.slice(Math.max(0, words[i].a - 4), words[i].a)))) return s;
+      if (c.titleWord || c.label || c.idLabel || c.pronounI || c.month && (c.nextDigit || !c.listed || /\d\s*$/.test(text.slice(Math.max(0, words[i].a - 4), words[i].a)))) return s;
       if (!c.cap && !c.caps) {
         // a small particle between two parts of a name (Leo de Vries)
         if (RD_PARTICLE.has(words[i].s) && was[i - 1] >= RD_FIRE && was[i + 1] >= RD_FIRE && glued(i - 1, i) && glued(i + 1, i)) s += 2.5;
@@ -279,8 +287,74 @@ function findPrivate(text, opts = {}) {
     });
     if (s2.every((v, i) => (v >= RD_FIRE) === (was[i] >= RD_FIRE))) break;
   }
-  words.forEach((t, i) => { if (s2[i] >= RD_FIRE) hits.push({ start: t.a, end: t.b, why: z[i].why || 'name' }); });
+  // a word joined to a sure cover (the first name before Mr Okafor's family name, the rest of a school's name) is as sure as it
+  const sure = z.map(x => x.sure);
+  for (let pass = 0; pass < 4; pass++) words.forEach((t, i) => { if (s2[i] < RD_FIRE) return; for (const k of [i - 1, i + 1]) if (words[k] && s2[k] >= RD_FIRE && glued(k, i) && sure[k] > sure[i]) sure[i] = sure[k]; });
+  hits.forEach(h => h.sure = 2);
+  words.forEach((t, i) => { if (s2[i] >= RD_FIRE) hits.push({ start: t.a, end: t.b, why: z[i].why || 'name', sure: sure[i] }); });
   return hits;
 }
 
-if (typeof module !== 'undefined') module.exports = { findPrivate, redactWords, RD_UNITS };
+// ---- the decision model: a second small hand-written network that looks at a whole class's covers together and takes off the ones that
+// cover no one: the book's characters and author, and names the teacher's own task sheet uses. It only ever takes off a cover the network
+// above made, never one from the roster, and never a sure one except for a word the task sheet itself uses.
+const RD_BOOKTALK = rdSet('novel novels poem book text texts chapter chapters scene scenes stanza author authors writer poet playwright narrator narrative protagonist antagonist character characters plot theme themes symbol symbolism symbolic foil reader readers audience ending opening speech quote quotation monologue soliloquy dialogue tragedy tragic hero heroine villain critics critic portrayal presents portrays shows depicts represents');
+const RD_MINE = rdSet("i i'm i've me my mine we we're our us");
+const RD_DROP = [
+  // a word the task sheet uses (Jane Eyre, Mr Rochester): it belongs to the assignment, not to a student
+  { why: 'task', w: { inTask: 1, shape: -3, rosterWord: -3 }, b: 0, out: 4 },
+  // a word covered on a quarter or more of the class's papers on no sure clue, and never surely anywhere: the class's book, not one student
+  { why: 'class', w: { manyPapers: 1, weak: 1, sureElsewhere: -3, rosterWord: -3, fair: -3, mostlyMine: -3 }, b: -1, out: 3 },
+  // a word the class mostly writes about in sentences about the book (the author shows, Ponyboy's speech, the narrator)
+  { why: 'book', w: { mostlyBook: 1, thrice: 1, weak: 1, sureElsewhere: -3, rosterWord: -3, mostlyMine: -3 }, b: -2, out: 2.5 },
+  // a place after "in" that the class mostly writes about as the book's setting, on several papers (the setting of Thornfield)
+  { why: 'book', w: { mostlyBook: 1, manyPapers: 1, fair: 1, sureElsewhere: -3, rosterWord: -3, mostlyMine: -3 }, b: -2, out: 2.5 },
+];
+
+function rdSentence(text, a, b) {
+  let s = a; while (s > 0 && !/[.!?\n]/.test(text[s - 1])) s--;
+  let e = b; while (e < text.length && !/[.!?\n]/.test(text[e])) e++;
+  return text.slice(s, e);
+}
+
+// papers: [{ text, hits (from findPrivate), roster }], all from one class. opts.task: the task sheet's text.
+// Returns, for each paper, the hits to keep and the hits taken off, each with the reason to show the teacher.
+function reviewCovers(papers, opts = {}) {
+  const taskWords = new Set((opts.task || '').match(/[\p{L}\p{M}'’.-]+/gu) || []);
+  const taskCaps = [...taskWords].filter(w => /^\p{Lu}/u.test(w) && !RD_FUNC.has(w.toLowerCase()));
+  const roster = new Set((papers[0] && papers[0].roster || []).flatMap(n => n.toLowerCase().split(/[\s-]+/)));
+  const word = (p, h) => p.text.slice(h.start, h.end).replace(/['’]s$/, '');
+  // what the class as a whole says about each covered word
+  const seen = new Map();
+  papers.forEach((p, n) => p.hits.forEach(h => {
+    if (h.why === 'email' || h.why === 'handle' || h.why === 'phone number' || h.why === 'birthday' || h.why === 'ID number') return;
+    const w = word(p, h), sen = rdSentence(p.text, h.start, h.end), o = seen.get(w) || { papers: new Set(), sure: 0, uses: 0, book: 0, mine: 0 };
+    const sw = sen.toLowerCase().match(/[\p{L}']+/gu) || [];
+    if (sw.some(x => RD_BOOKTALK.has(x)) || taskCaps.some(t => t !== w && sen.includes(t))) o.book++;
+    // a word the student uses about their own life (I play for, my grandparents' house in) is theirs, however many classmates share it
+    if (sw.some(x => RD_MINE.has(x))) o.mine++;
+    o.uses++; o.papers.add(n); if (h.sure === 2) o.sure++;
+    seen.set(w, o);
+  }));
+  const big = papers.length >= 5;
+  return papers.map(p => {
+    const keep = [], off = [];
+    for (const h of p.hits) {
+      const w = word(p, h), o = seen.get(w);
+      const shape = o ? 0 : 1;
+      const c = {
+        shape, inTask: taskWords.has(w) ? 1 : 0, rosterWord: roster.has(w.toLowerCase()) ? 1 : 0,
+        weak: h.sure === 0 ? 1 : 0, fair: h.sure === 1 ? 1 : 0, sureElsewhere: o && o.sure > 0 && o.sure >= .15 * o.uses ? 1 : 0,
+        manyPapers: o && big && o.papers.size >= .25 * papers.length ? 1 : 0, thrice: o && o.papers.size >= 3 ? 1 : 0,
+        mostlyBook: o && o.book >= .6 * o.uses ? 1 : 0, mostlyMine: o && o.mine >= .3 * o.uses ? 1 : 0,
+      };
+      let sum = 0, why = '', best = 0;
+      for (const u of RD_DROP) { let a = u.b; for (const k in u.w) a += u.w[k] * c[k]; const v = Math.max(0, a) * u.out; sum += v; if (v > best) { best = v; why = u.why; } }
+      if (sum >= RD_FIRE) off.push({ ...h, reason: why === 'task' ? 'in your task sheet' : why === 'class' ? 'on ' + o.papers.size + ' of ' + papers.length + ' papers' : 'talked about as part of the book' });
+      else keep.push(h);
+    }
+    return { keep, off };
+  });
+}
+
+if (typeof module !== 'undefined') module.exports = { findPrivate, reviewCovers, redactWords, RD_UNITS };
