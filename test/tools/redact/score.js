@@ -67,9 +67,9 @@ function report(name, r) {
 }
 
 if (require.main === module) {
-  const [split = 'dev', count = 500, ...flags] = process.argv.slice(2), seed = { dev: 1, test: 7, fresh: 13, blind: 29, blind2: 41, blind3: 53 }[split];
+  const [split = 'dev', count = 500, ...flags] = process.argv.slice(2), seed = { dev: 1, test: 7, fresh: 13, blind: 29, blind2: 41, blind3: 53, blind4: 67 }[split];
   WIDE = flags.includes('--places');
-  const papers = split === 'blind2' || split === 'blind3' ? require('./' + split).make(+count, seed) : make(+count, seed, split);
+  const papers = /^blind[234]$/.test(split) ? require('./' + split).make(+count, seed) : make(+count, seed, split);
   // the roster covering is slow outside the browser, so what it finds is kept in out/ between runs
   const cacheFile = path.join(root, 'out/redact-roster-' + split + '-' + count + '.json');
   let cache = {}; try { cache = JSON.parse(fs.readFileSync(cacheFile, 'utf8')); } catch (e) {}
