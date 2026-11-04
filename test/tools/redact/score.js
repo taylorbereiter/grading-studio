@@ -13,7 +13,7 @@ function rosterCover() {
   const grab = name => { const i = app.indexOf('const ' + name + ' ='); return app.slice(i, app.indexOf('\n', i)); };
   const ctx = { batch: null, console, window: { __gs: {} } };
   vm.createContext(ctx);
-  vm.runInContext(grab('LETTER_PLAIN') + '\n' + grab('nameFold') + '\n' + grab('SORT_STOP') + '\n' + fs.readFileSync(path.join(root, 'src/names.js'), 'utf8').replace(/^Object\.assign\(window\.__gs.*$/m, '') +
+  vm.runInContext(grab('LETTER_PLAIN') + '\n' + grab('rxEsc') + '\n' + grab('nameFold') + '\n' + grab('SORT_STOP') + '\n' + fs.readFileSync(path.join(root, 'src/names.js'), 'utf8').replace(/^Object\.assign\(window\.__gs.*$/m, '') +
     '\nfunction batchClass() { return { names: batch.roster }; }\nfunction rosterMatch(names) { return names.map(n => [n, { key: n }]); }\nthis.coverRx = coverRx; this.reset = () => { nameMemo = { sig: null }; };', ctx);
   return (p) => {
     if (!ctx.batch || ctx.batch.roster !== p.roster) { ctx.batch = { roster: p.roster, students: p.roster.map(key => ({ key })) }; ctx.reset(); }
@@ -67,9 +67,9 @@ function report(name, r) {
 }
 
 if (require.main === module) {
-  const [split = 'dev', count = 500, ...flags] = process.argv.slice(2), seed = { dev: 1, test: 7, fresh: 13, blind: 29, blind2: 41, blind3: 53, blind4: 67 }[split];
+  const [split = 'dev', count = 500, ...flags] = process.argv.slice(2), seed = { dev: 1, test: 7, fresh: 13, blind: 29, blind2: 41, blind3: 53, blind4: 67, zh: 71 }[split];
   WIDE = flags.includes('--places');
-  const papers = /^blind[234]$/.test(split) ? require('./' + split).make(+count, seed) : make(+count, seed, split);
+  const papers = /^blind[234]$/.test(split) ? require('./' + split).make(+count, seed) : split === 'zh' ? require('./zh-papers').make(+count, seed) : make(+count, seed, split);
   // the roster covering is slow outside the browser, so what it finds is kept in out/ between runs
   const cacheFile = path.join(root, 'out/redact-roster-' + split + '-' + count + '.json');
   let cache = {}; try { cache = JSON.parse(fs.readFileSync(cacheFile, 'utf8')); } catch (e) {}

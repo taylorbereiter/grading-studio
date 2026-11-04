@@ -253,6 +253,91 @@ const RD_SURE = new Set('afterTitle afterRel afterGreet afterNamed callsMe dashS
 const RD_FAIR = new Set(['afterPlace', 'afterJoinThe']);
 RD_UNITS.forEach(u => { const k = Object.keys(u.w).filter(k => u.w[k] > 0); u.sure = k.some(k => RD_SURE.has(k)) ? 2 : k.some(k => RD_FAIR.has(k)) ? 1 : 0; });
 
+// ---- Chinese writing. Chinese has no capitals and no spaces, so names are found from the family names people have (王, 李, 欧阳)
+// and the words around them: 我叫, 同桌, 妈妈 before a name; 老师, 同学, 阿姨 after a family name; 说, 告诉, 和我 after a name;
+// a line that is nothing but a name. Hand-written like the rest.
+const ZH_SURNAME = new Set([...'王李张刘陈杨黄赵吴周徐孙马朱胡郭何高林罗郑梁谢宋唐许韩冯邓曹彭曾肖田董袁潘于蒋蔡余杜叶程苏魏吕丁任沈姚卢姜崔钟谭陆汪范金石廖贾夏韦付方白邹孟熊秦邱江尹薛闫段雷侯龙史陶黎贺顾毛郝龚邵万钱严覃武戴莫孔向汤常温康施文牛樊葛邢安齐易乔伍庞颜倪庄聂章鲁岳翟殷詹申欧耿关兰焦俞左柳甘祝包宁尚符舒阮柯纪梅童凌毕单季裴霍涂成苗谷盛曲翁冉骆蓝路游辛靳管柴蒙鲍华喻祁蒲房滕屈饶解牟艾尤阳时穆农司卓古吉缪简车项连芦麦褚娄窦戚岑景党宫费卜冷晏席卫米柏宗瞿桂全佟应臧闵苟邬边卞姬师仇栾隋商刁沙荣巫寇桑郎甄丛仲虞敖巩佘池查麻苑迟邝'].concat(['欧阳', '司马', '上官', '诸葛', '东方', '慕容', '令狐', '皇甫', '尉迟', '公孙', '夏侯', '长孙', '宇文', '司徒']));
+// family names that are also very common characters: only taken as a name with a clear clue before or after
+const ZH_COMMON_SURNAME = new Set([...'和时明全应成车包关文安方万向于白高常华单解司师古吉简连景党宫费冷席米宗边商沙荣丛仲池查麻迟路游曲尚符易齐康温牛甘左']);
+// characters that end a name or can't be in one: grammar words, pronouns, verbs that follow a name, numbers and measure words
+const ZH_NOT_GIVEN = new Set([...'的了是在和说也就都又还把被给对很不没着过吧呢吗啊呀们个这那我你他她它有去来到上下里问告诉笑跑拿带回答喊叫二三四五六七八九十百千年号时候老师同学妈爸哥姐弟妹先生女士姨叔爷奶公婆舅姑与跟及或而但所该，。、！？；：“”‘’（）《》【】…—·']);
+// words after a family name or a full name that say it's a person: 王老师, 李明同学, 张阿姨
+const ZH_AFTER_TITLE = /^(老师|同学|先生|女士|小姐|阿姨|叔叔|伯伯|爷爷|奶奶|校长|教练|医生|大夫|主任|班主任|教授|师傅|老板|经理)/;
+// words just before a name that say it's a person: 我叫, 同桌, 我妈妈, 作者：
+const ZH_BEFORE = /(亲爱的|尊敬的|敬爱的|我叫|叫做|名叫|名字是|名字叫|我是|姓名[:：]\s*|名字[:：]\s*|作者[:：]\s*|学生[:：]\s*|署名[:：]\s*|同桌|同学|好朋友|朋友|闺蜜|好友|室友|邻居|班长|队长|组长|表哥|表姐|表弟|表妹|堂哥|堂姐|堂弟|堂妹|哥哥|姐姐|弟弟|妹妹|爸爸|妈妈|爷爷|奶奶|外公|外婆|姥姥|姥爷|叔叔|阿姨|舅舅|姑姑|老师|——|—|-\s*)$/;
+// words after a name that say someone did something: 李明说, 王芳告诉我, 张伟和我
+const ZH_AFTER_DOES = /^(说|问|告诉|批改|讲|教|写|看|来|去|走|送|买|做|请|帮|带|没|在|很|非常|不|会|要|想|刚|才|打|听|唱|画|哭|喜欢|觉得|认为|知道|拿着|站|坐|跳|玩|吃|喝|笑|跑|拿|带|回答|喊|叫|和我|跟我|是我|对我|给我|帮我|陪我|教我|让我|一起|也|就|又|还|都|一边|正在|突然|把|总是|每天|常常|已经|同学|今年|今天|昨天|是一个|是个|的妈妈|的爸爸|的家)/;
+// everyday words that start with a family name's character (高兴 is happy, not Mr Gao)
+const ZH_WORDS = new Set(('王国 王子 高兴 高中 高大 高山 高考 高级 高速 张开 张望 黄色 黄昏 黄金 白色 白天 白云 白菜 方法 方面 方向 方便 方式 马上 马路 周末 周围 周年 林子 树林 石头 江河 江南 何时 何必 何况 万一 万物 万里 于是 钱包 金色 金子 文化 文章 文字 史书 毛衣 毛巾 毛笔 龙舟 陈旧 李子 杨树 朱红 胡同 胡乱 孙子 宋朝 唐朝 明朝 明天 明白 明亮 清朝 汉朝 韩国 秦朝 吴国 许多 许久 许愿 丁点 常常 常见 夏天 夏日 夏季 雷声 雷雨 云朵 黄河 田野 田地 叶子 程度 苏醒 曾经 任何 任务 任性 沈默 江水 钟表 钟声 陆地 陆续 汪洋 范围 金钱 安全 安静 安排 关于 关心 关系 时候 时间 时光 和平 和谐 全部 全家 应该 成功 成绩 成长 车站 包括 包子 齐心 康复 温暖 温柔 牛奶 甘心 左边 路上 路边 游戏 游泳 曲子 尚未 符合 易于 容易 华丽 单独 解决 司机 师傅 古代 古老 吉利 简单 连续 景色 党员 宫殿 费用 冷静 席位 米饭 宗教 边上 商店 沙发 荣誉 丛林 池塘 查看 麻烦 迟到 向前 向往 汤圆 孔雀 孟夏 熊猫 秦岭 邱陵 尹某 薛定 段落 雷电 侯门 龙卷 陶醉 黎明 贺卡 顾客 顾问 郝然 龚某 邵某 严肃 严格 武器 武术 戴上 莫名 莫非 余下 杜绝 魏晋 吕剧 姚明 卢沟 姜汤 崔嵬 谭某 潘家 蒋氏 蔡伦 廖廓 贾氏 韦氏 付出 付款 邹氏 欧洲 东方 诸位 宇宙 阳光 太阳 牛顿 柳树 梅花 兰花 桂花 童年 童话 凌晨 毕业 季节 裴氏 霍乱 涂抹 苗条 谷物 盛开 翁婿 骆驼 蓝色 蓝天 辛苦 管理 柴火 蒙古 鲍鱼 喻意 蒲公 房间 房子 屈服 饶恕 艾草 尤其 穆斯 农民 农村 卓越 车子 项目 芦苇 麦子 戚戚 岑寂 卜卦 晏起 卫生 柏树 瞿然 全国 佟氏 应用 闵行 边疆 卞氏 姬氏 仇恨 商量 沙滩 巫婆 寇仇 桑树 郎中 甄别 仲夏 虞美 敖包 巩固 池水 查找 苑囿 迟早 宁静 宁愿 包容 祝福 祝贺 甘甜 焦急 焦虑 俞允 章节 鲁莽 岳父 翟某 殷勤 申请 耿直 关门 兰州 柯南 纪律 纪念 梅雨 成为 舒服 舒适 阮囊 冉冉 席子 简直 党史 吉他 古诗 景点').split(' '));
+// writers and characters taught in Chinese class: never a student (鲁迅, 李白, 闰土, 林黛玉)
+const ZH_FAMOUS = ('鲁迅 李白 杜甫 苏轼 白居易 王维 孟子 老子 庄子 孔子 屈原 毛泽东 孙中山 曹雪芹 林黛玉 贾宝玉 薛宝钗 王熙凤 诸葛亮 刘备 关羽 张飞 曹操 孙权 孙悟空 猪八戒 唐僧 沙僧 武松 宋江 林冲 鲁智深 李逵 祥子 朱自清 冰心 巴金 老舍 莫言 余华 福贵 闰土 孔乙己 阿Q 陶渊明 范仲淹 欧阳修 岳飞 文天祥 司马迁 秦始皇 李清照 辛弃疾 陆游 王安石 韩愈 柳宗元 曹植 王昌龄 孟浩然 杜牧 李商隐 王勃 贺知章 骆宾王 刘禹锡 杨绛 钱钟书 沈从文 史铁生 汪曾祺 萧红 张爱玲 郭沫若 闻一多 徐志摩 艾青 海子 顾城 舒婷 雷锋 钱学森 袁隆平 屠呦呦 邓稼先 詹天佑 华罗庚 李时珍 张衡 祖冲之 蔡伦 毕昇 郑和 花木兰 杨过 小龙女 郭靖 黄蓉 哪吒 嫦娥 后羿 女娲 盘古 刘慈欣 罗辑 叶文洁 汪淼 姚明 刘翔 李娜 郎平 谷爱凌').split(' ');
+const ZH_HAN = /\p{Script=Han}/u;
+
+function rdChinese(text, opts = {}) {
+  const hits = [], push = (a, b, why, sure) => hits.push({ start: a, end: b, why, sure, person: sure === 2 && why !== 'phone number' && why !== 'ID number' ? 1 : 0 });
+  const han = c => c && ZH_HAN.test(c) && !ZH_NOT_GIVEN.has(c);
+  const famousAt = i => ZH_FAMOUS.find(f => text.startsWith(f, i));
+  // numbers: an 11-digit mobile, a student number, a QQ or WeChat ID; a run of 7 or more digits anywhere in Chinese writing
+  for (const m of text.matchAll(/(?<![\d])(1[3-9]\d{9})(?![\d])/gu)) push(m.index, m.index + m[0].length, 'phone number', 2);
+  for (const m of text.matchAll(/(学号|学籍号|考号|准考证号|编号|QQ号?|微信号?|手机号?|电话)\s*(?:是|为|[:：])?\s*([A-Za-z0-9_-]{4,})/gu)) { const a = m.index + m[0].length - m[2].length; push(a, a + m[2].length, /QQ|微信|手机|电话/.test(m[1]) ? 'phone number' : 'ID number', 2); }
+  for (const m of text.matchAll(/(?<=\p{Script=Han}|^|\s)\d{7,}(?!\d)/gu)) push(m.index, m.index + m[0].length, 'ID number', 2);
+  // birthdays: a date with 生日, 出生 or 生于 near it, or a full date with a year a student was born in
+  for (const m of text.matchAll(/(?:(\d{4})\s*年\s*)?(\d{1,2})\s*月\s*(\d{1,2})\s*[日号]/gu)) {
+    const y = +(m[1] || 0), near = text.slice(Math.max(0, m.index - 12), m.index + m[0].length + 8);
+    if (/生日|出生|生于|诞生/.test(near) || y >= 1990 && y <= 2019) push(m.index, m.index + m[0].length, 'birthday', 2);
+  }
+  // street addresses: 人民路12号, 3栋502室, 阳光小区5号楼
+  for (const m of text.matchAll(/[\p{Script=Han}]{1,8}?(?:路|街|大道|大街|巷|胡同|弄)\s*\d+\s*号(?:\s*(?:院|楼)?\s*\d*\s*(?:号楼|栋|幢|单元|室|层)?\s*\d*\s*(?:单元|室|号)?)*|[\p{Script=Han}]{2,6}(?:小区|花园|公寓|新村|大厦)\s*\d+\s*(?:号楼|栋|幢)(?:\s*\d+\s*(?:单元|室|号)?)*|\d+\s*(?:号楼|栋|幢)\s*\d+\s*(?:单元\s*\d+\s*)?室?/gu)) {
+    // start after 住在, 在, 是 (我家住在人民路12号 covers 人民路12号)
+    const k = (m[0].match(/^[^\d]*?(?:住在|位于|在|是|于|到|从|去|住)(?=[^\d]*?(?:路|街|大道|大街|巷|胡同|弄|小区|花园|公寓|新村|大厦))/u) || [''])[0].length;
+    push(m.index + k, m.index + m[0].length, 'address', 2);
+  }
+  // names
+  for (let i = 0; i < text.length; i++) {
+    const two = text.slice(i, i + 2), sur = ZH_SURNAME.has(two) && two.length === 2 ? two : ZH_SURNAME.has(text[i]) ? text[i] : null;
+    if (!sur) continue;
+    // a writer or character (鲁迅, 闰土), unless more of a name follows (孟子杰 is a person, 孟子 a philosopher)
+    const f = famousAt(i); if (f && !han(text[i + f.length])) { i += f.length - 1; continue; }
+    if (f && ZH_AFTER_DOES.test(text.slice(i + f.length))) { i += f.length - 1; continue; }
+    const before = text.slice(Math.max(0, i - 8), i), s = i + sur.length, lineStart = /(^|\n)[ \t]*$/.test(text.slice(Math.max(0, i - 3), i));
+    // the character before is part of an everyday word with this one (任何, 许多): not a name
+    if (i > 0 && ZH_WORDS.has(text.slice(i - 1, i + 1))) continue;
+    // a name with no clue but a verb after it must start after punctuation, a space, the start, or a small word like 和, 跟, 的, 我
+    const edge = i === 0 || /[\s\p{P}和跟与把给对让叫是的了说我你他她们]/u.test(text[i - 1]);
+    // 王老师: the family name alone, with the title right after
+    if (ZH_AFTER_TITLE.test(text.slice(s))) { push(i, s, 'name', 2); continue; }
+    // the given name is one or two characters; try both and keep the one a clue supports
+    let best = null;
+    for (const g of [2, 1]) {
+      const e = s + g, given = text.slice(s, e);
+      if ([...given].length !== g || ![...given].every(han)) continue;
+      const word = text.slice(i, e), rest = text.slice(e);
+      const titleAfter = ZH_AFTER_TITLE.test(rest), cue = ZH_BEFORE.test(before), line = lineStart && /^[ \t]*($|\n|[,，(（:：])/.test(rest), does = ZH_AFTER_DOES.test(rest);
+      const everyday = ZH_WORDS.has(text.slice(i, i + 2)) || ZH_WORDS.has(text.slice(s, s + 2));
+      const sure = titleAfter || cue || line ? 2 : 0;
+      // a family name that is also a common character needs a verb that only a person does right after (白超批改, 高宇子带我)
+      const strongDoes = /^(说|告诉|带我|和我|跟我|对我|给我|帮我|陪我|教我|让我|问我|批改|笑着说)/.test(rest);
+      if (!sure && (!does || !edge || everyday || ZH_COMMON_SURNAME.has(sur) && !strongDoes)) continue;
+      if (everyday && !cue && !line) continue;
+      best = { a: i, b: e, sure: sure || 1 }; break;
+    }
+    if (best) { push(best.a, best.b, 'name', best.sure); i = best.b - 1; }
+  }
+  // nicknames: 小明, 阿强 before 说 or after 叫我; whatever follows 我叫 or 大家都叫我 up to the punctuation
+  for (const m of text.matchAll(/(?<=叫我|我叫|叫我做|外号是|绰号是|小名是|小名叫|昵称是)\s*([\p{Script=Han}A-Za-z]{1,3})/gu)) {
+    const a = m.index + m[0].length - m[1].length; const nick = m[1].replace(/[的了是在说也就都又还，。]+.*$/u, ''); if (nick && !hits.some(h => h.start <= a && h.end > a)) push(a, a + nick.length, 'nickname', 2);
+  }
+  for (const m of text.matchAll(/(?<![\p{Script=Han}])(\p{Script=Han})\1(?=说|问|告诉|笑|跑|和我|跟我|是我|对我|给我|帮我|也|就|又|还|都|一起)/gu)) {
+    if (ZH_NOT_GIVEN.has(m[1]) || /^(常常|天天|刚刚|慢慢|渐渐|好好|妈妈|爸爸|哥哥|姐姐|弟弟|妹妹|爷爷|奶奶|姥姥|叔叔|舅舅|姑姑|宝宝|人人|个个|偷偷|悄悄|静静|轻轻|默默)$/.test(m[0])) continue;
+    if (!hits.some(h => h.start <= m.index && h.end > m.index)) push(m.index, m.index + 2, 'nickname', 1);
+  }
+  for (const m of text.matchAll(/([小阿])([\p{Script=Han}])(?=说|问|告诉|笑|跑|和我|跟我|是我|对我|给我|帮我|也|就|又|还|都|一起|同学)/gu)) {
+    const a = m.index + m[0].length - 2; if (!han(m[2]) || ZH_WORDS.has(m[0]) || /^小(时|学|心|狗|猫|鸟|孩|朋|组|说|声|时候|路|草|河|山|船|镇)/.test(text.slice(a))) continue;
+    if (!hits.some(h => h.start <= a && h.end > a)) push(a, a + 2, 'nickname', 1);
+  }
+  return hits;
+}
+
 function findPrivate(text, opts = {}) {
   const toks = rdTokens(text); toks.forEach((t, j) => t.j = j);
   const words = toks.filter(t => t.kind === 'word'), nicks = rdNicks(opts.roster);
@@ -333,6 +418,8 @@ function findPrivate(text, opts = {}) {
     i = j;
   }
   words.forEach((t, i) => { if (s2[i] >= RD_FIRE && !skip[i]) hits.push({ start: t.a, end: t.b, why: z[i].why || 'name', sure: sure[i], person: z[i].person || addr[i] }); });
+  // Chinese writing gets its own pass; a word run the first pass covered in it (a Chinese name in an English paper) stays covered
+  if (ZH_HAN.test(text)) for (const h of rdChinese(text, opts)) if (!hits.some(x => x.start < h.end && h.start < x.end)) hits.push(h);
   // the place words left showing, so the decision model can leave the same words showing on the class's other papers
   hits.places = words.filter((t, i) => skip[i] && z[i].c.cap && !z[i].c.schoolWord && !z[i].c.ordinary).map(t => t.s);
   return hits;
@@ -406,6 +493,7 @@ function reviewCovers(papers, opts = {}) {
   const big = papers.length >= 5;
   // words the network found to be a town, team or school on some paper in the class (Larkspur International School)
   const places = new Set(papers.flatMap(p => p.hits.places || []));
+  const zhSure = new Set(papers.flatMap(p => p.hits.filter(h => h.sure === 2 && (h.why === 'name' || h.why === 'nickname')).map(h => p.text.slice(h.start, h.end)).filter(w => /^\p{Script=Han}{2,4}$/u.test(w) && !ZH_WORDS.has(w))));
   return papers.map(p => {
     const keep = [], off = [];
     let prevPlace = -1;
@@ -428,6 +516,9 @@ function reviewCovers(papers, opts = {}) {
       if (sum >= RD_FIRE) off.push({ ...h, reason: why === 'task' ? 'in your task sheet' : why === 'class' ? 'on ' + o.papers.size + ' of ' + papers.length + ' papers' : why === 'famous' ? 'an author, character or famous person' : 'talked about as part of the book' });
       else keep.push(h);
     }
+    // in Chinese writing, a name or nickname surely found on any of the class's papers (亲爱的谭曦熙, 大家都叫我大头) is covered wherever it appears
+    for (const w of zhSure) for (let k = p.text.indexOf(w); k >= 0; k = p.text.indexOf(w, k + w.length))
+      if (!p.hits.some(h => h.start < k + w.length && k < h.end) && !keep.some(h => h.start < k + w.length && k < h.end)) keep.push({ start: k, end: k + w.length, why: 'name', sure: 2, spread: true });
     // the other way round: a word the class surely covers somewhere (Mr Marsh, St. Brannoc College) is covered wherever the class writes it
     // with a capital, even where it looks like an everyday word (As Marsh told us)
     const have = new Set(p.hits.map(h => h.start));
@@ -442,4 +533,4 @@ function reviewCovers(papers, opts = {}) {
   });
 }
 
-if (typeof module !== 'undefined') module.exports = { findPrivate, reviewCovers, redactWords, RD_UNITS };
+if (typeof module !== 'undefined') module.exports = { findPrivate, reviewCovers, redactWords, rdChinese, RD_UNITS };
