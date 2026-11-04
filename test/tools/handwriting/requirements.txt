@@ -1,0 +1,11 @@
+# CPU-only PyTorch: pip install torch==2.15.0 --index-url https://download.pytorch.org/whl/cpu
+torch==2.15.0
+numpy==2.5.4
+pillow==13.0.0
+pyarrow==26.0.1
+opencv-python-headless==5.0.0
+numba==0.68.1
+fonttools==4.68.0
+# only for the TrOCR reference measurement (trocr_read.py):
+# transformers==4.57.1
+# sentencepiece==0.2.1
