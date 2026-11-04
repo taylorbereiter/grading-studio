@@ -26,15 +26,19 @@ function rosterCover() {
 function covered(text, ranges) { const c = new Uint8Array(text.length); for (const [a, b] of ranges) c.fill(1, Math.max(0, a), Math.min(text.length, b)); return c; }
 const LETTER = /[\p{L}\p{N}]/u;
 
+// Taylor's definition (11/4): names, contact details, ID numbers, street addresses and birthdays identify a student;
+// a town, team or school on its own doesn't, so covering one counts as a mistake. --places scores the older, wider definition.
+let WIDE = false;
+const kind = s => s.type === 'PLACE' ? (WIDE ? 'PLACE' : /\d/.test(s.value) ? 'ADDRESS' : 'PUBLIC') : s.type === 'SCHOOL' && !WIDE ? 'PUBLIC' : s.type;
 function score(papers, system) {
   const tally = {}, miss = [], wrong = {}, perClass = new Map(); let words = 0, wrongWords = 0, publicWrong = 0, coveredWords = 0;
   for (const p of papers) {
     const cw = perClass.get(p.roster) || new Set(); perClass.set(p.roster, cw);
     const c = covered(p.text, system(p)), inSpan = new Uint8Array(p.text.length), isPublic = new Uint8Array(p.text.length);
-    for (const s of p.spans) (s.type === 'PUBLIC' ? isPublic : inSpan).fill(1, s.start, s.end);
+    for (const s of p.spans) (kind(s) === 'PUBLIC' ? isPublic : inSpan).fill(1, s.start, s.end);
     for (const s of p.spans) {
-      if (s.type === 'PUBLIC') continue;
-      const k = s.type === 'PERSON' ? 'PERSON/' + s.who : s.type, t = tally[k] ||= [0, 0];
+      if (kind(s) === 'PUBLIC') continue;
+      const k = s.type === 'PERSON' ? 'PERSON/' + s.who : kind(s), t = tally[k] ||= [0, 0];
       let ok = true; for (let i = s.start; i < s.end; i++) if (LETTER.test(p.text[i]) && !c[i]) { ok = false; break; }
       t[1]++; if (ok) t[0]++; else miss.push(k + ': ' + s.value + '  in  ' + p.text.slice(Math.max(0, s.start - 40), s.end + 30).replace(/\n/g, ' / '));
     }
@@ -64,6 +68,7 @@ function report(name, r) {
 
 if (require.main === module) {
   const [split = 'dev', count = 500, ...flags] = process.argv.slice(2), seed = { dev: 1, test: 7, fresh: 13, blind: 29, blind2: 41 }[split];
+  WIDE = flags.includes('--places');
   const papers = split === 'blind2' ? require('./blind2').make(+count, seed) : make(+count, seed, split);
   // the roster covering is slow outside the browser, so what it finds is kept in out/ between runs
   const cacheFile = path.join(root, 'out/redact-roster-' + split + '-' + count + '.json');
@@ -73,14 +78,14 @@ if (require.main === module) {
   let net = null; try { net = require(path.join(root, 'src/redact.js')); net.redactWords(fs.readFileSync(path.join(root, 'src/redact-words.txt'), 'utf8'), fs.readFileSync(path.join(root, 'src/redact-names.txt'), 'utf8')); } catch (e) { if (e.code !== 'MODULE_NOT_FOUND') throw e; }
   const systems = { roster };
   if (net) {
-    systems.network = p => net.findPrivate(p.text, { roster: p.roster, student: p.student }).map(s => [s.start, s.end]);
+    systems.network = p => net.findPrivate(p.text, { roster: p.roster, student: p.student, places: WIDE }).map(s => [s.start, s.end]);
     systems.both = p => roster(p).concat(systems.network(p));
     // the decision model looks at a class at a time: the papers that share a roster, and the class's task sheet when there is one
     const kept = new Map();
     systems.decision = p => {
       if (!kept.has(p.id)) {
         const cls = papers.filter(q => q.roster === p.roster);
-        const r = net.reviewCovers(cls.map(q => ({ text: q.text, hits: net.findPrivate(q.text, { roster: q.roster, student: q.student }), roster: q.roster })), { task: cls[0].task });
+        const r = net.reviewCovers(cls.map(q => ({ text: q.text, hits: net.findPrivate(q.text, { roster: q.roster, student: q.student, places: WIDE }), roster: q.roster })), { task: cls[0].task });
         cls.forEach((q, i) => kept.set(q.id, r[i].keep.map(s => [s.start, s.end])));
       }
       return roster(p).concat(kept.get(p.id));
@@ -97,4 +102,4 @@ if (require.main === module) {
     }
   }
 }
-module.exports = { score, rosterCover };
+module.exports = { score, rosterCover, wide: w => { WIDE = w; } };

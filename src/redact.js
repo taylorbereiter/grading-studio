@@ -250,12 +250,14 @@ function findPrivate(text, opts = {}) {
   // layer 1: each word on its own
   const z = words.map((t, i) => {
     const c = rdClues(t, i, words, toks, text, nicks); c.latinPaper = latinPaper;
-    let sum = 0, why = '', best = 0; const by = [0, 0, 0];
+    let sum = 0, why = '', best = 0, place = 0, person = 0; const by = [0, 0, 0];
     for (const u of RD_UNITS) {
       let a = u.b; for (const k in u.w) a += u.w[k] * (c[k] || 0);
       const v = Math.max(0, a) * u.out; sum += v; if (v > 0) by[u.sure] += v; if (v > best) { best = v; why = u.why; }
+      if (v > 0 && (u.why === 'place' || u.why === 'school' || u.why === 'team')) place = 1;
+      if (v > 0 && u.sure === 2 && (u.why === 'name' || u.why === 'nickname')) person = 1;
     }
-    return { sum, why, c, sure: by[2] >= RD_FIRE ? 2 : by[1] >= RD_FIRE ? 1 : 0 };
+    return { sum, why, c, sure: by[2] >= RD_FIRE ? 2 : by[1] >= RD_FIRE ? 1 : 0, place, person };
   });
   // layer 2, run until nothing changes: a capitalized word next to one already found joins it (a first name before a family name, the rest of
   // "Cedar Hill", "Middle School", the second of "Mia and May"). Only spaces between them, or "Last, First" at the start of a line, or the dot of St.;
@@ -296,7 +298,23 @@ function findPrivate(text, opts = {}) {
   const sure = z.map(x => x.sure);
   for (let pass = 0; pass < 4; pass++) words.forEach((t, i) => { if (s2[i] < RD_FIRE) return; for (const k of [i - 1, i + 1]) if (words[k] && s2[k] >= RD_FIRE && glued(k, i) && sure[k] > sure[i]) sure[i] = sure[k]; });
   hits.forEach(h => h.sure = 2);
-  words.forEach((t, i) => { if (s2[i] >= RD_FIRE) hits.push({ start: t.a, end: t.b, why: z[i].why || 'name', sure: sure[i] }); });
+  // Towns, teams and schools stay showing unless opts.places asks for them: on their own they don't single a student out.
+  // A run of joined words is a place when a place, school or team unit fired on one of them and nothing said it is a person
+  // (Mr, my cousin, Dear) and none of its words is a name the list knows (a letter from Mira). Street addresses stay covered.
+  const skip = new Uint8Array(words.length), addr = new Uint8Array(words.length);
+  if (!opts.places) for (let i = 0; i < words.length; i++) {
+    if (s2[i] < RD_FIRE) continue;
+    let j = i; while (words[j + 1] && s2[j + 1] >= RD_FIRE && glued(j + 1, j)) j++;
+    const run = z.slice(i, j + 1);
+    const school = run.some(x => x.c.schoolWord), place = run.some(x => x.place) || school;
+    const person = run.some(x => x.person) || !school && run.some(x => x.c.listed && !x.c.ordinary);
+    if (run.some(x => x.why === 'address')) addr.fill(1, i, j + 1);
+    else if (place && !person) skip.fill(1, i, j + 1);
+    i = j;
+  }
+  words.forEach((t, i) => { if (s2[i] >= RD_FIRE && !skip[i]) hits.push({ start: t.a, end: t.b, why: z[i].why || 'name', sure: sure[i], person: z[i].person || addr[i] }); });
+  // the place words left showing, so the decision model can leave the same words showing on the class's other papers
+  hits.places = words.filter((t, i) => skip[i] && z[i].c.cap && !z[i].c.schoolWord && !z[i].c.ordinary).map(t => t.s);
   return hits;
 }
 
@@ -342,10 +360,16 @@ function reviewCovers(papers, opts = {}) {
     seen.set(w, o);
   }));
   const big = papers.length >= 5;
+  // words the network found to be a town, team or school on some paper in the class (Larkspur International School)
+  const places = new Set(papers.flatMap(p => p.hits.places || []));
   return papers.map(p => {
     const keep = [], off = [];
+    let prevPlace = -1;
     for (const h of p.hits) {
       const w = word(p, h), o = seen.get(w);
+      // the same word elsewhere, and the word right after it (the Larkspur Owls), is that place too, unless something says it's a person
+      if (!h.person && !roster.has(w.toLowerCase()) && (places.has(w) || prevPlace >= 0 && /^ $/.test(p.text.slice(prevPlace, h.start)))) { prevPlace = h.end; continue; }
+      prevPlace = -1;
       const shape = o ? 0 : 1;
       const c = {
         shape, inTask: taskWords.has(w) ? 1 : 0, rosterWord: roster.has(w.toLowerCase()) ? 1 : 0,
@@ -363,7 +387,7 @@ function reviewCovers(papers, opts = {}) {
     const have = new Set(p.hits.map(h => h.start));
     for (const m of p.text.matchAll(/\p{Lu}[\p{L}\p{M}'’-]*/gu)) {
       const w = m[0].replace(/['’]s$/, ''), o = seen.get(w);
-      if (!o || !o.sure || o.sure < .15 * o.uses || have.has(m.index) || taskWords.has(w) || RD_FUNC.has(w.toLowerCase()) || RD_TITLE.has(w.toLowerCase()) || RD_SCHOOL.has(w.toLowerCase()) || RD_STREET.has(w.toLowerCase()) || RD_LABEL.has(w.toLowerCase()) || w.length < 2) continue;
+      if (!o || !o.sure || o.sure < .15 * o.uses || have.has(m.index) || places.has(w) || taskWords.has(w) || RD_FUNC.has(w.toLowerCase()) || RD_TITLE.has(w.toLowerCase()) || RD_SCHOOL.has(w.toLowerCase()) || RD_STREET.has(w.toLowerCase()) || RD_LABEL.has(w.toLowerCase()) || w.length < 2) continue;
       // not at the start of a sentence, where any word has a capital (Chapter 3 begins...)
       if (/(^|[.!?:\n"“(|-]\s*)$/.test(p.text.slice(Math.max(0, m.index - 3), m.index))) continue;
       keep.push({ start: m.index, end: m.index + m[0].length, why: 'name', sure: 2, spread: true });
