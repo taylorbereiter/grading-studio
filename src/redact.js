@@ -7,7 +7,7 @@
 // Every weight has a reason beside it. Revisions were made by looking at mistakes on made-up papers only (test/tools/redact).
 
 // Two lists it knows (see redact-lists-LICENSE.txt): everyday English words (SCOWL, up to size 35) and given and family names in the Latin alphabet from many countries (Faker).
-let RD_WORDS = null, RD_NAMES = new Set(), RD_FAMOUS = new Set(), RD_TITLES = null;
+let RD_WORDS = null, RD_NAMES = new Set(), RD_FAMOUS = new Set(), RD_TITLES = null, RD_COMMON = new Set();
 // Apps and brands students name all the time, capitalized but identifying no one.
 const RD_BRANDS = 'instagram tiktok youtube snapchat google discord whatsapp netflix spotify minecraft roblox fortnite iphone ipad xbox playstation nintendo zoom kahoot canva quizlet chatgpt wikipedia facebook twitter reddit pinterest amazon'.split(' ');
 // School subjects, languages and nationalities: always capitalized in English, never a person.
@@ -17,7 +17,8 @@ function redactWords(words, names, famous) {
   if (names) RD_NAMES = new Set(names.split('\n'));
   // authors, characters and famous people (src/redact-public.txt): lines starting with # are notes
   if (famous) {
-    const lines = famous.split('\n').filter(l => l && !/^#/.test(l));
+    const lines = famous.split('\n').filter(l => l && !/^[#%]/.test(l));
+    RD_COMMON = new Set(famous.split('\n').filter(l => /^% /.test(l)).join(' ').split(/\s+/).filter(w => w && w !== '%' && /^\p{Lu}/u.test(w)));
     RD_FAMOUS = new Set(lines.filter(l => !/^= /.test(l)).join(' ').split(/\s+/).filter(Boolean).map(w => w.replace(/['’]s$/, '')));
     // titles: a cover inside one (Things Fall Apart) is the book's
     const esc = t => t.slice(2).trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/'/g, "['’]");
@@ -27,6 +28,7 @@ function redactWords(words, names, famous) {
 const rdSet = s => new Set(s.split(' '));
 const RD_FUNC = rdSet('a an the and or but if so of to in on at by for from with as is are was were be been am i you he she it we they me him her us them my your his its our their this that these those not no yes did does have has had would can could should might must there here what when where who why how all any some each very just also than then too');
 const RD_TITLE = rdSet('mr mrs ms miss mx dr prof professor sir madam madame monsieur coach grandma grandpa granny gran grandad granddad nana nan papa uncle auntie aunty aunt teacher principal headteacher sensei imam pastor rabbi señor señora');
+const RD_HONOR = rdSet('reverend friar lady queen princess captain inspector saint sister brother father mother duchess countess sergeant officer detective');
 const RD_REL = rdSet('mom mum mother mama dad father brother sister twin cousin uncle aunt auntie grandma grandpa grandmother grandfather grandad nan nana godmother godfather friend bestie neighbor neighbour stepdad stepmom stepmum stepbrother stepsister sibling partner classmate teammate roommate boyfriend girlfriend crush son daughter wife husband nephew niece tutor mentor counselor counsellor coach');
 const RD_GREET = rdSet('dear hi hello hey morning afternoon evening thanks thank thx sincerely regards wishes cheers love yours best warmly from by');
 const RD_NAMED = rdSet('named called nicknamed name student author submitted');
@@ -126,7 +128,7 @@ function rdClues(t, i, words, toks, text, nicks) {
     month: RD_MONTH.has(low) ? 1 : 0,
     start,
     otherScript: letters && !RD_LATIN.test(w) ? 1 : 0,
-    titleWord: RD_TITLE.has(low) || RD_GREET.has(low) ? 1 : 0,
+    titleWord: RD_TITLE.has(low) || RD_HONOR.has(low) || RD_GREET.has(low) ? 1 : 0,
     pronounI: w === 'I' ? 1 : 0,
     // what comes before
     afterTitle: prev && RD_TITLE.has(lowP) && !/[,;:]/.test(pb) ? 1 : 0,
@@ -260,11 +262,11 @@ const ZH_SURNAME = new Set([...'王李张刘陈杨黄赵吴周徐孙马朱胡郭
 // family names that are also very common characters: only taken as a name with a clear clue before or after
 const ZH_COMMON_SURNAME = new Set([...'和时明全应成车包关文安方万向于白高常华单解司师古吉简连景党宫费冷席米宗边商沙荣丛仲池查麻迟路游曲尚符易齐康温牛甘左']);
 // characters that end a name or can't be in one: grammar words, pronouns, verbs that follow a name, numbers and measure words
-const ZH_NOT_GIVEN = new Set([...'的了是在和说也就都又还把被给对很不没着过吧呢吗啊呀们个这那我你他她它有去来到上下里问告诉笑跑拿带回答喊叫二三四五六七八九十百千年号时候老师同学妈爸哥姐弟妹先生女士姨叔爷奶公婆舅姑与跟及或而但所该，。、！？；：“”‘’（）《》【】…—·']);
+const ZH_NOT_GIVEN = new Set([...'的了是在和说也就都又还把被给对很不没着过吧呢吗啊呀们个这那我你他她它有去来到上下里问告诉笑跑拿带回答喊叫二三四五六七八九十百千年号时候老师同学妈爸哥姐弟妹先女士姨叔爷奶公婆舅姑与跟及或而但所该，。、！？；：“”‘’（）《》【】…—·']);
 // words after a family name or a full name that say it's a person: 王老师, 李明同学, 张阿姨
 const ZH_AFTER_TITLE = /^(老师|同学|先生|女士|小姐|阿姨|叔叔|伯伯|爷爷|奶奶|校长|教练|医生|大夫|主任|班主任|教授|师傅|老板|经理)/;
 // words just before a name that say it's a person: 我叫, 同桌, 我妈妈, 作者：
-const ZH_BEFORE = /(亲爱的|尊敬的|敬爱的|我叫|叫做|名叫|名字是|名字叫|(?:^|[\s，。！？；：、])我是|老妈|老爸|大伯|大妈|伯伯|伯母|婶婶|舅妈|小姨|大姨|姨妈|姑妈|姑父|姨父|舅舅|表叔|堂叔|嫂子|姐夫|孙女|孙子|女儿|儿子|侄子|侄女|外甥|学生|师傅|教练|姓名[:：]\s*|名字[:：]\s*|作者[:：]\s*|学生[:：]\s*|署名[:：]\s*|同桌|同学|好朋友|朋友|闺蜜|好友|室友|邻居|班长|队长|组长|表哥|表姐|表弟|表妹|堂哥|堂姐|堂弟|堂妹|哥哥|姐姐|弟弟|妹妹|爸爸|妈妈|爷爷|奶奶|外公|外婆|姥姥|姥爷|叔叔|阿姨|舅舅|姑姑|老师|——|—|-\s*)$/;
+const ZH_BEFORE = /(亲爱的|尊敬的|敬爱的|感谢|谢谢|感激|采访了|采访|[大二三四五小老干][叔姨舅姑伯爷妈爸哥姐婶]|我叫|叫做|名叫|名字是|名字叫|(?:^|[\s，。！？；：、])我是|老妈|老爸|大伯|大妈|伯伯|伯母|婶婶|舅妈|小姨|大姨|姨妈|姑妈|姑父|姨父|舅舅|表叔|堂叔|嫂子|姐夫|孙女|孙子|女儿|儿子|侄子|侄女|外甥|学生|师傅|教练|姓名[:：]\s*|名字[:：]\s*|作者[:：]\s*|学生[:：]\s*|署名[:：]\s*|同桌|同学|好朋友|朋友|闺蜜|好友|室友|邻居|班长|队长|组长|表哥|表姐|表弟|表妹|堂哥|堂姐|堂弟|堂妹|哥哥|姐姐|弟弟|妹妹|爸爸|妈妈|爷爷|奶奶|外公|外婆|姥姥|姥爷|叔叔|阿姨|舅舅|姑姑|老师|——|—|-\s*)$/;
 // words after a name that say someone did something: 李明说, 王芳告诉我, 张伟和我
 const ZH_AFTER_DOES = /^(说|问|告诉|批改|讲|教|写|看|来|去|走|送|买|做|请|帮|带|没|在|很|非常|不|会|要|想|刚|才|打|听|唱|画|哭|喜欢|觉得|认为|知道|拿着|站|坐|跳|玩|吃|喝|笑|跑|拿|带|回答|喊|叫|和我|跟我|是我|对我|给我|帮我|陪我|教我|让我|一起|也|就|又|还|都|一边|正在|突然|把|总是|每天|常常|已经|同学|今年|今天|昨天|是一个|是个|的妈妈|的爸爸|的家)/;
 // everyday words that start with a family name's character (高兴 is happy, not Mr Gao)
@@ -313,7 +315,7 @@ function rdChinese(text, opts = {}) {
       if ([...given].length !== g || ![...given].every(han)) continue;
       const word = text.slice(i, e), rest = text.slice(e);
       const titleAfter = ZH_AFTER_TITLE.test(rest), cue = ZH_BEFORE.test(before), line = lineStart && /^[ \t]*($|\n|[,，(（:：])/.test(rest), does = ZH_AFTER_DOES.test(rest);
-      const everyday = ZH_WORDS.has(text.slice(i, i + 2)) || ZH_WORDS.has(text.slice(s, s + 2));
+      const everyday = ZH_WORDS.has(text.slice(i, i + 2));
       const sure = titleAfter || cue || line ? 2 : 0;
       // a family name that is also a common character needs a verb that only a person does right after (白超批改, 高宇子带我)
       const strongDoes = /^(说|告诉|带我|和我|跟我|对我|给我|帮我|陪我|教我|让我|问我|批改|笑着说)/.test(rest);
@@ -326,6 +328,19 @@ function rdChinese(text, opts = {}) {
   // a signature line (——琪, ——李明) and the name after 你的孙女, 你的女儿: the one to three characters that follow
   for (const m of text.matchAll(/(?:(?:^|\n|[。！？])[ \t]*(?:——|—|-)\s*|你的(?:孙女|孙子|女儿|儿子|学生|外孙女|外孙))(\p{Script=Han}{1,3})(?=$|\n|[，。！？\s]|这|那|在|于|如|是)/gu)) {
     const a = m.index + m[0].length - m[1].length; if (!ZH_NOT_GIVEN.has(m[1][0]) && !hits.some(h => h.start <= a && h.end > a)) push(a, a + m[1].length, 'name', 2);
+  }
+  // 大壮是我的外号: the nickname before 是我的外号
+  for (const m of text.matchAll(/(\p{Script=Han}{1,3})(?=是我的(?:外号|小名|绰号|昵称|乳名))/gu)) {
+    const nick = m[1].replace(/^.*[的了是在说也就都又还和]/u, ''); const a = m.index + m[1].length - nick.length;
+    if (nick && !hits.some(h => h.start <= a && h.end > a)) push(a, a + nick.length, 'nickname', 2);
+  }
+  // a roster student's given name alone on a line or after a dash (宇, ——琪), as a signature
+  for (const n of opts.roster || []) {
+    const c = [...String(n)]; if (c.length < 2 || c.length > 4 || !c.every(x => ZH_HAN.test(x))) continue;
+    const given = c.slice(c.length === 4 ? 2 : 1).join('');
+    for (const m of text.matchAll(new RegExp('(?:^|\\n|——|—)[ \\t]*(' + given + ')[ \\t]*(?=$|\\n)', 'gu'))) {
+      const a = m.index + m[0].length - m[1].length; if (!hits.some(h => h.start <= a && h.end > a)) push(a, a + m[1].length, 'name', 2);
+    }
   }
   // nicknames: 小明, 阿强 before 说 or after 叫我; whatever follows 我叫 or 大家都叫我 up to the punctuation
   for (const m of text.matchAll(/(?<=叫我|我叫|叫我做|外号是|外号叫|绰号是|绰号叫|小名是|小名叫|昵称是|昵称叫|乳名叫)\s*([\p{Script=Han}A-Za-z]{1,3})/gu)) {
@@ -447,7 +462,10 @@ const RD_DROP = [
   { why: 'book', w: { mostlyBook: 1, thrice: 1, weak: 1, sureElsewhere: -3, rosterWord: -3, mostlyMine: -3 }, b: -2, out: 2.5 },
   // an author, a character or a famous person (Gatsby, Steinbeck, Lady Macbeth) in a sentence that isn't about the student's own life;
   // a name people also have (George, Jack, Elizabeth) only when the sentence is about the book too (Lennie and George, the narrator)
-  { why: 'famous', w: { famous: 1, notSure: 1, shape: -5, mineHere: -1, rosterWord: -3, sureElsewhere: -3, peopleName: -1, bookHere: 1, famousNext: 1 }, b: -1, out: 3 },
+  { why: 'famous', w: { famousOnly: 1, notSure: 1, aboutBook: 1, shape: -5, rosterWord: -3, mostlySure: -3, relHere: -3 }, b: -2, out: 3 },
+  // a name people also have (Mary, Arthur, Elizabeth) needs more: a famous name right next to it (Mary Shelley, Arthur Miller),
+  // or talk of the book in its sentence or across the class, and no "I" or "my" in its sentence
+  { why: 'famous', w: { famous: 1, peopleName: 1, notSure: 1, shape: -5, rosterWord: -3, sureElsewhere: -3, mineHere: -1, relHere: -3, famousPair: 2, bookHere: 1, mostlyBook: 1 }, b: -3, out: 3 },
   // a name in Chinese that the class mostly writes about in sentences about the book (书中写孙少安, 孙少安的命运), on three or more papers
   { why: 'book', w: { zhBook: 1, rosterWord: -3 }, b: 0, out: 3 },
   // a word inside the title of a book, play or poem (Things Fall Apart, Nineteen Eighty-Four)
@@ -459,16 +477,16 @@ const RD_DROP = [
 // what the sentence around a cover is about: the student's own life (I, my, we), or the book (the narrator, another author or character, a word from the task sheet)
 function rdHere(text, h, w, taskCaps = []) {
   const sen = rdSentence(text, h.start, h.end), sw = sen.match(/[\p{L}'’]+/gu) || [];
-  const mine = sw.some(x => RD_MINE.has(x.toLowerCase())) ? 1 : 0;
+  const mine = sw.some(x => RD_MINE.has(x.toLowerCase())) ? 1 : 0, rel = sw.some(x => RD_REL.has(x.toLowerCase()) || RD_TITLE.has(x.toLowerCase())) ? 1 : 0;
   // another famous name counts only if it isn't the word right next to this one (Echo Ikemefuna is one person, whatever Ikemefuna is)
   const near = new Set([(text.slice(h.end).match(/^ (\p{Lu}[\p{L}'’-]+)/u) || [])[1], (text.slice(0, h.start).match(/(\p{Lu}[\p{L}'’-]+) $/u) || [])[1]]);
-  const book = sw.some(x => RD_BOOKTALK.has(x.toLowerCase()) || x !== w && !near.has(x) && /^\p{Lu}/u.test(x) && RD_FAMOUS.has(x.replace(/['’]s$/, '')) && !RD_NAMES.has(x.toLowerCase())) ? 1 : 0;
-  return { mine, book };
+  const book = sw.some(x => RD_BOOKTALK.has(x.toLowerCase()) || x !== w && !near.has(x) && /^\p{Lu}/u.test(x) && RD_FAMOUS.has(x.replace(/['’]s$/, '')) && !RD_COMMON.has(x.replace(/['’]s$/, ''))) ? 1 : 0;
+  return { mine, book, rel };
 }
 // the word right before or after is an author's or a famous person's family name that is nobody's given name (Albert Einstein, Isaac Newton)
 function rdFamousNext(text, h) {
   const after = text.slice(h.end).match(/^ (\p{Lu}[\p{L}'’-]+)/u), before = text.slice(0, h.start).match(/(\p{Lu}[\p{L}'’-]+) $/u);
-  return [after, before].some(m => m && RD_FAMOUS.has(m[1].replace(/['’]s$/, '')) && !RD_NAMES.has(m[1].toLowerCase()));
+  return [after, before].some(m => m && RD_FAMOUS.has(m[1].replace(/['’]s$/, '')) && !RD_COMMON.has(m[1].replace(/['’]s$/, '')));
 }
 // the capitalized words joined to a cover on either side (Jason in "Jason Liang"), so a sure name that only shares one word
 // with the task sheet (an author called Jason) stays covered
@@ -519,7 +537,8 @@ function reviewCovers(papers, opts = {}) {
         weak: h.sure === 0 ? 1 : 0, fair: h.sure === 1 ? 1 : 0, sureElsewhere: o && o.sure > 0 && o.sure >= .15 * o.uses ? 1 : 0,
         manyPapers: o && big && o.papers.size >= .25 * papers.length ? 1 : 0, thrice: o && o.papers.size >= 3 ? 1 : 0,
         mostlyBook: o && o.book >= .6 * o.uses ? 1 : 0, mostlyMine: o && o.mine >= .3 * o.uses ? 1 : 0,
-        zhBook: /\p{Script=Han}/u.test(w) && h.sure < 2 && o && o.papers.size >= 3 && o.book >= .5 * o.uses ? 1 : 0, famous: RD_FAMOUS.has(w) ? 1 : 0, notSure: h.sure < 2 ? 1 : 0, inTitle: titles.some(([a, b]) => h.start >= a && h.end <= b) ? 1 : 0, famousNext: rdFamousNext(p.text, h) && RD_NAMES.has(w.toLowerCase()) && !here.mine ? 1 : 0, peopleName: RD_NAMES.has(w.toLowerCase()) ? 1 : 0, mineHere: here.mine, bookHere: here.book,
+        famousOnly: RD_FAMOUS.has(w) && !RD_COMMON.has(w) ? 1 : 0, aboutBook: here.book || (o && o.book >= .6 * o.uses) || (o && big && o.papers.size >= .25 * papers.length) || rdNeighbours(p.text, h).some(x => RD_FAMOUS.has(x)) ? 1 : 0, mostlySure: o && o.sure >= .5 * o.uses ? 1 : 0, famousPair: rdNeighbours(p.text, h).some(x => RD_FAMOUS.has(x)) && RD_FAMOUS.has(w) ? 1 : 0,
+        zhBook: /\p{Script=Han}/u.test(w) && h.sure < 2 && o && o.papers.size >= 3 && o.book >= .5 * o.uses ? 1 : 0, famous: RD_FAMOUS.has(w) ? 1 : 0, notSure: h.sure < 2 ? 1 : 0, inTitle: titles.some(([a, b]) => h.start >= a && h.end <= b) ? 1 : 0, famousNext: rdFamousNext(p.text, h) && RD_NAMES.has(w.toLowerCase()) && !here.mine ? 1 : 0, peopleName: RD_COMMON.has(w) ? 1 : 0, mineHere: here.mine, bookHere: here.book, relHere: here.rel,
       };
       let sum = 0, why = '', best = 0;
       for (const u of RD_DROP) { let a = u.b; for (const k in u.w) a += u.w[k] * c[k]; const v = Math.max(0, a) * u.out; sum += v; if (v > best) { best = v; why = u.why; } }
