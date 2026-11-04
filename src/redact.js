@@ -76,7 +76,7 @@ function rdTokens(text) {
 // A line, or a part of one between | marks, that is nothing but two to four capitalized words: a name on a heading (Mia Tan / Bird, Olivia / VARGA ADAEZE)
 function rdNameLine(text, t) {
   const a = Math.max(0, ...['\n', '|', ' / ', ' - '].map(sep => { const k = text.lastIndexOf(sep, t.a - 1); return k < 0 ? 0 : k + sep.length; })), e = text.slice(t.b).search(/\n|\|| \/ | - /), part = text.slice(a, e < 0 ? text.length : t.b + e).trim();
-  const ws = part.split(/[\s,]+/).filter(Boolean);
+  const ws = part.replace(/\(([^()]{1,30})\)$/, '$1').split(/[\s,]+/).filter(Boolean);
   return ws.length >= 2 && ws.length <= 4 && ws.every(w => /^\p{Lu}[\p{L}\p{M}'’-]*$/u.test(w) && !RD_FUNC.has(w.toLowerCase()) && !RD_TITLE.has(w.toLowerCase().replace(/\.$/, '')) && !RD_MONTH.has(w.toLowerCase()));
 }
 // How much a word looks like a name from its letters alone: above 0 for names, below for English words.
@@ -97,6 +97,8 @@ function rdNicks(roster) {
     for (let k = 2; k < low.length; k++) { out.add(low.slice(0, k)); if (k >= 3) out.add(low.slice(-k)); }
   }
   for (const w of RD_FUNC) out.delete(w);
+  // the roster's family names and given names, for a name written next to them that the roster doesn't have
+  out.parts = new Set((roster || []).flatMap(n => (String(n).match(/[\p{L}\p{M}'’-]+/gu) || []).map(w => w.toLowerCase())));
   return out;
 }
 
@@ -130,7 +132,7 @@ function rdClues(t, i, words, toks, text, nicks) {
     afterTitle: prev && RD_TITLE.has(lowP) && !/[,;:]/.test(pb) ? 1 : 0,
     afterRel: prev && RD_REL.has(lowP) && !/[.!?;:]/.test(pb) ? 1 : 0,
     // "by" signs a paper only at the start of a line or after written, submitted, essay (a speech by Ella Baker is not a signature)
-    afterGreet: prev && RD_GREET.has(lowP) && /^,?\s*\n?\s*$/.test(pb) && (lowP !== 'by' || !prev2 || /\n\s*$/.test(text.slice(Math.max(0, prev.a - 3), prev.a)) || /^(written|submitted|essay|homework|work|report|draft|poem|story|love|made|all)$/.test(lowP2)) ? 1 : 0,
+    afterGreet: prev && (RD_GREET.has(lowP) || lowP === 'you' && lowP2 === 'thank') && /^,?\s*\n?\s*$/.test(pb) && (lowP !== 'by' || !prev2 || /\n\s*$/.test(text.slice(Math.max(0, prev.a - 3), prev.a)) || /^(written|submitted|essay|homework|work|report|draft|poem|story|love|made|all)$/.test(lowP2)) ? 1 : 0,
     afterNamed: prev && RD_NAMED.has(lowP) && /^\s*:?\s*$/.test(pb) || prev && lowP === 'by' && prev2 && lowP2 === 'submitted' ? 1 : 0,
     callsMe: prev && prev2 && (/^(me|him|her)$/.test(lowP) && /^(calls?|called|call)$/.test(lowP2) || lowP === 'as' && lowP2 === 'known' || lowP === 'by' && /^(go|goes|went)$/.test(lowP2) || lowP === 'is' && lowP2 === 'name' || /^i[’']m$/.test(lowP)) ? 1 : 0,
     dashSign: /^\s*[-–—]\s*$/.test(pb) && (!prev || /\n\s*[-–—]\s*$/.test(text.slice(Math.max(0, t.a - 4), t.a)) || i === 0) || /(^|\n)[ \t]*[-–—][ \t]*$/.test(text.slice(Math.max(0, t.a - 8), t.a)) ? 1 : 0,
@@ -153,6 +155,8 @@ function rdClues(t, i, words, toks, text, nicks) {
     streetWord: RD_STREET.has(low) ? 1 : 0,
     schoolWord: RD_SCHOOL.has(low) ? 1 : 0,
     nameLine: rdNameLine(text, t) ? 1 : 0,
+    besideRoster: next && nicks.parts && nicks.parts.has(lowN) && !nicks.parts.has(low) && /^ $/.test(text.slice(t.b, next.a)) && !RD_FAMOUS.has(w) ? 1 : 0,
+    andI: next && words[i + 2] && lowN === 'and' && words[i + 2].s === 'I' && /^ $/.test(text.slice(t.b, next.a)) ? 1 : 0,
     // the end of a part of a heading: a new line, a wide gap, or a | mark comes next
     partEnd: !next || /\n|\||\s{2,}/.test(text.slice(t.b, next.a)) ? 1 : 0,
     single: /^\p{Lu}$/u.test(w) ? 1 : 0,
@@ -198,8 +202,15 @@ const RD_UNITS = [
   { why: 'name', w: { afterNamed: 1, cap: 1, month: -3 }, b: -1, out: 4 },
   // after "calls me", "known as", "my name is", "I'm": a nickname, however short (calls me An)
   { why: 'nickname', w: { callsMe: 1, cap: 1 }, b: -1, out: 8 },
+  { why: 'nickname', w: { callsMe: 1, caps: 1 }, b: -1, out: 8 },
   // a name signed after a dash at the end (- Mo)
   { why: 'name', w: { dashSign: 1, cap: 1, func: -3 }, b: -1, out: 4 },
+  { why: 'name', w: { dashSign: 1, caps: 1, func: -3 }, b: -1, out: 4 },
+  // a capitalized word right before a roster student's family name or right after their given name: their English name or a
+  // name the roster doesn't have (Dragon Han, when the roster says Haoran Han)
+  { why: 'name', w: { besideRoster: 1, cap: 1, func: -3, month: -3, titleWord: -3 }, b: -1, out: 4 },
+  // the first of "Apple and I": someone the student did something with
+  { why: 'name', w: { andI: 1, cap: 1, func: -3, month: -3, titleWord: -3 }, b: -1, out: 2.5 },
   // a name followed by ", my brother"
   { why: 'name', w: { beforeRel: 1, cap: 1 }, b: -1, out: 4 },
   // a heading line with nothing but a name (Mia Tan / VARGA ADAEZE)
@@ -362,6 +373,11 @@ function rdFamousNext(text, h) {
   const after = text.slice(h.end).match(/^ (\p{Lu}[\p{L}'’-]+)/u), before = text.slice(0, h.start).match(/(\p{Lu}[\p{L}'’-]+) $/u);
   return [after, before].some(m => m && RD_FAMOUS.has(m[1].replace(/['’]s$/, '')) && !RD_NAMES.has(m[1].toLowerCase()));
 }
+// the capitalized words joined to a cover on either side (Jason in "Jason Liang"), so a sure name that only shares one word
+// with the task sheet (an author called Jason) stays covered
+function rdNeighbours(text, h) {
+  return [(text.slice(h.end).match(/^ (\p{Lu}[\p{L}'’.-]*)/u) || [])[1], (text.slice(0, h.start).match(/(\p{Lu}[\p{L}'’.-]*) $/u) || [])[1]].filter(Boolean).map(x => x.replace(/['’]s$/, ''));
+}
 function rdSentence(text, a, b) {
   let s = a; while (s > 0 && !/[.!?\n]/.test(text[s - 1])) s--;
   let e = b; while (e < text.length && !/[.!?\n]/.test(text[e])) e++;
@@ -401,7 +417,7 @@ function reviewCovers(papers, opts = {}) {
       prevPlace = -1;
       const shape = o ? 0 : 1, here = rdHere(p.text, h, w);
       const c = {
-        shape, inTask: taskWords.has(w) ? 1 : 0, rosterWord: roster.has(w.toLowerCase()) ? 1 : 0,
+        shape, inTask: taskWords.has(w) && (h.sure < 2 || rdNeighbours(p.text, h).every(x => taskWords.has(x) || RD_TITLE.has(x.toLowerCase().replace(/\.$/, '')))) ? 1 : 0, rosterWord: roster.has(w.toLowerCase()) ? 1 : 0,
         weak: h.sure === 0 ? 1 : 0, fair: h.sure === 1 ? 1 : 0, sureElsewhere: o && o.sure > 0 && o.sure >= .15 * o.uses ? 1 : 0,
         manyPapers: o && big && o.papers.size >= .25 * papers.length ? 1 : 0, thrice: o && o.papers.size >= 3 ? 1 : 0,
         mostlyBook: o && o.book >= .6 * o.uses ? 1 : 0, mostlyMine: o && o.mine >= .3 * o.uses ? 1 : 0,
