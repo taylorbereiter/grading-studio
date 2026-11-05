@@ -27,7 +27,7 @@ const qzCrops = new Map();    // student|question|shift|light -> picture URL
 const qzSize = new Map();     // student|page -> { W, H }, the page's size in points
 let qzQueue = Promise.resolve();
 async function qzDoc(f) {
-  if (!qzDocs.has(f.path)) qzDocs.set(f.path, pdfjsLib.getDocument({ data: f.data.slice(), isEvalSupported: false }).promise);
+  if (!qzDocs.has(f.path)) qzDocs.set(f.path, viewBytes(f).then(b => pdfjsLib.getDocument({ data: b.slice(), isEvalSupported: false }).promise));
   return qzDocs.get(f.path);
 }
 function qzClose() {
