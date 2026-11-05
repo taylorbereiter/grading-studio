@@ -768,6 +768,9 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
 /* a page flagged for a rescan: in the split, and the strip above it once it's open */
 .spfl .spre{background:var(--warn-soft);color:var(--warn);border-color:var(--warn);font-weight:600}
 .scnote.re{background:var(--warn-soft)}
+.imptbl{width:100%;border-collapse:collapse;font-size:13px;margin:6px 0 4px}
+.imptbl td{padding:6px 0;border-top:1px solid var(--line)}
+.imptbl td:last-child{text-align:right;color:var(--muted)}
 /* Quick mark: quiz boxes and marking a question across the class */
 .qbdlg .bh,.qbwrap{user-select:none}
 .qbwrap{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:16px;flex:1;min-height:0;overflow:hidden !important;padding:0 !important}
@@ -1040,6 +1043,7 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
           <button class="mitem" id="rescanBtn" title="Pages you flagged as needing a rescan, and who they belong to">Rescans</button>
           <button class="mitem" id="dispBtn" title="Text size and zoom">Display</button>
           <button class="mitem" id="mkeyBtn" title="What each proofreading mark means, for the key on returned papers">Mark key</button>
+          <button class="mitem" id="impBtn" title="Comments and marks made in Kami, Acrobat or Preview, made into your own so you can change them">Marks from other apps</button>
           <button class="mitem" id="calcBtn" title="Calculator for scores and percents">Calculator <kbd>=</kbd></button>
           <button class="mitem themeBtn">Dark mode</button>
           <button class="mitem" id="keysBtn">All keys <kbd>?</kbd></button>
@@ -2637,9 +2641,10 @@ function saveNow(leaving) {
     for (const fl of st.files) if (fl.hand) hb[fl.path] = fl.hand;
     const inc = st.inc && Object.keys(st.inc).length ? st.inc : undefined;
     const tr = {}; for (const fl of st.files) if (fl.tr) tr[fl.path] = fl.tr;
+    const im = {}, imn = []; for (const fl of st.files) { if (impHas(fl)) im[fl.path] = fl.imp; if (fl.impNo) imn.push(fl.path); }
     const rt = scanOwn(st, 'rot', 'didTurn', rotToSave), sk = scanOwn(st, 'skew', 'didSkew');
-    if (Object.keys(rt).length || Object.keys(sk).length || Object.keys(tr).length || Object.keys(hb).length || st.layout || st.forder || inc || Object.keys(f).length || g.rubric.some(v => v != null) || g.points !== '' || g.comment || hasSheet(g) || g.status || g.at)
-      data.s[st.key] = { f, g, h: hb, L: st.layout || undefined, Lp: st.layout ? 1 : undefined, o: st.forder || undefined, inc, tr: Object.keys(tr).length ? tr : undefined, r: Object.keys(rt).length ? rt : undefined, sk: Object.keys(sk).length ? sk : undefined };
+    if (Object.keys(im).length || imn.length || Object.keys(rt).length || Object.keys(sk).length || Object.keys(tr).length || Object.keys(hb).length || st.layout || st.forder || inc || Object.keys(f).length || g.rubric.some(v => v != null) || g.points !== '' || g.comment || hasSheet(g) || g.status || g.at)
+      data.s[st.key] = { f, g, h: hb, L: st.layout || undefined, Lp: st.layout ? 1 : undefined, o: st.forder || undefined, inc, tr: Object.keys(tr).length ? tr : undefined, r: Object.keys(rt).length ? rt : undefined, sk: Object.keys(sk).length ? sk : undefined, im: Object.keys(im).length ? im : undefined, imn: imn.length ? imn : undefined };
   }
   data.scan = scanSave();
   const listed = new Set(batch.students.map(st => st.key));
@@ -2667,7 +2672,7 @@ function restore() {
     const s = data.s[st.key]; if (!s) continue;
     if (s.o) st.forder = s.o;
     st.grade = { rubric: [], points: '', comment: '', ...s.g };
-    for (const fl of st.files) { if (s.f[fl.path]) fl.marks = s.f[fl.path]; if (s.h && s.h[fl.path]) fl.hand = s.h[fl.path]; if (s.tr && s.tr[fl.path]) fl.tr = s.tr[fl.path]; if (s.r && s.r[fl.path]) fl.rot = s.r[fl.path]; if (s.sk && s.sk[fl.path]) fl.skew = s.sk[fl.path]; }
+    for (const fl of st.files) { if (s.f[fl.path]) fl.marks = s.f[fl.path]; if (s.h && s.h[fl.path]) fl.hand = s.h[fl.path]; if (s.tr && s.tr[fl.path]) fl.tr = s.tr[fl.path]; if (s.r && s.r[fl.path]) fl.rot = s.r[fl.path]; if (s.sk && s.sk[fl.path]) fl.skew = s.sk[fl.path]; if (s.im && s.im[fl.path]) fl.imp = s.im[fl.path]; if (s.imn && s.imn.includes(fl.path)) fl.impNo = 1; }
     if (s.L) { st.layout = s.L.map(d => ({ ...d, pages: d.pages.filter(([path]) => st.files.some(f => f.path === path)) })); st.layoutOld = !s.Lp; }
     if (s.inc) st.inc = s.inc;
     n++;
@@ -3040,7 +3045,9 @@ async function openStudent(i, filePath) {
   await workerReady;
   for (const f of st.files.filter(viewable)) {
     try {
-      const doc = await pdfjsLib.getDocument({ data: f.data.slice(), isEvalSupported: false }).promise;
+      await impAuto(f);
+      if (token !== openToken) return;
+      const doc = await pdfjsLib.getDocument({ data: (await viewBytes(f)).slice(), isEvalSupported: false }).promise;
       if (token !== openToken) { doc.destroy(); return; }
       docs.push(doc); docMap.set(f.path, doc); f.numPages = doc.numPages;
     } catch (e) {
@@ -3084,6 +3091,7 @@ async function openStudent(i, filePath) {
       pg.wrap = wrap; pg.canvas = c;
       pages.push(pg);
       lightChip(pg); lightChips(); rotChip(pg, d.pages.length > 1 ? d.pages.findIndex(x => x[0] === path && x[1] === p) + 1 : 0); scanNote(pg);
+      if (!pages.some(q => q !== pg && q.file === f)) { pg.impFirst = true; impNote(pg); }
       pg.extra = (f.kami && f.kami[p] && f.kami[p].notes) || [];
       bindPage(pg);
       await renderPage(pg);
@@ -3473,7 +3481,7 @@ async function rescanFile(f) {
   const st = batch && batch.students.find(s => s.files.includes(f)); if (!st || !viewable(f)) return;
   try { f.scan = await scanFile(f, f.hand || setup.spot || null); if (f.hand) f.scan.hand = true; f.kami = f.scan.kami; } catch (e) { console.error(e); return; }
   refound(st); renderList(); gradeShown(st);
-  for (const pg of pages) if (pg.file === f) { pg.extra = (f.kami && f.kami[pg.idx] && f.kami[pg.idx].notes) || []; draw(pg); }
+  for (const pg of pages) if (pg.file === f) { pg.extra = (f.kami && f.kami[pg.idx] && f.kami[pg.idx].notes) || []; draw(pg); if (pg.impFirst) impNote(pg); }
 }
 function gradeShown(st) { const t = $('#grade .total'); if (t && st === batch.students[cur]) t.innerHTML = totalHtml(st); }
 const gradeMarks = f => Object.entries(f.marks || {}).flatMap(([p, a]) => a.filter(m => (m.t === 'text' || m.t === 'note' || (m.t === 'stamp' && m.k === 'score')) && m.text && parseGrade(m.text, false)).map(m => p + '|' + m.text)).sort();
@@ -3659,7 +3667,7 @@ let markClip = null;
 function copyMark(quiet) {
   if (!selected) return;
   markClip = { m: JSON.parse(JSON.stringify(selected.mark)), file: selected.page.file, idx: selected.page.idx, n: 0 };
-  delete markClip.m.ro;
+  delete markClip.m.ro; delete markClip.m.imp;
   if (!quiet) toast(keyLabel('Copied. ⌘V pastes it on the page you’re looking at.'));
 }
 function pageInView() {
@@ -4269,7 +4277,8 @@ async function flattenDoc(st, d, dpi, edit, key) {
   const src = async path => {
     if (!srcs.has(path)) {
       const f = fileByPath(st, path);
-      srcs.set(path, { f, js: await pdfjsLib.getDocument({ data: f.data.slice(), isEvalSupported: false }).promise, lib: await PDFLib.PDFDocument.load(f.data, { ignoreEncryption: true, updateMetadata: false }) });
+      const bytes = await viewBytes(f);   // less any marks from other apps that are hers now
+      srcs.set(path, { f, js: await pdfjsLib.getDocument({ data: bytes.slice(), isEvalSupported: false }).promise, lib: await PDFLib.PDFDocument.load(bytes, { ignoreEncryption: true, updateMetadata: false }) });
     }
     return srcs.get(path);
   };
@@ -4318,7 +4327,7 @@ async function flattenDoc(st, d, dpi, edit, key) {
     if (edit) {   // the original pages and her own marks go along, so bringing the file back in opens it ready to change
       const paths = [...new Set(d.pages.map(([path]) => path))];
       const info = { v: 1, pages: d.pages.map(([path, p]) => { const f = fileByPath(st, path); return [paths.indexOf(path), p, f.marks[p] || [], rotOf(f, p), skewOf(f, p)]; }) };
-      for (let k = 0; k < paths.length; k++) await out.attach(fileByPath(st, paths[k]).data, 'gs-original-' + (k + 1) + '.pdf', { mimeType: 'application/pdf', description: 'Original pages, for reopening in Grading Studio' });
+      for (let k = 0; k < paths.length; k++) await out.attach(await viewBytes(fileByPath(st, paths[k])), 'gs-original-' + (k + 1) + '.pdf', { mimeType: 'application/pdf', description: 'Original pages, for reopening in Grading Studio' });
       await out.attach(new TextEncoder().encode(JSON.stringify(info)), 'grading-studio.json', { mimeType: 'application/json', description: 'Marks, for reopening in Grading Studio' });
     }
   } finally { for (const v of srcs.values()) v.js.destroy(); }
@@ -4532,10 +4541,11 @@ async function wordPdf(f) {
     return f.wpdf;
   } finally { host.remove(); }
 }
-const paperBytes = async f => f.kind === 'docx' ? wordPdf(f) : f.data;
+const paperBytes = async f => f.kind === 'docx' ? wordPdf(f) : viewBytes(f);
 async function scanFile(f, spot) {
   const doc = await pdfjsLib.getDocument({ data: (await paperBytes(f)).slice(), isEvalSupported: false }).promise;
   const found = [], kami = {}, seen = [], marksSig = gradeMarks(f).join('\0');
+  let impN = 0;
   try {
     if (f.kind !== 'docx') f.numPages = doc.numPages;
     const pick = spot ? [typeof spot.page === 'number' ? Math.min(spot.page, doc.numPages - 1) : spot.page === 'last' ? doc.numPages - 1 : 0] : [...Array(doc.numPages).keys()];
@@ -4544,6 +4554,7 @@ async function scanFile(f, spot) {
       const vp = vpRot(f, p, page, 1);
       const annots = (await page.getAnnotations({ intent: 'display' })).filter(a => !SKIP_TYPES.has(a.subtype) && !(a.annotationFlags & 2) && !(a.annotationFlags & 32));
       if (annots.length) kami[p] = { notes: annots.filter(isPopupComment).map(a => kamiNote(a, vp)) };
+      if (f.kind === 'pdf') impN += annots.filter(impKind).length;
       if (!pick.includes(p)) { page.cleanup(); continue; }
       const area = spot ? { x: spot.x * vp.width, y: spot.y * vp.height, w: spot.w * vp.width, h: spot.h * vp.height } : null;
       const ofMark = t => { const g = parseGrade(t, false); return g && { ...g, mark: true }; };
@@ -4614,7 +4625,7 @@ async function scanFile(f, spot) {
       if (t) t.width = t.height = 0;
       c.width = c.height = 0;
     }
-    return { found, shots, kami, seen, marksSig, nAnnots: Object.keys(kami).length, hasText: seen.length > 0 };
+    return { found, shots, kami, seen, marksSig, nAnnots: Object.keys(kami).length, hasText: seen.length > 0, impN };
   } finally { doc.destroy(); }
 }
 function trimToInk(c, k) {
@@ -4675,7 +4686,7 @@ async function scanRun(onStep) {
   scanned = true;
   if (JSON.stringify(paperReads()) !== JSON.stringify(batch.read)) saveSoon();
   renderList();
-  for (const pg of pages) { pg.extra = (pg.file.kami && pg.file.kami[pg.idx] && pg.file.kami[pg.idx].notes) || []; draw(pg); }
+  for (const pg of pages) { pg.extra = (pg.file.kami && pg.file.kami[pg.idx] && pg.file.kami[pg.idx].notes) || []; draw(pg); if (pg.impFirst) impNote(pg); }
 }
 let scanned = false;
 function foundLabel(fd) {
@@ -4889,7 +4900,7 @@ function pickSpot() {
     if (sel) { ctx.fillStyle = 'rgba(31,111,178,.12)'; ctx.fillRect(sel.x * c.width, sel.y * c.height, sel.w * c.width, sel.h * c.height); ctx.strokeStyle = '#1F6FB2'; ctx.lineWidth = 2; ctx.strokeRect(sel.x * c.width, sel.y * c.height, sel.w * c.width, sel.h * c.height); }
   };
   const load = async () => {
-    const doc = await pdfjsLib.getDocument({ data: f.data.slice(), isEvalSupported: false }).promise;
+    const doc = await pdfjsLib.getDocument({ data: (await viewBytes(f)).slice(), isEvalSupported: false }).promise;
     const pn = which === 'last' ? doc.numPages - 1 : 0, page = await doc.getPage(pn + 1);
     const v1 = vpRot(f, pn, page, 1); const k = Math.min(1.4, 640 / v1.width);
     const vp = vpRot(f, pn, page, k); W = vp.width; H = vp.height;
@@ -5135,7 +5146,7 @@ async function checkCovers(start, onDone) {
       for (const [path, p] of d.pages) {
         if (my !== token) break;
         const f = fileByPath(st, path);
-        if (!js.has(path)) js.set(path, await pdfjsLib.getDocument({ data: f.data.slice(), isEvalSupported: false }).promise);
+        if (!js.has(path)) js.set(path, await pdfjsLib.getDocument({ data: (await viewBytes(f)).slice(), isEvalSupported: false }).promise);
         const avail = body.clientWidth - 40, dpr = window.devicePixelRatio || 1;
         const pg0 = await js.get(path).getPage(p + 1), v1 = vpRot(f, p, pg0, 1);
         const kk = Math.min(1.6, avail / (v1.width * 1.4));
@@ -5238,7 +5249,7 @@ async function makeSharePackage(onStep) {
     try {
       for (const [path, p] of d.pages) {
         const f = fileByPath(st, path);
-        if (!js.has(path)) js.set(path, await pdfjsLib.getDocument({ data: f.data.slice(), isEvalSupported: false }).promise);
+        if (!js.has(path)) js.set(path, await pdfjsLib.getDocument({ data: (await viewBytes(f)).slice(), isEvalSupported: false }).promise);
         const v1 = vpRot(f, p, await js.get(path).getPage(p + 1), 1);
         const r = await sharePage(st, f, js.get(path), p, Math.min(120 / 72, 8000 / Math.max(v1.width * 1.5, v1.height)), rx);
         const jpg = await canvasJpg(r.c, 0.85);
@@ -8079,6 +8090,7 @@ document.addEventListener('drop', async e => {
 $('#trAllBtn').onclick = openTranscripts;
 $('#dispBtn').onclick = openDisplay;
 $('#mkeyBtn').onclick = () => openMarkKey();
+$('#impBtn').onclick = () => openImported();
 function setPanels(L, R) {
   const c = $('#cols'); c.classList.toggle('noL', !!L); c.classList.toggle('noR', !!R);
   $('#colL').querySelector('.pa').textContent = L ? '›' : '‹'; $('#colR').querySelector('.pa').textContent = R ? '‹' : '›';
@@ -13542,7 +13554,7 @@ const qzCrops = new Map();    // student|question|shift|light -> picture URL
 const qzSize = new Map();     // student|page -> { W, H }, the page's size in points
 let qzQueue = Promise.resolve();
 async function qzDoc(f) {
-  if (!qzDocs.has(f.path)) qzDocs.set(f.path, pdfjsLib.getDocument({ data: f.data.slice(), isEvalSupported: false }).promise);
+  if (!qzDocs.has(f.path)) qzDocs.set(f.path, viewBytes(f).then(b => pdfjsLib.getDocument({ data: b.slice(), isEvalSupported: false }).promise));
   return qzDocs.get(f.path);
 }
 function qzClose() {
@@ -14024,6 +14036,263 @@ function quizBtn() {
 $('#quizBtn').onclick = () => openQuiz();
 $('#quizTop').onclick = () => openQuiz();
 Object.assign(window.__gs, { openQuiz, openQuizBoxes, quizSet, quizSum, quizCount, quizPart, quizMax, quizOn, qzCrop, qzRect, quizBtn });
+
+/* ---------------- marks from other apps: Kami, Acrobat or Preview marks made into her own ---------------- */
+const IMP_ID = /^\d+R\d*$/;
+const IMP_LINES = new Set(['Ink', 'Line', 'PolyLine', 'Polygon', 'Underline', 'StrikeOut', 'Squiggly']);
+function impHas(f) { return !!(f && f.imp && Object.values(f.imp).some(a => a.length)); }
+function impVisible(a) { return !IMP_SKIP.has(a.subtype) && !(a.annotationFlags & 2) && !(a.annotationFlags & 32); }
+const IMP_SKIP = new Set(['Link', 'Popup', 'Widget']);
+function impKind(a) {
+  if (!IMP_ID.test(String(a.id || ''))) return null;
+  if (IMP_LINES.has(a.subtype)) return 'pen';
+  if (a.subtype === 'Highlight') return 'hl';
+  if (a.subtype === 'Square' || a.subtype === 'Circle') return 'oval';
+  if (a.subtype === 'FreeText') return commentText(a) ? 'text' : null;
+  if (a.subtype === 'Text') return commentText(a) ? 'note' : null;
+  return null;
+}
+async function viewBytes(f) {
+  if (!impHas(f) || f.kind !== 'pdf') return f.data;
+  const key = JSON.stringify(f.imp);
+  if (f.view && f.viewOf === f.data && f.viewKey === key) return f.view;
+  try { f.view = await impStrip(f.data, f.imp); } catch (e) { console.error(e); return f.data; }
+  f.viewOf = f.data; f.viewKey = key;
+  return f.view;
+}
+function impRefId(r) { return r instanceof PDFLib.PDFRef ? r.objectNumber + 'R' + (r.generationNumber ? r.generationNumber : '') : ''; }
+async function impStrip(data, imp) {
+  const doc = await PDFLib.PDFDocument.load(data, { ignoreEncryption: true, updateMetadata: false });
+  const list = doc.getPages();
+  for (const [p, ids] of Object.entries(imp)) {
+    const page = list[+p]; if (!page || !ids.length) continue;
+    const arr = page.node.lookupMaybe(PDFLib.PDFName.of('Annots'), PDFLib.PDFArray); if (!arr) continue;
+    const gone = new Set(ids), keep = [];
+    for (let i = 0; i < arr.size(); i++) {
+      const r = arr.get(i);
+      if (gone.has(impRefId(r))) continue;
+      const d = doc.context.lookup(r);
+      if (d instanceof PDFLib.PDFDict && gone.has(impRefId(d.get(PDFLib.PDFName.of('Parent'))))) continue;
+      keep.push(r);
+    }
+    page.node.set(PDFLib.PDFName.of('Annots'), doc.context.obj(keep));
+  }
+  return doc.save();
+}
+function impHex(c, dflt) { return c && c.length >= 3 ? '#' + [0, 1, 2].map(i => Math.round(c[i]).toString(16).padStart(2, '0')).join('') : dflt; }
+function impMarks(a, vp, xf, line) {
+  const P = (x, y) => {
+    let [X, Y] = vp.convertToViewportPoint(x, y);
+    if (xf) [X, Y] = [xf[0] * X + xf[2] * Y + xf[4], xf[1] * X + xf[3] * Y + xf[5]];
+    return [r1(X), r1(Y)];
+  };
+  const box = pts => { const xs = pts.map(q => q[0]), ys = pts.map(q => q[1]), x = Math.min(...xs), y = Math.min(...ys); return { x: r1(x), y: r1(y), w: r1(Math.max(...xs) - x), h: r1(Math.max(...ys) - y) }; };
+  const rectBoxOf = rc => box([P(rc[0], rc[1]), P(rc[2], rc[3]), P(rc[0], rc[3]), P(rc[2], rc[1])]);
+  const quads = () => (a.quadPoints || []).map(q => box(q.map(o => P(o.x, o.y)))).filter(r => r.w > 0 && r.h > 0);
+  const col = impHex(a.color, COLORS.red), w = r1(Math.max(0.6, (a.borderStyle && a.borderStyle.width) || 1)), text = commentText(a);
+  const out = [], rb = rectBoxOf(a.rect);
+  const withNote = () => { if (text) out.push({ t: 'note', color: col, ax: r1(Math.min(rb.x + rb.w, vp.width - 2)), ay: r1(rb.y + Math.min(8, rb.h / 2)), text }); };
+  switch (a.subtype) {
+    case 'Ink':
+      for (const L of a.inkLists || []) if (L.length) out.push({ t: 'pen', color: col, w, pts: L.map(o => P(o.x, o.y)) });
+      withNote(); break;
+    case 'Line': {
+      const c = line && line.length === 4 ? line : a.lineCoordinates;
+      if (c) out.push({ t: 'pen', color: col, w, pts: [P(c[0], c[1]), P(c[2], c[3])] });
+      withNote(); break;
+    }
+    case 'PolyLine': case 'Polygon': {
+      const v = (a.vertices || []).map(o => P(o.x, o.y));
+      if (v.length) out.push({ t: 'pen', color: col, w, pts: a.subtype === 'Polygon' ? v.concat([v[0]]) : v });
+      withNote(); break;
+    }
+    case 'Underline': case 'StrikeOut': case 'Squiggly':
+      for (const r of quads()) {
+        const y = r1(a.subtype === 'StrikeOut' ? r.y + r.h / 2 : r.y + r.h - 0.6), lw = r1(Math.max(1, r.h / 14));
+        if (a.subtype !== 'Squiggly') { out.push({ t: 'pen', color: col, w: lw, pts: [[r.x, y], [r1(r.x + r.w), y]] }); continue; }
+        const pts = [], step = Math.max(2, r.h / 5);
+        for (let x = r.x, k = 0; x <= r.x + r.w; x += step, k++) pts.push([r1(x), r1(y - (k % 2 ? step * 0.6 : 0))]);
+        if (pts.length > 1) out.push({ t: 'pen', color: col, w: lw, pts });
+      }
+      withNote(); break;
+    case 'Highlight': {
+      const rs = quads(); if (!rs.length) rs.push(rb);
+      const hc = impHex(a.color, HL.yellow);
+      if (text) {
+        const last = rs[rs.length - 1], m = { t: 'note', color: hc, ax: r1(last.x + last.w), ay: r1(last.y + last.h / 2), hl: rectBox(rs), hc, text };
+        if (rs.length > 1) m.rects = rs;
+        out.push(m);
+      } else out.push(setRects({ t: 'hl', color: hc }, rs));
+      break;
+    }
+    case 'Square': case 'Circle':
+      out.push({ t: 'oval', color: col, sw: w, x: r1(rb.x + w / 2), y: r1(rb.y + w / 2), w: r1(Math.max(2, rb.w - w)), h: r1(Math.max(2, rb.h - w)) });
+      withNote(); break;
+    case 'FreeText': {
+      const da = a.defaultAppearanceData || {}, size = r1(Math.min(48, Math.max(6, da.fontSize || 12)));
+      out.push({ t: 'text', color: impHex(da.fontColor, COLORS.black), x: r1(rb.x + 2), y: r1(rb.y + 2), size, text, bw: r1(Math.max(24, rb.w - 4)) });
+      break;
+    }
+    case 'Text':
+      out.push({ t: 'note', color: col, ax: r1(Math.min(rb.x + rb.w / 2, vp.width - 2)), ay: r1(rb.y + rb.h / 2), text });
+      break;
+  }
+  for (const m of out) m.imp = a.id;
+  return out;
+}
+async function impRead(f) {
+  const res = { pages: {}, n: 0, keep: 0, kinds: {}, locked: false };
+  if (f.kind !== 'pdf' || !f.data || f.virtual) return res;
+  await workerReady;
+  const js = await pdfjsLib.getDocument({ data: f.data.slice(), isEvalSupported: false }).promise;
+  let lib = null;
+  try {
+    for (let p = 0; p < js.numPages; p++) {
+      const page = await js.getPage(p + 1);
+      const done = new Set((f.imp && f.imp[p]) || []);
+      const annots = (await page.getAnnotations({ intent: 'display' })).filter(a => impVisible(a) && !done.has(a.id));
+      if (!annots.length) { page.cleanup(); continue; }
+      if (!lib) {
+        lib = await PDFLib.PDFDocument.load(f.data, { ignoreEncryption: true, updateMetadata: false });
+        if (lib.isEncrypted) { res.locked = true; }
+      }
+      const vp = vpRot(f, p, page, 1), xf = skewXf(f, p, vp), list = [];
+      for (const a of annots) {
+        const kind = res.locked ? null : impKind(a);
+        if (!kind) { res.keep++; continue; }
+        let line = null;
+        if (a.subtype === 'Line') { try { const [num, gen] = a.id.split('R'); const d = lib.context.lookup(PDFLib.PDFRef.of(+num, +(gen || 0))); const L = d && d.lookupMaybe(PDFLib.PDFName.of('L'), PDFLib.PDFArray); if (L) line = L.asArray().map(v => v.asNumber()); } catch {} }
+        const marks = impMarks(a, vp, xf, line);
+        if (!marks.length) { res.keep++; continue; }
+        list.push({ id: a.id, kind, marks });
+        res.kinds[kind] = (res.kinds[kind] || 0) + 1; res.n++;
+      }
+      if (list.length) res.pages[p] = list;
+      page.cleanup();
+    }
+  } finally { js.destroy(); }
+  return res;
+}
+function impCount(f) { return (f && !f.impNo && f.scan && f.scan.impN) || 0; }
+async function impConvert(f, read) {
+  const r = read || await impRead(f);
+  if (!r.n) return { n: 0, keep: r.keep, locked: r.locked };
+  f.imp ||= {};
+  for (const [p, list] of Object.entries(r.pages)) {
+    const marks = (f.marks[p] ||= []);
+    for (const it of list) { marks.push(...it.marks); (f.imp[p] ||= []).push(it.id); }
+  }
+  delete f.impNo;
+  f.impNew = { n: r.n, keep: r.keep };
+  impForgetUndo(f);
+  return { n: r.n, keep: r.keep };
+}
+function impPutBack(f) {
+  for (const p of Object.keys(f.marks)) f.marks[p] = f.marks[p].filter(m => !m.imp);
+  delete f.imp; delete f.view; delete f.viewOf; delete f.viewKey; delete f.impNew;
+  f.impNo = 1;
+  impForgetUndo(f);
+}
+function impForgetUndo(f) {
+  undoStack = undoStack.filter(u => u.file !== f); redoStack = redoStack.filter(u => u.file !== f);
+  if (selected && selected.page && selected.page.file === f) selected = null;
+  renderTools();
+}
+async function impAfter(f) {
+  thumbCache.clear(); scanned = false;
+  await rescanFile(f);
+  gradeMarksChanged(f);
+  saveSoon(); renderList();
+  const st = batch && batch.students[cur];
+  if (st && st.files.includes(f)) await openStudent(cur, f.path);
+}
+const impPlural = (n, one, many) => n + ' ' + (n === 1 ? one : many);
+function impNote(pg) {
+  if (pg.inote) { pg.inote.remove(); pg.inote = null; }
+  const f = pg.file;
+  if (f.virtual || f.kind !== 'pdf') return;
+  const lines = [];
+  if (f.impNew) {
+    lines.push(impPlural(f.impNew.n, 'mark is', 'marks are') + ' now yours to change.<button class="link" data-imp="back">Put back</button>');
+    if (f.impNew.keep) lines.push('<span class="muted" style="font-size:12px">' + impPlural(f.impNew.keep, 'mark', 'marks') + ' (like a stamp or a picture) couldn’t be changed and ' + (f.impNew.keep === 1 ? 'stays' : 'stay') + ' on the page as ' + (f.impNew.keep === 1 ? 'it was' : 'they were') + '.</span>');
+  } else {
+    const n = impCount(f);
+    if (!n) return;
+    lines.push('This paper has ' + impPlural(n, 'mark', 'marks') + ' from another app. You can see ' + (n === 1 ? 'it' : 'them') + ' but not change ' + (n === 1 ? 'it' : 'them') + '.<button class="link" data-imp="make">Make ' + (n === 1 ? 'it' : 'them') + ' editable</button><button class="link" data-imp="no">Not now</button>');
+    const others = batch.students.flatMap(st => st.files).filter(x => x !== f && impCount(x)).length;
+    if (others) lines.push('<span class="muted" style="font-size:12px">' + impPlural(others + 1, 'paper', 'papers') + ' in this download have marks like these.<button class="link" data-imp="all" style="font-size:12px">Make all of them editable</button></span>');
+  }
+  const el = document.createElement('div'); el.className = 'scnote impnote';
+  el.innerHTML = lines.map(t => '<div>' + t + '</div>').join('');
+  el.onclick = e => {
+    const b = e.target.closest('[data-imp]'); if (!b) return;
+    const a = b.dataset.imp;
+    if (a === 'all') return openImported();
+    if (a === 'no') { f.impNo = 1; saveSoon(); el.remove(); pg.inote = null; return; }
+    b.disabled = true;
+    (async () => {
+      if (a === 'make') {
+        const r = await impConvert(f);
+        if (!r.n) { f.impNo = 1; toast(r.locked ? 'This file is locked, so its marks stay as they are.' : 'None of these marks could be made editable, so they stay as they are.'); }
+      }
+      else impPutBack(f);
+      await impAfter(f);
+    })().catch(err => { console.error(err); toast('That didn’t work on this file. Its marks are as they were.'); b.disabled = false; });
+  };
+  pg.wrap.before(el); pg.inote = el;
+}
+async function impAuto(f) {
+  if (!store.get('gs.impAuto', false) || f.impNo || f.virtual || f.kind !== 'pdf') return false;
+  if (!impCount(f)) return false;
+  const r = await impConvert(f);
+  if (!r.n) return false;
+  thumbCache.clear(); scanned = false;
+  await rescanFile(f); saveSoon(); renderList();
+  return true;
+}
+function openImported() {
+  const ROWS = [['pen', 'Pen and lines', 'your pen'], ['note', 'Comments', 'your margin comments'], ['hl', 'Highlights', 'your highlighter'], ['text', 'Typed text on the page', 'your text'], ['oval', 'Circles and boxes', 'your oval']];
+  openDlg('<div class="bh"><h2>Marks from other apps</h2><button class="icon" data-close aria-label="Close">✕</button></div><div class="bb imp"><p id="impSum">Looking through the papers…</p><div id="impTbl"></div>' +
+    '<label class="chk"><input type="checkbox" id="impAuto"' + (store.get('gs.impAuto', false) ? ' checked' : '') + '> Do this by itself for papers I open from now on</label>' +
+    '<p class="mkhint">Your original files aren’t changed, and Put back above each paper undoes it. A grade written in one of these comments still counts.</p></div>' +
+    '<div class="bf"><button class="btn" data-close>Cancel</button><button class="btn primary" id="impGo" disabled>Make them editable</button></div>', true);
+  const box = $('#dlgBox'), b0 = batch;
+  const files = batch.students.flatMap(st => st.files.filter(f => f.kind === 'pdf' && !f.virtual && !f.bad && !f.impNo));
+  const reads = new Map();
+  let total = 0, keep = 0, stop = false;
+  const kinds = {};
+  (async () => {
+    for (let i = 0; i < files.length; i++) {
+      if (stop || batch !== b0) return;
+      $('#impSum') && ($('#impSum').textContent = 'Looking through the papers… ' + (i + 1) + ' of ' + files.length);
+      let r; try { r = await impRead(files[i]); } catch (e) { console.error(e); continue; }
+      if (!r.n) continue;
+      reads.set(files[i], r); total += r.n; keep += r.keep;
+      for (const [k, v] of Object.entries(r.kinds)) kinds[k] = (kinds[k] || 0) + v;
+    }
+    if (stop || !$('#impSum')) return;
+    $('#impSum').textContent = total ? impPlural(reads.size, 'paper has ', 'papers have ') + impPlural(total, 'mark', 'marks') + ' made in another app.' : 'No paper in this download has marks from another app that could be made editable.';
+    $('#impTbl').innerHTML = total ? '<table class="imptbl">' + ROWS.filter(r => kinds[r[0]]).map(r => '<tr><td>' + r[1] + '</td><td>' + kinds[r[0]] + ' → ' + r[2] + '</td></tr>').join('') +
+      (keep ? '<tr><td>Stamps, pictures and other marks</td><td>' + keep + ' stay as they are</td></tr>' : '') + '</table>' : '';
+    const go = $('#impGo');
+    if (total) { go.disabled = false; go.textContent = 'Make ' + impPlural(total, 'mark', 'marks') + ' editable'; }
+  })();
+  box.onchange = e => { if (e.target.id === 'impAuto') store.set('gs.impAuto', e.target.checked); };
+  box.onclick = async e => {
+    if (e.target.closest('[data-close]')) { stop = true; return closeDlg(); }
+    if (!e.target.closest('#impGo')) return;
+    const go = $('#impGo'); go.disabled = true;
+    let n = 0, i = 0, bad = 0;
+    for (const [f, r] of reads) {
+      go.textContent = 'Working… ' + (++i) + ' of ' + reads.size;
+      try { n += (await impConvert(f, r)).n; thumbCache.clear(); await rescanFile(f); } catch (err) { console.error(err); bad++; }
+    }
+    scanned = false; saveSoon(); renderList(); closeDlg();
+    toast(impPlural(n, 'mark is', 'marks are') + ' now yours to change' + (bad ? '. ' + impPlural(bad, 'file', 'files') + ' couldn’t be changed.' : '.'));
+    if (batch && batch.students[cur]) openStudent(cur);
+  };
+}
+Object.assign(window.__gs, { impRead, impConvert, impPutBack, impMarks, impKind, viewBytes, openImported, impStrip });
 
 });</script>
 

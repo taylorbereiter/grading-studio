@@ -399,9 +399,10 @@ function saveNow(leaving) {
     for (const fl of st.files) if (fl.hand) hb[fl.path] = fl.hand;
     const inc = st.inc && Object.keys(st.inc).length ? st.inc : undefined;
     const tr = {}; for (const fl of st.files) if (fl.tr) tr[fl.path] = fl.tr;
+    const im = {}, imn = []; for (const fl of st.files) { if (impHas(fl)) im[fl.path] = fl.imp; if (fl.impNo) imn.push(fl.path); }
     const rt = scanOwn(st, 'rot', 'didTurn', rotToSave), sk = scanOwn(st, 'skew', 'didSkew');
-    if (Object.keys(rt).length || Object.keys(sk).length || Object.keys(tr).length || Object.keys(hb).length || st.layout || st.forder || inc || Object.keys(f).length || g.rubric.some(v => v != null) || g.points !== '' || g.comment || hasSheet(g) || g.status || g.at)
-      data.s[st.key] = { f, g, h: hb, L: st.layout || undefined, Lp: st.layout ? 1 : undefined, o: st.forder || undefined, inc, tr: Object.keys(tr).length ? tr : undefined, r: Object.keys(rt).length ? rt : undefined, sk: Object.keys(sk).length ? sk : undefined };
+    if (Object.keys(im).length || imn.length || Object.keys(rt).length || Object.keys(sk).length || Object.keys(tr).length || Object.keys(hb).length || st.layout || st.forder || inc || Object.keys(f).length || g.rubric.some(v => v != null) || g.points !== '' || g.comment || hasSheet(g) || g.status || g.at)
+      data.s[st.key] = { f, g, h: hb, L: st.layout || undefined, Lp: st.layout ? 1 : undefined, o: st.forder || undefined, inc, tr: Object.keys(tr).length ? tr : undefined, r: Object.keys(rt).length ? rt : undefined, sk: Object.keys(sk).length ? sk : undefined, im: Object.keys(im).length ? im : undefined, imn: imn.length ? imn : undefined };
   }
   data.scan = scanSave();
   // Someone with work saved who isn't on the list just now (no paper, and not on the roster here) keeps it: they'd only be off the list until the roster comes.
@@ -431,7 +432,7 @@ function restore() {
     const s = data.s[st.key]; if (!s) continue;
     if (s.o) st.forder = s.o;
     st.grade = { rubric: [], points: '', comment: '', ...s.g };
-    for (const fl of st.files) { if (s.f[fl.path]) fl.marks = s.f[fl.path]; if (s.h && s.h[fl.path]) fl.hand = s.h[fl.path]; if (s.tr && s.tr[fl.path]) fl.tr = s.tr[fl.path]; if (s.r && s.r[fl.path]) fl.rot = s.r[fl.path]; if (s.sk && s.sk[fl.path]) fl.skew = s.sk[fl.path]; }
+    for (const fl of st.files) { if (s.f[fl.path]) fl.marks = s.f[fl.path]; if (s.h && s.h[fl.path]) fl.hand = s.h[fl.path]; if (s.tr && s.tr[fl.path]) fl.tr = s.tr[fl.path]; if (s.r && s.r[fl.path]) fl.rot = s.r[fl.path]; if (s.sk && s.sk[fl.path]) fl.skew = s.sk[fl.path]; if (s.im && s.im[fl.path]) fl.imp = s.im[fl.path]; if (s.imn && s.imn.includes(fl.path)) fl.impNo = 1; }
     if (s.L) { st.layout = s.L.map(d => ({ ...d, pages: d.pages.filter(([path]) => st.files.some(f => f.path === path)) })); st.layoutOld = !s.Lp; }
     if (s.inc) st.inc = s.inc;
     n++;
@@ -827,7 +828,9 @@ async function openStudent(i, filePath) {
   await workerReady;
   for (const f of st.files.filter(viewable)) {
     try {
-      const doc = await pdfjsLib.getDocument({ data: f.data.slice(), isEvalSupported: false }).promise;
+      await impAuto(f);
+      if (token !== openToken) return;
+      const doc = await pdfjsLib.getDocument({ data: (await viewBytes(f)).slice(), isEvalSupported: false }).promise;
       if (token !== openToken) { doc.destroy(); return; }
       docs.push(doc); docMap.set(f.path, doc); f.numPages = doc.numPages;
     } catch (e) {
@@ -871,6 +874,7 @@ async function openStudent(i, filePath) {
       pg.wrap = wrap; pg.canvas = c;
       pages.push(pg);
       lightChip(pg); lightChips(); rotChip(pg, d.pages.length > 1 ? d.pages.findIndex(x => x[0] === path && x[1] === p) + 1 : 0); scanNote(pg);
+      if (!pages.some(q => q !== pg && q.file === f)) { pg.impFirst = true; impNote(pg); }
       pg.extra = (f.kami && f.kami[p] && f.kami[p].notes) || [];
       bindPage(pg);
       await renderPage(pg);
@@ -1270,7 +1274,7 @@ async function rescanFile(f) {
   const st = batch && batch.students.find(s => s.files.includes(f)); if (!st || !viewable(f)) return;
   try { f.scan = await scanFile(f, f.hand || setup.spot || null); if (f.hand) f.scan.hand = true; f.kami = f.scan.kami; } catch (e) { console.error(e); return; }
   refound(st); renderList(); gradeShown(st);
-  for (const pg of pages) if (pg.file === f) { pg.extra = (f.kami && f.kami[pg.idx] && f.kami[pg.idx].notes) || []; draw(pg); }
+  for (const pg of pages) if (pg.file === f) { pg.extra = (f.kami && f.kami[pg.idx] && f.kami[pg.idx].notes) || []; draw(pg); if (pg.impFirst) impNote(pg); }
 }
 // The panel's total, without touching the comment box she may be typing in.
 function gradeShown(st) { const t = $('#grade .total'); if (t && st === batch.students[cur]) t.innerHTML = totalHtml(st); }
@@ -1464,7 +1468,7 @@ let markClip = null;
 function copyMark(quiet) {
   if (!selected) return;
   markClip = { m: JSON.parse(JSON.stringify(selected.mark)), file: selected.page.file, idx: selected.page.idx, n: 0 };
-  delete markClip.m.ro;
+  delete markClip.m.ro; delete markClip.m.imp;
   if (!quiet) toast(keyLabel('Copied. ⌘V pastes it on the page you’re looking at.'));
 }
 function pageInView() {
@@ -2094,7 +2098,8 @@ async function flattenDoc(st, d, dpi, edit, key) {
   const src = async path => {
     if (!srcs.has(path)) {
       const f = fileByPath(st, path);
-      srcs.set(path, { f, js: await pdfjsLib.getDocument({ data: f.data.slice(), isEvalSupported: false }).promise, lib: await PDFLib.PDFDocument.load(f.data, { ignoreEncryption: true, updateMetadata: false }) });
+      const bytes = await viewBytes(f);   // less any marks from other apps that are hers now
+      srcs.set(path, { f, js: await pdfjsLib.getDocument({ data: bytes.slice(), isEvalSupported: false }).promise, lib: await PDFLib.PDFDocument.load(bytes, { ignoreEncryption: true, updateMetadata: false }) });
     }
     return srcs.get(path);
   };
@@ -2146,7 +2151,7 @@ async function flattenDoc(st, d, dpi, edit, key) {
     if (edit) {   // the original pages and her own marks go along, so bringing the file back in opens it ready to change
       const paths = [...new Set(d.pages.map(([path]) => path))];
       const info = { v: 1, pages: d.pages.map(([path, p]) => { const f = fileByPath(st, path); return [paths.indexOf(path), p, f.marks[p] || [], rotOf(f, p), skewOf(f, p)]; }) };
-      for (let k = 0; k < paths.length; k++) await out.attach(fileByPath(st, paths[k]).data, 'gs-original-' + (k + 1) + '.pdf', { mimeType: 'application/pdf', description: 'Original pages, for reopening in Grading Studio' });
+      for (let k = 0; k < paths.length; k++) await out.attach(await viewBytes(fileByPath(st, paths[k])), 'gs-original-' + (k + 1) + '.pdf', { mimeType: 'application/pdf', description: 'Original pages, for reopening in Grading Studio' });
       await out.attach(new TextEncoder().encode(JSON.stringify(info)), 'grading-studio.json', { mimeType: 'application/json', description: 'Marks, for reopening in Grading Studio' });
     }
   } finally { for (const v of srcs.values()) v.js.destroy(); }
@@ -2376,10 +2381,11 @@ async function wordPdf(f) {
   } finally { host.remove(); }
 }
 // The pages to look at for a grade: the PDF itself, or a Word file drawn as pages.
-const paperBytes = async f => f.kind === 'docx' ? wordPdf(f) : f.data;
+const paperBytes = async f => f.kind === 'docx' ? wordPdf(f) : viewBytes(f);
 async function scanFile(f, spot) {
   const doc = await pdfjsLib.getDocument({ data: (await paperBytes(f)).slice(), isEvalSupported: false }).promise;
   const found = [], kami = {}, seen = [], marksSig = gradeMarks(f).join('\0');
+  let impN = 0;
   try {
     if (f.kind !== 'docx') f.numPages = doc.numPages;
     const pick = spot ? [typeof spot.page === 'number' ? Math.min(spot.page, doc.numPages - 1) : spot.page === 'last' ? doc.numPages - 1 : 0] : [...Array(doc.numPages).keys()];
@@ -2388,6 +2394,7 @@ async function scanFile(f, spot) {
       const vp = vpRot(f, p, page, 1);
       const annots = (await page.getAnnotations({ intent: 'display' })).filter(a => !SKIP_TYPES.has(a.subtype) && !(a.annotationFlags & 2) && !(a.annotationFlags & 32));
       if (annots.length) kami[p] = { notes: annots.filter(isPopupComment).map(a => kamiNote(a, vp)) };
+      if (f.kind === 'pdf') impN += annots.filter(impKind).length;
       if (!pick.includes(p)) { page.cleanup(); continue; }
       const area = spot ? { x: spot.x * vp.width, y: spot.y * vp.height, w: spot.w * vp.width, h: spot.h * vp.height } : null;
       const ofMark = t => { const g = parseGrade(t, false); return g && { ...g, mark: true }; };
@@ -2462,7 +2469,7 @@ async function scanFile(f, spot) {
       if (t) t.width = t.height = 0;
       c.width = c.height = 0;
     }
-    return { found, shots, kami, seen, marksSig, nAnnots: Object.keys(kami).length, hasText: seen.length > 0 };
+    return { found, shots, kami, seen, marksSig, nAnnots: Object.keys(kami).length, hasText: seen.length > 0, impN };
   } finally { doc.destroy(); }
 }
 // Finds the marks inside a picked spot: her colored ink first (red pen, highlights), or dark ink when nothing is colored.
@@ -2527,7 +2534,7 @@ async function scanRun(onStep) {
   scanned = true;
   if (JSON.stringify(paperReads()) !== JSON.stringify(batch.read)) saveSoon();
   renderList();
-  for (const pg of pages) { pg.extra = (pg.file.kami && pg.file.kami[pg.idx] && pg.file.kami[pg.idx].notes) || []; draw(pg); }
+  for (const pg of pages) { pg.extra = (pg.file.kami && pg.file.kami[pg.idx] && pg.file.kami[pg.idx].notes) || []; draw(pg); if (pg.impFirst) impNote(pg); }
 }
 let scanned = false;
 function foundLabel(fd) {
@@ -2745,7 +2752,7 @@ function pickSpot() {
     if (sel) { ctx.fillStyle = 'rgba(31,111,178,.12)'; ctx.fillRect(sel.x * c.width, sel.y * c.height, sel.w * c.width, sel.h * c.height); ctx.strokeStyle = '#1F6FB2'; ctx.lineWidth = 2; ctx.strokeRect(sel.x * c.width, sel.y * c.height, sel.w * c.width, sel.h * c.height); }
   };
   const load = async () => {
-    const doc = await pdfjsLib.getDocument({ data: f.data.slice(), isEvalSupported: false }).promise;
+    const doc = await pdfjsLib.getDocument({ data: (await viewBytes(f)).slice(), isEvalSupported: false }).promise;
     const pn = which === 'last' ? doc.numPages - 1 : 0, page = await doc.getPage(pn + 1);
     const v1 = vpRot(f, pn, page, 1); const k = Math.min(1.4, 640 / v1.width);
     const vp = vpRot(f, pn, page, k); W = vp.width; H = vp.height;
@@ -3006,7 +3013,7 @@ async function checkCovers(start, onDone) {
       for (const [path, p] of d.pages) {
         if (my !== token) break;
         const f = fileByPath(st, path);
-        if (!js.has(path)) js.set(path, await pdfjsLib.getDocument({ data: f.data.slice(), isEvalSupported: false }).promise);
+        if (!js.has(path)) js.set(path, await pdfjsLib.getDocument({ data: (await viewBytes(f)).slice(), isEvalSupported: false }).promise);
         const avail = body.clientWidth - 40, dpr = window.devicePixelRatio || 1;
         const pg0 = await js.get(path).getPage(p + 1), v1 = vpRot(f, p, pg0, 1);
         const kk = Math.min(1.6, avail / (v1.width * 1.4));
@@ -3110,7 +3117,7 @@ async function makeSharePackage(onStep) {
     try {
       for (const [path, p] of d.pages) {
         const f = fileByPath(st, path);
-        if (!js.has(path)) js.set(path, await pdfjsLib.getDocument({ data: f.data.slice(), isEvalSupported: false }).promise);
+        if (!js.has(path)) js.set(path, await pdfjsLib.getDocument({ data: (await viewBytes(f)).slice(), isEvalSupported: false }).promise);
         // A poster-size page is drawn smaller: a canvas that big can't be turned into a picture.
         const v1 = vpRot(f, p, await js.get(path).getPage(p + 1), 1);
         const r = await sharePage(st, f, js.get(path), p, Math.min(120 / 72, 8000 / Math.max(v1.width * 1.5, v1.height)), rx);
@@ -6086,6 +6093,7 @@ document.addEventListener('drop', async e => {
 $('#trAllBtn').onclick = openTranscripts;
 $('#dispBtn').onclick = openDisplay;
 $('#mkeyBtn').onclick = () => openMarkKey();
+$('#impBtn').onclick = () => openImported();
 // Side panels fold away to give the paper more room; remembered in this browser. [ and ] also fold them.
 function setPanels(L, R) {
   const c = $('#cols'); c.classList.toggle('noL', !!L); c.classList.toggle('noR', !!R);

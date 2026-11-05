@@ -19,3 +19,6 @@
 /* a page flagged for a rescan: in the split, and the strip above it once it's open */
 .spfl .spre{background:var(--warn-soft);color:var(--warn);border-color:var(--warn);font-weight:600}
 .scnote.re{background:var(--warn-soft)}
+.imptbl{width:100%;border-collapse:collapse;font-size:13px;margin:6px 0 4px}
+.imptbl td{padding:6px 0;border-top:1px solid var(--line)}
+.imptbl td:last-child{text-align:right;color:var(--muted)}
