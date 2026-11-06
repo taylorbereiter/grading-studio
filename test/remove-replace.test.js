@@ -75,3 +75,16 @@ test('Remove, Undo, Bring back and Replace on downloaded files, kept after reope
   assert.deepEqual(page.errors, []);
   await dl.close(); await close();
 });
+
+test('with her rubric page on the end of each paper, the file still has Move to, Replace and Remove', async () => {
+  const rubric = Buffer.from(await makePaper({ title: 'Rubric page' })).toString('base64');
+  const { page, close } = await openApp(browser, { seed: { ls: { 'gs.setup': JSON.stringify({ mode: 'rubric', criteria: ['A', 'B', 'C'], rubricPage: { id: 'r1', name: 'Rubric page.pdf' }, rubricPos: 'end' }), 'gs.rp.r1': JSON.stringify(rubric) } } });
+  await openZip(page, zip, 'River essay.zip');
+  await page.waitForFunction(() => window.__gs.state().batch.students[0].files.some(f => f.virtual));
+  await goToStudent(page, 0);
+  await page.waitForSelector('[data-rmfile="Aria Testwell/Essay.pdf"]');
+  assert.ok(await page.$('[data-rplfile="Aria Testwell/Essay.pdf"]'));
+  assert.ok(await page.$('[data-mvfile="Aria Testwell/Essay.pdf"]'));
+  assert.deepEqual(page.errors, []);
+  await close();
+});
