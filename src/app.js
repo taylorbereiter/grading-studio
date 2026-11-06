@@ -3980,16 +3980,18 @@ document.addEventListener('drop', async e => {
   e.preventDefault(); e.stopPropagation(); clearIns(); $('#drop').classList.remove('over');
   const f = findItem(card.dataset.card); if (!f) return;
   const out = await entriesFromDrop(e.dataTransfer);
+  if (intoCard(out.list, f.it, out.dir)) return;
   intake(out.list, out.label, f.it);
 }, true);
 
 let asgTarget = null;
 $('#asgDirIn').onchange = e => {
   const fs = [...e.target.files], top = fs.length ? (fs[0].webkitRelativePath || '').split('/')[0] : '';
-  if (asgTarget && fs.length) intake(fs.map(f => ({ path: (f.webkitRelativePath || f.name).split('/').slice(1).join('/') || f.name, file: f })), top, asgTarget);
+  const list = fs.map(f => ({ path: (f.webkitRelativePath || f.name).split('/').slice(1).join('/') || f.name, file: f }));
+  if (asgTarget && fs.length && !intoCard(list, asgTarget, top)) intake(list, top, asgTarget);
   e.target.value = '';
 };
-$('#asgIn').onchange = e => { const fs = [...e.target.files]; if (asgTarget && fs.length) intake(fs.map(f => ({ path: f.name, file: f })), fs.length === 1 ? fs[0].name.replace(/\.[^.]+$/, '') : '', asgTarget); e.target.value = ''; };
+$('#asgIn').onchange = e => { const fs = [...e.target.files]; if (asgTarget && fs.length && !intoCard(fs.map(f => ({ path: f.name, file: f })), asgTarget)) intake(fs.map(f => ({ path: f.name, file: f })), fs.length === 1 ? fs[0].name.replace(/\.[^.]+$/, '') : '', asgTarget); e.target.value = ''; };
 $('#start').addEventListener('click', async e => {
   const b = e.target.closest('button'); if (!b) return;
   if (b.dataset.addunit != null) { const c = holderById(b.dataset.addunit); const name = await askTextDlg('Unit name', 'Unit ' + (c.units.length + 1), { ok: 'Add unit' }); if (name && name.trim()) { c.units.push({ id: uid(), name: name.trim(), items: [] }); saveLib(); renderLib(); } return; }
@@ -4013,7 +4015,7 @@ $('#start').addEventListener('click', async e => {
     asgTarget = findItem(b.dataset.openAsg).it;
     openDlg('<div class="bh"><h2>Open “' + esc(asgTarget.name) + '”</h2></div><div class="bb"><p style="margin-top:0">Where is the ManageBac download? You can also drop the ZIP or the folder straight onto this assignment’s card.</p></div>' +
       '<div class="bf"><button class="btn" data-cancel>Cancel</button><button class="btn" data-pc>The ZIP or files…</button><button class="btn" data-dir>A whole folder…</button><button class="btn" data-scan>A scan of everyone’s papers…</button><button class="btn" data-match>Files to match to a roster…</button>' + (gcid() ? '<button class="btn primary" data-dv>From Google Drive…</button>' : '') + '</div>', true);
-    $('#dlgBox').onclick = ev => { if (ev.target.closest('[data-cancel]')) return closeDlg(); if (ev.target.closest('[data-pc]')) { closeDlg(); $('#asgIn').click(); } if (ev.target.closest('[data-dir]')) { closeDlg(); pickDir('#asgDirIn'); } if (ev.target.closest('[data-scan]')) { closeDlg(); scanFor = asgTarget; $('#scanIn').click(); } if (ev.target.closest('[data-match]')) { const a = asgTarget; askFilesOrFolder('Match files to a roster', 'Each file is matched to a student by the name in its file name or folder name, and you can fix any match.', list => matchToRoster(list, a)); } if (ev.target.closest('[data-dv]')) { closeDlg(); openFromDrive(asgTarget); } };
+    $('#dlgBox').onclick = ev => { if (ev.target.closest('[data-cancel]')) return closeDlg(); if (ev.target.closest('[data-pc]')) { closeDlg(); $('#asgIn').click(); } if (ev.target.closest('[data-dir]')) { closeDlg(); pickDir('#asgDirIn'); } if (ev.target.closest('[data-scan]')) { closeDlg(); scanFor = asgTarget; $('#scanIn').click(); } if (ev.target.closest('[data-match]')) { const a = asgTarget; askFilesOrFolder('Match files to a roster', 'Each file is matched to a student by the name in its file name or folder name, and you can fix any match.', list => intoCard(list, a) || matchToRoster(list, a)); } if (ev.target.closest('[data-dv]')) { closeDlg(); openFromDrive(asgTarget); } };
     return;
   }
   if (b.dataset.editClass != null) return editClass(+b.dataset.editClass);
@@ -4304,6 +4306,49 @@ async function reopenKept(id, assignment) {
   const rec = await paperGet(id);
   if (!rec) { toast('The papers for this one aren’t kept in this browser. Drop the download in again.'); return; }
   await intake(rec.entries, rec.label, assignment || cardOfKept(id), true);
+}
+// One student's work picked or dropped for an assignment that already has its download isn't a new download.
+// It opens that download and goes through Bring in files, so each file lands on a student already in the list and nobody new is made.
+// dir: the name of a single folder dropped or picked, which for one student's folder is their name.
+function fewFiles(list, dir, m) {
+  list = list.filter(e => !junk(e.path));
+  if (!list.length || list.some(e => /\.zip$/i.test(e.path))) return false;   // a ZIP is a download
+  const loose = list.every(e => !e.path.includes('/'));
+  const groups = dir && loose ? 1 : new Set(list.map(e => e.path.split('/').filter(Boolean)[0])).size;
+  if (!(groups <= 2 || (loose && list.length <= 6))) return false;
+  return !m || !m.n || m.n > Math.min(groups, 2) * 2;   // a class this small could really be a whole download
+}
+const keptPapers = id => { const m = id && keptMeta.get(id); return m && m.papers ? m : null; };
+const withDir = (list, dir) => dir && list.every(e => !e.path.includes('/')) ? list.map(e => ({ ...e, path: dir + '/' + e.path })) : list;
+async function addIntoKept(id, asg, list, dir) {
+  await reopenKept(id, asg);
+  if (!batch || batch.id !== id) return;
+  await bringIn(withDir(list, dir));
+}
+// True if the files went into the assignment's own download.
+function intoCard(list, asg, dir) {
+  const m = asg && keptPapers(asg.batchId);
+  if (!m || !fewFiles(list, dir, m)) return false;
+  addIntoKept(asg.batchId, asg, list, dir);
+  return true;
+}
+// A file or two dropped on the start screen: asks which download it belongs in, or opens it on its own.
+function askWhichDownload(list, dir, label) {
+  const kept = [...keptMeta.values()].filter(m => m.papers).sort((a, b) => b.t - a.t).slice(0, 10);
+  if (!kept.length || !fewFiles(list, dir)) return false;
+  const nm = m => { const f = m.asg ? findItem(m.asg) : null; return (f && f.it.name) || m.name || 'A download'; };
+  openDlg('<div class="bh"><h2>Where does this go?</h2><button class="icon" data-cancel aria-label="Close" style="margin-left:auto">✕</button></div>' +
+    '<div class="bb"><p style="margin-top:0">Pick the assignment. It opens, and you choose the student for each file. Nobody new is added to the class.</p>' +
+    kept.map(m => '<button class="btn" data-into="' + esc(m.id) + '" style="display:flex;width:100%;justify-content:space-between;margin-bottom:6px;text-align:left"><b>' + esc(nm(m)) + '</b><span class="muted">' + m.n + (m.n === 1 ? ' student' : ' students') + ' · ' + fmtDay(m.t) + '</span></button>').join('') + '</div>' +
+    '<div class="bf"><button class="btn" data-own style="margin-right:auto">Open it on its own</button><button class="btn" data-cancel>Cancel</button></div>', true);
+  $('#dlgBox').onclick = e => {
+    if (e.target.closest('[data-cancel]')) return closeDlg();
+    if (e.target.closest('[data-own]')) { closeDlg(); return intake(list, label); }
+    const b = e.target.closest('[data-into]'); if (!b) return;
+    closeDlg(); const m = keptMeta.get(b.dataset.into), f = m && m.asg ? findItem(m.asg) : null;
+    addIntoKept(b.dataset.into, f ? f.it : null, list, dir);
+  };
+  return true;
 }
 async function forgetKept(id) {
   try { await gsData.forget(id); }   // first, so if this fails it can simply be clicked again
@@ -6039,10 +6084,10 @@ async function bringIn(list) {
   if (!list.length) return;
   const { fresh: rows, dups } = await freshRows(list.map(e => ({ e, ...sortGuess(e.path) })));
   if (!rows.length) return toast('Those files are already here, so there’s nothing new to add');
-  const opts = i => '<option value="-1"' + (i < 0 ? ' selected' : '') + '>Choose a student…</option>' + (anonOn() ? anonOrder() : batch.students.map((_, k) => k)).map(k => '<option value="' + k + '"' + (k === i ? ' selected' : '') + '>' + (anonOn() ? '' : (k + 1) + '. ') + esc(shownName(batch.students[k], k)) + '</option>').join('') + '<option value="-3">New student…</option><option value="-2">Skip this file</option>';
-  const count = () => rows.filter(r => r.i >= 0 || r.newKey).length;
+  const opts = i => '<option value="-1"' + (i < 0 ? ' selected' : '') + '>Choose a student…</option>' + (anonOn() ? anonOrder() : batch.students.map((_, k) => k)).map(k => '<option value="' + k + '"' + (k === i ? ' selected' : '') + '>' + (anonOn() ? '' : (k + 1) + '. ') + esc(shownName(batch.students[k], k)) + '</option>').join('') + '<option value="-2">Skip this file</option>';
+  const count = () => rows.filter(r => r.i >= 0).length;
   openDlg('<div class="bh"><h2>Bring in files</h2><span class="muted">' + rows.length + (rows.length === 1 ? ' file' : ' files') + ', sorted by the names in the file names</span><button class="icon" data-close aria-label="Close" style="margin-left:auto">✕</button></div>' +
-    '<div class="bb"><p class="muted" style="margin:0 0 10px;font-size:14px">Each file goes into that student’s submission in this download, tagged “Added by you”. Check the ones marked “Check” or “Choose”. Tick <b>Late</b> beside anyone you want marked late; nothing is taken off.' + (dups ? ' ' + dups + (dups === 1 ? ' file is' : ' files are') + ' already here, so ' + (dups === 1 ? 'it’s' : 'they’re') + ' left out.' : '') + '</p>' +
+    '<div class="bb"><p class="muted" style="margin:0 0 10px;font-size:14px">Each file goes into that student’s submission in this download, tagged “Added by you”. Check the ones marked “Check” or “Choose”. Tick <b>Late</b> beside anyone you want marked late; nothing is taken off. Files only go to students already in your list; nobody new is added. Someone missing from the list? Add them to the roster first.' + (dups ? ' ' + dups + (dups === 1 ? ' file is' : ' files are') + ' already here, so ' + (dups === 1 ? 'it’s' : 'they’re') + ' left out.' : '') + '</p>' +
     '<table class="gl"><thead><tr><th>File</th><th>Goes to</th><th></th><th><label style="white-space:nowrap"><input type="checkbox" data-lateall aria-label="Mark all late"> Late</label></th></tr></thead><tbody>' +
     rows.map((r, k) => '<tr><td style="overflow-wrap:anywhere">' + esc(r.e.path) + '</td><td><select class="btn" data-row="' + k + '" style="max-width:280px">' + opts(r.i) + '</select></td><td data-tag="' + k + '">' + sortTag(r) + rowNote(r) + '</td><td><input type="checkbox" data-late="' + k + '" aria-label="Mark late"></td></tr>').join('') +
     '</tbody></table></div><div class="bf"><button class="btn" data-close>Cancel</button><button class="btn primary" data-go>Add ' + count() + (count() === 1 ? ' file' : ' files') + '</button></div>');
@@ -6051,23 +6096,15 @@ async function bringIn(list) {
     if (e.target.closest('[data-lateall]')) { for (const c of box.querySelectorAll('[data-late]')) { c.checked = e.target.checked; rows[+c.dataset.late].late = c.checked; } return; }
     const l = e.target.closest('[data-late]'); if (l) { rows[+l.dataset.late].late = l.checked; return; }
     const s = e.target.closest('[data-row]'); if (!s) return; const r = rows[+s.dataset.row];
-    r.newKey = '';
-    if (s.value === '-3') {   // someone who isn't in this download yet
-      const nk = (await askTextDlg('The new student’s name', guessNewName(r.e.path)) || '').replace(/[\\/]+/g, ' ').trim();
-      if (!nk) { s.value = String(r.i); return; }
-      r.newKey = nk;
-    }
-    r.i = +s.value; r.sure = true; r.set = true; box.querySelector('[data-tag="' + s.dataset.row + '"]').innerHTML = (r.newKey ? '' : sortTag(r)) + rowNote(r); const n = count(); box.querySelector('[data-go]').textContent = 'Add ' + n + (n === 1 ? ' file' : ' files');
+    r.i = +s.value; r.sure = true; r.set = true; box.querySelector('[data-tag="' + s.dataset.row + '"]').innerHTML = sortTag(r) + rowNote(r); const n = count(); box.querySelector('[data-go]').textContent = 'Add ' + n + (n === 1 ? ' file' : ' files');
   };
   box.onclick = async e => {
     if (e.target.closest('[data-close]')) return closeDlg();
     if (!e.target.closest('[data-go]')) return;
     if (!count()) return toast('Choose a student for at least one file');
     const groups = new Map(), late = new Set(), keep = batch.students[cur], t0 = Date.now();
-    let made = false;
-    for (const r of rows) {
-      let st = r.i >= 0 ? batch.students[r.i] : null;
-      if (r.newKey) { st = batch.students.find(x => x.key === r.newKey); if (!st) { st = { key: r.newKey, files: [], grade: { rubric: [], points: '', comment: '' }, layout: null, inc: {} }; batch.students.push(st); made = true; } }
+    for (const r of rows) {   // only ever someone already in the list: a file never makes a new student
+      const st = r.i >= 0 ? batch.students[r.i] : null;
       if (!st) continue;
       if (!groups.has(st)) groups.set(st, []);
       groups.get(st).push(r.e);
@@ -6077,7 +6114,6 @@ async function bringIn(list) {
     let last = keep;
     for (const [st, fl] of groups) { await addFiles(st, fl, true); last = st; }
     late.forEach(markLate);
-    if (made) { rosterSort(); cur = Math.max(0, batch.students.indexOf(keep)); setBatchName(); saveNow(); }
     renderList(); openStudent(batch.students.indexOf(groups.has(keep) ? keep : last));
     bringInDone([...groups.keys()], t0, late.size);
   };
@@ -6245,11 +6281,12 @@ let scanInto = false;
 $('#pickScan').onclick = () => { scanFor = null; scanInto = false; $('#scanIn').click(); };
 $('#pickMatch').onclick = () => askFilesOrFolder('Match files to a roster', 'For files that aren’t a ManageBac download, like rubrics you marked outside Grading Studio. Each file is matched to a student on your roster by the name in its file name or folder name, and you can fix any match.', list => matchToRoster(list, null));
 $('#scanIn').onchange = e => { const f = e.target.files[0]; e.target.value = ''; const into = scanInto && !!batch; scanInto = false; if (f) openSplit(f, scanFor, into); };
-$('#fileIn').onchange = e => { const fs = [...e.target.files]; intake(fs.map(f => ({ path: f.name, file: f })), fs.length === 1 ? fs[0].name.replace(/\.[^.]+$/, '') : ''); e.target.value = ''; };
+$('#fileIn').onchange = e => { const fs = [...e.target.files]; if (askWhichDownload(fs.map(f => ({ path: f.name, file: f })), '', fs.length === 1 ? fs[0].name.replace(/\.[^.]+$/, '') : '')) { e.target.value = ''; return; } intake(fs.map(f => ({ path: f.name, file: f })), fs.length === 1 ? fs[0].name.replace(/\.[^.]+$/, '') : ''); e.target.value = ''; };
 $('#dirIn').onchange = e => {
   const fs = [...e.target.files];
   const top = fs.length ? (fs[0].webkitRelativePath || '').split('/')[0] : '';
-  intake(fs.map(f => ({ path: (f.webkitRelativePath || f.name).split('/').slice(1).join('/') || f.name, file: f })), top);
+  const list = fs.map(f => ({ path: (f.webkitRelativePath || f.name).split('/').slice(1).join('/') || f.name, file: f }));
+  if (!fs.length || !askWhichDownload(list, top, top)) intake(list, top);
   e.target.value = '';
 };
 const drop = $('#drop');
@@ -6258,21 +6295,22 @@ const drop = $('#drop');
 async function entriesFromDrop(dt) {
   const out = [];
   const entries = [...(dt.items || [])].map(i => i.webkitGetAsEntry && i.webkitGetAsEntry()).filter(Boolean);
-  let label = '';
+  let label = '', dir = '';
   if (entries.length) {
     if (entries.length === 1 && entries[0].isDirectory) {   // the dropped folder is the assignment itself
-      label = entries[0].name;
+      label = dir = entries[0].name;
       const tmp = []; await walkEntry(entries[0], '', tmp);
       for (const t of tmp) out.push({ path: t.path.split('/').slice(1).join('/'), file: t.file });
     } else for (const en of entries) await walkEntry(en, '', out);
   } else for (const f of dt.files) out.push({ path: f.name, file: f });
-  return { list: out, label };
+  return { list: out, label, dir };
 }
 document.addEventListener('drop', async e => {
   if (batch) return;
   e.preventDefault();
   if (!e.dataTransfer || !e.dataTransfer.files.length) return;
   const r = await entriesFromDrop(e.dataTransfer);
+  if (askWhichDownload(r.list, r.dir, r.label)) return;
   intake(r.list, r.label);
 });
 // With a download open, files dropped on the paper or on a student's name are added to that student.
@@ -6341,6 +6379,7 @@ $('#closeBtn').onclick = () => {
   commitEditors(); saveNow();   // what she's still typing first, so it's in this save
   if (batch) closeDownload();
 };
+$('#homeBtn').onclick = () => $('#closeBtn').onclick();   // the name in the corner goes back to the start screen too
 document.addEventListener('keydown', e => {
   if (!batch || !$('#dlg').hidden) { if (e.key === 'Escape' && !$('#dlg').hidden) { if (SP) splitLeave(); else leaveDlg(); } return; }
   const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement && document.activeElement.tagName) || (document.activeElement && document.activeElement.isContentEditable);
