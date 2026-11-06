@@ -264,6 +264,11 @@ body{padding-bottom:var(--savebar,0px)}.app{height:calc(100vh - var(--savebar,0p
 .pop{position:absolute;z-index:5;width:290px;background:var(--surface);border:1px solid var(--line-strong);border-radius:10px;box-shadow:0 10px 30px rgba(15,20,35,.18);padding:10px;display:flex;flex-direction:column;gap:8px}
 .pop textarea{width:100%;min-height:76px;border:1px solid var(--line-strong);border-radius:7px;padding:7px 8px;font-size:14px;background:var(--surface);resize:vertical}
 .pop .chips{display:flex;flex-wrap:wrap;gap:5px;max-height:120px;overflow:auto}
+.ctags{display:flex;flex-wrap:wrap;gap:6px}
+.field .ctag{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line-strong);border-radius:999px;padding:4px 12px 4px 9px;background:var(--surface);font-size:13px;font-weight:500;color:var(--fg-2);cursor:pointer;margin:0}
+.field .ctag input{margin:0;accent-color:var(--accent)}
+.field .ctag:has(input:checked){border-color:var(--accent);background:var(--accent-soft);color:var(--accent)}
+.field .ctag:has(input:focus-visible){outline:2px solid var(--accent);outline-offset:2px}
 .chip{display:inline-flex;align-items:center;gap:4px;border:1px solid var(--line);background:var(--surface-2);border-radius:999px;padding:3px 4px 3px 10px;font-size:12.5px;max-width:100%}
 .chip span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer}
 .chip button{border:0;background:none;color:var(--faint);padding:0 4px;font-size:14px;line-height:1}
@@ -2554,7 +2559,7 @@ async function intake(entries, label, assignment, fromKeep) {   // entries: [{ p
   if (earlier) carryRoster(earlier);
   if (batch.restoredKey) { const k = batch.students.findIndex(st => st.key === batch.restoredKey); if (k >= 0) batch.restoredCur = k; }
   renderClassSel();
-  if (assignment) { assignment.batchId = id; assignment.opened = Date.now(); if (!assignment.setup || rub.toCard) assignment.setup = { ...setup, spot: undefined }; saveLib(); }
+  if (assignment) { assignment.batchId = id; assignment.opened = Date.now(); if (!assignment.setup || rub.toCard) assignment.setup = { ...setup, spot: undefined }; shareRubric(assignment); saveLib(); }
   keepWait = keepPapers(batch, label, fromKeep ? null : keepList, sameSize.length > 0);
   cur = 0; undoStack = []; selected = null;
   $('#start').hidden = true; $('#app').hidden = false;
@@ -4236,7 +4241,7 @@ function openSetup() {
       const pageChanged = JSON.stringify(draft.rubricPage) !== JSON.stringify(setup.rubricPage) || draft.rubricPos !== setup.rubricPos;
       rowsTakenOut();
       setup = draft; store.set('gs.setup', { ...setup, spot: undefined, rubricPage: undefined });
-      if (batch && batch.assignment) { batch.assignment.setup = { ...setup, spot: undefined }; saveLib(); }
+      if (batch && batch.assignment) { batch.assignment.setup = { ...setup, spot: undefined }; shareRubric(batch.assignment); saveLib(); }
       if (batch) batch.students.forEach(refound);
       closeDlg(); renderGrade(); renderList(); saveSoon();
       for (const el of document.querySelectorAll('.docx')) if (el.wordShow) el.wordShow();   // the percent over an open Word rubric follows the new setup
@@ -6218,33 +6223,67 @@ $('#topAtlas').addEventListener('click', e => { const b = e.target.closest('[dat
 function editAssignment(id, unitId) {
   const f = id ? findItem(id) : null, start = f ? f : findUnit(unitId) || { c: lib.classes[0] || lib.loose, u: null };
   const it = f ? f.it : { id: uid(), name: '', classId: start.c.id };
+  const classPick = f
+    ? '<div class="field"><label for="aClass">Class</label><select id="aClass" class="btn" style="justify-content:flex-start">' + lib.classes.map(c => '<option value="' + c.id + '"' + (c === start.c ? ' selected' : '') + '>' + esc(c.name) + '</option>').join('') + '<option value=""' + (start.c === lib.loose ? ' selected' : '') + '>No class</option></select></div>'
+    : '<div class="field"><label>Classes</label><div class="ctags" id="aClasses">' + holders().map(c => '<label class="ctag"><input type="checkbox" value="' + esc(c.id) + '"' + (c === start.c ? ' checked' : '') + '><span>' + esc(c === lib.loose ? 'No class' : c.name) + '</span></label>').join('') + '</div></div>';
   openDlg('<div class="bh"><h2>' + (f ? 'Edit assignment' : 'New assignment') + '</h2></div><div class="bb">' +
     '<div class="field"><label for="aName">Name</label><input type="text" id="aName" value="' + esc(it.name) + '" placeholder="e.g. Ch 3 Analysis Paragraph"></div>' +
-    '<div class="field"><label for="aClass">Class</label><select id="aClass" class="btn" style="justify-content:flex-start">' + lib.classes.map(c => '<option value="' + c.id + '"' + (c === start.c ? ' selected' : '') + '>' + esc(c.name) + '</option>').join('') + '<option value=""' + (start.c === lib.loose ? ' selected' : '') + '>No class</option></select></div>' +
-    '<div class="field"><label for="aUnit">Unit</label><select id="aUnit" class="btn" style="justify-content:flex-start"></select></div>' +
-    '<p class="muted" style="font-size:13px;margin:0">The rubric is set the first time you open a download for it, with Rubric setup, and it’s remembered for this assignment.</p></div>' +
+    classPick +
+    '<div class="field"><label for="aUnit">Unit</label><select id="aUnit" class="btn" style="justify-content:flex-start"></select><p class="muted" id="aUnitNote" style="font-size:13px;margin:6px 0 0" hidden></p></div>' +
+    '<p class="muted" style="font-size:13px;margin:0">The rubric is set the first time you open a download for it, with Rubric setup, and it’s remembered for this assignment.' + (f ? '' : ' Copies in other classes get the same rubric.') + '</p></div>' +
     '<div class="bf">' + (f ? '<button class="btn" data-del style="margin-right:auto">Delete</button>' : '') + '<button class="btn" data-cancel>Cancel</button><button class="btn primary" data-ok>Save</button></div>', true);
+  const ticked = () => [...document.querySelectorAll('#aClasses input:checked')].map(x => holderById(x.value)).filter(Boolean);
   const fillUnits = keep => {
-    const c = holderById($('#aClass').value);
-    $('#aUnit').innerHTML = c.units.map(u => '<option value="' + u.id + '"' + (keep && u === keep ? ' selected' : '') + '>' + esc(u.name) + '</option>').join('') || '<option value="">Unit 1 (new)</option>';
+    if (f) {
+      const c = holderById($('#aClass').value);
+      $('#aUnit').innerHTML = c.units.map(u => '<option value="' + u.id + '"' + (keep && u === keep ? ' selected' : '') + '>' + esc(u.name) + '</option>').join('') || '<option value="">Unit 1 (new)</option>';
+      return;
+    }
+    const cs = ticked(), was = $('#aUnit').value || (keep && keep.name) || '', names = [];
+    for (const c of cs) for (const u of c.units) if (!names.includes(u.name)) names.push(u.name);
+    $('#aUnit').innerHTML = names.map(n => '<option value="' + esc(n) + '"' + (n === was ? ' selected' : '') + '>' + esc(n) + '</option>').join('') || '<option value="">Unit 1 (new)</option>';
+    const n = $('#aUnit').value || 'Unit 1', made = cs.filter(c => !c.units.some(u => u.name === n)).map(c => c === lib.loose ? 'No class' : c.name);
+    const note = $('#aUnitNote');
+    note.hidden = !(cs.length > 1 && made.length && made.length < cs.length);
+    if (!note.hidden) note.textContent = made.join(', ') + (made.length === 1 ? ' has' : ' have') + ' no unit called “' + n + '” yet, so one is made there.';
+    const ok = $('#dlgBox [data-ok]'); ok.textContent = cs.length > 1 ? 'Add to ' + cs.length + ' classes' : 'Save'; ok.disabled = !cs.length;
   };
   fillUnits(start.u);
-  $('#aClass').onchange = () => fillUnits(null);
+  if (f) $('#aClass').onchange = () => fillUnits(null);
+  else { $('#aClasses').onchange = () => fillUnits(null); $('#aUnit').onchange = () => fillUnits(null); }
   setTimeout(() => $('#aName').focus(), 0);
   $('#dlgBox').onclick = async e => {
     if (e.target.closest('[data-cancel]')) return closeDlg();
     if (e.target.closest('[data-del]')) { if (!await askDlg('Delete “' + it.name + '”?', { ok: 'Delete', danger: true })) return; f.u.items.splice(f.u.items.indexOf(it), 1); saveLib(); closeDlg(); return renderLib(); }
     if (e.target.closest('[data-ok]')) {
       const name = $('#aName').value.trim(); if (!name) { $('#aName').focus(); return; }
+      if (!f) {
+        const cs = ticked(); if (!cs.length) return;
+        const un = $('#aUnit').value || 'Unit 1', group = cs.length > 1 ? uid() : undefined;
+        cs.forEach((c, k) => {
+          let to = c.units.find(u => u.name === un);
+          if (!to) c.units.push(to = { id: uid(), name: un, items: [] });
+          const a = k ? { id: uid(), name, classId: c.id } : Object.assign(it, { name, classId: c.id });
+          if (group) a.group = group;
+          to.items.push(a);
+        });
+        saveLib(); closeDlg(); renderLib();
+        if (cs.length > 1) toast('Added to ' + cs.map(c => c === lib.loose ? 'No class' : c.name).join(', ').replace(/, ([^,]*)$/, ' and $1'));
+        return;
+      }
       const c = holderById($('#aClass').value);
       let to = c.units.find(u => u.id === $('#aUnit').value);
       if (!to) c.units.push(to = { id: uid(), name: 'Unit 1', items: [] });
       it.name = name; it.classId = c.id;
-      if (f && f.u !== to) f.u.items.splice(f.u.items.indexOf(it), 1);
-      if (!f || f.u !== to) to.items.push(it);
+      if (f.u !== to) f.u.items.splice(f.u.items.indexOf(it), 1);
+      if (f.u !== to) to.items.push(it);
       saveLib(); closeDlg(); renderLib();
     }
   };
+}
+function shareRubric(a) {
+  if (!a || !a.group || !a.setup) return;
+  for (const c of holders()) for (const u of c.units) for (const x of u.items) if (x !== a && x.group === a.group && !x.setup) x.setup = JSON.parse(JSON.stringify(a.setup));
 }
 function parseRoster(text) {
   const out = [];
