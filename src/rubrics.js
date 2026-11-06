@@ -396,7 +396,7 @@ function classStats() {
   const mean = a => a.reduce((x, y) => x + y, 0) / a.length;
   s.n = n; s.everyone = batch.students.length + s.rosterOnly.length; s.max = max;
   s.nLate = s.counted.filter(x => x.late).length;
-  if (n) Object.assign(s, { mean: mean(tot), median: n % 2 ? tot[(n - 1) / 2] : (tot[n / 2 - 1] + tot[n / 2]) / 2, low: tot[0], high: tot[n - 1], meanPct: pcts.length ? roundPct(mean(pcts)) : null });
+  if (n) Object.assign(s, { mean: mean(tot), median: n % 2 ? tot[(n - 1) / 2] : (tot[n / 2 - 1] + tot[n / 2]) / 2, low: tot[0], high: tot[n - 1], meanPct: pcts.length ? pct2(mean(pcts)) : null });
   const ps = pcts.slice().sort((a, b) => a - b);
   if (ps.length) Object.assign(s, { medPct: roundPct(ps.length % 2 ? ps[(ps.length - 1) / 2] : (ps[ps.length / 2 - 1] + ps[ps.length / 2]) / 2), lowPct: ps[0], highPct: ps[ps.length - 1] });
   s.bins = spreadBins(s.counted, max);
@@ -482,7 +482,7 @@ function ovDraw() {
     '<div class="bb" id="ovBody">' +
     '<p class="ovleft" id="ovLeft">' + esc(leftOutText(s)) + '</p>' +
     (s.n ? '<div class="ovtiles" id="ovTiles">' + (s.meanPct != null
-      ? ovTile('Average', s.meanPct + '%', oneDp(s.mean) + ' / ' + fmtNum(s.max), true) + ovTile('Middle score', s.medPct + '%', fmtNum(s.median) + ' / ' + fmtNum(s.max)) + ovTile('Lowest', s.lowPct + '%', fmtNum(s.low) + ' / ' + fmtNum(s.max)) + ovTile('Highest', s.highPct + '%', fmtNum(s.high) + ' / ' + fmtNum(s.max))
+      ? ovTile('Average', pctAvgText(s.meanPct), oneDp(s.mean) + ' / ' + fmtNum(s.max), true) + ovTile('Middle score', s.medPct + '%', fmtNum(s.median) + ' / ' + fmtNum(s.max)) + ovTile('Lowest', s.lowPct + '%', fmtNum(s.low) + ' / ' + fmtNum(s.max)) + ovTile('Highest', s.highPct + '%', fmtNum(s.high) + ' / ' + fmtNum(s.max))
       : ovTile('Average', oneDp(s.mean), '/ ' + fmtNum(s.max), true) + ovTile('Middle score', fmtNum(s.median)) + ovTile('Lowest', fmtNum(s.low)) + ovTile('Highest', fmtNum(s.high))) + '</div>' : '') +
     (s.meanPct != null ? '<div class="ovcharts"><section id="ovBands"><h3 class="ovh3">Grade bands</h3>' + bandsHtml(s.counted, PCT_TENS) + '<p class="muted ovcap2">How many papers landed in each range of percents.</p></section>' +
       '<section id="ovStrip"><h3 class="ovh3">Every paper’s percent</h3>' + stripHtml(s.counted, s.meanPct, 'Average') + '<p class="muted ovcap2">One dot for each paper. Point at one to see whose it is, and click it to open them.</p></section></div>' : '') +
@@ -501,6 +501,7 @@ function ovWire() {
     const g = e.target.closest('[data-ovgo]'); if (g) { closeDlg(); openStudent(+g.dataset.ovgo); return; }
     const tb = e.target.closest('[data-ovtab]'); if (tb && tb.dataset.ovtab !== ovTab) { ovTab = tb.dataset.ovtab; ovDraw(); return $('#dlgBox [data-ovtab="' + ovTab + '"]').focus(); }
     const sg = e.target.closest('[data-pseg]'); if (sg) { pvSet(sg.dataset.pseg, sg.dataset.v); return; }
+    const dp = e.target.closest('[data-avgdp]'); if (dp) return setAvgDp(+dp.dataset.avgdp);
     const th = e.target.closest('[data-psort]'); if (th) { const k = th.dataset.psort; if (pv.sort === k) pv.dir *= -1; else { pv.sort = k; pv.dir = k === 'name' ? 1 : -1; } return pctDraw(); }
     if (e.target.closest('[data-pcopy]')) return copy(pctRows().map(r => r.name + '\t' + r.pct + '%').join('\n'), 'Copied ' + pctRows().length + ' percents in the order shown');
   };
@@ -514,6 +515,11 @@ function ovWire() {
 }
 
 /* ---------- percents: bands, a dot for each paper, the class over time, and the Percents tab ---------- */
+// The class average percent shows to the hundredth by default (83.33%), or to one place or whole, as she picks. One paper's percent stays whole.
+const pct2 = v => Math.round(v * 100 + 1e-9) / 100;
+const avgDp = () => { const d = +store.get('gs.avgDp', 2); return d === 0 || d === 1 ? d : 2; };
+const pctAvgText = v => { if (v == null) return ''; const d = avgDp(), k = 10 ** d; return (Math.round(v * k + 1e-9) / k).toFixed(d) + '%'; };
+const pctText = v => v == null ? '' : fmtNum(v) + '%';
 const PCT_TENS = [90, 80, 70, 60], PCT_FIVES = [95, 90, 85, 80, 75, 70, 65, 60];
 // cuts: the lowest percent of each band, highest first. The last band is everything below the last cut.
 function bandsOf(list, cuts) {
@@ -535,7 +541,7 @@ function stripHtml(list, mid, midName, target) {
   const near = mid != null && target != null && Math.abs(x(mid) - x(target)) < 22;   // the two labels side by side would run into each other
   const top = Math.max(1, ...Object.values(list.reduce((o, p) => (o[p.pct] = (o[p.pct] || 0) + 1, o), {})));
   return '<div class="pstrip" style="height:' + (54 + Math.min(top, 8) * 13) + 'px"><div class="pax"></div>' + ticks.map(t => '<span class="ptk" style="left:' + x(t) + '%">' + t + '%</span>').join('') +
-    (mid != null ? '<div class="pln' + (near && target > mid ? ' l' : '') + '" style="left:' + x(mid) + '%"><span>' + midName + ' ' + mid + '%</span></div>' : '') +
+    (mid != null ? '<div class="pln' + (near && target > mid ? ' l' : '') + '" style="left:' + x(mid) + '%"><span>' + midName + ' ' + (midName === 'Average' ? pctAvgText(mid) : pctText(mid)) + '</span></div>' : '') +
     (target != null ? '<div class="pln tg' + (near && target <= mid ? ' l' : '') + '" style="left:' + x(target) + '%"><span>Target ' + target + '%</span></div>' : '') +
     list.map(p => { const k = seen[p.pct] = (seen[p.pct] || 0) + 1; return '<button class="pdot' + (target != null && p.pct < target ? ' lo' : '') + '" data-ovgo="' + p.i + '" aria-label="' + esc(p.name + ', ' + p.pct + '%') + '" data-tv="' + p.pct + '%" data-tl="' + esc(p.name) + '" data-tn="' + esc(fmtNum(p.total) + ' / ' + fmtNum(p.max || maxPoints())) + '" style="left:' + x(p.pct) + '%;bottom:' + (22 + Math.min(k - 1, 7) * 13) + 'px"></button>'; }).join('') + '</div>';
 }
@@ -548,7 +554,7 @@ function pastAvg(d) {
     if (p.status === 'missing' || p.status === 'excused' || p.partial || p.pct == null || p.total == null || !(p.total >= 0 && p.total <= p.max)) continue;
     ps.push(p.pct);
   }
-  return ps.length ? { pct: roundPct(ps.reduce((a, b) => a + b, 0) / ps.length), n: ps.length } : null;
+  return ps.length ? { pct: pct2(ps.reduce((a, b) => a + b, 0) / ps.length), n: ps.length } : null;
 }
 function trendHtml(s) {
   const c = batchClass(); if (!c || s.meanPct == null) return '';
@@ -562,10 +568,10 @@ function trendHtml(s) {
   const W = 900, H = 150, L = 44, R = 20, T = 14, B = 34, X = i => L + (pts.length === 1 ? 0 : i * (W - L - R) / (pts.length - 1)), Y = v => T + (hi - v) / (hi - lo) * (H - T - B);
   let g = ''; for (let v = lo; v <= hi; v += 10) g += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + Y(v) + '" y2="' + Y(v) + '" class="tgl"/><text x="' + (L - 8) + '" y="' + (Y(v) + 4) + '" text-anchor="end" class="ttk">' + v + '%</text>';
   const cut = t => t.length > 18 ? t.slice(0, 17) + '…' : t;
-  return head + '<svg class="tsvg" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' + esc('Class average by assignment: ' + pts.map(p => p.name + ' ' + p.a.pct + '%').join(', ')) + '">' + g +
+  return head + '<svg class="tsvg" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' + esc('Class average by assignment: ' + pts.map(p => p.name + ' ' + pctAvgText(p.a.pct)).join(', ')) + '">' + g +
     '<polyline class="tln" points="' + pts.map((p, i) => X(i) + ',' + Y(p.a.pct)).join(' ') + '"/>' +
-    pts.map((p, i) => '<circle class="tdot' + (p.me ? ' me' : '') + '" cx="' + X(i) + '" cy="' + Y(p.a.pct) + '" r="' + (p.me ? 6 : 5) + '" tabindex="0" data-tv="' + p.a.pct + '%" data-tl="' + esc(p.name) + '" data-tn="' + esc('Average of ' + people(p.a.n, 'finished score')) + '"/>' +
-      '<text x="' + X(i) + '" y="' + (H - 10) + '" text-anchor="' + (i === pts.length - 1 && pts.length > 1 ? 'end' : i === 0 ? 'start' : 'middle') + '" class="tlb' + (p.me ? ' me' : '') + '">' + esc(cut(p.name)) + (p.me ? ' · ' + p.a.pct + '%' : '') + '</text>').join('') +
+    pts.map((p, i) => '<circle class="tdot' + (p.me ? ' me' : '') + '" cx="' + X(i) + '" cy="' + Y(p.a.pct) + '" r="' + (p.me ? 6 : 5) + '" tabindex="0" data-tv="' + pctAvgText(p.a.pct) + '" data-tl="' + esc(p.name) + '" data-tn="' + esc('Average of ' + people(p.a.n, 'finished score')) + '"/>' +
+      '<text x="' + X(i) + '" y="' + (H - 10) + '" text-anchor="' + (i === pts.length - 1 && pts.length > 1 ? 'end' : i === 0 ? 'start' : 'middle') + '" class="tlb' + (p.me ? ' me' : '') + '">' + esc(cut(p.name)) + (p.me ? ' · ' + pctAvgText(p.a.pct) : '') + '</text>').join('') +
     '</svg><p class="muted ovcap2">Each assignment’s own percents, averaged the same way, so a 12-point rubric and a 30-point test compare fairly.</p></section>';
 }
 
@@ -592,6 +598,13 @@ function pvSet(k, v) {
   }
   pctDraw();
 }
+const dpSeg = () => '<div class="pseg" role="group" aria-label="Places for the average">' + [[0, '83%'], [1, '83.3%'], [2, '83.33%']].map(([v, l]) => '<button data-avgdp="' + v + '" aria-pressed="' + (avgDp() === v) + '">' + l + '</button>').join('') + '</div>';
+function setAvgDp(d) {
+  store.set('gs.avgDp', d);
+  for (const b of document.querySelectorAll('[data-avgdp]')) b.setAttribute('aria-pressed', String(+b.dataset.avgdp === d));
+  if (batch) renderProg();
+  if ($('#pMain')) pctDraw(); else if ($('#ovTiles')) ovDraw();
+}
 const pvCuts = () => pv.band === '5' ? PCT_FIVES : pv.band === 'own' ? (pv.cuts.length ? pv.cuts : PCT_TENS) : PCT_TENS;
 // Who counts in the Percents tab, each with the percent they'd have with What if added.
 function pctList() {
@@ -608,11 +621,11 @@ function pctList() {
   });
   return { list: out, tags };
 }
-const pctMean = a => a.length ? roundPct(a.reduce((x, y) => x + y, 0) / a.length) : null;
+const pctMean = a => a.length ? pct2(a.reduce((x, y) => x + y, 0) / a.length) : null;
 const pctMed = a => { if (!a.length) return null; const b = a.slice().sort((x, y) => x - y), m = b.length; return roundPct(m % 2 ? b[(m - 1) / 2] : (b[m / 2 - 1] + b[m / 2]) / 2); };
 function pctRows() {
   const { list } = pctList(), ps = list.map(p => p.pct), mid = pv.mid === 'median' ? pctMed(ps) : pctMean(ps), cuts = pvCuts(), b = bandsOf(list, cuts);
-  const rows = list.map(p => ({ ...p, vs: p.pct - mid, band: (b.find(x => x.who.includes(p)) || {}).label || '' }));
+  const rows = list.map(p => ({ ...p, vs: Math.round((p.pct - mid) * 100) / 100, band: (b.find(x => x.who.includes(p)) || {}).label || '' }));
   const k = pv.sort, by = k === 'name' ? (a, c) => natural(a.name, c.name) : k === 'band' ? (a, c) => a.pct - c.pct : (a, c) => (a[k] - c[k]) || (a.pct - c.pct);
   return rows.sort((a, c) => by(a, c) * pv.dir || natural(a.name, c.name));
 }
@@ -622,6 +635,7 @@ function pctShell() {
   return '<aside class="pctl" aria-label="What the numbers use">' +
     '<section><h4>Who counts</h4><div id="pWho"></div></section>' +
     '<section><h4>Middle of the class</h4>' + seg('mid', [['mean', 'Average'], ['median', 'Middle score']]) + '<p class="muted phint">Average is the papers’ percents averaged, as on the tile.</p></section>' +
+    '<section><h4>Show the average</h4>' + dpSeg() + '<p class="muted phint">For the average everywhere: here, on the tile and in Summary.</p></section>' +
     '<section><h4>Target</h4><label class="pnum">Flag papers below <input type="number" id="pTarget" min="0" max="100" step="1" value="' + pv.target + '">%</label></section>' +
     '<section><h4>Bands</h4>' + seg('band', [['10', 'Tens'], ['5', 'Fives'], ['own', 'My own']]) + '<div id="pCuts"></div></section>' +
     '<section><h4>What if</h4><label class="pnum">Add <input type="number" id="pAdd" step="0.5" value="0"> points to everyone</label><p class="muted phint">Only a preview. No score changes.</p></section>' +
@@ -643,15 +657,15 @@ function pctDraw() {
   const rows = pctRows(), arrow = k => pv.sort === k ? (pv.dir < 0 ? ' ▾' : ' ▴') : '';
   const th = (k, l, r) => '<th' + (r ? ' class="r"' : '') + ' aria-sort="' + (pv.sort === k ? (pv.dir < 0 ? 'descending' : 'ascending') : 'none') + '"><button data-psort="' + k + '">' + l + arrow(k) + '</button></th>';
   $('#pMain').innerHTML = '<div class="ovtiles ptiles5" id="pTiles">' +
-    tile(pv.mid === 'median' ? 'Middle score' : 'Average', mid + '%', pv.add ? 'now ' + was + '%, with ' + (pv.add > 0 ? '+' : '') + fmtNum(pv.add) : people(n, 'paper') + ' counted', true) +
-    tile(pv.mid === 'median' ? 'Average' : 'Middle score', (pv.mid === 'median' ? avg : med) + '%', pv.mid === 'median' ? 'the percents averaged' : 'half above, half below') +
+    tile(pv.mid === 'median' ? 'Middle score' : 'Average', pv.mid === 'median' ? pctText(mid) : pctAvgText(mid), pv.add ? 'now ' + (pv.mid === 'median' ? pctText(was) : pctAvgText(was)) + ', with ' + (pv.add > 0 ? '+' : '') + fmtNum(pv.add) : people(n, 'paper') + ' counted', true) +
+    tile(pv.mid === 'median' ? 'Average' : 'Middle score', pv.mid === 'median' ? pctAvgText(avg) : pctText(med), pv.mid === 'median' ? 'the percents averaged' : 'half above, half below') +
     tile('Range', ps.length > 1 ? Math.min(...ps) + '–' + Math.max(...ps) + '%' : ps[0] + '%', 'lowest to highest') +
     tile('Typical gap', '±' + sd, 'percent from the average') +
     tile('Below ' + pv.target + '%', below, below === 1 ? 'paper' : 'papers') + '</div>' +
     '<div class="ovcharts"><section><h3 class="ovh3">Bands</h3>' + bandsHtml(list, pvCuts()) + '</section><section><h3 class="ovh3">Every paper’s percent</h3>' + stripHtml(list, mid, pv.mid === 'median' ? 'Middle' : 'Average', pv.target) + '</section></div>' +
     '<div class="ptblh"><h3 class="ovh3">Papers by percent</h3><span class="muted">Click a heading to sort, and a name to open that paper.</span><button class="btn" data-pcopy>Copy this table</button></div>' +
     '<table class="ptab"><thead><tr>' + th('name', 'Student') + th('total', 'Points', 1) + th('pct', 'Percent', 1) + th('vs', 'Vs. ' + (pv.mid === 'median' ? 'middle' : 'average'), 1) + th('band', 'Band') + '</tr></thead><tbody>' +
-    rows.map(r => '<tr' + (r.pct < pv.target ? ' class="lo"' : '') + '><td><button class="link" data-ovgo="' + r.i + '">' + esc(r.name) + '</button>' + (r.tag ? ' <span class="stag">' + { late: 'late', out: 'left out', part: 'partial' }[r.tag] + '</span>' : '') + '</td><td class="r">' + fmtNum(r.total) + ' / ' + fmtNum(r.max) + '</td><td class="r"><b>' + r.pct + '%</b></td><td class="r">' + (r.vs > 0 ? '+' : '') + r.vs + '</td><td>' + esc(r.band) + '</td></tr>').join('') +
+    rows.map(r => '<tr' + (r.pct < pv.target ? ' class="lo"' : '') + '><td><button class="link" data-ovgo="' + r.i + '">' + esc(r.name) + '</button>' + (r.tag ? ' <span class="stag">' + { late: 'late', out: 'left out', part: 'partial' }[r.tag] + '</span>' : '') + '</td><td class="r">' + fmtNum(r.total) + ' / ' + fmtNum(r.max) + '</td><td class="r"><b>' + r.pct + '%</b></td><td class="r">' + (r.vs > 0 ? '+' : '') + fmtNum(r.vs) + '</td><td>' + esc(r.band) + '</td></tr>').join('') +
     '</tbody></table>';
 }
 
