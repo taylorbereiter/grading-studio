@@ -3073,7 +3073,7 @@ async function openStudent(i, filePath) {
       continue;
     }
     const d = it.d, di = it.di, on = docIn(st, d), auto = docAuto(st, d), af = d.file && fileByPath(st, d.file);
-    const one = af && d.pages.every(([q]) => q === af.path) && !af.virtual;
+    const one = af && !af.virtual && d.pages.every(([q]) => q === af.path || (fileByPath(st, q) || {}).virtual);   // her rubric page added on the end doesn't make it two files
     const head = document.createElement('div'); head.className = 'fhead';
     head.innerHTML = '<span style="color:var(--fg)">' + esc(d.name) + '</span><span>' + d.pages.length + (d.pages.length === 1 ? ' page' : ' pages') + '</span>' + (af && af.added ? addTag(af) : '') + carryTag(batch.carry && d.pages.map(([q]) => fileByPath(st, q)).find(f => f && !f.virtual && batch.carry.flags[f.path])) +
       (on ? '' : '<span class="pill warn" style="font-size:12px;padding:2px 8px;border-radius:999px;background:var(--warn-soft);color:var(--warn)">' + (auto ? 'No marks, left out' : 'Left out') + '</span>') +
