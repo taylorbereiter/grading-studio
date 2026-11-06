@@ -506,7 +506,7 @@ test('the overview counts 0, leaves out missing, excused and partial, and says s
   await page.waitForSelector('#ovBody');
   const left = await page.$eval('#ovLeft', e => e.textContent);
   assert.equal(left, 'Counted: 3 of 8 students. Left out: 1 marked missing, 1 excused, 1 partial, 1 not scored yet, 1 from the paper, not on this scale. Missing and excused don’t count as 0. A score of 0 is counted. 1 late score is counted.');
-  assert.match(await page.$eval('#ovTiles', e => e.textContent), /Lowest0/);
+  assert.match(await page.$eval('#ovTiles', e => e.textContent), /Lowest48%0 \/ 12/);
   const who = await page.$$eval('#ovWho details', d => Object.fromEntries(d.map(x => [x.dataset.group, x.querySelectorAll('li').length])));
   assert.deepEqual(who, { 'Not scored yet': 1, 'Partial: some rows scored': 1, 'Marked missing': 1, 'Excused': 1, 'Read from the paper, not on this scale': 1, 'Late, and counted': 1 });
   assert.equal((await page.$$('#ovSpread .ovb')).length, 3);
