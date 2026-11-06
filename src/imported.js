@@ -198,6 +198,9 @@ function impNote(pg) {
   if (f.impNew) {
     lines.push(impPlural(f.impNew.n, 'mark is', 'marks are') + ' now yours to change.<button class="link" data-imp="back">Put back</button>');
     if (f.impNew.keep) lines.push('<span class="muted" style="font-size:12px">' + impPlural(f.impNew.keep, 'mark', 'marks') + ' (like a stamp or a picture) couldn’t be changed and ' + (f.impNew.keep === 1 ? 'stays' : 'stay') + ' on the page as ' + (f.impNew.keep === 1 ? 'it was' : 'they were') + '.</span>');
+  } else if (f.gsFlat) {
+    lines.push('This file was exported from Grading Studio with its marks drawn into the page, so they can’t be changed here.');
+    lines.push('<span class="muted" style="font-size:12px">To change them, open the download you marked them in: your marks are kept there. Files exported with Keep marks editable on come back with their marks.</span>');
   } else {
     const n = impCount(f);
     if (!n) return;
@@ -223,6 +226,15 @@ function impNote(pg) {
     })().catch(err => { console.error(err); toast('That didn’t work on this file. Its marks are as they were.'); b.disabled = false; });
   };
   pg.wrap.before(el); pg.inote = el;
+}
+// A file exported from here without its marks kept (Keep marks editable off) has them drawn into the page, which nothing can
+// lift back out. Exports say Grading Studio as the app that made them; one that unpacked its marks came back with noauto.
+async function gsFlatCheck(f, doc) {
+  if (f.gsFlat !== undefined) return f.gsFlat;
+  f.gsFlat = false;
+  if (f.kind !== 'pdf' || f.virtual || f.noauto) return false;
+  try { const { info } = await doc.getMetadata(); f.gsFlat = !!info && info.Creator === 'Grading Studio'; } catch {}
+  return f.gsFlat;
 }
 // When she has asked for it, a paper's marks from other apps are made hers as it opens.
 async function impAuto(f) {

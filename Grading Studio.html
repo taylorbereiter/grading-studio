@@ -2562,7 +2562,7 @@ async function makeFile(path, data) {
   const magic = data && data.length > 4 && data[0] === 0x25 && data[1] === 0x50 && data[2] === 0x44 && data[3] === 0x46;   // "%PDF"
   let kind = trueKind(isPdf(name) || magic ? 'pdf' : isImg(name) || IMG_MORE.test(name) ? 'img' : MEDIA_RX.test(name) ? 'media' : WORD_RX.test(name) ? 'docx' : TEXT_RX.test(name) ? 'text' : 'other', name, data);
   let pdf = kind === 'pdf' ? data : null;
-  if (kind === 'pdf' && hasGsTail(data)) {   // a file exported from here with its marks kept: back to the original pages and the marks
+  if (kind === 'pdf' && gsExportLike(data)) {   // a file exported from here with its marks kept: back to the original pages and the marks
     const back = await unpackExport(data);
     if (back) return { path, name, kind, data: back.data, size: data.length, marks: back.marks, rot: back.rot, skew: back.skew, noauto: true, pages: null };
   }
@@ -2572,6 +2572,8 @@ async function makeFile(path, data) {
 }
 const GS_TAIL = '%GradingStudio-editable';
 const hasGsTail = d => !!d && d.length > 64 && new TextDecoder().decode(d.subarray(d.length - 64)).includes(GS_TAIL);
+const hasAttached = d => !!d && d.length > 64 && new TextDecoder('latin1').decode(d).includes('/EmbeddedFile');
+const gsExportLike = d => hasGsTail(d) || hasAttached(d);
 const markFits = m => !!m && typeof m === 'object' && ['pen', 'hl', 'text', 'check', 'oval', 'note', 'stamp'].includes(m.t) && (m.t !== 'stamp' || (typeof m.k === 'string' && isFinite(m.x) && isFinite(m.y))) && (m.t !== 'pen' || Array.isArray(m.pts)) && (m.t !== 'text' || typeof m.text === 'string') && (m.t !== 'note' || (typeof m.text === 'string' && /^#[0-9a-f]{6}$/i.test(m.color))) && (m.t !== 'hl' || Array.isArray(m.pts) || Array.isArray(m.rects) || m.x != null);
 async function unpackExport(data) {
   try {
@@ -3057,6 +3059,7 @@ async function openStudent(i, filePath) {
       const doc = await pdfjsLib.getDocument({ data: (await viewBytes(f)).slice(), isEvalSupported: false }).promise;
       if (token !== openToken) { doc.destroy(); return; }
       docs.push(doc); docMap.set(f.path, doc); f.numPages = doc.numPages;
+      gsFlatCheck(f, doc).then(flat => { if (flat && token === openToken) for (const q of pages) if (q.file === f && q.impFirst) impNote(q); });
     } catch (e) {
       pdfBad(f, e);
       paper.appendChild(otherCard(f));
@@ -4293,6 +4296,7 @@ async function flattenDoc(st, d, dpi, edit, key) {
     return srcs.get(path);
   };
   const out = await PDFLib.PDFDocument.create();
+  out.setCreator('Grading Studio'); out.setProducer('Grading Studio');   // so a flattened file brought back in can say why its marks can't be changed
   try {
     for (const [path, p] of d.pages) {
       const { f, js, lib } = await src(path);
@@ -14312,6 +14316,9 @@ function impNote(pg) {
   if (f.impNew) {
     lines.push(impPlural(f.impNew.n, 'mark is', 'marks are') + ' now yours to change.<button class="link" data-imp="back">Put back</button>');
     if (f.impNew.keep) lines.push('<span class="muted" style="font-size:12px">' + impPlural(f.impNew.keep, 'mark', 'marks') + ' (like a stamp or a picture) couldn’t be changed and ' + (f.impNew.keep === 1 ? 'stays' : 'stay') + ' on the page as ' + (f.impNew.keep === 1 ? 'it was' : 'they were') + '.</span>');
+  } else if (f.gsFlat) {
+    lines.push('This file was exported from Grading Studio with its marks drawn into the page, so they can’t be changed here.');
+    lines.push('<span class="muted" style="font-size:12px">To change them, open the download you marked them in: your marks are kept there. Files exported with Keep marks editable on come back with their marks.</span>');
   } else {
     const n = impCount(f);
     if (!n) return;
@@ -14337,6 +14344,13 @@ function impNote(pg) {
     })().catch(err => { console.error(err); toast('That didn’t work on this file. Its marks are as they were.'); b.disabled = false; });
   };
   pg.wrap.before(el); pg.inote = el;
+}
+async function gsFlatCheck(f, doc) {
+  if (f.gsFlat !== undefined) return f.gsFlat;
+  f.gsFlat = false;
+  if (f.kind !== 'pdf' || f.virtual || f.noauto) return false;
+  try { const { info } = await doc.getMetadata(); f.gsFlat = !!info && info.Creator === 'Grading Studio'; } catch {}
+  return f.gsFlat;
 }
 async function impAuto(f) {
   if (!store.get('gs.impAuto', false) || f.impNo || f.virtual || f.kind !== 'pdf') return false;
