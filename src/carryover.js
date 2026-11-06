@@ -132,7 +132,7 @@ async function carryInto(e, list) {
   const share = d.share && { ...d.share, boxes: mapBoxes(d.share.boxes, c.map), checked: mapBoxes(d.share.checked, c.map) };
   // What she said about a page holds on the very same page, and a changed or new file's pages get their own look.
   const scan = c.unchecked || !d.scan ? undefined : mapPaths(d.scan, Object.fromEntries(Object.entries(c.map).filter(([, to]) => !c.flags[to])));
-  batch.keptWork = { ...d, t: Date.now(), s, moved, removed, carry, scan, share, lightPg: mapLit(d.lightPg, c.map) };
+  batch.keptWork = { ...d, t: Date.now(), s, moved, removed, carry, scan, share, lightPg: mapLit(d.lightPg, c.map), lightPgL: mapLit(d.lightPgL, c.map) };
   batch.carry = carry;
   await carryExtras(from, carry);
   // The list of downloads says which one is the older copy.
