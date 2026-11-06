@@ -394,7 +394,7 @@ function saveNow(leaving) {
   if (!batch || !tabLive()) return;
   clearTimeout(saveT); saveDue = false;
   if (batch.revs && tabForgot(batch)) return tabLetGo();
-  const data = { t: Date.now(), carry: batch.carry, cur, ck: batch.students[cur] && batch.students[cur].key, setup, cls: batch.classId, share: batch.share, drive: batch.drive, light: batch.light, lightOpt: batch.lightOpt, lightPg: batch.lightPg, anon: batch.anon, moved: batch.moved, removed: batch.removed, refSkip: batch.refSkip, quiz: batch.quiz, read: (batch.read = paperReads()), s: {} };
+  const data = { t: Date.now(), carry: batch.carry, cur, ck: batch.students[cur] && batch.students[cur].key, setup, cls: batch.classId, share: batch.share, drive: batch.drive, light: batch.light, lightOpt: batch.lightOpt, lightPg: batch.lightPg, lightPgL: batch.lightPgL, anon: batch.anon, moved: batch.moved, removed: batch.removed, refSkip: batch.refSkip, quiz: batch.quiz, read: (batch.read = paperReads()), s: {} };
   for (const st of batch.students) {
     const f = {};
     for (const fl of st.files.concat(st.gone || [])) if (Object.values(fl.marks).some(a => a.length)) f[fl.path] = fl.marks;   // a removed file keeps its marks for Bring back
@@ -455,6 +455,7 @@ function restore() {
   if (data.light) batch.light = data.light;
   if (data.lightOpt) batch.lightOpt = data.lightOpt;
   if (data.lightPg) batch.lightPg = data.lightPg;
+  if (data.lightPgL) batch.lightPgL = data.lightPgL;
   if (data.anon) batch.anon = data.anon;
   if (data.refSkip) batch.refSkip = data.refSkip;
   if (data.quiz) batch.quiz = data.quiz;
@@ -766,7 +767,7 @@ async function moveFile(st, path, dst) {
   if (dst.layout && viewable(f) && f.numPages) dst.layout.push({ name: f.name, file: f.path, pages: [...Array(f.numPages).keys()].map(p => [f.path, p]) });
   if (st.inc && st.inc[path] != null) { (dst.inc ||= {})[path] = st.inc[path]; delete st.inc[path]; }
   if (st.forder) st.forder = st.forder.filter(x => x !== 'f:' + path);
-  if (batch.lightPg) for (const k of Object.keys(batch.lightPg)) if (k.startsWith(st.key + '|' + path + '|')) { batch.lightPg[dst.key + k.slice(st.key.length)] = batch.lightPg[k]; delete batch.lightPg[k]; }
+  for (const m of [batch.lightPg, batch.lightPgL]) if (m) for (const k of Object.keys(m)) if (k.startsWith(st.key + '|' + path + '|')) { m[dst.key + k.slice(st.key.length)] = m[k]; delete m[k]; }
   (batch.moved ||= {})[path] = dst.key;
   refound(st); refound(dst); wordScoresAll(); saveNow(); renderList(); openStudent(cur);
   toast('Moved ' + fileShown(st, f.name) + ' to ' + b + (take ? ' with ' + wordsJoin(said) : ''));
@@ -894,6 +895,7 @@ async function openStudent(i, filePath) {
 $('#paper').addEventListener('click', e => {
   if (!e.target.closest('#lmenu, [data-lmenu]') && $('#lmenu')) $('#lmenu').remove();
   const lm = e.target.closest('[data-lm]'); if (lm) return lightMenuDo(lm.dataset.lm);
+  if (e.target.closest('#lmenu')) return lightOwnClick(e);
   const lc = e.target.closest('.lchip'); if (lc) return lightChipClick(e, pages.find(q => q.chip === lc));
   if (e.target.closest('#arrangeBtn')) return openArrange();
   const rb = e.target.closest('[data-rot]');
@@ -4871,11 +4873,20 @@ function setPageLit(st, f, p, on, map) {
   const k = lightPgKey(st, f, p);
   if (on === pageLitDefault(f)) delete map[k]; else map[k] = on;
 }
-const lightLive = st => { const o = lightOpts(); return !!st && o.on && lightOn(lightFor(st)); };
+// A page's own lighting, set from its ▾ menu, by the same student|path|page key. It stays while the page is switched off,
+// so switching the page back on brings it back.
+const pageOwnL = (st, f, p) => (batch && batch.lightPgL && batch.lightPgL[lightPgKey(st, f, p)]) || null;
+function setPageOwnL(st, f, p, L) {
+  const m = batch.lightPgL || (batch.lightPgL = {}), k = lightPgKey(st, f, p);
+  if (L) m[k] = { ...LIGHT0, ...L }; else delete m[k];
+}
+const hasOwnL = st => !!(st && batch && batch.lightPgL && Object.keys(batch.lightPgL).some(k => k.startsWith(st.key + '|')));
+const lightLive = st => { const o = lightOpts(); return !!st && o.on && (lightOn(lightFor(st)) || hasOwnL(st)); };
 // The setting for one page, or null when lighting doesn't touch it.
 function lightForPage(st, f, p) {
-  if (!lightLive(st) || f.kind === 'docx') return null;
-  return pageLit(st, f, p) ? lightFor(st) : null;
+  if (!lightLive(st) || f.kind === 'docx' || !pageLit(st, f, p)) return null;
+  const L = pageOwnL(st, f, p) || lightFor(st);
+  return lightOn(L) ? L : null;
 }
 function lightCanvas(ctx, w, h, L) {
   const im = ctx.getImageData(0, 0, w, h), d = im.data, t = lightLut(L);
@@ -4941,6 +4952,9 @@ function lightChips() {
     const ok = live && pg.file.kind !== 'docx', on = ok && pageLit(st, pg.file, pg.idx);
     pg.chip.hidden = !ok; pg.chip.classList.toggle('off', !on);
     pg.chip.querySelector('span').textContent = on ? 'Lighting on' : 'Lighting off';
+    const own = ok && !!pageOwnL(st, pg.file, pg.idx);
+    pg.chip.classList.toggle('own', own);
+    pg.chip.querySelector('[data-lpg]').title = (own ? 'This page has its own lighting (▾ to change it). ' : '') + 'Turn lighting off or on for this page. Shift-click another page’s ☀ to do every page in between.';
   }
 }
 let lightLast = null;   // the last page she switched, for Shift-click runs
@@ -4962,10 +4976,60 @@ function lightMenu(pg) {
   const pos = d ? d.pages.findIndex(([q, p]) => q === pg.file.path && p === pg.idx) : -1, back = d ? d.pages.length - 1 - pos : -1;
   const nth = k => k === 0 ? 'last page' : k === 1 ? '2nd-to-last page' : k === 2 ? '3rd-to-last page' : (k + 1) + 'th-to-last page';
   const m = document.createElement('div'); m.id = 'lmenu'; m._pg = pg; m._at = { di, pos, back, want };
-  m.innerHTML = '<div class="dl">Turn lighting ' + (want ? 'on' : 'off') + ' for</div><button data-lm="page">Just this page</button>' +
+  m.innerHTML = '<div class="lmown"></div><div class="lmsep"></div><div class="dl">Turn lighting ' + (want ? 'on' : 'off') + ' for</div><button data-lm="page">Just this page</button>' +
     (d ? '<button data-lm="rest">This page and the rest of this file</button><button data-lm="file">Every page of this file</button>' +
       '<div class="dl">Every paper</div><button data-lm="from">Page ' + (pos + 1) + ' on every paper</button>' + (back !== pos ? '<button data-lm="back">The ' + nth(back) + ' on every paper</button>' : '') : '');
+  m._d = d;
   pg.wrap.appendChild(m);
+  lightOwnRender(m);
+  m.addEventListener('input', lightOwnInput);
+  m.addEventListener('change', e => { if (e.target.dataset.lpl) lightOwnRender(m); });   // after the slider is let go, so a drag isn't cut short
+}
+// The top of the ▾ menu: this page's own lighting, starting from what the page has now.
+function lightOwnRender(m) {
+  const pg = m._pg, st = batch.students[cur], L = pageOwnL(st, pg.file, pg.idx) || lightFor(st), { pos } = m._at, d = m._d;
+  const row = (k, label, min, max) => '<label class="lmsl"><span>' + label + '</span><input type="range" min="' + min + '" max="' + max + '" step="1" data-lpl="' + k + '" value="' + (L[k] || 0) + '"><b>' + (L[k] || 0) + '</b></label>';
+  m.querySelector('.lmown').innerHTML = '<div class="dl">This page</div>' +
+    row('b', 'Brightness', -60, 60) + row('c', 'Contrast', 0, 400) + row('d', 'Darken writing', 0, 100) + row('s', 'Sharpen', 0, 100) +
+    '<label class="lmchk"><input type="checkbox" data-lplg' + (L.g ? ' checked' : '') + '> Black and white</label>' +
+    '<div class="lmacts"><button class="btn sm primary" data-lpauto>Auto fix this page</button><span style="flex:1"></span>' + (pageOwnL(st, pg.file, pg.idx) ? '<button class="link" data-lpsame>Same as the rest</button>' : '') + '</div>' +
+    (d && pageOwnL(st, pg.file, pg.idx) ? '<div class="dl">Use this page’s lighting on</div>' + (pos < d.pages.length - 1 ? '<button data-lpcopy="rest">The rest of this file</button>' : '') + '<button data-lpcopy="from">Page ' + (pos + 1) + ' on every paper</button>' : '');
+}
+// Its own lighting for this page: the page is switched on too, so she sees what she's setting.
+function lightOwnSet(m, L) {
+  const pg = m._pg, st = batch.students[cur];
+  setPageOwnL(st, pg.file, pg.idx, L);
+  if (L && !pageLit(st, pg.file, pg.idx)) setPageLit(st, pg.file, pg.idx, true);
+  lightPagesChanged();
+}
+function lightOwnInput(e) {
+  const m = $('#lmenu'); if (!m) return;
+  const pg = m._pg, st = batch.students[cur], cur0 = pageOwnL(st, pg.file, pg.idx) || lightFor(st);
+  const k = e.target.dataset.lpl;
+  if (k) { e.target.nextElementSibling.textContent = e.target.value; lightOwnSet(m, { ...cur0, [k]: +e.target.value }); return; }
+  if (e.target.dataset.lplg != null) { lightOwnSet(m, { ...cur0, g: e.target.checked ? 1 : 0 }); lightOwnRender(m); }
+}
+async function lightOwnClick(e) {
+  const m = $('#lmenu'); if (!m) return false;
+  const pg = m._pg, st = batch.students[cur];
+  if (e.target.closest('[data-lpauto]')) {
+    if (!pg.bmp) { toast('This page is still loading'); return true; }
+    const was = pageOwnL(st, pg.file, pg.idx) || lightFor(st);
+    lightOwnSet(m, { ...lightAuto(pg), s: was.s || 0, g: was.g || 0 }); lightOwnRender(m); return true;
+  }
+  if (e.target.closest('[data-lpsame]')) { lightOwnSet(m, null); lightOwnRender(m); return true; }
+  const cp = e.target.closest('[data-lpcopy]'); if (!cp) return false;
+  const L = pageOwnL(st, pg.file, pg.idx), { di, pos } = m._at; m.remove();
+  const put = (s, [path, p]) => { const f = fileByPath(s, path); if (!f) return 0; setPageOwnL(s, f, p, L); setPageLit(s, f, p, true); return 1; };
+  let n = 0;
+  if (cp.dataset.lpcopy === 'rest') { for (const it of layoutOf(st)[di].pages.slice(pos + 1)) n += put(st, it); toast('This page’s lighting on ' + n + ' more ' + (n === 1 ? 'page' : 'pages')); }
+  else {
+    await ensureCounts();
+    for (const s of batch.students) { const ds = layoutOf(s)[di], it = ds && ds.pages[pos]; if (it) n += put(s, it); }
+    toast('This page’s lighting on page ' + (pos + 1) + ' of ' + n + (n === 1 ? ' paper' : ' papers'));
+  }
+  lightPagesChanged();
+  return true;
 }
 // Every student's page count, so "every paper" reaches students not opened yet.
 async function ensureCounts() {
@@ -5007,6 +5071,7 @@ function openLight() {
     const L = lightFor(batch.students[cur]), o = lightOpts();
     const offs = Object.entries(batch.lightPg || {}).filter(([, v]) => v === false).map(([k]) => k);
     const offAll = offs.length, offHere = offs.filter(k => k.startsWith(batch.students[cur].key + '|')).length;
+    const owns = Object.keys(batch.lightPgL || {}), ownAll = owns.length, ownHere = owns.filter(k => k.startsWith(batch.students[cur].key + '|')).length;
     const row = (k, label, min, max) => '<label><span>' + label + '</span><input type="range" min="' + min + '" max="' + max + '" step="1" data-l="' + k + '" value="' + (L[k] || 0) + '"><b>' + (L[k] || 0) + '</b></label>';
     p.innerHTML = '<div class="lph"><b>Lighting</b><span style="flex:1"></span><button class="anonsw" data-lon role="switch" aria-checked="' + o.on + '"><i></i>' + (o.on ? 'On' : 'Off') + '</button><button class="icon" data-lx aria-label="Close" style="margin-left:8px">✕</button></div>' +
       '<div class="lpbody' + (o.on ? '' : ' off') + '">' +
@@ -5016,9 +5081,10 @@ function openLight() {
       '<span class="seg" style="width:100%"><button data-lo="0" aria-pressed="' + !only + '" style="flex:1">All students</button><button data-lo="1" aria-pressed="' + only + '" style="flex:1">Only ' + esc(shownName(batch.students[cur], cur)) + '</button></span>' +
       '<div><button class="link" data-lreset>Back to normal</button></div>' +
       '<div class="lpsec"><div class="dl">Pages</div>' +
-        '<div class="muted" style="font-size:12px">Click ☀ in a page’s corner to turn lighting off just there. Shift-click another page’s ☀ to do every page in between. ▾ does the rest of a file, a whole file, or the same page on every paper.</div>' +
+        '<div class="muted" style="font-size:12px">Click ☀ in a page’s corner to turn lighting off just there. Shift-click another page’s ☀ to do every page in between. ▾ sets lighting for that page alone, and does the rest of a file, a whole file, or the same page on every paper.</div>' +
         '<div style="font-size:13px">Your rubric from Rubric setup</div><span class="seg" style="width:100%"><button data-lrub="0" aria-pressed="' + !o.rub + '" style="flex:1">Leave alone</button><button data-lrub="1" aria-pressed="' + o.rub + '" style="flex:1">Fix it too</button></span>' +
-        (offAll ? '<div style="font-size:13px">Turned off by you: ' + offHere + ' on this paper, ' + offAll + ' in all. <button class="link" data-lpgreset>Turn them all back on</button></div>' : '') + '</div>' +
+        (offAll ? '<div style="font-size:13px">Turned off by you: ' + offHere + ' on this paper, ' + offAll + ' in all. <button class="link" data-lpgreset>Turn them all back on</button></div>' : '') +
+        (ownAll ? '<div style="font-size:13px">Own lighting: ' + ownHere + ' on this paper, ' + ownAll + ' in all. <button class="link" data-lpgown>Make them all the same as the rest</button></div>' : '') + '</div>' +
       '<label class="lprow lpchk"><input type="checkbox" data-lexp' + (o.exp ? ' checked' : '') + '> Use in the export too</label>' +
       '<div class="muted" style="font-size:12px;margin-top:-4px">' + (o.exp ? 'Exported files come out with this lighting. The student’s original file isn’t changed.' : 'Only changes how you see the paper here; the export stays as scanned.') + '</div></div>';
   };
@@ -5029,6 +5095,7 @@ function openLight() {
     if (e.target.closest('[data-lx]')) return p.remove();
     if (e.target.closest('[data-lon]')) return opt('on', !lightOpts().on);
     const rb = e.target.closest('[data-lrub]'); if (rb) return opt('rub', rb.dataset.lrub === '1');
+    if (e.target.closest('[data-lpgown]')) { batch.lightPgL = {}; lightApply(); return render(); }
     if (e.target.closest('[data-lpgreset]')) { for (const [k, v] of Object.entries(batch.lightPg || {})) if (v === false) delete batch.lightPg[k]; lightApply(); return render(); }
     if (e.target.closest('[data-lauto]')) { const pg = pages.find(q => q.bmp && q.file.kind !== 'docx'); if (!pg) return toast('No scanned page to fix here'); set({ ...lightAuto(pg), s: lightFor(batch.students[cur]).s || 0, g: lightFor(batch.students[cur]).g || 0 }); return render(); }
     if (e.target.closest('[data-lreset]')) { set({ ...LIGHT0 }); if (only) { delete batch.light[batch.students[cur].key]; only = false; lightApply(); } return render(); }
@@ -6360,4 +6427,4 @@ for (const el of document.querySelectorAll('.gsVer')) el.textContent = versionLa
 if (gsData.info.note) { const el = $('#bootNote'); el.textContent = gsData.info.note; el.hidden = false; toast(gsData.info.note, 15000); }
 
 window.__gs_pickMany = pickMany;
-window.__gs = { removeFile, bringBack, replaceFile, stickerText, startScorePlace, stopScorePlace, saveTrouble, batchIdOf, wordScore, wordScoresAll, restoreBackup, fileSeq, moveFile, openMoveFile, calcEval, openCalc, pageLit, setPageLit, lightMenuDo, lightChips, ensureCounts, addRefs, refs: () => refFiles, matchToRoster, guessAmong, expandPicked, lightOpts, isRubricPage, openAnon, setAnon, anonOrder, anonOn, openLight, lightFor, lightAuto, openSplit, sp: () => SP, bringIn, sortGuess, openWord, wordBytes, reopenKept, forgetKept, kept: () => keptMeta, addFiles, removeAdded, nextUnscored, openDisplay, trimToInk, intake, parseGrade, scanFile, scanAll, state: () => ({ batch, cur, setup, pages, zoom, lib }), SCALE12, SCALE_FIVES, RUBRIC_STEPS, percentWith, ownGrade, roundPct, fmtNum, fmtPct, saveNow, undo, redo, gsData, gradeOf, percentFor, flattenDoc, exportPlan, layoutOf, docIn, openStudent, setTool };
+window.__gs = { removeFile, bringBack, replaceFile, stickerText, startScorePlace, stopScorePlace, saveTrouble, batchIdOf, wordScore, wordScoresAll, restoreBackup, fileSeq, moveFile, openMoveFile, calcEval, openCalc, pageLit, setPageLit, lightMenuDo, lightChips, pageOwnL, setPageOwnL, lightForPage, ensureCounts, addRefs, refs: () => refFiles, matchToRoster, guessAmong, expandPicked, lightOpts, isRubricPage, openAnon, setAnon, anonOrder, anonOn, openLight, lightFor, lightAuto, openSplit, sp: () => SP, bringIn, sortGuess, openWord, wordBytes, reopenKept, forgetKept, kept: () => keptMeta, addFiles, removeAdded, nextUnscored, openDisplay, trimToInk, intake, parseGrade, scanFile, scanAll, state: () => ({ batch, cur, setup, pages, zoom, lib }), SCALE12, SCALE_FIVES, RUBRIC_STEPS, percentWith, ownGrade, roundPct, fmtNum, fmtPct, saveNow, undo, redo, gsData, gradeOf, percentFor, flattenDoc, exportPlan, layoutOf, docIn, openStudent, setTool };
