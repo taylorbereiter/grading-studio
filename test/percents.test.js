@@ -40,17 +40,17 @@ const pctTab = async page => { await page.click('[data-ovtab="pct"]'); await pag
 
 test('the Average tile leads with the percent and opens Class overview, which leads with percents and shows bands, dots and the class over time', async () => {
   const { page, close } = await scored();
-  assert.equal(await text(page, '#pAvg .v'), '83%');
+  assert.equal(await text(page, '#pAvg .v'), '83.33%', 'to the hundredth by default');
   assert.equal(await text(page, '#pAvg .s'), '8.3 / 12');
   await page.click('#pAvg');
   await page.waitForSelector('#ovTiles');
-  assert.equal(await page.$$eval('#ovTiles .ovt', t => t.map(x => x.textContent).join(' | ')), 'Average83%8.3 / 12 | Middle score84%8.5 / 12 | Lowest73%6 / 12 | Highest93%10.5 / 12');
+  assert.equal(await page.$$eval('#ovTiles .ovt', t => t.map(x => x.textContent).join(' | ')), 'Average83.33%8.3 / 12 | Middle score84%8.5 / 12 | Lowest73%6 / 12 | Highest93%10.5 / 12');
   assert.deepEqual(await page.$$eval('#ovBands .pband', b => b.map(x => x.querySelector('span').textContent + ':' + x.querySelector('.pbn b').textContent)), ['90 to 100:1', '80 to 89:1', '70 to 79:1', '60 to 69:0', 'Below 60:0']);
   assert.equal((await page.$$('#ovStrip .pdot')).length, 3);
-  assert.match(await text(page, '#ovStrip .pln'), /Average 83%/);
+  assert.match(await text(page, '#ovStrip .pln'), /Average 83.33%/);
   // Only the earlier assignment for this class, oldest first, then this one.
   await page.waitForFunction(() => /River essay/.test(document.querySelector('#ovTrend').textContent));
-  assert.deepEqual(await page.$$eval('#ovTrend .tdot', d => d.map(x => x.dataset.tl + ' ' + x.dataset.tv)), ['River essay 83%', 'This one 83%']);
+  assert.deepEqual(await page.$$eval('#ovTrend .tdot', d => d.map(x => x.dataset.tl + ' ' + x.dataset.tv)), ['River essay 83.00%', 'This one 83.33%']);
   assert.doesNotMatch(await text(page, '#ovTrend'), /Other class/);
   // A dot opens that student.
   await page.click('#ovStrip .pdot');
@@ -63,17 +63,17 @@ test('the Percents tab: who counts, average or middle, a target, bands, What if,
   await page.evaluate(() => window.__gs.openOverview());
   await pctTab(page);
   const tiles = () => page.$$eval('#pTiles .ovt', t => t.map(x => x.querySelector('.ovl').textContent + ' ' + x.querySelector('.ovv').textContent));
-  assert.deepEqual(await tiles(), ['Average 83%', 'Middle score 84%', 'Range 73–93%', 'Typical gap ±8', 'Below 70% 0']);
+  assert.deepEqual(await tiles(), ['Average 83.33%', 'Middle score 84%', 'Range 73–93%', 'Typical gap ±8', 'Below 70% 0']);
   assert.match(await text(page, '#pWho'), /Partial papers, as they stand1 paper/);
 
   // Partial papers counted as they stand: Dov's 4 is 64%.
   await page.click('[data-pck="part"]');
-  assert.deepEqual((await tiles()).slice(0, 2), ['Average 79%', 'Middle score 79%']);
+  assert.deepEqual((await tiles()).slice(0, 2), ['Average 78.50%', 'Middle score 79%']);
   assert.match(await text(page, '.ptab'), /Dov Madeup partial/);
   await page.click('[data-pck="part"]');
 
   await page.click('[data-pseg="mid"][data-v="median"]');
-  assert.deepEqual((await tiles()).slice(0, 2), ['Middle score 84%', 'Average 83%']);
+  assert.deepEqual((await tiles()).slice(0, 2), ['Middle score 84%', 'Average 83.33%']);
   await page.click('[data-pseg="mid"][data-v="mean"]');
 
   // A target of 85: two papers below it, flagged in the table and hollow on the line.
@@ -92,8 +92,8 @@ test('the Percents tab: who counts, average or middle, a target, bands, What if,
 
   // What if: one point more for everyone is 98%, 89% and 77%. Nothing is saved.
   await page.$eval('#pAdd', e => { e.value = ''; }); await page.type('#pAdd', '1');
-  assert.deepEqual((await tiles())[0], 'Average 88%');
-  assert.match(await page.$eval('#pTiles .ovt .ovs', e => e.textContent), /now 83%, with \+1/);
+  assert.deepEqual((await tiles())[0], 'Average 88.00%');
+  assert.match(await page.$eval('#pTiles .ovt .ovs', e => e.textContent), /now 83.33%, with \+1/);
   assert.equal(await page.evaluate(() => window.__gs.gradeOf(window.__gs.state().batch.students[0]).total), 10.5);
   await page.$eval('#pAdd', e => { e.value = ''; }); await page.type('#pAdd', '0');
 
@@ -108,6 +108,16 @@ test('the Percents tab: who counts, average or middle, a target, bands, What if,
   await page.click('[data-pcopy]');
   await page.waitForFunction(() => window.__copied != null);
   assert.equal(await page.evaluate(() => window.__copied), 'Aria Testwell\t93%\nBram Sample\t84%\nCleo Fixture\t73%');
+
+  // The average can show whole, to one place or two, everywhere at once. Two is the start.
+  await page.click('[data-avgdp="1"]');
+  assert.equal((await tiles())[0], 'Average 83.3%');
+  assert.equal(await text(page, '#pAvg .v'), '83.3%');
+  await page.click('[data-avgdp="0"]');
+  assert.equal((await tiles())[0], 'Average 83%');
+  assert.equal(await text(page, '#pAvg .v'), '83%');
+  await page.click('[data-avgdp="2"]');
+  assert.equal(await text(page, '#pAvg .v'), '83.33%');
 
   // The target and bands are kept for this class; What if isn't.
   await page.click('[data-close]');

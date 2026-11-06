@@ -18,14 +18,14 @@ test('the average and papers left follow the scores, and a left-out paper stays 
   assert.deepEqual(await tiles(page), { avg: '–', left: '4', out: '0' });
   await score(page, [4, 3.5, 3]);   // 10.5 = 93%
   await goToStudent(page, 1); await score(page, [3, 3, 2.5]);   // 8.5 = 84%
-  assert.deepEqual(await tiles(page), { avg: '89% 9.5 / 12', left: '2', out: '0' });
+  assert.deepEqual(await tiles(page), { avg: '88.50% 9.5 / 12', left: '2', out: '0' });
 
   // A placeholder 0, left out: the score stays and copies, but the average doesn't move.
   await goToStudent(page, 2); await score(page, [0, 0, 0]);
-  assert.deepEqual(await tiles(page), { avg: '75% 6.3 / 12', left: '1', out: '0' }, 'a 0 counts until it is left out');
+  assert.deepEqual(await tiles(page), { avg: '75.00% 6.3 / 12', left: '1', out: '0' }, 'a 0 counts until it is left out');
   await page.click('#outAvg');
   assert.equal(await page.$eval('#outAvg', b => b.getAttribute('aria-checked')), 'true');
-  assert.deepEqual(await tiles(page), { avg: '89% 9.5 / 12', left: '1', out: '1' });
+  assert.deepEqual(await tiles(page), { avg: '88.50% 9.5 / 12', left: '1', out: '1' });
   const st = await page.evaluate(() => { const G = window.__gs, s = G.state().batch.students[2]; return { g: G.gradeOf(s), row: G.tableRow(s, 2), head: G.tableHead() }; });
   assert.deepEqual(st.g, { total: 0, pct: 48, done: true, out: true });
   assert.equal(st.row[st.head.indexOf('Total / 12')], '0', 'the score still copies');
@@ -45,7 +45,7 @@ test('the average and papers left follow the scores, and a left-out paper stays 
 
   // Switched back on, the 0 counts again.
   await page.click('#outAvg');
-  assert.deepEqual(await tiles(page), { avg: '75% 6.3 / 12', left: '1', out: '0' });
+  assert.deepEqual(await tiles(page), { avg: '75.00% 6.3 / 12', left: '1', out: '0' });
   noErrors(page); await close();
 });
 
