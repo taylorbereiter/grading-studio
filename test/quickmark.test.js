@@ -64,7 +64,7 @@ test('boxes, then marking one question for everyone: wrong ones by click, the re
   assert.match(await page.$eval('#qmProg', e => e.textContent), /3 of 3 marked/);
   const ben = await quizMarksOf(page, 1), ann = await quizMarksOf(page, 0);
   assert.deepEqual(Object.values(ben.q), [0]); assert.deepEqual(ben.marks, ['pen', 'pen'], 'a cross on Ben’s paper');
-  assert.deepEqual(ann.marks, ['check'], 'a check on Ann’s');
+  assert.deepEqual(ann.marks, [], 'nothing on Ann’s right answer: new boxes mark an ✗ on wrong ones only');
   assert.equal(ann.points, '1');
   assert.equal(await page.evaluate(() => window.__gs.ownGrade(window.__gs.state().batch.students[0]).partial), true, 'partial until every question is marked');
   // Question 2 from the keyboard: 1, 0, 1, moving along.
@@ -73,9 +73,9 @@ test('boxes, then marking one question for everyone: wrong ones by click, the re
   await page.keyboard.press('1'); await page.keyboard.press('0'); await page.keyboard.press('1');
   await page.waitForFunction(() => /3 of 3 marked/.test(document.querySelector('#qmProg').textContent));
   assert.equal((await quizMarksOf(page, 1)).points, '0');
-  // Question 3 is out of 2: half points are buttons, and "1/2" goes on the paper.
+  // Question 3 is out of 2: whole points are buttons, +½ adds a half, and "1/2" goes on the paper.
   await page.keyboard.press(']');
-  await page.waitForSelector('#qmBody .qmc button[data-v="1.5"]');
+  await page.waitForSelector('#qmBody .qmc button[data-half]');
   await page.click('#qmBody .qmc[data-st="0"] button[data-v="1"]');
   await page.waitForFunction(() => document.querySelector('#qmBody .qmc[data-st="0"]').classList.contains('some'));
   await page.click('[data-rest]');
@@ -105,7 +105,7 @@ test('by student: every answer on one screen, a change moves the score, and it a
   // Clearing takes the mark off the paper too.
   await page.evaluate(() => { const q = window.__gs.state().batch.quiz.qs[0]; return window.__gs.quizSet(window.__gs.state().batch.students[0], q, null); });
   const left = (await quizMarksOf(page, 0)).marks;
-  assert.deepEqual(left.sort(), ['pen', 'pen', 'text:2/2'], 'the check and the total come off: ' + left.join());
+  assert.deepEqual(left.sort(), ['pen', 'pen'], 'the total comes off, and full marks leave nothing: ' + left.join());
   await page.click('[data-close]');
   await settle(page);
   const before = await quizMarksOf(page, 0);
