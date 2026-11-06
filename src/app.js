@@ -2999,10 +2999,16 @@ async function checkCovers(start, onDone) {
   const list = coverList();
   if (!list.length) return toast('No papers to share');
   let pos = Math.min(start || 0, list.length - 1), token = 0, last = null, drawn = 0;
-  openDlg('<div class="bh"><h2 id="ccTitle">Check the covers</h2><span class="muted" id="ccCount"></span><span class="ccstate" id="ccState"></span><span class="ccstate stag" id="ccFlag" hidden></span><button class="icon" data-done aria-label="Done">✕</button></div>' +
-    '<div class="bb" id="ccBody" style="background:var(--surface-2)"></div>' +
-    '<div class="bf" style="justify-content:space-between"><span class="muted" style="font-size:13px;align-self:center;max-width:46%">Drag a box over a name it missed. Click one of your boxes to take it off.</span><span style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end"><button class="btn" data-every hidden>Use my last box on every paper</button><button class="btn" data-back>◀ Back</button><button class="btn primary" data-next>Next ▶</button></span></div>');
+  let find = '', only = 'all', undo = [];
+  openDlg('<div class="bh"><h2 id="ccTitle">Check the covers</h2><span class="ccstate" id="ccState"></span><button class="link ccstate" id="ccUndo" hidden>Mark not checked</button><span class="ccstate stag" id="ccFlag" hidden></span><span class="muted" id="ccCount"></span><button class="icon" data-done aria-label="Done">✕</button></div>' +
+    '<div class="ccmid"><aside class="ccside" aria-label="Papers"><div class="cchead"><b id="ccProg"></b><div class="ccbar"><i id="ccBar"></i></div>' +
+    '<input type="search" class="ccfind" id="ccFind" placeholder="Find a student" aria-label="Find a student" autocomplete="off">' +
+    '<span class="seg ccseg"><button data-ccf="all"></button><button data-ccf="todo"></button><button data-ccf="flag"></button></span></div>' +
+    '<ul class="ccrows" id="ccRows"></ul><div class="ccalldone" id="ccAllDone" hidden>✓ Every paper is checked.</div></aside>' +
+    '<div class="bb" id="ccBody"></div></div>' +
+    '<div class="bf" style="justify-content:space-between"><span class="muted" style="font-size:13px;align-self:center;max-width:46%">Drag a box over a name it missed. Click one of your boxes to take it off, or press ' + keyLabel('⌘Z') + ' for the last one.</span><span style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end"><button class="btn" data-every hidden>Use my last box on every paper</button><button class="btn" data-back>◀ Back</button><button class="btn primary" data-next>Next ▶</button></span></div>');
   const box = $('#dlgBox');
+  box.classList.add('ccbox');
   const finish = () => { if (eachKeys) document.removeEventListener('keydown', eachKeys, true); eachKeys = null; saveSoon(); (onDone || openShare)(); };
   const go = d => { pos += d; if (pos >= list.length) { toast('That was the last paper'); return finish(); } pos = Math.max(0, pos); show(); };
   // She says this one looks right, once she's seen it all. Then on to the next paper not checked yet.
@@ -3016,13 +3022,48 @@ async function checkCovers(start, onDone) {
   };
   // What the name search says about this paper, until she's checked it.
   const showFlag = () => { const el = $('#ccFlag'); if (!el) return; const { st, d } = list[pos]; el.textContent = coverOk(st, d) ? '' : nameFlag(st, d); el.hidden = !el.textContent; };
-  findNames().then(showFlag);
+  findNames().then(() => { showFlag(); rows(); });
+  // Whether this paper is checked, said in the header.
+  function head() {
+    const { st, d } = list[pos], ok = coverOk(st, d);
+    $('#ccState').textContent = ok ? '✓ Checked' : 'Not checked yet';
+    $('#ccState').className = ok ? 'ccstate' : 'ccstate stag';
+    $('#ccUndo').hidden = !ok;
+    showFlag();
+  }
+  // Her own boxes on a paper.
+  const boxCount = d => d.pages.reduce((n, [path, p]) => n + ((shareState().boxes[boxKey(path, p)] || []).length), 0);
+  const codeLine = x => codeOf(x.st) + (x.k ? '-' + (x.k + 1) : '');
+  // The papers that show in the list, with what she typed and the Not checked filter.
+  const flagOf = x => coverOk(x.st, x.d) ? '' : nameFlag(x.st, x.d).replace(/, check this one$/, '');
+  const shown = () => {
+    const q = find.trim().toLowerCase();
+    return list.map((x, i) => i).filter(i => (only === 'all' || (only === 'todo' ? !coverOk(list[i].st, list[i].d) : !!flagOf(list[i]))) && (!q || (coverName(list[i].st, list[i].k) + ' ' + codeLine(list[i])).toLowerCase().includes(q)));
+  };
+  // Every paper on the side: ticked once she's said the covers look right, and a click opens it.
+  function rows() {
+    const ul = $('#ccRows'); if (!ul) return;
+    const ok = list.map(x => coverOk(x.st, x.d)), n = ok.filter(Boolean).length, left = list.length - n;
+    $('#ccProg').textContent = n + ' of ' + list.length + ' checked';
+    $('#ccBar').style.width = (100 * n / list.length) + '%';
+    const say = list.map(flagOf), nf = say.filter(Boolean).length;
+    if (only === 'flag' && !nf) only = 'all';
+    const seg = { all: 'All ' + list.length, todo: 'Not checked ' + left, flag: 'Flagged ' + nf };
+    for (const b of box.querySelectorAll('[data-ccf]')) { b.textContent = seg[b.dataset.ccf]; b.setAttribute('aria-pressed', b.dataset.ccf === only); b.hidden = b.dataset.ccf === 'flag' && !nf; }
+    $('#ccAllDone').hidden = !!left;
+    const vis = shown();
+    ul.innerHTML = vis.map(i => {
+      const x = list[i], nb = boxCount(x.d);
+      return '<li><button data-ccgo="' + i + '"' + (i === pos ? ' aria-current="true"' : '') + '><span class="ccic' + (ok[i] ? ' done' : say[i] ? ' flag' : '') + '" aria-hidden="true">' + (ok[i] ? '✓' : say[i] ? '!' : '') + '</span>' +
+        '<span class="ccnm">' + esc(coverName(x.st, x.k)) + (nb ? '<span class="ccpill">' + nb + (nb === 1 ? ' box' : ' boxes') + '</span>' : '') + (say[i] ? '<small>' + esc(say[i]) + '</small>' : '') +
+        '<span class="sr">' + (ok[i] ? ', checked' : ', not checked yet') + '</span></span><span class="cccode">' + esc(codeLine(x)) + '</span></button></li>';
+    }).join('') || '<li class="ccnone">' + (find.trim() ? 'No one matches “' + esc(find.trim()) + '”.' : only === 'todo' ? 'Every paper is checked.' : 'Nothing to show.') + '</li>';
+    const cur = ul.querySelector('[aria-current="true"]'); if (cur) cur.scrollIntoView({ block: 'nearest' });
+  }
   async function show() {
     const my = ++token, { st, d, k } = list[pos], rx = coverRx(st);
     $('#ccTitle').textContent = coverName(st, 0) + ' → ' + codeOf(st) + (k ? '-' + (k + 1) : '');
-    $('#ccState').textContent = coverOk(st, d) ? '✓ Checked' : 'Not checked yet';
-    $('#ccState').className = coverOk(st, d) ? 'ccstate' : 'ccstate stag';
-    showFlag();
+    head(); rows();
     $('#ccCount').textContent = 'paper ' + (pos + 1) + ' of ' + list.length;
     box.querySelector('[data-back]').disabled = pos === 0;
     box.querySelector('[data-next]').textContent = pos === list.length - 1 ? 'Covers look right, done' : 'Covers look right ▶';
@@ -3057,7 +3098,7 @@ async function checkCovers(start, onDone) {
           }
           const fx = v => Math.round(v * 10000) / 10000;
           const b = [fx(clamp(sel.x / r.W, 0, 1)), fx(clamp(sel.y / r.H, 0, 1)), fx(Math.min(sel.w / r.W, 1)), fx(Math.min(sel.h / r.H, 1))];
-          own().push(b); last = { b, first: d.pages[0][0] === path && d.pages[0][1] === p, p }; coverMark(st, d, false);
+          own().push(b); undo.push({ k: boxKey(path, p), b, i: pos }); last = { b, first: d.pages[0][0] === path && d.pages[0][1] === p, p }; coverMark(st, d, false);
           box.querySelector('[data-every]').hidden = false;
           show();
         };
@@ -3067,8 +3108,14 @@ async function checkCovers(start, onDone) {
       if (my === token) drawn = my;
     } finally { for (const v of js.values()) v.destroy(); }
   }
+  // Up and down go through the list as it's shown, filtered or not.
+  const step = dd => { const vis = shown(); if (!vis.length) return; const at = vis.indexOf(pos); const to = at < 0 ? vis.find(i => dd > 0 ? i > pos : i < pos) : vis[at + dd]; if (to == null || to === pos) return; pos = to; show(); };
+  $('#ccFind').oninput = e => { find = e.target.value; rows(); };
   box.onclick = e => {
     if (e.target.closest('[data-done]')) return finish();
+    const g = e.target.closest('[data-ccgo]'); if (g) { pos = +g.dataset.ccgo; return show(); }
+    const f = e.target.closest('[data-ccf]'); if (f) { only = f.dataset.ccf; return rows(); }
+    if (e.target.closest('#ccUndo')) { coverMark(list[pos].st, list[pos].d, false); head(); return rows(); }
     if (e.target.closest('[data-back]')) return go(-1);
     if (e.target.closest('[data-next]')) return looked();
     if (e.target.closest('[data-every]') && last) {
@@ -3085,7 +3132,21 @@ async function checkCovers(start, onDone) {
   };
   if (eachKeys) document.removeEventListener('keydown', eachKeys, true);
   eachKeys = e => {
-    if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); finish(); }
+    const typing = e.target.id === 'ccFind';
+    if (e.key === 'Escape' && typing && find) { e.preventDefault(); e.stopPropagation(); e.target.value = find = ''; rows(); }
+    else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); finish(); }
+    else if (typing && e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); const vis = shown(); if (vis.length) { pos = vis[0]; show(); } }
+    else if (typing && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) return;
+    else if (!typing && (e.metaKey || e.ctrlKey) && !e.shiftKey && e.key.toLowerCase() === 'z') {
+      // Takes back the last box she drew here.
+      e.preventDefault(); e.stopPropagation();
+      const u = undo.pop(); if (!u) return toast('No box to take back');
+      const arr = shareState().boxes[u.k] || [], at = arr.lastIndexOf(u.b);
+      if (at >= 0) arr.splice(at, 1);
+      coverMark(list[u.i].st, list[u.i].d, false); saveSoon();
+      pos = u.i; show();
+    }
+    else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') { e.preventDefault(); e.stopPropagation(); step(e.key === 'ArrowUp' ? -1 : 1); }
     else if (e.key === 'ArrowLeft') { e.preventDefault(); e.stopPropagation(); go(-1); }
     else if (e.key === 'ArrowRight') { e.preventDefault(); e.stopPropagation(); go(1); }
     else if (e.key === 'Enter' && !e.target.closest('button')) { e.preventDefault(); e.stopPropagation(); looked(); }
