@@ -2963,7 +2963,8 @@ const shareDocs = st => layoutOf(st).filter(d => docIn(st, d)).map(d => ({ ...d,
 function openShare() {
   saveNow(); commitEditors(); shareState(); saveSoon();
   openDlg('<div class="bh"><h2>Share with Claude</h2><button class="icon" data-close aria-label="Close">✕</button></div><div class="bb">' +
-    '<p style="margin-top:0">This makes a ZIP you can give to Claude with <b>no names in it</b><span id="shPromise">' + esc(namePromise()) + '</span>. <span id="shWho"></span> The list of who is who stays only in this browser.</p>' +
+    '<div class="shkind" role="group" aria-label="What to give Claude"><button data-kind="papers" aria-pressed="true">Papers and marks<small>A ZIP of every page as a picture, names covered</small></button><button data-kind="marks" aria-pressed="false">Marks only<small>One file: scores, rubric, comments and every mark</small></button></div>' +
+    '<div id="shPapers"><p style="margin-top:0">This makes a ZIP you can give to Claude with <b>no names in it</b><span id="shPromise">' + esc(namePromise()) + '</span>. <span id="shWho"></span> The list of who is who stays only in this browser.</p>' +
     '<details class="cclist" style="margin:0 0 12px"><summary>What goes in it</summary><ul style="list-style:disc;margin:6px 0 0;padding-left:20px;line-height:1.55;max-height:none">' +
     '<li>Every page becomes a picture, so no hidden text or file details go with it.</li>' +
     '<li>Names are covered in black wherever they’re typed on the page' + (batchClass() ? ' (folder names and your roster names)' : ' (from the folder names)') + ', and in any Kami box that has a name.</li>' +
@@ -2971,13 +2972,15 @@ function openShare() {
     '<li>Your scores, rubric and comments go too, with names swapped for [name].</li>' +
     '<li><b>Only PDFs and pictures go in.</b> A Word file stays out until it’s saved as a PDF.</li></ul></details>' +
     '<div id="shSteps"></div>' +
-    '<div class="prog" hidden><i></i></div><p class="muted" id="shStatus" style="font-size:13px;margin:0"></p></div>' +
-    '<div class="bf"><button class="btn" data-check>Check the covers</button><button class="btn primary" data-make>Download ZIP for Claude</button></div>', true);
+    '<div class="prog" hidden><i></i></div><p class="muted" id="shStatus" style="font-size:13px;margin:0"></p></div><div id="shMarks" hidden></div></div>' +
+    '<div class="bf"><button class="btn" data-check>Check the covers</button><button class="btn primary" data-make>Download ZIP for Claude</button><button class="btn primary" data-marksdl hidden>Download marks file</button></div>', true);
   const box = $('#dlgBox');
   shareSteps();
+  if (shareState().kind === 'marks') shareKind('marks');
   ensureCounts().then(() => { if ($('#shSteps')) shareSteps(); findNames(); });
   box.onclick = async e => {
     if (e.target.closest('[data-close]')) return closeDlg();
+    if (marksClick(e)) return;
     if (shareStepClick(e)) return;
     if (e.target.closest('[data-check]')) return ensureCounts().then(() => checkCovers(coverFirst()));
     if (e.target.closest('[data-make]')) {
