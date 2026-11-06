@@ -88,3 +88,59 @@ test('with her rubric page on the end of each paper, the file still has Move to,
   assert.deepEqual(page.errors, []);
   await close();
 });
+
+test('single pages: × takes one out (the rubric page too), Undo and Bring back put it back in place, and the export leaves it out', async () => {
+  const rubric = Buffer.from(await makePaper({ title: 'Rubric page' })).toString('base64');
+  const { page, close } = await openApp(browser, { seed: { ls: { 'gs.setup': JSON.stringify({ mode: 'rubric', criteria: ['A', 'B', 'C'], rubricPage: { id: 'r1', name: 'Rubric page.pdf' }, rubricPos: 'end' }), 'gs.rp.r1': JSON.stringify(rubric) } } });
+  const dl = await catchDownloads(page);
+  await openZip(page, zip, 'River essay.zip');
+  await page.waitForFunction(() => window.__gs.state().batch.students[0].files.some(f => f.virtual));
+  await goToStudent(page, 0);
+  const pagesNow = () => page.evaluate(() => window.__gs.state().pages.map(p => p.file.name + ' ' + (p.idx + 1)));
+  await page.waitForFunction(() => window.__gs.state().pages.length === 3);
+  const all = await pagesNow();
+  const outAt = k => page.evaluate(k => window.__gs.state().pages[k].rchip.querySelector('[data-pgout]').click(), k);
+  await markPage(page, 0);
+  await settle(page);
+  // Page 2 of the essay out, then Undo.
+  await outAt(1);
+  await goneSays(page, /Removed pages.*Essay\.pdf, page 2/);
+  await page.waitForFunction(() => window.__gs.state().pages.length === 2);
+  await page.click('.toast .tact');
+  await page.waitForFunction(() => window.__gs.state().pages.length === 3);
+  assert.deepEqual(await pagesNow(), all);
+  // Page 2 and the rubric page out; the rubric page comes back at the end.
+  await outAt(1); await page.waitForFunction(() => window.__gs.state().pages.length === 2);
+  await outAt(1); await page.waitForFunction(() => window.__gs.state().pages.length === 1);
+  await goneSays(page, /Essay\.pdf, page 2.*page 1 · your rubric page/);
+  await page.click('[data-backpg$="|0"]');
+  await page.waitForFunction(() => window.__gs.state().pages.length === 2);
+  assert.deepEqual(await pagesNow(), [all[0], all[2]]);
+  await goneSays(page, /Removed pages.*Essay\.pdf, page 2/);
+  await settle(page);
+  // Arrange pages starts with it in the tray.
+  await page.click('#arrangeBtn');
+  await page.waitForSelector('.ath[data-where="tray"]');
+  assert.equal((await page.$$('.ath[data-where="tray"]')).length, 1);
+  await page.keyboard.press('Escape');
+  await page.waitForFunction(() => !document.querySelector('.ath'));
+  // Out of the export, and still out after reopening.
+  await page.click('#exportBtn');
+  await page.waitForSelector('#dlgBox [data-go="zip"]', { timeout: 60000 });
+  const got = await dl.next(() => page.click('#dlgBox [data-go="zip"]'));
+  await page.waitForFunction(() => /^Done\./.test(document.querySelector('#xStatus').textContent), { timeout: 60000 });
+  const { PDFDocument } = require('pdf-lib');
+  assert.equal((await PDFDocument.load(unzipSync(got.bytes)['Aria Testwell/Essay.pdf'])).getPageCount(), 2, 'page 1 and the rubric page');
+  await page.click('#dlgBox .bf [data-close]');
+  await page.reload();
+  await page.waitForSelector('#kept [data-kopen]');
+  await page.click('#kept [data-kopen]');
+  await waitPaper(page);
+  await goToStudent(page, 0);
+  await goneSays(page, /Essay\.pdf, page 2/);
+  await page.click('[data-backpg]');
+  await page.waitForFunction(() => window.__gs.state().pages.length === 3);
+  assert.equal(await page.evaluate(() => window.__gs.state().batch.students[0].layout), null, 'all back is the plain order again');
+  assert.deepEqual(page.errors, []);
+  await dl.close(); await close();
+});

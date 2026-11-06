@@ -3118,6 +3118,8 @@ $('#paper').addEventListener('click', e => {
   if (e.target.closest('#arrangeBtn')) return openArrange();
   const rb = e.target.closest('[data-rot]');
   if (rb) { const pg = pages.find(q => q.rchip === rb.parentNode); if (pg) turnPages(pg.file, [pg.idx], +rb.dataset.rot); return; }
+  const po = e.target.closest('[data-pgout]'); if (po) { const pg = pages.find(q => q.rchip === po.parentNode); if (pg) takePageOut(batch.students[cur], pg.file.path, pg.idx); return; }
+  const bp = e.target.closest('[data-backpg]'); if (bp) { const [i, p] = bp.dataset.backpg.split('|'); const it = outPages(batch.students[cur])[+i]; if (it) bringPageBack(batch.students[cur], it[0], +p); return; }
   const rf = e.target.closest('[data-reflag]'); if (rf) { const pg = pages.find(q => q.rchip === rf.parentNode); if (pg) scanFlag(pg); return; }
   const shf = e.target.closest('[data-shfile]'); if (shf) return openShareFile(batch.students[cur], shf.dataset.shfile);
   const rd = e.target.closest('[data-rotdoc]');
@@ -3162,7 +3164,7 @@ async function thumbFor(path, p, extra) {
 function openArrange() {
   const st = batch.students[cur];
   const start = layoutOf(st).map(d => ({ name: d.name, file: d.file, pages: d.pages.map(x => x.slice()), out: docAuto(st, d) ? null : !docIn(st, d) }));
-  let L = JSON.parse(JSON.stringify(start)), tray = [];
+  let L = JSON.parse(JSON.stringify(start)), tray = outPages(st).map(x => x.slice());   // pages taken out before wait here to be dragged back
   const lp = { ...(batch.lightPg || {}) }, lit = lightLive(st);   // page lighting choices, kept on Save
   const nameOf = path => fileShown(st, (fileByPath(st, path) || { name: path }).name);
   let drag = null, sel = new Set(), anchor = null, size = +store.get('gs.arrsize', 1);
@@ -6546,10 +6548,42 @@ async function replaceFile(st, path, file) {
   refound(st); wordScoresAll(); saveNow(); renderList(); openStudent(cur, nf.path);
   toast('Replaced ' + fileShown(st, old.name) + ' with ' + nf.name);
 }
+function outPages(st) {
+  if (!st.layout) return [];
+  const has = new Set(st.layout.flatMap(d => d.pages.map(([q, p]) => q + '|' + p))), out = [];
+  for (const f of st.files) if (viewable(f) && f.numPages) for (let p = 0; p < f.numPages; p++) if (!has.has(f.path + '|' + p)) out.push([f.path, p]);
+  return out;
+}
+function takePageOut(st, path, p) {
+  commitEditors();
+  const L0 = JSON.parse(JSON.stringify(layoutOf(st))), was = st.layout && JSON.parse(JSON.stringify(st.layout));
+  st.layout = L0.map(d => ({ ...d, pages: d.pages.filter(([q, n]) => !(q === path && n === p)) })).filter(d => d.pages.length);
+  const f = fileByPath(st, path);
+  saveNow(); renderList(); openStudent(cur);
+  toastDo('Took out ' + fileShown(st, (f || { name: path }).name) + ', page ' + (p + 1), 'Undo', () => { st.layout = was; saveNow(); renderList(); openStudent(cur, path); });
+}
+function bringPageBack(st, path, p) {
+  const f = fileByPath(st, path); if (!f || !st.layout) return;
+  let d = st.layout.find(x => x.file === path) || st.layout.find(x => x.pages.some(([q]) => q === path));
+  if (!d && f.virtual && st.layout.length) d = st.layout[setup.rubricPos === 'start' ? 0 : st.layout.length - 1];
+  if (!d) { st.layout.push({ name: f.name, file: path, pages: [[path, p]] }); }
+  else {
+    const k = d.pages.findIndex(([q, n]) => q === path && n > p), last = d.pages.map(([q]) => q).lastIndexOf(path);
+    d.pages.splice(k >= 0 ? k : last >= 0 ? last + 1 : (f.virtual && setup.rubricPos === 'start' ? 0 : d.pages.length), 0, [path, p]);
+  }
+  const def = defaultLayout(st);
+  if (st.layout.length === def.length && st.layout.every((x, k) => x.file === def[k].file && x.name === def[k].name && x.out == null && JSON.stringify(x.pages) === JSON.stringify(def[k].pages))) st.layout = null;
+  saveNow(); renderList(); openStudent(cur, path);
+  toast('Brought back ' + fileShown(st, f.name) + ', page ' + (p + 1));
+}
 function goneList(st) {
-  if (!st.gone || !st.gone.length) return;
+  const op = outPages(st);
+  if ((!st.gone || !st.gone.length) && !op.length) return;
   const el = document.createElement('div'); el.className = 'gonelist';
-  el.innerHTML = '<b>Removed files</b>' + st.gone.map(f => { const r = (batch.removed || {})[f.path] || {}, n = markCount(f);
+  el.innerHTML = '<b>' + (op.length ? (st.gone && st.gone.length ? 'Removed files and pages' : 'Removed pages') : 'Removed files') + '</b>' +
+    op.map(([path, p]) => { const f = fileByPath(st, path), n = ((f.marks || {})[p] || []).length;
+      return '<div class="gonerow"><span>' + [esc(fileShown(st, f.name)) + ', page ' + (p + 1), f.virtual ? 'your rubric page' : '', n ? n + (n === 1 ? ' mark' : ' marks') : ''].filter(Boolean).join(' · ') + '</span><span style="flex:1"></span><button class="link" style="font-size:13px" data-backpg="' + op.findIndex(x => x[0] === path) + '|' + p + '">Bring back</button></div>'; }).join('') +
+    (st.gone || []).map(f => { const r = (batch.removed || {})[f.path] || {}, n = markCount(f);
     return '<div class="gonerow"><span>' + [esc(fileShown(st, f.name)), f.numPages ? f.numPages + (f.numPages === 1 ? ' page' : ' pages') : '', n ? n + (n === 1 ? ' mark' : ' marks') : '', r.t ? (r.by ? 'replaced ' : 'removed ') + fmtDay(r.t) : ''].filter(Boolean).join(' · ') + '</span><span style="flex:1"></span><button class="link" style="font-size:13px" data-backfile="' + esc(f.path) + '">Bring back</button></div>'; }).join('');
   $('#paper').appendChild(el);
 }
@@ -6939,7 +6973,7 @@ function lightChip(pg) {
 }
 function rotChip(pg, n) {
   const b = document.createElement('div'); b.className = 'rchip';
-  b.innerHTML = (n ? '<span>p. ' + n + '</span>' : '') + '<button data-rot="-1" title="Turn this page to the left" aria-label="Turn this page to the left">⟲</button><button data-rot="1" title="Turn this page to the right" aria-label="Turn this page to the right">⟳</button><button data-reflag title="Needs a rescan: flag this page, or take the flag off" aria-label="Flag this page as needing a rescan">⚑</button>';
+  b.innerHTML = (n ? '<span>p. ' + n + '</span>' : '') + '<button data-rot="-1" title="Turn this page to the left" aria-label="Turn this page to the left">⟲</button><button data-rot="1" title="Turn this page to the right" aria-label="Turn this page to the right">⟳</button><button data-reflag title="Needs a rescan: flag this page, or take the flag off" aria-label="Flag this page as needing a rescan">⚑</button><button data-pgout title="Take this page out. It waits at the bottom of the paper, with Bring back." aria-label="Take this page out">×</button>';
   pg.wrap.appendChild(b); pg.rchip = b;
 }
 function lightChips() {
