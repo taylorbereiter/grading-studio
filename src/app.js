@@ -222,7 +222,7 @@ async function intake(entries, label, assignment, fromKeep) {   // entries: [{ p
   if (earlier) carryRoster(earlier);
   if (batch.restoredKey) { const k = batch.students.findIndex(st => st.key === batch.restoredKey); if (k >= 0) batch.restoredCur = k; }
   renderClassSel();
-  if (assignment) { assignment.batchId = id; assignment.opened = Date.now(); if (!assignment.setup || rub.toCard) assignment.setup = { ...setup, spot: undefined }; saveLib(); }
+  if (assignment) { assignment.batchId = id; assignment.opened = Date.now(); if (!assignment.setup || rub.toCard) assignment.setup = { ...setup, spot: undefined }; shareRubric(assignment); saveLib(); }
   keepWait = keepPapers(batch, label, fromKeep ? null : keepList, sameSize.length > 0);
   cur = 0; undoStack = []; selected = null;
   $('#start').hidden = true; $('#app').hidden = false;
@@ -1973,7 +1973,7 @@ function openSetup() {
       const pageChanged = JSON.stringify(draft.rubricPage) !== JSON.stringify(setup.rubricPage) || draft.rubricPos !== setup.rubricPos;
       rowsTakenOut();
       setup = draft; store.set('gs.setup', { ...setup, spot: undefined, rubricPage: undefined });
-      if (batch && batch.assignment) { batch.assignment.setup = { ...setup, spot: undefined }; saveLib(); }
+      if (batch && batch.assignment) { batch.assignment.setup = { ...setup, spot: undefined }; shareRubric(batch.assignment); saveLib(); }
       if (batch) batch.students.forEach(refound);
       closeDlg(); renderGrade(); renderList(); saveSoon();
       for (const el of document.querySelectorAll('.docx')) if (el.wordShow) el.wordShow();   // the percent over an open Word rubric follows the new setup
@@ -4039,36 +4039,75 @@ function renderTopAtlas() {
 }
 $('#topAtlas').addEventListener('click', e => { const b = e.target.closest('[data-uatlas]'); if (b) askAtlas(b.dataset.uatlas); const m = e.target.closest('[data-mbset]'); if (m) askMb(+m.dataset.mbset); });
 // The unit list follows the class picked; a class with no units gets a "Unit 1" when the assignment is saved.
+// A new assignment can go to several classes at once: each ticked class gets its own card (its own roster and download),
+// placed in that class's unit of the chosen name (made if missing). The copies share a group id, so the first rubric set
+// up in one class is given to the copies that have none yet (shareRubric).
 function editAssignment(id, unitId) {
   const f = id ? findItem(id) : null, start = f ? f : findUnit(unitId) || { c: lib.classes[0] || lib.loose, u: null };
   const it = f ? f.it : { id: uid(), name: '', classId: start.c.id };
+  const classPick = f
+    ? '<div class="field"><label for="aClass">Class</label><select id="aClass" class="btn" style="justify-content:flex-start">' + lib.classes.map(c => '<option value="' + c.id + '"' + (c === start.c ? ' selected' : '') + '>' + esc(c.name) + '</option>').join('') + '<option value=""' + (start.c === lib.loose ? ' selected' : '') + '>No class</option></select></div>'
+    : '<div class="field"><label>Classes</label><div class="ctags" id="aClasses">' + holders().map(c => '<label class="ctag"><input type="checkbox" value="' + esc(c.id) + '"' + (c === start.c ? ' checked' : '') + '><span>' + esc(c === lib.loose ? 'No class' : c.name) + '</span></label>').join('') + '</div></div>';
   openDlg('<div class="bh"><h2>' + (f ? 'Edit assignment' : 'New assignment') + '</h2></div><div class="bb">' +
     '<div class="field"><label for="aName">Name</label><input type="text" id="aName" value="' + esc(it.name) + '" placeholder="e.g. Ch 3 Analysis Paragraph"></div>' +
-    '<div class="field"><label for="aClass">Class</label><select id="aClass" class="btn" style="justify-content:flex-start">' + lib.classes.map(c => '<option value="' + c.id + '"' + (c === start.c ? ' selected' : '') + '>' + esc(c.name) + '</option>').join('') + '<option value=""' + (start.c === lib.loose ? ' selected' : '') + '>No class</option></select></div>' +
-    '<div class="field"><label for="aUnit">Unit</label><select id="aUnit" class="btn" style="justify-content:flex-start"></select></div>' +
-    '<p class="muted" style="font-size:13px;margin:0">The rubric is set the first time you open a download for it, with Rubric setup, and it’s remembered for this assignment.</p></div>' +
+    classPick +
+    '<div class="field"><label for="aUnit">Unit</label><select id="aUnit" class="btn" style="justify-content:flex-start"></select><p class="muted" id="aUnitNote" style="font-size:13px;margin:6px 0 0" hidden></p></div>' +
+    '<p class="muted" style="font-size:13px;margin:0">The rubric is set the first time you open a download for it, with Rubric setup, and it’s remembered for this assignment.' + (f ? '' : ' Copies in other classes get the same rubric.') + '</p></div>' +
     '<div class="bf">' + (f ? '<button class="btn" data-del style="margin-right:auto">Delete</button>' : '') + '<button class="btn" data-cancel>Cancel</button><button class="btn primary" data-ok>Save</button></div>', true);
+  const ticked = () => [...document.querySelectorAll('#aClasses input:checked')].map(x => holderById(x.value)).filter(Boolean);
   const fillUnits = keep => {
-    const c = holderById($('#aClass').value);
-    $('#aUnit').innerHTML = c.units.map(u => '<option value="' + u.id + '"' + (keep && u === keep ? ' selected' : '') + '>' + esc(u.name) + '</option>').join('') || '<option value="">Unit 1 (new)</option>';
+    if (f) {
+      const c = holderById($('#aClass').value);
+      $('#aUnit').innerHTML = c.units.map(u => '<option value="' + u.id + '"' + (keep && u === keep ? ' selected' : '') + '>' + esc(u.name) + '</option>').join('') || '<option value="">Unit 1 (new)</option>';
+      return;
+    }
+    // New: unit names from every ticked class, the one already picked kept if it's still there
+    const cs = ticked(), was = $('#aUnit').value || (keep && keep.name) || '', names = [];
+    for (const c of cs) for (const u of c.units) if (!names.includes(u.name)) names.push(u.name);
+    $('#aUnit').innerHTML = names.map(n => '<option value="' + esc(n) + '"' + (n === was ? ' selected' : '') + '>' + esc(n) + '</option>').join('') || '<option value="">Unit 1 (new)</option>';
+    const n = $('#aUnit').value || 'Unit 1', made = cs.filter(c => !c.units.some(u => u.name === n)).map(c => c === lib.loose ? 'No class' : c.name);
+    const note = $('#aUnitNote');
+    note.hidden = !(cs.length > 1 && made.length && made.length < cs.length);
+    if (!note.hidden) note.textContent = made.join(', ') + (made.length === 1 ? ' has' : ' have') + ' no unit called “' + n + '” yet, so one is made there.';
+    const ok = $('#dlgBox [data-ok]'); ok.textContent = cs.length > 1 ? 'Add to ' + cs.length + ' classes' : 'Save'; ok.disabled = !cs.length;
   };
   fillUnits(start.u);
-  $('#aClass').onchange = () => fillUnits(null);
+  if (f) $('#aClass').onchange = () => fillUnits(null);
+  else { $('#aClasses').onchange = () => fillUnits(null); $('#aUnit').onchange = () => fillUnits(null); }
   setTimeout(() => $('#aName').focus(), 0);
   $('#dlgBox').onclick = async e => {
     if (e.target.closest('[data-cancel]')) return closeDlg();
     if (e.target.closest('[data-del]')) { if (!await askDlg('Delete “' + it.name + '”?', { ok: 'Delete', danger: true })) return; f.u.items.splice(f.u.items.indexOf(it), 1); saveLib(); closeDlg(); return renderLib(); }
     if (e.target.closest('[data-ok]')) {
       const name = $('#aName').value.trim(); if (!name) { $('#aName').focus(); return; }
+      if (!f) {
+        const cs = ticked(); if (!cs.length) return;
+        const un = $('#aUnit').value || 'Unit 1', group = cs.length > 1 ? uid() : undefined;
+        cs.forEach((c, k) => {
+          let to = c.units.find(u => u.name === un);
+          if (!to) c.units.push(to = { id: uid(), name: un, items: [] });
+          const a = k ? { id: uid(), name, classId: c.id } : Object.assign(it, { name, classId: c.id });
+          if (group) a.group = group;
+          to.items.push(a);
+        });
+        saveLib(); closeDlg(); renderLib();
+        if (cs.length > 1) toast('Added to ' + cs.map(c => c === lib.loose ? 'No class' : c.name).join(', ').replace(/, ([^,]*)$/, ' and $1'));
+        return;
+      }
       const c = holderById($('#aClass').value);
       let to = c.units.find(u => u.id === $('#aUnit').value);
       if (!to) c.units.push(to = { id: uid(), name: 'Unit 1', items: [] });
       it.name = name; it.classId = c.id;
-      if (f && f.u !== to) f.u.items.splice(f.u.items.indexOf(it), 1);
-      if (!f || f.u !== to) to.items.push(it);
+      if (f.u !== to) f.u.items.splice(f.u.items.indexOf(it), 1);
+      if (f.u !== to) to.items.push(it);
       saveLib(); closeDlg(); renderLib();
     }
   };
+}
+// The first rubric set up for an assignment added to several classes goes to the copies that have no rubric yet.
+function shareRubric(a) {
+  if (!a || !a.group || !a.setup) return;
+  for (const c of holders()) for (const u of c.units) for (const x of u.items) if (x !== a && x.group === a.group && !x.setup) x.setup = JSON.parse(JSON.stringify(a.setup));
 }
 // Class lists: pasted from a spreadsheet, or a .csv / .txt file. Student ID columns (numbers) are skipped.
 function parseRoster(text) {
