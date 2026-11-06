@@ -174,6 +174,35 @@ test('with Keep marks editable off, the PDF is plain', async () => {
   await dl.close(); await close();
 });
 
+test('an exported file saved again in another app still opens with its marks, and a plain one says why it can’t', async () => {
+  const a = await openApp(browser), dl = await catchDownloads(a.page);
+  await openZip(a.page, zip);
+  await setTool(a.page, 'pen'); await drag(a.page, 0, [[100, 300], [200, 330]]);
+  await settle(a.page);
+  const was = (await workOf(a.page))['Aria Testwell'].files['Aria Testwell/Essay.pdf'].marks;
+  const editable = (await exportZip(a.page, dl)).un['Aria Testwell/Essay.pdf'];
+  const plain = (await exportZip(a.page, dl, { notEditable: true })).un['Aria Testwell/Essay.pdf'];
+  await dl.close(); await a.close();
+  // Opened and saved again elsewhere: the last line that marks an export is gone, but the attached files stay.
+  const resaved = await (await PDFDocument.load(editable)).save({ useObjectStreams: false });
+  assert.doesNotMatch(tailOf(resaved), /GradingStudio/);
+  assert.equal((await PDFDocument.load(plain, { updateMetadata: false })).getCreator(), 'Grading Studio');
+
+  const b = await openApp(browser);
+  await openZip(b.page, zipOf({ 'Aria Testwell/Essay.pdf': resaved, 'Bram Sample/Essay.pdf': plain }), 'Back again.zip');
+  const w = await workOf(b.page);
+  assert.deepEqual(w['Aria Testwell'].files['Aria Testwell/Essay.pdf'].marks, was, 'the marks come back as marks');
+  assert.equal(await b.page.evaluate(() => window.__gs.state().batch.students[0].files[0].data.length), files['Aria Testwell/Essay.pdf'].length, 'on the original pages');
+  await b.page.evaluate(() => window.__gs.openStudent(1));
+  await b.page.waitForFunction(() => { const n = document.querySelector('.impnote'); return n && /exported from Grading Studio with its marks drawn into the page/.test(n.textContent); }, { timeout: 30000 });
+  await b.page.evaluate(() => window.__gs.openStudent(0));
+  await b.page.waitForFunction(() => window.__gs.state().cur === 0 && window.__gs.state().pages[0] && window.__gs.state().pages[0].bmp);
+  await new Promise(r => setTimeout(r, 500));
+  assert.equal(await b.page.$('.impnote'), null, 'no note on the one that came back editable');
+  assert.deepEqual(b.page.errors, []);
+  await b.close();
+});
+
 test('Also include files with no marks: Word and text files come back unchanged', async () => {
   const { page, close } = await openApp(browser);
   const dl = await catchDownloads(page);

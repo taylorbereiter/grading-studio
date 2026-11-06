@@ -312,7 +312,7 @@ async function makeFile(path, data) {
   const magic = data && data.length > 4 && data[0] === 0x25 && data[1] === 0x50 && data[2] === 0x44 && data[3] === 0x46;   // "%PDF"
   let kind = trueKind(isPdf(name) || magic ? 'pdf' : isImg(name) || IMG_MORE.test(name) ? 'img' : MEDIA_RX.test(name) ? 'media' : WORD_RX.test(name) ? 'docx' : TEXT_RX.test(name) ? 'text' : 'other', name, data);
   let pdf = kind === 'pdf' ? data : null;
-  if (kind === 'pdf' && hasGsTail(data)) {   // a file exported from here with its marks kept: back to the original pages and the marks
+  if (kind === 'pdf' && gsExportLike(data)) {   // a file exported from here with its marks kept: back to the original pages and the marks
     const back = await unpackExport(data);
     if (back) return { path, name, kind, data: back.data, size: data.length, marks: back.marks, rot: back.rot, skew: back.skew, noauto: true, pages: null };
   }
@@ -323,6 +323,10 @@ async function makeFile(path, data) {
 // An editable export carries its original pages and its marks as attachments, and ends with this line so it's found without opening it.
 const GS_TAIL = '%GradingStudio-editable';
 const hasGsTail = d => !!d && d.length > 64 && new TextDecoder().decode(d.subarray(d.length - 64)).includes(GS_TAIL);
+// A file can lose that last line when it's opened and saved again in another app, or passed through some uploads. Its attached
+// files usually stay, and a file attached to a PDF always has "/EmbeddedFile" in plain text, so that's looked for too.
+const hasAttached = d => !!d && d.length > 64 && new TextDecoder('latin1').decode(d).includes('/EmbeddedFile');
+const gsExportLike = d => hasGsTail(d) || hasAttached(d);
 // Marks read from a file could say anything, so only ones that can be drawn come in. One bad mark would stop that student's page drawing.
 const markFits = m => !!m && typeof m === 'object' && ['pen', 'hl', 'text', 'check', 'oval', 'note', 'stamp'].includes(m.t) && (m.t !== 'stamp' || (typeof m.k === 'string' && isFinite(m.x) && isFinite(m.y))) && (m.t !== 'pen' || Array.isArray(m.pts)) && (m.t !== 'text' || typeof m.text === 'string') && (m.t !== 'note' || (typeof m.text === 'string' && /^#[0-9a-f]{6}$/i.test(m.color))) && (m.t !== 'hl' || Array.isArray(m.pts) || Array.isArray(m.rects) || m.x != null);
 async function unpackExport(data) {
@@ -835,6 +839,7 @@ async function openStudent(i, filePath) {
       const doc = await pdfjsLib.getDocument({ data: (await viewBytes(f)).slice(), isEvalSupported: false }).promise;
       if (token !== openToken) { doc.destroy(); return; }
       docs.push(doc); docMap.set(f.path, doc); f.numPages = doc.numPages;
+      gsFlatCheck(f, doc).then(flat => { if (flat && token === openToken) for (const q of pages) if (q.file === f && q.impFirst) impNote(q); });
     } catch (e) {
       pdfBad(f, e);
       paper.appendChild(otherCard(f));
@@ -2109,6 +2114,7 @@ async function flattenDoc(st, d, dpi, edit, key) {
     return srcs.get(path);
   };
   const out = await PDFLib.PDFDocument.create();
+  out.setCreator('Grading Studio'); out.setProducer('Grading Studio');   // so a flattened file brought back in can say why its marks can't be changed
   try {
     for (const [path, p] of d.pages) {
       const { f, js, lib } = await src(path);
