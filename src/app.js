@@ -2980,7 +2980,7 @@ function openShare() {
   ensureCounts().then(() => { if ($('#shSteps')) shareSteps(); findNames(); });
   box.onclick = async e => {
     if (e.target.closest('[data-close]')) return closeDlg();
-    if (await marksClick(e)) return;
+    if (marksClick(e)) return;
     if (shareStepClick(e)) return;
     if (e.target.closest('[data-check]')) return ensureCounts().then(() => checkCovers(coverFirst()));
     if (e.target.closest('[data-make]')) {

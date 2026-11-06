@@ -181,20 +181,21 @@ function shareKind(k) {
   if (marks) { $('#shMarks').innerHTML = marksPane(); marksPaneWire(); }
   saveSoon();
 }
-async function marksClick(e) {
+// Answers right away, so Open Claude and the rest still run inside her click. Making the file goes on by itself.
+function marksClick(e) {
   const k = e.target.closest('[data-kind]');
   if (k) { shareKind(k.dataset.kind); return true; }
   if (e.target.closest('[data-mkcopy]')) { copy(nameFreeText($('#mkAsk').value), 'Copied. Paste it into Claude along with the marks file.'); return true; }
-  if (e.target.closest('[data-marksdl]')) {
-    const btn = e.target.closest('[data-marksdl]'), bar = $('#mkProg'); btn.disabled = true; bar.hidden = false;
-    try {
-      const r = await makeMarksFile((n, t) => { bar.firstChild.style.width = (100 * n / t) + '%'; $('#mkStatus').textContent = 'Reading the marks ' + n + ' of ' + t + '…'; });
-      $('#mkStatus').textContent = 'Done: ' + plural(r.codes.length, 'student') + '. Give the file to Claude with the message.';
-      $('#mkMade').textContent = 'Made ' + whenLabel(shareState().marksMade) + '.';
-    } catch (er) { console.error(er); $('#mkStatus').textContent = 'Something went wrong: ' + (er.message || er); }
-    bar.hidden = true; btn.disabled = false;
-    return true;
-  }
+  if (e.target.closest('[data-marksdl]')) { marksDownload(e.target.closest('[data-marksdl]')); return true; }
   return false;
+}
+async function marksDownload(btn) {
+  const bar = $('#mkProg'); btn.disabled = true; bar.hidden = false;
+  try {
+    const r = await makeMarksFile((n, t) => { bar.firstChild.style.width = (100 * n / t) + '%'; $('#mkStatus').textContent = 'Reading the marks ' + n + ' of ' + t + '…'; });
+    $('#mkStatus').textContent = 'Done: ' + plural(r.codes.length, 'student') + '. Give the file to Claude with the message.';
+    $('#mkMade').textContent = 'Made ' + whenLabel(shareState().marksMade) + '.';
+  } catch (er) { console.error(er); $('#mkStatus').textContent = 'Something went wrong: ' + (er.message || er); }
+  bar.hidden = true; btn.disabled = false;
 }
 Object.assign(window.__gs, { marksFileText, makeMarksFile, MARKS_ASK, shareKind });
