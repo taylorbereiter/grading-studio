@@ -1722,8 +1722,10 @@ function renderProg() {
   const outList = (anonOn() ? anonOrder().filter(i => outs.includes(i)) : outs).map(i => { const g = gradeOf(batch.students[i]);
     return '<button class="po" data-pgo="' + i + '"><span>' + esc(shownName(batch.students[i], i)) + '</span><span>' + (g.total != null ? fmtNum(g.total) + ' / ' + fmtNum(g.outOf != null ? g.outOf : maxPoints()) : g.pct != null ? fmtPct(g.pct) : 'No score') + '</span></button>'; }).join('');
   $('#progS').innerHTML = '<div class="ph">' + n + ' of ' + N + ' <span>scored' + (nOff ? ' · ' + nOff + ' missing or excused' : '') + '</span></div><div class="pb"><i style="width:' + (N ? 100 * n / N : 0) + '%"></i></div>' +
-    '<div class="ptiles"><div class="pt" id="pAvg" title="' + (cs.n ? 'Average of ' + people(cs.n, 'finished score') + '. Partial, missing, excused and left-out papers don’t count.' : 'No finished scores yet') + '"><div class="k">Average</div><div class="v">' + (cs.n ? oneDp(cs.mean) + ' <small>/ ' + fmtNum(cs.max) + '</small>' + (cs.meanPct != null ? ' <small class="pp">' + cs.meanPct + '%</small>' : '') : '–') + '</div></div>' +
-    '<div class="pt" id="pLeft" title="Papers with no score or only part of one"><div class="k">Left</div><div class="v">' + (N - n) + '</div></div>' +
+    '<div class="ptiles">' + (cs.n ? '<button class="pt click big" id="pAvg" title="Average of ' + people(cs.n, 'finished score') + '’s percents. Partial, missing, excused and left-out papers don’t count. Click for Class overview."><div class="k">Average</div>' +
+      '<div class="v">' + (cs.meanPct != null ? cs.meanPct + '%' : oneDp(cs.mean)) + '</div><div class="s">' + oneDp(cs.mean) + ' / ' + fmtNum(cs.max) + '</div></button>'
+      : '<div class="pt" id="pAvg" title="No finished scores yet"><div class="k">Average</div><div class="v">–</div></div>') +
+'<div class="pt" id="pLeft" title="Papers with no score or only part of one"><div class="k">Left</div><div class="v">' + (N - n) + '</div></div>' +
     (outs.length ? '<button class="pt click" id="pOut" aria-expanded="' + outOpen + '" title="Papers you left out of the average. Click to see them."><div class="k">Left out</div><div class="v">' + outs.length + '</div></button>' : '<div class="pt" id="pOut" title="Leave a paper out with the switch under Mark as"><div class="k">Left out</div><div class="v">0</div></div>') + '</div>' +
     (outOpen ? '<div class="poutbox"><div class="h">Click one to open it</div>' + outList + '</div>' : '') +
     (n < N ? '<button class="btn sm" id="nextUn" title="Opens the next student without a full score">Next unscored <kbd>N</kbd></button>' : '<div class="muted" style="font-size:13px;margin-bottom:6px">Everyone ' + (nOff ? 'else ' : '') + 'has a score.</div>');
@@ -1736,6 +1738,7 @@ function nextUnscored() {
 $('#progS').addEventListener('click', e => {
   if (e.target.closest('#nextUn')) nextUnscored();
   if (e.target.closest('button#pOut')) { outOpen = !outOpen; renderProg(); }
+  if (e.target.closest('button#pAvg')) openOverview();
   const go = e.target.closest('[data-pgo]'); if (go) openStudent(+go.dataset.pgo);
 });
 $('#stuList').addEventListener('click', e => { const b = e.target.closest('.stu'); if (b) openStudent(+b.dataset.i); });
