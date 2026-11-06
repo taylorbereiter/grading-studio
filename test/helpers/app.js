@@ -94,7 +94,8 @@ async function goToStudent(page, i) {
 // PDF points on page k of the open student, to screen pixels. Scrolls the page into view first.
 const toScreen = (page, k, x, y) => page.evaluate((k, x, y) => { const pg = window.__gs.state().pages[k], r = pg.canvas.getBoundingClientRect(); return { x: r.left + x * pg.s, y: r.top + y * pg.s }; }, k, x, y);
 async function at(page, k, x, y) {
-  await page.evaluate(k => window.__gs.state().pages[k].canvas.scrollIntoView({ block: 'center' }), k);
+  // A scroll's event comes a frame later. Clicking before it lands would let it close a menu the click just opened, as a real scroll does.
+  await page.evaluate(k => { window.__gs.state().pages[k].canvas.scrollIntoView({ block: 'center' }); return new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r))); }, k);
   return toScreen(page, k, x, y);
 }
 async function drag(page, k, pts) {
