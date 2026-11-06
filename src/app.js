@@ -390,10 +390,10 @@ function saveNow(leaving) {
   if (!batch || !tabLive()) return;
   clearTimeout(saveT); saveDue = false;
   if (batch.revs && tabForgot(batch)) return tabLetGo();
-  const data = { t: Date.now(), carry: batch.carry, cur, ck: batch.students[cur] && batch.students[cur].key, setup, cls: batch.classId, share: batch.share, drive: batch.drive, light: batch.light, lightOpt: batch.lightOpt, lightPg: batch.lightPg, anon: batch.anon, moved: batch.moved, refSkip: batch.refSkip, quiz: batch.quiz, read: (batch.read = paperReads()), s: {} };
+  const data = { t: Date.now(), carry: batch.carry, cur, ck: batch.students[cur] && batch.students[cur].key, setup, cls: batch.classId, share: batch.share, drive: batch.drive, light: batch.light, lightOpt: batch.lightOpt, lightPg: batch.lightPg, anon: batch.anon, moved: batch.moved, removed: batch.removed, refSkip: batch.refSkip, quiz: batch.quiz, read: (batch.read = paperReads()), s: {} };
   for (const st of batch.students) {
     const f = {};
-    for (const fl of st.files) if (Object.values(fl.marks).some(a => a.length)) f[fl.path] = fl.marks;
+    for (const fl of st.files.concat(st.gone || [])) if (Object.values(fl.marks).some(a => a.length)) f[fl.path] = fl.marks;   // a removed file keeps its marks for Bring back
     const g = st.grade;
     const hb = {};
     for (const fl of st.files) if (fl.hand) hb[fl.path] = fl.hand;
@@ -437,6 +437,8 @@ function restore() {
     if (s.inc) st.inc = s.inc;
     n++;
   }
+  batch.removed = data.removed || {};
+  for (const [path, r] of Object.entries(batch.removed)) { if (r.back) continue; const st = batch.students.find(x => x.files.some(f => f.path === path)); if (st) goneNow(st, fileByPath(st, path)); }
   // A file moved on one computer and marked on the other: the marks follow the file.
   for (const [path, key] of Object.entries(batch.moved)) {
     const st = batch.students.find(x => x.key === key), fl = st && st.files.find(f => f.path === path);
@@ -820,7 +822,7 @@ async function openStudent(i, filePath) {
     const gs = $('#gapScan'); if (gs) gs.onclick = () => { scanInto = true; scanFor = null; $('#scanIn').click(); };
   }
   curMedia = null;
-  for (const f of st.files.filter(f => f.kind === 'media')) { if (f.added || carryTag(f)) paper.insertAdjacentHTML('beforeend', '<div class="fhead"><span style="color:var(--fg)">' + esc(f.name) + '</span>' + (f.added ? addTag(f) : '') + carryTag(f) + '</div>'); paper.appendChild(mediaCard(st, f)); }
+  for (const f of st.files.filter(f => f.kind === 'media')) { if (f.added || carryTag(f)) paper.insertAdjacentHTML('beforeend', '<div class="fhead"><span style="color:var(--fg)">' + esc(f.name) + '</span>' + (f.added ? addTag(f) : '') + carryTag(f) + '<span style="flex:1"></span>' + fileLinks(f) + '</div>'); paper.appendChild(mediaCard(st, f)); }
   const rd = refDoc();
   if (rd) { const det = document.createElement('details'); det.className = 'refd'; det.open = store.get('gs.rdOpen', true); det.innerHTML = '<summary>Your document: ' + esc(rd.name) + '</summary>'; det.ontoggle = () => store.set('gs.rdOpen', det.open); paper.appendChild(det); docxCard(rd, rd.name).then(c => { c.querySelector('.fhead').remove(); det.appendChild(c); }); }
   for (const r of refsFor(st)) { const hold = document.createElement('div'); paper.appendChild(hold); refCard(r, st).then(c => { if (token === openToken) hold.replaceWith(c); }); }
@@ -843,7 +845,7 @@ async function openStudent(i, filePath) {
     if (it.f) {   // a Word, text or other file, as one card
       const f = it.f, c = f.kind === 'docx' ? await wordCard(st, f) : f.kind === 'text' ? textCard(f) : otherCard(f);
       if (token !== openToken) return;
-      const fh = c.querySelector('.fhead'); if (fh && !f.virtual && !f.rubric) fh.insertAdjacentHTML('beforeend', carryTag(f) + moveLink(f));
+      const fh = c.querySelector('.fhead'); if (fh && !f.virtual && !f.rubric) fh.insertAdjacentHTML('beforeend', carryTag(f) + moveLink(f) + fileLinks(f));
       paper.appendChild(c);
       if (filePath && f.path === filePath) c.scrollIntoView({ block: 'start' });
       continue;
@@ -853,7 +855,7 @@ async function openStudent(i, filePath) {
     const head = document.createElement('div'); head.className = 'fhead';
     head.innerHTML = '<span style="color:var(--fg)">' + esc(d.name) + '</span><span>' + d.pages.length + (d.pages.length === 1 ? ' page' : ' pages') + '</span>' + (af && af.added ? addTag(af) : '') + carryTag(batch.carry && d.pages.map(([q]) => fileByPath(st, q)).find(f => f && !f.virtual && batch.carry.flags[f.path])) +
       (on ? '' : '<span class="pill warn" style="font-size:12px;padding:2px 8px;border-radius:999px;background:var(--warn-soft);color:var(--warn)">' + (auto ? 'No marks, left out' : 'Left out') + '</span>') +
-      '<span style="flex:1"></span>' + (on || auto ? '<button class="link" style="font-size:13px;margin-right:10px" data-rotdoc="' + di + '" title="Turn every page of this file a quarter turn to the right">⟳ Turn all pages</button>' : '') + (one ? moveLink(af) : '') + '<button class="link" style="font-size:13px" data-inout="' + di + '">' + (on ? 'Leave out' : 'Bring back') + '</button>';
+      '<span style="flex:1"></span>' + (on || auto ? '<button class="link" style="font-size:13px;margin-right:10px" data-rotdoc="' + di + '" title="Turn every page of this file a quarter turn to the right">⟳ Turn all pages</button>' : '') + (one ? moveLink(af) + replaceLink(af) : '') + '<button class="link" style="font-size:13px" data-inout="' + di + '">' + (on ? 'Leave out' : 'Bring back') + '</button>' + (one ? removeLink(af, 'margin-left:10px') : '');
     paper.appendChild(head);
     if (!on && !auto) continue;   // left out on purpose: just the bar
     for (const [path, p] of d.pages) {
@@ -881,6 +883,7 @@ async function openStudent(i, filePath) {
       if (filePath && f.path === filePath && p === 0) (d.pages[0][0] === filePath ? head : wrap).scrollIntoView({ block: 'start' });   // from its bar, with Mark late and Remove in view
     }
   }
+  goneList(st);
   renderTools();
 }
 $('#paper').addEventListener('click', e => {
@@ -901,11 +904,13 @@ $('#paper').addEventListener('click', e => {
   }
   const mvf = e.target.closest('[data-mvfile]'); if (mvf) return openMoveFile(batch.students[cur], mvf.dataset.mvfile);
   if (e.target.closest('#addFileBtn')) return pickAdd(batch.students[cur]);
-  const ra = e.target.closest('[data-rmadd]');
+  const ra = e.target.closest('[data-rmfile]');
   if (ra) {   // two clicks, so a stray click can't throw a file away
-    if (!ra.dataset.armed) { ra.dataset.armed = '1'; ra.textContent = 'Click again to remove'; setTimeout(() => { if (ra.isConnected) { delete ra.dataset.armed; ra.textContent = 'Remove'; } }, 4000); return; }
-    return removeAdded(batch.students[cur], ra.dataset.rmadd);
+    if (!ra.dataset.armed) { ra.dataset.armed = '1'; ra.textContent = 'Click again to remove'; ra.style.color = 'var(--warn)'; setTimeout(() => { if (ra.isConnected) { delete ra.dataset.armed; ra.textContent = 'Remove'; ra.style.color = ''; } }, 4000); return; }
+    return removeFile(batch.students[cur], ra.dataset.rmfile);
   }
+  const rpl = e.target.closest('[data-rplfile]'); if (rpl) return pickReplace(batch.students[cur], rpl.dataset.rplfile);
+  const bk = e.target.closest('[data-backfile]'); if (bk) return bringBack(batch.students[cur], bk.dataset.backfile);
   const io = e.target.closest('[data-inout]');
   if (io) {
     const st = batch.students[cur], d = layoutOf(st)[+io.dataset.inout];
@@ -4316,7 +4321,7 @@ async function idbDo(mode, fn) {
 }
 const addKey = (st, path) => batch.id + '|' + st.key + '|' + path;
 const fmtDay = t => new Date(t).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-const addTag = f => '<span class="addtag" title="You added this file">' + (f.from ? (anonOn() ? 'Group work copy' : 'Group work, shared from ' + esc(f.from)) : 'Added by you') + ' · ' + fmtDay(f.added) + '</span><button class="link" style="font-size:13px" data-rmadd="' + esc(f.path) + '">Remove</button>' + lateLink(f);
+const addTag = f => { const was = replacedOf(f); return '<span class="addtag" title="You added this file">' + (f.from ? (anonOn() ? 'Group work copy' : 'Group work, shared from ' + esc(f.from)) : was ? 'Replaced ' + esc(fileShown(batch.students[cur], was.name)) : 'Added by you') + ' · ' + fmtDay(f.added) + '</span>' + lateLink(f); };
 async function loadAdded() {
   let recs = [];
   try { recs = (await idbDo('readonly', o => o.getAll(underId(batch.id)))) || []; } catch { return; }
@@ -4353,7 +4358,7 @@ async function addFiles(st, list, quiet) {
     const bytes = new Uint8Array(await e.file.arrayBuffer());
     const name = e.file.name.replace(/[\\/]+/g, '-'), base = st.key + '/' + name;
     let path = base, k = 2;
-    while (st.files.some(f => f.path === path)) path = base.replace(/(\.[^./]+)?$/, ' (added ' + k++ + ')$1');
+    while (st.files.some(f => f.path === path) || (st.gone || []).some(f => f.path === path)) path = base.replace(/(\.[^./]+)?$/, ' (added ' + k++ + ')$1');
     const f = await makeFile(path, bytes); f.added = Date.now(); f.akey = st.key; if (e.from) f.from = e.from;
     if (f.photoTurn) f.rot = { 0: f.photoTurn };
     if (viewable(f)) {
@@ -4382,6 +4387,96 @@ async function removeAdded(st, path) {
   if (st.forder) st.forder = st.forder.filter(x => x !== 'f:' + path);
   refound(st); saveSoon(); renderList(); openStudent(cur);
   toast('Removed ' + fileShown(st, f.name));
+}
+/* ---------------- remove or replace any file on a student's paper ---------------- */
+// Nothing is thrown away: a removed file leaves the paper and the export, and waits in st.gone with its marks for Bring back.
+// batch.removed = { path: { t, by } } keeps it off when the download opens again; by is the file that replaced it. Bring back leaves { back: t }, so a merge can tell.
+const markCount = f => Object.values(f.marks || {}).reduce((n, a) => n + a.length, 0);
+const replacedOf = f => { const st = batch && batch.students[cur]; if (!st || !batch.removed) return null; const p = Object.keys(batch.removed).find(k => batch.removed[k].by === f.path && !batch.removed[k].back); return p ? ((st.gone || []).find(g => g.path === p) || { name: p.slice(p.lastIndexOf('/') + 1) }) : null; };
+const removeLink = (f, css) => '<button class="link" style="font-size:13px;' + (css || '') + '" data-rmfile="' + esc(f.path) + '" title="Take this file off this student. It waits at the bottom of the paper, with Bring back.">Remove</button>';
+const replaceLink = f => '<button class="link" style="font-size:13px;margin-right:10px" data-rplfile="' + esc(f.path) + '" title="Put a different file in its place, like a rescan or a corrected copy">Replace…</button>';
+const fileLinks = f => f.virtual || f.rubric ? '' : replaceLink(f) + removeLink(f);
+function goneNow(st, f) {
+  if (!f) return;
+  st.files.splice(st.files.indexOf(f), 1); (st.gone ||= []).push(f);
+  if (st.layout) { st.layout = st.layout.map(d => ({ ...d, pages: d.pages.filter(([q]) => q !== f.path) })).filter(d => d.pages.length); if (!st.layout.length) st.layout = null; }
+  if (st.forder) st.forder = st.forder.filter(x => x !== 'f:' + f.path);
+}
+async function removeFile(st, path, quiet) {
+  const f = fileByPath(st, path); if (!f) return;
+  await Promise.all([...wordSaves].map(s => s()));   // boxes highlighted a moment ago count
+  const n = markCount(f), nm = fileShown(st, f.name);
+  if (n && !quiet && !await askDlg('Remove ' + nm + '?\n\nYou have ' + n + (n === 1 ? ' mark' : ' marks') + ' on it. The file and its marks leave this paper and the export. Bring back, at the bottom of the paper, puts both back.', { ok: 'Remove', danger: true })) return;
+  commitEditors();
+  const L0 = st.layout && JSON.parse(JSON.stringify(st.layout)), o0 = st.forder && st.forder.slice();
+  goneNow(st, f);
+  (batch.removed ||= {})[path] = { t: Date.now() };
+  refound(st); wordScoresAll(); saveNow(); renderList(); openStudent(cur);
+  if (!quiet) toastDo('Removed ' + nm, 'Undo', () => bringBack(st, path, { L: L0, o: o0 }));
+}
+async function bringBack(st, path, was) {
+  const f = (st.gone || []).find(g => g.path === path); if (!f) return;
+  st.gone.splice(st.gone.indexOf(f), 1); st.files.push(f);
+  if (was && was.L !== undefined) { st.layout = was.L; st.forder = was.o; }
+  else if (st.layout && viewable(f) && f.numPages) st.layout.push({ name: f.name, file: f.path, pages: [...Array(f.numPages).keys()].map(p => [f.path, p]) });
+  if (batch.removed && batch.removed[path]) batch.removed[path] = { back: Date.now() };
+  refound(st); wordScoresAll(); saveNow(); renderList(); openStudent(cur, path);
+  toast('Brought back ' + fileShown(st, f.name));
+}
+function pickReplace(st, path) {
+  const inp = document.createElement('input');
+  inp.type = 'file';
+  inp.onchange = () => { if (inp.files[0]) askReplace(st, path, inp.files[0]); };
+  inp.click();
+}
+async function askReplace(st, path, file) {
+  const old = fileByPath(st, path); if (!old) return;
+  const n = markCount(old), pg = k => k ? k + (k === 1 ? ' page' : ' pages') : '';
+  let np = 0;
+  if (/\.pdf$/i.test(file.name)) try { await workerReady; const d = await pdfjsLib.getDocument({ data: new Uint8Array(await file.arrayBuffer()), isEvalSupported: false }).promise; np = d.numPages; d.destroy(); } catch {}
+  const card = (name, said) => '<div style="border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:13px;min-width:0"><b style="overflow-wrap:anywhere">' + esc(name) + '</b><div class="muted">' + said + '</div></div>';
+  openDlg('<div class="bh"><h2>Replace this file?</h2><button class="icon" data-cancel aria-label="Close" style="margin-left:auto">✕</button></div>' +
+    '<div class="bb"><div style="display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:center;margin:0 0 12px">' +
+      card(fileShown(st, old.name), [pg(old.numPages), n ? n + (n === 1 ? ' mark' : ' marks') : 'no marks'].filter(Boolean).join(' · ')) + '<span class="muted">→</span>' + card(file.name, [pg(np), 'new'].filter(Boolean).join(' · ')) + '</div>' +
+    '<p style="margin:0">The new file takes the old one’s place on the paper and in the export. ' + (n ? 'Marks can’t move onto different pages, so the old file keeps its ' + n + (n === 1 ? ' mark' : ' marks') + '. It waits under Removed files, so you can bring it back.' : 'The old file waits under Removed files, so you can bring it back.') + '</p></div>' +
+    '<div class="bf"><button class="btn" data-cancel>Cancel</button><button class="btn primary" data-ok>Replace</button></div>', true);
+  $('#dlgBox').onclick = async e => {
+    if (e.target.closest('[data-cancel]')) return closeDlg();
+    if (!e.target.closest('[data-ok]')) return;
+    closeDlg();
+    await replaceFile(st, path, file);
+  };
+}
+async function replaceFile(st, path, file) {
+  const old = fileByPath(st, path); if (!old) return;
+  commitEditors();
+  // where the old file sat, so the new one goes in the same place
+  const at = st.layout ? st.layout.findIndex(d => d.pages.some(([q]) => q === path)) : -1, oi = st.forder ? st.forder.indexOf('f:' + path) : -1;
+  const had = new Set(st.files);
+  await addFiles(st, [{ path: file.name, file }], true);
+  const nf = st.files.find(f => !had.has(f)); if (!nf) return;
+  if (at >= 0) { const k = st.layout.findIndex(d => d.file === nf.path); if (k >= 0) { const [d] = st.layout.splice(k, 1); st.layout.splice(Math.min(at, st.layout.length), 0, d); } }
+  if (oi >= 0) st.forder.splice(oi, 0, 'f:' + nf.path);
+  if (st.inc && st.inc[path] != null) st.inc[nf.path] = st.inc[path];
+  goneNow(st, old);
+  (batch.removed ||= {})[path] = { t: Date.now(), by: nf.path };
+  refound(st); wordScoresAll(); saveNow(); renderList(); openStudent(cur, nf.path);
+  toast('Replaced ' + fileShown(st, old.name) + ' with ' + nf.name);
+}
+function goneList(st) {
+  if (!st.gone || !st.gone.length) return;
+  const el = document.createElement('div'); el.className = 'gonelist';
+  el.innerHTML = '<b>Removed files</b>' + st.gone.map(f => { const r = (batch.removed || {})[f.path] || {}, n = markCount(f);
+    return '<div class="gonerow"><span>' + [esc(fileShown(st, f.name)), f.numPages ? f.numPages + (f.numPages === 1 ? ' page' : ' pages') : '', n ? n + (n === 1 ? ' mark' : ' marks') : '', r.t ? (r.by ? 'replaced ' : 'removed ') + fmtDay(r.t) : ''].filter(Boolean).join(' · ') + '</span><span style="flex:1"></span><button class="link" style="font-size:13px" data-backfile="' + esc(f.path) + '">Bring back</button></div>'; }).join('');
+  $('#paper').appendChild(el);
+}
+// A short note with one button, like Undo. It stays a little longer than a plain one.
+function toastDo(msg, label, fn) {
+  const t = $('.toast');
+  toast(msg, 6000);
+  const b = document.createElement('button'); b.className = 'tact'; b.textContent = label;
+  b.onclick = () => { t.hidden = true; t.textContent = ''; fn(); };
+  t.append(' ', b);
 }
 function refound(st) {
   const all = st.files.filter(f => f.kind !== 'docx' && fileIn(st, f)).flatMap(f => (f.scan && f.scan.found) || []).concat(st.files.flatMap(wordFound));
@@ -6217,4 +6312,4 @@ for (const el of document.querySelectorAll('.gsVer')) el.textContent = versionLa
 if (gsData.info.note) { const el = $('#bootNote'); el.textContent = gsData.info.note; el.hidden = false; toast(gsData.info.note, 15000); }
 
 window.__gs_pickMany = pickMany;
-window.__gs = { stickerText, startScorePlace, stopScorePlace, saveTrouble, batchIdOf, wordScore, wordScoresAll, restoreBackup, fileSeq, moveFile, openMoveFile, calcEval, openCalc, pageLit, setPageLit, lightMenuDo, lightChips, ensureCounts, addRefs, refs: () => refFiles, matchToRoster, guessAmong, expandPicked, lightOpts, isRubricPage, openAnon, setAnon, anonOrder, anonOn, openLight, lightFor, lightAuto, openSplit, sp: () => SP, bringIn, sortGuess, openWord, wordBytes, reopenKept, forgetKept, kept: () => keptMeta, addFiles, removeAdded, nextUnscored, openDisplay, trimToInk, intake, parseGrade, scanFile, scanAll, state: () => ({ batch, cur, setup, pages, zoom, lib }), SCALE12, SCALE_FIVES, RUBRIC_STEPS, percentWith, ownGrade, roundPct, fmtNum, fmtPct, saveNow, undo, redo, gsData, gradeOf, percentFor, flattenDoc, exportPlan, layoutOf, docIn, openStudent, setTool };
+window.__gs = { removeFile, bringBack, replaceFile, stickerText, startScorePlace, stopScorePlace, saveTrouble, batchIdOf, wordScore, wordScoresAll, restoreBackup, fileSeq, moveFile, openMoveFile, calcEval, openCalc, pageLit, setPageLit, lightMenuDo, lightChips, ensureCounts, addRefs, refs: () => refFiles, matchToRoster, guessAmong, expandPicked, lightOpts, isRubricPage, openAnon, setAnon, anonOrder, anonOn, openLight, lightFor, lightAuto, openSplit, sp: () => SP, bringIn, sortGuess, openWord, wordBytes, reopenKept, forgetKept, kept: () => keptMeta, addFiles, removeAdded, nextUnscored, openDisplay, trimToInk, intake, parseGrade, scanFile, scanAll, state: () => ({ batch, cur, setup, pages, zoom, lib }), SCALE12, SCALE_FIVES, RUBRIC_STEPS, percentWith, ownGrade, roundPct, fmtNum, fmtPct, saveNow, undo, redo, gsData, gradeOf, percentFor, flattenDoc, exportPlan, layoutOf, docIn, openStudent, setTool };

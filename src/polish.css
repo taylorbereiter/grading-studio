@@ -131,3 +131,8 @@
 .mk .mkusual{font-size:12px;margin-top:3px}
 @media (max-width:560px){.mk .mkrow{grid-template-columns:36px 1fr}.mk .mkrow>div{grid-column:2}}
 .mk .mkpic canvas{background:#fff;border-radius:6px}
+/* removed files, at the bottom of a student's paper */
+.gonelist{display:flex;flex-direction:column;gap:8px;margin:18px 0 24px;padding:12px 16px;border:1px dashed var(--line-strong);border-radius:var(--r-sm);background:var(--surface);font-size:14px;color:var(--fg-2)}
+.gonelist b{color:var(--fg)}
+.gonerow{display:flex;align-items:center;gap:10px;border-top:1px solid var(--line);padding-top:8px}
+.toast .tact{pointer-events:auto;margin-left:12px;background:none;border:0;padding:0;font:inherit;color:var(--accent-soft);text-decoration:underline;text-underline-offset:2px;cursor:pointer}
