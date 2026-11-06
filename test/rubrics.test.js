@@ -497,7 +497,7 @@ test('the overview counts 0, leaves out missing, excused and partial, and says s
   assert.ok(Math.abs(s.mean - 19.5 / 3) < 1e-9);
   // Each student's own percent, averaged: 0 is 48%, 9.5 is 89%, 10 is 91%.
   const pcts = await page.evaluate(() => [0, 9.5, 10].map(t => window.__gs.percentFor(t)));
-  assert.equal(s.meanPct, Math.round((pcts[0] + pcts[1] + pcts[2]) / 3));
+  assert.equal(s.meanPct, Math.round((pcts[0] + pcts[1] + pcts[2]) / 3 * 100) / 100, 'to the hundredth');
   assert.equal(s.bins.length, 13);
   assert.deepEqual(s.bins.filter(b => b.n).map(b => [b.lo, b.n]), [[0, 1], [9, 1], [10, 1]], 'a half point counts with the whole number below it');
 
