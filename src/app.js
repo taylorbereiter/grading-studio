@@ -1686,9 +1686,10 @@ function renderList() {
       : manyReads(st) ? '<span class="sc" style="color:var(--warn)" title="More than one grade found on the paper. Check the Grade sheet.">?</span>'
       : st.doubts && st.doubts.length ? '<span class="sc" style="color:var(--warn)" title="A reading on the paper may not be a grade. Confirm it on the Grade sheet.">?</span>'
       : hasMarks(st) ? '<span class="dot" title="Marked"></span>' : '';
+    const sent = st.grade.sent ? '<span class="sent" title="You exported this paper on its own at ' + esc(sentWhen(st.grade.sent)) + '">↗ sent</span>' : '';
     const nAdd = st.files.filter(f => f.added && !f.from).length, re = st.files.some(f => Object.values(f.sc || {}).some(r => r.re)), grp = st.files.some(f => f.from || Object.values(f.sc || {}).some(r => r.w)) || st.files.some(f => !f.added && shareCopies(st, f).length);
     return '<button class="stu' + (i === cur ? ' on' : '') + (st.files.length ? '' : ' empty') + '" data-i="' + i + '"><span class="num">' + (pos + 1) + '</span><span class="nm" title="' + esc(shownName(st, i)) + '">' + esc(shownName(st, i)) + '</span>' + (anonOn() ? '' : whoBtn('data-wi="' + i + '"', st.key)) +
-      '<span style="display:inline-flex;align-items:center;gap:4px">' + (st.files.length || noScore(st) ? '' : '<span class="muted" style="font-size:11px">no paper</span>') + (g.status === 'late' ? '<span class="stag" title="You marked this student late">late</span>' : '') + (g.out ? '<span class="stag out" title="Left out of the average">left out</span>' : '') + (nAdd ? '<span class="add" title="' + nAdd + (nAdd === 1 ? ' file' : ' files') + ' added by you">+' + nAdd + '</span>' : '') + (re ? '<span class="add" title="A page needs a rescan">⚑</span>' : '') + (groupOf(st) ? '<span class="add grp" title="Group work: marked and graded once with ' + esc(groupNames(groupMates(st))) + '">group</span>' : grp ? '<span class="add grp" title="Group work: shares pages or a file with another student">shared</span>' : '') + carryPill(st) + right + '</span></button>';
+      '<span style="display:inline-flex;align-items:center;gap:4px">' + (st.files.length || noScore(st) ? '' : '<span class="muted" style="font-size:11px">no paper</span>') + (g.status === 'late' ? '<span class="stag" title="You marked this student late">late</span>' : '') + (g.out ? '<span class="stag out" title="Left out of the average">left out</span>' : '') + (nAdd ? '<span class="add" title="' + nAdd + (nAdd === 1 ? ' file' : ' files') + ' added by you">+' + nAdd + '</span>' : '') + (re ? '<span class="add" title="A page needs a rescan">⚑</span>' : '') + (groupOf(st) ? '<span class="add grp" title="Group work: marked and graded once with ' + esc(groupNames(groupMates(st))) + '">group</span>' : grp ? '<span class="add grp" title="Group work: shares pages or a file with another student">shared</span>' : '') + carryPill(st) + sent + right + '</span></button>';
   }).join('');
   const on = $('#stuList .on'); if (on) on.scrollIntoView({ block: 'nearest' });
   const nExp = exportPlan(true).length;
@@ -1749,7 +1750,7 @@ function renderGrade() {
   h += '<div class="total">' + totalHtml(st) + '</div>' + statusHtml(st);
   h += '<div class="cmt"><h3 style="margin-bottom:6px">Comment for ManageBac</h3><textarea id="cmtIn" placeholder="Optional. Shows in the Grades list so you can copy it.">' + esc(g.comment) + '</textarea></div>';
   const navAt = anonOn() ? anonPos(cur) : cur;   // the order on screen
-  h += '<div class="nav"><button class="btn" id="prevBtn" ' + (navAt ? '' : 'disabled') + '>◀ Previous</button><button class="btn primary" id="nextBtn" ' + (navAt < batch.students.length - 1 ? '' : 'disabled') + '>Next ▶</button></div>';
+  h += '<div class="nav">' + oneOutHtml(st) + '<button class="btn" id="prevBtn" ' + (navAt ? '' : 'disabled') + '>◀ Previous</button><button class="btn primary" id="nextBtn" ' + (navAt < batch.students.length - 1 ? '' : 'disabled') + '>Next ▶</button></div>';
   h += histSlot(st);
   h += '<div class="hint">Keys: <kbd>←</kbd> <kbd>→</kbd> or <kbd>↑</kbd> <kbd>↓</kbd> students · <kbd>N</kbd> next unscored · <kbd>=</kbd> calculator · V P H O T C K E tools · ' + keyLabel('⌘Z undo, ⇧⌘Z redo') + ' · <button class="link" data-keys style="font-size:12.5px">All keys ( ? )</button></div>';
   $('#grade').innerHTML = h;
@@ -1771,6 +1772,7 @@ function paperScore(st) {
   return ty !== '' && ty != null && !isNaN(+ty) ? +ty : null;
 }
 $('#grade').addEventListener('click', e => {
+  if (e.target.closest('#oneOutBtn')) return exportOne(batch.students[cur]);
   const b = e.target.closest('.scores button');
   if (b) {
     const st = batch.students[cur], i = +b.closest('.scores').dataset.c, v = +b.dataset.v;
@@ -2280,6 +2282,50 @@ async function openExport() {
     xBusy = false;
     for (const b of box.querySelectorAll('[data-go]')) b.disabled = false;
   };
+}
+// Export one student's paper on its own, right after marking it, so their feedback can go out now.
+// Same rules as Export marked (a file with any mark goes back whole, scored Word rubrics as Word files) and her saved export options.
+function sentWhen(t) {
+  const d = new Date(t), now = new Date(), hm = d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  return d.toDateString() === now.toDateString() ? hm : d.toLocaleDateString([], { day: 'numeric', month: 'short' }) + ', ' + hm;
+}
+function oneOutHtml(st) {
+  if (!st.files.length) return '';
+  const nm = anonOn() ? 'this' : esc(st.key) + '’s', g = st.grade;
+  return '<div class="oneout"><button class="btn" id="oneOutBtn" title="Download just this student’s marked file, ready to upload. Uses your Export marked options."><span aria-hidden="true">⤓</span> Export ' + nm + ' paper</button>' +
+    '<p class="oneout-say' + (g.sent ? ' ok' : '') + '" id="oneOutSay">' + (g.sent ? '✓ Exported at ' + esc(sentWhen(g.sent)) + '. Export again after any change.' : 'Just their marked file, ready to upload.') + '</p></div>';
+}
+async function exportOne(st) {
+  if (xBusy) return toast('The last export is still going. It will say when it’s done.');
+  const btn = $('#oneOutBtn'), say = t => { const el = $('#oneOutSay'); if (el) { el.className = 'oneout-say'; el.textContent = t; } };
+  saveNow(); commitEditors(); wordScoresAll();
+  if (batch.lineBusy) await batch.lineRun;
+  const b0 = batch, mine = () => exportPlan(false).filter(o => o.st === st);
+  let items = mine();
+  if (!items.length && (!scanned || scanP)) { say('Reading the paper first…'); await scanAll(); if (batch !== b0) return; items = mine(); }   // a typed grade alone counts as a mark
+  const who = anonOn() ? 'this paper' : st.key + '’s paper';
+  if (!items.length) { renderGrade(); return toast('Nothing on ' + who + ' is marked yet. Mark it, then export.'); }
+  xBusy = true; if (btn) btn.disabled = true;
+  const files = {}, failed = [];
+  try {
+    for (let i = 0; i < items.length; i++) {
+      say(items.length > 1 ? 'Baking in marks ' + (i + 1) + ' of ' + items.length + '…' : 'Baking in marks…');
+      const o = items[i];
+      const base = o.path.split('/').pop(), name = base.includes(st.key) ? base : st.key + ' - ' + base;   // her own download names each file for its student
+      try { files[name] = o.raw ? o.f.data : await flattenDoc(st, o.d, 150, xEdit(), keyOn()); }
+      catch (er) { console.error(o.path, er); failed.push({ path: o.path, st, why: exportWhy(er, false) }); }
+    }
+    const names = Object.keys(files);
+    if (!names.length) throw new Error('the file couldn’t be made');
+    if (names.length === 1) await saveBlob(names[0], new Blob([files[names[0]]], { type: /\.pdf$/i.test(names[0]) ? 'application/pdf' : 'application/octet-stream' }));
+    else { const z = {}; for (const n of names) z[n] = [files[n], { level: 0 }]; await saveBlob(st.key + ' - ' + batch.name + '.zip', new Blob([fflate.zipSync(z)], { type: 'application/zip' })); }
+    if (batch !== b0) return;
+    st.grade.sent = Date.now(); saveSoon();
+    toast(names.length === 1 ? 'Saved “' + names[0] + '”.' : 'Saved ' + names.length + ' files for ' + (anonOn() ? 'this student' : st.key) + ' in one ZIP.', 5000);
+    if (failed.length) sayDlg(failed.length + (failed.length === 1 ? ' file couldn’t' : ' files couldn’t') + ' be made: ' + failed.map(f => f.path.split('/').pop() + ' (' + f.why + ')').join(', ') + '. The rest downloaded.');
+  } catch (er) { console.error(er); toast('Something went wrong: ' + (er.message || er), 6000); }
+  finally { xBusy = false; }
+  if (batch === b0) { renderList(); if (batch.students[cur] === st) renderGrade(); }
 }
 // Inside a published claude.ai page, files are offered through its downloads prompt; as a local file, a normal download.
 const downloadsP = window.claude && typeof window.claude.use === 'function' ? window.claude.use('downloads').catch(() => null) : Promise.resolve(null);
