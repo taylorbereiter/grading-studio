@@ -267,7 +267,18 @@ body{padding-bottom:var(--savebar,0px)}.app{height:calc(100vh - var(--savebar,0p
 .lchip button+button{border-left:1px solid var(--line-strong);padding:3px 7px;color:var(--muted)}
 .lchip.off{background:var(--surface-2);border-color:var(--line-strong)}
 .lchip.off button[data-lpg]{color:var(--muted)}
-#lmenu{position:absolute;top:34px;left:6px;z-index:6;background:var(--surface);border:1px solid var(--line-strong);border-radius:10px;box-shadow:0 12px 32px rgba(0,0,0,.18);padding:6px;display:flex;flex-direction:column;min-width:260px}
+#lmenu{position:absolute;top:34px;left:6px;z-index:6;width:300px;max-height:calc(100% - 44px);overflow:auto;background:var(--surface);border:1px solid var(--line-strong);border-radius:10px;box-shadow:0 12px 32px rgba(0,0,0,.18);padding:6px;display:flex;flex-direction:column;min-width:260px}
+.lchip.own button[data-lpg] span::after{content:'';display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--accent);margin-left:5px;vertical-align:1px}
+.lchip.off.own button[data-lpg] span::after{background:var(--muted)}
+#lmenu .lmsl{display:grid;grid-template-columns:104px 1fr 30px;gap:8px;align-items:center;font-size:13px;padding:3px 8px}
+#lmenu .lmsl b{font-size:12px;color:var(--muted);text-align:right;font-weight:500}
+#lmenu .lmsl input{width:100%;accent-color:var(--accent)}
+#lmenu .lmchk{display:flex;gap:8px;align-items:center;font-size:13px;padding:4px 8px}
+#lmenu .lmacts{display:flex;gap:8px;align-items:center;padding:6px 8px 8px}
+#lmenu .lmacts button{padding:5px 11px;font-size:13px}
+#lmenu .lmacts button.link{padding:0;background:none;color:var(--accent);text-decoration:underline;text-underline-offset:2px}
+#lmenu .lmacts button.primary{background:var(--accent);color:#fff;border:1px solid var(--accent)}
+#lmenu .lmsep{border-top:1px solid var(--line);margin:4px 0}
 #lmenu .dl{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;padding:6px 8px 2px}
 #lmenu button{border:0;background:none;text-align:left;padding:7px 8px;border-radius:6px;font:inherit;font-size:14px;color:var(--fg);cursor:pointer}
 #lmenu button:hover{background:var(--accent-soft)}

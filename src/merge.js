@@ -57,7 +57,7 @@ function decideRec(a, b, ta, tb) {
 const BLANK_REC = () => ({ f: {}, g: { rubric: [], points: '', comment: '' }, h: {} });
 // Settings of the download itself rather than of a student. Each goes on its own, stamped in w.pv = { setting: v } the way a student's record is, so a change to one is never undone by a change to another.
 // w.sv is all of them together, and an old copy has only that, or nothing.
-const WORK_SET = ['carry', 'setup', 'cls', 'share', 'drive', 'light', 'lightOpt', 'lightPg', 'anon', 'moved', 'removed', 'refSkip', 'quiz'];
+const WORK_SET = ['carry', 'setup', 'cls', 'share', 'drive', 'light', 'lightOpt', 'lightPg', 'lightPgL', 'anon', 'moved', 'removed', 'refSkip', 'quiz'];
 const setOf = w => { const o = {}; if (w) for (const k of WORK_SET) if (w[k] !== undefined) o[k] = w[k]; return o; };
 const setV = w => w && w.sv ? w.sv : (h => h ? { ['~' + h]: 1 } : {})(hashOf(setOf(w)));
 const partV = (w, k) => (w.pv && w.pv[k]) || (h => h ? { ['~' + h]: 1 } : {})(hashOf(w[k]));
@@ -169,7 +169,7 @@ function placeRows(rec, line) {
 
 /* one download */
 // A setting changed on both sides with a safe answer: lists and what's kept per student or per page are pooled, and where they disagree w (the later one) stands.
-const SET_POOL = new Set(['share', 'light', 'lightPg', 'moved', 'removed', 'refSkip']);
+const SET_POOL = new Set(['share', 'light', 'lightPg', 'lightPgL', 'moved', 'removed', 'refSkip']);
 function poolOf(w, l) {
   if (Array.isArray(w) && Array.isArray(l)) return [...new Set([...l, ...w].map(x => JSON.stringify(x)))].map(x => JSON.parse(x));
   if (!w || !l || typeof w !== 'object' || typeof l !== 'object' || Array.isArray(w) || Array.isArray(l)) return w === undefined ? l : w;
