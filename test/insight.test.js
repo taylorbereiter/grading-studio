@@ -381,6 +381,72 @@ test('covers: each paper is checked only when she says so, the list shows who, a
   noErrors(page); await close();
 });
 
+test('covers: the list on the side ticks papers off, jumps to one, filters, and can untick one', async () => {
+  const { page, close } = await openApp(browser);
+  await openZip(page, zipOf(files), 'Tide essay.zip');
+  await page.evaluate(() => window.__gs.openShare());
+  await page.waitForSelector('#dlgBox [data-check]');
+  await page.waitForFunction(() => /^0 of [34] papers checked/.test(document.querySelector('#shCount').textContent));
+  await page.click('#dlgBox [data-check]');
+  await page.waitForSelector('#ccRows [data-ccgo]');
+  const total = await page.evaluate(() => window.__gs.coverList().length);
+  const rowsText = () => page.$$eval('#ccRows li', l => l.map(x => x.textContent));
+  assert.equal((await rowsText()).length, total, 'every paper is listed');
+  assert.equal(await page.$eval('#ccProg', e => e.textContent), '0 of ' + total + ' checked');
+  assert.equal(await page.$eval('#ccRows [aria-current="true"]', e => e.dataset.ccgo), '0');
+  // A click on a name opens that paper.
+  await page.click('#ccRows [data-ccgo="2"]');
+  await page.waitForFunction(() => /paper 3 of/.test(document.querySelector('#ccCount').textContent) && document.querySelector('#ccRows [aria-current="true"]').dataset.ccgo === '2');
+  // Down and up go through the list.
+  await page.keyboard.press('ArrowUp');
+  await page.waitForFunction(() => /paper 2 of/.test(document.querySelector('#ccCount').textContent));
+  await page.keyboard.press('ArrowDown');
+  await page.waitForFunction(() => /paper 3 of/.test(document.querySelector('#ccCount').textContent));
+  // Covers look right ticks it off in the list.
+  await page.waitForFunction(() => document.querySelector('#ccBody canvas'));
+  await new Promise(r => setTimeout(r, 400));
+  await page.click('#dlgBox [data-next]');
+  await page.waitForFunction(() => document.querySelector('#ccRows [data-ccgo="2"] .ccic').classList.contains('done'));
+  assert.equal(await page.$eval('#ccProg', e => e.textContent), '1 of ' + total + ' checked');
+  assert.match(await page.$eval('#ccRows [data-ccgo="2"]', e => e.textContent), /, checked/);
+  // Not checked hides it; All brings it back.
+  await page.click('#dlgBox [data-ccf="todo"]');
+  assert.equal((await rowsText()).length, total - 1);
+  assert.equal(await page.$('#ccRows [data-ccgo="2"]'), null);
+  await page.click('#dlgBox [data-ccf="all"]');
+  assert.equal((await rowsText()).length, total);
+  // Typing a name narrows the list; Enter opens the first match; arrows in the box don't turn the paper.
+  const who = await page.evaluate(() => window.__gs.state().batch.students.find(s => s.key.startsWith('Bram')).key);
+  await page.click('#ccFind'); await page.keyboard.type('bram');
+  const hits = await rowsText();
+  assert.ok(hits.length >= 1 && hits.length < total && hits.every(t => /Bram/.test(t)), hits.join(' | '));
+  const at = await page.$eval('#ccCount', e => e.textContent);
+  await page.keyboard.press('ArrowLeft');
+  assert.equal(await page.$eval('#ccCount', e => e.textContent), at);
+  await page.keyboard.press('Enter');
+  await page.waitForFunction(w => document.querySelector('#ccTitle').textContent.startsWith(w), {}, who);
+  await page.keyboard.press('Escape');
+  assert.equal(await page.$eval('#ccFind', e => e.value), '', 'Escape in the box clears it first');
+  assert.equal((await rowsText()).length, total);
+  // Mark not checked unticks a checked paper.
+  await page.click('#ccRows [data-ccgo="2"]');
+  await page.waitForFunction(() => document.querySelector('#ccState').textContent === '✓ Checked');
+  await page.click('#ccUndo');
+  await page.waitForFunction(() => document.querySelector('#ccState').textContent === 'Not checked yet');
+  assert.equal(await page.$eval('#ccProg', e => e.textContent), '0 of ' + total + ' checked');
+  assert.equal(await page.$eval('#ccUndo', e => e.hidden), true);
+  // A box she draws shows as a count on that paper's row.
+  await page.waitForFunction(() => document.querySelector('#ccBody canvas'));
+  const c = await page.$('#ccBody canvas'), b = await c.boundingBox();
+  await page.mouse.move(b.x + 30, b.y + 30); await page.mouse.down(); await page.mouse.move(b.x + 120, b.y + 70, { steps: 3 }); await page.mouse.up();
+  await page.waitForFunction(() => /1 box/.test(document.querySelector('#ccRows [data-ccgo="2"]').textContent));
+  // Ctrl+Z takes it back.
+  await page.keyboard.down('Control'); await page.keyboard.press('z'); await page.keyboard.up('Control');
+  await page.waitForFunction(() => !/box/.test(document.querySelector('#ccRows [data-ccgo="2"]').textContent));
+  assert.equal(await page.evaluate(() => Object.values(window.__gs.state().batch.share.boxes).flat().length), 0);
+  noErrors(page); await close();
+});
+
 test('a checked paper whose file changes is no longer checked, and old work with no checks opens fine', async () => {
   const { page, close } = await openApp(browser);
   await openZip(page, zipOf(files), 'Tide essay.zip');
@@ -415,6 +481,7 @@ test('the check says Paper N during anonymous grading, and so does Bring back', 
   await page.click('#dlgBox [data-check]');
   await page.waitForSelector('#ccBody canvas');
   assert.match(await page.$eval('#ccTitle', e => e.textContent), /^Paper \d → S-/);
+  assert.doesNotMatch(await page.$eval('#ccRows', e => e.textContent), nameRx, 'the list on the side shows stand-ins too');
   await page.keyboard.press('Escape');
   await page.waitForSelector('#dlgBox [data-shback]');
   await page.click('#dlgBox [data-shback]');
