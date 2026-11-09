@@ -818,12 +818,14 @@ async function openStudent(i, filePath) {
   paper.innerHTML = '<div class="who"><h2>' + esc(shownName(st, cur)) + '</h2><span>' + ((anonOn() ? anonPos(cur) : cur) + 1) + ' of ' + batch.students.length + '</span><span style="flex:1"></span>' +
     '<button class="btn sm" id="readBtn" title="A reading, prompt or other file shown above the papers: for everyone, or a different one for this student">Readings' + (refsFor(st).length ? ' (' + refsFor(st).length + ')' : '') + '</button>' +
     '<button class="btn sm" id="addFileBtn" title="Add a late or forgotten file to this student. You can also drop files on the paper or on a name.">+ Add file</button>' +
+    '<button class="btn sm" id="pasteTextBtn" title="Paste work a student sent as text in an email or a message. It becomes a page you can mark.">Paste text…</button>' +
     (st.files.some(viewable) || fileSeq(st).length > 1 ? '<button class="btn sm" id="arrangeBtn">Arrange pages</button>' : '') + '</div>';
   paper.scrollTop = 0;
   if (!st.files.length) {
     paper.insertAdjacentHTML('beforeend', '<div class="nofile"><b>Nothing turned in yet.</b> Add their paper here, or drop the file on the page or on their name. You can still give a score without one.' +
-      '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button class="btn sm primary" id="gapFile">Add their file…</button>' + (st.gap || batch.students.some(x => x.files.length) ? '<button class="btn sm" id="gapScan">From a scan…</button>' : '') + '</div></div>');
+      '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button class="btn sm primary" id="gapFile">Add their file…</button><button class="btn sm" id="gapPaste">Paste text…</button>' + (st.gap || batch.students.some(x => x.files.length) ? '<button class="btn sm" id="gapScan">From a scan…</button>' : '') + '</div></div>');
     $('#gapFile').onclick = () => pickAdd(st);
+    $('#gapPaste').onclick = () => openPasteText(st);
     const gs = $('#gapScan'); if (gs) gs.onclick = () => { scanInto = true; scanFor = null; $('#scanIn').click(); };
   }
   curMedia = null;
@@ -913,6 +915,7 @@ $('#paper').addEventListener('click', e => {
   }
   const mvf = e.target.closest('[data-mvfile]'); if (mvf) return openMoveFile(batch.students[cur], mvf.dataset.mvfile);
   if (e.target.closest('#addFileBtn')) return pickAdd(batch.students[cur]);
+  if (e.target.closest('#pasteTextBtn')) return openPasteText(batch.students[cur]);
   const ra = e.target.closest('[data-rmfile]');
   if (ra) {   // two clicks, so a stray click can't throw a file away
     if (!ra.dataset.armed) { ra.dataset.armed = '1'; ra.textContent = 'Click again to remove'; ra.style.color = 'var(--warn)'; setTimeout(() => { if (ra.isConnected) { delete ra.dataset.armed; ra.textContent = 'Remove'; ra.style.color = ''; } }, 4000); return; }
