@@ -41,7 +41,7 @@ function keepInfo(c, was, rows) {
   if (!Object.keys(next).length) delete c.info;
 }
 const initials = n => { const w = String(n).replace(/[,_]/g, ' ').split(/\s+/).filter(x => /\p{L}/u.test(x)); const p = /,/.test(n) ? [w[1], w[0]] : [w[0], w[w.length - 1]]; return p.filter(Boolean).map(x => x[0].toUpperCase()).join('').slice(0, 2) || '?'; };
-const whoBtn = (attrs, label) => '<span class="whob" role="button" tabindex="0" ' + attrs + ' title="Student details" aria-label="Student details for ' + esc(label) + '">i</span>';
+const whoBtn = (attrs, label) => '<span class="whob" role="button" tabindex="0" ' + attrs + ' title="Student details" aria-label="Student details for ' + esc(label) + '"></span>';
 
 // For a student in the open download: their class and roster name, or just the folder name if the roster doesn't know them.
 function personOf(st) {

@@ -96,3 +96,32 @@
 .pc-ft{border-top:1px solid var(--line);padding:9px 16px 12px;font-size:12.5px}
 .ppl td{vertical-align:middle}.ppl td.nm .link{font-weight:600;text-decoration:none;text-align:left}
 .ppl .pc-in{font-weight:400}
+/* ---------- Check the covers: the list of papers on the side ---------- */
+.dlg .box.ccbox{width:min(1280px,100%);height:calc((100vh - 32px - var(--savebar,0px)) / var(--uz))}
+.ccmid{flex:1;min-height:0;display:grid;grid-template-columns:270px minmax(0,1fr)}
+.ccmid>.bb{background:var(--surface-2);min-height:0}
+.ccside{border-right:1px solid var(--line);display:flex;flex-direction:column;min-height:0;background:var(--surface)}
+.cchead{padding:12px 14px 10px;border-bottom:1px solid var(--line)}
+.cchead b{font-size:14px}
+.ccbar{height:6px;background:var(--track);border-radius:3px;margin:7px 0 10px;overflow:hidden}
+.ccbar i{display:block;height:100%;width:0;background:var(--accent);border-radius:3px;transition:width .2s}
+.ccfind{width:100%;font:inherit;font-size:13px;padding:6px 9px;border:1px solid var(--line-strong);border-radius:7px;background:var(--surface);color:var(--fg)}
+.ccseg{display:flex;margin-top:8px}.ccseg button{flex:1;padding:5px 6px;font-size:12.5px}
+.ccrows{list-style:none;margin:0;padding:6px;overflow:auto;flex:1;min-height:0}
+.ccrows button{display:grid;grid-template-columns:18px minmax(0,1fr) auto;gap:8px;align-items:center;width:100%;text-align:left;border:0;background:none;padding:6px 8px;border-radius:7px;font-size:13.5px;color:var(--fg)}
+.ccrows button:hover{background:var(--surface-2)}
+.ccrows button[aria-current="true"]{background:var(--accent-soft);box-shadow:inset 3px 0 0 var(--accent)}
+.ccic{width:16px;height:16px;border-radius:50%;border:1.5px solid var(--line-strong);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;line-height:1}
+.ccic.done{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+.ccic.flag{border-color:var(--warn);color:var(--warn)}
+.ccnm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ccnm small{display:block;color:var(--warn);font-size:11.5px;white-space:normal}
+.ccpill{font-size:11px;background:var(--surface-2);color:var(--fg-2);border-radius:999px;padding:1px 7px;margin-left:4px}
+.cccode{font-size:11.5px;color:var(--muted)}
+.ccnone{padding:10px 8px;font-size:13px;color:var(--muted)}
+.ccalldone{margin:8px 10px 10px;padding:9px 12px;border-radius:8px;background:var(--accent-soft);color:var(--accent);font-size:13px;font-weight:600}
+@media (max-width:760px){.ccmid{grid-template-columns:1fr;grid-template-rows:minmax(0,40%) minmax(0,1fr)}.ccside{border-right:0;border-bottom:1px solid var(--line)}}
+.ccrows .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.bktab .bknm .whob,.bkstu .whob{opacity:.85}.bktab tr:hover .whob{opacity:1}
+.whob::before{content:"i"}
+.bknm .whob,.bkstu .whob{margin-left:6px}

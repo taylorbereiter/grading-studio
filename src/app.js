@@ -5,6 +5,8 @@
    (per download), so the same download can be reopened later. Nothing is uploaded. */
 const $ = s => document.querySelector(s);
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+// Assignment types, for the Gradebook's term grades (src/book.js): key, full name, short name.
+const BK_TYPES = [['sum', 'Summative assessment', 'Summative'], ['ic', 'In-class assessment', 'In-class'], ['fm', 'Formative activity', 'Formative']];
 const natural = (a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
 
 /* ---------------- pdf.js worker (inlined, works from file://) ---------------- */
@@ -222,7 +224,7 @@ async function intake(entries, label, assignment, fromKeep) {   // entries: [{ p
   if (earlier) carryRoster(earlier);
   if (batch.restoredKey) { const k = batch.students.findIndex(st => st.key === batch.restoredKey); if (k >= 0) batch.restoredCur = k; }
   renderClassSel();
-  if (assignment) { assignment.batchId = id; assignment.opened = Date.now(); if (!assignment.setup || rub.toCard) assignment.setup = { ...setup, spot: undefined }; saveLib(); }
+  if (assignment) { assignment.batchId = id; assignment.opened = Date.now(); if (!assignment.setup || rub.toCard) assignment.setup = { ...setup, spot: undefined }; shareRubric(assignment); saveLib(); }
   keepWait = keepPapers(batch, label, fromKeep ? null : keepList, sameSize.length > 0);
   cur = 0; undoStack = []; selected = null;
   $('#start').hidden = true; $('#app').hidden = false;
@@ -818,12 +820,14 @@ async function openStudent(i, filePath) {
   paper.innerHTML = '<div class="who"><h2>' + esc(shownName(st, cur)) + '</h2>' + (anonOn() ? '' : whoBtn('data-wi="' + cur + '"', st.key)) + '<span>' + ((anonOn() ? anonPos(cur) : cur) + 1) + ' of ' + batch.students.length + '</span><span style="flex:1"></span>' +
     '<button class="btn sm" id="readBtn" title="A reading, prompt or other file shown above the papers: for everyone, or a different one for this student">Readings' + (refsFor(st).length ? ' (' + refsFor(st).length + ')' : '') + '</button>' +
     '<button class="btn sm" id="addFileBtn" title="Add a late or forgotten file to this student. You can also drop files on the paper or on a name.">+ Add file</button>' +
+    '<button class="btn sm" id="pasteTextBtn" title="Paste work a student sent as text in an email or a message. It becomes a page you can mark.">Paste text…</button>' +
     (st.files.some(viewable) || fileSeq(st).length > 1 ? '<button class="btn sm" id="arrangeBtn">Arrange pages</button>' : '') + '</div>';
   paper.scrollTop = 0;
   if (!st.files.length) {
     paper.insertAdjacentHTML('beforeend', '<div class="nofile"><b>Nothing turned in yet.</b> Add their paper here, or drop the file on the page or on their name. You can still give a score without one.' +
-      '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button class="btn sm primary" id="gapFile">Add their file…</button>' + (st.gap || batch.students.some(x => x.files.length) ? '<button class="btn sm" id="gapScan">From a scan…</button>' : '') + '</div></div>');
+      '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button class="btn sm primary" id="gapFile">Add their file…</button><button class="btn sm" id="gapPaste">Paste text…</button>' + (st.gap || batch.students.some(x => x.files.length) ? '<button class="btn sm" id="gapScan">From a scan…</button>' : '') + '</div></div>');
     $('#gapFile').onclick = () => pickAdd(st);
+    $('#gapPaste').onclick = () => openPasteText(st);
     const gs = $('#gapScan'); if (gs) gs.onclick = () => { scanInto = true; scanFor = null; $('#scanIn').click(); };
   }
   curMedia = null;
@@ -913,6 +917,7 @@ $('#paper').addEventListener('click', e => {
   }
   const mvf = e.target.closest('[data-mvfile]'); if (mvf) return openMoveFile(batch.students[cur], mvf.dataset.mvfile);
   if (e.target.closest('#addFileBtn')) return pickAdd(batch.students[cur]);
+  if (e.target.closest('#pasteTextBtn')) return openPasteText(batch.students[cur]);
   const ra = e.target.closest('[data-rmfile]');
   if (ra) {   // two clicks, so a stray click can't throw a file away
     if (!ra.dataset.armed) { ra.dataset.armed = '1'; ra.textContent = 'Click again to remove'; ra.style.color = 'var(--warn)'; setTimeout(() => { if (ra.isConnected) { delete ra.dataset.armed; ra.textContent = 'Remove'; ra.style.color = ''; } }, 4000); return; }
@@ -1975,7 +1980,7 @@ function openSetup() {
       const pageChanged = JSON.stringify(draft.rubricPage) !== JSON.stringify(setup.rubricPage) || draft.rubricPos !== setup.rubricPos;
       rowsTakenOut();
       setup = draft; store.set('gs.setup', { ...setup, spot: undefined, rubricPage: undefined });
-      if (batch && batch.assignment) { batch.assignment.setup = { ...setup, spot: undefined }; saveLib(); }
+      if (batch && batch.assignment) { batch.assignment.setup = { ...setup, spot: undefined }; shareRubric(batch.assignment); saveLib(); }
       if (batch) batch.students.forEach(refound);
       closeDlg(); renderGrade(); renderList(); saveSoon();
       for (const el of document.querySelectorAll('.docx')) if (el.wordShow) el.wordShow();   // the percent over an open Word rubric follows the new setup
@@ -3001,10 +3006,16 @@ async function checkCovers(start, onDone) {
   const list = coverList();
   if (!list.length) return toast('No papers to share');
   let pos = Math.min(start || 0, list.length - 1), token = 0, last = null, drawn = 0;
-  openDlg('<div class="bh"><h2 id="ccTitle">Check the covers</h2><span class="muted" id="ccCount"></span><span class="ccstate" id="ccState"></span><span class="ccstate stag" id="ccFlag" hidden></span><button class="icon" data-done aria-label="Done">✕</button></div>' +
-    '<div class="bb" id="ccBody" style="background:var(--surface-2)"></div>' +
-    '<div class="bf" style="justify-content:space-between"><span class="muted" style="font-size:13px;align-self:center;max-width:46%">Drag a box over a name it missed. Click one of your boxes to take it off.</span><span style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end"><button class="btn" data-every hidden>Use my last box on every paper</button><button class="btn" data-back>◀ Back</button><button class="btn primary" data-next>Next ▶</button></span></div>');
+  let find = '', only = 'all', undo = [];
+  openDlg('<div class="bh"><h2 id="ccTitle">Check the covers</h2><span class="ccstate" id="ccState"></span><button class="link ccstate" id="ccUndo" hidden>Mark not checked</button><span class="ccstate stag" id="ccFlag" hidden></span><span class="muted" id="ccCount"></span><button class="icon" data-done aria-label="Done">✕</button></div>' +
+    '<div class="ccmid"><aside class="ccside" aria-label="Papers"><div class="cchead"><b id="ccProg"></b><div class="ccbar"><i id="ccBar"></i></div>' +
+    '<input type="search" class="ccfind" id="ccFind" placeholder="Find a student" aria-label="Find a student" autocomplete="off">' +
+    '<span class="seg ccseg"><button data-ccf="all"></button><button data-ccf="todo"></button><button data-ccf="flag"></button></span></div>' +
+    '<ul class="ccrows" id="ccRows"></ul><div class="ccalldone" id="ccAllDone" hidden>✓ Every paper is checked.</div></aside>' +
+    '<div class="bb" id="ccBody"></div></div>' +
+    '<div class="bf" style="justify-content:space-between"><span class="muted" style="font-size:13px;align-self:center;max-width:46%">Drag a box over a name it missed. Click one of your boxes to take it off, or press ' + keyLabel('⌘Z') + ' for the last one.</span><span style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end"><button class="btn" data-every hidden>Use my last box on every paper</button><button class="btn" data-back>◀ Back</button><button class="btn primary" data-next>Next ▶</button></span></div>');
   const box = $('#dlgBox');
+  box.classList.add('ccbox');
   const finish = () => { if (eachKeys) document.removeEventListener('keydown', eachKeys, true); eachKeys = null; saveSoon(); (onDone || openShare)(); };
   const go = d => { pos += d; if (pos >= list.length) { toast('That was the last paper'); return finish(); } pos = Math.max(0, pos); show(); };
   // She says this one looks right, once she's seen it all. Then on to the next paper not checked yet.
@@ -3018,13 +3029,48 @@ async function checkCovers(start, onDone) {
   };
   // What the name search says about this paper, until she's checked it.
   const showFlag = () => { const el = $('#ccFlag'); if (!el) return; const { st, d } = list[pos]; el.textContent = coverOk(st, d) ? '' : nameFlag(st, d); el.hidden = !el.textContent; };
-  findNames().then(showFlag);
+  findNames().then(() => { showFlag(); rows(); });
+  // Whether this paper is checked, said in the header.
+  function head() {
+    const { st, d } = list[pos], ok = coverOk(st, d);
+    $('#ccState').textContent = ok ? '✓ Checked' : 'Not checked yet';
+    $('#ccState').className = ok ? 'ccstate' : 'ccstate stag';
+    $('#ccUndo').hidden = !ok;
+    showFlag();
+  }
+  // Her own boxes on a paper.
+  const boxCount = d => d.pages.reduce((n, [path, p]) => n + ((shareState().boxes[boxKey(path, p)] || []).length), 0);
+  const codeLine = x => codeOf(x.st) + (x.k ? '-' + (x.k + 1) : '');
+  // The papers that show in the list, with what she typed and the Not checked filter.
+  const flagOf = x => coverOk(x.st, x.d) ? '' : nameFlag(x.st, x.d).replace(/, check this one$/, '');
+  const shown = () => {
+    const q = find.trim().toLowerCase();
+    return list.map((x, i) => i).filter(i => (only === 'all' || (only === 'todo' ? !coverOk(list[i].st, list[i].d) : !!flagOf(list[i]))) && (!q || (coverName(list[i].st, list[i].k) + ' ' + codeLine(list[i])).toLowerCase().includes(q)));
+  };
+  // Every paper on the side: ticked once she's said the covers look right, and a click opens it.
+  function rows() {
+    const ul = $('#ccRows'); if (!ul) return;
+    const ok = list.map(x => coverOk(x.st, x.d)), n = ok.filter(Boolean).length, left = list.length - n;
+    $('#ccProg').textContent = n + ' of ' + list.length + ' checked';
+    $('#ccBar').style.width = (100 * n / list.length) + '%';
+    const say = list.map(flagOf), nf = say.filter(Boolean).length;
+    if (only === 'flag' && !nf) only = 'all';
+    const seg = { all: 'All ' + list.length, todo: 'Not checked ' + left, flag: 'Flagged ' + nf };
+    for (const b of box.querySelectorAll('[data-ccf]')) { b.textContent = seg[b.dataset.ccf]; b.setAttribute('aria-pressed', b.dataset.ccf === only); b.hidden = b.dataset.ccf === 'flag' && !nf; }
+    $('#ccAllDone').hidden = !!left;
+    const vis = shown();
+    ul.innerHTML = vis.map(i => {
+      const x = list[i], nb = boxCount(x.d);
+      return '<li><button data-ccgo="' + i + '"' + (i === pos ? ' aria-current="true"' : '') + '><span class="ccic' + (ok[i] ? ' done' : say[i] ? ' flag' : '') + '" aria-hidden="true">' + (ok[i] ? '✓' : say[i] ? '!' : '') + '</span>' +
+        '<span class="ccnm">' + esc(coverName(x.st, x.k)) + (nb ? '<span class="ccpill">' + nb + (nb === 1 ? ' box' : ' boxes') + '</span>' : '') + (say[i] ? '<small>' + esc(say[i]) + '</small>' : '') +
+        '<span class="sr">' + (ok[i] ? ', checked' : ', not checked yet') + '</span></span><span class="cccode">' + esc(codeLine(x)) + '</span></button></li>';
+    }).join('') || '<li class="ccnone">' + (find.trim() ? 'No one matches “' + esc(find.trim()) + '”.' : only === 'todo' ? 'Every paper is checked.' : 'Nothing to show.') + '</li>';
+    const cur = ul.querySelector('[aria-current="true"]'); if (cur) cur.scrollIntoView({ block: 'nearest' });
+  }
   async function show() {
     const my = ++token, { st, d, k } = list[pos], rx = coverRx(st);
     $('#ccTitle').textContent = coverName(st, 0) + ' → ' + codeOf(st) + (k ? '-' + (k + 1) : '');
-    $('#ccState').textContent = coverOk(st, d) ? '✓ Checked' : 'Not checked yet';
-    $('#ccState').className = coverOk(st, d) ? 'ccstate' : 'ccstate stag';
-    showFlag();
+    head(); rows();
     $('#ccCount').textContent = 'paper ' + (pos + 1) + ' of ' + list.length;
     box.querySelector('[data-back]').disabled = pos === 0;
     box.querySelector('[data-next]').textContent = pos === list.length - 1 ? 'Covers look right, done' : 'Covers look right ▶';
@@ -3059,7 +3105,7 @@ async function checkCovers(start, onDone) {
           }
           const fx = v => Math.round(v * 10000) / 10000;
           const b = [fx(clamp(sel.x / r.W, 0, 1)), fx(clamp(sel.y / r.H, 0, 1)), fx(Math.min(sel.w / r.W, 1)), fx(Math.min(sel.h / r.H, 1))];
-          own().push(b); last = { b, first: d.pages[0][0] === path && d.pages[0][1] === p, p }; coverMark(st, d, false);
+          own().push(b); undo.push({ k: boxKey(path, p), b, i: pos }); last = { b, first: d.pages[0][0] === path && d.pages[0][1] === p, p }; coverMark(st, d, false);
           box.querySelector('[data-every]').hidden = false;
           show();
         };
@@ -3069,8 +3115,14 @@ async function checkCovers(start, onDone) {
       if (my === token) drawn = my;
     } finally { for (const v of js.values()) v.destroy(); }
   }
+  // Up and down go through the list as it's shown, filtered or not.
+  const step = dd => { const vis = shown(); if (!vis.length) return; const at = vis.indexOf(pos); const to = at < 0 ? vis.find(i => dd > 0 ? i > pos : i < pos) : vis[at + dd]; if (to == null || to === pos) return; pos = to; show(); };
+  $('#ccFind').oninput = e => { find = e.target.value; rows(); };
   box.onclick = e => {
     if (e.target.closest('[data-done]')) return finish();
+    const g = e.target.closest('[data-ccgo]'); if (g) { pos = +g.dataset.ccgo; return show(); }
+    const f = e.target.closest('[data-ccf]'); if (f) { only = f.dataset.ccf; return rows(); }
+    if (e.target.closest('#ccUndo')) { coverMark(list[pos].st, list[pos].d, false); head(); return rows(); }
     if (e.target.closest('[data-back]')) return go(-1);
     if (e.target.closest('[data-next]')) return looked();
     if (e.target.closest('[data-every]') && last) {
@@ -3087,7 +3139,21 @@ async function checkCovers(start, onDone) {
   };
   if (eachKeys) document.removeEventListener('keydown', eachKeys, true);
   eachKeys = e => {
-    if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); finish(); }
+    const typing = e.target.id === 'ccFind';
+    if (e.key === 'Escape' && typing && find) { e.preventDefault(); e.stopPropagation(); e.target.value = find = ''; rows(); }
+    else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); finish(); }
+    else if (typing && e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); const vis = shown(); if (vis.length) { pos = vis[0]; show(); } }
+    else if (typing && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) return;
+    else if (!typing && (e.metaKey || e.ctrlKey) && !e.shiftKey && e.key.toLowerCase() === 'z') {
+      // Takes back the last box she drew here.
+      e.preventDefault(); e.stopPropagation();
+      const u = undo.pop(); if (!u) return toast('No box to take back');
+      const arr = shareState().boxes[u.k] || [], at = arr.lastIndexOf(u.b);
+      if (at >= 0) arr.splice(at, 1);
+      coverMark(list[u.i].st, list[u.i].d, false); saveSoon();
+      pos = u.i; show();
+    }
+    else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') { e.preventDefault(); e.stopPropagation(); step(e.key === 'ArrowUp' ? -1 : 1); }
     else if (e.key === 'ArrowLeft') { e.preventDefault(); e.stopPropagation(); go(-1); }
     else if (e.key === 'ArrowRight') { e.preventDefault(); e.stopPropagation(); go(1); }
     else if (e.key === 'Enter' && !e.target.closest('button')) { e.preventDefault(); e.stopPropagation(); looked(); }
@@ -3902,7 +3968,8 @@ function batchSummary(it) {
 function renderLib() {
   renderKept();
   const card = it => '<div class="card" draggable="true" data-card="' + it.id + '"><div class="t">' + esc(it.name) + '</div>' +
-    '<div class="m">' + esc(batchSummary(it)) + '</div>' +
+    (it.type || it.typed ? '<div class="bkpills">' + bkPill(it.type) + (it.typed ? '<span class="bkpill typed">Typed in</span>' : '') + '</div>' : '') +
+    '<div class="m">' + esc(it.typed && !it.batchId ? 'Scores typed in' + (it.due ? ' · due ' + bkDay(it.due) : '') : batchSummary(it)) + '</div>' +
     '<div class="row">' + (it.batchId && (keptMeta.get(it.batchId) || {}).papers ? '<button class="btn sm primary" data-kopen="' + esc(it.batchId) + '" data-kasg="' + it.id + '">Open</button><button class="btn sm" data-open-asg="' + it.id + '">Other download…</button>'
       : '<button class="btn sm primary" data-open-asg="' + it.id + '">Open download…</button>') + '<button class="btn sm" data-edit-asg="' + it.id + '">Edit</button></div></div>';
   const unit = u => '<div class="unit" draggable="true" data-unit="' + u.id + '">' +
@@ -3914,7 +3981,7 @@ function renderLib() {
     '<button class="addcard" data-additem="' + u.id + '">+ Assignment</button></div>';
   const block = (c, ci) => '<div class="cls" data-cls="' + esc(c.id) + '"><div class="clshead"><h3>' + esc(ci < 0 ? 'No class' : c.name) + '</h3>' +
     (ci < 0 ? '<span class="muted">Assignments with no roster. Drag them into a class.</span>' :
-      '<span class="muted">' + (c.names.length ? c.names.length + ' students on the roster' : 'No roster yet') + '</span><button class="btn sm" data-edit-class="' + ci + '">' + (c.names.length ? 'Edit roster' : 'Add roster') + '</button>' + (c.names.length ? '<button class="btn sm" data-people="' + ci + '">Students</button>' : '') + mbClassBtns(c, ci) +
+      '<span class="muted">' + (c.names.length ? c.names.length + ' students on the roster' : 'No roster yet') + '</span>' + (c.names.length ? '<button class="btn sm primary" data-book="' + esc(c.id) + '">Gradebook</button>' : '') + '<button class="btn sm" data-edit-class="' + ci + '">' + (c.names.length ? 'Edit roster' : 'Add roster') + '</button>' + (c.names.length ? '<button class="btn sm" data-people="' + ci + '">Students</button>' : '') + mbClassBtns(c, ci) +
       '<button class="icon" data-cmove="' + ci + ':-1" title="Move this class up" aria-label="Move this class up"' + (ci ? '' : ' disabled') + '>↑</button><button class="icon" data-cmove="' + ci + ':1" title="Move this class down" aria-label="Move this class down"' + (ci < lib.classes.length - 1 ? '' : ' disabled') + '>↓</button>') +
     '<span class="sp"></span><button class="btn sm" data-addunit="' + esc(c.id) + '">+ Unit</button></div>' +
     '<div class="board">' + (c.units.map(unit).join('') || '<div class="empty-note">No units yet. Click + Unit.</div>') + '</div></div>';
@@ -4042,36 +4109,83 @@ function renderTopAtlas() {
 }
 $('#topAtlas').addEventListener('click', e => { const b = e.target.closest('[data-uatlas]'); if (b) askAtlas(b.dataset.uatlas); const m = e.target.closest('[data-mbset]'); if (m) askMb(+m.dataset.mbset); });
 // The unit list follows the class picked; a class with no units gets a "Unit 1" when the assignment is saved.
+// A new assignment can go to several classes at once: each ticked class gets its own card (its own roster and download),
+// placed in that class's unit of the chosen name (made if missing). The copies share a group id, so the first rubric set
+// up in one class is given to the copies that have none yet (shareRubric).
 function editAssignment(id, unitId) {
   const f = id ? findItem(id) : null, start = f ? f : findUnit(unitId) || { c: lib.classes[0] || lib.loose, u: null };
   const it = f ? f.it : { id: uid(), name: '', classId: start.c.id };
+  const classPick = f
+    ? '<div class="field"><label for="aClass">Class</label><select id="aClass" class="btn" style="justify-content:flex-start">' + lib.classes.map(c => '<option value="' + c.id + '"' + (c === start.c ? ' selected' : '') + '>' + esc(c.name) + '</option>').join('') + '<option value=""' + (start.c === lib.loose ? ' selected' : '') + '>No class</option></select></div>'
+    : '<div class="field"><label>Classes</label><div class="ctags" id="aClasses">' + holders().map(c => '<label class="ctag"><input type="checkbox" value="' + esc(c.id) + '"' + (c === start.c ? ' checked' : '') + '><span>' + esc(c === lib.loose ? 'No class' : c.name) + '</span></label>').join('') + '</div></div>';
   openDlg('<div class="bh"><h2>' + (f ? 'Edit assignment' : 'New assignment') + '</h2></div><div class="bb">' +
     '<div class="field"><label for="aName">Name</label><input type="text" id="aName" value="' + esc(it.name) + '" placeholder="e.g. Ch 3 Analysis Paragraph"></div>' +
-    '<div class="field"><label for="aClass">Class</label><select id="aClass" class="btn" style="justify-content:flex-start">' + lib.classes.map(c => '<option value="' + c.id + '"' + (c === start.c ? ' selected' : '') + '>' + esc(c.name) + '</option>').join('') + '<option value=""' + (start.c === lib.loose ? ' selected' : '') + '>No class</option></select></div>' +
-    '<div class="field"><label for="aUnit">Unit</label><select id="aUnit" class="btn" style="justify-content:flex-start"></select></div>' +
-    '<p class="muted" style="font-size:13px;margin:0">The rubric is set the first time you open a download for it, with Rubric setup, and it’s remembered for this assignment.</p></div>' +
+    classPick +
+    '<div class="field"><label for="aUnit">Unit</label><select id="aUnit" class="btn" style="justify-content:flex-start"></select><p class="muted" id="aUnitNote" style="font-size:13px;margin:6px 0 0" hidden></p></div>' +
+    '<div class="field"><label>Type</label><div class="pseg" role="group" id="aType">' + BK_TYPES.map(([t, l]) => '<button type="button" data-atype="' + t + '" aria-pressed="' + (it.type === t) + '">' + l.replace(' assessment', '').replace(' activity', '') + '</button>').join('') + '</div><p class="muted" style="font-size:12.5px;margin:4px 0 0">Summatives and in-class assessments count toward the term grade in the Gradebook. Formative activities are feedback only.</p></div>' +
+    '<div class="field"><label for="aDue">Due</label><input type="date" id="aDue" class="btn" value="' + esc(it.due || '') + '"></div>' +
+    '<p class="muted" style="font-size:13px;margin:0">The rubric is set the first time you open a download for it, with Rubric setup, and it’s remembered for this assignment.' + (f ? '' : ' Copies in other classes get the same rubric.') + '</p></div>' +
     '<div class="bf">' + (f ? '<button class="btn" data-del style="margin-right:auto">Delete</button>' : '') + '<button class="btn" data-cancel>Cancel</button><button class="btn primary" data-ok>Save</button></div>', true);
+  const ticked = () => [...document.querySelectorAll('#aClasses input:checked')].map(x => holderById(x.value)).filter(Boolean);
   const fillUnits = keep => {
-    const c = holderById($('#aClass').value);
-    $('#aUnit').innerHTML = c.units.map(u => '<option value="' + u.id + '"' + (keep && u === keep ? ' selected' : '') + '>' + esc(u.name) + '</option>').join('') || '<option value="">Unit 1 (new)</option>';
+    if (f) {
+      const c = holderById($('#aClass').value);
+      $('#aUnit').innerHTML = c.units.map(u => '<option value="' + u.id + '"' + (keep && u === keep ? ' selected' : '') + '>' + esc(u.name) + '</option>').join('') || '<option value="">Unit 1 (new)</option>';
+      return;
+    }
+    // New: unit names from every ticked class, the one already picked kept if it's still there
+    const cs = ticked(), was = $('#aUnit').value || (keep && keep.name) || '', names = [];
+    for (const c of cs) for (const u of c.units) if (!names.includes(u.name)) names.push(u.name);
+    $('#aUnit').innerHTML = names.map(n => '<option value="' + esc(n) + '"' + (n === was ? ' selected' : '') + '>' + esc(n) + '</option>').join('') || '<option value="">Unit 1 (new)</option>';
+    const n = $('#aUnit').value || 'Unit 1', made = cs.filter(c => !c.units.some(u => u.name === n)).map(c => c === lib.loose ? 'No class' : c.name);
+    const note = $('#aUnitNote');
+    note.hidden = !(cs.length > 1 && made.length && made.length < cs.length);
+    if (!note.hidden) note.textContent = made.join(', ') + (made.length === 1 ? ' has' : ' have') + ' no unit called “' + n + '” yet, so one is made there.';
+    const ok = $('#dlgBox [data-ok]'); ok.textContent = cs.length > 1 ? 'Add to ' + cs.length + ' classes' : 'Save'; ok.disabled = !cs.length;
   };
   fillUnits(start.u);
-  $('#aClass').onchange = () => fillUnits(null);
+  if (f) $('#aClass').onchange = () => fillUnits(null);
+  else { $('#aClasses').onchange = () => fillUnits(null); $('#aUnit').onchange = () => fillUnits(null); }
   setTimeout(() => $('#aName').focus(), 0);
   $('#dlgBox').onclick = async e => {
     if (e.target.closest('[data-cancel]')) return closeDlg();
+    const tb = e.target.closest('[data-atype]');
+    if (tb) { const on = tb.getAttribute('aria-pressed') !== 'true'; for (const x of document.querySelectorAll('[data-atype]')) x.setAttribute('aria-pressed', String(on && x === tb)); return; }
     if (e.target.closest('[data-del]')) { if (!await askDlg('Delete “' + it.name + '”?', { ok: 'Delete', danger: true })) return; f.u.items.splice(f.u.items.indexOf(it), 1); saveLib(); closeDlg(); return renderLib(); }
     if (e.target.closest('[data-ok]')) {
       const name = $('#aName').value.trim(); if (!name) { $('#aName').focus(); return; }
+      const ty = document.querySelector('[data-atype][aria-pressed="true"]'), due = $('#aDue').value;
+      const setKind = a => { if (ty) a.type = ty.dataset.atype; else delete a.type; if (due) a.due = due; else delete a.due; };   // every copy in every class gets the same type and date
+      if (!f) {
+        const cs = ticked(); if (!cs.length) return;
+        const un = $('#aUnit').value || 'Unit 1', group = cs.length > 1 ? uid() : undefined;
+        cs.forEach((c, k) => {
+          let to = c.units.find(u => u.name === un);
+          if (!to) c.units.push(to = { id: uid(), name: un, items: [] });
+          const a = k ? { id: uid(), name, classId: c.id } : Object.assign(it, { name, classId: c.id });
+          if (group) a.group = group;
+          setKind(a);
+          to.items.push(a);
+        });
+        saveLib(); closeDlg(); renderLib();
+        if (cs.length > 1) toast('Added to ' + cs.map(c => c === lib.loose ? 'No class' : c.name).join(', ').replace(/, ([^,]*)$/, ' and $1'));
+        return;
+      }
       const c = holderById($('#aClass').value);
       let to = c.units.find(u => u.id === $('#aUnit').value);
       if (!to) c.units.push(to = { id: uid(), name: 'Unit 1', items: [] });
       it.name = name; it.classId = c.id;
-      if (f && f.u !== to) f.u.items.splice(f.u.items.indexOf(it), 1);
-      if (!f || f.u !== to) to.items.push(it);
+      setKind(it);
+      if (f.u !== to) f.u.items.splice(f.u.items.indexOf(it), 1);
+      if (f.u !== to) to.items.push(it);
       saveLib(); closeDlg(); renderLib();
     }
   };
+}
+// The first rubric set up for an assignment added to several classes goes to the copies that have no rubric yet.
+function shareRubric(a) {
+  if (!a || !a.group || !a.setup) return;
+  for (const c of holders()) for (const u of c.units) for (const x of u.items) if (x !== a && x.group === a.group && !x.setup) x.setup = JSON.parse(JSON.stringify(a.setup));
 }
 // Class lists: pasted from a spreadsheet, or a .csv / .txt file. A student ID column (numbers) and an email column are kept
 // beside the name as the student's details (see people.js), and never become part of the name.
