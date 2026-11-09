@@ -219,6 +219,7 @@ body{padding-bottom:var(--savebar,0px)}.app{height:calc(100vh - var(--savebar,0p
 .outsw i{flex:none;width:30px;height:17px;border-radius:999px;background:var(--line-strong);position:relative;margin-top:1px;transition:background .15s}
 .outsw i::after{content:"";position:absolute;top:2px;left:2px;width:13px;height:13px;border-radius:50%;background:var(--surface);transition:left .15s}
 .outsw[aria-checked=true] i{background:var(--accent)}.outsw[aria-checked=true] i::after{left:15px}
+.grpband{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 10px;padding:8px 12px;border:1px solid #B9D3EC;border-radius:9px;background:var(--accent-soft);font-size:13.5px;color:var(--fg-2)}.grpband b{color:var(--fg);font-weight:600}.grpband .link{font-size:13px}
 .outsw b{font-weight:600;font-size:13.5px;display:block}.outsw small{font-size:12px;color:var(--muted);display:block;line-height:1.4;margin-top:1px}
 .prog-s kbd,.hint kbd{font:500 10.5px var(--f-body);border:1px solid var(--line-strong);border-bottom-width:2px;border-radius:4px;padding:0 4px;background:var(--surface);color:var(--muted)}
 .stu .dot{width:8px;height:8px;border-radius:50%;background:var(--accent);display:inline-block}
@@ -2743,12 +2744,12 @@ async function walkEntry(entry, prefix, out) {
 
 /* ---------------- keeping work in this browser ---------------- */
 let saveT, saveDue = false;
-function saveSoon() { clearTimeout(saveT); saveSeq++; saveDue = true; saveT = setTimeout(saveNow, 500); const el = $('#saveState'); if (el && batch) el.textContent = 'Saving…'; }
+function saveSoon() { groupSync(); clearTimeout(saveT); saveSeq++; saveDue = true; saveT = setTimeout(saveNow, 500); const el = $('#saveState'); if (el && batch) el.textContent = 'Saving…'; }
 function saveNow(leaving) {
   if (!batch || !tabLive()) return;
   clearTimeout(saveT); saveDue = false;
   if (batch.revs && tabForgot(batch)) return tabLetGo();
-  const data = { t: Date.now(), carry: batch.carry, cur, ck: batch.students[cur] && batch.students[cur].key, setup, cls: batch.classId, share: batch.share, drive: batch.drive, light: batch.light, lightOpt: batch.lightOpt, lightPg: batch.lightPg, lightPgL: batch.lightPgL, anon: batch.anon, moved: batch.moved, removed: batch.removed, refSkip: batch.refSkip, quiz: batch.quiz, read: (batch.read = paperReads()), s: {} };
+  const data = { t: Date.now(), carry: batch.carry, cur, ck: batch.students[cur] && batch.students[cur].key, setup, cls: batch.classId, share: batch.share, drive: batch.drive, light: batch.light, lightOpt: batch.lightOpt, lightPg: batch.lightPg, lightPgL: batch.lightPgL, anon: batch.anon, moved: batch.moved, removed: batch.removed, refSkip: batch.refSkip, quiz: batch.quiz, groups: batch.groups && batch.groups.length ? batch.groups : undefined, read: (batch.read = paperReads()), s: {} };
   for (const st of batch.students) {
     const f = {};
     for (const fl of st.files.concat(st.gone || [])) if (Object.values(fl.marks).some(a => a.length)) f[fl.path] = fl.marks;   // a removed file keeps its marks for Bring back
@@ -2810,6 +2811,8 @@ function restore() {
   if (data.anon) batch.anon = data.anon;
   if (data.refSkip) batch.refSkip = data.refSkip;
   if (data.quiz) batch.quiz = data.quiz;
+  batch.groups = data.groups || [];
+  groupSync();
   if (data.drive && !batch.drive) batch.drive = data.drive;
   batch.restoredCur = Math.min(data.cur || 0, batch.students.length - 1); batch.restoredKey = data.ck;
   if (n) setTimeout(() => toast('Picked up where you left off (' + n + (n === 1 ? ' student' : ' students') + ' started)'), 300);
@@ -3034,34 +3037,6 @@ const seqSig = (st, it) => it.f ? it.f.kind + (it.f.rubric ? 'R' : '') + (it.f.a
 
 /* ---------------- a file in the wrong student's folder: move it to the right one ---------------- */
 const moveLink = f => shareLink(f) + '<button class="link" style="font-size:13px;margin-right:10px" data-mvfile="' + esc(f.path) + '" title="This file belongs to someone else? Move it to the right student">Move to…</button>';
-const shareCopies = (st, f) => batch.students.filter(s => s !== st && s.files.some(x => x.from === st.key && x.name === f.name));
-const shareLink = f => { const st = batch.students[cur], n = st ? shareCopies(st, f).length : 0; return '<button class="link" style="font-size:13px;margin-right:10px" data-shfile="' + esc(f.path) + '" title="Group work: give a copy of this file to other students, each to mark on their own">Share with…' + (n ? ' (' + n + ')' : '') + '</button>'; };
-function openShareFile(st, path) {
-  const f = fileByPath(st, path); if (!f || !f.data) return;
-  const anon = anonOn(), others = batch.students.map((s, i) => ({ s, i, label: shownName(s, i) })).filter(x => x.s !== st);
-  if (anon) others.sort((a, b) => anonPos(a.i) - anonPos(b.i));
-  openDlg('<div class="bh"><h2>Share ' + esc(fileShown(st, f.name)) + '</h2><button class="icon" data-cancel aria-label="Close" style="margin-left:auto">✕</button></div>' +
-    '<div class="bb"><p class="muted" style="margin:0 0 10px;font-size:14px">For group work. Click each student who worked on it: they get their own copy of the file as it was turned in, to mark and score on their own. Your marks on this copy stay here. Remove on a copy takes it back.</p>' +
-    '<input class="btn" id="mvFind" placeholder="' + (anon ? 'Type a paper number' : 'Type a name') + '" autocomplete="off" style="width:100%;margin-bottom:8px"><div id="mvList" class="mvlist"></div></div>' +
-    '<div class="bf"><button class="btn primary" data-cancel>Done</button></div>', true);
-  const has = s => s.files.some(x => x.from === st.key && x.name === f.name);
-  const draw = () => {
-    const q = $('#mvFind').value.toLowerCase().split(/\s+/).filter(Boolean);
-    const list = others.filter(x => q.every(w => x.label.toLowerCase().split(/[\s,_-]+/).some(y => y.startsWith(w))));
-    $('#mvList').innerHTML = list.length ? list.map((x, k) => '<button class="mvrow' + (k === 0 && q.length ? ' top' : '') + '" data-shto="' + x.i + '"' + (has(x.s) ? ' disabled' : '') + '>' + esc(x.label) + '<span class="muted">' + (has(x.s) ? '✓ Has a copy' : x.s.files.length + (x.s.files.length === 1 ? ' file' : ' files')) + '</span></button>').join('') : '<p class="muted">No name matches.</p>';
-  };
-  draw();
-  $('#mvFind').oninput = draw;
-  $('#mvFind').onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); const b = $('#mvList [data-shto]:not([disabled])'); if (b) b.click(); } };
-  $('#dlgBox').onclick = async e => {
-    if (e.target.closest('[data-cancel]')) { closeDlg(); return openStudent(cur); }
-    const b = e.target.closest('[data-shto]'); if (!b || b.disabled) return;
-    const to = batch.students[+b.dataset.shto]; b.disabled = true;
-    await addFiles(to, [{ path: f.name, file: new File([f.data], f.name), from: st.key }], true);
-    toast('Shared with ' + shownName(to, +b.dataset.shto)); draw(); $('#mvFind').focus();
-  };
-  $('#mvFind').focus();
-}
 function moveFileNow(path, key) {
   const src = batch.students.find(s => s.files.some(f => f.path === path)), dst = batch.students.find(s => s.key === key);
   if (!src || !dst || src === dst || dst.files.some(f => f.path === path)) return null;
@@ -3147,7 +3122,7 @@ async function openStudent(i, filePath) {
   paper.innerHTML = '<div class="who"><h2>' + esc(shownName(st, cur)) + '</h2><span>' + ((anonOn() ? anonPos(cur) : cur) + 1) + ' of ' + batch.students.length + '</span><span style="flex:1"></span>' +
     '<button class="btn sm" id="readBtn" title="A reading, prompt or other file shown above the papers: for everyone, or a different one for this student">Readings' + (refsFor(st).length ? ' (' + refsFor(st).length + ')' : '') + '</button>' +
     '<button class="btn sm" id="addFileBtn" title="Add a late or forgotten file to this student. You can also drop files on the paper or on a name.">+ Add file</button>' +
-    (st.files.some(viewable) || fileSeq(st).length > 1 ? '<button class="btn sm" id="arrangeBtn">Arrange pages</button>' : '') + '</div>';
+    (st.files.some(viewable) || fileSeq(st).length > 1 ? '<button class="btn sm" id="arrangeBtn">Arrange pages</button>' : '') + '</div>' + groupBand(st);
   paper.scrollTop = 0;
   if (!st.files.length) {
     paper.insertAdjacentHTML('beforeend', '<div class="nofile"><b>Nothing turned in yet.</b> Add their paper here, or drop the file on the page or on their name. You can still give a score without one.' +
@@ -3233,6 +3208,7 @@ $('#paper').addEventListener('click', e => {
   const bp = e.target.closest('[data-backpg]'); if (bp) { const [i, p] = bp.dataset.backpg.split('|'); const it = outPages(batch.students[cur])[+i]; if (it) bringPageBack(batch.students[cur], it[0], +p); return; }
   const rf = e.target.closest('[data-reflag]'); if (rf) { const pg = pages.find(q => q.rchip === rf.parentNode); if (pg) scanFlag(pg); return; }
   const shf = e.target.closest('[data-shfile]'); if (shf) return openShareFile(batch.students[cur], shf.dataset.shfile);
+  if (e.target.closest('#grpBand') && groupClick(e)) return;
   const rd = e.target.closest('[data-rotdoc]');
   if (rd) {
     const st = batch.students[cur], d = layoutOf(st)[+rd.dataset.rotdoc]; if (!d) return;
@@ -4015,7 +3991,7 @@ function renderList() {
       : hasMarks(st) ? '<span class="dot" title="Marked"></span>' : '';
     const nAdd = st.files.filter(f => f.added && !f.from).length, re = st.files.some(f => Object.values(f.sc || {}).some(r => r.re)), grp = st.files.some(f => f.from || Object.values(f.sc || {}).some(r => r.w)) || st.files.some(f => !f.added && shareCopies(st, f).length);
     return '<button class="stu' + (i === cur ? ' on' : '') + (st.files.length ? '' : ' empty') + '" data-i="' + i + '"><span class="num">' + (pos + 1) + '</span><span class="nm" title="' + esc(shownName(st, i)) + '">' + esc(shownName(st, i)) + '</span>' +
-      '<span style="display:inline-flex;align-items:center;gap:4px">' + (st.files.length || noScore(st) ? '' : '<span class="muted" style="font-size:11px">no paper</span>') + (g.status === 'late' ? '<span class="stag" title="You marked this student late">late</span>' : '') + (g.out ? '<span class="stag out" title="Left out of the average">left out</span>' : '') + (nAdd ? '<span class="add" title="' + nAdd + (nAdd === 1 ? ' file' : ' files') + ' added by you">+' + nAdd + '</span>' : '') + (re ? '<span class="add" title="A page needs a rescan">⚑</span>' : '') + (grp ? '<span class="add grp" title="Group work: shares pages or a file with another student">shared</span>' : '') + carryPill(st) + right + '</span></button>';
+      '<span style="display:inline-flex;align-items:center;gap:4px">' + (st.files.length || noScore(st) ? '' : '<span class="muted" style="font-size:11px">no paper</span>') + (g.status === 'late' ? '<span class="stag" title="You marked this student late">late</span>' : '') + (g.out ? '<span class="stag out" title="Left out of the average">left out</span>' : '') + (nAdd ? '<span class="add" title="' + nAdd + (nAdd === 1 ? ' file' : ' files') + ' added by you">+' + nAdd + '</span>' : '') + (re ? '<span class="add" title="A page needs a rescan">⚑</span>' : '') + (groupOf(st) ? '<span class="add grp" title="Group work: marked and graded once with ' + esc(groupNames(groupMates(st))) + '">group</span>' : grp ? '<span class="add grp" title="Group work: shares pages or a file with another student">shared</span>' : '') + carryPill(st) + right + '</span></button>';
   }).join('');
   const on = $('#stuList .on'); if (on) on.scrollIntoView({ block: 'nearest' });
   const nExp = exportPlan(true).length;
@@ -10038,7 +10014,8 @@ async function carryInto(e, list) {
   const removed = d.removed ? Object.fromEntries(Object.entries(d.removed).filter(([p]) => c.map[p]).map(([p, r]) => [c.map[p], r.by && c.map[r.by] ? { ...r, by: c.map[r.by] } : r])) : undefined;
   const share = d.share && { ...d.share, boxes: mapBoxes(d.share.boxes, c.map), checked: mapBoxes(d.share.checked, c.map) };
   const scan = c.unchecked || !d.scan ? undefined : mapPaths(d.scan, Object.fromEntries(Object.entries(c.map).filter(([, to]) => !c.flags[to])));
-  batch.keptWork = { ...d, t: Date.now(), s, moved, removed, carry, scan, share, lightPg: mapLit(d.lightPg, c.map), lightPgL: mapLit(d.lightPgL, c.map) };
+  const groups = d.groups && d.groups.map(g => ({ k: g.k.map(k => keyOf.get(nfc(k)) || k), p: Object.fromEntries(Object.entries(g.p || {}).map(([k, p]) => [keyOf.get(nfc(k)) || k, c.map[p] || p])) }));
+  batch.keptWork = { ...d, t: Date.now(), s, moved, removed, carry, scan, share, groups, lightPg: mapLit(d.lightPg, c.map), lightPgL: mapLit(d.lightPgL, c.map) };
   batch.carry = carry;
   await carryExtras(from, carry);
   const m = keptMeta.get(from);
@@ -12004,7 +11981,7 @@ function scanFree(f, p) {
 }
 async function scanCheck(f, p, page) {
   if (f.virtual) return;
-  scanTakeHint(f, batch.students[cur]);
+  scanTakeHint(f, batch.students[cur]); groupBandRefresh();
   if (!f.sc) f.sc = {};
   if (f.sc[p] && !f.sc[p].later) return;
   let rec;
@@ -12264,7 +12241,7 @@ function scanTakeHint(f, st) {
   if (lit && st) { batch.light ||= {}; batch.light[st.key] ||= { ...lit.L }; batch.lightOpt = { ...lightOpts(), on: true }; }
   scanned = false; saveSoon();
 }
-function scanHintsAll() { if (batch) for (const st of batch.students) for (const f of st.files) if (viewable(f) && !f.virtual) scanTakeHint(f, st); scanHints.clear(); }
+function scanHintsAll() { if (batch) for (const st of batch.students) for (const f of st.files) if (viewable(f) && !f.virtual) scanTakeHint(f, st); scanHints.clear(); groupBandRefresh(); }
 
 /* ---------------- lighting in the split: only how the pages look there and in the big view ---------------- */
 const spLight = (me, i) => { const L = me.Lp[i] || me.L; return lightOn(L) ? L : null; };
@@ -12384,7 +12361,7 @@ function decideRec(a, b, ta, tb) {
   return x === y ? { pick: 'ask' } : { pick: x > y ? 'a' : 'b', by: 'date' };
 }
 const BLANK_REC = () => ({ f: {}, g: { rubric: [], points: '', comment: '' }, h: {} });
-const WORK_SET = ['carry', 'setup', 'cls', 'share', 'drive', 'light', 'lightOpt', 'lightPg', 'lightPgL', 'anon', 'moved', 'removed', 'refSkip', 'quiz'];
+const WORK_SET = ['carry', 'setup', 'cls', 'share', 'drive', 'light', 'lightOpt', 'lightPg', 'lightPgL', 'anon', 'moved', 'removed', 'refSkip', 'quiz', 'groups'];
 const setOf = w => { const o = {}; if (w) for (const k of WORK_SET) if (w[k] !== undefined) o[k] = w[k]; return o; };
 const setV = w => w && w.sv ? w.sv : (h => h ? { ['~' + h]: 1 } : {})(hashOf(setOf(w)));
 const partV = (w, k) => (w.pv && w.pv[k]) || (h => h ? { ['~' + h]: 1 } : {})(hashOf(w[k]));
@@ -13791,7 +13768,7 @@ function sideHtml(r, t, anon, crit) {
   if (out.length === 1) out.push('<div class="muted">No score, comment or marks</div>');
   return out.join('');
 }
-const PART_SAY = { setup: 'Rubric setup', cls: 'Class', share: 'Cover boxes and Claude codes', drive: 'Google Drive link', light: 'Lighting', lightOpt: 'Lighting', lightPg: 'Lighting', lightPgL: 'Lighting', anon: 'Anonymous grading', moved: 'Moved files', removed: 'Removed and replaced files', refSkip: 'Which readings each student sees', quiz: 'Quick mark boxes', carry: 'Flags on new and changed files', scan: 'Your answers about scanned pages' };
+const PART_SAY = { setup: 'Rubric setup', cls: 'Class', share: 'Cover boxes and Claude codes', drive: 'Google Drive link', light: 'Lighting', lightOpt: 'Lighting', lightPg: 'Lighting', lightPgL: 'Lighting', anon: 'Anonymous grading', moved: 'Moved files', removed: 'Removed and replaced files', refSkip: 'Which readings each student sees', quiz: 'Quick mark boxes', groups: 'Group work', carry: 'Flags on new and changed files', scan: 'Your answers about scanned pages' };
 const partNames = list => [...new Set(list.map(k => PART_SAY[k] || k))].join(', ');
 const scaleSay = su => !rubricsDiffer(su, { ...su, scale: null }) ? 'No scale: percent is the plain share of points' : !rubricsDiffer(su, { ...su, scale: SCALE12 }) ? 'The usual grading scale' : 'A grading scale of its own';
 function partSide(part, v, other, t, anon) {
@@ -15226,6 +15203,158 @@ async function marksDownload(btn) {
   bar.hidden = true; btn.disabled = false;
 }
 Object.assign(window.__gs, { marksFileText, makeMarksFile, MARKS_ASK, shareKind });
+
+/* ---------------- group work: one paper for several students, marked and graded once ---------------- */
+function groupOf(st) { return (st && batch && (batch.groups || []).find(g => g.k.includes(st.key))) || null; }
+function groupMates(st) { const g = groupOf(st); return g ? g.k.filter(k => k !== st.key).map(k => batch.students.find(s => s.key === k)).filter(Boolean) : []; }
+function groupNames(list) { return wordsJoin(list.map(s => shownName(s, batch.students.indexOf(s)))); }
+function groupFileOf(g, st) { const p = g.p && g.p[st.key]; return p ? st.files.find(f => f.path === p) || null : null; }
+
+const GROUP_SKIP = new Set(['reads']);
+function groupGradeCopy(to, from) {
+  const a = to.grade, b = from.grade;
+  for (const k of Object.keys(a)) if (!GROUP_SKIP.has(k) && !(k in b)) delete a[k];
+  for (const [k, v] of Object.entries(b)) if (!GROUP_SKIP.has(k)) a[k] = v && typeof v === 'object' ? JSON.parse(JSON.stringify(v)) : v;
+  if (!a.rubric) a.rubric = [];
+}
+const gradeSig = g => JSON.stringify(Object.fromEntries(Object.entries(g).filter(([k]) => !GROUP_SKIP.has(k)).sort()));
+
+function groupMergeMarks(into, from) {
+  for (const [p, list] of Object.entries(from || {})) {
+    const have = new Set((into[p] ||= []).map(m => JSON.stringify(m)));
+    for (const m of list) if (!have.has(JSON.stringify(m))) into[p].push(m);
+  }
+}
+
+function groupSync() {
+  if (!batch || !batch.groups || !batch.groups.length) return false;
+  let changed = false;
+  batch.groups = batch.groups.filter(g => g.k.filter(k => batch.students.some(s => s.key === k)).length > 1);
+  for (const g of batch.groups) {
+    const sts = g.k.map(k => batch.students.find(s => s.key === k)).filter(Boolean);
+    const src = sts.reduce((a, s) => ((s.grade.at || 0) > (a.grade.at || 0) ? s : a), sts[0]), sig = gradeSig(src.grade);
+    for (const s of sts) if (s !== src && gradeSig(s.grade) !== sig) { groupGradeCopy(s, src); changed = true; }
+    const files = sts.map(s => groupFileOf(g, s)).filter(Boolean);
+    if (files.length < 2) continue;
+    const base = files[0];
+    for (const f of files.slice(1)) {
+      if (f.marks !== base.marks) { groupMergeMarks(base.marks, f.marks); f.marks = base.marks; changed = true; }
+      for (const k of ['rot', 'skew']) if (base[k] || f[k]) { if (!base[k]) base[k] = f[k] || {}; if (f[k] !== base[k]) { f[k] = base[k]; changed = true; } }
+    }
+  }
+  return changed;
+}
+
+function groupAdd(st, f, to, toFile) {
+  batch.groups ||= [];
+  let g = groupOf(st);
+  if (!g) { g = { k: [st.key], p: { [st.key]: f.path } }; batch.groups.push(g); }
+  if (!g.p[st.key]) g.p[st.key] = f.path;
+  const old = groupOf(to); if (old && old !== g) groupLeave(to, true);
+  if (!g.k.includes(to.key)) g.k.push(to.key);
+  if (toFile) g.p[to.key] = toFile.path; else delete g.p[to.key];
+  if (gradeHasWork(st.grade) || !gradeHasWork(to.grade)) { groupGradeCopy(to, st); if (!st.grade.at) touchGrade(st); to.grade.at = st.grade.at; }
+  else { groupGradeCopy(st, to); }
+  groupSync();
+}
+function groupLeave(st, quiet) {
+  const g = groupOf(st); if (!g) return;
+  const f = groupFileOf(g, st);
+  if (f) { f.marks = JSON.parse(JSON.stringify(f.marks || {})); for (const k of ['rot', 'skew']) if (f[k]) f[k] = { ...f[k] }; }
+  g.k = g.k.filter(k => k !== st.key); delete g.p[st.key];
+  if (g.k.length < 2) { batch.groups = batch.groups.filter(x => x !== g); const last = g.k[0] && batch.students.find(s => s.key === g.k[0]), lf = last && groupFileOf(g, last); if (lf) lf.marks = JSON.parse(JSON.stringify(lf.marks || {})); }
+  touchGrade(st);
+  if (!quiet) { saveSoon(); renderList(); openStudent(cur); toast(shownName(st, batch.students.indexOf(st)) + ' is graded on their own now'); }
+}
+
+function splitMates(st) {
+  const out = [];
+  for (const f of st.files) for (const r of Object.values(f.sc || {})) for (const k of r.w || []) {
+    const s = batch.students.find(x => x.key === k); if (!s || s === st || out.some(o => o.s === s)) continue;
+    const sf = s.files.find(x => Object.values(x.sc || {}).some(q => (q.w || []).includes(st.key)));
+    out.push({ s, f: sf, mine: f });
+  }
+  return out;
+}
+const pagesIn = f => f.numPages || Object.keys(f.sc || {}).length;
+const allShared = (f, k) => !!f && pagesIn(f) > 0 && [...Array(pagesIn(f)).keys()].every(p => f.sc && f.sc[p] && (f.sc[p].w || []).includes(k));
+function groupFromSplit(st) {
+  const mates = splitMates(st); if (!mates.length) return;
+  for (const { s, f, mine } of mates) groupAdd(st, mine, s, allShared(mine, s.key) && allShared(f, st.key) && pagesIn(f) === pagesIn(mine) ? f : null);
+  const g = groupOf(st); if (g && !Object.keys(g.p).some(k => k !== st.key)) g.p = {};
+  saveSoon(); renderList(); openStudent(cur);
+  toast('Marked and graded once with ' + groupNames(groupMates(st)));
+}
+
+function groupBand(st) {
+  const mates = groupMates(st);
+  if (mates.length) {
+    const g = groupOf(st), marks = !!groupFileOf(g, st);
+    return '<div class="grpband" id="grpBand"><b>Group work</b><span>with ' + esc(groupNames(mates)) + ' · ' + (marks ? 'marks and grade shared' : 'grade shared') + '</span><span style="flex:1"></span>' +
+      '<button class="link" data-grpout title="Give this student their own grade and their own copy of the marks so far. The rest stay together.">Grade on their own…</button></div>';
+  }
+  const sm = splitMates(st);
+  if (!sm.length) return '';
+  return '<div class="grpband" id="grpBand"><b>Group work</b><span>pages shared with ' + esc(groupNames(sm.map(o => o.s))) + ', each graded on their own</span><span style="flex:1"></span>' +
+    '<button class="link" data-grpjoin title="One set of marks and one grade for all of them">Mark and grade once for the group</button></div>';
+}
+function groupBandRefresh() {
+  if (!batch || !$('#paper .who')) return;
+  const html = groupBand(batch.students[cur]), old = $('#grpBand');
+  if (old) { if (html) old.outerHTML = html; else old.remove(); }
+  else if (html) $('#paper .who').insertAdjacentHTML('afterend', html);
+}
+function groupClick(e) {
+  const st = batch.students[cur];
+  if (e.target.closest('[data-grpjoin]')) { groupFromSplit(st); return true; }
+  if (e.target.closest('[data-grpout]')) {
+    askDlg(shownName(st, cur) + ' gets their own grade and their own copy of the marks so far. ' + groupNames(groupMates(st)) + (groupMates(st).length > 1 ? ' stay together.' : ' keeps theirs.'), { ok: 'Grade on their own', cancel: 'Keep the group' }).then(ok => { if (ok) groupLeave(st); });
+    return true;
+  }
+  return false;
+}
+
+/* ---------------- Group work… on a file ---------------- */
+const shareCopies = (st, f) => batch.students.filter(s => s !== st && s.files.some(x => x.from === st.key && x.name === f.name));
+const shareLink = f => { const st = batch.students[cur], n = st ? Math.max(shareCopies(st, f).length, groupMates(st).length) : 0; return '<button class="link" style="font-size:13px;margin-right:10px" data-shfile="' + esc(f.path) + '" title="Group work: give this paper to the students who worked on it, and mark and grade it once for all of them">Group work…' + (n ? ' (' + n + ')' : '') + '</button>'; };
+function openShareFile(st, path) {
+  const f = fileByPath(st, path); if (!f || !f.data) return;
+  const anon = anonOn(), others = batch.students.map((s, i) => ({ s, i, label: shownName(s, i) })).filter(x => x.s !== st);
+  if (anon) others.sort((a, b) => anonPos(a.i) - anonPos(b.i));
+  const copyOf = s => s.files.find(x => x.from === st.key && x.name === f.name);
+  let once = !(shareCopies(st, f).length && !groupOf(st));
+  openDlg('<div class="bh"><h2>Group work: ' + esc(fileShown(st, f.name)) + '</h2><button class="icon" data-cancel aria-label="Close" style="margin-left:auto">✕</button></div>' +
+    '<div class="bb"><button class="outsw" id="grpOnce" role="switch" aria-checked="' + once + '" style="margin:0 0 12px"><i></i><span><b>Mark and grade once for the group</b><small>Your marks, score and comment show on every partner’s paper. Turn off to mark each copy on its own.</small></span></button>' +
+    '<p class="muted" style="margin:0 0 10px;font-size:14px">Click each student who worked on it with ' + esc(shownName(st, batch.students.indexOf(st))) + '. They get their own copy of the file, so the export gives each of them the marked paper. Remove on a copy takes it back.</p>' +
+    '<input class="btn" id="mvFind" placeholder="' + (anon ? 'Type a paper number' : 'Type a name') + '" autocomplete="off" style="width:100%;margin-bottom:8px"><div id="mvList" class="mvlist"></div></div>' +
+    '<div class="bf"><button class="btn primary" data-cancel>Done</button></div>', true);
+  const inGrp = s => groupMates(st).includes(s);
+  const draw = () => {
+    const q = $('#mvFind').value.toLowerCase().split(/\s+/).filter(Boolean);
+    const list = others.filter(x => q.every(w => x.label.toLowerCase().split(/[\s,_-]+/).some(y => y.startsWith(w))));
+    $('#mvList').innerHTML = list.length ? list.map((x, k) => { const has = !!copyOf(x.s), g = inGrp(x.s), done = once ? g : has;
+      return '<button class="mvrow' + (k === 0 && q.length ? ' top' : '') + '" data-shto="' + x.i + '"' + (done ? ' disabled' : '') + '>' + esc(x.label) + '<span class="muted">' + (g ? '✓ In the group' : has ? '✓ Has a copy' : x.s.files.length ? x.s.files.length + (x.s.files.length === 1 ? ' file' : ' files') : 'No files') + '</span></button>'; }).join('') : '<p class="muted">No name matches.</p>';
+  };
+  draw();
+  $('#mvFind').oninput = draw;
+  $('#mvFind').onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); const b = $('#mvList [data-shto]:not([disabled])'); if (b) b.click(); } };
+  $('#dlgBox').onclick = async e => {
+    if (e.target.closest('[data-cancel]')) { closeDlg(); return openStudent(cur); }
+    if (e.target.closest('#grpOnce')) {
+      once = !once; $('#grpOnce').setAttribute('aria-checked', once);
+      if (once) { for (const s of shareCopies(st, f)) groupAdd(st, f, s, copyOf(s)); }
+      else if (groupOf(st)) { for (const s of groupMates(st)) groupLeave(s, true); }
+      saveSoon(); renderList(); draw(); return;
+    }
+    const b = e.target.closest('[data-shto]'); if (!b || b.disabled) return;
+    const to = batch.students[+b.dataset.shto]; b.disabled = true;
+    if (!copyOf(to)) await addFiles(to, [{ path: f.name, file: new File([f.data], f.name), from: st.key }], true);
+    if (once) groupAdd(st, f, to, copyOf(to));
+    saveSoon(); renderList();
+    toast((once ? 'In the group: ' : 'Shared with ') + shownName(to, +b.dataset.shto)); draw(); $('#mvFind').focus();
+  };
+  $('#mvFind').focus();
+}
 
 });</script>
 
