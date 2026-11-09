@@ -5708,7 +5708,7 @@ function wordScoresAll() {
 function wireRubric(st, f, w, page, el, soon) {
   const m = rubricModel(page); if (!m) return;
   for (const c of m.cells) { c.td.classList.add('rcell'); c.td.title = 'Click to highlight this score (two neighbouring boxes = half point)'; }
-  const info = document.createElement('div'); info.className = 'rinfo'; el.insertBefore(info, page);
+  const info = document.createElement('div'); info.className = 'rinfo'; el.insertBefore(info, page.closest('.wdoc') || page);
   const show = s => {
     info.innerHTML = '<b>' + (s.total == null ? '–' : fmtNum(s.total)) + '</b> / ' + m.max + (s.pct != null ? ' <b style="color:var(--accent)">' + fmtNum(s.pct) + '%</b>' : '') +
       '<span class="muted">' + m.crits.map((c, i) => esc(c.length > 24 ? c.slice(0, 24) + '…' : c) + ' ' + (s.per[i] == null ? '–' : fmtNum(s.per[i]))).join(' · ') + '</span>' +
