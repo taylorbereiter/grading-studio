@@ -815,7 +815,7 @@ async function openStudent(i, filePath) {
   renderList(); renderGrade(); saveSoon();
   const st = batch.students[cur];
   const paper = $('#paper');
-  paper.innerHTML = '<div class="who"><h2>' + esc(shownName(st, cur)) + '</h2><span>' + ((anonOn() ? anonPos(cur) : cur) + 1) + ' of ' + batch.students.length + '</span><span style="flex:1"></span>' +
+  paper.innerHTML = '<div class="who"><h2>' + esc(shownName(st, cur)) + '</h2>' + (anonOn() ? '' : whoBtn('data-wi="' + cur + '"', st.key)) + '<span>' + ((anonOn() ? anonPos(cur) : cur) + 1) + ' of ' + batch.students.length + '</span><span style="flex:1"></span>' +
     '<button class="btn sm" id="readBtn" title="A reading, prompt or other file shown above the papers: for everyone, or a different one for this student">Readings' + (refsFor(st).length ? ' (' + refsFor(st).length + ')' : '') + '</button>' +
     '<button class="btn sm" id="addFileBtn" title="Add a late or forgotten file to this student. You can also drop files on the paper or on a name.">+ Add file</button>' +
     (st.files.some(viewable) || fileSeq(st).length > 1 ? '<button class="btn sm" id="arrangeBtn">Arrange pages</button>' : '') + '</div>';
@@ -1707,7 +1707,7 @@ function renderList() {
       : st.doubts && st.doubts.length ? '<span class="sc" style="color:var(--warn)" title="A reading on the paper may not be a grade. Confirm it on the Grade sheet.">?</span>'
       : hasMarks(st) ? '<span class="dot" title="Marked"></span>' : '';
     const nAdd = st.files.filter(f => f.added && !f.from).length, re = st.files.some(f => Object.values(f.sc || {}).some(r => r.re)), grp = st.files.some(f => f.from || Object.values(f.sc || {}).some(r => r.w)) || st.files.some(f => !f.added && shareCopies(st, f).length);
-    return '<button class="stu' + (i === cur ? ' on' : '') + (st.files.length ? '' : ' empty') + '" data-i="' + i + '"><span class="num">' + (pos + 1) + '</span><span class="nm" title="' + esc(shownName(st, i)) + '">' + esc(shownName(st, i)) + '</span>' +
+    return '<button class="stu' + (i === cur ? ' on' : '') + (st.files.length ? '' : ' empty') + '" data-i="' + i + '"><span class="num">' + (pos + 1) + '</span><span class="nm" title="' + esc(shownName(st, i)) + '">' + esc(shownName(st, i)) + '</span>' + (anonOn() ? '' : whoBtn('data-wi="' + i + '"', st.key)) +
       '<span style="display:inline-flex;align-items:center;gap:4px">' + (st.files.length || noScore(st) ? '' : '<span class="muted" style="font-size:11px">no paper</span>') + (g.status === 'late' ? '<span class="stag" title="You marked this student late">late</span>' : '') + (g.out ? '<span class="stag out" title="Left out of the average">left out</span>' : '') + (nAdd ? '<span class="add" title="' + nAdd + (nAdd === 1 ? ' file' : ' files') + ' added by you">+' + nAdd + '</span>' : '') + (re ? '<span class="add" title="A page needs a rescan">⚑</span>' : '') + (grp ? '<span class="add grp" title="Group work: shares pages or a file with another student">shared</span>' : '') + carryPill(st) + right + '</span></button>';
   }).join('');
   const on = $('#stuList .on'); if (on) on.scrollIntoView({ block: 'nearest' });
@@ -2028,10 +2028,10 @@ function openGrades() {
   if (rereadsPending()) { rereadsDone().then(openGrades); return; }   // a grade she just typed or changed counts here
   const rub = setup.mode === 'rubric', c = batchClass();
   const rows = gradeRows().map(({ st, i, missing, off }, k) => {
-    if (missing) return '<tr><td class="n">' + (k + 1) + '</td><td class="nm" style="cursor:default">' + esc(missing) + ' <span class="muted" style="font-weight:400">(no folder: nothing turned in)</span></td>' + (rub ? setup.criteria.map(() => '<td></td>').join('') : '') + '<td></td><td></td><td></td></tr>';
+    if (missing) return '<tr><td class="n">' + (k + 1) + '</td><td class="nm" style="cursor:default">' + esc(missing) + (c ? ' ' + whoBtn('data-wc="' + esc(c.id) + '" data-wn="' + esc(missing) + '"', missing) : '') + ' <span class="muted" style="font-weight:400">(no folder: nothing turned in)</span></td>' + (rub ? setup.criteria.map(() => '<td></td>').join('') : '') + '<td></td><td></td><td></td></tr>';
     const g = gradeOf(st);
     const cells = rub ? setup.criteria.map((_, q) => '<td class="c" data-copy="' + fmtNum(rowShown(st, q)) + '">' + fmtNum(rowShown(st, q)) + '</td>').join('') : '';
-    return '<tr class="go" data-i="' + i + '"><td class="n">' + (k + 1) + '</td><td class="nm">' + esc(st.key) + (st.files.length ? '' : ' <span class="muted" style="font-weight:400">(nothing turned in)</span>') + (off ? ' <span class="pill" style="font-size:11px;padding:2px 7px;border-radius:999px;background:var(--warn-soft);color:var(--warn)">not on roster</span>' : '') + '</td>' + cells +
+    return '<tr class="go" data-i="' + i + '"><td class="n">' + (k + 1) + '</td><td class="nm">' + esc(st.key) + (anonOn() ? '' : ' ' + whoBtn('data-wi="' + i + '"', st.key)) + (st.files.length ? '' : ' <span class="muted" style="font-weight:400">(nothing turned in)</span>') + (off ? ' <span class="pill" style="font-size:11px;padding:2px 7px;border-radius:999px;background:var(--warn-soft);color:var(--warn)">not on roster</span>' : '') + '</td>' + cells +
       '<td class="c' + (g.partial ? ' part" data-partial="1' : '') + '" data-copy="' + esc(cellCopy(g, 'total')) + '">' + totalText(g) + statusPills(g) + (g.total == null && g.pct == null && ((st.doubts && st.doubts.length) || manyReads(st)) ? ' <span class="stag" title="Confirm it on the Grade sheet">to confirm</span>' : '') + (g.paper ? ' <span class="muted" style="font-weight:400;font-size:12px" title="Read from the paper">(paper)</span>' : '') + '</td><td class="c' + (g.partial ? ' part" data-partial="1' : '') + '" data-copy="' + esc(cellCopy(g, 'pct')) + '">' + fmtPct(g.pct) + '</td>' +
       '<td class="cm" data-copy="' + esc(st.grade.comment) + '">' + esc(st.grade.comment) + '</td></tr>';
   }).join('');
@@ -3914,7 +3914,7 @@ function renderLib() {
     '<button class="addcard" data-additem="' + u.id + '">+ Assignment</button></div>';
   const block = (c, ci) => '<div class="cls" data-cls="' + esc(c.id) + '"><div class="clshead"><h3>' + esc(ci < 0 ? 'No class' : c.name) + '</h3>' +
     (ci < 0 ? '<span class="muted">Assignments with no roster. Drag them into a class.</span>' :
-      '<span class="muted">' + (c.names.length ? c.names.length + ' students on the roster' : 'No roster yet') + '</span><button class="btn sm" data-edit-class="' + ci + '">' + (c.names.length ? 'Edit roster' : 'Add roster') + '</button>' + mbClassBtns(c, ci) +
+      '<span class="muted">' + (c.names.length ? c.names.length + ' students on the roster' : 'No roster yet') + '</span><button class="btn sm" data-edit-class="' + ci + '">' + (c.names.length ? 'Edit roster' : 'Add roster') + '</button>' + (c.names.length ? '<button class="btn sm" data-people="' + ci + '">Students</button>' : '') + mbClassBtns(c, ci) +
       '<button class="icon" data-cmove="' + ci + ':-1" title="Move this class up" aria-label="Move this class up"' + (ci ? '' : ' disabled') + '>↑</button><button class="icon" data-cmove="' + ci + ':1" title="Move this class down" aria-label="Move this class down"' + (ci < lib.classes.length - 1 ? '' : ' disabled') + '>↓</button>') +
     '<span class="sp"></span><button class="btn sm" data-addunit="' + esc(c.id) + '">+ Unit</button></div>' +
     '<div class="board">' + (c.units.map(unit).join('') || '<div class="empty-note">No units yet. Click + Unit.</div>') + '</div></div>';
@@ -4017,6 +4017,7 @@ $('#start').addEventListener('click', async e => {
     return;
   }
   if (b.dataset.editClass != null) return editClass(+b.dataset.editClass);
+  if (b.dataset.people != null) return openPeople(+b.dataset.people);
   if (b.dataset.mbset != null) return askMb(+b.dataset.mbset);
 });
 // The unit's page in Atlas (web links only); empty removes it. Shown on the unit and in the top bar while grading.
@@ -4072,16 +4073,22 @@ function editAssignment(id, unitId) {
     }
   };
 }
-// Class lists: pasted from a spreadsheet, or a .csv / .txt file. Student ID columns (numbers) are skipped.
-function parseRoster(text) {
+// Class lists: pasted from a spreadsheet, or a .csv / .txt file. A student ID column (numbers) and an email column are kept
+// beside the name as the student's details (see people.js), and never become part of the name.
+const EMAIL_RX = /^[^\s@,;]+@[^\s@,;]+\.[^\s@,;]+$/;
+function parseRosterRows(text) {
   const out = [];
   for (const line of text.split(/\r?\n/)) {
-    const cells = line.split(/\t|,(?=(?:[^"]*"[^"]*")*[^"]*$)/).map(c => c.replace(/^"|"$/g, '').trim()).filter(c => c && !/^\d[\d\s-]*$/.test(c));
+    const all = line.split(/\t|,(?=(?:[^"]*"[^"]*")*[^"]*$)/).map(c => c.replace(/^"|"$/g, '').trim()).filter(Boolean);
+    if (all.some(c => /^(e-?mail( address)?|student id|student number|id)$/i.test(c))) continue;   // a header row
+    const cells = all.filter(c => !/^\d[\d\s-]*$/.test(c) && !EMAIL_RX.test(c));
     if (!cells.length || /^(name|student|students|first|last|first name|last name|student name)$/i.test(cells[0])) continue;
-    out.push(cells.slice(0, 2).join(cells.length > 1 && !/,/.test(cells[0]) ? ' ' : ', '));
+    const id = all.find(c => /^\d[\d\s-]*$/.test(c)), email = all.find(c => EMAIL_RX.test(c));
+    out.push({ name: cells.slice(0, 2).join(cells.length > 1 && !/,/.test(cells[0]) ? ' ' : ', '), id: id ? id.replace(/\s+/g, '') : '', email: email || '' });
   }
   return out;
 }
+const parseRoster = text => parseRosterRows(text).map(r => r.name);
 // A class's ManageBac page, so it opens in one click from the class and its Grades list.
 function mbUrl(v) { v = String(v || '').trim(); if (/^[\w.-]+\.[a-z]{2,}\//i.test(v)) v = 'https://' + v; return /^https?:\/\/[^\s"<>]+$/i.test(v) ? v : ''; }
 // Links are also remembered by class name in this browser, so the Planner shows the same link for "11 EL-2" as grading does for "11EL-2".
@@ -4101,15 +4108,16 @@ async function askMb(ci) {
   saveLib(); if (batch) renderTopAtlas(); else renderLib();
 }
 function editClass(ci) {
+  let upRows = [];
   const c = ci >= 0 ? lib.classes[ci] : { id: uid(), name: '', names: [], units: [] };
   openDlg('<div class="bh"><h2>' + (ci >= 0 ? 'Edit roster' : 'New roster') + '</h2></div><div class="bb">' +
     '<div class="field"><label for="cName">Class name</label><input type="text" id="cName" value="' + esc(c.name) + '" placeholder="e.g. 11EL-2"></div>' +
     '<div class="field"><label for="cMb">ManageBac link <span class="muted" style="font-weight:400">(optional)</span></label><input type="url" id="cMb" value="' + esc(mbOf(c)) + '" placeholder="Paste this class’s ManageBac page address"></div>' +
-    '<div class="field"><label for="cNames">Students, one per line, in the order you want (ManageBac order works well)</label><textarea class="big" id="cNames" placeholder="Paste from a spreadsheet or ManageBac, or upload a file">' + esc(c.names.join('\n')) + '</textarea></div>' +
+    '<div class="field"><label for="cNames">Students, one per line, in the order you want (ManageBac order works well)</label><textarea class="big" id="cNames" placeholder="Paste from a spreadsheet or ManageBac, or upload a file. Student ID and email columns are kept as each student’s details.">' + esc(c.names.join('\n')) + '</textarea></div>' +
     '<button class="btn sm" data-up>Upload a list (.csv or .txt)…</button><input type="file" id="cFile" accept=".csv,.txt,text/csv,text/plain" hidden>' +
     '<p class="muted" style="font-size:13px">Kept in this browser.</p></div>' +
     '<div class="bf">' + (ci >= 0 ? '<button class="btn" data-del style="margin-right:auto">Delete</button>' : '') + '<button class="btn" data-cancel>Cancel</button><button class="btn primary" data-ok>Save</button></div>', true);
-  $('#cFile').onchange = async e => { const f = e.target.files[0]; if (!f) return; $('#cNames').value = parseRoster(await f.text()).join('\n'); e.target.value = ''; };
+  $('#cFile').onchange = async e => { const f = e.target.files[0]; if (!f) return; const rows = parseRosterRows(await f.text()); $('#cNames').value = rows.map(r => r.name).join('\n'); upRows = rows; e.target.value = ''; };
   $('#dlgBox').onclick = async e => {
     if (e.target.closest('[data-up]')) return $('#cFile').click();
     if (e.target.closest('[data-cancel]')) return closeDlg();
@@ -4117,7 +4125,7 @@ function editClass(ci) {
     if (e.target.closest('[data-ok]')) {
       const name = $('#cName').value.trim(); if (!name) { $('#cName').focus(); return; }
       const mb = mbUrl($('#cMb').value); if ($('#cMb').value.trim() && !mb) { toast('That ManageBac link isn’t a web address'); $('#cMb').focus(); return; }
-      c.name = name; c.names = parseRoster($('#cNames').value);
+      c.name = name; const rows = parseRosterRows($('#cNames').value).map(r => ({ ...(upRows.find(u => u.name === r.name) || {}), ...r, id: r.id || (upRows.find(u => u.name === r.name) || {}).id || '', email: r.email || (upRows.find(u => u.name === r.name) || {}).email || '' })), was = c.names; c.names = rows.map(r => r.name); keepInfo(c, was, rows);
       if (mb) c.mb = mb; else delete c.mb; mbRemember(name, mb);
       if (ci < 0) lib.classes.push(c);
       saveLib(); closeDlg(); renderLib();
@@ -4133,6 +4141,8 @@ function rosterMatch(names) {
   const used = new Set(), map = new Map(), left = () => [...new Set(names)].filter(n => !map.has(n));
   const studs = batch.students.map(st => ({ st, w: new Set(nameWords(st.key)) }));
   const give = (n, x) => { used.add(x.st); map.set(n, x.st); };
+  const c = classOfNames(names);   // a spelling she linked, or the student's ID in the folder name, is a sure match, even over an empty roster spot of the same name
+  if (c && c.info) for (const x of studs) { if (used.has(x.st) || (x.st.gap && !x.st.files.length)) continue; const h = infoHits(c, x.st.key).filter(n => !map.has(n)); if (h.length === 1) give(h[0], x); }
   for (const n of left()) { const x = studs.find(x => !used.has(x.st) && x.st.key === n); if (x) give(n, x); }
   for (const n of left()) {
     const w = new Set(nameWords(n)), hits = studs.filter(x => !used.has(x.st) && x.w.size === w.size && [...w].every(t => x.w.has(t)));
@@ -4168,7 +4178,10 @@ function rosterSort() {
   // A roster place-holder goes away if the roster changes, unless it has a file, score, comment or status: then it stays in the list, as not on the roster.
   batch.students = batch.students.filter(st => !(st.gap && !st.files.length && !gradeHasWork(st.grade) && !(c && c.names.includes(st.key))));
   if (c && c.names.length) {
-    const have = rosterMatch(c.names), saved = newestWork(store.get(batch.id, null), batch.keptWork);
+    let have = rosterMatch(c.names);
+    const spare = batch.students.filter(st => st.gap && !st.files.length && !gradeHasWork(st.grade) && have.has(st.key) && have.get(st.key) !== st);   // an empty spot another folder now fills
+    if (spare.length) { batch.students = batch.students.filter(st => !spare.includes(st)); have = rosterMatch(c.names); }
+    const saved = newestWork(store.get(batch.id, null), batch.keptWork);
     for (const nm of c.names) if (!have.has(nm)) {
       const s = saved && saved.s && saved.s[nm];
       batch.students.push(gapStudent(nm, s));

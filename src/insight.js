@@ -39,7 +39,12 @@ function nameNear(a, b) {
 }
 // Who's who in one list of names, by a roster: roster name to saved name. Only when each fits just the other, so it's never a guess.
 function rosterPairs(names, keys) {
-  const sure = new Map(), fits = names.map(n => keys.map(k => nameFit(n, k)));
+  const sure = new Map(), c = classOfNames(names);
+  if (c && c.info) {   // a spelling she linked, or the student's ID in the name, first
+    for (const k of keys) { const h = infoHits(c, k); if (h.length === 1 && !sure.has(h[0])) sure.set(h[0], k); }
+    const took = new Set(sure.values()); names = names.filter(n => !sure.has(n)); keys = keys.filter(k => !took.has(k));
+  }
+  const fits = names.map(n => keys.map(k => nameFit(n, k)));
   names.forEach((n, i) => {
     const top = Math.max(0, ...fits[i]); if (!top) return;
     const hits = keys.filter((_, j) => fits[i][j] === top); if (hits.length !== 1) return;

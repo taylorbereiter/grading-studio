@@ -60,3 +60,39 @@
 .mkopt{display:flex;gap:9px;align-items:flex-start;margin:0 0 8px;font-size:13.5px}
 .mkopt input{margin-top:3px;accent-color:var(--accent)}
 .mkopt small{display:block;color:var(--muted);font-size:12.5px}
+
+/* ---------- student details: the ⓘ beside a name, and the card it opens ---------- */
+.stu{grid-template-columns:24px 1fr auto auto}
+.whob{display:inline-grid;place-items:center;width:18px;height:18px;flex:none;border:1px solid var(--line-strong);border-radius:999px;background:var(--surface);color:var(--accent)!important;font:italic 700 11px/1 Georgia,serif;cursor:pointer;opacity:0;transition:opacity .12s;vertical-align:middle}
+.stu:hover .whob,.stu.on .whob,.whob:focus-visible,tr:hover .whob,.who .whob,.ppl .whob{opacity:1}
+.whob:hover{background:var(--accent-soft);border-color:var(--accent)}
+.who .whob{align-self:center;width:22px;height:22px;font-size:13px}
+@media (hover:none){.whob{opacity:1}}
+.pc-back{position:fixed;inset:0;z-index:60;background:rgba(10,14,25,.28);display:flex;align-items:center;justify-content:center;padding:16px}
+.pc{width:min(430px,100%);max-height:calc(100vh - 32px);overflow:auto;background:var(--surface);color:var(--fg);border:1px solid var(--line);border-radius:12px;box-shadow:0 10px 40px rgba(10,14,25,.22)}
+.pc-hd{display:flex;gap:12px;align-items:center;padding:16px 14px 12px 16px;border-bottom:1px solid var(--line)}
+.pc-tt{flex:1;min-width:0}.pc-tt h2{font-size:17px;margin:0;overflow-wrap:anywhere}
+.pc-av{width:40px;height:40px;flex:none;border-radius:50%;background:var(--accent-soft);color:var(--accent);font-weight:700;display:grid;place-items:center}
+.pc-av.pc-q{background:var(--warn-soft);color:var(--warn)}
+.pc-sm{font-size:12.5px}
+.pc-bd{padding:8px 0}
+.pc-f{display:grid;grid-template-columns:92px 1fr auto;gap:8px;align-items:center;padding:4px 16px}
+.pc-f.pc-top{align-items:start}.pc-f.pc-top .pc-k{padding-top:6px}
+.pc-k{color:var(--muted);font-size:13px}
+.pc-in{width:100%;border:1px solid transparent;border-radius:6px;padding:5px 7px;background:transparent;font-size:14px;font-weight:500;resize:vertical;min-width:0}
+.pc-in:hover{border-color:var(--line-strong)}.pc-in:focus{border-color:var(--accent);background:var(--surface);outline:none}
+.pc-in::placeholder{color:var(--faint);font-weight:400;font-style:italic}
+.pc-acts{display:flex;gap:8px;font-size:12.5px;white-space:nowrap}.pc-acts .link{font-size:12.5px}
+.pc-chips{display:flex;gap:6px;flex-wrap:wrap;padding:3px 0}
+.pc-chip{display:inline-flex;align-items:center;gap:4px;background:var(--surface-2);border:0;border-radius:999px;padding:2px 9px;font-size:12.5px}
+.pc-chip button{border:0;background:none;padding:0 0 0 2px;color:var(--muted);font-size:14px;line-height:1}
+.pc-chip.pc-add{color:var(--accent);font-weight:600}
+.pc-sec{border-top:1px solid var(--line);padding:10px 16px 12px}
+.pc-sec h3{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 6px}
+.pc-a{display:flex;justify-content:space-between;gap:10px;padding:4px 0;font-size:13.5px}
+.pc-an{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pc-note{background:var(--warn-soft);color:var(--warn);border-radius:8px;padding:8px 10px;font-size:13px;margin:12px 16px 0}
+.pc-f select{min-width:0;padding:5px 6px;border-radius:6px;border:1px solid var(--line-strong);background:var(--surface)}
+.pc-ft{border-top:1px solid var(--line);padding:9px 16px 12px;font-size:12.5px}
+.ppl td{vertical-align:middle}.ppl td.nm .link{font-weight:600;text-decoration:none;text-align:left}
+.ppl .pc-in{font-weight:400}

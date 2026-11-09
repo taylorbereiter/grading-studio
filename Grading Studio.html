@@ -1073,6 +1073,42 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
 .mkopt input{margin-top:3px;accent-color:var(--accent)}
 .mkopt small{display:block;color:var(--muted);font-size:12.5px}
 
+/* ---------- student details: the ⓘ beside a name, and the card it opens ---------- */
+.stu{grid-template-columns:24px 1fr auto auto}
+.whob{display:inline-grid;place-items:center;width:18px;height:18px;flex:none;border:1px solid var(--line-strong);border-radius:999px;background:var(--surface);color:var(--accent)!important;font:italic 700 11px/1 Georgia,serif;cursor:pointer;opacity:0;transition:opacity .12s;vertical-align:middle}
+.stu:hover .whob,.stu.on .whob,.whob:focus-visible,tr:hover .whob,.who .whob,.ppl .whob{opacity:1}
+.whob:hover{background:var(--accent-soft);border-color:var(--accent)}
+.who .whob{align-self:center;width:22px;height:22px;font-size:13px}
+@media (hover:none){.whob{opacity:1}}
+.pc-back{position:fixed;inset:0;z-index:60;background:rgba(10,14,25,.28);display:flex;align-items:center;justify-content:center;padding:16px}
+.pc{width:min(430px,100%);max-height:calc(100vh - 32px);overflow:auto;background:var(--surface);color:var(--fg);border:1px solid var(--line);border-radius:12px;box-shadow:0 10px 40px rgba(10,14,25,.22)}
+.pc-hd{display:flex;gap:12px;align-items:center;padding:16px 14px 12px 16px;border-bottom:1px solid var(--line)}
+.pc-tt{flex:1;min-width:0}.pc-tt h2{font-size:17px;margin:0;overflow-wrap:anywhere}
+.pc-av{width:40px;height:40px;flex:none;border-radius:50%;background:var(--accent-soft);color:var(--accent);font-weight:700;display:grid;place-items:center}
+.pc-av.pc-q{background:var(--warn-soft);color:var(--warn)}
+.pc-sm{font-size:12.5px}
+.pc-bd{padding:8px 0}
+.pc-f{display:grid;grid-template-columns:92px 1fr auto;gap:8px;align-items:center;padding:4px 16px}
+.pc-f.pc-top{align-items:start}.pc-f.pc-top .pc-k{padding-top:6px}
+.pc-k{color:var(--muted);font-size:13px}
+.pc-in{width:100%;border:1px solid transparent;border-radius:6px;padding:5px 7px;background:transparent;font-size:14px;font-weight:500;resize:vertical;min-width:0}
+.pc-in:hover{border-color:var(--line-strong)}.pc-in:focus{border-color:var(--accent);background:var(--surface);outline:none}
+.pc-in::placeholder{color:var(--faint);font-weight:400;font-style:italic}
+.pc-acts{display:flex;gap:8px;font-size:12.5px;white-space:nowrap}.pc-acts .link{font-size:12.5px}
+.pc-chips{display:flex;gap:6px;flex-wrap:wrap;padding:3px 0}
+.pc-chip{display:inline-flex;align-items:center;gap:4px;background:var(--surface-2);border:0;border-radius:999px;padding:2px 9px;font-size:12.5px}
+.pc-chip button{border:0;background:none;padding:0 0 0 2px;color:var(--muted);font-size:14px;line-height:1}
+.pc-chip.pc-add{color:var(--accent);font-weight:600}
+.pc-sec{border-top:1px solid var(--line);padding:10px 16px 12px}
+.pc-sec h3{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 6px}
+.pc-a{display:flex;justify-content:space-between;gap:10px;padding:4px 0;font-size:13.5px}
+.pc-an{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pc-note{background:var(--warn-soft);color:var(--warn);border-radius:8px;padding:8px 10px;font-size:13px;margin:12px 16px 0}
+.pc-f select{min-width:0;padding:5px 6px;border-radius:6px;border:1px solid var(--line-strong);background:var(--surface)}
+.pc-ft{border-top:1px solid var(--line);padding:9px 16px 12px;font-size:12.5px}
+.ppl td{vertical-align:middle}.ppl td.nm .link{font-weight:600;text-decoration:none;text-align:left}
+.ppl .pc-in{font-weight:400}
+
 </style>
 
 <!-- start -->
@@ -3144,7 +3180,7 @@ async function openStudent(i, filePath) {
   renderList(); renderGrade(); saveSoon();
   const st = batch.students[cur];
   const paper = $('#paper');
-  paper.innerHTML = '<div class="who"><h2>' + esc(shownName(st, cur)) + '</h2><span>' + ((anonOn() ? anonPos(cur) : cur) + 1) + ' of ' + batch.students.length + '</span><span style="flex:1"></span>' +
+  paper.innerHTML = '<div class="who"><h2>' + esc(shownName(st, cur)) + '</h2>' + (anonOn() ? '' : whoBtn('data-wi="' + cur + '"', st.key)) + '<span>' + ((anonOn() ? anonPos(cur) : cur) + 1) + ' of ' + batch.students.length + '</span><span style="flex:1"></span>' +
     '<button class="btn sm" id="readBtn" title="A reading, prompt or other file shown above the papers: for everyone, or a different one for this student">Readings' + (refsFor(st).length ? ' (' + refsFor(st).length + ')' : '') + '</button>' +
     '<button class="btn sm" id="addFileBtn" title="Add a late or forgotten file to this student. You can also drop files on the paper or on a name.">+ Add file</button>' +
     (st.files.some(viewable) || fileSeq(st).length > 1 ? '<button class="btn sm" id="arrangeBtn">Arrange pages</button>' : '') + '</div>';
@@ -4014,7 +4050,7 @@ function renderList() {
       : st.doubts && st.doubts.length ? '<span class="sc" style="color:var(--warn)" title="A reading on the paper may not be a grade. Confirm it on the Grade sheet.">?</span>'
       : hasMarks(st) ? '<span class="dot" title="Marked"></span>' : '';
     const nAdd = st.files.filter(f => f.added && !f.from).length, re = st.files.some(f => Object.values(f.sc || {}).some(r => r.re)), grp = st.files.some(f => f.from || Object.values(f.sc || {}).some(r => r.w)) || st.files.some(f => !f.added && shareCopies(st, f).length);
-    return '<button class="stu' + (i === cur ? ' on' : '') + (st.files.length ? '' : ' empty') + '" data-i="' + i + '"><span class="num">' + (pos + 1) + '</span><span class="nm" title="' + esc(shownName(st, i)) + '">' + esc(shownName(st, i)) + '</span>' +
+    return '<button class="stu' + (i === cur ? ' on' : '') + (st.files.length ? '' : ' empty') + '" data-i="' + i + '"><span class="num">' + (pos + 1) + '</span><span class="nm" title="' + esc(shownName(st, i)) + '">' + esc(shownName(st, i)) + '</span>' + (anonOn() ? '' : whoBtn('data-wi="' + i + '"', st.key)) +
       '<span style="display:inline-flex;align-items:center;gap:4px">' + (st.files.length || noScore(st) ? '' : '<span class="muted" style="font-size:11px">no paper</span>') + (g.status === 'late' ? '<span class="stag" title="You marked this student late">late</span>' : '') + (g.out ? '<span class="stag out" title="Left out of the average">left out</span>' : '') + (nAdd ? '<span class="add" title="' + nAdd + (nAdd === 1 ? ' file' : ' files') + ' added by you">+' + nAdd + '</span>' : '') + (re ? '<span class="add" title="A page needs a rescan">⚑</span>' : '') + (grp ? '<span class="add grp" title="Group work: shares pages or a file with another student">shared</span>' : '') + carryPill(st) + right + '</span></button>';
   }).join('');
   const on = $('#stuList .on'); if (on) on.scrollIntoView({ block: 'nearest' });
@@ -4323,10 +4359,10 @@ function openGrades() {
   if (rereadsPending()) { rereadsDone().then(openGrades); return; }   // a grade she just typed or changed counts here
   const rub = setup.mode === 'rubric', c = batchClass();
   const rows = gradeRows().map(({ st, i, missing, off }, k) => {
-    if (missing) return '<tr><td class="n">' + (k + 1) + '</td><td class="nm" style="cursor:default">' + esc(missing) + ' <span class="muted" style="font-weight:400">(no folder: nothing turned in)</span></td>' + (rub ? setup.criteria.map(() => '<td></td>').join('') : '') + '<td></td><td></td><td></td></tr>';
+    if (missing) return '<tr><td class="n">' + (k + 1) + '</td><td class="nm" style="cursor:default">' + esc(missing) + (c ? ' ' + whoBtn('data-wc="' + esc(c.id) + '" data-wn="' + esc(missing) + '"', missing) : '') + ' <span class="muted" style="font-weight:400">(no folder: nothing turned in)</span></td>' + (rub ? setup.criteria.map(() => '<td></td>').join('') : '') + '<td></td><td></td><td></td></tr>';
     const g = gradeOf(st);
     const cells = rub ? setup.criteria.map((_, q) => '<td class="c" data-copy="' + fmtNum(rowShown(st, q)) + '">' + fmtNum(rowShown(st, q)) + '</td>').join('') : '';
-    return '<tr class="go" data-i="' + i + '"><td class="n">' + (k + 1) + '</td><td class="nm">' + esc(st.key) + (st.files.length ? '' : ' <span class="muted" style="font-weight:400">(nothing turned in)</span>') + (off ? ' <span class="pill" style="font-size:11px;padding:2px 7px;border-radius:999px;background:var(--warn-soft);color:var(--warn)">not on roster</span>' : '') + '</td>' + cells +
+    return '<tr class="go" data-i="' + i + '"><td class="n">' + (k + 1) + '</td><td class="nm">' + esc(st.key) + (anonOn() ? '' : ' ' + whoBtn('data-wi="' + i + '"', st.key)) + (st.files.length ? '' : ' <span class="muted" style="font-weight:400">(nothing turned in)</span>') + (off ? ' <span class="pill" style="font-size:11px;padding:2px 7px;border-radius:999px;background:var(--warn-soft);color:var(--warn)">not on roster</span>' : '') + '</td>' + cells +
       '<td class="c' + (g.partial ? ' part" data-partial="1' : '') + '" data-copy="' + esc(cellCopy(g, 'total')) + '">' + totalText(g) + statusPills(g) + (g.total == null && g.pct == null && ((st.doubts && st.doubts.length) || manyReads(st)) ? ' <span class="stag" title="Confirm it on the Grade sheet">to confirm</span>' : '') + (g.paper ? ' <span class="muted" style="font-weight:400;font-size:12px" title="Read from the paper">(paper)</span>' : '') + '</td><td class="c' + (g.partial ? ' part" data-partial="1' : '') + '" data-copy="' + esc(cellCopy(g, 'pct')) + '">' + fmtPct(g.pct) + '</td>' +
       '<td class="cm" data-copy="' + esc(st.grade.comment) + '">' + esc(st.grade.comment) + '</td></tr>';
   }).join('');
@@ -6129,7 +6165,7 @@ function renderLib() {
     '<button class="addcard" data-additem="' + u.id + '">+ Assignment</button></div>';
   const block = (c, ci) => '<div class="cls" data-cls="' + esc(c.id) + '"><div class="clshead"><h3>' + esc(ci < 0 ? 'No class' : c.name) + '</h3>' +
     (ci < 0 ? '<span class="muted">Assignments with no roster. Drag them into a class.</span>' :
-      '<span class="muted">' + (c.names.length ? c.names.length + ' students on the roster' : 'No roster yet') + '</span><button class="btn sm" data-edit-class="' + ci + '">' + (c.names.length ? 'Edit roster' : 'Add roster') + '</button>' + mbClassBtns(c, ci) +
+      '<span class="muted">' + (c.names.length ? c.names.length + ' students on the roster' : 'No roster yet') + '</span><button class="btn sm" data-edit-class="' + ci + '">' + (c.names.length ? 'Edit roster' : 'Add roster') + '</button>' + (c.names.length ? '<button class="btn sm" data-people="' + ci + '">Students</button>' : '') + mbClassBtns(c, ci) +
       '<button class="icon" data-cmove="' + ci + ':-1" title="Move this class up" aria-label="Move this class up"' + (ci ? '' : ' disabled') + '>↑</button><button class="icon" data-cmove="' + ci + ':1" title="Move this class down" aria-label="Move this class down"' + (ci < lib.classes.length - 1 ? '' : ' disabled') + '>↓</button>') +
     '<span class="sp"></span><button class="btn sm" data-addunit="' + esc(c.id) + '">+ Unit</button></div>' +
     '<div class="board">' + (c.units.map(unit).join('') || '<div class="empty-note">No units yet. Click + Unit.</div>') + '</div></div>';
@@ -6230,6 +6266,7 @@ $('#start').addEventListener('click', async e => {
     return;
   }
   if (b.dataset.editClass != null) return editClass(+b.dataset.editClass);
+  if (b.dataset.people != null) return openPeople(+b.dataset.people);
   if (b.dataset.mbset != null) return askMb(+b.dataset.mbset);
 });
 async function askAtlas(unitId) {
@@ -6282,15 +6319,20 @@ function editAssignment(id, unitId) {
     }
   };
 }
-function parseRoster(text) {
+const EMAIL_RX = /^[^\s@,;]+@[^\s@,;]+\.[^\s@,;]+$/;
+function parseRosterRows(text) {
   const out = [];
   for (const line of text.split(/\r?\n/)) {
-    const cells = line.split(/\t|,(?=(?:[^"]*"[^"]*")*[^"]*$)/).map(c => c.replace(/^"|"$/g, '').trim()).filter(c => c && !/^\d[\d\s-]*$/.test(c));
+    const all = line.split(/\t|,(?=(?:[^"]*"[^"]*")*[^"]*$)/).map(c => c.replace(/^"|"$/g, '').trim()).filter(Boolean);
+    if (all.some(c => /^(e-?mail( address)?|student id|student number|id)$/i.test(c))) continue;   // a header row
+    const cells = all.filter(c => !/^\d[\d\s-]*$/.test(c) && !EMAIL_RX.test(c));
     if (!cells.length || /^(name|student|students|first|last|first name|last name|student name)$/i.test(cells[0])) continue;
-    out.push(cells.slice(0, 2).join(cells.length > 1 && !/,/.test(cells[0]) ? ' ' : ', '));
+    const id = all.find(c => /^\d[\d\s-]*$/.test(c)), email = all.find(c => EMAIL_RX.test(c));
+    out.push({ name: cells.slice(0, 2).join(cells.length > 1 && !/,/.test(cells[0]) ? ' ' : ', '), id: id ? id.replace(/\s+/g, '') : '', email: email || '' });
   }
   return out;
 }
+const parseRoster = text => parseRosterRows(text).map(r => r.name);
 function mbUrl(v) { v = String(v || '').trim(); if (/^[\w.-]+\.[a-z]{2,}\//i.test(v)) v = 'https://' + v; return /^https?:\/\/[^\s"<>]+$/i.test(v) ? v : ''; }
 const MB_KEY = 'gs.mblinks', mbNorm = s => String(s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
 function mbMap() { try { return JSON.parse(localStorage.getItem(MB_KEY) || '{}') || {}; } catch { return {}; } }
@@ -6307,15 +6349,16 @@ async function askMb(ci) {
   saveLib(); if (batch) renderTopAtlas(); else renderLib();
 }
 function editClass(ci) {
+  let upRows = [];
   const c = ci >= 0 ? lib.classes[ci] : { id: uid(), name: '', names: [], units: [] };
   openDlg('<div class="bh"><h2>' + (ci >= 0 ? 'Edit roster' : 'New roster') + '</h2></div><div class="bb">' +
     '<div class="field"><label for="cName">Class name</label><input type="text" id="cName" value="' + esc(c.name) + '" placeholder="e.g. 11EL-2"></div>' +
     '<div class="field"><label for="cMb">ManageBac link <span class="muted" style="font-weight:400">(optional)</span></label><input type="url" id="cMb" value="' + esc(mbOf(c)) + '" placeholder="Paste this class’s ManageBac page address"></div>' +
-    '<div class="field"><label for="cNames">Students, one per line, in the order you want (ManageBac order works well)</label><textarea class="big" id="cNames" placeholder="Paste from a spreadsheet or ManageBac, or upload a file">' + esc(c.names.join('\n')) + '</textarea></div>' +
+    '<div class="field"><label for="cNames">Students, one per line, in the order you want (ManageBac order works well)</label><textarea class="big" id="cNames" placeholder="Paste from a spreadsheet or ManageBac, or upload a file. Student ID and email columns are kept as each student’s details.">' + esc(c.names.join('\n')) + '</textarea></div>' +
     '<button class="btn sm" data-up>Upload a list (.csv or .txt)…</button><input type="file" id="cFile" accept=".csv,.txt,text/csv,text/plain" hidden>' +
     '<p class="muted" style="font-size:13px">Kept in this browser.</p></div>' +
     '<div class="bf">' + (ci >= 0 ? '<button class="btn" data-del style="margin-right:auto">Delete</button>' : '') + '<button class="btn" data-cancel>Cancel</button><button class="btn primary" data-ok>Save</button></div>', true);
-  $('#cFile').onchange = async e => { const f = e.target.files[0]; if (!f) return; $('#cNames').value = parseRoster(await f.text()).join('\n'); e.target.value = ''; };
+  $('#cFile').onchange = async e => { const f = e.target.files[0]; if (!f) return; const rows = parseRosterRows(await f.text()); $('#cNames').value = rows.map(r => r.name).join('\n'); upRows = rows; e.target.value = ''; };
   $('#dlgBox').onclick = async e => {
     if (e.target.closest('[data-up]')) return $('#cFile').click();
     if (e.target.closest('[data-cancel]')) return closeDlg();
@@ -6323,7 +6366,7 @@ function editClass(ci) {
     if (e.target.closest('[data-ok]')) {
       const name = $('#cName').value.trim(); if (!name) { $('#cName').focus(); return; }
       const mb = mbUrl($('#cMb').value); if ($('#cMb').value.trim() && !mb) { toast('That ManageBac link isn’t a web address'); $('#cMb').focus(); return; }
-      c.name = name; c.names = parseRoster($('#cNames').value);
+      c.name = name; const rows = parseRosterRows($('#cNames').value).map(r => ({ ...(upRows.find(u => u.name === r.name) || {}), ...r, id: r.id || (upRows.find(u => u.name === r.name) || {}).id || '', email: r.email || (upRows.find(u => u.name === r.name) || {}).email || '' })), was = c.names; c.names = rows.map(r => r.name); keepInfo(c, was, rows);
       if (mb) c.mb = mb; else delete c.mb; mbRemember(name, mb);
       if (ci < 0) lib.classes.push(c);
       saveLib(); closeDlg(); renderLib();
@@ -6337,6 +6380,8 @@ function rosterMatch(names) {
   const used = new Set(), map = new Map(), left = () => [...new Set(names)].filter(n => !map.has(n));
   const studs = batch.students.map(st => ({ st, w: new Set(nameWords(st.key)) }));
   const give = (n, x) => { used.add(x.st); map.set(n, x.st); };
+  const c = classOfNames(names);   // a spelling she linked, or the student's ID in the folder name, is a sure match, even over an empty roster spot of the same name
+  if (c && c.info) for (const x of studs) { if (used.has(x.st) || (x.st.gap && !x.st.files.length)) continue; const h = infoHits(c, x.st.key).filter(n => !map.has(n)); if (h.length === 1) give(h[0], x); }
   for (const n of left()) { const x = studs.find(x => !used.has(x.st) && x.st.key === n); if (x) give(n, x); }
   for (const n of left()) {
     const w = new Set(nameWords(n)), hits = studs.filter(x => !used.has(x.st) && x.w.size === w.size && [...w].every(t => x.w.has(t)));
@@ -6366,7 +6411,10 @@ function rosterSort() {
   }
   batch.students = batch.students.filter(st => !(st.gap && !st.files.length && !gradeHasWork(st.grade) && !(c && c.names.includes(st.key))));
   if (c && c.names.length) {
-    const have = rosterMatch(c.names), saved = newestWork(store.get(batch.id, null), batch.keptWork);
+    let have = rosterMatch(c.names);
+    const spare = batch.students.filter(st => st.gap && !st.files.length && !gradeHasWork(st.grade) && have.has(st.key) && have.get(st.key) !== st);   // an empty spot another folder now fills
+    if (spare.length) { batch.students = batch.students.filter(st => !spare.includes(st)); have = rosterMatch(c.names); }
+    const saved = newestWork(store.get(batch.id, null), batch.keptWork);
     for (const nm of c.names) if (!have.has(nm)) {
       const s = saved && saved.s && saved.s[nm];
       batch.students.push(gapStudent(nm, s));
@@ -8636,7 +8684,7 @@ const altsRx = (lists, more) => {
 };
 let nameMemo = { sig: null };
 function namesNow() {
-  const c = batchClass(), sig = batch.students.map(s => s.key).join('\n') + '\n\n' + (c ? c.names.join('\n') : '');
+  const c = batchClass(), sig = batch.students.map(s => s.key).join('\n') + '\n\n' + (c ? c.names.join('\n') + '\n\n' + infoSig(c) : '');
   if (nameMemo.sig === sig) return nameMemo;
   const roster = new Map();
   if (c) for (const [n, s] of rosterMatch(c.names)) roster.set(s.key, [...(roster.get(s.key) || []), n]);
@@ -10637,7 +10685,7 @@ function ovDraw() {
     (s.meanPct != null ? '<div class="ovcharts"><section id="ovBands"><h3 class="ovh3">Grade bands</h3>' + bandsHtml(s.counted, PCT_TENS) + '<p class="muted ovcap2">How many papers landed in each range of percents.</p></section>' +
       '<section id="ovStrip"><h3 class="ovh3">Every paper’s percent</h3>' + stripHtml(s.counted, s.meanPct, 'Average') + '<p class="muted ovcap2">One dot for each paper. Point at one to see whose it is, and click it to open them.</p></section></div>' : '') +
     '<div class="ovcharts"><section id="ovSpread"><h3 class="ovh3">Score spread</h3>' + spreadHtml(s) + '</section><section id="ovRows"><h3 class="ovh3">Rows the class found hardest</h3>' + rowsHtml(s) + '</section></div>' +
-    trendHtml(s) +
+    trendHtml(s) + levelHtml(s) +
     '<section id="ovWho"><h3 class="ovh3">Who’s missing or unfinished</h3>' + whoHtml(s) + '</section></div>') +
     '<div class="bf"><button class="btn" data-ovgrades>Grades list</button><button class="btn primary" data-close>Close</button></div>');
   if (on) pctDraw();
@@ -11380,7 +11428,12 @@ function nameNear(a, b) {
   return same > 0;
 }
 function rosterPairs(names, keys) {
-  const sure = new Map(), fits = names.map(n => keys.map(k => nameFit(n, k)));
+  const sure = new Map(), c = classOfNames(names);
+  if (c && c.info) {   // a spelling she linked, or the student's ID in the name, first
+    for (const k of keys) { const h = infoHits(c, k); if (h.length === 1 && !sure.has(h[0])) sure.set(h[0], k); }
+    const took = new Set(sure.values()); names = names.filter(n => !sure.has(n)); keys = keys.filter(k => !took.has(k));
+  }
+  const fits = names.map(n => keys.map(k => nameFit(n, k)));
   names.forEach((n, i) => {
     const top = Math.max(0, ...fits[i]); if (!top) return;
     const hits = keys.filter((_, j) => fits[i][j] === top); if (hits.length !== 1) return;
@@ -11787,6 +11840,227 @@ function bringBackNotes(fb, byCode) {
 document.addEventListener('click', e => { const b = e.target.closest('[data-bbmore]'); if (b) copy('Please continue with feedback for these codes, in the same format: ' + b.dataset.bbmore, 'Copied. Paste it into Claude.'); });
 
 Object.assign(window.__gs, { nameFit, nameNear, rosterPairs, pastScore, histFind, histFill, driftRead, driftSay, dropBatched, consData, openCons, openSame, coverList, coverOk, coverLine, coverFirst, checkCovers, SHARE_ASK, nameFreeText, paperReads });
+
+/* ---------------- student details: ID, email, other spellings and a note for each roster student ---------------- */
+const classOfNames = names => (names && lib.classes.find(k => k.names === names)) || null;   // rosterMatch and rosterPairs are handed c.names itself
+const infoOf = (c, n) => (c && c.info && c.info[n]) || {};
+const infoSig = c => c && c.info ? JSON.stringify(c.info) : '';
+const idDigits = v => String(v || '').replace(/\D/g, '');
+const wordKey = s => nameWords(s).sort().join(' ');
+function infoHits(c, key) {
+  if (!c || !c.info || !key) return [];
+  const kw = wordKey(key), nums = String(key).match(/\d{4,}/g) || [];
+  return c.names.filter(n => {
+    const i = c.info[n]; if (!i) return false;
+    if ((i.other || []).some(o => o === key || (kw && wordKey(o) === kw))) return true;
+    const d = idDigits(i.id); return d.length >= 4 && nums.includes(d);
+  });
+}
+const blankInfo = i => !i || (!i.id && !i.email && !(i.other || []).length && !(i.note || '').trim());
+function setInfo(c, n, patch) {
+  c.info ||= {};
+  const i = { ...c.info[n], ...patch };
+  for (const k of Object.keys(i)) if (i[k] === '' || (Array.isArray(i[k]) && !i[k].length)) delete i[k];
+  if (blankInfo(i)) delete c.info[n]; else c.info[n] = i;
+  if (!Object.keys(c.info).length) delete c.info;
+}
+function keepInfo(c, was, rows) {
+  const old = c.info || {}, next = {};
+  for (const n of c.names) if (old[n]) next[n] = old[n];
+  for (const r of rows) if (r.id || r.email) next[r.name] = { ...next[r.name], ...(r.id ? { id: r.id } : {}), ...(r.email ? { email: r.email } : {}) };
+  for (const n of (was || []).filter(n => !c.names.includes(n) && old[n])) {
+    const d = idDigits(old[n].id), to = d && c.names.find(m => idDigits((next[m] || {}).id) === d);
+    if (!to) continue;
+    const o = old[n], t = next[to] || {};
+    next[to] = { ...o, ...t, other: [...new Set([...(o.other || []), ...(t.other || []), n])] };
+  }
+  c.info = next;
+  if (!Object.keys(next).length) delete c.info;
+}
+const initials = n => { const w = String(n).replace(/[,_]/g, ' ').split(/\s+/).filter(x => /\p{L}/u.test(x)); const p = /,/.test(n) ? [w[1], w[0]] : [w[0], w[w.length - 1]]; return p.filter(Boolean).map(x => x[0].toUpperCase()).join('').slice(0, 2) || '?'; };
+const whoBtn = (attrs, label) => '<span class="whob" role="button" tabindex="0" ' + attrs + ' title="Student details" aria-label="Student details for ' + esc(label) + '">i</span>';
+
+function personOf(st) {
+  const c = batchClass();
+  if (!c) return { c: null, name: null, folder: st.key };
+  if (st.gap && c.names.includes(st.key)) return { c, name: st.key };
+  const n = (namesNow().roster.get(st.key) || [])[0];
+  return n ? { c, name: n, folder: st.key } : { c, name: null, folder: st.key };
+}
+const cardForStudent = i => { if (anonOn()) return; const p = personOf(batch.students[i]); personCard(p.c && p.c.id, p.name, p.folder); };
+
+async function classWork(c, name) {
+  if (batch) saveNow();
+  const all = await earlierWork('', d => hasWork(d) || !!(d && d.read)).catch(() => []);
+  const seen = new Set(), rows = [];
+  for (const [id, d] of all) {
+    const m = keptMeta.get(id) || {};
+    if (m.newer && keptMeta.has(m.newer)) continue;
+    if (pastClass(d, m) !== c.id) continue;
+    const f = m.asg && findItem(m.asg), label = (f && f.it.name) || m.name || (batch && batch.id === id ? batch.name : 'A download'), one = m.asg || label;
+    if (seen.has(one)) continue; seen.add(one);
+    const k = rosterPairs(c.names, Object.keys({ ...d.s, ...d.read })).get(name);
+    const g = k ? { ...((d.s[k] || {}).g || {}), ...(d.read && d.read[k] ? { read: d.read[k] } : {}) } : null;
+    rows.push({ name: label, t: workTime(d) || d.t || 0, p: g ? pastScore(d.setup, g) : null, none: !k || !!(d.s[k] && d.s[k].gap) });
+  }
+  return rows.sort((a, b) => a.t - b.t);
+}
+function workRows(rows) {
+  if (!rows.length) return '<div class="muted pc-sm">No downloads for this class yet.</div>';
+  return rows.map(r => {
+    const p = r.p, right = !p ? '<span class="stag">nothing turned in</span>'
+      : p.status ? '<span class="stag">' + STATUS_LABEL[p.status].toLowerCase() + '</span>'
+      : p.total != null ? '<span><b>' + fmtNum(p.total) + ' / ' + fmtNum(p.max) + '</b>' + (p.pct != null ? ' · ' + fmtPct(p.pct) : '') + (p.partial ? ' <span class="stag">partial</span>' : '') + '</span>'
+      : p.pct != null ? '<b>' + fmtPct(p.pct) + '</b>' : '<span class="muted">not scored yet</span>';
+    return '<div class="pc-a"><span class="pc-an" title="' + esc(r.name) + '">' + esc(r.name) + '</span>' + right + '</div>';
+  }).join('');
+}
+function workHead(c, rows) {
+  const done = rows.filter(r => r.p).length, pc = rows.map(r => r.p).filter(p => p && p.pct != null && !p.partial && !p.status).map(p => p.pct);
+  return 'In ' + esc(c.name) + (rows.length ? ' · ' + done + ' of ' + rows.length + ' turned in' + (pc.length ? ' · average ' + fmtPct(pc.reduce((a, b) => a + b, 0) / pc.length) : '') : '');
+}
+
+let pcOpen = null;
+function closeCard() { const el = $('#pcard'); if (el) el.remove(); const back = pcOpen && pcOpen.back; pcOpen = null; if (back && back.isConnected) back.focus(); }
+function personCard(cid, name, folder) {
+  const c = cid ? classById(cid) : null, back = document.activeElement;
+  closeCard(); pcOpen = { cid, name, folder, back };
+  const el = document.createElement('div'); el.id = 'pcard'; el.className = 'pc-back';
+  document.body.appendChild(el);
+  renderCard();
+  const f = el.querySelector('.pc-x'); if (f) f.focus();
+}
+function renderCard() {
+  const el = $('#pcard'); if (!el || !pcOpen) return;
+  const { cid, name, folder } = pcOpen, c = cid ? classById(cid) : null;
+  if (!name) return renderStranger(el, c, folder);
+  const i = infoOf(c, name), pos = c.names.indexOf(name);
+  const field = (k, label, ph, type) => '<label class="pc-f"><span class="pc-k">' + label + '</span><input class="pc-in" type="' + (type || 'text') + '" data-pf="' + k + '" value="' + esc(i[k] || '') + '" placeholder="' + ph + '" autocomplete="off" spellcheck="false">' +
+    '<span class="pc-acts">' + (i[k] && k !== 'prev' ? '<button class="link" data-pcopy="' + k + '">Copy</button>' + (k === 'email' ? '<a class="link" href="mailto:' + esc(i.email) + '">Email</a>' : '') : '') + '</span></label>';
+  el.innerHTML = '<div class="pc" role="dialog" aria-modal="true" aria-label="Student details"><div class="pc-hd"><div class="pc-av">' + esc(initials(name)) + '</div><div class="pc-tt"><h2>' + esc(name) + '</h2>' +
+    '<div class="muted pc-sm">' + esc(c.name) + ' · ' + (pos + 1) + ' of ' + c.names.length + ' on the roster' + (folder && folder !== name ? ' · folder “' + esc(folder) + '”' : '') + '</div></div><button class="icon pc-x" aria-label="Close">✕</button></div>' +
+    '<div class="pc-bd">' + field('id', 'Student ID', 'Add their student ID') + field('email', 'Email', 'Add their email', 'email') + field('prev', 'Last year', 'Their level last year (optional)') +
+    '<div class="pc-f"><span class="pc-k">Also called</span><span class="pc-chips">' + (i.other || []).map((o, k) => '<span class="pc-chip">' + esc(o) + '<button data-pdrop="' + k + '" aria-label="Remove ' + esc(o) + '" title="Remove this spelling">×</button></span>').join('') +
+    '<button class="pc-chip pc-add" data-padd>+ add</button></span><span></span></div>' +
+    '<label class="pc-f pc-top"><span class="pc-k">Note</span><textarea class="pc-in" data-pf="note" rows="2" placeholder="Anything you want to remember">' + esc(i.note || '') + '</textarea><span></span></label></div>' +
+    '<div class="pc-sec"><h3 id="pcWorkH">' + workHead(c, []) + '</h3><div id="pcWork"><div class="muted pc-sm">Looking through saved work…</div></div></div>' +
+    '<div class="pc-ft muted">Kept in this browser with the roster. Other spellings and the student ID match folders to this student.</div></div>';
+  const me = pcOpen;
+  classWork(c, name).then(rows => { if (pcOpen !== me || !$('#pcWork')) return; $('#pcWorkH').innerHTML = workHead(c, rows); $('#pcWork').innerHTML = workRows(rows); }).catch(e => console.error(e));
+}
+function renderStranger(el, c, folder) {
+  const free = c ? c.names.filter(n => !(batch && rosterMatch(c.names).has(n))) : [];
+  const near = c ? [...free].sort((a, b) => (nameFit(b, folder) * 2 + nameNear(b, folder)) - (nameFit(a, folder) * 2 + nameNear(a, folder))) : [];
+  const guess = near.find(n => nameFit(n, folder) || nameNear(n, folder));
+  const rest = c ? c.names.filter(n => !free.includes(n)) : [];
+  el.innerHTML = '<div class="pc" role="dialog" aria-modal="true" aria-label="Student details"><div class="pc-hd"><div class="pc-av pc-q">?</div><div class="pc-tt"><h2>' + esc(folder) + '</h2>' +
+    '<div class="muted pc-sm">' + (c ? 'Folder name · not on the ' + esc(c.name) + ' roster' : 'Folder name · no roster picked for this download') + '</div></div><button class="icon pc-x" aria-label="Close">✕</button></div>' +
+    (c && c.names.length ? (guess ? '<div class="pc-note">This looks like ' + esc(guess) + '.</div>' : '') +
+      '<div class="pc-bd"><label class="pc-f"><span class="pc-k">This is</span><select id="pcLink">' + near.map(n => '<option' + (n === guess ? ' selected' : '') + '>' + esc(n) + '</option>').join('') +
+      (rest.length ? '<optgroup label="Already matched">' + rest.map(n => '<option>' + esc(n) + '</option>').join('') + '</optgroup>' : '') + '</select><button class="btn sm primary" data-plink>Link</button></label></div>' +
+      '<div class="pc-ft muted">Linking saves “' + esc(folder) + '” as another spelling of that student, so later downloads with this name go to them by themselves.</div>'
+      : '<div class="pc-ft muted">' + (c ? 'Add students to the ' + esc(c.name) + ' roster to link this folder to one of them.' : 'Pick a roster under More to link this folder to a student.') + '</div>') + '</div>';
+}
+function linkFolder(c, name, folder) {
+  setInfo(c, name, { other: [...new Set([...(infoOf(c, name).other || []), folder])] });
+  saveLib();
+  if (batch && batchClass() === c) { const st = batch.students[cur]; rosterSort(); cur = Math.max(0, batch.students.indexOf(st)); setBatchName(); renderList(); saveSoon(); }
+  toast('“' + folder + '” is now linked to ' + name);
+}
+document.addEventListener('click', async e => {
+  const el = $('#pcard'); if (!el || !pcOpen) return;
+  if (e.target === el || e.target.closest('.pc-x')) return closeCard();
+  const c = classById(pcOpen.cid), n = pcOpen.name;
+  const cp = e.target.closest('[data-pcopy]'); if (cp) return copy(infoOf(c, n)[cp.dataset.pcopy] || '', 'Copied');
+  const dr = e.target.closest('[data-pdrop]');
+  if (dr) { const o = [...(infoOf(c, n).other || [])]; o.splice(+dr.dataset.pdrop, 1); setInfo(c, n, { other: o }); saveLib(); afterInfo(c); return renderCard(); }
+  if (e.target.closest('[data-padd]')) {
+    const v = await askTextDlg('Another way ' + n + '’s name is written (in a download, a folder or ManageBac)', '', { ok: 'Add' });
+    if (v && v.trim()) { setInfo(c, n, { other: [...new Set([...(infoOf(c, n).other || []), v.trim()])] }); saveLib(); afterInfo(c); }
+    return renderCard();
+  }
+  if (e.target.closest('[data-plink]')) { const to = $('#pcLink').value; linkFolder(c, to, pcOpen.folder); pcOpen.name = to; return renderCard(); }
+}, true);
+document.addEventListener('change', e => {
+  const f = e.target.closest && e.target.closest('#pcard [data-pf]'); if (!f || !pcOpen) return;
+  const c = classById(pcOpen.cid), v = f.value.trim();
+  if (f.dataset.pf === 'email' && v && !EMAIL_RX.test(v)) { toast('That doesn’t look like an email address'); return; }
+  setInfo(c, pcOpen.name, { [f.dataset.pf]: f.dataset.pf === 'id' ? v.replace(/\s+/g, '') : v }); saveLib(); afterInfo(c);
+  const acts = f.parentElement.querySelector('.pc-acts');
+  if (acts) acts.innerHTML = v && f.dataset.pf !== 'prev' ? '<button class="link" data-pcopy="' + f.dataset.pf + '">Copy</button>' + (f.dataset.pf === 'email' ? '<a class="link" href="mailto:' + esc(v) + '">Email</a>' : '') : '';
+}, true);
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('#pcard')) { e.stopPropagation(); e.preventDefault(); closeCard(); } }, true);
+function afterInfo(c) {
+  if (batch && batchClass() === c) { const st = batch.students[cur]; rosterSort(); cur = Math.max(0, batch.students.indexOf(st)); setBatchName(); renderList(); saveSoon(); }
+  if ($('#peopleTbl')) fillPeople(c);
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest && e.target.closest('.whob'); if (!b) return;
+  e.stopPropagation(); e.preventDefault();
+  if (b.dataset.wi != null) return cardForStudent(+b.dataset.wi);
+  if (b.dataset.wc) return personCard(b.dataset.wc, b.dataset.wn);
+}, true);
+document.addEventListener('keydown', e => { if ((e.key === 'Enter' || e.key === ' ') && e.target.classList && e.target.classList.contains('whob')) { e.preventDefault(); e.target.click(); } }, true);
+
+function openPeople(ci) {
+  const c = lib.classes[ci]; if (!c) return;
+  openDlg('<div class="bh"><h2>' + esc(c.name) + ' students</h2><span class="muted" id="peopleSum"></span><button class="icon" data-close aria-label="Close" style="margin-left:auto">✕</button></div>' +
+    '<div class="bb"><div id="peopleTbl"></div><div id="peoplePaste" hidden><p class="muted" style="margin:10px 0 6px;font-size:13.5px">Paste a class list with names and a student ID or email column (from ManageBac or a spreadsheet). Each row fills in the student with the same name.</p><textarea class="big" id="peopleIn" placeholder="Name, student ID, email"></textarea>' +
+    '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px"><button class="btn sm" data-pcancel>Cancel</button><button class="btn sm primary" data-pfill>Fill in</button></div></div></div>' +
+    '<div class="bf"><button class="btn" data-ppaste>Paste IDs and emails…</button><button class="btn" data-pmail>Copy all emails</button><span style="margin-right:auto"></span><button class="btn primary" data-close>Done</button></div>');
+  fillPeople(c);
+  const box = $('#dlgBox');
+  box.onclick = e => {
+    if (e.target.closest('[data-close]')) return closeDlg();
+    if (e.target.closest('[data-ppaste]')) { $('#peoplePaste').hidden = false; return $('#peopleIn').focus(); }
+    if (e.target.closest('[data-pcancel]')) { $('#peoplePaste').hidden = true; return; }
+    if (e.target.closest('[data-pmail]')) { const m = c.names.map(n => infoOf(c, n).email).filter(Boolean); return m.length ? copy(m.join('; '), 'Copied ' + m.length + (m.length === 1 ? ' email' : ' emails')) : toast('No emails yet'); }
+    if (e.target.closest('[data-pfill]')) {
+      const rows = parseRosterRows($('#peopleIn').value).filter(r => r.id || r.email), pairs = rosterPairs(c.names, rows.map(r => r.name));
+      let n = 0; const miss = [];
+      for (const r of rows) { const who = c.names.find(x => pairs.get(x) === r.name); if (!who) { miss.push(r.name); continue; } setInfo(c, who, { ...(r.id ? { id: r.id } : {}), ...(r.email ? { email: r.email } : {}) }); n++; }
+      saveLib(); afterInfo(c); $('#peoplePaste').hidden = true; $('#peopleIn').value = '';
+      toast(n ? 'Filled in ' + n + (n === 1 ? ' student' : ' students') + (miss.length ? '. Not on the roster: ' + miss.slice(0, 3).join(', ') + (miss.length > 3 ? ' and ' + (miss.length - 3) + ' more' : '') : '') : 'No names matched the roster', 6000);
+    }
+  };
+  box.onchange = e => {
+    const f = e.target.closest('[data-pp]'); if (!f) return;
+    const n = c.names[+f.dataset.pi], v = f.value.trim();
+    if (f.dataset.pp === 'email' && v && !EMAIL_RX.test(v)) { toast('That doesn’t look like an email address'); return; }
+    setInfo(c, n, { [f.dataset.pp]: f.dataset.pp === 'id' ? v.replace(/\s+/g, '') : v }); saveLib(); afterInfo(c);
+  };
+}
+function fillPeople(c) {
+  const t = $('#peopleTbl'); if (!t) return;
+  const withId = c.names.filter(n => infoOf(c, n).id).length;
+  $('#peopleSum').textContent = c.names.length + (c.names.length === 1 ? ' student' : ' students') + ' · ' + withId + ' with an ID';
+  t.innerHTML = c.names.length ? '<table class="gl ppl"><thead><tr><th>#</th><th>Name</th><th>Student ID</th><th>Email</th><th>Last year</th><th>Also called</th></tr></thead><tbody>' + c.names.map((n, k) => { const i = infoOf(c, n);
+    return '<tr><td class="n">' + (k + 1) + '</td><td class="nm"><button class="link" data-wc="' + esc(c.id) + '" data-wn="' + esc(n) + '">' + esc(n) + '</button></td>' +
+      '<td><input class="pc-in" data-pp="id" data-pi="' + k + '" value="' + esc(i.id || '') + '" placeholder="Student ID" aria-label="Student ID for ' + esc(n) + '"></td>' +
+      '<td><input class="pc-in" type="email" data-pp="email" data-pi="' + k + '" value="' + esc(i.email || '') + '" placeholder="Email" aria-label="Email for ' + esc(n) + '"></td>' +
+      '<td><input class="pc-in" data-pp="prev" data-pi="' + k + '" value="' + esc(i.prev || '') + '" placeholder="Optional" aria-label="Last year’s level for ' + esc(n) + '"></td>' +
+      '<td class="muted">' + ((i.other || []).length || '–') + '</td></tr>'; }).join('') + '</tbody></table>'
+    : '<p class="muted">No students on this roster yet. Use Edit roster to add them.</p>';
+}
+document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('#peopleTbl [data-wc]'); if (b) { e.stopPropagation(); personCard(b.dataset.wc, b.dataset.wn); } }, true);
+
+function levelHtml(s) {
+  if (anonOn() || s.meanPct == null) return '';
+  const c = batchClass(); if (!c || !c.info) return '';
+  const groups = new Map();
+  for (const x of s.counted) {
+    if (x.pct == null) continue;
+    const p = personOf(batch.students[x.i]), lv = (p.name ? infoOf(c, p.name).prev || '' : '').trim();
+    if (!groups.has(lv)) groups.set(lv, []);
+    groups.get(lv).push(x);
+  }
+  const named = [...groups.keys()].filter(Boolean).sort(natural);
+  if (!named.length) return '';
+  const row = (label, xs) => { const v = xs.map(x => x.pct); return '<tr><td>' + label + '</td><td class="c">' + xs.length + '</td><td class="c"><b>' + fmtPct(v.reduce((a, b) => a + b, 0) / v.length) + '</b></td><td class="c">' + fmtPct(Math.min(...v)) + ' – ' + fmtPct(Math.max(...v)) + '</td></tr>'; };
+  return '<section id="ovLevels"><h3 class="ovh3">By last year’s level</h3><table class="gl ovlv"><thead><tr><th>Last year</th><th>Papers</th><th>Average</th><th>Range</th></tr></thead><tbody>' +
+    named.map(k => row(esc(k), groups.get(k))).join('') + (groups.has('') ? row('<span class="muted">Not filled in</span>', groups.get('')) : '') + '</tbody></table>' +
+    '<p class="muted ovcap2">From the Last year field on each student’s details (the ⓘ beside a name). Finished scores only.</p></section>';
+}
 
 /* ---------------- paper scans: turned, crooked, blank and faint pages ---------------- */
 const SCAN_PX = 1000;   // the long side of the picture that's looked at
@@ -12851,7 +13125,12 @@ function mergeLib(a0, b0, o = {}) {
       e.fields.names = e.node.names = [...(x.fields.names || []), ...add];
       if (add.length) notes.push({ kind: 'roster', name: x.fields.name, add, drop: [], both: true });
     } else if (x.type === 'c' && m.fromY.includes('names')) rosterNote(notes, x, y);
-    const other = m.both.filter(k => k !== 'names');
+    if (x.type === 'c' && m.both.includes('info')) {   // student details: per student, and a saved spelling is never lost
+      const xi = x.fields.info || {}, yi = y.fields.info || {}, [lo, hi] = win === y ? [xi, yi] : [yi, xi], out = {};
+      for (const k of new Set([...Object.keys(xi), ...Object.keys(yi)])) { const o2 = [...new Set([...((lo[k] || {}).other || []), ...((hi[k] || {}).other || [])])]; out[k] = { ...lo[k], ...hi[k], ...(o2.length ? { other: o2 } : {}) }; }
+      e.fields.info = e.node.info = out;
+    }
+    const other = m.both.filter(k => k !== 'names' && k !== 'info');
     if (other.length) notes.push({ kind: 'both', type: x.type, name: e.fields.name, rubric: other.includes('setup') });
     else if (m.fromY.some(k => k !== 'names')) notes.push({ kind: 'changed', type: x.type, name: e.fields.name });
     kept.set(id, e);
