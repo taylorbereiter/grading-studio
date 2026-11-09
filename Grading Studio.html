@@ -265,6 +265,11 @@ body{padding-bottom:var(--savebar,0px)}.app{height:calc(100vh - var(--savebar,0p
 .pop{position:absolute;z-index:5;width:290px;background:var(--surface);border:1px solid var(--line-strong);border-radius:10px;box-shadow:0 10px 30px rgba(15,20,35,.18);padding:10px;display:flex;flex-direction:column;gap:8px}
 .pop textarea{width:100%;min-height:76px;border:1px solid var(--line-strong);border-radius:7px;padding:7px 8px;font-size:14px;background:var(--surface);resize:vertical}
 .pop .chips{display:flex;flex-wrap:wrap;gap:5px;max-height:120px;overflow:auto}
+.ctags{display:flex;flex-wrap:wrap;gap:6px}
+.field .ctag{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line-strong);border-radius:999px;padding:4px 12px 4px 9px;background:var(--surface);font-size:13px;font-weight:500;color:var(--fg-2);cursor:pointer;margin:0}
+.field .ctag input{margin:0;accent-color:var(--accent)}
+.field .ctag:has(input:checked){border-color:var(--accent);background:var(--accent-soft);color:var(--accent)}
+.field .ctag:has(input:focus-visible){outline:2px solid var(--accent);outline-offset:2px}
 .chip{display:inline-flex;align-items:center;gap:4px;border:1px solid var(--line);background:var(--surface-2);border-radius:999px;padding:3px 4px 3px 10px;font-size:12.5px;max-width:100%}
 .chip span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer}
 .chip button{border:0;background:none;color:var(--faint);padding:0 4px;font-size:14px;line-height:1}
@@ -1010,6 +1015,104 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
 .ptab tr.lo td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
 .ptab .link{text-decoration:none;font-weight:500}
 @media (max-width:700px){.dlg .box .pbody{grid-template-columns:1fr}.pctl{border-right:0;border-bottom:1px solid var(--line)}}
+/* ---------- gradebook ---------- */
+:root{--bk-sum:#164E80;--bk-ic:#6FA3D2;--bk-fm:#8A919E}
+:root[data-theme="dark"]{--bk-sum:#7FB2E0;--bk-ic:#3F78AE;--bk-fm:#6B7280}
+.dlg .box.bkbox{width:min(1400px,100%);height:calc(100vh - 32px)}
+.dlg .box .bkbody{padding:0;display:flex;flex-direction:column;min-height:0;overflow:auto;position:relative}
+.bkbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 18px;border-bottom:1px solid var(--line);background:var(--bg);position:sticky;top:0;z-index:3}
+.bkbar .sp{flex:1}
+.bkbar label{display:flex;align-items:center;gap:6px;font-size:13px}
+.bkterms{margin-left:0}
+.bknote{margin:12px 18px 0;padding:8px 12px;border:1px solid var(--line-strong);border-radius:10px;background:var(--surface-2);font-size:13.5px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.bkpad{padding:16px 18px}
+.bkcap{margin:8px 18px 16px;font-size:12.5px}
+.bkpill{display:inline-block;font-size:11px;font-weight:600;border-radius:999px;padding:1px 8px;white-space:nowrap;vertical-align:1px}
+.bkpill.sum{background:var(--bk-sum);color:#fff}
+.bkpill.ic{background:var(--accent-soft);color:var(--accent);border:1px solid color-mix(in srgb,var(--accent) 30%,transparent)}
+.bkpill.fm{background:var(--surface-2);color:var(--fg-2);border:1px solid var(--line-strong)}
+.bkpill.typed{background:var(--surface);color:var(--muted);border:1px dashed var(--line-strong);font-weight:500}
+.bkwrap{overflow:auto;margin:12px 18px 0;border:1px solid var(--line);border-radius:10px}
+.bktab{border-collapse:separate;border-spacing:0;font-size:13px;font-variant-numeric:tabular-nums;width:100%}
+.bktab th,.bktab td{border-bottom:1px solid var(--line);padding:6px 9px;white-space:nowrap;text-align:center}
+.bktab thead th{font-weight:500;color:var(--fg-2);vertical-align:bottom;font-size:12px;background:var(--surface);position:sticky;top:0;z-index:1}
+.bktab tr.bkg th{font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);border-bottom:0;padding-top:10px;position:static}
+.bktab tr.bkg th.sum{color:var(--bk-sum)}.bktab tr.bkg th.ic{color:var(--accent)}
+.bktab .bknm{text-align:left;font-weight:500;position:sticky;left:0;background:var(--surface);z-index:1}
+.bktab thead .bknm{z-index:2}
+.bkch button{border:0;background:none;font:inherit;color:var(--fg);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;max-width:110px;white-space:normal;line-height:1.2;margin:0 auto;padding:2px 4px;border-radius:6px}
+.bkch button:hover,.bkch button:focus-visible{background:var(--surface-2)}
+.bkch small{color:var(--muted);font-size:11px}
+.bkch.hi button{outline:2px solid var(--accent);outline-offset:1px}
+.bktab .bkavg{background:color-mix(in srgb,var(--surface-2) 55%,var(--surface));color:var(--fg-2)}
+.bktab .bkterm{background:var(--accent-soft);color:var(--accent);font-weight:600}
+.bktab .bkterm small{font-weight:500;color:var(--muted);font-size:11px}
+.bktab tr.bkfoot td{background:var(--bg);font-weight:600;border-top:1px solid var(--line-strong)}
+.bktab tr.bkfoot td.bkterm{background:var(--accent-soft)}
+.bktab td small{color:var(--muted);font-size:11px}
+.bktab td.bked{cursor:text}
+.bktab td.bked:hover{box-shadow:inset 0 0 0 1px var(--line-strong)}
+.bktab td.bked:focus{outline:2px solid var(--accent);outline-offset:-2px}
+.bkcin{width:60px;border:1px solid var(--accent);border-radius:4px;font:inherit;font-weight:600;text-align:center;background:var(--surface);color:var(--fg);padding:1px 2px}
+.bknone{color:var(--muted);opacity:.7}
+.bkst{color:var(--muted);font-size:11.5px}
+.bkfb{color:var(--accent);font-size:15px;font-weight:600}
+.bkpop{position:absolute;z-index:6;width:270px;background:var(--surface);border:1px solid var(--line-strong);border-radius:10px;box-shadow:0 8px 30px rgba(20,25,35,.18);padding:12px;display:flex;flex-direction:column;gap:8px;font-size:13px}
+.bkpf{display:flex;flex-direction:column;gap:4px;font-size:12.5px;font-weight:600;color:var(--fg-2)}
+.bkpf input,.bkpf select{font-weight:500}
+.bkin{border:1px solid var(--line-strong);border-radius:8px;padding:5px 8px;font:inherit;font-size:13.5px;background:var(--surface);color:var(--fg)}
+.bkpop input[type=date]{border:1px solid var(--line-strong);border-radius:8px;padding:4px 8px;font:inherit;background:var(--surface);color:var(--fg)}
+.bkleg{display:flex;gap:14px;font-size:12px;color:var(--fg-2);margin-top:6px;flex-wrap:wrap}
+.bkleg span{display:inline-flex;align-items:center;gap:6px}
+.bkleg i{display:inline-block;width:14px;height:3px;border-radius:2px;background:var(--ov-bar)}
+.bkleg i.sum{background:var(--bk-sum);height:10px;width:10px;border-radius:50%}.bkleg i.ic{background:var(--bk-ic);height:10px;width:10px;border-radius:50%}
+.bkleg i.ref{background:none;border-top:2px dashed var(--fg-2);height:0}.bkleg i.mute{background:var(--line-strong)}.bkleg i.me{background:var(--accent)}
+.bkln{fill:none;stroke:var(--line-strong);stroke-width:2}
+.bkln.mute{stroke:var(--line-strong)}
+#bkStuLine .bkln:not(.mute){stroke:var(--accent);stroke-width:2.5}
+.bkdot{stroke:var(--surface);stroke-width:1.5;fill:var(--accent)}
+.bkdot.sum{fill:var(--bk-sum)}.bkdot.ic{fill:var(--bk-ic)}
+.bkdot:focus{outline:none;stroke:var(--accent);stroke-width:2.5}
+.bkref{stroke:var(--fg-2);stroke-dasharray:5 4;stroke-width:1.5}
+.bkrng{fill:var(--surface-2)}
+.bkiqr{fill:var(--accent)}.bkiqr.sum{fill:var(--bk-sum)}.bkiqr.ic{fill:var(--bk-ic)}
+.bkiqr:focus{outline:none;stroke:var(--accent);stroke-width:2}
+.bkmid{stroke:var(--surface);stroke-width:2.5}
+.bkcmp{display:grid;grid-template-columns:minmax(0,150px) minmax(0,1fr) 72px;gap:10px;align-items:center;font-size:13px;margin:6px 0}
+.bkcmp span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bkcmp.me span{font-weight:600}
+.bkcmp b{text-align:right;font-variant-numeric:tabular-nums}
+.bkcmpt{position:relative;height:16px;background:var(--surface-2);border-radius:4px}
+.bkcmpt i{position:absolute;left:0;top:0;bottom:0;border-radius:4px;background:var(--accent)}
+.bkcmpt i.sum{background:var(--bk-sum)}.bkcmpt i.ic{background:var(--bk-ic)}
+#bkCmp .bkcmp:not(.me) .bkcmpt i{background:var(--bk-ic)}
+.bkcmpt em{position:absolute;top:-3px;bottom:-3px;border-left:2px dashed var(--fg-2)}
+.bkstu{display:flex;align-items:center;gap:8px;margin-bottom:14px;font-size:16px}
+.bkfbline{margin:0;font-size:13.5px;color:var(--fg-2)}
+.bksetup{display:grid;grid-template-columns:repeat(auto-fit,minmax(480px,1fr));gap:20px 40px;max-width:1120px}
+.bktrow{display:grid;grid-template-columns:minmax(0,1fr) 150px 150px 28px;gap:8px;align-items:center;margin:6px 0}
+.bktrh{font-size:12px;margin-bottom:0}
+.bkwrow{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line);font-size:14px}
+.bkdotk{width:12px;height:12px;border-radius:50%;background:var(--bk-sum)}.bkdotk.ic{background:var(--bk-ic)}.bkdotk.fm{background:var(--bk-fm)}
+.bkhint{font-size:12.5px;margin:6px 0 0}
+.bkfootbtns{grid-column:1/-1;display:flex;gap:8px;justify-content:flex-end;align-items:center;margin-top:16px}
+.bkfootbtns .sp{flex:1}
+.bktypes{display:flex;flex-direction:column;max-width:720px}
+.bktyrow{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid var(--line);font-size:14px;flex-wrap:wrap}
+.bkaddv{max-width:920px}
+.bkaddgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px 16px;margin-bottom:12px;align-items:end}
+.bkaddgrid .pseg{align-self:flex-start}
+.bkmax{width:80px}
+.bkso{display:flex;gap:8px;align-items:center}
+.pseg button{white-space:nowrap}
+.bkbox .ovcharts{grid-template-columns:repeat(auto-fit,minmax(520px,1fr))}
+.bkh{margin:0 0 14px;font-size:16px}
+.bkpaste{width:100%;resize:vertical;border-style:dashed;background:var(--bg)}
+.bkent{margin-top:10px}
+.bkent .bksc{width:72px;text-align:right;padding:3px 6px}
+.pseg.sm button{font-size:12px;padding:3px 8px}
+.cls .card .bkpills{display:flex;gap:4px;flex-wrap:wrap;margin:2px 0 4px}
+@media (max-width:700px){.bktrow{grid-template-columns:1fr 1fr;}.bktrow [data-tf=name]{grid-column:1/-1}}
 
 /* the dots: the accent in light; a step deeper in dark, inside the range that reads as a mark on a dark surface */
 :root{--dot:var(--accent)}
@@ -1073,6 +1176,33 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
 .mkopt{display:flex;gap:9px;align-items:flex-start;margin:0 0 8px;font-size:13.5px}
 .mkopt input{margin-top:3px;accent-color:var(--accent)}
 .mkopt small{display:block;color:var(--muted);font-size:12.5px}
+
+/* ---------- Check the covers: the list of papers on the side ---------- */
+.dlg .box.ccbox{width:min(1280px,100%);height:calc((100vh - 32px - var(--savebar,0px)) / var(--uz))}
+.ccmid{flex:1;min-height:0;display:grid;grid-template-columns:270px minmax(0,1fr)}
+.ccmid>.bb{background:var(--surface-2);min-height:0}
+.ccside{border-right:1px solid var(--line);display:flex;flex-direction:column;min-height:0;background:var(--surface)}
+.cchead{padding:12px 14px 10px;border-bottom:1px solid var(--line)}
+.cchead b{font-size:14px}
+.ccbar{height:6px;background:var(--track);border-radius:3px;margin:7px 0 10px;overflow:hidden}
+.ccbar i{display:block;height:100%;width:0;background:var(--accent);border-radius:3px;transition:width .2s}
+.ccfind{width:100%;font:inherit;font-size:13px;padding:6px 9px;border:1px solid var(--line-strong);border-radius:7px;background:var(--surface);color:var(--fg)}
+.ccseg{display:flex;margin-top:8px}.ccseg button{flex:1;padding:5px 6px;font-size:12.5px}
+.ccrows{list-style:none;margin:0;padding:6px;overflow:auto;flex:1;min-height:0}
+.ccrows button{display:grid;grid-template-columns:18px minmax(0,1fr) auto;gap:8px;align-items:center;width:100%;text-align:left;border:0;background:none;padding:6px 8px;border-radius:7px;font-size:13.5px;color:var(--fg)}
+.ccrows button:hover{background:var(--surface-2)}
+.ccrows button[aria-current="true"]{background:var(--accent-soft);box-shadow:inset 3px 0 0 var(--accent)}
+.ccic{width:16px;height:16px;border-radius:50%;border:1.5px solid var(--line-strong);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;line-height:1}
+.ccic.done{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+.ccic.flag{border-color:var(--warn);color:var(--warn)}
+.ccnm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ccnm small{display:block;color:var(--warn);font-size:11.5px;white-space:normal}
+.ccpill{font-size:11px;background:var(--surface-2);color:var(--fg-2);border-radius:999px;padding:1px 7px;margin-left:4px}
+.cccode{font-size:11.5px;color:var(--muted)}
+.ccnone{padding:10px 8px;font-size:13px;color:var(--muted)}
+.ccalldone{margin:8px 10px 10px;padding:9px 12px;border-radius:8px;background:var(--accent-soft);color:var(--accent);font-size:13px;font-weight:600}
+@media (max-width:760px){.ccmid{grid-template-columns:1fr;grid-template-rows:minmax(0,40%) minmax(0,1fr)}.ccside{border-right:0;border-bottom:1px solid var(--line)}}
+.ccrows .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
 
 </style>
 
@@ -1152,6 +1282,7 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
         </div>
         <div class="mgrp" role="group" aria-labelledby="mhC"><div class="mhd" id="mhC">View and tools</div>
           <button class="mitem" id="quizBtn" title="For a scanned paper quiz: box each question once, then mark the same question for everyone at once">Quick mark (paper quiz)</button>
+          <button class="mitem" id="bookBtn" title="Every assignment for this class, by term, with term grades and charts">Gradebook</button>
           <button class="mitem" id="overviewBtn" title="The spread of scores, the hardest rubric rows, and who isn’t finished">Class overview</button>
           <button class="mitem" id="consBtn" title="Same-score papers side by side, and whether you got harder or softer as you went">Consistency check</button>
           <button class="mitem" id="lightBtn" title="Make a pale or too-bright scan easier to read">Lighting</button>
@@ -2384,6 +2515,7 @@ gsData.boot(function () {
    (per download), so the same download can be reopened later. Nothing is uploaded. */
 const $ = s => document.querySelector(s);
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const BK_TYPES = [['sum', 'Summative assessment', 'Summative'], ['ic', 'In-class assessment', 'In-class'], ['fm', 'Formative activity', 'Formative']];
 const natural = (a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
 
 /* ---------------- pdf.js worker (inlined, works from file://) ---------------- */
@@ -2591,7 +2723,7 @@ async function intake(entries, label, assignment, fromKeep) {   // entries: [{ p
   if (earlier) carryRoster(earlier);
   if (batch.restoredKey) { const k = batch.students.findIndex(st => st.key === batch.restoredKey); if (k >= 0) batch.restoredCur = k; }
   renderClassSel();
-  if (assignment) { assignment.batchId = id; assignment.opened = Date.now(); if (!assignment.setup || rub.toCard) assignment.setup = { ...setup, spot: undefined }; saveLib(); }
+  if (assignment) { assignment.batchId = id; assignment.opened = Date.now(); if (!assignment.setup || rub.toCard) assignment.setup = { ...setup, spot: undefined }; shareRubric(assignment); saveLib(); }
   keepWait = keepPapers(batch, label, fromKeep ? null : keepList, sameSize.length > 0);
   cur = 0; undoStack = []; selected = null;
   $('#start').hidden = true; $('#app').hidden = false;
@@ -3122,12 +3254,14 @@ async function openStudent(i, filePath) {
   paper.innerHTML = '<div class="who"><h2>' + esc(shownName(st, cur)) + '</h2><span>' + ((anonOn() ? anonPos(cur) : cur) + 1) + ' of ' + batch.students.length + '</span><span style="flex:1"></span>' +
     '<button class="btn sm" id="readBtn" title="A reading, prompt or other file shown above the papers: for everyone, or a different one for this student">Readings' + (refsFor(st).length ? ' (' + refsFor(st).length + ')' : '') + '</button>' +
     '<button class="btn sm" id="addFileBtn" title="Add a late or forgotten file to this student. You can also drop files on the paper or on a name.">+ Add file</button>' +
+    '<button class="btn sm" id="pasteTextBtn" title="Paste work a student sent as text in an email or a message. It becomes a page you can mark.">Paste text…</button>' +
     (st.files.some(viewable) || fileSeq(st).length > 1 ? '<button class="btn sm" id="arrangeBtn">Arrange pages</button>' : '') + '</div>' + groupBand(st);
   paper.scrollTop = 0;
   if (!st.files.length) {
     paper.insertAdjacentHTML('beforeend', '<div class="nofile"><b>Nothing turned in yet.</b> Add their paper here, or drop the file on the page or on their name. You can still give a score without one.' +
-      '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button class="btn sm primary" id="gapFile">Add their file…</button>' + (st.gap || batch.students.some(x => x.files.length) ? '<button class="btn sm" id="gapScan">From a scan…</button>' : '') + '</div></div>');
+      '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button class="btn sm primary" id="gapFile">Add their file…</button><button class="btn sm" id="gapPaste">Paste text…</button>' + (st.gap || batch.students.some(x => x.files.length) ? '<button class="btn sm" id="gapScan">From a scan…</button>' : '') + '</div></div>');
     $('#gapFile').onclick = () => pickAdd(st);
+    $('#gapPaste').onclick = () => openPasteText(st);
     const gs = $('#gapScan'); if (gs) gs.onclick = () => { scanInto = true; scanFor = null; $('#scanIn').click(); };
   }
   curMedia = null;
@@ -3218,6 +3352,7 @@ $('#paper').addEventListener('click', e => {
   }
   const mvf = e.target.closest('[data-mvfile]'); if (mvf) return openMoveFile(batch.students[cur], mvf.dataset.mvfile);
   if (e.target.closest('#addFileBtn')) return pickAdd(batch.students[cur]);
+  if (e.target.closest('#pasteTextBtn')) return openPasteText(batch.students[cur]);
   const ra = e.target.closest('[data-rmfile]');
   if (ra) {   // two clicks, so a stray click can't throw a file away
     if (!ra.dataset.armed) { ra.dataset.armed = '1'; ra.textContent = 'Click again to remove'; ra.style.color = 'var(--warn)'; setTimeout(() => { if (ra.isConnected) { delete ra.dataset.armed; ra.textContent = 'Remove'; ra.style.color = ''; } }, 4000); return; }
@@ -4248,7 +4383,7 @@ function openSetup() {
       const pageChanged = JSON.stringify(draft.rubricPage) !== JSON.stringify(setup.rubricPage) || draft.rubricPos !== setup.rubricPos;
       rowsTakenOut();
       setup = draft; store.set('gs.setup', { ...setup, spot: undefined, rubricPage: undefined });
-      if (batch && batch.assignment) { batch.assignment.setup = { ...setup, spot: undefined }; saveLib(); }
+      if (batch && batch.assignment) { batch.assignment.setup = { ...setup, spot: undefined }; shareRubric(batch.assignment); saveLib(); }
       if (batch) batch.students.forEach(refound);
       closeDlg(); renderGrade(); renderList(); saveSoon();
       for (const el of document.querySelectorAll('.docx')) if (el.wordShow) el.wordShow();   // the percent over an open Word rubric follows the new setup
@@ -5224,10 +5359,16 @@ async function checkCovers(start, onDone) {
   const list = coverList();
   if (!list.length) return toast('No papers to share');
   let pos = Math.min(start || 0, list.length - 1), token = 0, last = null, drawn = 0;
-  openDlg('<div class="bh"><h2 id="ccTitle">Check the covers</h2><span class="muted" id="ccCount"></span><span class="ccstate" id="ccState"></span><span class="ccstate stag" id="ccFlag" hidden></span><button class="icon" data-done aria-label="Done">✕</button></div>' +
-    '<div class="bb" id="ccBody" style="background:var(--surface-2)"></div>' +
-    '<div class="bf" style="justify-content:space-between"><span class="muted" style="font-size:13px;align-self:center;max-width:46%">Drag a box over a name it missed. Click one of your boxes to take it off.</span><span style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end"><button class="btn" data-every hidden>Use my last box on every paper</button><button class="btn" data-back>◀ Back</button><button class="btn primary" data-next>Next ▶</button></span></div>');
+  let find = '', only = 'all', undo = [];
+  openDlg('<div class="bh"><h2 id="ccTitle">Check the covers</h2><span class="ccstate" id="ccState"></span><button class="link ccstate" id="ccUndo" hidden>Mark not checked</button><span class="ccstate stag" id="ccFlag" hidden></span><span class="muted" id="ccCount"></span><button class="icon" data-done aria-label="Done">✕</button></div>' +
+    '<div class="ccmid"><aside class="ccside" aria-label="Papers"><div class="cchead"><b id="ccProg"></b><div class="ccbar"><i id="ccBar"></i></div>' +
+    '<input type="search" class="ccfind" id="ccFind" placeholder="Find a student" aria-label="Find a student" autocomplete="off">' +
+    '<span class="seg ccseg"><button data-ccf="all"></button><button data-ccf="todo"></button><button data-ccf="flag"></button></span></div>' +
+    '<ul class="ccrows" id="ccRows"></ul><div class="ccalldone" id="ccAllDone" hidden>✓ Every paper is checked.</div></aside>' +
+    '<div class="bb" id="ccBody"></div></div>' +
+    '<div class="bf" style="justify-content:space-between"><span class="muted" style="font-size:13px;align-self:center;max-width:46%">Drag a box over a name it missed. Click one of your boxes to take it off, or press ' + keyLabel('⌘Z') + ' for the last one.</span><span style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end"><button class="btn" data-every hidden>Use my last box on every paper</button><button class="btn" data-back>◀ Back</button><button class="btn primary" data-next>Next ▶</button></span></div>');
   const box = $('#dlgBox');
+  box.classList.add('ccbox');
   const finish = () => { if (eachKeys) document.removeEventListener('keydown', eachKeys, true); eachKeys = null; saveSoon(); (onDone || openShare)(); };
   const go = d => { pos += d; if (pos >= list.length) { toast('That was the last paper'); return finish(); } pos = Math.max(0, pos); show(); };
   const looked = () => {
@@ -5239,13 +5380,44 @@ async function checkCovers(start, onDone) {
     finish();
   };
   const showFlag = () => { const el = $('#ccFlag'); if (!el) return; const { st, d } = list[pos]; el.textContent = coverOk(st, d) ? '' : nameFlag(st, d); el.hidden = !el.textContent; };
-  findNames().then(showFlag);
+  findNames().then(() => { showFlag(); rows(); });
+  function head() {
+    const { st, d } = list[pos], ok = coverOk(st, d);
+    $('#ccState').textContent = ok ? '✓ Checked' : 'Not checked yet';
+    $('#ccState').className = ok ? 'ccstate' : 'ccstate stag';
+    $('#ccUndo').hidden = !ok;
+    showFlag();
+  }
+  const boxCount = d => d.pages.reduce((n, [path, p]) => n + ((shareState().boxes[boxKey(path, p)] || []).length), 0);
+  const codeLine = x => codeOf(x.st) + (x.k ? '-' + (x.k + 1) : '');
+  const flagOf = x => coverOk(x.st, x.d) ? '' : nameFlag(x.st, x.d).replace(/, check this one$/, '');
+  const shown = () => {
+    const q = find.trim().toLowerCase();
+    return list.map((x, i) => i).filter(i => (only === 'all' || (only === 'todo' ? !coverOk(list[i].st, list[i].d) : !!flagOf(list[i]))) && (!q || (coverName(list[i].st, list[i].k) + ' ' + codeLine(list[i])).toLowerCase().includes(q)));
+  };
+  function rows() {
+    const ul = $('#ccRows'); if (!ul) return;
+    const ok = list.map(x => coverOk(x.st, x.d)), n = ok.filter(Boolean).length, left = list.length - n;
+    $('#ccProg').textContent = n + ' of ' + list.length + ' checked';
+    $('#ccBar').style.width = (100 * n / list.length) + '%';
+    const say = list.map(flagOf), nf = say.filter(Boolean).length;
+    if (only === 'flag' && !nf) only = 'all';
+    const seg = { all: 'All ' + list.length, todo: 'Not checked ' + left, flag: 'Flagged ' + nf };
+    for (const b of box.querySelectorAll('[data-ccf]')) { b.textContent = seg[b.dataset.ccf]; b.setAttribute('aria-pressed', b.dataset.ccf === only); b.hidden = b.dataset.ccf === 'flag' && !nf; }
+    $('#ccAllDone').hidden = !!left;
+    const vis = shown();
+    ul.innerHTML = vis.map(i => {
+      const x = list[i], nb = boxCount(x.d);
+      return '<li><button data-ccgo="' + i + '"' + (i === pos ? ' aria-current="true"' : '') + '><span class="ccic' + (ok[i] ? ' done' : say[i] ? ' flag' : '') + '" aria-hidden="true">' + (ok[i] ? '✓' : say[i] ? '!' : '') + '</span>' +
+        '<span class="ccnm">' + esc(coverName(x.st, x.k)) + (nb ? '<span class="ccpill">' + nb + (nb === 1 ? ' box' : ' boxes') + '</span>' : '') + (say[i] ? '<small>' + esc(say[i]) + '</small>' : '') +
+        '<span class="sr">' + (ok[i] ? ', checked' : ', not checked yet') + '</span></span><span class="cccode">' + esc(codeLine(x)) + '</span></button></li>';
+    }).join('') || '<li class="ccnone">' + (find.trim() ? 'No one matches “' + esc(find.trim()) + '”.' : only === 'todo' ? 'Every paper is checked.' : 'Nothing to show.') + '</li>';
+    const cur = ul.querySelector('[aria-current="true"]'); if (cur) cur.scrollIntoView({ block: 'nearest' });
+  }
   async function show() {
     const my = ++token, { st, d, k } = list[pos], rx = coverRx(st);
     $('#ccTitle').textContent = coverName(st, 0) + ' → ' + codeOf(st) + (k ? '-' + (k + 1) : '');
-    $('#ccState').textContent = coverOk(st, d) ? '✓ Checked' : 'Not checked yet';
-    $('#ccState').className = coverOk(st, d) ? 'ccstate' : 'ccstate stag';
-    showFlag();
+    head(); rows();
     $('#ccCount').textContent = 'paper ' + (pos + 1) + ' of ' + list.length;
     box.querySelector('[data-back]').disabled = pos === 0;
     box.querySelector('[data-next]').textContent = pos === list.length - 1 ? 'Covers look right, done' : 'Covers look right ▶';
@@ -5280,7 +5452,7 @@ async function checkCovers(start, onDone) {
           }
           const fx = v => Math.round(v * 10000) / 10000;
           const b = [fx(clamp(sel.x / r.W, 0, 1)), fx(clamp(sel.y / r.H, 0, 1)), fx(Math.min(sel.w / r.W, 1)), fx(Math.min(sel.h / r.H, 1))];
-          own().push(b); last = { b, first: d.pages[0][0] === path && d.pages[0][1] === p, p }; coverMark(st, d, false);
+          own().push(b); undo.push({ k: boxKey(path, p), b, i: pos }); last = { b, first: d.pages[0][0] === path && d.pages[0][1] === p, p }; coverMark(st, d, false);
           box.querySelector('[data-every]').hidden = false;
           show();
         };
@@ -5290,8 +5462,13 @@ async function checkCovers(start, onDone) {
       if (my === token) drawn = my;
     } finally { for (const v of js.values()) v.destroy(); }
   }
+  const step = dd => { const vis = shown(); if (!vis.length) return; const at = vis.indexOf(pos); const to = at < 0 ? vis.find(i => dd > 0 ? i > pos : i < pos) : vis[at + dd]; if (to == null || to === pos) return; pos = to; show(); };
+  $('#ccFind').oninput = e => { find = e.target.value; rows(); };
   box.onclick = e => {
     if (e.target.closest('[data-done]')) return finish();
+    const g = e.target.closest('[data-ccgo]'); if (g) { pos = +g.dataset.ccgo; return show(); }
+    const f = e.target.closest('[data-ccf]'); if (f) { only = f.dataset.ccf; return rows(); }
+    if (e.target.closest('#ccUndo')) { coverMark(list[pos].st, list[pos].d, false); head(); return rows(); }
     if (e.target.closest('[data-back]')) return go(-1);
     if (e.target.closest('[data-next]')) return looked();
     if (e.target.closest('[data-every]') && last) {
@@ -5307,7 +5484,20 @@ async function checkCovers(start, onDone) {
   };
   if (eachKeys) document.removeEventListener('keydown', eachKeys, true);
   eachKeys = e => {
-    if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); finish(); }
+    const typing = e.target.id === 'ccFind';
+    if (e.key === 'Escape' && typing && find) { e.preventDefault(); e.stopPropagation(); e.target.value = find = ''; rows(); }
+    else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); finish(); }
+    else if (typing && e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); const vis = shown(); if (vis.length) { pos = vis[0]; show(); } }
+    else if (typing && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) return;
+    else if (!typing && (e.metaKey || e.ctrlKey) && !e.shiftKey && e.key.toLowerCase() === 'z') {
+      e.preventDefault(); e.stopPropagation();
+      const u = undo.pop(); if (!u) return toast('No box to take back');
+      const arr = shareState().boxes[u.k] || [], at = arr.lastIndexOf(u.b);
+      if (at >= 0) arr.splice(at, 1);
+      coverMark(list[u.i].st, list[u.i].d, false); saveSoon();
+      pos = u.i; show();
+    }
+    else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') { e.preventDefault(); e.stopPropagation(); step(e.key === 'ArrowUp' ? -1 : 1); }
     else if (e.key === 'ArrowLeft') { e.preventDefault(); e.stopPropagation(); go(-1); }
     else if (e.key === 'ArrowRight') { e.preventDefault(); e.stopPropagation(); go(1); }
     else if (e.key === 'Enter' && !e.target.closest('button')) { e.preventDefault(); e.stopPropagation(); looked(); }
@@ -6093,7 +6283,8 @@ function batchSummary(it) {
 function renderLib() {
   renderKept();
   const card = it => '<div class="card" draggable="true" data-card="' + it.id + '"><div class="t">' + esc(it.name) + '</div>' +
-    '<div class="m">' + esc(batchSummary(it)) + '</div>' +
+    (it.type || it.typed ? '<div class="bkpills">' + bkPill(it.type) + (it.typed ? '<span class="bkpill typed">Typed in</span>' : '') + '</div>' : '') +
+    '<div class="m">' + esc(it.typed && !it.batchId ? 'Scores typed in' + (it.due ? ' · due ' + bkDay(it.due) : '') : batchSummary(it)) + '</div>' +
     '<div class="row">' + (it.batchId && (keptMeta.get(it.batchId) || {}).papers ? '<button class="btn sm primary" data-kopen="' + esc(it.batchId) + '" data-kasg="' + it.id + '">Open</button><button class="btn sm" data-open-asg="' + it.id + '">Other download…</button>'
       : '<button class="btn sm primary" data-open-asg="' + it.id + '">Open download…</button>') + '<button class="btn sm" data-edit-asg="' + it.id + '">Edit</button></div></div>';
   const unit = u => '<div class="unit" draggable="true" data-unit="' + u.id + '">' +
@@ -6105,7 +6296,7 @@ function renderLib() {
     '<button class="addcard" data-additem="' + u.id + '">+ Assignment</button></div>';
   const block = (c, ci) => '<div class="cls" data-cls="' + esc(c.id) + '"><div class="clshead"><h3>' + esc(ci < 0 ? 'No class' : c.name) + '</h3>' +
     (ci < 0 ? '<span class="muted">Assignments with no roster. Drag them into a class.</span>' :
-      '<span class="muted">' + (c.names.length ? c.names.length + ' students on the roster' : 'No roster yet') + '</span><button class="btn sm" data-edit-class="' + ci + '">' + (c.names.length ? 'Edit roster' : 'Add roster') + '</button>' + mbClassBtns(c, ci) +
+      '<span class="muted">' + (c.names.length ? c.names.length + ' students on the roster' : 'No roster yet') + '</span>' + (c.names.length ? '<button class="btn sm primary" data-book="' + esc(c.id) + '">Gradebook</button>' : '') + '<button class="btn sm" data-edit-class="' + ci + '">' + (c.names.length ? 'Edit roster' : 'Add roster') + '</button>' + mbClassBtns(c, ci) +
       '<button class="icon" data-cmove="' + ci + ':-1" title="Move this class up" aria-label="Move this class up"' + (ci ? '' : ' disabled') + '>↑</button><button class="icon" data-cmove="' + ci + ':1" title="Move this class down" aria-label="Move this class down"' + (ci < lib.classes.length - 1 ? '' : ' disabled') + '>↓</button>') +
     '<span class="sp"></span><button class="btn sm" data-addunit="' + esc(c.id) + '">+ Unit</button></div>' +
     '<div class="board">' + (c.units.map(unit).join('') || '<div class="empty-note">No units yet. Click + Unit.</div>') + '</div></div>';
@@ -6230,33 +6421,75 @@ $('#topAtlas').addEventListener('click', e => { const b = e.target.closest('[dat
 function editAssignment(id, unitId) {
   const f = id ? findItem(id) : null, start = f ? f : findUnit(unitId) || { c: lib.classes[0] || lib.loose, u: null };
   const it = f ? f.it : { id: uid(), name: '', classId: start.c.id };
+  const classPick = f
+    ? '<div class="field"><label for="aClass">Class</label><select id="aClass" class="btn" style="justify-content:flex-start">' + lib.classes.map(c => '<option value="' + c.id + '"' + (c === start.c ? ' selected' : '') + '>' + esc(c.name) + '</option>').join('') + '<option value=""' + (start.c === lib.loose ? ' selected' : '') + '>No class</option></select></div>'
+    : '<div class="field"><label>Classes</label><div class="ctags" id="aClasses">' + holders().map(c => '<label class="ctag"><input type="checkbox" value="' + esc(c.id) + '"' + (c === start.c ? ' checked' : '') + '><span>' + esc(c === lib.loose ? 'No class' : c.name) + '</span></label>').join('') + '</div></div>';
   openDlg('<div class="bh"><h2>' + (f ? 'Edit assignment' : 'New assignment') + '</h2></div><div class="bb">' +
     '<div class="field"><label for="aName">Name</label><input type="text" id="aName" value="' + esc(it.name) + '" placeholder="e.g. Ch 3 Analysis Paragraph"></div>' +
-    '<div class="field"><label for="aClass">Class</label><select id="aClass" class="btn" style="justify-content:flex-start">' + lib.classes.map(c => '<option value="' + c.id + '"' + (c === start.c ? ' selected' : '') + '>' + esc(c.name) + '</option>').join('') + '<option value=""' + (start.c === lib.loose ? ' selected' : '') + '>No class</option></select></div>' +
-    '<div class="field"><label for="aUnit">Unit</label><select id="aUnit" class="btn" style="justify-content:flex-start"></select></div>' +
-    '<p class="muted" style="font-size:13px;margin:0">The rubric is set the first time you open a download for it, with Rubric setup, and it’s remembered for this assignment.</p></div>' +
+    classPick +
+    '<div class="field"><label for="aUnit">Unit</label><select id="aUnit" class="btn" style="justify-content:flex-start"></select><p class="muted" id="aUnitNote" style="font-size:13px;margin:6px 0 0" hidden></p></div>' +
+    '<div class="field"><label>Type</label><div class="pseg" role="group" id="aType">' + BK_TYPES.map(([t, l]) => '<button type="button" data-atype="' + t + '" aria-pressed="' + (it.type === t) + '">' + l.replace(' assessment', '').replace(' activity', '') + '</button>').join('') + '</div><p class="muted" style="font-size:12.5px;margin:4px 0 0">Summatives and in-class assessments count toward the term grade in the Gradebook. Formative activities are feedback only.</p></div>' +
+    '<div class="field"><label for="aDue">Due</label><input type="date" id="aDue" class="btn" value="' + esc(it.due || '') + '"></div>' +
+    '<p class="muted" style="font-size:13px;margin:0">The rubric is set the first time you open a download for it, with Rubric setup, and it’s remembered for this assignment.' + (f ? '' : ' Copies in other classes get the same rubric.') + '</p></div>' +
     '<div class="bf">' + (f ? '<button class="btn" data-del style="margin-right:auto">Delete</button>' : '') + '<button class="btn" data-cancel>Cancel</button><button class="btn primary" data-ok>Save</button></div>', true);
+  const ticked = () => [...document.querySelectorAll('#aClasses input:checked')].map(x => holderById(x.value)).filter(Boolean);
   const fillUnits = keep => {
-    const c = holderById($('#aClass').value);
-    $('#aUnit').innerHTML = c.units.map(u => '<option value="' + u.id + '"' + (keep && u === keep ? ' selected' : '') + '>' + esc(u.name) + '</option>').join('') || '<option value="">Unit 1 (new)</option>';
+    if (f) {
+      const c = holderById($('#aClass').value);
+      $('#aUnit').innerHTML = c.units.map(u => '<option value="' + u.id + '"' + (keep && u === keep ? ' selected' : '') + '>' + esc(u.name) + '</option>').join('') || '<option value="">Unit 1 (new)</option>';
+      return;
+    }
+    const cs = ticked(), was = $('#aUnit').value || (keep && keep.name) || '', names = [];
+    for (const c of cs) for (const u of c.units) if (!names.includes(u.name)) names.push(u.name);
+    $('#aUnit').innerHTML = names.map(n => '<option value="' + esc(n) + '"' + (n === was ? ' selected' : '') + '>' + esc(n) + '</option>').join('') || '<option value="">Unit 1 (new)</option>';
+    const n = $('#aUnit').value || 'Unit 1', made = cs.filter(c => !c.units.some(u => u.name === n)).map(c => c === lib.loose ? 'No class' : c.name);
+    const note = $('#aUnitNote');
+    note.hidden = !(cs.length > 1 && made.length && made.length < cs.length);
+    if (!note.hidden) note.textContent = made.join(', ') + (made.length === 1 ? ' has' : ' have') + ' no unit called “' + n + '” yet, so one is made there.';
+    const ok = $('#dlgBox [data-ok]'); ok.textContent = cs.length > 1 ? 'Add to ' + cs.length + ' classes' : 'Save'; ok.disabled = !cs.length;
   };
   fillUnits(start.u);
-  $('#aClass').onchange = () => fillUnits(null);
+  if (f) $('#aClass').onchange = () => fillUnits(null);
+  else { $('#aClasses').onchange = () => fillUnits(null); $('#aUnit').onchange = () => fillUnits(null); }
   setTimeout(() => $('#aName').focus(), 0);
   $('#dlgBox').onclick = async e => {
     if (e.target.closest('[data-cancel]')) return closeDlg();
+    const tb = e.target.closest('[data-atype]');
+    if (tb) { const on = tb.getAttribute('aria-pressed') !== 'true'; for (const x of document.querySelectorAll('[data-atype]')) x.setAttribute('aria-pressed', String(on && x === tb)); return; }
     if (e.target.closest('[data-del]')) { if (!await askDlg('Delete “' + it.name + '”?', { ok: 'Delete', danger: true })) return; f.u.items.splice(f.u.items.indexOf(it), 1); saveLib(); closeDlg(); return renderLib(); }
     if (e.target.closest('[data-ok]')) {
       const name = $('#aName').value.trim(); if (!name) { $('#aName').focus(); return; }
+      const ty = document.querySelector('[data-atype][aria-pressed="true"]'), due = $('#aDue').value;
+      const setKind = a => { if (ty) a.type = ty.dataset.atype; else delete a.type; if (due) a.due = due; else delete a.due; };   // every copy in every class gets the same type and date
+      if (!f) {
+        const cs = ticked(); if (!cs.length) return;
+        const un = $('#aUnit').value || 'Unit 1', group = cs.length > 1 ? uid() : undefined;
+        cs.forEach((c, k) => {
+          let to = c.units.find(u => u.name === un);
+          if (!to) c.units.push(to = { id: uid(), name: un, items: [] });
+          const a = k ? { id: uid(), name, classId: c.id } : Object.assign(it, { name, classId: c.id });
+          if (group) a.group = group;
+          setKind(a);
+          to.items.push(a);
+        });
+        saveLib(); closeDlg(); renderLib();
+        if (cs.length > 1) toast('Added to ' + cs.map(c => c === lib.loose ? 'No class' : c.name).join(', ').replace(/, ([^,]*)$/, ' and $1'));
+        return;
+      }
       const c = holderById($('#aClass').value);
       let to = c.units.find(u => u.id === $('#aUnit').value);
       if (!to) c.units.push(to = { id: uid(), name: 'Unit 1', items: [] });
       it.name = name; it.classId = c.id;
-      if (f && f.u !== to) f.u.items.splice(f.u.items.indexOf(it), 1);
-      if (!f || f.u !== to) to.items.push(it);
+      setKind(it);
+      if (f.u !== to) f.u.items.splice(f.u.items.indexOf(it), 1);
+      if (f.u !== to) to.items.push(it);
       saveLib(); closeDlg(); renderLib();
     }
   };
+}
+function shareRubric(a) {
+  if (!a || !a.group || !a.setup) return;
+  for (const c of holders()) for (const u of c.units) for (const x of u.items) if (x !== a && x.group === a.group && !x.setup) x.setup = JSON.parse(JSON.stringify(a.setup));
 }
 function parseRoster(text) {
   const out = [];
@@ -10813,6 +11046,470 @@ $('#overviewBtn').onclick = openOverview;
 
 Object.assign(window.__gs, { bankBusy: () => bankBusyN, classStats, openOverview, pctList, pctRows, pv: () => pv, pastAvg, openSetup, savedRubrics, levelOf, tidyLevels, spreadBins });
 
+/* ---------------- gradebook: every assignment for a class, by term, with a term grade from the teacher's own weights ---------------- */
+function bkLabel(t, short) { const x = BK_TYPES.find(y => y[0] === t); return x ? x[short ? 2 : 1] : 'No type yet'; }
+function bkPill(t) { return t ? '<span class="bkpill ' + t + '">' + bkLabel(t, true) + '</span>' : ''; }
+const BK_W0 = { sum: 50, ic: 50, fm: 0 };
+function bkConf() {
+  const b = lib.book || {};
+  return { terms: (b.terms || []).filter(t => t && t.id), w: { ...BK_W0, ...(b.w || {}) }, empty: b.empty === 'zero' ? 'zero' : 'other', dl: b.dl || {} };
+}
+function bkSave(part) { lib.book = { ...(lib.book || {}), ...part }; saveLib(); }
+const isoDay = t => { if (!t) return ''; const d = new Date(t); return isNaN(d) ? '' : d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+function bkDay(s) { return s ? new Date(s + 'T12:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : ''; }
+function bkTermOf(col, terms) {
+  if (col.term && terms.some(t => t.id === col.term)) return col.term;
+  const t = terms.find(x => x.start && x.end && col.due >= x.start && col.due <= x.end);
+  return t ? t.id : '';
+}
+const bkMean = a => a.length ? a.reduce((x, y) => x + y, 0) / a.length : null;
+
+function bkCellOf(p, g, d, k) {
+  const marks = !!(d && d.s && d.s[k] && d.s[k].f && Object.values(d.s[k].f).some(pg => Object.values(pg || {}).some(a => a && a.length)));
+  const fb = marks || !!((g && g.comment) || '').trim();
+  if (p.status === 'missing' || p.status === 'excused') return { st: p.status, fb };
+  if (p.total == null && p.pct == null) return fb ? { fb } : null;
+  return { pct: p.pct, total: p.total, max: p.max, st: p.status, partial: p.partial, out: !!(g && g.outAvg), fb };
+}
+function bkTypedCell(ty, r) {
+  if (!r) return null;
+  if (r.st === 'missing' || r.st === 'excused') return { st: r.st, typed: true };
+  if (r.v == null || r.v === '' || isNaN(+r.v)) return null;
+  const v = +r.v, max = ty.max ? +ty.max : null;
+  return { pct: max ? roundPct(v / max * 100) : roundPct(v), total: max ? v : null, max, st: r.st || '', typed: true, fb: true };
+}
+async function bkLoad() {
+  const all = await earlierWork('', d => hasWork(d) || !!(d && d.read)).catch(e => { console.error(e); return []; });
+  const conf = bkConf(), byKey = new Map();
+  for (const [id, d] of all) {
+    const m = keptMeta.get(id) || {};
+    if (m.newer && keptMeta.has(m.newer)) continue;   // an older copy of a download that was opened again
+    const it = cardOfKept(id), cls = it ? it.classId || '' : pastClass(d, m), key = it ? it.id : 'dl:' + id;
+    if (!cls || byKey.has(key)) continue;   // newest first, so the first one is the one that counts
+    const o = it || conf.dl[id] || {};
+    byKey.set(key, { key, it, dl: id, d, cls, name: (it && it.name) || o.name || m.name || 'A download', type: o.type || '', due: o.due || isoDay(workTime(d) || d.t || m.t), term: o.term || '' });
+  }
+  for (const c of lib.classes) for (const u of c.units) for (const it of u.items) {
+    if (!it.typed || byKey.has(it.id)) { if (it.typed && byKey.has(it.id)) byKey.get(it.id).typed = it.typed; continue; }
+    byKey.set(it.id, { key: it.id, it, cls: c.id, name: it.name, type: it.type || '', due: it.due || isoDay(it.opened), term: it.term || '', typed: it.typed });
+  }
+  for (const col of byKey.values()) if (!col.typed && col.it && col.it.typed) col.typed = col.it.typed;
+  return [...byKey.values()];
+}
+function bkClassCols(c, cols) {
+  const names = c.names, terms = bkConf().terms;
+  return cols.filter(x => x.cls === c.id).map(col => {
+    const cells = new Map();
+    if (col.d) {
+      const d = col.d, pairs = rosterPairs(names, Object.keys({ ...d.s, ...d.read }));
+      for (const n of names) {
+        const k = pairs.get(n); if (!k) continue;
+        const g = (d.s[k] && d.s[k].g) || {}, r = d.read && d.read[k];
+        const cell = bkCellOf(pastScore(d.setup, r ? { ...g, read: r } : g), g, d, k);
+        if (cell) cells.set(n, cell);
+      }
+    }
+    if (col.typed) for (const n of names) if (!cells.has(n) || (cells.get(n).pct == null && !cells.get(n).st)) { const cell = bkTypedCell(col.typed, col.typed.s && col.typed.s[n]); if (cell) cells.set(n, cell); }
+    return { ...col, cells, termId: bkTermOf(col, terms) };
+  }).sort((a, b) => (a.due || '').localeCompare(b.due || '') || natural(a.name, b.name));
+}
+const bkCounts = cell => !!cell && cell.pct != null && !cell.partial && !cell.out && cell.st !== 'missing' && cell.st !== 'excused';
+function bkGrade(name, cols, conf) {
+  const by = {}, w = conf.w;
+  let sum = 0, wt = 0, soFar = false;
+  for (const [t] of BK_TYPES) {
+    const ps = cols.filter(x => x.type === t).map(x => x.cells.get(name)).filter(bkCounts).map(x => x.pct);
+    by[t] = ps.length ? bkMean(ps) : null;
+    if (t === 'fm' || !(+w[t] > 0)) continue;
+    if (by[t] == null) { if (cols.some(x => x.type === t)) soFar = true; if (conf.empty !== 'zero') continue; }
+    sum += (by[t] || 0) * +w[t]; wt += +w[t];
+  }
+  const fmw = +w.fm > 0 ? by.fm : null;
+  if (fmw != null) { sum += fmw * +w.fm; wt += +w.fm; }
+  return { by, grade: wt ? sum / wt : null, soFar };
+}
+
+/* ---------- the box ---------- */
+let bk = { tab: 'table', cls: '', term: null, show: 'pct', stu: 0, cols: null, hi: '' };
+async function openBook(clsId, opts = {}) {
+  if (batch) saveNow();
+  const c = classById(clsId) || batchClass() || lib.classes.find(k => k.names.length) || lib.classes[0];
+  if (!c) return toast('Add a class with its roster first, on the start screen.');
+  bk = { ...bk, tab: 'table', cls: c.id, term: null, stu: 0, cols: null, hi: opts.hi || '' };
+  openDlg('<div class="bh"><h2>Gradebook</h2><div class="ovtabs" role="tablist">' + [['table', 'Table'], ['class', 'Class charts'], ['one', 'One student']].map(([k, l]) => '<button role="tab" data-bktab="' + k + '" aria-selected="' + (k === 'table') + '">' + l + '</button>').join('') +
+    '</div><button class="icon" data-close aria-label="Close" style="margin-left:auto">✕</button></div><div class="bb bkbody" id="bkBody"><p class="muted">Looking through your saved work…</p></div>');
+  $('#dlgBox').classList.add('bkbox');
+  $('#dlgBox').onclick = e => { if (e.target.closest('[data-close]')) closeDlg(); };
+  const cols = await bkLoad();
+  if (!$('#bkBody')) return;
+  bk.cols = cols;
+  if (opts.hi) { const x = bkClassCols(c, cols).find(k => k.key === opts.hi); if (x) bk.term = x.termId; }
+  bkDraw();
+}
+const bkClass = () => classById(bk.cls);
+const bkWho = (n, i) => anonOn() ? 'Student ' + (i + 1) : n;
+function bkTabsOff() { for (const b of document.querySelectorAll('[data-bktab]')) b.setAttribute('aria-selected', 'false'); }
+function bkTabs(cols) {
+  const terms = bkConf().terms, out = terms.map(t => [t.id, t.name || 'Term']);
+  if (!terms.length) return [['', 'This year']];
+  if (cols.some(x => !x.termId)) out.push(['', 'Outside the terms']);
+  out.push(['*', 'Whole year']);
+  return out;
+}
+function bkTermNow(terms) { const t = isoDay(Date.now()), x = terms.find(y => y.start <= t && t <= y.end); return x ? x.id : terms.length ? terms[terms.length - 1].id : ''; }
+function bkDraw() {
+  const body = $('#bkBody'), c = bkClass(); if (!body || !c || !bk.cols) return;
+  for (const b of document.querySelectorAll('[data-bktab]')) b.setAttribute('aria-selected', String(b.dataset.bktab === bk.tab));
+  const conf = bkConf(), all = bkClassCols(c, bk.cols), tabs = bkTabs(all);
+  if (bk.term == null || !tabs.some(t => t[0] === bk.term)) bk.term = conf.terms.length ? bkTermNow(conf.terms) : '';
+  const cols = bk.term === '*' ? all : all.filter(x => x.termId === bk.term);
+  const bar = '<div class="bkbar"><label class="muted">Class <select class="btn sm" id="bkCls">' + lib.classes.map(k => '<option value="' + k.id + '"' + (k === c ? ' selected' : '') + '>' + esc(k.name) + '</option>').join('') + '</select></label>' +
+    '<div class="ovtabs bkterms" role="group" aria-label="Term">' + tabs.map(([id, l]) => '<button data-bkterm="' + esc(id) + '" aria-selected="' + (bk.term === id) + '">' + esc(l) + '</button>').join('') + '</div><span class="sp"></span>' +
+    (bk.tab === 'table' && bk.term !== '*' ? '<div class="pseg" role="group" aria-label="Show">' + [['pct', 'Percent'], ['pts', 'Points']].map(([v, l]) => '<button data-bkshow="' + v + '" aria-pressed="' + (bk.show === v) + '">' + l + '</button>').join('') + '</div>' : '') +
+    '<button class="btn sm" data-bksetup>Term setup</button>' + (bk.tab === 'table' ? '<button class="btn sm" data-bkcopy>Copy table</button>' : '') + '<button class="btn sm primary" data-bkadd>+ Add scores</button></div>';
+  let main;
+  if (!c.names.length) main = '<p class="muted bkpad">The gradebook lists the students on a class’s roster. Add a roster to ' + esc(c.name) + ' on the start screen first.</p>';
+  else if (bk.tab === 'class') main = bkClassView(c, cols, all, conf);
+  else if (bk.tab === 'one') main = bkOneView(c, cols, conf);
+  else main = bk.term === '*' ? bkYear(c, all, conf) : bkTable(c, cols, conf);
+  const untyped = all.filter(x => !x.type);
+  body.innerHTML = bar + (untyped.length ? '<div class="bknote">' + (untyped.length === 1 ? '“' + esc(untyped[0].name) + '” has' : untyped.length + ' assignments have') + ' no type yet, so ' + (untyped.length === 1 ? 'it doesn’t' : 'they don’t') + ' count toward a term grade. <button class="btn sm" data-bktypes>Set types</button></div>' : '') + main;
+}
+const bkCellText = (cell, show, col) => {
+  if (!cell) return '<span class="bknone">–</span>';
+  if (col.type === 'fm') return cell.st === 'missing' ? '<span class="bkst">missing</span>' : cell.st === 'excused' ? '<span class="bkst">excused</span>' : cell.fb ? '<span class="bkfb" aria-label="Feedback given">✓</span>' : '<span class="bknone">–</span>';
+  if (cell.st === 'missing' || cell.st === 'excused') return '<span class="bkst">' + cell.st + '</span>';
+  if (cell.pct == null) return cell.fb ? '<span class="bkfb" aria-label="Feedback given, no score">✓</span>' : '<span class="bknone">–</span>';
+  const v = show === 'pts' && cell.total != null ? fmtNum(cell.total) + '<small>/' + fmtNum(cell.max) + '</small>' : cell.pct + '%';
+  return v + (cell.partial ? ' <span class="stag">partial</span>' : cell.out ? ' <span class="stag">left out</span>' : cell.st === 'late' ? ' <span class="stag">late</span>' : '');
+};
+const bkColHead = col => '<th class="bkch' + (col.key === bk.hi ? ' hi' : '') + '"><button data-bkcol="' + esc(col.key) + '" title="Type, date and term">' + esc(col.name) + '<small>' + esc(bkDay(col.due)) + (col.typed ? ' · typed in' : '') + '</small></button></th>';
+function bkGroups(cols) {
+  const g = BK_TYPES.map(([t, , s]) => ({ t, s, cols: cols.filter(x => x.type === t) })).filter(x => x.cols.length);
+  const none = cols.filter(x => !x.type); if (none.length) g.push({ t: '', s: 'No type yet', cols: none });
+  return g;
+}
+function bkTable(c, cols, conf) {
+  if (!cols.length) return '<p class="muted bkpad">Nothing graded for ' + esc(c.name) + ' in this term yet. Grade a download for it, or use + Add scores for work you did before.</p>';
+  const groups = bkGroups(cols), w = conf.w, termName = (bkTabs(cols).find(t => t[0] === bk.term) || [, 'Term'])[1];
+  const avgCol = g => g.t === 'sum' || g.t === 'ic';
+  let h = '<div class="bkwrap"><table class="bktab" id="bkTab"><thead><tr class="bkg"><th></th>' + groups.map(g => '<th colspan="' + (g.cols.length + (avgCol(g) ? 1 : 0)) + '" class="' + g.t + '">' + esc(g.s) + (g.t === 'fm' ? (+w.fm > 0 ? ' · ' + w.fm + '%' : ' · feedback only') : g.t ? ' · ' + (+w[g.t] || 0) + '%' : '') + '</th>').join('') + '<th></th></tr>' +
+    '<tr><th class="bknm">Student</th>' + groups.map(g => g.cols.map(bkColHead).join('') + (avgCol(g) ? '<th class="bkavg">Avg</th>' : '')).join('') + '<th class="bkterm">' + esc(termName) + '</th></tr></thead><tbody>';
+  const grades = [];
+  c.names.forEach((n, i) => {
+    const r = bkGrade(n, cols, conf); grades.push(r);
+    h += '<tr><td class="bknm">' + esc(bkWho(n, i)) + '</td>' + groups.map(g => g.cols.map(col => { const cell = col.cells.get(n), ed = !!col.typed && !(cell && !cell.typed);
+      return '<td' + (ed ? ' class="bked" tabindex="0" data-bked="' + esc(col.key) + '" data-bkn="' + esc(n) + '" title="Click to change"' : col.d ? ' title="Change this score in its download"' : '') + '>' + bkCellText(cell, bk.show, col) + '</td>'; }).join('') +
+      (avgCol(g) ? '<td class="bkavg">' + (r.by[g.t] != null ? pctAvgText(r.by[g.t]) : '<span class="bknone">–</span>') + '</td>' : '')).join('') +
+      '<td class="bkterm" tabindex="0" ' + bkWhy(n, r, conf) + '>' + (r.grade != null ? pctAvgText(r.grade) + (r.soFar ? ' <small>so far</small>' : '') : '<span class="bknone">–</span>') + '</td></tr>';
+  });
+  const colAvg = col => { if (col.type === 'fm') { const k = c.names.filter(n => (col.cells.get(n) || {}).fb).length; return k + '/' + c.names.length; } const ps = c.names.map(n => col.cells.get(n)).filter(bkCounts).map(x => x.pct); return ps.length ? pctAvgText(bkMean(ps)) : '–'; };
+  const typeAvg = t => { const ps = grades.map(r => r.by[t]).filter(v => v != null); return ps.length ? pctAvgText(bkMean(ps)) : '–'; };
+  const gs = grades.map(r => r.grade).filter(v => v != null);
+  h += '<tr class="bkfoot"><td class="bknm">Class average</td>' + groups.map(g => g.cols.map(col => '<td>' + colAvg(col) + '</td>').join('') + (avgCol(g) ? '<td class="bkavg">' + typeAvg(g.t) + '</td>' : '')).join('') + '<td class="bkterm">' + (gs.length ? pctAvgText(bkMean(gs)) : '–') + '</td></tr></tbody></table></div>' +
+    '<p class="muted bkcap">Students are in your roster order. Missing and Excused never count against a student. Point at a term grade to see how it’s worked out. Scores you typed in can be changed here; a graded download’s scores change in that download.</p>';
+  return h;
+}
+function bkWhy(n, r, conf) {
+  const w = conf.w, parts = BK_TYPES.filter(([t]) => t !== 'fm' || +w.fm > 0).filter(([t]) => +w[t] > 0).map(([t, , s]) => s + ' ' + w[t] + '%: ' + (r.by[t] != null ? pctAvgText(r.by[t]) : conf.empty === 'zero' ? 'none, counts as 0' : 'none yet, left out'));
+  return 'data-tv="' + esc(r.grade != null ? pctAvgText(r.grade) : '–') + '" data-tl="' + esc(bkWho(n, bkClass().names.indexOf(n))) + '" data-tn="' + esc(parts.join(' · ')) + '"';
+}
+function bkYear(c, all, conf) {
+  const terms = conf.terms;
+  if (!terms.length) return '<p class="muted bkpad">Set up your terms with Term setup to see them side by side.</p>';
+  const per = terms.map(t => all.filter(x => x.termId === t.id));
+  let h = '<div class="bkwrap"><table class="bktab" id="bkTab"><thead><tr><th class="bknm">Student</th>' + terms.map(t => '<th class="bkterm">' + esc(t.name) + '</th>').join('') + '<th class="bkterm">Year</th></tr></thead><tbody>';
+  const col = terms.map(() => []), yr = [];
+  for (const [i, n] of c.names.entries()) {
+    const gs = per.map(cols => bkGrade(n, cols, conf).grade), have = gs.filter(v => v != null), y = have.length ? bkMean(have) : null;
+    gs.forEach((v, i) => { if (v != null) col[i].push(v); }); if (y != null) yr.push(y);
+    h += '<tr><td class="bknm">' + esc(bkWho(n, i)) + '</td>' + gs.map(v => '<td class="bkterm">' + (v != null ? pctAvgText(v) : '<span class="bknone">–</span>') + '</td>').join('') + '<td class="bkterm"><b>' + (y != null ? pctAvgText(y) : '–') + '</b></td></tr>';
+  }
+  h += '<tr class="bkfoot"><td class="bknm">Class average</td>' + col.map(a => '<td class="bkterm">' + (a.length ? pctAvgText(bkMean(a)) : '–') + '</td>').join('') + '<td class="bkterm">' + (yr.length ? pctAvgText(bkMean(yr)) : '–') + '</td></tr></tbody></table></div>' +
+    '<p class="muted bkcap">The year is the average of the terms each student has a grade in.</p>';
+  return h;
+}
+
+/* ---------- charts ---------- */
+const BK_BANDS = [[90, 100, '90 to 100'], [80, 89, '80 to 89'], [70, 79, '70 to 79'], [60, 69, '60 to 69'], [0, 59, 'Below 60']];
+function bkBands(list) {
+  const n = list.length, cnt = BK_BANDS.map(([lo, hi]) => list.filter(p => roundPct(p.v) >= lo && (roundPct(p.v) <= hi || (lo === 90 && p.v > 100)))), most = Math.max(1, ...cnt.map(x => x.length));
+  return '<div class="pbands" id="bkBands">' + BK_BANDS.map(([, , l], i) => { const k = cnt[i].length; return '<div class="pband"' + (k ? ' tabindex="0"' : '') + ' data-tv="' + esc(people(k, 'student')) + '" data-tl="' + esc(l + '%') + '" data-tn="' + esc(cnt[i].map(p => p.name).join(', ')) + '"><span>' + l + '</span><div class="pbt"><i style="width:' + k / most * 100 + '%"></i></div><span class="pbn"><b>' + k + '</b>' + (n ? ' · ' + Math.round(k / n * 100) + '%' : '') + '</span></div>'; }).join('') + '</div>';
+}
+function bkLine(cols, series, id, refLine) {
+  const vals = series.flatMap(s => s.pts).concat(refLine != null ? [refLine] : []).filter(v => v != null);
+  if (cols.length < 1 || !vals.length) return '<p class="muted">Nothing to show yet.</p>';
+  const lo = Math.max(0, Math.floor((Math.min(...vals) - 5) / 10) * 10), hi = Math.min(100, Math.ceil((Math.max(...vals) + 2) / 10) * 10) || 100;
+  const W = 640, H = 200, L = 44, R = 30, T = 16, B = 40, X = i => L + (cols.length === 1 ? (W - L - R) / 2 : i * (W - L - R) / (cols.length - 1)), Y = v => T + (hi - v) / Math.max(10, hi - lo) * (H - T - B);
+  let g = ''; for (let v = lo; v <= hi; v += 10) g += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + Y(v) + '" y2="' + Y(v) + '" class="tgl"/><text x="' + (L - 8) + '" y="' + (Y(v) + 4) + '" text-anchor="end" class="ttk">' + v + '%</text>';
+  if (refLine != null) g += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + Y(refLine) + '" y2="' + Y(refLine) + '" class="bkref"/>';
+  const cut = t => t.length > 14 ? t.slice(0, 13) + '…' : t;
+  for (const s of series) {
+    const seg = []; let run = [];
+    s.pts.forEach((v, i) => { if (v == null) { if (run.length) seg.push(run); run = []; } else run.push(X(i) + ',' + Y(v)); }); if (run.length) seg.push(run);
+    g += seg.map(r => '<polyline class="' + s.cls + '" points="' + r.join(' ') + '"/>').join('');
+    if (s.dots) s.pts.forEach((v, i) => { if (v != null) g += '<circle class="bkdot ' + (cols[i].type || '') + '" cx="' + X(i) + '" cy="' + Y(v) + '" r="5.5" tabindex="0" data-tv="' + esc(pctAvgText(v)) + '" data-tl="' + esc(cols[i].name) + '" data-tn="' + esc(bkLabel(cols[i].type) + (s.tn ? ' · ' + s.tn(i) : '')) + '"/>'; });
+  }
+  cols.forEach((c, i) => { g += '<text x="' + X(i) + '" y="' + (H - 22) + '" text-anchor="middle" class="tlb">' + esc(cut(c.name)) + '</text><text x="' + X(i) + '" y="' + (H - 8) + '" text-anchor="middle" class="ttk">' + esc(bkDay(c.due)) + '</text>'; });
+  return '<svg class="tsvg" id="' + id + '" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' + esc(cols.map((c, i) => c.name + ' ' + series.map(s => s.pts[i] != null ? pctAvgText(s.pts[i]) : '–').join(' / ')).join(', ')) + '">' + g + '</svg>';
+}
+function bkSpread(c, cols) {
+  const rows = cols.map(col => ({ col, v: c.names.map(n => col.cells.get(n)).filter(bkCounts).map(x => x.pct).sort((a, b) => a - b) })).filter(r => r.v.length);
+  if (!rows.length) return '<p class="muted">Nothing to show yet.</p>';
+  const lo = Math.max(0, Math.floor(Math.min(...rows.map(r => r.v[0])) / 10) * 10), W = 640, L = 150, R = 16, rh = 28, H = rows.length * rh + 26, x = v => L + (Math.min(100, v) - lo) / Math.max(10, 100 - lo) * (W - L - R);
+  const q = (v, f) => { const k = (v.length - 1) * f, i = Math.floor(k); return v[i] + (v[Math.ceil(k)] - v[i]) * (k - i); };
+  let s = '';
+  for (let t = lo; t <= 100; t += 10) s += '<line x1="' + x(t) + '" x2="' + x(t) + '" y1="0" y2="' + (H - 22) + '" class="tgl"/><text x="' + x(t) + '" y="' + (H - 6) + '" text-anchor="middle" class="ttk">' + t + '%</text>';
+  rows.forEach(({ col, v }, i) => {
+    const y = i * rh + 6, a = q(v, .25), b = q(v, .75), m = q(v, .5), nm = col.name.length > 20 ? col.name.slice(0, 19) + '…' : col.name;
+    s += '<text x="0" y="' + (y + 13) + '" class="tlb">' + esc(nm) + '</text><rect x="' + x(v[0]) + '" y="' + (y + 5) + '" width="' + Math.max(2, x(v[v.length - 1]) - x(v[0])) + '" height="8" rx="4" class="bkrng"/>' +
+      '<rect x="' + x(a) + '" y="' + (y + 1) + '" width="' + Math.max(3, x(b) - x(a)) + '" height="16" rx="4" class="bkiqr ' + col.type + '" tabindex="0" data-tv="' + esc('Middle ' + roundPct(m) + '%') + '" data-tl="' + esc(col.name) + '" data-tn="' + esc('Lowest ' + v[0] + '%, highest ' + v[v.length - 1] + '%, middle half ' + roundPct(a) + '–' + roundPct(b) + '%') + '"/>' +
+      '<line x1="' + x(m) + '" x2="' + x(m) + '" y1="' + y + '" y2="' + (y + 18) + '" class="bkmid"/>';
+  });
+  return '<svg class="tsvg" id="bkSpread" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Spread of percents on each assignment">' + s + '</svg>';
+}
+const bkTile = (l, v, s, main) => '<div class="ovt' + (main ? ' main' : '') + '"><div class="ovl">' + l + '</div><div class="ovv">' + v + '</div><div class="ovs muted">' + s + '</div></div>';
+function bkScored(cols) { return cols.filter(x => x.type === 'sum' || x.type === 'ic'); }
+function bkClassView(c, cols, all, conf) {
+  if (bk.term === '*') cols = all;
+  const grades = c.names.map((n, i) => ({ name: bkWho(n, i), r: bkGrade(n, cols, conf) })), gl = grades.filter(g => g.r.grade != null).map(g => ({ name: g.name, v: g.r.grade }));
+  const typeAvg = t => { const ps = grades.map(g => g.r.by[t]).filter(v => v != null); return ps.length ? pctAvgText(bkMean(ps)) : '–'; };
+  const sorted = gl.map(g => g.v).sort((a, b) => a - b), mid = sorted.length ? (sorted.length % 2 ? sorted[(sorted.length - 1) / 2] : (sorted[sorted.length / 2 - 1] + sorted[sorted.length / 2]) / 2) : null;
+  const sc = bkScored(cols), avgOf = col => bkMean(c.names.map(n => col.cells.get(n)).filter(bkCounts).map(x => x.pct));
+  const others = lib.classes.filter(k => k.names.length).map(k => { const kc = bkClassCols(k, bk.cols).filter(x => bk.term === '*' || x.termId === bk.term), gs = k.names.map(n => bkGrade(n, kc, conf).grade).filter(v => v != null); return { k, v: gs.length ? bkMean(gs) : null }; }).filter(x => x.v != null);
+  const termAvg = gl.length ? bkMean(gl.map(g => g.v)) : null;
+  return '<div class="bkpad"><div class="ovtiles" id="bkTiles">' + bkTile(bk.term === '*' ? 'Average grade' : 'Term average', termAvg != null ? pctAvgText(termAvg) : '–', people(gl.length, 'student'), true) +
+    bkTile('Middle grade', mid != null ? pctAvgText(mid) : '–', 'half above, half below') + bkTile('Summative average', typeAvg('sum'), people(cols.filter(x => x.type === 'sum').length, 'assignment')) + bkTile('In-class average', typeAvg('ic'), people(cols.filter(x => x.type === 'ic').length, 'assignment')) + '</div>' +
+    '<div class="ovcharts"><section><h3 class="ovh3">' + (bk.term === '*' ? 'Grades' : 'Term grades') + '</h3>' + bkBands(gl) + '<p class="muted ovcap2">How many students landed in each range.</p></section>' +
+    '<section><h3 class="ovh3">Each assignment’s class average</h3>' + bkLine(sc, [{ cls: 'bkln', pts: sc.map(avgOf), dots: true, tn: i => people(c.names.map(n => sc[i].cells.get(n)).filter(bkCounts).length, 'score') }], 'bkTrend', termAvg) +
+    '<div class="bkleg"><span><i class="sum"></i>Summative</span><span><i class="ic"></i>In-class</span>' + (termAvg != null ? '<span><i class="ref"></i>Average grade</span>' : '') + '</div></section>' +
+    '<section><h3 class="ovh3">Spread on each assignment</h3>' + bkSpread(c, sc) + '<p class="muted ovcap2">The bar runs from lowest to highest, the darker part is the middle half of the class, and the line is the middle score.</p></section>' +
+    '<section><h3 class="ovh3">Compare your classes</h3><div class="ovrows" id="bkCmp">' + (others.length ? others.map(o => '<div class="bkcmp' + (o.k === c ? ' me' : '') + '"><span>' + esc(o.k.name) + '</span><div class="bkcmpt"><i style="width:' + Math.min(100, o.v) + '%"></i></div><b>' + pctAvgText(o.v) + '</b></div>').join('') : '<p class="muted">No class has a grade here yet.</p>') + '</div><p class="muted ovcap2">The average grade for each class over the same term, by the same weights.</p></section></div></div>';
+}
+function bkOneView(c, cols, conf) {
+  if (bk.term === '*') cols = bk.cols ? bkClassCols(c, bk.cols) : cols;
+  bk.stu = Math.max(0, Math.min(c.names.length - 1, bk.stu));
+  const n = c.names[bk.stu], shown = bkWho(n, bk.stu), r = bkGrade(n, cols, conf), all = c.names.map(x => bkGrade(x, cols, conf));
+  const cavg = t => { const ps = all.map(g => t ? g.by[t] : g.grade).filter(v => v != null); return ps.length ? bkMean(ps) : null; };
+  const sc = bkScored(cols), fm = cols.filter(x => x.type === 'fm'), miss = cols.filter(x => (x.cells.get(n) || {}).st === 'missing');
+  const bar = (l, v, ref, t) => '<div class="bkcmp"><span>' + l + '</span><div class="bkcmpt"><i class="' + t + '" style="width:' + Math.min(100, v || 0) + '%"></i>' + (ref != null ? '<em style="left:' + Math.min(100, ref) + '%" title="Class average ' + esc(pctAvgText(ref)) + '"></em>' : '') + '</div><b>' + (v != null ? pctAvgText(v) : '–') + '</b></div>';
+  return '<div class="bkpad"><div class="bkstu"><button class="icon" data-bkstu="-1" aria-label="Previous student"' + (bk.stu ? '' : ' disabled') + '>‹</button><b id="bkStuName">' + esc(shown) + '</b><button class="icon" data-bkstu="1" aria-label="Next student"' + (bk.stu < c.names.length - 1 ? '' : ' disabled') + '>›</button><span class="muted">' + (bk.stu + 1) + ' of ' + c.names.length + ' · ← → to move</span></div>' +
+    '<div class="ovtiles" id="bkStuTiles">' + bkTile(bk.term === '*' ? 'Grade' : 'Term grade', r.grade != null ? pctAvgText(r.grade) + (r.soFar ? ' <small>so far</small>' : '') : '–', cavg('') != null ? 'class average ' + pctAvgText(cavg('')) : '', true) +
+    bkTile('Summatives', r.by.sum != null ? pctAvgText(r.by.sum) : '–', cols.filter(x => x.type === 'sum' && bkCounts(x.cells.get(n))).length + ' of ' + cols.filter(x => x.type === 'sum').length + ' counted') +
+    bkTile('In-class', r.by.ic != null ? pctAvgText(r.by.ic) : '–', cols.filter(x => x.type === 'ic' && bkCounts(x.cells.get(n))).length + ' of ' + cols.filter(x => x.type === 'ic').length + ' counted') +
+    bkTile('Missing', miss.length, miss.length ? miss.map(x => x.name).join(', ') : 'nothing outstanding') + '</div>' +
+    '<div class="ovcharts"><section><h3 class="ovh3">Against the class</h3>' + bkLine(sc, [{ cls: 'bkln mute', pts: sc.map(col => bkMean(c.names.map(x => col.cells.get(x)).filter(bkCounts).map(x => x.pct))) }, { cls: 'bkln', pts: sc.map(col => { const cell = col.cells.get(n); return bkCounts(cell) ? cell.pct : null; }), dots: true }], 'bkStuLine') +
+    '<div class="bkleg"><span><i class="me"></i>' + esc(shown) + '</span><span><i class="mute"></i>Class average</span></div></section>' +
+    '<section><h3 class="ovh3">By type</h3>' + bar('Summatives', r.by.sum, cavg('sum'), 'sum') + bar('In-class', r.by.ic, cavg('ic'), 'ic') + bar('Grade', r.grade, cavg(''), '') + '<p class="muted ovcap2">The dashed line is the class average.</p>' +
+    (fm.length ? '<h3 class="ovh3" style="margin-top:16px">Feedback</h3><p class="bkfbline">' + fm.filter(x => (x.cells.get(n) || {}).fb).length + ' of ' + fm.length + ' formative activities have feedback.</p>' : '') + '</section></div></div>';
+}
+
+/* ---------- column menu: type, date, term ---------- */
+function bkColMenu(key, anchor) {
+  const col = bkClassCols(bkClass(), bk.cols).find(x => x.key === key); if (!col) return;
+  bkPopClose();
+  const terms = bkConf().terms, p = document.createElement('div');
+  p.className = 'bkpop'; p.id = 'bkPop';
+  p.innerHTML = '<b>' + esc(col.name) + '</b><div class="bkpf">Type</div><div class="pseg bktypeseg" role="group">' + BK_TYPES.map(([t, , s]) => '<button data-bksettype="' + t + '" aria-pressed="' + (col.type === t) + '">' + s + '</button>').join('') + '</div>' +
+    '<label class="bkpf">Due <input type="date" id="bkDue" value="' + esc(col.due || '') + '"></label>' +
+    (terms.length ? '<label class="bkpf">Term <select id="bkTerm" class="btn sm"><option value="">By the date (' + esc((terms.find(t => t.id === bkTermOf({ ...col, term: '' }, terms)) || { name: 'none' }).name) + ')</option>' + terms.map(t => '<option value="' + t.id + '"' + (col.term === t.id ? ' selected' : '') + '>' + esc(t.name) + '</option>').join('') + '</select></label>' : '') +
+    (col.typed && col.it ? '<button class="btn sm" data-bkedittyped="' + esc(col.it.id) + '">Edit the typed-in scores</button>' : '') + '<button class="btn sm" data-bkpopclose>Done</button>';
+  p.dataset.key = key;
+  $('#dlgBox').appendChild(p);
+  const r = anchor.getBoundingClientRect(), b = $('#dlgBox').getBoundingClientRect(), z = parseFloat(getComputedStyle($('#dlgBox')).zoom) || 1;
+  p.style.left = Math.max(8, Math.min(b.width / z - 280, (r.left - b.left) / z)) + 'px'; p.style.top = ((r.bottom - b.top) / z + 4) + 'px';
+}
+function bkPopClose() { const p = $('#bkPop'); if (p) p.remove(); }
+function bkSetCol(key, part) {
+  const col = bk.cols.find(x => x.key === key); if (!col) return;
+  if (col.it) Object.assign(col.it, part);
+  else { const dl = { ...bkConf().dl }; dl[col.dl] = { name: col.name, type: col.type, due: col.due, term: col.term, ...(dl[col.dl] || {}), ...part }; bkSave({ dl }); }
+  Object.assign(col, part);
+  if (col.it) saveLib();
+  if (!batch) renderLib();
+}
+function bkTypesDlg() {
+  const left = bkClassCols(bkClass(), bk.cols).filter(x => !x.type);
+  const body = $('#bkBody');
+  bkTabsOff();
+  body.innerHTML = '<div class="bkpad"><h3 class="ovh3">What type is each of these?</h3><p class="muted" style="margin-top:-6px">Summatives and in-class assessments count toward the term grade; formative activities are feedback only. You can change any of them later from its column.</p>' +
+    '<div class="bktypes">' + left.map(col => '<div class="bktyrow"><span><b>' + esc(col.name) + '</b> <span class="muted">' + esc(bkDay(col.due)) + '</span></span><div class="pseg" role="group">' + BK_TYPES.map(([t, , s]) => '<button data-bkqtype="' + t + '" data-key="' + esc(col.key) + '" aria-pressed="false">' + s + '</button>').join('') + '</div></div>').join('') + '</div>' +
+    '<div class="bkfootbtns"><button class="btn primary" data-bkback>Done</button></div></div>';
+}
+
+/* ---------- term setup ---------- */
+function bkSetupView() {
+  const conf = bkConf(), body = $('#bkBody');
+  bkTabsOff();
+  const row = t => '<div class="bktrow" data-tid="' + esc(t.id) + '"><input type="text" class="bkin" data-tf="name" value="' + esc(t.name || '') + '" aria-label="Term name"><input type="date" class="bkin" data-tf="start" value="' + esc(t.start || '') + '" aria-label="Starts"><input type="date" class="bkin" data-tf="end" value="' + esc(t.end || '') + '" aria-label="Ends"><button class="icon" data-tdel aria-label="Remove this term">✕</button></div>';
+  const wrow = ([t, l]) => '<div class="bkwrow"><span class="bkdotk ' + t + '"></span><span>' + l.replace(/y$/, 'ie') + 's</span><label class="pnum"><input type="number" min="0" max="100" step="1" data-wt="' + t + '" value="' + (+conf.w[t] || 0) + '">%</label></div>';
+  body.innerHTML = '<div class="bkpad bksetup" id="bkSetup"><h3 class="bkh" style="grid-column:1/-1;margin:0">Term setup <span class="muted" style="font-size:13px;font-weight:400">· for all your classes</span></h3><section><h3 class="ovh3">Terms</h3><div class="bktrow muted bktrh"><span>Name</span><span>Starts</span><span>Ends</span><span></span></div><div id="bkTerms">' + conf.terms.map(row).join('') + '</div>' +
+    '<button class="link" data-taddt>+ Add a term</button><p class="muted bkhint">An assignment counts toward the term its due date falls in. You can move one to another term from its column. With no terms, everything is one year.</p></section>' +
+    '<section><h3 class="ovh3">What a grade is made of</h3>' + BK_TYPES.map(wrow).join('') + '<p class="muted bkhint" id="bkWsum"></p><p class="muted bkhint">Inside each type, every assignment counts the same, whatever it’s out of: two summatives at 50% are 25% each.</p>' +
+    '<h3 class="ovh3" style="margin-top:16px">When a type has nothing yet</h3><div class="pseg" role="group">' + [['other', 'Use the other types'], ['zero', 'Count it as 0']].map(([v, l]) => '<button data-bkempty="' + v + '" aria-pressed="' + (conf.empty === v) + '">' + l + '</button>').join('') + '</div>' +
+    '<p class="muted bkhint">Early in a term with no summative yet, the grade is the in-class average, marked “so far”.</p></section>' +
+    '<div class="bkfootbtns"><button class="btn" data-bkback>Cancel</button><button class="btn primary" data-bksavesetup>Save</button></div></div>';
+  bkWsum();
+}
+function bkWsum() { const el = $('#bkWsum'); if (!el) return; const s = [...document.querySelectorAll('[data-wt]')].reduce((a, i) => a + (+i.value || 0), 0); el.textContent = s === 100 ? 'These add up to 100%.' : 'These add up to ' + s + '%. Each type counts in proportion, so the grade still works out of 100.'; }
+function bkSetupSave() {
+  const terms = [...document.querySelectorAll('#bkTerms .bktrow')].map(r => { const v = f => r.querySelector('[data-tf="' + f + '"]').value.trim(); return { id: r.dataset.tid, name: v('name') || 'Term', start: v('start'), end: v('end') }; })
+    .filter(t => t.start || t.end || t.name).sort((a, b) => (a.start || '').localeCompare(b.start || ''));
+  const bad = terms.find(t => !t.start || !t.end || t.end < t.start);
+  if (bad) { toast('Give “' + bad.name + '” a start and an end date, with the end after the start.'); return false; }
+  const w = {}; for (const i of document.querySelectorAll('[data-wt]')) w[i.dataset.wt] = Math.max(0, Math.min(100, +i.value || 0));
+  if (!w.sum && !w.ic && !w.fm) { toast('Give at least one type some weight.'); return false; }
+  const e = document.querySelector('[data-bkempty][aria-pressed="true"]');
+  bkSave({ terms, w, empty: e ? e.dataset.bkempty : 'other' });
+  return true;
+}
+
+/* ---------- add scores without papers ---------- */
+let bkAdd = null;
+function bkAddView(itId) {
+  const c = bkClass(), f = itId ? findItem(itId) : null, it = f && f.it;
+  bkAdd = { it, max: it && it.typed ? it.typed.max : 20, mode: it && it.typed && !it.typed.max ? 'pct' : 'pts', type: (it && it.type) || 'ic', s: JSON.parse(JSON.stringify((it && it.typed && it.typed.s) || {})) };
+  const units = c.units;
+  bkTabsOff();
+  $('#bkBody').innerHTML = '<div class="bkpad bkaddv" id="bkAdd"><h3 class="bkh">' + (it ? 'Typed-in scores for ' + esc(it.name) : 'Add scores for ' + esc(c.name)) + '</h3><div class="bkaddgrid">' +
+    '<label class="bkpf">Assignment<input type="text" class="bkin" id="bkaName" value="' + esc(it ? it.name : '') + '" placeholder="e.g. Vocab quiz 2"></label>' +
+    '<div class="bkpf">Type<div class="pseg" role="group">' + BK_TYPES.map(([t, , s]) => '<button data-bkatype="' + t + '" aria-pressed="' + (bkAdd.type === t) + '">' + s + '</button>').join('') + '</div></div>' +
+    '<label class="bkpf">Due<input type="date" class="bkin" id="bkaDue" value="' + esc((it && it.due) || isoDay(Date.now())) + '"></label>' +
+    (it ? '' : '<label class="bkpf">Unit<select class="btn sm" id="bkaUnit">' + units.map(u => '<option value="' + u.id + '">' + esc(u.name) + '</option>').join('') + '<option value="">' + (units.length ? 'A new unit: Typed in' : 'Unit 1 (new)') + '</option></select></label>') +
+    '<div class="bkpf">Scored as<div class="bkso"><div class="pseg" role="group"><button data-bkamode="pts" aria-pressed="' + (bkAdd.mode === 'pts') + '">Points out of</button><button data-bkamode="pct" aria-pressed="' + (bkAdd.mode === 'pct') + '">Percent</button></div>' +
+    '<input type="number" class="bkin bkmax" id="bkaMax" min="0.5" step="0.5" value="' + esc(bkAdd.max || 20) + '"' + (bkAdd.mode === 'pct' ? ' hidden' : '') + ' aria-label="Out of"></div></div></div>' +
+    '<textarea class="bkin bkpaste" id="bkaPaste" rows="2" placeholder="Paste a column of scores from a spreadsheet, in roster order. Or paste names with scores beside them. Or type them in below."></textarea><p class="muted bkhint" id="bkaPasteNote"></p>' +
+    '<table class="ptab bkent"><thead><tr><th>Student</th><th>Score</th><th class="r">Percent</th><th>Mark as</th></tr></thead><tbody id="bkaRows"></tbody></table>' +
+    '<div class="bkfootbtns"><span class="muted" id="bkaCount"></span><span class="sp"></span><button class="btn" data-bkback>Cancel</button><button class="btn primary" data-bkasave>' + (it ? 'Save scores' : 'Add to gradebook') + '</button></div></div>';
+  bkAddRows();
+  setTimeout(() => { const n = $('#bkaName'); if (n && !it) n.focus(); }, 0);
+}
+function bkAddMax() { return bkAdd.mode === 'pct' ? null : Math.max(0.5, +($('#bkaMax') || {}).value || 0) || null; }
+function bkAddRows() {
+  const c = bkClass(), max = bkAddMax();
+  $('#bkaRows').innerHTML = c.names.map((n, i) => { const r = bkAdd.s[n] || {}, v = r.v != null ? r.v : '', p = v === '' || isNaN(+v) ? '' : (max ? roundPct(+v / max * 100) : roundPct(+v)) + '%';
+    return '<tr><td>' + esc(n) + '</td><td><input type="number" class="bkin bksc" step="0.5" min="0" data-bkai="' + i + '" value="' + esc(v) + '"' + (r.st === 'missing' || r.st === 'excused' ? ' disabled' : '') + ' aria-label="Score for ' + esc(n) + '"> ' + (max ? '/ ' + fmtNum(max) : '%') + '</td><td class="r muted">' + p + '</td>' +
+      '<td><div class="pseg sm" role="group">' + ['missing', 'excused', 'late'].map(s => '<button data-bkast="' + s + '" data-bkai="' + i + '" aria-pressed="' + (r.st === s) + '">' + STATUS_LABEL[s] + '</button>').join('') + '</div></td></tr>'; }).join('');
+  const n = c.names.filter(x => { const r = bkAdd.s[x]; return r && ((r.v != null && r.v !== '') || r.st === 'missing' || r.st === 'excused'); }).length;
+  $('#bkaCount').textContent = n + ' of ' + c.names.length + ' entered';
+}
+function bkPaste(text) {
+  const c = bkClass(), lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean), num = s => { const m = String(s).replace(',', '.').match(/^-?\d+(\.\d+)?/); return m ? +m[0] : null; };
+  const named = lines.map(l => { const cells = l.split(/\t|,(?!\d)|;/).map(x => x.trim()).filter(Boolean); const last = cells[cells.length - 1]; return cells.length > 1 && num(last) != null && isNaN(+cells[0]) ? { name: cells.slice(0, -1).join(' '), v: num(last) } : null; });
+  const left = [];
+  if (named.every(Boolean)) {
+    const pairs = rosterPairs(c.names, named.map(x => x.name)), back = new Map([...pairs].map(([r, k]) => [k, r]));
+    for (const x of named) { const r = back.get(x.name); if (r) bkAdd.s[r] = { ...(bkAdd.s[r] || {}), v: x.v }; else left.push(x.name); }
+  } else lines.slice(0, c.names.length).forEach((l, i) => { const v = /^(missing|m)$/i.test(l) ? null : num(l); bkAdd.s[c.names[i]] = /^(missing|m)$/i.test(l) ? { st: 'missing' } : { ...(bkAdd.s[c.names[i]] || {}), v }; });
+  $('#bkaPasteNote').textContent = left.length ? 'Not on the roster, so left out: ' + left.join(', ') + '. Type their scores in by hand.' : lines.length > c.names.length && !named.every(Boolean) ? 'There were more lines than students; the extra ones were left out.' : 'Pasted. Check them below.';
+  bkAddRows();
+}
+function bkAddSave() {
+  const c = bkClass(), name = $('#bkaName').value.trim(), due = $('#bkaDue').value;
+  if (!name) { $('#bkaName').focus(); return false; }
+  const max = bkAddMax(), s = {};
+  for (const [n, r] of Object.entries(bkAdd.s)) { const v = r.v === '' || r.v == null || isNaN(+r.v) ? null : Math.round(+r.v * 2) / 2; if (v != null || r.st) s[n] = { v, st: r.st || '' }; }
+  const typed = { max, s };
+  let it = bkAdd.it;
+  if (it) Object.assign(it, { name, type: bkAdd.type, due, typed });
+  else {
+    const uid0 = $('#bkaUnit') && $('#bkaUnit').value;
+    let u = c.units.find(x => x.id === uid0);
+    if (!u) c.units.push(u = { id: uid(), name: c.units.length ? 'Typed in' : 'Unit 1', items: [] });
+    u.items.push(it = { id: uid(), name, classId: c.id, type: bkAdd.type, due, typed });
+  }
+  saveLib(); if (!batch) renderLib();
+  const col = bk.cols.find(x => x.key === it.id);
+  if (col) Object.assign(col, { name, type: it.type, due, typed }); else bk.cols.push({ key: it.id, it, cls: c.id, name, type: it.type, due, term: it.term || '', typed });
+  bk.term = bkTermOf({ due, term: it.term || '' }, bkConf().terms); bk.hi = it.id;
+  return true;
+}
+function bkCellEdit(td) {
+  const col = bk.cols.find(x => x.key === td.dataset.bked), n = td.dataset.bkn; if (!col || !col.typed) return;
+  const r = (col.typed.s || {})[n] || {}, max = col.typed.max;
+  td.innerHTML = '<input type="text" class="bkcin" value="' + esc(r.st === 'missing' || r.st === 'excused' ? r.st : r.v != null ? fmtNum(r.v) : '') + '" aria-label="Score' + (max ? ' out of ' + fmtNum(max) : ' as a percent') + '">';
+  const inp = td.querySelector('input'); inp.focus(); inp.select();
+  let done = false;
+  const finish = keep => {
+    if (done) return; done = true;
+    if (keep) {
+      const t = inp.value.trim().toLowerCase(), s = { ...(col.typed.s || {}) };
+      if (!t) delete s[n];
+      else if (/^m(issing)?$/.test(t)) s[n] = { v: null, st: 'missing' };
+      else if (/^e(xcused)?$/.test(t)) s[n] = { v: null, st: 'excused' };
+      else if (!isNaN(+t.replace('%', ''))) s[n] = { v: Math.round(+t.replace('%', '') * 2) / 2, st: r.st === 'late' ? 'late' : '' };
+      col.typed = { ...col.typed, s };
+      if (col.it) { col.it.typed = col.typed; saveLib(); }
+    }
+    bkDraw();
+    const back = document.querySelector('[data-bked="' + CSS.escape(col.key) + '"][data-bkn="' + CSS.escape(n) + '"]'); if (back) back.focus();
+  };
+  inp.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); finish(true); } else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); finish(false); } });
+  inp.addEventListener('blur', () => finish(true));
+}
+function bkCopy() {
+  const t = $('#bkTab'); if (!t) return;
+  const rows = [...t.querySelectorAll('tr')].filter(r => !r.classList.contains('bkg')).map(r => [...r.children].map(td => td.textContent.replace(/\s+/g, ' ').trim()).join('\t'));
+  navigator.clipboard.writeText(rows.join('\n')).then(() => toast('Copied. Paste it into a spreadsheet.'), () => toast('Copying didn’t work in this browser.'));
+}
+
+/* ---------- clicks ---------- */
+$('#dlgBox').addEventListener('click', e => {
+  if (!$('#bkBody')) return;
+  const b = e.target.closest('button, [data-bked]'); if (!b) { if (!e.target.closest('#bkPop')) bkPopClose(); return; }
+  const d = b.dataset, c = bkClass();
+  if (d.bktab) { bk.tab = d.bktab; bkPopClose(); return bkDraw(); }
+  if (d.bkterm != null) { bk.term = d.bkterm; return bkDraw(); }
+  if (d.bkshow) { bk.show = d.bkshow; return bkDraw(); }
+  if (d.bkcopy != null) return bkCopy();
+  if (d.bksetup != null) return bkSetupView();
+  if (d.bkadd != null) return bkAddView();
+  if (d.bktypes != null) return bkTypesDlg();
+  if (d.bkback != null) { bkAdd = null; return bkDraw(); }
+  if (d.bkcol) { if ($('#bkPop') && $('#bkPop').dataset.key === d.bkcol) return bkPopClose(); return bkColMenu(d.bkcol, b); }
+  if (d.bkpopclose != null) { bkPopClose(); return bkDraw(); }
+  if (d.bksettype) { const k = $('#bkPop').dataset.key; bkSetCol(k, { type: d.bksettype }); for (const x of document.querySelectorAll('[data-bksettype]')) x.setAttribute('aria-pressed', String(x === b)); return; }
+  if (d.bkedittyped) { bkPopClose(); return bkAddView(d.bkedittyped); }
+  if (d.bkqtype) { bkSetCol(d.key, { type: d.bkqtype }); for (const x of b.parentElement.children) x.setAttribute('aria-pressed', String(x === b)); return; }
+  if (d.bked && !b.querySelector('input')) return bkCellEdit(b);
+  if (d.bkstu) { bk.stu += +d.bkstu; return bkDraw(); }
+  if (d.taddt != null) { const t = document.createElement('div'); t.innerHTML = '<div class="bktrow" data-tid="' + uid() + '"><input type="text" class="bkin" data-tf="name" value="Term ' + (document.querySelectorAll('#bkTerms .bktrow').length + 1) + '" aria-label="Term name"><input type="date" class="bkin" data-tf="start" aria-label="Starts"><input type="date" class="bkin" data-tf="end" aria-label="Ends"><button class="icon" data-tdel aria-label="Remove this term">✕</button></div>'; $('#bkTerms').appendChild(t.firstChild); return; }
+  if (d.tdel != null) { b.closest('.bktrow').remove(); return; }
+  if (d.bkempty) { for (const x of document.querySelectorAll('[data-bkempty]')) x.setAttribute('aria-pressed', String(x === b)); return; }
+  if (d.bksavesetup != null) { if (bkSetupSave()) bkDraw(); return; }
+  if (d.bkatype) { bkAdd.type = d.bkatype; for (const x of document.querySelectorAll('[data-bkatype]')) x.setAttribute('aria-pressed', String(x === b)); return; }
+  if (d.bkamode) { bkAdd.mode = d.bkamode; for (const x of document.querySelectorAll('[data-bkamode]')) x.setAttribute('aria-pressed', String(x === b)); $('#bkaMax').hidden = d.bkamode === 'pct'; return bkAddRows(); }
+  if (d.bkast) { const n = c.names[+d.bkai], r = bkAdd.s[n] || {}; bkAdd.s[n] = { ...r, st: r.st === d.bkast ? '' : d.bkast, v: d.bkast === 'late' || r.st === d.bkast ? r.v : null }; return bkAddRows(); }
+  if (d.bkasave != null) { if (bkAddSave()) { bkAdd = null; bkDraw(); } return; }
+});
+$('#dlgBox').addEventListener('change', e => {
+  if (!$('#bkBody')) return;
+  const t = e.target;
+  if (t.id === 'bkCls') { bk.cls = t.value; bk.term = null; bk.stu = 0; bk.hi = ''; return bkDraw(); }
+  if (t.id === 'bkDue' || t.id === 'bkTerm') { const k = $('#bkPop').dataset.key; bkSetCol(k, t.id === 'bkDue' ? { due: t.value } : { term: t.value }); return; }
+  if (t.id === 'bkaMax') return bkAddRows();
+});
+$('#dlgBox').addEventListener('input', e => {
+  if (!$('#bkBody')) return;
+  const t = e.target;
+  if (t.dataset.wt) return bkWsum();
+  if (t.dataset.bkai != null && t.classList.contains('bksc')) { const n = bkClass().names[+t.dataset.bkai]; bkAdd.s[n] = { ...(bkAdd.s[n] || {}), v: t.value === '' ? null : +t.value }; const max = bkAddMax(), p = t.closest('tr').children[2]; p.textContent = t.value === '' || isNaN(+t.value) ? '' : (max ? roundPct(+t.value / max * 100) : roundPct(+t.value)) + '%'; return; }
+});
+$('#dlgBox').addEventListener('paste', e => {
+  if (!$('#bkBody') || e.target.id !== 'bkaPaste') return;
+  e.preventDefault(); bkPaste((e.clipboardData || window.clipboardData).getData('text')); e.target.value = '';
+});
+$('#dlgBox').addEventListener('keydown', e => {
+  if (!$('#bkBody')) return;
+  if ((e.key === 'Enter' || e.key === ' ') && e.target.dataset && e.target.dataset.bked && !e.target.querySelector('input')) { e.preventDefault(); return bkCellEdit(e.target); }
+  if (bk.tab === 'one' && (e.key === 'ArrowLeft' || e.key === 'ArrowRight') && !/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)) { const c = bkClass(); if (!c) return; const n = bk.stu + (e.key === 'ArrowRight' ? 1 : -1); if (n >= 0 && n < c.names.length) { e.preventDefault(); bk.stu = n; bkDraw(); } }
+  if (e.key === 'Escape' && $('#bkPop')) { e.preventDefault(); e.stopPropagation(); bkPopClose(); }
+}, true);
+$('#bookBtn').onclick = () => { openBook(batchClass() ? batchClass().id : '', { hi: batch && batch.assignment ? batch.assignment.id : '' }); };
+document.addEventListener('click', e => { const b = e.target.closest('[data-book]'); if (b && $('#start') && !$('#start').hidden) openBook(b.dataset.book); });
+
+Object.assign(window.__gs, { openBook, bkLoad, bkClassCols, bkGrade, bkConf, bkTermOf, bk: () => bk });
+
 /* ---------------- bringing files in: what a file really is, why one won't open and what to do next, late work, the opening report ---------------- */
 function realType(d) {
   if (!d || !d.length) return 'empty';
@@ -15203,6 +15900,124 @@ async function marksDownload(btn) {
   bar.hidden = true; btn.disabled = false;
 }
 Object.assign(window.__gs, { marksFileText, makeMarksFile, MARKS_ASK, shareKind });
+
+/* ---------------- text a student sent in a message, pasted in as a page ---------------- */
+const PT_W = 595.28, PT_H = 841.89, PT_M = 64, PT_SIZE = 12, PT_LINE = 18;
+function pasteClean(s) {
+  return String(s || '').replace(/\r\n?/g, '\n').replace(/\t/g, '    ').replace(/[   ]/g, ' ').replace(/[​-‍⁠﻿­]/g, '').replace(/[ \t]+$/gm, '').replace(/^\n+|\s+$/g, '');
+}
+const pasteName = s => (String(s || '').replace(/[\\/:*?"<>|\u0000-\u001F]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 80) || 'Emailed work');
+function pasteWrap(text, width, measure, words) {
+  const out = [];
+  for (const para of text.split('\n')) {
+    if (!para.trim()) { out.push(''); continue; }
+    let line = '';
+    for (const w of words(para)) {
+      if (measure(line + w) <= width) { line += w; continue; }
+      if (line.trim()) { out.push(line.replace(/\s+$/, '')); line = ''; }
+      let piece = w.replace(/^\s+/, '');
+      while (measure(piece) > width) {
+        let k = 1; while (k < piece.length && measure(piece.slice(0, k + 1)) <= width) k++;
+        out.push(piece.slice(0, k)); piece = piece.slice(k);
+      }
+      line = piece;
+    }
+    out.push(line.replace(/\s+$/, ''));
+  }
+  return out;
+}
+const spaceWords = para => para.match(/\s*\S+/g) || [];
+const segWords = para => {   // languages written without spaces (Thai) break between words, where the browser knows how
+  try { return [...new Intl.Segmenter(undefined, { granularity: 'word' }).segment(para)].map(s => s.segment); } catch { return para.match(/\s*\S+/g) || []; }
+};
+function pastePages(lines, firstTop) {
+  const pages = [[]]; let y = firstTop;
+  for (const l of lines) {
+    if (y - PT_LINE < PT_M) { pages.push([]); y = PT_H - PT_M; }
+    pages[pages.length - 1].push(l); y -= PT_LINE;
+  }
+  return pages;
+}
+async function pasteTextPdf(title, text, when) {
+  text = pasteClean(text); title = pasteName(title);
+  const doc = await PDFLib.PDFDocument.create();
+  doc.setTitle(title);   // no Creator: 'Grading Studio' there means a flattened export (imported.js)
+  const font = await doc.embedFont(PDFLib.StandardFonts.Helvetica), bold = await doc.embedFont(PDFLib.StandardFonts.HelveticaBold);
+  const sub = 'Pasted from a message on ' + new Date(when || Date.now()).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
+  const can = new Set(font.getCharacterSet()), typed = [...(title + sub + text)].every(ch => ch === '\n' || can.has(ch.codePointAt(0)));
+  const width = PT_W - 2 * PT_M, gray = PDFLib.rgb(0.45, 0.45, 0.45), ink = PDFLib.rgb(0.1, 0.1, 0.12);
+  if (typed) {
+    const lines = pasteWrap(text, width, s => font.widthOfTextAtSize(s, PT_SIZE), spaceWords);
+    const titleLines = pasteWrap(title, width, s => bold.widthOfTextAtSize(s, 16), spaceWords);
+    let top = PT_H - PT_M - 16 - (titleLines.length - 1) * 21 - 44;
+    pastePages(lines, top).forEach((pl, i) => {
+      const page = doc.addPage([PT_W, PT_H]);
+      let y = PT_H - PT_M - PT_SIZE;
+      if (i === 0) {
+        y = PT_H - PT_M - 16;
+        for (const t of titleLines) { page.drawText(t, { x: PT_M, y, size: 16, font: bold, color: ink }); y -= 21; }
+        y += 21 - 16; page.drawText(sub, { x: PT_M, y, size: 9.5, font, color: gray }); y = top;
+      }
+      for (const l of pl) { if (l) page.drawText(l, { x: PT_M, y, size: PT_SIZE, font, color: ink }); y -= PT_LINE; }
+    });
+    return { bytes: await doc.save(), typed: true };
+  }
+  try { await Promise.all([document.fonts.load('400 24px Inter', text), document.fonts.load('700 32px Inter', title)]); } catch {}
+  const S = 2, c = document.createElement('canvas'); c.width = Math.round(PT_W * S); c.height = Math.round(PT_H * S);
+  const g = c.getContext('2d'), face = '"Inter", system-ui, -apple-system, "Segoe UI", "Noto Sans", "Noto Sans Thai", Tahoma, sans-serif';
+  const setFont = (px, w) => { g.font = (w || 400) + ' ' + (px * S) + 'px ' + face; };
+  setFont(PT_SIZE); const lines = pasteWrap(text, width * S, s => g.measureText(s).width, segWords);
+  setFont(16, 700); const titleLines = pasteWrap(title, width * S, s => g.measureText(s).width, segWords);
+  const top = PT_H - PT_M - 16 - (titleLines.length - 1) * 21 - 44;
+  for (const [i, pl] of pastePages(lines, top).entries()) {
+    g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height); g.textBaseline = 'alphabetic';
+    let y = PT_M + PT_SIZE;
+    if (i === 0) {
+      y = PT_M + 16; g.fillStyle = '#1a1a1f'; setFont(16, 700);
+      for (const t of titleLines) { g.fillText(t, PT_M * S, y * S); y += 21; }
+      y += 16 - 21; g.fillStyle = '#737373'; setFont(9.5); g.fillText(sub, PT_M * S, y * S); y = PT_H - top;
+    }
+    g.fillStyle = '#1a1a1f'; setFont(PT_SIZE);
+    for (const l of pl) { if (l) g.fillText(l, PT_M * S, y * S); y += PT_LINE; }
+    const png = await new Promise(r => c.toBlob(r, 'image/png'));
+    const img = await doc.embedPng(new Uint8Array(await png.arrayBuffer()));
+    doc.addPage([PT_W, PT_H]).drawImage(img, { x: 0, y: 0, width: PT_W, height: PT_H });
+  }
+  return { bytes: await doc.save(), typed: false };
+}
+async function pasteTextAdd(st, title, text) {
+  if (!pasteClean(text)) return null;
+  const name = pasteName(title) + '.pdf', { bytes, typed } = await pasteTextPdf(title, text);
+  await addFiles(st, [{ path: name, file: new File([bytes], name, { type: 'application/pdf' }) }]);
+  return { name, typed };
+}
+function openPasteText(st) {
+  if (!st) return;
+  const who = shownName(st, batch.students.indexOf(st));
+  openDlg('<div class="bh"><h2>Paste text for ' + esc(who) + '</h2><button class="icon" data-cancel aria-label="Close" style="margin-left:auto">✕</button></div>' +
+    '<div class="bb"><p class="muted" style="margin:0 0 10px;font-size:14px">For work a student sent in an email or a message. It becomes a page you can mark, score and export like any paper, added after their other files. It stays in this browser.</p>' +
+    '<label class="muted" for="ptName" style="font-size:13px">Name it</label><input class="btn" id="ptName" value="Emailed work" autocomplete="off" style="width:100%;margin:4px 0 10px;text-align:left">' +
+    '<textarea id="ptText" placeholder="Paste what they sent here" style="width:100%;box-sizing:border-box;height:220px;resize:vertical;font:inherit;font-size:14px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--fg)"></textarea>' +
+    '<p class="muted" id="ptCount" style="margin:6px 0 0;font-size:13px"></p></div>' +
+    '<div class="bf"><button class="btn" data-cancel>Cancel</button><button class="btn primary" id="ptAdd" disabled>Add to ' + esc(who) + '</button></div>');
+  const ta = $('#ptText'), add = $('#ptAdd');
+  const count = () => {
+    const t = pasteClean(ta.value), w = (t.match(/\S+/g) || []).length;
+    add.disabled = !t;
+    $('#ptCount').textContent = !t ? '' : w + (w === 1 ? ' word' : ' words') + ([...t].some(ch => ch.codePointAt(0) > 0x24F && !/[ -⁯€™]/.test(ch)) ? '. Some letters can’t be typed into the page, so it comes in as a picture of the text. Pen, highlighter and comments still work.' : '');
+  };
+  ta.oninput = count;
+  $('#dlgBox').onclick = async e => {
+    if (e.target.closest('[data-cancel]')) return closeDlg();
+    if (e.target !== add || add.disabled) return;
+    add.disabled = true; add.textContent = 'Adding…';
+    const title = $('#ptName').value, text = ta.value;
+    closeDlg();
+    try { await pasteTextAdd(st, title, text); } catch (err) { toast('That text couldn’t be added: ' + ((err && err.message) || err)); }
+  };
+  ta.focus();
+}
+Object.assign(window.__gs, { pasteTextPdf, pasteTextAdd, openPasteText, pasteWrap, pasteClean });
 
 /* ---------------- group work: one paper for several students, marked and graded once ---------------- */
 function groupOf(st) { return (st && batch && (batch.groups || []).find(g => g.k.includes(st.key))) || null; }
