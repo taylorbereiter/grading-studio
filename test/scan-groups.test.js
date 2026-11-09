@@ -124,7 +124,7 @@ test('⚑ in a page’s corner flags it for a rescan while grading', async () =>
   await close();
 });
 
-test('group work in a download: Share with… gives another student their own copy, kept after reopening', async () => {
+test('group work in a download: Group work… gives another student their own copy, kept after reopening', async () => {
   const { page, close } = await openApp(browser);
   const zip = zipOf({ 'Aria Testwell/Poster.pdf': await makePaper({ title: 'Our poster' }), 'Bram Sample/Other.pdf': await makePaper({ title: 'Something else' }) });
   await openZip(page, zip);
@@ -134,12 +134,12 @@ test('group work in a download: Share with… gives another student their own co
   await page.waitForSelector('#dlgBox [data-shto]');
   await page.click('#dlgBox [data-shto]');
   await page.waitForFunction(() => window.__gs.state().batch.students[1].files.length === 2);
-  assert.match(await page.$eval('#dlgBox [data-shto]', e => e.textContent), /Has a copy/);
+  assert.match(await page.$eval('#dlgBox [data-shto]', e => e.textContent), /In the group/);
   await page.click('#dlgBox .bf [data-cancel]');
   const bram = await studentNamed(page, 'Bram Sample');
   assert.deepEqual(bram.files.map(f => [f.name, f.from]), [['Other.pdf', null], ['Poster.pdf', 'Aria Testwell']]);
-  await page.waitForFunction(() => /Share with… \(1\)/.test((document.querySelector('#paper [data-shfile]') || {}).textContent || ''));
-  assert.deepEqual((await listChips(page))['Bram Sample'], ['shared']);
+  await page.waitForFunction(() => /Group work… \(1\)/.test((document.querySelector('#paper [data-shfile]') || {}).textContent || ''));
+  assert.deepEqual((await listChips(page))['Bram Sample'], ['group']);
   await settle(page);
   await page.reload(); await appReady(page);
   await openZip(page, zip);
