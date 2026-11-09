@@ -4,7 +4,7 @@ const STATUS_LABEL = { missing: 'Missing', excused: 'Excused', late: 'Late' };
 function noScore(st) { const s = st.grade.status; return s === 'missing' || s === 'excused'; }
 const hasSheet = g => g.sheet != null && g.sheet !== '';
 // Anything she has put on this student besides files: a score, a comment or a status.
-const gradeHasWork = g => !!g && ((g.rubric || []).some(v => v != null) || (g.points != null && g.points !== '') || hasSheet(g) || !!g.comment || !!g.status);
+const gradeHasWork = g => !!g && ((g.rubric || []).some(v => v != null) || (g.points != null && g.points !== '') || hasSheet(g) || !!g.comment || !!g.status || !!g.fb);
 // A score she gave this student, here or typed on the Grade sheet. A highlighted Word rubric doesn't write over it.
 const hasOwnScore = st => ownGrade(st).total != null || hasSheet(st.grade);
 // The same, in words: 'a score of 10', 'a comment'…

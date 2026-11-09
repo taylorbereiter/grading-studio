@@ -1126,6 +1126,17 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
 .pseg.sm button{font-size:12px;padding:3px 8px}
 .cls .card .bkpills{display:flex;gap:4px;flex-wrap:wrap;margin:2px 0 4px}
 @media (max-width:700px){.bktrow{grid-template-columns:1fr 1fr;}.bktrow [data-tf=name]{grid-column:1/-1}}
+/* ---------- feedback complete, for formative activities ---------- */
+.fbnote{background:var(--surface-2);border-radius:10px;padding:10px 12px;font-size:13px;color:var(--fg-2);margin-bottom:12px}
+.fbnote b{display:block;color:var(--fg)}
+.fbtog{width:100%;display:flex;align-items:center;gap:12px;border:1.5px solid var(--line-strong);background:var(--surface);color:var(--fg);border-radius:12px;padding:12px 14px;font:inherit;font-size:15px;font-weight:600;text-align:left;cursor:pointer;margin-bottom:12px}
+.fbtog:hover{border-color:var(--accent)}
+.fbtog .bx{flex:none;width:24px;height:24px;border-radius:7px;border:2px solid var(--line-strong);display:grid;place-items:center;color:#fff;font-size:15px}
+.fbtog small{display:block;font-weight:400;color:var(--muted);font-size:12.5px}
+.fbtog[aria-checked=true]{border-color:var(--accent);background:var(--accent-soft);color:var(--accent)}
+.fbtog[aria-checked=true] .bx{background:var(--accent);border-color:var(--accent)}
+.fbck{color:var(--accent);font-weight:700}
+.bkstart{color:var(--muted);font-size:11.5px}
 
 /* the dots: the accent in light; a step deeper in dark, inside the range that reads as a mark on a dark surface */
 :root{--dot:var(--accent)}
@@ -4161,6 +4172,8 @@ function recolorSelected(col) {
 
 /* ---------------- student list ---------------- */
 const fileMarked = f => viewable(f) && (Object.values(f.marks).some(a => a.length) || (f.kami && Object.keys(f.kami).length > 0) || !!(f.scan && f.scan.found && f.scan.found.length) || !!f.hand);
+function fmNow() { const a = batch && batch.assignment, f = a && findItem(a.id); return ((f && f.it) || a || {}).type === 'fm'; }
+function setFb(st, on) { if (on) st.grade.fb = true; else delete st.grade.fb; touchGrade(st); saveSoon(); }
 function hasMarks(st) { return st.files.some(f => fileMarked(f) || f.edited); }
 function renderList() {
   if (!batch) return;
@@ -4171,11 +4184,12 @@ function renderList() {
     if (q && !shownName(st, i).toLowerCase().includes(q)) return '';
     const g = gradeOf(st);
     const val = g.total != null ? g.total : g.pct != null ? g.pct + '%' : null;
-    const right = noScore(st) ? '<span class="stag" title="You marked this student ' + g.status + '. No score counts.">' + STATUS_LABEL[g.status] + '</span>' : val != null ? '<span class="sc" title="' + (g.paper ? 'Read from the paper' : g.done ? 'Scored' : 'Partly scored') + '"' + (g.paper || g.out ? ' style="color:var(--muted);font-weight:600"' : g.done ? '' : ' style="color:var(--warn)"') + '>' + fmtNum(g.total != null ? g.total : g.pct) + (g.total == null ? '%' : g.outOf != null ? '/' + fmtNum(g.outOf) : '') + (g.partial ? '<small>partial</small>' : '') + '</span>'
+    let right = noScore(st) ? '<span class="stag" title="You marked this student ' + g.status + '. No score counts.">' + STATUS_LABEL[g.status] + '</span>' : val != null ? '<span class="sc" title="' + (g.paper ? 'Read from the paper' : g.done ? 'Scored' : 'Partly scored') + '"' + (g.paper || g.out ? ' style="color:var(--muted);font-weight:600"' : g.done ? '' : ' style="color:var(--warn)"') + '>' + fmtNum(g.total != null ? g.total : g.pct) + (g.total == null ? '%' : g.outOf != null ? '/' + fmtNum(g.outOf) : '') + (g.partial ? '<small>partial</small>' : '') + '</span>'
       : manyReads(st) ? '<span class="sc" style="color:var(--warn)" title="More than one grade found on the paper. Check the Grade sheet.">?</span>'
       : st.doubts && st.doubts.length ? '<span class="sc" style="color:var(--warn)" title="A reading on the paper may not be a grade. Confirm it on the Grade sheet.">?</span>'
       : hasMarks(st) ? '<span class="dot" title="Marked"></span>' : '';
     const sent = st.grade.sent ? '<span class="sent" title="You exported this paper on its own at ' + esc(sentWhen(st.grade.sent)) + '">↗ sent</span>' : '';
+    if (fmNow() && !noScore(st)) right = st.grade.fb ? '<span class="fbck" title="Feedback complete">✓</span>' : hasMarks(st) || (st.grade.comment || '').trim() ? '<span class="dot" title="Started, not complete yet"></span>' : '';
     const nAdd = st.files.filter(f => f.added && !f.from).length, re = st.files.some(f => Object.values(f.sc || {}).some(r => r.re)), grp = st.files.some(f => f.from || Object.values(f.sc || {}).some(r => r.w)) || st.files.some(f => !f.added && shareCopies(st, f).length);
     return '<button class="stu' + (i === cur ? ' on' : '') + (st.files.length ? '' : ' empty') + '" data-i="' + i + '"><span class="num">' + (pos + 1) + '</span><span class="nm" title="' + esc(shownName(st, i)) + '">' + esc(shownName(st, i)) + '</span>' + (anonOn() ? '' : whoBtn('data-wi="' + i + '"', st.key)) +
       '<span style="display:inline-flex;align-items:center;gap:4px">' + (st.files.length || noScore(st) ? '' : '<span class="muted" style="font-size:11px">no paper</span>') + (g.status === 'late' ? '<span class="stag" title="You marked this student late">late</span>' : '') + (g.out ? '<span class="stag out" title="Left out of the average">left out</span>' : '') + (nAdd ? '<span class="add" title="' + nAdd + (nAdd === 1 ? ' file' : ' files') + ' added by you">+' + nAdd + '</span>' : '') + (re ? '<span class="add" title="A page needs a rescan">⚑</span>' : '') + (groupOf(st) ? '<span class="add grp" title="Group work: marked and graded once with ' + esc(groupNames(groupMates(st))) + '">group</span>' : grp ? '<span class="add grp" title="Group work: shares pages or a file with another student">shared</span>' : '') + carryPill(st) + sent + right + '</span></button>';
@@ -4187,6 +4201,13 @@ function renderList() {
 }
 let outOpen = false;
 function renderProg() {
+  if (fmNow()) {
+    const on = batch.students.filter(s => !noScore(s)), N = on.length, n = on.filter(s => s.grade.fb).length, nOff = batch.students.length - N;
+    $('#progS').innerHTML = '<div class="ph">' + n + ' of ' + N + ' <span>feedback complete' + (nOff ? ' · ' + nOff + ' missing or excused' : '') + '</span></div><div class="pb"><i style="width:' + (N ? 100 * n / N : 0) + '%"></i></div>' +
+      '<div class="ptiles"><div class="pt" id="pDone"><div class="k">Complete</div><div class="v">' + n + '</div></div><div class="pt" id="pLeft"><div class="k">Left</div><div class="v">' + (N - n) + '</div></div></div>' +
+      (n < N ? '<button class="btn sm" id="nextUn" title="Opens the next student whose feedback isn’t complete">Next without feedback <kbd>N</kbd></button>' : '<div class="muted" style="font-size:13px;margin-bottom:6px">Feedback is complete for everyone' + (nOff ? ' else' : '') + '.</div>');
+    return;
+  }
   const on = batch.students.filter(s => !noScore(s)), N = on.length, n = on.filter(s => gradeOf(s).done).length, nOff = batch.students.length - N;
   const cs = classStats(), outs = batch.students.map((st, i) => i).filter(i => batch.students[i].grade.outAvg && !noScore(batch.students[i]));
   if (!outs.length) outOpen = false;
@@ -4203,8 +4224,9 @@ function renderProg() {
 }
 function nextUnscored() {
   const N = batch.students.length, o = anonOn() ? anonOrder() : batch.students.map((_, i) => i), p = o.indexOf(cur);
-  for (let k = 1; k <= N; k++) { const i = o[(p + k) % N]; if (!gradeOf(batch.students[i]).done) return openStudent(i); }
-  toast('Everyone has a score');
+  const fm = fmNow(), left = st => fm ? !st.grade.fb && !noScore(st) : !gradeOf(st).done;
+  for (let k = 1; k <= N; k++) { const i = o[(p + k) % N]; if (left(batch.students[i])) return openStudent(i); }
+  toast(fm ? 'Feedback is complete for everyone' : 'Everyone has a score');
 }
 $('#progS').addEventListener('click', e => {
   if (e.target.closest('#nextUn')) nextUnscored();
@@ -4223,6 +4245,7 @@ $('#stuFind').addEventListener('keydown', e => {
 function renderGrade() {
   const st = batch.students[cur], g = st.grade, gr = gradeOf(st);
   let h = '';
+  if (fmNow()) return renderFeedback(st);
   if (setup.mode === 'rubric') {
     h += '<h3>Rubric <button class="link" id="editRubric" style="font-size:12px;text-transform:none;letter-spacing:0">Edit</button></h3>';
     h += setup.criteria.map((c, i) => { const v = g.rubric[i], k = RUBRIC_STEPS.indexOf(v);
@@ -4240,6 +4263,23 @@ function renderGrade() {
   h += histSlot(st);
   h += '<div class="hint">Keys: <kbd>←</kbd> <kbd>→</kbd> or <kbd>↑</kbd> <kbd>↓</kbd> students · <kbd>N</kbd> next unscored · <kbd>=</kbd> calculator · V P H O T C K E tools · ' + keyLabel('⌘Z undo, ⇧⌘Z redo') + ' · <button class="link" data-keys style="font-size:12.5px">All keys ( ? )</button></div>';
   $('#grade').innerHTML = h;
+}
+function renderFeedback(st) {
+  const g = st.grade, on = !!g.fb, off = noScore(st), navAt = anonOn() ? anonPos(cur) : cur, last = navAt >= batch.students.length - 1;
+  $('#grade').innerHTML = '<h3>Feedback</h3><div class="fbnote"><b>Formative activity</b>Feedback only, so there’s no score. <button class="link" id="fbType">Change the type</button></div>' +
+    (off ? '<div class="total"><b>' + STATUS_LABEL[g.status] + '</b><span style="width:100%;font-size:12.5px">Nothing to give feedback on. Click it again under Mark as to take this off.</span></div>'
+      : '<button class="fbtog" id="fbTog" role="switch" aria-checked="' + on + '"><span class="bx">' + (on ? '✓' : '') + '</span><span>Feedback complete<small>' + (on ? 'Click again to undo.' : 'Click, or press F, when you’ve finished with this paper.') + '</small></span></button>') +
+    statusHtml(st).replace(/<button class="outsw"[\s\S]*?<\/button>/, '') +
+    '<div class="cmt"><h3 style="margin-bottom:6px">Comment for ManageBac</h3><textarea id="cmtIn" placeholder="Optional. Shows in the Grades list so you can copy it.">' + esc(g.comment) + '</textarea></div>' +
+    '<div class="nav">' + oneOutHtml(st) + '<button class="btn" id="prevBtn" ' + (navAt ? '' : 'disabled') + '>◀ Previous</button>' + (off || on ? '<button class="btn primary" id="nextBtn" ' + (last ? 'disabled' : '') + '>Next ▶</button>' : '<button class="btn primary" id="fbNext">Complete' + (last ? '' : ' and next ▶') + '</button>') + '</div>' +
+    histSlot(st) +
+    '<div class="hint">Keys: <kbd>F</kbd> feedback complete · <kbd>Shift</kbd> <kbd>F</kbd> complete and next · <kbd>N</kbd> next without feedback · <kbd>←</kbd> <kbd>→</kbd> students · <button class="link" data-keys style="font-size:12.5px">All keys ( ? )</button></div>';
+}
+function fbToggle(next) {
+  const st = batch.students[cur]; if (noScore(st)) return;
+  setFb(st, next ? true : !st.grade.fb);
+  renderList();
+  if (next && (anonOn() ? anonPos(cur) : cur) < batch.students.length - 1) stepStudent(1); else renderGrade();
 }
 function totalHtml(st) {
   const gr = gradeOf(st), own = ownGrade(st);
@@ -4271,6 +4311,9 @@ $('#grade').addEventListener('click', e => {
   if (e.target.closest('#nextBtn')) stepStudent(1);
   if (e.target.closest('#editRubric')) openSetup();
   if (e.target.closest('[data-keys]')) openKeys();
+  if (e.target.closest('#fbTog')) fbToggle(false);
+  if (e.target.closest('#fbNext')) fbToggle(true);
+  if (e.target.closest('#fbType') && batch.assignment) editAssignment(batch.assignment.id);
 });
 function slideTo(r, v) {
   const st = batch.students[cur], i = +r.closest('.scores').dataset.c;
@@ -6695,6 +6738,7 @@ function editAssignment(id, unitId) {
       if (f.u !== to) f.u.items.splice(f.u.items.indexOf(it), 1);
       if (f.u !== to) to.items.push(it);
       saveLib(); closeDlg(); renderLib();
+      if (batch) { renderGrade(); renderList(); }   // a type changed while grading: the score panel follows
     }
   };
 }
@@ -8906,6 +8950,7 @@ document.addEventListener('keydown', e => {
   if (e.key.toLowerCase() === 'h' && tool === 'hl') { setHlMode(hlMode === 'free' ? 'auto' : 'free', true); return; }
   if (map[e.key.toLowerCase()]) { setTool(map[e.key.toLowerCase()]); return; }
   if (e.key.toLowerCase() === 'n') { nextUnscored(); return; }
+  if (e.key.toLowerCase() === 'f' && !e.metaKey && !e.ctrlKey && !e.altKey && fmNow()) { e.preventDefault(); fbToggle(e.shiftKey); return; }
   if (e.key === '=' && !$('#calcPanel')) { e.preventDefault(); openCalc(); return; }
   if ($('#calcPanel') && e.key !== '/' && !(e.key === 'x' || e.key === 'X')) { const k = calcKeyOf(e); if (k && k !== 'Escape' && (k !== '=' || e.code === 'Equal' || e.code === 'NumpadEqual')) { e.preventDefault(); $('#calcPanel').typeIn(k); return; } }
   if (e.key === '[' && !e.metaKey && !e.ctrlKey) { e.preventDefault(); const p = panelsNow(); return setPanels(!p.L, p.R); }
@@ -9977,7 +10022,7 @@ Object.assign(window.__gs, { unpackExport, keyRows, drawKeyPage, openMarkKey, ma
 const STATUS_LABEL = { missing: 'Missing', excused: 'Excused', late: 'Late' };
 function noScore(st) { const s = st.grade.status; return s === 'missing' || s === 'excused'; }
 const hasSheet = g => g.sheet != null && g.sheet !== '';
-const gradeHasWork = g => !!g && ((g.rubric || []).some(v => v != null) || (g.points != null && g.points !== '') || hasSheet(g) || !!g.comment || !!g.status);
+const gradeHasWork = g => !!g && ((g.rubric || []).some(v => v != null) || (g.points != null && g.points !== '') || hasSheet(g) || !!g.comment || !!g.status || !!g.fb);
 const hasOwnScore = st => ownGrade(st).total != null || hasSheet(st.grade);
 function gradeWords(st) {
   const g = st.grade, own = ownGrade(st).total, out = [];
@@ -11316,15 +11361,15 @@ const bkMean = a => a.length ? a.reduce((x, y) => x + y, 0) / a.length : null;
 
 function bkCellOf(p, g, d, k) {
   const marks = !!(d && d.s && d.s[k] && d.s[k].f && Object.values(d.s[k].f).some(pg => Object.values(pg || {}).some(a => a && a.length)));
-  const fb = marks || !!((g && g.comment) || '').trim();
+  const fb = !!(g && g.fb), started = marks || !!((g && g.comment) || '').trim();   // fb: she switched on Feedback complete
   if (p.status === 'missing' || p.status === 'excused') return { st: p.status, fb };
-  if (p.total == null && p.pct == null) return fb ? { fb } : null;
-  return { pct: p.pct, total: p.total, max: p.max, st: p.status, partial: p.partial, out: !!(g && g.outAvg), fb };
+  if (p.total == null && p.pct == null) return fb || started ? { fb, started } : null;
+  return { pct: p.pct, total: p.total, max: p.max, st: p.status, partial: p.partial, out: !!(g && g.outAvg), fb, started };
 }
 function bkTypedCell(ty, r) {
   if (!r) return null;
   if (r.st === 'missing' || r.st === 'excused') return { st: r.st, typed: true };
-  if (r.v == null || r.v === '' || isNaN(+r.v)) return null;
+  if (r.v == null || r.v === '' || isNaN(+r.v)) return r.fb ? { fb: true, typed: true } : null;
   const v = +r.v, max = ty.max ? +ty.max : null;
   return { pct: max ? roundPct(v / max * 100) : roundPct(v), total: max ? v : null, max, st: r.st || '', typed: true, fb: true };
 }
@@ -11428,7 +11473,7 @@ function bkDraw() {
 }
 const bkCellText = (cell, show, col) => {
   if (!cell) return '<span class="bknone">–</span>';
-  if (col.type === 'fm') return cell.st === 'missing' ? '<span class="bkst">missing</span>' : cell.st === 'excused' ? '<span class="bkst">excused</span>' : cell.fb ? '<span class="bkfb" aria-label="Feedback given">✓</span>' : '<span class="bknone">–</span>';
+  if (col.type === 'fm') return cell.st === 'missing' ? '<span class="bkst">missing</span>' : cell.st === 'excused' ? '<span class="bkst">excused</span>' : cell.fb ? '<span class="bkfb" aria-label="Feedback complete">✓</span>' : cell.started ? '<span class="bkstart">started</span>' : '<span class="bknone">–</span>';
   if (cell.st === 'missing' || cell.st === 'excused') return '<span class="bkst">' + cell.st + '</span>';
   if (cell.pct == null) return cell.fb ? '<span class="bkfb" aria-label="Feedback given, no score">✓</span>' : '<span class="bknone">–</span>';
   const v = show === 'pts' && cell.total != null ? fmtNum(cell.total) + '<small>/' + fmtNum(cell.max) + '</small>' : cell.pct + '%';
@@ -11630,14 +11675,23 @@ function bkAddView(itId) {
     '<div class="bkpf">Scored as<div class="bkso"><div class="pseg" role="group"><button data-bkamode="pts" aria-pressed="' + (bkAdd.mode === 'pts') + '">Points out of</button><button data-bkamode="pct" aria-pressed="' + (bkAdd.mode === 'pct') + '">Percent</button></div>' +
     '<input type="number" class="bkin bkmax" id="bkaMax" min="0.5" step="0.5" value="' + esc(bkAdd.max || 20) + '"' + (bkAdd.mode === 'pct' ? ' hidden' : '') + ' aria-label="Out of"></div></div></div>' +
     '<textarea class="bkin bkpaste" id="bkaPaste" rows="2" placeholder="Paste a column of scores from a spreadsheet, in roster order. Or paste names with scores beside them. Or type them in below."></textarea><p class="muted bkhint" id="bkaPasteNote"></p>' +
-    '<table class="ptab bkent"><thead><tr><th>Student</th><th>Score</th><th class="r">Percent</th><th>Mark as</th></tr></thead><tbody id="bkaRows"></tbody></table>' +
+    '<table class="ptab bkent"><thead><tr id="bkaHead"></tr></thead><tbody id="bkaRows"></tbody></table>' +
     '<div class="bkfootbtns"><span class="muted" id="bkaCount"></span><span class="sp"></span><button class="btn" data-bkback>Cancel</button><button class="btn primary" data-bkasave>' + (it ? 'Save scores' : 'Add to gradebook') + '</button></div></div>';
   bkAddRows();
   setTimeout(() => { const n = $('#bkaName'); if (n && !it) n.focus(); }, 0);
 }
 function bkAddMax() { return bkAdd.mode === 'pct' ? null : Math.max(0.5, +($('#bkaMax') || {}).value || 0) || null; }
 function bkAddRows() {
-  const c = bkClass(), max = bkAddMax();
+  const c = bkClass(), max = bkAddMax(), fm = bkAdd.type === 'fm';
+  $('#bkaHead').innerHTML = fm ? '<th>Student</th><th>Feedback complete</th><th></th><th>Mark as</th>' : '<th>Student</th><th>Score</th><th class="r">Percent</th><th>Mark as</th>';
+  for (const el of document.querySelectorAll('.bkso,#bkaPaste,#bkaPasteNote')) el.closest('.bkpf, textarea, p').hidden = fm;
+  if (fm) {
+    $('#bkaRows').innerHTML = c.names.map((n, i) => { const r = bkAdd.s[n] || {}, off = r.st === 'missing' || r.st === 'excused';
+      return '<tr><td>' + esc(n) + '</td><td><label class="pck"><input type="checkbox" data-bkafb="' + i + '"' + (r.fb ? ' checked' : '') + (off ? ' disabled' : '') + '><span>Complete</span></label></td><td></td>' +
+        '<td><div class="pseg sm" role="group">' + ['missing', 'excused', 'late'].map(s => '<button data-bkast="' + s + '" data-bkai="' + i + '" aria-pressed="' + (r.st === s) + '">' + STATUS_LABEL[s] + '</button>').join('') + '</div></td></tr>'; }).join('');
+    $('#bkaCount').textContent = c.names.filter(x => (bkAdd.s[x] || {}).fb).length + ' of ' + c.names.length + ' complete';
+    return;
+  }
   $('#bkaRows').innerHTML = c.names.map((n, i) => { const r = bkAdd.s[n] || {}, v = r.v != null ? r.v : '', p = v === '' || isNaN(+v) ? '' : (max ? roundPct(+v / max * 100) : roundPct(+v)) + '%';
     return '<tr><td>' + esc(n) + '</td><td><input type="number" class="bkin bksc" step="0.5" min="0" data-bkai="' + i + '" value="' + esc(v) + '"' + (r.st === 'missing' || r.st === 'excused' ? ' disabled' : '') + ' aria-label="Score for ' + esc(n) + '"> ' + (max ? '/ ' + fmtNum(max) : '%') + '</td><td class="r muted">' + p + '</td>' +
       '<td><div class="pseg sm" role="group">' + ['missing', 'excused', 'late'].map(s => '<button data-bkast="' + s + '" data-bkai="' + i + '" aria-pressed="' + (r.st === s) + '">' + STATUS_LABEL[s] + '</button>').join('') + '</div></td></tr>'; }).join('');
@@ -11659,7 +11713,11 @@ function bkAddSave() {
   const c = bkClass(), name = $('#bkaName').value.trim(), due = $('#bkaDue').value;
   if (!name) { $('#bkaName').focus(); return false; }
   const max = bkAddMax(), s = {};
-  for (const [n, r] of Object.entries(bkAdd.s)) { const v = r.v === '' || r.v == null || isNaN(+r.v) ? null : Math.round(+r.v * 2) / 2; if (v != null || r.st) s[n] = { v, st: r.st || '' }; }
+  const fm = bkAdd.type === 'fm';
+  for (const [n, r] of Object.entries(bkAdd.s)) {
+    const v = fm || r.v === '' || r.v == null || isNaN(+r.v) ? null : Math.round(+r.v * 2) / 2;
+    if (fm ? r.fb || r.st : v != null || r.st) s[n] = fm && r.fb ? { v: null, st: r.st || '', fb: true } : { v, st: r.st || '' };
+  }
   const typed = { max, s };
   let it = bkAdd.it;
   if (it) Object.assign(it, { name, type: bkAdd.type, due, typed });
@@ -11678,6 +11736,12 @@ function bkAddSave() {
 function bkCellEdit(td) {
   const col = bk.cols.find(x => x.key === td.dataset.bked), n = td.dataset.bkn; if (!col || !col.typed) return;
   const r = (col.typed.s || {})[n] || {}, max = col.typed.max;
+  if (col.type === 'fm') {   // feedback only: a click switches Feedback complete
+    const s = { ...(col.typed.s || {}) }; s[n] = { ...r, v: null, fb: !r.fb };
+    col.typed = { ...col.typed, s }; if (col.it) { col.it.typed = col.typed; saveLib(); }
+    bkDraw(); const back = document.querySelector('[data-bked="' + CSS.escape(col.key) + '"][data-bkn="' + CSS.escape(n) + '"]'); if (back) back.focus();
+    return;
+  }
   td.innerHTML = '<input type="text" class="bkcin" value="' + esc(r.st === 'missing' || r.st === 'excused' ? r.st : r.v != null ? fmtNum(r.v) : '') + '" aria-label="Score' + (max ? ' out of ' + fmtNum(max) : ' as a percent') + '">';
   const inp = td.querySelector('input'); inp.focus(); inp.select();
   let done = false;
@@ -11728,7 +11792,7 @@ $('#dlgBox').addEventListener('click', e => {
   if (d.tdel != null) { b.closest('.bktrow').remove(); return; }
   if (d.bkempty) { for (const x of document.querySelectorAll('[data-bkempty]')) x.setAttribute('aria-pressed', String(x === b)); return; }
   if (d.bksavesetup != null) { if (bkSetupSave()) bkDraw(); return; }
-  if (d.bkatype) { bkAdd.type = d.bkatype; for (const x of document.querySelectorAll('[data-bkatype]')) x.setAttribute('aria-pressed', String(x === b)); return; }
+  if (d.bkatype) { bkAdd.type = d.bkatype; for (const x of document.querySelectorAll('[data-bkatype]')) x.setAttribute('aria-pressed', String(x === b)); return bkAddRows(); }
   if (d.bkamode) { bkAdd.mode = d.bkamode; for (const x of document.querySelectorAll('[data-bkamode]')) x.setAttribute('aria-pressed', String(x === b)); $('#bkaMax').hidden = d.bkamode === 'pct'; return bkAddRows(); }
   if (d.bkast) { const n = c.names[+d.bkai], r = bkAdd.s[n] || {}; bkAdd.s[n] = { ...r, st: r.st === d.bkast ? '' : d.bkast, v: d.bkast === 'late' || r.st === d.bkast ? r.v : null }; return bkAddRows(); }
   if (d.bkasave != null) { if (bkAddSave()) { bkAdd = null; bkDraw(); } return; }
@@ -11739,6 +11803,7 @@ $('#dlgBox').addEventListener('change', e => {
   if (t.id === 'bkCls') { bk.cls = t.value; bk.term = null; bk.stu = 0; bk.hi = ''; return bkDraw(); }
   if (t.id === 'bkDue' || t.id === 'bkTerm') { const k = $('#bkPop').dataset.key; bkSetCol(k, t.id === 'bkDue' ? { due: t.value } : { term: t.value }); return; }
   if (t.id === 'bkaMax') return bkAddRows();
+  if (t.dataset.bkafb != null) { const n = bkClass().names[+t.dataset.bkafb]; bkAdd.s[n] = { ...(bkAdd.s[n] || {}), fb: t.checked }; return bkAddRows(); }
 });
 $('#dlgBox').addEventListener('input', e => {
   if (!$('#bkBody')) return;
