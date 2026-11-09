@@ -11170,6 +11170,7 @@ async function openBook(clsId, opts = {}) {
   bkDraw();
 }
 const bkClass = () => classById(bk.cls);
+const bkWho = (n, i) => anonOn() ? 'Student ' + (i + 1) : n;
 function bkTabsOff() { for (const b of document.querySelectorAll('[data-bktab]')) b.setAttribute('aria-selected', 'false'); }
 function bkTabs(cols) {
   const terms = bkConf().terms, out = terms.map(t => [t.id, t.name || 'Term']);
@@ -11218,9 +11219,9 @@ function bkTable(c, cols, conf) {
   let h = '<div class="bkwrap"><table class="bktab" id="bkTab"><thead><tr class="bkg"><th></th>' + groups.map(g => '<th colspan="' + (g.cols.length + (avgCol(g) ? 1 : 0)) + '" class="' + g.t + '">' + esc(g.s) + (g.t === 'fm' ? (+w.fm > 0 ? ' · ' + w.fm + '%' : ' · feedback only') : g.t ? ' · ' + (+w[g.t] || 0) + '%' : '') + '</th>').join('') + '<th></th></tr>' +
     '<tr><th class="bknm">Student</th>' + groups.map(g => g.cols.map(bkColHead).join('') + (avgCol(g) ? '<th class="bkavg">Avg</th>' : '')).join('') + '<th class="bkterm">' + esc(termName) + '</th></tr></thead><tbody>';
   const grades = [];
-  c.names.forEach(n => {
+  c.names.forEach((n, i) => {
     const r = bkGrade(n, cols, conf); grades.push(r);
-    h += '<tr><td class="bknm">' + esc(n) + '</td>' + groups.map(g => g.cols.map(col => { const cell = col.cells.get(n), ed = !!col.typed && !(cell && !cell.typed);
+    h += '<tr><td class="bknm">' + esc(bkWho(n, i)) + '</td>' + groups.map(g => g.cols.map(col => { const cell = col.cells.get(n), ed = !!col.typed && !(cell && !cell.typed);
       return '<td' + (ed ? ' class="bked" tabindex="0" data-bked="' + esc(col.key) + '" data-bkn="' + esc(n) + '" title="Click to change"' : col.d ? ' title="Change this score in its download"' : '') + '>' + bkCellText(cell, bk.show, col) + '</td>'; }).join('') +
       (avgCol(g) ? '<td class="bkavg">' + (r.by[g.t] != null ? pctAvgText(r.by[g.t]) : '<span class="bknone">–</span>') + '</td>' : '')).join('') +
       '<td class="bkterm" tabindex="0" ' + bkWhy(n, r, conf) + '>' + (r.grade != null ? pctAvgText(r.grade) + (r.soFar ? ' <small>so far</small>' : '') : '<span class="bknone">–</span>') + '</td></tr>';
@@ -11234,7 +11235,7 @@ function bkTable(c, cols, conf) {
 }
 function bkWhy(n, r, conf) {
   const w = conf.w, parts = BK_TYPES.filter(([t]) => t !== 'fm' || +w.fm > 0).filter(([t]) => +w[t] > 0).map(([t, , s]) => s + ' ' + w[t] + '%: ' + (r.by[t] != null ? pctAvgText(r.by[t]) : conf.empty === 'zero' ? 'none, counts as 0' : 'none yet, left out'));
-  return 'data-tv="' + esc(r.grade != null ? pctAvgText(r.grade) : '–') + '" data-tl="' + esc(n) + '" data-tn="' + esc(parts.join(' · ')) + '"';
+  return 'data-tv="' + esc(r.grade != null ? pctAvgText(r.grade) : '–') + '" data-tl="' + esc(bkWho(n, bkClass().names.indexOf(n))) + '" data-tn="' + esc(parts.join(' · ')) + '"';
 }
 function bkYear(c, all, conf) {
   const terms = conf.terms;
@@ -11242,10 +11243,10 @@ function bkYear(c, all, conf) {
   const per = terms.map(t => all.filter(x => x.termId === t.id));
   let h = '<div class="bkwrap"><table class="bktab" id="bkTab"><thead><tr><th class="bknm">Student</th>' + terms.map(t => '<th class="bkterm">' + esc(t.name) + '</th>').join('') + '<th class="bkterm">Year</th></tr></thead><tbody>';
   const col = terms.map(() => []), yr = [];
-  for (const n of c.names) {
+  for (const [i, n] of c.names.entries()) {
     const gs = per.map(cols => bkGrade(n, cols, conf).grade), have = gs.filter(v => v != null), y = have.length ? bkMean(have) : null;
     gs.forEach((v, i) => { if (v != null) col[i].push(v); }); if (y != null) yr.push(y);
-    h += '<tr><td class="bknm">' + esc(n) + '</td>' + gs.map(v => '<td class="bkterm">' + (v != null ? pctAvgText(v) : '<span class="bknone">–</span>') + '</td>').join('') + '<td class="bkterm"><b>' + (y != null ? pctAvgText(y) : '–') + '</b></td></tr>';
+    h += '<tr><td class="bknm">' + esc(bkWho(n, i)) + '</td>' + gs.map(v => '<td class="bkterm">' + (v != null ? pctAvgText(v) : '<span class="bknone">–</span>') + '</td>').join('') + '<td class="bkterm"><b>' + (y != null ? pctAvgText(y) : '–') + '</b></td></tr>';
   }
   h += '<tr class="bkfoot"><td class="bknm">Class average</td>' + col.map(a => '<td class="bkterm">' + (a.length ? pctAvgText(bkMean(a)) : '–') + '</td>').join('') + '<td class="bkterm">' + (yr.length ? pctAvgText(bkMean(yr)) : '–') + '</td></tr></tbody></table></div>' +
     '<p class="muted bkcap">The year is the average of the terms each student has a grade in.</p>';
@@ -11294,7 +11295,7 @@ const bkTile = (l, v, s, main) => '<div class="ovt' + (main ? ' main' : '') + '"
 function bkScored(cols) { return cols.filter(x => x.type === 'sum' || x.type === 'ic'); }
 function bkClassView(c, cols, all, conf) {
   if (bk.term === '*') cols = all;
-  const grades = c.names.map(n => ({ name: n, r: bkGrade(n, cols, conf) })), gl = grades.filter(g => g.r.grade != null).map(g => ({ name: g.name, v: g.r.grade }));
+  const grades = c.names.map((n, i) => ({ name: bkWho(n, i), r: bkGrade(n, cols, conf) })), gl = grades.filter(g => g.r.grade != null).map(g => ({ name: g.name, v: g.r.grade }));
   const typeAvg = t => { const ps = grades.map(g => g.r.by[t]).filter(v => v != null); return ps.length ? pctAvgText(bkMean(ps)) : '–'; };
   const sorted = gl.map(g => g.v).sort((a, b) => a - b), mid = sorted.length ? (sorted.length % 2 ? sorted[(sorted.length - 1) / 2] : (sorted[sorted.length / 2 - 1] + sorted[sorted.length / 2]) / 2) : null;
   const sc = bkScored(cols), avgOf = col => bkMean(c.names.map(n => col.cells.get(n)).filter(bkCounts).map(x => x.pct));
@@ -11311,7 +11312,7 @@ function bkClassView(c, cols, all, conf) {
 function bkOneView(c, cols, conf) {
   if (bk.term === '*') cols = bk.cols ? bkClassCols(c, bk.cols) : cols;
   bk.stu = Math.max(0, Math.min(c.names.length - 1, bk.stu));
-  const n = c.names[bk.stu], shown = anonOn() ? 'Student ' + (bk.stu + 1) : n, r = bkGrade(n, cols, conf), all = c.names.map(x => bkGrade(x, cols, conf));
+  const n = c.names[bk.stu], shown = bkWho(n, bk.stu), r = bkGrade(n, cols, conf), all = c.names.map(x => bkGrade(x, cols, conf));
   const cavg = t => { const ps = all.map(g => t ? g.by[t] : g.grade).filter(v => v != null); return ps.length ? bkMean(ps) : null; };
   const sc = bkScored(cols), fm = cols.filter(x => x.type === 'fm'), miss = cols.filter(x => (x.cells.get(n) || {}).st === 'missing');
   const bar = (l, v, ref, t) => '<div class="bkcmp"><span>' + l + '</span><div class="bkcmpt"><i class="' + t + '" style="width:' + Math.min(100, v || 0) + '%"></i>' + (ref != null ? '<em style="left:' + Math.min(100, ref) + '%" title="Class average ' + esc(pctAvgText(ref)) + '"></em>' : '') + '</div><b>' + (v != null ? pctAvgText(v) : '–') + '</b></div>';
