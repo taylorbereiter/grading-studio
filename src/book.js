@@ -24,15 +24,15 @@ const bkMean = a => a.length ? a.reduce((x, y) => x + y, 0) / a.length : null;
 // One cell: what the gradebook knows about one student on one assignment.
 function bkCellOf(p, g, d, k) {
   const marks = !!(d && d.s && d.s[k] && d.s[k].f && Object.values(d.s[k].f).some(pg => Object.values(pg || {}).some(a => a && a.length)));
-  const fb = marks || !!((g && g.comment) || '').trim();
+  const fb = !!(g && g.fb), started = marks || !!((g && g.comment) || '').trim();   // fb: she switched on Feedback complete
   if (p.status === 'missing' || p.status === 'excused') return { st: p.status, fb };
-  if (p.total == null && p.pct == null) return fb ? { fb } : null;
-  return { pct: p.pct, total: p.total, max: p.max, st: p.status, partial: p.partial, out: !!(g && g.outAvg), fb };
+  if (p.total == null && p.pct == null) return fb || started ? { fb, started } : null;
+  return { pct: p.pct, total: p.total, max: p.max, st: p.status, partial: p.partial, out: !!(g && g.outAvg), fb, started };
 }
 function bkTypedCell(ty, r) {
   if (!r) return null;
   if (r.st === 'missing' || r.st === 'excused') return { st: r.st, typed: true };
-  if (r.v == null || r.v === '' || isNaN(+r.v)) return null;
+  if (r.v == null || r.v === '' || isNaN(+r.v)) return r.fb ? { fb: true, typed: true } : null;
   const v = +r.v, max = ty.max ? +ty.max : null;
   return { pct: max ? roundPct(v / max * 100) : roundPct(v), total: max ? v : null, max, st: r.st || '', typed: true, fb: true };
 }
@@ -142,7 +142,7 @@ function bkDraw() {
 }
 const bkCellText = (cell, show, col) => {
   if (!cell) return '<span class="bknone">–</span>';
-  if (col.type === 'fm') return cell.st === 'missing' ? '<span class="bkst">missing</span>' : cell.st === 'excused' ? '<span class="bkst">excused</span>' : cell.fb ? '<span class="bkfb" aria-label="Feedback given">✓</span>' : '<span class="bknone">–</span>';
+  if (col.type === 'fm') return cell.st === 'missing' ? '<span class="bkst">missing</span>' : cell.st === 'excused' ? '<span class="bkst">excused</span>' : cell.fb ? '<span class="bkfb" aria-label="Feedback complete">✓</span>' : cell.started ? '<span class="bkstart">started</span>' : '<span class="bknone">–</span>';
   if (cell.st === 'missing' || cell.st === 'excused') return '<span class="bkst">' + cell.st + '</span>';
   if (cell.pct == null) return cell.fb ? '<span class="bkfb" aria-label="Feedback given, no score">✓</span>' : '<span class="bknone">–</span>';
   const v = show === 'pts' && cell.total != null ? fmtNum(cell.total) + '<small>/' + fmtNum(cell.max) + '</small>' : cell.pct + '%';
@@ -348,14 +348,23 @@ function bkAddView(itId) {
     '<div class="bkpf">Scored as<div class="bkso"><div class="pseg" role="group"><button data-bkamode="pts" aria-pressed="' + (bkAdd.mode === 'pts') + '">Points out of</button><button data-bkamode="pct" aria-pressed="' + (bkAdd.mode === 'pct') + '">Percent</button></div>' +
     '<input type="number" class="bkin bkmax" id="bkaMax" min="0.5" step="0.5" value="' + esc(bkAdd.max || 20) + '"' + (bkAdd.mode === 'pct' ? ' hidden' : '') + ' aria-label="Out of"></div></div></div>' +
     '<textarea class="bkin bkpaste" id="bkaPaste" rows="2" placeholder="Paste a column of scores from a spreadsheet, in roster order. Or paste names with scores beside them. Or type them in below."></textarea><p class="muted bkhint" id="bkaPasteNote"></p>' +
-    '<table class="ptab bkent"><thead><tr><th>Student</th><th>Score</th><th class="r">Percent</th><th>Mark as</th></tr></thead><tbody id="bkaRows"></tbody></table>' +
+    '<table class="ptab bkent"><thead><tr id="bkaHead"></tr></thead><tbody id="bkaRows"></tbody></table>' +
     '<div class="bkfootbtns"><span class="muted" id="bkaCount"></span><span class="sp"></span><button class="btn" data-bkback>Cancel</button><button class="btn primary" data-bkasave>' + (it ? 'Save scores' : 'Add to gradebook') + '</button></div></div>';
   bkAddRows();
   setTimeout(() => { const n = $('#bkaName'); if (n && !it) n.focus(); }, 0);
 }
 function bkAddMax() { return bkAdd.mode === 'pct' ? null : Math.max(0.5, +($('#bkaMax') || {}).value || 0) || null; }
 function bkAddRows() {
-  const c = bkClass(), max = bkAddMax();
+  const c = bkClass(), max = bkAddMax(), fm = bkAdd.type === 'fm';
+  $('#bkaHead').innerHTML = fm ? '<th>Student</th><th>Feedback complete</th><th></th><th>Mark as</th>' : '<th>Student</th><th>Score</th><th class="r">Percent</th><th>Mark as</th>';
+  for (const el of document.querySelectorAll('.bkso,#bkaPaste,#bkaPasteNote')) el.closest('.bkpf, textarea, p').hidden = fm;
+  if (fm) {
+    $('#bkaRows').innerHTML = c.names.map((n, i) => { const r = bkAdd.s[n] || {}, off = r.st === 'missing' || r.st === 'excused';
+      return '<tr><td>' + esc(n) + '</td><td><label class="pck"><input type="checkbox" data-bkafb="' + i + '"' + (r.fb ? ' checked' : '') + (off ? ' disabled' : '') + '><span>Complete</span></label></td><td></td>' +
+        '<td><div class="pseg sm" role="group">' + ['missing', 'excused', 'late'].map(s => '<button data-bkast="' + s + '" data-bkai="' + i + '" aria-pressed="' + (r.st === s) + '">' + STATUS_LABEL[s] + '</button>').join('') + '</div></td></tr>'; }).join('');
+    $('#bkaCount').textContent = c.names.filter(x => (bkAdd.s[x] || {}).fb).length + ' of ' + c.names.length + ' complete';
+    return;
+  }
   $('#bkaRows').innerHTML = c.names.map((n, i) => { const r = bkAdd.s[n] || {}, v = r.v != null ? r.v : '', p = v === '' || isNaN(+v) ? '' : (max ? roundPct(+v / max * 100) : roundPct(+v)) + '%';
     return '<tr><td>' + esc(n) + '</td><td><input type="number" class="bkin bksc" step="0.5" min="0" data-bkai="' + i + '" value="' + esc(v) + '"' + (r.st === 'missing' || r.st === 'excused' ? ' disabled' : '') + ' aria-label="Score for ' + esc(n) + '"> ' + (max ? '/ ' + fmtNum(max) : '%') + '</td><td class="r muted">' + p + '</td>' +
       '<td><div class="pseg sm" role="group">' + ['missing', 'excused', 'late'].map(s => '<button data-bkast="' + s + '" data-bkai="' + i + '" aria-pressed="' + (r.st === s) + '">' + STATUS_LABEL[s] + '</button>').join('') + '</div></td></tr>'; }).join('');
@@ -378,7 +387,11 @@ function bkAddSave() {
   const c = bkClass(), name = $('#bkaName').value.trim(), due = $('#bkaDue').value;
   if (!name) { $('#bkaName').focus(); return false; }
   const max = bkAddMax(), s = {};
-  for (const [n, r] of Object.entries(bkAdd.s)) { const v = r.v === '' || r.v == null || isNaN(+r.v) ? null : Math.round(+r.v * 2) / 2; if (v != null || r.st) s[n] = { v, st: r.st || '' }; }
+  const fm = bkAdd.type === 'fm';
+  for (const [n, r] of Object.entries(bkAdd.s)) {
+    const v = fm || r.v === '' || r.v == null || isNaN(+r.v) ? null : Math.round(+r.v * 2) / 2;
+    if (fm ? r.fb || r.st : v != null || r.st) s[n] = fm && r.fb ? { v: null, st: r.st || '', fb: true } : { v, st: r.st || '' };
+  }
   const typed = { max, s };
   let it = bkAdd.it;
   if (it) Object.assign(it, { name, type: bkAdd.type, due, typed });
@@ -398,6 +411,12 @@ function bkAddSave() {
 function bkCellEdit(td) {
   const col = bk.cols.find(x => x.key === td.dataset.bked), n = td.dataset.bkn; if (!col || !col.typed) return;
   const r = (col.typed.s || {})[n] || {}, max = col.typed.max;
+  if (col.type === 'fm') {   // feedback only: a click switches Feedback complete
+    const s = { ...(col.typed.s || {}) }; s[n] = { ...r, v: null, fb: !r.fb };
+    col.typed = { ...col.typed, s }; if (col.it) { col.it.typed = col.typed; saveLib(); }
+    bkDraw(); const back = document.querySelector('[data-bked="' + CSS.escape(col.key) + '"][data-bkn="' + CSS.escape(n) + '"]'); if (back) back.focus();
+    return;
+  }
   td.innerHTML = '<input type="text" class="bkcin" value="' + esc(r.st === 'missing' || r.st === 'excused' ? r.st : r.v != null ? fmtNum(r.v) : '') + '" aria-label="Score' + (max ? ' out of ' + fmtNum(max) : ' as a percent') + '">';
   const inp = td.querySelector('input'); inp.focus(); inp.select();
   let done = false;
@@ -448,7 +467,7 @@ $('#dlgBox').addEventListener('click', e => {
   if (d.tdel != null) { b.closest('.bktrow').remove(); return; }
   if (d.bkempty) { for (const x of document.querySelectorAll('[data-bkempty]')) x.setAttribute('aria-pressed', String(x === b)); return; }
   if (d.bksavesetup != null) { if (bkSetupSave()) bkDraw(); return; }
-  if (d.bkatype) { bkAdd.type = d.bkatype; for (const x of document.querySelectorAll('[data-bkatype]')) x.setAttribute('aria-pressed', String(x === b)); return; }
+  if (d.bkatype) { bkAdd.type = d.bkatype; for (const x of document.querySelectorAll('[data-bkatype]')) x.setAttribute('aria-pressed', String(x === b)); return bkAddRows(); }
   if (d.bkamode) { bkAdd.mode = d.bkamode; for (const x of document.querySelectorAll('[data-bkamode]')) x.setAttribute('aria-pressed', String(x === b)); $('#bkaMax').hidden = d.bkamode === 'pct'; return bkAddRows(); }
   if (d.bkast) { const n = c.names[+d.bkai], r = bkAdd.s[n] || {}; bkAdd.s[n] = { ...r, st: r.st === d.bkast ? '' : d.bkast, v: d.bkast === 'late' || r.st === d.bkast ? r.v : null }; return bkAddRows(); }
   if (d.bkasave != null) { if (bkAddSave()) { bkAdd = null; bkDraw(); } return; }
@@ -459,6 +478,7 @@ $('#dlgBox').addEventListener('change', e => {
   if (t.id === 'bkCls') { bk.cls = t.value; bk.term = null; bk.stu = 0; bk.hi = ''; return bkDraw(); }
   if (t.id === 'bkDue' || t.id === 'bkTerm') { const k = $('#bkPop').dataset.key; bkSetCol(k, t.id === 'bkDue' ? { due: t.value } : { term: t.value }); return; }
   if (t.id === 'bkaMax') return bkAddRows();
+  if (t.dataset.bkafb != null) { const n = bkClass().names[+t.dataset.bkafb]; bkAdd.s[n] = { ...(bkAdd.s[n] || {}), fb: t.checked }; return bkAddRows(); }
 });
 $('#dlgBox').addEventListener('input', e => {
   if (!$('#bkBody')) return;

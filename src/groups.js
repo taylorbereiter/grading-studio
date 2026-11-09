@@ -9,7 +9,7 @@ function groupNames(list) { return wordsJoin(list.map(s => shownName(s, batch.st
 function groupFileOf(g, st) { const p = g.p && g.p[st.key]; return p ? st.files.find(f => f.path === p) || null : null; }
 
 // The grade fields a group shares. Answers about what's written on each paper (reads) stay each student's own.
-const GROUP_SKIP = new Set(['reads']);
+const GROUP_SKIP = new Set(['reads', 'sent']);   // a partner's paper exported on its own isn't the others'
 function groupGradeCopy(to, from) {
   const a = to.grade, b = from.grade;
   for (const k of Object.keys(a)) if (!GROUP_SKIP.has(k) && !(k in b)) delete a[k];

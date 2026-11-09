@@ -1672,6 +1672,9 @@ function recolorSelected(col) {
 /* ---------------- student list ---------------- */
 // Counts as marked: marks made here, marks already on the file (Kami), a grade found in its text, or a grade boxed by hand.
 const fileMarked = f => viewable(f) && (Object.values(f.marks).some(a => a.length) || (f.kami && Object.keys(f.kami).length > 0) || !!(f.scan && f.scan.found && f.scan.found.length) || !!f.hand);
+// A formative activity is feedback only: no score, just Feedback complete per student (st.grade.fb).
+function fmNow() { const a = batch && batch.assignment, f = a && findItem(a.id); return ((f && f.it) || a || {}).type === 'fm'; }
+function setFb(st, on) { if (on) st.grade.fb = true; else delete st.grade.fb; touchGrade(st); saveSoon(); }
 function hasMarks(st) { return st.files.some(f => fileMarked(f) || f.edited); }
 function renderList() {
   if (!batch) return;
@@ -1682,13 +1685,15 @@ function renderList() {
     if (q && !shownName(st, i).toLowerCase().includes(q)) return '';
     const g = gradeOf(st);
     const val = g.total != null ? g.total : g.pct != null ? g.pct + '%' : null;
-    const right = noScore(st) ? '<span class="stag" title="You marked this student ' + g.status + '. No score counts.">' + STATUS_LABEL[g.status] + '</span>' : val != null ? '<span class="sc" title="' + (g.paper ? 'Read from the paper' : g.done ? 'Scored' : 'Partly scored') + '"' + (g.paper || g.out ? ' style="color:var(--muted);font-weight:600"' : g.done ? '' : ' style="color:var(--warn)"') + '>' + fmtNum(g.total != null ? g.total : g.pct) + (g.total == null ? '%' : g.outOf != null ? '/' + fmtNum(g.outOf) : '') + (g.partial ? '<small>partial</small>' : '') + '</span>'
+    let right = noScore(st) ? '<span class="stag" title="You marked this student ' + g.status + '. No score counts.">' + STATUS_LABEL[g.status] + '</span>' : val != null ? '<span class="sc" title="' + (g.paper ? 'Read from the paper' : g.done ? 'Scored' : 'Partly scored') + '"' + (g.paper || g.out ? ' style="color:var(--muted);font-weight:600"' : g.done ? '' : ' style="color:var(--warn)"') + '>' + fmtNum(g.total != null ? g.total : g.pct) + (g.total == null ? '%' : g.outOf != null ? '/' + fmtNum(g.outOf) : '') + (g.partial ? '<small>partial</small>' : '') + '</span>'
       : manyReads(st) ? '<span class="sc" style="color:var(--warn)" title="More than one grade found on the paper. Check the Grade sheet.">?</span>'
       : st.doubts && st.doubts.length ? '<span class="sc" style="color:var(--warn)" title="A reading on the paper may not be a grade. Confirm it on the Grade sheet.">?</span>'
       : hasMarks(st) ? '<span class="dot" title="Marked"></span>' : '';
+    const sent = st.grade.sent ? '<span class="sent" title="You exported this paper on its own at ' + esc(sentWhen(st.grade.sent)) + '">↗ sent</span>' : '';
+    if (fmNow() && !noScore(st)) right = st.grade.fb ? '<span class="fbck" title="Feedback complete">✓</span>' : hasMarks(st) || (st.grade.comment || '').trim() ? '<span class="dot" title="Started, not complete yet"></span>' : '';
     const nAdd = st.files.filter(f => f.added && !f.from).length, re = st.files.some(f => Object.values(f.sc || {}).some(r => r.re)), grp = st.files.some(f => f.from || Object.values(f.sc || {}).some(r => r.w)) || st.files.some(f => !f.added && shareCopies(st, f).length);
     return '<button class="stu' + (i === cur ? ' on' : '') + (st.files.length ? '' : ' empty') + '" data-i="' + i + '"><span class="num">' + (pos + 1) + '</span><span class="nm" title="' + esc(shownName(st, i)) + '">' + esc(shownName(st, i)) + '</span>' + (anonOn() ? '' : whoBtn('data-wi="' + i + '"', st.key)) +
-      '<span style="display:inline-flex;align-items:center;gap:4px">' + (st.files.length || noScore(st) ? '' : '<span class="muted" style="font-size:11px">no paper</span>') + (g.status === 'late' ? '<span class="stag" title="You marked this student late">late</span>' : '') + (g.out ? '<span class="stag out" title="Left out of the average">left out</span>' : '') + (nAdd ? '<span class="add" title="' + nAdd + (nAdd === 1 ? ' file' : ' files') + ' added by you">+' + nAdd + '</span>' : '') + (re ? '<span class="add" title="A page needs a rescan">⚑</span>' : '') + (groupOf(st) ? '<span class="add grp" title="Group work: marked and graded once with ' + esc(groupNames(groupMates(st))) + '">group</span>' : grp ? '<span class="add grp" title="Group work: shares pages or a file with another student">shared</span>' : '') + carryPill(st) + right + '</span></button>';
+      '<span style="display:inline-flex;align-items:center;gap:4px">' + (st.files.length || noScore(st) ? '' : '<span class="muted" style="font-size:11px">no paper</span>') + (g.status === 'late' ? '<span class="stag" title="You marked this student late">late</span>' : '') + (g.out ? '<span class="stag out" title="Left out of the average">left out</span>' : '') + (nAdd ? '<span class="add" title="' + nAdd + (nAdd === 1 ? ' file' : ' files') + ' added by you">+' + nAdd + '</span>' : '') + (re ? '<span class="add" title="A page needs a rescan">⚑</span>' : '') + (groupOf(st) ? '<span class="add grp" title="Group work: marked and graded once with ' + esc(groupNames(groupMates(st))) + '">group</span>' : grp ? '<span class="add grp" title="Group work: shares pages or a file with another student">shared</span>' : '') + carryPill(st) + sent + right + '</span></button>';
   }).join('');
   const on = $('#stuList .on'); if (on) on.scrollIntoView({ block: 'nearest' });
   const nExp = exportPlan(true).length;
@@ -1698,6 +1703,13 @@ function renderList() {
 // The top left: how many are scored, the class average so far (the same one Class overview gives), how many are left, and the papers left out of the average.
 let outOpen = false;
 function renderProg() {
+  if (fmNow()) {
+    const on = batch.students.filter(s => !noScore(s)), N = on.length, n = on.filter(s => s.grade.fb).length, nOff = batch.students.length - N;
+    $('#progS').innerHTML = '<div class="ph">' + n + ' of ' + N + ' <span>feedback complete' + (nOff ? ' · ' + nOff + ' missing or excused' : '') + '</span></div><div class="pb"><i style="width:' + (N ? 100 * n / N : 0) + '%"></i></div>' +
+      '<div class="ptiles"><div class="pt" id="pDone"><div class="k">Complete</div><div class="v">' + n + '</div></div><div class="pt" id="pLeft"><div class="k">Left</div><div class="v">' + (N - n) + '</div></div></div>' +
+      (n < N ? '<button class="btn sm" id="nextUn" title="Opens the next student whose feedback isn’t complete">Next without feedback <kbd>N</kbd></button>' : '<div class="muted" style="font-size:13px;margin-bottom:6px">Feedback is complete for everyone' + (nOff ? ' else' : '') + '.</div>');
+    return;
+  }
   const on = batch.students.filter(s => !noScore(s)), N = on.length, n = on.filter(s => gradeOf(s).done).length, nOff = batch.students.length - N;
   const cs = classStats(), outs = batch.students.map((st, i) => i).filter(i => batch.students[i].grade.outAvg && !noScore(batch.students[i]));
   if (!outs.length) outOpen = false;
@@ -1714,8 +1726,9 @@ function renderProg() {
 }
 function nextUnscored() {
   const N = batch.students.length, o = anonOn() ? anonOrder() : batch.students.map((_, i) => i), p = o.indexOf(cur);
-  for (let k = 1; k <= N; k++) { const i = o[(p + k) % N]; if (!gradeOf(batch.students[i]).done) return openStudent(i); }
-  toast('Everyone has a score');
+  const fm = fmNow(), left = st => fm ? !st.grade.fb && !noScore(st) : !gradeOf(st).done;
+  for (let k = 1; k <= N; k++) { const i = o[(p + k) % N]; if (left(batch.students[i])) return openStudent(i); }
+  toast(fm ? 'Feedback is complete for everyone' : 'Everyone has a score');
 }
 $('#progS').addEventListener('click', e => {
   if (e.target.closest('#nextUn')) nextUnscored();
@@ -1735,6 +1748,7 @@ $('#stuFind').addEventListener('keydown', e => {
 function renderGrade() {
   const st = batch.students[cur], g = st.grade, gr = gradeOf(st);
   let h = '';
+  if (fmNow()) return renderFeedback(st);
   if (setup.mode === 'rubric') {
     h += '<h3>Rubric <button class="link" id="editRubric" style="font-size:12px;text-transform:none;letter-spacing:0">Edit</button></h3>';
     // Each row is a slider over the steps 0, 1, 1.5 … 4, with its numbers underneath to click straight to one. Not scored yet: the slider waits, faded, for her first touch.
@@ -1749,10 +1763,28 @@ function renderGrade() {
   h += '<div class="total">' + totalHtml(st) + '</div>' + statusHtml(st);
   h += '<div class="cmt"><h3 style="margin-bottom:6px">Comment for ManageBac</h3><textarea id="cmtIn" placeholder="Optional. Shows in the Grades list so you can copy it.">' + esc(g.comment) + '</textarea></div>';
   const navAt = anonOn() ? anonPos(cur) : cur;   // the order on screen
-  h += '<div class="nav"><button class="btn" id="prevBtn" ' + (navAt ? '' : 'disabled') + '>◀ Previous</button><button class="btn primary" id="nextBtn" ' + (navAt < batch.students.length - 1 ? '' : 'disabled') + '>Next ▶</button></div>';
+  h += '<div class="nav">' + oneOutHtml(st) + '<button class="btn" id="prevBtn" ' + (navAt ? '' : 'disabled') + '>◀ Previous</button><button class="btn primary" id="nextBtn" ' + (navAt < batch.students.length - 1 ? '' : 'disabled') + '>Next ▶</button></div>';
   h += histSlot(st);
   h += '<div class="hint">Keys: <kbd>←</kbd> <kbd>→</kbd> or <kbd>↑</kbd> <kbd>↓</kbd> students · <kbd>N</kbd> next unscored · <kbd>=</kbd> calculator · V P H O T C K E tools · ' + keyLabel('⌘Z undo, ⇧⌘Z redo') + ' · <button class="link" data-keys style="font-size:12.5px">All keys ( ? )</button></div>';
   $('#grade').innerHTML = h;
+}
+// The panel for a formative activity: one Feedback complete switch in place of the score.
+function renderFeedback(st) {
+  const g = st.grade, on = !!g.fb, off = noScore(st), navAt = anonOn() ? anonPos(cur) : cur, last = navAt >= batch.students.length - 1;
+  $('#grade').innerHTML = '<h3>Feedback</h3><div class="fbnote"><b>Formative activity</b>Feedback only, so there’s no score. <button class="link" id="fbType">Change the type</button></div>' +
+    (off ? '<div class="total"><b>' + STATUS_LABEL[g.status] + '</b><span style="width:100%;font-size:12.5px">Nothing to give feedback on. Click it again under Mark as to take this off.</span></div>'
+      : '<button class="fbtog" id="fbTog" role="switch" aria-checked="' + on + '"><span class="bx">' + (on ? '✓' : '') + '</span><span>Feedback complete<small>' + (on ? 'Click again to undo.' : 'Click, or press F, when you’ve finished with this paper.') + '</small></span></button>') +
+    statusHtml(st).replace(/<button class="outsw"[\s\S]*?<\/button>/, '') +
+    '<div class="cmt"><h3 style="margin-bottom:6px">Comment for ManageBac</h3><textarea id="cmtIn" placeholder="Optional. Shows in the Grades list so you can copy it.">' + esc(g.comment) + '</textarea></div>' +
+    '<div class="nav">' + oneOutHtml(st) + '<button class="btn" id="prevBtn" ' + (navAt ? '' : 'disabled') + '>◀ Previous</button>' + (off || on ? '<button class="btn primary" id="nextBtn" ' + (last ? 'disabled' : '') + '>Next ▶</button>' : '<button class="btn primary" id="fbNext">Complete' + (last ? '' : ' and next ▶') + '</button>') + '</div>' +
+    histSlot(st) +
+    '<div class="hint">Keys: <kbd>F</kbd> feedback complete · <kbd>Shift</kbd> <kbd>F</kbd> complete and next · <kbd>N</kbd> next without feedback · <kbd>←</kbd> <kbd>→</kbd> students · <button class="link" data-keys style="font-size:12.5px">All keys ( ? )</button></div>';
+}
+function fbToggle(next) {
+  const st = batch.students[cur]; if (noScore(st)) return;
+  setFb(st, next ? true : !st.grade.fb);
+  renderList();
+  if (next && (anonOn() ? anonPos(cur) : cur) < batch.students.length - 1) stepStudent(1); else renderGrade();
 }
 function totalHtml(st) {
   const gr = gradeOf(st), own = ownGrade(st);
@@ -1771,6 +1803,7 @@ function paperScore(st) {
   return ty !== '' && ty != null && !isNaN(+ty) ? +ty : null;
 }
 $('#grade').addEventListener('click', e => {
+  if (e.target.closest('#oneOutBtn')) return exportOne(batch.students[cur]);
   const b = e.target.closest('.scores button');
   if (b) {
     const st = batch.students[cur], i = +b.closest('.scores').dataset.c, v = +b.dataset.v;
@@ -1784,6 +1817,9 @@ $('#grade').addEventListener('click', e => {
   if (e.target.closest('#nextBtn')) stepStudent(1);
   if (e.target.closest('#editRubric')) openSetup();
   if (e.target.closest('[data-keys]')) openKeys();
+  if (e.target.closest('#fbTog')) fbToggle(false);
+  if (e.target.closest('#fbNext')) fbToggle(true);
+  if (e.target.closest('#fbType') && batch.assignment) editAssignment(batch.assignment.id);
 });
 // Dragging a row's slider: the score, the total and the list keep up without redrawing the slider under her pointer. Letting go redraws the panel.
 function slideTo(r, v) {
@@ -2281,6 +2317,50 @@ async function openExport() {
     for (const b of box.querySelectorAll('[data-go]')) b.disabled = false;
   };
 }
+// Export one student's paper on its own, right after marking it, so their feedback can go out now.
+// Same rules as Export marked (a file with any mark goes back whole, scored Word rubrics as Word files) and her saved export options.
+function sentWhen(t) {
+  const d = new Date(t), now = new Date(), hm = d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  return d.toDateString() === now.toDateString() ? hm : d.toLocaleDateString([], { day: 'numeric', month: 'short' }) + ', ' + hm;
+}
+function oneOutHtml(st) {
+  if (!st.files.length) return '';
+  const nm = anonOn() ? 'this' : esc(st.key) + '’s', g = st.grade;
+  return '<div class="oneout"><button class="btn" id="oneOutBtn" title="Download just this student’s marked file, ready to upload. Uses your Export marked options."><span aria-hidden="true">⤓</span> Export ' + nm + ' paper</button>' +
+    '<p class="oneout-say' + (g.sent ? ' ok' : '') + '" id="oneOutSay">' + (g.sent ? '✓ Exported at ' + esc(sentWhen(g.sent)) + '. Export again after any change.' : 'Just their marked file, ready to upload.') + '</p></div>';
+}
+async function exportOne(st) {
+  if (xBusy) return toast('The last export is still going. It will say when it’s done.');
+  const btn = $('#oneOutBtn'), say = t => { const el = $('#oneOutSay'); if (el) { el.className = 'oneout-say'; el.textContent = t; } };
+  saveNow(); commitEditors(); wordScoresAll();
+  if (batch.lineBusy) await batch.lineRun;
+  const b0 = batch, mine = () => exportPlan(false).filter(o => o.st === st);
+  let items = mine();
+  if (!items.length && (!scanned || scanP)) { say('Reading the paper first…'); await scanAll(); if (batch !== b0) return; items = mine(); }   // a typed grade alone counts as a mark
+  const who = anonOn() ? 'this paper' : st.key + '’s paper';
+  if (!items.length) { renderGrade(); return toast('Nothing on ' + who + ' is marked yet. Mark it, then export.'); }
+  xBusy = true; if (btn) btn.disabled = true;
+  const files = {}, failed = [];
+  try {
+    for (let i = 0; i < items.length; i++) {
+      say(items.length > 1 ? 'Baking in marks ' + (i + 1) + ' of ' + items.length + '…' : 'Baking in marks…');
+      const o = items[i];
+      const base = o.path.split('/').pop(), name = base.includes(st.key) ? base : st.key + ' - ' + base;   // her own download names each file for its student
+      try { files[name] = o.raw ? o.f.data : await flattenDoc(st, o.d, 150, xEdit(), keyOn()); }
+      catch (er) { console.error(o.path, er); failed.push({ path: o.path, st, why: exportWhy(er, false) }); }
+    }
+    const names = Object.keys(files);
+    if (!names.length) throw new Error('the file couldn’t be made');
+    if (names.length === 1) await saveBlob(names[0], new Blob([files[names[0]]], { type: /\.pdf$/i.test(names[0]) ? 'application/pdf' : 'application/octet-stream' }));
+    else { const z = {}; for (const n of names) z[n] = [files[n], { level: 0 }]; await saveBlob(st.key + ' - ' + batch.name + '.zip', new Blob([fflate.zipSync(z)], { type: 'application/zip' })); }
+    if (batch !== b0) return;
+    st.grade.sent = Date.now(); saveSoon();
+    toast(names.length === 1 ? 'Saved “' + names[0] + '”.' : 'Saved ' + names.length + ' files for ' + (anonOn() ? 'this student' : st.key) + ' in one ZIP.', 5000);
+    if (failed.length) sayDlg(failed.length + (failed.length === 1 ? ' file couldn’t' : ' files couldn’t') + ' be made: ' + failed.map(f => f.path.split('/').pop() + ' (' + f.why + ')').join(', ') + '. The rest downloaded.');
+  } catch (er) { console.error(er); toast('Something went wrong: ' + (er.message || er), 6000); }
+  finally { xBusy = false; }
+  if (batch === b0) { renderList(); if (batch.students[cur] === st) renderGrade(); }
+}
 // Inside a published claude.ai page, files are offered through its downloads prompt; as a local file, a normal download.
 const downloadsP = window.claude && typeof window.claude.use === 'function' ? window.claude.use('downloads').catch(() => null) : Promise.resolve(null);
 async function saveBlob(name, blob) {
@@ -2391,7 +2471,8 @@ async function scanFile(f, spot) {
       const page = await doc.getPage(p + 1);
       const vp = vpRot(f, p, page, 1);
       const annots = (await page.getAnnotations({ intent: 'display' })).filter(a => !SKIP_TYPES.has(a.subtype) && !(a.annotationFlags & 2) && !(a.annotationFlags & 32));
-      if (annots.length) kami[p] = { notes: annots.filter(isPopupComment).map(a => kamiNote(a, vp)) };
+      // Marks inside her own rubric page came with the template, not from marking this student, so they don't count as marks here.
+      if (annots.length && !f.virtual) kami[p] = { notes: annots.filter(isPopupComment).map(a => kamiNote(a, vp)) };
       if (f.kind === 'pdf') impN += annots.filter(impKind).length;
       if (!pick.includes(p)) { page.cleanup(); continue; }
       const area = spot ? { x: spot.x * vp.width, y: spot.y * vp.height, w: spot.w * vp.width, h: spot.h * vp.height } : null;
@@ -2865,25 +2946,70 @@ function acrossItem(it, a, b, x, W) {
 // Covers (in page points) for one page: every name word in the page text, any Kami box whose text names them, plus her own boxes.
 // Each box lies along its words, however the page or the text is turned. xf: the page's straightening, if it has one.
 const textWidth = (s, font) => { measureCtx.font = '100px ' + font; return measureCtx.measureText(s).width; };
-async function autoCovers(page, vp, rx, xf) {
+// What's written after a Name label on its line, up to the next label (Date:, Class:…): the student's name, however it's spelled, or the blank they write it on.
+// A long run of words after it is a sentence (Name three causes…), so it's left alone. Returns [item, from, to] for what it covered.
+const NAME_SIGN = /(?<![\p{L}\p{N}])(?:(?:student|full|first|last|family|your|given)[’']?s?\s+)?(?:name|nom|nombre)(?:\s*\(s\))?\s*(?:[:：]|_{2,}|\.{3,})|(?:姓名|名字|名前|이름|ชื่อ)\s*[:：_]/giu;
+const NEXT_SIGN = /(?<![\p{L}\p{N}])(?:date|class|period|block|teacher|grade|section|subject|form|homeroom|due|score|mark|total|id|number|no\.|group|level|日期|班级|班級|学号|날짜|반)\s*[:：]/iu;
+function labelCovers(items, cover) {
+  const out = [], lines = [];
+  // Items on one line: the same way up, and their baselines within half a letter of each other.
+  for (const it of items) {
+    const t = it.transform, fh = Math.hypot(t[2], t[3]) || 10, len = Math.hypot(t[0], t[1]) || 1, ux = t[0] / len, uy = t[1] / len;
+    const off = -t[4] * uy + t[5] * ux, along = t[4] * ux + t[5] * uy;
+    let ln = lines.find(l => Math.abs(l.ux - ux) < .05 && Math.abs(l.uy - uy) < .05 && Math.abs(l.off - off) < fh * .5);
+    if (!ln) lines.push(ln = { ux, uy, off, list: [] });
+    ln.list.push({ it, along });
+  }
+  for (const ln of lines) {
+    const row = ln.list.sort((a, b) => a.along - b.along).map(x => x.it);
+    let text = ''; const from = [];
+    for (const it of row) { if (text) { text += '  '; from.push(null, null); } for (let i = 0; i < it.str.length; i++) { text += it.str[i]; from.push([it, i]); } }
+    NAME_SIGN.lastIndex = 0;
+    for (let m; (m = NAME_SIGN.exec(text));) {
+      let s = m.index + m[0].length - (/[_.]$/.test(m[0]) ? (m[0].match(/[_.]+$/) || [''])[0].length : 0);
+      const rest = text.slice(s), stop = rest.search(NEXT_SIGN), next = rest.slice(1).search(NAME_SIGN);
+      let e = s + Math.min(...[stop, next < 0 ? -1 : next + 1, rest.length].filter(v => v >= 0));
+      while (s < e && /\s/.test(text[s])) s++;
+      while (e > s && /\s/.test(text[e - 1])) e--;
+      const said = text.slice(s, e), blank = /^[\s_.\-–—]*$/.test(said);
+      if (s >= e || (!blank && (rawWords(said).length > 5 || said.length > 60))) continue;
+      const piece = new Map();
+      for (let k = s; k < e; k++) { const f = from[k]; if (!f) continue; const p = piece.get(f[0]); piece.set(f[0], p ? [p[0], f[1] + 1] : [f[1], f[1] + 1]); }
+      for (const [it, [a, b]] of piece) { cover(it, a, b - a, blank || /_{2,}/.test(it.str.slice(a, b))); out.push([it, a, b]); }
+    }
+  }
+  return out;
+}
+// opts, for the check and the ZIP: { common, own, parts } from shareOpts. With it, what comes right after a Name label is always covered, and a lone word that's
+// only a classmate's name by its letters (typed small, or on many papers of the class, like a word from the task) isn't.
+async function autoCovers(page, vp, rx, xf, opts) {
   const out = [];
   if (!rx) return out;
   const tc = await page.getTextContent();
-  const cover = (it, from, n) => {
+  const cover = (it, from, n, tall) => {
     const tx = pdfjsLib.Util.transform(vp.transform, it.transform), fh = Math.hypot(tx[2], tx[3]) || 10, run = Math.hypot(tx[0], tx[1]) || 1;
     const W = it.width * vp.scale, L = it.str.length || 1, at = (a, b) => [tx[4] + tx[0] / run * a + tx[2] / fh * b, tx[5] + tx[1] / run * a + tx[3] / fh * b];
     // Letters aren't all as wide, so where a word sits is its share of the measured line, not a count of letters.
     const font = ((tc.styles || {})[it.fontName] || {}).fontFamily || 'sans-serif', whole = textWidth(it.str, font), x = k => whole ? W * textWidth(it.str.slice(0, k), font) / whole : W * k / L;
-    const pad = W / L + 2, [left, right] = acrossItem(it, from, from + n, x, W), a0 = left - pad, a1 = right + pad, up = fh * 1.05 + 2, dn = -fh * .4 - 2;
+    const pad = W / L + 2, [left, right] = acrossItem(it, from, from + n, x, W), a0 = left - pad, a1 = right + pad, up = fh * (tall ? 2.4 : 1.05) + 2, dn = -fh * (tall ? .7 : .4) - 2;
     out.push(coverRound([at(a0, up), at(a1, up), at(a1, dn), at(a0, dn)], xf));
   };
   const hits = text => { const list = []; rx.lastIndex = 0; let m; while ((m = rx.exec(text))) { if (m[0].length) list.push([m.index, m[0].length]); else rx.lastIndex++; } return list; };
   const items = tc.items.filter(it => it.str), done = new Map();
+  const signed = opts ? labelCovers(items, cover) : [];
+  // Whether a hit counts as a name here. Without opts, every hit does.
+  const keep = (t, it, a) => {
+    if (!opts || signed.some(([i, s, e]) => i === it && a >= s && a < e) || /[@\d]/.test(t) || rawWords(t).length > 1) return true;
+    const w = nameFold(t), own = opts.own.has(w), small = isLatin(t) && t === t.toLowerCase();
+    if (small && !own && opts.parts.has(w)) return false;
+    return !opts.common.has(w) || (own && !small);
+  };
   // Reads these items as one text and covers each name where it sits, piece by piece. A letter stored in a special form, like ⼩ for 小 or a shaped Arabic letter, is read as the plain one.
   const coverIn = list => {
     let text = ''; const from = [];
     for (const it of list) { let i = 0; for (const c of it.str) { const plain = c.normalize('NFKC'); text += plain; for (let k = 0; k < plain.length; k++) from.push([it, i, i + c.length]); i += c.length; } }
     for (const [start, len] of hits(text)) {
+      if (!keep(text.slice(start, start + len), from[start][0], from[start][1])) continue;
       const piece = new Map();
       for (const [it, a, b] of from.slice(start, start + len)) { const p = piece.get(it); piece.set(it, p ? [Math.min(p[0], a), Math.max(p[1], b)] : [a, b]); }
       for (const [it, [a, b]] of piece) { const seen = done.get(it) || new Set(), key = a + '-' + b; done.set(it, seen); if (!seen.has(key)) { seen.add(key); cover(it, a, b - a); } }
@@ -2921,9 +3047,23 @@ async function autoCovers(page, vp, rx, xf) {
 }
 const boxKey = (path, p) => path + '|' + p;
 function ownCovers(path, p, W, H) { return (shareState().boxes[boxKey(path, p)] || []).map(b => ({ x: b[0] * W, y: b[1] * H, w: b[2] * W, h: b[3] * H, own: true })); }
+// Automatic covers she took off in Check the covers, kept as fractions of the page. A cover found again in about the same place stays off.
+const offList = (path, p) => (shareState().off ||= {})[boxKey(path, p)] || [];
+const sameSpot = (r, b, W, H) => {
+  const x0 = Math.max(r.x, b[0] * W), y0 = Math.max(r.y, b[1] * H), x1 = Math.min(r.x + r.w, (b[0] + b[2]) * W), y1 = Math.min(r.y + r.h, (b[1] + b[3]) * H);
+  const both = Math.max(0, x1 - x0) * Math.max(0, y1 - y0), a = r.w * r.h, c = b[2] * W * b[3] * H;
+  return both > 0 && both / (a + c - both) >= 0.5;
+};
+// The automatic covers for a page, without the ones she took off. gone: where those were, so the check can show them.
+function keptCovers(cs, path, p, W, H) {
+  const off = offList(path, p), gone = [];
+  if (!off.length) return Object.assign(cs, { gone });
+  const kept = cs.filter(r => { const out = off.some(b => sameSpot(r, b, W, H)); if (out) gone.push(r); return !out; });
+  return Object.assign(kept, { gone });
+}
 const scrubMarks = (marks, rx) => marks.map(m => m.text != null ? { ...m, text: scrub(m.text, rx) } : m);
 // Renders one page the way Claude will see it: her marks (names scrubbed from her text) and black covers.
-async function sharePage(st, f, js, p, scale, rx) {
+async function sharePage(st, f, js, p, scale, rx, opts) {
   const page = await js.getPage(p + 1);
   const vp = vpRot(f, p, page, 1), W = vp.width, H = vp.height;
   const marks = scrubMarks((f.marks[p] || []).concat((f.kami && f.kami[p] && f.kami[p].notes) || []), rx);
@@ -2935,11 +3075,11 @@ async function sharePage(st, f, js, p, scale, rx) {
   scanClip(ctx, f, p, W * scale, c.width, c.height);
   ctx.setTransform(scale, 0, 0, scale, 0, 0);
   drawMarks(ctx, marks, W, H, side, null);
-  const covers = (await autoCovers(page, vp, rx, skewXf(f, p, vp))).concat(ownCovers(f.path, p, W, H));
+  const auto = keptCovers(await autoCovers(page, vp, rx, skewXf(f, p, vp), opts), f.path, p, W, H), covers = auto.concat(ownCovers(f.path, p, W, H));
   ctx.fillStyle = '#111';
   for (const r of covers) ctx.fillRect(r.x, r.y, r.w, r.h);
   page.cleanup();
-  return { c, W, H, side, covers };
+  return { c, W, H, side, covers, gone: auto.gone };
 }
 const shareDocs = st => layoutOf(st).filter(d => docIn(st, d)).map(d => ({ ...d, pages: d.pages.filter(([path]) => { const f = fileByPath(st, path); return f && !f.virtual && viewable(f); }) })).filter(d => d.pages.length);
 
@@ -2979,6 +3119,7 @@ function openShare() {
 // Paper by paper: every page with its covers; drag to add a cover, click one of yours to remove it.
 async function checkCovers(start, onDone) {
   await ensureCounts();
+  await classCommon();
   const list = coverList();
   if (!list.length) return toast('No papers to share');
   let pos = Math.min(start || 0, list.length - 1), token = 0, last = null, drawn = 0;
@@ -2989,7 +3130,7 @@ async function checkCovers(start, onDone) {
     '<span class="seg ccseg"><button data-ccf="all"></button><button data-ccf="todo"></button><button data-ccf="flag"></button></span></div>' +
     '<ul class="ccrows" id="ccRows"></ul><div class="ccalldone" id="ccAllDone" hidden>✓ Every paper is checked.</div></aside>' +
     '<div class="bb" id="ccBody"></div></div>' +
-    '<div class="bf" style="justify-content:space-between"><span class="muted" style="font-size:13px;align-self:center;max-width:46%">Drag a box over a name it missed. Click one of your boxes to take it off, or press ' + keyLabel('⌘Z') + ' for the last one.</span><span style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end"><button class="btn" data-every hidden>Use my last box on every paper</button><button class="btn" data-back>◀ Back</button><button class="btn primary" data-next>Next ▶</button></span></div>');
+    '<div class="bf" style="justify-content:space-between"><span class="muted" style="font-size:13px;align-self:center;max-width:46%">Drag a box over a name it missed. Click any black box that isn’t a name to take it off, and click a dashed one to put it back. ' + keyLabel('⌘Z') + ' takes back the last change.</span><span style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end"><button class="btn" data-every hidden>Use my last box on every paper</button><button class="btn" data-back>◀ Back</button><button class="btn primary" data-next>Next ▶</button></span></div>');
   const box = $('#dlgBox');
   box.classList.add('ccbox');
   const finish = () => { if (eachKeys) document.removeEventListener('keydown', eachKeys, true); eachKeys = null; saveSoon(); (onDone || openShare)(); };
@@ -3060,23 +3201,35 @@ async function checkCovers(start, onDone) {
         const avail = body.clientWidth - 40, dpr = window.devicePixelRatio || 1;
         const pg0 = await js.get(path).getPage(p + 1), v1 = vpRot(f, p, pg0, 1);
         const kk = Math.min(1.6, avail / (v1.width * 1.4));
-        const r = await sharePage(st, f, js.get(path), p, kk * dpr, rx);
+        const r = await sharePage(st, f, js.get(path), p, kk * dpr, rx, shareOpts(st));
         if (my !== token) break;
         const c = r.c;
         Object.assign(c.style, { width: (r.W + r.side) * kk + 'px', height: r.H * kk + 'px', display: 'block', margin: '0 auto 14px', background: '#fff', boxShadow: 'var(--shadow)', cursor: 'crosshair', touchAction: 'none' });
-        const ctx = c.getContext('2d'), base = ctx.getImageData(0, 0, c.width, c.height);
+        const ctx = c.getContext('2d');
+        // Where a cover she took off was: a dashed outline, so she can see it and put it back.
+        if (r.gone.length) { ctx.save(); ctx.setTransform(kk * dpr, 0, 0, kk * dpr, 0, 0); ctx.strokeStyle = '#1F6FB2'; ctx.lineWidth = 1.5 / kk; ctx.setLineDash([5 / kk, 3 / kk]); for (const g of r.gone) ctx.strokeRect(g.x, g.y, g.w, g.h); ctx.restore(); }
+        const base = ctx.getImageData(0, 0, c.width, c.height);
+        const inside = (x, y, q) => x >= q.x - 2 && x <= q.x + q.w + 2 && y >= q.y - 2 && y <= q.y + q.h + 2;
+        const autoAt = (x, y) => r.covers.filter(q => !q.own && inside(x, y, q)).sort((a, b) => a.w * a.h - b.w * b.h)[0];
+        const goneAt = (x, y) => r.gone.find(q => inside(x, y, q));
+        const fracOf = q => [q.x / r.W, q.y / r.H, q.w / r.W, q.h / r.H].map(v => Math.round(v * 10000) / 10000);
         const own = () => shareState().boxes[boxKey(path, p)] || (shareState().boxes[boxKey(path, p)] = []);
         const fr = e => { const b = c.getBoundingClientRect(); return [(e.clientX - b.left) / kk, (e.clientY - b.top) / kk]; };
         let d0 = null, sel = null;
         const paint = () => { ctx.putImageData(base, 0, 0); if (sel) { ctx.save(); ctx.setTransform(kk * dpr, 0, 0, kk * dpr, 0, 0); ctx.fillStyle = 'rgba(17,17,17,.75)'; ctx.fillRect(sel.x, sel.y, sel.w, sel.h); ctx.restore(); } };
         c.onpointerdown = e => { e.preventDefault(); c.setPointerCapture(e.pointerId); d0 = fr(e); sel = null; };
-        c.onpointermove = e => { if (!d0) return; const [x, y] = fr(e); sel = { x: Math.min(x, d0[0]), y: Math.min(y, d0[1]), w: Math.abs(x - d0[0]), h: Math.abs(y - d0[1]) }; paint(); };
+        c.onpointermove = e => { if (!d0) { const [x, y] = fr(e), b = own().some(q => x >= q[0] * r.W && x <= (q[0] + q[2]) * r.W && y >= q[1] * r.H && y <= (q[1] + q[3]) * r.H) || autoAt(x, y) || goneAt(x, y); c.style.cursor = b ? 'pointer' : 'crosshair'; return; } const [x, y] = fr(e); sel = { x: Math.min(x, d0[0]), y: Math.min(y, d0[1]), w: Math.abs(x - d0[0]), h: Math.abs(y - d0[1]) }; paint(); };
         c.onpointerup = e => {
           if (!d0) return; const start = d0; d0 = null;
           if (!sel || sel.w < 4 || sel.h < 3) {
             sel = null; paint();
             const [x, y] = start, arr = own(), hit = arr.findIndex(b => x >= b[0] * r.W && x <= (b[0] + b[2]) * r.W && y >= b[1] * r.H && y <= (b[1] + b[3]) * r.H);
-            if (hit >= 0) { arr.splice(hit, 1); coverMark(st, d, false); show(); }
+            if (hit >= 0) { arr.splice(hit, 1); coverMark(st, d, false); show(); return; }
+            // One the name search put on: it comes off here, in the ZIP and while grading anonymously.
+            const offs = (shareState().off ||= {}), k = boxKey(path, p), a = autoAt(x, y);
+            if (a) { const b = fracOf(a); (offs[k] ||= []).push(b); undo.push({ k, b, i: pos, off: 'took' }); coverMark(st, d, false); saveSoon(); toast('Cover taken off. ' + keyLabel('⌘Z') + ' puts it back.'); return show(); }
+            const g = goneAt(x, y);
+            if (g) { const list = offs[k] || [], at = list.findIndex(b => sameSpot(g, b, r.W, r.H)); if (at >= 0) { const [b] = list.splice(at, 1); if (!list.length) delete offs[k]; undo.push({ k, b, i: pos, off: 'gave' }); } coverMark(st, d, false); saveSoon(); return show(); }
             return;
           }
           const fx = v => Math.round(v * 10000) / 10000;
@@ -3085,6 +3238,7 @@ async function checkCovers(start, onDone) {
           box.querySelector('[data-every]').hidden = false;
           show();
         };
+        c._cover = { covers: r.covers, gone: r.gone, kk };
         body.appendChild(c);
         if (pg0) pg0.cleanup();
       }
@@ -3123,9 +3277,11 @@ async function checkCovers(start, onDone) {
     else if (!typing && (e.metaKey || e.ctrlKey) && !e.shiftKey && e.key.toLowerCase() === 'z') {
       // Takes back the last box she drew here.
       e.preventDefault(); e.stopPropagation();
-      const u = undo.pop(); if (!u) return toast('No box to take back');
-      const arr = shareState().boxes[u.k] || [], at = arr.lastIndexOf(u.b);
-      if (at >= 0) arr.splice(at, 1);
+      const u = undo.pop(); if (!u) return toast('Nothing to take back');
+      const offs = (shareState().off ||= {});
+      if (u.off === 'took') { const list = offs[u.k] || [], at = list.lastIndexOf(u.b); if (at >= 0) list.splice(at, 1); if (!list.length) delete offs[u.k]; }
+      else if (u.off === 'gave') (offs[u.k] ||= []).push(u.b);
+      else { const arr = shareState().boxes[u.k] || [], at = arr.lastIndexOf(u.b); if (at >= 0) arr.splice(at, 1); }
       coverMark(list[u.i].st, list[u.i].d, false); saveSoon();
       pos = u.i; show();
     }
@@ -3165,6 +3321,7 @@ const README_FOR_CLAUDE = (n) => [
 async function makeSharePackage(onStep) {
   await workerReady;
   if (!scanned || scanP) await scanAll();
+  await classCommon();
   const files = {}, rows = [], notes = {};
   const crit = setup.mode === 'rubric' ? setup.criteria : [];
   const jobs = [];
@@ -3183,7 +3340,7 @@ async function makeSharePackage(onStep) {
         if (!js.has(path)) js.set(path, await pdfjsLib.getDocument({ data: (await viewBytes(f)).slice(), isEvalSupported: false }).promise);
         // A poster-size page is drawn smaller: a canvas that big can't be turned into a picture.
         const v1 = vpRot(f, p, await js.get(path).getPage(p + 1), 1);
-        const r = await sharePage(st, f, js.get(path), p, Math.min(120 / 72, 8000 / Math.max(v1.width * 1.5, v1.height)), rx);
+        const r = await sharePage(st, f, js.get(path), p, Math.min(120 / 72, 8000 / Math.max(v1.width * 1.5, v1.height)), rx, shareOpts(st));
         const jpg = await canvasJpg(r.c, 0.85);
         out.addPage([r.W + r.side, r.H]).drawImage(await out.embedJpg(jpg), { x: 0, y: 0, width: r.W + r.side, height: r.H });
         r.c.width = r.c.height = 0;
@@ -3724,23 +3881,73 @@ async function refCard(r, st) {
   if (hb) hb.onclick = e => { e.preventDefault(); if (r.for) return dropRef(r.path); setRefSkip(st, r.path, true); openStudent(cur); toast('Hidden for this student. Readings… brings it back or adds a different file.'); };
   const body = det.querySelector('.refbody');
   const f = await makeFile('reading/' + r.path, r.data.slice());
+  // Pages and Word or text files get a zoom bar and a box she can drag taller or shorter. Both are remembered for this file.
+  const zk = 'gs.refZoom.' + r.path, hk = 'gs.refH.' + r.path, ZMIN = 0.5, ZMAX = 3;
+  let zoom = Math.min(ZMAX, Math.max(ZMIN, +store.get(zk, 1) || 1)), apply = () => {};
+  const bar = document.createElement('div'); bar.className = 'refbar';
+  bar.innerHTML = '<span class="seg"><button data-rz="-" title="Zoom out" aria-label="Zoom out">−</button><button data-rz="1" title="Back to fit the width" class="rzv"></button><button data-rz="+" title="Zoom in" aria-label="Zoom in">+</button></span><span class="muted">Pinch or Ctrl + scroll on the reading to zoom. Drag the bottom edge to make it taller.</span>';
+  const scroll = document.createElement('div'); scroll.className = 'refscroll';
+  const h0 = +store.get(hk, 0); if (h0) scroll.style.maxHeight = h0 + 'px';
+  const grip = document.createElement('div'); grip.className = 'refgrip'; grip.title = 'Drag to make the reading taller or shorter'; grip.setAttribute('role', 'separator'); grip.setAttribute('aria-orientation', 'horizontal');
+  const showZ = () => { bar.querySelector('.rzv').textContent = Math.round(zoom * 100) + '%'; };
+  let zt = 0;
+  const setZoom = (z, now) => {
+    z = Math.round(Math.min(ZMAX, Math.max(ZMIN, z)) * 100) / 100;
+    if (z === zoom) return;
+    const fx = scroll.scrollLeft / Math.max(1, scroll.scrollWidth), fy = scroll.scrollTop / Math.max(1, scroll.scrollHeight);
+    zoom = z; showZ(); store.set(zk, zoom);
+    clearTimeout(zt); const go = async () => { try { await apply(); } catch { return; } scroll.scrollLeft = fx * scroll.scrollWidth; scroll.scrollTop = fy * scroll.scrollHeight; };
+    if (now) go(); else { apply(true); zt = setTimeout(go, 160); }
+  };
+  bar.onclick = e => { const b = e.target.closest('[data-rz]'); if (!b) return; const v = b.dataset.rz; setZoom(v === '+' ? zoom * 1.25 : v === '-' ? zoom / 1.25 : 1, true); };
+  scroll.addEventListener('wheel', e => { if (!e.ctrlKey && !e.metaKey) return; e.preventDefault(); setZoom(zoom * Math.exp(-e.deltaY / 300)); }, { passive: false });
+  grip.onpointerdown = e => {
+    e.preventDefault(); grip.setPointerCapture(e.pointerId);
+    const y0 = e.clientY, start = scroll.getBoundingClientRect().height;
+    grip.onpointermove = m => { const hh = Math.max(120, Math.round(start + m.clientY - y0)); scroll.style.maxHeight = hh + 'px'; scroll.style.height = hh + 'px'; };
+    grip.onpointerup = grip.onpointercancel = () => { grip.onpointermove = grip.onpointerup = grip.onpointercancel = null; const hh = parseInt(scroll.style.maxHeight) || 0; if (hh) store.set(hk, hh); scroll.style.height = ''; };
+  };
+  grip.onkeydown = e => { if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return; e.preventDefault(); const hh = Math.max(120, Math.round(scroll.getBoundingClientRect().height + (e.key === 'ArrowDown' ? 60 : -60))); scroll.style.maxHeight = hh + 'px'; store.set(hk, hh); };
+  grip.tabIndex = 0;
+  const framed = () => { showZ(); body.append(bar, scroll, grip); };
   try {
-    if (f.kind === 'docx') { const c = await docxCard({ name: r.name, data: r.data }, r.name); const h = c.querySelector('.fhead'); if (h) h.remove(); body.appendChild(c); }
+    if (f.kind === 'docx' || f.kind === 'text') {
+      const c = f.kind === 'docx' ? await docxCard({ name: r.name, data: r.data }, r.name) : textCard(f);
+      const h = c.querySelector('.fhead'); if (h) h.remove();
+      apply = () => { c.style.zoom = zoom; };
+      apply(); scroll.appendChild(c); framed();
+    }
     else if (viewable(f)) {
       await workerReady;
       const doc = await pdfjsLib.getDocument({ data: f.data.slice(), isEvalSupported: false }).promise;
-      const box = document.createElement('div'); box.className = 'refpages'; body.appendChild(box);
-      const dpr = window.devicePixelRatio || 1, w = Math.min(860, ($('#paper').clientWidth || 900) - 80);
+      docs.push(doc);   // let go of with the paper's own files when she moves to another student
+      const box = document.createElement('div'); box.className = 'refpages'; scroll.appendChild(box); framed();
+      const dpr = window.devicePixelRatio || 1, w = Math.min(860, ($('#paper').clientWidth || 900) - 80), turn = { rot: f.photoTurn ? { 0: f.photoTurn } : null };
+      const pgs = [];
       for (let i = 1; i <= doc.numPages; i++) {
-        const page = await doc.getPage(i), turn = { rot: f.photoTurn ? { 0: f.photoTurn } : null }, v1 = vpRot(turn, i - 1, page, 1), s = w / v1.width, vp = vpRot(turn, i - 1, page, s * dpr);
-        const c = document.createElement('canvas'); c.width = Math.ceil(vp.width); c.height = Math.ceil(vp.height); c.style.width = w + 'px';
-        const ctx = c.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
-        await page.render({ canvasContext: ctx, viewport: vp, annotationMode: pdfjsLib.AnnotationMode.ENABLE }).promise;
-        box.appendChild(c); page.cleanup();
+        const page = await doc.getPage(i), c = document.createElement('canvas');
+        pgs.push({ page, c, v1: vpRot(turn, i - 1, page, 1), i, drawn: 0 }); box.appendChild(c);
       }
-      doc.destroy();
+      // Quick look while pinching: stretch what's drawn. Then draw each page sharp at the new size.
+      let job = 0;
+      apply = async quick => {
+        const pw = Math.round(w * zoom);
+        for (const p of pgs) { p.c.style.width = pw + 'px'; p.c.style.height = Math.round(pw * p.v1.height / p.v1.width) + 'px'; }
+        if (quick) return;
+        const me = ++job;
+        for (const p of pgs) {
+          if (me !== job) return;
+          if (p.drawn === pw) continue;
+          const vp = vpRot(turn, p.i - 1, p.page, pw / p.v1.width * dpr), off = document.createElement('canvas');
+          off.width = Math.ceil(vp.width); off.height = Math.ceil(vp.height);
+          const ctx = off.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, off.width, off.height);
+          await p.page.render({ canvasContext: ctx, viewport: vp, annotationMode: pdfjsLib.AnnotationMode.ENABLE }).promise;
+          if (me !== job) return;
+          p.c.width = off.width; p.c.height = off.height; p.c.getContext('2d').drawImage(off, 0, 0); p.drawn = pw;
+        }
+      };
+      await apply();
     }
-    else if (f.kind === 'text') { const c = textCard(f); const h = c.querySelector('.fhead'); if (h) h.remove(); body.appendChild(c); }
     else if (f.kind === 'media') { const v = document.createElement(/\.(mp4|mov|webm|m4v)$/i.test(r.name) ? 'video' : 'audio'); v.controls = true; v.src = URL.createObjectURL(new Blob([r.data])); v.style.width = '100%'; body.appendChild(v); }
     else body.appendChild(otherCard(f));
   } catch { body.innerHTML = '<p class="muted">This file couldn’t be shown here.</p>'; }
@@ -4155,6 +4362,7 @@ function editAssignment(id, unitId) {
       if (f.u !== to) f.u.items.splice(f.u.items.indexOf(it), 1);
       if (f.u !== to) to.items.push(it);
       saveLib(); closeDlg(); renderLib();
+      if (batch) { renderGrade(); renderList(); }   // a type changed while grading: the score panel follows
     }
   };
 }
@@ -4709,13 +4917,13 @@ function stepStudent(d) {
 const anonRx = st => coverRx(st);
 // Black boxes (page points) over typed names, Kami boxes with names, and the boxes she drew in Check the covers.
 async function anonCovers(st, pg) {
-  try { const vp = vpRot(pg.file, pg.idx, pg.page, 1); return (await autoCovers(pg.page, vp, anonRx(st), skewXf(pg.file, pg.idx, vp))).concat(ownCovers(pg.file.path, pg.idx, pg.W, pg.H)); }
+  try { const vp = vpRot(pg.file, pg.idx, pg.page, 1); return keptCovers(await autoCovers(pg.page, vp, anonRx(st), skewXf(pg.file, pg.idx, vp)), pg.file.path, pg.idx, pg.W, pg.H).concat(ownCovers(pg.file.path, pg.idx, pg.W, pg.H)); }
   catch { return ownCovers(pg.file.path, pg.idx, pg.W, pg.H); }
 }
 // The same covers on a small or big picture of a page, drawn at vp. turned: a turn she hasn't saved yet.
 async function anonPaint(ctx, st, f, p, page, vp, turned) {
   let cs = [];
-  try { cs = await autoCovers(page, vp, anonRx(st), skewXf(f, p, vp)); } catch (er) { console.error(er); }
+  try { cs = keptCovers(await autoCovers(page, vp, anonRx(st), skewXf(f, p, vp)), f.path, p, vp.width, vp.height); } catch (er) { console.error(er); }
   ctx.fillStyle = '#111';
   for (const r of cs) ctx.fillRect(r.x, r.y, r.w, r.h);
   for (let b of shareState().boxes[boxKey(f.path, p)] || []) {
@@ -6483,6 +6691,7 @@ document.addEventListener('keydown', e => {
   if (e.key.toLowerCase() === 'h' && tool === 'hl') { setHlMode(hlMode === 'free' ? 'auto' : 'free', true); return; }
   if (map[e.key.toLowerCase()]) { setTool(map[e.key.toLowerCase()]); return; }
   if (e.key.toLowerCase() === 'n') { nextUnscored(); return; }
+  if (e.key.toLowerCase() === 'f' && !e.metaKey && !e.ctrlKey && !e.altKey && fmNow()) { e.preventDefault(); fbToggle(e.shiftKey); return; }
   if (e.key === '=' && !$('#calcPanel')) { e.preventDefault(); openCalc(); return; }
   // With the calculator open, numbers and + − × ÷ ( ) go straight into it, even after a click on the paper.
   // ( / still finds a student, and − with a picked mark still makes it smaller, above.)

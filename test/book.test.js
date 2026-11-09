@@ -60,8 +60,9 @@ test('the table groups a term’s assignments by type, averages each type, and w
   assert.deepEqual(await termCol(page), ['Aria Testwell 85.00%', 'Bram Sample 71.25%', 'Cleo Fixture 96.25%', 'Dov Madeup 60.00%', 'Class average 78.13%']);
   const row = await page.$$eval('#bkTab tbody tr:nth-child(4) td', t => t.map(x => x.textContent.trim()));
   assert.ok(row.includes('missing') && row.includes('excused'), row.join('|'));
-  // Formative: a check for feedback, never a score.
-  assert.equal(await page.$$eval('#bkTab tbody .bkfb', f => f.length), 2);
+  // Formative: never a score. Comments with Feedback complete not switched on yet are "started".
+  assert.equal(await page.$$eval('#bkTab tbody .bkfb', f => f.length), 0);
+  assert.equal(await page.$$eval('#bkTab tbody .bkstart', f => f.length), 2);
   assert.match(await page.$eval('#bkTab tbody tr td.bkterm', t => t.dataset.tn), /Summative 50%: 85.00% · In-class 50%: 85.00%/);
   // Term 2 has the download with no card, and it has no type yet.
   await page.click('[data-bkterm="t2"]');
