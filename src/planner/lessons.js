@@ -84,6 +84,10 @@ function normLesson(x) {
   const slides = Array.isArray(x.slides) && x.slides.length ? x.slides.map(ns) : [normSlide({ layout: 'title', fmt: 2 })];
   const out = { id: typeof x.id === 'string' && x.id ? x.id : lid(), title: String(x.title || 'Untitled lesson'), slots, slides, created: +x.created || Date.now(), updated: +x.updated || Date.now(), note: String(x.note || ''),
     status: STATUS[x.status] ? x.status : '', claudeNote: String(x.claudeNote || ''), fmt: 2 };
+  // Comments on the whole lesson, both ways, the same shape as a slide's "talk".
+  const talk = (Array.isArray(x.talk) ? x.talk : []).filter(t => t && t.text).map(t => ({ by: t.by === 'claude' ? 'claude' : 'you', text: String(t.text), at: +t.at || 0, ...(t.done ? { done: true } : {}) }));
+  if (talk.length) out.talk = talk;
+  if (x.titleApart) out.titleApart = true;
   if (LOOKS[x.look]) out.look = x.look;
   if (/^https?:\/\//.test(x.atlas || '')) out.atlas = String(x.atlas);
   if (x.library) out.library = String(x.library).slice(0, 120);
@@ -100,6 +104,41 @@ function normLesson(x) {
   if (x.pending && Array.isArray(x.pending.before)) out.pending = { at: +x.pending.at || Date.now(), before: x.pending.before.map(ns), title: String(x.pending.title || '') };
   if (x._file) out._file = x._file; if (x._mod) out._mod = x._mod;
   return out;
+}
+
+// Every new deck starts the same way: slide 1 the title slide, slide 2 the agenda. A title or agenda slide that is
+// already in the deck is moved there; a missing one is added (the agenda empty, with its gray hints, for the teacher
+// or Claude to fill). Run on decks as they're made (a new lesson, a new lesson file from Claude, an import), not on
+// lessons already in the Planner, so nothing the teacher arranged is moved later.
+function deckStart(l) {
+  const sl = l.slides, first = (l.slots.map(s => s.date).sort()[0]) || '';
+  let t = sl.findIndex(s => s.layout === 'title');
+  if (t < 0) sl.unshift(normSlide({ layout: 'title', title: l.title, fmt: 2 }));
+  else if (t > 0) sl.unshift(sl.splice(t, 1)[0]);
+  const a = sl.findIndex((s, i) => i > 0 && s.layout === 'agenda');
+  if (a < 0) sl.splice(1, 0, normSlide({ layout: 'agenda', title: (first ? (parseYmd(first).getMonth() + 1) + '/' + parseYmd(first).getDate() + ' ' : '') + 'Agenda', fmt: 2 }));
+  else if (a > 1) sl.splice(1, 0, sl.splice(a, 1)[0]);
+  return l;
+}
+
+/* ---------- the lesson's name and its title slide's title are one, unless the teacher sets them apart ---------- */
+const titleSlideOf = l => l.slides.find(s => s.layout === 'title');
+const titlesLinked = l => !l.titleApart;
+const plainTitle = t => String(t || '').replace(/\\([*_{])/g, (m, c) => '\u0000' + '*_{'.indexOf(c)).replace(/\*\*|__|\*|\{\/\}|\{(red|orange|green|blue|purple|gray)\}/g, '').replace(/\u0000(\d)/g, (m, i) => '*_{'[i]).replace(/\s+/g, ' ').trim();
+// The lesson's name was typed: the title slide follows.
+function titleToSlide(l) {
+  const s = titlesLinked(l) && titleSlideOf(l); if (!s) return;
+  s.title = l.title; const i = l.slides.indexOf(s);
+  refreshThumb(i); if (L.open === l && L.cur === i && !lEditing) renderStage();
+}
+// The title slide's title was edited: the lesson's name follows.
+function slideToTitle(l, s) {
+  if (!titlesLinked(l) || s !== titleSlideOf(l)) return;
+  const t = plainTitle(s.title); if (!t) return;
+  l.title = t; const i = $('#lessons [data-f="ltitle"]'); if (i && i.value !== t) i.value = t;
+}
+function titleLinkBtn(l) {
+  return titleSlideOf(l) ? '<button class="btn sm ghost pl-tlink' + (titlesLinked(l) ? ' on' : '') + '" data-a="tlink" title="' + (titlesLinked(l) ? 'The lesson name and the title slide match. Click to let them be different.' : 'The lesson name and the title slide are different. Click to match them again.') + '" aria-pressed="' + titlesLinked(l) + '">' + (titlesLinked(l) ? '🔗 Matches title slide' : 'Not matched') + '</button>' : '';
 }
 
 /* ---------- timetable ---------- */
@@ -337,7 +376,7 @@ function renderEditor() {
   L.cur = Math.max(0, Math.min(L.cur, l.slides.length - 1));
   const s = l.slides[L.cur];
   let h = '<div class="ls-top"><button class="btn sm ghost" data-a="back">‹ ' + ({ semester: 'Semester', units: 'Units', unit: 'Unit', activities: 'Activities', library: 'Past lessons' }[L.backTo] || 'Week') + '</button>' +
-    '<input class="ls-title-in" data-f="ltitle" value="' + esc(l.title) + '" aria-label="Lesson name">' +
+    '<input class="ls-title-in" data-f="ltitle" value="' + esc(l.title) + '" aria-label="Lesson name">' + titleLinkBtn(l) +
     '<span class="ls-slots">' + l.slots.map((t, i) => '<span class="ls-chip" style="--cc:' + esc((classById(t.classId) || {}).color || '#1F6FB2') + '">' + esc(className(t.classId)) + ' · ' + shortDate(t.date) + mbBtn(classById(t.classId)) + '<button data-unslot="' + i + '" title="Take it off this class" aria-label="Remove">×</button></span>').join('') + '<button class="btn sm ghost" data-a="addslot">+ Class</button></span>' +
     atlasChip(l) + '<span class="sp"></span>' + statusChip(l) + '<span class="savest" id="lsSaved">Saved</span>' +
     '<button class="btn sm" data-a="send" title="Copy this lesson for Claude, to paste where you’re working with Claude">Copy for Claude</button>' +
@@ -357,7 +396,7 @@ function renderEditor() {
     '<div class="ls-stagewrap" id="lsWrap"><div class="ls-stage" id="lsStage"><div class="ls-slide">' + slideHtml(s, l, true) + '</div></div></div>' +
     '<div class="ls-warn" id="lsWarn" hidden></div>' +
     '<label class="ls-notes">Speaker notes<textarea data-f="notes" rows="3" placeholder="Notes for you, not shown on the slide">' + esc(s.notes) + '</textarea></label>' +
-    slideTalkHtml(s) + finishedHtml(l) + materialsHtml(l, 'lesson') +
+    slideTalkHtml(s) + lessonTalkHtml(l) + finishedHtml(l) + materialsHtml(l, 'lesson') +
     '<p class="muted ls-hint">Click any text on the slide to edit it. In bullets, start a line with Tab for a smaller point under the one above. Arrow keys move between slides when you’re not typing. Drag a picture in from another tab, or paste a picture or a YouTube link.</p>' +
     '</section></div><input type="file" id="lsPicIn" accept="image/*" hidden>';
   $('#lessons').innerHTML = h;
@@ -448,8 +487,8 @@ function editorCommit() {
   if (!lEditing || !L.open) return;
   const { ta, k } = lEditing; lEditing = null;
   const s = L.open.slides[L.cur], v = ta.isContentEditable ? rtRead(ta) : ta.value;
-  if (ta.isContentEditable) { if (v.trim()) s[k] = v; else if (k === 'body') s.body = ''; else delete s[k]; lessonChanged(); renderStage(); rtToolState(); return; }
-  if (k === 'title') s.title = v.replace(/\n+/g, ' ');
+  if (ta.isContentEditable) { if (v.trim()) s[k] = v; else if (k === 'body') s.body = ''; else delete s[k]; if (k === 'title') slideToTitle(L.open, s); lessonChanged(); renderStage(); rtToolState(); return; }
+  if (k === 'title') { s.title = v.replace(/\n+/g, ' '); slideToTitle(L.open, s); }
   else if (k === 'source') { if (s.img) s.img.source = v.replace(/\n+/g, ' '); }
   else if (EXTRA.includes(k)) { const t = k === 'body2' ? v : v.replace(/\n+/g, ' '); if (t) s[k] = t; else delete s[k]; }
   else s.body = (s.layout === 'title' && v === titleSubtitle(L.open)) ? '' : v;
@@ -473,6 +512,7 @@ function onLessonsKey(e) {
     return;
   }
   if (e.key === 'Enter' && e.target.dataset && e.target.dataset.f === 'say') { e.preventDefault(); return addComment(); }
+  if (e.key === 'Enter' && e.target.dataset && e.target.dataset.f === 'lsay') { e.preventDefault(); return addLessonComment(); }
   if (e.key === 'Enter' && e.target.id === 'plFind') { e.preventDefault(); return findDlg(e.target.value); }
   const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName) || e.target.isContentEditable;
   if (L.view === 'edit' && !typing && !e.metaKey && !e.ctrlKey) {
@@ -495,7 +535,7 @@ async function onLessonsClick(e) {
   const mt = e.target.closest('[data-ma]'); if (mt && await matClick(mt)) return;
   if (await bankClick(e)) return;
   if (await unitsClick(e)) return;
-  const t = e.target.closest('[data-a],[data-mbset],[data-open],[data-new],[data-attach],[data-go],[data-addslide],[data-unslot],[data-talkdone],[data-ctxview],[data-ctxcopy],[data-ctxput],[data-ctxdel],[data-var],[data-dl],.ls-ed');
+  const t = e.target.closest('[data-a],[data-mbset],[data-open],[data-new],[data-attach],[data-go],[data-addslide],[data-unslot],[data-talkdone],[data-ltalkdone],[data-ctxview],[data-ctxcopy],[data-ctxput],[data-ctxdel],[data-var],[data-dl],.ls-ed');
   if (t && t.dataset.mbset) return mbDlg(t.dataset.mbset);
   if (t && t.dataset.dl) return dlCard(t.dataset.dl);
   if (!t) return;
@@ -535,6 +575,12 @@ async function onLessonsClick(e) {
   if (a === 'look') return lookDlg();
   if (a === 'vid') return videoDlg();
   if (a === 'split') return splitOverflow();
+  if (a === 'tlink') {
+    editorCommit();
+    if (titlesLinked(l)) { l.titleApart = true; toast('The lesson name and the title slide can be different now'); }
+    else { delete l.titleApart; const s = titleSlideOf(l); if (s) { s.title = l.title; } toast('The title slide matches the lesson name again'); }
+    lessonChanged(false); return renderEditor();
+  }
   if (a === 'dup') { const c = normSlide(JSON.parse(JSON.stringify(l.slides[L.cur]))); c.id = lid(); l.slides.splice(L.cur + 1, 0, c); L.cur++; lessonChanged(false); return renderEditor(); }
   if (a === 'del') {
     if (l.slides.length === 1) return toast('A lesson needs at least one slide');
@@ -551,7 +597,7 @@ function onLessonsInput(e) {
   if (docInput(e) || libraryInput(e)) return;
   if (unitsInput(e) || activitiesInput(e)) return;
   const f = e.target.dataset.f; if (!f || !L.open) return;
-  if (f === 'ltitle') { L.open.title = e.target.value; lessonChanged(false); }
+  if (f === 'ltitle') { L.open.title = e.target.value; titleToSlide(L.open); lessonChanged(false); }
   if (f === 'notes') { L.open.slides[L.cur].notes = e.target.value; lessonChanged(false); }
   if (f === 'ask') { L.open.slides[L.cur].ask = e.target.value; lessonChanged(false); }
   if (f === 'ctxnote') { const c = (L.open.slides[L.cur].ctx || [])[+e.target.dataset.i]; if (c) { c.note = e.target.value; lessonChanged(false); } }
@@ -679,24 +725,30 @@ async function setPicture(file, source) {
 /* ---------- lessons: create, attach, list ---------- */
 async function createLesson(slots) {
   const first = slots[0];
-  const l = normLesson({ title: 'New lesson', slots, slides: [
+  const l = deckStart(normLesson({ title: 'New lesson', slots, slides: [
     { layout: 'title', title: 'New lesson', fmt: 2 },
     { layout: 'content', title: '', body: '', fmt: 2 }
-  ] });
+  ] }));
   await lPut(l); openLesson(l);
   if (slots.length > 1) toast('Also on ' + slots.slice(1).map(s => className(s.classId) + ' ' + shortDate(s.date)).join(', ') + ' (one deck for both)', 4500);
 }
 function openLesson(l) { if (!l) return; if (L.view !== 'edit') L.backTo = L.view; L.open = l; L.cur = 0; L.view = 'edit'; renderEditor(); }
-const lessonNotes = l => ((SP.box && SP.box.chips) || []).filter(c => c && c.kind === 'note' && c.about && c.about.kind === 'lesson' && c.about.lesson === l.id && String(c.text || '').trim()).map(c => String(c.text).trim());
+const boxLessonNotes = l => ((SP.box && SP.box.chips) || []).filter(c => c && c.kind === 'note' && c.about && c.about.kind === 'lesson' && c.about.lesson === l.id && String(c.text || '').trim());
+// My open comments on the whole lesson: the ones on the lesson, and any right-click ones still only in the Claude box.
+const lessonNotes = l => { const mine = (l.talk || []).filter(t => t.by === 'you' && !t.done).map(t => t.text.trim()), all = (l.talk || []).map(t => t.text.trim()); return [...mine, ...boxLessonNotes(l).map(c => String(c.text).trim()).filter(t => !all.includes(t))]; };
 // A comment typed under a slide but not yet added (no Enter or Add) is kept when you move on or copy the lesson.
 function keepTypedComment() {
+  const j = document.querySelector('#lessons [data-f="lsay"]'), w = j && j.value.trim();
+  if (w && L.open && L.view === 'edit') { (L.open.talk = L.open.talk || []).push({ by: 'you', text: w, at: Date.now() }); j.value = ''; lessonChanged(false); }
   const i = document.querySelector('#lessons [data-f="say"]'), v = i && i.value.trim(); if (!v || !L.open || L.view !== 'edit') return;
   const s = L.open.slides[L.cur]; if (!s) return;
   s.talk.push({ by: 'you', text: v, at: Date.now() }); i.value = ''; lessonChanged(false);
 }
-// Right-click comments on a slide used to go only into the Claude box. Put any of those on their slide too, once.
+// Right-click comments on a slide or a lesson used to go only into the Claude box. Put any of those on their slide
+// or lesson too, once.
 function boxNotesToSlides(l) {
   let n = 0;
+  for (const c of boxLessonNotes(l)) { const t = String(c.text).trim(); if ((l.talk || []).some(m => m.text === t)) continue; (l.talk = l.talk || []).push({ by: 'you', text: t, at: +c.at || Date.now() }); n++; }
   for (const c of (SP.box && SP.box.chips) || []) {
     const a = c && c.kind === 'note' && c.about; if (!a || a.kind !== 'slide' || a.lesson !== l.id) continue;
     const s = l.slides[a.i], t = String(c.text || '').trim(); if (!s || !t || s.talk.some(m => m.text === t)) continue;
@@ -795,7 +847,7 @@ function lessonText(l) {
 // Ask Claude: copies this lesson only (nothing from grading), to paste where the teacher is working with Claude.
 async function askClaude(l) {
   const where = L.dir && L.dirOk ? 'It is saved in my Planner folder as "' + fileBase(l) + '.lesson.json". Edit that file directly (keep the same id), and I will pick up your changes in the Planner.\n\n' : '';
-  await copyText('Here is a lesson from my Planner. ' + where + 'Slide text stays 28 to 36 pt; keep my simple bullet style. In slide text, a line starting with "• " is a bullet and "1. " is a number (only where I put them), a tab indents, **bold**, *italic* and __underline__ work, and {red}words{/} are colored (red, orange, green, blue, purple, gray).\n\n' + lessonText(l));
+  await copyText('Here is a lesson from my Planner. ' + where + 'Slide 1 is the title slide and slide 2 the agenda. Slide text stays 28 to 36 pt; keep my simple bullet style. In slide text, a line starting with "• " is a bullet and "1. " is a number (only where I put them), a tab indents, **bold**, *italic* and __underline__ work, and {red}words{/} are colored (red, orange, green, blue, purple, gray).\n\n' + lessonText(l));
   const shots = l.slides.reduce((n, s) => n + (s.ctx || []).length, 0);
   toast('Lesson copied. Paste it into Claude and say what you want.' + (shots && !(L.dir && L.dirOk) ? ' Its ' + (shots === 1 ? 'screenshot doesn’t' : shots + ' screenshots don’t') + ' come along as text: use Copy on each one and paste it in too.' : ''), 7000);
 }
@@ -817,6 +869,7 @@ async function importLessonText(text, name) {
     if (!x || !Array.isArray(x.slides)) continue;
     const l = normLesson(x); l.slides.forEach(s => { if (s.img && !imgSrc(s.img.src)) delete s.img; });
     const old = L.lessons.find(o => o.id === l.id); if (old) l.created = old.created;
+    else deckStart(l);
     await lPut(l); done.push(l);
   }
   if (!done.length) return toast('No lesson found in ' + (name || 'that text'));
@@ -1066,6 +1119,8 @@ stripe, band, bigtype, framed, notebook, chalk. Leave it out to use the teacher'
   To put one on a slide, use its "src" as a picture slide's "img.src".
 - A slide's "talk" is comments: { "by": "you" | "claude", "text": "…" }. Reply by adding one with "by": "claude".
   Don't edit or remove the teacher's comments.
+- The lesson's own "talk" (same shape) is comments on the whole lesson: how it should go overall. Apply them across the
+  slides, and reply there the same way.
 - "status": "claude" means the teacher sent it to you; set it to "review" when you're done.
   "claudeNote" is your short summary of what you did.
 The teacher sees your changes slide by slide and keeps theirs or yours for each, so change what the lesson needs and leave the rest.
@@ -1075,7 +1130,9 @@ a line starting with "• " is a bullet, "1. " (any number) is a numbered line, 
 leading tabs indent the line. **bold**, *italic*, __underline__ and {red}colored words{/} (red, orange, green, blue,
 purple, gray) work inside a line (a backslash shows a *, _ or { as is).
 No layout adds bullets or numbers by itself, so add them only where the teacher would. Keep "fmt": 2 on the lesson.
-An empty title-slide body means the app fills in the course and dates. Bump "updated" (milliseconds) when you change a lesson.
+The lesson's "title" and the title slide's title are the same: change both together (unless the lesson has
+"titleApart": true). Slide 1 is always the title slide and slide 2 always the agenda ("layout": "agenda"): the parts of the lesson in order,
+one line each. Keep them there; the app puts them there in a new lesson. An empty title-slide body means the app fills in the course and dates. Bump "updated" (milliseconds) when you change a lesson.
 
 ## Unit shape
 {
@@ -1174,6 +1231,7 @@ async function folderRead(say) {
       let j; try { j = JSON.parse(await f.text()); } catch { continue; }
       const l = normLesson(j), old = L.lessons.find(x => x.id === l.id);
       if (old && old._file && old._file !== name) { continue; }   // a stale copy under an old name
+      if (!old) deckStart(l);   // a new deck from Claude: title, then agenda
       const fromImages = async p => { const idir = await L.dir.getDirectoryHandle('images'); const b = await (await idir.getFileHandle(p.slice(7))).getFile(); return new Promise(r => { const fr = new FileReader(); fr.onload = () => r(fr.result); fr.readAsDataURL(b); }); };
       for (const s of l.slides) if (s.img && /^images\//.test(s.img.src)) {
         try { s.img.src = await fromImages(s.img.src); if (!s.img.w) { const im = new Image(); im.src = s.img.src; await im.decode(); s.img.w = im.naturalWidth; s.img.h = im.naturalHeight; } }
@@ -1188,7 +1246,7 @@ async function folderRead(say) {
       const i = L.lessons.findIndex(x => x.id === l.id); if (i >= 0) L.lessons[i] = l; else L.lessons.push(l);
       if (L.open && L.open.id === l.id) L.open = l;
       old ? changed++ : added++;
-      if (!j.id) await folderWrite(l);   // give a new file its id
+      if (!j.id || !old) await folderWrite(l);   // give a new file its id and its title and agenda slides
     }
   } catch (e) { console.warn(e); if (say) toast('Couldn’t read the Planner folder'); return; }
   try { const u = await unitsFolderRead(); added += u.added; changed += u.changed; } catch (e) { console.warn(e); }

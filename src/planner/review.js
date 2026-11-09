@@ -48,10 +48,10 @@ async function sendToClaude(l) {
   const file = fileBase(l) + '.lesson.json';
   const msg = L.dir && L.dirOk
     ? 'Please work on my lesson "' + l.title + '" in my Planner folder ("' + L.dir.name + '"), file "' + file + '". Read "README - for Claude.md" there first.\n\n' +
-      (asks ? asks + ' slide' + (asks === 1 ? ' has' : 's have') + ' an "ask" saying what I want on it. ' : '') + (talks ? talks + ' slide' + (talks === 1 ? ' has' : 's have') + ' comments from me in "talk". ' : '') +
+      (asks ? asks + ' slide' + (asks === 1 ? ' has' : 's have') + ' an "ask" saying what I want on it. ' : '') + (talks ? talks + ' slide' + (talks === 1 ? ' has' : 's have') + ' comments from me in "talk". ' : '') + (lessonNotes(l).length ? 'My comments on the whole lesson are in the lesson\'s own "talk". ' : '') +
       lessonNotes(l).map(x => 'My comment on the whole lesson: ' + x + '\n').join('') +
       'Build the lesson out from my outline and those notes. Keep my wording where I wrote it. When you\'re done, reply to my comments in "talk", put a short summary in "claudeNote", and set "status" to "review". Don\'t change "id" or "slots". I\'ll look at your version slide by slide in the Planner.'
-    : 'Here is a lesson from my Planner. Each slide may have "What I want here" notes and comments for you. Build it out, keep my wording where I wrote it, and slide text stays 28 to 36 pt.\n\n' + lessonText(l);
+    : 'Here is a lesson from my Planner. Each slide may have "What I want here" notes and comments for you. Build it out, keep my wording where I wrote it, slide 1 stays the title slide and slide 2 the agenda, and slide text stays 28 to 36 pt.\n\n' + lessonText(l);
   await copyText(msg);
   toast(L.dir && L.dirOk ? 'Copied. Paste it into Claude. Claude’s changes show up here when it saves.' : 'Lesson copied. Paste it into Claude. Link the Planner folder so Claude can save straight back.', 7000);
   renderEditor();
@@ -166,25 +166,38 @@ function ctxPut(x) {
   L.open.slides.splice(L.cur + 1, 0, n); L.cur++; lessonChanged(); renderEditor();
   toast('Made a picture slide of it. The screenshot stays on the slide before as context too.', 5000);
 }
+/* ---------- comments on the whole lesson: kept on the lesson ("talk"), shown under the slide's ---------- */
+function lessonTalkHtml(l) {
+  const ms = l.talk || [];
+  return '<div class="pl-ltalk"><div class="pl-ltalk-h"><b>For Claude: the whole lesson</b> <span class="muted">Comments on how the lesson should go overall. They go with it when you copy it for Claude.</span></div>' +
+    '<div class="pl-talk">' + ms.map((t, i) => '<div class="pl-msg ' + (t.by === 'claude' ? 'cl' : 'me') + (t.done ? ' done' : '') + '"><b>' + (t.by === 'claude' ? 'Claude' : 'You') + '</b><span>' + esc(t.text) + '</span><button class="btn sm ghost" data-ltalkdone="' + i + '">' + (t.done ? 'Open again' : 'Done') + '</button></div>').join('') +
+    '<div class="pl-say"><input class="btn sm" data-f="lsay" placeholder="Comment on the whole lesson…" aria-label="Comment on the whole lesson"><button class="btn sm ghost pl-mic" data-dict="[data-f=&quot;lsay&quot;]" title="Say it instead of typing">🎤</button><button class="btn sm" data-a="lsay">Add</button></div></div></div>';
+}
+function addLessonComment() {
+  const i = document.querySelector('[data-f="lsay"]'), v = i && i.value.trim(); if (!v) return;
+  (L.open.talk = L.open.talk || []).push({ by: 'you', text: v, at: Date.now() }); lessonChanged(false); renderEditor();
+  const n = document.querySelector('[data-f="lsay"]'); if (n) n.focus();
+}
 /* ---------- every comment in the lesson, in one list ---------- */
 const openTalk = s => (s.talk || []).filter(t => !t.done).length;
 function commentsBtn(l) {
-  const n = l.slides.reduce((k, s) => k + openTalk(s), 0), all = l.slides.reduce((k, s) => k + (s.talk || []).length, 0);
-  return '<button class="btn sm ghost" data-a="comments" title="Every comment on this lesson’s slides">Comments' + (all ? ' (' + n + ')' : '') + '</button>';
+  const n = l.slides.reduce((k, s) => k + openTalk(s), openTalk(l)), all = l.slides.reduce((k, s) => k + (s.talk || []).length, (l.talk || []).length);
+  return '<button class="btn sm ghost" data-a="comments" title="Every comment on this lesson and its slides">Comments' + (all ? ' (' + n + ')' : '') + '</button>';
 }
 function commentsDlg(l, showDone) {
-  const rows = l.slides.map((s, i) => ({ s, i, ms: (s.talk || []).map((t, j) => ({ t, j })).filter(m => showDone || !m.t.done) })).filter(r => r.ms.length);
-  const done = l.slides.reduce((k, s) => k + (s.talk || []).filter(t => t.done).length, 0);
+  // The whole lesson first (i = -1), then each slide.
+  const rows = [{ s: l, i: -1 }, ...l.slides.map((s, i) => ({ s, i }))].map(r => ({ ...r, ms: (r.s.talk || []).map((t, j) => ({ t, j })).filter(m => showDone || !m.t.done) })).filter(r => r.ms.length);
+  const done = l.slides.reduce((k, s) => k + (s.talk || []).filter(t => t.done).length, (l.talk || []).filter(t => t.done).length);
   openDlg('<div class="bh"><h2>Comments on “' + esc(l.title) + '”</h2></div><div class="bb pl-cmts">' +
-    (rows.length ? rows.map(r => '<div class="pl-cmt-s"><button class="link" data-cgo="' + r.i + '"><b>Slide ' + (r.i + 1) + '</b>' + (r.s.title ? ': ' + esc(r.s.title.replace(/[*_{}]|\{\w*\}/g, '')) : '') + '</button>' +
+    (rows.length ? rows.map(r => '<div class="pl-cmt-s">' + (r.i < 0 ? '<button class="link" data-cgo="-1"><b>The whole lesson</b></button>' : '<button class="link" data-cgo="' + r.i + '"><b>Slide ' + (r.i + 1) + '</b>' + (r.s.title ? ': ' + esc(r.s.title.replace(/[*_{}]|\{\w*\}/g, '')) : '') + '</button>') +
       r.ms.map(m => '<div class="pl-msg ' + (m.t.by === 'claude' ? 'cl' : 'me') + (m.t.done ? ' done' : '') + '"><b>' + (m.t.by === 'claude' ? 'Claude' : 'You') + '</b><span>' + esc(m.t.text) + '</span><button class="btn sm ghost" data-cdone="' + r.i + ':' + m.j + '">' + (m.t.done ? 'Open again' : 'Done') + '</button></div>').join('') + '</div>').join('')
-      : '<p class="muted">' + (done ? 'No open comments. ' : 'No comments on this lesson yet. Add one under a slide, or right-click a slide and choose Comment for Claude.') + '</p>') +
+      : '<p class="muted">' + (done ? 'No open comments. ' : 'No comments on this lesson yet. Add one under a slide or in “For Claude: the whole lesson”, or right-click a slide and choose Comment for Claude.') + '</p>') +
     '</div><div class="bf">' + (done ? '<button class="btn ghost" data-cshow>' + (showDone ? 'Hide done' : 'Show done (' + done + ')') + '</button>' : '') + '<span class="sp"></span><button class="btn" data-x>Close</button></div>');
   $('#dlgBox').onclick = e => {
     if (e.target.closest('[data-x]')) return closeDlg();
     if (e.target.closest('[data-cshow]')) return commentsDlg(l, !showDone);
-    const g = e.target.closest('[data-cgo]'); if (g) { closeDlg(); L.cur = +g.dataset.cgo; renderEditor(); const t = document.querySelector('.pl-talk'); if (t) t.scrollIntoView({ block: 'center' }); return; }
-    const d = e.target.closest('[data-cdone]'); if (d) { const [i, j] = d.dataset.cdone.split(':').map(Number), m = l.slides[i].talk[j]; m.done = !m.done; lessonChanged(false); renderEditor(); commentsDlg(l, showDone); }
+    const g = e.target.closest('[data-cgo]'); if (g) { closeDlg(); const i = +g.dataset.cgo; if (i >= 0) L.cur = i; renderEditor(); const t = document.querySelector(i < 0 ? '.pl-ltalk' : '.pl-talk'); if (t) t.scrollIntoView({ block: 'center' }); return; }
+    const d = e.target.closest('[data-cdone]'); if (d) { const [i, j] = d.dataset.cdone.split(':').map(Number), m = (i < 0 ? l : l.slides[i]).talk[j]; m.done = !m.done; lessonChanged(false); renderEditor(); commentsDlg(l, showDone); }
   };
 }
 function addComment() {
@@ -212,6 +225,8 @@ async function reviewClick(t) {
   if (a === 'keepall') { delete l.pending; lessonChanged(false); renderEditor(); toast('Kept all of Claude’s changes. Your version is under Versions.'); return true; }
   if (a === 'undoall') { await undoAll(l); return true; }
   if (a === 'say') { addComment(); return true; }
+  if (a === 'lsay') { addLessonComment(); return true; }
+  if (t.dataset.ltalkdone != null) { const m = (l.talk || [])[+t.dataset.ltalkdone]; if (m) { m.done = !m.done; lessonChanged(false); renderEditor(); } return true; }
   if (a === 'comments') { editorCommit(); commentsDlg(l); return true; }
   return false;
 }
