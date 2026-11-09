@@ -87,6 +87,7 @@ These are under **Saving and carrying** on the start screen. The app still works
 ## Audio, video and Word files
 - Recordings (mp3, m4a, wav, mp4, mov, webm…) play at the top of each student with 10s skips, 1× to 2× speed, and **+ Time to comment** (adds [2:15] to the ManageBac comment). Keys: Space play/pause, J/L back/ahead 5s.
 - **Make transcript** runs speech-to-text in your browser (Whisper, same as the Interview Transcriber; a one-time engine download). Words light up as it plays; click a word to jump there. Transcripts are kept with your marks. Not in the claude.ai preview copy.
+- **Comments on Word papers** are real Word comments, so the student sees them in Word's margin. With the Comment tool, click a word (or select some words) and type; **Comment** on the file's bar does the same for selected words, and a right-click on a word works with any tool. Each comment lights its words, has a number after them and a card beside them; click either to change or delete it. Comments already in the file, like a classmate's, show too. A commented Word file goes back in Export marked. New comments are signed "Teacher".
 - Word files (.docx) show as readable pages. Old .doc files can't be read in a browser; a .doc that's really a newer Word file or RTF inside opens anyway.
 
 ## Phone photos and files that won't open

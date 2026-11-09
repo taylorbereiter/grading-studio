@@ -480,6 +480,18 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
 .dpage:not(.editing) td.rcell:hover{box-shadow:inset 0 0 0 2px var(--accent)}
 .rinfo{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;max-width:816px;margin:0 auto 8px;padding:8px 12px;background:var(--accent-soft);border-radius:10px;font-size:14px}
 .rinfo b{font-size:18px}.rinfo .muted{font-size:12.5px}
+.wdoc{position:relative;display:flex;gap:14px;align-items:flex-start;justify-content:center}
+.wdoc .dpage{flex:0 1 816px;min-width:0;margin:0 0 14px}
+.wnotes{position:relative;flex:0 0 210px}
+.wnote{position:absolute;left:0;right:0;display:flex;gap:7px;text-align:left;background:var(--surface);border:1px solid var(--line);border-left:3px solid #D7263D;border-radius:8px;padding:7px 9px;font:inherit;font-size:13px;line-height:1.35;color:var(--fg);cursor:pointer;box-shadow:var(--shadow)}
+.wnote:hover{border-color:var(--line-strong);border-left-color:#D7263D}
+.wnote i{font-style:normal;font-weight:700;color:#D7263D;flex:none}
+.wnote span{white-space:pre-wrap;overflow-wrap:anywhere;min-width:0}
+.wnote small{display:block;color:var(--faint);font-size:11.5px;margin-top:2px}
+.dpage .wcm{background:rgba(215,38,61,.11);box-shadow:inset 0 -2px 0 rgba(215,38,61,.75);cursor:pointer}
+.dpage .wpend{background:rgba(215,38,61,.2)}
+.dpage .wcref{color:#D7263D;font-weight:700;font-size:.7em;margin:0 1px 0 2px;cursor:pointer;user-select:none}
+.wpop{z-index:20}
 .wbar{display:flex;align-items:center;gap:6px;flex-wrap:wrap;max-width:816px;margin:0 auto 8px;padding:8px 10px;background:var(--surface);border:1px solid var(--line);border-radius:10px;font-size:13px;color:var(--muted)}
 .wbar .sw{width:22px;height:22px;font-size:12px;line-height:1;color:var(--muted)}
 .refd{max-width:900px;margin:0 auto 14px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:8px 12px}
