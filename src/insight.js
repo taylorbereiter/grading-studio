@@ -380,7 +380,8 @@ function coverTurn(f, p, by) {
   if (!sh || !by) return;
   if (sh.checked) delete sh.checked[k];
   const list = (sh.boxes && sh.boxes[k]) || [];
-  for (let n = (by + 360) % 360; n > 0; n -= 90) for (const b of list) [b[0], b[1], b[2], b[3]] = [fx(1 - b[1] - b[3]), b[0], b[3], b[2]];
+  const off = (sh.off && sh.off[k]) || [];
+  for (let n = (by + 360) % 360; n > 0; n -= 90) for (const b of list.concat(off)) [b[0], b[1], b[2], b[3]] = [fx(1 - b[1] - b[3]), b[0], b[3], b[2]];
 }
 // She needs another look at this page.
 function coverAgain(path, p) { const sh = batch && batch.share; if (sh && sh.checked) delete sh.checked[boxKey(path, p)]; }

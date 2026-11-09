@@ -447,6 +447,47 @@ test('covers: the list on the side ticks papers off, jumps to one, filters, and 
   noErrors(page); await close();
 });
 
+test('covers: a click takes off a cover the name search got wrong, a click on its outline or Ctrl+Z puts it back, and the ZIP leaves it off', async () => {
+  const { page, close } = await openApp(browser);
+  await openZip(page, zipOf(files), 'Tide essay.zip');
+  await page.evaluate(() => window.__gs.openShare());
+  await page.waitForSelector('#dlgBox [data-check]');
+  await page.click('#dlgBox [data-check]');
+  await page.waitForFunction(() => { const c = document.querySelector('#ccBody canvas'); return c && c._cover && c._cover.covers.some(q => !q.own); });
+  const first = () => page.$eval('#ccBody canvas', c => { const q = c._cover.covers.find(q => !q.own), g = c._cover.gone[0], b = c.getBoundingClientRect(), k = c._cover.kk; return { auto: c._cover.covers.filter(q => !q.own).length, gone: c._cover.gone.length, at: q && [b.left + (q.x + q.w / 2) * k, b.top + (q.y + q.h / 2) * k], back: g && [b.left + (g.x + g.w / 2) * k, b.top + (g.y + g.h / 2) * k] }; });
+  const was = await first();
+  const offCount = () => page.evaluate(() => Object.values(window.__gs.state().batch.share.off || {}).flat().length);
+  const redrawn = (auto, gone) => page.waitForFunction((a, g) => { const c = document.querySelector('#ccBody canvas'); return c && c._cover && c._cover.covers.filter(q => !q.own).length === a && c._cover.gone.length === g; }, {}, auto, gone);
+  // A click on a black box that isn't a name takes it off, and no box of her own is drawn.
+  await page.mouse.click(...was.at);
+  await redrawn(was.auto - 1, 1);
+  assert.equal(await offCount(), 1);
+  assert.equal(await page.evaluate(() => Object.values(window.__gs.state().batch.share.boxes).flat().length), 0);
+  assert.equal(await page.$eval('#ccState', e => e.textContent), 'Not checked yet');
+  // Ctrl+Z puts it back.
+  await page.keyboard.down('Control'); await page.keyboard.press('z'); await page.keyboard.up('Control');
+  await redrawn(was.auto, 0);
+  assert.equal(await offCount(), 0);
+  // Off again, then a click on its dashed outline puts it back.
+  await page.mouse.click(...was.at);
+  await redrawn(was.auto - 1, 1);
+  const now = await first();
+  await page.mouse.click(...now.back);
+  await redrawn(was.auto, 0);
+  assert.equal(await offCount(), 0);
+  // Taken off, it stays off in the picture Claude gets.
+  await page.mouse.click(...was.at);
+  await redrawn(was.auto - 1, 1);
+  const zipCovers = await page.evaluate(async () => {
+    const G = window.__gs, { st, d } = G.coverList()[0], [path, p] = d.pages[0], f = st.files.find(x => x.path === path);
+    const js = await pdfjsLib.getDocument({ data: f.data.slice(), isEvalSupported: false }).promise;
+    const r = await G.sharePage(st, f, js, p, 1, G.coverRx(st)); js.destroy();
+    return r.covers.filter(q => !q.own).length;
+  });
+  assert.equal(zipCovers, was.auto - 1);
+  noErrors(page); await close();
+});
+
 test('a checked paper whose file changes is no longer checked, and old work with no checks opens fine', async () => {
   const { page, close } = await openApp(browser);
   await openZip(page, zipOf(files), 'Tide essay.zip');
