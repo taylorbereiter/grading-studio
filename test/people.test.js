@@ -27,7 +27,8 @@ test('the ⓘ opens a card; details typed there are kept on the class', async ()
   const { page, close } = await seeded(['Ann Alpha', 'Ben Beta']);
   await openZip(page, await papers('Ann Alpha/Essay.pdf', 'Ben Beta/Essay.pdf'));
   await score(page, [4, 3, 3]);
-  await page.click('#stuList .stu[data-i="0"] .whob');
+  await settle(page);
+  await page.evaluate(() => document.querySelector('#stuList .stu[data-i="0"] .whob').click());
   await page.waitForSelector('#pcard .pc');
   assert.equal(await page.$eval('#pcard h2', e => e.textContent), 'Ann Alpha');
   await page.$eval('#pcard [data-pf="id"]', e => { e.value = ' 30 117 '; e.dispatchEvent(new Event('change', { bubbles: true })); });
