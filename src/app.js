@@ -2391,7 +2391,8 @@ async function scanFile(f, spot) {
       const page = await doc.getPage(p + 1);
       const vp = vpRot(f, p, page, 1);
       const annots = (await page.getAnnotations({ intent: 'display' })).filter(a => !SKIP_TYPES.has(a.subtype) && !(a.annotationFlags & 2) && !(a.annotationFlags & 32));
-      if (annots.length) kami[p] = { notes: annots.filter(isPopupComment).map(a => kamiNote(a, vp)) };
+      // Marks inside her own rubric page came with the template, not from marking this student, so they don't count as marks here.
+      if (annots.length && !f.virtual) kami[p] = { notes: annots.filter(isPopupComment).map(a => kamiNote(a, vp)) };
       if (f.kind === 'pdf') impN += annots.filter(impKind).length;
       if (!pick.includes(p)) { page.cleanup(); continue; }
       const area = spot ? { x: spot.x * vp.width, y: spot.y * vp.height, w: spot.w * vp.width, h: spot.h * vp.height } : null;
