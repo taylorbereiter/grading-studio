@@ -58,8 +58,10 @@ function noteOpen(c, x, y) {
   const t = box.querySelector('textarea'); t.focus();
   const ok = async () => {
     const v = t.value.trim(); if (!v) return t.focus(); ctxClose();
-    // A comment on a slide is also kept on that slide, so it shows under the slide and in Comments.
+    // A comment on a slide or a lesson is also kept there, so it shows in the editor and in Comments.
     const l = c.kind === 'slide' && L.lessons.find(x => x.id === c.lesson), s = l && l.slides[c.i];
+    const wl = c.kind === 'lesson' && L.lessons.find(x => x.id === c.lesson);
+    if (wl) { (wl.talk = wl.talk || []).push({ by: 'you', text: v, at: Date.now() }); if (L.open && L.open.id === wl.id) { lessonChanged(false); if (L.view === 'edit') renderEditor(); } else { wl.updated = Date.now(); await lPut(wl); } }
     if (s) {
       s.talk.push({ by: 'you', text: v, at: Date.now() });
       if (L.open && L.open.id === l.id) { lessonChanged(false); if (L.view === 'edit') renderEditor(); } else { l.updated = Date.now(); await lPut(l); }

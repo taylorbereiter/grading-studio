@@ -209,8 +209,9 @@ async function useActivity(id) {
     const s = actSlide(a);
     const at = L.open === l ? L.cur + 1 : l.slides.length;
     l.slides.splice(at, 0, s);
+    if (e.target.closest('[data-newl]')) deckStart(l);
     await lPut(l); closeDlg();
-    L.open = l; L.cur = at; L.backTo = 'activities'; L.view = 'edit'; renderEditor();
+    L.open = l; L.cur = l.slides.indexOf(s); L.backTo = 'activities'; L.view = 'edit'; renderEditor();
     toast('Added to “' + l.title + '”. The how-to steps are in the speaker notes.', 5000);
   };
 }
