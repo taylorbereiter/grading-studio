@@ -583,9 +583,15 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
 .wbar .sw{width:22px;height:22px;font-size:12px;line-height:1;color:var(--muted)}
 .refd{max-width:900px;margin:0 auto 14px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:8px 12px}
 .refd summary{cursor:pointer;font-weight:600}
-.refd .dpage{box-shadow:none;border:1px solid var(--line);margin-top:8px;max-height:46vh;overflow:auto;padding:28px 32px}
-#paper .refd .refpages{max-height:62vh;overflow:auto;margin-top:8px;display:flex;flex-direction:column;align-items:center;gap:10px;background:var(--surface-2);padding:10px;border-radius:8px}
-#paper .refd .refpages canvas{box-shadow:var(--shadow);background:#fff}
+.refd .dpage{box-shadow:none;border:1px solid var(--line);margin:0 auto;max-width:none;padding:28px 32px}
+.refd .refbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:8px;font-size:13px}
+.refd .refbar .seg button{min-width:34px;font-variant-numeric:tabular-nums}
+.refd .refscroll{max-height:62vh;overflow:auto;margin-top:8px;background:var(--surface-2);padding:10px;border-radius:8px 8px 0 0}
+.refd .refgrip{height:12px;cursor:ns-resize;background:var(--surface-2);border-radius:0 0 8px 8px;border-top:1px solid var(--line);display:flex;justify-content:center;align-items:center;touch-action:none}
+.refd .refgrip::after{content:"";width:40px;height:4px;border-radius:2px;background:var(--line)}
+.refd .refgrip:hover::after,.refd .refgrip:focus-visible::after{background:var(--accent)}
+#paper .refd .refpages canvas{display:block;margin:0 auto 10px;box-shadow:var(--shadow);background:#fff}
+#paper .refd .refpages canvas:last-child{margin-bottom:0}
 .rdl{display:flex;flex-direction:column;gap:6px;margin:0 0 10px}
 .rdrow{display:flex;align-items:center;gap:8px;padding:6px 10px;border:1px solid var(--line);border-radius:8px;overflow-wrap:anywhere}
 .rdrow .sp{flex:1}
@@ -6110,23 +6116,71 @@ async function refCard(r, st) {
   if (hb) hb.onclick = e => { e.preventDefault(); if (r.for) return dropRef(r.path); setRefSkip(st, r.path, true); openStudent(cur); toast('Hidden for this student. Readings… brings it back or adds a different file.'); };
   const body = det.querySelector('.refbody');
   const f = await makeFile('reading/' + r.path, r.data.slice());
+  const zk = 'gs.refZoom.' + r.path, hk = 'gs.refH.' + r.path, ZMIN = 0.5, ZMAX = 3;
+  let zoom = Math.min(ZMAX, Math.max(ZMIN, +store.get(zk, 1) || 1)), apply = () => {};
+  const bar = document.createElement('div'); bar.className = 'refbar';
+  bar.innerHTML = '<span class="seg"><button data-rz="-" title="Zoom out" aria-label="Zoom out">−</button><button data-rz="1" title="Back to fit the width" class="rzv"></button><button data-rz="+" title="Zoom in" aria-label="Zoom in">+</button></span><span class="muted">Pinch or Ctrl + scroll on the reading to zoom. Drag the bottom edge to make it taller.</span>';
+  const scroll = document.createElement('div'); scroll.className = 'refscroll';
+  const h0 = +store.get(hk, 0); if (h0) scroll.style.maxHeight = h0 + 'px';
+  const grip = document.createElement('div'); grip.className = 'refgrip'; grip.title = 'Drag to make the reading taller or shorter'; grip.setAttribute('role', 'separator'); grip.setAttribute('aria-orientation', 'horizontal');
+  const showZ = () => { bar.querySelector('.rzv').textContent = Math.round(zoom * 100) + '%'; };
+  let zt = 0;
+  const setZoom = (z, now) => {
+    z = Math.round(Math.min(ZMAX, Math.max(ZMIN, z)) * 100) / 100;
+    if (z === zoom) return;
+    const fx = scroll.scrollLeft / Math.max(1, scroll.scrollWidth), fy = scroll.scrollTop / Math.max(1, scroll.scrollHeight);
+    zoom = z; showZ(); store.set(zk, zoom);
+    clearTimeout(zt); const go = async () => { try { await apply(); } catch { return; } scroll.scrollLeft = fx * scroll.scrollWidth; scroll.scrollTop = fy * scroll.scrollHeight; };
+    if (now) go(); else { apply(true); zt = setTimeout(go, 160); }
+  };
+  bar.onclick = e => { const b = e.target.closest('[data-rz]'); if (!b) return; const v = b.dataset.rz; setZoom(v === '+' ? zoom * 1.25 : v === '-' ? zoom / 1.25 : 1, true); };
+  scroll.addEventListener('wheel', e => { if (!e.ctrlKey && !e.metaKey) return; e.preventDefault(); setZoom(zoom * Math.exp(-e.deltaY / 300)); }, { passive: false });
+  grip.onpointerdown = e => {
+    e.preventDefault(); grip.setPointerCapture(e.pointerId);
+    const y0 = e.clientY, start = scroll.getBoundingClientRect().height;
+    grip.onpointermove = m => { const hh = Math.max(120, Math.round(start + m.clientY - y0)); scroll.style.maxHeight = hh + 'px'; scroll.style.height = hh + 'px'; };
+    grip.onpointerup = grip.onpointercancel = () => { grip.onpointermove = grip.onpointerup = grip.onpointercancel = null; const hh = parseInt(scroll.style.maxHeight) || 0; if (hh) store.set(hk, hh); scroll.style.height = ''; };
+  };
+  grip.onkeydown = e => { if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return; e.preventDefault(); const hh = Math.max(120, Math.round(scroll.getBoundingClientRect().height + (e.key === 'ArrowDown' ? 60 : -60))); scroll.style.maxHeight = hh + 'px'; store.set(hk, hh); };
+  grip.tabIndex = 0;
+  const framed = () => { showZ(); body.append(bar, scroll, grip); };
   try {
-    if (f.kind === 'docx') { const c = await docxCard({ name: r.name, data: r.data }, r.name); const h = c.querySelector('.fhead'); if (h) h.remove(); body.appendChild(c); }
+    if (f.kind === 'docx' || f.kind === 'text') {
+      const c = f.kind === 'docx' ? await docxCard({ name: r.name, data: r.data }, r.name) : textCard(f);
+      const h = c.querySelector('.fhead'); if (h) h.remove();
+      apply = () => { c.style.zoom = zoom; };
+      apply(); scroll.appendChild(c); framed();
+    }
     else if (viewable(f)) {
       await workerReady;
       const doc = await pdfjsLib.getDocument({ data: f.data.slice(), isEvalSupported: false }).promise;
-      const box = document.createElement('div'); box.className = 'refpages'; body.appendChild(box);
-      const dpr = window.devicePixelRatio || 1, w = Math.min(860, ($('#paper').clientWidth || 900) - 80);
+      docs.push(doc);   // let go of with the paper's own files when she moves to another student
+      const box = document.createElement('div'); box.className = 'refpages'; scroll.appendChild(box); framed();
+      const dpr = window.devicePixelRatio || 1, w = Math.min(860, ($('#paper').clientWidth || 900) - 80), turn = { rot: f.photoTurn ? { 0: f.photoTurn } : null };
+      const pgs = [];
       for (let i = 1; i <= doc.numPages; i++) {
-        const page = await doc.getPage(i), turn = { rot: f.photoTurn ? { 0: f.photoTurn } : null }, v1 = vpRot(turn, i - 1, page, 1), s = w / v1.width, vp = vpRot(turn, i - 1, page, s * dpr);
-        const c = document.createElement('canvas'); c.width = Math.ceil(vp.width); c.height = Math.ceil(vp.height); c.style.width = w + 'px';
-        const ctx = c.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
-        await page.render({ canvasContext: ctx, viewport: vp, annotationMode: pdfjsLib.AnnotationMode.ENABLE }).promise;
-        box.appendChild(c); page.cleanup();
+        const page = await doc.getPage(i), c = document.createElement('canvas');
+        pgs.push({ page, c, v1: vpRot(turn, i - 1, page, 1), i, drawn: 0 }); box.appendChild(c);
       }
-      doc.destroy();
+      let job = 0;
+      apply = async quick => {
+        const pw = Math.round(w * zoom);
+        for (const p of pgs) { p.c.style.width = pw + 'px'; p.c.style.height = Math.round(pw * p.v1.height / p.v1.width) + 'px'; }
+        if (quick) return;
+        const me = ++job;
+        for (const p of pgs) {
+          if (me !== job) return;
+          if (p.drawn === pw) continue;
+          const vp = vpRot(turn, p.i - 1, p.page, pw / p.v1.width * dpr), off = document.createElement('canvas');
+          off.width = Math.ceil(vp.width); off.height = Math.ceil(vp.height);
+          const ctx = off.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, off.width, off.height);
+          await p.page.render({ canvasContext: ctx, viewport: vp, annotationMode: pdfjsLib.AnnotationMode.ENABLE }).promise;
+          if (me !== job) return;
+          p.c.width = off.width; p.c.height = off.height; p.c.getContext('2d').drawImage(off, 0, 0); p.drawn = pw;
+        }
+      };
+      await apply();
     }
-    else if (f.kind === 'text') { const c = textCard(f); const h = c.querySelector('.fhead'); if (h) h.remove(); body.appendChild(c); }
     else if (f.kind === 'media') { const v = document.createElement(/\.(mp4|mov|webm|m4v)$/i.test(r.name) ? 'video' : 'audio'); v.controls = true; v.src = URL.createObjectURL(new Blob([r.data])); v.style.width = '100%'; body.appendChild(v); }
     else body.appendChild(otherCard(f));
   } catch { body.innerHTML = '<p class="muted">This file couldn’t be shown here.</p>'; }
