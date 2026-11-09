@@ -5636,15 +5636,15 @@ async function wordCard(st, f, opts) {
   const el = document.createElement('div'); el.className = 'docx'; el.wordF = f;
   el.innerHTML = '<div class="fhead"><span style="color:var(--fg)">' + esc(opts.title || f.name) + '</span><span>' + (/\.docm$|\.dotm$/i.test(f.name) ? 'Word file with macros' : 'Word file') + '</span>' +
     (f.rubric ? '<span class="addtag" style="background:var(--accent-soft);color:var(--accent)">Your rubric</span>' : '') + (f.edited ? '<span class="addtag" style="background:var(--accent-soft);color:var(--accent)">Edited by you</span>' : '') + (f.added ? addTag(f) : '') + '<span style="flex:1"></span>' +
-    (opts.readOnly ? '' : '<button class="btn sm" data-wedit>Edit</button>') + '<button class="btn sm ghost" data-wdl>Download</button></div>' +
-    '<div class="wbar" hidden></div><div class="dpage"><p class="muted">Opening…</p></div>';
+    (opts.readOnly ? '' : '<button class="btn sm" data-wnote title="Select words, then press this to comment on them. Or pick the Comment tool and click a word.">Comment</button><button class="btn sm" data-wedit>Edit</button>') + '<button class="btn sm ghost" data-wdl>Download</button></div>' +
+    '<div class="wbar" hidden></div><div class="wdoc"><div class="dpage"><p class="muted">Opening…</p></div><aside class="wnotes" hidden></aside></div>';
   const page = el.querySelector('.dpage'), bar = el.querySelector('.wbar');
   let w;
   try { w = openWord(f.data); w.pRuns = []; renderWord(w, page); }
   catch (e) {
     console.error(e);
     try { page.innerHTML = await docxHtml(f.data); } catch { page.innerHTML = '<p>' + (troubleText(troubleOf(f)) || 'This Word file couldn’t be opened here. Download it to open it in Word.') + '</p>'; }
-    const eb = el.querySelector('[data-wedit]'); if (eb) eb.remove();
+    for (const b of el.querySelectorAll('[data-wedit], [data-wnote]')) b.remove();
   }
   if (w && !opts.readOnly) setTimeout(() => wireRubric(st, f, w, page, el, () => soon()), 0);
   if (w) w.pRuns = w.paras.map((_, i) => [...page.querySelectorAll('p[data-pi="' + i + '"] > [data-ri], p[data-pi="' + i + '"] [data-ri]')].map(s => w.runs[+s.dataset.ri]));
@@ -5702,6 +5702,7 @@ async function wordCard(st, f, opts) {
   });
   page.addEventListener('paste', e => { if (!editing) return; e.preventDefault(); document.execCommand('insertText', false, (e.clipboardData.getData('text/plain') || '').replace(/\r\n?/g, '\n')); });
   page.addEventListener('focusout', () => { if (dirty.size) saveNowW(); });
+  if (w && !opts.readOnly) wireWordNotes(w, el, page, el.querySelector('.wnotes'), () => editing, () => { for (const p of dirty) if (p.isConnected) wApplyPara(w, p); dirty.clear(); }, () => saveNowW());
   return el;
 }
 // Edited Word files are kept in this browser (per download), so the edits come back next time.
@@ -5915,7 +5916,7 @@ function wordScoresAll() {
 function wireRubric(st, f, w, page, el, soon) {
   const m = rubricModel(page); if (!m) return;
   for (const c of m.cells) { c.td.classList.add('rcell'); c.td.title = 'Click to highlight this score (two neighbouring boxes = half point)'; }
-  const info = document.createElement('div'); info.className = 'rinfo'; el.insertBefore(info, page);
+  const info = document.createElement('div'); info.className = 'rinfo'; el.insertBefore(info, page.closest('.wdoc') || page);
   const show = s => {
     info.innerHTML = '<b>' + (s.total == null ? '–' : fmtNum(s.total)) + '</b> / ' + m.max + (s.pct != null ? ' <b style="color:var(--accent)">' + fmtNum(s.pct) + '%</b>' : '') +
       '<span class="muted">' + m.crits.map((c, i) => esc(c.length > 24 ? c.slice(0, 24) + '…' : c) + ' ' + (s.per[i] == null ? '–' : fmtNum(s.per[i]))).join(' · ') + '</span>' +
