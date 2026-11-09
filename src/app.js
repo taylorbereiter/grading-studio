@@ -2912,25 +2912,70 @@ function acrossItem(it, a, b, x, W) {
 // Covers (in page points) for one page: every name word in the page text, any Kami box whose text names them, plus her own boxes.
 // Each box lies along its words, however the page or the text is turned. xf: the page's straightening, if it has one.
 const textWidth = (s, font) => { measureCtx.font = '100px ' + font; return measureCtx.measureText(s).width; };
-async function autoCovers(page, vp, rx, xf) {
+// What's written after a Name label on its line, up to the next label (Date:, Class:…): the student's name, however it's spelled, or the blank they write it on.
+// A long run of words after it is a sentence (Name three causes…), so it's left alone. Returns [item, from, to] for what it covered.
+const NAME_SIGN = /(?<![\p{L}\p{N}])(?:(?:student|full|first|last|family|your|given)[’']?s?\s+)?(?:name|nom|nombre)(?:\s*\(s\))?\s*(?:[:：]|_{2,}|\.{3,})|(?:姓名|名字|名前|이름|ชื่อ)\s*[:：_]/giu;
+const NEXT_SIGN = /(?<![\p{L}\p{N}])(?:date|class|period|block|teacher|grade|section|subject|form|homeroom|due|score|mark|total|id|number|no\.|group|level|日期|班级|班級|学号|날짜|반)\s*[:：]/iu;
+function labelCovers(items, cover) {
+  const out = [], lines = [];
+  // Items on one line: the same way up, and their baselines within half a letter of each other.
+  for (const it of items) {
+    const t = it.transform, fh = Math.hypot(t[2], t[3]) || 10, len = Math.hypot(t[0], t[1]) || 1, ux = t[0] / len, uy = t[1] / len;
+    const off = -t[4] * uy + t[5] * ux, along = t[4] * ux + t[5] * uy;
+    let ln = lines.find(l => Math.abs(l.ux - ux) < .05 && Math.abs(l.uy - uy) < .05 && Math.abs(l.off - off) < fh * .5);
+    if (!ln) lines.push(ln = { ux, uy, off, list: [] });
+    ln.list.push({ it, along });
+  }
+  for (const ln of lines) {
+    const row = ln.list.sort((a, b) => a.along - b.along).map(x => x.it);
+    let text = ''; const from = [];
+    for (const it of row) { if (text) { text += '  '; from.push(null, null); } for (let i = 0; i < it.str.length; i++) { text += it.str[i]; from.push([it, i]); } }
+    NAME_SIGN.lastIndex = 0;
+    for (let m; (m = NAME_SIGN.exec(text));) {
+      let s = m.index + m[0].length - (/[_.]$/.test(m[0]) ? (m[0].match(/[_.]+$/) || [''])[0].length : 0);
+      const rest = text.slice(s), stop = rest.search(NEXT_SIGN), next = rest.slice(1).search(NAME_SIGN);
+      let e = s + Math.min(...[stop, next < 0 ? -1 : next + 1, rest.length].filter(v => v >= 0));
+      while (s < e && /\s/.test(text[s])) s++;
+      while (e > s && /\s/.test(text[e - 1])) e--;
+      const said = text.slice(s, e), blank = /^[\s_.\-–—]*$/.test(said);
+      if (s >= e || (!blank && (rawWords(said).length > 5 || said.length > 60))) continue;
+      const piece = new Map();
+      for (let k = s; k < e; k++) { const f = from[k]; if (!f) continue; const p = piece.get(f[0]); piece.set(f[0], p ? [p[0], f[1] + 1] : [f[1], f[1] + 1]); }
+      for (const [it, [a, b]] of piece) { cover(it, a, b - a, blank || /_{2,}/.test(it.str.slice(a, b))); out.push([it, a, b]); }
+    }
+  }
+  return out;
+}
+// opts, for the check and the ZIP: { common, own, parts } from shareOpts. With it, what comes right after a Name label is always covered, and a lone word that's
+// only a classmate's name by its letters (typed small, or on many papers of the class, like a word from the task) isn't.
+async function autoCovers(page, vp, rx, xf, opts) {
   const out = [];
   if (!rx) return out;
   const tc = await page.getTextContent();
-  const cover = (it, from, n) => {
+  const cover = (it, from, n, tall) => {
     const tx = pdfjsLib.Util.transform(vp.transform, it.transform), fh = Math.hypot(tx[2], tx[3]) || 10, run = Math.hypot(tx[0], tx[1]) || 1;
     const W = it.width * vp.scale, L = it.str.length || 1, at = (a, b) => [tx[4] + tx[0] / run * a + tx[2] / fh * b, tx[5] + tx[1] / run * a + tx[3] / fh * b];
     // Letters aren't all as wide, so where a word sits is its share of the measured line, not a count of letters.
     const font = ((tc.styles || {})[it.fontName] || {}).fontFamily || 'sans-serif', whole = textWidth(it.str, font), x = k => whole ? W * textWidth(it.str.slice(0, k), font) / whole : W * k / L;
-    const pad = W / L + 2, [left, right] = acrossItem(it, from, from + n, x, W), a0 = left - pad, a1 = right + pad, up = fh * 1.05 + 2, dn = -fh * .4 - 2;
+    const pad = W / L + 2, [left, right] = acrossItem(it, from, from + n, x, W), a0 = left - pad, a1 = right + pad, up = fh * (tall ? 2.4 : 1.05) + 2, dn = -fh * (tall ? .7 : .4) - 2;
     out.push(coverRound([at(a0, up), at(a1, up), at(a1, dn), at(a0, dn)], xf));
   };
   const hits = text => { const list = []; rx.lastIndex = 0; let m; while ((m = rx.exec(text))) { if (m[0].length) list.push([m.index, m[0].length]); else rx.lastIndex++; } return list; };
   const items = tc.items.filter(it => it.str), done = new Map();
+  const signed = opts ? labelCovers(items, cover) : [];
+  // Whether a hit counts as a name here. Without opts, every hit does.
+  const keep = (t, it, a) => {
+    if (!opts || signed.some(([i, s, e]) => i === it && a >= s && a < e) || /[@\d]/.test(t) || rawWords(t).length > 1) return true;
+    const w = nameFold(t), own = opts.own.has(w), small = isLatin(t) && t === t.toLowerCase();
+    if (small && !own && opts.parts.has(w)) return false;
+    return !opts.common.has(w) || (own && !small);
+  };
   // Reads these items as one text and covers each name where it sits, piece by piece. A letter stored in a special form, like ⼩ for 小 or a shaped Arabic letter, is read as the plain one.
   const coverIn = list => {
     let text = ''; const from = [];
     for (const it of list) { let i = 0; for (const c of it.str) { const plain = c.normalize('NFKC'); text += plain; for (let k = 0; k < plain.length; k++) from.push([it, i, i + c.length]); i += c.length; } }
     for (const [start, len] of hits(text)) {
+      if (!keep(text.slice(start, start + len), from[start][0], from[start][1])) continue;
       const piece = new Map();
       for (const [it, a, b] of from.slice(start, start + len)) { const p = piece.get(it); piece.set(it, p ? [Math.min(p[0], a), Math.max(p[1], b)] : [a, b]); }
       for (const [it, [a, b]] of piece) { const seen = done.get(it) || new Set(), key = a + '-' + b; done.set(it, seen); if (!seen.has(key)) { seen.add(key); cover(it, a, b - a); } }
@@ -2984,7 +3029,7 @@ function keptCovers(cs, path, p, W, H) {
 }
 const scrubMarks = (marks, rx) => marks.map(m => m.text != null ? { ...m, text: scrub(m.text, rx) } : m);
 // Renders one page the way Claude will see it: her marks (names scrubbed from her text) and black covers.
-async function sharePage(st, f, js, p, scale, rx) {
+async function sharePage(st, f, js, p, scale, rx, opts) {
   const page = await js.getPage(p + 1);
   const vp = vpRot(f, p, page, 1), W = vp.width, H = vp.height;
   const marks = scrubMarks((f.marks[p] || []).concat((f.kami && f.kami[p] && f.kami[p].notes) || []), rx);
@@ -2996,7 +3041,7 @@ async function sharePage(st, f, js, p, scale, rx) {
   scanClip(ctx, f, p, W * scale, c.width, c.height);
   ctx.setTransform(scale, 0, 0, scale, 0, 0);
   drawMarks(ctx, marks, W, H, side, null);
-  const auto = keptCovers(await autoCovers(page, vp, rx, skewXf(f, p, vp)), f.path, p, W, H), covers = auto.concat(ownCovers(f.path, p, W, H));
+  const auto = keptCovers(await autoCovers(page, vp, rx, skewXf(f, p, vp), opts), f.path, p, W, H), covers = auto.concat(ownCovers(f.path, p, W, H));
   ctx.fillStyle = '#111';
   for (const r of covers) ctx.fillRect(r.x, r.y, r.w, r.h);
   page.cleanup();
@@ -3040,6 +3085,7 @@ function openShare() {
 // Paper by paper: every page with its covers; drag to add a cover, click one of yours to remove it.
 async function checkCovers(start, onDone) {
   await ensureCounts();
+  await classCommon();
   const list = coverList();
   if (!list.length) return toast('No papers to share');
   let pos = Math.min(start || 0, list.length - 1), token = 0, last = null, drawn = 0;
@@ -3121,7 +3167,7 @@ async function checkCovers(start, onDone) {
         const avail = body.clientWidth - 40, dpr = window.devicePixelRatio || 1;
         const pg0 = await js.get(path).getPage(p + 1), v1 = vpRot(f, p, pg0, 1);
         const kk = Math.min(1.6, avail / (v1.width * 1.4));
-        const r = await sharePage(st, f, js.get(path), p, kk * dpr, rx);
+        const r = await sharePage(st, f, js.get(path), p, kk * dpr, rx, shareOpts(st));
         if (my !== token) break;
         const c = r.c;
         Object.assign(c.style, { width: (r.W + r.side) * kk + 'px', height: r.H * kk + 'px', display: 'block', margin: '0 auto 14px', background: '#fff', boxShadow: 'var(--shadow)', cursor: 'crosshair', touchAction: 'none' });
@@ -3241,6 +3287,7 @@ const README_FOR_CLAUDE = (n) => [
 async function makeSharePackage(onStep) {
   await workerReady;
   if (!scanned || scanP) await scanAll();
+  await classCommon();
   const files = {}, rows = [], notes = {};
   const crit = setup.mode === 'rubric' ? setup.criteria : [];
   const jobs = [];
@@ -3259,7 +3306,7 @@ async function makeSharePackage(onStep) {
         if (!js.has(path)) js.set(path, await pdfjsLib.getDocument({ data: (await viewBytes(f)).slice(), isEvalSupported: false }).promise);
         // A poster-size page is drawn smaller: a canvas that big can't be turned into a picture.
         const v1 = vpRot(f, p, await js.get(path).getPage(p + 1), 1);
-        const r = await sharePage(st, f, js.get(path), p, Math.min(120 / 72, 8000 / Math.max(v1.width * 1.5, v1.height)), rx);
+        const r = await sharePage(st, f, js.get(path), p, Math.min(120 / 72, 8000 / Math.max(v1.width * 1.5, v1.height)), rx, shareOpts(st));
         const jpg = await canvasJpg(r.c, 0.85);
         out.addPage([r.W + r.side, r.H]).drawImage(await out.embedJpg(jpg), { x: 0, y: 0, width: r.W + r.side, height: r.H });
         r.c.width = r.c.height = 0;

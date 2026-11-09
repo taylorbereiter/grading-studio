@@ -202,6 +202,37 @@ async function lookForName(st, d) {
   } catch (er) { console.error(er); return 'none'; }
   finally { for (const js of docs.values()) js.destroy(); }
 }
+// Lone name words found on many papers of the class: a name in the task sheet, or a word everyone writes (Earth, Bank, Mint). On those papers it isn't anyone's name.
+// Kept until the papers, the students or the roster change.
+async function classCommon() {
+  await ensureCounts();
+  const N = namesNow(), list = coverList(), key = list.map(x => paperKey(x.st, x.d)).join('\n');
+  if (N.commonKey === key) return N.common;
+  const count = new Map(), rx = N.classSrc && list.length >= 3 ? new RegExp(N.classSrc, 'gu') : null;
+  if (rx) for (const { st, d } of list) {
+    const seen = new Set(), docs = new Map();
+    try {
+      for (const [path, p] of d.pages) {
+        const f = fileByPath(st, path);
+        if (!docs.has(path)) docs.set(path, await pdfjsLib.getDocument({ data: (await viewBytes(f)).slice(), isEvalSupported: false }).promise);
+        const page = await docs.get(path).getPage(p + 1), t = (await page.getTextContent()).items.map(it => it.str).join('\n').normalize('NFKC');
+        page.cleanup();
+        for (const m of t.matchAll(rx)) if (m[0] && rawWords(m[0]).length === 1 && !/[@\d]/.test(m[0])) seen.add(nameFold(m[0]));
+      }
+    } catch (er) { console.error(er); }
+    finally { for (const js of docs.values()) js.destroy(); }
+    for (const w of seen) count.set(w, (count.get(w) || 0) + 1);
+  }
+  const need = Math.max(3, Math.ceil(list.length * 0.4));
+  N.commonKey = key;
+  return N.common = new Set([...count].filter(([, n]) => n >= need).map(([w]) => w));
+}
+// What autoCovers needs to weigh a hit on this student's paper.
+function shareOpts(st) {
+  const N = namesNow();
+  N.parts ||= new Set(N.all.flatMap(rawWords).map(nameFold));
+  return { common: N.common || new Set(), own: new Set(ownNames(st).flat().map(nameFold)), parts: N.parts };
+}
 let nameLook = null;
 // Goes through every paper not looked at yet. What it finds is kept until the students, the roster or the paper change.
 function findNames() {
@@ -259,4 +290,4 @@ function nameFlagsShow() {
 }
 // A file's name as it can be shown right now.
 const fileShown = (st, name) => anonOn() && st ? scrub(name, fileRx(st)) : name;
-Object.assign(window.__gs, { coverRx, fileRx, classRx, autoCovers, nameFlagged, namesLooking, findNames, wordNoName });
+Object.assign(window.__gs, { coverRx, fileRx, classRx, autoCovers, classCommon, shareOpts, labelCovers, nameFlagged, namesLooking, findNames, wordNoName });

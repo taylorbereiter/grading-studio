@@ -918,3 +918,51 @@ test('a Word paper with no sign of its student’s name is listed before anonymo
   assert.deepEqual(page.errors, []);
   await close();
 });
+
+test('the check and the ZIP cover what comes after a Name label, and skip a classmate’s name typed small or found on many papers', async () => {
+  const { page, close } = await openApp(browser);
+  const font = await (await PDFDocument.create()).embedFont(StandardFonts.Helvetica);
+  await openZip(page, zipOf({
+    'Aria Testwell/Essay.pdf': await pdf(['Name: Ari T.     Date: 1 Nov', 'The Earth is warming.', 'I ate a mint today.', 'Mint helped me write this.', 'Name three causes of the war and explain them.']),
+    'Earth Somchai/Essay.pdf': await pdf(['Name: Earth S.', 'Earth is our home.']),
+    'Mint Wongsa/Essay.pdf': await pdf(['Life on Earth.']),
+    'Bank Chai/Essay.pdf': await pdf(['Name: ____________', 'Earth and sky.']),
+  }), 'Essay.zip');
+  // Which lines get a cover, and how far right the covers on each line reach.
+  const lines = who => page.evaluate(async (who, plain) => {
+    const G = window.__gs, st = G.state().batch.students.find(s => s.key === who), f = st.files[0];
+    await G.classCommon();
+    const d = await pdfjsLib.getDocument({ data: f.data.slice(), isEvalSupported: false }).promise, p = await d.getPage(1), vp = p.getViewport({ scale: 1 });
+    const cs = await G.autoCovers(p, vp, G.coverRx(st), null, plain ? undefined : G.shareOpts(st));
+    d.destroy();
+    const out = {};
+    for (const r of cs) { const i = Math.round((r.y + r.h - 62 - 6) / 26); out[i] = Math.max(out[i] || 0, Math.round(r.x + r.w)); }
+    return out;
+  }, who, false);
+  const aria = await lines('Aria Testwell');
+  assert.ok(aria[0], 'what she typed after Name: is covered, though it isn’t on the roster: ' + JSON.stringify(aria));
+  assert.ok(aria[0] < 60 + font.widthOfTextAtSize('Name: Ari T.     ', 14), 'and the Date after it isn’t: ' + aria[0]);
+  assert.equal(aria[1], undefined, 'Earth is on most papers, so it isn’t a name on hers');
+  assert.equal(aria[2], undefined, 'mint typed small isn’t Mint');
+  assert.ok(aria[3], 'Mint, written as a name, is still covered');
+  assert.equal(aria[4], undefined, 'Name three causes is a question, not a label');
+  const earth = await lines('Earth Somchai');
+  assert.ok(earth[0] && earth[1], 'on Earth’s own paper, Earth is covered: ' + JSON.stringify(earth));
+  const bank = await page.evaluate(async () => {
+    const G = window.__gs, st = G.state().batch.students.find(s => s.key === 'Bank Chai'), f = st.files[0];
+    const d = await pdfjsLib.getDocument({ data: f.data.slice(), isEvalSupported: false }).promise, p = await d.getPage(1);
+    const cs = await G.autoCovers(p, p.getViewport({ scale: 1 }), G.coverRx(st), null, G.shareOpts(st)); d.destroy();
+    return cs.filter(r => r.y < 80).map(r => Math.round(r.h));
+  });
+  assert.ok(bank.length && bank[0] > 30, 'the blank after Name: gets a cover tall enough for a handwritten name: ' + JSON.stringify(bank));
+  // Anonymous grading keeps covering every match, as before.
+  const anon = await page.evaluate(async () => {
+    const G = window.__gs, st = G.state().batch.students.find(s => s.key === 'Aria Testwell'), f = st.files[0];
+    const d = await pdfjsLib.getDocument({ data: f.data.slice(), isEvalSupported: false }).promise, p = await d.getPage(1);
+    const cs = await G.autoCovers(p, p.getViewport({ scale: 1 }), G.coverRx(st)); d.destroy();
+    return cs.some(r => Math.round((r.y + r.h - 62 - 6) / 26) === 1);
+  });
+  assert.ok(anon, 'without the check’s weighing, Earth is covered');
+  assert.deepEqual(page.errors, []);
+  await close();
+});
