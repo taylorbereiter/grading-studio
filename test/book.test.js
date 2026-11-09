@@ -114,6 +114,17 @@ test('a type can be set on assignments that already exist, from the one-time lis
   const it = l.classes[0].units[0].items.find(x => x.id === 'i3');
   assert.equal(it.type, 'sum'); assert.equal(it.due, '2026-09-03');
   assert.match(await page.$eval('[data-card="i3"]', c => c.textContent), /Summative/);
+  // A new assignment for two classes at once: both copies get the type and date.
+  await page.click('[data-additem="u1"]');
+  await page.waitForSelector('#aClasses');
+  await page.type('#aName', 'Shared essay');
+  await page.click('#aClasses input[value="c2"]');
+  await page.click('[data-atype="sum"]');
+  await page.$eval('#aDue', e => { e.value = '2026-10-15'; });
+  await page.click('[data-ok]');
+  const copies = [];
+  for (const c of (await lib(page)).classes) for (const u of c.units) for (const x of u.items) if (x.name === 'Shared essay') copies.push(c.id + ':' + x.type + ':' + x.due);
+  assert.deepEqual(copies.sort(), ['c1:sum:2026-10-15', 'c2:sum:2026-10-15']);
   noErrors(page); await close();
 });
 
