@@ -241,7 +241,7 @@ function scanFree(f, p) {
 // Looks once at each page she opens, before it's drawn. A page already looked at, here or in the split, keeps what was decided.
 async function scanCheck(f, p, page) {
   if (f.virtual) return;
-  scanTakeHint(f, batch.students[cur]);
+  scanTakeHint(f, batch.students[cur]); groupBandRefresh();
   if (!f.sc) f.sc = {};
   if (f.sc[p] && !f.sc[p].later) return;
   let rec;
@@ -517,7 +517,7 @@ function scanTakeHint(f, st) {
   if (lit && st) { batch.light ||= {}; batch.light[st.key] ||= { ...lit.L }; batch.lightOpt = { ...lightOpts(), on: true }; }
   scanned = false; saveSoon();
 }
-function scanHintsAll() { if (batch) for (const st of batch.students) for (const f of st.files) if (viewable(f) && !f.virtual) scanTakeHint(f, st); scanHints.clear(); }
+function scanHintsAll() { if (batch) for (const st of batch.students) for (const f of st.files) if (viewable(f) && !f.virtual) scanTakeHint(f, st); scanHints.clear(); groupBandRefresh(); }
 
 /* ---------------- lighting in the split: only how the pages look there and in the big view ---------------- */
 const spLight = (me, i) => { const L = me.Lp[i] || me.L; return lightOn(L) ? L : null; };

@@ -391,12 +391,12 @@ async function walkEntry(entry, prefix, out) {
 
 /* ---------------- keeping work in this browser ---------------- */
 let saveT, saveDue = false;
-function saveSoon() { clearTimeout(saveT); saveSeq++; saveDue = true; saveT = setTimeout(saveNow, 500); const el = $('#saveState'); if (el && batch) el.textContent = 'Saving…'; }
+function saveSoon() { groupSync(); clearTimeout(saveT); saveSeq++; saveDue = true; saveT = setTimeout(saveNow, 500); const el = $('#saveState'); if (el && batch) el.textContent = 'Saving…'; }
 function saveNow(leaving) {
   if (!batch || !tabLive()) return;
   clearTimeout(saveT); saveDue = false;
   if (batch.revs && tabForgot(batch)) return tabLetGo();
-  const data = { t: Date.now(), carry: batch.carry, cur, ck: batch.students[cur] && batch.students[cur].key, setup, cls: batch.classId, share: batch.share, drive: batch.drive, light: batch.light, lightOpt: batch.lightOpt, lightPg: batch.lightPg, lightPgL: batch.lightPgL, anon: batch.anon, moved: batch.moved, removed: batch.removed, refSkip: batch.refSkip, quiz: batch.quiz, read: (batch.read = paperReads()), s: {} };
+  const data = { t: Date.now(), carry: batch.carry, cur, ck: batch.students[cur] && batch.students[cur].key, setup, cls: batch.classId, share: batch.share, drive: batch.drive, light: batch.light, lightOpt: batch.lightOpt, lightPg: batch.lightPg, lightPgL: batch.lightPgL, anon: batch.anon, moved: batch.moved, removed: batch.removed, refSkip: batch.refSkip, quiz: batch.quiz, groups: batch.groups && batch.groups.length ? batch.groups : undefined, read: (batch.read = paperReads()), s: {} };
   for (const st of batch.students) {
     const f = {};
     for (const fl of st.files.concat(st.gone || [])) if (Object.values(fl.marks).some(a => a.length)) f[fl.path] = fl.marks;   // a removed file keeps its marks for Bring back
@@ -461,6 +461,8 @@ function restore() {
   if (data.anon) batch.anon = data.anon;
   if (data.refSkip) batch.refSkip = data.refSkip;
   if (data.quiz) batch.quiz = data.quiz;
+  batch.groups = data.groups || [];
+  groupSync();
   if (data.drive && !batch.drive) batch.drive = data.drive;
   batch.restoredCur = Math.min(data.cur || 0, batch.students.length - 1); batch.restoredKey = data.ck;
   if (n) setTimeout(() => toast('Picked up where you left off (' + n + (n === 1 ? ' student' : ' students') + ' started)'), 300);
@@ -703,35 +705,7 @@ const seqSig = (st, it) => it.f ? it.f.kind + (it.f.rubric ? 'R' : '') + (it.f.a
 /* ---------------- a file in the wrong student's folder: move it to the right one ---------------- */
 // The file keeps its path, marks and edits; batch.moved remembers the move so it holds when the download is opened again.
 const moveLink = f => shareLink(f) + '<button class="link" style="font-size:13px;margin-right:10px" data-mvfile="' + esc(f.path) + '" title="This file belongs to someone else? Move it to the right student">Move to…</button>';
-// Group work: one student turned it in for several. Each student picked gets their own copy, as a file added to them.
-const shareCopies = (st, f) => batch.students.filter(s => s !== st && s.files.some(x => x.from === st.key && x.name === f.name));
-const shareLink = f => { const st = batch.students[cur], n = st ? shareCopies(st, f).length : 0; return '<button class="link" style="font-size:13px;margin-right:10px" data-shfile="' + esc(f.path) + '" title="Group work: give a copy of this file to other students, each to mark on their own">Share with…' + (n ? ' (' + n + ')' : '') + '</button>'; };
-function openShareFile(st, path) {
-  const f = fileByPath(st, path); if (!f || !f.data) return;
-  const anon = anonOn(), others = batch.students.map((s, i) => ({ s, i, label: shownName(s, i) })).filter(x => x.s !== st);
-  if (anon) others.sort((a, b) => anonPos(a.i) - anonPos(b.i));
-  openDlg('<div class="bh"><h2>Share ' + esc(fileShown(st, f.name)) + '</h2><button class="icon" data-cancel aria-label="Close" style="margin-left:auto">✕</button></div>' +
-    '<div class="bb"><p class="muted" style="margin:0 0 10px;font-size:14px">For group work. Click each student who worked on it: they get their own copy of the file as it was turned in, to mark and score on their own. Your marks on this copy stay here. Remove on a copy takes it back.</p>' +
-    '<input class="btn" id="mvFind" placeholder="' + (anon ? 'Type a paper number' : 'Type a name') + '" autocomplete="off" style="width:100%;margin-bottom:8px"><div id="mvList" class="mvlist"></div></div>' +
-    '<div class="bf"><button class="btn primary" data-cancel>Done</button></div>', true);
-  const has = s => s.files.some(x => x.from === st.key && x.name === f.name);
-  const draw = () => {
-    const q = $('#mvFind').value.toLowerCase().split(/\s+/).filter(Boolean);
-    const list = others.filter(x => q.every(w => x.label.toLowerCase().split(/[\s,_-]+/).some(y => y.startsWith(w))));
-    $('#mvList').innerHTML = list.length ? list.map((x, k) => '<button class="mvrow' + (k === 0 && q.length ? ' top' : '') + '" data-shto="' + x.i + '"' + (has(x.s) ? ' disabled' : '') + '>' + esc(x.label) + '<span class="muted">' + (has(x.s) ? '✓ Has a copy' : x.s.files.length + (x.s.files.length === 1 ? ' file' : ' files')) + '</span></button>').join('') : '<p class="muted">No name matches.</p>';
-  };
-  draw();
-  $('#mvFind').oninput = draw;
-  $('#mvFind').onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); const b = $('#mvList [data-shto]:not([disabled])'); if (b) b.click(); } };
-  $('#dlgBox').onclick = async e => {
-    if (e.target.closest('[data-cancel]')) { closeDlg(); return openStudent(cur); }
-    const b = e.target.closest('[data-shto]'); if (!b || b.disabled) return;
-    const to = batch.students[+b.dataset.shto]; b.disabled = true;
-    await addFiles(to, [{ path: f.name, file: new File([f.data], f.name), from: st.key }], true);
-    toast('Shared with ' + shownName(to, +b.dataset.shto)); draw(); $('#mvFind').focus();
-  };
-  $('#mvFind').focus();
-}
+// Group work… is in src/groups.js.
 function moveFileNow(path, key) {
   const src = batch.students.find(s => s.files.some(f => f.path === path)), dst = batch.students.find(s => s.key === key);
   if (!src || !dst || src === dst || dst.files.some(f => f.path === path)) return null;
@@ -821,7 +795,7 @@ async function openStudent(i, filePath) {
     '<button class="btn sm" id="readBtn" title="A reading, prompt or other file shown above the papers: for everyone, or a different one for this student">Readings' + (refsFor(st).length ? ' (' + refsFor(st).length + ')' : '') + '</button>' +
     '<button class="btn sm" id="addFileBtn" title="Add a late or forgotten file to this student. You can also drop files on the paper or on a name.">+ Add file</button>' +
     '<button class="btn sm" id="pasteTextBtn" title="Paste work a student sent as text in an email or a message. It becomes a page you can mark.">Paste text…</button>' +
-    (st.files.some(viewable) || fileSeq(st).length > 1 ? '<button class="btn sm" id="arrangeBtn">Arrange pages</button>' : '') + '</div>';
+    (st.files.some(viewable) || fileSeq(st).length > 1 ? '<button class="btn sm" id="arrangeBtn">Arrange pages</button>' : '') + '</div>' + groupBand(st);
   paper.scrollTop = 0;
   if (!st.files.length) {
     paper.insertAdjacentHTML('beforeend', '<div class="nofile"><b>Nothing turned in yet.</b> Add their paper here, or drop the file on the page or on their name. You can still give a score without one.' +
@@ -908,6 +882,7 @@ $('#paper').addEventListener('click', e => {
   const bp = e.target.closest('[data-backpg]'); if (bp) { const [i, p] = bp.dataset.backpg.split('|'); const it = outPages(batch.students[cur])[+i]; if (it) bringPageBack(batch.students[cur], it[0], +p); return; }
   const rf = e.target.closest('[data-reflag]'); if (rf) { const pg = pages.find(q => q.rchip === rf.parentNode); if (pg) scanFlag(pg); return; }
   const shf = e.target.closest('[data-shfile]'); if (shf) return openShareFile(batch.students[cur], shf.dataset.shfile);
+  if (e.target.closest('#grpBand') && groupClick(e)) return;
   const rd = e.target.closest('[data-rotdoc]');
   if (rd) {
     const st = batch.students[cur], d = layoutOf(st)[+rd.dataset.rotdoc]; if (!d) return;
@@ -1713,7 +1688,7 @@ function renderList() {
       : hasMarks(st) ? '<span class="dot" title="Marked"></span>' : '';
     const nAdd = st.files.filter(f => f.added && !f.from).length, re = st.files.some(f => Object.values(f.sc || {}).some(r => r.re)), grp = st.files.some(f => f.from || Object.values(f.sc || {}).some(r => r.w)) || st.files.some(f => !f.added && shareCopies(st, f).length);
     return '<button class="stu' + (i === cur ? ' on' : '') + (st.files.length ? '' : ' empty') + '" data-i="' + i + '"><span class="num">' + (pos + 1) + '</span><span class="nm" title="' + esc(shownName(st, i)) + '">' + esc(shownName(st, i)) + '</span>' +
-      '<span style="display:inline-flex;align-items:center;gap:4px">' + (st.files.length || noScore(st) ? '' : '<span class="muted" style="font-size:11px">no paper</span>') + (g.status === 'late' ? '<span class="stag" title="You marked this student late">late</span>' : '') + (g.out ? '<span class="stag out" title="Left out of the average">left out</span>' : '') + (nAdd ? '<span class="add" title="' + nAdd + (nAdd === 1 ? ' file' : ' files') + ' added by you">+' + nAdd + '</span>' : '') + (re ? '<span class="add" title="A page needs a rescan">⚑</span>' : '') + (grp ? '<span class="add grp" title="Group work: shares pages or a file with another student">shared</span>' : '') + carryPill(st) + right + '</span></button>';
+      '<span style="display:inline-flex;align-items:center;gap:4px">' + (st.files.length || noScore(st) ? '' : '<span class="muted" style="font-size:11px">no paper</span>') + (g.status === 'late' ? '<span class="stag" title="You marked this student late">late</span>' : '') + (g.out ? '<span class="stag out" title="Left out of the average">left out</span>' : '') + (nAdd ? '<span class="add" title="' + nAdd + (nAdd === 1 ? ' file' : ' files') + ' added by you">+' + nAdd + '</span>' : '') + (re ? '<span class="add" title="A page needs a rescan">⚑</span>' : '') + (groupOf(st) ? '<span class="add grp" title="Group work: marked and graded once with ' + esc(groupNames(groupMates(st))) + '">group</span>' : grp ? '<span class="add grp" title="Group work: shares pages or a file with another student">shared</span>' : '') + carryPill(st) + right + '</span></button>';
   }).join('');
   const on = $('#stuList .on'); if (on) on.scrollIntoView({ block: 'nearest' });
   const nExp = exportPlan(true).length;
