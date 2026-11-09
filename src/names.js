@@ -136,7 +136,7 @@ const altsRx = (lists, more) => {
 // Everything worked out for a class is kept until the students or the roster change, since a page draw asks for it every time.
 let nameMemo = { sig: null };
 function namesNow() {
-  const c = batchClass(), sig = batch.students.map(s => s.key).join('\n') + '\n\n' + (c ? c.names.join('\n') : '');
+  const c = batchClass(), sig = batch.students.map(s => s.key).join('\n') + '\n\n' + (c ? c.names.join('\n') + '\n\n' + infoSig(c) : '');
   if (nameMemo.sig === sig) return nameMemo;
   const roster = new Map();
   if (c) for (const [n, s] of rosterMatch(c.names)) roster.set(s.key, [...(roster.get(s.key) || []), n]);

@@ -110,6 +110,8 @@ async function openBook(clsId, opts = {}) {
 const bkClass = () => classById(bk.cls);
 // During anonymous grading, names stay hidden here too.
 const bkWho = (n, i) => anonOn() ? 'Student ' + (i + 1) : n;
+// The ⓘ beside a name opens that student's details card (people.js). Not while names are hidden.
+const bkInfo = n => anonOn() ? '' : whoBtn('data-wc="' + esc(bk.cls) + '" data-wn="' + esc(n) + '"', n);
 function bkTabsOff() { for (const b of document.querySelectorAll('[data-bktab]')) b.setAttribute('aria-selected', 'false'); }
 // The terms shown as tabs: the teacher's own, then "No term" if anything falls outside them, then Whole year.
 function bkTabs(cols) {
@@ -161,7 +163,7 @@ function bkTable(c, cols, conf) {
   const grades = [];
   c.names.forEach((n, i) => {
     const r = bkGrade(n, cols, conf); grades.push(r);
-    h += '<tr><td class="bknm">' + esc(bkWho(n, i)) + '</td>' + groups.map(g => g.cols.map(col => { const cell = col.cells.get(n), ed = !!col.typed && !(cell && !cell.typed);
+    h += '<tr><td class="bknm">' + esc(bkWho(n, i)) + bkInfo(n) + '</td>' + groups.map(g => g.cols.map(col => { const cell = col.cells.get(n), ed = !!col.typed && !(cell && !cell.typed);
       return '<td' + (ed ? ' class="bked" tabindex="0" data-bked="' + esc(col.key) + '" data-bkn="' + esc(n) + '" title="Click to change"' : col.d ? ' title="Change this score in its download"' : '') + '>' + bkCellText(cell, bk.show, col) + '</td>'; }).join('') +
       (avgCol(g) ? '<td class="bkavg">' + (r.by[g.t] != null ? pctAvgText(r.by[g.t]) : '<span class="bknone">–</span>') + '</td>' : '')).join('') +
       '<td class="bkterm" tabindex="0" ' + bkWhy(n, r, conf) + '>' + (r.grade != null ? pctAvgText(r.grade) + (r.soFar ? ' <small>so far</small>' : '') : '<span class="bknone">–</span>') + '</td></tr>';
@@ -186,7 +188,7 @@ function bkYear(c, all, conf) {
   for (const [i, n] of c.names.entries()) {
     const gs = per.map(cols => bkGrade(n, cols, conf).grade), have = gs.filter(v => v != null), y = have.length ? bkMean(have) : null;
     gs.forEach((v, i) => { if (v != null) col[i].push(v); }); if (y != null) yr.push(y);
-    h += '<tr><td class="bknm">' + esc(bkWho(n, i)) + '</td>' + gs.map(v => '<td class="bkterm">' + (v != null ? pctAvgText(v) : '<span class="bknone">–</span>') + '</td>').join('') + '<td class="bkterm"><b>' + (y != null ? pctAvgText(y) : '–') + '</b></td></tr>';
+    h += '<tr><td class="bknm">' + esc(bkWho(n, i)) + bkInfo(n) + '</td>' + gs.map(v => '<td class="bkterm">' + (v != null ? pctAvgText(v) : '<span class="bknone">–</span>') + '</td>').join('') + '<td class="bkterm"><b>' + (y != null ? pctAvgText(y) : '–') + '</b></td></tr>';
   }
   h += '<tr class="bkfoot"><td class="bknm">Class average</td>' + col.map(a => '<td class="bkterm">' + (a.length ? pctAvgText(bkMean(a)) : '–') + '</td>').join('') + '<td class="bkterm">' + (yr.length ? pctAvgText(bkMean(yr)) : '–') + '</td></tr></tbody></table></div>' +
     '<p class="muted bkcap">The year is the average of the terms each student has a grade in.</p>';
@@ -258,7 +260,7 @@ function bkOneView(c, cols, conf) {
   const cavg = t => { const ps = all.map(g => t ? g.by[t] : g.grade).filter(v => v != null); return ps.length ? bkMean(ps) : null; };
   const sc = bkScored(cols), fm = cols.filter(x => x.type === 'fm'), miss = cols.filter(x => (x.cells.get(n) || {}).st === 'missing');
   const bar = (l, v, ref, t) => '<div class="bkcmp"><span>' + l + '</span><div class="bkcmpt"><i class="' + t + '" style="width:' + Math.min(100, v || 0) + '%"></i>' + (ref != null ? '<em style="left:' + Math.min(100, ref) + '%" title="Class average ' + esc(pctAvgText(ref)) + '"></em>' : '') + '</div><b>' + (v != null ? pctAvgText(v) : '–') + '</b></div>';
-  return '<div class="bkpad"><div class="bkstu"><button class="icon" data-bkstu="-1" aria-label="Previous student"' + (bk.stu ? '' : ' disabled') + '>‹</button><b id="bkStuName">' + esc(shown) + '</b><button class="icon" data-bkstu="1" aria-label="Next student"' + (bk.stu < c.names.length - 1 ? '' : ' disabled') + '>›</button><span class="muted">' + (bk.stu + 1) + ' of ' + c.names.length + ' · ← → to move</span></div>' +
+  return '<div class="bkpad"><div class="bkstu"><button class="icon" data-bkstu="-1" aria-label="Previous student"' + (bk.stu ? '' : ' disabled') + '>‹</button><b id="bkStuName">' + esc(shown) + '</b>' + bkInfo(n) + '<button class="icon" data-bkstu="1" aria-label="Next student"' + (bk.stu < c.names.length - 1 ? '' : ' disabled') + '>›</button><span class="muted">' + (bk.stu + 1) + ' of ' + c.names.length + ' · ← → to move</span></div>' +
     '<div class="ovtiles" id="bkStuTiles">' + bkTile(bk.term === '*' ? 'Grade' : 'Term grade', r.grade != null ? pctAvgText(r.grade) + (r.soFar ? ' <small>so far</small>' : '') : '–', cavg('') != null ? 'class average ' + pctAvgText(cavg('')) : '', true) +
     bkTile('Summatives', r.by.sum != null ? pctAvgText(r.by.sum) : '–', cols.filter(x => x.type === 'sum' && bkCounts(x.cells.get(n))).length + ' of ' + cols.filter(x => x.type === 'sum').length + ' counted') +
     bkTile('In-class', r.by.ic != null ? pctAvgText(r.by.ic) : '–', cols.filter(x => x.type === 'ic' && bkCounts(x.cells.get(n))).length + ' of ' + cols.filter(x => x.type === 'ic').length + ' counted') +

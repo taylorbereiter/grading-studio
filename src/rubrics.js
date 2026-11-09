@@ -487,7 +487,7 @@ function ovDraw() {
     (s.meanPct != null ? '<div class="ovcharts"><section id="ovBands"><h3 class="ovh3">Grade bands</h3>' + bandsHtml(s.counted, PCT_TENS) + '<p class="muted ovcap2">How many papers landed in each range of percents.</p></section>' +
       '<section id="ovStrip"><h3 class="ovh3">Every paper’s percent</h3>' + stripHtml(s.counted, s.meanPct, 'Average') + '<p class="muted ovcap2">One dot for each paper. Point at one to see whose it is, and click it to open them.</p></section></div>' : '') +
     '<div class="ovcharts"><section id="ovSpread"><h3 class="ovh3">Score spread</h3>' + spreadHtml(s) + '</section><section id="ovRows"><h3 class="ovh3">Rows the class found hardest</h3>' + rowsHtml(s) + '</section></div>' +
-    trendHtml(s) +
+    trendHtml(s) + levelHtml(s) +
     '<section id="ovWho"><h3 class="ovh3">Who’s missing or unfinished</h3>' + whoHtml(s) + '</section></div>') +
     '<div class="bf"><button class="btn" data-ovgrades>Grades list</button><button class="btn primary" data-close>Close</button></div>');
   if (on) pctDraw();

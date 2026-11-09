@@ -570,7 +570,12 @@ function mergeLib(a0, b0, o = {}) {
       e.fields.names = e.node.names = [...(x.fields.names || []), ...add];
       if (add.length) notes.push({ kind: 'roster', name: x.fields.name, add, drop: [], both: true });
     } else if (x.type === 'c' && m.fromY.includes('names')) rosterNote(notes, x, y);
-    const other = m.both.filter(k => k !== 'names');
+    if (x.type === 'c' && m.both.includes('info')) {   // student details: per student, and a saved spelling is never lost
+      const xi = x.fields.info || {}, yi = y.fields.info || {}, [lo, hi] = win === y ? [xi, yi] : [yi, xi], out = {};
+      for (const k of new Set([...Object.keys(xi), ...Object.keys(yi)])) { const o2 = [...new Set([...((lo[k] || {}).other || []), ...((hi[k] || {}).other || [])])]; out[k] = { ...lo[k], ...hi[k], ...(o2.length ? { other: o2 } : {}) }; }
+      e.fields.info = e.node.info = out;
+    }
+    const other = m.both.filter(k => k !== 'names' && k !== 'info');
     if (other.length) notes.push({ kind: 'both', type: x.type, name: e.fields.name, rubric: other.includes('setup') });
     else if (m.fromY.some(k => k !== 'names')) notes.push({ kind: 'changed', type: x.type, name: e.fields.name });
     kept.set(id, e);
