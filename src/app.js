@@ -2968,6 +2968,20 @@ async function autoCovers(page, vp, rx, xf) {
 }
 const boxKey = (path, p) => path + '|' + p;
 function ownCovers(path, p, W, H) { return (shareState().boxes[boxKey(path, p)] || []).map(b => ({ x: b[0] * W, y: b[1] * H, w: b[2] * W, h: b[3] * H, own: true })); }
+// Automatic covers she took off in Check the covers, kept as fractions of the page. A cover found again in about the same place stays off.
+const offList = (path, p) => (shareState().off ||= {})[boxKey(path, p)] || [];
+const sameSpot = (r, b, W, H) => {
+  const x0 = Math.max(r.x, b[0] * W), y0 = Math.max(r.y, b[1] * H), x1 = Math.min(r.x + r.w, (b[0] + b[2]) * W), y1 = Math.min(r.y + r.h, (b[1] + b[3]) * H);
+  const both = Math.max(0, x1 - x0) * Math.max(0, y1 - y0), a = r.w * r.h, c = b[2] * W * b[3] * H;
+  return both > 0 && both / (a + c - both) >= 0.5;
+};
+// The automatic covers for a page, without the ones she took off. gone: where those were, so the check can show them.
+function keptCovers(cs, path, p, W, H) {
+  const off = offList(path, p), gone = [];
+  if (!off.length) return Object.assign(cs, { gone });
+  const kept = cs.filter(r => { const out = off.some(b => sameSpot(r, b, W, H)); if (out) gone.push(r); return !out; });
+  return Object.assign(kept, { gone });
+}
 const scrubMarks = (marks, rx) => marks.map(m => m.text != null ? { ...m, text: scrub(m.text, rx) } : m);
 // Renders one page the way Claude will see it: her marks (names scrubbed from her text) and black covers.
 async function sharePage(st, f, js, p, scale, rx) {
@@ -2982,11 +2996,11 @@ async function sharePage(st, f, js, p, scale, rx) {
   scanClip(ctx, f, p, W * scale, c.width, c.height);
   ctx.setTransform(scale, 0, 0, scale, 0, 0);
   drawMarks(ctx, marks, W, H, side, null);
-  const covers = (await autoCovers(page, vp, rx, skewXf(f, p, vp))).concat(ownCovers(f.path, p, W, H));
+  const auto = keptCovers(await autoCovers(page, vp, rx, skewXf(f, p, vp)), f.path, p, W, H), covers = auto.concat(ownCovers(f.path, p, W, H));
   ctx.fillStyle = '#111';
   for (const r of covers) ctx.fillRect(r.x, r.y, r.w, r.h);
   page.cleanup();
-  return { c, W, H, side, covers };
+  return { c, W, H, side, covers, gone: auto.gone };
 }
 const shareDocs = st => layoutOf(st).filter(d => docIn(st, d)).map(d => ({ ...d, pages: d.pages.filter(([path]) => { const f = fileByPath(st, path); return f && !f.virtual && viewable(f); }) })).filter(d => d.pages.length);
 
@@ -3036,7 +3050,7 @@ async function checkCovers(start, onDone) {
     '<span class="seg ccseg"><button data-ccf="all"></button><button data-ccf="todo"></button><button data-ccf="flag"></button></span></div>' +
     '<ul class="ccrows" id="ccRows"></ul><div class="ccalldone" id="ccAllDone" hidden>✓ Every paper is checked.</div></aside>' +
     '<div class="bb" id="ccBody"></div></div>' +
-    '<div class="bf" style="justify-content:space-between"><span class="muted" style="font-size:13px;align-self:center;max-width:46%">Drag a box over a name it missed. Click one of your boxes to take it off, or press ' + keyLabel('⌘Z') + ' for the last one.</span><span style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end"><button class="btn" data-every hidden>Use my last box on every paper</button><button class="btn" data-back>◀ Back</button><button class="btn primary" data-next>Next ▶</button></span></div>');
+    '<div class="bf" style="justify-content:space-between"><span class="muted" style="font-size:13px;align-self:center;max-width:46%">Drag a box over a name it missed. Click any black box that isn’t a name to take it off, and click a dashed one to put it back. ' + keyLabel('⌘Z') + ' takes back the last change.</span><span style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end"><button class="btn" data-every hidden>Use my last box on every paper</button><button class="btn" data-back>◀ Back</button><button class="btn primary" data-next>Next ▶</button></span></div>');
   const box = $('#dlgBox');
   box.classList.add('ccbox');
   const finish = () => { if (eachKeys) document.removeEventListener('keydown', eachKeys, true); eachKeys = null; saveSoon(); (onDone || openShare)(); };
@@ -3111,19 +3125,31 @@ async function checkCovers(start, onDone) {
         if (my !== token) break;
         const c = r.c;
         Object.assign(c.style, { width: (r.W + r.side) * kk + 'px', height: r.H * kk + 'px', display: 'block', margin: '0 auto 14px', background: '#fff', boxShadow: 'var(--shadow)', cursor: 'crosshair', touchAction: 'none' });
-        const ctx = c.getContext('2d'), base = ctx.getImageData(0, 0, c.width, c.height);
+        const ctx = c.getContext('2d');
+        // Where a cover she took off was: a dashed outline, so she can see it and put it back.
+        if (r.gone.length) { ctx.save(); ctx.setTransform(kk * dpr, 0, 0, kk * dpr, 0, 0); ctx.strokeStyle = '#1F6FB2'; ctx.lineWidth = 1.5 / kk; ctx.setLineDash([5 / kk, 3 / kk]); for (const g of r.gone) ctx.strokeRect(g.x, g.y, g.w, g.h); ctx.restore(); }
+        const base = ctx.getImageData(0, 0, c.width, c.height);
+        const inside = (x, y, q) => x >= q.x - 2 && x <= q.x + q.w + 2 && y >= q.y - 2 && y <= q.y + q.h + 2;
+        const autoAt = (x, y) => r.covers.filter(q => !q.own && inside(x, y, q)).sort((a, b) => a.w * a.h - b.w * b.h)[0];
+        const goneAt = (x, y) => r.gone.find(q => inside(x, y, q));
+        const fracOf = q => [q.x / r.W, q.y / r.H, q.w / r.W, q.h / r.H].map(v => Math.round(v * 10000) / 10000);
         const own = () => shareState().boxes[boxKey(path, p)] || (shareState().boxes[boxKey(path, p)] = []);
         const fr = e => { const b = c.getBoundingClientRect(); return [(e.clientX - b.left) / kk, (e.clientY - b.top) / kk]; };
         let d0 = null, sel = null;
         const paint = () => { ctx.putImageData(base, 0, 0); if (sel) { ctx.save(); ctx.setTransform(kk * dpr, 0, 0, kk * dpr, 0, 0); ctx.fillStyle = 'rgba(17,17,17,.75)'; ctx.fillRect(sel.x, sel.y, sel.w, sel.h); ctx.restore(); } };
         c.onpointerdown = e => { e.preventDefault(); c.setPointerCapture(e.pointerId); d0 = fr(e); sel = null; };
-        c.onpointermove = e => { if (!d0) return; const [x, y] = fr(e); sel = { x: Math.min(x, d0[0]), y: Math.min(y, d0[1]), w: Math.abs(x - d0[0]), h: Math.abs(y - d0[1]) }; paint(); };
+        c.onpointermove = e => { if (!d0) { const [x, y] = fr(e), b = own().some(q => x >= q[0] * r.W && x <= (q[0] + q[2]) * r.W && y >= q[1] * r.H && y <= (q[1] + q[3]) * r.H) || autoAt(x, y) || goneAt(x, y); c.style.cursor = b ? 'pointer' : 'crosshair'; return; } const [x, y] = fr(e); sel = { x: Math.min(x, d0[0]), y: Math.min(y, d0[1]), w: Math.abs(x - d0[0]), h: Math.abs(y - d0[1]) }; paint(); };
         c.onpointerup = e => {
           if (!d0) return; const start = d0; d0 = null;
           if (!sel || sel.w < 4 || sel.h < 3) {
             sel = null; paint();
             const [x, y] = start, arr = own(), hit = arr.findIndex(b => x >= b[0] * r.W && x <= (b[0] + b[2]) * r.W && y >= b[1] * r.H && y <= (b[1] + b[3]) * r.H);
-            if (hit >= 0) { arr.splice(hit, 1); coverMark(st, d, false); show(); }
+            if (hit >= 0) { arr.splice(hit, 1); coverMark(st, d, false); show(); return; }
+            // One the name search put on: it comes off here, in the ZIP and while grading anonymously.
+            const offs = (shareState().off ||= {}), k = boxKey(path, p), a = autoAt(x, y);
+            if (a) { const b = fracOf(a); (offs[k] ||= []).push(b); undo.push({ k, b, i: pos, off: 'took' }); coverMark(st, d, false); saveSoon(); toast('Cover taken off. ' + keyLabel('⌘Z') + ' puts it back.'); return show(); }
+            const g = goneAt(x, y);
+            if (g) { const list = offs[k] || [], at = list.findIndex(b => sameSpot(g, b, r.W, r.H)); if (at >= 0) { const [b] = list.splice(at, 1); if (!list.length) delete offs[k]; undo.push({ k, b, i: pos, off: 'gave' }); } coverMark(st, d, false); saveSoon(); return show(); }
             return;
           }
           const fx = v => Math.round(v * 10000) / 10000;
@@ -3132,6 +3158,7 @@ async function checkCovers(start, onDone) {
           box.querySelector('[data-every]').hidden = false;
           show();
         };
+        c._cover = { covers: r.covers, gone: r.gone, kk };
         body.appendChild(c);
         if (pg0) pg0.cleanup();
       }
@@ -3170,9 +3197,11 @@ async function checkCovers(start, onDone) {
     else if (!typing && (e.metaKey || e.ctrlKey) && !e.shiftKey && e.key.toLowerCase() === 'z') {
       // Takes back the last box she drew here.
       e.preventDefault(); e.stopPropagation();
-      const u = undo.pop(); if (!u) return toast('No box to take back');
-      const arr = shareState().boxes[u.k] || [], at = arr.lastIndexOf(u.b);
-      if (at >= 0) arr.splice(at, 1);
+      const u = undo.pop(); if (!u) return toast('Nothing to take back');
+      const offs = (shareState().off ||= {});
+      if (u.off === 'took') { const list = offs[u.k] || [], at = list.lastIndexOf(u.b); if (at >= 0) list.splice(at, 1); if (!list.length) delete offs[u.k]; }
+      else if (u.off === 'gave') (offs[u.k] ||= []).push(u.b);
+      else { const arr = shareState().boxes[u.k] || [], at = arr.lastIndexOf(u.b); if (at >= 0) arr.splice(at, 1); }
       coverMark(list[u.i].st, list[u.i].d, false); saveSoon();
       pos = u.i; show();
     }
@@ -4806,13 +4835,13 @@ function stepStudent(d) {
 const anonRx = st => coverRx(st);
 // Black boxes (page points) over typed names, Kami boxes with names, and the boxes she drew in Check the covers.
 async function anonCovers(st, pg) {
-  try { const vp = vpRot(pg.file, pg.idx, pg.page, 1); return (await autoCovers(pg.page, vp, anonRx(st), skewXf(pg.file, pg.idx, vp))).concat(ownCovers(pg.file.path, pg.idx, pg.W, pg.H)); }
+  try { const vp = vpRot(pg.file, pg.idx, pg.page, 1); return keptCovers(await autoCovers(pg.page, vp, anonRx(st), skewXf(pg.file, pg.idx, vp)), pg.file.path, pg.idx, pg.W, pg.H).concat(ownCovers(pg.file.path, pg.idx, pg.W, pg.H)); }
   catch { return ownCovers(pg.file.path, pg.idx, pg.W, pg.H); }
 }
 // The same covers on a small or big picture of a page, drawn at vp. turned: a turn she hasn't saved yet.
 async function anonPaint(ctx, st, f, p, page, vp, turned) {
   let cs = [];
-  try { cs = await autoCovers(page, vp, anonRx(st), skewXf(f, p, vp)); } catch (er) { console.error(er); }
+  try { cs = keptCovers(await autoCovers(page, vp, anonRx(st), skewXf(f, p, vp)), f.path, p, vp.width, vp.height); } catch (er) { console.error(er); }
   ctx.fillStyle = '#111';
   for (const r of cs) ctx.fillRect(r.x, r.y, r.w, r.h);
   for (let b of shareState().boxes[boxKey(f.path, p)] || []) {
