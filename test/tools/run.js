@@ -1,15 +1,20 @@
 // npm test: runs every test file, a few at a time, and says plainly what failed.
 //   node test/tools/run.js                 every file in test/
 //   node test/tools/run.js marking shell   only the files whose names contain one of these words
-//   JOBS=1 node test/tools/run.js          one file at a time (the default is one per processor, up to 4)
+//   JOBS=1 node test/tools/run.js          one file at a time (the default is one fewer than the processors, up to 4)
 // Each file gets its own Chrome with a throwaway profile, so files can't disturb each other. A file that fails while
 // others were running is run once more on its own: if it passes then, it is listed under "passed on a second try"
 // so a test that depends on timing is seen, and the run still counts as failed if it fails alone.
 const fs = require('fs'), os = require('os'), path = require('path'), { spawn } = require('child_process');
 const ROOT = path.join(__dirname, '..', '..'), DIR = path.join(ROOT, 'test');
-const words = process.argv.slice(2).filter(a => !a.startsWith('-'));
-const files = fs.readdirSync(DIR).filter(f => f.endsWith('.test.js') && (!words.length || words.some(w => f.includes(w)))).sort();
-const JOBS = Math.max(1, +process.env.JOBS || Math.min(4, os.cpus().length));
+const words = process.argv.slice(2).filter((a, i, l) => !a.startsWith('-') && l[i - 1] !== '--part');
+// --part 2/3 runs every third file, starting with the second: for sharing the files between computers that run at once.
+const part = (process.argv.find((a, i) => process.argv[i - 1] === '--part') || '1/1').split('/').map(Number);
+const all = fs.readdirSync(DIR).filter(f => f.endsWith('.test.js')).sort();
+const files = all.filter((f, i) => i % part[1] === part[0] - 1 && (!words.length || words.some(w => f.includes(w))));
+// Each file drives a Chrome of its own, which takes more than one processor at busy moments. One fewer at a time than
+// there are processors keeps tests that depend on timing steady.
+const JOBS = Math.max(1, +process.env.JOBS || Math.min(4, os.cpus().length - 1));
 const LOGS = path.join(ROOT, 'out', 'test-logs');
 fs.rmSync(LOGS, { recursive: true, force: true }); fs.mkdirSync(LOGS, { recursive: true });
 

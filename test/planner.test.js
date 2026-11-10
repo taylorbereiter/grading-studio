@@ -466,7 +466,7 @@ test('materials: a new document typed on a page, downloaded as Word, read back i
       const P = window.__planner, l = P.normLesson({ title: 'Talk', slides: [{ layout: 'title', title: 'Talk' }] }); P.L.lessons.push(l); P.openLessonForTest(l, 0);
     });
     await page.waitForSelector('.pl-mats [data-ma="newdoc"]');
-    await page.click('.pl-mats [data-ma="newdoc"]');
+    await page.$eval('.pl-mats [data-ma="newdoc"]', b => b.click());   // the lesson has only just opened and may be drawn once more, so the button is clicked where it stands
     await page.waitForSelector('#docPage');
     assert.equal(await page.$eval('[data-df="name"]', i => i.value), 'Talk handout');
     await page.evaluate(() => { const h = document.querySelector('#docPage h1'); const r = document.createRange(); r.selectNodeContents(h); r.collapse(false); const s = getSelection(); s.removeAllRanges(); s.addRange(r); });

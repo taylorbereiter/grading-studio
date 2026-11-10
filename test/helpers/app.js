@@ -246,4 +246,4 @@ async function menuPick(page, sel) {
   await page.waitForSelector('.stampmenu [data-fly="' + where + '"]:not([hidden])');
   await page.click('.stampmenu [data-fly="' + where + '"] ' + sel);
 }
-module.exports = { openOwn, closeOwn, goTo, openClass, classPage, menuPick, press, pick, closeBox, MARK_BOXES, ROOT, BUILT, builtHtml, tmpDir, openApp, answerDlg, appReady, plant, idbRead, pickFile, openZip, waitPaper, goToStudent, at, drag, clickAt, setTool, score, markPage, settle, catchDownloads, probePdf, probeScreen, workOf };
+module.exports = { openOwn, closeOwn, goTo, openClass, classPage, menuPick, press, pick, closeBox, MARK_BOXES, ROOT, BUILT, builtHtml, tmpDir, openApp, answerDlg, appReady, plant, idbRead, pickFile, openZip, waitPaper, goToStudent, toScreen, at, drag, clickAt, setTool, score, markPage, settle, catchDownloads, probePdf, probeScreen, workOf };

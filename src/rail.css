@@ -5,21 +5,21 @@
 .rbrand{font-family:var(--f-display);font-weight:700;font-size:17px;letter-spacing:-.02em;padding:4px 10px 14px;color:var(--fg);white-space:nowrap}
 .rbrand i{font-style:normal;font-weight:500;color:var(--accent)}
 .rbrand .rs{display:none}
-.rfind{display:flex;align-items:center;gap:8px;width:100%;height:36px;padding:0 10px;margin:0 0 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--muted);font-size:14px;text-align:left}
+.rfind{display:flex;align-items:center;gap:8px;width:100%;height:36px;padding:0 10px;margin:0 0 10px;border:1px solid var(--line);border-radius:var(--corner-3);background:var(--bg);color:var(--muted);font-size:var(--text-body);text-align:left}
 .rfind:hover{border-color:var(--line-strong);color:var(--fg)}
 .rfind kbd,.fbox kbd{margin-left:auto;flex:none;font:500 11px var(--f-body);border:1px solid var(--line-strong);border-radius:5px;padding:1px 5px;background:var(--surface);color:var(--muted);white-space:nowrap}
-.rnav{display:flex;align-items:center;gap:10px;width:100%;min-height:36px;padding:0 10px;border:0;border-radius:8px;background:none;color:var(--fg-2);font-weight:500;font-size:14px;text-align:left}
+.rnav{display:flex;align-items:center;gap:10px;width:100%;min-height:36px;padding:0 10px;border:0;border-radius:var(--corner-3);background:none;color:var(--fg-2);font-weight:500;font-size:var(--text-body);text-align:left}
 .rnav:hover{background:var(--hover)}
 .rnav.on{background:var(--accent-soft);color:var(--accent);font-weight:600}
 .rnav.over{background:var(--accent-soft);box-shadow:0 0 0 2px var(--accent)}
-.rcap{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:16px 10px 6px}
-.rdot{width:8px;height:8px;border-radius:50%;flex:none}
+.rcap{font-size:var(--text-caption);font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:16px 10px 6px}
+.rdot{width:8px;height:8px;border-radius:var(--corner-round);flex:none}
 .rname{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.rcnt{flex:none;font-size:12px;font-weight:500;color:var(--muted);font-variant-numeric:tabular-nums}
+.rcnt{flex:none;font-size:var(--text-small);font-weight:500;color:var(--muted);font-variant-numeric:tabular-nums}
 .rnav.on .rcnt{color:var(--accent)}
 .radd{color:var(--muted)}
 .rail .sp{flex:1;min-height:12px}
-.rsaved{display:flex;gap:10px;align-items:flex-start;width:100%;padding:10px;border:0;border-radius:8px;background:none;color:var(--muted);font-size:12.5px;line-height:1.35;text-align:left}
+.rsaved{display:flex;gap:10px;align-items:flex-start;width:100%;padding:10px;border:0;border-radius:var(--corner-3);background:none;color:var(--muted);font-size:12.5px;line-height:1.35;text-align:left}
 .rsaved:hover{background:var(--hover)}
 .rsaved .rdot{background:var(--ok);margin-top:5px}
 .rsaved.warn .rdot{background:var(--warn)}
@@ -60,8 +60,8 @@
 .fin svg{width:20px;height:20px;flex:none;fill:none;stroke:var(--muted);stroke-width:1.7;stroke-linecap:round}
 .fin input{flex:1;min-width:0;border:0;outline:0;background:none;font-size:17px;color:var(--fg)}
 #findList{flex:1;min-height:0;overflow:auto;padding:0 0 8px}
-.fcap{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:12px 18px 4px}
-.frow{display:flex;align-items:center;gap:12px;width:calc(100% - 12px);min-height:40px;margin:0 6px;padding:6px 12px;border:0;border-radius:8px;background:none;color:var(--fg);font-size:14px;text-align:left}
+.fcap{font-size:var(--text-caption);font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:12px 18px 4px}
+.frow{display:flex;align-items:center;gap:12px;width:calc(100% - 12px);min-height:40px;margin:0 6px;padding:6px 12px;border:0;border-radius:var(--corner-3);background:none;color:var(--fg);font-size:var(--text-body);text-align:left}
 .frow b{font-weight:500;white-space:nowrap}
 .frow span{flex:1;min-width:0;color:var(--muted);font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .frow.on{background:var(--accent-soft)}

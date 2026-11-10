@@ -1,0 +1,27 @@
+/* ---------- parts: the pieces every screen is built from, the same on the grading page and the Planner ----------
+   So far: the page itself, focus, the page title, buttons (.btn, with .primary, .ghost, .sm, .big) and text links (.link).
+   Menus, tabs, chips, boxes, tables, fields, notices and empty screens join them here as each screen is rebuilt;
+   until then each page still has its own. Every value comes from src/tokens.css. */
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.45 var(--f-body);-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+h1{font-family:var(--f-display);font-size:var(--text-display);font-weight:700;letter-spacing:-.025em;margin:0}
+h1 i,.top .title i{font-style:normal;font-weight:500;color:var(--accent)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;border:1px solid var(--line-strong);background:var(--surface);border-radius:var(--r-sm);padding:8px 14px;font-weight:500;font-size:var(--text-body);line-height:1.2;white-space:nowrap}
+.btn.ghost{border-color:transparent;background:none}
+.btn.ghost:hover{background:var(--surface-2)}
+.btn:hover{background:var(--surface-2)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+.btn.primary:hover{background:var(--accent-hover)}
+.btn:disabled{opacity:.5;cursor:default}
+.btn.sm{padding:5px 10px;font-size:var(--text-control)}
+.btn.big{padding:12px 20px;font-size:15px}
+.link{background:none;border:0;padding:0;color:var(--accent);font-weight:600;text-decoration:underline;text-underline-offset:2px}
+
+/* ---------- start screen ---------- */
+.start{max-width:1180px;margin:0 auto;padding:32px 16px 60px}
+.start .sub{color:var(--muted);margin:6px 0 24px;max-width:62ch}

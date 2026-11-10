@@ -14,7 +14,7 @@ after(async () => { await browser.close(); });
 
 test('the version number shows, and is set in one place', async () => {
   assert.match(VERSION, /^\d+\.\d+\.\d+$/);
-  for (const f of ['app.js', 'app.html', 'migrate.js', 'planner/lessons.js', 'planner/units.js', 'planner/planner.html']) assert.ok(!fs.readFileSync(path.join(ROOT, 'src', f), 'utf8').includes(VERSION), f + ' shouldn’t have the number written in it');
+  for (const f of [...require('../src/app/order.json').map(n => 'app/' + n + '.js'), 'app.html', 'migrate.js', 'planner/lessons.js', 'planner/units.js', 'planner/planner.html']) assert.ok(!fs.readFileSync(path.join(ROOT, 'src', f), 'utf8').includes(VERSION), f + ' shouldn’t have the number written in it');
   const { page, close } = await openApp(browser);
   assert.equal(await page.evaluate(() => window.__gs.gsData.APP_VERSION), VERSION);
   assert.ok((await page.$eval('#start .gsVer', e => e.textContent)).includes('version ' + VERSION), 'on the start screen');
@@ -102,7 +102,7 @@ test('npm run preview serves the built app on localhost, and only that', async (
     assert.ok(p.out().includes('http://localhost:' + port));
     const base = 'http://localhost:' + port;
     assert.equal(await (await fetch(base + '/')).text(), fs.readFileSync(BUILT, 'utf8'));
-    for (const q of ['/package.json', '/src/app.js', '/test/preview.js', '/../package.json']) assert.equal((await fetch(base + q)).status, 404, q);
+    for (const q of ['/package.json', '/src/app/start.js', '/test/preview.js', '/../package.json']) assert.equal((await fetch(base + q)).status, 404, q);
     // Reachable from this computer only.
     const other = Object.values(os.networkInterfaces()).flat().find(a => a.family === 'IPv4' && !a.internal);
     if (other) await new Promise((res, rej) => { const s = net.connect({ host: other.address, port, timeout: 1500 }); s.on('connect', () => { s.destroy(); rej(new Error('The preview answers on the network at ' + other.address)); }); s.on('error', res); s.on('timeout', () => { s.destroy(); res(); }); });

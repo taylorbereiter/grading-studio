@@ -7,6 +7,9 @@
     "build": "node build.js",
     "test": "node test/tools/run.js",
     "check": "npm run build && npm test",
+    "screens": "node test/tools/screens.js",
+    "saved-work": "node test/tools/saved-work.js",
+    "speed": "node test/tools/speed.js",
     "preview": "npm run build && node test/preview.js"
   },
   "dependencies": {
