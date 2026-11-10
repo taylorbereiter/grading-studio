@@ -485,8 +485,9 @@ test('materials: a new document typed on a page, downloaded as Word, read back i
     assert.match(xml.doc, /<w:tbl>/);
     // into the Claude box as text
     await page.click('[data-da="claude"]');
+    await page.waitForFunction(() => /Added to the Claude box/.test(document.querySelector('.toast').textContent));   // it saves first; opening the panel before that is done has the panel drawn again under the next click
     await page.click('.ls-top [data-a="panel"]');
-    await page.waitForSelector('#side:not([hidden]) [data-st="claude"]'); await page.click('[data-st="claude"]');
+    await page.waitForSelector('#side:not([hidden]) [data-st="claude"]', { visible: true }); await page.click('[data-st="claude"]');   // visible: the panel has only just opened, and its tabs can be there a moment before they have a size
     await page.waitForSelector('[data-sa="boxcopy"]');
     assert.match(await page.$eval('#spChips', c => c.textContent), /Talk handout/);
     await page.click('[data-sa="boxcopy"]'); await page.waitForFunction(() => window.__copied);
@@ -548,7 +549,7 @@ test('right-click a slide or a lesson to comment for Claude; search finds slides
     await page.keyboard.down('Control'); await page.keyboard.press('Enter'); await page.keyboard.up('Control');
     await page.waitForFunction(() => !document.querySelector('.pl-ctx'));
     await page.click('.ls-top [data-a="panel"]');
-    await page.waitForSelector('#side:not([hidden]) [data-st="claude"]'); await page.click('[data-st="claude"]');
+    await page.waitForSelector('#side:not([hidden]) [data-st="claude"]', { visible: true }); await page.click('[data-st="claude"]');   // visible: the panel has only just opened, and its tabs can be there a moment before they have a size
     await page.waitForFunction(() => document.querySelectorAll('#spChips .sp-chip').length === 2);
     assert.match(await page.$eval('#spChips', c => c.textContent), /Comment on Claims[\s\S]*Comment on Claims, slide 2: Counterclaims/);
     await page.click('[data-sa="boxcopy"]'); await page.waitForFunction(() => window.__copied);
