@@ -37,17 +37,6 @@
 .btn.danger{background:var(--warn);border-color:var(--warn);color:var(--warn-fg)}
 .btn.danger:hover{background:var(--warn);opacity:.88}
 
-/* a smaller, even tool bar when the middle column is narrow, so the tools don't crowd the paper */
-@media (max-width:1420px){
-  .tools{margin:10px 10px 0;padding:5px 6px;gap:2px}
-  .tool{padding:7px}
-  .tool .lb{display:none}
-  .sep{margin:0 2px}
-  .swatches{gap:2px}
-  .sw{width:20px;height:20px}
-  .tools .seg button{padding:5px 8px;font-size:12.5px}
-  .tools .icon{width:26px}
-  .zoom span{min-width:36px;font-size:12.5px}
 }
 
 /* a narrow student list keeps room for the name: the tags go under the score */

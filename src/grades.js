@@ -42,10 +42,14 @@ function setStatus(st, s) {
   st.grade.status = (st.grade.status || '') === s ? '' : s;
   touchGrade(st); saveSoon(); renderGrade(); renderList();
 }
-function statusHtml(st) {
+// Missing, Excused, Late, and a ⋯ for what is used now and then: leaving this paper out of the average, and the calculator.
+function statusHtml(st, plain) {
   const on = st.grade.status || '', out = !!st.grade.outAvg;
-  return '<div id="gstat"><div class="gstat"><span class="muted">Mark as</span><span class="seg">' + Object.keys(STATUS_LABEL).map(k => '<button data-status="' + k + '" aria-pressed="' + (on === k) + '">' + STATUS_LABEL[k] + '</button>').join('') + '</span></div>' +
-    (noScore(st) ? '' : '<button class="outsw" id="outAvg" role="switch" aria-checked="' + out + '"><i></i><span><b>Leave out of the average</b><small>The score stays and still copies. It doesn’t count in the average or on the Insights tab.</small></span></button>') + '</div>';
+  return '<div id="gstat"><div class="gstat"><span class="seg" role="group" aria-label="Mark as">' + Object.keys(STATUS_LABEL).map(k => '<button data-status="' + k + '" aria-pressed="' + (on === k) + '">' + STATUS_LABEL[k] + '</button>').join('') + '</span>' +
+    (plain ? '' : kmWrap('⋯', 'class="btn sm kdots" id="gMore" aria-label="More for this score" title="More for this score"',
+      (noScore(st) ? '' : '<button class="outsw" id="outAvg" role="switch" aria-checked="' + out + '"><i></i><span><b>Leave out of the average</b><small>The score stays and still copies. It doesn’t count in the average or on the Insights tab.</small></span></button>') +
+      '<button class="mitem" data-gcalc>Calculator <kbd>=</kbd></button>', 'right')) + '</div>' +
+    (out && !noScore(st) && !plain ? '<p class="outnote">Left out of the average. <button class="link" data-outoff>Count it again</button></p>' : '') + '</div>';
 }
 // Left out of the average: for a one-off case, a placeholder 0, or a paper graded somewhere else. Nothing about the score changes.
 function setOutAvg(st) {

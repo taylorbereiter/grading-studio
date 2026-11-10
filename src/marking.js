@@ -238,7 +238,7 @@ function setHlMode(mode, say) {
   hlMode = mode; store.set('gs.hlMode', mode); renderTools();
   if (say) toast(mode === 'free' ? 'Highlight: freehand' : 'Highlight: snaps to typed lines. Freehand where there are none.');
 }
-const hlBar = () => '<span class="seg" style="margin-left:4px"><button data-hlm="auto" aria-pressed="' + (hlMode !== 'free') + '" title="Snaps to typed lines. Goes freehand on scans and handwriting. Press H again to switch.">Snap</button><button data-hlm="free" aria-pressed="' + (hlMode === 'free') + '" title="Always draw it by hand. Hold Shift for a straight line. Press H again to switch.">Freehand</button></span>' +
+const hlBar = () => '<span class="seg" style="margin-left:4px"><button data-hlm="auto" aria-pressed="' + (hlMode !== 'free') + '" title="Snaps to typed lines. Goes freehand on scans and handwriting. Press H again to switch.">Snap</button><button data-hlm="free" aria-pressed="' + (hlMode === 'free') + '" title="Always draw it by hand. Hold Shift for a straight line. Press H again to switch." aria-label="Freehand">Free</button></span>' +
   '<span class="seg" style="margin-left:4px"><button data-hlw title="How wide a freehand highlight is. Click to change.">' + (HL_WIDTHS[hlW] || 'M') + '</button></span>';
 function hlBarClick(e) {
   const m = e.target.closest('[data-hlm]'); if (m) { setHlMode(m.dataset.hlm); return true; }

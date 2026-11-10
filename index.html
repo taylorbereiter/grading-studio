@@ -697,17 +697,6 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
 .btn.danger{background:var(--warn);border-color:var(--warn);color:var(--warn-fg)}
 .btn.danger:hover{background:var(--warn);opacity:.88}
 
-/* a smaller, even tool bar when the middle column is narrow, so the tools don't crowd the paper */
-@media (max-width:1420px){
-  .tools{margin:10px 10px 0;padding:5px 6px;gap:2px}
-  .tool{padding:7px}
-  .tool .lb{display:none}
-  .sep{margin:0 2px}
-  .swatches{gap:2px}
-  .sw{width:20px;height:20px}
-  .tools .seg button{padding:5px 8px;font-size:12.5px}
-  .tools .icon{width:26px}
-  .zoom span{min-width:36px;font-size:12.5px}
 }
 
 /* a narrow student list keeps room for the name: the tags go under the score */
@@ -1440,11 +1429,9 @@ button.nrow:hover,a.nrow:hover{background:var(--hover)}
 /* Home: the open box sits under the work in a narrower column now, so its buttons go below its words */
 .hmain .today:not([hidden])~.drop{grid-template-columns:minmax(0,1fr)}
 .hmain .today:not([hidden])~.drop .row{grid-column:1;grid-row:auto;justify-content:flex-start;margin-top:8px}
-/* The folded sidebar takes 60px beside the paper. On a small laptop the tools still fit on one row: a little less padding, slightly narrower side columns. */
+/* The folded sidebar takes 60px beside the paper. On a small laptop the side columns are slightly narrower. */
 @media (min-width:1101px) and (max-width:1340px){
   .shell.grading .cols{grid-template-columns:calc(220px * var(--uz)) minmax(0,1fr) calc(296px * var(--uz))}
-  .shell.grading .tool{padding:7px 5px}
-  .shell.grading .tools{gap:1px}
 }
 /* ---------- a class page's tabs, and what each one shows (11/10) ---------- */
 .clshead{margin-bottom:10px}
@@ -1645,6 +1632,101 @@ a.opchip:hover{text-decoration:underline}
 .insxv small{color:var(--muted);font-size:11.5px;margin-left:2px}
 .insxax .insxt{height:14px}
 .insxax .insxt span{position:absolute;transform:translateX(-50%);font-size:11px;color:var(--muted)}
+/* ---------------- the marking screen ---------------- */
+/* The tools: one dock down the left edge of the paper, so the paper keeps the full height */
+.main{position:relative}
+.tools{position:absolute;left:10px;top:12px;z-index:5;width:56px;margin:0;padding:5px;flex-direction:column;flex-wrap:nowrap;align-items:stretch;gap:2px;max-height:calc(100% - 24px);overflow-x:hidden;overflow-y:auto;scrollbar-width:none;box-shadow:0 2px 10px rgba(20,25,35,.08)}
+.tools::-webkit-scrollbar{display:none}
+.tools .tool{justify-content:center;padding:0;height:34px;flex:none}
+.tools .tool svg{width:18px;height:18px}
+.tools .tool .lb{display:block;position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.tools .sep{width:auto;height:1px;margin:4px 3px;flex:none}
+.topts{display:flex;flex-direction:column;align-items:center;gap:6px;padding:2px 0;flex:none}
+.tools .swatches{display:grid;grid-template-columns:repeat(2,18px);gap:5px;justify-content:center}
+.tools .sw{width:18px;height:18px}
+.tools .seg{display:flex;flex-direction:column;margin:0!important;width:100%}
+.tools .seg button{padding:4px 0;font-size:10.5px;width:100%;line-height:1.2}
+.tools .seg button+button{border-top:1px solid var(--line)}
+.penw button i{display:block;margin:4px auto;width:24px;height:calc(var(--w) * 1.4px);border-radius:2px;background:currentColor}
+.tpair{display:flex;justify-content:center;flex:none}
+.tools .icon{width:22px;height:28px}
+.tools .zoom{margin:0;flex-wrap:wrap;justify-content:center;gap:0;flex:none}
+.tools .zoom span{order:3;min-width:100%;font-size:11.5px;padding:1px 0 2px}
+.paper{padding-left:calc(18px + 62px * var(--uz))}
+@media (max-height:700px){.tools .tool{height:29px}.tools .sep{margin:2px 3px}.topts{gap:4px}}
+
+/* Small menus: + Add, the ⋯ on a file, the ⋯ beside Missing, Excused, Late */
+.kmw{position:relative;display:inline-flex}
+.km{position:absolute;top:calc(100% + 4px);left:0;z-index:20;min-width:216px;max-width:300px;max-height:min(60vh,440px);overflow:auto;background:var(--surface);border:1px solid var(--line-strong);border-radius:10px;box-shadow:0 10px 28px rgba(10,14,25,.2);padding:5px;display:flex;flex-direction:column;gap:1px;text-align:left;font-weight:400;white-space:normal}
+.km[hidden]{display:none}
+.km.right{left:auto;right:0}
+.km.up,.km.flip{top:auto;bottom:calc(100% + 4px)}
+.km .mitem{display:block;font-size:14px}
+.km .mitem small{display:block;font-size:12px;font-weight:400;color:var(--muted);margin-top:1px}
+.km .mitem kbd{float:right}
+.km .link{display:block;width:100%;text-align:left;padding:7px 10px;margin:0!important;border-radius:7px;font-size:14px!important;font-weight:500;color:var(--fg);text-decoration:none;line-height:1.3}
+.km .link:hover,.km .link:focus-visible{background:var(--hover)}
+.km .link[data-armed]{color:var(--warn)!important;font-weight:600}
+.kmhd{font-size:11.5px;font-weight:600;color:var(--faint);text-transform:uppercase;letter-spacing:.05em;padding:7px 10px 3px;border-top:1px solid var(--line);margin-top:4px}
+.kmnote{margin:0;padding:6px 10px;font-size:12.5px;color:var(--muted)}
+.kdots{font-weight:700;letter-spacing:1px;line-height:1}
+.btn.kdots{padding-left:9px;padding-right:9px}
+.icon.kdots{width:28px;height:26px;font-size:16px;border-color:var(--line)}
+[data-km][aria-expanded=true]{background:var(--accent-soft);color:var(--accent);border-color:var(--accent)}
+
+/* The student's bar above the paper */
+.who{align-items:center;gap:8px}
+.who h2{margin-right:2px}
+.who .btn.sm .atn{margin-left:2px}
+
+/* The student list: how far along, the filters, the list, and what is used now and then at the foot */
+.side{display:flex;flex-direction:column}
+.side #stuList{flex:1 0 auto}
+.phrow{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+.pavg{border:0;background:none;padding:0;font:inherit;font-size:12.5px;color:var(--muted);white-space:nowrap;cursor:pointer}
+.pavg.none{cursor:default}
+.pavg .v{color:var(--accent);font-weight:600;font-variant-numeric:tabular-nums}
+.pavg.none .v{color:var(--muted)}
+.pavg .s{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+button.pavg:hover .v{text-decoration:underline}
+.lfilt{display:flex;flex-wrap:wrap;gap:5px;margin:0 0 10px}
+.lf{border:0;background:var(--surface-2);border-radius:999px;padding:3px 9px;font-size:12.5px;font-weight:500;color:var(--fg-2);white-space:nowrap}
+.lf:hover{color:var(--fg)}
+.lf[aria-pressed=true]{background:var(--accent-soft);color:var(--accent);font-weight:600}
+.lf .v{font-variant-numeric:tabular-nums}
+.lfnone{font-size:13px;padding:6px 8px}
+.side .hd{display:flex;align-items:center;justify-content:space-between;gap:6px;margin:2px 8px 6px}
+.sfoot{position:sticky;bottom:-10px;z-index:1;display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:8px;padding:8px 6px 10px;background:var(--bg);border-top:1px solid var(--line)}
+.sfoot{flex-wrap:wrap}
+.sfoot .anonsw{font-size:12.5px;letter-spacing:0;text-transform:none;font-weight:500;white-space:nowrap}
+.sfoot .btn.sm{padding:5px 8px}
+
+/* The score panel: the rubric, the total, the comment and Next */
+.grade{gap:14px}
+/* the percent beside the total had picked up the student card's box (both were called .pc) */
+.total span.pc{width:auto;max-height:none;overflow:visible;background:none;border:0;border-radius:0;box-shadow:none}
+.cmt textarea{min-height:84px}
+.grade .crit{border:0;border-bottom:1px solid var(--line);border-radius:0;padding:0 0 13px}
+.gstat{display:flex;flex-wrap:nowrap;align-items:center;gap:6px;margin:4px 0 0}
+.gstat .seg{margin-left:0;flex:1}
+.gstat .seg button{flex:1;padding:7px 6px}
+.km .outsw{margin:0 0 2px;border:0;background:none;border-radius:7px}
+.km .outsw:hover{background:var(--hover)}
+.km .outsw[aria-checked=true]{background:var(--accent-soft)}
+.outnote{margin:7px 0 0;font-size:12.5px;color:var(--muted)}
+.cbank{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px}
+.cchip{border:0;background:var(--surface-2);border-radius:999px;padding:3px 10px;font-size:12.5px;font-weight:500;color:var(--fg-2);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cchip:hover{color:var(--fg)}
+.cchip.cmore{background:var(--accent-soft);color:var(--accent);font-weight:600}
+.cbank .km{min-width:250px}
+.nav .navi{flex:0 0 42px;padding:0;font-size:20px;line-height:1;color:var(--fg-2)}
+.nav .primary kbd{font:600 10.5px var(--f-body);border:1px solid rgba(255,255,255,.55);border-radius:4px;padding:0 4px;margin-left:2px}
+.oneout{text-align:center;margin:0}
+.oneout .link{font-size:13.5px}
+.oneout-say{margin:3px 0 0}
+.oneout-say:empty{display:none}
+.nextun{align-self:center;font-size:13px}
+.nextun kbd,.hint kbd{font:500 10.5px var(--f-body);border:1px solid var(--line-strong);border-bottom-width:2px;border-radius:4px;padding:0 4px;background:var(--surface);color:var(--muted)}
 
 </style>
 
@@ -1787,7 +1869,7 @@ a.opchip:hover{text-decoration:underline}
   <div class="cols" id="cols">
     <button class="pbtn" id="colL" title="Hide the student list ( [ )" aria-label="Hide the student list"><span class="pa">‹</span><span class="pl">Students</span></button>
     <button class="pbtn" id="colR" title="Hide the score panel ( ] )" aria-label="Hide the score panel"><span class="pa">›</span><span class="pl">Score</span></button>
-    <nav class="side"><div class="prog-s" id="progS"></div><div class="hd" id="sideHd">Students, in folder order</div><input type="search" id="stuFind" class="stufind" placeholder="Find a student  ( / )" aria-label="Find a student" autocomplete="off"><div id="stuList"></div></nav>
+    <nav class="side"><div class="prog-s" id="progS"></div><input type="search" id="stuFind" class="stufind" placeholder="Find a student  ( / )" aria-label="Find a student" autocomplete="off"><div class="hd" id="sideHd">Students, in folder order</div><div id="stuList"></div><div class="sfoot" id="sideFoot"></div></nav>
     <section class="main" style="position:relative">
       <div class="tools" id="tools"></div>
       <div id="openRep" hidden role="status" style="position:absolute;left:16px;right:28px;bottom:12px;z-index:5;align-items:center;gap:10px;padding:8px 12px;border-radius:10px;background:var(--surface);border:1px solid var(--warn);box-shadow:var(--shadow);font-size:14px"></div>
@@ -3743,11 +3825,17 @@ async function openStudent(i, filePath) {
   renderList(); renderGrade(); saveSoon();
   const st = batch.students[cur];
   const paper = $('#paper');
+  const nRef = refsFor(st).length;
   paper.innerHTML = '<div class="who"><h2>' + esc(shownName(st, cur)) + '</h2>' + (anonOn() ? '' : whoBtn('data-wi="' + cur + '"', st.key)) + '<span>' + ((anonOn() ? anonPos(cur) : cur) + 1) + ' of ' + batch.students.length + '</span><span style="flex:1"></span>' +
-    '<button class="btn sm" id="readBtn" title="A reading, prompt or other file shown above the papers: for everyone, or a different one for this student">Readings' + (refsFor(st).length ? ' (' + refsFor(st).length + ')' : '') + '</button>' +
-    '<button class="btn sm" id="addFileBtn" title="Add a late or forgotten file to this student. You can also drop files on the paper or on a name.">+ Add file</button>' +
-    '<button class="btn sm" id="pasteTextBtn" title="Paste work a student sent as text in an email or a message. It becomes a page you can mark.">Paste text…</button>' +
-    (st.files.some(viewable) || fileSeq(st).length > 1 ? '<button class="btn sm" id="arrangeBtn">Arrange pages</button>' : '') + '</div>' + groupBand(st);
+    '<button class="btn sm" id="readBtn" title="A reading, prompt or other file shown above the papers: for everyone, or a different one for this student">Readings' + (nRef ? ' <span class="atn">' + nRef + '</span>' : '') + '</button>' +
+    kmWrap('<span aria-hidden="true">+</span> Add', 'id="addMenuBtn" class="btn sm" title="Add late or forgotten work to this student. You can also drop files on the paper or on a name."',
+      '<button class="mitem" id="addFileBtn">A file…<small>A late or forgotten paper</small></button>' +
+      '<button class="mitem" id="pasteTextBtn">Pasted text…<small>Work sent in an email or a message</small></button>' +
+      '<button class="mitem" id="addScanBtn">From a scan…<small>A stack of pages scanned as one PDF</small></button>') +
+    kmWrap('⋯', 'id="whoMore" class="btn sm kdots" aria-label="More for this paper" title="More for this paper"',
+      (st.files.some(viewable) || fileSeq(st).length > 1 ? '<button class="mitem" id="arrangeBtn">Arrange pages<small>Combine files, reorder or take pages out</small></button>' : '') +
+      '<button class="mitem" data-whodo="light">Lighting<small>Make a pale or too-bright scan easier to read</small></button>' +
+      '<button class="mitem" data-whodo="calc">Calculator <kbd>=</kbd></button>', 'right') + '</div>' + groupBand(st);
   paper.scrollTop = 0;
   if (!st.files.length) {
     paper.insertAdjacentHTML('beforeend', '<div class="nofile"><b>Nothing turned in yet.</b> Add their paper here, or drop the file on the page or on their name. You can still give a score without one.' +
@@ -3757,7 +3845,7 @@ async function openStudent(i, filePath) {
     const gs = $('#gapScan'); if (gs) gs.onclick = () => { scanInto = true; scanFor = null; $('#scanIn').click(); };
   }
   curMedia = null;
-  for (const f of st.files.filter(f => f.kind === 'media')) { if (f.added || carryTag(f)) paper.insertAdjacentHTML('beforeend', '<div class="fhead"><span style="color:var(--fg)">' + esc(f.name) + '</span>' + (f.added ? addTag(f) : '') + carryTag(f) + '<span style="flex:1"></span>' + fileLinks(f) + '</div>'); paper.appendChild(mediaCard(st, f)); }
+  for (const f of st.files.filter(f => f.kind === 'media')) { if (f.added || carryTag(f)) paper.insertAdjacentHTML('beforeend', '<div class="fhead"><span style="color:var(--fg)">' + esc(f.name) + '</span>' + (f.added ? addTag(f) : '') + carryTag(f) + '<span style="flex:1"></span>' + fileMenu(fileLinks(f)) + '</div>'); paper.appendChild(mediaCard(st, f)); }
   const rd = refDoc();
   if (rd) { const det = document.createElement('details'); det.className = 'refd'; det.open = store.get('gs.rdOpen', true); det.innerHTML = '<summary>Your document: ' + esc(rd.name) + '</summary>'; det.ontoggle = () => store.set('gs.rdOpen', det.open); paper.appendChild(det); docxCard(rd, rd.name).then(c => { c.querySelector('.fhead').remove(); det.appendChild(c); }); }
   for (const r of refsFor(st)) { const hold = document.createElement('div'); paper.appendChild(hold); refCard(r, st).then(c => { if (token === openToken) hold.replaceWith(c); }); }
@@ -3781,7 +3869,11 @@ async function openStudent(i, filePath) {
     if (it.f) {   // a Word, text or other file, as one card
       const f = it.f, c = f.kind === 'docx' ? await wordCard(st, f) : f.kind === 'text' ? textCard(f) : otherCard(f);
       if (token !== openToken) return;
-      const fh = c.querySelector('.fhead'); if (fh && !f.virtual && !f.rubric) fh.insertAdjacentHTML('beforeend', carryTag(f) + moveLink(f) + fileLinks(f));
+      const fh = c.querySelector('.fhead');
+      if (fh && !f.virtual && !f.rubric) {   // Download joins Group work, Move to, Replace and Remove under the file's ⋯
+        fh.insertAdjacentHTML('beforeend', carryTag(f) + fileMenu(moveLink(f) + fileLinks(f)));
+        const dl = fh.querySelector('[data-wdl], [data-odl]'); if (dl) { dl.className = 'link'; fh.querySelector('.km').prepend(dl); }
+      }
       paper.appendChild(c);
       if (filePath && f.path === filePath) c.scrollIntoView({ block: 'start' });
       continue;
@@ -3791,7 +3883,8 @@ async function openStudent(i, filePath) {
     const head = document.createElement('div'); head.className = 'fhead';
     head.innerHTML = '<span style="color:var(--fg)">' + esc(d.name) + '</span><span>' + d.pages.length + (d.pages.length === 1 ? ' page' : ' pages') + '</span>' + (af && af.added ? addTag(af) : '') + carryTag(batch.carry && d.pages.map(([q]) => fileByPath(st, q)).find(f => f && !f.virtual && batch.carry.flags[f.path])) +
       (on ? '' : '<span class="pill warn" style="font-size:12px;padding:2px 8px;border-radius:999px;background:var(--warn-soft);color:var(--warn)">' + (auto ? 'No marks, left out' : 'Left out') + '</span>') +
-      '<span style="flex:1"></span>' + (on || auto ? '<button class="link" style="font-size:13px;margin-right:10px" data-rotdoc="' + di + '" title="Turn every page of this file a quarter turn to the right">⟳ Turn all pages</button>' : '') + (one ? moveLink(af) + replaceLink(af) : '') + '<button class="link" style="font-size:13px" data-inout="' + di + '">' + (on ? 'Leave out' : 'Bring back') + '</button>' + (one ? removeLink(af, 'margin-left:10px') : '');
+      '<span style="flex:1"></span>' + (on ? '' : '<button class="link" style="font-size:13px" data-inout="' + di + '">Bring back</button>') +
+      fileMenu((on || auto ? '<button class="link" data-rotdoc="' + di + '" title="Turn every page of this file a quarter turn to the right">⟳ Turn all pages</button>' : '') + (one ? moveLink(af) + replaceLink(af) : '') + (on ? '<button class="link" data-inout="' + di + '" title="Keep this file off the screen and out of what goes back. Bring back undoes it.">Leave out</button>' : '') + (one ? removeLink(af) : ''));
     paper.appendChild(head);
     if (!on && !auto) continue;   // left out on purpose: just the bar
     for (const [path, p] of d.pages) {
@@ -3845,6 +3938,8 @@ $('#paper').addEventListener('click', e => {
   const mvf = e.target.closest('[data-mvfile]'); if (mvf) return openMoveFile(batch.students[cur], mvf.dataset.mvfile);
   if (e.target.closest('#addFileBtn')) return pickAdd(batch.students[cur]);
   if (e.target.closest('#pasteTextBtn')) return openPasteText(batch.students[cur]);
+  if (e.target.closest('#addScanBtn')) { scanInto = true; scanFor = null; return $('#scanIn').click(); }
+  const wd = e.target.closest('[data-whodo]'); if (wd) return wd.dataset.whodo === 'light' ? openLight() : openCalc();
   const ra = e.target.closest('[data-rmfile]');
   if (ra) {   // two clicks, so a stray click can't throw a file away
     if (!ra.dataset.armed) { ra.dataset.armed = '1'; ra.textContent = 'Click again to remove'; ra.style.color = 'var(--warn)'; setTimeout(() => { if (ra.isConnected) { delete ra.dataset.armed; ra.textContent = 'Remove'; ra.style.color = ''; } }, 4000); return; }
@@ -4090,8 +4185,8 @@ function openArrange() {
 }
 
 function fitScale(pg) {
-  const P = $('#paper');
-  let s = (P.clientWidth - 40) / (pg.W + pg.side);
+  const P = $('#paper'), cs = getComputedStyle(P);   // the tool dock sits in the left padding
+  let s = (P.clientWidth - (parseFloat(cs.paddingLeft) || 18) - (parseFloat(cs.paddingRight) || 18) - 4) / (pg.W + pg.side);
   if (disp.fit === 'page') s = Math.min(s, (P.clientHeight - 40) / pg.H);
   return Math.max(0.3, Math.min(2.2, s)) * zoom;
 }
@@ -4556,11 +4651,12 @@ function renderTools() {
   const isHl = bar === 'hl';
   const sw = isHl ? Object.entries(HL).map(([k, v]) => '<button class="sw" data-hl="' + k + '" style="background:' + v + '" aria-pressed="' + (k === hlColor) + '" title="' + k + '"></button>').join('')
     : Object.entries(COLORS).map(([k, v]) => '<button class="sw" data-ink="' + k + '" style="background:' + v + '" aria-pressed="' + (k === inkColor) + '" title="' + k + '"></button>').join('');
+  const opts = (bar === 'select' || bar === 'erase' ? '' : '<span class="swatches">' + sw + '</span>') +
+    (bar === 'pen' ? '<span class="seg penw">' + [[1.2, 'Fine'], [2, 'Medium'], [3.5, 'Bold']].map(([w, l]) => '<button data-w="' + w + '" aria-pressed="' + (penW === w) + '" title="' + l + ' pen" aria-label="' + l + ' pen"><i style="--w:' + w + '"></i></button>').join('') + '</span>' : '') + (isHl ? hlBar() : '');
   $('#tools').innerHTML = TOOLS.map(([k, l, key]) => '<button class="tool' + (once && once.k === k ? ' once' : '') + '" data-tool="' + k + '" aria-pressed="' + ((once ? once.prev : tool) === k) + '" title="' + l + ' (' + key + ')">' + svg(IC[k]) + '<span class="lb">' + l + '</span></button>').join('') +
-    '<span class="sep"></span><span class="swatches">' + (bar === 'select' || bar === 'erase' ? '' : sw) + '</span>' +
-    (bar === 'pen' ? '<span class="seg" style="margin-left:4px"><button data-w="1.2" aria-pressed="' + (penW === 1.2) + '">Fine</button><button data-w="2" aria-pressed="' + (penW === 2) + '">Medium</button><button data-w="3.5" aria-pressed="' + (penW === 3.5) + '">Bold</button></span>' : '') + (isHl ? hlBar() : '') +
-    '<button class="icon" id="undoBtn" title="Undo (' + keyLabel('⌘Z') + ')" aria-label="Undo" ' + (undoStack.length ? '' : 'disabled') + '>' + svg(IC.undo) + '</button>' +
-    '<button class="icon" id="redoBtn" title="Redo (' + keyLabel('⇧⌘Z') + ')" aria-label="Redo" ' + (redoStack.length ? '' : 'disabled') + '>' + svg(IC.redo) + '</button>' +
+    (opts ? '<span class="sep"></span><span class="topts">' + opts + '</span>' : '') + '<span class="sep"></span>' +
+    '<span class="tpair"><button class="icon" id="undoBtn" title="Undo (' + keyLabel('⌘Z') + ')" aria-label="Undo" ' + (undoStack.length ? '' : 'disabled') + '>' + svg(IC.undo) + '</button>' +
+    '<button class="icon" id="redoBtn" title="Redo (' + keyLabel('⇧⌘Z') + ')" aria-label="Redo" ' + (redoStack.length ? '' : 'disabled') + '>' + svg(IC.redo) + '</button></span>' +
     '<span class="zoom"><button class="icon" data-z="-1" aria-label="Zoom out" title="Zoom out (' + keyLabel('⌘−') + ')">' + svg(IC.minus) + '</button><span data-z0 title="' + keyLabel('Back to 100% (⌘0). Pinch or ⌘-scroll on the paper to zoom.') + '">' + Math.round(zoom * 100) + '%</span><button class="icon" data-z="1" aria-label="Zoom in" title="Zoom in (' + keyLabel('⌘+') + ')">' + svg(IC.plus) + '</button></span>';
   for (const pg of pages) pg.canvas.style.cursor = tool === 'select' ? 'default' : tool === 'text' ? 'text' : 'crosshair';
 }
@@ -4610,8 +4706,10 @@ function renderList() {
   renderAnonHead();
   const order = anonOn() ? anonOrder() : batch.students.map((_, i) => i);
   const q = ($('#stuFind').value || '').trim().toLowerCase();
+  lfCheck();
   $('#stuList').innerHTML = order.map((i, pos) => { const st = batch.students[i];
     if (q && !shownName(st, i).toLowerCase().includes(q)) return '';
+    if (!lfShows(i)) return '';
     const g = gradeOf(st);
     const val = g.total != null ? g.total : g.pct != null ? g.pct + '%' : null;
     let right = noScore(st) ? '<span class="stag" title="You marked this student ' + g.status + '. No score counts.">' + STATUS_LABEL[g.status] + '</span>' : val != null ? '<span class="sc" title="' + (g.paper ? 'Read from the paper' : g.done ? 'Scored' : 'Partly scored') + '"' + (g.paper || g.out ? ' style="color:var(--muted);font-weight:600"' : g.done ? '' : ' style="color:var(--warn)"') + '>' + fmtNum(g.total != null ? g.total : g.pct) + (g.total == null ? '%' : g.outOf != null ? '/' + fmtNum(g.outOf) : '') + (g.partial ? '<small>partial</small>' : '') + '</span>'
@@ -4624,33 +4722,20 @@ function renderList() {
     return '<button class="stu' + (i === cur ? ' on' : '') + (st.files.length ? '' : ' empty') + '" data-i="' + i + '"><span class="num">' + (pos + 1) + '</span><span class="nm" title="' + esc(shownName(st, i)) + '">' + esc(shownName(st, i)) + '</span>' + (anonOn() ? '' : whoBtn('data-wi="' + i + '"', st.key)) +
       '<span style="display:inline-flex;align-items:center;gap:4px">' + (st.files.length || noScore(st) ? '' : '<span class="muted" style="font-size:11px">no paper</span>') + (g.status === 'late' ? '<span class="stag" title="You marked this student late">late</span>' : '') + (g.out ? '<span class="stag out" title="Left out of the average">left out</span>' : '') + (nAdd ? '<span class="add" title="' + nAdd + (nAdd === 1 ? ' file' : ' files') + ' added by you">+' + nAdd + '</span>' : '') + (re ? '<span class="add" title="A page needs a rescan">⚑</span>' : '') + (groupOf(st) ? '<span class="add grp" title="Group work: marked and graded once with ' + esc(groupNames(groupMates(st))) + '">group</span>' : grp ? '<span class="add grp" title="Group work: shares pages or a file with another student">shared</span>' : '') + carryPill(st) + sent + right + '</span></button>';
   }).join('');
+  if (listFilter !== 'all' && !q && !order.some(i => lfMatch(batch.students[i]))) $('#stuList').insertAdjacentHTML('beforeend', '<div class="muted lfnone">No one else here. <button class="link" data-lf="all">Show everyone</button></div>');
   const on = $('#stuList .on'); if (on) on.scrollIntoView({ block: 'nearest' });
   const nExp = exportPlan(true).length;
   $('#exportBtn').innerHTML = 'Return' + (nExp ? ' <span class="atn" title="' + nExp + (nExp === 1 ? ' marked file' : ' marked files') + ' ready to give back">' + nExp + '</span>' : '');
   renderProg();
 }
-let outOpen = false;
 function renderProg() {
-  if (fmNow()) {
-    const on = batch.students.filter(s => !noScore(s)), N = on.length, n = on.filter(s => s.grade.fb).length, nOff = batch.students.length - N;
-    $('#progS').innerHTML = '<div class="ph">' + n + ' of ' + N + ' <span>feedback complete' + (nOff ? ' · ' + nOff + ' missing or excused' : '') + '</span></div><div class="pb"><i style="width:' + (N ? 100 * n / N : 0) + '%"></i></div>' +
-      '<div class="ptiles"><div class="pt" id="pDone"><div class="k">Complete</div><div class="v">' + n + '</div></div><div class="pt" id="pLeft"><div class="k">Left</div><div class="v">' + (N - n) + '</div></div></div>' +
-      (n < N ? '<button class="btn sm" id="nextUn" title="Opens the next student whose feedback isn’t complete">Next without feedback <kbd>N</kbd></button>' : '<div class="muted" style="font-size:13px;margin-bottom:6px">Feedback is complete for everyone' + (nOff ? ' else' : '') + '.</div>');
-    return;
-  }
-  const on = batch.students.filter(s => !noScore(s)), N = on.length, n = on.filter(s => gradeOf(s).done).length, nOff = batch.students.length - N;
-  const cs = classStats(), outs = batch.students.map((st, i) => i).filter(i => batch.students[i].grade.outAvg && !noScore(batch.students[i]));
-  if (!outs.length) outOpen = false;
-  const outList = (anonOn() ? anonOrder().filter(i => outs.includes(i)) : outs).map(i => { const g = gradeOf(batch.students[i]);
-    return '<button class="po" data-pgo="' + i + '"><span>' + esc(shownName(batch.students[i], i)) + '</span><span>' + (g.total != null ? fmtNum(g.total) + ' / ' + fmtNum(g.outOf != null ? g.outOf : maxPoints()) : g.pct != null ? fmtPct(g.pct) : 'No score') + '</span></button>'; }).join('');
-  $('#progS').innerHTML = '<div class="ph">' + n + ' of ' + N + ' <span>scored' + (nOff ? ' · ' + nOff + ' missing or excused' : '') + '</span></div><div class="pb"><i style="width:' + (N ? 100 * n / N : 0) + '%"></i></div>' +
-    '<div class="ptiles">' + (cs.n ? '<button class="pt click big" id="pAvg" title="Average of ' + people(cs.n, 'finished score') + '’s percents. Partial, missing, excused and left-out papers don’t count. Click for Insights."><div class="k">Average</div>' +
-      '<div class="v">' + (cs.meanPct != null ? pctAvgText(cs.meanPct) : oneDp(cs.mean)) + '</div><div class="s">' + oneDp(cs.mean) + ' / ' + fmtNum(cs.max) + '</div></button>'
-      : '<div class="pt" id="pAvg" title="No finished scores yet"><div class="k">Average</div><div class="v">–</div></div>') +
-'<div class="pt" id="pLeft" title="Papers with no score or only part of one"><div class="k">Left</div><div class="v">' + (N - n) + '</div></div>' +
-    (outs.length ? '<button class="pt click" id="pOut" aria-expanded="' + outOpen + '" title="Papers you left out of the average. Click to see them."><div class="k">Left out</div><div class="v">' + outs.length + '</div></button>' : '<div class="pt" id="pOut" title="Leave a paper out with the switch under Mark as"><div class="k">Left out</div><div class="v">0</div></div>') + '</div>' +
-    (outOpen ? '<div class="poutbox"><div class="h">Click one to open it</div>' + outList + '</div>' : '') +
-    (n < N ? '<button class="btn sm" id="nextUn" title="Opens the next student without a full score">Next unscored <kbd>N</kbd></button>' : '<div class="muted" style="font-size:13px;margin-bottom:6px">Everyone ' + (nOff ? 'else ' : '') + 'has a score.</div>');
+  const fm = fmNow();
+  const on = batch.students.filter(s => !noScore(s)), N = on.length, n = on.filter(s => fm ? s.grade.fb : gradeOf(s).done).length, nOff = batch.students.length - N;
+  const cs = fm ? null : classStats();
+  const avg = fm ? '' : cs.n ? '<button class="pavg" id="pAvg" title="Average of ' + people(cs.n, 'finished score') + '’s percents: ' + oneDp(cs.mean) + ' / ' + fmtNum(cs.max) + '. Partial, missing, excused and left-out papers don’t count. Click for Insights."><span class="k">Avg</span> <span class="v">' + (cs.meanPct != null ? pctAvgText(cs.meanPct) : oneDp(cs.mean)) + '</span><span class="s">' + oneDp(cs.mean) + ' / ' + fmtNum(cs.max) + '</span></button>'
+    : '<span class="pavg none" id="pAvg" title="No finished scores yet"><span class="k">Avg</span> <span class="v">–</span></span>';
+  $('#progS').innerHTML = '<div class="phrow"><div class="ph">' + n + ' of ' + N + ' <span>' + (fm ? 'feedback complete' : 'scored') + (nOff ? ' · ' + nOff + ' missing or excused' : '') + '</span></div>' + avg + '</div>' +
+    '<div class="pb"><i style="width:' + (N ? 100 * n / N : 0) + '%"></i></div>' + lfChips();
 }
 function nextUnscored() {
   const N = batch.students.length, o = anonOn() ? anonOrder() : batch.students.map((_, i) => i), p = o.indexOf(cur);
@@ -4659,10 +4744,7 @@ function nextUnscored() {
   toast(fm ? 'Feedback is complete for everyone' : 'Everyone has a score');
 }
 $('#progS').addEventListener('click', e => {
-  if (e.target.closest('#nextUn')) nextUnscored();
-  if (e.target.closest('button#pOut')) { outOpen = !outOpen; renderProg(); }
   if (e.target.closest('button#pAvg')) openOverview();
-  const go = e.target.closest('[data-pgo]'); if (go) openStudent(+go.dataset.pgo);
 });
 $('#stuList').addEventListener('click', e => { const b = e.target.closest('.stu'); if (b) openStudent(+b.dataset.i); });
 $('#stuFind').addEventListener('input', () => { renderList(); if (!$('#stuList .stu')) $('#stuList').innerHTML = '<div class="muted" style="font-size:13px;padding:6px 8px">No one matches.</div>'; });
@@ -4677,7 +4759,7 @@ function renderGrade() {
   let h = '';
   if (fmNow()) return renderFeedback(st);
   if (setup.mode === 'rubric') {
-    h += '<h3>Rubric <button class="link" id="editRubric" style="font-size:12px;text-transform:none;letter-spacing:0">Edit</button></h3>';
+    h += '<h3>Rubric <button class="link" id="editRubric" style="font-size:12.5px;text-transform:none;letter-spacing:0">Edit rubric</button></h3>';
     h += setup.criteria.map((c, i) => { const v = g.rubric[i], k = RUBRIC_STEPS.indexOf(v);
       return '<div class="crit"><div class="cn"><span>' + esc(c) + '</span><em>' + (v == null ? '' : fmtNum(v) + ' / 4') + '</em></div><div class="scores slide" data-c="' + i + '">' +
         '<input type="range" class="srange' + (v == null ? ' unset' : '') + '" min="0" max="' + (RUBRIC_STEPS.length - 1) + '" step="1" value="' + Math.max(0, k) + '" aria-label="Score for ' + esc(c) + '" aria-valuetext="' + (v == null ? 'Not scored' : fmtNum(v) + ' out of 4') + '">' +
@@ -4687,29 +4769,34 @@ function renderGrade() {
       '<div class="pts"><input type="number" step="0.5" min="0" id="ptsIn" value="' + esc(g.points) + '" aria-label="Points"><span class="muted">out of ' + esc(setup.outOf) + '</span></div>';
   }
   h += '<div class="total">' + totalHtml(st) + '</div>' + statusHtml(st);
-  h += '<div class="cmt"><h3 style="margin-bottom:6px">Comment for ManageBac</h3><textarea id="cmtIn" placeholder="Optional. Shows on the Grades tab so you can copy it.">' + esc(g.comment) + '</textarea></div>';
-  const navAt = anonOn() ? anonPos(cur) : cur;   // the order on screen
-  h += '<div class="nav">' + oneOutHtml(st) + '<button class="btn" id="prevBtn" ' + (navAt ? '' : 'disabled') + '>◀ Previous</button><button class="btn primary" id="nextBtn" ' + (navAt < batch.students.length - 1 ? '' : 'disabled') + '>Next ▶</button></div>';
-  h += histSlot(st);
-  h += '<div class="hint">Keys: <kbd>←</kbd> <kbd>→</kbd> or <kbd>↑</kbd> <kbd>↓</kbd> students · <kbd>N</kbd> next unscored · <kbd>=</kbd> calculator · V P H O T C K E tools · ' + keyLabel('⌘Z undo, ⇧⌘Z redo') + ' · <button class="link" data-keys style="font-size:12.5px">All keys ( ? )</button></div>';
+  h += cmtHtml(g) + navHtml(st) + histSlot(st);
+  h += '<div class="hint"><button class="link" data-keys style="font-size:12.5px">All keys ( ? )</button></div>';
   $('#grade').innerHTML = h;
 }
+const cmtHtml = g => '<div class="cmt"><h3 style="margin-bottom:6px">Comment for ManageBac</h3><textarea id="cmtIn" placeholder="Optional. Shows on the Grades tab so you can copy it.">' + esc(g.comment) + '</textarea>' + cmtChips() + '</div>';
+function navHtml(st) {
+  const o = navOrder(), at = o.indexOf(cur), first = at <= 0, last = at >= o.length - 1, fm = fmNow();
+  const more = batch.students.some(s => !noScore(s) && (fm ? !s.grade.fb : !gradeOf(s).done));
+  return '<div class="nav"><button class="btn navi" id="prevBtn" aria-label="Previous student" title="Previous student (←)" ' + (first ? 'disabled' : '') + '>‹</button>' +
+    (more ? '<button class="btn primary" id="nextUn" title="Opens the next student ' + (fm ? 'whose feedback isn’t complete' : 'without a full score') + '">' + (fm ? 'Next without feedback' : 'Next unscored') + ' <kbd>N</kbd></button><button class="btn navi" id="nextBtn" aria-label="Next student" title="Next student (→)" ' + (last ? 'disabled' : '') + '>›</button>'
+      : '<button class="btn primary" id="nextBtn" ' + (last ? 'disabled' : '') + '>Next ▶</button>') + oneOutHtml(st) + '</div>';
+}
 function renderFeedback(st) {
-  const g = st.grade, on = !!g.fb, off = noScore(st), navAt = anonOn() ? anonPos(cur) : cur, last = navAt >= batch.students.length - 1;
+  const g = st.grade, on = !!g.fb, off = noScore(st), nav = navOrder(), navAt = nav.indexOf(cur), last = navAt >= nav.length - 1;
   $('#grade').innerHTML = '<h3>Feedback</h3><div class="fbnote"><b>Formative activity</b>Feedback only, so there’s no score. <button class="link" id="fbType">Change the type</button></div>' +
     (off ? '<div class="total"><b>' + STATUS_LABEL[g.status] + '</b><span style="width:100%;font-size:12.5px">Nothing to give feedback on. Click it again under Mark as to take this off.</span></div>'
       : '<button class="fbtog" id="fbTog" role="switch" aria-checked="' + on + '"><span class="bx">' + (on ? '✓' : '') + '</span><span>Feedback complete<small>' + (on ? 'Click again to undo.' : 'Click, or press F, when you’ve finished with this paper.') + '</small></span></button>') +
-    statusHtml(st).replace(/<button class="outsw"[\s\S]*?<\/button>/, '') +
-    '<div class="cmt"><h3 style="margin-bottom:6px">Comment for ManageBac</h3><textarea id="cmtIn" placeholder="Optional. Shows on the Grades tab so you can copy it.">' + esc(g.comment) + '</textarea></div>' +
-    '<div class="nav">' + oneOutHtml(st) + '<button class="btn" id="prevBtn" ' + (navAt ? '' : 'disabled') + '>◀ Previous</button>' + (off || on ? '<button class="btn primary" id="nextBtn" ' + (last ? 'disabled' : '') + '>Next ▶</button>' : '<button class="btn primary" id="fbNext">Complete' + (last ? '' : ' and next ▶') + '</button>') + '</div>' +
+    statusHtml(st, true) + cmtHtml(g) +
+    '<div class="nav"><button class="btn navi" id="prevBtn" aria-label="Previous student" title="Previous student (←)" ' + (navAt ? '' : 'disabled') + '>‹</button>' + (off || on ? '<button class="btn primary" id="nextBtn" ' + (last ? 'disabled' : '') + '>Next ▶</button>' : '<button class="btn primary" id="fbNext">Complete' + (last ? '' : ' and next ▶') + '</button>') + oneOutHtml(st) + '</div>' +
+    (batch.students.some(s => !noScore(s) && !s.grade.fb && s !== st) ? '<button class="link nextun" id="nextUn" title="Opens the next student whose feedback isn’t complete">Next without feedback <kbd>N</kbd></button>' : '') +
     histSlot(st) +
-    '<div class="hint">Keys: <kbd>F</kbd> feedback complete · <kbd>Shift</kbd> <kbd>F</kbd> complete and next · <kbd>N</kbd> next without feedback · <kbd>←</kbd> <kbd>→</kbd> students · <button class="link" data-keys style="font-size:12.5px">All keys ( ? )</button></div>';
+    '<div class="hint"><kbd>F</kbd> feedback complete · <kbd>Shift</kbd> <kbd>F</kbd> complete and next · <button class="link" data-keys style="font-size:12.5px">All keys ( ? )</button></div>';
 }
 function fbToggle(next) {
   const st = batch.students[cur]; if (noScore(st)) return;
   setFb(st, next ? true : !st.grade.fb);
   renderList();
-  if (next && (anonOn() ? anonPos(cur) : cur) < batch.students.length - 1) stepStudent(1); else renderGrade();
+  if (next && navOrder().indexOf(cur) < navOrder().length - 1) stepStudent(1); else renderGrade();
 }
 function totalHtml(st) {
   const gr = gradeOf(st), own = ownGrade(st);
@@ -4736,9 +4823,12 @@ $('#grade').addEventListener('click', e => {
     renderGrade(); renderList(); saveSoon(); return;
   }
   const sb = e.target.closest('[data-status]'); if (sb) return setStatus(batch.students[cur], sb.dataset.status);
-  if (e.target.closest('#outAvg')) return setOutAvg(batch.students[cur]);
+  if (e.target.closest('#outAvg, [data-outoff]')) return setOutAvg(batch.students[cur]);
   if (e.target.closest('#prevBtn')) stepStudent(-1);
   if (e.target.closest('#nextBtn')) stepStudent(1);
+  if (e.target.closest('#nextUn')) return nextUnscored();
+  if (e.target.closest('[data-gcalc]')) return openCalc();
+  if (cmtClick(e)) return;
   if (e.target.closest('#editRubric')) openSetup();
   if (e.target.closest('[data-keys]')) openKeys();
   if (e.target.closest('#fbTog')) fbToggle(false);
@@ -5280,8 +5370,8 @@ function sentWhen(t) {
 function oneOutHtml(st) {
   if (!st.files.length) return '';
   const nm = anonOn() ? 'this' : esc(st.key) + '’s', g = st.grade;
-  return '<div class="oneout"><button class="btn" id="oneOutBtn" title="Download just this student’s marked file, ready to upload. Uses the options on the Return tab."><span aria-hidden="true">⤓</span> Export ' + nm + ' paper</button>' +
-    '<p class="oneout-say' + (g.sent ? ' ok' : '') + '" id="oneOutSay">' + (g.sent ? '✓ Exported at ' + esc(sentWhen(g.sent)) + '. Export again after any change.' : 'Just their marked file, ready to upload.') + '</p></div>';
+  return '<div class="oneout"><button class="link" id="oneOutBtn" title="Download just this student’s marked file, ready to upload. Uses the options on the Return tab.">Export ' + nm + ' paper now</button>' +
+    '<p class="oneout-say' + (g.sent ? ' ok' : '') + '" id="oneOutSay">' + (g.sent ? '✓ Exported at ' + esc(sentWhen(g.sent)) + '. Export again after any change.' : '') + '</p></div>';
 }
 async function exportOne(st) {
   if (xBusy) return toast('The last export is still going. It will say when it’s done.');
@@ -7862,8 +7952,7 @@ function anonShuffle() {
 const anonPos = i => anonOrder().indexOf(i);
 const shownName = (st, i) => anonOn() ? 'Paper ' + (anonPos(i) + 1) : st.key;
 function stepStudent(d) {
-  if (!anonOn()) { const n = cur + d; if (n >= 0 && n < batch.students.length) openStudent(n); return; }
-  const o = anonOrder(), p = o.indexOf(cur) + d;
+  const o = navOrder(), p = o.indexOf(cur) + d;   // the list as it shows: her order, and only the papers the filter lets through
   if (p >= 0 && p < o.length) openStudent(o[p]);
 }
 const anonRx = st => coverRx(st);
@@ -7925,12 +8014,14 @@ function openAnon() {
 function renderAnonHead() {
   const on = anonOn();
   $('#sideHd').innerHTML = '<span>' + (on ? 'Papers, shuffled' : 'Students') + (on ? '' : batchClass() && batchClass().names.length ? ' <i style="font-style:normal;font-weight:500;text-transform:none;letter-spacing:0">· roster order</i>' : ' <i style="font-style:normal;font-weight:500;text-transform:none;letter-spacing:0">· folder order</i>') + '</span>' +
-    '<button class="anonsw" id="anonSw" role="switch" aria-checked="' + on + '" title="Grade without names, in a random order"><i></i>Anonymous</button>' +
     (on ? '<button class="btn sm" id="anonShuf" title="Put the papers in a new random order">⤮ Shuffle</button>' : '');
+  $('#sideFoot').innerHTML = '<button class="btn sm" id="lateBtn" title="Late work, or many files at once. Each goes to its student by the name in the file name.">Add late work</button>' +
+    '<button class="anonsw" id="anonSw" role="switch" aria-checked="' + on + '" title="Grade without names, in a random order">Hide names<i></i></button>';
 }
-$('#sideHd').addEventListener('click', e => {
+for (const id of ['#sideHd', '#sideFoot']) $(id).addEventListener('click', e => {
   if (e.target.closest('#anonSw')) openAnon();
   if (e.target.closest('#anonShuf')) { anonShuffle(); saveNow(); openStudent(anonOrder()[0]); toast('Shuffled: a new random order'); }
+  if (e.target.closest('#lateBtn')) $('#bringBtn').click();
 });
 
 /* ---------------- calculator: a small floating calculator with grade helpers; it opens from the top bar or the = key ---------------- */
@@ -10105,7 +10196,7 @@ function setHlMode(mode, say) {
   hlMode = mode; store.set('gs.hlMode', mode); renderTools();
   if (say) toast(mode === 'free' ? 'Highlight: freehand' : 'Highlight: snaps to typed lines. Freehand where there are none.');
 }
-const hlBar = () => '<span class="seg" style="margin-left:4px"><button data-hlm="auto" aria-pressed="' + (hlMode !== 'free') + '" title="Snaps to typed lines. Goes freehand on scans and handwriting. Press H again to switch.">Snap</button><button data-hlm="free" aria-pressed="' + (hlMode === 'free') + '" title="Always draw it by hand. Hold Shift for a straight line. Press H again to switch.">Freehand</button></span>' +
+const hlBar = () => '<span class="seg" style="margin-left:4px"><button data-hlm="auto" aria-pressed="' + (hlMode !== 'free') + '" title="Snaps to typed lines. Goes freehand on scans and handwriting. Press H again to switch.">Snap</button><button data-hlm="free" aria-pressed="' + (hlMode === 'free') + '" title="Always draw it by hand. Hold Shift for a straight line. Press H again to switch." aria-label="Freehand">Free</button></span>' +
   '<span class="seg" style="margin-left:4px"><button data-hlw title="How wide a freehand highlight is. Click to change.">' + (HL_WIDTHS[hlW] || 'M') + '</button></span>';
 function hlBarClick(e) {
   const m = e.target.closest('[data-hlm]'); if (m) { setHlMode(m.dataset.hlm); return true; }
@@ -10698,10 +10789,13 @@ function setStatus(st, s) {
   st.grade.status = (st.grade.status || '') === s ? '' : s;
   touchGrade(st); saveSoon(); renderGrade(); renderList();
 }
-function statusHtml(st) {
+function statusHtml(st, plain) {
   const on = st.grade.status || '', out = !!st.grade.outAvg;
-  return '<div id="gstat"><div class="gstat"><span class="muted">Mark as</span><span class="seg">' + Object.keys(STATUS_LABEL).map(k => '<button data-status="' + k + '" aria-pressed="' + (on === k) + '">' + STATUS_LABEL[k] + '</button>').join('') + '</span></div>' +
-    (noScore(st) ? '' : '<button class="outsw" id="outAvg" role="switch" aria-checked="' + out + '"><i></i><span><b>Leave out of the average</b><small>The score stays and still copies. It doesn’t count in the average or on the Insights tab.</small></span></button>') + '</div>';
+  return '<div id="gstat"><div class="gstat"><span class="seg" role="group" aria-label="Mark as">' + Object.keys(STATUS_LABEL).map(k => '<button data-status="' + k + '" aria-pressed="' + (on === k) + '">' + STATUS_LABEL[k] + '</button>').join('') + '</span>' +
+    (plain ? '' : kmWrap('⋯', 'class="btn sm kdots" id="gMore" aria-label="More for this score" title="More for this score"',
+      (noScore(st) ? '' : '<button class="outsw" id="outAvg" role="switch" aria-checked="' + out + '"><i></i><span><b>Leave out of the average</b><small>The score stays and still copies. It doesn’t count in the average or on the Insights tab.</small></span></button>') +
+      '<button class="mitem" data-gcalc>Calculator <kbd>=</kbd></button>', 'right')) + '</div>' +
+    (out && !noScore(st) && !plain ? '<p class="outnote">Left out of the average. <button class="link" data-outoff>Count it again</button></p>' : '') + '</div>';
 }
 function setOutAvg(st) {
   if (st.grade.outAvg) delete st.grade.outAvg; else st.grade.outAvg = true;
@@ -18413,6 +18507,120 @@ let insResize = 0;
 window.addEventListener('resize', () => { if (!$('#insMore')) return; clearTimeout(insResize); insResize = setTimeout(() => { if ($('#insMore')) insMore(); }, 200); });
 
 Object.assign(window.__gs, { tabsRender, tabShow, glPaperOf, setReturned, insNow });
+
+/* ---------------- the marking screen: small menus, the student list's filters, the score panel's extras ---------------- */
+const kmWrap = (label, attrs, items, cls) => '<span class="kmw"><button ' + attrs + ' data-km aria-haspopup="true" aria-expanded="false">' + label + '</button><div class="km' + (cls ? ' ' + cls : '') + '" hidden>' + items + '</div></span>';
+const fileMenu = items => items ? kmWrap('⋯', 'class="icon kdots" aria-label="More for this file" title="More for this file"', items, 'right') : '';
+let kmOn = null;
+const kmItems = m => [...m.querySelectorAll('button, a[href]')].filter(x => !x.disabled && x.checkVisibility());
+function kmClose(focus) {
+  const b = kmOn; if (!b) return;
+  kmOn = null;
+  if (!b.isConnected) return;
+  b.setAttribute('aria-expanded', 'false');
+  const m = b.nextElementSibling; if (m) m.hidden = true;
+  if (focus) b.focus({ preventScroll: true });
+}
+function kmOpen(b) {
+  kmClose();
+  const m = b.nextElementSibling; if (!m || !m.classList.contains('km')) return;
+  m.hidden = false; m.classList.remove('flip'); b.setAttribute('aria-expanded', 'true'); kmOn = b;
+  const host = b.closest('#paper, #grade, .side'), r = m.getBoundingClientRect(), hr = host && host.getBoundingClientRect();
+  if (hr && r.bottom > hr.bottom - 6 && b.getBoundingClientRect().top - hr.top > r.height + 8) m.classList.add('flip');
+  const first = kmItems(m)[0]; if (first) first.focus({ preventScroll: true });
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-km]');
+  if (b) return b === kmOn ? kmClose() : kmOpen(b);
+  if (!kmOn) return;
+  if (e.target.closest('.km [data-armed]')) return;   // Remove asks for a second click: the menu waits for it
+  kmClose();
+});
+document.addEventListener('pointerdown', e => {
+  if (!kmOn || !e.target.closest('.pg')) return;
+  e.preventDefault(); e.stopPropagation(); kmClose();
+}, true);
+document.addEventListener('focusout', e => { if (kmOn && e.relatedTarget && !e.relatedTarget.closest('.kmw')) kmClose(); });
+document.addEventListener('keydown', e => {
+  if (!kmOn) return;
+  if (!kmOn.isConnected) { kmOn = null; return; }
+  if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); return kmClose(true); }
+  if (e.key === 'Tab' || e.metaKey || e.ctrlKey || e.altKey) return;
+  e.stopPropagation();   // nothing behind the menu gets a key; its own buttons still press
+  if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
+  e.preventDefault();
+  const list = kmItems(kmOn.nextElementSibling), i = list.indexOf(document.activeElement), n = list.length;
+  if (n) list[(i + (e.key === 'ArrowDown' ? 1 : -1) + n) % n].focus();
+}, true);
+
+/* ---------------- the student list's filters ---------------- */
+function flagsOf(st) {
+  const out = [];
+  if (st.files.some(f => Object.values(f.sc || {}).some(r => r.re))) out.push('A page needs a rescan');
+  if (manyReads(st)) out.push('More than one grade on the paper'); else if (st.doubts && st.doubts.length) out.push('A grade on the paper to confirm');
+  if (!noScore(st) && disagreeNote(st)) out.push('Your score differs from the paper');
+  if (batch.carry && st.files.some(f => batch.carry.flags[f.path])) out.push('A new or changed file');
+  return out;
+}
+const LIST_FILTERS = [
+  ['all', 'All', () => true, 'Every student'],
+  ['todo', 'To score', st => !noScore(st) && (fmNow() ? !st.grade.fb : !gradeOf(st).done), 'Papers with no score yet, or only part of one'],
+  ['flag', 'Flagged', st => flagsOf(st).length > 0, 'Papers with something to look at: a page to rescan, a grade on the paper to confirm, a score that differs from the paper, or a new or changed file'],
+  ['nopaper', 'No paper', st => !st.files.length && !noScore(st), 'Students with nothing turned in'],
+  ['late', 'Late', st => st.grade.status === 'late', 'Students you marked late'],
+  ['out', 'Left out', st => !!st.grade.outAvg && !noScore(st), 'Papers you left out of the average'],
+];
+let listFilter = 'all', listFilterOf = null;
+function lfCheck() { if (batch && listFilterOf !== batch) { listFilterOf = batch; listFilter = 'all'; } }
+const lfMatch = st => LIST_FILTERS.find(f => f[0] === listFilter)[2](st);
+const lfShows = i => listFilter === 'all' || i === cur || lfMatch(batch.students[i]);
+function navOrder() { lfCheck(); return (anonOn() ? anonOrder() : batch.students.map((_, i) => i)).filter(lfShows); }
+function lfChips() {
+  lfCheck();
+  const todoName = fmNow() ? 'To finish' : 'To score';
+  return '<div class="lfilt" role="group" aria-label="Show in the list">' + LIST_FILTERS.map(([k, label, fn, tip]) => {
+    const n = batch.students.filter(fn).length, id = k === 'todo' ? ' id="pLeft"' : k === 'out' ? ' id="pOut"' : '';
+    const quiet = n === 0 && listFilter !== k && k !== 'all' && k !== 'todo' && k !== 'flag';   // No paper, Late and Left out show only when there are some
+    return '<button class="lf" data-lf="' + k + '"' + id + ' aria-pressed="' + (listFilter === k) + '" title="' + tip + '"' + (quiet ? ' hidden' : '') + '>' + (k === 'todo' ? todoName : label) + ' <span class="v">' + n + '</span></button>';
+  }).join('') + '</div>';
+}
+function lfSet(k) {
+  lfCheck();
+  listFilter = LIST_FILTERS.some(f => f[0] === k) ? k : 'all';
+  renderList(); renderGrade();   // Previous and Next follow the list
+}
+document.addEventListener('click', e => { const b = e.target.closest('[data-lf]'); if (b && batch) lfSet(listFilter === b.dataset.lf ? 'all' : b.dataset.lf); });
+
+/* ---------------- saved comments, one click from the comment box ---------------- */
+const cmtShort = t => { t = String(t).replace(/\s+/g, ' ').trim(); return t.length > 26 ? t.slice(0, 25).trimEnd() + '…' : t; };
+function cmtChips() {
+  const chip = (t, i) => '<button class="cchip" data-cbank="' + i + '" title="' + esc(t) + '">' + esc(cmtShort(t)) + '</button>';
+  return '<div class="cbank">' + bank.slice(0, 3).map(chip).join('') +
+    kmWrap('Saved comments', 'class="cchip cmore" id="cmtMore" title="Your saved comments, and saving this one"',
+      '<button class="mitem" data-cbsave>Save this comment<small>It shows here and under every comment on a paper</small></button>' +
+      (bank.length ? '<div class="kmhd">Click one to add it</div>' + bank.map((t, i) => '<button class="mitem" data-cbank="' + i + '" title="' + esc(t) + '">' + esc(t.length > 90 ? t.slice(0, 89) + '…' : t) + '</button>').join('') : '<p class="kmnote">Nothing saved yet.</p>'), 'up') + '</div>';
+}
+function cmtClick(e) {
+  const ta = $('#cmtIn'); if (!ta) return false;
+  const c = e.target.closest('[data-cbank]');
+  if (c) {
+    const t = bank[+c.dataset.cbank]; if (t == null) return true;
+    ta.value = ta.value.trim() ? ta.value.replace(/\s+$/, '') + ' ' + t : t;
+    ta.dispatchEvent(new Event('input', { bubbles: true }));
+    ta.focus(); ta.selectionStart = ta.selectionEnd = ta.value.length;
+    return true;
+  }
+  if (e.target.closest('[data-cbsave]')) {
+    const t = ta.value.trim();
+    if (!t) { toast('Type the comment first, then save it.'); return true; }
+    if (bank.includes(t)) { toast('That one is already saved.'); return true; }
+    bank.unshift(t); store.set('gs.bank', bank); toast('Saved. It’s one click away on every paper now.');
+    const box = $('#grade .cbank'); if (box) box.outerHTML = cmtChips();
+    return true;
+  }
+  return false;
+}
+Object.assign(window.__gs, { flagsOf, lfSet, navOrder, kmClose });
 
 /* ---------------- the frame: the sidebar, Home's "Needs a look", and Find anything (11/9) ---------------- */
 var shellReady;
