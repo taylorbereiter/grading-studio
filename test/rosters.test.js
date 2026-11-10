@@ -3,7 +3,7 @@ const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const { unzipSync, zipSync, strToU8 } = require('fflate');
 const { launch } = require('./helpers/chrome');
-const { openApp, answerDlg, openZip, pickFile, goToStudent, setTool, drag, score, settle, workOf, closeBox } = require('./helpers/app');
+const { openApp, answerDlg, openZip, pickFile, goToStudent, setTool, drag, score, settle, workOf, closeBox, pick } = require('./helpers/app');
 const { makePaper, makeDocx, zipOf } = require('./helpers/fixtures');
 
 let browser;
@@ -297,7 +297,7 @@ test('moving a scored file asks, and yes takes the score, comment and status wit
 
 test('through the Move to… box: typing a name and pressing Enter stops at the question', async () => {
   const { page, close } = await scoredAnn('Ann Alpha/Essay.pdf', 'Ben Beta/Essay.pdf');
-  await page.click('[data-mvfile]');
+  await pick(page, '[data-mvfile]');
   await page.waitForSelector('#mvFind');
   await page.keyboard.type('Ben'); await page.keyboard.press('Enter');
   await page.waitForSelector('#askDlg [data-ok]');

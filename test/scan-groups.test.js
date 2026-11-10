@@ -2,7 +2,7 @@
 const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const { launch } = require('./helpers/chrome');
-const { openApp, openZip, appReady, answerDlg, pickFile, waitPaper, goToStudent, settle, press } = require('./helpers/app');
+const { openApp, openZip, appReady, answerDlg, pickFile, waitPaper, goToStudent, settle, press, pick } = require('./helpers/app');
 const { makePaper, zipOf } = require('./helpers/fixtures');
 
 let browser;
@@ -130,7 +130,7 @@ test('group work in a download: Group work… gives another student their own co
   await openZip(page, zip);
   await waitPaper(page);
   await page.waitForSelector('#paper [data-shfile]');
-  await page.click('#paper [data-shfile]');
+  await pick(page, '#paper [data-shfile]');
   await page.waitForSelector('#dlgBox [data-shto]');
   await page.click('#dlgBox [data-shto]');
   await page.waitForFunction(() => window.__gs.state().batch.students[1].files.length === 2);

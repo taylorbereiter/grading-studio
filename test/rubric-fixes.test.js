@@ -5,7 +5,7 @@ const fs = require('fs'), path = require('path');
 const { unzipSync, zipSync, strToU8 } = require('fflate');
 const { PDFDocument, PDFName, PDFString, PDFHexString } = require('pdf-lib');
 const { launch } = require('./helpers/chrome');
-const { openApp, answerDlg, appReady, openZip, pickFile, goToStudent, score, settle, waitPaper, tmpDir, catchDownloads, closeBox } = require('./helpers/app');
+const { openApp, answerDlg, appReady, openZip, pickFile, goToStudent, score, settle, waitPaper, tmpDir, catchDownloads, closeBox, pick } = require('./helpers/app');
 const { makePaper, makeDocx, zipOf, quizFiles } = require('./helpers/fixtures');
 
 let browser, zip3;
@@ -50,7 +50,7 @@ test('nothing of Arrange pages is left on the dialog box once it has closed', as
   const { page, close } = await openApp(browser);
   await openZip(page, zip3);
   const layout = () => page.evaluate(() => { const s = window.__gs.state(); return s.batch.students[s.cur].layout || null; });
-  await page.click('#arrangeBtn');
+  await pick(page, '#arrangeBtn');
   await page.waitForSelector('#arrBody [data-rm]');
   await page.click('#arrBody .ath');   // a page is picked, so the old key handler would act on it
   await page.click('#arrBody [data-rm]');
@@ -83,7 +83,7 @@ test('nothing of Arrange pages is left on the dialog box once it has closed', as
 test('Arrange pages Save still saves, and the next dialog’s Save is its own', async () => {
   const { page, close } = await openApp(browser);
   await openZip(page, zip3);
-  await page.click('#arrangeBtn');
+  await pick(page, '#arrangeBtn');
   await page.waitForSelector('#arrBody [data-rm]');
   await page.click('#dlgBox .bf [data-save]');
   await closed(page);
@@ -92,7 +92,7 @@ test('Arrange pages Save still saves, and the next dialog’s Save is its own', 
   await page.click('#dlgBox .bf [data-save]');
   await closed(page);
   assert.equal((await page.evaluate(() => window.__gs.state().setup.criteria)).length, 4);
-  await page.click('#arrangeBtn');
+  await pick(page, '#arrangeBtn');
   await page.waitForSelector('#arrBody .ath');
   await page.$eval('#arrBody [data-name]', e => { e.value = 'Renamed.pdf'; e.dispatchEvent(new Event('input', { bubbles: true })); });
   await page.click('#dlgBox .bf [data-save]');

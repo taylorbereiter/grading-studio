@@ -35,6 +35,7 @@ test('a PDF reading zooms in and out sharply, its box drags taller, and both sta
   await page.mouse.move(box.x, box.y);
   await page.keyboard.down('Control'); await page.mouse.wheel({ deltaY: -200 }); await page.keyboard.up('Control');
   await page.waitForFunction(() => parseInt(document.querySelector('#paper .refd .rzv').textContent) > 125);
+  assert.equal(await page.evaluate(() => window.__gs.state().zoom), 1, 'the papers under it stay as they were');
   await page.click('#paper .refd [data-rz="1"]');
   await page.waitForFunction(() => document.querySelector('#paper .refd .rzv').textContent === '100%');
   await page.click('#paper .refd [data-rz="-"]');

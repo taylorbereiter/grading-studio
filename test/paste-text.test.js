@@ -2,7 +2,7 @@
 const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const { launch } = require('./helpers/chrome');
-const { openApp, openZip, waitPaper, goToStudent, markPage, settle } = require('./helpers/app');
+const { openApp, openZip, waitPaper, goToStudent, markPage, settle, pick } = require('./helpers/app');
 const { standardFiles, zipOf } = require('./helpers/fixtures');
 
 let browser, zip;
@@ -21,7 +21,7 @@ test('Paste text adds a markable page that stays after reopening', async () => {
   const { page, close } = await openApp(browser);
   await openZip(page, zip, 'River essay.zip');
   await goToStudent(page, 1);
-  await page.click('#pasteTextBtn');
+  await pick(page, '#pasteTextBtn');
   await page.waitForSelector('#ptText');
   assert.equal(await page.$eval('#ptAdd', b => b.disabled), true);
   await page.$eval('#ptName', e => { e.value = 'Part 2 from email'; });

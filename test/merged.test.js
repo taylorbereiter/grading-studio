@@ -3,7 +3,7 @@ const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs'), path = require('path'), vm = require('vm');
 const { launch } = require('./helpers/chrome');
-const { openApp, answerDlg, appReady, openZip, waitPaper, score, settle, pickFile, closeBox } = require('./helpers/app');
+const { openApp, answerDlg, appReady, openZip, waitPaper, score, settle, pickFile, closeBox, pick } = require('./helpers/app');
 const { makePaper, zipOf, standardFiles } = require('./helpers/fixtures');
 const { takeHome, openFile, bringIt } = require('./helpers/carry');
 
@@ -191,7 +191,7 @@ test('after + Add file, the new file’s bar is in view, with Mark late on it', 
   const paper = await makePaper({ title: 'A paper' });
   await openZip(page, zipOf({ 'Aria Testwell/Essay.pdf': paper, 'Bram Sample/Essay.pdf': paper }));
   await page.evaluate(() => { const was = HTMLInputElement.prototype.click; HTMLInputElement.prototype.click = function () { if (this.type === 'file') { this.id = 'pickHere'; document.body.appendChild(this); return; } return was.call(this); }; });
-  await page.click('#addFileBtn');
+  await pick(page, '#addFileBtn');
   await page.waitForSelector('#pickHere');
   const dir = fs.mkdtempSync(path.join(require('os').tmpdir(), 'gs-test-late-')), f = path.join(dir, 'late page.pdf');
   fs.writeFileSync(f, await makePaper({ title: 'Late page' }));

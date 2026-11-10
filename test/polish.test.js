@@ -192,13 +192,15 @@ test('Box each grade, Box it by hand and Check the covers show the paper', async
   await close();
 });
 
-test('the tools fit on one row at 1280px, even with the pen’s choices showing', async () => {
+test('the tools stay one column at 1280px, all on screen, even with the pen’s choices showing', async () => {
   const { page, close } = await openApp(browser);
   await page.setViewport({ width: 1280, height: 800 });
   await openZip(page, zip);
   await page.evaluate(() => window.__gs.setTool('pen'));
-  const below = await page.$eval('#tools', t => { const kids = [...t.children].filter(e => e.getBoundingClientRect().height), end = kids[0].getBoundingClientRect().bottom; return kids.filter(e => e.getBoundingClientRect().top >= end).map(e => e.className); });
-  assert.deepEqual(below, []);
+  const d = await page.$eval('#tools', t => { const r = t.getBoundingClientRect(), tools = [...t.querySelectorAll('.tool')].map(e => e.getBoundingClientRect()); return { beside: tools.filter((q, i) => i && q.top < tools[i - 1].bottom).length, cut: t.scrollHeight - t.clientHeight, off: r.bottom - document.querySelector('#paper').getBoundingClientRect().bottom, w: r.width }; });
+  assert.equal(d.beside, 0, 'each tool is under the one before');
+  assert.ok(d.cut <= 1 && d.off <= 0, 'nothing is cut off: ' + JSON.stringify(d));
+  assert.ok(d.w <= 64, 'a narrow strip');
   await close();
 });
 

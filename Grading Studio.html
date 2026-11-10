@@ -4886,7 +4886,7 @@ function openKeys() {
     row('⌘Z', 'Undo') + row('⇧⌘Z', 'Redo (⌘Y works too)') +
     '<h4>A picked mark (Select tool)</h4>' + row('← → ↑ ↓', 'Nudge it (Shift for bigger steps)') + row('⌘C ⌘V', 'Copy it, then paste on the page you’re looking at, even on another student’s paper') + row('⌘D', 'Make a copy of it') + row('+ −', 'Make it bigger or smaller (or drag the square at its corner)') + row('Delete', 'Remove it') + row('Esc', 'Let go of it (the arrows go back to moving between students)') +
     '<h4>The paper</h4>' + row('⌘+ ⌘−', 'Zoom in / out (or pinch, or ⌘-scroll)') + row('⌘0', 'Back to 100%') + row('[ ]', 'Fold away the student list / score panel') +
-    'Turn a page: point at it and use ⟲ ⟳ in its top corner, or “Turn all pages” above the file. In Arrange pages, pick pages and press R.'.replace(/^/, '<h4>Turning pages</h4><span style="grid-column:1/-1">') + '</span>' +
+    'Turn a page: point at it and use ⟲ ⟳ in its top corner, or “Turn all pages” under the file’s ⋯. In Arrange pages, pick pages and press R.'.replace(/^/, '<h4>Turning pages</h4><span style="grid-column:1/-1">') + '</span>' +
     '<h4>Other</h4>' + row('=', 'Calculator') + row('Shift =', 'Answer, in the calculator (= on its own adds, Enter answers too)') + row('Space', 'Play / pause a recording') + row('J L', 'Back / ahead 5 seconds') + row('?', 'This list') +
     '</div></div><div class="bf"><span class="muted gsVer" style="margin-right:auto;font-size:13px">' + esc(versionLabel()) + '</span><button class="btn primary" data-close>Close</button></div>', true);
   $('#dlgBox').onclick = e => { if (e.target.closest('[data-close]')) closeDlg(); };
@@ -6866,7 +6866,7 @@ async function refCard(r, st) {
     if (now) go(); else { apply(true); zt = setTimeout(go, 160); }
   };
   bar.onclick = e => { const b = e.target.closest('[data-rz]'); if (!b) return; const v = b.dataset.rz; setZoom(v === '+' ? zoom * 1.25 : v === '-' ? zoom / 1.25 : 1, true); };
-  scroll.addEventListener('wheel', e => { if (!e.ctrlKey && !e.metaKey) return; e.preventDefault(); setZoom(zoom * Math.exp(-e.deltaY / 300)); }, { passive: false });
+  scroll.addEventListener('wheel', e => { if (!e.ctrlKey && !e.metaKey) return; e.preventDefault(); e.stopPropagation(); setZoom(zoom * Math.exp(-e.deltaY / 300)); }, { passive: false });   // the reading zooms, not the papers under it
   grip.onpointerdown = e => {
     e.preventDefault(); grip.setPointerCapture(e.pointerId);
     const y0 = e.clientY, start = scroll.getBoundingClientRect().height;
@@ -7907,7 +7907,7 @@ function openDisplay() {
   const render = () => {
     $('#dispBody').innerHTML =
       '<div class="dset"><div class="dl">App text size</div>' + seg('ui', [[0.9, 'Small'], [1, 'Normal'], [1.15, 'Large'], [1.3, 'Extra large']]) +
-        '<div class="muted" style="font-size:12.5px;margin-top:6px">The student list, toolbar, grade panel and windows. Papers keep their own zoom.</div></div>' +
+        '<div class="muted" style="font-size:12.5px;margin-top:6px">The student list, tools, grade panel and windows. Papers keep their own zoom.</div></div>' +
       '<div class="dset"><div class="dl">New text boxes on the paper</div>' + range('tsize', 8, 32, 1, disp.tsize, ' pt') +
         '<div id="tsPrev" style="margin-top:6px;padding:4px 8px;border-radius:6px;background:#fff;font:' + disp.tsize + 'px Helvetica,Arial,sans-serif;color:' + COLORS[inkColor] + '">Aa Bb 123</div></div>' +
       '<div class="dset"><div class="dl">Paper</div>' + seg('fit', [['width', 'Fit width'], ['page', 'Fit whole page']]) +
@@ -18537,6 +18537,7 @@ document.addEventListener('click', e => {
   kmClose();
 });
 document.addEventListener('pointerdown', e => {
+  if (kmOn && !kmOn.isConnected) kmOn = null;   // its paper was drawn again
   if (!kmOn || !e.target.closest('.pg')) return;
   e.preventDefault(); e.stopPropagation(); kmClose();
 }, true);

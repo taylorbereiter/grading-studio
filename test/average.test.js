@@ -2,7 +2,7 @@
 const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const { launch } = require('./helpers/chrome');
-const { openApp, openZip, goToStudent, score, settle, appReady } = require('./helpers/app');
+const { openApp, openZip, goToStudent, score, settle, appReady, pick } = require('./helpers/app');
 const { standardFiles, makePaper, zipOf } = require('./helpers/fixtures');
 
 let browser, zip;
@@ -23,7 +23,7 @@ test('the average and papers left follow the scores, and a left-out paper stays 
   // A placeholder 0, left out: the score stays and copies, but the average doesn't move.
   await goToStudent(page, 2); await score(page, [0, 0, 0]);
   assert.deepEqual(await tiles(page), { avg: '75.00% 6.3 / 12', left: '1', out: '0' }, 'a 0 counts until it is left out');
-  await page.click('#outAvg');
+  await pick(page, '#outAvg');
   assert.equal(await page.$eval('#outAvg', b => b.getAttribute('aria-checked')), 'true');
   assert.deepEqual(await tiles(page), { avg: '88.50% 9.5 / 12', left: '1', out: '1' });
   const st = await page.evaluate(() => { const G = window.__gs, s = G.state().batch.students[2]; return { g: G.gradeOf(s), row: G.tableRow(s, 2), head: G.tableHead() }; });
@@ -36,15 +36,17 @@ test('the average and papers left follow the scores, and a left-out paper stays 
   const keys = await page.evaluate(() => [...window.__gs.consData().groups.keys()]);
   assert.ok(!keys.includes(0), 'and the Consistency check leaves it out');
 
-  // The Left out box lists it, and a click opens that student.
+  // The Left out filter lists it (with the paper she is on), and a click opens that student.
   await goToStudent(page, 0);
   await page.click('#pOut');
-  assert.match(await page.$eval('.poutbox', e => e.textContent), /Cleo Fixture\s*0 \/ 12/);
-  await page.click('.poutbox [data-pgo="2"]');
+  assert.deepEqual(await page.$$eval('#stuList .stu', a => a.map(b => +b.dataset.i)), [0, 2]);
+  assert.match(await page.$eval('#stuList .stu[data-i="2"]', e => e.textContent), /Cleo Fixture/);
+  await page.click('#stuList .stu[data-i="2"]');
   await page.waitForFunction(() => window.__gs.state().cur === 2);
+  assert.deepEqual(await page.$$eval('#stuList .stu', a => a.map(b => +b.dataset.i)), [2]);
 
   // Switched back on, the 0 counts again.
-  await page.click('#outAvg');
+  await pick(page, '#outAvg');
   assert.deepEqual(await tiles(page), { avg: '75.00% 6.3 / 12', left: '1', out: '0' });
   noErrors(page); await close();
 });
@@ -52,7 +54,7 @@ test('the average and papers left follow the scores, and a left-out paper stays 
 test('a left-out paper with no score is still left; missing and excused have no switch; it comes back after a reload', async () => {
   const { page, close } = await stack();
   await goToStudent(page, 3);
-  await page.click('#outAvg');
+  await pick(page, '#outAvg');
   assert.deepEqual(await tiles(page), { avg: '–', left: '4', out: '1' }, 'still to do until it has a score');
   await goToStudent(page, 1);
   await page.click('[data-status="missing"]');
@@ -66,13 +68,13 @@ test('a left-out paper with no score is still left; missing and excused have no 
   noErrors(page); await close();
 });
 
-test('during anonymous grading the left-out list shows no names', async () => {
+test('during anonymous grading the Left out filter shows no names', async () => {
   const { page, close } = await stack();
-  await goToStudent(page, 2); await score(page, [2, 2, 2]); await page.click('#outAvg');
+  await goToStudent(page, 2); await score(page, [2, 2, 2]); await pick(page, '#outAvg');
   await page.evaluate(() => window.__gs.setAnon(true));
   await page.waitForFunction(() => window.__gs.anonOn());
   await page.click('#pOut');
-  const t = await page.$eval('.poutbox', e => e.textContent);
+  const t = await page.$eval('#stuList', e => e.textContent);
   assert.match(t, /Paper \d/);
   assert.doesNotMatch(t, /Cleo|Fixture/);
   noErrors(page); await close();

@@ -2,7 +2,7 @@
 const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const { launch } = require('./helpers/chrome');
-const { openApp, openZip, pickFile, appReady, waitPaper, goToStudent, score, settle, setTool, drag, answerDlg } = require('./helpers/app');
+const { openApp, openZip, pickFile, appReady, waitPaper, goToStudent, score, settle, setTool, drag, answerDlg, pick } = require('./helpers/app');
 const { makePaper, zipOf } = require('./helpers/fixtures');
 
 let browser;
@@ -29,7 +29,7 @@ test('Group work…: partners get the paper, one set of marks and one grade; Gra
   });
   await openZip(page, zip);
   await waitPaper(page);
-  await page.click('#paper [data-shfile]');
+  await pick(page, '#paper [data-shfile]');
   await page.waitForSelector('#grpOnce');
   assert.equal(await page.$eval('#grpOnce', e => e.getAttribute('aria-checked')), 'true', 'on by default');
   await shareTo(page, 'Bram Sample');

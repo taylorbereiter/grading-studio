@@ -41,7 +41,8 @@ after(async () => { await browser.close(); });
 
 const marks = (page, k = 0) => page.evaluate(k => JSON.parse(JSON.stringify(window.__gs.state().pages[k].marks())), k);
 const linesReady = (page, k = 0) => page.waitForFunction(k => { const p = window.__gs.state().pages[k]; return p && p.bmp && p.tl; }, {}, k);
-async function open(page) { await openZip(page, zip, 'Marking.zip'); await linesReady(page, 0); await linesReady(page, 1); }
+// The pixel checks here were written for the page as wide as it was before the tool dock took 62 px beside the paper, so the window is that much wider.
+async function open(page) { const v = page.viewport(); await page.setViewport({ width: v.width + 62, height: v.height }); await openZip(page, zip, 'Marking.zip'); await linesReady(page, 0); await linesReady(page, 1); }
 const near = (a, b, tol, what) => assert.ok(Math.abs(a - b) <= tol, (what || 'value') + ': ' + a + ' is not within ' + tol + ' of ' + b);
 const key = async (page, combo) => { for (const k of combo.slice(0, -1)) await page.keyboard.down(k); await page.keyboard.press(combo[combo.length - 1]); for (const k of combo.slice(0, -1)) await page.keyboard.up(k); };
 
@@ -677,7 +678,7 @@ test('the handles on a picked box set its width from either side, on the Text to
   near(m.x + m.bw, m0.x + m0.bw, 1, 'and the right edge stays');
   // Near the edge of the page a box of set width moves in instead of being squeezed.
   const w = m.bw;
-  await drag(page, 0, [[m.x + 5, m.y + 8], [m.x + 505, m.y + 8]]);
+  await drag(page, 0, [[m.x + 14, m.y + 8], [m.x + 514, m.y + 8]]);   // well inside the box: the grips answer 8 px either side of its edge
   [m] = await marks(page);
   assert.equal(m.bw, w, 'keeps its width');
   near(m.x + m.bw, 612 - 6, 1, 'against the edge');

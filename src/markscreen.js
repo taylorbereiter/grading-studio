@@ -31,6 +31,7 @@ document.addEventListener('click', e => {
 });
 // A press on the page only closes the menu. It mustn't also mark the paper underneath.
 document.addEventListener('pointerdown', e => {
+  if (kmOn && !kmOn.isConnected) kmOn = null;   // its paper was drawn again
   if (!kmOn || !e.target.closest('.pg')) return;
   e.preventDefault(); e.stopPropagation(); kmClose();
 }, true);

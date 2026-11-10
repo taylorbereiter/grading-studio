@@ -4,7 +4,7 @@ const assert = require('node:assert/strict');
 const { PDFDocument, StandardFonts, rgb } = require('pdf-lib');
 const { unzipSync, strFromU8 } = require('fflate');
 const { launch } = require('./helpers/chrome');
-const { openApp, openZip, pickFile, goToStudent, catchDownloads, score, settle, press } = require('./helpers/app');
+const { openApp, openZip, pickFile, goToStudent, catchDownloads, score, settle, press, pick } = require('./helpers/app');
 const { zipOf, makeDocx } = require('./helpers/fixtures');
 
 let browser;
@@ -796,7 +796,7 @@ test('during anonymous grading Previous and Next follow the papers’ order, and
   const st = await keys(page);
   await goToStudent(page, st.indexOf('Ruby Walsh'));
   await page.waitForSelector('#paper [data-mvfile]');
-  await page.click('#paper [data-mvfile]');
+  await pick(page, '#paper [data-mvfile]');
   await page.waitForSelector('#mvList');
   const text = await page.$eval('#dlgBox', e => e.innerText);
   assert.ok(!/ruby|walsh|nia|omar|haddad|theo|banks/i.test(text), text);
