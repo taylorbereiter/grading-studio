@@ -217,11 +217,14 @@ test('the gradebook on the page keeps its tools, and picks up a change made on t
   await page.waitForFunction(() => /Reading quiz A/.test(document.querySelector('#bkTab thead').textContent));
   assert.match(await page.$eval(cell, c => c.textContent), /85%/);
   // another tab renames an assignment: the table here is drawn again from the new copy, and a score typed after that keeps both changes
-  const other = await page.browserContext().newPage();
-  await other.goto(page.url().replace(/#.*$/, '') + 'blank');
-  await other.evaluate(() => { const l = JSON.parse(localStorage.getItem('gs.lib')); l.classes[0].units[0].items[5].name = 'Timed paragraph B'; localStorage.setItem('gs.lib', JSON.stringify(l)); });
-  await other.close(); await page.bringToFront();
-  await page.waitForFunction(() => /Timed paragraph B/.test(document.querySelector('#bkTab thead').textContent), { polling: 100 });
+  // (the other tab is a frame at the same address: it saves, and this page hears of it as it would from a tab)
+  await page.evaluate(() => new Promise(done => {
+    const f = document.createElement('iframe'); f.src = location.pathname.replace(/[^/]*$/, '') + 'blank'; f.hidden = true;
+    f.onload = () => { const s = f.contentWindow.localStorage, l = JSON.parse(s.getItem('gs.lib')); l.classes[0].units[0].items[5].name = 'Timed paragraph B'; s.setItem('gs.lib', JSON.stringify(l)); done(); };
+    document.body.appendChild(f);
+  }));
+  await page.waitForFunction(() => { const h = document.querySelector('#bkTab thead'); return !!h && /Timed paragraph B/.test(h.textContent); });
+  await page.$eval('iframe', f => f.remove());
   const c2 = '[data-bked="i6"][data-bkn="Aria Testwell"]';
   await page.click(c2); await page.waitForSelector(c2 + ' input');
   await page.$eval(c2 + ' input', i => { i.value = ''; }); await page.type(c2 + ' input', '95'); await page.keyboard.press('Enter');
