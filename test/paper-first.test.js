@@ -95,6 +95,7 @@ test('the strip shows each student’s number and how far their score is; pointi
 
 test('[ keeps the list open beside the paper and folds it again; only that choice is remembered', async () => {
   const { page, close } = await laptop();
+  await settle(page);   // opening the papers saves once, and on a busy computer that save can land after this line
   const keysBefore = await page.evaluate(() => Object.keys(localStorage).sort());
   const panels = await page.evaluate(() => localStorage.getItem('gs.panels'));
   await blur(page);
