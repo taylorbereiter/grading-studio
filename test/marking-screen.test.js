@@ -74,6 +74,7 @@ test('the dock fits a short window', async () => {
 test('+ Add is one menu: a file, pasted text, or pages from a scan', async () => {
   const { page, close } = await standard();
   for (const s of ['#addFileBtn', '#pasteTextBtn', '#addScanBtn']) assert.equal(await shown(page, s), false, s + ' waits in the menu');
+  assert.deepEqual(await page.evaluate(() => window.__gs.findRows().filter(r => r.group === 'This paper').map(r => r.label)), ['Add a file…', 'Add pasted text…', 'Add pages from a scan…', 'Arrange pages'], 'Find anything reaches them too');
   await page.click('#addMenuBtn');
   assert.equal(await page.$eval('#addMenuBtn', b => b.getAttribute('aria-expanded')), 'true');
   assert.deepEqual(await texts(page, '#addMenuBtn + .km .mitem'), ['A file…', 'Pasted text…', 'From a scan…']);
