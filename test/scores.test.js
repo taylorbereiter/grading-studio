@@ -687,15 +687,16 @@ test('a reading inside a box she drew counts without asking', async () => {
   noErrors(page); await close();
 });
 
-test('a grade typed in a Word file follows the same rules', async () => {
-  const z = zipOf({ 'Ana Example/Essay.pdf': await makePaper({ title: 'Ana' }), 'Ben Example/Essay.docx': makeDocx('Due 10/12'), 'Cal Example/Essay.docx': makeDocx('Total: 10/12'), 'Dee Example/Essay.docx': makeDocx('Nice argument. 10/15') });
+test('a grade typed in a student’s Word file is offered when it’s written out as one', async () => {
+  const z = zipOf({ 'Ana Example/Essay.pdf': await makePaper({ title: 'Ana' }), 'Ben Example/Essay.docx': makeDocx('Due 10/12'), 'Cal Example/Essay.docx': makeDocx('Total: 10/12'), 'Dee Example/Essay.docx': makeDocx('Nice argument. 10/15'), 'Eve Example/Essay.docx': makeDocx('10/12 = 91%') });
   const { page, close } = await stack(z, 'Word typed.zip');
   await page.evaluate(() => window.__gs.scanAll());
   assert.deepEqual((await stu(page, 1)).computed, { total: null, pct: null, done: false });
   const c = await stu(page, 2);
   assert.equal(c.computed.total, null, 'a student could have typed it'); assert.equal(c.doubts.length, 1);
   const d = await stu(page, 3);
-  assert.equal(d.computed.total, null); assert.equal(d.doubts.length, 1);
+  assert.equal(d.computed.total, null); assert.equal(d.doubts.length, 0, 'a number in a sentence of theirs is their sentence');
+  assert.equal((await stu(page, 4)).doubts.length, 1);
   await page.evaluate(() => window.__gs.openSheet());
   for (let n = 2; n > 0; n--) {
     await page.waitForSelector('.rd-ask [data-rd="1"]', { timeout: 60000 });
@@ -703,7 +704,7 @@ test('a grade typed in a Word file follows the same rules', async () => {
     await page.waitForFunction(n => document.querySelectorAll('.rd-ask').length < n, {}, n);
   }
   assert.equal((await stu(page, 2)).computed.total, 10);
-  assert.equal((await stu(page, 3)).computed.total, 10);
+  assert.equal((await stu(page, 4)).computed.total, 10);
   noErrors(page); await close();
 });
 

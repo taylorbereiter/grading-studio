@@ -586,6 +586,7 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
 .dpage:not(.editing) td.rcell:hover{box-shadow:inset 0 0 0 2px var(--accent)}
 .rinfo{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;max-width:816px;margin:0 auto 8px;padding:8px 12px;background:var(--accent-soft);border-radius:10px;font-size:14px}
 .rinfo b{font-size:18px}.rinfo .muted{font-size:12.5px}
+.rinfo.roff{background:none;padding:0 2px;margin-bottom:6px;gap:8px}
 .wdoc{position:relative;display:flex;gap:14px;align-items:flex-start;justify-content:center}
 .wdoc .dpage{flex:0 1 816px;min-width:0;margin:0 0 14px}
 .wnotes{position:relative;flex:0 0 210px}
@@ -1617,6 +1618,9 @@ button.nrow:hover,a.nrow:hover{background:var(--hover)}
     </section>
     <section class="lib setsec" id="setDisplay">
       <div class="lhead"><h2>Display</h2><span class="muted">Light mode is the usual look. Text size and zoom apply while you grade.</span><span class="sp"></span><button class="btn sm themeBtn">Dark mode</button><button class="btn sm" id="setDisp">Text size and zoom</button></div>
+    </section>
+    <section class="lib setsec" id="setPapers">
+      <div class="lhead"><h2>Word papers</h2><span class="muted">Mark them as they are, or turn each one into PDF pages you can mark anywhere. The Word file is always kept.</span><span class="sp"></span><span class="seg" id="setWordPdf"><button data-v="0" aria-pressed="true">Keep as Word</button><button data-v="1" aria-pressed="false">Convert to PDF pages</button></span></div>
     </section>
     <section class="lib setsec" id="setKeys">
       <div class="lhead"><h2>Keys</h2><span class="muted">Every keyboard shortcut for marking and scoring.</span><span class="sp"></span><button class="btn sm" id="setKeysBtn">Show all keys</button></div>
@@ -3107,6 +3111,7 @@ async function intake(entries, label, assignment, fromKeep) {   // entries: [{ p
   renderTools(); renderList(); renderTopAtlas(); openStudent(batch.restoredCur || 0);
   scanned = false; scanAll();
   setTimeout(wordScoresAll, 50);
+  if (shellReady) setTimeout(wordPdfAuto, 400);   // Word papers as PDF pages, when that's her setting
   if (earlier) carrySay();
   if (rub.said) saveSoon();   // what she chose goes with the work, so it isn't a question next time
   openingReport();
@@ -4503,7 +4508,7 @@ function renderList() {
       : hasMarks(st) ? '<span class="dot" title="Marked"></span>' : '';
     const sent = st.grade.sent ? '<span class="sent" title="You exported this paper on its own at ' + esc(sentWhen(st.grade.sent)) + '">↗ sent</span>' : '';
     if (fmNow() && !noScore(st)) right = st.grade.fb ? '<span class="fbck" title="Feedback complete">✓</span>' : hasMarks(st) || (st.grade.comment || '').trim() ? '<span class="dot" title="Started, not complete yet"></span>' : '';
-    const nAdd = st.files.filter(f => f.added && !f.from).length, re = st.files.some(f => Object.values(f.sc || {}).some(r => r.re)), grp = st.files.some(f => f.from || Object.values(f.sc || {}).some(r => r.w)) || st.files.some(f => !f.added && shareCopies(st, f).length);
+    const nAdd = st.files.filter(f => f.added && !f.from && !madeFromWord(f)).length, re = st.files.some(f => Object.values(f.sc || {}).some(r => r.re)), grp = st.files.some(f => f.from || Object.values(f.sc || {}).some(r => r.w)) || st.files.some(f => !f.added && shareCopies(st, f).length);
     return '<button class="stu' + (i === cur ? ' on' : '') + (st.files.length ? '' : ' empty') + '" data-i="' + i + '"><span class="num">' + (pos + 1) + '</span><span class="nm" title="' + esc(shownName(st, i)) + '">' + esc(shownName(st, i)) + '</span>' + (anonOn() ? '' : whoBtn('data-wi="' + i + '"', st.key)) +
       '<span style="display:inline-flex;align-items:center;gap:4px">' + (st.files.length || noScore(st) ? '' : '<span class="muted" style="font-size:11px">no paper</span>') + (g.status === 'late' ? '<span class="stag" title="You marked this student late">late</span>' : '') + (g.out ? '<span class="stag out" title="Left out of the average">left out</span>' : '') + (nAdd ? '<span class="add" title="' + nAdd + (nAdd === 1 ? ' file' : ' files') + ' added by you">+' + nAdd + '</span>' : '') + (re ? '<span class="add" title="A page needs a rescan">⚑</span>' : '') + (groupOf(st) ? '<span class="add grp" title="Group work: marked and graded once with ' + esc(groupNames(groupMates(st))) + '">group</span>' : grp ? '<span class="add grp" title="Group work: shares pages or a file with another student">shared</span>' : '') + carryPill(st) + sent + right + '</span></button>';
   }).join('');
@@ -4900,7 +4905,11 @@ let xBusy = false;
 const xAll = () => !!store.get('gs.xall', false);
 const xEdit = () => store.get('gs.xedit', true) !== false;   // "Keep marks editable"   // "Also include files with no marks"
 const rawOut = f => !viewable(f) && !!f.data && (f.virtual ? f.kind === 'docx' && (!!f.edited || !!(wordScore(f) && f.wscore.total != null)) : xAll() || !!f.edited || !!f.added || !!(wordScore(f) && f.wscore.total != null));
-const docAdded = (st, d) => d.pages.some(([path]) => { const f = fileByPath(st, path); return !!f && !!f.added; });
+function madeFromWord(f) {
+  if (!f || !f.added || !batch || !batch.removed || !/\.pdf$/i.test(f.name)) return false;
+  return Object.keys(batch.removed).some(k => { const r = batch.removed[k]; if (r.by !== f.path || r.back || !WORD_RX.test(k)) return false; const base = k.slice(k.lastIndexOf('/') + 1).replace(WORD_RX, ''); return f.name === base + '.pdf' || (f.name.startsWith(base + ' (added ') && /^ \(added \d+\)\.pdf$/.test(f.name.slice(base.length))); });
+}
+const docAdded = (st, d) => d.pages.some(([path]) => { const f = fileByPath(st, path); return !!f && !!f.added && !madeFromWord(f); });
 const outPath = (st, path) => batch.moved && batch.moved[path] === st.key && path.includes('/') ? st.key + path.slice(path.indexOf('/')) : path;
 function exportPlan(keepFolders) {
   const out = [];
@@ -5388,7 +5397,7 @@ function foundLabel(fd) {
 }
 let sheetShowOut = false;
 let sheetAll = !!store.get('gs.sheetall', false);
-const rowGraded = r => r.word ? !!((r.f.wscore && r.f.wscore.total != null) || wordFound(r.f).length || (r.f.hand && r.f.scan && r.f.scan.shots.length))
+const rowGraded = r => r.word ? !!((r.f.wscore && r.f.wscore.total != null) || wordFound(r.f, r.st).length || (r.f.hand && r.f.scan && r.f.scan.shots.length))
   : !!(r.f.scan && (r.f.scan.found.length || r.f.scan.shots.length));
 function sheetRows(box) {
   const rows = [];
@@ -5449,7 +5458,7 @@ function renderSheet() {
   const nOne = batch.students.filter(st => st.found).length, nMany = batch.students.filter(manyReads).length, nAsk = batch.students.reduce((a, st) => a + (st.doubts && !manyReads(st) ? st.doubts.length : 0), 0);
   $('#shSub').textContent = (setup.spot ? 'Same spot on every paper · ' : '') + nOne + ' of ' + batch.students.length + ' read' + (nMany ? ' · ' + nMany + ' to check' : '') + (nAsk ? ' · ' + nAsk + ' to confirm' : '');
   const spotted = !!setup.spot || batch.students.some(st => st.files.some(f => f.hand));
-  const nHidden = sheetAll ? 0 : batch.students.reduce((a, st) => a + st.files.filter(f => f.kind === 'docx').map(f => ({ f, word: true })).concat(st.files.filter(f => viewable(f) && fileIn(st, f)).map(f => ({ f }))).filter(r => !rowGraded(r)).length, 0);
+  const nHidden = sheetAll ? 0 : batch.students.reduce((a, st) => a + st.files.filter(f => f.kind === 'docx').map(f => ({ f, st, word: true })).concat(st.files.filter(f => viewable(f) && fileIn(st, f)).map(f => ({ f }))).filter(r => !rowGraded(r)).length, 0);
   $('#shBody').innerHTML = '<p class="muted" style="margin:0 0 10px;font-size:14px">Every row is made from the file named on it, inside that student’s folder. Click a picture to open that exact file. Click a score to copy it.</p>' +
     '<label class="chk" style="margin:0 0 10px;font-size:14px"><input type="checkbox" data-sheetall' + (sheetAll ? ' checked' : '') + '> Show files with no grade' + (sheetAll ? '' : nHidden ? ' (' + nHidden + ' hidden)' : '') + '<span class="muted" style="font-weight:400">&nbsp;· the downloaded sheet shows the same rows</span></label>' +
     (spotted ? '<label class="chk" style="margin:0 0 10px;font-size:14px"><input type="checkbox" data-trim' + (disp.trim ? ' checked' : '') + '> Trim each spot down to your marks</label>' : '') +
@@ -5458,7 +5467,7 @@ function renderSheet() {
     rows.map(({ st, i, f, out, none, word, nograde, first }) => {
       const where = '<div style="font-weight:600">' + esc(st.key) + '</div>' + (f ? '<div class="muted" style="font-size:13px;overflow-wrap:anywhere">' + esc(f.path) + '</div>' : '');
       if (word) {   // her Word rubric: the highlighted boxes, read straight from the file
-        const w = f.wscore, tyAll = wordFound(f), rdw = splitReads(st, tyAll), ty = rdw.ok, hs = (f.hand && f.scan && f.scan.shots) || [], ri = rows.findIndex(r => r.f === f);
+        const w = f.wscore, tyAll = wordFound(f, st), rdw = splitReads(st, tyAll), ty = rdw.ok, hs = (f.hand && f.scan && f.scan.shots) || [], ri = rows.findIndex(r => r.f === f);
         const info = w ? w.crits.map((c, k) => esc(c.length > 28 ? c.slice(0, 28) + '…' : c) + ' <b>' + (w.per[k] == null ? '–' : fmtNum(w.per[k])) + '</b>').join(' · ') + (w.total != null && !w.done ? '<div class="muted" style="font-size:12px">Not every criterion is highlighted yet</div>' : '') : '';
         const pics = hs.map(g => '<div style="margin-bottom:6px"><img src="' + g.img + '" alt="" data-open="' + i + '" data-file="' + esc(f.path) + '" title="Open this file" style="display:block;max-width:360px;max-height:150px;border:1px solid var(--line);border-radius:4px;cursor:pointer;background:#fff"><div class="muted" style="font-size:12px">Page ' + (g.page + 1) + '</div></div>').join('');
         const big = (v, of, pct) => '<div class="big-sc" data-copy="' + esc(fmtNum(v)) + '" title="Click to copy">' + fmtNum(v) + (of ? '<small>/ ' + fmtNum(of) + '</small>' : '') + '</div>' + (pct != null ? '<div class="muted" style="font-size:13px;margin-top:4px;font-weight:500">= ' + fmtNum(pct) + '%</div>' : '');
@@ -5638,7 +5647,7 @@ async function buildSheetPdf() {
     ctx.fillStyle = '#151922'; ctx.font = 'bold 13px ' + FONT; ctx.fillText(batch.name + ' · grade sheet' + (pageNo ? ' (continued)' : ''), M, M - 8);
     let y = M + 6;
     while (ri < rows.length) {
-      const { st, i, f, word } = rows[ri], wty = word ? wordFound(f).filter(g => !g.table) : [], sc = word ? { found: f.virtual && f.wscore && f.wscore.total != null ? [{ score: f.wscore.total, outOf: f.wscore.max, pct: f.wscore.pct }] : wordFound(f).length ? wordFound(f) : (f.hand && f.scan && f.scan.found) || [], shots: (f.hand && f.scan && f.scan.shots) || [] } : f && f.scan ? f.scan : { found: [], shots: [] };
+      const { st, i, f, word } = rows[ri], wty = word ? wordFound(f, st).filter(g => !g.table) : [], sc = word ? { found: f.virtual && f.wscore && f.wscore.total != null ? [{ score: f.wscore.total, outOf: f.wscore.max, pct: f.wscore.pct }] : wordFound(f, st).length ? wordFound(f, st) : (f.hand && f.scan && f.scan.found) || [], shots: (f.hand && f.scan && f.scan.shots) || [] } : f && f.scan ? f.scan : { found: [], shots: [] };
       const rd = splitReads(st, sc.found), okF = rd.ok;
       const imgs = [];
       for (const g of sc.shots) { const im = await loadImg(g.img); if (im) imgs.push({ im, h: Math.min(90, maxW * im.height / im.width) }); }
@@ -7425,7 +7434,11 @@ async function idbDo(mode, fn) {
 }
 const addKey = (st, path) => batch.id + '|' + st.key + '|' + path;
 const fmtDay = t => new Date(t).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-const addTag = f => { const was = replacedOf(f); return '<span class="addtag" title="You added this file">' + (f.from ? (anonOn() ? 'Group work copy' : 'Group work, shared from ' + esc(f.from)) : was ? 'Replaced ' + esc(fileShown(batch.students[cur], was.name)) : 'Added by you') + ' · ' + fmtDay(f.added) + '</span>' + lateLink(f); };
+const addTag = f => {
+  const was = replacedOf(f);
+  if (was && madeFromWord(f)) return '<span class="addtag" title="Converted from ' + esc(fileShown(batch.students[cur], was.name)) + ' on ' + fmtDay(f.added) + '. The Word file is under Removed files, below the paper.">From Word</span>' + lateLink(f);
+  return '<span class="addtag" title="You added this file">' + (f.from ? (anonOn() ? 'Group work copy' : 'Group work, shared from ' + esc(f.from)) : was ? 'Replaced ' + esc(fileShown(batch.students[cur], was.name)) : 'Added by you') + ' · ' + fmtDay(f.added) + '</span>' + lateLink(f);
+};
 async function loadAdded() {
   let recs = [];
   try { recs = (await idbDo('readonly', o => o.getAll(underId(batch.id)))) || []; } catch { return; }
@@ -7548,7 +7561,7 @@ async function askReplace(st, path, file) {
     await replaceFile(st, path, file);
   };
 }
-async function replaceFile(st, path, file) {
+async function replaceFile(st, path, file, quiet) {
   const old = fileByPath(st, path); if (!old) return;
   commitEditors();
   const at = st.layout ? st.layout.findIndex(d => d.pages.some(([q]) => q === path)) : -1, oi = st.forder ? st.forder.indexOf('f:' + path) : -1;
@@ -7560,8 +7573,11 @@ async function replaceFile(st, path, file) {
   if (st.inc && st.inc[path] != null) st.inc[nf.path] = st.inc[path];
   goneNow(st, old);
   (batch.removed ||= {})[path] = { t: Date.now(), by: nf.path };
-  refound(st); wordScoresAll(); saveNow(); renderList(); openStudent(cur, nf.path);
+  refound(st); wordScoresAll(); saveNow(); renderList();
+  if (quiet) return nf;   // a Word paper made into PDF pages (wordpdf.js) says so itself
+  openStudent(cur, nf.path);
   toast('Replaced ' + fileShown(st, old.name) + ' with ' + nf.name);
+  return nf;
 }
 function outPages(st) {
   if (!st.layout) return [];
@@ -7599,7 +7615,7 @@ function goneList(st) {
     op.map(([path, p]) => { const f = fileByPath(st, path), n = ((f.marks || {})[p] || []).length;
       return '<div class="gonerow"><span>' + [esc(fileShown(st, f.name)) + ', page ' + (p + 1), f.virtual ? 'your rubric page' : '', n ? n + (n === 1 ? ' mark' : ' marks') : ''].filter(Boolean).join(' · ') + '</span><span style="flex:1"></span><button class="link" style="font-size:13px" data-backpg="' + op.findIndex(x => x[0] === path) + '|' + p + '">Bring back</button></div>'; }).join('') +
     (st.gone || []).map(f => { const r = (batch.removed || {})[f.path] || {}, n = markCount(f);
-    return '<div class="gonerow"><span>' + [esc(fileShown(st, f.name)), f.numPages ? f.numPages + (f.numPages === 1 ? ' page' : ' pages') : '', n ? n + (n === 1 ? ' mark' : ' marks') : '', r.t ? (r.by ? 'replaced ' : 'removed ') + fmtDay(r.t) : ''].filter(Boolean).join(' · ') + '</span><span style="flex:1"></span><button class="link" style="font-size:13px" data-backfile="' + esc(f.path) + '">Bring back</button></div>'; }).join('');
+    return '<div class="gonerow"><span>' + [esc(fileShown(st, f.name)), f.numPages ? f.numPages + (f.numPages === 1 ? ' page' : ' pages') : '', n ? n + (n === 1 ? ' mark' : ' marks') : '', r.t ? (r.by ? (madeFromWord(fileByPath(st, r.by)) ? 'now PDF pages, ' : 'replaced ') : 'removed ') + fmtDay(r.t) : ''].filter(Boolean).join(' · ') + '</span><span style="flex:1"></span><button class="link" style="font-size:13px" data-backfile="' + esc(f.path) + '">Bring back</button></div>'; }).join('');
   $('#paper').appendChild(el);
 }
 function toastDo(msg, label, fn) {
@@ -7610,7 +7626,7 @@ function toastDo(msg, label, fn) {
   t.append(' ', b);
 }
 function refound(st) {
-  const all = st.files.filter(f => f.kind !== 'docx' && fileIn(st, f)).flatMap(f => (f.scan && f.scan.found) || []).concat(st.files.flatMap(wordFound));
+  const all = st.files.filter(f => f.kind !== 'docx' && fileIn(st, f)).flatMap(f => (f.scan && f.scan.found) || []).concat(st.files.flatMap(f => wordFound(f, st)));
   const r = splitReads(st, all), rd = st.grade.reads || {}, ok = r.ok.filter(g => !r.mine.includes(g)).filter((g, n, a) => rd[readKey(g)] !== 1 || a.findIndex(o => readKey(o) === readKey(g)) === n);
   st.foundCount = ok.length; st.doubts = r.ask; st.foundAll = ok;
   st.found = ok.length === 1 && !rivalReads(st).length ? { ...ok[0], found: true } : null;
@@ -8368,7 +8384,7 @@ async function wordCard(st, f, opts) {
   const el = document.createElement('div'); el.className = 'docx'; el.wordF = f;
   el.innerHTML = '<div class="fhead"><span style="color:var(--fg)">' + esc(opts.title || f.name) + '</span><span>' + (/\.docm$|\.dotm$/i.test(f.name) ? 'Word file with macros' : 'Word file') + '</span>' +
     (f.rubric ? '<span class="addtag" style="background:var(--accent-soft);color:var(--accent)">Your rubric</span>' : '') + (f.edited ? '<span class="addtag" style="background:var(--accent-soft);color:var(--accent)">Edited by you</span>' : '') + (f.added ? addTag(f) : '') + '<span style="flex:1"></span>' +
-    (opts.readOnly ? '' : '<button class="btn sm" data-wnote title="Select words, then press this to comment on them. Or pick the Comment tool and click a word.">Comment</button><button class="btn sm" data-wedit>Edit</button>') + '<button class="btn sm ghost" data-wdl>Download</button></div>' +
+    (opts.readOnly ? '' : '<button class="btn sm" data-wnote title="Select words, then press this to comment on them. Or pick the Comment tool and click a word.">Comment</button><button class="btn sm" data-wedit>Edit</button>' + (wordCanPdf(f) ? '<button class="btn sm" data-wpdf title="Turn this file into pages you can mark and comment on anywhere, like a PDF. The Word file is kept.">Convert to PDF</button>' : '')) + '<button class="btn sm ghost" data-wdl>Download</button></div>' +
     '<div class="wbar" hidden></div><div class="wdoc"><div class="dpage"><p class="muted">Opening…</p></div><aside class="wnotes" hidden></aside></div>';
   const page = el.querySelector('.dpage'), bar = el.querySelector('.wbar');
   let w;
@@ -8378,7 +8394,15 @@ async function wordCard(st, f, opts) {
     try { page.innerHTML = await docxHtml(f.data); } catch { page.innerHTML = '<p>' + (troubleText(troubleOf(f)) || 'This Word file couldn’t be opened here. Download it to open it in Word.') + '</p>'; }
     for (const b of el.querySelectorAll('[data-wedit], [data-wnote]')) b.remove();
   }
-  if (w && !opts.readOnly) setTimeout(() => wireRubric(st, f, w, page, el, () => soon()), 0);
+  if (w && !opts.readOnly) setTimeout(() => {
+    const wire = () => wireRubric(st, f, w, page, el, () => soon());
+    wordScore(f);
+    if (f.wscore || !f.wtab) return wire();
+    const off = document.createElement('div'); off.className = 'rinfo roff';
+    off.innerHTML = '<span class="muted">A table in this file could be a score rubric.</span><button class="link" data-wtabon style="font-size:12.5px">Score with it</button>';
+    el.insertBefore(off, page.closest('.wdoc') || page);
+    off.querySelector('button').onclick = () => { wordTabOn.add(batch.id); for (const x of batch.students) for (const g of x.files) if (g.kind === 'docx') g.wsOf = null; off.remove(); wordScoresAll(); wire(); };
+  }, 0);
   if (w) w.pRuns = w.paras.map((_, i) => [...page.querySelectorAll('p[data-pi="' + i + '"] > [data-ri], p[data-pi="' + i + '"] [data-ri]')].map(s => w.runs[+s.dataset.ri]));
   for (const a of page.querySelectorAll('a')) { a.target = '_blank'; a.rel = 'noopener noreferrer'; }
   let editing = false, cell = null, saveT = null;
@@ -8410,6 +8434,7 @@ async function wordCard(st, f, opts) {
   el.addEventListener('click', async e => {
     if (e.target.closest('[data-wdl]')) { await saveNowW(); return saveBlob(f.name, new Blob([f.data])); }
     if (e.target.closest('[data-wedit]')) return setEditing(!editing);
+    if (e.target.closest('[data-wpdf]')) { if (editing) setEditing(false); return openWordPdf(st, f); }
     if (e.target.closest('[data-wreset]')) {
       if (saveT) await saveNowW();
       const orig = f.orig || await origBytes(st, f); if (!orig) return toast('The original isn’t kept in this browser');
@@ -8468,6 +8493,19 @@ async function loadEdits() {
 const RUB_HL = '#FFF59D';
 const cellNum = td => { const m = /(\d+(?:\.\d+)?)/.exec(td.textContent || ''); return m ? +m[1] : null; };
 const isShaded = td => { const b = (td.style.backgroundColor || '').replace(/\s/g, ''); return !!b && b !== 'rgb(255,255,255)' && b !== 'transparent' && b !== 'white'; };
+const LEVEL_WORD = /(?<![\p{L}])(?:score|level|band|marks?|points?|pts)(?![\p{L}])/iu;
+function levelsSure(tds) {
+  const txt = tds.map(td => (td.textContent || '').replace(/\s+/g, ' ').trim()), v = tds.map(cellNum);
+  if (tds.length < 2 || txt.some(t => t.length > 30 || (t.match(/\d+(?:\.\d+)?/g) || []).length !== 1)) return false;
+  return txt.every(t => LEVEL_WORD.test(t)) || (v.every((x, i) => !i || x <= v[i - 1]) && v[0] > v[v.length - 1]);
+}
+const wordTabOn = new Set();
+function wordTableCounts(f, m) {
+  if (f.virtual || f.rubric || m.sure || (batch && wordTabOn.has(batch.id))) return true;
+  const st = batch && batch.students.find(x => x.files.includes(f) || (x.gone || []).includes(f)), s = st && rubricScore(m);
+  if (!s || s.total == null) return false;
+  return (st.grade.reads || {})['w|' + wordTableSays(s.per, m.crits)] === 1 || (!!f.edited && ownGrade(st).total === s.total);
+}
 function rubricModel(page) {
   let best = null, scale = null;
   for (const t of page.querySelectorAll('table.wt')) {
@@ -8483,7 +8521,7 @@ function rubricModel(page) {
       const cells = [];
       rows.slice(1).forEach((r, k) => { if (!lvl(side[k])) return; r.slice(1).forEach((td, c) => cells.push({ td, crit: c, val: side[k] })); });
       const crits = rows[0].slice(1).map(td => td.textContent.trim() || 'Criterion');
-      const m = { cells, crits, levels: [...new Set(side.filter(lvl))] };
+      const m = { cells, crits, levels: [...new Set(side.filter(lvl))], sure: levelsSure(rows.slice(1).filter((r, k) => lvl(side[k])).map(r => r[0])) };
       if (!best || cells.length > best.cells.length) best = m;
       continue;
     }
@@ -8491,7 +8529,7 @@ function rubricModel(page) {
     if (top.filter(lvl).length >= 2) {
       const cells = [];
       rows.slice(1).forEach((r, k) => r.forEach((td, c) => { if (c && lvl(top[c])) cells.push({ td, crit: k, val: top[c] }); }));
-      const m = { cells, crits: rows.slice(1).map(r => r[0] ? r[0].textContent.trim() : 'Criterion'), levels: [...new Set(top.filter(lvl))] };
+      const m = { cells, crits: rows.slice(1).map(r => r[0] ? r[0].textContent.trim() : 'Criterion'), levels: [...new Set(top.filter(lvl))], sure: levelsSure(rows[0].filter((td, c) => lvl(top[c]))) };
       if (!best || cells.length > best.cells.length) best = m;
     }
   }
@@ -8576,7 +8614,8 @@ function wordScore(f) {
   try {
     const w = openWord(f.data), page = document.createElement('div'); page.className = 'dpage'; w.pRuns = []; renderWord(w, page);
     const m = rubricModel(page);
-    if (m) s = { ...rubricScore(m), max: m.max, nCrit: m.crits.length, crits: m.crits, scale: m.scale, get pct() { return wordPct(this.total, this.max, this.scale); } };
+    f.wtab = !!m;   // a table that could be a rubric, whether or not it counts as one
+    if (m && wordTableCounts(f, m)) s = { ...rubricScore(m), max: m.max, nCrit: m.crits.length, crits: m.crits, scale: m.scale, get pct() { return wordPct(this.total, this.max, this.scale); } };
     f.wtyped = wordTyped(page, m);
     f.wtext = [...page.querySelectorAll('p')].map(p => p.textContent).join('\n') || page.textContent; f.wpic = !!page.querySelector('img');
   } catch (e) { console.error(e); f.wtyped = []; f.wtext = null; }
@@ -8591,26 +8630,29 @@ function wordTyped(page, m) {
     const t = p.closest('table.wt'); if (t && [...skip].some(k => k.contains(t))) continue;
     const text = p.textContent.replace(/\s+/g, ' ').trim(); if (!text) continue;
     const g = parseGrade(text, false); if (!g || g.rank < 2) continue;
-    out.push({ rank: g.rank, loose: g.loose, eq: g.eq, several: g.several, counts: g.counts, score: g.score, outOf: g.outOf, pct: g.pct, text: text.length > 80 ? text.slice(0, 80) + '…' : text, word: true });
+    const asGrade = (g.rank === 3 && !(g.loose && !g.eq && g.outOf == null)) || (g.at != null && (GRADE_BEFORE.test(text.slice(0, g.at)) || GRADE_AFTER.test(text.slice(g.at + g.len))));
+    out.push({ rank: g.rank, loose: g.loose, eq: g.eq, several: g.several, counts: g.counts, score: g.score, outOf: g.outOf, pct: g.pct, text: text.length > 80 ? text.slice(0, 80) + '…' : text, word: true, asGrade });
   }
   return out;
 }
+const wordTableSays = (per, crits) => { const t = 'Shaded boxes in a table: ' + per.map(v => v == null ? '–' : fmtNum(v)).join(', ') + ' (' + crits.join(', ') + ')'; return t.length > 140 ? t.slice(0, 140) + '…' : t; };
 function wordTableRead(f) {
-  const w = f.wscore, t = 'Shaded boxes in a table: ' + w.per.map(v => v == null ? '–' : fmtNum(v)).join(', ') + ' (' + w.crits.join(', ') + ')';
-  return { rank: 3, score: w.total, outOf: w.max, pct: w.pct, table: true, word: true, text: t.length > 140 ? t.slice(0, 140) + '…' : t };
+  const w = f.wscore;
+  return { rank: 3, score: w.total, outOf: w.max, pct: w.pct, table: true, word: true, text: wordTableSays(w.per, w.crits) };
 }
-const wordFound = f => {
+const wordFound = (f, st) => {
   if (f.kind !== 'docx' || f.wsOf !== f.data) return [];
   if (f.wscore && f.wscore.total != null) return f.virtual ? [] : [wordTableRead(f)];
   if (f.virtual) return f.edited ? f.wtyped || [] : [];
-  return (f.wtyped || []).map(g => ({ ...g, theirs: true }));
+  const rd = (st && st.grade && st.grade.reads) || {};
+  return (f.wtyped || []).filter(g => g.asGrade || rd[readKey(g)] === 1).map(g => ({ ...g, theirs: true }));
 };
 function wordScoresOf(st) { for (const f of st.files) wordScore(f); }
 function wordScoresAll() {
   if (!batch) return;
   let n = 0;
   let asks = 0;
-  for (const st of batch.students) { wordScoresOf(st); if (st.files.some(f => wordFound(f).length)) { refound(st); asks++; } }
+  for (const st of batch.students) { wordScoresOf(st); if (st.files.some(f => wordFound(f, st).length)) { refound(st); asks++; } }
   for (const st of batch.students) for (const f of st.files) {
     const s = wordScore(f); if (!s || s.total == null) continue;
     if (f.virtual) {   // her own rubric page, so the assignment follows it
@@ -10611,7 +10653,7 @@ function splitReads(st, list) {
 }
 function setReading(st, key, v) {
   const rd = (st.grade.reads ||= {}), was = rd[key];
-  const table = st.files.flatMap(wordFound).find(g => g.table && readKey(g) === key);
+  const table = st.files.flatMap(f => wordFound(f, st)).find(g => g.table && readKey(g) === key);
   if (v === '') delete rd[key]; else rd[key] = +v;
   if (v === '1') for (const g of [...(st.foundAll || []), ...rivalReads(st)]) if (readKey(g) !== key) rd[readKey(g)] = 0;   // she's picked this one, so the others on the paper aren't the grade
   if (table && was === 1 && v !== '1' && ownGrade(st).total === table.score) { if (setup.mode === 'rubric') st.grade.rubric = []; else st.grade.points = ''; }   // Undo takes back what Use it brought in
@@ -10639,7 +10681,7 @@ function unmarkedFile(st, f) {
   }
   if (f.kind !== 'docx' || f.edited || f.hand) return false;
   const w = wordScore(f);
-  return !(w && w.total != null) && !wordFound(f).length;
+  return !(w && w.total != null) && !wordFound(f, st).length;
 }
 function disagreeNote(st) {
   const own = ownGrade(st);
@@ -17476,6 +17518,312 @@ function wireWordNotes(w, el, page, aside, editing, flush, save) {
   }
 }
 
+/* ---------------- a Word paper as PDF pages (11/10) ---------------- */
+const WP_MAX = 60, WP_PX = 96 / 72, WP_FONT = 14.67;   // pages at most; screen dots to a point; 11 pt in screen dots
+const wordPdfAlways = () => !!store.get('gs.wordPdf', false);
+function wordCanPdf(f) { return !!f && f.kind === 'docx' && !f.virtual && !f.rubric && !f.from && !!f.data; }
+const wordReadUsed = (st, f) => wordFound(f, st).some(g => (st.grade.reads || {})[readKey(g)] === 1);
+const wordPdfList = () => !batch ? [] : batch.students.flatMap(st => st.files.filter(wordCanPdf).map(f => ({ st, f })));
+const wordPdfFree = ({ st, f }) => !f.edited && !f.hand && !wordReadUsed(st, f) && !((batch.removed || {})[f.path] || {}).back && !shareCopies(st, f).length;
+
+function wordPageBox(w) {
+  const tw = (el, k) => { const v = el ? +(el.getAttributeNS(W_NS, k) || el.getAttribute('w:' + k)) : 0; return v > 0 ? v / 20 : null; };
+  let sect = null, sz = null, mar = null;
+  try { sect = w && wkid(wkid(w.doc.documentElement, 'body'), 'sectPr'); sz = sect && wkid(sect, 'pgSz'); mar = sect && wkid(sect, 'pgMar'); } catch {}
+  const W = clamp(tw(sz, 'w') || 595.28, 360, 1224), H = clamp(tw(sz, 'h') || 841.89, 360, 1224);
+  const m = k => clamp(tw(mar, k) || 72, 28, Math.min(W, H) / 4);
+  return { W, H, t: m('top'), r: m('right'), b: m('bottom'), l: m('left') };
+}
+function wordPdfNotes(w, page) {
+  let els = [];
+  try { els = wCommentEls(w); } catch {}
+  if (!els.length) return;
+  try {
+    wNotesPaint(w, page, document.createElement('aside'));
+    const by = new Map(els.map(c => [wId(c), c])), order = wCommentMap(w).order;
+    const box = document.createElement('div'); box.style.cssText = 'margin-top:28px;padding-top:10px;border-top:1px solid #9aa0ad;font-size:.92em';
+    box.innerHTML = '<p class="wp" style="font-weight:700">Comments</p>' + order.map((id, i) => '<p class="wp"><span style="color:#D7263D;font-weight:700">' + (i + 1) + '</span>  ' + esc(wCommentText(by.get(id)) || '') + '</p>').join('');
+    page.appendChild(box);
+  } catch (e) { console.error(e); }
+}
+function wordPdfParts(page) {
+  const o = page.getBoundingClientRect(), P = { fills: [], lines: [], imgs: [], checks: [], words: [] };
+  const rel = b => ({ x: b.left - o.left, y: b.top - o.top, w: b.width, h: b.height });
+  const col = s => { const m = /rgba?\(([^)]+)\)/.exec(s || ''); if (!m) return null; const v = m[1].split(/[,\s/]+/).filter(Boolean).map(Number), a = v.length > 3 ? v[3] : 1; return a > 0 ? { r: v[0] / 255, g: v[1] / 255, b: v[2] / 255, a } : null; };
+  for (const el of page.querySelectorAll('*')) {
+    if (el.closest('button')) { if (el.matches('.wchk')) P.checks.push({ ...rel(el.getBoundingClientRect()), on: el.getAttribute('aria-pressed') === 'true' }); continue; }
+    const cs = getComputedStyle(el);
+    if (cs.display === 'none' || cs.visibility === 'hidden') continue;
+    if (el.tagName === 'IMG') { const b = rel(el.getBoundingClientRect()); if (b.w > 1 && b.h > 1) P.imgs.push({ el, ...b }); continue; }
+    const whole = rel(el.getBoundingClientRect()), bg = col(cs.backgroundColor);
+    if (bg) for (const b of cs.display === 'inline' ? [...el.getClientRects()].map(rel) : [whole]) if (b.w > .5 && b.h > .5) P.fills.push({ ...b, c: bg });
+    const cell = /^T[DH]$/.test(el.tagName) && cs.borderCollapse === 'collapse';
+    for (const side of ['Top', 'Right', 'Bottom', 'Left']) {
+      const wd = parseFloat(cs['border' + side + 'Width']) || 0, c = wd && !/none|hidden/.test(cs['border' + side + 'Style']) ? col(cs['border' + side + 'Color']) : null;
+      if (!c) continue;
+      const k = cell ? 0 : wd / 2, x1 = whole.x + k, y1 = whole.y + k, x2 = whole.x + whole.w - k, y2 = whole.y + whole.h - k;
+      P.lines.push({ wd, c, ...(side === 'Top' ? { x1, y1, x2, y2: y1 } : side === 'Bottom' ? { x1, y1: y2, x2, y2 } : side === 'Left' ? { x1, y1, x2: x1, y2 } : { x1: x2, y1, x2, y2 }) });
+    }
+  }
+  const tw = document.createTreeWalker(page, NodeFilter.SHOW_TEXT), r = document.createRange(), looks = new Map(), g = document.createElement('canvas').getContext('2d');
+  const lookOf = el => {
+    if (looks.has(el)) return looks.get(el);
+    const cs = getComputedStyle(el); let deco = '';
+    for (let e = el; e; e = e.parentElement) { deco += ' ' + getComputedStyle(e).textDecorationLine; if (e === page) break; }   // an underline belongs to the words inside it too
+    const font = cs.fontStyle + ' ' + cs.fontWeight + ' ' + cs.fontSize + ' ' + cs.fontFamily;
+    g.font = font; const m = g.measureText('Hg');
+    const L = { size: parseFloat(cs.fontSize) || WP_FONT, bold: (+cs.fontWeight || 400) >= 600, ital: /italic|oblique/.test(cs.fontStyle), c: col(cs.color) || { r: 0, g: 0, b: 0, a: 1 }, under: /underline/.test(deco), strike: /line-through/.test(deco), font,
+      asc: m.fontBoundingBoxAscent || parseFloat(cs.fontSize) * .9, desc: m.fontBoundingBoxDescent || parseFloat(cs.fontSize) * .22, show: cs.visibility !== 'hidden' && cs.display !== 'none' };
+    looks.set(el, L); return L;
+  };
+  for (let n; (n = tw.nextNode());) {
+    const el = n.parentElement; if (!el || !/\S/.test(n.data) || el.closest('button')) continue;
+    const L = lookOf(el); if (!L.show) continue;
+    for (const m of n.data.matchAll(/\S+/g)) {
+      r.setStart(n, m.index); r.setEnd(n, m.index + m[0].length);
+      const b = r.getClientRects()[0];   // a word broken over two lines keeps its first piece
+      if (!b || b.width < .5 || b.height < 2) continue;
+      const q = rel(b);
+      P.words.push({ s: m[0], ...q, base: q.y + (q.h - L.asc - L.desc) / 2 + L.asc, L });
+    }
+  }
+  for (const li of page.querySelectorAll('li')) {
+    const b = rel(li.getBoundingClientRect()), L = lookOf(li), ol = li.parentElement && li.parentElement.tagName === 'OL';
+    const s = ol ? ([...li.parentElement.children].indexOf(li) + 1) + '.' : '•';
+    P.words.push({ s, x: b.x - L.size * (ol ? 1.5 : 1.1), y: b.y, w: L.size * (ol ? .9 : .35), h: L.asc + L.desc, base: b.y + (parseFloat(getComputedStyle(li).lineHeight) || L.size * 1.4) / 2 + (L.asc - L.desc) / 2, L, mark: true });
+  }
+  return P;
+}
+function wordPdfCuts(total, pageH, atoms) {
+  const cuts = [0];
+  while (total - cuts[cuts.length - 1] > pageH + 1) {
+    if (cuts.length >= WP_MAX) throw new Error('too long');
+    const start = cuts[cuts.length - 1];
+    let y = start + pageH;
+    for (let moved = true; moved;) {
+      moved = false;
+      for (const [a, b] of atoms) if (a < y - .5 && b > y + .5 && a - 2 > start + pageH * .35) { y = a - 2; moved = true; }
+    }
+    cuts.push(y);
+  }
+  cuts.push(total);
+  return cuts;
+}
+async function wordPdfStage(f) {
+  let w = null;
+  try { w = openWord(f.data); w.pRuns = []; } catch (e) { console.error(e); }
+  const box = wordPageBox(w), Wpx = Math.round(box.W * WP_PX);
+  const host = document.createElement('div');
+  host.style.cssText = 'position:fixed;left:-20000px;top:0;width:' + Wpx + 'px;pointer-events:none;--dfs:' + WP_FONT + 'px;--dlh:1.4';
+  const page = document.createElement('div'); page.className = 'dpage';
+  page.style.cssText = 'max-width:none;width:' + Wpx + 'px;box-sizing:border-box;margin:0;box-shadow:none;overflow:visible;border-radius:0;padding:0 ' + (box.r * WP_PX).toFixed(1) + 'px 0 ' + (box.l * WP_PX).toFixed(1) + 'px;' +
+    'font-family:Arial,Helvetica,"Liberation Sans",Arimo,"Nimbus Sans",sans-serif;font-kerning:none;font-variant-ligatures:none';
+  host.appendChild(page); document.body.appendChild(host);
+  const done = () => { host.remove(); if (w) for (const u of w.urls) URL.revokeObjectURL(u); };
+  try {
+    if (w) { renderWord(w, page); wordPdfNotes(w, page); }
+    else page.innerHTML = await docxHtml(f.data);
+    await Promise.all([...page.querySelectorAll('img')].map(im => im.complete ? 0 : new Promise(r => { im.onload = im.onerror = r; })));
+    const P = wordPdfParts(page), total = Math.max(1, Math.ceil(page.getBoundingClientRect().height)), pageH = (box.H - box.t - box.b) * WP_PX;
+    const cuts = wordPdfCuts(total, pageH, P.words.filter(q => !q.mark).map(q => [q.y, q.y + q.h]).concat(P.imgs.map(q => [q.y, q.y + q.h]), P.checks.map(q => [q.y, q.y + q.h])));
+    return { w, box, Wpx, host, page, P, cuts, done };
+  } catch (e) { done(); throw e; }
+}
+async function wordPagesPdf(f) {
+  const S = await wordPdfStage(f);
+  try {
+    try { return await wordPdfWrite(f, S); }
+    catch (e) { if (/too long/.test(String(e && e.message))) throw e; console.error(e); return await wordPdfPictures(f, S); }
+  } finally { S.done(); }
+}
+const WP_BLANK = 'AAEAAAAKAIAAAwAgT1MvMkT/RUAAAAEoAAAAYGNtYXAADABzAAABkAAAADRnbHlmAAAAAAAAAcwAAAABaGVhZC1GmP4AAACsAAAANmhoZWED6QH2AAAA5AAAACRobXR4AfQAAAAAAYgAAAAGbG9jYQAAAAAAAAHEAAAABm1heHAAAwACAAABCAAAACBuYW1lGZ8ZNAAAAdAAAABycG9zdG1nc80AAAJEAAAALAABAAAAAQAApyfBol8PPPUAAwPoAAAAAOcYLA8AAAAA5xgsDwAAAAAAAAAAAAAAAwACAAAAAAAAAAEAAAPoAAAAAAH0AAAAAAAAAAEAAAAAAAAAAAAAAAAAAAABAAEAAAACAAAAAAAAAAAAAgAAAAAAAAAAAAAAAAAAAAAAAwH0AZAABQAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAPz8/PwAAACAAIAPoAAAAAAPoAAAAAAAAAAAAAAAAAAAAAAAgAAAB9AAAAAAAAAAAAAIAAAADAAAAFAADAAEAAAAUAAQAIAAAAAQABAABAAAAIP//AAAAIP///+EAAQAAAAAAAAAAAAAAAAAAAAAAAAAEADYAAQAAAAAAAQANAAAAAQAAAAAAAgAHAA0AAwABBAkAAQAaABQAAwABBAkAAgAOAC5HbHlwaExlc3NGb250UmVndWxhcgBHAGwAeQBwAGgATABlAHMAcwBGAG8AbgB0AFIAZQBnAHUAbABhAHIAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAECBWJsYW5r';
+function wordPdfUnseen(pdf) {
+  let ref = null;
+  const make = () => {
+    const ctx = pdf.context, S = PDFLib.PDFString.of, ttf = Uint8Array.from(atob(WP_BLANK), c => c.charCodeAt(0));
+    const map = new Uint8Array(131072); for (let i = 1; i < map.length; i += 2) map[i] = 1;   // every letter is the blank glyph
+    const cmap = '/CIDInit /ProcSet findresource begin\n12 dict begin\nbegincmap\n/CIDSystemInfo << /Registry (Adobe) /Ordering (UCS) /Supplement 0 >> def\n/CMapName /Adobe-Identity-UCS def\n/CMapType 2 def\n1 begincodespacerange\n<0000> <FFFF>\nendcodespacerange\n1 beginbfrange\n<0000> <FFFF> <0000>\nendbfrange\nendcmap\nCMapName currentdict /CMap defineresource pop\nend\nend\n';
+    const desc = ctx.register(ctx.obj({ Type: 'FontDescriptor', FontName: 'GlyphLessFont', Flags: 5, FontBBox: [0, 0, 500, 1000], ItalicAngle: 0, Ascent: 1000, Descent: -1, CapHeight: 1000, StemV: 80, FontFile2: ctx.register(ctx.flateStream(ttf, { Length1: ttf.length })) }));
+    const cid = ctx.register(ctx.obj({ Type: 'Font', Subtype: 'CIDFontType2', BaseFont: 'GlyphLessFont', CIDSystemInfo: { Registry: S('Adobe'), Ordering: S('Identity'), Supplement: 0 }, FontDescriptor: desc, DW: 500, CIDToGIDMap: ctx.register(ctx.flateStream(map)) }));
+    return ctx.register(ctx.obj({ Type: 'Font', Subtype: 'Type0', BaseFont: 'GlyphLessFont', Encoding: 'Identity-H', DescendantFonts: [cid], ToUnicode: ctx.register(ctx.flateStream(cmap)) }));
+  };
+  return (pg, keys, s, size, x, y, w) => {
+    ref ||= make();
+    if (!keys.has('unseen')) keys.set('unseen', pg.node.newFontDictionary('GlyphLess', ref));
+    let hex = ''; for (let i = 0; i < s.length; i++) hex += s.charCodeAt(i).toString(16).padStart(4, '0');
+    return [PDFLib.setFontAndSize(keys.get('unseen'), size), PDFLib.setWordSpacing(0), PDFLib.setTextMatrix(Math.max(.01, w / (s.length * size / 2)), 0, 0, 1, x, y), PDFLib.showText(PDFLib.PDFHexString.of(hex.toUpperCase()))];
+  };
+}
+async function wordPdfWrite(f, { box, P, cuts }) {
+  const pdf = await PDFLib.PDFDocument.create(), SF = PDFLib.StandardFonts, rgb = c => PDFLib.rgb(c.r, c.g, c.b);
+  pdf.setTitle(f.name.replace(WORD_RX, ''));   // no Creator: 'Grading Studio' there means a flattened export (imported.js)
+  const fonts = {}, fontOf = async L => { const k = (L.bold ? 'b' : '') + (L.ital ? 'i' : ''); return fonts[k] ||= { font: await pdf.embedFont(L.bold ? (L.ital ? SF.HelveticaBoldOblique : SF.HelveticaBold) : L.ital ? SF.HelveticaOblique : SF.Helvetica), wd: new Map() }; };
+  for (const q of P.words) q.F = await fontOf(q.L);
+  const can = new Set((await fontOf({})).font.getCharacterSet());
+  const wide = (F, s, size) => { let n = 0; for (const ch of s) { let v = F.wd.get(ch); if (v == null) F.wd.set(ch, v = F.font.widthOfTextAtSize(ch, 1000)); n += v; } return n * size / 1000; };
+  const pics = new Map(), unseen = wordPdfUnseen(pdf), TR = PDFLib.setTextRenderingMode, TM = PDFLib.TextRenderingMode;
+  for (const im of P.imgs) {
+    try {
+      const el = im.el, k = Math.min(1, 2400 / Math.max(el.naturalWidth, el.naturalHeight, 1), 2.5 * im.w / Math.max(el.naturalWidth, 1)), c = document.createElement('canvas');
+      c.width = Math.max(1, Math.round(el.naturalWidth * k)); c.height = Math.max(1, Math.round(el.naturalHeight * k));
+      const x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, c.width, c.height); x.drawImage(el, 0, 0, c.width, c.height);
+      pics.set(im, await pdf.embedJpg(await (await new Promise(r => c.toBlob(r, 'image/jpeg', 0.86))).arrayBuffer()));
+      c.width = c.height = 0;
+    } catch (e) { console.error(e); }
+  }
+  const wordPic = async q => {
+    const K = 3, pad = 2, c = document.createElement('canvas'); c.width = Math.ceil((q.w + pad * 2) * K); c.height = Math.ceil((q.h + pad * 2) * K);
+    const x = c.getContext('2d'); x.scale(K, K); x.font = q.L.font; x.fillStyle = 'rgb(' + [q.L.c.r, q.L.c.g, q.L.c.b].map(v => Math.round(v * 255)).join(',') + ')'; x.textBaseline = 'alphabetic';
+    x.fillText(q.s, pad, pad + (q.base - q.y));
+    const png = await pdf.embedPng(await (await new Promise(r => c.toBlob(r, 'image/png'))).arrayBuffer()); c.width = c.height = 0;
+    return { png, pad };
+  };
+  for (let k = 0; k + 1 < cuts.length; k++) {
+    const y0 = cuts[k], y1 = cuts[k + 1], pg = pdf.addPage([box.W, box.H]), X = x => x / WP_PX, Y = y => box.H - box.t - (y - y0) / WP_PX, inY = (a, b) => b > y0 && a < y1;
+    pg.pushOperators(PDFLib.pushGraphicsState(), PDFLib.rectangle(0, Y(y1), box.W, (y1 - y0) / WP_PX), PDFLib.clip(), PDFLib.endPath());
+    for (const q of P.fills) if (inY(q.y, q.y + q.h)) pg.drawRectangle({ x: X(q.x), y: Y(q.y + q.h), width: q.w / WP_PX, height: q.h / WP_PX, color: rgb(q.c), opacity: q.c.a });
+    for (const im of P.imgs) if (pics.get(im) && inY(im.y, im.y + im.h)) pg.drawImage(pics.get(im), { x: X(im.x), y: Y(im.y + im.h), width: im.w / WP_PX, height: im.h / WP_PX });
+    for (const q of P.lines) if (inY(Math.min(q.y1, q.y2) - 1, Math.max(q.y1, q.y2) + 1)) pg.drawLine({ start: { x: X(q.x1), y: Y(q.y1) }, end: { x: X(q.x2), y: Y(q.y2) }, thickness: q.wd / WP_PX, color: rgb(q.c), opacity: q.c.a });
+    for (const q of P.checks) if (inY(q.y, q.y + q.h)) {
+      const s = Math.min(q.w, q.h) * .7 / WP_PX, x = X(q.x + q.w / 2) - s / 2, y = Y(q.y + q.h / 2) - s / 2, ink = PDFLib.rgb(.08, .1, .13);
+      pg.drawRectangle({ x, y, width: s, height: s, borderColor: ink, borderWidth: .8 });
+      if (q.on) { pg.drawLine({ start: { x, y }, end: { x: x + s, y: y + s }, thickness: .8, color: ink }); pg.drawLine({ start: { x, y: y + s }, end: { x: x + s, y }, thickness: .8, color: ink }); }
+    }
+    const mine = P.words.filter(q => q.y + q.h / 2 >= y0 && q.y + q.h / 2 < y1), keys = new Map(), ops = [PDFLib.beginText()], after = [];
+    for (const [i, q] of mine.entries()) {
+      const size = q.L.size / WP_PX, x = X(q.x), y = Y(q.base);
+      const nx = mine[i + 1], joined = !q.mark && nx && !nx.mark && Math.abs(nx.base - q.base) < 1 && nx.x > q.x + q.w - 1 && nx.x - (q.x + q.w) < q.L.size * 1.2 && nx.L.size === q.L.size;
+      const to = joined ? nx.x : q.x + q.w;
+      if (q.L.under) after.push({ x1: q.x, x2: to, y: q.base + q.L.size * .12, wd: Math.max(.6, q.L.size / 16), c: q.L.c });
+      if (q.L.strike) after.push({ x1: q.x, x2: to, y: q.base - q.L.size * .3, wd: Math.max(.6, q.L.size / 16), c: q.L.c });
+      if (![...q.s].every(ch => can.has(ch.codePointAt(0)))) {
+        const pic = await wordPic(q); pg.drawImage(pic.png, { x: X(q.x - pic.pad), y: Y(q.y + q.h + pic.pad), width: (q.w + pic.pad * 2) / WP_PX, height: (q.h + pic.pad * 2) / WP_PX });
+        ops.push(TR(TM.Invisible), ...unseen(pg, keys, joined ? q.s + ' ' : q.s, size, x, y, (to - q.x) / WP_PX), TR(TM.Fill));
+        continue;
+      }
+      const F = q.F, has = wide(F, q.s, size); if (!(has > 0)) continue;
+      if (!keys.has(F)) keys.set(F, pg.node.newFontDictionary(F.font.name, F.font.ref));
+      const sx = q.mark ? 1 : (q.w / WP_PX) / has;
+      ops.push(PDFLib.setFillingColor(rgb(q.L.c)), PDFLib.setFontAndSize(keys.get(F), size), PDFLib.setWordSpacing(joined ? (nx.x - q.x) / WP_PX / sx - wide(F, q.s + ' ', size) : 0), PDFLib.setTextMatrix(sx, 0, 0, 1, x, y), PDFLib.showText(F.font.encodeText(joined ? q.s + ' ' : q.s)));
+    }
+    ops.push(PDFLib.endText());
+    pg.pushOperators(...ops);
+    for (const u of after) pg.drawLine({ start: { x: X(u.x1), y: Y(u.y) }, end: { x: X(u.x2), y: Y(u.y) }, thickness: u.wd / WP_PX, color: rgb(u.c) });
+    pg.pushOperators(PDFLib.popGraphicsState());
+  }
+  return await pdf.save();
+}
+async function wordPdfPictures(f, { box, Wpx, host, page, P, cuts }) {
+  const pdf = await PDFLib.PDFDocument.create(), font = await pdf.embedFont(PDFLib.StandardFonts.Helvetica), can = new Set(font.getCharacterSet()), unseen = wordPdfUnseen(pdf);
+  pdf.setTitle(f.name.replace(WORD_RX, ''));
+  const skip = el => el.parentNode === document.body && el !== host && !/^(STYLE|LINK)$/.test(el.tagName);   // only this page is copied to be drawn
+  for (let k = 0; k + 1 < cuts.length; k++) {
+    const y0 = cuts[k], y1 = cuts[k + 1], hpx = Math.max(1, Math.ceil(y1 - y0));
+    const c = await html2canvas(page, { scale: 1.5, backgroundColor: '#ffffff', logging: false, useCORS: true, x: 0, y: y0, width: Wpx, height: hpx, ignoreElements: skip });
+    const jpg = await pdf.embedJpg(await (await new Promise(r => c.toBlob(r, 'image/jpeg', 0.82))).arrayBuffer());
+    c.width = c.height = 0;
+    const pg = pdf.addPage([box.W, box.H]);
+    pg.drawImage(jpg, { x: 0, y: box.H - box.t - hpx / WP_PX, width: box.W, height: hpx / WP_PX });
+    const key = pg.node.newFontDictionary(font.name, font.ref), keys = new Map(), ops = [PDFLib.beginText(), PDFLib.setTextRenderingMode(PDFLib.TextRenderingMode.Invisible)];
+    for (const q of P.words) {
+      if (q.mark || q.y + q.h / 2 < y0 || q.y + q.h / 2 >= y1) continue;
+      const size = q.L.size / WP_PX;
+      if (![...q.s].every(ch => can.has(ch.codePointAt(0)))) { ops.push(...unseen(pg, keys, q.s, size, q.x / WP_PX, box.H - box.t - (q.base - y0) / WP_PX, q.w / WP_PX)); continue; }
+      const has = font.widthOfTextAtSize(q.s, size); if (!(has > 0)) continue;
+      ops.push(PDFLib.setFontAndSize(key, size), PDFLib.setTextMatrix((q.w / WP_PX) / has, 0, 0, 1, q.x / WP_PX, box.H - box.t - (q.base - y0) / WP_PX), PDFLib.showText(font.encodeText(q.s)));
+    }
+    ops.push(PDFLib.endText());
+    pg.pushOperators(...ops);
+  }
+  return await pdf.save();
+}
+async function wordToPdf(st, f) {
+  await Promise.all([...wordSaves].map(s => s()));   // what she typed a moment ago is in the file first
+  const L = st.layout && JSON.parse(JSON.stringify(st.layout)), o = st.forder && st.forder.slice(), word = f.path;
+  const bytes = await wordPagesPdf(f);
+  const nf = await replaceFile(st, word, new File([bytes], f.name.replace(WORD_RX, '') + '.pdf', { type: 'application/pdf' }), true);
+  return nf ? { st, word, pdf: nf.path, L, o } : null;
+}
+async function wordPdfBack(done) {
+  if (!batch) return;
+  const b = batch, drop = [];
+  for (const { st, word, pdf, L, o } of done) {
+    if (!batch.students.includes(st)) continue;
+    const nf = fileByPath(st, pdf), g = (st.gone || []).find(x => x.path === word);
+    if (!g) continue;
+    if (nf) {
+      st.files.splice(st.files.indexOf(nf), 1);
+      if (st.inc) delete st.inc[pdf];
+      drop.push((nf.akey || st.key) + '|' + pdf);
+      noteGone(batch, (nf.akey || st.key) + '|' + pdf);
+    }
+    st.gone.splice(st.gone.indexOf(g), 1); st.files.push(g);
+    st.layout = L; st.forder = o;
+    if (batch.removed && batch.removed[word]) batch.removed[word] = { back: Date.now() };
+    refound(st);
+  }
+  wordScoresAll(); saveNow(); renderList(); openStudent(cur);
+  toast(done.length === 1 ? 'Back to the Word file' : 'Back to the Word files');
+  for (const k of drop) { try { await idbDo('readwrite', os => os.delete(b.id + '|' + k)); } catch {} }
+}
+let wordPdfBusy = false;
+async function wordPdfRun(list, quietIfNone) {
+  if (wordPdfBusy || !batch) return;
+  const b = batch, done = []; let bad = 0, long = 0;
+  if (!list.length) { if (!quietIfNone) toast('No Word papers to convert'); return; }
+  wordPdfBusy = true;
+  try {
+    for (const [i, { st, f }] of list.entries()) {
+      if (batch !== b) break;
+      if (!st.files.includes(f)) continue;
+      toast(list.length === 1 ? 'Making PDF pages…' : 'Making PDF pages… ' + (i + 1) + ' of ' + list.length, 600000);
+      try { const d = await wordToPdf(st, f); if (d) done.push(d); else bad++; }
+      catch (e) { if (/too long/.test(String(e && e.message))) long++; else { console.error(e); bad++; } }
+    }
+  } finally { wordPdfBusy = false; }
+  if (batch !== b) return;
+  const cst = batch.students[cur], here = done.find(d => d.st === cst);
+  openStudent(cur, here ? here.pdf : undefined);
+  const not = [long ? long + (long === 1 ? ' is' : ' are') + ' longer than ' + WP_MAX + ' pages' : '', bad ? bad + ' couldn’t be drawn' : ''].filter(Boolean).join(' and ');
+  const said = (done.length === 1 ? 'This Word paper is now PDF pages' : done.length + ' Word papers are now PDF pages') + (not ? '. ' + not + ', so ' + (long + bad === 1 ? 'it stays a Word file' : 'they stay Word files') : '');
+  if (done.length) toastDo(said, 'Undo', () => wordPdfBack(done));
+  else toast(not ? not[0].toUpperCase() + not.slice(1) + ', so ' + (long + bad === 1 ? 'it stays a Word file' : 'they stay Word files') : 'Nothing to convert', 6000);
+  return done;
+}
+function wordPdfAuto() {
+  if (!batch || !wordPdfAlways() || wordPdfBusy) return;
+  return wordPdfRun(wordPdfList().filter(wordPdfFree), true);
+}
+function openWordPdf(st, f) {
+  if (wordPdfBusy) return toast('Still making PDF pages…');
+  const all = wordPdfList(), free = all.filter(wordPdfFree), others = free.filter(x => x.f !== f).length, kept = all.length - free.length - (wordPdfFree({ st, f }) ? 0 : 1);
+  const used = wordReadUsed(st, f);
+  openDlg('<div class="bh"><h2>Convert to PDF pages</h2><button class="icon" data-cancel aria-label="Close" style="margin-left:auto">✕</button></div>' +
+    '<div class="bb"><p style="margin:0 0 10px">The Word file becomes pages you can mark, comment on and stamp anywhere, like any PDF. The Word file isn’t changed. It waits under Removed files at the bottom of the paper, with Bring back.</p>' +
+    (f.edited ? '<p class="muted" style="margin:0 0 10px;font-size:13.5px">What you typed or shaded in this file shows on the pages. Comments are numbered, and listed after the last page.</p>' : '') +
+    (used ? '<p class="sc-warn" style="margin:0 0 10px">You took this student’s grade from what’s typed in this Word file. That stays with the Word file, so give the score in the score panel after converting.</p>' : '') +
+    (others ? '<div class="wpwhich" role="radiogroup" aria-label="Which papers" style="display:grid;gap:6px;margin:0 0 12px"><label><input type="radio" name="wpWhich" value="one" checked> Just this file</label>' +
+      '<label><input type="radio" name="wpWhich" value="all"> All ' + (others + 1) + ' Word papers in this assignment' + (kept > 0 ? ' <span class="muted" style="font-size:13px">(' + kept + ' you’ve typed in, commented on or scored from ' + (kept === 1 ? 'stays a Word file' : 'stay Word files') + ')</span>' : '') + '</label></div>' : '') +
+    '<label style="display:flex;gap:8px;align-items:baseline"><input type="checkbox" id="wpAlways"' + (wordPdfAlways() ? ' checked' : '') + '> <span>From now on, convert Word papers as each assignment opens <span class="muted" style="font-size:13px">(you can change this in Settings)</span></span></label></div>' +
+    '<div class="bf"><button class="btn" data-cancel>Cancel</button><button class="btn primary" data-ok>Convert</button></div>', true);
+  $('#dlgBox').onclick = e => {
+    if (e.target.closest('[data-cancel]')) return closeDlg();
+    if (!e.target.closest('[data-ok]')) return;
+    const which = ($('#dlgBox input[name="wpWhich"]:checked') || {}).value || 'one';
+    wordPdfSet($('#wpAlways').checked);
+    closeDlg();
+    wordPdfRun(which === 'all' ? [{ st, f }].concat(free.filter(x => x.f !== f)) : [{ st, f }]);
+  };
+}
+function wordPdfSet(on) {
+  if (on !== wordPdfAlways()) { if (on) store.set('gs.wordPdf', true); else store.del('gs.wordPdf'); }
+  wordPdfShow();
+}
+function wordPdfShow() { for (const b of document.querySelectorAll('#setWordPdf button')) b.setAttribute('aria-pressed', String((b.dataset.v === '1') === wordPdfAlways())); }
+$('#setWordPdf').addEventListener('click', e => { const b = e.target.closest('button[data-v]'); if (b) wordPdfSet(b.dataset.v === '1'); });
+wordPdfShow();
+Object.assign(window.__gs, { wordPagesPdf, wordToPdf, wordPdfRun, wordPdfAuto, wordPdfList, wordCanPdf });
+
 /* ---------------- a class page's tabs: Gradebook, Students and Charts, and one student's own page (11/10) ---------------- */
 let panelKey = '', panelTok = 0;
 function classPanelGone() { panelKey = ''; panelTok++; if (bk.host === 'page') { bk.cols = null; bkPopClose(); } }
@@ -17786,6 +18134,12 @@ function findRows() {
       const k = b.querySelector('kbd'), label = [...b.childNodes].filter(n => n.nodeType === 3).map(n => n.textContent).join('').trim();
       add(b.closest('.mgrp').querySelector('.mhd').textContent === 'View and tools' ? 'Tools' : 'This assignment', label, b.title, () => b.click(), k ? k.textContent : '');
     }
+    const words = wordPdfList();
+    if (words.length) add('This assignment', 'Convert Word papers to PDF pages', words.length + (words.length === 1 ? ' Word paper' : ' Word papers') + ' here. The Word files are kept', () => {
+      const x = words.find(x => x.st === batch.students[cur]) || words[0];
+      if (x.st !== batch.students[cur]) openStudent(batch.students.indexOf(x.st));
+      openWordPdf(x.st, x.f);
+    });
     add('This assignment', 'Close this assignment', 'Saved first, then back to Home', () => go('#/'));
   }
   add('Go to', 'Home', 'What to pick up, and what needs a look', () => go('#/'));
@@ -17816,6 +18170,7 @@ function findRows() {
   add('Settings', 'Where my work is saved', 'This browser, and a linked folder', () => openWhere());
   add('Settings', document.documentElement.dataset.theme === 'dark' ? 'Light mode' : 'Dark mode', 'Display', press('.themeBtn'));
   add('Settings', 'Text size and zoom', 'Display', () => openDisplay());
+  add('Settings', 'Word papers', wordPdfAlways() ? 'Converted to PDF pages as each assignment opens' : 'Kept as Word files. They can be converted to PDF pages', () => { go('#/settings'); setTimeout(() => $('#setPapers').scrollIntoView({ block: 'center' }), 60); });
   add('Settings', 'All keys', 'Every keyboard shortcut', () => openKeys(), '?');
   return out;
 }

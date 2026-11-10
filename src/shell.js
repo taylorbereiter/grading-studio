@@ -86,6 +86,12 @@ function findRows() {
       const k = b.querySelector('kbd'), label = [...b.childNodes].filter(n => n.nodeType === 3).map(n => n.textContent).join('').trim();
       add(b.closest('.mgrp').querySelector('.mhd').textContent === 'View and tools' ? 'Tools' : 'This assignment', label, b.title, () => b.click(), k ? k.textContent : '');
     }
+    const words = wordPdfList();
+    if (words.length) add('This assignment', 'Convert Word papers to PDF pages', words.length + (words.length === 1 ? ' Word paper' : ' Word papers') + ' here. The Word files are kept', () => {
+      const x = words.find(x => x.st === batch.students[cur]) || words[0];
+      if (x.st !== batch.students[cur]) openStudent(batch.students.indexOf(x.st));
+      openWordPdf(x.st, x.f);
+    });
     add('This assignment', 'Close this assignment', 'Saved first, then back to Home', () => go('#/'));
   }
   add('Go to', 'Home', 'What to pick up, and what needs a look', () => go('#/'));
@@ -116,6 +122,7 @@ function findRows() {
   add('Settings', 'Where my work is saved', 'This browser, and a linked folder', () => openWhere());
   add('Settings', document.documentElement.dataset.theme === 'dark' ? 'Light mode' : 'Dark mode', 'Display', press('.themeBtn'));
   add('Settings', 'Text size and zoom', 'Display', () => openDisplay());
+  add('Settings', 'Word papers', wordPdfAlways() ? 'Converted to PDF pages as each assignment opens' : 'Kept as Word files. They can be converted to PDF pages', () => { go('#/settings'); setTimeout(() => $('#setPapers').scrollIntoView({ block: 'center' }), 60); });
   add('Settings', 'All keys', 'Every keyboard shortcut', () => openKeys(), '?');
   return out;
 }

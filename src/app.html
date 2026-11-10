@@ -487,6 +487,7 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
 .dpage:not(.editing) td.rcell:hover{box-shadow:inset 0 0 0 2px var(--accent)}
 .rinfo{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;max-width:816px;margin:0 auto 8px;padding:8px 12px;background:var(--accent-soft);border-radius:10px;font-size:14px}
 .rinfo b{font-size:18px}.rinfo .muted{font-size:12.5px}
+.rinfo.roff{background:none;padding:0 2px;margin-bottom:6px;gap:8px}
 .wdoc{position:relative;display:flex;gap:14px;align-items:flex-start;justify-content:center}
 .wdoc .dpage{flex:0 1 816px;min-width:0;margin:0 0 14px}
 .wnotes{position:relative;flex:0 0 210px}
@@ -636,6 +637,9 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
     </section>
     <section class="lib setsec" id="setDisplay">
       <div class="lhead"><h2>Display</h2><span class="muted">Light mode is the usual look. Text size and zoom apply while you grade.</span><span class="sp"></span><button class="btn sm themeBtn">Dark mode</button><button class="btn sm" id="setDisp">Text size and zoom</button></div>
+    </section>
+    <section class="lib setsec" id="setPapers">
+      <div class="lhead"><h2>Word papers</h2><span class="muted">Mark them as they are, or turn each one into PDF pages you can mark anywhere. The Word file is always kept.</span><span class="sp"></span><span class="seg" id="setWordPdf"><button data-v="0" aria-pressed="true">Keep as Word</button><button data-v="1" aria-pressed="false">Convert to PDF pages</button></span></div>
     </section>
     <section class="lib setsec" id="setKeys">
       <div class="lhead"><h2>Keys</h2><span class="muted">Every keyboard shortcut for marking and scoring.</span><span class="sp"></span><button class="btn sm" id="setKeysBtn">Show all keys</button></div>

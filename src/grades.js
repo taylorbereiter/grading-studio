@@ -187,7 +187,7 @@ function splitReads(st, list) {
 }
 function setReading(st, key, v) {
   const rd = (st.grade.reads ||= {}), was = rd[key];
-  const table = st.files.flatMap(wordFound).find(g => g.table && readKey(g) === key);
+  const table = st.files.flatMap(f => wordFound(f, st)).find(g => g.table && readKey(g) === key);
   if (v === '') delete rd[key]; else rd[key] = +v;
   if (v === '1') for (const g of [...(st.foundAll || []), ...rivalReads(st)]) if (readKey(g) !== key) rd[readKey(g)] = 0;   // she's picked this one, so the others on the paper aren't the grade
   if (table && was === 1 && v !== '1' && ownGrade(st).total === table.score) { if (setup.mode === 'rubric') st.grade.rubric = []; else st.grade.points = ''; }   // Undo takes back what Use it brought in
@@ -217,7 +217,7 @@ function unmarkedFile(st, f) {
   }
   if (f.kind !== 'docx' || f.edited || f.hand) return false;
   const w = wordScore(f);
-  return !(w && w.total != null) && !wordFound(f).length;
+  return !(w && w.total != null) && !wordFound(f, st).length;
 }
 // Her score against what the paper says, or the Word rubric's highlighted score. Empty when they agree or there's nothing to compare.
 function disagreeNote(st) {
