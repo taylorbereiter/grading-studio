@@ -880,6 +880,8 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
 .qmchip{font-size:12px;color:var(--muted);background:var(--surface-2);border-radius:999px;padding:1px 8px;white-space:nowrap}
 .qmmk{position:absolute;transform:translate(-50%,-50%);color:#C62B1A;font:700 26px/1 var(--f-body);cursor:grab;padding:2px 4px;border-radius:6px;white-space:nowrap;text-shadow:0 0 3px #fff}
 .qmmk.txt{font-size:17px}
+.qmmk.ok{color:#1E8A4C}
+.qmmk.ok:hover{background:rgba(30,138,76,.08)}
 .qmmk.pin{width:22px;height:22px;padding:0;box-sizing:border-box;border:1.5px dashed rgba(198,43,26,.45);border-radius:50%;opacity:.55}
 .qmc:hover .qmmk.pin,.qmc:focus .qmmk.pin{opacity:1}
 .qmmk:hover{background:rgba(198,43,26,.08)}
@@ -3250,6 +3252,7 @@ let cur = 0;             // index of the open student
 let tool = 'pen';
 let once = null, onceEl = null;   // a tool picked from the right-click for one go: { k, prev } (src/stamps.js)
 const COLORS = { red: '#D7263D', blue: '#1F5FD1', green: '#1E8A4C', purple: '#7B3FC4', black: '#1B1F27' };
+const CHECK_INK = COLORS.green;
 const HL = { yellow: '#FFE45C', green: '#B4F0A8', pink: '#FFB8D6', blue: '#B0E0FF' };
 let inkColor = store.get('gs.ink', 'red'), hlColor = store.get('gs.hl', 'yellow'), penW = store.get('gs.penW', 2);
 const DISP0 = { ui: 1, tsize: 14, fit: 'width', dfs: 15, dlh: 1.45, trim: true };
@@ -3625,7 +3628,7 @@ function layoutNotes(notes, W, H, side) {
 }
 function drawCheck(ctx, m) {
   const s = m.size || 22;
-  ctx.save(); ctx.strokeStyle = m.color; ctx.lineWidth = s * 0.13; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  ctx.save(); ctx.strokeStyle = CHECK_INK; ctx.lineWidth = s * 0.13; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
   ctx.beginPath(); ctx.moveTo(m.x - s * 0.4, m.y); ctx.lineTo(m.x - s * 0.1, m.y + s * 0.3); ctx.lineTo(m.x + s * 0.45, m.y - s * 0.35); ctx.stroke();
   ctx.restore();
 }
@@ -4421,7 +4424,7 @@ function bindPage(pg) {
     else if (tool === 'hl') g = hlBegin(pg, x, y, e);
     else if (tool === 'oval') g = { x0: x, y0: y, m: { t: 'oval', color: COLORS[inkColor], sw: Math.max(1.2, penW * 0.8), x, y, w: 0, h: 0 } };
     else if (tool === 'erase') { g = { erase: true, snapped: false }; eraseAt(pg, x, y, g); }
-    else if (tool === 'check') { snap(pg); pg.marks().push({ t: 'check', color: COLORS[inkColor], x: r1(x), y: r1(y), size: newCheckSize() }); changed(pg); }
+    else if (tool === 'check') { snap(pg); pg.marks().push({ t: 'check', color: CHECK_INK, x: r1(x), y: r1(y), size: newCheckSize() }); changed(pg); }
     else if (tool === 'text') {
       const grip = gripAt(pg, x, y); if (grip) { g = gripBegin(pg, grip); return; }
       const hit = hitMark(pg, x, y, 3);
@@ -4745,7 +4748,7 @@ $('#paper').addEventListener('wheel', e => {   // a trackpad pinch arrives as �
 }, { passive: false });
 function setTool(t) { commitEditors(); if (once) dropOnce(); tool = t; if (t !== 'select') { selected = null; redrawAll(); } renderTools(); }
 function recolorSelected(col) {
-  if (!selected || selected.fresh || selected.mark.t === 'hl') return;
+  if (!selected || selected.fresh || selected.mark.t === 'hl' || selected.mark.t === 'check') return;
   snap(selected.page); selected.mark.color = col; changed(selected.page);
 }
 
@@ -10778,7 +10781,7 @@ function openStampMenu(pg, x, y, cx, cy) {
     if (b) { closeStampMenu(); const m = placeStamp(pg, b.dataset.mark, x, y); selected = { page: pg, mark: m, fresh: true }; redrawAll(); return; }
     if (e.target.closest('[data-tick]')) {
       closeStampMenu();
-      const m = { t: 'check', color: COLORS[inkColor], x: r1(x), y: r1(y), size: newCheckSize() };
+      const m = { t: 'check', color: CHECK_INK, x: r1(x), y: r1(y), size: newCheckSize() };
       snap(pg); pg.marks().push(m); selected = { page: pg, mark: m, fresh: true }; changed(pg); redrawAll(); return;
     }
     if (e.target.closest('[data-note]')) { closeStampMenu(); openNote(pg, { t: 'note', color: COLORS[inkColor], ax: r1(x), ay: r1(y), text: '' }, true); return; }
@@ -16233,7 +16236,7 @@ async function qzPaper(st, q, v) {
   if (look) {
     const sz = await qzPageSize(st, q.n); if (!sz) return;
     const s = qzSpot(st, q, sz), cx = s.x * sz.W, cy = s.y * sz.H, color = COLORS[inkColor] || COLORS.red;
-    if (look.k === 'check') list.push({ t: 'check', color, x: r1(cx), y: r1(cy), size: 22, qz: q.id });
+    if (look.k === 'check') list.push({ t: 'check', color: CHECK_INK, x: r1(cx), y: r1(cy), size: 22, qz: q.id });
     else if (look.k === 'x') {
       const d = 9;
       list.push({ t: 'pen', color, w: 2.2, pts: [[r1(cx - d), r1(cy - d)], [r1(cx + d), r1(cy + d)]], qz: q.id });
@@ -16561,7 +16564,7 @@ function qmSizeSay() {
 function qmMarkEl(q, v) {
   const look = qzLook(q, v);
   if (!look) return '<span class="qmmk pin" title="Where the mark goes on this paper. Drag to move it on this paper only."></span>';
-  return '<span class="qmmk' + (look.k === 'text' ? ' txt' : '') + '" title="Drag to move this mark on this paper only">' + (look.k === 'check' ? '✓' : look.k === 'x' ? '✗' : esc(look.text)) + '</span>';
+  return '<span class="qmmk' + (look.k === 'text' ? ' txt' : look.k === 'check' ? ' ok' : '') + '" title="Drag to move this mark on this paper only">' + (look.k === 'check' ? '✓' : look.k === 'x' ? '✗' : esc(look.text)) + '</span>';
 }
 const qmCard = (i, q, qi) => {
   const st = batch.students[i], v = quizMarks(st)[q.id], pts = +q.pts || 1;

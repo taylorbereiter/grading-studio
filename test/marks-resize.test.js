@@ -101,7 +101,7 @@ test('a sticker grows by its corner, the next one comes out that size, and + / â
   await close();
 });
 
-test('the right-click menu has the check mark, in her ink color, at the size she last gave a check', async () => {
+test('the right-click menu has the check mark, always green, at the size she last gave a check', async () => {
   const { page, close } = await openApp(browser);
   await open(page);
   await rightClick(page, 200, 300);

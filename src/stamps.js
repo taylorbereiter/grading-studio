@@ -336,7 +336,7 @@ function openStampMenu(pg, x, y, cx, cy) {
     el.append(sep());
   }
   el.append(item({ note: '1' }, IC.note, 'Add a comment here', { cls: 'st-pri' }));
-  // The check: the same one as the Check tool, in her ink color, at the size she last gave a check.
+  // The check: the same one as the Check tool, always green, at the size she last gave a check.
   const tc = document.createElement('canvas'), dpr = window.devicePixelRatio || 1; tc.width = tc.height = Math.round(22 * dpr); tc.style.width = tc.style.height = '22px';
   const tx = tc.getContext('2d'); tx.scale(dpr, dpr); drawCheck(tx, { t: 'check', color, x: 11, y: 12, size: 16 });
   el.append(item({ tick: '1' }, tc, 'Check mark', { title: 'Check mark' }));
@@ -411,7 +411,7 @@ function openStampMenu(pg, x, y, cx, cy) {
     if (b) { closeStampMenu(); const m = placeStamp(pg, b.dataset.mark, x, y); selected = { page: pg, mark: m, fresh: true }; redrawAll(); return; }
     if (e.target.closest('[data-tick]')) {
       closeStampMenu();
-      const m = { t: 'check', color: COLORS[inkColor], x: r1(x), y: r1(y), size: newCheckSize() };
+      const m = { t: 'check', color: CHECK_INK, x: r1(x), y: r1(y), size: newCheckSize() };
       snap(pg); pg.marks().push(m); selected = { page: pg, mark: m, fresh: true }; changed(pg); redrawAll(); return;
     }
     if (e.target.closest('[data-note]')) { closeStampMenu(); openNote(pg, { t: 'note', color: COLORS[inkColor], ax: r1(x), ay: r1(y), text: '' }, true); return; }

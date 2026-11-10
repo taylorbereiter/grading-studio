@@ -90,7 +90,7 @@ test('old marks still draw, move, turn and export', async () => {
 
   // Drawing on screen
   const seen = await probeScreen(page, 0, [PEN, HL, OVAL, CHECK, TEXT, BLANK]);
-  assert.ok(seen[0].red > 20, 'pen'); assert.ok(seen[1].yellow > seen[1].n / 2, 'highlight'); assert.ok(seen[2].red > 20, 'circle'); assert.ok(seen[3].red > 5, 'check'); assert.ok(seen[4].red > 5, 'text'); assert.equal(seen[5].red, 0);
+  assert.ok(seen[0].red > 20, 'pen'); assert.ok(seen[1].yellow > seen[1].n / 2, 'highlight'); assert.ok(seen[2].red > 20, 'circle'); assert.ok(seen[3].green > 5 && seen[3].red === 0, 'a check saved in red draws green'); assert.ok(seen[4].red > 5, 'text'); assert.equal(seen[5].red, 0);
 
   // Moving: pick the pen line with the Select tool and drag it
   const pen0 = (await aria())[0].find(m => m.t === 'pen');
@@ -112,7 +112,7 @@ test('old marks still draw, move, turn and export', async () => {
   const un = unzipSync(got.bytes), pdf = un[ARIA];
   assert.equal((await PDFDocument.load(pdf)).getPageCount(), 2);
   const p1 = await probePdf(page, pdf, 1, [PEN, HL, OVAL, CHECK, TEXT, BLANK]);
-  assert.ok(p1.ink[0].red > 50 && p1.ink[1].yellow > p1.ink[1].n / 2 && p1.ink[2].red > 50 && p1.ink[3].red > 15 && p1.ink[4].red > 15, JSON.stringify(p1.ink));
+  assert.ok(p1.ink[0].red > 50 && p1.ink[1].yellow > p1.ink[1].n / 2 && p1.ink[2].red > 50 && p1.ink[3].green > 15 && p1.ink[3].red === 0 && p1.ink[4].red > 15, JSON.stringify(p1.ink));
   assert.equal(p1.ink[5].red, 0);
   const p2 = await probePdf(page, pdf, 2, [[490, 110, 140, 50]]);
   assert.equal(p2.W, 792, 'the page turned in the old build is still turned'); assert.ok(p2.ink[0].red > 20);

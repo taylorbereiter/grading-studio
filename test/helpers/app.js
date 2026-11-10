@@ -186,8 +186,8 @@ async function catchDownloads(page) {
 // Sorts pixels in a box (x, y, w, h in the page's points, from the top left) into the marks' colors.
 const inkIn = `(d, rects, scale) => rects.map(([x, y, w, h]) => {
   const q = d.getImageData(Math.round(x * scale), Math.round(y * scale), Math.max(1, Math.round(w * scale)), Math.max(1, Math.round(h * scale))).data;
-  const o = { red: 0, yellow: 0, dark: 0, n: q.length / 4 };
-  for (let i = 0; i < q.length; i += 4) { const [r, g, b] = [q[i], q[i + 1], q[i + 2]]; if (r > 170 && g < 110 && b < 110) o.red++; else if (r > 225 && g > 195 && b < 170) o.yellow++; else if (r < 90 && g < 90 && b < 90) o.dark++; }
+  const o = { red: 0, yellow: 0, dark: 0, green: 0, n: q.length / 4 };
+  for (let i = 0; i < q.length; i += 4) { const [r, g, b] = [q[i], q[i + 1], q[i + 2]]; if (r > 170 && g < 110 && b < 110) o.red++; else if (r > 225 && g > 195 && b < 170) o.yellow++; else if (r < 90 && g < 90 && b < 90) o.dark++; else if (g > 100 && g > r + 40 && g > b + 25) o.green++; }
   return o;
 })`;
 // Draws one page of a PDF with the app's own pdf.js, and reports the ink in each box.
