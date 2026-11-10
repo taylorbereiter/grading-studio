@@ -198,19 +198,20 @@ async function catchDownloads(page) {
 // Sorts pixels in a box (x, y, w, h in the page's points, from the top left) into the marks' colors.
 const inkIn = `(d, rects, scale) => rects.map(([x, y, w, h]) => {
   const q = d.getImageData(Math.round(x * scale), Math.round(y * scale), Math.max(1, Math.round(w * scale)), Math.max(1, Math.round(h * scale))).data;
-  const o = { red: 0, yellow: 0, dark: 0, green: 0, n: q.length / 4 };
-  for (let i = 0; i < q.length; i += 4) { const [r, g, b] = [q[i], q[i + 1], q[i + 2]]; if (r > 170 && g < 110 && b < 110) o.red++; else if (r > 225 && g > 195 && b < 170) o.yellow++; else if (r < 90 && g < 90 && b < 90) o.dark++; else if (g > 100 && g > r + 40 && g > b + 25) o.green++; }
+  const o = { red: 0, yellow: 0, dark: 0, green: 0, tint: 0, n: q.length / 4 };   // tint: any yellow at all, pale or strong, text over it or not
+  for (let i = 0; i < q.length; i += 4) { const [r, g, b] = [q[i], q[i + 1], q[i + 2]]; if (r > 150 && g > 130 && b < r - 40) o.tint++; if (r > 170 && g < 110 && b < 110) o.red++; else if (r > 225 && g > 195 && b < 170) o.yellow++; else if (r < 90 && g < 90 && b < 90) o.dark++; else if (g > 100 && g > r + 40 && g > b + 25) o.green++; }
   return o;
 })`;
 // Draws one page of a PDF with the app's own pdf.js, and reports the ink in each box.
-const probePdf = (page, bytes, pageNo, rects) => page.evaluate(async (b64, pageNo, rects, inkIn) => {
+// scale: how large to draw it (1 is one pixel to a point). Compared with the screen, it is drawn at the screen's size, so text is as thick in both.
+const probePdf = (page, bytes, pageNo, rects, scale = 1) => page.evaluate(async (b64, pageNo, rects, inkIn, scale) => {
   const bin = atob(b64), u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
-  const d = await pdfjsLib.getDocument({ data: u, isEvalSupported: false }).promise, p = await d.getPage(pageNo), vp = p.getViewport({ scale: 1 });
+  const d = await pdfjsLib.getDocument({ data: u, isEvalSupported: false }).promise, p = await d.getPage(pageNo), vp = p.getViewport({ scale });
   const c = document.createElement('canvas'); c.width = Math.ceil(vp.width); c.height = Math.ceil(vp.height);
   const x = c.getContext('2d', { willReadFrequently: true }); x.fillStyle = '#fff'; x.fillRect(0, 0, c.width, c.height); await p.render({ canvasContext: x, viewport: vp }).promise;
-  const out = { W: vp.width, H: vp.height, n: d.numPages, ink: eval(inkIn)(x, rects, 1) };
+  const out = { W: vp.width / scale, H: vp.height / scale, n: d.numPages, ink: eval(inkIn)(x, rects, scale) };
   d.destroy(); return out;
-}, Buffer.from(bytes).toString('base64'), pageNo, rects, inkIn);
+}, Buffer.from(bytes).toString('base64'), pageNo, rects, inkIn, scale);
 // The same, for page k as the app has it drawn on screen right now.
 const probeScreen = (page, k, rects) => page.evaluate((k, rects, inkIn) => { const pg = window.__gs.state().pages[k]; return eval(inkIn)(pg.canvas.getContext('2d'), rects, pg.canvas.width / (pg.W + pg.side)); }, k, rects, inkIn);
 // Marks and scores of a whole download, to compare before and after.
