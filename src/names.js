@@ -50,8 +50,13 @@ function spelledRx(raw, marked) {
   return '(?:' + [...new Set([raw.normalize('NFC'), nfd, marked ? nfd : nfd.replace(/[̀-ͯ]/g, '')])].map(lit).concat(THAI.test(raw) ? thaiRx(raw) : []).join('|') + ')';
 }
 // Thai: where two marks stack on a letter, a PDF's text can keep only one of them and put an empty character in place of the other. ดิ์ comes out as ดิ and a gap, น้ำ as นํ, a gap and า.
+// With some fonts a single mark is followed by a gap too: คำ comes out as คํ, a gap and า.
 const THAI = /\p{Script=Thai}/u;
-const thaiRx = raw => (raw.normalize('NFC').match(/\P{M}\p{M}*/gu) || []).map(c => [...c].length > 2 ? rxEsc([...c][0]) + '\\p{M}+[\\s\\x00]?' : rxEsc(c)).join('');
+const thaiRx = raw => (raw.normalize('NFC').match(/\P{M}\p{M}*/gu) || []).map(c => { const n = [...c].length; return n > 2 ? rxEsc([...c][0]) + '\\p{M}+[\\s\\x00]?' : n === 2 ? rxEsc(c) + '[\\s\\x00]?' : rxEsc(c); }).join('');
+// Many Thai fonts keep a second drawing of a mark for where it has to sit lower or further left, and a PDF's text gives that drawing
+// its own private character (U+F700 to U+F71A) in place of the mark. Read back as the mark it is, or a name with one goes uncovered.
+const THAI_PUA = '\u0E10\u0E34\u0E35\u0E36\u0E37\u0E48\u0E49\u0E4A\u0E4B\u0E4C\u0E48\u0E49\u0E4A\u0E4B\u0E4C\u0E0D\u0E31\u0E4D\u0E47\u0E48\u0E49\u0E4A\u0E4B\u0E4C\u0E38\u0E39\u0E3A';
+const thaiPlain = s => /[\uF700-\uF71A]/.test(s) ? s.replace(/[\uF700-\uF71A]/g, c => THAI_PUA[c.charCodeAt(0) - 0xF700]) : s;
 const isLatin = raw => /^[a-z0-9]+$/.test(nameFold(raw));
 // A short name with its accents gone is too easily a word of its own: cat for Cát. Its small letters only count on the student's own paper.
 const shortBare = raw => { const w = nameFold(raw); return isLatin(raw) && w.length <= 3 && w !== raw.toLowerCase(); };
@@ -215,7 +220,7 @@ async function classCommon() {
       for (const [path, p] of d.pages) {
         const f = fileByPath(st, path);
         if (!docs.has(path)) docs.set(path, await pdfjsLib.getDocument({ data: (await viewBytes(f)).slice(), isEvalSupported: false }).promise);
-        const page = await docs.get(path).getPage(p + 1), t = (await page.getTextContent()).items.map(it => it.str).join('\n').normalize('NFKC');
+        const page = await docs.get(path).getPage(p + 1), t = (await page.getTextContent()).items.map(it => thaiPlain(it.str)).join('\n').normalize('NFKC');
         page.cleanup();
         for (const m of t.matchAll(rx)) if (m[0] && rawWords(m[0]).length === 1 && !/[@\d]/.test(m[0])) seen.add(nameFold(m[0]));
       }

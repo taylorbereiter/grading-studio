@@ -1,0 +1,42 @@
+/* ---------- tokens: every colour, text size, space and corner the app is drawn from ----------
+   One file, built into both pages (grading and the Planner). A rule anywhere else names a token; it doesn't write a
+   colour code or a size of its own. Where older rules still do, test/tokens.test.js counts them, and the count may
+   only go down.
+   Look: "Calm Desk" in ocean blue: white and cool gray, one blue accent, red only for marks on the paper.
+   Light is the default and never follows the system; dark is the same names with other values. */
+:root{
+  /* colour: surfaces, from the page behind everything to the things on it */
+  --bg:#F4F5F7; --surface:#FFFFFF; --surface-2:#EEF0F3; --hover:#EBEDF1; --track:#DDE0E6; --line:#E4E6EA; --line-strong:#CDD1D9;
+  /* colour: text, strongest first */
+  --fg:#1E2024; --fg-2:#3F444C; --muted:#5C616A; --faint:#666B74;
+  /* colour: the one accent */
+  --accent:#1A67A8; --accent-hover:#15568C; --accent-fg:#FFFFFF; --accent-soft:#E6F0F9;
+  /* colour: saying how things stand. Each has a soft background to sit on. */
+  --warn:#8A5A0E; --warn-soft:#FBF0D9; --ok:#17704A; --ok-soft:#DFF3E9; --bad:#B4321F; --bad-soft:#FCE7E3; --warn-fg:#FFFFFF;
+  --paper-chip:#FFFFFF;
+  --shadow:0 1px 2px rgba(20,25,40,.06),0 4px 14px rgba(20,25,40,.06);
+  /* type */
+  --f-display:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  --f-body:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  --text-caption:11px; --text-small:12px; --text-control:13px; --text-body:14px; --text-lead:16px; --text-title:20px; --text-heading:24px; --text-display:28px;
+  /* space: gaps and padding step along this scale */
+  --space-1:4px; --space-2:8px; --space-3:12px; --space-4:16px; --space-5:24px; --space-6:32px; --space-7:48px;
+  /* corners */
+  --corner-1:4px; --corner-2:6px; --corner-3:8px; --corner-4:10px; --corner-5:12px; --corner-pill:999px; --corner-round:50%;
+  /* the teacher's own display settings (Settings, Display) */
+  --uz:1; --dfs:15px; --dlh:1.45;
+  /* older names for corners, still used by a few rules */
+  --r:10px; --r-sm:7px;
+  /* colour: charts and the gradebook (types of assignment, the five steps of a heat map, up and down, the dot plot) */
+  --bk-sum:#164E80; --bk-ic:#6FA3D2; --bk-fm:#8A919E; --ch1:#8FB5DC; --ch2:#5F96CB; --ch3:#3478B7; --ch4:#1A5D9A; --ch5:#0F3F6C; --ch-lo:#0D2740; --ch-hi:#FFFFFF; --ch-up:#1A67A8; --ch-down:#B4610F; --ch-band:#DCE7F3; --dot:var(--accent); --ov-bar:#1A67A8; --ov-mute:#8A919E;
+}
+:root[data-theme="dark"]{
+  --bg:#0F1117; --surface:#171A22; --surface-2:#1E222C; --hover:#272C38; --track:#343A47; --line:#2A2F3B; --line-strong:#454C5B;
+  --fg:#E7E9EF; --fg-2:#CDD2DE; --muted:#A9B0C0; --faint:#8E95A6;
+  --accent:#5AA6E6; --accent-hover:#7DB9EC; --accent-fg:#0C1520; --accent-soft:#16283A;
+  --warn:#E8B451; --warn-soft:#352A14; --ok:#4FC690; --ok-soft:#15302A; --bad:#FF7A64; --bad-soft:#3A1E1A; --warn-fg:#1C1405;
+  --paper-chip:#1E222C;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 4px 14px rgba(0,0,0,.25);
+  --bk-sum:#7FB2E0; --bk-ic:#3F78AE; --bk-fm:#6B7280; --ch1:#3A6590; --ch2:#4A80B5; --ch3:#5E9AD1; --ch4:#84B5E2; --ch5:#B3D3F0; --ch-lo:#FFFFFF; --ch-hi:#0B1F33; --ch-up:#4A93D6; --ch-down:#C98230; --ch-band:#22324A; --dot:#4A9ADF; --ov-bar:#4793D4; --ov-mute:#6B7280;
+  color-scheme:dark;
+}

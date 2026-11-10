@@ -23,21 +23,21 @@
 
 /* Small menus: + Add, the ⋯ on a file, the ⋯ beside Missing, Excused, Late */
 .kmw{position:relative;display:inline-flex}
-.km{position:absolute;top:calc(100% + 4px);left:0;z-index:20;min-width:216px;max-width:300px;max-height:min(60vh,440px);overflow:auto;background:var(--surface);border:1px solid var(--line-strong);border-radius:10px;box-shadow:0 10px 28px rgba(10,14,25,.2);padding:5px;display:flex;flex-direction:column;gap:1px;text-align:left;font-weight:400;white-space:normal}
+.km{position:absolute;top:calc(100% + 4px);left:0;z-index:20;min-width:216px;max-width:300px;max-height:min(60vh,440px);overflow:auto;background:var(--surface);border:1px solid var(--line-strong);border-radius:var(--corner-4);box-shadow:0 10px 28px rgba(10,14,25,.2);padding:5px;display:flex;flex-direction:column;gap:1px;text-align:left;font-weight:400;white-space:normal}
 .km[hidden]{display:none}
 .km.right{left:auto;right:0}
 .km.up,.km.flip{top:auto;bottom:calc(100% + 4px)}
-.km .mitem{display:block;font-size:14px}
-.km .mitem small{display:block;font-size:12px;font-weight:400;color:var(--muted);margin-top:1px}
+.km .mitem{display:block;font-size:var(--text-body)}
+.km .mitem small{display:block;font-size:var(--text-small);font-weight:400;color:var(--muted);margin-top:1px}
 .km .mitem kbd{float:right}
-.km .link{display:block;width:100%;text-align:left;padding:7px 10px;margin:0!important;border-radius:7px;font-size:14px!important;font-weight:500;color:var(--fg);text-decoration:none;line-height:1.3}
+.km .link{display:block;width:100%;text-align:left;padding:7px 10px;margin:0!important;border-radius:7px;font-size:var(--text-body)!important;font-weight:500;color:var(--fg);text-decoration:none;line-height:1.3}
 .km .link:hover,.km .link:focus-visible{background:var(--hover)}
 .km .link[data-armed]{color:var(--warn)!important;font-weight:600}
 .kmhd{font-size:11.5px;font-weight:600;color:var(--faint);text-transform:uppercase;letter-spacing:.05em;padding:7px 10px 3px;border-top:1px solid var(--line);margin-top:4px}
 .kmnote{margin:0;padding:6px 10px;font-size:12.5px;color:var(--muted)}
 .kdots{font-weight:700;letter-spacing:1px;line-height:1}
 .btn.kdots{padding-left:9px;padding-right:9px}
-.icon.kdots{width:28px;height:26px;font-size:16px;border-color:var(--line)}
+.icon.kdots{width:28px;height:26px;font-size:var(--text-lead);border-color:var(--line)}
 [data-km][aria-expanded=true]{background:var(--accent-soft);color:var(--accent);border-color:var(--accent)}
 
 /* The student's bar above the paper */
@@ -56,11 +56,11 @@
 .pavg .s{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
 button.pavg:hover .v{text-decoration:underline}
 .lfilt{display:flex;flex-wrap:wrap;gap:5px;margin:0 0 10px}
-.lf{border:0;background:var(--surface-2);border-radius:999px;padding:3px 9px;font-size:12.5px;font-weight:500;color:var(--fg-2);white-space:nowrap}
+.lf{border:0;background:var(--surface-2);border-radius:var(--corner-pill);padding:3px 9px;font-size:12.5px;font-weight:500;color:var(--fg-2);white-space:nowrap}
 .lf:hover{color:var(--fg)}
 .lf[aria-pressed=true]{background:var(--accent-soft);color:var(--accent);font-weight:600}
 .lf .v{font-variant-numeric:tabular-nums}
-.lfnone{font-size:13px;padding:6px 8px}
+.lfnone{font-size:var(--text-control);padding:6px 8px}
 .side .hd{display:flex;align-items:center;justify-content:space-between;gap:6px;margin:2px 8px 6px}
 .sfoot{position:sticky;bottom:-10px;z-index:1;display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:8px;padding:8px 6px 10px;background:var(--bg);border-top:1px solid var(--line)}
 .sfoot{flex-wrap:wrap}
@@ -81,16 +81,16 @@ button.pavg:hover .v{text-decoration:underline}
 .km .outsw[aria-checked=true]{background:var(--accent-soft)}
 .outnote{margin:7px 0 0;font-size:12.5px;color:var(--muted)}
 .cbank{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px}
-.cchip{border:0;background:var(--surface-2);border-radius:999px;padding:3px 10px;font-size:12.5px;font-weight:500;color:var(--fg-2);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cchip{border:0;background:var(--surface-2);border-radius:var(--corner-pill);padding:3px 10px;font-size:12.5px;font-weight:500;color:var(--fg-2);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .cbank>.cchip{max-width:calc(50% - 3px)}
 .cchip:hover{color:var(--fg)}
 .cchip.cmore{background:var(--accent-soft);color:var(--accent);font-weight:600}
 .cbank .km{min-width:250px}
-.nav .navi{flex:0 0 42px;padding:0;font-size:20px;line-height:1;color:var(--fg-2)}
-.nav .primary kbd{font:600 10.5px var(--f-body);border:1px solid rgba(255,255,255,.55);border-radius:4px;padding:0 4px;margin-left:2px}
+.nav .navi{flex:0 0 42px;padding:0;font-size:var(--text-title);line-height:1;color:var(--fg-2)}
+.nav .primary kbd{font:600 10.5px var(--f-body);border:1px solid rgba(255,255,255,.55);border-radius:var(--corner-1);padding:0 4px;margin-left:2px}
 .oneout{text-align:center;margin:0}
 .oneout .link{font-size:13.5px}
 .oneout-say{margin:3px 0 0}
 .oneout-say:empty{display:none}
-.nextun{align-self:center;font-size:13px}
-.nextun kbd,.hint kbd{font:500 10.5px var(--f-body);border:1px solid var(--line-strong);border-bottom-width:2px;border-radius:4px;padding:0 4px;background:var(--surface);color:var(--muted)}
+.nextun{align-self:center;font-size:var(--text-control)}
+.nextun kbd,.hint kbd{font:500 10.5px var(--f-body);border:1px solid var(--line-strong);border-bottom-width:2px;border-radius:var(--corner-1);padding:0 4px;background:var(--surface);color:var(--muted)}

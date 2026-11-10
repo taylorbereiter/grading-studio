@@ -208,7 +208,7 @@ test('the gradebook on the page keeps its tools, and picks up a change made on t
   assert.equal((await lib(page)).classes[0].units[0].items[0].typed.s['Bram Sample'].v, 85);
   // an assignment renamed on the Assignments tab has its new name in the gradebook
   await tab(page, '', '[data-edit-asg="i1"]');
-  await page.click('[data-edit-asg="i1"]');
+  await page.$eval('[data-edit-asg="i1"]', b => b.click());   // the cards are drawn again as the tab settles, so a pointer click can find the button gone
   await page.waitForSelector('#aName');
   await page.$eval('#aName', e => { e.value = 'Reading quiz A'; });
   await page.click('#dlgBox [data-ok]');

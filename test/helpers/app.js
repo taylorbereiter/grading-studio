@@ -8,7 +8,8 @@ const BUILT = path.join(ROOT, 'index.html');
 // Tests on a stale build would pass or fail about old code, so stop with a clear message instead.
 function builtHtml() {
   if (!fs.existsSync(BUILT)) throw new Error('index.html is missing. Run: npm run check');
-  const t = fs.statSync(BUILT).mtimeMs, src = ['build.js', 'package.json', ...fs.readdirSync(path.join(ROOT, 'src')).map(f => 'src/' + f)];
+  const walk = d => fs.readdirSync(path.join(ROOT, d), { withFileTypes: true }).flatMap(e => e.isDirectory() ? walk(d + '/' + e.name) : [d + '/' + e.name]);   // every file under src, folders within folders too
+  const t = fs.statSync(BUILT).mtimeMs, src = ['build.js', 'package.json', ...walk('src')];
   const old = src.filter(f => fs.statSync(path.join(ROOT, f)).mtimeMs > t + 1000);
   if (old.length) throw new Error('index.html is older than ' + old.join(', ') + '. Run: npm run check');
   return fs.readFileSync(BUILT, 'utf8');
@@ -28,6 +29,15 @@ async function openApp(browser, { html, platform, seed, server, context, noWait,
   page.on('dialog', d => { page.lastDialog = d.message(); d.accept(); });
   // A refresh now comes back to the very screen she was on, the open paper included. Most tests mean "close the tab and come back
   // to the app", which lands on Home, so reload does that. reloadHere is the plain refresh.
+  // The app redraws lists as work loads; a press that lands in the middle of a redraw finds the old button gone. Nothing was
+  // pressed when that happens, so find the button again and press it.
+  const press = page.click.bind(page);
+  page.click = async (...a) => {
+    for (let n = 0; ; n++) {
+      try { return await press(...a); }
+      catch (e) { if (n >= 4 || !/detached|not clickable|not an Element/i.test(String(e && e.message))) throw e; await new Promise(r => setTimeout(r, 150)); }
+    }
+  };
   const plain = page.reload.bind(page);
   page.reloadHere = plain;
   page.reload = async (...a) => { await page.evaluate(() => { if (location.hash) history.replaceState(null, '', location.pathname + location.search); }).catch(() => {}); return plain(...a); };
@@ -42,6 +52,17 @@ async function openApp(browser, { html, platform, seed, server, context, noWait,
   if (!noWait) await appReady(page);
   return { page, ctx, srv, close: async () => { await ctx.close().catch(() => {}); if (!server) await srv.close(); } };
 }
+// The app in a Chrome of its own, in that Chrome's main profile (still a throwaway one). For tests that link a folder and then
+// come back to the page: some Chrome builds stop dead when a separate section of a profile reads a folder link it saved earlier.
+// Takes the same options as openApp; close() also closes that Chrome.
+async function openOwn(o = {}) {
+  const own = await require('./chrome').launch(), r = await openApp(own, { ...o, context: own.defaultBrowserContext() }), close = r.close;
+  OWN.add(own);
+  r.close = async () => { await close(); OWN.delete(own); await own.close(); };
+  return r;
+}
+// For a file's after(): closes any Chrome a failed test left open, so the file can end.
+const OWN = new Set(), closeOwn = async () => { for (const b of OWN) await b.close().catch(() => {}); OWN.clear(); };
 // Answers the app's own askDlg, sayDlg or askTextDlg, and keeps its text in page.lastDialog. typed fills in askTextDlg first.
 async function answerDlg(page, { yes = true, typed } = {}) {
   await page.waitForSelector('#askDlg [data-ok]');
@@ -186,19 +207,20 @@ async function catchDownloads(page) {
 // Sorts pixels in a box (x, y, w, h in the page's points, from the top left) into the marks' colors.
 const inkIn = `(d, rects, scale) => rects.map(([x, y, w, h]) => {
   const q = d.getImageData(Math.round(x * scale), Math.round(y * scale), Math.max(1, Math.round(w * scale)), Math.max(1, Math.round(h * scale))).data;
-  const o = { red: 0, yellow: 0, dark: 0, green: 0, n: q.length / 4 };
-  for (let i = 0; i < q.length; i += 4) { const [r, g, b] = [q[i], q[i + 1], q[i + 2]]; if (r > 170 && g < 110 && b < 110) o.red++; else if (r > 225 && g > 195 && b < 170) o.yellow++; else if (r < 90 && g < 90 && b < 90) o.dark++; else if (g > 100 && g > r + 40 && g > b + 25) o.green++; }
+  const o = { red: 0, yellow: 0, dark: 0, green: 0, tint: 0, n: q.length / 4 };   // tint: any yellow at all, pale or strong, text over it or not
+  for (let i = 0; i < q.length; i += 4) { const [r, g, b] = [q[i], q[i + 1], q[i + 2]]; if (r > 150 && g > 130 && b < r - 40) o.tint++; if (r > 170 && g < 110 && b < 110) o.red++; else if (r > 225 && g > 195 && b < 170) o.yellow++; else if (r < 90 && g < 90 && b < 90) o.dark++; else if (g > 100 && g > r + 40 && g > b + 25) o.green++; }
   return o;
 })`;
 // Draws one page of a PDF with the app's own pdf.js, and reports the ink in each box.
-const probePdf = (page, bytes, pageNo, rects) => page.evaluate(async (b64, pageNo, rects, inkIn) => {
+// scale: how large to draw it (1 is one pixel to a point). Compared with the screen, it is drawn at the screen's size, so text is as thick in both.
+const probePdf = (page, bytes, pageNo, rects, scale = 1) => page.evaluate(async (b64, pageNo, rects, inkIn, scale) => {
   const bin = atob(b64), u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
-  const d = await pdfjsLib.getDocument({ data: u, isEvalSupported: false }).promise, p = await d.getPage(pageNo), vp = p.getViewport({ scale: 1 });
+  const d = await pdfjsLib.getDocument({ data: u, isEvalSupported: false }).promise, p = await d.getPage(pageNo), vp = p.getViewport({ scale });
   const c = document.createElement('canvas'); c.width = Math.ceil(vp.width); c.height = Math.ceil(vp.height);
   const x = c.getContext('2d', { willReadFrequently: true }); x.fillStyle = '#fff'; x.fillRect(0, 0, c.width, c.height); await p.render({ canvasContext: x, viewport: vp }).promise;
-  const out = { W: vp.width, H: vp.height, n: d.numPages, ink: eval(inkIn)(x, rects, 1) };
+  const out = { W: vp.width / scale, H: vp.height / scale, n: d.numPages, ink: eval(inkIn)(x, rects, scale) };
   d.destroy(); return out;
-}, Buffer.from(bytes).toString('base64'), pageNo, rects, inkIn);
+}, Buffer.from(bytes).toString('base64'), pageNo, rects, inkIn, scale);
 // The same, for page k as the app has it drawn on screen right now.
 const probeScreen = (page, k, rects) => page.evaluate((k, rects, inkIn) => { const pg = window.__gs.state().pages[k]; return eval(inkIn)(pg.canvas.getContext('2d'), rects, pg.canvas.width / (pg.W + pg.side)); }, k, rects, inkIn);
 // Marks and scores of a whole download, to compare before and after.
@@ -234,4 +256,4 @@ async function menuPick(page, sel) {
   await page.waitForSelector('.stampmenu [data-fly="' + where + '"]:not([hidden])');
   await page.click('.stampmenu [data-fly="' + where + '"] ' + sel);
 }
-module.exports = { goTo, openClass, classPage, menuPick, press, pick, closeBox, MARK_BOXES, ROOT, BUILT, builtHtml, tmpDir, openApp, answerDlg, appReady, plant, idbRead, pickFile, openZip, waitPaper, goToStudent, at, drag, clickAt, setTool, score, markPage, settle, catchDownloads, probePdf, probeScreen, workOf };
+module.exports = { openOwn, closeOwn, goTo, openClass, classPage, menuPick, press, pick, closeBox, MARK_BOXES, ROOT, BUILT, builtHtml, tmpDir, openApp, answerDlg, appReady, plant, idbRead, pickFile, openZip, waitPaper, goToStudent, toScreen, at, drag, clickAt, setTool, score, markPage, settle, catchDownloads, probePdf, probeScreen, workOf };

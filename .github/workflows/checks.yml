@@ -1,0 +1,132 @@
+# Runs on every pull request and on every change to main:
+#   Build and tests   the pages are built and are the ones in the change; every test passes
+#   Screens           every screen pictured at three sizes in light and dark, compared with main
+#   Saved work        work made with main's pages opens unchanged in this change's pages, at the same address
+#   Speed             pen, next student and opening 30 papers, measured
+#   All checks        passes only when the four above do, so one name can be required on main
+# Nothing here can reach student work: every paper, name and score in the tests is made up, and the test browser
+# can reach nothing but this computer.
+name: Checks
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: checks-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+env:
+  # What a change is held against: the branch a pull request is going into, or main as it was before a push.
+  AGAINST: ${{ github.event_name == 'pull_request' && format('origin/{0}', github.base_ref) || github.event.before || 'origin/main' }}
+jobs:
+  tests:
+    name: Build and tests (${{ matrix.part }} of 2)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        part: [1, 2]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      # The made-up papers include Thai, Chinese and Japanese names, typed text and code. Chrome draws them with the
+      # computer's fonts, so the tests get the common free ones instead of whatever the runner happens to have.
+      - name: Fonts for the made-up papers
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq fonts-liberation fonts-dejavu fonts-freefont-ttf fonts-wqy-zenhei fonts-ipafont-gothic fonts-thai-tlwg fonts-noto-color-emoji
+          mkdir -p ~/.config/fontconfig && cp test/tools/ci-fonts.conf ~/.config/fontconfig/fonts.conf
+          fc-cache -f >/dev/null
+          fc-match monospace; fc-match Consolas; fc-match sans-serif; fc-match serif; fc-match Arial; fc-match "Courier New"
+      - name: Build
+        run: npm run build
+      - name: The pages in this change are the ones its source builds
+        run: |
+          git diff --exit-code --stat -- index.html "Grading Studio.html" planner.html Planner.html || {
+            echo "::error::index.html, Grading Studio.html, planner.html or Planner.html is not what src/ builds. Run npm run build and commit the pages."
+            exit 1
+          }
+      - name: Tests
+        run: npm test -- --part ${{ matrix.part }}/2
+      - name: Keep the logs of a failed run
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-logs-${{ matrix.part }}
+          path: out/test-logs
+          retention-days: 7
+
+  screens:
+    name: Screens
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - name: Every screen, compared with ${{ env.AGAINST }}
+        run: node test/tools/screens.js --against "$AGAINST"
+      - name: Keep the pictures of what changed
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: screens-that-changed
+          path: out/screens/diff
+          if-no-files-found: ignore
+          retention-days: 14
+
+  saved-work:
+    name: Saved work
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - name: Work made with ${{ env.AGAINST }} opens unchanged in this build
+        run: node test/tools/saved-work.js --against "$AGAINST"
+
+  speed:
+    name: Speed
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - name: Pen, next student, opening 30 papers
+        run: node test/tools/speed.js
+
+  all:
+    name: All checks
+    if: always()
+    needs: [tests, screens, saved-work, speed]
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Every check passed
+        run: |
+          echo "tests=${{ needs.tests.result }} screens=${{ needs.screens.result }} saved-work=${{ needs.saved-work.result }} speed=${{ needs.speed.result }}"
+          [ "${{ needs.tests.result }}" = success ] && [ "${{ needs.screens.result }}" = success ] && [ "${{ needs.saved-work.result }}" = success ] && [ "${{ needs.speed.result }}" = success ]

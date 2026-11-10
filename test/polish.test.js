@@ -6,6 +6,7 @@ const { launch } = require('./helpers/chrome');
 const { classPage, ROOT, builtHtml, openApp, answerDlg, appReady, openZip, pickFile, score, settle, press, closeBox } = require('./helpers/app');
 const { makePaper, standardFiles, zipOf } = require('./helpers/fixtures');
 const { contrastFails, contrastSeen } = require('./helpers/contrast');
+const APP_PARTS = require('../src/app/order.json').map(n => 'app/' + n);   // the app's own source, in the order it is built
 
 let browser, zip;
 before(async () => { browser = await launch(); zip = zipOf(await standardFiles()); });
@@ -336,14 +337,14 @@ for (const [platform, wanted, unwanted] of [['mac', '⌘', /Ctrl/], ['win', 'Ctr
 });
 
 test('the source has no bare ⌘ in a label outside keyLabel', () => {
-  const src = ['app', 'marking', 'grades', 'saving', 'carryover', 'exportreport', 'planner/lessons'].flatMap(f => fs.readFileSync(path.join(ROOT, 'src', f + '.js'), 'utf8').split('\n'));
+  const src = [...APP_PARTS, 'marking', 'grades', 'saving', 'carryover', 'exportreport', 'planner/lessons'].flatMap(f => fs.readFileSync(path.join(ROOT, 'src', f + '.js'), 'utf8').split('\n'));
   const bare = src.filter(l => /⌘/.test(l) && !/^\s*\/\//.test(l) && !/keyLabel\(|row\('/.test(l) && !/\/\/.*⌘/.test(l));
   assert.deepEqual(bare, []);
 });
 
 /* ---------------- the app's own pop-ups ---------------- */
 test('nothing in the app uses a browser pop-up any more', async () => {
-  for (const f of ['app.js', 'marking.js', 'grades.js', 'saving.js', 'carryover.js', 'exportreport.js', 'planner/lessons.js', 'planner/units.js', 'planner/base.js', 'polish.js']) {
+  for (const f of [...APP_PARTS.map(n => n + '.js'), 'marking.js', 'grades.js', 'saving.js', 'carryover.js', 'exportreport.js', 'planner/lessons.js', 'planner/units.js', 'planner/base.js', 'polish.js']) {
     const s = fs.readFileSync(path.join(ROOT, 'src', f), 'utf8');
     assert.doesNotMatch(s, /(^|[^.\w])(window\.)?(confirm|prompt|alert)\(/m, f);
   }

@@ -155,11 +155,14 @@ test('drawing just the end of a stroke leaves the page exactly as drawing it all
     draw(pg, [{ ...m, pts: pts.slice(0, 4) }, { ...hl, pts: hl.pts.slice(0, 4) }]);
     draw(pg, [m, hl], { x: 150, y: 600, w: 90.3, h: 110.7 });   // the changed end, on fractions of a pixel
     const part = snap();
-    let diff = 0; for (let i = 0; i < whole.length; i++) if (whole[i] !== part[i]) diff++;
+    // Some Chrome builds smooth the edge of a line a shade differently when the line is drawn in two goes, so this counts what an
+    // eye could see: a missing or doubled piece of the stroke is off by 100 or more over hundreds of values, smoothing by a few.
+    let far = 0, clear = 0; for (let i = 0; i < whole.length; i++) { const d = Math.abs(whole[i] - part[i]); if (d > 64) far++; if (d > 16) clear++; }
     draw(pg);
-    return diff;
+    return { far, clear };
   });
-  assert.equal(same, 0);
+  assert.equal(same.far, 0, 'nothing is plainly different');
+  assert.ok(same.clear < 40, 'and next to nothing is faintly different: ' + same.clear);
   await close();
 });
 
@@ -438,7 +441,7 @@ test('a comment dragged over words highlights those words, over several lines to
 
 /* ---------------- surviving save, reopen, turning and export ---------------- */
 const SPOTS = m => (m.rects || [m]).map(r => [r.x + 2, r.y + 2, r.w - 4, r.h - 4]);
-const inkOf = async (page, bytes, n, rects) => (await probePdf(page, bytes, n, rects)).ink;
+const inkOf = async (page, bytes, n, rects, scale) => (await probePdf(page, bytes, n, rects, scale)).ink;
 
 async function exportZip(page, dl) {
   await page.click('#exportBtn');
@@ -516,10 +519,12 @@ test('the screen, the export and an editable export reopened all agree', async (
   const shown = await probeScreen(page, 0, probes.concat([gapBefore, freeOff, penBox]));
   const un = await exportZip(page, dl);
   const bytes = un['Aria Testwell/Essay.pdf'];
-  const out = await inkOf(page, bytes, 1, probes.concat([gapBefore, freeOff, penBox]));
+  const drawn = await page.evaluate(() => { const pg = window.__gs.state().pages[0]; return pg.canvas.width / (pg.W + pg.side); });   // the export is drawn as large as the screen, so the two can be compared
+  const out = await inkOf(page, bytes, 1, probes.concat([gapBefore, freeOff, penBox]), drawn);
+  const table = out.slice(0, probes.length).map((o, i) => i + ': screen ' + (shown[i].tint / shown[i].n).toFixed(2) + ', export ' + (o.tint / o.n).toFixed(2) + ', box ' + probes[i].map(v => Math.round(v)).join(' ')).join('; ');
   out.slice(0, probes.length).forEach((o, i) => {
     assert.ok(o.yellow > 0, 'export has highlight at spot ' + i);
-    near(o.yellow / o.n, shown[i].yellow / shown[i].n, 0.2, 'screen and export agree at spot ' + i);
+    near(o.tint / o.n, shown[i].tint / shown[i].n, 0.2, 'screen and export agree at spot ' + i + ' (all spots: ' + table + ')');
   });
   assert.equal(out[probes.length].yellow, 0, 'nothing before the first word');
   assert.equal(out[probes.length + 1].yellow, 0, 'nothing beside the freehand stroke');
