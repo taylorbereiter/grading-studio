@@ -3,7 +3,7 @@ const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 
 const { launch } = require('./helpers/chrome');
-const { openApp, openZip, waitPaper, appReady, goToStudent, setTool, drag, score, settle, workOf, idbRead, catchDownloads } = require('./helpers/app');
+const { openApp, openZip, waitPaper, appReady, goToStudent, setTool, drag, score, settle, workOf, idbRead, catchDownloads, closeBox: shutBox } = require('./helpers/app');
 const { standardFiles, makePaper, makeDocx, zipOf } = require('./helpers/fixtures');
 
 let browser, v1, v2;
@@ -19,7 +19,7 @@ after(async () => { await browser.close(); });
 const pen = async (page, k = 0) => { await setTool(page, 'pen'); await drag(page, k, [[100, 300], [200, 330]]); };
 const idOf = page => page.evaluate(() => window.__gs.state().batch.id);
 const carryBox = page => page.waitForSelector('#carryBox', { timeout: 20000 }).then(() => page.$eval('#carryBox', e => e.textContent));
-const closeBox = page => page.click('#dlgBox .bf [data-close]');
+const closeBox = page => shutBox(page, '#dlgBox .bf [data-close]');
 const noBox = async page => { await new Promise(r => setTimeout(r, 300)); assert.equal(await page.$('#carryBox'), null, 'no message about older copies'); };
 // Answers the app's own question whenever it comes up, even across a reload, and notes its text.
 const answer = (page, yes) => {
@@ -193,7 +193,7 @@ test('an exported ZIP brings its own marks, and isn’t taken for a newer copy',
   await page.waitForSelector('#dlgBox [data-go="zip"]', { timeout: 60000 });
   const got = await dl.next(() => page.click('#dlgBox [data-go="zip"]'));
   await page.waitForFunction(() => /^Done\./.test(document.querySelector('#xStatus').textContent), { timeout: 60000 });
-  await page.click('#dlgBox .bf [data-close]');
+  await closeBox(page, '#dlgBox .bf [data-close]');
   await page.click('#closeBtn');
   await openZip(page, got.bytes, 'Marked - River essay.zip');
   await noBox(page);

@@ -3,7 +3,7 @@ const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs'), path = require('path');
 const { launch } = require('./helpers/chrome');
-const { classPage, ROOT, builtHtml, openApp, answerDlg, appReady, openZip, pickFile, score, settle } = require('./helpers/app');
+const { classPage, ROOT, builtHtml, openApp, answerDlg, appReady, openZip, pickFile, score, settle, press, closeBox } = require('./helpers/app');
 const { makePaper, standardFiles, zipOf } = require('./helpers/fixtures');
 const { contrastFails, contrastSeen } = require('./helpers/contrast');
 
@@ -21,18 +21,20 @@ for (const width of [1280, 1440]) test('the top bar is one row at ' + width + 'p
   await page.setViewport({ width, height: 800 });
   await openZip(page, zip);
   const bar = await page.$eval('.top', top => {
-    const shown = [...top.querySelectorAll('button,select,.batch,.title')].filter(e => e.checkVisibility() && !e.closest('#moreMenu'));
+    const shown = [...top.querySelectorAll('button,select,a.atab,.batch,.title')].filter(e => e.checkVisibility() && !e.closest('#moreMenu'));
     const rects = shown.map(e => e.getBoundingClientRect()), mid = r => r.top + r.height / 2, y = mid(rects[0]);
-    return { same: rects.every(r => Math.abs(mid(r) - y) < 4), h: top.getBoundingClientRect().height, spill: top.scrollWidth - top.clientWidth, controls: shown.filter(e => e.matches('button,select')).map(e => e.id) };
+    return { same: rects.every(r => Math.abs(mid(r) - y) < 4), h: top.getBoundingClientRect().height, spill: top.scrollWidth - top.clientWidth, controls: shown.filter(e => e.matches('button,select,a.atab')).map(e => e.id) };
   });
   assert.ok(bar.same, 'all on one row'); assert.ok(bar.h < 60, 'one row tall, got ' + bar.h); assert.ok(bar.spill <= 0, 'nothing spills out');
-  assert.deepEqual(bar.controls, ['saveWhere', 'sheetBtn', 'gradesBtn', 'exportBtn', 'moreBtn', 'closeBtn']);   // saveWhere: the line saying where her work is saved
+  assert.deepEqual(bar.controls, ['markTab', 'gradesBtn', 'insightsTab', 'exportBtn', 'saveWhere', 'moreBtn', 'closeBtn']);   // the four tabs, the line saying where her work is saved, Setup and ✕
   await page.click('#moreBtn');
-  for (const id of ['classSel', 'setupBtn', 'bringBtn', 'shareBtn', 'backBtn', 'lightBtn', 'dispBtn', 'calcBtn', 'keysBtn']) {
+  for (const id of ['classSel', 'setupBtn', 'bringBtn', 'openRepBtn', 'quizBtn', 'impBtn']) {
     const r = await page.$eval('#' + id, e => { const b = e.getBoundingClientRect(); return e.checkVisibility() && b.left >= 0 && b.right <= innerWidth && b.bottom <= innerHeight; });
     assert.ok(r, id + ' shows in the menu, fully on screen');
   }
-  assert.ok(await page.$eval('#moreMenu .themeBtn', e => e.checkVisibility()));
+  // what left the menu is in Find anything, by the same names
+  const found = await page.evaluate(() => window.__gs.findRows().map(r => r.label));
+  for (const l of ['Share with Claude', 'Bring back from Claude', 'Lighting', 'Display', 'Calculator', 'All keys', 'Dark mode']) assert.ok(found.includes(l), l + ' is in Find anything');
   assert.deepEqual(page.errors, []);
   await close();
 });
@@ -49,7 +51,7 @@ test('the More menu opens things, and keys work as expected', async () => {
   await page.keyboard.press('ArrowDown');
   assert.equal(await active(page), 'openRepBtn');
   await page.keyboard.press('ArrowDown');
-  assert.equal(await active(page), 'shareBtn');
+  assert.equal(await active(page), 'quizBtn');
   const before = await page.evaluate(() => window.__gs.state().cur);
   for (const k of ['ArrowDown', 'ArrowLeft', 'ArrowRight']) await page.keyboard.press(k);
   assert.equal(await page.evaluate(() => window.__gs.state().cur), before, 'the arrows move in the menu, not between students');
@@ -65,10 +67,10 @@ test('the More menu opens things, and keys work as expected', async () => {
   await page.click('#moreBtn'); await page.click('.mrow');
   assert.ok(await moreOpen(page));
   await page.click('#paper'); assert.ok(!await moreOpen(page));
-  // the theme and the keys list still work from it
-  await page.click('#moreBtn'); await page.click('#moreMenu .themeBtn');
+  // the theme and the keys list are pressed from Find anything now
+  await press(page, '.themeBtn');
   assert.equal(await page.evaluate(() => document.documentElement.dataset.theme), 'dark');
-  await page.click('#moreBtn'); await page.click('#keysBtn');
+  await press(page, '#keysBtn');
   await page.waitForSelector('#dlgBox .keys');
   assert.deepEqual(page.errors, []);
   await close();
@@ -122,7 +124,7 @@ test('with More open, no stray key changes the roster or moves the assignment', 
   assert.deepEqual(await rosterNow(page), was, 'Down on the roster');
   await page.focus('#classSel');
   await page.keyboard.press('ArrowUp');
-  assert.equal(await active(page), 'keysBtn', 'and around the other way');
+  assert.equal(await page.evaluate(() => { const l = [...document.querySelectorAll('#moreMenu button, #moreMenu a')].filter(e => e.offsetParent); return document.activeElement === l[l.length - 1] && l.length > 4; }), true, 'and around the other way, to the last thing in the menu');
   // Space opens the list, as it does everywhere, so the app must leave it alone. Choosing from the list still moves the assignment.
   await page.focus('#classSel');
   await page.evaluate(() => { window.addEventListener('keydown', e => { window.__spaceBlocked = e.defaultPrevented; }, { once: true }); });
@@ -139,14 +141,14 @@ for (const width of [1280, 1440]) test('at ' + width + 'px the More menu sits ab
   const { page, close } = await openApp(browser);
   await page.setViewport({ width, height: 800 });
   await openZip(page, zip);
-  await page.click('#moreBtn'); await page.click('#lightBtn');
+  await press(page, '#lightBtn');
   await page.waitForSelector('#lightPanel');
   assert.ok(!await moreOpen(page));
   await page.evaluate(() => { window.__gs.openCalc(); const c = document.querySelector('#calcPanel'), m = document.querySelector('#moreBtn').getBoundingClientRect(); c.style.right = (innerWidth - m.right) + 'px'; });   // she can drag it there
   await page.click('#moreBtn');
   const covered = await page.$$eval('#moreMenu .mitem, #moreMenu .mrow', list => list.filter(e => e.checkVisibility()).filter(e => { const r = e.getBoundingClientRect(), at = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2); return !e.contains(at); }).map(e => e.id || e.textContent));
   assert.deepEqual(covered, []);
-  await page.click('#dispBtn');
+  await press(page, '#dispBtn');
   await page.waitForSelector('#dispBody');
   assert.ok(await page.$('#lightPanel'), 'Lighting stays open behind it');
   const onTop = await page.evaluate(() => { const b = document.querySelector('#dispBody').getBoundingClientRect(); return !!document.elementFromPoint(b.left + b.width / 2, b.top + b.height / 2).closest('#dlg'); });
@@ -159,7 +161,7 @@ test('Box each grade, Box it by hand and Check the covers show the paper', async
   const { page, close } = await openApp(browser);
   await openZip(page, zip);
   const named = () => page.evaluate(() => { const b = document.querySelector('#dlgBox'), h = document.getElementById(b.getAttribute('aria-labelledby')); return h && h === b.querySelector('h2') ? h.textContent : null; });
-  await page.click('#sheetBtn');
+  await press(page, '#sheetBtn');
   await page.waitForSelector('#dlgBox [data-each]'); await page.click('#dlgBox [data-each]');
   await page.waitForSelector('#peBody canvas');
   assert.ok(['Aria Testwell', 'Bram Sample', 'Cleo Fixture', 'Dov Madeup'].includes(await named()), 'its title is the student');
@@ -170,15 +172,15 @@ test('Box each grade, Box it by hand and Check the covers show the paper', async
   assert.ok(await named(), 'a row’s Box it by hand');
   await page.keyboard.press('Escape');
   await page.waitForSelector('#dlgBox [data-each]');
-  await page.click('#dlgBox [data-close]');
-  await page.click('#moreBtn'); await page.click('#shareBtn');
+  await closeBox(page);
+  await press(page, '#shareBtn');
   await page.waitForSelector('#dlgBox [data-check]'); await page.click('#dlgBox [data-check]');
   await page.waitForSelector('#ccBody canvas');
   assert.match(await named(), / → S-/, 'its title is the student and their code');
   assert.match(await page.$eval('#ccCount', e => e.textContent), /^paper 1 of \d$/);
   await page.keyboard.press('Escape');
   await page.waitForSelector('#dlgBox [data-make]');
-  await page.click('#dlgBox [data-close]');
+  await closeBox(page);
   // the same check, from Anonymous grading
   await page.evaluate(() => window.__gs.openAnon());
   await page.waitForSelector('#dlgBox [data-check]'); await page.click('#dlgBox [data-check]');
@@ -249,11 +251,12 @@ for (const theme of ['light', 'dark']) test('every screen reads at WCAG AA in ' 
   await score(page, [3.5, 3, null]);
   await check('main, part scored');
   await page.click('#moreBtn'); await check('More menu'); await page.keyboard.press('Escape');
-  for (const [id, sel] of [['gradesBtn', '.gl'], ['exportBtn', '#dlgBox h2'], ['setupBtn', '#setupBody'], ['dispBtn', '#dispBody'], ['shareBtn', '#dlgBox h2'], ['backBtn', '#dlgBox h2']]) {
+  for (const [id, sel] of [['gradesBtn', '.gl'], ['insightsTab', '#ovBody'], ['exportBtn', '#rtSide'], ['setupBtn', '#setupBody'], ['dispBtn', '#dispBody'], ['shareBtn', '#dlgBox h2'], ['backBtn', '#dlgBox h2']]) {
     await page.evaluate(id => document.getElementById(id).click(), id);
     await page.waitForSelector(sel);
     await check(id);
     await page.keyboard.press('Escape');
+    await page.waitForFunction(() => document.querySelector('#dlg').hidden);
   }
   await page.keyboard.press('?'); await page.waitForSelector('.keys'); await check('Keys'); await page.keyboard.press('Escape');
   page.evaluate(() => { window.__gs.askDlg('Delete “Unit 1”?', { ok: 'Delete', danger: true }); });
@@ -412,15 +415,26 @@ test('a pop-up over a dialog: only it hears keys, Tab stays in it, and the dialo
 test('dialogs: named, focus goes in, Tab stays in, Escape closes, focus comes back', async () => {
   const { page, close } = await openApp(browser);
   await openZip(page, zip);
+  const said = () => page.evaluate(() => { const b = document.querySelector('#dlgBox'); return { role: b.getAttribute('role'), modal: b.getAttribute('aria-modal'), name: document.getElementById(b.getAttribute('aria-labelledby')).textContent, inside: b.contains(document.activeElement) }; });
+  // a tab's screen is a page, not a dialog: named, the keyboard starts in it, and Tab can leave it for the tabs but never reaches the papers under it
   await page.focus('#gradesBtn'); await page.keyboard.press('Enter');
   await page.waitForSelector('.gl');
-  const d = await page.evaluate(() => { const b = document.querySelector('#dlgBox'); return { role: b.getAttribute('role'), modal: b.getAttribute('aria-modal'), name: document.getElementById(b.getAttribute('aria-labelledby')).textContent, inside: b.contains(document.activeElement) }; });
-  assert.equal(d.role, 'dialog'); assert.equal(d.modal, 'true'); assert.equal(d.name, 'Grades list'); assert.ok(d.inside);
+  assert.deepEqual(await said(), { role: 'region', modal: null, name: 'Grades', inside: true });
+  const seen = new Set();
+  for (let i = 0; i < 60; i++) { await page.keyboard.press('Tab'); seen.add(await page.evaluate(() => { const a = document.activeElement; return a.closest('#dlgBox') ? 'screen' : a.closest('#aTabs') ? 'tabs' : a.closest('.side, .main, #grade') ? 'papers' : 'frame'; })); }
+  assert.ok(seen.has('screen') && seen.has('tabs') && !seen.has('papers'), 'Tab went through ' + [...seen].join(', '));
+  await page.keyboard.press('Escape');
+  await page.waitForFunction(() => document.querySelector('#dlg').hidden);
+  // a box is a dialog
+  await page.focus('#saveWhere'); await page.keyboard.press('Enter');
+  await page.waitForFunction(() => !document.querySelector('#dlg').hidden && document.querySelector('#dlgBox h2'));
+  const d = await said();
+  assert.equal(d.role, 'dialog'); assert.equal(d.modal, 'true'); assert.ok(d.name.trim()); assert.ok(d.inside);
   for (let i = 0; i < 40; i++) { await page.keyboard.press('Tab'); assert.ok(await page.evaluate(() => document.querySelector('#dlgBox').contains(document.activeElement)), 'Tab forward stays in'); }
   for (let i = 0; i < 40; i++) { await page.keyboard.down('Shift'); await page.keyboard.press('Tab'); await page.keyboard.up('Shift'); assert.ok(await page.evaluate(() => document.querySelector('#dlgBox').contains(document.activeElement)), 'Tab back stays in'); }
   await page.keyboard.press('Escape');
   assert.ok(await page.$eval('#dlg', e => e.hidden));
-  assert.equal(await active(page), 'gradesBtn');
+  assert.equal(await active(page), 'saveWhere');
   assert.deepEqual(page.errors, []);
   await close();
 });
@@ -493,7 +507,7 @@ test('Inter is built in, and opening the app contacts nobody', async () => {
 
 test('the built file stays a sensible size with the font in it', () => {
   const size = fs.statSync(path.join(ROOT, 'Grading Studio.html')).size;
-  assert.ok(size < 5.2e6, 'it’s ' + (size / 1e6).toFixed(2) + ' MB');   // about 5.1 MB, with the Gradebook and the sidebar: the iPhone photo decoder (about 0.7 MB), the Inter font (about 0.2 MB) and the stickers (about 0.15 MB) are bundled so the one file works offline
+  assert.ok(size < 5.3e6, 'it’s ' + (size / 1e6).toFixed(2) + ' MB');   // about 5.2 MB, with the Gradebook, the sidebar, Word papers as PDF and the assignment tabs: the iPhone photo decoder (about 0.7 MB), the Inter font (about 0.2 MB) and the stickers (about 0.15 MB) are bundled so the one file works offline
 });
 
 test('the build only leaves out lines that really are comments', () => {   // a // line inside a multi-line string would be lost from the app

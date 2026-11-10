@@ -286,7 +286,8 @@ function openCons() {
   const { pts, noTime, off, groups } = consData(), max = maxPoints(), read = driftRead(pts.map(p => p.v), max);
   const left = [noTime.length ? noTime.length + (noTime.length === 1 ? ' has' : ' have') + ' no time (scored before the app kept them, or read off the paper)' : '', off.length ? off.length + ' changed all at once, like bringing Claude’s feedback back, so their order isn’t known' : ''].filter(Boolean);
   const same = [...groups].filter(([, l]) => l.length > 1).sort((a, b) => parseFloat(b[0]) - parseFloat(a[0])), single = groups.size - same.length;
-  openDlg('<div class="bh"><h2>Consistency check</h2><button class="icon" data-close aria-label="Close">✕</button></div><div class="bb" id="consBox">' +
+  tabNext('insights/consistency');
+  openDlg('<div class="bh"><h2>Insights</h2>' + insTabs('cons') + '<button class="icon" data-close aria-label="Close" style="margin-left:auto">✕</button></div><div class="bb" id="consBox">' +
     '<h3 class="chd">Did you get harder or softer as you went?</h3><p class="csay" id="consSay">' + driftSay(read, max) + '</p>' +
     (pts.length ? driftChart(pts, read, max) + rowSay(rowDrifts()) : '') +
     '<p class="muted hsm">This goes by when each score last changed, so a paper you came back to counts as late. Finished scores only.' + (left.length ? ' Left out: ' + left.join('; ') + '.' : '') + '</p>' +
@@ -299,8 +300,9 @@ function openCons() {
   const box = $('#dlgBox'), tip = $('#consTip');
   box.onclick = e => {
     if (e.target.closest('[data-close]')) return closeDlg();
-    const o = e.target.closest('[data-open]'); if (o) { closeDlg(); return openStudent(+o.dataset.open); }
+    const o = e.target.closest('[data-open]'); if (o) { return toPaper(+o.dataset.open); }
     const s = e.target.closest('[data-same]'); if (s) return openSame(isNaN(+s.dataset.same) ? s.dataset.same : +s.dataset.same);
+    const tb = e.target.closest('[data-ovtab]'); if (tb && tb.dataset.ovtab !== 'cons') { openOverview(tb.dataset.ovtab).then(() => { const b = $('#dlgBox [data-ovtab="' + ovTab + '"]'); if (b) b.focus(); }); }
   };
   if (!tip) return;
   const wrap = tip.parentNode, show = el => {
@@ -314,7 +316,7 @@ function openCons() {
   wrap.addEventListener('pointerout', e => { if (hit(e)) tip.hidden = true; });
   wrap.addEventListener('focusin', e => { if (hit(e)) show(hit(e)); });
   wrap.addEventListener('focusout', e => { if (hit(e)) tip.hidden = true; });
-  wrap.addEventListener('keydown', e => { if (hit(e) && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); closeDlg(); openStudent(+hit(e).dataset.open); } });
+  wrap.addEventListener('keydown', e => { if (hit(e) && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); toPaper(+hit(e).dataset.open); } });
 }
 const sameLabel = v => typeof v === 'number' ? fmtNum(v) : v.split('/').map(x => fmtNum(+x)).join(' / ');
 // One column per paper, drawn one after another, each turning its own pages. During anonymous grading sharePage's name covers are on.
@@ -336,7 +338,7 @@ async function openSame(v) {
   box.onclick = e => {
     if (e.target.closest('[data-close]')) return closeDlg();
     if (e.target.closest('[data-back]')) return openCons();
-    const o = e.target.closest('[data-open]'); if (o) { closeDlg(); return openStudent(+o.dataset.open); }
+    const o = e.target.closest('[data-open]'); if (o) { return toPaper(+o.dataset.open); }
     const b = e.target.closest('[data-pg]'); if (!b) return;
     const c = cols.get(b.closest('.sbsc')), at = c.at + +b.dataset.pg;
     if (at >= 0 && at < c.pages.length) { c.at = at; sbsDraw(c); }

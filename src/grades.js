@@ -45,7 +45,7 @@ function setStatus(st, s) {
 function statusHtml(st) {
   const on = st.grade.status || '', out = !!st.grade.outAvg;
   return '<div id="gstat"><div class="gstat"><span class="muted">Mark as</span><span class="seg">' + Object.keys(STATUS_LABEL).map(k => '<button data-status="' + k + '" aria-pressed="' + (on === k) + '">' + STATUS_LABEL[k] + '</button>').join('') + '</span></div>' +
-    (noScore(st) ? '' : '<button class="outsw" id="outAvg" role="switch" aria-checked="' + out + '"><i></i><span><b>Leave out of the average</b><small>The score stays and still copies. It doesn’t count in the average, Class overview or Consistency check.</small></span></button>') + '</div>';
+    (noScore(st) ? '' : '<button class="outsw" id="outAvg" role="switch" aria-checked="' + out + '"><i></i><span><b>Leave out of the average</b><small>The score stays and still copies. It doesn’t count in the average or on the Insights tab.</small></span></button>') + '</div>';
 }
 // Left out of the average: for a one-off case, a placeholder 0, or a paper graded somewhere else. Nothing about the score changes.
 function setOutAvg(st) {
@@ -253,7 +253,7 @@ function exportCheckHtml(c) {
   const item = (o, sheet) => '<li><button class="link" ' + (sheet && !anonOn() ? 'data-chksheet' : 'data-chk="' + o.i + '"' + (o.file ? ' data-file="' + esc(o.file) + '"' : '')) + '>' + esc(o.name) + '</button>' + (o.note ? ' <span class="muted">' + esc(o.note) + '</span>' : '') + '</li>';
   const n = groups.reduce((a, g) => a + g[1].length, 0);
   // One line until she opens it; the export button stays right under it.
-  return '<details class="xchk" id="xCheck"><summary><span><b>' + n + (n === 1 ? ' thing' : ' things') + ' to look at before you export</b> <span class="muted">(you can still export)</span></span><span class="xshow">Show</span></summary>' +
+  return '<details class="xchk" id="xCheck"><summary><span><b>' + n + (n === 1 ? ' thing' : ' things') + ' to look at before you return these</b> <span class="muted">(you can still download)</span></span><span class="xshow">Show</span></summary>' +
     '<p class="muted" style="margin:6px 0 0">Click a name to go there.</p>' +
     groups.map(([t, list, sheet]) => '<div class="xgrp" data-group="' + esc(t) + '"><div class="xgt">' + esc(t) + ' (' + list.length + ')</div><ul>' + list.map(o => item(o, sheet)).join('') + '</ul></div>').join('') + '</details>';
 }

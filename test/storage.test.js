@@ -3,7 +3,7 @@ const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs'), path = require('path');
 const { launch } = require('./helpers/chrome');
-const { goTo, builtHtml, tmpDir, openApp, answerDlg, appReady, openZip, pickFile, waitPaper, goToStudent, setTool, clickAt, score, settle, catchDownloads, idbRead } = require('./helpers/app');
+const { goTo, builtHtml, tmpDir, openApp, answerDlg, appReady, openZip, pickFile, waitPaper, goToStudent, setTool, clickAt, score, settle, catchDownloads, idbRead, closeBox } = require('./helpers/app');
 const { standardFiles, makePaper, zipOf } = require('./helpers/fixtures');
 const { loadLegacy } = require('./helpers/legacy');
 const { linkFolder, folderWait, folderRead, folderList, wipeBrowser, takeHome, openFile, bringIt } = require('./helpers/carry');
@@ -65,7 +65,7 @@ test('a download over 127 MB is really kept, reopens, and goes through the take-
     await page.waitForSelector('#takeDone', { timeout: 180000 });
     assert.match(await page.$eval('#takeDone', e => e.textContent), /^Done/);
     assert.ok(await page.evaluate(async () => (await (await (await navigator.storage.getDirectory()).getFileHandle('big.gswork')).getFile()).size) > 140e6, 'the papers are in the file');
-    await page.click('#dlgBox [data-close]');
+    await closeBox(page);
 
     // and it comes in on a browser with nothing
     await wipeBrowser(page, srv);
@@ -107,7 +107,7 @@ test('the take-home dialog and its result both say which downloads have no paper
   await page.waitForFunction(() => window.__gs.kept().size === 1);
   await goTo(page, '#/settings'); await page.click('#takeBtn'); await page.waitForSelector('#takeP1');
   assert.match(await page.$eval('#takeLack', e => e.textContent), /Unit test essays/);
-  await page.click('#dlgBox [data-close]');
+  await closeBox(page);
   await page.evaluate(async () => window.__gs.takeUse(await (await navigator.storage.getDirectory()).getFileHandle('t.gswork', { create: true })));
   await goTo(page, '#/settings'); await page.click('#takeBtn'); await page.waitForSelector('#takeP1');
   for (const s of ['#takeP1', '#takeP2']) await page.$eval(s, e => { e.value = 'correct horse battery'; });

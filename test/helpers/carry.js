@@ -1,6 +1,6 @@
 // Linking a folder and making take-home files without the browser's own pickers, which can't be driven in a test.
 // The folder is one from the browser's private file system, and the app can't tell the difference.
-const { pickFile, appReady, goTo } = require('./app');
+const { pickFile, appReady, goTo, closeBox } = require('./app');
 
 // Links the folder called name, made if needed.
 const linkFolder = (page, name = 'Linked') => page.evaluate(async name => {
@@ -59,7 +59,7 @@ async function takeHome(page, pass = 'correct horse battery') {
     for (let i = 0; i < u.length; i += 0x8000) s += String.fromCharCode.apply(null, u.subarray(i, i + 0x8000));
     return btoa(s);
   });
-  await page.click('#dlgBox [data-close]');
+  await closeBox(page);
   return new Uint8Array(Buffer.from(b64, 'base64'));
 }
 // Picks the file and types the passphrase. Resolves when the preview is up, or to what went wrong: { error }.

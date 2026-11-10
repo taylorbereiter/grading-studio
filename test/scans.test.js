@@ -3,7 +3,7 @@ const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const { unzipSync } = require('fflate');
 const { launch } = require('./helpers/chrome');
-const { openApp, openZip, appReady, waitPaper, goToStudent, pickFile, setTool, drag, settle, catchDownloads, answerDlg } = require('./helpers/app');
+const { openApp, openZip, appReady, waitPaper, goToStudent, pickFile, setTool, drag, settle, catchDownloads, answerDlg, press, closeBox } = require('./helpers/app');
 const { makePaper, zipOf } = require('./helpers/fixtures');
 const { PAGE_SRC, tally } = require('./helpers/scans');
 
@@ -568,7 +568,7 @@ test('a newer copy of the download brings a marked page over with its turn, its 
   assert.ok(kept.sk['Aria Testwell/Scan.pdf'], 'a marked page keeps its straightening with her work');
   await page.reload(); await appReady(page);
   await openZip(page, zipOf({ 'Aria Testwell/Scan.pdf': bytes, 'Bram Sample/Essay.pdf': other, 'Cleo Fixture/Essay.pdf': await makePaper({ title: 'A late essay' }) }), 'Second.zip');
-  await page.waitForSelector('#carryBox'); await page.click('#dlgBox [data-close]');
+  await page.waitForSelector('#carryBox'); await closeBox(page);
   await shown(page);
   const now = await student(page);
   assert.equal(now.rot[0], 180); assert.equal(now.skew[0], was.skew[0]);
@@ -679,7 +679,7 @@ test('Put back on one student leaves another student lit, the last one turns Lig
   await page.evaluate(() => window.__gs.scanNote(window.__gs.state().pages[0]));
   await noteBtn(page, 0, 'light');
   await page.waitForFunction(() => /Lighting is on/.test(window.__gs.state().pages[0].snote.textContent));
-  await page.click('#moreBtn'); await page.click('#lightBtn');
+  await press(page, '#lightBtn');
   await page.waitForSelector('#lightPanel [data-lon]');
   await page.click('#lightPanel [data-lon]');
   await page.waitForFunction(() => !/Lighting is on/.test((window.__gs.state().pages[0].snote || {}).textContent || ''), { timeout: 10000 });

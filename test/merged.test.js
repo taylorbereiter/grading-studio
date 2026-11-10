@@ -3,7 +3,7 @@ const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs'), path = require('path'), vm = require('vm');
 const { launch } = require('./helpers/chrome');
-const { openApp, answerDlg, appReady, openZip, waitPaper, score, settle, pickFile } = require('./helpers/app');
+const { openApp, answerDlg, appReady, openZip, waitPaper, score, settle, pickFile, closeBox } = require('./helpers/app');
 const { makePaper, zipOf, standardFiles } = require('./helpers/fixtures');
 const { takeHome, openFile, bringIt } = require('./helpers/carry');
 
@@ -61,7 +61,7 @@ test('a straightened page needs another look, and Undo puts her cover back where
   await checkFirstPaper(page);
   await page.keyboard.press('Escape');
   await page.waitForSelector('#ccDone');
-  await page.click('#dlgBox [data-close]');
+  await closeBox(page);
   await page.waitForFunction(() => document.querySelector('#dlg').hidden);
   await page.evaluate(() => window.__gs.openStudent(0));
   await page.waitForFunction(() => { const s = window.__gs.state(); return s.cur === 0 && s.pages.length && s.pages[0].s > 0; });

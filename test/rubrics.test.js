@@ -3,7 +3,7 @@ const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const { strFromU8, unzipSync } = require('fflate');
 const { launch } = require('./helpers/chrome');
-const { openApp, answerDlg, appReady, openZip, pickFile, goToStudent, score, settle, waitPaper, catchDownloads } = require('./helpers/app');
+const { openApp, answerDlg, appReady, openZip, pickFile, goToStudent, score, settle, waitPaper, catchDownloads, press, closeBox } = require('./helpers/app');
 const { makePaper, zipOf, standardFiles } = require('./helpers/fixtures');
 const { loadLegacy } = require('./helpers/legacy');
 const { contrastFails } = require('./helpers/contrast');
@@ -502,7 +502,7 @@ test('the overview counts 0, leaves out missing, excused and partial, and says s
   assert.deepEqual(s.bins.filter(b => b.n).map(b => [b.lo, b.n]), [[0, 1], [9, 1], [10, 1]], 'a half point counts with the whole number below it');
 
   await page.click('#moreBtn');
-  await page.click('#overviewBtn');
+  await press(page, '#overviewBtn');
   await page.waitForSelector('#ovBody');
   const left = await page.$eval('#ovLeft', e => e.textContent);
   assert.equal(left, 'Counted: 3 of 8 students. Left out: 1 marked missing, 1 excused, 1 partial, 1 not scored yet, 1 from the paper, not on this scale. Missing and excused don’t count as 0. A score of 0 is counted. 1 late score is counted.');
@@ -562,7 +562,7 @@ test('rows tied or barely scored aren’t called lowest; nothing scored says so'
   assert.match(await page.$eval('#ovSpread', e => e.textContent), /No finished scores yet/);
   assert.match(await page.$eval('#ovRows', e => e.textContent), /No rubric rows scored yet/);
   assert.equal(await page.$('#ovTiles'), null);
-  await page.click('#dlgBox [data-close]');
+  await closeBox(page);
   await score(page, [2, 2, 2]);
   s = await ovStats(page);
   assert.deepEqual(s.rows.map(x => x.lowest), [false, false, false], 'all equal: no row is lowest');
@@ -606,7 +606,7 @@ test('roster students with nothing here are counted as left out, and hidden whil
   await page.evaluate(() => window.__gs.openOverview());
   assert.match(await page.$eval('#ovLeft', e => e.textContent), /1 on the roster with nothing here/);
   assert.match(await page.$eval('#ovWho', e => e.textContent), /Ivy Nofolder/);
-  await page.click('#dlgBox [data-close]');
+  await closeBox(page);
   await page.evaluate(() => window.__gs.setAnon(true));
   await page.evaluate(() => window.__gs.openOverview());
   const body = await page.$eval('#ovBody', e => e.innerHTML);
@@ -617,16 +617,16 @@ test('roster students with nothing here are counted as left out, and hidden whil
   await close();
 });
 
-test('the overview: a name goes to that paper, Grades list goes both ways, tooltips work by pointing and by keyboard', async () => {
+test('the overview: a name goes to that paper, the Grades and Insights tabs go both ways, tooltips work by pointing and by keyboard', async () => {
   const { page, close } = await openApp(browser);
   await classOpen(page);
   await page.click('#gradesBtn');
-  await page.waitForSelector('[data-ovopen]');
-  await page.click('[data-ovopen]');
+  await page.waitForSelector('#glTable');
+  await page.click('#insightsTab');
   await page.waitForSelector('#ovBody');
-  await page.click('[data-ovgrades]');
-  await page.waitForSelector('[data-ovopen]');
-  await page.click('[data-ovopen]');
+  await page.click('#gradesBtn');
+  await page.waitForSelector('#glTable');
+  await page.click('#insightsTab');
   await page.waitForSelector('#ovBody');
 
   const bar = await page.$('#ovSpread .ovc[tabindex]');

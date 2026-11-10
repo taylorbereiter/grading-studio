@@ -2,7 +2,7 @@
 const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const { launch } = require('./helpers/chrome');
-const { openApp, openZip, pickFile, waitPaper, goToStudent, setTool, drag, score, settle } = require('./helpers/app');
+const { openApp, openZip, pickFile, waitPaper, goToStudent, setTool, drag, score, settle, closeBox } = require('./helpers/app');
 const { makePaper, zipOf } = require('./helpers/fixtures');
 const { takeHome, openFile, bringIt, linkFolder, folderWait, folderRead, folderWrite } = require('./helpers/carry');
 const { loadLegacy } = require('./helpers/legacy');
@@ -447,10 +447,10 @@ test('a linked folder: a card’s rubric changed in both places waits for her, s
 test('Claude codes made on both computers: a reply matches with either one, and the preview is true', async () => {
   const { lap, home } = await twoComputers();
   const codes = page => page.evaluate(() => window.__gs.state().batch.share.codes);
-  await lap.page.evaluate(() => window.__gs.openShare()); await new Promise(r => setTimeout(r, 200)); await lap.page.click('#dlgBox [data-close]');
+  await lap.page.evaluate(() => window.__gs.openShare()); await new Promise(r => setTimeout(r, 200)); await closeBox(lap.page);
   const L = await codes(lap.page);
   await new Promise(r => setTimeout(r, 50));
-  await home.page.evaluate(() => window.__gs.openShare()); await new Promise(r => setTimeout(r, 200)); await home.page.click('#dlgBox [data-close]');
+  await home.page.evaluate(() => window.__gs.openShare()); await new Promise(r => setTimeout(r, 200)); await closeBox(home.page);
   const H = await codes(home.page);
   assert.notDeepEqual(L, H);
   await homeToLaptop(lap, home);
@@ -475,11 +475,11 @@ test('Claude codes made on both computers: a reply matches with either one, and 
   assert.equal((await gradeOf(lap.page, 'Oren Turnwell')).comment, 'A fair start.');
   const fromHome = await reply(H['Pia Sample'] + '\nFrom the home ZIP.', /1 of 3/);
   assert.equal(fromHome.off, false); assert.match(fromHome.out, /Pia Sample/);
-  await lap.page.click('#dlgBox [data-close]');
+  await closeBox(lap.page);
   // Anything else still isn't a match.
   const none = await reply('S-ZZZZ\nWhose is this?', /doesn’t belong/);
   assert.equal(none.off, true);
-  await lap.page.click('#dlgBox [data-close]');
+  await closeBox(lap.page);
   assert.deepEqual(lap.page.errors, []);
   await lap.close(); await home.close();
 });
@@ -526,7 +526,7 @@ test('Put back and It’s fine hold on the same page in a newer copy of the down
   const clean = zipOf({ 'Cleo Fixture/Scan.pdf': scan, 'Dov Madeup/Essay.pdf': other, 'Eve Newcomer/Essay.pdf': late });
   await openZip(page, clean, 'Fourth.zip');
   await page.waitForSelector('#carryBox', { timeout: 20000 });
-  await page.click('#dlgBox .bf [data-close]');
+  await closeBox(page, '#dlgBox .bf [data-close]');
   assert.deepEqual(await rot(), {}, 'and the same with marks to bring over');
   assert.deepEqual(page.errors, []);
   await close();

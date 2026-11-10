@@ -56,7 +56,7 @@ function saveBar() {
   if (!el) {
     el = document.createElement('div'); el.id = 'saveWarn'; el.className = 'savewarn'; el.setAttribute('role', 'alert');
     el.innerHTML = '<span></span><button class="btn sm" data-saveretry>Try again</button><button class="btn sm" data-savehelp>Export what I have</button>';
-    el.onclick = e => { if (e.target.closest('[data-saveretry]')) saveRetry(); else if (e.target.closest('[data-savehelp]')) { if (batch) openExport(); else toast('Open that download, then use Export marked'); } };
+    el.onclick = e => { if (e.target.closest('[data-saveretry]')) saveRetry(); else if (e.target.closest('[data-savehelp]')) { if (batch) openExport(); else toast('Open that assignment, then use its Return tab'); } };
     document.body.appendChild(el);
     new ResizeObserver(() => { if (el.isConnected) document.body.style.setProperty('--savebar', el.offsetHeight + 'px'); }).observe(el);   // keeps its own strip, so nothing she needs sits under it
   }

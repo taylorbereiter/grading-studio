@@ -3,7 +3,7 @@ const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const { unzipSync } = require('fflate');
 const { launch } = require('./helpers/chrome');
-const { openApp, openZip, waitPaper, goToStudent, markPage, answerDlg, settle, catchDownloads } = require('./helpers/app');
+const { openApp, openZip, waitPaper, goToStudent, markPage, answerDlg, settle, catchDownloads, closeBox } = require('./helpers/app');
 const { standardFiles, makePaper, zipOf } = require('./helpers/fixtures');
 
 let browser, zip, retake;
@@ -131,7 +131,7 @@ test('single pages: × takes one out (the rubric page too), Undo and Bring back 
   await page.waitForFunction(() => /^Done\./.test(document.querySelector('#xStatus').textContent), { timeout: 60000 });
   const { PDFDocument } = require('pdf-lib');
   assert.equal((await PDFDocument.load(unzipSync(got.bytes)['Aria Testwell/Essay.pdf'])).getPageCount(), 2, 'page 1 and the rubric page');
-  await page.click('#dlgBox .bf [data-close]');
+  await closeBox(page, '#dlgBox .bf [data-close]');
   await page.reload();
   await page.waitForSelector('#kept [data-kopen]');
   await page.click('#kept [data-kopen]');

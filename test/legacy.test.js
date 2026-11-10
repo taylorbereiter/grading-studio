@@ -4,7 +4,7 @@ const assert = require('node:assert/strict');
 const { PDFDocument } = require('pdf-lib');
 const { unzipSync, strFromU8 } = require('fflate');
 const { launch } = require('./helpers/chrome');
-const { classPage, MARK_BOXES, openApp, answerDlg, openZip, pickFile, waitPaper, appReady, goToStudent, setTool, drag, settle, catchDownloads, probePdf, probeScreen, workOf, idbRead } = require('./helpers/app');
+const { classPage, MARK_BOXES, openApp, answerDlg, openZip, pickFile, waitPaper, appReady, goToStudent, setTool, drag, settle, catchDownloads, probePdf, probeScreen, workOf, idbRead, closeBox } = require('./helpers/app');
 const { loadLegacy, noEmpty } = require('./helpers/legacy');
 const { makePaper, zipOf } = require('./helpers/fixtures');
 const { takeHome, openFile, bringIt, openZipBackup } = require('./helpers/carry');
@@ -108,7 +108,7 @@ test('old marks still draw, move, turn and export', async () => {
   await page.waitForSelector('#dlgBox [data-go="zip"]', { timeout: 60000 });
   const got = await dl.next(() => page.click('#dlgBox [data-go="zip"]'));
   await page.waitForFunction(() => /^Done\./.test(document.querySelector('#xStatus').textContent), { timeout: 60000 });
-  await page.click('#dlgBox .bf [data-close]');
+  await closeBox(page, '#dlgBox .bf [data-close]');
   const un = unzipSync(got.bytes), pdf = un[ARIA];
   assert.equal((await PDFDocument.load(pdf)).getPageCount(), 2);
   const p1 = await probePdf(page, pdf, 1, [PEN, HL, OVAL, CHECK, TEXT, BLANK]);

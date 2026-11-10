@@ -4,7 +4,7 @@ const assert = require('node:assert/strict');
 const { PDFDocument, StandardFonts, rgb } = require('pdf-lib');
 const { unzipSync, strFromU8 } = require('fflate');
 const { launch } = require('./helpers/chrome');
-const { openApp, openZip, pickFile, goToStudent, catchDownloads, score, settle } = require('./helpers/app');
+const { openApp, openZip, pickFile, goToStudent, catchDownloads, score, settle, press } = require('./helpers/app');
 const { zipOf, makeDocx } = require('./helpers/fixtures');
 
 let browser;
@@ -41,7 +41,7 @@ const openNoPages = async (page, bytes) => { await pickFile(page, '#fileIn', byt
 const keys = page => page.evaluate(() => window.__gs.state().batch.students.map(s => s.key));
 async function makeZip(page) {
   const dl = await catchDownloads(page);
-  await page.click('#moreBtn'); await page.click('#shareBtn');
+  await press(page, '#shareBtn');
   await page.waitForSelector('#dlgBox [data-make]');
   const got = await dl.next(() => page.click('#dlgBox [data-make]'));
   await dl.close();
@@ -127,7 +127,7 @@ const fileFor = (page, who, text) => page.evaluate((who, text) => { const G = wi
 // The boxes reach from..to and don't stray much past it.
 const onlyOver = (boxes, from, to) => boxes.length > 0 && boxes.every(b => b[0] >= from - 14 && b[1] <= to + 14) && Math.min(...boxes.map(b => b[0])) <= from && Math.max(...boxes.map(b => b[1])) >= to;
 const openShareBox = async page => {
-  await page.click('#moreBtn'); await page.click('#shareBtn');
+  await press(page, '#shareBtn');
   await page.waitForFunction(() => /random code/.test(document.querySelector('#dlgBox .bb').innerText));
   return page.$eval('#dlgBox .bb', e => e.innerText);
 };
@@ -426,7 +426,7 @@ test('the name search finishing doesn’t turn the ZIP buttons back on while a Z
   const files = {}; for (const c of 'abcdefghijkl') files['Stu Dent' + c + '/Essay.pdf'] = await pdf(['Nothing here.', 'Body.']);
   await openZip(page, zipOf(files), 'Essay.zip');
   const dl = await catchDownloads(page);
-  await page.click('#moreBtn'); await page.click('#shareBtn');
+  await press(page, '#shareBtn');
   await page.waitForFunction(() => /random code/.test(document.querySelector('#dlgBox .bb').innerText));
   let during;
   const got = await dl.next(async () => {
@@ -469,7 +469,7 @@ test('a name form that collapses to an everyday word counts only on the student�
   assert.ok(onlyOver(await fakeCovers(page, row(['ﻲ', 'ﻠ', 'ﻋ']), 'Ben Carter'), 100, 130), 'علي on a classmate’s page');
   assert.ok(onlyOver(await fakeCovers(page, row(['ﻰ', 'ﻠ', 'ﻋ']), 'محمد علي'), 100, 130), 'على on his own page');
   // She's told.
-  await page.click('#moreBtn'); await page.click('#shareBtn');
+  await press(page, '#shareBtn');
   await page.waitForSelector('#nameWarn');
   assert.match(await page.$eval('#nameWarn', e => e.innerText), /everyday words too/);
   await closeDlg(page);
@@ -732,7 +732,7 @@ test('email addresses and long ID numbers are covered, and swapped in comments',
 test('Share with Claude says plainly who is left out of the ZIP, and doesn’t call nothing checked', async () => {
   const { page, close } = await openApp(browser);
   await openZip(page, zipOf({ 'Ida Word/Essay.docx': makeDocx('Word only'), 'Bea Both/Essay.pdf': await pdf(['Body.']), 'Bea Both/Notes.docx': makeDocx('Notes') }), 'Essay.zip');
-  await page.click('#moreBtn'); await page.click('#shareBtn');
+  await press(page, '#shareBtn');
   await page.waitForFunction(() => /random code/.test(document.querySelector('#dlgBox .bb').innerText));
   const text = await page.$eval('#dlgBox .bb', e => e.innerText);
   assert.match(text, /1 student gets a random code/, text);
@@ -744,7 +744,7 @@ test('Share with Claude says plainly who is left out of the ZIP, and doesn’t c
   // Only Word files: nothing to check and nothing to send, and no tick.
   const b = await openApp(browser);
   await openNoPages(b.page, zipOf({ 'Ida Word/Essay.docx': makeDocx('Word only'), 'Uma Word/Essay.docx': makeDocx('Word too') }));
-  await b.page.click('#moreBtn'); await b.page.click('#shareBtn');
+  await press(b.page, '#shareBtn');
   await b.page.waitForFunction(() => /No one can go in/.test(document.querySelector('#dlgBox .bb').innerText));
   assert.equal(await b.page.$eval('#shCount', e => e.textContent), 'No PDFs or pictures to check.');
   assert.equal(await b.page.$eval('#dlgBox [data-check]', e => e.disabled), true);
