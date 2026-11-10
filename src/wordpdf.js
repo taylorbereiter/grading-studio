@@ -5,13 +5,14 @@
 // Nothing new is stored but one setting, gs.wordPdf, for doing this as Word papers come in.
 const WP_MAX = 60, WP_PX = 96 / 72, WP_FONT = 14.67;   // pages at most; screen dots to a point; 11 pt in screen dots
 const wordPdfAlways = () => !!store.get('gs.wordPdf', false);
-// A student's own Word file. Her rubric copy stays a Word file: its boxes are how she scores.
-function wordCanPdf(f) { return !!f && f.kind === 'docx' && !f.virtual && !f.rubric && !!f.data; }
+// A student's own Word file. Her rubric copy stays a Word file: its boxes are how she scores. A group-work copy follows the paper it was shared from.
+function wordCanPdf(f) { return !!f && f.kind === 'docx' && !f.virtual && !f.rubric && !f.from && !!f.data; }
 // A grade she took from what's typed in the Word file lives with that file, so it isn't converted without her saying so.
 const wordReadUsed = (st, f) => wordFound(f, st).some(g => (st.grade.reads || {})[readKey(g)] === 1);
 const wordPdfList = () => !batch ? [] : batch.students.flatMap(st => st.files.filter(wordCanPdf).map(f => ({ st, f })));
 // The ones that can go without asking: nothing of hers is on the Word file yet, and she hasn't brought it back from a conversion.
-const wordPdfFree = ({ st, f }) => !f.edited && !f.hand && !wordReadUsed(st, f) && !((batch.removed || {})[f.path] || {}).back;
+// A paper shared with partners (group work) is hers to convert by hand, since their copies are the Word file.
+const wordPdfFree = ({ st, f }) => !f.edited && !f.hand && !wordReadUsed(st, f) && !((batch.removed || {})[f.path] || {}).back && !shareCopies(st, f).length;
 
 // The page the file was written for, in points. A4 with one-inch margins when the file doesn't say.
 function wordPageBox(w) {

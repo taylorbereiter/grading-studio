@@ -17521,10 +17521,10 @@ function wireWordNotes(w, el, page, aside, editing, flush, save) {
 /* ---------------- a Word paper as PDF pages (11/10) ---------------- */
 const WP_MAX = 60, WP_PX = 96 / 72, WP_FONT = 14.67;   // pages at most; screen dots to a point; 11 pt in screen dots
 const wordPdfAlways = () => !!store.get('gs.wordPdf', false);
-function wordCanPdf(f) { return !!f && f.kind === 'docx' && !f.virtual && !f.rubric && !!f.data; }
+function wordCanPdf(f) { return !!f && f.kind === 'docx' && !f.virtual && !f.rubric && !f.from && !!f.data; }
 const wordReadUsed = (st, f) => wordFound(f, st).some(g => (st.grade.reads || {})[readKey(g)] === 1);
 const wordPdfList = () => !batch ? [] : batch.students.flatMap(st => st.files.filter(wordCanPdf).map(f => ({ st, f })));
-const wordPdfFree = ({ st, f }) => !f.edited && !f.hand && !wordReadUsed(st, f) && !((batch.removed || {})[f.path] || {}).back;
+const wordPdfFree = ({ st, f }) => !f.edited && !f.hand && !wordReadUsed(st, f) && !((batch.removed || {})[f.path] || {}).back && !shareCopies(st, f).length;
 
 function wordPageBox(w) {
   const tw = (el, k) => { const v = el ? +(el.getAttributeNS(W_NS, k) || el.getAttribute('w:' + k)) : 0; return v > 0 ? v / 20 : null; };
