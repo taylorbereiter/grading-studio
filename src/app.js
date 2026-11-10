@@ -5137,7 +5137,7 @@ function anonShuffle() {
 }
 const anonPos = i => anonOrder().indexOf(i);
 const shownName = (st, i) => anonOn() ? 'Paper ' + (anonPos(i) + 1) : st.key;
-// The student list shows the name as it is on her roster, not the longer one from the file or folder (Taylor, 11/10).
+// The student list shows the name as it is on her roster, not the longer one from the file or folder.
 // Student -> roster name, for the students matched to the batch's roster. Papers no roster name matches keep their file name.
 function rosterNames() {
   const c = batchClass(), out = new Map();

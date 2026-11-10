@@ -4760,8 +4760,10 @@ function renderList() {
   const order = anonOn() ? anonOrder() : batch.students.map((_, i) => i);
   const q = ($('#stuFind').value || '').trim().toLowerCase();
   lfCheck();
+  const rn = anonOn() ? null : rosterNames();
   $('#stuList').innerHTML = order.map((i, pos) => { const st = batch.students[i];
-    if (q && !shownName(st, i).toLowerCase().includes(q)) return '';
+    const nm = rn && rn.get(st) || shownName(st, i), full = rn && rn.has(st) && st.key !== nm ? nm + ' (' + st.key + ')' : nm;
+    if (q && !full.toLowerCase().includes(q)) return '';
     if (!lfShows(i)) return '';
     const g = gradeOf(st);
     const val = g.total != null ? g.total : g.pct != null ? g.pct + '%' : null;
@@ -4772,7 +4774,7 @@ function renderList() {
     const sent = st.grade.sent ? '<span class="sent" title="You exported this paper on its own at ' + esc(sentWhen(st.grade.sent)) + '">↗ sent</span>' : '';
     if (fmNow() && !noScore(st)) right = st.grade.fb ? '<span class="fbck" title="Feedback complete">✓</span>' : hasMarks(st) || (st.grade.comment || '').trim() ? '<span class="dot" title="Started, not complete yet"></span>' : '';
     const nAdd = st.files.filter(f => f.added && !f.from && !madeFromWord(f)).length, re = st.files.some(f => Object.values(f.sc || {}).some(r => r.re)), grp = st.files.some(f => f.from || Object.values(f.sc || {}).some(r => r.w)) || st.files.some(f => !f.added && shareCopies(st, f).length);
-    return '<button class="stu' + (i === cur ? ' on' : '') + (st.files.length ? '' : ' empty') + '" data-i="' + i + '"><span class="num">' + (pos + 1) + '</span><span class="nm" title="' + esc(shownName(st, i)) + '">' + esc(shownName(st, i)) + '</span>' + (anonOn() ? '' : whoBtn('data-wi="' + i + '"', st.key)) +
+    return '<button class="stu' + (i === cur ? ' on' : '') + (st.files.length ? '' : ' empty') + '" data-i="' + i + '"><span class="num">' + (pos + 1) + '</span><span class="nm" title="' + esc(full) + '">' + esc(nm) + '</span>' + (anonOn() ? '' : whoBtn('data-wi="' + i + '"', st.key)) +
       '<span style="display:inline-flex;align-items:center;gap:4px">' + (st.files.length || noScore(st) ? '' : '<span class="muted" style="font-size:11px">no paper</span>') + (g.status === 'late' ? '<span class="stag" title="You marked this student late">late</span>' : '') + (g.out ? '<span class="stag out" title="Left out of the average">left out</span>' : '') + (nAdd ? '<span class="add" title="' + nAdd + (nAdd === 1 ? ' file' : ' files') + ' added by you">+' + nAdd + '</span>' : '') + (re ? '<span class="add" title="A page needs a rescan">⚑</span>' : '') + (groupOf(st) ? '<span class="add grp" title="Group work: marked and graded once with ' + esc(groupNames(groupMates(st))) + '">group</span>' : grp ? '<span class="add grp" title="Group work: shares pages or a file with another student">shared</span>' : '') + carryPill(st) + sent + right + '</span></button>';
   }).join('');
   if (listFilter !== 'all' && !q && !order.some(i => lfMatch(batch.students[i]))) $('#stuList').insertAdjacentHTML('beforeend', '<div class="muted lfnone">No one else here. <button class="link" data-lf="all">Show everyone</button></div>');
@@ -8010,6 +8012,11 @@ function anonShuffle() {
 }
 const anonPos = i => anonOrder().indexOf(i);
 const shownName = (st, i) => anonOn() ? 'Paper ' + (anonPos(i) + 1) : st.key;
+function rosterNames() {
+  const c = batchClass(), out = new Map();
+  if (c && c.names.length) for (const [n, st] of rosterMatch(c.names)) out.set(st, n);
+  return out;
+}
 function stepStudent(d) {
   const o = navOrder(), p = o.indexOf(cur) + d;   // the list as it shows: her order, and only the papers the filter lets through
   if (p >= 0 && p < o.length) openStudent(o[p]);
