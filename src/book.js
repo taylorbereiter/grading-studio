@@ -10,7 +10,9 @@ function bkConf() {
   const b = lib.book || {};
   return { terms: (b.terms || []).filter(t => t && t.id), w: { ...BK_W0, ...(b.w || {}) }, empty: b.empty === 'zero' ? 'zero' : 'other', dl: b.dl || {} };
 }
-function bkSave(part) { lib.book = { ...(lib.book || {}), ...part }; saveLib(); }
+// The gradebook's own saves: what it has on screen already has the change, so its copy is still good.
+function bkSaveLib() { saveLib(); bk.ver = libVer; }
+function bkSave(part) { lib.book = { ...(lib.book || {}), ...part }; bkSaveLib(); }
 const isoDay = t => { if (!t) return ''; const d = new Date(t); return isNaN(d) ? '' : d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
 function bkDay(s) { return s ? new Date(s + 'T12:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : ''; }
 // The term an assignment counts toward: the one it was moved to, else the one its due date falls in. '' is "no term": with no terms set up, that's the whole year.
@@ -27,7 +29,9 @@ function bkCellOf(p, g, d, k) {
   const fb = !!(g && g.fb), started = marks || !!((g && g.comment) || '').trim();   // fb: she switched on Feedback complete
   if (p.status === 'missing' || p.status === 'excused') return { st: p.status, fb };
   if (p.total == null && p.pct == null) return fb || started ? { fb, started } : null;
-  return { pct: p.pct, total: p.total, max: p.max, st: p.status, partial: p.partial, out: !!(g && g.outAvg), fb, started };
+  const cell = { pct: p.pct, total: p.total, max: p.max, st: p.status, partial: p.partial, out: !!(g && g.outAvg), fb, started };
+  if (p.rows && p.rows.length) cell.rows = p.rows;   // each rubric row's score, for the charts
+  return cell;
 }
 function bkTypedCell(ty, r) {
   if (!r) return null;
@@ -91,12 +95,13 @@ function bkGrade(name, cols, conf) {
 }
 
 /* ---------- the box ---------- */
-let bk = { tab: 'table', cls: '', term: null, show: 'pct', stu: 0, cols: null, hi: '' };
+// host: 'dlg' is the box that opens while grading; 'page' is a class page's Gradebook, Charts or one-student screen (classpage.js), where the address picks the tab and the student.
+let bk = { tab: 'table', cls: '', term: null, show: 'pct', stu: 0, cols: null, hi: '', host: 'dlg', sort: null, ver: -1, lib: null };
 async function openBook(clsId, opts = {}) {
   if (batch) saveNow();
   const c = classById(clsId) || batchClass() || lib.classes.find(k => k.names.length) || lib.classes[0];
   if (!c) return toast('Add a class with its roster first, from the sidebar.');
-  bk = { ...bk, tab: 'table', cls: c.id, term: null, stu: 0, cols: null, hi: opts.hi || '' };
+  bk = { ...bk, host: 'dlg', tab: 'table', cls: c.id, term: null, stu: 0, cols: null, hi: opts.hi || '' };
   openDlg('<div class="bh"><h2>Gradebook</h2><div class="ovtabs" role="tablist">' + [['table', 'Table'], ['class', 'Class charts'], ['one', 'One student']].map(([k, l]) => '<button role="tab" data-bktab="' + k + '" aria-selected="' + (k === 'table') + '">' + l + '</button>').join('') +
     '</div><button class="icon" data-close aria-label="Close" style="margin-left:auto">✕</button></div><div class="bb bkbody" id="bkBody"><p class="muted">Looking through your saved work…</p></div>');
   $('#dlgBox').classList.add('bkbox');
@@ -108,10 +113,23 @@ async function openBook(clsId, opts = {}) {
   bkDraw();
 }
 const bkClass = () => classById(bk.cls);
+// How wide one chart is on screen (bkDraw measures it): a chart drawn at that width has text the size of the text around it.
+const bkW = () => bk.w || 640;
 // During anonymous grading, names stay hidden here too.
 const bkWho = (n, i) => anonOn() ? 'Student ' + (i + 1) : n;
 // The ⓘ beside a name opens that student's details card (people.js). Not while names are hidden.
 const bkInfo = n => anonOn() ? '' : whoBtn('data-wc="' + esc(bk.cls) + '" data-wn="' + esc(n) + '"', n);
+const bkPage = () => bk.host === 'page';
+// A student's name: on a class page it's a link to their own page (by place on the roster, so no name is in the address).
+const bkName = (n, i) => bkPage() ? '<a class="bklink" href="' + classHash(bkClass(), 'students', i) + '">' + esc(bkWho(n, i)) + '</a>' : esc(bkWho(n, i));
+// One student: the next one, or any one. On a class page that's another address, in place of this one so Back returns to the list.
+function bkGoStu(i) {
+  const c = bkClass(); if (!c || i < 0 || i >= c.names.length) return;
+  if (bkPage()) return go(classHash(c, 'students', i), true);
+  bk.tab = 'one'; bk.stu = i; bkDraw();
+}
+// What the gradebook is drawn inside: the box, or the class page.
+const bkHost = () => { const b = $('#bkBody'); return b ? b.closest('#dlgBox') || $('#vClass') : null; };
 function bkTabsOff() { for (const b of document.querySelectorAll('[data-bktab]')) b.setAttribute('aria-selected', 'false'); }
 // The terms shown as tabs: the teacher's own, then "No term" if anything falls outside them, then Whole year.
 function bkTabs(cols) {
@@ -128,10 +146,12 @@ function bkDraw() {
   const conf = bkConf(), all = bkClassCols(c, bk.cols), tabs = bkTabs(all);
   if (bk.term == null || !tabs.some(t => t[0] === bk.term)) bk.term = conf.terms.length ? bkTermNow(conf.terms) : '';
   const cols = bk.term === '*' ? all : all.filter(x => x.termId === bk.term);
-  const bar = '<div class="bkbar"><label class="muted">Class <select class="btn sm" id="bkCls">' + lib.classes.map(k => '<option value="' + k.id + '"' + (k === c ? ' selected' : '') + '>' + esc(k.name) + '</option>').join('') + '</select></label>' +
+  const page = bkPage(), tools = !page || bk.tab === 'table';
+  { const room = body.clientWidth - 36, gap = page ? 36 : 28, min = page ? 440 : 520, n = Math.max(1, Math.floor((room + gap) / (min + gap))); bk.w = room > 0 ? Math.max(320, Math.min(760, Math.round((room - (n - 1) * gap) / n))) : 640; }   // on a class page the class is the page's, and the table's tools stay with the table
+  const bar = '<div class="bkbar">' + (page ? (bk.tab === 'one' ? '<a class="btn sm" id="bkBackStu" href="' + classHash(c, 'students') + '">← Students</a>' : '') : '<label class="muted">Class <select class="btn sm" id="bkCls">' + lib.classes.map(k => '<option value="' + k.id + '"' + (k === c ? ' selected' : '') + '>' + esc(k.name) + '</option>').join('') + '</select></label>') +
     '<div class="ovtabs bkterms" role="group" aria-label="Term">' + tabs.map(([id, l]) => '<button data-bkterm="' + esc(id) + '" aria-selected="' + (bk.term === id) + '">' + esc(l) + '</button>').join('') + '</div><span class="sp"></span>' +
     (bk.tab === 'table' && bk.term !== '*' ? '<div class="pseg" role="group" aria-label="Show">' + [['pct', 'Percent'], ['pts', 'Points']].map(([v, l]) => '<button data-bkshow="' + v + '" aria-pressed="' + (bk.show === v) + '">' + l + '</button>').join('') + '</div>' : '') +
-    '<button class="btn sm" data-bksetup>Term setup</button>' + (bk.tab === 'table' ? '<button class="btn sm" data-bkcopy>Copy table</button>' : '') + '<button class="btn sm primary" data-bkadd>+ Add scores</button></div>';
+    (tools ? '<button class="btn sm" data-bksetup>Term setup</button>' + (bk.tab === 'table' ? '<button class="btn sm" data-bkcopy>Copy table</button>' : '') + '<button class="btn sm primary" data-bkadd>+ Add scores</button>' : '') + '</div>';
   let main;
   if (!c.names.length) main = '<p class="muted bkpad">The gradebook lists the students on a class’s roster. Add a roster to ' + esc(c.name) + ' on its class page first.</p>';
   else if (bk.tab === 'class') main = bkClassView(c, cols, all, conf);
@@ -163,7 +183,7 @@ function bkTable(c, cols, conf) {
   const grades = [];
   c.names.forEach((n, i) => {
     const r = bkGrade(n, cols, conf); grades.push(r);
-    h += '<tr><td class="bknm">' + esc(bkWho(n, i)) + bkInfo(n) + '</td>' + groups.map(g => g.cols.map(col => { const cell = col.cells.get(n), ed = !!col.typed && !(cell && !cell.typed);
+    h += '<tr><td class="bknm">' + bkName(n, i) + bkInfo(n) + '</td>' + groups.map(g => g.cols.map(col => { const cell = col.cells.get(n), ed = !!col.typed && !(cell && !cell.typed);
       return '<td' + (ed ? ' class="bked" tabindex="0" data-bked="' + esc(col.key) + '" data-bkn="' + esc(n) + '" title="Click to change"' : col.d ? ' title="Change this score in its download"' : '') + '>' + bkCellText(cell, bk.show, col) + '</td>'; }).join('') +
       (avgCol(g) ? '<td class="bkavg">' + (r.by[g.t] != null ? pctAvgText(r.by[g.t]) : '<span class="bknone">–</span>') + '</td>' : '')).join('') +
       '<td class="bkterm" tabindex="0" ' + bkWhy(n, r, conf) + '>' + (r.grade != null ? pctAvgText(r.grade) + (r.soFar ? ' <small>so far</small>' : '') : '<span class="bknone">–</span>') + '</td></tr>';
@@ -188,7 +208,7 @@ function bkYear(c, all, conf) {
   for (const [i, n] of c.names.entries()) {
     const gs = per.map(cols => bkGrade(n, cols, conf).grade), have = gs.filter(v => v != null), y = have.length ? bkMean(have) : null;
     gs.forEach((v, i) => { if (v != null) col[i].push(v); }); if (y != null) yr.push(y);
-    h += '<tr><td class="bknm">' + esc(bkWho(n, i)) + bkInfo(n) + '</td>' + gs.map(v => '<td class="bkterm">' + (v != null ? pctAvgText(v) : '<span class="bknone">–</span>') + '</td>').join('') + '<td class="bkterm"><b>' + (y != null ? pctAvgText(y) : '–') + '</b></td></tr>';
+    h += '<tr><td class="bknm">' + bkName(n, i) + bkInfo(n) + '</td>' + gs.map(v => '<td class="bkterm">' + (v != null ? pctAvgText(v) : '<span class="bknone">–</span>') + '</td>').join('') + '<td class="bkterm"><b>' + (y != null ? pctAvgText(y) : '–') + '</b></td></tr>';
   }
   h += '<tr class="bkfoot"><td class="bknm">Class average</td>' + col.map(a => '<td class="bkterm">' + (a.length ? pctAvgText(bkMean(a)) : '–') + '</td>').join('') + '<td class="bkterm">' + (yr.length ? pctAvgText(bkMean(yr)) : '–') + '</td></tr></tbody></table></div>' +
     '<p class="muted bkcap">The year is the average of the terms each student has a grade in.</p>';
@@ -206,24 +226,23 @@ function bkLine(cols, series, id, refLine) {
   const vals = series.flatMap(s => s.pts).concat(refLine != null ? [refLine] : []).filter(v => v != null);
   if (cols.length < 1 || !vals.length) return '<p class="muted">Nothing to show yet.</p>';
   const lo = Math.max(0, Math.floor((Math.min(...vals) - 5) / 10) * 10), hi = Math.min(100, Math.ceil((Math.max(...vals) + 2) / 10) * 10) || 100;
-  const W = 640, H = 200, L = 44, R = 30, T = 16, B = 40, X = i => L + (cols.length === 1 ? (W - L - R) / 2 : i * (W - L - R) / (cols.length - 1)), Y = v => T + (hi - v) / Math.max(10, hi - lo) * (H - T - B);
+  const W = bkW(), L = 44, R = 30, fit = chFit((W - L - R) / Math.max(1, cols.length), cols.length), lines = fit.lines, T = 16, B = 26 + lines * 14, H = 160 + B, X = i => L + (cols.length === 1 ? (W - L - R) / 2 : i * (W - L - R) / (cols.length - 1)), Y = v => T + (hi - v) / Math.max(10, hi - lo) * (H - T - B);
   let g = ''; for (let v = lo; v <= hi; v += 10) g += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + Y(v) + '" y2="' + Y(v) + '" class="tgl"/><text x="' + (L - 8) + '" y="' + (Y(v) + 4) + '" text-anchor="end" class="ttk">' + v + '%</text>';
   if (refLine != null) g += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + Y(refLine) + '" y2="' + Y(refLine) + '" class="bkref"/>';
-  const cut = t => t.length > 14 ? t.slice(0, 13) + '…' : t;
   for (const s of series) {
     const seg = []; let run = [];
     s.pts.forEach((v, i) => { if (v == null) { if (run.length) seg.push(run); run = []; } else run.push(X(i) + ',' + Y(v)); }); if (run.length) seg.push(run);
     g += seg.map(r => '<polyline class="' + s.cls + '" points="' + r.join(' ') + '"/>').join('');
     if (s.dots) s.pts.forEach((v, i) => { if (v != null) g += '<circle class="bkdot ' + (cols[i].type || '') + '" cx="' + X(i) + '" cy="' + Y(v) + '" r="5.5" tabindex="0" data-tv="' + esc(pctAvgText(v)) + '" data-tl="' + esc(cols[i].name) + '" data-tn="' + esc(bkLabel(cols[i].type) + (s.tn ? ' · ' + s.tn(i) : '')) + '"/>'; });
   }
-  cols.forEach((c, i) => { g += '<text x="' + X(i) + '" y="' + (H - 22) + '" text-anchor="middle" class="tlb">' + esc(cut(c.name)) + '</text><text x="' + X(i) + '" y="' + (H - 8) + '" text-anchor="middle" class="ttk">' + esc(bkDay(c.due)) + '</text>'; });
+  cols.forEach((c, i) => { chLines(c.name, fit.chars, lines).forEach((l, j) => { g += '<text x="' + X(i) + '" y="' + (H - B + 18 + j * 14) + '" text-anchor="middle" class="tlb">' + esc(l) + '</text>'; }); if (i % fit.dates === 0) g += '<text x="' + X(i) + '" y="' + (H - 4) + '" text-anchor="middle" class="ttk">' + esc(bkDay(c.due)) + '</text>'; });
   return '<svg class="tsvg" id="' + id + '" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' + esc(cols.map((c, i) => c.name + ' ' + series.map(s => s.pts[i] != null ? pctAvgText(s.pts[i]) : '–').join(' / ')).join(', ')) + '">' + g + '</svg>';
 }
 // Lowest to highest, the middle half darker, a line at the middle score.
 function bkSpread(c, cols) {
   const rows = cols.map(col => ({ col, v: c.names.map(n => col.cells.get(n)).filter(bkCounts).map(x => x.pct).sort((a, b) => a - b) })).filter(r => r.v.length);
   if (!rows.length) return '<p class="muted">Nothing to show yet.</p>';
-  const lo = Math.max(0, Math.floor(Math.min(...rows.map(r => r.v[0])) / 10) * 10), W = 640, L = 150, R = 16, rh = 28, H = rows.length * rh + 26, x = v => L + (Math.min(100, v) - lo) / Math.max(10, 100 - lo) * (W - L - R);
+  const lo = Math.max(0, Math.floor(Math.min(...rows.map(r => r.v[0])) / 10) * 10), W = bkW(), L = 150, R = 16, rh = 28, H = rows.length * rh + 26, x = v => L + (Math.min(100, v) - lo) / Math.max(10, 100 - lo) * (W - L - R);
   const q = (v, f) => { const k = (v.length - 1) * f, i = Math.floor(k); return v[i] + (v[Math.ceil(k)] - v[i]) * (k - i); };
   let s = '';
   for (let t = lo; t <= 100; t += 10) s += '<line x1="' + x(t) + '" x2="' + x(t) + '" y1="0" y2="' + (H - 22) + '" class="tgl"/><text x="' + x(t) + '" y="' + (H - 6) + '" text-anchor="middle" class="ttk">' + t + '%</text>';
@@ -244,13 +263,18 @@ function bkClassView(c, cols, all, conf) {
   const sorted = gl.map(g => g.v).sort((a, b) => a - b), mid = sorted.length ? (sorted.length % 2 ? sorted[(sorted.length - 1) / 2] : (sorted[sorted.length / 2 - 1] + sorted[sorted.length / 2]) / 2) : null;
   const sc = bkScored(cols), avgOf = col => bkMean(c.names.map(n => col.cells.get(n)).filter(bkCounts).map(x => x.pct));
   const others = lib.classes.filter(k => k.names.length).map(k => { const kc = bkClassCols(k, bk.cols).filter(x => bk.term === '*' || x.termId === bk.term), gs = k.names.map(n => bkGrade(n, kc, conf).grade).filter(v => v != null); return { k, v: gs.length ? bkMean(gs) : null }; }).filter(x => x.v != null);
-  const termAvg = gl.length ? bkMean(gl.map(g => g.v)) : null;
+  const termAvg = gl.length ? bkMean(gl.map(g => g.v)) : null, miss = cols.flatMap(col => c.names.filter(n => (col.cells.get(n) || {}).st === 'missing'));
   return '<div class="bkpad"><div class="ovtiles" id="bkTiles">' + bkTile(bk.term === '*' ? 'Average grade' : 'Term average', termAvg != null ? pctAvgText(termAvg) : '–', people(gl.length, 'student'), true) +
-    bkTile('Middle grade', mid != null ? pctAvgText(mid) : '–', 'half above, half below') + bkTile('Summative average', typeAvg('sum'), people(cols.filter(x => x.type === 'sum').length, 'assignment')) + bkTile('In-class average', typeAvg('ic'), people(cols.filter(x => x.type === 'ic').length, 'assignment')) + '</div>' +
-    '<div class="ovcharts"><section><h3 class="ovh3">' + (bk.term === '*' ? 'Grades' : 'Term grades') + '</h3>' + bkBands(gl) + '<p class="muted ovcap2">How many students landed in each range.</p></section>' +
+    bkTile('Middle grade', mid != null ? pctAvgText(mid) : '–', 'half above, half below') + bkTile('Summative average', typeAvg('sum'), people(cols.filter(x => x.type === 'sum').length, 'assignment')) + bkTile('In-class average', typeAvg('ic'), people(cols.filter(x => x.type === 'ic').length, 'assignment')) +
+    bkTile('Missing work', miss.length, miss.length ? 'across ' + people(new Set(miss).size, 'student') : 'nothing outstanding') + '</div>' + bkHeat(c, cols, conf) +
+    '<div class="ovcharts">' + chSec('Who is moving', bkMoving(c, cols), 'Each student’s last three scores against their earlier ones, in points: the biggest rises and drops.') +
+    chSec('Where the class stands, assignment by assignment', bkStacks(c, cols), 'How many students landed in each range each time, so a shift in the whole class shows.') +
+    chSec('Rubric rows across the summatives', bkRubricRows(c, cols), 'The class average on each rubric row, out of 4, wherever the same row name comes back. The lowest row is in blue.') +
     '<section><h3 class="ovh3">Each assignment’s class average</h3>' + bkLine(sc, [{ cls: 'bkln', pts: sc.map(avgOf), dots: true, tn: i => people(c.names.map(n => sc[i].cells.get(n)).filter(bkCounts).length, 'score') }], 'bkTrend', termAvg) +
     '<div class="bkleg"><span><i class="sum"></i>Summative</span><span><i class="ic"></i>In-class</span>' + (termAvg != null ? '<span><i class="ref"></i>Average grade</span>' : '') + '</div></section>' +
+    chSec('Summatives against in-class work', bkScatter(c, cols, conf), 'One dot per student. On the line, the two match. Below it, a student does better in class than on summatives.') +
     '<section><h3 class="ovh3">Spread on each assignment</h3>' + bkSpread(c, sc) + '<p class="muted ovcap2">The bar runs from lowest to highest, the darker part is the middle half of the class, and the line is the middle score.</p></section>' +
+    '<section><h3 class="ovh3">' + (bk.term === '*' ? 'Grades' : 'Term grades') + '</h3>' + bkBands(gl) + '<p class="muted ovcap2">How many students landed in each range.</p></section>' +
     '<section><h3 class="ovh3">Compare your classes</h3><div class="ovrows" id="bkCmp">' + (others.length ? others.map(o => '<div class="bkcmp' + (o.k === c ? ' me' : '') + '"><span>' + esc(o.k.name) + '</span><div class="bkcmpt"><i style="width:' + Math.min(100, o.v) + '%"></i></div><b>' + pctAvgText(o.v) + '</b></div>').join('') : '<p class="muted">No class has a grade here yet.</p>') + '</div><p class="muted ovcap2">The average grade for each class over the same term, by the same weights.</p></section></div></div>';
 }
 function bkOneView(c, cols, conf) {
@@ -264,9 +288,9 @@ function bkOneView(c, cols, conf) {
     '<div class="ovtiles" id="bkStuTiles">' + bkTile(bk.term === '*' ? 'Grade' : 'Term grade', r.grade != null ? pctAvgText(r.grade) + (r.soFar ? ' <small>so far</small>' : '') : '–', cavg('') != null ? 'class average ' + pctAvgText(cavg('')) : '', true) +
     bkTile('Summatives', r.by.sum != null ? pctAvgText(r.by.sum) : '–', cols.filter(x => x.type === 'sum' && bkCounts(x.cells.get(n))).length + ' of ' + cols.filter(x => x.type === 'sum').length + ' counted') +
     bkTile('In-class', r.by.ic != null ? pctAvgText(r.by.ic) : '–', cols.filter(x => x.type === 'ic' && bkCounts(x.cells.get(n))).length + ' of ' + cols.filter(x => x.type === 'ic').length + ' counted') +
-    bkTile('Missing', miss.length, miss.length ? miss.map(x => x.name).join(', ') : 'nothing outstanding') + '</div>' +
-    '<div class="ovcharts"><section><h3 class="ovh3">Against the class</h3>' + bkLine(sc, [{ cls: 'bkln mute', pts: sc.map(col => bkMean(c.names.map(x => col.cells.get(x)).filter(bkCounts).map(x => x.pct))) }, { cls: 'bkln', pts: sc.map(col => { const cell = col.cells.get(n); return bkCounts(cell) ? cell.pct : null; }), dots: true }], 'bkStuLine') +
-    '<div class="bkleg"><span><i class="me"></i>' + esc(shown) + '</span><span><i class="mute"></i>Class average</span></div></section>' +
+    bkTile('Missing', miss.length, miss.length ? miss.map(x => x.name).join(', ') : 'nothing outstanding') + '</div>' + bkStrip(c, cols, n) +
+    '<div class="ovcharts">' + chSec('Against the class', bkBandLine(c, sc, n, shown), 'The shaded band is the middle half of the class, so it’s clear when a score is unusual and when the assignment was just hard.') +
+    chSec('Rubric rows', bkStuRows(c, cols, n), 'Their average on each rubric row across the summatives, out of 4. The dashed line is the class average.') +
     '<section><h3 class="ovh3">By type</h3>' + bar('Summatives', r.by.sum, cavg('sum'), 'sum') + bar('In-class', r.by.ic, cavg('ic'), 'ic') + bar('Grade', r.grade, cavg(''), '') + '<p class="muted ovcap2">The dashed line is the class average.</p>' +
     (fm.length ? '<h3 class="ovh3" style="margin-top:16px">Feedback</h3><p class="bkfbline">' + fm.filter(x => (x.cells.get(n) || {}).fb).length + ' of ' + fm.length + ' formative activities have feedback.</p>' : '') + '</section></div></div>';
 }
@@ -282,8 +306,9 @@ function bkColMenu(key, anchor) {
     (terms.length ? '<label class="bkpf">Term <select id="bkTerm" class="btn sm"><option value="">By the date (' + esc((terms.find(t => t.id === bkTermOf({ ...col, term: '' }, terms)) || { name: 'none' }).name) + ')</option>' + terms.map(t => '<option value="' + t.id + '"' + (col.term === t.id ? ' selected' : '') + '>' + esc(t.name) + '</option>').join('') + '</select></label>' : '') +
     (col.typed && col.it ? '<button class="btn sm" data-bkedittyped="' + esc(col.it.id) + '">Edit the typed-in scores</button>' : '') + '<button class="btn sm" data-bkpopclose>Done</button>';
   p.dataset.key = key;
-  $('#dlgBox').appendChild(p);
-  const r = anchor.getBoundingClientRect(), b = $('#dlgBox').getBoundingClientRect(), z = parseFloat(getComputedStyle($('#dlgBox')).zoom) || 1;
+  const host = bkHost();
+  host.appendChild(p);
+  const r = anchor.getBoundingClientRect(), b = host.getBoundingClientRect(), z = parseFloat(getComputedStyle(host).zoom) || 1;
   p.style.left = Math.max(8, Math.min(b.width / z - 280, (r.left - b.left) / z)) + 'px'; p.style.top = ((r.bottom - b.top) / z + 4) + 'px';
 }
 function bkPopClose() { const p = $('#bkPop'); if (p) p.remove(); }
@@ -293,7 +318,7 @@ function bkSetCol(key, part) {
   if (col.it) Object.assign(col.it, part);
   else { const dl = { ...bkConf().dl }; dl[col.dl] = { name: col.name, type: col.type, due: col.due, term: col.term, ...(dl[col.dl] || {}), ...part }; bkSave({ dl }); }
   Object.assign(col, part);
-  if (col.it) saveLib();
+  if (col.it) bkSaveLib();
   if (!batch) renderLib();
 }
 // The one-time question: every assignment in this class with no type yet, each with the three choices.
@@ -401,7 +426,7 @@ function bkAddSave() {
     if (!u) c.units.push(u = { id: uid(), name: c.units.length ? 'Typed in' : 'Unit 1', items: [] });
     u.items.push(it = { id: uid(), name, classId: c.id, type: bkAdd.type, due, typed });
   }
-  saveLib(); if (!batch) renderLib();
+  bkSaveLib(); if (!batch) renderLib();
   const col = bk.cols.find(x => x.key === it.id);
   if (col) Object.assign(col, { name, type: it.type, due, typed }); else bk.cols.push({ key: it.id, it, cls: c.id, name, type: it.type, due, term: it.term || '', typed });
   bk.term = bkTermOf({ due, term: it.term || '' }, bkConf().terms); bk.hi = it.id;
@@ -413,7 +438,7 @@ function bkCellEdit(td) {
   const r = (col.typed.s || {})[n] || {}, max = col.typed.max;
   if (col.type === 'fm') {   // feedback only: a click switches Feedback complete
     const s = { ...(col.typed.s || {}) }; s[n] = { ...r, v: null, fb: !r.fb };
-    col.typed = { ...col.typed, s }; if (col.it) { col.it.typed = col.typed; saveLib(); }
+    col.typed = { ...col.typed, s }; if (col.it) { col.it.typed = col.typed; bkSaveLib(); }
     bkDraw(); const back = document.querySelector('[data-bked="' + CSS.escape(col.key) + '"][data-bkn="' + CSS.escape(n) + '"]'); if (back) back.focus();
     return;
   }
@@ -429,7 +454,7 @@ function bkCellEdit(td) {
       else if (/^e(xcused)?$/.test(t)) s[n] = { v: null, st: 'excused' };
       else if (!isNaN(+t.replace('%', ''))) s[n] = { v: Math.round(+t.replace('%', '') * 2) / 2, st: r.st === 'late' ? 'late' : '' };
       col.typed = { ...col.typed, s };
-      if (col.it) { col.it.typed = col.typed; saveLib(); }
+      if (col.it) { col.it.typed = col.typed; bkSaveLib(); }
     }
     bkDraw();
     const back = document.querySelector('[data-bked="' + CSS.escape(col.key) + '"][data-bkn="' + CSS.escape(n) + '"]'); if (back) back.focus();
@@ -444,8 +469,10 @@ function bkCopy() {
 }
 
 /* ---------- clicks ---------- */
-$('#dlgBox').addEventListener('click', e => {
-  if (!$('#bkBody')) return;
+// The same clicks and keys wherever the gradebook is drawn: in the box, or on a class page.
+const bkHere = e => { const b = $('#bkBody'); return !!b && e.currentTarget.contains(b); };
+function bkClick(e) {
+  if (!bkHere(e)) return;
   const b = e.target.closest('button, [data-bked]'); if (!b) { if (!e.target.closest('#bkPop')) bkPopClose(); return; }
   const d = b.dataset, c = bkClass();
   if (d.bktab) { bk.tab = d.bktab; bkPopClose(); return bkDraw(); }
@@ -462,7 +489,9 @@ $('#dlgBox').addEventListener('click', e => {
   if (d.bkedittyped) { bkPopClose(); return bkAddView(d.bkedittyped); }
   if (d.bkqtype) { bkSetCol(d.key, { type: d.bkqtype }); for (const x of b.parentElement.children) x.setAttribute('aria-pressed', String(x === b)); return; }
   if (d.bked && !b.querySelector('input')) return bkCellEdit(b);
-  if (d.bkstu) { bk.stu += +d.bkstu; return bkDraw(); }
+  if (d.bkstu) return bkGoStu(bk.stu + +d.bkstu);
+  if (d.bkgo != null) return bkGoStu(+d.bkgo);
+  if (d.chsort) { const s = bk.sort || { k: 'grade', dir: -1 }; bk.sort = s.k === d.chsort ? { k: s.k, dir: -s.dir } : { k: d.chsort, dir: d.chsort === 'name' ? 1 : -1 }; return bkDraw(); }
   if (d.taddt != null) { const t = document.createElement('div'); t.innerHTML = '<div class="bktrow" data-tid="' + uid() + '"><input type="text" class="bkin" data-tf="name" value="Term ' + (document.querySelectorAll('#bkTerms .bktrow').length + 1) + '" aria-label="Term name"><input type="date" class="bkin" data-tf="start" aria-label="Starts"><input type="date" class="bkin" data-tf="end" aria-label="Ends"><button class="icon" data-tdel aria-label="Remove this term">✕</button></div>'; $('#bkTerms').appendChild(t.firstChild); return; }
   if (d.tdel != null) { b.closest('.bktrow').remove(); return; }
   if (d.bkempty) { for (const x of document.querySelectorAll('[data-bkempty]')) x.setAttribute('aria-pressed', String(x === b)); return; }
@@ -471,32 +500,36 @@ $('#dlgBox').addEventListener('click', e => {
   if (d.bkamode) { bkAdd.mode = d.bkamode; for (const x of document.querySelectorAll('[data-bkamode]')) x.setAttribute('aria-pressed', String(x === b)); $('#bkaMax').hidden = d.bkamode === 'pct'; return bkAddRows(); }
   if (d.bkast) { const n = c.names[+d.bkai], r = bkAdd.s[n] || {}; bkAdd.s[n] = { ...r, st: r.st === d.bkast ? '' : d.bkast, v: d.bkast === 'late' || r.st === d.bkast ? r.v : null }; return bkAddRows(); }
   if (d.bkasave != null) { if (bkAddSave()) { bkAdd = null; bkDraw(); } return; }
-});
-$('#dlgBox').addEventListener('change', e => {
-  if (!$('#bkBody')) return;
+}
+function bkChange(e) {
+  if (!bkHere(e)) return;
   const t = e.target;
   if (t.id === 'bkCls') { bk.cls = t.value; bk.term = null; bk.stu = 0; bk.hi = ''; return bkDraw(); }
   if (t.id === 'bkDue' || t.id === 'bkTerm') { const k = $('#bkPop').dataset.key; bkSetCol(k, t.id === 'bkDue' ? { due: t.value } : { term: t.value }); return; }
   if (t.id === 'bkaMax') return bkAddRows();
   if (t.dataset.bkafb != null) { const n = bkClass().names[+t.dataset.bkafb]; bkAdd.s[n] = { ...(bkAdd.s[n] || {}), fb: t.checked }; return bkAddRows(); }
-});
-$('#dlgBox').addEventListener('input', e => {
-  if (!$('#bkBody')) return;
+}
+function bkInput(e) {
+  if (!bkHere(e)) return;
   const t = e.target;
   if (t.dataset.wt) return bkWsum();
   if (t.dataset.bkai != null && t.classList.contains('bksc')) { const n = bkClass().names[+t.dataset.bkai]; bkAdd.s[n] = { ...(bkAdd.s[n] || {}), v: t.value === '' ? null : +t.value }; const max = bkAddMax(), p = t.closest('tr').children[2]; p.textContent = t.value === '' || isNaN(+t.value) ? '' : (max ? roundPct(+t.value / max * 100) : roundPct(+t.value)) + '%'; return; }
-});
-$('#dlgBox').addEventListener('paste', e => {
-  if (!$('#bkBody') || e.target.id !== 'bkaPaste') return;
+}
+function bkPasted(e) {
+  if (!bkHere(e) || e.target.id !== 'bkaPaste') return;
   e.preventDefault(); bkPaste((e.clipboardData || window.clipboardData).getData('text')); e.target.value = '';
-});
-$('#dlgBox').addEventListener('keydown', e => {
-  if (!$('#bkBody')) return;
+}
+function bkKey(e) {
   if ((e.key === 'Enter' || e.key === ' ') && e.target.dataset && e.target.dataset.bked && !e.target.querySelector('input')) { e.preventDefault(); return bkCellEdit(e.target); }
-  if (bk.tab === 'one' && (e.key === 'ArrowLeft' || e.key === 'ArrowRight') && !/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)) { const c = bkClass(); if (!c) return; const n = bk.stu + (e.key === 'ArrowRight' ? 1 : -1); if (n >= 0 && n < c.names.length) { e.preventDefault(); bk.stu = n; bkDraw(); } }
+  if (bk.tab === 'one' && (e.key === 'ArrowLeft' || e.key === 'ArrowRight') && !e.altKey && !e.ctrlKey && !e.metaKey && !/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)) { const c = bkClass(); if (!c) return; const n = bk.stu + (e.key === 'ArrowRight' ? 1 : -1); if (n >= 0 && n < c.names.length) { e.preventDefault(); bkGoStu(n); } }
   if (e.key === 'Escape' && $('#bkPop')) { e.preventDefault(); e.stopPropagation(); bkPopClose(); }
-}, true);
+}
+for (const host of [$('#dlgBox'), $('#vClass')]) {
+  host.addEventListener('click', bkClick); host.addEventListener('change', bkChange); host.addEventListener('input', bkInput); host.addEventListener('paste', bkPasted);
+}
+$('#dlgBox').addEventListener('keydown', e => { if (bkHere(e)) bkKey(e); }, true);
+// On a class page the keys work wherever the pointer last was, as long as nothing is open over the page.
+document.addEventListener('keydown', e => { if (bkPage() && $('#bkBody') && $('#dlg').hidden && !$('#findDlg') && !$('#askDlg') && !$('#pcard')) bkKey(e); });
 $('#bookBtn').onclick = () => { openBook(batchClass() ? batchClass().id : '', { hi: batch && batch.assignment ? batch.assignment.id : '' }); };
-document.addEventListener('click', e => { const b = e.target.closest('[data-book]'); if (b && $('#start') && !$('#start').hidden) openBook(b.dataset.book); });
 
 Object.assign(window.__gs, { openBook, bkLoad, bkClassCols, bkGrade, bkConf, bkTermOf, bk: () => bk });

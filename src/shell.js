@@ -91,7 +91,10 @@ function findRows() {
   add('Go to', 'Home', 'What to pick up, and what needs a look', () => go('#/'));
   add('Go to', 'Planner', 'Units and lessons, on its own page', () => { location.href = $('#lessonsBtn').href; });
   add('Go to', 'Settings', 'Saving and carrying, display, keys', () => go('#/settings'));
-  for (const c of lib.classes) add('Classes', c.name, (c.names.length ? c.names.length + ' students' : 'No roster yet') + (classLeft(c) ? ' · ' + classLeft(c) + ' left to score' : ''), () => go(classHash(c)));
+  for (const c of lib.classes) {
+    add('Classes', c.name, (c.names.length ? c.names.length + ' students' : 'No roster yet') + (classLeft(c) ? ' · ' + classLeft(c) + ' left to score' : ''), () => go(classHash(c)));
+    if (c.names.length) for (const [k, l, sub] of [['gradebook', 'gradebook', 'Every assignment by term, with each term grade'], ['students', 'students', 'The roster, with IDs and emails, and each student’s own page'], ['charts', 'charts', 'Grades and scores as charts']]) add('Class pages', c.name + ' ' + l, sub, () => go(classHash(c, k)));
+  }
   const carded = new Set();
   for (const c of holders()) for (const u of c.units) for (const it of u.items) {
     const m = it.batchId ? keptMeta.get(it.batchId) : null; if (it.batchId) carded.add(it.batchId);
@@ -119,7 +122,7 @@ function findRows() {
 // Every word typed has to be somewhere in the row. A name that starts with what she typed comes first.
 function findMatch(rows, q) {
   const words = q.toLowerCase().split(/\s+/).filter(Boolean);
-  if (!words.length) return rows.filter(r => r.group !== 'Students' && r.group !== 'Assignments' || batch && r.group === 'Students').slice(0, 60);
+  if (!words.length) return rows.filter(r => r.group !== 'Students' && r.group !== 'Assignments' && r.group !== 'Class pages' || batch && r.group === 'Students').slice(0, 60);
   const hit = [];
   for (const r of rows) {
     const l = r.label.toLowerCase(), all = l + ' ' + r.sub.toLowerCase() + ' ' + r.group.toLowerCase();

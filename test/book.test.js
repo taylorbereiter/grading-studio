@@ -104,8 +104,9 @@ test('a type can be set on assignments that already exist, from the one-time lis
   await page.select('#bkTerm', 't2');
   await page.click('[data-bkpopclose]');
   await page.waitForFunction(() => !/Narrative essay/.test(document.querySelector('#bkTab thead').textContent));
-  await page.click('[data-close]');
-  // Edit assignment on the start screen.
+  await page.click('[data-ctab=""]');
+  // Edit assignment on the class's Assignments tab.
+  await page.waitForSelector('[data-edit-asg="i3"]');
   await page.click('[data-edit-asg="i3"]');
   await page.waitForSelector('[data-atype="sum"]');
   assert.equal(await page.$eval('[data-atype="ic"]', b => b.getAttribute('aria-pressed')), 'true');
@@ -164,8 +165,9 @@ test('scores for past work go in by typing or pasting, become a card, and can be
   await page.keyboard.press('Enter');
   await page.waitForFunction(c => /80%/.test(document.querySelector(c).textContent), {}, cell);
   assert.equal((await lib(page)).classes[0].units[0].items.find(x => x.id === 'i2').typed.s['Bram Sample'].v, 24);
-  // The card shows on the start screen as typed in.
-  await page.click('[data-close]');
+  // The card shows on the Assignments tab as typed in.
+  await page.click('[data-ctab=""]');
+  await page.waitForSelector('[data-card="' + it.id + '"]');
   assert.match(await page.$eval('[data-card="' + it.id + '"]', c => c.textContent), /In-class.*Typed in/);
   noErrors(page); await close();
 });
@@ -192,16 +194,19 @@ test('term setup comes from the teacher’s own settings, and the charts and one
   assert.ok(await page.$('#bkSetup'), 'stays open to fix it');
   await page.click('[data-bkback]');
   await page.waitForSelector('#bkTab');
-  // Class charts.
-  await page.click('[data-bktab="class"]');
+  // Class charts: the Charts tab, for the same term.
+  await page.click('[data-ctab="charts"]');
   await page.waitForSelector('#bkTiles');
+  assert.equal(await page.$eval('[data-bkterm="t1"]', b => b.getAttribute('aria-selected')), 'true', 'the term she picked stays picked from tab to tab');
   assert.match(await page.$eval('#bkTiles', t => t.textContent), /Term average/);
   assert.deepEqual(await page.$$eval('#bkBands .pband', b => b.map(x => x.querySelector('span').textContent + ':' + x.querySelector('.pbn b').textContent)), ['90 to 100:1', '80 to 89:1', '70 to 79:1', '60 to 69:1', 'Below 60:0']);
   assert.deepEqual(await page.$$eval('#bkTrend .bkdot', d => d.map(x => x.dataset.tl)), ['Reading check', 'Paragraph', 'Narrative essay', 'Poetry test'], 'in date order, scored types only');
   assert.equal(await page.$$eval('#bkSpread .bkiqr', r => r.length), 4);
   assert.match(await page.$eval('#bkCmp', t => t.textContent), /Grade 9 English/);
   // One student, with the arrow keys.
-  await page.click('[data-bktab="one"]');
+  await page.click('[data-ctab="students"]');
+  await page.waitForSelector('#peopleTbl td.nm a');
+  await page.click('#peopleTbl td.nm a');
   await page.waitForSelector('#bkStuTiles');
   assert.equal(await page.$eval('#bkStuName', e => e.textContent), 'Aria Testwell');
   await page.keyboard.press('ArrowRight');

@@ -1,7 +1,7 @@
 /* ---------------- student details: ID, email, other spellings and a note for each roster student ---------------- */
 // Kept on the class beside its roster, as c.info: { roster name: { id, email, other: [names], note } }. It lives in lib, so it
 // stays in this browser, goes in her own Drive sync and merges like the roster does. It never goes in the Claude package.
-// The card opens from the ⓘ beside a name: the student list, the paper's heading, the Grades list and a class's Students list.
+// The card opens from the ⓘ beside a name: the student list, the paper's heading, the Grades list, the gradebook and a class's Students tab.
 const classOfNames = names => (names && lib.classes.find(k => k.names === names)) || null;   // rosterMatch and rosterPairs are handed c.names itself
 const infoOf = (c, n) => (c && c.info && c.info[n]) || {};
 const infoSig = c => c && c.info ? JSON.stringify(c.info) : '';
@@ -171,17 +171,16 @@ document.addEventListener('click', e => {
 }, true);
 document.addEventListener('keydown', e => { if ((e.key === 'Enter' || e.key === ' ') && e.target.classList && e.target.classList.contains('whob')) { e.preventDefault(); e.target.click(); } }, true);
 
-// A class's students, with their ID and email to type or paste in. From the class on the start screen.
-function openPeople(ci) {
-  const c = lib.classes[ci]; if (!c) return;
-  openDlg('<div class="bh"><h2>' + esc(c.name) + ' students</h2><span class="muted" id="peopleSum"></span><button class="icon" data-close aria-label="Close" style="margin-left:auto">✕</button></div>' +
-    '<div class="bb"><div id="peopleTbl"></div><div id="peoplePaste" hidden><p class="muted" style="margin:10px 0 6px;font-size:13.5px">Paste a class list with names and a student ID or email column (from ManageBac or a spreadsheet). Each row fills in the student with the same name.</p><textarea class="big" id="peopleIn" placeholder="Name, student ID, email"></textarea>' +
-    '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px"><button class="btn sm" data-pcancel>Cancel</button><button class="btn sm primary" data-pfill>Fill in</button></div></div></div>' +
-    '<div class="bf"><button class="btn" data-ppaste>Paste IDs and emails…</button><button class="btn" data-pmail>Copy all emails</button><span style="margin-right:auto"></span><button class="btn primary" data-close>Done</button></div>');
+// A class's students, with their ID and email to type or paste in: the Students tab of a class page (classpage.js puts it there).
+// A name goes to that student's own page of grades and charts; the ⓘ beside it opens their details.
+let peopleQuiet = false;
+function peoplePanel(el, c) {
+  el.innerHTML = '<div class="pplbar"><span class="muted" id="peopleSum"></span><span class="sp"></span><button class="btn sm" data-ppaste>Paste IDs and emails…</button><button class="btn sm" data-pmail>Copy all emails</button></div>' +
+    '<div id="peoplePaste" hidden><p class="muted" style="margin:0 0 6px;font-size:13.5px">Paste a class list with names and a student ID or email column (from ManageBac or a spreadsheet). Each row fills in the student with the same name.</p><textarea class="big" id="peopleIn" placeholder="Name, student ID, email"></textarea>' +
+    '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px"><button class="btn sm" data-pcancel>Cancel</button><button class="btn sm primary" data-pfill>Fill in</button></div></div><div id="peopleTbl"></div>' +
+    '<p class="muted pplcap">Click a name for that student’s grades and charts. The ⓘ opens their details, with other spellings and a note.</p>';
   fillPeople(c);
-  const box = $('#dlgBox');
-  box.onclick = e => {
-    if (e.target.closest('[data-close]')) return closeDlg();
+  el.onclick = e => {
     if (e.target.closest('[data-ppaste]')) { $('#peoplePaste').hidden = false; return $('#peopleIn').focus(); }
     if (e.target.closest('[data-pcancel]')) { $('#peoplePaste').hidden = true; return; }
     if (e.target.closest('[data-pmail]')) { const m = c.names.map(n => infoOf(c, n).email).filter(Boolean); return m.length ? copy(m.join('; '), 'Copied ' + m.length + (m.length === 1 ? ' email' : ' emails')) : toast('No emails yet'); }
@@ -193,26 +192,38 @@ function openPeople(ci) {
       toast(n ? 'Filled in ' + n + (n === 1 ? ' student' : ' students') + (miss.length ? '. Not on the roster: ' + miss.slice(0, 3).join(', ') + (miss.length > 3 ? ' and ' + (miss.length - 3) + ' more' : '') : '') : 'No names matched the roster', 6000);
     }
   };
-  box.onchange = e => {
+  el.onchange = e => {
     const f = e.target.closest('[data-pp]'); if (!f) return;
     const n = c.names[+f.dataset.pi], v = f.value.trim();
     if (f.dataset.pp === 'email' && v && !EMAIL_RX.test(v)) { toast('That doesn’t look like an email address'); return; }
-    setInfo(c, n, { [f.dataset.pp]: f.dataset.pp === 'id' ? v.replace(/\s+/g, '') : v }); saveLib(); afterInfo(c);
+    setInfo(c, n, { [f.dataset.pp]: f.dataset.pp === 'id' ? v.replace(/\s+/g, '') : v }); saveLib();
+    peopleQuiet = true; try { afterInfo(c); } finally { peopleQuiet = false; }   // the row she's typing in stays as it is, so Tab goes on to the next box
+    peopleSum(c);
   };
 }
+function peopleSum(c) {
+  const el = $('#peopleSum'); if (!el) return;
+  el.textContent = c.names.length + (c.names.length === 1 ? ' student' : ' students') + ' · ' + c.names.filter(n => infoOf(c, n).id).length + ' with an ID';
+}
 function fillPeople(c) {
-  const t = $('#peopleTbl'); if (!t) return;
-  const withId = c.names.filter(n => infoOf(c, n).id).length;
-  $('#peopleSum').textContent = c.names.length + (c.names.length === 1 ? ' student' : ' students') + ' · ' + withId + ' with an ID';
-  t.innerHTML = c.names.length ? '<table class="gl ppl"><thead><tr><th>#</th><th>Name</th><th>Student ID</th><th>Email</th><th>Last year</th><th>Also called</th></tr></thead><tbody>' + c.names.map((n, k) => { const i = infoOf(c, n);
-    return '<tr><td class="n">' + (k + 1) + '</td><td class="nm"><button class="link" data-wc="' + esc(c.id) + '" data-wn="' + esc(n) + '">' + esc(n) + '</button></td>' +
+  const t = $('#peopleTbl'); if (!t || peopleQuiet) return;
+  peopleSum(c);
+  t.innerHTML = c.names.length ? '<table class="gl ppl"><thead><tr><th>#</th><th>Name</th><th class="pg" id="peopleGh">Grade</th><th>Student ID</th><th>Email</th><th>Last year</th><th>Also called</th></tr></thead><tbody>' + c.names.map((n, k) => { const i = infoOf(c, n);
+    return '<tr><td class="n">' + (k + 1) + '</td><td class="nm"><a class="link" href="' + classHash(c, 'students', k) + '">' + esc(n) + '</a>' + whoBtn('data-wc="' + esc(c.id) + '" data-wn="' + esc(n) + '"', n) + '</td><td class="pg" data-pg="' + k + '"></td>' +
       '<td><input class="pc-in" data-pp="id" data-pi="' + k + '" value="' + esc(i.id || '') + '" placeholder="Student ID" aria-label="Student ID for ' + esc(n) + '"></td>' +
       '<td><input class="pc-in" type="email" data-pp="email" data-pi="' + k + '" value="' + esc(i.email || '') + '" placeholder="Email" aria-label="Email for ' + esc(n) + '"></td>' +
       '<td><input class="pc-in" data-pp="prev" data-pi="' + k + '" value="' + esc(i.prev || '') + '" placeholder="Optional" aria-label="Last year’s level for ' + esc(n) + '"></td>' +
       '<td class="muted">' + ((i.other || []).length || '–') + '</td></tr>'; }).join('') + '</tbody></table>'
     : '<p class="muted">No students on this roster yet. Use Edit roster to add them.</p>';
+  peopleGrades(c);
 }
-document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('#peopleTbl [data-wc]'); if (b) { e.stopPropagation(); personCard(b.dataset.wc, b.dataset.wn); } }, true);
+// Each student's grade for the term that's on now, by the gradebook's own sums, once the saved work has been read.
+function peopleGrades(c) {
+  const t = $('#peopleTbl'); if (!t || bk.host !== 'page' || !bk.cols) return;
+  const conf = bkConf(), term = conf.terms.length ? bkTermNow(conf.terms) : '', cols = bkClassCols(c, bk.cols).filter(x => x.termId === term), tn = conf.terms.find(x => x.id === term);
+  const h = $('#peopleGh'); if (h) h.textContent = tn ? tn.name || 'Term' : 'Grade';
+  for (const td of t.querySelectorAll('td[data-pg]')) { const r = bkGrade(c.names[+td.dataset.pg], cols, conf); td.textContent = r.grade != null ? pctAvgText(r.grade) : '–'; }
+}
 
 // Class overview: this assignment's average by the level each student was in last year, if she's filled any in. Optional, so it's only there when there's something to show.
 function levelHtml(s) {
