@@ -1,0 +1,38 @@
+# Runs on every pull request and on every change to main: the build, every test, the screenshot check,
+# the saved-work check and the speed measurements. Nothing here can reach student work: tests use made-up students only.
+name: Checks
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: checks-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+jobs:
+  tests:
+    name: Build and tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Build
+        run: npm run build
+      - name: The pages in this change are the ones its source builds
+        run: git diff --exit-code --stat -- index.html "Grading Studio.html" planner.html Planner.html
+      - name: Tests
+        run: npm test
+      - name: Keep the logs of a failed run
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-logs
+          path: out/test-logs
+          retention-days: 7
