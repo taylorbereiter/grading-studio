@@ -69,7 +69,7 @@ async function turnPages(f, list, dir) {
 // Re-measures a page after a turn and draws it again.
 function reshape(pg) {
   const vp = vpRot(pg.file, pg.idx, pg.page, 1);
-  pg.W = vp.width; pg.H = vp.height; pg.side = sideFor(vp.width); pg.covers = null; pg.adj = null; pg.extra = [];
+  pg.W = vp.width; pg.H = vp.height; pg.side = sideScreen(vp.width); pg.covers = null; pg.adj = null; pg.extra = [];
   renderPage(pg); scanNote(pg);
 }
 // Kami notes and typed grades are found again on the turned page.

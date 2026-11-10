@@ -56,7 +56,8 @@ test('a tool’s choices open in the dock: ink and width for the pen, colors and
   assert.ok(await shown(page, '#tools .topts [data-hlm]'), 'Snap and Free');
   const dock = await box(page, '#tools'), paper = await box(page, '#paper');
   assert.ok(dock.b <= paper.b, 'still all on screen with the choices open');
-  for (const s of ['#undoBtn', '#redoBtn', '#tools [data-z="1"]', '#tools [data-z="-1"]']) assert.ok(await shown(page, s), s + ' is in the dock');
+  for (const s of ['#undoBtn', '#redoBtn']) assert.ok(await shown(page, s), s + ' is in the dock');
+  for (const s of ['#zoomPill [data-z="1"]', '#zoomPill [data-z="-1"]', '#zoomPill [data-z0]']) assert.ok(await shown(page, s), s + ' is in the corner of the paper');
   await close();
 });
 
@@ -149,13 +150,13 @@ test('Leave out of the average is under the ⋯ beside Missing, Excused, Late, a
   const { page, close } = await standard();
   await score(page, [4, 3, 3]);
   assert.equal(await shown(page, '#outAvg'), false);
-  assert.equal(await shown(page, '#pOut'), false, 'no Left out filter while nothing is left out');
+  assert.equal(await page.$eval('#pOut', b => b.hidden), true, 'no Left out filter while nothing is left out');
   await page.click('#gMore'); await page.click('#outAvg');
   await page.waitForSelector('#grade .outnote');
   assert.match(await page.$eval('#grade .outnote', e => e.textContent), /Left out of the average/);
   assert.equal(await page.evaluate(() => !!window.__gs.state().batch.students[0].grade.outAvg), true);
   assert.equal(await page.$eval('#pOut .v', e => e.textContent), '1');
-  assert.ok(await shown(page, '#pOut'));
+  assert.equal(await page.$eval('#pOut', b => b.hidden), false);
   await page.click('#grade .outnote [data-outoff]');
   await page.waitForFunction(() => !document.querySelector('#grade .outnote'));
   assert.equal(await page.evaluate(() => !!window.__gs.state().batch.students[0].grade.outAvg), false);
@@ -184,9 +185,9 @@ test('a saved comment is one click from the comment box, on every paper', async 
   await close();
 });
 
-test('Next unscored is the main button while papers are left, and plain Next once everyone has a score', async () => {
+test('Next to score is the main button while papers are left, and plain Next once everyone has a score', async () => {
   const { page, close } = await standard();
-  assert.match(await page.$eval('#nextUn', b => b.textContent), /Next unscored/);
+  assert.match(await page.$eval('#nextUn', b => b.textContent), /Next to score/);
   assert.equal(await page.$eval('#prevBtn', b => b.disabled), true);
   await score(page, [4, 4, 4]);
   await goToStudent(page, 1); await score(page, [3, 3, 3]);
@@ -221,7 +222,7 @@ async function river() {
   await goToStudent(page, 0);
   return app;
 }
-const chips = page => page.$$eval('#progS .lf', a => a.filter(b => b.checkVisibility()).map(b => b.textContent.replace(/\s+/g, ' ').trim()));
+const chips = page => page.$$eval('#lfSlot .lf', a => a.filter(b => !b.hidden).map(b => b.textContent.replace(/\s+/g, ' ').trim()));
 const rows = page => page.$$eval('#stuList [data-i]', a => a.map(b => +b.dataset.i));
 
 test('the list’s filters: To score, Flagged, No paper, and Late once someone is', async () => {
@@ -274,6 +275,7 @@ test('a filter with nobody in it says so, with a way back to everyone', async ()
 
 test('Add late work and Hide names are at the foot of the list', async () => {
   const { page, close } = await river();
+  await page.evaluate(() => window.__gs.listPeek(true));   // the strip opens to the full list
   const foot = await box(page, '#sideFoot'), list = await box(page, '#stuList');
   assert.ok(foot.t >= list.b - 1, 'below the names');
   assert.equal(await page.$eval('#anonSw', b => b.getAttribute('aria-checked')), 'false');

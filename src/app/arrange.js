@@ -235,6 +235,7 @@ function fitScale(pg) {
   const P = $('#paper'), cs = getComputedStyle(P);   // the tool dock sits in the left padding
   let s = (P.clientWidth - (parseFloat(cs.paddingLeft) || 18) - (parseFloat(cs.paddingRight) || 18) - 4) / (pg.W + pg.side);
   if (disp.fit === 'page') s = Math.min(s, (P.clientHeight - 40) / pg.H);
+  s = Math.min(s, 1000 / pg.W);   // on a very wide window the page stops growing at a comfortable reading size; the zoom buttons go past it
   return Math.max(0.3, Math.min(2.2, s)) * zoom;
 }
 async function renderPage(pg) {
@@ -244,8 +245,11 @@ async function renderPage(pg) {
   const c = pg.canvas;
   c.width = Math.ceil((pg.W + pg.side) * s * dpr); c.height = Math.ceil(pg.H * s * dpr);
   c.style.width = (pg.W + pg.side) * s + 'px'; c.style.height = pg.H * s + 'px';
+  if (pg === pages[0]) $('#paper').style.setProperty('--pgw', c.style.width);   // the bar above lines up with the page
   if (pg.rchip) pg.rchip.style.left = pg.W * s + 'px';
   if (anonOn() && !pg.covers) pg.bmp = null;   // nothing shows until its name covers are ready
+  if (pg === pages[0]) lastSheet = { w: (pg.W + pg.side) * s, h: pg.H * s, p: pg.W * s };
+  if (!pg.bmp) { const x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, c.width, c.height); x.fillStyle = '#F6F7F9'; x.fillRect(Math.round(pg.W * s * dpr), 0, c.width, c.height); }   // a white sheet at once; the words follow
   draw(pg);
   const vp = vpRot(pg.file, pg.idx, pg.page, s * dpr);
   const bmp = document.createElement('canvas');

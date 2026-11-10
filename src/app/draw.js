@@ -2,6 +2,8 @@
 const FONT = 'Helvetica, Arial, "PingFang TC", "Microsoft JhengHei", sans-serif';
 const measureCtx = document.createElement('canvas').getContext('2d');
 const sideFor = W => Math.round(Math.max(200, W * 0.4));
+// On screen the comment margin is narrower than in the exported file, so the student's page gets the width. Comments wrap to fit either.
+const sideScreen = W => Math.round(Math.max(150, W * 0.25));
 function wrapText(ctx, text, maxW) {
   const lines = [];
   for (const para of String(text).split('\n')) {

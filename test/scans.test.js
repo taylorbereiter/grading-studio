@@ -24,7 +24,8 @@ const squareOnScreen = (page, k = 0) => page.evaluate(k => {
   for (let y = r; y < h - r; y += 2) for (let x = r; x < w - r; x += 2) if (dark(x, y) && dark(x - r, y - r) && dark(x + r, y - r) && dark(x - r, y + r) && dark(x + r, y + r)) { sx += x; sy += y; n++; }
   return { x: n ? sx / n / q : -1, y: n ? sy / n / q : -1, W: pg.W, H: pg.H };
 }, k);
-const shown = page => page.waitForFunction(() => { const s = window.__gs.state(); return s.pages[0] && s.pages[0].bmp; });
+// The first page of the student now open is drawn (not a page still up from the download open before it).
+const shown = page => page.waitForFunction(() => { const s = window.__gs.state(), st = s.batch && s.batch.students[s.cur]; return s.pages[0] && s.pages[0].bmp && st && st.files.includes(s.pages[0].file); });
 const redrawn = page => page.waitForFunction(() => new Promise(r => setTimeout(() => r(true), 400)));
 
 test('on made-up scans the rules never turn a page the wrong way, and fix most pages they could', async () => {

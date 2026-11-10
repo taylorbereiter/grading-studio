@@ -74,15 +74,19 @@ const lfMatch = st => LIST_FILTERS.find(f => f[0] === listFilter)[2](st);
 const lfShows = i => listFilter === 'all' || i === cur || lfMatch(batch.students[i]);
 // The order Previous, Next and the arrow keys walk: the list as it shows.
 function navOrder() { lfCheck(); return (anonOn() ? anonOrder() : batch.students.map((_, i) => i)).filter(lfShows); }
+// One button beside the find box says which papers the list shows; its menu has the others, each with its count.
+const LF_ICON = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4"/></svg>';
 function lfChips() {
   lfCheck();
-  const todoName = fmNow() ? 'To finish' : 'To score';
-  return '<div class="lfilt" role="group" aria-label="Show in the list">' + LIST_FILTERS.map(([k, label, fn, tip]) => {
+  const todoName = fmNow() ? 'To finish' : 'To score', name = k => k === 'todo' ? todoName : LIST_FILTERS.find(f => f[0] === k)[1];
+  const items = LIST_FILTERS.map(([k, label, fn, tip]) => {
     const n = batch.students.filter(fn).length, id = k === 'todo' ? ' id="pLeft"' : k === 'out' ? ' id="pOut"' : '';
     const quiet = n === 0 && listFilter !== k && k !== 'all' && k !== 'todo' && k !== 'flag';   // No paper, Late and Left out show only when there are some
-    return '<button class="lf" data-lf="' + k + '"' + id + ' aria-pressed="' + (listFilter === k) + '" title="' + tip + '"' + (quiet ? ' hidden' : '') + '>' + (k === 'todo' ? todoName : label) + ' <span class="v">' + n + '</span></button>';
-  }).join('') + '</div>';
+    return '<button class="mitem lf" data-lf="' + k + '"' + id + ' aria-pressed="' + (listFilter === k) + '" title="' + tip + '"' + (quiet ? ' hidden' : '') + '>' + name(k) + ' <span class="v">' + n + '</span></button>';
+  }).join('');
+  return '<div class="lfilt" role="group" aria-label="Show in the list">' + kmWrap(LF_ICON + '<span class="t">' + name(listFilter) + '</span>', 'class="lfnow' + (listFilter === 'all' ? '' : ' on') + '" id="lfBtn" aria-label="Show in the list: ' + name(listFilter) + '" title="Which papers the list shows: ' + name(listFilter) + '. Previous and Next follow it."', items, 'right') + '</div>';
 }
+function lfDraw() { const el = $('#lfSlot'); if (el && batch) el.innerHTML = lfChips(); }
 function lfSet(k) {
   lfCheck();
   listFilter = LIST_FILTERS.some(f => f[0] === k) ? k : 'all';
@@ -120,4 +124,4 @@ function cmtClick(e) {
   }
   return false;
 }
-Object.assign(window.__gs, { flagsOf, lfSet, navOrder, kmClose });
+Object.assign(window.__gs, { flagsOf, lfSet, navOrder, kmClose, setList, listPeek, scoreRow: () => rowOn });

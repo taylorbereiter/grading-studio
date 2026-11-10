@@ -3,10 +3,18 @@ let pages = [];          // on-screen pages for the open student
 let docs = [];           // pdf.js documents for the open student
 let docMap = new Map();  // source path -> pdf.js document, for the open student
 let openToken = 0;
+// One helper thread reads every paper she looks at, and stays for the next one. Starting a new one for each student took most of the wait between papers.
+let viewW = null, lastSheet = null;   // lastSheet: the size on screen of the first page last drawn
+function viewWorker() {
+  try { if (!viewW || viewW.destroyed) viewW = new pdfjsLib.PDFWorker({ name: 'papers' }); return viewW; }
+  catch (e) { return undefined; }   // without it each paper gets its own, as before
+}
 async function openStudent(i, filePath) {
   if (!batch) return;
   commitEditors();
+  const moved = cur !== Math.max(0, Math.min(batch.students.length - 1, i));
   cur = Math.max(0, Math.min(batch.students.length - 1, i));
+  if (moved || rowOnOf !== batch.students[cur]) rowStart();
   selected = null;
   if ($('#lightPanel')) $('#lightPanel').refresh();
   const token = ++openToken;
@@ -17,7 +25,7 @@ async function openStudent(i, filePath) {
   const paper = $('#paper');
   // The student's bar: who it is, then Readings, one Add menu, and a menu for the whole paper. What belongs to one file is under that file's own ⋯.
   const nRef = refsFor(st).length;
-  paper.innerHTML = '<div class="who"><h2>' + esc(shownName(st, cur)) + '</h2>' + (anonOn() ? '' : whoBtn('data-wi="' + cur + '"', st.key)) + '<span>' + ((anonOn() ? anonPos(cur) : cur) + 1) + ' of ' + batch.students.length + '</span><span style="flex:1"></span>' +
+  paper.innerHTML = '<div class="who"><h2>' + esc(shownName(st, cur)) + '</h2>' + (anonOn() ? '' : whoBtn('data-wi="' + cur + '"', st.key)) + '<span>' + ((anonOn() ? anonPos(cur) : cur) + 1) + ' of ' + batch.students.length + '</span><span class="whosp"></span>' +
     '<button class="btn sm" id="readBtn" title="A reading, prompt or other file shown above the papers: for everyone, or a different one for this student">Readings' + (nRef ? ' <span class="atn">' + nRef + '</span>' : '') + '</button>' +
     kmWrap('<span aria-hidden="true">+</span> Add', 'id="addMenuBtn" class="btn sm" title="Add late or forgotten work to this student. You can also drop files on the paper or on a name."',
       '<button class="mitem" id="addFileBtn">A file…<small>A late or forgotten paper</small></button>' +
@@ -28,6 +36,9 @@ async function openStudent(i, filePath) {
       '<button class="mitem" data-whodo="light">Lighting<small>Make a pale or too-bright scan easier to read</small></button>' +
       '<button class="mitem" data-whodo="calc">Calculator <kbd>=</kbd></button>', 'right') + '</div>' + groupBand(st);
   paper.scrollTop = 0;
+  // A paper that is one file: the sheet stays where the last one was while this one is read, so nothing jumps between students.
+  if (lastSheet && st.files.length === 1 && viewable(st.files[0]) && !refsFor(st).length && !refDoc()) paper.insertAdjacentHTML('beforeend', '<div class="pg" id="sheet0" style="width:' + lastSheet.w + 'px;height:' + lastSheet.h + 'px;background:linear-gradient(to right,#fff ' + lastSheet.p + 'px,#F6F7F9 0)"></div>');
+  const sheetOff = () => { const g = $('#sheet0'); if (g) g.remove(); };
   if (!st.files.length) {
     paper.insertAdjacentHTML('beforeend', '<div class="nofile"><b>Nothing turned in yet.</b> Add their paper here, or drop the file on the page or on their name. You can still give a score without one.' +
       '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button class="btn sm primary" id="gapFile">Add their file…</button><button class="btn sm" id="gapPaste">Paste text…</button>' + (st.gap || batch.students.some(x => x.files.length) ? '<button class="btn sm" id="gapScan">From a scan…</button>' : '') + '</div></div>');
@@ -46,17 +57,19 @@ async function openStudent(i, filePath) {
     try {
       await impAuto(f);
       if (token !== openToken) return;
-      const doc = await pdfjsLib.getDocument({ data: (await viewBytes(f)).slice(), isEvalSupported: false }).promise;
+      const doc = await pdfjsLib.getDocument({ data: (await viewBytes(f)).slice(), isEvalSupported: false, worker: viewWorker() }).promise;
       if (token !== openToken) { doc.destroy(); return; }
       docs.push(doc); docMap.set(f.path, doc); f.numPages = doc.numPages;
       gsFlatCheck(f, doc).then(flat => { if (flat && token === openToken) for (const q of pages) if (q.file === f && q.impFirst) impNote(q); });
     } catch (e) {
       pdfBad(f, e);
-      paper.appendChild(otherCard(f));
+      sheetOff(); paper.appendChild(otherCard(f));
     }
   }
   if (token !== openToken) return;
-  for (const it of fileSeq(st)) {
+  const seq = fileSeq(st), oneFile = seq.length === 1 && !!seq[0].d && !st.files.some(f => f.kind === 'media');
+  if (!oneFile) sheetOff();
+  for (const it of seq) {
     if (it.f) {   // a Word, text or other file, as one card
       const f = it.f, c = f.kind === 'docx' ? await wordCard(st, f) : f.kind === 'text' ? textCard(f) : otherCard(f);
       if (token !== openToken) return;
@@ -76,7 +89,7 @@ async function openStudent(i, filePath) {
       (on ? '' : '<span class="pill warn" style="font-size:12px;padding:2px 8px;border-radius:999px;background:var(--warn-soft);color:var(--warn)">' + (auto ? 'No marks, left out' : 'Left out') + '</span>') +
       '<span style="flex:1"></span>' + (on ? '' : '<button class="link" style="font-size:13px" data-inout="' + di + '">Bring back</button>') +
       fileMenu((on || auto ? '<button class="link" data-rotdoc="' + di + '" title="Turn every page of this file a quarter turn to the right">⟳ Turn all pages</button>' : '') + (one ? moveLink(af) + replaceLink(af) : '') + (on ? '<button class="link" data-inout="' + di + '" title="Keep this file off the screen and out of what goes back. Bring back undoes it.">Leave out</button>' : '') + (one ? removeLink(af) : ''));
-    paper.appendChild(head);
+    if (oneFile) whoHead(paper, head); else paper.appendChild(head);
     if (!on && !auto) continue;   // left out on purpose: just the bar
     for (const [path, p] of d.pages) {
       if (token !== openToken) return;
@@ -88,11 +101,11 @@ async function openStudent(i, filePath) {
       await scanCheck(f, p, page);
       if (token !== openToken) return;
       const vp = vpRot(f, p, page, 1);
-      const pg = { file: f, idx: p, page, W: vp.width, H: vp.height, side: sideFor(vp.width), marks: () => (f.marks[p] ||= []) };
+      const pg = { file: f, idx: p, page, W: vp.width, H: vp.height, side: sideScreen(vp.width), marks: () => (f.marks[p] ||= []) };
       const wrap = document.createElement('div'); wrap.className = 'pg';
       if (!on) wrap.style.opacity = '.75';
       const c = document.createElement('canvas');
-      wrap.appendChild(c); paper.appendChild(wrap);
+      sheetOff(); wrap.appendChild(c); paper.appendChild(wrap);
       pg.wrap = wrap; pg.canvas = c;
       pages.push(pg);
       lightChip(pg); lightChips(); rotChip(pg, d.pages.length > 1 ? d.pages.findIndex(x => x[0] === path && x[1] === p) + 1 : 0); scanNote(pg);
@@ -103,8 +116,19 @@ async function openStudent(i, filePath) {
       if (filePath && f.path === filePath && p === 0) (d.pages[0][0] === filePath ? head : wrap).scrollIntoView({ block: 'start' });   // from its bar, with Mark late and Remove in view
     }
   }
+  sheetOff();
   goneList(st);
   renderTools();
+}
+// A paper that is one file: the file's name joins the student's bar and its ⋯ joins the paper's, so the page starts a line higher.
+function whoHead(paper, head) {
+  const who = paper.querySelector('.who'), sp = who && who.querySelector('.whosp'), menu = who && who.querySelector('#whoMore + .km');
+  if (!sp || !menu) return paper.appendChild(head);
+  const own = head.querySelector('.kmw'), gap = head.querySelector('span[style="flex:1"]');
+  if (own) { menu.insertAdjacentHTML('beforeend', '<div class="kmhd">This file</div>'); for (const b of [...own.querySelector('.km').children]) menu.appendChild(b); own.remove(); }
+  if (gap) gap.remove();
+  head.classList.add('inl');
+  who.insertBefore(head, sp);
 }
 $('#paper').addEventListener('click', e => {
   if (!e.target.closest('#lmenu, [data-lmenu]') && $('#lmenu')) $('#lmenu').remove();
