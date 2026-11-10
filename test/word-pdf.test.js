@@ -178,7 +178,7 @@ test('all the Word papers at once: one she took a grade from stays a Word file, 
 
 test('the setting converts Word papers as an assignment opens, leaves a brought-back file alone, and turns off in Settings', async () => {
   const { page, close } = await openApp(browser);
-  await goTo(page, '#/settings');
+  await goTo(page, '#/settings/marking');
   await page.waitForSelector('#setWordPdf');
   assert.equal(await page.$eval('#setWordPdf [data-v="0"]', b => b.getAttribute('aria-pressed')), 'true', 'Word papers stay Word files until she says');
   const found = label => page.evaluate(label => { const r = window.__gs.findRows().find(r => r.label === label); return r ? r.group + ': ' + r.sub : null; }, label);
@@ -208,7 +208,7 @@ test('the setting converts Word papers as an assignment opens, leaves a brought-
   // and off again
   await page.click('#closeBtn');
   await page.waitForFunction(() => !window.__gs.state().batch);
-  await goTo(page, '#/settings');
+  await goTo(page, '#/settings/marking');
   await page.click('#setWordPdf [data-v="0"]');
   assert.equal(await page.evaluate(() => localStorage.getItem('gs.wordPdf')), null);
   assert.equal(await page.$eval('#setWordPdf [data-v="0"]', b => b.getAttribute('aria-pressed')), 'true');

@@ -1,0 +1,71 @@
+/* ---------- the sidebar and Find anything: the same on the grading page and on the Planner (shared styles only; each page has its own code) ---------- */
+.rail{flex:none;width:232px;display:flex;flex-direction:column;gap:2px;padding:16px 12px 12px;background:var(--surface);border-right:1px solid var(--line);overflow:hidden auto}
+.rail a{text-decoration:none;color:inherit}
+.rail svg{width:18px;height:18px;flex:none;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.rbrand{font-family:var(--f-display);font-weight:700;font-size:17px;letter-spacing:-.02em;padding:4px 10px 14px;color:var(--fg);white-space:nowrap}
+.rbrand i{font-style:normal;font-weight:500;color:var(--accent)}
+.rbrand .rs{display:none}
+.rfind{display:flex;align-items:center;gap:8px;width:100%;height:36px;padding:0 10px;margin:0 0 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--muted);font-size:14px;text-align:left}
+.rfind:hover{border-color:var(--line-strong);color:var(--fg)}
+.rfind kbd,.fbox kbd{margin-left:auto;flex:none;font:500 11px var(--f-body);border:1px solid var(--line-strong);border-radius:5px;padding:1px 5px;background:var(--surface);color:var(--muted);white-space:nowrap}
+.rnav{display:flex;align-items:center;gap:10px;width:100%;min-height:36px;padding:0 10px;border:0;border-radius:8px;background:none;color:var(--fg-2);font-weight:500;font-size:14px;text-align:left}
+.rnav:hover{background:var(--hover)}
+.rnav.on{background:var(--accent-soft);color:var(--accent);font-weight:600}
+.rnav.over{background:var(--accent-soft);box-shadow:0 0 0 2px var(--accent)}
+.rcap{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:16px 10px 6px}
+.rdot{width:8px;height:8px;border-radius:50%;flex:none}
+.rname{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rcnt{flex:none;font-size:12px;font-weight:500;color:var(--muted);font-variant-numeric:tabular-nums}
+.rnav.on .rcnt{color:var(--accent)}
+.radd{color:var(--muted)}
+.rail .sp{flex:1;min-height:12px}
+.rsaved{display:flex;gap:10px;align-items:flex-start;width:100%;padding:10px;border:0;border-radius:8px;background:none;color:var(--muted);font-size:12.5px;line-height:1.35;text-align:left}
+.rsaved:hover{background:var(--hover)}
+.rsaved .rdot{background:var(--ok);margin-top:5px}
+.rsaved.warn .rdot{background:var(--warn)}
+.rsaved.bad .rdot{background:var(--bad)}
+.rsaved b{display:block;color:var(--fg);font-weight:600}
+.rsaved.warn b{color:var(--warn)}
+.rsaved.bad b{color:var(--bad)}
+.rsaved .rl{display:block;flex:1;min-width:0;overflow-wrap:anywhere}
+
+/* while a paper is open the sidebar folds to a strip of icons, so the paper gets the room */
+:is(.shell.grading,.pfold) .rail{width:60px;padding:12px 8px;align-items:center;overflow:hidden auto}
+:is(.shell.grading,.pfold) .rail .rl{display:none}
+:is(.shell.grading,.pfold) .rbrand{padding:4px 0 12px}
+:is(.shell.grading,.pfold) .rbrand .rs{display:inline}
+:is(.shell.grading,.pfold) .rnav,:is(.shell.grading,.pfold) .rfind{justify-content:center;width:40px;min-height:40px;height:40px;padding:0;margin:0 0 2px;flex:none}
+:is(.shell.grading,.pfold) .rcap{width:24px;height:0;padding:0;margin:8px 0;border-top:1px solid var(--line)}
+:is(.shell.grading,.pfold) .radd{display:none}
+:is(.shell.grading,.pfold) #railClasses{display:flex;flex-direction:column;align-items:center}
+:is(.shell.grading,.pfold) .rdot{width:10px;height:10px}
+:is(.shell.grading,.pfold) .rsaved{justify-content:center;width:40px;padding:12px 0}
+:is(.shell.grading,.pfold) .rsaved .rdot{margin:0}
+@media (max-width:1100px){
+  .rail{width:60px;padding:12px 8px;align-items:center}
+  .rail .rl{display:none}
+  .rbrand{padding:4px 0 12px}
+  .rbrand .rs{display:inline}
+  .rnav,.rfind{justify-content:center;width:40px;min-height:40px;height:40px;padding:0;margin:0 0 2px;flex:none}
+  .rcap{width:24px;height:0;padding:0;margin:8px 0;border-top:1px solid var(--line)}
+  #railClasses{display:flex;flex-direction:column;align-items:center}
+  .rdot{width:10px;height:10px}
+  .rsaved{justify-content:center;width:40px;padding:12px 0}
+  .rsaved .rdot{margin:0}
+}
+/* ---------- Find anything ---------- */
+.finddlg{align-items:flex-start;padding-top:12vh;z-index:34}
+.fbox{width:min(640px,100%);max-height:min(560px,76vh);display:flex;flex-direction:column;background:var(--surface);border-radius:14px;box-shadow:0 4px 12px rgba(20,25,40,.12),0 24px 60px rgba(20,25,40,.28);overflow:hidden}
+.fin{display:flex;align-items:center;gap:12px;height:56px;flex:none;padding:0 18px;border-bottom:1px solid var(--line)}
+.fin svg{width:20px;height:20px;flex:none;fill:none;stroke:var(--muted);stroke-width:1.7;stroke-linecap:round}
+.fin input{flex:1;min-width:0;border:0;outline:0;background:none;font-size:17px;color:var(--fg)}
+#findList{flex:1;min-height:0;overflow:auto;padding:0 0 8px}
+.fcap{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:12px 18px 4px}
+.frow{display:flex;align-items:center;gap:12px;width:calc(100% - 12px);min-height:40px;margin:0 6px;padding:6px 12px;border:0;border-radius:8px;background:none;color:var(--fg);font-size:14px;text-align:left}
+.frow b{font-weight:500;white-space:nowrap}
+.frow span{flex:1;min-width:0;color:var(--muted);font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.frow.on{background:var(--accent-soft)}
+.frow.on b{color:var(--accent);font-weight:600}
+.fnone{padding:22px 18px;color:var(--muted)}
+.ffoot{display:flex;align-items:center;gap:14px;flex:none;height:40px;padding:0 18px;border-top:1px solid var(--line);background:var(--bg);font-size:12.5px;color:var(--muted)}
+.ffoot .sp{flex:1}

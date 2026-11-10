@@ -4241,7 +4241,9 @@ const routeOf = hash => {
       return { v: 'class', c, tab, stu };
     }
   }
-  if (p[0] === 'settings') return { v: 'settings' };
+  // from the Planner's sidebar, which knows a class only by the name on its timetable (spaces, dashes and capitals don’t count: “Course A 2” there is “CourseA2” here)
+  if (p[0] === 'class-named' && p[1]) { const nk = s => String(s || '').toLowerCase().replace(/[^a-z0-9]/g, ''), k = nk(p.slice(1).join('/')), c = k && lib.classes.find(c => nk(c.name) === k); return c ? { v: 'class', c, tab: '', stu: null, named: true } : { v: 'home', noClass: p.slice(1).join('/').slice(0, 60) }; }
+  if (p[0] === 'settings') return { v: 'settings', sec: SET_SECS.some(x => x[0] === p[1]) ? p[1] : 'saving' };
   if (p[0] === 'a' && p[1]) {
     const tab = A_TABS.some(t => t[0] && t[0] === p[2]) ? p[2] : '', sub = tab && (A_SUBS[tab] || []).includes(p[3]) ? p[3] : '';
     return { v: 'a', id: 'gs.b.' + p[1], tab, sub };
@@ -4249,6 +4251,10 @@ const routeOf = hash => {
   return { v: 'home' };
 };
 const routeNow = () => routeOf(location.hash);
+// Settings is one page per subject: #/settings is the first, #/settings/<key> the others.
+const SET_SECS = [['saving', 'Saving and carrying', 'Folder, take-home file, safety copies'], ['classes', 'Classes and rosters', 'Names, students, ManageBac links'], ['terms', 'Terms and weights', 'Your terms and how each type counts'],
+  ['grading', 'Grading scale and rubrics', 'Your saved scales and rubrics'], ['marking', 'Marking', 'Mark key, Word papers'], ['timetable', 'Timetable and calendar', 'Class times and days off, in the Planner'],
+  ['display', 'Display', 'Text size, zoom, dark mode'], ['claude', 'Working with Claude', 'Optional. What Claude can and can’t see'], ['keys', 'Keys', 'Every shortcut']];
 const CLASS_TABS = [['', 'Assignments'], ['gradebook', 'Gradebook'], ['students', 'Students'], ['charts', 'Charts']];
 const classHash = (c, tab, stu) => '#/class/' + (c === lib.loose || !c.id ? '-' : encodeURIComponent(c.id)) + (tab ? '/' + tab + (stu != null ? '/' + (stu + 1) : '') : '');
 // An open assignment has four screens: the papers (Mark), Grades, Insights and Return. Grades and Insights each have a second view.
@@ -4269,6 +4275,8 @@ function go(hash, replace) {
 let routeTok = 0, routeOpening = '', routeTab = null;
 function applyRoute() {
   const r = routeNow();
+  if (r.named) { go(classHash(r.c), true); return; }   // its own address from here on
+  if (r.noClass) { toast('There is no class called “' + r.noClass + '” in grading yet. “Add a class” in the sidebar makes one.', 7000); go('#/', true); return; }
   if (r.v === 'a') {
     if (batch && batch.id === r.id) return showScreen(r);
     if (routeOpening !== r.id) openRoute(r.id);

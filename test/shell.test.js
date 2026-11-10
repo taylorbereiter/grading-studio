@@ -29,7 +29,7 @@ test('the version number shows, and is set in one place', async () => {
 
 test('the app starts cleanly, and the Planner button, Dark mode and the sample papers still work', async () => {
   const { page, close } = await openApp(browser);
-  await goTo(page, '#/settings');
+  await goTo(page, '#/settings/display');
   await page.click('#vSettings .themeBtn');
   assert.equal(await page.evaluate(() => document.documentElement.dataset.theme), 'dark');
   await page.click('#vSettings .themeBtn');

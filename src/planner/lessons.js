@@ -307,10 +307,9 @@ async function openLessons() {
   if (!L.weekOf) L.weekOf = ymd(mondayOf(new Date()));
   try { const v = localStorage.getItem('gsp.view'); if (v === 'week' || v === 'semester' || v === 'units' || v === 'activities' || v === 'bank' || v === 'library') L.view = v; } catch { }
   renderLessons();
+  arriveAt();
   await folderReconnect(false);
 }
-// Grading Studio sits next to this page: index.html online, "Grading Studio.html" for the double-click copy.
-function closeLessons() { editorCommit(); location.href = /Planner\.html$/i.test(decodeURIComponent(location.pathname)) ? 'Grading Studio.html' : './'; }
 function renderLessons() {
   if (L.view === 'doc' && L.doc) return renderDoc();
   if (L.view === 'edit' && L.open) return renderEditor();
@@ -549,7 +548,6 @@ async function onLessonsClick(e) {
   if (t.dataset.addslide) return newSlide(t.dataset.addslide);
   if (t.dataset.unslot != null) { L.open.slots.splice(+t.dataset.unslot, 1); lessonChanged(false); return renderEditor(); }
   const a = t.dataset.a, l = L.open;
-  if (a === 'close') return closeLessons();
   if (a === 'wk') { L.weekOf = ymd(addDays(parseYmd(L.weekOf), +t.dataset.n)); return renderWeek(); }
   if (a === 'today') { L.weekOf = ymd(mondayOf(new Date())); return renderWeek(); }
   if (a === 'back') { editorCommit(); clearTimeout(lSaveT); if (L.open) await lPut(L.open); L.open = null; L.view = L.backTo || 'week'; L.backTo = null; return renderLessons(); }
@@ -1167,6 +1165,7 @@ async function folderReconnect(ask) {
   } catch { L.dirOk = false; }
   if (L.dirOk) { await folderRead(false); if (ask) await folderWriteAll(); }
   if (L.view === 'week') renderWeek(); else { const c = document.querySelector('#lessons [data-a="reconnect"],#lessons [data-a="sync"],#lessons [data-a="link"]'); if (c) c.outerHTML = folderChip(); }
+  railRender();
 }
 async function writeFile(dir, name, data) { const fh = await dir.getFileHandle(name, { create: true }); const w = await fh.createWritable(); await w.write(data); await w.close(); return (await fh.getFile()).lastModified; }
 // Where a slide's context screenshot is saved in the Planner folder.

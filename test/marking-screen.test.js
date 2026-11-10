@@ -229,6 +229,7 @@ test('the list’s filters: To score, Flagged, No paper, and Late once someone i
   assert.match(await page.$eval('#progS .ph', e => e.textContent.replace(/\s+/g, ' ')), /2 of 5 scored/);
   assert.deepEqual(await chips(page), ['All 5', 'To score 3', 'Flagged 0', 'No paper 1']);
   assert.deepEqual(await rows(page), [0, 1, 2, 3, 4]);
+  await settle(page);   // the scores just given are saved before the filters are tried
   const before = await stored(page);
   await press(page, '[data-lf="todo"]');
   assert.deepEqual(await rows(page), [0, 2, 3, 4], 'the paper she is on stays, then the three with no score');
