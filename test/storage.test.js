@@ -3,7 +3,7 @@ const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs'), path = require('path');
 const { launch } = require('./helpers/chrome');
-const { builtHtml, tmpDir, openApp, answerDlg, appReady, openZip, pickFile, waitPaper, goToStudent, setTool, clickAt, score, settle, catchDownloads, idbRead } = require('./helpers/app');
+const { goTo, builtHtml, tmpDir, openApp, answerDlg, appReady, openZip, pickFile, waitPaper, goToStudent, setTool, clickAt, score, settle, catchDownloads, idbRead } = require('./helpers/app');
 const { standardFiles, makePaper, zipOf } = require('./helpers/fixtures');
 const { loadLegacy } = require('./helpers/legacy');
 const { linkFolder, folderWait, folderRead, folderList, wipeBrowser, takeHome, openFile, bringIt } = require('./helpers/carry');
@@ -58,7 +58,7 @@ test('a download over 127 MB is really kept, reopens, and goes through the take-
 
     // the take-home file has it, and a file that big goes on the private file system
     await page.evaluate(async () => window.__gs.takeUse(await (await navigator.storage.getDirectory()).getFileHandle('big.gswork', { create: true })));
-    await page.click('#takeBtn'); await page.waitForSelector('#takeP1');
+    await goTo(page, '#/settings'); await page.click('#takeBtn'); await page.waitForSelector('#takeP1');
     assert.equal(await page.$('#takeLack'), null, 'nothing to warn about');
     for (const s of ['#takeP1', '#takeP2']) await page.$eval(s, e => { e.value = 'correct horse battery'; });
     await page.click('#takeGo');
@@ -105,11 +105,11 @@ test('a small download stays one record, as it always was', async () => {
 test('the take-home dialog and its result both say which downloads have no papers to carry', async () => {
   const { page, close } = await openApp(browser, { seed: { idb: { 'grading-studio-keep': { version: 2, stores: { papers: [], edits: [], work: [['gs.b.nope', { t: 5, s: {} }]], meta: [['gs.b.nope', { id: 'gs.b.nope', name: 'Unit test essays', n: 3, t: 5, scored: 0 }]] } } } } });
   await page.waitForFunction(() => window.__gs.kept().size === 1);
-  await page.click('#takeBtn'); await page.waitForSelector('#takeP1');
+  await goTo(page, '#/settings'); await page.click('#takeBtn'); await page.waitForSelector('#takeP1');
   assert.match(await page.$eval('#takeLack', e => e.textContent), /Unit test essays/);
   await page.click('#dlgBox [data-close]');
   await page.evaluate(async () => window.__gs.takeUse(await (await navigator.storage.getDirectory()).getFileHandle('t.gswork', { create: true })));
-  await page.click('#takeBtn'); await page.waitForSelector('#takeP1');
+  await goTo(page, '#/settings'); await page.click('#takeBtn'); await page.waitForSelector('#takeP1');
   for (const s of ['#takeP1', '#takeP2']) await page.$eval(s, e => { e.value = 'correct horse battery'; });
   await page.click('#takeGo');
   await page.waitForSelector('#takeDone', { timeout: 120000 });
@@ -122,7 +122,7 @@ test('with the save dialog blocked, the take-home file still comes, as a plain d
   await openZip(page, zip); await settle(page); await closeUp(page);
   await page.evaluate(() => { window.showSaveFilePicker = async () => { throw new DOMException('Blocked by policy', 'SecurityError'); }; });
   const dl = await catchDownloads(page);
-  await page.click('#takeBtn'); await page.waitForSelector('#takeP1');
+  await goTo(page, '#/settings'); await page.click('#takeBtn'); await page.waitForSelector('#takeP1');
   for (const s of ['#takeP1', '#takeP2']) await page.$eval(s, e => { e.value = 'correct horse battery'; });
   const got = await dl.next(() => page.click('#takeGo'));
   assert.match(got.name, /\.gswork$/);
@@ -258,7 +258,7 @@ async function removeCase(a, b) {
   await b.page.waitForFunction(() => window.__gs.kept().size === 1 || !!document.querySelector('#removeBtn'));
   await b.page.evaluate(() => window.__gs.reloadKept());
   const moved = a.page.waitForNavigation({ timeout: 30000 }), nav = b.page.waitForNavigation({ timeout: 30000 });
-  await b.page.click('#removeBtn');
+  await goTo(b.page, '#/settings'); await b.page.click('#removeBtn');
   await answerDlg(b.page, { typed: 'REMOVE' });
   await nav; await moved;
   await appReady(a.page); await appReady(b.page);
@@ -282,6 +282,7 @@ test('an old tab that missed the news still can’t save after Remove from this 
   await a.page.evaluate(() => { window.__hold = e => e.stopImmediatePropagation(); window.addEventListener('storage', window.__hold, true); });   // asleep in the background
   await b.page.bringToFront();
   await b.page.evaluate(() => window.__gs.reloadKept());
+  await goTo(b.page, '#/settings');
   const nav = b.page.waitForNavigation({ timeout: 30000 });
   await b.page.click('#removeBtn');
   await answerDlg(b.page, { typed: 'REMOVE' });

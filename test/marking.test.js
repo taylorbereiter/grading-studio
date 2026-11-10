@@ -500,6 +500,7 @@ test('every kind of highlight turns with the page, and four turns bring it back'
 
 test('the screen, the export and an editable export reopened all agree', async () => {
   const { page, close } = await openApp(browser);
+  await page.setViewport({ width: 1560, height: 950 });   // the paper as wide as it was before the sidebar took 60px: the spots below are small, and where they land depends on that width
   const dl = await catchDownloads(page);
   await open(page);
   await threeHighlights(page, true);

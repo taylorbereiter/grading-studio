@@ -4,7 +4,7 @@ const assert = require('node:assert/strict');
 const { PDFDocument } = require('pdf-lib');
 const { unzipSync, strFromU8 } = require('fflate');
 const { launch } = require('./helpers/chrome');
-const { MARK_BOXES, openApp, answerDlg, openZip, pickFile, waitPaper, appReady, goToStudent, setTool, drag, settle, catchDownloads, probePdf, probeScreen, workOf, idbRead } = require('./helpers/app');
+const { classPage, MARK_BOXES, openApp, answerDlg, openZip, pickFile, waitPaper, appReady, goToStudent, setTool, drag, settle, catchDownloads, probePdf, probeScreen, workOf, idbRead } = require('./helpers/app');
 const { loadLegacy, noEmpty } = require('./helpers/legacy');
 const { makePaper, zipOf } = require('./helpers/fixtures');
 const { takeHome, openFile, bringIt, openZipBackup } = require('./helpers/carry');
@@ -203,6 +203,7 @@ test('units from when they were shared across classes move into each class', asy
   const c = got.classes.find(x => x.id === 'cls00001');
   assert.equal(c.units[0].name, 'Poetry'); assert.equal(c.units[0].items[0].name, 'Poem one');
   assert.equal(got.loose.units[0].items[0].name, 'Poem two');
+  await classPage(page, 'cls00001');
   assert.match(await page.$eval('#classes', e => e.textContent), /Poem one/);
   await close();
 });

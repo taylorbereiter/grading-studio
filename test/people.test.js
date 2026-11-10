@@ -2,7 +2,7 @@
 const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const { launch } = require('./helpers/chrome');
-const { openApp, openZip, score, settle } = require('./helpers/app');
+const { classPage, openApp, openZip, score, settle } = require('./helpers/app');
 const { makePaper, zipOf } = require('./helpers/fixtures');
 
 let browser;
@@ -68,6 +68,7 @@ test('a pasted roster with ID and email columns keeps them as details, not in th
     const G = window.__gs; return G.parseRosterRows ? G.parseRosterRows('Name\tStudent ID\tEmail\nAlpha, Ann\t20477\tann@example.org\nBen Beta\t20481\tben@example.org') : null;
   });
   if (out) assert.deepEqual(out, [{ name: 'Alpha Ann', id: '20477', email: 'ann@example.org' }, { name: 'Ben Beta', id: '20481', email: 'ben@example.org' }]);
+  await classPage(page, 0);
   await page.click('[data-edit-class="0"]');
   await page.$eval('#cNames', e => { e.value = 'Alpha, Ann\t20477\tann@example.org\nBen Beta\t20481\tben@example.org'; });
   await page.click('#dlgBox [data-ok]');

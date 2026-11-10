@@ -697,7 +697,7 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
 .btn.danger:hover{background:var(--warn);opacity:.88}
 
 /* a smaller, even tool bar when the middle column is narrow, so the tools don't crowd the paper */
-@media (max-width:1360px){
+@media (max-width:1420px){
   .tools{margin:10px 10px 0;padding:5px 6px;gap:2px}
   .tool{padding:7px}
   .tool .lb{display:none}
@@ -1278,53 +1278,254 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
 .whob::before{content:"i"}
 .bknm .whob,.bkstu .whob{margin-left:6px}
 
+/* ---------- the frame: a sidebar that is always there, and one screen beside it (11/9) ---------- */
+.shell{display:flex;height:calc(100vh - var(--savebar,0px));min-width:0}
+.shellmain{flex:1;min-width:0;height:100%;overflow:auto;position:relative}
+.shell .app{height:100%}
+.rail{flex:none;width:232px;display:flex;flex-direction:column;gap:2px;padding:16px 12px 12px;background:var(--surface);border-right:1px solid var(--line);overflow:hidden auto}
+.rail a{text-decoration:none;color:inherit}
+.rail svg{width:18px;height:18px;flex:none;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.rbrand{font-family:var(--f-display);font-weight:700;font-size:17px;letter-spacing:-.02em;padding:4px 10px 14px;color:var(--fg);white-space:nowrap}
+.rbrand i{font-style:normal;font-weight:500;color:var(--accent)}
+.rbrand .rs{display:none}
+.rfind{display:flex;align-items:center;gap:8px;width:100%;height:36px;padding:0 10px;margin:0 0 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--muted);font-size:14px;text-align:left}
+.rfind:hover{border-color:var(--line-strong);color:var(--fg)}
+.rfind kbd,.fbox kbd{margin-left:auto;flex:none;font:500 11px var(--f-body);border:1px solid var(--line-strong);border-radius:5px;padding:1px 5px;background:var(--surface);color:var(--muted);white-space:nowrap}
+.rnav{display:flex;align-items:center;gap:10px;width:100%;min-height:36px;padding:0 10px;border:0;border-radius:8px;background:none;color:var(--fg-2);font-weight:500;font-size:14px;text-align:left}
+.rnav:hover{background:var(--hover)}
+.rnav.on{background:var(--accent-soft);color:var(--accent);font-weight:600}
+.rnav.over{background:var(--accent-soft);box-shadow:0 0 0 2px var(--accent)}
+.rcap{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:16px 10px 6px}
+.rdot{width:8px;height:8px;border-radius:50%;flex:none}
+.rname{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rcnt{flex:none;font-size:12px;font-weight:500;color:var(--muted);font-variant-numeric:tabular-nums}
+.rnav.on .rcnt{color:var(--accent)}
+.radd{color:var(--muted)}
+.rail .sp{flex:1;min-height:12px}
+.rsaved{display:flex;gap:10px;align-items:flex-start;width:100%;padding:10px;border:0;border-radius:8px;background:none;color:var(--muted);font-size:12.5px;line-height:1.35;text-align:left}
+.rsaved:hover{background:var(--hover)}
+.rsaved .rdot{background:var(--ok);margin-top:5px}
+.rsaved.warn .rdot{background:var(--warn)}
+.rsaved.bad .rdot{background:var(--bad)}
+.rsaved b{display:block;color:var(--fg);font-weight:600}
+.rsaved.warn b{color:var(--warn)}
+.rsaved.bad b{color:var(--bad)}
+.rsaved .rl{display:block;flex:1;min-width:0;overflow-wrap:anywhere}
+
+/* while a paper is open the sidebar folds to a strip of icons, so the paper gets the room */
+.shell.grading .rail{width:60px;padding:12px 8px;align-items:center;overflow:hidden auto}
+.shell.grading .rail .rl{display:none}
+.shell.grading .rbrand{padding:4px 0 12px}
+.shell.grading .rbrand .rs{display:inline}
+.shell.grading .rnav,.shell.grading .rfind{justify-content:center;width:40px;min-height:40px;height:40px;padding:0;margin:0 0 2px;flex:none}
+.shell.grading .rcap{width:24px;height:0;padding:0;margin:8px 0;border-top:1px solid var(--line)}
+.shell.grading .radd{display:none}
+.shell.grading #railClasses{display:flex;flex-direction:column;align-items:center}
+.shell.grading .rdot{width:10px;height:10px}
+.shell.grading .rsaved{justify-content:center;width:40px;padding:12px 0}
+.shell.grading .rsaved .rdot{margin:0}
+@media (max-width:1100px){
+  .rail{width:60px;padding:12px 8px;align-items:center}
+  .rail .rl{display:none}
+  .rbrand{padding:4px 0 12px}
+  .rbrand .rs{display:inline}
+  .rnav,.rfind{justify-content:center;width:40px;min-height:40px;height:40px;padding:0;margin:0 0 2px;flex:none}
+  .rcap{width:24px;height:0;padding:0;margin:8px 0;border-top:1px solid var(--line)}
+  #railClasses{display:flex;flex-direction:column;align-items:center}
+  .rdot{width:10px;height:10px}
+  .rsaved{justify-content:center;width:40px;padding:12px 0}
+  .rsaved .rdot{margin:0}
+}
+@media (max-width:760px){.shell{height:auto;min-height:100vh}.shellmain{height:auto;overflow:visible}.shell .app{height:auto}}
+
+/* the top bar while grading: the class, then the assignment */
+.shell .top .title{display:none}
+.crumb{flex:none;font-weight:600;font-size:14px;color:var(--fg-2);text-decoration:none;white-space:nowrap}
+.crumb:hover{color:var(--accent)}
+.crumb::after{content:"/";margin:0 0 0 8px;color:var(--faint);font-weight:400}
+.top .batch{color:var(--fg);font-weight:600}
+
+/* ---------- Home, a class, Settings ---------- */
+.start{max-width:1240px;padding:24px 28px 60px}
+.vhead{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin:0 0 18px}
+.vhead h1,.clshead h1{font-size:24px}
+.vhead .sp,.clshead .sp{flex:1}
+#whereTop{margin:0 0 14px;font-size:14px}
+.vopening{padding:80px 0;text-align:center}
+.vhint{font-size:13px;margin:14px 2px 0}
+.hgrid{display:grid;grid-template-columns:minmax(0,1fr);gap:20px;align-items:start}
+.hgrid:has(.hside:not([hidden])){grid-template-columns:minmax(0,1fr) 320px}
+@media (max-width:1280px){.hgrid:has(.hside:not([hidden])){grid-template-columns:minmax(0,1fr)}}
+.hmain{min-width:0}
+.start .lib.today{margin:0 0 16px}
+.schip{display:inline-flex;align-items:center;font-size:12px;font-weight:600;line-height:1.3;padding:2px 8px;border-radius:999px;background:var(--surface-2);color:var(--fg-2);white-space:nowrap}
+.schip.ok{background:var(--ok-soft);color:var(--ok)}
+.schip.on{background:var(--accent-soft);color:var(--accent)}
+.schip.warn{background:var(--warn-soft);color:var(--warn)}
+.sbar{display:inline-block;flex:none;width:96px;height:6px;border-radius:3px;background:var(--track);overflow:hidden}
+.sbar i{display:block;height:100%;background:var(--accent);border-radius:3px}
+.krow{gap:10px}
+.krow .kw{font-size:12.5px;color:var(--fg-2);font-weight:500}
+.kst{display:flex;align-items:center;gap:8px;flex:none}
+.krow.first{border-color:var(--line);box-shadow:var(--shadow);padding:18px 20px}
+.krow.first .kn b{font-size:20px;letter-spacing:-.02em}
+.krow.first .kn{gap:2px}
+.krow.first [data-kopen]{padding:10px 18px;font-size:15px;font-weight:600}
+.krow.first .sbar{width:140px}
+.krow [data-kforget]{border-color:transparent;background:none;color:var(--muted)}
+.krow [data-kforget]:hover{background:var(--surface-2);color:var(--fg)}
+@media (max-width:900px){.kst .sbar{display:none}}
+.ncard{background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.nhead{display:flex;align-items:center;gap:10px;padding:14px 16px 12px}
+.nhead h2{font-family:var(--f-display);font-size:15px;margin:0}
+.nrow{display:flex;align-items:center;gap:10px;width:100%;padding:11px 16px;border:0;border-top:1px solid var(--line);background:none;color:inherit;font-size:14px;text-align:left;text-decoration:none}
+button.nrow:hover,a.nrow:hover{background:var(--hover)}
+.nrow .nt{flex:1;min-width:0}
+.nrow b{display:block;font-weight:600}
+.nrow .ns{display:block;font-size:12.5px;color:var(--muted);overflow-wrap:anywhere}
+.nrow svg{width:16px;height:16px;flex:none;fill:none;stroke:var(--muted);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+
+/* a class page: its units down the page, one row per assignment */
+.cls{background:none;border:0;border-radius:0;padding:0;margin:0}
+.clshead{align-items:center;gap:8px;margin:0 0 16px}
+.clshead h1{margin-right:4px}
+.board{flex-direction:column;align-items:stretch;gap:14px;overflow:visible;padding:0}
+.unit{flex:none;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:0;gap:0;overflow:hidden}
+.unit.ins{box-shadow:0 -4px 0 var(--accent)}
+.cls .board.insEnd{box-shadow:0 4px 0 var(--accent)}
+.uhead{padding:11px 10px 11px 16px;gap:8px;font-size:15px}
+.uhead .nm{flex:none;max-width:60%}
+.uhead .sp{flex:1}
+.ucount{font:400 12.5px var(--f-body);color:var(--muted)}
+.uhead .atl{margin:0;padding:0;font-family:var(--f-body);font-weight:400}
+.unit .cards{gap:0;min-height:0;border-radius:0}
+.unit .card{display:grid;grid-template-columns:minmax(0,1.3fr) 96px minmax(0,1.6fr) auto;gap:14px;align-items:center;border:0;border-top:1px solid var(--line);border-radius:0;box-shadow:none;padding:10px 16px}
+.unit .card.ins{box-shadow:inset 0 3px 0 var(--accent)}
+.unit .cards.insEnd{box-shadow:inset 0 -3px 0 var(--accent)}
+.unit .card.over{outline-offset:-2px}
+.cmain{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}
+.unit .card .t{font-weight:600}
+.unit .card .m{margin:0;font-size:12.5px;min-width:0}
+.cdue{font-size:13px;color:var(--muted);white-space:nowrap}
+.cstate{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}
+.unit .card .row{justify-content:flex-end;flex-wrap:nowrap}
+.unit .addcard{border:0;border-top:1px solid var(--line);border-radius:0;padding:10px 16px;text-align:left;color:var(--accent)}
+.unit .addcard:hover{background:var(--hover);color:var(--accent)}
+.board>.empty-note{background:var(--surface);border:1px dashed var(--line-strong);border-radius:12px;padding:22px 18px}
+@media (max-width:1100px){.unit .card{grid-template-columns:minmax(0,1fr) auto}.cdue:empty{display:none}.unit .card .row{justify-content:flex-start;flex-wrap:wrap}}
+
+/* Settings: one card per subject */
+.setsec{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin:0 0 14px}
+.setsec .lhead{margin-bottom:8px;align-items:center}
+.setsec .lhead:only-child{margin-bottom:0}
+.setsec h2{font-size:17px}
+
+/* ---------- Find anything ---------- */
+.finddlg{align-items:flex-start;padding-top:12vh;z-index:34}
+.fbox{width:min(640px,100%);max-height:min(560px,76vh);display:flex;flex-direction:column;background:var(--surface);border-radius:14px;box-shadow:0 4px 12px rgba(20,25,40,.12),0 24px 60px rgba(20,25,40,.28);overflow:hidden}
+.fin{display:flex;align-items:center;gap:12px;height:56px;flex:none;padding:0 18px;border-bottom:1px solid var(--line)}
+.fin svg{width:20px;height:20px;flex:none;fill:none;stroke:var(--muted);stroke-width:1.7;stroke-linecap:round}
+.fin input{flex:1;min-width:0;border:0;outline:0;background:none;font-size:17px;color:var(--fg)}
+#findList{flex:1;min-height:0;overflow:auto;padding:0 0 8px}
+.fcap{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:12px 18px 4px}
+.frow{display:flex;align-items:center;gap:12px;width:calc(100% - 12px);min-height:40px;margin:0 6px;padding:6px 12px;border:0;border-radius:8px;background:none;color:var(--fg);font-size:14px;text-align:left}
+.frow b{font-weight:500;white-space:nowrap}
+.frow span{flex:1;min-width:0;color:var(--muted);font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.frow.on{background:var(--accent-soft)}
+.frow.on b{color:var(--accent);font-weight:600}
+.fnone{padding:22px 18px;color:var(--muted)}
+.ffoot{display:flex;align-items:center;gap:14px;flex:none;height:40px;padding:0 18px;border-top:1px solid var(--line);background:var(--bg);font-size:12.5px;color:var(--muted)}
+.ffoot .sp{flex:1}
+/* Home: the open box sits under the work in a narrower column now, so its buttons go below its words */
+.hmain .today:not([hidden])~.drop{grid-template-columns:minmax(0,1fr)}
+.hmain .today:not([hidden])~.drop .row{grid-column:1;grid-row:auto;justify-content:flex-start;margin-top:8px}
+/* The folded sidebar takes 60px beside the paper. On a small laptop the tools still fit on one row: a little less padding, slightly narrower side columns. */
+@media (min-width:1101px) and (max-width:1340px){
+  .shell.grading .cols{grid-template-columns:calc(220px * var(--uz)) minmax(0,1fr) calc(296px * var(--uz))}
+  .shell.grading .tool{padding:7px 5px}
+  .shell.grading .tools{gap:1px}
+}
+
 </style>
 
-<!-- start -->
+<!-- the frame: a sidebar that is always there, and one screen beside it -->
+<div class="shell" id="shell">
+<nav class="rail" id="rail" aria-label="Main">
+  <a class="rbrand" href="#/" aria-label="Grading Studio, Home"><span class="rl">Grading <i>Studio</i></span><span class="rs" aria-hidden="true">G<i>S</i></span></a>
+  <button class="rfind" id="findBtn" aria-haspopup="dialog" title="Find a student, an assignment, a tool or a setting"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5"/></svg><span class="rl">Find anything</span><kbd class="rl" id="findKey">Ctrl K</kbd></button>
+  <a class="rnav" data-nav="home" href="#/" title="Home"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11l8-7 8 7v8a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1z"/></svg><span class="rl">Home</span></a>
+  <a class="rnav" id="lessonsBtn" href="planner.html" title="Plan units and lessons. The Planner is a separate page and never sees grading work."><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M8 3v4M16 3v4"/></svg><span class="rl">Planner</span></a>
+  <div class="rcap"><span class="rl">Classes</span></div>
+  <div id="railClasses"></div>
+  <button class="rnav radd" id="addClass" title="Add a class"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span class="rl">Add a class</span></button>
+  <span class="sp"></span>
+  <button class="rsaved" id="railSaved" data-wopen></button>
+  <a class="rnav" data-nav="settings" href="#/settings" title="Settings"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg><span class="rl">Settings</span></a>
+</nav>
+<div class="shellmain" id="shellMain">
+<!-- every screen but the paper: Home, a class, Settings -->
 <div class="start" id="start">
-  <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap"><h1>Grading <i>Studio</i></h1><span style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><span class="gAcct"></span><button class="btn sm" id="lessonsBtn" title="Plan units and lessons. The Planner is a separate page and never sees grading work.">Planner</button><button class="btn sm themeBtn">Dark mode</button></span></div>
-  <p class="sub">Open a ManageBac download, mark each paper, score it, and get everything back out in the same folders. Your work stays on this computer.</p>
   <p class="bootnote" id="bootNote" role="alert" hidden></p>
-  <section class="lib today" hidden>
-    <div class="lhead"><h2>Pick up where you left off</h2><span class="muted">Newest first. Kept in this browser until you click Forget.</span></div>
-    <div class="kept" id="kept"></div>
-    <button class="link" id="keptAll" hidden></button>
-  </section>
-  <div class="drop" id="drop">
-    <h2>Open a ManageBac download</h2>
-    <p>The ZIP, or the unzipped folder with one folder per student.</p>
-    <div class="row">
-      <button class="btn primary" id="pickFiles">Choose the ZIP or PDFs…</button>
-      <button class="btn" id="pickFolder">Choose a folder…</button>
-      <button class="btn" id="pickDrive">Open from Google Drive…</button>
-      <button class="btn" id="pickScan">Split a scan of everyone’s papers…</button>
-      <button class="btn" id="pickMatch">Match files to a roster…</button>
+  <p id="whereTop" hidden></p>
+  <section class="view" id="vOpening" hidden><p class="muted vopening" role="status">Opening your papers…</p></section>
+  <section class="view" id="vHome">
+    <header class="vhead"><h1>Home</h1><span class="muted" id="homeDate"></span><span class="sp"></span><span class="gAcct"></span></header>
+    <div class="hgrid">
+      <div class="hmain">
+        <section class="lib today" hidden>
+          <div class="lhead"><h2>Pick up where you left off</h2><span class="muted" id="keptSay">Newest first. Kept in this browser until you click Forget.</span></div>
+          <div class="kept" id="kept"></div>
+          <button class="link" id="keptAll" hidden></button>
+        </section>
+        <div class="drop" id="drop">
+          <h2>Open a ManageBac download</h2>
+          <p>The ZIP, or the unzipped folder with one folder per student. You can also drop it anywhere on this page.</p>
+          <div class="row">
+            <button class="btn primary" id="pickFiles">Choose the ZIP or PDFs…</button>
+            <button class="btn" id="pickFolder">Choose a folder…</button>
+            <button class="btn" id="pickDrive">Open from Google Drive…</button>
+            <button class="btn" id="pickScan">Split a scan of everyone’s papers…</button>
+            <button class="btn" id="pickMatch">Match files to a roster…</button>
+          </div>
+          <input type="file" id="fileIn" multiple hidden>
+          <input type="file" id="dirIn" webkitdirectory multiple hidden>
+        </div>
+      </div>
+      <aside class="hside" id="needs" hidden></aside>
     </div>
-    <input type="file" id="fileIn" multiple hidden>
-    <input type="file" id="dirIn" webkitdirectory multiple hidden>
-  </div>
-  <p id="whereTop" hidden style="margin:10px 0 14px;font-size:14px"></p>
-  <section class="lib">
-    <div class="lhead"><h2>Classes</h2><span class="muted">Each class has its roster and its own units. Drag assignments between units or into another class, and drag a unit’s name to move the unit. Drop a ManageBac ZIP on an assignment to open it there.</span><span class="sp"></span><button class="btn sm" id="addClass">+ Class</button></div>
+    <details class="how">
+      <summary>How it works</summary>
+      <ol class="steps">
+        <li><span class="n">1</span><span><b>Mark.</b> Pen, highlight, text, check marks, and comments that sit in the margin with a line to the spot. Arrange pages lets you combine a student’s files and drag pages into order.</span></li>
+        <li><span class="n">2</span><span><b>Score.</b> Type a total, or click 0 to 4 on each rubric row (half points too). Or bring in your own rubric (Word, PDF or picture) once and grade right on each student’s copy. Students stay in their folder order.</span></li>
+        <li><span class="n">3</span><span><b>Enter grades.</b> Open the Grades list and go down it in ManageBac. Click any score or comment to copy it. Marked in Kami instead? The Grade sheet finds what you typed, like “9 = 85%”, and shows a crop of it for every student. Files with no marks are left out as extra papers, and you can bring them back.</span></li>
+        <li><span class="n">4</span><span><b>Return.</b> Export gives you the marked files in the same student folders.</span></li>
+      </ol>
+    </details>
+    <p class="foot">Your marks, scores, units and rosters are kept in this browser, so you can close the tab and come back to pick up where you left off. <button class="link" id="sample">Try it with sample papers</button></p>
+    <p class="foot gsVer"></p>
+  </section>
+  <section class="view" id="vClass" hidden>
     <div id="classes"></div>
+    <p class="muted vhint" id="classHint">Drag an assignment to another unit, or onto a class in the sidebar. Drag a unit’s name to move the unit. Drop a ManageBac ZIP on an assignment to open it there.</p>
   </section>
-  <section class="lib">
-    <div class="lhead"><h2>Saving and carrying</h2><span class="muted">Everything above lives in this browser at this address. A linked folder keeps a second copy by itself. A take-home file carries all of it to another computer and back, protected by a passphrase.</span><span class="sp"></span><button class="btn sm" id="takeBtn">Take my work with me</button><button class="btn sm" id="restoreBtn">Bring work in…</button><button class="btn sm" id="removeBtn">Remove from this computer</button></div>
-    <p id="whereLine" style="margin:0 0 6px;font-size:14px"></p>
-    <p class="muted" id="backupInfo" style="margin:0;font-size:13px"></p><input type="file" id="restoreIn" accept=".gswork,.zip,application/zip" hidden>
-    <div id="safetyList" hidden></div>
+  <section class="view" id="vSettings" hidden>
+    <header class="vhead"><h1>Settings</h1></header>
+    <section class="lib setsec" id="setSaving">
+      <div class="lhead"><h2>Saving and carrying</h2><span class="sp"></span><button class="btn sm" id="takeBtn">Take my work with me</button><button class="btn sm" id="restoreBtn">Bring work in…</button><button class="btn sm" id="removeBtn">Remove from this computer</button></div>
+      <p class="muted" style="margin:0 0 10px;font-size:13.5px;max-width:80ch">Your classes, papers, marks and scores live in this browser at this address. A linked folder keeps a second copy by itself. A take-home file carries all of it to another computer and back, protected by a passphrase.</p>
+      <p id="whereLine" style="margin:0 0 6px;font-size:14px"></p>
+      <p class="muted" id="backupInfo" style="margin:0;font-size:13px"></p><input type="file" id="restoreIn" accept=".gswork,.zip,application/zip" hidden>
+      <div id="safetyList" hidden></div>
+    </section>
+    <section class="lib setsec" id="setDisplay">
+      <div class="lhead"><h2>Display</h2><span class="muted">Light mode is the usual look. Text size and zoom apply while you grade.</span><span class="sp"></span><button class="btn sm themeBtn">Dark mode</button><button class="btn sm" id="setDisp">Text size and zoom</button></div>
+    </section>
+    <section class="lib setsec" id="setKeys">
+      <div class="lhead"><h2>Keys</h2><span class="muted">Every keyboard shortcut for marking and scoring.</span><span class="sp"></span><button class="btn sm" id="setKeysBtn">Show all keys</button></div>
+    </section>
+    <p class="foot gsVer"></p>
   </section>
-  <details class="how">
-    <summary>How it works</summary>
-    <ol class="steps">
-      <li><span class="n">1</span><span><b>Mark.</b> Pen, highlight, text, check marks, and comments that sit in the margin with a line to the spot. Arrange pages lets you combine a student’s files and drag pages into order.</span></li>
-      <li><span class="n">2</span><span><b>Score.</b> Type a total, or click 0 to 4 on each rubric row (half points too). Or bring in your own rubric (Word, PDF or picture) once and grade right on each student’s copy. Students stay in their folder order.</span></li>
-      <li><span class="n">3</span><span><b>Enter grades.</b> Open the Grades list and go down it in ManageBac. Click any score or comment to copy it. Marked in Kami instead? The Grade sheet finds what you typed, like “9 = 85%”, and shows a crop of it for every student. Files with no marks are left out as extra papers, and you can bring them back.</span></li>
-      <li><span class="n">4</span><span><b>Return.</b> Export gives you the marked files in the same student folders.</span></li>
-    </ol>
-  </details>
-  <p class="foot">Your marks, scores, units and rosters are kept in this browser, so you can close the tab and drop the same download in again to pick up where you left off. <button class="link" id="sample">Try it with sample papers</button></p>
-  <p class="foot gsVer"></p>
   <input type="file" id="asgIn" multiple hidden><input type="file" id="scanIn" accept=".pdf,application/pdf" hidden><input type="file" id="asgDirIn" webkitdirectory multiple hidden>
 </div>
 
@@ -1332,7 +1533,7 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
 <div class="app" id="app" hidden>
   <div class="top">
     <span class="title">Grading <i>Studio</i></span>
-    <span class="batch" id="batchName"></span><span class="savest" id="saveState" title="Your marks and scores are kept in this browser as you go"></span><button class="savewhere link" id="saveWhere"></button>
+    <a class="crumb" id="crumbClass" href="#/" hidden></a><span class="batch" id="batchName"></span><span class="savest" id="saveState" title="Your marks and scores are kept in this browser as you go"></span><button class="savewhere link" id="saveWhere"></button>
     <span class="sp"></span>
     <button class="btn sm ghost" id="sheetBtn">Grade sheet</button>
     <button class="btn sm ghost" id="gradesBtn">Grades list</button>
@@ -1370,7 +1571,7 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
         </div>
       </div>
     </div>
-    <button class="icon" id="closeBtn" title="Open a different download" aria-label="Open a different download"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+    <button class="icon" id="closeBtn" title="Close this assignment and go Home" aria-label="Close this assignment and go Home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
   </div>
   <div class="cols" id="cols">
     <button class="pbtn" id="colL" title="Hide the student list ( [ )" aria-label="Hide the student list"><span class="pa">‹</span><span class="pl">Students</span></button>
@@ -1383,6 +1584,8 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
     </section>
     <aside class="grade" id="grade"></aside>
   </div>
+</div>
+</div>
 </div>
 
 <div class="dlg" id="dlg" hidden><div class="box" id="dlgBox" role="dialog" aria-modal="true" tabindex="-1"></div></div>
@@ -2731,7 +2934,7 @@ function unzipInto(data, prefix, raw, depth) {
   }
 }
 async function intake(entries, label, assignment, fromKeep) {   // entries: [{ path, file|data }]
-  if (entries.length === 1 && /\.gswork$/i.test(entries[0].path)) return sayDlg('That’s a take-home file, not papers. To bring it in, use Bring work in under Saving and carrying on the start screen.');
+  if (entries.length === 1 && /\.gswork$/i.test(entries[0].path)) return sayDlg('That’s a take-home file, not papers. To bring it in, use Bring work in under Saving and carrying, in Settings.');
   const raw = [], zipProblems = []; zipSkipped = 0;
   for (const e of entries) {
     if (junk(e.path)) continue;
@@ -2800,7 +3003,7 @@ async function intake(entries, label, assignment, fromKeep) {   // entries: [{ p
   if (assignment) { assignment.batchId = id; assignment.opened = Date.now(); if (!assignment.setup || rub.toCard) assignment.setup = { ...setup, spot: undefined }; shareRubric(assignment); saveLib(); }
   keepWait = keepPapers(batch, label, fromKeep ? null : keepList, sameSize.length > 0);
   cur = 0; undoStack = []; selected = null;
-  $('#start').hidden = true; $('#app').hidden = false;
+  routeTok++; routeOpening = ''; go(batchHash(id), routeNow().v === 'a');   // from another open assignment (or this one's own address after a refresh): no extra step for Back
   setBatchName(); qzForget(); quizBtn();
   $('#trAllBtn').hidden = !CAN_TRANSCRIBE || !students.some(st => st.files.some(f => f.kind === 'media'));
   renderTools(); renderList(); renderTopAtlas(); openStudent(batch.restoredCur || 0);
@@ -6545,29 +6748,97 @@ function batchSummary(it) {
   if (m) return 'Last worked on ' + fmtDay(m.t) + ' · ' + (m.scored || 0) + ' of ' + (m.n - (m.off || 0)) + ' scored' + keptMore(m) + (m.papers ? '' : ' · drop the same ZIP to keep going');
   return 'Opened ' + d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) + (data ? ' · ' + n + ' scored' : '') + ' · drop the same ZIP to keep going';
 }
+/* ---------------- where she is: every screen has its own address, the part after # ---------------- */
+const routeOf = hash => {
+  let p; try { p = decodeURIComponent(String(hash || '').replace(/^#\/?/, '')).split('/'); } catch { p = ['']; }
+  if (p[0] === 'class' && p[1]) { const c = p[1] === '-' ? lib.loose : classById(p[1]); if (c) return { v: 'class', c }; }
+  if (p[0] === 'settings') return { v: 'settings' };
+  if (p[0] === 'a' && p[1]) return { v: 'a', id: 'gs.b.' + p[1] };
+  return { v: 'home' };
+};
+const routeNow = () => routeOf(location.hash);
+const classHash = c => '#/class/' + (c === lib.loose || !c.id ? '-' : encodeURIComponent(c.id));
+const batchHash = id => '#/a/' + encodeURIComponent(String(id).replace(/^gs\.b\./, ''));
+function reloadHome() { try { sessionStorage.setItem('gs.goHome', '1'); } catch {} location.reload(); }
+try { if (sessionStorage.getItem('gs.goHome')) { sessionStorage.removeItem('gs.goHome'); if (location.hash) history.replaceState(null, '', location.pathname + location.search); } } catch {}
+function go(hash, replace) {
+  if (location.hash !== hash && !(hash === '#/' && !location.hash)) {
+    if (replace) { try { history.replaceState(null, '', hash); } catch { location.replace(hash); } }
+    else location.hash = hash;
+  }
+  applyRoute();
+}
+let routeTok = 0, routeOpening = '';
+function applyRoute() {
+  const r = routeNow();
+  if (r.v === 'a') {
+    if (batch && batch.id === r.id) return showScreen(r);
+    if (routeOpening !== r.id) openRoute(r.id);
+    return;
+  }
+  routeTok++; routeOpening = '';
+  if (batch && !$('#app').hidden) { commitEditors(); saveNow(); closeDownload(true); }   // leaving the paper closes it, saved first. (Still hidden: a download on its way in, which shows itself when it's ready.)
+  showScreen(r);
+  if (r.v === 'class') renderLib();
+}
+async function openRoute(id) {
+  const tok = ++routeTok; routeOpening = id;
+  if (batch && !$('#app').hidden) { commitEditors(); saveNow(); closeDownload(true); }
+  showScreen({ v: 'opening' });
+  try { await keptFirst; await workerReady; } catch {}   // the list of kept work, and the PDF reader, which a click would have given time to start
+  const stale = () => tok !== routeTok;
+  if (stale()) return;
+  const m = keptMeta.get(id);
+  if (!m || !m.papers) { routeOpening = ''; if (m) toast('The papers for this one aren’t kept in this browser. Drop the download in again.', 6000); return go('#/', true); }
+  try { await reopenKept(id); } catch (e) { console.error(e); }
+  if (stale()) return;
+  routeOpening = '';
+  if (!batch || batch.id !== id) return go('#/', true);   // not opened (Not now, or its papers are gone)
+  showScreen(routeNow());
+}
+function showScreen(r) {
+  const grading = r.v === 'a' && !!batch;
+  $('#shell').classList.toggle('grading', grading);
+  $('#app').hidden = !grading; $('#start').hidden = grading;
+  for (const [id, v] of [['vHome', 'home'], ['vClass', 'class'], ['vSettings', 'settings'], ['vOpening', 'opening']]) $('#' + id).hidden = grading || r.v !== v;
+  if (!grading) $('#shellMain').scrollTop = 0;
+  railRender();
+}
+function keptState(m) {
+  const of = Math.max(0, (m.n || 0) - (m.off || 0)), done = Math.min(of, m.scored || 0), left = of - done;
+  return { of, done, left, pct: of ? Math.round(done / of * 100) : 0, label: !of ? '' : !left ? 'All scored' : done || m.partial ? 'Scoring' : 'Not started', cls: !of ? '' : !left ? 'ok' : done || m.partial ? 'on' : '' };
+}
+const stateChip = st => st.label ? '<span class="schip ' + st.cls + '">' + st.label + '</span>' : '';
+const stateBar = st => st.of ? '<span class="sbar" role="img" aria-label="' + st.done + ' of ' + st.of + ' scored"><i style="width:' + st.pct + '%"></i></span>' : '';
 function renderLib() {
   renderKept();
-  const card = it => '<div class="card" draggable="true" data-card="' + it.id + '"><div class="t">' + esc(it.name) + '</div>' +
-    (it.type || it.typed ? '<div class="bkpills">' + bkPill(it.type) + (it.typed ? '<span class="bkpill typed">Typed in</span>' : '') + '</div>' : '') +
-    '<div class="m">' + esc(it.typed && !it.batchId ? 'Scores typed in' + (it.due ? ' · due ' + bkDay(it.due) : '') : batchSummary(it)) + '</div>' +
-    '<div class="row">' + (it.batchId && (keptMeta.get(it.batchId) || {}).papers ? '<button class="btn sm primary" data-kopen="' + esc(it.batchId) + '" data-kasg="' + it.id + '">Open</button><button class="btn sm" data-open-asg="' + it.id + '">Other download…</button>'
-      : '<button class="btn sm primary" data-open-asg="' + it.id + '">Open download…</button>') + '<button class="btn sm" data-edit-asg="' + it.id + '">Edit</button></div></div>';
+  const card = it => {
+    const m = it.batchId ? keptMeta.get(it.batchId) : null, st = m ? keptState(m) : null;
+    return '<div class="card" draggable="true" data-card="' + it.id + '"><div class="cmain"><div class="t">' + esc(it.name) + '</div>' +
+      (it.type || it.typed ? '<div class="bkpills">' + bkPill(it.type) + (it.typed ? '<span class="bkpill typed">Typed in</span>' : '') + '</div>' : '') + '</div>' +
+      '<div class="cdue">' + (it.due ? 'Due ' + bkDay(it.due) : '') + '</div>' +
+      '<div class="cstate">' + (st ? stateBar(st) + stateChip(st) : '') + '<div class="m">' + esc(it.typed && !it.batchId ? 'Scores typed in' + (it.due ? ' · due ' + bkDay(it.due) : '') : batchSummary(it)) + '</div></div>' +
+      '<div class="row">' + (m && m.papers ? '<button class="btn sm primary" data-kopen="' + esc(it.batchId) + '" data-kasg="' + it.id + '">Open</button><button class="btn sm" data-open-asg="' + it.id + '">Other download…</button>'
+        : '<button class="btn sm primary" data-open-asg="' + it.id + '">Open download…</button>') + '<button class="btn sm" data-edit-asg="' + it.id + '">Edit</button></div></div>';
+  };
   const unit = u => '<div class="unit" draggable="true" data-unit="' + u.id + '">' +
-    '<div class="uhead" title="Drag to move this unit"><span class="nm">' + esc(u.name) + '</span><button class="icon" data-urename="' + u.id + '" title="Rename unit" aria-label="Rename unit">✎</button>' +
+    '<div class="uhead" title="Drag to move this unit"><span class="nm">' + esc(u.name) + '</span><span class="ucount">' + u.items.length + (u.items.length === 1 ? ' assignment' : ' assignments') + '</span><span class="sp"></span>' +
+    '<span class="atl">' + (u.atlas ? '<a href="' + esc(u.atlas) + '" target="_blank" rel="noopener noreferrer" title="' + esc(u.atlas) + '">Open in Atlas ↗</a><button class="link" data-uatlas="' + u.id + '">Change</button>'
+      : '<button class="link" data-uatlas="' + u.id + '">+ Link to Atlas</button>') + '</span>' +
+    '<button class="icon" data-urename="' + u.id + '" title="Rename unit" aria-label="Rename unit">✎</button>' +
     '<button class="icon" data-udel="' + u.id + '" title="Delete unit" aria-label="Delete unit">✕</button></div>' +
-    '<div class="atl">' + (u.atlas ? '<a href="' + esc(u.atlas) + '" target="_blank" rel="noopener noreferrer" title="' + esc(u.atlas) + '">Open in Atlas ↗</a><button class="link" data-uatlas="' + u.id + '">Change</button>'
-      : '<button class="link" data-uatlas="' + u.id + '">+ Link to Atlas</button>') + '</div>' +
     '<div class="cards">' + u.items.map(card).join('') + '</div>' +
     '<button class="addcard" data-additem="' + u.id + '">+ Assignment</button></div>';
-  const block = (c, ci) => '<div class="cls" data-cls="' + esc(c.id) + '"><div class="clshead"><h3>' + esc(ci < 0 ? 'No class' : c.name) + '</h3>' +
-    (ci < 0 ? '<span class="muted">Assignments with no roster. Drag them into a class.</span>' :
-      '<span class="muted">' + (c.names.length ? c.names.length + ' students on the roster' : 'No roster yet') + '</span>' + (c.names.length ? '<button class="btn sm primary" data-book="' + esc(c.id) + '">Gradebook</button>' : '') + '<button class="btn sm" data-edit-class="' + ci + '">' + (c.names.length ? 'Edit roster' : 'Add roster') + '</button>' + (c.names.length ? '<button class="btn sm" data-people="' + ci + '">Students</button>' : '') + mbClassBtns(c, ci) +
-      '<button class="icon" data-cmove="' + ci + ':-1" title="Move this class up" aria-label="Move this class up"' + (ci ? '' : ' disabled') + '>↑</button><button class="icon" data-cmove="' + ci + ':1" title="Move this class down" aria-label="Move this class down"' + (ci < lib.classes.length - 1 ? '' : ' disabled') + '>↓</button>') +
-    '<span class="sp"></span><button class="btn sm" data-addunit="' + esc(c.id) + '">+ Unit</button></div>' +
+  const block = (c, ci) => '<div class="cls" data-cls="' + esc(c.id) + '"><div class="clshead"><h1>' + esc(ci < 0 ? 'No class' : c.name) + '</h1>' +
+    (ci < 0 ? '<span class="muted">Assignments with no roster. Drag them onto a class in the sidebar, or use Edit to pick a class.</span><span class="sp"></span>' :
+      '<span class="muted">' + (c.names.length ? c.names.length + ' students on the roster' : 'No roster yet') + '</span><span class="sp"></span>' + mbClassBtns(c, ci) + (c.names.length ? '<button class="btn sm" data-book="' + esc(c.id) + '">Gradebook</button>' : '') + (c.names.length ? '<button class="btn sm" data-people="' + ci + '">Students</button>' : '') + '<button class="btn sm" data-edit-class="' + ci + '">' + (c.names.length ? 'Edit roster' : 'Add roster') + '</button>' +
+      '<button class="icon" data-cmove="' + ci + ':-1" title="Move this class up in the sidebar" aria-label="Move this class up in the sidebar"' + (ci ? '' : ' disabled') + '>↑</button><button class="icon" data-cmove="' + ci + ':1" title="Move this class down in the sidebar" aria-label="Move this class down in the sidebar"' + (ci < lib.classes.length - 1 ? '' : ' disabled') + '>↓</button>') +
+    '<button class="btn sm" data-addunit="' + esc(c.id) + '">+ Unit</button><button class="btn sm primary" data-newasg="' + esc(c.id) + '">+ Assignment</button></div>' +
     '<div class="board">' + (c.units.map(unit).join('') || '<div class="empty-note">No units yet. Click + Unit.</div>') + '</div></div>';
-  const loose = lib.loose.units.some(u => u.items.length);
-  $('#classes').innerHTML = lib.classes.map(block).join('') + (loose ? block(lib.loose, -1) : '') ||
-    '<div class="empty-note">No classes yet. Click + Class and paste or upload a class list.</div>';
+  const r = routeNow(), c = r.v === 'class' ? r.c : null;
+  $('#classes').innerHTML = c ? block(c, c === lib.loose ? -1 : lib.classes.indexOf(c)) : '';
+  if (r.v === 'class' && !c) go('#/', true);
+  railRender();
 }
 let ldrag = null;
 document.addEventListener('dragstart', e => {
@@ -6588,8 +6859,26 @@ function slot(list, e, horiz) {
 function libDragTarget(e) {
   if (!ldrag || !e.target.closest) return null;
   if (ldrag.kind === 'card') { const z = e.target.closest('.unit'); if (!z) return null; const cards = z.querySelector('.cards'); const list = [...cards.querySelectorAll('.card')]; return { unit: z.dataset.unit, k: slot(list, e, false), list, cards }; }
-  if (ldrag.kind === 'unit') { const z = e.target.closest('.cls'); if (!z) return null; const board = z.querySelector('.board'), list = [...board.querySelectorAll('.unit')]; return { cls: z.dataset.cls, k: slot(list, e, true), list, cards: board }; }
+  if (ldrag.kind === 'unit') { const z = e.target.closest('.cls'); if (!z) return null; const board = z.querySelector('.board'), list = [...board.querySelectorAll('.unit')]; return { cls: z.dataset.cls, k: slot(list, e, false), list, cards: board }; }
 }
+const railDragTarget = e => { const a = ldrag && e.target.closest && e.target.closest('#railClasses [data-railcls]'); return a ? holderById(a.dataset.railcls) : null; };
+document.addEventListener('dragover', e => { const c = railDragTarget(e); if (!c) return; e.preventDefault(); e.stopPropagation(); clearIns(); e.target.closest('[data-railcls]').classList.add('over'); }, true);
+document.addEventListener('drop', e => {
+  const to = railDragTarget(e); if (!to) return;
+  e.preventDefault(); e.stopPropagation(); clearIns();
+  if (ldrag.kind === 'card') {
+    const from = findItem(ldrag.id); if (!from || from.c === to) return;
+    let u = to.units.find(x => x.name === from.u.name); if (!u) to.units.push(u = { id: uid(), name: from.u.name, items: [] });
+    from.u.items.splice(from.u.items.indexOf(from.it), 1); u.items.push(from.it); from.it.classId = to.id;
+    toast('Moved to ' + (to === lib.loose ? 'No class' : to.name));
+  } else {
+    const from = findUnit(ldrag.id); if (!from || from.c === to) return;
+    from.c.units.splice(from.c.units.indexOf(from.u), 1); to.units.push(from.u);
+    for (const it of from.u.items) it.classId = to.id;
+    toast('Moved to ' + (to === lib.loose ? 'No class' : to.name));
+  }
+  ldrag = null; saveLib(); renderLib();
+}, true);
 document.addEventListener('dragover', e => {
   const t = libDragTarget(e); if (!t) return;
   e.preventDefault(); e.stopPropagation(); clearIns();
@@ -6638,8 +6927,8 @@ $('#asgIn').onchange = e => { const fs = [...e.target.files]; if (asgTarget && f
 $('#start').addEventListener('click', async e => {
   const b = e.target.closest('button'); if (!b) return;
   if (b.dataset.addunit != null) { const c = holderById(b.dataset.addunit); const name = await askTextDlg('Unit name', 'Unit ' + (c.units.length + 1), { ok: 'Add unit' }); if (name && name.trim()) { c.units.push({ id: uid(), name: name.trim(), items: [] }); saveLib(); renderLib(); } return; }
-  if (b.id === 'addClass') return editClass(-1);
-  if (b.dataset.cmove) { const [ci, d] = b.dataset.cmove.split(':').map(Number), j = ci + d; if (j >= 0 && j < lib.classes.length) { [lib.classes[ci], lib.classes[j]] = [lib.classes[j], lib.classes[ci]]; saveLib(); renderLib(); } return; }
+  if (b.dataset.newasg != null) return editAssignment(null, null, b.dataset.newasg);
+  if (b.dataset.cmove) { const [ci, d] = b.dataset.cmove.split(':').map(Number), j = ci + d; if (j >= 0 && j < lib.classes.length) { [lib.classes[ci], lib.classes[j]] = [lib.classes[j], lib.classes[ci]]; saveLib(); renderLib(); const again = $('#classes [data-cmove="' + j + ':' + d + '"]'); if (again && !again.disabled) again.focus(); } return; }
   if (b.dataset.urename != null) { const f = findUnit(b.dataset.urename); if (!f) return; const name = await askTextDlg('Unit name', f.u.name, { ok: 'Rename' }); if (name && name.trim()) { f.u.name = name.trim(); saveLib(); renderLib(); } return; }
   if (b.dataset.uatlas != null) return askAtlas(b.dataset.uatlas);
   if (b.dataset.udel != null) {
@@ -6684,8 +6973,8 @@ function renderTopAtlas() {
   if (c) el.innerHTML += mbOf(c) ? ' <a href="' + esc(mbOf(c)) + '" target="_blank" rel="noopener" title="' + esc(c.name) + ' on ManageBac">ManageBac ↗</a>' : ' <button class="link" data-mbset="' + ci + '" title="Link ' + esc(c.name) + ' to its ManageBac page">+ ManageBac link</button>';
 }
 $('#topAtlas').addEventListener('click', e => { const b = e.target.closest('[data-uatlas]'); if (b) askAtlas(b.dataset.uatlas); const m = e.target.closest('[data-mbset]'); if (m) askMb(+m.dataset.mbset); });
-function editAssignment(id, unitId) {
-  const f = id ? findItem(id) : null, start = f ? f : findUnit(unitId) || { c: lib.classes[0] || lib.loose, u: null };
+function editAssignment(id, unitId, clsId) {
+  const f = id ? findItem(id) : null, start = f ? f : findUnit(unitId) || { c: (clsId != null ? holderById(clsId) : null) || lib.classes[0] || lib.loose, u: null };
   const it = f ? f.it : { id: uid(), name: '', classId: start.c.id };
   const classPick = f
     ? '<div class="field"><label for="aClass">Class</label><select id="aClass" class="btn" style="justify-content:flex-start">' + lib.classes.map(c => '<option value="' + c.id + '"' + (c === start.c ? ' selected' : '') + '>' + esc(c.name) + '</option>').join('') + '<option value=""' + (start.c === lib.loose ? ' selected' : '') + '>No class</option></select></div>'
@@ -6801,7 +7090,7 @@ function editClass(ci) {
   $('#dlgBox').onclick = async e => {
     if (e.target.closest('[data-up]')) return $('#cFile').click();
     if (e.target.closest('[data-cancel]')) return closeDlg();
-    if (e.target.closest('[data-del]')) { if (!await askDlg('Delete the ' + c.name + ' class? Its assignments move to “No class”.', { ok: 'Delete', danger: true })) return; for (const u of c.units) { for (const it of u.items) it.classId = ''; lib.loose.units.push(u); } lib.classes.splice(ci, 1); saveLib(); closeDlg(); return renderLib(); }
+    if (e.target.closest('[data-del]')) { if (!await askDlg('Delete the ' + c.name + ' class? Its assignments move to “No class”.', { ok: 'Delete', danger: true })) return; for (const u of c.units) { for (const it of u.items) it.classId = ''; lib.loose.units.push(u); } lib.classes.splice(ci, 1); saveLib(); closeDlg(); renderLib(); if (!batch && routeNow().v !== 'class') go(lib.loose.units.some(u => u.items.length) ? classHash(lib.loose) : '#/', true); return; }
     if (e.target.closest('[data-ok]')) {
       const name = $('#cName').value.trim(); if (!name) { $('#cName').focus(); return; }
       const mb = mbUrl($('#cMb').value); if ($('#cMb').value.trim() && !mb) { toast('That ManageBac link isn’t a web address'); $('#cMb').focus(); return; }
@@ -6809,6 +7098,7 @@ function editClass(ci) {
       if (mb) c.mb = mb; else delete c.mb; mbRemember(name, mb);
       if (ci < 0) lib.classes.push(c);
       saveLib(); closeDlg(); renderLib();
+      if (ci < 0 && !batch) go(classHash(c));
     }
   };
 }
@@ -6865,7 +7155,7 @@ function rosterSort() {
   const m = rosterMatch(c.names), used = new Set(c.names.filter(n => m.has(n)).map(n => m.get(n)));
   batch.students = [...used].concat(byFolder.filter(st => !used.has(st)));
 }
-function setBatchName() { $('#batchName').textContent = batch.name + ' · ' + batch.students.length + (batch.students.length === 1 ? ' student' : ' students'); }
+function setBatchName() { $('#batchName').textContent = batch.name + ' · ' + batch.students.length + (batch.students.length === 1 ? ' student' : ' students'); railRender(); }
 function batchClass() { const id = batch && (batch.classId != null ? batch.classId : batch.assignment && batch.assignment.classId); return id ? classById(id) : null; }
 function renderClassSel() {
   const sel = $('#classSel'), c = batchClass();
@@ -7005,8 +7295,11 @@ function renderKept() {
   const list = [...keptMeta.values()].sort((a, b) => b.t - a.t);
   el.closest('section').hidden = !list.length;
   keptTidy(list.length);
-  el.innerHTML = list.map((m, i) => '<div class="krow' + (i ? '' : ' first') + '"><div class="kn"><b>' + esc(m.name || 'A download') + '</b><span class="muted">' + m.n + (m.n === 1 ? ' student' : ' students') + ' · ' + (m.scored || 0) + ' scored' + keptMore(m) + ' · last worked on ' + fmtDay(m.t) + (m.size ? ' · ' + fmtSize(m.size) : '') + (m.newer && keptMeta.has(m.newer) ? ' · an older copy: your work went on in a newer one' : '') + (m.papers ? '' : ' · papers not kept, drop the download again') + '</span></div>' +
+  const where = m => { const it = cardOfKept(m.id), f = it && findItem(it.id); return f ? (f.c === lib.loose ? '' : f.c.name + ' · ') + f.u.name : ''; };
+  const state = m => { const st = keptState(m); return '<span class="kst">' + stateBar(st) + stateChip(st) + '</span>'; };
+  el.innerHTML = list.map((m, i) => '<div class="krow' + (i ? '' : ' first') + '"><div class="kn"><b>' + esc(m.name || 'A download') + '</b>' + (where(m) ? '<span class="kw">' + esc(where(m)) + '</span>' : '') + '<span class="muted">' + m.n + (m.n === 1 ? ' student' : ' students') + ' · ' + (m.scored || 0) + ' scored' + keptMore(m) + ' · last worked on ' + fmtDay(m.t) + (m.size ? ' · ' + fmtSize(m.size) : '') + (m.newer && keptMeta.has(m.newer) ? ' · an older copy: your work went on in a newer one' : '') + (m.papers ? '' : ' · papers not kept, drop the download again') + '</span></div>' + state(m) +
     (m.papers ? '<button class="btn sm' + (i ? '' : ' primary') + '" data-kopen="' + esc(m.id) + '">' + (i ? 'Open' : 'Continue') + '</button>' : '') + '<button class="btn sm" data-kforget="' + esc(m.id) + '" title="Removes the papers, your marks and scores for this download from this browser and any linked folder">Forget</button></div>').join('');
+  renderNeeds();
 }
 async function idbDo(mode, fn) {
   const db = await addDb();
@@ -8765,7 +9058,7 @@ function matchToRoster(list, assignment) {
         '<span class="muted" style="font-size:13px">Matched by the names in the file and folder names. Check the ones marked “Check” or “Choose”.</span></div>' +
       (names.length ? '<table class="gl"><thead><tr><th>File</th><th>Student</th><th></th></tr></thead><tbody>' +
         rows.map((r, k) => '<tr><td style="overflow-wrap:anywhere">' + esc(r.e.path) + '</td><td><select class="btn" data-row="' + k + '" style="max-width:280px">' + opts(r.i) + '</select></td><td>' + sortTag(r) + '</td></tr>').join('') + '</tbody></table>'
-        : '<p>Add a roster for this class first (Rosters, + Class on the start screen), then try again.</p>') +
+        : '<p>Add a roster for this class first (on the class’s own page, from the sidebar), then try again.</p>') +
       (missing.length && names.length ? '<p class="muted" style="font-size:13px;margin:10px 0 0">No file yet: ' + esc(missing.join(', ')) + '</p>' : '') + '</div>' +
       '<div class="bf"><button class="btn" data-close>Cancel</button><button class="btn primary" data-go' + (n ? '' : ' disabled') + '>Open ' + n + (n === 1 ? ' file' : ' files') + ' for ' + who + (who === 1 ? ' student' : ' students') + '</button></div>');
     box.onchange = changed; box.onclick = clicked;   // openDlg takes the handlers off, so each redraw puts them back
@@ -8823,7 +9116,10 @@ function toast(msg, ms) {
   t.textContent = msg; t.hidden = false;
   clearTimeout(toastT); toastT = setTimeout(() => { t.hidden = true; t.textContent = ''; }, ms || 3000);
 }
-$('#lessonsBtn').onclick = () => { location.href = /Grading Studio\.html$/i.test(decodeURIComponent(location.pathname)) ? 'Planner.html' : 'planner.html'; };
+$('#lessonsBtn').href = /Grading Studio\.html$/i.test(decodeURIComponent(location.pathname)) ? 'Planner.html' : 'planner.html';
+$('#addClass').onclick = () => editClass(-1);
+$('#setDisp').onclick = openDisplay;
+$('#setKeysBtn').onclick = openKeys;
 $('#pickFiles').onclick = () => $('#fileIn').click();
 $('#pickFolder').onclick = () => pickDir('#dirIn');
 $('#pickDrive').onclick = () => openFromDrive(null);
@@ -8917,15 +9213,18 @@ $('#sheetBtn').onclick = () => openSheet(false);
 $('#exportBtn').onclick = openExport;
 $('#shareBtn').onclick = openShare;
 $('#backBtn').onclick = openBringBack;
-function closeDownload() {
+function closeDownload(routed) {
   for (const d of docs) d.destroy();
   batch = null; pages = []; docs = []; openToken++;   // a student still opening stops there
-  histAll = null;   // Past work is read again next time: she may forget a download from the start screen
-  $('#app').hidden = true; $('#start').hidden = false; $('#paper').innerHTML = ''; renderLib(); loadKept();
+  histAll = null;   // Past work is read again next time: she may forget a download from Home
+  $('#paper').innerHTML = '';
+  if (!routed && routeNow().v === 'a') { routeTok++; routeOpening = ''; go('#/', true); }
+  else showScreen(routeNow().v === 'a' ? { v: 'opening' } : routeNow());
+  renderLib(); loadKept();
 }
 $('#closeBtn').onclick = () => {
   commitEditors(); saveNow();   // what she's still typing first, so it's in this save
-  if (batch) closeDownload();
+  go('#/');   // closes it on the way
 };
 document.addEventListener('keydown', e => {
   if (!batch || !$('#dlg').hidden) { if (e.key === 'Escape' && !$('#dlg').hidden) { if (SP) splitLeave(); else leaveDlg(); } return; }
@@ -8977,8 +9276,9 @@ let nudging = false;
 document.addEventListener('keyup', e => { if (/^Arrow/.test(e.key)) nudging = false; });
 window.addEventListener('beforeunload', () => { if (!batch || !tabLive()) return; try { commitEditors(); } catch (e) { console.error(e); } saveNow(true); });
 applyDisp();
-renderLib(); renderGoogle(); loadKept();
-/* ---------------- the Saving and carrying section of the start screen (src/folder.js and src/takehome.js do the work) ---------------- */
+renderLib(); renderGoogle();
+const keptFirst = loadKept();   // the address of an open assignment waits for this list before it reopens
+/* ---------------- Saving and carrying, in Settings (src/folder.js and src/takehome.js do the work) ---------------- */
 function renderBackup() {
   const el = $('#backupInfo'); if (!el) return;
   const t = store.get('gs.lastBackup', 0);
@@ -8986,7 +9286,7 @@ function renderBackup() {
   const due = keptMeta.size > 0 && Date.now() - t > 7 * 864e5 && fld.state === 'none';
   el.classList.toggle('due', due);
   if (due) el.textContent += t ? ' · It’s been over a week; a fresh one, or linking a folder, keeps your work safe.' : ' Linking a folder, or a take-home file, keeps your work safe if this browser is cleared.';
-  renderSafety();
+  renderSafety(); renderNeeds();
 }
 async function renderSafety() {
   const el = $('#safetyList'); if (!el) return;
@@ -8997,7 +9297,7 @@ async function renderSafety() {
 $('#safetyList').onclick = async e => {
   const b = e.target.closest('[data-putback]'); if (!b) return;
   if (!await askDlg('Put back this safety copy?\n\nYour marks, scores, comments, late files, readings, units, rosters and settings in this browser go back to how they were then. The papers from each download stay. A safety copy of how things are now is made first, so this can be undone.', { ok: 'Put back' })) return;
-  try { batch = null; await tabsFinish(); tabsOver('go'); await gsData.putBack(b.dataset.putback); carryAfterPutBack(); tabsOver('done'); toast('Put back. Reloading…'); setTimeout(() => location.reload(), 700); }
+  try { batch = null; await tabsFinish(); tabsOver('go'); await gsData.putBack(b.dataset.putback); carryAfterPutBack(); tabsOver('done'); toast('Put back. Reloading…'); setTimeout(reloadHome, 700); }
   catch (er) { console.error(er); tabsOver('done'); toast('That didn’t finish, so some of your work may have gone back and some not. Reload, then use Put back on the newest safety copy (“Before putting back”) to return to how things were.', 15000); }
 };
 $('#restoreBtn').onclick = () => $('#restoreIn').click();
@@ -10293,7 +10593,7 @@ function saveResult(b, data, ls, full) {
   if (full) saveBad.delete(b.id); else saveBad.set(b.id, { b, data, ls });
   if (full) saveLabel(b, ls ? '✓ Saved' : '✓ Saved (1 copy)', '', ls ? '' : 'The full copy is kept. This browser’s quick copy is full, which does no harm.');
   else saveLabel(b, ls ? '⚠ Partly saved' : '⚠ Not saved', ls ? 'warn' : 'bad');
-  if (full && !ls && !oneCopyTold) { oneCopyTold = true; toast('Your work is saved, but this browser’s room for its quick copy is full. Linking a folder from the start screen is a good idea.', 8000); }
+  if (full && !ls && !oneCopyTold) { oneCopyTold = true; toast('Your work is saved, but this browser’s room for its quick copy is full. Linking a folder, in Settings, is a good idea.', 8000); }
   saveBar();
 }
 function saveLabel(b, text, cls, tip) {
@@ -10348,12 +10648,12 @@ function tabLive() {
   const v = lsRaw('gsc.over');
   if (v === overSeen) return true;
   tabStopped = true; clearTimeout(saveT); clearTimeout(saveRetryT); saveBad.clear();
-  if (/:done$/.test(v || '')) { location.reload(); return false; }
+  if (/:done$/.test(v || '')) { reloadHome(); return false; }
   const el = document.createElement('div');
   el.id = 'tabOver'; el.setAttribute('role', 'alert'); el.textContent = 'Your saved work is being changed in another tab. This tab will reload by itself when that’s done.';
   el.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;padding:40px;text-align:center;font-size:18px;color:#fff;background:rgba(0,0,0,.72)';
   document.body.appendChild(el);
-  setTimeout(() => location.reload(), 60000);   // that tab may never finish
+  setTimeout(reloadHome, 60000);   // that tab may never finish
   return false;
 }
 const TAB_HEAR = 800, savingKey = 'gsc.saving.';
@@ -10423,7 +10723,7 @@ const tabForgot = b => +lsRaw(forgotKey(b.id)) > (b.opened || 0);
 function tabLetGo() { closeDownload(); toast('That download was forgotten in another tab, so it’s closed here too.', 6000); }
 window.addEventListener('storage', e => {
   if (e.storageArea && e.storageArea !== localStorage) return;
-  if (e.key === 'gsc.over') { if (!tabLive() && /:done$/.test(e.newValue || '')) location.reload(); return; }
+  if (e.key === 'gsc.over') { if (!tabLive() && /:done$/.test(e.newValue || '')) reloadHome(); return; }
   if (!e.key || !tabLive()) return;
   if (e.key === 'gsc.finish') tabFinishUp();
   else if (e.key === 'gs.bank') bank = store.get('gs.bank', bank);
@@ -10647,7 +10947,7 @@ async function carrySay() {
   const anon = anonOn(), count = (items, what) => items.length ? [items.length + ' ' + what + (items.length === 1 ? '' : 's')] : [], names = (items, what) => anon ? count(items, what) : items;
   const list = (title, items) => items.length ? '<p style="margin:10px 0 2px"><b>' + title + '</b></p><ul style="margin:0;padding-left:18px">' + items.slice(0, 12).map(x => '<li style="overflow-wrap:anywhere">' + esc(x) + '</li>').join('') + (items.length > 12 ? '<li>and ' + (items.length - 12) + ' more</li>' : '') + '</ul>' : '';
   openDlg('<div class="bh"><h2>Your work came over</h2><button class="icon" data-close aria-label="Close">✕</button></div><div class="bb" id="carryBox">' +
-    '<p style="margin-top:0">This looks like a newer copy of <b>' + esc(c.name || 'a download you worked on') + '</b>. Marks and scores for <b>' + n + (n === 1 ? ' student' : ' students') + '</b> came over. The older copy hasn’t changed: it’s still on the start screen.</p>' +
+    '<p style="margin-top:0">This looks like a newer copy of <b>' + esc(c.name || 'a download you worked on') + '</b>. Marks and scores for <b>' + n + (n === 1 ? ' student' : ' students') + '</b> came over. The older copy hasn’t changed: it’s still on Home.</p>' +
     (c.unchecked ? '<p>The older papers aren’t kept in this browser, so which files changed couldn’t be checked. Have a look through them.</p>' : '') +
     list('Changed, so check your marks still sit in the right places:', names(paths('changed'), 'file')) +
     list('These have marks on pages they no longer have. The older copy still has them:', names(changed.filter(f => lostPages(f).length).map(f => f.name + ', page ' + lostPages(f).map(p => p + 1).join(', ')), 'file')) +
@@ -11442,7 +11742,7 @@ let bk = { tab: 'table', cls: '', term: null, show: 'pct', stu: 0, cols: null, h
 async function openBook(clsId, opts = {}) {
   if (batch) saveNow();
   const c = classById(clsId) || batchClass() || lib.classes.find(k => k.names.length) || lib.classes[0];
-  if (!c) return toast('Add a class with its roster first, on the start screen.');
+  if (!c) return toast('Add a class with its roster first, from the sidebar.');
   bk = { ...bk, tab: 'table', cls: c.id, term: null, stu: 0, cols: null, hi: opts.hi || '' };
   openDlg('<div class="bh"><h2>Gradebook</h2><div class="ovtabs" role="tablist">' + [['table', 'Table'], ['class', 'Class charts'], ['one', 'One student']].map(([k, l]) => '<button role="tab" data-bktab="' + k + '" aria-selected="' + (k === 'table') + '">' + l + '</button>').join('') +
     '</div><button class="icon" data-close aria-label="Close" style="margin-left:auto">✕</button></div><div class="bb bkbody" id="bkBody"><p class="muted">Looking through your saved work…</p></div>');
@@ -11477,7 +11777,7 @@ function bkDraw() {
     (bk.tab === 'table' && bk.term !== '*' ? '<div class="pseg" role="group" aria-label="Show">' + [['pct', 'Percent'], ['pts', 'Points']].map(([v, l]) => '<button data-bkshow="' + v + '" aria-pressed="' + (bk.show === v) + '">' + l + '</button>').join('') + '</div>' : '') +
     '<button class="btn sm" data-bksetup>Term setup</button>' + (bk.tab === 'table' ? '<button class="btn sm" data-bkcopy>Copy table</button>' : '') + '<button class="btn sm primary" data-bkadd>+ Add scores</button></div>';
   let main;
-  if (!c.names.length) main = '<p class="muted bkpad">The gradebook lists the students on a class’s roster. Add a roster to ' + esc(c.name) + ' on the start screen first.</p>';
+  if (!c.names.length) main = '<p class="muted bkpad">The gradebook lists the students on a class’s roster. Add a roster to ' + esc(c.name) + ' on its class page first.</p>';
   else if (bk.tab === 'class') main = bkClassView(c, cols, all, conf);
   else if (bk.tab === 'one') main = bkOneView(c, cols, conf);
   else main = bk.term === '*' ? bkYear(c, all, conf) : bkTable(c, cols, conf);
@@ -14731,6 +15031,7 @@ function renderWhere() {
       (fld.state === 'none' ? (('showDirectoryPicker' in window) ? '<button class="btn sm" data-wlink>Link a folder…</button>' : '') : '<button class="btn sm" data-wopen>Folder…</button>');
     if (line.dataset.h !== h) { line.dataset.h = h; line.innerHTML = h; }   // a button shouldn't vanish under her click just because a save went by
   }
+  railSavedRender(); renderNeeds();
 }
 function whereAct() { if (fld.state === 'decide') openFolderAsks(); else folderResume(true); }
 document.addEventListener('click', e => {
@@ -14758,7 +15059,7 @@ async function openWhere() {
     }
     const g = e.target.closest('[data-snap]'); if (!g) return;
     if (!await askDlg('Go back to this snapshot from ' + g.dataset.when + '?\n\nYour marks, scores, comments, late files, readings, rosters and settings go back to how they were then, in this browser and in the folder. Papers stay. A snapshot of how things are now is made first, so this can be undone.', { ok: 'Go back' })) return;
-    try { await tabsFinish(); tabsOver('go'); await folderGoBack(g.dataset.snap); tabsOver('done'); toast('Done. Reloading…'); setTimeout(() => location.reload(), 700); }
+    try { await tabsFinish(); tabsOver('go'); await folderGoBack(g.dataset.snap); tabsOver('done'); toast('Done. Reloading…'); setTimeout(reloadHome, 700); }
     catch (er) { console.error(er); tabsOver('done'); toast('That didn’t finish. Your work may be partly back: use Put back on the newest safety copy under “Saving and carrying”.', 15000); }
   };
   if (!linked || !fld.root) return;
@@ -15155,7 +15456,7 @@ async function bringPreview(B, src, label, sub, again) {
       return sayDlg(er && er.small ? 'This browser’s small store for rosters and settings is full, and nothing more in it can safely go, so that didn’t finish. Your marks and scores here weren’t replaced.' : er && er.name === 'QuotaExceededError' ? 'This browser ran out of room, so that didn’t finish. Your marks and scores here weren’t replaced. Free up some disk space and try again.' : 'That didn’t finish. Your work is safe, and a safety copy was made first: Put back is under Saving and carrying if anything looks wrong.');
     }
     toast('Brought in. Reloading…');
-    setTimeout(() => location.reload(), 700);
+    setTimeout(reloadHome, 700);
   };
 }
 async function bringApply(B0, src, shown, answers) {
@@ -15253,7 +15554,7 @@ async function removeHere() {
   try { localStorage.removeItem('gsc.win'); } catch {}
   tabsOver('done');
   toast('Removed from this computer. Reloading…');
-  setTimeout(() => location.reload(), 700);
+  setTimeout(reloadHome, 700);
 }
 $('#takeBtn').onclick = openTake;
 $('#removeBtn').onclick = removeHere;
@@ -17017,6 +17318,175 @@ function wireWordNotes(w, el, page, aside, editing, flush, save) {
     btn.addEventListener('click', () => { const at = wPickWords(w, page, null); if (at) add(at); else toast('Select the words to comment on, then press Comment. Or pick the Comment tool and click a word.'); });
   }
 }
+
+/* ---------------- the frame: the sidebar, Home's "Needs a look", and Find anything (11/9) ---------------- */
+var shellReady;
+
+function classColor(c) {
+  const list = ['#1F6FB2', '#7B3FC4', '#0E7C86', '#A8327E', '#3D4CB8', '#9A5B13', '#0B6E99', '#5B6472'], i = lib.classes.indexOf(c);
+  return i < 0 ? '#8A8F98' : list[i % list.length];
+}
+function classLeft(c) {
+  let n = 0;
+  for (const u of c.units) for (const it of u.items) { const m = it.batchId && it.type !== 'fm' ? keptMeta.get(it.batchId) : null; if (m) n += keptState(m).left; }
+  return n;
+}
+function railRender() {
+  if (!shellReady) return;
+  const r = routeNow(), open = batch ? batchClass() : null, cur = batch ? open : r.v === 'class' ? r.c : null;
+  const row = c => {
+    const n = classLeft(c), name = c === lib.loose ? 'No class' : c.name, on = cur === c;
+    return '<a class="rnav' + (on ? ' on' : '') + '" href="' + classHash(c) + '" data-railcls="' + esc(c.id) + '" title="' + esc(name) + (n ? ' · ' + n + ' left to score' : '') + '"' + (on ? ' aria-current="page"' : '') + '>' +
+      '<span class="rdot" style="background:' + classColor(c) + '"></span><span class="rl rname">' + esc(name) + '</span>' + (n ? '<span class="rl rcnt">' + n + '</span>' : '') + '</a>';
+  };
+  const h = lib.classes.map(row).join('') + (lib.loose.units.some(u => u.items.length) ? row(lib.loose) : '');
+  const box = $('#railClasses'); if (box.dataset.h !== h) { box.dataset.h = h; box.innerHTML = h; }   // a link shouldn't be swapped out from under her click
+  for (const a of document.querySelectorAll('#rail [data-nav]')) { const on = !batch && a.dataset.nav === r.v; a.classList.toggle('on', on); if (on) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); }
+  const cr = $('#crumbClass'); cr.hidden = !(batch && open);
+  if (batch && open) { cr.textContent = open.name; cr.href = classHash(open); cr.title = 'Back to ' + open.name; }
+  const d = $('#homeDate'), today = new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' }); if (d.textContent !== today) d.textContent = today;
+  const asg = batch && batch.assignment && findItem(batch.assignment.id);
+  document.title = batch ? (asg ? asg.it.name + ' · ' : '') + 'Grading Studio' : r.v === 'class' ? (r.c === lib.loose ? 'No class' : r.c.name) + ' · Grading Studio' : r.v === 'settings' ? 'Settings · Grading Studio' : 'Grading Studio';
+}
+function railSavedRender() {
+  if (!shellReady) return;
+  const el = $('#railSaved'), w = whereSay(), st = batch ? ($('#saveState').textContent || '').replace(/^[✓⚠]\s*/, '').trim() : '';
+  const bad = saveBad.size > 0, head = bad ? (/saved/i.test(st) && !/^Saved/.test(st) ? st : 'Not saved') : /^Saving/.test(st) ? 'Saving…' : 'Saved';
+  const h = '<span class="rdot"></span><span class="rl"><b>' + esc(head) + '</b>' + esc(w.text) + '</span>';
+  el.className = 'rsaved' + (bad ? ' bad' : w.cls ? ' ' + w.cls : '');
+  el.title = head + '. ' + w.text + '. ' + w.tip;
+  el.toggleAttribute('data-wact', !!w.act); el.toggleAttribute('data-wopen', !w.act);
+  if (el.dataset.h !== h) { el.dataset.h = h; el.innerHTML = h; }
+}
+function renderNeeds() {
+  if (!shellReady) return;
+  const el = $('#needs'), rows = [], chev = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>';
+  for (const m of [...keptMeta.values()].sort((a, b) => b.t - a.t)) {
+    if (m.partial && m.papers) rows.push({ t: m.partial + (m.partial === 1 ? ' paper is' : ' papers are') + ' partly scored', s: m.name || 'A download', open: m.id });
+    else if (!m.papers) rows.push({ t: 'Papers not kept in this browser', s: (m.name || 'A download') + ': drop the download in again to reopen it' });
+  }
+  const last = store.get('gs.lastBackup', 0), days = Math.floor((Date.now() - last) / 864e5);
+  if (keptMeta.size > 0 && fld.state === 'none' && days >= 7) rows.push({ t: last ? 'Your take-home file is ' + days + ' days old' : 'Your work is only in this browser', s: 'Link a folder or make a take-home file, in Settings', href: '#/settings' });
+  const h = !rows.length ? '' : '<section class="ncard"><div class="nhead"><h2>Needs a look</h2><span class="schip warn">' + rows.length + '</span></div>' +
+    rows.slice(0, 6).map(r => { const body = '<span class="nt"><b>' + esc(r.t) + '</b><span class="ns">' + esc(r.s) + '</span></span>'; return r.open ? '<button class="nrow" data-nopen="' + esc(r.open) + '">' + body + chev + '</button>' : r.href ? '<a class="nrow" href="' + r.href + '">' + body + chev + '</a>' : '<div class="nrow">' + body + '</div>'; }).join('') +
+    (rows.length > 6 ? '<div class="nrow"><span class="ns">and ' + (rows.length - 6) + ' more</span></div>' : '') + '</section>';
+  el.hidden = !h;
+  if (el.dataset.h !== h) { el.dataset.h = h; el.innerHTML = h; }
+}
+$('#needs').addEventListener('click', e => { const b = e.target.closest('[data-nopen]'); if (b && !b.disabled) { b.disabled = true; reopenKept(b.dataset.nopen).finally(() => { b.disabled = false; }); } });
+
+document.addEventListener('click', e => {
+  const a = e.target.closest && e.target.closest('a[href^="#/"]'); if (!a || e.defaultPrevented || e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+  e.preventDefault(); go(a.getAttribute('href'));
+});
+window.addEventListener('hashchange', applyRoute);
+new MutationObserver(railSavedRender).observe($('#saveState'), { childList: true, characterData: true, subtree: true });
+
+/* ---------------- Find anything (Ctrl K, or ⌘K): one box that reaches every student, assignment, tool and setting ---------------- */
+function findRows() {
+  const out = [], add = (group, label, sub, run, key) => { if (label) out.push({ group, label: String(label), sub: sub || '', run, key: key || '' }); };
+  const press = sel => () => { const b = $(sel); if (b) b.click(); };
+  if (batch) {
+    const order = anonOn() ? anonOrder() : batch.students.map((_, i) => i);
+    order.forEach((i, pos) => { const st = batch.students[i], g = gradeOf(st); add('Students', shownName(st, i), noScore(st) ? STATUS_LABEL[g.status] : g.done ? 'Scored' : g.total != null ? 'Partly scored' : st.files.length ? 'Not scored yet' : 'No paper', () => openStudent(i), String(pos + 1)); });
+    for (const b of document.querySelectorAll('#tools .tool[data-tool]')) { const m = /^(.*?) \((.*)\)$/.exec(b.title) || [0, b.title, '']; add('Marking tools', m[1], 'Tool for the paper', () => setTool(b.dataset.tool), m[2]); }
+    for (const [sel, sub] of [['#sheetBtn', 'Every grade found on the papers, with a crop of each'], ['#gradesBtn', 'Scores and comments, to copy into ManageBac'], ['#exportBtn', 'The marked files, back in their student folders'], ['#quizTop', '']]) { const b = $(sel); if (b && !b.hidden) add('This assignment', b.textContent.replace(/\s*\(\d+\)$/, ''), sub || b.title, press(sel)); }
+    for (const b of document.querySelectorAll('#moreMenu .mitem')) {
+      if (b.hidden || b.classList.contains('themeBtn') || b.id === 'keysBtn') continue;
+      const k = b.querySelector('kbd'), label = [...b.childNodes].filter(n => n.nodeType === 3).map(n => n.textContent).join('').trim();
+      add(b.closest('.mgrp').querySelector('.mhd').textContent === 'View and tools' ? 'Tools' : 'This assignment', label, b.title, () => b.click(), k ? k.textContent : '');
+    }
+    add('This assignment', 'Close this assignment', 'Saved first, then back to Home', () => go('#/'));
+  }
+  add('Go to', 'Home', 'What to pick up, and what needs a look', () => go('#/'));
+  add('Go to', 'Planner', 'Units and lessons, on its own page', () => { location.href = $('#lessonsBtn').href; });
+  add('Go to', 'Settings', 'Saving and carrying, display, keys', () => go('#/settings'));
+  for (const c of lib.classes) add('Classes', c.name, (c.names.length ? c.names.length + ' students' : 'No roster yet') + (classLeft(c) ? ' · ' + classLeft(c) + ' left to score' : ''), () => go(classHash(c)));
+  const carded = new Set();
+  for (const c of holders()) for (const u of c.units) for (const it of u.items) {
+    const m = it.batchId ? keptMeta.get(it.batchId) : null; if (it.batchId) carded.add(it.batchId);
+    const here = batch && batch.id === it.batchId;
+    add('Assignments', it.name, (c === lib.loose ? 'No class' : c.name) + ' · ' + u.name + (here ? ' · open now' : m && m.papers ? ' · ' + keptState(m).done + ' of ' + keptState(m).of + ' scored' : ''), () => here ? null : m && m.papers ? reopenKept(it.batchId, it) : go(classHash(c)));
+  }
+  for (const m of keptMeta.values()) if (!carded.has(m.id) && m.papers && !(batch && batch.id === m.id)) add('Assignments', m.name || 'A download', 'Kept in this browser · ' + keptState(m).done + ' of ' + keptState(m).of + ' scored', () => reopenKept(m.id));
+  if (!batch) {
+    add('Do', 'Open a ManageBac download', 'The ZIP or PDFs', press('#pickFiles'));
+    add('Do', 'Open a folder of papers', '', press('#pickFolder'));
+    add('Do', 'Split a scan of everyone’s papers', '', press('#pickScan'));
+    add('Do', 'Match files to a roster', '', press('#pickMatch'));
+    add('Do', 'Add a class', 'Its name and roster', press('#addClass'));
+    add('Do', 'Try it with sample papers', '', press('#sample'));
+    add('Settings', 'Take my work with me', 'A take-home file for another computer', press('#takeBtn'));
+    add('Settings', 'Bring work in', 'From a take-home file', press('#restoreBtn'));
+    add('Settings', 'Remove from this computer', '', () => go('#/settings'));
+  }
+  add('Settings', 'Where my work is saved', 'This browser, and a linked folder', () => openWhere());
+  add('Settings', document.documentElement.dataset.theme === 'dark' ? 'Light mode' : 'Dark mode', 'Display', press('.themeBtn'));
+  add('Settings', 'Text size and zoom', 'Display', () => openDisplay());
+  add('Settings', 'All keys', 'Every keyboard shortcut', () => openKeys(), '?');
+  return out;
+}
+function findMatch(rows, q) {
+  const words = q.toLowerCase().split(/\s+/).filter(Boolean);
+  if (!words.length) return rows.filter(r => r.group !== 'Students' && r.group !== 'Assignments' || batch && r.group === 'Students').slice(0, 60);
+  const hit = [];
+  for (const r of rows) {
+    const l = r.label.toLowerCase(), all = l + ' ' + r.sub.toLowerCase() + ' ' + r.group.toLowerCase();
+    if (!words.every(w => all.includes(w))) continue;
+    hit.push({ r, rank: l.startsWith(words[0]) ? 0 : l.split(/[^a-z0-9]+/).some(p => p.startsWith(words[0])) ? 1 : words.every(w => l.includes(w)) ? 2 : 3 });
+  }
+  return hit.sort((a, b) => a.rank - b.rank).map(x => x.r).slice(0, 40);
+}
+function openFind() {
+  if ($('#findDlg') || $('#askDlg') || !$('#dlg').hidden) return;
+  commitEditors(); setMore(false);
+  const back = document.activeElement, el = document.createElement('div');
+  el.className = 'dlg finddlg'; el.id = 'findDlg';
+  el.innerHTML = '<div class="fbox" role="dialog" aria-modal="true" aria-label="Find anything"><div class="fin"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5"/></svg>' +
+    '<input type="text" id="findIn" role="combobox" aria-expanded="true" aria-controls="findList" aria-autocomplete="list" autocomplete="off" spellcheck="false" placeholder="Find a student, an assignment, a tool or a setting"><kbd>Esc</kbd></div>' +
+    '<div id="findList" role="listbox" aria-label="Results"></div><div class="ffoot"><span>↑ ↓ to move</span><span>Enter to open</span><span class="sp"></span><span id="findCount"></span></div></div>';
+  const rows = findRows(), inp = el.querySelector('#findIn'), list = el.querySelector('#findList');
+  let shown = [], at = 0;
+  const mark = () => { [...list.querySelectorAll('.frow')].forEach((b, i) => { b.classList.toggle('on', i === at); b.setAttribute('aria-selected', String(i === at)); if (i === at) { b.scrollIntoView({ block: 'nearest' }); inp.setAttribute('aria-activedescendant', b.id); } }); };
+  const render = () => {
+    const hits = findMatch(rows, inp.value), groups = [];
+    for (const r of hits) { let g = groups.find(x => x.name === r.group); if (!g) groups.push(g = { name: r.group, rows: [] }); g.rows.push(r); }
+    shown = groups.flatMap(g => g.rows); at = 0;
+    let k = 0;
+    list.innerHTML = groups.map(g => '<div class="fcap">' + esc(g.name) + '</div>' + g.rows.map(r => '<button class="frow" role="option" id="fr' + k + '" data-fi="' + (k++) + '"><b>' + esc(r.label) + '</b><span>' + esc(r.sub) + '</span>' + (r.key ? '<kbd>' + esc(keyLabel(r.key)) + '</kbd>' : '') + '</button>').join('')).join('') || '<div class="fnone">Nothing matches “' + esc(inp.value.trim()) + '”.</div>';
+    el.querySelector('#findCount').textContent = inp.value.trim() ? shown.length + (shown.length === 1 ? ' match' : ' matches') : 'Students, assignments, tools and settings';
+    mark();
+  };
+  const close = () => { document.removeEventListener('keydown', keys, true); el.remove(); if (back && back.isConnected && back !== document.body) back.focus({ preventScroll: true }); };
+  const run = i => { const r = shown[i]; if (!r) return; close(); r.run(); };
+  const keys = e => {
+    e.stopPropagation();   // nothing behind gets a key while this is up
+    if (e.key === 'Escape') { e.preventDefault(); close(); }
+    else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); if (shown.length) { at = (at + (e.key === 'ArrowDown' ? 1 : -1) + shown.length) % shown.length; mark(); } }
+    else if (e.key === 'Enter') { e.preventDefault(); run(at); }
+    else if (e.key === 'Tab') { e.preventDefault(); inp.focus(); }
+    else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); close(); }
+  };
+  inp.oninput = render;
+  list.onclick = e => { const b = e.target.closest('.frow'); if (b) run(+b.dataset.fi); };
+  list.onpointermove = e => { const b = e.target.closest('.frow'); if (b && +b.dataset.fi !== at) { at = +b.dataset.fi; mark(); } };
+  el.addEventListener('pointerdown', e => { if (e.target === el) close(); });
+  document.addEventListener('keydown', keys, true);
+  document.body.appendChild(el);
+  render(); inp.focus();
+}
+$('#findBtn').onclick = openFind;
+$('#findKey').textContent = isMac() ? '⌘K' : 'Ctrl K';
+document.addEventListener('keydown', e => {
+  if (!(e.ctrlKey || e.metaKey) || e.altKey || e.shiftKey || e.key.toLowerCase() !== 'k' || $('#findDlg')) return;
+  if ($('#askDlg') || !$('#dlg').hidden) return;
+  e.preventDefault(); e.stopPropagation(); openFind();
+}, true);
+
+shellReady = true;
+railSavedRender(); renderNeeds();
+applyRoute();
+Object.assign(window.__gs, { go, routeNow, applyRoute, openFind, findRows, keptState, classLeft });
 
 });</script>
 

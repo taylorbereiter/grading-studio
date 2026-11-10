@@ -38,7 +38,7 @@
 .btn.danger:hover{background:var(--warn);opacity:.88}
 
 /* a smaller, even tool bar when the middle column is narrow, so the tools don't crowd the paper */
-@media (max-width:1360px){
+@media (max-width:1420px){
   .tools{margin:10px 10px 0;padding:5px 6px;gap:2px}
   .tool{padding:7px}
   .tool .lb{display:none}
