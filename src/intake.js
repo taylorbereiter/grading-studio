@@ -323,7 +323,7 @@ async function openRep() {
   $('#dlgBox').onclick = e => {
     if (e.target.closest('[data-close]')) return closeDlg();
     const g = e.target.closest('[data-repgo]'); if (!g) return;
-    closeDlg(); openStudent(+g.dataset.repgo, g.dataset.file);
+    toPaper(+g.dataset.repgo, g.dataset.file);
   };
 }
 // Runs by itself after a download opens, and says something only if there's something new to say. What she's seen is kept as hashes, so no file names stay behind if she forgets the download.

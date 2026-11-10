@@ -300,7 +300,7 @@ function openCons() {
   const box = $('#dlgBox'), tip = $('#consTip');
   box.onclick = e => {
     if (e.target.closest('[data-close]')) return closeDlg();
-    const o = e.target.closest('[data-open]'); if (o) { closeDlg(); return openStudent(+o.dataset.open); }
+    const o = e.target.closest('[data-open]'); if (o) { return toPaper(+o.dataset.open); }
     const s = e.target.closest('[data-same]'); if (s) return openSame(isNaN(+s.dataset.same) ? s.dataset.same : +s.dataset.same);
     const tb = e.target.closest('[data-ovtab]'); if (tb && tb.dataset.ovtab !== 'cons') { openOverview(tb.dataset.ovtab).then(() => { const b = $('#dlgBox [data-ovtab="' + ovTab + '"]'); if (b) b.focus(); }); }
   };
@@ -316,7 +316,7 @@ function openCons() {
   wrap.addEventListener('pointerout', e => { if (hit(e)) tip.hidden = true; });
   wrap.addEventListener('focusin', e => { if (hit(e)) show(hit(e)); });
   wrap.addEventListener('focusout', e => { if (hit(e)) tip.hidden = true; });
-  wrap.addEventListener('keydown', e => { if (hit(e) && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); closeDlg(); openStudent(+hit(e).dataset.open); } });
+  wrap.addEventListener('keydown', e => { if (hit(e) && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); toPaper(+hit(e).dataset.open); } });
 }
 const sameLabel = v => typeof v === 'number' ? fmtNum(v) : v.split('/').map(x => fmtNum(+x)).join(' / ');
 // One column per paper, drawn one after another, each turning its own pages. During anonymous grading sharePage's name covers are on.
@@ -338,7 +338,7 @@ async function openSame(v) {
   box.onclick = e => {
     if (e.target.closest('[data-close]')) return closeDlg();
     if (e.target.closest('[data-back]')) return openCons();
-    const o = e.target.closest('[data-open]'); if (o) { closeDlg(); return openStudent(+o.dataset.open); }
+    const o = e.target.closest('[data-open]'); if (o) { return toPaper(+o.dataset.open); }
     const b = e.target.closest('[data-pg]'); if (!b) return;
     const c = cols.get(b.closest('.sbsc')), at = c.at + +b.dataset.pg;
     if (at >= 0 && at < c.pages.length) { c.at = at; sbsDraw(c); }

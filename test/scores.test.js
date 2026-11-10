@@ -5,7 +5,7 @@ const assert = require('node:assert/strict');
 const { unzipSync, zipSync, strToU8 } = require('fflate');
 const { PDFDocument, PDFName, PDFString, PDFHexString } = require('pdf-lib');
 const { launch } = require('./helpers/chrome');
-const { openApp, answerDlg, openZip, goToStudent, score, settle, catchDownloads, appReady, setTool, clickAt, workOf } = require('./helpers/app');
+const { openApp, answerDlg, openZip, goToStudent, score, settle, catchDownloads, appReady, setTool, clickAt, workOf, closeBox } = require('./helpers/app');
 const { standardFiles, makePaper, makeDocx, zipOf } = require('./helpers/fixtures');
 const { loadLegacy } = require('./helpers/legacy');
 
@@ -113,7 +113,7 @@ test('0 on a rubric row is a real score everywhere', async () => {
   assert.deepEqual(await page.$$eval('tr.go[data-i="0"] td.c', a => a.map(c => c.dataset.copy)), ['0', '0', '0', '0', '48']);
   await page.click('[data-cp="total"]');
   assert.equal((await clip(page)).split('\n')[0], '0');
-  await page.click('[data-close]');
+  await closeBox(page);
   // one 0 among other rows, and undoing it
   await goToStudent(page, 1);
   await score(page, [0, 4]);
@@ -157,7 +157,7 @@ test('missing and excused are their own states, with no number and no penalty', 
   assert.equal(R[1][R[0].indexOf('Status')], 'Missing');
   assert.equal(R[2][R[0].indexOf('Status')], 'Excused');
   assert.equal(R[1][R[0].indexOf('Total / 12')], '', 'no number stands in for missing');
-  await page.click('[data-close]');
+  await closeBox(page);
   await page.evaluate(() => { window.__gs.openStudent(1); window.__gs.nextUnscored(); });
   await page.waitForFunction(() => window.__gs.state().cur === 2, { timeout: 15000 });   // skips 1 (excused), and goes to the next without a score
   noErrors(page); await close();
@@ -286,7 +286,7 @@ test('a score typed on the Grade sheet, a Claude comment and a time stamp record
 test('a comment brought back from Claude records the time', async () => {
   const { page, close } = await stack();
   const code = await page.evaluate(() => { const G = window.__gs; G.openShare(); return G.state().batch.share.codes['Aria Testwell']; });
-  await page.click('#dlgBox [data-close]');
+  await closeBox(page);
   await page.evaluate(() => window.__gs.openBringBack());
   await page.waitForSelector('#bbText');
   const t = await page.evaluate(() => Date.now());
@@ -611,7 +611,7 @@ test('a reading waiting for her shows in the Grades list, and Copy all scores wa
   await score(page, [4]);
   await page.click('#gradesBtn'); await page.waitForSelector('table.gl');
   assert.match(await page.$eval('tr.go[data-i="1"]', e => e.textContent), /to confirm/);
-  await page.click('[data-close]');
+  await closeBox(page);
   await page.evaluate(() => window.__gs.openSheet());
   await page.waitForSelector('.rd-ask', { timeout: 60000 });
   await page.click('#dlgBox .bf [data-cp]');
@@ -736,7 +736,7 @@ test('the pre-export check names unfinished scores, no paper, disagreements, unm
   assert.ok(!c.unmarked.some(o => o.name === 'Cleo Fixture'), 'a grade on the paper counts as marked');
   assert.deepEqual(c.doubts.map(o => o.name), ['Bram Sample']);
   const html = await page.$eval('#xCheck', e => e.textContent);
-  for (const t of ['to look at before you export', 'Scores not finished (4)', 'No paper (1)', 'Scores that disagree with the paper (1)', 'Grades to confirm (1)', 'Your score is 9, the paper says 9.5']) assert.ok(html.includes(t), t);
+  for (const t of ['to look at before you return these', 'Scores not finished (4)', 'No paper (1)', 'Scores that disagree with the paper (1)', 'Grades to confirm (1)', 'Your score is 9, the paper says 9.5']) assert.ok(html.includes(t), t);
   // a name goes to that student, and the dialog gets out of the way
   await page.click('#xCheck summary');
   await page.click('#xCheck [data-chk="2"]');
@@ -752,7 +752,7 @@ test('a clean class gets an all clear, and export still works with problems list
   await page.click('#exportBtn');
   await page.waitForSelector('#xCheck.ok', { timeout: 60000 });
   assert.match(await page.$eval('#xCheck', e => e.textContent), /All clear/);
-  await page.click('#dlgBox .bf [data-close]');
+  await closeBox(page, '#dlgBox .bf [data-close]');
   await page.evaluate(() => { window.__gs.state().batch.students[0].grade.rubric = [3]; });
   await addText(page, 1, 'Nice argument. 3/12');   // the grade sheet PDF prints it as one to confirm
   await page.click('#exportBtn');

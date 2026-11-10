@@ -4,7 +4,7 @@ const assert = require('node:assert/strict');
 const { PDFDocument, StandardFonts, rgb } = require('pdf-lib');
 const { unzipSync, zipSync } = require('fflate');
 const { launch } = require('./helpers/chrome');
-const { openApp, openZip, appReady, goToStudent, at, drag, clickAt, setTool, settle, catchDownloads, probePdf, probeScreen } = require('./helpers/app');
+const { openApp, openZip, appReady, goToStudent, at, drag, clickAt, setTool, settle, catchDownloads, probePdf, probeScreen, closeBox } = require('./helpers/app');
 const { zipOf } = require('./helpers/fixtures');
 
 const LINE = 'The quick brown fox jumps over the lazy dog and keeps on running far away';
@@ -444,7 +444,7 @@ async function exportZip(page, dl) {
   await page.waitForSelector('#dlgBox [data-go="zip"]', { timeout: 60000 });
   const got = await dl.next(() => page.click('#dlgBox [data-go="zip"]'));
   await page.waitForFunction(() => /^Done\./.test(document.querySelector('#xStatus').textContent), { timeout: 60000 });
-  await page.click('#dlgBox .bf [data-close]');
+  await closeBox(page, '#dlgBox .bf [data-close]');
   return unzipSync(got.bytes);
 }
 

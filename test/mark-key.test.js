@@ -5,7 +5,7 @@ const assert = require('node:assert/strict');
 const { PDFDocument, StandardFonts, rgb } = require('pdf-lib');
 const { unzipSync } = require('fflate');
 const { launch } = require('./helpers/chrome');
-const { openApp, menuPick, openZip, at, settle, catchDownloads, probePdf } = require('./helpers/app');
+const { openApp, menuPick, openZip, at, settle, catchDownloads, probePdf, press, closeBox } = require('./helpers/app');
 const { zipOf } = require('./helpers/fixtures');
 
 let browser, zip;
@@ -39,7 +39,7 @@ async function exportZip(page, dl, { key } = {}) {
   if (key !== undefined) await page.evaluate(on => { const b = document.querySelector('#xKey'); if (b.checked !== on) b.click(); }, key);
   const got = await dl.next(() => page.click('#dlgBox [data-go="zip"]'));
   await page.waitForFunction(() => /^Done\./.test(document.querySelector('#xStatus').textContent), { timeout: 60000 });
-  await page.click('#dlgBox .bf [data-close]');
+  await closeBox(page, '#dlgBox .bf [data-close]');
   return unzipSync(got.bytes);
 }
 
@@ -66,7 +66,7 @@ test('a returned paper gets a key page listing only the proofreading marks used 
   await page.waitForSelector('#dlgBox #xKey');
   assert.equal(await page.$eval('#xKey', b => b.checked), true, 'on by default');
   assert.match(await page.$eval('#xKey', b => b.closest('label').nextElementSibling.textContent), /^1 of the 2 files gets one\./);
-  await page.click('#dlgBox .bf [data-close]');
+  await closeBox(page, '#dlgBox .bf [data-close]');
 
   let un = await exportZip(page, dl);
   const aria = await probePdf(page, un['Aria Testwell/Essay.pdf'], 3, [[55, 105, 46, 200], [400, 105, 150, 600]]);
@@ -98,7 +98,7 @@ test('a returned paper gets a key page listing only the proofreading marks used 
 test('More > Mark key: her own names and meanings are used in the menu and the key, and Back to the usual wording undoes one', async () => {
   const { page, close } = await openApp(browser);
   await open(page);
-  await page.click('#moreBtn'); await page.click('#mkeyBtn');
+  await press(page, '#mkeyBtn');
   await page.waitForSelector('#dlgBox .mk');
   assert.equal(await page.$$eval('#dlgBox .mkrow', r => r.length), 26, 'every proofreading and punctuation mark');
   assert.equal(await page.$$eval('#dlgBox .mkrow canvas', r => r.length), 26, 'each with its picture');
@@ -110,20 +110,20 @@ test('More > Mark key: her own names and meanings are used in the menu and the k
   // A blank meaning shows just the name.
   const sp = await page.$('#dlgBox [data-m="sp"]'); await sp.evaluate(i => { i.focus(); i.select(); }); await page.keyboard.press('Backspace');
   assert.equal(await page.evaluate(() => window.__gs.markMean('sp')), '');
-  await page.click('#dlgBox .bf [data-close]');
+  await closeBox(page, '#dlgBox .bf [data-close]');
   // The right-click menu says her name for it.
   const p = await at(page, 0, 200, 200); await page.mouse.click(p.x, p.y, { button: 'right' });
   await page.waitForSelector('.stampmenu');
   assert.equal(await page.$eval('.stampmenu [data-mark="awk"]', b => b.title), 'Awkward phrasing');
   await page.keyboard.press('Escape');
   // Back to the usual wording.
-  await page.click('#moreBtn'); await page.click('#mkeyBtn');
+  await press(page, '#mkeyBtn');
   await page.waitForSelector('#dlgBox .mk');
   assert.equal(await page.$eval('#dlgBox [data-n="awk"]', i => i.value), 'Awkward phrasing', 'kept');
   await page.click('#dlgBox [data-usual="awk"]');
   assert.deepEqual(await page.evaluate(() => [window.__gs.markLabel('awk'), window.__gs.markMean('awk')]), ['Awkward', 'This is hard to read. Try saying it out loud and rewording it.']);
   assert.equal(await page.$eval('#dlgBox [data-n="awk"]', i => i.value), 'Awkward');
-  await page.click('#dlgBox .bf [data-close]');
+  await closeBox(page, '#dlgBox .bf [data-close]');
   assert.deepEqual(page.errors, []);
   await close();
 });

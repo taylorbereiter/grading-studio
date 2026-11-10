@@ -408,7 +408,7 @@ function openRescans() {
   $('#dlgBox').onclick = e => {
     if (e.target.closest('[data-cancel]')) return closeDlg();
     if (e.target.closest('[data-rscopy]')) return copy(order.map(line).join('\n'), 'Copied the list');
-    const g = e.target.closest('[data-rsgo]'); if (g) { closeDlg(); openStudent(+g.dataset.rsgo); }
+    const g = e.target.closest('[data-rsgo]'); if (g) { toPaper(+g.dataset.rsgo); }
   };
 }
 $('#paper').addEventListener('click', e => {

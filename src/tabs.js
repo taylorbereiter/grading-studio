@@ -58,12 +58,12 @@ function returnedHtml() {
 }
 function returnedDraw() { const el = $('#rtState'); if (el) el.innerHTML = returnedHtml(); }
 // The marked files went out (ZIP, folder or Drive): the assignment says Returned on Home and on its class page. One click takes it back.
-function setReturned(n) {
+function setReturned(n, said) {
   if (!batch) return;
   const b0 = batch, was = batch.returned;
   batch.returned = { t: Date.now(), n }; saveSoon();
   if ($('#rtState')) returnedDraw();
-  else toastDo('Done. This assignment is marked as returned.', 'Undo', () => { if (batch !== b0) return; batch.returned = was; saveSoon(); });
+  else toastDo((said || 'Done.') + ' This assignment is marked as returned.', 'Undo', () => { if (batch !== b0) return; batch.returned = was; saveSoon(); });
 }
 function returnSideHtml() {
   const st = batch.students[cur], who = st && st.files.length ? (anonOn() ? 'this paper' : esc(st.key) + '’s paper') : '';

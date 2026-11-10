@@ -209,11 +209,11 @@ const workOf = page => page.evaluate(() => {
 // What used to be under More (Lighting, Share with Claude, Mark key, the Gradebook box…) is pressed from Find anything now, which clicks
 // the button it always was. This is that click.
 const press = (page, sel) => page.$eval(sel, b => b.click());
-// Leaves a tab's screen (Grades, Insights, Return) for the papers. A tab's screen has no ✕: Escape and the Mark tab are the ways back.
-async function toMark(page) {
-  await page.evaluate(() => { const G = window.__gs, b = G.state().batch; if (b && G.routeNow().tab) G.go('#/a/' + encodeURIComponent(b.id.replace(/^gs\.b\./, ''))); else { const x = document.querySelector('#dlgBox [data-close]'); if (x && !document.querySelector('#dlg').hidden) x.click(); } });
-  await page.waitForFunction(() => document.querySelector('#dlg').hidden);
-}
+// Closes what is open: a box by its ✕ or its Close button, a tab's screen (Grades, Insights, Return; it has neither) by going back to the papers.
+const closeBox = (page, sel = '#dlgBox [data-close]') => page.evaluate(sel => {
+  const d = document.querySelector('#dlg'), G = window.__gs, b = G.state().batch; if (d.hidden) return;
+  if (d.classList.contains('aspage') && b) G.go('#/a/' + encodeURIComponent(b.id.replace(/^gs\.b\./, ''))); else document.querySelector(sel).click();
+}, sel);
 // Picks something in the right-click menu: right there if it's in the menu, or by pointing at the panel it's in first.
 async function menuPick(page, sel) {
   const where = await page.evaluate(sel => {
@@ -227,4 +227,4 @@ async function menuPick(page, sel) {
   await page.waitForSelector('.stampmenu [data-fly="' + where + '"]:not([hidden])');
   await page.click('.stampmenu [data-fly="' + where + '"] ' + sel);
 }
-module.exports = { goTo, openClass, classPage, menuPick, press, toMark, MARK_BOXES, ROOT, BUILT, builtHtml, tmpDir, openApp, answerDlg, appReady, plant, idbRead, pickFile, openZip, waitPaper, goToStudent, at, drag, clickAt, setTool, score, markPage, settle, catchDownloads, probePdf, probeScreen, workOf };
+module.exports = { goTo, openClass, classPage, menuPick, press, closeBox, MARK_BOXES, ROOT, BUILT, builtHtml, tmpDir, openApp, answerDlg, appReady, plant, idbRead, pickFile, openZip, waitPaper, goToStudent, at, drag, clickAt, setTool, score, markPage, settle, catchDownloads, probePdf, probeScreen, workOf };

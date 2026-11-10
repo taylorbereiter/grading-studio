@@ -2,7 +2,7 @@
 const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const { launch } = require('./helpers/chrome');
-const { openApp, openZip, catchDownloads } = require('./helpers/app');
+const { openApp, openZip, catchDownloads, press } = require('./helpers/app');
 const { makePaper, zipOf, standardFiles } = require('./helpers/fixtures');
 
 let browser, files;
@@ -43,7 +43,7 @@ test('Marks only: one file by code, with scores, comments, marks and the words u
   await page.evaluate(() => window.__gs.state().setup.mode === 'rubric' || (window.__gs.state().setup.mode = 'rubric'));
   await plant(page);
   const dl = await catchDownloads(page);
-  await page.click('#moreBtn'); await page.click('#shareBtn');
+  await press(page, '#shareBtn');
   await page.waitForSelector('[data-kind="marks"]');
   await page.click('[data-kind="marks"]');
   await page.waitForSelector('#mkAsk');

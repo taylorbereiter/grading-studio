@@ -6,7 +6,7 @@ const fs = require('fs');
 const { PDFDocument, StandardFonts, rgb } = require('pdf-lib');
 const { unzipSync } = require('fflate');
 const { launch } = require('./helpers/chrome');
-const { openApp, menuPick, openZip, appReady, at, clickAt, drag, setTool, settle, catchDownloads, probePdf } = require('./helpers/app');
+const { openApp, menuPick, openZip, appReady, at, clickAt, drag, setTool, settle, catchDownloads, probePdf, closeBox } = require('./helpers/app');
 const { zipOf } = require('./helpers/fixtures');
 
 const LINE = 'The quick brown fox jumps over the lazy dog and keeps on running far away';
@@ -147,7 +147,7 @@ test('stamps survive saving and reopening, turn with the page staying upright, a
   assert.ok(out[0] > 5, 'the circled sp is in the export');
   assert.ok(out[1] > 50, 'the lightbulb is in the export');
   assert.equal(out[2], 0, 'and nothing where there was nothing');
-  await page.click('#dlgBox .bf [data-close]');
+  await closeBox(page, '#dlgBox .bf [data-close]');
   // A turned page: the stamps move with it and stay upright.
   const turned = await page.evaluate(() => { const m = [{ t: 'stamp', k: 'star', x: 100, y: 200, size: 44, rot: 3 }]; window.__gs.turnMarks(m, 612, 792, 1); return m[0]; });
   assert.deepEqual([turned.x, turned.y, turned.rot], [592, 100, 3]);

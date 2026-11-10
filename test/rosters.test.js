@@ -3,7 +3,7 @@ const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const { unzipSync, zipSync, strToU8 } = require('fflate');
 const { launch } = require('./helpers/chrome');
-const { openApp, answerDlg, openZip, pickFile, goToStudent, setTool, drag, score, settle, workOf } = require('./helpers/app');
+const { openApp, answerDlg, openZip, pickFile, goToStudent, setTool, drag, score, settle, workOf, closeBox } = require('./helpers/app');
 const { makePaper, makeDocx, zipOf } = require('./helpers/fixtures');
 
 let browser;
@@ -224,7 +224,7 @@ test('Copy all scores says the order it copies in', async () => {
     const c = await clip(page);
     await page.waitForFunction(() => document.querySelector('.toast').textContent);
     const t = await toastText(page);
-    await page.click('#dlgBox [data-close]');
+    await closeBox(page);
     return [c, t];
   };
   let [c, t] = await copyAll();

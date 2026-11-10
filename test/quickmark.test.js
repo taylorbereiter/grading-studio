@@ -3,7 +3,7 @@
 const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const { launch } = require('./helpers/chrome');
-const { openApp, openZip, appReady, settle } = require('./helpers/app');
+const { openApp, openZip, appReady, settle, closeBox } = require('./helpers/app');
 const { makePaper, zipOf } = require('./helpers/fixtures');
 
 let browser, zip;
@@ -106,7 +106,7 @@ test('by student: every answer on one screen, a change moves the score, and it a
   await page.evaluate(() => { const q = window.__gs.state().batch.quiz.qs[0]; return window.__gs.quizSet(window.__gs.state().batch.students[0], q, null); });
   const left = (await quizMarksOf(page, 0)).marks;
   assert.deepEqual(left.sort(), ['pen', 'pen'], 'the total comes off, and full marks leave nothing: ' + left.join());
-  await page.click('[data-close]');
+  await closeBox(page);
   await settle(page);
   const before = await quizMarksOf(page, 0);
   await page.reload(); await appReady(page);

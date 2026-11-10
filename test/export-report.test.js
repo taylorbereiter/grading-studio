@@ -4,7 +4,7 @@ const assert = require('node:assert/strict');
 const { PDFDocument } = require('pdf-lib');
 const { unzipSync, strToU8 } = require('fflate');
 const { launch } = require('./helpers/chrome');
-const { openApp, openZip, goToStudent, setTool, drag, settle, catchDownloads } = require('./helpers/app');
+const { openApp, openZip, goToStudent, setTool, drag, settle, catchDownloads, closeBox } = require('./helpers/app');
 const { standardFiles, makePaper, zipOf } = require('./helpers/fixtures');
 
 let browser, files;
@@ -140,7 +140,7 @@ test('Closing the export box while it runs doesn’t lose the export: the ZIP st
   await openZip(page, zipOf({ 'Aria Testwell/Essay.pdf': paper, 'Bram Sample/Essay.pdf': paper }), 'Mine.zip');
   await scribble(page, 0); await settle(page);
   await runExport(page);
-  const got = await dl.next(async () => { await page.click('#dlgBox [data-go="zip"]'); await page.click('#dlgBox .bf [data-close]'); });
+  const got = await dl.next(async () => { await page.click('#dlgBox [data-go="zip"]'); await closeBox(page, '#dlgBox .bf [data-close]'); });
   assert.match(got.name, /Marked - /);
   await page.waitForFunction(() => /Done\. 1 file in the ZIP/.test((document.querySelector('.toast') || {}).textContent || ''), { timeout: 15000 });
   assert.deepEqual(page.errors, []);

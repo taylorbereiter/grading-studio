@@ -2,7 +2,7 @@
 const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const { launch } = require('./helpers/chrome');
-const { openApp, openZip, appReady, answerDlg, pickFile, waitPaper, goToStudent, settle } = require('./helpers/app');
+const { openApp, openZip, appReady, answerDlg, pickFile, waitPaper, goToStudent, settle, press } = require('./helpers/app');
 const { makePaper, zipOf } = require('./helpers/fixtures');
 
 let browser;
@@ -73,7 +73,7 @@ test('in the split: pages go to several students, a page can be flagged for a re
   await page.click('#kept [data-kopen]');
   await waitPaper(page);
   await page.waitForFunction(() => window.__gs.scanRescans().length === 2);
-  await page.click('#moreBtn'); await page.click('#rescanBtn');
+  await press(page, '#rescanBtn');
   assert.deepEqual(await page.$$eval('#dlgBox [data-rsgo]', e => e.map(x => x.textContent)), ['Bram Samplep. 2', 'Cleo Fixturep. 2']);
   await page.click('#dlgBox [data-rsgo]');
   await page.waitForFunction(() => window.__gs.state().pages[1] && window.__gs.state().pages[1].snote);

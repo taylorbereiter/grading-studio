@@ -2,7 +2,7 @@
 const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const { launch } = require('./helpers/chrome');
-const { openApp, openZip, goToStudent, score } = require('./helpers/app');
+const { openApp, openZip, goToStudent, score, closeBox } = require('./helpers/app');
 const { standardFiles, makePaper, zipOf } = require('./helpers/fixtures');
 
 let browser, zip;
@@ -120,7 +120,7 @@ test('the Percents tab: who counts, average or middle, a target, bands, What if,
   assert.equal(await text(page, '#pAvg .v'), '83.33%');
 
   // The target and bands are kept for this class; What if isn't.
-  await page.click('[data-close]');
+  await closeBox(page);
   await page.evaluate(() => window.__gs.openOverview());
   await pctTab(page);
   assert.equal(await page.$eval('#pTarget', e => e.value), '85');

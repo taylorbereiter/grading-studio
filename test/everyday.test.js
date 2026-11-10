@@ -2,7 +2,7 @@
 const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const { launch } = require('./helpers/chrome');
-const { openApp, openZip, at, clickAt, drag, setTool, goToStudent } = require('./helpers/app');
+const { openApp, openZip, at, clickAt, drag, setTool, goToStudent, press, closeBox } = require('./helpers/app');
 const { makePaper, standardFiles, zipOf } = require('./helpers/fixtures');
 
 let browser, zip;
@@ -28,7 +28,7 @@ const onScreen = page => page.evaluate(() => {
   }
   return out;
 });
-const OPENERS = { 'Export marked': '#exportBtn', 'Rubric setup': '#setupBtn', 'Keys': '#keysBtn', 'Display': '#dispBtn', 'Grades list': '#gradesBtn', 'Grade sheet': '#sheetBtn', 'Arrange pages': '#arrangeBtn' };
+const OPENERS = { 'Return': '#exportBtn', 'Insights': '#insightsTab', 'Rubric setup': '#setupBtn', 'Keys': '#keysBtn', 'Display': '#dispBtn', 'Grades': '#gradesBtn', 'Grade sheet': '#sheetBtn', 'Arrange pages': '#arrangeBtn' };
 for (const [ui, W, H] of [[1.15, 1440, 900], [1.15, 1440, 760], [1.3, 1440, 760], [1.3, 1280, 680]]) test('at app text ' + ui + ' in a ' + W + 'x' + H + ' window, every tall dialog keeps its title and buttons on screen', async () => {
   const { page, close } = await openApp(browser, bigText(ui));
   await page.setViewport({ width: W, height: H });
@@ -54,8 +54,8 @@ for (const [ui, H] of [[1, 420], [1.3, 680]]) test('at app text ' + ui + ' in a 
   await page.click('#moreBtn');
   const m = await page.$eval('#moreMenu', e => { const r = e.getBoundingClientRect(); return { bottom: r.bottom, scrolls: e.scrollHeight > e.clientHeight + 1, over: getComputedStyle(e).overflowY }; });
   assert.ok(m.bottom <= H, 'the menu ends on screen: ' + m.bottom);
-  await page.$eval('#keysBtn', e => e.scrollIntoView({ block: 'nearest' }));
-  const k = await page.$eval('#keysBtn', e => e.getBoundingClientRect().bottom);
+  await page.$eval('#moreMenu .mfoot', e => e.scrollIntoView({ block: 'nearest' }));
+  const k = await page.$eval('#moreMenu .mfoot', e => e.getBoundingClientRect().bottom);
   assert.ok(k <= H, 'scrolled to, its last rows show: ' + k);
   await close();
 });
@@ -232,7 +232,7 @@ test('dragging a highlight past the end of a short line stays on that line', asy
 });
 
 /* ---------------- keys and the More menu ---------------- */
-test('with More open, nothing behind it gets a key, and tabbing out of it closes it', async () => {
+test('with Setup open, nothing behind it gets a key, and tabbing out of it closes it', async () => {
   const { page, close } = await openApp(browser);
   await openZip(page, zip);
   await setTool(page, 'pen'); await drag(page, 0, [[100, 500], [200, 530]]);
@@ -244,27 +244,27 @@ test('with More open, nothing behind it gets a key, and tabbing out of it closes
   assert.equal(await page.$eval('.tool[data-tool="select"]', b => b.getAttribute('aria-pressed')), 'true', 'P');
   assert.equal(await page.$eval('#moreMenu', m => m.hidden), false, 'and the menu is still up');
   // Enter still presses what is in the menu.
-  await page.focus('#keysBtn'); await page.keyboard.press('Enter');
-  await page.waitForSelector('#dlgBox .keys');
+  await page.focus('#setupBtn'); await page.keyboard.press('Enter');
+  await page.waitForSelector('#setupBody');
   await page.keyboard.press('Escape');
   await page.waitForFunction(() => document.querySelector('#dlg').hidden);
   // Past the last item the menu closes, and the keys are hers again.
-  await page.click('#moreBtn'); await page.focus('#moreMenu .themeBtn');
+  await page.click('#moreBtn'); await page.evaluate(() => [...document.querySelectorAll('#moreMenu button, #moreMenu a')].filter(e => e.checkVisibility()).pop().focus());
   for (let i = 0; i < 12 && !await page.$eval('#moreMenu', m => m.hidden); i++) await page.keyboard.press('Tab');
   assert.equal(await page.$eval('#moreMenu', m => m.hidden), true, 'it closed');
   assert.deepEqual(page.errors, []);
   await close();
 });
 
-test('Lighting from More takes the keyboard, so Escape closes it; with no mark picked, Escape closes it from anywhere', async () => {
+test('Lighting takes the keyboard, so Escape closes it; with no mark picked, Escape closes it from anywhere', async () => {
   const { page, close } = await openApp(browser);
   await openZip(page, zip);
-  await page.click('#moreBtn'); await page.click('#lightBtn');
+  await press(page, '#lightBtn');
   await page.waitForSelector('#lightPanel');
   assert.equal(await page.evaluate(() => document.activeElement.id), 'lightPanel');
   await page.keyboard.press('Escape');
   assert.equal(await page.$('#lightPanel'), null, 'closed');
-  await page.click('#moreBtn'); await page.click('#lightBtn');
+  await press(page, '#lightBtn');
   await page.waitForSelector('#lightPanel');
   await page.evaluate(() => document.activeElement.blur());
   await page.keyboard.press('Escape');
@@ -279,7 +279,7 @@ test('slow checks show a box straight away: Export and What opened', async () =>
   const says = await page.evaluate(() => { document.querySelector('#openRepBtn').click(); return document.querySelector('#dlgBox').textContent; });
   assert.match(says, /What opened.*Checking the files/s);
   await page.waitForSelector('#openRepBox', { timeout: 60000 });
-  await page.click('#dlgBox .bf [data-close]');
+  await closeBox(page, '#dlgBox .bf [data-close]');
   const exp = await page.evaluate(() => { document.querySelector('#exportBtn').click(); return document.querySelector('#dlgBox').textContent; });
   assert.match(exp, /Reading the files first/);
   await page.keyboard.press('KeyN');

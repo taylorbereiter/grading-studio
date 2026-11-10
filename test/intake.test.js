@@ -4,7 +4,7 @@ const assert = require('node:assert/strict');
 const fs = require('fs'), path = require('path');
 const { unzipSync, strToU8 } = require('fflate');
 const { launch } = require('./helpers/chrome');
-const { builtHtml, openApp, openZip, waitPaper, goToStudent, setTool, drag, settle, catchDownloads, probePdf, answerDlg } = require('./helpers/app');
+const { builtHtml, openApp, openZip, waitPaper, goToStudent, setTool, drag, settle, catchDownloads, probePdf, answerDlg, closeBox } = require('./helpers/app');
 const { makePaper, makeDocx, zipOf } = require('./helpers/fixtures');
 
 const FX = n => new Uint8Array(fs.readFileSync(path.join(__dirname, 'fixtures', 'intake', n)));
@@ -636,7 +636,7 @@ test('A newer download with new files offers to mark those students late, and do
   await page.click('#dlgBox [data-carrylate]');
   assert.deepEqual(await page.evaluate(() => window.__gs.state().batch.students.filter(s => s.grade.status === 'late').map(s => s.key)), ['Dov Madeup']);
   assert.equal(await page.$('#dlgBox [data-carrylate]'), null, 'done, so it’s gone');
-  await page.click('#dlgBox .bf [data-close]');
+  await closeBox(page, '#dlgBox .bf [data-close]');
   assert.deepEqual(page.errors, []);
   await close();
 });
@@ -687,7 +687,7 @@ test('Reading the report by way of More takes the bar down for good, and Forget 
   const id = await page.evaluate(() => window.__gs.state().batch.id);
   await page.click('#moreBtn'); await page.click('#openRepBtn');
   await page.waitForSelector('#openRepBox');
-  await page.click('#dlgBox .bf [data-close]');
+  await closeBox(page, '#dlgBox .bf [data-close]');
   assert.equal(await page.$eval('#openRep', e => e.hidden), true);
   const seen = () => page.evaluate(id => Object.keys(JSON.parse(localStorage.getItem('gs.openSeen') || '{}')).includes(id), id);
   assert.equal(await seen(), true);

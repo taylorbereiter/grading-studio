@@ -5,7 +5,7 @@ const fs = require('fs'), path = require('path');
 const { unzipSync, zipSync, strToU8 } = require('fflate');
 const { PDFDocument, PDFName, PDFString, PDFHexString } = require('pdf-lib');
 const { launch } = require('./helpers/chrome');
-const { openApp, answerDlg, appReady, openZip, pickFile, goToStudent, score, settle, waitPaper, tmpDir, catchDownloads } = require('./helpers/app');
+const { openApp, answerDlg, appReady, openZip, pickFile, goToStudent, score, settle, waitPaper, tmpDir, catchDownloads, closeBox } = require('./helpers/app');
 const { makePaper, makeDocx, zipOf, quizFiles } = require('./helpers/fixtures');
 
 let browser, zip3;
@@ -443,7 +443,7 @@ test('a Word rubric’s percent follows the setup, on the Grade sheet too', asyn
     await page.waitForSelector('#shBody table');
     await page.waitForFunction(() => [...document.querySelectorAll('#shBody tbody tr')].some(t => /Ben/.test(t.textContent) && /%/.test(t.textContent)));
     const t = await page.$$eval('#shBody tbody tr', a => a.map(t => t.textContent.replace(/\s+/g, ' ')).filter(t => /Ben/.test(t)));
-    await page.click('#dlgBox [data-close]');
+    await closeBox(page);
     await closed(page);
     return t[0];
   };
@@ -672,10 +672,10 @@ test('the overview waits for the papers, and says it’s her score that’s off 
   await page.evaluate(() => window.__gs.openOverview());
   await page.waitForSelector('#ovLeft');
   assert.match(await page.$eval('#ovLeft', e => e.textContent), /^Counted: 1 of 4/);
-  await page.click('#dlgBox .bf [data-close]');
+  await closeBox(page, '#dlgBox .bf [data-close]');
   await closed(page);
-  // while the papers are still being read, from the Grades list
-  await page.evaluate(async () => { const G = window.__gs; G.openGrades(); const p = G.scanAll(); document.querySelector('#dlgBox [data-ovopen]').click(); await p; });
+  // while the papers are still being read, from the Grades tab
+  await page.evaluate(async () => { const G = window.__gs; G.openGrades(); const p = G.scanAll(); document.querySelector('#insightsTab').click(); await p; });
   await page.waitForSelector('#ovLeft');
   await page.$eval('#ptsIn', e => { e.value = '13'; e.dispatchEvent(new Event('input', { bubbles: true })); });
   await goToStudent(page, 1);

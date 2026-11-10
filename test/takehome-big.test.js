@@ -5,7 +5,7 @@ const assert = require('node:assert/strict');
 const { execFileSync } = require('child_process');
 const { launch } = require('./helpers/chrome');
 const { serve } = require('./helpers/serve');
-const { goTo, builtHtml, openApp, appReady } = require('./helpers/app');
+const { goTo, builtHtml, openApp, appReady, closeBox } = require('./helpers/app');
 const { linkFolder } = require('./helpers/carry');
 
 // How much memory the page's process is really using, in MB. Array buffers don't show in the JS heap, so this asks the system.
@@ -78,7 +78,7 @@ test('over 600 MB goes out and comes back, with the tab responsive and no spike 
     const size = await page.evaluate(async () => (await (await (await navigator.storage.getDirectory()).getFileHandle('big.gswork')).getFile()).size);
     console.log('file size MB', Math.round(size / 1e6));
     assert.ok(size >= made);
-    await page.click('#dlgBox [data-close]');
+    await closeBox(page);
     // A browser with nothing in it. The file stays, in the private file system.
     await page.goto(server.url + 'blank');
     await page.evaluate(async () => {

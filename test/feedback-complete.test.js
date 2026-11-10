@@ -2,7 +2,7 @@
 const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const { launch } = require('./helpers/chrome');
-const { classPage, openApp, pickFile, waitPaper } = require('./helpers/app');
+const { classPage, openApp, pickFile, waitPaper, press } = require('./helpers/app');
 const { standardFiles, zipOf } = require('./helpers/fixtures');
 
 let browser, zip;
@@ -62,7 +62,7 @@ test('a formative activity shows Feedback complete in place of the score, with F
   await page.waitForFunction(() => /2 of 3 feedback complete/.test(document.querySelector('#progS .ph').textContent));
   assert.equal(await page.$('#fbTog'), null);
   // The gradebook's ✓ follows the switch.
-  await page.click('#moreBtn'); await page.click('#bookBtn');
+  await press(page, '#bookBtn');
   await page.waitForSelector('#bkTab');
   const cells = await page.$$eval('#bkTab tbody tr', r => r.map(x => x.children[1].textContent.trim()));
   assert.deepEqual(cells, ['✓', '✓', 'started', 'missing', '2/4']);

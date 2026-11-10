@@ -4,7 +4,7 @@ const assert = require('node:assert/strict');
 const { PDFDocument } = require('pdf-lib');
 const { unzipSync } = require('fflate');
 const { launch } = require('./helpers/chrome');
-const { MARK_BOXES, openApp, openZip, waitPaper, goToStudent, markPage, setTool, drag, score, settle, catchDownloads, probePdf, workOf, appReady } = require('./helpers/app');
+const { MARK_BOXES, openApp, openZip, waitPaper, goToStudent, markPage, setTool, drag, score, settle, catchDownloads, probePdf, workOf, appReady, closeBox } = require('./helpers/app');
 const { standardFiles, makePaper, makeDocx, zipOf } = require('./helpers/fixtures');
 
 let browser, files, zip;
@@ -26,7 +26,7 @@ async function exportZip(page, dl, opts = {}) {
   await page.waitForFunction(() => /^Done\./.test(document.querySelector('#xStatus').textContent), { timeout: 60000 });
   assert.match(got.name, /^Marked - /);
   const un = unzipSync(got.bytes);
-  await page.click('#dlgBox .bf [data-close]');
+  await closeBox(page, '#dlgBox .bf [data-close]');
   return { un, bytes: got.bytes };
 }
 async function markedStack(page) {

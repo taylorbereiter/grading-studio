@@ -4,7 +4,7 @@ const assert = require('node:assert/strict');
 const { unzipSync } = require('fflate');
 const { PDFDocument, PDFName, PDFString, PDFHexString } = require('pdf-lib');
 const { launch } = require('./helpers/chrome');
-const { openApp, openZip, goToStudent, score, settle, catchDownloads } = require('./helpers/app');
+const { openApp, openZip, goToStudent, score, settle, catchDownloads, press, closeBox } = require('./helpers/app');
 const { makePaper, zipOf, standardFiles } = require('./helpers/fixtures');
 
 let browser, files;
@@ -215,7 +215,7 @@ test('the check on a full class: the reading, one dot per paper, a list, and row
   const { page, close } = await openApp(browser);
   await openZip(page, zipOf(f), 'Big class.zip');
   await fill(page, { noTimes: 0 });
-  await page.click('#moreBtn'); await page.click('#consBtn');
+  await press(page, '#consBtn');
   await page.waitForSelector('#consBox');
   assert.match(await page.$eval('#consSay', e => e.textContent), /Worth a look.*Later papers scored lower/s);
   assert.equal((await page.$$('#consBox .ddot')).length, 24);
@@ -233,11 +233,11 @@ test('the check on a full class: the reading, one dot per paper, a list, and row
   const size = await page.$eval('#consBox .dchart', e => { const r = e.getBoundingClientRect(); return [r.width, r.height]; });
   assert.ok(size[0] > 300 && size[1] > 90, 'the chart has room: ' + size);
   // Times that came from one bulk change aren't used, and she's told.
-  await page.click('#dlgBox [data-close]');
+  await closeBox(page);
   await page.evaluate(() => { const s = window.__gs.state(); for (const st of s.batch.students) delete st.grade.atR; });
   await fill(page, { batched: true });
   await page.evaluate(() => { for (const st of window.__gs.state().batch.students) delete st.grade.atR; });
-  await page.click('#moreBtn'); await page.click('#consBtn');
+  await press(page, '#consBtn');
   await page.waitForSelector('#consBox');
   assert.match(await page.$eval('#consBox', e => e.textContent), /24 changed all at once/);
   assert.match(await page.$eval('#consSay', e => e.textContent), /Too few papers to say/);
@@ -250,7 +250,7 @@ test('a small class: no direction claimed, and same scores side by side with the
   await openZip(page, zipOf(files), 'Small.zip');
   await page.evaluate(() => { window.__gs.state().batch.students[0].grade.comment = 'Clear thesis, Aria Testwell.'; });
   await fill(page, { same: 3, nSame: 3 });
-  await page.click('#moreBtn'); await page.click('#consBtn');
+  await press(page, '#consBtn');
   await page.waitForSelector('#consBox');
   const say = await page.$eval('#consSay', e => e.textContent);
   assert.match(say, /Too few papers to say/); assert.doesNotMatch(say, /Later papers|you got harder/);
@@ -349,11 +349,11 @@ test('covers: each paper is checked only when she says so, the list shows who, a
   assert.match(await page.$eval('#ccDone', e => e.textContent), /Checked \(1\).*Aria Testwell/s);
   assert.doesNotMatch(await page.$eval('#ccTodo', e => e.textContent), /Aria Testwell/);
   // It's kept with the work.
-  await page.click('#dlgBox [data-close]');
+  await closeBox(page);
   await settle(page);
   assert.equal(await page.evaluate(() => { const s = JSON.parse(localStorage.getItem(window.__gs.state().batch.id)); return Object.keys(s.share.checked).length; }), 2, 'both of her pages');
   // Back to the check: it starts at the first one not done, and her clicks on the rest finish it.
-  await page.click('#moreBtn'); await page.click('#shareBtn');
+  await press(page, '#shareBtn');
   await page.waitForSelector('#dlgBox [data-check]');
   await page.click('#dlgBox [data-check]');
   await page.waitForFunction(() => /paper 2 of/.test(document.querySelector('#ccCount').textContent));
@@ -512,7 +512,7 @@ test('the check says Paper N during anonymous grading, and so does Bring back', 
   await page.evaluate(() => window.__gs.openShare());
   await page.waitForSelector('#dlgBox [data-close]');
   const codes = await page.evaluate(() => window.__gs.state().batch.share.codes);
-  await page.click('#dlgBox [data-close]');
+  await closeBox(page);
   await page.evaluate(() => window.__gs.setAnon(true));
   await waitAnon(page);
   await page.evaluate(() => window.__gs.openShare());
@@ -539,7 +539,7 @@ test('the Claude steps: the message has no names, the ZIP is remembered, and a r
   await openZip(page, zipOf(files), 'Tide essay.zip');
   await page.evaluate(() => { navigator.clipboard.writeText = t => { window.__copied = t; return Promise.resolve(); }; });
   const dl = await catchDownloads(page);
-  await page.click('#moreBtn'); await page.click('#shareBtn');
+  await press(page, '#shareBtn');
   await page.waitForSelector('#shAsk');
   assert.equal(await page.$eval('#shAsk', e => e.value), await page.evaluate(() => window.__gs.SHARE_ASK));
   // She can change it. If a name slips in, what she copies has [name] in its place.
@@ -604,7 +604,7 @@ test('a page turned after its covers were checked needs another look, and her bo
   const count = () => page.$eval('#shCount', e => e.textContent);
   assert.match(await count(), /^1 of 2/);
   const was = await boxOf();
-  await page.click('#dlgBox [data-close]');
+  await closeBox(page);
   await page.evaluate(() => document.querySelector('[data-rotdoc]').click());
   await page.waitForFunction(() => window.__gs.state().batch.students[0].files[0].rot[0] === 90);
   await page.evaluate(() => window.__gs.openShare());
@@ -621,7 +621,7 @@ test('a page turned after its covers were checked needs another look, and her bo
   assert.ok((await px(200, 65)).every(v => v > 200), 'and gone from where they were');
   await page.keyboard.press('Escape');
   await page.waitForSelector('#ccTodo');
-  await page.click('#dlgBox [data-close]');
+  await closeBox(page);
   // Undo turns the box back too. She still looks again.
   await page.evaluate(() => window.__gs.undo());
   await page.waitForFunction(() => !window.__gs.state().batch.students[0].files[0].rot[0]);

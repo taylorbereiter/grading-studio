@@ -2,7 +2,7 @@
 const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const { launch } = require('./helpers/chrome');
-const { classPage, openApp, openZip, pickFile, waitPaper, score, settle, appReady } = require('./helpers/app');
+const { classPage, openApp, openZip, pickFile, waitPaper, score, settle, appReady, closeBox } = require('./helpers/app');
 const { makePaper, zipOf } = require('./helpers/fixtures');
 const { takeHome, openFile, bringIt, linkFolder, folderWait, folderRead, folderWrite } = require('./helpers/carry');
 
@@ -232,7 +232,7 @@ for (const [side, rows, total, pct] of [['a', 4, 13, 81], ['b', 3, 9, 86]]) test
   const back = await openFile(lap.page, await takeHome(home.page));
   assert.doesNotMatch(back.preview || back.error, /later one is kept/);
   assert.equal((await lap.page.$$('.cfrow')).length, 0);
-  if (await lap.page.$('#bringGo')) await bringIt(lap.page); else await lap.page.click('#dlgBox [data-close]');
+  if (await lap.page.$('#bringGo')) await bringIt(lap.page); else await closeBox(lap.page);
   await cont(lap.page); await waitPaper(lap.page); await noQuestion(lap.page);
   g = await grade(lap.page); assert.equal(g.total, total); assert.equal(g.pct, pct);
   assert.equal(await cardRows(lap.page), rows);

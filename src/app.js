@@ -1940,6 +1940,8 @@ function closeDlg() {
   });
 }
 $('#dlg').addEventListener('pointerdown', e => { if (e.target.id === 'dlg' && !dlgPage) { if (SP) splitLeave(); else leaveDlg(); } });
+// From any screen or box straight to a paper. A box over a tab's screen would otherwise fall back to that screen when it closes.
+function toPaper(i, path) { closeDlg(); if (batch && routeNow().tab) go(batchHash(batch.id)); return openStudent(i, path); }
 const TAB_DRAW = { grades: () => openGrades(), 'grades/sheet': () => openSheet(false), insights: () => openOverview(), 'insights/consistency': () => openCons(), return: () => openExport() };
 // The screen for where the address says she is in the open assignment.
 function tabShow(r) {
@@ -2117,7 +2119,7 @@ function openGrades() {
     if (cc && cc.dataset.partial && !await okCellPartial(+cc.closest('tr').dataset.i, cc.dataset.copy)) return;
     if (cc) { copy(cc.dataset.copy, cc.dataset.copy ? 'Copied “' + (cc.dataset.copy.length > 40 ? cc.dataset.copy.slice(0, 40) + '…' : cc.dataset.copy) + '”' : 'That cell is empty'); return; }
     const nm = e.target.closest('tr.go td.nm');
-    if (nm) { closeDlg(); openStudent(+nm.parentElement.dataset.i); return; }
+    if (nm) { toPaper(+nm.parentElement.dataset.i); return; }
     const cp = e.target.closest('[data-cp]');
     if (cp) {
       const k = cp.dataset.cp, R = gradeRows();
@@ -2309,7 +2311,7 @@ async function openExport() {
   box.onchange = e => { optsSay(); if (e.target.id === 'xEdit') store.set('gs.xedit', e.target.checked); if (e.target.id === 'xKey') setKey(v => { v.on = e.target.checked; }); if (e.target.id === 'xAll') { store.set('gs.xall', e.target.checked); renderTools(); openExport(); } };
   box.onclick = async e => {
     if (e.target.closest('[data-close]')) return closeDlg();
-    const ck = e.target.closest('[data-chk]'); if (ck) { closeDlg(); return openStudent(+ck.dataset.chk, ck.dataset.file || undefined); }
+    const ck = e.target.closest('[data-chk]'); if (ck) { return toPaper(+ck.dataset.chk, ck.dataset.file || undefined); }
     if (e.target.closest('[data-chksheet]')) return openSheet();
     if (returnSideClick(e)) return;
     if (e.target.closest('[data-mkey]')) { if (xBusy) return toast('The last export is still going. It will say when it’s done.'); closeDlg(); return openMarkKey(openExport); }
@@ -2360,17 +2362,18 @@ async function openExport() {
       }
       await unopenable(failed);
       bar.firstChild.style.width = '100%';
+      let done = '';
       if (!dir && !Object.keys(files).length) say('Nothing could be exported.', true);
       else if (go.dataset.go === 'drive') {
         const plain = {}; for (const [k, v] of Object.entries(files)) plain[k] = v[0];
         const fname = 'Marked - ' + batch.name;
         await saveToDrive(fname, plain, (n, t) => { say('Saving to Google Drive ' + n + ' of ' + t + '…'); });
-        say('Done. Saved to Google Drive in “' + fname + '”' + (batch.drive && batch.drive.kind === 'folder' ? ', inside the folder you opened.' : batch.drive ? ', next to the ZIP you opened.' : ', in My Drive.'), true);
+        say(done = 'Done. Saved to Google Drive in “' + fname + '”' + (batch.drive && batch.drive.kind === 'folder' ? ', inside the folder you opened.' : batch.drive ? ', next to the ZIP you opened.' : ', in My Drive.'), true);
       } else {
         if (!dir) saveBlob('Marked - ' + batch.name + '.zip', new Blob([fflate.zipSync(files)], { type: 'application/zip' }));
-        say('Done. ' + nOut + (nOut === 1 ? ' file' : ' files') + (dir ? ' saved into “' + dir.name + '”.' : ' in the ZIP.'), true);
+        say(done = 'Done. ' + nOut + (nOut === 1 ? ' file' : ' files') + (dir ? ' saved into “' + dir.name + '”.' : ' in the ZIP.'), true);
       }
-      if (nOut && (dir || Object.keys(files).length)) setReturned(nOut);
+      if (nOut && (dir || Object.keys(files).length)) setReturned(nOut, done);
       exportReport(failed);
     } catch (er) {
       console.error(er); say('Something went wrong: ' + (er.message || er), true);
@@ -2726,7 +2729,7 @@ async function openSheet(rescan) {
     }
     if (e.target.closest('[data-auto]')) { delete setup.spot; store.set('gs.setup', { ...setup, spot: undefined }); saveSoon(); return openSheet(true); }
     const c = e.target.closest('[data-copy]'); if (c) return copy(c.dataset.copy, c.dataset.copy ? 'Copied ' + c.dataset.copy : 'Nothing to copy');
-    const go = e.target.closest('[data-open]'); if (go) { closeDlg(); return openStudent(+go.dataset.open, go.dataset.file); }
+    const go = e.target.closest('[data-open]'); if (go) { return toPaper(+go.dataset.open, go.dataset.file); }
     const rd = e.target.closest('[data-rd]'); if (rd) { setReading(batch.students[+rd.dataset.rdi], rd.dataset.rdk, rd.dataset.rd); return renderSheet(); }
     if (e.target.closest('[data-cp]') && !await okPartial(batch.students)) return;
     if (e.target.closest('[data-cp]')) return copy(batch.students.map(st => scoreText(gradeOf(st), 'any')).join('\n'), 'Copied ' + batch.students.length + ' scores in ' + listOrder() + ' (blank where unsure)');
@@ -5172,7 +5175,7 @@ function openAnon() {
   $('#dlgBox').onclick = e => {
     if (e.target.closest('[data-cancel]')) return closeDlg();
     const cc = e.target.closest('[data-cc]'); if (cc) return checkCovers(+cc.dataset.cc, openAnon);
-    const wp = e.target.closest('[data-wp]'); if (wp) { closeDlg(); return openStudent(+wp.dataset.wp); }
+    const wp = e.target.closest('[data-wp]'); if (wp) { return toPaper(+wp.dataset.wp); }
     if (e.target.closest('[data-check]')) return ensureCounts().then(() => checkCovers(coverFirst(), openAnon));
     if (e.target.closest('[data-shuf]')) { anonShuffle(); closeDlg(); return setAnon(true); }
     if (e.target.closest('[data-go]')) { closeDlg(); return setAnon(true); }

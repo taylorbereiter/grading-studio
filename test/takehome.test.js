@@ -2,7 +2,7 @@
 const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const { launch } = require('./helpers/chrome');
-const { goTo, openApp, answerDlg, openZip, waitPaper, appReady, goToStudent, setTool, drag, score, settle, catchDownloads, workOf, idbRead } = require('./helpers/app');
+const { goTo, openApp, answerDlg, openZip, waitPaper, appReady, goToStudent, setTool, drag, score, settle, catchDownloads, workOf, idbRead, closeBox } = require('./helpers/app');
 const { standardFiles, makePaper, zipOf } = require('./helpers/fixtures');
 const { loadLegacy } = require('./helpers/legacy');
 const { linkFolder, folderWait, folderList, takeHome, openFile, bringIt, openZipBackup } = require('./helpers/carry');
@@ -158,7 +158,7 @@ test('there and back: each trip merges per student, and nothing done on either c
   // The same file again changes nothing.
   const again = await openFile(a.page, home);
   assert.match(again.preview, /Nothing to bring in/);
-  await a.page.click('#dlgBox [data-close]');
+  await closeBox(a.page);
   // And the trip the other way: the laptop's Bram reaches home.
   const back = await takeHome(a.page);
   await openFile(b.page, back); await bringIt(b.page);

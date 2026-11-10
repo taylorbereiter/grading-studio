@@ -500,7 +500,7 @@ function ovWire() {
   ovTipHide();
   $('#dlgBox').onclick = e => {
     if (e.target.closest('[data-close]')) return closeDlg();
-    const g = e.target.closest('[data-ovgo]'); if (g) { closeDlg(); openStudent(+g.dataset.ovgo); return; }
+    const g = e.target.closest('[data-ovgo]'); if (g) { toPaper(+g.dataset.ovgo); return; }
     const tb = e.target.closest('[data-ovtab]'); if (tb && tb.dataset.ovtab === 'cons') { openCons(); return $('#dlgBox [data-ovtab="cons"]').focus(); }
     if (tb && tb.dataset.ovtab !== ovTab) { ovTab = tb.dataset.ovtab; ovDraw(); return $('#dlgBox [data-ovtab="' + ovTab + '"]').focus(); }
     const sg = e.target.closest('[data-pseg]'); if (sg) { pvSet(sg.dataset.pseg, sg.dataset.v); return; }
