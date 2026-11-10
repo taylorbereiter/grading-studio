@@ -121,6 +121,9 @@ let cur = 0;             // index of the open student
 let tool = 'pen';
 let once = null, onceEl = null;   // a tool picked from the right-click for one go: { k, prev } (src/stamps.js)
 const COLORS = { red: '#D7263D', blue: '#1F5FD1', green: '#1E8A4C', purple: '#7B3FC4', black: '#1B1F27' };
+// A check mark always shows green ("correct"), whatever ink is picked, on screen and in every export. Checks saved
+// before this kept the ink they were made in; they draw green too, and their stored color is left as it was.
+const CHECK_INK = COLORS.green;
 const HL = { yellow: '#FFE45C', green: '#B4F0A8', pink: '#FFB8D6', blue: '#B0E0FF' };
 let inkColor = store.get('gs.ink', 'red'), hlColor = store.get('gs.hl', 'yellow'), penW = store.get('gs.penW', 2);
 const DISP0 = { ui: 1, tsize: 14, fit: 'width', dfs: 15, dlh: 1.45, trim: true };
@@ -521,7 +524,7 @@ function layoutNotes(notes, W, H, side) {
 }
 function drawCheck(ctx, m) {
   const s = m.size || 22;
-  ctx.save(); ctx.strokeStyle = m.color; ctx.lineWidth = s * 0.13; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  ctx.save(); ctx.strokeStyle = CHECK_INK; ctx.lineWidth = s * 0.13; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
   ctx.beginPath(); ctx.moveTo(m.x - s * 0.4, m.y); ctx.lineTo(m.x - s * 0.1, m.y + s * 0.3); ctx.lineTo(m.x + s * 0.45, m.y - s * 0.35); ctx.stroke();
   ctx.restore();
 }
@@ -1355,7 +1358,7 @@ function bindPage(pg) {
     else if (tool === 'hl') g = hlBegin(pg, x, y, e);
     else if (tool === 'oval') g = { x0: x, y0: y, m: { t: 'oval', color: COLORS[inkColor], sw: Math.max(1.2, penW * 0.8), x, y, w: 0, h: 0 } };
     else if (tool === 'erase') { g = { erase: true, snapped: false }; eraseAt(pg, x, y, g); }
-    else if (tool === 'check') { snap(pg); pg.marks().push({ t: 'check', color: COLORS[inkColor], x: r1(x), y: r1(y), size: newCheckSize() }); changed(pg); }
+    else if (tool === 'check') { snap(pg); pg.marks().push({ t: 'check', color: CHECK_INK, x: r1(x), y: r1(y), size: newCheckSize() }); changed(pg); }
     else if (tool === 'text') {
       const grip = gripAt(pg, x, y); if (grip) { g = gripBegin(pg, grip); return; }
       const hit = hitMark(pg, x, y, 3);
@@ -1685,7 +1688,7 @@ $('#paper').addEventListener('wheel', e => {   // a trackpad pinch arrives as ‚å
 }, { passive: false });
 function setTool(t) { commitEditors(); if (once) dropOnce(); tool = t; if (t !== 'select') { selected = null; redrawAll(); } renderTools(); }
 function recolorSelected(col) {
-  if (!selected || selected.fresh || selected.mark.t === 'hl') return;
+  if (!selected || selected.fresh || selected.mark.t === 'hl' || selected.mark.t === 'check') return;
   snap(selected.page); selected.mark.color = col; changed(selected.page);
 }
 

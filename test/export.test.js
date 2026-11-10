@@ -57,7 +57,7 @@ test('Export marked: valid PDFs, the same folders, marks baked in where she drew
   assert.equal(p1.n, 2);
   assert.equal(p1.H, 792); assert.ok(p1.W > 800, 'a comment adds the margin on the right');
   const [pen, hl, oval, check, txt, blank] = p1.ink;
-  assert.ok(pen.red > 50, 'pen'); assert.ok(hl.yellow > hl.n * 0.5, 'highlight'); assert.ok(oval.red > 50, 'circle'); assert.ok(check.red > 15, 'check'); assert.ok(txt.red > 15, 'text');
+  assert.ok(pen.red > 50, 'pen'); assert.ok(hl.yellow > hl.n * 0.5, 'highlight'); assert.ok(oval.red > 50, 'circle'); assert.ok(check.green > 15 && check.red === 0, 'check, always green'); assert.ok(txt.red > 15, 'text');
   assert.equal(blank.red, 0, 'and nothing where she didn’t mark');
   const note = await probePdf(page, aria, 1, [[622, 10, 220, 772]]);
   assert.ok(note.ink[0].dark + note.ink[0].red > 20, 'the comment is in the margin');

@@ -159,7 +159,7 @@ async function qzPaper(st, q, v) {
   if (look) {
     const sz = await qzPageSize(st, q.n); if (!sz) return;
     const s = qzSpot(st, q, sz), cx = s.x * sz.W, cy = s.y * sz.H, color = COLORS[inkColor] || COLORS.red;
-    if (look.k === 'check') list.push({ t: 'check', color, x: r1(cx), y: r1(cy), size: 22, qz: q.id });
+    if (look.k === 'check') list.push({ t: 'check', color: CHECK_INK, x: r1(cx), y: r1(cy), size: 22, qz: q.id });
     else if (look.k === 'x') {
       const d = 9;
       list.push({ t: 'pen', color, w: 2.2, pts: [[r1(cx - d), r1(cy - d)], [r1(cx + d), r1(cy + d)]], qz: q.id });
@@ -496,7 +496,7 @@ function qmSizeSay() {
 function qmMarkEl(q, v) {
   const look = qzLook(q, v);
   if (!look) return '<span class="qmmk pin" title="Where the mark goes on this paper. Drag to move it on this paper only."></span>';
-  return '<span class="qmmk' + (look.k === 'text' ? ' txt' : '') + '" title="Drag to move this mark on this paper only">' + (look.k === 'check' ? '✓' : look.k === 'x' ? '✗' : esc(look.text)) + '</span>';
+  return '<span class="qmmk' + (look.k === 'text' ? ' txt' : look.k === 'check' ? ' ok' : '') + '" title="Drag to move this mark on this paper only">' + (look.k === 'check' ? '✓' : look.k === 'x' ? '✗' : esc(look.text)) + '</span>';
 }
 const qmCard = (i, q, qi) => {
   const st = batch.students[i], v = quizMarks(st)[q.id], pts = +q.pts || 1;
