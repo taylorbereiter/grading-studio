@@ -3090,7 +3090,7 @@ async function autoCovers(page, vp, rx, xf, opts) {
   // Reads these items as one text and covers each name where it sits, piece by piece. A letter stored in a special form, like ⼩ for 小 or a shaped Arabic letter, is read as the plain one.
   const coverIn = list => {
     let text = ''; const from = [];
-    for (const it of list) { let i = 0; for (const c of it.str) { const plain = c.normalize('NFKC'); text += plain; for (let k = 0; k < plain.length; k++) from.push([it, i, i + c.length]); i += c.length; } }
+    for (const it of list) { let i = 0; for (const c of it.str) { const plain = thaiPlain(c).normalize('NFKC'); text += plain; for (let k = 0; k < plain.length; k++) from.push([it, i, i + c.length]); i += c.length; } }
     for (const [start, len] of hits(text)) {
       if (!keep(text.slice(start, start + len), from[start][0], from[start][1])) continue;
       const piece = new Map();

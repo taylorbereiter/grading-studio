@@ -8,7 +8,8 @@ const BUILT = path.join(ROOT, 'index.html');
 // Tests on a stale build would pass or fail about old code, so stop with a clear message instead.
 function builtHtml() {
   if (!fs.existsSync(BUILT)) throw new Error('index.html is missing. Run: npm run check');
-  const t = fs.statSync(BUILT).mtimeMs, src = ['build.js', 'package.json', ...fs.readdirSync(path.join(ROOT, 'src')).map(f => 'src/' + f)];
+  const walk = d => fs.readdirSync(path.join(ROOT, d), { withFileTypes: true }).flatMap(e => e.isDirectory() ? walk(d + '/' + e.name) : [d + '/' + e.name]);   // every file under src, folders within folders too
+  const t = fs.statSync(BUILT).mtimeMs, src = ['build.js', 'package.json', ...walk('src')];
   const old = src.filter(f => fs.statSync(path.join(ROOT, f)).mtimeMs > t + 1000);
   if (old.length) throw new Error('index.html is older than ' + old.join(', ') + '. Run: npm run check');
   return fs.readFileSync(BUILT, 'utf8');
@@ -42,6 +43,17 @@ async function openApp(browser, { html, platform, seed, server, context, noWait,
   if (!noWait) await appReady(page);
   return { page, ctx, srv, close: async () => { await ctx.close().catch(() => {}); if (!server) await srv.close(); } };
 }
+// The app in a Chrome of its own, in that Chrome's main profile (still a throwaway one). For tests that link a folder and then
+// come back to the page: some Chrome builds stop dead when a separate section of a profile reads a folder link it saved earlier.
+// Takes the same options as openApp; close() also closes that Chrome.
+async function openOwn(o = {}) {
+  const own = await require('./chrome').launch(), r = await openApp(own, { ...o, context: own.defaultBrowserContext() }), close = r.close;
+  OWN.add(own);
+  r.close = async () => { await close(); OWN.delete(own); await own.close(); };
+  return r;
+}
+// For a file's after(): closes any Chrome a failed test left open, so the file can end.
+const OWN = new Set(), closeOwn = async () => { for (const b of OWN) await b.close().catch(() => {}); OWN.clear(); };
 // Answers the app's own askDlg, sayDlg or askTextDlg, and keeps its text in page.lastDialog. typed fills in askTextDlg first.
 async function answerDlg(page, { yes = true, typed } = {}) {
   await page.waitForSelector('#askDlg [data-ok]');
@@ -234,4 +246,4 @@ async function menuPick(page, sel) {
   await page.waitForSelector('.stampmenu [data-fly="' + where + '"]:not([hidden])');
   await page.click('.stampmenu [data-fly="' + where + '"] ' + sel);
 }
-module.exports = { goTo, openClass, classPage, menuPick, press, pick, closeBox, MARK_BOXES, ROOT, BUILT, builtHtml, tmpDir, openApp, answerDlg, appReady, plant, idbRead, pickFile, openZip, waitPaper, goToStudent, at, drag, clickAt, setTool, score, markPage, settle, catchDownloads, probePdf, probeScreen, workOf };
+module.exports = { openOwn, closeOwn, goTo, openClass, classPage, menuPick, press, pick, closeBox, MARK_BOXES, ROOT, BUILT, builtHtml, tmpDir, openApp, answerDlg, appReady, plant, idbRead, pickFile, openZip, waitPaper, goToStudent, at, drag, clickAt, setTool, score, markPage, settle, catchDownloads, probePdf, probeScreen, workOf };

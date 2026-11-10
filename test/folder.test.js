@@ -2,15 +2,19 @@
 const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const { launch } = require('./helpers/chrome');
-const { classPage, openApp, answerDlg, openZip, waitPaper, appReady, goToStudent, setTool, drag, score, settle, workOf, idbRead } = require('./helpers/app');
+const { classPage, openOwn, closeOwn, answerDlg, openZip, waitPaper, appReady, goToStudent, setTool, drag, score, settle, workOf, idbRead } = require('./helpers/app');
 const { standardFiles, zipOf } = require('./helpers/fixtures');
 const { loadLegacy } = require('./helpers/legacy');
 const { linkFolder, folderWait, folderInfo, folderRead, folderWrite, folderList, wipeBrowser, takeHome, openFile, bringIt } = require('./helpers/carry');
 
-let browser, zip, L;
-before(async () => { browser = await launch(); zip = zipOf(await standardFiles()); L = await loadLegacy(); });
-after(async () => { await browser.close(); });
+// Every test here gets a Chrome of its own (see openOwn): a linked folder has to survive a reload.
+let zip, L;
+const browser = null, openApp = (b, o) => openOwn(o);
+before(async () => { zip = zipOf(await standardFiles()); L = await loadLegacy(); });
+after(closeOwn);
 
+// The page's address without the screen it is on (the part after #), so base + 'blank' is the empty page at the same address.
+const baseOf = page => new URL(page.url()).origin + '/';
 const idOf = page => page.evaluate(() => window.__gs.state().batch.id);
 const topBar = page => page.$eval('#saveWhere', e => e.textContent);
 async function openKept(page, name) {
@@ -278,7 +282,7 @@ test('putting back a safety copy takes the folder with it', async () => {
   await page.click('#closeBtn');
   await page.waitForSelector('[data-putback]');
   const nav = page.waitForNavigation({ timeout: 60000 });
-  await page.click('[data-putback]');
+  await page.evaluate(() => document.querySelector('[data-putback]').click());
   await answerDlg(page);
   await nav;
   await appReady(page);
@@ -295,7 +299,7 @@ test('forget reaches the folder, its snapshots and its files, and the download s
   await page.type('#cmtIn', 'To be forgotten');
   await settle(page); await folderWait(page);
   const id = await idOf(page);
-  await page.click('#closeBtn');
+  await closeUp(page);   // the save that closing makes has to land first, or it would write the download back after it was forgotten
   await page.evaluate(i => window.__gs.forgetKept(i), id);
   await folderWait(page);
   assert.deepEqual(await folderList(page, 'downloads'), []);
@@ -380,7 +384,15 @@ async function setRoster(page, name, names) {
 }
 const rosterOf = (page, name) => page.evaluate(n => window.__gs.state().lib.classes.find(c => c.name === n).names, name);
 const settled = async page => { await page.waitForFunction(() => ['ok', 'decide'].includes(window.__gs.folderState().state), { timeout: 30000 }); await folderWait(page); };
-const closeUp = async page => { await page.click('#closeBtn'); await page.waitForFunction(() => document.querySelector('#start').hidden === false); await folderWait(page); };
+// Closing saves once more, and that save reaches the folder a moment after Home shows. Waits for both, so what a test does to
+// the folder or the browser next isn't undone by a save still on its way.
+const savedAll = page => page.waitForFunction(async () => {
+  const ids = Object.keys(JSON.parse(localStorage.getItem('gs.batches') || '{}')).filter(id => localStorage.getItem(id)); if (!ids.length) return true;
+  const db = await new Promise(res => { const r = indexedDB.open('grading-studio-keep'); r.onsuccess = () => res(r.result); r.onerror = () => res(null); }); if (!db) return false;
+  const ws = await Promise.all(ids.map(id => new Promise(res => { const q = db.transaction('work').objectStore('work').get(id); q.onsuccess = () => res(q.result); q.onerror = () => res(null); })));
+  db.close(); return ids.every((id, i) => ws[i] && ws[i].t === JSON.parse(localStorage.getItem(id)).t);
+}, { timeout: 15000, polling: 100 });
+const closeUp = async page => { await page.click('#closeBtn'); await page.waitForFunction(() => document.querySelector('#start').hidden === false); await savedAll(page); await folderWait(page); };
 const inStore = (db, store) => async page => ((await idbRead(page, db, store)) || { k: [] }).k.slice().sort();
 const addedKeys = inStore('grading-studio-added', 'files'), editKeys = inStore('grading-studio-keep', 'edits');
 const bytesOf = (page, id) => page.evaluate(async id => {   // does the folder really hold the bytes it lists?
@@ -487,7 +499,7 @@ test('a merge from the folder brings in late files, readings and Word edits this
   assert.equal(Object.keys(had.added).length, 2, 'the folder has them'); assert.equal(Object.keys(had.edits).length, 1);
   const lateKey = Object.keys(had.added).find(k => /Late\.txt$/.test(k));
   // What a second browser on the same folder looks like: its work is older and it has none of these files.
-  const base = page.url();
+  const base = baseOf(page);
   await page.goto(base + 'blank');
   await page.evaluate(async (id, o) => {
     localStorage.setItem(id, o.ls);
@@ -644,7 +656,7 @@ test('opening a download doesn’t take off a late file another browser has just
   await linkFolder(page, 'Opening');
   const id = await idOf(page);
   await addLate(page, 0, 'Late.txt');
-  await folderWait(page);
+  await settle(page); await folderWait(page);
   await closeUp(page);
   const key = id + '|Aria Testwell|Aria Testwell/Late.txt';
   // This browser hasn't got it, and the folder's work was written by someone else since this tab looked.
@@ -685,7 +697,7 @@ for (const [folderHas, hereHas, pick, ends] of [
   const save = async () => { await settle(page); await page.evaluate(() => window.__gs.saveNow()); };
   await openZip(page, zip, 'River essay.zip');
   await linkFolder(page, 'Held' + (folderHas ? 'F' : '') + (hereHas ? 'H' : '') + pick);
-  const id = await idOf(page), base = page.url(), dov = await page.evaluate(k => window.__gs.state().batch.students.findIndex(s => s.key === k), DOV);
+  const id = await idOf(page), base = baseOf(page), dov = await page.evaluate(k => window.__gs.state().batch.students.findIndex(s => s.key === k), DOV);
   await goToStudent(page, dov);
   await page.type('#cmtIn', 'Start'); await save(); await folderWait(page);
   await goToStudent(page, 0); await closeUp(page);   // so each opening lands on a paper that draws
@@ -729,6 +741,7 @@ for (const [folderHas, hereHas, pick, ends] of [
   await page.type('#cmtIn', 'Unrelated'); await save(); await folderWait(page);
   await closeUp(page);
   await eachKeeps('after another save');
+  await settled(page);   // the save of the other student has to finish before the notice says Decide again
   await page.evaluate(() => document.querySelector('[data-wact]').click());
   await page.waitForSelector('#cfBox');
   await page.click('.cfside input[value="' + pick + '"]');

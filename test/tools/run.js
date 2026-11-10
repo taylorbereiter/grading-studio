@@ -16,7 +16,7 @@ fs.rmSync(LOGS, { recursive: true, force: true }); fs.mkdirSync(LOGS, { recursiv
 function runFile(f, tag = '') {
   return new Promise(resolve => {
     const t0 = Date.now(), log = path.join(LOGS, f.replace(/\.test\.js$/, '') + tag + '.log'), out = fs.createWriteStream(log);
-    const p = spawn(process.execPath, ['--test', '--test-concurrency=1', '--test-timeout=300000', path.join('test', f)], { cwd: ROOT, stdio: ['ignore', 'pipe', 'pipe'] });
+    const p = spawn(process.execPath, ['--test', '--test-reporter=spec', '--test-concurrency=1', '--test-timeout=300000', path.join('test', f)], { cwd: ROOT, stdio: ['ignore', 'pipe', 'pipe'] });
     p.stdout.pipe(out, { end: false }); p.stderr.pipe(out, { end: false });
     p.on('close', code => out.end(() => resolve({ f, ok: code === 0, secs: Math.round((Date.now() - t0) / 1000), log })));
   });
@@ -25,7 +25,7 @@ function runFile(f, tag = '') {
 function failedNames(log) {
   const t = fs.readFileSync(log, 'utf8'), names = [];
   for (const m of t.matchAll(/^✖ (.+?)(?: \([\d.]+ms\))?$/gm)) if (!names.includes(m[1])) names.push(m[1]);
-  return names.filter(n => !/\.test\.js$/.test(n));
+  return names.filter(n => !/\.test\.js$/.test(n) && n !== 'failing tests:');
 }
 (async () => {
   if (!files.length) { console.error('No test files match ' + words.join(', ')); process.exit(1); }

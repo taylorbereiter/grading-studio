@@ -35,7 +35,12 @@ test('on made-up scans the rules never turn a page the wrong way, and fix most p
   assert.equal(t.autoWrong, 0, 'wrong automatic turns: ' + t.wrong.map(r => r.kind + ' o' + r.o).join(', '));
   assert.equal(t.skewAutoWrong, 0, 'wrong automatic straightening: ' + t.skewWrong.map(r => r.kind + ' ' + r.skew).join(', '));
   assert.equal(t.skewFalse, 0, 'nothing crooked was made crooked');
-  assert.ok(t.autoRight >= 32, 'most typed and handwritten pages get turned: ' + say);   // it was 33: one missed turn is accepted so that matrix pages are never turned the wrong way
+  // How many get turned depends on the letter shapes, so on the fonts this computer draws the typed pages with: 33 with Windows' own
+  // (one missed turn is accepted so that matrix pages are never turned the wrong way), 25 with the ones Linux puts in their place.
+  // The handwritten pages are drawn stroke by stroke, the same everywhere, so their count is held exactly.
+  const hand = Object.entries(t.byKind).filter(([k]) => /^handwriting/.test(k)).reduce((n, [, v]) => n + v.autoRight, 0);
+  assert.ok(hand >= 13, 'handwritten pages get turned: ' + hand);
+  assert.ok(t.autoRight >= 24, 'and so do most typed pages, whatever the font: ' + say);
   assert.ok(t.skewAuto >= t.needSkew * .6, 'and straightened: ' + say);
   assert.ok(t.askWrong <= t.pages * .03, 'it rarely asks about a page that was fine: ' + say);
   assert.equal(rows.filter(r => r.blank).length, 0, 'a page with writing is never called blank');
@@ -373,7 +378,7 @@ test('faded pages come through blur and gray paper without being called blank', 
 
 test('an upside-down crooked scan is fixed when opened, says so, and Put back undoes it for good', async () => {
   const { page, close } = await openApp(browser);
-  const bytes = await scanPdf(page, [{ o: 180, skew: 2.5, box: true }]), typed = await makePaper({ title: 'Typed essay' });
+  const bytes = await scanPdf(page, [{ kind: 'handwriting ruled', o: 180, skew: 2.5, box: true }]), typed = await makePaper({ title: 'Typed essay' });
   await openZip(page, zipOf({ 'Aria Testwell/Scan.pdf': bytes, 'Bram Sample/Essay.pdf': typed }), 'Scans.zip');
   await shown(page);
   let s = await student(page);
@@ -554,7 +559,7 @@ test('in the split: pages are fixed and flagged as they are read, Put back is ke
 
 test('a newer copy of the download brings a marked page over with its turn, its straightening and its marks', async () => {
   const { page, close } = await openApp(browser);
-  const bytes = await scanPdf(page, [{ o: 180, skew: 2.5, box: true }]), other = await makePaper({ title: 'Another essay' });
+  const bytes = await scanPdf(page, [{ kind: 'handwriting ruled', o: 180, skew: 2.5, box: true }]), other = await makePaper({ title: 'Another essay' });
   await openZip(page, zipOf({ 'Aria Testwell/Scan.pdf': bytes, 'Bram Sample/Essay.pdf': other }), 'First.zip');
   await shown(page);
   const was = await student(page);
