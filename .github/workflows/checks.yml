@@ -42,7 +42,9 @@ jobs:
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y -qq fonts-liberation fonts-dejavu fonts-freefont-ttf fonts-wqy-zenhei fonts-ipafont-gothic fonts-thai-tlwg fonts-noto-color-emoji
-          fc-list | wc -l
+          mkdir -p ~/.config/fontconfig && cp test/tools/ci-fonts.conf ~/.config/fontconfig/fonts.conf
+          fc-cache -f >/dev/null
+          fc-match monospace; fc-match Consolas; fc-match sans-serif; fc-match serif; fc-match Arial; fc-match "Courier New"
       - name: Build
         run: npm run build
       - name: The pages in this change are the ones its source builds
