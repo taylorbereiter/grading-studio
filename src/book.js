@@ -95,7 +95,7 @@ let bk = { tab: 'table', cls: '', term: null, show: 'pct', stu: 0, cols: null, h
 async function openBook(clsId, opts = {}) {
   if (batch) saveNow();
   const c = classById(clsId) || batchClass() || lib.classes.find(k => k.names.length) || lib.classes[0];
-  if (!c) return toast('Add a class with its roster first, on the start screen.');
+  if (!c) return toast('Add a class with its roster first, from the sidebar.');
   bk = { ...bk, tab: 'table', cls: c.id, term: null, stu: 0, cols: null, hi: opts.hi || '' };
   openDlg('<div class="bh"><h2>Gradebook</h2><div class="ovtabs" role="tablist">' + [['table', 'Table'], ['class', 'Class charts'], ['one', 'One student']].map(([k, l]) => '<button role="tab" data-bktab="' + k + '" aria-selected="' + (k === 'table') + '">' + l + '</button>').join('') +
     '</div><button class="icon" data-close aria-label="Close" style="margin-left:auto">✕</button></div><div class="bb bkbody" id="bkBody"><p class="muted">Looking through your saved work…</p></div>');
@@ -133,7 +133,7 @@ function bkDraw() {
     (bk.tab === 'table' && bk.term !== '*' ? '<div class="pseg" role="group" aria-label="Show">' + [['pct', 'Percent'], ['pts', 'Points']].map(([v, l]) => '<button data-bkshow="' + v + '" aria-pressed="' + (bk.show === v) + '">' + l + '</button>').join('') + '</div>' : '') +
     '<button class="btn sm" data-bksetup>Term setup</button>' + (bk.tab === 'table' ? '<button class="btn sm" data-bkcopy>Copy table</button>' : '') + '<button class="btn sm primary" data-bkadd>+ Add scores</button></div>';
   let main;
-  if (!c.names.length) main = '<p class="muted bkpad">The gradebook lists the students on a class’s roster. Add a roster to ' + esc(c.name) + ' on the start screen first.</p>';
+  if (!c.names.length) main = '<p class="muted bkpad">The gradebook lists the students on a class’s roster. Add a roster to ' + esc(c.name) + ' on its class page first.</p>';
   else if (bk.tab === 'class') main = bkClassView(c, cols, all, conf);
   else if (bk.tab === 'one') main = bkOneView(c, cols, conf);
   else main = bk.term === '*' ? bkYear(c, all, conf) : bkTable(c, cols, conf);

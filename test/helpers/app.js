@@ -26,6 +26,11 @@ async function openApp(browser, { html, platform, seed, server, context, noWait,
   page.errors = [];
   page.on('pageerror', e => page.errors.push(String(e && e.stack || e)));
   page.on('dialog', d => { page.lastDialog = d.message(); d.accept(); });
+  // A refresh now comes back to the very screen she was on, the open paper included. Most tests mean "close the tab and come back
+  // to the app", which lands on Home, so reload does that. reloadHere is the plain refresh.
+  const plain = page.reload.bind(page);
+  page.reloadHere = plain;
+  page.reload = async (...a) => { await page.evaluate(() => { if (location.hash) history.replaceState(null, '', location.pathname + location.search); }).catch(() => {}); return plain(...a); };
   if (platform) {
     const P = PLATFORMS[platform];
     await page.setUserAgent(P.ua);
@@ -78,7 +83,27 @@ async function pickFile(page, selector, bytes, name) {
   await inp.uploadFile(f);
   return () => fs.rmSync(dir, { recursive: true, force: true });
 }
-// Opens a ZIP from the start screen and waits for the first paper to be drawn.
+// Goes to a screen by its address, as a click in the sidebar does: '#/' Home, '#/settings', '#/class/<id>'.
+const goTo = (page, hash) => page.evaluate(h => window.__gs.go(h), hash);
+// Opens a class's page from the sidebar, by the class's name. 'No class' is the one for work with no class.
+async function openClass(page, name) {
+  const id = await page.evaluate(name => { const a = [...document.querySelectorAll('#railClasses [data-railcls]')].find(a => a.querySelector('.rname').textContent === name); return a ? a.dataset.railcls : null; }, name);
+  if (id == null) throw new Error('No class in the sidebar called ' + name);
+  await page.click('#railClasses [data-railcls="' + id + '"]');
+  await page.waitForSelector('#vClass:not([hidden]) .cls');
+}
+// Goes to the page of the class that key belongs to. key is a class id, a unit id, an assignment id, part of an assignment's
+// name, or a number for the class's place in the sidebar (0 is the first). A class's units and cards are only drawn on its own page.
+async function classPage(page, key) {
+  const h = await page.evaluate(key => {
+    const l = window.__gs.state().lib, hs = l.classes.concat([l.loose]);
+    const c = typeof key === 'number' ? l.classes[key] : hs.find(c => c.id === key) || hs.find(c => c.units.some(u => u.id === key || u.items.some(i => i.id === key))) || hs.find(c => c.units.some(u => u.items.some(i => (i.name || '').includes(key))));
+    return c ? '#/class/' + (c === l.loose || !c.id ? '-' : encodeURIComponent(c.id)) : null;
+  }, key);
+  if (!h) throw new Error('No class page for ' + key);
+  await goTo(page, h);
+}
+// Opens a ZIP from Home and waits for the first paper to be drawn.
 async function openZip(page, bytes, name = 'Download.zip') {
   const clean = await pickFile(page, '#fileIn', bytes, name);
   await waitPaper(page);
@@ -194,4 +219,4 @@ async function menuPick(page, sel) {
   await page.waitForSelector('.stampmenu [data-fly="' + where + '"]:not([hidden])');
   await page.click('.stampmenu [data-fly="' + where + '"] ' + sel);
 }
-module.exports = { menuPick, MARK_BOXES, ROOT, BUILT, builtHtml, tmpDir, openApp, answerDlg, appReady, plant, idbRead, pickFile, openZip, waitPaper, goToStudent, at, drag, clickAt, setTool, score, markPage, settle, catchDownloads, probePdf, probeScreen, workOf };
+module.exports = { goTo, openClass, classPage, menuPick, MARK_BOXES, ROOT, BUILT, builtHtml, tmpDir, openApp, answerDlg, appReady, plant, idbRead, pickFile, openZip, waitPaper, goToStudent, at, drag, clickAt, setTool, score, markPage, settle, catchDownloads, probePdf, probeScreen, workOf };

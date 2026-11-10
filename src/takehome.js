@@ -404,7 +404,7 @@ async function bringPreview(B, src, label, sub, again) {
       return sayDlg(er && er.small ? 'This browser’s small store for rosters and settings is full, and nothing more in it can safely go, so that didn’t finish. Your marks and scores here weren’t replaced.' : er && er.name === 'QuotaExceededError' ? 'This browser ran out of room, so that didn’t finish. Your marks and scores here weren’t replaced. Free up some disk space and try again.' : 'That didn’t finish. Your work is safe, and a safety copy was made first: Put back is under Saving and carrying if anything looks wrong.');
     }
     toast('Brought in. Reloading…');
-    setTimeout(() => location.reload(), 700);
+    setTimeout(reloadHome, 700);
   };
 }
 // Other tabs have stopped by now, so this is the last word on what's here, and whatever they saved during the preview gets merged like the rest.
@@ -507,7 +507,7 @@ async function removeHere() {
   try { localStorage.removeItem('gsc.win'); } catch {}
   tabsOver('done');
   toast('Removed from this computer. Reloading…');
-  setTimeout(() => location.reload(), 700);
+  setTimeout(reloadHome, 700);
 }
 $('#takeBtn').onclick = openTake;
 $('#removeBtn').onclick = removeHere;

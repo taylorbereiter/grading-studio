@@ -157,7 +157,7 @@ function unzipInto(data, prefix, raw, depth) {
   }
 }
 async function intake(entries, label, assignment, fromKeep) {   // entries: [{ path, file|data }]
-  if (entries.length === 1 && /\.gswork$/i.test(entries[0].path)) return sayDlg('That’s a take-home file, not papers. To bring it in, use Bring work in under Saving and carrying on the start screen.');
+  if (entries.length === 1 && /\.gswork$/i.test(entries[0].path)) return sayDlg('That’s a take-home file, not papers. To bring it in, use Bring work in under Saving and carrying, in Settings.');
   const raw = [], zipProblems = []; zipSkipped = 0;
   for (const e of entries) {
     if (junk(e.path)) continue;
@@ -227,7 +227,7 @@ async function intake(entries, label, assignment, fromKeep) {   // entries: [{ p
   if (assignment) { assignment.batchId = id; assignment.opened = Date.now(); if (!assignment.setup || rub.toCard) assignment.setup = { ...setup, spot: undefined }; shareRubric(assignment); saveLib(); }
   keepWait = keepPapers(batch, label, fromKeep ? null : keepList, sameSize.length > 0);
   cur = 0; undoStack = []; selected = null;
-  $('#start').hidden = true; $('#app').hidden = false;
+  routeTok++; routeOpening = ''; go(batchHash(id), routeNow().v === 'a');   // from another open assignment (or this one's own address after a refresh): no extra step for Back
   setBatchName(); qzForget(); quizBtn();
   $('#trAllBtn').hidden = !CAN_TRANSCRIBE || !students.some(st => st.files.some(f => f.kind === 'media'));
   renderTools(); renderList(); renderTopAtlas(); openStudent(batch.restoredCur || 0);
@@ -4148,29 +4148,105 @@ function batchSummary(it) {
   if (m) return 'Last worked on ' + fmtDay(m.t) + ' · ' + (m.scored || 0) + ' of ' + (m.n - (m.off || 0)) + ' scored' + keptMore(m) + (m.papers ? '' : ' · drop the same ZIP to keep going');
   return 'Opened ' + d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) + (data ? ' · ' + n + ' scored' : '') + ' · drop the same ZIP to keep going';
 }
+/* ---------------- where she is: every screen has its own address, the part after # ---------------- */
+// #/ is Home, #/class/<id> a class (- for "No class"), #/settings Settings, #/a/<download> an open assignment.
+// Back, Forward and Refresh follow it. Nothing here is saved: the address only says which screen to show.
+const routeOf = hash => {
+  let p; try { p = decodeURIComponent(String(hash || '').replace(/^#\/?/, '')).split('/'); } catch { p = ['']; }
+  if (p[0] === 'class' && p[1]) { const c = p[1] === '-' ? lib.loose : classById(p[1]); if (c) return { v: 'class', c }; }
+  if (p[0] === 'settings') return { v: 'settings' };
+  if (p[0] === 'a' && p[1]) return { v: 'a', id: 'gs.b.' + p[1] };
+  return { v: 'home' };
+};
+const routeNow = () => routeOf(location.hash);
+const classHash = c => '#/class/' + (c === lib.loose || !c.id ? '-' : encodeURIComponent(c.id));
+const batchHash = id => '#/a/' + encodeURIComponent(String(id).replace(/^gs\.b\./, ''));
+// When the app reloads itself (work was put back or brought in), it starts again from Home, where that work is listed.
+// A note for the page that loads next, in this tab only, says so; it's read once, here, and gone.
+function reloadHome() { try { sessionStorage.setItem('gs.goHome', '1'); } catch {} location.reload(); }
+try { if (sessionStorage.getItem('gs.goHome')) { sessionStorage.removeItem('gs.goHome'); if (location.hash) history.replaceState(null, '', location.pathname + location.search); } } catch {}
+// Goes to a screen. replace: instead of the one she's on, so Back doesn't come back here.
+function go(hash, replace) {
+  if (location.hash !== hash && !(hash === '#/' && !location.hash)) {
+    if (replace) { try { history.replaceState(null, '', hash); } catch { location.replace(hash); } }
+    else location.hash = hash;
+  }
+  applyRoute();
+}
+let routeTok = 0, routeOpening = '';
+function applyRoute() {
+  const r = routeNow();
+  if (r.v === 'a') {
+    if (batch && batch.id === r.id) return showScreen(r);
+    if (routeOpening !== r.id) openRoute(r.id);
+    return;
+  }
+  routeTok++; routeOpening = '';
+  if (batch && !$('#app').hidden) { commitEditors(); saveNow(); closeDownload(true); }   // leaving the paper closes it, saved first. (Still hidden: a download on its way in, which shows itself when it's ready.)
+  showScreen(r);
+  if (r.v === 'class') renderLib();
+}
+// The address of an open assignment, with no paper on screen: after a refresh, or Back or Forward. Its kept papers open again where she left off.
+async function openRoute(id) {
+  const tok = ++routeTok; routeOpening = id;
+  if (batch && !$('#app').hidden) { commitEditors(); saveNow(); closeDownload(true); }
+  showScreen({ v: 'opening' });
+  try { await keptFirst; await workerReady; } catch {}   // the list of kept work, and the PDF reader, which a click would have given time to start
+  const stale = () => tok !== routeTok;
+  if (stale()) return;
+  const m = keptMeta.get(id);
+  if (!m || !m.papers) { routeOpening = ''; if (m) toast('The papers for this one aren’t kept in this browser. Drop the download in again.', 6000); return go('#/', true); }
+  try { await reopenKept(id); } catch (e) { console.error(e); }
+  if (stale()) return;
+  routeOpening = '';
+  if (!batch || batch.id !== id) return go('#/', true);   // not opened (Not now, or its papers are gone)
+  showScreen(routeNow());
+}
+function showScreen(r) {
+  const grading = r.v === 'a' && !!batch;
+  $('#shell').classList.toggle('grading', grading);
+  $('#app').hidden = !grading; $('#start').hidden = grading;
+  for (const [id, v] of [['vHome', 'home'], ['vClass', 'class'], ['vSettings', 'settings'], ['vOpening', 'opening']]) $('#' + id).hidden = grading || r.v !== v;
+  if (!grading) $('#shellMain').scrollTop = 0;
+  railRender();
+}
+// How far along a kept download is, in the same words everywhere: on Home, on a class page and in the sidebar's counts.
+function keptState(m) {
+  const of = Math.max(0, (m.n || 0) - (m.off || 0)), done = Math.min(of, m.scored || 0), left = of - done;
+  return { of, done, left, pct: of ? Math.round(done / of * 100) : 0, label: !of ? '' : !left ? 'All scored' : done || m.partial ? 'Scoring' : 'Not started', cls: !of ? '' : !left ? 'ok' : done || m.partial ? 'on' : '' };
+}
+const stateChip = st => st.label ? '<span class="schip ' + st.cls + '">' + st.label + '</span>' : '';
+const stateBar = st => st.of ? '<span class="sbar" role="img" aria-label="' + st.done + ' of ' + st.of + ' scored"><i style="width:' + st.pct + '%"></i></span>' : '';
 function renderLib() {
   renderKept();
-  const card = it => '<div class="card" draggable="true" data-card="' + it.id + '"><div class="t">' + esc(it.name) + '</div>' +
-    (it.type || it.typed ? '<div class="bkpills">' + bkPill(it.type) + (it.typed ? '<span class="bkpill typed">Typed in</span>' : '') + '</div>' : '') +
-    '<div class="m">' + esc(it.typed && !it.batchId ? 'Scores typed in' + (it.due ? ' · due ' + bkDay(it.due) : '') : batchSummary(it)) + '</div>' +
-    '<div class="row">' + (it.batchId && (keptMeta.get(it.batchId) || {}).papers ? '<button class="btn sm primary" data-kopen="' + esc(it.batchId) + '" data-kasg="' + it.id + '">Open</button><button class="btn sm" data-open-asg="' + it.id + '">Other download…</button>'
-      : '<button class="btn sm primary" data-open-asg="' + it.id + '">Open download…</button>') + '<button class="btn sm" data-edit-asg="' + it.id + '">Edit</button></div></div>';
+  const card = it => {
+    const m = it.batchId ? keptMeta.get(it.batchId) : null, st = m ? keptState(m) : null;
+    return '<div class="card" draggable="true" data-card="' + it.id + '"><div class="cmain"><div class="t">' + esc(it.name) + '</div>' +
+      (it.type || it.typed ? '<div class="bkpills">' + bkPill(it.type) + (it.typed ? '<span class="bkpill typed">Typed in</span>' : '') + '</div>' : '') + '</div>' +
+      '<div class="cdue">' + (it.due ? 'Due ' + bkDay(it.due) : '') + '</div>' +
+      '<div class="cstate">' + (st ? stateBar(st) + stateChip(st) : '') + '<div class="m">' + esc(it.typed && !it.batchId ? 'Scores typed in' + (it.due ? ' · due ' + bkDay(it.due) : '') : batchSummary(it)) + '</div></div>' +
+      '<div class="row">' + (m && m.papers ? '<button class="btn sm primary" data-kopen="' + esc(it.batchId) + '" data-kasg="' + it.id + '">Open</button><button class="btn sm" data-open-asg="' + it.id + '">Other download…</button>'
+        : '<button class="btn sm primary" data-open-asg="' + it.id + '">Open download…</button>') + '<button class="btn sm" data-edit-asg="' + it.id + '">Edit</button></div></div>';
+  };
   const unit = u => '<div class="unit" draggable="true" data-unit="' + u.id + '">' +
-    '<div class="uhead" title="Drag to move this unit"><span class="nm">' + esc(u.name) + '</span><button class="icon" data-urename="' + u.id + '" title="Rename unit" aria-label="Rename unit">✎</button>' +
+    '<div class="uhead" title="Drag to move this unit"><span class="nm">' + esc(u.name) + '</span><span class="ucount">' + u.items.length + (u.items.length === 1 ? ' assignment' : ' assignments') + '</span><span class="sp"></span>' +
+    '<span class="atl">' + (u.atlas ? '<a href="' + esc(u.atlas) + '" target="_blank" rel="noopener noreferrer" title="' + esc(u.atlas) + '">Open in Atlas ↗</a><button class="link" data-uatlas="' + u.id + '">Change</button>'
+      : '<button class="link" data-uatlas="' + u.id + '">+ Link to Atlas</button>') + '</span>' +
+    '<button class="icon" data-urename="' + u.id + '" title="Rename unit" aria-label="Rename unit">✎</button>' +
     '<button class="icon" data-udel="' + u.id + '" title="Delete unit" aria-label="Delete unit">✕</button></div>' +
-    '<div class="atl">' + (u.atlas ? '<a href="' + esc(u.atlas) + '" target="_blank" rel="noopener noreferrer" title="' + esc(u.atlas) + '">Open in Atlas ↗</a><button class="link" data-uatlas="' + u.id + '">Change</button>'
-      : '<button class="link" data-uatlas="' + u.id + '">+ Link to Atlas</button>') + '</div>' +
     '<div class="cards">' + u.items.map(card).join('') + '</div>' +
     '<button class="addcard" data-additem="' + u.id + '">+ Assignment</button></div>';
-  const block = (c, ci) => '<div class="cls" data-cls="' + esc(c.id) + '"><div class="clshead"><h3>' + esc(ci < 0 ? 'No class' : c.name) + '</h3>' +
-    (ci < 0 ? '<span class="muted">Assignments with no roster. Drag them into a class.</span>' :
-      '<span class="muted">' + (c.names.length ? c.names.length + ' students on the roster' : 'No roster yet') + '</span>' + (c.names.length ? '<button class="btn sm primary" data-book="' + esc(c.id) + '">Gradebook</button>' : '') + '<button class="btn sm" data-edit-class="' + ci + '">' + (c.names.length ? 'Edit roster' : 'Add roster') + '</button>' + (c.names.length ? '<button class="btn sm" data-people="' + ci + '">Students</button>' : '') + mbClassBtns(c, ci) +
-      '<button class="icon" data-cmove="' + ci + ':-1" title="Move this class up" aria-label="Move this class up"' + (ci ? '' : ' disabled') + '>↑</button><button class="icon" data-cmove="' + ci + ':1" title="Move this class down" aria-label="Move this class down"' + (ci < lib.classes.length - 1 ? '' : ' disabled') + '>↓</button>') +
-    '<span class="sp"></span><button class="btn sm" data-addunit="' + esc(c.id) + '">+ Unit</button></div>' +
+  const block = (c, ci) => '<div class="cls" data-cls="' + esc(c.id) + '"><div class="clshead"><h1>' + esc(ci < 0 ? 'No class' : c.name) + '</h1>' +
+    (ci < 0 ? '<span class="muted">Assignments with no roster. Drag them onto a class in the sidebar, or use Edit to pick a class.</span><span class="sp"></span>' :
+      '<span class="muted">' + (c.names.length ? c.names.length + ' students on the roster' : 'No roster yet') + '</span><span class="sp"></span>' + mbClassBtns(c, ci) + (c.names.length ? '<button class="btn sm" data-book="' + esc(c.id) + '">Gradebook</button>' : '') + (c.names.length ? '<button class="btn sm" data-people="' + ci + '">Students</button>' : '') + '<button class="btn sm" data-edit-class="' + ci + '">' + (c.names.length ? 'Edit roster' : 'Add roster') + '</button>' +
+      '<button class="icon" data-cmove="' + ci + ':-1" title="Move this class up in the sidebar" aria-label="Move this class up in the sidebar"' + (ci ? '' : ' disabled') + '>↑</button><button class="icon" data-cmove="' + ci + ':1" title="Move this class down in the sidebar" aria-label="Move this class down in the sidebar"' + (ci < lib.classes.length - 1 ? '' : ' disabled') + '>↓</button>') +
+    '<button class="btn sm" data-addunit="' + esc(c.id) + '">+ Unit</button><button class="btn sm primary" data-newasg="' + esc(c.id) + '">+ Assignment</button></div>' +
     '<div class="board">' + (c.units.map(unit).join('') || '<div class="empty-note">No units yet. Click + Unit.</div>') + '</div></div>';
-  const loose = lib.loose.units.some(u => u.items.length);
-  $('#classes').innerHTML = lib.classes.map(block).join('') + (loose ? block(lib.loose, -1) : '') ||
-    '<div class="empty-note">No classes yet. Click + Class and paste or upload a class list.</div>';
+  // One class at a time: the one whose page she's on.
+  const r = routeNow(), c = r.v === 'class' ? r.c : null;
+  $('#classes').innerHTML = c ? block(c, c === lib.loose ? -1 : lib.classes.indexOf(c)) : '';
+  if (r.v === 'class' && !c) go('#/', true);
+  railRender();
 }
 // Drag and drop: assignment cards between units (in any class), and units between classes.
 let ldrag = null;
@@ -4192,8 +4268,27 @@ function slot(list, e, horiz) {
 function libDragTarget(e) {
   if (!ldrag || !e.target.closest) return null;
   if (ldrag.kind === 'card') { const z = e.target.closest('.unit'); if (!z) return null; const cards = z.querySelector('.cards'); const list = [...cards.querySelectorAll('.card')]; return { unit: z.dataset.unit, k: slot(list, e, false), list, cards }; }
-  if (ldrag.kind === 'unit') { const z = e.target.closest('.cls'); if (!z) return null; const board = z.querySelector('.board'), list = [...board.querySelectorAll('.unit')]; return { cls: z.dataset.cls, k: slot(list, e, true), list, cards: board }; }
+  if (ldrag.kind === 'unit') { const z = e.target.closest('.cls'); if (!z) return null; const board = z.querySelector('.board'), list = [...board.querySelectorAll('.unit')]; return { cls: z.dataset.cls, k: slot(list, e, false), list, cards: board }; }
 }
+// The same drag, onto a class in the sidebar: the assignment goes to that class's unit of the same name (made if it isn't there), a unit goes to the end of that class.
+const railDragTarget = e => { const a = ldrag && e.target.closest && e.target.closest('#railClasses [data-railcls]'); return a ? holderById(a.dataset.railcls) : null; };
+document.addEventListener('dragover', e => { const c = railDragTarget(e); if (!c) return; e.preventDefault(); e.stopPropagation(); clearIns(); e.target.closest('[data-railcls]').classList.add('over'); }, true);
+document.addEventListener('drop', e => {
+  const to = railDragTarget(e); if (!to) return;
+  e.preventDefault(); e.stopPropagation(); clearIns();
+  if (ldrag.kind === 'card') {
+    const from = findItem(ldrag.id); if (!from || from.c === to) return;
+    let u = to.units.find(x => x.name === from.u.name); if (!u) to.units.push(u = { id: uid(), name: from.u.name, items: [] });
+    from.u.items.splice(from.u.items.indexOf(from.it), 1); u.items.push(from.it); from.it.classId = to.id;
+    toast('Moved to ' + (to === lib.loose ? 'No class' : to.name));
+  } else {
+    const from = findUnit(ldrag.id); if (!from || from.c === to) return;
+    from.c.units.splice(from.c.units.indexOf(from.u), 1); to.units.push(from.u);
+    for (const it of from.u.items) it.classId = to.id;
+    toast('Moved to ' + (to === lib.loose ? 'No class' : to.name));
+  }
+  ldrag = null; saveLib(); renderLib();
+}, true);
 document.addEventListener('dragover', e => {
   const t = libDragTarget(e); if (!t) return;
   e.preventDefault(); e.stopPropagation(); clearIns();
@@ -4243,8 +4338,8 @@ $('#asgIn').onchange = e => { const fs = [...e.target.files]; if (asgTarget && f
 $('#start').addEventListener('click', async e => {
   const b = e.target.closest('button'); if (!b) return;
   if (b.dataset.addunit != null) { const c = holderById(b.dataset.addunit); const name = await askTextDlg('Unit name', 'Unit ' + (c.units.length + 1), { ok: 'Add unit' }); if (name && name.trim()) { c.units.push({ id: uid(), name: name.trim(), items: [] }); saveLib(); renderLib(); } return; }
-  if (b.id === 'addClass') return editClass(-1);
-  if (b.dataset.cmove) { const [ci, d] = b.dataset.cmove.split(':').map(Number), j = ci + d; if (j >= 0 && j < lib.classes.length) { [lib.classes[ci], lib.classes[j]] = [lib.classes[j], lib.classes[ci]]; saveLib(); renderLib(); } return; }
+  if (b.dataset.newasg != null) return editAssignment(null, null, b.dataset.newasg);
+  if (b.dataset.cmove) { const [ci, d] = b.dataset.cmove.split(':').map(Number), j = ci + d; if (j >= 0 && j < lib.classes.length) { [lib.classes[ci], lib.classes[j]] = [lib.classes[j], lib.classes[ci]]; saveLib(); renderLib(); const again = $('#classes [data-cmove="' + j + ':' + d + '"]'); if (again && !again.disabled) again.focus(); } return; }
   if (b.dataset.urename != null) { const f = findUnit(b.dataset.urename); if (!f) return; const name = await askTextDlg('Unit name', f.u.name, { ok: 'Rename' }); if (name && name.trim()) { f.u.name = name.trim(); saveLib(); renderLib(); } return; }
   if (b.dataset.uatlas != null) return askAtlas(b.dataset.uatlas);
   if (b.dataset.udel != null) {
@@ -4295,8 +4390,8 @@ $('#topAtlas').addEventListener('click', e => { const b = e.target.closest('[dat
 // A new assignment can go to several classes at once: each ticked class gets its own card (its own roster and download),
 // placed in that class's unit of the chosen name (made if missing). The copies share a group id, so the first rubric set
 // up in one class is given to the copies that have none yet (shareRubric).
-function editAssignment(id, unitId) {
-  const f = id ? findItem(id) : null, start = f ? f : findUnit(unitId) || { c: lib.classes[0] || lib.loose, u: null };
+function editAssignment(id, unitId, clsId) {
+  const f = id ? findItem(id) : null, start = f ? f : findUnit(unitId) || { c: (clsId != null ? holderById(clsId) : null) || lib.classes[0] || lib.loose, u: null };
   const it = f ? f.it : { id: uid(), name: '', classId: start.c.id };
   const classPick = f
     ? '<div class="field"><label for="aClass">Class</label><select id="aClass" class="btn" style="justify-content:flex-start">' + lib.classes.map(c => '<option value="' + c.id + '"' + (c === start.c ? ' selected' : '') + '>' + esc(c.name) + '</option>').join('') + '<option value=""' + (start.c === lib.loose ? ' selected' : '') + '>No class</option></select></div>'
@@ -4419,7 +4514,7 @@ function editClass(ci) {
   $('#dlgBox').onclick = async e => {
     if (e.target.closest('[data-up]')) return $('#cFile').click();
     if (e.target.closest('[data-cancel]')) return closeDlg();
-    if (e.target.closest('[data-del]')) { if (!await askDlg('Delete the ' + c.name + ' class? Its assignments move to “No class”.', { ok: 'Delete', danger: true })) return; for (const u of c.units) { for (const it of u.items) it.classId = ''; lib.loose.units.push(u); } lib.classes.splice(ci, 1); saveLib(); closeDlg(); return renderLib(); }
+    if (e.target.closest('[data-del]')) { if (!await askDlg('Delete the ' + c.name + ' class? Its assignments move to “No class”.', { ok: 'Delete', danger: true })) return; for (const u of c.units) { for (const it of u.items) it.classId = ''; lib.loose.units.push(u); } lib.classes.splice(ci, 1); saveLib(); closeDlg(); renderLib(); if (!batch && routeNow().v !== 'class') go(lib.loose.units.some(u => u.items.length) ? classHash(lib.loose) : '#/', true); return; }
     if (e.target.closest('[data-ok]')) {
       const name = $('#cName').value.trim(); if (!name) { $('#cName').focus(); return; }
       const mb = mbUrl($('#cMb').value); if ($('#cMb').value.trim() && !mb) { toast('That ManageBac link isn’t a web address'); $('#cMb').focus(); return; }
@@ -4427,6 +4522,7 @@ function editClass(ci) {
       if (mb) c.mb = mb; else delete c.mb; mbRemember(name, mb);
       if (ci < 0) lib.classes.push(c);
       saveLib(); closeDlg(); renderLib();
+      if (ci < 0 && !batch) go(classHash(c));
     }
   };
 }
@@ -4491,7 +4587,7 @@ function rosterSort() {
   const m = rosterMatch(c.names), used = new Set(c.names.filter(n => m.has(n)).map(n => m.get(n)));
   batch.students = [...used].concat(byFolder.filter(st => !used.has(st)));
 }
-function setBatchName() { $('#batchName').textContent = batch.name + ' · ' + batch.students.length + (batch.students.length === 1 ? ' student' : ' students'); }
+function setBatchName() { $('#batchName').textContent = batch.name + ' · ' + batch.students.length + (batch.students.length === 1 ? ' student' : ' students'); railRender(); }
 function batchClass() { const id = batch && (batch.classId != null ? batch.classId : batch.assignment && batch.assignment.classId); return id ? classById(id) : null; }
 function renderClassSel() {
   const sel = $('#classSel'), c = batchClass();
@@ -4639,8 +4735,11 @@ function renderKept() {
   const list = [...keptMeta.values()].sort((a, b) => b.t - a.t);
   el.closest('section').hidden = !list.length;
   keptTidy(list.length);
-  el.innerHTML = list.map((m, i) => '<div class="krow' + (i ? '' : ' first') + '"><div class="kn"><b>' + esc(m.name || 'A download') + '</b><span class="muted">' + m.n + (m.n === 1 ? ' student' : ' students') + ' · ' + (m.scored || 0) + ' scored' + keptMore(m) + ' · last worked on ' + fmtDay(m.t) + (m.size ? ' · ' + fmtSize(m.size) : '') + (m.newer && keptMeta.has(m.newer) ? ' · an older copy: your work went on in a newer one' : '') + (m.papers ? '' : ' · papers not kept, drop the download again') + '</span></div>' +
+  const where = m => { const it = cardOfKept(m.id), f = it && findItem(it.id); return f ? (f.c === lib.loose ? '' : f.c.name + ' · ') + f.u.name : ''; };
+  const state = m => { const st = keptState(m); return '<span class="kst">' + stateBar(st) + stateChip(st) + '</span>'; };
+  el.innerHTML = list.map((m, i) => '<div class="krow' + (i ? '' : ' first') + '"><div class="kn"><b>' + esc(m.name || 'A download') + '</b>' + (where(m) ? '<span class="kw">' + esc(where(m)) + '</span>' : '') + '<span class="muted">' + m.n + (m.n === 1 ? ' student' : ' students') + ' · ' + (m.scored || 0) + ' scored' + keptMore(m) + ' · last worked on ' + fmtDay(m.t) + (m.size ? ' · ' + fmtSize(m.size) : '') + (m.newer && keptMeta.has(m.newer) ? ' · an older copy: your work went on in a newer one' : '') + (m.papers ? '' : ' · papers not kept, drop the download again') + '</span></div>' + state(m) +
     (m.papers ? '<button class="btn sm' + (i ? '' : ' primary') + '" data-kopen="' + esc(m.id) + '">' + (i ? 'Open' : 'Continue') + '</button>' : '') + '<button class="btn sm" data-kforget="' + esc(m.id) + '" title="Removes the papers, your marks and scores for this download from this browser and any linked folder">Forget</button></div>').join('');
+  renderNeeds();
 }
 async function idbDo(mode, fn) {
   const db = await addDb();
@@ -6487,7 +6586,7 @@ function matchToRoster(list, assignment) {
         '<span class="muted" style="font-size:13px">Matched by the names in the file and folder names. Check the ones marked “Check” or “Choose”.</span></div>' +
       (names.length ? '<table class="gl"><thead><tr><th>File</th><th>Student</th><th></th></tr></thead><tbody>' +
         rows.map((r, k) => '<tr><td style="overflow-wrap:anywhere">' + esc(r.e.path) + '</td><td><select class="btn" data-row="' + k + '" style="max-width:280px">' + opts(r.i) + '</select></td><td>' + sortTag(r) + '</td></tr>').join('') + '</tbody></table>'
-        : '<p>Add a roster for this class first (Rosters, + Class on the start screen), then try again.</p>') +
+        : '<p>Add a roster for this class first (on the class’s own page, from the sidebar), then try again.</p>') +
       (missing.length && names.length ? '<p class="muted" style="font-size:13px;margin:10px 0 0">No file yet: ' + esc(missing.join(', ')) + '</p>' : '') + '</div>' +
       '<div class="bf"><button class="btn" data-close>Cancel</button><button class="btn primary" data-go' + (n ? '' : ' disabled') + '>Open ' + n + (n === 1 ? ' file' : ' files') + ' for ' + who + (who === 1 ? ' student' : ' students') + '</button></div>');
     box.onchange = changed; box.onclick = clicked;   // openDlg takes the handlers off, so each redraw puts them back
@@ -6547,7 +6646,10 @@ function toast(msg, ms) {
   clearTimeout(toastT); toastT = setTimeout(() => { t.hidden = true; t.textContent = ''; }, ms || 3000);
 }
 // The Planner is its own page beside this one, with its own code and saved work: nothing from grading goes there.
-$('#lessonsBtn').onclick = () => { location.href = /Grading Studio\.html$/i.test(decodeURIComponent(location.pathname)) ? 'Planner.html' : 'planner.html'; };
+$('#lessonsBtn').href = /Grading Studio\.html$/i.test(decodeURIComponent(location.pathname)) ? 'Planner.html' : 'planner.html';
+$('#addClass').onclick = () => editClass(-1);
+$('#setDisp').onclick = openDisplay;
+$('#setKeysBtn').onclick = openKeys;
 $('#pickFiles').onclick = () => $('#fileIn').click();
 $('#pickFolder').onclick = () => pickDir('#dirIn');
 $('#pickDrive').onclick = () => openFromDrive(null);
@@ -6643,15 +6745,19 @@ $('#sheetBtn').onclick = () => openSheet(false);
 $('#exportBtn').onclick = openExport;
 $('#shareBtn').onclick = openShare;
 $('#backBtn').onclick = openBringBack;
-function closeDownload() {
+// routed: the address has already moved on (Back, the sidebar), so only the paper is put away.
+function closeDownload(routed) {
   for (const d of docs) d.destroy();
   batch = null; pages = []; docs = []; openToken++;   // a student still opening stops there
-  histAll = null;   // Past work is read again next time: she may forget a download from the start screen
-  $('#app').hidden = true; $('#start').hidden = false; $('#paper').innerHTML = ''; renderLib(); loadKept();
+  histAll = null;   // Past work is read again next time: she may forget a download from Home
+  $('#paper').innerHTML = '';
+  if (!routed && routeNow().v === 'a') { routeTok++; routeOpening = ''; go('#/', true); }
+  else showScreen(routeNow().v === 'a' ? { v: 'opening' } : routeNow());
+  renderLib(); loadKept();
 }
 $('#closeBtn').onclick = () => {
   commitEditors(); saveNow();   // what she's still typing first, so it's in this save
-  if (batch) closeDownload();
+  go('#/');   // closes it on the way
 };
 document.addEventListener('keydown', e => {
   if (!batch || !$('#dlg').hidden) { if (e.key === 'Escape' && !$('#dlg').hidden) { if (SP) splitLeave(); else leaveDlg(); } return; }
@@ -6707,8 +6813,9 @@ let nudging = false;
 document.addEventListener('keyup', e => { if (/^Arrow/.test(e.key)) nudging = false; });
 window.addEventListener('beforeunload', () => { if (!batch || !tabLive()) return; try { commitEditors(); } catch (e) { console.error(e); } saveNow(true); });
 applyDisp();
-renderLib(); renderGoogle(); loadKept();
-/* ---------------- the Saving and carrying section of the start screen (src/folder.js and src/takehome.js do the work) ---------------- */
+renderLib(); renderGoogle();
+const keptFirst = loadKept();   // the address of an open assignment waits for this list before it reopens
+/* ---------------- Saving and carrying, in Settings (src/folder.js and src/takehome.js do the work) ---------------- */
 function renderBackup() {
   const el = $('#backupInfo'); if (!el) return;
   const t = store.get('gs.lastBackup', 0);
@@ -6717,7 +6824,7 @@ function renderBackup() {
   const due = keptMeta.size > 0 && Date.now() - t > 7 * 864e5 && fld.state === 'none';
   el.classList.toggle('due', due);
   if (due) el.textContent += t ? ' · It’s been over a week; a fresh one, or linking a folder, keeps your work safe.' : ' Linking a folder, or a take-home file, keeps your work safe if this browser is cleared.';
-  renderSafety();
+  renderSafety(); renderNeeds();
 }
 // Safety copies made automatically before an update to how work is saved, or before putting one back (src/migrate.js). Only shown once there is one.
 async function renderSafety() {
@@ -6729,7 +6836,7 @@ async function renderSafety() {
 $('#safetyList').onclick = async e => {
   const b = e.target.closest('[data-putback]'); if (!b) return;
   if (!await askDlg('Put back this safety copy?\n\nYour marks, scores, comments, late files, readings, units, rosters and settings in this browser go back to how they were then. The papers from each download stay. A safety copy of how things are now is made first, so this can be undone.', { ok: 'Put back' })) return;
-  try { batch = null; await tabsFinish(); tabsOver('go'); await gsData.putBack(b.dataset.putback); carryAfterPutBack(); tabsOver('done'); toast('Put back. Reloading…'); setTimeout(() => location.reload(), 700); }
+  try { batch = null; await tabsFinish(); tabsOver('go'); await gsData.putBack(b.dataset.putback); carryAfterPutBack(); tabsOver('done'); toast('Put back. Reloading…'); setTimeout(reloadHome, 700); }
   catch (er) { console.error(er); tabsOver('done'); toast('That didn’t finish, so some of your work may have gone back and some not. Reload, then use Put back on the newest safety copy (“Before putting back”) to return to how things were.', 15000); }
 };
 $('#restoreBtn').onclick = () => $('#restoreIn').click();

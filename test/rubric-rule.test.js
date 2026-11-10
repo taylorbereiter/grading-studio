@@ -2,7 +2,7 @@
 const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const { launch } = require('./helpers/chrome');
-const { openApp, openZip, pickFile, waitPaper, score, settle, appReady } = require('./helpers/app');
+const { classPage, openApp, openZip, pickFile, waitPaper, score, settle, appReady } = require('./helpers/app');
 const { makePaper, zipOf } = require('./helpers/fixtures');
 const { takeHome, openFile, bringIt, linkFolder, folderWait, folderRead, folderWrite } = require('./helpers/carry');
 
@@ -20,6 +20,7 @@ const libOf = (...items) => JSON.stringify({ classes: [{ id: 'c1', name: '9A', n
 const closeUp = async page => { await settle(page); await page.click('#closeBtn'); await page.waitForFunction(() => document.querySelector('#start').hidden === false); await new Promise(r => setTimeout(r, 300)); };
 // The card's own button, and the file input behind it. wait: false stops at any question.
 async function viaCard(page, name, bytes, wait = true) {
+  await classPage(page, name);
   await page.evaluate(n => [...document.querySelectorAll('.card')].find(x => x.textContent.includes(n)).querySelector('[data-open-asg]').click(), name);
   await page.waitForSelector('#dlgBox [data-cancel]');
   await page.click('#dlgBox [data-cancel]');

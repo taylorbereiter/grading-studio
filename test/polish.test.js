@@ -3,7 +3,7 @@ const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs'), path = require('path');
 const { launch } = require('./helpers/chrome');
-const { ROOT, builtHtml, openApp, answerDlg, appReady, openZip, pickFile, score, settle } = require('./helpers/app');
+const { classPage, ROOT, builtHtml, openApp, answerDlg, appReady, openZip, pickFile, score, settle } = require('./helpers/app');
 const { makePaper, standardFiles, zipOf } = require('./helpers/fixtures');
 const { contrastFails, contrastSeen } = require('./helpers/contrast');
 
@@ -82,6 +82,7 @@ async function twoRosters(page) {
     await page.waitForFunction(() => document.querySelector('#dlg').hidden);
   }
   const id = await page.evaluate(() => window.__gs.state().lib.classes.find(c => c.name === '9EL-A').id);
+  await classPage(page, id);
   await page.click('[data-addunit="' + id + '"]');
   await answerDlg(page, { typed: 'Unit A' });
   await page.waitForSelector('[data-additem]'); await page.click('[data-additem]');
@@ -212,6 +213,7 @@ test('the floating panels close with Escape from inside them', async () => {
 
 test('the Atlas link moved under More, and still works', async () => {
   const { page, close } = await openApp(browser);
+  await classPage(page, 0);
   await page.click('#classes [data-addunit]');
   await answerDlg(page, { typed: 'Poems' });
   await page.waitForSelector('[data-additem]'); await page.click('[data-additem]');
@@ -427,6 +429,7 @@ test('real uses: adding, renaming and deleting a unit go through the app’s own
   const { page, close } = await openApp(browser);
   page.removeAllListeners('dialog');
   let native = 0; page.on('dialog', d => { native++; d.dismiss(); });
+  await classPage(page, 0);
   await page.click('#classes [data-addunit]');
   await answerDlg(page, { typed: 'Poetry' });
   await page.waitForFunction(() => window.__gs.state().lib.classes[0].units.some(u => u.name === 'Poetry'));
@@ -490,7 +493,7 @@ test('Inter is built in, and opening the app contacts nobody', async () => {
 
 test('the built file stays a sensible size with the font in it', () => {
   const size = fs.statSync(path.join(ROOT, 'Grading Studio.html')).size;
-  assert.ok(size < 5.1e6, 'it’s ' + (size / 1e6).toFixed(2) + ' MB');   // about 5.0 MB, with the Gradebook: the iPhone photo decoder (about 0.7 MB), the Inter font (about 0.2 MB) and the stickers (about 0.15 MB) are bundled so the one file works offline
+  assert.ok(size < 5.2e6, 'it’s ' + (size / 1e6).toFixed(2) + ' MB');   // about 5.1 MB, with the Gradebook and the sidebar: the iPhone photo decoder (about 0.7 MB), the Inter font (about 0.2 MB) and the stickers (about 0.15 MB) are bundled so the one file works offline
 });
 
 test('the build only leaves out lines that really are comments', () => {   // a // line inside a multi-line string would be lost from the app
@@ -505,18 +508,18 @@ test('the build only leaves out lines that really are comments', () => {   // a 
   }
 });
 
-/* ---------------- the start screen ---------------- */
-test('the start screen puts today’s work first', async () => {
+/* ---------------- Home ---------------- */
+test('Home puts today’s work first', async () => {
   const { page, close } = await openApp(browser);
-  const order = () => page.evaluate(() => { const y = s => document.querySelector(s).getBoundingClientRect().top; return { kept: document.querySelector('#kept').checkVisibility() ? y('#kept') : null, drop: y('#drop'), classes: y('#classes') }; });
+  const order = () => page.evaluate(() => { const y = s => document.querySelector(s).getBoundingClientRect().top; return { kept: document.querySelector('#kept').checkVisibility() ? y('#kept') : null, drop: y('#drop'), classes: document.querySelector('#classes').checkVisibility() }; });
   assert.ok(await page.$eval('#pickDrive', e => e.hidden) && await page.$eval('.gAcct', e => e.hidden), 'no Google key built in, so no Google buttons');
   let o = await order();
-  assert.equal(o.kept, null, 'nothing kept yet, so the download box comes first'); assert.ok(o.drop < o.classes);
+  assert.equal(o.kept, null, 'nothing kept yet, so the download box comes first'); assert.equal(o.classes, false, 'classes are on their own pages now');
   await openZip(page, zip); await score(page, [3, 3, 3]); await settle(page);
   await page.click('#closeBtn');
   await page.waitForSelector('#kept [data-kopen]');
   o = await order();
-  assert.ok(o.kept < o.drop && o.drop < o.classes, JSON.stringify(o));
+  assert.ok(o.kept < o.drop && !o.classes, JSON.stringify(o));
   assert.equal(await page.$eval('#kept .krow [data-kopen]', e => e.textContent), 'Continue');
   // many downloads: the five newest, and the rest a click away
   await page.evaluate(() => { const k = window.__gs.kept(), m = [...k.values()][0]; for (let i = 0; i < 7; i++) k.set('x' + i, { ...m, id: 'x' + i, name: 'Old ' + i, t: 1000 + i }); window.__gs.renderKept(); });

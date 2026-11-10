@@ -4,7 +4,7 @@ const assert = require('node:assert/strict');
 const fs = require('fs'), net = require('net'), os = require('os'), path = require('path'), { spawn } = require('child_process');
 const { launch, chromeCandidates, findChrome } = require('./helpers/chrome');
 const { serve } = require('./helpers/serve');
-const { ROOT, BUILT, builtHtml, tmpDir, openApp, appReady, openZip, waitPaper, setTool, drag, score, settle, workOf } = require('./helpers/app');
+const { goTo, ROOT, BUILT, builtHtml, tmpDir, openApp, appReady, openZip, waitPaper, setTool, drag, score, settle, workOf } = require('./helpers/app');
 const { standardFiles, zipOf } = require('./helpers/fixtures');
 
 let browser, zip;
@@ -29,14 +29,16 @@ test('the version number shows, and is set in one place', async () => {
 
 test('the app starts cleanly, and the Planner button, Dark mode and the sample papers still work', async () => {
   const { page, close } = await openApp(browser);
-  await page.click('#start .themeBtn');
+  await goTo(page, '#/settings');
+  await page.click('#vSettings .themeBtn');
   assert.equal(await page.evaluate(() => document.documentElement.dataset.theme), 'dark');
-  await page.click('#start .themeBtn');
+  await page.click('#vSettings .themeBtn');
   // The Planner is its own page next to this one (planner.test.js tries it); grading only links to it.
   await Promise.all([page.waitForNavigation(), page.click('#lessonsBtn')]);
   assert.match(page.url(), /\/planner\.html$/);
   await page.goBack(); await appReady(page);
   assert.ok(await page.evaluate(() => !window.__lessons && !document.querySelector('#lessons')), 'no Planner code in the grading page');
+  await goTo(page, '#/');
   await page.click('#sample');
   await waitPaper(page);
   assert.ok(await page.evaluate(() => window.__gs.state().batch.students.length > 0));
@@ -59,10 +61,14 @@ test('a double-clicked copy (file://) opens, saves and reopens', async () => {
   await score(page, [3.5, 3.5, 3.5]);
   await settle(page);
   await page.reload(); await appReady(page);
+  await waitPaper(page);                                   // a refresh comes back to the open paper, in the double-clicked copy too
+  let w = await workOf(page);
+  assert.equal(w['Aria Testwell'].computed.pct, 93);
+  await page.click('#closeBtn');
   await page.waitForSelector('#kept [data-kopen]');
   await page.click('#kept [data-kopen]');
   await waitPaper(page);
-  const w = await workOf(page);
+  w = await workOf(page);
   assert.equal(w['Aria Testwell'].computed.pct, 93);
   assert.equal(w['Aria Testwell'].files['Aria Testwell/Essay.pdf'].marks[0].length, 1);
   assert.deepEqual(errors, []);

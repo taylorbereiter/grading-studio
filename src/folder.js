@@ -556,6 +556,7 @@ function renderWhere() {
       (fld.state === 'none' ? (('showDirectoryPicker' in window) ? '<button class="btn sm" data-wlink>Link a folder…</button>' : '') : '<button class="btn sm" data-wopen>Folder…</button>');
     if (line.dataset.h !== h) { line.dataset.h = h; line.innerHTML = h; }   // a button shouldn't vanish under her click just because a save went by
   }
+  railSavedRender(); renderNeeds();
 }
 function whereAct() { if (fld.state === 'decide') openFolderAsks(); else folderResume(true); }
 document.addEventListener('click', e => {
@@ -584,7 +585,7 @@ async function openWhere() {
     }
     const g = e.target.closest('[data-snap]'); if (!g) return;
     if (!await askDlg('Go back to this snapshot from ' + g.dataset.when + '?\n\nYour marks, scores, comments, late files, readings, rosters and settings go back to how they were then, in this browser and in the folder. Papers stay. A snapshot of how things are now is made first, so this can be undone.', { ok: 'Go back' })) return;
-    try { await tabsFinish(); tabsOver('go'); await folderGoBack(g.dataset.snap); tabsOver('done'); toast('Done. Reloading…'); setTimeout(() => location.reload(), 700); }
+    try { await tabsFinish(); tabsOver('go'); await folderGoBack(g.dataset.snap); tabsOver('done'); toast('Done. Reloading…'); setTimeout(reloadHome, 700); }
     catch (er) { console.error(er); tabsOver('done'); toast('That didn’t finish. Your work may be partly back: use Put back on the newest safety copy under “Saving and carrying”.', 15000); }
   };
   if (!linked || !fld.root) return;

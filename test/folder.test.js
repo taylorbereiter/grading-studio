@@ -2,7 +2,7 @@
 const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const { launch } = require('./helpers/chrome');
-const { openApp, answerDlg, openZip, waitPaper, appReady, goToStudent, setTool, drag, score, settle, workOf, idbRead } = require('./helpers/app');
+const { classPage, openApp, answerDlg, openZip, waitPaper, appReady, goToStudent, setTool, drag, score, settle, workOf, idbRead } = require('./helpers/app');
 const { standardFiles, zipOf } = require('./helpers/fixtures');
 const { loadLegacy } = require('./helpers/legacy');
 const { linkFolder, folderWait, folderInfo, folderRead, folderWrite, folderList, wipeBrowser, takeHome, openFile, bringIt } = require('./helpers/carry');
@@ -371,6 +371,7 @@ test('stop using a folder leaves its files alone', async () => {
 /* undoing a merge, and bytes the browser or the folder hasn't got */
 async function setRoster(page, name, names) {
   const ci = await page.evaluate(n => window.__gs.state().lib.classes.findIndex(c => c.name === n), name);
+  await classPage(page, ci);
   await page.evaluate(i => document.querySelector('[data-edit-class="' + i + '"]').click(), ci);
   await page.waitForSelector('#cNames');
   await page.$eval('#cNames', (e, v) => { e.value = v; }, names.join('\n'));

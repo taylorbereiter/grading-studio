@@ -3,7 +3,7 @@
 const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const { launch } = require('./helpers/chrome');
-const { openApp, answerDlg, pickFile } = require('./helpers/app');
+const { classPage, openApp, answerDlg, pickFile } = require('./helpers/app');
 const { standardFiles, zipOf } = require('./helpers/fixtures');
 
 let browser, zip;
@@ -23,6 +23,7 @@ test('a new assignment goes to every ticked class, each in its unit of that name
   await addClass(page, 'Test B', 'Cal Nye\nDee Rao');
   await addClass(page, 'Test C', 'Eve Lin');
   const ids = await page.evaluate(() => Object.fromEntries(window.__gs.state().lib.classes.map(c => [c.name, c.id])));
+  await classPage(page, ids['Test A']);
   await page.click('[data-addunit="' + ids['Test A'] + '"]'); await answerDlg(page, { typed: 'Poems' });
   await page.click('[data-cls="' + ids['Test A'] + '"] [data-additem]');
   await page.waitForSelector('#aClasses');
@@ -40,16 +41,19 @@ test('a new assignment goes to every ticked class, each in its unit of that name
   assert.equal(cards.length, 2); assert.ok(cards[0].group && cards[0].group === cards[1].group, 'the copies are grouped');
   assert.notEqual(cards[0].id, cards[1].id); for (const c of cards) assert.equal(c.classId, c.own, c.cls + ' card uses its own class');
   // none ticked: Save can't be pressed
+  await classPage(page, ids['Test C']);
   await page.click('[data-cls="' + ids['Test C'] + '"] [data-addunit]'); await answerDlg(page, { typed: 'Plays' });
   await page.click('[data-cls="' + ids['Test C'] + '"] [data-additem]'); await page.waitForSelector('#aClasses');
   await page.click('#aClasses input[value="' + ids['Test C'] + '"]');
   assert.ok(await page.$eval('#dlgBox [data-ok]', b => b.disabled));
   await page.click('#dlgBox [data-cancel]');
   // Edit stays one class
+  await classPage(page, cards[1].id);
   await page.click('[data-edit-asg="' + cards[1].id + '"]'); await page.waitForSelector('#aClass');
   assert.equal(await page.$('#aClasses'), null);
   await page.click('#dlgBox [data-cancel]');
   // opening one copy sets its rubric, and the other copy takes it
+  await classPage(page, cards[0].id);
   await page.click('[data-open-asg="' + cards[0].id + '"]');
   await page.waitForSelector('#dlgBox [data-pc]'); await page.click('#dlgBox [data-cancel]');
   const clean = await pickFile(page, '#asgIn', zip, 'River.zip');

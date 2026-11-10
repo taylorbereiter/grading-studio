@@ -4,7 +4,7 @@ const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const { launch } = require('./helpers/chrome');
 const { serve } = require('./helpers/serve');
-const { builtHtml, openApp, answerDlg, openZip, appReady, plant, waitPaper, pickFile, workOf, idbRead, score, settle } = require('./helpers/app');
+const { goTo, builtHtml, openApp, answerDlg, openZip, appReady, plant, waitPaper, pickFile, workOf, idbRead, score, settle } = require('./helpers/app');
 const { makePaper, zipOf } = require('./helpers/fixtures');
 const { loadLegacy, noEmpty } = require('./helpers/legacy');
 const { openZipBackup, bringIt } = require('./helpers/carry');
@@ -32,6 +32,7 @@ const tries = page => page.evaluate(() => JSON.parse(localStorage.getItem('gs.tr
 const noteOf = page => page.$eval('#bootNote', e => e.textContent);
 async function putBackRow(page, id) {
   await page.waitForSelector('#safetyList [data-putback="' + id + '"]');
+  await goTo(page, '#/settings');
   const nav = page.waitForNavigation({ timeout: 30000 });
   await page.click('#safetyList [data-putback="' + id + '"]');
   await answerDlg(page);
@@ -262,6 +263,7 @@ test('Put back returns the work as it was, then the update runs again', async ()
     db.close();
   }, RIVER);
   await page.waitForSelector('#safetyList [data-putback]');
+  await goTo(page, '#/settings');
   const nav = page.waitForNavigation({ timeout: 30000 });
   await page.click('#safetyList [data-putback]');
   await answerDlg(page);

@@ -1,0 +1,167 @@
+/* ---------- the frame: a sidebar that is always there, and one screen beside it (11/9) ---------- */
+.shell{display:flex;height:calc(100vh - var(--savebar,0px));min-width:0}
+.shellmain{flex:1;min-width:0;height:100%;overflow:auto;position:relative}
+.shell .app{height:100%}
+.rail{flex:none;width:232px;display:flex;flex-direction:column;gap:2px;padding:16px 12px 12px;background:var(--surface);border-right:1px solid var(--line);overflow:hidden auto}
+.rail a{text-decoration:none;color:inherit}
+.rail svg{width:18px;height:18px;flex:none;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.rbrand{font-family:var(--f-display);font-weight:700;font-size:17px;letter-spacing:-.02em;padding:4px 10px 14px;color:var(--fg);white-space:nowrap}
+.rbrand i{font-style:normal;font-weight:500;color:var(--accent)}
+.rbrand .rs{display:none}
+.rfind{display:flex;align-items:center;gap:8px;width:100%;height:36px;padding:0 10px;margin:0 0 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--muted);font-size:14px;text-align:left}
+.rfind:hover{border-color:var(--line-strong);color:var(--fg)}
+.rfind kbd,.fbox kbd{margin-left:auto;flex:none;font:500 11px var(--f-body);border:1px solid var(--line-strong);border-radius:5px;padding:1px 5px;background:var(--surface);color:var(--muted);white-space:nowrap}
+.rnav{display:flex;align-items:center;gap:10px;width:100%;min-height:36px;padding:0 10px;border:0;border-radius:8px;background:none;color:var(--fg-2);font-weight:500;font-size:14px;text-align:left}
+.rnav:hover{background:var(--hover)}
+.rnav.on{background:var(--accent-soft);color:var(--accent);font-weight:600}
+.rnav.over{background:var(--accent-soft);box-shadow:0 0 0 2px var(--accent)}
+.rcap{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:16px 10px 6px}
+.rdot{width:8px;height:8px;border-radius:50%;flex:none}
+.rname{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rcnt{flex:none;font-size:12px;font-weight:500;color:var(--muted);font-variant-numeric:tabular-nums}
+.rnav.on .rcnt{color:var(--accent)}
+.radd{color:var(--muted)}
+.rail .sp{flex:1;min-height:12px}
+.rsaved{display:flex;gap:10px;align-items:flex-start;width:100%;padding:10px;border:0;border-radius:8px;background:none;color:var(--muted);font-size:12.5px;line-height:1.35;text-align:left}
+.rsaved:hover{background:var(--hover)}
+.rsaved .rdot{background:var(--ok);margin-top:5px}
+.rsaved.warn .rdot{background:var(--warn)}
+.rsaved.bad .rdot{background:var(--bad)}
+.rsaved b{display:block;color:var(--fg);font-weight:600}
+.rsaved.warn b{color:var(--warn)}
+.rsaved.bad b{color:var(--bad)}
+.rsaved .rl{display:block;flex:1;min-width:0;overflow-wrap:anywhere}
+
+/* while a paper is open the sidebar folds to a strip of icons, so the paper gets the room */
+.shell.grading .rail{width:60px;padding:12px 8px;align-items:center;overflow:hidden auto}
+.shell.grading .rail .rl{display:none}
+.shell.grading .rbrand{padding:4px 0 12px}
+.shell.grading .rbrand .rs{display:inline}
+.shell.grading .rnav,.shell.grading .rfind{justify-content:center;width:40px;min-height:40px;height:40px;padding:0;margin:0 0 2px;flex:none}
+.shell.grading .rcap{width:24px;height:0;padding:0;margin:8px 0;border-top:1px solid var(--line)}
+.shell.grading .radd{display:none}
+.shell.grading #railClasses{display:flex;flex-direction:column;align-items:center}
+.shell.grading .rdot{width:10px;height:10px}
+.shell.grading .rsaved{justify-content:center;width:40px;padding:12px 0}
+.shell.grading .rsaved .rdot{margin:0}
+@media (max-width:1100px){
+  .rail{width:60px;padding:12px 8px;align-items:center}
+  .rail .rl{display:none}
+  .rbrand{padding:4px 0 12px}
+  .rbrand .rs{display:inline}
+  .rnav,.rfind{justify-content:center;width:40px;min-height:40px;height:40px;padding:0;margin:0 0 2px;flex:none}
+  .rcap{width:24px;height:0;padding:0;margin:8px 0;border-top:1px solid var(--line)}
+  #railClasses{display:flex;flex-direction:column;align-items:center}
+  .rdot{width:10px;height:10px}
+  .rsaved{justify-content:center;width:40px;padding:12px 0}
+  .rsaved .rdot{margin:0}
+}
+@media (max-width:760px){.shell{height:auto;min-height:100vh}.shellmain{height:auto;overflow:visible}.shell .app{height:auto}}
+
+/* the top bar while grading: the class, then the assignment */
+.shell .top .title{display:none}
+.crumb{flex:none;font-weight:600;font-size:14px;color:var(--fg-2);text-decoration:none;white-space:nowrap}
+.crumb:hover{color:var(--accent)}
+.crumb::after{content:"/";margin:0 0 0 8px;color:var(--faint);font-weight:400}
+.top .batch{color:var(--fg);font-weight:600}
+
+/* ---------- Home, a class, Settings ---------- */
+.start{max-width:1240px;padding:24px 28px 60px}
+.vhead{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin:0 0 18px}
+.vhead h1,.clshead h1{font-size:24px}
+.vhead .sp,.clshead .sp{flex:1}
+#whereTop{margin:0 0 14px;font-size:14px}
+.vopening{padding:80px 0;text-align:center}
+.vhint{font-size:13px;margin:14px 2px 0}
+.hgrid{display:grid;grid-template-columns:minmax(0,1fr);gap:20px;align-items:start}
+.hgrid:has(.hside:not([hidden])){grid-template-columns:minmax(0,1fr) 320px}
+@media (max-width:1280px){.hgrid:has(.hside:not([hidden])){grid-template-columns:minmax(0,1fr)}}
+.hmain{min-width:0}
+.start .lib.today{margin:0 0 16px}
+.schip{display:inline-flex;align-items:center;font-size:12px;font-weight:600;line-height:1.3;padding:2px 8px;border-radius:999px;background:var(--surface-2);color:var(--fg-2);white-space:nowrap}
+.schip.ok{background:var(--ok-soft);color:var(--ok)}
+.schip.on{background:var(--accent-soft);color:var(--accent)}
+.schip.warn{background:var(--warn-soft);color:var(--warn)}
+.sbar{display:inline-block;flex:none;width:96px;height:6px;border-radius:3px;background:var(--track);overflow:hidden}
+.sbar i{display:block;height:100%;background:var(--accent);border-radius:3px}
+.krow{gap:10px}
+.krow .kw{font-size:12.5px;color:var(--fg-2);font-weight:500}
+.kst{display:flex;align-items:center;gap:8px;flex:none}
+.krow.first{border-color:var(--line);box-shadow:var(--shadow);padding:18px 20px}
+.krow.first .kn b{font-size:20px;letter-spacing:-.02em}
+.krow.first .kn{gap:2px}
+.krow.first [data-kopen]{padding:10px 18px;font-size:15px;font-weight:600}
+.krow.first .sbar{width:140px}
+.krow [data-kforget]{border-color:transparent;background:none;color:var(--muted)}
+.krow [data-kforget]:hover{background:var(--surface-2);color:var(--fg)}
+@media (max-width:900px){.kst .sbar{display:none}}
+.ncard{background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.nhead{display:flex;align-items:center;gap:10px;padding:14px 16px 12px}
+.nhead h2{font-family:var(--f-display);font-size:15px;margin:0}
+.nrow{display:flex;align-items:center;gap:10px;width:100%;padding:11px 16px;border:0;border-top:1px solid var(--line);background:none;color:inherit;font-size:14px;text-align:left;text-decoration:none}
+button.nrow:hover,a.nrow:hover{background:var(--hover)}
+.nrow .nt{flex:1;min-width:0}
+.nrow b{display:block;font-weight:600}
+.nrow .ns{display:block;font-size:12.5px;color:var(--muted);overflow-wrap:anywhere}
+.nrow svg{width:16px;height:16px;flex:none;fill:none;stroke:var(--muted);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+
+/* a class page: its units down the page, one row per assignment */
+.cls{background:none;border:0;border-radius:0;padding:0;margin:0}
+.clshead{align-items:center;gap:8px;margin:0 0 16px}
+.clshead h1{margin-right:4px}
+.board{flex-direction:column;align-items:stretch;gap:14px;overflow:visible;padding:0}
+.unit{flex:none;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:0;gap:0;overflow:hidden}
+.unit.ins{box-shadow:0 -4px 0 var(--accent)}
+.cls .board.insEnd{box-shadow:0 4px 0 var(--accent)}
+.uhead{padding:11px 10px 11px 16px;gap:8px;font-size:15px}
+.uhead .nm{flex:none;max-width:60%}
+.uhead .sp{flex:1}
+.ucount{font:400 12.5px var(--f-body);color:var(--muted)}
+.uhead .atl{margin:0;padding:0;font-family:var(--f-body);font-weight:400}
+.unit .cards{gap:0;min-height:0;border-radius:0}
+.unit .card{display:grid;grid-template-columns:minmax(0,1.3fr) 96px minmax(0,1.6fr) auto;gap:14px;align-items:center;border:0;border-top:1px solid var(--line);border-radius:0;box-shadow:none;padding:10px 16px}
+.unit .card.ins{box-shadow:inset 0 3px 0 var(--accent)}
+.unit .cards.insEnd{box-shadow:inset 0 -3px 0 var(--accent)}
+.unit .card.over{outline-offset:-2px}
+.cmain{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}
+.unit .card .t{font-weight:600}
+.unit .card .m{margin:0;font-size:12.5px;min-width:0}
+.cdue{font-size:13px;color:var(--muted);white-space:nowrap}
+.cstate{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}
+.unit .card .row{justify-content:flex-end;flex-wrap:nowrap}
+.unit .addcard{border:0;border-top:1px solid var(--line);border-radius:0;padding:10px 16px;text-align:left;color:var(--accent)}
+.unit .addcard:hover{background:var(--hover);color:var(--accent)}
+.board>.empty-note{background:var(--surface);border:1px dashed var(--line-strong);border-radius:12px;padding:22px 18px}
+@media (max-width:1100px){.unit .card{grid-template-columns:minmax(0,1fr) auto}.cdue:empty{display:none}.unit .card .row{justify-content:flex-start;flex-wrap:wrap}}
+
+/* Settings: one card per subject */
+.setsec{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin:0 0 14px}
+.setsec .lhead{margin-bottom:8px;align-items:center}
+.setsec .lhead:only-child{margin-bottom:0}
+.setsec h2{font-size:17px}
+
+/* ---------- Find anything ---------- */
+.finddlg{align-items:flex-start;padding-top:12vh;z-index:34}
+.fbox{width:min(640px,100%);max-height:min(560px,76vh);display:flex;flex-direction:column;background:var(--surface);border-radius:14px;box-shadow:0 4px 12px rgba(20,25,40,.12),0 24px 60px rgba(20,25,40,.28);overflow:hidden}
+.fin{display:flex;align-items:center;gap:12px;height:56px;flex:none;padding:0 18px;border-bottom:1px solid var(--line)}
+.fin svg{width:20px;height:20px;flex:none;fill:none;stroke:var(--muted);stroke-width:1.7;stroke-linecap:round}
+.fin input{flex:1;min-width:0;border:0;outline:0;background:none;font-size:17px;color:var(--fg)}
+#findList{flex:1;min-height:0;overflow:auto;padding:0 0 8px}
+.fcap{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:12px 18px 4px}
+.frow{display:flex;align-items:center;gap:12px;width:calc(100% - 12px);min-height:40px;margin:0 6px;padding:6px 12px;border:0;border-radius:8px;background:none;color:var(--fg);font-size:14px;text-align:left}
+.frow b{font-weight:500;white-space:nowrap}
+.frow span{flex:1;min-width:0;color:var(--muted);font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.frow.on{background:var(--accent-soft)}
+.frow.on b{color:var(--accent);font-weight:600}
+.fnone{padding:22px 18px;color:var(--muted)}
+.ffoot{display:flex;align-items:center;gap:14px;flex:none;height:40px;padding:0 18px;border-top:1px solid var(--line);background:var(--bg);font-size:12.5px;color:var(--muted)}
+.ffoot .sp{flex:1}
+/* Home: the open box sits under the work in a narrower column now, so its buttons go below its words */
+.hmain .today:not([hidden])~.drop{grid-template-columns:minmax(0,1fr)}
+.hmain .today:not([hidden])~.drop .row{grid-column:1;grid-row:auto;justify-content:flex-start;margin-top:8px}
+/* The folded sidebar takes 60px beside the paper. On a small laptop the tools still fit on one row: a little less padding, slightly narrower side columns. */
+@media (min-width:1101px) and (max-width:1340px){
+  .shell.grading .cols{grid-template-columns:calc(220px * var(--uz)) minmax(0,1fr) calc(296px * var(--uz))}
+  .shell.grading .tool{padding:7px 5px}
+  .shell.grading .tools{gap:1px}
+}

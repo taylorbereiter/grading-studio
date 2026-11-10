@@ -232,7 +232,7 @@ async function carrySay() {
   const anon = anonOn(), count = (items, what) => items.length ? [items.length + ' ' + what + (items.length === 1 ? '' : 's')] : [], names = (items, what) => anon ? count(items, what) : items;
   const list = (title, items) => items.length ? '<p style="margin:10px 0 2px"><b>' + title + '</b></p><ul style="margin:0;padding-left:18px">' + items.slice(0, 12).map(x => '<li style="overflow-wrap:anywhere">' + esc(x) + '</li>').join('') + (items.length > 12 ? '<li>and ' + (items.length - 12) + ' more</li>' : '') + '</ul>' : '';
   openDlg('<div class="bh"><h2>Your work came over</h2><button class="icon" data-close aria-label="Close">✕</button></div><div class="bb" id="carryBox">' +
-    '<p style="margin-top:0">This looks like a newer copy of <b>' + esc(c.name || 'a download you worked on') + '</b>. Marks and scores for <b>' + n + (n === 1 ? ' student' : ' students') + '</b> came over. The older copy hasn’t changed: it’s still on the start screen.</p>' +
+    '<p style="margin-top:0">This looks like a newer copy of <b>' + esc(c.name || 'a download you worked on') + '</b>. Marks and scores for <b>' + n + (n === 1 ? ' student' : ' students') + '</b> came over. The older copy hasn’t changed: it’s still on Home.</p>' +
     (c.unchecked ? '<p>The older papers aren’t kept in this browser, so which files changed couldn’t be checked. Have a look through them.</p>' : '') +
     list('Changed, so check your marks still sit in the right places:', names(paths('changed'), 'file')) +
     list('These have marks on pages they no longer have. The older copy still has them:', names(changed.filter(f => lostPages(f).length).map(f => f.name + ', page ' + lostPages(f).map(p => p + 1).join(', ')), 'file')) +

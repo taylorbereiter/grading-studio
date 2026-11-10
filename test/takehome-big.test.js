@@ -5,7 +5,7 @@ const assert = require('node:assert/strict');
 const { execFileSync } = require('child_process');
 const { launch } = require('./helpers/chrome');
 const { serve } = require('./helpers/serve');
-const { builtHtml, openApp, appReady } = require('./helpers/app');
+const { goTo, builtHtml, openApp, appReady } = require('./helpers/app');
 const { linkFolder } = require('./helpers/carry');
 
 // How much memory the page's process is really using, in MB. Array buffers don't show in the JS heap, so this asks the system.
@@ -67,7 +67,7 @@ test('over 600 MB goes out and comes back, with the tab responsive and no spike 
     await page.reload(); await appReady(page);
     await page.waitForFunction(() => window.__gs.kept().size === 26);
     await page.evaluate(async () => { window.__gs.takeUse(await (await navigator.storage.getDirectory()).getFileHandle('big.gswork', { create: true })); });
-    await page.click('#takeBtn');
+    await goTo(page, '#/settings'); await page.click('#takeBtn');
     await page.waitForSelector('#takeP1');
     await page.$eval('#takeP1', e => { e.value = 'correct horse battery'; }); await page.$eval('#takeP2', e => { e.value = 'correct horse battery'; });
     const out = await measure(browser, page, 'Take my work with me', async () => {

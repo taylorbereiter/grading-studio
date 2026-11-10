@@ -3,7 +3,7 @@ const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const { unzipSync, strFromU8, zipSync, strToU8 } = require('fflate');
 const { launch } = require('./helpers/chrome');
-const { openApp, answerDlg, openZip, pickFile, settle, catchDownloads, score, waitPaper } = require('./helpers/app');
+const { classPage, openApp, answerDlg, openZip, pickFile, settle, catchDownloads, score, waitPaper } = require('./helpers/app');
 const { makePaper, makeDocx, zipOf } = require('./helpers/fixtures');
 const { linkFolder, folderWait, folderRead, folderWrite } = require('./helpers/carry');
 
@@ -66,6 +66,7 @@ test('Not now while newer work comes in from the folder: the out-of-date copy le
   const setup = { mode: 'rubric', criteria: ['Thesis', 'Evidence', 'Style'] };
   const lib = JSON.stringify({ classes: [{ id: 'c1', name: '9A', names: [], units: [{ id: 'u1', name: 'Rivers', items: [{ id: 'asg1', classId: 'c1', name: 'River card', setup }] }] }], loose: { id: '', units: [] } });
   const { page, close } = await openApp(browser, { seed: { ls: { 'gs.lib': lib } } });
+  await classPage(page, 'River card');
   await page.evaluate(() => [...document.querySelectorAll('.card')].find(x => x.textContent.includes('River card')).querySelector('[data-open-asg]').click());
   await page.waitForSelector('#dlgBox [data-cancel]'); await page.click('#dlgBox [data-cancel]');
   const clean = await pickFile(page, '#asgIn', await papers(), 'River.zip');

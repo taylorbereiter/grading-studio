@@ -2,7 +2,7 @@
 const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const { launch } = require('./helpers/chrome');
-const { openApp, answerDlg, openZip, waitPaper, appReady, goToStudent, setTool, drag, score, settle, catchDownloads, workOf, idbRead } = require('./helpers/app');
+const { goTo, openApp, answerDlg, openZip, waitPaper, appReady, goToStudent, setTool, drag, score, settle, catchDownloads, workOf, idbRead } = require('./helpers/app');
 const { standardFiles, makePaper, zipOf } = require('./helpers/fixtures');
 const { loadLegacy } = require('./helpers/legacy');
 const { linkFolder, folderWait, folderList, takeHome, openFile, bringIt, openZipBackup } = require('./helpers/carry');
@@ -199,6 +199,7 @@ test('changed on both computers: she sees both versions, and nothing goes in unt
   await closeUp(a.page);
   await a.page.waitForSelector('[data-putback]');
   assert.match(await a.page.$eval('#safetyList', e => e.textContent), /Before bringing work in/);
+  await goTo(a.page, '#/settings');
   const nav = a.page.waitForNavigation({ timeout: 60000 });
   await a.page.click('[data-putback]');
   await answerDlg(a.page);
@@ -256,7 +257,7 @@ test('without a save dialog the file still comes out, as a download', async () =
   const a = await laptop();
   await a.page.evaluate(() => { window.showSaveFilePicker = undefined; });
   const dl = await catchDownloads(a.page);
-  await a.page.click('#takeBtn');
+  await goTo(a.page, '#/settings'); await a.page.click('#takeBtn');
   await a.page.waitForSelector('#takeP1');
   await a.page.$eval('#takeP1', e => { e.value = 'correct horse battery'; });
   await a.page.$eval('#takeP2', e => { e.value = 'correct horse battery'; });
@@ -271,7 +272,7 @@ test('without a save dialog the file still comes out, as a download', async () =
 
 test('asks for a real passphrase, twice', async () => {
   const { page, close } = await openApp(browser);
-  await page.click('#takeBtn');
+  await goTo(page, '#/settings'); await page.click('#takeBtn');
   await page.waitForSelector('#takeP1');
   await page.$eval('#takeP1', e => { e.value = 'short'; }); await page.$eval('#takeP2', e => { e.value = 'short'; });
   await page.click('#takeGo');
@@ -326,7 +327,7 @@ test('Remove from this computer: a strong warning first, then the student work i
   });
   await a.page.evaluate(() => window.__gs.gsData.snapshot('Test', 1));
   // Not the right word: nothing happens.
-  await a.page.click('#removeBtn');
+  await goTo(a.page, '#/settings'); await a.page.click('#removeBtn');
   await a.page.waitForSelector('#askDlg');
   const warn = await a.page.$eval('#askText', e => e.textContent);
   assert.match(warn, /1 download/); assert.match(warn, /haven’t made a take-home file/);
@@ -336,12 +337,12 @@ test('Remove from this computer: a strong warning first, then the student work i
   await answerDlg(a.page);
   assert.equal(await a.page.evaluate(() => window.__gs.kept().size), 1);
   // Cancel: nothing happens.
-  await a.page.click('#removeBtn');
+  await goTo(a.page, '#/settings'); await a.page.click('#removeBtn');
   await a.page.waitForSelector('#askDlg');
   await answerDlg(a.page, { yes: false });
   assert.equal(await a.page.evaluate(() => window.__gs.kept().size), 1);
   // The right word.
-  await a.page.click('#removeBtn');
+  await goTo(a.page, '#/settings'); await a.page.click('#removeBtn');
   await a.page.waitForSelector('#askDlg');
   const nav = a.page.waitForNavigation({ timeout: 60000 });
   await answerDlg(a.page, { typed: 'remove' });

@@ -37,7 +37,7 @@ function saveResult(b, data, ls, full) {
   if (full) saveBad.delete(b.id); else saveBad.set(b.id, { b, data, ls });
   if (full) saveLabel(b, ls ? '✓ Saved' : '✓ Saved (1 copy)', '', ls ? '' : 'The full copy is kept. This browser’s quick copy is full, which does no harm.');
   else saveLabel(b, ls ? '⚠ Partly saved' : '⚠ Not saved', ls ? 'warn' : 'bad');
-  if (full && !ls && !oneCopyTold) { oneCopyTold = true; toast('Your work is saved, but this browser’s room for its quick copy is full. Linking a folder from the start screen is a good idea.', 8000); }
+  if (full && !ls && !oneCopyTold) { oneCopyTold = true; toast('Your work is saved, but this browser’s room for its quick copy is full. Linking a folder, in Settings, is a good idea.', 8000); }
   saveBar();
 }
 function saveLabel(b, text, cls, tip) {
@@ -101,12 +101,12 @@ function tabLive() {
   const v = lsRaw('gsc.over');
   if (v === overSeen) return true;
   tabStopped = true; clearTimeout(saveT); clearTimeout(saveRetryT); saveBad.clear();
-  if (/:done$/.test(v || '')) { location.reload(); return false; }
+  if (/:done$/.test(v || '')) { reloadHome(); return false; }
   const el = document.createElement('div');
   el.id = 'tabOver'; el.setAttribute('role', 'alert'); el.textContent = 'Your saved work is being changed in another tab. This tab will reload by itself when that’s done.';
   el.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;padding:40px;text-align:center;font-size:18px;color:#fff;background:rgba(0,0,0,.72)';
   document.body.appendChild(el);
-  setTimeout(() => location.reload(), 60000);   // that tab may never finish
+  setTimeout(reloadHome, 60000);   // that tab may never finish
   return false;
 }
 // This tab is about to replace everything, so the others get a moment to finish first: long enough to hear, and then as long as any of them says it's still saving.
@@ -183,7 +183,7 @@ const tabForgot = b => +lsRaw(forgotKey(b.id)) > (b.opened || 0);
 function tabLetGo() { closeDownload(); toast('That download was forgotten in another tab, so it’s closed here too.', 6000); }
 window.addEventListener('storage', e => {
   if (e.storageArea && e.storageArea !== localStorage) return;
-  if (e.key === 'gsc.over') { if (!tabLive() && /:done$/.test(e.newValue || '')) location.reload(); return; }
+  if (e.key === 'gsc.over') { if (!tabLive() && /:done$/.test(e.newValue || '')) reloadHome(); return; }
   if (!e.key || !tabLive()) return;
   if (e.key === 'gsc.finish') tabFinishUp();
   else if (e.key === 'gs.bank') bank = store.get('gs.bank', bank);

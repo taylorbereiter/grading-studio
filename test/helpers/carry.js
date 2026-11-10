@@ -1,6 +1,6 @@
 // Linking a folder and making take-home files without the browser's own pickers, which can't be driven in a test.
 // The folder is one from the browser's private file system, and the app can't tell the difference.
-const { pickFile, appReady } = require('./app');
+const { pickFile, appReady, goTo } = require('./app');
 
 // Links the folder called name, made if needed.
 const linkFolder = (page, name = 'Linked') => page.evaluate(async name => {
@@ -45,7 +45,7 @@ async function takeHome(page, pass = 'correct horse battery') {
     const h = await (await navigator.storage.getDirectory()).getFileHandle('take-home-test.gswork', { create: true });
     window.__gs.takeUse(h);
   });
-  await page.click('#takeBtn');
+  await goTo(page, '#/settings'); await page.click('#takeBtn');
   await page.waitForSelector('#takeP1');
   await page.$eval('#takeP1', (e, p) => { e.value = p; }, pass);
   await page.$eval('#takeP2', (e, p) => { e.value = p; }, pass);

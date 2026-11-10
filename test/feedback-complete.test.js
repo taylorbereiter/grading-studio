@@ -2,7 +2,7 @@
 const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const { launch } = require('./helpers/chrome');
-const { openApp, pickFile, waitPaper } = require('./helpers/app');
+const { classPage, openApp, pickFile, waitPaper } = require('./helpers/app');
 const { standardFiles, zipOf } = require('./helpers/fixtures');
 
 let browser, zip;
@@ -15,6 +15,7 @@ function seed(type) {
   return { ls: { 'gs.lib': JSON.stringify(lib) } };
 }
 async function openCard(page) {
+  await classPage(page, 'i1');
   await page.waitForSelector('[data-open-asg="i1"]');
   await page.click('[data-open-asg="i1"]');
   await page.waitForSelector('#dlgBox [data-cancel]'); await page.click('#dlgBox [data-cancel]');
@@ -82,6 +83,7 @@ test('the score panel stays as it was for other types, and changing the type swi
 
 test('Add scores for a formative activity ticks Feedback complete per student', async () => {
   const { page, close } = await openApp(browser, { seed: seed('fm') });
+  await classPage(page, 'c1');
   await page.waitForSelector('[data-book="c1"]'); await page.click('[data-book="c1"]');
   await page.waitForSelector('[data-bkadd]'); await page.click('[data-bkadd]');
   await page.waitForSelector('#bkaName');

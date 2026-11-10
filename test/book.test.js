@@ -2,7 +2,7 @@
 const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const { launch } = require('./helpers/chrome');
-const { openApp } = require('./helpers/app');
+const { classPage, openApp } = require('./helpers/app');
 
 let browser;
 before(async () => { browser = await launch(); });
@@ -43,6 +43,7 @@ function seed() {
 }
 const noErrors = page => assert.deepEqual(page.errors, []);
 async function openBook(page) {
+  await classPage(page, 'c1');
   await page.waitForSelector('[data-book="c1"]');
   await page.click('[data-book="c1"]');
   await page.waitForSelector('[data-bkterm]');
