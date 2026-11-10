@@ -1,7 +1,7 @@
 /* ---------------- the frame: the sidebar, Home's "Needs a look", and Find anything (11/9) ---------------- */
 // The screens themselves are drawn by app.js (routeNow, applyRoute, renderLib). app.js and folder.js call the functions here while the
 // app is still loading, before this file has run, so each one waits for shellReady.
-var shellReady;
+var shellReady, screenWas = '';
 
 // One colour per class, by its place in the sidebar. No sage or yellow-green, and no red: red is for marks on the paper.
 function classColor(c) {
@@ -27,12 +27,14 @@ function railRender() {
   for (const a of document.querySelectorAll('#rail [data-nav]')) { const on = !batch && a.dataset.nav === r.v; a.classList.toggle('on', on); if (on) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); }
   const cr = $('#crumbClass'); cr.hidden = !(batch && open);
   if (batch && open) { cr.textContent = open.name; cr.href = classHash(open); cr.title = 'Back to ' + open.name; }
-  tabsRender();
+  tabsRender(); setRender();
+  if (!batch && r.v === 'home' && screenWas !== 'home') planRefresh();
+  screenWas = batch ? 'a' : r.v;
   const d = $('#homeDate'), today = new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' }); if (d.textContent !== today) d.textContent = today;
   // The tab's name goes into the browser's history, which some browsers copy to an account. A download's name can be a student's, so it stays out;
   // an assignment or class name she typed herself is fine.
   const asg = batch && batch.assignment && findItem(batch.assignment.id);
-  document.title = batch ? (asg ? asg.it.name + ' · ' : '') + 'Grading Studio' : r.v === 'class' ? (r.c === lib.loose ? 'No class' : r.c.name) + ' · Grading Studio' : r.v === 'settings' ? 'Settings · Grading Studio' : 'Grading Studio';
+  document.title = batch ? (asg ? asg.it.name + ' · ' : '') + 'Grading Studio' : r.v === 'class' ? (r.c === lib.loose ? 'No class' : r.c.name) + ' · Grading Studio' : r.v === 'settings' ? (r.sec === 'saving' ? '' : SET_SECS.find(x => x[0] === r.sec)[1] + ' · ') + 'Settings · Grading Studio' : 'Grading Studio';
 }
 // "Saved", and where: the same words as the top bar while grading and the line in Settings (folder.js says them).
 function railSavedRender() {
@@ -60,6 +62,7 @@ function renderNeeds() {
     (rows.length > 6 ? '<div class="nrow"><span class="ns">and ' + (rows.length - 6) + ' more</span></div>' : '') + '</section>';
   el.hidden = !h;
   if (el.dataset.h !== h) { el.dataset.h = h; el.innerHTML = h; }
+  hsideShow();
 }
 $('#needs').addEventListener('click', e => { const b = e.target.closest('[data-nopen]'); if (b && !b.disabled) { b.disabled = true; reopenKept(b.dataset.nopen).finally(() => { b.disabled = false; }); } });
 
@@ -108,7 +111,7 @@ function findRows() {
   }
   add('Go to', 'Home', 'What to pick up, and what needs a look', () => go('#/'));
   add('Go to', 'Planner', 'Units and lessons, on its own page', () => { location.href = $('#lessonsBtn').href; });
-  add('Go to', 'Settings', 'Saving and carrying, display, keys', () => go('#/settings'));
+  add('Go to', 'Settings', 'Saving, classes, terms, marking, display and keys', () => go('#/settings'));
   for (const c of lib.classes) {
     add('Classes', c.name, (c.names.length ? c.names.length + ' students' : 'No roster yet') + (classLeft(c) ? ' · ' + classLeft(c) + ' left to score' : ''), () => go(classHash(c)));
     if (c.names.length) for (const [k, l, sub] of [['gradebook', 'gradebook', 'Every assignment by term, with each term grade'], ['students', 'students', 'The roster, with IDs and emails, and each student’s own page'], ['charts', 'charts', 'Grades and scores as charts']]) add('Class pages', c.name + ' ' + l, sub, () => go(classHash(c, k)));
@@ -129,13 +132,15 @@ function findRows() {
     add('Do', 'Try it with sample papers', '', press('#sample'));
     add('Settings', 'Take my work with me', 'A take-home file for another computer', press('#takeBtn'));
     add('Settings', 'Bring work in', 'From a take-home file', press('#restoreBtn'));
-    add('Settings', 'Remove from this computer', '', () => go('#/settings'));
+    add('Settings', 'Remove from this computer', 'Clears student work from this browser', () => go('#/settings'));
   }
   add('Settings', 'Where my work is saved', 'This browser, and a linked folder', () => openWhere());
   add('Settings', document.documentElement.dataset.theme === 'dark' ? 'Light mode' : 'Dark mode', 'Display', press('.themeBtn'));
   add('Settings', 'Text size and zoom', 'Display', () => openDisplay());
-  add('Settings', 'Word papers', wordPdfAlways() ? 'Converted to PDF pages as each assignment opens' : 'Kept as Word files. They can be converted to PDF pages', () => { go('#/settings'); setTimeout(() => $('#setPapers').scrollIntoView({ block: 'center' }), 60); });
+  add('Settings', 'Word papers', wordPdfAlways() ? 'Converted to PDF pages as each assignment opens' : 'Kept as Word files. They can be converted to PDF pages', () => go('#/settings/marking'));
   add('Settings', 'All keys', 'Every keyboard shortcut', () => openKeys(), '?');
+  for (const [k, t, sub] of SET_SECS) if (k !== 'saving' && k !== 'display' && k !== 'keys') add('Settings', t, sub, () => go(setHash(k)));
+  if (plan) add('Go to', 'This week in the Planner', 'Today’s classes and the lessons planned for them', () => { location.href = planUrl('#week'); });
   return out;
 }
 // Every word typed has to be somewhere in the row. A name that starts with what she typed comes first.

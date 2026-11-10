@@ -8,11 +8,13 @@ const MAX_FILE = 40 * 1024 * 1024;
 
 /* ---------- top bar shared by every Planner view ---------- */
 function topBar(view, extra) {
-  const tab = (v, t) => '<button class="pl-tab' + (view === v ? ' on' : '') + '" data-a="tab" data-v="' + v + '"' + (view === v ? ' aria-current="page"' : '') + '>' + t + '</button>';
-  return '<div class="ls-top"><span class="title">Planner</span><nav class="pl-tabs" aria-label="Views">' + tab('semester', 'Semester') + tab('week', 'Week') + tab('units', 'Units') + tab('library', 'Past lessons') + tab('activities', 'Activities') + tab('bank', 'Rubrics') + '</nav>' +
-    (extra || '') + '<span class="sp"></span><input type="search" id="plFind" class="pl-find" placeholder="Search lessons…" aria-label="Search lessons, slides, documents and units">' + folderChip() +
-    panelBtn() + '<button class="btn sm ghost" data-a="import">Import…</button><button class="btn sm ghost" data-a="setup">Timetable</button><button class="btn sm ghost themeBtn">' + (document.documentElement.dataset.theme === 'dark' ? 'Light mode' : 'Dark mode') + '</button>' +
-    '<button class="btn sm" data-a="close" title="Go to grading. The Planner and grading keep their work apart.">Grading Studio</button></div>';
+  const cal = view === 'week' || view === 'semester';
+  const tab = (v, t, on) => '<button class="pl-tab' + (on ? ' on' : '') + '" data-a="tab" data-v="' + v + '"' + (on ? ' aria-current="page"' : '') + '>' + t + '</button>';
+  // Home, the classes, the timetable and Settings are in the sidebar. The calendar's two views share one tab, with Semester | Week on the line below.
+  return '<div class="ls-top"><span class="title">Planner</span><nav class="pl-tabs" aria-label="Views">' + tab(cal ? view : calView, 'Calendar', cal) + tab('units', 'Units', view === 'units') + tab('library', 'Past lessons', view === 'library') + tab('activities', 'Activities', view === 'activities') + tab('bank', 'Rubrics', view === 'bank') + '</nav>' +
+    (cal ? '' : extra || '') + '<span class="sp"></span><input type="search" id="plFind" class="pl-find" placeholder="Search lessons…" aria-label="Search lessons, slides, documents and units">' + folderChip() +
+    panelBtn() + '<button class="btn sm ghost" data-a="import">Import…</button>' +
+    (cal ? '<span class="ls-brk"></span><span class="pl-tabs cal" role="group" aria-label="Calendar view">' + tab('semester', 'Semester', view === 'semester') + tab('week', 'Week', view === 'week') + '</span>' + (extra || '') : '') + '</div>';
 }
 
 // The Planner folder must never be the grading folder, or hold it: Claude reads everything in the Planner folder.

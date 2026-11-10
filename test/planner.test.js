@@ -190,7 +190,8 @@ test('light by default; slides keep their own light colors in dark mode', async 
   try {
     const { page } = a;
     assert.equal(await page.evaluate(() => document.documentElement.dataset.theme), 'light');
-    await page.click('.themeBtn');
+    // Dark mode is under Find anything now (and in Settings on the grading page); the choice is shared with grading
+    await page.click('#findBtn'); await page.type('#findIn', 'dark mode'); await page.keyboard.press('Enter');
     assert.equal(await page.evaluate(() => document.documentElement.dataset.theme), 'dark');
     const bg = await page.evaluate(() => { const s = document.createElement('div'); s.className = 'ls-slide'; document.body.appendChild(s); const c = getComputedStyle(s).backgroundColor; s.remove(); return c; });
     assert.equal(bg, 'rgb(223, 219, 213)');

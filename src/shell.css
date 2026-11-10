@@ -2,60 +2,6 @@
 .shell{display:flex;height:calc(100vh - var(--savebar,0px));min-width:0}
 .shellmain{flex:1;min-width:0;height:100%;overflow:auto;position:relative}
 .shell .app{height:100%}
-.rail{flex:none;width:232px;display:flex;flex-direction:column;gap:2px;padding:16px 12px 12px;background:var(--surface);border-right:1px solid var(--line);overflow:hidden auto}
-.rail a{text-decoration:none;color:inherit}
-.rail svg{width:18px;height:18px;flex:none;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
-.rbrand{font-family:var(--f-display);font-weight:700;font-size:17px;letter-spacing:-.02em;padding:4px 10px 14px;color:var(--fg);white-space:nowrap}
-.rbrand i{font-style:normal;font-weight:500;color:var(--accent)}
-.rbrand .rs{display:none}
-.rfind{display:flex;align-items:center;gap:8px;width:100%;height:36px;padding:0 10px;margin:0 0 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--muted);font-size:14px;text-align:left}
-.rfind:hover{border-color:var(--line-strong);color:var(--fg)}
-.rfind kbd,.fbox kbd{margin-left:auto;flex:none;font:500 11px var(--f-body);border:1px solid var(--line-strong);border-radius:5px;padding:1px 5px;background:var(--surface);color:var(--muted);white-space:nowrap}
-.rnav{display:flex;align-items:center;gap:10px;width:100%;min-height:36px;padding:0 10px;border:0;border-radius:8px;background:none;color:var(--fg-2);font-weight:500;font-size:14px;text-align:left}
-.rnav:hover{background:var(--hover)}
-.rnav.on{background:var(--accent-soft);color:var(--accent);font-weight:600}
-.rnav.over{background:var(--accent-soft);box-shadow:0 0 0 2px var(--accent)}
-.rcap{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:16px 10px 6px}
-.rdot{width:8px;height:8px;border-radius:50%;flex:none}
-.rname{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.rcnt{flex:none;font-size:12px;font-weight:500;color:var(--muted);font-variant-numeric:tabular-nums}
-.rnav.on .rcnt{color:var(--accent)}
-.radd{color:var(--muted)}
-.rail .sp{flex:1;min-height:12px}
-.rsaved{display:flex;gap:10px;align-items:flex-start;width:100%;padding:10px;border:0;border-radius:8px;background:none;color:var(--muted);font-size:12.5px;line-height:1.35;text-align:left}
-.rsaved:hover{background:var(--hover)}
-.rsaved .rdot{background:var(--ok);margin-top:5px}
-.rsaved.warn .rdot{background:var(--warn)}
-.rsaved.bad .rdot{background:var(--bad)}
-.rsaved b{display:block;color:var(--fg);font-weight:600}
-.rsaved.warn b{color:var(--warn)}
-.rsaved.bad b{color:var(--bad)}
-.rsaved .rl{display:block;flex:1;min-width:0;overflow-wrap:anywhere}
-
-/* while a paper is open the sidebar folds to a strip of icons, so the paper gets the room */
-.shell.grading .rail{width:60px;padding:12px 8px;align-items:center;overflow:hidden auto}
-.shell.grading .rail .rl{display:none}
-.shell.grading .rbrand{padding:4px 0 12px}
-.shell.grading .rbrand .rs{display:inline}
-.shell.grading .rnav,.shell.grading .rfind{justify-content:center;width:40px;min-height:40px;height:40px;padding:0;margin:0 0 2px;flex:none}
-.shell.grading .rcap{width:24px;height:0;padding:0;margin:8px 0;border-top:1px solid var(--line)}
-.shell.grading .radd{display:none}
-.shell.grading #railClasses{display:flex;flex-direction:column;align-items:center}
-.shell.grading .rdot{width:10px;height:10px}
-.shell.grading .rsaved{justify-content:center;width:40px;padding:12px 0}
-.shell.grading .rsaved .rdot{margin:0}
-@media (max-width:1100px){
-  .rail{width:60px;padding:12px 8px;align-items:center}
-  .rail .rl{display:none}
-  .rbrand{padding:4px 0 12px}
-  .rbrand .rs{display:inline}
-  .rnav,.rfind{justify-content:center;width:40px;min-height:40px;height:40px;padding:0;margin:0 0 2px;flex:none}
-  .rcap{width:24px;height:0;padding:0;margin:8px 0;border-top:1px solid var(--line)}
-  #railClasses{display:flex;flex-direction:column;align-items:center}
-  .rdot{width:10px;height:10px}
-  .rsaved{justify-content:center;width:40px;padding:12px 0}
-  .rsaved .rdot{margin:0}
-}
 @media (max-width:760px){.shell{height:auto;min-height:100vh}.shellmain{height:auto;overflow:visible}.shell .app{height:auto}}
 
 /* the top bar while grading: the class, then the assignment */
@@ -134,28 +80,40 @@ button.nrow:hover,a.nrow:hover{background:var(--hover)}
 .board>.empty-note{background:var(--surface);border:1px dashed var(--line-strong);border-radius:12px;padding:22px 18px}
 @media (max-width:1100px){.unit .card{grid-template-columns:minmax(0,1fr) auto}.cdue:empty{display:none}.unit .card .row{justify-content:flex-start;flex-wrap:wrap}}
 
-/* Settings: one card per subject */
+/* Settings: the subjects down the left, the chosen one's cards on the right */
+.setgrid{display:grid;grid-template-columns:260px minmax(0,1fr);gap:24px;align-items:start;max-width:1120px}
+.setnav{display:flex;flex-direction:column;gap:2px;position:sticky;top:0}
+.setlink{display:block;padding:9px 12px;border-radius:8px;text-decoration:none;color:var(--fg-2)}
+.setlink:hover{background:var(--hover)}
+.setlink b{display:block;font-weight:500;font-size:14.5px;color:var(--fg)}
+.setlink span{display:block;font-size:12.5px;color:var(--muted)}
+.setlink.on{background:var(--accent-soft)}
+.setlink.on b{color:var(--accent);font-weight:600}
 .setsec{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin:0 0 14px}
 .setsec .lhead{margin-bottom:8px;align-items:center}
 .setsec .lhead:only-child{margin-bottom:0}
 .setsec h2{font-size:17px}
-
-/* ---------- Find anything ---------- */
-.finddlg{align-items:flex-start;padding-top:12vh;z-index:34}
-.fbox{width:min(640px,100%);max-height:min(560px,76vh);display:flex;flex-direction:column;background:var(--surface);border-radius:14px;box-shadow:0 4px 12px rgba(20,25,40,.12),0 24px 60px rgba(20,25,40,.28);overflow:hidden}
-.fin{display:flex;align-items:center;gap:12px;height:56px;flex:none;padding:0 18px;border-bottom:1px solid var(--line)}
-.fin svg{width:20px;height:20px;flex:none;fill:none;stroke:var(--muted);stroke-width:1.7;stroke-linecap:round}
-.fin input{flex:1;min-width:0;border:0;outline:0;background:none;font-size:17px;color:var(--fg)}
-#findList{flex:1;min-height:0;overflow:auto;padding:0 0 8px}
-.fcap{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:12px 18px 4px}
-.frow{display:flex;align-items:center;gap:12px;width:calc(100% - 12px);min-height:40px;margin:0 6px;padding:6px 12px;border:0;border-radius:8px;background:none;color:var(--fg);font-size:14px;text-align:left}
-.frow b{font-weight:500;white-space:nowrap}
-.frow span{flex:1;min-width:0;color:var(--muted);font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.frow.on{background:var(--accent-soft)}
-.frow.on b{color:var(--accent);font-weight:600}
-.fnone{padding:22px 18px;color:var(--muted)}
-.ffoot{display:flex;align-items:center;gap:14px;flex:none;height:40px;padding:0 18px;border-top:1px solid var(--line);background:var(--bg);font-size:12.5px;color:var(--muted)}
-.ffoot .sp{flex:1}
+.setsec .lhead .muted{flex:1 1 240px;min-width:0;font-size:13.5px}
+.setsec .lhead .muted+.sp{display:none}
+.setp{margin:0 0 10px;font-size:13.5px;max-width:80ch}
+.setp:last-child{margin-bottom:0}
+.setrows{border:1px solid var(--line);border-radius:10px;overflow:hidden;margin:4px 0 12px}
+.setrows:last-child{margin-bottom:0}
+.setrow{display:flex;align-items:center;gap:10px;padding:10px 14px;font-size:14px}
+.setrow+.setrow{border-top:1px solid var(--line)}
+.setrow .nt{flex:1;min-width:0}
+.setrow b{display:block;font-weight:600}
+.setrow .ns{display:block;font-size:12.5px;color:var(--muted)}
+@media (max-width:900px){.setgrid{grid-template-columns:minmax(0,1fr)}.setnav{position:static;flex-direction:row;flex-wrap:wrap}.setlink span{display:none}}
+/* Home's side column: today's classes, then what needs a look */
+.hside{display:flex;flex-direction:column;gap:16px}
+.nhead .sp{flex:1}
+.nhead .link{font-size:13px;text-decoration:none}
+.nhead .link:hover{text-decoration:underline}
+.trow .tt{flex:none;width:44px;font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.trow b{display:flex;align-items:center;gap:7px}
+.trow .ns{padding-left:15px}
+.trow .btn.sm{flex:none}
 /* Home: the open box sits under the work in a narrower column now, so its buttons go below its words */
 .hmain .today:not([hidden])~.drop{grid-template-columns:minmax(0,1fr)}
 .hmain .today:not([hidden])~.drop .row{grid-column:1;grid-row:auto;justify-content:flex-start;margin-top:8px}

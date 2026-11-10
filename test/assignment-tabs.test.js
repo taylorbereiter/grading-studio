@@ -120,7 +120,7 @@ test('Setup holds what is set once for the assignment, and everything else is in
   await page.$eval('#dlgBox .bf [data-close]', b => b.click()); await page.waitForSelector('#glTable');
   assert.deepEqual(await where(page), { hash: '/grades', page: true, box: false, on: 'Grades' });
   // Mark key is in Settings as well
-  await goTo(page, '#/settings'); await page.click('#setMkey'); await page.waitForSelector('#dlgBox .mk');
+  await goTo(page, '#/settings/marking'); await page.click('#setMkey'); await page.waitForSelector('#dlgBox .mk');
   await page.$eval('#dlgBox .bf [data-close]', b => b.click());
   noErrors(page); await close();
 });
