@@ -29,6 +29,15 @@ async function openApp(browser, { html, platform, seed, server, context, noWait,
   page.on('dialog', d => { page.lastDialog = d.message(); d.accept(); });
   // A refresh now comes back to the very screen she was on, the open paper included. Most tests mean "close the tab and come back
   // to the app", which lands on Home, so reload does that. reloadHere is the plain refresh.
+  // The app redraws lists as work loads; a press that lands in the middle of a redraw finds the old button gone. Nothing was
+  // pressed when that happens, so find the button again and press it.
+  const press = page.click.bind(page);
+  page.click = async (...a) => {
+    for (let n = 0; ; n++) {
+      try { return await press(...a); }
+      catch (e) { if (n >= 4 || !/detached|not clickable|not an Element/i.test(String(e && e.message))) throw e; await new Promise(r => setTimeout(r, 150)); }
+    }
+  };
   const plain = page.reload.bind(page);
   page.reloadHere = plain;
   page.reload = async (...a) => { await page.evaluate(() => { if (location.hash) history.replaceState(null, '', location.pathname + location.search); }).catch(() => {}); return plain(...a); };
