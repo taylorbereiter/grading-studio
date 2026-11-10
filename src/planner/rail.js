@@ -27,9 +27,11 @@ function railRender() {
   // Saved, and where. The folder is the Planner's own, never the grading folder.
   const el = $('#railSaved'), can = 'showDirectoryPicker' in window;
   const where = L.dir && L.dirOk ? 'This browser and your Planner folder' : L.dir ? 'This browser. The Planner folder needs reconnecting' : 'This browser';
-  const tip = L.dir && L.dirOk ? 'Lessons are kept in this browser and in your Planner folder (' + L.dir.name + '). Click to look for lessons added or changed there.' : L.dir ? 'Click to reconnect your Planner folder.' : can ? 'Lessons are kept in this browser. Click to link a Planner folder as a second copy.' : 'Lessons are kept in this browser. A Planner folder needs Chrome.';
-  const s = '<span class="rdot"></span><span class="rl"><b>Saved</b>' + esc(where) + '</span>';
-  el.className = 'rsaved' + (L.dir && !L.dirOk ? ' warn' : ''); el.title = 'Saved. ' + tip; el.disabled = !can;
+  const tip = L.dir && L.dirOk ? 'Lessons are kept in this browser and in your Planner folder (' + L.dir.name + '). Click to look for lessons added or changed there.' : L.dir ? 'Click to reconnect your Planner folder.' : can ? 'Lessons are kept only in this browser. Click to choose a Planner folder as a second copy.' : 'Lessons are kept only in this browser. A Planner folder needs Chrome or Edge on a computer.';
+  // The same words as the grading page: "Saved" only once a folder holds a second copy, and "Not backed up" in amber until then.
+  const safe = !!(L.dir && L.dirOk), head = safe ? 'Saved' : 'Not backed up';
+  const s = '<span class="rdot"></span><span class="rl"><b>' + head + '</b>' + esc(where) + '</span>';
+  el.className = 'rsaved' + (safe ? '' : ' warn'); el.title = head + '. ' + tip; el.disabled = !can;
   if (el.dataset.h !== s) { el.dataset.h = s; el.innerHTML = s; }
   // A lesson, a unit or a document gets the room: the sidebar folds to icons.
   document.body.classList.toggle('pfold', L.view === 'edit' || L.view === 'doc' || L.view === 'unit');

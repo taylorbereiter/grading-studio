@@ -14,7 +14,7 @@ rep('/*@@PARTSCSS@@*/', partsCss);
 rep('/*@@POLISHCSS@@*/', fs.readFileSync('src/polish.css', 'utf8') + fs.readFileSync('src/scans.css', 'utf8') + fs.readFileSync('src/quiz.css', 'utf8'));
 rep('/*@@RUBRICSCSS@@*/', fs.readFileSync('src/rubrics.css', 'utf8') + fs.readFileSync('src/book.css', 'utf8'));
 rep('/*@@INSIGHTCSS@@*/', fs.readFileSync('src/insight.css', 'utf8'));
-rep('/*@@SHELLCSS@@*/', fs.readFileSync('src/rail.css', 'utf8') + fs.readFileSync('src/shell.css', 'utf8') + fs.readFileSync('src/classpage.css', 'utf8') + fs.readFileSync('src/tabs.css', 'utf8') + fs.readFileSync('src/markscreen.css', 'utf8'));
+rep('/*@@SHELLCSS@@*/', fs.readFileSync('src/rail.css', 'utf8') + fs.readFileSync('src/shell.css', 'utf8') + fs.readFileSync('src/classpage.css', 'utf8') + fs.readFileSync('src/tabs.css', 'utf8') + fs.readFileSync('src/markscreen.css', 'utf8') + fs.readFileSync('src/safe.css', 'utf8'));
 rep('/*@@PDFJS@@*/', fs.readFileSync(nm + 'pdfjs-dist/build/pdf.min.js', 'utf8'));
 rep('/*@@PDFLIB@@*/', fs.readFileSync(nm + 'pdf-lib/dist/pdf-lib.min.js', 'utf8'));
 rep('/*@@H2C@@*/', fs.readFileSync(nm + 'html2canvas/dist/html2canvas.min.js', 'utf8'));
@@ -34,14 +34,18 @@ rep('/*@@HEICLICENSE@@*/', 'libheif-js ' + require('./' + nm + 'libheif-js/packa
 // Lines that are only a comment stay in src/ but don't ship, to keep the one file from growing. A test in polish.test.js checks each one really is a comment.
 // The stickers in the right-click menu: small pictures in src/stickers, built in so nothing is fetched.
 const stickerSrc = JSON.stringify(Object.fromEntries(fs.readdirSync('src/stickers').filter(f => f.endsWith('.webp')).sort().map(f => [f.slice(0, -5), 'data:image/webp;base64,' + fs.readFileSync('src/stickers/' + f).toString('base64')])));
-rep('/*@@APP@@*/', (fs.readFileSync('src/migrate.js', 'utf8') + '\ngsData.boot(function () {\n' + [APP, 'names', 'marking', 'stamps', 'grades', 'saving', 'carryover', 'exportreport', 'rubrics', 'book', 'intake', 'polish', 'insight', 'people', 'scans', 'merge', 'folder', 'takehome', 'quiz', 'imported', 'marksout', 'pastetext', 'groups', 'wordnotes', 'wordpdf', 'classpage', 'tabs', 'markscreen', 'today', 'settings', 'shell'].map(n => n === APP ? appSrc : fs.readFileSync('src/' + n + '.js', 'utf8')).join('\n') + '\n});').replace(/^[ \t]*\/\/.*\r?\n/gm, '').replace('/*@@STICKERS@@*/{}', () => stickerSrc));
+rep('/*@@APP@@*/', (fs.readFileSync('src/migrate.js', 'utf8') + '\ngsData.boot(function () {\n' + [APP, 'names', 'marking', 'stamps', 'grades', 'saving', 'carryover', 'exportreport', 'rubrics', 'book', 'intake', 'polish', 'insight', 'people', 'scans', 'merge', 'folder', 'takehome', 'quiz', 'imported', 'marksout', 'pastetext', 'groups', 'wordnotes', 'wordpdf', 'classpage', 'tabs', 'markscreen', 'today', 'settings', 'safe', 'shell'].map(n => n === APP ? appSrc : fs.readFileSync('src/' + n + '.js', 'utf8')).join('\n') + '\n});').replace(/^[ \t]*\/\/.*\r?\n/gm, '').replace('/*@@STICKERS@@*/{}', () => stickerSrc));
 rep("'/*@@GCID@@*/'", JSON.stringify(process.env.GCID || ''));
-rep("'/*@@VERSION@@*/'", JSON.stringify(require('./package.json').version));   // the version shown in the app: set it in package.json
+const VERSION = require('./package.json').version, whatsNew = require('./src/whatsnew.json');
+rep("'/*@@WHATSNEW@@*/'", JSON.stringify(whatsNew));   // what each version brought, for About and updates
+rep("'/*@@VERSION@@*/'", JSON.stringify(VERSION));   // the version shown in the app: set it in package.json
 fs.mkdirSync('out', { recursive: true });
 const fullHtml = '<!doctype html>\n<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body>\n' + h + '\n</body></html>';
 fs.writeFileSync('Grading Studio.html', fullHtml);
 fs.writeFileSync('out/Grading Studio.html', fullHtml);
-fs.writeFileSync('index.html', fullHtml.replace('</head>', '<meta name="robots" content="noindex"></head>'));
+// The pages at the web address can be installed as an app: they name the install card and the icon. The double-click copies don't, having no address to install from.
+const HOSTED = '<meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"></head>';
+fs.writeFileSync('index.html', fullHtml.replace('</head>', HOSTED));
 fs.mkdirSync('out/netlify', { recursive: true });
 fs.writeFileSync('out/netlify/index.html', '<!doctype html>\n<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"></head><body>\n' + h + '\n</body></html>');
 fs.writeFileSync('out/artifact.html', h.split('�').join('\\uFFFD'));
@@ -61,7 +65,20 @@ console.log((h.length / 1e6).toFixed(2) + 'MB');
   prep('/*@@WORKER@@*/', fs.readFileSync(nm + 'pdfjs-dist/build/pdf.worker.min.js', 'utf8'));
   prep('/*@@PLANNER@@*/', ('(() => {\n' + ['base', 'bank', 'review', 'lessons', 'looks', 'rich', 'activities', 'materials', 'finished', 'variants', 'extras', 'library', 'panel', 'notebook', 'rail', 'units'].map(n => fs.readFileSync('src/planner/' + n + '.js', 'utf8')).join('\n') + '\n})();').replace(/^[ \t]*\/\/.*\r?\n/gm, ''));
   const page = '<!doctype html>\n<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"></head><body>\n' + p + '\n</body></html>';
-  fs.writeFileSync('planner.html', page);
+  fs.writeFileSync('planner.html', page.replace('<meta name="robots" content="noindex"></head>', HOSTED));
   fs.writeFileSync('Planner.html', page);
   console.log('Planner ' + (p.length / 1e6).toFixed(2) + 'MB');
+}
+// What lets the pages be installed and kept on a computer (src/sw.js says how). version.json names this build by the pages themselves,
+// so the same source always gives the same name, and a kept copy can be checked against it.
+{
+  const sha = f => require('crypto').createHash('sha256').update(fs.readFileSync(f)).digest('hex');
+  const files = { 'index.html': sha('index.html'), 'planner.html': sha('planner.html') };
+  fs.writeFileSync('version.json', JSON.stringify({ version: VERSION, build: require('crypto').createHash('sha256').update(files['index.html'] + files['planner.html']).digest('hex').slice(0, 12), notes: whatsNew[VERSION] || [], files }, null, 1) + '\n');
+  fs.writeFileSync('sw.js', fs.readFileSync('src/sw.js', 'utf8'));
+  fs.writeFileSync('manifest.webmanifest', JSON.stringify({
+    name: 'Grading Studio', short_name: 'Grading Studio', description: 'Mark papers, plan lessons and hand work back. Everything stays on this computer.',
+    start_url: './', scope: './', display: 'standalone', background_color: '#F4F5F7', theme_color: '#FFFFFF',
+    icons: [{ src: 'icons/icon-192.png', sizes: '192x192', type: 'image/png' }, { src: 'icons/icon-512.png', sizes: '512x512', type: 'image/png' }, { src: 'icons/icon-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' }],
+  }, null, 1) + '\n');
 }

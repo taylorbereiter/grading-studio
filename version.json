@@ -1,0 +1,14 @@
+{
+ "version": "1.5.0",
+ "build": "37c66c573aed",
+ "notes": [
+  "The sidebar says “Not backed up”, in amber, until a folder holds a second copy of your work. Home asks for that folder once.",
+  "Go back in time, in Settings: any assignment as it was on an earlier day, restored on its own, with Undo.",
+  "Grading Studio can be installed as an app, and it opens with no internet.",
+  "A newer version now waits until you click Update now, so nothing changes in the middle of marking."
+ ],
+ "files": {
+  "index.html": "ab8bb8ce611ce01b5f89a3e8bd4a27bbe0572fd563fb0d6e34045870ffb3f7a8",
+  "planner.html": "d4e5f3aeeefd1a349e5b38c085b5103f817787e83bac2632a18c6e961d279d1e"
+ }
+}

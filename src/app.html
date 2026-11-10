@@ -531,6 +531,7 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
   <div id="railClasses"></div>
   <button class="rnav radd" id="addClass" title="Add a class"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span class="rl">Add a class</span></button>
   <span class="sp"></span>
+  <a class="rnav rupd" id="railUpdate" href="#/settings/about" hidden><span class="rdot"></span><span class="rl">Update ready</span></a>
   <button class="rsaved" id="railSaved" data-wopen></button>
   <a class="rnav" data-nav="settings" href="#/settings" title="Settings"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg><span class="rl">Settings</span></a>
 </nav>
@@ -544,6 +545,7 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
     <header class="vhead"><h1>Home</h1><span class="muted" id="homeDate"></span><span class="sp"></span><span class="gAcct"></span></header>
     <div class="hgrid">
       <div class="hmain">
+        <section class="safeask" id="safeAsk" hidden></section>
         <section class="lib today" hidden>
           <div class="lhead"><h2>Pick up where you left off</h2><span class="muted" id="keptSay">Newest first. Kept in this browser until you click Forget.</span></div>
           <div class="kept" id="kept"></div>
@@ -601,6 +603,9 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
           <div class="lhead"><h2>Remove from this computer</h2><span class="sp"></span><button class="btn sm" id="removeBtn">Remove from this computer</button></div>
           <p class="muted setp">Clears student work from this browser when you are finished here. A linked folder and Planner work are not touched.</p>
         </section>
+        <section class="lib setsec" id="setHistory" data-sec="history" hidden></section>
+        <section class="lib setsec" id="setAbout" data-sec="about" hidden></section>
+        <section class="lib setsec" id="setInstall" data-sec="about" hidden></section>
         <section class="lib setsec" id="setClasses" data-sec="classes" hidden></section>
         <section class="lib setsec" id="setTerms" data-sec="terms" hidden></section>
         <section class="lib setsec" id="setGrading" data-sec="grading" hidden></section>

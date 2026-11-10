@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"></head><body>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"></head><body>
 <title>Grading Studio</title>
 <script>try{document.documentElement.dataset.theme=JSON.parse(localStorage.getItem('gs.theme'))||'light'}catch(e){document.documentElement.dataset.theme='light'}</script>
 <style>
@@ -1873,6 +1873,33 @@ button.pavg:hover .v{text-decoration:underline}
 .oneout-say:empty{display:none}
 .nextun{display:block;margin:8px auto 0;font-size:var(--text-control)}
 .nextun kbd,.hint kbd{font:500 var(--text-caption) var(--f-body);border:1px solid var(--line-strong);border-bottom-width:2px;border-radius:var(--corner-1);padding:0 4px;background:var(--surface);color:var(--muted)}
+/* ---------- safe by default: the folder ask on Home, Go back in time, About and updates ---------- */
+.safeask{display:flex;gap:var(--space-4);align-items:flex-start;padding:18px 20px;margin:0 0 var(--space-5);background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--warn);border-radius:var(--corner-5)}
+.safeask .saic{flex:none;width:40px;height:40px;display:flex;align-items:center;justify-content:center;border-radius:var(--corner-4);background:var(--warn-soft);color:var(--warn)}
+.safeask .saic svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.safeask .satx{flex:1;min-width:0}
+.safeask h2{font-family:var(--f-display);font-size:var(--text-lead);margin:1px 0 var(--space-1)}
+.safeask p{margin:0;max-width:74ch;font-size:var(--text-body);color:var(--fg-2)}
+.safeask .sarow{display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-2) var(--space-4);margin-top:var(--space-3)}
+.safeask .sarow .muted{font-size:var(--text-control)}
+.safeask~.lib.today{margin-top:0}
+.gbday{font-family:var(--f-display);font-size:var(--text-control);font-weight:600;color:var(--muted);margin:var(--space-4) 0 var(--space-1)}
+.gbrow.on{background:var(--accent-soft)}
+.gbdetail{padding:var(--space-3) 14px 14px;border-top:1px solid var(--line);background:var(--bg)}
+.gbdetail .setrows{background:var(--surface)}
+.gbdetail .gball{margin-top:var(--space-3);color:var(--muted)}
+.setp.warn{color:var(--warn)}
+.rupd{color:var(--accent);font-weight:600}
+.rupd .rdot{background:var(--accent);margin:0 5px}
+.updbox{padding:var(--space-3) 14px;margin:0 0 var(--space-3);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:var(--corner-4)}
+.updnotes{margin:0 0 var(--space-3);padding-left:20px;font-size:var(--text-control);max-width:80ch}
+.updnotes li{margin:2px 0}
+.updmode{border:0;padding:0;margin:var(--space-4) 0 0;display:grid;gap:var(--space-2)}
+.updmode legend{padding:0;margin-bottom:var(--space-2);font-weight:600;font-size:var(--text-body)}
+.updmode label{display:flex;gap:10px;align-items:flex-start;font-size:var(--text-body)}
+.updmode input{margin-top:3px;accent-color:var(--accent)}
+.updmode b{display:block;font-weight:500}
+.updmode .ns{display:block;font-size:var(--text-small);color:var(--muted)}
 
 </style>
 
@@ -1887,6 +1914,7 @@ button.pavg:hover .v{text-decoration:underline}
   <div id="railClasses"></div>
   <button class="rnav radd" id="addClass" title="Add a class"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span class="rl">Add a class</span></button>
   <span class="sp"></span>
+  <a class="rnav rupd" id="railUpdate" href="#/settings/about" hidden><span class="rdot"></span><span class="rl">Update ready</span></a>
   <button class="rsaved" id="railSaved" data-wopen></button>
   <a class="rnav" data-nav="settings" href="#/settings" title="Settings"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg><span class="rl">Settings</span></a>
 </nav>
@@ -1900,6 +1928,7 @@ button.pavg:hover .v{text-decoration:underline}
     <header class="vhead"><h1>Home</h1><span class="muted" id="homeDate"></span><span class="sp"></span><span class="gAcct"></span></header>
     <div class="hgrid">
       <div class="hmain">
+        <section class="safeask" id="safeAsk" hidden></section>
         <section class="lib today" hidden>
           <div class="lhead"><h2>Pick up where you left off</h2><span class="muted" id="keptSay">Newest first. Kept in this browser until you click Forget.</span></div>
           <div class="kept" id="kept"></div>
@@ -1957,6 +1986,9 @@ button.pavg:hover .v{text-decoration:underline}
           <div class="lhead"><h2>Remove from this computer</h2><span class="sp"></span><button class="btn sm" id="removeBtn">Remove from this computer</button></div>
           <p class="muted setp">Clears student work from this browser when you are finished here. A linked folder and Planner work are not touched.</p>
         </section>
+        <section class="lib setsec" id="setHistory" data-sec="history" hidden></section>
+        <section class="lib setsec" id="setAbout" data-sec="about" hidden></section>
+        <section class="lib setsec" id="setInstall" data-sec="about" hidden></section>
         <section class="lib setsec" id="setClasses" data-sec="classes" hidden></section>
         <section class="lib setsec" id="setTerms" data-sec="terms" hidden></section>
         <section class="lib setsec" id="setGrading" data-sec="grading" hidden></section>
@@ -3034,7 +3066,7 @@ SOFTWARE.
 <script>/* ---------------- saved-data versions: a safety copy, then any format changes, before the app starts ---------------- */
 const gsData = (() => {
   'use strict';
-  const APP_VERSION = "1.4.0";   // from package.json, the one place it's set
+  const APP_VERSION = "1.5.0";   // from package.json, the one place it's set
   const MIGRATIONS = [
   ];
   const DATA_V = Math.max(1, ...MIGRATIONS.map(s => s.to));
@@ -7388,9 +7420,9 @@ const routeOf = hash => {
   return { v: 'home' };
 };
 const routeNow = () => routeOf(location.hash);
-const SET_SECS = [['saving', 'Saving and carrying', 'Folder, take-home file, safety copies'], ['classes', 'Classes and rosters', 'Names, students, ManageBac links'], ['terms', 'Terms and weights', 'Your terms and how each type counts'],
+const SET_SECS = [['saving', 'Saving and carrying', 'Folder, take-home file, safety copies'], ['history', 'Go back in time', 'Your work as it was on an earlier day'], ['classes', 'Classes and rosters', 'Names, students, ManageBac links'], ['terms', 'Terms and weights', 'Your terms and how each type counts'],
   ['grading', 'Grading scale and rubrics', 'Your saved scales and rubrics'], ['marking', 'Marking', 'Mark key, Word papers'], ['timetable', 'Timetable and calendar', 'Class times and days off, in the Planner'],
-  ['display', 'Display', 'Text size, zoom, dark mode'], ['claude', 'Working with Claude', 'Optional. What Claude can and can’t see'], ['keys', 'Keys', 'Every shortcut']];
+  ['display', 'Display', 'Text size, zoom, dark mode'], ['claude', 'Working with Claude', 'Optional. What Claude can and can’t see'], ['keys', 'Keys', 'Every shortcut'], ['about', 'About and updates', 'Version, what’s new, install as an app']];
 const CLASS_TABS = [['', 'Assignments'], ['gradebook', 'Gradebook'], ['students', 'Students'], ['charts', 'Charts']];
 const classHash = (c, tab, stu) => '#/class/' + (c === lib.loose || !c.id ? '-' : encodeURIComponent(c.id)) + (tab ? '/' + tab + (stu != null ? '/' + (stu + 1) : '') : '');
 const A_TABS = [['', 'Mark'], ['grades', 'Grades'], ['insights', 'Insights'], ['return', 'Return']], A_SUBS = { grades: ['sheet'], insights: ['consistency'] };
@@ -9997,7 +10029,8 @@ document.addEventListener('keydown', e => {
 });
 let nudging = false;
 document.addEventListener('keyup', e => { if (/^Arrow/.test(e.key)) nudging = false; });
-window.addEventListener('beforeunload', () => { if (!batch || !tabLive()) return; try { commitEditors(); } catch (e) { console.error(e); } saveNow(true); });
+window.addEventListener('beforeunload', () => { if (!batch || !batch.revs || !tabLive()) return;   // no revs yet: still opening, so nothing of hers has changed
+  try { commitEditors(); } catch (e) { console.error(e); } saveNow(true); });
 applyDisp();
 renderLib(); renderGoogle();
 const keptFirst = loadKept();   // the address of an open assignment waits for this list before it reopens
@@ -10017,12 +10050,7 @@ async function renderSafety() {
   el.hidden = !list.length;
   el.innerHTML = list.map(s => '<p class="muted" style="margin:6px 0 0;font-size:13px">Safety copy from ' + esc(new Date(s.t).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', second: '2-digit' })) + '. ' + esc(s.why) + (s.state && s.state !== 'done' ? ', which didn’t finish' : '') + '. <button class="link" style="font-size:13px" data-putback="' + esc(s.id) + '">Put back</button></p>').join('');
 }
-$('#safetyList').onclick = async e => {
-  const b = e.target.closest('[data-putback]'); if (!b) return;
-  if (!await askDlg('Put back this safety copy?\n\nYour marks, scores, comments, late files, readings, units, rosters and settings in this browser go back to how they were then. The papers from each download stay. A safety copy of how things are now is made first, so this can be undone.', { ok: 'Put back' })) return;
-  try { batch = null; await tabsFinish(); tabsOver('go'); await gsData.putBack(b.dataset.putback); carryAfterPutBack(); tabsOver('done'); toast('Put back. Reloading…'); setTimeout(reloadHome, 700); }
-  catch (er) { console.error(er); tabsOver('done'); toast('That didn’t finish, so some of your work may have gone back and some not. Reload, then use Put back on the newest safety copy (“Before putting back”) to return to how things were.', 15000); }
-};
+$('#safetyList').onclick = e => { const b = e.target.closest('[data-putback]'); if (b) putBackAsk(b.dataset.putback); };
 $('#restoreBtn').onclick = () => $('#restoreIn').click();
 $('#restoreIn').onchange = () => { const f = $('#restoreIn').files[0]; $('#restoreIn').value = ''; if (f) bringFile(f); };
 renderBackup();
@@ -15293,7 +15321,7 @@ function snapKeep(list, now) {
 
 /* ---------------- the linked folder: every save goes to the browser and to a folder she picked once ---------------- */
 const FOLDER_SUB = 'Grading Studio', FOLDER_RETRY = 20000;
-const fld = { picked: null, root: null, name: '', state: 'none', why: '', at: 0, prog: '', work: new Map(), lib: false, gone: new Set(), run: null, sync: null, again: false, seen: new Map(), info: new Map(), hold: {}, holdSet: {}, holdLib: {}, asks: [], answers: {}, day: '', timer: null, have: null };
+const fld = { picked: null, root: null, name: '', state: 'none', why: '', at: 0, prog: '', work: new Map(), lib: false, gone: new Set(), run: null, sync: null, again: false, booted: false, seen: new Map(), info: new Map(), hold: {}, holdSet: {}, holdLib: {}, asks: [], answers: {}, day: '', timer: null, have: null };
 
 /* who's saving */
 function devId() {
@@ -15760,17 +15788,17 @@ function openFolderAsks() {
 const folderKv = () => new Promise((res, rej) => { const r = indexedDB.open('grading-studio-folder', 1); r.onupgradeneeded = () => r.result.createObjectStore('kv'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
 async function kvDo(mode, fn) { const db = await folderKv(); try { return await new Promise((res, rej) => { const tx = db.transaction('kv', mode), q = fn(tx.objectStore('kv')); tx.oncomplete = () => res(q.result); tx.onerror = () => rej(tx.error); }); } finally { db.close(); } }
 async function folderUse(h) {
-  fld.picked = h; fld.name = h.name; fld.state = 'saving'; fld.info.clear(); fld.seen.clear();
+  fld.booted = true; fld.picked = h; fld.name = h.name; fld.state = 'saving'; fld.info.clear(); fld.seen.clear();
   await kvDo('readwrite', o => o.put(h, 'dir'));
   return folderResume(false);
 }
 async function folderPick() {
-  if (!('showDirectoryPicker' in window)) return sayDlg('Linking a folder needs Chrome on a computer. Your work is still kept in this browser.');
+  if (!canPickFolder()) return sayDlg('Saving to a folder needs Chrome or Edge on a computer. Your work is still kept in this browser.');
   let h;
   try { h = await window.showDirectoryPicker({ id: 'gs-work', mode: 'readwrite', startIn: 'documents' }); }
   catch (e) { if (e && e.name !== 'AbortError') { console.error(e); toast('That folder couldn’t be used. Try another one.'); } return; }
   await folderUse(h);
-  if (fld.state === 'ok' || fld.state === 'decide') toast('Linked. Your work now saves to “' + fld.name + '” as well.', 6000);
+  if (fld.state === 'ok' || fld.state === 'decide') toast('Done. Your work now saves to “' + fld.name + '” as well.', 6000);
 }
 async function folderUnlink() {
   await kvDo('readwrite', o => o.delete('dir')).catch(() => {});
@@ -15781,6 +15809,7 @@ async function folderUnlink() {
 async function folderBoot() {
   let h = null;
   try { h = await kvDo('readonly', o => o.get('dir')); } catch (e) { console.error(e); }
+  fld.booted = true;   // from here on, no folder means none was chosen, and the app says so
   if (!h) return renderWhere();
   fld.picked = h; fld.name = h.name; fld.state = 'ask';
   await folderResume(false);
@@ -15788,15 +15817,17 @@ async function folderBoot() {
 
 /* saying where her work is */
 function setWhere(s) { fld.state = s; renderWhere(); }
+const canPickFolder = () => 'showDirectoryPicker' in window;
 function whereSay() {
   const nm = '“' + fld.name + '”', sh = fld.name.length > 24 ? '“' + fld.name.slice(0, 22) + '…”' : nm;   // the top bar has room for only so much, and what to do has to fit
   switch (fld.state) {
-    case 'ok': return { text: 'In this browser and your ' + nm + ' folder', tip: 'Every save goes to both' + (fld.at ? '. Last saved to the folder at ' + new Date(fld.at).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' }) : ''), cls: '' };
-    case 'saving': return { text: 'Saving to your ' + nm + ' folder' + (fld.prog ? ' (' + fld.prog + ')' : '') + '…', tip: 'Your work is already in this browser', cls: '' };
-    case 'ask': return { text: 'Only in this browser. ' + sh + ' needs a click to reconnect', tip: 'Chrome needs your OK to use the folder again. Choose “Allow on every visit” and it won’t ask next time.', cls: 'warn', act: 'Reconnect' };
+    case 'ok': return { safe: true, text: 'In this browser and your ' + nm + ' folder', tip: 'Every save goes to both' + (fld.at ? '. Last saved to the folder at ' + new Date(fld.at).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' }) : ''), cls: '' };
+    case 'saving': return { safe: true, text: 'Saving to your ' + nm + ' folder' + (fld.prog ? ' (' + fld.prog + ')' : '') + '…', tip: 'Your work is already in this browser', cls: '' };
+    case 'ask': return { sub: sh + ' needs a click to reconnect', text: 'Only in this browser. ' + sh + ' needs a click to reconnect', tip: 'Chrome needs your OK to use the folder again. Choose “Allow on every visit” and it won’t ask next time.', cls: 'warn', act: 'Reconnect' };
     case 'lost': return { text: 'Only in this browser. ' + (fld.why === 'full' ? 'The disk with ' + nm + ' is full' : fld.why === 'room' ? 'This browser is out of room, so ' + nm + ' can’t catch up' : 'Can’t reach ' + nm), tip: 'It’ll catch up by itself as soon as the folder is back.', cls: 'warn' };
-    case 'decide': return { text: fld.asks.length + (fld.asks.length === 1 ? ' thing' : ' things') + ' to decide about your folder', tip: 'Two versions to choose between', cls: 'warn', act: 'Decide' };
-    default: return { text: 'Only in this browser', tip: 'Link a folder to keep a second copy on this computer', cls: '' };
+    case 'decide': return { safe: true, text: fld.asks.length + (fld.asks.length === 1 ? ' thing' : ' things') + ' to decide about your folder', tip: 'Two versions to choose between', cls: 'warn', act: 'Decide' };
+    default: return !fld.booted ? { safe: true, text: 'Checking where your work is kept…', tip: 'One moment', cls: '' }
+      : { sub: 'Only in this browser', text: 'Not backed up. Only in this browser', tip: canPickFolder() ? 'Clearing this browser’s data would erase your work. Choose a folder and every save goes there too' : 'Clearing this browser’s data would erase your work. This browser can’t save to a folder, so make a take-home file when you finish marking', cls: 'warn' };
   }
 }
 function renderWhere() {
@@ -15807,12 +15838,13 @@ function renderWhere() {
   }
   if (top) { top.textContent = s.text; top.title = s.tip; top.className = 'savewhere link' + (s.cls ? ' ' + s.cls : ''); }
   if (line) {
-    const h = '<span class="wtext' + (s.cls ? ' ' + s.cls : '') + '">Your work is saved: ' + esc(s.text.charAt(0).toLowerCase() + s.text.slice(1)) + '.</span> ' +
+    const h = '<span class="wtext' + (s.cls ? ' ' + s.cls : '') + '">' + (fld.state === 'none' && fld.booted ? 'Your work is saved only in this browser, and is not backed up' : 'Your work is saved: ' + esc(s.text.charAt(0).toLowerCase() + s.text.slice(1))) + '.</span> ' +
       (s.act ? '<button class="btn sm primary" data-wact>' + s.act + '</button> ' : '') +
-      (fld.state === 'none' ? (('showDirectoryPicker' in window) ? '<button class="btn sm" data-wlink>Link a folder…</button>' : '') : '<button class="btn sm" data-wopen>Folder…</button>');
+      (fld.state === 'none' ? (canPickFolder() ? '<button class="btn sm primary" data-wlink>Choose a folder…</button>' : '') : '<button class="btn sm" data-wopen>Folder…</button>') +
+      (fld.state !== 'none' && fld.root ? ' <a class="btn sm" href="#/settings/history">Go back in time…</a>' : '');
     if (line.dataset.h !== h) { line.dataset.h = h; line.innerHTML = h; }   // a button shouldn't vanish under her click just because a save went by
   }
-  railSavedRender(); renderNeeds();
+  railSavedRender(); renderNeeds(); safeAskRender();
 }
 function whereAct() { if (fld.state === 'decide') openFolderAsks(); else folderResume(true); }
 document.addEventListener('click', e => {
@@ -15827,29 +15859,23 @@ async function openWhere() {
   const s = whereSay(), linked = fld.state !== 'none';
   openDlg('<div class="bh"><h2>Where your work is saved</h2><button class="icon" data-close aria-label="Close">✕</button></div><div class="bb" id="whereBox"><p style="margin-top:0">' + esc(s.text) + '. ' + esc(s.tip) + '.</p>' +
     (linked ? '<p class="muted" style="font-size:14px">A copy of your papers, marks, scores, comments, rosters and rubrics is kept here, with no save button to remember' + (fld.root && fld.root.name !== fld.name ? ', in a folder called “' + esc(fld.root.name) + '” inside “' + esc(fld.name) + '”' : '') + '. If this browser is ever cleared, link the folder again and everything comes back.</p>'
-      : '<p class="muted" style="font-size:14px">Pick a folder on this computer once, and every save goes there as well as to this browser. Pick something private: it holds student work. When Chrome asks, choose “Allow on every visit”.</p>') +
-    '<p><button class="btn sm primary" data-wlink>' + (linked ? 'Use a different folder…' : 'Link a folder…') + '</button>' + (linked ? ' <button class="btn sm" data-wstop>Stop using this folder</button>' : '') + '</p>' +
-    '<div id="snapBox"></div></div><div class="bf"><button class="btn primary" data-close>Done</button></div>', true);
+      : '<p class="muted" style="font-size:14px">Choose a folder on this computer once, and every save goes there as well as to this browser, with a copy of each day to go back to. Choose something private: it holds student work. When Chrome asks, choose “Allow on every visit”. If you already have a Grading Studio folder, choose it and your work comes back.</p>') +
+    '<p><button class="btn sm primary" data-wlink>' + (linked ? 'Use a different folder…' : 'Choose a folder…') + '</button>' + (linked ? ' <button class="btn sm" data-wstop>Stop using this folder</button>' : '') + '</p>' +
+    (linked && fld.root ? '<p class="muted" style="font-size:14px;margin-bottom:0">The folder also keeps a copy of each day. <a class="link" href="#/settings/history" data-close>Go back in time…</a></p>' : '') +
+    '</div><div class="bf"><button class="btn primary" data-close>Done</button></div>', true);
   const box = $('#dlgBox');
   box.onclick = async e => {
     if (e.target.closest('[data-close]')) return closeDlg();
     if (e.target.closest('[data-wlink]')) { closeDlg(); return; }
     if (e.target.closest('[data-wstop]')) {
-      if (await askDlg('Stop saving to “' + fld.name + '”?\n\nWhat’s already in the folder stays there. Nothing in it is deleted. Your work carries on in this browser.', { ok: 'Stop using it', danger: true })) { await folderUnlink(); closeDlg(); toast('Not saving to a folder any more. The folder’s files are still there.'); }
-      return;
+      if (await askDlg('Stop saving to “' + fld.name + '”?\n\nWhat’s already in the folder stays there. Nothing in it is deleted. Your work carries on in this browser, with no second copy.', { ok: 'Stop using it', danger: true })) { await folderUnlink(); closeDlg(); toast('Not saving to a folder any more. The folder’s files are still there.'); }
     }
-    const g = e.target.closest('[data-snap]'); if (!g) return;
-    if (!await askDlg('Go back to this snapshot from ' + g.dataset.when + '?\n\nYour marks, scores, comments, late files, readings, rosters and settings go back to how they were then, in this browser and in the folder. Papers stay. A snapshot of how things are now is made first, so this can be undone.', { ok: 'Go back' })) return;
-    try { await tabsFinish(); tabsOver('go'); await folderGoBack(g.dataset.snap); tabsOver('done'); toast('Done. Reloading…'); setTimeout(reloadHome, 700); }
-    catch (er) { console.error(er); tabsOver('done'); toast('That didn’t finish. Your work may be partly back: use Put back on the newest safety copy under “Saving and carrying”.', 15000); }
   };
-  if (!linked || !fld.root) return;
-  try {
-    const list = await snapList(), el = $('#snapBox');
-    if (!el || !list.length) return;
-    const when = t => new Date(t).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
-    el.innerHTML = '<h3 style="margin:14px 0 6px">Snapshots to go back to</h3>' + list.slice(0, 30).map(s => '<div class="rdrow"><span>' + esc(when(s.t)) + (s.why === 'daily' ? '' : ' <span class="muted">' + esc(s.why.toLowerCase()) + '</span>') + '</span><span class="sp"></span><button class="btn sm" data-snap="' + esc(s.name) + '" data-when="' + esc(when(s.t)) + '">Go back</button></div>').join('');
-  } catch (e) { console.error(e); }
+}
+async function folderGoBackAsk(name, when) {
+  if (!await askDlg('Go back to this copy from ' + when + '?\n\nYour marks, scores, comments, late files, readings, rosters and settings go back to how they were then, in this browser and in the folder. Papers stay. A copy of how things are now is made first, so this can be undone.', { ok: 'Go back' })) return;
+  try { await tabsFinish(); tabsOver('go'); await folderGoBack(name); tabsOver('done'); toast('Done. Reloading…'); setTimeout(reloadHome, 700); }
+  catch (er) { console.error(er); tabsOver('done'); toast('That didn’t finish. Your work may be partly back: use Put back on the newest safety copy under “Saving and carrying”.', 15000); }
 }
 folderBoot();
 Object.assign(window.__gs, { folderUse, folderUnlink, folderResume, folderReconcile, folderState: () => ({ state: fld.state, name: fld.name, at: fld.at, asks: fld.asks, root: fld.root, picked: fld.picked }), folderWait: async () => { for (let i = 0; i < 400; i++) { if (!fld.run && !fld.sync && !fld.work.size && !fld.lib && !fld.gone.size) return fld.state; await new Promise(r => setTimeout(r, 25)); } return 'busy'; }, folderSnapshot, snapList, folderGoBack, carryParts: { mergeWork, mergeStates, mergeLib, recHash, stampData, revsOf } });
@@ -18997,11 +19023,13 @@ const setHash = k => '#/settings' + (k && k !== 'saving' ? '/' + k : '');
 function setRender() {
   if (!shellReady) return;
   const r = routeNow(); if (r.v !== 'settings' || batch) { setSecWas = ''; return; }
-  if (r.sec !== setSecWas) { setSecWas = r.sec; if (r.sec === 'grading') setBankCount(); if (r.sec === 'timetable') planRefresh(); }
+  if (r.sec !== setSecWas) { setSecWas = r.sec; if (r.sec === 'grading') setBankCount(); if (r.sec === 'timetable') planRefresh(); if (r.sec === 'history') gbOpen(); }
   const nav = SET_SECS.map(([k, t, s]) => '<a class="setlink' + (k === r.sec ? ' on' : '') + '" href="' + setHash(k) + '" data-set="' + k + '"' + (k === r.sec ? ' aria-current="page"' : '') + '><b>' + t + '</b><span>' + s + '</span></a>').join('');
   const box = $('#setNav'); if (box.dataset.h !== nav) { box.dataset.h = nav; box.innerHTML = nav; }
   for (const el of document.querySelectorAll('#setPane [data-sec]')) el.hidden = el.dataset.sec !== r.sec;
   const put = (id, h) => { const el = $(id); if (el.dataset.h !== h) { el.dataset.h = h; el.innerHTML = h; } };
+  if (r.sec === 'history') gbRender();
+  if (r.sec === 'about') updRender();
   if (r.sec === 'classes') {
     const row = (c, ci) => '<div class="setrow"><span class="rdot" style="background:' + classColor(c) + '"></span><span class="nt"><b>' + esc(c.name) + '</b><span class="ns">' + (c.names.length ? c.names.length + (c.names.length === 1 ? ' student' : ' students') : 'No roster yet') + ' · ' + (mbOf(c) ? 'ManageBac link saved' : 'No ManageBac link') + '</span></span>' +
       '<a class="btn sm" href="' + classHash(c) + '">Open</a><button class="btn sm" data-setcls="' + ci + '">Name and roster</button><button class="btn sm" data-setmb="' + ci + '">ManageBac link</button></div>';
@@ -19046,6 +19074,240 @@ $('#setPane').addEventListener('click', async e => {
 });
 new MutationObserver(() => { if ($('#dlg').hidden) setRender(); }).observe($('#dlg'), { attributes: true, attributeFilter: ['hidden'] });
 
+/* ---------------- safe by default: the folder ask on Home, going back in time, and updates she controls (stage 2) ---------------- */
+
+/* the ask: where should a copy of your work be kept? */
+const ASK_LATER = 7 * 864e5;
+const IC_FOLDER = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2.5h8a2 2 0 0 1 2 2V17a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>';
+function safeAskShown() {
+  if (fld.state !== 'none' || !fld.booted) return false;
+  let later = 0; try { later = +localStorage.getItem('gsc.folderLater') || 0; } catch {}
+  if (Date.now() - later < ASK_LATER) return false;
+  return canPickFolder() || keptMeta.size > 0;   // a browser that can't save to a folder has nothing to be asked until there is work to lose
+}
+function safeAskRender() {
+  const el = $('#safeAsk'); if (!el || !shellReady) return;
+  const h = !safeAskShown() ? '' : '<span class="saic">' + IC_FOLDER + '</span><div class="satx">' + (canPickFolder()
+    ? '<h2>Choose where your work is kept</h2><p>Right now your marking lives only in this browser, and clearing the browser’s data would erase it. Choose a folder on this computer once. Every save then goes there too, with a copy of each day to go back to. Nothing is uploaded.</p>' +
+      '<p class="sarow"><button class="btn primary" data-wlink>Choose a folder…</button><button class="link" data-asklater>Not now</button><span class="muted">Already have a Grading Studio folder? Choose it and your work comes back.</span></p>'
+    : '<h2>Your work is not backed up</h2><p>It lives only in this browser, and clearing the browser’s data would erase it. This browser can’t save to a folder by itself: Chrome or Edge on a computer can. Here, make a take-home file when you finish marking.</p>' +
+      '<p class="sarow"><button class="btn primary" data-asktake>Make a take-home file</button><button class="link" data-asklater>Not now</button></p>') + '</div>';
+  el.hidden = !h;
+  if (el.dataset.h !== h) { el.dataset.h = h; el.innerHTML = h; }
+}
+$('#safeAsk').addEventListener('click', e => {
+  if (e.target.closest('[data-asklater]')) { try { localStorage.setItem('gsc.folderLater', String(Date.now())); } catch {} safeAskRender(); renderNeeds(); toast('The sidebar keeps saying “Not backed up” until a folder is chosen. Click it any time.', 6000); }
+  else if (e.target.closest('[data-asktake]')) { go('#/settings'); $('#takeBtn').click(); }
+});
+
+/* going back in time */
+const gbk = { list: null, open: '', detail: null, busy: false, err: '' };
+const gbWhen = t => new Date(t).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+const gbDay = t => { const d = new Date(t), n = new Date(), days = Math.round((new Date(n.getFullYear(), n.getMonth(), n.getDate()) - new Date(d.getFullYear(), d.getMonth(), d.getDate())) / 864e5); return days === 0 ? 'Today' : days === 1 ? 'Yesterday' : d.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' }); };
+const gbFolderOn = () => !!fld.root && (fld.state === 'ok' || fld.state === 'saving' || fld.state === 'decide');
+const gbWhy = m => m.why === 'daily' ? 'Start of the day' : m.why.replace(/\.$/, '');
+async function gbLoad() {
+  const out = [];
+  if (gbFolderOn()) { try { for (const s of await snapList()) out.push({ key: 'f:' + s.name, src: 'f', name: s.name, t: s.t, why: s.why }); } catch (e) { console.error(e); } }
+  try { for (const s of await gsData.snapshots()) out.push({ key: 'b:' + s.id, src: 'b', id: s.id, t: s.t, why: s.why + (s.state && s.state !== 'done' ? ', which didn’t finish' : '') }); } catch (e) { console.error(e); }
+  gbk.list = out.sort((a, b) => b.t - a.t);
+  if (gbk.open && !gbk.list.some(m => m.key === gbk.open)) { gbk.open = ''; gbk.detail = null; }
+  gbRender();
+}
+function gbOpen() { gbk.open = ''; gbk.detail = null; gbk.err = ''; gbRender(); gbLoad(); }
+async function gbRead(m) {
+  if (m.src === 'f') {
+    const s = await gzRead(await fld.root.getDirectoryHandle('snapshots'), m.name), edits = {};
+    for (const [id, list] of Object.entries(s.edits || {})) { edits[id] = {}; for (const [p, r] of Object.entries(list)) edits[id][p] = { t: r.t || 1, data: () => getBlob(r.data), orig: async () => r.orig ? getBlob(r.orig) : null }; }
+    return { work: s.work || {}, edits };
+  }
+  const rec = await gsData.readCopy(m.id), work = {}, edits = {};
+  if (!rec) throw new Error('That safety copy is gone');
+  const w = rec.stores['grading-studio-keep/work'] || { k: [], v: [] }, ed = rec.stores['grading-studio-keep/edits'] || { k: [], v: [] };
+  w.k.forEach((id, i) => { work[id] = w.v[i]; });
+  for (const [k, v] of Object.entries(rec.ls || {})) if (k.startsWith('gs.b.')) { let d = null; try { d = JSON.parse(v); } catch {} if (d) work[k] = newestWork(work[k], d); }
+  ed.k.forEach((k, i) => { const at = String(k).indexOf('|'), r = ed.v[i]; (edits[k.slice(0, at)] ||= {})[k.slice(at + 1)] = { t: r.t || 1, data: async () => r.data, orig: async () => r.orig || null }; });
+  return { work, edits };
+}
+const gbNow = async id => newestWork(store.get(id, null), await kget('work', id));
+const gbName = id => { for (const c of holders()) for (const u of c.units) for (const it of u.items) if (it.batchId === id) return it.name; return (keptMeta.get(id) || {}).name || 'An assignment'; };
+function gbDiff(then, now) {
+  const a = revsOf(then), b = revsOf(now || { s: {} });
+  let n = 0; for (const k of new Set([...Object.keys(a.s), ...Object.keys(b.s)])) if (((a.s[k] || {}).h || '') !== ((b.s[k] || {}).h || '')) n++;
+  return { students: n, set: a.set !== b.set };
+}
+async function gbLook(key, again) {
+  if (gbk.busy && !again) return;
+  if (gbk.open === key) { gbk.open = ''; gbk.detail = null; return gbRender(); }
+  const m = (gbk.list || []).find(x => x.key === key); if (!m) return;
+  gbk.open = key; gbk.detail = null; gbk.err = ''; gbRender();
+  try {
+    const got = await gbRead(m), rows = [];
+    for (const [id, then] of Object.entries(got.work)) {
+      const meta = keptMeta.get(id); if (!meta || !then) continue;   // forgotten since, or never in this browser: nothing here to restore it onto
+      const now = await gbNow(id), d = gbDiff(then, now), ct = workCounts(then), cn = now ? workCounts(now) : { scored: 0 };
+      rows.push({ id, name: gbName(id), then, d, scoredThen: ct.scored, scoredNow: cn.scored, of: Math.max(0, (meta.n || 0) - (meta.off || 0)), t: meta.t || 0 });
+    }
+    if (gbk.open !== key) return;
+    gbk.detail = { m, got, rows: rows.sort((a, b) => (b.d.students || b.d.set ? 1 : 0) - (a.d.students || a.d.set ? 1 : 0) || b.t - a.t) };
+  } catch (e) { console.error(e); if (gbk.open === key) gbk.err = e && e.damaged ? 'A file this copy needs is damaged in your folder, so it can’t be opened.' : 'That copy couldn’t be read. If your folder is on a drive that was unplugged, plug it in and try again.'; }
+  gbRender();
+}
+function gbRender() {
+  const el = $('#setHistory'); if (!el || el.hidden) return;
+  const linked = fld.state !== 'none', on = gbFolderOn(), list = gbk.list;
+  let h = '<div class="lhead"><h2>Go back in time</h2><span class="muted">One assignment, or everything, as it was on an earlier day.</span></div>';
+  if (!linked) h += '<p class="setp">A copy of each day you work is kept in the folder you choose, so there is always an earlier day to go back to. No folder is chosen yet, so those copies have not started.</p>' +
+    (canPickFolder() ? '<p class="setp"><button class="btn sm primary" data-wlink>Choose a folder…</button></p>' : '<p class="muted setp">Saving to a folder needs Chrome or Edge on a computer.</p>');
+  else if (!on) h += '<p class="setp">Your “' + esc(fld.name) + '” folder can’t be reached right now, so its dated copies can’t be shown. <button class="btn sm" data-wact>Reconnect</button></p>';
+  else h += '<p class="muted setp">Your “' + esc(fld.name) + '” folder keeps a copy from each day you work, and one before anything that changes a lot at once. Restoring makes a copy of how things are now first, so it can always be undone. Papers are never changed.</p>';
+  if (list === null) h += '<p class="muted setp">Looking for earlier copies…</p>';
+  else if (!list.length) h += (on ? '<p class="muted setp">No earlier copies yet. The first is made the next time you save.</p>' : '');
+  else {
+    let day = '';
+    for (const m of list.slice(0, 60)) {
+      const d = gbDay(m.t), open = gbk.open === m.key;
+      if (d !== day) { if (day) h += '</div>'; day = d; h += '<h3 class="gbday">' + esc(d) + '</h3><div class="setrows">'; }
+      h += '<div class="setrow gbrow' + (open ? ' on' : '') + '"><span class="nt"><b>' + esc(new Date(m.t).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })) + '</b><span class="ns">' + esc(gbWhy(m)) + (m.src === 'b' ? ' · kept in this browser' : '') + '</span></span>' +
+        '<button class="btn sm" data-hlook="' + esc(m.key) + '" aria-expanded="' + open + '">' + (open ? 'Close' : 'Look') + '</button></div>';
+      if (open) h += '<div class="gbdetail">' + gbDetail() + '</div>';
+    }
+    if (day) h += '</div>';
+  }
+  if (el.dataset.h !== h) { el.dataset.h = h; el.innerHTML = h; }
+}
+function gbDetail() {
+  if (gbk.err) return '<p class="setp warn">' + esc(gbk.err) + '</p>';
+  const d = gbk.detail; if (!d) return '<p class="muted setp">Reading this copy…</p>';
+  const when = gbWhen(d.m.t), cnt = (n, of) => of ? n + ' of ' + of + ' scored' : n + ' scored';
+  const rows = d.rows.map((r, i) => {
+    const same = !r.d.students && !r.d.set;
+    return '<div class="setrow"><span class="nt"><b>' + esc(r.name) + '</b><span class="ns">' + (same ? 'The same then as now' : 'Then ' + cnt(r.scoredThen, r.of) + ', now ' + cnt(r.scoredNow, r.of) + ' · ' +
+      (r.d.students ? r.d.students + (r.d.students === 1 ? ' student’s work differs' : ' students’ work differs') : 'its setup differs')) + '</span></span>' +
+      (same ? '' : '<button class="btn sm" data-hone="' + i + '"' + (gbk.busy ? ' disabled' : '') + '>Restore this assignment</button>') + '</div>';
+  }).join('');
+  return (d.rows.length ? '<p class="muted setp">How each assignment stood at ' + esc(when) + ':</p><div class="setrows">' + rows + '</div>' : '<p class="muted setp">None of the assignments in this browser now were in this copy.</p>') +
+    '<p class="setp gball">To take rosters, units and settings back as well: <button class="link" data-hall>Restore everything from this copy…</button></p>';
+}
+async function gbPut(id, want, edits) {
+  const cur = await gbNow(id), data = JSON.parse(JSON.stringify(want));
+  for (const k of ['sv', 'sat', 'pv']) delete data[k];
+  for (const r of Object.values(data.s || {})) { delete r.v; delete r.at; delete r.ft; }
+  data.s ||= {}; data.t = Date.now();
+  stampData(revsOf(cur || { s: {} }), data, devId(), data.t);
+  const range = IDBKeyRange.bound(id + '|', id + '|￿'), had = {};
+  if (edits) {
+    const keys = (await kdo('edits', 'readonly', o => o.getAllKeys(range))) || [];
+    for (const k of keys) had[k.slice(id.length + 1)] = await kget('edits', k);
+    for (const [p, r] of Object.entries(edits)) if (!had[p] || (had[p].t || 1) !== r.t) { const rec = { t: r.t, data: await r.data(), orig: await r.orig() }; await kdo('edits', 'readwrite', o => o.put(rec, id + '|' + p)); }
+    for (const p of Object.keys(had)) if (!edits[p]) await kdo('edits', 'readwrite', o => o.delete(id + '|' + p));
+  }
+  await kdo('work', 'readwrite', o => o.put(data, id));
+  store.del(id); { const idx = store.get('gs.batches', {}); if (id in idx) { delete idx[id]; store.set('gs.batches', idx); } }   // the quick copy is out of date now
+  tabStamp(id, data.t);   // another tab with this one open is told, and keeps only what it changes from here on
+  const m = metaFor(keptMeta.get(id), null, data, id); await kdo('meta', 'readwrite', o => o.put(m, id)); keptMeta.set(id, m);
+  if (fld.state !== 'none') { const i = fld.info.get(id); if (i && edits) for (const p of Object.keys(i.edits || {})) delete i.edits[p]; fld.work.set(id, data); folderKick(); }
+  railRender(); renderNeeds();
+  return { cur, had: Object.fromEntries(Object.entries(had).map(([p, r]) => [p, { t: r.t || 1, data: async () => r.data, orig: async () => r.orig || null }])) };
+}
+async function gbRestoreOne(i) {
+  const d = gbk.detail, r = d && d.rows[i]; if (!r || gbk.busy) return;
+  gbk.busy = true; gbRender();
+  try {
+    if (gbFolderOn()) await folderSnapshot('Before restoring an assignment');
+    else await gsData.snapshot('Before restoring an assignment to an earlier day', gsData.version());
+    const was = await gbPut(r.id, r.then, d.got.edits[r.id] || {});
+    const key = gbk.open; gbk.detail = null; gbk.open = '';
+    await gbLoad(); await gbLook(key, true);
+    toastDo('“' + r.name + '” is back to how it was at ' + gbWhen(d.m.t) + '.', 'Undo', async () => {
+      try { if (was.cur) await gbPut(r.id, was.cur, was.had); toast('Undone. “' + r.name + '” is as it was before.'); const k = gbk.open; gbk.open = ''; await gbLoad(); if (k) gbLook(k, true); }
+      catch (e) { console.error(e); toast('That couldn’t be undone here. The copy made just before restoring is on this page.', 9000); }
+    });
+  } catch (e) { console.error(e); toast(e && e.name === 'QuotaExceededError' ? 'This computer is out of room, so nothing was restored.' : 'That didn’t finish, so nothing was restored.', 8000); }
+  finally { gbk.busy = false; gbRender(); }
+}
+async function putBackAsk(id) {
+  if (!await askDlg('Put back this safety copy?\n\nYour marks, scores, comments, late files, readings, units, rosters and settings in this browser go back to how they were then. The papers from each download stay. A safety copy of how things are now is made first, so this can be undone.', { ok: 'Put back' })) return;
+  try { batch = null; await tabsFinish(); tabsOver('go'); await gsData.putBack(id); carryAfterPutBack(); tabsOver('done'); toast('Put back. Reloading…'); setTimeout(reloadHome, 700); }
+  catch (er) { console.error(er); tabsOver('done'); toast('That didn’t finish, so some of your work may have gone back and some not. Reload, then use Put back on the newest safety copy (“Before putting back”) to return to how things were.', 15000); }
+}
+$('#setHistory').addEventListener('click', e => {
+  const l = e.target.closest('[data-hlook]'); if (l) return gbLook(l.dataset.hlook);
+  const o = e.target.closest('[data-hone]'); if (o) return gbRestoreOne(+o.dataset.hone);
+  if (e.target.closest('[data-hall]') && gbk.detail) { const m = gbk.detail.m; return m.src === 'f' ? folderGoBackAsk(m.name, gbWhen(m.t)) : putBackAsk(m.id); }
+});
+
+/* updates she controls, and installing as an app */
+const WHATS_NEW = {"1.5.0":["The sidebar says “Not backed up”, in amber, until a folder holds a second copy of your work. Home asks for that folder once.","Go back in time, in Settings: any assignment as it was on an earlier day, restored on its own, with Undo.","Grading Studio can be installed as an app, and it opens with no internet.","A newer version now waits until you click Update now, so nothing changes in the middle of marking."]};
+const upd = { on: false, st: null, mine: '', checking: false, said: '', install: null, installed: false, err: '' };
+const updCan = () => 'serviceWorker' in navigator && (location.protocol === 'https:' || /[?&]sw=1(&|$)/.test(location.search)) && !/Grading Studio\.html$/i.test(decodeURIComponent(location.pathname));
+const updSend = async msg => { const reg = await navigator.serviceWorker.ready; if (reg.active) reg.active.postMessage(msg); };
+const updStandalone = () => { try { return matchMedia('(display-mode: standalone)').matches || matchMedia('(display-mode: window-controls-overlay)').matches; } catch { return false; } };
+const updNext = () => upd.st && upd.st.next && upd.st.current && upd.st.next.build !== upd.st.current.build ? upd.st.next : null;
+const updStale = () => !!(upd.st && upd.st.current && upd.mine && upd.st.current.build !== upd.mine);
+function updRender() {
+  if (!shellReady) return;
+  const next = updNext(), stale = updStale(), rail = $('#railUpdate');
+  rail.hidden = !(next || stale);
+  rail.title = next ? 'A newer version is ready. It waits until you say so.' : 'This tab is still on the older version. Reload it when you’re ready.';
+  rail.querySelector('.rl').textContent = next ? 'Update ready' : 'Reload to update';
+  const el = $('#setAbout'), box = $('#setInstall'); if (!el || el.hidden) return;
+  const notes = v => (WHATS_NEW[v] || []).map(n => '<li>' + esc(n) + '</li>').join('');
+  let h = '<div class="lhead"><h2>Grading Studio ' + esc(gsData.APP_VERSION) + '</h2><span class="muted">' + (upd.on ? 'Kept on this computer, so it opens with no internet.' : '') + '</span></div>';
+  if (!upd.on) h += '<p class="setp">' + (location.protocol === 'file:' ? 'This is a copy saved on this computer. It stays on this version until you download a newer copy.' : 'This copy gets the newest version each time the page is loaded.') + '</p>';
+  else if (stale) h += '<p class="setp"><b>Another tab has updated.</b> This tab is still on the older version. <button class="btn sm primary" data-updreload>Reload this tab</button></p>';
+  else if (next) h += '<div class="updbox"><p class="setp"><b>' + (next.version !== gsData.APP_VERSION ? 'Version ' + esc(next.version) + ' is ready.' : 'An update is ready.') + '</b> It waits here until you say so, so nothing changes while you are marking.</p>' +
+    ((next.notes || []).length ? '<ul class="updnotes">' + next.notes.map(n => '<li>' + esc(n) + '</li>').join('') + '</ul>' : '') +
+    '<p class="setp"><button class="btn sm primary" data-updnow>Update now</button> <span class="muted">Your work is saved first. The page reloads once.</span></p></div>';
+  else h += '<p class="setp">' + (upd.err ? esc(upd.err) : upd.checking ? 'Checking…' : upd.said || 'You have the newest version.') + ' <button class="btn sm" data-updcheck' + (upd.checking ? ' disabled' : '') + '>Check for updates</button></p>';
+  if (upd.on) {
+    const auto = upd.st && upd.st.mode === 'auto';
+    h += '<fieldset class="updmode"><legend>When a newer version comes out</legend>' +
+      '<label><input type="radio" name="updMode" value="ask"' + (auto ? '' : ' checked') + '> <span><b>Ask me first</b><span class="ns">The sidebar says “Update ready”, and nothing changes until you click Update now.</span></span></label>' +
+      '<label><input type="radio" name="updMode" value="auto"' + (auto ? ' checked' : '') + '> <span><b>Update by itself the next time I open Grading Studio</b><span class="ns">Never while it is open, so never in the middle of marking.</span></span></label></fieldset>';
+  }
+  if (notes(gsData.APP_VERSION)) h += '<h3 class="gbday">New in this version</h3><ul class="updnotes">' + notes(gsData.APP_VERSION) + '</ul>';
+  if (el.dataset.h !== h) { el.dataset.h = h; el.innerHTML = h; }
+  let b = '<div class="lhead"><h2>Install as an app</h2><span class="muted">Its own window and its own icon. No installer, nothing for school IT to approve.</span>' + (upd.install ? '<span class="sp"></span><button class="btn sm primary" data-updinstall>Install</button>' : '') + '</div>';
+  b += upd.installed || updStandalone() ? '<p class="setp">Installed. Your work is the same in the app and at this address in the browser: they are the same place.</p>'
+    : upd.install ? '<p class="setp">Your saved work stays exactly where it is. The app and this page in Chrome are the same place, so you can use either.</p>'
+    : !upd.on ? '<p class="setp">Installing works from the web address in Chrome or Edge, not from a copy saved on this computer.</p>'
+    : '<p class="setp">In Chrome or Edge, open the browser’s menu (⋮) and choose <b>Cast, save and share</b>, then <b>Install page as app</b>. In Safari on a Mac, choose <b>File</b>, then <b>Add to Dock</b>. Your saved work stays where it is.</p>';
+  box.hidden = el.hidden;
+  if (box.dataset.h !== b) { box.dataset.h = b; box.innerHTML = b; }
+}
+async function updApply() {
+  try { if (batch) { commitEditors(); await saveNow(); } } catch (e) { console.error(e); }
+  if (saveBad.size) return toast('Your latest work isn’t saved yet, so the update is waiting. See the red bar.', 7000);
+  upd.applying = true; updSend({ type: 'gs-apply' });
+}
+$('#setAbout').addEventListener('click', e => {
+  if (e.target.closest('[data-updnow]')) return updApply();
+  if (e.target.closest('[data-updreload]')) return location.reload();
+  if (e.target.closest('[data-updcheck]')) { upd.checking = true; upd.err = ''; upd.said = ''; updRender(); updSend({ type: 'gs-check' }); }
+});
+$('#setAbout').addEventListener('change', e => { if (e.target.name === 'updMode') updSend({ type: 'gs-mode', mode: e.target.value === 'auto' ? 'auto' : 'ask' }); });
+$('#setInstall').addEventListener('click', async e => {
+  if (!e.target.closest('[data-updinstall]') || !upd.install) return;
+  const p = upd.install; upd.install = null;
+  try { p.prompt(); const r = await p.userChoice; if (r && r.outcome === 'accepted') upd.installed = true; } catch (er) { console.error(er); }
+  updRender();
+});
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); upd.install = e; updRender(); });
+window.addEventListener('appinstalled', () => { upd.install = null; upd.installed = true; updRender(); });
+if (updCan()) {
+  navigator.serviceWorker.addEventListener('message', e => {
+    const d = e.data; if (!d || d.type !== 'gs-state') return;
+    upd.st = d.state;
+    if (!upd.mine && d.state.current) upd.mine = d.state.current.build;
+    if (d.checked) { upd.checking = false; upd.err = d.checked === 'offline' ? 'Couldn’t check just now. Is this computer online?' : ''; upd.said = d.checked === 'ok' && !updNext() ? 'You have the newest version. Checked just now.' : ''; }
+    if (d.applied && upd.applying) return location.reload();
+    updRender();
+  });
+  navigator.serviceWorker.register('sw.js').then(() => { upd.on = true; updRender(); return updSend({ type: 'gs-state' }); }).catch(e => console.error(e));
+}
+Object.assign(window.__gs, { safeAskShown, gbLoad, gbLook, gbPut, gbState: () => gbk, updState: () => upd });
+
 /* ---------------- the frame: the sidebar, Home's "Needs a look", and Find anything (11/9) ---------------- */
 var shellReady, screenWas = '';
 
@@ -19081,22 +19343,23 @@ function railRender() {
 function railSavedRender() {
   if (!shellReady) return;
   const el = $('#railSaved'), w = whereSay(), st = batch ? ($('#saveState').textContent || '').replace(/^[✓⚠]\s*/, '').trim() : '';
-  const bad = saveBad.size > 0, head = bad ? (/saved/i.test(st) && !/^Saved/.test(st) ? st : 'Not saved') : /^Saving/.test(st) ? 'Saving…' : 'Saved';
-  const h = '<span class="rdot"></span><span class="rl"><b>' + esc(head) + '</b>' + esc(w.text) + '</span>';
+  const bad = saveBad.size > 0, head = bad ? (/saved/i.test(st) && !/^Saved/.test(st) ? st : 'Not saved') : /^Saving/.test(st) ? 'Saving…' : w.safe ? 'Saved' : 'Not backed up';
+  const h = '<span class="rdot"></span><span class="rl"><b>' + esc(head) + '</b>' + esc(w.sub || w.text) + '</span>';
   el.className = 'rsaved' + (bad ? ' bad' : w.cls ? ' ' + w.cls : '');
-  el.title = head + '. ' + w.text + '. ' + w.tip;
+  el.title = (w.safe || bad ? head + '. ' : '') + w.text + '. ' + w.tip;
   el.toggleAttribute('data-wact', !!w.act); el.toggleAttribute('data-wopen', !w.act);
   if (el.dataset.h !== h) { el.dataset.h = h; el.innerHTML = h; }
 }
 function renderNeeds() {
   if (!shellReady) return;
+  safeAskRender();
   const el = $('#needs'), rows = [], chev = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>';
   for (const m of [...keptMeta.values()].sort((a, b) => b.t - a.t)) {
     if (m.partial && m.papers) rows.push({ t: m.partial + (m.partial === 1 ? ' paper is' : ' papers are') + ' partly scored', s: m.name || 'A download', open: m.id });
     else if (!m.papers) rows.push({ t: 'Papers not kept in this browser', s: (m.name || 'A download') + ': drop the download in again to reopen it' });
   }
   const last = store.get('gs.lastBackup', 0), days = Math.floor((Date.now() - last) / 864e5);
-  if (keptMeta.size > 0 && fld.state === 'none' && days >= 7) rows.push({ t: last ? 'Your take-home file is ' + days + ' days old' : 'Your work is only in this browser', s: 'Link a folder or make a take-home file, in Settings', href: '#/settings' });
+  if (keptMeta.size > 0 && fld.state === 'none' && days >= 7 && !safeAskShown()) rows.push({ t: last ? 'Your take-home file is ' + days + ' days old' : 'Your work is not backed up', s: 'Choose a folder or make a take-home file, in Settings', href: '#/settings' });
   const h = !rows.length ? '' : '<section class="ncard"><div class="nhead"><h2>Needs a look</h2><span class="schip warn">' + rows.length + '</span></div>' +
     rows.slice(0, 6).map(r => { const body = '<span class="nt"><b>' + esc(r.t) + '</b><span class="ns">' + esc(r.s) + '</span></span>'; return r.open ? '<button class="nrow" data-nopen="' + esc(r.open) + '">' + body + chev + '</button>' : r.href ? '<a class="nrow" href="' + r.href + '">' + body + chev + '</a>' : '<div class="nrow">' + body + '</div>'; }).join('') +
     (rows.length > 6 ? '<div class="nrow"><span class="ns">and ' + (rows.length - 6) + ' more</span></div>' : '') + '</section>';
@@ -19170,12 +19433,14 @@ function findRows() {
     add('Settings', 'Bring work in', 'From a take-home file', press('#restoreBtn'));
     add('Settings', 'Remove from this computer', 'Clears student work from this browser', () => go('#/settings'));
   }
-  add('Settings', 'Where my work is saved', 'This browser, and a linked folder', () => openWhere());
+  add('Settings', 'Where my work is saved', 'This browser, and a folder you choose', () => openWhere());
+  add('Settings', 'Go back in time', 'An assignment, or everything, as it was on an earlier day', () => go(setHash('history')));
+  add('Settings', 'Updates and installing', 'This version, what’s new, install as an app', () => go(setHash('about')));
   add('Settings', document.documentElement.dataset.theme === 'dark' ? 'Light mode' : 'Dark mode', 'Display', press('.themeBtn'));
   add('Settings', 'Text size and zoom', 'Display', () => openDisplay());
   add('Settings', 'Word papers', wordPdfAlways() ? 'Converted to PDF pages as each assignment opens' : 'Kept as Word files. They can be converted to PDF pages', () => go('#/settings/marking'));
   add('Settings', 'All keys', 'Every keyboard shortcut', () => openKeys(), '?');
-  for (const [k, t, sub] of SET_SECS) if (k !== 'saving' && k !== 'display' && k !== 'keys') add('Settings', t, sub, () => go(setHash(k)));
+  for (const [k, t, sub] of SET_SECS) if (k !== 'saving' && k !== 'display' && k !== 'keys' && k !== 'history' && k !== 'about') add('Settings', t, sub, () => go(setHash(k)));
   if (plan) add('Go to', 'This week in the Planner', 'Today’s classes and the lessons planned for them', () => { location.href = planUrl('#week'); });
   return out;
 }
@@ -19237,7 +19502,7 @@ document.addEventListener('keydown', e => {
 }, true);
 
 shellReady = true;
-railSavedRender(); renderNeeds();
+railSavedRender(); renderNeeds(); safeAskRender(); updRender();
 applyRoute();
 Object.assign(window.__gs, { go, routeNow, applyRoute, openFind, findRows, keptState, classLeft });
 

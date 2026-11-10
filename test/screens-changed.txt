@@ -1,6 +1,17 @@
-# Stage 1, the marking screen with the paper first: the student list is a strip, the score panel is narrower, the page is wider.
+# Stage 2, safe by default. The sidebar is on every grading screen, and with no folder chosen it now says "Not backed up" in amber
+# (an amber dot when it is folded) where it said "Saved" in green. The Planner's sidebar says the same about its own folder.
+# Home also asks where a copy of the work should be kept, and Settings has two new pages: Go back in time, About and updates.
+home
+home-find
+first-visit
+class-*
 mark
-mark-add-menu
-mark-setup-menu
-mark-keys
-mark-word-paper
+mark-*
+grades
+grades-sheet
+insights
+insights-consistency
+return
+settings-*
+planner-*
+first-visit-planner

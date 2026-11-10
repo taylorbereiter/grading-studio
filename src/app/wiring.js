@@ -231,7 +231,8 @@ document.addEventListener('keydown', e => {
 });
 let nudging = false;
 document.addEventListener('keyup', e => { if (/^Arrow/.test(e.key)) nudging = false; });
-window.addEventListener('beforeunload', () => { if (!batch || !tabLive()) return; try { commitEditors(); } catch (e) { console.error(e); } saveNow(true); });
+window.addEventListener('beforeunload', () => { if (!batch || !batch.revs || !tabLive()) return;   // no revs yet: still opening, so nothing of hers has changed
+  try { commitEditors(); } catch (e) { console.error(e); } saveNow(true); });
 applyDisp();
 renderLib(); renderGoogle();
 const keptFirst = loadKept();   // the address of an open assignment waits for this list before it reopens
@@ -253,12 +254,7 @@ async function renderSafety() {
   el.hidden = !list.length;
   el.innerHTML = list.map(s => '<p class="muted" style="margin:6px 0 0;font-size:13px">Safety copy from ' + esc(new Date(s.t).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', second: '2-digit' })) + '. ' + esc(s.why) + (s.state && s.state !== 'done' ? ', which didn’t finish' : '') + '. <button class="link" style="font-size:13px" data-putback="' + esc(s.id) + '">Put back</button></p>').join('');
 }
-$('#safetyList').onclick = async e => {
-  const b = e.target.closest('[data-putback]'); if (!b) return;
-  if (!await askDlg('Put back this safety copy?\n\nYour marks, scores, comments, late files, readings, units, rosters and settings in this browser go back to how they were then. The papers from each download stay. A safety copy of how things are now is made first, so this can be undone.', { ok: 'Put back' })) return;
-  try { batch = null; await tabsFinish(); tabsOver('go'); await gsData.putBack(b.dataset.putback); carryAfterPutBack(); tabsOver('done'); toast('Put back. Reloading…'); setTimeout(reloadHome, 700); }
-  catch (er) { console.error(er); tabsOver('done'); toast('That didn’t finish, so some of your work may have gone back and some not. Reload, then use Put back on the newest safety copy (“Before putting back”) to return to how things were.', 15000); }
-};
+$('#safetyList').onclick = e => { const b = e.target.closest('[data-putback]'); if (b) putBackAsk(b.dataset.putback); };
 $('#restoreBtn').onclick = () => $('#restoreIn').click();
 $('#restoreIn').onchange = () => { const f = $('#restoreIn').files[0]; $('#restoreIn').value = ''; if (f) bringFile(f); };
 renderBackup();

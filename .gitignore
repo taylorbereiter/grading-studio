@@ -3,3 +3,5 @@ libs/node_modules/
 out/
 .DS_Store
 *.png
+# the app icons are the only pictures kept in the repo (drawn by test/tools/make-icons.js)
+!icons/*.png

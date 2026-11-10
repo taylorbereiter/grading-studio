@@ -161,7 +161,7 @@ test('Home lists a partly scored paper under Needs a look, and opens it from the
 
 test('the sidebar says where the work is saved, and folds to icons on a narrow window', async () => {
   const { page, close } = await openApp(browser, { seed: { ls: { 'gs.lib': LIB } } });
-  assert.match(await page.$eval('#railSaved', e => e.textContent), /^Saved/);
+  assert.match(await page.$eval('#railSaved', e => e.textContent), /^Not backed upOnly in this browser/, 'no folder yet, so it does not say Saved');
   await page.setViewport({ width: 1000, height: 800 });
   assert.ok(await page.$eval('#rail', e => e.getBoundingClientRect().width < 80));
   assert.ok(await page.$eval('#railClasses [data-railcls="c1"]', a => a.title.includes('Test English')), 'a folded link still says its class');

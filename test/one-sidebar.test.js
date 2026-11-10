@@ -58,7 +58,7 @@ test('the Planner has the same sidebar: its own classes, no grading counts, and 
     await page.waitForSelector('#railClasses a');
     // the same rows in the same order as on the grading page, with Timetable where Add a class is
     assert.deepEqual(await page.$$eval('#rail > *', els => els.filter(e => e.checkVisibility() && e.innerText.trim()).map(e => e.innerText.replace(/\s+/g, ' ').trim().replace(/(Ctrl K|⌘K)$/, '').trim())),
-      ['Grading Studio', 'Find anything', 'Home', 'Planner', 'CLASSES', 'Course A-1 Course A 2 Course B-1', 'Timetable', 'Saved This browser', 'Settings']);
+      ['Grading Studio', 'Find anything', 'Home', 'Planner', 'CLASSES', 'Course A-1 Course A 2 Course B-1', 'Timetable', 'Not backed up This browser', 'Settings']);
     assert.equal(await page.$eval('#railPlanner', a => a.getAttribute('aria-current')), 'page');
     assert.equal(await page.$('#rail .rcnt'), null, 'no counts');
     assert.ok(!/\d+ left|to score/.test(await page.$eval('#rail', e => e.textContent + [...e.querySelectorAll('[title]')].map(x => x.title).join(' '))), 'nothing about grading in the Planner’s sidebar');
@@ -318,7 +318,7 @@ test('Settings is one page per subject, each with its own address', async () => 
   const { page, close } = await openApp(browser, { seed: GRADING });
   const shown = () => page.$$eval('#setPane [data-sec]', els => els.filter(e => e.checkVisibility()).map(e => e.id));
   await goTo(page, '#/settings');
-  assert.deepEqual(await page.$$eval('#setNav .setlink b', b => b.map(x => x.textContent)), ['Saving and carrying', 'Classes and rosters', 'Terms and weights', 'Grading scale and rubrics', 'Marking', 'Timetable and calendar', 'Display', 'Working with Claude', 'Keys']);
+  assert.deepEqual(await page.$$eval('#setNav .setlink b', b => b.map(x => x.textContent)), ['Saving and carrying', 'Go back in time', 'Classes and rosters', 'Terms and weights', 'Grading scale and rubrics', 'Marking', 'Timetable and calendar', 'Display', 'Working with Claude', 'Keys', 'About and updates']);
   assert.deepEqual(await shown(), ['setSaving', 'setTake', 'setRemove']);
   assert.equal(await page.$eval('#setNav .setlink.on', a => a.textContent), 'Saving and carryingFolder, take-home file, safety copies');
   assert.equal(await page.title(), 'Settings · Grading Studio');
