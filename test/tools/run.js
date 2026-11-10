@@ -32,6 +32,12 @@ function failedNames(log) {
   for (const m of t.matchAll(/^✖ (.+?)(?: \([\d.]+ms\))?$/gm)) if (!names.includes(m[1])) names.push(m[1]);
   return names.filter(n => !/\.test\.js$/.test(n) && n !== 'failing tests:');
 }
+// What the first failed test in a log said, for the summary: enough to see why without opening the log.
+function firstError(log) {
+  const t = fs.readFileSync(log, 'utf8'), i = t.indexOf('✖ failing tests:');
+  if (i < 0) return '';
+  return t.slice(i).split('\n').slice(2, 30).filter(l => !/node:internal|^\s*$/.test(l)).map(l => '      ' + l.trimEnd().slice(0, 300)).join('\n');
+}
 (async () => {
   if (!files.length) { console.error('No test files match ' + words.join(', ')); process.exit(1); }
   const t0 = Date.now(), queue = files.slice(), done = [];
@@ -49,7 +55,7 @@ function failedNames(log) {
   const mins = ((Date.now() - t0) / 60000).toFixed(1);
   let sum = '';
   if (again.length) sum += '\nPassed on a second try, on their own (timing under load):\n' + again.map(r => '  ' + r.f + (r.first.length ? ': ' + r.first.join('; ') : '')).join('\n') + '\n';
-  if (failed.length) sum += '\nFAILED:\n' + failed.map(r => '  ' + r.f + '\n' + failedNames(r.log).map(n => '    ✖ ' + n).join('\n') + '\n    log: ' + path.relative(ROOT, r.log)).join('\n') + '\n';
+  if (failed.length) sum += '\nFAILED:\n' + failed.map(r => '  ' + r.f + '\n' + failedNames(r.log).map(n => '    ✖ ' + n).join('\n') + '\n' + firstError(r.log) + '\n    log: ' + path.relative(ROOT, r.log)).join('\n') + '\n';
   sum += '\n' + (failed.length ? failed.length + ' of ' + files.length + ' files failed' : 'All ' + files.length + ' files passed') + ' in ' + mins + ' min.';
   console.log(sum);
   if (process.env.GITHUB_STEP_SUMMARY) fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, '### Tests\n```\n' + sum.trim() + '\n```\n');

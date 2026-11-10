@@ -36,6 +36,13 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      # The made-up papers include Thai, Chinese and Japanese names, typed text and code. Chrome draws them with the
+      # computer's fonts, so the tests get the common free ones instead of whatever the runner happens to have.
+      - name: Fonts for the made-up papers
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq fonts-liberation fonts-dejavu fonts-freefont-ttf fonts-wqy-zenhei fonts-ipafont-gothic fonts-thai-tlwg fonts-noto-color-emoji
+          fc-list | wc -l
       - name: Build
         run: npm run build
       - name: The pages in this change are the ones its source builds
