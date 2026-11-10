@@ -2,7 +2,7 @@
 const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const { launch } = require('./helpers/chrome');
-const { openApp, openZip, goToStudent, score, settle, appReady, pick } = require('./helpers/app');
+const { openApp, openZip, goToStudent, score, settle, appReady, pick, press } = require('./helpers/app');
 const { standardFiles, makePaper, zipOf } = require('./helpers/fixtures');
 
 let browser, zip;
@@ -38,7 +38,7 @@ test('the average and papers left follow the scores, and a left-out paper stays 
 
   // The Left out filter lists it (with the paper she is on), and a click opens that student.
   await goToStudent(page, 0);
-  await page.click('#pOut');
+  await press(page, '#pOut');
   assert.deepEqual(await page.$$eval('#stuList .stu', a => a.map(b => +b.dataset.i)), [0, 2]);
   assert.match(await page.$eval('#stuList .stu[data-i="2"]', e => e.textContent), /Cleo Fixture/);
   await page.click('#stuList .stu[data-i="2"]');
@@ -73,7 +73,7 @@ test('during anonymous grading the Left out filter shows no names', async () => 
   await goToStudent(page, 2); await score(page, [2, 2, 2]); await pick(page, '#outAvg');
   await page.evaluate(() => window.__gs.setAnon(true));
   await page.waitForFunction(() => window.__gs.anonOn());
-  await page.click('#pOut');
+  await press(page, '#pOut');
   const t = await page.$eval('#stuList', e => e.textContent);
   assert.match(t, /Paper \d/);
   assert.doesNotMatch(t, /Cleo|Fixture/);
