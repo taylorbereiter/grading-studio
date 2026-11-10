@@ -70,7 +70,7 @@ test('math and code pages are never turned by themselves, and a question about o
   const small = r => r.kind + ' o' + r.o;
   assert.equal(rows.length, 96);
   assert.deepEqual(rows.filter(r => r.turnSure === 2).map(small), [], 'turned without asking');
-  assert.deepEqual(rows.filter(r => r.turnSure && r.turn).map(small), [], 'asked with a direction it can not know');
+  assert.deepEqual(rows.filter(r => r.turnSure && r.turn).map(r => small(r) + ' turned ' + r.turn + ' (right would be ' + r.want + ') ' + JSON.stringify(r.why)), [], 'asked with a direction it can not know');
   assert.deepEqual(rows.filter(r => r.turnSure && !(r.want % 180 && r.sideways)).map(small), [], 'asked about a page that is not on its side');
   assert.ok(rows.filter(r => r.turnSure).length >= 24, 'and most pages on their side do ask');
   assert.deepEqual(page.errors, []);
@@ -84,7 +84,7 @@ test('a page of matrices with bars beside them is never turned by itself, and a 
   const small = r => r.kind + ' o' + r.o + ' turned ' + r.turn + ' grain ' + r.why.grain;
   assert.equal(rows.length, 64);
   assert.deepEqual(rows.filter(r => r.turnSure === 2).map(small), [], 'turned without asking');
-  assert.deepEqual(rows.filter(r => r.turnSure && r.turn).map(small), [], 'asked with a direction it can not know');
+  assert.deepEqual(rows.filter(r => r.turnSure && r.turn).map(r => small(r) + ' turned ' + r.turn + ' (right would be ' + r.want + ') ' + JSON.stringify(r.why)), [], 'asked with a direction it can not know');
   assert.deepEqual(page.errors, []);
   await close();
 });
@@ -97,7 +97,7 @@ test('no shape of matrix page is turned by itself or asked about with a directio
   const small = r => r.kind + ' o' + r.o + ' turned ' + r.turn + ' grain ' + r.why.grain + ' cover ' + r.why.cover;
   assert.equal(rows.length, 160);
   assert.deepEqual(rows.filter(r => r.turnSure === 2).map(small), [], 'turned without asking');
-  assert.deepEqual(rows.filter(r => r.turnSure && r.turn).map(small), [], 'asked with a direction it can not know');
+  assert.deepEqual(rows.filter(r => r.turnSure && r.turn).map(r => small(r) + ' turned ' + r.turn + ' (right would be ' + r.want + ') ' + JSON.stringify(r.why)), [], 'asked with a direction it can not know');
   const few = await page.evaluate(() => window.gsScan.run({ seed: 16, perKind: 4, kinds: ['handwriting big short', 'typed half page', 'slide'] }));
   assert.deepEqual(few.filter(r => r.turnSure === 2 && r.turn !== r.want).map(small), [], 'and writing is never turned the wrong way');
   assert.ok(few.filter(r => r.turnSure === 2).length >= 18, 'a short page of writing still turns: ' + few.filter(r => r.turnSure === 2).length + ' of ' + few.filter(r => r.want).length);
