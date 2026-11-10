@@ -803,7 +803,9 @@ test('during anonymous grading Previous and Next follow the papers’ order, and
   assert.match(text, /Paper \d/);
   await closeDlg(page);
   // A grade to confirm goes to the paper, not to the Grade sheet with every name on it.
-  const check = await page.evaluate(() => { const b = window.__gs.state().batch, s = b.students.find(x => x.key === 'Ruby Walsh'); s.doubts = [{ total: 5, outOf: 12 }]; window.__gs.openExport(); return { sheet: !!document.querySelector('#xCheck [data-chksheet]'), rows: document.querySelector('#xCheck').innerText }; });
+  await page.evaluate(() => { const b = window.__gs.state().batch, s = b.students.find(x => x.key === 'Ruby Walsh'); s.doubts = [{ total: 5, outOf: 12 }]; window.__gs.openExport(); });
+  await page.waitForSelector('#xCheck');   // the files may still be being read when it opens
+  const check = await page.evaluate(() => { return { sheet: !!document.querySelector('#xCheck [data-chksheet]'), rows: document.querySelector('#xCheck').innerText }; });
   assert.equal(check.sheet, false, check.rows);
   await closeDlg(page);
   assert.deepEqual(page.errors, []);
