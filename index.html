@@ -213,7 +213,7 @@ body{padding-bottom:var(--savebar,0px)}.app{height:calc(100vh - var(--savebar,0p
 .keys h4{grid-column:1/-1;margin:10px 0 0;font-size:var(--text-small);text-transform:uppercase;letter-spacing:.05em;color:var(--faint)}
 .keys kbd{font:600 12px var(--f-body);border:1px solid var(--line-strong);border-bottom-width:2px;border-radius:var(--corner-1);padding:1px 6px;background:var(--surface);white-space:nowrap}
 #backupInfo.due{color:var(--warn);font-weight:600}
-.cols{display:grid;grid-template-columns:calc(232px * var(--uz)) minmax(0,1fr) calc(310px * var(--uz));min-height:0}
+.cols{--lw:64px;--rw:276px;display:grid;grid-template-columns:calc(var(--lw) * var(--uz)) minmax(0,1fr) calc(var(--rw) * var(--uz));min-height:0}
 
 .side{border-right:1px solid var(--line);background:var(--bg);overflow:auto;padding:14px 10px 10px;zoom:var(--uz)}
 .side .hd{font-size:var(--text-small);font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:.05em;margin:6px 8px 8px}
@@ -328,7 +328,7 @@ body{padding-bottom:var(--savebar,0px)}.app{height:calc(100vh - var(--savebar,0p
 .scores button.half{font-weight:500;color:var(--muted);font-size:var(--text-small)}
 .scores button[aria-pressed=true]{background:var(--accent);border-color:var(--accent);color:var(--accent-fg);box-shadow:0 0 0 3px var(--accent-soft)}
 .total{padding:4px 2px;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
-.total b{font-family:var(--f-display);font-size:34px;font-weight:700;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.total b{font-family:var(--f-display);font-size:var(--text-display);font-weight:700;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
 .total span{color:var(--muted);font-weight:500}
 .total span.pc{color:var(--accent);font-size:var(--text-heading);font-weight:600;margin-left:auto}
 .pts{display:flex;align-items:center;gap:8px}
@@ -491,19 +491,16 @@ body{padding-bottom:var(--savebar,0px)}.app{height:calc(100vh - var(--savebar,0p
 .anonhide *{color:#111 !important;background:#111 !important}
 /* collapsible side panels */
 .cols{position:relative}
-.cols.noL{grid-template-columns:30px minmax(0,1fr) calc(310px * var(--uz))}
-.cols.noR{grid-template-columns:calc(232px * var(--uz)) minmax(0,1fr) 30px}
-.cols.noL.noR{grid-template-columns:30px minmax(0,1fr) 30px}
-.cols.noL .side,.cols.noR .grade{visibility:hidden;padding:0;overflow:hidden}
+.cols.noR{grid-template-columns:calc(var(--lw) * var(--uz)) minmax(0,1fr) 30px}
+.cols.noR .grade{visibility:hidden;padding:0;overflow:hidden}
 .pbtn{position:absolute;top:10px;z-index:6;min-width:22px;height:22px;border-radius:var(--corner-pill);border:1px solid var(--line-strong);background:var(--surface);color:var(--muted);font-size:var(--text-body);line-height:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:0 5px;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.08)}
 .pbtn:hover{color:var(--accent);border-color:var(--accent)}
 .pbtn .pl{display:none;font-size:var(--text-small);font-weight:600;letter-spacing:.03em}
-#colL{left:calc(232px * var(--uz) - 11px)}
-#colR{right:calc(310px * var(--uz) - 11px)}
-.cols.noL #colL,.cols.noR #colR{height:auto;padding:8px 0;width:22px;writing-mode:vertical-rl;color:var(--accent)}
-.cols.noL #colL{left:4px}
+#colL{left:calc(var(--lw) * var(--uz) - 11px)}
+#colR{right:calc(var(--rw) * var(--uz) - 11px)}
+.cols.noR #colR{height:auto;padding:8px 0;width:22px;writing-mode:vertical-rl;color:var(--accent)}
 .cols.noR #colR{right:4px}
-.cols.noL #colL .pl,.cols.noR #colR .pl{display:inline}
+.cols.noR #colR .pl{display:inline}
 .dlg .bf{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;padding:12px 18px;border-top:1px solid var(--line)}
 table.gl{border-collapse:collapse;width:100%;font-size:var(--text-body)}
 .gl th{text-align:left;font-size:var(--text-small);color:var(--faint);text-transform:uppercase;letter-spacing:.04em;padding:6px 8px;border-bottom:1px solid var(--line);position:sticky;top:-16px;background:var(--surface)}
@@ -683,7 +680,7 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
 .xopts .xhint{margin:-4px 0 8px 32px;color:var(--muted);font-size:var(--text-control)}
 .xp .xfoot{color:var(--muted);font-size:12.5px;margin:12px 0 0}
 .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);pointer-events:none;background:var(--fg);color:var(--surface);padding:10px 16px;border-radius:var(--corner-3);font-weight:600;font-size:var(--text-body);box-shadow:var(--shadow);z-index:40;max-width:calc(100vw - 32px)}
-@media (max-width:1100px){.cols{grid-template-columns:calc(190px * var(--uz)) minmax(0,1fr) calc(260px * var(--uz))}.tool .lb{display:none}}
+@media (max-width:1100px){.tool .lb{display:none}}
 @media (max-width:760px){.cols{grid-template-columns:1fr}.side{max-height:160px;border-right:0;border-bottom:1px solid var(--line)}.grade{border-left:0;border-top:1px solid var(--line)}.app{height:auto;min-height:100vh}.top{flex-wrap:wrap}}
 /* ---------- polish: one top bar row, the More menu, pop-ups, the start screen ---------- */
 .top{flex-wrap:nowrap}
@@ -1481,10 +1478,7 @@ button.nrow:hover,a.nrow:hover{background:var(--hover)}
 /* Home: the open box sits under the work in a narrower column now, so its buttons go below its words */
 .hmain .today:not([hidden])~.drop{grid-template-columns:minmax(0,1fr)}
 .hmain .today:not([hidden])~.drop .row{grid-column:1;grid-row:auto;justify-content:flex-start;margin-top:8px}
-/* The folded sidebar takes 60px beside the paper. On a small laptop the side columns are slightly narrower. */
-@media (min-width:1101px) and (max-width:1340px){
-  .shell.grading .cols{grid-template-columns:calc(220px * var(--uz)) minmax(0,1fr) calc(296px * var(--uz))}
-}
+
 /* ---------- a class page's tabs, and what each one shows (11/10) ---------- */
 .clshead{margin-bottom:10px}
 .ctabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin:0 0 16px;overflow-x:auto}
@@ -1683,27 +1677,33 @@ a.opchip:hover{text-decoration:underline}
 .insxax .insxt{height:14px}
 .insxax .insxt span{position:absolute;transform:translateX(-50%);font-size:var(--text-caption);color:var(--muted)}
 /* ---------------- the marking screen ---------------- */
-/* The tools: one dock down the left edge of the paper, so the paper keeps the full height */
+/* The tools: one slim dock down the left edge of the paper, so the paper keeps the full height. Zoom is a pill at the paper's foot. */
 .main{position:relative}
-.tools{position:absolute;left:10px;top:12px;z-index:5;width:56px;margin:0;padding:5px;flex-direction:column;flex-wrap:nowrap;align-items:stretch;gap:2px;max-height:calc(100% - 24px);overflow-x:hidden;overflow-y:auto;scrollbar-width:none;box-shadow:0 2px 10px rgba(20,25,35,.08)}
+.tools{position:absolute;left:12px;top:12px;z-index:3;width:44px;margin:0;padding:5px;flex-direction:column;flex-wrap:nowrap;align-items:stretch;gap:2px;max-height:calc(100% - 24px);overflow-x:hidden;overflow-y:auto;scrollbar-width:none;border-radius:var(--corner-5);box-shadow:var(--shadow)}
 .tools::-webkit-scrollbar{display:none}
-.tools .tool{justify-content:center;padding:0;height:34px;flex:none}
+.tools .tool{justify-content:center;padding:0;height:32px;flex:none}
 .tools .tool svg{width:18px;height:18px}
 .tools .tool .lb{display:block;position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
-.tools .sep{width:auto;height:1px;margin:4px 3px;flex:none}
-.topts{display:flex;flex-direction:column;align-items:center;gap:6px;padding:2px 0;flex:none}
-.tools .swatches{display:grid;grid-template-columns:repeat(2,18px);gap:5px;justify-content:center}
+.tools .sep{width:auto;height:1px;margin:4px 5px;flex:none}
+.topts{display:flex;flex-direction:column;align-items:center;gap:6px;padding:3px 0;flex:none}
+.tools .swatches{display:grid;grid-template-columns:18px;gap:6px;justify-content:center}
 .tools .sw{width:18px;height:18px}
 .tools .seg{display:flex;flex-direction:column;margin:0!important;width:100%}
-.tools .seg button{padding:4px 0;font-size:10.5px;width:100%;line-height:1.2}
+.tools .seg button{padding:4px 0;font-size:var(--text-caption);width:100%;line-height:1.2}
 .tools .seg button+button{border-top:1px solid var(--line)}
-.penw button i{display:block;margin:4px auto;width:24px;height:calc(var(--w) * 1.4px);border-radius:2px;background:currentColor}
-.tpair{display:flex;justify-content:center;flex:none}
-.tools .icon{width:22px;height:28px}
-.tools .zoom{margin:0;flex-wrap:wrap;justify-content:center;gap:0;flex:none}
-.tools .zoom span{order:3;min-width:100%;font-size:11.5px;padding:1px 0 2px}
-.paper{padding-left:calc(18px + 62px * var(--uz))}
-@media (max-height:700px){.tools .tool{height:29px}.tools .sep{margin:2px 3px}.topts{gap:4px}}
+.penw button i{display:block;margin:4px auto;width:20px;height:calc(var(--w) * 1.4px);border-radius:var(--corner-1);background:currentColor}
+.tpair{display:flex;flex-direction:column;align-items:center;flex:none}
+.tools .icon{width:32px;height:28px}
+.paper{padding:10px 16px 80px calc(24px + 44px * var(--uz));scrollbar-width:thin}
+@media (max-height:700px){.tools .tool{height:28px}.tools .sep{margin:2px 5px}.topts{gap:4px}.tools .icon{height:24px}}
+.zoompill{position:absolute;right:24px;bottom:14px;z-index:3;height:32px;display:flex;align-items:center;padding:0 4px;background:var(--surface);border:1px solid var(--line);border-radius:var(--corner-pill);box-shadow:var(--shadow);zoom:var(--uz)}
+.zoompill:empty{display:none}
+.zoompill .zoom{margin:0;gap:0}
+.zoompill .icon{width:26px;height:26px;border-radius:var(--corner-pill)}
+.zoompill .icon svg{width:14px;height:14px}
+.zlab{border:0;background:none;min-width:46px;padding:0 2px;text-align:center;font-size:var(--text-small);font-weight:500;color:var(--fg-2);font-variant-numeric:tabular-nums;border-radius:var(--corner-pill)}
+.zlab:hover{color:var(--accent)}
+#openRep:not([hidden])~.zoompill{bottom:64px}
 
 /* Small menus: + Add, the ⋯ on a file, the ⋯ beside Missing, Excused, Late */
 .kmw{position:relative;display:inline-flex}
@@ -1724,60 +1724,155 @@ a.opchip:hover{text-decoration:underline}
 .icon.kdots{width:28px;height:26px;font-size:var(--text-lead);border-color:var(--line)}
 [data-km][aria-expanded=true]{background:var(--accent-soft);color:var(--accent);border-color:var(--accent)}
 
-/* The student's bar above the paper */
-.who{align-items:center;gap:8px}
-.who h2{margin-right:2px}
+/* The student's bar above the paper: who it is, the file when there is just one, then Readings, Add and the paper's own menu */
+.who{align-items:center;gap:8px;margin:0 0 10px;min-height:34px}
+.who h2{margin-right:2px;font-size:var(--text-title);font-weight:650;letter-spacing:-.015em}
 .who .btn.sm .atn{margin-left:2px}
+.whosp{flex:1}
+.fhead.inl{margin:0 0 0 6px;font-weight:500;min-width:0}
+.fhead.inl>span:first-child{color:var(--muted)!important;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:24ch}
 
-/* The student list: how far along, the filters, the list, and what is used now and then at the foot */
-.side{display:flex;flex-direction:column}
+/* The student list. Folded, it is a strip beside the paper: a number and a score for each student. Pointed at, the whole list
+   opens over the paper's edge (.peek); kept open, it sits beside the paper (.open). The top of the list is the same height
+   either way, so a row never moves from under the pointer as the list opens. */
+.side{display:flex;flex-direction:column;padding:12px 10px 10px;overflow-x:hidden;scrollbar-width:thin}
 .side #stuList{flex:1 0 auto}
-.phrow{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
-.pavg{border:0;background:none;padding:0;font:inherit;font-size:12.5px;color:var(--muted);white-space:nowrap;cursor:pointer}
+.prog-s{padding:0 2px}
+.phrow{display:flex;align-items:baseline;justify-content:space-between;gap:8px;height:20px;white-space:nowrap}
+.prog-s .ph{font-size:var(--text-body)}
+.prog-s .pb{height:3px;margin:7px 0 10px}
+.pavg{border:0;background:none;padding:0;font:inherit;font-size:var(--text-small);color:var(--muted);white-space:nowrap;cursor:pointer}
 .pavg.none{cursor:default}
 .pavg .v{color:var(--accent);font-weight:600;font-variant-numeric:tabular-nums}
 .pavg.none .v{color:var(--muted)}
 .pavg .s{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
 button.pavg:hover .v{text-decoration:underline}
-.lfilt{display:flex;flex-wrap:wrap;gap:5px;margin:0 0 10px}
-.lf{border:0;background:var(--surface-2);border-radius:var(--corner-pill);padding:3px 9px;font-size:12.5px;font-weight:500;color:var(--fg-2);white-space:nowrap}
-.lf:hover{color:var(--fg)}
-.lf[aria-pressed=true]{background:var(--accent-soft);color:var(--accent);font-weight:600}
-.lf .v{font-variant-numeric:tabular-nums}
+.lbar{display:flex;align-items:center;gap:6px;height:30px;margin:0 0 10px}
+.sfind{flex:1;min-width:0;height:30px;display:flex;align-items:center;gap:6px;padding:0 8px;border:1px solid var(--line-strong);border-radius:var(--corner-3);background:var(--surface);color:var(--muted);position:relative}
+.sfind:focus-within{outline:2px solid var(--accent);outline-offset:1px}
+.sfind svg{flex:none}
+.sfind .stufind{flex:1;min-width:0;width:auto;margin:0;padding:0;border:0;background:none;outline:0;font-size:var(--text-control);color:var(--fg)}
+.lfilt{display:flex;margin:0}
+.lfnow{height:30px;display:inline-flex;align-items:center;gap:5px;padding:0 8px;border:1px solid var(--line-strong);border-radius:var(--corner-3);background:var(--surface);font-size:var(--text-small);font-weight:500;color:var(--fg-2);white-space:nowrap}
+.lfnow:hover{color:var(--fg)}
+.lfnow.on{background:var(--accent-soft);border-color:var(--accent);color:var(--accent);font-weight:600}
+.km .lf{display:flex;justify-content:space-between;gap:12px}
+.km .lf[aria-pressed=true]{background:var(--accent-soft);color:var(--accent);font-weight:600}
+.lf .v{font-variant-numeric:tabular-nums;color:var(--muted);font-weight:500}
 .lfnone{font-size:var(--text-control);padding:6px 8px}
-.side .hd{display:flex;align-items:center;justify-content:space-between;gap:6px;margin:2px 8px 6px}
-.sfoot{position:sticky;bottom:-10px;z-index:1;display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:8px;padding:8px 6px 10px;background:var(--bg);border-top:1px solid var(--line)}
-.sfoot{flex-wrap:wrap}
-.sfoot .anonsw{font-size:12.5px;letter-spacing:0;text-transform:none;font-weight:500;white-space:nowrap}
+.stu{height:32px;padding:0 8px;margin-bottom:2px;grid-template-columns:22px minmax(0,1fr) auto auto}
+.stu .tail{display:inline-flex;align-items:center;gap:4px}
+.side .hd{display:flex;align-items:center;justify-content:space-between;gap:6px;margin:10px 8px 2px}
+.sfoot{position:sticky;bottom:-10px;z-index:1;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-top:8px;padding:8px 6px 10px;background:var(--bg);border-top:1px solid var(--line)}
+.sfoot .anonsw{font-size:var(--text-small);letter-spacing:0;text-transform:none;font-weight:500;white-space:nowrap}
 .sfoot .btn.sm{padding:5px 8px}
+/* The arrow that keeps the list open: at the foot of the strip, and on the list's edge once it is open */
+#colL{top:auto;bottom:10px;left:calc((var(--lw) * var(--uz) - 22px) / 2)}
+.cols:is(.open,.peek) #colL{top:10px;bottom:auto;left:calc(232px * var(--uz) - 11px)}
+@media (max-width:1100px){.cols.open #colL{left:calc(204px * var(--uz) - 11px)}}
+@media (max-width:760px){#colL{display:none}}
+.cols.open{--lw:232px}
+@media (max-width:1100px){.cols{--rw:256px}.cols.open{--lw:204px}}
+@media (min-width:761px){
+  .cols>.main{grid-column:2}
+  .cols>.grade{grid-column:3}
+  .cols>.side{position:absolute;left:0;top:0;bottom:0;z-index:5;width:var(--lw)}
+  .cols.peek>.side{width:232px;border-right-color:var(--line-strong);box-shadow:var(--shadow),8px 0 24px -12px color-mix(in srgb,var(--fg) 30%,transparent)}
+  .cols:not(.open):not(.peek)>.side{padding-left:5px;padding-right:5px;padding-bottom:40px;scrollbar-width:none}
+  .cols:not(.open):not(.peek)>.side::-webkit-scrollbar{display:none}
+  .cols:not(.open):not(.peek) :is(.ph span,.pavg,.lfnow .t,.stu .nm,.stu .whob,.stu .tail,#sideHd,.sfoot,.lfnone){display:none}
+  .cols:not(.open):not(.peek) .phrow{justify-content:center}
+  .cols:not(.open):not(.peek) .prog-s .ph{font-size:var(--text-small)}
+  .cols:not(.open):not(.peek) .lbar{justify-content:center;gap:2px}
+  .cols:not(.open):not(.peek) :is(.sfind,.lfnow){flex:none;width:25px;padding:0;justify-content:center;border-color:transparent;background:none;cursor:pointer}
+  .cols:not(.open):not(.peek) .sfind .stufind{position:absolute;inset:0;width:100%;opacity:0;cursor:pointer}
+  .cols:not(.open):not(.peek) .lfnow.on{background:var(--accent-soft)}
+  .cols:not(.open):not(.peek) :is(.sfind,.lfnow):hover{background:var(--hover);color:var(--fg)}
+  .cols:not(.open):not(.peek) .stu{grid-template-columns:auto 1fr;gap:2px;padding:0 6px 0 7px}
+  .cols:not(.open):not(.peek) .stu::after{content:attr(data-sv);justify-self:end;font-size:var(--text-small);font-weight:600;color:var(--accent);font-variant-numeric:tabular-nums}
+  .cols:not(.open):not(.peek) .stu.sv-part::after{color:var(--warn)}
+  .cols:not(.open):not(.peek) .stu.sv-quiet::after{color:var(--muted)}
+  .cols:not(.open):not(.peek) .stu.sv-ok::after{color:var(--ok)}
+  .cols:not(.open):not(.peek) .stu.sv-none::after{color:var(--faint);font-weight:500}
+  .cols:not(.open):not(.peek) .stu:is(.sv-ring,.sv-dot)::after{content:"";width:7px;height:7px;margin-right:2px;border-radius:var(--corner-round);border:1.5px solid var(--line-strong)}
+  .cols:not(.open):not(.peek) .stu.sv-dot::after{border-color:var(--accent);background:var(--accent)}
+  .cols:not(.open):not(.peek) .stu.is-late .num::after{content:"";display:inline-block;width:5px;height:5px;margin-left:2px;border-radius:var(--corner-round);background:var(--warn);vertical-align:1px}
+}
 
-/* The score panel: the rubric, the total, the comment and Next */
-.grade{gap:14px}
+/* The score panel: one line a row, the total, the comment, and Next at the foot */
+.grade{gap:10px;padding:14px 16px 0}
+.grade h3{font-size:var(--text-caption);letter-spacing:.07em}
+.grade h3 .link{font-size:var(--text-small);font-weight:500;letter-spacing:0;text-transform:none;text-decoration:none}
+.grade h3 .link:hover{text-decoration:underline}
+.crits{display:flex;flex-direction:column;gap:2px;margin:-4px -8px 0}
+.grade .crit{border:0;border-radius:var(--corner-4);padding:6px 8px 1px}
+.grade .crit.on{background:var(--accent-soft)}
+.crit .cn{align-items:baseline;gap:8px;margin-bottom:3px;cursor:pointer}
+.crit .cn span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.crit .cn em{flex:none;font-size:var(--text-body);font-weight:650;font-variant-numeric:tabular-nums}
+.crit .cn em small{font-size:var(--text-small);font-weight:500;color:var(--muted)}
+.crit .cn em:empty::before{content:"–";font-weight:500;color:var(--faint)}
+.scores.slide{--th:14px;--fill:calc(var(--th) / 2 + var(--k) * (100% - var(--th)) / 7);padding:0}
+.srange{height:16px}
+.srange::-webkit-slider-runnable-track{height:4px;border-radius:var(--corner-1);background:linear-gradient(to right,var(--accent) calc(var(--th) / 2 + var(--k) * (100% - var(--th)) / 7),var(--track) 0)}
+.srange::-moz-range-track{height:4px;border-radius:var(--corner-1);background:linear-gradient(to right,var(--accent) calc(var(--th) / 2 + var(--k) * (100% - var(--th)) / 7),var(--track) 0)}
+.crit.on .srange::-webkit-slider-runnable-track{background:linear-gradient(to right,var(--accent) calc(var(--th) / 2 + var(--k) * (100% - var(--th)) / 7),color-mix(in srgb,var(--accent) 24%,var(--surface)) 0)}
+.srange.unset::-webkit-slider-runnable-track{background:var(--track)}
+.srange.unset::-moz-range-track{background:var(--track)}
+.crit.on .srange.unset::-webkit-slider-runnable-track{background:color-mix(in srgb,var(--accent) 24%,var(--surface))}
+.srange::-webkit-slider-thumb{background:var(--surface);border:2px solid var(--accent);box-shadow:0 1px 3px color-mix(in srgb,var(--fg) 22%,transparent);margin-top:-5px}
+.srange::-moz-range-thumb{box-sizing:border-box;background:var(--surface);border:2px solid var(--accent);box-shadow:0 1px 3px color-mix(in srgb,var(--fg) 22%,transparent)}
+.srange.unset::-webkit-slider-thumb{border-color:var(--line-strong)}
+.srange.unset::-moz-range-thumb{border-color:var(--line-strong)}
+.sticks{height:16px;opacity:0;transition:opacity .12s}
+.crit.on .sticks,.crit:hover .sticks,.crit:focus-within .sticks{opacity:1}
+.scores.slide .sticks button{min-width:20px;padding:1px 2px;font-size:var(--text-caption);font-weight:500;color:var(--muted)}
+.scores.slide .sticks button.half{font-size:var(--text-caption);color:var(--faint)}
+#lvBox{min-height:66px;padding:8px 10px 9px;border-radius:var(--corner-4);background:var(--surface-2)}
+.lvname{font-size:var(--text-caption);font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--faint);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#lvBox .lvrow{margin-top:2px}
 /* the percent beside the total had picked up the student card's box (both were called .pc) */
-.total span.pc{width:auto;max-height:none;overflow:visible;background:none;border:0;border-radius:0;box-shadow:none}
-.cmt textarea{min-height:84px}
-.grade .crit{border:0;border-bottom:1px solid var(--line);border-radius:0;padding:0 0 13px}
-.gstat{display:flex;flex-wrap:nowrap;align-items:center;gap:6px;margin:4px 0 0}
-.gstat .seg{margin-left:0;flex:1}
-.gstat .seg button{flex:1;padding:7px 6px}
-.km .outsw{margin:0 0 2px;border:0;background:none;border-radius:7px}
+.total span.pc{width:auto;max-height:none;overflow:visible;background:none;border:0;border-radius:0;box-shadow:none;font-size:var(--text-title);font-weight:650;letter-spacing:-.02em}
+.total{padding:10px 2px 0;border-top:1px solid var(--line)}
+.cmt textarea{min-height:72px;padding:9px 11px;border-radius:var(--corner-4);font-size:var(--text-control);line-height:1.45;display:block}
+.gstat{display:flex;flex-wrap:nowrap;align-items:center;gap:6px;margin:0}
+.gstat .seg{margin-left:0;flex:1;gap:6px;border:0;border-radius:0;overflow:visible}
+.gstat .seg button{flex:none;padding:4px 10px;border:1px solid var(--line);border-radius:var(--corner-pill);background:none;font-size:var(--text-small);font-weight:500}
+.gstat .seg button:hover{color:var(--fg);border-color:var(--line-strong)}
+.gstat .seg button[aria-pressed=true]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent);font-weight:600}
+.gstat #gMore{border-color:transparent;background:none;color:var(--muted)}
+.gstat #gMore:hover,.gstat #gMore[aria-expanded=true]{background:var(--surface-2);color:var(--fg)}
+.km .outsw{margin:0 0 2px;border:0;background:none;border-radius:var(--corner-2)}
 .km .outsw:hover{background:var(--hover)}
 .km .outsw[aria-checked=true]{background:var(--accent-soft)}
-.outnote{margin:7px 0 0;font-size:12.5px;color:var(--muted)}
+.outnote{margin:7px 0 0;font-size:var(--text-small);color:var(--muted)}
 .cbank{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px}
-.cchip{border:0;background:var(--surface-2);border-radius:var(--corner-pill);padding:3px 10px;font-size:12.5px;font-weight:500;color:var(--fg-2);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cchip{border:0;background:var(--surface-2);border-radius:var(--corner-pill);padding:3px 10px;font-size:var(--text-small);font-weight:500;color:var(--fg-2);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .cbank>.cchip{max-width:calc(50% - 3px)}
 .cchip:hover{color:var(--fg)}
 .cchip.cmore{background:var(--accent-soft);color:var(--accent);font-weight:600}
-.cbank .km{min-width:250px}
-.nav .navi{flex:0 0 42px;padding:0;font-size:var(--text-title);line-height:1;color:var(--fg-2)}
-.nav .primary kbd{font:600 10.5px var(--f-body);border:1px solid rgba(255,255,255,.55);border-radius:var(--corner-1);padding:0 4px;margin-left:2px}
-.oneout{text-align:center;margin:0}
-.oneout .link{font-size:13.5px}
+.cbank .km{min-width:244px}
+/* The foot of the panel stays in view: the keys, then Previous, the blue button and Next */
+.gfoot{margin-top:auto;position:sticky;bottom:0;z-index:1;padding:8px 0 12px;background:var(--surface)}
+.keysrow{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:8px;font-size:var(--text-small);color:var(--muted);white-space:nowrap}
+.keysrow .link{font-size:var(--text-small);font-weight:500;text-decoration:none;color:var(--muted)}
+.keysrow .link:hover{color:var(--accent)}
+.gfoot .nav{position:static;margin:0;padding:0}
+.gfoot .nav .primary{flex:1 1 0;min-width:0;white-space:nowrap;padding-left:8px;padding-right:8px}
+.gfoot .nav>:not(.btn){flex:0 0 100%}
+.rchip{white-space:nowrap}
+/* On a very wide window the page stops growing (fitScale), and it and its bar sit in the middle of the space */
+.paper>.pg,.paper>.who,.paper>.fhead{margin-left:auto;margin-right:auto}
+.paper>.who,.paper>.fhead{max-width:var(--pgw,none)}
+.nav .btn{height:38px}
+.nav .navi{flex:0 0 38px;padding:0;font-size:var(--text-title);line-height:1;color:var(--fg-2)}
+.nav .primary kbd{font:600 var(--text-caption) var(--f-body);border:1px solid color-mix(in srgb,var(--accent-fg) 55%,transparent);border-radius:var(--corner-1);padding:0 4px;margin-left:2px}
+.oneout{text-align:center;margin:0;flex-basis:100%}
+.oneout .link{font-size:var(--text-small);font-weight:500}
 .oneout-say{margin:3px 0 0}
 .oneout-say:empty{display:none}
-.nextun{align-self:center;font-size:var(--text-control)}
-.nextun kbd,.hint kbd{font:500 10.5px var(--f-body);border:1px solid var(--line-strong);border-bottom-width:2px;border-radius:var(--corner-1);padding:0 4px;background:var(--surface);color:var(--muted)}
+.nextun{display:block;margin:8px auto 0;font-size:var(--text-control)}
+.nextun kbd,.hint kbd{font:500 var(--text-caption) var(--f-body);border:1px solid var(--line-strong);border-bottom-width:2px;border-radius:var(--corner-1);padding:0 4px;background:var(--surface);color:var(--muted)}
 
 </style>
 
@@ -1941,13 +2036,14 @@ button.pavg:hover .v{text-decoration:underline}
     <button class="icon" id="closeBtn" title="Close this assignment and go Home" aria-label="Close this assignment and go Home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
   </div>
   <div class="cols" id="cols">
-    <button class="pbtn" id="colL" title="Hide the student list ( [ )" aria-label="Hide the student list"><span class="pa">‹</span><span class="pl">Students</span></button>
+    <button class="pbtn" id="colL" title="Keep the student list open ( [ )" aria-label="Keep the student list open" aria-pressed="false"><span class="pa">›</span></button>
     <button class="pbtn" id="colR" title="Hide the score panel ( ] )" aria-label="Hide the score panel"><span class="pa">›</span><span class="pl">Score</span></button>
-    <nav class="side"><div class="prog-s" id="progS"></div><input type="search" id="stuFind" class="stufind" placeholder="Find a student  ( / )" aria-label="Find a student" autocomplete="off"><div class="hd" id="sideHd">Students, in folder order</div><div id="stuList"></div><div class="sfoot" id="sideFoot"></div></nav>
+    <nav class="side" id="side" aria-label="Students"><div class="prog-s" id="progS"></div><div class="lbar"><label class="sfind" title="Find a student ( / )"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg><input type="search" id="stuFind" class="stufind" placeholder="Find  ( / )" aria-label="Find a student" autocomplete="off"></label><span id="lfSlot"></span></div><div id="stuList"></div><div class="hd" id="sideHd">Students, in folder order</div><div class="sfoot" id="sideFoot"></div></nav>
     <section class="main" style="position:relative">
       <div class="tools" id="tools"></div>
-      <div id="openRep" hidden role="status" style="position:absolute;left:16px;right:28px;bottom:12px;z-index:5;align-items:center;gap:10px;padding:8px 12px;border-radius:10px;background:var(--surface);border:1px solid var(--warn);box-shadow:var(--shadow);font-size:14px"></div>
+      <div id="openRep" hidden role="status" style="position:absolute;left:16px;right:28px;bottom:12px;z-index:4;align-items:center;gap:10px;padding:8px 12px;border-radius:10px;background:var(--surface);border:1px solid var(--warn);box-shadow:var(--shadow);font-size:14px"></div>
       <div class="paper" id="paper"></div>
+      <div class="zoompill" id="zoomPill"></div>
     </section>
     <aside class="grade" id="grade"></aside>
   </div>
@@ -3603,6 +3699,7 @@ function restore() {
 const FONT = 'Helvetica, Arial, "PingFang TC", "Microsoft JhengHei", sans-serif';
 const measureCtx = document.createElement('canvas').getContext('2d');
 const sideFor = W => Math.round(Math.max(200, W * 0.4));
+const sideScreen = W => Math.round(Math.max(150, W * 0.25));
 function wrapText(ctx, text, maxW) {
   const lines = [];
   for (const para of String(text).split('\n')) {
@@ -3888,10 +3985,17 @@ let pages = [];          // on-screen pages for the open student
 let docs = [];           // pdf.js documents for the open student
 let docMap = new Map();  // source path -> pdf.js document, for the open student
 let openToken = 0;
+let viewW = null, lastSheet = null;   // lastSheet: the size on screen of the first page last drawn
+function viewWorker() {
+  try { if (!viewW || viewW.destroyed) viewW = new pdfjsLib.PDFWorker({ name: 'papers' }); return viewW; }
+  catch (e) { return undefined; }   // without it each paper gets its own, as before
+}
 async function openStudent(i, filePath) {
   if (!batch) return;
   commitEditors();
+  const moved = cur !== Math.max(0, Math.min(batch.students.length - 1, i));
   cur = Math.max(0, Math.min(batch.students.length - 1, i));
+  if (moved || rowOnOf !== batch.students[cur]) rowStart();
   selected = null;
   if ($('#lightPanel')) $('#lightPanel').refresh();
   const token = ++openToken;
@@ -3901,7 +4005,7 @@ async function openStudent(i, filePath) {
   const st = batch.students[cur];
   const paper = $('#paper');
   const nRef = refsFor(st).length;
-  paper.innerHTML = '<div class="who"><h2>' + esc(shownName(st, cur)) + '</h2>' + (anonOn() ? '' : whoBtn('data-wi="' + cur + '"', st.key)) + '<span>' + ((anonOn() ? anonPos(cur) : cur) + 1) + ' of ' + batch.students.length + '</span><span style="flex:1"></span>' +
+  paper.innerHTML = '<div class="who"><h2>' + esc(shownName(st, cur)) + '</h2>' + (anonOn() ? '' : whoBtn('data-wi="' + cur + '"', st.key)) + '<span>' + ((anonOn() ? anonPos(cur) : cur) + 1) + ' of ' + batch.students.length + '</span><span class="whosp"></span>' +
     '<button class="btn sm" id="readBtn" title="A reading, prompt or other file shown above the papers: for everyone, or a different one for this student">Readings' + (nRef ? ' <span class="atn">' + nRef + '</span>' : '') + '</button>' +
     kmWrap('<span aria-hidden="true">+</span> Add', 'id="addMenuBtn" class="btn sm" title="Add late or forgotten work to this student. You can also drop files on the paper or on a name."',
       '<button class="mitem" id="addFileBtn">A file…<small>A late or forgotten paper</small></button>' +
@@ -3912,6 +4016,8 @@ async function openStudent(i, filePath) {
       '<button class="mitem" data-whodo="light">Lighting<small>Make a pale or too-bright scan easier to read</small></button>' +
       '<button class="mitem" data-whodo="calc">Calculator <kbd>=</kbd></button>', 'right') + '</div>' + groupBand(st);
   paper.scrollTop = 0;
+  if (lastSheet && st.files.length === 1 && viewable(st.files[0]) && !refsFor(st).length && !refDoc()) paper.insertAdjacentHTML('beforeend', '<div class="pg" id="sheet0" style="width:' + lastSheet.w + 'px;height:' + lastSheet.h + 'px;background:linear-gradient(to right,#fff ' + lastSheet.p + 'px,#F6F7F9 0)"></div>');
+  const sheetOff = () => { const g = $('#sheet0'); if (g) g.remove(); };
   if (!st.files.length) {
     paper.insertAdjacentHTML('beforeend', '<div class="nofile"><b>Nothing turned in yet.</b> Add their paper here, or drop the file on the page or on their name. You can still give a score without one.' +
       '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button class="btn sm primary" id="gapFile">Add their file…</button><button class="btn sm" id="gapPaste">Paste text…</button>' + (st.gap || batch.students.some(x => x.files.length) ? '<button class="btn sm" id="gapScan">From a scan…</button>' : '') + '</div></div>');
@@ -3930,17 +4036,19 @@ async function openStudent(i, filePath) {
     try {
       await impAuto(f);
       if (token !== openToken) return;
-      const doc = await pdfjsLib.getDocument({ data: (await viewBytes(f)).slice(), isEvalSupported: false }).promise;
+      const doc = await pdfjsLib.getDocument({ data: (await viewBytes(f)).slice(), isEvalSupported: false, worker: viewWorker() }).promise;
       if (token !== openToken) { doc.destroy(); return; }
       docs.push(doc); docMap.set(f.path, doc); f.numPages = doc.numPages;
       gsFlatCheck(f, doc).then(flat => { if (flat && token === openToken) for (const q of pages) if (q.file === f && q.impFirst) impNote(q); });
     } catch (e) {
       pdfBad(f, e);
-      paper.appendChild(otherCard(f));
+      sheetOff(); paper.appendChild(otherCard(f));
     }
   }
   if (token !== openToken) return;
-  for (const it of fileSeq(st)) {
+  const seq = fileSeq(st), oneFile = seq.length === 1 && !!seq[0].d && !st.files.some(f => f.kind === 'media');
+  if (!oneFile) sheetOff();
+  for (const it of seq) {
     if (it.f) {   // a Word, text or other file, as one card
       const f = it.f, c = f.kind === 'docx' ? await wordCard(st, f) : f.kind === 'text' ? textCard(f) : otherCard(f);
       if (token !== openToken) return;
@@ -3960,7 +4068,7 @@ async function openStudent(i, filePath) {
       (on ? '' : '<span class="pill warn" style="font-size:12px;padding:2px 8px;border-radius:999px;background:var(--warn-soft);color:var(--warn)">' + (auto ? 'No marks, left out' : 'Left out') + '</span>') +
       '<span style="flex:1"></span>' + (on ? '' : '<button class="link" style="font-size:13px" data-inout="' + di + '">Bring back</button>') +
       fileMenu((on || auto ? '<button class="link" data-rotdoc="' + di + '" title="Turn every page of this file a quarter turn to the right">⟳ Turn all pages</button>' : '') + (one ? moveLink(af) + replaceLink(af) : '') + (on ? '<button class="link" data-inout="' + di + '" title="Keep this file off the screen and out of what goes back. Bring back undoes it.">Leave out</button>' : '') + (one ? removeLink(af) : ''));
-    paper.appendChild(head);
+    if (oneFile) whoHead(paper, head); else paper.appendChild(head);
     if (!on && !auto) continue;   // left out on purpose: just the bar
     for (const [path, p] of d.pages) {
       if (token !== openToken) return;
@@ -3972,11 +4080,11 @@ async function openStudent(i, filePath) {
       await scanCheck(f, p, page);
       if (token !== openToken) return;
       const vp = vpRot(f, p, page, 1);
-      const pg = { file: f, idx: p, page, W: vp.width, H: vp.height, side: sideFor(vp.width), marks: () => (f.marks[p] ||= []) };
+      const pg = { file: f, idx: p, page, W: vp.width, H: vp.height, side: sideScreen(vp.width), marks: () => (f.marks[p] ||= []) };
       const wrap = document.createElement('div'); wrap.className = 'pg';
       if (!on) wrap.style.opacity = '.75';
       const c = document.createElement('canvas');
-      wrap.appendChild(c); paper.appendChild(wrap);
+      sheetOff(); wrap.appendChild(c); paper.appendChild(wrap);
       pg.wrap = wrap; pg.canvas = c;
       pages.push(pg);
       lightChip(pg); lightChips(); rotChip(pg, d.pages.length > 1 ? d.pages.findIndex(x => x[0] === path && x[1] === p) + 1 : 0); scanNote(pg);
@@ -3987,8 +4095,18 @@ async function openStudent(i, filePath) {
       if (filePath && f.path === filePath && p === 0) (d.pages[0][0] === filePath ? head : wrap).scrollIntoView({ block: 'start' });   // from its bar, with Mark late and Remove in view
     }
   }
+  sheetOff();
   goneList(st);
   renderTools();
+}
+function whoHead(paper, head) {
+  const who = paper.querySelector('.who'), sp = who && who.querySelector('.whosp'), menu = who && who.querySelector('#whoMore + .km');
+  if (!sp || !menu) return paper.appendChild(head);
+  const own = head.querySelector('.kmw'), gap = head.querySelector('span[style="flex:1"]');
+  if (own) { menu.insertAdjacentHTML('beforeend', '<div class="kmhd">This file</div>'); for (const b of [...own.querySelector('.km').children]) menu.appendChild(b); own.remove(); }
+  if (gap) gap.remove();
+  head.classList.add('inl');
+  who.insertBefore(head, sp);
 }
 $('#paper').addEventListener('click', e => {
   if (!e.target.closest('#lmenu, [data-lmenu]') && $('#lmenu')) $('#lmenu').remove();
@@ -4263,6 +4381,7 @@ function fitScale(pg) {
   const P = $('#paper'), cs = getComputedStyle(P);   // the tool dock sits in the left padding
   let s = (P.clientWidth - (parseFloat(cs.paddingLeft) || 18) - (parseFloat(cs.paddingRight) || 18) - 4) / (pg.W + pg.side);
   if (disp.fit === 'page') s = Math.min(s, (P.clientHeight - 40) / pg.H);
+  s = Math.min(s, 1000 / pg.W);   // on a very wide window the page stops growing at a comfortable reading size; the zoom buttons go past it
   return Math.max(0.3, Math.min(2.2, s)) * zoom;
 }
 async function renderPage(pg) {
@@ -4271,8 +4390,11 @@ async function renderPage(pg) {
   const c = pg.canvas;
   c.width = Math.ceil((pg.W + pg.side) * s * dpr); c.height = Math.ceil(pg.H * s * dpr);
   c.style.width = (pg.W + pg.side) * s + 'px'; c.style.height = pg.H * s + 'px';
+  if (pg === pages[0]) $('#paper').style.setProperty('--pgw', c.style.width);   // the bar above lines up with the page
   if (pg.rchip) pg.rchip.style.left = pg.W * s + 'px';
   if (anonOn() && !pg.covers) pg.bmp = null;   // nothing shows until its name covers are ready
+  if (pg === pages[0]) lastSheet = { w: (pg.W + pg.side) * s, h: pg.H * s, p: pg.W * s };
+  if (!pg.bmp) { const x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, c.width, c.height); x.fillStyle = '#F6F7F9'; x.fillRect(Math.round(pg.W * s * dpr), 0, c.width, c.height); }   // a white sheet at once; the words follow
   draw(pg);
   const vp = vpRot(pg.file, pg.idx, pg.page, s * dpr);
   const bmp = document.createElement('canvas');
@@ -4373,7 +4495,7 @@ async function turnPages(f, list, dir) {
 }
 function reshape(pg) {
   const vp = vpRot(pg.file, pg.idx, pg.page, 1);
-  pg.W = vp.width; pg.H = vp.height; pg.side = sideFor(vp.width); pg.covers = null; pg.adj = null; pg.extra = [];
+  pg.W = vp.width; pg.H = vp.height; pg.side = sideScreen(vp.width); pg.covers = null; pg.adj = null; pg.extra = [];
   renderPage(pg); scanNote(pg);
 }
 async function rescanFile(f) {
@@ -4731,8 +4853,8 @@ function renderTools() {
   $('#tools').innerHTML = TOOLS.map(([k, l, key]) => '<button class="tool' + (once && once.k === k ? ' once' : '') + '" data-tool="' + k + '" aria-pressed="' + ((once ? once.prev : tool) === k) + '" title="' + l + ' (' + key + ')">' + svg(IC[k]) + '<span class="lb">' + l + '</span></button>').join('') +
     (opts ? '<span class="sep"></span><span class="topts">' + opts + '</span>' : '') + '<span class="sep"></span>' +
     '<span class="tpair"><button class="icon" id="undoBtn" title="Undo (' + keyLabel('⌘Z') + ')" aria-label="Undo" ' + (undoStack.length ? '' : 'disabled') + '>' + svg(IC.undo) + '</button>' +
-    '<button class="icon" id="redoBtn" title="Redo (' + keyLabel('⇧⌘Z') + ')" aria-label="Redo" ' + (redoStack.length ? '' : 'disabled') + '>' + svg(IC.redo) + '</button></span>' +
-    '<span class="zoom"><button class="icon" data-z="-1" aria-label="Zoom out" title="Zoom out (' + keyLabel('⌘−') + ')">' + svg(IC.minus) + '</button><span data-z0 title="' + keyLabel('Back to 100% (⌘0). Pinch or ⌘-scroll on the paper to zoom.') + '">' + Math.round(zoom * 100) + '%</span><button class="icon" data-z="1" aria-label="Zoom in" title="Zoom in (' + keyLabel('⌘+') + ')">' + svg(IC.plus) + '</button></span>';
+    '<button class="icon" id="redoBtn" title="Redo (' + keyLabel('⇧⌘Z') + ')" aria-label="Redo" ' + (redoStack.length ? '' : 'disabled') + '>' + svg(IC.redo) + '</button></span>';
+  $('#zoomPill').innerHTML = '<span class="zoom"><button class="icon" data-z="-1" aria-label="Zoom out" title="Zoom out (' + keyLabel('⌘−') + ')">' + svg(IC.minus) + '</button><button class="zlab" data-z0 title="' + keyLabel('Back to 100% (⌘0). Pinch or ⌘-scroll on the paper to zoom.') + '">' + Math.round(zoom * 100) + '%</button><button class="icon" data-z="1" aria-label="Zoom in" title="Zoom in (' + keyLabel('⌘+') + ')">' + svg(IC.plus) + '</button></span>';
   for (const pg of pages) pg.canvas.style.cursor = tool === 'select' ? 'default' : tool === 'text' ? 'text' : 'crosshair';
 }
 $('#tools').addEventListener('click', e => {
@@ -4743,6 +4865,8 @@ $('#tools').addEventListener('click', e => {
   const w = e.target.closest('[data-w]'); if (w) { penW = +w.dataset.w; store.set('gs.penW', penW); renderTools(); return; }
   if (e.target.closest('#undoBtn')) { undo(); return; }
   if (e.target.closest('#redoBtn')) { redo(); return; }
+});
+$('#zoomPill').addEventListener('click', e => {
   const z = e.target.closest('[data-z]');
   if (z) setZoom(Math.round((zoom + (+z.dataset.z) * 0.15) * 100) / 100);
   if (e.target.closest('[data-z0]')) setZoom(1);
@@ -4796,14 +4920,22 @@ function renderList() {
     const sent = st.grade.sent ? '<span class="sent" title="You exported this paper on its own at ' + esc(sentWhen(st.grade.sent)) + '">↗ sent</span>' : '';
     if (fmNow() && !noScore(st)) right = st.grade.fb ? '<span class="fbck" title="Feedback complete">✓</span>' : hasMarks(st) || (st.grade.comment || '').trim() ? '<span class="dot" title="Started, not complete yet"></span>' : '';
     const nAdd = st.files.filter(f => f.added && !f.from && !madeFromWord(f)).length, re = st.files.some(f => Object.values(f.sc || {}).some(r => r.re)), grp = st.files.some(f => f.from || Object.values(f.sc || {}).some(r => r.w)) || st.files.some(f => !f.added && shareCopies(st, f).length);
-    return '<button class="stu' + (i === cur ? ' on' : '') + (st.files.length ? '' : ' empty') + '" data-i="' + i + '"><span class="num">' + (pos + 1) + '</span><span class="nm" title="' + esc(full) + '">' + esc(nm) + '</span>' + (anonOn() ? '' : whoBtn('data-wi="' + i + '"', st.key)) +
-      '<span style="display:inline-flex;align-items:center;gap:4px">' + (st.files.length || noScore(st) ? '' : '<span class="muted" style="font-size:11px">no paper</span>') + (g.status === 'late' ? '<span class="stag" title="You marked this student late">late</span>' : '') + (g.out ? '<span class="stag out" title="Left out of the average">left out</span>' : '') + (nAdd ? '<span class="add" title="' + nAdd + (nAdd === 1 ? ' file' : ' files') + ' added by you">+' + nAdd + '</span>' : '') + (re ? '<span class="add" title="A page needs a rescan">⚑</span>' : '') + (groupOf(st) ? '<span class="add grp" title="Group work: marked and graded once with ' + esc(groupNames(groupMates(st))) + '">group</span>' : grp ? '<span class="add grp" title="Group work: shares pages or a file with another student">shared</span>' : '') + carryPill(st) + sent + right + '</span></button>';
+    const fm = fmNow(), sv = noScore(st) ? ['–', 'none'] : fm ? (st.grade.fb ? ['✓', 'ok'] : hasMarks(st) || (st.grade.comment || '').trim() ? ['', 'dot'] : st.files.length ? ['', 'ring'] : ['–', 'none'])
+      : val != null ? [fmtNum(g.total != null ? g.total : g.pct) + (g.total == null ? '%' : ''), g.paper || g.out ? 'quiet' : g.done ? '' : 'part'] : manyReads(st) || (st.doubts && st.doubts.length) ? ['?', 'part'] : hasMarks(st) ? ['', 'dot'] : st.files.length ? ['', 'ring'] : ['–', 'none'];
+    return '<button class="stu' + (i === cur ? ' on' : '') + (st.files.length ? '' : ' empty') + (sv[1] ? ' sv-' + sv[1] : '') + (g.status === 'late' ? ' is-late' : '') + '" data-i="' + i + '" data-sv="' + sv[0] + '"' + (i === cur ? ' aria-current="true"' : '') + '><span class="num">' + (pos + 1) + '</span><span class="nm" title="' + esc(full) + '">' + esc(nm) + '</span>' + (anonOn() ? '' : whoBtn('data-wi="' + i + '"', st.key)) +
+      '<span class="tail">' + (st.files.length || noScore(st) ? '' : '<span class="muted" style="font-size:11px">no paper</span>') + (g.status === 'late' ? '<span class="stag" title="You marked this student late">late</span>' : '') + (g.out ? '<span class="stag out" title="Left out of the average">left out</span>' : '') + (nAdd ? '<span class="add" title="' + nAdd + (nAdd === 1 ? ' file' : ' files') + ' added by you">+' + nAdd + '</span>' : '') + (re ? '<span class="add" title="A page needs a rescan">⚑</span>' : '') + (groupOf(st) ? '<span class="add grp" title="Group work: marked and graded once with ' + esc(groupNames(groupMates(st))) + '">group</span>' : grp ? '<span class="add grp" title="Group work: shares pages or a file with another student">shared</span>' : '') + carryPill(st) + sent + right + '</span></button>';
   }).join('');
   if (listFilter !== 'all' && !q && !order.some(i => lfMatch(batch.students[i]))) $('#stuList').insertAdjacentHTML('beforeend', '<div class="muted lfnone">No one else here. <button class="link" data-lf="all">Show everyone</button></div>');
-  const on = $('#stuList .on'); if (on) on.scrollIntoView({ block: 'nearest' });
+  listToCur();
   const nExp = exportPlan(true).length;
   $('#exportBtn').innerHTML = 'Return' + (nExp ? ' <span class="atn" title="' + nExp + (nExp === 1 ? ' marked file' : ' marked files') + ' ready to give back">' + nExp + '</span>' : '');
   renderProg();
+}
+function listToCur() {
+  const on = $('#stuList .on'), box = $('#side'); if (!on || !box) return;
+  const r = on.getBoundingClientRect(), b = box.getBoundingClientRect(), foot = $('#sideFoot'), fh = foot && foot.offsetHeight ? foot.getBoundingClientRect().height : 0;
+  if (r.top < b.top + 4) box.scrollTop -= (b.top + 4 - r.top) / (disp.ui || 1);
+  else if (r.bottom > b.bottom - fh - 4) box.scrollTop += (r.bottom - (b.bottom - fh - 4)) / (disp.ui || 1);
 }
 function renderProg() {
   const fm = fmNow();
@@ -4812,7 +4944,9 @@ function renderProg() {
   const avg = fm ? '' : cs.n ? '<button class="pavg" id="pAvg" title="Average of ' + people(cs.n, 'finished score') + '’s percents: ' + oneDp(cs.mean) + ' / ' + fmtNum(cs.max) + '. Partial, missing, excused and left-out papers don’t count. Click for Insights."><span class="k">Avg</span> <span class="v">' + (cs.meanPct != null ? pctAvgText(cs.meanPct) : oneDp(cs.mean)) + '</span><span class="s">' + oneDp(cs.mean) + ' / ' + fmtNum(cs.max) + '</span></button>'
     : '<span class="pavg none" id="pAvg" title="No finished scores yet"><span class="k">Avg</span> <span class="v">–</span></span>';
   $('#progS').innerHTML = '<div class="phrow"><div class="ph">' + n + ' of ' + N + ' <span>' + (fm ? 'feedback complete' : 'scored') + (nOff ? ' · ' + nOff + ' missing or excused' : '') + '</span></div>' + avg + '</div>' +
-    '<div class="pb"><i style="width:' + (N ? 100 * n / N : 0) + '%"></i></div>' + lfChips();
+    '<div class="pb"><i style="width:' + (N ? 100 * n / N : 0) + '%"></i></div>';
+  $('#progS').title = n + ' of ' + N + (fm ? ' with feedback complete' : ' scored');
+  lfDraw();
 }
 function nextUnscored() {
   const N = batch.students.length, o = anonOn() ? anonOrder() : batch.students.map((_, i) => i), p = o.indexOf(cur);
@@ -4831,43 +4965,50 @@ $('#stuFind').addEventListener('keydown', e => {
 });
 
 /* ---------------- grade panel ---------------- */
+let rowOn = -1, rowOnOf = null, rowKeyed = -1;
+function rowStart() {
+  const st = batch && batch.students[cur]; rowOnOf = st || null; rowKeyed = -1;
+  rowOn = st && setup.mode === 'rubric' && !fmNow() ? setup.criteria.findIndex((_, i) => st.grade.rubric[i] == null) : -1;
+}
+function rowPick(i) { if (i === rowOn) return; rowOn = i; rowKeyed = -1; for (const c of document.querySelectorAll('#grade .crit')) c.classList.toggle('on', +c.dataset.row === i); lvDraw(); }
+const critScore = v => v == null ? '' : fmtNum(v) + '<small> / 4</small>';
 function renderGrade() {
   const st = batch.students[cur], g = st.grade, gr = gradeOf(st);
   let h = '';
+  if (rowOnOf !== st) rowStart();
   if (fmNow()) return renderFeedback(st);
   if (setup.mode === 'rubric') {
-    h += '<h3>Rubric <button class="link" id="editRubric" style="font-size:12.5px;text-transform:none;letter-spacing:0">Edit rubric</button></h3>';
+    if (rowOn >= setup.criteria.length) rowOn = -1;
+    h += '<h3>Score <button class="link" id="editRubric">Edit rubric</button></h3><div class="crits">';
     h += setup.criteria.map((c, i) => { const v = g.rubric[i], k = RUBRIC_STEPS.indexOf(v);
-      return '<div class="crit"><div class="cn"><span>' + esc(c) + '</span><em>' + (v == null ? '' : fmtNum(v) + ' / 4') + '</em></div><div class="scores slide" data-c="' + i + '">' +
-        '<input type="range" class="srange' + (v == null ? ' unset' : '') + '" min="0" max="' + (RUBRIC_STEPS.length - 1) + '" step="1" value="' + Math.max(0, k) + '" aria-label="Score for ' + esc(c) + '" aria-valuetext="' + (v == null ? 'Not scored' : fmtNum(v) + ' out of 4') + '">' +
-        '<div class="sticks">' + RUBRIC_STEPS.map((w, j) => '<button class="' + (w % 1 ? 'half' : '') + '" style="--k:' + j + '" data-v="' + w + '" tabindex="-1" aria-pressed="' + (v === w) + '">' + w + '</button>').join('') + '</div></div>' + levelsHtml(i, v) + '</div>'; }).join('');
+      return '<div class="crit' + (i === rowOn ? ' on' : '') + '" data-row="' + i + '"><div class="cn"><span title="' + esc(c) + '">' + esc(c) + '</span><em>' + critScore(v) + '</em></div><div class="scores slide" data-c="' + i + '">' +
+        '<input type="range" class="srange' + (v == null ? ' unset' : '') + '" style="--k:' + Math.max(0, k) + '" min="0" max="' + (RUBRIC_STEPS.length - 1) + '" step="1" value="' + Math.max(0, k) + '" aria-label="Score for ' + esc(c) + '" aria-valuetext="' + (v == null ? 'Not scored' : fmtNum(v) + ' out of 4') + '">' +
+        '<div class="sticks">' + RUBRIC_STEPS.map((w, j) => '<button class="' + (w % 1 ? 'half' : '') + '" style="--k:' + j + '" data-v="' + w + '" tabindex="-1" aria-pressed="' + (v === w) + '">' + w + '</button>').join('') + '</div></div></div>'; }).join('') + '</div>' + lvBox();
   } else {
-    h += '<h3>Score <button class="link" id="editRubric" style="font-size:12px;text-transform:none;letter-spacing:0">Edit</button></h3>' +
+    h += '<h3>Score <button class="link" id="editRubric">Edit</button></h3>' +
       '<div class="pts"><input type="number" step="0.5" min="0" id="ptsIn" value="' + esc(g.points) + '" aria-label="Points"><span class="muted">out of ' + esc(setup.outOf) + '</span></div>';
   }
   h += '<div class="total">' + totalHtml(st) + '</div>' + statusHtml(st);
-  h += cmtHtml(g) + navHtml(st) + histSlot(st);
-  h += '<div class="hint"><button class="link" data-keys style="font-size:12.5px">All keys ( ? )</button></div>';
+  h += cmtHtml(g) + histSlot(st) + '<div class="gfoot"><div class="hint keysrow">' + (setup.mode === 'rubric' ? '<span><kbd>1</kbd>–<kbd>4</kbd> score</span><span><kbd>.</kbd> half</span>' : '<span>Type the score</span>') + '<button class="link" data-keys title="Every key">All keys <kbd>?</kbd></button></div>' + navHtml(st) + '</div>';
   $('#grade').innerHTML = h;
 }
-const cmtHtml = g => '<div class="cmt"><h3 style="margin-bottom:6px">Comment for ManageBac</h3><textarea id="cmtIn" placeholder="Optional. Shows on the Grades tab so you can copy it.">' + esc(g.comment) + '</textarea>' + cmtChips() + '</div>';
+const cmtHtml = g => '<div class="cmt"><textarea id="cmtIn" aria-label="Comment for ManageBac" placeholder="Comment for ManageBac (optional). It shows on the Grades tab so you can copy it.">' + esc(g.comment) + '</textarea>' + cmtChips() + '</div>';
 function navHtml(st) {
   const o = navOrder(), at = o.indexOf(cur), first = at <= 0, last = at >= o.length - 1, fm = fmNow();
   const more = batch.students.some(s => !noScore(s) && (fm ? !s.grade.fb : !gradeOf(s).done));
   return '<div class="nav"><button class="btn navi" id="prevBtn" aria-label="Previous student" title="Previous student (←)" ' + (first ? 'disabled' : '') + '>‹</button>' +
-    (more ? '<button class="btn primary" id="nextUn" title="Opens the next student ' + (fm ? 'whose feedback isn’t complete' : 'without a full score') + '">' + (fm ? 'Next without feedback' : 'Next unscored') + ' <kbd>N</kbd></button><button class="btn navi" id="nextBtn" aria-label="Next student" title="Next student (→)" ' + (last ? 'disabled' : '') + '>›</button>'
-      : '<button class="btn primary" id="nextBtn" ' + (last ? 'disabled' : '') + '>Next ▶</button>') + oneOutHtml(st) + '</div>';
+    (more ? '<button class="btn primary" id="nextUn" title="Opens the next student ' + (fm ? 'whose feedback isn’t complete' : 'without a full score') + ' (Enter, or N)">' + (fm ? 'Next without feedback' : 'Next to score') + ' <kbd>↵</kbd></button><button class="btn navi" id="nextBtn" aria-label="Next student" title="Next student (→)" ' + (last ? 'disabled' : '') + '>›</button>'
+      : '<button class="btn primary" id="nextBtn" ' + (last ? 'disabled' : '') + '>Next <kbd>↵</kbd></button>') + oneOutHtml(st) + '</div>';
 }
 function renderFeedback(st) {
   const g = st.grade, on = !!g.fb, off = noScore(st), nav = navOrder(), navAt = nav.indexOf(cur), last = navAt >= nav.length - 1;
   $('#grade').innerHTML = '<h3>Feedback</h3><div class="fbnote"><b>Formative activity</b>Feedback only, so there’s no score. <button class="link" id="fbType">Change the type</button></div>' +
     (off ? '<div class="total"><b>' + STATUS_LABEL[g.status] + '</b><span style="width:100%;font-size:12.5px">Nothing to give feedback on. Click it again under Mark as to take this off.</span></div>'
       : '<button class="fbtog" id="fbTog" role="switch" aria-checked="' + on + '"><span class="bx">' + (on ? '✓' : '') + '</span><span>Feedback complete<small>' + (on ? 'Click again to undo.' : 'Click, or press F, when you’ve finished with this paper.') + '</small></span></button>') +
-    statusHtml(st, true) + cmtHtml(g) +
-    '<div class="nav"><button class="btn navi" id="prevBtn" aria-label="Previous student" title="Previous student (←)" ' + (navAt ? '' : 'disabled') + '>‹</button>' + (off || on ? '<button class="btn primary" id="nextBtn" ' + (last ? 'disabled' : '') + '>Next ▶</button>' : '<button class="btn primary" id="fbNext">Complete' + (last ? '' : ' and next ▶') + '</button>') + oneOutHtml(st) + '</div>' +
-    (batch.students.some(s => !noScore(s) && !s.grade.fb && s !== st) ? '<button class="link nextun" id="nextUn" title="Opens the next student whose feedback isn’t complete">Next without feedback <kbd>N</kbd></button>' : '') +
-    histSlot(st) +
-    '<div class="hint"><kbd>F</kbd> feedback complete · <kbd>Shift</kbd> <kbd>F</kbd> complete and next · <button class="link" data-keys style="font-size:12.5px">All keys ( ? )</button></div>';
+    statusHtml(st, true) + cmtHtml(g) + histSlot(st) +
+    '<div class="gfoot"><div class="hint keysrow"><span><kbd>F</kbd> complete</span><span><kbd>Shift</kbd> <kbd>F</kbd> and next</span><button class="link" data-keys title="Every key">All keys <kbd>?</kbd></button></div>' +
+    '<div class="nav"><button class="btn navi" id="prevBtn" aria-label="Previous student" title="Previous student (←)" ' + (navAt ? '' : 'disabled') + '>‹</button>' + (off || on ? '<button class="btn primary" id="nextBtn" ' + (last ? 'disabled' : '') + '>Next <kbd>↵</kbd></button>' : '<button class="btn primary" id="fbNext">Complete' + (last ? '' : ' and next') + ' <kbd>↵</kbd></button>') + oneOutHtml(st) + '</div>' +
+    (batch.students.some(s => !noScore(s) && !s.grade.fb && s !== st) ? '<button class="link nextun" id="nextUn" title="Opens the next student whose feedback isn’t complete">Next without feedback <kbd>N</kbd></button>' : '') + '</div>';
 }
 function fbToggle(next) {
   const st = batch.students[cur]; if (noScore(st)) return;
@@ -4896,9 +5037,10 @@ $('#grade').addEventListener('click', e => {
   if (b) {
     const st = batch.students[cur], i = +b.closest('.scores').dataset.c, v = +b.dataset.v;
     st.grade.rubric[i] = st.grade.rubric[i] === v ? null : v;
-    scoreTouched(st, i);
+    scoreTouched(st, i); rowOn = lvAt = i; rowKeyed = -1;
     renderGrade(); renderList(); saveSoon(); return;
   }
+  const rn = e.target.closest('.crit .cn'); if (rn) return rowPick(+rn.parentNode.dataset.row);
   const sb = e.target.closest('[data-status]'); if (sb) return setStatus(batch.students[cur], sb.dataset.status);
   if (e.target.closest('#outAvg, [data-outoff]')) return setOutAvg(batch.students[cur]);
   if (e.target.closest('#prevBtn')) stepStudent(-1);
@@ -4916,10 +5058,10 @@ function slideTo(r, v) {
   const st = batch.students[cur], i = +r.closest('.scores').dataset.c;
   if (st.grade.rubric[i] === v && !r.classList.contains('unset')) return;
   st.grade.rubric[i] = v; scoreTouched(st, i);
-  r.classList.remove('unset'); r.setAttribute('aria-valuetext', fmtNum(v) + ' out of 4');
-  const crit = r.closest('.crit'), em = crit.querySelector('.cn em'); if (em) em.textContent = fmtNum(v) + ' / 4';
+  r.classList.remove('unset'); r.setAttribute('aria-valuetext', fmtNum(v) + ' out of 4'); r.style.setProperty('--k', r.value);
+  const crit = r.closest('.crit'), em = crit.querySelector('.cn em'); if (em) em.innerHTML = critScore(v);
   for (const t of crit.querySelectorAll('.sticks button')) t.setAttribute('aria-pressed', String(+t.dataset.v === v));
-  const lv = crit.querySelector('.lvtxt'); if (lv) lv.innerHTML = levelHint(i, v);
+  rowOn = -2; rowPick(i);   // the row in hand, and what its score means under the rows
   const tot = $('#grade .total'); if (tot) tot.innerHTML = totalHtml(st);
   const gs = $('#gstat'); if (gs) gs.outerHTML = statusHtml(st);
   renderList(); saveSoon();
@@ -4939,6 +5081,49 @@ $('#grade').addEventListener('keydown', e => {
   const st = batch.students[cur], i = +e.target.closest('.scores').dataset.c; if (st.grade.rubric[i] == null) return;
   st.grade.rubric[i] = null; scoreTouched(st, i); renderList(); saveSoon(); slideDone(e.target);
 });
+$('#grade').addEventListener('focusin', e => { if (e.target.classList && e.target.classList.contains('srange')) rowPick(+e.target.closest('.crit').dataset.row); });
+
+/* ---------------- scoring from the keyboard ---------------- */
+function scoreKey(e, onRange) {
+  if (!batch || $('#calcPanel')) return false;
+  const st = batch.students[cur], ae = document.activeElement, free = e.target === document.body || onRange;   // not while she's in a box or on a button
+  if (e.key === 'Enter') {
+    if (!free) return false;
+    const b = $('#grade .gfoot .btn.primary'); if (!b || b.disabled) return false;
+    e.preventDefault(); if (onRange) ae.blur(); b.click(); return true;
+  }
+  if (fmNow()) return false;
+  if (setup.mode !== 'rubric') {   // plain points: a number starts typing in the score box
+    if (onRange || !/^[0-9.]$/.test(e.key) || /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return false;
+    const box = $('#ptsIn'); if (!box) return false;
+    box.focus(); box.select(); return true;   // the key itself then lands in the box
+  }
+  const n = setup.criteria.length; if (!n) return false;
+  const redraw = to => { renderGrade(); renderList(); saveSoon(); if (onRange) { const r = $('#grade .scores[data-c="' + to + '"] .srange'); if (r) r.focus({ preventScroll: true }); } };
+  if (e.key === 'Tab') {   // from nowhere in particular, Tab goes to the row in hand; after that it walks the rows as Tab does
+    if (onRange || e.shiftKey || e.target !== document.body) return false;
+    const i = rowOn >= 0 ? rowOn : Math.max(0, setup.criteria.findIndex((_, k) => st.grade.rubric[k] == null)), r = $('#grade .scores[data-c="' + i + '"] .srange');
+    if (!r) return false;
+    e.preventDefault(); r.focus({ preventScroll: true }); return true;
+  }
+  if (/^[0-4]$/.test(e.key)) {
+    const i = onRange ? +ae.closest('.scores').dataset.c : rowOn;
+    e.preventDefault();
+    if (i < 0) { toast('Every row has a score. To change one, press Tab or click the row first.'); return true; }
+    st.grade.rubric[i] = +e.key; scoreTouched(st, i);
+    rowKeyed = i; rowOn = lvAt = Math.min(i + 1, n - 1);
+    redraw(rowOn); return true;
+  }
+  if (e.key === '.' && rowKeyed >= 0) {
+    const v = st.grade.rubric[rowKeyed]; if (v == null) return false;
+    const to = v % 1 ? Math.floor(v) : v + 0.5;
+    e.preventDefault();
+    if (!RUBRIC_STEPS.includes(to)) { toast('There’s no ' + fmtNum(to) + ' on this scale.'); return true; }
+    st.grade.rubric[rowKeyed] = to; scoreTouched(st, rowKeyed);
+    redraw(rowOn); return true;
+  }
+  return false;
+}
 $('#grade').addEventListener('input', e => {
   const st = batch.students[cur];
   if (e.target.id === 'cmtIn') { st.grade.comment = e.target.value; touchGrade(st); saveSoon(); }
@@ -4958,11 +5143,12 @@ $('#grade').addEventListener('wheel', e => { if (e.target.id === 'ptsIn') e.targ
 function openKeys() {
   const row = (k, t) => '<span>' + keyLabel(k).split(' ').map(x => '<kbd>' + esc(x) + '</kbd>').join(' ') + '</span><span>' + keyLabel(t) + '</span>';
   openDlg('<div class="bh"><h2>Keys</h2><button class="icon" data-close aria-label="Close">✕</button></div><div class="bb"><div class="keys">' +
-    '<h4>Students</h4>' + row('← →', 'Previous / next student (also ↑ ↓)') + row('N', 'Next student without a full score') + row('/', 'Find a student by name') +
+    '<h4>Students</h4>' + row('← →', 'Previous / next student (also ↑ ↓)') + row('Enter', 'The blue button: the next student without a full score') + row('N', 'Next student without a full score') + row('/', 'Find a student by name') +
+    '<h4>Scoring</h4>' + row('0 1 2 3 4', 'Score the rubric row in hand, then move to the next row') + row('.', 'Right after a number: add the half, or take it off') + row('Tab', 'Go to the row in hand. Tab again for the next row, and ← → to change its score by a step') +
     '<h4>Marking</h4>' + row('V', 'Select') + row('P', 'Pen (hold Shift for a straight line)') + row('H', 'Highlight, snapping to typed lines. Press H again for freehand (Shift for straight)') + row('O', 'Circle') + row('T', 'Text') + row('C', 'Comment') + row('K', 'Check mark') + row('E', 'Eraser') +
     row('⌘Z', 'Undo') + row('⇧⌘Z', 'Redo (⌘Y works too)') +
     '<h4>A picked mark (Select tool)</h4>' + row('← → ↑ ↓', 'Nudge it (Shift for bigger steps)') + row('⌘C ⌘V', 'Copy it, then paste on the page you’re looking at, even on another student’s paper') + row('⌘D', 'Make a copy of it') + row('+ −', 'Make it bigger or smaller (or drag the square at its corner)') + row('Delete', 'Remove it') + row('Esc', 'Let go of it (the arrows go back to moving between students)') +
-    '<h4>The paper</h4>' + row('⌘+ ⌘−', 'Zoom in / out (or pinch, or ⌘-scroll)') + row('⌘0', 'Back to 100%') + row('[ ]', 'Fold away the student list / score panel') +
+    '<h4>The paper</h4>' + row('⌘+ ⌘−', 'Zoom in / out (or pinch, or ⌘-scroll)') + row('⌘0', 'Back to 100%') + row('[ ]', 'Keep the student list open / fold away the score panel') +
     'Turn a page: point at it and use ⟲ ⟳ in its top corner, or “Turn all pages” under the file’s ⋯. In Arrange pages, pick pages and press R.'.replace(/^/, '<h4>Turning pages</h4><span style="grid-column:1/-1">') + '</span>' +
     '<h4>Other</h4>' + row('=', 'Calculator') + row('Shift =', 'Answer, in the calculator (= on its own adds, Enter answers too)') + row('Space', 'Play / pause a recording') + row('J L', 'Back / ahead 5 seconds') + row('?', 'This list') +
     '</div></div><div class="bf"><span class="muted gsVer" style="margin-right:auto;font-size:13px">' + esc(versionLabel()) + '</span><button class="btn primary" data-close>Close</button></div>', true);
@@ -9697,16 +9883,43 @@ $('#mkeyBtn').onclick = () => openMarkKey();
 $('#setMkey').onclick = () => openMarkKey();
 $('#impBtn').onclick = () => openImported();
 function setPanels(L, R) {
-  const c = $('#cols'); c.classList.toggle('noL', !!L); c.classList.toggle('noR', !!R);
-  $('#colL').querySelector('.pa').textContent = L ? '›' : '‹'; $('#colR').querySelector('.pa').textContent = R ? '‹' : '›';
-  $('#colL').title = L ? 'Show the student list ( [ )' : 'Hide the student list ( [ )'; $('#colR').title = R ? 'Show the score panel ( ] )' : 'Hide the score panel ( ] )';
+  const c = $('#cols'); c.classList.toggle('noR', !!R);
+  $('#colR').querySelector('.pa').textContent = R ? '‹' : '›';
+  $('#colR').title = R ? 'Show the score panel ( ] )' : 'Hide the score panel ( ] )';
   store.set('gs.panels', { L: !!L, R: !!R });
   clearTimeout(resizeT); resizeT = setTimeout(() => pages.forEach(renderPage), 60);
 }
-const panelsNow = () => ({ L: $('#cols').classList.contains('noL'), R: $('#cols').classList.contains('noR') });
-$('#colL').onclick = () => { const p = panelsNow(); setPanels(!p.L, p.R); };
+const panelsNow = () => ({ L: !!store.get('gs.panels', {}).L, R: $('#cols').classList.contains('noR') });
 $('#colR').onclick = () => { const p = panelsNow(); setPanels(p.L, !p.R); };
 { const p = store.get('gs.panels', {}); setPanels(p.L, p.R); }
+
+/* ---------------- the student list: a strip beside the paper, the whole list when it's wanted ---------------- */
+let listOpen = !!store.get('gs.listOpen', false), peekT = null;
+function listDraw() {
+  const c = $('#cols'), b = $('#colL'); c.classList.toggle('open', listOpen); if (listOpen) c.classList.remove('peek');
+  b.querySelector('.pa').textContent = listOpen ? '‹' : '›'; b.setAttribute('aria-pressed', String(listOpen));
+  b.title = (listOpen ? 'Fold the student list to a strip' : 'Keep the student list open') + ' ( [ )'; b.setAttribute('aria-label', listOpen ? 'Fold the student list to a strip' : 'Keep the student list open');
+}
+function setList(open) {
+  listOpen = !!open; store.set('gs.listOpen', listOpen); clearTimeout(peekT); listDraw(); listToCur();
+  clearTimeout(resizeT); resizeT = setTimeout(() => pages.forEach(renderPage), 60);
+}
+const peekHeld = () => document.activeElement === $('#stuFind') || !!$('#side [data-km][aria-expanded=true]') || $('#side').matches(':hover') || $('#colL').matches(':hover');
+function listPeek(on, wait) {
+  clearTimeout(peekT); if (listOpen) return;
+  const go = () => { if (!on && peekHeld()) return; const c = $('#cols'); if (c.classList.contains('peek') === on) return; c.classList.toggle('peek', on); if (!on && document.activeElement && $('#side').contains(document.activeElement) && !document.activeElement.classList.contains('stu')) document.activeElement.blur(); listToCur(); };
+  if (wait) peekT = setTimeout(go, wait); else go();
+}
+for (const el of [$('#side'), $('#colL')]) {
+  el.addEventListener('mouseenter', () => listPeek(true, 160));
+  el.addEventListener('mouseleave', () => listPeek(false, 280));
+}
+$('#side').addEventListener('focusout', () => listPeek(false, 200));
+$('#side').addEventListener('dragenter', () => listPeek(true));   // a file dragged to the strip: the names open so it can be dropped on one
+$('#side').addEventListener('pointerdown', e => { if (!listOpen && e.target.closest('.lbar')) listPeek(true); }, true);
+$('#stuFind').addEventListener('focus', () => listPeek(true));
+$('#colL').onclick = () => setList(!listOpen);
+listDraw();
 $('#lightBtn').onclick = openLight;
 $('#rescanBtn').onclick = openRescans;
 $('#calcBtn').onclick = openCalc;
@@ -9748,6 +9961,8 @@ document.addEventListener('keydown', e => {
     if (key === 'v' && markClip) { e.preventDefault(); pasteMark(); return; }
     if (key === 'd' && selected) { e.preventDefault(); copyMark(true); pasteMark(); return; }
   }
+  const onRange = !!(document.activeElement && document.activeElement.classList && document.activeElement.classList.contains('srange'));
+  if (!e.metaKey && !e.ctrlKey && !e.altKey && (!typing || onRange) && !/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName === 'INPUT' && e.target.type === 'range' ? '' : e.target.tagName) && scoreKey(e, onRange)) return;
   if (typing || e.metaKey || e.ctrlKey || e.altKey) return;
   if (e.key === 'Escape' && once) { e.preventDefault(); endOnce(); return; }
   if (e.key === '?') { e.preventDefault(); openKeys(); return; }
@@ -9773,7 +9988,7 @@ document.addEventListener('keydown', e => {
   if (e.key.toLowerCase() === 'f' && !e.metaKey && !e.ctrlKey && !e.altKey && fmNow()) { e.preventDefault(); fbToggle(e.shiftKey); return; }
   if (e.key === '=' && !$('#calcPanel')) { e.preventDefault(); openCalc(); return; }
   if ($('#calcPanel') && e.key !== '/' && !(e.key === 'x' || e.key === 'X')) { const k = calcKeyOf(e); if (k && k !== 'Escape' && (k !== '=' || e.code === 'Equal' || e.code === 'NumpadEqual')) { e.preventDefault(); $('#calcPanel').typeIn(k); return; } }
-  if (e.key === '[' && !e.metaKey && !e.ctrlKey) { e.preventDefault(); const p = panelsNow(); return setPanels(!p.L, p.R); }
+  if (e.key === '[' && !e.metaKey && !e.ctrlKey) { e.preventDefault(); return setList(!listOpen); }
   if (e.key === ']' && !e.metaKey && !e.ctrlKey) { e.preventDefault(); const p = panelsNow(); return setPanels(p.L, !p.R); }
   if (e.key === 'ArrowRight' || e.key === 'ArrowDown') { e.preventDefault(); stepStudent(1); }
   if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); stepStudent(-1); }
@@ -11524,9 +11739,17 @@ function levelsHtml(i, v) {
 }
 function levelPreview(e, leaving) {
   const b = e.target.closest('.scores button'); if (!b) return;
-  const i = +b.closest('.scores').dataset.c, el = $('#grade [data-lvline="' + i + '"] .lvtxt');
-  if (el && batch) el.innerHTML = levelHint(i, leaving ? batch.students[cur].grade.rubric[i] : +b.dataset.v);
+  const i = +b.closest('.scores').dataset.c;
+  if (!batch || !rowHasLevels(i) || levelsOpen.has(i)) return;
+  if (leaving) lvDraw(); else { const box = $('#lvBox'); if (box) box.innerHTML = lvInner(i, +b.dataset.v); }
 }
+let lvAt = 0;
+function lvInner(i, v) {
+  if (!(i >= 0) || i >= setup.criteria.length) i = setup.criteria.findIndex((_, k) => rowHasLevels(k));
+  return '<div class="lvname">' + esc(setup.criteria[i]) + '</div>' + (rowHasLevels(i) ? levelsHtml(i, v === undefined ? batch.students[cur].grade.rubric[i] : v) : '<div class="lvrow"><div class="lvtxt"><span class="muted">Nothing written for this row yet. Edit rubric adds it.</span></div></div>');
+}
+const lvBox = () => setup.criteria.some((_, i) => rowHasLevels(i)) ? '<div id="lvBox">' + lvInner(rowOn >= 0 ? rowOn : lvAt) + '</div>' : '';
+function lvDraw(i, v) { const box = $('#lvBox'); if (!box || !batch) return; if (i == null) i = rowOn >= 0 ? rowOn : lvAt; else if (v === undefined) lvAt = i; box.innerHTML = lvInner(i, v); }
 $('#grade').addEventListener('mouseover', e => levelPreview(e));
 $('#grade').addEventListener('focusin', e => levelPreview(e));
 $('#grade').addEventListener('mouseout', e => levelPreview(e, true));
@@ -18666,15 +18889,18 @@ function lfCheck() { if (batch && listFilterOf !== batch) { listFilterOf = batch
 const lfMatch = st => LIST_FILTERS.find(f => f[0] === listFilter)[2](st);
 const lfShows = i => listFilter === 'all' || i === cur || lfMatch(batch.students[i]);
 function navOrder() { lfCheck(); return (anonOn() ? anonOrder() : batch.students.map((_, i) => i)).filter(lfShows); }
+const LF_ICON = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4"/></svg>';
 function lfChips() {
   lfCheck();
-  const todoName = fmNow() ? 'To finish' : 'To score';
-  return '<div class="lfilt" role="group" aria-label="Show in the list">' + LIST_FILTERS.map(([k, label, fn, tip]) => {
+  const todoName = fmNow() ? 'To finish' : 'To score', name = k => k === 'todo' ? todoName : LIST_FILTERS.find(f => f[0] === k)[1];
+  const items = LIST_FILTERS.map(([k, label, fn, tip]) => {
     const n = batch.students.filter(fn).length, id = k === 'todo' ? ' id="pLeft"' : k === 'out' ? ' id="pOut"' : '';
     const quiet = n === 0 && listFilter !== k && k !== 'all' && k !== 'todo' && k !== 'flag';   // No paper, Late and Left out show only when there are some
-    return '<button class="lf" data-lf="' + k + '"' + id + ' aria-pressed="' + (listFilter === k) + '" title="' + tip + '"' + (quiet ? ' hidden' : '') + '>' + (k === 'todo' ? todoName : label) + ' <span class="v">' + n + '</span></button>';
-  }).join('') + '</div>';
+    return '<button class="mitem lf" data-lf="' + k + '"' + id + ' aria-pressed="' + (listFilter === k) + '" title="' + tip + '"' + (quiet ? ' hidden' : '') + '>' + name(k) + ' <span class="v">' + n + '</span></button>';
+  }).join('');
+  return '<div class="lfilt" role="group" aria-label="Show in the list">' + kmWrap(LF_ICON + '<span class="t">' + name(listFilter) + '</span>', 'class="lfnow' + (listFilter === 'all' ? '' : ' on') + '" id="lfBtn" aria-label="Show in the list: ' + name(listFilter) + '" title="Which papers the list shows: ' + name(listFilter) + '. Previous and Next follow it."', items, 'right') + '</div>';
 }
+function lfDraw() { const el = $('#lfSlot'); if (el && batch) el.innerHTML = lfChips(); }
 function lfSet(k) {
   lfCheck();
   listFilter = LIST_FILTERS.some(f => f[0] === k) ? k : 'all';
@@ -18711,7 +18937,7 @@ function cmtClick(e) {
   }
   return false;
 }
-Object.assign(window.__gs, { flagsOf, lfSet, navOrder, kmClose });
+Object.assign(window.__gs, { flagsOf, lfSet, navOrder, kmClose, setList, listPeek, scoreRow: () => rowOn });
 
 /* ---------------- today's classes on Home: a one-way read of the Planner's timetable ---------------- */
 let plan = null;   // { classes, daysOff, lessons } or null when there is no timetable

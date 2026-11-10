@@ -45,7 +45,7 @@ body{padding-bottom:var(--savebar,0px)}.app{height:calc(100vh - var(--savebar,0p
 .keys h4{grid-column:1/-1;margin:10px 0 0;font-size:var(--text-small);text-transform:uppercase;letter-spacing:.05em;color:var(--faint)}
 .keys kbd{font:600 12px var(--f-body);border:1px solid var(--line-strong);border-bottom-width:2px;border-radius:var(--corner-1);padding:1px 6px;background:var(--surface);white-space:nowrap}
 #backupInfo.due{color:var(--warn);font-weight:600}
-.cols{display:grid;grid-template-columns:calc(232px * var(--uz)) minmax(0,1fr) calc(310px * var(--uz));min-height:0}
+.cols{--lw:64px;--rw:276px;display:grid;grid-template-columns:calc(var(--lw) * var(--uz)) minmax(0,1fr) calc(var(--rw) * var(--uz));min-height:0}
 
 .side{border-right:1px solid var(--line);background:var(--bg);overflow:auto;padding:14px 10px 10px;zoom:var(--uz)}
 .side .hd{font-size:var(--text-small);font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:.05em;margin:6px 8px 8px}
@@ -160,7 +160,7 @@ body{padding-bottom:var(--savebar,0px)}.app{height:calc(100vh - var(--savebar,0p
 .scores button.half{font-weight:500;color:var(--muted);font-size:var(--text-small)}
 .scores button[aria-pressed=true]{background:var(--accent);border-color:var(--accent);color:var(--accent-fg);box-shadow:0 0 0 3px var(--accent-soft)}
 .total{padding:4px 2px;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
-.total b{font-family:var(--f-display);font-size:34px;font-weight:700;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.total b{font-family:var(--f-display);font-size:var(--text-display);font-weight:700;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
 .total span{color:var(--muted);font-weight:500}
 .total span.pc{color:var(--accent);font-size:var(--text-heading);font-weight:600;margin-left:auto}
 .pts{display:flex;align-items:center;gap:8px}
@@ -323,19 +323,16 @@ body{padding-bottom:var(--savebar,0px)}.app{height:calc(100vh - var(--savebar,0p
 .anonhide *{color:#111 !important;background:#111 !important}
 /* collapsible side panels */
 .cols{position:relative}
-.cols.noL{grid-template-columns:30px minmax(0,1fr) calc(310px * var(--uz))}
-.cols.noR{grid-template-columns:calc(232px * var(--uz)) minmax(0,1fr) 30px}
-.cols.noL.noR{grid-template-columns:30px minmax(0,1fr) 30px}
-.cols.noL .side,.cols.noR .grade{visibility:hidden;padding:0;overflow:hidden}
+.cols.noR{grid-template-columns:calc(var(--lw) * var(--uz)) minmax(0,1fr) 30px}
+.cols.noR .grade{visibility:hidden;padding:0;overflow:hidden}
 .pbtn{position:absolute;top:10px;z-index:6;min-width:22px;height:22px;border-radius:var(--corner-pill);border:1px solid var(--line-strong);background:var(--surface);color:var(--muted);font-size:var(--text-body);line-height:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:0 5px;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.08)}
 .pbtn:hover{color:var(--accent);border-color:var(--accent)}
 .pbtn .pl{display:none;font-size:var(--text-small);font-weight:600;letter-spacing:.03em}
-#colL{left:calc(232px * var(--uz) - 11px)}
-#colR{right:calc(310px * var(--uz) - 11px)}
-.cols.noL #colL,.cols.noR #colR{height:auto;padding:8px 0;width:22px;writing-mode:vertical-rl;color:var(--accent)}
-.cols.noL #colL{left:4px}
+#colL{left:calc(var(--lw) * var(--uz) - 11px)}
+#colR{right:calc(var(--rw) * var(--uz) - 11px)}
+.cols.noR #colR{height:auto;padding:8px 0;width:22px;writing-mode:vertical-rl;color:var(--accent)}
 .cols.noR #colR{right:4px}
-.cols.noL #colL .pl,.cols.noR #colR .pl{display:inline}
+.cols.noR #colR .pl{display:inline}
 .dlg .bf{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;padding:12px 18px;border-top:1px solid var(--line)}
 table.gl{border-collapse:collapse;width:100%;font-size:var(--text-body)}
 .gl th{text-align:left;font-size:var(--text-small);color:var(--faint);text-transform:uppercase;letter-spacing:.04em;padding:6px 8px;border-bottom:1px solid var(--line);position:sticky;top:-16px;background:var(--surface)}
@@ -515,7 +512,7 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
 .xopts .xhint{margin:-4px 0 8px 32px;color:var(--muted);font-size:var(--text-control)}
 .xp .xfoot{color:var(--muted);font-size:12.5px;margin:12px 0 0}
 .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);pointer-events:none;background:var(--fg);color:var(--surface);padding:10px 16px;border-radius:var(--corner-3);font-weight:600;font-size:var(--text-body);box-shadow:var(--shadow);z-index:40;max-width:calc(100vw - 32px)}
-@media (max-width:1100px){.cols{grid-template-columns:calc(190px * var(--uz)) minmax(0,1fr) calc(260px * var(--uz))}.tool .lb{display:none}}
+@media (max-width:1100px){.tool .lb{display:none}}
 @media (max-width:760px){.cols{grid-template-columns:1fr}.side{max-height:160px;border-right:0;border-bottom:1px solid var(--line)}.grade{border-left:0;border-top:1px solid var(--line)}.app{height:auto;min-height:100vh}.top{flex-wrap:wrap}}
 /*@@POLISHCSS@@*/
 /*@@RUBRICSCSS@@*/
@@ -683,13 +680,14 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
     <button class="icon" id="closeBtn" title="Close this assignment and go Home" aria-label="Close this assignment and go Home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
   </div>
   <div class="cols" id="cols">
-    <button class="pbtn" id="colL" title="Hide the student list ( [ )" aria-label="Hide the student list"><span class="pa">‹</span><span class="pl">Students</span></button>
+    <button class="pbtn" id="colL" title="Keep the student list open ( [ )" aria-label="Keep the student list open" aria-pressed="false"><span class="pa">›</span></button>
     <button class="pbtn" id="colR" title="Hide the score panel ( ] )" aria-label="Hide the score panel"><span class="pa">›</span><span class="pl">Score</span></button>
-    <nav class="side"><div class="prog-s" id="progS"></div><input type="search" id="stuFind" class="stufind" placeholder="Find a student  ( / )" aria-label="Find a student" autocomplete="off"><div class="hd" id="sideHd">Students, in folder order</div><div id="stuList"></div><div class="sfoot" id="sideFoot"></div></nav>
+    <nav class="side" id="side" aria-label="Students"><div class="prog-s" id="progS"></div><div class="lbar"><label class="sfind" title="Find a student ( / )"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg><input type="search" id="stuFind" class="stufind" placeholder="Find  ( / )" aria-label="Find a student" autocomplete="off"></label><span id="lfSlot"></span></div><div id="stuList"></div><div class="hd" id="sideHd">Students, in folder order</div><div class="sfoot" id="sideFoot"></div></nav>
     <section class="main" style="position:relative">
       <div class="tools" id="tools"></div>
-      <div id="openRep" hidden role="status" style="position:absolute;left:16px;right:28px;bottom:12px;z-index:5;align-items:center;gap:10px;padding:8px 12px;border-radius:10px;background:var(--surface);border:1px solid var(--warn);box-shadow:var(--shadow);font-size:14px"></div>
+      <div id="openRep" hidden role="status" style="position:absolute;left:16px;right:28px;bottom:12px;z-index:4;align-items:center;gap:10px;padding:8px 12px;border-radius:10px;background:var(--surface);border:1px solid var(--warn);box-shadow:var(--shadow);font-size:14px"></div>
       <div class="paper" id="paper"></div>
+      <div class="zoompill" id="zoomPill"></div>
     </section>
     <aside class="grade" id="grade"></aside>
   </div>

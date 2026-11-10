@@ -41,8 +41,9 @@ after(async () => { await browser.close(); });
 
 const marks = (page, k = 0) => page.evaluate(k => JSON.parse(JSON.stringify(window.__gs.state().pages[k].marks())), k);
 const linesReady = (page, k = 0) => page.waitForFunction(k => { const p = window.__gs.state().pages[k]; return p && p.bmp && p.tl; }, {}, k);
-// The pixel checks here were written for the page as wide as it was before the tool dock took 62 px beside the paper, so the window is that much wider.
-async function open(page) { const v = page.viewport(); await page.setViewport({ width: v.width + 62, height: v.height }); await openZip(page, zip, 'Marking.zip'); await linesReady(page, 0); await linesReady(page, 1); }
+// The pixel checks here were written for the page at the size it had before the marking screen put the paper first (it is now a good
+// deal larger in the same window), so the window is made 137 px narrower: the page then draws at the size the checks expect.
+async function open(page) { const v = page.viewport(); await page.setViewport({ width: v.width - 137, height: v.height }); await openZip(page, zip, 'Marking.zip'); await linesReady(page, 0); await linesReady(page, 1); }
 const near = (a, b, tol, what) => assert.ok(Math.abs(a - b) <= tol, (what || 'value') + ': ' + a + ' is not within ' + tol + ' of ' + b);
 const key = async (page, combo) => { for (const k of combo.slice(0, -1)) await page.keyboard.down(k); await page.keyboard.press(combo[combo.length - 1]); for (const k of combo.slice(0, -1)) await page.keyboard.up(k); };
 

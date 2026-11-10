@@ -34,6 +34,8 @@ async function openApp(browser, { html, platform, seed, server, context, noWait,
   const press = page.click.bind(page);
   page.click = async (...a) => {
     for (let n = 0; ; n++) {
+      // The student list is a narrow strip until she points at it. A press on something in the list points at it first.
+      if (typeof a[0] === 'string') await page.evaluate(sel => { try { const e = document.querySelector(sel), G = window.__gs; if (e && G && G.listPeek && e.closest('#side') && !e.closest('#colL')) G.listPeek(true); } catch (x) {} }, a[0]).catch(() => {});
       try { return await press(...a); }
       catch (e) { if (n >= 4 || !/detached|not clickable|not an Element/i.test(String(e && e.message))) throw e; await new Promise(r => setTimeout(r, 150)); }
     }
@@ -141,7 +143,14 @@ async function goToStudent(page, i) {
 const toScreen = (page, k, x, y) => page.evaluate((k, x, y) => { const pg = window.__gs.state().pages[k], r = pg.canvas.getBoundingClientRect(); return { x: r.left + x * pg.s, y: r.top + y * pg.s }; }, k, x, y);
 async function at(page, k, x, y) {
   // A scroll's event comes a frame later. Clicking before it lands would let it close a menu the click just opened, as a real scroll does.
-  await page.evaluate(k => { window.__gs.state().pages[k].canvas.scrollIntoView({ block: 'center' }); return new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r))); }, k);
+  // A page taller than the window has its top or foot out of sight when centred: then the spot itself is brought to the middle.
+  await page.evaluate((k, y) => {
+    const pg = window.__gs.state().pages[k], c = pg.canvas, box = document.querySelector('#paper').getBoundingClientRect();
+    c.scrollIntoView({ block: 'center' });
+    const py = c.getBoundingClientRect().top + y * pg.s;
+    if (py < box.top + 60 || py > box.bottom - 60) document.querySelector('#paper').scrollBy(0, py - (box.top + box.height / 2));
+    return new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+  }, k, y);
   return toScreen(page, k, x, y);
 }
 async function drag(page, k, pts) {

@@ -23,9 +23,18 @@ function levelsHtml(i, v) {
 }
 function levelPreview(e, leaving) {
   const b = e.target.closest('.scores button'); if (!b) return;
-  const i = +b.closest('.scores').dataset.c, el = $('#grade [data-lvline="' + i + '"] .lvtxt');
-  if (el && batch) el.innerHTML = levelHint(i, leaving ? batch.students[cur].grade.rubric[i] : +b.dataset.v);
+  const i = +b.closest('.scores').dataset.c;
+  if (!batch || !rowHasLevels(i) || levelsOpen.has(i)) return;
+  if (leaving) lvDraw(); else { const box = $('#lvBox'); if (box) box.innerHTML = lvInner(i, +b.dataset.v); }
 }
+// Under the rows, in one place so the rows never move: what the score means on the row in hand, or on the one under the pointer.
+let lvAt = 0;
+function lvInner(i, v) {
+  if (!(i >= 0) || i >= setup.criteria.length) i = setup.criteria.findIndex((_, k) => rowHasLevels(k));
+  return '<div class="lvname">' + esc(setup.criteria[i]) + '</div>' + (rowHasLevels(i) ? levelsHtml(i, v === undefined ? batch.students[cur].grade.rubric[i] : v) : '<div class="lvrow"><div class="lvtxt"><span class="muted">Nothing written for this row yet. Edit rubric adds it.</span></div></div>');
+}
+const lvBox = () => setup.criteria.some((_, i) => rowHasLevels(i)) ? '<div id="lvBox">' + lvInner(rowOn >= 0 ? rowOn : lvAt) + '</div>' : '';
+function lvDraw(i, v) { const box = $('#lvBox'); if (!box || !batch) return; if (i == null) i = rowOn >= 0 ? rowOn : lvAt; else if (v === undefined) lvAt = i; box.innerHTML = lvInner(i, v); }
 $('#grade').addEventListener('mouseover', e => levelPreview(e));
 $('#grade').addEventListener('focusin', e => levelPreview(e));
 $('#grade').addEventListener('mouseout', e => levelPreview(e, true));

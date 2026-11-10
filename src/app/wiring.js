@@ -104,18 +104,50 @@ $('#dispBtn').onclick = openDisplay;
 $('#mkeyBtn').onclick = () => openMarkKey();
 $('#setMkey').onclick = () => openMarkKey();
 $('#impBtn').onclick = () => openImported();
-// Side panels fold away to give the paper more room; remembered in this browser. [ and ] also fold them.
+// The score panel folds away to give the paper more room; remembered in this browser. ] also folds it.
+// (L is from when the student list folded away too. It is kept as it was saved and no longer read: the list is a strip now.)
 function setPanels(L, R) {
-  const c = $('#cols'); c.classList.toggle('noL', !!L); c.classList.toggle('noR', !!R);
-  $('#colL').querySelector('.pa').textContent = L ? '›' : '‹'; $('#colR').querySelector('.pa').textContent = R ? '‹' : '›';
-  $('#colL').title = L ? 'Show the student list ( [ )' : 'Hide the student list ( [ )'; $('#colR').title = R ? 'Show the score panel ( ] )' : 'Hide the score panel ( ] )';
+  const c = $('#cols'); c.classList.toggle('noR', !!R);
+  $('#colR').querySelector('.pa').textContent = R ? '‹' : '›';
+  $('#colR').title = R ? 'Show the score panel ( ] )' : 'Hide the score panel ( ] )';
   store.set('gs.panels', { L: !!L, R: !!R });
   clearTimeout(resizeT); resizeT = setTimeout(() => pages.forEach(renderPage), 60);
 }
-const panelsNow = () => ({ L: $('#cols').classList.contains('noL'), R: $('#cols').classList.contains('noR') });
-$('#colL').onclick = () => { const p = panelsNow(); setPanels(!p.L, p.R); };
+const panelsNow = () => ({ L: !!store.get('gs.panels', {}).L, R: $('#cols').classList.contains('noR') });
 $('#colR').onclick = () => { const p = panelsNow(); setPanels(p.L, !p.R); };
 { const p = store.get('gs.panels', {}); setPanels(p.L, p.R); }
+
+/* ---------------- the student list: a strip beside the paper, the whole list when it's wanted ---------------- */
+// Folded, it is a narrow strip of numbers and scores and the paper has the room. Pointing at it (or / to find someone) opens the whole
+// list over the paper's edge, and it folds again when the pointer leaves. [ or the arrow at its edge keeps it open beside the paper.
+// Only "kept open" is remembered (gs.listOpen), and only once she chooses it.
+let listOpen = !!store.get('gs.listOpen', false), peekT = null;
+function listDraw() {
+  const c = $('#cols'), b = $('#colL'); c.classList.toggle('open', listOpen); if (listOpen) c.classList.remove('peek');
+  b.querySelector('.pa').textContent = listOpen ? '‹' : '›'; b.setAttribute('aria-pressed', String(listOpen));
+  b.title = (listOpen ? 'Fold the student list to a strip' : 'Keep the student list open') + ' ( [ )'; b.setAttribute('aria-label', listOpen ? 'Fold the student list to a strip' : 'Keep the student list open');
+}
+function setList(open) {
+  listOpen = !!open; store.set('gs.listOpen', listOpen); clearTimeout(peekT); listDraw(); listToCur();
+  clearTimeout(resizeT); resizeT = setTimeout(() => pages.forEach(renderPage), 60);
+}
+const peekHeld = () => document.activeElement === $('#stuFind') || !!$('#side [data-km][aria-expanded=true]') || $('#side').matches(':hover') || $('#colL').matches(':hover');
+function listPeek(on, wait) {
+  clearTimeout(peekT); if (listOpen) return;
+  const go = () => { if (!on && peekHeld()) return; const c = $('#cols'); if (c.classList.contains('peek') === on) return; c.classList.toggle('peek', on); if (!on && document.activeElement && $('#side').contains(document.activeElement) && !document.activeElement.classList.contains('stu')) document.activeElement.blur(); listToCur(); };
+  if (wait) peekT = setTimeout(go, wait); else go();
+}
+for (const el of [$('#side'), $('#colL')]) {
+  el.addEventListener('mouseenter', () => listPeek(true, 160));
+  el.addEventListener('mouseleave', () => listPeek(false, 280));
+}
+$('#side').addEventListener('focusout', () => listPeek(false, 200));
+$('#side').addEventListener('dragenter', () => listPeek(true));   // a file dragged to the strip: the names open so it can be dropped on one
+// A click on the strip's own tools (find, the filter) opens the list first, so they have room.
+$('#side').addEventListener('pointerdown', e => { if (!listOpen && e.target.closest('.lbar')) listPeek(true); }, true);
+$('#stuFind').addEventListener('focus', () => listPeek(true));
+$('#colL').onclick = () => setList(!listOpen);
+listDraw();
 $('#lightBtn').onclick = openLight;
 $('#rescanBtn').onclick = openRescans;
 $('#calcBtn').onclick = openCalc;
@@ -158,6 +190,9 @@ document.addEventListener('keydown', e => {
     if (key === 'v' && markClip) { e.preventDefault(); pasteMark(); return; }
     if (key === 'd' && selected) { e.preventDefault(); copyMark(true); pasteMark(); return; }
   }
+  // Scoring from the keyboard: a number for the row in hand, Enter for the next student. These work from a rubric slider too.
+  const onRange = !!(document.activeElement && document.activeElement.classList && document.activeElement.classList.contains('srange'));
+  if (!e.metaKey && !e.ctrlKey && !e.altKey && (!typing || onRange) && !/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName === 'INPUT' && e.target.type === 'range' ? '' : e.target.tagName) && scoreKey(e, onRange)) return;
   if (typing || e.metaKey || e.ctrlKey || e.altKey) return;
   if (e.key === 'Escape' && once) { e.preventDefault(); endOnce(); return; }
   if (e.key === '?') { e.preventDefault(); openKeys(); return; }
@@ -187,7 +222,7 @@ document.addEventListener('keydown', e => {
   // With the calculator open, numbers and + − × ÷ ( ) go straight into it, even after a click on the paper.
   // ( / still finds a student, and − with a picked mark still makes it smaller, above.)
   if ($('#calcPanel') && e.key !== '/' && !(e.key === 'x' || e.key === 'X')) { const k = calcKeyOf(e); if (k && k !== 'Escape' && (k !== '=' || e.code === 'Equal' || e.code === 'NumpadEqual')) { e.preventDefault(); $('#calcPanel').typeIn(k); return; } }
-  if (e.key === '[' && !e.metaKey && !e.ctrlKey) { e.preventDefault(); const p = panelsNow(); return setPanels(!p.L, p.R); }
+  if (e.key === '[' && !e.metaKey && !e.ctrlKey) { e.preventDefault(); return setList(!listOpen); }
   if (e.key === ']' && !e.metaKey && !e.ctrlKey) { e.preventDefault(); const p = panelsNow(); return setPanels(p.L, !p.R); }
   if (e.key === 'ArrowRight' || e.key === 'ArrowDown') { e.preventDefault(); stepStudent(1); }
   if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); stepStudent(-1); }
