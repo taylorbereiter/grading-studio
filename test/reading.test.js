@@ -315,8 +315,8 @@ test('editing the box to another grade follows it, and the Grades list waits for
   assert.match(await page.$eval('table.gl', e => e.textContent), /10 \(paper\)/);
   await shut(page);
   // edit it the way she does: the first click picks a box she's just finished, clicking what's picked opens it, then change the words and leave
-  await clickAt(page, 0, 105, 508);
-  await clickAt(page, 0, 105, 508);
+  await clickAt(page, 0, 120, 508);   // on the words: the first few pixels inside a picked box's edge belong to its grip
+  await clickAt(page, 0, 120, 508);
   await page.waitForSelector('textarea.ed');
   await page.$eval('textarea.ed', e => { e.value = 'Total 9/12'; e.dispatchEvent(new Event('input', { bubbles: true })); });
   await page.keyboard.press('Escape');

@@ -209,6 +209,13 @@ const workOf = page => page.evaluate(() => {
 // What used to be under More (Lighting, Share with Claude, Mark key, the Gradebook box…) is pressed from Find anything now, which clicks
 // the button it always was. This is that click.
 const press = (page, sel) => page.$eval(sel, b => b.click());
+// Clicks something that lives in one of the small menus on the marking screen (+ Add, the ⋯ on a file or beside the student's name,
+// the ⋯ beside Missing, Excused, Late): opens its menu first, as she would, then clicks it.
+async function pick(page, sel) {
+  await page.waitForSelector(sel);
+  await page.evaluate(sel => { const m = document.querySelector(sel).closest('.km'); if (m && m.hidden) m.previousElementSibling.click(); }, sel);
+  await page.click(sel);
+}
 // Closes what is open: a box by its ✕ or its Close button, a tab's screen (Grades, Insights, Return; it has neither) by going back to the papers.
 const closeBox = (page, sel = '#dlgBox [data-close]') => page.evaluate(sel => {
   const d = document.querySelector('#dlg'), G = window.__gs, b = G.state().batch; if (d.hidden) return;
@@ -227,4 +234,4 @@ async function menuPick(page, sel) {
   await page.waitForSelector('.stampmenu [data-fly="' + where + '"]:not([hidden])');
   await page.click('.stampmenu [data-fly="' + where + '"] ' + sel);
 }
-module.exports = { goTo, openClass, classPage, menuPick, press, closeBox, MARK_BOXES, ROOT, BUILT, builtHtml, tmpDir, openApp, answerDlg, appReady, plant, idbRead, pickFile, openZip, waitPaper, goToStudent, at, drag, clickAt, setTool, score, markPage, settle, catchDownloads, probePdf, probeScreen, workOf };
+module.exports = { goTo, openClass, classPage, menuPick, press, pick, closeBox, MARK_BOXES, ROOT, BUILT, builtHtml, tmpDir, openApp, answerDlg, appReady, plant, idbRead, pickFile, openZip, waitPaper, goToStudent, at, drag, clickAt, setTool, score, markPage, settle, catchDownloads, probePdf, probeScreen, workOf };

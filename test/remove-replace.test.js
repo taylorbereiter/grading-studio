@@ -3,7 +3,7 @@ const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const { unzipSync } = require('fflate');
 const { launch } = require('./helpers/chrome');
-const { openApp, openZip, waitPaper, goToStudent, markPage, answerDlg, settle, catchDownloads, closeBox } = require('./helpers/app');
+const { openApp, openZip, waitPaper, goToStudent, markPage, answerDlg, settle, catchDownloads, closeBox, pick } = require('./helpers/app');
 const { standardFiles, makePaper, zipOf } = require('./helpers/fixtures');
 
 let browser, zip, retake;
@@ -13,7 +13,7 @@ after(async () => { await browser.close(); });
 const ESSAY = 'Bram Sample/Essay.pdf', NOTES = 'Bram Sample/Extra notes.pdf';
 const bram = page => page.evaluate(() => { const st = window.__gs.state().batch.students.find(s => s.key === 'Bram Sample'); const n = f => Object.values(f.marks).reduce((a, m) => a + m.length, 0); return { files: st.files.map(f => f.path), gone: (st.gone || []).map(f => [f.path, n(f)]) }; });
 const goneSays = (page, rx) => page.waitForFunction(src => { const e = document.querySelector('.gonelist'); return e && new RegExp(src, 's').test(e.textContent); }, { timeout: 15000 }, rx.source);
-const twoClicks = async (page, sel) => { await page.waitForSelector(sel); await page.click(sel); await page.waitForFunction(s => document.querySelector(s).dataset.armed, {}, sel); await page.click(sel); };
+const twoClicks = async (page, sel) => { await pick(page, sel); await page.waitForFunction(s => document.querySelector(s).dataset.armed, {}, sel); await page.click(sel); };
 
 test('Remove, Undo, Bring back and Replace on downloaded files, kept after reopening and left out of the export', async () => {
   const { page, close } = await openApp(browser);
@@ -119,7 +119,7 @@ test('single pages: × takes one out (the rubric page too), Undo and Bring back 
   await goneSays(page, /Removed pages.*Essay\.pdf, page 2/);
   await settle(page);
   // Arrange pages starts with it in the tray.
-  await page.click('#arrangeBtn');
+  await pick(page, '#arrangeBtn');
   await page.waitForSelector('.ath[data-where="tray"]');
   assert.equal((await page.$$('.ath[data-where="tray"]')).length, 1);
   await page.keyboard.press('Escape');

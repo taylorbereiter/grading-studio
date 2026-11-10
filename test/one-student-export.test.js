@@ -31,7 +31,8 @@ test('Export one student: just their marked file, named for them, and a sent tag
 
   // Dov has nothing marked: nothing downloads, and she's told why.
   await goToStudent(page, 3);
-  assert.match(await say(page), /Just their marked file/);
+  assert.equal(await say(page), '', 'nothing said until one has gone out');
+  assert.match(await page.$eval('#oneOutBtn', e => e.title), /just this student’s marked file/);
   await page.click('#oneOutBtn');
   await page.waitForFunction(() => /Nothing on .* is marked yet/.test(document.body.textContent), { timeout: 60000 });
   assert.equal(await page.$$eval('#stuList .stu .sent', els => els.length), 1);

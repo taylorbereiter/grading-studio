@@ -159,9 +159,7 @@ button.nrow:hover,a.nrow:hover{background:var(--hover)}
 /* Home: the open box sits under the work in a narrower column now, so its buttons go below its words */
 .hmain .today:not([hidden])~.drop{grid-template-columns:minmax(0,1fr)}
 .hmain .today:not([hidden])~.drop .row{grid-column:1;grid-row:auto;justify-content:flex-start;margin-top:8px}
-/* The folded sidebar takes 60px beside the paper. On a small laptop the tools still fit on one row: a little less padding, slightly narrower side columns. */
+/* The folded sidebar takes 60px beside the paper. On a small laptop the side columns are slightly narrower. */
 @media (min-width:1101px) and (max-width:1340px){
   .shell.grading .cols{grid-template-columns:calc(220px * var(--uz)) minmax(0,1fr) calc(296px * var(--uz))}
-  .shell.grading .tool{padding:7px 5px}
-  .shell.grading .tools{gap:1px}
 }

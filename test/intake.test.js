@@ -4,7 +4,7 @@ const assert = require('node:assert/strict');
 const fs = require('fs'), path = require('path');
 const { unzipSync, strToU8 } = require('fflate');
 const { launch } = require('./helpers/chrome');
-const { builtHtml, openApp, openZip, waitPaper, goToStudent, setTool, drag, settle, catchDownloads, probePdf, answerDlg, closeBox } = require('./helpers/app');
+const { builtHtml, openApp, openZip, waitPaper, goToStudent, setTool, drag, settle, catchDownloads, probePdf, answerDlg, closeBox, pick } = require('./helpers/app');
 const { makePaper, makeDocx, zipOf } = require('./helpers/fixtures');
 
 const FX = n => new Uint8Array(fs.readFileSync(path.join(__dirname, 'fixtures', 'intake', n)));
@@ -309,7 +309,7 @@ test('A page she took out of an iPhone photo or a misnamed picture stays out aft
   for (const i of [0, 1]) {
     await goToStudent(page, i);
     await page.waitForFunction(() => window.__gs.state().pages.length === 2 && window.__gs.state().pages[1].s > 0, { timeout: 20000 });
-    await page.click('#arrangeBtn');
+    await pick(page, '#arrangeBtn');
     await page.waitForSelector('#dlgBox [data-save]');
     await page.waitForFunction(() => document.querySelectorAll('#dlgBox .ath [data-rm]').length === 2, { timeout: 20000 });
     await page.evaluate(() => { const r = [...document.querySelectorAll('#dlgBox .ath [data-rm]')]; r[r.length - 1].click(); });
@@ -609,7 +609,7 @@ test('Mark late on a file she added: offered, not assumed', async () => {
   await goToStudent(page, 1);
   const f = tmpPick('late page.pdf', await makePaper({ title: 'Late page' }));
   await page.evaluate(() => { window.__pick = HTMLInputElement.prototype.click; HTMLInputElement.prototype.click = function () { if (this.type === 'file') { this.id = 'pickHere'; document.body.appendChild(this); return; } return window.__pick.call(this); }; });
-  await page.click('#addFileBtn');
+  await pick(page, '#addFileBtn');
   await page.waitForSelector('#pickHere');
   await (await page.$('#pickHere')).uploadFile(f);
   await page.waitForSelector('#paper [data-marklate]', { timeout: 20000 });
