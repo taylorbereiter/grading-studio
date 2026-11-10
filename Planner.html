@@ -4657,9 +4657,10 @@ function railRender() {
   $('#railTimetable').querySelector('.rl').textContent = classes.length ? 'Timetable' : 'Set up your timetable';
   const el = $('#railSaved'), can = 'showDirectoryPicker' in window;
   const where = L.dir && L.dirOk ? 'This browser and your Planner folder' : L.dir ? 'This browser. The Planner folder needs reconnecting' : 'This browser';
-  const tip = L.dir && L.dirOk ? 'Lessons are kept in this browser and in your Planner folder (' + L.dir.name + '). Click to look for lessons added or changed there.' : L.dir ? 'Click to reconnect your Planner folder.' : can ? 'Lessons are kept in this browser. Click to link a Planner folder as a second copy.' : 'Lessons are kept in this browser. A Planner folder needs Chrome.';
-  const s = '<span class="rdot"></span><span class="rl"><b>Saved</b>' + esc(where) + '</span>';
-  el.className = 'rsaved' + (L.dir && !L.dirOk ? ' warn' : ''); el.title = 'Saved. ' + tip; el.disabled = !can;
+  const tip = L.dir && L.dirOk ? 'Lessons are kept in this browser and in your Planner folder (' + L.dir.name + '). Click to look for lessons added or changed there.' : L.dir ? 'Click to reconnect your Planner folder.' : can ? 'Lessons are kept only in this browser. Click to choose a Planner folder as a second copy.' : 'Lessons are kept only in this browser. A Planner folder needs Chrome or Edge on a computer.';
+  const safe = !!(L.dir && L.dirOk), head = safe ? 'Saved' : 'Not backed up';
+  const s = '<span class="rdot"></span><span class="rl"><b>' + head + '</b>' + esc(where) + '</span>';
+  el.className = 'rsaved' + (safe ? '' : ' warn'); el.title = head + '. ' + tip; el.disabled = !can;
   if (el.dataset.h !== s) { el.dataset.h = s; el.innerHTML = s; }
   document.body.classList.toggle('pfold', L.view === 'edit' || L.view === 'doc' || L.view === 'unit');
   if (L.view === 'week' || L.view === 'semester') calView = L.view;

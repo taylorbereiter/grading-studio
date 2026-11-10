@@ -6,11 +6,13 @@ const setHash = k => '#/settings' + (k && k !== 'saving' ? '/' + k : '');
 function setRender() {
   if (!shellReady) return;
   const r = routeNow(); if (r.v !== 'settings' || batch) { setSecWas = ''; return; }
-  if (r.sec !== setSecWas) { setSecWas = r.sec; if (r.sec === 'grading') setBankCount(); if (r.sec === 'timetable') planRefresh(); }
+  if (r.sec !== setSecWas) { setSecWas = r.sec; if (r.sec === 'grading') setBankCount(); if (r.sec === 'timetable') planRefresh(); if (r.sec === 'history') gbOpen(); }
   const nav = SET_SECS.map(([k, t, s]) => '<a class="setlink' + (k === r.sec ? ' on' : '') + '" href="' + setHash(k) + '" data-set="' + k + '"' + (k === r.sec ? ' aria-current="page"' : '') + '><b>' + t + '</b><span>' + s + '</span></a>').join('');
   const box = $('#setNav'); if (box.dataset.h !== nav) { box.dataset.h = nav; box.innerHTML = nav; }
   for (const el of document.querySelectorAll('#setPane [data-sec]')) el.hidden = el.dataset.sec !== r.sec;
   const put = (id, h) => { const el = $(id); if (el.dataset.h !== h) { el.dataset.h = h; el.innerHTML = h; } };
+  if (r.sec === 'history') gbRender();
+  if (r.sec === 'about') updRender();
   if (r.sec === 'classes') {
     const row = (c, ci) => '<div class="setrow"><span class="rdot" style="background:' + classColor(c) + '"></span><span class="nt"><b>' + esc(c.name) + '</b><span class="ns">' + (c.names.length ? c.names.length + (c.names.length === 1 ? ' student' : ' students') : 'No roster yet') + ' · ' + (mbOf(c) ? 'ManageBac link saved' : 'No ManageBac link') + '</span></span>' +
       '<a class="btn sm" href="' + classHash(c) + '">Open</a><button class="btn sm" data-setcls="' + ci + '">Name and roster</button><button class="btn sm" data-setmb="' + ci + '">ManageBac link</button></div>';

@@ -29,6 +29,15 @@ const folderList = (page, ...parts) => page.evaluate(async parts => {
   const out = []; for await (const [n] of d.entries()) out.push(n);
   return out.sort();
 }, parts);
+// Go back in time (Settings): opens the dated copy called name and presses "Restore everything from this copy". The app then asks, and reloads.
+async function goBackAll(page, name) {
+  await goTo(page, '#/settings/history');
+  const sel = '[data-hlook="f:' + name + '"]';
+  await page.waitForSelector(sel, { timeout: 30000 });
+  await page.$eval(sel, b => b.click());
+  await page.waitForSelector('#setHistory [data-hall]', { timeout: 30000 });
+  await page.$eval('#setHistory [data-hall]', b => b.click());
+}
 // Empties the browser's own storage, and leaves the private file system (the folder) alone.
 async function wipeBrowser(page, srv) {
   await page.goto(srv.url + 'blank');
@@ -87,4 +96,4 @@ async function openZipBackup(page, bytes) {
   clean();
   return page.$eval('#bringBox', e => e.innerText);
 }
-module.exports = { linkFolder, folderWait, folderInfo, folderRead, folderWrite, folderList, wipeBrowser, takeHome, openFile, bringIt, openZipBackup };
+module.exports = { goBackAll, linkFolder, folderWait, folderInfo, folderRead, folderWrite, folderList, wipeBrowser, takeHome, openFile, bringIt, openZipBackup };

@@ -11,7 +11,7 @@
 // if it's still there. Browsers put a whole file in place only when it's closed, and a bad bytes file is caught by its size and hash when it's read back.
 // Any FileSystemDirectoryHandle will do, so tests hand it one from the browser's private file system.
 const FOLDER_SUB = 'Grading Studio', FOLDER_RETRY = 20000;
-const fld = { picked: null, root: null, name: '', state: 'none', why: '', at: 0, prog: '', work: new Map(), lib: false, gone: new Set(), run: null, sync: null, again: false, seen: new Map(), info: new Map(), hold: {}, holdSet: {}, holdLib: {}, asks: [], answers: {}, day: '', timer: null, have: null };
+const fld = { picked: null, root: null, name: '', state: 'none', why: '', at: 0, prog: '', work: new Map(), lib: false, gone: new Set(), run: null, sync: null, again: false, booted: false, seen: new Map(), info: new Map(), hold: {}, holdSet: {}, holdLib: {}, asks: [], answers: {}, day: '', timer: null, have: null };
 
 /* who's saving */
 function devId() {
@@ -504,17 +504,17 @@ function openFolderAsks() {
 const folderKv = () => new Promise((res, rej) => { const r = indexedDB.open('grading-studio-folder', 1); r.onupgradeneeded = () => r.result.createObjectStore('kv'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
 async function kvDo(mode, fn) { const db = await folderKv(); try { return await new Promise((res, rej) => { const tx = db.transaction('kv', mode), q = fn(tx.objectStore('kv')); tx.oncomplete = () => res(q.result); tx.onerror = () => rej(tx.error); }); } finally { db.close(); } }
 async function folderUse(h) {
-  fld.picked = h; fld.name = h.name; fld.state = 'saving'; fld.info.clear(); fld.seen.clear();
+  fld.booted = true; fld.picked = h; fld.name = h.name; fld.state = 'saving'; fld.info.clear(); fld.seen.clear();
   await kvDo('readwrite', o => o.put(h, 'dir'));
   return folderResume(false);
 }
 async function folderPick() {
-  if (!('showDirectoryPicker' in window)) return sayDlg('Linking a folder needs Chrome on a computer. Your work is still kept in this browser.');
+  if (!canPickFolder()) return sayDlg('Saving to a folder needs Chrome or Edge on a computer. Your work is still kept in this browser.');
   let h;
   try { h = await window.showDirectoryPicker({ id: 'gs-work', mode: 'readwrite', startIn: 'documents' }); }
   catch (e) { if (e && e.name !== 'AbortError') { console.error(e); toast('That folder couldn’t be used. Try another one.'); } return; }
   await folderUse(h);
-  if (fld.state === 'ok' || fld.state === 'decide') toast('Linked. Your work now saves to “' + fld.name + '” as well.', 6000);
+  if (fld.state === 'ok' || fld.state === 'decide') toast('Done. Your work now saves to “' + fld.name + '” as well.', 6000);
 }
 async function folderUnlink() {
   await kvDo('readwrite', o => o.delete('dir')).catch(() => {});
@@ -525,6 +525,7 @@ async function folderUnlink() {
 async function folderBoot() {
   let h = null;
   try { h = await kvDo('readonly', o => o.get('dir')); } catch (e) { console.error(e); }
+  fld.booted = true;   // from here on, no folder means none was chosen, and the app says so
   if (!h) return renderWhere();
   fld.picked = h; fld.name = h.name; fld.state = 'ask';
   await folderResume(false);
@@ -532,15 +533,18 @@ async function folderBoot() {
 
 /* saying where her work is */
 function setWhere(s) { fld.state = s; renderWhere(); }
+const canPickFolder = () => 'showDirectoryPicker' in window;
 function whereSay() {
   const nm = '“' + fld.name + '”', sh = fld.name.length > 24 ? '“' + fld.name.slice(0, 22) + '…”' : nm;   // the top bar has room for only so much, and what to do has to fit
   switch (fld.state) {
-    case 'ok': return { text: 'In this browser and your ' + nm + ' folder', tip: 'Every save goes to both' + (fld.at ? '. Last saved to the folder at ' + new Date(fld.at).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' }) : ''), cls: '' };
-    case 'saving': return { text: 'Saving to your ' + nm + ' folder' + (fld.prog ? ' (' + fld.prog + ')' : '') + '…', tip: 'Your work is already in this browser', cls: '' };
-    case 'ask': return { text: 'Only in this browser. ' + sh + ' needs a click to reconnect', tip: 'Chrome needs your OK to use the folder again. Choose “Allow on every visit” and it won’t ask next time.', cls: 'warn', act: 'Reconnect' };
+    case 'ok': return { safe: true, text: 'In this browser and your ' + nm + ' folder', tip: 'Every save goes to both' + (fld.at ? '. Last saved to the folder at ' + new Date(fld.at).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' }) : ''), cls: '' };
+    case 'saving': return { safe: true, text: 'Saving to your ' + nm + ' folder' + (fld.prog ? ' (' + fld.prog + ')' : '') + '…', tip: 'Your work is already in this browser', cls: '' };
+    case 'ask': return { sub: sh + ' needs a click to reconnect', text: 'Only in this browser. ' + sh + ' needs a click to reconnect', tip: 'Chrome needs your OK to use the folder again. Choose “Allow on every visit” and it won’t ask next time.', cls: 'warn', act: 'Reconnect' };
     case 'lost': return { text: 'Only in this browser. ' + (fld.why === 'full' ? 'The disk with ' + nm + ' is full' : fld.why === 'room' ? 'This browser is out of room, so ' + nm + ' can’t catch up' : 'Can’t reach ' + nm), tip: 'It’ll catch up by itself as soon as the folder is back.', cls: 'warn' };
-    case 'decide': return { text: fld.asks.length + (fld.asks.length === 1 ? ' thing' : ' things') + ' to decide about your folder', tip: 'Two versions to choose between', cls: 'warn', act: 'Decide' };
-    default: return { text: 'Only in this browser', tip: 'Link a folder to keep a second copy on this computer', cls: '' };
+    case 'decide': return { safe: true, text: fld.asks.length + (fld.asks.length === 1 ? ' thing' : ' things') + ' to decide about your folder', tip: 'Two versions to choose between', cls: 'warn', act: 'Decide' };
+    // Until a folder holds a second copy the work is not backed up, and every place that says where it is says so, in amber. Never "Saved" in green.
+    default: return !fld.booted ? { safe: true, text: 'Checking where your work is kept…', tip: 'One moment', cls: '' }
+      : { sub: 'Only in this browser', text: 'Not backed up. Only in this browser', tip: canPickFolder() ? 'Clearing this browser’s data would erase your work. Choose a folder and every save goes there too' : 'Clearing this browser’s data would erase your work. This browser can’t save to a folder, so make a take-home file when you finish marking', cls: 'warn' };
   }
 }
 function renderWhere() {
@@ -551,12 +555,13 @@ function renderWhere() {
   }
   if (top) { top.textContent = s.text; top.title = s.tip; top.className = 'savewhere link' + (s.cls ? ' ' + s.cls : ''); }
   if (line) {
-    const h = '<span class="wtext' + (s.cls ? ' ' + s.cls : '') + '">Your work is saved: ' + esc(s.text.charAt(0).toLowerCase() + s.text.slice(1)) + '.</span> ' +
+    const h = '<span class="wtext' + (s.cls ? ' ' + s.cls : '') + '">' + (fld.state === 'none' && fld.booted ? 'Your work is saved only in this browser, and is not backed up' : 'Your work is saved: ' + esc(s.text.charAt(0).toLowerCase() + s.text.slice(1))) + '.</span> ' +
       (s.act ? '<button class="btn sm primary" data-wact>' + s.act + '</button> ' : '') +
-      (fld.state === 'none' ? (('showDirectoryPicker' in window) ? '<button class="btn sm" data-wlink>Link a folder…</button>' : '') : '<button class="btn sm" data-wopen>Folder…</button>');
+      (fld.state === 'none' ? (canPickFolder() ? '<button class="btn sm primary" data-wlink>Choose a folder…</button>' : '') : '<button class="btn sm" data-wopen>Folder…</button>') +
+      (fld.state !== 'none' && fld.root ? ' <a class="btn sm" href="#/settings/history">Go back in time…</a>' : '');
     if (line.dataset.h !== h) { line.dataset.h = h; line.innerHTML = h; }   // a button shouldn't vanish under her click just because a save went by
   }
-  railSavedRender(); renderNeeds();
+  railSavedRender(); renderNeeds(); safeAskRender();
 }
 function whereAct() { if (fld.state === 'decide') openFolderAsks(); else folderResume(true); }
 document.addEventListener('click', e => {
@@ -572,29 +577,24 @@ async function openWhere() {
   const s = whereSay(), linked = fld.state !== 'none';
   openDlg('<div class="bh"><h2>Where your work is saved</h2><button class="icon" data-close aria-label="Close">✕</button></div><div class="bb" id="whereBox"><p style="margin-top:0">' + esc(s.text) + '. ' + esc(s.tip) + '.</p>' +
     (linked ? '<p class="muted" style="font-size:14px">A copy of your papers, marks, scores, comments, rosters and rubrics is kept here, with no save button to remember' + (fld.root && fld.root.name !== fld.name ? ', in a folder called “' + esc(fld.root.name) + '” inside “' + esc(fld.name) + '”' : '') + '. If this browser is ever cleared, link the folder again and everything comes back.</p>'
-      : '<p class="muted" style="font-size:14px">Pick a folder on this computer once, and every save goes there as well as to this browser. Pick something private: it holds student work. When Chrome asks, choose “Allow on every visit”.</p>') +
-    '<p><button class="btn sm primary" data-wlink>' + (linked ? 'Use a different folder…' : 'Link a folder…') + '</button>' + (linked ? ' <button class="btn sm" data-wstop>Stop using this folder</button>' : '') + '</p>' +
-    '<div id="snapBox"></div></div><div class="bf"><button class="btn primary" data-close>Done</button></div>', true);
+      : '<p class="muted" style="font-size:14px">Choose a folder on this computer once, and every save goes there as well as to this browser, with a copy of each day to go back to. Choose something private: it holds student work. When Chrome asks, choose “Allow on every visit”. If you already have a Grading Studio folder, choose it and your work comes back.</p>') +
+    '<p><button class="btn sm primary" data-wlink>' + (linked ? 'Use a different folder…' : 'Choose a folder…') + '</button>' + (linked ? ' <button class="btn sm" data-wstop>Stop using this folder</button>' : '') + '</p>' +
+    (linked && fld.root ? '<p class="muted" style="font-size:14px;margin-bottom:0">The folder also keeps a copy of each day. <a class="link" href="#/settings/history" data-close>Go back in time…</a></p>' : '') +
+    '</div><div class="bf"><button class="btn primary" data-close>Done</button></div>', true);
   const box = $('#dlgBox');
   box.onclick = async e => {
     if (e.target.closest('[data-close]')) return closeDlg();
     if (e.target.closest('[data-wlink]')) { closeDlg(); return; }
     if (e.target.closest('[data-wstop]')) {
-      if (await askDlg('Stop saving to “' + fld.name + '”?\n\nWhat’s already in the folder stays there. Nothing in it is deleted. Your work carries on in this browser.', { ok: 'Stop using it', danger: true })) { await folderUnlink(); closeDlg(); toast('Not saving to a folder any more. The folder’s files are still there.'); }
-      return;
+      if (await askDlg('Stop saving to “' + fld.name + '”?\n\nWhat’s already in the folder stays there. Nothing in it is deleted. Your work carries on in this browser, with no second copy.', { ok: 'Stop using it', danger: true })) { await folderUnlink(); closeDlg(); toast('Not saving to a folder any more. The folder’s files are still there.'); }
     }
-    const g = e.target.closest('[data-snap]'); if (!g) return;
-    if (!await askDlg('Go back to this snapshot from ' + g.dataset.when + '?\n\nYour marks, scores, comments, late files, readings, rosters and settings go back to how they were then, in this browser and in the folder. Papers stay. A snapshot of how things are now is made first, so this can be undone.', { ok: 'Go back' })) return;
-    try { await tabsFinish(); tabsOver('go'); await folderGoBack(g.dataset.snap); tabsOver('done'); toast('Done. Reloading…'); setTimeout(reloadHome, 700); }
-    catch (er) { console.error(er); tabsOver('done'); toast('That didn’t finish. Your work may be partly back: use Put back on the newest safety copy under “Saving and carrying”.', 15000); }
   };
-  if (!linked || !fld.root) return;
-  try {
-    const list = await snapList(), el = $('#snapBox');
-    if (!el || !list.length) return;
-    const when = t => new Date(t).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
-    el.innerHTML = '<h3 style="margin:14px 0 6px">Snapshots to go back to</h3>' + list.slice(0, 30).map(s => '<div class="rdrow"><span>' + esc(when(s.t)) + (s.why === 'daily' ? '' : ' <span class="muted">' + esc(s.why.toLowerCase()) + '</span>') + '</span><span class="sp"></span><button class="btn sm" data-snap="' + esc(s.name) + '" data-when="' + esc(when(s.t)) + '">Go back</button></div>').join('');
-  } catch (e) { console.error(e); }
+}
+// Everything goes back to a dated copy in the folder: asked first, since it replaces rosters and settings too, and how things are now is kept so it can be undone.
+async function folderGoBackAsk(name, when) {
+  if (!await askDlg('Go back to this copy from ' + when + '?\n\nYour marks, scores, comments, late files, readings, rosters and settings go back to how they were then, in this browser and in the folder. Papers stay. A copy of how things are now is made first, so this can be undone.', { ok: 'Go back' })) return;
+  try { await tabsFinish(); tabsOver('go'); await folderGoBack(name); tabsOver('done'); toast('Done. Reloading…'); setTimeout(reloadHome, 700); }
+  catch (er) { console.error(er); tabsOver('done'); toast('That didn’t finish. Your work may be partly back: use Put back on the newest safety copy under “Saving and carrying”.', 15000); }
 }
 folderBoot();
 Object.assign(window.__gs, { folderUse, folderUnlink, folderResume, folderReconcile, folderState: () => ({ state: fld.state, name: fld.name, at: fld.at, asks: fld.asks, root: fld.root, picked: fld.picked }), folderWait: async () => { for (let i = 0; i < 400; i++) { if (!fld.run && !fld.sync && !fld.work.size && !fld.lib && !fld.gone.size) return fld.state; await new Promise(r => setTimeout(r, 25)); } return 'busy'; }, folderSnapshot, snapList, folderGoBack, carryParts: { mergeWork, mergeStates, mergeLib, recHash, stampData, revsOf } });

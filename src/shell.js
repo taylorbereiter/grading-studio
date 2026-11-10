@@ -40,23 +40,25 @@ function railRender() {
 function railSavedRender() {
   if (!shellReady) return;
   const el = $('#railSaved'), w = whereSay(), st = batch ? ($('#saveState').textContent || '').replace(/^[✓⚠]\s*/, '').trim() : '';
-  const bad = saveBad.size > 0, head = bad ? (/saved/i.test(st) && !/^Saved/.test(st) ? st : 'Not saved') : /^Saving/.test(st) ? 'Saving…' : 'Saved';
-  const h = '<span class="rdot"></span><span class="rl"><b>' + esc(head) + '</b>' + esc(w.text) + '</span>';
+  // "Saved" is only said when a second copy exists outside this browser. Until then it is "Not backed up", in amber.
+  const bad = saveBad.size > 0, head = bad ? (/saved/i.test(st) && !/^Saved/.test(st) ? st : 'Not saved') : /^Saving/.test(st) ? 'Saving…' : w.safe ? 'Saved' : 'Not backed up';
+  const h = '<span class="rdot"></span><span class="rl"><b>' + esc(head) + '</b>' + esc(w.sub || w.text) + '</span>';
   el.className = 'rsaved' + (bad ? ' bad' : w.cls ? ' ' + w.cls : '');
-  el.title = head + '. ' + w.text + '. ' + w.tip;
+  el.title = (w.safe || bad ? head + '. ' : '') + w.text + '. ' + w.tip;
   el.toggleAttribute('data-wact', !!w.act); el.toggleAttribute('data-wopen', !w.act);
   if (el.dataset.h !== h) { el.dataset.h = h; el.innerHTML = h; }
 }
 // Home: the few things waiting on her, gathered from where each used to be said.
 function renderNeeds() {
   if (!shellReady) return;
+  safeAskRender();
   const el = $('#needs'), rows = [], chev = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>';
   for (const m of [...keptMeta.values()].sort((a, b) => b.t - a.t)) {
     if (m.partial && m.papers) rows.push({ t: m.partial + (m.partial === 1 ? ' paper is' : ' papers are') + ' partly scored', s: m.name || 'A download', open: m.id });
     else if (!m.papers) rows.push({ t: 'Papers not kept in this browser', s: (m.name || 'A download') + ': drop the download in again to reopen it' });
   }
   const last = store.get('gs.lastBackup', 0), days = Math.floor((Date.now() - last) / 864e5);
-  if (keptMeta.size > 0 && fld.state === 'none' && days >= 7) rows.push({ t: last ? 'Your take-home file is ' + days + ' days old' : 'Your work is only in this browser', s: 'Link a folder or make a take-home file, in Settings', href: '#/settings' });
+  if (keptMeta.size > 0 && fld.state === 'none' && days >= 7 && !safeAskShown()) rows.push({ t: last ? 'Your take-home file is ' + days + ' days old' : 'Your work is not backed up', s: 'Choose a folder or make a take-home file, in Settings', href: '#/settings' });
   const h = !rows.length ? '' : '<section class="ncard"><div class="nhead"><h2>Needs a look</h2><span class="schip warn">' + rows.length + '</span></div>' +
     rows.slice(0, 6).map(r => { const body = '<span class="nt"><b>' + esc(r.t) + '</b><span class="ns">' + esc(r.s) + '</span></span>'; return r.open ? '<button class="nrow" data-nopen="' + esc(r.open) + '">' + body + chev + '</button>' : r.href ? '<a class="nrow" href="' + r.href + '">' + body + chev + '</a>' : '<div class="nrow">' + body + '</div>'; }).join('') +
     (rows.length > 6 ? '<div class="nrow"><span class="ns">and ' + (rows.length - 6) + ' more</span></div>' : '') + '</section>';
@@ -134,12 +136,14 @@ function findRows() {
     add('Settings', 'Bring work in', 'From a take-home file', press('#restoreBtn'));
     add('Settings', 'Remove from this computer', 'Clears student work from this browser', () => go('#/settings'));
   }
-  add('Settings', 'Where my work is saved', 'This browser, and a linked folder', () => openWhere());
+  add('Settings', 'Where my work is saved', 'This browser, and a folder you choose', () => openWhere());
+  add('Settings', 'Go back in time', 'An assignment, or everything, as it was on an earlier day', () => go(setHash('history')));
+  add('Settings', 'Updates and installing', 'This version, what’s new, install as an app', () => go(setHash('about')));
   add('Settings', document.documentElement.dataset.theme === 'dark' ? 'Light mode' : 'Dark mode', 'Display', press('.themeBtn'));
   add('Settings', 'Text size and zoom', 'Display', () => openDisplay());
   add('Settings', 'Word papers', wordPdfAlways() ? 'Converted to PDF pages as each assignment opens' : 'Kept as Word files. They can be converted to PDF pages', () => go('#/settings/marking'));
   add('Settings', 'All keys', 'Every keyboard shortcut', () => openKeys(), '?');
-  for (const [k, t, sub] of SET_SECS) if (k !== 'saving' && k !== 'display' && k !== 'keys') add('Settings', t, sub, () => go(setHash(k)));
+  for (const [k, t, sub] of SET_SECS) if (k !== 'saving' && k !== 'display' && k !== 'keys' && k !== 'history' && k !== 'about') add('Settings', t, sub, () => go(setHash(k)));
   if (plan) add('Go to', 'This week in the Planner', 'Today’s classes and the lessons planned for them', () => { location.href = planUrl('#week'); });
   return out;
 }
@@ -202,6 +206,6 @@ document.addEventListener('keydown', e => {
 }, true);
 
 shellReady = true;
-railSavedRender(); renderNeeds();
+railSavedRender(); renderNeeds(); safeAskRender(); updRender();
 applyRoute();
 Object.assign(window.__gs, { go, routeNow, applyRoute, openFind, findRows, keptState, classLeft });

@@ -5,7 +5,7 @@ const { launch } = require('./helpers/chrome');
 const { classPage, openOwn, closeOwn, answerDlg, openZip, waitPaper, appReady, goToStudent, setTool, drag, score, settle, workOf, idbRead } = require('./helpers/app');
 const { standardFiles, zipOf } = require('./helpers/fixtures');
 const { loadLegacy } = require('./helpers/legacy');
-const { linkFolder, folderWait, folderInfo, folderRead, folderWrite, folderList, wipeBrowser, takeHome, openFile, bringIt } = require('./helpers/carry');
+const { goBackAll, linkFolder, folderWait, folderInfo, folderRead, folderWrite, folderList, wipeBrowser, takeHome, openFile, bringIt } = require('./helpers/carry');
 
 // Every test here gets a Chrome of its own (see openOwn): a linked folder has to survive a reload.
 let zip, L;
@@ -29,7 +29,7 @@ test('once linked, a save goes to the browser and the folder, and the top bar sa
   const { page, close } = await openApp(browser);
   assert.equal((await page.$eval('#whereLine', e => e.textContent)).includes('only in this browser'), true);
   await openZip(page, zip, 'River essay.zip');
-  assert.equal(await topBar(page), 'Only in this browser');
+  assert.equal(await topBar(page), 'Not backed up. Only in this browser');
   await linkFolder(page, 'One');
   assert.match(await topBar(page), /^In this browser and your “One” folder$/);
   const id = await idOf(page);
@@ -252,11 +252,9 @@ test('a merge from the folder can be undone: a snapshot from before it goes back
   assert.ok(undo, 'a snapshot from just before the merge');
   await page.click('#closeBtn');
   await folderWait(page);
-  await page.waitForSelector('[data-wopen]'); await page.evaluate(() => document.querySelector('[data-wopen]').click());
-  await page.waitForSelector('[data-snap]');
-  assert.match(await page.$eval('#snapBox', e => e.innerText), /before bringing in work/);
-  const nav = page.waitForNavigation({ timeout: 60000 });
-  await page.evaluate(n => document.querySelector('[data-snap="' + n + '"]').click(), undo.name);
+  await goBackAll(page, undo.name);
+  assert.match(await page.$eval('#setHistory', e => e.innerText), /Before bringing in work/);
+  const nav = page.waitForNavigation({ timeout: 60000 });   // only now: going to a screen counts as a navigation too
   await answerDlg(page);
   await nav;
   await appReady(page);
@@ -431,16 +429,14 @@ for (const how of ['Put back', 'Go back']) test(how + ' undoes a bad merge with 
   await settled(a.page);
   assert.deepEqual(await rosterOf(a.page, '12EL-1'), ['Aria Testwell', 'Zed Wrongly'], 'the bad merge happened');
   assert.ok(await a.page.evaluate(() => !!localStorage.getItem('gs.rp.fromHome')));
-  const nav = a.page.waitForNavigation({ timeout: 60000 });
   if (how === 'Put back') {
     await a.page.waitForSelector('[data-putback]');
     await a.page.evaluate(() => document.querySelector('[data-putback]').click());
   } else {
     const snap = (await a.page.evaluate(() => window.__gs.snapList())).find(s => /Before bringing work in/.test(s.why));
-    await a.page.evaluate(() => document.querySelector('[data-wopen]').click());
-    await a.page.waitForSelector('[data-snap]');
-    await a.page.evaluate(n => document.querySelector('[data-snap="' + n + '"]').click(), snap.name);
+    await goBackAll(a.page, snap.name);
   }
+  const nav = a.page.waitForNavigation({ timeout: 60000 });
   await answerDlg(a.page); await nav; await appReady(a.page);
   await settled(a.page);
   assert.deepEqual(await rosterOf(a.page, '12EL-1'), ['Aria Testwell', 'Bram Sample', 'Cleo Fixture']);

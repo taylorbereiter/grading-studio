@@ -49,8 +49,8 @@ jobs:
         run: npm run build
       - name: The pages in this change are the ones its source builds
         run: |
-          git diff --exit-code --stat -- index.html "Grading Studio.html" planner.html Planner.html || {
-            echo "::error::index.html, Grading Studio.html, planner.html or Planner.html is not what src/ builds. Run npm run build and commit the pages."
+          git diff --exit-code --stat -- index.html "Grading Studio.html" planner.html Planner.html sw.js version.json manifest.webmanifest || {
+            echo "::error::index.html, Grading Studio.html, planner.html, Planner.html, sw.js, version.json or manifest.webmanifest is not what src/ builds. Run npm run build and commit them."
             exit 1
           }
       - name: Tests
