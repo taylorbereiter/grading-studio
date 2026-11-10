@@ -234,6 +234,7 @@ async function intake(entries, label, assignment, fromKeep) {   // entries: [{ p
   renderTools(); renderList(); renderTopAtlas(); openStudent(batch.restoredCur || 0);
   scanned = false; scanAll();
   setTimeout(wordScoresAll, 50);
+  if (shellReady) setTimeout(wordPdfAuto, 400);   // Word papers as PDF pages, when that's her setting
   if (earlier) carrySay();
   if (rub.said) saveSoon();   // what she chose goes with the work, so it isn't a question next time
   openingReport();
@@ -1692,7 +1693,7 @@ function renderList() {
       : hasMarks(st) ? '<span class="dot" title="Marked"></span>' : '';
     const sent = st.grade.sent ? '<span class="sent" title="You exported this paper on its own at ' + esc(sentWhen(st.grade.sent)) + '">↗ sent</span>' : '';
     if (fmNow() && !noScore(st)) right = st.grade.fb ? '<span class="fbck" title="Feedback complete">✓</span>' : hasMarks(st) || (st.grade.comment || '').trim() ? '<span class="dot" title="Started, not complete yet"></span>' : '';
-    const nAdd = st.files.filter(f => f.added && !f.from).length, re = st.files.some(f => Object.values(f.sc || {}).some(r => r.re)), grp = st.files.some(f => f.from || Object.values(f.sc || {}).some(r => r.w)) || st.files.some(f => !f.added && shareCopies(st, f).length);
+    const nAdd = st.files.filter(f => f.added && !f.from && !madeFromWord(f)).length, re = st.files.some(f => Object.values(f.sc || {}).some(r => r.re)), grp = st.files.some(f => f.from || Object.values(f.sc || {}).some(r => r.w)) || st.files.some(f => !f.added && shareCopies(st, f).length);
     return '<button class="stu' + (i === cur ? ' on' : '') + (st.files.length ? '' : ' empty') + '" data-i="' + i + '"><span class="num">' + (pos + 1) + '</span><span class="nm" title="' + esc(shownName(st, i)) + '">' + esc(shownName(st, i)) + '</span>' + (anonOn() ? '' : whoBtn('data-wi="' + i + '"', st.key)) +
       '<span style="display:inline-flex;align-items:center;gap:4px">' + (st.files.length || noScore(st) ? '' : '<span class="muted" style="font-size:11px">no paper</span>') + (g.status === 'late' ? '<span class="stag" title="You marked this student late">late</span>' : '') + (g.out ? '<span class="stag out" title="Left out of the average">left out</span>' : '') + (nAdd ? '<span class="add" title="' + nAdd + (nAdd === 1 ? ' file' : ' files') + ' added by you">+' + nAdd + '</span>' : '') + (re ? '<span class="add" title="A page needs a rescan">⚑</span>' : '') + (groupOf(st) ? '<span class="add grp" title="Group work: marked and graded once with ' + esc(groupNames(groupMates(st))) + '">group</span>' : grp ? '<span class="add grp" title="Group work: shares pages or a file with another student">shared</span>' : '') + carryPill(st) + sent + right + '</span></button>';
   }).join('');
@@ -2104,7 +2105,12 @@ const xEdit = () => store.get('gs.xedit', true) !== false;   // "Keep marks edit
 // Word files you edited or scored, any file you added; with "include everything", every file.
 // A student's copy of her own Word rubric goes back once she has highlighted or typed in it, and stays out while it's still blank.
 const rawOut = f => !viewable(f) && !!f.data && (f.virtual ? f.kind === 'docx' && (!!f.edited || !!(wordScore(f) && f.wscore.total != null)) : xAll() || !!f.edited || !!f.added || !!(wordScore(f) && f.wscore.total != null));
-const docAdded = (st, d) => d.pages.some(([path]) => { const f = fileByPath(st, path); return !!f && !!f.added; });
+// A PDF standing in for the student's own Word paper (wordpdf.js, or her own Replace with the same name) is still their paper, not a file she added.
+function madeFromWord(f) {
+  if (!f || !f.added || !batch || !batch.removed || !/\.pdf$/i.test(f.name)) return false;
+  return Object.keys(batch.removed).some(k => { const r = batch.removed[k]; if (r.by !== f.path || r.back || !WORD_RX.test(k)) return false; const base = k.slice(k.lastIndexOf('/') + 1).replace(WORD_RX, ''); return f.name === base + '.pdf' || (f.name.startsWith(base + ' (added ') && /^ \(added \d+\)\.pdf$/.test(f.name.slice(base.length))); });
+}
+const docAdded = (st, d) => d.pages.some(([path]) => { const f = fileByPath(st, path); return !!f && !!f.added && !madeFromWord(f); });
 // A file you moved to another student goes back in that student's folder.
 const outPath = (st, path) => batch.moved && batch.moved[path] === st.key && path.includes('/') ? st.key + path.slice(path.indexOf('/')) : path;
 function exportPlan(keepFolders) {
@@ -2626,7 +2632,7 @@ function foundLabel(fd) {
 let sheetShowOut = false;
 // The sheet lists only files with a grade on them (read, boxed or highlighted); "Show files with no grade" lists every file.
 let sheetAll = !!store.get('gs.sheetall', false);
-const rowGraded = r => r.word ? !!((r.f.wscore && r.f.wscore.total != null) || wordFound(r.f).length || (r.f.hand && r.f.scan && r.f.scan.shots.length))
+const rowGraded = r => r.word ? !!((r.f.wscore && r.f.wscore.total != null) || wordFound(r.f, r.st).length || (r.f.hand && r.f.scan && r.f.scan.shots.length))
   : !!(r.f.scan && (r.f.scan.found.length || r.f.scan.shots.length));
 // box: every file to look through for "Box each grade by hand", graded or not.
 function sheetRows(box) {
@@ -2688,7 +2694,7 @@ function renderSheet() {
   const nOne = batch.students.filter(st => st.found).length, nMany = batch.students.filter(manyReads).length, nAsk = batch.students.reduce((a, st) => a + (st.doubts && !manyReads(st) ? st.doubts.length : 0), 0);
   $('#shSub').textContent = (setup.spot ? 'Same spot on every paper · ' : '') + nOne + ' of ' + batch.students.length + ' read' + (nMany ? ' · ' + nMany + ' to check' : '') + (nAsk ? ' · ' + nAsk + ' to confirm' : '');
   const spotted = !!setup.spot || batch.students.some(st => st.files.some(f => f.hand));
-  const nHidden = sheetAll ? 0 : batch.students.reduce((a, st) => a + st.files.filter(f => f.kind === 'docx').map(f => ({ f, word: true })).concat(st.files.filter(f => viewable(f) && fileIn(st, f)).map(f => ({ f }))).filter(r => !rowGraded(r)).length, 0);
+  const nHidden = sheetAll ? 0 : batch.students.reduce((a, st) => a + st.files.filter(f => f.kind === 'docx').map(f => ({ f, st, word: true })).concat(st.files.filter(f => viewable(f) && fileIn(st, f)).map(f => ({ f }))).filter(r => !rowGraded(r)).length, 0);
   $('#shBody').innerHTML = '<p class="muted" style="margin:0 0 10px;font-size:14px">Every row is made from the file named on it, inside that student’s folder. Click a picture to open that exact file. Click a score to copy it.</p>' +
     '<label class="chk" style="margin:0 0 10px;font-size:14px"><input type="checkbox" data-sheetall' + (sheetAll ? ' checked' : '') + '> Show files with no grade' + (sheetAll ? '' : nHidden ? ' (' + nHidden + ' hidden)' : '') + '<span class="muted" style="font-weight:400">&nbsp;· the downloaded sheet shows the same rows</span></label>' +
     (spotted ? '<label class="chk" style="margin:0 0 10px;font-size:14px"><input type="checkbox" data-trim' + (disp.trim ? ' checked' : '') + '> Trim each spot down to your marks</label>' : '') +
@@ -2697,7 +2703,7 @@ function renderSheet() {
     rows.map(({ st, i, f, out, none, word, nograde, first }) => {
       const where = '<div style="font-weight:600">' + esc(st.key) + '</div>' + (f ? '<div class="muted" style="font-size:13px;overflow-wrap:anywhere">' + esc(f.path) + '</div>' : '');
       if (word) {   // her Word rubric: the highlighted boxes, read straight from the file
-        const w = f.wscore, tyAll = wordFound(f), rdw = splitReads(st, tyAll), ty = rdw.ok, hs = (f.hand && f.scan && f.scan.shots) || [], ri = rows.findIndex(r => r.f === f);
+        const w = f.wscore, tyAll = wordFound(f, st), rdw = splitReads(st, tyAll), ty = rdw.ok, hs = (f.hand && f.scan && f.scan.shots) || [], ri = rows.findIndex(r => r.f === f);
         const info = w ? w.crits.map((c, k) => esc(c.length > 28 ? c.slice(0, 28) + '…' : c) + ' <b>' + (w.per[k] == null ? '–' : fmtNum(w.per[k])) + '</b>').join(' · ') + (w.total != null && !w.done ? '<div class="muted" style="font-size:12px">Not every criterion is highlighted yet</div>' : '') : '';
         const pics = hs.map(g => '<div style="margin-bottom:6px"><img src="' + g.img + '" alt="" data-open="' + i + '" data-file="' + esc(f.path) + '" title="Open this file" style="display:block;max-width:360px;max-height:150px;border:1px solid var(--line);border-radius:4px;cursor:pointer;background:#fff"><div class="muted" style="font-size:12px">Page ' + (g.page + 1) + '</div></div>').join('');
         const big = (v, of, pct) => '<div class="big-sc" data-copy="' + esc(fmtNum(v)) + '" title="Click to copy">' + fmtNum(v) + (of ? '<small>/ ' + fmtNum(of) + '</small>' : '') + '</div>' + (pct != null ? '<div class="muted" style="font-size:13px;margin-top:4px;font-weight:500">= ' + fmtNum(pct) + '%</div>' : '');
@@ -2880,7 +2886,7 @@ async function buildSheetPdf() {
     ctx.fillStyle = '#151922'; ctx.font = 'bold 13px ' + FONT; ctx.fillText(batch.name + ' · grade sheet' + (pageNo ? ' (continued)' : ''), M, M - 8);
     let y = M + 6;
     while (ri < rows.length) {
-      const { st, i, f, word } = rows[ri], wty = word ? wordFound(f).filter(g => !g.table) : [], sc = word ? { found: f.virtual && f.wscore && f.wscore.total != null ? [{ score: f.wscore.total, outOf: f.wscore.max, pct: f.wscore.pct }] : wordFound(f).length ? wordFound(f) : (f.hand && f.scan && f.scan.found) || [], shots: (f.hand && f.scan && f.scan.shots) || [] } : f && f.scan ? f.scan : { found: [], shots: [] };
+      const { st, i, f, word } = rows[ri], wty = word ? wordFound(f, st).filter(g => !g.table) : [], sc = word ? { found: f.virtual && f.wscore && f.wscore.total != null ? [{ score: f.wscore.total, outOf: f.wscore.max, pct: f.wscore.pct }] : wordFound(f, st).length ? wordFound(f, st) : (f.hand && f.scan && f.scan.found) || [], shots: (f.hand && f.scan && f.scan.shots) || [] } : f && f.scan ? f.scan : { found: [], shots: [] };
       const rd = splitReads(st, sc.found), okF = rd.ok;
       const imgs = [];
       for (const g of sc.shots) { const im = await loadImg(g.img); if (im) imgs.push({ im, h: Math.min(90, maxW * im.height / im.width) }); }
@@ -4771,7 +4777,12 @@ async function idbDo(mode, fn) {
 }
 const addKey = (st, path) => batch.id + '|' + st.key + '|' + path;
 const fmtDay = t => new Date(t).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-const addTag = f => { const was = replacedOf(f); return '<span class="addtag" title="You added this file">' + (f.from ? (anonOn() ? 'Group work copy' : 'Group work, shared from ' + esc(f.from)) : was ? 'Replaced ' + esc(fileShown(batch.students[cur], was.name)) : 'Added by you') + ' · ' + fmtDay(f.added) + '</span>' + lateLink(f); };
+const addTag = f => {
+  const was = replacedOf(f);
+  // pages made from the student's own Word file: a short tag, since nothing here is hers
+  if (was && madeFromWord(f)) return '<span class="addtag" title="Converted from ' + esc(fileShown(batch.students[cur], was.name)) + ' on ' + fmtDay(f.added) + '. The Word file is under Removed files, below the paper.">From Word</span>' + lateLink(f);
+  return '<span class="addtag" title="You added this file">' + (f.from ? (anonOn() ? 'Group work copy' : 'Group work, shared from ' + esc(f.from)) : was ? 'Replaced ' + esc(fileShown(batch.students[cur], was.name)) : 'Added by you') + ' · ' + fmtDay(f.added) + '</span>' + lateLink(f);
+};
 async function loadAdded() {
   let recs = [];
   try { recs = (await idbDo('readonly', o => o.getAll(underId(batch.id)))) || []; } catch { return; }
@@ -4897,7 +4908,7 @@ async function askReplace(st, path, file) {
     await replaceFile(st, path, file);
   };
 }
-async function replaceFile(st, path, file) {
+async function replaceFile(st, path, file, quiet) {
   const old = fileByPath(st, path); if (!old) return;
   commitEditors();
   // where the old file sat, so the new one goes in the same place
@@ -4910,8 +4921,11 @@ async function replaceFile(st, path, file) {
   if (st.inc && st.inc[path] != null) st.inc[nf.path] = st.inc[path];
   goneNow(st, old);
   (batch.removed ||= {})[path] = { t: Date.now(), by: nf.path };
-  refound(st); wordScoresAll(); saveNow(); renderList(); openStudent(cur, nf.path);
+  refound(st); wordScoresAll(); saveNow(); renderList();
+  if (quiet) return nf;   // a Word paper made into PDF pages (wordpdf.js) says so itself
+  openStudent(cur, nf.path);
   toast('Replaced ' + fileShown(st, old.name) + ' with ' + nf.name);
+  return nf;
 }
 // Pages taken out of the paper (here with × or in Arrange pages): every page of a file on the paper that isn't in the layout.
 function outPages(st) {
@@ -4951,7 +4965,7 @@ function goneList(st) {
     op.map(([path, p]) => { const f = fileByPath(st, path), n = ((f.marks || {})[p] || []).length;
       return '<div class="gonerow"><span>' + [esc(fileShown(st, f.name)) + ', page ' + (p + 1), f.virtual ? 'your rubric page' : '', n ? n + (n === 1 ? ' mark' : ' marks') : ''].filter(Boolean).join(' · ') + '</span><span style="flex:1"></span><button class="link" style="font-size:13px" data-backpg="' + op.findIndex(x => x[0] === path) + '|' + p + '">Bring back</button></div>'; }).join('') +
     (st.gone || []).map(f => { const r = (batch.removed || {})[f.path] || {}, n = markCount(f);
-    return '<div class="gonerow"><span>' + [esc(fileShown(st, f.name)), f.numPages ? f.numPages + (f.numPages === 1 ? ' page' : ' pages') : '', n ? n + (n === 1 ? ' mark' : ' marks') : '', r.t ? (r.by ? 'replaced ' : 'removed ') + fmtDay(r.t) : ''].filter(Boolean).join(' · ') + '</span><span style="flex:1"></span><button class="link" style="font-size:13px" data-backfile="' + esc(f.path) + '">Bring back</button></div>'; }).join('');
+    return '<div class="gonerow"><span>' + [esc(fileShown(st, f.name)), f.numPages ? f.numPages + (f.numPages === 1 ? ' page' : ' pages') : '', n ? n + (n === 1 ? ' mark' : ' marks') : '', r.t ? (r.by ? (madeFromWord(fileByPath(st, r.by)) ? 'now PDF pages, ' : 'replaced ') : 'removed ') + fmtDay(r.t) : ''].filter(Boolean).join(' · ') + '</span><span style="flex:1"></span><button class="link" style="font-size:13px" data-backfile="' + esc(f.path) + '">Bring back</button></div>'; }).join('');
   $('#paper').appendChild(el);
 }
 // A short note with one button, like Undo. It stays a little longer than a plain one.
@@ -4963,7 +4977,7 @@ function toastDo(msg, label, fn) {
   t.append(' ', b);
 }
 function refound(st) {
-  const all = st.files.filter(f => f.kind !== 'docx' && fileIn(st, f)).flatMap(f => (f.scan && f.scan.found) || []).concat(st.files.flatMap(wordFound));
+  const all = st.files.filter(f => f.kind !== 'docx' && fileIn(st, f)).flatMap(f => (f.scan && f.scan.found) || []).concat(st.files.flatMap(f => wordFound(f, st)));
   // Doubtful readings wait for her OK and don't count until then, and while one is waiting nothing beside it stands either. The same words she's already said yes to, written twice on a page, are one answer.
   const r = splitReads(st, all), rd = st.grade.reads || {}, ok = r.ok.filter(g => !r.mine.includes(g)).filter((g, n, a) => rd[readKey(g)] !== 1 || a.findIndex(o => readKey(o) === readKey(g)) === n);
   st.foundCount = ok.length; st.doubts = r.ask; st.foundAll = ok;
@@ -5759,7 +5773,7 @@ async function wordCard(st, f, opts) {
   const el = document.createElement('div'); el.className = 'docx'; el.wordF = f;
   el.innerHTML = '<div class="fhead"><span style="color:var(--fg)">' + esc(opts.title || f.name) + '</span><span>' + (/\.docm$|\.dotm$/i.test(f.name) ? 'Word file with macros' : 'Word file') + '</span>' +
     (f.rubric ? '<span class="addtag" style="background:var(--accent-soft);color:var(--accent)">Your rubric</span>' : '') + (f.edited ? '<span class="addtag" style="background:var(--accent-soft);color:var(--accent)">Edited by you</span>' : '') + (f.added ? addTag(f) : '') + '<span style="flex:1"></span>' +
-    (opts.readOnly ? '' : '<button class="btn sm" data-wnote title="Select words, then press this to comment on them. Or pick the Comment tool and click a word.">Comment</button><button class="btn sm" data-wedit>Edit</button>') + '<button class="btn sm ghost" data-wdl>Download</button></div>' +
+    (opts.readOnly ? '' : '<button class="btn sm" data-wnote title="Select words, then press this to comment on them. Or pick the Comment tool and click a word.">Comment</button><button class="btn sm" data-wedit>Edit</button>' + (wordCanPdf(f) ? '<button class="btn sm" data-wpdf title="Turn this file into pages you can mark and comment on anywhere, like a PDF. The Word file is kept.">Convert to PDF</button>' : '')) + '<button class="btn sm ghost" data-wdl>Download</button></div>' +
     '<div class="wbar" hidden></div><div class="wdoc"><div class="dpage"><p class="muted">Opening…</p></div><aside class="wnotes" hidden></aside></div>';
   const page = el.querySelector('.dpage'), bar = el.querySelector('.wbar');
   let w;
@@ -5769,7 +5783,18 @@ async function wordCard(st, f, opts) {
     try { page.innerHTML = await docxHtml(f.data); } catch { page.innerHTML = '<p>' + (troubleText(troubleOf(f)) || 'This Word file couldn’t be opened here. Download it to open it in Word.') + '</p>'; }
     for (const b of el.querySelectorAll('[data-wedit], [data-wnote]')) b.remove();
   }
-  if (w && !opts.readOnly) setTimeout(() => wireRubric(st, f, w, page, el, () => soon()), 0);
+  // Her own rubric scores by its boxes. A table in a student's file does only when it reads as a rubric, or she says to score with it: a numbered table in
+  // an essay isn't one, and a click in it mustn't shade a box and set a score.
+  if (w && !opts.readOnly) setTimeout(() => {
+    const wire = () => wireRubric(st, f, w, page, el, () => soon());
+    wordScore(f);
+    if (f.wscore || !f.wtab) return wire();
+    const off = document.createElement('div'); off.className = 'rinfo roff';
+    off.innerHTML = '<span class="muted">A table in this file could be a score rubric.</span><button class="link" data-wtabon style="font-size:12.5px">Score with it</button>';
+    el.insertBefore(off, page.closest('.wdoc') || page);
+    // for this assignment, until the page is closed: every student's table is read again as a rubric
+    off.querySelector('button').onclick = () => { wordTabOn.add(batch.id); for (const x of batch.students) for (const g of x.files) if (g.kind === 'docx') g.wsOf = null; off.remove(); wordScoresAll(); wire(); };
+  }, 0);
   if (w) w.pRuns = w.paras.map((_, i) => [...page.querySelectorAll('p[data-pi="' + i + '"] > [data-ri], p[data-pi="' + i + '"] [data-ri]')].map(s => w.runs[+s.dataset.ri]));
   for (const a of page.querySelectorAll('a')) { a.target = '_blank'; a.rel = 'noopener noreferrer'; }
   let editing = false, cell = null, saveT = null;
@@ -5801,6 +5826,7 @@ async function wordCard(st, f, opts) {
   el.addEventListener('click', async e => {
     if (e.target.closest('[data-wdl]')) { await saveNowW(); return saveBlob(f.name, new Blob([f.data])); }
     if (e.target.closest('[data-wedit]')) return setEditing(!editing);
+    if (e.target.closest('[data-wpdf]')) { if (editing) setEditing(false); return openWordPdf(st, f); }
     if (e.target.closest('[data-wreset]')) {
       if (saveT) await saveNowW();
       const orig = f.orig || await origBytes(st, f); if (!orig) return toast('The original isn’t kept in this browser');
@@ -5864,6 +5890,25 @@ async function loadEdits() {
 const RUB_HL = '#FFF59D';
 const cellNum = td => { const m = /(\d+(?:\.\d+)?)/.exec(td.textContent || ''); return m ? +m[1] : null; };
 const isShaded = td => { const b = (td.style.backgroundColor || '').replace(/\s/g, ''); return !!b && b !== 'rgb(255,255,255)' && b !== 'transparent' && b !== 'white'; };
+// Level headings that read as a scale: short, one number each, and either counting down (4 3 2 1) or each one named (Score 4, Level 3).
+// "Paragraph 1, Paragraph 2" and a numbered list (1 2 3) are a student's own table.
+const LEVEL_WORD = /(?<![\p{L}])(?:score|level|band|marks?|points?|pts)(?![\p{L}])/iu;
+function levelsSure(tds) {
+  const txt = tds.map(td => (td.textContent || '').replace(/\s+/g, ' ').trim()), v = tds.map(cellNum);
+  if (tds.length < 2 || txt.some(t => t.length > 30 || (t.match(/\d+(?:\.\d+)?/g) || []).length !== 1)) return false;
+  return txt.every(t => LEVEL_WORD.test(t)) || (v.every((x, i) => !i || x <= v[i - 1]) && v[0] > v[v.length - 1]);
+}
+// Assignments where she chose to score with a table in a student's file, until the page is closed.
+const wordTabOn = new Set();
+// Whether the table found in this file counts as a rubric at all: for a click to score, for its shaded boxes to be offered as a grade, for the Grade sheet
+// and the export. Her own rubric always does. A table in a student's file does when it reads as a rubric, when she has said to score with tables in this
+// assignment, or when it has already given this student's score. A numbered table in an essay is just the student's table.
+function wordTableCounts(f, m) {
+  if (f.virtual || f.rubric || m.sure || (batch && wordTabOn.has(batch.id))) return true;
+  const st = batch && batch.students.find(x => x.files.includes(f) || (x.gone || []).includes(f)), s = st && rubricScore(m);
+  if (!s || s.total == null) return false;
+  return (st.grade.reads || {})['w|' + wordTableSays(s.per, m.crits)] === 1 || (!!f.edited && ownGrade(st).total === s.total);
+}
 function rubricModel(page) {
   let best = null, scale = null;
   for (const t of page.querySelectorAll('table.wt')) {
@@ -5881,7 +5926,7 @@ function rubricModel(page) {
       const cells = [];
       rows.slice(1).forEach((r, k) => { if (!lvl(side[k])) return; r.slice(1).forEach((td, c) => cells.push({ td, crit: c, val: side[k] })); });
       const crits = rows[0].slice(1).map(td => td.textContent.trim() || 'Criterion');
-      const m = { cells, crits, levels: [...new Set(side.filter(lvl))] };
+      const m = { cells, crits, levels: [...new Set(side.filter(lvl))], sure: levelsSure(rows.slice(1).filter((r, k) => lvl(side[k])).map(r => r[0])) };
       if (!best || cells.length > best.cells.length) best = m;
       continue;
     }
@@ -5890,7 +5935,7 @@ function rubricModel(page) {
     if (top.filter(lvl).length >= 2) {
       const cells = [];
       rows.slice(1).forEach((r, k) => r.forEach((td, c) => { if (c && lvl(top[c])) cells.push({ td, crit: k, val: top[c] }); }));
-      const m = { cells, crits: rows.slice(1).map(r => r[0] ? r[0].textContent.trim() : 'Criterion'), levels: [...new Set(top.filter(lvl))] };
+      const m = { cells, crits: rows.slice(1).map(r => r[0] ? r[0].textContent.trim() : 'Criterion'), levels: [...new Set(top.filter(lvl))], sure: levelsSure(rows[0].filter((td, c) => lvl(top[c]))) };
       if (!best || cells.length > best.cells.length) best = m;
     }
   }
@@ -5984,7 +6029,8 @@ function wordScore(f) {
   try {
     const w = openWord(f.data), page = document.createElement('div'); page.className = 'dpage'; w.pRuns = []; renderWord(w, page);
     const m = rubricModel(page);
-    if (m) s = { ...rubricScore(m), max: m.max, nCrit: m.crits.length, crits: m.crits, scale: m.scale, get pct() { return wordPct(this.total, this.max, this.scale); } };
+    f.wtab = !!m;   // a table that could be a rubric, whether or not it counts as one
+    if (m && wordTableCounts(f, m)) s = { ...rubricScore(m), max: m.max, nCrit: m.crits.length, crits: m.crits, scale: m.scale, get pct() { return wordPct(this.total, this.max, this.scale); } };
     f.wtyped = wordTyped(page, m);
     f.wtext = [...page.querySelectorAll('p')].map(p => p.textContent).join('\n') || page.textContent; f.wpic = !!page.querySelector('img');
   } catch (e) { console.error(e); f.wtyped = []; f.wtext = null; }
@@ -6000,22 +6046,28 @@ function wordTyped(page, m) {
     const t = p.closest('table.wt'); if (t && [...skip].some(k => k.contains(t))) continue;
     const text = p.textContent.replace(/\s+/g, ' ').trim(); if (!text) continue;
     const g = parseGrade(text, false); if (!g || g.rank < 2) continue;
-    out.push({ rank: g.rank, loose: g.loose, eq: g.eq, several: g.several, counts: g.counts, score: g.score, outOf: g.outOf, pct: g.pct, text: text.length > 80 ? text.slice(0, 80) + '…' : text, word: true });
+    // written out as a grade: worked out to a percent ("10/12 = 85%"), or with the word for it right against the number ("Total: 11/12", "10/12 points")
+    const asGrade = (g.rank === 3 && !(g.loose && !g.eq && g.outOf == null)) || (g.at != null && (GRADE_BEFORE.test(text.slice(0, g.at)) || GRADE_AFTER.test(text.slice(g.at + g.len))));
+    out.push({ rank: g.rank, loose: g.loose, eq: g.eq, several: g.several, counts: g.counts, score: g.score, outOf: g.outOf, pct: g.pct, text: text.length > 80 ? text.slice(0, 80) + '…' : text, word: true, asGrade });
   }
   return out;
 }
 // Shaded boxes in a Word table, as a reading for her to confirm. It could be her rubric or a student's own table, and only she can tell.
+const wordTableSays = (per, crits) => { const t = 'Shaded boxes in a table: ' + per.map(v => v == null ? '–' : fmtNum(v)).join(', ') + ' (' + crits.join(', ') + ')'; return t.length > 140 ? t.slice(0, 140) + '…' : t; };
 function wordTableRead(f) {
-  const w = f.wscore, t = 'Shaded boxes in a table: ' + w.per.map(v => v == null ? '–' : fmtNum(v)).join(', ') + ' (' + w.crits.join(', ') + ')';
-  return { rank: 3, score: w.total, outOf: w.max, pct: w.pct, table: true, word: true, text: t.length > 140 ? t.slice(0, 140) + '…' : t };
+  const w = f.wscore;
+  return { rank: 3, score: w.total, outOf: w.max, pct: w.pct, table: true, word: true, text: wordTableSays(w.per, w.crits) };
 }
 // What a Word file adds to the grade sheet: highlighted boxes, otherwise a grade typed in it. A student wrote all of that, so all of it waits for her.
 // Her own Word rubric page isn't a student's: its boxes score it directly (wordScoresAll), and only what she has typed into her copy counts.
-const wordFound = f => {
+// A number a student typed in an essay is a date or a count far more often than a grade ("10/12", "3/4 of the village"), so in their own file only one
+// written out as a grade is offered. One she has already said yes to stays (st: whose file it is).
+const wordFound = (f, st) => {
   if (f.kind !== 'docx' || f.wsOf !== f.data) return [];
   if (f.wscore && f.wscore.total != null) return f.virtual ? [] : [wordTableRead(f)];
   if (f.virtual) return f.edited ? f.wtyped || [] : [];
-  return (f.wtyped || []).map(g => ({ ...g, theirs: true }));
+  const rd = (st && st.grade && st.grade.reads) || {};
+  return (f.wtyped || []).filter(g => g.asGrade || rd[readKey(g)] === 1).map(g => ({ ...g, theirs: true }));
 };
 // Every student's Word rubrics: a rubric already highlighted gives the score, like opening it would.
 function wordScoresOf(st) { for (const f of st.files) wordScore(f); }
@@ -6023,7 +6075,7 @@ function wordScoresAll() {
   if (!batch) return;
   let n = 0;
   let asks = 0;
-  for (const st of batch.students) { wordScoresOf(st); if (st.files.some(f => wordFound(f).length)) { refound(st); asks++; } }
+  for (const st of batch.students) { wordScoresOf(st); if (st.files.some(f => wordFound(f, st).length)) { refound(st); asks++; } }
   for (const st of batch.students) for (const f of st.files) {
     const s = wordScore(f); if (!s || s.total == null) continue;
     if (f.virtual) {   // her own rubric page, so the assignment follows it

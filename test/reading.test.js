@@ -106,21 +106,34 @@ test('page text she boxed by hand counts, and one box used for every paper still
 });
 
 /* ---------------- a student's Word file ---------------- */
-test('a line in a student’s Word file is only ever offered', async () => {
-  const files = { 'Aya Example/Essay.pdf': await makePaper({ title: 'Aya' }), 'Ben Example/Essay.docx': lines('Ben Example', 'English 12', '10/12', 'My essay begins here.'), 'Cal Example/Essay.docx': lines('Total: 11/12'), 'Dee Example/Essay.docx': lines('Date: 10/12') };
+test('a number typed in a student’s Word file is offered only when it’s written out as a grade', async () => {
+  const files = { 'Aya Example/Essay.pdf': await makePaper({ title: 'Aya' }), 'Ben Example/Essay.docx': lines('Ben Example', 'English 12', '10/12', 'In chapter 3 the water rises 2 metres, and 3/4 of the village leaves.'), 'Cal Example/Essay.docx': lines('Total: 10/12'), 'Dee Example/Essay.docx': lines('Date: 10/12'), 'Eve Example/Essay.docx': lines('9/12 = 75%') };
   const { page, close } = await stack(files);
   const a = await stu(page, 1);
   assert.deepEqual(a.computed, NOTHING);
-  assert.deepEqual(a.doubts, ['10/12']);
-  assert.deepEqual((await stu(page, 2)).computed, NOTHING, 'even with a label');
+  assert.deepEqual(a.doubts, [], 'a date and a count in an essay are the essay');
+  assert.deepEqual((await stu(page, 2)).computed, NOTHING, 'with a label it’s offered, and still only offered');
   assert.equal((await stu(page, 2)).doubts.length, 1);
   assert.deepEqual((await stu(page, 3)).doubts, [], 'a date stays nothing');
+  assert.equal((await stu(page, 4)).doubts.length, 1, 'worked out to a percent, it’s offered');
   await useIt(page);
+  assert.deepEqual((await stu(page, 2)).computed, { total: 10, pct: 91, done: true, paper: true });
+  noErrors(page); await close();
+});
+
+test('a reading from a student’s Word file that she already accepted stays, though it wouldn’t be offered now', async () => {
+  const { page, close } = await stack({ 'Aya Example/Essay.pdf': await makePaper({ title: 'Aya' }), 'Ben Example/Essay.docx': lines('Ben Example', '10/12', 'My essay begins here.') });
+  assert.deepEqual((await stu(page, 1)).doubts, []);
+  // as saved by a copy of the app that offered it
+  await page.evaluate(() => { const G = window.__gs, st = G.state().batch.students[1]; st.grade.reads = { 'w|10/12': 1 }; G.refound(st); });
   assert.deepEqual((await stu(page, 1)).computed, { total: 10, pct: 91, done: true, paper: true });
   noErrors(page); await close();
 });
 
-test('a student’s Word table gives no score and leaves the class’s Out of alone', async () => {
+// Turns on scoring with the table in the student's file on screen.
+const scoreWithIt = async page => { await page.waitForSelector('[data-wtabon]'); await page.click('[data-wtabon]'); await page.waitForSelector('td.rcell'); };
+
+test('a student’s own table is not a rubric: no score, nothing offered, and a click in it does nothing', async () => {
   const { page, close } = await stack({ 'Ann Example/Essay.pdf': await makePaper({ title: 'Ann' }), 'Ben Example/Plan.docx': planTable() }, { points: true });
   await page.evaluate(() => window.__gs.wordScoresAll());
   await new Promise(r => setTimeout(r, 200));
@@ -128,16 +141,25 @@ test('a student’s Word table gives no score and leaves the class’s Out of al
   assert.equal(+setup.now, 12); assert.equal(+setup.saved, 12);
   let b = await stu(page, 1);
   assert.deepEqual(b.computed, NOTHING); assert.equal(b.points, '');
-  assert.equal(b.doubts.length, 1, 'it’s offered');
-  // opening it changes nothing either
+  assert.deepEqual(b.doubts, [], 'its shaded boxes aren’t offered as a grade');
+  // on screen it's the student's table: no score line over it, and clicking a box shades nothing and scores nothing
   await page.evaluate(() => window.__gs.openStudent(1));
-  await page.waitForSelector('td.rcell');
+  await page.waitForSelector('[data-wtabon]');
+  assert.equal(await page.$('td.rcell'), null);
+  assert.equal(await page.$('.rinfo:not(.roff)'), null);
+  await page.click('#paper .dpage td:nth-child(2)');
+  await new Promise(r => setTimeout(r, 900));
   b = await stu(page, 1);
-  assert.deepEqual(b.computed, NOTHING); assert.equal(+(await page.evaluate(() => window.__gs.state().setup.outOf)), 12);
+  assert.deepEqual(b.computed, NOTHING);
+  assert.equal(await page.evaluate(() => !!window.__gs.state().batch.students[1].files[0].edited), false, 'the file is untouched');
   // Ann's typed score means what it did
   await page.evaluate(() => { window.__gs.state().batch.students[0].grade.points = '10'; });
   assert.deepEqual((await stu(page, 0)).computed, { total: 10, pct: 91, done: true });
-  // she can still say yes: it counts for Ben alone, out of what it says
+  // she can say it is a rubric: then its boxes are offered, and count for Ben alone, out of what the table says
+  await scoreWithIt(page);
+  b = await stu(page, 1);
+  assert.deepEqual(b.computed, NOTHING); assert.equal(b.doubts.length, 1, 'now it’s offered');
+  assert.equal(+(await page.evaluate(() => window.__gs.state().setup.outOf)), 12);
   await useIt(page);
   b = await stu(page, 1);
   assert.deepEqual(b.computed, { total: 4, pct: 67, done: true, paper: true, outOf: 6 });
@@ -145,10 +167,23 @@ test('a student’s Word table gives no score and leaves the class’s Out of al
   noErrors(page); await close();
 });
 
+test('a table that reads as a rubric in a student’s file still scores by its boxes', async () => {
+  // levels counting down across the top, as on a rubric
+  const cell = t => '<w:tc><w:tcPr></w:tcPr><w:p><w:r><w:t>' + t + '</w:t></w:r></w:p></w:tc>';
+  const xml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body><w:tbl>' + [['Criterion', '4', '3', '2', '1'], ['Thesis', 'a', 'b', 'c', 'd'], ['Evidence', 'a', 'b', 'c', 'd'], ['Style', 'a', 'b', 'c', 'd']].map(r => '<w:tr>' + r.map(cell).join('') + '</w:tr>').join('') + '</w:tbl></w:body></w:document>';
+  const { page, close } = await stack({ 'Ann Example/Essay.pdf': await makePaper({ title: 'Ann' }), 'Ben Example/Rubric.docx': zipSync({ ...unzipSync(makeDocx('x')), 'word/document.xml': strToU8(xml) }) }, { points: true });
+  await page.evaluate(() => window.__gs.openStudent(1));
+  await page.waitForSelector('td.rcell');
+  assert.equal(await page.$('[data-wtabon]'), null);
+  await page.evaluate(() => document.querySelector('td.rcell').click());
+  await page.waitForFunction(() => window.__gs.gradeOf(window.__gs.state().batch.students[1]).total === 4);
+  noErrors(page); await close();
+});
+
 test('clicking a box in a student’s table on another scale asks before touching the whole class', async () => {
   const { page, close } = await stack({ 'Ann Example/Essay.pdf': await makePaper({ title: 'Ann' }), 'Ben Example/Plan.docx': planTable([]) }, { points: true });
   await page.evaluate(() => window.__gs.openStudent(1));
-  await page.waitForSelector('td.rcell');
+  await scoreWithIt(page);
   await page.evaluate(() => document.querySelector('td.rcell').click());
   await answerDlg(page, { yes: false });
   assert.match(page.lastDialog, /6.*12/s);
@@ -164,7 +199,7 @@ test('clicking a box in a student’s table on another scale asks before touchin
 test('if she says yes, the whole class follows the table she is clicking', async () => {
   const { page, close } = await stack({ 'Ann Example/Essay.pdf': await makePaper({ title: 'Ann' }), 'Ben Example/Plan.docx': planTable([]) }, { points: true });
   await page.evaluate(() => window.__gs.openStudent(1));
-  await page.waitForSelector('td.rcell');
+  await scoreWithIt(page);
   await page.evaluate(() => document.querySelector('td.rcell').click());
   await answerDlg(page);
   await page.waitForFunction(() => +window.__gs.state().setup.outOf === 6);
