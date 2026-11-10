@@ -73,7 +73,7 @@ let setLibFrom, libNews;   // setLibFrom replaces the whole library, a merge hav
   // A box she has open may be holding parts of the library to change, so with one open it waits, and her save merges instead.
   libNews = () => {
     const now = lsRaw('gs.lib');
-    if (!now || now === libSeen || !$('#dlg').hidden) return;
+    if (!now || now === libSeen || !$('#dlg').hidden || (shellReady && classPanelBusy())) return;
     let other = null; try { other = JSON.parse(now); } catch {}
     if (!other) return;
     lib = migrateLib(other); prev = libPrev(lib); libSeen = now; refs();

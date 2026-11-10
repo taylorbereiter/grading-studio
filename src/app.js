@@ -7,6 +7,7 @@ const $ = s => document.querySelector(s);
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 // Assignment types, for the Gradebook's term grades (src/book.js): key, full name, short name.
 const BK_TYPES = [['sum', 'Summative assessment', 'Summative'], ['ic', 'In-class assessment', 'In-class'], ['fm', 'Formative activity', 'Formative']];
+let libVer = 0;   // goes up each time the units and rosters are saved, so a screen that kept a copy knows it's out of date
 const natural = (a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
 
 /* ---------------- pdf.js worker (inlined, works from file://) ---------------- */
@@ -4130,7 +4131,7 @@ if (!lib.seed2627) {
   // A brand-new browser's starter list never wins over units and rosters already synced from another computer.
   if (fresh) { const t = syncTimes(); t['gs.lib'] = 1; try { localStorage.setItem('gs.syncT', JSON.stringify(t)); } catch {} }
 }
-function saveLib() { if (!store.set('gs.lib', lib)) toast('This browser is out of room to keep your units and rosters.'); }
+function saveLib() { libVer++; if (!store.set('gs.lib', lib)) toast('This browser is out of room to keep your units and rosters.'); }
 const holders = () => lib.classes.concat([lib.loose]);
 const holderById = id => id ? lib.classes.find(c => c.id === id) || null : lib.loose;
 const findItem = id => { for (const c of holders()) for (const u of c.units) { const it = u.items.find(x => x.id === id); if (it) return { c, u, it }; } return null; };
@@ -4149,17 +4150,26 @@ function batchSummary(it) {
   return 'Opened ' + d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) + (data ? ' · ' + n + ' scored' : '') + ' · drop the same ZIP to keep going';
 }
 /* ---------------- where she is: every screen has its own address, the part after # ---------------- */
-// #/ is Home, #/class/<id> a class (- for "No class"), #/settings Settings, #/a/<download> an open assignment.
+// #/ is Home, #/class/<id> a class (- for "No class") with /gradebook, /students, /students/<place on the roster> and /charts under it, #/settings Settings, #/a/<download> an open assignment.
 // Back, Forward and Refresh follow it. Nothing here is saved: the address only says which screen to show.
 const routeOf = hash => {
   let p; try { p = decodeURIComponent(String(hash || '').replace(/^#\/?/, '')).split('/'); } catch { p = ['']; }
-  if (p[0] === 'class' && p[1]) { const c = p[1] === '-' ? lib.loose : classById(p[1]); if (c) return { v: 'class', c }; }
+  if (p[0] === 'class' && p[1]) {
+    const c = p[1] === '-' ? lib.loose : classById(p[1]);
+    if (c) {
+      const tab = c !== lib.loose && c.names.length && CLASS_TABS.some(t => t[0] && t[0] === p[2]) ? p[2] : '';
+      // one student: by place on the roster, never by name, since an address stays in the browser's history
+      const stu = tab === 'students' && /^\d+$/.test(p[3] || '') && +p[3] >= 1 && +p[3] <= c.names.length ? +p[3] - 1 : null;
+      return { v: 'class', c, tab, stu };
+    }
+  }
   if (p[0] === 'settings') return { v: 'settings' };
   if (p[0] === 'a' && p[1]) return { v: 'a', id: 'gs.b.' + p[1] };
   return { v: 'home' };
 };
 const routeNow = () => routeOf(location.hash);
-const classHash = c => '#/class/' + (c === lib.loose || !c.id ? '-' : encodeURIComponent(c.id));
+const CLASS_TABS = [['', 'Assignments'], ['gradebook', 'Gradebook'], ['students', 'Students'], ['charts', 'Charts']];
+const classHash = (c, tab, stu) => '#/class/' + (c === lib.loose || !c.id ? '-' : encodeURIComponent(c.id)) + (tab ? '/' + tab + (stu != null ? '/' + (stu + 1) : '') : '');
 const batchHash = id => '#/a/' + encodeURIComponent(String(id).replace(/^gs\.b\./, ''));
 // When the app reloads itself (work was put back or brought in), it starts again from Home, where that work is listed.
 // A note for the page that loads next, in this tab only, says so; it's read once, here, and gone.
@@ -4202,12 +4212,19 @@ async function openRoute(id) {
   if (!batch || batch.id !== id) return go('#/', true);   // not opened (Not now, or its papers are gone)
   showScreen(routeNow());
 }
+let screenKey = '';
+// A short number that changes when a roster does. The names themselves stay out of it.
+const rosterSig = c => { let h = 5381; for (const ch of c.names.join('\n')) h = (h * 33 ^ ch.codePointAt(0)) >>> 0; return h.toString(36); };
+function classLeave() { const box = $('#classes'); if (box.firstChild) { box.innerHTML = ''; delete box.dataset.h; } if (shellReady) classPanelGone(); }
 function showScreen(r) {
   const grading = r.v === 'a' && !!batch;
   $('#shell').classList.toggle('grading', grading);
   $('#app').hidden = !grading; $('#start').hidden = grading;
   for (const [id, v] of [['vHome', 'home'], ['vClass', 'class'], ['vSettings', 'settings'], ['vOpening', 'opening']]) $('#' + id).hidden = grading || r.v !== v;
-  if (!grading) $('#shellMain').scrollTop = 0;
+  if (r.v !== 'class') classLeave();
+  const key = grading ? 'a' : r.v + (r.c ? ':' + r.c.id + ':' + r.tab + (r.stu != null ? ':one' : '') : '');   // moving from one student to the next keeps her place on the page
+  if (!grading && key !== screenKey) $('#shellMain').scrollTop = 0;
+  screenKey = key;
   railRender();
 }
 // How far along a kept download is, in the same words everywhere: on Home, on a class page and in the sidebar's counts.
@@ -4236,16 +4253,24 @@ function renderLib() {
     '<button class="icon" data-udel="' + u.id + '" title="Delete unit" aria-label="Delete unit">✕</button></div>' +
     '<div class="cards">' + u.items.map(card).join('') + '</div>' +
     '<button class="addcard" data-additem="' + u.id + '">+ Assignment</button></div>';
+  const r = routeNow(), c = r.v === 'class' ? r.c : null, tab = c ? r.tab : '';
+  const tabs = (c, ci) => ci < 0 || !c.names.length ? '' : '<nav class="ctabs" aria-label="' + esc(c.name) + '">' + CLASS_TABS.map(([k, l]) => { const on = tab === k;
+    return '<a class="ctab' + (on ? ' on' : '') + '" href="' + classHash(c, k) + '" data-ctab="' + k + '"' + (k === 'gradebook' ? ' data-book="' + esc(c.id) + '"' : k === 'students' ? ' data-people="' + ci + '"' : '') + (on ? ' aria-current="page"' : '') + '>' + l + '</a>'; }).join('') + '</nav>';
   const block = (c, ci) => '<div class="cls" data-cls="' + esc(c.id) + '"><div class="clshead"><h1>' + esc(ci < 0 ? 'No class' : c.name) + '</h1>' +
     (ci < 0 ? '<span class="muted">Assignments with no roster. Drag them onto a class in the sidebar, or use Edit to pick a class.</span><span class="sp"></span>' :
-      '<span class="muted">' + (c.names.length ? c.names.length + ' students on the roster' : 'No roster yet') + '</span><span class="sp"></span>' + mbClassBtns(c, ci) + (c.names.length ? '<button class="btn sm" data-book="' + esc(c.id) + '">Gradebook</button>' : '') + (c.names.length ? '<button class="btn sm" data-people="' + ci + '">Students</button>' : '') + '<button class="btn sm" data-edit-class="' + ci + '">' + (c.names.length ? 'Edit roster' : 'Add roster') + '</button>' +
-      '<button class="icon" data-cmove="' + ci + ':-1" title="Move this class up in the sidebar" aria-label="Move this class up in the sidebar"' + (ci ? '' : ' disabled') + '>↑</button><button class="icon" data-cmove="' + ci + ':1" title="Move this class down in the sidebar" aria-label="Move this class down in the sidebar"' + (ci < lib.classes.length - 1 ? '' : ' disabled') + '>↓</button>') +
-    '<button class="btn sm" data-addunit="' + esc(c.id) + '">+ Unit</button><button class="btn sm primary" data-newasg="' + esc(c.id) + '">+ Assignment</button></div>' +
-    '<div class="board">' + (c.units.map(unit).join('') || '<div class="empty-note">No units yet. Click + Unit.</div>') + '</div></div>';
-  // One class at a time: the one whose page she's on.
-  const r = routeNow(), c = r.v === 'class' ? r.c : null;
-  $('#classes').innerHTML = c ? block(c, c === lib.loose ? -1 : lib.classes.indexOf(c)) : '';
+      '<span class="muted">' + (c.names.length ? c.names.length + ' students on the roster' : 'No roster yet') + '</span><span class="sp"></span>' + mbClassBtns(c, ci) + '<button class="btn sm" data-edit-class="' + ci + '">' + (c.names.length ? 'Edit roster' : 'Add roster') + '</button>' +
+      '<button class="icon" data-cmove="' + ci + ':-1" title="Move this class up in the sidebar" aria-label="Move this class up in the sidebar"' + (ci ? '' : ' disabled') + '>↑</button><button class="icon" data-cmove="' + ci + ':1" title="Move this class down in the sidebar" aria-label="Move this class down in the sidebar"' + (ci < lib.classes.length - 1 ? '' : ' disabled') + '>↓</button>') + '</div>' + tabs(c, ci) +
+    (tab ? '<div class="cpanel" id="classPanel" data-sig="' + rosterSig(c) + '"></div>'
+      : '<div class="ctools"><span class="sp"></span><button class="btn sm" data-addunit="' + esc(c.id) + '">+ Unit</button><button class="btn sm primary" data-newasg="' + esc(c.id) + '">+ Assignment</button></div>' +
+        '<div class="board">' + (c.units.map(unit).join('') || '<div class="empty-note">No units yet. Click + Unit.</div>') + '</div>') + '</div>';
+  // One class at a time: the one whose page she's on. The Gradebook, Students and Charts tabs draw themselves into the panel (classpage.js),
+  // and keep what's in it while nothing around it has changed, so a list she's part-way through isn't redrawn under her.
+  const box = $('#classes'), h = c ? block(c, c === lib.loose ? -1 : lib.classes.indexOf(c)) : '';
+  const fresh = !tab || box.dataset.h !== h;
+  if (fresh) { box.dataset.h = h; box.innerHTML = h; }
   if (r.v === 'class' && !c) go('#/', true);
+  $('#classHint').hidden = !!tab;
+  if (shellReady) classPanelDraw(fresh);
   railRender();
 }
 // Drag and drop: assignment cards between units (in any class), and units between classes.
@@ -4362,7 +4387,6 @@ $('#start').addEventListener('click', async e => {
     return;
   }
   if (b.dataset.editClass != null) return editClass(+b.dataset.editClass);
-  if (b.dataset.people != null) return openPeople(+b.dataset.people);
   if (b.dataset.mbset != null) return askMb(+b.dataset.mbset);
 });
 // The unit's page in Atlas (web links only); empty removes it. Shown on the unit and in the top bar while grading.

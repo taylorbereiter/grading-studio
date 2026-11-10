@@ -1125,7 +1125,7 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
 .bktypes{display:flex;flex-direction:column;max-width:720px}
 .bktyrow{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid var(--line);font-size:14px;flex-wrap:wrap}
 .bkaddv{max-width:920px}
-.bkaddgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px 16px;margin-bottom:12px;align-items:end}
+.bkaddgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:12px 16px;margin-bottom:12px;align-items:end}
 .bkaddgrid .pseg{align-self:flex-start}
 .bkmax{width:80px}
 .bkso{display:flex;gap:8px;align-items:center}
@@ -1445,6 +1445,103 @@ button.nrow:hover,a.nrow:hover{background:var(--hover)}
   .shell.grading .tool{padding:7px 5px}
   .shell.grading .tools{gap:1px}
 }
+/* ---------- a class page's tabs, and what each one shows (11/10) ---------- */
+.clshead{margin-bottom:10px}
+.ctabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin:0 0 16px;overflow-x:auto}
+.ctab{flex:none;padding:9px 14px;font-size:14.5px;font-weight:500;color:var(--fg-2);text-decoration:none;border-bottom:2px solid transparent;margin-bottom:-1px;border-radius:6px 6px 0 0}
+.ctab:hover{color:var(--fg);background:var(--hover)}
+.ctab.on{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
+.ctools{display:flex;gap:8px;align-items:center;margin:0 0 12px}
+.ctools .sp{flex:1}
+#vClass{position:relative}
+.cpanel{background:var(--surface);border:1px solid var(--line);border-radius:12px;min-height:160px}
+.cpanel .bkpage{display:block;padding:0;position:static}
+.cpanel .bkbar{position:static;background:none;border-radius:12px 12px 0 0;min-height:52px}
+.cpanel .bkbar .bkterms{margin-left:0}
+.cpanel .bkwrap{max-height:calc(100vh - 250px);min-height:180px}
+.cpanel .ovcharts{grid-template-columns:repeat(auto-fit,minmax(440px,1fr));gap:28px 36px}
+.cpanel .bktab .bknm,.cpanel .bktab thead th{background:var(--surface)}
+.cpanel .bktab td.bkterm:last-child,.cpanel .bktab thead th.bkterm:last-child{position:sticky;right:0}
+.cpanel .bktab thead th.bkterm:last-child{z-index:2;background:var(--accent-soft)}
+.bklink{color:inherit;text-decoration:none;font-weight:inherit}
+.bklink:hover{color:var(--accent);text-decoration:underline}
+/* Students */
+.pplbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:12px 18px;border-bottom:1px solid var(--line);font-size:13.5px}
+.pplbar .sp{flex:1}
+.cpanel #peoplePaste{padding:14px 18px;border-bottom:1px solid var(--line);background:var(--bg)}
+.cpanel #peopleTbl{padding:4px 18px 0;overflow-x:auto}
+.cpanel .gl th{position:static}
+.cpanel .ppl td.nm{white-space:nowrap}
+.cpanel .ppl td.nm .whob{margin-left:6px}
+.ppl .pg{font-variant-numeric:tabular-nums;font-weight:600;white-space:nowrap;width:84px}
+.pplcap{margin:10px 18px 14px;font-size:12.5px}
+
+/* ---------- charts: one blue from light to dark for a score's range, blue against amber for up and down ---------- */
+:root{--ch1:#8FB5DC;--ch2:#5F96CB;--ch3:#3478B7;--ch4:#1A5D9A;--ch5:#0F3F6C;--ch-lo:#0D2740;--ch-hi:#FFFFFF;--ch-up:#1A67A8;--ch-down:#B4610F;--ch-band:#DCE7F3}
+:root[data-theme="dark"]{--ch1:#3A6590;--ch2:#4A80B5;--ch3:#5E9AD1;--ch4:#84B5E2;--ch5:#B3D3F0;--ch-lo:#FFFFFF;--ch-hi:#0B1F33;--ch-up:#4A93D6;--ch-down:#C98230;--ch-band:#22324A}
+.chc{display:flex;align-items:center;justify-content:center;min-width:62px;height:28px;padding:0 6px;border-radius:4px;font-size:12.5px;font-weight:600;font-variant-numeric:tabular-nums;line-height:1;white-space:nowrap;color:var(--fg-2)}
+.chc sup{font-size:9px;margin-left:1px;position:relative;top:-4px;line-height:1}
+.chc.b1,.chsw.b1,.chseg.b1{background:var(--ch1);fill:var(--ch1)}.chc.b2,.chsw.b2,.chseg.b2{background:var(--ch2);fill:var(--ch2)}.chc.b3,.chsw.b3,.chseg.b3{background:var(--ch3);fill:var(--ch3)}
+.chc.b4,.chsw.b4,.chseg.b4{background:var(--ch4);fill:var(--ch4)}.chc.b5,.chsw.b5,.chseg.b5{background:var(--ch5);fill:var(--ch5)}
+.chc.b1,.chc.b2{color:var(--ch-lo)}.chc.b3,.chc.b4,.chc.b5{color:var(--ch-hi)}
+:root[data-theme="dark"] .chc.b3{color:var(--ch-hi)}
+.chc.nc{box-shadow:inset 0 0 0 1.5px var(--line-strong);color:var(--fg)}
+.chc.miss,.chsw.miss{box-shadow:inset 0 0 0 1.5px var(--muted);background:none;color:var(--fg-2);font-weight:500;border-radius:4px}
+.chc.miss{background-image:none;outline:0;box-shadow:none;border:1.5px dashed var(--muted)}
+.chsw.miss{box-shadow:none;border:1.5px dashed var(--muted)}
+.chc.exc{color:var(--muted);font-weight:500}
+.chc.fm,.chsw.fm{background:var(--surface-2);color:var(--fg-2)}
+.chc.none{background:color-mix(in srgb,var(--surface-2) 55%,var(--surface))}
+.chheat{margin:0 0 26px}
+.chwrap{overflow:auto;max-width:100%;padding-bottom:2px}
+.chtab{border-collapse:separate;border-spacing:2px;font-size:13px}
+.chtab th,.chtab td{padding:0;text-align:center;font-weight:400}
+.chtab .chn{text-align:left;white-space:nowrap;padding-right:14px;position:sticky;left:0;background:var(--surface);z-index:1;font-weight:500}
+.chtab .chn .link{font:inherit;font-weight:500;color:inherit;text-decoration:none;padding:0}
+.chtab .chn .link:hover{color:var(--accent);text-decoration:underline}
+.chtab thead th{vertical-align:bottom;padding-bottom:4px}
+.chtab thead button{border:0;background:none;font:inherit;color:var(--fg);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;width:100%;max-width:92px;margin:0 auto;padding:3px 2px;border-radius:6px;font-size:12px;line-height:1.2;white-space:normal}
+.chtab thead .chn button{flex-direction:row;align-items:center;gap:4px;font-weight:500;color:var(--fg-2);width:auto;margin:0;max-width:none}
+.chtab thead .chg button{flex-direction:row;justify-content:center;gap:4px;font-weight:500;color:var(--fg-2)}
+.chtab thead button:hover,.chtab thead button:focus-visible{background:var(--surface-2)}
+.chtab thead small{color:var(--muted);font-size:11px}
+.charr{font-size:11px;color:var(--accent)}
+.chtab .chg{padding:0 4px 0 12px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap;text-align:right}
+.chtab tr.chfoot td,.chtab tr.chfoot th{padding-top:6px;color:var(--fg-2);font-size:12.5px;font-variant-numeric:tabular-nums}
+.chtab tr.chfoot th{color:var(--muted);font-weight:400}
+.chdot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--bk-fm);flex:none}
+.chdot.sum{background:var(--bk-sum)}.chdot.ic{background:var(--bk-ic)}.chdot.no{background:none;box-shadow:inset 0 0 0 1.5px var(--line-strong)}
+.bkleg .chdot{width:10px;height:10px}
+.bkleg i.chsw{width:12px;height:12px;border-radius:3px;display:inline-grid;place-items:center;font-size:9px;font-style:normal;color:var(--fg-2)}
+.bkleg i.chsw.up{background:var(--ch-up)}.bkleg i.chsw.down{background:var(--ch-down)}.bkleg i.chsw.band{background:var(--ch-band)}
+.bkleg i.chsw.miss{background:none}
+.chleg{margin-top:10px}
+.chmv.up{fill:var(--ch-up)}.chmv.down{fill:var(--ch-down)}
+.chmv:focus,.chseg:focus,.chrd:focus,.chpt:focus,.chmiss:focus,.chrow:focus{outline:none}
+.chmv:focus-visible,.chseg:focus-visible{stroke:var(--fg);stroke-width:1.5}
+.chzero{stroke:var(--line-strong);stroke-width:1.5}
+.chseg:hover,.chmv:hover{opacity:.86}
+.chrl{fill:none;stroke:var(--line-strong);stroke-width:2}
+.chrl.lo{stroke:var(--accent);stroke-width:2.5}
+.chrd{fill:var(--muted);stroke:var(--surface);stroke-width:2}
+.chrd.lo{fill:var(--accent)}
+.chrd:focus-visible,.chpt:focus-visible{stroke:var(--fg)}
+.chdiag{stroke:var(--line-strong);stroke-width:1.5}
+.chpt{fill:var(--ch3);stroke:var(--surface);stroke-width:2}
+.chband{fill:var(--ch-band)}
+.chmed{fill:none;stroke:var(--muted);stroke-width:1.5;opacity:.75}
+#bkStuLine .bkln{stroke:var(--accent);stroke-width:2.5}
+.chmiss{fill:none;stroke:var(--muted);stroke-width:1.5;stroke-dasharray:3 3}
+.chstripsec{margin:0 0 26px}
+.chstrip{display:flex;flex-wrap:wrap;gap:12px 6px}
+.chsi{display:flex;flex-direction:column;align-items:center;gap:2px;width:132px;text-align:center;font-size:12.5px;line-height:1.3}
+.chsi .chc{width:100%;height:34px;margin-bottom:4px;font-size:13px;border-radius:6px}
+.chsi b{font-weight:500;color:var(--fg);overflow-wrap:anywhere}
+.chsi small{color:var(--muted);font-size:11.5px}
+.bkcmp.chrow{grid-template-columns:minmax(0,150px) minmax(0,1fr) 34px 70px;border-radius:4px}
+.bkcmp.chrow small{color:var(--muted);font-size:12px;white-space:nowrap}
+.bkcmp.chrow:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+@media (max-width:700px){.cpanel .ovcharts{grid-template-columns:minmax(0,1fr)}}
 
 </style>
 
@@ -2793,6 +2890,7 @@ gsData.boot(function () {
 const $ = s => document.querySelector(s);
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const BK_TYPES = [['sum', 'Summative assessment', 'Summative'], ['ic', 'In-class assessment', 'In-class'], ['fm', 'Formative activity', 'Formative']];
+let libVer = 0;   // goes up each time the units and rosters are saved, so a screen that kept a copy knows it's out of date
 const natural = (a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
 
 /* ---------------- pdf.js worker (inlined, works from file://) ---------------- */
@@ -6731,7 +6829,7 @@ if (!lib.seed2627) {
   lib.seed2627 = true; store.set('gs.lib', lib);
   if (fresh) { const t = syncTimes(); t['gs.lib'] = 1; try { localStorage.setItem('gs.syncT', JSON.stringify(t)); } catch {} }
 }
-function saveLib() { if (!store.set('gs.lib', lib)) toast('This browser is out of room to keep your units and rosters.'); }
+function saveLib() { libVer++; if (!store.set('gs.lib', lib)) toast('This browser is out of room to keep your units and rosters.'); }
 const holders = () => lib.classes.concat([lib.loose]);
 const holderById = id => id ? lib.classes.find(c => c.id === id) || null : lib.loose;
 const findItem = id => { for (const c of holders()) for (const u of c.units) { const it = u.items.find(x => x.id === id); if (it) return { c, u, it }; } return null; };
@@ -6751,13 +6849,21 @@ function batchSummary(it) {
 /* ---------------- where she is: every screen has its own address, the part after # ---------------- */
 const routeOf = hash => {
   let p; try { p = decodeURIComponent(String(hash || '').replace(/^#\/?/, '')).split('/'); } catch { p = ['']; }
-  if (p[0] === 'class' && p[1]) { const c = p[1] === '-' ? lib.loose : classById(p[1]); if (c) return { v: 'class', c }; }
+  if (p[0] === 'class' && p[1]) {
+    const c = p[1] === '-' ? lib.loose : classById(p[1]);
+    if (c) {
+      const tab = c !== lib.loose && c.names.length && CLASS_TABS.some(t => t[0] && t[0] === p[2]) ? p[2] : '';
+      const stu = tab === 'students' && /^\d+$/.test(p[3] || '') && +p[3] >= 1 && +p[3] <= c.names.length ? +p[3] - 1 : null;
+      return { v: 'class', c, tab, stu };
+    }
+  }
   if (p[0] === 'settings') return { v: 'settings' };
   if (p[0] === 'a' && p[1]) return { v: 'a', id: 'gs.b.' + p[1] };
   return { v: 'home' };
 };
 const routeNow = () => routeOf(location.hash);
-const classHash = c => '#/class/' + (c === lib.loose || !c.id ? '-' : encodeURIComponent(c.id));
+const CLASS_TABS = [['', 'Assignments'], ['gradebook', 'Gradebook'], ['students', 'Students'], ['charts', 'Charts']];
+const classHash = (c, tab, stu) => '#/class/' + (c === lib.loose || !c.id ? '-' : encodeURIComponent(c.id)) + (tab ? '/' + tab + (stu != null ? '/' + (stu + 1) : '') : '');
 const batchHash = id => '#/a/' + encodeURIComponent(String(id).replace(/^gs\.b\./, ''));
 function reloadHome() { try { sessionStorage.setItem('gs.goHome', '1'); } catch {} location.reload(); }
 try { if (sessionStorage.getItem('gs.goHome')) { sessionStorage.removeItem('gs.goHome'); if (location.hash) history.replaceState(null, '', location.pathname + location.search); } } catch {}
@@ -6796,12 +6902,18 @@ async function openRoute(id) {
   if (!batch || batch.id !== id) return go('#/', true);   // not opened (Not now, or its papers are gone)
   showScreen(routeNow());
 }
+let screenKey = '';
+const rosterSig = c => { let h = 5381; for (const ch of c.names.join('\n')) h = (h * 33 ^ ch.codePointAt(0)) >>> 0; return h.toString(36); };
+function classLeave() { const box = $('#classes'); if (box.firstChild) { box.innerHTML = ''; delete box.dataset.h; } if (shellReady) classPanelGone(); }
 function showScreen(r) {
   const grading = r.v === 'a' && !!batch;
   $('#shell').classList.toggle('grading', grading);
   $('#app').hidden = !grading; $('#start').hidden = grading;
   for (const [id, v] of [['vHome', 'home'], ['vClass', 'class'], ['vSettings', 'settings'], ['vOpening', 'opening']]) $('#' + id).hidden = grading || r.v !== v;
-  if (!grading) $('#shellMain').scrollTop = 0;
+  if (r.v !== 'class') classLeave();
+  const key = grading ? 'a' : r.v + (r.c ? ':' + r.c.id + ':' + r.tab + (r.stu != null ? ':one' : '') : '');   // moving from one student to the next keeps her place on the page
+  if (!grading && key !== screenKey) $('#shellMain').scrollTop = 0;
+  screenKey = key;
   railRender();
 }
 function keptState(m) {
@@ -6829,15 +6941,22 @@ function renderLib() {
     '<button class="icon" data-udel="' + u.id + '" title="Delete unit" aria-label="Delete unit">✕</button></div>' +
     '<div class="cards">' + u.items.map(card).join('') + '</div>' +
     '<button class="addcard" data-additem="' + u.id + '">+ Assignment</button></div>';
+  const r = routeNow(), c = r.v === 'class' ? r.c : null, tab = c ? r.tab : '';
+  const tabs = (c, ci) => ci < 0 || !c.names.length ? '' : '<nav class="ctabs" aria-label="' + esc(c.name) + '">' + CLASS_TABS.map(([k, l]) => { const on = tab === k;
+    return '<a class="ctab' + (on ? ' on' : '') + '" href="' + classHash(c, k) + '" data-ctab="' + k + '"' + (k === 'gradebook' ? ' data-book="' + esc(c.id) + '"' : k === 'students' ? ' data-people="' + ci + '"' : '') + (on ? ' aria-current="page"' : '') + '>' + l + '</a>'; }).join('') + '</nav>';
   const block = (c, ci) => '<div class="cls" data-cls="' + esc(c.id) + '"><div class="clshead"><h1>' + esc(ci < 0 ? 'No class' : c.name) + '</h1>' +
     (ci < 0 ? '<span class="muted">Assignments with no roster. Drag them onto a class in the sidebar, or use Edit to pick a class.</span><span class="sp"></span>' :
-      '<span class="muted">' + (c.names.length ? c.names.length + ' students on the roster' : 'No roster yet') + '</span><span class="sp"></span>' + mbClassBtns(c, ci) + (c.names.length ? '<button class="btn sm" data-book="' + esc(c.id) + '">Gradebook</button>' : '') + (c.names.length ? '<button class="btn sm" data-people="' + ci + '">Students</button>' : '') + '<button class="btn sm" data-edit-class="' + ci + '">' + (c.names.length ? 'Edit roster' : 'Add roster') + '</button>' +
-      '<button class="icon" data-cmove="' + ci + ':-1" title="Move this class up in the sidebar" aria-label="Move this class up in the sidebar"' + (ci ? '' : ' disabled') + '>↑</button><button class="icon" data-cmove="' + ci + ':1" title="Move this class down in the sidebar" aria-label="Move this class down in the sidebar"' + (ci < lib.classes.length - 1 ? '' : ' disabled') + '>↓</button>') +
-    '<button class="btn sm" data-addunit="' + esc(c.id) + '">+ Unit</button><button class="btn sm primary" data-newasg="' + esc(c.id) + '">+ Assignment</button></div>' +
-    '<div class="board">' + (c.units.map(unit).join('') || '<div class="empty-note">No units yet. Click + Unit.</div>') + '</div></div>';
-  const r = routeNow(), c = r.v === 'class' ? r.c : null;
-  $('#classes').innerHTML = c ? block(c, c === lib.loose ? -1 : lib.classes.indexOf(c)) : '';
+      '<span class="muted">' + (c.names.length ? c.names.length + ' students on the roster' : 'No roster yet') + '</span><span class="sp"></span>' + mbClassBtns(c, ci) + '<button class="btn sm" data-edit-class="' + ci + '">' + (c.names.length ? 'Edit roster' : 'Add roster') + '</button>' +
+      '<button class="icon" data-cmove="' + ci + ':-1" title="Move this class up in the sidebar" aria-label="Move this class up in the sidebar"' + (ci ? '' : ' disabled') + '>↑</button><button class="icon" data-cmove="' + ci + ':1" title="Move this class down in the sidebar" aria-label="Move this class down in the sidebar"' + (ci < lib.classes.length - 1 ? '' : ' disabled') + '>↓</button>') + '</div>' + tabs(c, ci) +
+    (tab ? '<div class="cpanel" id="classPanel" data-sig="' + rosterSig(c) + '"></div>'
+      : '<div class="ctools"><span class="sp"></span><button class="btn sm" data-addunit="' + esc(c.id) + '">+ Unit</button><button class="btn sm primary" data-newasg="' + esc(c.id) + '">+ Assignment</button></div>' +
+        '<div class="board">' + (c.units.map(unit).join('') || '<div class="empty-note">No units yet. Click + Unit.</div>') + '</div>') + '</div>';
+  const box = $('#classes'), h = c ? block(c, c === lib.loose ? -1 : lib.classes.indexOf(c)) : '';
+  const fresh = !tab || box.dataset.h !== h;
+  if (fresh) { box.dataset.h = h; box.innerHTML = h; }
   if (r.v === 'class' && !c) go('#/', true);
+  $('#classHint').hidden = !!tab;
+  if (shellReady) classPanelDraw(fresh);
   railRender();
 }
 let ldrag = null;
@@ -6951,7 +7070,6 @@ $('#start').addEventListener('click', async e => {
     return;
   }
   if (b.dataset.editClass != null) return editClass(+b.dataset.editClass);
-  if (b.dataset.people != null) return openPeople(+b.dataset.people);
   if (b.dataset.mbset != null) return askMb(+b.dataset.mbset);
 });
 async function askAtlas(unitId) {
@@ -11632,7 +11750,9 @@ function pctDraw() {
 
 function ovTip() {
   let t = $('#ovTip');
-  if (!t) { t = document.createElement('div'); t.id = 'ovTip'; t.setAttribute('role', 'tooltip'); t.hidden = true; t.innerHTML = '<b></b><span></span><em></em>'; $('#dlg').appendChild(t); }
+  if (!t) { t = document.createElement('div'); t.id = 'ovTip'; t.setAttribute('role', 'tooltip'); t.hidden = true; t.innerHTML = '<b></b><span></span><em></em>'; }
+  const host = $('#dlg').hidden ? document.body : $('#dlg');   // over a box when one is open, else over the page (a class page's charts)
+  if (t.parentNode !== host) host.appendChild(t);
   return t;
 }
 function ovTipHide() { const t = $('#ovTip'); if (t) t.hidden = true; }
@@ -11645,11 +11765,14 @@ function ovTipShow(el) {
   t.style.top = (y < 8 ? r.bottom + 6 : y) + 'px';
 }
 const ovMark = e => e.target.closest && e.target.closest('[data-tv]');
-$('#dlgBox').addEventListener('mouseover', e => { const m = ovMark(e); if (m) ovTipShow(m); });
-$('#dlgBox').addEventListener('mouseout', e => { if (ovMark(e)) ovTipHide(); });
-$('#dlgBox').addEventListener('focusin', e => { const m = ovMark(e); if (m) ovTipShow(m); });
-$('#dlgBox').addEventListener('focusout', e => { if (ovMark(e)) ovTipHide(); });
-$('#dlgBox').addEventListener('scroll', ovTipHide, true);
+for (const host of [$('#dlgBox'), $('#vClass')]) {
+  host.addEventListener('mouseover', e => { const m = ovMark(e); if (m) ovTipShow(m); });
+  host.addEventListener('mouseout', e => { if (ovMark(e)) ovTipHide(); });
+  host.addEventListener('focusin', e => { const m = ovMark(e); if (m) ovTipShow(m); });
+  host.addEventListener('focusout', e => { if (ovMark(e)) ovTipHide(); });
+  host.addEventListener('scroll', ovTipHide, true);
+}
+$('#shellMain').addEventListener('scroll', ovTipHide, { passive: true });
 $('#overviewBtn').onclick = openOverview;
 
 Object.assign(window.__gs, { bankBusy: () => bankBusyN, classStats, openOverview, pctList, pctRows, pv: () => pv, pastAvg, openSetup, savedRubrics, levelOf, tidyLevels, spreadBins });
@@ -11662,7 +11785,8 @@ function bkConf() {
   const b = lib.book || {};
   return { terms: (b.terms || []).filter(t => t && t.id), w: { ...BK_W0, ...(b.w || {}) }, empty: b.empty === 'zero' ? 'zero' : 'other', dl: b.dl || {} };
 }
-function bkSave(part) { lib.book = { ...(lib.book || {}), ...part }; saveLib(); }
+function bkSaveLib() { saveLib(); bk.ver = libVer; }
+function bkSave(part) { lib.book = { ...(lib.book || {}), ...part }; bkSaveLib(); }
 const isoDay = t => { if (!t) return ''; const d = new Date(t); return isNaN(d) ? '' : d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
 function bkDay(s) { return s ? new Date(s + 'T12:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : ''; }
 function bkTermOf(col, terms) {
@@ -11677,7 +11801,9 @@ function bkCellOf(p, g, d, k) {
   const fb = !!(g && g.fb), started = marks || !!((g && g.comment) || '').trim();   // fb: she switched on Feedback complete
   if (p.status === 'missing' || p.status === 'excused') return { st: p.status, fb };
   if (p.total == null && p.pct == null) return fb || started ? { fb, started } : null;
-  return { pct: p.pct, total: p.total, max: p.max, st: p.status, partial: p.partial, out: !!(g && g.outAvg), fb, started };
+  const cell = { pct: p.pct, total: p.total, max: p.max, st: p.status, partial: p.partial, out: !!(g && g.outAvg), fb, started };
+  if (p.rows && p.rows.length) cell.rows = p.rows;   // each rubric row's score, for the charts
+  return cell;
 }
 function bkTypedCell(ty, r) {
   if (!r) return null;
@@ -11738,12 +11864,12 @@ function bkGrade(name, cols, conf) {
 }
 
 /* ---------- the box ---------- */
-let bk = { tab: 'table', cls: '', term: null, show: 'pct', stu: 0, cols: null, hi: '' };
+let bk = { tab: 'table', cls: '', term: null, show: 'pct', stu: 0, cols: null, hi: '', host: 'dlg', sort: null, ver: -1, lib: null };
 async function openBook(clsId, opts = {}) {
   if (batch) saveNow();
   const c = classById(clsId) || batchClass() || lib.classes.find(k => k.names.length) || lib.classes[0];
   if (!c) return toast('Add a class with its roster first, from the sidebar.');
-  bk = { ...bk, tab: 'table', cls: c.id, term: null, stu: 0, cols: null, hi: opts.hi || '' };
+  bk = { ...bk, host: 'dlg', tab: 'table', cls: c.id, term: null, stu: 0, cols: null, hi: opts.hi || '' };
   openDlg('<div class="bh"><h2>Gradebook</h2><div class="ovtabs" role="tablist">' + [['table', 'Table'], ['class', 'Class charts'], ['one', 'One student']].map(([k, l]) => '<button role="tab" data-bktab="' + k + '" aria-selected="' + (k === 'table') + '">' + l + '</button>').join('') +
     '</div><button class="icon" data-close aria-label="Close" style="margin-left:auto">✕</button></div><div class="bb bkbody" id="bkBody"><p class="muted">Looking through your saved work…</p></div>');
   $('#dlgBox').classList.add('bkbox');
@@ -11755,8 +11881,17 @@ async function openBook(clsId, opts = {}) {
   bkDraw();
 }
 const bkClass = () => classById(bk.cls);
+const bkW = () => bk.w || 640;
 const bkWho = (n, i) => anonOn() ? 'Student ' + (i + 1) : n;
 const bkInfo = n => anonOn() ? '' : whoBtn('data-wc="' + esc(bk.cls) + '" data-wn="' + esc(n) + '"', n);
+const bkPage = () => bk.host === 'page';
+const bkName = (n, i) => bkPage() ? '<a class="bklink" href="' + classHash(bkClass(), 'students', i) + '">' + esc(bkWho(n, i)) + '</a>' : esc(bkWho(n, i));
+function bkGoStu(i) {
+  const c = bkClass(); if (!c || i < 0 || i >= c.names.length) return;
+  if (bkPage()) return go(classHash(c, 'students', i), true);
+  bk.tab = 'one'; bk.stu = i; bkDraw();
+}
+const bkHost = () => { const b = $('#bkBody'); return b ? b.closest('#dlgBox') || $('#vClass') : null; };
 function bkTabsOff() { for (const b of document.querySelectorAll('[data-bktab]')) b.setAttribute('aria-selected', 'false'); }
 function bkTabs(cols) {
   const terms = bkConf().terms, out = terms.map(t => [t.id, t.name || 'Term']);
@@ -11772,10 +11907,12 @@ function bkDraw() {
   const conf = bkConf(), all = bkClassCols(c, bk.cols), tabs = bkTabs(all);
   if (bk.term == null || !tabs.some(t => t[0] === bk.term)) bk.term = conf.terms.length ? bkTermNow(conf.terms) : '';
   const cols = bk.term === '*' ? all : all.filter(x => x.termId === bk.term);
-  const bar = '<div class="bkbar"><label class="muted">Class <select class="btn sm" id="bkCls">' + lib.classes.map(k => '<option value="' + k.id + '"' + (k === c ? ' selected' : '') + '>' + esc(k.name) + '</option>').join('') + '</select></label>' +
+  const page = bkPage(), tools = !page || bk.tab === 'table';
+  { const room = body.clientWidth - 36, gap = page ? 36 : 28, min = page ? 440 : 520, n = Math.max(1, Math.floor((room + gap) / (min + gap))); bk.w = room > 0 ? Math.max(320, Math.min(760, Math.round((room - (n - 1) * gap) / n))) : 640; }   // on a class page the class is the page's, and the table's tools stay with the table
+  const bar = '<div class="bkbar">' + (page ? (bk.tab === 'one' ? '<a class="btn sm" id="bkBackStu" href="' + classHash(c, 'students') + '">← Students</a>' : '') : '<label class="muted">Class <select class="btn sm" id="bkCls">' + lib.classes.map(k => '<option value="' + k.id + '"' + (k === c ? ' selected' : '') + '>' + esc(k.name) + '</option>').join('') + '</select></label>') +
     '<div class="ovtabs bkterms" role="group" aria-label="Term">' + tabs.map(([id, l]) => '<button data-bkterm="' + esc(id) + '" aria-selected="' + (bk.term === id) + '">' + esc(l) + '</button>').join('') + '</div><span class="sp"></span>' +
     (bk.tab === 'table' && bk.term !== '*' ? '<div class="pseg" role="group" aria-label="Show">' + [['pct', 'Percent'], ['pts', 'Points']].map(([v, l]) => '<button data-bkshow="' + v + '" aria-pressed="' + (bk.show === v) + '">' + l + '</button>').join('') + '</div>' : '') +
-    '<button class="btn sm" data-bksetup>Term setup</button>' + (bk.tab === 'table' ? '<button class="btn sm" data-bkcopy>Copy table</button>' : '') + '<button class="btn sm primary" data-bkadd>+ Add scores</button></div>';
+    (tools ? '<button class="btn sm" data-bksetup>Term setup</button>' + (bk.tab === 'table' ? '<button class="btn sm" data-bkcopy>Copy table</button>' : '') + '<button class="btn sm primary" data-bkadd>+ Add scores</button>' : '') + '</div>';
   let main;
   if (!c.names.length) main = '<p class="muted bkpad">The gradebook lists the students on a class’s roster. Add a roster to ' + esc(c.name) + ' on its class page first.</p>';
   else if (bk.tab === 'class') main = bkClassView(c, cols, all, conf);
@@ -11807,7 +11944,7 @@ function bkTable(c, cols, conf) {
   const grades = [];
   c.names.forEach((n, i) => {
     const r = bkGrade(n, cols, conf); grades.push(r);
-    h += '<tr><td class="bknm">' + esc(bkWho(n, i)) + bkInfo(n) + '</td>' + groups.map(g => g.cols.map(col => { const cell = col.cells.get(n), ed = !!col.typed && !(cell && !cell.typed);
+    h += '<tr><td class="bknm">' + bkName(n, i) + bkInfo(n) + '</td>' + groups.map(g => g.cols.map(col => { const cell = col.cells.get(n), ed = !!col.typed && !(cell && !cell.typed);
       return '<td' + (ed ? ' class="bked" tabindex="0" data-bked="' + esc(col.key) + '" data-bkn="' + esc(n) + '" title="Click to change"' : col.d ? ' title="Change this score in its download"' : '') + '>' + bkCellText(cell, bk.show, col) + '</td>'; }).join('') +
       (avgCol(g) ? '<td class="bkavg">' + (r.by[g.t] != null ? pctAvgText(r.by[g.t]) : '<span class="bknone">–</span>') + '</td>' : '')).join('') +
       '<td class="bkterm" tabindex="0" ' + bkWhy(n, r, conf) + '>' + (r.grade != null ? pctAvgText(r.grade) + (r.soFar ? ' <small>so far</small>' : '') : '<span class="bknone">–</span>') + '</td></tr>';
@@ -11832,7 +11969,7 @@ function bkYear(c, all, conf) {
   for (const [i, n] of c.names.entries()) {
     const gs = per.map(cols => bkGrade(n, cols, conf).grade), have = gs.filter(v => v != null), y = have.length ? bkMean(have) : null;
     gs.forEach((v, i) => { if (v != null) col[i].push(v); }); if (y != null) yr.push(y);
-    h += '<tr><td class="bknm">' + esc(bkWho(n, i)) + bkInfo(n) + '</td>' + gs.map(v => '<td class="bkterm">' + (v != null ? pctAvgText(v) : '<span class="bknone">–</span>') + '</td>').join('') + '<td class="bkterm"><b>' + (y != null ? pctAvgText(y) : '–') + '</b></td></tr>';
+    h += '<tr><td class="bknm">' + bkName(n, i) + bkInfo(n) + '</td>' + gs.map(v => '<td class="bkterm">' + (v != null ? pctAvgText(v) : '<span class="bknone">–</span>') + '</td>').join('') + '<td class="bkterm"><b>' + (y != null ? pctAvgText(y) : '–') + '</b></td></tr>';
   }
   h += '<tr class="bkfoot"><td class="bknm">Class average</td>' + col.map(a => '<td class="bkterm">' + (a.length ? pctAvgText(bkMean(a)) : '–') + '</td>').join('') + '<td class="bkterm">' + (yr.length ? pctAvgText(bkMean(yr)) : '–') + '</td></tr></tbody></table></div>' +
     '<p class="muted bkcap">The year is the average of the terms each student has a grade in.</p>';
@@ -11849,23 +11986,22 @@ function bkLine(cols, series, id, refLine) {
   const vals = series.flatMap(s => s.pts).concat(refLine != null ? [refLine] : []).filter(v => v != null);
   if (cols.length < 1 || !vals.length) return '<p class="muted">Nothing to show yet.</p>';
   const lo = Math.max(0, Math.floor((Math.min(...vals) - 5) / 10) * 10), hi = Math.min(100, Math.ceil((Math.max(...vals) + 2) / 10) * 10) || 100;
-  const W = 640, H = 200, L = 44, R = 30, T = 16, B = 40, X = i => L + (cols.length === 1 ? (W - L - R) / 2 : i * (W - L - R) / (cols.length - 1)), Y = v => T + (hi - v) / Math.max(10, hi - lo) * (H - T - B);
+  const W = bkW(), L = 44, R = 30, fit = chFit((W - L - R) / Math.max(1, cols.length), cols.length), lines = fit.lines, T = 16, B = 26 + lines * 14, H = 160 + B, X = i => L + (cols.length === 1 ? (W - L - R) / 2 : i * (W - L - R) / (cols.length - 1)), Y = v => T + (hi - v) / Math.max(10, hi - lo) * (H - T - B);
   let g = ''; for (let v = lo; v <= hi; v += 10) g += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + Y(v) + '" y2="' + Y(v) + '" class="tgl"/><text x="' + (L - 8) + '" y="' + (Y(v) + 4) + '" text-anchor="end" class="ttk">' + v + '%</text>';
   if (refLine != null) g += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + Y(refLine) + '" y2="' + Y(refLine) + '" class="bkref"/>';
-  const cut = t => t.length > 14 ? t.slice(0, 13) + '…' : t;
   for (const s of series) {
     const seg = []; let run = [];
     s.pts.forEach((v, i) => { if (v == null) { if (run.length) seg.push(run); run = []; } else run.push(X(i) + ',' + Y(v)); }); if (run.length) seg.push(run);
     g += seg.map(r => '<polyline class="' + s.cls + '" points="' + r.join(' ') + '"/>').join('');
     if (s.dots) s.pts.forEach((v, i) => { if (v != null) g += '<circle class="bkdot ' + (cols[i].type || '') + '" cx="' + X(i) + '" cy="' + Y(v) + '" r="5.5" tabindex="0" data-tv="' + esc(pctAvgText(v)) + '" data-tl="' + esc(cols[i].name) + '" data-tn="' + esc(bkLabel(cols[i].type) + (s.tn ? ' · ' + s.tn(i) : '')) + '"/>'; });
   }
-  cols.forEach((c, i) => { g += '<text x="' + X(i) + '" y="' + (H - 22) + '" text-anchor="middle" class="tlb">' + esc(cut(c.name)) + '</text><text x="' + X(i) + '" y="' + (H - 8) + '" text-anchor="middle" class="ttk">' + esc(bkDay(c.due)) + '</text>'; });
+  cols.forEach((c, i) => { chLines(c.name, fit.chars, lines).forEach((l, j) => { g += '<text x="' + X(i) + '" y="' + (H - B + 18 + j * 14) + '" text-anchor="middle" class="tlb">' + esc(l) + '</text>'; }); if (i % fit.dates === 0) g += '<text x="' + X(i) + '" y="' + (H - 4) + '" text-anchor="middle" class="ttk">' + esc(bkDay(c.due)) + '</text>'; });
   return '<svg class="tsvg" id="' + id + '" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' + esc(cols.map((c, i) => c.name + ' ' + series.map(s => s.pts[i] != null ? pctAvgText(s.pts[i]) : '–').join(' / ')).join(', ')) + '">' + g + '</svg>';
 }
 function bkSpread(c, cols) {
   const rows = cols.map(col => ({ col, v: c.names.map(n => col.cells.get(n)).filter(bkCounts).map(x => x.pct).sort((a, b) => a - b) })).filter(r => r.v.length);
   if (!rows.length) return '<p class="muted">Nothing to show yet.</p>';
-  const lo = Math.max(0, Math.floor(Math.min(...rows.map(r => r.v[0])) / 10) * 10), W = 640, L = 150, R = 16, rh = 28, H = rows.length * rh + 26, x = v => L + (Math.min(100, v) - lo) / Math.max(10, 100 - lo) * (W - L - R);
+  const lo = Math.max(0, Math.floor(Math.min(...rows.map(r => r.v[0])) / 10) * 10), W = bkW(), L = 150, R = 16, rh = 28, H = rows.length * rh + 26, x = v => L + (Math.min(100, v) - lo) / Math.max(10, 100 - lo) * (W - L - R);
   const q = (v, f) => { const k = (v.length - 1) * f, i = Math.floor(k); return v[i] + (v[Math.ceil(k)] - v[i]) * (k - i); };
   let s = '';
   for (let t = lo; t <= 100; t += 10) s += '<line x1="' + x(t) + '" x2="' + x(t) + '" y1="0" y2="' + (H - 22) + '" class="tgl"/><text x="' + x(t) + '" y="' + (H - 6) + '" text-anchor="middle" class="ttk">' + t + '%</text>';
@@ -11886,13 +12022,18 @@ function bkClassView(c, cols, all, conf) {
   const sorted = gl.map(g => g.v).sort((a, b) => a - b), mid = sorted.length ? (sorted.length % 2 ? sorted[(sorted.length - 1) / 2] : (sorted[sorted.length / 2 - 1] + sorted[sorted.length / 2]) / 2) : null;
   const sc = bkScored(cols), avgOf = col => bkMean(c.names.map(n => col.cells.get(n)).filter(bkCounts).map(x => x.pct));
   const others = lib.classes.filter(k => k.names.length).map(k => { const kc = bkClassCols(k, bk.cols).filter(x => bk.term === '*' || x.termId === bk.term), gs = k.names.map(n => bkGrade(n, kc, conf).grade).filter(v => v != null); return { k, v: gs.length ? bkMean(gs) : null }; }).filter(x => x.v != null);
-  const termAvg = gl.length ? bkMean(gl.map(g => g.v)) : null;
+  const termAvg = gl.length ? bkMean(gl.map(g => g.v)) : null, miss = cols.flatMap(col => c.names.filter(n => (col.cells.get(n) || {}).st === 'missing'));
   return '<div class="bkpad"><div class="ovtiles" id="bkTiles">' + bkTile(bk.term === '*' ? 'Average grade' : 'Term average', termAvg != null ? pctAvgText(termAvg) : '–', people(gl.length, 'student'), true) +
-    bkTile('Middle grade', mid != null ? pctAvgText(mid) : '–', 'half above, half below') + bkTile('Summative average', typeAvg('sum'), people(cols.filter(x => x.type === 'sum').length, 'assignment')) + bkTile('In-class average', typeAvg('ic'), people(cols.filter(x => x.type === 'ic').length, 'assignment')) + '</div>' +
-    '<div class="ovcharts"><section><h3 class="ovh3">' + (bk.term === '*' ? 'Grades' : 'Term grades') + '</h3>' + bkBands(gl) + '<p class="muted ovcap2">How many students landed in each range.</p></section>' +
+    bkTile('Middle grade', mid != null ? pctAvgText(mid) : '–', 'half above, half below') + bkTile('Summative average', typeAvg('sum'), people(cols.filter(x => x.type === 'sum').length, 'assignment')) + bkTile('In-class average', typeAvg('ic'), people(cols.filter(x => x.type === 'ic').length, 'assignment')) +
+    bkTile('Missing work', miss.length, miss.length ? 'across ' + people(new Set(miss).size, 'student') : 'nothing outstanding') + '</div>' + bkHeat(c, cols, conf) +
+    '<div class="ovcharts">' + chSec('Who is moving', bkMoving(c, cols), 'Each student’s last three scores against their earlier ones, in points: the biggest rises and drops.') +
+    chSec('Where the class stands, assignment by assignment', bkStacks(c, cols), 'How many students landed in each range each time, so a shift in the whole class shows.') +
+    chSec('Rubric rows across the summatives', bkRubricRows(c, cols), 'The class average on each rubric row, out of 4, wherever the same row name comes back. The lowest row is in blue.') +
     '<section><h3 class="ovh3">Each assignment’s class average</h3>' + bkLine(sc, [{ cls: 'bkln', pts: sc.map(avgOf), dots: true, tn: i => people(c.names.map(n => sc[i].cells.get(n)).filter(bkCounts).length, 'score') }], 'bkTrend', termAvg) +
     '<div class="bkleg"><span><i class="sum"></i>Summative</span><span><i class="ic"></i>In-class</span>' + (termAvg != null ? '<span><i class="ref"></i>Average grade</span>' : '') + '</div></section>' +
+    chSec('Summatives against in-class work', bkScatter(c, cols, conf), 'One dot per student. On the line, the two match. Below it, a student does better in class than on summatives.') +
     '<section><h3 class="ovh3">Spread on each assignment</h3>' + bkSpread(c, sc) + '<p class="muted ovcap2">The bar runs from lowest to highest, the darker part is the middle half of the class, and the line is the middle score.</p></section>' +
+    '<section><h3 class="ovh3">' + (bk.term === '*' ? 'Grades' : 'Term grades') + '</h3>' + bkBands(gl) + '<p class="muted ovcap2">How many students landed in each range.</p></section>' +
     '<section><h3 class="ovh3">Compare your classes</h3><div class="ovrows" id="bkCmp">' + (others.length ? others.map(o => '<div class="bkcmp' + (o.k === c ? ' me' : '') + '"><span>' + esc(o.k.name) + '</span><div class="bkcmpt"><i style="width:' + Math.min(100, o.v) + '%"></i></div><b>' + pctAvgText(o.v) + '</b></div>').join('') : '<p class="muted">No class has a grade here yet.</p>') + '</div><p class="muted ovcap2">The average grade for each class over the same term, by the same weights.</p></section></div></div>';
 }
 function bkOneView(c, cols, conf) {
@@ -11906,9 +12047,9 @@ function bkOneView(c, cols, conf) {
     '<div class="ovtiles" id="bkStuTiles">' + bkTile(bk.term === '*' ? 'Grade' : 'Term grade', r.grade != null ? pctAvgText(r.grade) + (r.soFar ? ' <small>so far</small>' : '') : '–', cavg('') != null ? 'class average ' + pctAvgText(cavg('')) : '', true) +
     bkTile('Summatives', r.by.sum != null ? pctAvgText(r.by.sum) : '–', cols.filter(x => x.type === 'sum' && bkCounts(x.cells.get(n))).length + ' of ' + cols.filter(x => x.type === 'sum').length + ' counted') +
     bkTile('In-class', r.by.ic != null ? pctAvgText(r.by.ic) : '–', cols.filter(x => x.type === 'ic' && bkCounts(x.cells.get(n))).length + ' of ' + cols.filter(x => x.type === 'ic').length + ' counted') +
-    bkTile('Missing', miss.length, miss.length ? miss.map(x => x.name).join(', ') : 'nothing outstanding') + '</div>' +
-    '<div class="ovcharts"><section><h3 class="ovh3">Against the class</h3>' + bkLine(sc, [{ cls: 'bkln mute', pts: sc.map(col => bkMean(c.names.map(x => col.cells.get(x)).filter(bkCounts).map(x => x.pct))) }, { cls: 'bkln', pts: sc.map(col => { const cell = col.cells.get(n); return bkCounts(cell) ? cell.pct : null; }), dots: true }], 'bkStuLine') +
-    '<div class="bkleg"><span><i class="me"></i>' + esc(shown) + '</span><span><i class="mute"></i>Class average</span></div></section>' +
+    bkTile('Missing', miss.length, miss.length ? miss.map(x => x.name).join(', ') : 'nothing outstanding') + '</div>' + bkStrip(c, cols, n) +
+    '<div class="ovcharts">' + chSec('Against the class', bkBandLine(c, sc, n, shown), 'The shaded band is the middle half of the class, so it’s clear when a score is unusual and when the assignment was just hard.') +
+    chSec('Rubric rows', bkStuRows(c, cols, n), 'Their average on each rubric row across the summatives, out of 4. The dashed line is the class average.') +
     '<section><h3 class="ovh3">By type</h3>' + bar('Summatives', r.by.sum, cavg('sum'), 'sum') + bar('In-class', r.by.ic, cavg('ic'), 'ic') + bar('Grade', r.grade, cavg(''), '') + '<p class="muted ovcap2">The dashed line is the class average.</p>' +
     (fm.length ? '<h3 class="ovh3" style="margin-top:16px">Feedback</h3><p class="bkfbline">' + fm.filter(x => (x.cells.get(n) || {}).fb).length + ' of ' + fm.length + ' formative activities have feedback.</p>' : '') + '</section></div></div>';
 }
@@ -11924,8 +12065,9 @@ function bkColMenu(key, anchor) {
     (terms.length ? '<label class="bkpf">Term <select id="bkTerm" class="btn sm"><option value="">By the date (' + esc((terms.find(t => t.id === bkTermOf({ ...col, term: '' }, terms)) || { name: 'none' }).name) + ')</option>' + terms.map(t => '<option value="' + t.id + '"' + (col.term === t.id ? ' selected' : '') + '>' + esc(t.name) + '</option>').join('') + '</select></label>' : '') +
     (col.typed && col.it ? '<button class="btn sm" data-bkedittyped="' + esc(col.it.id) + '">Edit the typed-in scores</button>' : '') + '<button class="btn sm" data-bkpopclose>Done</button>';
   p.dataset.key = key;
-  $('#dlgBox').appendChild(p);
-  const r = anchor.getBoundingClientRect(), b = $('#dlgBox').getBoundingClientRect(), z = parseFloat(getComputedStyle($('#dlgBox')).zoom) || 1;
+  const host = bkHost();
+  host.appendChild(p);
+  const r = anchor.getBoundingClientRect(), b = host.getBoundingClientRect(), z = parseFloat(getComputedStyle(host).zoom) || 1;
   p.style.left = Math.max(8, Math.min(b.width / z - 280, (r.left - b.left) / z)) + 'px'; p.style.top = ((r.bottom - b.top) / z + 4) + 'px';
 }
 function bkPopClose() { const p = $('#bkPop'); if (p) p.remove(); }
@@ -11934,7 +12076,7 @@ function bkSetCol(key, part) {
   if (col.it) Object.assign(col.it, part);
   else { const dl = { ...bkConf().dl }; dl[col.dl] = { name: col.name, type: col.type, due: col.due, term: col.term, ...(dl[col.dl] || {}), ...part }; bkSave({ dl }); }
   Object.assign(col, part);
-  if (col.it) saveLib();
+  if (col.it) bkSaveLib();
   if (!batch) renderLib();
 }
 function bkTypesDlg() {
@@ -12040,7 +12182,7 @@ function bkAddSave() {
     if (!u) c.units.push(u = { id: uid(), name: c.units.length ? 'Typed in' : 'Unit 1', items: [] });
     u.items.push(it = { id: uid(), name, classId: c.id, type: bkAdd.type, due, typed });
   }
-  saveLib(); if (!batch) renderLib();
+  bkSaveLib(); if (!batch) renderLib();
   const col = bk.cols.find(x => x.key === it.id);
   if (col) Object.assign(col, { name, type: it.type, due, typed }); else bk.cols.push({ key: it.id, it, cls: c.id, name, type: it.type, due, term: it.term || '', typed });
   bk.term = bkTermOf({ due, term: it.term || '' }, bkConf().terms); bk.hi = it.id;
@@ -12051,7 +12193,7 @@ function bkCellEdit(td) {
   const r = (col.typed.s || {})[n] || {}, max = col.typed.max;
   if (col.type === 'fm') {   // feedback only: a click switches Feedback complete
     const s = { ...(col.typed.s || {}) }; s[n] = { ...r, v: null, fb: !r.fb };
-    col.typed = { ...col.typed, s }; if (col.it) { col.it.typed = col.typed; saveLib(); }
+    col.typed = { ...col.typed, s }; if (col.it) { col.it.typed = col.typed; bkSaveLib(); }
     bkDraw(); const back = document.querySelector('[data-bked="' + CSS.escape(col.key) + '"][data-bkn="' + CSS.escape(n) + '"]'); if (back) back.focus();
     return;
   }
@@ -12067,7 +12209,7 @@ function bkCellEdit(td) {
       else if (/^e(xcused)?$/.test(t)) s[n] = { v: null, st: 'excused' };
       else if (!isNaN(+t.replace('%', ''))) s[n] = { v: Math.round(+t.replace('%', '') * 2) / 2, st: r.st === 'late' ? 'late' : '' };
       col.typed = { ...col.typed, s };
-      if (col.it) { col.it.typed = col.typed; saveLib(); }
+      if (col.it) { col.it.typed = col.typed; bkSaveLib(); }
     }
     bkDraw();
     const back = document.querySelector('[data-bked="' + CSS.escape(col.key) + '"][data-bkn="' + CSS.escape(n) + '"]'); if (back) back.focus();
@@ -12082,8 +12224,9 @@ function bkCopy() {
 }
 
 /* ---------- clicks ---------- */
-$('#dlgBox').addEventListener('click', e => {
-  if (!$('#bkBody')) return;
+const bkHere = e => { const b = $('#bkBody'); return !!b && e.currentTarget.contains(b); };
+function bkClick(e) {
+  if (!bkHere(e)) return;
   const b = e.target.closest('button, [data-bked]'); if (!b) { if (!e.target.closest('#bkPop')) bkPopClose(); return; }
   const d = b.dataset, c = bkClass();
   if (d.bktab) { bk.tab = d.bktab; bkPopClose(); return bkDraw(); }
@@ -12100,7 +12243,9 @@ $('#dlgBox').addEventListener('click', e => {
   if (d.bkedittyped) { bkPopClose(); return bkAddView(d.bkedittyped); }
   if (d.bkqtype) { bkSetCol(d.key, { type: d.bkqtype }); for (const x of b.parentElement.children) x.setAttribute('aria-pressed', String(x === b)); return; }
   if (d.bked && !b.querySelector('input')) return bkCellEdit(b);
-  if (d.bkstu) { bk.stu += +d.bkstu; return bkDraw(); }
+  if (d.bkstu) return bkGoStu(bk.stu + +d.bkstu);
+  if (d.bkgo != null) return bkGoStu(+d.bkgo);
+  if (d.chsort) { const s = bk.sort || { k: 'grade', dir: -1 }; bk.sort = s.k === d.chsort ? { k: s.k, dir: -s.dir } : { k: d.chsort, dir: d.chsort === 'name' ? 1 : -1 }; return bkDraw(); }
   if (d.taddt != null) { const t = document.createElement('div'); t.innerHTML = '<div class="bktrow" data-tid="' + uid() + '"><input type="text" class="bkin" data-tf="name" value="Term ' + (document.querySelectorAll('#bkTerms .bktrow').length + 1) + '" aria-label="Term name"><input type="date" class="bkin" data-tf="start" aria-label="Starts"><input type="date" class="bkin" data-tf="end" aria-label="Ends"><button class="icon" data-tdel aria-label="Remove this term">✕</button></div>'; $('#bkTerms').appendChild(t.firstChild); return; }
   if (d.tdel != null) { b.closest('.bktrow').remove(); return; }
   if (d.bkempty) { for (const x of document.querySelectorAll('[data-bkempty]')) x.setAttribute('aria-pressed', String(x === b)); return; }
@@ -12109,33 +12254,36 @@ $('#dlgBox').addEventListener('click', e => {
   if (d.bkamode) { bkAdd.mode = d.bkamode; for (const x of document.querySelectorAll('[data-bkamode]')) x.setAttribute('aria-pressed', String(x === b)); $('#bkaMax').hidden = d.bkamode === 'pct'; return bkAddRows(); }
   if (d.bkast) { const n = c.names[+d.bkai], r = bkAdd.s[n] || {}; bkAdd.s[n] = { ...r, st: r.st === d.bkast ? '' : d.bkast, v: d.bkast === 'late' || r.st === d.bkast ? r.v : null }; return bkAddRows(); }
   if (d.bkasave != null) { if (bkAddSave()) { bkAdd = null; bkDraw(); } return; }
-});
-$('#dlgBox').addEventListener('change', e => {
-  if (!$('#bkBody')) return;
+}
+function bkChange(e) {
+  if (!bkHere(e)) return;
   const t = e.target;
   if (t.id === 'bkCls') { bk.cls = t.value; bk.term = null; bk.stu = 0; bk.hi = ''; return bkDraw(); }
   if (t.id === 'bkDue' || t.id === 'bkTerm') { const k = $('#bkPop').dataset.key; bkSetCol(k, t.id === 'bkDue' ? { due: t.value } : { term: t.value }); return; }
   if (t.id === 'bkaMax') return bkAddRows();
   if (t.dataset.bkafb != null) { const n = bkClass().names[+t.dataset.bkafb]; bkAdd.s[n] = { ...(bkAdd.s[n] || {}), fb: t.checked }; return bkAddRows(); }
-});
-$('#dlgBox').addEventListener('input', e => {
-  if (!$('#bkBody')) return;
+}
+function bkInput(e) {
+  if (!bkHere(e)) return;
   const t = e.target;
   if (t.dataset.wt) return bkWsum();
   if (t.dataset.bkai != null && t.classList.contains('bksc')) { const n = bkClass().names[+t.dataset.bkai]; bkAdd.s[n] = { ...(bkAdd.s[n] || {}), v: t.value === '' ? null : +t.value }; const max = bkAddMax(), p = t.closest('tr').children[2]; p.textContent = t.value === '' || isNaN(+t.value) ? '' : (max ? roundPct(+t.value / max * 100) : roundPct(+t.value)) + '%'; return; }
-});
-$('#dlgBox').addEventListener('paste', e => {
-  if (!$('#bkBody') || e.target.id !== 'bkaPaste') return;
+}
+function bkPasted(e) {
+  if (!bkHere(e) || e.target.id !== 'bkaPaste') return;
   e.preventDefault(); bkPaste((e.clipboardData || window.clipboardData).getData('text')); e.target.value = '';
-});
-$('#dlgBox').addEventListener('keydown', e => {
-  if (!$('#bkBody')) return;
+}
+function bkKey(e) {
   if ((e.key === 'Enter' || e.key === ' ') && e.target.dataset && e.target.dataset.bked && !e.target.querySelector('input')) { e.preventDefault(); return bkCellEdit(e.target); }
-  if (bk.tab === 'one' && (e.key === 'ArrowLeft' || e.key === 'ArrowRight') && !/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)) { const c = bkClass(); if (!c) return; const n = bk.stu + (e.key === 'ArrowRight' ? 1 : -1); if (n >= 0 && n < c.names.length) { e.preventDefault(); bk.stu = n; bkDraw(); } }
+  if (bk.tab === 'one' && (e.key === 'ArrowLeft' || e.key === 'ArrowRight') && !e.altKey && !e.ctrlKey && !e.metaKey && !/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)) { const c = bkClass(); if (!c) return; const n = bk.stu + (e.key === 'ArrowRight' ? 1 : -1); if (n >= 0 && n < c.names.length) { e.preventDefault(); bkGoStu(n); } }
   if (e.key === 'Escape' && $('#bkPop')) { e.preventDefault(); e.stopPropagation(); bkPopClose(); }
-}, true);
+}
+for (const host of [$('#dlgBox'), $('#vClass')]) {
+  host.addEventListener('click', bkClick); host.addEventListener('change', bkChange); host.addEventListener('input', bkInput); host.addEventListener('paste', bkPasted);
+}
+$('#dlgBox').addEventListener('keydown', e => { if (bkHere(e)) bkKey(e); }, true);
+document.addEventListener('keydown', e => { if (bkPage() && $('#bkBody') && $('#dlg').hidden && !$('#findDlg') && !$('#askDlg') && !$('#pcard')) bkKey(e); });
 $('#bookBtn').onclick = () => { openBook(batchClass() ? batchClass().id : '', { hi: batch && batch.assignment ? batch.assignment.id : '' }); };
-document.addEventListener('click', e => { const b = e.target.closest('[data-book]'); if (b && $('#start') && !$('#start').hidden) openBook(b.dataset.book); });
 
 Object.assign(window.__gs, { openBook, bkLoad, bkClassCols, bkGrade, bkConf, bkTermOf, bk: () => bk });
 
@@ -13258,16 +13406,14 @@ document.addEventListener('click', e => {
 }, true);
 document.addEventListener('keydown', e => { if ((e.key === 'Enter' || e.key === ' ') && e.target.classList && e.target.classList.contains('whob')) { e.preventDefault(); e.target.click(); } }, true);
 
-function openPeople(ci) {
-  const c = lib.classes[ci]; if (!c) return;
-  openDlg('<div class="bh"><h2>' + esc(c.name) + ' students</h2><span class="muted" id="peopleSum"></span><button class="icon" data-close aria-label="Close" style="margin-left:auto">✕</button></div>' +
-    '<div class="bb"><div id="peopleTbl"></div><div id="peoplePaste" hidden><p class="muted" style="margin:10px 0 6px;font-size:13.5px">Paste a class list with names and a student ID or email column (from ManageBac or a spreadsheet). Each row fills in the student with the same name.</p><textarea class="big" id="peopleIn" placeholder="Name, student ID, email"></textarea>' +
-    '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px"><button class="btn sm" data-pcancel>Cancel</button><button class="btn sm primary" data-pfill>Fill in</button></div></div></div>' +
-    '<div class="bf"><button class="btn" data-ppaste>Paste IDs and emails…</button><button class="btn" data-pmail>Copy all emails</button><span style="margin-right:auto"></span><button class="btn primary" data-close>Done</button></div>');
+let peopleQuiet = false;
+function peoplePanel(el, c) {
+  el.innerHTML = '<div class="pplbar"><span class="muted" id="peopleSum"></span><span class="sp"></span><button class="btn sm" data-ppaste>Paste IDs and emails…</button><button class="btn sm" data-pmail>Copy all emails</button></div>' +
+    '<div id="peoplePaste" hidden><p class="muted" style="margin:0 0 6px;font-size:13.5px">Paste a class list with names and a student ID or email column (from ManageBac or a spreadsheet). Each row fills in the student with the same name.</p><textarea class="big" id="peopleIn" placeholder="Name, student ID, email"></textarea>' +
+    '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px"><button class="btn sm" data-pcancel>Cancel</button><button class="btn sm primary" data-pfill>Fill in</button></div></div><div id="peopleTbl"></div>' +
+    '<p class="muted pplcap">Click a name for that student’s grades and charts. The ⓘ opens their details, with other spellings and a note.</p>';
   fillPeople(c);
-  const box = $('#dlgBox');
-  box.onclick = e => {
-    if (e.target.closest('[data-close]')) return closeDlg();
+  el.onclick = e => {
     if (e.target.closest('[data-ppaste]')) { $('#peoplePaste').hidden = false; return $('#peopleIn').focus(); }
     if (e.target.closest('[data-pcancel]')) { $('#peoplePaste').hidden = true; return; }
     if (e.target.closest('[data-pmail]')) { const m = c.names.map(n => infoOf(c, n).email).filter(Boolean); return m.length ? copy(m.join('; '), 'Copied ' + m.length + (m.length === 1 ? ' email' : ' emails')) : toast('No emails yet'); }
@@ -13279,26 +13425,37 @@ function openPeople(ci) {
       toast(n ? 'Filled in ' + n + (n === 1 ? ' student' : ' students') + (miss.length ? '. Not on the roster: ' + miss.slice(0, 3).join(', ') + (miss.length > 3 ? ' and ' + (miss.length - 3) + ' more' : '') : '') : 'No names matched the roster', 6000);
     }
   };
-  box.onchange = e => {
+  el.onchange = e => {
     const f = e.target.closest('[data-pp]'); if (!f) return;
     const n = c.names[+f.dataset.pi], v = f.value.trim();
     if (f.dataset.pp === 'email' && v && !EMAIL_RX.test(v)) { toast('That doesn’t look like an email address'); return; }
-    setInfo(c, n, { [f.dataset.pp]: f.dataset.pp === 'id' ? v.replace(/\s+/g, '') : v }); saveLib(); afterInfo(c);
+    setInfo(c, n, { [f.dataset.pp]: f.dataset.pp === 'id' ? v.replace(/\s+/g, '') : v }); saveLib();
+    peopleQuiet = true; try { afterInfo(c); } finally { peopleQuiet = false; }   // the row she's typing in stays as it is, so Tab goes on to the next box
+    peopleSum(c);
   };
 }
+function peopleSum(c) {
+  const el = $('#peopleSum'); if (!el) return;
+  el.textContent = c.names.length + (c.names.length === 1 ? ' student' : ' students') + ' · ' + c.names.filter(n => infoOf(c, n).id).length + ' with an ID';
+}
 function fillPeople(c) {
-  const t = $('#peopleTbl'); if (!t) return;
-  const withId = c.names.filter(n => infoOf(c, n).id).length;
-  $('#peopleSum').textContent = c.names.length + (c.names.length === 1 ? ' student' : ' students') + ' · ' + withId + ' with an ID';
-  t.innerHTML = c.names.length ? '<table class="gl ppl"><thead><tr><th>#</th><th>Name</th><th>Student ID</th><th>Email</th><th>Last year</th><th>Also called</th></tr></thead><tbody>' + c.names.map((n, k) => { const i = infoOf(c, n);
-    return '<tr><td class="n">' + (k + 1) + '</td><td class="nm"><button class="link" data-wc="' + esc(c.id) + '" data-wn="' + esc(n) + '">' + esc(n) + '</button></td>' +
+  const t = $('#peopleTbl'); if (!t || peopleQuiet) return;
+  peopleSum(c);
+  t.innerHTML = c.names.length ? '<table class="gl ppl"><thead><tr><th>#</th><th>Name</th><th class="pg" id="peopleGh">Grade</th><th>Student ID</th><th>Email</th><th>Last year</th><th>Also called</th></tr></thead><tbody>' + c.names.map((n, k) => { const i = infoOf(c, n);
+    return '<tr><td class="n">' + (k + 1) + '</td><td class="nm"><a class="link" href="' + classHash(c, 'students', k) + '">' + esc(n) + '</a>' + whoBtn('data-wc="' + esc(c.id) + '" data-wn="' + esc(n) + '"', n) + '</td><td class="pg" data-pg="' + k + '"></td>' +
       '<td><input class="pc-in" data-pp="id" data-pi="' + k + '" value="' + esc(i.id || '') + '" placeholder="Student ID" aria-label="Student ID for ' + esc(n) + '"></td>' +
       '<td><input class="pc-in" type="email" data-pp="email" data-pi="' + k + '" value="' + esc(i.email || '') + '" placeholder="Email" aria-label="Email for ' + esc(n) + '"></td>' +
       '<td><input class="pc-in" data-pp="prev" data-pi="' + k + '" value="' + esc(i.prev || '') + '" placeholder="Optional" aria-label="Last year’s level for ' + esc(n) + '"></td>' +
       '<td class="muted">' + ((i.other || []).length || '–') + '</td></tr>'; }).join('') + '</tbody></table>'
     : '<p class="muted">No students on this roster yet. Use Edit roster to add them.</p>';
+  peopleGrades(c);
 }
-document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('#peopleTbl [data-wc]'); if (b) { e.stopPropagation(); personCard(b.dataset.wc, b.dataset.wn); } }, true);
+function peopleGrades(c) {
+  const t = $('#peopleTbl'); if (!t || bk.host !== 'page' || !bk.cols) return;
+  const conf = bkConf(), term = conf.terms.length ? bkTermNow(conf.terms) : '', cols = bkClassCols(c, bk.cols).filter(x => x.termId === term), tn = conf.terms.find(x => x.id === term);
+  const h = $('#peopleGh'); if (h) h.textContent = tn ? tn.name || 'Term' : 'Grade';
+  for (const td of t.querySelectorAll('td[data-pg]')) { const r = bkGrade(c.names[+td.dataset.pg], cols, conf); td.textContent = r.grade != null ? pctAvgText(r.grade) : '–'; }
+}
 
 function levelHtml(s) {
   if (anonOn() || s.meanPct == null) return '';
@@ -14568,7 +14725,7 @@ let setLibFrom, libNews;   // setLibFrom replaces the whole library, a merge hav
   setLibFrom = l => { prev = libPrev(l); const ok = roomy('gs.lib', l); if (ok) libSeen = lsRaw('gs.lib'); return ok; };
   libNews = () => {
     const now = lsRaw('gs.lib');
-    if (!now || now === libSeen || !$('#dlg').hidden) return;
+    if (!now || now === libSeen || !$('#dlg').hidden || (shellReady && classPanelBusy())) return;
     let other = null; try { other = JSON.parse(now); } catch {}
     if (!other) return;
     lib = migrateLib(other); prev = libPrev(lib); libSeen = now; refs();
@@ -17319,6 +17476,239 @@ function wireWordNotes(w, el, page, aside, editing, flush, save) {
   }
 }
 
+/* ---------------- a class page's tabs: Gradebook, Students and Charts, and one student's own page (11/10) ---------------- */
+let panelKey = '', panelTok = 0;
+function classPanelGone() { panelKey = ''; panelTok++; if (bk.host === 'page') { bk.cols = null; bkPopClose(); } }
+function classPanelBusy() { const a = document.activeElement; return !!$('#bkAdd, #bkSetup, .bkcin, #bkPop, .bktypes') || (!!a && /INPUT|TEXTAREA|SELECT/.test(a.tagName) && !!a.closest('#classPanel')); }
+function classPanelDraw(fresh) {
+  const r = routeNow(), el = $('#classPanel');
+  if (r.v !== 'class' || !r.tab || !el) { panelKey = ''; return; }
+  const c = r.c, key = c.id + '/' + r.tab + '/' + (r.stu == null ? '' : r.stu);
+  if (!fresh && key === panelKey && el.firstChild && bk.lib === lib) return;
+  panelKey = key;
+  const tok = ++panelTok, list = r.tab === 'students' && r.stu == null, kept = bk.host === 'page' && !!bk.cols && bk.ver === libVer && bk.lib === lib;
+  bkPopClose(); ovTipHide();
+  bk = { ...bk, host: 'page', lib, tab: r.tab === 'gradebook' ? 'table' : r.tab === 'charts' ? 'class' : 'one', cls: c.id, stu: r.stu || 0, hi: '', cols: kept ? bk.cols : null };
+  if (list) peoplePanel(el, c);
+  else el.innerHTML = '<div class="bkbody bkpage" id="bkBody"><p class="muted bkpad">Looking through your saved work…</p></div>';
+  const show = () => list ? peopleGrades(c) : bkDraw();
+  if (kept) return show();
+  bkLoad().then(cols => { if (tok !== panelTok) return; bk.cols = cols; bk.ver = libVer; show(); });
+}
+
+/* ---------- charts: shared pieces ---------- */
+const CH_BANDS = ['Below 60', '60 to 69', '70 to 79', '80 to 89', '90 to 100'];
+const chBand = p => { const v = roundPct(p); return v >= 90 ? 5 : v >= 80 ? 4 : v >= 70 ? 3 : v >= 60 ? 2 : 1; };
+const chQ = (v, f) => { const k = (v.length - 1) * f, i = Math.floor(k); return v[i] + (v[Math.ceil(k)] - v[i]) * (k - i); };
+const chCut = (t, n) => t.length > n ? t.slice(0, n - 1) + '…' : t;
+function chLines(name, max, lines) {
+  if (!lines) return [];
+  const out = []; let cur = '';
+  for (const w of String(name).split(/\s+/).filter(Boolean)) { if (!cur) cur = w; else if ((cur + ' ' + w).length <= max) cur += ' ' + w; else { out.push(cur); cur = w; } }
+  if (cur) out.push(cur);
+  if (out.length > lines) { out[lines - 1] += '…'; out.length = lines; }
+  return out.map(l => chCut(l, max + 1));
+}
+const chFit = (step, n) => { const chars = Math.floor(step / 6.6); return { chars, lines: chars < 7 ? 0 : n <= 8 ? 2 : 1, dates: step >= 40 ? 1 : 2 }; };
+function chBarPath(x0, x1, y, h, r) {
+  const d = x1 >= x0 ? 1 : -1, rr = Math.min(r, Math.abs(x1 - x0), h / 2);
+  return 'M' + x0 + ' ' + y + 'H' + (x1 - d * rr) + 'Q' + x1 + ' ' + y + ' ' + x1 + ' ' + (y + rr) + 'V' + (y + h - rr) + 'Q' + x1 + ' ' + (y + h) + ' ' + (x1 - d * rr) + ' ' + (y + h) + 'H' + x0 + 'Z';
+}
+const chTip = (v, l, n) => ' data-tv="' + esc(v) + '" data-tl="' + esc(l) + '" data-tn="' + esc(n || '') + '"';
+const chBandLegend = () => CH_BANDS.map((l, i) => '<span><i class="chsw b' + (i + 1) + '"></i>' + l + '</span>');
+const chNone = '<p class="muted">Nothing to show yet.</p>';
+const chSec = (title, body, cap, id) => '<section' + (id ? ' id="' + id + '"' : '') + '><h3 class="ovh3">' + title + '</h3>' + body + (cap ? '<p class="muted ovcap2">' + cap + '</p>' : '') + '</section>';
+
+/* ---------- every student, every assignment ---------- */
+function chCell(col, cell, who) {
+  const tip = (v, note) => chTip(v, who, col.name + (note ? ' · ' + note : ''));
+  if (cell && cell.st === 'missing') return '<span class="chc miss"' + tip('Missing') + '>M</span>';
+  if (cell && cell.st === 'excused') return '<span class="chc exc"' + tip('Excused') + '>E</span>';
+  if (col.type === 'fm') return '<span class="chc fm"' + tip(cell && cell.fb ? 'Feedback given' : 'No feedback yet', 'Formative') + '>' + (cell && cell.fb ? '✓' : '') + '</span>';
+  if (!cell || cell.pct == null) return '<span class="chc none"' + tip('Not scored yet') + '></span>';
+  const tag = cell.partial ? ['P', 'partly scored'] : cell.out ? ['O', 'left out of the average'] : cell.st === 'late' ? ['L', 'late'] : null;
+  return '<span class="chc ' + (bkCounts(cell) ? 'b' + chBand(cell.pct) : 'nc') + '"' + tip(cell.pct + '%', [cell.total != null ? fmtNum(cell.total) + ' / ' + fmtNum(cell.max) : '', tag ? tag[1] : ''].filter(Boolean).join(' · ')) + '>' + cell.pct + (tag ? '<sup>' + tag[0] + '</sup>' : '') + '</span>';
+}
+function bkHeat(c, cols, conf) {
+  if (!cols.length || !c.names.length) return '';
+  const sort = bk.sort && (bk.sort.k === 'name' || bk.sort.k === 'grade' || cols.some(x => x.key === bk.sort.k)) ? bk.sort : { k: 'grade', dir: -1 }, scol = cols.find(x => x.key === sort.k);
+  const rows = c.names.map((n, i) => ({ n, i, shown: bkWho(n, i), r: bkGrade(n, cols, conf) }));
+  const val = row => {
+    if (sort.k === 'name') return row.i;
+    if (sort.k === 'grade') return row.r.grade;
+    const cell = scol.cells.get(row.n);
+    return scol.type === 'fm' ? (cell && cell.fb ? 1 : 0) : cell && cell.pct != null && cell.st !== 'missing' && cell.st !== 'excused' ? cell.pct : null;
+  };
+  rows.sort((a, b) => { const x = val(a), y = val(b); return x == null || y == null ? (x == null ? 1 : 0) - (y == null ? 1 : 0) || a.i - b.i : (x - y) * sort.dir || a.i - b.i; });
+  const head = (k, inner, cls, label) => '<th class="' + cls + '"' + (sort.k === k ? ' aria-sort="' + (sort.dir < 0 ? 'descending' : 'ascending') + '"' : '') + '><button data-chsort="' + esc(k) + '" title="Sort by ' + esc(label) + '">' + inner + (sort.k === k ? '<span class="charr" aria-hidden="true">' + (sort.dir < 0 ? '▾' : '▴') + '</span>' : '') + '</button></th>';
+  const page = bkPage(), name = row => page ? '<a class="bklink" href="' + classHash(c, 'students', row.i) + '">' + esc(row.shown) + '</a>' : '<button class="link" data-bkgo="' + row.i + '">' + esc(row.shown) + '</button>';
+  const avg = col => { if (col.type === 'fm') return c.names.filter(n => (col.cells.get(n) || {}).fb).length + '/' + c.names.length; const ps = c.names.map(n => col.cells.get(n)).filter(bkCounts).map(x => x.pct); return ps.length ? roundPct(bkMean(ps)) + '%' : '–'; };
+  const gs = rows.map(x => x.r.grade).filter(v => v != null), gname = bk.term === '*' ? 'Grade' : (bkTabs(cols).find(t => t[0] === bk.term) || [, 'Grade'])[1];
+  return '<section class="chheat" id="bkHeat"><h3 class="ovh3">Every student, every assignment</h3><div class="chwrap"><table class="chtab"><thead><tr>' + head('name', 'Student', 'chn', 'roster order') +
+    cols.map(col => head(col.key, '<i class="chdot ' + (col.type || 'no') + '"></i><span>' + esc(col.name) + '</span><small>' + esc(bkDay(col.due)) + '</small>', 'chh', col.name)).join('') + head('grade', esc(gname), 'chg', 'grade') + '</tr></thead><tbody>' +
+    rows.map(row => '<tr><th class="chn" scope="row">' + name(row) + '</th>' + cols.map(col => '<td>' + chCell(col, col.cells.get(row.n), row.shown) + '</td>').join('') + '<td class="chg">' + (row.r.grade != null ? pctAvgText(row.r.grade) : '–') + '</td></tr>').join('') +
+    '<tr class="chfoot"><th class="chn" scope="row">Class average</th>' + cols.map(col => '<td>' + avg(col) + '</td>').join('') + '<td class="chg">' + (gs.length ? pctAvgText(bkMean(gs)) : '–') + '</td></tr></tbody></table></div>' +
+    '<div class="bkleg chleg">' + chBandLegend().join('') + '<span><i class="chsw miss"></i>Missing</span><span><i class="chsw fm">✓</i>Feedback given (formative)</span><span><i class="chdot sum"></i>Summative</span><span><i class="chdot ic"></i>In-class</span></div>' +
+    '<p class="muted ovcap2">The stronger the blue, the higher the score, so a faint row is a student having a hard time and a faint column is an assignment the class found hard. Click a heading to sort by it. L is late; a score with no fill (P partly scored, O left out) isn’t in the average.</p></section>';
+}
+
+/* ---------- who is moving: each student's last three scores against their earlier ones ---------- */
+function bkMoving(c, cols) {
+  const sc = bkScored(cols), list = [];
+  c.names.forEach((n, i) => {
+    const v = sc.map(col => col.cells.get(n)).filter(bkCounts).map(x => x.pct); if (v.length < 4) return;
+    const a = bkMean(v.slice(-3)), b = bkMean(v.slice(0, -3));
+    list.push({ name: bkWho(n, i), d: Math.round((a - b) * 10) / 10, a, b });
+  });
+  if (!list.length) return '<p class="muted" id="bkMove">This shows once a student has four scored assignments ' + (bk.term === '*' || !bkConf().terms.length ? 'this year' : 'in this term') + '.</p>';
+  list.sort((x, y) => y.d - x.d);
+  const up = list.filter(x => x.d > 0).slice(0, 5), down = list.filter(x => x.d < 0).slice(-5), both = up.concat(down);
+  if (!both.length) return '<p class="muted" id="bkMove">No one’s last three scores differ from their earlier ones.</p>';
+  const m = Math.max(5, Math.ceil(Math.max(...both.map(x => Math.abs(x.d))) / 5) * 5), step = m > 30 || (m > 15 && bkW() < 520) ? 10 : 5;
+  const W = bkW(), L = Math.min(150, Math.round(W * .27)), P = 48, rh = 28, gap = up.length && down.length ? 10 : 0, H = both.length * rh + gap + 30, X = v => L + P + (v + m) / (2 * m) * (W - L - 2 * P);
+  let s = '';
+  for (let t = -m; t <= m; t += step) if (t) s += '<line x1="' + X(t) + '" x2="' + X(t) + '" y1="0" y2="' + (H - 24) + '" class="tgl"/>';
+  for (let t = -m; t <= m; t += step) s += '<text x="' + X(t) + '" y="' + (H - 8) + '" text-anchor="middle" class="ttk">' + (t > 0 ? '+' : t < 0 ? '−' : '') + Math.abs(t) + '</text>';
+  both.forEach((x, k) => {
+    const y = k * rh + (k >= up.length ? gap : 0) + 4, x0 = X(0), far = Math.abs(X(x.d) - x0) < 5 ? x0 + (x.d > 0 ? 5 : -5) : X(x.d), txt = (x.d > 0 ? '+' : '−') + Math.abs(x.d).toFixed(1);
+    s += '<text x="0" y="' + (y + 13) + '" class="tlb">' + esc(chCut(x.name, Math.floor(L / 6.6))) + '</text><path d="' + chBarPath(x0, far, y, 18, 4) + '" class="chmv ' + (x.d > 0 ? 'up' : 'down') + '" tabindex="0"' + chTip(txt + ' points', x.name, 'Last three ' + pctAvgText(x.a) + ', earlier ' + pctAvgText(x.b)) + '/>' +
+      '<text x="' + (far + (x.d > 0 ? 6 : -6)) + '" y="' + (y + 13) + '" text-anchor="' + (x.d > 0 ? 'start' : 'end') + '" class="tlb me">' + txt + '</text>';
+  });
+  s += '<line x1="' + X(0) + '" x2="' + X(0) + '" y1="0" y2="' + (H - 24) + '" class="chzero"/>';
+  return '<svg class="tsvg" id="bkMove" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' + esc(both.map(x => x.name + ' ' + (x.d > 0 ? 'up ' : 'down ') + Math.abs(x.d).toFixed(1)).join(', ')) + '">' + s + '</svg>' +
+    '<div class="bkleg"><span><i class="chsw up"></i>Rising</span><span><i class="chsw down"></i>Dropping</span></div>';
+}
+
+/* ---------- where the class stands: how many students landed in each range, assignment by assignment ---------- */
+function bkStacks(c, cols) {
+  const sc = bkScored(cols).map(col => { const by = [[], [], [], [], []]; c.names.forEach((n, i) => { const cell = col.cells.get(n); if (bkCounts(cell)) by[chBand(cell.pct) - 1].push(bkWho(n, i)); }); return { col, by, n: by.reduce((a, b) => a + b.length, 0) }; }).filter(x => x.n);
+  if (!sc.length) return chNone;
+  const most = Math.max(...sc.map(x => x.n)), tick = most <= 6 ? 1 : most <= 12 ? 2 : most <= 20 ? 5 : most <= 40 ? 10 : 20, top = Math.ceil(most / tick) * tick;
+  const n = sc.length, W = bkW(), L = 34, R = 6, T = 8, PH = 190, step = (W - L - R) / n, fit = chFit(step, n), lines = fit.lines, H = T + PH + 24 + lines * 14, bw = Math.max(8, Math.min(52, step * .62)), Y = v => T + PH - v / top * PH;
+  let s = '';
+  for (let v = 0; v <= top; v += tick) s += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + Y(v) + '" y2="' + Y(v) + '" class="tgl"/><text x="' + (L - 8) + '" y="' + (Y(v) + 4) + '" text-anchor="end" class="ttk">' + v + '</text>';
+  sc.forEach((x, i) => {
+    const cx = L + step * (i + .5); let acc = 0;
+    x.by.forEach((names, b) => {
+      if (!names.length) return;
+      const y0 = Y(acc), y1 = Y(acc + names.length), h = Math.max(2, y0 - y1 - 2); acc += names.length;
+      s += '<rect x="' + (cx - bw / 2) + '" y="' + (y0 - 1 - h) + '" width="' + bw + '" height="' + h + '" rx="2" class="chseg b' + (b + 1) + '" tabindex="0"' + chTip(people(names.length, 'student'), CH_BANDS[b] + ' · ' + x.col.name, names.join(', ')) + '/>';
+    });
+    chLines(x.col.name, fit.chars, lines).forEach((l, k) => { s += '<text x="' + cx + '" y="' + (T + PH + 16 + k * 14) + '" text-anchor="middle" class="tlb">' + esc(l) + '</text>'; });
+    if (i % fit.dates === 0) s += '<text x="' + cx + '" y="' + (H - 4) + '" text-anchor="middle" class="ttk">' + esc(bkDay(x.col.due)) + '</text>';
+  });
+  return '<svg class="tsvg" id="bkStacks" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' + esc(sc.map(x => x.col.name + ': ' + x.by.map((b, i) => b.length ? b.length + ' ' + CH_BANDS[i].toLowerCase() : '').filter(Boolean).join(', ')).join('. ')) + '">' + s + '</svg>' +
+    '<div class="bkleg">' + chBandLegend().reverse().join('') + '</div>';
+}
+
+/* ---------- rubric rows across the summatives ---------- */
+const chRowName = x => typeof x === 'string' ? x.trim() : String((x && x.name) || '').trim();
+function chRowAvgs(c, cols, only) {
+  return cols.filter(x => x.type === 'sum').map(col => {
+    const by = new Map();
+    for (const n of only ? [only] : c.names) {
+      const cell = col.cells.get(n); if (!cell || !cell.rows || cell.out || cell.st === 'missing' || cell.st === 'excused') continue;
+      for (const [nm, v] of cell.rows) { const name = chRowName(nm), k = name.toLowerCase(); if (!k || v == null || isNaN(+v)) continue; if (!by.has(k)) by.set(k, { name, v: [] }); by.get(k).v.push(+v); }
+    }
+    return { col, by };
+  }).filter(x => x.by.size);
+}
+function bkRubricRows(c, cols) {
+  const per = chRowAvgs(c, cols);
+  if (!per.length) return '<p class="muted" id="bkRows">This shows once a summative has been scored with a rubric.</p>';
+  const keys = []; for (const p of per) for (const k of p.by.keys()) if (!keys.includes(k)) keys.push(k);
+  const series = keys.map(k => { const pts = per.map(p => p.by.has(k) ? bkMean(p.by.get(k).v) : null), have = pts.filter(v => v != null); return { k, name: per.find(p => p.by.has(k)).by.get(k).name, pts, mean: bkMean(have), last: have[have.length - 1], at: pts.reduce((a, v, i) => v != null ? i : a, 0) }; });
+  const low = series.reduce((a, b) => b.mean < a.mean ? b : a), vals = series.flatMap(x => x.pts).filter(v => v != null);
+  const hi = 4, lo = Math.max(0, Math.min(hi - 1, Math.floor(Math.min(...vals) - .25))), tick = hi - lo > 2 ? 1 : .5;
+  const n = per.length, W = bkW(), L = 34, R = Math.min(176, Math.round(W * .3)), T = 12, B = 58, H = 250, X = i => n === 1 ? L + (W - L - R) / 2 : L + 20 + i * (W - L - R - 40) / (n - 1), Y = v => T + (hi - v) / (hi - lo) * (H - T - B);
+  let s = '';
+  for (let v = lo; v <= hi + 1e-9; v += tick) s += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + Y(v) + '" y2="' + Y(v) + '" class="tgl"/><text x="' + (L - 8) + '" y="' + (Y(v) + 4) + '" text-anchor="end" class="ttk">' + v + '</text>';
+  const room = Math.max(8, Math.floor((W - L - R) / n / 6.6));
+  per.forEach((p, i) => { chLines(p.col.name, room, 2).forEach((l, j) => { s += '<text x="' + X(i) + '" y="' + (H - B + 18 + j * 14) + '" text-anchor="middle" class="tlb">' + esc(l) + '</text>'; }); s += '<text x="' + X(i) + '" y="' + (H - 4) + '" text-anchor="middle" class="ttk">' + esc(bkDay(p.col.due)) + '</text>'; });
+  for (const x of series.filter(y => y !== low).concat([low])) {
+    const cls = x === low ? ' lo' : '', seg = []; let run = [];
+    x.pts.forEach((v, i) => { if (v == null) { if (run.length) seg.push(run); run = []; } else run.push(X(i) + ',' + Y(v)); }); if (run.length) seg.push(run);
+    s += seg.map(r => '<polyline class="chrl' + cls + '" points="' + r.join(' ') + '"/>').join('');
+    x.pts.forEach((v, i) => { if (v != null) s += '<circle class="chrd' + cls + '" cx="' + X(i) + '" cy="' + Y(v) + '" r="5" tabindex="0"' + chTip(fmtNum(Math.round(v * 10) / 10) + ' out of 4', x.name + ' · ' + per[i].col.name, people(per[i].by.get(x.k).v.length, 'paper')) + '/>'; });
+  }
+  const labs = series.map(x => ({ x, y: Y(x.last) })).sort((a, b) => a.y - b.y);
+  for (let i = 1; i < labs.length; i++) if (labs[i].y - labs[i - 1].y < 15) labs[i].y = labs[i - 1].y + 15;
+  const over = labs.length ? labs[labs.length - 1].y - (H - B + 6) : 0; if (over > 0) for (const l of labs) l.y -= over;
+  for (const l of labs) s += '<text x="' + (W - R + 14) + '" y="' + (l.y + 4) + '" class="tlb' + (l.x === low ? ' me' : '') + '">' + esc(chCut(l.x.name, Math.max(6, Math.floor((R - 44) / 6.6)))) + ' ' + fmtNum(Math.round(l.x.last * 10) / 10) + '</text>';
+  return '<svg class="tsvg" id="bkRows" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' + esc(series.map(x => x.name + ': ' + x.pts.map((v, i) => v != null ? per[i].col.name + ' ' + fmtNum(Math.round(v * 10) / 10) : '').filter(Boolean).join(', ')).join('. ')) + '">' + s + '</svg>';
+}
+
+/* ---------- summatives against in-class work: one dot per student ---------- */
+function bkScatter(c, cols, conf) {
+  const pts = c.names.map((n, i) => { const r = bkGrade(n, cols, conf); return r.by.sum != null && r.by.ic != null ? { name: bkWho(n, i), x: r.by.ic, y: r.by.sum } : null; }).filter(Boolean);
+  if (pts.length < 2) return '<p class="muted" id="bkScatter">This shows once students have both a summative and an in-class score.</p>';
+  const all = pts.flatMap(p => [p.x, p.y]), lo = Math.max(0, Math.floor((Math.min(...all) - 3) / 10) * 10), hi = Math.max(100, Math.ceil(Math.max(...all) / 10) * 10);
+  const W = Math.min(480, bkW()), H = Math.round(W * .72), L = 58, R = 16, T = 12, B = 46, X = v => L + (v - lo) / (hi - lo) * (W - L - R), Y = v => T + (hi - v) / (hi - lo) * (H - T - B), tick = hi - lo > 60 ? 20 : 10;
+  let s = '';
+  for (let v = lo; v <= hi; v += tick) s += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + Y(v) + '" y2="' + Y(v) + '" class="tgl"/><line x1="' + X(v) + '" x2="' + X(v) + '" y1="' + T + '" y2="' + (H - B) + '" class="tgl"/>' +
+    '<text x="' + (L - 8) + '" y="' + (Y(v) + 4) + '" text-anchor="end" class="ttk">' + v + '%</text><text x="' + X(v) + '" y="' + (H - B + 16) + '" text-anchor="middle" class="ttk">' + v + '%</text>';
+  s += '<line x1="' + X(lo) + '" y1="' + Y(lo) + '" x2="' + X(hi) + '" y2="' + Y(hi) + '" class="chdiag"/>' +
+    '<text x="' + (L + 8) + '" y="' + (T + 16) + '" class="ttk">Stronger on summatives</text><text x="' + (W - R - 8) + '" y="' + (H - B - 8) + '" text-anchor="end" class="ttk">Stronger in class</text>' +
+    '<text x="' + (L + (W - L - R) / 2) + '" y="' + (H - 6) + '" text-anchor="middle" class="ttk">In-class average</text><text transform="translate(12 ' + (T + (H - T - B) / 2) + ') rotate(-90)" text-anchor="middle" class="ttk">Summative average</text>';
+  for (const p of pts) s += '<circle class="chpt" cx="' + X(Math.min(hi, p.x)) + '" cy="' + Y(Math.min(hi, p.y)) + '" r="5.5" tabindex="0"' + chTip(p.name, 'Summatives ' + pctAvgText(p.y), 'In-class ' + pctAvgText(p.x)) + '/>';
+  for (const p of [...pts].sort((a, b) => Math.abs(b.y - b.x) - Math.abs(a.y - a.x)).slice(0, 2)) if (Math.abs(p.y - p.x) >= 8) {
+    const up = p.y > p.x, nm = chCut(p.name, 20), w = nm.length * 6.8, left = up ? X(p.x) - 10 - w >= L + 4 : X(p.x) + 10 + w > W - R;   // above the line there's room to the upper left, below it to the lower right
+    s += '<text x="' + (X(p.x) + (left ? -10 : 10)) + '" y="' + (Y(p.y) + (up ? -4 : 13)) + '" text-anchor="' + (left ? 'end' : 'start') + '" class="tlb me">' + esc(nm) + '</text>';
+  }
+  return '<svg class="tsvg chsq" style="max-width:' + W + 'px" id="bkScatter" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' + esc(pts.map(p => p.name + ': summatives ' + pctAvgText(p.y) + ', in-class ' + pctAvgText(p.x)).join('. ')) + '">' + s + '</svg>';
+}
+
+/* ---------- one student ---------- */
+function bkStrip(c, cols, n) {
+  if (!cols.length) return '';
+  return '<section class="chstripsec" id="bkStrip"><h3 class="ovh3">' + (bk.term === '*' || !bkConf().terms.length ? 'The year so far' : 'The term so far') + '</h3><div class="chstrip">' + cols.map(col => {
+    const cell = col.cells.get(n); let cls = 'none', txt = 'Not scored yet';
+    if (cell && cell.st === 'missing') { cls = 'miss'; txt = 'Missing'; }
+    else if (cell && cell.st === 'excused') { cls = 'exc'; txt = 'Excused'; }
+    else if (col.type === 'fm') { cls = 'fm'; txt = cell && cell.fb ? '✓ Feedback given' : cell && cell.started ? 'Started' : 'No feedback yet'; }
+    else if (cell && cell.pct != null) { cls = bkCounts(cell) ? 'b' + chBand(cell.pct) : 'nc'; txt = cell.pct + '%' + (cell.partial ? ' · partial' : cell.out ? ' · left out' : cell.st === 'late' ? ' · late' : ''); }
+    return '<div class="chsi"><span class="chc ' + cls + '"' + (cell && cell.total != null ? ' title="' + esc(fmtNum(cell.total) + ' / ' + fmtNum(cell.max)) + '"' : '') + '>' + txt + '</span><b>' + esc(col.name) + '</b><small>' + esc(bkLabel(col.type, true)) + (col.due ? ' · ' + esc(bkDay(col.due)) : '') + '</small></div>';
+  }).join('') + '</div><div class="bkleg chleg">' + chBandLegend().join('') + '<span><i class="chsw miss"></i>Missing</span><span><i class="chsw fm"></i>Formative</span></div></section>';
+}
+function bkBandLine(c, sc, n, shown) {
+  const cols = sc.map(col => { const v = c.names.map(x => col.cells.get(x)).filter(bkCounts).map(x => x.pct).sort((a, b) => a - b), cell = col.cells.get(n); return { col, v, me: bkCounts(cell) ? cell.pct : null, miss: !!cell && cell.st === 'missing' }; }).filter(x => x.v.length || x.miss);
+  if (!cols.length) return chNone;
+  const q = cols.map(x => x.v.length ? [chQ(x.v, .25), chQ(x.v, .5), chQ(x.v, .75)] : null), vals = q.filter(Boolean).flat().concat(cols.map(x => x.me).filter(v => v != null));
+  if (!vals.length) return chNone;
+  const lo = Math.max(0, Math.floor((Math.min(...vals) - 8) / 10) * 10), hi = Math.min(100, Math.ceil((Math.max(...vals) + 2) / 10) * 10) || 100;
+  const k = cols.length, W = bkW(), L = 44, R = 30, fit = chFit((W - L - R) / Math.max(1, k), k), lines = fit.lines, T = 16, B = 26 + lines * 14, H = 190 + B, X = i => L + (k === 1 ? (W - L - R) / 2 : i * (W - L - R) / (k - 1)), Y = v => T + (hi - Math.min(hi, v)) / Math.max(10, hi - lo) * (H - T - B);
+  let s = '';
+  for (let v = lo; v <= hi; v += 10) s += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + Y(v) + '" y2="' + Y(v) + '" class="tgl"/><text x="' + (L - 8) + '" y="' + (Y(v) + 4) + '" text-anchor="end" class="ttk">' + v + '%</text>';
+  const runs = []; let run = [];
+  q.forEach((x, i) => { if (!x) { if (run.length) runs.push(run); run = []; } else run.push(i); }); if (run.length) runs.push(run);
+  for (const r of runs) {
+    if (r.length === 1) { const i = r[0]; s += '<rect class="chband" x="' + (X(i) - 14) + '" y="' + Y(q[i][2]) + '" width="28" height="' + Math.max(2, Y(q[i][0]) - Y(q[i][2])) + '"/><line class="chmed" x1="' + (X(i) - 14) + '" x2="' + (X(i) + 14) + '" y1="' + Y(q[i][1]) + '" y2="' + Y(q[i][1]) + '"/>'; continue; }
+    s += '<polygon class="chband" points="' + r.map(i => X(i) + ',' + Y(q[i][2])).concat([...r].reverse().map(i => X(i) + ',' + Y(q[i][0]))).join(' ') + '"/><polyline class="chmed" points="' + r.map(i => X(i) + ',' + Y(q[i][1])).join(' ') + '"/>';
+  }
+  const seg = []; run = [];
+  cols.forEach((x, i) => { if (x.me == null) { if (run.length) seg.push(run); run = []; } else run.push(X(i) + ',' + Y(x.me)); }); if (run.length) seg.push(run);
+  s += seg.map(r => '<polyline class="bkln" points="' + r.join(' ') + '"/>').join('');
+  cols.forEach((x, i) => {
+    if (x.me != null) s += '<circle class="bkdot ' + (x.col.type || '') + '" cx="' + X(i) + '" cy="' + Y(x.me) + '" r="5.5" tabindex="0"' + chTip(x.me + '%', x.col.name, bkLabel(x.col.type) + (q[i] ? ' · class middle half ' + roundPct(q[i][0]) + '–' + roundPct(q[i][2]) + '%' : '')) + '/>';
+    else if (x.miss) s += '<circle class="chmiss" cx="' + X(i) + '" cy="' + (H - B - 10) + '" r="6" tabindex="0"' + chTip('Missing', x.col.name) + '/><text x="' + X(i) + '" y="' + (H - B - 22) + '" text-anchor="middle" class="ttk">missing</text>';
+    chLines(x.col.name, fit.chars, lines).forEach((l, j) => { s += '<text x="' + X(i) + '" y="' + (H - B + 18 + j * 14) + '" text-anchor="middle" class="tlb">' + esc(l) + '</text>'; });
+    if (i % fit.dates === 0) s += '<text x="' + X(i) + '" y="' + (H - 4) + '" text-anchor="middle" class="ttk">' + esc(bkDay(x.col.due)) + '</text>';
+  });
+  return '<svg class="tsvg" id="bkStuLine" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' + esc(cols.map((x, i) => x.col.name + ' ' + (x.me != null ? x.me + '%' : x.miss ? 'missing' : '–') + (q[i] ? ', class middle ' + roundPct(q[i][1]) + '%' : '')).join('. ')) + '">' + s + '</svg>' +
+    '<div class="bkleg"><span><i class="me"></i>' + esc(shown) + '</span><span><i class="sum"></i>Summative</span><span><i class="ic"></i>In-class</span><span><i class="chsw band"></i>Middle half of the class</span><span><i class="mute"></i>Class middle score</span></div>';
+}
+function bkStuRows(c, cols, n) {
+  const fold = per => { const m = new Map(); for (const p of per) for (const [k, e] of p.by) { if (!m.has(k)) m.set(k, { name: e.name, v: [] }); m.get(k).v.push(...e.v); } return m; };
+  const mine = fold(chRowAvgs(c, cols, n)), cls = fold(chRowAvgs(c, cols));
+  if (!mine.size) return '<p class="muted" id="bkStuRows">This shows once a summative of theirs has been scored with a rubric.</p>';
+  const one = v => fmtNum(Math.round(v * 10) / 10);
+  return '<div id="bkStuRows">' + [...mine].map(([k, e]) => { const v = bkMean(e.v), cv = cls.has(k) ? bkMean(cls.get(k).v) : null;
+    return '<div class="bkcmp chrow"' + chTip(one(v) + ' out of 4', e.name, people(e.v.length, 'summative') + (cv != null ? ' · class average ' + one(cv) : '')) + ' tabindex="0"><span title="' + esc(e.name) + '">' + esc(e.name) + '</span><div class="bkcmpt"><i style="width:' + Math.min(100, v / 4 * 100) + '%"></i>' + (cv != null ? '<em style="left:' + Math.min(100, cv / 4 * 100) + '%"></em>' : '') + '</div><b>' + one(v) + '</b><small>' + (cv != null ? 'class ' + one(cv) : '') + '</small></div>'; }).join('') + '</div>';
+}
+let chResize = 0;
+window.addEventListener('resize', () => { clearTimeout(chResize); chResize = setTimeout(() => { if (bkPage() && $('#bkBody') && bk.tab !== 'table' && bk.cols && !$('#bkAdd') && !$('#bkSetup') && !$('.bktypes')) bkDraw(); }, 200); });
+Object.assign(window.__gs, { classPanelDraw, chBand, chRowAvgs });
+
 /* ---------------- the frame: the sidebar, Home's "Needs a look", and Find anything (11/9) ---------------- */
 var shellReady;
 
@@ -17401,7 +17791,10 @@ function findRows() {
   add('Go to', 'Home', 'What to pick up, and what needs a look', () => go('#/'));
   add('Go to', 'Planner', 'Units and lessons, on its own page', () => { location.href = $('#lessonsBtn').href; });
   add('Go to', 'Settings', 'Saving and carrying, display, keys', () => go('#/settings'));
-  for (const c of lib.classes) add('Classes', c.name, (c.names.length ? c.names.length + ' students' : 'No roster yet') + (classLeft(c) ? ' · ' + classLeft(c) + ' left to score' : ''), () => go(classHash(c)));
+  for (const c of lib.classes) {
+    add('Classes', c.name, (c.names.length ? c.names.length + ' students' : 'No roster yet') + (classLeft(c) ? ' · ' + classLeft(c) + ' left to score' : ''), () => go(classHash(c)));
+    if (c.names.length) for (const [k, l, sub] of [['gradebook', 'gradebook', 'Every assignment by term, with each term grade'], ['students', 'students', 'The roster, with IDs and emails, and each student’s own page'], ['charts', 'charts', 'Grades and scores as charts']]) add('Class pages', c.name + ' ' + l, sub, () => go(classHash(c, k)));
+  }
   const carded = new Set();
   for (const c of holders()) for (const u of c.units) for (const it of u.items) {
     const m = it.batchId ? keptMeta.get(it.batchId) : null; if (it.batchId) carded.add(it.batchId);
@@ -17428,7 +17821,7 @@ function findRows() {
 }
 function findMatch(rows, q) {
   const words = q.toLowerCase().split(/\s+/).filter(Boolean);
-  if (!words.length) return rows.filter(r => r.group !== 'Students' && r.group !== 'Assignments' || batch && r.group === 'Students').slice(0, 60);
+  if (!words.length) return rows.filter(r => r.group !== 'Students' && r.group !== 'Assignments' && r.group !== 'Class pages' || batch && r.group === 'Students').slice(0, 60);
   const hit = [];
   for (const r of rows) {
     const l = r.label.toLowerCase(), all = l + ' ' + r.sub.toLowerCase() + ' ' + r.group.toLowerCase();

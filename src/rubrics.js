@@ -672,7 +672,9 @@ function pctDraw() {
 // One tooltip, for pointing and for the keyboard. The same numbers are in the table and the row labels. textContent, since names are in it.
 function ovTip() {
   let t = $('#ovTip');
-  if (!t) { t = document.createElement('div'); t.id = 'ovTip'; t.setAttribute('role', 'tooltip'); t.hidden = true; t.innerHTML = '<b></b><span></span><em></em>'; $('#dlg').appendChild(t); }
+  if (!t) { t = document.createElement('div'); t.id = 'ovTip'; t.setAttribute('role', 'tooltip'); t.hidden = true; t.innerHTML = '<b></b><span></span><em></em>'; }
+  const host = $('#dlg').hidden ? document.body : $('#dlg');   // over a box when one is open, else over the page (a class page's charts)
+  if (t.parentNode !== host) host.appendChild(t);
   return t;
 }
 function ovTipHide() { const t = $('#ovTip'); if (t) t.hidden = true; }
@@ -685,11 +687,14 @@ function ovTipShow(el) {
   t.style.top = (y < 8 ? r.bottom + 6 : y) + 'px';
 }
 const ovMark = e => e.target.closest && e.target.closest('[data-tv]');
-$('#dlgBox').addEventListener('mouseover', e => { const m = ovMark(e); if (m) ovTipShow(m); });
-$('#dlgBox').addEventListener('mouseout', e => { if (ovMark(e)) ovTipHide(); });
-$('#dlgBox').addEventListener('focusin', e => { const m = ovMark(e); if (m) ovTipShow(m); });
-$('#dlgBox').addEventListener('focusout', e => { if (ovMark(e)) ovTipHide(); });
-$('#dlgBox').addEventListener('scroll', ovTipHide, true);
+for (const host of [$('#dlgBox'), $('#vClass')]) {
+  host.addEventListener('mouseover', e => { const m = ovMark(e); if (m) ovTipShow(m); });
+  host.addEventListener('mouseout', e => { if (ovMark(e)) ovTipHide(); });
+  host.addEventListener('focusin', e => { const m = ovMark(e); if (m) ovTipShow(m); });
+  host.addEventListener('focusout', e => { if (ovMark(e)) ovTipHide(); });
+  host.addEventListener('scroll', ovTipHide, true);
+}
+$('#shellMain').addEventListener('scroll', ovTipHide, { passive: true });
 $('#overviewBtn').onclick = openOverview;
 
 Object.assign(window.__gs, { bankBusy: () => bankBusyN, classStats, openOverview, pctList, pctRows, pv: () => pv, pastAvg, openSetup, savedRubrics, levelOf, tidyLevels, spreadBins });
