@@ -125,7 +125,7 @@ function renderStranger(el, c, folder) {
       '<div class="pc-bd"><label class="pc-f"><span class="pc-k">This is</span><select id="pcLink">' + near.map(n => '<option' + (n === guess ? ' selected' : '') + '>' + esc(n) + '</option>').join('') +
       (rest.length ? '<optgroup label="Already matched">' + rest.map(n => '<option>' + esc(n) + '</option>').join('') + '</optgroup>' : '') + '</select><button class="btn sm primary" data-plink>Link</button></label></div>' +
       '<div class="pc-ft muted">Linking saves “' + esc(folder) + '” as another spelling of that student, so later downloads with this name go to them by themselves.</div>'
-      : '<div class="pc-ft muted">' + (c ? 'Add students to the ' + esc(c.name) + ' roster to link this folder to one of them.' : 'Pick a roster under More to link this folder to a student.') + '</div>') + '</div>';
+      : '<div class="pc-ft muted">' + (c ? 'Add students to the ' + esc(c.name) + ' roster to link this folder to one of them.' : 'Pick a roster under Setup to link this folder to a student.') + '</div>') + '</div>';
 }
 // Linking a folder: its name becomes another spelling of that roster student, and the open download re-sorts.
 function linkFolder(c, name, folder) {

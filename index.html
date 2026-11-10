@@ -1543,6 +1543,108 @@ button.nrow:hover,a.nrow:hover{background:var(--hover)}
 .bkcmp.chrow small{color:var(--muted);font-size:12px;white-space:nowrap}
 .bkcmp.chrow:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 @media (max-width:700px){.cpanel .ovcharts{grid-template-columns:minmax(0,1fr)}}
+/* ---------- an open assignment's tabs, and a tab's screen drawn on the page (11/10) ---------- */
+.atabs{display:flex;gap:2px;align-self:stretch;margin:-9px 0 -9px 8px;flex:none}
+.atab{display:flex;align-items:center;gap:6px;padding:0 13px;min-height:44px;font-size:14px;font-weight:500;color:var(--fg-2);text-decoration:none;border-bottom:2px solid transparent;border-top:2px solid transparent;white-space:nowrap}
+.atab:hover{color:var(--fg);background:var(--hover)}
+.atab.on{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
+.atab:focus-visible{outline:2px solid var(--accent);outline-offset:-3px;border-radius:6px}
+.atn{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:18px;padding:0 6px;border-radius:999px;background:var(--accent-soft);color:var(--accent);font-size:11.5px;font-weight:700;font-variant-numeric:tabular-nums}
+.mfoot{margin:0;padding:8px 10px 6px;border-top:1px solid var(--line);font-size:12.5px;color:var(--muted)}
+.mfoot kbd{font:600 11px var(--f-body);border:1px solid var(--line-strong);border-bottom-width:2px;border-radius:4px;padding:0 5px;color:var(--muted)}
+.schip.ret{background:var(--surface-2);color:var(--fg-2)}
+.schip.ret::before{content:"✓";margin-right:4px;color:var(--ok)}
+
+#dlg.aspage{position:absolute;inset:0;z-index:6;display:block;padding:0;background:var(--bg)}
+#dlg.aspage .box,#dlg.aspage .box.narrow{width:100%;height:100%;max-height:none;border-radius:0;box-shadow:none;background:var(--bg);outline:0}
+#dlg.aspage .bh{padding:12px 24px;background:var(--surface);flex-wrap:wrap;row-gap:8px;min-height:57px}
+#dlg.aspage .bh h2{flex:none;margin-right:6px}
+#dlg.aspage .bh .sp{flex:1}
+#dlg.aspage .bb{flex:1;padding:18px 24px 28px}
+#dlg.aspage .bf{padding:12px 24px;background:var(--surface)}
+#dlg.aspage [data-close]{display:none}
+#dlg.aspage .bf:not(:has(> :not([data-close]))){display:none}
+#dlg.aspage .gl th{top:-18px}
+#dlg.aspage .bb>table.gl,#dlg.aspage #shBody>table.gl{background:var(--surface);border-radius:10px;box-shadow:0 0 0 1px var(--line)}
+#dlg.aspage table.gl th:first-child,#dlg.aspage table.gl td:first-child{padding-left:14px}
+#dlg.aspage #consBox,#dlg.aspage .bb.mk{max-width:1100px}
+.seg a{padding:7px 14px;font-size:13px;font-weight:600;color:var(--muted);text-decoration:none;background:var(--surface);white-space:nowrap}
+.seg a+a{border-left:1px solid var(--line-strong)}
+.seg a:hover{color:var(--fg)}
+.seg a[aria-current]{background:var(--accent-soft);color:var(--accent)}
+
+/* Grades: the grade on the paper beside her score */
+.gl td.op{white-space:nowrap;font-variant-numeric:tabular-nums}
+.opv{font-weight:600;color:var(--fg-2)}
+.opchip{display:inline-flex;align-items:center;font-size:12px;font-weight:600;line-height:1.3;padding:2px 8px;border-radius:999px;text-decoration:none;white-space:nowrap}
+.opchip.warn{background:var(--warn-soft);color:var(--warn)}
+a.opchip:hover{text-decoration:underline}
+#glChk{display:flex;align-items:center;gap:6px 14px;flex-wrap:wrap;margin:0 0 12px;padding:10px 14px;border-radius:10px;background:var(--warn-soft);color:var(--fg);font-size:14px}
+#glChk b{color:var(--warn)}
+#glChk span{flex:1;min-width:200px}
+#glTable.only tbody tr:not(.chk){display:none}
+
+/* Return */
+#dlg.aspage .bb.xp{display:grid;grid-template-columns:minmax(0,1fr) minmax(280px,360px);gap:24px;align-content:start;align-items:start}
+.rtmain{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:20px 22px;min-width:0}
+.rtmain .xbig{margin-top:0}
+.rtside{display:flex;flex-direction:column;gap:14px;min-width:0}
+.dlg:not(.aspage) .rtside{margin-top:16px}
+.rtcard{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.rtcard h3{margin:0 0 6px;font-size:14.5px;font-weight:600}
+.rtcard h3 .muted{font-weight:400;font-size:13px}
+.rtcard p{margin:0 0 10px;font-size:13.5px;line-height:1.45}
+.rtsent{list-style:none;margin:0 0 10px;padding:0;font-size:13.5px;display:flex;flex-direction:column;gap:3px}
+.rtsent .muted{font-size:12.5px}
+.rtrow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 0;border-top:1px solid var(--line)}
+.rtrow:first-of-type{border-top:0;padding-top:2px}
+.rtrow span{display:flex;flex-direction:column;min-width:0;font-size:13.5px}
+.rtrow b{font-weight:500}
+.rtrow small{color:var(--muted);font-size:12.5px}
+.rtrow .btn{flex:none}
+.rtdone{margin:10px 0 0;font-size:13.5px}
+.rtdone span{color:var(--ok);font-weight:600}
+@media (max-width:980px){#dlg.aspage .bb.xp{grid-template-columns:minmax(0,1fr)}}
+
+/* Insights: three more charts */
+#dlg.aspage #ovBody .ovcharts{grid-template-columns:repeat(auto-fit,minmax(380px,1fr));gap:24px 28px}
+#dlg.aspage #ovBody:not(.pbody) section{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 18px}
+#dlg.aspage #ovBody:not(.pbody)>section{margin-bottom:18px}
+#insMore:empty{display:none}
+.insrows{display:flex;flex-direction:column;gap:7px}
+.insr{display:grid;grid-template-columns:minmax(90px,170px) minmax(0,1fr);gap:10px;align-items:center;font-size:13px}
+.insn{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--fg-2)}
+.inst{display:flex;gap:2px;height:22px}
+.inst i{display:flex;align-items:center;justify-content:center;min-width:3px;border-radius:3px;font-style:normal;font-size:11.5px;font-weight:600;font-variant-numeric:tabular-nums;cursor:default}
+.inst i.b1,.inst i.b2{color:var(--ch-lo)}.inst i.b3,.inst i.b4,.inst i.b5{color:var(--ch-hi)}
+.inst i:hover{opacity:.86}
+.inst i:focus-visible{outline:2px solid var(--fg);outline-offset:1px}
+.insdb{cursor:pointer}
+.insdb:focus{outline:none}
+.inshit{fill:transparent}
+.insdb:hover .inshit,.insdb:focus-visible .inshit{fill:var(--hover)}
+.insln{stroke-width:2.5;stroke-linecap:round;stroke:var(--line-strong)}
+.insdb.up .insln{stroke:var(--ch-up)}.insdb.down .insln{stroke:var(--ch-down)}
+.inswas{fill:var(--surface);stroke:var(--muted);stroke-width:1.75}
+.insnow{fill:var(--muted);stroke:var(--surface);stroke-width:2}
+.insdb.up .insnow{fill:var(--ch-up)}.insdb.down .insnow{fill:var(--ch-down)}
+.bkleg i.insk{width:10px;height:10px;border-radius:50%;background:var(--muted)}
+.bkleg i.insk.was{background:var(--surface);box-shadow:inset 0 0 0 1.75px var(--muted)}
+.insx{display:flex;flex-direction:column;gap:8px}
+.insxr{display:grid;grid-template-columns:minmax(80px,150px) minmax(0,1fr) 92px;gap:10px;align-items:center;font-size:13px;border-radius:4px}
+.insxr.me .insxn{font-weight:600;color:var(--fg)}
+.insxr:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.insxn{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--fg-2)}
+.insxt{position:relative;height:18px}
+.insxt i{position:absolute;top:5px;height:8px;border-radius:4px}
+.insxa{background:var(--ch-band)}
+.insxq{background:var(--ch3)}
+.insxr.me .insxq{background:var(--ch4)}
+.insxt i.insxm{top:0;height:18px;width:2.5px;margin-left:-1.25px;border-radius:2px;background:var(--fg)}
+.insxv{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.insxv small{color:var(--muted);font-size:11.5px;margin-left:2px}
+.insxax .insxt{height:14px}
+.insxax .insxt span{position:absolute;transform:translateX(-50%);font-size:11px;color:var(--muted)}
 
 </style>
 
@@ -1596,7 +1698,7 @@ button.nrow:hover,a.nrow:hover{background:var(--hover)}
       <ol class="steps">
         <li><span class="n">1</span><span><b>Mark.</b> Pen, highlight, text, check marks, and comments that sit in the margin with a line to the spot. Arrange pages lets you combine a student’s files and drag pages into order.</span></li>
         <li><span class="n">2</span><span><b>Score.</b> Type a total, or click 0 to 4 on each rubric row (half points too). Or bring in your own rubric (Word, PDF or picture) once and grade right on each student’s copy. Students stay in their folder order.</span></li>
-        <li><span class="n">3</span><span><b>Enter grades.</b> Open the Grades list and go down it in ManageBac. Click any score or comment to copy it. Marked in Kami instead? The Grade sheet finds what you typed, like “9 = 85%”, and shows a crop of it for every student. Files with no marks are left out as extra papers, and you can bring them back.</span></li>
+        <li><span class="n">3</span><span><b>Enter grades.</b> Open the Grades tab and go down it in ManageBac. Click any score or comment to copy it. Marked in Kami instead? The Grade sheet finds what you typed, like “9 = 85%”, and shows a crop of it for every student. Files with no marks are left out as extra papers, and you can bring them back.</span></li>
         <li><span class="n">4</span><span><b>Return.</b> Export gives you the marked files in the same student folders.</span></li>
       </ol>
     </details>
@@ -1622,6 +1724,9 @@ button.nrow:hover,a.nrow:hover{background:var(--hover)}
     <section class="lib setsec" id="setPapers">
       <div class="lhead"><h2>Word papers</h2><span class="muted">Mark them as they are, or turn each one into PDF pages you can mark anywhere. The Word file is always kept.</span><span class="sp"></span><span class="seg" id="setWordPdf"><button data-v="0" aria-pressed="true">Keep as Word</button><button data-v="1" aria-pressed="false">Convert to PDF pages</button></span></div>
     </section>
+    <section class="lib setsec" id="setMarking">
+      <div class="lhead"><h2>Marking</h2><span class="muted">What each proofreading mark means, for the key on returned papers.</span><span class="sp"></span><button class="btn sm" id="setMkey">Mark key</button></div>
+    </section>
     <section class="lib setsec" id="setKeys">
       <div class="lhead"><h2>Keys</h2><span class="muted">Every keyboard shortcut for marking and scoring.</span><span class="sp"></span><button class="btn sm" id="setKeysBtn">Show all keys</button></div>
     </section>
@@ -1634,42 +1739,47 @@ button.nrow:hover,a.nrow:hover{background:var(--hover)}
 <div class="app" id="app" hidden>
   <div class="top">
     <span class="title">Grading <i>Studio</i></span>
-    <a class="crumb" id="crumbClass" href="#/" hidden></a><span class="batch" id="batchName"></span><span class="savest" id="saveState" title="Your marks and scores are kept in this browser as you go"></span><button class="savewhere link" id="saveWhere"></button>
+    <a class="crumb" id="crumbClass" href="#/" hidden></a><span class="batch" id="batchName"></span>
+    <nav class="atabs" id="aTabs" aria-label="This assignment">
+      <a class="atab" id="markTab" data-atab="" href="#/">Mark</a>
+      <a class="atab" id="gradesBtn" data-atab="grades" href="#/" title="Every score and comment, beside the grade written on each paper">Grades</a>
+      <a class="atab" id="insightsTab" data-atab="insights" href="#/" title="How the class did, row by row, and whether your scoring stayed even">Insights</a>
+      <a class="atab" id="exportBtn" data-atab="return" href="#/" title="Check the class, then get the marked files to give back">Return</a>
+    </nav>
     <span class="sp"></span>
-    <button class="btn sm ghost" id="sheetBtn">Grade sheet</button>
-    <button class="btn sm ghost" id="gradesBtn">Grades list</button>
+    <span class="savest" id="saveState" title="Your marks and scores are kept in this browser as you go"></span><button class="savewhere link" id="saveWhere"></button>
     <button class="btn sm ghost" id="quizTop" hidden title="Mark a paper quiz one question at a time, across the class">Quick mark</button>
     <span id="topMb"></span>
-    <button class="btn sm primary" id="exportBtn">Export marked</button>
     <div class="morewrap">
-      <button class="btn sm" id="moreBtn" aria-haspopup="true" aria-expanded="false" aria-controls="moreMenu">More <span aria-hidden="true">▾</span></button>
+      <button class="btn sm" id="moreBtn" aria-haspopup="true" aria-expanded="false" aria-controls="moreMenu" title="The roster, the rubric and the files of this assignment"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" style="vertical-align:-2px;margin-right:5px"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>Setup</button>
       <div class="more" id="moreMenu" hidden>
         <div class="mgrp" role="group" aria-labelledby="mhA"><div class="mhd" id="mhA">This assignment</div>
-          <label class="mrow">Roster <select id="classSel" class="btn sm" aria-label="Roster for this download"></select></label>
+          <label class="mrow">Roster <select id="classSel" class="btn sm" aria-label="Roster for this assignment"></select></label>
           <button class="mitem" id="setupBtn">Rubric setup</button>
           <button class="mitem" id="bringBtn" title="Late work, or many files at once; each goes to its student by the name in the file name">Bring in files</button>
           <button class="mitem" id="openRepBtn" title="What opened from this download, what didn’t, who has nothing, and anything odd">What opened</button>
-          <button class="mitem" id="trAllBtn" hidden title="Make a transcript for every recording in this download">Transcripts</button>
+          <button class="mitem" id="trAllBtn" hidden title="Make a transcript for every recording in this assignment">Transcripts</button>
+          <button class="mitem" id="quizBtn" title="For a scanned paper quiz: box each question once, then mark the same question for everyone at once">Quick mark (paper quiz)</button>
+          <button class="mitem" id="impBtn" title="Comments and marks made in Kami, Acrobat or Preview, made into your own so you can change them">Marks from other apps</button>
           <span class="mlink" id="topAtlas"></span>
         </div>
-        <div class="mgrp" role="group" aria-labelledby="mhB"><div class="mhd" id="mhB">Claude</div>
-          <button class="mitem" id="shareBtn" title="Papers with names covered, by code">Share with Claude</button>
-          <button class="mitem" id="backBtn" title="Put Claude’s feedback with the right students">Bring back from Claude</button>
-        </div>
-        <div class="mgrp" role="group" aria-labelledby="mhC"><div class="mhd" id="mhC">View and tools</div>
-          <button class="mitem" id="quizBtn" title="For a scanned paper quiz: box each question once, then mark the same question for everyone at once">Quick mark (paper quiz)</button>
-          <button class="mitem" id="bookBtn" title="Every assignment for this class, by term, with term grades and charts">Gradebook</button>
-          <button class="mitem" id="overviewBtn" title="The spread of scores, the hardest rubric rows, and who isn’t finished">Class overview</button>
-          <button class="mitem" id="consBtn" title="Same-score papers side by side, and whether you got harder or softer as you went">Consistency check</button>
-          <button class="mitem" id="lightBtn" title="Make a pale or too-bright scan easier to read">Lighting</button>
-          <button class="mitem" id="rescanBtn" title="Pages you flagged as needing a rescan, and who they belong to">Rescans</button>
-          <button class="mitem" id="dispBtn" title="Text size and zoom">Display</button>
-          <button class="mitem" id="mkeyBtn" title="What each proofreading mark means, for the key on returned papers">Mark key</button>
-          <button class="mitem" id="impBtn" title="Comments and marks made in Kami, Acrobat or Preview, made into your own so you can change them">Marks from other apps</button>
-          <button class="mitem" id="calcBtn" title="Calculator for scores and percents">Calculator <kbd>=</kbd></button>
-          <button class="mitem themeBtn">Dark mode</button>
-          <button class="mitem" id="keysBtn">All keys <kbd>?</kbd></button>
-        </div>
+        <p class="mfoot">Everything else is under Find anything <kbd>Ctrl K</kbd></p>
+      </div>
+      <!-- What the More menu used to hold now lives on a tab or in Settings. Each button stays here, out of sight, so Find anything and the keys press the same thing they always did. -->
+      <div id="toolStash" hidden>
+        <button class="mitem" id="sheetBtn" data-fg="This assignment" title="A picture of every grade written on the papers">Grades on the papers</button>
+        <button class="mitem" id="shareBtn" data-fg="This assignment" title="Papers with names covered, by code">Share with Claude</button>
+        <button class="mitem" id="backBtn" data-fg="This assignment" title="Put Claude’s feedback with the right students">Bring back from Claude</button>
+        <button class="mitem" id="bookBtn" data-fg="This assignment" title="Every assignment for this class, by term, with term grades and charts">Gradebook</button>
+        <button class="mitem" id="overviewBtn" data-fg="This assignment" title="The spread of scores, the hardest rubric rows, and who isn’t finished">Class overview</button>
+        <button class="mitem" id="consBtn" data-fg="This assignment" title="Same-score papers side by side, and whether you got harder or softer as you went">Consistency check</button>
+        <button class="mitem" id="lightBtn" data-fg="Tools" data-paper="1" title="Make a pale or too-bright scan easier to read">Lighting</button>
+        <button class="mitem" id="rescanBtn" data-fg="Tools" title="Pages you flagged as needing a rescan, and who they belong to">Rescans</button>
+        <button class="mitem" id="dispBtn" data-fg="Tools" title="Text size and zoom">Display</button>
+        <button class="mitem" id="mkeyBtn" data-fg="Tools" title="What each proofreading mark means, for the key on returned papers">Mark key</button>
+        <button class="mitem" id="calcBtn" data-fg="Tools" title="Calculator for scores and percents">Calculator <kbd>=</kbd></button>
+        <button class="mitem themeBtn" data-fg="Tools">Dark mode</button>
+        <button class="mitem" id="keysBtn" data-fg="Tools">All keys <kbd>?</kbd></button>
       </div>
     </div>
     <button class="icon" id="closeBtn" title="Close this assignment and go Home" aria-label="Close this assignment and go Home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
@@ -3110,6 +3220,7 @@ async function intake(entries, label, assignment, fromKeep) {   // entries: [{ p
   $('#trAllBtn').hidden = !CAN_TRANSCRIBE || !students.some(st => st.files.some(f => f.kind === 'media'));
   renderTools(); renderList(); renderTopAtlas(); openStudent(batch.restoredCur || 0);
   scanned = false; scanAll();
+  { const t = routeTab; routeTab = null; if (t && t.id === id) go(batchHash(id, t.tab), true); }
   setTimeout(wordScoresAll, 50);
   if (shellReady) setTimeout(wordPdfAuto, 400);   // Word papers as PDF pages, when that's her setting
   if (earlier) carrySay();
@@ -3261,7 +3372,7 @@ function saveNow(leaving) {
   if (!batch || !tabLive()) return;
   clearTimeout(saveT); saveDue = false;
   if (batch.revs && tabForgot(batch)) return tabLetGo();
-  const data = { t: Date.now(), carry: batch.carry, cur, ck: batch.students[cur] && batch.students[cur].key, setup, cls: batch.classId, share: batch.share, drive: batch.drive, light: batch.light, lightOpt: batch.lightOpt, lightPg: batch.lightPg, lightPgL: batch.lightPgL, anon: batch.anon, moved: batch.moved, removed: batch.removed, refSkip: batch.refSkip, quiz: batch.quiz, groups: batch.groups && batch.groups.length ? batch.groups : undefined, read: (batch.read = paperReads()), s: {} };
+  const data = { t: Date.now(), carry: batch.carry, cur, ck: batch.students[cur] && batch.students[cur].key, setup, cls: batch.classId, share: batch.share, drive: batch.drive, light: batch.light, lightOpt: batch.lightOpt, lightPg: batch.lightPg, lightPgL: batch.lightPgL, anon: batch.anon, moved: batch.moved, removed: batch.removed, refSkip: batch.refSkip, quiz: batch.quiz, groups: batch.groups && batch.groups.length ? batch.groups : undefined, returned: batch.returned || undefined, read: (batch.read = paperReads()), s: {} };
   for (const st of batch.students) {
     const f = {};
     for (const fl of st.files.concat(st.gone || [])) if (Object.values(fl.marks).some(a => a.length)) f[fl.path] = fl.marks;   // a removed file keeps its marks for Bring back
@@ -3323,6 +3434,7 @@ function restore() {
   if (data.anon) batch.anon = data.anon;
   if (data.refSkip) batch.refSkip = data.refSkip;
   if (data.quiz) batch.quiz = data.quiz;
+  if (data.returned) batch.returned = data.returned;
   batch.groups = data.groups || [];
   groupSync();
   if (data.drive && !batch.drive) batch.drive = data.drive;
@@ -4514,7 +4626,7 @@ function renderList() {
   }).join('');
   const on = $('#stuList .on'); if (on) on.scrollIntoView({ block: 'nearest' });
   const nExp = exportPlan(true).length;
-  $('#exportBtn').textContent = 'Export marked' + (nExp ? ' (' + nExp + ')' : '');
+  $('#exportBtn').innerHTML = 'Return' + (nExp ? ' <span class="atn" title="' + nExp + (nExp === 1 ? ' marked file' : ' marked files') + ' ready to give back">' + nExp + '</span>' : '');
   renderProg();
 }
 let outOpen = false;
@@ -4532,7 +4644,7 @@ function renderProg() {
   const outList = (anonOn() ? anonOrder().filter(i => outs.includes(i)) : outs).map(i => { const g = gradeOf(batch.students[i]);
     return '<button class="po" data-pgo="' + i + '"><span>' + esc(shownName(batch.students[i], i)) + '</span><span>' + (g.total != null ? fmtNum(g.total) + ' / ' + fmtNum(g.outOf != null ? g.outOf : maxPoints()) : g.pct != null ? fmtPct(g.pct) : 'No score') + '</span></button>'; }).join('');
   $('#progS').innerHTML = '<div class="ph">' + n + ' of ' + N + ' <span>scored' + (nOff ? ' · ' + nOff + ' missing or excused' : '') + '</span></div><div class="pb"><i style="width:' + (N ? 100 * n / N : 0) + '%"></i></div>' +
-    '<div class="ptiles">' + (cs.n ? '<button class="pt click big" id="pAvg" title="Average of ' + people(cs.n, 'finished score') + '’s percents. Partial, missing, excused and left-out papers don’t count. Click for Class overview."><div class="k">Average</div>' +
+    '<div class="ptiles">' + (cs.n ? '<button class="pt click big" id="pAvg" title="Average of ' + people(cs.n, 'finished score') + '’s percents. Partial, missing, excused and left-out papers don’t count. Click for Insights."><div class="k">Average</div>' +
       '<div class="v">' + (cs.meanPct != null ? pctAvgText(cs.meanPct) : oneDp(cs.mean)) + '</div><div class="s">' + oneDp(cs.mean) + ' / ' + fmtNum(cs.max) + '</div></button>'
       : '<div class="pt" id="pAvg" title="No finished scores yet"><div class="k">Average</div><div class="v">–</div></div>') +
 '<div class="pt" id="pLeft" title="Papers with no score or only part of one"><div class="k">Left</div><div class="v">' + (N - n) + '</div></div>' +
@@ -4575,7 +4687,7 @@ function renderGrade() {
       '<div class="pts"><input type="number" step="0.5" min="0" id="ptsIn" value="' + esc(g.points) + '" aria-label="Points"><span class="muted">out of ' + esc(setup.outOf) + '</span></div>';
   }
   h += '<div class="total">' + totalHtml(st) + '</div>' + statusHtml(st);
-  h += '<div class="cmt"><h3 style="margin-bottom:6px">Comment for ManageBac</h3><textarea id="cmtIn" placeholder="Optional. Shows in the Grades list so you can copy it.">' + esc(g.comment) + '</textarea></div>';
+  h += '<div class="cmt"><h3 style="margin-bottom:6px">Comment for ManageBac</h3><textarea id="cmtIn" placeholder="Optional. Shows on the Grades tab so you can copy it.">' + esc(g.comment) + '</textarea></div>';
   const navAt = anonOn() ? anonPos(cur) : cur;   // the order on screen
   h += '<div class="nav">' + oneOutHtml(st) + '<button class="btn" id="prevBtn" ' + (navAt ? '' : 'disabled') + '>◀ Previous</button><button class="btn primary" id="nextBtn" ' + (navAt < batch.students.length - 1 ? '' : 'disabled') + '>Next ▶</button></div>';
   h += histSlot(st);
@@ -4588,7 +4700,7 @@ function renderFeedback(st) {
     (off ? '<div class="total"><b>' + STATUS_LABEL[g.status] + '</b><span style="width:100%;font-size:12.5px">Nothing to give feedback on. Click it again under Mark as to take this off.</span></div>'
       : '<button class="fbtog" id="fbTog" role="switch" aria-checked="' + on + '"><span class="bx">' + (on ? '✓' : '') + '</span><span>Feedback complete<small>' + (on ? 'Click again to undo.' : 'Click, or press F, when you’ve finished with this paper.') + '</small></span></button>') +
     statusHtml(st).replace(/<button class="outsw"[\s\S]*?<\/button>/, '') +
-    '<div class="cmt"><h3 style="margin-bottom:6px">Comment for ManageBac</h3><textarea id="cmtIn" placeholder="Optional. Shows in the Grades list so you can copy it.">' + esc(g.comment) + '</textarea></div>' +
+    '<div class="cmt"><h3 style="margin-bottom:6px">Comment for ManageBac</h3><textarea id="cmtIn" placeholder="Optional. Shows on the Grades tab so you can copy it.">' + esc(g.comment) + '</textarea></div>' +
     '<div class="nav">' + oneOutHtml(st) + '<button class="btn" id="prevBtn" ' + (navAt ? '' : 'disabled') + '>◀ Previous</button>' + (off || on ? '<button class="btn primary" id="nextBtn" ' + (last ? 'disabled' : '') + '>Next ▶</button>' : '<button class="btn primary" id="fbNext">Complete' + (last ? '' : ' and next ▶') + '</button>') + '</div>' +
     histSlot(st) +
     '<div class="hint">Keys: <kbd>F</kbd> feedback complete · <kbd>Shift</kbd> <kbd>F</kbd> complete and next · <kbd>N</kbd> next without feedback · <kbd>←</kbd> <kbd>→</kbd> students · <button class="link" data-keys style="font-size:12.5px">All keys ( ? )</button></div>';
@@ -4699,13 +4811,50 @@ function dlgClear() {
   const box = $('#dlgBox'); box.onclick = box.onchange = box.oninput = box.ondblclick = box.onkeydown = null;
   const gone = dlgGone; dlgGone = null; if (gone) gone();
 }
+let dlgTab = '', dlgPage = '';
+function dlgPlace(page) {
+  const d = $('#dlg'), host = page ? $('#cols') : document.body, box = $('#dlgBox');
+  if (d.parentNode !== host) { if (page) host.appendChild(d); else host.insertBefore(d, $('.toast')); }
+  d.classList.toggle('aspage', !!page);
+  for (const c of $('#cols').children) if (c !== d) c.inert = !!page;   // the papers underneath take no Tab and no click while a tab's screen covers them
+  box.setAttribute('role', page ? 'region' : 'dialog');
+  if (page) box.removeAttribute('aria-modal'); else box.setAttribute('aria-modal', 'true');
+}
+function tabNext(key) {
+  if (!batch || $('#app').hidden) return false;
+  dlgTab = key;
+  const h = batchHash(batch.id, key); if (location.hash !== h) location.hash = h;   // applyRoute finds this screen already drawn
+  return true;
+}
+const tabSeg = (tab, on, views) => batch ? '<span class="seg vseg" role="group">' + views.map(([sub, l]) => '<a href="' + batchHash(batch.id, tab + (sub ? '/' + sub : '')) + '"' + (sub === on ? ' aria-current="page"' : '') + '>' + l + '</a>').join('') + '</span>' : '';
 function openDlg(html, narrow) {
   commitEditors(); dlgClear(); ovTipHide();
-  $('#dlgBox').className = 'box' + (narrow ? ' narrow' : '');
+  const tab = dlgTab; dlgTab = '';
+  dlgPage = tab; dlgPlace(tab);
+  $('#dlgBox').className = 'box' + (narrow && !tab ? ' narrow' : '');
   $('#dlgBox').innerHTML = html; $('#dlg').hidden = false; dlgShown();
+  if (shellReady) tabsRender();
 }
-function closeDlg() { ovTipHide(); dlgClear(); if (eachKeys) { document.removeEventListener('keydown', eachKeys, true); eachKeys = null; } $('#dlg').hidden = true; $('#dlgBox').innerHTML = ''; dlgFocusBack(); }
-$('#dlg').addEventListener('pointerdown', e => { if (e.target.id === 'dlg') { if (SP) splitLeave(); else leaveDlg(); } });
+function dlgShut() { ovTipHide(); dlgClear(); if (eachKeys) { document.removeEventListener('keydown', eachKeys, true); eachKeys = null; } $('#dlg').hidden = true; $('#dlgBox').innerHTML = ''; dlgPage = ''; dlgPlace(''); }
+function closeDlg() {
+  const was = dlgPage;
+  dlgShut(); dlgFocusBack();
+  if (!batch || $('#app').hidden || !routeNow().tab) return;
+  queueMicrotask(() => {
+    if (!$('#dlg').hidden || !batch || $('#app').hidden) return;
+    const r = routeNow(); if (r.v !== 'a' || !r.tab) return;
+    if (was) go(batchHash(batch.id));   // leaving a tab's screen is going back to the papers
+    else tabShow(r);                     // a box over a tab's screen has gone: the screen again, as it stands now
+  });
+}
+$('#dlg').addEventListener('pointerdown', e => { if (e.target.id === 'dlg' && !dlgPage) { if (SP) splitLeave(); else leaveDlg(); } });
+const TAB_DRAW = { grades: () => openGrades(), 'grades/sheet': () => openSheet(false), insights: () => openOverview(), 'insights/consistency': () => openCons(), return: () => openExport() };
+function tabShow(r) {
+  const key = r.tab ? r.tab + (r.sub ? '/' + r.sub : '') : '';
+  if (shellReady) tabsRender();
+  if (!key) { if (dlgPage) { dlgShut(); dlgFocusBack(); } return; }
+  if (dlgPage !== key && (dlgPage || $('#dlg').hidden)) TAB_DRAW[key]();   // a box over the screen stays; closing it draws the screen
+}
 
 function openSetup() {
   let draft = JSON.parse(JSON.stringify(setup));
@@ -4720,7 +4869,7 @@ function openSetup() {
   };
   const body = () => {
     let h = '<div class="field"><label>How do you score this one?</label><span class="seg"><button data-m="points" aria-pressed="' + (draft.mode === 'points') + '">Just the total</button><button data-m="rubric" aria-pressed="' + (draft.mode === 'rubric') + '">Rubric rows, 0 to 4</button></span>' +
-      '<span class="muted" style="font-size:12.5px;margin-top:4px">Grading right on your own rubric? Use Just the total: one score box, and the Grades list and percents still work.</span></div>';
+      '<span class="muted" style="font-size:12.5px;margin-top:4px">Grading right on your own rubric? Use Just the total: one score box, and the Grades tab and percents still work.</span></div>';
     h += rubricLibHtml(draft);
     if (draft.mode === 'rubric') {
       h += '<div class="field"><label>Rubric rows</label>' + draft.criteria.map((c, i) => '<div class="critrow"><input type="text" data-ci="' + i + '" value="' + esc(c) + '">' + (draft.criteria.length > 1 ? '<button class="btn sm" data-rm="' + i + '" aria-label="Remove row">×</button>' : '') + '</div>' + levelsEditHtml(draft, i)).join('') +
@@ -4848,23 +4997,26 @@ function openGrades() {
   if (rereadsPending()) { rereadsDone().then(openGrades); return; }   // a grade she just typed or changed counts here
   const rub = setup.mode === 'rubric', c = batchClass();
   const rows = gradeRows().map(({ st, i, missing, off }, k) => {
-    if (missing) return '<tr><td class="n">' + (k + 1) + '</td><td class="nm" style="cursor:default">' + esc(missing) + (c ? ' ' + whoBtn('data-wc="' + esc(c.id) + '" data-wn="' + esc(missing) + '"', missing) : '') + ' <span class="muted" style="font-weight:400">(no folder: nothing turned in)</span></td>' + (rub ? setup.criteria.map(() => '<td></td>').join('') : '') + '<td></td><td></td><td></td></tr>';
+    if (missing) return '<tr><td class="n">' + (k + 1) + '</td><td class="nm" style="cursor:default">' + esc(missing) + (c ? ' ' + whoBtn('data-wc="' + esc(c.id) + '" data-wn="' + esc(missing) + '"', missing) : '') + ' <span class="muted" style="font-weight:400">(no folder: nothing turned in)</span></td>' + (rub ? setup.criteria.map(() => '<td></td>').join('') : '') + '<td></td><td></td><td></td><td></td></tr>';
     const g = gradeOf(st);
     const cells = rub ? setup.criteria.map((_, q) => '<td class="c" data-copy="' + fmtNum(rowShown(st, q)) + '">' + fmtNum(rowShown(st, q)) + '</td>').join('') : '';
     return '<tr class="go" data-i="' + i + '"><td class="n">' + (k + 1) + '</td><td class="nm">' + esc(st.key) + (anonOn() ? '' : ' ' + whoBtn('data-wi="' + i + '"', st.key)) + (st.files.length ? '' : ' <span class="muted" style="font-weight:400">(nothing turned in)</span>') + (off ? ' <span class="pill" style="font-size:11px;padding:2px 7px;border-radius:999px;background:var(--warn-soft);color:var(--warn)">not on roster</span>' : '') + '</td>' + cells +
       '<td class="c' + (g.partial ? ' part" data-partial="1' : '') + '" data-copy="' + esc(cellCopy(g, 'total')) + '">' + totalText(g) + statusPills(g) + (g.total == null && g.pct == null && ((st.doubts && st.doubts.length) || manyReads(st)) ? ' <span class="stag" title="Confirm it on the Grade sheet">to confirm</span>' : '') + (g.paper ? ' <span class="muted" style="font-weight:400;font-size:12px" title="Read from the paper">(paper)</span>' : '') + '</td><td class="c' + (g.partial ? ' part" data-partial="1' : '') + '" data-copy="' + esc(cellCopy(g, 'pct')) + '">' + fmtPct(g.pct) + '</td>' +
-      '<td class="cm" data-copy="' + esc(st.grade.comment) + '">' + esc(st.grade.comment) + '</td></tr>';
+      '<td class="op" data-op="' + i + '"></td><td class="cm" data-copy="' + esc(st.grade.comment) + '">' + esc(st.grade.comment) + '</td></tr>';
   }).join('');
-  openDlg('<div class="bh"><h2>Grades list</h2><span class="muted">' + gradesSummary() + '</span>' +
+  tabNext('grades');
+  openDlg('<div class="bh"><h2>Grades</h2><span class="muted" id="glSum">' + gradesSummary() + '</span>' +
     (c ? '<span class="seg" style="margin-left:8px"><button data-ord="folder" aria-pressed="' + (gradesOrder === 'folder') + '">Folder order</button><button data-ord="roster" aria-pressed="' + (gradesOrder === 'roster') + '">' + esc(c.name) + ' roster order</button></span>' : '') +
-    '<button class="icon" data-close aria-label="Close" style="margin-left:auto">✕</button></div>' +
-    '<div class="bb"><p class="muted" style="margin:0 0 10px;font-size:14px">Click any score or comment to copy it, then paste it into ManageBac. Click a name to open that paper.' + (c ? '' : ' Pick a roster under More to see this list in roster order.') + '</p>' +
-    '<table class="gl"><thead><tr><th>#</th><th>Student</th>' + (rub ? setup.criteria.map(x => '<th>' + esc(x) + '</th>').join('') : '') + '<th>Total /' + maxPoints() + '</th><th>%</th><th>Comment</th></tr></thead><tbody>' + rows + '</tbody></table></div>' +
-    '<div class="bf"><button class="btn" data-ovopen>Class overview</button>' + mbLink(c, 'btn') + '<span style="margin-right:auto"></span><button class="btn" data-cp="total">Copy all totals</button><button class="btn" data-cp="pct">Copy all percents</button><button class="btn" data-cp="tsv">Copy as a table</button><button class="btn primary" data-csv>Download spreadsheet (CSV)</button></div>');
+    '<span class="sp"></span>' + tabSeg('grades', '', GRADE_VIEWS) + '<button class="icon" data-close aria-label="Close">✕</button></div>' +
+    '<div class="bb" id="glBody"><div id="glChk" hidden></div><p class="muted" style="margin:0 0 10px;font-size:14px">Click any score or comment to copy it, then paste it into ManageBac. Click a name to open that paper.' + (c ? '' : ' Pick a roster under Setup to see this list in roster order.') + '</p>' +
+    '<table class="gl" id="glTable"><thead><tr><th>#</th><th>Student</th>' + (rub ? setup.criteria.map(x => '<th>' + esc(x) + '</th>').join('') : '') + '<th>Total /' + maxPoints() + '</th><th>%</th><th title="The grade written on the paper itself, read from the file">On the paper</th><th>Comment</th></tr></thead><tbody>' + rows + '</tbody></table></div>' +
+    '<div class="bf">' + mbLink(c, 'btn') + '<span style="margin-right:auto"></span><button class="btn" data-cp="total">Copy all totals</button><button class="btn" data-cp="pct">Copy all percents</button><button class="btn" data-cp="tsv">Copy as a table</button><button class="btn" data-glpdf title="A crop of each grade written on a paper, one row per file">Grade sheet (PDF)</button><button class="btn primary" data-csv>Download spreadsheet (CSV)</button></div>');
   const box = $('#dlgBox');
+  glPaper();
   box.onclick = async e => {
     if (e.target.closest('[data-close]')) return closeDlg();
-    if (e.target.closest('[data-ovopen]')) return openOverview();
+    if (e.target.closest('[data-glonly]')) { const t = $('#glTable'), on = t.classList.toggle('only'); e.target.closest('[data-glonly]').textContent = on ? 'Show everyone' : 'Show only these'; return; }
+    if (e.target.closest('[data-glpdf]')) { const b0 = batch; if (!scanned || scanP) { toast('Reading the files first…'); await scanAll(); if (batch !== b0) return; } return saveBlob('Grade sheet - ' + batch.name + '.pdf', new Blob([await buildSheetPdf()], { type: 'application/pdf' })); }
     const o = e.target.closest('[data-ord]'); if (o) { gradesOrder = o.dataset.ord; return openGrades(); }
     const cc = e.target.closest('[data-copy]');
     if (cc && cc.dataset.partial && !await okCellPartial(+cc.closest('tr').dataset.i, cc.dataset.copy)) return;
@@ -4886,6 +5038,7 @@ function openGrades() {
     }
   };
 }
+const GRADE_VIEWS = [['', 'Scores and comments'], ['sheet', 'Grade sheet']];
 function tableHead() { return ['#', 'Student'].concat(setup.mode === 'rubric' ? setup.criteria : [], ['Total / ' + maxPoints(), 'Percent', 'Status', 'Comment']); }
 function tableRow(st, pos) {
   const g = gradeOf(st), i = pos != null ? pos : batch.students.indexOf(st);
@@ -4999,7 +5152,8 @@ async function openExport() {
   saveNow(); commitEditors(); wordScoresAll();
   if (batch.lineBusy) await batch.lineRun;
   if (!scanned || scanP) {
-    const wait = waitDlg('Export marked files', 'Reading the files first…');
+    tabNext('return');
+    const wait = waitDlg('Return marked files', 'Reading the files first…');
     await scanAll();
     if (!wait.isConnected) return;   // she closed it while it read
   }
@@ -5011,14 +5165,15 @@ async function openExport() {
   const optsOpen = !!store.get('gs.xopts', false);
   const canDir = !!(window.showDirectoryPicker && window.self === window.top);
   const allBox = '<label class="chk"><input type="checkbox" id="xAll"' + (xAll() ? ' checked' : '') + '> Also send back files with no marks (Word files, other files and unmarked pages)</label>';
-  openDlg('<div class="bh"><h2>Export marked files</h2><button class="icon" data-close aria-label="Close">✕</button></div><div class="bb xp">' +
+  tabNext('return');
+  openDlg('<div class="bh"><h2>Return marked files</h2><button class="icon" data-close aria-label="Close">✕</button></div><div class="bb xp"><div class="rtmain">' +
     (plan.length
       ? '<p class="xbig">' + plan.length + (plan.length === 1 ? ' file' : ' files') + ' ready</p>' +
         '<p class="xsub">From ' + nStu + (nStu === 1 ? ' student' : ' students') + ', in their own folders, ready to upload back on ManageBac.' +
           (skipped ? ' ' + skipped + ' ' + (skipped === 1 ? 'student has' : 'students have') + ' nothing marked, so they’re left out.' : '') +
           (nLeft ? ' ' + nLeft + (nLeft === 1 ? ' file you left out isn’t' : ' files you left out aren’t') + ' in it.' : '') + '</p>' +
         exportCheckHtml(exportCheck()) +
-        '<button class="btn primary xgo" data-go="zip">Download ZIP</button>' +
+        '<button class="btn primary xgo" data-go="zip">Download ZIP</button><div id="rtState">' + returnedHtml() + '</div>' +
         ((canDir || G.email) ? '<p class="xalt">or ' + [canDir ? '<button class="link" data-go="dir">save into a folder…</button>' : '', G.email ? '<button class="link" data-go="drive">save to Google Drive</button>' : ''].filter(Boolean).join(' or ') + '</p>' : '') +
         '<div class="prog" hidden><i></i></div><p class="muted" id="xStatus" style="font-size:13px"></p>' +
         '<details class="xopts" id="xOpts"' + (optsOpen ? ' open' : '') + '><summary>Options: <span id="xOptsSay"></span></summary>' +
@@ -5030,8 +5185,8 @@ async function openExport() {
           '<div class="chk" style="cursor:default">Sharpness <span class="seg" id="xDpi"><button data-dpi="150" aria-pressed="true">Standard</button><button data-dpi="220" aria-pressed="false">Extra sharp</button></span></div>' +
         '</details>' +
         '<p class="xfoot">Your original files don’t change. A file you marked anywhere goes back whole, every page in order. Word rubrics you scored go back as Word files. ' + (xAll() ? 'Files with no marks go too.' : 'Files with no marks stay out.') + ' Comments go in a right-hand margin.</p>'
-      : '<p style="margin-top:0">Nothing is marked yet. Mark a paper and it will show up here.</p>' + exportCheckHtml(exportCheck()) + allBox) +
-    '</div><div class="bf"><button class="btn" data-close>Close</button></div>', true);
+      : '<p style="margin-top:0">Nothing is marked yet. Mark a paper and it will show up here.</p>' + exportCheckHtml(exportCheck()) + allBox + '<div id="rtState">' + returnedHtml() + '</div>') +
+    '</div>' + returnSideHtml() + '</div><div class="bf"><button class="btn" data-close>Close</button></div>', true);
   const box = $('#dlgBox');
   const optsSay = () => {
     const el = $('#xOptsSay'); if (!el) return;
@@ -5051,6 +5206,7 @@ async function openExport() {
     if (e.target.closest('[data-close]')) return closeDlg();
     const ck = e.target.closest('[data-chk]'); if (ck) { closeDlg(); return openStudent(+ck.dataset.chk, ck.dataset.file || undefined); }
     if (e.target.closest('[data-chksheet]')) return openSheet();
+    if (returnSideClick(e)) return;
     if (e.target.closest('[data-mkey]')) { if (xBusy) return toast('The last export is still going. It will say when it’s done.'); closeDlg(); return openMarkKey(openExport); }
     const d = e.target.closest('[data-dpi]');
     if (d) { dpi = +d.dataset.dpi; for (const x of $('#xDpi').children) x.setAttribute('aria-pressed', x === d); optsSay(); return; }
@@ -5106,6 +5262,7 @@ async function openExport() {
         if (!dir) saveBlob('Marked - ' + batch.name + '.zip', new Blob([fflate.zipSync(files)], { type: 'application/zip' }));
         say('Done. ' + nOut + (nOut === 1 ? ' file' : ' files') + (dir ? ' saved into “' + dir.name + '”.' : ' in the ZIP.'), true);
       }
+      if (nOut && (dir || Object.keys(files).length)) setReturned(nOut);
       exportReport(failed);
     } catch (er) {
       console.error(er); say('Something went wrong: ' + (er.message || er), true);
@@ -5121,7 +5278,7 @@ function sentWhen(t) {
 function oneOutHtml(st) {
   if (!st.files.length) return '';
   const nm = anonOn() ? 'this' : esc(st.key) + '’s', g = st.grade;
-  return '<div class="oneout"><button class="btn" id="oneOutBtn" title="Download just this student’s marked file, ready to upload. Uses your Export marked options."><span aria-hidden="true">⤓</span> Export ' + nm + ' paper</button>' +
+  return '<div class="oneout"><button class="btn" id="oneOutBtn" title="Download just this student’s marked file, ready to upload. Uses the options on the Return tab."><span aria-hidden="true">⤓</span> Export ' + nm + ' paper</button>' +
     '<p class="oneout-say' + (g.sent ? ' ok' : '') + '" id="oneOutSay">' + (g.sent ? '✓ Exported at ' + esc(sentWhen(g.sent)) + '. Export again after any change.' : 'Just their marked file, ready to upload.') + '</p></div>';
 }
 async function exportOne(st) {
@@ -5413,7 +5570,8 @@ function sheetRows(box) {
   return rows;
 }
 async function openSheet(rescan) {
-  openDlg('<div class="bh"><h2>Grade sheet</h2><span class="muted" id="shSub"></span><button class="icon" data-close aria-label="Close">✕</button></div>' +
+  tabNext('grades/sheet');
+  openDlg('<div class="bh"><h2>Grade sheet</h2><span class="muted" id="shSub"></span><span class="sp"></span>' + tabSeg('grades', 'sheet', GRADE_VIEWS) + '<button class="icon" data-close aria-label="Close">✕</button></div>' +
     '<div class="bb" id="shBody"><p class="muted">Looking for the grade on each paper…</p><div class="prog"><i></i></div></div>' +
     '<div class="bf"><button class="btn" data-each>Box each grade by hand</button><button class="btn" data-spot>' + (setup.spot ? 'Change the shared spot' : 'Same spot on every paper') + '</button>' + (setup.spot ? '<button class="btn" data-auto>Stop using the shared spot</button>' : '') +
     '<button class="btn" data-cp>Copy all scores</button><button class="btn primary" data-pdf>Download grade sheet (PDF)</button></div>');
@@ -5843,7 +6001,7 @@ function openShare() {
     '<li>Names are covered in black wherever they’re typed on the page' + (batchClass() ? ' (folder names and your roster names)' : ' (from the folder names)') + ', and in any Kami box that has a name.</li>' +
     '<li>Email addresses and long ID numbers typed on the page are covered too.</li>' +
     '<li>Your scores, rubric and comments go too, with names swapped for [name].</li>' +
-    '<li><b>Only PDFs and pictures go in.</b> A Word file stays out until it’s saved as a PDF.</li></ul></details>' +
+    '<li><b>Only PDFs and pictures go in.</b> A Word file stays out until it’s PDF pages: Convert to PDF on the Word paper’s bar makes them.</li></ul></details>' +
     '<div id="shSteps"></div>' +
     '<div class="prog" hidden><i></i></div><p class="muted" id="shStatus" style="font-size:13px;margin:0"></p></div><div id="shMarks" hidden></div></div>' +
     '<div class="bf"><button class="btn" data-check>Check the covers</button><button class="btn primary" data-make>Download ZIP for Claude</button><button class="btn primary" data-marksdl hidden>Download marks file</button></div>', true);
@@ -6178,7 +6336,7 @@ function openBringBack() {
       const add = $('#bbAdd').checked; let n = 0;
       for (const [c, v] of fb) { const st = byCode.get(c); if (!st || !v || (add && ('\n\n' + st.grade.comment.trim() + '\n\n').includes('\n\n' + v.trim() + '\n\n'))) continue; st.grade.comment = add && st.grade.comment.trim() ? st.grade.comment.replace(/\s+$/, '') + '\n\n' + v : v; touchGrade(st); n++; }
       saveNow(); renderList(); renderGrade();
-      toast('Put feedback in ' + n + (n === 1 ? ' comment box' : ' comment boxes') + '. It’s in the Grades list too.');
+      toast('Put feedback in ' + n + (n === 1 ? ' comment box' : ' comment boxes') + '. It’s on the Grades tab too.');
       closeDlg();
     }
     if (e.target.closest('[data-papers]')) {
@@ -6867,13 +7025,17 @@ const routeOf = hash => {
     }
   }
   if (p[0] === 'settings') return { v: 'settings' };
-  if (p[0] === 'a' && p[1]) return { v: 'a', id: 'gs.b.' + p[1] };
+  if (p[0] === 'a' && p[1]) {
+    const tab = A_TABS.some(t => t[0] && t[0] === p[2]) ? p[2] : '', sub = tab && (A_SUBS[tab] || []).includes(p[3]) ? p[3] : '';
+    return { v: 'a', id: 'gs.b.' + p[1], tab, sub };
+  }
   return { v: 'home' };
 };
 const routeNow = () => routeOf(location.hash);
 const CLASS_TABS = [['', 'Assignments'], ['gradebook', 'Gradebook'], ['students', 'Students'], ['charts', 'Charts']];
 const classHash = (c, tab, stu) => '#/class/' + (c === lib.loose || !c.id ? '-' : encodeURIComponent(c.id)) + (tab ? '/' + tab + (stu != null ? '/' + (stu + 1) : '') : '');
-const batchHash = id => '#/a/' + encodeURIComponent(String(id).replace(/^gs\.b\./, ''));
+const A_TABS = [['', 'Mark'], ['grades', 'Grades'], ['insights', 'Insights'], ['return', 'Return']], A_SUBS = { grades: ['sheet'], insights: ['consistency'] };
+const batchHash = (id, tab) => '#/a/' + encodeURIComponent(String(id).replace(/^gs\.b\./, '')) + (tab ? '/' + tab : '');
 function reloadHome() { try { sessionStorage.setItem('gs.goHome', '1'); } catch {} location.reload(); }
 try { if (sessionStorage.getItem('gs.goHome')) { sessionStorage.removeItem('gs.goHome'); if (location.hash) history.replaceState(null, '', location.pathname + location.search); } } catch {}
 function go(hash, replace) {
@@ -6883,7 +7045,7 @@ function go(hash, replace) {
   }
   applyRoute();
 }
-let routeTok = 0, routeOpening = '';
+let routeTok = 0, routeOpening = '', routeTab = null;
 function applyRoute() {
   const r = routeNow();
   if (r.v === 'a') {
@@ -6891,13 +7053,16 @@ function applyRoute() {
     if (routeOpening !== r.id) openRoute(r.id);
     return;
   }
-  routeTok++; routeOpening = '';
+  routeTok++; routeOpening = ''; routeTab = null;
+  if (dlgPage) dlgShut();
   if (batch && !$('#app').hidden) { commitEditors(); saveNow(); closeDownload(true); }   // leaving the paper closes it, saved first. (Still hidden: a download on its way in, which shows itself when it's ready.)
   showScreen(r);
   if (r.v === 'class') renderLib();
 }
 async function openRoute(id) {
-  const tok = ++routeTok; routeOpening = id;
+  const tok = ++routeTok, want = routeNow(); routeOpening = id;
+  routeTab = want.v === 'a' && want.tab ? { id, tab: want.tab + (want.sub ? '/' + want.sub : '') } : null;   // a refresh on one of its tabs comes back to that tab, once the papers are open
+  if (dlgPage) dlgShut();
   if (batch && !$('#app').hidden) { commitEditors(); saveNow(); closeDownload(true); }
   showScreen({ v: 'opening' });
   try { await keptFirst; await workerReady; } catch {}   // the list of kept work, and the PDF reader, which a click would have given time to start
@@ -6924,10 +7089,11 @@ function showScreen(r) {
   if (!grading && key !== screenKey) $('#shellMain').scrollTop = 0;
   screenKey = key;
   railRender();
+  if (grading) tabShow(r); else if (dlgPage) dlgShut();
 }
 function keptState(m) {
   const of = Math.max(0, (m.n || 0) - (m.off || 0)), done = Math.min(of, m.scored || 0), left = of - done;
-  return { of, done, left, pct: of ? Math.round(done / of * 100) : 0, label: !of ? '' : !left ? 'All scored' : done || m.partial ? 'Scoring' : 'Not started', cls: !of ? '' : !left ? 'ok' : done || m.partial ? 'on' : '' };
+  return { of, done, left, pct: of ? Math.round(done / of * 100) : 0, label: !of ? '' : !left ? (m.ret ? 'Returned' : 'Ready to return') : done || m.partial ? 'Scoring' : 'Not started', cls: !of ? '' : !left ? (m.ret ? 'ret' : 'ok') : done || m.partial ? 'on' : '' };
 }
 const stateChip = st => st.label ? '<span class="schip ' + st.cls + '">' + st.label + '</span>' : '';
 const stateBar = st => st.of ? '<span class="sbar" role="img" aria-label="' + st.done + ' of ' + st.of + ' scored"><i style="width:' + st.pct + '%"></i></span>' : '';
@@ -7384,6 +7550,7 @@ async function keepPapers(b, label, list, again) {
 let keepT = null;
 function keepWork(b, data) {
   const m = { ...(keptMeta.get(b.id) || { id: b.id, name: b.name }), n: b.students.length, t: data.t, ...workCounts(data) };
+  if (!data.returned) delete m.ret;
   keptMeta.set(b.id, m);
   return kdo('work', 'readwrite', o => o.put(data, b.id)).then(() => kdo('meta', 'readwrite', o => o.put(m, b.id))).then(() => { keepOk = true; return true; })
     .catch(e => { keepOk = false; console.error(e); if (e && e.name === 'InvalidStateError') keepDbP = null; keepDb().catch(() => { keepDbP = null; }); return false; });   // so Try again reopens a store that went away
@@ -7741,7 +7908,7 @@ function openAnon() {
     '<li><b>Get everything in order first:</b> late files, split scans, your rubric.</li>' +
     '<li><b>Cover the names.</b> Typed names (from the folder names' + (batchClass() ? ' and your roster' : '') + ') are covered on their own. For handwritten names, check the covers: drag a box over the name once, then use it on every paper. <span id="anCover">' + esc(coverLine()) + '</span>' + nameWarnings() + '<div id="nameFlags" data-before="before you start" style="margin-top:8px">' + nameFlagsHtml('before you start') + '</div></li>' +
     '<li><b>Start.</b> ' + (seen ? 'It keeps the same random order as last time, or you can shuffle a new one.' : 'The order is shuffled once and kept, so you can stop and come back.') + '</li></ol>' +
-    '<p class="muted" style="font-size:13px;margin:0">The Grades list, Grade sheet and export still use names, since that’s where you copy grades out.</p></div>' +
+    '<p class="muted" style="font-size:13px;margin:0">The Grades tab, the grade sheet and returned files still use names, since that’s where you copy grades out.</p></div>' +
     '<div class="bf"><button class="btn" data-check style="margin-right:auto">Check the covers…</button>' + (seen ? '<button class="btn" data-shuf>Shuffle a new order and start</button>' : '') + '<button class="btn primary" data-go>Start anonymous grading</button></div>', true);
   ensureCounts().then(() => { const el = $('#anCover'); if (el) el.textContent = coverLine(); findNames(); });
   $('#dlgBox').onclick = e => {
@@ -9346,6 +9513,7 @@ document.addEventListener('drop', async e => {
 $('#trAllBtn').onclick = openTranscripts;
 $('#dispBtn').onclick = openDisplay;
 $('#mkeyBtn').onclick = () => openMarkKey();
+$('#setMkey').onclick = () => openMarkKey();
 $('#impBtn').onclick = () => openImported();
 function setPanels(L, R) {
   const c = $('#cols'); c.classList.toggle('noL', !!L); c.classList.toggle('noR', !!R);
@@ -9368,12 +9536,11 @@ $('#bringBtn').onclick = () => {
   box.onclick = e => { if (e.target.closest('[data-scanin]')) { closeDlg(); scanInto = true; return $('#scanIn').click(); } return was(e); };
 };
 $('#setupBtn').onclick = openSetup;
-$('#gradesBtn').onclick = openGrades;
 $('#sheetBtn').onclick = () => openSheet(false);
-$('#exportBtn').onclick = openExport;
 $('#shareBtn').onclick = openShare;
 $('#backBtn').onclick = openBringBack;
 function closeDownload(routed) {
+  if (dlgPage) dlgShut();
   for (const d of docs) d.destroy();
   batch = null; pages = []; docs = []; openToken++;   // a student still opening stops there
   histAll = null;   // Past work is read again next time: she may forget a download from Home
@@ -10167,7 +10334,7 @@ function openMarkKey(back) {
     '<p class="mkhint">A page at the end of each returned file, listing only the proofreading and punctuation marks used on it, with what they mean. Stickers and check marks are left out. Leave a meaning blank to show just the name.</p>' +
     '<div class="mkgrp">Proofreading marks</div>' + PROOF.map(p => row(p[0])).join('') +
     '<div class="mkgrp">Punctuation</div>' + PUNCT.map(p => row(p[0])).join('') +
-    '</div><div class="bf">' + (back ? '<button class="btn" data-back>Back to Export</button>' : '') + '<button class="btn primary" data-close>Done</button></div>', true);
+    '</div><div class="bf">' + (back ? '<button class="btn" data-back>Back to Return</button>' : '') + '<button class="btn primary" data-close>Done</button></div>', true);
   const box = $('#dlgBox');
   for (const el of box.querySelectorAll('.mkrow')) el.querySelector('.mkpic').append(stampPicture(el.dataset.k, COLORS[inkColor]));
   box.oninput = e => {
@@ -10532,7 +10699,7 @@ function setStatus(st, s) {
 function statusHtml(st) {
   const on = st.grade.status || '', out = !!st.grade.outAvg;
   return '<div id="gstat"><div class="gstat"><span class="muted">Mark as</span><span class="seg">' + Object.keys(STATUS_LABEL).map(k => '<button data-status="' + k + '" aria-pressed="' + (on === k) + '">' + STATUS_LABEL[k] + '</button>').join('') + '</span></div>' +
-    (noScore(st) ? '' : '<button class="outsw" id="outAvg" role="switch" aria-checked="' + out + '"><i></i><span><b>Leave out of the average</b><small>The score stays and still copies. It doesn’t count in the average, Class overview or Consistency check.</small></span></button>') + '</div>';
+    (noScore(st) ? '' : '<button class="outsw" id="outAvg" role="switch" aria-checked="' + out + '"><i></i><span><b>Leave out of the average</b><small>The score stays and still copies. It doesn’t count in the average or on the Insights tab.</small></span></button>') + '</div>';
 }
 function setOutAvg(st) {
   if (st.grade.outAvg) delete st.grade.outAvg; else st.grade.outAvg = true;
@@ -10715,7 +10882,7 @@ function exportCheckHtml(c) {
   if (!groups.length) return '<div class="xchk ok" id="xCheck">✓ All clear: everyone is scored, scores match the papers, and every file is marked.</div>';
   const item = (o, sheet) => '<li><button class="link" ' + (sheet && !anonOn() ? 'data-chksheet' : 'data-chk="' + o.i + '"' + (o.file ? ' data-file="' + esc(o.file) + '"' : '')) + '>' + esc(o.name) + '</button>' + (o.note ? ' <span class="muted">' + esc(o.note) + '</span>' : '') + '</li>';
   const n = groups.reduce((a, g) => a + g[1].length, 0);
-  return '<details class="xchk" id="xCheck"><summary><span><b>' + n + (n === 1 ? ' thing' : ' things') + ' to look at before you export</b> <span class="muted">(you can still export)</span></span><span class="xshow">Show</span></summary>' +
+  return '<details class="xchk" id="xCheck"><summary><span><b>' + n + (n === 1 ? ' thing' : ' things') + ' to look at before you return these</b> <span class="muted">(you can still download)</span></span><span class="xshow">Show</span></summary>' +
     '<p class="muted" style="margin:6px 0 0">Click a name to go there.</p>' +
     groups.map(([t, list, sheet]) => '<div class="xgrp" data-group="' + esc(t) + '"><div class="xgt">' + esc(t) + ' (' + list.length + ')</div><ul>' + list.map(o => item(o, sheet)).join('') + '</ul></div>').join('') + '</details>';
 }
@@ -10771,7 +10938,7 @@ function saveBar() {
   if (!el) {
     el = document.createElement('div'); el.id = 'saveWarn'; el.className = 'savewarn'; el.setAttribute('role', 'alert');
     el.innerHTML = '<span></span><button class="btn sm" data-saveretry>Try again</button><button class="btn sm" data-savehelp>Export what I have</button>';
-    el.onclick = e => { if (e.target.closest('[data-saveretry]')) saveRetry(); else if (e.target.closest('[data-savehelp]')) { if (batch) openExport(); else toast('Open that download, then use Export marked'); } };
+    el.onclick = e => { if (e.target.closest('[data-saveretry]')) saveRetry(); else if (e.target.closest('[data-savehelp]')) { if (batch) openExport(); else toast('Open that assignment, then use its Return tab'); } };
     document.body.appendChild(el);
     new ResizeObserver(() => { if (el.isConnected) document.body.style.setProperty('--savebar', el.offsetHeight + 'px'); }).observe(el);   // keeps its own strip, so nothing she needs sits under it
   }
@@ -11593,19 +11760,21 @@ function whoHtml(s) {
   const open = s.notScored.length + s.partial.length + s.rosterOnly.length;
   return (open ? '' : '<p class="ovok">Everyone has a finished score or a mark saying why not.</p>') + h;
 }
-async function openOverview() {
+async function openOverview(tab) {
   if (!scanned || scanP) {   // a grade read off a paper counts, so finish reading first, as the Grade sheet and export do
-    toast('Reading the files first…');
-    const b0 = batch, shown = $('#dlg').hidden ? null : $('#dlgBox').firstElementChild;   // it may be opening from the Grades list
+    tabNext('insights');
+    const wait = waitDlg('Insights', 'Reading the files first…');
     await scanAll();
-    if (batch !== b0 || (!$('#dlg').hidden && $('#dlgBox').firstElementChild !== shown)) return;   // she's moved on to something else
+    if (!wait.isConnected) return;   // she's moved on to something else
   }
-  ovTab = 'sum'; ovDraw();
+  ovTab = tab === 'pct' ? 'pct' : 'sum'; ovDraw();
 }
+const insTabs = on => '<div class="ovtabs" role="tablist">' + [['sum', 'Summary'], ['pct', 'Percents'], ['cons', 'Consistency']].map(([k, l]) => '<button role="tab" data-ovtab="' + k + '" aria-selected="' + (on === k) + '">' + l + '</button>').join('') + '</div>';
 let ovTab = 'sum';
 function ovDraw() {
   const s = classStats(), on = ovTab === 'pct';
-  openDlg('<div class="bh"><h2>Class overview</h2><div class="ovtabs" role="tablist">' + [['sum', 'Summary'], ['pct', 'Percents']].map(([k, l]) => '<button role="tab" data-ovtab="' + k + '" aria-selected="' + (ovTab === k) + '">' + l + '</button>').join('') + '</div><button class="icon" data-close aria-label="Close" style="margin-left:auto">✕</button></div>' +
+  tabNext('insights');
+  openDlg('<div class="bh"><h2>Insights</h2>' + insTabs(ovTab) + '<button class="icon" data-close aria-label="Close" style="margin-left:auto">✕</button></div>' +
     (on ? '<div class="bb pbody" id="ovBody">' + pctShell() + '</div>' :
     '<div class="bb" id="ovBody">' +
     '<p class="ovleft" id="ovLeft">' + esc(leftOutText(s)) + '</p>' +
@@ -11614,20 +11783,20 @@ function ovDraw() {
       : ovTile('Average', oneDp(s.mean), '/ ' + fmtNum(s.max), true) + ovTile('Middle score', fmtNum(s.median)) + ovTile('Lowest', fmtNum(s.low)) + ovTile('Highest', fmtNum(s.high))) + '</div>' : '') +
     (s.meanPct != null ? '<div class="ovcharts"><section id="ovBands"><h3 class="ovh3">Grade bands</h3>' + bandsHtml(s.counted, PCT_TENS) + '<p class="muted ovcap2">How many papers landed in each range of percents.</p></section>' +
       '<section id="ovStrip"><h3 class="ovh3">Every paper’s percent</h3>' + stripHtml(s.counted, s.meanPct, 'Average') + '<p class="muted ovcap2">One dot for each paper. Point at one to see whose it is, and click it to open them.</p></section></div>' : '') +
-    '<div class="ovcharts"><section id="ovSpread"><h3 class="ovh3">Score spread</h3>' + spreadHtml(s) + '</section><section id="ovRows"><h3 class="ovh3">Rows the class found hardest</h3>' + rowsHtml(s) + '</section></div>' +
-    trendHtml(s) + levelHtml(s) +
+    '<div class="ovcharts"><section id="ovSpread"><h3 class="ovh3">Score spread</h3>' + spreadHtml(s) + '</section><section id="ovRows"><h3 class="ovh3">Rows the class found hardest</h3>' + rowsHtml(s) + '</section>' + insRowsHtml() + '</div>' +
+    '<div id="insMore"></div>' + trendHtml(s) + levelHtml(s) +
     '<section id="ovWho"><h3 class="ovh3">Who’s missing or unfinished</h3>' + whoHtml(s) + '</section></div>') +
-    '<div class="bf"><button class="btn" data-ovgrades>Grades list</button><button class="btn primary" data-close>Close</button></div>');
-  if (on) pctDraw();
+    '<div class="bf"><button class="btn primary" data-close>Close</button></div>');
+  if (on) pctDraw(); else insMore();
   ovWire();
 }
 function ovWire() {
   ovTipHide();
   $('#dlgBox').onclick = e => {
     if (e.target.closest('[data-close]')) return closeDlg();
-    if (e.target.closest('[data-ovgrades]')) return openGrades();
     const g = e.target.closest('[data-ovgo]'); if (g) { closeDlg(); openStudent(+g.dataset.ovgo); return; }
-    const tb = e.target.closest('[data-ovtab]'); if (tb && tb.dataset.ovtab !== ovTab) { ovTab = tb.dataset.ovtab; ovDraw(); return $('#dlgBox [data-ovtab="' + ovTab + '"]').focus(); }
+    const tb = e.target.closest('[data-ovtab]'); if (tb && tb.dataset.ovtab === 'cons') { openCons(); return $('#dlgBox [data-ovtab="cons"]').focus(); }
+    if (tb && tb.dataset.ovtab !== ovTab) { ovTab = tb.dataset.ovtab; ovDraw(); return $('#dlgBox [data-ovtab="' + ovTab + '"]').focus(); }
     const sg = e.target.closest('[data-pseg]'); if (sg) { pvSet(sg.dataset.pseg, sg.dataset.v); return; }
     const dp = e.target.closest('[data-avgdp]'); if (dp) return setAvgDp(+dp.dataset.avgdp);
     const th = e.target.closest('[data-psort]'); if (th) { const k = th.dataset.psort; if (pv.sort === k) pv.dir *= -1; else { pv.sort = k; pv.dir = k === 'name' ? 1 : -1; } return pctDraw(); }
@@ -12778,7 +12947,7 @@ function dlgFocusBack() {
   if (!b || !b.isConnected) return;
   (b.closest('#moreMenu') ? $('#moreBtn') : b).focus({ preventScroll: true });
 }
-document.addEventListener('keydown', e => { if (e.key === 'Tab' && !$('#dlg').hidden && !$('#askDlg')) trapTab(e, $('#dlgBox')); }, true);
+document.addEventListener('keydown', e => { if (e.key === 'Tab' && !$('#dlg').hidden && !dlgPage && !$('#askDlg')) trapTab(e, $('#dlgBox')); }, true);
 async function splitLeave() {
   if (await askDlg('Leave this split? The pages you’ve sorted so far won’t be kept.', { ok: 'Leave', cancel: 'Keep sorting', danger: true })) { const c = $('#dlgBox [data-cancel]'); if (c) c.click(); }
 }
@@ -13104,7 +13273,8 @@ function openCons() {
   const { pts, noTime, off, groups } = consData(), max = maxPoints(), read = driftRead(pts.map(p => p.v), max);
   const left = [noTime.length ? noTime.length + (noTime.length === 1 ? ' has' : ' have') + ' no time (scored before the app kept them, or read off the paper)' : '', off.length ? off.length + ' changed all at once, like bringing Claude’s feedback back, so their order isn’t known' : ''].filter(Boolean);
   const same = [...groups].filter(([, l]) => l.length > 1).sort((a, b) => parseFloat(b[0]) - parseFloat(a[0])), single = groups.size - same.length;
-  openDlg('<div class="bh"><h2>Consistency check</h2><button class="icon" data-close aria-label="Close">✕</button></div><div class="bb" id="consBox">' +
+  tabNext('insights/consistency');
+  openDlg('<div class="bh"><h2>Insights</h2>' + insTabs('cons') + '<button class="icon" data-close aria-label="Close" style="margin-left:auto">✕</button></div><div class="bb" id="consBox">' +
     '<h3 class="chd">Did you get harder or softer as you went?</h3><p class="csay" id="consSay">' + driftSay(read, max) + '</p>' +
     (pts.length ? driftChart(pts, read, max) + rowSay(rowDrifts()) : '') +
     '<p class="muted hsm">This goes by when each score last changed, so a paper you came back to counts as late. Finished scores only.' + (left.length ? ' Left out: ' + left.join('; ') + '.' : '') + '</p>' +
@@ -13119,6 +13289,7 @@ function openCons() {
     if (e.target.closest('[data-close]')) return closeDlg();
     const o = e.target.closest('[data-open]'); if (o) { closeDlg(); return openStudent(+o.dataset.open); }
     const s = e.target.closest('[data-same]'); if (s) return openSame(isNaN(+s.dataset.same) ? s.dataset.same : +s.dataset.same);
+    const tb = e.target.closest('[data-ovtab]'); if (tb && tb.dataset.ovtab !== 'cons') { openOverview(tb.dataset.ovtab).then(() => { const b = $('#dlgBox [data-ovtab="' + ovTab + '"]'); if (b) b.focus(); }); }
   };
   if (!tip) return;
   const wrap = tip.parentNode, show = el => {
@@ -13405,7 +13576,7 @@ function renderStranger(el, c, folder) {
       '<div class="pc-bd"><label class="pc-f"><span class="pc-k">This is</span><select id="pcLink">' + near.map(n => '<option' + (n === guess ? ' selected' : '') + '>' + esc(n) + '</option>').join('') +
       (rest.length ? '<optgroup label="Already matched">' + rest.map(n => '<option>' + esc(n) + '</option>').join('') + '</optgroup>' : '') + '</select><button class="btn sm primary" data-plink>Link</button></label></div>' +
       '<div class="pc-ft muted">Linking saves “' + esc(folder) + '” as another spelling of that student, so later downloads with this name go to them by themselves.</div>'
-      : '<div class="pc-ft muted">' + (c ? 'Add students to the ' + esc(c.name) + ' roster to link this folder to one of them.' : 'Pick a roster under More to link this folder to a student.') + '</div>') + '</div>';
+      : '<div class="pc-ft muted">' + (c ? 'Add students to the ' + esc(c.name) + ' roster to link this folder to one of them.' : 'Pick a roster under Setup to link this folder to a student.') + '</div>') + '</div>';
 }
 function linkFolder(c, name, folder) {
   setInfo(c, name, { other: [...new Set([...(infoOf(c, name).other || []), folder])] });
@@ -13872,7 +14043,7 @@ function scanFlag(pg) {
   const f = pg.file; if (f.virtual) return;
   const r = (f.sc ||= {})[pg.idx] ||= { later: 1 };
   if (r.re) delete r.re; else r.re = 1;
-  toast(r.re ? 'Flagged for a rescan. Rescans under More lists everyone waiting.' : 'Rescan flag taken off');
+  toast(r.re ? 'Flagged for a rescan. The Return tab lists everyone waiting.' : 'Rescan flag taken off');
   saveSoon(); scanNote(pg); renderList();
 }
 const scanRescans = () => batch ? batch.students.flatMap((st, i) => st.files.flatMap(f => Object.entries(f.sc || {}).filter(([, r]) => r.re).map(([p]) => ({ i, st, f, p: +p })))) : [];
@@ -14113,7 +14284,7 @@ function decideRec(a, b, ta, tb) {
   return x === y ? { pick: 'ask' } : { pick: x > y ? 'a' : 'b', by: 'date' };
 }
 const BLANK_REC = () => ({ f: {}, g: { rubric: [], points: '', comment: '' }, h: {} });
-const WORK_SET = ['carry', 'setup', 'cls', 'share', 'drive', 'light', 'lightOpt', 'lightPg', 'lightPgL', 'anon', 'moved', 'removed', 'refSkip', 'quiz', 'groups'];
+const WORK_SET = ['carry', 'setup', 'cls', 'share', 'drive', 'light', 'lightOpt', 'lightPg', 'lightPgL', 'anon', 'moved', 'removed', 'refSkip', 'quiz', 'groups', 'returned'];
 const setOf = w => { const o = {}; if (w) for (const k of WORK_SET) if (w[k] !== undefined) o[k] = w[k]; return o; };
 const setV = w => w && w.sv ? w.sv : (h => h ? { ['~' + h]: 1 } : {})(hashOf(setOf(w)));
 const partV = (w, k) => (w.pv && w.pv[k]) || (h => h ? { ['~' + h]: 1 } : {})(hashOf(w[k]));
@@ -14412,6 +14583,7 @@ function workCounts(work) {
     else if (su.mode !== 'points' && on) out.partial++;
     else if ((!blank(g.sheet) && !isNaN(+g.sheet)) || read[k]) out.scored++;
   }
+  if (work.returned) out.ret = work.returned.t;   // the marked files went back to the students
   return out;
 }
 function metaFor(ma, mb, work, id) {
@@ -14420,6 +14592,7 @@ function metaFor(ma, mb, work, id) {
   if (work) {
     m.t = work.t || m.t;
     Object.assign(m, workCounts(work));
+    if (!work.returned) delete m.ret;
     m.n = Math.max(m.n || 0, Object.keys(work.s || {}).length);
   }
   return m;
@@ -15526,7 +15699,7 @@ function sideHtml(r, t, anon, crit) {
   if (out.length === 1) out.push('<div class="muted">No score, comment or marks</div>');
   return out.join('');
 }
-const PART_SAY = { setup: 'Rubric setup', cls: 'Class', share: 'Cover boxes and Claude codes', drive: 'Google Drive link', light: 'Lighting', lightOpt: 'Lighting', lightPg: 'Lighting', lightPgL: 'Lighting', anon: 'Anonymous grading', moved: 'Moved files', removed: 'Removed and replaced files', refSkip: 'Which readings each student sees', quiz: 'Quick mark boxes', groups: 'Group work', carry: 'Flags on new and changed files', scan: 'Your answers about scanned pages' };
+const PART_SAY = { setup: 'Rubric setup', cls: 'Class', share: 'Cover boxes and Claude codes', drive: 'Google Drive link', light: 'Lighting', lightOpt: 'Lighting', lightPg: 'Lighting', lightPgL: 'Lighting', anon: 'Anonymous grading', moved: 'Moved files', removed: 'Removed and replaced files', refSkip: 'Which readings each student sees', quiz: 'Quick mark boxes', groups: 'Group work', returned: 'Returned to students', carry: 'Flags on new and changed files', scan: 'Your answers about scanned pages' };
 const partNames = list => [...new Set(list.map(k => PART_SAY[k] || k))].join(', ');
 const scaleSay = su => !rubricsDiffer(su, { ...su, scale: null }) ? 'No scale: percent is the plain share of points' : !rubricsDiffer(su, { ...su, scale: SCALE12 }) ? 'The usual grading scale' : 'A grading scale of its own';
 function partSide(part, v, other, t, anon) {
@@ -18057,6 +18230,188 @@ let chResize = 0;
 window.addEventListener('resize', () => { clearTimeout(chResize); chResize = setTimeout(() => { if (bkPage() && $('#bkBody') && bk.tab !== 'table' && bk.cols && !$('#bkAdd') && !$('#bkSetup') && !$('.bktypes')) bkDraw(); }, 200); });
 Object.assign(window.__gs, { classPanelDraw, chBand, chRowAvgs });
 
+/* ---------------- an open assignment's tabs: Mark, Grades, Insights, Return (11/10) ---------------- */
+function tabsRender() {
+  if (!batch) return;
+  const r = routeNow(), on = r.v === 'a' ? r.tab : '';
+  for (const a of document.querySelectorAll('#aTabs .atab')) {
+    const h = batchHash(batch.id, a.dataset.atab), cur = a.dataset.atab === on;
+    if (a.getAttribute('href') !== h) a.setAttribute('href', h);
+    a.classList.toggle('on', cur);
+    if (cur) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
+  }
+}
+
+/* ---------- Grades: what the paper itself says, beside her score ---------- */
+function glPaperOf(st) {
+  if (!st.files.length || noScore(st)) return { html: '', chk: false };
+  const sheet = batchHash(batch.id, 'grades/sheet'), g = gradeOf(st), open = g.total == null && g.pct == null;
+  const ask = (t, tip) => '<a class="opchip warn" href="' + sheet + '" title="' + esc(tip) + '">' + esc(t) + '</a>';
+  if (manyReads(st)) return { html: ask(readsCount(st) + ' grades · pick one', 'More than one grade is written on this paper. Say which one counts on the grade sheet.'), chk: true };
+  if (open && st.doubts && st.doubts.length) return { html: ask('“' + foundLabel(st.doubts[0]) + '”? confirm', 'This may be the grade, or may not. Confirm it on the grade sheet.'), chk: true };
+  const note = disagreeNote(st), ws = st.files.map(wordScore).filter(w => w && w.total != null);
+  const ty = st.grade.sheet, said = st.found && st.found.found ? foundLabel(st.found) : ty !== '' && ty != null && !isNaN(+ty) ? fmtNum(+ty) : ws.length === 1 ? fmtNum(ws[0].total) + (ws[0].max ? '/' + fmtNum(ws[0].max) : '') : '';
+  if (!said && st.doubts && st.doubts.length) return { html: '<span class="muted" title="This may be a grade written on the paper. Your own score is the one that counts.">' + esc(foundLabel(st.doubts[0])) + ' ?</span>', chk: false };
+  if (!said) return { html: '<span class="muted">–</span>', chk: false };
+  return { html: '<span class="opv">' + esc(said) + '</span>' + (note ? ' ' + ask('differs', note + '.') : ''), chk: !!note };
+}
+const glSig = () => batch.students.map(st => cellCopy(gradeOf(st), 'total') + '/' + cellCopy(gradeOf(st), 'pct')).join('|');
+function glPaper() {
+  const t = $('#glTable'); if (!t || !batch) return;
+  const fill = () => {
+    let n = 0;
+    for (const td of t.querySelectorAll('td.op[data-op]')) {
+      const r = glPaperOf(batch.students[+td.dataset.op]);
+      td.innerHTML = r.html; td.parentElement.classList.toggle('chk', r.chk); if (r.chk) n++;
+    }
+    const el = $('#glChk');
+    el.hidden = !n;
+    el.innerHTML = n ? '<b>' + n + ' to check</b><span>The grade on the paper differs from your score, or needs you to pick or confirm it.</span><button class="link" data-glonly>Show only these</button><a class="link" href="' + batchHash(batch.id, 'grades/sheet') + '">Open the grade sheet</a>' : '';
+    if (!n) t.classList.remove('only');
+  };
+  if (scanned && !scanP) return fill();
+  for (const td of t.querySelectorAll('td.op[data-op]')) td.innerHTML = '<span class="muted">…</span>';
+  const b0 = batch, was = glSig();
+  scanAll().then(() => {
+    if (batch !== b0 || !t.isConnected) return;
+    if (glSig() !== was) openGrades(); else fill();
+  });
+}
+
+/* ---------- Return: "Returned", one student at a time, and the Claude steps ---------- */
+function returnedHtml() {
+  const r = batch && batch.returned; if (!r) return '';
+  const d = new Date(r.t), hm = d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }), today = d.toDateString() === new Date().toDateString();
+  return '<p class="rtdone"><span>✓ Returned ' + (today ? 'today at ' + esc(hm) : 'on ' + esc(d.toLocaleDateString([], { day: 'numeric', month: 'short' }))) + ' · ' + r.n + (r.n === 1 ? ' file' : ' files') + '.</span> <button class="link" data-unreturn>Mark as not returned</button></p>';
+}
+function returnedDraw() { const el = $('#rtState'); if (el) el.innerHTML = returnedHtml(); }
+function setReturned(n) {
+  if (!batch) return;
+  const b0 = batch, was = batch.returned;
+  batch.returned = { t: Date.now(), n }; saveSoon();
+  if ($('#rtState')) returnedDraw();
+  else toastDo('Done. This assignment is marked as returned.', 'Undo', () => { if (batch !== b0) return; batch.returned = was; saveSoon(); });
+}
+function returnSideHtml() {
+  const st = batch.students[cur], who = st && st.files.length ? (anonOn() ? 'this paper' : esc(st.key) + '’s paper') : '';
+  const sent = batch.students.map((s, i) => ({ s, i })).filter(x => x.s.grade.sent).sort((a, b) => b.s.grade.sent - a.s.grade.sent);
+  const re = scanRescans(), nRe = new Set(re.map(x => x.i)).size;
+  const row = (t, s, act, label) => '<div class="rtrow"><span><b>' + t + '</b><small>' + s + '</small></span><button class="btn sm" data-rtask="' + act + '">' + label + '</button></div>';
+  return '<aside class="rtside" id="rtSide" aria-label="Other ways to give work back">' +
+    '<section class="rtcard" id="rtOne"><h3>One student at a time</h3><p class="muted">Give one student their marked paper now, without waiting for the rest.</p>' +
+      (sent.length ? '<ul class="rtsent">' + sent.slice(0, 6).map(x => '<li><button class="link" data-chk="' + x.i + '">' + esc(shownName(x.s, x.i)) + '</button> <span class="muted">exported ' + esc(sentWhen(x.s.grade.sent)) + '</span></li>').join('') + (sent.length > 6 ? '<li class="muted">and ' + (sent.length - 6) + ' more</li>' : '') + '</ul>' : '') +
+      (who ? '<button class="btn" data-rtone>Export ' + who + '</button>' : '<p class="muted">Open a student’s paper on the Mark tab first.</p>') + '</section>' +
+    '<section class="rtcard" id="rtClaude"><h3>Ask Claude <span class="muted">(optional)</span></h3>' +
+      row('Papers with names covered', 'A ZIP of every page as a picture', 'papers', 'Check the covers') +
+      row('Marks only', 'One file: scores, rubric and your marks', 'marks', 'Make the file') +
+      row('Bring back Claude’s feedback', 'Paste a reply, and it goes to each student', 'back', 'Paste a reply') + '</section>' +
+    (re.length ? '<section class="rtcard" id="rtRescan"><h3>Rescans</h3>' + row(re.length + (re.length === 1 ? ' page is' : ' pages are') + ' flagged for a rescan', 'From ' + nRe + (nRe === 1 ? ' student' : ' students'), 'rescan', 'Show') + '</section>' : '') +
+    '</aside>';
+}
+function returnSideClick(e) {
+  if (e.target.closest('[data-unreturn]')) { delete batch.returned; saveSoon(); returnedDraw(); toast('Marked as not returned'); return true; }
+  if (e.target.closest('[data-rtone]')) {
+    const st = batch.students[cur], b0 = batch;
+    toast('Making ' + (anonOn() ? 'this paper' : st.key + '’s paper') + '…');
+    exportOne(st).then(() => { const el = $('#rtSide'); if (el && batch === b0) el.outerHTML = returnSideHtml(); });
+    return true;
+  }
+  const a = e.target.closest('[data-rtask]'); if (!a) return false;
+  const k = a.dataset.rtask;
+  if (k === 'back') openBringBack();
+  else if (k === 'rescan') openRescans();
+  else { openShare(); if ($('#shMarks') && $('#dlgBox [data-kind="' + k + '"]')) shareKind(k); }
+  return true;
+}
+
+/* ---------- Insights: how each row was scored, change since the last summative, and the same assignment in her other classes ---------- */
+function insRowsHtml() {
+  if (setup.mode !== 'rubric') return '';
+  const lv = [0, 1, 2, 3, 4], rows = setup.criteria.map((name, r) => {
+    const by = lv.map(() => []);
+    batch.students.forEach((st, i) => { const v = st.grade.outAvg ? null : rowShown(st, r); if (v != null) by[Math.max(0, Math.min(4, Math.floor(v)))].push(shownName(st, i)); });
+    return { name, by, n: by.reduce((a, b) => a + b.length, 0) };
+  });
+  if (!rows.some(x => x.n)) return '';
+  const zero = rows.some(x => x.by[0].length), shown = zero ? lv : lv.slice(1);
+  return '<section id="insRows"><h3 class="ovh3">How each row was scored</h3><div class="insrows" role="group" aria-label="Papers at each score, row by row">' + rows.map(x =>
+    '<div class="insr"><div class="insn" title="' + esc(x.name) + '">' + esc(x.name) + '</div><div class="inst">' + (x.n ? shown.map(v => { const who = x.by[v], k = who.length; if (!k) return '';
+      return '<i class="chseg b' + (v + 1) + '" style="flex:' + k + '" tabindex="0" aria-label="' + esc(x.name + ': ' + people(k, 'paper') + ' at ' + v) + '"' + chTip(people(k, 'paper') + ' · ' + Math.round(k / x.n * 100) + '%', 'Scored ' + v + ' on ' + x.name, who.slice(0, 12).join(', ') + (k > 12 ? ' and ' + (k - 12) + ' more' : '')) + '>' + (k / x.n > .07 ? k : '') + '</i>'; }).join('') : '<span class="muted">No scores yet</span>') + '</div></div>').join('') +
+    '</div><div class="bkleg">' + shown.map(v => '<span><i class="chsw b' + (v + 1) + '"></i>' + v + '</span>').join('') + '</div>' +
+    '<p class="muted ovcap2">How many papers got each score on each row, in the rubric’s order. A half point counts with the whole number below it. The stronger the blue, the higher the score.</p></section>';
+}
+function insNow(c) {
+  const m = rosterMatch(c.names), max = maxPoints(), out = new Map();
+  c.names.forEach((n, k) => {
+    const st = m.get(n); if (!st) return;
+    const g = gradeOf(st), i = batch.students.indexOf(st);
+    if (g.status === 'missing' || g.status === 'excused' || g.partial || g.out || !g.done || g.pct == null || !onThisScale(st, g, max)) return;
+    out.set(n, { pct: g.pct, i, name: shownName(st, i) });
+  });
+  return out;
+}
+const insW = () => { const b = $('#ovBody'), room = b ? b.clientWidth - 48 : 0, n = room > 780 ? 2 : 1; return room > 0 ? Math.max(340, Math.min(760, Math.round((room - (n - 1) * 28) / n))) : 640; };
+function insMoveHtml(c, cols, me) {
+  const mine = me ? cols.find(x => x.key === me.id) : null, due = (mine && mine.due) || (me && me.due) || isoDay(Date.now());
+  const prev = cols.filter(x => x.type === 'sum' && (!me || x.key !== me.id) && x.dl !== batch.id && (!x.due || x.due <= due) && c.names.some(n => bkCounts(x.cells.get(n)))).sort((a, b) => (a.due || '').localeCompare(b.due || '')).pop();
+  const head = '<section id="insMove"><h3 class="ovh3">Change since the last summative</h3>';
+  if (!prev) return head + '<p class="muted">This shows once ' + esc(c.name) + ' has an earlier summative scored in this browser.</p></section>';
+  const now = insNow(c), list = [];
+  for (const n of c.names) { const a = prev.cells.get(n), b = now.get(n); if (bkCounts(a) && b) list.push({ name: b.name, i: b.i, a: a.pct, b: b.pct, d: b.pct - a.pct }); }
+  if (!list.length) return head + '<p class="muted">No student has a finished score on both this and ' + esc(prev.name) + ' yet.</p></section>';
+  list.sort((x, y) => y.d - x.d || natural(x.name, y.name));
+  const all = list.flatMap(x => [x.a, x.b]), lo = Math.max(0, Math.floor((Math.min(...all) - 4) / 10) * 10), W = insW(), L = Math.min(150, Math.round(W * .28)), R = 46, rh = 24, T = 6, H = T + list.length * rh + 26, X = v => L + (Math.min(100, v) - lo) / (100 - lo) * (W - L - R);
+  let s = '';
+  for (let t = lo; t <= 100; t += 10) s += '<line x1="' + X(t) + '" x2="' + X(t) + '" y1="' + T + '" y2="' + (H - 22) + '" class="tgl"/><text x="' + X(t) + '" y="' + (H - 6) + '" text-anchor="middle" class="ttk">' + t + '%</text>';
+  list.forEach((x, k) => {
+    const y = T + k * rh + rh / 2, dir = x.d > 0 ? 'up' : x.d < 0 ? 'down' : 'same', txt = (x.d > 0 ? '+' : x.d < 0 ? '−' : '') + Math.abs(Math.round(x.d));
+    s += '<g class="insdb ' + dir + '" tabindex="0" role="button" data-ovgo="' + x.i + '" aria-label="' + esc(x.name + ': ' + x.a + '% then ' + x.b + '%') + '"' + chTip(txt + ' points', x.name, prev.name + ' ' + x.a + '%, this one ' + x.b + '%') + '>' +
+      '<rect x="0" y="' + (y - rh / 2) + '" width="' + W + '" height="' + rh + '" class="inshit"/><text x="0" y="' + (y + 4) + '" class="tlb">' + esc(chCut(x.name, Math.floor(L / 6.8))) + '</text>' +
+      '<line x1="' + X(x.a) + '" x2="' + X(x.b) + '" y1="' + y + '" y2="' + y + '" class="insln"/><circle cx="' + X(x.a) + '" cy="' + y + '" r="4.5" class="inswas"/><circle cx="' + X(x.b) + '" cy="' + y + '" r="5.5" class="insnow"/>' +
+      '<text x="' + (W - 2) + '" y="' + (y + 4) + '" text-anchor="end" class="tlb me">' + txt + '</text></g>';
+  });
+  const up = list.filter(x => x.d > 0).length, down = list.filter(x => x.d < 0).length;
+  return head + '<svg class="tsvg" viewBox="0 0 ' + W + ' ' + H + '" role="group" aria-label="' + esc('Each student’s percent on ' + prev.name + ' and on this assignment') + '">' + s + '</svg>' +
+    '<div class="bkleg"><span><i class="insk was"></i>' + esc(chCut(prev.name, 28)) + (prev.due ? ' · ' + esc(bkDay(prev.due)) : '') + '</span><span><i class="insk now"></i>This one</span><span><i class="chsw up"></i>Up (' + up + ')</span><span><i class="chsw down"></i>Down (' + down + ')</span></div>' +
+    '<p class="muted ovcap2">Each student’s percent on the last summative and on this one, biggest rise first. Finished scores only. Click a row to open that paper.</p></section>';
+}
+function insAcrossHtml(c, all, me, s) {
+  if (!me || !me.group) return '';
+  const rows = [];
+  for (const k of lib.classes) {
+    const it = k.units.flatMap(u => u.items).find(x => x.group === me.group); if (!it) continue;
+    let ps;
+    if (k === c) ps = s.counted.map(x => x.pct).filter(v => v != null);
+    else { const col = bkClassCols(k, all).find(x => x.key === it.id); ps = col ? k.names.map(n => col.cells.get(n)).filter(bkCounts).map(x => x.pct) : []; }
+    rows.push({ k, ps: ps.sort((a, b) => a - b) });
+  }
+  if (rows.length < 2) return '';
+  const lo = Math.max(0, Math.floor((Math.min(100, ...rows.flatMap(r => r.ps)) - 4) / 10) * 10), X = v => (Math.min(100, v) - lo) / (100 - lo) * 100, ticks = [];
+  for (let t = lo; t <= 100; t += 10) ticks.push(t);
+  return '<section id="insAcross"><h3 class="ovh3">The same assignment in your other classes</h3><div class="insx" role="group">' + rows.map(r => {
+    if (!r.ps.length) return '<div class="insxr' + (r.k === c ? ' me' : '') + '"><span class="insxn">' + esc(r.k.name) + '</span><div class="insxt"></div><span class="muted insxv">no scores yet</span></div>';
+    const q1 = chQ(r.ps, .25), q2 = chQ(r.ps, .5), q3 = chQ(r.ps, .75), avg = bkMean(r.ps);
+    return '<div class="insxr' + (r.k === c ? ' me' : '') + '" tabindex="0"' + chTip(pctAvgText(avg) + ' average', r.k.name, people(r.ps.length, 'finished score') + ', from ' + r.ps[0] + '% to ' + r.ps[r.ps.length - 1] + '%, middle ' + Math.round(q2) + '%') + '><span class="insxn">' + esc(r.k.name) + '</span>' +
+      '<div class="insxt"><i class="insxa" style="left:' + X(r.ps[0]) + '%;width:' + Math.max(.8, X(r.ps[r.ps.length - 1]) - X(r.ps[0])) + '%"></i><i class="insxq" style="left:' + X(q1) + '%;width:' + Math.max(.8, X(q3) - X(q1)) + '%"></i><i class="insxm" style="left:' + X(q2) + '%"></i></div>' +
+      '<span class="insxv"><b>' + pctAvgText(avg) + '</b> <small>' + r.ps.length + '</small></span></div>';
+  }).join('') + '<div class="insxr insxax" aria-hidden="true"><span></span><div class="insxt">' + ticks.map(t => '<span style="left:' + X(t) + '%">' + t + '%</span>').join('') + '</div><span></span></div></div>' +
+    '<p class="muted ovcap2">For each class: the bar runs from the lowest to the highest percent, the darker part is the middle half, and the line is the middle score. The number is the class average, then how many finished scores it’s from.</p></section>';
+}
+let insTok = 0;
+async function insMore() {
+  const host = $('#insMore'), c = batchClass(); if (!host || !batch) return;
+  if (!c || !c.names.length) { host.innerHTML = ''; return; }
+  const tok = ++insTok, b0 = batch;
+  const all = await bkLoad();
+  if (tok !== insTok || batch !== b0 || !host.isConnected) return;
+  const f = batch.assignment && findItem(batch.assignment.id), me = f ? f.it : null, s = classStats();
+  host.innerHTML = '<div class="ovcharts">' + insMoveHtml(c, bkClassCols(c, all), me) + insAcrossHtml(c, all, me, s) + '</div>';
+}
+let insResize = 0;
+window.addEventListener('resize', () => { if (!$('#insMore')) return; clearTimeout(insResize); insResize = setTimeout(() => { if ($('#insMore')) insMore(); }, 200); });
+
+Object.assign(window.__gs, { tabsRender, tabShow, glPaperOf, setReturned, insNow });
+
 /* ---------------- the frame: the sidebar, Home's "Needs a look", and Find anything (11/9) ---------------- */
 var shellReady;
 
@@ -18082,6 +18437,7 @@ function railRender() {
   for (const a of document.querySelectorAll('#rail [data-nav]')) { const on = !batch && a.dataset.nav === r.v; a.classList.toggle('on', on); if (on) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); }
   const cr = $('#crumbClass'); cr.hidden = !(batch && open);
   if (batch && open) { cr.textContent = open.name; cr.href = classHash(open); cr.title = 'Back to ' + open.name; }
+  tabsRender();
   const d = $('#homeDate'), today = new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' }); if (d.textContent !== today) d.textContent = today;
   const asg = batch && batch.assignment && findItem(batch.assignment.id);
   document.title = batch ? (asg ? asg.it.name + ' · ' : '') + 'Grading Studio' : r.v === 'class' ? (r.c === lib.loose ? 'No class' : r.c.name) + ' · Grading Studio' : r.v === 'settings' ? 'Settings · Grading Studio' : 'Grading Studio';
@@ -18124,19 +18480,28 @@ new MutationObserver(railSavedRender).observe($('#saveState'), { childList: true
 function findRows() {
   const out = [], add = (group, label, sub, run, key) => { if (label) out.push({ group, label: String(label), sub: sub || '', run, key: key || '' }); };
   const press = sel => () => { const b = $(sel); if (b) b.click(); };
+  const toMark = () => { if (dlgPage) closeDlg(); };   // a student or a marking tool is on the papers: a tab's screen steps aside first
   if (batch) {
     const order = anonOn() ? anonOrder() : batch.students.map((_, i) => i);
-    order.forEach((i, pos) => { const st = batch.students[i], g = gradeOf(st); add('Students', shownName(st, i), noScore(st) ? STATUS_LABEL[g.status] : g.done ? 'Scored' : g.total != null ? 'Partly scored' : st.files.length ? 'Not scored yet' : 'No paper', () => openStudent(i), String(pos + 1)); });
-    for (const b of document.querySelectorAll('#tools .tool[data-tool]')) { const m = /^(.*?) \((.*)\)$/.exec(b.title) || [0, b.title, '']; add('Marking tools', m[1], 'Tool for the paper', () => setTool(b.dataset.tool), m[2]); }
-    for (const [sel, sub] of [['#sheetBtn', 'Every grade found on the papers, with a crop of each'], ['#gradesBtn', 'Scores and comments, to copy into ManageBac'], ['#exportBtn', 'The marked files, back in their student folders'], ['#quizTop', '']]) { const b = $(sel); if (b && !b.hidden) add('This assignment', b.textContent.replace(/\s*\(\d+\)$/, ''), sub || b.title, press(sel)); }
-    for (const b of document.querySelectorAll('#moreMenu .mitem')) {
-      if (b.hidden || b.classList.contains('themeBtn') || b.id === 'keysBtn') continue;
+    order.forEach((i, pos) => { const st = batch.students[i], g = gradeOf(st); add('Students', shownName(st, i), noScore(st) ? STATUS_LABEL[g.status] : g.done ? 'Scored' : g.total != null ? 'Partly scored' : st.files.length ? 'Not scored yet' : 'No paper', () => { toMark(); openStudent(i); }, String(pos + 1)); });
+    for (const b of document.querySelectorAll('#tools .tool[data-tool]')) { const m = /^(.*?) \((.*)\)$/.exec(b.title) || [0, b.title, '']; add('Marking tools', m[1], 'Tool for the paper', () => { toMark(); setTool(b.dataset.tool); }, m[2]); }
+    const tabGo = (k, label, sub) => add('This assignment', label, sub, () => go(batchHash(batch.id, k)));
+    tabGo('', 'Mark', 'The papers, one student at a time');
+    tabGo('grades', 'Grades', 'Scores and comments to copy into ManageBac, beside the grade written on each paper');
+    tabGo('grades/sheet', 'Grade sheet', 'Every grade found on the papers, with a crop of each');
+    tabGo('insights', 'Insights', 'The class at a glance: average, spread, rubric rows, charts');
+    tabGo('insights/consistency', 'Consistency check', 'Did you get harder or softer as you went?');
+    tabGo('return', 'Return marked files', 'The marked files, back in their student folders');
+    { const b = $('#quizTop'); if (b && !b.hidden) add('This assignment', b.textContent, b.title, press('#quizTop')); }
+    for (const b of document.querySelectorAll('#moreMenu .mitem, #toolStash .mitem')) {
+      if (b.hidden || b.classList.contains('themeBtn') || b.id === 'keysBtn' || b.id === 'sheetBtn' || b.id === 'overviewBtn' || b.id === 'consBtn') continue;
       const k = b.querySelector('kbd'), label = [...b.childNodes].filter(n => n.nodeType === 3).map(n => n.textContent).join('').trim();
-      add(b.closest('.mgrp').querySelector('.mhd').textContent === 'View and tools' ? 'Tools' : 'This assignment', label, b.title, () => b.click(), k ? k.textContent : '');
+      add(b.dataset.fg || 'This assignment', label, b.title, () => { if (b.dataset.paper) toMark(); b.click(); }, k ? k.textContent : '');
     }
     const words = wordPdfList();
     if (words.length) add('This assignment', 'Convert Word papers to PDF pages', words.length + (words.length === 1 ? ' Word paper' : ' Word papers') + ' here. The Word files are kept', () => {
       const x = words.find(x => x.st === batch.students[cur]) || words[0];
+      toMark();
       if (x.st !== batch.students[cur]) openStudent(batch.students.indexOf(x.st));
       openWordPdf(x.st, x.f);
     });
@@ -18186,7 +18551,7 @@ function findMatch(rows, q) {
   return hit.sort((a, b) => a.rank - b.rank).map(x => x.r).slice(0, 40);
 }
 function openFind() {
-  if ($('#findDlg') || $('#askDlg') || !$('#dlg').hidden) return;
+  if ($('#findDlg') || $('#askDlg') || (!$('#dlg').hidden && !dlgPage)) return;
   commitEditors(); setMore(false);
   const back = document.activeElement, el = document.createElement('div');
   el.className = 'dlg finddlg'; el.id = 'findDlg';
@@ -18227,7 +18592,7 @@ $('#findBtn').onclick = openFind;
 $('#findKey').textContent = isMac() ? '⌘K' : 'Ctrl K';
 document.addEventListener('keydown', e => {
   if (!(e.ctrlKey || e.metaKey) || e.altKey || e.shiftKey || e.key.toLowerCase() !== 'k' || $('#findDlg')) return;
-  if ($('#askDlg') || !$('#dlg').hidden) return;
+  if ($('#askDlg') || (!$('#dlg').hidden && !dlgPage)) return;
   e.preventDefault(); e.stopPropagation(); openFind();
 }, true);
 

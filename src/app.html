@@ -615,7 +615,7 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
       <ol class="steps">
         <li><span class="n">1</span><span><b>Mark.</b> Pen, highlight, text, check marks, and comments that sit in the margin with a line to the spot. Arrange pages lets you combine a student’s files and drag pages into order.</span></li>
         <li><span class="n">2</span><span><b>Score.</b> Type a total, or click 0 to 4 on each rubric row (half points too). Or bring in your own rubric (Word, PDF or picture) once and grade right on each student’s copy. Students stay in their folder order.</span></li>
-        <li><span class="n">3</span><span><b>Enter grades.</b> Open the Grades list and go down it in ManageBac. Click any score or comment to copy it. Marked in Kami instead? The Grade sheet finds what you typed, like “9 = 85%”, and shows a crop of it for every student. Files with no marks are left out as extra papers, and you can bring them back.</span></li>
+        <li><span class="n">3</span><span><b>Enter grades.</b> Open the Grades tab and go down it in ManageBac. Click any score or comment to copy it. Marked in Kami instead? The Grade sheet finds what you typed, like “9 = 85%”, and shows a crop of it for every student. Files with no marks are left out as extra papers, and you can bring them back.</span></li>
         <li><span class="n">4</span><span><b>Return.</b> Export gives you the marked files in the same student folders.</span></li>
       </ol>
     </details>
@@ -641,6 +641,9 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
     <section class="lib setsec" id="setPapers">
       <div class="lhead"><h2>Word papers</h2><span class="muted">Mark them as they are, or turn each one into PDF pages you can mark anywhere. The Word file is always kept.</span><span class="sp"></span><span class="seg" id="setWordPdf"><button data-v="0" aria-pressed="true">Keep as Word</button><button data-v="1" aria-pressed="false">Convert to PDF pages</button></span></div>
     </section>
+    <section class="lib setsec" id="setMarking">
+      <div class="lhead"><h2>Marking</h2><span class="muted">What each proofreading mark means, for the key on returned papers.</span><span class="sp"></span><button class="btn sm" id="setMkey">Mark key</button></div>
+    </section>
     <section class="lib setsec" id="setKeys">
       <div class="lhead"><h2>Keys</h2><span class="muted">Every keyboard shortcut for marking and scoring.</span><span class="sp"></span><button class="btn sm" id="setKeysBtn">Show all keys</button></div>
     </section>
@@ -653,42 +656,47 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
 <div class="app" id="app" hidden>
   <div class="top">
     <span class="title">Grading <i>Studio</i></span>
-    <a class="crumb" id="crumbClass" href="#/" hidden></a><span class="batch" id="batchName"></span><span class="savest" id="saveState" title="Your marks and scores are kept in this browser as you go"></span><button class="savewhere link" id="saveWhere"></button>
+    <a class="crumb" id="crumbClass" href="#/" hidden></a><span class="batch" id="batchName"></span>
+    <nav class="atabs" id="aTabs" aria-label="This assignment">
+      <a class="atab" id="markTab" data-atab="" href="#/">Mark</a>
+      <a class="atab" id="gradesBtn" data-atab="grades" href="#/" title="Every score and comment, beside the grade written on each paper">Grades</a>
+      <a class="atab" id="insightsTab" data-atab="insights" href="#/" title="How the class did, row by row, and whether your scoring stayed even">Insights</a>
+      <a class="atab" id="exportBtn" data-atab="return" href="#/" title="Check the class, then get the marked files to give back">Return</a>
+    </nav>
     <span class="sp"></span>
-    <button class="btn sm ghost" id="sheetBtn">Grade sheet</button>
-    <button class="btn sm ghost" id="gradesBtn">Grades list</button>
+    <span class="savest" id="saveState" title="Your marks and scores are kept in this browser as you go"></span><button class="savewhere link" id="saveWhere"></button>
     <button class="btn sm ghost" id="quizTop" hidden title="Mark a paper quiz one question at a time, across the class">Quick mark</button>
     <span id="topMb"></span>
-    <button class="btn sm primary" id="exportBtn">Export marked</button>
     <div class="morewrap">
-      <button class="btn sm" id="moreBtn" aria-haspopup="true" aria-expanded="false" aria-controls="moreMenu">More <span aria-hidden="true">▾</span></button>
+      <button class="btn sm" id="moreBtn" aria-haspopup="true" aria-expanded="false" aria-controls="moreMenu" title="The roster, the rubric and the files of this assignment"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" style="vertical-align:-2px;margin-right:5px"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>Setup</button>
       <div class="more" id="moreMenu" hidden>
         <div class="mgrp" role="group" aria-labelledby="mhA"><div class="mhd" id="mhA">This assignment</div>
-          <label class="mrow">Roster <select id="classSel" class="btn sm" aria-label="Roster for this download"></select></label>
+          <label class="mrow">Roster <select id="classSel" class="btn sm" aria-label="Roster for this assignment"></select></label>
           <button class="mitem" id="setupBtn">Rubric setup</button>
           <button class="mitem" id="bringBtn" title="Late work, or many files at once; each goes to its student by the name in the file name">Bring in files</button>
           <button class="mitem" id="openRepBtn" title="What opened from this download, what didn’t, who has nothing, and anything odd">What opened</button>
-          <button class="mitem" id="trAllBtn" hidden title="Make a transcript for every recording in this download">Transcripts</button>
+          <button class="mitem" id="trAllBtn" hidden title="Make a transcript for every recording in this assignment">Transcripts</button>
+          <button class="mitem" id="quizBtn" title="For a scanned paper quiz: box each question once, then mark the same question for everyone at once">Quick mark (paper quiz)</button>
+          <button class="mitem" id="impBtn" title="Comments and marks made in Kami, Acrobat or Preview, made into your own so you can change them">Marks from other apps</button>
           <span class="mlink" id="topAtlas"></span>
         </div>
-        <div class="mgrp" role="group" aria-labelledby="mhB"><div class="mhd" id="mhB">Claude</div>
-          <button class="mitem" id="shareBtn" title="Papers with names covered, by code">Share with Claude</button>
-          <button class="mitem" id="backBtn" title="Put Claude’s feedback with the right students">Bring back from Claude</button>
-        </div>
-        <div class="mgrp" role="group" aria-labelledby="mhC"><div class="mhd" id="mhC">View and tools</div>
-          <button class="mitem" id="quizBtn" title="For a scanned paper quiz: box each question once, then mark the same question for everyone at once">Quick mark (paper quiz)</button>
-          <button class="mitem" id="bookBtn" title="Every assignment for this class, by term, with term grades and charts">Gradebook</button>
-          <button class="mitem" id="overviewBtn" title="The spread of scores, the hardest rubric rows, and who isn’t finished">Class overview</button>
-          <button class="mitem" id="consBtn" title="Same-score papers side by side, and whether you got harder or softer as you went">Consistency check</button>
-          <button class="mitem" id="lightBtn" title="Make a pale or too-bright scan easier to read">Lighting</button>
-          <button class="mitem" id="rescanBtn" title="Pages you flagged as needing a rescan, and who they belong to">Rescans</button>
-          <button class="mitem" id="dispBtn" title="Text size and zoom">Display</button>
-          <button class="mitem" id="mkeyBtn" title="What each proofreading mark means, for the key on returned papers">Mark key</button>
-          <button class="mitem" id="impBtn" title="Comments and marks made in Kami, Acrobat or Preview, made into your own so you can change them">Marks from other apps</button>
-          <button class="mitem" id="calcBtn" title="Calculator for scores and percents">Calculator <kbd>=</kbd></button>
-          <button class="mitem themeBtn">Dark mode</button>
-          <button class="mitem" id="keysBtn">All keys <kbd>?</kbd></button>
-        </div>
+        <p class="mfoot">Everything else is under Find anything <kbd>Ctrl K</kbd></p>
+      </div>
+      <!-- What the More menu used to hold now lives on a tab or in Settings. Each button stays here, out of sight, so Find anything and the keys press the same thing they always did. -->
+      <div id="toolStash" hidden>
+        <button class="mitem" id="sheetBtn" data-fg="This assignment" title="A picture of every grade written on the papers">Grades on the papers</button>
+        <button class="mitem" id="shareBtn" data-fg="This assignment" title="Papers with names covered, by code">Share with Claude</button>
+        <button class="mitem" id="backBtn" data-fg="This assignment" title="Put Claude’s feedback with the right students">Bring back from Claude</button>
+        <button class="mitem" id="bookBtn" data-fg="This assignment" title="Every assignment for this class, by term, with term grades and charts">Gradebook</button>
+        <button class="mitem" id="overviewBtn" data-fg="This assignment" title="The spread of scores, the hardest rubric rows, and who isn’t finished">Class overview</button>
+        <button class="mitem" id="consBtn" data-fg="This assignment" title="Same-score papers side by side, and whether you got harder or softer as you went">Consistency check</button>
+        <button class="mitem" id="lightBtn" data-fg="Tools" data-paper="1" title="Make a pale or too-bright scan easier to read">Lighting</button>
+        <button class="mitem" id="rescanBtn" data-fg="Tools" title="Pages you flagged as needing a rescan, and who they belong to">Rescans</button>
+        <button class="mitem" id="dispBtn" data-fg="Tools" title="Text size and zoom">Display</button>
+        <button class="mitem" id="mkeyBtn" data-fg="Tools" title="What each proofreading mark means, for the key on returned papers">Mark key</button>
+        <button class="mitem" id="calcBtn" data-fg="Tools" title="Calculator for scores and percents">Calculator <kbd>=</kbd></button>
+        <button class="mitem themeBtn" data-fg="Tools">Dark mode</button>
+        <button class="mitem" id="keysBtn" data-fg="Tools">All keys <kbd>?</kbd></button>
       </div>
     </div>
     <button class="icon" id="closeBtn" title="Close this assignment and go Home" aria-label="Close this assignment and go Home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>

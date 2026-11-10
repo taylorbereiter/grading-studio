@@ -114,7 +114,7 @@ function openMarkKey(back) {
     '<p class="mkhint">A page at the end of each returned file, listing only the proofreading and punctuation marks used on it, with what they mean. Stickers and check marks are left out. Leave a meaning blank to show just the name.</p>' +
     '<div class="mkgrp">Proofreading marks</div>' + PROOF.map(p => row(p[0])).join('') +
     '<div class="mkgrp">Punctuation</div>' + PUNCT.map(p => row(p[0])).join('') +
-    '</div><div class="bf">' + (back ? '<button class="btn" data-back>Back to Export</button>' : '') + '<button class="btn primary" data-close>Done</button></div>', true);
+    '</div><div class="bf">' + (back ? '<button class="btn" data-back>Back to Return</button>' : '') + '<button class="btn primary" data-close>Done</button></div>', true);
   const box = $('#dlgBox');
   for (const el of box.querySelectorAll('.mkrow')) el.querySelector('.mkpic').append(stampPicture(el.dataset.k, COLORS[inkColor]));
   box.oninput = e => {

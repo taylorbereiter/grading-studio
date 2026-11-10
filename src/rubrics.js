@@ -464,20 +464,23 @@ function whoHtml(s) {
   const open = s.notScored.length + s.partial.length + s.rosterOnly.length;
   return (open ? '' : '<p class="ovok">Everyone has a finished score or a mark saying why not.</p>') + h;
 }
-async function openOverview() {
+async function openOverview(tab) {
   if (!scanned || scanP) {   // a grade read off a paper counts, so finish reading first, as the Grade sheet and export do
-    toast('Reading the files first…');
-    const b0 = batch, shown = $('#dlg').hidden ? null : $('#dlgBox').firstElementChild;   // it may be opening from the Grades list
+    tabNext('insights');
+    const wait = waitDlg('Insights', 'Reading the files first…');
     await scanAll();
-    if (batch !== b0 || (!$('#dlg').hidden && $('#dlgBox').firstElementChild !== shown)) return;   // she's moved on to something else
+    if (!wait.isConnected) return;   // she's moved on to something else
   }
-  ovTab = 'sum'; ovDraw();
+  ovTab = tab === 'pct' ? 'pct' : 'sum'; ovDraw();
 }
+// Insights has three views: Summary and Percents here, and the Consistency check (insight.js), which has its own address.
+const insTabs = on => '<div class="ovtabs" role="tablist">' + [['sum', 'Summary'], ['pct', 'Percents'], ['cons', 'Consistency']].map(([k, l]) => '<button role="tab" data-ovtab="' + k + '" aria-selected="' + (on === k) + '">' + l + '</button>').join('') + '</div>';
 let ovTab = 'sum';
 // The whole box, on the tab she's on. Summary is what the class looks like; Percents is hers to slice.
 function ovDraw() {
   const s = classStats(), on = ovTab === 'pct';
-  openDlg('<div class="bh"><h2>Class overview</h2><div class="ovtabs" role="tablist">' + [['sum', 'Summary'], ['pct', 'Percents']].map(([k, l]) => '<button role="tab" data-ovtab="' + k + '" aria-selected="' + (ovTab === k) + '">' + l + '</button>').join('') + '</div><button class="icon" data-close aria-label="Close" style="margin-left:auto">✕</button></div>' +
+  tabNext('insights');
+  openDlg('<div class="bh"><h2>Insights</h2>' + insTabs(ovTab) + '<button class="icon" data-close aria-label="Close" style="margin-left:auto">✕</button></div>' +
     (on ? '<div class="bb pbody" id="ovBody">' + pctShell() + '</div>' :
     '<div class="bb" id="ovBody">' +
     '<p class="ovleft" id="ovLeft">' + esc(leftOutText(s)) + '</p>' +
@@ -486,20 +489,20 @@ function ovDraw() {
       : ovTile('Average', oneDp(s.mean), '/ ' + fmtNum(s.max), true) + ovTile('Middle score', fmtNum(s.median)) + ovTile('Lowest', fmtNum(s.low)) + ovTile('Highest', fmtNum(s.high))) + '</div>' : '') +
     (s.meanPct != null ? '<div class="ovcharts"><section id="ovBands"><h3 class="ovh3">Grade bands</h3>' + bandsHtml(s.counted, PCT_TENS) + '<p class="muted ovcap2">How many papers landed in each range of percents.</p></section>' +
       '<section id="ovStrip"><h3 class="ovh3">Every paper’s percent</h3>' + stripHtml(s.counted, s.meanPct, 'Average') + '<p class="muted ovcap2">One dot for each paper. Point at one to see whose it is, and click it to open them.</p></section></div>' : '') +
-    '<div class="ovcharts"><section id="ovSpread"><h3 class="ovh3">Score spread</h3>' + spreadHtml(s) + '</section><section id="ovRows"><h3 class="ovh3">Rows the class found hardest</h3>' + rowsHtml(s) + '</section></div>' +
-    trendHtml(s) + levelHtml(s) +
+    '<div class="ovcharts"><section id="ovSpread"><h3 class="ovh3">Score spread</h3>' + spreadHtml(s) + '</section><section id="ovRows"><h3 class="ovh3">Rows the class found hardest</h3>' + rowsHtml(s) + '</section>' + insRowsHtml() + '</div>' +
+    '<div id="insMore"></div>' + trendHtml(s) + levelHtml(s) +
     '<section id="ovWho"><h3 class="ovh3">Who’s missing or unfinished</h3>' + whoHtml(s) + '</section></div>') +
-    '<div class="bf"><button class="btn" data-ovgrades>Grades list</button><button class="btn primary" data-close>Close</button></div>');
-  if (on) pctDraw();
+    '<div class="bf"><button class="btn primary" data-close>Close</button></div>');
+  if (on) pctDraw(); else insMore();
   ovWire();
 }
 function ovWire() {
   ovTipHide();
   $('#dlgBox').onclick = e => {
     if (e.target.closest('[data-close]')) return closeDlg();
-    if (e.target.closest('[data-ovgrades]')) return openGrades();
     const g = e.target.closest('[data-ovgo]'); if (g) { closeDlg(); openStudent(+g.dataset.ovgo); return; }
-    const tb = e.target.closest('[data-ovtab]'); if (tb && tb.dataset.ovtab !== ovTab) { ovTab = tb.dataset.ovtab; ovDraw(); return $('#dlgBox [data-ovtab="' + ovTab + '"]').focus(); }
+    const tb = e.target.closest('[data-ovtab]'); if (tb && tb.dataset.ovtab === 'cons') { openCons(); return $('#dlgBox [data-ovtab="cons"]').focus(); }
+    if (tb && tb.dataset.ovtab !== ovTab) { ovTab = tb.dataset.ovtab; ovDraw(); return $('#dlgBox [data-ovtab="' + ovTab + '"]').focus(); }
     const sg = e.target.closest('[data-pseg]'); if (sg) { pvSet(sg.dataset.pseg, sg.dataset.v); return; }
     const dp = e.target.closest('[data-avgdp]'); if (dp) return setAvgDp(+dp.dataset.avgdp);
     const th = e.target.closest('[data-psort]'); if (th) { const k = th.dataset.psort; if (pv.sort === k) pv.dir *= -1; else { pv.sort = k; pv.dir = k === 'name' ? 1 : -1; } return pctDraw(); }

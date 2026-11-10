@@ -80,7 +80,7 @@ function dlgFocusBack() {
   if (!b || !b.isConnected) return;
   (b.closest('#moreMenu') ? $('#moreBtn') : b).focus({ preventScroll: true });
 }
-document.addEventListener('keydown', e => { if (e.key === 'Tab' && !$('#dlg').hidden && !$('#askDlg')) trapTab(e, $('#dlgBox')); }, true);
+document.addEventListener('keydown', e => { if (e.key === 'Tab' && !$('#dlg').hidden && !dlgPage && !$('#askDlg')) trapTab(e, $('#dlgBox')); }, true);
 // Leaving a split part way loses the sorting, so it asks. Its Cancel button clears the split.
 async function splitLeave() {
   if (await askDlg('Leave this split? The pages you’ve sorted so far won’t be kept.', { ok: 'Leave', cancel: 'Keep sorting', danger: true })) { const c = $('#dlgBox [data-cancel]'); if (c) c.click(); }

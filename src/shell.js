@@ -27,6 +27,7 @@ function railRender() {
   for (const a of document.querySelectorAll('#rail [data-nav]')) { const on = !batch && a.dataset.nav === r.v; a.classList.toggle('on', on); if (on) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); }
   const cr = $('#crumbClass'); cr.hidden = !(batch && open);
   if (batch && open) { cr.textContent = open.name; cr.href = classHash(open); cr.title = 'Back to ' + open.name; }
+  tabsRender();
   const d = $('#homeDate'), today = new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' }); if (d.textContent !== today) d.textContent = today;
   // The tab's name goes into the browser's history, which some browsers copy to an account. A download's name can be a student's, so it stays out;
   // an assignment or class name she typed herself is fine.
@@ -76,19 +77,28 @@ new MutationObserver(railSavedRender).observe($('#saveState'), { childList: true
 function findRows() {
   const out = [], add = (group, label, sub, run, key) => { if (label) out.push({ group, label: String(label), sub: sub || '', run, key: key || '' }); };
   const press = sel => () => { const b = $(sel); if (b) b.click(); };
+  const toMark = () => { if (dlgPage) closeDlg(); };   // a student or a marking tool is on the papers: a tab's screen steps aside first
   if (batch) {
     const order = anonOn() ? anonOrder() : batch.students.map((_, i) => i);
-    order.forEach((i, pos) => { const st = batch.students[i], g = gradeOf(st); add('Students', shownName(st, i), noScore(st) ? STATUS_LABEL[g.status] : g.done ? 'Scored' : g.total != null ? 'Partly scored' : st.files.length ? 'Not scored yet' : 'No paper', () => openStudent(i), String(pos + 1)); });
-    for (const b of document.querySelectorAll('#tools .tool[data-tool]')) { const m = /^(.*?) \((.*)\)$/.exec(b.title) || [0, b.title, '']; add('Marking tools', m[1], 'Tool for the paper', () => setTool(b.dataset.tool), m[2]); }
-    for (const [sel, sub] of [['#sheetBtn', 'Every grade found on the papers, with a crop of each'], ['#gradesBtn', 'Scores and comments, to copy into ManageBac'], ['#exportBtn', 'The marked files, back in their student folders'], ['#quizTop', '']]) { const b = $(sel); if (b && !b.hidden) add('This assignment', b.textContent.replace(/\s*\(\d+\)$/, ''), sub || b.title, press(sel)); }
-    for (const b of document.querySelectorAll('#moreMenu .mitem')) {
-      if (b.hidden || b.classList.contains('themeBtn') || b.id === 'keysBtn') continue;
+    order.forEach((i, pos) => { const st = batch.students[i], g = gradeOf(st); add('Students', shownName(st, i), noScore(st) ? STATUS_LABEL[g.status] : g.done ? 'Scored' : g.total != null ? 'Partly scored' : st.files.length ? 'Not scored yet' : 'No paper', () => { toMark(); openStudent(i); }, String(pos + 1)); });
+    for (const b of document.querySelectorAll('#tools .tool[data-tool]')) { const m = /^(.*?) \((.*)\)$/.exec(b.title) || [0, b.title, '']; add('Marking tools', m[1], 'Tool for the paper', () => { toMark(); setTool(b.dataset.tool); }, m[2]); }
+    const tabGo = (k, label, sub) => add('This assignment', label, sub, () => go(batchHash(batch.id, k)));
+    tabGo('', 'Mark', 'The papers, one student at a time');
+    tabGo('grades', 'Grades', 'Scores and comments to copy into ManageBac, beside the grade written on each paper');
+    tabGo('grades/sheet', 'Grade sheet', 'Every grade found on the papers, with a crop of each');
+    tabGo('insights', 'Insights', 'The class at a glance: average, spread, rubric rows, charts');
+    tabGo('insights/consistency', 'Consistency check', 'Did you get harder or softer as you went?');
+    tabGo('return', 'Return marked files', 'The marked files, back in their student folders');
+    { const b = $('#quizTop'); if (b && !b.hidden) add('This assignment', b.textContent, b.title, press('#quizTop')); }
+    for (const b of document.querySelectorAll('#moreMenu .mitem, #toolStash .mitem')) {
+      if (b.hidden || b.classList.contains('themeBtn') || b.id === 'keysBtn' || b.id === 'sheetBtn' || b.id === 'overviewBtn' || b.id === 'consBtn') continue;
       const k = b.querySelector('kbd'), label = [...b.childNodes].filter(n => n.nodeType === 3).map(n => n.textContent).join('').trim();
-      add(b.closest('.mgrp').querySelector('.mhd').textContent === 'View and tools' ? 'Tools' : 'This assignment', label, b.title, () => b.click(), k ? k.textContent : '');
+      add(b.dataset.fg || 'This assignment', label, b.title, () => { if (b.dataset.paper) toMark(); b.click(); }, k ? k.textContent : '');
     }
     const words = wordPdfList();
     if (words.length) add('This assignment', 'Convert Word papers to PDF pages', words.length + (words.length === 1 ? ' Word paper' : ' Word papers') + ' here. The Word files are kept', () => {
       const x = words.find(x => x.st === batch.students[cur]) || words[0];
+      toMark();
       if (x.st !== batch.students[cur]) openStudent(batch.students.indexOf(x.st));
       openWordPdf(x.st, x.f);
     });
@@ -139,7 +149,7 @@ function findMatch(rows, q) {
   return hit.sort((a, b) => a.rank - b.rank).map(x => x.r).slice(0, 40);
 }
 function openFind() {
-  if ($('#findDlg') || $('#askDlg') || !$('#dlg').hidden) return;
+  if ($('#findDlg') || $('#askDlg') || (!$('#dlg').hidden && !dlgPage)) return;
   commitEditors(); setMore(false);
   const back = document.activeElement, el = document.createElement('div');
   el.className = 'dlg finddlg'; el.id = 'findDlg';
@@ -180,7 +190,7 @@ $('#findBtn').onclick = openFind;
 $('#findKey').textContent = isMac() ? '⌘K' : 'Ctrl K';
 document.addEventListener('keydown', e => {
   if (!(e.ctrlKey || e.metaKey) || e.altKey || e.shiftKey || e.key.toLowerCase() !== 'k' || $('#findDlg')) return;
-  if ($('#askDlg') || !$('#dlg').hidden) return;
+  if ($('#askDlg') || (!$('#dlg').hidden && !dlgPage)) return;
   e.preventDefault(); e.stopPropagation(); openFind();
 }, true);
 

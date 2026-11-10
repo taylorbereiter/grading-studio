@@ -206,6 +206,14 @@ const workOf = page => page.evaluate(() => {
   const s = window.__gs.state();
   return Object.fromEntries(s.batch.students.map(st => [st.key, { grade: st.grade, computed: window.__gs.gradeOf(st), inc: st.inc, files: Object.fromEntries(st.files.map(f => [f.path, { kind: f.kind, marks: Object.fromEntries(Object.entries(f.marks).filter(([, a]) => a.length)), rot: f.rot || null, added: !!f.added, edited: !!f.edited }])) }]));
 });
+// What used to be under More (Lighting, Share with Claude, Mark key, the Gradebook box…) is pressed from Find anything now, which clicks
+// the button it always was. This is that click.
+const press = (page, sel) => page.$eval(sel, b => b.click());
+// Leaves a tab's screen (Grades, Insights, Return) for the papers. A tab's screen has no ✕: Escape and the Mark tab are the ways back.
+async function toMark(page) {
+  await page.evaluate(() => { const G = window.__gs, b = G.state().batch; if (b && G.routeNow().tab) G.go('#/a/' + encodeURIComponent(b.id.replace(/^gs\.b\./, ''))); else { const x = document.querySelector('#dlgBox [data-close]'); if (x && !document.querySelector('#dlg').hidden) x.click(); } });
+  await page.waitForFunction(() => document.querySelector('#dlg').hidden);
+}
 // Picks something in the right-click menu: right there if it's in the menu, or by pointing at the panel it's in first.
 async function menuPick(page, sel) {
   const where = await page.evaluate(sel => {
@@ -219,4 +227,4 @@ async function menuPick(page, sel) {
   await page.waitForSelector('.stampmenu [data-fly="' + where + '"]:not([hidden])');
   await page.click('.stampmenu [data-fly="' + where + '"] ' + sel);
 }
-module.exports = { goTo, openClass, classPage, menuPick, MARK_BOXES, ROOT, BUILT, builtHtml, tmpDir, openApp, answerDlg, appReady, plant, idbRead, pickFile, openZip, waitPaper, goToStudent, at, drag, clickAt, setTool, score, markPage, settle, catchDownloads, probePdf, probeScreen, workOf };
+module.exports = { goTo, openClass, classPage, menuPick, press, toMark, MARK_BOXES, ROOT, BUILT, builtHtml, tmpDir, openApp, answerDlg, appReady, plant, idbRead, pickFile, openZip, waitPaper, goToStudent, at, drag, clickAt, setTool, score, markPage, settle, catchDownloads, probePdf, probeScreen, workOf };

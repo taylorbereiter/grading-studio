@@ -390,7 +390,7 @@ function scanFlag(pg) {
   const f = pg.file; if (f.virtual) return;
   const r = (f.sc ||= {})[pg.idx] ||= { later: 1 };
   if (r.re) delete r.re; else r.re = 1;
-  toast(r.re ? 'Flagged for a rescan. Rescans under More lists everyone waiting.' : 'Rescan flag taken off');
+  toast(r.re ? 'Flagged for a rescan. The Return tab lists everyone waiting.' : 'Rescan flag taken off');
   saveSoon(); scanNote(pg); renderList();
 }
 // Every page waiting on a rescan: [{ i, st, f, p }], in list order.
