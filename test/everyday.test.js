@@ -281,7 +281,8 @@ test('slow checks show a box straight away: Export and What opened', async () =>
   await page.waitForSelector('#openRepBox', { timeout: 60000 });
   await closeBox(page, '#dlgBox .bf [data-close]');
   const exp = await page.evaluate(() => { document.querySelector('#exportBtn').click(); return document.querySelector('#dlgBox').textContent; });
-  assert.match(exp, /Reading the files first/);
+  // the box is there at once either way: saying it is reading the files, or, on a computer quick enough to have read them already, the finished one
+  assert.match(exp, /Return marked files.*(Reading the files first|ready)/s);
   await page.keyboard.press('KeyN');
   assert.equal(await page.evaluate(() => window.__gs.state().cur), 0, 'keys wait for the box like any other');
   await page.waitForSelector('#dlgBox .bf', { timeout: 60000 });
