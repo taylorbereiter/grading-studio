@@ -1,0 +1,60 @@
+/* the welcome: three questions for a brand-new browser, over everything else */
+/* under every dialog (30 and up): choosing a folder that already holds work asks its questions on top of the welcome */
+.welcome{position:fixed;inset:0;z-index:29;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:var(--space-5);overflow:auto}
+.welcome[hidden]{display:none}
+html.welcoming .shell{visibility:hidden}
+.wlsheet{width:min(1040px,100%);min-height:600px;margin:auto;background:var(--surface);border:1px solid var(--line);border-radius:var(--corner-5);box-shadow:var(--shadow);display:grid;grid-template-columns:minmax(0,1fr) 380px;overflow:hidden}
+.wll{padding:36px 52px 28px;display:flex;flex-direction:column;min-width:0}
+.wlbrand{font:600 var(--text-lead) var(--f-display);letter-spacing:-.01em}
+.wlbrand i{font-style:normal;font-weight:500;color:var(--accent)}
+.wll h1{font:700 var(--text-display)/1.15 var(--f-display);letter-spacing:-.03em;margin:var(--space-4) 0 var(--space-2)}
+.wllead{font-size:var(--text-lead);color:var(--fg-2);max-width:44ch;margin:0 0 var(--space-4)}
+.wlsteps{display:flex;flex-wrap:wrap;gap:var(--space-2);align-items:center;font:500 var(--text-control) var(--f-body);color:var(--muted);margin-bottom:var(--space-4)}
+.wlsteps span{display:inline-flex;align-items:center;white-space:nowrap}
+.wlsteps b{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:var(--corner-round);border:1.5px solid var(--line-strong);font:600 var(--text-small) var(--f-body);margin-right:6px}
+.wlsteps .on{color:var(--fg)}
+.wlsteps .on b{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+.wlsteps .done b{border-color:var(--accent);color:var(--accent)}
+.wlsteps hr{width:22px;border:0;border-top:1px solid var(--line-strong);margin:0 var(--space-1)}
+.wlbody{min-height:236px}
+.wlq{display:block;font:600 var(--text-control) var(--f-body);margin:0 0 6px}
+.wlhint+.wlq{margin-top:var(--space-4)}
+.wlfields{display:grid;gap:var(--space-2);max-width:420px}
+.wlfields input,.wlfields select,.merow select,.merow input{height:40px;border:1px solid var(--line-strong);border-radius:var(--corner-3);padding:0 var(--space-3);font:inherit;font-size:var(--text-body);background:var(--surface);color:var(--fg);min-width:0}
+.wlfields input:disabled{background:var(--surface-2);color:var(--muted)}
+.wlfields input:focus,.wlfields select:focus,.merow select:focus,.merow input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.wlhint{font-size:var(--text-control);color:var(--muted);margin:var(--space-2) 0 0;max-width:60ch}
+.wlways,.meways{display:grid;gap:var(--space-2);max-width:520px}
+.meways{grid-template-columns:repeat(auto-fill,minmax(230px,1fr));max-width:none;margin:0 0 var(--space-3)}
+.wlway{display:block;text-align:left;font:inherit;color:var(--fg);background:var(--surface);border:1px solid var(--line-strong);border-radius:var(--corner-3);padding:7px var(--space-3);cursor:pointer}
+.wlway b{display:block;font:600 var(--text-body) var(--f-body)}
+.wlway span{display:block;font-size:var(--text-control);color:var(--muted);margin-top:1px}
+.wlway:hover{background:var(--hover)}
+.wlway.on{border-color:var(--accent);background:var(--accent-soft);box-shadow:inset 0 0 0 1px var(--accent)}
+.wlway.on span{color:var(--fg-2)}
+.wlsay,.wlsafe{font-size:var(--text-body);color:var(--fg-2);max-width:56ch;margin:0 0 var(--space-3)}
+.wlsafe{color:var(--fg)}
+.wlok{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:var(--corner-round);background:var(--ok-soft);color:var(--ok);font-weight:700;margin-right:var(--space-1)}
+.wlrow{display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-2) var(--space-4);margin:0}
+.wlrow .btn svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.wlrow .muted{font-size:var(--text-control)}
+.wlact{margin-top:auto;padding-top:var(--space-4);display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-3) var(--space-4)}
+.wlact .btn{height:40px;padding:0 20px;font-size:var(--text-body)}
+.wlact .link{font-weight:600}
+.wlfoot{margin:var(--space-4) 0 0;font-size:var(--text-control);color:var(--muted)}
+.wlr{background:var(--surface-2);border-left:1px solid var(--line);padding:48px 36px;display:flex;flex-direction:column;gap:26px;justify-content:center}
+.wlpr{display:grid;grid-template-columns:40px 1fr;gap:14px}
+.wlic{width:40px;height:40px;border-radius:var(--corner-4);background:var(--surface);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;color:var(--accent)}
+.wlic svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.wlpr b{display:block;font:600 var(--text-lead) var(--f-body);margin-bottom:2px}
+.wlpr span{color:var(--fg-2);font-size:var(--text-control);line-height:1.45}
+@media (max-width:860px){.wlsheet{grid-template-columns:1fr;min-height:0}.wlr{display:none}.wll{padding:28px 24px 24px}.welcome{padding:var(--space-3);align-items:flex-start}}
+/* the sample class card on Home: the folder card's shape, in blue instead of amber */
+.safeask.calm{border-left-color:var(--accent)}
+.safeask.calm .saic{background:var(--accent-soft);color:var(--accent)}
+/* Settings: where students hand in work, and how you usually grade */
+.merow{display:flex;flex-wrap:wrap;gap:var(--space-2)}
+.mebrow{display:flex;flex-wrap:wrap;gap:var(--space-2) var(--space-4)}
+.mebrow label{display:inline-flex;align-items:center;gap:6px;font-size:var(--text-control);color:var(--muted)}
+.mebrow input{height:32px;border:1px solid var(--line-strong);border-radius:var(--corner-2);padding:0 var(--space-2);font:inherit;font-size:var(--text-body);background:var(--surface);color:var(--fg);width:64px}
+.mebrow input.mebl{width:56px;font-weight:600}

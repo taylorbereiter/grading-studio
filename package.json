@@ -1,8 +1,9 @@
 {
   "name": "grading-studio",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "private": true,
-  "description": "Offline and browser-based grading studio for ManageBac downloads, PDF/Word/media submissions, half-point rubrics, grade sheets, and de-identified Claude handoffs.",
+  "license": "MIT",
+  "description": "Mark papers, plan lessons and hand work back, in the browser. Student work stays on the teacher's computer.",
   "scripts": {
     "build": "node build.js",
     "test": "node test/tools/run.js",

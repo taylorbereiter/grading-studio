@@ -144,20 +144,31 @@ function titleLinkBtn(l) {
 /* ---------- timetable ---------- */
 const classById = id => ((L.setup && L.setup.classes) || []).find(c => c.id === id);
 const className = id => { const c = classById(id); return c ? c.name : id; };
-/* ---------- each class's ManageBac page ----------
+/* ---------- the names of the school's own systems ----------
+   Where students hand in work (ManageBac, Canvas…) and where unit plans live (Atlas…). The teacher says them once in grading
+   (its welcome or Settings), which keeps them in gs.words for both pages; a Planner set up by typing classes in, with no word
+   from grading, uses plain words. A Planner that had its setup before these were asked reads as it always did. */
+function plWords() {
+  let w = null; try { w = JSON.parse(localStorage.getItem('gs.words') || 'null'); } catch { }
+  w = (w && typeof w === 'object' ? w : null) || L.words || (L.setup ? { sys: 'ManageBac', unit: 'Atlas', scale12: true } : { sys: '', unit: '' });
+  return { sys: String(w.sys || '').trim().slice(0, 40), unit: String(w.unit || '').trim().slice(0, 40), scale12: !!w.scale12 };   // scale12: the rubric bank offers the 12-point scale as a preset
+}
+const plSys = () => plWords().sys, plCur = () => plWords().unit;
+const plSysLink = () => plSys() || 'Class page', plCurLink = () => plCur() || 'Unit plan';
+/* ---------- each class's page in the school's system (ManageBac, for one) ----------
    Kept on the class in the timetable, and remembered by class name in this browser so grading and the Planner
-   share it ("11 EL-2" here is "11EL-2" there). Only a link: nothing from ManageBac is read. */
+   share it ("Course A 2" here is "CourseA2" there). Only a link: nothing is read from the school's system. */
 const MB_KEY = 'gs.mblinks', mbNorm = s => String(s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
 function mbUrl(v) { v = String(v || '').trim(); if (/^[\w.-]+\.[a-z]{2,}\//i.test(v)) v = 'https://' + v; return /^https?:\/\/[^\s"<>]+$/i.test(v) ? v : ''; }
 function mbMap() { try { return JSON.parse(localStorage.getItem(MB_KEY) || '{}') || {}; } catch { return {}; } }
 function mbRemember(name, url) { try { const m = mbMap(), k = mbNorm(name); if (!k) return; if (url) m[k] = url; else delete m[k]; localStorage.setItem(MB_KEY, JSON.stringify(m)); } catch { } }
 const mbOf = c => (c && (mbUrl(c.mb) || mbUrl(mbMap()[mbNorm(c.name)]))) || '';
-const mbA = (c, txt) => '<a class="pl-mb" href="' + esc(mbOf(c)) + '" target="_blank" rel="noopener" title="' + esc(c.name) + ' on ManageBac">' + (txt || 'ManageBac ↗') + '</a>';
+const mbA = (c, txt) => '<a class="pl-mb" href="' + esc(mbOf(c)) + '" target="_blank" rel="noopener" title="' + esc(c.name) + (plSys() ? ' on ' + esc(plSys()) : ': its class page') + '">' + (txt || esc(plSysLink()) + ' ↗') + '</a>';
 // The link for a class, or a button to add one.
-const mbBtn = c => !c ? '' : mbOf(c) ? mbA(c) : '<button class="pl-mb add" data-mbset="' + esc(c.id) + '" title="Add ' + esc(c.name) + '’s ManageBac link">+ ManageBac</button>';
+const mbBtn = c => !c ? '' : mbOf(c) ? mbA(c) : '<button class="pl-mb add" data-mbset="' + esc(c.id) + '" title="Add ' + esc(c.name) + '’s ' + esc(plSysLink()) + ' link">+ ' + esc(plSysLink()) + '</button>';
 function mbDlg(id) {
   const c = classById(id); if (!c) return;
-  openDlg('<div class="bh"><h2>ManageBac link</h2></div><div class="bb"><label class="ls-f">' + esc(c.name) + '’s page in ManageBac<input id="mbU" class="btn" style="justify-content:flex-start;cursor:text" placeholder="https://…" value="' + esc(mbOf(c)) + '"></label>' +
+  openDlg('<div class="bh"><h2>' + esc(plSysLink()) + ' link</h2></div><div class="bb"><label class="ls-f">' + esc(c.name) + '’s page in ' + (plSys() ? esc(plSys()) : 'your school’s system') + '<input id="mbU" class="btn" style="justify-content:flex-start;cursor:text" placeholder="https://…" value="' + esc(mbOf(c)) + '"></label>' +
     '<p class="muted">It shows on this class in the week, on its lessons, and in grading. Leave it empty to remove it.</p></div><div class="bf"><button class="btn" data-x>Cancel</button><button class="btn primary" data-ok>Save</button></div>', true);
   const save = async () => {
     const raw = $('#mbU').value, u = mbUrl(raw); if (raw.trim() && !u) return toast('That doesn’t look like a web link');
@@ -176,7 +187,7 @@ function meetingsOn(date) {
   return out.sort((a, b) => (a.m.start || '').localeCompare(b.m.start || ''));
 }
 const lessonsAt = (classId, date) => L.lessons.filter(l => l.slots.some(s => s.classId === classId && s.date === date));
-// One deck for both sections of a course (Taylor's rule): a new lesson also goes on the other section's
+// One deck for both sections of a course: a new lesson also goes on the other section's
 // matching class that week (same place in its week), when that class has no lesson yet.
 function partnerSlots(classId, date) {
   const c = classById(classId); if (!c || !c.course) return [];
@@ -301,6 +312,7 @@ async function openLessons() {
   lessonsShell();
   await lOpenDb(); await lLoadAll(); await unitsLoad(); await bankLoad();
   L.setup = (await kvGet('setup')) || null;
+  L.words = (await kvGet('words')) || null;
   L.defLook = (await kvGet('deflook')) || '';
   await panelInit();
   await tplPreview();
@@ -340,8 +352,8 @@ function renderWeek() {
     '<button class="btn sm ghost" data-a="wk" data-n="7" aria-label="Next week">›</button><button class="btn sm ghost" data-a="today">This week</button>' +
     '<input type="date" class="btn sm" data-a="jump" value="' + L.weekOf + '" aria-label="Go to a date">' + (L.setup ? '<button class="btn sm ghost" data-a="dlweek" title="Every lesson on the calendar this week, with its PowerPoint and materials, in one .zip">↓ Download week</button><button class="btn sm ghost" data-a="printweek">Print week</button>' : ''));
   if (!L.setup) {
-    h += '<div class="ls-empty"><h2>Load your profile</h2><p>Lessons line up with your classes once the app knows when they meet. Load your profile file (your timetable, school calendar, units and slide template), drop it on this page, or type your classes in. You do this once on each computer.</p>' +
-      '<div class="row"><button class="btn primary" data-a="loadsetup">Load my profile…</button><button class="btn" data-a="setup">Type in my classes</button><button class="btn" data-a="newfree">Make a lesson without a class</button></div></div>';
+    h += '<div class="ls-empty"><h2>Tell the Planner when your classes meet</h2><p>Lessons line up with your classes once the Planner knows when they meet. Type your classes and their times in, which takes a few minutes and is done once. If you already have a setup file from another computer, load it or drop it on this page.</p>' +
+      '<div class="row"><button class="btn primary" data-a="setup">Type in my classes</button><button class="btn" data-a="loadsetup">Load a setup file…</button><button class="btn" data-a="newfree">Make a lesson without a class</button></div></div>';
   } else {
     h += weekUnitsBar(L.weekOf) + '<div class="ls-grid">';
     for (const d of days) {
@@ -413,13 +425,13 @@ function atlasOf(l) {
 }
 function atlasChip(l) {
   const a = atlasOf(l);
-  return a ? '<a class="btn sm ghost" href="' + esc(a.url) + '" target="_blank" rel="noopener" title="' + (a.own ? 'This lesson’s Atlas page' : 'Atlas page of ' + esc(a.unit)) + '">Atlas ↗</a><button class="btn sm ghost" data-a="atlas" title="Change the Atlas link" aria-label="Change the Atlas link">✎</button>'
-    : '<button class="btn sm ghost" data-a="atlas">+ Atlas link</button>';
+  return a ? '<a class="btn sm ghost" href="' + esc(a.url) + '" target="_blank" rel="noopener" title="' + (a.own ? 'This lesson’s ' + (plCur() ? esc(plCur()) + ' page' : 'unit plan') : (plCur() ? esc(plCur()) + ' page of ' : 'Unit plan of ') + esc(a.unit)) + '">' + esc(plCurLink()) + ' ↗</a><button class="btn sm ghost" data-a="atlas" title="Change the ' + esc(plCurLink()) + ' link" aria-label="Change the ' + esc(plCurLink()) + ' link">✎</button>'
+    : '<button class="btn sm ghost" data-a="atlas">+ ' + esc(plCurLink()) + ' link</button>';
 }
 function atlasDlg(l) {
   const a = atlasOf(l);
-  openDlg('<div class="bh"><h2>Atlas link</h2></div><div class="bb"><label class="ls-f">This lesson’s page in Atlas<input id="atU" class="btn" style="justify-content:flex-start;cursor:text" placeholder="https://…" value="' + esc(l.atlas || '') + '"></label>' +
-    '<p class="muted">' + (a && !a.own ? 'Leave it empty to use the unit’s link (' + esc(a.unit) + ').' : 'Tip: a unit’s Atlas link is used for all its lessons, so you only need this for a lesson with its own page.') + '</p></div><div class="bf"><button class="btn" data-x>Cancel</button><button class="btn primary" data-ok>Save</button></div>', true);
+  openDlg('<div class="bh"><h2>' + esc(plCurLink()) + ' link</h2></div><div class="bb"><label class="ls-f">' + (plCur() ? 'This lesson’s page in ' + esc(plCur()) : 'A link to this lesson’s place in your unit plan') + '<input id="atU" class="btn" style="justify-content:flex-start;cursor:text" placeholder="https://…" value="' + esc(l.atlas || '') + '"></label>' +
+    '<p class="muted">' + (a && !a.own ? 'Leave it empty to use the unit’s link (' + esc(a.unit) + ').' : 'Tip: a unit’s ' + (plCur() ? esc(plCur()) + ' link' : 'link') + ' is used for all its lessons, so you only need this for a lesson with its own page.') + '</p></div><div class="bf"><button class="btn" data-x>Cancel</button><button class="btn primary" data-ok>Save</button></div>', true);
   $('#dlgBox').onclick = e => {
     if (e.target.closest('[data-x]')) return closeDlg();
     if (!e.target.closest('[data-ok]')) return;
@@ -878,17 +890,19 @@ async function importLessonText(text, name) {
 /* ---------- timetable + setup file ---------- */
 function loadSetupFile() {
   const i = document.createElement('input'); i.type = 'file'; i.accept = '.json,application/json';
-  i.onchange = async () => { const f = i.files[0]; if (!f) return; try { applySetup(JSON.parse(await f.text())); } catch { toast('That isn’t a profile file'); } };
+  i.onchange = async () => { const f = i.files[0]; if (!f) return; try { applySetup(JSON.parse(await f.text())); } catch { toast('That isn’t a setup file'); } };
   i.click();
 }
 async function applySetup(j) {
-  if (!j || !Array.isArray(j.classes)) return toast('That isn’t a profile file');
+  if (!j || !Array.isArray(j.classes)) return toast('That isn’t a setup file');
   const old = id => ((L.setup && L.setup.classes) || []).find(x => x.id === String(id)) || {};
   const setup = { classes: j.classes.map(c => ({ id: String(c.id), name: String(c.name || c.id), course: String(c.course || ''), color: /^#[0-9a-f]{6}$/i.test(c.color) ? c.color : '#1F6FB2', ...((u => u ? { mb: u } : {})(mbUrl(c.mb) || mbUrl(old(c.id).mb))), meets: (c.meets || []).map(m => ({ dow: +m.dow, start: String(m.start || ''), end: String(m.end || ''), label: String(m.label || '') })) })),
     daysOff: (j.daysOff || []).map(d => ({ date: String(d.date), label: String(d.label || 'No school') })), events: (j.events || []).map(e => ({ date: String(e.date), to: e.to ? String(e.to) : '', label: String(e.label || '') })),
     template: typeof j.template === 'string' ? j.template : (L.setup && L.setup.template) || '',
     semStart: /^\d{4}-\d\d-\d\d$/.test(j.semStart) ? ymd(mondayOf(parseYmd(j.semStart))) : '', semEnd: /^\d{4}-\d\d-\d\d$/.test(j.semEnd) ? ymd(mondayOf(parseYmd(j.semEnd))) : '',
     claudeUrl: /^https:\/\/claude\.ai\//.test(j.claudeUrl) ? String(j.claudeUrl) : '', profile: String(j.profile || '').slice(0, 80) };
+  // A setup file can name the school's systems; one typed in for the first time here starts with plain words (j.plain).
+  if (typeof j.sys === 'string' || typeof j.unitPlans === 'string' || (j.plain && !L.words)) { L.words = { sys: String(j.sys || '').slice(0, 40), unit: String(j.unitPlans || '').slice(0, 40) }; await kvSet('words', L.words); }
   L.setup = setup; await kvSet('setup', setup); await tplPreview();
   folderWriteSchedule();
   // A profile can also bring units (only ones not here yet, so your edits stay) and a default look.
@@ -899,7 +913,7 @@ async function applySetup(j) {
     else if (had && !had.atlas && u.atlas) { had.atlas = u.atlas; await unitPut(had, true); }   // fill in a missing Atlas link, nothing else
   }
   if (LOOKS[j.look] && !L.defLook) { L.defLook = j.look; await kvSet('deflook', j.look); }
-  toast((setup.profile ? setup.profile + ' loaded: ' : 'Timetable loaded: ') + setup.classes.length + ' classes' + (nu ? ', ' + nu + ' units' : '') + (setup.template ? ', your slide template' : ''), 5000);
+  toast((setup.profile ? setup.profile + ' loaded: ' : 'Timetable loaded: ') + setup.classes.length + (setup.classes.length === 1 ? ' class' : ' classes') + (nu ? ', ' + nu + ' units' : '') + (setup.template ? ', your slide template' : ''), 5000);
   renderLessons();
 }
 function openTimetable() {
@@ -907,13 +921,13 @@ function openTimetable() {
   const draft = JSON.parse(JSON.stringify({ classes: s.classes, daysOff: s.daysOff, events: s.events, semStart: s.semStart || '', semEnd: s.semEnd || '', claudeUrl: s.claudeUrl || '' }));
   const meetRow = (ci, mi, m) => '<div class="ls-mrow"><select data-m="dow" data-ci="' + ci + '" data-mi="' + mi + '" class="btn sm">' + [1, 2, 3, 4, 5, 6].map(d => '<option value="' + d + '"' + (+m.dow === d ? ' selected' : '') + '>' + LDAYS_LONG[d] + '</option>').join('') + '</select><input type="time" data-m="start" data-ci="' + ci + '" data-mi="' + mi + '" value="' + esc(m.start) + '" class="btn sm"> to <input type="time" data-m="end" data-ci="' + ci + '" data-mi="' + mi + '" value="' + esc(m.end) + '" class="btn sm"><input data-m="label" data-ci="' + ci + '" data-mi="' + mi + '" value="' + esc(m.label) + '" placeholder="Periods" class="btn sm" style="width:90px"><button class="btn sm ghost" data-delm="' + ci + '|' + mi + '">×</button></div>';
   const draw = () => {
-    $('#ttBody').innerHTML = draft.classes.map((c, ci) => '<div class="ls-tc"><div class="ls-mrow"><input data-c="name" data-ci="' + ci + '" value="' + esc(c.name) + '" placeholder="Class name, like 12 EL-1" class="btn sm" style="width:170px"><input data-c="course" data-ci="' + ci + '" value="' + esc(c.course) + '" placeholder="Course, like 12 EL" class="btn sm" style="width:130px" title="Classes with the same course share one deck"><input type="color" data-c="color" data-ci="' + ci + '" value="' + esc(c.color || '#1F6FB2') + '" aria-label="Color"><input data-c="mb" data-ci="' + ci + '" value="' + esc(mbOf(c)) + '" placeholder="ManageBac link (optional)" class="btn sm" style="width:220px;cursor:text"><span class="sp"></span><button class="btn sm ghost" data-delc="' + ci + '">Remove class</button></div>' +
+    $('#ttBody').innerHTML = draft.classes.map((c, ci) => '<div class="ls-tc"><div class="ls-mrow"><input data-c="name" data-ci="' + ci + '" value="' + esc(c.name) + '" placeholder="Class name, like Period 2 Biology" class="btn sm" style="width:170px"><input data-c="course" data-ci="' + ci + '" value="' + esc(c.course) + '" placeholder="Course, like Biology" class="btn sm" style="width:130px" title="Classes with the same course share one deck"><input type="color" data-c="color" data-ci="' + ci + '" value="' + esc(c.color || '#1F6FB2') + '" aria-label="Color"><input data-c="mb" data-ci="' + ci + '" value="' + esc(mbOf(c)) + '" placeholder="' + esc(plSysLink()) + ' link (optional)" class="btn sm" style="width:220px;cursor:text"><span class="sp"></span><button class="btn sm ghost" data-delc="' + ci + '">Remove class</button></div>' +
       c.meets.map((m, mi) => meetRow(ci, mi, m)).join('') + '<button class="btn sm ghost" data-addm="' + ci + '">+ Meeting</button></div>').join('') +
       '<button class="btn sm" data-addc>+ Class</button><h3 style="margin:18px 0 6px;font-size:15px">Semester</h3><div class="ls-mrow"><label>First week <input type="date" id="ttS" class="btn sm" value="' + esc(draft.semStart) + '"></label><label>Last week <input type="date" id="ttE" class="btn sm" value="' + esc(draft.semEnd) + '"></label></div>' +
       '<h3 style="margin:18px 0 6px;font-size:15px">Days off</h3><textarea id="ttOff" rows="4" style="width:100%" placeholder="One per line: 2026-12-25 Christmas">' + esc(draft.daysOff.map(d => d.date + ' ' + d.label).join('\n')) + '</textarea>' +
       '<h3 style="margin:14px 0 6px;font-size:15px">Dates to show (not days off)</h3><textarea id="ttEv" rows="4" style="width:100%" placeholder="One per line: 2026-11-09 to 2026-11-13 Midterms">' + esc(draft.events.map(e => e.date + (e.to ? ' to ' + e.to : '') + ' ' + e.label).join('\n')) + '</textarea>' ;
   };
-  openDlg('<div class="bh"><h2>Timetable</h2><button class="btn sm" data-load>Load my profile…</button></div><div class="bb" id="ttBody"></div><div class="bf"><button class="btn" data-x>Cancel</button><button class="btn primary" data-ok>Save</button></div>');
+  openDlg('<div class="bh"><h2>Timetable</h2><button class="btn sm" data-load>Load a setup file…</button></div><div class="bb" id="ttBody"></div><div class="bf"><button class="btn" data-x>Cancel</button><button class="btn primary" data-ok>Save</button></div>');
   draw();
   const box = $('#dlgBox');
   box.oninput = e => { const t = e.target, ci = +t.dataset.ci; if (t.dataset.c) draft.classes[ci][t.dataset.c] = t.value; if (t.dataset.m) draft.classes[ci].meets[+t.dataset.mi][t.dataset.m] = t.dataset.m === 'dow' ? +t.value : t.value; };
@@ -932,11 +946,11 @@ function openTimetable() {
     draft.classes = draft.classes.filter(c => c.name.trim()).map(c => ({ ...c, id: c.id || lid() }));
     for (const c of draft.classes) { const u = mbUrl(c.mb); if (u) c.mb = u; else delete c.mb; mbRemember(c.name, u); }
     draft.semStart = $('#ttS').value; draft.semEnd = $('#ttE').value; 
-    closeDlg(); await applySetup({ ...draft, template: s.template });
+    closeDlg(); await applySetup({ ...draft, template: s.template, ...(L.setup ? {} : { plain: true }) });
   };
 }
 
-/* ---------- .pptx from Taylor's own template ---------- */
+/* ---------- .pptx from the teacher's own template, or the plain one built in (plain.js) ---------- */
 const b64ToU8 = b => Uint8Array.from(atob(b), c => c.charCodeAt(0));
 const xe = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '');
 async function tplPreview() {
@@ -1008,7 +1022,7 @@ function slideXmlIn(s, lesson, media) {
 const notesXml = t => '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<p:notes ' + NS + '><p:cSld><p:spTree><p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr><p:grpSpPr/><p:sp><p:nvSpPr><p:cNvPr id="2" name="Slide Image Placeholder 1"/><p:cNvSpPr><a:spLocks noGrp="1"/></p:cNvSpPr><p:nvPr><p:ph type="sldImg" idx="2"/></p:nvPr></p:nvSpPr><p:spPr/></p:sp><p:sp><p:nvSpPr><p:cNvPr id="3" name="Notes Placeholder 2"/><p:cNvSpPr><a:spLocks noGrp="1"/></p:cNvSpPr><p:nvPr><p:ph type="body" idx="3" sz="quarter"/></p:nvPr></p:nvSpPr><p:spPr/><p:txBody><a:bodyPr/><a:lstStyle/>' + t.split('\n').map(x => '<a:p>' + (x ? run(x) : '') + '</a:p>').join('') + '</p:txBody></p:sp></p:spTree></p:cSld><p:clrMapOvr><a:masterClrMapping/></p:clrMapOvr></p:notes>';
 const REL = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/';
 function buildPptx(lesson) {
-  const z = fflate.unzipSync(b64ToU8(L.setup.template)), td = new TextDecoder(), te = new TextEncoder();
+  const z = fflate.unzipSync(tplBytes()), td = new TextDecoder(), te = new TextEncoder();
   const str = k => td.decode(z[k]), put = (k, s) => { z[k] = te.encode(s); };
   { const m = /<p:sldSz cx="(\d+)" cy="(\d+)"/.exec(str('ppt/presentation.xml')); EX = m ? +m[1] / 1280 : 9525; EY = m ? +m[2] / 720 : 9525; }
   const lay = tplLayouts(z), hasNotes = Object.keys(z).some(k => /^ppt\/notesMasters\/notesMaster\d+\.xml$/.test(k));
@@ -1052,7 +1066,6 @@ function fileBase(l) {
   return (md + (l.title || 'Lesson')).replace(/[\\/:*?"<>|]+/g, '-').slice(0, 90);
 }
 function downloadPptx(l) {
-  if (!L.setup || !L.setup.template) return toast('Load your setup file first: it has your slide template');
   try { saveBlob(fileBase(l) + '.pptx', new Blob([buildPptx(l)], { type: 'application/vnd.openxmlformats-officedocument.presentationml.presentation' })); }
   catch (e) { console.error(e); toast('The .pptx couldn’t be made'); }
 }

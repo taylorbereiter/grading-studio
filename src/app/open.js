@@ -45,6 +45,7 @@ async function intake(entries, label, assignment, fromKeep) {   // entries: [{ p
   const zipBad = zipProblems.length ? { names: zipProblems, n: zipProblems.length } : zipSkipped ? { skip: zipSkipped, n: zipSkipped } : null;   // told in the opening report, or now if that's all there is
   if (!raw.length) { toast(zipBad ? zipSay(zipBad) : 'Nothing found in what you dropped', zipBad ? 9000 : 3000); return; }
 
+  await srcRead(raw);
   await spellLikeSaved(raw);
   const map = groupRaw(raw), keys = [...map.keys()].sort(natural);
   const students = [], keepList = [];
@@ -155,12 +156,35 @@ function groupRaw(raw) {
   const map = new Map();
   for (const r of raw) {
     if (/^Grade sheet - [^/]*\.pdf$/i.test(r.path)) continue;   // the grade sheet from an earlier export isn't a student
-    const parts = r.path.split('/').filter(Boolean);
-    const key = parts.length > 1 ? parts[0] : parts[0].replace(/\.[^.]+$/, '');
+    const key = studentOf(r.path);
     if (!map.has(key)) map.set(key, []);
     map.get(key).push(r);
   }
   return map;
+}
+// Canvas and Moodle hand a class's work back with the student's name inside each file or folder name, not as one folder each:
+//   Canvas   doejane_12345_678901_Essay.pdf, doejane_LATE_12345_678901_Notes.pdf   (name, their number, the file's number)
+//   Moodle   Jane Doe_12345_assignsubmission_file_/Essay.pdf, or loose: Jane Doe_12345_assignsubmission_file_Essay.pdf
+// When every file in a download is named one of those ways, and they name more than one student, each student's files are put together under their name. The files keep
+// the paths they came with, so the export hands back the same names. A download already worked on before this was known keeps the
+// students it had: srcRead leaves it alone.
+const SRC_CANVAS = /^([^_\/A-Z\s]*[^_\/A-Z\s\d][^_\/A-Z\s]*)_(?:LATE_|late_)?(\d{3,})_(\d{3,})_[^\/]+$/, SRC_MOODLE = /^([^\/]+?)_(\d+)_assignsubmission_[a-z]+_(?:\/.+|[^\/]*)$/i;
+let srcWho = new Map();   // path -> student, for the download being opened or open
+const plainStudent = path => { const parts = path.split('/').filter(Boolean); return parts.length > 1 ? parts[0] : parts[0].replace(/\.[^.]+$/, ''); };
+const studentOf = path => srcWho.get(path) || plainStudent(path);
+async function srcRead(raw) {
+  srcWho = new Map();
+  const list = raw.filter(r => !houseFile(r.path) && !/^Grade sheet - [^/]*\.pdf$/i.test(r.path));
+  const rx = list.length >= 2 && [SRC_CANVAS, SRC_MOODLE].find(x => list.every(r => x.test(r.path)));
+  if (!rx) return;
+  const id = batchIdOf(raw);   // as it would have opened before: with work saved that way, it stays that way
+  if (store.get(id, null) || keptMeta.has(id) || await kget('work', id)) return;
+  const ids = new Map();   // two students whose names read the same are told apart by their number
+  for (const r of list) { const m = rx.exec(r.path), n = m[1].trim(); if (!ids.has(n)) ids.set(n, new Set()); ids.get(n).add(m[2]); }
+  if (ids.size < 2) return;   // one name for every file is a naming habit (IMG_2026_1110_…), not a class
+  const who = new Map();
+  for (const r of raw) { const m = rx.exec(r.path); if (m) who.set(r.path, ids.get(m[1].trim()).size > 1 ? m[1].trim() + ' ' + m[2] : m[1].trim()); }
+  srcWho = who;
 }
 // A download is known by its file names and sizes, which is how the same one is found again.
 function batchIdOf(raw) {

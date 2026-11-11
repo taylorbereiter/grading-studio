@@ -63,13 +63,13 @@ test('a double-clicked copy (file://) opens, saves and reopens', async () => {
   await page.reload(); await appReady(page);
   await waitPaper(page);                                   // a refresh comes back to the open paper, in the double-clicked copy too
   let w = await workOf(page);
-  assert.equal(w['Aria Testwell'].computed.pct, 93);
+  assert.equal(w['Aria Testwell'].computed.pct, 88);   // a brand-new browser: 10.5 of 12 as a plain percent, with no one's scale applied
   await page.click('#closeBtn');
   await page.waitForSelector('#kept [data-kopen]');
   await page.click('#kept [data-kopen]');
   await waitPaper(page);
   w = await workOf(page);
-  assert.equal(w['Aria Testwell'].computed.pct, 93);
+  assert.equal(w['Aria Testwell'].computed.pct, 88);
   assert.equal(w['Aria Testwell'].files['Aria Testwell/Essay.pdf'].marks[0].length, 1);
   assert.deepEqual(errors, []);
   await ctx.close();

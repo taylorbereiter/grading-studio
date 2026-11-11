@@ -241,7 +241,6 @@ const safeName = s => String(s || '').replace(/[\\/:*?"<>|\u0000-\u001f]+/g, '-'
 // The deck to hand out: the finished file if there is one, otherwise one made from the slides (null if neither).
 async function deckFor(l) {
   if (l.final) { const b = await fileBlob(l.final.id); if (b) return { name: l.final.name, u8: new Uint8Array(await b.arrayBuffer()) }; }
-  if (!L.setup || !L.setup.template) return null;
   try { return { name: fileBase(l) + '.pptx', u8: buildPptx(l) }; } catch (e) { console.warn(e); return null; }
 }
 // Everything for one lesson as zip entries under a folder ('' = top level).
@@ -256,7 +255,7 @@ async function lessonEntries(l, dir) {
   return out;
 }
 async function dlLessonZip(l) {
-  const e = await lessonEntries(l, ''); if (!Object.keys(e).length) return toast('Nothing to download yet: load your profile (for the slide template) or upload a finished deck');
+  const e = await lessonEntries(l, ''); if (!Object.keys(e).length) return toast('Nothing to download yet');
   saveBlob(fileBase(l) + '.zip', new Blob([fflate.zipSync(e)], { type: 'application/zip' }));
 }
 // Every lesson on the calendar this week, a folder per class and day.

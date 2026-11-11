@@ -587,6 +587,11 @@ function mergeLib(a0, b0, o = {}) {
     if (t && e.node.opened !== t) kept.set(id, { ...e, node: { ...e.node, opened: t } });
   }
   const lib = { ...b, ...a, classes: [], loose: { id: '', units: [] }, units: [] };
+  // How a teacher works (lib.me) goes with their work. A browser that was only just set up, with nothing in it yet, takes on the
+  // work coming in as it is: if that work is from before the welcome and has no lib.me, this copy drops its own, so every word and
+  // default stays what it was where the work was done.
+  const hasWork = l => ((l && l.classes) || []).some(c => (c.names || []).length || (c.units || []).some(u => u && (u.items || []).length));
+  if (a.me && !b.me && hasWork(b) && !hasWork(a)) delete lib.me;
   const by = t => [...kept.values()].filter(e => e.type === t);
   const shell = e => { const n = { ...e.node }; delete n.units; delete n.items; return n; };
   const units = new Map(), classes = new Map();

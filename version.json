@@ -1,14 +1,15 @@
 {
- "version": "1.5.0",
- "build": "37c66c573aed",
+ "version": "1.6.0",
+ "build": "4b0122c3438b",
  "notes": [
-  "The sidebar says “Not backed up”, in amber, until a folder holds a second copy of your work. Home asks for that folder once.",
-  "Go back in time, in Settings: any assignment as it was on an earlier day, restored on its own, with Undo.",
-  "Grading Studio can be installed as an app, and it opens with no internet.",
-  "A newer version now waits until you click Update now, so nothing changes in the middle of marking."
+  "A new browser opens on three questions (your classes, how you grade, where work is kept) and starts with nothing of anyone else’s in it.",
+  "A sample class of made-up students, with papers to mark, for trying things out. Remove it from Home when you’re done.",
+  "The app uses the name of your own school system. Choose it, and how you usually grade, in Settings.",
+  "Letter grades or IB 1 to 7 can show beside the percent, with boundaries you set.",
+  "Canvas and Moodle downloads are grouped by student. The Planner works without a setup file, and downloads lessons as PowerPoint with a plain built-in template."
  ],
  "files": {
-  "index.html": "ab8bb8ce611ce01b5f89a3e8bd4a27bbe0572fd563fb0d6e34045870ffb3f7a8",
-  "planner.html": "d4e5f3aeeefd1a349e5b38c085b5103f817787e83bac2632a18c6e961d279d1e"
+  "index.html": "2bcef1d9d818602d1e333c5e2bb30252429d054d7b2bc2a1bbc2b54267a9ff06",
+  "planner.html": "b36e40f7c04320dc441a855946d3ccb52b24e8d58f00942286d893ffae7f7e65"
  }
 }

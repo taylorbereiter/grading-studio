@@ -21,7 +21,8 @@ const LOOKS = {
   notebook: { name: 'Notebook', bg: '#FDFCF7', text: '#1B2430', accent: '#2D5F8B', serif: 1, deco: 'notebook' },
   chalk: { name: 'Chalkboard', bg: '#2F3B33', text: '#F3F1E8', accent: '#E9D78A', rule: 1, dark: 1, deco: 'chalk' }
 };
-const lookOf = l => LOOKS[l && l.look] ? l.look : (LOOKS[L.defLook] ? L.defLook : 'wood');
+// 'wood' is the teacher's own slide template, colors and all. With no template of their own, a lesson is Plain White instead.
+const lookOf = l => { const k = LOOKS[l && l.look] ? l.look : (LOOKS[L.defLook] ? L.defLook : 'wood'); return k === 'wood' && !ownTpl() ? 'white' : k; };
 const lookVars = k => { const o = LOOKS[k]; return '--lbg:' + o.bg + ';--lt:' + o.text + ';--la:' + o.accent + ';--ltt:' + (o.title || o.text); };
 
 // Shapes drawn behind the text, in slide units: [x, y, w, h, fill, line] (line = [color, px] for an outline).
@@ -185,7 +186,7 @@ function lookDlg() {
   const l = L.open; if (!l) return;
   const s = l.slides[L.cur], cur = lookOf(l);
   openDlg('<div class="bh"><h2>Look</h2></div><div class="bb"><p class="muted" style="margin-top:0">Colors and background for every slide in this lesson. The layouts and your text stay the same.</p><div class="pl-looks">' +
-    Object.entries(LOOKS).map(([k, o]) => '<button class="pl-look' + (k === cur ? ' on' : '') + '" data-look="' + k + '">' + miniSlide(s, l, k, 164) + '<span>' + esc(o.name) + (k === 'wood' ? ' (your template)' : '') + '</span></button>').join('') +
+    Object.entries(LOOKS).filter(([k]) => k !== 'wood' || ownTpl()).map(([k, o]) => '<button class="pl-look' + (k === cur ? ' on' : '') + '" data-look="' + k + '">' + miniSlide(s, l, k, 164) + '<span>' + esc(o.name) + (k === 'wood' ? ' (your template)' : '') + '</span></button>').join('') +
     '</div><label class="pl-lmine"><input type="checkbox" id="lkDef"' + (L.defLook === cur ? ' checked' : '') + '> Use this look for new lessons too</label></div><div class="bf"><button class="btn" data-x>Close</button></div>');
   $('#dlgBox').onclick = async e => {
     if (e.target.closest('[data-x]')) return closeDlg();

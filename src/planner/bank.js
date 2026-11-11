@@ -151,7 +151,7 @@ function scaleRowsHtml(scale, top) {
 }
 function presetsHtml(top, cur) {
   const others = bankScales().filter(s => scaleTop(s.scale) === top && (!bEd || s.id !== bEd.item.id));
-  return '<span class="pl-pre">' + (top === 12 ? '<button class="btn sm" data-bpre="usual">12 = 100, 11 = 95, 10 = 91…</button>' : '') +
+  return '<span class="pl-pre">' + (top === 12 && plWords().scale12 ? '<button class="btn sm" data-bpre="usual">12 = 100, 11 = 95, 10 = 91…</button>' : '') +
     '<button class="btn sm" data-bpre="fives">Steps of 5 (' + Math.max(0, top - 3) + ' = 85%)</button><button class="btn sm" data-bpre="plain">Plain percent</button>' +
     (cur !== undefined ? '<button class="btn sm" data-bpre="none">No scale</button>' : '') +
     (others.length ? '<select class="btn sm" data-bsaved aria-label="Use a saved scale"><option value="">Use a saved scale…</option>' + others.map(s => '<option value="' + esc(s.id) + '">' + esc(s.name) + '</option>').join('') + '</select>' : '') + '</span>';

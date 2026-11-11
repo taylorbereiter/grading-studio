@@ -1,28 +1,3 @@
-/* ---------------- sample papers (made-up names) ---------------- */
-async function makeSample() {
-  const names = ['Sample Student 01', 'Sample Student 02', 'Sample Student 03', 'Sample Student 04', 'Sample Student 05'];
-  const para = 'In When the Emperor Was Divine, Otsuka uses quiet, plain diction to build a mood of loss. When the mother buries the family dog, the narrator does not describe her feelings at all, which makes the silence feel heavier. The short sentences slow the reader down and make each small action matter.';
-  const entries = [];
-  for (let i = 0; i < names.length; i++) {
-    if (i === 3) continue;   // one student turned nothing in
-    const doc = await PDFLib.PDFDocument.create();
-    const font = await doc.embedFont(PDFLib.StandardFonts.TimesRoman);
-    const page = doc.addPage([612, 792]);
-    page.drawText('Analysis Paragraph', { x: 72, y: 720, size: 16, font });
-    let y = 690;
-    for (let k = 0; k < 3; k++) {
-      const words = para.split(' '); let line = '';
-      for (const w of words) { if (font.widthOfTextAtSize(line + w, 12) > 468) { page.drawText(line, { x: 72, y, size: 12, font }); y -= 22; line = ''; } line += w + ' '; }
-      page.drawText(line, { x: 72, y, size: 12, font }); y -= 34;
-    }
-    entries.push({ path: names[i] + '/Analysis paragraph.pdf', data: await doc.save() });
-  }
-  entries.push({ path: names[3] + '/', data: null });
-  await intake(entries.filter(e => e.data), 'Sample assignment');
-  // the empty folder: add the student with no files so the list shows the gap
-  if (!batch.students.find(s => s.key === names[3])) { const st0 = batch.students[cur]; batch.students.splice(3, 0, { key: names[3], files: [], grade: { rubric: [], points: '', comment: '' } }); restore(); rosterSort(); cur = Math.max(0, batch.students.indexOf(st0)); renderList(); $('#batchName').textContent = batch.name + ' · ' + batch.students.length + ' students'; }
-}
-
 /* ---------------- wiring ---------------- */
 let toastT;
 function toast(msg, ms) {
@@ -38,11 +13,11 @@ $('#setKeysBtn').onclick = openKeys;
 $('#pickFiles').onclick = () => $('#fileIn').click();
 $('#pickFolder').onclick = () => pickDir('#dirIn');
 $('#pickDrive').onclick = () => openFromDrive(null);
-$('#sample').onclick = makeSample;
+$('#sample').onclick = () => sampleClass();
 let scanFor = null;
 let scanInto = false;
 $('#pickScan').onclick = () => { scanFor = null; scanInto = false; $('#scanIn').click(); };
-$('#pickMatch').onclick = () => askFilesOrFolder('Match files to a roster', 'For files that aren’t a ManageBac download, like rubrics you marked outside Grading Studio. Each file is matched to a student on your roster by the name in its file name or folder name, and you can fix any match.', list => matchToRoster(list, null));
+$('#pickMatch').onclick = () => askFilesOrFolder('Match files to a roster', 'For files that aren’t in one folder per student, like rubrics you marked outside Grading Studio. Each file is matched to a student on your roster by the name in its file name or folder name, and you can fix any match.', list => matchToRoster(list, null));
 $('#scanIn').onchange = e => { const f = e.target.files[0]; e.target.value = ''; const into = scanInto && !!batch; scanInto = false; if (f) openSplit(f, scanFor, into); };
 $('#fileIn').onchange = e => { const fs = [...e.target.files]; intake(fs.map(f => ({ path: f.name, file: f })), fs.length === 1 ? fs[0].name.replace(/\.[^.]+$/, '') : ''); e.target.value = ''; };
 $('#dirIn').onchange = e => {

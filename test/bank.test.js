@@ -101,14 +101,14 @@ test('a rubric made in the Planner sits under its unit, and grading uses it; one
     assert.equal(legacy[0].unit.title, 'Unit 3: Poetry');
     // the open Planner tab hears about it
     await pl.evaluate(() => { const P = window.__planner; P.L.view = 'bank'; P.renderLessons(); });
-    await pl.waitForFunction(id => /Poem response/.test(document.querySelector('[data-bdrop="' + id + '"]').textContent), {}, u3);
+    await pl.waitForFunction(id => /Poem response/.test(document.querySelector('[data-bdrop="' + id + '"]').textContent), { polling: 100 }, u3);   // the Planner's tab is behind grading's by now, and a tab in the background doesn't animate, so polling by the clock
     // moving one to another unit
     await pl.evaluate(async (u2) => {
       const c = [...document.querySelectorAll('.pl-bcard')].find(x => /Poem response/.test(x.textContent)), dt = new DataTransfer();
       c.dispatchEvent(new DragEvent('dragstart', { dataTransfer: dt, bubbles: true }));
       document.querySelector('[data-bdrop="' + u2 + '"]').dispatchEvent(new DragEvent('drop', { dataTransfer: dt, bubbles: true, cancelable: true }));
     }, u2);
-    await pl.waitForFunction(id => /Poem response/.test(document.querySelector('[data-bdrop="' + id + '"]').textContent), {}, u2);
+    await pl.waitForFunction(id => /Poem response/.test(document.querySelector('[data-bdrop="' + id + '"]').textContent), { polling: 100 }, u2);
     // nothing about a student reaches the bank
     const bank = await pl.evaluate(() => JSON.stringify(window.__planner.L.bank));
     assert.ok(!/Ada|Ben|Sample/.test(bank), bank);
