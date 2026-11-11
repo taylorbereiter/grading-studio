@@ -217,7 +217,7 @@ const bkCountTypes = conf => BK_TYPES.filter(([t]) => +conf.w[t] > 0);
 const bkOnly = () => { try { return localStorage.getItem('gs.bkOnly') === '1'; } catch (e) { return false; } };
 // One type's average in a cell; the in-class average says when extra credit is in it.
 const bkAvgCell = (r, t) => r.by[t] != null ? pctAvgText(r.by[t]) + (t === 'ic' && r.xcIc ? ' <small class="bkxc" title="Includes extra credit">+xc</small>' : '') : '<span class="bknone">–</span>';
-const bkGradeCell = r => r.grade != null ? pctAvgText(r.grade) + (r.soFar ? ' <small>so far</small>' : '') + (r.xcTerm ? ' <small class="bkxc" title="Includes extra credit">+xc</small>' : '') : '<span class="bknone">–</span>';
+const bkGradeCell = r => r.grade != null ? pctAvgText(r.grade) + ibDpSay(r.grade, bkClass()) + (r.soFar ? ' <small>so far</small>' : '') + (r.xcTerm ? ' <small class="bkxc" title="Includes extra credit">+xc</small>' : '') : '<span class="bknone">–</span>';
 // The class average of one type's averages, or of the grades ('' for the grade).
 // The type averages and the grade stay in view at the right while the assignments scroll under them.
 const bkStick = (j, n) => ' style="right:' + (j >= n ? 0 : 120 + (n - 1 - j) * 100) + 'px"';

@@ -70,6 +70,8 @@ function gradeDefaultApply() {
 gradeDefaultApply();
 // The grade a percent earns, for a teacher who grades in letters or 1 to 7: the first boundary it reaches. '' when they don't.
 function bandOf(pct) {
+  const dp = batch ? batchClass() : null;   // a paper of a DP class: that class's own boundaries, whatever the teacher's usual way (ib.js)
+  if (dp && classWay(dp) === 'dp') { const v = pct == null || isNaN(pct) ? null : ibGradeOf(roundPct(pct), ibBounds(dp)); return v == null ? '' : String(v); }
   const g = meGrade(); if (!g || !g.bands || pct == null || isNaN(pct)) return '';
   const b = g.bands.find(b => pct >= b[0]); return b ? b[1] : g.bands[g.bands.length - 1][1];
 }

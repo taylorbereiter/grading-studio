@@ -180,3 +180,19 @@ test('a criterion assessed fewer than twice this year is named', async () => {
   assert.match(await page.$eval('.ibfew', e => e.textContent), /Criterion A has been assessed once this year\. Criterion B has been assessed once/);
   await close();
 });
+
+test('a DP class’s term grade carries the 1 to 7 its percent earns on the class’s own boundaries', async () => {
+  const names = ['Aria Testwell', 'Bram Sample', 'Cleo Fixture'];
+  const lib = { classes: [
+    { id: 'c1', name: 'DP1 History HL', names, way: 'dp', ib: { bounds: [[80, 7], [68, 6], [56, 5], [44, 4], [32, 3], [18, 2], [0, 1]] }, units: [{ id: 'u1', name: 'Unit 1', items: [
+      { id: 'i1', name: 'Source paper', classId: 'c1', type: 'sum', due: '2026-09-20', typed: { max: 24, s: { 'Aria Testwell': { v: 20, st: '' }, 'Bram Sample': { v: 12, st: '' }, 'Cleo Fixture': { v: 3, st: '' } } } }] }] },
+    { id: 'c2', name: 'Grade 9 English', names, units: [{ id: 'u2', name: 'Unit 1', items: [
+      { id: 'i2', name: 'Essay', classId: 'c2', type: 'sum', due: '2026-09-20', typed: { max: 24, s: { 'Aria Testwell': { v: 20, st: '' } } } }] }] }],
+    loose: { id: '', units: [] }, seed2627: true, book: { terms: [{ id: 't1', name: 'Term 1', start: '2026-08-10', end: '2027-07-31' }] } };
+  const { page, close } = await openApp(browser, { seed: { ls: { 'gs.lib': JSON.stringify(lib) } } });
+  await goTo(page, '#/class/c1/gradebook'); await page.waitForSelector('#bkTab');
+  assert.deepEqual(await page.$$eval('#bkTab tbody tr:not(.bkfoot) td.bkterm', xs => xs.map(x => (x.querySelector('.ibg7') || {}).textContent)), ['7', '4', '1']);   // 83%, 50%, 13%
+  await goTo(page, '#/class/c2/gradebook'); await page.waitForSelector('#bkTab');
+  assert.equal(await page.$('#bkTab .ibg7'), null, 'a points and percent class shows the percent alone');
+  await close();
+});

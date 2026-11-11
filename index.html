@@ -1749,6 +1749,7 @@ p.goalline{display:block}
 .ibtab th small,.ibaddtab th small{display:block;font-weight:400;color:var(--muted);font-size:var(--text-caption)}
 .ibtab .bkch button,.ibtab .bkch>span{max-width:150px;min-width:96px}
 .ibtab .bkch>span{display:flex;flex-direction:column;align-items:center;gap:2px;white-space:normal;line-height:1.2;margin:0 auto}
+.ibg7{display:inline-block;min-width:20px;margin-left:var(--space-1);padding:0 var(--space-1);border-radius:var(--corner-1);background:var(--accent);color:var(--accent-fg);font-weight:700;text-align:center}
 /* ---------- an open assignment's tabs, and a tab's screen drawn on the page (11/10) ---------- */
 .atabs{display:flex;gap:2px;align-self:stretch;margin:-9px 0 -9px 8px;flex:none}
 .atab{display:flex;align-items:center;gap:6px;padding:0 13px;min-height:44px;font-size:var(--text-body);font-weight:500;color:var(--fg-2);text-decoration:none;border-bottom:2px solid transparent;border-top:2px solid transparent;white-space:nowrap}
@@ -8978,6 +8979,8 @@ function gradeDefaultApply() {
 }
 gradeDefaultApply();
 function bandOf(pct) {
+  const dp = batch ? batchClass() : null;   // a paper of a DP class: that class's own boundaries, whatever the teacher's usual way (ib.js)
+  if (dp && classWay(dp) === 'dp') { const v = pct == null || isNaN(pct) ? null : ibGradeOf(roundPct(pct), ibBounds(dp)); return v == null ? '' : String(v); }
   const g = meGrade(); if (!g || !g.bands || pct == null || isNaN(pct)) return '';
   const b = g.bands.find(b => pct >= b[0]); return b ? b[1] : g.bands[g.bands.length - 1][1];
 }
@@ -14483,7 +14486,7 @@ const bkRowCls = n => bkIn(n) ? '' : ' class="bkleft"';
 const bkCountTypes = conf => BK_TYPES.filter(([t]) => +conf.w[t] > 0);
 const bkOnly = () => { try { return localStorage.getItem('gs.bkOnly') === '1'; } catch (e) { return false; } };
 const bkAvgCell = (r, t) => r.by[t] != null ? pctAvgText(r.by[t]) + (t === 'ic' && r.xcIc ? ' <small class="bkxc" title="Includes extra credit">+xc</small>' : '') : '<span class="bknone">–</span>';
-const bkGradeCell = r => r.grade != null ? pctAvgText(r.grade) + (r.soFar ? ' <small>so far</small>' : '') + (r.xcTerm ? ' <small class="bkxc" title="Includes extra credit">+xc</small>' : '') : '<span class="bknone">–</span>';
+const bkGradeCell = r => r.grade != null ? pctAvgText(r.grade) + ibDpSay(r.grade, bkClass()) + (r.soFar ? ' <small>so far</small>' : '') + (r.xcTerm ? ' <small class="bkxc" title="Includes extra credit">+xc</small>' : '') : '<span class="bknone">–</span>';
 const bkStick = (j, n) => ' style="right:' + (j >= n ? 0 : 120 + (n - 1 - j) * 100) + 'px"';
 const bkClassAvg = (grades, t) => { const ps = grades.map(r => t ? r.by[t] : r.grade).filter(v => v != null); return ps.length ? pctAvgText(bkMean(ps)) : '–'; };
 function bkTable(c, cols, conf) {
@@ -21210,6 +21213,8 @@ function ibEvidence(list) {
 }
 function ibPill(c) { const w = classWay(c); return w ? '<span class="ibpill" title="' + (w === 'myp' ? 'This class is graded with IB MYP criteria' : 'This class is graded as an IB DP class') + '">' + (w === 'myp' ? 'MYP' : 'DP') + '</span>' : ''; }
 function ibClassBtn(c, ci) { return '<button class="btn sm" data-ib-class="' + ci + '">Grading</button>'; }
+
+function ibDpSay(pct, c) { if (classWay(c) !== 'dp' || pct == null) return ''; const g = ibGradeOf(roundPct(pct), ibBounds(c)); return g == null ? '' : ' <b class="ibg7" title="On this class’s boundaries">' + g + '</b>'; }
 
 /* ---------- how this class is graded: the box behind the Grading button on a class ---------- */
 let ibDraft = null;

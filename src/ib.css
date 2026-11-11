@@ -49,3 +49,4 @@
 .ibtab th small,.ibaddtab th small{display:block;font-weight:400;color:var(--muted);font-size:var(--text-caption)}
 .ibtab .bkch button,.ibtab .bkch>span{max-width:150px;min-width:96px}
 .ibtab .bkch>span{display:flex;flex-direction:column;align-items:center;gap:2px;white-space:normal;line-height:1.2;margin:0 auto}
+.ibg7{display:inline-block;min-width:20px;margin-left:var(--space-1);padding:0 var(--space-1);border-radius:var(--corner-1);background:var(--accent);color:var(--accent-fg);font-weight:700;text-align:center}

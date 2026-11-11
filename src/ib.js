@@ -81,6 +81,9 @@ function ibEvidence(list) {
 function ibPill(c) { const w = classWay(c); return w ? '<span class="ibpill" title="' + (w === 'myp' ? 'This class is graded with IB MYP criteria' : 'This class is graded as an IB DP class') + '">' + (w === 'myp' ? 'MYP' : 'DP') + '</span>' : ''; }
 function ibClassBtn(c, ci) { return '<button class="btn sm" data-ib-class="' + ci + '">Grading</button>'; }
 
+// A DP class's term grade: the 1 to 7 its percent earns on the class's own boundaries, shown after the percent. '' for any other class.
+function ibDpSay(pct, c) { if (classWay(c) !== 'dp' || pct == null) return ''; const g = ibGradeOf(roundPct(pct), ibBounds(c)); return g == null ? '' : ' <b class="ibg7" title="On this class’s boundaries">' + g + '</b>'; }
+
 /* ---------- how this class is graded: the box behind the Grading button on a class ---------- */
 let ibDraft = null;
 function ibDlg(ci) {
