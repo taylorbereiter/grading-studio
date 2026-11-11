@@ -572,8 +572,9 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
     <p class="muted vhint" id="classHint">Drag an assignment to another unit, or onto a class in the sidebar. Drag a unit’s name to move the unit. Drop <span class="sysZip">a ManageBac ZIP</span> on an assignment to open it there.</p>
   </section>
   <section class="view" id="vTodo" hidden>
-    <header class="vhead"><h1>To do</h1><span class="muted" id="tdSay"></span><span class="sp"></span><button class="btn sm" id="tdDoneBtn" hidden></button></header>
+    <header class="vhead"><h1>To do</h1><span class="muted" id="tdSay"></span><span class="sp"></span><button class="btn sm" id="tdDoneBtn" hidden></button><div class="pseg" id="tdView" role="group" aria-label="View"><button data-tdview="" aria-pressed="true">List</button><button data-tdview="week" aria-pressed="false">Week</button></div></header>
     <div class="tdchips" id="tdChips" role="group" aria-label="Show"></div>
+    <div id="tdWeek" hidden></div>
     <div class="tdgrid">
       <div class="tcard tdmainc">
         <form class="tdadd" id="tdAdd" autocomplete="off"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><input type="text" id="tdIn" maxlength="300" placeholder="Add a to-do, like “Print handouts tomorrow”" aria-label="Add a to-do"><kbd title="Press N anywhere outside a paper to add a to-do">N</kbd></form>

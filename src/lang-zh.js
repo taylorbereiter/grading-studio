@@ -29,6 +29,7 @@ const LANG_ZH = {
   words: {
     /* the to-do list: the sidebar, the card on Today, Find anything */
     'To do': '待辦事項', 'To do: your own list, with what the app noticed from your work': '待辦事項：你自己的清單，加上系統從你的工作中發現的事', 'Add a to-do': '新增待辦事項', 'Add a to-do…': '新增待辦事項…',
+    'To do, by week': '待辦事項（週檢視）', 'Your list laid out on the days of the week, under the classes that meet': '把清單排在一週的每一天，列在當天的課底下',
     'Open To do': '開啟待辦事項', 'Nothing on your list for today.': '今天清單上沒有事項。', 'See everything': '查看全部', 'Done': '已完成', 'Tomorrow': '明天', 'Note': '備註', 'Open it in To do': '在待辦事項中開啟',
     'Every school day': '每個上課日', 'Every week': '每週', 'Each time this class meets': '每次這個班上課時',
     'Your own list, with what the app noticed from your work': '你自己的清單，加上系統從你的工作中發現的事', 'Type it the way you would say it': '照你平常說的方式輸入', 'Your own list, on the grading page': '你自己的清單，在批改頁面',
@@ -229,6 +230,9 @@ const LANG_ZH = {
         '照你平常說的方式輸入，然後按 Enter。日期目前用英文辨識：句尾的日期（“tomorrow”、“friday”、“nov 20”）、班級名稱或學生姓名會自動辨識出來，點一下辨識到的項目就能取消。在作業畫面以外的任何地方按 **N** 就能新增。',
         '點一下事項，可以設定日期、班級、相關的對象、重複或備註。系統加入的事項在工作完成後會自己消失。你可以把它移到另一天、隱藏，或關掉整個類別。',
         '**今天**會顯示一張小卡，列出你逾期或今天到期的事項。清單和你的批改工作存在一起，絕不會放進備課的資料夾。'] },
+    'todo-week': { q: '可以按週查看待辦事項嗎？', go: '開啟本週', words: '待辦 事項 週 每週 行事曆 日期 拖曳 移動 week',
+      a: ['可以。在**待辦事項**頁面右上角選 **Week**。同樣的事項會排在各自的日期，放在當天上課的班級底下，其餘的在 Later 欄。',
+        '在某一天輸入就能新增那天的事項，也可以把事項拖到另一天。當天沒完成的會自動移到今天，並標出原本是哪一天。'] },
     'language': { q: '介面可以換成其他語言嗎？', go: '開啟設定、顯示', words: '中文 繁體 西班牙文 英文 語言 翻譯 chinese language',
       a: ['可以。目前有繁體中文和西班牙文。在設定、Display 的**介面語言**選擇，或在歡迎畫面最上方選擇。頁面會用你選的語言重新顯示。',
         '英文以外的語言目前涵蓋側邊欄、今天、歡迎畫面、搜尋、說明，以及學生隨發還作業收到的回饋頁。其他畫面仍是英文。',

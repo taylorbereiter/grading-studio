@@ -259,10 +259,74 @@ test('N starts a to-do from anywhere outside a paper, Find anything reaches the 
   await page.keyboard.type('nothing new'); await page.keyboard.press('Enter');
   assert.equal((await saved(page)).items[0].x, 'nothing new', 'an n typed in the box is a letter');
   const find = await page.evaluate(() => window.__gs.findRows().filter(r => /to[- ]?do/i.test(r.label)).map(r => r.group + ': ' + r.label));
-  assert.deepEqual(find, ['Go to: To do', 'Do: Add a to-do', 'Help: How does the to-do list work?']);
+  assert.deepEqual(find, ['Go to: To do', 'Go to: To do, by week', 'Do: Add a to-do', 'Help: How does the to-do list work?', 'Help: Can I see my to-dos by week?']);
   await goTo(page, '#/help/todo');
   await page.waitForSelector('#hlp-todo.on');
   assert.equal(await page.$eval('#hlp-todo .hlpgo a', a => a.getAttribute('href')), '#/todo');
+  assert.deepEqual(page.errors, []);
+  await close();
+});
+
+test('the week: each line on its day under the class that meets, what is late under today, adding in a day, and dragging to another', async () => {
+  const todo = { items: [item('a', 'Email the office', { d: day(-1) }), item('b', 'Print handouts', { d: day(0), c: 'c1' }), item('c', 'Order the novels'), item('d', 'Reports', { d: day(21) }), item('e', 'Water the plants', { d: day(0), done: Date.now() })], off: { mark: 1, back: 1, miss: 1 }, offT: 1, auto: {} };
+  const { page, close } = await open(todo, null);
+  await page.evaluate(async () => {
+    const db = await new Promise((res, rej) => { const r = indexedDB.open('gs-lessons'); r.onupgradeneeded = () => { r.result.createObjectStore('lessons', { keyPath: 'id' }); r.result.createObjectStore('kv'); }; r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
+    await new Promise((res, rej) => { const tx = db.transaction('kv', 'readwrite'); tx.objectStore('kv').put({ classes: [{ id: 'A1', name: 'grade-9 english', color: '#0E7C86', meets: [0, 1, 2, 3, 4, 5, 6].map(dow => ({ dow, start: '23:58', end: '23:59' })) }], daysOff: [] }, 'setup'); tx.oncomplete = res; tx.onerror = () => rej(tx.error); });
+    db.close();
+  });
+  await page.reload();
+  await page.waitForSelector('#today .trow');
+  await goTo(page, '#/todo');
+  await page.click('#tdView [data-tdview="week"]');
+  await page.waitForSelector('#tdWeek .tdday.now .tdw.auto');
+  assert.equal(await page.evaluate(() => location.hash), '#/todo/week');
+  assert.equal(await page.$eval('#tdList', e => e.offsetParent === null), true, 'the list gives way to the week');
+  const col = d => page.$$eval('#tdWeek [data-tdday="' + d + '"] > *', k => { const out = []; for (const x of k) { if (x.matches('.tdcl')) out.push('[' + x.querySelector('b').textContent + ']'); else if (x.matches('.tdw')) out.push(x.querySelector('.tdx').textContent + (x.querySelector('.late') ? ' (late)' : '') + (x.matches('.done') ? ' (done)' : '')); } return out; });
+  // seven days with a class on each, and Later
+  assert.equal((await page.$$('#tdWeek .tdday')).length, 8);
+  assert.deepEqual(await col(day(0)), ['Email the office (late)', 'Water the plants (done)', '[grade-9 english]', 'Print handouts', 'Plan today’s grade-9 english lesson']);
+  assert.match(await page.$eval('#tdWeek .tdday.now .late', e => e.textContent), /^from \S+day$/);
+  assert.deepEqual(await col(''), ['Reports', 'Order the novels'], 'a line with a day comes before one with none');
+  // a line typed into a day is for that day; typed into Later it has no day
+  await add(page, 'Call the printer', '#tdWeek [data-tdwadd="' + day(0) + '"] input');
+  await add(page, 'Sort the bookshelf', '#tdWeek [data-tdwadd=""] input');
+  const it = (await saved(page)).items;
+  assert.deepEqual([it.find(i => i.x === 'Call the printer').d, it.find(i => i.x === 'Sort the bookshelf').d], [day(0), '']);
+  assert.ok((await col(day(0))).includes('Call the printer'));
+  // dragging to another day changes the day and nothing else
+  const drag = (id, to) => page.evaluate((id, to) => {
+    const dt = new DataTransfer(), ev = (n, el) => el.dispatchEvent(new DragEvent(n, { bubbles: true, cancelable: true, dataTransfer: dt }));
+    ev('dragstart', document.querySelector('#tdWeek [data-td="' + id + '"]')); const c = document.querySelector('#tdWeek [data-tdday="' + to + '"]'); ev('dragover', c); ev('drop', c);
+  }, id, to);
+  await drag('b', '');
+  assert.equal((await saved(page)).items.find(i => i.id === 'b').d, '');
+  assert.ok((await col('')).includes('Print handouts'));
+  await drag('c', day(0));
+  assert.equal((await saved(page)).items.find(i => i.id === 'c').d, day(0));
+  // a line the app added keeps a day: it moves to a later one, and not to Later
+  const auto = await page.$eval('#tdWeek .tdday.now .tdw.auto', e => e.dataset.td);
+  await drag(auto, '');
+  assert.ok((await col(day(0))).includes('Plan today’s grade-9 english lesson'));
+  await page.evaluate((id, d) => window.__gs.todoMove(id, d), auto, day(7));
+  assert.equal((await col(day(0))).includes('Plan today’s grade-9 english lesson'), false);
+  // the week after, and back
+  await page.click('#tdWeek [data-tdwk="1"]');
+  assert.ok((await col(day(7))).some(x => /^Plan .* grade-9 english lesson$/.test(x)));
+  assert.equal(await page.$('#tdWeek .tdday.now'), null);
+  await page.click('#tdWeek [data-tdwk="0"]');
+  // ticking in the week, and the line opening beside it
+  await page.click('#tdWeek [data-td="c"] .tdck');
+  assert.ok((await saved(page)).items.find(i => i.id === 'c').done > 0);
+  await page.click('#tdWeek [data-td="a"] .tdmain');
+  await page.waitForSelector('#tdSide [data-tdpane="a"]');
+  await page.click('#tdSide [data-tdwhen="today"]');
+  assert.equal((await saved(page)).items.find(i => i.id === 'a').d, day(0));
+  assert.equal(await page.$('#tdWeek .late'), null);
+  await page.click('#tdSide [data-tdclose]');
+  await page.click('#tdView [data-tdview=""]');
+  assert.equal(await page.evaluate(() => location.hash), '#/todo');
+  assert.equal(await page.$eval('#tdWeek', e => e.hidden), true);
   assert.deepEqual(page.errors, []);
   await close();
 });

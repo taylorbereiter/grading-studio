@@ -1,5 +1,5 @@
 /* ---------------- where she is: every screen has its own address, the part after # ---------------- */
-// #/help is Help, with /<answer> for one answer. #/todo is the to-do list. #/ is Home, #/class/<id> a class (- for "No class") with /gradebook, /students, /students/<place on the roster>, /missing, /charts and /reports under it, #/settings Settings,
+// #/help is Help, with /<answer> for one answer. #/todo is the to-do list, with /week for it laid out on the week. #/ is Home, #/class/<id> a class (- for "No class") with /gradebook, /students, /students/<place on the roster>, /missing, /charts and /reports under it, #/settings Settings,
 // #/a/<download> an open assignment (its papers), with /grades, /grades/sheet, /insights, /insights/consistency and /return under it.
 // Back, Forward and Refresh follow it. Nothing here is saved: the address only says which screen to show.
 const routeOf = hash => {
@@ -15,7 +15,7 @@ const routeOf = hash => {
   }
   // from the Planner's sidebar, which knows a class only by the name on its timetable (spaces, dashes and capitals don’t count: “Course A 2” there is “CourseA2” here)
   if (p[0] === 'class-named' && p[1]) { const nk = s => String(s || '').toLowerCase().replace(/[^a-z0-9]/g, ''), k = nk(p.slice(1).join('/')), c = k && lib.classes.find(c => nk(c.name) === k); return c ? { v: 'class', c, tab: '', stu: null, named: true } : { v: 'home', noClass: p.slice(1).join('/').slice(0, 60) }; }
-  if (p[0] === 'todo') return { v: 'todo' };
+  if (p[0] === 'todo') return { v: 'todo', week: p[1] === 'week' };
   if (p[0] === 'help') return { v: 'help', topic: HELP.some(t => t.id === p[1]) ? p[1] : '' };
   if (p[0] === 'settings') return { v: 'settings', sec: SET_SECS.some(x => x[0] === p[1]) ? p[1] : 'saving' };
   if (p[0] === 'a' && p[1]) {

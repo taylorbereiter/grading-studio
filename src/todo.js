@@ -11,7 +11,7 @@
      off:   { mark | back | plan | miss: 1 } the kinds the app no longer adds, offT when that was last changed
      auto:  { <line's key>: { d: day it was moved to, h: hidden while its number is this, t } } */
 const TD_KINDS = [['mark', 'Papers to mark'], ['back', 'Papers to hand back'], ['plan', 'Lessons not planned yet'], ['miss', 'Missing work to chase']];
-let tdS = { filter: 'all', sel: '', done: false, drop: {} };   // for this visit only
+let tdS = { filter: 'all', sel: '', done: false, drop: {}, week: 0, drag: '' };   // for this visit only
 const TD_DAY = 864e5;
 const tdData = () => { const t = lib.todo || {}; return { items: Array.isArray(t.items) ? t.items : [], off: t.off || {}, offT: t.offT || 0, auto: t.auto || {} }; };
 function tdSave(part) {
@@ -151,8 +151,9 @@ function tdMissLoad() {
 function todoAuto() {
   const d = tdData(), today = tdToday(), out = [];
   const add = (kind, key, x, sub, c, day, btn, sig, color) => {
-    const a = d.auto[key] || {}; if (a.h != null && a.h === sig) return;
-    out.push({ auto: true, id: 'auto:' + key, key, kind, x, sub, c, d: a.d && a.d > day && a.d > today ? a.d : day < today ? today : day, btn, sig, color });
+    const a = d.auto[key] || {}; if (a.h != null && a.h === sig) return null;
+    const row = { auto: true, id: 'auto:' + key, key, kind, x, sub, c, d: a.d && a.d > day && a.d > today ? a.d : day < today ? today : day, btn, sig, color };
+    out.push(row); return row;
   };
   const g = homeGroups();
   if (!d.off.mark) for (const m of g.mark) {
@@ -172,7 +173,8 @@ function todoAuto() {
     for (const r of t.rows) {
       if (r.lessons.length || (!i && (!live || t.rows.indexOf(r) < t.rows.indexOf(live)))) continue;   // planned, or over already today
       const when = i === 0 ? 'today’s' : i === 1 ? 'tomorrow’s' : tdAt(day).toLocaleDateString(LANG_LOCALE, { weekday: 'long' }) + '’s';
-      add('plan', 'plan:' + r.c.id + ':' + day + ':' + r.m.start, 'Plan ' + when + ' ' + r.c.name + ' lesson', [planTime(r.m.start), 'nothing planned yet'].filter(Boolean).join(' · '), tdGradeClass(r.c), day, { label: 'Plan it', href: planUrl('#week') }, 'x', r.c.color);
+      const row = add('plan', 'plan:' + r.c.id + ':' + day + ':' + r.m.start, 'Plan ' + when + ' ' + r.c.name + ' lesson', [planTime(r.m.start), 'nothing planned yet'].filter(Boolean).join(' · '), tdGradeClass(r.c), day, { label: 'Plan it', href: planUrl('#week') }, 'x', r.c.color);
+      if (row) row.pid = r.c.id;
     }
   }
   if (!d.off.miss) for (const c of lib.classes) {
@@ -240,8 +242,47 @@ function tdGroups(rows, today) {
   g.done.sort((a, b) => b.done - a.done);
   return g;
 }
+/* ---------- the week: the same lines on the days they are for, under the classes that meet ---------- */
+// Monday to Friday (and the weekend when something is on it), then Later. A line not done by its day shows under today, with the day
+// it was for. What was done stays on the day it was done. Nothing more is saved: a line's day is the only thing a drag changes.
+const tdPid = r => r.pid || ((p => p ? p.id : '')(tdPlanClass(r.c)));
+function tdWRow(r) {
+  const done = !!r.done, sub = r.from ? '<span class="late" data-raw>from ' + esc(tdAt(r.from).toLocaleDateString(LANG_LOCALE, { weekday: 'long' })) + '</span>' : r.auto ? (r.sub ? '<span data-raw>' + esc(r.sub.split(' · ').pop()) + '</span>' : '') :
+    [r.it.who ? '<span data-raw>' + esc(r.it.who) + '</span>' : '', r.it.rep ? '<span>' + TD_REP[r.it.rep] + '</span>' : ''].filter(Boolean).join('');
+  return '<div class="tdw' + (done ? ' done' : '') + (r.auto ? ' auto' : '') + (tdS.sel === r.id ? ' sel' : '') + '" data-td="' + esc(r.id) + '"' + (done ? '' : ' draggable="true"') + '>' +
+    '<button class="tdck" data-raw data-tdtick="' + esc(r.id) + '" ' + (r.auto ? 'title="Hide this line. It goes by itself when the work is done." aria-label="Hide: ' + esc(r.x) + '"' : 'role="checkbox" aria-checked="' + done + '" aria-label="' + esc(r.x) + '" title="' + (done ? 'Not done after all' : 'Done') + '"') + '>' + (done ? TD_TICK : '') + '</button>' +
+    '<button class="tdmain" data-tdsel="' + esc(r.id) + '"><span class="tdx" data-raw>' + esc(r.x) + '</span>' + (sub ? '<span class="tdm">' + sub + '</span>' : '') + '</button></div>';
+}
+function tdWeekHtml(rows, today) {
+  const mon = tdAdd(today, -((tdAt(today).getDay() + 6) % 7) + 7 * tdS.week), days = [0, 1, 2, 3, 4, 5, 6].map(i => tdAdd(mon, i)), end = days[6], cur = today >= mon && today <= end;
+  const by = new Map(days.map(d => [d, []])), later = [];
+  for (const r of rows) {
+    if (r.done) { const dd = isoDay(r.done); if (by.has(dd)) by.get(dd).push(r); continue; }
+    if (!r.d || r.d > end) later.push(r);
+    else if (r.d < today) { if (cur) by.get(today).push({ ...r, from: r.d }); }   // not done by its day: it is today's now
+    else if (r.d >= mon) by.get(r.d).push(r);
+  }
+  const add = (day, label) => '<form class="tdwadd" data-tdwadd="' + day + '" autocomplete="off"><input type="text" maxlength="300" placeholder="Add…" aria-label="Add a to-do for ' + esc(label) + '"></form>';
+  const col = day => {
+    const list = by.get(day).sort((a, b) => (a.done ? 1 : 0) - (b.done ? 1 : 0) || (a.from ? 0 : 1) - (b.from ? 0 : 1) || tdSort(a, b)), dow = tdAt(day).getDay();
+    const inTerm = plan && !(plan.semStart && day < plan.semStart) && !(plan.semEnd && day > plan.semEnd), t = inTerm ? todayRows(plan, tdAt(day).getTime()) : { off: '', rows: [] };
+    const meets = []; for (const m of t.rows) if (!meets.some(x => x.c.id === m.c.id)) meets.push(m);
+    if ((dow === 0 || dow === 6) && !list.length && !meets.length && day !== today) return '';
+    const under = new Map(meets.map(m => [m.c.id, []])), any = [];
+    for (const r of list) { const p = tdPid(r); (under.has(p) ? under.get(p) : any).push(r); }
+    const name = day === today ? 'Today' : tdAt(day).toLocaleDateString(LANG_LOCALE, { weekday: 'short' });
+    return '<section class="tdday' + (day === today ? ' now' : day < today ? ' past' : '') + '" data-tdday="' + day + '"><h3><b' + (day === today ? '' : ' data-raw') + '>' + esc(name) + '</b><span data-raw>' + esc(day === today ? tdDayLong(day) : bkDay(day)) + '</span></h3>' +
+      (t.off ? '<p class="tdoff" data-raw>' + esc(t.off) + '</p>' : '') + (any.length && meets.length ? '<div class="tdany">Any time</div>' : '') + any.map(tdWRow).join('') +
+      meets.map(m => '<div class="tdcl" data-raw>' + tdDot(null, m.c.color) + '<b>' + esc(m.c.name) + '</b><span>' + esc(planTime(m.m.start)) + '</span></div>' + under.get(m.c.id).map(tdWRow).join('')).join('') + add(day, name) + '</section>';
+  };
+  const say = tdAt(mon).toLocaleDateString(LANG_LOCALE, { month: 'long', day: 'numeric' });
+  return '<div class="tdwbar"><button class="btn sm" data-tdwk="-1" aria-label="The week before" title="The week before">‹</button><b>Week of <span data-raw>' + esc(say) + '</span></b><button class="btn sm" data-tdwk="1" aria-label="The week after" title="The week after">›</button>' +
+    (tdS.week ? '<button class="btn sm" data-tdwk="0">This week</button>' : '') + '<span class="muted">Anything not done moves to today on its own. Drag a line to another day.</span></div>' +
+    '<div class="tdwk">' + days.map(col).join('') + '<section class="tdday tdlater" data-tdday=""><h3><b>Later</b><span>no day, or after this week</span></h3>' + later.sort(tdSort).map(r => tdWRow(r)).join('') + add('', 'later') + '</section></div>';
+}
 function tdSideHtml(rows, today) {
   const r = tdS.sel ? rows.find(x => x.id === tdS.sel) : null;
+  if (!r && routeNow().week) return '';   // the week has no room for the switches: they are on the list
   if (!r) {
     const off = tdData().off;
     return '<h2 class="tcap">The app adds these for you</h2><div class="tcard tdkinds">' + TD_KINDS.map(([k, l]) => '<button class="tdsw" role="switch" aria-checked="' + !off[k] + '" data-tdkind="' + k + '"><span>' + l + '</span><i aria-hidden="true"></i></button>').join('') +
@@ -285,6 +326,12 @@ function tdPageRender() {
   const sec = (k, name, list) => list.length ? '<div class="tdgrp' + (k === 'late' ? ' late' : '') + '" data-tdgrp="' + k + '">' + name + ' <span>' + (k === 'done' ? list.length : list.filter(x => !x.done).length) + '</span></div>' + list.map(x => tdRow(x, today)).join('') : '';
   const h = sec('late', 'Overdue', g.late) + sec('now', 'Today', g.now) + sec('week', 'Next 7 days', g.week) + sec('later', 'Later', g.later) + (tdS.done ? sec('done', 'Done in the last 7 days', g.done) : '');
   tdPutHtml($('#tdList'), h || '<p class="tdnone">' + (tdS.filter === 'all' ? 'Nothing here yet. Type something above and press Enter, like “Print handouts tomorrow”.' : 'Nothing here for this view.') + '</p>');
+  const wk = !!r.week, box = $('#tdWeek');
+  for (const b of document.querySelectorAll('#tdView [data-tdview]')) b.setAttribute('aria-pressed', String((b.dataset.tdview === 'week') === wk));
+  $('#vTodo .tdgrid').classList.toggle('wk', wk); box.hidden = !wk;
+  // a line being typed into a day is not drawn over
+  const typing = wk && box.contains(document.activeElement) && document.activeElement.matches('input') && document.activeElement.value;
+  if (wk && !typing) tdPutHtml(box, tdWeekHtml(rows, today));
   tdPutHtml($('#tdSide'), tdSideHtml(all, today));
 }
 function tdUndRender() {
@@ -341,6 +388,8 @@ function tdClick(e) {
     if (onCard) { tdS.filter = 'all'; go('#/todo'); } else tdPageRender();
     return;
   }
+  if ((b = hit('data-tdview'))) { go('#/todo' + (b.dataset.tdview ? '/' + b.dataset.tdview : '')); return; }
+  if ((b = hit('data-tdwk'))) { tdS.week = +b.dataset.tdwk ? tdS.week + +b.dataset.tdwk : 0; tdPageRender(); return; }
   if ((b = hit('data-tdf'))) { tdS.filter = b.dataset.tdf; tdPageRender(); return; }
   if ((b = hit('data-tdkind'))) { const d = tdData(), off = { ...d.off }, k = b.dataset.tdkind; if (off[k]) delete off[k]; else off[k] = 1; tdSave({ off, offT: Date.now() }); if (k === 'miss' && !off.miss) tdMissLoad(); return; }
   if (hit('data-tdclose')) { tdS.sel = ''; tdPageRender(); return; }
@@ -356,6 +405,30 @@ function tdClick(e) {
 }
 $('#vTodo').addEventListener('click', tdClick);
 $('#todoCard').addEventListener('click', tdClick);
+// The week: a line typed into a day is for that day, and a line dragged to a day moves there.
+$('#tdWeek').addEventListener('submit', e => {
+  e.preventDefault();
+  const f = e.target.closest('[data-tdwadd]'), i = f && f.querySelector('input'); if (!i || !i.value.trim()) return;
+  const day = f.dataset.tdwadd, v = i.value; i.value = '';
+  const it = todoAdd(v, null, day ? { d: day } : null);
+  if (it && tdS.filter !== 'all' && tdS.filter !== 'mine' && !it.c) tdPut(it.id, { c: tdS.filter });   // typed while looking at one class: it is that class's
+  const again = document.querySelector('#tdWeek [data-tdwadd="' + day + '"] input'); if (again) again.focus();
+});
+$('#tdWeek').addEventListener('dragstart', e => { const w = e.target.closest && e.target.closest('.tdw[draggable]'); if (!w) return; tdS.drag = w.dataset.td; try { e.dataTransfer.setData('text/plain', tdS.drag); e.dataTransfer.effectAllowed = 'move'; } catch {} });
+$('#tdWeek').addEventListener('dragend', () => { tdS.drag = ''; for (const x of document.querySelectorAll('#tdWeek .tdday.over')) x.classList.remove('over'); });
+$('#tdWeek').addEventListener('dragover', e => { const c = tdS.drag && e.target.closest('.tdday'); if (!c) return; e.preventDefault(); for (const x of document.querySelectorAll('#tdWeek .tdday.over')) if (x !== c) x.classList.remove('over'); c.classList.add('over'); });
+$('#tdWeek').addEventListener('drop', e => {
+  const c = tdS.drag && e.target.closest('.tdday'); if (!c) return;
+  e.preventDefault();
+  const id = tdS.drag, day = c.dataset.tdday; tdS.drag = '';
+  todoMove(id, day);
+});
+function todoMove(id, day) {
+  if (!id.startsWith('auto:')) { if (tdItem(id)) tdPut(id, { d: day, ...(day ? {} : { rep: '' }) }); return; }
+  const r = todoAuto().find(x => x.id === id); if (!r) return;
+  if (!day || day < tdToday()) { toast('A line the app added needs a day, today or later. Hide it if you don’t want it.', 6000); tdPageRender(); return; }
+  tdAutoPut(r.key, { d: day });
+}
 $('#tdDoneBtn').onclick = () => { tdS.done = !tdS.done; tdPageRender(); };
 $('#tdSide').addEventListener('change', e => {
   const id = tdS.sel, t = e.target; if (!id) return;
@@ -378,4 +451,4 @@ document.addEventListener('keydown', e => {
   if ((t.closest && t.closest('input, textarea, select, [contenteditable]')) || $('#findDlg') || $('#askDlg') || !$('#dlg').hidden || !$('#welcome').hidden) return;
   e.preventDefault(); tdFocusAdd();
 });
-Object.assign(window.__gs, { todoRead, todoAdd, todoRows, todoCount, todoTick });
+Object.assign(window.__gs, { todoRead, todoAdd, todoRows, todoCount, todoTick, todoMove });

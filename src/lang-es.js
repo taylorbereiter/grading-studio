@@ -32,6 +32,7 @@ const LANG_ES = {
   words: {
     /* the to-do list: the sidebar, the card on Today, Find anything */
     'To do': 'Pendientes', 'To do: your own list, with what the app noticed from your work': 'Pendientes: tu propia lista, con lo que la aplicación ha visto en tu trabajo', 'Add a to-do': 'Añadir un pendiente', 'Add a to-do…': 'Añadir un pendiente…',
+    'To do, by week': 'Pendientes, por semana', 'Your list laid out on the days of the week, under the classes that meet': 'Tu lista repartida en los días de la semana, bajo las clases de cada día',
     'Open To do': 'Abrir Pendientes', 'Nothing on your list for today.': 'Nada en tu lista para hoy.', 'See everything': 'Ver todo', 'Done': 'Hecho', 'Tomorrow': 'Mañana', 'Note': 'Nota', 'Open it in To do': 'Abrirlo en Pendientes',
     'Every school day': 'Cada día de clase', 'Every week': 'Cada semana', 'Each time this class meets': 'Cada vez que hay esta clase',
     'Your own list, with what the app noticed from your work': 'Tu propia lista, con lo que la aplicación ha visto en tu trabajo', 'Type it the way you would say it': 'Escríbelo como lo dirías', 'Your own list, on the grading page': 'Tu propia lista, en la página de corrección',
@@ -232,6 +233,9 @@ const LANG_ES = {
         'Escribe un pendiente como lo dirías y pulsa Intro. Por ahora los días se leen en inglés: un día al final (“tomorrow”, “friday”, “nov 20”), el nombre de una clase o el de un estudiante se reconocen solos, y un clic en lo reconocido lo quita. Pulsa **N** en cualquier lugar fuera de un trabajo para añadir uno.',
         'Haz clic en una línea para darle un día, una clase, algo con lo que va, una repetición o una nota. Las líneas de la aplicación se van solas cuando el trabajo está hecho. Puedes mover una a otro día, ocultarla o desactivar todo un tipo.',
         '**Hoy** muestra una tarjeta corta con tus pendientes atrasados o de hoy. La lista se guarda con tu trabajo de corrección, nunca en la carpeta del Planificador.'] },
+    'todo-week': { q: '¿Puedo ver mis pendientes por semana?', go: 'Abrir la semana', words: 'pendientes semana semanal calendario días arrastrar mover',
+      a: ['Sí. En **Pendientes**, elige **Week** arriba a la derecha. Las mismas líneas aparecen en los días que les corresponden, cada una bajo la clase que se reúne ese día, con una columna Later para el resto.',
+        'Escribe en un día para añadir un pendiente para ese día y arrastra una línea a otro día. Lo que no se hace en su día pasa solo a hoy, e indica de qué día era.'] },
     'language': { q: '¿Puedo usar la aplicación en otro idioma?', go: 'Abrir Ajustes, Pantalla', words: 'español inglés chino idioma lengua traducir traducción',
       a: ['Sí: español o chino tradicional. Elígelo en Ajustes, Display, **Idioma de la aplicación**, o en lo alto de la bienvenida. La página se vuelve a dibujar en el idioma que elijas.',
         'Por ahora, un idioma distinto del inglés cubre la barra lateral, Hoy, la bienvenida, Buscar, la Ayuda y la página de comentarios que reciben los estudiantes con un trabajo devuelto. Las demás pantallas siguen en inglés.',
