@@ -592,6 +592,11 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
           <p class="muted" id="backupInfo" style="margin:0;font-size:13px"></p><input type="file" id="restoreIn" accept=".gswork,.zip,application/zip" hidden>
           <div id="safetyList" hidden></div>
         </section>
+        <section class="lib setsec" id="setYear" data-sec="saving">
+          <div class="lhead"><h2>School year</h2><span class="sp"></span><button class="btn sm" id="yearOpenBtn">Open an archived year…</button><button class="btn sm primary" id="yearBtn">Start a new year…</button></div>
+          <p class="muted setp">Starts a fresh year with the same classes, units, rubrics and quizzes and empty class lists. This year goes into one protected file first, and it is checked before anything is cleared.</p>
+          <p id="yearLine" style="margin:0;font-size:13px"></p><input type="file" id="yearIn" accept=".gswork" hidden>
+        </section>
         <section class="lib setsec" id="setRemove" data-sec="saving">
           <div class="lhead"><h2>Remove from this computer</h2><span class="sp"></span><button class="btn sm" id="removeBtn">Remove from this computer</button></div>
           <p class="muted setp">Clears student work from this browser when you are finished here. A linked folder and Planner work are not touched.</p>

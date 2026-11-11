@@ -324,6 +324,7 @@ async function openLessons() {
   renderLessons();
   arriveAt();
   await folderReconnect(false);
+  await yearMoveOn();
 }
 function renderLessons() {
   if (L.view === 'doc' && L.doc) return renderDoc();

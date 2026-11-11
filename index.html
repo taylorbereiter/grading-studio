@@ -722,6 +722,7 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
 .savewhere{flex:0 1 auto;min-width:0;max-width:48ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12.5px;color:var(--faint);text-decoration:none}
 .savewhere:hover{text-decoration:underline}
 .savewhere.warn,.wtext.warn{color:var(--warn);font-weight:600}
+.nyrow{display:flex;gap:12px}.nyrow .tkf{flex:1}.nyh{margin:16px 0 4px;font-size:var(--text-body)}.nyck{display:flex;gap:10px;align-items:flex-start;margin:8px 0;font-size:var(--text-body)}.nyck input{margin-top:3px}.nyck small{display:block;color:var(--muted);font-size:var(--text-small)}
 .tkf{display:block;margin:10px 0;font-size:var(--text-body)}.tkf input{display:block;width:100%;margin-top:4px;padding:8px 10px;border:1px solid var(--line);border-radius:var(--corner-3);background:var(--surface);color:var(--fg);font:inherit}
 .tkerr{color:var(--bad);font-size:var(--text-body);font-weight:600}
 .cfrow{border-top:1px solid var(--line);padding:10px 0}.cfrow h3{margin:0 0 6px;font-size:15px}
@@ -2531,6 +2532,11 @@ button.seat[data-n]:hover{border-color:var(--accent)}
           <p class="muted" id="backupInfo" style="margin:0;font-size:13px"></p><input type="file" id="restoreIn" accept=".gswork,.zip,application/zip" hidden>
           <div id="safetyList" hidden></div>
         </section>
+        <section class="lib setsec" id="setYear" data-sec="saving">
+          <div class="lhead"><h2>School year</h2><span class="sp"></span><button class="btn sm" id="yearOpenBtn">Open an archived year…</button><button class="btn sm primary" id="yearBtn">Start a new year…</button></div>
+          <p class="muted setp">Starts a fresh year with the same classes, units, rubrics and quizzes and empty class lists. This year goes into one protected file first, and it is checked before anything is cleared.</p>
+          <p id="yearLine" style="margin:0;font-size:13px"></p><input type="file" id="yearIn" accept=".gswork" hidden>
+        </section>
         <section class="lib setsec" id="setRemove" data-sec="saving">
           <div class="lhead"><h2>Remove from this computer</h2><span class="sp"></span><button class="btn sm" id="removeBtn">Remove from this computer</button></div>
           <p class="muted setp">Clears student work from this browser when you are finished here. A linked folder and Planner work are not touched.</p>
@@ -3967,6 +3973,7 @@ const LANG_ES = {
     'Open student work': 'Abrir trabajos de estudiantes', 'The ZIP or PDFs': 'El ZIP o los PDF', 'A ZIP, PDFs, Word files or photos': 'Un ZIP, PDF, archivos de Word o fotos',
     'Open a folder of papers': 'Abrir una carpeta de trabajos', 'Split a scan of everyone’s papers': 'Dividir un escaneo con los trabajos de todos', 'Match files to a roster': 'Emparejar archivos con una lista',
     'Its name and roster': 'Su nombre y su lista', 'Made-up students and papers': 'Estudiantes y trabajos inventados',
+    'Start a new school year': 'Empezar un nuevo curso escolar', 'Same classes, empty class lists; this year saved to a file': 'Las mismas clases, listas vacías; este curso guardado en un archivo', 'Open an archived year': 'Abrir un curso archivado', 'Bring back a year saved to a file': 'Recuperar un curso guardado en un archivo',
     'Take my work with me': 'Llevarme mi trabajo', 'A take-home file for another computer': 'Un archivo para llevar a otro ordenador', 'Bring work in': 'Traer trabajo', 'From a take-home file': 'Desde un archivo para llevar',
     'Remove from this computer': 'Quitar de este ordenador', 'Clears student work from this browser': 'Borra de este navegador los trabajos de los estudiantes',
     'Where my work is saved': 'Dónde se guarda mi trabajo', 'This browser, and a folder you choose': 'Este navegador y una carpeta que tú eliges',
@@ -4172,6 +4179,10 @@ const LANG_ES = {
     'other-computer': { q: '¿Cómo llevo mi trabajo a otro ordenador?', go: 'Abrir Ajustes, Guardado', words: 'casa portátil transferir llevar sincronizar segundo ordenador usb',
       a: ['1. En Ajustes, **Saving and carrying**, pulsa **Take my work with me**. Crea un archivo protegido con una frase de contraseña que tú eliges.', '2. Lleva el archivo al otro ordenador.', '3. Allí, pulsa **Bring work in**. Muestra lo que va a cambiar antes de cambiar nada.',
         'El viaje de vuelta funciona igual. Si el mismo estudiante cambió en los dos sitios, ves las dos versiones y eliges.'] },
+    'new-year': { q: '¿Cómo empiezo un nuevo curso escolar?', go: 'Abrir Ajustes, Guardado', words: 'nuevo curso año escolar archivar empezar de cero septiembre lista vacía',
+      a: ['1. En Ajustes, **Saving and carrying**, pulsa **Start a new year**.', '2. Revisa los nombres de los dos cursos y lo que se conserva, elige una frase de contraseña y pulsa **Save the file and start the new year**. Este curso se guarda en un archivo protegido, y el archivo se vuelve a leer y se comprueba antes de borrar nada.',
+        'Tus clases, unidades y tarjetas de tareas se quedan, cada tarjeta con su rúbrica y sus casillas de Quick mark, y las fechas avanzan un año. Las listas de clase, los trabajos, las notas y los comentarios salen de este navegador y quedan en el archivo. El Planner avanza sus unidades un año la próxima vez que lo abras.',
+        'Para volver a ver un curso anterior, pulsa **Open an archived year** y elige su archivo. El curso en el que estás se guarda antes en su propio archivo, así que puedes volver.'] },
     'go-back': { q: 'Me equivoqué. ¿Puedo volver a como estaba todo?', go: 'Abrir Volver atrás en el tiempo', words: 'deshacer restaurar historial perdido borrado recuperar copia',
       a: ['Deshacer (Ctrl Z, o ⌘Z) retrocede por las marcas de la página.', 'Para algo mayor, en Ajustes, **Go back in time** muestra tu trabajo tal como estaba en días anteriores. **Look** compara entonces y ahora. **Restore this assignment** devuelve una tarea a ese día y deja el resto como está.'] },
     'offline': { q: '¿Funciona sin internet?', go: 'Abrir Acerca de y actualizaciones', words: 'sin conexión wifi instalar aplicación avión',
@@ -4318,6 +4329,7 @@ const LANG_ZH = {
     'Open student work': '開啟學生作業', 'The ZIP or PDFs': 'ZIP 或 PDF 檔', 'A ZIP, PDFs, Word files or photos': 'ZIP、PDF、Word 檔或照片',
     'Open a folder of papers': '開啟作業資料夾', 'Split a scan of everyone’s papers': '分割全班作業的掃描檔', 'Match files to a roster': '將檔案與名單配對',
     'Its name and roster': '名稱與名單', 'Made-up students and papers': '虛構的學生與作業',
+    'Start a new school year': '開始新的學年', 'Same classes, empty class lists; this year saved to a file': '同樣的班級、空白名單；這一學年存成檔案', 'Open an archived year': '開啟封存的學年', 'Bring back a year saved to a file': '找回存成檔案的學年',
     'Take my work with me': '帶走我的工作成果', 'A take-home file for another computer': '給另一台電腦用的攜帶檔', 'Bring work in': '帶入工作成果', 'From a take-home file': '從攜帶檔',
     'Remove from this computer': '從這台電腦移除', 'Clears student work from this browser': '清除這個瀏覽器裡的學生作業',
     'Where my work is saved': '我的工作成果存在哪裡', 'This browser, and a folder you choose': '這個瀏覽器，以及你選擇的資料夾',
@@ -4523,6 +4535,10 @@ const LANG_ZH = {
     'other-computer': { q: '怎麼把工作成果帶到另一台電腦？', go: '開啟設定、儲存', words: '家裡 筆電 轉移 帶走 同步 第二台電腦 usb',
       a: ['1. 在設定的 **Saving and carrying** 按 **Take my work with me**。它會建立一個用你自訂的密語保護的檔案。', '2. 把檔案帶到另一台電腦。', '3. 在那裡按 **Bring work in**。它會在更改任何東西之前，先顯示將會改變的內容。',
         '帶回來的方式也一樣。如果同一位學生在兩邊都有更改，你會看到兩個版本，再由你選擇。'] },
+    'new-year': { q: '怎麼開始新的學年？', go: '開啟設定、儲存', words: '新學年 下學年 封存 重新開始 九月 名單 清空',
+      a: ['1. 在設定的 **Saving and carrying** 按 **Start a new year**。', '2. 確認兩個學年的名稱和要帶過去的內容，選一個密語，再按 **Save the file and start the new year**。這一學年會存成一個受保護的檔案，而且在清除任何東西之前，會先把檔案讀回來檢查。',
+        '你的班級、單元和作業卡片都會保留，每張卡片連同它的評分規準和 Quick mark 框，日期也會往後移一年。班級名單、作業、分數和評語會離開這個瀏覽器，存在檔案裡。下次打開 Planner 時，它會把單元往後移一年。',
+        '想再看以前的學年，按 **Open an archived year** 並選擇它的檔案。你目前的學年會先存成自己的檔案，所以可以再換回來。'] },
     'go-back': { q: '我弄錯了，可以回到之前的狀態嗎？', go: '開啟回到先前的狀態', words: '復原 還原 紀錄 遺失 刪除 救回 備份 undo',
       a: ['復原（Ctrl Z 或 ⌘Z）會一步步退回頁面上的批註。', '更大的問題，可以在設定的 **Go back in time** 查看你的工作成果在前幾天的樣子。**Look** 會比較當時和現在。**Restore this assignment** 會把一份作業回復到那一天，其他的保持不變。'] },
     'offline': { q: '沒有網路也能用嗎？', go: '開啟關於與更新', words: '離線 wifi 安裝 應用程式 飛機 offline',
@@ -4786,6 +4802,11 @@ const HELP = [
     a: ['1. In Settings, **Saving and carrying**, press **Take my work with me**. It makes one file protected by a passphrase you choose.', '2. Carry the file to the other computer.', '3. There, press **Bring work in**. It shows what will change before anything does.',
       'The trip back works the same way. If the same student changed in both places, you see both versions and choose.'],
     go: ['Open Settings, Saving', '#/settings'], words: 'home laptop transfer take-home sync second computer usb' },
+  { id: 'new-year', sec: 'safe', q: 'How do I start a new school year?',
+    a: ['1. In Settings, **Saving and carrying**, press **Start a new year**.', '2. Check the two years’ names and what carries over, choose a passphrase and press **Save the file and start the new year**. This year goes into one protected file, and the file is read back and checked before anything is cleared.',
+      'Your classes, units and assignment cards stay, each card with its rubric and Quick mark boxes, and dates move on a year. Class lists, papers, scores and comments leave this browser for the file. The Planner moves its units on a year the next time you open it.',
+      'To look at an old year again, press **Open an archived year** and choose its file. The year you are in is saved to its own file first, so you can switch back.'],
+    go: ['Open Settings, Saving', '#/settings'], words: 'new year next year school year archive rollover reset fresh start august september roster empty' },
   { id: 'go-back', sec: 'safe', q: 'I made a mistake. Can I go back to how things were?',
     a: ['Undo (Ctrl Z, or ⌘Z) steps back through marks on the paper.', 'For anything bigger, Settings, **Go back in time** lists your work as it was on earlier days. **Look** compares then and now. **Restore this assignment** takes one assignment back and leaves the rest alone.'],
     go: ['Open Go back in time', '#/settings/history'], words: 'undo restore history lost deleted recover snapshot' },
@@ -5257,6 +5278,7 @@ async function intake(entries, label, assignment, fromKeep) {   // entries: [{ p
   if (earlier) carryRoster(earlier);
   if (batch.restoredKey) { const k = batch.students.findIndex(st => st.key === batch.restoredKey); if (k >= 0) batch.restoredCur = k; }
   renderClassSel();
+  if (assignment && assignment.quiz && !batch.quiz && !assignment.batchId) { batch.quiz = JSON.parse(JSON.stringify(assignment.quiz)); setTimeout(saveSoon, 0); }   // a card from last year starts with its Quick mark boxes
   if (assignment) { assignment.batchId = id; assignment.opened = Date.now(); if (!assignment.setup || rub.toCard) assignment.setup = { ...setup, spot: undefined }; shareRubric(assignment); saveLib(); }
   keepWait = keepPapers(batch, label, fromKeep ? null : keepList, sameSize.length > 0);
   cur = 0; undoStack = []; selected = null;
@@ -9307,7 +9329,7 @@ const routeOf = hash => {
   return { v: 'home' };
 };
 const routeNow = () => routeOf(location.hash);
-const SET_SECS = [['saving', 'Saving and carrying', 'Folder, take-home file, safety copies'], ['history', 'Go back in time', 'Your work as it was on an earlier day'], ['classes', 'Classes and rosters', 'Names, students, ' + (sysName() ? sysName() + ' links' : 'class links')], ['terms', 'Terms and weights', 'Your terms and how each type counts'],
+const SET_SECS = [['saving', 'Saving and carrying', 'Folder, take-home file, new school year'], ['history', 'Go back in time', 'Your work as it was on an earlier day'], ['classes', 'Classes and rosters', 'Names, students, ' + (sysName() ? sysName() + ' links' : 'class links')], ['terms', 'Terms and weights', 'Your terms and how each type counts'],
   ['grading', 'Grading scale and rubrics', 'Your saved scales and rubrics'], ['marking', 'Marking', 'Mark key, Word papers, tablet and pencil'], ['timetable', 'Timetable and calendar', 'Class times and days off, in the Planner'],
   ['display', 'Display', 'Text size, zoom, dark mode'], ['claude', 'Working with Claude', 'Optional. What Claude can and can’t see'], ['keys', 'Keys', 'Every shortcut'], ['about', 'About and updates', 'Version, what’s new, install as an app']];
 const CLASS_TABS = [['', 'Assignments'], ['gradebook', 'Gradebook'], ['students', 'Students'], ['attendance', 'Attendance'], ['seating', 'Seating'], ['missing', 'Missing work'], ['charts', 'Charts'], ['goals', 'Goals'], ['reports', 'Report comments']];   // Goals shows only once the teacher has a learning goal (goals.js)
@@ -11908,6 +11930,7 @@ const keptFirst = loadKept();   // the address of an open assignment waits for t
 function renderBackup() {
   const el = $('#backupInfo'); if (!el) return;
   const t = store.get('gs.lastBackup', 0);
+  yearRender();
   el.textContent = t ? 'Last take-home file: ' + new Date(t).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : 'No take-home file made from this link yet.';
   const due = keptMeta.size > 0 && Date.now() - t > 7 * 864e5 && fld.state === 'none';
   el.classList.toggle('due', due);
@@ -18151,7 +18174,7 @@ const takeNonce = (np, i, flag) => { const n = new Uint8Array(12); n.set(np); ne
 const CHECK_I = 0xffffffff;
 
 /* writing */
-async function takeWrite(sink, pass, onp, stop) {
+async function takeWrite(sink, pass, onp, stop, more) {
   const salt = crypto.getRandomValues(new Uint8Array(16)), np = crypto.getRandomValues(new Uint8Array(7));
   const hdr = te.encode(JSON.stringify({ v: 1, kdf: { name: 'PBKDF2', hash: 'SHA-256', iter: TAKE_ITER, salt: b64(salt) }, cipher: 'AES-256-GCM', chunk: TAKE_CHUNK, np: b64(np) }));
   const head = new Uint8Array(TAKE_MAGIC.length + 4 + hdr.length);
@@ -18181,7 +18204,7 @@ async function takeWrite(sink, pass, onp, stop) {
   await keepWait;   // a big download may still be going in
   const A = await localState();
   const metas = Object.keys(A.meta), ids = [...new Set([...metas, ...Object.keys(A.work)])];
-  await frame({ k: 'info', app: 'Grading Studio', kind: 'take-home', t: Date.now(), from: location.host || 'an offline copy', ver: gsData.APP_VERSION, dataV: gsData.version(), downloads: ids.length });
+  await frame({ k: 'info', app: 'Grading Studio', kind: 'take-home', t: Date.now(), from: location.host || 'an offline copy', ver: gsData.APP_VERSION, dataV: gsData.version(), downloads: ids.length, ...((more && more.info) || {}) });
   await frame({ k: 'ls', ls: carryLs() });
   await frame({ k: 'tomb', tomb: A.tomb });
   for (const id of ids) await frame({ k: 'dl', id, work: A.work[id] || null, meta: A.meta[id] || null });
@@ -18195,6 +18218,7 @@ async function takeWrite(sink, pass, onp, stop) {
     both.set(rec.data); both.set(orig, rec.data.length);
     await frame({ k: 'edit', id: k.slice(0, i), path: k.slice(i + 1), t: rec.t || 1, nd: rec.data.length, hasOrig: !!rec.orig }, both);
   });
+  if (more && more.extra) await more.extra(frame);
   await frame({ k: 'end' });
   await seal(true);
   await sink.close();
@@ -18267,6 +18291,7 @@ async function takeScan(rd, onp) {
       else if (f.k === 'paper') { const p = B.papers[f.id] ||= { label: f.label, entries: [], size: 0 }; p.entries.push({ path: f.path, off: pos, n, none: f.none }); p.size += n; }
       else if (f.k === 'added') { (B.addedAt[f.id] ||= {})[f.lk] = { rec: f.rec, off: pos, n }; (B.added[f.id] ||= {})[f.lk] = f.rec.added || 0; }
       else if (f.k === 'edit') { (B.editAt[f.id] ||= {})[f.path] = { t: f.t, off: pos, n, nd: f.nd, hasOrig: f.hasOrig }; (B.edits[f.id] ||= {})[f.path] = f.t; }
+      else if (f.k === 'plan') (B.plan ||= []).push({ f, off: pos, n });   // the Planner's records, in a year's archive
       else if (f.k === 'end') ended = true;
       await skipTo(pos + n);
       pos += n;
@@ -23034,6 +23059,337 @@ if (updCan()) {
 }
 Object.assign(window.__gs, { safeAskShown, gbLoad, gbLook, gbPut, gbState: () => gbk, updState: () => upd });
 
+/* ---------------- a new school year: this year to one protected file, then the same classes with empty class lists ---------------- */
+const NY_EXT = TAKE_EXT;
+const nyClone = o => JSON.parse(JSON.stringify(o));
+function nyPad(n) { return String(n).padStart(2, '0'); }
+function nyLabel(y) { return y + '–' + nyPad((y + 1) % 100); }   // function declarations: Settings draws the year before this file has run
+function nyGuess() {
+  if (lib.year && typeof lib.year === 'string') return lib.year;
+  const starts = ((lib.book && lib.book.terms) || []).map(t => t.start).filter(s => /^\d{4}-\d\d-\d\d$/.test(s || '')).sort();
+  const d = starts.length ? new Date(starts[0] + 'T12:00:00') : new Date();
+  return nyLabel(d.getMonth() >= 6 ? d.getFullYear() : d.getFullYear() - 1);
+}
+function nyNext(name) {
+  const m = /^(\d{4})\s*[–-]\s*(\d{2}|\d{4})$/.exec(String(name).trim());
+  if (m) return nyLabel(+m[1] + 1);
+  const y = /^(\d{4})$/.exec(String(name).trim()); return y ? String(+y[1] + 1) : '';
+}
+function nyDay(s) {
+  const m = /^(\d{4})-(\d\d)-(\d\d)$/.exec(s || ''); if (!m) return s;
+  const y = +m[1] + 1, d = m[2] === '02' && m[3] === '29' ? '28' : m[3];
+  return y + '-' + m[2] + '-' + d;
+}
+const nySafeName = s => String(s || '').replace(/[\\/:*?"<>|]+/g, '-').trim();
+const nyFileName = year => 'Grading Studio ' + (nySafeName(year) || 'year') + NY_EXT;
+
+/* what is about a student */
+function nyNames(l) {
+  const s = new Set();
+  for (const c of (l && l.classes) || []) {
+    for (const n of c.names || []) if (n) s.add(n);
+    for (const [n, i] of Object.entries(c.info || {})) { s.add(n); for (const o of (i && i.other) || []) if (o) s.add(o); }
+  }
+  return s;
+}
+function nyAbout(v, names, depth = 0) {
+  if (v == null || depth > 20 || !names.size) return false;
+  if (typeof v === 'string') return names.has(v.trim());
+  if (typeof v !== 'object') return false;
+  if (Array.isArray(v)) return v.some(x => nyAbout(x, names, depth + 1));
+  for (const [k, x] of Object.entries(v)) if (names.has(k) || nyAbout(x, names, depth + 1)) return true;
+  return false;
+}
+const nyStrip = (o, names, keep) => { for (const k of Object.keys(o)) if (!keep.includes(k) && nyAbout(o[k], names)) delete o[k]; return o; };
+
+/* the new year's library */
+function nyLib(old, works, o) {
+  const L = nyClone(old), names = nyNames(old);
+  L.classes ||= []; L.loose ||= { id: '', units: [] };
+  const card = it => {
+    const w = it.batchId ? works[it.batchId] : null, n = { ...it };
+    delete n.batchId; delete n.opened;
+    if (n.typed && typeof n.typed === 'object') n.typed = { max: n.typed.max == null ? null : n.typed.max, s: {} };
+    if (!n.setup && w && w.setup) { n.setup = { ...w.setup }; delete n.setup.spot; delete n.setup.rubricPage; }
+    if (!n.quiz && w && w.quiz && Array.isArray(w.quiz.qs) && w.quiz.qs.length) { const q = nyClone(w.quiz); delete q.shift; delete q.spot; n.quiz = q; }
+    if (o.dates && n.due) n.due = nyDay(n.due);
+    return nyStrip(n, names, ['id', 'name', 'setup', 'quiz', 'typed', 'classId']);
+  };
+  for (const c of L.classes) {
+    if (!o.roster) { c.names = []; delete c.info; }
+    nyStrip(c, names, ['id', 'name', 'units', ...(o.roster ? ['names', 'info'] : [])]);
+  }
+  for (const h of L.classes.concat([L.loose])) for (const u of h.units || []) { nyStrip(u, names, ['id', 'name', 'items']); u.items = (u.items || []).map(card); }
+  if (L.book && typeof L.book === 'object') {
+    delete L.book.dl;   // type and date of downloads with no card: those downloads are in the file now
+    if (o.dates) L.book.terms = (L.book.terms || []).map(t => ({ ...t, start: nyDay(t.start), end: nyDay(t.end) }));
+    nyStrip(L.book, names, ['terms']);
+  }
+  nyStrip(L, names, ['classes', 'loose', 'me', 'book', 'gone', 'years']);
+  L.year = o.to;
+  L.years = [...(Array.isArray(old.years) ? old.years : []), { name: o.from, at: Date.now(), file: o.file }];
+  return L;
+}
+
+/* the Planner's records, for the file */
+async function nyPlanFrames(frame) {
+  const db = await planDb(false); if (!db) return 0;
+  let n = 0;
+  try {
+    for (const name of ['lessons', 'kv']) {
+      if (!db.objectStoreNames.contains(name)) continue;
+      let last, first = true;
+      for (;;) {   // one record at a time: a Planner can hold big PDFs
+        const got = await new Promise((res, rej) => {
+          const q = db.transaction(name).objectStore(name).openCursor(first ? undefined : IDBKeyRange.lowerBound(last, true));
+          q.onsuccess = () => res(q.result ? { k: q.result.key, v: q.result.value } : null); q.onerror = () => rej(q.error);
+        });
+        if (!got) break;
+        last = got.k; first = false;
+        const v = got.v;
+        if (typeof FileSystemHandle !== 'undefined' && v instanceof FileSystemHandle) continue;   // the Planner folder's link belongs to this computer
+        if (v instanceof Blob) { await frame({ k: 'plan', s: name, key: got.k, blob: v.type || '', fname: v.name || '' }, new Uint8Array(await v.arrayBuffer())); n++; continue; }
+        let j; try { j = JSON.parse(JSON.stringify(v === undefined ? null : v)); } catch { continue; }
+        await frame({ k: 'plan', s: name, key: got.k, v: j }); n++;
+      }
+    }
+  } finally { db.close(); }
+  return n;
+}
+const nyHasPlanner = async () => { const db = await planDb(false); if (!db) return false; try { const q = db.transaction('lessons').objectStore('lessons').count(); return (await idbP(q)) > 0 || (await idbP(db.transaction('kv').objectStore('kv').count())) > 0; } catch { return false; } finally { db.close(); } };
+
+/* writing the file, and reading it back */
+async function nySink(name) {
+  try {
+    const fh = takeSinkFor || (window.showSaveFilePicker ? await window.showSaveFilePicker({ suggestedName: name, types: [{ description: 'Grading Studio year', accept: { 'application/octet-stream': [NY_EXT] } }] }) : null);
+    if (fh) { const w = await fh.createWritable(); return { name: fh.name, write: b => w.write(b), close: () => w.close(), abort: () => w.abort(), file: () => fh.getFile(), save: async () => {} }; }
+  } catch (e) { if (e && e.name === 'AbortError') throw e; console.error(e); }
+  const parts = []; let blob = null;
+  return { name, write: async b => { parts.push(new Blob([b])); }, close: async () => { blob = new Blob(parts, { type: 'application/octet-stream' }); }, abort: async () => {}, file: async () => blob, save: () => saveBlob(name, blob) };
+}
+async function nyExpect() {
+  const A = await localState();
+  return { ids: [...new Set([...Object.keys(A.meta), ...Object.keys(A.work)])].sort(), papers: [...keptMeta.entries()].filter(([, m]) => m && m.papers).map(([id]) => id), lib: localStorage.getItem('gs.lib') || '' };
+}
+async function nyCheck(file, pass, want, onp) {
+  const rd = await takeOpen(file, pass), B = await takeScan(rd, onp);
+  const ids = [...new Set([...Object.keys(B.meta), ...Object.keys(B.work)])].sort();
+  const ok = JSON.stringify(ids) === JSON.stringify(want.ids) && want.papers.every(id => B.papers[id]) && (B.ls['gs.lib'] || '') === want.lib && (B.plan || []).length === want.plan;
+  return ok ? { rd, B } : null;
+}
+async function nyArchive(year, pass, say) {
+  await keepWait;
+  if (batch) { commitEditors(); await saveNow(); }
+  const sink = await nySink(nyFileName(year));
+  const want = await nyExpect();
+  let total = 0; for (const m of keptMeta.values()) total += m.size || 0;
+  say('Saving ' + year + ' to a file…', 0, total);
+  try {
+    const size = await takeWrite(sink, pass, n => say('Saving ' + year + ' to a file… ' + fmtSize(n) + (total ? ' of about ' + fmtSize(total) : ''), n, total), null,
+      { info: { kind: 'year', year }, extra: async frame => { want.plan = await nyPlanFrames(frame); } });
+    const file = await sink.file();
+    say('Checking the file…', 0, file.size);
+    const got = await nyCheck(file, pass, want, n => say('Checking the file… ' + fmtSize(Math.min(n, file.size)) + ' of ' + fmtSize(file.size), n, file.size));
+    if (!got) throw Object.assign(new Error('The file did not match'), { check: true });
+    await sink.save();
+    store.set('gs.lastBackup', Date.now());
+    return { name: sink.name, size };
+  } catch (e) { try { await sink.abort(); } catch {} throw e; }
+}
+
+/* the new year */
+async function nyStart(o) {
+  const A = await localState(), ids = [...new Set([...Object.keys(A.meta), ...Object.keys(A.work), ...keptMeta.keys()])];
+  const next = nyLib(lib, A.work, o), names = nyNames(lib);
+  batch = null;
+  try { await gsData.snapshot('Before starting ' + o.to, gsData.version()); } catch (e) { console.error(e); }
+  if (fld.state === 'ok' || fld.state === 'decide') { try { await folderSnapshot('Before starting ' + o.to); } catch (e) { console.error(e); } }
+  for (const id of ids) await forgetKept(id);
+  const left = [...keptMeta.keys()];
+  if (left.length) throw new Error(left.length + ' downloads could not be cleared');
+  for (const [k, v] of Object.entries(carryLs())) {
+    if (k === 'gs.lib') continue;
+    let x; try { x = JSON.parse(v); } catch { continue; }
+    if (nyAbout(x, names)) localStorage.removeItem(k);
+  }
+  lib = migrateLib(next); saveLib();
+  if (o.planner) try { localStorage.setItem('gsp.newYear', JSON.stringify({ id: Date.now().toString(36), from: o.from, dates: !!o.dates })); } catch {}
+  renderLib(); railRender(); renderNeeds();
+}
+
+/* the box */
+function nyBox(body, foot) {
+  openDlg('<div class="bh"><h2>Start a new school year</h2><button class="icon" data-close aria-label="Close">✕</button></div><div class="bb" id="nyBox">' + body + '</div><div class="bf">' + foot + '</div>', true);
+  return $('#dlgBox');
+}
+async function openNewYear() {
+  if (batch) { commitEditors(); await saveNow(); }
+  const from = nyGuess(), to = nyNext(from), planner = await nyHasPlanner();
+  const nDl = keptMeta.size, nCls = lib.classes.length;
+  const box = nyBox(
+    '<p style="margin-top:0">Your classes carry on into a fresh year with empty class lists. First, everything from this year goes into one protected file, and the file is checked before anything here is cleared.</p>' +
+    '<div class="nyrow"><label class="tkf">The year you are closing<input id="nyFrom" autocomplete="off" value="' + esc(from) + '"></label><label class="tkf">The new year<input id="nyTo" autocomplete="off" value="' + esc(to) + '"></label></div>' +
+    '<h3 class="nyh">What carries over</h3>' +
+    '<label class="nyck"><input type="checkbox" checked disabled> <span><b>' + nCls + (nCls === 1 ? ' class' : ' classes') + ', with their units and assignment cards</b><small>Each card keeps its rubric and its Quick mark boxes. No papers, scores or comments.</small></span></label>' +
+    '<label class="nyck"><input type="checkbox" id="nyDates" checked> <span><b>Due dates and term dates, a year later</b><small>Change any of them afterwards in Term setup or on the card.</small></span></label>' +
+    (planner ? '<label class="nyck"><input type="checkbox" id="nyPlan" checked> <span><b>Planner units and the semester, a year later</b><small>This year’s lessons move to Past lessons, under “' + '<span id="nyFromSay">' + esc(from) + '</span>' + '”, ready to reuse.</small></span></label>' : '') +
+    '<label class="nyck"><input type="checkbox" id="nyRoster"> <span><b>Class lists</b><small>Only for classes that keep the same students. Left empty otherwise.</small></span></label>' +
+    '<p class="muted" style="font-size:14px;margin:10px 0 0">Your settings, grading scale, saved rubrics and comment bank stay as they are. ' + (nDl ? nDl + (nDl === 1 ? ' set of papers goes' : ' sets of papers go') + ' into the file and leave this browser.' : '') + '</p>' +
+    '<h3 class="nyh">Protect the file</h3>' +
+    '<p class="muted" style="font-size:14px;margin:0 0 8px">Choose a passphrase of a few words. Nobody can open the file without it, you included, so write it down somewhere safe.</p>' +
+    passFields() + '<label class="tkf">Again, to be sure<input type="password" id="takeP2" autocomplete="off"></label><p class="tkerr" id="takeErr" role="alert" hidden></p>',
+    '<button class="btn" data-close>Cancel</button><button class="btn primary" id="nyGo">Save the file and start the new year</button>');
+  box.oninput = e => { if (e.target.id === 'nyFrom') { const s = $('#nyFromSay'); if (s) s.textContent = e.target.value.trim(); } };
+  box.onkeydown = e => { if (e.key === 'Enter' && /^takeP[12]$/.test(e.target.id)) { e.preventDefault(); $('#nyGo').click(); } };
+  box.onclick = async e => {
+    if (e.target.closest('[data-close]')) return closeDlg();
+    if (!e.target.closest('#nyGo')) return;
+    const err = t => { const el = $('#takeErr'); el.textContent = t; el.hidden = false; };
+    const o = { from: $('#nyFrom').value.trim(), to: $('#nyTo').value.trim(), dates: $('#nyDates').checked, planner: !!($('#nyPlan') && $('#nyPlan').checked), roster: $('#nyRoster').checked };
+    const p1 = $('#takeP1').value, p2 = $('#takeP2').value;
+    if (!o.from || !o.to) return err('Give both years a name, like 2025–26 and 2026–27.');
+    if (o.from === o.to) return err('The new year needs a different name from the one you are closing.');
+    if (p1.length < 8) return err('Please use at least 8 characters for the passphrase. A few ordinary words work well.');
+    if (p1 !== p2) return err('Those two passphrases don’t match.');
+    nyRun(o, p1);
+  };
+  $('#nyTo').focus();
+}
+function nyProgress(box) {
+  box.querySelector('.bb').innerHTML = '<p style="margin-top:0" id="takeMsg">Getting ready…</p><progress id="takeBar" style="width:100%"></progress>';
+  box.querySelector('.bf').innerHTML = '';
+  return (t, n, of) => { const m = $('#takeMsg'), b = $('#takeBar'); if (m) m.textContent = t; if (b && of) { b.max = of; b.value = Math.min(n, of); } };
+}
+function nyEnd(title, html, btn) {
+  openDlg('<div class="bh"><h2>' + title + '</h2></div><div class="bb"><div id="nyDone">' + html + '</div></div><div class="bf"><button class="btn primary" data-close>' + (btn || 'Done') + '</button></div>', true);
+  $('#dlgBox').onclick = e => { if (e.target.closest('[data-close]')) closeDlg(); };
+}
+const nyFailSay = er => er && er.check ? 'The file didn’t read back the same as your work here, so it can’t be trusted. Nothing here was cleared. Please try again, somewhere with more room.'
+  : 'The file didn’t finish, so nothing here was cleared. ' + (er && er.name === 'QuotaExceededError' ? 'There isn’t enough room on that disk. ' : '') + 'Please try again, somewhere with more room.';
+async function nyRun(o, pass) {
+  const say = nyProgress($('#dlgBox'));
+  o.file = nyFileName(o.from);
+  let made;
+  try { made = await nyArchive(o.from, pass, say); o.file = made.name; }
+  catch (er) {
+    if (er && er.name === 'AbortError') return closeDlg();
+    console.error(er);
+    return nyEnd('Start a new school year', '<p style="margin-top:0">' + nyFailSay(er) + '</p>', 'Close');
+  }
+  say('Starting ' + o.to + '…');
+  try { await tabsFinish(); tabsOver('go'); await nyStart(o); }
+  catch (er) {
+    console.error(er);
+    tabsOver('done');
+    return nyEnd('Start a new school year', '<p style="margin-top:0">The new year didn’t finish setting up. Everything from ' + esc(o.from) + ' is safe in <b>' + esc(made.name) + '</b>, and a safety copy was made first: Put back is under Go back in time if anything looks wrong.</p>', 'Close');
+  }
+  tabsOver('done');
+  if (routeNow().v !== 'home' && routeNow().v !== 'settings') go('#/', true);
+  yearRender();
+  nyEnd(esc(o.to) + ' has started',
+    '<p style="margin-top:0">Your classes, units and assignment cards are ready' + (o.roster ? '' : ', with empty class lists. Paste each class’s students on its <b>Students</b> tab') + '.' + (o.planner ? ' The Planner moves to the new year the next time you open it.' : '') + '</p>' +
+    '<p>Everything from ' + esc(o.from) + ' is in <b>' + esc(made.name) + '</b> (' + fmtSize(made.size) + '), checked. Keep it somewhere safe with its passphrase. <b>Open an archived year</b> in Settings brings it back.</p>');
+}
+
+/* opening an archived year */
+async function openArchivedYear(file) {
+  const ask = msg => {
+    openDlg('<div class="bh"><h2>Open an archived year</h2><button class="icon" data-close aria-label="Close">✕</button></div><div class="bb" id="takeBox"><p style="margin-top:0">Type the passphrase for <b>' + esc(file.name) + '</b>. The whole file is checked before anything here changes.</p>' + passFields() + '<p class="tkerr" id="takeErr" role="alert"' + (msg ? '' : ' hidden') + '>' + esc(msg || '') + '</p></div><div class="bf"><button class="btn" data-close>Cancel</button><button class="btn primary" id="takeGo">Open it</button></div>', true);
+    const box = $('#dlgBox');
+    const go1 = async () => {
+      const pass = $('#takeP1').value, say = nyProgress(box);
+      let B, rd;
+      try {
+        rd = await takeOpen(file, pass);
+        say('Checking the file…', 0, rd.plainLen);
+        B = await takeScan(rd, n => say('Checking the file… ' + fmtSize(Math.min(n, rd.plainLen)) + ' of ' + fmtSize(rd.plainLen), n, rd.plainLen));
+        if (B.info.dataV > gsData.DATA_V) throw new TakeError('newer');
+      } catch (e) {
+        if (!(e instanceof TakeError)) console.error(e);
+        const code = e instanceof TakeError ? e.code : 'damaged';
+        if (code === 'pass') return ask(TAKE_SAY.pass);
+        closeDlg(); return sayDlg(TAKE_SAY[code] || TAKE_SAY.damaged);
+      }
+      nyConfirm(B, rd, pass, file.name);
+    };
+    box.onclick = e => { if (e.target.closest('[data-close]')) return closeDlg(); if (e.target.closest('#takeGo')) go1(); };
+    box.onkeydown = e => { if (e.key === 'Enter' && e.target.id === 'takeP1') { e.preventDefault(); go1(); } };
+    $('#takeP1').focus();
+  };
+  ask();
+}
+function nyConfirm(B, rd, pass, fname) {
+  const old = B.info.year || 'the year in ' + fname, now = nyGuess(), n = Object.keys(B.meta).length || B.info.downloads || 0, linked = fld.state !== 'none';
+  openDlg('<div class="bh"><h2>Open ' + esc(old) + '</h2><button class="icon" data-close aria-label="Close">✕</button></div><div class="bb" id="nyBox">' +
+    '<p style="margin-top:0">The file holds ' + n + (n === 1 ? ' set of papers' : ' sets of papers') + ', with its classes, class lists, marks and scores, made ' + esc(whenOf(B.info.t)) + '.</p>' +
+    '<p>Opening it puts that year in place of what is here now. First, <b>' + esc(now) + '</b> is saved to its own file with the same passphrase, and checked, so you can switch back the same way.</p>' +
+    '<p class="muted" style="font-size:14px">The Planner is not changed: last year’s lessons are already in Past lessons.' + (linked ? ' This browser stops saving to the folder “' + esc(fld.name) + '”, which keeps the current year. Choose a different folder for the old year if you want one.' : '') + '</p></div>' +
+    '<div class="bf"><button class="btn" data-close>Cancel</button><button class="btn primary" id="nyOpenGo">Save ' + esc(now) + ' and open ' + esc(old) + '</button></div>', true);
+  $('#dlgBox').onclick = async e => {
+    if (e.target.closest('[data-close]')) return closeDlg();
+    if (!e.target.closest('#nyOpenGo')) return;
+    const say = nyProgress($('#dlgBox'));
+    let made;
+    try { made = await nyArchive(now, pass, say); }
+    catch (er) {
+      if (er && er.name === 'AbortError') return closeDlg();
+      console.error(er);
+      return nyEnd('Open ' + esc(old), '<p style="margin-top:0">' + nyFailSay(er).replace('cleared', 'changed') + '</p>', 'Close');
+    }
+    say('Opening ' + old + '…');
+    try { await nyReplace(B, rd, { name: now, at: Date.now(), file: made.name }); }
+    catch (er) {
+      console.error(er);
+      tabsOver('done');
+      return nyEnd('Open ' + esc(old), '<p style="margin-top:0">That didn’t finish. ' + esc(now) + ' is safe in <b>' + esc(made.name) + '</b>, and a safety copy was made first: Put back is under Go back in time. Reload before doing anything else.</p>', 'Close');
+    }
+    tabsOver('done');
+    toast(old + ' is open. Reloading…');
+    setTimeout(reloadHome, 900);
+  };
+}
+async function nyReplace(B, rd, was) {
+  await keepWait;
+  await tabsFinish(); tabsOver('go');
+  batch = null; clearTimeout(saveT); saveBad.clear();
+  try { await gsData.snapshot('Before opening ' + (B.info.year || 'an archived year'), gsData.version()); } catch (e) { console.error(e); }
+  if (fld.state !== 'none') await folderUnlink();
+  const years = Array.isArray(lib.years) ? lib.years : [];
+  for (const n of ['papers', 'work', 'meta', 'edits']) await kdo(n, 'readwrite', o => o.clear());
+  await idbDo('readwrite', o => o.clear());
+  for (let i = localStorage.length - 1; i >= 0; i--) { const k = localStorage.key(i); if (k && (k.startsWith('gsc.saved.') || k.startsWith('gsc.forgot.') || k.startsWith('gs.') && !LS_LOOKS.test(k))) localStorage.removeItem(k); }
+  for (const [k, v] of Object.entries(B.ls || {})) if (k !== 'gs.dataV' && !lsPut(k, v)) throw browserFull();
+  try {
+    const l = JSON.parse(localStorage.getItem('gs.lib') || 'null');
+    if (l) { const seen = new Set(), all = [...(Array.isArray(l.years) ? l.years : []), ...years, was].filter(y => y && y.name && !seen.has(y.name + '|' + y.file) && seen.add(y.name + '|' + y.file)); if (!l.year && B.info.year) l.year = B.info.year; l.years = all.filter(y => y.name !== l.year); if (!lsPut('gs.lib', JSON.stringify(l))) throw browserFull(); }
+  } catch (e) { if (e && e.small) throw e; console.error(e); }
+  store.set('gs.tomb', B.tomb || {});
+  const src = takeSource(rd, B);
+  for (const id of new Set([...Object.keys(B.meta), ...Object.keys(B.work), ...Object.keys(B.papers)])) {
+    const rec = await src.papers(id);
+    if (rec) await paperPut(id, rec);
+    for (const k of Object.keys((B.added && B.added[id]) || {})) { const r = await src.added(id, k); if (r) await idbDo('readwrite', o => o.put(r, id + '|' + k)); }
+    for (const p of Object.keys((B.edits && B.edits[id]) || {})) { const r = await src.edit(id, p); if (r) await kdo('edits', 'readwrite', o => o.put(r, id + '|' + p)); }
+    if (B.work[id]) await kdo('work', 'readwrite', o => o.put(B.work[id], id));
+    const m = B.meta[id] || { id, name: (rec && rec.label) || 'A download', n: 0, t: (B.work[id] && B.work[id].t) || Date.now() };
+    await kdo('meta', 'readwrite', o => o.put({ ...m, papers: !!rec, ...(rec ? { size: rec.entries.reduce((a, e) => a + (e.data ? e.data.length : 0), 0) } : {}) }, id));
+  }
+  const v = B.info && B.info.dataV;
+  if (!v) store.del('gs.dataV'); else if (v < gsData.version()) store.set('gs.dataV', v);
+}
+
+/* the card in Settings */
+function yearRender() {
+  const el = $('#yearLine'); if (!el) return;
+  const ys = Array.isArray(lib.years) ? lib.years : [];
+  el.innerHTML = 'This year: <b>' + esc(nyGuess()) + '</b>' + (lib.year ? '' : ' <span class="muted">(from your term dates)</span>') + '.' +
+    (ys.length ? ' Archived: ' + ys.map(y => esc(y.name) + ' <span class="muted">in ' + esc(y.file || 'a file') + ', ' + esc(new Date(y.at).toLocaleDateString(LANG_LOCALE, { month: 'short', day: 'numeric', year: 'numeric' })) + '</span>').join('; ') + '.' : '');
+}
+$('#yearBtn').onclick = openNewYear;
+$('#yearOpenBtn').onclick = () => $('#yearIn').click();
+$('#yearIn').onchange = e => { const f = e.target.files[0]; e.target.value = ''; if (f) openArchivedYear(f); };
+Object.assign(window.__gs, { nyLib, nyAbout, nyDay, nyNext, nyGuess, openNewYear, openArchivedYear, yearRender });
+
 /* ---------------- any teacher: the welcome, a sample class, and the words that follow a teacher's own school (stage 3) ---------------- */
 
 /* the words on Home that name the school's system */
@@ -23448,6 +23804,8 @@ function findRows() {
     add('Do', 'Try it with a sample class', 'Made-up students and papers', press('#sample'));
     add('Settings', 'Take my work with me', 'A take-home file for another computer', press('#takeBtn'));
     add('Settings', 'Bring work in', 'From a take-home file', press('#restoreBtn'));
+    add('Settings', 'Start a new school year', 'Same classes, empty class lists; this year saved to a file', press('#yearBtn'));
+    add('Settings', 'Open an archived year', 'Bring back a year saved to a file', press('#yearOpenBtn'));
     add('Settings', 'Remove from this computer', 'Clears student work from this browser', () => go('#/settings'));
   }
   add('Settings', 'Where my work is saved', 'This browser, and a folder you choose', () => openWhere());
