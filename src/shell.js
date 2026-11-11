@@ -141,7 +141,7 @@ function findRows() {
   add('Settings', 'Updates and installing', 'This version, what’s new, install as an app', () => go(setHash('about')));
   add('Settings', document.documentElement.dataset.theme === 'dark' ? 'Light mode' : 'Dark mode', 'Display', press('.themeBtn'));
   add('Settings', 'Text size and zoom', 'Display', () => openDisplay());
-  add('Settings', 'App language', 'English or Spanish', () => go('#/settings/display'));
+  add('Settings', 'App language', 'English, Spanish or Traditional Chinese', () => go('#/settings/display'));
   add('Settings', 'Word papers', wordPdfAlways() ? 'Converted to PDF pages as each assignment opens' : 'Kept as Word files. They can be converted to PDF pages', () => go('#/settings/marking'));
   add('Settings', 'Tablet and pencil', 'What a finger does on the paper, and pencil pressure', () => go('#/settings/marking'));
   add('Settings', 'All keys', 'Every keyboard shortcut', () => openKeys(), '?');

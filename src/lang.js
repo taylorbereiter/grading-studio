@@ -6,9 +6,9 @@
    that is joined with " · ". A piece the file doesn't know stays as it is, so a class's name, a student's and an assignment's are
    left alone, and a screen that hasn't been translated yet is simply still in English.
    The choice is one setting in this browser (gs.lang), read by both pages. English adds nothing and runs none of this.
-   To add a language: copy src/lang-es.js, translate it, name it in LANG_PACKS below and in build.js. test/lang.test.js lists what a
+   To add a language: copy src/lang-es.js (Spanish) or src/lang-zh.js (Traditional Chinese), translate it, name it in LANG_PACKS below and in build.js. test/lang.test.js lists what a
    file still leaves in English on the screens it covers. */
-const LANG_PACKS = { es: LANG_ES };
+const LANG_PACKS = { 'zh-Hant': LANG_ZH, es: LANG_ES };
 const LANG = (() => { try { const v = JSON.parse(localStorage.getItem('gs.lang')); return typeof v === 'string' && Object.prototype.hasOwnProperty.call(LANG_PACKS, v) ? v : 'en'; } catch { return 'en'; } })();
 const LANG_PACK = LANG_PACKS[LANG] || null;
 // For dates: the browser's own way of writing them in English, the language's way otherwise.

@@ -36,7 +36,7 @@ test('the app is in English until a language is picked, and Settings, Display sw
   assert.equal(await text(page, '#rail [data-nav="home"]'), 'Today');
   await goTo(page, '#/settings/display');
   assert.equal(await text(page, '#setLang h2'), 'App language');
-  assert.deepEqual(await page.$$eval('#setLangPick option', o => o.map(x => x.value + ' ' + x.textContent)), ['en English', 'es Español']);
+  assert.deepEqual(await page.$$eval('#setLangPick option', o => o.map(x => x.value + ' ' + x.textContent)), ['en English', 'zh-Hant 繁體中文', 'es Español']);
   const before = await page.evaluate(() => Object.keys(localStorage).filter(k => k !== 'gs.lang').sort().map(k => k + '=' + localStorage.getItem(k)).join('\n'));
   await Promise.all([page.waitForNavigation(), page.select('#setLangPick', 'es')]);
   await page.waitForFunction(() => window.__gsLang && window.__gsLang.lang === 'es' && document.querySelector('#rail [data-nav="home"]').textContent.trim() === 'Hoy');
@@ -110,8 +110,8 @@ test('the sentences Today builds come out as Spanish sentences', async () => {
   await close();
 });
 
-test('every word on the covered screens is in the Spanish file (run in English, the screens are walked and what is missing is listed)', async () => {
-  const miss = async (page, where, own) => { const m = (await page.evaluate(() => window.__gsLang.missing('es'))).filter(s => !own.some(o => o === s || (o instanceof RegExp && o.test(s)))); assert.deepEqual(m, [], where + ': not in src/lang-es.js'); };
+test('every word on the covered screens is in each language file (run in English, the screens are walked and what is missing is listed)', async () => {
+  const miss = async (page, where, own) => { for (const k of await page.evaluate(() => window.__gsLang.packs)) { const m = (await page.evaluate(k => window.__gsLang.missing(k), k)).filter(s => !own.some(o => o === s || (o instanceof RegExp && o.test(s)))); assert.deepEqual(m, [], where + ': not in the ' + k + ' language file'); } };
   // a new browser: the welcome, each step and each choice, then Today as a new teacher finds it
   {
     const { page, close } = await openApp(browser, { newTeacher: true });
@@ -249,4 +249,88 @@ test('the Planner’s sidebar and its Find anything follow the same setting, and
     assert.equal(await page.evaluate(() => localStorage.getItem('gs.lang')), '"es"', 'the Planner reads the setting and leaves it as it was');
     assert.deepEqual(page.errors, []); assert.deepEqual(g.page.errors, []);
   } finally { await ctx.close(); await srv.close(); }
+});
+
+// ---------------- Traditional Chinese ----------------
+const ZH = { 'gs.lang': '"zh-Hant"' };
+const inChinese = () => { const s = gradingSeed(); Object.assign(s.ls, ZH); return s; };
+const HAN = /[一-鿿]/;
+
+test('Traditional Chinese: the sidebar, Today and the sentences Today builds, with typed names left alone', async () => {
+  const { page, close } = await openApp(browser, { seed: inChinese() });
+  await page.waitForFunction(() => window.__gsLang && window.__gsLang.lang === 'zh-Hant' && document.querySelector('#rail [data-nav="home"]').textContent.trim() === '今天');
+  assert.equal(await page.evaluate(() => document.documentElement.lang), 'zh-Hant');
+  assert.deepEqual(await page.$$eval('#rail .rnav[data-nav] .rl, #rail #lessonsBtn .rl, #rail .rcap .rl, #rail .rfind .rl:not(kbd), #addClass .rl', els => els.map(e => e.textContent.trim())), ['搜尋', '今天', '備課', '班級', '新增班級', '說明', '設定']);
+  assert.deepEqual(await page.$$eval('#railClasses .rname', els => els.map(e => e.textContent)), ['Grade 9 English', 'Grade 10 Literature'], 'class names stay as typed');
+  assert.equal(await page.$eval('#dropTitle', e => e.textContent), '把新的學生作業拖到這裡');
+  assert.equal(await page.$eval('#pickFiles', e => e.textContent), '選擇檔案…');
+  assert.match(await page.$eval('#homeDate', e => e.textContent), /\d+月\d+日/, 'the date is written the Chinese way');
+  const want = {
+    'One class today. One set of papers to mark.': '今天有 1 堂課。1 批作業待批改。',
+    'Three classes today. Two sets of papers to mark, one ready to hand back.': '今天有 3 堂課。2 批作業待批改，1 批可以發還。',
+    'No classes today. Nothing waiting to be marked.': '今天沒有課。沒有待批改的作業。',
+    'One set of papers ready to hand back.': '1 批作業可以發還。',
+    '3 of 6 scored · 1 partial · 2 missing or excused': '6 份中已評 3 份 · 1 份評到一半 · 2 份缺交或免交',
+    'The river · 12 slides · taught to slide 4 of 12 · and 1 more': 'The river · 12 張投影片 · 上到第 4 張，共 12 張 · 還有 1 項',
+    'One student scored 2 or below on Evidence.': '1 位學生在 Evidence 得到 2 分或以下。',
+    'Every row came out the same on the last set of papers.': '在最近一批作業中，每個項目的結果都一樣。',
+    'Thesis 3 of 4, Evidence 2.5 of 4': 'Thesis 3 / 4、Evidence 2.5 / 4',
+    'In this browser and your “Marking” folder': '存在這個瀏覽器和你的 “Marking” 資料夾',
+    'Aria Testwell': 'Aria Testwell', 'Narrative essay · Unit 1': 'Narrative essay · Unit 1',
+  };
+  for (const [en, zh] of Object.entries(want)) assert.equal(await page.evaluate(s => window.__gsLang.tr(s, 'zh-Hant'), en), zh);
+  assert.deepEqual(page.errors, []);
+  await close();
+});
+
+test('Traditional Chinese: Help topic for topic, found by Chinese or English words, and Find anything', async () => {
+  const { page, close } = await openApp(browser, { seed: inChinese() });
+  const en = await (async () => { const a = await openApp(browser, { seed: gradingSeed() }); const t = await a.page.evaluate(() => window.__gs.helpTopics().map(t => ({ id: t.id, q: t.q, a: t.a, go: t.go || null }))); await a.close(); return t; })();
+  const zh = await page.evaluate(() => window.__gs.helpTopics().map(t => ({ id: t.id, q: t.q, a: t.a, go: t.go || null })));
+  assert.deepEqual(zh.map(t => t.id), en.map(t => t.id));
+  for (const [i, t] of zh.entries()) {
+    assert.match(t.q, HAN, t.id + ' has a Chinese question');
+    assert.equal(t.a.length, en[i].a.length, t.id + ' has the same paragraphs');
+    for (const p of t.a) assert.match(p, HAN, t.id + ' is answered in Chinese');
+    assert.deepEqual(t.a.map(p => /^\d+\. /.test(p)), en[i].a.map(p => /^\d+\. /.test(p)), t.id + ' has the same steps');
+    assert.deepEqual(t.a.map(p => (p.match(/\*\*/g) || []).length % 2), t.a.map(() => 0), t.id + ' closes every bold name');
+    if (en[i].go) { assert.equal(t.go[1], en[i].go[1]); assert.notEqual(t.go[0], en[i].go[0], t.id + ' has a Chinese button'); }
+  }
+  await goTo(page, '#/help/where-saved');
+  await page.waitForSelector('#hlp-where-saved.on');
+  assert.equal(await text(page, '#hlp-where-saved .hlph'), '我的工作成果存在哪裡？');
+  assert.equal(await text(page, '#hlp-where-saved .hlpgo'), '開啟設定、儲存');
+  assert.equal(await page.$eval('#vHelp .hlpsec h2', e => e.textContent), '開始使用');
+  for (const [q, id] of [['備份', 'where-saved'], ['backup', 'where-saved'], ['評分規準', 'rubric']]) {
+    await page.$eval('#hlpIn', e => { e.value = ''; }); await page.type('#hlpIn', q);
+    await page.waitForFunction(id => !!document.querySelector('#hlp-' + id) && /則解答$/.test(document.querySelector('#hlpList h2').textContent), {}, id);
+  }
+  await goTo(page, '#/');
+  for (const [q, label] of [['設定', '設定'], ['settings', '設定'], ['深色', '深色模式'], ['Grade 9', 'Grade 9 English']]) {
+    await page.click('#findBtn'); await page.waitForSelector('#findIn'); await page.type('#findIn', q);
+    await page.waitForFunction(l => [...document.querySelectorAll('#findDlg .frow b')].some(b => b.textContent === l), {}, label);
+    await page.keyboard.press('Escape');
+  }
+  assert.deepEqual(page.errors, []);
+  await close();
+});
+
+test('Traditional Chinese: the feedback page in a returned paper is in Chinese', async () => {
+  const SETUP = { mode: 'rubric', criteria: ['Thesis', 'Evidence', 'Style'], levels: [{ 4: 'A clear claim.' }, {}, {}] };
+  const { page, close } = await openApp(browser, { seed: { ls: { 'gs.setup': JSON.stringify(SETUP), ...ZH } }, feedback: true });
+  await openZip(page, zip);
+  await score(page, [4, 3, 3]);
+  await setTool(page, 'pen'); await drag(page, 0, [[100, 300], [220, 300]]);
+  await settle(page);
+  await page.evaluate(() => { window.__drawn = []; const was = CanvasRenderingContext2D.prototype.fillText; CanvasRenderingContext2D.prototype.fillText = function (t, ...a) { window.__drawn.push(String(t)); return was.call(this, t, ...a); }; });
+  const dl = await catchDownloads(page);
+  await page.click('#exportBtn'); await page.waitForSelector('#dlgBox [data-go="zip"]', { timeout: 60000 });
+  await dl.next(() => page.click('#dlgBox [data-go="zip"]'));
+  await page.waitForFunction(() => /^Done\./.test(document.querySelector('#xStatus').textContent), { timeout: 60000 });
+  const drawn = await page.evaluate(() => window.__drawn);
+  for (const s of ['評分方式', '4 / 4', '批改後的作業從下一頁開始。']) assert.ok(drawn.includes(s), 'the page says “' + s + '”: ' + JSON.stringify(drawn.slice(0, 40)));
+  for (const s of ['HOW IT WAS SCORED', 'Your marked paper starts on the next page.']) assert.ok(!drawn.includes(s), 'and not “' + s + '”');
+  await closeBox(page, '#dlgBox .bf [data-close]');
+  assert.deepEqual(page.errors, []);
+  await close();
 });

@@ -1,13 +1,12 @@
 {
- "version": "1.19.0",
- "build": "95151f18f4bf",
+ "version": "1.20.0",
+ "build": "9082b2a2a23f",
  "notes": [
-  "The app can speak Spanish. Choose it in Settings, Display, App language, or at the top of the welcome.",
-  "Spanish covers the first screens so far: the sidebar, Today, the welcome, Find anything, Help, and the feedback page students get with a returned paper. The other screens are still in English.",
-  "Names you typed (classes, students, assignments, rubric rows) are never translated."
+  "The app can speak Traditional Chinese (繁體中文). Choose it in Settings, Display, App language, or at the top of the welcome.",
+  "Like Spanish, it covers the first screens so far: the sidebar, Today, the welcome, Find anything, Help, and the feedback page students get with a returned paper. The other screens are still in English."
  ],
  "files": {
-  "index.html": "7370afc647db739f17ebd103f49a5cd1052749d8b9ecf5da81bc36dff1123cb4",
-  "planner.html": "e3c9abe5d8488cf12a7dd65193e2cea51a183ed241d26d6e60ac8db5fd8e29a2"
+  "index.html": "3436faa0d8c7cf1080c0a8092a211f0eb1a811687dff798d2d31c69816d17462",
+  "planner.html": "bcf06d59fd469ef624812e97c8c1193e6134ca9961a5a715d60cbe333b4179b0"
  }
 }
