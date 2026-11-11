@@ -1,0 +1,13 @@
+/* IB classes: the MYP or DP pill beside a class's name, and the box that says how a class is graded (src/ib.js) */
+.ibpill{display:inline-flex;align-items:center;height:20px;padding:0 var(--space-2);border-radius:var(--corner-pill);background:var(--accent-soft);color:var(--accent);font-size:var(--text-caption);font-weight:600;letter-spacing:.02em}
+.ibways{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--space-2);margin-bottom:var(--space-4)}
+.ibcols{display:grid;grid-template-columns:1.3fr 1fr;gap:var(--space-5)}
+.ibcap{margin:var(--space-3) 0 var(--space-2);font-size:var(--text-control)}
+.ibcrit{display:flex;align-items:center;gap:var(--space-2);margin-bottom:var(--space-2)}
+.ibcrit b{width:18px}
+.ibcrit input{flex:1;min-width:0}
+.ibbounds{display:grid;gap:var(--space-1)}
+.ibbound{display:grid;grid-template-columns:72px 36px 76px;align-items:center;gap:var(--space-2);font-size:var(--text-control)}
+.ibbound input{width:76px}
+.ibnote{font-size:var(--text-control);margin:var(--space-3) 0 0}
+@media (max-width:640px){.ibways,.ibcols{grid-template-columns:1fr}}
