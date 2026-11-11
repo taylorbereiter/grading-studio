@@ -31,6 +31,13 @@ function saveNow(leaving) {
   if (tabsBehind(batch)) return saveBehind(batch, data, was, leaving);
   return writeWork(batch, data);
 }
+// "Picked up where you left off" is said once for an assignment in each visit, and only on the assignment's own screens:
+// the last assignment is also opened quietly behind Today, a class page or Settings, where the note meant nothing.
+function pickedUpNew(id) {
+  if (!/^#\/a\//.test(location.hash)) return false;
+  try { const said = JSON.parse(sessionStorage.getItem('gs.pickedUp') || '[]'); if (said.includes(id)) return false; sessionStorage.setItem('gs.pickedUp', JSON.stringify(said.concat(id).slice(-40))); } catch (e) {}
+  return true;
+}
 function restore() {
   const data = newestWork(store.get(batch.id, null), batch.keptWork);
   if (!data) return;
@@ -77,6 +84,6 @@ function restore() {
   groupSync();
   if (data.drive && !batch.drive) batch.drive = data.drive;
   batch.restoredCur = Math.min(data.cur || 0, batch.students.length - 1); batch.restoredKey = data.ck;
-  if (n) setTimeout(() => toast('Picked up where you left off (' + n + (n === 1 ? ' student' : ' students') + ' started)'), 300);
+  if (n && pickedUpNew(batch.id)) setTimeout(() => { if (/^#\/a\//.test(location.hash)) toast('Picked up where you left off (' + n + (n === 1 ? ' student' : ' students') + ' started)'); }, 300);
 }
 

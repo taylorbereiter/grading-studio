@@ -1,14 +1,13 @@
 {
- "version": "1.23.0",
- "build": "dc53f49d218a",
+ "version": "1.27.4",
+ "build": "84d9a606de74",
  "notes": [
-  "Scores by learning goal, if you want them. Keep your own list of goals (a skill, or a standard from your school) in Settings, Grading, or add one wherever you tag.",
-  "Tag rubric rows in Rubric setup and quiz questions in Quiz boxes. An assignment scored with just a total can carry one goal for the whole score.",
-  "Each class page gets a Goals tab: the class average on each goal with the lowest first, every student by every goal, and where each number came from. A student's own page shows their goals beside the class average.",
-  "Nothing changes until you add a first goal, and tagging never changes a score or a grade."
+  "School is a new page in the sidebar for the things about your school you look up again and again: the handbook, the calendar, the bell schedule, portals, forms, who to call.",
+  "Add a link, a file (a copy is kept with your work) or a note. Name your own groups, and star the ones you open most to keep them along the top.",
+  "Drop files on the page or paste a web address. Find anything lists every resource. They are kept in your folder and take-home file, and stay when you start a new school year."
  ],
  "files": {
-  "index.html": "661f44ab92b9f1f73bb3d9c41c96c66fe3df35953f6e358b75965145ff4d2d20",
-  "planner.html": "2af04bed217762b5d6dc8bb5857bc8dc11acb08a6b200ce8a8ee546adb3de223"
+  "index.html": "ddb294d34adcdad3e13cb27013db71a68ec77af898d39d9ab88a317607459c42",
+  "planner.html": "c2290b19761fac300f112a050b27e3805d59a98488b604fb9a656ecf437116ba"
  }
 }

@@ -59,7 +59,7 @@ let setLibFrom, libNews;   // setLibFrom replaces the whole library, a merge hav
         let other = null; try { other = JSON.parse(now); } catch {}
         if (other) {
           const m = mergeLib(v, other, { dev: devId(), now: Date.now() });
-          v = lib = migrateLib(m.lib); prev = libPrev(v); refs();
+          v = lib = migrateLib(m.lib); prev = libPrev(v); refs(); rollsShare();
           if (batch && m.mapA[batch.classId]) batch.classId = m.mapA[batch.classId];
         }
       }
@@ -82,7 +82,7 @@ let setLibFrom, libNews;   // setLibFrom replaces the whole library, a merge hav
 }
 const browserFull = () => Object.assign(new DOMException('The small store is full', 'QuotaExceededError'), { small: true });
 // What travels with her work. Quick copies travel as work, and the rest belongs to this browser.
-const LS_LOCAL = /^gs\.(b\..+|batches|syncT|dataV|lastBackup|gcid|gEmail|tomb|refOpen\..*)$/;
+const LS_LOCAL = /^gs\.(b\..+|batches|syncT|dataV|lastBackup|gcid|gEmail|tomb|rolls|refOpen\..*)$/;   // rolls: a copy of the rosters for the Planner's name picker, made again from the classes wherever they go
 function carryLs() {
   const o = {};
   for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k && k.startsWith('gs.') && !LS_LOCAL.test(k)) o[k] = localStorage.getItem(k); }
@@ -483,7 +483,7 @@ async function reconcileNow() {
   await dailySnapshot();
   fld.at = Date.now(); fld.state = 'ok';
   setWhere(fld.asks.length ? 'decide' : 'ok');
-  if (taking.length || libm.toA) { bank = store.get('gs.bank', bank); if (!batch) { const su = store.get('gs.setup', null); if (su) setup = { ...DEFAULT_SETUP, ...su }; } await loadKept(); }
+  if (taking.length || libm.toA) { bank = store.get('gs.bank', bank); if (!batch) { const su = store.get('gs.setup', null); if (su) setup = setupOver(su); } await loadKept(); }
   if (open && taking.some(r => r.id === open)) { toast('Newer work from your folder came in, so this download has been reopened.', 6000); const was = batch; await reopenKept(open, batch.assignment); if (batch === was) { closeDownload(); toast('Newer work came in from your folder, and this download is waiting for your answer. Open it when you’re ready.', 8000); } }   // not opened again (Not now): the copy on screen is out of date, and saving it would write over what just came in
   else if (!hadWork && taking.length && !B.missing.size) toast('Everything came back from your folder.', 6000);
   else if (students) toast('Newer work from your folder came in for ' + students + (students === 1 ? ' student.' : ' students.'), 6000);
@@ -556,7 +556,7 @@ function renderWhere() {
     const h = s.act ? '<span class="wtext' + (s.cls ? ' ' + s.cls : '') + '">' + esc(s.text) + '.</span> <button class="btn sm primary" data-wact>' + s.act + '</button>' : '';
     if (first.dataset.h !== h) { first.dataset.h = h; first.innerHTML = h; first.hidden = !h; }
   }
-  if (top) { top.textContent = s.text; top.title = s.tip; top.className = 'savewhere link' + (s.cls ? ' ' + s.cls : ''); }
+  if (top) { const cut = /^Not backed up\. /.exec(s.text); top.textContent = cut ? 'Not backed up' : s.text; if (cut) { const more = document.createElement('span'); more.className = 'sw-more'; more.textContent = s.text.slice(13); top.append(more); } top.title = s.tip; top.className = 'savewhere link' + (s.cls ? ' ' + s.cls : ''); }
   if (line) {
     const h = '<span class="wtext' + (s.cls ? ' ' + s.cls : '') + '">' + (fld.state === 'none' && fld.booted ? 'Your work is saved only in this browser, and is not backed up' : 'Your work is saved: ' + esc(s.text.charAt(0).toLowerCase() + s.text.slice(1))) + '.</span> ' +
       (s.act ? '<button class="btn sm primary" data-wact>' + s.act + '</button> ' : '') +
