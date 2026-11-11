@@ -153,5 +153,6 @@ test('a test profile can only live in the temp folder', async () => {
 test('.gitignore keeps test screenshots and .DS_Store out', () => {
   const lines = fs.readFileSync(path.join(ROOT, '.gitignore'), 'utf8').split(/\r?\n/);
   assert.ok(lines.includes('.DS_Store') && lines.includes('*.png') && !lines.includes('.DS_Store/*.png'));
-  assert.ok(lines.includes('node_modules/') && lines.includes('out/'));
+  // no trailing slash, so a node_modules symlink is ignored too (one got committed in PR #71)
+  assert.ok(lines.includes('node_modules') && !lines.includes('node_modules/') && lines.includes('out/'));
 });
