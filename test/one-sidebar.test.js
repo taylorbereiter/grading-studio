@@ -348,7 +348,7 @@ test('Settings is one page per subject, each with its own address', async () => 
   const { page, close } = await openApp(browser, { seed: GRADING });
   const shown = () => page.$$eval('#setPane [data-sec]', els => els.filter(e => e.checkVisibility()).map(e => e.id));
   await goTo(page, '#/settings');
-  assert.deepEqual(await page.$$eval('#setNav .setlink b', b => b.map(x => x.textContent)), ['Saving and carrying', 'Go back in time', 'Classes and rosters', 'Terms and weights', 'Grading scale and rubrics', 'Marking', 'Timetable and calendar', 'Display', 'Working with AI', 'Keys', 'About and updates']);
+  assert.deepEqual(await page.$$eval('#setNav .setlink b', b => b.map(x => x.textContent)), ['Saving and carrying', 'Go back in time', 'My setup', 'Classes and rosters', 'Terms and weights', 'Grading scale and rubrics', 'Marking', 'Timetable and calendar', 'Display', 'Working with AI', 'Keys', 'About and updates']);
   assert.deepEqual(await shown(), ['setSaving', 'setTake', 'setYear', 'setRemove']);
   assert.equal(await page.$eval('#setNav .setlink.on', a => a.textContent), 'Saving and carryingFolder, take-home file, new school year');
   assert.equal(await page.title(), 'Settings · Grading Studio');
