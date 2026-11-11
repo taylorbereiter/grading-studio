@@ -204,3 +204,17 @@ button.pavg:hover .v{text-decoration:underline}
 .xcsay{color:var(--accent);font-size:var(--text-small)}
 .xcnote .sp{flex:1}
 .xcnote label,.xcnote>span{white-space:nowrap}.xcnote input{width:52px}
+
+/* a retake under the score: the earlier tries, which one counts, and the way out */
+.trynote{grid-template-columns:minmax(0,1fr);min-width:0;margin:9px 0 0;padding:var(--space-3);border:1px solid var(--line);border-radius:var(--corner-3);background:var(--surface-2);font-size:var(--text-small);color:var(--fg-2);display:grid;gap:5px}
+.tryhd,.tryrow,.trycount{display:flex;align-items:baseline;gap:var(--space-2);flex-wrap:wrap}
+.tryhd b{color:var(--accent)}.tryhd .sp{flex:1}.tryhd .arm{color:var(--warn);font-weight:600}
+.tryrow>span:first-child{min-width:58px;color:var(--muted)}.tryrow b{color:var(--fg)}
+.trycm{flex-basis:100%;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.trycount{flex-wrap:nowrap;justify-content:space-between;border-top:1px solid var(--line);padding-top:5px}.trycount>span:first-child{flex:1;min-width:0}.trycount b{color:var(--fg)}
+.trynote .btn{justify-self:start}
+.km .kmsay{margin:4px 10px 6px;font-size:var(--text-small);color:var(--muted);max-width:230px}
+.km .mitem[aria-pressed="true"] b{color:var(--accent)}
+.trytag{font-size:var(--text-small);font-weight:600;padding:2px 8px;border-radius:var(--corner-pill);background:var(--surface-2);color:var(--muted);border:1px solid var(--line);white-space:nowrap}
+.stag.retk{background:var(--accent-soft);color:var(--accent)}
+.tryown{color:var(--muted);font-size:var(--text-small)}

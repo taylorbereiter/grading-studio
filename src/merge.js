@@ -57,7 +57,7 @@ function decideRec(a, b, ta, tb) {
 const BLANK_REC = () => ({ f: {}, g: { rubric: [], points: '', comment: '' }, h: {} });
 // Settings of the download itself rather than of a student. Each goes on its own, stamped in w.pv = { setting: v } the way a student's record is, so a change to one is never undone by a change to another.
 // w.sv is all of them together, and an old copy has only that, or nothing.
-const WORK_SET = ['carry', 'setup', 'cls', 'share', 'drive', 'light', 'lightOpt', 'lightPg', 'lightPgL', 'anon', 'moved', 'removed', 'refSkip', 'quiz', 'groups', 'returned'];
+const WORK_SET = ['carry', 'setup', 'cls', 'share', 'drive', 'light', 'lightOpt', 'lightPg', 'lightPgL', 'anon', 'moved', 'removed', 'refSkip', 'quiz', 'groups', 'returned', 'goal'];
 const setOf = w => { const o = {}; if (w) for (const k of WORK_SET) if (w[k] !== undefined) o[k] = w[k]; return o; };
 const setV = w => w && w.sv ? w.sv : (h => h ? { ['~' + h]: 1 } : {})(hashOf(setOf(w)));
 const partV = (w, k) => (w.pv && w.pv[k]) || (h => h ? { ['~' + h]: 1 } : {})(hashOf(w[k]));
@@ -531,6 +531,19 @@ function libGoBack(a0, b0, dev, now) {
   const same = (p, q) => JSON.stringify(canon(p)) === JSON.stringify(canon(q));
   return { lib: a, notes: [], asks: [], cards: {}, mapA: {}, mapB: {}, toA: !same(a, a0), toB: !same(a, b0) };
 }
+// Learning goals (goals.js): everyone's from both copies, in this copy's order then the other's. The later name wins, and one removed
+// after it was last changed stays removed.
+function libGoals(lib, a, b) {
+  const gone = { ...(a.goalsGone || {}) }, out = [];
+  for (const [id, t] of Object.entries(b.goalsGone || {})) gone[id] = Math.max(gone[id] || 0, t);
+  for (const g of [...(Array.isArray(a.goals) ? a.goals : []), ...(Array.isArray(b.goals) ? b.goals : [])]) {
+    if (!g || !g.id || gone[g.id] >= (g.at || 0)) continue;
+    const i = out.findIndex(x => x.id === g.id);
+    if (i < 0) out.push(g); else if ((g.at || 0) > (out[i].at || 0)) out[i] = g;
+  }
+  if (out.length) lib.goals = out; else delete lib.goals;
+  if (Object.keys(gone).length) lib.goalsGone = gone; else delete lib.goalsGone;
+}
 // A brand-new browser's starter classes have the same names as the real ones with ids of their own, so classes with no id in common are matched by name.
 function mergeLib(a0, b0, o = {}) {
   const { dev = 'merge', now = Date.now() } = o;
@@ -595,6 +608,7 @@ function mergeLib(a0, b0, o = {}) {
   // How a teacher works (lib.me) goes with their work. A browser that was only just set up, with nothing in it yet, takes on the
   // work coming in as it is: if that work is from before the welcome and has no lib.me, this copy drops its own, so every word and
   // default stays what it was where the work was done.
+  libGoals(lib, a, b);
   const hasWork = l => ((l && l.classes) || []).some(c => (c.names || []).length || (c.units || []).some(u => u && (u.items || []).length));
   if (a.me && !b.me && hasWork(b) && !hasWork(a)) delete lib.me;
   const by = t => [...kept.values()].filter(e => e.type === t);

@@ -87,8 +87,33 @@ function percentWith(total, max, sc) {
 }
 function gradeOf(st) {
   if (noScore(st)) return { total: null, pct: null, done: true, status: st.grade.status };   // missing or excused: settled, with no number
-  const g0 = scoreOf(st), g = addXc(g0, st.grade.xc, g0.outOf != null ? g0.outOf : maxPoints(), st.grade.xcU), r = st.grade.status === 'late' ? { ...g, status: 'late' } : g;
+  const g0 = tryGrade(st), g = withTries(g0, st.grade.tries, g0.outOf != null ? g0.outOf : maxPoints(), !!g0.done && !g0.partial && g0.total != null), r = st.grade.status === 'late' ? { ...g, status: 'late' } : g;
   return st.grade.outAvg ? { ...r, out: true } : r;   // left out of the average: the score stays and copies, it just isn't counted
+}
+// The score of the try in hand, on its own: what the sliders and the points box show. gradeOf is what counts once earlier tries are weighed in.
+function tryGrade(st) { const g0 = scoreOf(st); return addXc(g0, st.grade.xc, g0.outOf != null ? g0.outOf : maxPoints(), st.grade.xcU); }
+/* Retakes. grade.tries holds the earlier tries, oldest first, each frozen as it stood when the next one began:
+   { t, total, max, pct, late, files: [paths on the paper then], and the rubric rows, points, comment… it had, so taking the retake off puts them back }.
+   The score fields of the grade itself are the newest try. Which one counts is the teacher's own rule, for every class (lib.book.retake):
+   'high' the best percent (the default), 'last' the newest try that has a full score, 'avg' the average of the tries.
+   A try counts once it has a full score; until then the earlier ones stand, and the paper still shows as waiting for a score. */
+const RETAKE_RULES = [['high', 'Highest', 'The best try counts'], ['last', 'Latest', 'The newest try counts, even if it is lower'], ['avg', 'Average', 'The average of the tries counts']];
+function retakeRule() { const r = typeof lib !== 'undefined' && lib && lib.book && lib.book.retake; return r === 'last' || r === 'avg' ? r : 'high'; }
+function withTries(r, tries, max, full) {
+  const was = (tries || []).filter(t => t && t.pct != null);
+  if (!was.length) return r;
+  const now = full ? { total: r.total, max, pct: r.pct, now: true } : null, all = now ? was.concat(now) : was, rule = retakeRule();
+  let c;
+  if (rule === 'last') c = all[all.length - 1];
+  else if (rule === 'avg' && all.length > 1) {
+    const same = all.every(t => t.total != null && t.max === all[0].max);
+    c = { pct: roundPct(all.reduce((a, t) => a + t.pct, 0) / all.length), max: same ? all[0].max : max, total: same ? Math.round(all.reduce((a, t) => a + t.total, 0) / all.length * 100) / 100 : null };
+    if (c.total == null && max) c.total = Math.round(c.pct * max) / 100;
+  } else c = all.reduce((a, t) => t.pct >= a.pct ? t : a);
+  const out = { ...r, total: c.total, pct: c.pct, tries: was, tryNow: now, tryRule: rule, tryOwn: { total: r.total, pct: r.pct } };
+  if (c !== now) { for (const k of ['xc', 'xcU', 'base', 'paper', 'outOf']) delete out[k]; if (c.max != null && c.max !== max) out.outOf = c.max; }
+  if (!now) { out.done = false; out.wait = true; delete out.partial; }   // the retake has no full score yet: the earlier tries stand
+  return out;
 }
 // Extra credit on one paper (grade.xc, in the assignment's own points) goes on top of the score. The score itself is still read on
 // the assignment's scale exactly as before; then each extra point adds its share of the total as percentage points. So 12/15 read as

@@ -84,7 +84,7 @@ function findRows() {
   const toMark = () => { if (dlgPage) closeDlg(); };   // a student or a marking tool is on the papers: a tab's screen steps aside first
   if (batch) {
     const order = anonOn() ? anonOrder() : batch.students.map((_, i) => i);
-    order.forEach((i, pos) => { const st = batch.students[i], g = gradeOf(st); add('Students', shownName(st, i), noScore(st) ? STATUS_LABEL[g.status] : g.done ? 'Scored' : g.total != null ? 'Partly scored' : st.files.length ? 'Not scored yet' : 'No paper', () => { toMark(); openStudent(i); }, String(pos + 1)); });
+    order.forEach((i, pos) => { const st = batch.students[i], g = gradeOf(st); add('Students', shownName(st, i), noScore(st) ? STATUS_LABEL[g.status] : g.done ? 'Scored' : g.wait ? 'Retake to score' : g.total != null ? 'Partly scored' : st.files.length ? 'Not scored yet' : 'No paper', () => { toMark(); openStudent(i); }, String(pos + 1)); });
     for (const b of document.querySelectorAll('#tools .tool[data-tool]')) { const m = /^(.*?) \((.*)\)$/.exec(b.title) || [0, b.title, '']; add('Marking tools', m[1], 'Tool for the paper', () => { toMark(); setTool(b.dataset.tool); }, m[2]); }
     // what + Add and the ⋯ beside the student's name hold, for the paper that is open
     for (const b of document.querySelectorAll('#paper .who .km .mitem:not([data-whodo])')) { const s = b.querySelector('small'); add('This paper', (b.closest('.kmw').querySelector('#addMenuBtn') ? 'Add ' : '') + b.firstChild.textContent.trim().replace(/^A /, 'a ').replace(/^Pasted/, 'pasted').replace(/^From/, 'pages from'), s ? s.textContent : '', () => { toMark(); if (b.isConnected) b.click(); }); }
@@ -116,7 +116,7 @@ function findRows() {
   add('Go to', 'Help', 'Short answers to common questions', () => go('#/help'));
   for (const c of lib.classes) {
     add('Classes', c.name, (c.names.length ? c.names.length + ' students' : 'No roster yet') + (classLeft(c) ? ' · ' + classLeft(c) + ' left to score' : ''), () => go(classHash(c)));
-    if (c.names.length) for (const [k, l, sub] of [['gradebook', 'gradebook', 'Every assignment by term, with each term grade'], ['students', 'students', 'The roster, with IDs and emails, and each student’s own page'], ...(attOn() ? [['attendance', 'attendance', 'Who was here, late, excused or absent, saved by day']] : []), ['missing', 'missing work', 'Who still owes work, with a reminder email for each student'], ['charts', 'charts', 'Grades and scores as charts'], ['reports', 'report comments', 'A draft comment for each student, from your own scores and comments']]) add('Class pages', c.name + ' ' + l, sub, () => go(classHash(c, k)));
+    if (c.names.length) for (const [k, l, sub] of [['gradebook', 'gradebook', 'Every assignment by term, with each term grade'], ['students', 'students', 'The roster, with IDs and emails, and each student’s own page'], ...(attOn() ? [['attendance', 'attendance', 'Who was here, late, excused or absent, saved by day']] : []), ['missing', 'missing work', 'Who still owes work, with a reminder email for each student'], ['charts', 'charts', 'Grades and scores as charts'], ['reports', 'report comments', 'A draft comment for each student, from your own scores and comments']].concat(goalList().length ? [['goals', 'goals', 'The class and each student by learning goal: what to reteach']] : [])) add('Class pages', c.name + ' ' + l, sub, () => go(classHash(c, k)));
   }
   const carded = new Set();
   for (const c of holders()) for (const u of c.units) for (const it of u.items) {
@@ -137,6 +137,7 @@ function findRows() {
     add('Settings', 'Remove from this computer', 'Clears student work from this browser', () => go('#/settings'));
   }
   add('Settings', 'Where my work is saved', 'This browser, and a folder you choose', () => openWhere());
+  add('Settings', 'Learning goals', 'Your own list of goals, to see scores by', () => goalsDlg());
   add('Settings', 'Go back in time', 'An assignment, or everything, as it was on an earlier day', () => go(setHash('history')));
   add('Settings', 'Updates and installing', 'This version, what’s new, install as an app', () => go(setHash('about')));
   add('Settings', document.documentElement.dataset.theme === 'dark' ? 'Light mode' : 'Dark mode', 'Display', press('.themeBtn'));

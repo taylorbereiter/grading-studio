@@ -1660,6 +1660,44 @@ a.btn.busy{opacity:.6;pointer-events:none}
 .bkcmp.chrow:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 @media (max-width:700px){.cpanel .ovcharts{grid-template-columns:minmax(0,1fr)}}
 .chc.xc{background:var(--surface);color:var(--accent);border:1px solid var(--accent)}
+/* learning goals (goals.js): the picker beside a rubric row or a quiz question, the list's own box, the class page's Goals tab */
+.goalsel{border:1px solid var(--line-strong);border-radius:var(--corner-2);padding:var(--space-1) 6px;background:var(--surface);color:var(--fg);font:inherit;font-size:var(--text-control);max-width:180px;min-width:0}
+.critrow .goalsel{flex:0 1 170px}
+.qbt .qgrow td{padding:0 4px 8px}
+.qbt .qgrow label{display:flex;align-items:center;gap:var(--space-2);color:var(--muted);font-size:var(--text-small)}
+.qbt .goalsel{max-width:260px;padding:var(--space-1) 6px}
+.goalline{display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-2) var(--space-3);margin:0 0 var(--space-4);font-size:var(--text-control)}
+p.goalline{display:block}
+.goalwhole{display:flex;align-items:center;gap:var(--space-2);font-weight:600}
+.goalnote{flex-basis:100%;font-size:var(--text-small)}
+.goalbox .bh h2{margin:0}
+.goalsay{font-size:var(--text-control);margin:0 0 var(--space-3)}
+#goalRows{margin-bottom:var(--space-2)}
+.goalrow{display:flex;gap:6px;margin-bottom:6px}
+.goalrow input{flex:1;min-width:0;border:1px solid var(--line-strong);border-radius:var(--corner-2);padding:6px var(--space-2);background:var(--surface);color:var(--fg);font:inherit}
+#goalGoneSay{margin:var(--space-3) 0 0}
+.goalset{margin-top:var(--space-5)}
+.glhead{display:flex;align-items:flex-start;gap:var(--space-3);margin-bottom:var(--space-4)}
+.glhead p{margin:0;max-width:70ch}
+.glhead .sp{flex:1}
+.glbars{max-width:860px}
+.glbar{display:grid;grid-template-columns:minmax(0,230px) minmax(0,1fr) 56px minmax(0,190px);gap:10px;align-items:center;font-size:var(--text-control);margin:var(--space-2) 0;border-radius:var(--corner-1)}
+.glbar:focus{outline:none}.glbar:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.glbar .gln{display:flex;align-items:center;gap:6px;min-width:0}
+.glbar .gln>span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.glbar .bkcmpt i{background:var(--bk-ic)}
+.glbar.lo .bkcmpt i{background:var(--accent)}
+.glbar.lo .gln>span:first-child{font-weight:600}
+.glbar b{text-align:right;font-variant-numeric:tabular-nums}
+.glbar small{color:var(--muted);font-size:var(--text-small);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bkcmpt em.glcut{border-left-color:var(--muted)}
+.gltab thead button{max-width:120px}
+.gltab thead .chh span[data-raw]{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.25}
+.chc.glout{opacity:.45}
+.bkcmp.chrow.glstu{grid-template-columns:minmax(0,190px) minmax(0,1fr) 44px 84px}
+#glFrom{margin-top:0}
+@media (max-width:700px){.glbar{grid-template-columns:minmax(0,1fr) 56px}.glbar .bkcmpt,.glbar small{grid-column:1 / -1}}
+#glView section{margin:0 0 var(--space-5)}
 /* ---------- an open assignment's tabs, and a tab's screen drawn on the page (11/10) ---------- */
 .atabs{display:flex;gap:2px;align-self:stretch;margin:-9px 0 -9px 8px;flex:none}
 .atab{display:flex;align-items:center;gap:6px;padding:0 13px;min-height:44px;font-size:var(--text-body);font-weight:500;color:var(--fg-2);text-decoration:none;border-bottom:2px solid transparent;border-top:2px solid transparent;white-space:nowrap}
@@ -1968,6 +2006,20 @@ button.pavg:hover .v{text-decoration:underline}
 .xcsay{color:var(--accent);font-size:var(--text-small)}
 .xcnote .sp{flex:1}
 .xcnote label,.xcnote>span{white-space:nowrap}.xcnote input{width:52px}
+
+/* a retake under the score: the earlier tries, which one counts, and the way out */
+.trynote{grid-template-columns:minmax(0,1fr);min-width:0;margin:9px 0 0;padding:var(--space-3);border:1px solid var(--line);border-radius:var(--corner-3);background:var(--surface-2);font-size:var(--text-small);color:var(--fg-2);display:grid;gap:5px}
+.tryhd,.tryrow,.trycount{display:flex;align-items:baseline;gap:var(--space-2);flex-wrap:wrap}
+.tryhd b{color:var(--accent)}.tryhd .sp{flex:1}.tryhd .arm{color:var(--warn);font-weight:600}
+.tryrow>span:first-child{min-width:58px;color:var(--muted)}.tryrow b{color:var(--fg)}
+.trycm{flex-basis:100%;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.trycount{flex-wrap:nowrap;justify-content:space-between;border-top:1px solid var(--line);padding-top:5px}.trycount>span:first-child{flex:1;min-width:0}.trycount b{color:var(--fg)}
+.trynote .btn{justify-self:start}
+.km .kmsay{margin:4px 10px 6px;font-size:var(--text-small);color:var(--muted);max-width:230px}
+.km .mitem[aria-pressed="true"] b{color:var(--accent)}
+.trytag{font-size:var(--text-small);font-weight:600;padding:2px 8px;border-radius:var(--corner-pill);background:var(--surface-2);color:var(--muted);border:1px solid var(--line);white-space:nowrap}
+.stag.retk{background:var(--accent-soft);color:var(--accent)}
+.tryown{color:var(--muted);font-size:var(--text-small)}
 /* ---------- safe by default: the folder ask on Home, Go back in time, About and updates ---------- */
 .safeask{display:flex;gap:var(--space-4);align-items:flex-start;padding:18px 20px;margin:0 0 var(--space-5);background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--warn);border-radius:var(--corner-5)}
 .safeask .saic{flex:none;width:40px;height:40px;display:flex;align-items:center;justify-content:center;border-radius:var(--corner-4);background:var(--warn-soft);color:var(--warn)}
@@ -3457,7 +3509,7 @@ SOFTWARE.
 <script>/* ---------------- saved-data versions: a safety copy, then any format changes, before the app starts ---------------- */
 const gsData = (() => {
   'use strict';
-  const APP_VERSION = "1.23.0";   // from package.json, the one place it's set
+  const APP_VERSION = "1.25.0";   // from package.json, the one place it's set
   const MIGRATIONS = [
   ];
   const DATA_V = Math.max(1, ...MIGRATIONS.map(s => s.to));
@@ -3798,6 +3850,7 @@ const LANG_ES = {
     'Take my work with me': 'Llevarme mi trabajo', 'A take-home file for another computer': 'Un archivo para llevar a otro ordenador', 'Bring work in': 'Traer trabajo', 'From a take-home file': 'Desde un archivo para llevar',
     'Remove from this computer': 'Quitar de este ordenador', 'Clears student work from this browser': 'Borra de este navegador los trabajos de los estudiantes',
     'Where my work is saved': 'Dónde se guarda mi trabajo', 'This browser, and a folder you choose': 'Este navegador y una carpeta que tú eliges',
+    'Learning goals': 'Objetivos de aprendizaje', 'Your own list of goals, to see scores by': 'Tu propia lista de objetivos, para ver las notas por objetivo', 'The class and each student by learning goal: what to reteach': 'La clase y cada estudiante por objetivo de aprendizaje: qué repasar',
     'Go back in time': 'Volver atrás en el tiempo', 'An assignment, or everything, as it was on an earlier day': 'Una tarea, o todo, tal como estaba un día anterior',
     'Updates and installing': 'Actualizaciones e instalación', 'This version, what’s new, install as an app': 'Esta versión, las novedades e instalar como aplicación',
     'Dark mode': 'Modo oscuro', 'Light mode': 'Modo claro', 'Display': 'Pantalla', 'Text size and zoom': 'Tamaño del texto y zoom',
@@ -3824,7 +3877,7 @@ const LANG_ES = {
     /* the feedback page in a returned paper */
     'How it was scored': 'Cómo se puntuó', 'From your teacher': 'De tu docente', 'Comment on your paper': 'Comentario en tu trabajo', 'Comments on your paper': 'Comentarios en tu trabajo',
     'Your marked paper starts on the next page.': 'Tu trabajo corregido empieza en la página siguiente.', 'Your feedback continues on the next page.': 'Tus comentarios continúan en la página siguiente.',
-    'Missing': 'No entregado', 'Excused': 'Justificado', 'Late': 'Con retraso',
+    'Missing': 'No entregado', 'Excused': 'Justificado', 'Late': 'Con retraso', 'Retake': 'Nuevo intento', 'First try': 'Primer intento', 'counts as': 'cuenta como',
   },
   rules: [
     [/^(?:No classes today\.|\w+ class(?:es)? today\.|\w+ sets? of papers (?:to mark|ready to hand back)|[Nn]othing waiting to be marked\.)/, m => esHomeSay(m.input)],
@@ -3853,7 +3906,7 @@ const LANG_ES = {
     [/^A ZIP from (.+), a folder, a scan of the whole class, or photos\.$/, m => 'Un ZIP ' + (/^your school’?s? system$/.test(m[1]) ? 'del sistema de tu centro' : 'de ' + m[1]) + ', una carpeta, un escaneo de toda la clase o fotos.'],
     [/^Open a (.+) download$/, 'Abrir una descarga de $1'],
     [/^(\d+) students?$/, m => m[1] + (m[1] === '1' ? ' estudiante' : ' estudiantes')],
-    [/^(.+) (gradebook|students|attendance|missing work|charts|report comments)$/, m => m[1] + ': ' + { gradebook: 'libro de calificaciones', students: 'estudiantes', attendance: 'asistencia', charts: 'gráficos', 'report comments': 'comentarios de informe', 'missing work': 'trabajos sin entregar' }[m[2]]],
+    [/^(.+) (gradebook|students|attendance|missing work|charts|goals|report comments)$/, m => m[1] + ': ' + { gradebook: 'libro de calificaciones', students: 'estudiantes', attendance: 'asistencia', charts: 'gráficos', goals: 'objetivos', 'report comments': 'comentarios de informe', 'missing work': 'trabajos sin entregar' }[m[2]]],
     [/^(\d+) (late|excused|absent)$/, m => m[1] + ' ' + { late: 'tarde', excused: +m[1] === 1 ? 'justificada' : 'justificadas', absent: +m[1] === 1 ? 'falta' : 'faltas' }[m[2]]],
     [/^Names, students, (.+) links$/, 'Nombres, estudiantes y enlaces de $1'], [/^Names, students, links to your school’s system$/, 'Nombres, estudiantes y enlaces al sistema de tu centro'],
     [/^Nothing matches “(.*)”\.$/, 'Nada coincide con «$1».'],
@@ -3945,6 +3998,8 @@ const LANG_ES = {
       a: ['Bajo el total del estudiante en el panel de notas, elige **Missing**, **Excused** o **Late**. El ⋯ de al lado tiene **Leave out of the average**.', 'Los trabajos no entregados y justificados no esperan nota, así que no cuentan como pendientes de corregir.'] },
     'extra-credit': { q: '¿Cómo doy puntos extra?', words: 'bonus puntos extra adicional',
       a: ['En un trabajo, abre el ⋯ junto a la nota y elige **Extra credit points**. Admite puntos o un porcentaje.', 'Para puntos extra que no van ligados a un trabajo, pulsa **+ Extra credit** en el libro de calificaciones de la clase. La configuración de periodos dice si se suman a la nota del periodo y si una nota puede pasar del 100 %.'] },
+    'retake': { q: 'Un estudiante repite una tarea. ¿Cómo conservo la primera nota?', words: 'repetir recuperación reentrega segundo intento rehacer más alta última media',
+      a: ['Abre el ⋯ junto a Missing, Excused y Late en su trabajo y elige **Start a retake**. La nota, el comentario y el trabajo del primer intento se conservan, y el panel de notas queda vacío para el nuevo intento. Añade el trabajo nuevo con **+ Add**.', 'Cuenta el intento con la nota más alta, salvo que elijas el último o la media: **Change** en el cuadro del nuevo intento, o la configuración de periodos del libro de calificaciones. Es una sola regla para todas tus clases.', 'Para una nota escrita a mano en el libro de calificaciones, escribe las dos en la celda, así: **7 > 10**.'] },
     'past-work': { q: '¿Puedo ver trabajos anteriores de un estudiante mientras corrijo?', words: 'historial anterior previo progreso comparar',
       a: ['Sí. **Past work**, bajo Next en el panel de notas, muestra las notas del estudiante y tus comentarios de otras tareas junto al trabajo en pantalla.', 'Los estudiantes se emparejan mediante la lista de la clase.'] },
     'return': { q: '¿Cómo devuelvo los trabajos corregidos?', words: 'exportar descargar devolver entregar zip enviar estudiantes',
@@ -3969,6 +4024,10 @@ const LANG_ES = {
       a: ['Sí. Abre una clase y elige **Attendance**. Todos empiezan como presentes, así que pulsa **Late**, **Excused** o **Absent** solo para quien no lo esté, o **Everyone is here** si están todos. Cada pulsación se guarda, con una nota si la quieres.',
         '**Look back** muestra cada día guardado en una tabla, con los totales de cada estudiante. **Copy this day** y **Download as a spreadsheet** lo sacan para el sistema de tu centro.',
         'La asistencia se queda en este navegador y en tu carpeta, como el resto de tu trabajo. Si no la usas, desactívala en Ajustes, **Classes and rosters**.'] },
+    'learning-goals': { q: '¿Puedo ver las notas por objetivo de aprendizaje o estándar?', go: 'Abrir Ajustes, Calificación', words: 'estándares estándar destrezas objetivos resultados dominio repasar etiquetar competencia',
+      a: ['Sí, y es opcional. En Ajustes, Calificación, **Learning goals** guarda tu propia lista: una destreza como «Usa evidencias», o un estándar de tu centro.',
+        '1. En una tarea, elige Setup, luego **Rubric setup**, y escoge un objetivo junto a cada fila. En un examen en papel, escoge un objetivo debajo de cada pregunta en **Quiz boxes**.', '2. Abre la clase y elige **Goals**: la media de la clase en cada objetivo, con el más bajo primero, cada estudiante en cada objetivo, y de dónde sale cada número.',
+        'La página de cada estudiante muestra sus objetivos junto a la media de la clase. Etiquetar nunca cambia una puntuación ni una nota, y cada tarea cuenta lo mismo dentro de un objetivo.'] },
     'report-comments': { q: '¿Puede ayudarme a escribir los comentarios de los informes?', words: 'boletín informe periodo comentario fin de trimestre narrativa familias',
       a: ['Sí. Abre una clase y elige **Report comments**. Cada estudiante tiene un borrador hecho a partir de la nota del periodo, las filas de rúbrica más fuerte y más floja, los trabajos sin entregar y cómo han evolucionado las notas.',
         'Cambia lo que quieras, trae lo que escribiste en sus trabajos con **Add** y pulsa **Done, next student**. **Copy all** copia todos los comentarios para tu sistema de informes.',
@@ -4136,6 +4195,7 @@ const LANG_ZH = {
     'Take my work with me': '帶走我的工作成果', 'A take-home file for another computer': '給另一台電腦用的攜帶檔', 'Bring work in': '帶入工作成果', 'From a take-home file': '從攜帶檔',
     'Remove from this computer': '從這台電腦移除', 'Clears student work from this browser': '清除這個瀏覽器裡的學生作業',
     'Where my work is saved': '我的工作成果存在哪裡', 'This browser, and a folder you choose': '這個瀏覽器，以及你選擇的資料夾',
+    'Learning goals': '學習目標', 'Your own list of goals, to see scores by': '你自己的目標清單，用來依目標查看分數', 'The class and each student by learning goal: what to reteach': '依學習目標查看全班與每位學生：哪些需要重教',
     'Go back in time': '回到先前的狀態', 'An assignment, or everything, as it was on an earlier day': '一份作業或全部資料在先前某一天的樣子',
     'Updates and installing': '更新與安裝', 'This version, what’s new, install as an app': '目前版本、新功能、安裝為應用程式',
     'Dark mode': '深色模式', 'Light mode': '淺色模式', 'Display': '顯示', 'Text size and zoom': '文字大小與縮放',
@@ -4162,7 +4222,7 @@ const LANG_ZH = {
     /* the feedback page in a returned paper */
     'How it was scored': '評分方式', 'From your teacher': '老師的話', 'Comment on your paper': '作業上的評語', 'Comments on your paper': '作業上的評語',
     'Your marked paper starts on the next page.': '批改後的作業從下一頁開始。', 'Your feedback continues on the next page.': '回饋接續在下一頁。',
-    'Missing': '缺交', 'Excused': '免交', 'Late': '遲交',
+    'Missing': '缺交', 'Excused': '免交', 'Late': '遲交', 'Retake': '重做', 'First try': '第一次', 'counts as': '採計',
   },
   rules: [
     [/^(?:No classes today\.|\w+ class(?:es)? today\.|\w+ sets? of papers (?:to mark|ready to hand back)|[Nn]othing waiting to be marked\.)/, m => zhHomeSay(m.input)],
@@ -4191,7 +4251,7 @@ const LANG_ZH = {
     [/^A ZIP from (.+), a folder, a scan of the whole class, or photos\.$/, m => (/^your school’?s? system$/.test(m[1]) ? '學校系統' : m[1]) + '的 ZIP、資料夾、全班的掃描檔或照片。'],
     [/^Open a (.+) download$/, '開啟 $1 的下載檔'],
     [/^(\d+) students?$/, '$1 位學生'],
-    [/^(.+) (gradebook|students|attendance|missing work|charts|report comments)$/, m => m[1] + '：' + { gradebook: '成績冊', students: '學生', attendance: '出缺席', charts: '圖表', 'report comments': '成績單評語', 'missing work': '缺交作業' }[m[2]]],
+    [/^(.+) (gradebook|students|attendance|missing work|charts|goals|report comments)$/, m => m[1] + '：' + { gradebook: '成績冊', students: '學生', attendance: '出缺席', charts: '圖表', goals: '學習目標', 'report comments': '成績單評語', 'missing work': '缺交作業' }[m[2]]],
     [/^(\d+) (late|excused|absent)$/, m => m[1] + ' 人' + { late: '遲到', excused: '請假', absent: '缺席' }[m[2]]],
     [/^Names, students, (.+) links$/, '名稱、學生與 $1 連結'], [/^Names, students, links to your school’s system$/, '名稱、學生與學校系統的連結'],
     [/^Nothing matches “(.*)”\.$/, '找不到符合「$1」的項目。'],
@@ -4283,6 +4343,8 @@ const LANG_ZH = {
       a: ['在評分面板中學生總分的下方，選擇 **Missing**、**Excused** 或 **Late**。旁邊的 ⋯ 裡有 **Leave out of the average**。', '缺交和免交的作業不需要分數，所以不會算在待批改裡。'] },
     'extra-credit': { q: '怎麼給加分？', words: '加分 額外分數 bonus extra credit',
       a: ['在一份作業上，開啟分數旁的 ⋯，選擇 **Extra credit points**。可以輸入分數或百分比。', '如果加分不屬於任何一份作業，請在班級成績冊按 **+ Extra credit**。學期設定決定加分是否計入學期成績，以及成績能否超過 100%。'] },
+    'retake': { q: '學生要重做作業，怎麼保留第一次的分數？', words: '重考 補考 重做 重交 第二次 再試一次 最高 最新 平均',
+      a: ['在該生的作業上，開啟 Missing、Excused、Late 旁的 ⋯，選擇 **Start a retake**。第一次的分數、評語和作業都會保留，評分欄會清空給重做的這一次。用 **+ Add** 加入新的作業。', '預設採計最高的一次；也可以改成最新的一次或平均：按重做方塊裡的 **Change**，或到成績冊的學期設定。這條規則適用於你所有的班級。', '如果分數是直接輸入成績冊的，請在格子裡輸入兩個分數，例如 **7 > 10**。'] },
     'past-work': { q: '批改時可以看學生以前的作業嗎？', words: '紀錄 以前 先前 進步 比較 history',
       a: ['可以。評分面板中 Next 下方的 **Past work** 會在目前的作業旁，顯示這位學生在其他作業的分數和你的評語。', '學生是依班級名單來配對的。'] },
     'return': { q: '怎麼發還批改好的作業？', words: '匯出 下載 發還 交回 zip 傳送 學生 export',
@@ -4307,6 +4369,10 @@ const LANG_ZH = {
       a: ['可以。開啟一個班級，選擇 **Attendance**。每個人一開始都是出席，所以只要替沒到的人按 **Late**、**Excused** 或 **Absent**；如果全員到齊，就按 **Everyone is here**。每按一次都會儲存，也可以加上備註。',
         '**Look back** 會用一張表顯示每個已儲存的日期，以及每位學生的總計。**Copy this day** 和 **Download as a spreadsheet** 可以把資料帶到學校的系統。',
         '出缺席紀錄和你其他的工作一樣，只留在這個瀏覽器和你的資料夾裡。如果用不到，可以在設定的 **Classes and rosters** 關閉。'] },
+    'learning-goals': { q: '可以依學習目標或能力指標查看分數嗎？', go: '開啟設定的評分', words: '指標 標準 能力 目標 學習表現 精熟 重教 標記 素養',
+      a: ['可以，而且可用可不用。在設定的評分裡，**Learning goals** 是你自己的清單：一項能力，例如「運用證據」，或學校的能力指標。',
+        '1. 在一份作業裡選 Setup，再選 **Rubric setup**，在每個項目旁選一個目標。紙本小考則在 **Quiz boxes** 裡每一題的下方選一個目標。', '2. 開啟班級並選 **Goals**：每個目標的全班平均（最低的排最前面）、每位學生在每個目標的表現，以及每個數字的來源。',
+        '每位學生自己的頁面會把他的目標和全班平均並列。標記目標不會改變任何分數或成績，同一個目標裡每份作業的比重相同。'] },
     'report-comments': { q: '可以幫我寫成績單評語嗎？', words: '成績單 報告 學期 評語 期末 敘述 家長 report',
       a: ['可以。開啟一個班級，選擇 **Report comments**。每位學生都有一份草稿，內容來自學期成績、評分規準中最強和最弱的項目、缺交的作業，以及分數的變化。',
         '可以任意修改，用 **Add** 帶入你在作業上寫過的內容，然後按 **Done, next student**。**Copy all** 會複製所有評語，方便貼到成績單系統。',
@@ -4514,6 +4580,9 @@ const HELP = [
   { id: 'extra-credit', sec: 'score', q: 'How do I give extra credit?',
     a: ['On one paper, open the ⋯ beside the score and choose **Extra credit points**. It takes points or a percent.', 'For extra credit that is not tied to a paper, press **+ Extra credit** in the class’s gradebook. Term setup says whether it adds to the term grade and whether a grade can pass 100%.'],
     words: 'bonus points extra' },
+  { id: 'retake', sec: 'score', q: 'A student is redoing an assignment. How do I keep the first score?',
+    a: ['Open the ⋯ beside Missing, Excused and Late on their paper and choose **Start a retake**. The first try’s score, comment and paper are kept, and the score panel empties for the retake. Add the new paper with **+ Add**.', 'The highest try counts unless you choose the latest or the average: **Change** in the retake box, or Term setup in the gradebook. It is one rule for all your classes.', 'For a score you typed into the gradebook, type both into the cell, like **7 > 10**.'],
+    words: 'retake resubmit resubmission redo second attempt try again rewrite highest latest average' },
   { id: 'past-work', sec: 'score', q: 'Can I see a student’s earlier work while I mark?',
     a: ['Yes. **Past work**, under Next in the score panel, shows the student’s scores and your comments from other assignments beside the paper on screen.', 'Students are matched through the class roster.'],
     words: 'history previous earlier progress compare' },
@@ -4549,6 +4618,11 @@ const HELP = [
       '**Look back** shows every saved day in one table, with each student’s totals. **Copy this day** and **Download as a spreadsheet** take it out for your school’s system.',
       'Attendance stays in this browser and your folder, like the rest of your work. If you don’t use it, turn it off in Settings, **Classes and rosters**.'],
     go: ['Open Settings, Classes', '#/settings/classes'], words: 'attendance register roll call present absent absence late tardy excused' },
+  { id: 'learning-goals', sec: 'class', q: 'Can I see scores by learning goal or standard?',
+    a: ['Yes, and it is optional. In Settings, Grading, **Learning goals** holds your own list: a skill like “Uses evidence”, or a standard from your school.',
+      '1. In an assignment, choose Setup, then **Rubric setup**, and pick a goal beside each row. For a paper quiz, pick a goal under each question in **Quiz boxes**.', '2. Open the class and choose **Goals**: the class average on each goal with the lowest first, every student by every goal, and where each number came from.',
+      'A student’s own page shows their goals beside the class average. Tagging never changes a score or a grade, and every assignment counts the same within a goal.'],
+    go: ['Open Settings, Grading', '#/settings/grading'], words: 'standards standard skills objectives outcomes mastery reteach tag strand competency' },
   { id: 'report-comments', sec: 'class', q: 'Can it help me write report comments?',
     a: ['Yes. Open a class and choose **Report comments**. Each student has a draft built from the term grade, the strongest and weakest rubric rows, missing work and how the scores have moved.',
       'Change any of it, bring in what you wrote on their papers with **Add**, and press **Done, next student**. **Copy all** puts every comment on the clipboard for your report system.',
@@ -4698,8 +4772,32 @@ function percentWith(total, max, sc) {
 }
 function gradeOf(st) {
   if (noScore(st)) return { total: null, pct: null, done: true, status: st.grade.status };   // missing or excused: settled, with no number
-  const g0 = scoreOf(st), g = addXc(g0, st.grade.xc, g0.outOf != null ? g0.outOf : maxPoints(), st.grade.xcU), r = st.grade.status === 'late' ? { ...g, status: 'late' } : g;
+  const g0 = tryGrade(st), g = withTries(g0, st.grade.tries, g0.outOf != null ? g0.outOf : maxPoints(), !!g0.done && !g0.partial && g0.total != null), r = st.grade.status === 'late' ? { ...g, status: 'late' } : g;
   return st.grade.outAvg ? { ...r, out: true } : r;   // left out of the average: the score stays and copies, it just isn't counted
+}
+function tryGrade(st) { const g0 = scoreOf(st); return addXc(g0, st.grade.xc, g0.outOf != null ? g0.outOf : maxPoints(), st.grade.xcU); }
+/* Retakes. grade.tries holds the earlier tries, oldest first, each frozen as it stood when the next one began:
+   { t, total, max, pct, late, files: [paths on the paper then], and the rubric rows, points, comment… it had, so taking the retake off puts them back }.
+   The score fields of the grade itself are the newest try. Which one counts is the teacher's own rule, for every class (lib.book.retake):
+   'high' the best percent (the default), 'last' the newest try that has a full score, 'avg' the average of the tries.
+   A try counts once it has a full score; until then the earlier ones stand, and the paper still shows as waiting for a score. */
+const RETAKE_RULES = [['high', 'Highest', 'The best try counts'], ['last', 'Latest', 'The newest try counts, even if it is lower'], ['avg', 'Average', 'The average of the tries counts']];
+function retakeRule() { const r = typeof lib !== 'undefined' && lib && lib.book && lib.book.retake; return r === 'last' || r === 'avg' ? r : 'high'; }
+function withTries(r, tries, max, full) {
+  const was = (tries || []).filter(t => t && t.pct != null);
+  if (!was.length) return r;
+  const now = full ? { total: r.total, max, pct: r.pct, now: true } : null, all = now ? was.concat(now) : was, rule = retakeRule();
+  let c;
+  if (rule === 'last') c = all[all.length - 1];
+  else if (rule === 'avg' && all.length > 1) {
+    const same = all.every(t => t.total != null && t.max === all[0].max);
+    c = { pct: roundPct(all.reduce((a, t) => a + t.pct, 0) / all.length), max: same ? all[0].max : max, total: same ? Math.round(all.reduce((a, t) => a + t.total, 0) / all.length * 100) / 100 : null };
+    if (c.total == null && max) c.total = Math.round(c.pct * max) / 100;
+  } else c = all.reduce((a, t) => t.pct >= a.pct ? t : a);
+  const out = { ...r, total: c.total, pct: c.pct, tries: was, tryNow: now, tryRule: rule, tryOwn: { total: r.total, pct: r.pct } };
+  if (c !== now) { for (const k of ['xc', 'xcU', 'base', 'paper', 'outOf']) delete out[k]; if (c.max != null && c.max !== max) out.outOf = c.max; }
+  if (!now) { out.done = false; out.wait = true; delete out.partial; }   // the retake has no full score yet: the earlier tries stand
+  return out;
 }
 function addXc(r, xc, max, unit) {
   xc = +xc; if (!xc || isNaN(xc) || r.total == null) return r;
@@ -5018,6 +5116,7 @@ function saveNow(leaving) {
   clearTimeout(saveT); saveDue = false;
   if (batch.revs && tabForgot(batch)) return tabLetGo();
   const data = { t: Date.now(), carry: batch.carry, cur, ck: batch.students[cur] && batch.students[cur].key, setup, cls: batch.classId, share: batch.share, drive: batch.drive, light: batch.light, lightOpt: batch.lightOpt, lightPg: batch.lightPg, lightPgL: batch.lightPgL, anon: batch.anon, moved: batch.moved, removed: batch.removed, refSkip: batch.refSkip, quiz: batch.quiz, groups: batch.groups && batch.groups.length ? batch.groups : undefined, returned: batch.returned || undefined, read: (batch.read = paperReads()), s: {} };
+  if (batch.goal) data.goal = batch.goal;   // a learning goal for the whole score (goals.js); no key at all without one
   for (const st of batch.students) {
     const f = {};
     for (const fl of st.files.concat(st.gone || [])) if (Object.values(fl.marks).some(a => a.length)) f[fl.path] = fl.marks;   // a removed file keeps its marks for Bring back
@@ -5079,6 +5178,7 @@ function restore() {
   if (data.anon) batch.anon = data.anon;
   if (data.refSkip) batch.refSkip = data.refSkip;
   if (data.quiz) batch.quiz = data.quiz;
+  if (data.goal) batch.goal = data.goal;
   if (data.returned) batch.returned = data.returned;
   batch.groups = data.groups || [];
   groupSync();
@@ -5426,7 +5526,7 @@ async function openStudent(i, filePath) {
     const gs = $('#gapScan'); if (gs) gs.onclick = () => { scanInto = true; scanFor = null; $('#scanIn').click(); };
   }
   curMedia = null;
-  for (const f of st.files.filter(f => f.kind === 'media')) { if (f.added || carryTag(f)) paper.insertAdjacentHTML('beforeend', '<div class="fhead"><span style="color:var(--fg)">' + esc(f.name) + '</span>' + (f.added ? addTag(f) : '') + carryTag(f) + '<span style="flex:1"></span>' + fileMenu(fileLinks(f)) + '</div>'); paper.appendChild(mediaCard(st, f)); }
+  for (const f of st.files.filter(f => f.kind === 'media')) { if (f.added || carryTag(f) || tryTag(st, f)) paper.insertAdjacentHTML('beforeend', '<div class="fhead"><span style="color:var(--fg)">' + esc(f.name) + '</span>' + tryTag(st, f) + (f.added ? addTag(f) : '') + carryTag(f) + '<span style="flex:1"></span>' + fileMenu(fileLinks(f)) + '</div>'); paper.appendChild(mediaCard(st, f)); }
   const rd = refDoc();
   if (rd) { const det = document.createElement('details'); det.className = 'refd'; det.open = store.get('gs.rdOpen', true); det.innerHTML = '<summary>Your document: ' + esc(rd.name) + '</summary>'; det.ontoggle = () => store.set('gs.rdOpen', det.open); paper.appendChild(det); docxCard(rd, rd.name).then(c => { c.querySelector('.fhead').remove(); det.appendChild(c); }); }
   for (const r of refsFor(st)) { const hold = document.createElement('div'); paper.appendChild(hold); refCard(r, st).then(c => { if (token === openToken) hold.replaceWith(c); }); }
@@ -5454,7 +5554,7 @@ async function openStudent(i, filePath) {
       if (token !== openToken) return;
       const fh = c.querySelector('.fhead');
       if (fh && !f.virtual && !f.rubric) {   // Download joins Group work, Move to, Replace and Remove under the file's ⋯
-        fh.insertAdjacentHTML('beforeend', carryTag(f) + fileMenu(moveLink(f) + fileLinks(f)));
+        fh.insertAdjacentHTML('beforeend', tryTag(st, f) + carryTag(f) + fileMenu(moveLink(f) + fileLinks(f)));
         const dl = fh.querySelector('[data-wdl], [data-odl]'); if (dl) { dl.className = 'link'; fh.querySelector('.km').prepend(dl); }
       }
       paper.appendChild(c);
@@ -5464,7 +5564,7 @@ async function openStudent(i, filePath) {
     const d = it.d, di = it.di, on = docIn(st, d), auto = docAuto(st, d), af = d.file && fileByPath(st, d.file);
     const one = af && !af.virtual && d.pages.every(([q]) => q === af.path || (fileByPath(st, q) || {}).virtual);   // her rubric page added on the end doesn't make it two files
     const head = document.createElement('div'); head.className = 'fhead';
-    head.innerHTML = '<span style="color:var(--fg)">' + esc(d.name) + '</span><span>' + d.pages.length + (d.pages.length === 1 ? ' page' : ' pages') + '</span>' + (af && af.added ? addTag(af) : '') + carryTag(batch.carry && d.pages.map(([q]) => fileByPath(st, q)).find(f => f && !f.virtual && batch.carry.flags[f.path])) +
+    head.innerHTML = '<span style="color:var(--fg)">' + esc(d.name) + '</span><span>' + d.pages.length + (d.pages.length === 1 ? ' page' : ' pages') + '</span>' + tryTag(st, af || fileByPath(st, (d.pages[0] || [])[0])) + (af && af.added ? addTag(af) : '') + carryTag(batch.carry && d.pages.map(([q]) => fileByPath(st, q)).find(f => f && !f.virtual && batch.carry.flags[f.path])) +
       (on ? '' : '<span class="pill warn" style="font-size:12px;padding:2px 8px;border-radius:999px;background:var(--warn-soft);color:var(--warn)">' + (auto ? 'No marks, left out' : 'Left out') + '</span>') +
       '<span style="flex:1"></span>' + (on ? '' : '<button class="link" style="font-size:13px" data-inout="' + di + '">Bring back</button>') +
       fileMenu((on || auto ? '<button class="link" data-rotdoc="' + di + '" title="Turn every page of this file a quarter turn to the right">⟳ Turn all pages</button>' : '') + (one ? moveLink(af) + replaceLink(af) : '') + (on ? '<button class="link" data-inout="' + di + '" title="Keep this file off the screen and out of what goes back. Bring back undoes it.">Leave out</button>' : '') + (one ? removeLink(af) : ''));
@@ -6331,7 +6431,7 @@ function renderList() {
     if (!lfShows(i)) return '';
     const g = gradeOf(st);
     const val = g.total != null ? g.total : g.pct != null ? g.pct + '%' : null;
-    let right = noScore(st) ? '<span class="stag" title="You marked this student ' + g.status + '. No score counts.">' + STATUS_LABEL[g.status] + '</span>' : val != null ? '<span class="sc" title="' + (g.paper ? 'Read from the paper' : g.done ? 'Scored' : 'Partly scored') + '"' + (g.paper || g.out ? ' style="color:var(--muted);font-weight:600"' : g.done ? '' : ' style="color:var(--warn)"') + '>' + fmtNum(g.total != null ? g.total : g.pct) + (g.total == null ? '%' : g.outOf != null ? '/' + fmtNum(g.outOf) : '') + (g.partial ? '<small>partial</small>' : '') + '</span>'
+    let right = noScore(st) ? '<span class="stag" title="You marked this student ' + g.status + '. No score counts.">' + STATUS_LABEL[g.status] + '</span>' : val != null ? '<span class="sc" title="' + (g.tries ? esc(triesSay(g)) : g.paper ? 'Read from the paper' : g.done ? 'Scored' : 'Partly scored') + '"' + (g.paper || g.out ? ' style="color:var(--muted);font-weight:600"' : g.done ? '' : ' style="color:var(--warn)"') + '>' + fmtNum(g.total != null ? g.total : g.pct) + (g.total == null ? '%' : g.outOf != null ? '/' + fmtNum(g.outOf) : '') + (g.partial ? '<small>partial</small>' : '') + '</span>'
       : manyReads(st) ? '<span class="sc" style="color:var(--warn)" title="More than one grade found on the paper. Check the Grade sheet.">?</span>'
       : st.doubts && st.doubts.length ? '<span class="sc" style="color:var(--warn)" title="A reading on the paper may not be a grade. Confirm it on the Grade sheet.">?</span>'
       : hasMarks(st) ? '<span class="dot" title="Marked"></span>' : '';
@@ -6341,7 +6441,7 @@ function renderList() {
     const fm = fmNow(), sv = noScore(st) ? ['–', 'none'] : fm ? (st.grade.fb ? ['✓', 'ok'] : hasMarks(st) || (st.grade.comment || '').trim() ? ['', 'dot'] : st.files.length ? ['', 'ring'] : ['–', 'none'])
       : val != null ? [fmtNum(g.total != null ? g.total : g.pct) + (g.total == null ? '%' : ''), g.paper || g.out ? 'quiet' : g.done ? '' : 'part'] : manyReads(st) || (st.doubts && st.doubts.length) ? ['?', 'part'] : hasMarks(st) ? ['', 'dot'] : st.files.length ? ['', 'ring'] : ['–', 'none'];
     return '<button class="stu' + (i === cur ? ' on' : '') + (st.files.length ? '' : ' empty') + (sv[1] ? ' sv-' + sv[1] : '') + (g.status === 'late' ? ' is-late' : '') + '" data-i="' + i + '" data-sv="' + sv[0] + '"' + (i === cur ? ' aria-current="true"' : '') + '><span class="num">' + (pos + 1) + '</span><span class="nm" title="' + esc(full) + '">' + esc(nm) + '</span>' + (anonOn() ? '' : whoBtn('data-wi="' + i + '"', st.key)) +
-      '<span class="tail">' + (st.files.length || noScore(st) ? '' : '<span class="muted" style="font-size:11px">no paper</span>') + (g.status === 'late' ? '<span class="stag" title="You marked this student late">late</span>' : '') + (g.out ? '<span class="stag out" title="Left out of the average">left out</span>' : '') + (nAdd ? '<span class="add" title="' + nAdd + (nAdd === 1 ? ' file' : ' files') + ' added by you">+' + nAdd + '</span>' : '') + (re ? '<span class="add" title="A page needs a rescan">⚑</span>' : '') + (groupOf(st) ? '<span class="add grp" title="Group work: marked and graded once with ' + esc(groupNames(groupMates(st))) + '">group</span>' : grp ? '<span class="add grp" title="Group work: shares pages or a file with another student">shared</span>' : '') + carryPill(st) + sent + right + '</span></button>';
+      '<span class="tail">' + (st.files.length || noScore(st) ? '' : '<span class="muted" style="font-size:11px">no paper</span>') + (g.status === 'late' ? '<span class="stag" title="You marked this student late">late</span>' : '') + (g.out ? '<span class="stag out" title="Left out of the average">left out</span>' : '') + (g.tries ? '<span class="stag retk" title="' + esc(triesSay(g)) + '">retake</span>' : '') + (nAdd ? '<span class="add" title="' + nAdd + (nAdd === 1 ? ' file' : ' files') + ' added by you">+' + nAdd + '</span>' : '') + (re ? '<span class="add" title="A page needs a rescan">⚑</span>' : '') + (groupOf(st) ? '<span class="add grp" title="Group work: marked and graded once with ' + esc(groupNames(groupMates(st))) + '">group</span>' : grp ? '<span class="add grp" title="Group work: shares pages or a file with another student">shared</span>' : '') + carryPill(st) + sent + right + '</span></button>';
   }).join('');
   if (listFilter !== 'all' && !q && !order.some(i => lfMatch(batch.students[i]))) $('#stuList').insertAdjacentHTML('beforeend', '<div class="muted lfnone">No one else here. <button class="link" data-lf="all">Show everyone</button></div>');
   listToCur();
@@ -6435,7 +6535,7 @@ function fbToggle(next) {
   if (next && navOrder().indexOf(cur) < navOrder().length - 1) stepStudent(1); else renderGrade();
 }
 function totalHtml(st) {
-  const gr = gradeOf(st), own = ownGrade(st);
+  const gr = noScore(st) ? gradeOf(st) : tryGrade(st), own = ownGrade(st);   // with a retake, the big number is the try being scored; what counts is in the retake box under it
   if (noScore(st)) return '<b>' + STATUS_LABEL[gr.status] + '</b><span style="width:100%;font-size:12.5px">No score counts. Giving a score takes this off.</span>';
   let h = '<b>' + (gr.total == null ? '–' : fmtNum(gr.total)) + '</b><span>/ ' + (gr.outOf != null ? fmtNum(gr.outOf) : maxPoints()) + '</span><span class="pc">' + (gr.pct == null ? '' : fmtPct(gr.pct) + bandSay(gr.pct)) + '</span>';
   if (gr.total != null) h += '<button class="btn sm ghost" id="stampScore" title="Put the score on the paper: ' + esc(scoreStampText(gr)) + '">' + STAMP_ICON + 'Stamp</button>';
@@ -6471,6 +6571,10 @@ $('#grade').addEventListener('click', e => {
   if (e.target.closest('[data-gxc]')) { kmClose(); return xcStart(batch.students[cur]); }
   { const u = e.target.closest('[data-xcu]'); if (u) return xcUnitSet(batch.students[cur], u.dataset.xcu); }
   if (e.target.closest('[data-xcoff]')) return xcSet(batch.students[cur], 0, true);
+  if (e.target.closest('[data-gretake]')) { kmClose(); return retakeStart(batch.students[cur]); }
+  if (e.target.closest('[data-tryoff]')) return retakeOff(batch.students[cur]);
+  { const u = e.target.closest('[data-tryrule]'); if (u) { kmClose(); return retakeRuleSet(u.dataset.tryrule); } }
+  if (e.target.closest('[data-tryadd]')) return pickAdd(batch.students[cur]);
   if (e.target.closest('#prevBtn')) stepStudent(-1);
   if (e.target.closest('#nextBtn')) stepStudent(1);
   if (e.target.closest('#nextUn')) return nextUnscored();
@@ -6657,11 +6761,12 @@ function openSetup() {
       '<span class="muted" style="font-size:12.5px;margin-top:4px">Grading right on your own rubric? Use Just the total: one score box, and the Grades tab and percents still work.</span></div>';
     h += rubricLibHtml(draft);
     if (draft.mode === 'rubric') {
-      h += '<div class="field"><label>Rubric rows</label>' + draft.criteria.map((c, i) => '<div class="critrow"><input type="text" data-ci="' + i + '" value="' + esc(c) + '">' + (draft.criteria.length > 1 ? '<button class="btn sm" data-rm="' + i + '" aria-label="Remove row">×</button>' : '') + '</div>' + levelsEditHtml(draft, i)).join('') +
+      h += '<div class="field"><label>Rubric rows</label>' + draft.criteria.map((c, i) => '<div class="critrow"><input type="text" data-ci="' + i + '" value="' + esc(c) + '">' + goalRowHtml(draft, i) + (draft.criteria.length > 1 ? '<button class="btn sm" data-rm="' + i + '" aria-label="Remove row">×</button>' : '') + '</div>' + levelsEditHtml(draft, i)).join('') +
         (draft.criteria.length < 6 ? '<div><button class="btn sm" data-add>+ Add a row</button></div>' : '') + '</div>';
     } else {
       h += '<div class="field"><label for="outOf">Out of</label><input type="number" id="outOf" min="1" step="0.5" value="' + esc(draft.outOf) + '" style="width:120px"></div>';
     }
+    h += goalsSetupHtml(draft);
     h += '<div class="field"><label>Grading scale</label><span style="display:flex;gap:6px;flex-wrap:wrap">' + (me().scale12 ? '<button class="btn sm" data-preset="usual">12 = 100, 11 = 95, 10 = 91…</button>' : '') + '<button class="btn sm" data-preset="fives">Steps of 5 (9 = 85%)</button><button class="btn sm" data-preset="none">No scale</button>' + scaleBankHtml(draft, draft.mode === 'rubric' ? draft.criteria.length * 4 : Math.round(+draft.outOf || 0)) + '</span>' + scaleRows() + '</div>';
     const rp = newPage === undefined ? draft.rubricPage : newPage;
     h += '<div class="field"><label>Your rubric, for every student</label><span class="muted" style="font-size:13px">Bring in your rubric once and every student gets their own copy to grade on. A Word rubric (.docx or .docm) stays a Word file: type in it, check its boxes and shade its cells. A PDF or picture is added as a page you can mark up. Each copy goes back with that student’s work.</span>' +
@@ -6720,6 +6825,8 @@ function openSetup() {
       if (note && !await askDlg(note, { ok: 'Save', cancel: 'Go back' })) return;
       draft.criteria = draft.criteria.map((c, i) => c.trim() || 'Criterion ' + (i + 1));
       draft.levels = tidyLevels(draft);
+      draft.goals = goalsTidy(draft);
+      if (batch && rubDlg.goalAll !== (batch.goal || '')) { if (rubDlg.goalAll) batch.goal = rubDlg.goalAll; else delete batch.goal; }
       if (newPage === null) { if (draft.rubricPage) store.del('gs.rp.' + draft.rubricPage.id); draft.rubricPage = null; }
       else if (newPage) {
         const id = uid();
@@ -8870,7 +8977,7 @@ const routeNow = () => routeOf(location.hash);
 const SET_SECS = [['saving', 'Saving and carrying', 'Folder, take-home file, safety copies'], ['history', 'Go back in time', 'Your work as it was on an earlier day'], ['classes', 'Classes and rosters', 'Names, students, ' + (sysName() ? sysName() + ' links' : 'class links')], ['terms', 'Terms and weights', 'Your terms and how each type counts'],
   ['grading', 'Grading scale and rubrics', 'Your saved scales and rubrics'], ['marking', 'Marking', 'Mark key, Word papers, tablet and pencil'], ['timetable', 'Timetable and calendar', 'Class times and days off, in the Planner'],
   ['display', 'Display', 'Text size, zoom, dark mode'], ['claude', 'Working with Claude', 'Optional. What Claude can and can’t see'], ['keys', 'Keys', 'Every shortcut'], ['about', 'About and updates', 'Version, what’s new, install as an app']];
-const CLASS_TABS = [['', 'Assignments'], ['gradebook', 'Gradebook'], ['students', 'Students'], ['attendance', 'Attendance'], ['missing', 'Missing work'], ['charts', 'Charts'], ['reports', 'Report comments']];
+const CLASS_TABS = [['', 'Assignments'], ['gradebook', 'Gradebook'], ['students', 'Students'], ['attendance', 'Attendance'], ['missing', 'Missing work'], ['charts', 'Charts'], ['goals', 'Goals'], ['reports', 'Report comments']];   // Goals shows only once the teacher has a learning goal (goals.js)
 const classTabs = () => CLASS_TABS.filter(t => t[0] !== 'attendance' || attOn());   // attendance is the teacher's to turn off
 const classHash = (c, tab, stu) => '#/class/' + (c === lib.loose || !c.id ? '-' : encodeURIComponent(c.id)) + (tab ? '/' + tab + (stu != null ? '/' + (stu + 1) : '') : '');
 const A_TABS = [['', 'Mark'], ['grades', 'Grades'], ['insights', 'Insights'], ['return', 'Return']], A_SUBS = { grades: ['sheet'], insights: ['consistency'] };
@@ -8960,7 +9067,7 @@ function renderLib() {
     '<div class="cards">' + u.items.map(card).join('') + '</div>' +
     '<button class="addcard" data-additem="' + u.id + '">+ Assignment</button></div>';
   const r = routeNow(), c = r.v === 'class' ? r.c : null, tab = c ? r.tab : '';
-  const tabs = (c, ci) => ci < 0 || !c.names.length ? '' : '<nav class="ctabs" aria-label="' + esc(c.name) + '">' + classTabs().map(([k, l]) => { const on = tab === k;
+  const tabs = (c, ci) => ci < 0 || !c.names.length ? '' : '<nav class="ctabs" aria-label="' + esc(c.name) + '">' + classTabs().filter(t => t[0] !== 'goals' || tab === 'goals' || goalList().length).map(([k, l]) => { const on = tab === k;
     return '<a class="ctab' + (on ? ' on' : '') + '" href="' + classHash(c, k) + '" data-ctab="' + k + '"' + (k === 'gradebook' ? ' data-book="' + esc(c.id) + '"' : k === 'students' ? ' data-people="' + ci + '"' : '') + (on ? ' aria-current="page"' : '') + '>' + l + '</a>'; }).join('') + '</nav>';
   const block = (c, ci) => '<div class="cls" data-cls="' + esc(c.id) + '"><div class="clshead"><h1>' + esc(ci < 0 ? 'No class' : c.name) + '</h1>' +
     (ci < 0 ? '<span class="muted">Assignments with no roster. Drag them onto a class in the sidebar, or use Edit to pick a class.</span><span class="sp"></span>' :
@@ -9638,7 +9745,8 @@ function toastDo(msg, label, fn) {
   t.append(' ', b);
 }
 function refound(st) {
-  const all = st.files.filter(f => f.kind !== 'docx' && fileIn(st, f)).flatMap(f => (f.scan && f.scan.found) || []).concat(st.files.flatMap(f => wordFound(f, st)));
+  const fs = st.files.filter(f => !tryOfFile(st, f));   // a grade written on an earlier try's paper belongs to that try
+  const all = fs.filter(f => f.kind !== 'docx' && fileIn(st, f)).flatMap(f => (f.scan && f.scan.found) || []).concat(fs.flatMap(f => wordFound(f, st)));
   const r = splitReads(st, all), rd = st.grade.reads || {}, ok = r.ok.filter(g => !r.mine.includes(g)).filter((g, n, a) => rd[readKey(g)] !== 1 || a.findIndex(o => readKey(o) === readKey(g)) === n);
   st.foundCount = ok.length; st.doubts = r.ask; st.foundAll = ok;
   st.found = ok.length === 1 && !rivalReads(st).length ? { ...ok[0], found: true } : null;
@@ -10677,7 +10785,7 @@ function wordScoresAll() {
       if (scaleDiffers(s.scale)) setClassScale(s.scale);
       if (!hasOwnScore(st) && setup.mode === 'points' && +setup.outOf !== s.max) setClassOutOf(s.max);
     } else if ((st.grade.reads || {})[readKey(wordTableRead(f))] !== 1) continue;   // a table in a student's file waits for her OK
-    if (!hasOwnScore(st)) { rubricToGrade(st, s, s.max, s.nCrit); n++; }
+    if (!hasOwnScore(st) && !tryOfFile(st, f)) { rubricToGrade(st, s, s.max, s.nCrit); n++; }
   }
   if (n) { saveSoon(); renderList(); renderGrade(); }
   else if (asks) renderList();
@@ -10695,6 +10803,7 @@ function wireRubric(st, f, w, page, el, soon) {
   };
   const push = (s, write) => {
     show(s);
+    if (tryOfFile(st, f)) { last = s; return; }   // a rubric from an earlier try: its score is kept with that try, and the retake's score is its own
     if (s.total == null) wordScoreGone(st, last); else rubricToGrade(st, s, m.max, m.crits.length);
     last = s;
     if (write && s.total != null && ownGrade(st).total != null) liftStatus(st);
@@ -12596,8 +12705,9 @@ function statusHtml(st, plain) {
     (plain ? '' : kmWrap('⋯', 'class="btn sm kdots" id="gMore" aria-label="More for this score" title="More for this score"',
       (noScore(st) ? '' : '<button class="outsw" id="outAvg" role="switch" aria-checked="' + out + '"><i></i><span><b>Leave out of the average</b><small>The score stays and still copies. It doesn’t count in the average or on the Insights tab.</small></span></button>') +
       (noScore(st) ? '' : '<button class="mitem" data-gxc>Extra credit points</button>') +
+      (noScore(st) || fmNow() ? '' : '<button class="mitem" data-gretake title="A second try at this assignment. The score, comment and paper so far are kept as the ' + (st.grade.tries && st.grade.tries.length ? 'try before it' : 'first try') + '.">' + (st.grade.tries && st.grade.tries.length ? 'Another retake' : 'Start a retake') + '</button>') +
       '<button class="mitem" data-gcalc>Calculator <kbd>=</kbd></button>', 'right')) + '</div>' +
-    (out && !noScore(st) && !plain ? '<p class="outnote">Left out of the average. <button class="link" data-outoff>Count it again</button></p>' : '') + (plain ? '' : xcHtml(st)) + '</div>';
+    (out && !noScore(st) && !plain ? '<p class="outnote">Left out of the average. <button class="link" data-outoff>Count it again</button></p>' : '') + (plain ? '' : xcHtml(st) + tryHtml(st)) + '</div>';
 }
 /* ---------------- extra credit on one paper ---------------- */
 let xcOpen = null, xcUnit = store.get('gs.xcU', 'pts') === 'pct' ? 'pct' : 'pts';   // the last unit picked, on this computer, for the next paper
@@ -12623,6 +12733,65 @@ function xcSet(st, raw, redraw) {
   else { delete st.grade.xc; delete st.grade.xcU; if (redraw) xcOpen = null; }
   touchGrade(st); saveSoon(); renderList();
   if (redraw) renderGrade(); else { const t = $('#grade .total'); if (t) t.innerHTML = totalHtml(st); }
+}
+/* ---------------- retakes: a second try that keeps the first ---------------- */
+const TRY_KEEP = ['rubric', 'points', 'sheet', 'xc', 'xcU', 'q', 'qAuto', 'comment'];
+const tryName = n => n === 1 ? 'First try' : 'Try ' + n;
+function tryOfFile(st, f) {
+  const ts = st && st.grade && st.grade.tries; if (!ts || !ts.length || !f) return 0;
+  const i = ts.findIndex(t => (t.files || []).includes(f.path));
+  return i < 0 ? 0 : i + 1;
+}
+const tryTag = (st, f) => { const n = tryOfFile(st, f); return n ? '<span class="trytag" title="This was the paper for the ' + tryName(n).toLowerCase() + '. Its marks and score are kept.">' + tryName(n) + '</span>' : ''; };
+const tryScoreText = t => (t.total != null ? fmtNum(t.total) + ' / ' + fmtNum(t.max) + ' · ' : '') + fmtPct(t.pct);
+const tryRuleSay = (rule, n) => rule === 'last' ? 'the latest try' : rule === 'avg' ? 'the average of ' + n + ' tries' : 'the highest of ' + n + ' tries';
+function retakeStart(st) {
+  const g = st.grade, r = tryGrade(st);
+  if (noScore(st) || r.pct == null || !r.done || r.partial) return toast('Give this paper a full score first. A retake keeps it and starts a new one.');
+  const was = { t: Date.now(), total: r.total, max: r.outOf != null ? r.outOf : maxPoints(), pct: r.pct };
+  if (g.status === 'late') was.late = 1;
+  for (const k of TRY_KEEP) if (g[k] != null && g[k] !== '' && !(Array.isArray(g[k]) && !g[k].length)) was[k] = JSON.parse(JSON.stringify(g[k]));
+  was.files = st.files.filter(f => !tryOfFile(st, f) && !(batch.carry && batch.carry.flags[f.path] === 'new') && (!f.virtual || (f.kind === 'docx' && (f.edited || (wordScore(f) && f.wscore.total != null))))).map(f => f.path);
+  (g.tries ||= []).push(was);
+  g.rubric = []; g.points = ''; g.comment = '';
+  for (const k of ['sheet', 'xc', 'xcU', 'q', 'qAuto', 'atR']) delete g[k];
+  if (g.status === 'late') g.status = '';
+  touchGrade(st); if (st.found !== undefined) refound(st);
+  rowOnOf = null; saveSoon(); renderList(); renderGrade();
+  if (pages.length || st.files.length) openStudent(cur);   // the file bars now say which paper was the first try
+  toast(tryName(g.tries.length) + ' kept: ' + tryScoreText(was) + '. Score the retake here' + (st.files.length ? ', and add its paper with + Add.' : '.'));
+}
+let tryOffArm = null;
+function retakeOff(st) {
+  const g = st.grade, ts = g.tries; if (!ts || !ts.length) return;
+  const has = tryGrade(st).total != null || (g.comment || '').trim();
+  if (has && tryOffArm !== st) { tryOffArm = st; renderGrade(); return; }
+  tryOffArm = null;
+  const was = ts.pop(); if (!ts.length) delete g.tries;
+  g.rubric = []; g.points = ''; g.comment = '';
+  for (const k of ['sheet', 'xc', 'xcU', 'q', 'qAuto', 'atR']) delete g[k];
+  for (const k of TRY_KEEP) if (was[k] != null) g[k] = was[k];
+  if (was.late && !g.status) g.status = 'late';
+  touchGrade(st); if (st.found !== undefined) refound(st);
+  rowOnOf = null; saveSoon(); renderList(); renderGrade();
+  if (pages.length || st.files.length) openStudent(cur);
+  toast('Retake taken off. The score is the ' + tryName(ts.length + 1).toLowerCase() + '’s again.');
+}
+function retakeRuleSet(k) {
+  if (!RETAKE_RULES.some(r => r[0] === k)) return;
+  lib.book = { ...(lib.book || {}), retake: k }; saveLib();
+  renderList(); renderGrade();
+  toast('Retakes: ' + RETAKE_RULES.find(r => r[0] === k)[2].toLowerCase() + ', for every assignment.');
+}
+function tryHtml(st) {
+  const ts = st.grade.tries; if (!ts || !ts.length || noScore(st)) return '';
+  const gr = gradeOf(st), n = ts.length + (gr.tryNow ? 1 : 0), rule = gr.tryRule || retakeRule(), arm = tryOffArm === st;
+  if (!arm) tryOffArm = null;
+  return '<div class="trynote" id="tryNote"><div class="tryhd"><b>Retake</b><span>' + tryName(ts.length + 1).toLowerCase() + '</span><span class="sp"></span><button class="link' + (arm ? ' arm' : '') + '" data-tryoff title="Puts the ' + tryName(ts.length).toLowerCase() + ' back as the score">' + (arm ? 'Click again: the retake’s score goes' : 'Remove retake') + '</button></div>' +
+    ts.map((t, i) => '<div class="tryrow"><span>' + tryName(i + 1) + '</span><b>' + tryScoreText(t) + '</b>' + (t.late ? '<span class="stag">late</span>' : '') + (t.comment ? '<span class="trycm" title="' + esc(t.comment) + '">“' + esc(t.comment.length > 60 ? t.comment.slice(0, 60) + '…' : t.comment) + '”</span>' : '') + '</div>').join('') +
+    '<div class="trycount"><span>' + (gr.tryNow ? 'Counts: <b>' + fmtPct(gr.pct) + '</b>, ' + tryRuleSay(rule, n) : 'Until the retake has a full score, the ' + (ts.length > 1 ? 'earlier tries count' : 'first try counts') + ': <b>' + fmtPct(gr.pct) + '</b>') + '</span>' +
+    kmWrap('Change', 'class="link" id="tryRule" title="Which try counts, for every assignment"', RETAKE_RULES.map(([k, l, say]) => '<button class="mitem" data-tryrule="' + k + '" aria-pressed="' + (rule === k) + '"><b>' + l + '</b><small>' + say + '</small></button>').join('') + '<p class="kmsay">For every class and assignment. Also in the gradebook’s Term setup.</p>', 'right') + '</div>' +
+    (st.files.some(f => !tryOfFile(st, f) && !f.virtual) ? '' : '<button class="btn sm" data-tryadd>Add the retake paper…</button>') + '</div>';
 }
 function setOutAvg(st) {
   if (st.grade.outAvg) delete st.grade.outAvg; else st.grade.outAvg = true;
@@ -12656,12 +12825,17 @@ const cellCopy = (g, k) => g.status === 'missing' || g.status === 'excused' ? (k
 function statusText(st) {
   const g = gradeOf(st), out = [];
   if (g.status) out.push(STATUS_LABEL[g.status]);
+  if (g.tries) out.push('Retake: ' + triesSay(g).replace(/\.$/, '').replace('. Counts', '; counts'));
   if (g.out) out.push('Left out of the average');
   if (g.partial) out.push('Partial: ' + partNote(st));
   return out.join(', ');
 }
 function statusPills(g) {
-  return (g.status ? ' <span class="stag">' + STATUS_LABEL[g.status].toLowerCase() + '</span>' : '') + (g.out ? ' <span class="stag out">left out</span>' : '') + (g.partial ? ' <span class="stag">partial</span>' : '');
+  return (g.status ? ' <span class="stag">' + STATUS_LABEL[g.status].toLowerCase() + '</span>' : '') + (g.out ? ' <span class="stag out">left out</span>' : '') + (g.partial ? ' <span class="stag">partial</span>' : '') + (g.tries ? ' <span class="stag retk" title="' + esc(triesSay(g)) + '">retake</span>' : '');
+}
+function triesSay(g) {
+  const all = g.tries.concat(g.tryNow ? [g.tryNow] : []);
+  return all.map((t, i) => (i ? (all.length === 2 ? 'retake ' : 'try ' + (i + 1) + ' ') : 'First try ') + fmtPct(t.pct)).join(', ') + (g.tryNow ? '' : ', retake not scored yet') + '. Counts: ' + (g.tryNow ? tryRuleSay(g.tryRule, all.length) : 'the ' + (g.tries.length > 1 ? 'earlier tries' : 'first try')) + '.';
 }
 function gradesSummary() {
   const all = batch.students, on = all.filter(s => !noScore(s)), nOff = all.length - on.length, nPart = on.filter(s => gradeOf(s).partial).length;
@@ -13091,6 +13265,7 @@ async function carryInto(e, list) {
     const nk = keyOf.get(nfc(key));
     if (!nk) { carry.goneStudents.push(key); continue; }
     const x = { ...o, f: mapPaths(o.f, c.map) || {}, h: mapPaths(o.h, c.map), tr: mapPaths(o.tr, c.map), r: mapPaths(o.r, c.map), sk: mapPaths(o.sk, c.map), inc: mapPaths(o.inc, c.map) };
+    if (o.g && o.g.tries) x.g = { ...o.g, tries: o.g.tries.map(t => t.files ? { ...t, files: t.files.map(q => c.map[q] || q) } : t) };   // an earlier try's papers keep their label under their new names
     if (o.L || o.o) {
       if (touched(key)) { delete x.L; delete x.o; if (o.L) carry.layouts.push(nk); }
       else {
@@ -13248,8 +13423,11 @@ const fbOn = () => store.get('gs.xfb', true) !== false;
 const FB_INK = '#1E2024', FB_INK2 = '#3F444C', FB_MUTED = '#5C616A', FB_LINE = '#E4E6EA', FB_BLUE = '#1F6FB2', FB_SOFT = '#E6F0F8';
 
 function fbData(st, d) {
-  const g = gradeOf(st), rub = setup.mode === 'rubric', c = batchClass();
-  const rows = rub ? setup.criteria.map((name, i) => { const v = st.grade.rubric[i]; return v == null ? null : { name, v, text: ((setup.levels && setup.levels[i] && setup.levels[i][Math.floor(v)]) || '').trim() }; }).filter(Boolean) : [];
+  const tries = st.grade.tries || [], tn = tries.length ? tryOfFile(st, fileByPath(st, (d.pages[0] || [])[0])) : 0, old = tn ? tries[tn - 1] : null, cnt = tries.length && !old ? gradeOf(st) : null;
+  const g = old ? { total: old.total, pct: old.pct, outOf: old.max, status: old.late ? 'late' : '' } : tries.length ? tryGrade(st) : gradeOf(st), rub = setup.mode === 'rubric', c = batchClass();
+  if (cnt && !g.status && st.grade.status === 'late') g.status = 'late';
+  const rubricOf = old ? old.rubric || [] : st.grade.rubric;
+  const rows = rub ? setup.criteria.map((name, i) => { const v = rubricOf[i]; return v == null ? null : { name, v, text: ((setup.levels && setup.levels[i] && setup.levels[i][Math.floor(v)]) || '').trim() }; }).filter(Boolean) : [];
   const notes = [];
   d.pages.forEach(([path, p], k) => {
     const f = fileByPath(st, path); if (!f) return;
@@ -13257,11 +13435,12 @@ function fbData(st, d) {
     const numbered = all.filter(n => n.hl).sort((a, b) => a.ay - b.ay || a.ax - b.ax);   // the numbers the page itself shows
     for (const n of [...all].sort((a, b) => a.ay - b.ay || a.ax - b.ax)) notes.push({ n: numbered.indexOf(n) + 1, text: n.text.trim(), color: n.color, page: k });
   });
-  const comment = (st.grade.comment || '').trim(), scored = g.total != null && !g.partial;
+  const comment = ((old ? old.comment : st.grade.comment) || '').trim(), scored = g.total != null && !g.partial;
+  const trySay = old ? tr(tryName(tn)) : cnt ? tr('Retake') + (cnt.tryNow && cnt.pct !== g.pct ? ' · ' + tr('counts as') + ' ' + fmtPct(cnt.pct) : '') : '';
   if (!scored && !rows.length && !comment && !notes.length) return null;
   const rn = rosterNames(), who = rn.get(st) || st.key;   // the paper goes back to its student, so it carries their name even while she marks with names hidden
   return { title: (batch.assignment && batch.assignment.name) || batch.name, sub: [who, c && c.name, tr('returned ' + fmtDay(Date.now()))].filter(Boolean).join(' · '),
-    total: scored ? g.total : null, max: g.outOf != null ? g.outOf : maxPoints(), pct: scored ? g.pct : null, status: g.status ? tr(STATUS_LABEL[g.status]) : '', rows, comment, notes };
+    total: scored ? g.total : null, max: g.outOf != null ? g.outOf : maxPoints(), pct: scored ? g.pct : null, status: [g.status ? tr(STATUS_LABEL[g.status]) : '', trySay].filter(Boolean).join(' · '), rows, comment, notes };
 }
 
 function fbBlocks(ctx, data, W, M, off) {
@@ -13431,13 +13610,13 @@ $('#grade').addEventListener('click', e => {
 
 /* In Rubric setup. */
 let rubDlg = null;   // the setup being edited: { draft, re, was, pageNew, from, n0, told }
-const setupSnap = d => JSON.stringify({ ...d, levels: tidyLevels(d), rubricName: undefined });
+const setupSnap = d => JSON.stringify({ ...d, levels: tidyLevels(d), goals: goalsTidy(d), rubricName: undefined });
 function rubricsSetup(draft, re, pageNew) {
-  rubDlg = { draft, re, was: setupSnap(draft), pageNew, from: draft.criteria.map((_, i) => i), n0: draft.criteria.length, told: null, bankKey: null };
+  rubDlg = { draft, re, was: setupSnap(draft), pageNew, from: draft.criteria.map((_, i) => i), n0: draft.criteria.length, told: null, bankKey: null, goalAll: (batch && batch.goal) || '' };
   const me = rubDlg; bankJob(() => bankRead(true).catch(() => { gBank = { rubrics: savedRubrics(), scales: [], gone: {}, units: [] }; }).then(() => { if (rubDlg === me) bankRedraw(); }));
 }
 async function leaveDlg() {
-  if ($('#setupBody') && (rubDlg.pageNew() || setupSnap(rubDlg.draft) !== rubDlg.was) && !await askDlg('Leave Rubric setup without saving? The changes you made here won’t be kept.', { ok: 'Leave', cancel: 'Keep editing', danger: true })) return;
+  if ($('#setupBody') && (rubDlg.pageNew() || setupSnap(rubDlg.draft) !== rubDlg.was || rubDlg.goalAll !== ((batch && batch.goal) || '')) && !await askDlg('Leave Rubric setup without saving? The changes you made here won’t be kept.', { ok: 'Leave', cancel: 'Keep editing', danger: true })) return;
   closeDlg();
 }
 function levelsEditHtml(d, i) {
@@ -13446,7 +13625,7 @@ function levelsEditHtml(d, i) {
     LEVELS.map(v => '<label class="lvin"><b>' + v + '</b><textarea rows="2" data-lvi="' + i + '" data-lvv="' + v + '" aria-label="What ' + v + ' means on this row">' + esc(levelIn(d, i, v)) + '</textarea></label>').join('') +
     '<span class="muted lvnote">Leave any of these blank. A half point shows the two scores around it.</span></details>';
 }
-function levelsRowGone(d, i) { if (d.levels) d.levels.splice(i, 1); rubDlg.from.splice(i, 1); levelEditOpen.clear(); }
+function levelsRowGone(d, i) { if (d.levels) d.levels.splice(i, 1); goalsRowGone(d, i); rubDlg.from.splice(i, 1); levelEditOpen.clear(); }
 function tidyLevels(d) {
   const out = d.criteria.map((_, i) => { const r = {}; for (const v of LEVELS) { const t = levelIn(d, i, v).trim(); if (t) r[v] = t; } return r; });
   return out.some(r => Object.keys(r).length) ? out : undefined;
@@ -13667,7 +13846,7 @@ function rowsTakenOut() {
 async function rubricUse(r) {
   const { draft: d, re } = rubDlg, note = rubricUseNote(r, d);
   if (note && !await askDlg('Use “' + r.name + '”?\n\n' + note, { ok: 'Use it', cancel: 'Keep what I have' })) return;
-  Object.assign(d, { mode: 'rubric', criteria: r.criteria.slice(), levels: r.levels ? JSON.parse(JSON.stringify(r.levels)) : undefined, scale: r.scale ? { ...r.scale } : null, rubricName: r.name });
+  Object.assign(d, { mode: 'rubric', criteria: r.criteria.slice(), levels: r.levels ? JSON.parse(JSON.stringify(r.levels)) : undefined, goals: Array.isArray(r.goals) ? r.goals.slice() : undefined, scale: r.scale ? { ...r.scale } : null, rubricName: r.name });
   Object.assign(rubDlg, { from: r.criteria.map((_, i) => i), n0: r.criteria.length, told: 'rubric' });   // a saved rubric's rows go by place, and this has just said so
   levelEditOpen.clear(); re();
   toast('“' + r.name + '” is filled in. Press Save to keep it.');
@@ -13680,6 +13859,7 @@ async function rubricSaveNow() {
   const name = got.name, list = bankRubrics(), old = list.find(r => r.name.toLowerCase() === name.toLowerCase());
   if (old && !await askDlg('You already have a rubric called “' + old.name + '”. Replace it with this one?', { ok: 'Replace it', cancel: 'Keep the old one', danger: true })) return;
   const r = { id: old ? old.id : uid(), name, criteria: d.criteria.map((c, i) => c.trim() || 'Criterion ' + (i + 1)), levels: tidyLevels(d), scale: d.scale ? { ...d.scale } : null, at: Date.now() };
+  const tags = goalsTidy(d); if (tags) r.goals = tags;   // a saved rubric keeps its rows' learning goals
   const unit = keyRef(got.key, old && old.unit); if (unit) r.unit = unit;
   const legacy = savedRubrics().filter(x => x.id !== r.id && x.name.toLowerCase() !== name.toLowerCase()); legacy.push(r); legacy.sort((a, b) => natural(a.name, b.name));
   store.set('gs.rubrics', legacy);   // so the take-home file still carries it, and so it's listed right away
@@ -14093,14 +14273,17 @@ function bkCellOf(p, g, d, k) {
   if (p.total == null && p.pct == null) return fb || started ? { fb, started } : null;
   const cell = { pct: p.pct, total: p.total, max: p.max, st: p.status, partial: p.partial, out: !!(g && g.outAvg), fb, started };
   if (p.rows && p.rows.length) cell.rows = p.rows;   // each rubric row's score, for the charts
+  const goals = d ? goalCell(d, g, p) : null; if (goals) cell.goals = goals;   // what this paper says about each learning goal (goals.js)
+  if (p.tries) cell.tries = triesSay(p);   // a retake: every try and which counts, in words
   return cell;
 }
 function bkTypedCell(ty, r) {
   if (!r) return null;
   if (r.st === 'missing' || r.st === 'excused') return { st: r.st, typed: true };
   if (r.v == null || r.v === '' || isNaN(+r.v)) return r.fb ? { fb: true, typed: true } : null;
-  const v = +r.v, max = ty.max ? +ty.max : null;
-  return { pct: max ? roundPct(v / max * 100) : roundPct(v), total: max ? v : null, max, st: r.st || '', typed: true, fb: true };
+  const v = +r.v, max = ty.max ? +ty.max : null, one = x => ({ pct: max ? roundPct(x / max * 100) : roundPct(x), total: max ? x : null, max });
+  const was = (r.tries || []).filter(x => x != null && !isNaN(+x)).map(x => one(+x)), p = was.length ? withTries(one(v), was, max, true) : one(v);
+  return { pct: p.pct, total: p.total, max, st: r.st || '', typed: true, fb: true, ...(was.length ? { tries: triesSay(p) } : {}) };
 }
 async function bkLoad() {
   const all = await earlierWork('', d => hasWork(d) || !!(d && d.read)).catch(e => { console.error(e); return []; });
@@ -14218,6 +14401,7 @@ function bkDraw() {
   else if (bk.tab === 'one') main = bkOneView(c, cols, conf);
   else if (bk.tab === 'rep') main = rptView(c, cols, conf);
   else if (bk.tab === 'miss') main = misView(c, cols);   // missing.js
+  else if (bk.tab === 'goals') main = goalsView(c, cols, all);
   else main = bk.term === '*' ? bkYear(c, all, conf) : bkTable(c, cols, conf);
   const untyped = all.filter(x => !x.type);
   body.innerHTML = bar + (untyped.length ? '<div class="bknote">' + (untyped.length === 1 ? '“' + esc(untyped[0].name) + '” has' : untyped.length + ' assignments have') + ' no type yet, so ' + (untyped.length === 1 ? 'it doesn’t' : 'they don’t') + ' count toward a term grade. <button class="btn sm" data-bktypes>Set types</button></div>' : '') + main;
@@ -14229,7 +14413,7 @@ const bkCellText = (cell, show, col) => {
   if (cell.st === 'missing' || cell.st === 'excused') return '<span class="bkst">' + cell.st + '</span>';
   if (cell.pct == null) return cell.fb ? '<span class="bkfb" aria-label="Feedback given, no score">✓</span>' : '<span class="bknone">–</span>';
   const v = show === 'pts' && cell.total != null ? fmtNum(cell.total) + '<small>/' + fmtNum(cell.max) + '</small>' : cell.pct + '%';
-  return v + (cell.partial ? ' <span class="stag">partial</span>' : cell.out ? ' <span class="stag">left out</span>' : cell.st === 'late' ? ' <span class="stag">late</span>' : '');
+  return v + (cell.tries ? ' <span class="stag retk" title="' + esc(cell.tries) + '">retake</span>' : '') + (cell.partial ? ' <span class="stag">partial</span>' : cell.out ? ' <span class="stag">left out</span>' : cell.st === 'late' ? ' <span class="stag">late</span>' : '');
 };
 const bkColHead = col => '<th class="bkch' + (col.key === bk.hi ? ' hi' : '') + '"><button data-bkcol="' + esc(col.key) + '" title="Type, date and term">' + esc(col.name) + '<small>' + esc(bkDay(col.due)) + (col.typed ? ' · typed in' : '') + '</small></button></th>';
 function bkGroups(cols) {
@@ -14368,7 +14552,7 @@ function bkOneView(c, cols, conf) {
     bkCountTypes(conf).map(([t, , l]) => bkTile(l + ' average', r.by[t] != null ? pctAvgText(r.by[t]) : '–', [cols.filter(x => x.type === t && bkCounts(x.cells.get(n))).length + ' of ' + cols.filter(x => x.type === t).length + ' counted', t === 'ic' && r.xcIc ? '+' + fmtNum(r.xcIc) + ' extra credit' : '', cavg(t) != null ? 'class ' + pctAvgText(cavg(t)) : ''].filter(Boolean).join(' · '))).join('') +
     bkTile('Missing', miss.length, miss.length ? miss.map(x => x.name).join(', ') : 'nothing outstanding') + '</div>' + bkStrip(c, cols, n) +
     '<div class="ovcharts">' + chSec('Against the class', bkBandLine(c, sc, n, shown), 'The shaded band is the middle half of the class, so it’s clear when a score is unusual and when the assignment was just hard.') +
-    chSec('Rubric rows', bkStuRows(c, cols, n), 'Their average on each rubric row across the summatives, out of 4. The dashed line is the class average.') +
+    chSec('Rubric rows', bkStuRows(c, cols, n), 'Their average on each rubric row across the summatives, out of 4. The dashed line is the class average.') + goalsStu(c, cols, n) +
     '<section><h3 class="ovh3">By type</h3>' + bar('Summatives', r.by.sum, cavg('sum'), 'sum') + bar('In-class', r.by.ic, cavg('ic'), 'ic') + bar('Grade', r.grade, cavg(''), '') + '<p class="muted ovcap2">The dashed line is the class average.</p>' +
     (fm.length ? '<h3 class="ovh3" style="margin-top:16px">Feedback</h3><p class="bkfbline">' + fm.filter(x => (x.cells.get(n) || {}).fb).length + ' of ' + fm.length + ' formative activities have feedback.</p>' : '') + '</section>' + attStuHtml(c, n) + '</div></div>';
 }
@@ -14422,7 +14606,9 @@ function bkSetupView() {
     '<p class="muted bkhint">Early in a term with no summative yet, the grade is the in-class average, marked “so far”.</p>' +
     '<h3 class="ovh3" style="margin-top:16px">Extra credit</h3><div class="bkpf">New extra credit adds to</div><div class="pseg" role="group">' + [['term', 'The term grade'], ['ic', 'The in-class average']].map(([v, l]) => '<button data-bkxcto="' + v + '" aria-pressed="' + (conf.xcTo === v) + '">' + l + '</button>').join('') + '</div>' +
     '<p class="muted bkhint">One extra credit point adds one percentage point there. Added to the in-class average, it counts by that type’s weight. Summatives and each paper’s own percent are never changed by it.</p>' +
-    '<div class="bkpf" style="margin-top:10px">Above 100%</div><div class="pseg" role="group">' + [['cap', 'Keep grades at 100% at most'], ['over', 'Let a grade go over 100%']].map(([v, l]) => '<button data-bkxccap="' + v + '" aria-pressed="' + ((v === 'cap') === conf.xcCap) + '">' + l + '</button>').join('') + '</div></section>' +
+    '<div class="bkpf" style="margin-top:10px">Above 100%</div><div class="pseg" role="group">' + [['cap', 'Keep grades at 100% at most'], ['over', 'Let a grade go over 100%']].map(([v, l]) => '<button data-bkxccap="' + v + '" aria-pressed="' + ((v === 'cap') === conf.xcCap) + '">' + l + '</button>').join('') + '</div>' +
+    '<h3 class="ovh3" style="margin-top:16px">Retakes</h3><div class="bkpf">When a student has more than one try</div><div class="pseg" role="group">' + RETAKE_RULES.map(([v, l]) => '<button data-bkretake="' + v + '" aria-pressed="' + (retakeRule() === v) + '">' + l + ' counts</button>').join('') + '</div>' +
+    '<p class="muted bkhint">Start a retake from the ⋯ beside Missing, Excused and Late on a paper, or type both scores into a typed-in cell as “7 &gt; 10”. Every try is kept; this says which one goes into averages and grades.</p></section>' +
     '<div class="bkfootbtns"><button class="btn" data-bkback>Cancel</button><button class="btn primary" data-bksavesetup>Save</button></div></div>';
   bkWsum();
 }
@@ -14434,8 +14620,8 @@ function bkSetupSave() {
   if (bad) { toast('Give “' + bad.name + '” a start and an end date, with the end after the start.'); return false; }
   const w = {}; for (const i of document.querySelectorAll('[data-wt]')) w[i.dataset.wt] = Math.max(0, Math.min(100, +i.value || 0));
   if (!w.sum && !w.ic && !w.fm) { toast('Give at least one type some weight.'); return false; }
-  const e = document.querySelector('[data-bkempty][aria-pressed="true"]'), xt = document.querySelector('[data-bkxcto][aria-pressed="true"]'), xp = document.querySelector('[data-bkxccap][aria-pressed="true"]');
-  bkSave({ terms, w, empty: e ? e.dataset.bkempty : 'other', xcTo: xt ? xt.dataset.bkxcto : 'term', xcCap: !xp || xp.dataset.bkxccap === 'cap' });
+  const e = document.querySelector('[data-bkempty][aria-pressed="true"]'), xt = document.querySelector('[data-bkxcto][aria-pressed="true"]'), xp = document.querySelector('[data-bkxccap][aria-pressed="true"]'), rk = document.querySelector('[data-bkretake][aria-pressed="true"]');
+  bkSave({ terms, w, empty: e ? e.dataset.bkempty : 'other', xcTo: xt ? xt.dataset.bkxcto : 'term', xcCap: !xp || xp.dataset.bkxccap === 'cap', retake: rk ? rk.dataset.bkretake : 'high' });
   return true;
 }
 
@@ -14509,7 +14695,8 @@ function bkAddSave() {
   if (xc) for (const [n, r] of Object.entries(bkAdd.s)) { const v = r.v === '' || r.v == null || isNaN(+r.v) ? 0 : Math.round(+r.v * 2) / 2; if (v > 0) s[n] = { v }; }
   else for (const [n, r] of Object.entries(bkAdd.s)) {
     const v = fm || r.v === '' || r.v == null || isNaN(+r.v) ? null : Math.round(+r.v * 2) / 2;
-    if (fm ? r.fb || r.st : v != null || r.st) s[n] = fm && r.fb ? { v: null, st: r.st || '', fb: true } : { v, st: r.st || '' };
+    if (fm ? r.fb || r.st : v != null || r.st) s[n] = fm && r.fb ? { v: null, st: r.st || '', fb: true } : { v, st: r.st || '' }
+    if (s[n] && !fm && v != null && r.tries && r.tries.length) s[n].tries = r.tries;   // a retake typed in the table stays when the scores are edited here
   }
   const typed = { max, s };
   let it = bkAdd.it;
@@ -14548,7 +14735,7 @@ function bkCellEdit(td) {
     inp.addEventListener('blur', () => finish(true));
     return;
   }
-  td.innerHTML = '<input type="text" class="bkcin" value="' + esc(r.st === 'missing' || r.st === 'excused' ? r.st : r.v != null ? fmtNum(r.v) : '') + '" aria-label="Score' + (max ? ' out of ' + fmtNum(max) : ' as a percent') + '">';
+  td.innerHTML = '<input type="text" class="bkcin" value="' + esc(r.st === 'missing' || r.st === 'excused' ? r.st : r.v != null ? (r.tries || []).concat(r.v).map(fmtNum).join(' > ') : '') + '" aria-label="Score' + (max ? ' out of ' + fmtNum(max) : ' as a percent') + '">';
   const inp = td.querySelector('input'); inp.focus(); inp.select();
   let done = false;
   const finish = keep => {
@@ -14558,6 +14745,7 @@ function bkCellEdit(td) {
       if (!t) delete s[n];
       else if (/^m(issing)?$/.test(t)) s[n] = { v: null, st: 'missing' };
       else if (/^e(xcused)?$/.test(t)) s[n] = { v: null, st: 'excused' };
+      else if (/>/.test(t) && t.split('>').every(x => x.trim() && !isNaN(+x.replace('%', '')))) { const vs = t.split('>').map(x => Math.round(+x.replace('%', '') * 2) / 2); s[n] = { v: vs.pop(), st: r.st === 'late' ? 'late' : '', tries: vs }; }   // "7 > 10": a first try and its retake
       else if (!isNaN(+t.replace('%', ''))) s[n] = { v: Math.round(+t.replace('%', '') * 2) / 2, st: r.st === 'late' ? 'late' : '' };
       col.typed = { ...col.typed, s };
       if (col.it) { col.it.typed = col.typed; bkSaveLib(); }
@@ -14603,7 +14791,7 @@ function bkClick(e) {
   if (d.chsort) { const s = bk.sort || { k: 'grade', dir: -1 }; bk.sort = s.k === d.chsort ? { k: s.k, dir: -s.dir } : { k: d.chsort, dir: d.chsort === 'name' ? 1 : -1 }; return bkDraw(); }
   if (d.taddt != null) { const t = document.createElement('div'); t.innerHTML = '<div class="bktrow" data-tid="' + uid() + '"><input type="text" class="bkin" data-tf="name" value="Term ' + (document.querySelectorAll('#bkTerms .bktrow').length + 1) + '" aria-label="Term name"><input type="date" class="bkin" data-tf="start" aria-label="Starts"><input type="date" class="bkin" data-tf="end" aria-label="Ends"><button class="icon" data-tdel aria-label="Remove this term">✕</button></div>'; $('#bkTerms').appendChild(t.firstChild); return; }
   if (d.tdel != null) { b.closest('.bktrow').remove(); return; }
-  if (d.bkxcto || d.bkxccap) { const k = d.bkxcto ? 'bkxcto' : 'bkxccap'; for (const x of document.querySelectorAll('[data-' + k + ']')) x.setAttribute('aria-pressed', String(x === b)); return; }
+  if (d.bkxcto || d.bkxccap || d.bkretake) { const k = d.bkxcto ? 'bkxcto' : d.bkxccap ? 'bkxccap' : 'bkretake'; for (const x of document.querySelectorAll('[data-' + k + ']')) x.setAttribute('aria-pressed', String(x === b)); return; }
   if (d.bkcolxc) { const k = $('#bkPop').dataset.key; bkSetCol(k, { xcTo: d.bkcolxc }); for (const x of document.querySelectorAll('[data-bkcolxc]')) x.setAttribute('aria-pressed', String(x === b)); return; }
   if (d.bkaxcto) { bkAdd.xcTo = d.bkaxcto; for (const x of document.querySelectorAll('[data-bkaxcto]')) x.setAttribute('aria-pressed', String(x === b)); return bkAddRows(); }
   if (d.bkaxcall) { const v = Math.max(0, Math.round(+($('#bkaXcV') || {}).value * 2) / 2) || 0; for (const n of c.names) { if (d.bkaxcall === 'clear') delete bkAdd.s[n]; else if (d.bkaxcall === 'all' || !(+((bkAdd.s[n] || {}).v) > 0)) bkAdd.s[n] = { v }; } return bkAddRows(); }
@@ -15217,8 +15405,12 @@ function pastScore(su, g) {
   else if (g.points !== '' && g.points != null && !isNaN(+g.points)) total = +g.points;
   if (total == null && hasSheet(g) && !isNaN(+g.sheet)) { total = +g.sheet; paper = true; }
   let pct = percentWith(total, max, s.scale);
-  if (total == null && g.read) { const d = g.read; paper = true; total = d.score; if (d.outOf != null) max = d.outOf; pct = d.pct != null ? d.pct : percentWith(total, max, s.scale); }
-  return addXc({ total, max, pct, partial, paper, status: g.status || '', rows: rub ? s.criteria.map((c, i) => [c, r[i]]).filter(x => x[1] != null) : [] }, g.xc, max, g.xcU);
+  if (total == null && g.read && !(g.tries && g.tries.length)) { const d = g.read; paper = true; total = d.score; if (d.outOf != null) max = d.outOf; pct = d.pct != null ? d.pct : percentWith(total, max, s.scale); }
+  const one = addXc({ total, max, pct, partial, paper, status: g.status || '', rows: rub ? s.criteria.map((c, i) => [c, r[i]]).filter(x => x[1] != null) : [] }, g.xc, max, g.xcU);
+  if (!g.tries || !g.tries.length) return one;
+  const out = withTries(one, g.tries, max, one.total != null && !partial);   // a retake: the try that counts by the teacher's rule (start.js)
+  if (out.outOf != null) { out.max = out.outOf; delete out.outOf; }
+  return out;
 }
 function pastClass(d, m) {
   const f = m.asg && findItem(m.asg);
@@ -15599,7 +15791,7 @@ function bringBackNotes(fb, byCode) {
 }
 document.addEventListener('click', e => { const b = e.target.closest('[data-bbmore]'); if (b) copy('Please continue with feedback for these codes, in the same format: ' + b.dataset.bbmore, 'Copied. Paste it into Claude.'); });
 
-Object.assign(window.__gs, { nameFit, nameNear, rosterPairs, pastScore, histFind, histFill, driftRead, driftSay, dropBatched, consData, openCons, openSame, coverList, coverOk, coverLine, coverFirst, checkCovers, SHARE_ASK, nameFreeText, paperReads });
+Object.assign(window.__gs, { nameFit, nameNear, rosterPairs, pastScore, tryGrade, retakeStart, retakeOff, tryOfFile, retakeRule, histFind, histFill, driftRead, driftSay, dropBatched, consData, openCons, openSame, coverList, coverOk, coverLine, coverFirst, checkCovers, SHARE_ASK, nameFreeText, paperReads });
 
 /* ---------------- student details: ID, email, other spellings and a note for each roster student ---------------- */
 const classOfNames = names => (names && lib.classes.find(k => k.names === names)) || null;   // rosterMatch and rosterPairs are handed c.names itself
@@ -16427,7 +16619,7 @@ function decideRec(a, b, ta, tb) {
   return x === y ? { pick: 'ask' } : { pick: x > y ? 'a' : 'b', by: 'date' };
 }
 const BLANK_REC = () => ({ f: {}, g: { rubric: [], points: '', comment: '' }, h: {} });
-const WORK_SET = ['carry', 'setup', 'cls', 'share', 'drive', 'light', 'lightOpt', 'lightPg', 'lightPgL', 'anon', 'moved', 'removed', 'refSkip', 'quiz', 'groups', 'returned'];
+const WORK_SET = ['carry', 'setup', 'cls', 'share', 'drive', 'light', 'lightOpt', 'lightPg', 'lightPgL', 'anon', 'moved', 'removed', 'refSkip', 'quiz', 'groups', 'returned', 'goal'];
 const setOf = w => { const o = {}; if (w) for (const k of WORK_SET) if (w[k] !== undefined) o[k] = w[k]; return o; };
 const setV = w => w && w.sv ? w.sv : (h => h ? { ['~' + h]: 1 } : {})(hashOf(setOf(w)));
 const partV = (w, k) => (w.pv && w.pv[k]) || (h => h ? { ['~' + h]: 1 } : {})(hashOf(w[k]));
@@ -16858,6 +17050,17 @@ function libGoBack(a0, b0, dev, now) {
   const same = (p, q) => JSON.stringify(canon(p)) === JSON.stringify(canon(q));
   return { lib: a, notes: [], asks: [], cards: {}, mapA: {}, mapB: {}, toA: !same(a, a0), toB: !same(a, b0) };
 }
+function libGoals(lib, a, b) {
+  const gone = { ...(a.goalsGone || {}) }, out = [];
+  for (const [id, t] of Object.entries(b.goalsGone || {})) gone[id] = Math.max(gone[id] || 0, t);
+  for (const g of [...(Array.isArray(a.goals) ? a.goals : []), ...(Array.isArray(b.goals) ? b.goals : [])]) {
+    if (!g || !g.id || gone[g.id] >= (g.at || 0)) continue;
+    const i = out.findIndex(x => x.id === g.id);
+    if (i < 0) out.push(g); else if ((g.at || 0) > (out[i].at || 0)) out[i] = g;
+  }
+  if (out.length) lib.goals = out; else delete lib.goals;
+  if (Object.keys(gone).length) lib.goalsGone = gone; else delete lib.goalsGone;
+}
 function mergeLib(a0, b0, o = {}) {
   const { dev = 'merge', now = Date.now() } = o;
   if (o.prefer === 'a') return libGoBack(a0, b0, dev, now);
@@ -16916,6 +17119,7 @@ function mergeLib(a0, b0, o = {}) {
     if (t && e.node.opened !== t) kept.set(id, { ...e, node: { ...e.node, opened: t } });
   }
   const lib = { ...b, ...a, classes: [], loose: { id: '', units: [] }, units: [] };
+  libGoals(lib, a, b);
   const hasWork = l => ((l && l.classes) || []).some(c => (c.names || []).length || (c.units || []).some(u => u && (u.items || []).length));
   if (a.me && !b.me && hasWork(b) && !hasWork(a)) delete lib.me;
   const by = t => [...kept.values()].filter(e => e.type === t);
@@ -18100,7 +18304,7 @@ function qzStepWords(pts, all = qzWordsAll()) {
   return Array.from({ length: n }, (_, k) => k === 0 ? 'Not shown' : k === n - 1 ? 'Full' : '');
 }
 const qzWord = (s, pts) => qzStepWords(pts)[qzSteps(pts).indexOf(s)] || '';
-const quizPages = st => layoutOf(st).filter(d => docIn(st, d) || docAuto(st, d)).flatMap(d => d.pages.filter(([path]) => { const f = fileByPath(st, path); return f && !f.virtual && viewable(f); }));
+const quizPages = st => layoutOf(st).filter(d => docIn(st, d) || docAuto(st, d)).flatMap(d => d.pages.filter(([path]) => { const f = fileByPath(st, path); return f && !f.virtual && viewable(f) && !tryOfFile(st, f); }));
 const quizMarks = st => (st.grade && st.grade.q) || {};
 function quizCount(st) { const m = quizMarks(st); return quizOn() ? batch.quiz.qs.filter(q => m[q.id] != null).length : 0; }
 function quizPart(st) { const n = quizCount(st); return quizOn() && n > 0 && n < batch.quiz.qs.length; }
@@ -18343,7 +18547,9 @@ function openQuizBoxes(back) {
       '<td><select class="qkind" aria-label="Scored">' + qzKindOpts(q) + '</select></td>' +
       '<td><select class="qhow" aria-label="How to mark">' + qzHowOpts(q) + '</select></td>' +
       '<td><input class="qkey" value="' + esc(q.key || '') + '" placeholder="optional" aria-label="Right answer" maxlength="40"></td>' +
-      '<td><button class="icon" data-del="' + q.id + '" aria-label="Take out this box" title="Take out">✕</button></td></tr>').join('') + '</tbody></table>'
+      '<td><button class="icon" data-del="' + q.id + '" aria-label="Take out this box" title="Take out">✕</button></td></tr>' +
+      (goalList().length ? '<tr class="qgrow' + (q.id === selId ? ' on' : '') + '" data-q="' + q.id + '"><td colspan="6"><label>Goal ' + goalPick('data-qgoal', q.goal || '', 'Learning goal for question ' + quizLabel(q, i)) + '</label></td></tr>' : '')).join('') + '</tbody></table>' +
+      '<p class="hsm goalline"><button class="link" data-qgoals>' + (goalList().length ? 'Edit goals…' : 'Tag questions with learning goals…') + '</button></p>'
       : '<p class="muted hsm">No boxes yet.</p>';
     wordsSay(); sum(); spotSay();
   };
@@ -18465,10 +18671,14 @@ function openQuizBoxes(back) {
     }
     if (e.target.classList.contains('qkey')) q.key = e.target.value;
     if (e.target.classList.contains('qhow')) q.how = e.target.value;
+    if (e.target.dataset.qgoal != null) {   // a learning goal for this question (goals.js); the last choice makes a new one
+      if (e.target.value === '+') { goalsDlg({ add: true }).then(r => { if (r.added) q.goal = r.added; if (pagesEl.isConnected) list(); }); return; }
+      if (e.target.value) q.goal = e.target.value; else delete q.goal;
+    }
     overlays();
   };
   if (box._qbFocus) box.removeEventListener('focusin', box._qbFocus);
-  box._qbFocus = e => { if (!pagesEl.isConnected) return; const tr = e.target.closest && e.target.closest('tr[data-q]'); if (tr && tr.dataset.q !== selId) { selId = tr.dataset.q; spotPick = false; for (const x of box.querySelectorAll('tr[data-q]')) x.classList.toggle('on', x === tr); spotSay(); overlays(); } };
+  box._qbFocus = e => { if (!pagesEl.isConnected) return; const tr = e.target.closest && e.target.closest('tr[data-q]'); if (tr && tr.dataset.q !== selId) { selId = tr.dataset.q; spotPick = false; for (const x of box.querySelectorAll('tr[data-q]')) x.classList.toggle('on', x.dataset.q === selId); spotSay(); overlays(); } };
   box.addEventListener('focusin', box._qbFocus);
   box.onclick = async e => {
     if (e.target.closest('[data-close]')) { if (back) return back(); closeDlg(); return qzClose(); }
@@ -18479,6 +18689,7 @@ function openQuizBoxes(back) {
     if (e.target.closest('[data-margin]')) { const q = qOf(selId); if (q) { delete q.mx; delete q.my; } spotSay(); overlays(); return; }
     if (e.target.closest('#qbTotal')) { picking = !picking; spotPick = false; totalSay(); spotSay(); return; }
     if (e.target.closest('[data-nototal]')) { Q.total = null; totalSay(); overlays(); return; }
+    if (e.target.closest('[data-qgoals]')) { goalsDlg().then(() => { if (pagesEl.isConnected) list(); }); return; }
     if (e.target.closest('[data-save]')) {
       for (const q of Q.qs) if (!(+q.pts > 0)) q.pts = 1;
       for (const t of Object.keys(Q.words)) if (Q.words[t].length !== qzSteps(+t).length) delete Q.words[t];
@@ -20278,7 +20489,7 @@ function classPanelDraw(fresh) {
   panelKey = key;
   const tok = ++panelTok, list = r.tab === 'students' && r.stu == null, kept = bk.host === 'page' && !!bk.cols && bk.ver === libVer && bk.lib === lib;
   bkPopClose(); ovTipHide();
-  bk = { ...bk, host: 'page', lib, tab: r.tab === 'gradebook' ? 'table' : r.tab === 'charts' ? 'class' : r.tab === 'reports' ? 'rep' : r.tab === 'missing' ? 'miss' : 'one', cls: c.id, stu: r.stu || 0, hi: '', cols: kept ? bk.cols : null };
+  bk = { ...bk, host: 'page', lib, tab: r.tab === 'gradebook' ? 'table' : r.tab === 'charts' ? 'class' : r.tab === 'reports' ? 'rep' : r.tab === 'missing' ? 'miss' : r.tab === 'goals' ? 'goals' : 'one', cls: c.id, stu: r.stu || 0, hi: '', cols: kept ? bk.cols : null };
   if (list) peoplePanel(el, c);
   else el.innerHTML = '<div class="bkbody bkpage" id="bkBody"><p class="muted bkpad">Looking through your saved work…</p></div>';
   const show = () => list ? peopleGrades(c) : bkDraw();
@@ -20682,6 +20893,203 @@ function attSetRender(sec) {
 }
 $('#setPane').addEventListener('change', e => { if (e.target.id !== 'attOnBox') return; meSet({ att: e.target.checked }); setRender(); renderLib(); homeRender(); });
 Object.assign(window.__gs, { attSet, attOf, attTake, attClear, attDays, attCount, attStep, attTodayLine });
+
+/* ---------------- learning goals: tag rubric rows and quiz questions, then see a class and a student by goal ---------------- */
+function goalList() { return Array.isArray(lib.goals) ? lib.goals.filter(g => g && g.id && String(g.name || '').trim()) : []; }
+function goalById(id) { return id ? goalList().find(g => g.id === id) || null : null; }
+const goalName = id => { const g = goalById(id); return g ? g.name : ''; };
+function goalsTidy(d) {
+  const a = (d.criteria || []).map((_, i) => (d.goals && d.goals[i]) || null);
+  return a.some(Boolean) ? a : undefined;
+}
+function goalPick(attrs, sel, label) {
+  const list = goalList(), known = !sel || list.some(g => g.id === sel);
+  return '<select class="goalsel" ' + attrs + ' aria-label="' + esc(label || 'Learning goal') + '" title="' + esc(label || 'Learning goal') + '"><option value="">No goal</option>' +
+    list.map(g => '<option value="' + esc(g.id) + '"' + (g.id === sel ? ' selected' : '') + '>' + esc(g.name) + '</option>').join('') +
+    (known ? '' : '<option value="' + esc(sel) + '" selected>A goal you removed</option>') + '<option value="+">New goal…</option></select>';
+}
+function goalsSetupHtml(d) {
+  const has = goalList().length > 0;
+  if (!has) return '<p class="goalline"><button class="link" data-goalsedit>Tag ' + (d.mode === 'rubric' ? 'rows' : 'this score') + ' with learning goals…</button> <span class="muted">Optional: see each class and student by goal.</span></p>';
+  const whole = d.mode !== 'rubric' && batch ? '<label class="goalwhole">Learning goal for the whole score ' + goalPick('data-gall', rubDlg && rubDlg.draft === d ? rubDlg.goalAll : batch.goal || '', 'Learning goal for the whole score') + '</label>' +
+    (quizOn() ? '<span class="muted goalnote">A Quick mark question with a goal of its own in Quiz boxes uses that one.</span>' : '') : '';
+  return '<div class="goalline">' + whole + '<button class="link" data-goalsedit>Edit goals…</button></div>';
+}
+const goalRowHtml = (d, i) => goalList().length ? goalPick('data-gi="' + i + '"', (d.goals && d.goals[i]) || '', 'Learning goal for this row') : '';
+function goalsRowGone(d, i) { if (d.goals) d.goals.splice(i, 1); }
+
+/* Her list, on the layer over whatever is open. Resolves { changed, added: the id of a goal just made }. */
+function goalsDlg(opts = {}) {
+  const run = () => new Promise(done => {
+    const back = document.activeElement, el = document.createElement('div'), was = goalList();
+    let rows = was.map(g => ({ id: g.id, name: g.name }));
+    if (opts.add || !rows.length) rows.push({ id: '', name: '' });
+    el.className = 'dlg askdlg'; el.id = 'askDlg';
+    el.innerHTML = '<div class="box narrow goalbox" role="dialog" aria-modal="true" aria-labelledby="goalsH" tabindex="-1"><div class="bh"><h2 id="goalsH">Learning goals</h2></div><div class="bb">' +
+      '<p class="muted goalsay">Your own list: a skill, a standard, anything you want to see scores by. Tag rubric rows in Rubric setup and questions in Quiz boxes.</p>' +
+      '<div id="goalRows"></div><div><button class="btn sm" data-gadd>+ Add a goal</button></div>' +
+      '<p class="muted goalsay" id="goalGoneSay" hidden>A goal you remove comes off whatever was tagged with it. No score changes.</p></div>' +
+      '<div class="bf"><button class="btn" data-no>Cancel</button><button class="btn primary" data-ok>Done</button></div></div>';
+    const box = el.firstChild, list = el.querySelector('#goalRows');
+    const draw = focus => {
+      list.innerHTML = rows.map((r, i) => '<div class="goalrow"><input type="text" data-gn="' + i + '" maxlength="80" autocomplete="off" placeholder="A goal, in your words" aria-label="Goal ' + (i + 1) + '" value="' + esc(r.name) + '"><button class="icon" data-gx="' + i + '" aria-label="Remove this goal" title="Remove">✕</button></div>').join('');
+      el.querySelector('#goalGoneSay').hidden = !was.some(g => !rows.some(r => r.id === g.id));
+      if (focus != null) { const inp = list.querySelector('[data-gn="' + focus + '"]'); if (inp) inp.focus(); }
+    };
+    const finish = yes => {
+      document.removeEventListener('keydown', keys, true);
+      el.remove();
+      if (back && back.isConnected) back.focus({ preventScroll: true });
+      if (!yes) return done({ changed: false, added: null });
+      const now = Date.now(), seen = new Set(), next = []; let added = null;
+      for (const r of rows) {
+        const name = r.name.trim().replace(/\s+/g, ' '); if (!name || seen.has(name.toLowerCase())) continue;
+        seen.add(name.toLowerCase());
+        const old = r.id ? was.find(g => g.id === r.id) : null;
+        if (old) next.push(old.name === name ? old : { ...old, name, at: now });
+        else { const g = { id: uid(), name, at: now }; next.push(g); added = g.id; }
+      }
+      const changed = JSON.stringify(next) !== JSON.stringify(was);
+      if (changed) {
+        const gone = { ...(lib.goalsGone || {}) };
+        for (const g of was) if (!next.some(x => x.id === g.id)) gone[g.id] = now;
+        if (next.length) lib.goals = next; else delete lib.goals;
+        if (Object.keys(gone).length) lib.goalsGone = gone;
+        saveLib(); goalsChanged();
+      }
+      done({ changed, added });
+    };
+    const keys = e => {
+      e.stopPropagation();
+      if (e.key === 'Tab') trapTab(e, box);
+      else if (e.key === 'Escape') { e.preventDefault(); finish(false); }
+      else if (e.key === 'Enter' && e.target.dataset && e.target.dataset.gn != null) {   // Enter on the last line starts the next; anywhere else it is Done
+        e.preventDefault();
+        if (+e.target.dataset.gn === rows.length - 1 && e.target.value.trim()) { rows.push({ id: '', name: '' }); draw(rows.length - 1); } else finish(true);
+      }
+    };
+    el.addEventListener('input', e => { const i = e.target.dataset.gn; if (i != null) rows[+i].name = e.target.value; });
+    el.addEventListener('click', e => {
+      if (e.target.closest('[data-ok]')) return finish(true);
+      if (e.target.closest('[data-no]')) return finish(false);
+      if (e.target.closest('[data-gadd]')) { rows.push({ id: '', name: '' }); return draw(rows.length - 1); }
+      const x = e.target.closest('[data-gx]'); if (x) { rows.splice(+x.dataset.gx, 1); if (!rows.length) rows.push({ id: '', name: '' }); draw(Math.min(+x.dataset.gx, rows.length - 1)); }
+    });
+    el.addEventListener('pointerdown', e => { if (e.target === el) finish(false); });
+    document.addEventListener('keydown', keys, true); document.body.appendChild(el);
+    draw(opts.add || !was.length ? rows.length - 1 : 0);
+  });
+  const p = askQ.then(run); askQ = p; return p;
+}
+function goalsChanged() {
+  const r = routeNow();
+  if (r.v === 'class' && !batch) { renderLib(); if ($('#classPanel')) classPanelDraw(true); }
+  else if ($('#bkBody') && bk.cols) bkDraw();
+  if (r.v === 'settings') setRender();
+}
+function goalsSetHtml() {
+  const list = goalList();
+  return '<div class="lhead goalset"><h2>Learning goals</h2><span class="muted">Optional. See each class and each student by goal.</span><span class="sp"></span><button class="btn sm" data-goalsedit>' + (list.length ? 'Edit goals' : 'Add goals') + '</button></div>' +
+    (list.length ? '<div class="setrows" id="setGoals">' + list.map(g => '<div class="setrow"><span class="nt"><b>' + esc(g.name) + '</b></span></div>').join('') + '</div>' +
+      '<p class="muted setp">Tag rubric rows in Rubric setup and quiz questions in Quiz boxes. Each class page then has a Goals tab.</p>'
+      : '<p class="muted setp">A goal is anything you want to see scores by: a skill like “Uses evidence”, or a standard from your school. Tag rubric rows and quiz questions with a goal, and each class gets a Goals tab that shows what to reteach.</p>');
+}
+document.addEventListener('click', e => {
+  if (!e.target.closest || !e.target.closest('[data-goalsedit]')) return;
+  goalsDlg().then(() => { if (rubDlg && $('#setupBody')) rubDlg.re(); });
+});
+document.addEventListener('change', e => {
+  const t = e.target; if (!t.classList || !t.classList.contains('goalsel') || !rubDlg || !t.closest('#setupBody')) return;
+  const d = rubDlg.draft, set = v => { if (t.dataset.gi != null) { d.goals ||= []; d.goals[+t.dataset.gi] = v || null; } else rubDlg.goalAll = v || ''; };
+  if (t.value !== '+') return set(t.value);
+  goalsDlg({ add: true }).then(r => { if (r.added) set(r.added); if (rubDlg && $('#setupBody')) rubDlg.re(); });
+});
+
+/* ---------- what one saved paper says about each goal ---------- */
+function goalCell(d, g, p) {
+  if (!g || !p || p.status === 'missing' || p.status === 'excused' || g.outAvg) return null;
+  const s = { ...DEFAULT_SETUP, ...(d.setup || {}) }, rub = s.mode === 'rubric', out = {};
+  const max = rub ? s.criteria.length * 4 : +s.outOf || 0;
+  const put = (id, got, of, part) => { if (!id || !(of > 0) || got == null || isNaN(+got)) return; const e = out[id] ||= { got: 0, of: 0, parts: [] }; e.got += +got; e.of += of; if (!e.parts.includes(part)) e.parts.push(part); };
+  const qs = !rub && d.quiz && Array.isArray(d.quiz.qs) ? d.quiz.qs : [], q = g.q || {};
+  if (rub) s.criteria.forEach((c, i) => put(s.goals && s.goals[i], (g.rubric || [])[i], 4, String(c)));
+  else if (qs.some(x => q[x.id] != null)) qs.forEach((x, i) => put(x.goal || d.goal, q[x.id], +x.pts || 0, 'Question ' + ((x.lab || '').trim() || String(i + 1))));
+  else if (d.goal && p.pct != null && !p.partial) out[d.goal] = { got: p.total != null ? p.total : p.pct, of: p.total != null && p.max ? p.max : 100, pct: p.pct, parts: ['The whole score'] };
+  for (const e of Object.values(out)) if (e.pct == null) { const share = Math.max(0, Math.min(1, e.got / e.of)), v = max ? percentWith(share * max, max, s.scale) : null; e.pct = v == null ? share * 100 : Math.max(0, v); }
+  return Object.keys(out).length ? out : null;
+}
+const GOAL_LOW = 70;
+function goalData(c, cols) {
+  const use = cols.filter(x => x.type !== 'fm' && x.type !== 'xc');
+  return goalList().map(g => {
+    const per = new Map(), from = [];
+    for (const col of use) {
+      const parts = []; let n = 0;
+      for (const nm of c.names) {
+        const cell = col.cells.get(nm), e = cell && cell.goals && cell.goals[g.id]; if (!e) continue;
+        n++; for (const p of e.parts) if (!parts.includes(p)) parts.push(p);
+        if (!per.has(nm)) per.set(nm, []); per.get(nm).push({ col, pct: e.pct, got: e.got, of: e.of });
+      }
+      if (n) from.push({ col, parts, n });
+    }
+    const stu = new Map(); for (const [nm, list] of per) stu.set(nm, bkMean(list.map(x => x.pct)));
+    const inAvg = c.names.filter(nm => stu.has(nm) && bkIn(nm)), low = inAvg.filter(nm => roundPct(stu.get(nm)) < GOAL_LOW);
+    return { g, per, stu, from, avg: inAvg.length ? bkMean(inAvg.map(nm => stu.get(nm))) : null, n: inAvg.length, low };
+  }).filter(x => x.from.length);
+}
+const goalPapers = list => list.map(x => x.col.name + ' ' + roundPct(x.pct) + '% (' + fmtNum(Math.round(x.got * 10) / 10) + ' of ' + fmtNum(x.of) + ')').join(' · ');
+
+/* ---------- a class page's Goals tab ---------- */
+function goalsView(c, cols, all) {
+  if (bk.term === '*') cols = all;
+  const edit = '<button class="btn sm" data-goalsedit>Edit goals</button>';
+  if (!goalList().length) return '<div class="bkpad" id="glView"><p class="muted">You have no learning goals yet. A goal is anything you want to see scores by: a skill, or a standard from your school.</p><p><button class="btn sm primary" data-goalsedit>Add goals</button></p></div>';
+  const data = goalData(c, cols);
+  if (!data.length) return '<div class="bkpad" id="glView"><div class="glhead"><p class="muted">Nothing ' + (bk.term === '*' || !bkConf().terms.length ? 'this year' : 'in this term') + ' has a score on a goal yet. In an assignment, choose Setup, then Rubric setup, and pick a goal beside each row. For a paper quiz, pick one beside each question in Quiz boxes.</p><span class="sp"></span>' + edit + '</div></div>';
+  const who = nm => bkWho(nm, c.names.indexOf(nm));
+  const order = data.filter(x => x.avg != null).sort((a, b) => a.avg - b.avg), least = order.length > 1 && roundPct(order[0].avg) !== roundPct(order[order.length - 1].avg) ? order[0] : null;
+  const bars = order.map(x => {
+    const sub = people(x.n, 'student') + ' · ' + (x.low.length ? x.low.length + ' under ' + GOAL_LOW + '%' : 'no one under ' + GOAL_LOW + '%');
+    return '<div class="glbar' + (x === least ? ' lo' : '') + '" tabindex="0"' + chTip(pctAvgText(x.avg) + ' class average', x.g.name, x.low.length ? 'Under ' + GOAL_LOW + '%: ' + x.low.slice(0, 12).map(who).join(', ') + (x.low.length > 12 ? ' and ' + (x.low.length - 12) + ' more' : '') : people(x.from.length, 'assignment')) + ' aria-label="' + esc(x.g.name + ': ' + pctAvgText(x.avg) + ' class average. ' + sub) + '">' +
+      '<span class="gln" data-raw><span>' + esc(x.g.name) + '</span>' + (x === least ? ' <span class="stag">lowest</span>' : '') + '</span><div class="bkcmpt"><i style="width:' + Math.min(100, x.avg) + '%"></i><em class="glcut" style="left:' + GOAL_LOW + '%"></em></div><b>' + pctAvgText(x.avg) + '</b><small>' + sub + '</small></div>';
+  }).join('');
+  const sort = bk.gsort && (bk.gsort.k === 'name' || data.some(x => x.g.id === bk.gsort.k)) ? bk.gsort : { k: 'name', dir: 1 }, sg = data.find(x => x.g.id === sort.k);
+  const rows = c.names.map((n, i) => ({ n, i, shown: bkWho(n, i) })), val = r => sort.k === 'name' ? r.i : sg.stu.has(r.n) ? sg.stu.get(r.n) : null;
+  rows.sort((a, b) => { const x = val(a), y = val(b); return x == null || y == null ? (x == null ? 1 : 0) - (y == null ? 1 : 0) || a.i - b.i : (x - y) * sort.dir || a.i - b.i; });
+  const head = (k, inner, cls, label) => '<th class="' + cls + '"' + (sort.k === k ? ' aria-sort="' + (sort.dir < 0 ? 'descending' : 'ascending') + '"' : '') + '><button data-glsort="' + esc(k) + '" title="Sort by ' + esc(label) + '">' + inner + (sort.k === k ? '<span class="charr" aria-hidden="true">' + (sort.dir < 0 ? '▾' : '▴') + '</span>' : '') + '</button></th>';
+  const page = bkPage(), name = r => page ? '<a class="bklink" href="' + classHash(c, 'students', r.i) + '">' + esc(r.shown) + '</a>' : '<button class="link" data-bkgo="' + r.i + '">' + esc(r.shown) + '</button>';
+  const cell = (x, r) => {
+    if (!x.stu.has(r.n)) return '<span class="chc none"' + chTip('No score on this goal yet', r.shown, x.g.name) + '></span>';
+    const v = x.stu.get(r.n);
+    return '<span class="chc b' + chBand(v) + (bkIn(r.n) ? '' : ' glout') + '"' + chTip(roundPct(v) + '%', r.shown + ' · ' + x.g.name, goalPapers(x.per.get(r.n))) + '>' + roundPct(v) + '</span>';
+  };
+  const heat = '<div class="chwrap"><table class="chtab gltab" id="glHeat"><thead><tr>' + head('name', 'Student', 'chn', 'roster order') + data.map(x => head(x.g.id, '<span data-raw>' + esc(x.g.name) + '</span>', 'chh', x.g.name)).join('') + '</tr></thead><tbody>' +
+    rows.map(r => '<tr><th class="chn" scope="row">' + name(r) + '</th>' + data.map(x => '<td>' + cell(x, r) + '</td>').join('') + '</tr>').join('') +
+    '<tr class="chfoot"><th class="chn" scope="row">Class average</th>' + data.map(x => '<td>' + (x.avg != null ? roundPct(x.avg) + '%' : '–') + '</td>').join('') + '</tr></tbody></table></div>' +
+    '<div class="bkleg chleg">' + chBandLegend().join('') + '</div>';
+  const fromRows = data.flatMap(x => x.from.map((f, k) => '<tr><td>' + (k ? '' : esc(x.g.name)) + '</td><td>' + esc(f.col.name) + (f.col.due ? ' <span class="muted">' + esc(bkDay(f.col.due)) + '</span>' : '') + '</td><td>' + esc(f.parts.join(', ')) + '</td><td>' + f.n + '</td></tr>')).join('');
+  const unused = goalList().filter(g => !data.some(x => x.g.id === g.id));
+  return '<div class="bkpad" id="glView"><div class="glhead"><p class="muted">Each goal’s percent comes from the rubric rows and quiz questions you tagged with it. Every assignment counts the same.</p><span class="sp"></span>' + edit + '</div>' +
+    chSec('What to reteach', '<div class="glbars" id="glBars">' + bars + '</div>', 'The class average on each goal, lowest first. The dashed line is ' + GOAL_LOW + '%.') +
+    chSec('Every student, every goal', heat, 'The stronger the blue, the higher the score. Click a heading to sort by it. An empty box is a student with no score on that goal yet.') +
+    '<section><details class="ovtbl" id="glFrom"><summary>Where each goal’s scores come from</summary><table class="ovtab"><thead><tr><th>Goal</th><th>Assignment</th><th>Tagged with it</th><th>Papers</th></tr></thead><tbody>' + fromRows + '</tbody></table>' +
+    (unused.length ? '<p class="muted ovcap2">No scores here yet: ' + esc(unused.map(g => g.name).join(', ')) + '.</p>' : '') + '</details></section></div>';
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest && e.target.closest('[data-glsort]'); if (!b || !$('#bkBody')) return;
+  const k = b.dataset.glsort, was = bk.gsort && bk.gsort.k === k ? bk.gsort.dir : 0;
+  bk.gsort = { k, dir: was ? -was : k === 'name' ? 1 : -1 }; bkDraw();
+  const again = $('#glHeat [data-glsort="' + CSS.escape(k) + '"]'); if (again) again.focus({ preventScroll: true });
+});
+
+/* ---------- one student's goals, on their own page ---------- */
+function goalsStu(c, cols, n) {
+  const data = goalData(c, cols).filter(x => x.stu.has(n)); if (!data.length) return '';
+  return chSec('Learning goals', '<div id="glStu">' + data.map(x => { const v = x.stu.get(n), list = x.per.get(n);
+    return '<div class="bkcmp chrow glstu" tabindex="0"' + chTip(roundPct(v) + '%', x.g.name, goalPapers(list) + (x.avg != null ? ' · class average ' + pctAvgText(x.avg) : '')) + '><span title="' + esc(x.g.name) + '" data-raw>' + esc(x.g.name) + '</span><div class="bkcmpt"><i style="width:' + Math.min(100, v) + '%"></i>' + (x.avg != null ? '<em style="left:' + Math.min(100, x.avg) + '%"></em>' : '') + '</div><b>' + roundPct(v) + '%</b><small>' + (x.avg != null ? 'class ' + pctAvgText(x.avg) : '') + '</small></div>'; }).join('') + '</div>',
+    'Their average on each goal, from the rubric rows and quiz questions tagged with it. The dashed line is the class average.');
+}
+Object.assign(window.__gs, { goalList, goalCell, goalData, goalsDlg });
 
 /* ---------------- Report comments: a draft for each student, from her own scores and comments (Stage 6) ----------------
    A class page's Report comments tab (#/class/<id>/reports). The draft is put together here, in the browser, from the
@@ -21775,7 +22183,7 @@ function setRender() {
     const n = gBankSeen;
     put('#setGrading', '<div class="lhead"><h2>Grading scale and rubrics</h2><span class="muted">Saved once, picked on any assignment.</span><span class="sp"></span><a class="btn sm" href="' + esc(planUrl('#rubrics')) + '">Open the rubric bank</a></div>' +
       '<p class="setp">' + (n ? 'You have ' + n.r + (n.r === 1 ? ' saved rubric' : ' saved rubrics') + ' and ' + n.s + (n.s === 1 ? ' saved grading scale' : ' saved grading scales') + '.' : 'Looking for your saved rubrics…') + ' They are kept in the rubric bank, sorted by unit, and hold only a rubric’s wording and a scale’s percents.</p>' +
-      '<p class="muted setp">To use one, open an assignment and choose Setup, then Rubric setup. A rubric or scale you make there can be saved to the bank from the same box.</p>');
+      '<p class="muted setp">To use one, open an assignment and choose Setup, then Rubric setup. A rubric or scale you make there can be saved to the bank from the same box.</p>' + goalsSetHtml());
   }
   if (r.sec === 'timetable') {
     const p = plan, day = s => s ? new Date(s + 'T12:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : '';
@@ -21968,7 +22376,7 @@ $('#setHistory').addEventListener('click', e => {
 });
 
 /* updates she controls, and installing as an app */
-const WHATS_NEW = {"1.23.0":["Attendance. Each class has an Attendance tab: everyone starts as present, so a day is one press for each student who is late, excused or absent, with a note if you want one.","Look back shows every saved day in one table with each student’s totals, and a student’s own page lists the days they missed.","Copy a day, or download the table as a spreadsheet, for your school’s system. Today has a line for it under each class.","If you don’t take attendance here, turn it off in Settings, Classes and rosters."],"1.22.0":["Progress sheets for parent meetings: one printed page per student with the term grade, every score, a chart of how they moved, missing work, each term's grade, the report comment and lines for notes. Find it on a class's Students list, or Progress sheet on one student's page.","Choose the term and tick what goes on it; Print opens the print window, where you can pick a printer or Save as PDF. It is made on your computer and nothing is sent anywhere."],"1.21.0":["Each class has a Missing work tab: every paper you marked Missing, by student or by assignment, for the term you pick.","Email reminder opens an email in your own mail app, addressed to the student and listing what they owe, for you to read and send. Email all writes one email to everyone who owes an assignment, with the addresses in Bcc. Grading Studio sends nothing itself.","Each reminder you open is noted beside the work, and Email wording… changes what every reminder says."],"1.20.0":["The app can speak Traditional Chinese (繁體中文). Choose it in Settings, Display, App language, or at the top of the welcome.","Like Spanish, it covers the first screens so far: the sidebar, Today, the welcome, Find anything, Help, and the feedback page students get with a returned paper. The other screens are still in English."],"1.19.0":["The app can speak Spanish. Choose it in Settings, Display, App language, or at the top of the welcome.","Spanish covers the first screens so far: the sidebar, Today, the welcome, Find anything, Help, and the feedback page students get with a returned paper. The other screens are still in English.","Names you typed (classes, students, assignments, rubric rows) are never translated."],"1.18.0":["On a tablet, a pencil draws and the pen's line is wider where you press harder. Once you have used a pencil, one finger moves the page, two fingers pinch to zoom, and a hand resting on the screen does nothing.","Settings, Marking has a new Tablet and pencil section: choose what a finger does on the paper, or turn off the wider line.","On a touch screen the tools, the student rows and the score buttons are larger."],"1.17.0":["Report comments: a new tab on each class's page drafts a comment for every student from your own gradebook, rubric scores and the comments you wrote on their papers. Edit each one, tick it done, then copy or download them all.","The drafts are put together on your computer from sentences you can change under Wording. Nothing about a student is sent anywhere."],"1.16.0":["Help is in the sidebar: short answers to the questions teachers ask most, from opening a set of papers to moving your work to another computer.","Find anything answers questions too. Type a few words, like “late paper” or “backup”, and the answer is in the list."],"1.15.0":["A picture dragged onto a slide that has text now sits beside the text, in a new Text + picture layout.","Drag several pictures in at once and each gets its own slide. Let a picture go on any slide in the list on the left to put it there.","New Full picture layout: the picture fills the whole slide."],"1.14.0":["Extra credit: points or a percent on one paper, and extra credit entries in the gradebook that add to the term grade or the in-class average.","The gradebook shows each type's average (summative, in-class) right beside the term grade, kept in view as you scroll. Averages only shows just those columns, and Whole year splits each term the same way.","Leave out… lets you untick students to see the class averages without them. Their own grades don't change, and nothing is saved."],"1.13.0":["Present a lesson from the Planner, or from Today when its class is on now or next: its slides fill the screen, and the arrow keys or a clicker move through them.","While presenting, A shows the agenda to tick off, T starts a timer the class can see, N shows your notes and B blanks the screen.","The bar shows how many minutes the class has left, from your timetable.","After a lesson is taught, one line says where the class got to. It shows on the lesson and on the week, and presenting again picks up there."],"1.12.0":["A returned paper starts with a feedback page: the score, each rubric row with the level given and what that level means, your comment, and every comment on the paper with its page number.","It is on unless you turn it off under Options on the Return tab. Your own pages are not changed, and bringing an export back in opens only those."],"1.11.0":["The Planner’s sections are in the sidebar: Calendar, Units, Past lessons, Activities and Rubrics. The row of tabs across the top is gone.","A lesson has a lighter top: its name, its classes, its status and Download. Copy for Claude, Versions, the upload and the links are under More.","Comments shows above a lesson once it has one."],"1.7.0":["Home is now Today: the classes you teach today with the lesson planned for each, the papers waiting to be marked, and the papers ready to hand back.","What the class needs next: after a set of papers is scored, Today shows the weakest rubric row and how many students to sit down with.","A class page is quieter. Click anywhere on an assignment’s row to open it; the only blue button is the one that adds an assignment.","Forget, and the other ways to open papers, moved into the ⋯ menu on each row."],"1.6.0":["A new browser opens on three questions (your classes, how you grade, where work is kept) and starts with nothing of anyone else’s in it.","A sample class of made-up students, with papers to mark, for trying things out. Remove it from Home when you’re done.","The app uses the name of your own school system. Choose it, and how you usually grade, in Settings.","Letter grades or IB 1 to 7 can show beside the percent, with boundaries you set.","Canvas and Moodle downloads are grouped by student. The Planner works without a setup file, and downloads lessons as PowerPoint with a plain built-in template."],"1.5.0":["The sidebar says “Not backed up”, in amber, until a folder holds a second copy of your work. Home asks for that folder once.","Go back in time, in Settings: any assignment as it was on an earlier day, restored on its own, with Undo.","Grading Studio can be installed as an app, and it opens with no internet.","A newer version now waits until you click Update now, so nothing changes in the middle of marking."]};
+const WHATS_NEW = {"1.25.0":["Attendance. Each class has an Attendance tab: everyone starts as present, so a day is one press for each student who is late, excused or absent, with a note if you want one.","Look back shows every saved day in one table with each student’s totals, and a student’s own page lists the days they missed.","Copy a day, or download the table as a spreadsheet, for your school’s system. Today has a line for it under each class.","If you don’t take attendance here, turn it off in Settings, Classes and rosters."],"1.24.0":["Retakes: a second try at the same assignment keeps the first try's score, comment and paper. Start one from the ⋯ beside Missing, Excused and Late on a paper.","You choose which try counts, for all your classes: the highest (to begin with), the latest, or the average. It is in the retake box and in the gradebook's Term setup.","A score typed into the gradebook takes a retake too: type both, like 7 > 10."],"1.23.0":["Scores by learning goal, if you want them. Keep your own list of goals (a skill, or a standard from your school) in Settings, Grading, or add one wherever you tag.","Tag rubric rows in Rubric setup and quiz questions in Quiz boxes. An assignment scored with just a total can carry one goal for the whole score.","Each class page gets a Goals tab: the class average on each goal with the lowest first, every student by every goal, and where each number came from. A student's own page shows their goals beside the class average.","Nothing changes until you add a first goal, and tagging never changes a score or a grade."],"1.22.0":["Progress sheets for parent meetings: one printed page per student with the term grade, every score, a chart of how they moved, missing work, each term's grade, the report comment and lines for notes. Find it on a class's Students list, or Progress sheet on one student's page.","Choose the term and tick what goes on it; Print opens the print window, where you can pick a printer or Save as PDF. It is made on your computer and nothing is sent anywhere."],"1.21.0":["Each class has a Missing work tab: every paper you marked Missing, by student or by assignment, for the term you pick.","Email reminder opens an email in your own mail app, addressed to the student and listing what they owe, for you to read and send. Email all writes one email to everyone who owes an assignment, with the addresses in Bcc. Grading Studio sends nothing itself.","Each reminder you open is noted beside the work, and Email wording… changes what every reminder says."],"1.20.0":["The app can speak Traditional Chinese (繁體中文). Choose it in Settings, Display, App language, or at the top of the welcome.","Like Spanish, it covers the first screens so far: the sidebar, Today, the welcome, Find anything, Help, and the feedback page students get with a returned paper. The other screens are still in English."],"1.19.0":["The app can speak Spanish. Choose it in Settings, Display, App language, or at the top of the welcome.","Spanish covers the first screens so far: the sidebar, Today, the welcome, Find anything, Help, and the feedback page students get with a returned paper. The other screens are still in English.","Names you typed (classes, students, assignments, rubric rows) are never translated."],"1.18.0":["On a tablet, a pencil draws and the pen's line is wider where you press harder. Once you have used a pencil, one finger moves the page, two fingers pinch to zoom, and a hand resting on the screen does nothing.","Settings, Marking has a new Tablet and pencil section: choose what a finger does on the paper, or turn off the wider line.","On a touch screen the tools, the student rows and the score buttons are larger."],"1.17.0":["Report comments: a new tab on each class's page drafts a comment for every student from your own gradebook, rubric scores and the comments you wrote on their papers. Edit each one, tick it done, then copy or download them all.","The drafts are put together on your computer from sentences you can change under Wording. Nothing about a student is sent anywhere."],"1.16.0":["Help is in the sidebar: short answers to the questions teachers ask most, from opening a set of papers to moving your work to another computer.","Find anything answers questions too. Type a few words, like “late paper” or “backup”, and the answer is in the list."],"1.15.0":["A picture dragged onto a slide that has text now sits beside the text, in a new Text + picture layout.","Drag several pictures in at once and each gets its own slide. Let a picture go on any slide in the list on the left to put it there.","New Full picture layout: the picture fills the whole slide."],"1.14.0":["Extra credit: points or a percent on one paper, and extra credit entries in the gradebook that add to the term grade or the in-class average.","The gradebook shows each type's average (summative, in-class) right beside the term grade, kept in view as you scroll. Averages only shows just those columns, and Whole year splits each term the same way.","Leave out… lets you untick students to see the class averages without them. Their own grades don't change, and nothing is saved."],"1.13.0":["Present a lesson from the Planner, or from Today when its class is on now or next: its slides fill the screen, and the arrow keys or a clicker move through them.","While presenting, A shows the agenda to tick off, T starts a timer the class can see, N shows your notes and B blanks the screen.","The bar shows how many minutes the class has left, from your timetable.","After a lesson is taught, one line says where the class got to. It shows on the lesson and on the week, and presenting again picks up there."],"1.12.0":["A returned paper starts with a feedback page: the score, each rubric row with the level given and what that level means, your comment, and every comment on the paper with its page number.","It is on unless you turn it off under Options on the Return tab. Your own pages are not changed, and bringing an export back in opens only those."],"1.11.0":["The Planner’s sections are in the sidebar: Calendar, Units, Past lessons, Activities and Rubrics. The row of tabs across the top is gone.","A lesson has a lighter top: its name, its classes, its status and Download. Copy for Claude, Versions, the upload and the links are under More.","Comments shows above a lesson once it has one."],"1.7.0":["Home is now Today: the classes you teach today with the lesson planned for each, the papers waiting to be marked, and the papers ready to hand back.","What the class needs next: after a set of papers is scored, Today shows the weakest rubric row and how many students to sit down with.","A class page is quieter. Click anywhere on an assignment’s row to open it; the only blue button is the one that adds an assignment.","Forget, and the other ways to open papers, moved into the ⋯ menu on each row."],"1.6.0":["A new browser opens on three questions (your classes, how you grade, where work is kept) and starts with nothing of anyone else’s in it.","A sample class of made-up students, with papers to mark, for trying things out. Remove it from Home when you’re done.","The app uses the name of your own school system. Choose it, and how you usually grade, in Settings.","Letter grades or IB 1 to 7 can show beside the percent, with boundaries you set.","Canvas and Moodle downloads are grouped by student. The Planner works without a setup file, and downloads lessons as PowerPoint with a plain built-in template."],"1.5.0":["The sidebar says “Not backed up”, in amber, until a folder holds a second copy of your work. Home asks for that folder once.","Go back in time, in Settings: any assignment as it was on an earlier day, restored on its own, with Undo.","Grading Studio can be installed as an app, and it opens with no internet.","A newer version now waits until you click Update now, so nothing changes in the middle of marking."]};
 const upd = { on: false, st: null, mine: '', checking: false, said: '', install: null, installed: false, err: '' };
 const updCan = () => 'serviceWorker' in navigator && (location.protocol === 'https:' || /[?&]sw=1(&|$)/.test(location.search)) && !/Grading Studio\.html$/i.test(decodeURIComponent(location.pathname));
 const updSend = async msg => { const reg = await navigator.serviceWorker.ready; if (reg.active) reg.active.postMessage(msg); };
@@ -22392,7 +22800,7 @@ function findRows() {
   const toMark = () => { if (dlgPage) closeDlg(); };   // a student or a marking tool is on the papers: a tab's screen steps aside first
   if (batch) {
     const order = anonOn() ? anonOrder() : batch.students.map((_, i) => i);
-    order.forEach((i, pos) => { const st = batch.students[i], g = gradeOf(st); add('Students', shownName(st, i), noScore(st) ? STATUS_LABEL[g.status] : g.done ? 'Scored' : g.total != null ? 'Partly scored' : st.files.length ? 'Not scored yet' : 'No paper', () => { toMark(); openStudent(i); }, String(pos + 1)); });
+    order.forEach((i, pos) => { const st = batch.students[i], g = gradeOf(st); add('Students', shownName(st, i), noScore(st) ? STATUS_LABEL[g.status] : g.done ? 'Scored' : g.wait ? 'Retake to score' : g.total != null ? 'Partly scored' : st.files.length ? 'Not scored yet' : 'No paper', () => { toMark(); openStudent(i); }, String(pos + 1)); });
     for (const b of document.querySelectorAll('#tools .tool[data-tool]')) { const m = /^(.*?) \((.*)\)$/.exec(b.title) || [0, b.title, '']; add('Marking tools', m[1], 'Tool for the paper', () => { toMark(); setTool(b.dataset.tool); }, m[2]); }
     for (const b of document.querySelectorAll('#paper .who .km .mitem:not([data-whodo])')) { const s = b.querySelector('small'); add('This paper', (b.closest('.kmw').querySelector('#addMenuBtn') ? 'Add ' : '') + b.firstChild.textContent.trim().replace(/^A /, 'a ').replace(/^Pasted/, 'pasted').replace(/^From/, 'pages from'), s ? s.textContent : '', () => { toMark(); if (b.isConnected) b.click(); }); }
     const tabGo = (k, label, sub) => add('This assignment', label, sub, () => go(batchHash(batch.id, k)));
@@ -22423,7 +22831,7 @@ function findRows() {
   add('Go to', 'Help', 'Short answers to common questions', () => go('#/help'));
   for (const c of lib.classes) {
     add('Classes', c.name, (c.names.length ? c.names.length + ' students' : 'No roster yet') + (classLeft(c) ? ' · ' + classLeft(c) + ' left to score' : ''), () => go(classHash(c)));
-    if (c.names.length) for (const [k, l, sub] of [['gradebook', 'gradebook', 'Every assignment by term, with each term grade'], ['students', 'students', 'The roster, with IDs and emails, and each student’s own page'], ...(attOn() ? [['attendance', 'attendance', 'Who was here, late, excused or absent, saved by day']] : []), ['missing', 'missing work', 'Who still owes work, with a reminder email for each student'], ['charts', 'charts', 'Grades and scores as charts'], ['reports', 'report comments', 'A draft comment for each student, from your own scores and comments']]) add('Class pages', c.name + ' ' + l, sub, () => go(classHash(c, k)));
+    if (c.names.length) for (const [k, l, sub] of [['gradebook', 'gradebook', 'Every assignment by term, with each term grade'], ['students', 'students', 'The roster, with IDs and emails, and each student’s own page'], ...(attOn() ? [['attendance', 'attendance', 'Who was here, late, excused or absent, saved by day']] : []), ['missing', 'missing work', 'Who still owes work, with a reminder email for each student'], ['charts', 'charts', 'Grades and scores as charts'], ['reports', 'report comments', 'A draft comment for each student, from your own scores and comments']].concat(goalList().length ? [['goals', 'goals', 'The class and each student by learning goal: what to reteach']] : [])) add('Class pages', c.name + ' ' + l, sub, () => go(classHash(c, k)));
   }
   const carded = new Set();
   for (const c of holders()) for (const u of c.units) for (const it of u.items) {
@@ -22444,6 +22852,7 @@ function findRows() {
     add('Settings', 'Remove from this computer', 'Clears student work from this browser', () => go('#/settings'));
   }
   add('Settings', 'Where my work is saved', 'This browser, and a folder you choose', () => openWhere());
+  add('Settings', 'Learning goals', 'Your own list of goals, to see scores by', () => goalsDlg());
   add('Settings', 'Go back in time', 'An assignment, or everything, as it was on an earlier day', () => go(setHash('history')));
   add('Settings', 'Updates and installing', 'This version, what’s new, install as an app', () => go(setHash('about')));
   add('Settings', document.documentElement.dataset.theme === 'dark' ? 'Light mode' : 'Dark mode', 'Display', press('.themeBtn'));

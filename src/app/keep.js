@@ -6,6 +6,7 @@ function saveNow(leaving) {
   clearTimeout(saveT); saveDue = false;
   if (batch.revs && tabForgot(batch)) return tabLetGo();
   const data = { t: Date.now(), carry: batch.carry, cur, ck: batch.students[cur] && batch.students[cur].key, setup, cls: batch.classId, share: batch.share, drive: batch.drive, light: batch.light, lightOpt: batch.lightOpt, lightPg: batch.lightPg, lightPgL: batch.lightPgL, anon: batch.anon, moved: batch.moved, removed: batch.removed, refSkip: batch.refSkip, quiz: batch.quiz, groups: batch.groups && batch.groups.length ? batch.groups : undefined, returned: batch.returned || undefined, read: (batch.read = paperReads()), s: {} };
+  if (batch.goal) data.goal = batch.goal;   // a learning goal for the whole score (goals.js); no key at all without one
   for (const st of batch.students) {
     const f = {};
     for (const fl of st.files.concat(st.gone || [])) if (Object.values(fl.marks).some(a => a.length)) f[fl.path] = fl.marks;   // a removed file keeps its marks for Bring back
@@ -70,6 +71,7 @@ function restore() {
   if (data.anon) batch.anon = data.anon;
   if (data.refSkip) batch.refSkip = data.refSkip;
   if (data.quiz) batch.quiz = data.quiz;
+  if (data.goal) batch.goal = data.goal;
   if (data.returned) batch.returned = data.returned;
   batch.groups = data.groups || [];
   groupSync();
