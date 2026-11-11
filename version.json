@@ -1,13 +1,13 @@
 {
- "version": "1.23.0",
- "build": "96593be6a4e1",
+ "version": "1.27.2",
+ "build": "5db1351cccbe",
  "notes": [
   "In the gradebook, in-class assessments are now on the left and summatives on the right: the columns, the averages beside the term grade, and wherever you choose a type.",
   "The order is yours to change. In Term setup, the arrows beside each type move it, and the gradebook's columns follow from left to right.",
   "You can make your own assignment types. In Term setup, rename a type or press + Add a type (Homework, Projects, Quizzes), and give each its share of the grade. Your own setup stays as it is until you change it."
  ],
  "files": {
-  "index.html": "7a240740aa1f171f1c412d42930c31f3ded1fd467a3bd5cddf4b96374b6ddb01",
-  "planner.html": "54ffb75957732175a885e6e25465ce38529e753cfe54a7685a6aeb2438475577"
+  "index.html": "5842b12ce0b49f641e312690b4229712c84513abf4cba29367085c9a8143955c",
+  "planner.html": "379f42266ca625949033afeb3e8f19062b4a331588edd43134c50235e9d8055b"
  }
 }

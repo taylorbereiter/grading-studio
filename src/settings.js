@@ -11,7 +11,7 @@ function setRender() {
   const box = $('#setNav'); if (box.dataset.h !== nav) { box.dataset.h = nav; box.innerHTML = nav; }
   for (const el of document.querySelectorAll('#setPane [data-sec]')) el.hidden = el.dataset.sec !== r.sec;
   const put = (id, h) => { const el = $(id); if (el.dataset.h !== h) { el.dataset.h = h; el.innerHTML = h; } };
-  meSetRender(r.sec);
+  meSetRender(r.sec); attSetRender(r.sec);
   if (r.sec === 'history') gbRender();
   if (r.sec === 'about') updRender();
   if (r.sec === 'classes') {
@@ -32,7 +32,7 @@ function setRender() {
     const n = gBankSeen;
     put('#setGrading', '<div class="lhead"><h2>Grading scale and rubrics</h2><span class="muted">Saved once, picked on any assignment.</span><span class="sp"></span><a class="btn sm" href="' + esc(planUrl('#rubrics')) + '">Open the rubric bank</a></div>' +
       '<p class="setp">' + (n ? 'You have ' + n.r + (n.r === 1 ? ' saved rubric' : ' saved rubrics') + ' and ' + n.s + (n.s === 1 ? ' saved grading scale' : ' saved grading scales') + '.' : 'Looking for your saved rubrics…') + ' They are kept in the rubric bank, sorted by unit, and hold only a rubric’s wording and a scale’s percents.</p>' +
-      '<p class="muted setp">To use one, open an assignment and choose Setup, then Rubric setup. A rubric or scale you make there can be saved to the bank from the same box.</p>');
+      '<p class="muted setp">To use one, open an assignment and choose Setup, then Rubric setup. A rubric or scale you make there can be saved to the bank from the same box.</p>' + goalsSetHtml());
   }
   if (r.sec === 'timetable') {
     const p = plan, day = s => s ? new Date(s + 'T12:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : '';

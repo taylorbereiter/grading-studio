@@ -21,13 +21,14 @@ function findChrome() {
   return hit;
 }
 // userDataDir with keepProfile: closes and reopens the same throwaway profile, for a real browser restart.
-async function launch({ userDataDir, keepProfile } = {}) {
+// args: more Chrome switches for one caller (the screens tool asks for steady drawing).
+async function launch({ userDataDir, keepProfile, args = [] } = {}) {
   const dir = userDataDir || fs.mkdtempSync(path.join(os.tmpdir(), 'gs-test-profile-'));
   if (!path.resolve(dir).startsWith(path.resolve(os.tmpdir()))) throw new Error('Test profiles must live in the temp folder: ' + dir);
   const browser = await puppeteer.launch({
     executablePath: findChrome(), headless: true, userDataDir: dir, defaultViewport: { width: 1500, height: 950 },
     // Everything but this computer is unreachable: a test can't reach the live site or send anything anywhere.
-    args: ['--host-resolver-rules=MAP * ~NOTFOUND, EXCLUDE localhost', '--no-first-run', '--no-default-browser-check'],
+    args: ['--host-resolver-rules=MAP * ~NOTFOUND, EXCLUDE localhost', '--no-first-run', '--no-default-browser-check', ...args],
   });
   const close = browser.close.bind(browser);
   browser.close = async () => {

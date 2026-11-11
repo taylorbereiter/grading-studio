@@ -21,7 +21,8 @@ const CHECK_I = 0xffffffff;
 
 /* writing */
 // sink: { write(bytes), close(), abort() }. onp(bytes so far).
-async function takeWrite(sink, pass, onp, stop) {
+// more (a new year's archive): { info: more fields for the info frame, extra: async frame => more frames before the end }.
+async function takeWrite(sink, pass, onp, stop, more) {
   const salt = crypto.getRandomValues(new Uint8Array(16)), np = crypto.getRandomValues(new Uint8Array(7));
   const hdr = te.encode(JSON.stringify({ v: 1, kdf: { name: 'PBKDF2', hash: 'SHA-256', iter: TAKE_ITER, salt: b64(salt) }, cipher: 'AES-256-GCM', chunk: TAKE_CHUNK, np: b64(np) }));
   const head = new Uint8Array(TAKE_MAGIC.length + 4 + hdr.length);
@@ -51,7 +52,7 @@ async function takeWrite(sink, pass, onp, stop) {
   await keepWait;   // a big download may still be going in
   const A = await localState();
   const metas = Object.keys(A.meta), ids = [...new Set([...metas, ...Object.keys(A.work)])];
-  await frame({ k: 'info', app: 'Grading Studio', kind: 'take-home', t: Date.now(), from: location.host || 'an offline copy', ver: gsData.APP_VERSION, dataV: gsData.version(), downloads: ids.length });
+  await frame({ k: 'info', app: 'Grading Studio', kind: 'take-home', t: Date.now(), from: location.host || 'an offline copy', ver: gsData.APP_VERSION, dataV: gsData.version(), downloads: ids.length, ...((more && more.info) || {}) });
   await frame({ k: 'ls', ls: carryLs() });
   await frame({ k: 'tomb', tomb: A.tomb });
   for (const id of ids) await frame({ k: 'dl', id, work: A.work[id] || null, meta: A.meta[id] || null });
@@ -65,6 +66,7 @@ async function takeWrite(sink, pass, onp, stop) {
     both.set(rec.data); both.set(orig, rec.data.length);
     await frame({ k: 'edit', id: k.slice(0, i), path: k.slice(i + 1), t: rec.t || 1, nd: rec.data.length, hasOrig: !!rec.orig }, both);
   });
+  if (more && more.extra) await more.extra(frame);
   await frame({ k: 'end' });
   await seal(true);
   await sink.close();
@@ -141,6 +143,7 @@ async function takeScan(rd, onp) {
       else if (f.k === 'paper') { const p = B.papers[f.id] ||= { label: f.label, entries: [], size: 0 }; p.entries.push({ path: f.path, off: pos, n, none: f.none }); p.size += n; }
       else if (f.k === 'added') { (B.addedAt[f.id] ||= {})[f.lk] = { rec: f.rec, off: pos, n }; (B.added[f.id] ||= {})[f.lk] = f.rec.added || 0; }
       else if (f.k === 'edit') { (B.editAt[f.id] ||= {})[f.path] = { t: f.t, off: pos, n, nd: f.nd, hasOrig: f.hasOrig }; (B.edits[f.id] ||= {})[f.path] = f.t; }
+      else if (f.k === 'plan') (B.plan ||= []).push({ f, off: pos, n });   // the Planner's records, in a year's archive
       else if (f.k === 'end') ended = true;
       await skipTo(pos + n);
       pos += n;
@@ -278,7 +281,7 @@ function partSide(part, v, other, t, anon) {
     const c = (v && v.criteria) || [];
     if (!v) out.push('<div>Nothing set up</div>');
     else if (v.mode === 'points') out.push('<div>Points, out of ' + esc(v.outOf) + '</div>');
-    else out.push('<div>Rubric with ' + c.length + (c.length === 1 ? ' row' : ' rows') + ', out of ' + c.length * 4 + '</div><div class="muted">' + esc(c.join(', ')) + '</div>');
+    else out.push('<div>Rubric with ' + c.length + (c.length === 1 ? ' row' : ' rows') + ', out of ' + rowsMax(v) + '</div><div class="muted">' + esc(c.join(', ')) + '</div>');
     if (v && other && scaleSay(v) !== scaleSay(other)) out.push('<div class="muted">' + scaleSay(v) + '</div>');
     if (v && v.rubricPage && v.rubricPage.name) out.push('<div class="muted">Rubric page: ' + esc(v.rubricPage.name) + '</div>');
   } else if (part === 'cls') { const c = (lib.classes || []).find(x => x.id === v); out.push('<div>' + (c ? esc(c.name) : 'No class') + '</div>'); }
