@@ -36,7 +36,7 @@ function ctxOpen(e) {
   const c = ctxTarget(e.target), x = e.clientX, y = e.clientY;
   const what = c.kind === 'slide' ? 'this slide' : c.kind === 'lesson' ? 'this lesson' : c.kind === 'file' ? 'this file' : c.kind === 'quote' && getSelection().toString().trim() ? 'the selected text' : 'this';
   const box = document.createElement('div'); box.className = 'pl-ctx'; box.setAttribute('role', 'menu');
-  box.innerHTML = '<button role="menuitem" data-cx="note">💬 Comment for Claude on ' + what + '…</button><button role="menuitem" data-cx="add">＋ Add ' + what + ' to the Claude box</button>' +
+  box.innerHTML = '<button role="menuitem" data-cx="note">💬 Comment for ' + plAi() + ' on ' + what + '…</button><button role="menuitem" data-cx="add">＋ Add ' + what + ' to the ' + plAiTag() + ' box</button>' +
     (c.kind === 'lesson' || (c.kind === 'slide' && L.view === 'edit') ? '<button role="menuitem" data-cx="copy">⧉ Copy ' + (c.kind === 'lesson' ? 'this lesson' : 'the lesson') + ' to another day…</button>' : '') +
     '<span class="pl-ctx-hint">Shift + right-click for the usual menu</span>';
   ctxEl = box; ctxPlace(box, x, y);
@@ -52,8 +52,8 @@ function ctxOpen(e) {
 function noteOpen(c, x, y) {
   ctxClose();
   const box = document.createElement('div'); box.className = 'pl-ctx pl-note';
-  box.innerHTML = '<b>Comment for Claude</b><span class="muted sp-small">' + esc(chipLabelNow(c)) + '</span><textarea id="plNoteT" rows="4" placeholder="What should Claude change or think about here?"></textarea>' +
-    '<div class="sp-bar"><button class="btn sm" data-dict="#plNoteT">🎤 Dictate</button><span class="sp"></span><button class="btn sm ghost" data-nx>Cancel</button><button class="btn sm primary" data-nok>Add to Claude box</button></div>';
+  box.innerHTML = '<b>Comment for ' + plAi() + '</b><span class="muted sp-small">' + esc(chipLabelNow(c)) + '</span><textarea id="plNoteT" rows="4" placeholder="What should ' + plAi() + ' change or think about here?"></textarea>' +
+    '<div class="sp-bar"><button class="btn sm" data-dict="#plNoteT">🎤 Dictate</button><span class="sp"></span><button class="btn sm ghost" data-nx>Cancel</button><button class="btn sm primary" data-nok>Add to ' + plAiTag() + ' box</button></div>';
   ctxEl = box; ctxPlace(box, x, y);
   const t = box.querySelector('textarea'); t.focus();
   const ok = async () => {

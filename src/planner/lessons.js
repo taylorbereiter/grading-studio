@@ -147,10 +147,16 @@ const className = id => { const c = classById(id); return c ? c.name : id; };
    from grading, uses plain words. A Planner that had its setup before these were asked reads as it always did. */
 function plWords() {
   let w = null; try { w = JSON.parse(localStorage.getItem('gs.words') || 'null'); } catch { }
-  w = (w && typeof w === 'object' ? w : null) || L.words || (L.setup ? { sys: 'ManageBac', unit: 'Atlas', scale12: true } : { sys: '', unit: '' });
-  return { sys: String(w.sys || '').trim().slice(0, 40), unit: String(w.unit || '').trim().slice(0, 40), scale12: !!w.scale12 };   // scale12: the rubric bank offers the 12-point scale as a preset
+  w = (w && typeof w === 'object' ? w : null) || L.words || (L.setup ? { sys: 'ManageBac', unit: 'Atlas', scale12: true, ai: 'Claude' } : { sys: '', unit: '', ai: '' });
+  // ai: the teacher's AI assistant by name. Words kept before it was asked say nothing about it, and that teacher had Claude's words.
+  return { sys: String(w.sys || '').trim().slice(0, 40), unit: String(w.unit || '').trim().slice(0, 40), scale12: !!w.scale12, ai: String(w.ai == null ? (w.scale12 ? 'Claude' : '') : w.ai).trim().slice(0, 30) };   // scale12: the rubric bank offers the 12-point scale as a preset
 }
 const plSys = () => plWords().sys, plCur = () => plWords().unit;
+// The assistant's name in a sentence, at the start of one, and in front of another word ("the AI box"). Declared as functions so the
+// files before this one can use them.
+function plAi() { return plWords().ai || 'your AI assistant'; }
+function PlAi() { return plWords().ai || 'Your AI assistant'; }
+function plAiTag() { return plWords().ai || 'AI'; }
 const plSysLink = () => plSys() || 'Class page', plCurLink = () => plCur() || 'Unit plan';
 /* ---------- each class's page in the school's system (ManageBac, for one) ----------
    Kept on the class in the timetable, and remembered by class name in this browser so grading and the Planner
@@ -837,13 +843,13 @@ function moreHtml(l) {
   const a = atlasOf(l), linked = titlesLinked(l), link = esc(plCurLink());
   const it = (act, label, sub, cls) => '<button class="mi' + (cls ? ' ' + cls : '') + '" role="menuitem" data-a="' + act + '">' + label + (sub ? '<small>' + sub + '</small>' : '') + '</button>';
   return '<span class="ls-morew"><button class="btn sm ghost" data-a="more" aria-haspopup="true" aria-expanded="false">More ▾</button><div class="ls-menu" role="menu" aria-label="More for this lesson" hidden>' +
-    it('send', 'Copy for Claude', 'To paste where you’re working with Claude') +
+    it('send', 'Copy for ' + plAi(), 'To paste where you’re working with ' + plAi()) +
     (lessonTalk(l) ? '' : it('comments', 'Comments', 'On the lesson and its slides')) +
     it('versions', 'Versions', 'Earlier copies of this lesson') +
     it('finzip', 'Upload lesson .zip', 'The finished PowerPoint and its files, as one .zip') + '<hr>' +
     (titleSlideOf(l) ? it('tlink', linked ? 'Name matches the title slide ✓' : 'Match the name to the title slide', linked ? 'Click to let them be different' : 'They are different now', linked ? 'on' : '') : '') +
     (a ? '<a class="mi" role="menuitem" href="' + esc(a.url) + '" target="_blank" rel="noopener">Open ' + link + ' ↗<small>' + (a.own ? 'This lesson’s own page' : 'The page of ' + esc(a.unit)) + '</small></a>' + it('atlas', 'Change the ' + link + ' link') : it('atlas', '+ ' + link + ' link')) + '<hr>' +
-    it('mexport', 'Save lesson file…', 'A .lesson.json of just this lesson, for Claude. Bring Claude’s version back with Import') +
+    it('mexport', 'Save lesson file…', 'A .lesson.json of just this lesson, for ' + plAi() + '. Bring ' + plAi() + '’s version back with Import') +
     it('mcopyto', 'Copy to another class or day…', 'A separate copy with its own slides and materials') +
     it('mcopy', 'Copy lesson as text', 'The slides and notes as plain text') +
     it('mdelete', 'Delete this lesson') + '</div></span>';
@@ -892,7 +898,7 @@ function lessonText(l) {
     if (s.notes) t += 'Notes: ' + s.notes + '\n';
     if (s.ask) t += 'What I want on this slide: ' + s.ask + '\n';
     for (const c of s.ctx || []) t += '[Screenshot for context, not on the slide' + (c.note ? ': ' + c.note : '') + (L.dir && L.dirOk && ctxFile(s, c) ? ' (in my Planner folder: ' + ctxFile(s, c) + ')' : '') + ']\n';
-    for (const m of s.talk) if (!m.done) t += (m.by === 'claude' ? 'Claude: ' : 'My comment: ') + m.text + '\n';
+    for (const m of s.talk) if (!m.done) t += (m.by === 'claude' ? PlAi() + ': ' : 'My comment: ') + m.text + '\n';
   });
   if (l.notebook) t += '\n## My notebook for this lesson\n' + nbText(l.notebook) + '\n';
   return t;
@@ -902,12 +908,12 @@ async function askClaude(l) {
   const where = L.dir && L.dirOk ? 'It is saved in my Planner folder as "' + fileBase(l) + '.lesson.json". Edit that file directly (keep the same id), and I will pick up your changes in the Planner.\n\n' : '';
   await copyText('Here is a lesson from my Planner. ' + where + 'Slide 1 is the title slide and slide 2 the agenda. Slide text stays 28 to 36 pt; keep my simple bullet style. In slide text, a line starting with "• " is a bullet and "1. " is a number (only where I put them), a tab indents, **bold**, *italic* and __underline__ work, and {red}words{/} are colored (red, orange, green, blue, purple, gray).\n\n' + lessonText(l));
   const shots = l.slides.reduce((n, s) => n + (s.ctx || []).length, 0);
-  toast('Lesson copied. Paste it into Claude and say what you want.' + (shots && !(L.dir && L.dirOk) ? ' Its ' + (shots === 1 ? 'screenshot doesn’t' : shots + ' screenshots don’t') + ' come along as text: use Copy on each one and paste it in too.' : ''), 7000);
+  toast('Lesson copied. Paste it into ' + plAi() + ' and say what you want.' + (shots && !(L.dir && L.dirOk) ? ' Its ' + (shots === 1 ? 'screenshot doesn’t' : shots + ' screenshots don’t') + ' come along as text: use Copy on each one and paste it in too.' : ''), 7000);
 }
 
 /* ---------- import ---------- */
 function importLesson() {
-  openDlg('<div class="bh"><h2>Import a lesson</h2></div><div class="bb"><p class="muted" style="margin-top:0">Choose a .lesson.json file (from Claude or another computer), or a lesson pack (.zip) of past lessons with their files. You can also paste a lesson below. A lesson with the same id replaces the one here; a pack leaves lessons you already have alone.</p>' +
+  openDlg('<div class="bh"><h2>Import a lesson</h2></div><div class="bb"><p class="muted" style="margin-top:0">Choose a .lesson.json file (from ' + plAi() + ' or another computer), or a lesson pack (.zip) of past lessons with their files. You can also paste a lesson below. A lesson with the same id replaces the one here; a pack leaves lessons you already have alone.</p>' +
     '<button class="btn" id="imF">Choose a file…</button><input type="file" id="imIn" accept=".json,application/json,.zip,application/zip" hidden><textarea id="imT" rows="8" style="width:100%;margin-top:10px" placeholder="Or paste the lesson here"></textarea></div>' +
     '<div class="bf"><button class="btn" data-x>Cancel</button><button class="btn primary" data-ok>Import pasted text</button></div>', true);
   $('#imF').onclick = () => $('#imIn').click();
@@ -1125,7 +1131,7 @@ function downloadPptx(l) {
 const FOLDER_MARK = 'planner-folder.json';
 const FOLDER_README = `# Planner folder
 
-The Planner (part of Grading Studio) keeps planning here so Claude can read and edit it. Only planning is in
+The Planner (part of Grading Studio) keeps planning here so the teacher's AI assistant can read and edit it. Only planning is in
 this folder: lessons, units, the timetable, files the teacher added to a unit, and rubrics and grading scales. Student work and grades
 never are, and nothing here should point to a student.
 
@@ -1135,7 +1141,7 @@ never are, and nothing here should point to a student.
   dates to show, and the semester's first and last Monday. Read it; the teacher changes it in the app.
 - \`*.lesson.json\`: one lesson each. Edit in place and keep the "id". To add a lesson, write a new file
   ending in .lesson.json (leave "id" out). \`images/\` holds slide pictures ("img.src": "images/abc.jpg").
-- \`Units/*.unit.json\`: one unit each (see below). Its files (Atlas screenshots, summative task sheets)
+- \`Units/*.unit.json\`: one unit each (see below). Its files (screenshots of the unit plan, summative task sheets)
   are in the folder next to it with the same name plus " files".
 - \`activities.json\`: the teacher's own activities, a list of { "name", "what", "kind" (talk, read, write,
   words, move, check), "parts" (warmup, activity, review), "group", "how": [steps for the teacher],
@@ -1165,7 +1171,7 @@ never are, and nothing here should point to a student.
     { "layout": "exit", "title": "Exit ticket", "tag": "On a sticky note", "body": "The question" }
   ],
   "look": "wood",
-  "atlas": "https://…"              // optional: this lesson's Atlas page (otherwise its unit's link is used)
+  "atlas": "https://…"              // optional: this lesson's page in the school's curriculum tool (otherwise its unit's link is used)
 }
 "look" is the lesson's colors: wood (the teacher's template), white, cream, sage, sky, blush, charcoal, navy,
 stripe, band, bigtype, framed, notebook, chalk. Leave it out to use the teacher's default; change it only when asked.
@@ -1205,11 +1211,11 @@ one line each. Keep them there; the app puts them there in a new lesson. An empt
 {
   "id": "…", "course": "<course from timetable.json, like English 10>", "title": "Unit 2: Argument",
   "start": "2026-10-05",            // the Monday of the unit's first week
-  "atlas": "https://…",             // the unit's Atlas page, if the teacher added it
-  "weeks": [ { "focus": "What this week is about (from Atlas)", "notes": "Teacher's own notes", "standards": "RL.1, RL.2" } ],
-  "files": [ { "name": "Atlas week 1-3.png", "kind": "atlas" }, { "name": "Summative task sheet.docx", "kind": "summative" } ]
+  "atlas": "https://…",             // the unit's page in the school's curriculum tool, if the teacher added it
+  "weeks": [ { "focus": "What this week is about (from the unit plan)", "notes": "Teacher's own notes", "standards": "RL.1, RL.2" } ],
+  "files": [ { "name": "Unit plan week 1-3.png", "kind": "atlas" }, { "name": "Summative task sheet.docx", "kind": "summative" } ]
 }
-To fill a unit's weeks from its Atlas screenshots: read the "atlas" files in its files folder and write each
+To fill a unit's weeks from its unit plan screenshots: read the "atlas" files in its files folder and write each
 week's focus (and standards, if shown) into "weeks", in order, one entry per week. Keep the teacher's "notes".
 Don't add, rename or remove files in the files folder; the teacher adds those in the app.
 ` + BANK_README;
@@ -1271,7 +1277,7 @@ async function folderWriteSchedule() {
 }
 async function folderWriteAll() {
   if (!L.dir || !L.dirOk) return;
-  await writeFile(L.dir, 'README - for Claude.md', FOLDER_README);
+  await writeFile(L.dir, 'README - for ' + plAi() + '.md', FOLDER_README);
   await writeFile(L.dir, FOLDER_MARK, JSON.stringify({ kind: 'grading-studio-planner-folder', note: 'Planning only: lessons, units, the timetable, files added to units, rubrics and grading scales. Never student work or grades.' }, null, 2));
   await folderWriteSchedule();
   for (const l of L.lessons) await folderWrite(l);

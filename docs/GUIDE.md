@@ -2,7 +2,7 @@
 
 Everything the app does, screen by screen. For what it is and how to start, see the [README](../README.md).
 
-Where this guide says ManageBac or Atlas, read the name of your own school's system: the app uses whichever name you gave it in the welcome (or in Settings, under Classes and rosters), and plain words if you gave none.
+Where this guide says ManageBac or Atlas, read the name of your own school's system: the app uses whichever name you gave it in the welcome (or in Settings, under Classes and rosters), and plain words if you gave none. The same goes for Claude: the app names the AI assistant you chose in Settings, under Working with AI, and says "your AI assistant" if you chose none.
 
 ## How to use
 1. Download the class's submissions from your school's system (ManageBac, Google Classroom, Canvas, Teams, Moodle…). Drop the ZIP (or the unzipped folder, or the files) onto the page.

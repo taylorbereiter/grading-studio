@@ -288,7 +288,7 @@ function driftChart(pts, read, max) {
 }
 function openCons() {
   const { pts, noTime, off, groups } = consData(), max = maxPoints(), read = driftRead(pts.map(p => p.v), max);
-  const left = [noTime.length ? noTime.length + (noTime.length === 1 ? ' has' : ' have') + ' no time (scored before the app kept them, or read off the paper)' : '', off.length ? off.length + ' changed all at once, like bringing Claude’s feedback back, so their order isn’t known' : ''].filter(Boolean);
+  const left = [noTime.length ? noTime.length + (noTime.length === 1 ? ' has' : ' have') + ' no time (scored before the app kept them, or read off the paper)' : '', off.length ? off.length + ' changed all at once, like bringing ' + aiSay() + '’s feedback back, so their order isn’t known' : ''].filter(Boolean);
   const same = [...groups].filter(([, l]) => l.length > 1).sort((a, b) => parseFloat(b[0]) - parseFloat(a[0])), single = groups.size - same.length;
   tabNext('insights/consistency');
   openDlg('<div class="bh"><h2>Insights</h2>' + insTabs('cons') + '<button class="icon" data-close aria-label="Close" style="margin-left:auto">✕</button></div><div class="bb" id="consBox">' +
@@ -437,7 +437,7 @@ function shareOut() {
 // What's said about the ZIP before she makes it: it only says it has no names when nothing is still in doubt.
 function shareMadeLine() {
   const sh = shareState();
-  return sh.made ? 'Made ' + esc(whenLabel(sh.made)) + (sh.madeOpen ? ', with ' + sh.madeOpen + (sh.madeOpen === 1 ? ' paper' : ' papers') + ' not checked.' : '.') : (namesInDoubt() ? 'Box the names the cover can’t read first. It' : namesLooking() || nameFlagged().length ? 'Check the papers listed above first. It' : 'It has no names in it, and it') + ' stays on your computer until you give it to Claude.';
+  return sh.made ? 'Made ' + esc(whenLabel(sh.made)) + (sh.madeOpen ? ', with ' + sh.madeOpen + (sh.madeOpen === 1 ? ' paper' : ' papers') + ' not checked.' : '.') : (namesInDoubt() ? 'Box the names the cover can’t read first. It' : namesLooking() || nameFlagged().length ? 'Check the papers listed above first. It' : 'It has no names in it, and it') + ' stays on your computer until you give it to ' + aiSay() + '.';
 }
 function shareSteps() {
   const sh = shareState(), list = coverList().map((x, i) => ({ ...x, i, ok: coverOk(x.st, x.d) })), todo = list.filter(x => !x.ok), done = list.filter(x => x.ok);
@@ -449,8 +449,8 @@ function shareSteps() {
   $('#shSteps').innerHTML = shareOut() + nameWarnings() + '<div id="nameFlags" data-before="before you make the ZIP">' + nameFlagsHtml('before you make the ZIP') + '</div><ol class="shsteps">' +
     '<li><b>Check the covers.</b> <span id="shCount"' + (todo.length ? ' class="stag"' : '') + '>' + (todo.length || !list.length ? '' : '<span aria-hidden="true">✓ </span>') + esc(coverLine()) + '</span> The automatic cover can’t see handwriting or a name inside a picture. In the check, drag a box over anything it missed. If students write their name in the same spot, box it once and use it on every paper.' + group('ccTodo', 'Not checked yet', todo, true) + group('ccDone', 'Checked', done, !todo.length) + '</li>' +
     '<li><b>Download the ZIP.</b> <span id="shMade">' + shareMadeLine() + '</span></li>' +
-    '<li><b>Give it to Claude,</b> with this message. Change it however you like.<textarea id="shAsk" rows="4" aria-label="What to say to Claude"></textarea><div class="shrow"><button class="btn sm" data-shcopy>Copy the message</button><button class="btn sm" data-shopen>Open Claude ↗</button></div></li>' +
-    '<li><b>Bring the reply back.</b> <button class="btn sm" data-shback>Bring back from Claude</button></li></ol>';
+    '<li><b>Give it to ' + aiSay() + ',</b> with this message. Change it however you like.<textarea id="shAsk" rows="4" aria-label="What to say to ' + aiSay() + '"></textarea><div class="shrow"><button class="btn sm" data-shcopy>Copy the message</button>' + (aiLink() ? '<button class="btn sm" data-shopen>Open ' + aiSay() + ' ↗</button>' : '') + '</div></li>' +
+    '<li><b>Bring the reply back.</b> <button class="btn sm" data-shback>Bring back from ' + aiSay() + '</button></li></ol>';
   $('#shAsk').value = sh.ask != null ? sh.ask : SHARE_ASK;
   $('#shAsk').oninput = e => { sh.ask = e.target.value; saveSoon(); };
   // Nothing stops her making the ZIP, but until every paper is checked the check is the main button and the ZIP says what it's skipping.
@@ -458,14 +458,14 @@ function shareSteps() {
   chk.className = 'btn' + (left ? ' primary' : ''); mk.className = 'btn' + (left ? '' : ' primary');
   chk.textContent = !list.length ? 'Check the covers' : !left ? 'Check the covers again' : todo.length === list.length ? 'Check the covers' : 'Check the other ' + todo.length;
   chk.disabled = mk.disabled = nothing;
-  mk.textContent = left ? 'Download ZIP anyway' : 'Download ZIP for Claude';
+  mk.textContent = left ? 'Download ZIP anyway' : 'Download ZIP for ' + aiSay();
 }
 // A click on one of the steps; true if it was.
 function shareStepClick(e) {
   const c = e.target.closest('[data-cc]');
   if (c) { checkCovers(+c.dataset.cc); return true; }
-  if (e.target.closest('[data-shcopy]')) { const t = nameFreeText($('#shAsk').value); copy(t, 'Copied. Paste it into Claude along with the ZIP.'); return true; }
-  if (e.target.closest('[data-shopen]')) { window.open('https://claude.ai/new', '_blank', 'noopener'); return true; }
+  if (e.target.closest('[data-shcopy]')) { const t = nameFreeText($('#shAsk').value); copy(t, 'Copied. Paste it into ' + aiSay() + ' along with the ZIP.'); return true; }
+  if (e.target.closest('[data-shopen]')) { if (aiLink()) window.open(aiLink(), '_blank', 'noopener'); return true; }
   if (e.target.closest('[data-shback]')) { closeDlg(); openBringBack(); return true; }
   return false;
 }
@@ -480,9 +480,9 @@ function bringBackNotes(fb, byCode) {
   // A student can have two codes after working on two computers: feedback under either counts.
   const sent = shareState().sent || [], got = new Set([...fb.keys()].map(c => byCode.get(c))), miss = sent.filter(c => byCode.has(c) && !got.has(byCode.get(c))), who = [...new Set(miss.map(c => byCode.get(c)))], nm = [...fb].filter(([c, v]) => byCode.has(c) && /\[name\]/i.test(v)).length;
   if (!fb.size) return '';
-  return (miss.length ? '<div class="bbmiss" id="bbMiss"><b>No feedback yet for ' + who.length + (who.length === 1 ? ' paper' : ' papers') + ':</b> ' + who.map(st => esc(shownName(st, batch.students.indexOf(st)))).join(', ') + '. <button class="link" data-bbmore="' + esc(miss.join(', ')) + '">Copy a note asking Claude for these</button></div>' : '') +
+  return (miss.length ? '<div class="bbmiss" id="bbMiss"><b>No feedback yet for ' + who.length + (who.length === 1 ? ' paper' : ' papers') + ':</b> ' + who.map(st => esc(shownName(st, batch.students.indexOf(st)))).join(', ') + '. <button class="link" data-bbmore="' + esc(miss.join(', ')) + '">Copy a note asking ' + aiSay() + ' for these</button></div>' : '') +
     (nm ? '<p class="muted hsm" id="bbNm">' + nm + (nm === 1 ? ' reply still says' : ' replies still say') + ' [name]. Change it to the student’s name in the comment box, or leave it out.</p>' : '');
 }
-document.addEventListener('click', e => { const b = e.target.closest('[data-bbmore]'); if (b) copy('Please continue with feedback for these codes, in the same format: ' + b.dataset.bbmore, 'Copied. Paste it into Claude.'); });
+document.addEventListener('click', e => { const b = e.target.closest('[data-bbmore]'); if (b) copy('Please continue with feedback for these codes, in the same format: ' + b.dataset.bbmore, 'Copied. Paste it into ' + aiSay() + '.'); });
 
 Object.assign(window.__gs, { nameFit, nameNear, rosterPairs, pastScore, tryGrade, retakeStart, retakeOff, tryOfFile, retakeRule, histFind, histFill, driftRead, driftSay, dropBatched, consData, openCons, openSame, coverList, coverOk, coverLine, coverFirst, checkCovers, SHARE_ASK, nameFreeText, paperReads });

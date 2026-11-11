@@ -169,9 +169,9 @@ const shareDocs = st => layoutOf(st).filter(d => docIn(st, d)).map(d => ({ ...d,
 
 function openShare() {
   saveNow(); commitEditors(); shareState(); saveSoon();
-  openDlg('<div class="bh"><h2>Share with Claude</h2><button class="icon" data-close aria-label="Close">✕</button></div><div class="bb">' +
-    '<div class="shkind" role="group" aria-label="What to give Claude"><button data-kind="papers" aria-pressed="true">Papers and marks<small>A ZIP of every page as a picture, names covered</small></button><button data-kind="marks" aria-pressed="false">Marks only<small>One file: scores, rubric, comments and every mark</small></button></div>' +
-    '<div id="shPapers"><p style="margin-top:0">This makes a ZIP you can give to Claude with <b>no names in it</b><span id="shPromise">' + esc(namePromise()) + '</span>. <span id="shWho"></span> The list of who is who stays only in this browser.</p>' +
+  openDlg('<div class="bh"><h2>Share with ' + aiSay() + '</h2><button class="icon" data-close aria-label="Close">✕</button></div><div class="bb">' +
+    '<div class="shkind" role="group" aria-label="What to give ' + aiSay() + '"><button data-kind="papers" aria-pressed="true">Papers and marks<small>A ZIP of every page as a picture, names covered</small></button><button data-kind="marks" aria-pressed="false">Marks only<small>One file: scores, rubric, comments and every mark</small></button></div>' +
+    '<div id="shPapers"><p style="margin-top:0">This makes a ZIP you can give to ' + aiSay() + ' with <b>no names in it</b><span id="shPromise">' + esc(namePromise()) + '</span>. <span id="shWho"></span> The list of who is who stays only in this browser.</p>' +
     '<details class="cclist" style="margin:0 0 12px"><summary>What goes in it</summary><ul style="list-style:disc;margin:6px 0 0;padding-left:20px;line-height:1.55;max-height:none">' +
     '<li>Every page becomes a picture, so no hidden text or file details go with it.</li>' +
     '<li>Names are covered in black wherever they’re typed on the page' + (batchClass() ? ' (folder names and your roster names)' : ' (from the folder names)') + ', and in any Kami box that has a name.</li>' +
@@ -180,7 +180,7 @@ function openShare() {
     '<li><b>Only PDFs and pictures go in.</b> A Word file stays out until it’s PDF pages: Convert to PDF on the Word paper’s bar makes them.</li></ul></details>' +
     '<div id="shSteps"></div>' +
     '<div class="prog" hidden><i></i></div><p class="muted" id="shStatus" style="font-size:13px;margin:0"></p></div><div id="shMarks" hidden></div></div>' +
-    '<div class="bf"><button class="btn" data-check>Check the covers</button><button class="btn primary" data-make>Download ZIP for Claude</button><button class="btn primary" data-marksdl hidden>Download marks file</button></div>', true);
+    '<div class="bf"><button class="btn" data-check>Check the covers</button><button class="btn primary" data-make>Download ZIP for ' + aiSay() + '</button><button class="btn primary" data-marksdl hidden>Download marks file</button></div>', true);
   const box = $('#dlgBox');
   shareSteps();
   if (shareState().kind === 'marks') shareKind('marks');
@@ -193,7 +193,7 @@ function openShare() {
     if (e.target.closest('[data-make]')) {
       for (const b of box.querySelectorAll('.bf .btn')) b.disabled = true;
       const bar = box.querySelector('.prog'); bar.hidden = false;
-      try { await makeSharePackage((n, t) => { bar.firstChild.style.width = (100 * n / t) + '%'; $('#shStatus').textContent = 'Covering names and making pictures ' + n + ' of ' + t + '…'; }); $('#shStatus').textContent = 'Done. Give the ZIP to Claude, then use Bring back from Claude with what it sends.'; shareMade(); }
+      try { await makeSharePackage((n, t) => { bar.firstChild.style.width = (100 * n / t) + '%'; $('#shStatus').textContent = 'Covering names and making pictures ' + n + ' of ' + t + '…'; }); $('#shStatus').textContent = 'Done. Give the ZIP to ' + aiSay() + ', then use Bring back from ' + aiSay() + ' with what it sends.'; shareMade(); }
       catch (er) { console.error(er); $('#shStatus').textContent = 'Something went wrong: ' + (er.message || er); }
       for (const b of box.querySelectorAll('.bf .btn')) b.disabled = false;
     }
@@ -379,7 +379,7 @@ async function checkCovers(start, onDone) {
 }
 
 const README_FOR_CLAUDE = (n) => [
-  'Grading Studio package for Claude',
+  'Grading Studio package for ' + aiSay(),
   '',
   'Assignment: ' + nameFreeText(batch.name).replace(/[\r\n]+/g, ' '),
   'Papers: ' + n + (n === 1 ? ' student' : ' students') + ', each named by a random code (S-XXXX). Names are covered and swapped for [name].',
@@ -398,7 +398,7 @@ const README_FOR_CLAUDE = (n) => [
   '    Feedback for this student...',
   '',
   '  Or a CSV with the columns code,feedback. Paste the reply, or drop the file, into',
-  '  "Bring back from Claude" in Grading Studio and each block goes to the right student.',
+  '  "Bring back from ' + aiSay() + '" in Grading Studio and each block goes to the right student.',
   '  Only these codes are known to Grading Studio; never guess or ask for names.',
 ].join('\r\n');
 
@@ -448,7 +448,7 @@ async function makeSharePackage(onStep) {
   files['comments.json'] = enc(JSON.stringify(notes, null, 1));
   files['rubric.json'] = enc(JSON.stringify({ mode: setup.mode, criteria: crit, levels: setup.mode === 'rubric' ? (rowsTop(setup) ? '0 to ' + rowsTop(setup) + ' per row' : 'rows in order: ' + setup.criteria.map((_, i) => '0 to ' + rowTop(setup, i)).join(', ')) + (rowHalf(setup) ? ', half points allowed from 1 up' : ', whole numbers only') : undefined, outOf: maxPoints(), scale: setup.scale || null }, null, 1));
   files['README.txt'] = enc(README_FOR_CLAUDE(seen.size));
-  saveBlob(('For Claude - ' + nameFreeText(batch.name) + '.zip'), new Blob([fflate.zipSync(files)], { type: 'application/zip' }));
+  saveBlob(('For ' + aiSay() + ' - ' + nameFreeText(batch.name) + '.zip'), new Blob([fflate.zipSync(files)], { type: 'application/zip' }));
 }
 
 // Claude's reply: blocks that start with a code, a code,feedback CSV, JSON, or a ZIP with those and/or papers named by code.
@@ -487,8 +487,8 @@ function openBringBack() {
   const byCode = new Map(batch.students.map(st => [codeOf(st), st]));
   for (const [c, k] of Object.entries(shareState().also || {})) { const st = batch.students.find(s => s.key === k); if (st && !byCode.has(c)) byCode.set(c, st); }   // made on another computer: its ZIP can still come back
   let fb = new Map(), papers = [];
-  openDlg('<div class="bh"><h2>Bring back from Claude</h2><button class="icon" data-close aria-label="Close">✕</button></div><div class="bb">' +
-    '<p style="margin-top:0">Paste Claude’s reply here, or drop the file it gave you (CSV, text or ZIP). Each code is matched to its student in this browser.</p>' +
+  openDlg('<div class="bh"><h2>Bring back from ' + aiSay() + '</h2><button class="icon" data-close aria-label="Close">✕</button></div><div class="bb">' +
+    '<p style="margin-top:0">Paste ' + aiSay() + '’s reply here, or drop the file it gave you (CSV, text or ZIP). Each code is matched to its student in this browser.</p>' +
     '<textarea id="bbText" rows="7" style="width:100%;font:inherit;font-size:14px;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink)" placeholder="S-7QK4&#10;Your thesis is clear…&#10;&#10;S-M3TD&#10;…"></textarea>' +
     '<div style="display:flex;gap:8px;margin:8px 0 12px"><button class="btn sm" data-file>Open a file…</button><button class="btn sm" data-read>Match to students</button><input type="file" id="bbFile" accept=".csv,.txt,.json,.md,.zip" hidden></div>' +
     '<div id="bbOut"></div></div>' +
@@ -537,7 +537,7 @@ function openBringBack() {
         const dir = real && real.path.includes('/') ? real.path.slice(0, real.path.lastIndexOf('/') + 1) : st.key + '/';
         files[(dir + 'Feedback' + (p.n > 1 ? ' ' + p.n : '') + '.pdf').replace(/[\\:*?"<>|]+/g, '-')] = [p.data, { level: 0 }];
       }
-      saveBlob('From Claude - ' + batch.name + '.zip', new Blob([fflate.zipSync(files)], { type: 'application/zip' }));
+      saveBlob('From ' + aiSay() + ' - ' + batch.name + '.zip', new Blob([fflate.zipSync(files)], { type: 'application/zip' }));
     }
   };
   $('#bbFile').onchange = e => { const f = e.target.files[0]; if (f) takeFile(f); e.target.value = ''; };

@@ -1262,7 +1262,7 @@ async function bankFolderRead() {
     const ref = j.unit ? (unitRef(L.units.find(u => u.course === String(j.unit.course || '') && u.title.trim().toLowerCase() === String(j.unit.title || '').trim().toLowerCase())) || normRef(j.unit)) : null;
     const item = kind === 'rubrics' ? normRubric({ ...j, id: old ? old.id : j.id, unit: ref }) : normBankScale({ ...j, id: old ? old.id : j.id, unit: ref });
     const dupe = list.find(x => x.id !== item.id && x.name.toLowerCase() === item.name.toLowerCase());
-    if (dupe) item.name += ' (from Claude)';
+    if (dupe) item.name += ' (from ' + plAi() + ')';
     item.at = Date.now();
     await bankUpdate(b => { const l = b[kind], i = l.findIndex(x => x.id === item.id); if (i >= 0) l[i] = item; else l.push(item); l.sort((x, y) => bankNatural(x.name, y.name)); delete b.gone[item.id]; });
     files[item.id] = { file: name, mod: f.lastModified, text: '' }; await kvSet('bankFiles', files);
@@ -1297,9 +1297,10 @@ Grading scale: { "id": "…", "name": "Out of 12, steps of 5", "unit": { … }, 
    - Versions: a copy is kept when it's sent, before Claude's changes come in, and on request.
    - When Claude changes a lesson in the Planner folder, the teacher's copy from just before is kept, and the
      editor offers a side-by-side look with Keep Claude's / Keep mine for each slide. */
-const STATUS = { claude: 'With Claude', review: 'Ready for you' };
+const STATUS = { claude: 'With the assistant', review: 'Ready for you' };   // the chip's words are read when it is drawn (statusSay): the assistant's name is the teacher's own
+const statusSay = k => k === 'claude' ? 'With ' + plAi() : STATUS[k];
 const MAX_VERSIONS = 30;
-const statusChip = l => l.status && STATUS[l.status] ? '<span class="pl-st st-' + l.status + '">' + STATUS[l.status] + '</span>' : '';
+const statusChip = l => l.status && STATUS[l.status] ? '<span class="pl-st st-' + l.status + '">' + statusSay(l.status) + '</span>' : '';
 
 /* ---------- versions: kv 'ver:<lesson id>' ---------- */
 const snap = l => { const c = JSON.parse(JSON.stringify(l)); delete c._file; delete c._mod; delete c.pending; return c; };
@@ -1312,7 +1313,7 @@ async function saveVersion(l, label, from) {
 async function versionsDlg(l) {
   const vs = await versionsOf(l);
   openDlg('<div class="bh"><h2>Versions of “' + esc(l.title) + '”</h2><button class="btn sm" data-sv>Save a version now</button></div><div class="bb"><div class="ls-pick">' +
-    (vs.length ? vs.map((v, i) => '<div class="ls-row"><div class="ls-card" style="flex:1;cursor:default"><b>' + esc(v.label) + '</b><span>' + new Date(v.at).toLocaleString() + ' · ' + v.lesson.slides.length + ' slides</span></div><button class="btn sm" data-rv="' + i + '">Go back to this</button></div>').join('') : '<p class="muted">No versions yet. One is kept each time you send the lesson to Claude, when Claude’s changes come in, and when you approve it.</p>') +
+    (vs.length ? vs.map((v, i) => '<div class="ls-row"><div class="ls-card" style="flex:1;cursor:default"><b>' + esc(v.label) + '</b><span>' + new Date(v.at).toLocaleString() + ' · ' + v.lesson.slides.length + ' slides</span></div><button class="btn sm" data-rv="' + i + '">Go back to this</button></div>').join('') : '<p class="muted">No versions yet. One is kept each time you send the lesson to ' + plAi() + ', when ' + plAi() + '’s changes come in, and when you approve it.</p>') +
     '</div></div><div class="bf"><button class="btn" data-x>Close</button></div>');
   $('#dlgBox').onclick = async e => {
     if (e.target.closest('[data-x]')) return closeDlg();
@@ -1332,18 +1333,18 @@ async function versionsDlg(l) {
 /* ---------- sending to Claude, approving ---------- */
 async function sendToClaude(l) {
   editorCommit(); boxNotesToSlides(l);
-  await saveVersion(l, 'Sent to Claude');
+  await saveVersion(l, 'Sent to ' + plAi());
   l.status = 'claude'; await lPut(l);
   const asks = l.slides.filter(s => s.ask.trim()).length, talks = l.slides.filter(s => s.talk.some(t => t.by === 'you' && !t.done)).length;
   const file = fileBase(l) + '.lesson.json';
   const msg = L.dir && L.dirOk
-    ? 'Please work on my lesson "' + l.title + '" in my Planner folder ("' + L.dir.name + '"), file "' + file + '". Read "README - for Claude.md" there first.\n\n' +
+    ? 'Please work on my lesson "' + l.title + '" in my Planner folder ("' + L.dir.name + '"), file "' + file + '". Read "README - for ' + plAi() + '.md" there first.\n\n' +
       (asks ? asks + ' slide' + (asks === 1 ? ' has' : 's have') + ' an "ask" saying what I want on it. ' : '') + (talks ? talks + ' slide' + (talks === 1 ? ' has' : 's have') + ' comments from me in "talk". ' : '') + (lessonNotes(l).length ? 'My comments on the whole lesson are in the lesson\'s own "talk". ' : '') +
       lessonNotes(l).map(x => 'My comment on the whole lesson: ' + x + '\n').join('') +
       'Build the lesson out from my outline and those notes. Keep my wording where I wrote it. When you\'re done, reply to my comments in "talk", put a short summary in "claudeNote", and set "status" to "review". Don\'t change "id" or "slots". I\'ll look at your version slide by slide in the Planner.'
     : 'Here is a lesson from my Planner. Each slide may have "What I want here" notes and comments for you. Build it out, keep my wording where I wrote it, slide 1 stays the title slide and slide 2 the agenda, and slide text stays 28 to 36 pt.\n\n' + lessonText(l);
   await copyText(msg);
-  toast(L.dir && L.dirOk ? 'Copied. Paste it into Claude. Claude’s changes show up here when it saves.' : 'Lesson copied. Paste it into Claude. Link the Planner folder so Claude can save straight back.', 7000);
+  toast(L.dir && L.dirOk ? 'Copied. Paste it into ' + plAi() + '. ' + PlAi() + '’s changes show up here when it saves.' : 'Lesson copied. Paste it into ' + plAi() + '. Link the Planner folder so ' + plAi() + ' can save straight back.', 7000);
   renderEditor();
 }
 
@@ -1357,20 +1358,20 @@ function changesOf(l) {
   return out;
 }
 function pendingBar(l) {
-  if (!l.pending) return l.claudeNote && l.status === 'review' ? '<div class="pl-claude"><b>Claude’s note</b><span>' + esc(l.claudeNote) + '</span></div>' : '';
+  if (!l.pending) return l.claudeNote && l.status === 'review' ? '<div class="pl-claude"><b>' + PlAi() + '’s note</b><span>' + esc(l.claudeNote) + '</span></div>' : '';
   const ch = changesOf(l);
-  return '<div class="pl-claude pending"><div><b>Claude changed this lesson</b><span>' + (ch.length ? ch.length + ' slide' + (ch.length === 1 ? '' : 's') + ' changed, added or taken out.' : 'No slides changed.') + (l.claudeNote ? ' “' + esc(l.claudeNote) + '”' : '') + '</span></div>' +
+  return '<div class="pl-claude pending"><div><b>' + PlAi() + ' changed this lesson</b><span>' + (ch.length ? ch.length + ' slide' + (ch.length === 1 ? '' : 's') + ' changed, added or taken out.' : 'No slides changed.') + (l.claudeNote ? ' “' + esc(l.claudeNote) + '”' : '') + '</span></div>' +
     '<span class="sp"></span>' + (ch.length ? '<button class="btn sm primary" data-a="cmp">Look slide by slide</button>' : '') + '<button class="btn sm" data-a="keepall">Keep all of it</button><button class="btn sm ghost" data-a="undoall">Go back to mine</button></div>';
 }
 function compareDlg(l) {
   const ch = changesOf(l), pick = ch.map(() => 'claude');
   const mini = s => s ? '<div class="pl-cmini"><div class="ls-slide">' + slideHtml(s, l, false) + '</div></div>' : '<div class="pl-cmini none">Not there</div>';
-  const row = (c, i) => '<div class="pl-crow" data-i="' + i + '"><div class="pl-ch">' + (c.kind === 'added' ? 'Claude added a slide' : c.kind === 'removed' ? 'Claude took out a slide' : 'Slide ' + (l.slides.indexOf(c.now) + 1) + ' changed') + '</div>' +
+  const row = (c, i) => '<div class="pl-crow" data-i="' + i + '"><div class="pl-ch">' + (c.kind === 'added' ? PlAi() + ' added a slide' : c.kind === 'removed' ? PlAi() + ' took out a slide' : 'Slide ' + (l.slides.indexOf(c.now) + 1) + ' changed') + '</div>' +
     '<div class="pl-cpair"><label class="pl-side' + (pick[i] === 'mine' ? ' on' : '') + '"><input type="radio" name="c' + i + '" value="mine"' + (pick[i] === 'mine' ? ' checked' : '') + '>' + mini(c.was) + '<span>' + (c.kind === 'added' ? 'Leave it out' : 'Keep mine') + '</span></label>' +
-    '<label class="pl-side' + (pick[i] === 'claude' ? ' on' : '') + '"><input type="radio" name="c' + i + '" value="claude"' + (pick[i] === 'claude' ? ' checked' : '') + '>' + mini(c.now) + '<span>' + (c.kind === 'removed' ? 'Take it out' : 'Keep Claude’s') + '</span></label></div>' +
-    (c.now && c.now.talk.some(t => t.by === 'claude') ? '<div class="pl-ctalk">' + c.now.talk.filter(t => t.by === 'claude').map(t => '<span>Claude: ' + esc(t.text) + '</span>').join('') + '</div>' : '') + '</div>';
-  openDlg('<div class="bh"><h2>Claude’s changes</h2><span class="muted" style="font-size:13px">Yours on the left, Claude’s on the right. Pick one for each.</span></div><div class="bb pl-cmp">' + ch.map(row).join('') + '</div>' +
-    '<div class="bf"><button class="btn" data-all="mine">All mine</button><button class="btn" data-all="claude">All Claude’s</button><span class="sp" style="flex:1"></span><button class="btn" data-x>Later</button><button class="btn primary" data-ok>Done</button></div>');
+    '<label class="pl-side' + (pick[i] === 'claude' ? ' on' : '') + '"><input type="radio" name="c' + i + '" value="claude"' + (pick[i] === 'claude' ? ' checked' : '') + '>' + mini(c.now) + '<span>' + (c.kind === 'removed' ? 'Take it out' : 'Keep ' + plAi() + '’s') + '</span></label></div>' +
+    (c.now && c.now.talk.some(t => t.by === 'claude') ? '<div class="pl-ctalk">' + c.now.talk.filter(t => t.by === 'claude').map(t => '<span>' + PlAi() + ': ' + esc(t.text) + '</span>').join('') + '</div>' : '') + '</div>';
+  openDlg('<div class="bh"><h2>' + PlAi() + '’s changes</h2><span class="muted" style="font-size:13px">Yours on the left, ' + plAi() + '’s on the right. Pick one for each.</span></div><div class="bb pl-cmp">' + ch.map(row).join('') + '</div>' +
+    '<div class="bf"><button class="btn" data-all="mine">All mine</button><button class="btn" data-all="claude">All ' + plAi() + '’s</button><span class="sp" style="flex:1"></span><button class="btn" data-x>Later</button><button class="btn primary" data-ok>Done</button></div>');
   const box = $('#dlgBox');
   box.onchange = e => { const r = e.target.closest('.pl-crow'); if (!r) return; pick[+r.dataset.i] = e.target.value; for (const s of r.querySelectorAll('.pl-side')) s.classList.toggle('on', s.querySelector('input').checked); };
   box.onclick = async e => {
@@ -1395,27 +1396,27 @@ function applyPicks(l, ch, pick) {
   const mine = pick.filter(p => p === 'mine').length;
   delete l.pending; L.cur = Math.min(L.cur, l.slides.length - 1);
   lessonChanged(false); renderEditor();
-  toast(mine ? 'Done. Kept yours on ' + mine + ', Claude’s on ' + (pick.length - mine) + '.' : 'Done. Kept all of Claude’s changes.');
+  toast(mine ? 'Done. Kept yours on ' + mine + ', ' + plAi() + '’s on ' + (pick.length - mine) + '.' : 'Done. Kept all of ' + plAi() + '’s changes.');
 }
 async function undoAll(l) {
   const before = l.pending.before, title = l.pending.title;
-  await saveVersion(l, 'Claude’s version (you went back to yours)');
+  await saveVersion(l, PlAi() + '’s version (you went back to yours)');
   l.slides = before.map(normSlide); if (title) l.title = title; delete l.pending;
-  L.cur = Math.min(L.cur, l.slides.length - 1); lessonChanged(false); renderEditor(); toast('Back to your version. Claude’s is under Versions.');
+  L.cur = Math.min(L.cur, l.slides.length - 1); lessonChanged(false); renderEditor(); toast('Back to your version. ' + PlAi() + '’s is under Versions.');
 }
 async function claudeChanged(old, l) {
   if (!old) return;
   if (!l.taught && old.taught) l.taught = old.taught;   // a file written without the taught notes doesn't lose them
   if (JSON.stringify(old.slides.map(slideKey)) === JSON.stringify(l.slides.map(slideKey)) && old.title === l.title) { if (old.pending) l.pending = old.pending; return; }
-  await saveVersion(old, 'Before Claude’s changes');
+  await saveVersion(old, 'Before ' + plAi() + '’s changes');
   l.pending = old.pending || { at: Date.now(), before: JSON.parse(JSON.stringify(old.slides)), title: old.title };
 }
 
 /* ---------- the slide's "for Claude" note and comments ---------- */
 function slideTalkHtml(s) {
-  return '<div class="pl-ask"><label class="ls-notes">What I want on this slide <span class="muted" style="font-weight:400">(for Claude, not shown on the slide)</span><textarea data-f="ask" rows="2" placeholder="Like: a short video on ethos here, or three examples from Ch 4">' + esc(s.ask) + '</textarea></label><button class="btn sm ghost pl-mic" data-dict="[data-f=&quot;ask&quot;]" title="Say it instead of typing">🎤 Dictate</button>' +
+  return '<div class="pl-ask"><label class="ls-notes">What I want on this slide <span class="muted" style="font-weight:400">(for ' + plAi() + ', not shown on the slide)</span><textarea data-f="ask" rows="2" placeholder="Like: a short video on ethos here, or three examples from Ch 4">' + esc(s.ask) + '</textarea></label><button class="btn sm ghost pl-mic" data-dict="[data-f=&quot;ask&quot;]" title="Say it instead of typing">🎤 Dictate</button>' +
     ctxHtml(s) +
-    '<div class="pl-talk">' + s.talk.map((t, i) => '<div class="pl-msg ' + (t.by === 'claude' ? 'cl' : 'me') + (t.done ? ' done' : '') + '"><b>' + (t.by === 'claude' ? 'Claude' : 'You') + '</b><span>' + esc(t.text) + '</span><button class="btn sm ghost" data-talkdone="' + i + '">' + (t.done ? 'Open again' : 'Done') + '</button></div>').join('') +
+    '<div class="pl-talk">' + s.talk.map((t, i) => '<div class="pl-msg ' + (t.by === 'claude' ? 'cl' : 'me') + (t.done ? ' done' : '') + '"><b>' + (t.by === 'claude' ? PlAi() : 'You') + '</b><span>' + esc(t.text) + '</span><button class="btn sm ghost" data-talkdone="' + i + '">' + (t.done ? 'Open again' : 'Done') + '</button></div>').join('') +
     '<div class="pl-say"><input class="btn sm" data-f="say" placeholder="Comment on this slide…" aria-label="Comment on this slide"><button class="btn sm" data-a="say">Add</button></div></div></div>';
 }
 /* ---------- screenshots for context: on the slide's "for Claude" area, not on the slide ---------- */
@@ -1425,7 +1426,7 @@ function ctxHtml(s) {
     '<button class="btn sm" data-a="ctxadd">+ Screenshot</button><input type="file" id="ctxIn" accept="image/*" multiple hidden></div>' +
     (c.length ? '<div class="pl-cs-list">' + c.map((x, i) => '<div class="pl-csi"><button class="pl-csi-img" data-ctxview="' + i + '" title="See it bigger"><img src="' + esc(imgSrc(x.src)) + '" alt="' + esc(x.note || 'Screenshot') + '"></button>' +
       '<input class="btn sm" data-f="ctxnote" data-i="' + i + '" value="' + esc(x.note) + '" placeholder="What is it? (like: the task sheet)" aria-label="What this screenshot is">' +
-      '<div class="pl-csi-b"><button class="btn sm" data-ctxput="' + i + '" title="Make a picture slide of it after this one">Put on a slide</button><button class="btn sm ghost" data-ctxcopy="' + i + '" title="Copy the picture to paste into Claude">Copy</button><button class="btn sm ghost" data-ctxdel="' + i + '" title="Remove">×</button></div></div>').join('') + '</div>'
+      '<div class="pl-csi-b"><button class="btn sm" data-ctxput="' + i + '" title="Make a picture slide of it after this one">Put on a slide</button><button class="btn sm ghost" data-ctxcopy="' + i + '" title="Copy the picture to paste into ' + plAi() + '">Copy</button><button class="btn sm ghost" data-ctxdel="' + i + '" title="Remove">×</button></div></div>').join('') + '</div>'
       : '') +
     '<p class="muted pl-cs-tip">Crop out student names and faces first.</p></div>';
 }
@@ -1444,7 +1445,7 @@ async function ctxCopy(x) {
     const c = document.createElement('canvas'); c.width = im.naturalWidth; c.height = im.naturalHeight; c.getContext('2d').drawImage(im, 0, 0);
     const b = await new Promise(r => c.toBlob(r, 'image/png'));
     await navigator.clipboard.write([new ClipboardItem({ 'image/png': b })]);
-    toast('Screenshot copied. Paste it into Claude.');
+    toast('Screenshot copied. Paste it into ' + plAi() + '.');
   } catch { toast('This browser couldn’t copy the picture. Right-click it and choose Copy image.', 6000); }
 }
 function ctxView(x) {
@@ -1459,8 +1460,8 @@ function ctxPut(x) {
 /* ---------- comments on the whole lesson: kept on the lesson ("talk"), shown under the slide's ---------- */
 function lessonTalkHtml(l) {
   const ms = l.talk || [];
-  return '<div class="pl-ltalk"><div class="pl-ltalk-h"><b>For Claude: the whole lesson</b> <span class="muted">Comments on how the lesson should go overall. They go with it when you copy it for Claude.</span></div>' +
-    '<div class="pl-talk">' + ms.map((t, i) => '<div class="pl-msg ' + (t.by === 'claude' ? 'cl' : 'me') + (t.done ? ' done' : '') + '"><b>' + (t.by === 'claude' ? 'Claude' : 'You') + '</b><span>' + esc(t.text) + '</span><button class="btn sm ghost" data-ltalkdone="' + i + '">' + (t.done ? 'Open again' : 'Done') + '</button></div>').join('') +
+  return '<div class="pl-ltalk"><div class="pl-ltalk-h"><b>For ' + plAi() + ': the whole lesson</b> <span class="muted">Comments on how the lesson should go overall. They go with it when you copy it for ' + plAi() + '.</span></div>' +
+    '<div class="pl-talk">' + ms.map((t, i) => '<div class="pl-msg ' + (t.by === 'claude' ? 'cl' : 'me') + (t.done ? ' done' : '') + '"><b>' + (t.by === 'claude' ? PlAi() : 'You') + '</b><span>' + esc(t.text) + '</span><button class="btn sm ghost" data-ltalkdone="' + i + '">' + (t.done ? 'Open again' : 'Done') + '</button></div>').join('') +
     '<div class="pl-say"><input class="btn sm" data-f="lsay" placeholder="Comment on the whole lesson…" aria-label="Comment on the whole lesson"><button class="btn sm ghost pl-mic" data-dict="[data-f=&quot;lsay&quot;]" title="Say it instead of typing">🎤</button><button class="btn sm" data-a="lsay">Add</button></div></div></div>';
 }
 function addLessonComment() {
@@ -1479,8 +1480,8 @@ function commentsDlg(l, showDone) {
   const done = l.slides.reduce((k, s) => k + (s.talk || []).filter(t => t.done).length, (l.talk || []).filter(t => t.done).length);
   openDlg('<div class="bh"><h2>Comments on “' + esc(l.title) + '”</h2></div><div class="bb pl-cmts">' +
     (rows.length ? rows.map(r => '<div class="pl-cmt-s">' + (r.i < 0 ? '<button class="link" data-cgo="-1"><b>The whole lesson</b></button>' : '<button class="link" data-cgo="' + r.i + '"><b>Slide ' + (r.i + 1) + '</b>' + (r.s.title ? ': ' + esc(r.s.title.replace(/[*_{}]|\{\w*\}/g, '')) : '') + '</button>') +
-      r.ms.map(m => '<div class="pl-msg ' + (m.t.by === 'claude' ? 'cl' : 'me') + (m.t.done ? ' done' : '') + '"><b>' + (m.t.by === 'claude' ? 'Claude' : 'You') + '</b><span>' + esc(m.t.text) + '</span><button class="btn sm ghost" data-cdone="' + r.i + ':' + m.j + '">' + (m.t.done ? 'Open again' : 'Done') + '</button></div>').join('') + '</div>').join('')
-      : '<p class="muted">' + (done ? 'No open comments. ' : 'No comments on this lesson yet. Add one under a slide or in “For Claude: the whole lesson”, or right-click a slide and choose Comment for Claude.') + '</p>') +
+      r.ms.map(m => '<div class="pl-msg ' + (m.t.by === 'claude' ? 'cl' : 'me') + (m.t.done ? ' done' : '') + '"><b>' + (m.t.by === 'claude' ? PlAi() : 'You') + '</b><span>' + esc(m.t.text) + '</span><button class="btn sm ghost" data-cdone="' + r.i + ':' + m.j + '">' + (m.t.done ? 'Open again' : 'Done') + '</button></div>').join('') + '</div>').join('')
+      : '<p class="muted">' + (done ? 'No open comments. ' : 'No comments on this lesson yet. Add one under a slide or in “For ' + plAi() + ': the whole lesson”, or right-click a slide and choose Comment for ' + plAi() + '.') + '</p>') +
     '</div><div class="bf">' + (done ? '<button class="btn ghost" data-cshow>' + (showDone ? 'Hide done' : 'Show done (' + done + ')') + '</button>' : '') + '<span class="sp"></span><button class="btn" data-x>Close</button></div>');
   $('#dlgBox').onclick = e => {
     if (e.target.closest('[data-x]')) return closeDlg();
@@ -1511,7 +1512,7 @@ async function reviewClick(t) {
   if (a === 'send') { await sendToClaude(l); return true; }
   if (a === 'versions') { editorCommit(); await versionsDlg(l); return true; }
   if (a === 'cmp') { editorCommit(); compareDlg(l); return true; }
-  if (a === 'keepall') { delete l.pending; lessonChanged(false); renderEditor(); toast('Kept all of Claude’s changes. Your version is under Versions.'); return true; }
+  if (a === 'keepall') { delete l.pending; lessonChanged(false); renderEditor(); toast('Kept all of ' + plAi() + '’s changes. Your version is under Versions.'); return true; }
   if (a === 'undoall') { await undoAll(l); return true; }
   if (a === 'say') { addComment(); return true; }
   if (a === 'lsay') { addLessonComment(); return true; }
@@ -1661,10 +1662,13 @@ const className = id => { const c = classById(id); return c ? c.name : id; };
    from grading, uses plain words. A Planner that had its setup before these were asked reads as it always did. */
 function plWords() {
   let w = null; try { w = JSON.parse(localStorage.getItem('gs.words') || 'null'); } catch { }
-  w = (w && typeof w === 'object' ? w : null) || L.words || (L.setup ? { sys: 'ManageBac', unit: 'Atlas', scale12: true } : { sys: '', unit: '' });
-  return { sys: String(w.sys || '').trim().slice(0, 40), unit: String(w.unit || '').trim().slice(0, 40), scale12: !!w.scale12 };   // scale12: the rubric bank offers the 12-point scale as a preset
+  w = (w && typeof w === 'object' ? w : null) || L.words || (L.setup ? { sys: 'ManageBac', unit: 'Atlas', scale12: true, ai: 'Claude' } : { sys: '', unit: '', ai: '' });
+  return { sys: String(w.sys || '').trim().slice(0, 40), unit: String(w.unit || '').trim().slice(0, 40), scale12: !!w.scale12, ai: String(w.ai == null ? (w.scale12 ? 'Claude' : '') : w.ai).trim().slice(0, 30) };   // scale12: the rubric bank offers the 12-point scale as a preset
 }
 const plSys = () => plWords().sys, plCur = () => plWords().unit;
+function plAi() { return plWords().ai || 'your AI assistant'; }
+function PlAi() { return plWords().ai || 'Your AI assistant'; }
+function plAiTag() { return plWords().ai || 'AI'; }
 const plSysLink = () => plSys() || 'Class page', plCurLink = () => plCur() || 'Unit plan';
 /* ---------- each class's page in the school's system (ManageBac, for one) ----------
    Kept on the class in the timetable, and remembered by class name in this browser so grading and the Planner
@@ -2325,13 +2329,13 @@ function moreHtml(l) {
   const a = atlasOf(l), linked = titlesLinked(l), link = esc(plCurLink());
   const it = (act, label, sub, cls) => '<button class="mi' + (cls ? ' ' + cls : '') + '" role="menuitem" data-a="' + act + '">' + label + (sub ? '<small>' + sub + '</small>' : '') + '</button>';
   return '<span class="ls-morew"><button class="btn sm ghost" data-a="more" aria-haspopup="true" aria-expanded="false">More ▾</button><div class="ls-menu" role="menu" aria-label="More for this lesson" hidden>' +
-    it('send', 'Copy for Claude', 'To paste where you’re working with Claude') +
+    it('send', 'Copy for ' + plAi(), 'To paste where you’re working with ' + plAi()) +
     (lessonTalk(l) ? '' : it('comments', 'Comments', 'On the lesson and its slides')) +
     it('versions', 'Versions', 'Earlier copies of this lesson') +
     it('finzip', 'Upload lesson .zip', 'The finished PowerPoint and its files, as one .zip') + '<hr>' +
     (titleSlideOf(l) ? it('tlink', linked ? 'Name matches the title slide ✓' : 'Match the name to the title slide', linked ? 'Click to let them be different' : 'They are different now', linked ? 'on' : '') : '') +
     (a ? '<a class="mi" role="menuitem" href="' + esc(a.url) + '" target="_blank" rel="noopener">Open ' + link + ' ↗<small>' + (a.own ? 'This lesson’s own page' : 'The page of ' + esc(a.unit)) + '</small></a>' + it('atlas', 'Change the ' + link + ' link') : it('atlas', '+ ' + link + ' link')) + '<hr>' +
-    it('mexport', 'Save lesson file…', 'A .lesson.json of just this lesson, for Claude. Bring Claude’s version back with Import') +
+    it('mexport', 'Save lesson file…', 'A .lesson.json of just this lesson, for ' + plAi() + '. Bring ' + plAi() + '’s version back with Import') +
     it('mcopyto', 'Copy to another class or day…', 'A separate copy with its own slides and materials') +
     it('mcopy', 'Copy lesson as text', 'The slides and notes as plain text') +
     it('mdelete', 'Delete this lesson') + '</div></span>';
@@ -2377,7 +2381,7 @@ function lessonText(l) {
     if (s.notes) t += 'Notes: ' + s.notes + '\n';
     if (s.ask) t += 'What I want on this slide: ' + s.ask + '\n';
     for (const c of s.ctx || []) t += '[Screenshot for context, not on the slide' + (c.note ? ': ' + c.note : '') + (L.dir && L.dirOk && ctxFile(s, c) ? ' (in my Planner folder: ' + ctxFile(s, c) + ')' : '') + ']\n';
-    for (const m of s.talk) if (!m.done) t += (m.by === 'claude' ? 'Claude: ' : 'My comment: ') + m.text + '\n';
+    for (const m of s.talk) if (!m.done) t += (m.by === 'claude' ? PlAi() + ': ' : 'My comment: ') + m.text + '\n';
   });
   if (l.notebook) t += '\n## My notebook for this lesson\n' + nbText(l.notebook) + '\n';
   return t;
@@ -2386,12 +2390,12 @@ async function askClaude(l) {
   const where = L.dir && L.dirOk ? 'It is saved in my Planner folder as "' + fileBase(l) + '.lesson.json". Edit that file directly (keep the same id), and I will pick up your changes in the Planner.\n\n' : '';
   await copyText('Here is a lesson from my Planner. ' + where + 'Slide 1 is the title slide and slide 2 the agenda. Slide text stays 28 to 36 pt; keep my simple bullet style. In slide text, a line starting with "• " is a bullet and "1. " is a number (only where I put them), a tab indents, **bold**, *italic* and __underline__ work, and {red}words{/} are colored (red, orange, green, blue, purple, gray).\n\n' + lessonText(l));
   const shots = l.slides.reduce((n, s) => n + (s.ctx || []).length, 0);
-  toast('Lesson copied. Paste it into Claude and say what you want.' + (shots && !(L.dir && L.dirOk) ? ' Its ' + (shots === 1 ? 'screenshot doesn’t' : shots + ' screenshots don’t') + ' come along as text: use Copy on each one and paste it in too.' : ''), 7000);
+  toast('Lesson copied. Paste it into ' + plAi() + ' and say what you want.' + (shots && !(L.dir && L.dirOk) ? ' Its ' + (shots === 1 ? 'screenshot doesn’t' : shots + ' screenshots don’t') + ' come along as text: use Copy on each one and paste it in too.' : ''), 7000);
 }
 
 /* ---------- import ---------- */
 function importLesson() {
-  openDlg('<div class="bh"><h2>Import a lesson</h2></div><div class="bb"><p class="muted" style="margin-top:0">Choose a .lesson.json file (from Claude or another computer), or a lesson pack (.zip) of past lessons with their files. You can also paste a lesson below. A lesson with the same id replaces the one here; a pack leaves lessons you already have alone.</p>' +
+  openDlg('<div class="bh"><h2>Import a lesson</h2></div><div class="bb"><p class="muted" style="margin-top:0">Choose a .lesson.json file (from ' + plAi() + ' or another computer), or a lesson pack (.zip) of past lessons with their files. You can also paste a lesson below. A lesson with the same id replaces the one here; a pack leaves lessons you already have alone.</p>' +
     '<button class="btn" id="imF">Choose a file…</button><input type="file" id="imIn" accept=".json,application/json,.zip,application/zip" hidden><textarea id="imT" rows="8" style="width:100%;margin-top:10px" placeholder="Or paste the lesson here"></textarea></div>' +
     '<div class="bf"><button class="btn" data-x>Cancel</button><button class="btn primary" data-ok>Import pasted text</button></div>', true);
   $('#imF').onclick = () => $('#imIn').click();
@@ -2602,7 +2606,7 @@ function downloadPptx(l) {
 const FOLDER_MARK = 'planner-folder.json';
 const FOLDER_README = `# Planner folder
 
-The Planner (part of Grading Studio) keeps planning here so Claude can read and edit it. Only planning is in
+The Planner (part of Grading Studio) keeps planning here so the teacher's AI assistant can read and edit it. Only planning is in
 this folder: lessons, units, the timetable, files the teacher added to a unit, and rubrics and grading scales. Student work and grades
 never are, and nothing here should point to a student.
 
@@ -2612,7 +2616,7 @@ never are, and nothing here should point to a student.
   dates to show, and the semester's first and last Monday. Read it; the teacher changes it in the app.
 - \`*.lesson.json\`: one lesson each. Edit in place and keep the "id". To add a lesson, write a new file
   ending in .lesson.json (leave "id" out). \`images/\` holds slide pictures ("img.src": "images/abc.jpg").
-- \`Units/*.unit.json\`: one unit each (see below). Its files (Atlas screenshots, summative task sheets)
+- \`Units/*.unit.json\`: one unit each (see below). Its files (screenshots of the unit plan, summative task sheets)
   are in the folder next to it with the same name plus " files".
 - \`activities.json\`: the teacher's own activities, a list of { "name", "what", "kind" (talk, read, write,
   words, move, check), "parts" (warmup, activity, review), "group", "how": [steps for the teacher],
@@ -2642,7 +2646,7 @@ never are, and nothing here should point to a student.
     { "layout": "exit", "title": "Exit ticket", "tag": "On a sticky note", "body": "The question" }
   ],
   "look": "wood",
-  "atlas": "https://…"              // optional: this lesson's Atlas page (otherwise its unit's link is used)
+  "atlas": "https://…"              // optional: this lesson's page in the school's curriculum tool (otherwise its unit's link is used)
 }
 "look" is the lesson's colors: wood (the teacher's template), white, cream, sage, sky, blush, charcoal, navy,
 stripe, band, bigtype, framed, notebook, chalk. Leave it out to use the teacher's default; change it only when asked.
@@ -2682,11 +2686,11 @@ one line each. Keep them there; the app puts them there in a new lesson. An empt
 {
   "id": "…", "course": "<course from timetable.json, like English 10>", "title": "Unit 2: Argument",
   "start": "2026-10-05",            // the Monday of the unit's first week
-  "atlas": "https://…",             // the unit's Atlas page, if the teacher added it
-  "weeks": [ { "focus": "What this week is about (from Atlas)", "notes": "Teacher's own notes", "standards": "RL.1, RL.2" } ],
-  "files": [ { "name": "Atlas week 1-3.png", "kind": "atlas" }, { "name": "Summative task sheet.docx", "kind": "summative" } ]
+  "atlas": "https://…",             // the unit's page in the school's curriculum tool, if the teacher added it
+  "weeks": [ { "focus": "What this week is about (from the unit plan)", "notes": "Teacher's own notes", "standards": "RL.1, RL.2" } ],
+  "files": [ { "name": "Unit plan week 1-3.png", "kind": "atlas" }, { "name": "Summative task sheet.docx", "kind": "summative" } ]
 }
-To fill a unit's weeks from its Atlas screenshots: read the "atlas" files in its files folder and write each
+To fill a unit's weeks from its unit plan screenshots: read the "atlas" files in its files folder and write each
 week's focus (and standards, if shown) into "weeks", in order, one entry per week. Keep the teacher's "notes".
 Don't add, rename or remove files in the files folder; the teacher adds those in the app.
 ` + BANK_README;
@@ -2747,7 +2751,7 @@ async function folderWriteSchedule() {
 }
 async function folderWriteAll() {
   if (!L.dir || !L.dirOk) return;
-  await writeFile(L.dir, 'README - for Claude.md', FOLDER_README);
+  await writeFile(L.dir, 'README - for ' + plAi() + '.md', FOLDER_README);
   await writeFile(L.dir, FOLDER_MARK, JSON.stringify({ kind: 'grading-studio-planner-folder', note: 'Planning only: lessons, units, the timetable, files added to units, rubrics and grading scales. Never student work or grades.' }, null, 2));
   await folderWriteSchedule();
   for (const l of L.lessons) await folderWrite(l);
@@ -3670,7 +3674,7 @@ async function renderDoc() {
   if (!f) { L.view = L.doc.back || 'week'; return renderLessons(); }
   const html = await (await fileBlob(id)).text();
   $('#lessons').innerHTML = '<div class="pl-dochead"><div class="ls-top"><button class="btn sm ghost" data-da="back">‹ ' + esc(ref.t === 'lesson' ? o.title : o.title) + '</button><input class="ls-title-in" data-df="name" value="' + esc(f.name) + '" aria-label="Document name"><span class="sp"></span><span class="savest" id="docSaved">✓ Saved</span>' +
-    '<button class="btn sm ghost" data-dict="#docPage">🎤 Dictate</button><button class="btn sm ghost" data-da="claude" title="Put this document in the Claude box">+ Claude box</button>' + panelBtn() + '<button class="btn sm ghost" data-da="print">Print</button><button class="btn sm primary" data-da="docx">Download .docx</button></div>' +
+    '<button class="btn sm ghost" data-dict="#docPage">🎤 Dictate</button><button class="btn sm ghost" data-da="claude" title="Put this document in the ' + plAiTag() + ' box">+ ' + plAiTag() + ' box</button>' + panelBtn() + '<button class="btn sm ghost" data-da="print">Print</button><button class="btn sm primary" data-da="docx">Download .docx</button></div>' +
     '<div class="pl-doctools" role="toolbar" aria-label="Formatting">' + DOC_TOOLS.map(([k, v]) => k === '|' ? '<span class="pl-dsep"></span>' : '<button class="btn sm ghost" data-dt="' + k + '"' + (k === 'bold' ? ' style="font-weight:800"' : k === 'italic' ? ' style="font-style:italic"' : k === 'underline' ? ' style="text-decoration:underline"' : '') + '>' + v + '</button>').join('') + '</div></div>' +
     '<div class="pl-docwrap"><div class="pl-docpage" id="docPage" contenteditable="true" spellcheck="true">' + docClean(html) + '</div></div>';
   const pg = $('#docPage');
@@ -4169,7 +4173,7 @@ function ctxOpen(e) {
   const c = ctxTarget(e.target), x = e.clientX, y = e.clientY;
   const what = c.kind === 'slide' ? 'this slide' : c.kind === 'lesson' ? 'this lesson' : c.kind === 'file' ? 'this file' : c.kind === 'quote' && getSelection().toString().trim() ? 'the selected text' : 'this';
   const box = document.createElement('div'); box.className = 'pl-ctx'; box.setAttribute('role', 'menu');
-  box.innerHTML = '<button role="menuitem" data-cx="note">💬 Comment for Claude on ' + what + '…</button><button role="menuitem" data-cx="add">＋ Add ' + what + ' to the Claude box</button>' +
+  box.innerHTML = '<button role="menuitem" data-cx="note">💬 Comment for ' + plAi() + ' on ' + what + '…</button><button role="menuitem" data-cx="add">＋ Add ' + what + ' to the ' + plAiTag() + ' box</button>' +
     (c.kind === 'lesson' || (c.kind === 'slide' && L.view === 'edit') ? '<button role="menuitem" data-cx="copy">⧉ Copy ' + (c.kind === 'lesson' ? 'this lesson' : 'the lesson') + ' to another day…</button>' : '') +
     '<span class="pl-ctx-hint">Shift + right-click for the usual menu</span>';
   ctxEl = box; ctxPlace(box, x, y);
@@ -4185,8 +4189,8 @@ function ctxOpen(e) {
 function noteOpen(c, x, y) {
   ctxClose();
   const box = document.createElement('div'); box.className = 'pl-ctx pl-note';
-  box.innerHTML = '<b>Comment for Claude</b><span class="muted sp-small">' + esc(chipLabelNow(c)) + '</span><textarea id="plNoteT" rows="4" placeholder="What should Claude change or think about here?"></textarea>' +
-    '<div class="sp-bar"><button class="btn sm" data-dict="#plNoteT">🎤 Dictate</button><span class="sp"></span><button class="btn sm ghost" data-nx>Cancel</button><button class="btn sm primary" data-nok>Add to Claude box</button></div>';
+  box.innerHTML = '<b>Comment for ' + plAi() + '</b><span class="muted sp-small">' + esc(chipLabelNow(c)) + '</span><textarea id="plNoteT" rows="4" placeholder="What should ' + plAi() + ' change or think about here?"></textarea>' +
+    '<div class="sp-bar"><button class="btn sm" data-dict="#plNoteT">🎤 Dictate</button><span class="sp"></span><button class="btn sm ghost" data-nx>Cancel</button><button class="btn sm primary" data-nok>Add to ' + plAiTag() + ' box</button></div>';
   ctxEl = box; ctxPlace(box, x, y);
   const t = box.querySelector('textarea'); t.focus();
   const ok = async () => {
@@ -4413,7 +4417,7 @@ async function packImport(file) {
    A panel beside whatever the teacher is working on, kept outside #lessons so redrawing a lesson never
    resets it. Tabs:
    - Books: the teacher's own PDFs (a routines book, a textbook), stored in this browser only. Chapters
-     from the PDF's own bookmarks, search, and pages that can go to the Claude box.
+     from the PDF's own bookmarks, search, and pages that can go to the ' + plAiTag() + ' box.
    - Video: a YouTube link plays here; words search YouTube in a new tab (YouTube doesn't allow its search
      inside other sites).
    - Atlas: the lesson's Atlas link (Atlas needs its own sign-in, so it opens in a tab), the unit's week and
@@ -4421,8 +4425,8 @@ async function packImport(file) {
    - Claude: things gathered for Claude (slides, pages, a video, a unit week) plus what the teacher types or
      says, copied in one go to paste into Claude. */
 const SP = { open: false, tab: 'books', w: 420, view: 'page', book: null, pdf: null, page: 1, outline: null, find: '', hits: null, texts: {}, video: '', box: { text: '', chips: [] } };
-const SP_TABS = { books: 'Books', acts: 'Activities', video: 'Video', atlas: 'Atlas', notes: 'Notebook', claude: 'Claude' };
-const spTabName = k => k === 'atlas' ? plCur() || 'Unit' : SP_TABS[k];   // the unit's tab carries the name of the school's curriculum tool, when it has one
+const SP_TABS = { books: 'Books', acts: 'Activities', video: 'Video', atlas: 'Atlas', notes: 'Notebook', claude: 'AI' };   // the tab reads the teacher's own assistant's name when it is drawn (spTabName)
+const spTabName = k => k === 'atlas' ? plCur() || 'Unit' : k === 'claude' ? plAiTag() : SP_TABS[k];   // the unit's tab carries the name of the school's curriculum tool, when it has one
 try { const v = JSON.parse(localStorage.getItem('gsp.panel') || '{}'); if (SP_TABS[v.tab]) SP.tab = v.tab; SP.open = !!v.open; if (v.w >= 300 && v.w <= 900) SP.w = v.w; } catch { }
 const spKeep = () => { try { localStorage.setItem('gsp.panel', JSON.stringify({ open: SP.open, tab: SP.tab, w: SP.w })); } catch { } };
 
@@ -4449,7 +4453,7 @@ async function panelToggle(on) {
   for (const b of document.querySelectorAll('[data-a="panel"]')) b.classList.toggle('on', SP.open);
   if (SP.open) await panelRender();
 }
-const panelBtn = () => '<button class="btn sm ghost' + (SP.open ? ' on' : '') + '" data-a="panel" title="Books, video, ' + (plCur() ? esc(plCur()) : 'the unit') + ' and the Claude box beside your work">Side panel</button>';
+const panelBtn = () => '<button class="btn sm ghost' + (SP.open ? ' on' : '') + '" data-a="panel" title="Books, video, ' + (plCur() ? esc(plCur()) : 'the unit') + ' and the ' + plAiTag() + ' box beside your work">Side panel</button>';
 
 async function panelRender() {
   const d = $('#side'); if (!d || !SP.open) return;
@@ -4497,7 +4501,7 @@ async function booksHtml() {
   const bk = list.find(x => x.id === SP.book) || {};
   return '<div class="sp-bar"><button class="btn sm ghost" data-sa="books">‹ Books</button><b class="sp-title">' + esc(bk.name || '') + '</b></div>' +
     '<div class="sp-bar"><input class="btn sm sp-find" data-sf="find" placeholder="Search this book" value="' + esc(SP.find) + '"><button class="btn sm' + (SP.view === 'toc' ? ' on' : ' ghost') + '" data-sa="toc">Contents</button></div>' +
-    '<div class="sp-split"><div class="sp-toc" id="spToc"' + (SP.view === 'toc' ? '' : ' hidden') + '>' + tocHtml() + '</div><div class="sp-pageview" id="spPageView"' + (SP.view === 'toc' ? ' hidden' : '') + '><div class="sp-bar"><button class="btn sm ghost" data-sa="prev" aria-label="Previous page">‹</button><span id="spPg">Page ' + SP.page + ' of ' + (SP.pdf ? SP.pdf.numPages : '…') + '</span><button class="btn sm ghost" data-sa="next" aria-label="Next page">›</button><span class="sp"></span><button class="btn sm" data-sa="pagebox" title="Put this page’s text in the Claude box">+ Claude box</button></div><div class="sp-canvas" id="spCanvas" draggable="true"></div></div></div>';
+    '<div class="sp-split"><div class="sp-toc" id="spToc"' + (SP.view === 'toc' ? '' : ' hidden') + '>' + tocHtml() + '</div><div class="sp-pageview" id="spPageView"' + (SP.view === 'toc' ? ' hidden' : '') + '><div class="sp-bar"><button class="btn sm ghost" data-sa="prev" aria-label="Previous page">‹</button><span id="spPg">Page ' + SP.page + ' of ' + (SP.pdf ? SP.pdf.numPages : '…') + '</span><button class="btn sm ghost" data-sa="next" aria-label="Next page">›</button><span class="sp"></span><button class="btn sm" data-sa="pagebox" title="Put this page’s text in the ' + plAiTag() + ' box">+ ' + plAiTag() + ' box</button></div><div class="sp-canvas" id="spCanvas" draggable="true"></div></div></div>';
 }
 function tocHtml() {
   if (SP.hits) return '<div class="muted sp-small">' + SP.hits.length + ' page' + (SP.hits.length === 1 ? '' : 's') + ' with “' + esc(SP.find) + '”</div>' + SP.hits.map(h => '<button class="sp-toci" data-pg="' + h.p + '" draggable="true" data-chip=\'' + esc(JSON.stringify({ kind: 'page', book: SP.book, page: h.p, title: 'p. ' + h.p })) + '\'><b>p. ' + h.p + '</b> ' + esc(h.snip) + '</button>').join('');
@@ -4580,7 +4584,7 @@ function videoHtml() {
   const id = ytId(SP.video), st = ytStart(SP.video);
   return '<div class="sp-pad"><div class="sp-bar"><input class="btn sm sp-find" data-sf="vid" placeholder="Paste a YouTube link, or type words to search" value="' + esc(SP.video) + '"><button class="btn sm" data-sa="vidgo">Go</button></div>' +
     (id ? '<div class="sp-vid"><iframe src="https://www.youtube-nocookie.com/embed/' + id + (st ? '?start=' + st : '') + '" title="Video" allow="encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe></div>' +
-      '<div class="sp-bar"><button class="btn sm" data-sa="vidslide">Put on a slide</button><button class="btn sm ghost" data-sa="vidbox">+ Claude box</button><a class="btn sm ghost" href="' + esc(SP.video) + '" target="_blank" rel="noopener">YouTube ↗</a></div>'
+      '<div class="sp-bar"><button class="btn sm" data-sa="vidslide">Put on a slide</button><button class="btn sm ghost" data-sa="vidbox">+ ' + plAiTag() + ' box</button><a class="btn sm ghost" href="' + esc(SP.video) + '" target="_blank" rel="noopener">YouTube ↗</a></div>'
       : '<p class="muted">YouTube doesn’t allow its search inside other sites, so words open YouTube’s search in a new tab. Copy a video’s link there and paste it here to watch it beside your lesson.</p>') + '</div>';
 }
 function videoGo(v) {
@@ -4604,7 +4608,7 @@ async function atlasHtml() {
     const w = n >= 0 ? u.weeks[n] : null;
     h += '<div class="sp-unit"><b>' + esc(u.title) + '</b>' + (u.atlas && !a ? ' <a href="' + esc(u.atlas) + '" target="_blank" rel="noopener">' + esc(plCurLink()) + ' ↗</a>' : '') +
       (w ? '<div>Week ' + (n + 1) + ' of ' + u.weeks.length + (w.focus ? ': ' + esc(w.focus) : '') + '</div>' + (w.standards ? '<div class="muted">' + esc(w.standards) + '</div>' : '') + (w.notes ? '<div class="muted">' + esc(w.notes) + '</div>' : '') +
-        '<button class="btn sm ghost" data-sa="weekbox" data-u="' + u.id + '" data-n="' + n + '">+ Claude box</button>' : '') + '<div class="sp-shots">';
+        '<button class="btn sm ghost" data-sa="weekbox" data-u="' + u.id + '" data-n="' + n + '">+ ' + plAiTag() + ' box</button>' : '') + '<div class="sp-shots">';
     for (const f of u.files.filter(f => f.kind === 'atlas')) { const b = await fileBlob(f.id); if (b && /^image\//.test(b.type || f.type)) h += '<button class="sp-shot" data-shot="' + u.id + '|' + f.id + '" title="' + esc(f.name) + '"><img src="' + URL.createObjectURL(b) + '" alt="' + esc(f.name) + '"></button>'; }
     h += '</div></div>';
   }
@@ -4614,10 +4618,10 @@ async function atlasHtml() {
 /* ---------- the Claude box ---------- */
 const CHIP_ICON = { notebook: '📓', slide: '▭', page: '📖', video: '▶', week: '📅', file: '📄', lesson: '📘', quote: '❝', note: '💬' };
 function boxHtml() {
-  return '<div class="sp-pad sp-box"><p class="muted sp-small">Drag slides, book pages and chapters here, or use the “+ Claude box” buttons. Then say or type what you want, and copy it all for Claude.</p>' +
+  return '<div class="sp-pad sp-box"><p class="muted sp-small">Drag slides, book pages and chapters here, or use the “+ ' + plAiTag() + ' box” buttons. Then say or type what you want, and copy it all for ' + plAi() + '.</p>' +
     '<div class="sp-chips" id="spChips">' + (SP.box.chips.length ? SP.box.chips.map((c, i) => '<span class="sp-chip">' + (CHIP_ICON[c.kind] || '•') + ' ' + esc(c.label) + '<button data-schip="' + i + '" aria-label="Remove">×</button></span>').join('') : '<span class="muted sp-small">Nothing here yet.</span>') + '</div>' +
-    '<textarea id="spText" data-sf="boxtext" rows="7" placeholder="What do you want Claude to do with these?">' + esc(SP.box.text) + '</textarea>' +
-    '<div class="sp-bar"><button class="btn sm" data-dict="#spText">🎤 Dictate</button><span class="sp"></span><button class="btn sm ghost" data-sa="boxclear">Clear</button><button class="btn sm primary" data-sa="boxcopy">Copy for Claude</button></div></div>';
+    '<textarea id="spText" data-sf="boxtext" rows="7" placeholder="What do you want ' + plAi() + ' to do with these?">' + esc(SP.box.text) + '</textarea>' +
+    '<div class="sp-bar"><button class="btn sm" data-dict="#spText">🎤 Dictate</button><span class="sp"></span><button class="btn sm ghost" data-sa="boxclear">Clear</button><button class="btn sm primary" data-sa="boxcopy">Copy for ' + plAi() + '</button></div></div>';
 }
 async function boxSave() { await kvSet('cbox', SP.box); }
 async function chipLabel(c) {
@@ -4632,7 +4636,7 @@ async function chipLabel(c) {
 async function boxAdd(c) {
   if (!c || !c.kind || !(await chipLabel(c))) return;
   SP.box.chips.push(c); await boxSave();
-  if (SP.open && SP.tab === 'claude') panelRender(); else { if (SP.open) panelRender(); toast(c.kind === 'note' ? 'Comment added to the Claude box' : 'Added to the Claude box'); }
+  if (SP.open && SP.tab === 'claude') panelRender(); else { if (SP.open) panelRender(); toast(c.kind === 'note' ? 'Comment added to the ' + plAiTag() + ' box' : 'Added to the ' + plAiTag() + ' box'); }
 }
 async function chipText(c) {
   if (c.kind === 'page') { const bk = (await booksList()).find(x => x.id === c.book); const t = await pageText(c.book, c.page).catch(() => ''); return '[' + (bk ? bk.name : 'Book') + ', ' + (c.title && !/^p\. \d+$/.test(c.title) ? c.title + ', ' : '') + 'page ' + c.page + ']\n' + (t || '(no text on this page)'); }
@@ -4661,8 +4665,8 @@ async function boxCopy() {
   const parts = [];
   for (const c of SP.box.chips) parts.push(await chipText(c));
   const t = (SP.box.text.trim() ? SP.box.text.trim() + '\n\n' : '') + parts.join('\n\n');
-  if (!t.trim()) return toast('The Claude box is empty');
-  await copyText(t); toast('Copied. Paste it into Claude.', 4000);
+  if (!t.trim()) return toast('The ' + plAiTag() + ' box is empty');
+  await copyText(t); toast('Copied. Paste it into ' + plAi() + '.', 4000);
 }
 
 /* ---------- voice typing (Chrome) ---------- */
@@ -4825,7 +4829,7 @@ async function notebookHtml() {
     '<div class="nb-ask" id="nbAsk" hidden><input class="btn sm" id="nbAskIn"><button class="btn sm primary" data-nb="askok">Add</button><button class="btn sm ghost" data-nb="askx" aria-label="Cancel">×</button></div>' +
     '<div class="nb-page" id="nbPage" contenteditable="true" spellcheck="true" data-ph="Thoughts for this lesson as they come: what to try, what to change, links, videos, pictures…">' + nbClean(html) + '</div>' +
     '<input type="file" id="nbPicIn" accept="image/*" hidden>' +
-    '<div class="sp-bar"><span class="muted sp-small">Saved as you type' + (ref.t === 'lesson' ? ', with this lesson' : ref.t === 'unit' ? ', with this unit' : ' on this computer') + '.</span><span class="sp"></span><button class="btn sm ghost" data-sa="nbbox">+ Claude box</button></div></div>';
+    '<div class="sp-bar"><span class="muted sp-small">Saved as you type' + (ref.t === 'lesson' ? ', with this lesson' : ref.t === 'unit' ? ', with this unit' : ' on this computer') + '.</span><span class="sp"></span><button class="btn sm ghost" data-sa="nbbox">+ ' + plAiTag() + ' box</button></div></div>';
 }
 function notebookWire() {
   const el = $('#nbPage'); if (!el) return;
@@ -5588,7 +5592,7 @@ const LANG_ES = {
     'Your timetable isn’t here yet': 'Tu horario aún no está aquí', 'Add your class times in the Planner, and each day’s classes and lessons show here.': 'Añade las horas de tus clases en el Planificador y aquí verás las clases y lecciones de cada día.',
     'Open the Planner': 'Abrir el Planificador', 'Present': 'Presentar', 'Open': 'Abrir', 'Plan it': 'Planificar', 'No lesson planned yet': 'Aún no hay lección planificada',
     'Present this lesson, from the Planner': 'Presentar esta lección desde el Planificador', 'Open this lesson in the Planner': 'Abrir esta lección en el Planificador', 'Plan this class in the Planner': 'Planificar esta clase en el Planificador',
-    'finished': 'terminada', 'ready for you': 'lista para ti', 'with Claude': 'con Claude', 'draft': 'borrador', 'taught': 'impartida',
+    'finished': 'terminada', 'ready for you': 'lista para ti', 'with Claude': 'con Claude', 'with your AI assistant': 'con tu asistente de IA', 'draft': 'borrador', 'taught': 'impartida',
     'To mark': 'Por corregir', 'Ready to hand back': 'Listos para devolver', 'Earlier work': 'Trabajos anteriores', 'What the class needs next': 'Qué necesita la clase ahora', 'Needs a look': 'Para revisar',
     'Continue': 'Continuar', 'Start': 'Empezar', 'Return papers': 'Devolver trabajos', 'More': 'Más', 'Forget': 'Olvidar', 'Open the papers': 'Abrir los trabajos',
     'Removes the papers, your marks and scores for this assignment from this browser and any linked folder': 'Quita de este navegador y de la carpeta vinculada los trabajos, tus marcas y las notas de esta tarea',
@@ -5664,7 +5668,7 @@ const LANG_ES = {
     'Grading scale and rubrics': 'Escala de calificación y rúbricas', 'Your saved scales and rubrics': 'Tus escalas y rúbricas guardadas',
     'Marking': 'Corrección', 'Mark key, Word papers, tablet and pencil': 'Clave de marcas, trabajos de Word, tableta y lápiz',
     'Timetable and calendar': 'Horario y calendario', 'Class times and days off, in the Planner': 'Horas de clase y días sin clase, en el Planificador',
-    'Working with Claude': 'Trabajar con Claude', 'Optional. What Claude can and can’t see': 'Opcional. Lo que Claude puede ver y lo que no',
+    'Working with AI': 'Trabajar con IA', 'Optional. What an AI assistant can and can’t see': 'Opcional. Lo que un asistente de IA puede ver y lo que no',
     'This week in the Planner': 'Esta semana en el Planificador', 'Today’s classes and the lessons planned for them': 'Las clases de hoy y las lecciones planificadas para ellas',
     'This week': 'Esta semana', 'The calendar, a week at a time': 'El calendario, semana a semana', 'Semester': 'Semestre', 'The calendar, every week and its units': 'El calendario, con todas las semanas y sus unidades',
     'Each unit, its weeks and its files': 'Cada unidad, sus semanas y sus archivos', 'Old decks and their handouts, to use again': 'Presentaciones y materiales para usar de nuevo', 'The activity bank': 'El banco de actividades', 'Saved rubrics and grading scales': 'Rúbricas y escalas de calificación guardadas',
@@ -5683,6 +5687,7 @@ const LANG_ES = {
     'Missing': 'No entregado', 'Excused': 'Justificado', 'Late': 'Con retraso', 'Retake': 'Nuevo intento', 'First try': 'Primer intento', 'counts as': 'cuenta como',
   },
   rules: [
+    [/^with (ChatGPT|Gemini|Copilot)$/, 'con $1'],
     [/^(?:No classes today\.|\w+ class(?:es)? today\.|\w+ sets? of papers (?:to mark|ready to hand back)|[Nn]othing waiting to be marked\.)/, m => esHomeSay(m.input)],
     [/^Grading Studio version (.+)$/, 'Grading Studio, versión $1'],
     [/^Step (\d) of 3$/, 'Paso $1 de 3'],
@@ -5873,8 +5878,8 @@ const LANG_ES = {
     'privacy': { q: '¿Salen de mi ordenador los trabajos de los estudiantes?', words: 'privado protección de datos rgpd nube servidor seguro',
       a: ['No. Los trabajos, los nombres, las notas y los comentarios se quedan en este navegador y en la carpeta que elijas. La aplicación no tiene servidor ni cuentas, y funciona sin internet.',
         'Lo único que sale son los archivos que tú exportas.'] },
-    'ai': { q: '¿Usa la aplicación IA con los trabajos de los estudiantes?', go: 'Abrir Ajustes, Trabajar con Claude', words: 'inteligencia artificial claude chatgpt calificación automática máquina',
-      a: ['No. Nada en la aplicación envía trabajos de estudiantes a una IA, y las notas solo las pones tú.', '**Share with Claude**, en la pestaña Return, es opcional y está desactivado hasta que lo uses. Crea una copia sin nombres: cada estudiante recibe un código aleatorio, los nombres escritos a máquina se tapan y la clave se queda en tu navegador.'] },
+    'ai': { q: '¿Usa la aplicación IA con los trabajos de los estudiantes?', go: 'Abrir Ajustes, Trabajar con IA', words: 'inteligencia artificial claude chatgpt calificación automática máquina',
+      a: ['No. Nada en la aplicación envía trabajos de estudiantes a una IA, y las notas solo las pones tú.', 'Compartir con un asistente de IA, en la pestaña Return, es opcional y está desactivado hasta que lo uses. Crea una copia sin nombres: cada estudiante recibe un código aleatorio, los nombres escritos a máquina se tapan y la clave se queda en tu navegador.'] },
     'remove': { q: '¿Cómo quito los trabajos de los estudiantes de este ordenador?', go: 'Abrir Ajustes, Guardado', words: 'borrar eliminar limpiar fin de curso ordenador compartido',
       a: ['En Ajustes, **Saving and carrying**, **Remove from this computer** borra de este navegador todos los trabajos de los estudiantes cuando escribes REMOVE.', 'Nunca borra lo que hay en tu carpeta vinculada. Lo indica, deja de usar la carpeta y te deja los archivos.'] },
   },
@@ -5939,7 +5944,7 @@ const LANG_ZH = {
     'Your timetable isn’t here yet': '還沒有課表', 'Add your class times in the Planner, and each day’s classes and lessons show here.': '在備課頁面加入上課時間，這裡就會顯示每天的班級和課程。',
     'Open the Planner': '開啟備課', 'Present': '播放', 'Open': '開啟', 'Plan it': '備課', 'No lesson planned yet': '還沒有備課',
     'Present this lesson, from the Planner': '從備課頁面播放這堂課', 'Open this lesson in the Planner': '在備課頁面開啟這堂課', 'Plan this class in the Planner': '在備課頁面為這個班級備課',
-    'finished': '已完成', 'ready for you': '等你查看', 'with Claude': 'Claude 處理中', 'draft': '草稿', 'taught': '已上課',
+    'finished': '已完成', 'ready for you': '等你查看', 'with Claude': 'Claude 處理中', 'with your AI assistant': 'AI 助理處理中', 'draft': '草稿', 'taught': '已上課',
     'To mark': '待批改', 'Ready to hand back': '可以發還', 'Earlier work': '先前的作業', 'What the class needs next': '班級接下來需要什麼', 'Needs a look': '需要留意',
     'Continue': '繼續', 'Start': '開始', 'Return papers': '發還作業', 'More': '更多', 'Forget': '移除', 'Open the papers': '開啟作業',
     'Removes the papers, your marks and scores for this assignment from this browser and any linked folder': '從這個瀏覽器和已連結的資料夾移除這份作業的學生檔案、你的批註和分數',
@@ -6015,7 +6020,7 @@ const LANG_ZH = {
     'Grading scale and rubrics': '評分等第與評分規準', 'Your saved scales and rubrics': '你儲存的評分等第與評分規準',
     'Marking': '批改', 'Mark key, Word papers, tablet and pencil': '批改符號表、Word 作業、平板與觸控筆',
     'Timetable and calendar': '課表與行事曆', 'Class times and days off, in the Planner': '上課時間與放假日，在備課頁面',
-    'Working with Claude': '搭配 Claude 使用', 'Optional. What Claude can and can’t see': '可選用。Claude 看得到和看不到的內容',
+    'Working with AI': '搭配 AI 使用', 'Optional. What an AI assistant can and can’t see': '可選用。AI 助理看得到和看不到的內容',
     'This week in the Planner': '備課頁面的本週', 'Today’s classes and the lessons planned for them': '今天的班級與為它們準備的課程',
     'This week': '本週', 'The calendar, a week at a time': '行事曆，一次看一週', 'Semester': '學期', 'The calendar, every week and its units': '行事曆，每一週與其單元',
     'Each unit, its weeks and its files': '每個單元、所屬週次與檔案', 'Old decks and their handouts, to use again': '以前的簡報與講義，可以再次使用', 'The activity bank': '活動庫', 'Saved rubrics and grading scales': '已儲存的評分規準與評分等第',
@@ -6034,6 +6039,7 @@ const LANG_ZH = {
     'Missing': '缺交', 'Excused': '免交', 'Late': '遲交', 'Retake': '重做', 'First try': '第一次', 'counts as': '採計',
   },
   rules: [
+    [/^with (ChatGPT|Gemini|Copilot)$/, '$1 處理中'],
     [/^(?:No classes today\.|\w+ class(?:es)? today\.|\w+ sets? of papers (?:to mark|ready to hand back)|[Nn]othing waiting to be marked\.)/, m => zhHomeSay(m.input)],
     [/^Grading Studio version (.+)$/, 'Grading Studio 版本 $1'],
     [/^Step (\d) of 3$/, '第 $1 步，共 3 步'],
@@ -6224,8 +6230,8 @@ const LANG_ZH = {
     'privacy': { q: '學生作業會離開我的電腦嗎？', words: '隱私 資料保護 個資 雲端 伺服器 安全 privacy',
       a: ['不會。作業、姓名、分數和評語都留在這個瀏覽器和你選擇的資料夾裡。這個程式沒有伺服器，也沒有帳號，沒有網路也能使用。',
         '唯一會離開的，是你自己匯出的檔案。'] },
-    'ai': { q: '這個程式會用 AI 處理學生作業嗎？', go: '開啟設定、搭配 Claude 使用', words: '人工智慧 ai claude chatgpt 自動評分 機器',
-      a: ['不會。程式裡沒有任何功能會把學生作業傳給 AI，分數也只由你來給。', 'Return 分頁的 **Share with Claude** 是可選用的，在你使用之前都是關閉的。它會建立一份不含姓名的副本：每位學生得到一個隨機代碼，打字的姓名會被遮住，對照表留在你的瀏覽器裡。'] },
+    'ai': { q: '這個程式會用 AI 處理學生作業嗎？', go: '開啟設定、搭配 AI 使用', words: '人工智慧 ai claude chatgpt 自動評分 機器',
+      a: ['不會。程式裡沒有任何功能會把學生作業傳給 AI，分數也只由你來給。', 'Return 分頁裡與 AI 助理分享的功能是可選用的，在你使用之前都是關閉的。它會建立一份不含姓名的副本：每位學生得到一個隨機代碼，打字的姓名會被遮住，對照表留在你的瀏覽器裡。'] },
     'remove': { q: '怎麼從這台電腦移除學生作業？', go: '開啟設定、儲存', words: '刪除 移除 清除 學年結束 共用電腦',
       a: ['在設定的 **Saving and carrying** 裡，**Remove from this computer** 會在你輸入 REMOVE 之後，清除這個瀏覽器裡的所有學生作業。', '它不會刪除你已連結的資料夾裡的內容。它會告訴你、停止使用那個資料夾，並把檔案留給你。'] },
   },
@@ -6498,8 +6504,8 @@ const HELP = [
       'The only things that leave are the files you export yourself.'],
     words: 'private data protection gdpr ferpa cloud server secure safe' },
   { id: 'ai', sec: 'private', q: 'Does the app use AI on student work?',
-    a: ['No. Nothing in the app sends student work to an AI, and scores are only ever given by you.', '**Share with Claude**, on the Return tab, is optional and off until you use it. It makes a copy with no names in it: each student gets a random code, typed names are covered, and the key stays in your browser.'],
-    go: ['Open Settings, Working with Claude', '#/settings/claude'], words: 'artificial intelligence claude chatgpt automatic grading machine' },
+    a: ['No. Nothing in the app sends student work to an AI, and scores are only ever given by you.', 'Sharing with an AI assistant, on the Return tab, is optional and off until you use it. It makes a copy with no names in it: each student gets a random code, typed names are covered, and the key stays in your browser.'],
+    go: ['Open Settings, Working with AI', '#/settings/claude'], words: 'artificial intelligence claude chatgpt automatic grading machine' },
   { id: 'remove', sec: 'private', q: 'How do I remove student work from this computer?',
     a: ['Settings, **Saving and carrying**, **Remove from this computer** clears all student work from this browser once you type REMOVE.', 'It never deletes what is in your linked folder. It says so, stops using the folder and leaves the files for you.'],
     go: ['Open Settings, Saving', '#/settings'], words: 'delete erase clear wipe end of year shared computer' },
@@ -6583,7 +6589,7 @@ function findRows() {
   add('Do', 'Import a lesson', 'A lesson file, a lesson pack, or pasted text', () => importLesson());
   add('Do', 'Timetable', 'Your classes, when they meet, and the school calendar', () => openTimetable());
   if ('showDirectoryPicker' in window) add('Do', L.dir && L.dirOk ? 'Look in the Planner folder' : L.dir ? 'Reconnect the Planner folder' : 'Link the Planner folder', L.dir && L.dirOk ? 'For lessons added or changed there' : 'A second copy of your lessons, in a folder of their own', () => L.dir && L.dirOk ? folderRead(true) : L.dir ? folderReconnect(true) : folderLink());
-  add('Do', 'Side panel', 'Books, video, ' + (plCur() || 'the unit') + ', the notebook and the Claude box', () => panelToggle());
+  add('Do', 'Side panel', 'Books, video, ' + (plCur() || 'the unit') + ', the notebook and the ' + plAiTag() + ' box', () => panelToggle());
   add('Do', document.documentElement.dataset.theme === 'dark' ? 'Light mode' : 'Dark mode', 'Display', () => setTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'));
   for (const t of HELP) out.push({ group: 'Help', label: t.q, sub: helpGist(t), words: t.words || '', run: () => leaveTo(gsUrl('#/help/' + t.id)) });
   return out;
@@ -6826,7 +6832,7 @@ function renderUnit() {
     '<label>Weeks <span class="pl-step"><button class="btn sm" data-a="wkminus" aria-label="One week fewer">−</button><b>' + u.weeks.length + '</b><button class="btn sm" data-a="wkplus" aria-label="One week more">+</button></span></label>' +
     '<label class="pl-atl">' + (plCur() ? esc(plCur()) + ' page' : 'Unit plan link') + ' <input class="btn sm" data-uf="atlas" placeholder="Paste ' + (plCur() ? 'the unit’s ' + esc(plCur()) + ' link' : 'a link to the unit plan') + '" value="' + esc(u.atlas) + '">' + (u.atlas ? '<a class="btn sm" href="' + esc(u.atlas) + '" target="_blank" rel="noopener">Open</a>' : '') + '</label></section>';
   h += '<section class="pl-card"><div class="lhead"><h2>' + (plCur() ? 'From ' + esc(plCur()) : 'From your unit plan') + '</h2><span class="sp"></span><button class="btn sm" data-a="addshot">Add screenshot…</button><button class="btn sm" data-a="pasteweeks">Type or paste the weeks…</button>' +
-    '<button class="btn sm primary" data-a="askweeks"' + (atlas.length ? '' : ' disabled title="Add a screenshot first"') + '>Ask Claude to fill the weeks</button></div>' +
+    '<button class="btn sm primary" data-a="askweeks"' + (atlas.length ? '' : ' disabled title="Add a screenshot first"') + '>Ask ' + plAi() + ' to fill the weeks</button></div>' +
     '<div class="pl-drop" id="plShotDrop" tabindex="0">' + (atlas.length ? '<div class="pl-shots">' + atlas.map(f => '<figure class="pl-shot"><button class="pl-shotimg" data-a="viewfile" data-fid="' + f.id + '" aria-label="Look at ' + esc(f.name) + '"><img data-fimg="' + f.id + '" alt=""></button><figcaption>' + esc(f.name) + '<button class="btn sm ghost" data-a="rmfile" data-fid="' + f.id + '">Remove</button></figcaption></figure>').join('') + '</div>' : '') +
     '<p class="muted">' + (atlas.length ? 'Paste or drop more screenshots here.' : 'Take a screenshot of the unit ' + (plCur() ? 'in ' + esc(plCur()) : 'plan, wherever your school keeps it') + ', then paste it here (Ctrl+V or ⌘V) or drop the picture in.') + '</p></div></section>';
   h += '<section class="pl-card"><div class="lhead"><h2>Weeks</h2></div><div class="pl-weeks">';
@@ -6847,9 +6853,9 @@ function renderUnit() {
   h += '</div></section>';
   h += '<section class="pl-card" data-owner="unit|' + esc(u.id) + '"><div class="lhead"><h2>Summative and unit files</h2><span class="sp"></span><button class="btn sm" data-ma="newdoc">+ New document</button><button class="btn sm" data-a="addfile">Add files…</button></div>' +
     '<div class="pl-drop" id="plFileDrop">' + (other.length ? '<div class="pl-files">' + other.map(f => '<div class="pl-file"><span class="pl-ft">' + (f.kind === 'doc' ? 'DOC' : esc((f.name.split('.').pop() || '').slice(0, 4).toUpperCase())) + '</span><div class="pl-fn"><b>' + esc(f.name) + '</b><span>' + (f.kind === 'doc' ? 'Document' : (f.kind === 'summative' ? 'Summative' : 'Unit file') + ' · ' + kb(f.size)) + '</span></div>' +
-      (f.kind === 'doc' ? '<button class="btn sm ghost" data-ma="claude" data-id="' + f.id + '" title="Put this in the Claude box">+ Claude box</button>' : '<select class="btn sm" data-fkind="' + f.id + '" aria-label="Kind"><option value="summative"' + (f.kind === 'summative' ? ' selected' : '') + '>Summative</option><option value="other"' + (f.kind === 'other' ? ' selected' : '') + '>Unit file</option></select>') +
+      (f.kind === 'doc' ? '<button class="btn sm ghost" data-ma="claude" data-id="' + f.id + '" title="Put this in the ' + plAiTag() + ' box">+ ' + plAiTag() + ' box</button>' : '<select class="btn sm" data-fkind="' + f.id + '" aria-label="Kind"><option value="summative"' + (f.kind === 'summative' ? ' selected' : '') + '>Summative</option><option value="other"' + (f.kind === 'other' ? ' selected' : '') + '>Unit file</option></select>') +
       '<button class="btn sm" data-a="viewfile" data-fid="' + f.id + '">Open</button><button class="btn sm ghost" data-a="dlfile" data-fid="' + f.id + '">Download</button><button class="btn sm ghost" data-a="rmfile" data-fid="' + f.id + '">Remove</button></div>').join('') + '</div>' : '') +
-    '<p class="muted">Drop task sheets, rubrics or exemplars here. Planning files only: never student work. They go to the Planner folder, where Claude can read them.</p></div></section>';
+    '<p class="muted">Drop task sheets, rubrics or exemplars here. Planning files only: never student work. They go to the Planner folder, where ' + plAi() + ' can read them.</p></div></section>';
   h += unitLessonsSection(u);
   h += bankUnitSection(u);
   h += '</div><input type="file" id="plFileIn" multiple hidden><input type="file" id="plShotIn" accept="image/*" multiple hidden>';
@@ -6902,7 +6908,7 @@ function askWeeks(u) {
   const msg = 'Please fill in the weeks of my ' + u.course + ' unit "' + u.title + '" from its ' + (plCur() || 'unit plan') + ' screenshots. ' + where +
     'It starts the week of ' + shortDate(u.start) + ' and has ' + u.weeks.length + ' weeks. Read the screenshots and write each week\'s focus (and standards, if shown) into "weeks" in the unit file, one entry per week, in order. Keep my notes. Then tell me what you filled in and anything you weren\'t sure of.' +
     (where ? '' : '\n\n(My Planner folder isn\'t linked yet, so I\'ll attach the screenshots.)');
-  copyText(msg).then(() => { toast(where ? 'Message copied. Paste it into Claude.' : 'Message copied. Link the Planner folder so Claude can read the screenshots, or attach them.', 6000); });
+  copyText(msg).then(() => { toast(where ? 'Message copied. Paste it into ' + plAi() + '.' : 'Message copied. Link the Planner folder so ' + plAi() + ' can read the screenshots, or attach them.', 6000); });
 }
 function pasteWeeksDlg(u) {
   openDlg('<div class="bh"><h2>Weeks of ' + esc(u.title) + '</h2></div><div class="bb"><p class="muted" style="margin-top:0">One line per week: what that week is about. You can copy the week list straight out of ' + (plCur() ? esc(plCur()) : 'your unit plan') + '. Lines starting with “Week 3:” or similar are fine.</p>' +

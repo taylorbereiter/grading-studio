@@ -626,9 +626,10 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
           <p class="muted setp">A language other than English covers the first screens so far: the sidebar, Today, the welcome, Help and the feedback page students get. The other screens are still in English.</p>
         </section>
         <section class="lib setsec" id="setClaude" data-sec="claude" hidden>
-          <div class="lhead"><h2>Working with Claude</h2><span class="muted">Optional. Nothing reaches Claude unless you give it a file yourself.</span></div>
-          <p class="setp"><b>Share with Claude</b> is under Setup when an assignment is open. It makes a file for you to give to Claude yourself: the papers with names covered, or your marks only. Each student is a random code, and the key to the codes stays in this browser.</p>
-          <p class="setp"><b>The Planner folder</b> holds lessons only. If you let Claude work in a folder on your computer, make it that one: grading work never goes in it, and the Planner refuses a folder that holds grading files.</p>
+          <div class="lhead"><h2>Working with AI</h2><span class="muted">Optional. Nothing reaches an AI assistant unless you give it a file yourself.</span></div>
+          <div id="setAi"></div>
+          <p class="setp"><b>Share with <span class="aiWord">your AI assistant</span></b> is under Setup when an assignment is open. It makes a file for you to give to <span class="aiWord">your AI assistant</span> yourself: the papers with names covered, or your marks only. Each student is a random code, and the key to the codes stays in this browser.</p>
+          <p class="setp"><b>The Planner folder</b> holds lessons only. If you let <span class="aiWord">your AI assistant</span> work in a folder on your computer, make it that one: grading work never goes in it, and the Planner refuses a folder that holds grading files.</p>
           <p class="muted setp">Papers, names, scores and comments stay in this browser and in your own linked folder.</p>
         </section>
         <section class="lib setsec" id="setKeys" data-sec="keys" hidden>
@@ -674,8 +675,8 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
       <!-- What the More menu used to hold now lives on a tab or in Settings. Each button stays here, out of sight, so Find anything and the keys press the same thing they always did. -->
       <div id="toolStash" hidden>
         <button class="mitem" id="sheetBtn" data-fg="This assignment" title="A picture of every grade written on the papers">Grades on the papers</button>
-        <button class="mitem" id="shareBtn" data-fg="This assignment" title="Papers with names covered, by code">Share with Claude</button>
-        <button class="mitem" id="backBtn" data-fg="This assignment" title="Put Claude’s feedback with the right students">Bring back from Claude</button>
+        <button class="mitem" id="shareBtn" data-fg="This assignment" title="Papers with names covered, by code">Share with your AI assistant</button>
+        <button class="mitem" id="backBtn" data-fg="This assignment" title="Put its feedback with the right students">Bring back from your AI assistant</button>
         <button class="mitem" id="bookBtn" data-fg="This assignment" title="Every assignment for this class, by term, with term grades and charts">Gradebook</button>
         <button class="mitem" id="overviewBtn" data-fg="This assignment" title="The spread of scores, the hardest rubric rows, and who isn’t finished">Class overview</button>
         <button class="mitem" id="consBtn" data-fg="This assignment" title="Same-score papers side by side, and whether you got harder or softer as you went">Consistency check</button>

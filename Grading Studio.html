@@ -2565,9 +2565,10 @@ button.seat[data-n]:hover{border-color:var(--accent)}
           <p class="muted setp">A language other than English covers the first screens so far: the sidebar, Today, the welcome, Help and the feedback page students get. The other screens are still in English.</p>
         </section>
         <section class="lib setsec" id="setClaude" data-sec="claude" hidden>
-          <div class="lhead"><h2>Working with Claude</h2><span class="muted">Optional. Nothing reaches Claude unless you give it a file yourself.</span></div>
-          <p class="setp"><b>Share with Claude</b> is under Setup when an assignment is open. It makes a file for you to give to Claude yourself: the papers with names covered, or your marks only. Each student is a random code, and the key to the codes stays in this browser.</p>
-          <p class="setp"><b>The Planner folder</b> holds lessons only. If you let Claude work in a folder on your computer, make it that one: grading work never goes in it, and the Planner refuses a folder that holds grading files.</p>
+          <div class="lhead"><h2>Working with AI</h2><span class="muted">Optional. Nothing reaches an AI assistant unless you give it a file yourself.</span></div>
+          <div id="setAi"></div>
+          <p class="setp"><b>Share with <span class="aiWord">your AI assistant</span></b> is under Setup when an assignment is open. It makes a file for you to give to <span class="aiWord">your AI assistant</span> yourself: the papers with names covered, or your marks only. Each student is a random code, and the key to the codes stays in this browser.</p>
+          <p class="setp"><b>The Planner folder</b> holds lessons only. If you let <span class="aiWord">your AI assistant</span> work in a folder on your computer, make it that one: grading work never goes in it, and the Planner refuses a folder that holds grading files.</p>
           <p class="muted setp">Papers, names, scores and comments stay in this browser and in your own linked folder.</p>
         </section>
         <section class="lib setsec" id="setKeys" data-sec="keys" hidden>
@@ -2613,8 +2614,8 @@ button.seat[data-n]:hover{border-color:var(--accent)}
       <!-- What the More menu used to hold now lives on a tab or in Settings. Each button stays here, out of sight, so Find anything and the keys press the same thing they always did. -->
       <div id="toolStash" hidden>
         <button class="mitem" id="sheetBtn" data-fg="This assignment" title="A picture of every grade written on the papers">Grades on the papers</button>
-        <button class="mitem" id="shareBtn" data-fg="This assignment" title="Papers with names covered, by code">Share with Claude</button>
-        <button class="mitem" id="backBtn" data-fg="This assignment" title="Put Claude’s feedback with the right students">Bring back from Claude</button>
+        <button class="mitem" id="shareBtn" data-fg="This assignment" title="Papers with names covered, by code">Share with your AI assistant</button>
+        <button class="mitem" id="backBtn" data-fg="This assignment" title="Put its feedback with the right students">Bring back from your AI assistant</button>
         <button class="mitem" id="bookBtn" data-fg="This assignment" title="Every assignment for this class, by term, with term grades and charts">Gradebook</button>
         <button class="mitem" id="overviewBtn" data-fg="This assignment" title="The spread of scores, the hardest rubric rows, and who isn’t finished">Class overview</button>
         <button class="mitem" id="consBtn" data-fg="This assignment" title="Same-score papers side by side, and whether you got harder or softer as you went">Consistency check</button>
@@ -3905,7 +3906,7 @@ const LANG_ES = {
     'Your timetable isn’t here yet': 'Tu horario aún no está aquí', 'Add your class times in the Planner, and each day’s classes and lessons show here.': 'Añade las horas de tus clases en el Planificador y aquí verás las clases y lecciones de cada día.',
     'Open the Planner': 'Abrir el Planificador', 'Present': 'Presentar', 'Open': 'Abrir', 'Plan it': 'Planificar', 'No lesson planned yet': 'Aún no hay lección planificada',
     'Present this lesson, from the Planner': 'Presentar esta lección desde el Planificador', 'Open this lesson in the Planner': 'Abrir esta lección en el Planificador', 'Plan this class in the Planner': 'Planificar esta clase en el Planificador',
-    'finished': 'terminada', 'ready for you': 'lista para ti', 'with Claude': 'con Claude', 'draft': 'borrador', 'taught': 'impartida',
+    'finished': 'terminada', 'ready for you': 'lista para ti', 'with Claude': 'con Claude', 'with your AI assistant': 'con tu asistente de IA', 'draft': 'borrador', 'taught': 'impartida',
     'To mark': 'Por corregir', 'Ready to hand back': 'Listos para devolver', 'Earlier work': 'Trabajos anteriores', 'What the class needs next': 'Qué necesita la clase ahora', 'Needs a look': 'Para revisar',
     'Continue': 'Continuar', 'Start': 'Empezar', 'Return papers': 'Devolver trabajos', 'More': 'Más', 'Forget': 'Olvidar', 'Open the papers': 'Abrir los trabajos',
     'Removes the papers, your marks and scores for this assignment from this browser and any linked folder': 'Quita de este navegador y de la carpeta vinculada los trabajos, tus marcas y las notas de esta tarea',
@@ -3981,7 +3982,7 @@ const LANG_ES = {
     'Grading scale and rubrics': 'Escala de calificación y rúbricas', 'Your saved scales and rubrics': 'Tus escalas y rúbricas guardadas',
     'Marking': 'Corrección', 'Mark key, Word papers, tablet and pencil': 'Clave de marcas, trabajos de Word, tableta y lápiz',
     'Timetable and calendar': 'Horario y calendario', 'Class times and days off, in the Planner': 'Horas de clase y días sin clase, en el Planificador',
-    'Working with Claude': 'Trabajar con Claude', 'Optional. What Claude can and can’t see': 'Opcional. Lo que Claude puede ver y lo que no',
+    'Working with AI': 'Trabajar con IA', 'Optional. What an AI assistant can and can’t see': 'Opcional. Lo que un asistente de IA puede ver y lo que no',
     'This week in the Planner': 'Esta semana en el Planificador', 'Today’s classes and the lessons planned for them': 'Las clases de hoy y las lecciones planificadas para ellas',
     'This week': 'Esta semana', 'The calendar, a week at a time': 'El calendario, semana a semana', 'Semester': 'Semestre', 'The calendar, every week and its units': 'El calendario, con todas las semanas y sus unidades',
     'Each unit, its weeks and its files': 'Cada unidad, sus semanas y sus archivos', 'Old decks and their handouts, to use again': 'Presentaciones y materiales para usar de nuevo', 'The activity bank': 'El banco de actividades', 'Saved rubrics and grading scales': 'Rúbricas y escalas de calificación guardadas',
@@ -4000,6 +4001,7 @@ const LANG_ES = {
     'Missing': 'No entregado', 'Excused': 'Justificado', 'Late': 'Con retraso', 'Retake': 'Nuevo intento', 'First try': 'Primer intento', 'counts as': 'cuenta como',
   },
   rules: [
+    [/^with (ChatGPT|Gemini|Copilot)$/, 'con $1'],
     [/^(?:No classes today\.|\w+ class(?:es)? today\.|\w+ sets? of papers (?:to mark|ready to hand back)|[Nn]othing waiting to be marked\.)/, m => esHomeSay(m.input)],
     [/^Grading Studio version (.+)$/, 'Grading Studio, versión $1'],
     [/^Step (\d) of 3$/, 'Paso $1 de 3'],
@@ -4190,8 +4192,8 @@ const LANG_ES = {
     'privacy': { q: '¿Salen de mi ordenador los trabajos de los estudiantes?', words: 'privado protección de datos rgpd nube servidor seguro',
       a: ['No. Los trabajos, los nombres, las notas y los comentarios se quedan en este navegador y en la carpeta que elijas. La aplicación no tiene servidor ni cuentas, y funciona sin internet.',
         'Lo único que sale son los archivos que tú exportas.'] },
-    'ai': { q: '¿Usa la aplicación IA con los trabajos de los estudiantes?', go: 'Abrir Ajustes, Trabajar con Claude', words: 'inteligencia artificial claude chatgpt calificación automática máquina',
-      a: ['No. Nada en la aplicación envía trabajos de estudiantes a una IA, y las notas solo las pones tú.', '**Share with Claude**, en la pestaña Return, es opcional y está desactivado hasta que lo uses. Crea una copia sin nombres: cada estudiante recibe un código aleatorio, los nombres escritos a máquina se tapan y la clave se queda en tu navegador.'] },
+    'ai': { q: '¿Usa la aplicación IA con los trabajos de los estudiantes?', go: 'Abrir Ajustes, Trabajar con IA', words: 'inteligencia artificial claude chatgpt calificación automática máquina',
+      a: ['No. Nada en la aplicación envía trabajos de estudiantes a una IA, y las notas solo las pones tú.', 'Compartir con un asistente de IA, en la pestaña Return, es opcional y está desactivado hasta que lo uses. Crea una copia sin nombres: cada estudiante recibe un código aleatorio, los nombres escritos a máquina se tapan y la clave se queda en tu navegador.'] },
     'remove': { q: '¿Cómo quito los trabajos de los estudiantes de este ordenador?', go: 'Abrir Ajustes, Guardado', words: 'borrar eliminar limpiar fin de curso ordenador compartido',
       a: ['En Ajustes, **Saving and carrying**, **Remove from this computer** borra de este navegador todos los trabajos de los estudiantes cuando escribes REMOVE.', 'Nunca borra lo que hay en tu carpeta vinculada. Lo indica, deja de usar la carpeta y te deja los archivos.'] },
   },
@@ -4256,7 +4258,7 @@ const LANG_ZH = {
     'Your timetable isn’t here yet': '還沒有課表', 'Add your class times in the Planner, and each day’s classes and lessons show here.': '在備課頁面加入上課時間，這裡就會顯示每天的班級和課程。',
     'Open the Planner': '開啟備課', 'Present': '播放', 'Open': '開啟', 'Plan it': '備課', 'No lesson planned yet': '還沒有備課',
     'Present this lesson, from the Planner': '從備課頁面播放這堂課', 'Open this lesson in the Planner': '在備課頁面開啟這堂課', 'Plan this class in the Planner': '在備課頁面為這個班級備課',
-    'finished': '已完成', 'ready for you': '等你查看', 'with Claude': 'Claude 處理中', 'draft': '草稿', 'taught': '已上課',
+    'finished': '已完成', 'ready for you': '等你查看', 'with Claude': 'Claude 處理中', 'with your AI assistant': 'AI 助理處理中', 'draft': '草稿', 'taught': '已上課',
     'To mark': '待批改', 'Ready to hand back': '可以發還', 'Earlier work': '先前的作業', 'What the class needs next': '班級接下來需要什麼', 'Needs a look': '需要留意',
     'Continue': '繼續', 'Start': '開始', 'Return papers': '發還作業', 'More': '更多', 'Forget': '移除', 'Open the papers': '開啟作業',
     'Removes the papers, your marks and scores for this assignment from this browser and any linked folder': '從這個瀏覽器和已連結的資料夾移除這份作業的學生檔案、你的批註和分數',
@@ -4332,7 +4334,7 @@ const LANG_ZH = {
     'Grading scale and rubrics': '評分等第與評分規準', 'Your saved scales and rubrics': '你儲存的評分等第與評分規準',
     'Marking': '批改', 'Mark key, Word papers, tablet and pencil': '批改符號表、Word 作業、平板與觸控筆',
     'Timetable and calendar': '課表與行事曆', 'Class times and days off, in the Planner': '上課時間與放假日，在備課頁面',
-    'Working with Claude': '搭配 Claude 使用', 'Optional. What Claude can and can’t see': '可選用。Claude 看得到和看不到的內容',
+    'Working with AI': '搭配 AI 使用', 'Optional. What an AI assistant can and can’t see': '可選用。AI 助理看得到和看不到的內容',
     'This week in the Planner': '備課頁面的本週', 'Today’s classes and the lessons planned for them': '今天的班級與為它們準備的課程',
     'This week': '本週', 'The calendar, a week at a time': '行事曆，一次看一週', 'Semester': '學期', 'The calendar, every week and its units': '行事曆，每一週與其單元',
     'Each unit, its weeks and its files': '每個單元、所屬週次與檔案', 'Old decks and their handouts, to use again': '以前的簡報與講義，可以再次使用', 'The activity bank': '活動庫', 'Saved rubrics and grading scales': '已儲存的評分規準與評分等第',
@@ -4351,6 +4353,7 @@ const LANG_ZH = {
     'Missing': '缺交', 'Excused': '免交', 'Late': '遲交', 'Retake': '重做', 'First try': '第一次', 'counts as': '採計',
   },
   rules: [
+    [/^with (ChatGPT|Gemini|Copilot)$/, '$1 處理中'],
     [/^(?:No classes today\.|\w+ class(?:es)? today\.|\w+ sets? of papers (?:to mark|ready to hand back)|[Nn]othing waiting to be marked\.)/, m => zhHomeSay(m.input)],
     [/^Grading Studio version (.+)$/, 'Grading Studio 版本 $1'],
     [/^Step (\d) of 3$/, '第 $1 步，共 3 步'],
@@ -4541,8 +4544,8 @@ const LANG_ZH = {
     'privacy': { q: '學生作業會離開我的電腦嗎？', words: '隱私 資料保護 個資 雲端 伺服器 安全 privacy',
       a: ['不會。作業、姓名、分數和評語都留在這個瀏覽器和你選擇的資料夾裡。這個程式沒有伺服器，也沒有帳號，沒有網路也能使用。',
         '唯一會離開的，是你自己匯出的檔案。'] },
-    'ai': { q: '這個程式會用 AI 處理學生作業嗎？', go: '開啟設定、搭配 Claude 使用', words: '人工智慧 ai claude chatgpt 自動評分 機器',
-      a: ['不會。程式裡沒有任何功能會把學生作業傳給 AI，分數也只由你來給。', 'Return 分頁的 **Share with Claude** 是可選用的，在你使用之前都是關閉的。它會建立一份不含姓名的副本：每位學生得到一個隨機代碼，打字的姓名會被遮住，對照表留在你的瀏覽器裡。'] },
+    'ai': { q: '這個程式會用 AI 處理學生作業嗎？', go: '開啟設定、搭配 AI 使用', words: '人工智慧 ai claude chatgpt 自動評分 機器',
+      a: ['不會。程式裡沒有任何功能會把學生作業傳給 AI，分數也只由你來給。', 'Return 分頁裡與 AI 助理分享的功能是可選用的，在你使用之前都是關閉的。它會建立一份不含姓名的副本：每位學生得到一個隨機代碼，打字的姓名會被遮住，對照表留在你的瀏覽器裡。'] },
     'remove': { q: '怎麼從這台電腦移除學生作業？', go: '開啟設定、儲存', words: '刪除 移除 清除 學年結束 共用電腦',
       a: ['在設定的 **Saving and carrying** 裡，**Remove from this computer** 會在你輸入 REMOVE 之後，清除這個瀏覽器裡的所有學生作業。', '它不會刪除你已連結的資料夾裡的內容。它會告訴你、停止使用那個資料夾，並把檔案留給你。'] },
   },
@@ -4815,8 +4818,8 @@ const HELP = [
       'The only things that leave are the files you export yourself.'],
     words: 'private data protection gdpr ferpa cloud server secure safe' },
   { id: 'ai', sec: 'private', q: 'Does the app use AI on student work?',
-    a: ['No. Nothing in the app sends student work to an AI, and scores are only ever given by you.', '**Share with Claude**, on the Return tab, is optional and off until you use it. It makes a copy with no names in it: each student gets a random code, typed names are covered, and the key stays in your browser.'],
-    go: ['Open Settings, Working with Claude', '#/settings/claude'], words: 'artificial intelligence claude chatgpt automatic grading machine' },
+    a: ['No. Nothing in the app sends student work to an AI, and scores are only ever given by you.', 'Sharing with an AI assistant, on the Return tab, is optional and off until you use it. It makes a copy with no names in it: each student gets a random code, typed names are covered, and the key stays in your browser.'],
+    go: ['Open Settings, Working with AI', '#/settings/claude'], words: 'artificial intelligence claude chatgpt automatic grading machine' },
   { id: 'remove', sec: 'private', q: 'How do I remove student work from this computer?',
     a: ['Settings, **Saving and carrying**, **Remove from this computer** clears all student work from this browser once you type REMOVE.', 'It never deletes what is in your linked folder. It says so, stops using the folder and leaves the files for you.'],
     go: ['Open Settings, Saving', '#/settings'], words: 'delete erase clear wipe end of year shared computer' },
@@ -8224,9 +8227,9 @@ const shareDocs = st => layoutOf(st).filter(d => docIn(st, d)).map(d => ({ ...d,
 
 function openShare() {
   saveNow(); commitEditors(); shareState(); saveSoon();
-  openDlg('<div class="bh"><h2>Share with Claude</h2><button class="icon" data-close aria-label="Close">✕</button></div><div class="bb">' +
-    '<div class="shkind" role="group" aria-label="What to give Claude"><button data-kind="papers" aria-pressed="true">Papers and marks<small>A ZIP of every page as a picture, names covered</small></button><button data-kind="marks" aria-pressed="false">Marks only<small>One file: scores, rubric, comments and every mark</small></button></div>' +
-    '<div id="shPapers"><p style="margin-top:0">This makes a ZIP you can give to Claude with <b>no names in it</b><span id="shPromise">' + esc(namePromise()) + '</span>. <span id="shWho"></span> The list of who is who stays only in this browser.</p>' +
+  openDlg('<div class="bh"><h2>Share with ' + aiSay() + '</h2><button class="icon" data-close aria-label="Close">✕</button></div><div class="bb">' +
+    '<div class="shkind" role="group" aria-label="What to give ' + aiSay() + '"><button data-kind="papers" aria-pressed="true">Papers and marks<small>A ZIP of every page as a picture, names covered</small></button><button data-kind="marks" aria-pressed="false">Marks only<small>One file: scores, rubric, comments and every mark</small></button></div>' +
+    '<div id="shPapers"><p style="margin-top:0">This makes a ZIP you can give to ' + aiSay() + ' with <b>no names in it</b><span id="shPromise">' + esc(namePromise()) + '</span>. <span id="shWho"></span> The list of who is who stays only in this browser.</p>' +
     '<details class="cclist" style="margin:0 0 12px"><summary>What goes in it</summary><ul style="list-style:disc;margin:6px 0 0;padding-left:20px;line-height:1.55;max-height:none">' +
     '<li>Every page becomes a picture, so no hidden text or file details go with it.</li>' +
     '<li>Names are covered in black wherever they’re typed on the page' + (batchClass() ? ' (folder names and your roster names)' : ' (from the folder names)') + ', and in any Kami box that has a name.</li>' +
@@ -8235,7 +8238,7 @@ function openShare() {
     '<li><b>Only PDFs and pictures go in.</b> A Word file stays out until it’s PDF pages: Convert to PDF on the Word paper’s bar makes them.</li></ul></details>' +
     '<div id="shSteps"></div>' +
     '<div class="prog" hidden><i></i></div><p class="muted" id="shStatus" style="font-size:13px;margin:0"></p></div><div id="shMarks" hidden></div></div>' +
-    '<div class="bf"><button class="btn" data-check>Check the covers</button><button class="btn primary" data-make>Download ZIP for Claude</button><button class="btn primary" data-marksdl hidden>Download marks file</button></div>', true);
+    '<div class="bf"><button class="btn" data-check>Check the covers</button><button class="btn primary" data-make>Download ZIP for ' + aiSay() + '</button><button class="btn primary" data-marksdl hidden>Download marks file</button></div>', true);
   const box = $('#dlgBox');
   shareSteps();
   if (shareState().kind === 'marks') shareKind('marks');
@@ -8248,7 +8251,7 @@ function openShare() {
     if (e.target.closest('[data-make]')) {
       for (const b of box.querySelectorAll('.bf .btn')) b.disabled = true;
       const bar = box.querySelector('.prog'); bar.hidden = false;
-      try { await makeSharePackage((n, t) => { bar.firstChild.style.width = (100 * n / t) + '%'; $('#shStatus').textContent = 'Covering names and making pictures ' + n + ' of ' + t + '…'; }); $('#shStatus').textContent = 'Done. Give the ZIP to Claude, then use Bring back from Claude with what it sends.'; shareMade(); }
+      try { await makeSharePackage((n, t) => { bar.firstChild.style.width = (100 * n / t) + '%'; $('#shStatus').textContent = 'Covering names and making pictures ' + n + ' of ' + t + '…'; }); $('#shStatus').textContent = 'Done. Give the ZIP to ' + aiSay() + ', then use Bring back from ' + aiSay() + ' with what it sends.'; shareMade(); }
       catch (er) { console.error(er); $('#shStatus').textContent = 'Something went wrong: ' + (er.message || er); }
       for (const b of box.querySelectorAll('.bf .btn')) b.disabled = false;
     }
@@ -8422,7 +8425,7 @@ async function checkCovers(start, onDone) {
 }
 
 const README_FOR_CLAUDE = (n) => [
-  'Grading Studio package for Claude',
+  'Grading Studio package for ' + aiSay(),
   '',
   'Assignment: ' + nameFreeText(batch.name).replace(/[\r\n]+/g, ' '),
   'Papers: ' + n + (n === 1 ? ' student' : ' students') + ', each named by a random code (S-XXXX). Names are covered and swapped for [name].',
@@ -8441,7 +8444,7 @@ const README_FOR_CLAUDE = (n) => [
   '    Feedback for this student...',
   '',
   '  Or a CSV with the columns code,feedback. Paste the reply, or drop the file, into',
-  '  "Bring back from Claude" in Grading Studio and each block goes to the right student.',
+  '  "Bring back from ' + aiSay() + '" in Grading Studio and each block goes to the right student.',
   '  Only these codes are known to Grading Studio; never guess or ask for names.',
 ].join('\r\n');
 
@@ -8490,7 +8493,7 @@ async function makeSharePackage(onStep) {
   files['comments.json'] = enc(JSON.stringify(notes, null, 1));
   files['rubric.json'] = enc(JSON.stringify({ mode: setup.mode, criteria: crit, levels: setup.mode === 'rubric' ? (rowsTop(setup) ? '0 to ' + rowsTop(setup) + ' per row' : 'rows in order: ' + setup.criteria.map((_, i) => '0 to ' + rowTop(setup, i)).join(', ')) + (rowHalf(setup) ? ', half points allowed from 1 up' : ', whole numbers only') : undefined, outOf: maxPoints(), scale: setup.scale || null }, null, 1));
   files['README.txt'] = enc(README_FOR_CLAUDE(seen.size));
-  saveBlob(('For Claude - ' + nameFreeText(batch.name) + '.zip'), new Blob([fflate.zipSync(files)], { type: 'application/zip' }));
+  saveBlob(('For ' + aiSay() + ' - ' + nameFreeText(batch.name) + '.zip'), new Blob([fflate.zipSync(files)], { type: 'application/zip' }));
 }
 
 function parseFeedback(text) {
@@ -8528,8 +8531,8 @@ function openBringBack() {
   const byCode = new Map(batch.students.map(st => [codeOf(st), st]));
   for (const [c, k] of Object.entries(shareState().also || {})) { const st = batch.students.find(s => s.key === k); if (st && !byCode.has(c)) byCode.set(c, st); }   // made on another computer: its ZIP can still come back
   let fb = new Map(), papers = [];
-  openDlg('<div class="bh"><h2>Bring back from Claude</h2><button class="icon" data-close aria-label="Close">✕</button></div><div class="bb">' +
-    '<p style="margin-top:0">Paste Claude’s reply here, or drop the file it gave you (CSV, text or ZIP). Each code is matched to its student in this browser.</p>' +
+  openDlg('<div class="bh"><h2>Bring back from ' + aiSay() + '</h2><button class="icon" data-close aria-label="Close">✕</button></div><div class="bb">' +
+    '<p style="margin-top:0">Paste ' + aiSay() + '’s reply here, or drop the file it gave you (CSV, text or ZIP). Each code is matched to its student in this browser.</p>' +
     '<textarea id="bbText" rows="7" style="width:100%;font:inherit;font-size:14px;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink)" placeholder="S-7QK4&#10;Your thesis is clear…&#10;&#10;S-M3TD&#10;…"></textarea>' +
     '<div style="display:flex;gap:8px;margin:8px 0 12px"><button class="btn sm" data-file>Open a file…</button><button class="btn sm" data-read>Match to students</button><input type="file" id="bbFile" accept=".csv,.txt,.json,.md,.zip" hidden></div>' +
     '<div id="bbOut"></div></div>' +
@@ -8578,7 +8581,7 @@ function openBringBack() {
         const dir = real && real.path.includes('/') ? real.path.slice(0, real.path.lastIndexOf('/') + 1) : st.key + '/';
         files[(dir + 'Feedback' + (p.n > 1 ? ' ' + p.n : '') + '.pdf').replace(/[\\:*?"<>|]+/g, '-')] = [p.data, { level: 0 }];
       }
-      saveBlob('From Claude - ' + batch.name + '.zip', new Blob([fflate.zipSync(files)], { type: 'application/zip' }));
+      saveBlob('From ' + aiSay() + ' - ' + batch.name + '.zip', new Blob([fflate.zipSync(files)], { type: 'application/zip' }));
     }
   };
   $('#bbFile').onchange = e => { const f = e.target.files[0]; if (f) takeFile(f); e.target.value = ''; };
@@ -9223,8 +9226,8 @@ function migrateLib(l) {
 }
 let lib = migrateLib(store.get('gs.lib', null) || { classes: [] });
 /* ---------------- how this teacher works: lib.me ---------------- */
-const ME_OLD = { sys: 'ManageBac', unit: 'Atlas', scale12: true };   // scale12: Rubric setup offers the 12-point scale (12 = 100, 11 = 95…) as a preset
-const ME_NEW = { sys: '', unit: '', grade: { way: 'rubric' } };
+const ME_OLD = { sys: 'ManageBac', unit: 'Atlas', scale12: true, ai: 'Claude' };   // scale12: Rubric setup offers the 12-point scale (12 = 100, 11 = 95…) as a preset
+const ME_NEW = { sys: '', unit: '', ai: '', grade: { way: 'rubric' } };
 if (fresh && !lib.me) lib.me = JSON.parse(JSON.stringify(ME_NEW));
 const me = () => lib.me || ME_OLD;
 const attOn = () => me().att !== false;
@@ -9235,6 +9238,12 @@ const SYS_LIST = ['Google Classroom', 'ManageBac', 'Canvas', 'Microsoft Teams', 
 const sysOr = other => sysName() || other;
 const sysLink = () => sysName() || 'Class page';   // the link each class can carry to its page in the school's system
 const sysDl = () => sysName() ? 'the ' + sysName() + ' download' : 'the papers';
+const AI_LIST = [['Claude', 'https://claude.ai/new'], ['ChatGPT', 'https://chatgpt.com/'], ['Gemini', 'https://gemini.google.com/app'], ['Copilot', 'https://copilot.microsoft.com/']];
+function aiName() { const m = me(), v = m.ai == null ? (m.scale12 ? 'Claude' : '') : m.ai; return String(v || '').trim().slice(0, 30); }
+function aiSay() { return aiName() || 'your AI assistant'; }   // in the middle of a sentence
+function AiSay() { return aiName() || 'Your AI assistant'; }   // at the start of one
+function aiTag() { return aiName() || 'AI'; }                  // in front of another word: "the AI codes"
+function aiLink() { const a = AI_LIST.find(x => x[0].toLowerCase() === aiName().toLowerCase()); return a ? a[1] : ''; }   // where "Open …" goes; none for an assistant the app doesn't know
 const unitWord = () => unitLinkName() || 'unit plan';
 const unitLinkName = () => String(me().unit || '').trim();
 const GRADE_WAYS = [
@@ -9267,7 +9276,7 @@ const bandSay = pct => { const b = bandOf(pct); return b ? ' · ' + b : ''; };
 function saveLib() { libVer++; if (!store.set('gs.lib', lib)) toast('This browser is out of room to keep your units and rosters.'); wordsShare(); rollsShare(); }
 function wordsShare() {
   if (!lib.me) return;
-  try { const v = JSON.stringify({ sys: sysName(), unit: unitLinkName(), ...(me().scale12 ? { scale12: true } : {}) }); if (localStorage.getItem('gs.words') !== v) localStorage.setItem('gs.words', v); } catch {}
+  try { const v = JSON.stringify({ sys: sysName(), unit: unitLinkName(), ai: aiName(), ...(me().scale12 ? { scale12: true } : {}) }); if (localStorage.getItem('gs.words') !== v) localStorage.setItem('gs.words', v); } catch {}
 }
 const holders = () => lib.classes.concat([lib.loose]);
 const holderById = id => id ? lib.classes.find(c => c.id === id) || null : lib.loose;
@@ -9309,8 +9318,13 @@ const routeOf = hash => {
 const routeNow = () => routeOf(location.hash);
 const SET_SECS = [['saving', 'Saving and carrying', 'Folder, take-home file, safety copies'], ['history', 'Go back in time', 'Your work as it was on an earlier day'], ['classes', 'Classes and rosters', 'Names, students, ' + (sysName() ? sysName() + ' links' : 'class links')], ['terms', 'Terms and weights', 'Your terms and how each type counts'],
   ['grading', 'Grading scale and rubrics', 'Your saved scales and rubrics'], ['marking', 'Marking', 'Mark key, Word papers, tablet and pencil'], ['timetable', 'Timetable and calendar', 'Class times and days off, in the Planner'],
+<<<<<<< HEAD
   ['display', 'Display', 'Text size, zoom, dark mode'], ['claude', 'Working with Claude', 'Optional. What Claude can and can’t see'], ['keys', 'Keys', 'Every shortcut'], ['about', 'About and updates', 'Version, what’s new, install as an app']];
 const CLASS_TABS = [['', 'Assignments'], ['gradebook', 'Gradebook'], ['students', 'Students'], ['attendance', 'Attendance'], ['seating', 'Seating'], ['missing', 'Missing work'], ['charts', 'Charts'], ['goals', 'Goals'], ['reports', 'Report comments']];   // Goals shows only once the teacher has a learning goal (goals.js)
+=======
+  ['display', 'Display', 'Text size, zoom, dark mode'], ['claude', 'Working with AI', 'Optional. What an AI assistant can and can’t see'], ['keys', 'Keys', 'Every shortcut'], ['about', 'About and updates', 'Version, what’s new, install as an app']];
+const CLASS_TABS = [['', 'Assignments'], ['gradebook', 'Gradebook'], ['students', 'Students'], ['attendance', 'Attendance'], ['missing', 'Missing work'], ['charts', 'Charts'], ['goals', 'Goals'], ['reports', 'Report comments']];   // Goals shows only once the teacher has a learning goal (goals.js)
+>>>>>>> 5b15f7a (The AI assistant's name is the teacher's own, not Claude typed into the app)
 const classTabs = () => CLASS_TABS.filter(t => t[0] !== 'attendance' || attOn());   // attendance is the teacher's to turn off
 const classHash = (c, tab, stu) => '#/class/' + (c === lib.loose || !c.id ? '-' : encodeURIComponent(c.id)) + (tab ? '/' + tab + (stu != null ? '/' + (stu + 1) : '') : '');
 const A_TABS = [['', 'Mark'], ['grades', 'Grades'], ['insights', 'Insights'], ['return', 'Return']], A_SUBS = { grades: ['sheet'], insights: ['consistency'] };
@@ -11929,7 +11943,7 @@ for (const el of document.querySelectorAll('.gsVer')) el.textContent = versionLa
 if (gsData.info.note) { const el = $('#bootNote'); el.textContent = gsData.info.note; el.hidden = false; toast(gsData.info.note, 15000); }
 
 window.__gs_pickMany = pickMany;
-window.__gs = { DEFAULT_SETUP, rowTop, rowSteps, rowsMax, setupMax, setupOver, rowScaleOf, pastScore, removeFile, bringBack, replaceFile, stickerText, startScorePlace, stopScorePlace, saveTrouble, batchIdOf, wordScore, wordScoresAll, restoreBackup, fileSeq, moveFile, openMoveFile, calcEval, openCalc, pageLit, setPageLit, lightMenuDo, lightChips, pageOwnL, setPageOwnL, lightForPage, ensureCounts, addRefs, refs: () => refFiles, matchToRoster, guessAmong, expandPicked, lightOpts, isRubricPage, openAnon, setAnon, anonOrder, anonOn, openLight, lightFor, lightAuto, openSplit, sp: () => SP, bringIn, sortGuess, openWord, wordBytes, reopenKept, forgetKept, kept: () => keptMeta, addFiles, removeAdded, nextUnscored, openDisplay, trimToInk, intake, parseGrade, scanFile, scanAll, state: () => ({ batch, cur, setup, pages, zoom, lib }), SCALE12, SCALE_FIVES, RUBRIC_STEPS, percentWith, ownGrade, roundPct, fmtNum, fmtPct, saveNow, undo, redo, gsData, gradeOf, percentFor, flattenDoc, exportPlan, layoutOf, docIn, openStudent, setTool };
+window.__gs = { aiName, aiSay, aiTag, aiLink, DEFAULT_SETUP, rowTop, rowSteps, rowsMax, setupMax, setupOver, rowScaleOf, pastScore, removeFile, bringBack, replaceFile, stickerText, startScorePlace, stopScorePlace, saveTrouble, batchIdOf, wordScore, wordScoresAll, restoreBackup, fileSeq, moveFile, openMoveFile, calcEval, openCalc, pageLit, setPageLit, lightMenuDo, lightChips, pageOwnL, setPageOwnL, lightForPage, ensureCounts, addRefs, refs: () => refFiles, matchToRoster, guessAmong, expandPicked, lightOpts, isRubricPage, openAnon, setAnon, anonOrder, anonOn, openLight, lightFor, lightAuto, openSplit, sp: () => SP, bringIn, sortGuess, openWord, wordBytes, reopenKept, forgetKept, kept: () => keptMeta, addFiles, removeAdded, nextUnscored, openDisplay, trimToInk, intake, parseGrade, scanFile, scanAll, state: () => ({ batch, cur, setup, pages, zoom, lib }), SCALE12, SCALE_FIVES, RUBRIC_STEPS, percentWith, ownGrade, roundPct, fmtNum, fmtPct, saveNow, undo, redo, gsData, gradeOf, percentFor, flattenDoc, exportPlan, layoutOf, docIn, openStudent, setTool };
 
 /* ---------------- names: finding a student's name in text, in any alphabet, for the Claude ZIP and anonymous grading ---------------- */
 const NAME_PLAIN = new Set(('al am an art as at august autumn ban bay be best bill bin black brown by can case chase chin dawn day de dean do don dung da ed faith far frank gay go grace gray green grey ha hang he hope ho hung if in is it ivy jade joy june king la lane le little long love major man mark may me min my new no nice on or page pan park pat pearl pen penny price rich rose ruby sandy sang short sing small so son song star stone su sue summer sun sung tan tang ten tin to tu up us van violet von we white will win wing won wood wu ye young april').split(' '));
@@ -15945,7 +15959,7 @@ function driftChart(pts, read, max) {
 }
 function openCons() {
   const { pts, noTime, off, groups } = consData(), max = maxPoints(), read = driftRead(pts.map(p => p.v), max);
-  const left = [noTime.length ? noTime.length + (noTime.length === 1 ? ' has' : ' have') + ' no time (scored before the app kept them, or read off the paper)' : '', off.length ? off.length + ' changed all at once, like bringing Claude’s feedback back, so their order isn’t known' : ''].filter(Boolean);
+  const left = [noTime.length ? noTime.length + (noTime.length === 1 ? ' has' : ' have') + ' no time (scored before the app kept them, or read off the paper)' : '', off.length ? off.length + ' changed all at once, like bringing ' + aiSay() + '’s feedback back, so their order isn’t known' : ''].filter(Boolean);
   const same = [...groups].filter(([, l]) => l.length > 1).sort((a, b) => parseFloat(b[0]) - parseFloat(a[0])), single = groups.size - same.length;
   tabNext('insights/consistency');
   openDlg('<div class="bh"><h2>Insights</h2>' + insTabs('cons') + '<button class="icon" data-close aria-label="Close" style="margin-left:auto">✕</button></div><div class="bb" id="consBox">' +
@@ -16086,7 +16100,7 @@ function shareOut() {
 }
 function shareMadeLine() {
   const sh = shareState();
-  return sh.made ? 'Made ' + esc(whenLabel(sh.made)) + (sh.madeOpen ? ', with ' + sh.madeOpen + (sh.madeOpen === 1 ? ' paper' : ' papers') + ' not checked.' : '.') : (namesInDoubt() ? 'Box the names the cover can’t read first. It' : namesLooking() || nameFlagged().length ? 'Check the papers listed above first. It' : 'It has no names in it, and it') + ' stays on your computer until you give it to Claude.';
+  return sh.made ? 'Made ' + esc(whenLabel(sh.made)) + (sh.madeOpen ? ', with ' + sh.madeOpen + (sh.madeOpen === 1 ? ' paper' : ' papers') + ' not checked.' : '.') : (namesInDoubt() ? 'Box the names the cover can’t read first. It' : namesLooking() || nameFlagged().length ? 'Check the papers listed above first. It' : 'It has no names in it, and it') + ' stays on your computer until you give it to ' + aiSay() + '.';
 }
 function shareSteps() {
   const sh = shareState(), list = coverList().map((x, i) => ({ ...x, i, ok: coverOk(x.st, x.d) })), todo = list.filter(x => !x.ok), done = list.filter(x => x.ok);
@@ -16098,21 +16112,21 @@ function shareSteps() {
   $('#shSteps').innerHTML = shareOut() + nameWarnings() + '<div id="nameFlags" data-before="before you make the ZIP">' + nameFlagsHtml('before you make the ZIP') + '</div><ol class="shsteps">' +
     '<li><b>Check the covers.</b> <span id="shCount"' + (todo.length ? ' class="stag"' : '') + '>' + (todo.length || !list.length ? '' : '<span aria-hidden="true">✓ </span>') + esc(coverLine()) + '</span> The automatic cover can’t see handwriting or a name inside a picture. In the check, drag a box over anything it missed. If students write their name in the same spot, box it once and use it on every paper.' + group('ccTodo', 'Not checked yet', todo, true) + group('ccDone', 'Checked', done, !todo.length) + '</li>' +
     '<li><b>Download the ZIP.</b> <span id="shMade">' + shareMadeLine() + '</span></li>' +
-    '<li><b>Give it to Claude,</b> with this message. Change it however you like.<textarea id="shAsk" rows="4" aria-label="What to say to Claude"></textarea><div class="shrow"><button class="btn sm" data-shcopy>Copy the message</button><button class="btn sm" data-shopen>Open Claude ↗</button></div></li>' +
-    '<li><b>Bring the reply back.</b> <button class="btn sm" data-shback>Bring back from Claude</button></li></ol>';
+    '<li><b>Give it to ' + aiSay() + ',</b> with this message. Change it however you like.<textarea id="shAsk" rows="4" aria-label="What to say to ' + aiSay() + '"></textarea><div class="shrow"><button class="btn sm" data-shcopy>Copy the message</button>' + (aiLink() ? '<button class="btn sm" data-shopen>Open ' + aiSay() + ' ↗</button>' : '') + '</div></li>' +
+    '<li><b>Bring the reply back.</b> <button class="btn sm" data-shback>Bring back from ' + aiSay() + '</button></li></ol>';
   $('#shAsk').value = sh.ask != null ? sh.ask : SHARE_ASK;
   $('#shAsk').oninput = e => { sh.ask = e.target.value; saveSoon(); };
   const box = $('#dlgBox'), chk = box.querySelector('[data-check]'), mk = box.querySelector('[data-make]'), left = todo.length && list.length;
   chk.className = 'btn' + (left ? ' primary' : ''); mk.className = 'btn' + (left ? '' : ' primary');
   chk.textContent = !list.length ? 'Check the covers' : !left ? 'Check the covers again' : todo.length === list.length ? 'Check the covers' : 'Check the other ' + todo.length;
   chk.disabled = mk.disabled = nothing;
-  mk.textContent = left ? 'Download ZIP anyway' : 'Download ZIP for Claude';
+  mk.textContent = left ? 'Download ZIP anyway' : 'Download ZIP for ' + aiSay();
 }
 function shareStepClick(e) {
   const c = e.target.closest('[data-cc]');
   if (c) { checkCovers(+c.dataset.cc); return true; }
-  if (e.target.closest('[data-shcopy]')) { const t = nameFreeText($('#shAsk').value); copy(t, 'Copied. Paste it into Claude along with the ZIP.'); return true; }
-  if (e.target.closest('[data-shopen]')) { window.open('https://claude.ai/new', '_blank', 'noopener'); return true; }
+  if (e.target.closest('[data-shcopy]')) { const t = nameFreeText($('#shAsk').value); copy(t, 'Copied. Paste it into ' + aiSay() + ' along with the ZIP.'); return true; }
+  if (e.target.closest('[data-shopen]')) { if (aiLink()) window.open(aiLink(), '_blank', 'noopener'); return true; }
   if (e.target.closest('[data-shback]')) { closeDlg(); openBringBack(); return true; }
   return false;
 }
@@ -16125,10 +16139,10 @@ function shareMade() {
 function bringBackNotes(fb, byCode) {
   const sent = shareState().sent || [], got = new Set([...fb.keys()].map(c => byCode.get(c))), miss = sent.filter(c => byCode.has(c) && !got.has(byCode.get(c))), who = [...new Set(miss.map(c => byCode.get(c)))], nm = [...fb].filter(([c, v]) => byCode.has(c) && /\[name\]/i.test(v)).length;
   if (!fb.size) return '';
-  return (miss.length ? '<div class="bbmiss" id="bbMiss"><b>No feedback yet for ' + who.length + (who.length === 1 ? ' paper' : ' papers') + ':</b> ' + who.map(st => esc(shownName(st, batch.students.indexOf(st)))).join(', ') + '. <button class="link" data-bbmore="' + esc(miss.join(', ')) + '">Copy a note asking Claude for these</button></div>' : '') +
+  return (miss.length ? '<div class="bbmiss" id="bbMiss"><b>No feedback yet for ' + who.length + (who.length === 1 ? ' paper' : ' papers') + ':</b> ' + who.map(st => esc(shownName(st, batch.students.indexOf(st)))).join(', ') + '. <button class="link" data-bbmore="' + esc(miss.join(', ')) + '">Copy a note asking ' + aiSay() + ' for these</button></div>' : '') +
     (nm ? '<p class="muted hsm" id="bbNm">' + nm + (nm === 1 ? ' reply still says' : ' replies still say') + ' [name]. Change it to the student’s name in the comment box, or leave it out.</p>' : '');
 }
-document.addEventListener('click', e => { const b = e.target.closest('[data-bbmore]'); if (b) copy('Please continue with feedback for these codes, in the same format: ' + b.dataset.bbmore, 'Copied. Paste it into Claude.'); });
+document.addEventListener('click', e => { const b = e.target.closest('[data-bbmore]'); if (b) copy('Please continue with feedback for these codes, in the same format: ' + b.dataset.bbmore, 'Copied. Paste it into ' + aiSay() + '.'); });
 
 Object.assign(window.__gs, { nameFit, nameNear, rosterPairs, pastScore, tryGrade, retakeStart, retakeOff, tryOfFile, retakeRule, histFind, histFill, driftRead, driftSay, dropBatched, consData, openCons, openSame, coverList, coverOk, coverLine, coverFirst, checkCovers, SHARE_ASK, nameFreeText, paperReads });
 
@@ -18391,7 +18405,7 @@ function sideHtml(r, t, anon, crit) {
   if (out.length === 1) out.push('<div class="muted">No score, comment or marks</div>');
   return out.join('');
 }
-const PART_SAY = { setup: 'Rubric setup', cls: 'Class', share: 'Cover boxes and Claude codes', drive: 'Google Drive link', light: 'Lighting', lightOpt: 'Lighting', lightPg: 'Lighting', lightPgL: 'Lighting', anon: 'Anonymous grading', moved: 'Moved files', removed: 'Removed and replaced files', refSkip: 'Which readings each student sees', quiz: 'Quick mark boxes', groups: 'Group work', returned: 'Returned to students', carry: 'Flags on new and changed files', scan: 'Your answers about scanned pages' };
+const PART_SAY = { setup: 'Rubric setup', cls: 'Class', share: 'Cover boxes and share codes', drive: 'Google Drive link', light: 'Lighting', lightOpt: 'Lighting', lightPg: 'Lighting', lightPgL: 'Lighting', anon: 'Anonymous grading', moved: 'Moved files', removed: 'Removed and replaced files', refSkip: 'Which readings each student sees', quiz: 'Quick mark boxes', groups: 'Group work', returned: 'Returned to students', carry: 'Flags on new and changed files', scan: 'Your answers about scanned pages' };
 const partNames = list => [...new Set(list.map(k => PART_SAY[k] || k))].join(', ');
 const scaleSay = su => !rubricsDiffer(su, { ...su, scale: null }) ? 'No scale: percent is the plain share of points' : !rubricsDiffer(su, { ...su, scale: SCALE12 }) ? 'The usual grading scale' : 'A grading scale of its own';
 function partSide(part, v, other, t, anon) {
@@ -19855,7 +19869,7 @@ async function marksFileText(onStep) {
     byStudent.push({ st, ...r });
     onStep && onStep(++n, who.length);
   }
-  out.push('# Marks for Claude: ' + one(nameFreeText(batch.name)), '');
+  out.push('# Marks for ' + aiSay() + ': ' + one(nameFreeText(batch.name)), '');
   out.push(plural(who.length, 'student') + ', each named by a random code (S-XXXX). Names in the teacher’s text became [name].');
   out.push(rubric ? 'Rubric: ' + plural(crit.length, 'row') + ', scored ' + (rowsTop(setup) ? '0 to ' + rowsTop(setup) : setup.criteria.map((_, i) => '0 to ' + rowTop(setup, i)).join(', ')) + (rowHalf(setup) ? ' (half points allowed from 1 up)' : ' (whole numbers only)') + ', out of ' + maxPoints() + '.' : 'Scored in points, out of ' + maxPoints() + '.');
   if (o.scores && rubric) {
@@ -19899,7 +19913,7 @@ async function makeMarksFile(onStep) {
   await workerReady;
   if (!scanned || scanP) await scanAll();   // a grade typed on the paper counts as a score
   const r = await marksFileText(onStep);
-  saveBlob('Marks for Claude - ' + one(nameFreeText(batch.name)).replace(/[\\/:*?"<>|]/g, '-') + '.md', new Blob([r.text], { type: 'text/markdown' }));
+  saveBlob('Marks for ' + aiSay() + ' - ' + one(nameFreeText(batch.name)).replace(/[\\/:*?"<>|]/g, '-') + '.md', new Blob([r.text], { type: 'text/markdown' }));
   const sh = shareState();
   sh.marksMade = Date.now(); sh.sent = [...new Set((sh.sent || []).concat(r.codes))];
   saveSoon();
@@ -19912,9 +19926,9 @@ function marksPane() {
   return '<p style="margin-top:0">One file for spotting patterns across the class, with <b>no names in it</b>. ' + (ex ? plural(who.length, 'student gets', 'students get') + ' a random code, like <b>' + esc(codeOf(ex)) + '</b>, the same one as in the ZIP. ' : '') + 'Names in your comments become [name]. The list of who is who stays only in this browser. No papers go, so there are no covers to check.</p>' +
     MARKS_OPTS.map(([k, t, s]) => '<label class="mkopt"><input type="checkbox" data-mkopt="' + k + '"' + (o[k] ? ' checked' : '') + '><span>' + t + '<small>' + s + '</small></span></label>').join('') +
     (empty ? '<div class="bbmiss" id="mkOut" style="margin:10px 0 12px">Left out: ' + plural(empty, 'student') + ' with no marks, score or comment yet. The file says how many.</div>' : '') +
-    '<ol class="shsteps" style="margin-top:12px"><li><b>Download the marks file.</b> <span id="mkMade">' + (sh.marksMade ? 'Made ' + esc(whenLabel(sh.marksMade)) + '.' : 'It stays on your computer until you give it to Claude.') + '</span></li>' +
-    '<li><b>Give it to Claude,</b> with this message. Change it however you like.<textarea id="mkAsk" rows="4" aria-label="What to say to Claude"></textarea><div class="shrow"><button class="btn sm" data-mkcopy>Copy the message</button><button class="btn sm" data-shopen>Open Claude ↗</button></div></li>' +
-    '<li><b>Bring the reply back,</b> if Claude wrote feedback for students. <button class="btn sm" data-shback>Bring back from Claude</button></li></ol>' +
+    '<ol class="shsteps" style="margin-top:12px"><li><b>Download the marks file.</b> <span id="mkMade">' + (sh.marksMade ? 'Made ' + esc(whenLabel(sh.marksMade)) + '.' : 'It stays on your computer until you give it to ' + aiSay() + '.') + '</span></li>' +
+    '<li><b>Give it to ' + aiSay() + ',</b> with this message. Change it however you like.<textarea id="mkAsk" rows="4" aria-label="What to say to ' + aiSay() + '"></textarea><div class="shrow"><button class="btn sm" data-mkcopy>Copy the message</button>' + (aiLink() ? '<button class="btn sm" data-shopen>Open ' + aiSay() + ' ↗</button>' : '') + '</div></li>' +
+    '<li><b>Bring the reply back,</b> if ' + aiSay() + ' wrote feedback for students. <button class="btn sm" data-shback>Bring back from ' + aiSay() + '</button></li></ol>' +
     '<div class="prog" id="mkProg" hidden><i></i></div><p class="muted" id="mkStatus" style="font-size:13px;margin:0"></p>';
 }
 function marksPaneWire() {
@@ -19936,7 +19950,7 @@ function shareKind(k) {
 function marksClick(e) {
   const k = e.target.closest('[data-kind]');
   if (k) { shareKind(k.dataset.kind); return true; }
-  if (e.target.closest('[data-mkcopy]')) { copy(nameFreeText($('#mkAsk').value), 'Copied. Paste it into Claude along with the marks file.'); return true; }
+  if (e.target.closest('[data-mkcopy]')) { copy(nameFreeText($('#mkAsk').value), 'Copied. Paste it into ' + aiSay() + ' along with the marks file.'); return true; }
   if (e.target.closest('[data-marksdl]')) { marksDownload(e.target.closest('[data-marksdl]')); return true; }
   return false;
 }
@@ -19944,7 +19958,7 @@ async function marksDownload(btn) {
   const bar = $('#mkProg'); btn.disabled = true; bar.hidden = false;
   try {
     const r = await makeMarksFile((n, t) => { bar.firstChild.style.width = (100 * n / t) + '%'; $('#mkStatus').textContent = 'Reading the marks ' + n + ' of ' + t + '…'; });
-    $('#mkStatus').textContent = 'Done: ' + plural(r.codes.length, 'student') + '. Give the file to Claude with the message.';
+    $('#mkStatus').textContent = 'Done: ' + plural(r.codes.length, 'student') + '. Give the file to ' + aiSay() + ' with the message.';
     $('#mkMade').textContent = 'Made ' + whenLabel(shareState().marksMade) + '.';
   } catch (er) { console.error(er); $('#mkStatus').textContent = 'Something went wrong: ' + (er.message || er); }
   bar.hidden = true; btn.disabled = false;
@@ -22274,10 +22288,10 @@ function returnSideHtml() {
     '<section class="rtcard" id="rtOne"><h3>One student at a time</h3><p class="muted">Give one student their marked paper now, without waiting for the rest.</p>' +
       (sent.length ? '<ul class="rtsent">' + sent.slice(0, 6).map(x => '<li><button class="link" data-chk="' + x.i + '">' + esc(shownName(x.s, x.i)) + '</button> <span class="muted">exported ' + esc(sentWhen(x.s.grade.sent)) + '</span></li>').join('') + (sent.length > 6 ? '<li class="muted">and ' + (sent.length - 6) + ' more</li>' : '') + '</ul>' : '') +
       (who ? '<button class="btn" data-rtone>Export ' + who + '</button>' : '<p class="muted">Open a student’s paper on the Mark tab first.</p>') + '</section>' +
-    '<section class="rtcard" id="rtClaude"><h3>Ask Claude <span class="muted">(optional)</span></h3>' +
+    '<section class="rtcard" id="rtClaude"><h3>Ask ' + aiSay() + ' <span class="muted">(optional)</span></h3>' +
       row('Papers with names covered', 'A ZIP of every page as a picture', 'papers', 'Check the covers') +
       row('Marks only', 'One file: scores, rubric and your marks', 'marks', 'Make the file') +
-      row('Bring back Claude’s feedback', 'Paste a reply, and it goes to each student', 'back', 'Paste a reply') + '</section>' +
+      row('Bring back ' + aiSay() + '’s feedback', 'Paste a reply, and it goes to each student', 'back', 'Paste a reply') + '</section>' +
     (re.length ? '<section class="rtcard" id="rtRescan"><h3>Rescans</h3>' + row(re.length + (re.length === 1 ? ' page is' : ' pages are') + ' flagged for a rescan', 'From ' + nRe + (nRe === 1 ? ' student' : ' students'), 'rescan', 'Show') + '</section>' : '') +
     '</aside>';
 }
@@ -22619,7 +22633,7 @@ const numWord = n => ['No', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven
 function todayHtml(prim) {
   if (!plan) return '<h2 class="tcap">Teaching today</h2><div class="tcard"><div class="trow none"><span class="nt"><b>Your timetable isn’t here yet</b><span class="ns">Add your class times in the Planner, and each day’s classes and lessons show here.</span></span><a class="btn sm" href="' + esc(planUrl('#timetable')) + '">Open the Planner</a></div></div>';
   const t = todayRows(plan), cur = nowRow(t.rows), day = isoDay(Date.now());
-  const say = l => l.done ? 'finished' : l.status === 'review' ? 'ready for you' : l.status === 'claude' ? 'with Claude' : 'draft';
+  const say = l => l.done ? 'finished' : l.status === 'review' ? 'ready for you' : l.status === 'claude' ? 'with ' + aiSay() : 'draft';
   const row = r => {
     const { c, m, lessons } = r, l = lessons[0], more = lessons.length > 1 ? ' · and ' + (lessons.length - 1) + ' more' : '';
     const got = l && l.taught.find(t => t.classId === c.id && t.date === day), end = got && got.slide >= got.of, show = !!l && r === cur && !end;
@@ -23042,6 +23056,8 @@ function sysWords() {
   put('#dropSay', 'A ZIP from ' + (s || 'your school’s system') + ', a folder, a scan of the whole class, or photos.');
   put('.sysWord', s || 'your gradebook');
   put('.sysZip', s ? 'a ' + s + ' ZIP' : 'a ZIP');
+  put('.aiWord', aiSay());
+  put('#shareBtn', 'Share with ' + aiSay()); put('#backBtn', 'Bring back from ' + aiSay());   // the whole label, since Find anything lists these buttons by their words
 }
 
 /* the welcome */
@@ -23238,6 +23254,12 @@ function meSetRender(sec) {
       '<p class="setp merow"><select id="meSys" aria-label="Where students hand in work"><option value="">On paper, or not said</option>' + SYS_LIST.map(x => '<option' + (x === s ? ' selected' : '') + '>' + esc(x) + '</option>').join('') +
       '<option value="other"' + (s && !known ? ' selected' : '') + '>Somewhere else…</option></select>' + (s && !known ? '<input type="text" id="meSysOther" maxlength="40" value="' + esc(s) + '" aria-label="Its name">' : '') + '</p>');
   }
+  if (sec === 'claude') {
+    const a = aiName(), known = AI_LIST.some(x => x[0] === a);
+    put('#setAi', '<p class="setp merow"><label for="meAi"><b>Your AI assistant</b></label> <select id="meAi"><option value="">None, or not said</option>' + AI_LIST.map(x => '<option' + (x[0] === a ? ' selected' : '') + '>' + x[0] + '</option>').join('') +
+      '<option value="other"' + (a && !known ? ' selected' : '') + '>Another one…</option></select>' + (a && !known ? '<input type="text" id="meAiOther" maxlength="30" value="' + esc(a) + '" aria-label="Its name">' : '') +
+      ' <span class="muted">Only for the words on screen and the names of the files you make for it. Nothing is connected to it.</span></p>');
+  }
   if (sec === 'grading') {
     const g = meGrade(), way = g ? g.way : '';
     put('#setWay', '<div class="lhead"><h2>How you usually grade</h2><span class="muted">What a new assignment starts with. Any assignment can be scored another way, in its Rubric setup.</span></div>' +
@@ -23252,6 +23274,8 @@ function meSetRender(sec) {
 $('#setPane').addEventListener('change', e => {
   const t = e.target;
   if (t.id === 'meSys') { if (t.value === 'other') { meSet({ sys: 'My school’s system' }); sysWords(); setRender(); const o = $('#meSysOther'); if (o) { o.focus(); o.select(); } return; } meSet({ sys: t.value }); sysWords(); return setRender(); }
+  if (t.id === 'meAi') { if (t.value === 'other') { meSet({ ai: 'My assistant' }); sysWords(); setRender(); const o = $('#meAiOther'); if (o) { o.focus(); o.select(); } return; } meSet({ ai: t.value }); sysWords(); return setRender(); }
+  if (t.id === 'meAiOther') { meSet({ ai: t.value.trim().slice(0, 30) }); sysWords(); return setRender(); }
   if (t.id === 'meSysOther') { meSet({ sys: t.value.trim().slice(0, 40) }); sysWords(); return setRender(); }
   if (t.id === 'meRowTop' || t.id === 'meRowHalf') {   // the teacher's usual row scale: only new assignments start with it
     const g = meGrade(); if (!g) return;
