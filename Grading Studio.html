@@ -2082,6 +2082,44 @@ html.welcoming .shell{visibility:hidden}
 .hlpnone{padding:var(--space-5) var(--space-1)}
 .hlpfoot{color:var(--muted);margin:0 var(--space-1)}
 @media (prefers-reduced-motion:reduce){.hlph svg{transition:none}}
+/* ---------- Report comments: a class page's tab (reports.js) ---------- */
+.rptopts{display:flex;align-items:center;gap:var(--space-3) var(--space-4);flex-wrap:wrap;margin:0 0 var(--space-2)}
+.rptopts label,.rptopts .rptlab,.rpthead label{display:flex;align-items:center;gap:var(--space-2);font-size:var(--text-control);color:var(--fg-2)}
+.rptopts .sp,.rpthead .sp,.rptfoot .sp{flex:1}
+.rpt input[type=text],.rpt input[type=number]{height:30px;padding:0 var(--space-2);border:1px solid var(--line-strong);border-radius:var(--corner-2);background:var(--surface);color:var(--fg);font:inherit;font-size:var(--text-control)}
+#rptPro{width:auto}#rptSubj{width:150px}#rptLimit{width:76px}#rptCall{width:120px}
+.rptnote{margin:0 0 var(--space-4);font-size:var(--text-control);max-width:80ch}
+.rptgrid{display:grid;grid-template-columns:minmax(200px,280px) minmax(0,1fr);gap:var(--space-4);align-items:start}
+.rptlist{background:var(--surface);border:1px solid var(--line);border-radius:var(--corner-5);padding:var(--space-2);max-height:calc(100vh - 250px);overflow:auto;position:sticky;top:60px}
+.rptdone{font-size:var(--text-caption);font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:var(--space-1) var(--space-2) var(--space-2)}
+.rptrow{display:flex;align-items:center;gap:var(--space-2);width:100%;min-height:36px;padding:0 var(--space-2);border:0;border-radius:var(--corner-3);background:none;color:var(--fg-2);font:inherit;font-size:var(--text-body);text-align:left;cursor:pointer}
+.rptrow:hover{background:var(--hover)}
+.rptrow.on{background:var(--accent-soft);color:var(--accent);font-weight:600}
+.rptrow:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.rptnum{flex:none;width:22px;color:var(--muted);font-size:var(--text-small);font-variant-numeric:tabular-nums;text-align:right}
+.rptnm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rptone{background:var(--surface);border:1px solid var(--line);border-radius:var(--corner-5);padding:var(--space-4) var(--space-4) var(--space-4)}
+.rpthead{display:flex;align-items:center;gap:var(--space-3);flex-wrap:wrap;margin:0 0 var(--space-3)}
+.rpthead h3{margin:0;font-size:var(--text-title);font-weight:700;letter-spacing:-.01em}
+.rptfacts{display:flex;gap:var(--space-2);flex-wrap:wrap;margin:0 0 var(--space-3)}
+#rptText{display:block;width:100%;min-height:150px;padding:var(--space-3);border:1px solid var(--line-strong);border-radius:var(--corner-3);background:var(--surface);color:var(--fg);font:inherit;font-size:var(--text-lead);line-height:1.55;resize:vertical}
+#rptText:focus-visible{outline:2px solid var(--accent);outline-offset:1px;border-color:var(--accent)}
+.rptfoot{display:flex;align-items:center;gap:var(--space-2);flex-wrap:wrap;margin:var(--space-3) 0 0}
+.rptfoot .muted{font-size:var(--text-control);font-variant-numeric:tabular-nums}
+.rptover{color:var(--bad);font-weight:600}
+.rptsaid{margin:var(--space-5) 0 0;padding:var(--space-4) 0 0;border-top:1px solid var(--line)}
+.rptq{display:flex;align-items:flex-start;gap:var(--space-3);padding:var(--space-2) 0}
+.rptq+.rptq{border-top:1px solid var(--line)}
+.rptq div{flex:1;min-width:0}
+.rptq b{font-size:var(--text-control);font-weight:600}
+.rptq p{margin:2px 0 0;color:var(--fg-2);white-space:pre-wrap;overflow-wrap:anywhere}
+.rptwords .rptslot{display:block;margin:0 0 var(--space-3)}
+.rptwords .rptslot span{display:block;font-size:var(--text-control);font-weight:600;margin:0 0 var(--space-1)}
+.rptwords textarea{display:block;width:100%;padding:var(--space-2);border:1px solid var(--line-strong);border-radius:var(--corner-2);background:var(--surface);color:var(--fg);font:inherit;font-size:var(--text-control);line-height:1.5;resize:vertical}
+.rptwords .rptkeys{font-size:var(--text-control)}
+.rptcuts{display:flex;align-items:center;gap:var(--space-3);flex-wrap:wrap;margin:0 0 var(--space-4);font-size:var(--text-control)}
+.rptcuts input{width:64px;height:28px;margin:0 2px 0 var(--space-1);padding:0 var(--space-1);border:1px solid var(--line-strong);border-radius:var(--corner-2);background:var(--surface);color:var(--fg);font:inherit}
+@media (max-width:900px){.rptgrid{grid-template-columns:minmax(0,1fr)}.rptlist{position:static;max-height:220px}}
 
 </style>
 
@@ -3258,7 +3296,7 @@ SOFTWARE.
 <script>/* ---------------- saved-data versions: a safety copy, then any format changes, before the app starts ---------------- */
 const gsData = (() => {
   'use strict';
-  const APP_VERSION = "1.16.0";   // from package.json, the one place it's set
+  const APP_VERSION = "1.17.0";   // from package.json, the one place it's set
   const MIGRATIONS = [
   ];
   const DATA_V = Math.max(1, ...MIGRATIONS.map(s => s.to));
@@ -3591,6 +3629,11 @@ const HELP = [
   { id: 'one-student', sec: 'class', q: 'How do I see everything about one student?',
     a: ['Open the class, choose **Students** and click a name. The student’s page has every score, the term grade, and how they are moving.', 'The class’s **Charts** tab shows the same numbers for everyone at once.'],
     words: 'profile individual parent meeting conference progress chart' },
+  { id: 'report-comments', sec: 'class', q: 'Can it help me write report comments?',
+    a: ['Yes. Open a class and choose **Report comments**. Each student has a draft built from the term grade, the strongest and weakest rubric rows, missing work and how the scores have moved.',
+      'Change any of it, bring in what you wrote on their papers with **Add**, and press **Done, next student**. **Copy all** puts every comment on the clipboard for your report system.',
+      'No AI writes the drafts and nothing is sent anywhere. **Wording…** lets you rewrite the sentences they are built from.'],
+    words: 'report card term comment end of term narrative parents' },
 
   { id: 'where-saved', sec: 'safe', q: 'Where is my work saved?',
     a: ['In this browser, on this computer, as you work. There is no save button and no account.', 'A browser can be cleared, so choose a folder as a second copy: Settings, **Saving and carrying**. Until then the sidebar says **Not backed up** in amber.',
@@ -7883,7 +7926,7 @@ const routeNow = () => routeOf(location.hash);
 const SET_SECS = [['saving', 'Saving and carrying', 'Folder, take-home file, safety copies'], ['history', 'Go back in time', 'Your work as it was on an earlier day'], ['classes', 'Classes and rosters', 'Names, students, ' + (sysName() ? sysName() + ' links' : 'class links')], ['terms', 'Terms and weights', 'Your terms and how each type counts'],
   ['grading', 'Grading scale and rubrics', 'Your saved scales and rubrics'], ['marking', 'Marking', 'Mark key, Word papers'], ['timetable', 'Timetable and calendar', 'Class times and days off, in the Planner'],
   ['display', 'Display', 'Text size, zoom, dark mode'], ['claude', 'Working with Claude', 'Optional. What Claude can and can’t see'], ['keys', 'Keys', 'Every shortcut'], ['about', 'About and updates', 'Version, what’s new, install as an app']];
-const CLASS_TABS = [['', 'Assignments'], ['gradebook', 'Gradebook'], ['students', 'Students'], ['charts', 'Charts']];
+const CLASS_TABS = [['', 'Assignments'], ['gradebook', 'Gradebook'], ['students', 'Students'], ['charts', 'Charts'], ['reports', 'Report comments']];
 const classHash = (c, tab, stu) => '#/class/' + (c === lib.loose || !c.id ? '-' : encodeURIComponent(c.id)) + (tab ? '/' + tab + (stu != null ? '/' + (stu + 1) : '') : '');
 const A_TABS = [['', 'Mark'], ['grades', 'Grades'], ['insights', 'Insights'], ['return', 'Return']], A_SUBS = { grades: ['sheet'], insights: ['consistency'] };
 const batchHash = (id, tab) => '#/a/' + encodeURIComponent(String(id).replace(/^gs\.b\./, '')) + (tab ? '/' + tab : '');
@@ -13199,11 +13242,13 @@ function bkDraw() {
     '<div class="ovtabs bkterms" role="group" aria-label="Term">' + tabs.map(([id, l]) => '<button data-bkterm="' + esc(id) + '" aria-selected="' + (bk.term === id) + '">' + esc(l) + '</button>').join('') + '</div><span class="sp"></span>' +
     (bk.tab === 'table' && bk.term !== '*' ? '<div class="pseg" role="group" aria-label="Columns">' + [['', 'Every assignment'], ['1', 'Averages only']].map(([v, l]) => '<button data-bkonly="' + v + '" aria-pressed="' + (bkOnly() === !!v) + '">' + l + '</button>').join('') + '</div>' +
       (bkOnly() ? '' : '<div class="pseg" role="group" aria-label="Show">' + [['pct', 'Percent'], ['pts', 'Points']].map(([v, l]) => '<button data-bkshow="' + v + '" aria-pressed="' + (bk.show === v) + '">' + l + '</button>').join('') + '</div>') : '') +
+    (bk.tab === 'rep' && c.names.length ? rptBar() : '') +
     (tools ? '<button class="btn sm" data-bksetup>Term setup</button>' + (bk.tab === 'table' ? '<button class="btn sm" data-bkpickon aria-pressed="' + !!bk.pick + '" title="Leave students out of the class averages to see how it changes">' + (bk.pick ? 'Done' : 'Leave out…') + '</button><button class="btn sm" data-bkcopy>Copy table</button>' : '') + '<button class="btn sm" data-bkaddxc>+ Extra credit</button><button class="btn sm primary" data-bkadd>+ Add scores</button>' : '') + '</div>';
   let main;
   if (!c.names.length) main = '<p class="muted bkpad">The gradebook lists the students on a class’s roster. Add a roster to ' + esc(c.name) + ' on its class page first.</p>';
   else if (bk.tab === 'class') main = bkClassView(c, cols, all, conf);
   else if (bk.tab === 'one') main = bkOneView(c, cols, conf);
+  else if (bk.tab === 'rep') main = rptView(c, cols, conf);
   else main = bk.term === '*' ? bkYear(c, all, conf) : bkTable(c, cols, conf);
   const untyped = all.filter(x => !x.type);
   body.innerHTML = bar + (untyped.length ? '<div class="bknote">' + (untyped.length === 1 ? '“' + esc(untyped[0].name) + '” has' : untyped.length + ' assignments have') + ' no type yet, so ' + (untyped.length === 1 ? 'it doesn’t' : 'they don’t') + ' count toward a term grade. <button class="btn sm" data-bktypes>Set types</button></div>' : '') + main;
@@ -14602,7 +14647,7 @@ function infoHits(c, key) {
     const d = idDigits(i.id); return d.length >= 4 && nums.includes(d);
   });
 }
-const blankInfo = i => !i || (!i.id && !i.email && !(i.other || []).length && !(i.note || '').trim());
+const blankInfo = i => !i || (!i.id && !i.email && !(i.other || []).length && !(i.note || '').trim() && !i.call && !i.pro && !i.rep);   // call, pro, rep: report comments (reports.js)
 function setInfo(c, n, patch) {
   c.info ||= {};
   const i = { ...c.info[n], ...patch };
@@ -19245,7 +19290,7 @@ Object.assign(window.__gs, { wordPagesPdf, wordToPdf, wordPdfRun, wordPdfAuto, w
 
 /* ---------------- a class page's tabs: Gradebook, Students and Charts, and one student's own page (11/10) ---------------- */
 let panelKey = '', panelTok = 0;
-function classPanelGone() { panelKey = ''; panelTok++; if (bk.host === 'page') { bk.cols = null; bkPopClose(); } }
+function classPanelGone() { rptKeep(true); panelKey = ''; panelTok++; if (bk.host === 'page') { bk.cols = null; bkPopClose(); } }
 function classPanelBusy() { const a = document.activeElement; return !!$('#bkAdd, #bkSetup, .bkcin, #bkPop, .bktypes') || (!!a && /INPUT|TEXTAREA|SELECT/.test(a.tagName) && !!a.closest('#classPanel')); }
 function classPanelDraw(fresh) {
   const r = routeNow(), el = $('#classPanel');
@@ -19255,7 +19300,7 @@ function classPanelDraw(fresh) {
   panelKey = key;
   const tok = ++panelTok, list = r.tab === 'students' && r.stu == null, kept = bk.host === 'page' && !!bk.cols && bk.ver === libVer && bk.lib === lib;
   bkPopClose(); ovTipHide();
-  bk = { ...bk, host: 'page', lib, tab: r.tab === 'gradebook' ? 'table' : r.tab === 'charts' ? 'class' : 'one', cls: c.id, stu: r.stu || 0, hi: '', cols: kept ? bk.cols : null };
+  bk = { ...bk, host: 'page', lib, tab: r.tab === 'gradebook' ? 'table' : r.tab === 'charts' ? 'class' : r.tab === 'reports' ? 'rep' : 'one', cls: c.id, stu: r.stu || 0, hi: '', cols: kept ? bk.cols : null };
   if (list) peoplePanel(el, c);
   else el.innerHTML = '<div class="bkbody bkpage" id="bkBody"><p class="muted bkpad">Looking through your saved work…</p></div>';
   const show = () => list ? peopleGrades(c) : bkDraw();
@@ -19478,6 +19523,243 @@ function bkStuRows(c, cols, n) {
 let chResize = 0;
 window.addEventListener('resize', () => { clearTimeout(chResize); chResize = setTimeout(() => { if (bkPage() && $('#bkBody') && bk.tab !== 'table' && bk.cols && !$('#bkAdd') && !$('#bkSetup') && !$('.bktypes')) bkDraw(); }, 200); });
 Object.assign(window.__gs, { classPanelDraw, chBand, chRowAvgs });
+
+/* ---------------- Report comments: a draft for each student, from her own scores and comments (Stage 6) ----------------
+   A class page's Report comments tab (#/class/<id>/reports). The draft is put together here, in the browser, from the
+   gradebook's own numbers and from sentences she can rewrite: no AI writes it and nothing is sent anywhere.
+   What is saved: each student's comment for a term, in the class's student details (c.info[name].rep[term] = { text, done,
+   v, t }), with what the student is called and the pronoun to use (c.info[name].call, .pro). How she likes them written
+   (length, the grade in or out, a character limit, the subject's name for each class, her own sentences) is in lib.book.rep.
+   Both travel with the rest of her work: the folder, the take-home file, safety copies. */
+const RPT_LEN = [['short', 'Short'], ['medium', 'Medium'], ['long', 'Long']];
+const RPT_WORDS = {
+  openHigh: ['{name} has had an excellent term{in}.', '{name} has worked to a very high standard{in} this term.', 'This has been a very strong term{in} for {name}.'],
+  openGood: ['{name} has had a good term{in}.', '{name} has made solid progress{in} this term.', 'This has been a positive term{in} for {name}.'],
+  openMid: ['{name} has had a mixed term{in}.', '{name} has shown what {they} can do at times{in} this term.', 'This has been an uneven term{in} for {name}.'],
+  openLow: ['{name} has found this term{in} difficult.', 'This has been a challenging term{in} for {name}.'],
+  openNone: ['{name} has not yet finished enough work{in} this term for a grade.'],
+  grade: ['{Their} term grade is {grade}.'],
+  strong: ['{Their} strongest area is {row}.', '{They} {is} at {their} best in {row}.', '{row} has been a real strength.'],
+  best: ['{Their} best piece of work was {work}.', '{work} showed what {they} can do.'],
+  up: ['{Their} recent work shows clear improvement.', '{They} {has} improved steadily over the term.'],
+  down: ['{Their} most recent scores have been lower than earlier in the term.', 'Recent work has not matched what {they} did earlier in the term.'],
+  next: ['The next step is to work on {row}.', '{They} should now focus on {row}.', 'More attention to {row} will lift {their} work.'],
+  level: ['To move up in {row}, the aim is: {words}.'],
+  missing1: ['{They} still {has} one piece of work to hand in: {list}.'],
+  missing: ['{They} still {has} {n} pieces of work to hand in: {list}.'],
+  closeHigh: ['Well done, {name}.', '{They} should be proud of this term.'],
+  closeGood: ['With the same effort next term, {they} can go further.', 'Keep it up, {name}.'],
+  closeMid: ['Steady effort on this next term will make a real difference.', 'A consistent routine next term will help {them} show {their} best work more often.'],
+  closeLow: ['Regular practice, and asking for help early, will make a difference next term.', 'I would like {name} to ask for help as soon as something is unclear.'],
+};
+const RPT_SLOTS = [['openHigh', 'Opening, for the highest grades'], ['openGood', 'Opening, for good grades'], ['openMid', 'Opening, for middling grades'], ['openLow', 'Opening, for the lowest grades'], ['openNone', 'Opening, when there is no grade yet'],
+  ['grade', 'The grade'], ['strong', 'Strongest rubric row'], ['best', 'Best piece of work'], ['up', 'Scores going up'], ['down', 'Scores going down'], ['next', 'Rubric row to work on'], ['level', 'What the next level asks for'],
+  ['missing1', 'One piece of work missing'], ['missing', 'Several pieces missing'], ['closeHigh', 'Closing, for the highest grades'], ['closeGood', 'Closing, for good grades'], ['closeMid', 'Closing, for middling grades'], ['closeLow', 'Closing, for the lowest grades']];
+const RPT_PRO = { they: ['they', 'them', 'their', 'are', 'have', ''], she: ['she', 'her', 'her', 'is', 'has', 's'], he: ['he', 'him', 'his', 'is', 'has', 's'] };
+const RPT_PROS = [['they', 'they / their'], ['she', 'she / her'], ['he', 'he / his'], ['name', 'No pronoun: use the name']];
+let rpt = { stu: 0, saveT: 0, dirty: null };
+
+function rptConf() {
+  const r = (lib.book && lib.book.rep) || {}, cut = Array.isArray(r.cut) && r.cut.length === 3 && r.cut.every(v => isFinite(+v)) ? r.cut.map(Number) : [85, 70, 55];
+  return { len: RPT_LEN.some(x => x[0] === r.len) ? r.len : 'medium', grade: !!r.grade, limit: +r.limit > 0 ? Math.round(+r.limit) : 0, cut, words: r.words || {}, subj: r.subj || {} };
+}
+function rptSave(part) { bkSave({ rep: { ...((lib.book || {}).rep || {}), ...part } }); }
+const rptTerm = () => bk.term === '*' ? 'year' : bk.term || 'all';
+function rptCall(c, n) {
+  const own = (infoOf(c, n).call || '').trim(); if (own) return own;
+  const t = String(n), part = /,/.test(t) ? t.split(',').slice(1).join(' ') : t;
+  return (part.trim().split(/\s+/)[0] || t).trim();
+}
+const rptPro = (c, n) => { const p = infoOf(c, n).pro; return RPT_PROS.some(x => x[0] === p) ? p : 'they'; };
+const rptEntry = (c, n) => ((infoOf(c, n).rep || {})[rptTerm()]) || {};
+function rptPut(c, n, patch, term) {
+  const key = term || rptTerm(), rep = { ...(infoOf(c, n).rep || {}) }, e = { ...(rep[key] || {}), ...patch };
+  for (const k of Object.keys(e)) if (e[k] == null || e[k] === false || e[k] === 0) delete e[k];
+  if (Object.keys(e).some(k => k !== 't')) rep[key] = e; else delete rep[key];
+  setInfo(c, n, { rep: Object.keys(rep).length ? rep : '' });
+  bkSaveLib();
+}
+
+/* ---------- what the gradebook knows about one student this term ---------- */
+const rptPairs = new WeakMap();
+function rptFacts(c, cols, conf, n) {
+  const g = bkGrade(n, cols, conf), scored = bkScored(cols).map(col => ({ col, cell: col.cells.get(n) })).filter(x => bkCounts(x.cell));
+  const rows = new Map();
+  for (const { col, cell } of scored) for (const [nm, v] of cell.rows || []) {
+    const name = chRowName(nm), k = name.toLowerCase(); if (!k || v == null || isNaN(+v)) continue;
+    if (!rows.has(k)) rows.set(k, { name, v: [] });
+    const e = rows.get(k); e.v.push(+v); e.col = col; e.raw = nm;
+  }
+  const avg = [...rows.values()].map(e => ({ ...e, avg: bkMean(e.v) })).sort((a, b) => b.avg - a.avg);
+  const apart = avg.length >= 2 && avg[0].avg - avg[avg.length - 1].avg >= 0.25, strong = apart ? avg[0] : null, weak = apart ? avg[avg.length - 1] : null;
+  let words = '';
+  if (weak && weak.col.d) {   // her own words for the level above where the student is now, from the newest rubric with that row
+    const s = weak.col.d.setup || {}, i = (s.criteria || []).findIndex(x => chRowName(x).toLowerCase() === weak.name.toLowerCase());
+    if (i >= 0) words = String(levelIn(s, i, Math.min(4, Math.floor(weak.avg + 1e-9) + 1)) || '').trim().replace(/[.。]+$/, '');
+  }
+  const v = scored.map(x => x.cell.pct), move = v.length >= 4 ? bkMean(v.slice(-3)) - bkMean(v.slice(0, -3)) : 0;
+  const missing = cols.filter(x => x.type !== 'xc' && (x.cells.get(n) || {}).st === 'missing').map(x => x.name);
+  const best = scored.length >= 2 ? scored.reduce((a, b) => b.cell.pct > a.cell.pct ? b : a) : null;
+  const said = [];
+  for (const col of cols) {
+    if (!col.d || !col.d.s) continue;
+    let pairs = rptPairs.get(col); if (!pairs) rptPairs.set(col, pairs = rosterPairs(c.names, Object.keys({ ...col.d.s, ...col.d.read })));
+    const k = pairs.get(n), t = k && col.d.s[k] && col.d.s[k].g ? String(col.d.s[k].g.comment || '').trim() : '';
+    if (t) said.push({ work: col.name, text: t });
+  }
+  return { grade: g.grade, soFar: g.soFar, strong, weak, words, move, missing, best: best && best.cell.pct >= 70 ? best.col.name : '', said, scored: scored.length };
+}
+
+/* ---------- the draft ---------- */
+const rptHash = s => { let h = 7; for (const ch of String(s)) h = (h * 31 + ch.codePointAt(0)) >>> 0; return h; };
+const rptList = a => a.length <= 1 ? a.join('') : a.slice(0, -1).join(', ') + ' and ' + a[a.length - 1];
+function rptFill(t, c, n, f, rc) {
+  const call = rptCall(c, n), pro = rptPro(c, n), P = RPT_PRO[pro] || [call, call, call + '’s', 'is', 'has', 's'], subj = (rc.subj[c.id] || '').trim();
+  const map = { name: call, they: P[0], them: P[1], their: P[2], is: P[3], has: P[4], s: P[5], in: subj ? ' in ' + subj : '', subject: subj, grade: f.grade != null ? roundPct(f.grade) + '%' : '',
+    row: '', work: f.best, n: String(f.missing.length), list: rptList(f.missing), words: f.words };
+  const out = t.replace(/\{(\w+)\}/g, (m, k) => {
+    const low = k[0].toLowerCase() + k.slice(1); if (!(low in map)) return m;
+    const v = String(map[low]); return k !== low && v ? v[0].toUpperCase() + v.slice(1) : v;
+  });
+  return out.replace(/\s+([.,;:!?])/g, '$1').replace(/\s{2,}/g, ' ').trim().replace(/^./, ch => ch.toUpperCase());
+}
+function rptDraft(c, n, f, rc, v) {
+  const band = f.grade == null ? 'None' : f.grade >= rc.cut[0] ? 'High' : f.grade >= rc.cut[1] ? 'Good' : f.grade >= rc.cut[2] ? 'Mid' : 'Low';
+  const say = (k, row) => { const own = (rc.words[k] || []).filter(Boolean), list = own.length ? own : RPT_WORDS[k]; return rptFill(list[(rptHash(n + k) + (v || 0)) % list.length].replace(/\{row\}/g, row || ''), c, n, f, rc); };
+  const long = rc.len === 'long', short = rc.len === 'short', out = [say('open' + band)];
+  if (rc.grade && f.grade != null) out.push(say('grade'));
+  if (!short && f.strong) out.push(say('strong', f.strong.name));
+  if (long && f.best) out.push(say('best'));
+  if (!short && Math.abs(f.move) >= 5) out.push(say(f.move > 0 ? 'up' : 'down'));
+  if (f.weak) out.push(say('next', f.weak.name));
+  if (long && f.weak && f.words) out.push(say('level', f.weak.name));
+  if (f.missing.length) out.push(say(f.missing.length === 1 ? 'missing1' : 'missing'));
+  if (!short && band !== 'None') out.push(say('close' + band));
+  return out.join(' ');
+}
+function rptText(c, cols, conf, n, rc) { const e = rptEntry(c, n); return e.text != null ? e.text : rptDraft(c, n, rptFacts(c, cols, conf, n), rc, e.v); }
+const rptState = e => e.done ? ['ok', 'Done'] : e.text != null ? ['on', 'Edited'] : ['', 'Draft'];
+
+/* ---------- the page ---------- */
+function rptFactChips(f) {
+  const one = v => fmtNum(Math.round(v * 10) / 10), out = [];
+  out.push('<span class="schip">' + (f.grade != null ? 'Grade ' + pctAvgText(f.grade) + (f.soFar ? ' so far' : '') : 'No grade yet') + '</span>');
+  if (f.strong) out.push('<span class="schip">Strongest: ' + esc(f.strong.name) + ' ' + one(f.strong.avg) + '</span>');
+  if (f.weak) out.push('<span class="schip">To work on: ' + esc(f.weak.name) + ' ' + one(f.weak.avg) + '</span>');
+  if (Math.abs(f.move) >= 5) out.push('<span class="schip">Last three scores ' + (f.move > 0 ? 'up ' : 'down ') + Math.abs(Math.round(f.move)) + '</span>');
+  if (f.missing.length) out.push('<span class="schip warn">Missing ' + f.missing.length + '</span>');
+  if (!f.scored) out.push('<span class="schip">Nothing scored in this term yet</span>');
+  return out.join('');
+}
+function rptCount(text, rc) {
+  const n = [...text].length;
+  return rc.limit ? '<span class="' + (n > rc.limit ? 'rptover' : '') + '">' + n + ' of ' + rc.limit + ' characters' + (n > rc.limit ? ', ' + (n - rc.limit) + ' over' : '') + '</span>' : n + ' characters';
+}
+function rptView(c, cols, conf) {
+  const rc = rptConf(), names = c.names;
+  rpt.stu = Math.max(0, Math.min(names.length - 1, rpt.stu));
+  const n = names[rpt.stu], f = rptFacts(c, cols, conf, n), e = rptEntry(c, n), text = e.text != null ? e.text : rptDraft(c, n, f, rc, e.v), done = names.filter(x => rptEntry(c, x).done).length;
+  const seg = '<div class="pseg" role="group" aria-label="Length">' + RPT_LEN.map(([k, l]) => '<button data-rptlen="' + k + '" aria-pressed="' + (rc.len === k) + '">' + l + '</button>').join('') + '</div>';
+  const list = names.map((x, i) => { const s = rptState(rptEntry(c, x)); return '<button class="rptrow' + (i === rpt.stu ? ' on' : '') + '" data-rptstu="' + i + '"' + (i === rpt.stu ? ' aria-current="true"' : '') + '><span class="rptnum">' + (i + 1) + '</span><span class="rptnm">' + esc(bkWho(x, i)) + '</span><span class="schip ' + s[0] + '">' + s[1] + '</span></button>'; }).join('');
+  const said = f.said.length ? '<section class="rptsaid"><h3 class="ovh3">What you wrote on their papers</h3>' + f.said.map((s, i) => '<div class="rptq"><div><b>' + esc(s.work) + '</b><p>' + esc(s.text) + '</p></div><button class="btn sm" data-rptadd="' + i + '" title="Add this to the end of the comment">Add</button></div>').join('') + '</section>' : '';
+  return '<div class="bkpad rpt" id="rpt">' +
+    '<div class="rptopts"><label>Subject <input type="text" id="rptSubj" value="' + esc(rc.subj[c.id] || '') + '" placeholder="e.g. English" maxlength="60" title="How the subject is named in a comment. Leave it empty to leave the subject out."></label>' +
+      '<span class="rptlab">Length ' + seg + '</span><label class="rptck"><input type="checkbox" id="rptGrade"' + (rc.grade ? ' checked' : '') + '> Say the grade</label>' +
+      '<label>Limit <input type="number" id="rptLimit" min="0" step="50" value="' + (rc.limit || '') + '" placeholder="none" title="The most characters your report system takes. Leave it empty for no limit."> characters</label>' +
+      '</div>' +
+    '<p class="muted rptnote">Each draft is put together on this computer from your own scores and comments. No AI writes it, and nothing is sent anywhere. Change any of it: it is your comment.</p>' +
+    '<div class="rptgrid"><nav class="rptlist" aria-label="Students"><div class="rptdone" id="rptDone">' + done + ' of ' + names.length + ' done</div>' + list + '</nav>' +
+    '<section class="rptone"><div class="rpthead"><h3 id="rptName">' + esc(bkWho(n, rpt.stu)) + '</h3><span class="muted">' + (rpt.stu + 1) + ' of ' + names.length + '</span><span class="sp"></span>' +
+      '<label>Called <input type="text" id="rptCall" value="' + esc(rptCall(c, n)) + '" maxlength="40" title="The name used in the comment"></label>' +
+      '<label>Pronoun <select id="rptPro" class="btn sm">' + RPT_PROS.map(([k, l]) => '<option value="' + k + '"' + (rptPro(c, n) === k ? ' selected' : '') + '>' + l + '</option>').join('') + '</select></label></div>' +
+      '<div class="rptfacts" id="rptFacts">' + rptFactChips(f) + '</div>' +
+      '<textarea id="rptText" rows="7" aria-label="' + esc('Report comment for ' + bkWho(n, rpt.stu)) + '" spellcheck="true">' + esc(text) + '</textarea>' +
+      '<div class="rptfoot"><span class="muted" id="rptCount">' + rptCount(text, rc) + '</span><span class="sp"></span><button class="btn sm" data-rptagain title="The same facts in other words">Draft again</button><button class="btn sm" data-rptcopy>Copy</button>' +
+      (e.done ? '<button class="btn sm" data-rptundone>Not done yet</button><button class="btn primary" data-rptnext>Next student</button>' : '<button class="btn primary" data-rptdoit>Done, next student</button>') + '</div>' + said +
+    '</section></div></div>';
+}
+function rptKeep(now) {
+  clearTimeout(rpt.saveT);
+  const go = () => { const d = rpt.dirty; if (!d) return; rpt.dirty = null; if (!lib.classes.includes(d.c) || !d.c.names.includes(d.n)) return; rptPut(d.c, d.n, { text: d.text, t: Date.now() }, d.term); if ($('#rpt') && bkClass() === d.c) rptMarks(d.c); };
+  if (now) go(); else rpt.saveT = setTimeout(go, 400);
+}
+function rptTyped(ta) { const c = bkClass(); rpt.dirty = { c, n: c.names[rpt.stu], term: rptTerm(), text: ta.value }; }
+function rptMarks(c) {
+  for (const b of document.querySelectorAll('#rpt [data-rptstu]')) { const s = rptState(rptEntry(c, c.names[+b.dataset.rptstu])), chip = b.querySelector('.schip'); chip.className = 'schip ' + s[0]; chip.textContent = s[1]; }
+  const d = $('#rptDone'); if (d) d.textContent = c.names.filter(x => rptEntry(c, x).done).length + ' of ' + c.names.length + ' done';
+}
+function rptGo(i) { rptKeep(true); rpt.stu = i; bkDraw(); const ta = $('#rptText'); if (ta) ta.focus({ preventScroll: true }); const on = $('#rpt .rptrow.on'); if (on) on.scrollIntoView({ block: 'nearest' }); }
+function rptAll(c) {
+  const conf = bkConf(), all = bkClassCols(c, bk.cols), cols = bk.term === '*' ? all : all.filter(x => x.termId === bk.term), rc = rptConf();
+  return c.names.map(n => [n, rptText(c, cols, conf, n, rc)]);
+}
+const rptBar = () => '<button class="btn sm" data-rptwords>Wording…</button><button class="btn sm" data-rptcopyall title="Every student’s name and comment, to paste into a spreadsheet or your report system">Copy all</button><button class="btn sm" data-rptcsv title="A spreadsheet file with every student’s name and comment">Download</button>';
+function rptClick(e) {
+  if (!$('#rpt') || !e.target.closest('#bkBody')) return;
+  const b = e.target.closest('button'), c = bkClass(); if (!b || !c) return;
+  const d = b.dataset, n = c.names[rpt.stu], ta = $('#rptText');
+  if (d.rptstu != null) return rptGo(+d.rptstu);
+  if (d.rptlen) { rptKeep(true); rptSave({ len: d.rptlen }); return bkDraw(); }
+  if (d.rptagain != null) {
+    const was = rptEntry(c, n), wasText = ta.value;
+    rpt.dirty = null; rptPut(c, n, { text: null, done: false, v: ((was.v || 0) + 1) % 60, t: Date.now() }); bkDraw();
+    return toastDo(was.text != null ? 'Drafted again. What you had typed is gone.' : 'Drafted again.', 'Undo', () => { rptPut(c, n, { text: was.text != null ? wasText : null, done: was.done, v: was.v || null }); bkDraw(); });
+  }
+  if (d.rptcopy != null) return navigator.clipboard.writeText(ta.value).then(() => toast('Copied.'), () => toast('Copying didn’t work in this browser.'));
+  if (d.rptdoit != null || d.rptnext != null) {
+    if (d.rptdoit != null) { rpt.dirty = null; rptPut(c, n, { text: ta.value, done: true, t: Date.now() }); }
+    const left = c.names.map((x, i) => i).filter(i => !rptEntry(c, c.names[i]).done), next = left.find(i => i > rpt.stu);
+    if (!left.length) { bkDraw(); return toast('Every comment is done. Copy all puts them on the clipboard.', 6000); }
+    return rptGo(next != null ? next : d.rptnext != null && rpt.stu < c.names.length - 1 ? rpt.stu + 1 : left[0]);
+  }
+  if (d.rptundone != null) { rptPut(c, n, { done: false }); return bkDraw(); }
+  if (d.rptadd != null) {
+    const conf = bkConf(), all = bkClassCols(c, bk.cols), cols = bk.term === '*' ? all : all.filter(x => x.termId === bk.term), s = rptFacts(c, cols, conf, n).said[+d.rptadd]; if (!s) return;
+    ta.value = (ta.value.trim() ? ta.value.trim() + ' ' : '') + s.text; rptTyped(ta); rptKeep(true); $('#rptCount').innerHTML = rptCount(ta.value, rptConf()); return ta.focus();
+  }
+  if (d.rptcopyall != null) { rptKeep(true); return navigator.clipboard.writeText(rptAll(c).map(r => tsvLine(r)).join('\n')).then(() => toast('Copied ' + people(c.names.length, 'comment') + ', each with its student’s name. Paste them into a spreadsheet.', 6000), () => toast('Copying didn’t work in this browser.')); }
+  if (d.rptcsv != null) { rptKeep(true); return saveBlob(c.name + ' report comments.csv', new Blob(['﻿Student,Comment\r\n' + rptAll(c).map(r => r.map(csvCell).join(',')).join('\r\n') + '\r\n'], { type: 'text/csv' })); }
+  if (d.rptwords != null) { rptKeep(true); return rptWordsDlg(); }
+}
+function rptInput(e) {
+  const t = e.target, c = bkClass(); if (!c || !t.closest || !t.closest('#rpt')) return;
+  if (t.id === 'rptText') { rptTyped(t); $('#rptCount').innerHTML = rptCount(t.value, rptConf()); rptKeep(); }
+}
+function rptChange(e) {
+  const t = e.target, c = bkClass(); if (!c || !t.closest || !t.closest('#rpt')) return;
+  const n = c.names[rpt.stu];
+  if (t.id === 'rptText') return rptKeep(true);
+  rptKeep(true);
+  if (t.id === 'rptSubj') rptSave({ subj: { ...rptConf().subj, [c.id]: t.value.trim() } });
+  else if (t.id === 'rptGrade') rptSave({ grade: t.checked });
+  else if (t.id === 'rptLimit') rptSave({ limit: Math.max(0, Math.round(+t.value || 0)) });
+  else if (t.id === 'rptCall') { const v = t.value.trim(); setInfo(c, n, { call: v && v !== rptCall({ info: {} }, n) ? v : '' }); bkSaveLib(); }
+  else if (t.id === 'rptPro') { setInfo(c, n, { pro: t.value === 'they' ? '' : t.value }); bkSaveLib(); }
+  else return;
+  bkDraw();
+}
+function rptWordsDlg() {
+  const rc = rptConf();
+  openDlg('<div class="bh"><h2>Wording</h2><button class="icon" data-close aria-label="Close" style="margin-left:auto">✕</button></div><div class="bb rptwords" id="rptWords">' +
+    '<p class="muted">A draft is built from these sentences. Write each one your way, one on a line. With several lines, students get different ones.</p>' +
+    '<p class="muted rptkeys"><b>Words that are filled in:</b> {name} · {they} {them} {their} · {is} {has} · {s} for the verb, as in “{they} work{s}” · {in} for “in English” · {grade} · {row} · {work} · {n} · {list} · {words}. A capital, as in {They}, starts a sentence.</p>' +
+    '<div class="rptcuts"><b>Grades:</b> <label>highest from <input type="number" data-rptcut="0" min="0" max="100" value="' + rc.cut[0] + '">%</label><label>good from <input type="number" data-rptcut="1" min="0" max="100" value="' + rc.cut[1] + '">%</label><label>middling from <input type="number" data-rptcut="2" min="0" max="100" value="' + rc.cut[2] + '">%</label></div>' +
+    RPT_SLOTS.map(([k, l]) => '<label class="rptslot"><span>' + l + '</span><textarea data-rptslot="' + k + '" rows="' + Math.max(2, ((rc.words[k] || []).length || RPT_WORDS[k].length)) + '">' + esc(((rc.words[k] || []).length ? rc.words[k] : RPT_WORDS[k]).join('\n')) + '</textarea></label>').join('') +
+    '</div><div class="bf"><button class="btn" data-rptreset>Use the built-in wording</button><span class="sp" style="flex:1"></span><button class="btn" data-close>Cancel</button><button class="btn primary" data-rptsavew>Save</button></div>', true);
+  $('#dlgBox').onclick = e => {
+    if (e.target.closest('[data-close]')) return closeDlg();
+    if (e.target.closest('[data-rptreset]')) { for (const t of document.querySelectorAll('[data-rptslot]')) t.value = RPT_WORDS[t.dataset.rptslot].join('\n'); return; }
+    if (!e.target.closest('[data-rptsavew]')) return;
+    const words = {}; for (const t of document.querySelectorAll('[data-rptslot]')) { const lines = t.value.split('\n').map(s => s.trim()).filter(Boolean); if (lines.length && lines.join('\n') !== RPT_WORDS[t.dataset.rptslot].join('\n')) words[t.dataset.rptslot] = lines; }
+    const cut = [...document.querySelectorAll('[data-rptcut]')].map(i => Math.max(0, Math.min(100, +i.value || 0))).sort((a, b) => b - a);
+    rptSave({ words, cut }); closeDlg(); if ($('#rpt')) bkDraw(); toast('Saved. Drafts you have not changed use the new wording.');
+  };
+}
+$('#vClass').addEventListener('click', rptClick);
+$('#vClass').addEventListener('input', rptInput);
+$('#vClass').addEventListener('change', rptChange);
+window.addEventListener('pagehide', () => rptKeep(true));
+Object.assign(window.__gs, { rptDraft, rptFacts, rptConf, RPT_WORDS });
 
 /* ---------------- an open assignment's tabs: Mark, Grades, Insights, Return (11/10) ---------------- */
 function tabsRender() {
@@ -20162,7 +20444,7 @@ $('#setHistory').addEventListener('click', e => {
 });
 
 /* updates she controls, and installing as an app */
-const WHATS_NEW = {"1.16.0":["Help is in the sidebar: short answers to the questions teachers ask most, from opening a set of papers to moving your work to another computer.","Find anything answers questions too. Type a few words, like “late paper” or “backup”, and the answer is in the list."],"1.15.0":["A picture dragged onto a slide that has text now sits beside the text, in a new Text + picture layout.","Drag several pictures in at once and each gets its own slide. Let a picture go on any slide in the list on the left to put it there.","New Full picture layout: the picture fills the whole slide."],"1.14.0":["Extra credit: points or a percent on one paper, and extra credit entries in the gradebook that add to the term grade or the in-class average.","The gradebook shows each type's average (summative, in-class) right beside the term grade, kept in view as you scroll. Averages only shows just those columns, and Whole year splits each term the same way.","Leave out… lets you untick students to see the class averages without them. Their own grades don't change, and nothing is saved."],"1.13.0":["Present a lesson from the Planner, or from Today when its class is on now or next: its slides fill the screen, and the arrow keys or a clicker move through them.","While presenting, A shows the agenda to tick off, T starts a timer the class can see, N shows your notes and B blanks the screen.","The bar shows how many minutes the class has left, from your timetable.","After a lesson is taught, one line says where the class got to. It shows on the lesson and on the week, and presenting again picks up there."],"1.12.0":["A returned paper starts with a feedback page: the score, each rubric row with the level given and what that level means, your comment, and every comment on the paper with its page number.","It is on unless you turn it off under Options on the Return tab. Your own pages are not changed, and bringing an export back in opens only those."],"1.11.0":["The Planner’s sections are in the sidebar: Calendar, Units, Past lessons, Activities and Rubrics. The row of tabs across the top is gone.","A lesson has a lighter top: its name, its classes, its status and Download. Copy for Claude, Versions, the upload and the links are under More.","Comments shows above a lesson once it has one."],"1.7.0":["Home is now Today: the classes you teach today with the lesson planned for each, the papers waiting to be marked, and the papers ready to hand back.","What the class needs next: after a set of papers is scored, Today shows the weakest rubric row and how many students to sit down with.","A class page is quieter. Click anywhere on an assignment’s row to open it; the only blue button is the one that adds an assignment.","Forget, and the other ways to open papers, moved into the ⋯ menu on each row."],"1.6.0":["A new browser opens on three questions (your classes, how you grade, where work is kept) and starts with nothing of anyone else’s in it.","A sample class of made-up students, with papers to mark, for trying things out. Remove it from Home when you’re done.","The app uses the name of your own school system. Choose it, and how you usually grade, in Settings.","Letter grades or IB 1 to 7 can show beside the percent, with boundaries you set.","Canvas and Moodle downloads are grouped by student. The Planner works without a setup file, and downloads lessons as PowerPoint with a plain built-in template."],"1.5.0":["The sidebar says “Not backed up”, in amber, until a folder holds a second copy of your work. Home asks for that folder once.","Go back in time, in Settings: any assignment as it was on an earlier day, restored on its own, with Undo.","Grading Studio can be installed as an app, and it opens with no internet.","A newer version now waits until you click Update now, so nothing changes in the middle of marking."]};
+const WHATS_NEW = {"1.17.0":["Report comments: a new tab on each class's page drafts a comment for every student from your own gradebook, rubric scores and the comments you wrote on their papers. Edit each one, tick it done, then copy or download them all.","The drafts are put together on your computer from sentences you can change under Wording. Nothing about a student is sent anywhere."],"1.16.0":["Help is in the sidebar: short answers to the questions teachers ask most, from opening a set of papers to moving your work to another computer.","Find anything answers questions too. Type a few words, like “late paper” or “backup”, and the answer is in the list."],"1.15.0":["A picture dragged onto a slide that has text now sits beside the text, in a new Text + picture layout.","Drag several pictures in at once and each gets its own slide. Let a picture go on any slide in the list on the left to put it there.","New Full picture layout: the picture fills the whole slide."],"1.14.0":["Extra credit: points or a percent on one paper, and extra credit entries in the gradebook that add to the term grade or the in-class average.","The gradebook shows each type's average (summative, in-class) right beside the term grade, kept in view as you scroll. Averages only shows just those columns, and Whole year splits each term the same way.","Leave out… lets you untick students to see the class averages without them. Their own grades don't change, and nothing is saved."],"1.13.0":["Present a lesson from the Planner, or from Today when its class is on now or next: its slides fill the screen, and the arrow keys or a clicker move through them.","While presenting, A shows the agenda to tick off, T starts a timer the class can see, N shows your notes and B blanks the screen.","The bar shows how many minutes the class has left, from your timetable.","After a lesson is taught, one line says where the class got to. It shows on the lesson and on the week, and presenting again picks up there."],"1.12.0":["A returned paper starts with a feedback page: the score, each rubric row with the level given and what that level means, your comment, and every comment on the paper with its page number.","It is on unless you turn it off under Options on the Return tab. Your own pages are not changed, and bringing an export back in opens only those."],"1.11.0":["The Planner’s sections are in the sidebar: Calendar, Units, Past lessons, Activities and Rubrics. The row of tabs across the top is gone.","A lesson has a lighter top: its name, its classes, its status and Download. Copy for Claude, Versions, the upload and the links are under More.","Comments shows above a lesson once it has one."],"1.7.0":["Home is now Today: the classes you teach today with the lesson planned for each, the papers waiting to be marked, and the papers ready to hand back.","What the class needs next: after a set of papers is scored, Today shows the weakest rubric row and how many students to sit down with.","A class page is quieter. Click anywhere on an assignment’s row to open it; the only blue button is the one that adds an assignment.","Forget, and the other ways to open papers, moved into the ⋯ menu on each row."],"1.6.0":["A new browser opens on three questions (your classes, how you grade, where work is kept) and starts with nothing of anyone else’s in it.","A sample class of made-up students, with papers to mark, for trying things out. Remove it from Home when you’re done.","The app uses the name of your own school system. Choose it, and how you usually grade, in Settings.","Letter grades or IB 1 to 7 can show beside the percent, with boundaries you set.","Canvas and Moodle downloads are grouped by student. The Planner works without a setup file, and downloads lessons as PowerPoint with a plain built-in template."],"1.5.0":["The sidebar says “Not backed up”, in amber, until a folder holds a second copy of your work. Home asks for that folder once.","Go back in time, in Settings: any assignment as it was on an earlier day, restored on its own, with Undo.","Grading Studio can be installed as an app, and it opens with no internet.","A newer version now waits until you click Update now, so nothing changes in the middle of marking."]};
 const upd = { on: false, st: null, mine: '', checking: false, said: '', install: null, installed: false, err: '' };
 const updCan = () => 'serviceWorker' in navigator && (location.protocol === 'https:' || /[?&]sw=1(&|$)/.test(location.search)) && !/Grading Studio\.html$/i.test(decodeURIComponent(location.pathname));
 const updSend = async msg => { const reg = await navigator.serviceWorker.ready; if (reg.active) reg.active.postMessage(msg); };
@@ -20617,7 +20899,7 @@ function findRows() {
   add('Go to', 'Help', 'Short answers to common questions', () => go('#/help'));
   for (const c of lib.classes) {
     add('Classes', c.name, (c.names.length ? c.names.length + ' students' : 'No roster yet') + (classLeft(c) ? ' · ' + classLeft(c) + ' left to score' : ''), () => go(classHash(c)));
-    if (c.names.length) for (const [k, l, sub] of [['gradebook', 'gradebook', 'Every assignment by term, with each term grade'], ['students', 'students', 'The roster, with IDs and emails, and each student’s own page'], ['charts', 'charts', 'Grades and scores as charts']]) add('Class pages', c.name + ' ' + l, sub, () => go(classHash(c, k)));
+    if (c.names.length) for (const [k, l, sub] of [['gradebook', 'gradebook', 'Every assignment by term, with each term grade'], ['students', 'students', 'The roster, with IDs and emails, and each student’s own page'], ['charts', 'charts', 'Grades and scores as charts'], ['reports', 'report comments', 'A draft comment for each student, from your own scores and comments']]) add('Class pages', c.name + ' ' + l, sub, () => go(classHash(c, k)));
   }
   const carded = new Set();
   for (const c of holders()) for (const u of c.units) for (const it of u.items) {

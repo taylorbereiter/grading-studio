@@ -1,0 +1,38 @@
+/* ---------- Report comments: a class page's tab (reports.js) ---------- */
+.rptopts{display:flex;align-items:center;gap:var(--space-3) var(--space-4);flex-wrap:wrap;margin:0 0 var(--space-2)}
+.rptopts label,.rptopts .rptlab,.rpthead label{display:flex;align-items:center;gap:var(--space-2);font-size:var(--text-control);color:var(--fg-2)}
+.rptopts .sp,.rpthead .sp,.rptfoot .sp{flex:1}
+.rpt input[type=text],.rpt input[type=number]{height:30px;padding:0 var(--space-2);border:1px solid var(--line-strong);border-radius:var(--corner-2);background:var(--surface);color:var(--fg);font:inherit;font-size:var(--text-control)}
+#rptPro{width:auto}#rptSubj{width:150px}#rptLimit{width:76px}#rptCall{width:120px}
+.rptnote{margin:0 0 var(--space-4);font-size:var(--text-control);max-width:80ch}
+.rptgrid{display:grid;grid-template-columns:minmax(200px,280px) minmax(0,1fr);gap:var(--space-4);align-items:start}
+.rptlist{background:var(--surface);border:1px solid var(--line);border-radius:var(--corner-5);padding:var(--space-2);max-height:calc(100vh - 250px);overflow:auto;position:sticky;top:60px}
+.rptdone{font-size:var(--text-caption);font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:var(--space-1) var(--space-2) var(--space-2)}
+.rptrow{display:flex;align-items:center;gap:var(--space-2);width:100%;min-height:36px;padding:0 var(--space-2);border:0;border-radius:var(--corner-3);background:none;color:var(--fg-2);font:inherit;font-size:var(--text-body);text-align:left;cursor:pointer}
+.rptrow:hover{background:var(--hover)}
+.rptrow.on{background:var(--accent-soft);color:var(--accent);font-weight:600}
+.rptrow:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.rptnum{flex:none;width:22px;color:var(--muted);font-size:var(--text-small);font-variant-numeric:tabular-nums;text-align:right}
+.rptnm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rptone{background:var(--surface);border:1px solid var(--line);border-radius:var(--corner-5);padding:var(--space-4) var(--space-4) var(--space-4)}
+.rpthead{display:flex;align-items:center;gap:var(--space-3);flex-wrap:wrap;margin:0 0 var(--space-3)}
+.rpthead h3{margin:0;font-size:var(--text-title);font-weight:700;letter-spacing:-.01em}
+.rptfacts{display:flex;gap:var(--space-2);flex-wrap:wrap;margin:0 0 var(--space-3)}
+#rptText{display:block;width:100%;min-height:150px;padding:var(--space-3);border:1px solid var(--line-strong);border-radius:var(--corner-3);background:var(--surface);color:var(--fg);font:inherit;font-size:var(--text-lead);line-height:1.55;resize:vertical}
+#rptText:focus-visible{outline:2px solid var(--accent);outline-offset:1px;border-color:var(--accent)}
+.rptfoot{display:flex;align-items:center;gap:var(--space-2);flex-wrap:wrap;margin:var(--space-3) 0 0}
+.rptfoot .muted{font-size:var(--text-control);font-variant-numeric:tabular-nums}
+.rptover{color:var(--bad);font-weight:600}
+.rptsaid{margin:var(--space-5) 0 0;padding:var(--space-4) 0 0;border-top:1px solid var(--line)}
+.rptq{display:flex;align-items:flex-start;gap:var(--space-3);padding:var(--space-2) 0}
+.rptq+.rptq{border-top:1px solid var(--line)}
+.rptq div{flex:1;min-width:0}
+.rptq b{font-size:var(--text-control);font-weight:600}
+.rptq p{margin:2px 0 0;color:var(--fg-2);white-space:pre-wrap;overflow-wrap:anywhere}
+.rptwords .rptslot{display:block;margin:0 0 var(--space-3)}
+.rptwords .rptslot span{display:block;font-size:var(--text-control);font-weight:600;margin:0 0 var(--space-1)}
+.rptwords textarea{display:block;width:100%;padding:var(--space-2);border:1px solid var(--line-strong);border-radius:var(--corner-2);background:var(--surface);color:var(--fg);font:inherit;font-size:var(--text-control);line-height:1.5;resize:vertical}
+.rptwords .rptkeys{font-size:var(--text-control)}
+.rptcuts{display:flex;align-items:center;gap:var(--space-3);flex-wrap:wrap;margin:0 0 var(--space-4);font-size:var(--text-control)}
+.rptcuts input{width:64px;height:28px;margin:0 2px 0 var(--space-1);padding:0 var(--space-1);border:1px solid var(--line-strong);border-radius:var(--corner-2);background:var(--surface);color:var(--fg);font:inherit}
+@media (max-width:900px){.rptgrid{grid-template-columns:minmax(0,1fr)}.rptlist{position:static;max-height:220px}}
