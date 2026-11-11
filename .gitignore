@@ -1,5 +1,6 @@
-node_modules/
-libs/node_modules/
+# no trailing slash: a node_modules symlink (made when linking packages into a worktree) is a file, and "node_modules/" would not ignore it
+node_modules
+libs/node_modules
 out/
 .DS_Store
 *.png

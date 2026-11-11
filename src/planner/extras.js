@@ -165,7 +165,7 @@ function copyLessonDlg(l) {
   };
 }
 async function copyLesson(l, slot, title) {
-  const j = JSON.parse(JSON.stringify(l)); delete j._file; delete j._mod; delete j.pending;
+  const j = JSON.parse(JSON.stringify(l)); delete j._file; delete j._mod; delete j.pending; delete j.taught;
   j.id = lid(); j.title = title || l.title; j.slots = slot ? [slot] : []; j.created = j.updated = Date.now(); j.status = ''; j.claudeNote = '';
   j.slides = j.slides.map(s => ({ ...s, id: lid() }));
   j.files = [];
