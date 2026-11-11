@@ -1901,7 +1901,8 @@ button.pavg:hover .v{text-decoration:underline}
 .updmode b{display:block;font-weight:500}
 .updmode .ns{display:block;font-size:var(--text-small);color:var(--muted)}
 /* the welcome: three questions for a brand-new browser, over everything else */
-.welcome{position:fixed;inset:0;z-index:60;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:var(--space-5);overflow:auto}
+/* under every dialog (30 and up): choosing a folder that already holds work asks its questions on top of the welcome */
+.welcome{position:fixed;inset:0;z-index:29;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:var(--space-5);overflow:auto}
 .welcome[hidden]{display:none}
 html.welcoming .shell{visibility:hidden}
 .wlsheet{width:min(1040px,100%);min-height:600px;margin:auto;background:var(--surface);border:1px solid var(--line);border-radius:var(--corner-5);box-shadow:var(--shadow);display:grid;grid-template-columns:minmax(0,1fr) 380px;overflow:hidden}

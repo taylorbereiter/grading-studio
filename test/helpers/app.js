@@ -25,7 +25,7 @@ const PLATFORMS = {
 // in and the state real saved work is in: no welcome, and every word and default as it was.
 const USED_BEFORE = { 'gs.lib': JSON.stringify({ classes: ['12EL-1', '12EL-2', '11EL-2'].map((name, i) => ({ id: 'starter' + (i + 1), name, names: [], units: [] })), loose: { id: '', units: [] }, units: [], seed2627: true }), 'gs.syncT': JSON.stringify({ 'gs.lib': 1 }) };
 async function openApp(browser, { html, platform, seed, server, context, noWait, beforeLoad, newTeacher } = {}) {
-  if (!newTeacher && !(seed && seed.ls && seed.ls['gs.lib'] != null)) seed = { ...(seed || {}), ls: { ...USED_BEFORE, ...((seed && seed.ls) || {}) } };
+  const usedBefore = !newTeacher && !(seed && seed.ls && seed.ls['gs.lib'] != null);
   const srv = server || await serve(html || builtHtml());
   const ctx = context || await browser.createBrowserContext();
   const page = await ctx.newPage();
@@ -53,7 +53,12 @@ async function openApp(browser, { html, platform, seed, server, context, noWait,
     await page.setUserAgent(P.ua);
     await page.evaluateOnNewDocument(p => Object.defineProperty(navigator, 'platform', { get: () => p }), P.platform);
   }
-  if (seed) { await page.goto(srv.url + 'blank'); await plant(page, seed); }
+  if (seed || usedBefore) {
+    await page.goto(srv.url + 'blank');
+    // a second tab in a browser that already has work keeps that work
+    if (usedBefore && await page.evaluate(() => localStorage.getItem('gs.lib') == null)) seed = { ...(seed || {}), ls: { ...USED_BEFORE, ...((seed && seed.ls) || {}) } };
+    if (seed) await plant(page, seed);
+  }
   if (beforeLoad) await beforeLoad(page);
   await page.goto(srv.url);
   if (!noWait) await appReady(page);
@@ -77,7 +82,7 @@ async function answerDlg(page, { yes = true, typed } = {}) {
   if (typed != null) await page.$eval('#askIn', (e, t) => { e.value = t; }, typed);
   await page.click(yes ? '#askDlg [data-ok]' : '#askDlg [data-no]');
 }
-const appReady = page => page.waitForFunction(() => window.__gs && !!window.__gs.state, { timeout: 60000, polling: 100 });   // a tab in the background doesn't animate, so polling by the clock
+const appReady = page => page.waitForFunction(() => { if (!window.__gs || !window.__gs.state) return false; const w = document.querySelector('#whereLine'); return !w || !!w.textContent || !window.__gs.folderState; }, { timeout: 60000, polling: 100 });   // ready once the last part has run: the line that says where work is kept is written then   // a tab in the background doesn't animate, so polling by the clock
 
 // Writes saved data the way an earlier copy of the app left it. A value of { __b: name } in idb becomes the bytes of bins[name].
 async function plant(page, { ls = {}, idb = {}, bins = {} }) {

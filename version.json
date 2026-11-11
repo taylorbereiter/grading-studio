@@ -1,6 +1,6 @@
 {
  "version": "1.6.0",
- "build": "f331bdb866fe",
+ "build": "4b0122c3438b",
  "notes": [
   "A new browser opens on three questions (your classes, how you grade, where work is kept) and starts with nothing of anyone else’s in it.",
   "A sample class of made-up students, with papers to mark, for trying things out. Remove it from Home when you’re done.",
@@ -9,7 +9,7 @@
   "Canvas and Moodle downloads are grouped by student. The Planner works without a setup file, and downloads lessons as PowerPoint with a plain built-in template."
  ],
  "files": {
-  "index.html": "2f2d6929d00437eb97d4e1a654c67b0b0ce224a636b8666019cb43f1cf8c9672",
+  "index.html": "2bcef1d9d818602d1e333c5e2bb30252429d054d7b2bc2a1bbc2b54267a9ff06",
   "planner.html": "b36e40f7c04320dc441a855946d3ccb52b24e8d58f00942286d893ffae7f7e65"
  }
 }
