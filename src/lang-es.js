@@ -32,6 +32,8 @@ const LANG_ES = {
   words: {
     /* the sidebar, on both pages */
     'Main': 'Principal', 'Grading Studio, Today': 'Grading Studio, Hoy', 'Find anything': 'Buscar', 'Today': 'Hoy', 'Planner': 'Planificador', 'Classes': 'Clases', 'Add a class': 'Añadir una clase',
+    'School': 'Centro', 'School resources': 'Recursos del centro', 'School resources: links, files and notes about your school': 'Recursos del centro: enlaces, archivos y notas sobre tu centro',
+    'Links, files and notes about your school': 'Enlaces, archivos y notas sobre tu centro', 'Links, files and notes about your school, on the grading page': 'Enlaces, archivos y notas sobre tu centro, en la página de calificación', 'Link': 'Enlace', 'File': 'Archivo', 'Note': 'Nota',
     'Help': 'Ayuda', 'Settings': 'Ajustes', 'Update ready': 'Actualización lista', 'No class': 'Sin clase', 'App language': 'Idioma de la aplicación', 'English, Spanish or Traditional Chinese': 'Inglés, español o chino tradicional',
     'Find a student, an assignment, a tool or a setting': 'Busca un estudiante, una tarea, una herramienta o un ajuste',
     'Find a lesson, a unit, a class or a setting': 'Busca una lección, una unidad, una clase o un ajuste',
@@ -220,6 +222,10 @@ const LANG_ES = {
     'add-class': { q: '¿Cómo añado una clase y su lista?', words: 'lista estudiantes alumnos nombres nueva clase',
       a: ['1. Pulsa **Añadir una clase** en la barra lateral y ponle un nombre.', '2. Pega los nombres de los estudiantes, uno por línea. Se conservan en el orden en que los pegas.', '3. Abre la pestaña **Students** de la clase para añadir un identificador, un correo o una nota a cada uno.',
         'Con una lista, al abrir los trabajos de esa clase aparece cada estudiante, también quien no entregó nada.'] },
+    'school-resources': { q: '¿Dónde puedo guardar los enlaces y archivos de mi centro?', go: 'Abrir Recursos del centro', words: 'manual calendario normas portal marcador enlace archivo documento recursos centro colegio escuela horario formularios',
+      a: ['En **School** (Centro), en la barra lateral. Guarda el manual, el calendario, el horario, los portales en los que inicias sesión, los formularios y notas como a quién llamar. Ponlos en grupos con el nombre que quieras y pulsa la estrella de los que más abres para tenerlos arriba.',
+        '**Add a link** cuando el centro lo tiene en línea, porque un enlace se mantiene al día solo. **Add files…** guarda una copia del archivo con tu trabajo, hasta 50 MB cada uno. También puedes soltar archivos en la página o pegar una dirección web.',
+        'Todo se guarda con el resto de tu trabajo: en este navegador, en tu carpeta y en el archivo para llevar. Buscar encuentra cada uno por su nombre.'] },
     'language': { q: '¿Puedo usar la aplicación en otro idioma?', go: 'Abrir Ajustes, Pantalla', words: 'español inglés chino idioma lengua traducir traducción',
       a: ['Sí: español o chino tradicional. Elígelo en Ajustes, Display, **Idioma de la aplicación**, o en lo alto de la bienvenida. La página se vuelve a dibujar en el idioma que elijas.',
         'Por ahora, un idioma distinto del inglés cubre la barra lateral, Hoy, la bienvenida, Buscar, la Ayuda y la página de comentarios que reciben los estudiantes con un trabajo devuelto. Las demás pantallas siguen en inglés.',

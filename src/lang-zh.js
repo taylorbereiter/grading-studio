@@ -29,6 +29,8 @@ const LANG_ZH = {
   words: {
     /* the sidebar, on both pages */
     'Main': '主選單', 'Grading Studio, Today': 'Grading Studio，今天', 'Find anything': '搜尋', 'Today': '今天', 'Planner': '備課', 'Classes': '班級', 'Add a class': '新增班級',
+    'School': '學校', 'School resources': '學校資源', 'School resources: links, files and notes about your school': '學校資源：學校的連結、檔案與筆記',
+    'Links, files and notes about your school': '學校的連結、檔案與筆記', 'Links, files and notes about your school, on the grading page': '學校的連結、檔案與筆記，在批改頁面', 'Link': '連結', 'File': '檔案', 'Note': '筆記',
     'Help': '說明', 'Settings': '設定', 'Update ready': '有新版本', 'No class': '未指定班級', 'App language': '介面語言', 'English, Spanish or Traditional Chinese': '英文、西班牙文或繁體中文',
     'Find a student, an assignment, a tool or a setting': '搜尋學生、作業、工具或設定',
     'Find a lesson, a unit, a class or a setting': '搜尋課程、單元、班級或設定',
@@ -217,6 +219,10 @@ const LANG_ZH = {
     'add-class': { q: '怎麼新增班級和名單？', words: '名單 學生 姓名 新班級 roster',
       a: ['1. 按側邊欄的**新增班級**，並為它命名。', '2. 貼上學生姓名，一行一位。順序會和你貼上的一樣。', '3. 開啟班級的 **Students** 分頁，可以為每位學生加上學號、電子郵件或備註。',
         '有了名單，開啟那個班級的作業時會列出每位學生，包括沒有繳交的人。'] },
+    'school-resources': { q: '學校的連結和檔案可以放在哪裡？', go: '開啟學校資源', words: '手冊 行事曆 規定 政策 入口網站 書籤 連結 檔案 文件 資源 學校 作息表 表單 handbook calendar link file',
+      a: ['在側邊欄的**School**（學校）。把教師手冊、行事曆、作息表、常登入的入口網站、表單，以及「該找誰」這類筆記都放在這裡。可以自己命名分組，常開的項目按星號就會排在最上面。',
+        '學校已經放在網路上的內容，用 **Add a link**，連結會自己保持最新。**Add files…** 會把檔案的副本和你的工作存在一起，每個檔案最多 50 MB。也可以把檔案拖到頁面上，或貼上網址。',
+        '所有內容都和你其他的工作一起儲存：在這個瀏覽器、你的資料夾，以及帶著走的檔案裡。用搜尋輸入名稱就能找到每一項。'] },
     'language': { q: '介面可以換成其他語言嗎？', go: '開啟設定、顯示', words: '中文 繁體 西班牙文 英文 語言 翻譯 chinese language',
       a: ['可以。目前有繁體中文和西班牙文。在設定、Display 的**介面語言**選擇，或在歡迎畫面最上方選擇。頁面會用你選的語言重新顯示。',
         '英文以外的語言目前涵蓋側邊欄、今天、歡迎畫面、搜尋、說明，以及學生隨發還作業收到的回饋頁。其他畫面仍是英文。',

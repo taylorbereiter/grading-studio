@@ -60,7 +60,7 @@ test('in Spanish the sidebar and Today read in Spanish, with the date written th
   const s = gradingSeed(), lib = JSON.parse(s.ls['gs.lib']); lib.classes[1].name = 'Help';
   const { page, close } = await openApp(browser, { seed: inSpanish({ ...s, ls: { ...s.ls, 'gs.lib': JSON.stringify(lib) } }) });
   await page.waitForFunction(() => /devolver/.test(document.querySelector('#homeSay').textContent));
-  assert.deepEqual(await page.$$eval('#rail .rnav[data-nav] .rl, #rail #lessonsBtn .rl, #rail .rcap .rl, #rail .rfind .rl:not(kbd), #addClass .rl', els => els.map(e => e.textContent.trim())), ['Buscar', 'Hoy', 'Planificador', 'Clases', 'Añadir una clase', 'Ayuda', 'Ajustes']);
+  assert.deepEqual(await page.$$eval('#rail .rnav[data-nav] .rl, #rail #lessonsBtn .rl, #rail .rcap .rl, #rail .rfind .rl:not(kbd), #addClass .rl', els => els.map(e => e.textContent.trim())), ['Buscar', 'Hoy', 'Planificador', 'Centro', 'Clases', 'Añadir una clase', 'Ayuda', 'Ajustes']);
   assert.deepEqual(await page.$$eval('#railClasses .rname', els => els.map(e => e.textContent)), ['Grade 9 English', 'Help'], 'a class called Help keeps its name');
   assert.match(await text(page, '#railSaved'), /^Sin copia de seguridad\s*Solo en este navegador$/);
   assert.match(await text(page, '#homeDate'), /^[a-záéíóúñ]+, \d+ de [a-záéíóúñ]+$/i);
@@ -241,7 +241,7 @@ test('the Planner’s sidebar and its Find anything follow the same setting, and
     await page.waitForFunction(() => window.__planner && document.querySelector('#lessons .ls-top'));
     assert.equal(await page.evaluate(() => window.__gsLang.lang), 'es');
     assert.deepEqual(await page.$$eval('#rail .rnav .rl, #rail .rcap .rl', els => els.filter(e => e.checkVisibility()).map(e => e.textContent.trim())),
-      ['Hoy', 'Planificador', 'Calendario', 'Unidades', 'Lecciones anteriores', 'Actividades', 'Rúbricas', 'Clases', 'Configura tu horario', 'Ayuda', 'Ajustes']);
+      ['Hoy', 'Centro', 'Planificador', 'Calendario', 'Unidades', 'Lecciones anteriores', 'Actividades', 'Rúbricas', 'Clases', 'Configura tu horario', 'Ayuda', 'Ajustes']);
     assert.match(await text(page, '#railSaved'), /^Sin copia de seguridad\s*Este navegador$/);
     await page.click('#findBtn'); await page.waitForSelector('#findIn'); await page.type('#findIn', 'copia de seg');
     await page.waitForFunction(() => [...document.querySelectorAll('#findDlg .frow b')].some(b => b.textContent === '¿Dónde se guarda mi trabajo?'));
@@ -260,7 +260,7 @@ test('Traditional Chinese: the sidebar, Today and the sentences Today builds, wi
   const { page, close } = await openApp(browser, { seed: inChinese() });
   await page.waitForFunction(() => window.__gsLang && window.__gsLang.lang === 'zh-Hant' && document.querySelector('#rail [data-nav="home"]').textContent.trim() === '今天');
   assert.equal(await page.evaluate(() => document.documentElement.lang), 'zh-Hant');
-  assert.deepEqual(await page.$$eval('#rail .rnav[data-nav] .rl, #rail #lessonsBtn .rl, #rail .rcap .rl, #rail .rfind .rl:not(kbd), #addClass .rl', els => els.map(e => e.textContent.trim())), ['搜尋', '今天', '備課', '班級', '新增班級', '說明', '設定']);
+  assert.deepEqual(await page.$$eval('#rail .rnav[data-nav] .rl, #rail #lessonsBtn .rl, #rail .rcap .rl, #rail .rfind .rl:not(kbd), #addClass .rl', els => els.map(e => e.textContent.trim())), ['搜尋', '今天', '備課', '學校', '班級', '新增班級', '說明', '設定']);
   assert.deepEqual(await page.$$eval('#railClasses .rname', els => els.map(e => e.textContent)), ['Grade 9 English', 'Grade 10 Literature'], 'class names stay as typed');
   assert.equal(await page.$eval('#dropTitle', e => e.textContent), '把新的學生作業拖到這裡');
   assert.equal(await page.$eval('#pickFiles', e => e.textContent), '選擇檔案…');
