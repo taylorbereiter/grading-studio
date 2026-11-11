@@ -38,14 +38,26 @@ jobs:
       - run: npm ci
       # The made-up papers include Thai, Chinese and Japanese names, typed text and code. Chrome draws them with the
       # computer's fonts, so the tests get the common free ones instead of whatever the runner happens to have.
+      # The font packages are kept between runs, so a run needs Ubuntu's package servers only the first time, or
+      # when the list below changes (then change the number at the end of the key).
+      - name: The test fonts kept from an earlier run
+        uses: actions/cache@v4
+        with:
+          path: ~/font-debs
+          key: font-debs-ubuntu-24.04-1
       - name: Fonts for the made-up papers
         run: |
-          # The runner's package mirror is sometimes unreachable. Try three times, give up on a try after a few
-          # minutes instead of twenty, and ask Ubuntu's own server on the second and third tries.
           fonts="fonts-liberation fonts-dejavu fonts-freefont-ttf fonts-wqy-zenhei fonts-ipafont-gothic fonts-thai-tlwg fonts-noto-color-emoji"
           got=
+          if ls ~/font-debs/*.deb >/dev/null 2>&1 && sudo dpkg -i ~/font-debs/*.deb >/dev/null; then got=1; echo "Fonts: installed from the kept packages"; fi
+          # Otherwise download them. The runner's package mirror is sometimes unreachable: try three times, give up
+          # on a try after a few minutes instead of twenty, and ask Ubuntu's own server on the second and third tries.
           for try in 1 2 3; do
-            if sudo timeout 180 apt-get -o Acquire::Retries=2 update -qq && sudo timeout 420 apt-get -o Acquire::Retries=2 install -y -qq $fonts; then got=1; break; fi
+            [ -n "$got" ] && break
+            if sudo timeout 180 apt-get -o Acquire::Retries=2 update -qq && sudo timeout 420 apt-get -o Acquire::Retries=2 install -y -qq --download-only $fonts; then
+              mkdir -p ~/font-debs && cp /var/cache/apt/archives/fonts-*.deb ~/font-debs/ 2>/dev/null || true
+              sudo apt-get install -y -qq $fonts && got=1 && break
+            fi
             echo "Fonts: try $try failed. What the runner can reach:"
             getent hosts azure.archive.ubuntu.com archive.ubuntu.com security.ubuntu.com || echo "  a name did not resolve"
             curl -sS -m 15 -o /dev/null -w "  archive.ubuntu.com answered %{http_code} in %{time_total}s\n" http://archive.ubuntu.com/ubuntu/dists/noble/InRelease || true
