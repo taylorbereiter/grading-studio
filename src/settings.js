@@ -11,7 +11,7 @@ function setRender() {
   const box = $('#setNav'); if (box.dataset.h !== nav) { box.dataset.h = nav; box.innerHTML = nav; }
   for (const el of document.querySelectorAll('#setPane [data-sec]')) el.hidden = el.dataset.sec !== r.sec;
   const put = (id, h) => { const el = $(id); if (el.dataset.h !== h) { el.dataset.h = h; el.innerHTML = h; } };
-  meSetRender(r.sec);
+  meSetRender(r.sec); attSetRender(r.sec);
   if (r.sec === 'history') gbRender();
   if (r.sec === 'about') updRender();
   if (r.sec === 'classes') {

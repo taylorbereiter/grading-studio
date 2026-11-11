@@ -1,12 +1,14 @@
 {
- "version": "1.20.0",
- "build": "9082b2a2a23f",
+ "version": "1.21.0",
+ "build": "49b27edd07d4",
  "notes": [
-  "The app can speak Traditional Chinese (繁體中文). Choose it in Settings, Display, App language, or at the top of the welcome.",
-  "Like Spanish, it covers the first screens so far: the sidebar, Today, the welcome, Find anything, Help, and the feedback page students get with a returned paper. The other screens are still in English."
+  "Attendance. Each class has an Attendance tab: everyone starts as present, so a day is one press for each student who is late, excused or absent, with a note if you want one.",
+  "Look back shows every saved day in one table with each student’s totals, and a student’s own page lists the days they missed.",
+  "Copy a day, or download the table as a spreadsheet, for your school’s system. Today has a line for it under each class.",
+  "If you don’t take attendance here, turn it off in Settings, Classes and rosters."
  ],
  "files": {
-  "index.html": "3436faa0d8c7cf1080c0a8092a211f0eb1a811687dff798d2d31c69816d17462",
-  "planner.html": "bcf06d59fd469ef624812e97c8c1193e6134ca9961a5a715d60cbe333b4179b0"
+  "index.html": "46509ce032745831bea5fd3b91fe5db3be86d15198d5ae39b6a26afd49e1cc20",
+  "planner.html": "d933583fb02f545de4b81c480bdb5e54e8ad2f38f8d24ad2b8c024a889ed391e"
  }
 }
