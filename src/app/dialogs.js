@@ -52,7 +52,7 @@ function closeDlg() {
 $('#dlg').addEventListener('pointerdown', e => { if (e.target.id === 'dlg' && !dlgPage) { if (SP) splitLeave(); else leaveDlg(); } });
 // From any screen or box straight to a paper. A box over a tab's screen would otherwise fall back to that screen when it closes.
 function toPaper(i, path) { closeDlg(); if (batch && routeNow().tab) go(batchHash(batch.id)); return openStudent(i, path); }
-const TAB_DRAW = { grades: () => openGrades(), 'grades/sheet': () => openSheet(false), insights: () => openOverview(), 'insights/consistency': () => openCons(), return: () => openExport() };
+const TAB_DRAW = { grades: () => openGrades(), 'grades/sheet': () => openSheet(false), insights: () => openOverview(), 'insights/consistency': () => openCons(), examples: () => openExamples(), return: () => openExport() };
 // The screen for where the address says she is in the open assignment.
 function tabShow(r) {
   const key = r.tab ? r.tab + (r.sub ? '/' + r.sub : '') : '';

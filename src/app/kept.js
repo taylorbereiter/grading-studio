@@ -109,6 +109,7 @@ async function forgetKept(id) {
   try { await gsData.forget(id); }   // first, so if this fails it can simply be clicked again
   catch (e) { console.error(e); return toast('That didn’t work, so nothing was forgotten. Try again.'); }
   lsPut(forgotKey(id), String(Date.now()));   // any tab with it open lets go now
+  await exForgetWork(id);   // its strong examples stay; whose they were goes
   await noteForgotten(id);
   try {
     await paperDrop(id);

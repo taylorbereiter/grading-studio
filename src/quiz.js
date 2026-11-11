@@ -510,6 +510,7 @@ function openQuiz(view) {
     const mv = e.target.closest('[data-qgo]'); if (mv) { qmGo(+mv.dataset.qgo); return; }
     const op = e.target.closest('[data-open]'); if (op) { qmClose(); return openStudent(+op.dataset.open); }
     const pk = e.target.closest('[data-peek]'); if (pk) return qmPeek(pk.closest('.qmc'));
+    const ex = e.target.closest('[data-ex]'); if (ex) return exStar(ex.closest('.qmc'));
     const rs = e.target.closest('[data-reset]'); if (rs) return qmSpotSet(rs.closest('.qmc'), null);
     if (e.target.closest('[data-rest]')) return qmRest();
     const hf = e.target.closest('[data-half]'); if (hf) return qmHalf(hf.closest('.qmc'));
@@ -556,7 +557,7 @@ const qmCard = (i, q, qi) => {
   const tag = v != null && qzByPts(q) ? '<span class="qmchip">' + fmtNum(v) + ' of ' + fmtNum(pts) + '</span>' : '';
   return '<div class="qmc' + state + '" tabindex="0" data-st="' + i + '" data-q="' + q.id + '"><div class="qmch">' + head + tag +
     '<span class="qmchr">' + (qzOwn(st, q) ? '<button class="link hsm" data-reset title="Put this mark back where the question’s mark goes">Reset spot</button>' : '') +
-    '<button class="btn sm" data-peek title="See their whole page (Space)">⤢ Whole page</button></span></div>' +
+    exStarBtn(st, q) + '<button class="btn sm" data-peek title="See their whole page (Space)">⤢ Whole page</button></span></div>' +
     '<div class="qmimg" title="' + (qzByPts(q) && qzHow(q) === 'pts' ? 'Drag: line this paper up' : 'Click: wrong / right. Drag: line this paper up') + '"><span class="muted hsm">…</span></div>' +
     '<div class="qmbtns">' + btns + (v != null ? '<button class="qmb clr" data-v="" title="Clear">Clear</button>' : '') + '</div></div>';
 };
@@ -577,7 +578,7 @@ function qmRender() {
     $('#qmProg').textContent = done + ' of ' + who.length + ' marked';
     $('#qmFoot').innerHTML = '<button class="btn primary" data-rest' + (done === who.length ? ' disabled' : '') + '>' + (qzByPts(q) ? 'Give the rest ' + fmtNum(full) : 'Mark the rest right') + '</button>';
     $('#qmHint').textContent = (qzByPts(q) ? 'Keys: a number for its points, H adds ½' : 'Click an answer to put an ✗ on it, click again to take it off. Keys: 1 right, 0 or X wrong') +
-      ', arrows to move, Space whole page, Ctrl Z undo, [ and ] for the question. Drag a mark to move it on that paper.';
+      ', E example, arrows to move, Space whole page, Ctrl Z undo, [ and ] for the question. Drag a mark to move it on that paper.';
     cards = who.map(i => [i, q, qzAt]);
     body.className = 'bb qmbody qmgrid';
   } else {
@@ -588,7 +589,7 @@ function qmRender() {
       '<span class="qmtot">' + fmtNum(quizSum(st)) + ' / ' + fmtNum(quizMax()) + (n === qs.length && percentFor(quizSum(st)) != null ? ' = ' + percentFor(quizSum(st)) + '%' : '') + '</span>';
     $('#qmProg').textContent = n + ' of ' + qs.length + ' marked';
     $('#qmFoot').innerHTML = '<button class="btn" data-open="' + qzStu + '">Open their paper</button><button class="btn primary" data-rest' + (n === qs.length ? ' disabled' : '') + '>Mark the rest right</button>';
-    $('#qmHint').textContent = 'Click an answer to put an ✗ on it, click again to take it off. Keys: ↑ ↓ to move, a number for its points, Space whole page, Ctrl Z undo, [ and ] for the student.';
+    $('#qmHint').textContent = 'Click an answer to put an ✗ on it, click again to take it off. Keys: ↑ ↓ to move, a number for its points, E example, Space whole page, Ctrl Z undo, [ and ] for the student.';
     cards = qs.map((q, qi) => [qzStu, q, qi]);
     body.className = 'bb qmbody qmcol';
   }
@@ -766,6 +767,7 @@ function qmKey(e) {
   if (e.key === 'ArrowDown') { stop(); return move(cols); }
   if (e.key === 'ArrowUp') { stop(); return move(-cols); }
   if (e.key === ' ') { stop(); return qmPeek(el); }
+  if (e.key === 'e' || e.key === 'E') { stop(); return exStar(el); }   // keep this answer as a strong example, or take it back
   const q = batch.quiz.qs.find(x => x.id === el.dataset.q), scale = !q || qzByPts(q);
   if ((e.key === 'h' || e.key === 'H' || e.key === '½') && scale) { stop(); return qmHalf(el); }
   if (/^[0-9]$/.test(e.key) && scale) { stop(); return qmMark(el, +e.key); }

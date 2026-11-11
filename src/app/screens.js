@@ -1,6 +1,6 @@
 /* ---------------- where she is: every screen has its own address, the part after # ---------------- */
 // #/ is Home, #/class/<id> a class (- for "No class") with /gradebook, /students, /students/<place on the roster> and /charts under it, #/settings Settings,
-// #/a/<download> an open assignment (its papers), with /grades, /grades/sheet, /insights, /insights/consistency and /return under it.
+// #/a/<download> an open assignment (its papers), with /grades, /grades/sheet, /insights, /insights/consistency, /examples and /return under it.
 // Back, Forward and Refresh follow it. Nothing here is saved: the address only says which screen to show.
 const routeOf = hash => {
   let p; try { p = decodeURIComponent(String(hash || '').replace(/^#\/?/, '')).split('/'); } catch { p = ['']; }
@@ -30,7 +30,7 @@ const SET_SECS = [['saving', 'Saving and carrying', 'Folder, take-home file, saf
 const CLASS_TABS = [['', 'Assignments'], ['gradebook', 'Gradebook'], ['students', 'Students'], ['charts', 'Charts']];
 const classHash = (c, tab, stu) => '#/class/' + (c === lib.loose || !c.id ? '-' : encodeURIComponent(c.id)) + (tab ? '/' + tab + (stu != null ? '/' + (stu + 1) : '') : '');
 // An open assignment has four screens: the papers (Mark), Grades, Insights and Return. Grades and Insights each have a second view.
-const A_TABS = [['', 'Mark'], ['grades', 'Grades'], ['insights', 'Insights'], ['return', 'Return']], A_SUBS = { grades: ['sheet'], insights: ['consistency'] };
+const A_TABS = [['', 'Mark'], ['grades', 'Grades'], ['insights', 'Insights'], ['examples', 'Examples'], ['return', 'Return']], A_SUBS = { grades: ['sheet'], insights: ['consistency'] };
 const batchHash = (id, tab) => '#/a/' + encodeURIComponent(String(id).replace(/^gs\.b\./, '')) + (tab ? '/' + tab : '');
 // When the app reloads itself (work was put back or brought in), it starts again from Home, where that work is listed.
 // A note for the page that loads next, in this tab only, says so; it's read once, here, and gone.
