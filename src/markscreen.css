@@ -134,11 +134,11 @@ button.pavg:hover .v{text-decoration:underline}
 .crit .cn em{flex:none;font-size:var(--text-body);font-weight:650;font-variant-numeric:tabular-nums}
 .crit .cn em small{font-size:var(--text-small);font-weight:500;color:var(--muted)}
 .crit .cn em:empty::before{content:"–";font-weight:500;color:var(--faint)}
-.scores.slide{--th:14px;--fill:calc(var(--th) / 2 + var(--k) * (100% - var(--th)) / 7);padding:0}
+.scores.slide{--th:14px;--fill:calc(var(--th) / 2 + var(--k) * (100% - var(--th)) / var(--n, 7));padding:0}
 .srange{height:16px}
-.srange::-webkit-slider-runnable-track{height:4px;border-radius:var(--corner-1);background:linear-gradient(to right,var(--accent) calc(var(--th) / 2 + var(--k) * (100% - var(--th)) / 7),var(--track) 0)}
-.srange::-moz-range-track{height:4px;border-radius:var(--corner-1);background:linear-gradient(to right,var(--accent) calc(var(--th) / 2 + var(--k) * (100% - var(--th)) / 7),var(--track) 0)}
-.crit.on .srange::-webkit-slider-runnable-track{background:linear-gradient(to right,var(--accent) calc(var(--th) / 2 + var(--k) * (100% - var(--th)) / 7),color-mix(in srgb,var(--accent) 24%,var(--surface)) 0)}
+.srange::-webkit-slider-runnable-track{height:4px;border-radius:var(--corner-1);background:linear-gradient(to right,var(--accent) calc(var(--th) / 2 + var(--k) * (100% - var(--th)) / var(--n, 7)),var(--track) 0)}
+.srange::-moz-range-track{height:4px;border-radius:var(--corner-1);background:linear-gradient(to right,var(--accent) calc(var(--th) / 2 + var(--k) * (100% - var(--th)) / var(--n, 7)),var(--track) 0)}
+.crit.on .srange::-webkit-slider-runnable-track{background:linear-gradient(to right,var(--accent) calc(var(--th) / 2 + var(--k) * (100% - var(--th)) / var(--n, 7)),color-mix(in srgb,var(--accent) 24%,var(--surface)) 0)}
 .srange.unset::-webkit-slider-runnable-track{background:var(--track)}
 .srange.unset::-moz-range-track{background:var(--track)}
 .crit.on .srange.unset::-webkit-slider-runnable-track{background:color-mix(in srgb,var(--accent) 24%,var(--surface))}
@@ -218,3 +218,11 @@ button.pavg:hover .v{text-decoration:underline}
 .trytag{font-size:var(--text-small);font-weight:600;padding:2px 8px;border-radius:var(--corner-pill);background:var(--surface-2);color:var(--muted);border:1px solid var(--line);white-space:nowrap}
 .stag.retk{background:var(--accent-soft);color:var(--accent)}
 .tryown{color:var(--muted);font-size:var(--text-small)}
+/* a row with many steps (0 to 8 with half points, say): only the whole numbers are written under the slider */
+.scores.slide.many .sticks button.half{display:none}
+.scores.slide.many .sticks button{min-width:16px;padding:1px 0}
+/* Rubric setup: how every row is scored */
+.rowscale{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:8px;font-size:13px}
+.rowscale label{font-weight:600;margin:0}
+.rowscale .rowhalf{display:inline-flex;align-items:center;gap:5px;font-weight:500}
+.rowscale select{padding:4px 6px}

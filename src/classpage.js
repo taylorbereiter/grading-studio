@@ -144,12 +144,21 @@ function bkStacks(c, cols) {
 const chRowName = x => typeof x === 'string' ? x.trim() : String((x && x.name) || '').trim();
 // For each summative scored with a rubric: every row's scores, under the row's name in small letters so the same row matches from one assignment to the next.
 // only: one student's rows. A paper she left out of the average is left out here too.
+// Rows from rubrics on different scales are put on one, so an average across them means something: the scale most of the scored rows used.
+// A row keeps its own top as a third value only when it isn't 0 to 4 (pastScore), so every chart of saved work reads as it did.
+function chRowTop(cols) {
+  const n = new Map(); for (const col of cols) for (const cell of col.cells.values()) for (const r of (cell && cell.rows) || []) { const t = r[2] || ROW_TOP; n.set(t, (n.get(t) || 0) + 1); }
+  let best = ROW_TOP, most = 0; for (const [t, k] of n) if (k > most) { best = t; most = k; }
+  return best;
+}
+const chSums = cols => cols.filter(x => x.type === 'sum');
 function chRowAvgs(c, cols, only) {
-  return cols.filter(x => x.type === 'sum').map(col => {
+  const T = chRowTop(chSums(cols));
+  return chSums(cols).map(col => {
     const by = new Map();
     for (const n of only ? [only] : c.names) {
       const cell = col.cells.get(n); if (!cell || !cell.rows || cell.out || cell.st === 'missing' || cell.st === 'excused') continue;
-      for (const [nm, v] of cell.rows) { const name = chRowName(nm), k = name.toLowerCase(); if (!k || v == null || isNaN(+v)) continue; if (!by.has(k)) by.set(k, { name, v: [] }); by.get(k).v.push(+v); }
+      for (const [nm, v, t] of cell.rows) { const name = chRowName(nm), k = name.toLowerCase(); if (!k || v == null || isNaN(+v)) continue; if (!by.has(k)) by.set(k, { name, v: [] }); by.get(k).v.push((t || ROW_TOP) !== T ? +v * T / (t || ROW_TOP) : +v); }
     }
     return { col, by };
   }).filter(x => x.by.size);
@@ -160,7 +169,7 @@ function bkRubricRows(c, cols) {
   const keys = []; for (const p of per) for (const k of p.by.keys()) if (!keys.includes(k)) keys.push(k);
   const series = keys.map(k => { const pts = per.map(p => p.by.has(k) ? bkMean(p.by.get(k).v) : null), have = pts.filter(v => v != null); return { k, name: per.find(p => p.by.has(k)).by.get(k).name, pts, mean: bkMean(have), last: have[have.length - 1], at: pts.reduce((a, v, i) => v != null ? i : a, 0) }; });
   const low = series.reduce((a, b) => b.mean < a.mean ? b : a), vals = series.flatMap(x => x.pts).filter(v => v != null);
-  const hi = 4, lo = Math.max(0, Math.min(hi - 1, Math.floor(Math.min(...vals) - .25))), tick = hi - lo > 2 ? 1 : .5;
+  const hi = chRowTop(chSums(cols)), lo = Math.max(0, Math.min(hi - 1, Math.floor(Math.min(...vals) - .25))), tick = hi - lo > 2 ? 1 : .5;
   const n = per.length, W = bkW(), L = 34, R = Math.min(176, Math.round(W * .3)), T = 12, B = 58, H = 250, X = i => n === 1 ? L + (W - L - R) / 2 : L + 20 + i * (W - L - R - 40) / (n - 1), Y = v => T + (hi - v) / (hi - lo) * (H - T - B);
   let s = '';
   for (let v = lo; v <= hi + 1e-9; v += tick) s += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + Y(v) + '" y2="' + Y(v) + '" class="tgl"/><text x="' + (L - 8) + '" y="' + (Y(v) + 4) + '" text-anchor="end" class="ttk">' + v + '</text>';
@@ -170,7 +179,7 @@ function bkRubricRows(c, cols) {
     const cls = x === low ? ' lo' : '', seg = []; let run = [];
     x.pts.forEach((v, i) => { if (v == null) { if (run.length) seg.push(run); run = []; } else run.push(X(i) + ',' + Y(v)); }); if (run.length) seg.push(run);
     s += seg.map(r => '<polyline class="chrl' + cls + '" points="' + r.join(' ') + '"/>').join('');
-    x.pts.forEach((v, i) => { if (v != null) s += '<circle class="chrd' + cls + '" cx="' + X(i) + '" cy="' + Y(v) + '" r="5" tabindex="0"' + chTip(fmtNum(Math.round(v * 10) / 10) + ' out of 4', x.name + ' · ' + per[i].col.name, people(per[i].by.get(x.k).v.length, 'paper')) + '/>'; });
+    x.pts.forEach((v, i) => { if (v != null) s += '<circle class="chrd' + cls + '" cx="' + X(i) + '" cy="' + Y(v) + '" r="5" tabindex="0"' + chTip(fmtNum(Math.round(v * 10) / 10) + ' out of ' + hi, x.name + ' · ' + per[i].col.name, people(per[i].by.get(x.k).v.length, 'paper')) + '/>'; });
   }
   // each row's name at the right, beside where its line ends; pushed apart so no two sit on each other
   const labs = series.map(x => ({ x, y: Y(x.last) })).sort((a, b) => a.y - b.y);
@@ -250,9 +259,9 @@ function bkStuRows(c, cols, n) {
   const fold = per => { const m = new Map(); for (const p of per) for (const [k, e] of p.by) { if (!m.has(k)) m.set(k, { name: e.name, v: [] }); m.get(k).v.push(...e.v); } return m; };
   const mine = fold(chRowAvgs(c, cols, n)), cls = fold(chRowAvgs(c, cols));
   if (!mine.size) return '<p class="muted" id="bkStuRows">This shows once a summative of theirs has been scored with a rubric.</p>';
-  const one = v => fmtNum(Math.round(v * 10) / 10);
+  const one = v => fmtNum(Math.round(v * 10) / 10), T = chRowTop(chSums(cols));
   return '<div id="bkStuRows">' + [...mine].map(([k, e]) => { const v = bkMean(e.v), cv = cls.has(k) ? bkMean(cls.get(k).v) : null;
-    return '<div class="bkcmp chrow"' + chTip(one(v) + ' out of 4', e.name, people(e.v.length, 'summative') + (cv != null ? ' · class average ' + one(cv) : '')) + ' tabindex="0"><span title="' + esc(e.name) + '">' + esc(e.name) + '</span><div class="bkcmpt"><i style="width:' + Math.min(100, v / 4 * 100) + '%"></i>' + (cv != null ? '<em style="left:' + Math.min(100, cv / 4 * 100) + '%"></em>' : '') + '</div><b>' + one(v) + '</b><small>' + (cv != null ? 'class ' + one(cv) : '') + '</small></div>'; }).join('') + '</div>';
+    return '<div class="bkcmp chrow"' + chTip(one(v) + ' out of ' + T, e.name, people(e.v.length, 'summative') + (cv != null ? ' · class average ' + one(cv) : '')) + ' tabindex="0"><span title="' + esc(e.name) + '">' + esc(e.name) + '</span><div class="bkcmpt"><i style="width:' + Math.min(100, v / T * 100) + '%"></i>' + (cv != null ? '<em style="left:' + Math.min(100, cv / T * 100) + '%"></em>' : '') + '</div><b>' + one(v) + '</b><small>' + (cv != null ? 'class ' + one(cv) : '') + '</small></div>'; }).join('') + '</div>';
 }
 // A window that changes size: the charts are drawn again at their new width, unless she's part-way through something in the gradebook.
 let chResize = 0;

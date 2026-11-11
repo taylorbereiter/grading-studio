@@ -879,7 +879,13 @@ document.addEventListener('click', e => { if (e.target.closest('.themeBtn')) set
    and the Planner never opens anything of grading's. A rubric or scale names its unit as
    { id, course, title }, so it still sorts if that unit isn't here. They also go to the Planner folder,
    under Rubrics/, for Claude. Tabs tell each other about changes on the 'gs-bank' channel. */
-const B_LEVELS = [4, 3, 2, 1, 0];
+const B_TOP = 4, B_TOP_MAX = 10;
+const bTopOk = v => { v = Math.round(+v); return v >= 1 && v <= B_TOP_MAX ? v : 0; };
+const bTop = (x, i) => (i != null && Array.isArray(x.tops) && bTopOk(x.tops[i])) || bTopOk(x.top) || B_TOP;
+const bMax = x => x.criteria.reduce((a, _, i) => a + bTop(x, i), 0);
+const bLevels = (x, i) => { const out = []; for (let v = bTop(x, i); v >= 0; v--) out.push(v); return out; };
+const bOneTop = x => x.criteria.every((_, i) => bTop(x, i) === bTop(x, 0)) ? bTop(x, 0) : 0;
+function bRowScale(x) { const o = {}; if (bTopOk(x.top) && bTopOk(x.top) !== B_TOP) o.top = bTopOk(x.top); if (Array.isArray(x.tops) && x.tops.some(bTopOk)) o.tops = x.tops.map(v => bTopOk(v) || null); if (x.half === false) o.half = false; return o; }
 const B_SCALE12 = { 12: 100, 11: 95, 10: 91, 9: 86, 8: 82, 7: 77, 6: 73, 5: 68, 4: 64, 3: 60 };
 let bankChan = null; try { bankChan = new BroadcastChannel('gs-bank'); } catch { }
 const tidyBank = b => ({ rubrics: Array.isArray(b && b.rubrics) ? b.rubrics : [], scales: Array.isArray(b && b.scales) ? b.scales : [], gone: (b && b.gone && typeof b.gone === 'object') ? b.gone : {} });
@@ -909,10 +915,11 @@ function normRubric(x) {
   const criteria = (Array.isArray(x.criteria) ? x.criteria : []).map(c => String(c == null ? '' : c).trim()).slice(0, 12).map((c, i) => c || 'Criterion ' + (i + 1));
   let levels;
   if (Array.isArray(x.levels)) {
-    levels = criteria.map((_, i) => { const r = x.levels[i] || {}, o = {}; for (const v of B_LEVELS) { const t = String(r[v] == null ? '' : r[v]).trim(); if (t) o[v] = t; } return o; });
+    levels = criteria.map((_, i) => { const r = x.levels[i] || {}, o = {}; for (const v of bLevels({ ...x, criteria }, i)) { const t = String(r[v] == null ? '' : r[v]).trim(); if (t) o[v] = t; } return o; });
     if (!levels.some(r => Object.keys(r).length)) levels = undefined;
   }
-  const r = { id: typeof x.id === 'string' && x.id ? x.id : lid(), name: String(x.name || '').trim() || 'Rubric', criteria: criteria.length ? criteria : ['Criterion 1'], levels, scale: normScale(x.scale), at: +x.at || Date.now() };
+  const r = { id: typeof x.id === 'string' && x.id ? x.id : lid(), name: String(x.name || '').trim() || 'Rubric', criteria: criteria.length ? criteria : ['Criterion 1'], levels, scale: normScale(x.scale), ...bRowScale(x), at: +x.at || Date.now() };
+  if (r.tops) r.tops = r.criteria.map((_, i) => r.tops[i] || null);
   const u = normRef(x.unit); if (u) r.unit = u;
   return r;
 }
@@ -966,7 +973,7 @@ function refFromKey(key, was) {
 /* ---------- the Bank tab ---------- */
 function bankCard(kind, x) {
   const about = kind === 'scales' ? 'Grading scale · top score ' + scaleTop(x.scale)
-    : x.criteria.length + (x.criteria.length === 1 ? ' row' : ' rows') + ' · out of ' + x.criteria.length * 4 + (x.levels ? ' · what each score means' : '') + (x.scale ? ' · with a scale' : '');
+    : x.criteria.length + (x.criteria.length === 1 ? ' row' : ' rows') + ' · out of ' + bMax(x) + (x.levels ? ' · what each score means' : '') + (x.scale ? ' · with a scale' : '');
   return '<button class="ls-card pl-bcard' + (kind === 'scales' ? ' scale' : '') + '" draggable="true" data-a="bopen" data-bk="' + kind + '" data-bid="' + esc(x.id) + '"><b>' + esc(x.name) + '</b><span>' + esc(about) + '</span></button>';
 }
 function bankGroups() {
@@ -1039,15 +1046,15 @@ function bankEdRender() {
     '<label class="pl-fl">Name<input class="btn sm" data-bf="name" value="' + esc(x.name) + '" placeholder="' + (rub ? 'Like Book cover formative' : 'Like Out of 12, steps of 5') + '"></label>' +
     '<label class="pl-fl">Unit<select class="btn sm" data-bf="unit">' + unitOptions(bEd.unitKey) + '</select></label>';
   if (rub) {
-    h += '<div class="pl-fl"><b>Rows</b> <span class="muted">Each row is scored 4 to 1, with 0 there if you need it. Out of ' + x.criteria.length * 4 + '.</span></div>';
+    h += '<div class="pl-fl"><b>Rows</b> <span class="muted">Each row is scored 0 to <select class="btn sm" data-bf="rowtop" aria-label="The highest score on a row">' + (bOneTop(x) ? '' : '<option value="" selected>each its own</option>') + Array.from({ length: B_TOP_MAX }, (_, k) => '<option' + (k + 1 === bOneTop(x) ? ' selected' : '') + '>' + (k + 1) + '</option>').join('') + '</select> <label style="display:inline-flex;gap:5px;align-items:center"><input type="checkbox" data-bf="rowhalf"' + (x.half === false ? '' : ' checked') + '> Half points</label> Out of ' + bMax(x) + '.</span></div>';
     x.criteria.forEach((c, i) => {
-      const lv = x.levels[i] || {}, n = B_LEVELS.filter(v => String(lv[v] || '').trim()).length;
+      const lv = x.levels[i] || {}, n = bLevels(x, i).filter(v => String(lv[v] || '').trim()).length;
       h += '<div class="pl-brow"><div class="pl-brh"><b>' + (i + 1) + '</b><input class="btn sm" data-bc="' + i + '" value="' + esc(c) + '" aria-label="Row ' + (i + 1) + ' name"><button class="btn sm ghost" data-a="browdel" data-i="' + i + '"' + (x.criteria.length < 2 ? ' disabled' : '') + ' aria-label="Take out row ' + (i + 1) + '">×</button></div>' +
         '<details' + (n ? '' : '') + '><summary>What each score means' + (n ? ' (' + n + ' written)' : '') + '</summary>' +
-        B_LEVELS.map(v => '<label class="pl-blv"><b>' + v + '</b><textarea rows="2" data-bl="' + i + '" data-bv="' + v + '" placeholder="' + (v === 0 ? 'Optional' : '') + '" aria-label="What ' + v + ' means on row ' + (i + 1) + '">' + esc(lv[v] || '') + '</textarea></label>').join('') + '</details></div>';
+        bLevels(x, i).map(v => '<label class="pl-blv"><b>' + v + '</b><textarea rows="2" data-bl="' + i + '" data-bv="' + v + '" placeholder="' + (v === 0 ? 'Optional' : '') + '" aria-label="What ' + v + ' means on row ' + (i + 1) + '">' + esc(lv[v] || '') + '</textarea></label>').join('') + '</details></div>';
     });
     h += '<button class="btn sm" data-a="browadd"' + (x.criteria.length >= 12 ? ' disabled' : '') + '>+ Add a row</button>';
-    const top = x.criteria.length * 4;
+    const top = bMax(x);
     h += '<div class="pl-fl" style="margin-top:14px"><b>Grading scale</b> ' + presetsHtml(top, x.scale) + '</div>' + scaleRowsHtml(x.scale, top);
   } else {
     const top = scaleTop(x.scale);
@@ -1077,22 +1084,24 @@ function bankEdInput(e) {
 function bankEdChange(e) {
   const t = e.target, x = bEd.item;
   if (t.dataset.bf === 'unit') bEd.unitKey = t.value;
+  else if (t.dataset.bf === 'rowtop') { const to = bTopOk(t.value), was = bMax(x); if (to) { delete x.tops; if (to === B_TOP) delete x.top; else x.top = to; x.scale = rescale(x.scale, was, bMax(x)); } bankEdRender(); }
+  else if (t.dataset.bf === 'rowhalf') { if (t.checked) delete x.half; else x.half = false; bankEdRender(); }
   else if (t.dataset.bf === 'top') {
     const top = Math.max(1, Math.min(40, Math.round(+t.value) || 1)), was = scaleTop(x.scale);
     if (top !== was) x.scale = rescale(x.scale, was, top) || presetScale('plain', top);
     bankEdRender();
   } else if (t.dataset.bsaved != null && t.value) {
-    const top = bEd.kind === 'rubrics' ? x.criteria.length * 4 : scaleTop(x.scale);
+    const top = bEd.kind === 'rubrics' ? bMax(x) : scaleTop(x.scale);
     x.scale = presetScale(null, top, t.value); bankEdRender();
   }
 }
 async function bankEdClick(e) {
   const t = e.target.closest('[data-a],[data-bpre]'); if (!t) return;
   const { kind, item: x } = bEd;
-  if (t.dataset.bpre) { const top = kind === 'rubrics' ? x.criteria.length * 4 : scaleTop(x.scale); x.scale = presetScale(t.dataset.bpre, top) || (kind === 'scales' ? x.scale : null); return bankEdRender(); }
+  if (t.dataset.bpre) { const top = kind === 'rubrics' ? bMax(x) : scaleTop(x.scale); x.scale = presetScale(t.dataset.bpre, top) || (kind === 'scales' ? x.scale : null); return bankEdRender(); }
   const a = t.dataset.a;
-  if (a === 'browadd') { x.criteria.push('Criterion ' + (x.criteria.length + 1)); x.levels.push({}); x.scale = rescale(x.scale, (x.criteria.length - 1) * 4, x.criteria.length * 4); return bankEdRender(); }
-  if (a === 'browdel') { const i = +t.dataset.i; x.criteria.splice(i, 1); x.levels.splice(i, 1); x.scale = rescale(x.scale, (x.criteria.length + 1) * 4, x.criteria.length * 4); return bankEdRender(); }
+  if (a === 'browadd') { const was = bMax(x); x.criteria.push('Criterion ' + (x.criteria.length + 1)); x.levels.push({}); if (Array.isArray(x.tops)) x.tops.push(null); x.scale = rescale(x.scale, was, bMax(x)); return bankEdRender(); }
+  if (a === 'browdel') { const i = +t.dataset.i, was = bMax(x); x.criteria.splice(i, 1); x.levels.splice(i, 1); if (Array.isArray(x.tops)) x.tops.splice(i, 1); x.scale = rescale(x.scale, was, bMax(x)); return bankEdRender(); }
   if (a === 'bcancel') { bEd = null; return closeDlg(); }
   if (a === 'bsave') return bankEdSave();
   if (a === 'bdup') { const c = JSON.parse(JSON.stringify(x)); c.id = lid(); c.name = x.name + ' (copy)'; bEd = { kind, item: c, isNew: true, unitKey: bEd.unitKey }; return bankEdRender(); }
@@ -1232,6 +1241,7 @@ Rubric: {
   "id": "…", "name": "Book cover formative",
   "unit": { "course": "<course from timetable.json>", "title": "<a unit's title from Units/>" },   // optional
   "criteria": ["Row 1 name", "Row 2 name", "Row 3 name"],        // each row is scored 4 to 1 (0 if needed), so 3 rows = out of 12
+  "top": 8, "half": false,                                       // optional: a row's highest score when it isn't 4 (1 to 10), and false for whole numbers only
   "levels": [ { "4": "What a 4 looks like on row 1", "3": "…", "2": "…", "1": "…" }, { … }, { … } ],   // optional; "0" too if wanted
   "scale": { "12": 100, "11": 95, "10": 90, … }                  // optional: total points -> percent; null = plain share of points
 }
@@ -5456,9 +5466,9 @@ const LANG_ES = {
     [/^all (\d+) scored$/, 'los $1 con nota'], [/^average (\d+)%$/, 'media: $1 %'],
     [/^(?:(.+): )?(.+) was the weakest row on (.+)\.$/, m => (m[1] ? m[1] + ': ' : '') + m[2] + ' fue la fila más floja en ' + (m[3] === 'the last set of papers' ? 'el último grupo de trabajos' : m[3]) + '.'],
     [/^(?:(.+): )?[Ee]very row came out the same on (.+)\.$/, m => (m[1] ? m[1] + ': t' : 'T') + 'odas las filas salieron igual en ' + (m[2] === 'the last set of papers' ? 'el último grupo de trabajos' : m[2]) + '.'],
-    [/^(\w+) students? scored 2 or below on (.+)\.$/, m => { const n = esN(m[1]); return esCap(esW(n)) + (n === 1 ? ' estudiante obtuvo' : ' estudiantes obtuvieron') + ' 2 o menos en ' + m[2] + '.'; }],
-    [/^Nobody scored 2 or below on (.+)\.$/, 'Nadie obtuvo 2 o menos en $1.'],
-    [/^.+ [\d.]+ of 4(?:, .+ [\d.]+ of 4)*$/, m => m.input.replace(/ of 4/g, ' de 4')],
+    [/^(\w+) students? scored ([\d.]+) or below on (.+)\.$/, m => { const n = esN(m[1]); return esCap(esW(n)) + (n === 1 ? ' estudiante obtuvo' : ' estudiantes obtuvieron') + ' ' + m[2] + ' o menos en ' + m[3] + '.'; }],
+    [/^Nobody scored ([\d.]+) or below on (.+)\.$/, 'Nadie obtuvo $1 o menos en $2.'],
+    [/^.+ [\d.]+ of \d+(?:, .+ [\d.]+ of \d+)*$/, m => m.input.replace(/ of (\d+)/g, ' de $1')],
     [/^Show all (\d+)$/, 'Mostrar los $1'],
     [/^(\d+) papers? (?:is|are) partly scored$/, m => m[1] + (m[1] === '1' ? ' trabajo tiene' : ' trabajos tienen') + ' la nota a medias'],
     [/^(.+): drop the download in again to reopen it$/, m => (m[1] === 'A download' ? 'Una descarga' : m[1]) + ': suelta otra vez la descarga para volver a abrirlo'],
@@ -5490,7 +5500,7 @@ const LANG_ES = {
     [/^(\d+) answers?$/, m => m[1] + (m[1] === '1' ? ' respuesta' : ' respuestas')],
     [/^No answer matches “(.*)”\. Try one word, like “roster” or “export”\.$/, 'Ninguna respuesta coincide con «$1». Prueba con una sola palabra, como «lista» o «exportar».'],
     /* the feedback page */
-    [/^([\d.,½]+) of 4$/, '$1 de 4'], [/^p\. (\d+)$/, 'pág. $1'],
+    [/^([\d.,½]+) of (\d+)$/, '$1 de $2'], [/^p\. (\d+)$/, 'pág. $1'],
   ],
   helpSecs: { start: 'Primeros pasos', mark: 'Corregir un trabajo', score: 'Notas y rúbricas', back: 'Devolver los trabajos', class: 'Clases y libro de calificaciones', safe: 'Guardado y seguridad', plan: 'Planificar y enseñar', private: 'Privacidad' },
   help: {
@@ -5552,7 +5562,8 @@ const LANG_ES = {
         'Desde el teclado: pulsa del **1** al **4** (o **0**) para puntuar la fila activa, un **punto** para medio punto e **Intro** para el siguiente trabajo.'] },
     'rubric-setup': { q: '¿Cómo cambio las filas de la rúbrica o uso puntos?', words: 'criterios filas niveles descriptores puntos porcentaje escala editar banco reutilizar',
       a: ['Pulsa **Edit** encima de la rúbrica, o **Rubric setup** en Setup. Cambia el nombre de las filas, añádelas o quítalas, y escribe qué significa cada nota en una fila.',
-        'El mismo cuadro cambia la tarea a puntos simples y fija la escala de calificación que convierte un total en un porcentaje.', '**Save to the bank…** guarda una rúbrica para usarla en otra tarea.'] },
+        'El mismo cuadro cambia la tarea a puntos simples y fija la escala de calificación que convierte un total en un porcentaje.', '**Save to the bank…** guarda una rúbrica para usarla en otra tarea.',
+        'Cada fila se puntúa de 0 a 4 con medios puntos, salvo que indiques otra cosa. Debajo de las filas, elige otra nota máxima (de 1 a 10) o desactiva los medios puntos. Tu escala habitual para las rúbricas nuevas está en Ajustes, Calificación.'] },
     'grading-way': { q: 'Mi centro califica con letras, porcentajes o del 1 al 7. ¿Puedo configurarlo?', go: 'Abrir Ajustes, Calificación', words: 'letras A B C porcentaje IB 7 límites bandas escala',
       a: ['Sí. En Ajustes, **Grading scale and rubrics** está tu forma de calificar: filas de rúbrica, puntos, porcentaje, letras o IB del 1 al 7, con los límites de cada letra o nivel.', 'Es tu punto de partida para las tareas nuevas. Cada tarea se puede configurar a su manera en Rubric setup.'] },
     'status': { q: '¿Cómo marco un trabajo como no entregado, justificado o con retraso?', words: 'ausente sin trabajo exento tarde estado falta',
@@ -5801,9 +5812,9 @@ const LANG_ZH = {
     [/^all (\d+) scored$/, '$1 份全部已評分'], [/^average (\d+)%$/, '平均 $1%'],
     [/^(?:(.+): )?(.+) was the weakest row on (.+)\.$/, m => (m[1] ? m[1] + '：' : '') + '在' + zhLast(m[3]) + '中，' + m[2] + ' 是最弱的項目。'],
     [/^(?:(.+): )?[Ee]very row came out the same on (.+)\.$/, m => (m[1] ? m[1] + '：' : '') + '在' + zhLast(m[2]) + '中，每個項目的結果都一樣。'],
-    [/^(\w+) students? scored 2 or below on (.+)\.$/, m => zhN(m[1]) + ' 位學生在 ' + m[2] + ' 得到 2 分或以下。'],
-    [/^Nobody scored 2 or below on (.+)\.$/, '沒有人在 $1 得到 2 分或以下。'],
-    [/^.+ [\d.]+ of 4(?:, .+ [\d.]+ of 4)*$/, m => m.input.replace(/ of 4/g, ' / 4').replace(/, /g, '、')],
+    [/^(\w+) students? scored ([\d.]+) or below on (.+)\.$/, m => zhN(m[1]) + ' 位學生在 ' + m[3] + ' 得到 ' + m[2] + ' 分或以下。'],
+    [/^Nobody scored ([\d.]+) or below on (.+)\.$/, '沒有人在 $2 得到 $1 分或以下。'],
+    [/^.+ [\d.]+ of \d+(?:, .+ [\d.]+ of \d+)*$/, m => m.input.replace(/ of (\d+)/g, ' / $1').replace(/, /g, '、')],
     [/^Show all (\d+)$/, '顯示全部 $1 項'],
     [/^(\d+) papers? (?:is|are) partly scored$/, '$1 份作業只評了一部分'],
     [/^(.+): drop the download in again to reopen it$/, m => (m[1] === 'A download' ? '一個下載檔' : m[1]) + '：再拖入一次下載檔即可重新開啟'],
@@ -5835,7 +5846,7 @@ const LANG_ZH = {
     [/^(\d+) answers?$/, '$1 則解答'],
     [/^No answer matches “(.*)”\. Try one word, like “roster” or “export”\.$/, '沒有符合「$1」的解答。試試一個詞，例如「名單」或「匯出」。'],
     /* the feedback page */
-    [/^([\d.,½]+) of 4$/, '$1 / 4'], [/^p\. (\d+)$/, '第 $1 頁'],
+    [/^([\d.,½]+) of (\d+)$/, '$1 / $2'], [/^p\. (\d+)$/, '第 $1 頁'],
   ],
   helpSecs: { start: '開始使用', mark: '批改作業', score: '分數與評分規準', back: '發還作業', class: '班級與成績冊', safe: '儲存與安全', plan: '備課與上課', private: '隱私' },
   help: {
@@ -5897,7 +5908,8 @@ const LANG_ZH = {
         '用鍵盤：按 **1** 到 **4**（或 **0**）為目前的項目評分，按**句點**給半分，按 **Enter** 前往下一份作業。'] },
     'rubric-setup': { q: '怎麼更改評分規準的項目，或改用分數？', words: '規準 項目 等級 描述 分數 百分比 等第 編輯 規準庫 重複使用',
       a: ['按評分規準上方的 **Edit**，或 Setup 裡的 **Rubric setup**。可以更改項目名稱、新增或移除項目，並寫下每個分數在該項目代表的意義。',
-        '同一個視窗也可以把作業改成單純給分，並設定把總分換算成百分比的評分等第。', '**Save to the bank…** 會把評分規準存起來，供其他作業使用。'] },
+        '同一個視窗也可以把作業改成單純給分，並設定把總分換算成百分比的評分等第。', '**Save to the bank…** 會把評分規準存起來，供其他作業使用。',
+        '每個項目預設評 0 到 4 分，可以給半分。在項目下方可以改成其他最高分（1 到 10），或關閉半分。新評分規準的慣用分數範圍在設定的「評分」裡。'] },
     'grading-way': { q: '我的學校用等第、百分比或 1 到 7 評分，可以設定嗎？', go: '開啟設定、評分', words: '等第 A B C 百分比 IB 7 分界 級距 量尺',
       a: ['可以。在設定的 **Grading scale and rubrics** 裡是你的評分方式：評分規準項目、分數、百分比、等第或 IB 1 到 7，以及每個等第或級別的分界。', '這是新作業的預設方式。每份作業都可以在 Rubric setup 裡另外設定。'] },
     'status': { q: '怎麼把作業標示為缺交、免交或遲交？', words: '缺席 沒交 免除 遲交 狀態 缺交',
@@ -6130,8 +6142,9 @@ const HELP = [
     words: 'score grade slider rows criteria keyboard half points' },
   { id: 'rubric-setup', sec: 'score', q: 'How do I change the rubric rows or use points instead?',
     a: ['Press **Edit** above the rubric, or **Rubric setup** under Setup. Rename rows, add or remove them, and write what each score means on a row.',
-      'The same box switches the assignment to plain points, and sets the grading scale that turns a total into a percent.', '**Save to the bank…** keeps a rubric to use again on another assignment.'],
-    words: 'criteria rows levels descriptors points percent scale edit bank reuse' },
+      'The same box switches the assignment to plain points, and sets the grading scale that turns a total into a percent.', '**Save to the bank…** keeps a rubric to use again on another assignment.',
+      'A row is scored 0 to 4 with half points unless you say otherwise. Under the rows, choose another top score (1 to 10) or turn half points off. Your usual scale for new rubrics is in Settings, Grading.'],
+    words: 'criteria rows levels descriptors points percent scale edit bank reuse top highest 0 to 8 0 to 5 half points whole numbers' },
   { id: 'grading-way', sec: 'score', q: 'My school grades with letters, percent or 1 to 7. Can I set that?',
     a: ['Yes. Settings, **Grading scale and rubrics** has how you grade: rubric rows, points, percent, letter grades or IB 1 to 7, with the boundaries for each letter or level.', 'It is your default for new assignments. Each assignment can still be set its own way in Rubric setup.'],
     go: ['Open Settings, Grading', '#/settings/grading'], words: 'letters A B C percent IB 7 boundaries bands default scale' },

@@ -314,7 +314,7 @@ body{padding-bottom:var(--savebar,0px)}.app{height:calc(100vh - var(--savebar,0p
 .srange.unset::-moz-range-thumb{background:var(--surface);border-color:var(--line-strong);box-shadow:none}
 .srange:focus-visible{outline:none}.srange:focus-visible::-webkit-slider-thumb{outline:2px solid var(--accent);outline-offset:2px}
 .sticks{position:relative;height:24px}
-.scores.slide .sticks button{position:absolute;top:0;left:calc(var(--th) / 2 + var(--k) * (100% - var(--th)) / 7);transform:translateX(-50%);min-width:26px;padding:2px 3px;border:0;background:none;border-radius:5px;font-size:12.5px}
+.scores.slide .sticks button{position:absolute;top:0;left:calc(var(--th) / 2 + var(--k) * (100% - var(--th)) / var(--n, 7));transform:translateX(-50%);min-width:26px;padding:2px 3px;border:0;background:none;border-radius:5px;font-size:12.5px}
 .scores.slide .sticks button.half{font-size:11.5px}
 .scores.slide .sticks button:hover{background:var(--surface-2)}
 .scores.slide .sticks button[aria-pressed=true]{background:none;box-shadow:none;color:var(--accent);font-weight:700}
@@ -1936,11 +1936,11 @@ button.pavg:hover .v{text-decoration:underline}
 .crit .cn em{flex:none;font-size:var(--text-body);font-weight:650;font-variant-numeric:tabular-nums}
 .crit .cn em small{font-size:var(--text-small);font-weight:500;color:var(--muted)}
 .crit .cn em:empty::before{content:"–";font-weight:500;color:var(--faint)}
-.scores.slide{--th:14px;--fill:calc(var(--th) / 2 + var(--k) * (100% - var(--th)) / 7);padding:0}
+.scores.slide{--th:14px;--fill:calc(var(--th) / 2 + var(--k) * (100% - var(--th)) / var(--n, 7));padding:0}
 .srange{height:16px}
-.srange::-webkit-slider-runnable-track{height:4px;border-radius:var(--corner-1);background:linear-gradient(to right,var(--accent) calc(var(--th) / 2 + var(--k) * (100% - var(--th)) / 7),var(--track) 0)}
-.srange::-moz-range-track{height:4px;border-radius:var(--corner-1);background:linear-gradient(to right,var(--accent) calc(var(--th) / 2 + var(--k) * (100% - var(--th)) / 7),var(--track) 0)}
-.crit.on .srange::-webkit-slider-runnable-track{background:linear-gradient(to right,var(--accent) calc(var(--th) / 2 + var(--k) * (100% - var(--th)) / 7),color-mix(in srgb,var(--accent) 24%,var(--surface)) 0)}
+.srange::-webkit-slider-runnable-track{height:4px;border-radius:var(--corner-1);background:linear-gradient(to right,var(--accent) calc(var(--th) / 2 + var(--k) * (100% - var(--th)) / var(--n, 7)),var(--track) 0)}
+.srange::-moz-range-track{height:4px;border-radius:var(--corner-1);background:linear-gradient(to right,var(--accent) calc(var(--th) / 2 + var(--k) * (100% - var(--th)) / var(--n, 7)),var(--track) 0)}
+.crit.on .srange::-webkit-slider-runnable-track{background:linear-gradient(to right,var(--accent) calc(var(--th) / 2 + var(--k) * (100% - var(--th)) / var(--n, 7)),color-mix(in srgb,var(--accent) 24%,var(--surface)) 0)}
 .srange.unset::-webkit-slider-runnable-track{background:var(--track)}
 .srange.unset::-moz-range-track{background:var(--track)}
 .crit.on .srange.unset::-webkit-slider-runnable-track{background:color-mix(in srgb,var(--accent) 24%,var(--surface))}
@@ -2020,6 +2020,14 @@ button.pavg:hover .v{text-decoration:underline}
 .trytag{font-size:var(--text-small);font-weight:600;padding:2px 8px;border-radius:var(--corner-pill);background:var(--surface-2);color:var(--muted);border:1px solid var(--line);white-space:nowrap}
 .stag.retk{background:var(--accent-soft);color:var(--accent)}
 .tryown{color:var(--muted);font-size:var(--text-small)}
+/* a row with many steps (0 to 8 with half points, say): only the whole numbers are written under the slider */
+.scores.slide.many .sticks button.half{display:none}
+.scores.slide.many .sticks button{min-width:16px;padding:1px 0}
+/* Rubric setup: how every row is scored */
+.rowscale{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:8px;font-size:13px}
+.rowscale label{font-weight:600;margin:0}
+.rowscale .rowhalf{display:inline-flex;align-items:center;gap:5px;font-weight:500}
+.rowscale select{padding:4px 6px}
 /* ---------- safe by default: the folder ask on Home, Go back in time, About and updates ---------- */
 .safeask{display:flex;gap:var(--space-4);align-items:flex-start;padding:18px 20px;margin:0 0 var(--space-5);background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--warn);border-radius:var(--corner-5)}
 .safeask .saic{flex:none;width:40px;height:40px;display:flex;align-items:center;justify-content:center;border-radius:var(--corner-4);background:var(--warn-soft);color:var(--warn)}
@@ -3895,9 +3903,9 @@ const LANG_ES = {
     [/^all (\d+) scored$/, 'los $1 con nota'], [/^average (\d+)%$/, 'media: $1 %'],
     [/^(?:(.+): )?(.+) was the weakest row on (.+)\.$/, m => (m[1] ? m[1] + ': ' : '') + m[2] + ' fue la fila más floja en ' + (m[3] === 'the last set of papers' ? 'el último grupo de trabajos' : m[3]) + '.'],
     [/^(?:(.+): )?[Ee]very row came out the same on (.+)\.$/, m => (m[1] ? m[1] + ': t' : 'T') + 'odas las filas salieron igual en ' + (m[2] === 'the last set of papers' ? 'el último grupo de trabajos' : m[2]) + '.'],
-    [/^(\w+) students? scored 2 or below on (.+)\.$/, m => { const n = esN(m[1]); return esCap(esW(n)) + (n === 1 ? ' estudiante obtuvo' : ' estudiantes obtuvieron') + ' 2 o menos en ' + m[2] + '.'; }],
-    [/^Nobody scored 2 or below on (.+)\.$/, 'Nadie obtuvo 2 o menos en $1.'],
-    [/^.+ [\d.]+ of 4(?:, .+ [\d.]+ of 4)*$/, m => m.input.replace(/ of 4/g, ' de 4')],
+    [/^(\w+) students? scored ([\d.]+) or below on (.+)\.$/, m => { const n = esN(m[1]); return esCap(esW(n)) + (n === 1 ? ' estudiante obtuvo' : ' estudiantes obtuvieron') + ' ' + m[2] + ' o menos en ' + m[3] + '.'; }],
+    [/^Nobody scored ([\d.]+) or below on (.+)\.$/, 'Nadie obtuvo $1 o menos en $2.'],
+    [/^.+ [\d.]+ of \d+(?:, .+ [\d.]+ of \d+)*$/, m => m.input.replace(/ of (\d+)/g, ' de $1')],
     [/^Show all (\d+)$/, 'Mostrar los $1'],
     [/^(\d+) papers? (?:is|are) partly scored$/, m => m[1] + (m[1] === '1' ? ' trabajo tiene' : ' trabajos tienen') + ' la nota a medias'],
     [/^(.+): drop the download in again to reopen it$/, m => (m[1] === 'A download' ? 'Una descarga' : m[1]) + ': suelta otra vez la descarga para volver a abrirlo'],
@@ -3929,7 +3937,7 @@ const LANG_ES = {
     [/^(\d+) answers?$/, m => m[1] + (m[1] === '1' ? ' respuesta' : ' respuestas')],
     [/^No answer matches “(.*)”\. Try one word, like “roster” or “export”\.$/, 'Ninguna respuesta coincide con «$1». Prueba con una sola palabra, como «lista» o «exportar».'],
     /* the feedback page */
-    [/^([\d.,½]+) of 4$/, '$1 de 4'], [/^p\. (\d+)$/, 'pág. $1'],
+    [/^([\d.,½]+) of (\d+)$/, '$1 de $2'], [/^p\. (\d+)$/, 'pág. $1'],
   ],
   helpSecs: { start: 'Primeros pasos', mark: 'Corregir un trabajo', score: 'Notas y rúbricas', back: 'Devolver los trabajos', class: 'Clases y libro de calificaciones', safe: 'Guardado y seguridad', plan: 'Planificar y enseñar', private: 'Privacidad' },
   help: {
@@ -3991,7 +3999,8 @@ const LANG_ES = {
         'Desde el teclado: pulsa del **1** al **4** (o **0**) para puntuar la fila activa, un **punto** para medio punto e **Intro** para el siguiente trabajo.'] },
     'rubric-setup': { q: '¿Cómo cambio las filas de la rúbrica o uso puntos?', words: 'criterios filas niveles descriptores puntos porcentaje escala editar banco reutilizar',
       a: ['Pulsa **Edit** encima de la rúbrica, o **Rubric setup** en Setup. Cambia el nombre de las filas, añádelas o quítalas, y escribe qué significa cada nota en una fila.',
-        'El mismo cuadro cambia la tarea a puntos simples y fija la escala de calificación que convierte un total en un porcentaje.', '**Save to the bank…** guarda una rúbrica para usarla en otra tarea.'] },
+        'El mismo cuadro cambia la tarea a puntos simples y fija la escala de calificación que convierte un total en un porcentaje.', '**Save to the bank…** guarda una rúbrica para usarla en otra tarea.',
+        'Cada fila se puntúa de 0 a 4 con medios puntos, salvo que indiques otra cosa. Debajo de las filas, elige otra nota máxima (de 1 a 10) o desactiva los medios puntos. Tu escala habitual para las rúbricas nuevas está en Ajustes, Calificación.'] },
     'grading-way': { q: 'Mi centro califica con letras, porcentajes o del 1 al 7. ¿Puedo configurarlo?', go: 'Abrir Ajustes, Calificación', words: 'letras A B C porcentaje IB 7 límites bandas escala',
       a: ['Sí. En Ajustes, **Grading scale and rubrics** está tu forma de calificar: filas de rúbrica, puntos, porcentaje, letras o IB del 1 al 7, con los límites de cada letra o nivel.', 'Es tu punto de partida para las tareas nuevas. Cada tarea se puede configurar a su manera en Rubric setup.'] },
     'status': { q: '¿Cómo marco un trabajo como no entregado, justificado o con retraso?', words: 'ausente sin trabajo exento tarde estado falta',
@@ -4240,9 +4249,9 @@ const LANG_ZH = {
     [/^all (\d+) scored$/, '$1 份全部已評分'], [/^average (\d+)%$/, '平均 $1%'],
     [/^(?:(.+): )?(.+) was the weakest row on (.+)\.$/, m => (m[1] ? m[1] + '：' : '') + '在' + zhLast(m[3]) + '中，' + m[2] + ' 是最弱的項目。'],
     [/^(?:(.+): )?[Ee]very row came out the same on (.+)\.$/, m => (m[1] ? m[1] + '：' : '') + '在' + zhLast(m[2]) + '中，每個項目的結果都一樣。'],
-    [/^(\w+) students? scored 2 or below on (.+)\.$/, m => zhN(m[1]) + ' 位學生在 ' + m[2] + ' 得到 2 分或以下。'],
-    [/^Nobody scored 2 or below on (.+)\.$/, '沒有人在 $1 得到 2 分或以下。'],
-    [/^.+ [\d.]+ of 4(?:, .+ [\d.]+ of 4)*$/, m => m.input.replace(/ of 4/g, ' / 4').replace(/, /g, '、')],
+    [/^(\w+) students? scored ([\d.]+) or below on (.+)\.$/, m => zhN(m[1]) + ' 位學生在 ' + m[3] + ' 得到 ' + m[2] + ' 分或以下。'],
+    [/^Nobody scored ([\d.]+) or below on (.+)\.$/, '沒有人在 $2 得到 $1 分或以下。'],
+    [/^.+ [\d.]+ of \d+(?:, .+ [\d.]+ of \d+)*$/, m => m.input.replace(/ of (\d+)/g, ' / $1').replace(/, /g, '、')],
     [/^Show all (\d+)$/, '顯示全部 $1 項'],
     [/^(\d+) papers? (?:is|are) partly scored$/, '$1 份作業只評了一部分'],
     [/^(.+): drop the download in again to reopen it$/, m => (m[1] === 'A download' ? '一個下載檔' : m[1]) + '：再拖入一次下載檔即可重新開啟'],
@@ -4274,7 +4283,7 @@ const LANG_ZH = {
     [/^(\d+) answers?$/, '$1 則解答'],
     [/^No answer matches “(.*)”\. Try one word, like “roster” or “export”\.$/, '沒有符合「$1」的解答。試試一個詞，例如「名單」或「匯出」。'],
     /* the feedback page */
-    [/^([\d.,½]+) of 4$/, '$1 / 4'], [/^p\. (\d+)$/, '第 $1 頁'],
+    [/^([\d.,½]+) of (\d+)$/, '$1 / $2'], [/^p\. (\d+)$/, '第 $1 頁'],
   ],
   helpSecs: { start: '開始使用', mark: '批改作業', score: '分數與評分規準', back: '發還作業', class: '班級與成績冊', safe: '儲存與安全', plan: '備課與上課', private: '隱私' },
   help: {
@@ -4336,7 +4345,8 @@ const LANG_ZH = {
         '用鍵盤：按 **1** 到 **4**（或 **0**）為目前的項目評分，按**句點**給半分，按 **Enter** 前往下一份作業。'] },
     'rubric-setup': { q: '怎麼更改評分規準的項目，或改用分數？', words: '規準 項目 等級 描述 分數 百分比 等第 編輯 規準庫 重複使用',
       a: ['按評分規準上方的 **Edit**，或 Setup 裡的 **Rubric setup**。可以更改項目名稱、新增或移除項目，並寫下每個分數在該項目代表的意義。',
-        '同一個視窗也可以把作業改成單純給分，並設定把總分換算成百分比的評分等第。', '**Save to the bank…** 會把評分規準存起來，供其他作業使用。'] },
+        '同一個視窗也可以把作業改成單純給分，並設定把總分換算成百分比的評分等第。', '**Save to the bank…** 會把評分規準存起來，供其他作業使用。',
+        '每個項目預設評 0 到 4 分，可以給半分。在項目下方可以改成其他最高分（1 到 10），或關閉半分。新評分規準的慣用分數範圍在設定的「評分」裡。'] },
     'grading-way': { q: '我的學校用等第、百分比或 1 到 7 評分，可以設定嗎？', go: '開啟設定、評分', words: '等第 A B C 百分比 IB 7 分界 級距 量尺',
       a: ['可以。在設定的 **Grading scale and rubrics** 裡是你的評分方式：評分規準項目、分數、百分比、等第或 IB 1 到 7，以及每個等第或級別的分界。', '這是新作業的預設方式。每份作業都可以在 Rubric setup 裡另外設定。'] },
     'status': { q: '怎麼把作業標示為缺交、免交或遲交？', words: '缺席 沒交 免除 遲交 狀態 缺交',
@@ -4569,8 +4579,9 @@ const HELP = [
     words: 'score grade slider rows criteria keyboard half points' },
   { id: 'rubric-setup', sec: 'score', q: 'How do I change the rubric rows or use points instead?',
     a: ['Press **Edit** above the rubric, or **Rubric setup** under Setup. Rename rows, add or remove them, and write what each score means on a row.',
-      'The same box switches the assignment to plain points, and sets the grading scale that turns a total into a percent.', '**Save to the bank…** keeps a rubric to use again on another assignment.'],
-    words: 'criteria rows levels descriptors points percent scale edit bank reuse' },
+      'The same box switches the assignment to plain points, and sets the grading scale that turns a total into a percent.', '**Save to the bank…** keeps a rubric to use again on another assignment.',
+      'A row is scored 0 to 4 with half points unless you say otherwise. Under the rows, choose another top score (1 to 10) or turn half points off. Your usual scale for new rubrics is in Settings, Grading.'],
+    words: 'criteria rows levels descriptors points percent scale edit bank reuse top highest 0 to 8 0 to 5 half points whole numbers' },
   { id: 'grading-way', sec: 'score', q: 'My school grades with letters, percent or 1 to 7. Can I set that?',
     a: ['Yes. Settings, **Grading scale and rubrics** has how you grade: rubric rows, points, percent, letter grades or IB 1 to 7, with the boundaries for each letter or level.', 'It is your default for new assignments. Each assignment can still be set its own way in Rubric setup.'],
     go: ['Open Settings, Grading', '#/settings/grading'], words: 'letters A B C percent IB 7 boundaries bands default scale' },
@@ -4744,12 +4755,24 @@ document.addEventListener('click', e => {
 
 /* ---------------- grading setup ---------------- */
 const SCALE12 = { 12: 100, 11: 95, 10: 91, 9: 86, 8: 82, 7: 77, 6: 73, 5: 68, 4: 64, 3: 60 };
-const RUBRIC_STEPS = [0, 1, 1.5, 2, 2.5, 3, 3.5, 4];
+const RUBRIC_STEPS = [0, 1, 1.5, 2, 2.5, 3, 3.5, 4];   // the steps of a row scored 0 to 4 with half points: what every setup had before the row's scale was a choice
+const ROW_TOP = 4, ROW_TOP_MAX = 10;
+const topOk = v => { v = Math.round(+v); return v >= 1 && v <= ROW_TOP_MAX ? v : 0; };
+function rowTop(su, i) { su = su || setup; return (i != null && Array.isArray(su.tops) && topOk(su.tops[i])) || topOk(su.top) || ROW_TOP; }
+const rowHalf = su => (su || setup).half !== false;
+function rowSteps(su, i) { const top = rowTop(su, i), half = rowHalf(su), out = [0, 1]; for (let k = 1; k < top; k++) { if (half) out.push(k + .5); out.push(k + 1); } return out; }
+function rowsMax(su) { su = su || setup; return (su.criteria || []).reduce((a, _, i) => a + rowTop(su, i), 0); }
+function setupMax(su) { su = su || setup; return su.mode === 'rubric' ? rowsMax(su) : +su.outOf || 0; }
+const rowLevels = (su, i) => { const out = []; for (let v = rowTop(su, i); v >= 0; v--) out.push(v); return out; };
+function rowsTop(su) { su = su || setup; const n = (su.criteria || []).length, t = rowTop(su, 0); for (let i = 1; i < n; i++) if (rowTop(su, i) !== t) return null; return t; }
+const rowsSay = su => { const t = rowsTop(su); return (t ? '0 to ' + t : 'each row on its own scale') + (rowHalf(su) ? ', half points too' : ''); };
+function rowScaleOf(su) { const o = {}; if (su && topOk(su.top) && topOk(su.top) !== ROW_TOP) o.top = topOk(su.top); if (su && Array.isArray(su.tops) && su.tops.some(topOk)) o.tops = su.tops.map(v => topOk(v) || null); if (su && su.half === false) o.half = false; return o; }
 const SCALE_FIVES = { 12: 100, 11: 95, 10: 90, 9: 85, 8: 80, 7: 75, 6: 70, 5: 65, 4: 60, 3: 55, 2: 50, 1: 45, 0: 40 };
 const DEFAULT_SETUP = { mode: 'rubric', criteria: ['Criterion 1', 'Criterion 2', 'Criterion 3'], outOf: 10, scale: SCALE12 };
-let setup = { ...DEFAULT_SETUP, ...store.get('gs.setup', {}) };
+function setupOver(su) { const out = { ...DEFAULT_SETUP, ...(su || {}) }; if (su && (su.criteria || su.mode)) for (const k of ['top', 'tops', 'half']) if (!(k in su)) delete out[k]; return out; }
+let setup = setupOver(store.get('gs.setup', null));
 
-function maxPoints() { return setup.mode === 'rubric' ? setup.criteria.length * 4 : +setup.outOf || 0; }
+function maxPoints() { return setupMax(setup); }
 const roundPct = v => Math.max(0, Math.round(v + 1e-9));
 function percentFor(total) { return percentWith(total, maxPoints(), setup.scale); }
 function percentWith(total, max, sc) {
@@ -4913,7 +4936,7 @@ async function intake(entries, label, assignment, fromKeep) {   // entries: [{ p
   const rub = await rubricAtOpen(assignment, earlier ? earlier.d : newestWork(store.get(id, null), await kget('work', id)), (assignment && assignment.name) || label || 'This download');
   if (!rub) { toast('Nothing was opened. It will ask again when you open it.', 5000); return; }
   batch = { id, name: (assignment && assignment.name) || label || 'Your download', students, assignment: assignment || null, zipBad, seen: lsRaw(savedKey(id)), opened: Date.now() };   // seen: from before the work is read, so a save by another tab from here on is noticed
-  if (rub.su) setup = { ...DEFAULT_SETUP, ...rub.su };
+  if (rub.su) setup = setupOver(rub.su);
   delete setup.spot;   // the grade spot belongs to one download, and restore() brings its own back
   thumbCache.clear();
   askToKeep();
@@ -4963,7 +4986,7 @@ async function rubricAtOpen(card, work, name) {
     return said && (said === 'a' ? { su: mine, said } : { su: own, said, toCard: true });
   }
   if (mine || own) return { su: mine || own };
-  const last = { ...DEFAULT_SETUP, ...(card ? store.get('gs.setup', {}) : setup) }, fit = workScored(work) ? rubricFitting(work, last) : null;
+  const last = setupOver(card ? store.get('gs.setup', null) : setup), fit = workScored(work) ? rubricFitting(work, last) : null;
   if (fit) {
     const said = await ask({ a: last, b: fit, la: 'The last rubric you saved', lb: 'One that fits these scores' }, 'This work doesn’t say which rubric its scores were given with, and they don’t fit the last one you saved.');
     return said && { su: said === 'a' ? last : fit, said };
@@ -4984,7 +5007,7 @@ function rubricFitting(work, last) {
 function revsBase(saved) {
   if (!saved) return saved;
   const w = { ...saved, s: { ...saved.s } };
-  if (w.setup) w.setup = { ...DEFAULT_SETUP, ...w.setup };
+  if (w.setup) w.setup = setupOver(w.setup);
   for (const st of batch.students) for (const f of st.files) {
     const r = w.s[st.key];
     if (f.edited && !(r && r.v) && !(r && r.e && r.e[f.path])) w.s[st.key] = { ...(r || { f: {}, g: st.grade, h: {} }), e: { ...(r && r.e), [f.path]: f.edited } };
@@ -6489,7 +6512,7 @@ function rowStart() {
   rowOn = st && setup.mode === 'rubric' && !fmNow() ? setup.criteria.findIndex((_, i) => st.grade.rubric[i] == null) : -1;
 }
 function rowPick(i) { if (i === rowOn) return; rowOn = i; rowKeyed = -1; for (const c of document.querySelectorAll('#grade .crit')) c.classList.toggle('on', +c.dataset.row === i); lvDraw(); }
-const critScore = v => v == null ? '' : fmtNum(v) + '<small> / 4</small>';
+const critScore = (v, i) => v == null ? '' : fmtNum(v) + '<small> / ' + rowTop(setup, i) + '</small>';
 function renderGrade() {
   const st = batch.students[cur], g = st.grade, gr = gradeOf(st);
   let h = '';
@@ -6498,16 +6521,16 @@ function renderGrade() {
   if (setup.mode === 'rubric') {
     if (rowOn >= setup.criteria.length) rowOn = -1;
     h += '<h3>Score <button class="link" id="editRubric">Edit rubric</button></h3><div class="crits">';
-    h += setup.criteria.map((c, i) => { const v = g.rubric[i], k = RUBRIC_STEPS.indexOf(v);
-      return '<div class="crit' + (i === rowOn ? ' on' : '') + '" data-row="' + i + '"><div class="cn"><span title="' + esc(c) + '">' + esc(c) + '</span><em>' + critScore(v) + '</em></div><div class="scores slide" data-c="' + i + '">' +
-        '<input type="range" class="srange' + (v == null ? ' unset' : '') + '" style="--k:' + Math.max(0, k) + '" min="0" max="' + (RUBRIC_STEPS.length - 1) + '" step="1" value="' + Math.max(0, k) + '" aria-label="Score for ' + esc(c) + '" aria-valuetext="' + (v == null ? 'Not scored' : fmtNum(v) + ' out of 4') + '">' +
-        '<div class="sticks">' + RUBRIC_STEPS.map((w, j) => '<button class="' + (w % 1 ? 'half' : '') + '" style="--k:' + j + '" data-v="' + w + '" tabindex="-1" aria-pressed="' + (v === w) + '">' + w + '</button>').join('') + '</div></div></div>'; }).join('') + '</div>' + lvBox();
+    h += setup.criteria.map((c, i) => { const v = g.rubric[i], steps = rowSteps(setup, i), k = steps.indexOf(v), top = rowTop(setup, i);
+      return '<div class="crit' + (i === rowOn ? ' on' : '') + '" data-row="' + i + '"><div class="cn"><span title="' + esc(c) + '">' + esc(c) + '</span><em>' + critScore(v, i) + '</em></div><div class="scores slide' + (steps.length > 9 ? ' many' : '') + '" data-c="' + i + '" style="--n:' + (steps.length - 1) + '">' +
+        '<input type="range" class="srange' + (v == null ? ' unset' : '') + '" style="--k:' + Math.max(0, k) + '" min="0" max="' + (steps.length - 1) + '" step="1" value="' + Math.max(0, k) + '" aria-label="Score for ' + esc(c) + '" aria-valuetext="' + (v == null ? 'Not scored' : fmtNum(v) + ' out of ' + top) + '">' +
+        '<div class="sticks">' + steps.map((w, j) => '<button class="' + (w % 1 ? 'half' : '') + '" style="--k:' + j + '" data-v="' + w + '" tabindex="-1" aria-pressed="' + (v === w) + '">' + w + '</button>').join('') + '</div></div></div>'; }).join('') + '</div>' + lvBox();
   } else {
     h += '<h3>Score <button class="link" id="editRubric">Edit</button></h3>' +
       '<div class="pts"><input type="number" step="0.5" min="0" id="ptsIn" value="' + esc(g.points) + '" aria-label="Points"><span class="muted">out of ' + esc(setup.outOf) + '</span></div>';
   }
   h += '<div class="total">' + totalHtml(st) + '</div>' + statusHtml(st);
-  h += cmtHtml(g) + histSlot(st) + '<div class="gfoot"><div class="hint keysrow">' + (setup.mode === 'rubric' ? '<span><kbd>1</kbd>–<kbd>4</kbd> score</span><span><kbd>.</kbd> half</span>' : '<span>Type the score</span>') + '<button class="link" data-keys title="Every key">All keys <kbd>?</kbd></button></div>' + navHtml(st) + '</div>';
+  h += cmtHtml(g) + histSlot(st) + '<div class="gfoot"><div class="hint keysrow">' + (setup.mode === 'rubric' ? '<span><kbd>1</kbd>–<kbd>' + Math.min(9, Math.max(...setup.criteria.map((_, i) => rowTop(setup, i)))) + '</kbd> score</span>' + (rowHalf(setup) ? '<span><kbd>.</kbd> half</span>' : '') : '<span>Type the score</span>') + '<button class="link" data-keys title="Every key">All keys <kbd>?</kbd></button></div>' + navHtml(st) + '</div>';
   $('#grade').innerHTML = h;
 }
 const cmtHtml = g => '<div class="cmt"><textarea id="cmtIn" aria-label="Comment for ' + esc(sysOr('the student')) + '" placeholder="Comment for ' + esc(sysOr('the student')) + ' (optional). It shows on the Grades tab so you can copy it.">' + esc(g.comment) + '</textarea>' + cmtChips() + '</div>';
@@ -6591,8 +6614,8 @@ function slideTo(r, v) {
   const st = batch.students[cur], i = +r.closest('.scores').dataset.c;
   if (st.grade.rubric[i] === v && !r.classList.contains('unset')) return;
   st.grade.rubric[i] = v; scoreTouched(st, i);
-  r.classList.remove('unset'); r.setAttribute('aria-valuetext', fmtNum(v) + ' out of 4'); r.style.setProperty('--k', r.value);
-  const crit = r.closest('.crit'), em = crit.querySelector('.cn em'); if (em) em.innerHTML = critScore(v);
+  r.classList.remove('unset'); r.setAttribute('aria-valuetext', fmtNum(v) + ' out of ' + rowTop(setup, i)); r.style.setProperty('--k', r.value);
+  const crit = r.closest('.crit'), em = crit.querySelector('.cn em'); if (em) em.innerHTML = critScore(v, i);
   for (const t of crit.querySelectorAll('.sticks button')) t.setAttribute('aria-pressed', String(+t.dataset.v === v));
   rowOn = -2; rowPick(i);   // the row in hand, and what its score means under the rows
   const tot = $('#grade .total'); if (tot) tot.innerHTML = totalHtml(st);
@@ -6602,11 +6625,11 @@ function slideTo(r, v) {
 let slidePtr = false;
 function slideDone(r) { const i = r.closest('.scores').dataset.c, kb = !slidePtr; slidePtr = false; renderGrade(); const again = $('#grade .scores[data-c="' + i + '"] .srange'); if (again && kb) again.focus({ preventScroll: true }); }
 $('#grade').addEventListener('pointerdown', e => { if (e.target.closest && e.target.closest('.srange')) slidePtr = true; });
-$('#grade').addEventListener('input', e => { if (e.target.classList.contains('srange')) slideTo(e.target, RUBRIC_STEPS[+e.target.value]); });
+$('#grade').addEventListener('input', e => { if (e.target.classList.contains('srange')) slideTo(e.target, rowSteps(setup, +e.target.closest('.scores').dataset.c)[+e.target.value]); });
 $('#grade').addEventListener('change', e => { if (e.target.classList.contains('srange')) slideDone(e.target); });
 $('#grade').addEventListener('pointerup', e => {
   const r = e.target.closest && e.target.closest('.srange'); if (!r || !r.classList.contains('unset')) return;
-  setTimeout(() => { if (r.isConnected && r.classList.contains('unset')) { slideTo(r, RUBRIC_STEPS[+r.value]); slideDone(r); } }, 0);
+  setTimeout(() => { if (r.isConnected && r.classList.contains('unset')) { slideTo(r, rowSteps(setup, +r.closest('.scores').dataset.c)[+r.value]); slideDone(r); } }, 0);
 });
 $('#grade').addEventListener('keydown', e => {
   if (!e.target.classList || !e.target.classList.contains('srange') || (e.key !== 'Delete' && e.key !== 'Backspace')) return;
@@ -6639,10 +6662,12 @@ function scoreKey(e, onRange) {
     if (!r) return false;
     e.preventDefault(); r.focus({ preventScroll: true }); return true;
   }
-  if (/^[0-4]$/.test(e.key)) {
+  if (/^[0-9]$/.test(e.key)) {
     const i = onRange ? +ae.closest('.scores').dataset.c : rowOn;
+    if (+e.key > Math.max(ROW_TOP, ...setup.criteria.map((_, k) => rowTop(setup, k)))) return false;   // a number no row of this rubric has: not a score
     e.preventDefault();
     if (i < 0) { toast('Every row has a score. To change one, press Tab or click the row first.'); return true; }
+    if (+e.key > rowTop(setup, i)) { toast('This row goes up to ' + rowTop(setup, i) + '.'); return true; }
     st.grade.rubric[i] = +e.key; scoreTouched(st, i);
     rowKeyed = i; rowOn = lvAt = Math.min(i + 1, n - 1);
     redraw(rowOn); return true;
@@ -6651,7 +6676,7 @@ function scoreKey(e, onRange) {
     const v = st.grade.rubric[rowKeyed]; if (v == null) return false;
     const to = v % 1 ? Math.floor(v) : v + 0.5;
     e.preventDefault();
-    if (!RUBRIC_STEPS.includes(to)) { toast('There’s no ' + fmtNum(to) + ' on this scale.'); return true; }
+    if (!rowSteps(setup, rowKeyed).includes(to)) { toast('There’s no ' + fmtNum(to) + ' on this scale.'); return true; }
     st.grade.rubric[rowKeyed] = to; scoreTouched(st, rowKeyed);
     redraw(rowOn); return true;
   }
@@ -6745,11 +6770,20 @@ function tabShow(r) {
   if (dlgPage !== key && (dlgPage || $('#dlg').hidden)) TAB_DRAW[key]();   // a box over the screen stays; closing it draws the screen
 }
 
+function rowScaleHtml(d) {
+  const t = rowsTop(d);
+  let o = t ? '' : '<option value="" selected>each its own</option>';
+  for (let k = 1; k <= ROW_TOP_MAX; k++) o += '<option value="' + k + '"' + (k === t ? ' selected' : '') + '>' + k + '</option>';
+  return '<div class="rowscale"><label for="rowTopSel">Each row is scored 0 to</label><select id="rowTopSel" class="btn sm">' + o + '</select>' +
+    '<label class="rowhalf"><input type="checkbox" id="rowHalfIn"' + (rowHalf(d) ? ' checked' : '') + '> Half points</label>' +
+    '<span class="muted">Out of ' + rowsMax(d) + ' in all.</span></div>';
+}
+const draftMax = d => d.mode === 'rubric' ? rowsMax(d) : Math.round(+d.outOf || 0);
 function openSetup() {
   let draft = JSON.parse(JSON.stringify(setup));
   let newPage = undefined;   // undefined: unchanged, null: removed, {bytes,name}: new upload
   const scaleRows = () => {
-    const max = draft.mode === 'rubric' ? draft.criteria.length * 4 : Math.round(+draft.outOf || 0);
+    const max = draftMax(draft);
     if (!draft.scale) return '<p class="muted" style="font-size:13px;margin:4px 0 0">No scale: percent is the plain share of points.</p>';
     if (max > 40) return '<p class="muted" style="font-size:13px">A scale needs a total of 40 or less.</p>';
     let h = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:6px 10px;margin-top:6px">';
@@ -6757,17 +6791,17 @@ function openSetup() {
     return h + '</div><p class="muted" style="font-size:12.5px;margin:6px 0 0">Leave a row blank if you never use it. Half points land between two rows.</p>';
   };
   const body = () => {
-    let h = '<div class="field"><label>How do you score this one?</label><span class="seg"><button data-m="points" aria-pressed="' + (draft.mode === 'points') + '">Just the total</button><button data-m="rubric" aria-pressed="' + (draft.mode === 'rubric') + '">Rubric rows, 0 to 4</button></span>' +
+    let h = '<div class="field"><label>How do you score this one?</label><span class="seg"><button data-m="points" aria-pressed="' + (draft.mode === 'points') + '">Just the total</button><button data-m="rubric" aria-pressed="' + (draft.mode === 'rubric') + '">Rubric rows</button></span>' +
       '<span class="muted" style="font-size:12.5px;margin-top:4px">Grading right on your own rubric? Use Just the total: one score box, and the Grades tab and percents still work.</span></div>';
     h += rubricLibHtml(draft);
     if (draft.mode === 'rubric') {
       h += '<div class="field"><label>Rubric rows</label>' + draft.criteria.map((c, i) => '<div class="critrow"><input type="text" data-ci="' + i + '" value="' + esc(c) + '">' + goalRowHtml(draft, i) + (draft.criteria.length > 1 ? '<button class="btn sm" data-rm="' + i + '" aria-label="Remove row">×</button>' : '') + '</div>' + levelsEditHtml(draft, i)).join('') +
-        (draft.criteria.length < 6 ? '<div><button class="btn sm" data-add>+ Add a row</button></div>' : '') + '</div>';
+        (draft.criteria.length < 6 ? '<div><button class="btn sm" data-add>+ Add a row</button></div>' : '') + rowScaleHtml(draft) + '</div>';
     } else {
       h += '<div class="field"><label for="outOf">Out of</label><input type="number" id="outOf" min="1" step="0.5" value="' + esc(draft.outOf) + '" style="width:120px"></div>';
     }
     h += goalsSetupHtml(draft);
-    h += '<div class="field"><label>Grading scale</label><span style="display:flex;gap:6px;flex-wrap:wrap">' + (me().scale12 ? '<button class="btn sm" data-preset="usual">12 = 100, 11 = 95, 10 = 91…</button>' : '') + '<button class="btn sm" data-preset="fives">Steps of 5 (9 = 85%)</button><button class="btn sm" data-preset="none">No scale</button>' + scaleBankHtml(draft, draft.mode === 'rubric' ? draft.criteria.length * 4 : Math.round(+draft.outOf || 0)) + '</span>' + scaleRows() + '</div>';
+    h += '<div class="field"><label>Grading scale</label><span style="display:flex;gap:6px;flex-wrap:wrap">' + (me().scale12 ? '<button class="btn sm" data-preset="usual">12 = 100, 11 = 95, 10 = 91…</button>' : '') + '<button class="btn sm" data-preset="fives">Steps of 5 (9 = 85%)</button><button class="btn sm" data-preset="none">No scale</button>' + scaleBankHtml(draft, draftMax(draft)) + '</span>' + scaleRows() + '</div>';
     const rp = newPage === undefined ? draft.rubricPage : newPage;
     h += '<div class="field"><label>Your rubric, for every student</label><span class="muted" style="font-size:13px">Bring in your rubric once and every student gets their own copy to grade on. A Word rubric (.docx or .docm) stays a Word file: type in it, check its boxes and shade its cells. A PDF or picture is added as a page you can mark up. Each copy goes back with that student’s work.</span>' +
       '<span style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:4px"><button class="btn sm" data-rpup>' + (rp ? 'Replace…' : 'Bring in my rubric…') + '</button>' +
@@ -6786,6 +6820,8 @@ function openSetup() {
     if (e.target.dataset.sk != null && draft.scale) { const v = e.target.value; if (v === '') delete draft.scale[e.target.dataset.sk]; else draft.scale[e.target.dataset.sk] = +v; }
   }, live);
   box.addEventListener('change', async e => {
+    if (e.target.id === 'rowTopSel') { const t = topOk(e.target.value); if (t) { delete draft.tops; if (t === ROW_TOP) delete draft.top; else draft.top = t; levelEditOpen.clear(); } return re(); }
+    if (e.target.id === 'rowHalfIn') { if (e.target.checked) delete draft.half; else draft.half = false; return re(); }
     if (e.target.id !== 'rpIn' || !e.target.files[0]) return;
     const f = e.target.files[0], bytes = new Uint8Array(await f.arrayBuffer());
     try {
@@ -6799,17 +6835,17 @@ function openSetup() {
         await PDFLib.PDFDocument.load(pdf, { ignoreEncryption: true });
         newPage = { bytes: pdf, name: f.name };
       }
-      if (draft.mode === 'rubric' && draft.criteria.every((c, i) => c === 'Criterion ' + (i + 1))) { draft.outOf = draft.criteria.length * 4; draft.mode = 'points'; }   // her rubric replaces the generic rows
+      if (draft.mode === 'rubric' && draft.criteria.every((c, i) => c === 'Criterion ' + (i + 1))) { draft.outOf = rowsMax(draft); draft.mode = 'points'; }   // her rubric replaces the generic rows
       re();
     } catch { toast('That file couldn’t be opened as a Word file, PDF or picture'); }
   }, live);
   box.addEventListener('click', async e => {
     const m = e.target.closest('[data-m]'); if (m) { draft.mode = m.dataset.m; return re(); }
     const rm = e.target.closest('[data-rm]'); if (rm) { draft.criteria.splice(+rm.dataset.rm, 1); levelsRowGone(draft, +rm.dataset.rm); return re(); }
-    if (e.target.closest('[data-add]')) { draft.criteria.push('Criterion ' + (draft.criteria.length + 1)); rubDlg.from.push(null); return re(); }
+    if (e.target.closest('[data-add]')) { draft.criteria.push('Criterion ' + (draft.criteria.length + 1)); if (Array.isArray(draft.tops)) draft.tops.push(null); rubDlg.from.push(null); return re(); }
     const pr = e.target.closest('[data-preset]');
     if (pr) {
-      const max = draft.mode === 'rubric' ? draft.criteria.length * 4 : Math.round(+draft.outOf || 0);
+      const max = draftMax(draft);
       if (pr.dataset.preset === 'none') draft.scale = null;
       else if (max === 12) draft.scale = { ...(pr.dataset.preset === 'usual' ? SCALE12 : SCALE_FIVES) };
       else { draft.scale = {}; for (let k = max; k >= 0; k--) draft.scale[k] = Math.round((pr.dataset.preset === 'fives' ? 100 - (max - k) * 5 : k / max * 100) * 10) / 10; }
@@ -6825,6 +6861,7 @@ function openSetup() {
       if (note && !await askDlg(note, { ok: 'Save', cancel: 'Go back' })) return;
       draft.criteria = draft.criteria.map((c, i) => c.trim() || 'Criterion ' + (i + 1));
       draft.levels = tidyLevels(draft);
+      { const rs = rowScaleOf(draft); for (const k of ['top', 'tops', 'half']) delete draft[k]; if (draft.mode === 'rubric') Object.assign(draft, rs); }   // only a scale that isn't 0 to 4 with halves is written down
       draft.goals = goalsTidy(draft);
       if (batch && rubDlg.goalAll !== (batch.goal || '')) { if (rubDlg.goalAll) batch.goal = rubDlg.goalAll; else delete batch.goal; }
       if (newPage === null) { if (draft.rubricPage) store.del('gs.rp.' + draft.rubricPage.id); draft.rubricPage = null; }
@@ -8155,7 +8192,7 @@ async function makeSharePackage(onStep) {
   const enc = s => new TextEncoder().encode(s);
   files['scores.csv'] = enc('﻿' + [head].concat(rows).map(r => r.map(csvCell).join(',')).join('\r\n'));
   files['comments.json'] = enc(JSON.stringify(notes, null, 1));
-  files['rubric.json'] = enc(JSON.stringify({ mode: setup.mode, criteria: crit, levels: setup.mode === 'rubric' ? '0 to 4 per row, half points allowed from 1 up' : undefined, outOf: maxPoints(), scale: setup.scale || null }, null, 1));
+  files['rubric.json'] = enc(JSON.stringify({ mode: setup.mode, criteria: crit, levels: setup.mode === 'rubric' ? (rowsTop(setup) ? '0 to ' + rowsTop(setup) + ' per row' : 'rows in order: ' + setup.criteria.map((_, i) => '0 to ' + rowTop(setup, i)).join(', ')) + (rowHalf(setup) ? ', half points allowed from 1 up' : ', whole numbers only') : undefined, outOf: maxPoints(), scale: setup.scale || null }, null, 1));
   files['README.txt'] = enc(README_FOR_CLAUDE(seen.size));
   saveBlob(('For Claude - ' + nameFreeText(batch.name) + '.zip'), new Blob([fflate.zipSync(files)], { type: 'application/zip' }));
 }
@@ -8449,7 +8486,7 @@ async function syncPull() {
     if (changed) {
       const l = store.get('gs.lib', null); if (l) lib = migrateLib(l);
       bank = store.get('gs.bank', bank);
-      if (!batch) { const s = store.get('gs.setup', null); if (s) setup = { ...DEFAULT_SETUP, ...s }; }
+      if (!batch) { const s = store.get('gs.setup', null); if (s) setup = setupOver(s); }
       renderLib(); if (batch) renderClassSel();
     }
     syncBusy = false;
@@ -8916,7 +8953,7 @@ function meGrade() {
   const g = me().grade; if (!g || typeof g !== 'object') return null;
   const w = gradeWay(g.way) || GRADE_WAYS[0], su = g.setup && typeof g.setup === 'object' ? g.setup : w[3];
   const bands = Array.isArray(g.bands) ? g.bands.filter(b => Array.isArray(b) && isFinite(+b[0]) && String(b[1] || '').trim()).map(b => [+b[0], String(b[1]).trim().slice(0, 12)]).sort((a, b) => b[0] - a[0]) : null;
-  return { way: w[0], setup: { mode: su.mode === 'points' ? 'points' : 'rubric', criteria: Array.isArray(su.criteria) && su.criteria.length ? su.criteria.map(String) : w[3].criteria.slice(), outOf: +su.outOf || w[3].outOf, scale: su.scale && typeof su.scale === 'object' ? su.scale : null }, bands: bands && bands.length ? bands : null };
+  return { way: w[0], setup: { mode: su.mode === 'points' ? 'points' : 'rubric', criteria: Array.isArray(su.criteria) && su.criteria.length ? su.criteria.map(String) : w[3].criteria.slice(), outOf: +su.outOf || w[3].outOf, scale: su.scale && typeof su.scale === 'object' ? su.scale : null, ...rowScaleOf(su) }, bands: bands && bands.length ? bands : null };
 }
 const DEFAULT_SETUP_OLD = { ...DEFAULT_SETUP };
 function gradeDefaultApply() {
@@ -11596,7 +11633,7 @@ for (const el of document.querySelectorAll('.gsVer')) el.textContent = versionLa
 if (gsData.info.note) { const el = $('#bootNote'); el.textContent = gsData.info.note; el.hidden = false; toast(gsData.info.note, 15000); }
 
 window.__gs_pickMany = pickMany;
-window.__gs = { removeFile, bringBack, replaceFile, stickerText, startScorePlace, stopScorePlace, saveTrouble, batchIdOf, wordScore, wordScoresAll, restoreBackup, fileSeq, moveFile, openMoveFile, calcEval, openCalc, pageLit, setPageLit, lightMenuDo, lightChips, pageOwnL, setPageOwnL, lightForPage, ensureCounts, addRefs, refs: () => refFiles, matchToRoster, guessAmong, expandPicked, lightOpts, isRubricPage, openAnon, setAnon, anonOrder, anonOn, openLight, lightFor, lightAuto, openSplit, sp: () => SP, bringIn, sortGuess, openWord, wordBytes, reopenKept, forgetKept, kept: () => keptMeta, addFiles, removeAdded, nextUnscored, openDisplay, trimToInk, intake, parseGrade, scanFile, scanAll, state: () => ({ batch, cur, setup, pages, zoom, lib }), SCALE12, SCALE_FIVES, RUBRIC_STEPS, percentWith, ownGrade, roundPct, fmtNum, fmtPct, saveNow, undo, redo, gsData, gradeOf, percentFor, flattenDoc, exportPlan, layoutOf, docIn, openStudent, setTool };
+window.__gs = { DEFAULT_SETUP, rowTop, rowSteps, rowsMax, setupMax, setupOver, rowScaleOf, pastScore, removeFile, bringBack, replaceFile, stickerText, startScorePlace, stopScorePlace, saveTrouble, batchIdOf, wordScore, wordScoresAll, restoreBackup, fileSeq, moveFile, openMoveFile, calcEval, openCalc, pageLit, setPageLit, lightMenuDo, lightChips, pageOwnL, setPageOwnL, lightForPage, ensureCounts, addRefs, refs: () => refFiles, matchToRoster, guessAmong, expandPicked, lightOpts, isRubricPage, openAnon, setAnon, anonOrder, anonOn, openLight, lightFor, lightAuto, openSplit, sp: () => SP, bringIn, sortGuess, openWord, wordBytes, reopenKept, forgetKept, kept: () => keptMeta, addFiles, removeAdded, nextUnscored, openDisplay, trimToInk, intake, parseGrade, scanFile, scanAll, state: () => ({ batch, cur, setup, pages, zoom, lib }), SCALE12, SCALE_FIVES, RUBRIC_STEPS, percentWith, ownGrade, roundPct, fmtNum, fmtPct, saveNow, undo, redo, gsData, gradeOf, percentFor, flattenDoc, exportPlan, layoutOf, docIn, openStudent, setTool };
 
 /* ---------------- names: finding a student's name in text, in any alphabet, for the Claude ZIP and anonymous grading ---------------- */
 const NAME_PLAIN = new Set(('al am an art as at august autumn ban bay be best bill bin black brown by can case chase chin dawn day de dean do don dung da ed faith far frank gay go grace gray green grey ha hang he hope ho hung if in is it ivy jade joy june king la lane le little long love major man mark may me min my new no nice on or page pan park pat pearl pen penny price rich rose ruby sandy sang short sing small so son song star stone su sue summer sun sung tan tang ten tin to tu up us van violet von we white will win wing won wood wu ye young april').split(' '));
@@ -13427,7 +13464,7 @@ function fbData(st, d) {
   const g = old ? { total: old.total, pct: old.pct, outOf: old.max, status: old.late ? 'late' : '' } : tries.length ? tryGrade(st) : gradeOf(st), rub = setup.mode === 'rubric', c = batchClass();
   if (cnt && !g.status && st.grade.status === 'late') g.status = 'late';
   const rubricOf = old ? old.rubric || [] : st.grade.rubric;
-  const rows = rub ? setup.criteria.map((name, i) => { const v = rubricOf[i]; return v == null ? null : { name, v, text: ((setup.levels && setup.levels[i] && setup.levels[i][Math.floor(v)]) || '').trim() }; }).filter(Boolean) : [];
+  const rows = rub ? setup.criteria.map((name, i) => { const v = rubricOf[i]; return v == null ? null : { name, v, ...(rowTop(setup, i) !== ROW_TOP ? { top: rowTop(setup, i) } : {}), text: ((setup.levels && setup.levels[i] && setup.levels[i][Math.floor(v)]) || '').trim() }; }).filter(Boolean) : [];
   const notes = [];
   d.pages.forEach(([path, p], k) => {
     const f = fileByPath(st, path); if (!f) return;
@@ -13489,11 +13526,12 @@ function fbBlocks(ctx, data, W, M, off) {
       const h = Math.max(nl.length * 16, dl.length * 16, 30) + 18, bx = any ? M + nameW : M + cw - barW;
       out.push({ h, draw: y => {
         text(nl, '600 12.5px ' + UI, FB_INK, M, y + 21, 16);
-        text([tr(fmtNum(r.v) + ' of 4')], '600 12px ' + UI, FB_BLUE, bx, y + 21, 16);
-        for (let k = 0; k < 4; k++) {   // four segments; a half point fills half of one
-          const x = bx + k * 23, fill = Math.max(0, Math.min(1, r.v - k));
-          ctx.fillStyle = FB_LINE; ctx.fillRect(x, y + 28, 20, 3.5);
-          if (fill) { ctx.fillStyle = FB_BLUE; ctx.fillRect(x, y + 28, 20 * fill, 3.5); }
+        const top = r.top || ROW_TOP, sw = (89 - (top - 1) * 3) / top;   // one segment for each point, the same width in all as four always were; a half point fills half of one
+        text([tr(fmtNum(r.v) + ' of ' + top)], '600 12px ' + UI, FB_BLUE, bx, y + 21, 16);
+        for (let k = 0; k < top; k++) {
+          const x = bx + k * (sw + 3), fill = Math.max(0, Math.min(1, r.v - k));
+          ctx.fillStyle = FB_LINE; ctx.fillRect(x, y + 28, sw, 3.5);
+          if (fill) { ctx.fillStyle = FB_BLUE; ctx.fillRect(x, y + 28, sw * fill, 3.5); }
         }
         text(dl, '11.5px ' + UI, FB_INK2, tx, y + 21, 16);
         ctx.fillStyle = FB_LINE; ctx.fillRect(M, y + h - 1, cw, 1);
@@ -13565,10 +13603,10 @@ async function fbAddPages(out, data, W, H, dpi) {
 Object.assign(window.__gs, { fbData: i => { const st = batch.students[i], d = layoutOf(st)[0]; return d ? fbData(st, d) : null; } });
 
 /* ---------------- rubric library: what each score means on each row, and saved rubrics to reuse ---------------- */
-const LEVELS = [4, 3, 2, 1, 0], levelsOpen = new Set(), levelEditOpen = new Set();
+const levelsOpen = new Set(), levelEditOpen = new Set();
 const levelIn = (d, i, v) => { const r = d.levels && d.levels[i]; return (r && r[v]) || ''; };
 const levelOf = (i, v) => levelIn(setup, i, v);
-const rowHasLevels = i => LEVELS.some(v => levelOf(i, v));
+const rowHasLevels = i => rowLevels(setup, i).some(v => levelOf(i, v));
 function levelPick(i, v) {
   if (v == null) return '';
   const say = (v % 1 ? [Math.ceil(v), Math.floor(v)] : [v]).filter(w => levelOf(i, w)).map(w => '<b>' + w + '</b> ' + esc(levelOf(i, w)));
@@ -13579,7 +13617,7 @@ function levelsHtml(i, v) {
   if (!rowHasLevels(i)) return '';
   if (levelsOpen.has(i)) {
     const on = v == null ? [] : [Math.ceil(v), Math.floor(v)];
-    return '<div class="lvrow"><ul class="lvall">' + LEVELS.filter(w => levelOf(i, w)).map(w => '<li' + (on.includes(w) ? ' class="on"' : '') + '><b>' + w + '</b><span>' + esc(levelOf(i, w)) + '</span></li>').join('') + '</ul><button class="link lvbtn" data-lvopen="' + i + '" aria-expanded="true">Less</button></div>';
+    return '<div class="lvrow"><ul class="lvall">' + rowLevels(setup, i).filter(w => levelOf(i, w)).map(w => '<li' + (on.includes(w) ? ' class="on"' : '') + '><b>' + w + '</b><span>' + esc(levelOf(i, w)) + '</span></li>').join('') + '</ul><button class="link lvbtn" data-lvopen="' + i + '" aria-expanded="true">Less</button></div>';
   }
   return '<div class="lvrow" data-lvline="' + i + '"><div class="lvtxt" aria-live="polite">' + levelHint(i, v) + '</div><button class="link lvbtn" data-lvopen="' + i + '" aria-expanded="false" aria-label="See what every score means on this row">All</button></div>';
 }
@@ -13620,14 +13658,14 @@ async function leaveDlg() {
   closeDlg();
 }
 function levelsEditHtml(d, i) {
-  const n = LEVELS.filter(v => levelIn(d, i, v).trim()).length;
-  return '<details class="lved" data-lvrow="' + i + '"' + (levelEditOpen.has(i) ? ' open' : '') + '><summary>What each score means' + (n ? ' (' + n + ' of 5 written)' : '') + '</summary>' +
-    LEVELS.map(v => '<label class="lvin"><b>' + v + '</b><textarea rows="2" data-lvi="' + i + '" data-lvv="' + v + '" aria-label="What ' + v + ' means on this row">' + esc(levelIn(d, i, v)) + '</textarea></label>').join('') +
-    '<span class="muted lvnote">Leave any of these blank. A half point shows the two scores around it.</span></details>';
+  const lv = rowLevels(d, i), n = lv.filter(v => levelIn(d, i, v).trim()).length;
+  return '<details class="lved" data-lvrow="' + i + '"' + (levelEditOpen.has(i) ? ' open' : '') + '><summary>What each score means' + (n ? ' (' + n + ' of ' + lv.length + ' written)' : '') + '</summary>' +
+    lv.map(v => '<label class="lvin"><b>' + v + '</b><textarea rows="2" data-lvi="' + i + '" data-lvv="' + v + '" aria-label="What ' + v + ' means on this row">' + esc(levelIn(d, i, v)) + '</textarea></label>').join('') +
+    '<span class="muted lvnote">Leave any of these blank.' + (rowHalf(d) ? ' A half point shows the two scores around it.' : '') + '</span></details>';
 }
-function levelsRowGone(d, i) { if (d.levels) d.levels.splice(i, 1); goalsRowGone(d, i); rubDlg.from.splice(i, 1); levelEditOpen.clear(); }
+function levelsRowGone(d, i) { if (d.levels) d.levels.splice(i, 1); if (Array.isArray(d.tops)) d.tops.splice(i, 1); goalsRowGone(d, i); rubDlg.from.splice(i, 1); levelEditOpen.clear(); }
 function tidyLevels(d) {
-  const out = d.criteria.map((_, i) => { const r = {}; for (const v of LEVELS) { const t = levelIn(d, i, v).trim(); if (t) r[v] = t; } return r; });
+  const out = d.criteria.map((_, i) => { const r = {}; for (const v of rowLevels(d, i)) { const t = levelIn(d, i, v).trim(); if (t) r[v] = t; } return r; });
   return out.some(r => Object.keys(r).length) ? out : undefined;
 }
 const savedRubrics = () => { const a = store.get('gs.rubrics', []); return Array.isArray(a) ? a.filter(r => r && r.id && r.name && Array.isArray(r.criteria) && r.criteria.length) : []; };
@@ -13685,7 +13723,7 @@ const bankStamp = (h, id) => h.replace('id="' + id + '"', 'id="' + id + '" data-
 function bankRedraw() {
   if (!rubDlg || !$('#setupBody')) return;
   const d = rubDlg.draft, a = $('#rbBank'), b = $('#rbScales');
-  const nb = rubricLibHtml(d), ns = scaleBankHtml(d, d.mode === 'rubric' ? d.criteria.length * 4 : Math.round(+d.outOf || 0));
+  const nb = rubricLibHtml(d), ns = scaleBankHtml(d, draftMax(d));
   if (a && a.dataset.h !== /data-h="([^"]*)"/.exec(nb)[1]) a.outerHTML = nb;
   if (b && b.dataset.h !== /data-h="([^"]*)"/.exec(ns)[1]) b.outerHTML = ns;
 }
@@ -13819,6 +13857,10 @@ function setupSaveNote(d, page) {
   const S = batch.students, gone = rowsGone(), out = [], has = v => v !== '' && v != null;
   const nGone = S.filter(st => gone.some(i => st.grade.rubric[i] != null)).length;
   if (nGone) out.push((nGone === 1 ? '1 student has a score' : nGone + ' students have scores') + ' on ' + (gone.length === 1 ? 'the row' : 'the rows') + ' you took out. ' + (nGone === 1 ? 'That score goes' : 'Those scores go') + ' with ' + (gone.length === 1 ? 'the row' : 'the rows') + ', and ' + (nGone === 1 ? 'that total changes' : 'those totals change') + '. Every other score stays on its own row.');
+  if (d.mode === 'rubric') {   // the rows' scale changed under scores already given
+    const off = S.filter(st => d.criteria.some((_, i) => { const from = rubDlg.from[i], v = from == null ? null : st.grade.rubric[from]; return v != null && !rowSteps(d, i).includes(v); })).length;
+    if (off) out.push((off === 1 ? '1 student has a score' : off + ' students have scores') + ' that this scale doesn’t have: above a row’s top, or a half point. ' + (off === 1 ? 'It stays' : 'They stay') + ' as given, and still count, until you change ' + (off === 1 ? 'it' : 'them') + '.');
+  }
   if (d.mode !== setup.mode && d.mode !== rubDlg.told) {
     if (d.mode === 'points') {
       const n = S.filter(st => st.grade.rubric.some(v => v != null)).length;
@@ -13846,7 +13888,8 @@ function rowsTakenOut() {
 async function rubricUse(r) {
   const { draft: d, re } = rubDlg, note = rubricUseNote(r, d);
   if (note && !await askDlg('Use “' + r.name + '”?\n\n' + note, { ok: 'Use it', cancel: 'Keep what I have' })) return;
-  Object.assign(d, { mode: 'rubric', criteria: r.criteria.slice(), levels: r.levels ? JSON.parse(JSON.stringify(r.levels)) : undefined, goals: Array.isArray(r.goals) ? r.goals.slice() : undefined, scale: r.scale ? { ...r.scale } : null, rubricName: r.name });
+  for (const k of ['top', 'tops', 'half']) delete d[k];   // the saved rubric's own row scale, or 0 to 4 with halves when it says none
+  Object.assign(d, rowScaleOf(r), { mode: 'rubric', criteria: r.criteria.slice(), levels: r.levels ? JSON.parse(JSON.stringify(r.levels)) : undefined, goals: Array.isArray(r.goals) ? r.goals.slice() : undefined, scale: r.scale ? { ...r.scale } : null, rubricName: r.name });
   Object.assign(rubDlg, { from: r.criteria.map((_, i) => i), n0: r.criteria.length, told: 'rubric' });   // a saved rubric's rows go by place, and this has just said so
   levelEditOpen.clear(); re();
   toast('“' + r.name + '” is filled in. Press Save to keep it.');
@@ -13858,7 +13901,7 @@ async function rubricSaveNow() {
   if (!got || !got.name) return;
   const name = got.name, list = bankRubrics(), old = list.find(r => r.name.toLowerCase() === name.toLowerCase());
   if (old && !await askDlg('You already have a rubric called “' + old.name + '”. Replace it with this one?', { ok: 'Replace it', cancel: 'Keep the old one', danger: true })) return;
-  const r = { id: old ? old.id : uid(), name, criteria: d.criteria.map((c, i) => c.trim() || 'Criterion ' + (i + 1)), levels: tidyLevels(d), scale: d.scale ? { ...d.scale } : null, at: Date.now() };
+  const r = { id: old ? old.id : uid(), name, criteria: d.criteria.map((c, i) => c.trim() || 'Criterion ' + (i + 1)), levels: tidyLevels(d), scale: d.scale ? { ...d.scale } : null, ...rowScaleOf(d), at: Date.now() };
   const tags = goalsTidy(d); if (tags) r.goals = tags;   // a saved rubric keeps its rows' learning goals
   const unit = keyRef(got.key, old && old.unit); if (unit) r.unit = unit;
   const legacy = savedRubrics().filter(x => x.id !== r.id && x.name.toLowerCase() !== name.toLowerCase()); legacy.push(r); legacy.sort((a, b) => natural(a.name, b.name));
@@ -13880,7 +13923,7 @@ async function rubricDeleteNow(r) {
 }
 function scaleSave() { return bankJob(() => scaleSaveNow()); }
 async function scaleSaveNow() {
-  const { draft: d, re } = rubDlg, max = d.mode === 'rubric' ? d.criteria.length * 4 : Math.round(+d.outOf || 0);
+  const { draft: d, re } = rubDlg, max = draftMax(d);
   const got = await askSaveDlg('Save this grading scale to the bank (top score ' + max + ')', 'Out of ' + max, rubDlg.bankKey && rubDlg.bankKey !== '*' ? rubDlg.bankKey : defaultUnitKey());
   if (!got || !got.name) return;
   const old = bankScales().find(s => s.name.toLowerCase() === got.name.toLowerCase());
@@ -13956,7 +13999,7 @@ function classStats() {
   if (setup.mode === 'rubric') {
     s.rows = setup.criteria.map((name, r) => {
       const v = batch.students.map(st => st.grade.outAvg ? null : rowShown(st, r)).filter(x => x != null);
-      return { r, name, n: v.length, avg: v.length ? mean(v) : null, low: v.filter(x => x <= 2).length };
+      const top = rowTop(setup, r); return { r, name, top, n: v.length, avg: v.length ? mean(v) : null, low: v.filter(x => x <= top / 2).length };
     }).sort((a, b) => (a.avg == null ? 9 : a.avg) - (b.avg == null ? 9 : b.avg) || a.r - b.r);
     const av = s.rows.filter(x => x.n).map(x => x.avg), least = Math.min(...av);
     for (const x of s.rows) x.lowest = x.n > 0 && x.avg === least && av.some(a => a !== least);
@@ -13996,14 +14039,14 @@ function spreadHtml(s) {
 function rowsHtml(s) {
   if (setup.mode !== 'rubric') return '<p class="muted">This assignment is scored with just a total, so there are no rows to compare.</p>';
   if (!s.rows.some(x => x.n)) return '<p class="muted">No rubric rows scored yet.</p>';
-  const nPart = s.partial.length, notes = ['Average out of 4, lowest first. It uses every row with a score' + (nPart ? ', including the scored rows on ' + (nPart === 1 ? '1 partial paper' : nPart + ' partial papers') : '') + '.'];
+  const nPart = s.partial.length, oneTop = rowsTop(setup), notes = ['Average out of ' + (oneTop || 'each row’s top') + ', lowest first. It uses every row with a score' + (nPart ? ', including the scored rows on ' + (nPart === 1 ? '1 partial paper' : nPart + ' partial papers') : '') + '.'];
   if (s.missing.length || s.excused.length) notes.push('Missing and excused students aren’t in it.');
   if (s.nRowless) notes.push((s.nRowless === 1 ? '1 score' : s.nRowless + ' scores') + ' read from the paper ' + (s.nRowless === 1 ? 'has' : 'have') + ' no rows, so ' + (s.nRowless === 1 ? 'it isn’t' : 'they aren’t') + ' here.');
   return '<div class="ovrows" role="group" aria-label="Rubric rows, lowest average first">' + s.rows.map(x => {
-    const sum = x.n ? people(x.n, 'score') + ', ' + x.low + ' at 2 or less' : 'No scores yet', tip = x.n ? oneDp(x.avg) + ' average' : 'No scores yet';
+    const sum = x.n ? people(x.n, 'score') + ', ' + x.low + ' at ' + fmtNum(x.top / 2) + ' or less' : 'No scores yet', tip = x.n ? oneDp(x.avg) + ' average' + (oneTop ? '' : ' out of ' + x.top) : 'No scores yet', w = 100 / x.top;
     return '<div class="ovr"' + (x.n ? ' tabindex="0"' : '') + ' aria-label="' + esc(x.name + ': ' + tip + '. ' + sum) + '" data-tv="' + esc(tip) + '" data-tl="' + esc(x.name) + '" data-tn="' + esc(sum) + '">' +
       '<div class="ovrn"><span>' + esc(x.name) + '</span>' + (x.lowest ? ' <span class="stag">lowest</span>' : '') + '</div>' +
-      '<div class="ovrt">' + [1, 2, 3].map(t => '<i style="left:' + t * 25 + '%"></i>').join('') + (x.n ? '<div class="ovrb' + (x.lowest ? ' on' : '') + '" style="width:' + x.avg * 25 + '%"></div>' : '') + '<span class="ovrv" style="left:' + (x.n ? x.avg * 25 : 0) + '%">' + (x.n ? oneDp(x.avg) : '–') + '</span></div>' +
+      '<div class="ovrt">' + Array.from({ length: x.top - 1 }, (_, t) => '<i style="left:' + (t + 1) * w + '%"></i>').join('') + (x.n ? '<div class="ovrb' + (x.lowest ? ' on' : '') + '" style="width:' + Math.min(100, x.avg * w) + '%"></div>' : '') + '<span class="ovrv" style="left:' + (x.n ? Math.min(100, x.avg * w) : 0) + '%">' + (x.n ? oneDp(x.avg) : '–') + '</span></div>' +
       '<div class="muted ovrs">' + sum + '</div></div>';
   }).join('') + '</div><div class="ovrx" aria-hidden="true"><span></span><div>' + [0, 1, 2, 3, 4].map(t => '<span style="left:' + t * 25 + '%">' + t + '</span>').join('') + '</div><span></span></div><p class="muted ovcap2">' + notes.join(' ') + '</p>';
 }
@@ -14532,7 +14575,7 @@ function bkClassView(c, cols, all, conf) {
     bkTile('Missing work', miss.length, miss.length ? 'across ' + people(new Set(miss).size, 'student') : 'nothing outstanding') + '</div>' + bkHeat(c, cols, conf) +
     '<div class="ovcharts">' + chSec('Who is moving', bkMoving(c, cols), 'Each student’s last three scores against their earlier ones, in points: the biggest rises and drops.') +
     chSec('Where the class stands, assignment by assignment', bkStacks(c, cols), 'How many students landed in each range each time, so a shift in the whole class shows.') +
-    chSec('Rubric rows across the summatives', bkRubricRows(c, cols), 'The class average on each rubric row, out of 4, wherever the same row name comes back. The lowest row is in blue.') +
+    chSec('Rubric rows across the summatives', bkRubricRows(c, cols), 'The class average on each rubric row, out of ' + chRowTop(chSums(cols)) + ', wherever the same row name comes back. The lowest row is in blue.') +
     '<section><h3 class="ovh3">Each assignment’s class average</h3>' + bkLine(sc, [{ cls: 'bkln', pts: sc.map(avgOf), dots: true, tn: i => people(c.names.map(n => sc[i].cells.get(n)).filter(bkCounts).length, 'score') }], 'bkTrend', termAvg) +
     '<div class="bkleg"><span><i class="sum"></i>Summative</span><span><i class="ic"></i>In-class</span>' + (termAvg != null ? '<span><i class="ref"></i>Average grade</span>' : '') + '</div></section>' +
     chSec('Summatives against in-class work', bkScatter(c, cols, conf), 'One dot per student. On the line, the two match. Below it, a student does better in class than on summatives.') +
@@ -14552,7 +14595,7 @@ function bkOneView(c, cols, conf) {
     bkCountTypes(conf).map(([t, , l]) => bkTile(l + ' average', r.by[t] != null ? pctAvgText(r.by[t]) : '–', [cols.filter(x => x.type === t && bkCounts(x.cells.get(n))).length + ' of ' + cols.filter(x => x.type === t).length + ' counted', t === 'ic' && r.xcIc ? '+' + fmtNum(r.xcIc) + ' extra credit' : '', cavg(t) != null ? 'class ' + pctAvgText(cavg(t)) : ''].filter(Boolean).join(' · '))).join('') +
     bkTile('Missing', miss.length, miss.length ? miss.map(x => x.name).join(', ') : 'nothing outstanding') + '</div>' + bkStrip(c, cols, n) +
     '<div class="ovcharts">' + chSec('Against the class', bkBandLine(c, sc, n, shown), 'The shaded band is the middle half of the class, so it’s clear when a score is unusual and when the assignment was just hard.') +
-    chSec('Rubric rows', bkStuRows(c, cols, n), 'Their average on each rubric row across the summatives, out of 4. The dashed line is the class average.') + goalsStu(c, cols, n) +
+    chSec('Rubric rows', bkStuRows(c, cols, n), 'Their average on each rubric row across the summatives, out of ' + chRowTop(chSums(cols)) + '. The dashed line is the class average.') + goalsStu(c, cols, n) +
     '<section><h3 class="ovh3">By type</h3>' + bar('Summatives', r.by.sum, cavg('sum'), 'sum') + bar('In-class', r.by.ic, cavg('ic'), 'ic') + bar('Grade', r.grade, cavg(''), '') + '<p class="muted ovcap2">The dashed line is the class average.</p>' +
     (fm.length ? '<h3 class="ovh3" style="margin-top:16px">Feedback</h3><p class="bkfbline">' + fm.filter(x => (x.cells.get(n) || {}).fb).length + ' of ' + fm.length + ' formative activities have feedback.</p>' : '') + '</section>' + attStuHtml(c, n) + '</div></div>';
 }
@@ -15397,16 +15440,16 @@ function paperReads() {
   return Object.keys(r).length ? r : undefined;
 }
 function pastScore(su, g) {
-  const s = { ...DEFAULT_SETUP, ...su }, rub = s.mode === 'rubric';
+  const s = setupOver(su), rub = s.mode === 'rubric';
   if (g.status === 'missing' || g.status === 'excused') return { total: null, pct: null, status: g.status, rows: [] };
   const r = g.rubric || [];
-  let max = rub ? s.criteria.length * 4 : +s.outOf || 0, total = null, partial = false, paper = false;
+  let max = setupMax(s), total = null, partial = false, paper = false;
   if (rub) { const v = s.criteria.map((_, i) => r[i]); if (v.some(x => x != null)) { total = v.reduce((a, x) => a + (x || 0), 0); partial = v.some(x => x == null); } }
   else if (g.points !== '' && g.points != null && !isNaN(+g.points)) total = +g.points;
   if (total == null && hasSheet(g) && !isNaN(+g.sheet)) { total = +g.sheet; paper = true; }
   let pct = percentWith(total, max, s.scale);
   if (total == null && g.read && !(g.tries && g.tries.length)) { const d = g.read; paper = true; total = d.score; if (d.outOf != null) max = d.outOf; pct = d.pct != null ? d.pct : percentWith(total, max, s.scale); }
-  const one = addXc({ total, max, pct, partial, paper, status: g.status || '', rows: rub ? s.criteria.map((c, i) => [c, r[i]]).filter(x => x[1] != null) : [] }, g.xc, max, g.xcU);
+  const one = addXc({ total, max, pct, partial, paper, status: g.status || '', rows: rub ? s.criteria.map((c, i) => rowTop(s, i) === ROW_TOP ? [c, r[i]] : [c, r[i], rowTop(s, i)]).filter(x => x[1] != null) : [] }, g.xc, max, g.xcU);
   if (!g.tries || !g.tries.length) return one;
   const out = withTries(one, g.tries, max, one.total != null && !partial);   // a retake: the try that counts by the teacher's rule (start.js)
   if (out.outOf != null) { out.max = out.outOf; delete out.outOf; }
@@ -15572,18 +15615,18 @@ function consData() {
   return { pts: out, noTime, off, groups };
 }
 function rowDrifts() {
-  const max = 4, cut = 0.05 / setup.criteria.length;
+  const cut = 0.05 / setup.criteria.length;
   return setup.criteria.map((name, r) => {
     const pts = [];
     for (const st of batch.students) { const v = st.grade.rubric[r], t = st.grade.atR && st.grade.atR[r]; if (!noScore(st) && !st.grade.outAvg && v != null && t) pts.push({ v, t }); }
     const { out } = dropBatched(pts.sort((a, b) => a.t - b.t));
-    return { name, read: driftRead(out.map(p => p.v), max, cut) };
+    return { name, top: rowTop(setup, r), read: driftRead(out.map(p => p.v), rowTop(setup, r), cut) };
   });
 }
 function rowSay(rows) {
   if (setup.mode !== 'rubric' || rows.length < 2) return '';
   if (!rows.some(x => x.read.n >= DRIFT_SURE)) return '<p class="muted hsm">Rubric rows aren’t read one by one with fewer than ' + DRIFT_SURE + ' papers: each row is too noisy on its own.</p>';
-  return '<ul class="crows">' + rows.map(({ name, read: r }) => '<li><b>' + esc(name) + ':</b> ' + (r.n < DRIFT_SURE ? 'too few papers with a time' : r.level === 'none' ? 'no clear change' : 'later papers ' + (r.gap < 0 ? 'lower' : 'higher') + ', by about ' + roughGap(r, 4)) + '</li>').join('') + '</ul>';
+  return '<ul class="crows">' + rows.map(({ name, top, read: r }) => '<li><b>' + esc(name) + ':</b> ' + (r.n < DRIFT_SURE ? 'too few papers with a time' : r.level === 'none' ? 'no clear change' : 'later papers ' + (r.gap < 0 ? 'lower' : 'higher') + ', by about ' + roughGap(r, top || ROW_TOP)) + '</li>').join('') + '</ul>';
 }
 const ordinal = n => { const t = n % 100, u = n % 10; return n + (t > 10 && t < 14 ? 'th' : u === 1 ? 'st' : u === 2 ? 'nd' : u === 3 ? 'rd' : 'th'); };
 const whenLabel = t => new Date(t).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
@@ -16677,9 +16720,10 @@ function stampData(prev, data, dev, now, seen) {
 
 /* a rubric and the scores given with it */
 function rubricKey(su) {
-  const s = su || {}, pts = s.mode === 'points', max = pts ? +(s.outOf == null ? 10 : s.outOf) || 0 : (s.criteria ? s.criteria.length : 3) * 4, sc = s.scale === undefined ? SCALE12 : s.scale || {};
+  const s = su || {}, pts = s.mode === 'points', max = pts ? +(s.outOf == null ? 10 : s.outOf) || 0 : (s.criteria ? rowsMax(s) : 3 * ROW_TOP), sc = s.scale === undefined ? SCALE12 : s.scale || {};
   const keys = Object.keys(sc).filter(k => sc[k] !== '' && sc[k] != null && !isNaN(+sc[k])).map(Number).sort((a, b) => a - b);
-  return JSON.stringify([pts, max, keys.length >= 2 && keys[keys.length - 1] === max ? keys.map(k => [k, +sc[k]]) : 0]);
+  const own = pts ? {} : rowScaleOf(s);   // rows scored on another scale than 0 to 4 with halves: a different rubric, even when the total is the same
+  return JSON.stringify([pts, max, keys.length >= 2 && keys[keys.length - 1] === max ? keys.map(k => [k, +sc[k]]) : 0].concat(Object.keys(own).length ? [own] : []));
 }
 const rubricsDiffer = (x, y) => rubricKey(x) !== rubricKey(y);
 function workScored(w) {
@@ -17682,7 +17726,7 @@ async function reconcileNow() {
   await dailySnapshot();
   fld.at = Date.now(); fld.state = 'ok';
   setWhere(fld.asks.length ? 'decide' : 'ok');
-  if (taking.length || libm.toA) { bank = store.get('gs.bank', bank); if (!batch) { const su = store.get('gs.setup', null); if (su) setup = { ...DEFAULT_SETUP, ...su }; } await loadKept(); }
+  if (taking.length || libm.toA) { bank = store.get('gs.bank', bank); if (!batch) { const su = store.get('gs.setup', null); if (su) setup = setupOver(su); } await loadKept(); }
   if (open && taking.some(r => r.id === open)) { toast('Newer work from your folder came in, so this download has been reopened.', 6000); const was = batch; await reopenKept(open, batch.assignment); if (batch === was) { closeDownload(); toast('Newer work came in from your folder, and this download is waiting for your answer. Open it when you’re ready.', 8000); } }   // not opened again (Not now): the copy on screen is out of date, and saving it would write over what just came in
   else if (!hadWork && taking.length && !B.missing.size) toast('Everything came back from your folder.', 6000);
   else if (students) toast('Newer work from your folder came in for ' + students + (students === 1 ? ' student.' : ' students.'), 6000);
@@ -18060,7 +18104,7 @@ function partSide(part, v, other, t, anon) {
     const c = (v && v.criteria) || [];
     if (!v) out.push('<div>Nothing set up</div>');
     else if (v.mode === 'points') out.push('<div>Points, out of ' + esc(v.outOf) + '</div>');
-    else out.push('<div>Rubric with ' + c.length + (c.length === 1 ? ' row' : ' rows') + ', out of ' + c.length * 4 + '</div><div class="muted">' + esc(c.join(', ')) + '</div>');
+    else out.push('<div>Rubric with ' + c.length + (c.length === 1 ? ' row' : ' rows') + ', out of ' + rowsMax(v) + '</div><div class="muted">' + esc(c.join(', ')) + '</div>');
     if (v && other && scaleSay(v) !== scaleSay(other)) out.push('<div class="muted">' + scaleSay(v) + '</div>');
     if (v && v.rubricPage && v.rubricPage.name) out.push('<div class="muted">Rubric page: ' + esc(v.rubricPage.name) + '</div>');
   } else if (part === 'cls') { const c = (lib.classes || []).find(x => x.id === v); out.push('<div>' + (c ? esc(c.name) : 'No class') + '</div>'); }
@@ -19517,9 +19561,9 @@ async function marksFileText(onStep) {
   }
   out.push('# Marks for Claude: ' + one(nameFreeText(batch.name)), '');
   out.push(plural(who.length, 'student') + ', each named by a random code (S-XXXX). Names in the teacher’s text became [name].');
-  out.push(rubric ? 'Rubric: ' + plural(crit.length, 'row') + ', scored 0 to 4 (half points allowed from 1 up), out of ' + maxPoints() + '.' : 'Scored in points, out of ' + maxPoints() + '.');
+  out.push(rubric ? 'Rubric: ' + plural(crit.length, 'row') + ', scored ' + (rowsTop(setup) ? '0 to ' + rowsTop(setup) : setup.criteria.map((_, i) => '0 to ' + rowTop(setup, i)).join(', ')) + (rowHalf(setup) ? ' (half points allowed from 1 up)' : ' (whole numbers only)') + ', out of ' + maxPoints() + '.' : 'Scored in points, out of ' + maxPoints() + '.');
   if (o.scores && rubric) {
-    const lv = crit.map((c, i) => { const w = [4, 3, 2, 1, 0].map(v => { const t = (setup.levels && setup.levels[i] && setup.levels[i][v]) || ''; return t ? '  - ' + v + ': ' + one(nameFreeText(t)) : ''; }).filter(Boolean); return w.length ? ['- ' + one(nameFreeText(c)), ...w].join('\n') : ''; }).filter(Boolean);
+    const lv = crit.map((c, i) => { const w = rowLevels(setup, i).map(v => { const t = (setup.levels && setup.levels[i] && setup.levels[i][v]) || ''; return t ? '  - ' + v + ': ' + one(nameFreeText(t)) : ''; }).filter(Boolean); return w.length ? ['- ' + one(nameFreeText(c)), ...w].join('\n') : ''; }).filter(Boolean);
     if (lv.length) out.push('', '## What each score means', ...lv);
   }
   out.push('', '## Class at a glance');
@@ -20605,12 +20649,19 @@ function bkStacks(c, cols) {
 
 /* ---------- rubric rows across the summatives ---------- */
 const chRowName = x => typeof x === 'string' ? x.trim() : String((x && x.name) || '').trim();
+function chRowTop(cols) {
+  const n = new Map(); for (const col of cols) for (const cell of col.cells.values()) for (const r of (cell && cell.rows) || []) { const t = r[2] || ROW_TOP; n.set(t, (n.get(t) || 0) + 1); }
+  let best = ROW_TOP, most = 0; for (const [t, k] of n) if (k > most) { best = t; most = k; }
+  return best;
+}
+const chSums = cols => cols.filter(x => x.type === 'sum');
 function chRowAvgs(c, cols, only) {
-  return cols.filter(x => x.type === 'sum').map(col => {
+  const T = chRowTop(chSums(cols));
+  return chSums(cols).map(col => {
     const by = new Map();
     for (const n of only ? [only] : c.names) {
       const cell = col.cells.get(n); if (!cell || !cell.rows || cell.out || cell.st === 'missing' || cell.st === 'excused') continue;
-      for (const [nm, v] of cell.rows) { const name = chRowName(nm), k = name.toLowerCase(); if (!k || v == null || isNaN(+v)) continue; if (!by.has(k)) by.set(k, { name, v: [] }); by.get(k).v.push(+v); }
+      for (const [nm, v, t] of cell.rows) { const name = chRowName(nm), k = name.toLowerCase(); if (!k || v == null || isNaN(+v)) continue; if (!by.has(k)) by.set(k, { name, v: [] }); by.get(k).v.push((t || ROW_TOP) !== T ? +v * T / (t || ROW_TOP) : +v); }
     }
     return { col, by };
   }).filter(x => x.by.size);
@@ -20621,7 +20672,7 @@ function bkRubricRows(c, cols) {
   const keys = []; for (const p of per) for (const k of p.by.keys()) if (!keys.includes(k)) keys.push(k);
   const series = keys.map(k => { const pts = per.map(p => p.by.has(k) ? bkMean(p.by.get(k).v) : null), have = pts.filter(v => v != null); return { k, name: per.find(p => p.by.has(k)).by.get(k).name, pts, mean: bkMean(have), last: have[have.length - 1], at: pts.reduce((a, v, i) => v != null ? i : a, 0) }; });
   const low = series.reduce((a, b) => b.mean < a.mean ? b : a), vals = series.flatMap(x => x.pts).filter(v => v != null);
-  const hi = 4, lo = Math.max(0, Math.min(hi - 1, Math.floor(Math.min(...vals) - .25))), tick = hi - lo > 2 ? 1 : .5;
+  const hi = chRowTop(chSums(cols)), lo = Math.max(0, Math.min(hi - 1, Math.floor(Math.min(...vals) - .25))), tick = hi - lo > 2 ? 1 : .5;
   const n = per.length, W = bkW(), L = 34, R = Math.min(176, Math.round(W * .3)), T = 12, B = 58, H = 250, X = i => n === 1 ? L + (W - L - R) / 2 : L + 20 + i * (W - L - R - 40) / (n - 1), Y = v => T + (hi - v) / (hi - lo) * (H - T - B);
   let s = '';
   for (let v = lo; v <= hi + 1e-9; v += tick) s += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + Y(v) + '" y2="' + Y(v) + '" class="tgl"/><text x="' + (L - 8) + '" y="' + (Y(v) + 4) + '" text-anchor="end" class="ttk">' + v + '</text>';
@@ -20631,7 +20682,7 @@ function bkRubricRows(c, cols) {
     const cls = x === low ? ' lo' : '', seg = []; let run = [];
     x.pts.forEach((v, i) => { if (v == null) { if (run.length) seg.push(run); run = []; } else run.push(X(i) + ',' + Y(v)); }); if (run.length) seg.push(run);
     s += seg.map(r => '<polyline class="chrl' + cls + '" points="' + r.join(' ') + '"/>').join('');
-    x.pts.forEach((v, i) => { if (v != null) s += '<circle class="chrd' + cls + '" cx="' + X(i) + '" cy="' + Y(v) + '" r="5" tabindex="0"' + chTip(fmtNum(Math.round(v * 10) / 10) + ' out of 4', x.name + ' · ' + per[i].col.name, people(per[i].by.get(x.k).v.length, 'paper')) + '/>'; });
+    x.pts.forEach((v, i) => { if (v != null) s += '<circle class="chrd' + cls + '" cx="' + X(i) + '" cy="' + Y(v) + '" r="5" tabindex="0"' + chTip(fmtNum(Math.round(v * 10) / 10) + ' out of ' + hi, x.name + ' · ' + per[i].col.name, people(per[i].by.get(x.k).v.length, 'paper')) + '/>'; });
   }
   const labs = series.map(x => ({ x, y: Y(x.last) })).sort((a, b) => a.y - b.y);
   for (let i = 1; i < labs.length; i++) if (labs[i].y - labs[i - 1].y < 15) labs[i].y = labs[i - 1].y + 15;
@@ -20705,9 +20756,9 @@ function bkStuRows(c, cols, n) {
   const fold = per => { const m = new Map(); for (const p of per) for (const [k, e] of p.by) { if (!m.has(k)) m.set(k, { name: e.name, v: [] }); m.get(k).v.push(...e.v); } return m; };
   const mine = fold(chRowAvgs(c, cols, n)), cls = fold(chRowAvgs(c, cols));
   if (!mine.size) return '<p class="muted" id="bkStuRows">This shows once a summative of theirs has been scored with a rubric.</p>';
-  const one = v => fmtNum(Math.round(v * 10) / 10);
+  const one = v => fmtNum(Math.round(v * 10) / 10), T = chRowTop(chSums(cols));
   return '<div id="bkStuRows">' + [...mine].map(([k, e]) => { const v = bkMean(e.v), cv = cls.has(k) ? bkMean(cls.get(k).v) : null;
-    return '<div class="bkcmp chrow"' + chTip(one(v) + ' out of 4', e.name, people(e.v.length, 'summative') + (cv != null ? ' · class average ' + one(cv) : '')) + ' tabindex="0"><span title="' + esc(e.name) + '">' + esc(e.name) + '</span><div class="bkcmpt"><i style="width:' + Math.min(100, v / 4 * 100) + '%"></i>' + (cv != null ? '<em style="left:' + Math.min(100, cv / 4 * 100) + '%"></em>' : '') + '</div><b>' + one(v) + '</b><small>' + (cv != null ? 'class ' + one(cv) : '') + '</small></div>'; }).join('') + '</div>';
+    return '<div class="bkcmp chrow"' + chTip(one(v) + ' out of ' + T, e.name, people(e.v.length, 'summative') + (cv != null ? ' · class average ' + one(cv) : '')) + ' tabindex="0"><span title="' + esc(e.name) + '">' + esc(e.name) + '</span><div class="bkcmpt"><i style="width:' + Math.min(100, v / T * 100) + '%"></i>' + (cv != null ? '<em style="left:' + Math.min(100, cv / T * 100) + '%"></em>' : '') + '</div><b>' + one(v) + '</b><small>' + (cv != null ? 'class ' + one(cv) : '') + '</small></div>'; }).join('') + '</div>';
 }
 let chResize = 0;
 window.addEventListener('resize', () => { clearTimeout(chResize); chResize = setTimeout(() => { if (bkPage() && $('#bkBody') && bk.tab !== 'table' && bk.cols && !$('#bkAdd') && !$('#bkSetup') && !$('.bktypes')) bkDraw(); }, 200); });
@@ -21008,11 +21059,11 @@ document.addEventListener('change', e => {
 /* ---------- what one saved paper says about each goal ---------- */
 function goalCell(d, g, p) {
   if (!g || !p || p.status === 'missing' || p.status === 'excused' || g.outAvg) return null;
-  const s = { ...DEFAULT_SETUP, ...(d.setup || {}) }, rub = s.mode === 'rubric', out = {};
-  const max = rub ? s.criteria.length * 4 : +s.outOf || 0;
+  const s = setupOver(d.setup), rub = s.mode === 'rubric', out = {};
+  const max = setupMax(s);
   const put = (id, got, of, part) => { if (!id || !(of > 0) || got == null || isNaN(+got)) return; const e = out[id] ||= { got: 0, of: 0, parts: [] }; e.got += +got; e.of += of; if (!e.parts.includes(part)) e.parts.push(part); };
   const qs = !rub && d.quiz && Array.isArray(d.quiz.qs) ? d.quiz.qs : [], q = g.q || {};
-  if (rub) s.criteria.forEach((c, i) => put(s.goals && s.goals[i], (g.rubric || [])[i], 4, String(c)));
+  if (rub) s.criteria.forEach((c, i) => put(s.goals && s.goals[i], (g.rubric || [])[i], rowTop(s, i), String(c)));
   else if (qs.some(x => q[x.id] != null)) qs.forEach((x, i) => put(x.goal || d.goal, q[x.id], +x.pts || 0, 'Question ' + ((x.lab || '').trim() || String(i + 1))));
   else if (d.goal && p.pct != null && !p.partial) out[d.goal] = { got: p.total != null ? p.total : p.pct, of: p.total != null && p.max ? p.max : 100, pct: p.pct, parts: ['The whole score'] };
   for (const e of Object.values(out)) if (e.pct == null) { const share = Math.max(0, Math.min(1, e.got / e.of)), v = max ? percentWith(share * max, max, s.scale) : null; e.pct = v == null ? share * 100 : Math.max(0, v); }
@@ -21151,18 +21202,19 @@ function rptPut(c, n, patch, term) {
 const rptPairs = new WeakMap();
 function rptFacts(c, cols, conf, n) {
   const g = bkGrade(n, cols, conf), scored = bkScored(cols).map(col => ({ col, cell: col.cells.get(n) })).filter(x => bkCounts(x.cell));
-  const rows = new Map();
-  for (const { col, cell } of scored) for (const [nm, v] of cell.rows || []) {
+  const rows = new Map(), T = chRowTop(scored.map(x => x.col));   // rows on different scales are put on the one most of them use
+  for (const { col, cell } of scored) for (const [nm, v0, t] of cell.rows || []) {
+    const v = (t || ROW_TOP) !== T && v0 != null ? +v0 * T / (t || ROW_TOP) : v0;
     const name = chRowName(nm), k = name.toLowerCase(); if (!k || v == null || isNaN(+v)) continue;
     if (!rows.has(k)) rows.set(k, { name, v: [] });
     const e = rows.get(k); e.v.push(+v); e.col = col; e.raw = nm;
   }
   const avg = [...rows.values()].map(e => ({ ...e, avg: bkMean(e.v) })).sort((a, b) => b.avg - a.avg);
-  const apart = avg.length >= 2 && avg[0].avg - avg[avg.length - 1].avg >= 0.25, strong = apart ? avg[0] : null, weak = apart ? avg[avg.length - 1] : null;
+  const apart = avg.length >= 2 && avg[0].avg - avg[avg.length - 1].avg >= 0.25 * T / ROW_TOP, strong = apart ? avg[0] : null, weak = apart ? avg[avg.length - 1] : null;
   let words = '';
   if (weak && weak.col.d) {   // her own words for the level above where the student is now, from the newest rubric with that row
     const s = weak.col.d.setup || {}, i = (s.criteria || []).findIndex(x => chRowName(x).toLowerCase() === weak.name.toLowerCase());
-    if (i >= 0) words = String(levelIn(s, i, Math.min(4, Math.floor(weak.avg + 1e-9) + 1)) || '').trim().replace(/[.。]+$/, '');
+    if (i >= 0) words = String(levelIn(s, i, Math.min(rowTop(s, i), Math.floor(weak.avg * rowTop(s, i) / T + 1e-9) + 1)) || '').trim().replace(/[.。]+$/, '');
   }
   const v = scored.map(x => x.cell.pct), move = v.length >= 4 ? bkMean(v.slice(-3)) - bkMean(v.slice(0, -3)) : 0;
   const missing = cols.filter(x => x.type !== 'xc' && (x.cells.get(n) || {}).st === 'missing').map(x => x.name);
@@ -21713,18 +21765,19 @@ function returnSideClick(e) {
 /* ---------- Insights: how each row was scored, change since the last summative, and the same assignment in her other classes ---------- */
 function insRowsHtml() {
   if (setup.mode !== 'rubric') return '';
-  const lv = [0, 1, 2, 3, 4], rows = setup.criteria.map((name, r) => {
+  const hi = Math.max(...setup.criteria.map((_, r) => rowTop(setup, r))), lv = Array.from({ length: hi + 1 }, (_, v) => v), shade = v => 'b' + (1 + Math.round(v / hi * 4));   // five blues, spread over whatever the top is
+  const rows = setup.criteria.map((name, r) => {
     const by = lv.map(() => []);
-    batch.students.forEach((st, i) => { const v = st.grade.outAvg ? null : rowShown(st, r); if (v != null) by[Math.max(0, Math.min(4, Math.floor(v)))].push(shownName(st, i)); });
+    batch.students.forEach((st, i) => { const v = st.grade.outAvg ? null : rowShown(st, r); if (v != null) by[Math.max(0, Math.min(hi, Math.floor(v)))].push(shownName(st, i)); });
     return { name, by, n: by.reduce((a, b) => a + b.length, 0) };
   });
   if (!rows.some(x => x.n)) return '';
   const zero = rows.some(x => x.by[0].length), shown = zero ? lv : lv.slice(1);
   return '<section id="insRows"><h3 class="ovh3">How each row was scored</h3><div class="insrows" role="group" aria-label="Papers at each score, row by row">' + rows.map(x =>
     '<div class="insr"><div class="insn" title="' + esc(x.name) + '">' + esc(x.name) + '</div><div class="inst">' + (x.n ? shown.map(v => { const who = x.by[v], k = who.length; if (!k) return '';
-      return '<i class="chseg b' + (v + 1) + '" style="flex:' + k + '" tabindex="0" aria-label="' + esc(x.name + ': ' + people(k, 'paper') + ' at ' + v) + '"' + chTip(people(k, 'paper') + ' · ' + Math.round(k / x.n * 100) + '%', 'Scored ' + v + ' on ' + x.name, who.slice(0, 12).join(', ') + (k > 12 ? ' and ' + (k - 12) + ' more' : '')) + '>' + (k / x.n > .07 ? k : '') + '</i>'; }).join('') : '<span class="muted">No scores yet</span>') + '</div></div>').join('') +
-    '</div><div class="bkleg">' + shown.map(v => '<span><i class="chsw b' + (v + 1) + '"></i>' + v + '</span>').join('') + '</div>' +
-    '<p class="muted ovcap2">How many papers got each score on each row, in the rubric’s order. A half point counts with the whole number below it. The stronger the blue, the higher the score.</p></section>';
+      return '<i class="chseg ' + shade(v) + '" style="flex:' + k + '" tabindex="0" aria-label="' + esc(x.name + ': ' + people(k, 'paper') + ' at ' + v) + '"' + chTip(people(k, 'paper') + ' · ' + Math.round(k / x.n * 100) + '%', 'Scored ' + v + ' on ' + x.name, who.slice(0, 12).join(', ') + (k > 12 ? ' and ' + (k - 12) + ' more' : '')) + '>' + (k / x.n > .07 ? k : '') + '</i>'; }).join('') : '<span class="muted">No scores yet</span>') + '</div></div>').join('') +
+    '</div><div class="bkleg">' + shown.map(v => '<span><i class="chsw ' + shade(v) + '"></i>' + v + '</span>').join('') + '</div>' +
+    '<p class="muted ovcap2">How many papers got each score on each row, in the rubric’s order.' + (rowHalf(setup) ? ' A half point counts with the whole number below it.' : '') + ' The stronger the blue, the higher the score.</p></section>';
 }
 function insNow(c) {
   const m = rosterMatch(c.names), max = maxPoints(), out = new Map();
@@ -22087,14 +22140,14 @@ function statOf(m) {
   return had ? had.v : null;
 }
 function workStat(d) {
-  const su = { ...DEFAULT_SETUP, ...d.setup }, pcts = [], crit = su.mode === 'rubric' ? su.criteria : [], rows = crit.map(c => ({ name: String(c), sum: 0, n: 0, low: 0 }));
+  const su = setupOver(d.setup), pcts = [], crit = su.mode === 'rubric' ? su.criteria : [], rows = crit.map((c, i) => ({ name: String(c), top: rowTop(su, i), sum: 0, n: 0, low: 0 }));
   for (const k of new Set([...Object.keys(d.s || {}), ...Object.keys(d.read || {})])) {
     const g = { ...(((d.s || {})[k] || {}).g || {}), read: (d.read || {})[k] }, p = pastScore(d.setup, g);
     if (p.status === 'missing' || p.status === 'excused' || p.partial || g.outAvg) continue;
     if (p.pct != null) pcts.push(p.pct);
-    if (!p.paper) for (const [i, row] of rows.entries()) { const v = (g.rubric || [])[i]; if (v != null) { row.sum += v; row.n++; if (v <= 2) row.low++; } }
+    if (!p.paper) for (const [i, row] of rows.entries()) { const v = (g.rubric || [])[i]; if (v != null) { row.sum += v; row.n++; if (v <= row.top / 2) row.low++; } }
   }
-  const full = rows.filter(r => r.n >= 3).map(r => ({ name: r.name, avg: r.sum / r.n, low: r.low, n: r.n }));
+  const full = rows.filter(r => r.n >= 3).map(r => ({ name: r.name, top: r.top, avg: r.sum / r.n, low: r.low, n: r.n }));
   return { avg: pcts.length ? roundPct(pcts.reduce((a, b) => a + b, 0) / pcts.length) : null, n: pcts.length, rows: full.length === rows.length && rows.length >= 2 ? full : [] };
 }
 function backHtml(list, prim) {
@@ -22109,11 +22162,11 @@ const NEXT_DAYS = 30;
 function nextHtml(groups) {
   const m = [...groups.back, ...groups.old].filter(m => keptState(m).of && !keptState(m).left && !(m.newer && keptMeta.has(m.newer)) && Date.now() - m.t < NEXT_DAYS * 864e5).sort((a, b) => b.t - a.t)[0];
   const s = m && statOf(m); if (!s || !s.rows.length) return '';
-  const w = keptWhere(m), low = s.rows.reduce((a, b) => b.avg < a.avg ? b : a), flat = s.rows.every(r => Math.abs(r.avg - low.avg) < 0.05);
+  const w = keptWhere(m), low = s.rows.reduce((a, b) => b.avg / b.top < a.avg / a.top ? b : a), flat = s.rows.every(r => Math.abs(r.avg / r.top - low.avg / low.top) < 0.0125);   // rows can be on different scales, so they are compared by their share of the top (0.05 of a point on 0 to 4)
   const head = (w.cls ? esc(w.cls.name) + ': ' : '') + (flat ? 'every row came out the same on ' : esc(low.name) + ' was the weakest row on ') + esc(m.name || 'the last set of papers') + '.';
-  const who = low.low ? numWord(low.low) + (low.low === 1 ? ' student' : ' students') + ' scored 2 or below on ' + esc(low.name) + '.' : 'Nobody scored 2 or below on ' + esc(low.name) + '.';
+  const who = low.low ? numWord(low.low) + (low.low === 1 ? ' student' : ' students') + ' scored ' + fmtNum(low.top / 2) + ' or below on ' + esc(low.name) + '.' : 'Nobody scored ' + fmtNum(low.top / 2) + ' or below on ' + esc(low.name) + '.';
   return '<h2 class="tcap">What the class needs next</h2><div class="tcard tneed"><p class="tbig">' + head.charAt(0).toUpperCase() + head.slice(1) + '</p>' +
-    '<div class="tbars" role="img" aria-label="' + esc(s.rows.map(r => r.name + ' ' + fmtNum(Math.round(r.avg * 10) / 10) + ' of 4').join(', ')) + '">' + s.rows.map(r => '<span class="tbn">' + esc(r.name) + '</span><span class="tbt"><i class="' + (r === low && !flat ? 'low' : '') + '" style="width:' + Math.round(r.avg / 4 * 100) + '%"></i></span><span class="tbv">' + (Math.round(r.avg * 10) / 10).toFixed(1) + '</span>').join('') + '</div>' +
+    '<div class="tbars" role="img" aria-label="' + esc(s.rows.map(r => r.name + ' ' + fmtNum(Math.round(r.avg * 10) / 10) + ' of ' + r.top).join(', ')) + '">' + s.rows.map(r => '<span class="tbn">' + esc(r.name) + '</span><span class="tbt"><i class="' + (r === low && !flat ? 'low' : '') + '" style="width:' + Math.round(r.avg / r.top * 100) + '%"></i></span><span class="tbv">' + (Math.round(r.avg * 10) / 10).toFixed(1) + '</span>').join('') + '</div>' +
     (flat ? '' : '<p class="tsay">' + who + '</p>') + (m.papers ? '<a class="tlink" href="' + batchHash(m.id, 'insights') + '">' + (low.low && !flat ? 'See who' : 'Open Insights') + T_ARROW + '</a>' : '') + '</div>';
 }
 function hsideShow() { $('#hside').hidden = $('#handBack').hidden && $('#needNext').hidden && $('#needs').hidden; }
@@ -22654,6 +22707,8 @@ function meSetRender(sec) {
     const g = meGrade(), way = g ? g.way : '';
     put('#setWay', '<div class="lhead"><h2>How you usually grade</h2><span class="muted">What a new assignment starts with. Any assignment can be scored another way, in its Rubric setup.</span></div>' +
       '<div class="meways" role="radiogroup" aria-label="How you usually grade">' + GRADE_WAYS.map(([k, t, s]) => '<button class="wlway' + (way === k ? ' on' : '') + '" role="radio" aria-checked="' + (way === k) + '" data-meway="' + k + '"><b>' + t + '</b><span>' + s + '</span></button>').join('') + '</div>' +
+      (g && g.way === 'rubric' ? '<div class="rowscale merowscale"><label for="meRowTop">Each rubric row is scored 0 to</label><select id="meRowTop" class="btn sm">' + Array.from({ length: ROW_TOP_MAX }, (_, k) => '<option' + (k + 1 === (rowsTop(g.setup) || ROW_TOP) ? ' selected' : '') + '>' + (k + 1) + '</option>').join('') + '</select>' +
+        '<label class="rowhalf"><input type="checkbox" id="meRowHalf"' + (rowHalf(g.setup) ? ' checked' : '') + '> Half points</label><span class="muted">For new assignments. Any rubric can use another scale, in its Rubric setup.</span></div>' : '') +
       (g ? '' : '<p class="muted setp">Not chosen: a new assignment starts as it always has here, with three rubric rows and the 12-point scale (12 = 100, 11 = 95, 10 = 91…). Choosing one changes only assignments you make from then on.</p>') +
       (g && g.bands ? '<div class="mebands"><p class="setp"><b>' + (g.way === 'ib7' ? 'Grade boundaries' : 'Where each letter starts') + '</b> <span class="muted">The lowest percent that earns each grade. Shown beside the percent while you score and on the Grades tab.</span></p>' +
         '<div class="mebrow">' + g.bands.map((b, i) => '<label><input type="text" class="mebl" data-mebl="' + i + '" maxlength="12" value="' + esc(b[1]) + '" aria-label="Grade ' + (i + 1) + '"><span>from</span><input type="number" min="0" max="100" step="1" data-mebp="' + i + '" value="' + b[0] + '" aria-label="Lowest percent for ' + esc(b[1]) + '"' + (i === g.bands.length - 1 ? ' disabled' : '') + '><span>%</span></label>').join('') + '</div></div>' : ''));
@@ -22663,6 +22718,15 @@ $('#setPane').addEventListener('change', e => {
   const t = e.target;
   if (t.id === 'meSys') { if (t.value === 'other') { meSet({ sys: 'My school’s system' }); sysWords(); setRender(); const o = $('#meSysOther'); if (o) { o.focus(); o.select(); } return; } meSet({ sys: t.value }); sysWords(); return setRender(); }
   if (t.id === 'meSysOther') { meSet({ sys: t.value.trim().slice(0, 40) }); sysWords(); return setRender(); }
+  if (t.id === 'meRowTop' || t.id === 'meRowHalf') {   // the teacher's usual row scale: only new assignments start with it
+    const g = meGrade(); if (!g) return;
+    const su = { ...g.setup }; for (const k of ['top', 'tops', 'half']) delete su[k];
+    Object.assign(su, rowScaleOf({ top: $('#meRowTop').value, half: $('#meRowHalf').checked }));
+    store.set('gs.setup', JSON.parse(JSON.stringify(su)));   // the next new assignment starts from this, not from the last one saved
+    meSet({ grade: { ...me().grade, setup: su } });
+    if (!batch) setup = { ...DEFAULT_SETUP };
+    setRender(); return toast('New rubrics score each row ' + rowsSay(su) + '.');
+  }
   if (t.dataset.mebl != null || t.dataset.mebp != null) {
     const g = meGrade(); if (!g || !g.bands) return;
     const bands = g.bands.map((b, i) => { const l = $('[data-mebl="' + i + '"]'), p = $('[data-mebp="' + i + '"]'); return [i === g.bands.length - 1 ? 0 : Math.max(0, Math.min(100, Math.round(+p.value) || 0)), (l.value.trim() || b[1]).slice(0, 12)]; });
