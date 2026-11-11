@@ -210,12 +210,20 @@ function totalHtml(st) {
   const gr = gradeOf(st), own = ownGrade(st);
   if (noScore(st)) return '<b>' + STATUS_LABEL[gr.status] + '</b><span style="width:100%;font-size:12.5px">No score counts. Giving a score takes this off.</span>';
   let h = '<b>' + (gr.total == null ? '–' : fmtNum(gr.total)) + '</b><span>/ ' + (gr.outOf != null ? fmtNum(gr.outOf) : maxPoints()) + '</span><span class="pc">' + (gr.pct == null ? '' : fmtPct(gr.pct) + bandSay(gr.pct)) + '</span>';
+  if (gr.total != null) h += '<button class="btn sm ghost" id="stampScore" title="Put the score on the paper: ' + esc(scoreStampText(gr)) + '">' + STAMP_ICON + 'Stamp</button>';
   if (gr.xc) h += '<span class="xcsay" style="width:100%">' + fmtNum(gr.base) + ' earned + ' + fmtNum(gr.xc) + (gr.xcU === 'pct' ? '%' : '') + ' extra credit</span>';
   if (gr.partial) h += '<span class="sc-warn" style="width:100%">Partial: ' + partNote(st) + '. This total isn’t final.</span>';
   if (gr.paper) h += '<span style="width:100%;font-size:12.5px">From the paper (Grade sheet)</span>';
   const ps = paperScore(st);
   if (own.total != null && ps != null && Math.abs(ps - own.total) > 0.001) h += '<span class="sc-warn" style="width:100%">The paper says ' + fmtNum(ps) + '</span>';
   return h;
+}
+// The score stamp, the same one the calculator's "Score sticker" places: "12.5/15 = 83%", from the score however it was given
+// (rubric, points, Quick mark or the grade sheet), so she doesn't need the calculator to get it onto the paper.
+const STAMP_ICON = '<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><rect x="2" y="9.5" width="12" height="3.5" rx="1"/><path d="M6 9.5V7.2a2 2 0 1 1 4 0v2.3M3.5 15h9"/></svg>';
+function scoreStampText(gr) {
+  const max = gr.outOf != null ? gr.outOf : maxPoints();
+  return fmtNum(gr.total) + (max ? '/' + fmtNum(max) : '') + (gr.pct != null ? ' = ' + gr.pct + '%' : '');
 }
 // The score on the paper: read from typed text, or typed by her on the Grade sheet from the picture.
 function paperScore(st) {
@@ -242,6 +250,7 @@ $('#grade').addEventListener('click', e => {
   if (e.target.closest('#nextBtn')) stepStudent(1);
   if (e.target.closest('#nextUn')) return nextUnscored();
   if (e.target.closest('[data-gcalc]')) return openCalc();
+  if (e.target.closest('#stampScore')) { const gr = gradeOf(batch.students[cur]); if (gr.total == null) return; if (!pages.length) return toast('Open the paper first, then stamp the score on it'); startScorePlace(scoreStampText(gr)); return; }
   if (cmtClick(e)) return;
   if (e.target.closest('#editRubric')) openSetup();
   if (e.target.closest('[data-keys]')) openKeys();

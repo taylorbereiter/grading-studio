@@ -75,3 +75,24 @@ test('Score sticker sets the score, lands where she clicks, and the grade sheet 
   assert.deepEqual(page.errors, []);
   await close();
 });
+
+// The Stamp button by the score: the same sticker without the calculator, for a score given any other way (typed, rubric, Quick mark).
+test('Stamp by the score puts the score sticker on the paper without the calculator', async () => {
+  const { page, close } = await openApp(browser, { beforeLoad: p => p.evaluateOnNewDocument(() => { if (!localStorage.getItem('gs.setup')) localStorage.setItem('gs.setup', JSON.stringify({ mode: 'points', outOf: 15 })); }) });
+  await openZip(page, zipOf({ 'Ann Example/Essay.pdf': await makePaper({ title: 'Ann' }) }), 'Stamp.zip');
+  await page.waitForSelector('#ptsIn');
+  assert.equal(await page.$('#stampScore'), null, 'no button before there is a score');
+  await page.click('#ptsIn'); await page.keyboard.type('11.5'); await page.keyboard.press('Enter');
+  await page.waitForSelector('#stampScore');
+  assert.match(await page.$eval('#stampScore', b => b.title), /11\.5\/15 = 77%/);
+  await page.click('#stampScore');
+  assert.ok(await page.$('#scoreBar'));
+  assert.equal(await page.$('#calcPanel'), null, 'the calculator stays shut');
+  const c = await page.evaluate(() => { const pg = window.__gs.state().pages[0], r = pg.canvas.getBoundingClientRect(); return { x: r.left + pg.W * pg.s * 0.75, y: r.top + 60 * pg.s }; });
+  await page.mouse.move(c.x, c.y); await page.mouse.click(c.x, c.y);
+  assert.equal(await page.$('#scoreBar'), null);
+  const marks = await page.evaluate(() => Object.values(window.__gs.state().batch.students[0].files[0].marks).flat().filter(m => m.t === 'stamp'));
+  assert.equal(marks.length, 1); assert.equal(marks[0].k, 'score'); assert.equal(marks[0].text, '11.5/15 = 77%');
+  assert.deepEqual(page.errors, []);
+  await close();
+});
