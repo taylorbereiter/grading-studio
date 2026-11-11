@@ -595,7 +595,12 @@ function mergeLib(a0, b0, o = {}) {
       for (const k of new Set([...Object.keys(xa), ...Object.keys(ya)])) out[k] = !xa[k] ? ya[k] : !ya[k] ? xa[k] : (ya[k].t || 0) > (xa[k].t || 0) ? ya[k] : xa[k];
       e.fields.att = e.node.att = out;
     }
-    const other = m.both.filter(k => k !== 'names' && k !== 'info' && k !== 'att');
+    if (x.type === 'c' && m.both.includes('lv')) {   // an MYP class's term levels: student by student within each term, the one saved later
+      const xl = x.fields.lv || {}, yl = y.fields.lv || {}, out = {};
+      for (const t of new Set([...Object.keys(xl), ...Object.keys(yl)])) { const a = xl[t] || {}, b = yl[t] || {}; out[t] = {}; for (const n of new Set([...Object.keys(a), ...Object.keys(b)])) out[t][n] = !a[n] ? b[n] : !b[n] ? a[n] : (b[n].t || 0) > (a[n].t || 0) ? b[n] : a[n]; }
+      e.fields.lv = e.node.lv = out;
+    }
+    const other = m.both.filter(k => k !== 'names' && k !== 'info' && k !== 'att' && k !== 'lv');
     if (other.length) notes.push({ kind: 'both', type: x.type, name: e.fields.name, rubric: other.includes('setup') });
     else if (m.fromY.some(k => k !== 'names')) notes.push({ kind: 'changed', type: x.type, name: e.fields.name });
     kept.set(id, e);

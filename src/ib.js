@@ -31,7 +31,8 @@ const IB_WAYS = [
   ['dp', 'IB DP', 'Marks for each component, turned into 1 to 7 by your boundaries.'],
 ];
 const ibLetter = i => String.fromCharCode(65 + i);
-const classWay = c => c && (c.way === 'myp' || c.way === 'dp') ? c.way : '';
+// These three are plain functions, not consts: a page opened straight on a class draws its head before this file has run.
+function classWay(c) { return c && (c.way === 'myp' || c.way === 'dp') ? c.way : ''; }
 const ibGroup = k => IB_GROUPS.find(g => g[0] === k) || null;
 const ibGroupCrit = k => (ibGroup(k) || IB_GROUPS[IB_GROUPS.length - 1])[2].map((name, i) => ({ k: ibLetter(i), name }));
 // For a subject with another number of criteria no table is published, so the four-criterion one is scaled to its top total.
@@ -77,8 +78,8 @@ function ibEvidence(list) {
   if (!ev.length) return { n: 0, hint: null, last: null, high: null };
   return { n: ev.length, hint: ev[ev.length - 1].v, last: ev[ev.length - 1].v, high: Math.max(...ev.map(e => e.v)) };
 }
-const ibPill = c => classWay(c) ? '<span class="ibpill" title="' + (classWay(c) === 'myp' ? 'This class is graded with IB MYP criteria' : 'This class is graded as an IB DP class') + '">' + (classWay(c) === 'myp' ? 'MYP' : 'DP') + '</span>' : '';
-const ibClassBtn = (c, ci) => '<button class="btn sm" data-ib-class="' + ci + '">Grading</button>';
+function ibPill(c) { const w = classWay(c); return w ? '<span class="ibpill" title="' + (w === 'myp' ? 'This class is graded with IB MYP criteria' : 'This class is graded as an IB DP class') + '">' + (w === 'myp' ? 'MYP' : 'DP') + '</span>' : ''; }
+function ibClassBtn(c, ci) { return '<button class="btn sm" data-ib-class="' + ci + '">Grading</button>'; }
 
 /* ---------- how this class is graded: the box behind the Grading button on a class ---------- */
 let ibDraft = null;
@@ -150,4 +151,146 @@ function ibDlgSave() {
   toast(d.way === 'myp' ? c.name + ' is graded with MYP criteria' : d.way === 'dp' ? c.name + ' is graded as a DP class' : c.name + ' is graded with points and percent');
 }
 document.addEventListener('click', e => { const b = e.target.closest('[data-ib-class]'); if (b) ibDlg(+b.dataset.ibClass); });
-Object.assign(window.__gs, { classWay, ibCrit, ibBounds, ibBoundsFor, ibGradeOf, ibTerm, ibEvidence, ibLevel, ibDlg, IB_GROUPS });
+/* ---------- an MYP class's gradebook: the evidence for each criterion, and the level the teacher judges fits best ---------- */
+// Evidence comes from two places. Levels typed in for a task: item.crit = ['A', 'D'], item.typed = { lv: true, s: { name: { l: { A: 6, D: 5 }, st } } }.
+// A graded download whose rubric rows are criteria: setup.ib = ['B', 'C', 'D'] beside setup.criteria, and each row's score is the level.
+// The level for a term is the teacher's own: c.lv[term][name] = { A: 7, B: 6, t } ('' when there are no terms, '*' for the whole year).
+// Nothing here averages levels or fills one in: a term has a total and a grade only once every criterion has been given a level.
+let ibk = { view: 'table', stu: 0, add: null };
+const ibTermKey = () => bk.term == null ? '' : bk.term;
+const ibLvOf = (c, name) => ((c.lv || {})[ibTermKey()] || {})[name] || {};
+function ibLvSet(c, name, k, v) {
+  const t = ibTermKey(); c.lv ||= {}; c.lv[t] ||= {};
+  const r = { ...(c.lv[t][name] || {}) }; if (v == null) delete r[k]; else r[k] = v; r.t = Date.now();
+  if (Object.keys(r).length > 1) c.lv[t][name] = r; else delete c.lv[t][name];
+  bkSaveLib();
+}
+// Each column of an MYP class with what it says about each student: { key, name, due, fm, crit: ['A', 'D'], cells: Map(name -> { lv, st }) }.
+function ibCols(c, cols) {
+  const keys = new Set(ibCrit(c).map(x => x.k));
+  return cols.map(col => {
+    const cells = new Map(); let crit = [];
+    if (col.typed && col.typed.lv) {
+      crit = ((col.it && col.it.crit) || []).filter(k => keys.has(k));
+      for (const n of c.names) { const r = col.typed.s && col.typed.s[n]; if (!r) continue; const lv = {}; for (const k of crit) { const v = ibLevel((r.l || {})[k]); if (v != null) lv[k] = v; } if (Object.keys(lv).length || r.st) cells.set(n, { lv, st: r.st || '' }); }
+    } else if (col.d && col.d.setup && Array.isArray(col.d.setup.ib)) {
+      const d = col.d, rows = d.setup.ib, pairs = rosterPairs(c.names, Object.keys(d.s || {}));
+      crit = rows.filter(k => keys.has(k));
+      for (const n of c.names) { const k = pairs.get(n), g = k && d.s[k] && d.s[k].g; if (!g) continue; const lv = {}; rows.forEach((ck, i) => { const v = ibLevel((g.rubric || [])[i]); if (keys.has(ck) && v != null) lv[ck] = v; });
+        const st = g.status === 'missing' || g.status === 'excused' ? g.status : ''; if (Object.keys(lv).length || st) cells.set(n, { lv, st }); }
+    } else return null;
+    return { key: col.key, name: col.name, due: col.due, fm: col.type === 'fm', crit, cells, typed: !!(col.typed && col.typed.lv), t: Date.parse((col.due || '1970-01-01') + 'T12:00:00') || 0 };
+  }).filter(Boolean);
+}
+const ibEvFor = (icols, name, k) => icols.filter(x => x.cells.has(name) && x.cells.get(name).lv[k] != null).map(x => ({ v: x.cells.get(name).lv[k], t: x.t, name: x.name, fm: x.fm }));
+const ibLvText = (lv, crit) => crit.filter(k => lv[k] != null).map(k => '<span class="iblv"><i>' + esc(k) + '</i>' + lv[k] + '</span>').join('') || '<span class="bknone">–</span>';
+function ibBar(c, tabs, more) {
+  return '<div class="bkbar"><div class="ovtabs bkterms" role="group" aria-label="Term">' + tabs.map(([id, l]) => '<button data-bkterm="' + esc(id) + '" aria-selected="' + (bk.term === id) + '">' + esc(l) + '</button>').join('') + '</div><span class="sp"></span>' + more + '</div>';
+}
+function ibBookView(c, cols, all, tabs) {
+  if (ibk.view === 'add' && ibk.add) return ibAddView(c);
+  const crit = ibCrit(c), bounds = ibBounds(c), icols = ibCols(c, cols), top = crit.length * IB_TOP, termName = (tabs.find(t => t[0] === bk.term) || [, 'This year'])[1];
+  if (ibk.view === 'fit') return ibFitView(c, crit, bounds, icols, tabs, termName);
+  const bar = ibBar(c, tabs, '<button class="btn sm" data-bksetup>Term setup</button><button class="btn sm" data-ib-class="' + lib.classes.indexOf(c) + '">Criteria and boundaries</button><button class="btn sm" data-ibcopy>Copy levels</button><button class="btn sm primary" data-ibadd-lv>+ Add levels</button>');
+  let h = '<div class="bkwrap"><table class="bktab ibtab" id="ibTab"><thead><tr class="bkg"><th></th>' + (icols.length ? '<th colspan="' + icols.length + '">Evidence</th>' : '') + '<th colspan="' + (crit.length + 2) + '" class="bkgsum">' + esc(termName) + ' · your judgment</th></tr>' +
+    '<tr><th class="bknm">Student</th>' + icols.map(x => '<th class="bkch' + (x.fm ? ' ibfm' : '') + '">' + (x.typed ? '<button data-ibedit="' + esc(x.key) + '" title="Change these levels">' : '<span>') + esc(x.name) + '<small>' + esc(bkDay(x.due)) + ' · ' + esc(x.crit.join(' ') || 'no criteria') + (x.fm ? ' · formative' : '') + '</small>' + (x.typed ? '</button>' : '</span>') + '</th>').join('') +
+    crit.map(x => '<th class="bkavg bksum" title="' + esc(x.name) + '">' + esc(x.k) + '</th>').join('') + '<th class="bkavg bksum">Total<small>of ' + top + '</small></th><th class="bkterm bksum">Grade<small>1 to 7</small></th></tr></thead><tbody>';
+  c.names.forEach((nm, i) => {
+    const lv = ibLvOf(c, nm), r = ibTerm(lv, crit, bounds);
+    h += '<tr><td class="bknm">' + bkName(nm, i) + bkInfo(nm) + '</td>' + icols.map(x => { const cell = x.cells.get(nm); return '<td' + (x.fm ? ' class="ibfm"' : '') + '>' + (!cell ? '<span class="bknone">–</span>' : cell.st ? '<span class="bkst">' + cell.st + '</span>' : ibLvText(cell.lv, x.crit)) + '</td>'; }).join('') +
+      crit.map(x => { const v = ibLevel(lv[x.k]), n = ibEvFor(icols, nm, x.k).length;
+        return '<td class="bkavg bksum ibset"><button data-ibfit="' + i + '" aria-label="' + esc(x.k + ' for ' + bkWho(nm, i) + ': ' + (v != null ? v : n ? 'not set' : 'no evidence')) + '">' + (v != null ? '<b>' + v + '</b>' : n ? '<span class="ibtodo">set</span>' : '<span class="ibnone">no evidence</span>') + '</button></td>'; }).join('') +
+      '<td class="bkavg bksum">' + (r.total != null ? r.total : '<span class="bknone">–</span>') + '</td><td class="bkterm bksum">' + (r.grade != null ? '<b>' + r.grade + '</b>' : '<span class="bknone">–</span>') + '</td></tr>';
+  });
+  h += '</tbody></table></div>';
+  // each criterion should be assessed at least twice in a year: say which have not been, from everything this class has
+  const yr = ibCols(c, all).filter(x => !x.fm), few = crit.map(x => [x.k, yr.filter(y => y.crit.includes(x.k)).length]).filter(x => x[1] < 2);
+  const note = yr.length && few.length ? '<div class="bknote ibfew">' + few.map(([k, n]) => 'Criterion ' + esc(k) + ' has been assessed ' + (n ? 'once' : 'in no task') + ' this year').join('. ') + '. Each criterion is usually assessed at least twice a year.</div>' : '';
+  return bar + note + (icols.length || c.names.some(n => Object.keys(ibLvOf(c, n)).length) ? h : '<p class="muted bkpad">No levels for ' + esc(c.name) + ' in this term yet. Use + Add levels to type in the levels each student earned on a task.</p>' + h) +
+    '<p class="muted bkcap">Each task shows the level given for the criteria it assessed. The levels on the right are yours to set: click one to see all of a student’s evidence and choose the level that fits best. Levels are never averaged. The total and the grade appear once every criterion has a level.</p>';
+}
+// One student: every piece of evidence for each criterion, and the buttons that set its level. The outlined button is the most recent level, as a hint.
+function ibFitView(c, crit, bounds, icols, tabs, termName) {
+  const i = Math.max(0, Math.min(c.names.length - 1, ibk.stu)), nm = c.names[i], lv = ibLvOf(c, nm), r = ibTerm(lv, crit, bounds), top = crit.length * IB_TOP;
+  const bar = ibBar(c, tabs, '<button class="btn sm" data-ibback>← Gradebook</button><button class="btn sm" data-ibstep="-1"' + (i ? '' : ' disabled') + '>Previous student</button><button class="btn sm primary" data-ibstep="1"' + (i < c.names.length - 1 ? '' : ' disabled') + '>Next student</button>');
+  let h = '<div class="ibfit" id="ibFit"><div class="ibfithead"><h3>' + esc(bkWho(nm, i)) + '</h3><span class="muted">' + esc(termName) + ' · choose the level that fits best · ' + r.set + ' of ' + crit.length + ' set</span></div>';
+  for (const x of crit) {
+    const list = ibEvFor(icols, nm, x.k), ev = ibEvidence(list), v = ibLevel(lv[x.k]);
+    h += '<div class="ibrow"><div class="ibrowname"><b>' + esc(x.k) + '</b> ' + esc(x.name) + '</div><div class="ibev">' + (list.length ? list.sort((a, b) => a.t - b.t).map(e => '<span class="ibchip' + (e.fm ? ' fm' : '') + '">' + esc(e.name) + ' <b>' + e.v + '</b></span>').join('') : '<span class="ibnone">no evidence</span>') + '</div>' +
+      '<div><div class="iblvl" role="radiogroup" aria-label="' + esc('Level for ' + x.k) + '">' + Array.from({ length: IB_TOP + 1 }, (_, n) => '<button role="radio" aria-checked="' + (v === n) + '" class="' + (v === n ? 'on' : v == null && ev.hint === n ? 'hint' : '') + '" data-iblv="' + esc(x.k) + ':' + n + '">' + n + '</button>').join('') + '</div>' +
+      '<div class="muted ibsay">' + (v != null ? (ev.n ? 'Most recent ' + ev.last + ', highest ' + ev.high : 'Set with no evidence here') + ' · ' + ibBandName(v) : ev.n ? 'Most recent is ' + ev.last + '. Not set yet.' : 'Nothing to judge from yet.') + '</div></div></div>';
+  }
+  h += '<div class="ibsum"><div><span class="ibcapw">Total</span><b>' + (r.total != null ? r.total : '–') + '</b> <span class="muted">of ' + top + '</span></div><div><span class="ibcapw">Grade</span><b class="ibg">' + (r.grade != null ? r.grade : '–') + '</b></div>' +
+    '<span class="muted">' + (r.need.length ? 'Still to set: ' + esc(r.need.join(', ')) + '.' : r.grade == null ? 'This total is below the lowest boundary.' : '') + ' The outlined number is only a hint from the most recent work. Nothing is set until you click, and clicking a set level again clears it.</span></div></div>';
+  return bar + h;
+}
+// Levels typed in for one task: its name, date, the criteria it assessed, and a level per student for each.
+function ibAddOpen(c, itId) {
+  const f = itId && findItem(itId), it = f ? f.it : null, crit = ibCrit(c);
+  ibk.add = { it, name: it ? it.name : '', due: it ? it.due || '' : isoDay(Date.now()), fm: !!it && it.type === 'fm', crit: it ? (it.crit || []).slice() : crit.slice(0, 2).map(x => x.k),
+    s: it ? JSON.parse(JSON.stringify((it.typed && it.typed.s) || {})) : {} };
+  ibk.view = 'add'; bkDraw(); const n = $('#ibaName'); if (n && !it) n.focus();
+}
+function ibAddView(c) {
+  const a = ibk.add, crit = ibCrit(c), on = crit.filter(x => a.crit.includes(x.k));
+  return '<div class="ibadd" id="ibAdd"><div class="ibaddhead"><h3>' + (a.it ? 'Change levels' : 'Add levels') + '</h3><span class="muted">For a task you marked on paper or somewhere else.</span></div>' +
+    '<div class="ibaddtop"><label>Task <input type="text" id="ibaName" value="' + esc(a.name) + '" maxlength="80" placeholder="e.g. Cells lab report"></label><label>Date <input type="date" id="ibaDue" value="' + esc(a.due) + '"></label>' +
+    '<label class="ibchk"><input type="checkbox" id="ibaFm"' + (a.fm ? ' checked' : '') + '> Formative</label></div>' +
+    '<div class="ibaddcrit" role="group" aria-label="Criteria this task assessed"><span class="muted">Assessed:</span>' + crit.map(x => '<label class="ibchk" title="' + esc(x.name) + '"><input type="checkbox" data-ibacrit="' + esc(x.k) + '"' + (a.crit.includes(x.k) ? ' checked' : '') + '> ' + esc(x.k) + ' <span class="muted">' + esc(x.name) + '</span></label>').join('') + '</div>' +
+    (on.length ? '<div class="bkwrap"><table class="bktab ibaddtab"><thead><tr><th class="bknm">Student</th>' + on.map(x => '<th>' + esc(x.k) + '<small>0 to ' + IB_TOP + '</small></th>').join('') + '</tr></thead><tbody>' +
+      c.names.map((nm, i) => '<tr><td class="bknm">' + esc(bkWho(nm, i)) + '</td>' + on.map(x => { const v = ((a.s[nm] || {}).l || {})[x.k]; return '<td><input type="number" class="ibain" min="0" max="' + IB_TOP + '" step="1" data-iban="' + esc(nm) + '" data-ibak="' + esc(x.k) + '" value="' + (v == null ? '' : v) + '" aria-label="' + esc(x.k + ' for ' + bkWho(nm, i)) + '"></td>'; }).join('') + '</tr>').join('') + '</tbody></table></div>'
+      : '<p class="muted bkpad">Tick the criteria this task assessed.</p>') +
+    '<div class="ibaddfoot">' + (a.it ? '<button class="btn" data-ibadel style="margin-right:auto">Delete these levels</button>' : '') + '<button class="btn" data-ibacancel>Cancel</button><button class="btn primary" data-ibasave>Save</button></div></div>';
+}
+function ibAddRead() {
+  const a = ibk.add; if (!a || !$('#ibAdd')) return;
+  a.name = $('#ibaName').value.trim(); a.due = $('#ibaDue').value; a.fm = $('#ibaFm').checked;
+  for (const i of document.querySelectorAll('#ibAdd .ibain')) { const n = i.dataset.iban, k = i.dataset.ibak, v = i.value === '' ? null : ibLevel(i.value); a.s[n] ||= {}; a.s[n].l ||= {}; if (v == null) delete a.s[n].l[k]; else a.s[n].l[k] = v; }
+}
+function ibAddSave(c) {
+  const a = ibk.add; ibAddRead();
+  if (!a.name) { $('#ibaName').focus(); return; }
+  const bad = [...document.querySelectorAll('#ibAdd .ibain')].find(i => i.value !== '' && ibLevel(i.value) == null);
+  if (bad) { toast('A level is a whole number from 0 to ' + IB_TOP); bad.focus(); return; }
+  if (!a.crit.length) { toast('Tick the criteria this task assessed'); return; }
+  const s = {};
+  for (const [n, r] of Object.entries(a.s)) { const l = {}; for (const k of a.crit) if (r.l && r.l[k] != null) l[k] = r.l[k]; if (Object.keys(l).length || r.st) s[n] = { l, ...(r.st ? { st: r.st } : {}) }; }
+  const typed = { lv: true, s }, type = a.fm ? 'fm' : 'sum', due = a.due || isoDay(Date.now());
+  let it = a.it;
+  if (it) Object.assign(it, { name: a.name, type, due, crit: a.crit.slice(), typed });
+  else { let u = c.units[c.units.length - 1]; if (!u) c.units.push(u = { id: uid(), name: 'Unit 1', items: [] }); u.items.push(it = { id: uid(), name: a.name, classId: c.id, type, due, crit: a.crit.slice(), typed }); }
+  bkSaveLib(); if (!batch) renderLib();
+  const col = bk.cols.find(x => x.key === it.id);
+  if (col) Object.assign(col, { name: it.name, type, due, typed }); else bk.cols.push({ key: it.id, it, cls: c.id, name: it.name, type, due, term: it.term || '', typed, xcTo: '' });
+  if (bk.term !== '*') bk.term = bkTermOf({ due, term: it.term || '' }, bkConf().terms);
+  ibk.view = 'table'; ibk.add = null; bkDraw(); toast('Levels saved');
+}
+async function ibAddDel(c) {
+  const a = ibk.add, it = a && a.it; if (!it) return;
+  if (!await askDlg('Delete the levels typed in for “' + it.name + '”?', { ok: 'Delete', danger: true })) return;
+  for (const u of c.units) { const i = u.items.indexOf(it); if (i >= 0) u.items.splice(i, 1); }
+  bk.cols = bk.cols.filter(x => x.key !== it.id); bkSaveLib(); if (!batch) renderLib();
+  ibk.view = 'table'; ibk.add = null; bkDraw();
+}
+// The term's levels as rows a spreadsheet or the school's system takes: student, each criterion, total, grade.
+function ibCopy(c) {
+  const crit = ibCrit(c), bounds = ibBounds(c);
+  const rows = [['Student', ...crit.map(x => x.k), 'Total', 'Grade'].join('\t')].concat(c.names.map((nm, i) => { const lv = ibLvOf(c, nm), r = ibTerm(lv, crit, bounds); return [bkWho(nm, i), ...crit.map(x => ibLevel(lv[x.k]) == null ? '' : lv[x.k]), r.total == null ? '' : r.total, r.grade == null ? '' : r.grade].join('\t'); }));
+  navigator.clipboard.writeText(rows.join('\n')).then(() => toast('Copied. Paste it into a spreadsheet' + (sysName() ? ' or ' + sysName() : '') + '.'), () => toast('Copying didn’t work in this browser.'));
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest('#bkBody [data-ibfit], #bkBody [data-ibback], #bkBody [data-ibstep], #bkBody [data-iblv], #bkBody [data-ibadd-lv], #bkBody [data-ibedit], #bkBody [data-ibacancel], #bkBody [data-ibasave], #bkBody [data-ibadel], #bkBody [data-ibcopy]');
+  if (!b) return; const c = bkClass(), d = b.dataset; if (!c || classWay(c) !== 'myp') return;
+  if (d.ibfit != null) { ibk.view = 'fit'; ibk.stu = +d.ibfit; return bkDraw(); }
+  if (d.ibback != null) { ibk.view = 'table'; return bkDraw(); }
+  if (d.ibstep) { ibk.stu = Math.max(0, Math.min(c.names.length - 1, ibk.stu + +d.ibstep)); return bkDraw(); }
+  if (d.iblv) { const [k, n] = d.iblv.split(':'), nm = c.names[ibk.stu], was = ibLevel(ibLvOf(c, nm)[k]); ibLvSet(c, nm, k, was === +n ? null : +n); bkDraw(); const on = $('#bkBody [data-iblv="' + k + ':' + n + '"]'); if (on) on.focus(); return; }
+  if (d.ibaddLv != null) return ibAddOpen(c, '');
+  if (d.ibedit) return ibAddOpen(c, d.ibedit);
+  if (d.ibacancel != null) { ibk.view = 'table'; ibk.add = null; return bkDraw(); }
+  if (d.ibasave != null) return ibAddSave(c);
+  if (d.ibadel != null) return ibAddDel(c);
+  if (d.ibcopy != null) return ibCopy(c);
+});
+document.addEventListener('change', e => { const t = e.target.closest('#ibAdd [data-ibacrit]'); if (!t || !ibk.add) return; ibAddRead(); const k = t.dataset.ibacrit, a = ibk.add; a.crit = ibCrit(bkClass()).map(x => x.k).filter(x => x === k ? t.checked : a.crit.includes(x)); bkDraw(); });
+Object.assign(window.__gs, { classWay, ibCrit, ibBounds, ibBoundsFor, ibGradeOf, ibTerm, ibEvidence, ibLevel, ibDlg, IB_GROUPS, ibCols, ibk: () => ibk });

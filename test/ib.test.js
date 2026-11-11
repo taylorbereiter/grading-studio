@@ -4,7 +4,8 @@
 const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const { launch } = require('./helpers/chrome');
-const { openApp, classPage } = require('./helpers/app');
+const { openApp, classPage, goTo } = require('./helpers/app');
+const { ibSeed } = require('./helpers/ibseed');
 
 let browser;
 before(async () => { browser = await launch(); });
@@ -97,5 +98,85 @@ test('three criteria get a scaled table, a boundary out of order is refused, and
   c = (await stored(page)).classes[0];
   assert.equal(c.way, undefined); assert.deepEqual(c.ib.bounds[0], [77, 7]);
   assert.equal(await page.$('.clshead .ibpill'), null);
+  await close();
+});
+
+const book = async page => { await goTo(page, '#/class/c1/gradebook'); await page.waitForSelector('#ibTab'); };
+const row = (page, i) => page.$$eval('#ibTab tbody tr', (rs, i) => [...rs[i].children].map(td => td.textContent.trim()), i);
+
+test('an MYP gradebook shows each task’s levels, the term levels the teacher set, and a grade only when all are set', async () => {
+  const { page, close } = await openApp(browser, { seed: ibSeed() });
+  await book(page);
+  assert.deepEqual(await row(page, 1), ['Bram Sample', 'A4D3', 'B4C4', 'A4', 'B3C5D4', '4', '4', '5', '4', '17', '4']);
+  assert.deepEqual(await row(page, 2), ['Cleo Fixture', 'A8D7', 'B7C8', 'A8', 'B8C7D7', '8', '8', '7', '7', '30', '7']);
+  assert.deepEqual((await row(page, 0)).slice(5), ['7', '6', '6', 'set', '–', '–'], 'three of four set: no total, no grade');
+  assert.deepEqual((await row(page, 4)).slice(5), ['set', 'set', 'set', 'set', '–', '–'], 'nothing is filled in from the evidence');
+  assert.equal(await page.$('#bkTab'), null, 'no percent table for an MYP class');
+  assert.ok(!/%/.test(await page.$eval('#bkBody', e => e.innerText)), 'no percent anywhere');
+  // the other term has no evidence and its own, empty, levels
+  await page.click('[data-bkterm="t2"]'); await page.waitForFunction(() => /No levels for/.test(document.querySelector('#bkBody').innerText));
+  // the whole year keeps levels of its own
+  await page.click('[data-bkterm="*"]'); await page.waitForSelector('#ibTab');
+  assert.deepEqual((await row(page, 1)).slice(5), ['set', 'set', 'set', 'set', '–', '–']);
+  // a points-and-percent class is as it was
+  await goTo(page, '#/class/c2/gradebook'); await page.waitForSelector('#bkBody .bkbar');
+  assert.equal(await page.$('#ibTab'), null); assert.ok(await page.$('[data-bkadd]'));
+  await close();
+});
+
+test('the best-fit screen: evidence by criterion, a hint that sets nothing, a click that sets and a second click that clears', async () => {
+  const { page, close } = await openApp(browser, { seed: ibSeed() });
+  await book(page);
+  await page.click('#ibTab tbody tr:nth-child(1) [data-ibfit]'); await page.waitForSelector('#ibFit');
+  assert.deepEqual(await page.$$eval('#ibFit .ibrow', rs => rs.map(r => [...r.querySelectorAll('.ibchip')].map(c => c.textContent.trim()))),
+    [['Cells lab report 6', 'Unit test 7'], ['Density inquiry 5', 'Energy investigation 6'], ['Density inquiry 6', 'Energy investigation 6'], ['Cells lab report 5', 'Energy investigation 6']]);
+  assert.equal(await page.$eval('#ibFit .iblvl .hint', e => e.dataset.iblv), 'D:6', 'the most recent level is outlined');
+  assert.equal((await stored(page)).classes[0].lv.t1['Aria Testwell'].D, undefined, 'and not saved');
+  await page.click('[data-iblv="D:6"]'); await page.waitForFunction(() => /4 of 4 set/.test(document.querySelector('#ibFit').innerText));
+  assert.equal((await stored(page)).classes[0].lv.t1['Aria Testwell'].D, 6);
+  assert.match(await page.$eval('#ibFit .ibsum', e => e.innerText.replace(/\s+/g, ' ')), /Total 25 of 32 Grade 6/i);
+  await page.click('[data-iblv="D:6"]'); await page.waitForFunction(() => /3 of 4 set/.test(document.querySelector('#ibFit').innerText));
+  assert.equal((await stored(page)).classes[0].lv.t1['Aria Testwell'].D, undefined);
+  // next student, and a criterion with nothing behind it in this student's work
+  await page.click('[data-ibstep="1"]'); await page.waitForFunction(() => /Bram Sample/.test(document.querySelector('#ibFit h3').textContent));
+  await page.click('[data-ibback]'); await page.waitForSelector('#ibTab');
+  await close();
+});
+
+test('levels are typed in for a task, changed, and refused when they are not whole numbers from 0 to 8', async () => {
+  const { page, close } = await openApp(browser, { seed: ibSeed({ lv: false }) });
+  await book(page);
+  await page.click('[data-ibadd-lv]'); await page.waitForSelector('#ibAdd');
+  await type(page, '#ibaName', 'Forces poster');
+  await page.$eval('#ibaDue', e => { e.value = '2026-11-20'; });
+  await page.click('[data-ibacrit="B"]'); await page.waitForFunction(() => document.querySelectorAll('#ibAdd thead th').length === 2);
+  await page.click('[data-ibacrit="D"]'); await page.waitForFunction(() => document.querySelectorAll('#ibAdd thead th').length === 3);
+  const put = (n, k, v) => page.$eval('#ibAdd [data-iban="' + n + '"][data-ibak="' + k + '"]', (e, v) => { e.value = v; }, v);
+  await put('Aria Testwell', 'A', '7'); await put('Aria Testwell', 'D', '6'); await put('Bram Sample', 'A', '9');
+  await page.click('[data-ibasave]');
+  await page.waitForFunction(() => /whole number from 0 to 8/.test(document.body.innerText));
+  await put('Bram Sample', 'A', '4');
+  await page.click('[data-ibasave]'); await page.waitForSelector('#ibTab');
+  const it = (await stored(page)).classes[0].units[0].items.find(x => x.name === 'Forces poster');
+  assert.deepEqual(it.crit, ['A', 'D']); assert.equal(it.due, '2026-11-20'); assert.equal(it.type, 'sum');
+  assert.deepEqual(it.typed, { lv: true, s: { 'Aria Testwell': { l: { A: 7, D: 6 } }, 'Bram Sample': { l: { A: 4 } } } });
+  assert.equal((await row(page, 0))[5], 'A7D6');
+  // change it: the same box, with what was typed
+  await page.click('[data-ibedit="' + it.id + '"]'); await page.waitForSelector('#ibAdd');
+  assert.equal(await page.$eval('#ibAdd [data-iban="Aria Testwell"][data-ibak="D"]', e => e.value), '6');
+  await put('Aria Testwell', 'D', '5'); await page.click('[data-ibasave]'); await page.waitForSelector('#ibTab');
+  assert.equal((await row(page, 0))[5], 'A7D5');
+  // with every criterion assessed twice by now except none: D has three tasks, so no warning about D
+  assert.equal(await page.$('.ibfew'), null);
+  await close();
+});
+
+test('a criterion assessed fewer than twice this year is named', async () => {
+  const s = ibSeed({ lv: false }), lib = JSON.parse(s.ls['gs.lib']);
+  lib.classes[0].units[0].items = lib.classes[0].units[0].items.slice(0, 2);   // A D, then B C: each once
+  lib.classes[0].ib = { group: 'sci' };
+  const { page, close } = await openApp(browser, { seed: { ls: { 'gs.lib': JSON.stringify(lib) } } });
+  await book(page);
+  assert.match(await page.$eval('.ibfew', e => e.textContent), /Criterion A has been assessed once this year\. Criterion B has been assessed once/);
   await close();
 });
