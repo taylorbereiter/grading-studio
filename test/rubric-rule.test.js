@@ -29,7 +29,7 @@ async function viaCard(page, name, bytes, wait = true) {
   return clean;
 }
 const dropZip = async (page, bytes, name = 'River.zip') => pickFile(page, '#fileIn', bytes, name);
-const cont = page => page.evaluate(() => document.querySelector('#kept .krow [data-kopen]').click());
+const cont = page => page.evaluate(() => document.querySelector('#vHome .krow [data-kopen]').click());
 const addRow = async page => {
   await page.click('#editRubric'); await page.waitForSelector('#setupBody');
   await page.click('#dlgBox [data-add]'); await page.click('#dlgBox [data-save]');
@@ -131,7 +131,7 @@ test('a new card’s grade doesn’t move when another assignment saves a differ
   await noQuestion(page);
   assert.equal((await grade(page)).pct, 86, 'dropped in again');
   await closeUp(page);
-  await page.evaluate(() => [...document.querySelectorAll('#kept .krow')].find(r => r.textContent.includes('River')).querySelector('[data-kopen]').click());
+  await page.evaluate(() => [...document.querySelectorAll('#vHome .krow')].find(r => r.textContent.includes('River')).querySelector('[data-kopen]').click());
   await waitPaper(page); await noQuestion(page);
   assert.equal((await grade(page)).pct, 86, 'and on Continue');
   assert.deepEqual(page.errors, []);
@@ -404,7 +404,7 @@ test('No scale at home and the usual scale on a card brought from the laptop: br
   await lap.close(); await home.close();
 });
 
-const kept = page => page.$eval('#kept .krow [data-kopen]', b => ({ text: b.textContent, disabled: b.disabled }));
+const kept = page => page.$eval('#vHome .krow [data-kopen]', b => ({ text: b.textContent, disabled: b.disabled }));
 const toastIs = (page, re) => page.waitForFunction(s => new RegExp(s).test(document.querySelector('.toast').textContent), {}, re.source);
 test('leaving the question with Esc or a click outside is a not now: it says so, and the button still works', async () => {
   const { page, close } = await openApp(browser, { seed: { ls: { 'gs.lib': libOf({ id: 'asg1', name: 'River card', setup: R3 }) } } });
@@ -414,7 +414,7 @@ test('leaving the question with Esc or a click outside is a not now: it says so,
   await closeUp(page);
   await page.evaluate(() => { const l = window.__gs.state().lib; l.classes[0].units[0].items[0].setup.criteria.pop(); localStorage.setItem('gs.lib', JSON.stringify(l)); });
   await page.reload(); await appReady(page);
-  await page.waitForSelector('#kept .krow [data-kopen]');
+  await page.waitForSelector('#vHome .krow [data-kopen]');
   const label = (await kept(page)).text;
   for (const leave of [() => page.keyboard.press('Escape'), () => page.mouse.click(5, 5), () => page.click('[data-cflater]')]) {
     await cont(page);
@@ -424,7 +424,7 @@ test('leaving the question with Esc or a click outside is a not now: it says so,
     await leave();
     await page.waitForFunction(() => document.querySelector('#dlg').hidden);
     await toastIs(page, /Nothing was opened/);
-    await page.waitForFunction(() => !document.querySelector('#kept .krow [data-kopen]').disabled);
+    await page.waitForFunction(() => !document.querySelector('#vHome .krow [data-kopen]').disabled);
     assert.deepEqual(await kept(page), { text: label, disabled: false }, 'the button is as it was');
     assert.equal(await page.evaluate(() => document.querySelector('#app').hidden), true, 'nothing opened');
     assert.equal(await cardRows(page), 3, 'nothing changed');

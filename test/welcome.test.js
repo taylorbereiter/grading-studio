@@ -82,7 +82,7 @@ test('three answers and she is set up: her classes in the sidebar, her school’
   assert.equal(l.me.sys, 'Canvas'); assert.equal(l.me.unit, ''); assert.equal(l.me.grade.way, 'letters'); assert.ok(l.me.hi > 0);
   assert.equal(l.me.scale12, undefined);
   assert.deepEqual(await page.$$eval('#railClasses [data-railcls] .rname', a => a.map(e => e.textContent)), ['Period 2 Biology', 'Period 5 Chemistry']);
-  assert.equal(await page.$eval('#dropTitle', e => e.textContent), 'Open a Canvas download');
+  assert.equal(await page.$eval('#dropSay', e => e.textContent), 'A ZIP from Canvas, a folder, a scan of the whole class, or photos.');
   assert.deepEqual(JSON.parse(await page.evaluate(() => localStorage.getItem('gs.words'))), { sys: 'Canvas', unit: '' });
   await noneOfHers(page, 'Home after the welcome');
   // a new assignment starts as she said: a percent, with the letter it earns
@@ -100,7 +100,7 @@ test('three answers and she is set up: her classes in the sidebar, her school’
   // and it is still so after the tab is closed and opened again, with no questions
   await page.reload(); await appReady(page);
   assert.equal(await welcomeShown(page), false);
-  assert.equal(await page.$eval('#dropTitle', e => e.textContent), 'Open a Canvas download');
+  assert.equal(await page.$eval('#dropSay', e => e.textContent), 'A ZIP from Canvas, a folder, a scan of the whole class, or photos.');
   assert.deepEqual(page.errors, []);
   await close();
 });
@@ -168,9 +168,9 @@ test('a new browser that only looked at the sample is asked again from the card,
 test('a browser that was used before is not asked anything, and every word, default and saved byte is as it was', async () => {
   const { page, close } = await openApp(browser);
   assert.equal(await welcomeShown(page), false);
-  assert.equal(await page.$eval('#dropTitle', e => e.textContent), 'Open a ManageBac download');
+  assert.equal(await page.$eval('#dropTitle', e => e.textContent), 'Drop new student work anywhere');
   assert.match(await wordsOf(page), HERS, 'her words are where they were (and the check above can see them)');
-  assert.equal(await page.$eval('#dropSay', e => e.textContent), 'The ZIP, or the unzipped folder with one folder per student. You can also drop it anywhere on this page.');
+  assert.equal(await page.$eval('#dropSay', e => e.textContent), 'A ZIP from ManageBac, a folder, a scan of the whole class, or photos.');
   assert.deepEqual(await page.evaluate(() => { const G = window.__gs, s = G.state(); return [s.lib.me, JSON.stringify(s.setup.scale) === JSON.stringify(G.SCALE12), G.meGrade(), G.bandOf(85)]; }), [undefined, true, null, ''].map(v => v === undefined ? null : v));
   for (const s of ['classes', 'grading']) await goTo(page, '#/settings/' + s);
   assert.match(await page.$eval('#setWay', e => e.innerText), /Not chosen: a new assignment starts as it always has here/);
@@ -194,7 +194,7 @@ test('Settings changes the same answers, and a teacher from before keeps the res
   let l = await lib(page);
   assert.deepEqual(l.me, { sys: 'Google Classroom', unit: 'Atlas', scale12: true });
   await goTo(page, '#/');
-  assert.equal(await page.$eval('#dropTitle', e => e.textContent), 'Open a Google Classroom download');
+  assert.equal(await page.$eval('#dropSay', e => e.textContent), 'A ZIP from Google Classroom, a folder, a scan of the whole class, or photos.');
   await goTo(page, '#/settings/classes');
   await page.select('#meSys', 'other');
   await page.waitForSelector('#meSysOther');

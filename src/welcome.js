@@ -6,9 +6,7 @@
 /* the words on Home that name the school's system */
 function sysWords() {
   const s = sysName(), put = (sel, t) => { for (const el of document.querySelectorAll(sel)) if (el.textContent !== t) el.textContent = t; };
-  put('#dropTitle', s ? 'Open a ' + s + ' download' : 'Open student work');
-  put('#dropSay', s === 'ManageBac' ? 'The ZIP, or the unzipped folder with one folder per student. You can also drop it anywhere on this page.'
-    : (s ? 'The ZIP from ' + s + ', a folder, or the files themselves' : 'A ZIP from your school’s system, a folder, or the files themselves') + ': PDFs, Word files, photos and scans. One folder or one file per student works best. You can also drop it anywhere on this page.');
+  put('#dropSay', 'A ZIP from ' + (s || 'your school’s system') + ', a folder, a scan of the whole class, or photos.');
   put('.sysWord', s || 'your gradebook');
   put('.sysZip', s ? 'a ' + s + ' ZIP' : 'a ZIP');
 }

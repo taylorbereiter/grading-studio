@@ -58,7 +58,7 @@ test('the Planner has the same sidebar: its own classes, no grading counts, and 
     await page.waitForSelector('#railClasses a');
     // the same rows in the same order as on the grading page, with Timetable where Add a class is
     assert.deepEqual(await page.$$eval('#rail > *', els => els.filter(e => e.checkVisibility() && e.innerText.trim()).map(e => e.innerText.replace(/\s+/g, ' ').trim().replace(/(Ctrl K|⌘K)$/, '').trim())),
-      ['Grading Studio', 'Find anything', 'Home', 'Planner', 'CLASSES', 'Course A-1 Course A 2 Course B-1', 'Timetable', 'Not backed up This browser', 'Settings']);
+      ['Grading Studio', 'Find anything', 'Today', 'Planner', 'CLASSES', 'Course A-1 Course A 2 Course B-1', 'Timetable', 'Not backed up This browser', 'Settings']);
     assert.equal(await page.$eval('#railPlanner', a => a.getAttribute('aria-current')), 'page');
     assert.equal(await page.$('#rail .rcnt'), null, 'no counts');
     assert.ok(!/\d+ left|to score/.test(await page.$eval('#rail', e => e.textContent + [...e.querySelectorAll('[title]')].map(x => x.title).join(' '))), 'nothing about grading in the Planner’s sidebar');
@@ -189,7 +189,7 @@ test('Find anything in the Planner reaches lessons, units, views, classes and th
     const rows = () => page.$$eval('#findList .frow', r => r.map(x => x.closest('#findList').querySelectorAll('.fcap').length && x.querySelector('b').textContent));
     await find('');
     const first = await rows();
-    for (const want of ['Home', 'This week', 'Semester', 'Units', 'Past lessons', 'Activities', 'Rubrics', 'Settings', 'Course A-1', 'Make a new lesson', 'Import a lesson', 'Timetable', 'Side panel', 'Dark mode']) assert.ok(first.includes(want), want + ' is offered');
+    for (const want of ['Today', 'This week', 'Semester', 'Units', 'Past lessons', 'Activities', 'Rubrics', 'Settings', 'Course A-1', 'Make a new lesson', 'Import a lesson', 'Timetable', 'Side panel', 'Dark mode']) assert.ok(first.includes(want), want + ' is offered');
     assert.ok(!first.includes('Counterclaims'), 'lessons wait until she types');
     assert.equal(await page.$eval('#findKey', e => e.textContent), 'Ctrl K');
     await page.keyboard.press('Escape'); assert.equal(await page.$('#findDlg'), null);
@@ -253,13 +253,13 @@ test('coming to the Planner from grading: this week, the timetable, the rubric b
   } finally { await ctx.close(); await srv.close(); }
 });
 
-test('Home shows today’s classes from the Planner’s timetable, and writes nothing to it', async () => {
+test('Today shows the day’s classes from the Planner’s timetable, and writes nothing to it', async () => {
   const srv = await serveBoth(), ctx = await browser.createBrowserContext();
   try {
     // no Planner work in this browser: no card, and the Planner's database isn't made by looking
     const g = await openApp(browser, { server: srv, context: ctx, seed: GRADING });
     await g.page.waitForSelector('#needs:not([hidden])');   // the side column is there for Needs a look alone
-    assert.ok(await g.page.$eval('#today', e => e.hidden));
+    assert.match(await g.page.$eval('#today', e => e.textContent), /Your timetable isn’t here yet/);   // one quiet line, with the way to the Planner
     assert.equal(await g.page.evaluate(async () => (await indexedDB.databases()).some(d => d.name === 'gs-lessons')), false);
     // a timetable with three classes today, two of them planned
     const pl = await planner(ctx, srv);
@@ -281,15 +281,15 @@ test('Home shows today’s classes from the Planner’s timetable, and writes no
     const { page } = g;
     await page.reload(); await appReady(page);
     await page.waitForSelector('#today .trow');
-    assert.equal(await page.$eval('#today h2', e => e.textContent), 'Today’s classes');
-    assert.deepEqual(await page.$$eval('#today .trow', r => r.map(x => [x.querySelector('.tt').textContent, x.querySelector('b').textContent, x.querySelector('.ns').textContent, (x.querySelector('.schip, .btn') || {}).textContent, x.getAttribute('href')])), [
-      ['9:00', 'Course A 2', 'Annotating a sonnet', 'Ready for you', 'planner.html#lesson/' + ids['Annotating a sonnet']],
-      ['10:45', 'Course B-1', 'No lesson yet', 'Plan it', 'planner.html#week'],
-      ['1:30', 'Course A-1', 'Rhetorical appeals', 'Draft', 'planner.html#lesson/' + ids['Rhetorical appeals']],
+    assert.equal(await page.$eval('#today h2', e => e.textContent), 'Teaching today');
+    assert.deepEqual(await page.$$eval('#today .trow', r => r.map(x => [x.querySelector('.tt').textContent, x.querySelector('b').textContent, x.querySelector('.ns').textContent, (x.querySelector('.btn') || {}).textContent, x.getAttribute('href')])), [
+      ['9:00', 'Course A 2', 'Annotating a sonnet · 3 slides · ready for you', 'Open', 'planner.html#lesson/' + ids['Annotating a sonnet']],
+      ['10:45', 'Course B-1', 'No lesson planned yet', 'Plan it', 'planner.html#week'],
+      ['1:30', 'Course A-1', 'Rhetorical appeals · 3 slides · draft', 'Open', 'planner.html#lesson/' + ids['Rhetorical appeals']],
     ]);
     assert.deepEqual(await page.$$eval('#today .rdot', d => d.map(x => x.style.background)), ['rgb(123, 63, 196)', 'rgb(14, 124, 134)', 'rgb(31, 111, 178)']);
     assert.equal(await page.$eval('#today .tweek', a => a.getAttribute('href')), 'planner.html#week');
-    assert.ok(await page.$eval('#today', e => e.getBoundingClientRect().bottom <= document.querySelector('#needs').getBoundingClientRect().top), 'above Needs a look');
+    assert.equal(await page.$$eval('#today .trow.now', r => r.length) <= 1, true, 'at most one class is on now or next');
     // Settings says the same timetable, and Find anything goes to the week
     await goTo(page, '#/settings/timetable');
     await page.waitForSelector('#setTimetable .setrow');
@@ -307,8 +307,8 @@ test('Home shows today’s classes from the Planner’s timetable, and writes no
     // a day off: said so, with no rows
     await page.evaluate(async () => { const P = window.__planner, now = new Date(), d = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0'); await P.applySetup({ ...P.L.setup, kind: 'grading-studio-lessons-setup', daysOff: [{ date: d, label: 'Founders’ day' }] }); });
     await page.goto(srv.url); await appReady(page);
-    await page.waitForSelector('#today .nrow');
-    assert.equal(await page.$('#today .trow'), null);
+    await page.waitForSelector('#today .trow.none');
+    assert.equal(await page.$('#today a.trow'), null);
     assert.match(await page.$eval('#today', e => e.textContent), /No classes today.*Founders’ day/);
     assert.deepEqual(page.errors, []);
   } finally { await ctx.close(); await srv.close(); }

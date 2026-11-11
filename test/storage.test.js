@@ -50,8 +50,8 @@ test('a download over 127 MB is really kept, reopens, and goes through the take-
     assert.ok(await page.evaluate(id => window.__gs.kept().get(id).size, id) > 140e6, 'it knows its size');
     await score(page, [3, 3, 3]); await settle(page);
     await page.reload(); await appReady(page);
-    await page.waitForSelector('#kept [data-kopen]');
-    assert.doesNotMatch(await page.$eval('#kept', e => e.textContent), /papers not kept/);
+    await page.waitForSelector('#vHome [data-kopen]');
+    assert.doesNotMatch(await page.$eval('#vHome', e => e.textContent), /papers not kept/);
     await reopen(page, id);
     assert.deepEqual(await sumOf(page, 'Bram Sample', name), want, 'the recording comes back whole');
     await closeUp(page);
@@ -476,8 +476,8 @@ test('very old work with no record in the big store comes across with a proper r
   assert.doesNotMatch(preview, /1 students/);
   assert.doesNotMatch(preview, /undefined/);
   await bringIt(b.page);
-  await b.page.waitForSelector('#kept .krow');
-  const rows = await b.page.$eval('#kept', e => e.textContent);
+  await b.page.waitForSelector('#vHome .krow');
+  const rows = await b.page.$eval('#vHome', e => e.textContent);
   assert.doesNotMatch(rows, /undefined/);
   await b.close(); await a.close();
 });

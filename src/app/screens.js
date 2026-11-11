@@ -105,13 +105,14 @@ const stateBar = st => st.of ? '<span class="sbar" role="img" aria-label="' + st
 function renderLib() {
   renderKept();
   const card = it => {
-    const m = it.batchId ? keptMeta.get(it.batchId) : null, st = m ? keptState(m) : null;
-    return '<div class="card" draggable="true" data-card="' + it.id + '"><div class="cmain"><div class="t">' + esc(it.name) + '</div>' +
+    const m = it.batchId ? keptMeta.get(it.batchId) : null, st = m ? keptState(m) : null, typedOnly = !!it.typed && !it.batchId;
+    return '<div class="card" draggable="true" data-card="' + it.id + '" title="' + (m && m.papers ? 'Open the papers' : it.typed && !it.batchId ? 'Scores typed in: open the gradebook' : 'Add this assignment’s papers') + '"><div class="cmain"><div class="t">' + esc(it.name) + '</div>' +
       (it.type || it.typed ? '<div class="bkpills">' + bkPill(it.type) + (it.typed ? '<span class="bkpill typed">Typed in</span>' : '') + '</div>' : '') + '</div>' +
       '<div class="cdue">' + (it.due ? 'Due ' + bkDay(it.due) : '') + '</div>' +
-      '<div class="cstate">' + (st ? stateBar(st) + stateChip(st) : '') + '<div class="m">' + esc(it.typed && !it.batchId ? 'Scores typed in' + (it.due ? ' · due ' + bkDay(it.due) : '') : batchSummary(it)) + '</div></div>' +
-      '<div class="row">' + (m && m.papers ? '<button class="btn sm primary" data-kopen="' + esc(it.batchId) + '" data-kasg="' + it.id + '">Open</button><button class="btn sm" data-open-asg="' + it.id + '">Other download…</button>'
-        : '<button class="btn sm primary" data-open-asg="' + it.id + '">Open download…</button>') + '<button class="btn sm" data-edit-asg="' + it.id + '">Edit</button></div></div>';
+      '<div class="cstate">' + (st ? stateBar(st) : '') + '<div class="m">' + esc(it.typed && !it.batchId ? 'Scores typed in' : batchSummary(it)) + '</div>' + (st ? stateChip(st) : '') + '</div>' +
+      '<div class="row">' + (m && m.papers ? '<button class="btn sm" data-kopen="' + esc(it.batchId) + '" data-kasg="' + it.id + '">Open</button>'
+        : typedOnly ? '' : '<button class="btn sm" data-open-asg="' + it.id + '">Add papers…</button>') + '<button class="btn sm ghost" data-edit-asg="' + it.id + '">Edit</button>' +
+        (m && m.papers || typedOnly ? kmWrap('⋯', 'class="icon kdots" aria-label="More for ' + esc(it.name) + '" title="More"', '<button class="mitem" data-open-asg="' + it.id + '">' + (typedOnly ? 'Add papers…<small>Mark this one’s papers here as well</small>' : 'Open other papers…<small>A newer download, or a different set of files</small>') + '</button>', 'right') : '') + '</div></div>';
   };
   const unit = u => '<div class="unit" draggable="true" data-unit="' + u.id + '">' +
     '<div class="uhead" title="Drag to move this unit"><span class="nm">' + esc(u.name) + '</span><span class="ucount">' + u.items.length + (u.items.length === 1 ? ' assignment' : ' assignments') + '</span><span class="sp"></span>' +
@@ -229,7 +230,14 @@ $('#asgDirIn').onchange = e => {
 };
 $('#asgIn').onchange = e => { const fs = [...e.target.files]; if (asgTarget && fs.length) intake(fs.map(f => ({ path: f.name, file: f })), fs.length === 1 ? fs[0].name.replace(/\.[^.]+$/, '') : '', asgTarget); e.target.value = ''; };
 $('#start').addEventListener('click', async e => {
-  const b = e.target.closest('button'); if (!b) return;
+  let b = e.target.closest('button');
+  // A click anywhere else on an assignment's row opens it: its papers if they are kept, its scores if they were typed in, else the way to add its papers.
+  if (!b) {
+    const card = !e.target.closest('a, input, select, textarea, .km') && e.target.closest('#classes .card[data-card]'), f = card && findItem(card.dataset.card);
+    if (!f) return;
+    if (f.it.typed && !f.it.batchId && f.c !== lib.loose && f.c.names.length) return go(classHash(f.c, 'gradebook'));
+    b = card.querySelector('[data-kopen], [data-open-asg]'); if (!b || b.disabled) return;
+  }
   if (b.dataset.addunit != null) { const c = holderById(b.dataset.addunit); const name = await askTextDlg('Unit name', 'Unit ' + (c.units.length + 1), { ok: 'Add unit' }); if (name && name.trim()) { c.units.push({ id: uid(), name: name.trim(), items: [] }); saveLib(); renderLib(); } return; }
   if (b.dataset.newasg != null) return editAssignment(null, null, b.dataset.newasg);
   if (b.dataset.cmove) { const [ci, d] = b.dataset.cmove.split(':').map(Number), j = ci + d; if (j >= 0 && j < lib.classes.length) { [lib.classes[ci], lib.classes[j]] = [lib.classes[j], lib.classes[ci]]; saveLib(); renderLib(); const again = $('#classes [data-cmove="' + j + ':' + d + '"]'); if (again && !again.disabled) again.focus(); } return; }
@@ -242,7 +250,7 @@ $('#start').addEventListener('click', async e => {
   }
   if (b.dataset.additem != null) return editAssignment(null, b.dataset.additem);
   if (b.dataset.editAsg) return editAssignment(b.dataset.editAsg);
-  if (b.dataset.kopen) { const f = b.dataset.kasg ? findItem(b.dataset.kasg) : null; const was = b.textContent; b.disabled = true; b.textContent = 'Opening…'; return reopenKept(b.dataset.kopen, f ? f.it : null).finally(() => { b.disabled = false; b.textContent = was; }); }
+  if (b.dataset.kopen) { const f = b.dataset.kasg ? findItem(b.dataset.kasg) : null; const was = b.textContent, named = b.classList.contains('kname'); b.disabled = true; if (!named) b.textContent = 'Opening…'; return reopenKept(b.dataset.kopen, f ? f.it : null).finally(() => { b.disabled = false; if (!named) b.textContent = was; }); }   // a button that is the assignment's own name keeps saying it
   if (b.dataset.kforget) {   // two clicks, so a stray click can't throw work away
     if (!b.dataset.armed) { b.dataset.armed = '1'; b.textContent = 'Click again to forget it'; setTimeout(() => { if (b.isConnected) { delete b.dataset.armed; b.textContent = 'Forget'; } }, 4000); return; }
     return forgetKept(b.dataset.kforget);

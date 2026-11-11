@@ -81,8 +81,8 @@ test('The Comment tool on a Word paper comments on the word clicked, as a real W
 
   // it stays after the browser is reloaded
   await page.reload();
-  await page.waitForSelector('#kept [data-kopen]');
-  await page.click('#kept [data-kopen]');
+  await page.waitForSelector('#vHome [data-kopen]');
+  await page.click('#vHome [data-kopen]');
   await page.waitForFunction(() => { const a = document.querySelector('#app'); return a && !a.hidden && window.__gs.state().batch; });
   await goToStudent(page, i);
   await page.waitForFunction(() => document.querySelectorAll('#paper .docx .wnote').length === 2);

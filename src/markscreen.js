@@ -1,6 +1,7 @@
 /* ---------------- the marking screen: small menus, the student list's filters, the score panel's extras ---------------- */
 // A button with data-km opens the menu right after it. One menu at a time. Escape, a click anywhere else, or picking something closes it.
-const kmWrap = (label, attrs, items, cls) => '<span class="kmw"><button ' + attrs + ' data-km aria-haspopup="true" aria-expanded="false">' + label + '</button><div class="km' + (cls ? ' ' + cls : '') + '" hidden>' + items + '</div></span>';
+// (A function, not a const: a class page drawn while the app is still loading uses it before this file has run.)
+function kmWrap(label, attrs, items, cls) { return '<span class="kmw"><button ' + attrs + ' data-km aria-haspopup="true" aria-expanded="false">' + label + '</button><div class="km' + (cls ? ' ' + cls : '') + '" hidden>' + items + '</div></span>'; }
 // The ⋯ on a file's bar. Nothing to offer: no button.
 const fileMenu = items => items ? kmWrap('⋯', 'class="icon kdots" aria-label="More for this file" title="More for this file"', items, 'right') : '';
 let kmOn = null;

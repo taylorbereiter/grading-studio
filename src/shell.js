@@ -30,7 +30,7 @@ function railRender() {
   tabsRender(); setRender();
   if (!batch && r.v === 'home' && screenWas !== 'home') planRefresh();
   screenWas = batch ? 'a' : r.v;
-  const d = $('#homeDate'), today = new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' }); if (d.textContent !== today) d.textContent = today;
+  const d = $('#homeDate'), today = new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' }); if (d.textContent !== today) d.textContent = today;   // Today's title is the day itself
   // The tab's name goes into the browser's history, which some browsers copy to an account. A download's name can be a student's, so it stays out;
   // an assignment or class name she typed herself is fine.
   const asg = batch && batch.assignment && findItem(batch.assignment.id);
@@ -48,9 +48,9 @@ function railSavedRender() {
   el.toggleAttribute('data-wact', !!w.act); el.toggleAttribute('data-wopen', !w.act);
   if (el.dataset.h !== h) { el.dataset.h = h; el.innerHTML = h; }
 }
-// Home: the few things waiting on her, gathered from where each used to be said.
-function renderNeeds() {
-  if (!shellReady) return;
+// Today: the few things waiting on her, gathered from where each used to be said.
+function renderNeeds() { if (shellReady) homeRender(); }
+function renderNeedsOnly() {
   safeAskRender(); sampleNoteRender();
   const el = $('#needs'), rows = [], chev = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>';
   for (const m of [...keptMeta.values()].sort((a, b) => b.t - a.t)) {
@@ -64,7 +64,6 @@ function renderNeeds() {
     (rows.length > 6 ? '<div class="nrow"><span class="ns">and ' + (rows.length - 6) + ' more</span></div>' : '') + '</section>';
   el.hidden = !h;
   if (el.dataset.h !== h) { el.dataset.h = h; el.innerHTML = h; }
-  hsideShow();
 }
 $('#needs').addEventListener('click', e => { const b = e.target.closest('[data-nopen]'); if (b && !b.disabled) { b.disabled = true; reopenKept(b.dataset.nopen).finally(() => { b.disabled = false; }); } });
 
@@ -109,9 +108,9 @@ function findRows() {
       if (x.st !== batch.students[cur]) openStudent(batch.students.indexOf(x.st));
       openWordPdf(x.st, x.f);
     });
-    add('This assignment', 'Close this assignment', 'Saved first, then back to Home', () => go('#/'));
+    add('This assignment', 'Close this assignment', 'Saved first, then back to Today', () => go('#/'));
   }
-  add('Go to', 'Home', 'What to pick up, and what needs a look', () => go('#/'));
+  add('Go to', 'Today', 'What you teach today, what is waiting to be marked, what is ready to hand back', () => go('#/'));
   add('Go to', 'Planner', 'Units and lessons, on its own page', () => { location.href = $('#lessonsBtn').href; });
   add('Go to', 'Settings', 'Saving, classes, terms, marking, display and keys', () => go('#/settings'));
   for (const c of lib.classes) {

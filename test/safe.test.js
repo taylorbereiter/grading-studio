@@ -18,8 +18,8 @@ const idOf = page => page.evaluate(() => window.__gs.state().batch.id);
 const rubricOf = (page, key) => page.evaluate(k => window.__gs.state().batch.students.find(s => s.key === k).grade.rubric, key);
 async function openKept(page, name) {
   await goTo(page, '#/');
-  await page.waitForFunction(n => [...document.querySelectorAll('#kept .krow')].some(r => r.textContent.includes(n)), { timeout: 30000 }, name);
-  await page.evaluate(n => [...document.querySelectorAll('#kept .krow')].find(r => r.textContent.includes(n)).querySelector('[data-kopen]').click(), name);
+  await page.waitForFunction(n => [...document.querySelectorAll('#vHome .krow')].some(r => r.textContent.includes(n)), { timeout: 30000 }, name);
+  await page.evaluate(n => [...document.querySelectorAll('#vHome .krow')].find(r => r.textContent.includes(n)).querySelector('[data-kopen]').click(), name);
   await page.waitForFunction(n => { const s = window.__gs.state(); return s.batch && s.batch.name === n; }, {}, name);
   await waitPaper(page);
 }

@@ -15,13 +15,13 @@ Mark student papers, score them, plan lessons and hand work back, in your browse
 ## Start in five minutes
 
 1. Open the link. A new browser asks three questions: what you teach, how you grade, and where your work should be kept. Every answer can be changed later in Settings.
-2. Or click **Look around with a sample class first**. It makes a class of six made-up students with papers to mark, score and export. **Remove the sample class** on Home takes it away again.
-3. Download a class's submissions from your school's system and drop the ZIP on Home. A folder, loose files, or one scan of the whole class's papers work too.
+2. Or click **Look around with a sample class first**. It makes a class of six made-up students with papers to mark, score and export. **Remove the sample class** on Today takes it away again.
+3. Download a class's submissions from your school's system and drop the ZIP on Today. A folder, loose files, or one scan of the whole class's papers work too.
 4. Mark and score. **Enter** goes to the next paper. The **Grades** tab lists every score to copy, and **Return** exports the marked files.
 
 ## Where papers can come from
 
-| From | What to drop on Home |
+| From | What to drop on Today |
 |---|---|
 | ManageBac | The ZIP of submissions, or the unzipped folder: one folder per student. |
 | Google Classroom | The assignment's Drive folder, downloaded: one file per student. |
@@ -70,7 +70,7 @@ MIT. Use it, change it and share it, free of charge; see [LICENSE](LICENSE). The
 
 **Why the preview isn't on github.io.** Browsers keep saved work per address, and every page under `taylorbereiter.github.io` is the same address, even in another folder or repo. A preview there would open your real saved student work, and a bad change could damage it. `localhost:4173` is a different address, so it starts empty and keeps its own saved work. Use the sample papers or made-up files there, and your real work stays on the real link.
 
-**Version number.** Set it in `package.json`, and nowhere else. It shows at the bottom of Home and Settings, and in the Keys list (press ?).
+**Version number.** Set it in `package.json`, and nowhere else. It shows at the bottom of Today and Settings, and in the Keys list (press ?).
 
 **Changing how work is saved.** Add a step to `MIGRATIONS` in src/migrate.js; the rules are at the top of that file. Before any step runs, the app keeps a safety copy of marks, scores, comments, units, rosters and settings in this browser (the last three copies; papers aren't copied, since they never change). If a step fails, everything goes back as it was, and it tries again on the next load with a fresh copy in place of the last one. If the tab closes partway, it starts again and keeps the copy it made first. If a step is still going after 30 seconds, a button offers to stop it and put everything back; a stopped update waits until the version number goes up or a new step is added, so raise the version when you fix it.
 

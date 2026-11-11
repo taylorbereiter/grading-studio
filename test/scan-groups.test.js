@@ -70,7 +70,7 @@ test('in the split: pages go to several students, a page can be flagged for a re
   // Rescans lists both, and survives a reload.
   await settle(page);
   await page.reload(); await appReady(page);
-  await page.click('#kept [data-kopen]');
+  await page.click('#vHome [data-kopen]');
   await waitPaper(page);
   await page.waitForFunction(() => window.__gs.scanRescans().length === 2);
   await press(page, '#rescanBtn');

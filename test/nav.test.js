@@ -79,8 +79,8 @@ test('a refresh comes back to the same paper, and Back closes it with the work k
   // the X goes Home, and Continue there opens it again
   await page.click('#closeBtn'); await until(page, '#/');
   assert.equal(await showing(page), 'vHome');
-  await page.waitForSelector('#kept [data-kopen]');
-  await page.click('#kept [data-kopen]'); await waitPaper(page);
+  await page.waitForSelector('#vHome [data-kopen]');
+  await page.click('#vHome [data-kopen]'); await waitPaper(page);
   assert.equal(await hash(page), at);
   assert.deepEqual(await workOf(page), before_);
   assert.deepEqual(page.errors, []);
@@ -92,7 +92,7 @@ test('going around the new screens changes nothing that is saved', async () => {
   await openZip(page, zip, 'Narrative essay.zip');
   await gradeABit(page);
   await page.click('#closeBtn'); await until(page, '#/');
-  await page.waitForSelector('#kept [data-kopen]');
+  await page.waitForSelector('#vHome [data-kopen]');
   const snap = async () => ({
     ls: await page.evaluate(() => Object.fromEntries(Object.keys(localStorage).filter(k => k.startsWith('gs.')).sort().map(k => [k, localStorage.getItem(k)]))),
     work: await idbRead(page, 'grading-studio-keep', 'work'), papers: await idbRead(page, 'grading-studio-keep', 'papers'), meta: await idbRead(page, 'grading-studio-keep', 'meta'),
@@ -104,7 +104,7 @@ test('going around the new screens changes nothing that is saved', async () => {
   await page.keyboard.down('Control'); await page.keyboard.press('k'); await page.keyboard.up('Control');
   await page.waitForSelector('#findDlg'); await page.keyboard.type('test'); await page.keyboard.press('Escape');
   await page.goBack(); await page.goForward();
-  await page.reload(); await appReady(page); await page.waitForSelector('#kept [data-kopen]');
+  await page.reload(); await appReady(page); await page.waitForSelector('#vHome [data-kopen]');
   assert.deepEqual(await snap(), a);
   assert.deepEqual(page.errors, []);
   await close();
@@ -152,7 +152,7 @@ test('Home lists a partly scored paper under Needs a look, and opens it from the
   await page.click('#closeBtn'); await until(page, '#/');
   await page.waitForSelector('#needs [data-nopen]');
   assert.match(await page.$eval('#needs [data-nopen]', e => e.textContent), /1 paper is partly scored/);
-  assert.equal(await page.$eval('#kept .schip', e => e.textContent), 'Scoring');
+  assert.match(await page.$eval('#toMark .krow', e => e.textContent), /1 of \d scored · 1 partial/);
   await page.click('#needs [data-nopen]'); await waitPaper(page);
   assert.match(await hash(page), /^#\/a\//);
   assert.deepEqual(page.errors, []);

@@ -226,8 +226,8 @@ test('points mode: 0 and the statuses work there too', async () => {
 test('work saved by the old build opens with no status or times, and its partial score is now flagged', async () => {
   const L = await loadLegacy();
   const { page, close } = await openApp(browser, { seed: L.seed() });
-  await page.waitForFunction(() => [...document.querySelectorAll('#kept .krow')].some(r => r.textContent.includes('River essay')));
-  await page.evaluate(() => [...document.querySelectorAll('#kept .krow')].find(r => r.textContent.includes('River essay')).querySelector('[data-kopen]').click());
+  await page.waitForFunction(() => [...document.querySelectorAll('#vHome .krow')].some(r => r.textContent.includes('River essay')));
+  await page.evaluate(() => [...document.querySelectorAll('#vHome .krow')].find(r => r.textContent.includes('River essay')).querySelector('[data-kopen]').click());
   await page.waitForFunction(() => { const s = window.__gs.state(); return s.batch && s.batch.name === 'River essay' && s.pages.length; });
   const w = await workOf(page);
   assert.deepEqual(w['Bram Sample'].computed, { total: 4, pct: 64, done: false, partial: true });

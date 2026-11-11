@@ -14,7 +14,7 @@ rep('/*@@PARTSCSS@@*/', partsCss);
 rep('/*@@POLISHCSS@@*/', fs.readFileSync('src/polish.css', 'utf8') + fs.readFileSync('src/scans.css', 'utf8') + fs.readFileSync('src/quiz.css', 'utf8'));
 rep('/*@@RUBRICSCSS@@*/', fs.readFileSync('src/rubrics.css', 'utf8') + fs.readFileSync('src/book.css', 'utf8'));
 rep('/*@@INSIGHTCSS@@*/', fs.readFileSync('src/insight.css', 'utf8'));
-rep('/*@@SHELLCSS@@*/', fs.readFileSync('src/rail.css', 'utf8') + fs.readFileSync('src/shell.css', 'utf8') + fs.readFileSync('src/classpage.css', 'utf8') + fs.readFileSync('src/tabs.css', 'utf8') + fs.readFileSync('src/markscreen.css', 'utf8') + fs.readFileSync('src/safe.css', 'utf8') + fs.readFileSync('src/welcome.css', 'utf8'));
+rep('/*@@SHELLCSS@@*/', fs.readFileSync('src/rail.css', 'utf8') + fs.readFileSync('src/shell.css', 'utf8') + fs.readFileSync('src/today.css', 'utf8') + fs.readFileSync('src/classpage.css', 'utf8') + fs.readFileSync('src/tabs.css', 'utf8') + fs.readFileSync('src/markscreen.css', 'utf8') + fs.readFileSync('src/safe.css', 'utf8') + fs.readFileSync('src/welcome.css', 'utf8'));
 rep('/*@@PDFJS@@*/', fs.readFileSync(nm + 'pdfjs-dist/build/pdf.min.js', 'utf8'));
 rep('/*@@PDFLIB@@*/', fs.readFileSync(nm + 'pdf-lib/dist/pdf-lib.min.js', 'utf8'));
 rep('/*@@H2C@@*/', fs.readFileSync(nm + 'html2canvas/dist/html2canvas.min.js', 'utf8'));

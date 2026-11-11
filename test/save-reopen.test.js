@@ -37,9 +37,9 @@ test('marks, scores and comments come back after closing the browser for real', 
   const b2 = await launch({ userDataDir: dir, keepProfile: true });
   try {
     const { page } = await openApp(b2, { server, context: b2.defaultBrowserContext() });
-    await page.waitForSelector('#kept [data-kopen]');
-    assert.match(await page.$eval('#kept', e => e.textContent), /River essay.*4 students · 1 scored · 1 partial/s);
-    await page.click('#kept [data-kopen]');
+    await page.waitForSelector('#vHome [data-kopen]');
+    assert.match(await page.$eval('#vHome', e => e.textContent), /River essay.*1 of 4 scored · 1 partial/s);
+    await page.click('#vHome [data-kopen]');
     await waitPaper(page);
     const w = await workOf(page);
     assert.deepEqual(w['Aria Testwell'].grade, before_['Aria Testwell'].grade);
@@ -89,7 +89,7 @@ test('Forget removes a download and its work from this browser', async () => {
   await score(page, [3, 3, 3]); await settle(page);
   const id = await page.evaluate(() => window.__gs.state().batch.id);
   await page.click('#closeBtn');
-  await page.waitForSelector('#kept [data-kforget]');
+  await page.waitForSelector('#vHome [data-kforget]');
   await page.evaluate(id => window.__gs.forgetKept(id), id);
   assert.equal(await page.evaluate(id => localStorage.getItem(id), id), null);
   assert.equal(await page.evaluate(() => window.__gs.kept().size), 0);
