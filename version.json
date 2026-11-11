@@ -1,13 +1,12 @@
 {
- "version": "1.15.0",
- "build": "8493d5f1ba01",
+ "version": "1.16.0",
+ "build": "e099f6f19991",
  "notes": [
-  "A picture dragged onto a slide that has text now sits beside the text, in a new Text + picture layout.",
-  "Drag several pictures in at once and each gets its own slide. Let a picture go on any slide in the list on the left to put it there.",
-  "New Full picture layout: the picture fills the whole slide."
+  "Help is in the sidebar: short answers to the questions teachers ask most, from opening a set of papers to moving your work to another computer.",
+  "Find anything answers questions too. Type a few words, like “late paper” or “backup”, and the answer is in the list."
  ],
  "files": {
-  "index.html": "11833e46118c76667c1d9f9a6c99d51f0f014506fdd6e7dc0f51361ce4bde08a",
-  "planner.html": "ee6523fea6477ea7e17f30930fba4cd04b7725c047876297103b8b110b3f97f4"
+  "index.html": "1720cda66eb52179390a17d67db00a0caaede7a4749995dd7c6a35e8b3163be2",
+  "planner.html": "296abf172a68c982e2cc08c4c7e1afadbb118ee00bde948fd585f4111de83100"
  }
 }
