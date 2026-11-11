@@ -346,3 +346,60 @@ test('planner.html#present/<lesson>/<class> opens the lesson presenting, for the
     assert.deepEqual(a.errors, []);
   } finally { await a.done(); }
 });
+
+test('while presenting, P picks a student from the class being taught and G deals groups; the names are shown and never kept', async () => {
+  const a = await open();
+  try {
+    const { page } = a, A1 = ['Aria Testwell', 'Bram Sample', 'Cleo Fixture', 'Dov Madeup'], A2 = ['Nia Elsewhere', 'Omar Stand-in'];
+    const { id } = await seed(page);
+    // no rosters yet (the grading page has no class with students): P says so and the slides stay
+    await page.$eval('.ls-go[data-id="' + id + '"], [data-pr="present"]', b => b.click());
+    await until(page, s => !!document.querySelector(s), '#present');
+    assert.ok(await page.$('#present [data-p="pick"]') && await page.$('#present [data-p="groups"]'), 'the bar has Pick a name and Groups');
+    await page.keyboard.press('p');
+    assert.match(await page.$eval('#prHint', h => h.textContent), /No rosters yet/);
+    assert.equal(await page.$('#pkStage'), null);
+    // the grading page's copy of the rosters. Its class is "Course A1"; the timetable's is "Course A-1": the same class.
+    await page.evaluate((A1, A2) => { localStorage.setItem('gs.rolls', JSON.stringify([['Course A2', A2], ['Course A1', A1]])); window.__pick.PK.fast = true; }, A1, A2);
+    await page.keyboard.press('p'); await until(page, s => !!document.querySelector(s), '#pkName.done');
+    assert.equal((await state(page)).slot.classId, 'A1');
+    assert.equal(await page.$eval('#pkClass', s => s.options[s.selectedIndex].textContent), 'Course A1');
+    const got = [await page.$eval('#pkName', e => e.textContent)];
+    for (let i = 0; i < 3; i++) { await page.keyboard.press('Space'); got.push(await page.$eval('#pkName', e => e.textContent)); }
+    assert.deepEqual(got.slice().sort(), A1.slice().sort(), 'four picks, the four students of the class being taught');
+    assert.equal((await state(page)).i, 0, 'Space picked again; the slide did not move');
+    // groups, in pairs
+    await page.keyboard.press('g'); await until(page, s => !!document.querySelector(s), '#pkGroups');
+    await page.keyboard.press('2');
+    const groups = await page.$$eval('.pk-g', g => g.map(x => [...x.querySelectorAll('div')].map(d => d.textContent)));
+    assert.deepEqual(groups.map(g => g.length), [2, 2]); assert.deepEqual(groups.flat().sort(), A1.slice().sort());
+    // a click on it is not a click on the slide
+    await page.$eval('.pk-g', g => g.click());
+    assert.equal((await state(page)).i, 0);
+    // the other class can be chosen
+    await page.select('#pkClass', '0');
+    assert.deepEqual((await page.$$eval('.pk-g div', d => d.map(x => x.textContent))).sort(), A2.slice().sort());
+    // Escape closes it and the lesson is still on; the keys are the slides' again
+    await page.keyboard.press('Escape');
+    assert.equal(await page.$('#pkStage'), null);
+    assert.equal((await state(page)).on, true);
+    await page.keyboard.press('ArrowRight');
+    assert.equal((await state(page)).i, 1);
+    // opened from the bar, and finishing the lesson closes it too
+    await page.$eval('#present [data-p="groups"]', b => b.click()); await until(page, s => !!document.querySelector(s), '#pkGroups');
+    await page.evaluate(() => window.__present.end());
+    await until(page, () => !document.querySelector('#present'));
+    assert.equal(await page.$('#pkStage'), null);
+    // no student's name is in the lesson, or anywhere in the Planner's own storage
+    const kept = await page.evaluate(async () => {
+      const P = window.__planner, db = await new Promise((ok, no) => { const r = indexedDB.open('gs-lessons'); r.onsuccess = () => ok(r.result); r.onerror = () => no(r.error); });
+      let all = JSON.stringify(P.L.lessons);
+      for (const s of [...db.objectStoreNames]) all += JSON.stringify(await new Promise((ok, no) => { const r = db.transaction(s).objectStore(s).getAll(); r.onsuccess = () => ok(r.result); r.onerror = () => no(r.error); }));
+      db.close();
+      for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k !== 'gs.rolls') all += localStorage.getItem(k); }
+      return all;
+    });
+    for (const n of [...A1, ...A2]) assert.ok(!kept.includes(n) && !kept.includes(n.split(' ')[1]), n + ' is not kept by the Planner');
+    assert.deepEqual(a.errors, []);
+  } finally { await a.done(); }
+});

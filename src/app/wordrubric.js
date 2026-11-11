@@ -197,7 +197,7 @@ function wordScoresAll() {
       if (scaleDiffers(s.scale)) setClassScale(s.scale);
       if (!hasOwnScore(st) && setup.mode === 'points' && +setup.outOf !== s.max) setClassOutOf(s.max);
     } else if ((st.grade.reads || {})[readKey(wordTableRead(f))] !== 1) continue;   // a table in a student's file waits for her OK
-    if (!hasOwnScore(st)) { rubricToGrade(st, s, s.max, s.nCrit); n++; }
+    if (!hasOwnScore(st) && !tryOfFile(st, f)) { rubricToGrade(st, s, s.max, s.nCrit); n++; }
   }
   if (n) { saveSoon(); renderList(); renderGrade(); }
   else if (asks) renderList();
@@ -215,6 +215,7 @@ function wireRubric(st, f, w, page, el, soon) {
   };
   const push = (s, write) => {
     show(s);
+    if (tryOfFile(st, f)) { last = s; return; }   // a rubric from an earlier try: its score is kept with that try, and the retake's score is its own
     if (s.total == null) wordScoreGone(st, last); else rubricToGrade(st, s, m.max, m.crits.length);
     last = s;
     if (write && s.total != null && ownGrade(st).total != null) liftStatus(st);

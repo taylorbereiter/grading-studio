@@ -1,13 +1,13 @@
 {
- "version": "1.23.0",
- "build": "838a304e9e96",
+ "version": "1.27.3",
+ "build": "5c765a53d233",
  "notes": [
   "The class timer in Present takes minutes and seconds: type them in, or pick 0:30 and the other quick times. The menu remembers the last time you typed.",
   "While it runs, the timer's menu adds or takes away 10 seconds or a minute, pauses, and restarts from the time you set. + and − add or take away a minute without opening the menu.",
   "Tick Show it big to put the countdown in the middle of the screen, large enough for the back of the room."
  ],
  "files": {
-  "index.html": "d786576573b31fbc03cd3d425f4f0dfd4f6545f415ef566d4f0895c68b1d6184",
-  "planner.html": "60b6713a2e454824eb675875cc29b08c0d9b7ca5a7baf547af08267a64acb108"
+  "index.html": "5e50e3fe16db915b7d786487f465ac6d5898f269a3ef6eb2119b145da96fa23c",
+  "planner.html": "ac3b176fcdb5d5da8c21c1db93a2399bdda9d4c43d7922cbc446df87e1857172"
  }
 }
