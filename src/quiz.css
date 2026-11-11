@@ -24,7 +24,10 @@
 .qmhd h2{flex:0 0 auto !important}
 .qmnav{display:flex;align-items:center;gap:6px;margin-left:8px}
 .qmnav select{max-width:220px}
-.qmkey{display:inline-block;margin-left:6px;padding:1px 8px;border-radius:var(--corner-pill);background:var(--ok-soft);color:var(--ok);font-weight:700;font-size:var(--text-control)}
+.qmkey{display:inline-block;margin-left:6px;padding:1px 8px;border-radius:var(--corner-pill);background:var(--gold-soft);color:var(--gold);box-shadow:inset 0 0 0 1px var(--gold-line);font-weight:700;font-size:var(--text-control)}
+.qzgold{display:inline-block;padding:0 7px;border-radius:var(--corner-pill);background:var(--gold);color:var(--gold-fg);font-weight:700;font-size:var(--text-caption);letter-spacing:.02em;line-height:18px;text-transform:uppercase}
+.qbanssay{display:inline-flex;align-items:center;gap:8px}
+.qmans{display:flex;align-items:baseline;gap:8px;margin-top:6px;padding:5px 8px;border-radius:var(--corner-2,8px);background:var(--gold-soft);border-left:3px solid var(--gold-line);font-size:var(--text-control);color:var(--fg);overflow-wrap:anywhere}
 .qmkey.big{font-size:var(--text-lead);padding:3px 12px}
 .qmtot{font-weight:700;font-size:var(--text-lead);margin-left:8px;font-variant-numeric:tabular-nums}
 .qmhd [data-boxes]{margin-left:auto}
@@ -98,7 +101,7 @@
 /* With the Scored column the table needs to fit the side panel: narrower fields. */
 .qbt .qlab{width:46px}.qbt .qpts{width:50px}
 .qbt .qkind,.qbt .qhow{max-width:112px}
-.qbt .qkey{min-width:56px}
+.qbt .qkey{min-width:84px}
 .qbw input{width:84px}
 
 .qmink{position:relative;display:inline-flex}

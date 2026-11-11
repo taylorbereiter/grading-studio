@@ -82,7 +82,7 @@ async function rescanFile(f) {
 // The panel's total, without touching the comment box she may be typing in.
 function gradeShown(st) { const t = $('#grade .total'); if (t && st === batch.students[cur]) t.innerHTML = totalHtml(st); }
 // A grade lives in the mark that holds it. "page|words" for each of her marks with a grade in it.
-const gradeMarks = f => Object.entries(f.marks || {}).flatMap(([p, a]) => a.filter(m => (m.t === 'text' || m.t === 'note' || (m.t === 'stamp' && m.k === 'score')) && m.text && parseGrade(m.text, false)).map(m => p + '|' + m.text)).sort();
+const gradeMarks = f => Object.entries(f.marks || {}).flatMap(([p, a]) => a.filter(m => !m.qza && (m.t === 'text' || m.t === 'note' || (m.t === 'stamp' && m.k === 'score')) && m.text && parseGrade(m.text, false)).map(m => p + '|' + m.text)).sort();
 const rereadTimers = new Map();
 let rereadQ = Promise.resolve(), rereadsLeft = 0;
 // When those marks change, the old reading goes this moment and the file is read again for the new one. Pen strokes and plain comments change nothing here.

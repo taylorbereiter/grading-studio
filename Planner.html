@@ -116,6 +116,7 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
   --accent:#1A67A8; --accent-hover:#15568C; --accent-fg:#FFFFFF; --accent-soft:#E6F0F9;
   /* colour: saying how things stand. Each has a soft background to sit on. */
   --warn:#8A5A0E; --warn-soft:#FBF0D9; --ok:#17704A; --ok-soft:#DFF3E9; --bad:#B4321F; --bad-soft:#FCE7E3; --warn-fg:#FFFFFF;
+  --gold:#8A6500; --gold-soft:#FBF3D6; --gold-line:#C08C00; --gold-fg:#FFFFFF;
   --paper-chip:#FFFFFF;
   --shadow:0 1px 2px rgba(20,25,40,.06),0 4px 14px rgba(20,25,40,.06);
   /* type */
@@ -141,6 +142,7 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
   --fg:#E7E9EF; --fg-2:#CDD2DE; --muted:#A9B0C0; --faint:#8E95A6;
   --accent:#5AA6E6; --accent-hover:#7DB9EC; --accent-fg:#0C1520; --accent-soft:#16283A;
   --warn:#E8B451; --warn-soft:#352A14; --ok:#4FC690; --ok-soft:#15302A; --bad:#FF7A64; --bad-soft:#3A1E1A; --warn-fg:#1C1405;
+  --gold:#E8C35A; --gold-soft:#33290F; --gold-line:#B8901E; --gold-fg:#1C1405;
   --paper-chip:#1E222C;
   --shadow:0 1px 2px rgba(0,0,0,.3),0 4px 14px rgba(0,0,0,.25);
   --bk-sum:#7FB2E0; --bk-ic:#3F78AE; --bk-fm:#6B7280; --ch1:#3A6590; --ch2:#4A80B5; --ch3:#5E9AD1; --ch4:#84B5E2; --ch5:#B3D3F0; --ch-lo:#FFFFFF; --ch-hi:#0B1F33; --ch-up:#4A93D6; --ch-down:#C98230; --ch-band:#22324A; --dot:#4A9ADF; --ov-bar:#4793D4; --ov-mute:#6B7280;
@@ -5437,7 +5439,7 @@ const LANG_ES = {
     /* the feedback page in a returned paper */
     'How it was scored': 'Cómo se puntuó', 'From your teacher': 'De tu docente', 'Comment on your paper': 'Comentario en tu trabajo', 'Comments on your paper': 'Comentarios en tu trabajo',
     'Your marked paper starts on the next page.': 'Tu trabajo corregido empieza en la página siguiente.', 'Your feedback continues on the next page.': 'Tus comentarios continúan en la página siguiente.',
-    'Missing': 'No entregado', 'Excused': 'Justificado', 'Late': 'Con retraso', 'Retake': 'Nuevo intento', 'First try': 'Primer intento', 'counts as': 'cuenta como',
+    'Missing': 'No entregado', 'Excused': 'Justificado', 'Late': 'Con retraso', 'Retake': 'Nuevo intento', 'Answer': 'Respuesta', 'First try': 'Primer intento', 'counts as': 'cuenta como',
   },
   rules: [
     [/^(?:No classes today\.|\w+ class(?:es)? today\.|\w+ sets? of papers (?:to mark|ready to hand back)|[Nn]othing waiting to be marked\.)/, m => esHomeSay(m.input)],
@@ -5776,7 +5778,7 @@ const LANG_ZH = {
     /* the feedback page in a returned paper */
     'How it was scored': '評分方式', 'From your teacher': '老師的話', 'Comment on your paper': '作業上的評語', 'Comments on your paper': '作業上的評語',
     'Your marked paper starts on the next page.': '批改後的作業從下一頁開始。', 'Your feedback continues on the next page.': '回饋接續在下一頁。',
-    'Missing': '缺交', 'Excused': '免交', 'Late': '遲交', 'Retake': '重做', 'First try': '第一次', 'counts as': '採計',
+    'Missing': '缺交', 'Excused': '免交', 'Late': '遲交', 'Retake': '重做', 'Answer': '答案', 'First try': '第一次', 'counts as': '採計',
   },
   rules: [
     [/^(?:No classes today\.|\w+ class(?:es)? today\.|\w+ sets? of papers (?:to mark|ready to hand back)|[Nn]othing waiting to be marked\.)/, m => zhHomeSay(m.input)],

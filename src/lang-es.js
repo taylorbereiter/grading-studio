@@ -153,7 +153,7 @@ const LANG_ES = {
     /* the feedback page in a returned paper */
     'How it was scored': 'Cómo se puntuó', 'From your teacher': 'De tu docente', 'Comment on your paper': 'Comentario en tu trabajo', 'Comments on your paper': 'Comentarios en tu trabajo',
     'Your marked paper starts on the next page.': 'Tu trabajo corregido empieza en la página siguiente.', 'Your feedback continues on the next page.': 'Tus comentarios continúan en la página siguiente.',
-    'Missing': 'No entregado', 'Excused': 'Justificado', 'Late': 'Con retraso', 'Retake': 'Nuevo intento', 'First try': 'Primer intento', 'counts as': 'cuenta como',
+    'Missing': 'No entregado', 'Excused': 'Justificado', 'Late': 'Con retraso', 'Retake': 'Nuevo intento', 'Answer': 'Respuesta', 'First try': 'Primer intento', 'counts as': 'cuenta como',
   },
   rules: [
     [/^(?:No classes today\.|\w+ class(?:es)? today\.|\w+ sets? of papers (?:to mark|ready to hand back)|[Nn]othing waiting to be marked\.)/, m => esHomeSay(m.input)],

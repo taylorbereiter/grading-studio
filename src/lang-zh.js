@@ -150,7 +150,7 @@ const LANG_ZH = {
     /* the feedback page in a returned paper */
     'How it was scored': '評分方式', 'From your teacher': '老師的話', 'Comment on your paper': '作業上的評語', 'Comments on your paper': '作業上的評語',
     'Your marked paper starts on the next page.': '批改後的作業從下一頁開始。', 'Your feedback continues on the next page.': '回饋接續在下一頁。',
-    'Missing': '缺交', 'Excused': '免交', 'Late': '遲交', 'Retake': '重做', 'First try': '第一次', 'counts as': '採計',
+    'Missing': '缺交', 'Excused': '免交', 'Late': '遲交', 'Retake': '重做', 'Answer': '答案', 'First try': '第一次', 'counts as': '採計',
   },
   rules: [
     [/^(?:No classes today\.|\w+ class(?:es)? today\.|\w+ sets? of papers (?:to mark|ready to hand back)|[Nn]othing waiting to be marked\.)/, m => zhHomeSay(m.input)],
