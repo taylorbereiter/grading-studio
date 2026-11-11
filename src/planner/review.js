@@ -52,7 +52,7 @@ async function sendToClaude(l) {
       (asks ? asks + ' slide' + (asks === 1 ? ' has' : 's have') + ' an "ask" saying what I want on it. ' : '') + (talks ? talks + ' slide' + (talks === 1 ? ' has' : 's have') + ' comments from me in "talk". ' : '') + (lessonNotes(l).length ? 'My comments on the whole lesson are in the lesson\'s own "talk". ' : '') +
       lessonNotes(l).map(x => 'My comment on the whole lesson: ' + x + '\n').join('') +
       'Build the lesson out from my outline and those notes. Keep my wording where I wrote it. When you\'re done, reply to my comments in "talk", put a short summary in "claudeNote", and set "status" to "review". Don\'t change "id" or "slots". I\'ll look at your version slide by slide in the Planner.'
-    : 'Here is a lesson from my Planner. Each slide may have "What I want here" notes and comments for you. Build it out, keep my wording where I wrote it, slide 1 stays the title slide and slide 2 the agenda, and slide text stays 28 to 36 pt.\n\n' + lessonText(l);
+    : 'Here is a lesson from my Planner. Each slide may have "What I want here" notes and comments for you. Build it out, keep my wording where I wrote it, slide 1 stays the title slide' + (deckAgenda() ? ' and slide 2 the agenda' : '') + ', and slide text stays ' + deckSizeSay() + ' pt.\n\n' + lessonText(l);
   await copyText(msg);
   toast(L.dir && L.dirOk ? 'Copied. Paste it into ' + plAi() + '. ' + PlAi() + '’s changes show up here when it saves.' : 'Lesson copied. Paste it into ' + plAi() + '. Link the Planner folder so ' + plAi() + ' can save straight back.', 7000);
   renderEditor();

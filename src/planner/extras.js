@@ -175,14 +175,14 @@ async function copyLesson(l, slot, title) {
 
 /* ---------- print a week ---------- */
 function printWeek() {
-  const mon = parseYmd(L.weekOf), days = [0, 1, 2, 3, 4].map(i => ymd(addDays(mon, i)));
+  const mon = parseYmd(L.weekOf), days = plWeekOffs().map(i => ymd(addDays(mon, i)));
   const P = s => esc(s);
   let h = '<h1>Week of ' + LMONTHS[mon.getMonth()] + ' ' + mon.getDate() + '</h1>';
   const units = courses().map(c => { const at = unitAt(c.course, L.weekOf); return at ? '<li><b>' + P(c.course) + ':</b> ' + P(at.u.title) + ', week ' + (at.n + 1) + ' of ' + at.u.weeks.length + (at.u.weeks[at.n].focus ? ' (' + P(at.u.weeks[at.n].focus) + ')' : '') + '</li>' : ''; }).join('');
   if (units) h += '<ul class="units">' + units + '</ul>';
   for (const d of days) {
     const off = dayOff(d), ev = eventsOn(d), ms = meetingsOn(d);
-    h += '<section><h2>' + LDAYS[parseYmd(d).getDay()] + ' ' + (parseYmd(d).getMonth() + 1) + '/' + parseYmd(d).getDate() + (off ? ' · ' + P(off.label || 'No school') : '') + ev.map(x => ' · ' + P(x.label)).join('') + '</h2>';
+    h += '<section><h2>' + LDAYS[parseYmd(d).getDay()] + ' ' + plMd(d) + (off ? ' · ' + P(off.label || 'No school') : '') + ev.map(x => ' · ' + P(x.label)).join('') + '</h2>';
     if (!ms.length && !off) h += '<p class="none">No classes</p>';
     for (const { c, m } of ms) {
       const ls = lessonsAt(c.id, d);

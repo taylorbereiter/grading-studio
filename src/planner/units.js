@@ -89,12 +89,12 @@ function semesterMondays() {
   return out;
 }
 const schoolWeek = monday => { const s = L.setup && L.setup.semStart; if (!s) return 0; const n = Math.round((parseYmd(monday) - parseYmd(s)) / 864e5 / 7) + 1; return n >= 1 ? n : 0; };
-const weekDays = monday => [0, 1, 2, 3, 4].map(i => ymd(addDays(parseYmd(monday), i)));
+const weekDays = monday => plWeekOffs().map(i => ymd(addDays(parseYmd(monday), i)));
 function weekMeetings(course, monday) {
   const ids = new Set(((courses().find(c => c.course === course) || {}).classes || []).map(c => c.id));
   return weekDays(monday).flatMap(d => meetingsOn(d).filter(m => ids.has(m.c.id)));
 }
-const rangeLabel = monday => { const a = parseYmd(monday), b = addDays(a, 4); return (a.getMonth() + 1) + '/' + a.getDate() + '–' + (b.getMonth() !== a.getMonth() ? (b.getMonth() + 1) + '/' : '') + b.getDate(); };
+const rangeLabel = monday => { const o = plWeekOffs(), a = addDays(parseYmd(monday), o[0]), b = addDays(parseYmd(monday), o[o.length - 1]); return a.getMonth() !== b.getMonth() || plMd(a) !== (a.getMonth() + 1) + '/' + a.getDate() ? plMd(a) + '–' + plMd(b) : plMd(a) + '–' + b.getDate(); };
 
 /* ---------- semester view: every week down, each course across ---------- */
 function renderSemester() {
@@ -384,5 +384,5 @@ async function unitsFolderRead() {
   return out;
 }
 
-window.__planner = { bankPut, normRubric, slideHtml, LOOKS, TEACH, TEACH_SAMPLE, versions: versionsOf, ytIds: us => us.map(u => [ytId(u), ytStart(u)]), openLessonForTest: (l, i) => { openLesson(l); goSlide(i || 0); }, L, applySetup, renderLessons, setPicture, folderWriteAll, folderRead, buildPptx, normLesson, deckStart, normUnit, unitPut, unitAt, addUnitFiles, notGradingFolder, unitsFolderRead, semesterMondays, openUnit, docxOf, findAll, copyLesson, packImport, createLesson, lessonText, lessonForFile, pptxToSlides, finUpload, versionsOf, SP, lessonZip, variantsOf, lessonEntries, dlWeek };
+window.__planner = { bankPut, normRubric, slideHtml, LOOKS, TEACH, TEACH_SAMPLE, versions: versionsOf, ytIds: us => us.map(u => [ytId(u), ytStart(u)]), openLessonForTest: (l, i) => { openLesson(l); goSlide(i || 0); }, L, applySetup, openTimetable, folderReadme, plWeekOffs, renderLessons, setPicture, folderWriteAll, folderRead, buildPptx, normLesson, deckStart, normUnit, unitPut, unitAt, addUnitFiles, notGradingFolder, unitsFolderRead, semesterMondays, openUnit, docxOf, findAll, copyLesson, packImport, createLesson, lessonText, lessonForFile, pptxToSlides, finUpload, versionsOf, SP, lessonZip, variantsOf, lessonEntries, dlWeek };
 openLessons();
