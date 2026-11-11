@@ -1,19 +1,9 @@
-# A Stamp button beside the score total on the marking screen puts the score sticker on the paper. On a small window it
-# sits on its own line under the total.
-mark
-mark-add-menu
-mark-setup-menu
-mark-keys
-# Stage 5, teach from it. A lesson's top bar has Present (the one blue button; Download is plain), and a lesson whose day
-# has come has a Taught box under its comments. planner-present is new: a lesson being presented, with the agenda open.
-# Today's lesson has a play button on its card in the week (planner-week, planner-semester, planner-find).
-# The version line reads 1.13.0 on Home (home, home-find), in Settings and in the Keys box.
-planner-lesson
-planner-present
-planner-week
-planner-semester
-planner-find
+# Gradebook averages (1.14.0). The gradebook puts each type's average beside the term grade, with an Averages only switch
+# and a Leave out button; the one-student page has a tile per counting type with the class figure. The version shown at
+# the foot of the sidebar is now 1.14.0 (Home, Settings, the Keys box), and About lists what's new.
+class-gradebook
+class-one-student
 home
 home-find
-settings-*
 mark-keys
+settings-*

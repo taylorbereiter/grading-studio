@@ -1,14 +1,13 @@
 {
- "version": "1.13.0",
- "build": "72eb4c87bae3",
+ "version": "1.14.0",
+ "build": "507c0041a51c",
  "notes": [
-  "Present a lesson from the Planner, or from Today when its class is on now or next: its slides fill the screen, and the arrow keys or a clicker move through them.",
-  "While presenting, A shows the agenda to tick off, T starts a timer the class can see, N shows your notes and B blanks the screen.",
-  "The bar shows how many minutes the class has left, from your timetable.",
-  "After a lesson is taught, one line says where the class got to. It shows on the lesson and on the week, and presenting again picks up there."
+  "Extra credit: points or a percent on one paper, and extra credit entries in the gradebook that add to the term grade or the in-class average.",
+  "The gradebook shows each type's average (summative, in-class) right beside the term grade, kept in view as you scroll. Averages only shows just those columns, and Whole year splits each term the same way.",
+  "Leave out… lets you untick students to see the class averages without them. Their own grades don't change, and nothing is saved."
  ],
  "files": {
-  "index.html": "4e23c24f0da55fcbf153a9a43eecd98a1f9dc6f01a25232cb7468aeecfd931fa",
+  "index.html": "49c8a7b102755463cb1b4e5ff9b2bcbca55841a667c154ccdae22d83569dfcc8",
   "planner.html": "4339c23682d44200fdf0f42c441cd986aff33eaf4e9d9f7fa3ed84e5ad66e0f6"
  }
 }
