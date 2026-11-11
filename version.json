@@ -1,12 +1,13 @@
 {
- "version": "1.12.0",
- "build": "8eefe7c413f0",
+ "version": "1.13.0",
+ "build": "eee01f86ab40",
  "notes": [
-  "A returned paper starts with a feedback page: the score, each rubric row with the level given and what that level means, your comment, and every comment on the paper with its page number.",
-  "It is on unless you turn it off under Options on the Return tab. Your own pages are not changed, and bringing an export back in opens only those."
+  "Keep strong work as an example: press ☆ Example on an answer in Quick mark (or E), or pick Use as an example in the ⋯ beside a student’s name for a whole paper or part of a page. Names are covered, and your marks and the score stay off unless you switch them on. It is always optional.",
+  "The Examples tab on an assignment, and Examples in the sidebar for every class, have Show to the class, Copy picture, Download and Download as a sheet.",
+  "Examples go to your linked folder and into the take-home file with the rest of your work."
  ],
  "files": {
-  "index.html": "d06386156fc729a0380450c8f8ac7406c34cc15cd813a39375e73d6b9f43d6f6",
+  "index.html": "6d0ede12c82c17735397bb2c56835201c1c14f7eb1b20e555c625f50a3a1b777",
   "planner.html": "8acd5c1af8216f1399363b2fca23845fe7e92d4b149e9f2f0fd6b4705f7d53d4"
  }
 }

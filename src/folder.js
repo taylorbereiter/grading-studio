@@ -6,6 +6,7 @@
 //   tombstones.json        forgotten downloads, so they stay forgotten
 //   files/<sha256>.dat     papers, late files, readings and Word edits. Bytes are written once, however many downloads share them
 //   downloads/<id>/        info.json (which files, and the row for the list) and work.json (marks, scores, comments)
+//   examples/<id>.json     one strong example and the names of its pictures in files/ (examples.js)
 //   snapshots/             dated copies of everything but the bytes, as gzipped JSON, to go back to
 // A half-written file can't be the only copy: JSON goes to name.new first and then to name, and the .new is removed last. Whichever parses is whole, and .new is the newer one
 // if it's still there. Browsers put a whole file in place only when it's closed, and a bad bytes file is caught by its size and hash when it's read back.
@@ -337,6 +338,7 @@ async function folderGoBack(name) {
   for (const [id, m] of Object.entries(s.meta || {})) put('grading-studio-keep/meta', id, m);
   for (const [id, list] of Object.entries(s.edits || {})) for (const [p, r] of Object.entries(list)) put('grading-studio-keep/edits', id + '|' + p, { t: r.t, data: await getBlob(r.data), orig: r.orig ? await getBlob(r.orig) : null });
   for (const [id, list] of Object.entries(s.added || {})) for (const [k, r] of Object.entries(list)) { const { hash, size, ...x } = r; put('grading-studio-added/files', id + '|' + k, { ...x, data: await getBlob({ hash, size }) }); }
+  await exKeepFor(rec);
   batch = null;
   await gsData.putBackData(rec);
   carryAfterPutBack();
@@ -364,6 +366,7 @@ async function folderRemove(id) {
     }
     for (const x of Object.keys(s.added || {})) markAll(s.added[x], s.edits && s.edits[x]);
   }
+  for (const h of await exFolderHashes()) used.add(h);   // examples' pictures live in files/ too
   const files = await fld.root.getDirectoryHandle('files', { create: true }), drop = [];
   for await (const [n] of files.entries()) if (!used.has(n.replace(/\.dat$/, ''))) drop.push(n);
   for (const n of drop) await files.removeEntry(n).catch(() => {});
@@ -475,6 +478,7 @@ async function reconcileNow() {
   const set = prefer ? {} : mergeLs(carryLs(), B.ls || {}, k => Object.keys(tomb).some(id => k.includes(id)));   // going back: the folder takes what's here, and nothing newer comes back
   for (const [k, v] of Object.entries(set)) lsPut(k, v);
   await pushLibrary();
+  try { await exFolderSync(true); } catch (e) { console.error(e); }   // examples merge on their own, by id, and never hold up the rest
   fld.lib = false; fld.answers = {};
   try { localStorage.removeItem('gsc.win'); } catch {}
   await dailySnapshot();

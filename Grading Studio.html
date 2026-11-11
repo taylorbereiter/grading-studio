@@ -2121,6 +2121,16 @@ html.welcoming .shell{visibility:hidden}
 .exsft{display:flex;align-items:center;gap:var(--space-3);padding:var(--space-3) var(--space-6) var(--space-4);font-size:var(--text-lead)}
 .exsft .muted{font-size:var(--text-body)}
 
+/* the Examples page in the sidebar */
+.exbar{display:flex;align-items:center;flex-wrap:wrap;gap:var(--space-2);margin:0 0 var(--space-5)}
+.exbar .sp{flex:1}
+.exbar select{max-width:220px}
+.exn{font-size:var(--text-control)}
+.exnone2{margin:var(--space-6) 0}
+.exgroup{margin:0 0 var(--space-7)}
+.exgh{margin:0 0 var(--space-3);font-size:var(--text-lead);font-weight:600}
+.exgh .muted{font-weight:500;font-size:var(--text-body)}
+
 </style>
 
 <!-- the frame: a sidebar that is always there, and one screen beside it -->
@@ -2130,6 +2140,7 @@ html.welcoming .shell{visibility:hidden}
   <button class="rfind" id="findBtn" aria-haspopup="dialog" title="Find a student, an assignment, a tool or a setting"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5"/></svg><span class="rl">Find anything</span><kbd class="rl" id="findKey">Ctrl K</kbd></button>
   <a class="rnav" data-nav="home" href="#/" title="Today: what you teach, what is waiting to be marked, what is ready to hand back"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.6"/><path d="M12 3v2.2M12 18.8V21M3 12h2.2M18.8 12H21M5.6 5.6l1.6 1.6M16.8 16.8l1.6 1.6M5.6 18.4l1.6-1.6M16.8 7.2l1.6-1.6"/></svg><span class="rl">Today</span></a>
   <a class="rnav" id="lessonsBtn" href="planner.html" title="Plan units and lessons. The Planner is a separate page and never sees grading work."><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M8 3v4M16 3v4"/></svg><span class="rl">Planner</span></a>
+  <a class="rnav" data-nav="examples" id="railExamples" href="#/examples" hidden title="Strong work from every class, with no names on it"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4l2.4 5 5.4.6-4 3.7 1.1 5.3L12 16l-4.9 2.6 1.1-5.3-4-3.7 5.4-.6z"/></svg><span class="rl">Examples</span></a>
   <div class="rcap"><span class="rl">Classes</span></div>
   <div id="railClasses"></div>
   <button class="rnav radd" id="addClass" title="Add a class"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span class="rl">Add a class</span></button>
@@ -2185,6 +2196,10 @@ html.welcoming .shell{visibility:hidden}
   <section class="view" id="vClass" hidden>
     <div id="classes"></div>
     <p class="muted vhint" id="classHint">Drag an assignment to another unit, or onto a class in the sidebar. Drag a unit’s name to move the unit. Drop <span class="sysZip">a ManageBac ZIP</span> on an assignment to open it there.</p>
+  </section>
+  <section class="view" id="vExamples" hidden>
+    <header class="vhead"><h1>Examples</h1><span class="muted">Strong work from every class, with no names on it.</span></header>
+    <div id="exPage"></div>
   </section>
   <section class="view" id="vSettings" hidden>
     <header class="vhead"><h1>Settings</h1><span class="muted">Yours, kept on this computer.</span></header>
@@ -3290,12 +3305,12 @@ SOFTWARE.
 <script>/* ---------------- saved-data versions: a safety copy, then any format changes, before the app starts ---------------- */
 const gsData = (() => {
   'use strict';
-  const APP_VERSION = "1.12.0";   // from package.json, the one place it's set
+  const APP_VERSION = "1.13.0";   // from package.json, the one place it's set
   const MIGRATIONS = [
   ];
   const DATA_V = Math.max(1, ...MIGRATIONS.map(s => s.to));
   const SAFETY_DB = 'grading-studio-safety', SNAP_KEEP = 3, STUCK_MS = 30000, KEEP_DB = 'grading-studio-keep', SLICE_MAX = 32e6, TRY_KEY = 'gsm.try';   // TRY_KEY is outside gs.*, so copies and backups never carry it
-  const STORES = [[KEEP_DB, 'work'], [KEEP_DB, 'meta'], [KEEP_DB, 'edits'], ['grading-studio-added', 'files']];
+  const STORES = [[KEEP_DB, 'work'], [KEEP_DB, 'meta'], [KEEP_DB, 'edits'], ['grading-studio-added', 'files'], ['grading-studio-examples', 'ex'], ['grading-studio-examples', 'pix']];   // examples' pictures are small, and a copy put back needs them
   const info = { note: '' };   // shown once the app is up
   const endTry = () => { try { localStorage.removeItem(TRY_KEY); } catch {} };
   let stopped = false;   // she stopped a stuck update: a step still running can't change anything from here on
@@ -7733,6 +7748,7 @@ const routeOf = hash => {
     }
   }
   if (p[0] === 'class-named' && p[1]) { const nk = s => String(s || '').toLowerCase().replace(/[^a-z0-9]/g, ''), k = nk(p.slice(1).join('/')), c = k && lib.classes.find(c => nk(c.name) === k); return c ? { v: 'class', c, tab: '', stu: null, named: true } : { v: 'home', noClass: p.slice(1).join('/').slice(0, 60) }; }
+  if (p[0] === 'examples') return { v: 'examples' };
   if (p[0] === 'settings') return { v: 'settings', sec: SET_SECS.some(x => x[0] === p[1]) ? p[1] : 'saving' };
   if (p[0] === 'a' && p[1]) {
     const tab = A_TABS.some(t => t[0] && t[0] === p[2]) ? p[2] : '', sub = tab && (A_SUBS[tab] || []).includes(p[3]) ? p[3] : '';
@@ -7798,12 +7814,13 @@ function showScreen(r) {
   if (grading && !$('#welcome').hidden) wlClose();   // papers opened past the welcome (dropped on the page): the questions wait on Home's card instead
   $('#shell').classList.toggle('grading', grading);
   $('#app').hidden = !grading; $('#start').hidden = grading;
-  for (const [id, v] of [['vHome', 'home'], ['vClass', 'class'], ['vSettings', 'settings'], ['vOpening', 'opening']]) $('#' + id).hidden = grading || r.v !== v;
+  for (const [id, v] of [['vHome', 'home'], ['vClass', 'class'], ['vSettings', 'settings'], ['vExamples', 'examples'], ['vOpening', 'opening']]) $('#' + id).hidden = grading || r.v !== v;
   if (r.v !== 'class') classLeave();
   const key = grading ? 'a' : r.v + (r.c ? ':' + r.c.id + ':' + r.tab + (r.stu != null ? ':one' : '') : '');   // moving from one student to the next keeps her place on the page
   if (!grading && key !== screenKey) $('#shellMain').scrollTop = 0;
   screenKey = key;
   railRender();
+  if (!grading && r.v === 'examples') exPageRender();
   if (grading) tabShow(r); else if (dlgPage) dlgShut();
 }
 function keptState(m) {
@@ -16164,6 +16181,7 @@ async function folderGoBack(name) {
   for (const [id, m] of Object.entries(s.meta || {})) put('grading-studio-keep/meta', id, m);
   for (const [id, list] of Object.entries(s.edits || {})) for (const [p, r] of Object.entries(list)) put('grading-studio-keep/edits', id + '|' + p, { t: r.t, data: await getBlob(r.data), orig: r.orig ? await getBlob(r.orig) : null });
   for (const [id, list] of Object.entries(s.added || {})) for (const [k, r] of Object.entries(list)) { const { hash, size, ...x } = r; put('grading-studio-added/files', id + '|' + k, { ...x, data: await getBlob({ hash, size }) }); }
+  await exKeepFor(rec);
   batch = null;
   await gsData.putBackData(rec);
   carryAfterPutBack();
@@ -16189,6 +16207,7 @@ async function folderRemove(id) {
     }
     for (const x of Object.keys(s.added || {})) markAll(s.added[x], s.edits && s.edits[x]);
   }
+  for (const h of await exFolderHashes()) used.add(h);   // examples' pictures live in files/ too
   const files = await fld.root.getDirectoryHandle('files', { create: true }), drop = [];
   for await (const [n] of files.entries()) if (!used.has(n.replace(/\.dat$/, ''))) drop.push(n);
   for (const n of drop) await files.removeEntry(n).catch(() => {});
@@ -16298,6 +16317,7 @@ async function reconcileNow() {
   const set = prefer ? {} : mergeLs(carryLs(), B.ls || {}, k => Object.keys(tomb).some(id => k.includes(id)));   // going back: the folder takes what's here, and nothing newer comes back
   for (const [k, v] of Object.entries(set)) lsPut(k, v);
   await pushLibrary();
+  try { await exFolderSync(true); } catch (e) { console.error(e); }   // examples merge on their own, by id, and never hold up the rest
   fld.lib = false; fld.answers = {};
   try { localStorage.removeItem('gsc.win'); } catch {}
   await dailySnapshot();
@@ -16476,6 +16496,7 @@ async function takeWrite(sink, pass, onp, stop) {
     both.set(rec.data); both.set(orig, rec.data.length);
     await frame({ k: 'edit', id: k.slice(0, i), path: k.slice(i + 1), t: rec.t || 1, nd: rec.data.length, hasOrig: !!rec.orig }, both);
   });
+  await exTakeFrames(frame);
   await frame({ k: 'end' });
   await seal(true);
   await sink.close();
@@ -16530,7 +16551,7 @@ async function takeOpen(file, pass) {
   return { read, chunkAt, chunk, plainLen };
 }
 async function takeScan(rd, onp) {
-  const B = { work: {}, meta: {}, tomb: {}, added: {}, edits: {}, papers: {}, addedAt: {}, editAt: {}, ls: {}, lib: null, info: null, need: 0 };
+  const B = { work: {}, meta: {}, tomb: {}, added: {}, edits: {}, papers: {}, addedAt: {}, editAt: {}, ex: {}, exAt: {}, ls: {}, lib: null, info: null, need: 0 };
   let pos = 0, seen = -1, ended = false;
   const skipTo = async end => { const stop = Math.ceil(end / rd.chunk); for (let i = seen + 1; i < stop; i++) { await rd.chunkAt(i); seen = i; if (onp) onp((i + 1) * rd.chunk); } };
   try {
@@ -16548,6 +16569,8 @@ async function takeScan(rd, onp) {
       else if (f.k === 'paper') { const p = B.papers[f.id] ||= { label: f.label, entries: [], size: 0 }; p.entries.push({ path: f.path, off: pos, n, none: f.none }); p.size += n; }
       else if (f.k === 'added') { (B.addedAt[f.id] ||= {})[f.lk] = { rec: f.rec, off: pos, n }; (B.added[f.id] ||= {})[f.lk] = f.rec.added || 0; }
       else if (f.k === 'edit') { (B.editAt[f.id] ||= {})[f.path] = { t: f.t, off: pos, n, nd: f.nd, hasOrig: f.hasOrig }; (B.edits[f.id] ||= {})[f.path] = f.t; }
+      else if (f.k === 'ex') { if (f.rec && f.rec.id) B.ex[f.rec.id] = f.rec; }
+      else if (f.k === 'expix') B.exAt[f.id + '|' + f.i] = { off: pos, n };
       else if (f.k === 'end') ended = true;
       await skipTo(pos + n);
       pos += n;
@@ -16569,6 +16592,11 @@ const takeSource = (rd, B) => ({
     const both = await rd.read(e.off, e.n);
     return { t: e.t, data: both.slice(0, e.nd), orig: e.hasOrig ? both.slice(e.nd) : null };
   },
+  async exPics(r) {
+    const out = [];
+    for (let i = 0; i < (r.pages || []).length; i++) { const a = B.exAt[r.id + '|' + i]; if (!a) return null; out.push(new Blob([await rd.read(a.off, a.n)], { type: 'image/jpeg' })); }
+    return out;
+  },
 });
 const TAKE_SAY = {
   notours: 'That isn’t a Grading Studio take-home file.',
@@ -16583,7 +16611,7 @@ const papersLacking = () => [...keptMeta.values()].filter(m => !m.papers).map(m 
 function openTake() {
   if (batch) saveNow();
   openDlg('<div class="bh"><h2>Take my work with me</h2><button class="icon" data-close aria-label="Close">✕</button></div><div class="bb" id="takeBox">' +
-    '<p style="margin-top:0">Makes one protected file with everything you need to grade on another computer: student files, marks, scores, comments, rosters, rubrics, readings, Word edits and added files. Planner work stays here.</p>' +
+    '<p style="margin-top:0">Makes one protected file with everything you need to grade on another computer: student files, marks, scores, comments, rosters, rubrics, readings, Word edits, added files and strong examples. Planner work stays here.</p>' +
     '<p class="muted" style="font-size:14px">Choose a passphrase of a few words. If you forget it, nobody can open this file, you included, but your work here isn’t affected. Keep the file somewhere private all the same.</p>' +
     passFields() + '<label class="tkf">Again, to be sure<input type="password" id="takeP2" autocomplete="off"></label><p class="tkerr" id="takeErr" role="alert" hidden></p></div>' +
     '<div class="bf"><button class="btn" data-close>Cancel</button><button class="btn primary" id="takeGo">Make the file</button></div>', true);
@@ -16752,7 +16780,7 @@ async function bringPlan(B) {
 }
 const askSig = a => a.gone ? '!' + a.id + '|' + (a.work && a.work.t) : a.id + '|' + a.key + '|' + recHash(a.a);
 async function bringPreview(B, src, label, sub, again) {
-  const { plan, libm, lsSet } = await bringPlan(B), rows = plan.rows, lines = [], asks = [...plan.asks, ...libm.asks], shown = new Set(asks.map(askSig));
+  const { plan, libm, lsSet } = await bringPlan(B), rows = plan.rows, lines = [], asks = [...plan.asks, ...libm.asks], shown = new Set(asks.map(askSig)), ex = await exBringPlan(B);
   const nw = rows.filter(r => r.kind === 'new'), mg = rows.filter(r => r.kind === 'merge'), gn = rows.filter(r => r.kind === 'gone');
   const li = t => '<li>' + t + '</li>';
   if (nw.length) lines.push('<p><b>' + nw.length + ' new ' + (nw.length === 1 ? 'download' : 'downloads') + '</b></p><ul>' + nw.map(r => li(esc(r.name) + ' <span class="muted">· ' + (r.meta && r.meta.n || Object.keys((r.work && r.work.s) || {}).length) + ' ' + ((r.meta && r.meta.n || Object.keys((r.work && r.work.s) || {}).length) === 1 ? 'student' : 'students') + (r.work ? ', ' + r.meta.scored + ' scored' : '') + (B.papers && B.papers[r.id] ? ', ' + fmtSize(B.papers[r.id].size) : '') + '</span>')).join('') + '</ul>');
@@ -16772,7 +16800,8 @@ async function bringPreview(B, src, label, sub, again) {
   if (off.length) lines.push('<p id="bringCardOff">The rubric saved with ' + off.map(r => '<b>' + esc(r.name) + '</b>').join(', ') + ' doesn’t match ' + (off.length === 1 ? 'its assignment card' : 'their assignment cards') + '. Bringing this in doesn’t settle that, so you’ll be asked which one to use when you open ' + (off.length === 1 ? 'it' : 'them') + '.</p>');
   const lsReal = Object.keys(lsSet).filter(k => k !== 'gs.rubricsGone' && /^gs\.(bank|setup|rubrics|rp\.|rd\.)/.test(k));
   if (lsReal.length) lines.push('<p><b>Also</b></p><ul>' + (lsSet['gs.bank'] ? li('Saved comments from the other computer are added to yours') : '') + (lsReal.some(k => k !== 'gs.bank') ? li('Rubrics or settings you don’t have here yet') : '') + '</ul>');
-  const nothing = !nw.length && !gn.some(r => r.onA) && !libm.notes.length && !lsReal.length && !asks.length && !mg.some(r => r.extra || r.setIn.length || r.rows.some(x => x.pick === 'b'));
+  if (ex.add || ex.change || ex.drop) lines.push('<p><b>Examples</b></p><ul id="bringEx">' + (ex.add ? li(ex.add + (ex.add === 1 ? ' new example' : ' new examples')) : '') + (ex.change ? li(ex.change + (ex.change === 1 ? ' example was changed' : ' examples were changed') + ' there') : '') + (ex.drop ? li(ex.drop + (ex.drop === 1 ? ' example was deleted there, so it goes here too' : ' examples were deleted there, so they go here too')) : '') + '</ul>');
+  const nothing = !ex.list.length && !nw.length && !gn.some(r => r.onA) && !libm.notes.length && !lsReal.length && !asks.length && !mg.some(r => r.extra || r.setIn.length || r.rows.some(x => x.pick === 'b'));
   const sameN = rows.filter(r => r.kind === 'same' || r.kind === 'onlyA').length;
   const need = rows.filter(r => r.kind === 'new').reduce((a, r) => a + ((B.papers && B.papers[r.id] && B.papers[r.id].size) || 0), 0);
   let room = '';
@@ -16841,6 +16870,7 @@ async function bringApply(B0, src, shown, answers) {
     await applyRow(r, none);
   }
   store.set('gs.tomb', plan.tomb);
+  if (src.exPics) await exTake((await exBringPlan(B0)).list, src.exPics);
   const v = B.info && B.info.dataV;
   if (!v) store.del('gs.dataV'); else if (v < gsData.version()) store.set('gs.dataV', v);
   return true;
@@ -16882,7 +16912,7 @@ async function removeHere() {
   const folderLine = linked ? '\n\nYour linked folder “' + fld.name + '” isn’t touched: its files stay where they are, and this browser stops saving to it. To delete them, delete that folder yourself.' : '';
   const warn = !list.length ? '' : !last ? '\n\nYou haven’t made a take-home file from this browser, so anything done here may not be anywhere else.'
     : newer.length ? '\n\n' + newer.length + (newer.length === 1 ? ' download has' : ' downloads have') + ' changes since your last take-home file (' + whenOf(last) + '). Those changes aren’t in that file.' : '\n\nYour last take-home file was made ' + whenOf(last) + ', after your last change.';
-  const typed = await askTextDlg('This removes all student work from this browser: ' + list.length + (list.length === 1 ? ' download' : ' downloads') + ' with their papers, marks, scores and comments, plus rosters, units, rubrics, late files, readings, Word edits and safety copies.' + warn + folderLine + '\n\nPlanner work isn’t touched. This can’t be undone.\n\nType REMOVE to go ahead.', '', { ok: 'Remove from this computer', cancel: 'Keep it', danger: true });
+  const typed = await askTextDlg('This removes all student work from this browser: ' + list.length + (list.length === 1 ? ' download' : ' downloads') + ' with their papers, marks, scores and comments, plus rosters, units, rubrics, late files, readings, Word edits, examples and safety copies.' + warn + folderLine + '\n\nPlanner work isn’t touched. This can’t be undone.\n\nType REMOVE to go ahead.', '', { ok: 'Remove from this computer', cancel: 'Keep it', danger: true });
   if (typed == null) return;
   if (typed.trim().toUpperCase() !== 'REMOVE') return sayDlg('That didn’t say REMOVE, so nothing was removed.');
   await keepWait;   // papers still going in would land after the clearing
@@ -16894,6 +16924,7 @@ async function removeHere() {
     for (const n of ['papers', 'work', 'meta', 'edits']) await kdo(n, 'readwrite', o => o.clear());
     await idbDo('readwrite', o => o.clear());
     await new Promise(res => { const r = indexedDB.deleteDatabase('grading-studio-safety'); r.onsuccess = r.onerror = r.onblocked = () => res(); });
+    await exRemoveAll();
   } catch (e) { console.error(e); tabsOver('done'); return sayDlg('Not everything could be removed. Close any other Grading Studio tabs and try again.'); }
   for (let i = localStorage.length - 1; i >= 0; i--) { const k = localStorage.key(i); if (k && (k.startsWith('gsc.saved.') || k.startsWith('gsc.forgot.') || k.startsWith('gs.') && !LS_LOOKS.test(k))) localStorage.removeItem(k); }
   try { localStorage.removeItem('gsc.win'); } catch {}
@@ -19640,33 +19671,39 @@ function exTx(stores, mode, fn) {
     tx.oncomplete = () => res(out && 'result' in out ? out.result : out); tx.onerror = () => rej(tx.error); tx.onabort = () => rej(tx.error);
   }));
 }
+const exU = r => r.u || r.t || 0;
+const exHave = async () => !indexedDB.databases || (await indexedDB.databases()).some(d => d.name === EX_DB);
 exReady = (async () => {
   try {
-    const have = indexedDB.databases ? (await indexedDB.databases()).some(d => d.name === EX_DB) : true;
-    if (!have) return;
-    exList = (await exTx('ex', 'readonly', tx => tx.objectStore('ex').getAll())) || [];
+    if (!await exHave()) return;
+    exList = ((await exTx('ex', 'readonly', tx => tx.objectStore('ex').getAll())) || []).filter(r => !r.gone);
     exList.sort((a, b) => a.t - b.t);
   } catch (e) { console.error(e); exList = []; }
   exTabSay();
   if (batch && dlgPage === 'examples') openExamples();   // the tab was drawn before the examples were read
 })();
 const exOfWork = id => exList.filter(r => r.work === id);
-async function exPut(rec, blobs) {
+async function exPut(rec, blobs, raw) {
+  if (!raw) rec = { ...rec, u: Date.now() };
   await exTx(['ex', 'pix'], 'readwrite', tx => {
     tx.objectStore('ex').put(rec, rec.id);
+    if (rec.gone) tx.objectStore('pix').delete(IDBKeyRange.bound(rec.id + '|', rec.id + '|\uffff'));
     if (blobs) blobs.forEach((b, n) => tx.objectStore('pix').put(b, rec.id + '|' + n));
   });
   const k = exList.findIndex(r => r.id === rec.id);
-  if (k >= 0) exList[k] = rec; else exList.push(rec);
-  exTabSay();
+  if (rec.gone) { if (k >= 0) exList.splice(k, 1); exUrlsDrop(rec.id); }
+  else if (k >= 0) exList[k] = rec; else { exList.push(rec); exList.sort((a, b) => a.t - b.t); }
+  exTabSay(); exRailSay();
+  if (!raw) exFolderSoon();
+  return rec;
 }
 async function exDelete(id) {
-  const rec = exList.find(r => r.id === id); if (!rec) return;
-  await exTx(['ex', 'pix'], 'readwrite', tx => { tx.objectStore('ex').delete(id); tx.objectStore('pix').delete(IDBKeyRange.bound(id + '|', id + '|￿')); });
-  exList = exList.filter(r => r.id !== id);
-  for (const [k, u] of exUrls) if (k.startsWith(id + '|')) { u.then(x => x && URL.revokeObjectURL(x)); exUrls.delete(k); }
-  exTabSay();
+  if (!exList.some(r => r.id === id)) return;
+  await exPut({ id, t: Date.now(), gone: true });
 }
+const exUrlsDrop = id => { for (const [k, u] of exUrls) if (k.startsWith(id + '|')) { u.then(x => x && URL.revokeObjectURL(x)); exUrls.delete(k); } };
+const exAll = async () => await exHave() ? (await exTx('ex', 'readonly', tx => tx.objectStore('ex').getAll())) || [] : [];
+const exPics = async r => { const out = []; for (let n = 0; n < (r.pages || []).length; n++) { const b = await exPic(r.id, n); if (!b) return null; out.push(b); } return out; };
 const exPic = (id, n) => exTx('pix', 'readonly', tx => tx.objectStore('pix').get(id + '|' + n));
 const exUrls = new Map();
 const exUrl = (id, n) => { const k = id + '|' + n; if (!exUrls.has(k)) exUrls.set(k, exPic(id, n).then(b => b ? URL.createObjectURL(b) : null, () => null)); return exUrls.get(k); };
@@ -20022,19 +20059,22 @@ function openExamples() {
     if (e.target.closest('[data-close]')) return closeDlg();
     if (e.target.closest('[data-exshow]')) return exShow(exSorted(exOfWork(batch.id)), 0);
     if (e.target.closest('[data-exsheet]')) return exSheet(exSorted(exOfWork(batch.id)));
-    const card = e.target.closest('[data-exid]'); if (!card) return;
-    const r = exList.find(x => x.id === card.dataset.exid); if (!r) return;
-    if (e.target.closest('[data-exopen]')) { const all = exSorted(exOfWork(batch.id)); return exShow(all, Math.max(0, all.findIndex(x => x.id === r.id))); }
-    if (e.target.closest('[data-excopy]')) return exCopy(r);
-    if (e.target.closest('[data-exdl]')) return exDownload(r);
-    if (e.target.closest('[data-exwhy]')) return exWhyEdit(card, r);
-    const del = e.target.closest('[data-exdel]');
-    if (del) {   // two clicks, so a stray click can't throw an example away
-      if (!del.dataset.armed) { del.dataset.armed = '1'; del.textContent = 'Click again to delete'; del.style.color = 'var(--bad)'; setTimeout(() => { if (del.isConnected) { delete del.dataset.armed; del.textContent = 'Delete'; del.style.color = ''; } }, 4000); return; }
-      kmClose();
-      exDelete(r.id).then(() => { toast('Example deleted'); if (dlgPage === 'examples') openExamples(); }, er => { console.error(er); toast('That didn’t work. Try again.'); });
-    }
+    exCardAct(e, () => exSorted(exOfWork(batch.id)), () => { if (dlgPage === 'examples') openExamples(); });
   };
+}
+function exCardAct(e, list, after) {
+  const card = e.target.closest('[data-exid]'); if (!card) return;
+  const r = exList.find(x => x.id === card.dataset.exid); if (!r) return;
+  if (e.target.closest('[data-exopen]')) { const all = list(); return exShow(all, Math.max(0, all.findIndex(x => x.id === r.id))); }
+  if (e.target.closest('[data-excopy]')) return exCopy(r);
+  if (e.target.closest('[data-exdl]')) return exDownload(r);
+  if (e.target.closest('[data-exwhy]')) return exWhyEdit(card, r);
+  const del = e.target.closest('[data-exdel]');
+  if (del) {   // two clicks, so a stray click can't throw an example away
+    if (!del.dataset.armed) { del.dataset.armed = '1'; del.textContent = 'Click again to delete'; del.style.color = 'var(--bad)'; setTimeout(() => { if (del.isConnected) { delete del.dataset.armed; del.textContent = 'Delete'; del.style.color = ''; } }, 4000); return; }
+    kmClose();
+    exDelete(r.id).then(() => { toast('Example deleted'); after(); }, er => { console.error(er); toast('That didn’t work. Try again.'); });
+  }
 }
 function exWhyEdit(card, r) {
   kmClose();
@@ -20175,7 +20215,142 @@ function exShowClose() {
   el.remove();
   if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
 }
-Object.assign(window.__gs, { exList: () => exList, exReady: () => exReady, exStar, openUseExample, openExamples, exShow, exSheet, exPdfOf, exPng, exDownload, exForgetWork, exUse: () => EXU, exItems });
+/* carrying examples: the linked folder, the take-home file and Bring work in (part 2) */
+function exMergePlan(A, B) {
+  const a = new Map(A.map(r => [r.id, r])), b = new Map(B.map(r => [r.id, r]));
+  return { toA: B.filter(r => !a.has(r.id) ? !r.gone : exU(r) > exU(a.get(r.id))), toB: A.filter(r => !b.has(r.id) || exU(r) > exU(b.get(r.id))) };
+}
+async function exTake(list, pics) {
+  let n = 0;
+  for (const r of list) {
+    if (r.gone) { await exPut(r, null, true); n++; continue; }
+    const blobs = await pics(r); if (!blobs || blobs.length !== (r.pages || []).length) continue;
+    await exPut(r, blobs, true); n++;
+  }
+  return n;
+}
+function exRefreshViews() {
+  exTabSay(); exRailSay();
+  if (batch && dlgPage === 'examples') openExamples();
+  if (!batch && routeNow().v === 'examples') exPageRender();
+}
+let exSyncP = null, exSyncAgain = false, exSyncT = 0;
+function exFolderSoon() { clearTimeout(exSyncT); exSyncT = setTimeout(() => exFolderSync().catch(e => console.error(e)), 400); }
+function exFolderSync(inSync) {
+  if (typeof fld === 'undefined' || !fld.root || fld.state === 'none' || fld.state === 'ask' || fld.state === 'lost') return Promise.resolve();
+  if (!inSync && (fld.run || fld.sync)) { exFolderSoon(); return Promise.resolve(); }   // the folder's sync brings examples up to date at its end anyway
+  if (exSyncP) { exSyncAgain = true; return exSyncP; }
+  exSyncP = exFolderRun().finally(() => { exSyncP = null; if (exSyncAgain) { exSyncAgain = false; exFolderSoon(); } });
+  return exSyncP;
+}
+async function exFolderRun() {
+  const dir = await fld.root.getDirectoryHandle('examples', { create: true }), ids = new Set(), B = new Map();
+  for await (const [nm, h] of dir.entries()) { const m = h.kind === 'file' && /^(.+)\.json(?:\.new)?$/.exec(nm); if (m) ids.add(m[1]); }
+  for (const id of ids) { const o = await readJson(dir, id + '.json'); if (o && o.rec && o.rec.id === id) B.set(id, o); }
+  const A = await exAll();
+  if (!A.length && !B.size) return;
+  const { toA, toB } = exMergePlan(A, [...B.values()].map(o => o.rec));
+  const got = await exTake(toA, async r => {
+    const out = [];
+    for (const ref of B.get(r.id).pix || []) { try { out.push(new Blob([await getBlob(ref)], { type: 'image/jpeg' })); } catch (e) { if (e.damaged || e.name === 'NotFoundError') return null; throw e; } }
+    return out;
+  });
+  for (const r of toB) {
+    if (r.gone) { await writeJson(dir, r.id + '.json', { rec: r, pix: [] }); continue; }
+    const blobs = await exPics(r); if (!blobs) continue;
+    const pix = []; for (const b of blobs) pix.push(await putBlob(new Uint8Array(await b.arrayBuffer())));
+    await writeJson(dir, r.id + '.json', { rec: r, pix });
+  }
+  if (got) exRefreshViews();
+}
+async function exFolderHashes() {
+  try { await exSyncP; } catch {}
+  const out = new Set();
+  let dir; try { dir = await fld.root.getDirectoryHandle('examples'); } catch (e) { if (e.name === 'NotFoundError') return out; throw e; }
+  const ids = new Set();
+  for await (const [nm, h] of dir.entries()) { const m = h.kind === 'file' && /^(.+)\.json(?:\.new)?$/.exec(nm); if (m) ids.add(m[1]); }
+  for (const id of ids) { const o = await readJson(dir, id + '.json'); for (const ref of (o && o.pix) || []) if (ref && ref.hash) out.add(ref.hash); }
+  return out;
+}
+async function exKeepFor(rec) {
+  if (!await exHave()) return;
+  for (const name of ['ex', 'pix']) {
+    const got = await exTx(name, 'readonly', tx => { const o = tx.objectStore(name), a = o.getAll(), b = o.getAllKeys(); return { get result() { return { k: b.result, v: a.result }; } }; });
+    rec.stores[EX_DB + '/' + name] = got;
+  }
+}
+async function exTakeFrames(frame) {
+  for (const r of await exAll()) {
+    if (r.gone) { await frame({ k: 'ex', rec: r }); continue; }
+    const blobs = await exPics(r); if (!blobs) continue;
+    await frame({ k: 'ex', rec: r });
+    for (let i = 0; i < blobs.length; i++) await frame({ k: 'expix', id: r.id, i }, new Uint8Array(await blobs[i].arrayBuffer()));
+  }
+}
+async function exBringPlan(B) {
+  const A = await exAll(), { toA } = exMergePlan(A, Object.values(B.ex || {})), had = new Set(A.filter(r => !r.gone).map(r => r.id));
+  return { list: toA, add: toA.filter(r => !r.gone && !had.has(r.id)).length, change: toA.filter(r => !r.gone && had.has(r.id)).length, drop: toA.filter(r => r.gone && had.has(r.id)).length };
+}
+async function exRemoveAll() {
+  clearTimeout(exSyncT);
+  if (exDbP) { try { (await exDbP).close(); } catch {} exDbP = null; }
+  await new Promise(res => { const r = indexedDB.deleteDatabase(EX_DB); r.onsuccess = r.onerror = r.onblocked = () => res(); });
+  exList = [];
+}
+
+/* the Examples page in the sidebar: every example, from every class and year (part 2) */
+function exRailSay() {
+  const a = $('#railExamples'); if (!a) return;
+  let here = false; try { here = !batch && routeNow().v === 'examples'; } catch {}
+  a.hidden = !exList.length && !here;
+}
+const exPageF = { cls: '', asg: '', kind: '', row: '' };
+const EX_KINDS = [['answer', 'Answers'], ['paper', 'Whole papers'], ['part', 'Parts of pages']];
+const exAsgKey = r => r.asg || 'w:' + r.work;
+const exClassName = id => { const c = id && classById(id); return c ? c.name : id ? 'A class no longer here' : 'No class'; };
+function exPageList() {
+  return exList.filter(r => (!exPageF.cls || (r.cls || '-') === exPageF.cls) && (!exPageF.asg || exAsgKey(r) === exPageF.asg) && (!exPageF.kind || r.kind === exPageF.kind) && (!exPageF.row || r.row === exPageF.row));
+}
+const exPageSort = list => list.slice().sort((a, b) => (a.kind === b.kind ? 0 : a.kind === 'answer' ? -1 : b.kind === 'answer' ? 1 : a.kind === 'paper' ? -1 : 1) || (a.kind === 'answer' ? natural(String(a.q && a.q.lab), String(b.q && b.q.lab)) : 0) || a.t - b.t);
+function exPageGroups(list) {
+  const g = new Map();
+  for (const r of list) { const k = exAsgKey(r); if (!g.has(k)) g.set(k, []); g.get(k).push(r); }
+  return [...g.values()].map(exPageSort).sort((a, b) => Math.max(...b.map(r => r.t)) - Math.max(...a.map(r => r.t)));
+}
+function exPageRender() {
+  const el = $('#exPage'); if (!el) return;
+  exRailSay();
+  const opts = (key, list, all) => '<select class="btn sm" data-exf="' + key + '" aria-label="' + all + '"><option value="">' + all + '</option>' + list.map(([v, l]) => '<option value="' + esc(v) + '"' + (exPageF[key] === v ? ' selected' : '') + '>' + esc(l) + '</option>').join('') + '</select>';
+  const uniq = pairs => [...new Map(pairs).entries()];
+  const classes = uniq(exList.map(r => [r.cls || '-', exClassName(r.cls)])).sort((a, b) => natural(a[1], b[1]));
+  const asgs = uniq(exList.filter(r => !exPageF.cls || (r.cls || '-') === exPageF.cls).map(r => [exAsgKey(r), r.title || 'Assignment'])).sort((a, b) => natural(a[1], b[1]));
+  const rows = uniq(exList.filter(r => r.row).map(r => [r.row, r.row])).sort((a, b) => natural(a[1], b[1]));
+  const list = exPageList(), groups = exPageGroups(list), filtered = Object.values(exPageF).some(Boolean);
+  const one = groups.length === 1;
+  el.innerHTML = !exList.length ? '<div class="exempty"><p><b>No examples yet.</b></p><p class="muted">Press ☆ Example on an answer in Quick mark, or pick <b>Use as an example</b> in a paper’s ⋯ menu. Every example from every class shows here.</p></div>'
+    : '<div class="exbar">' + opts('cls', classes, 'Every class') + opts('asg', asgs, 'Every assignment') + opts('kind', EX_KINDS.filter(k => exList.some(r => r.kind === k[0])), 'Every kind') + (rows.length ? opts('row', rows, 'Every rubric row') : '') +
+      (filtered ? '<button class="link" data-exfclear>Clear</button>' : '') + '<span class="sp"></span><span class="muted exn">' + list.length + (list.length === 1 ? ' example' : ' examples') + '</span>' +
+      (one ? '<button class="btn sm" data-exsheet>Download as a sheet</button>' : '') + (list.length ? '<button class="btn sm primary" data-exshow>Show to the class</button>' : '') + '</div>' +
+      (!list.length ? '<p class="muted exnone2">None match. <button class="link" data-exfclear>Clear the filters</button></p>' : '') +
+      groups.map(g => '<section class="exgroup"><h2 class="exgh">' + esc(g[0].title || 'Assignment') + ' <span class="muted">· ' + esc(exClassName(g[0].cls)) + ' · ' + esc(new Date(Math.max(...g.map(r => r.t))).toLocaleDateString(undefined, { month: 'short', year: 'numeric' })) + '</span></h2><div class="exgrid">' + g.map(exCard).join('') + '</div></section>').join('');
+  for (const im of el.querySelectorAll('img[data-expic]')) exUrl(im.dataset.expic, 0).then(u => { if (u && im.isConnected) im.src = u; });
+}
+{
+  const page = () => exPageGroups(exPageList()).flat();
+  const el = $('#exPage');
+  if (el) {
+    el.addEventListener('change', e => { const f = e.target.closest('[data-exf]'); if (!f) return; exPageF[f.dataset.exf] = f.value; if (f.dataset.exf === 'cls') exPageF.asg = ''; exPageRender(); });
+    el.addEventListener('click', e => {
+      if (e.target.closest('[data-exfclear]')) { for (const k of Object.keys(exPageF)) exPageF[k] = ''; return exPageRender(); }
+      if (e.target.closest('[data-exshow]')) return exShow(page(), 0);
+      if (e.target.closest('[data-exsheet]')) return exSheet(page());
+      exCardAct(e, page, exPageRender);
+    });
+  }
+}
+exReady.then(exRailSay);
+
+Object.assign(window.__gs, { exList: () => exList, exReady: () => exReady, exStar, openUseExample, openExamples, exShow, exSheet, exPdfOf, exPng, exDownload, exForgetWork, exUse: () => EXU, exItems, exAll, exFolderSync: () => exFolderSync(), exMergePlan, exPageRender, exPageF, exDeleteTest: exDelete });
 
 /* ---------------- Today: what she teaches, what is waiting to be marked, what is ready to hand back (stage 4) ---------------- */
 
@@ -20557,7 +20732,7 @@ $('#setHistory').addEventListener('click', e => {
 });
 
 /* updates she controls, and installing as an app */
-const WHATS_NEW = {"1.12.0":["A returned paper starts with a feedback page: the score, each rubric row with the level given and what that level means, your comment, and every comment on the paper with its page number.","It is on unless you turn it off under Options on the Return tab. Your own pages are not changed, and bringing an export back in opens only those."],"1.11.0":["The Planner’s sections are in the sidebar: Calendar, Units, Past lessons, Activities and Rubrics. The row of tabs across the top is gone.","A lesson has a lighter top: its name, its classes, its status and Download. Copy for Claude, Versions, the upload and the links are under More.","Comments shows above a lesson once it has one."],"1.7.0":["Home is now Today: the classes you teach today with the lesson planned for each, the papers waiting to be marked, and the papers ready to hand back.","What the class needs next: after a set of papers is scored, Today shows the weakest rubric row and how many students to sit down with.","A class page is quieter. Click anywhere on an assignment’s row to open it; the only blue button is the one that adds an assignment.","Forget, and the other ways to open papers, moved into the ⋯ menu on each row."],"1.6.0":["A new browser opens on three questions (your classes, how you grade, where work is kept) and starts with nothing of anyone else’s in it.","A sample class of made-up students, with papers to mark, for trying things out. Remove it from Home when you’re done.","The app uses the name of your own school system. Choose it, and how you usually grade, in Settings.","Letter grades or IB 1 to 7 can show beside the percent, with boundaries you set.","Canvas and Moodle downloads are grouped by student. The Planner works without a setup file, and downloads lessons as PowerPoint with a plain built-in template."],"1.5.0":["The sidebar says “Not backed up”, in amber, until a folder holds a second copy of your work. Home asks for that folder once.","Go back in time, in Settings: any assignment as it was on an earlier day, restored on its own, with Undo.","Grading Studio can be installed as an app, and it opens with no internet.","A newer version now waits until you click Update now, so nothing changes in the middle of marking."]};
+const WHATS_NEW = {"1.13.0":["Keep strong work as an example: press ☆ Example on an answer in Quick mark (or E), or pick Use as an example in the ⋯ beside a student’s name for a whole paper or part of a page. Names are covered, and your marks and the score stay off unless you switch them on. It is always optional.","The Examples tab on an assignment, and Examples in the sidebar for every class, have Show to the class, Copy picture, Download and Download as a sheet.","Examples go to your linked folder and into the take-home file with the rest of your work."],"1.12.0":["A returned paper starts with a feedback page: the score, each rubric row with the level given and what that level means, your comment, and every comment on the paper with its page number.","It is on unless you turn it off under Options on the Return tab. Your own pages are not changed, and bringing an export back in opens only those."],"1.11.0":["The Planner’s sections are in the sidebar: Calendar, Units, Past lessons, Activities and Rubrics. The row of tabs across the top is gone.","A lesson has a lighter top: its name, its classes, its status and Download. Copy for Claude, Versions, the upload and the links are under More.","Comments shows above a lesson once it has one."],"1.7.0":["Home is now Today: the classes you teach today with the lesson planned for each, the papers waiting to be marked, and the papers ready to hand back.","What the class needs next: after a set of papers is scored, Today shows the weakest rubric row and how many students to sit down with.","A class page is quieter. Click anywhere on an assignment’s row to open it; the only blue button is the one that adds an assignment.","Forget, and the other ways to open papers, moved into the ⋯ menu on each row."],"1.6.0":["A new browser opens on three questions (your classes, how you grade, where work is kept) and starts with nothing of anyone else’s in it.","A sample class of made-up students, with papers to mark, for trying things out. Remove it from Home when you’re done.","The app uses the name of your own school system. Choose it, and how you usually grade, in Settings.","Letter grades or IB 1 to 7 can show beside the percent, with boundaries you set.","Canvas and Moodle downloads are grouped by student. The Planner works without a setup file, and downloads lessons as PowerPoint with a plain built-in template."],"1.5.0":["The sidebar says “Not backed up”, in amber, until a folder holds a second copy of your work. Home asks for that folder once.","Go back in time, in Settings: any assignment as it was on an earlier day, restored on its own, with Undo.","Grading Studio can be installed as an app, and it opens with no internet.","A newer version now waits until you click Update now, so nothing changes in the middle of marking."]};
 const upd = { on: false, st: null, mine: '', checking: false, said: '', install: null, installed: false, err: '' };
 const updCan = () => 'serviceWorker' in navigator && (location.protocol === 'https:' || /[?&]sw=1(&|$)/.test(location.search)) && !/Grading Studio\.html$/i.test(decodeURIComponent(location.pathname));
 const updSend = async msg => { const reg = await navigator.serviceWorker.ready; if (reg.active) reg.active.postMessage(msg); };
@@ -20894,7 +21069,7 @@ function railRender() {
   screenWas = batch ? 'a' : r.v;
   const d = $('#homeDate'), today = new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' }); if (d.textContent !== today) d.textContent = today;   // Today's title is the day itself
   const asg = batch && batch.assignment && findItem(batch.assignment.id);
-  document.title = batch ? (asg ? asg.it.name + ' · ' : '') + 'Grading Studio' : r.v === 'class' ? (r.c === lib.loose ? 'No class' : r.c.name) + ' · Grading Studio' : r.v === 'settings' ? (r.sec === 'saving' ? '' : SET_SECS.find(x => x[0] === r.sec)[1] + ' · ') + 'Settings · Grading Studio' : 'Grading Studio';
+  document.title = batch ? (asg ? asg.it.name + ' · ' : '') + 'Grading Studio' : r.v === 'class' ? (r.c === lib.loose ? 'No class' : r.c.name) + ' · Grading Studio' : r.v === 'examples' ? 'Examples · Grading Studio' : r.v === 'settings' ? (r.sec === 'saving' ? '' : SET_SECS.find(x => x[0] === r.sec)[1] + ' · ') + 'Settings · Grading Studio' : 'Grading Studio';
 }
 function railSavedRender() {
   if (!shellReady) return;
@@ -20947,6 +21122,7 @@ function findRows() {
     tabGo('grades/sheet', 'Grade sheet', 'Every grade found on the papers, with a crop of each');
     tabGo('insights', 'Insights', 'The class at a glance: average, spread, rubric rows, charts');
     tabGo('insights/consistency', 'Consistency check', 'Did you get harder or softer as you went?');
+    if (exOfWork(batch.id).length) tabGo('examples', 'Examples', 'Strong work from this assignment, with no names on it');
     tabGo('return', 'Return marked files', 'The marked files, back in their student folders');
     { const b = $('#quizTop'); if (b && !b.hidden) add('This assignment', b.textContent, b.title, press('#quizTop')); }
     for (const b of document.querySelectorAll('#moreMenu .mitem, #toolStash .mitem')) {
@@ -20965,6 +21141,7 @@ function findRows() {
   }
   add('Go to', 'Today', 'What you teach today, what is waiting to be marked, what is ready to hand back', () => go('#/'));
   add('Go to', 'Planner', 'Units and lessons, on its own page', () => { location.href = $('#lessonsBtn').href; });
+  if (exList.length) add('Go to', 'Examples', 'Strong work from every class, with no names on it', () => go('#/examples'));
   add('Go to', 'Settings', 'Saving, classes, terms, marking, display and keys', () => go('#/settings'));
   for (const c of lib.classes) {
     add('Classes', c.name, (c.names.length ? c.names.length + ' students' : 'No roster yet') + (classLeft(c) ? ' · ' + classLeft(c) + ' left to score' : ''), () => go(classHash(c)));

@@ -21,34 +21,43 @@ function exTx(stores, mode, fn) {
     tx.oncomplete = () => res(out && 'result' in out ? out.result : out); tx.onerror = () => rej(tx.error); tx.onabort = () => rej(tx.error);
   }));
 }
-// The records, read once at the start, if the database is there at all.
+// The records, read once at the start, if the database is there at all. A deleted example leaves { id, u, gone: true } behind, so a folder or
+// take-home file that still has it doesn't bring it back. u is when a record last changed (t when it never has): the newer one wins a merge.
+const exU = r => r.u || r.t || 0;
+const exHave = async () => !indexedDB.databases || (await indexedDB.databases()).some(d => d.name === EX_DB);
 exReady = (async () => {
   try {
-    const have = indexedDB.databases ? (await indexedDB.databases()).some(d => d.name === EX_DB) : true;
-    if (!have) return;
-    exList = (await exTx('ex', 'readonly', tx => tx.objectStore('ex').getAll())) || [];
+    if (!await exHave()) return;
+    exList = ((await exTx('ex', 'readonly', tx => tx.objectStore('ex').getAll())) || []).filter(r => !r.gone);
     exList.sort((a, b) => a.t - b.t);
   } catch (e) { console.error(e); exList = []; }
   exTabSay();
   if (batch && dlgPage === 'examples') openExamples();   // the tab was drawn before the examples were read
 })();
 const exOfWork = id => exList.filter(r => r.work === id);
-async function exPut(rec, blobs) {
+// raw: a record from the folder or a take-home file, put in as it is, with its own u.
+async function exPut(rec, blobs, raw) {
+  if (!raw) rec = { ...rec, u: Date.now() };
   await exTx(['ex', 'pix'], 'readwrite', tx => {
     tx.objectStore('ex').put(rec, rec.id);
+    if (rec.gone) tx.objectStore('pix').delete(IDBKeyRange.bound(rec.id + '|', rec.id + '|\uffff'));
     if (blobs) blobs.forEach((b, n) => tx.objectStore('pix').put(b, rec.id + '|' + n));
   });
   const k = exList.findIndex(r => r.id === rec.id);
-  if (k >= 0) exList[k] = rec; else exList.push(rec);
-  exTabSay();
+  if (rec.gone) { if (k >= 0) exList.splice(k, 1); exUrlsDrop(rec.id); }
+  else if (k >= 0) exList[k] = rec; else { exList.push(rec); exList.sort((a, b) => a.t - b.t); }
+  exTabSay(); exRailSay();
+  if (!raw) exFolderSoon();
+  return rec;
 }
 async function exDelete(id) {
-  const rec = exList.find(r => r.id === id); if (!rec) return;
-  await exTx(['ex', 'pix'], 'readwrite', tx => { tx.objectStore('ex').delete(id); tx.objectStore('pix').delete(IDBKeyRange.bound(id + '|', id + '|￿')); });
-  exList = exList.filter(r => r.id !== id);
-  for (const [k, u] of exUrls) if (k.startsWith(id + '|')) { u.then(x => x && URL.revokeObjectURL(x)); exUrls.delete(k); }
-  exTabSay();
+  if (!exList.some(r => r.id === id)) return;
+  await exPut({ id, t: Date.now(), gone: true });
 }
+const exUrlsDrop = id => { for (const [k, u] of exUrls) if (k.startsWith(id + '|')) { u.then(x => x && URL.revokeObjectURL(x)); exUrls.delete(k); } };
+// Every record, the deleted ones too, and the pictures of one.
+const exAll = async () => await exHave() ? (await exTx('ex', 'readonly', tx => tx.objectStore('ex').getAll())) || [] : [];
+const exPics = async r => { const out = []; for (let n = 0; n < (r.pages || []).length; n++) { const b = await exPic(r.id, n); if (!b) return null; out.push(b); } return out; };
 const exPic = (id, n) => exTx('pix', 'readonly', tx => tx.objectStore('pix').get(id + '|' + n));
 const exUrls = new Map();
 const exUrl = (id, n) => { const k = id + '|' + n; if (!exUrls.has(k)) exUrls.set(k, exPic(id, n).then(b => b ? URL.createObjectURL(b) : null, () => null)); return exUrls.get(k); };
@@ -422,19 +431,23 @@ function openExamples() {
     if (e.target.closest('[data-close]')) return closeDlg();
     if (e.target.closest('[data-exshow]')) return exShow(exSorted(exOfWork(batch.id)), 0);
     if (e.target.closest('[data-exsheet]')) return exSheet(exSorted(exOfWork(batch.id)));
-    const card = e.target.closest('[data-exid]'); if (!card) return;
-    const r = exList.find(x => x.id === card.dataset.exid); if (!r) return;
-    if (e.target.closest('[data-exopen]')) { const all = exSorted(exOfWork(batch.id)); return exShow(all, Math.max(0, all.findIndex(x => x.id === r.id))); }
-    if (e.target.closest('[data-excopy]')) return exCopy(r);
-    if (e.target.closest('[data-exdl]')) return exDownload(r);
-    if (e.target.closest('[data-exwhy]')) return exWhyEdit(card, r);
-    const del = e.target.closest('[data-exdel]');
-    if (del) {   // two clicks, so a stray click can't throw an example away
-      if (!del.dataset.armed) { del.dataset.armed = '1'; del.textContent = 'Click again to delete'; del.style.color = 'var(--bad)'; setTimeout(() => { if (del.isConnected) { delete del.dataset.armed; del.textContent = 'Delete'; del.style.color = ''; } }, 4000); return; }
-      kmClose();
-      exDelete(r.id).then(() => { toast('Example deleted'); if (dlgPage === 'examples') openExamples(); }, er => { console.error(er); toast('That didn’t work. Try again.'); });
-    }
+    exCardAct(e, () => exSorted(exOfWork(batch.id)), () => { if (dlgPage === 'examples') openExamples(); });
   };
+}
+// A click on an example's card, on the tab or the page. list() gives the examples Show to the class steps through; after() draws again once one is deleted.
+function exCardAct(e, list, after) {
+  const card = e.target.closest('[data-exid]'); if (!card) return;
+  const r = exList.find(x => x.id === card.dataset.exid); if (!r) return;
+  if (e.target.closest('[data-exopen]')) { const all = list(); return exShow(all, Math.max(0, all.findIndex(x => x.id === r.id))); }
+  if (e.target.closest('[data-excopy]')) return exCopy(r);
+  if (e.target.closest('[data-exdl]')) return exDownload(r);
+  if (e.target.closest('[data-exwhy]')) return exWhyEdit(card, r);
+  const del = e.target.closest('[data-exdel]');
+  if (del) {   // two clicks, so a stray click can't throw an example away
+    if (!del.dataset.armed) { del.dataset.armed = '1'; del.textContent = 'Click again to delete'; del.style.color = 'var(--bad)'; setTimeout(() => { if (del.isConnected) { delete del.dataset.armed; del.textContent = 'Delete'; del.style.color = ''; } }, 4000); return; }
+    kmClose();
+    exDelete(r.id).then(() => { toast('Example deleted'); after(); }, er => { console.error(er); toast('That didn’t work. Try again.'); });
+  }
 }
 function exWhyEdit(card, r) {
   kmClose();
@@ -581,4 +594,150 @@ function exShowClose() {
   el.remove();
   if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
 }
-Object.assign(window.__gs, { exList: () => exList, exReady: () => exReady, exStar, openUseExample, openExamples, exShow, exSheet, exPdfOf, exPng, exDownload, exForgetWork, exUse: () => EXU, exItems });
+/* carrying examples: the linked folder, the take-home file and Bring work in (part 2) */
+// By id, the newer u wins, a deleted example's { gone } record too. With the same u, this browser's stays.
+function exMergePlan(A, B) {
+  const a = new Map(A.map(r => [r.id, r])), b = new Map(B.map(r => [r.id, r]));
+  return { toA: B.filter(r => !a.has(r.id) ? !r.gone : exU(r) > exU(a.get(r.id))), toB: A.filter(r => !b.has(r.id) || exU(r) > exU(b.get(r.id))) };
+}
+// Puts records from elsewhere in, as they are. pics(r) gives their pictures; one whose pictures are missing or damaged is left out.
+async function exTake(list, pics) {
+  let n = 0;
+  for (const r of list) {
+    if (r.gone) { await exPut(r, null, true); n++; continue; }
+    const blobs = await pics(r); if (!blobs || blobs.length !== (r.pages || []).length) continue;
+    await exPut(r, blobs, true); n++;
+  }
+  return n;
+}
+function exRefreshViews() {
+  exTabSay(); exRailSay();
+  if (batch && dlgPage === 'examples') openExamples();
+  if (!batch && routeNow().v === 'examples') exPageRender();
+}
+// The folder: examples/<id>.json holds { rec, pix: [{ hash, size }] }, with the pictures' bytes in files/ beside the papers. A deleted one stays as its { gone } record.
+// Folder work never runs beside the folder's own saving: Forget clears out bytes nothing lists, and a picture written but not yet listed would go.
+let exSyncP = null, exSyncAgain = false, exSyncT = 0;
+function exFolderSoon() { clearTimeout(exSyncT); exSyncT = setTimeout(() => exFolderSync().catch(e => console.error(e)), 400); }
+function exFolderSync(inSync) {
+  if (typeof fld === 'undefined' || !fld.root || fld.state === 'none' || fld.state === 'ask' || fld.state === 'lost') return Promise.resolve();
+  if (!inSync && (fld.run || fld.sync)) { exFolderSoon(); return Promise.resolve(); }   // the folder's sync brings examples up to date at its end anyway
+  if (exSyncP) { exSyncAgain = true; return exSyncP; }
+  exSyncP = exFolderRun().finally(() => { exSyncP = null; if (exSyncAgain) { exSyncAgain = false; exFolderSoon(); } });
+  return exSyncP;
+}
+async function exFolderRun() {
+  const dir = await fld.root.getDirectoryHandle('examples', { create: true }), ids = new Set(), B = new Map();
+  for await (const [nm, h] of dir.entries()) { const m = h.kind === 'file' && /^(.+)\.json(?:\.new)?$/.exec(nm); if (m) ids.add(m[1]); }
+  for (const id of ids) { const o = await readJson(dir, id + '.json'); if (o && o.rec && o.rec.id === id) B.set(id, o); }
+  const A = await exAll();
+  if (!A.length && !B.size) return;
+  const { toA, toB } = exMergePlan(A, [...B.values()].map(o => o.rec));
+  const got = await exTake(toA, async r => {
+    const out = [];
+    for (const ref of B.get(r.id).pix || []) { try { out.push(new Blob([await getBlob(ref)], { type: 'image/jpeg' })); } catch (e) { if (e.damaged || e.name === 'NotFoundError') return null; throw e; } }
+    return out;
+  });
+  for (const r of toB) {
+    if (r.gone) { await writeJson(dir, r.id + '.json', { rec: r, pix: [] }); continue; }
+    const blobs = await exPics(r); if (!blobs) continue;
+    const pix = []; for (const b of blobs) pix.push(await putBlob(new Uint8Array(await b.arrayBuffer())));
+    await writeJson(dir, r.id + '.json', { rec: r, pix });
+  }
+  if (got) exRefreshViews();
+}
+// The bytes the folder's examples use, so Forget doesn't clear them out.
+async function exFolderHashes() {
+  try { await exSyncP; } catch {}
+  const out = new Set();
+  let dir; try { dir = await fld.root.getDirectoryHandle('examples'); } catch (e) { if (e.name === 'NotFoundError') return out; throw e; }
+  const ids = new Set();
+  for await (const [nm, h] of dir.entries()) { const m = h.kind === 'file' && /^(.+)\.json(?:\.new)?$/.exec(nm); if (m) ids.add(m[1]); }
+  for (const id of ids) { const o = await readJson(dir, id + '.json'); for (const ref of (o && o.pix) || []) if (ref && ref.hash) out.add(ref.hash); }
+  return out;
+}
+// Going back to a snapshot in the folder leaves examples as they are: they're anonymous pictures, kept apart from the work that goes back.
+async function exKeepFor(rec) {
+  if (!await exHave()) return;
+  for (const name of ['ex', 'pix']) {
+    const got = await exTx(name, 'readonly', tx => { const o = tx.objectStore(name), a = o.getAll(), b = o.getAllKeys(); return { get result() { return { k: b.result, v: a.result }; } }; });
+    rec.stores[EX_DB + '/' + name] = got;
+  }
+}
+// The take-home file: an { k: 'ex', rec } frame for each record, then an { k: 'expix', id, i } frame for each of its pictures. An older copy of the app skips both.
+async function exTakeFrames(frame) {
+  for (const r of await exAll()) {
+    if (r.gone) { await frame({ k: 'ex', rec: r }); continue; }
+    const blobs = await exPics(r); if (!blobs) continue;
+    await frame({ k: 'ex', rec: r });
+    for (let i = 0; i < blobs.length; i++) await frame({ k: 'expix', id: r.id, i }, new Uint8Array(await blobs[i].arrayBuffer()));
+  }
+}
+// What Bring work in would do with a file's examples.
+async function exBringPlan(B) {
+  const A = await exAll(), { toA } = exMergePlan(A, Object.values(B.ex || {})), had = new Set(A.filter(r => !r.gone).map(r => r.id));
+  return { list: toA, add: toA.filter(r => !r.gone && !had.has(r.id)).length, change: toA.filter(r => !r.gone && had.has(r.id)).length, drop: toA.filter(r => r.gone && had.has(r.id)).length };
+}
+// Remove from this computer takes examples too.
+async function exRemoveAll() {
+  clearTimeout(exSyncT);
+  if (exDbP) { try { (await exDbP).close(); } catch {} exDbP = null; }
+  await new Promise(res => { const r = indexedDB.deleteDatabase(EX_DB); r.onsuccess = r.onerror = r.onblocked = () => res(); });
+  exList = [];
+}
+
+/* the Examples page in the sidebar: every example, from every class and year (part 2) */
+// The sidebar shows it once there is an example, like the tab on an assignment.
+function exRailSay() {
+  const a = $('#railExamples'); if (!a) return;
+  let here = false; try { here = !batch && routeNow().v === 'examples'; } catch {}
+  a.hidden = !exList.length && !here;
+}
+const exPageF = { cls: '', asg: '', kind: '', row: '' };
+const EX_KINDS = [['answer', 'Answers'], ['paper', 'Whole papers'], ['part', 'Parts of pages']];
+const exAsgKey = r => r.asg || 'w:' + r.work;
+const exClassName = id => { const c = id && classById(id); return c ? c.name : id ? 'A class no longer here' : 'No class'; };
+function exPageList() {
+  return exList.filter(r => (!exPageF.cls || (r.cls || '-') === exPageF.cls) && (!exPageF.asg || exAsgKey(r) === exPageF.asg) && (!exPageF.kind || r.kind === exPageF.kind) && (!exPageF.row || r.row === exPageF.row));
+}
+// One assignment's examples in the order the tab shows them: answers by question, then whole papers, then parts of pages.
+const exPageSort = list => list.slice().sort((a, b) => (a.kind === b.kind ? 0 : a.kind === 'answer' ? -1 : b.kind === 'answer' ? 1 : a.kind === 'paper' ? -1 : 1) || (a.kind === 'answer' ? natural(String(a.q && a.q.lab), String(b.q && b.q.lab)) : 0) || a.t - b.t);
+function exPageGroups(list) {
+  const g = new Map();
+  for (const r of list) { const k = exAsgKey(r); if (!g.has(k)) g.set(k, []); g.get(k).push(r); }
+  return [...g.values()].map(exPageSort).sort((a, b) => Math.max(...b.map(r => r.t)) - Math.max(...a.map(r => r.t)));
+}
+function exPageRender() {
+  const el = $('#exPage'); if (!el) return;
+  exRailSay();
+  const opts = (key, list, all) => '<select class="btn sm" data-exf="' + key + '" aria-label="' + all + '"><option value="">' + all + '</option>' + list.map(([v, l]) => '<option value="' + esc(v) + '"' + (exPageF[key] === v ? ' selected' : '') + '>' + esc(l) + '</option>').join('') + '</select>';
+  const uniq = pairs => [...new Map(pairs).entries()];
+  const classes = uniq(exList.map(r => [r.cls || '-', exClassName(r.cls)])).sort((a, b) => natural(a[1], b[1]));
+  const asgs = uniq(exList.filter(r => !exPageF.cls || (r.cls || '-') === exPageF.cls).map(r => [exAsgKey(r), r.title || 'Assignment'])).sort((a, b) => natural(a[1], b[1]));
+  const rows = uniq(exList.filter(r => r.row).map(r => [r.row, r.row])).sort((a, b) => natural(a[1], b[1]));
+  const list = exPageList(), groups = exPageGroups(list), filtered = Object.values(exPageF).some(Boolean);
+  const one = groups.length === 1;
+  el.innerHTML = !exList.length ? '<div class="exempty"><p><b>No examples yet.</b></p><p class="muted">Press ☆ Example on an answer in Quick mark, or pick <b>Use as an example</b> in a paper’s ⋯ menu. Every example from every class shows here.</p></div>'
+    : '<div class="exbar">' + opts('cls', classes, 'Every class') + opts('asg', asgs, 'Every assignment') + opts('kind', EX_KINDS.filter(k => exList.some(r => r.kind === k[0])), 'Every kind') + (rows.length ? opts('row', rows, 'Every rubric row') : '') +
+      (filtered ? '<button class="link" data-exfclear>Clear</button>' : '') + '<span class="sp"></span><span class="muted exn">' + list.length + (list.length === 1 ? ' example' : ' examples') + '</span>' +
+      (one ? '<button class="btn sm" data-exsheet>Download as a sheet</button>' : '') + (list.length ? '<button class="btn sm primary" data-exshow>Show to the class</button>' : '') + '</div>' +
+      (!list.length ? '<p class="muted exnone2">None match. <button class="link" data-exfclear>Clear the filters</button></p>' : '') +
+      groups.map(g => '<section class="exgroup"><h2 class="exgh">' + esc(g[0].title || 'Assignment') + ' <span class="muted">· ' + esc(exClassName(g[0].cls)) + ' · ' + esc(new Date(Math.max(...g.map(r => r.t))).toLocaleDateString(undefined, { month: 'short', year: 'numeric' })) + '</span></h2><div class="exgrid">' + g.map(exCard).join('') + '</div></section>').join('');
+  for (const im of el.querySelectorAll('img[data-expic]')) exUrl(im.dataset.expic, 0).then(u => { if (u && im.isConnected) im.src = u; });
+}
+{
+  const page = () => exPageGroups(exPageList()).flat();
+  const el = $('#exPage');
+  if (el) {
+    el.addEventListener('change', e => { const f = e.target.closest('[data-exf]'); if (!f) return; exPageF[f.dataset.exf] = f.value; if (f.dataset.exf === 'cls') exPageF.asg = ''; exPageRender(); });
+    el.addEventListener('click', e => {
+      if (e.target.closest('[data-exfclear]')) { for (const k of Object.keys(exPageF)) exPageF[k] = ''; return exPageRender(); }
+      if (e.target.closest('[data-exshow]')) return exShow(page(), 0);
+      if (e.target.closest('[data-exsheet]')) return exSheet(page());
+      exCardAct(e, page, exPageRender);
+    });
+  }
+}
+exReady.then(exRailSay);
+
+Object.assign(window.__gs, { exList: () => exList, exReady: () => exReady, exStar, openUseExample, openExamples, exShow, exSheet, exPdfOf, exPng, exDownload, exForgetWork, exUse: () => EXU, exItems, exAll, exFolderSync: () => exFolderSync(), exMergePlan, exPageRender, exPageF, exDeleteTest: exDelete });

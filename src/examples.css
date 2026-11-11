@@ -84,3 +84,13 @@
 .exsnote.top{max-width:900px;margin:0 auto var(--space-4);font-size:var(--text-heading)}
 .exsft{display:flex;align-items:center;gap:var(--space-3);padding:var(--space-3) var(--space-6) var(--space-4);font-size:var(--text-lead)}
 .exsft .muted{font-size:var(--text-body)}
+
+/* the Examples page in the sidebar */
+.exbar{display:flex;align-items:center;flex-wrap:wrap;gap:var(--space-2);margin:0 0 var(--space-5)}
+.exbar .sp{flex:1}
+.exbar select{max-width:220px}
+.exn{font-size:var(--text-control)}
+.exnone2{margin:var(--space-6) 0}
+.exgroup{margin:0 0 var(--space-7)}
+.exgh{margin:0 0 var(--space-3);font-size:var(--text-lead);font-weight:600}
+.exgh .muted{font-weight:500;font-size:var(--text-body)}
