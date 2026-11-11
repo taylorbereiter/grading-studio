@@ -40,8 +40,17 @@ jobs:
       # computer's fonts, so the tests get the common free ones instead of whatever the runner happens to have.
       - name: Fonts for the made-up papers
         run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq fonts-liberation fonts-dejavu fonts-freefont-ttf fonts-wqy-zenhei fonts-ipafont-gothic fonts-thai-tlwg fonts-noto-color-emoji
+          # The runner's package mirror is sometimes unreachable. Try three times, give up on a try after a few
+          # minutes instead of twenty, and ask Ubuntu's own server on the second and third tries.
+          fonts="fonts-liberation fonts-dejavu fonts-freefont-ttf fonts-wqy-zenhei fonts-ipafont-gothic fonts-thai-tlwg fonts-noto-color-emoji"
+          got=
+          for try in 1 2 3; do
+            if sudo timeout 180 apt-get -o Acquire::Retries=2 update -qq && sudo timeout 420 apt-get -o Acquire::Retries=2 install -y -qq $fonts; then got=1; break; fi
+            echo "Fonts: try $try failed"
+            if [ -f /etc/apt/apt-mirrors.txt ]; then echo "http://archive.ubuntu.com/ubuntu/" | sudo tee /etc/apt/apt-mirrors.txt >/dev/null; fi
+            sleep 20
+          done
+          [ -n "$got" ]
           mkdir -p ~/.config/fontconfig && cp test/tools/ci-fonts.conf ~/.config/fontconfig/fonts.conf
           fc-cache -f >/dev/null
           fc-match monospace; fc-match Consolas; fc-match sans-serif; fc-match serif; fc-match Arial; fc-match "Courier New"
