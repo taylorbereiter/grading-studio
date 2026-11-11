@@ -1,14 +1,13 @@
 {
- "version": "1.23.0",
- "build": "8e2dee4fa33d",
+ "version": "1.24.0",
+ "build": "019b24442d4c",
  "notes": [
-  "Scores by learning goal, if you want them. Keep your own list of goals (a skill, or a standard from your school) in Settings, Grading, or add one wherever you tag.",
-  "Tag rubric rows in Rubric setup and quiz questions in Quiz boxes. An assignment scored with just a total can carry one goal for the whole score.",
-  "Each class page gets a Goals tab: the class average on each goal with the lowest first, every student by every goal, and where each number came from. A student's own page shows their goals beside the class average.",
-  "Nothing changes until you add a first goal, and tagging never changes a score or a grade."
+  "Retakes: a second try at the same assignment keeps the first try's score, comment and paper. Start one from the ⋯ beside Missing, Excused and Late on a paper.",
+  "You choose which try counts, for all your classes: the highest (to begin with), the latest, or the average. It is in the retake box and in the gradebook's Term setup.",
+  "A score typed into the gradebook takes a retake too: type both, like 7 > 10."
  ],
  "files": {
-  "index.html": "6b3e4ee42570376f499de62f6106c09c3e929e00ad84af4a7f9bcb5e8dfc2875",
-  "planner.html": "ee2610f0d5a77444a342c9d84fcea339c123d5513af65be589200afc5801ae09"
+  "index.html": "6046e06ddfcd537678b215577bd5a874eb07c95995c844d0294aebbc4fd0dfa9",
+  "planner.html": "a858050b0ba9631ef8afc1c129c16ba9e661de246c93b9ed4aae04ce1c91d479"
  }
 }

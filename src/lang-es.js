@@ -153,7 +153,7 @@ const LANG_ES = {
     /* the feedback page in a returned paper */
     'How it was scored': 'Cómo se puntuó', 'From your teacher': 'De tu docente', 'Comment on your paper': 'Comentario en tu trabajo', 'Comments on your paper': 'Comentarios en tu trabajo',
     'Your marked paper starts on the next page.': 'Tu trabajo corregido empieza en la página siguiente.', 'Your feedback continues on the next page.': 'Tus comentarios continúan en la página siguiente.',
-    'Missing': 'No entregado', 'Excused': 'Justificado', 'Late': 'Con retraso',
+    'Missing': 'No entregado', 'Excused': 'Justificado', 'Late': 'Con retraso', 'Retake': 'Nuevo intento', 'First try': 'Primer intento', 'counts as': 'cuenta como',
   },
   rules: [
     [/^(?:No classes today\.|\w+ class(?:es)? today\.|\w+ sets? of papers (?:to mark|ready to hand back)|[Nn]othing waiting to be marked\.)/, m => esHomeSay(m.input)],
@@ -273,6 +273,8 @@ const LANG_ES = {
       a: ['Bajo el total del estudiante en el panel de notas, elige **Missing**, **Excused** o **Late**. El ⋯ de al lado tiene **Leave out of the average**.', 'Los trabajos no entregados y justificados no esperan nota, así que no cuentan como pendientes de corregir.'] },
     'extra-credit': { q: '¿Cómo doy puntos extra?', words: 'bonus puntos extra adicional',
       a: ['En un trabajo, abre el ⋯ junto a la nota y elige **Extra credit points**. Admite puntos o un porcentaje.', 'Para puntos extra que no van ligados a un trabajo, pulsa **+ Extra credit** en el libro de calificaciones de la clase. La configuración de periodos dice si se suman a la nota del periodo y si una nota puede pasar del 100 %.'] },
+    'retake': { q: 'Un estudiante repite una tarea. ¿Cómo conservo la primera nota?', words: 'repetir recuperación reentrega segundo intento rehacer más alta última media',
+      a: ['Abre el ⋯ junto a Missing, Excused y Late en su trabajo y elige **Start a retake**. La nota, el comentario y el trabajo del primer intento se conservan, y el panel de notas queda vacío para el nuevo intento. Añade el trabajo nuevo con **+ Add**.', 'Cuenta el intento con la nota más alta, salvo que elijas el último o la media: **Change** en el cuadro del nuevo intento, o la configuración de periodos del libro de calificaciones. Es una sola regla para todas tus clases.', 'Para una nota escrita a mano en el libro de calificaciones, escribe las dos en la celda, así: **7 > 10**.'] },
     'past-work': { q: '¿Puedo ver trabajos anteriores de un estudiante mientras corrijo?', words: 'historial anterior previo progreso comparar',
       a: ['Sí. **Past work**, bajo Next en el panel de notas, muestra las notas del estudiante y tus comentarios de otras tareas junto al trabajo en pantalla.', 'Los estudiantes se emparejan mediante la lista de la clase.'] },
     'return': { q: '¿Cómo devuelvo los trabajos corregidos?', words: 'exportar descargar devolver entregar zip enviar estudiantes',

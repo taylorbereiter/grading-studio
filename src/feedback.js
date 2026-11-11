@@ -8,8 +8,12 @@ const FB_INK = '#1E2024', FB_INK2 = '#3F444C', FB_MUTED = '#5C616A', FB_LINE = '
 
 // What the page says for this student and this file, or null when there is nothing to say (no score, no comment, no comment on the paper).
 function fbData(st, d) {
-  const g = gradeOf(st), rub = setup.mode === 'rubric', c = batchClass();
-  const rows = rub ? setup.criteria.map((name, i) => { const v = st.grade.rubric[i]; return v == null ? null : { name, v, text: ((setup.levels && setup.levels[i] && setup.levels[i][Math.floor(v)]) || '').trim() }; }).filter(Boolean) : [];
+  // A retake: each paper carries its own try's score, rows and comment. The newer one also says what counts when that isn't its own score.
+  const tries = st.grade.tries || [], tn = tries.length ? tryOfFile(st, fileByPath(st, (d.pages[0] || [])[0])) : 0, old = tn ? tries[tn - 1] : null, cnt = tries.length && !old ? gradeOf(st) : null;
+  const g = old ? { total: old.total, pct: old.pct, outOf: old.max, status: old.late ? 'late' : '' } : tries.length ? tryGrade(st) : gradeOf(st), rub = setup.mode === 'rubric', c = batchClass();
+  if (cnt && !g.status && st.grade.status === 'late') g.status = 'late';
+  const rubricOf = old ? old.rubric || [] : st.grade.rubric;
+  const rows = rub ? setup.criteria.map((name, i) => { const v = rubricOf[i]; return v == null ? null : { name, v, text: ((setup.levels && setup.levels[i] && setup.levels[i][Math.floor(v)]) || '').trim() }; }).filter(Boolean) : [];
   const notes = [];
   d.pages.forEach(([path, p], k) => {
     const f = fileByPath(st, path); if (!f) return;
@@ -17,11 +21,12 @@ function fbData(st, d) {
     const numbered = all.filter(n => n.hl).sort((a, b) => a.ay - b.ay || a.ax - b.ax);   // the numbers the page itself shows
     for (const n of [...all].sort((a, b) => a.ay - b.ay || a.ax - b.ax)) notes.push({ n: numbered.indexOf(n) + 1, text: n.text.trim(), color: n.color, page: k });
   });
-  const comment = (st.grade.comment || '').trim(), scored = g.total != null && !g.partial;
+  const comment = ((old ? old.comment : st.grade.comment) || '').trim(), scored = g.total != null && !g.partial;
+  const trySay = old ? tr(tryName(tn)) : cnt ? tr('Retake') + (cnt.tryNow && cnt.pct !== g.pct ? ' · ' + tr('counts as') + ' ' + fmtPct(cnt.pct) : '') : '';
   if (!scored && !rows.length && !comment && !notes.length) return null;
   const rn = rosterNames(), who = rn.get(st) || st.key;   // the paper goes back to its student, so it carries their name even while she marks with names hidden
   return { title: (batch.assignment && batch.assignment.name) || batch.name, sub: [who, c && c.name, tr('returned ' + fmtDay(Date.now()))].filter(Boolean).join(' · '),
-    total: scored ? g.total : null, max: g.outOf != null ? g.outOf : maxPoints(), pct: scored ? g.pct : null, status: g.status ? tr(STATUS_LABEL[g.status]) : '', rows, comment, notes };
+    total: scored ? g.total : null, max: g.outOf != null ? g.outOf : maxPoints(), pct: scored ? g.pct : null, status: [g.status ? tr(STATUS_LABEL[g.status]) : '', trySay].filter(Boolean).join(' · '), rows, comment, notes };
 }
 
 // Lays the page out as blocks, each with a height and a way to draw itself at a y. off is how many feedback pages come before the paper.

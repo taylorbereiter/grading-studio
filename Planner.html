@@ -5439,7 +5439,7 @@ const LANG_ES = {
     /* the feedback page in a returned paper */
     'How it was scored': 'Cómo se puntuó', 'From your teacher': 'De tu docente', 'Comment on your paper': 'Comentario en tu trabajo', 'Comments on your paper': 'Comentarios en tu trabajo',
     'Your marked paper starts on the next page.': 'Tu trabajo corregido empieza en la página siguiente.', 'Your feedback continues on the next page.': 'Tus comentarios continúan en la página siguiente.',
-    'Missing': 'No entregado', 'Excused': 'Justificado', 'Late': 'Con retraso',
+    'Missing': 'No entregado', 'Excused': 'Justificado', 'Late': 'Con retraso', 'Retake': 'Nuevo intento', 'First try': 'Primer intento', 'counts as': 'cuenta como',
   },
   rules: [
     [/^(?:No classes today\.|\w+ class(?:es)? today\.|\w+ sets? of papers (?:to mark|ready to hand back)|[Nn]othing waiting to be marked\.)/, m => esHomeSay(m.input)],
@@ -5559,6 +5559,8 @@ const LANG_ES = {
       a: ['Bajo el total del estudiante en el panel de notas, elige **Missing**, **Excused** o **Late**. El ⋯ de al lado tiene **Leave out of the average**.', 'Los trabajos no entregados y justificados no esperan nota, así que no cuentan como pendientes de corregir.'] },
     'extra-credit': { q: '¿Cómo doy puntos extra?', words: 'bonus puntos extra adicional',
       a: ['En un trabajo, abre el ⋯ junto a la nota y elige **Extra credit points**. Admite puntos o un porcentaje.', 'Para puntos extra que no van ligados a un trabajo, pulsa **+ Extra credit** en el libro de calificaciones de la clase. La configuración de periodos dice si se suman a la nota del periodo y si una nota puede pasar del 100 %.'] },
+    'retake': { q: 'Un estudiante repite una tarea. ¿Cómo conservo la primera nota?', words: 'repetir recuperación reentrega segundo intento rehacer más alta última media',
+      a: ['Abre el ⋯ junto a Missing, Excused y Late en su trabajo y elige **Start a retake**. La nota, el comentario y el trabajo del primer intento se conservan, y el panel de notas queda vacío para el nuevo intento. Añade el trabajo nuevo con **+ Add**.', 'Cuenta el intento con la nota más alta, salvo que elijas el último o la media: **Change** en el cuadro del nuevo intento, o la configuración de periodos del libro de calificaciones. Es una sola regla para todas tus clases.', 'Para una nota escrita a mano en el libro de calificaciones, escribe las dos en la celda, así: **7 > 10**.'] },
     'past-work': { q: '¿Puedo ver trabajos anteriores de un estudiante mientras corrijo?', words: 'historial anterior previo progreso comparar',
       a: ['Sí. **Past work**, bajo Next en el panel de notas, muestra las notas del estudiante y tus comentarios de otras tareas junto al trabajo en pantalla.', 'Los estudiantes se emparejan mediante la lista de la clase.'] },
     'return': { q: '¿Cómo devuelvo los trabajos corregidos?', words: 'exportar descargar devolver entregar zip enviar estudiantes',
@@ -5776,7 +5778,7 @@ const LANG_ZH = {
     /* the feedback page in a returned paper */
     'How it was scored': '評分方式', 'From your teacher': '老師的話', 'Comment on your paper': '作業上的評語', 'Comments on your paper': '作業上的評語',
     'Your marked paper starts on the next page.': '批改後的作業從下一頁開始。', 'Your feedback continues on the next page.': '回饋接續在下一頁。',
-    'Missing': '缺交', 'Excused': '免交', 'Late': '遲交',
+    'Missing': '缺交', 'Excused': '免交', 'Late': '遲交', 'Retake': '重做', 'First try': '第一次', 'counts as': '採計',
   },
   rules: [
     [/^(?:No classes today\.|\w+ class(?:es)? today\.|\w+ sets? of papers (?:to mark|ready to hand back)|[Nn]othing waiting to be marked\.)/, m => zhHomeSay(m.input)],
@@ -5896,6 +5898,8 @@ const LANG_ZH = {
       a: ['在評分面板中學生總分的下方，選擇 **Missing**、**Excused** 或 **Late**。旁邊的 ⋯ 裡有 **Leave out of the average**。', '缺交和免交的作業不需要分數，所以不會算在待批改裡。'] },
     'extra-credit': { q: '怎麼給加分？', words: '加分 額外分數 bonus extra credit',
       a: ['在一份作業上，開啟分數旁的 ⋯，選擇 **Extra credit points**。可以輸入分數或百分比。', '如果加分不屬於任何一份作業，請在班級成績冊按 **+ Extra credit**。學期設定決定加分是否計入學期成績，以及成績能否超過 100%。'] },
+    'retake': { q: '學生要重做作業，怎麼保留第一次的分數？', words: '重考 補考 重做 重交 第二次 再試一次 最高 最新 平均',
+      a: ['在該生的作業上，開啟 Missing、Excused、Late 旁的 ⋯，選擇 **Start a retake**。第一次的分數、評語和作業都會保留，評分欄會清空給重做的這一次。用 **+ Add** 加入新的作業。', '預設採計最高的一次；也可以改成最新的一次或平均：按重做方塊裡的 **Change**，或到成績冊的學期設定。這條規則適用於你所有的班級。', '如果分數是直接輸入成績冊的，請在格子裡輸入兩個分數，例如 **7 > 10**。'] },
     'past-work': { q: '批改時可以看學生以前的作業嗎？', words: '紀錄 以前 先前 進步 比較 history',
       a: ['可以。評分面板中 Next 下方的 **Past work** 會在目前的作業旁，顯示這位學生在其他作業的分數和你的評語。', '學生是依班級名單來配對的。'] },
     'return': { q: '怎麼發還批改好的作業？', words: '匯出 下載 發還 交回 zip 傳送 學生 export',
@@ -6127,6 +6131,9 @@ const HELP = [
   { id: 'extra-credit', sec: 'score', q: 'How do I give extra credit?',
     a: ['On one paper, open the ⋯ beside the score and choose **Extra credit points**. It takes points or a percent.', 'For extra credit that is not tied to a paper, press **+ Extra credit** in the class’s gradebook. Term setup says whether it adds to the term grade and whether a grade can pass 100%.'],
     words: 'bonus points extra' },
+  { id: 'retake', sec: 'score', q: 'A student is redoing an assignment. How do I keep the first score?',
+    a: ['Open the ⋯ beside Missing, Excused and Late on their paper and choose **Start a retake**. The first try’s score, comment and paper are kept, and the score panel empties for the retake. Add the new paper with **+ Add**.', 'The highest try counts unless you choose the latest or the average: **Change** in the retake box, or Term setup in the gradebook. It is one rule for all your classes.', 'For a score you typed into the gradebook, type both into the cell, like **7 > 10**.'],
+    words: 'retake resubmit resubmission redo second attempt try again rewrite highest latest average' },
   { id: 'past-work', sec: 'score', q: 'Can I see a student’s earlier work while I mark?',
     a: ['Yes. **Past work**, under Next in the score panel, shows the student’s scores and your comments from other assignments beside the paper on screen.', 'Students are matched through the class roster.'],
     words: 'history previous earlier progress compare' },
