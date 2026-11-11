@@ -37,6 +37,7 @@ const tabNamed = t => async page => { await page.waitForFunction(t => [...docume
 const SCREENS = [
   { name: 'home', where: 'g', hash: '#/', ready: '#railClasses a' },
   { name: 'home-find', where: 'g', hash: '#/', ready: '#railClasses a', then: page => page.evaluate(() => window.__gs.openFind()) },
+  { name: 'help', where: 'g', hash: '#/help/return', ready: '#hlp-return.on' },
   { name: 'class-assignments', where: 'g', hash: '#/class/c1', ready: '#vClass:not([hidden]) .cls' },
   { name: 'class-gradebook', where: 'g', hash: '#/class/c1/gradebook', ready: '#bkTab' },
   { name: 'class-students', where: 'g', hash: '#/class/c1/students', ready: '#peopleTbl table' },

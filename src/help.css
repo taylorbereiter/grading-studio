@@ -1,0 +1,27 @@
+/* ---------- Help: short answers on a page of their own ---------- */
+#vHelp{max-width:760px}
+.hlpfind{position:relative;margin:0 0 var(--space-5)}
+.hlpfind svg{position:absolute;left:var(--space-3);top:50%;width:18px;height:18px;margin-top:-9px;fill:none;stroke:var(--muted);stroke-width:1.8;stroke-linecap:round;pointer-events:none}
+.hlpfind input{width:100%;height:44px;padding:0 var(--space-3) 0 40px;border:1px solid var(--line-strong);border-radius:var(--corner-4);background:var(--surface);color:var(--fg);font:inherit;font-size:var(--text-lead)}
+.hlpfind input:focus-visible{outline:2px solid var(--accent);outline-offset:1px;border-color:var(--accent)}
+.hlpsec{margin:0 0 var(--space-5)}
+.hlpsec h2{font-size:var(--text-caption);font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 var(--space-2) var(--space-1)}
+.hlpcard{background:var(--surface);border:1px solid var(--line);border-radius:var(--corner-5);overflow:hidden}
+.hlpq+.hlpq{border-top:1px solid var(--line)}
+.hlpq h3{margin:0;font:inherit}
+.hlph{display:flex;align-items:center;gap:var(--space-3);width:100%;min-height:48px;padding:var(--space-3) var(--space-4);border:0;background:none;color:var(--fg);font:inherit;font-size:var(--text-lead);font-weight:500;text-align:left;cursor:pointer}
+.hlph:hover{background:var(--hover)}
+.hlph:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.hlph span{flex:1;min-width:0}
+.hlph svg{flex:none;width:18px;height:18px;fill:none;stroke:var(--muted);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;transition:transform .15s}
+.hlpq.on .hlph{color:var(--accent);font-weight:600}
+.hlpq.on .hlph svg{transform:rotate(180deg);stroke:var(--accent)}
+.hlpa{padding:0 var(--space-4) var(--space-4);color:var(--fg-2);font-size:var(--text-lead);line-height:1.55;max-width:66ch}
+.hlpa p{margin:0 0 var(--space-2)}
+.hlpa ol{margin:0 0 var(--space-2);padding-left:1.4em}
+.hlpa li{margin:0 0 var(--space-1)}
+.hlpa b{color:var(--fg);font-weight:600}
+.hlpa .hlpgo{margin:var(--space-3) 0 0}
+.hlpnone{padding:var(--space-5) var(--space-1)}
+.hlpfoot{color:var(--muted);margin:0 var(--space-1)}
+@media (prefers-reduced-motion:reduce){.hlph svg{transition:none}}
