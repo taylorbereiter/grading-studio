@@ -1,4 +1,10 @@
 {
+  "1.13.0": [
+    "Present a lesson from the Planner, or from Today when its class is on now or next: its slides fill the screen, and the arrow keys or a clicker move through them.",
+    "While presenting, A shows the agenda to tick off, T starts a timer the class can see, N shows your notes and B blanks the screen.",
+    "The bar shows how many minutes the class has left, from your timetable.",
+    "After a lesson is taught, one line says where the class got to. It shows on the lesson and on the week, and presenting again picks up there."
+  ],
   "1.12.0": [
     "A returned paper starts with a feedback page: the score, each rubric row with the level given and what that level means, your comment, and every comment on the paper with its page number.",
     "It is on unless you turn it off under Options on the Return tab. Your own pages are not changed, and bringing an export back in opens only those."

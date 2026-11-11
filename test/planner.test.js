@@ -1216,7 +1216,7 @@ test('the lesson name and the title slide match both ways, unless I set them apa
   } finally { await a.done(); }
 });
 
-test('a lesson’s top bar is light: its name, its classes, status and Download, with the rest in More', async () => {
+test('a lesson’s top bar is light: its name, its classes, status, Download and Present, with the rest in More', async () => {
   const a = await open();
   try {
     const { page, errors } = a;
@@ -1224,9 +1224,9 @@ test('a lesson’s top bar is light: its name, its classes, status and Download,
     await page.waitForSelector('.ls-top [data-a="pptx"]');
     const shown = () => page.$$eval('.ls-top > button, .ls-top > .ls-morew > button, .ls-top > .ls-slots > button', b => b.filter(x => x.checkVisibility()).map(x => x.textContent.trim()));
     const top = await shown();
-    assert.deepEqual([top[0], ...top.slice(-2)], ['‹ Week', 'More ▾', 'Download .pptx']);
+    assert.deepEqual([top[0], ...top.slice(-3)], ['‹ Week', 'More ▾', 'Download .pptx', 'Present']);
     for (const gone of ['Copy for Claude', 'Versions', '↑ Upload lesson .zip', 'Comments']) assert.ok(!top.includes(gone), gone + ' is not above the slide');
-    assert.deepEqual(await page.$$eval('.ls-top .btn.primary', b => b.map(x => x.textContent)), ['Download .pptx'], 'one blue button');
+    assert.deepEqual(await page.$$eval('.ls-top .btn.primary', b => b.map(x => x.textContent)), ['Present'], 'one blue button');
     // More holds the rest
     assert.ok(await page.$eval('.ls-menu', m => m.hidden));
     await page.click('.ls-top [data-a="more"]');
