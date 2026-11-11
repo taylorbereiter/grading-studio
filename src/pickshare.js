@@ -130,7 +130,7 @@ function pkBar() {
 function pkWho() {
   const w = PK.el.querySelector('#pkWho'); w.hidden = !PK.who; if (!PK.who) return;
   const m = pkMem(PK.cls);
-  w.innerHTML = '<h2>Who’s here</h2><p>Click anyone who is away today. They are left out of picks and groups until this page is closed.</p><div class="pk-wl">' +
+  w.innerHTML = '<button data-pk="who" class="pk-wx">Done</button><h2>Who’s here</h2><p>Click anyone who is away today. They are left out of picks and groups until this page is closed.</p><div class="pk-wl">' +
     PK.cls.names.map((n, i) => '<button data-pkw="' + i + '" aria-pressed="' + !m.away.has(n) + '">' + pkEsc(pkNice(n)) + '</button>').join('') + '</div>';
 }
 function pkDo(k) {

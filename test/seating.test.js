@@ -191,7 +191,7 @@ test('Pick a name goes round the whole class before anyone is picked twice, and 
     const here = [await page.$eval('#pkName', e => e.textContent)];
     for (let i = 0; i < 3; i++) { await page.keyboard.press('Space'); here.push(await page.$eval('#pkName', e => e.textContent)); }
     assert.deepEqual(here.slice().sort(), NAMES.slice(2).sort());
-    assert.match(await page.$eval('[data-pk="who"]', e => e.textContent), /2 away/);
+    assert.match(await page.$eval('#pkBar [data-pk="who"]', e => e.textContent), /2 away/);
     // groups: the four who are here, in pairs
     await page.keyboard.press('g'); await page.waitForSelector('#pkGroups');
     await page.keyboard.press('2');

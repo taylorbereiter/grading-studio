@@ -740,7 +740,8 @@ body.has-side .lsn{margin-right:var(--sidew,420px)}
 /* the bar: for the teacher */
 .pk-bar{flex:none;align-self:center;display:flex;align-items:center;flex-wrap:wrap;justify-content:center;gap:var(--space-1);margin:var(--space-4);padding:var(--space-1) var(--space-2);max-width:calc(100vw - var(--space-5));
   background:var(--stage-bar);border:1px solid var(--stage-line);border-radius:var(--corner-5);font-size:var(--text-control)}
-.pk-bar button,.pk-bar select{border:0;background:none;color:var(--stage-fg);border-radius:var(--corner-3);padding:var(--space-2) var(--space-3);font:inherit;font-weight:500;white-space:nowrap}
+.pk-bar>button,.pk-bar select{border-radius:var(--corner-3)}
+.pk-bar button,.pk-bar select{border:0;background:none;color:var(--stage-fg);padding:var(--space-2) var(--space-3);font:inherit;font-weight:500;white-space:nowrap}
 .pk-bar select{border:1px solid var(--stage-line);background:var(--stage);max-width:200px}
 .pk-bar button:hover,.pk-bar button[aria-pressed="true"]{background:var(--stage-hover)}
 .pk-bar .pk-go,.pk-bar .pk-end{font-weight:600}
@@ -748,7 +749,7 @@ body.has-side .lsn{margin-right:var(--sidew,420px)}
 .pk-bar .pk-go:hover{background:var(--stage-blue-2)}
 .pk-bar .pk-end{border:1px solid var(--stage-line)}
 .pk-seg{display:inline-flex;border:1px solid var(--stage-line);border-radius:var(--corner-3);overflow:hidden}
-.pk-seg button{border-radius:0;padding:var(--space-2)}
+.pk-seg button{padding:var(--space-2)}
 .pk-seg button[aria-pressed="true"]{background:var(--stage-blue);color:var(--stage-paper)}
 .pk-sep{width:1px;align-self:stretch;margin:var(--space-1);background:var(--stage-line)}
 .pk :focus-visible{outline:2px solid var(--stage-fg);outline-offset:2px}
@@ -761,6 +762,8 @@ body.has-side .lsn{margin-right:var(--sidew,420px)}
 .pk-wl{display:flex;flex-wrap:wrap;gap:var(--space-2)}
 .pk-wl button{border:1px solid var(--stage-line);background:none;color:var(--stage-muted);border-radius:var(--corner-pill);padding:var(--space-1) var(--space-3);font:inherit;text-decoration:line-through}
 .pk-wl button[aria-pressed="true"]{background:var(--stage-paper);color:var(--stage-ink);border-color:var(--stage-paper);text-decoration:none;font-weight:500}
+.pk-wx{float:right;border:1px solid var(--stage-line);background:none;color:var(--stage-fg);border-radius:var(--corner-3);padding:var(--space-1) var(--space-3);font:inherit;font-weight:600}
+.pk-wx:hover{background:var(--stage-hover)}
 
 /* The sidebar stays put at the left edge; the Planner's own screen scrolls beside it. It folds to icons while a lesson, a unit or a document is open. */
 .rail{position:fixed;left:0;top:0;bottom:0;z-index:6}
@@ -5040,7 +5043,7 @@ function pkBar() {
 function pkWho() {
   const w = PK.el.querySelector('#pkWho'); w.hidden = !PK.who; if (!PK.who) return;
   const m = pkMem(PK.cls);
-  w.innerHTML = '<h2>Who’s here</h2><p>Click anyone who is away today. They are left out of picks and groups until this page is closed.</p><div class="pk-wl">' +
+  w.innerHTML = '<button data-pk="who" class="pk-wx">Done</button><h2>Who’s here</h2><p>Click anyone who is away today. They are left out of picks and groups until this page is closed.</p><div class="pk-wl">' +
     PK.cls.names.map((n, i) => '<button data-pkw="' + i + '" aria-pressed="' + !m.away.has(n) + '">' + pkEsc(pkNice(n)) + '</button>').join('') + '</div>';
 }
 function pkDo(k) {
