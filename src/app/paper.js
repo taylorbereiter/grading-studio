@@ -31,7 +31,7 @@ function turnMarks(marks, W, H, dir) {
   const pt = ([x, y]) => dir > 0 ? [r1(H - y), r1(x)] : [r1(y), r1(W - x)];
   const box = b => { const [ax, ay] = pt([b.x, b.y]), [bx, by] = pt([b.x + b.w, b.y + b.h]); return { x: Math.min(ax, bx), y: Math.min(ay, by), w: Math.abs(bx - ax), h: Math.abs(by - ay) }; };
   for (const m of marks) {
-    if (m.t === 'pen') m.pts = m.pts.map(pt);
+    if (m.t === 'pen') m.pts = m.pts.map(q => keepP(pt(q), q));
     else if (m.t === 'hl' || m.t === 'oval') { Object.assign(m, box(m)); if (m.rects) m.rects = m.rects.map(box); if (m.pts) m.pts = m.pts.map(pt); }
     else if (m.t === 'check' || m.t === 'stamp') [m.x, m.y] = pt([m.x, m.y]);
     else if (m.t === 'note') { delete m.ly; [m.ax, m.ay] = pt([m.ax, m.ay]); if (m.hl) m.hl = box(m.hl); if (m.rects) m.rects = m.rects.map(box); }
@@ -123,9 +123,11 @@ function bindPage(pg) {
   const c = pg.canvas;
   const pt = e => { const r = c.getBoundingClientRect(); return [(e.clientX - r.left) / pg.s, (e.clientY - r.top) / pg.s]; };
   const onPage = (x, y) => x >= 0 && x <= pg.W && y >= 0 && y <= pg.H;
-  let g = null;   // the gesture in progress
+  let g = null, gid = -1;   // the gesture in progress, and the pointer it belongs to
   c.addEventListener('pointerdown', e => {
     if (e.button !== 0) return;
+    if (g && e.pointerId !== gid && ptrLive.has(gid)) return;   // a second finger, or her hand, while a stroke is being drawn: the stroke goes on as it was
+    gid = e.pointerId;
     const wasNote = !!(activeEditor && activeEditor.note);   // a comment was open: this click only closes it
     commitEditors();
     // Clicking the paper leaves the score or comment box, so the arrow keys move between students again.
@@ -168,6 +170,7 @@ function bindPage(pg) {
     }
   });
   c.addEventListener('pointermove', e => {
+    if (g && e.pointerId !== gid) return;
     if (!g) { const [x, y] = pt(e), cu = hoverCursor(pg, x, y); c.style.cursor = cu || (tool === 'select' ? 'default' : tool === 'text' ? 'text' : 'crosshair'); return; }
     const [x, y] = pt(e);
     if (g.line) {
@@ -206,8 +209,8 @@ function bindPage(pg) {
       moveMark(g.move, dx, dy); if (g.move.t === 'text') keepOnPage(g.move, pg.W, pg.H); g.x = x; g.y = y; draw(pg);
     }
   });
-  const end = () => {
-    if (!g) return;
+  const end = e => {
+    if (!g || (e && e.pointerId != null && e.pointerId !== gid)) return;
     if (g.line) {
       const m = g.line, moved = g.moved; g = null; pg.lineOn = null;
       if (moved) { if (Math.abs(m.ly - m.ay) < 1) delete m.ly; changed(pg); } else draw(pg);
@@ -249,6 +252,8 @@ function bindPage(pg) {
   c.addEventListener('pointerleave', () => { if (!g && pg.lineOn) { pg.lineOn = null; draw(pg); } });
   c.addEventListener('pointerup', end);
   c.addEventListener('pointercancel', end);
+  // A second finger came down (touch.js): a line, a circle or a box only just begun is taken back; anything else ends where it is.
+  c.addEventListener('gsdrop', () => { if (!g) return; if (g.m || g.text || g.note) { g = null; pg.ghost = null; draw(pg); } else end(); });
   // A right-click on the page: a comment right there, or any other mark or tool, used once.
   c.addEventListener('contextmenu', e => {
     const [x, y] = pt(e);
@@ -268,7 +273,7 @@ function bindPage(pg) {
 const r1 = v => Math.round(v * 10) / 10;
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 function moveMark(m, dx, dy) {
-  if (m.t === 'pen') m.pts = m.pts.map(([x, y]) => [r1(x + dx), r1(y + dy)]);
+  if (m.t === 'pen') m.pts = m.pts.map(q => keepP([r1(q[0] + dx), r1(q[1] + dy)], q));
   else if (m.t === 'note') { m.ax = r1(m.ax + dx); m.ay = r1(m.ay + dy); if (m.ly != null) m.ly = r1(m.ly + dy); if (m.hl) m.hl = { ...m.hl, x: r1(m.hl.x + dx), y: r1(m.hl.y + dy) }; moveExtras(m, dx, dy); }
   else { m.x = r1(m.x + dx); m.y = r1(m.y + dy); moveExtras(m, dx, dy); }
 }

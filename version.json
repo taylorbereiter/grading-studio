@@ -1,12 +1,13 @@
 {
- "version": "1.17.0",
- "build": "968e051b7fb0",
+ "version": "1.18.0",
+ "build": "aae57ecdf0c8",
  "notes": [
-  "Report comments: a new tab on each class's page drafts a comment for every student from your own gradebook, rubric scores and the comments you wrote on their papers. Edit each one, tick it done, then copy or download them all.",
-  "The drafts are put together on your computer from sentences you can change under Wording. Nothing about a student is sent anywhere."
+  "On a tablet, a pencil draws and the pen's line is wider where you press harder. Once you have used a pencil, one finger moves the page, two fingers pinch to zoom, and a hand resting on the screen does nothing.",
+  "Settings, Marking has a new Tablet and pencil section: choose what a finger does on the paper, or turn off the wider line.",
+  "On a touch screen the tools, the student rows and the score buttons are larger."
  ],
  "files": {
-  "index.html": "ff2eac8c9921394a36d52d29b8a9aef4012aa4d9dbd2ac19ac1a6c1268f4afbf",
-  "planner.html": "fdca38674e05e442ace2af1581c4877892d0efae3d071bae51270b19f3fe5a2e"
+  "index.html": "541dcec045eb511cc4cced0133c8a5679bcfcc9d97d5dfcc7194a793a96fedcd",
+  "planner.html": "aa55427cb813b376de9c64d5c34d2cabd50a1b818f00f14a6fc1428f803aa775"
  }
 }

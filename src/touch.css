@@ -1,0 +1,17 @@
+/* ---------- tablets: what a finger needs (touch.js). None of this applies with a mouse or a trackpad. ---------- */
+.settch{display:flex;align-items:center;gap:var(--space-2);flex-wrap:wrap}
+.settch select{max-width:100%}
+/* nothing can be pointed at, so what shows on pointing shows always */
+@media (hover:none){.pg .rchip{opacity:.92}.crit .sticks{opacity:1}}
+/* a fingertip is wider than a mouse pointer: the tools, the student rows and the score ticks get more room to be hit */
+@media (pointer:coarse){
+  .tools .tool{height:40px}
+  .tools .tool svg{width:20px;height:20px}
+  .tools .seg button{padding:8px 0}
+  .tools .icon{height:36px}
+  .tools .sw{width:22px;height:22px}
+  .tools .swatches{grid-template-columns:22px;gap:8px}
+  .stu{height:40px}
+  .sticks{height:28px}
+  .scores.slide .sticks button{min-width:28px;padding:4px 2px}
+}
