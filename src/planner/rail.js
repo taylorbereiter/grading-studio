@@ -1,12 +1,12 @@
 /* ================= The sidebar =================
    The same sidebar as on the grading page, drawn by the Planner's own code. Its classes are the ones on the Planner's
-   timetable. It shows no grading counts and reads nothing of grading's: Today, a class and Settings are plain links
+   timetable, and the Planner's own sections (Calendar, Units, Past lessons, Activities, Rubrics) are in it. It shows no grading counts and reads nothing of grading's: Today, a class and Settings are plain links
    to the grading page, which looks the class up by its name when it opens. */
 // Grading Studio sits next to this page: index.html online, "Grading Studio.html" for the double-click copy.
 const GS_PAGE = location.protocol === 'file:' || /Planner\.html$/.test(decodeURIComponent(location.pathname)) ? 'Grading Studio.html' : './';
 const gsUrl = hash => GS_PAGE + (hash || '#/');
 const classUrl = c => gsUrl('#/class-named/' + encodeURIComponent(c.name));
-// The calendar is two views, the week and the semester: the Calendar tab opens the one she used last.
+// The calendar is two views, the week and the semester: Calendar in the sidebar opens the one she used last.
 let calView = 'week';
 
 // Everything typed is saved before the screen changes or the page is left.
@@ -36,17 +36,21 @@ function railRender() {
   // A lesson, a unit or a document gets the room: the sidebar folds to icons.
   document.body.classList.toggle('pfold', L.view === 'edit' || L.view === 'doc' || L.view === 'unit');
   if (L.view === 'week' || L.view === 'semester') calView = L.view;
+  // The Planner's own sections are in the sidebar: the one on the screen is marked. A lesson or a unit marks where it was opened from.
+  const at = { week: 'cal', semester: 'cal', units: 'units', unit: 'units', library: 'library', activities: 'activities', bank: 'bank' }[L.view === 'edit' || L.view === 'doc' ? L.backTo || 'week' : L.view] || 'cal';
+  for (const x of document.querySelectorAll('#rail [data-v]')) { const on = x.dataset.v === at; x.classList.toggle('on', on); if (on) x.setAttribute('aria-current', 'page'); else x.removeAttribute('aria-current'); }
   const t = (L.view === 'edit' && L.open ? L.open.title + ' · ' : L.view === 'unit' && L.unit ? L.unit.title + ' · ' : '') + 'Planner · Grading Studio';
   if (document.title !== t) document.title = t;
 }
 $('#rail').addEventListener('click', async e => {
   const a = e.target.closest('a[href]');
   if (a) {
-    if (a.id === 'railPlanner') { e.preventDefault(); return toView('week'); }
+    if (a.id === 'railPlanner') { e.preventDefault(); return toView(L.view === 'week' || L.view === 'semester' ? L.view : calView); }
     if (e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;   // a new tab, as the browser does it
     e.preventDefault(); return leaveTo(a.href);
   }
   const b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.v) return toView(b.dataset.v);
   if (b.id === 'findBtn') return openFind();
   if (b.id === 'railTimetable') return openTimetable();
   if (b.id === 'railSaved') return L.dir && L.dirOk ? folderRead(true) : L.dir ? folderReconnect(true) : folderLink();
