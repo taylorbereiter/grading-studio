@@ -196,3 +196,39 @@ test('a DP class’s term grade carries the 1 to 7 its percent earns on the clas
   assert.equal(await page.$('#bkTab .ibg7'), null, 'a points and percent class shows the percent alone');
   await close();
 });
+
+test('an MYP class’s Charts tab counts students by band and names the middle level, with no percent anywhere', async () => {
+  const { page, close } = await openApp(browser, { seed: ibSeed() });
+  await goTo(page, '#/class/c1/charts'); await page.waitForSelector('#ibTiles');
+  const tiles = await page.$$eval('#ibTiles .ovt', xs => xs.map(x => [x.querySelector('.ovl').textContent, x.querySelector('.ovv').textContent]));
+  assert.deepEqual(tiles.slice(0, 3), [['Grades set', '3 of 6'], ['Middle grade', '5'], ['A middle level', '6']]);
+  const segs = id => page.$$eval('#' + id + ' .ibstack:first-child .ibseg', xs => xs.map(x => x.className.replace('ibseg ', '') + ':' + x.textContent));
+  assert.deepEqual(await segs('ibSet'), ['s2:1', 's3:2', 's4:2', 'sn:1'], 'criterion A as set: Bram 4, Dov 5 and Finn 6, Aria 7 and Cleo 8, Edda not set');
+  assert.deepEqual(await segs('ibLast'), ['s2:1', 's3:3', 's4:2'], 'criterion A on the latest task');
+  assert.deepEqual(await page.$$eval('#ibGrades .pbn b', xs => xs.map(x => x.textContent)), ['1', '0', '1', '1', '0', '0', '0']);
+  assert.equal(await page.$eval('#ibTasks tbody tr:first-child td:nth-child(2)', e => e.textContent.trim()), '5 to 6 3–8', 'Cells lab report, criterion A: 3 4 5 6 6 8');
+  assert.equal(await page.$eval('#ibOften', e => e.textContent.includes('fewer than two')), false);
+  assert.equal(await page.$eval('#bkBody', e => e.textContent.includes('%')), false);
+  assert.equal(await page.evaluate(() => window.__gs.ibMid([3, 3, 4])), '3');
+  await goTo(page, '#/class/c2/charts'); await page.waitForSelector('#bkTiles');
+  assert.equal(await page.$('#ibTiles'), null, 'a points and percent class keeps its own charts');
+  await close();
+});
+
+test('a student’s page in an MYP class sets levels in place, and the Students list shows the grade', async () => {
+  const { page, close } = await openApp(browser, { seed: ibSeed() });
+  await goTo(page, '#/class/c1/students/1'); await page.waitForSelector('#bkStuTiles');
+  const tile = () => page.$eval('#bkStuTiles .ovt.main', x => x.querySelector('.ovv').textContent + ' | ' + x.querySelector('.ovs').textContent);
+  assert.equal(await page.$eval('#bkStuName', e => e.textContent), 'Aria Testwell');
+  assert.equal(await tile(), '– | still to set: D');
+  await page.click('#ibFit [data-iblv="D:6"]');
+  await page.waitForFunction(() => document.querySelector('#bkStuTiles .ovt.main .ovv').textContent === '6');   // 7 + 6 + 6 + 6 = 25
+  assert.equal(stored && (await stored(page)).classes[0].lv.t1['Aria Testwell'].D, 6);
+  assert.equal((await stored(page)).classes[0].lv.t1['Bram Sample'].D, 4, 'no other student is touched');
+  await page.click('#bkBody [data-bkstu="1"]'); await page.waitForFunction(() => document.querySelector('#bkStuName').textContent === 'Bram Sample');
+  assert.equal(await tile(), '4 | 1 to 7');
+  await goTo(page, '#/class/c1/students'); await page.waitForSelector('#peopleTbl td[data-pg]');
+  await page.waitForFunction(() => document.querySelector('#peopleTbl td[data-pg]').textContent === '6');
+  assert.deepEqual(await page.$$eval('#peopleTbl td[data-pg]', xs => xs.map(x => x.textContent)), ['6', '4', '7', '3 of 4 set', '–', '5']);
+  await close();
+});

@@ -214,9 +214,14 @@ function ibBookView(c, cols, all, tabs) {
 }
 // One student: every piece of evidence for each criterion, and the buttons that set its level. The outlined button is the most recent level, as a hint.
 function ibFitView(c, crit, bounds, icols, tabs, termName) {
-  const i = Math.max(0, Math.min(c.names.length - 1, ibk.stu)), nm = c.names[i], lv = ibLvOf(c, nm), r = ibTerm(lv, crit, bounds), top = crit.length * IB_TOP;
+  const i = Math.max(0, Math.min(c.names.length - 1, ibk.stu));
   const bar = ibBar(c, tabs, '<button class="btn sm" data-ibback>← Gradebook</button><button class="btn sm" data-ibstep="-1"' + (i ? '' : ' disabled') + '>Previous student</button><button class="btn sm primary" data-ibstep="1"' + (i < c.names.length - 1 ? '' : ' disabled') + '>Next student</button>');
-  let h = '<div class="ibfit" id="ibFit"><div class="ibfithead"><h3>' + esc(bkWho(nm, i)) + '</h3><span class="muted">' + esc(termName) + ' · choose the level that fits best · ' + r.set + ' of ' + crit.length + ' set</span></div>';
+  return bar + ibFitBox(c, crit, bounds, icols, i, termName, true);
+}
+// The box itself, for student i: on the best-fit screen with the name on top, on the student's own page without it.
+function ibFitBox(c, crit, bounds, icols, i, termName, named) {
+  const nm = c.names[i], lv = ibLvOf(c, nm), r = ibTerm(lv, crit, bounds), top = crit.length * IB_TOP;
+  let h = '<div class="ibfit" id="ibFit" data-ibstu="' + i + '"><div class="ibfithead"><h3>' + (named ? esc(bkWho(nm, i)) : 'Levels') + '</h3><span class="muted">' + esc(termName) + ' · choose the level that fits best · ' + r.set + ' of ' + crit.length + ' set</span></div>';
   for (const x of crit) {
     const list = ibEvFor(icols, nm, x.k), ev = ibEvidence(list), v = ibLevel(lv[x.k]);
     h += '<div class="ibrow"><div class="ibrowname"><b>' + esc(x.k) + '</b> ' + esc(x.name) + '</div><div class="ibev">' + (list.length ? list.sort((a, b) => a.t - b.t).map(e => '<span class="ibchip' + (e.fm ? ' fm' : '') + '">' + esc(e.name) + ' <b>' + e.v + '</b></span>').join('') : '<span class="ibnone">no evidence</span>') + '</div>' +
@@ -225,8 +230,53 @@ function ibFitView(c, crit, bounds, icols, tabs, termName) {
   }
   h += '<div class="ibsum"><div><span class="ibcapw">Total</span><b>' + (r.total != null ? r.total : '–') + '</b> <span class="muted">of ' + top + '</span></div><div><span class="ibcapw">Grade</span><b class="ibg">' + (r.grade != null ? r.grade : '–') + '</b></div>' +
     '<span class="muted">' + (r.need.length ? 'Still to set: ' + esc(r.need.join(', ')) + '.' : r.grade == null ? 'This total is below the lowest boundary.' : '') + ' The outlined number is only a hint from the most recent work. Nothing is set until you click, and clicking a set level again clears it.</span></div></div>';
-  return bar + h;
+  return h;
 }
+
+/* ---------- an MYP class's Charts tab, a student's own page, and the grade on the Students list ---------- */
+// The middle of a list of levels or grades, said without averaging: the middle one, or the two it falls between.
+function ibMid(list) { const v = list.filter(x => x != null).sort((a, b) => a - b), n = v.length; if (!n) return null; const a = v[Math.floor((n - 1) / 2)], b = v[Math.ceil((n - 1) / 2)]; return a === b ? String(a) : a + ' to ' + b; }
+const IB_SEGS = [['0', v => v === 0]].concat(IB_BANDS.map(([lo, hi, l]) => [lo + ' to ' + hi + ' ' + l, v => v >= lo && v <= hi]));
+// One bar per criterion: how many students sit in each band. vals: [{ name, v }] with v null for a student who has no level.
+function ibStack(crit, valsOf, id, noneWord) {
+  return '<div class="ibstacks" id="' + id + '">' + crit.map(x => {
+    const vals = valsOf(x.k), n = vals.length || 1, none = vals.filter(p => p.v == null);
+    const seg = (cls, list, label) => list.length ? '<i class="' + cls + '" style="flex:' + list.length + '" tabindex="0"' + chTip(people(list.length, 'student'), x.k + ' ' + x.name + ' · ' + label, list.map(p => p.name).join(', ')) + '>' + list.length + '</i>' : '';
+    return '<div class="ibstack"><span title="' + esc(x.name) + '"><b>' + esc(x.k) + '</b> ' + esc(x.name) + '</span><div class="ibsegs">' + IB_SEGS.map(([l, fn], i) => seg('ibseg s' + i, vals.filter(p => p.v != null && fn(p.v)), l)).join('') + seg('ibseg sn', none, noneWord) + '</div><b class="ibmid">' + (ibMid(vals.map(p => p.v)) ?? '–') + '</b></div>';
+  }).join('') + '</div><div class="bkleg ibleg">' + IB_SEGS.map(([l], i) => '<span><i class="ibseg s' + i + '"></i>' + esc(l) + '</span>').join('') + '<span><i class="ibseg sn"></i>' + esc(noneWord) + '</span></div>';
+}
+function ibClassView(c, cols, all) {
+  const crit = ibCrit(c), bounds = ibBounds(c), icols = ibCols(c, bk.term === '*' ? all : cols), who = c.names.map((n, i) => ({ n, name: bkWho(n, i) })).filter(p => bkIn(p.n));
+  const terms = who.map(p => ({ ...p, lv: ibLvOf(c, p.n), r: ibTerm(ibLvOf(c, p.n), crit, bounds) })), graded = terms.filter(t => t.r.grade != null);
+  const miss = icols.flatMap(x => who.filter(p => (x.cells.get(p.n) || {}).st === 'missing').map(p => p.n)), most = Math.max(1, ...[1, 2, 3, 4, 5, 6, 7].map(g => graded.filter(t => t.r.grade === g).length));
+  const grades = '<div class="pbands" id="ibGrades">' + [7, 6, 5, 4, 3, 2, 1].map(g => { const l = graded.filter(t => t.r.grade === g); return '<div class="pband"' + (l.length ? ' tabindex="0"' : '') + chTip(people(l.length, 'student'), 'Grade ' + g, l.map(t => t.name).join(', ')) + '><span>Grade ' + g + '</span><div class="pbt"><i style="width:' + l.length / most * 100 + '%"></i></div><span class="pbn"><b>' + l.length + '</b></span></div>'; }).join('') + '</div>';
+  const tasks = icols.length ? '<div class="bkwrap ibtaskw"><table class="bktab ibtasks" id="ibTasks"><thead><tr><th class="bknm">Task</th>' + crit.map(x => '<th title="' + esc(x.name) + '">' + esc(x.k) + '</th>').join('') + '<th>Marked</th></tr></thead><tbody>' +
+    icols.map(x => '<tr' + (x.fm ? ' class="ibfm"' : '') + '><td class="bknm">' + esc(x.name) + '<small class="muted"> ' + esc(bkDay(x.due)) + (x.fm ? ' · formative' : '') + '</small></td>' + crit.map(k => { if (!x.crit.includes(k.k)) return '<td><span class="bknone">·</span></td>'; const v = who.map(p => (x.cells.get(p.n) || { lv: {} }).lv[k.k]).filter(v => v != null); return '<td>' + (v.length ? '<b>' + ibMid(v) + '</b><small class="muted"> ' + (Math.min(...v) === Math.max(...v) ? '' : Math.min(...v) + '–' + Math.max(...v)) + '</small>' : '<span class="bknone">–</span>') + '</td>'; }).join('') +
+      '<td>' + who.filter(p => x.cells.has(p.n) && Object.keys(x.cells.get(p.n).lv).length).length + ' of ' + who.length + '</td></tr>').join('') + '</tbody></table></div>' : '<p class="muted">No task has levels in this term yet.</p>';
+  const yr = ibCols(c, all), often = '<div id="ibOften">' + crit.map(x => { const s = yr.filter(y => !y.fm && y.crit.includes(x.k)).length, f = yr.filter(y => y.fm && y.crit.includes(x.k)).length;
+    return '<div class="iboften"><span><b>' + esc(x.k) + '</b> ' + esc(x.name) + '</span><span>' + people(s, 'task') + (f ? ' <span class="muted">+ ' + f + ' formative</span>' : '') + '</span>' + (s < 2 ? '<span class="ibnone">fewer than two</span>' : '<span></span>') + '</div>'; }).join('') + '</div>';
+  return '<div class="bkpad"><div class="ovtiles" id="ibTiles">' + bkTile('Grades set', graded.length + ' of ' + who.length, 'every criterion has a level' + (bkLeft().size ? ' · ' + bkLeft().size + ' left out' : ''), true) +
+    bkTile('Middle grade', ibMid(graded.map(t => t.r.grade)) ?? '–', 'half above, half below') + crit.map(x => bkTile(esc(x.k) + ' middle level', ibMid(terms.map(t => ibLevel(t.lv[x.k]))) ?? '–', esc(x.name))).join('') +
+    bkTile('Missing work', miss.length, miss.length ? 'across ' + people(new Set(miss).size, 'student') : 'nothing outstanding') + '</div>' +
+    '<div class="ovcharts">' + chSec('Levels you set, by criterion', ibStack(crit, k => terms.map(t => ({ name: t.name, v: ibLevel(t.lv[k]) })), 'ibSet', 'not set'), 'How many students sit in each band on each criterion, from the levels you set for this term. The number on the right is the middle level.') +
+    chSec('Most recent level, by criterion', ibStack(crit, k => who.map(p => ({ name: p.name, v: ibEvidence(ibEvFor(icols, p.n, k)).last })), 'ibLast', 'no evidence'), 'The same picture from each student’s latest task on each criterion, before you have set anything.') +
+    chSec('Grades', grades, 'Students whose every criterion has a level, by the 1 to 7 their total earns on this class’s boundaries.') +
+    chSec('Each task', tasks, 'The middle level the class reached on each criterion a task assessed, with the lowest and highest.') +
+    chSec('How often each criterion was assessed this year', often, 'Each criterion is usually assessed at least twice a year.') + '</div>' +
+    '<p class="muted ovcap2">Nothing here is an average of levels: a middle level is the one that half the class is at or above.</p></div>';
+}
+// One student of an MYP class: the grade so far, then the same evidence and level buttons as the best-fit screen.
+function ibOneView(c, cols, all) {
+  bk.stu = Math.max(0, Math.min(c.names.length - 1, bk.stu));
+  const crit = ibCrit(c), bounds = ibBounds(c), icols = ibCols(c, bk.term === '*' ? all : cols), i = bk.stu, n = c.names[i], lv = ibLvOf(c, n), r = ibTerm(lv, crit, bounds);
+  const miss = icols.filter(x => (x.cells.get(n) || {}).st === 'missing'), termName = (bkTabs(all).find(t => t[0] === bk.term) || [, 'This year'])[1];
+  return '<div class="bkpad"><div class="bkstu"><button class="icon" data-bkstu="-1" aria-label="Previous student"' + (i ? '' : ' disabled') + '>‹</button><b id="bkStuName">' + esc(bkWho(n, i)) + '</b>' + bkInfo(n) + '<button class="icon" data-bkstu="1" aria-label="Next student"' + (i < c.names.length - 1 ? '' : ' disabled') + '>›</button><span class="muted">' + (i + 1) + ' of ' + c.names.length + ' · ← → to move</span></div>' +
+    '<div class="ovtiles" id="bkStuTiles">' + bkTile('Grade', r.grade != null ? r.grade : '–', r.need.length ? 'still to set: ' + esc(r.need.join(', ')) : '1 to 7', true) + bkTile('Total', r.total != null ? r.total : '–', 'of ' + crit.length * IB_TOP) +
+    crit.map(x => { const v = ibLevel(lv[x.k]), ev = ibEvidence(ibEvFor(icols, n, x.k)); return bkTile(esc(x.k) + ' ' + esc(x.name), v != null ? v : '–', v != null ? ibBandName(v) : ev.n ? 'most recent ' + ev.last + ', not set' : 'no evidence'); }).join('') +
+    bkTile('Missing', miss.length, miss.length ? esc(miss.map(x => x.name).join(', ')) : 'nothing outstanding') + '</div>' + ibFitBox(c, crit, bounds, icols, i, termName, false) + '<div class="ovcharts">' + attStuHtml(c, n) + '</div></div>';
+}
+// The Students list on a class page: the 1 to 7 for the term that is on now, or how far the levels have got.
+function ibPeopleSay(c, name, term) { const crit = ibCrit(c), r = ibTerm(((c.lv || {})[term] || {})[name], crit, ibBounds(c)); return r.grade != null ? String(r.grade) : r.set ? r.set + ' of ' + crit.length + ' set' : '–'; }
 // Levels typed in for one task: its name, date, the criteria it assessed, and a level per student for each.
 function ibAddOpen(c, itId) {
   const f = itId && findItem(itId), it = f ? f.it : null, crit = ibCrit(c);
@@ -287,7 +337,7 @@ document.addEventListener('click', e => {
   if (d.ibfit != null) { ibk.view = 'fit'; ibk.stu = +d.ibfit; return bkDraw(); }
   if (d.ibback != null) { ibk.view = 'table'; return bkDraw(); }
   if (d.ibstep) { ibk.stu = Math.max(0, Math.min(c.names.length - 1, ibk.stu + +d.ibstep)); return bkDraw(); }
-  if (d.iblv) { const [k, n] = d.iblv.split(':'), nm = c.names[ibk.stu], was = ibLevel(ibLvOf(c, nm)[k]); ibLvSet(c, nm, k, was === +n ? null : +n); bkDraw(); const on = $('#bkBody [data-iblv="' + k + ':' + n + '"]'); if (on) on.focus(); return; }
+  if (d.iblv) { const [k, n] = d.iblv.split(':'), nm = c.names[+b.closest('[data-ibstu]').dataset.ibstu], was = ibLevel(ibLvOf(c, nm)[k]); ibLvSet(c, nm, k, was === +n ? null : +n); bkDraw(); const on = $('#bkBody [data-iblv="' + k + ':' + n + '"]'); if (on) on.focus(); return; }
   if (d.ibaddLv != null) return ibAddOpen(c, '');
   if (d.ibedit) return ibAddOpen(c, d.ibedit);
   if (d.ibacancel != null) { ibk.view = 'table'; ibk.add = null; return bkDraw(); }
@@ -296,4 +346,4 @@ document.addEventListener('click', e => {
   if (d.ibcopy != null) return ibCopy(c);
 });
 document.addEventListener('change', e => { const t = e.target.closest('#ibAdd [data-ibacrit]'); if (!t || !ibk.add) return; ibAddRead(); const k = t.dataset.ibacrit, a = ibk.add; a.crit = ibCrit(bkClass()).map(x => x.k).filter(x => x === k ? t.checked : a.crit.includes(x)); bkDraw(); });
-Object.assign(window.__gs, { classWay, ibCrit, ibBounds, ibBoundsFor, ibGradeOf, ibTerm, ibEvidence, ibLevel, ibDlg, IB_GROUPS, ibCols, ibk: () => ibk });
+Object.assign(window.__gs, { classWay, ibCrit, ibBounds, ibBoundsFor, ibGradeOf, ibTerm, ibEvidence, ibLevel, ibDlg, IB_GROUPS, ibCols, ibMid, ibk: () => ibk });

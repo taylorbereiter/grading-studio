@@ -50,3 +50,19 @@
 .ibtab .bkch button,.ibtab .bkch>span{max-width:150px;min-width:96px}
 .ibtab .bkch>span{display:flex;flex-direction:column;align-items:center;gap:2px;white-space:normal;line-height:1.2;margin:0 auto}
 .ibg7{display:inline-block;min-width:20px;margin-left:var(--space-1);padding:0 var(--space-1);border-radius:var(--corner-1);background:var(--accent);color:var(--accent-fg);font-weight:700;text-align:center}
+/* an MYP class's Charts tab */
+.ibstacks{display:grid;gap:var(--space-2)}
+.ibstack{display:grid;grid-template-columns:minmax(0,190px) minmax(0,1fr) 56px;gap:10px;align-items:center;font-size:var(--text-control)}
+.ibstack>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ibsegs{display:flex;height:22px;border-radius:var(--corner-1);overflow:hidden;background:var(--surface-2)}
+.ibseg{display:flex;align-items:center;justify-content:center;min-width:16px;font-style:normal;font-size:var(--text-caption);font-weight:600;font-variant-numeric:tabular-nums}
+.ibseg.s0{background:var(--bk-fm);color:var(--ch-hi)}.ibseg.s1{background:var(--ch1);color:var(--ch-lo)}.ibseg.s2{background:var(--ch2);color:var(--ch-lo)}.ibseg.s3{background:var(--ch4);color:var(--ch-hi)}.ibseg.s4{background:var(--ch5);color:var(--ch-hi)}
+.ibseg.sn{background:var(--surface-2);color:var(--muted);box-shadow:inset 0 0 0 1px var(--line-strong)}
+.ibseg:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.ibmid{text-align:right;font-variant-numeric:tabular-nums}
+.bkleg.ibleg{flex-wrap:wrap}.bkleg.ibleg i.ibseg{width:10px;height:10px;min-width:0;border-radius:var(--corner-round)}
+.ibtaskw{margin:0}.bktab.ibtasks{width:100%;min-width:0}.bktab.ibtasks th,.bktab.ibtasks td{min-width:0;max-width:none;padding-left:6px;padding-right:6px;white-space:nowrap}.ibtasks td,.ibtasks th{text-align:center}.ibtasks .bknm{text-align:left;position:static}
+.iboften{display:grid;grid-template-columns:minmax(0,190px) minmax(0,1fr) auto;gap:10px;align-items:center;font-size:var(--text-control);margin:6px 0}
+.iboften>span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bkpad>.ibfit{margin-left:0;margin-right:0}
+@media (max-width:640px){.ibstack,.iboften{grid-template-columns:minmax(0,1fr)}}

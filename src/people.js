@@ -222,6 +222,7 @@ function peopleGrades(c) {
   const t = $('#peopleTbl'); if (!t || bk.host !== 'page' || !bk.cols) return;
   const conf = bkConf(), term = conf.terms.length ? bkTermNow(conf.terms) : '', cols = bkClassCols(c, bk.cols).filter(x => x.termId === term), tn = conf.terms.find(x => x.id === term);
   const h = $('#peopleGh'); if (h) h.textContent = tn ? tn.name || 'Term' : 'Grade';
+  if (classWay(c) === 'myp') { for (const td of t.querySelectorAll('td[data-pg]')) td.textContent = ibPeopleSay(c, c.names[+td.dataset.pg], term); return; }   // levels and a 1 to 7, not a percent (ib.js)
   for (const td of t.querySelectorAll('td[data-pg]')) { const r = bkGrade(c.names[+td.dataset.pg], cols, conf); td.textContent = r.grade != null ? pctAvgText(r.grade) : '–'; }
 }
 
