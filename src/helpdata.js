@@ -101,8 +101,7 @@ const HELP = [
     words: 'history previous earlier progress compare' },
 
   { id: 'return', sec: 'back', q: 'How do I hand marked papers back?',
-    a: ['1. Open the assignment’s **Return** tab. It first lists anything unfinished: scores not given, students with no paper.', '2. Press the blue button. The app makes a ZIP with each student’s marked file in the same folders they came in.', '3. Upload that ZIP, or the files in it, to your school’s system.',
-      'Each file is named for the student, the assignment and what it is, like “Ana Lee - River essay - Graded.pdf”. It says **Feedback** in place of Graded when there is no score. To keep the names students turned in, untick **Name each file by student and assignment** under **Options**.',
+    a: ['1. Open the assignment’s **Return** tab. It first lists anything unfinished: scores not given, students with no paper.', '2. Press the blue button. The app makes a ZIP with each student’s marked file in the same folders they came in, named like “Ana Lee - River essay - Graded.pdf” (Feedback when there is no score).', '3. Upload that ZIP, or the files in it, to your school’s system.',
       'To hand back one paper straight away, use the **Export … paper now** button under Previous and Next.'],
     words: 'export download return give back zip send students flatten' },
   { id: 'feedback-page', sec: 'back', q: 'What is the feedback page on a returned paper?',
