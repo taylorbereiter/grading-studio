@@ -1,13 +1,12 @@
 {
- "version": "1.11.0",
- "build": "a2cfe76db5df",
+ "version": "1.12.0",
+ "build": "c9b7bb9e72f8",
  "notes": [
-  "The Planner’s sections are in the sidebar: Calendar, Units, Past lessons, Activities and Rubrics. The row of tabs across the top is gone.",
-  "A lesson has a lighter top: its name, its classes, its status and Download. Copy for Claude, Versions, the upload and the links are under More.",
-  "Comments shows above a lesson once it has one."
+  "A returned paper starts with a feedback page: the score, each rubric row with the level given and what that level means, your comment, and every comment on the paper with its page number.",
+  "It is on unless you turn it off under Options on the Return tab. Your own pages are not changed, and bringing an export back in opens only those."
  ],
  "files": {
-  "index.html": "a687bd284d9872b694f4c6772530dd1c647f6b305fc90f57a723a4455f46a907",
+  "index.html": "c9db6f25b900445068f5e650e055f53ec351d56176cbccdc9476ed75522ac0cb",
   "planner.html": "8acd5c1af8216f1399363b2fca23845fe7e92d4b149e9f2f0fd6b4705f7d53d4"
  }
 }
