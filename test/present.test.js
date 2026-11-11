@@ -41,7 +41,18 @@ async function seed(page, opts) {
   }, opts || {});
 }
 const state = page => page.evaluate(() => { const p = window.__present.PR; return { on: p.on, i: p.i, far: p.far, ended: p.ended, blank: p.blank, agenda: p.agenda, notes: p.notes, ticks: [...(p.ticks || [])], slot: p.slot }; });
-const present = async page => { await page.$eval('[data-pr="present"]', b => b.click()); await until(page, s => !!document.querySelector(s), '#present'); };
+// Waits until the stage has finished starting (it may still be going full screen), so the keys that follow land on it.
+const present = async page => { await page.$eval('[data-pr="present"]', b => b.click()); await until(page, () => { const h = document.querySelector('#present #prHint'); return !!(h && h.textContent); }); };
+// Ticks an agenda item and waits until the stage has it ticked; a click lost to a slow runner is made again.
+const tick = async (page, i) => {
+  for (let n = 0; n < 5; n++) {
+    await until(page, k => !!document.querySelector('#prAgenda [data-ag="' + k + '"]'), i);
+    if (await page.evaluate(k => window.__present.PR.ticks.has(k), i)) return;
+    await page.$eval('#prAgenda [data-ag="' + i + '"]', b => b.click());
+    try { await until(page, k => window.__present.PR.ticks.has(k) && document.querySelector('#prAgenda [data-ag="' + k + '"]').getAttribute('aria-pressed') === 'true', i); return; } catch { }
+  }
+  throw new Error('agenda item ' + i + ' would not tick');
+};
 
 test('Present shows the lesson on the whole screen, and the keys run it', async () => {
   const a = await open();
@@ -163,11 +174,45 @@ test('a timer the class can see counts down, pauses, and says when the time is u
     await page.keyboard.press('ArrowRight'); await wait(1300);
     assert.equal(await page.$eval('#prChip', c => c.textContent), held);
     assert.equal((await state(page)).i, 1);
-    // the menu now runs the timer: one more minute, then stop
+    // the menu now runs the timer: one more minute, ten seconds less, + and − by the minute, back to the start, then stop
     await page.keyboard.press('t');
-    await page.$eval('#prMenu [data-p="tadd"]', b => b.click());
-    assert.match(await page.$eval('#prChip', c => c.textContent), /^(6:00|5:59|5:58)Paused$/);
+    assert.match(await page.$eval('#prMenu h3', h => h.textContent), /started at 5:00/);
+    await page.$eval('#prMenu [data-ta="60"]', b => b.click());
+    const sec = () => page.$eval('#prChip', c => { const m = c.textContent.match(/^(\d+):(\d\d)/); return +m[1] * 60 + +m[2]; });
+    const t0 = await sec();
+    assert.ok(t0 >= 358 && t0 <= 360, 'one minute more: ' + t0);
+    await page.$eval('#prMenu [data-ta="-10"]', b => b.click());
+    assert.equal(await sec(), t0 - 10);
+    await page.keyboard.press('-');
+    assert.equal(await sec(), t0 - 70);
+    await page.keyboard.press('+');
+    assert.equal(await sec(), t0 - 10);
+    assert.match(await page.$eval('#prChip', c => c.textContent), /Paused$/, 'still paused after the changes');
+    await page.$eval('#prMenu [data-p="trestart"]', b => b.click());
+    assert.match(await page.$eval('#prChip', c => c.textContent), /^(5:00|4:59)$/, 'restart goes back to 5:00, running');
+    // big in the middle of the screen, and the choice is kept
+    await page.$eval('#prBigC', c => c.click());
+    assert.equal(await page.$eval('#prChip', c => c.classList.contains('big')), true);
+    assert.equal(await page.evaluate(() => localStorage.getItem('gsp.presentBig')), '1');
+    await page.$eval('#prBigC', c => c.click());
+    assert.equal(await page.$eval('#prChip', c => c.classList.contains('big')), false);
     await page.$eval('#prMenu [data-p="tstop"]', b => b.click());
+    // minutes and seconds typed in: 1 min 45 sec, and the menu remembers it next time
+    assert.equal(await page.$eval('#prMenu [data-ts]', b => b.textContent), '0:30');
+    await page.$eval('#prOwn', i => { i.value = '1'; }); await page.$eval('#prOwnS', i => { i.value = '45'; });
+    await page.$eval('#prMenu [data-p="town"]', b => b.click());
+    assert.match(await page.$eval('#prChip', c => c.textContent), /^(1:45|1:44)$/);
+    assert.equal(await page.evaluate(() => localStorage.getItem('gsp.presentOwn')), '105');
+    await page.keyboard.press('t');
+    await page.$eval('#prMenu [data-p="tstop"]', b => b.click());
+    assert.deepEqual(await page.$eval('#prOwn', i => i.value), '1');
+    assert.deepEqual(await page.$eval('#prOwnS', i => i.value), '45');
+    // taking away more than is left ends it
+    await page.$eval('#prMenu [data-ts]', b => b.click());
+    await page.keyboard.press('-');
+    await until(page, () => /Time’s up/.test(document.querySelector('#prChip').textContent));
+    await page.$eval('#prChip', c => c.click());
+    await page.keyboard.press('t');
     assert.equal(await page.$eval('#prChip', c => c.hidden), true);
     await page.keyboard.press('Escape');   // closes the menu, not the lesson
     assert.equal((await state(page)).on, true);
@@ -199,14 +244,18 @@ test('after a lesson is taught, one line says where the class got to, and it sta
     await page.keyboard.press('a'); await page.keyboard.press('ArrowRight'); await page.keyboard.press('ArrowRight'); await page.keyboard.press('ArrowLeft');
     // a look of a few seconds asks nothing
     await page.keyboard.press('Escape');
-    await until(page, () => !document.querySelector('#present'));
+    await until(page, () => !document.querySelector('#present') && !document.fullscreenElement && !window.__present.PR.on);
     assert.equal(await page.$eval('#dlg', d => d.hidden), true);
     // a lesson that ran: the question comes with the furthest slide already picked
     await page.evaluate(() => window.__planner.openLessonForTest(window.__planner.L.open, 0));
     await present(page);
     for (let i = 0; i < 3; i++) await page.keyboard.press('ArrowRight');
-    await page.keyboard.press('ArrowLeft'); await page.keyboard.press('a');
-    await page.$eval('#prAgenda [data-ag="0"]', b => b.click()); await page.$eval('#prAgenda [data-ag="1"]', b => b.click());
+    await page.keyboard.press('ArrowLeft');
+    await until(page, () => window.__present.PR.i === 2 && window.__present.PR.far === 3);
+    await page.keyboard.press('a');
+    await until(page, () => window.__present.PR.agenda);
+    await tick(page, 0); await tick(page, 1);
+    assert.deepEqual(await page.evaluate(() => [...window.__present.PR.ticks].sort()), [0, 1], 'two agenda items ticked before finishing');
     await page.evaluate(() => { window.__present.PR.began -= 10 * 60 * 1000; });
     await page.keyboard.press('Escape');
     await until(page, s => !!document.querySelector(s), '#tgN');

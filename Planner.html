@@ -670,13 +670,15 @@ body.has-side .lsn{margin-right:var(--sidew,420px)}
 .pr-menu{position:absolute;left:50%;bottom:calc(var(--nb,0px) + var(--space-4) + 56px);transform:translateX(-50%);z-index:6;width:min(340px,calc(100vw - var(--space-5)));padding:var(--space-3);
   background:var(--stage-bar);border:1px solid var(--stage-line);border-radius:var(--corner-5);box-shadow:var(--shadow);font-size:var(--text-control)}
 .pr-menu h3{margin:0 0 var(--space-2);font-size:var(--text-control);font-weight:600;color:var(--stage-muted)}
-.pr-mins{display:grid;grid-template-columns:repeat(6,1fr);gap:var(--space-1)}
+.pr-mins{display:grid;grid-template-columns:1.4fr repeat(6,1fr);gap:var(--space-1)}
+.pr-adj{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--space-1);margin-bottom:var(--space-2)}
 .pr-menu button{border:1px solid var(--stage-line);background:none;color:var(--stage-fg);border-radius:var(--corner-3);padding:var(--space-2);font-weight:600}
 .pr-menu button:hover{background:var(--stage-hover)}
 .pr-own{display:flex;gap:var(--space-2);align-items:center;margin-top:var(--space-3);color:var(--stage-muted)}
-.pr-own input[type=number]{width:64px;border:1px solid var(--stage-line);background:var(--stage);color:var(--stage-fg);border-radius:var(--corner-3);padding:var(--space-2)}
+.pr-own label{display:flex;gap:var(--space-1);align-items:center}
+.pr-own input[type=number]{width:60px;border:1px solid var(--stage-line);background:var(--stage);color:var(--stage-fg);border-radius:var(--corner-3);padding:var(--space-2)}
 .pr-own .sp{flex:1}
-.pr-run{display:flex;gap:var(--space-2);flex-wrap:wrap}
+.pr-run{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--space-1)}
 .pr-snd{display:flex;gap:var(--space-2);align-items:center;margin-top:var(--space-3);color:var(--stage-muted)}
 
 /* the countdown the class watches */
@@ -685,7 +687,12 @@ body.has-side .lsn{margin-right:var(--sidew,420px)}
 .pr-chip.done{background:var(--stage-paper);color:var(--stage-blue);animation:prPulse 1s ease-in-out 6}
 .pr-chip small{display:block;font:600 1.9vh/1.3 var(--f-body);letter-spacing:0;opacity:.85}
 @keyframes prPulse{50%{transform:scale(1.06)}}
-@media (prefers-reduced-motion:reduce){.pr-chip.done{animation:none}.pr-bar{transition:none}}
+/* big: in the middle of the screen, for the back of the room */
+.pr-chip.big{top:50%;right:auto;left:50%;transform:translate(-50%,-50%);padding:3vh 6vh;font-size:32vh;border-radius:var(--corner-5)}
+.pr-chip.big small{font-size:4vh}
+.pr-chip.big.done{font-size:20vh;animation:prPulseBig 1s ease-in-out 6}
+@keyframes prPulseBig{50%{transform:translate(-50%,-50%) scale(1.04)}}
+@media (prefers-reduced-motion:reduce){.pr-chip.done,.pr-chip.big.done{animation:none}.pr-bar{transition:none}}
 
 /* the agenda: a light panel over the left of the slide */
 .pr-agenda{position:absolute;left:0;top:0;bottom:0;z-index:4;width:min(52vw,100vh);background:var(--stage-paper);color:var(--stage-ink);padding:5vh 4vh 96px;overflow:auto;box-shadow:0 0 6vh rgba(0,0,0,.45);display:flex;flex-direction:column;gap:1.2vh}
@@ -5369,7 +5376,7 @@ function prChime() {
 }
 function prTimerStart(sec) {
   sec = Math.max(1, Math.min(180 * 60, Math.round(sec)));
-  PR.timer = { end: Date.now() + sec * 1000, left: sec, paused: false, done: false };
+  PR.timer = { end: Date.now() + sec * 1000, left: sec, total: sec, paused: false, done: false };
   try { PR.ac = PR.ac || new (window.AudioContext || window.webkitAudioContext)(); } catch { }
   prMenu(false); prTick();
 }
@@ -5379,12 +5386,33 @@ function prTimerPause() {
   prTick(); if (PR.menu) prMenu(true);
 }
 function prTimerAdd(sec) {
-  const t = PR.timer; if (!t) return prTimerStart(sec);
-  if (t.done) return prTimerStart(sec);
-  if (t.paused) t.left += sec; else t.end += sec * 1000;
-  prTick();
+  const t = PR.timer; if (!t || t.done) return sec > 0 ? prTimerStart(sec) : undefined;
+  if (t.paused) t.left = Math.max(0, Math.min(180 * 60, t.left + sec));
+  else { const left = Math.max(0, Math.ceil((t.end - Date.now()) / 1000)); t.end = Date.now() + Math.max(0, Math.min(180 * 60, left + sec)) * 1000; }
+  if (t.paused && !t.left) { t.paused = false; t.end = Date.now(); }
+  prTick(); if (PR.menu && t.done) prMenu(true);
+}
+function prTimerRestart() {
+  const t = PR.timer; if (!t) return;
+  prTimerStart(t.total); prMenu(true);
 }
 function prTimerStop() { PR.timer = null; prTick(); if (PR.menu) prMenu(true); }
+function prOwnSec() {
+  const m = Math.max(0, +($('#prOwn') || {}).value || 0), s = Math.max(0, +($('#prOwnS') || {}).value || 0);
+  return Math.round(m * 60 + s);
+}
+function prOwnStart() {
+  const sec = prOwnSec();
+  if (!(sec > 0)) return $('#prOwn').focus();
+  try { localStorage.setItem('gsp.presentOwn', String(sec)); } catch { }
+  prTimerStart(sec);
+}
+const prOwnLast = () => { try { return +localStorage.getItem('gsp.presentOwn') || 0; } catch { return 0; } };
+const prBig = () => { try { return localStorage.getItem('gsp.presentBig') === '1'; } catch { return false; } };
+function prBigToggle() {
+  try { localStorage.setItem('gsp.presentBig', prBig() ? '0' : '1'); } catch { }
+  prTick(); if (PR.menu) prMenu(true);
+}
 function prTick() {
   if (!PR.on) return;
   const clock = prClock(), tm = $('#prTime'), ac = $('#prAClock');
@@ -5395,7 +5423,7 @@ function prTick() {
   if (!t.paused && !t.done) { t.left = Math.max(0, Math.ceil((t.end - Date.now()) / 1000)); if (!t.left) { t.done = true; prChime(); if (PR.menu) prMenu(true); } }
   const txt = t.done ? 'Time’s up' : mmss(t.left) + (t.paused ? '<small>Paused</small>' : '');
   if (chip.dataset.h !== txt) { chip.dataset.h = txt; chip.innerHTML = txt; }
-  chip.hidden = false; chip.className = 'pr-chip' + (t.done ? ' done' : t.paused ? ' paused' : '');
+  chip.hidden = false; chip.className = 'pr-chip' + (prBig() ? ' big' : '') + (t.done ? ' done' : t.paused ? ' paused' : '');
   chip.setAttribute('aria-label', t.done ? 'Time’s up. Click to clear' : mmss(t.left) + ' left. Click to ' + (t.paused ? 'go on' : 'pause'));
 }
 function prMenu(open) {
@@ -5404,11 +5432,18 @@ function prMenu(open) {
   PR.el.querySelector('[data-p="timer"]').setAttribute('aria-expanded', String(PR.menu));
   if (!PR.menu) return prWake();
   const t = PR.timer, run = t && !t.done;
-  m.innerHTML = '<h3>' + (run ? 'Timer' : 'Start a timer the class can see') + '</h3>' +
-    (run ? '<div class="pr-run"><button data-p="tpause">' + (t.paused ? 'Go on' : 'Pause') + '</button><button data-p="tadd">+1 min</button><button data-p="tstop">Stop</button></div>'
-      : '<div class="pr-mins">' + [1, 2, 3, 5, 10, 15].map(n => '<button data-tm="' + n + '" aria-label="' + n + ' minute' + (n === 1 ? '' : 's') + '">' + n + '</button>').join('') + '</div>' +
-        '<div class="pr-own"><label for="prOwn">Minutes</label><input type="number" id="prOwn" min="1" max="180" step="1" inputmode="numeric"><span class="sp"></span><button data-p="town">Start</button></div>') +
+  const last = prOwnLast(), lm = last ? Math.floor(last / 60) : '', ls = last ? last % 60 : '';
+  m.innerHTML = '<h3>' + (run ? 'Timer · started at ' + mmss(t.total) : 'Start a timer the class can see') + '</h3>' +
+    (run ? '<div class="pr-adj" role="group" aria-label="Change the time">' +
+        '<button data-ta="-60" aria-label="One minute less">−1 min</button><button data-ta="-10" aria-label="Ten seconds less">−10 s</button>' +
+        '<button data-ta="10" aria-label="Ten seconds more">+10 s</button><button data-ta="60" aria-label="One minute more">+1 min</button></div>' +
+        '<div class="pr-run"><button data-p="tpause">' + (t.paused ? 'Go on' : 'Pause') + '</button><button data-p="trestart" title="Back to ' + mmss(t.total) + '">Restart</button><button data-p="tstop">Stop</button></div>'
+      : '<div class="pr-mins"><button data-ts="30" aria-label="30 seconds">0:30</button>' + [1, 2, 3, 5, 10, 15].map(n => '<button data-tm="' + n + '" aria-label="' + n + ' minute' + (n === 1 ? '' : 's') + '">' + n + '</button>').join('') + '</div>' +
+        '<div class="pr-own"><label><input type="number" id="prOwn" min="0" max="180" step="1" inputmode="numeric" value="' + lm + '" aria-label="Minutes"> min</label>' +
+        '<label><input type="number" id="prOwnS" min="0" max="59" step="5" inputmode="numeric" value="' + ls + '" aria-label="Seconds"> sec</label><span class="sp"></span><button data-p="town">Start</button></div>') +
+    '<label class="pr-snd"><input type="checkbox" id="prBigC"' + (prBig() ? ' checked' : '') + '> Show it big in the middle of the screen</label>' +
     '<label class="pr-snd"><input type="checkbox" id="prSnd"' + (prSound() ? ' checked' : '') + '> A sound when the time is up</label>';
+  m.querySelector('#prBigC').onchange = () => prBigToggle();
   m.querySelector('#prSnd').onchange = e => { try { localStorage.setItem('gsp.presentSound', e.target.checked ? '1' : '0'); } catch { } };
 }
 
@@ -5421,9 +5456,11 @@ function prClick(e) {
   if (t.closest('#prMenu')) {
     const b = t.closest('button'); if (!b) return;
     if (b.dataset.tm) return prTimerStart(+b.dataset.tm * 60);
-    if (b.dataset.p === 'town') { const v = +$('#prOwn').value; return v > 0 ? prTimerStart(v * 60) : $('#prOwn').focus(); }
+    if (b.dataset.ts) return prTimerStart(+b.dataset.ts);
+    if (b.dataset.ta) return prTimerAdd(+b.dataset.ta);
+    if (b.dataset.p === 'town') return prOwnStart();
     if (b.dataset.p === 'tpause') return prTimerPause();
-    if (b.dataset.p === 'tadd') return prTimerAdd(60);
+    if (b.dataset.p === 'trestart') return prTimerRestart();
     if (b.dataset.p === 'tstop') return prTimerStop();
     return;
   }
@@ -5460,14 +5497,15 @@ function prKey(e) {
   e.stopPropagation();   // nothing behind the stage gets a key
   if (PK.on) { pkKey(e); return; }
   if (e.metaKey || e.ctrlKey || e.altKey) return;
-  const k = e.key, own = e.target && e.target.id === 'prOwn';
-  if (own) { if (k === 'Enter') { e.preventDefault(); const v = +e.target.value; if (v > 0) prTimerStart(v * 60); } else if (k === 'Escape') { e.preventDefault(); prMenu(false); PR.el.focus(); } return; }
+  const k = e.key, own = e.target && (e.target.id === 'prOwn' || e.target.id === 'prOwnS');
+  if (own) { if (k === 'Enter') { e.preventDefault(); prOwnStart(); } else if (k === 'Escape') { e.preventDefault(); prMenu(false); PR.el.focus(); } return; }
   if (k === 'Tab') return prWake();
   if ((k === ' ' || k === 'Enter') && e.target && e.target.closest && e.target.closest('#present button,#present input')) return;   // the button in hand does its own thing
   const stop = () => e.preventDefault();
   if (PR.menu) {
     stop();
     if (/^[1-9]$/.test(k)) return prTimerStart(+k * 60);
+    if (PR.timer && !PR.timer.done && (k === '+' || k === '=' || k === '-')) return prTimerAdd(k === '-' ? -60 : 60);
     if (k === 'Escape' || k.toLowerCase() === 't') return prMenu(false);
     return;
   }
@@ -5485,6 +5523,7 @@ function prKey(e) {
   if (c === 'n') { stop(); return prToggle('notes'); }
   if (c === 'b' || k === '.') { stop(); return prToggle('blank'); }
   if (c === 't') { stop(); return prMenu(true); }
+  if (PR.timer && !PR.timer.done && (k === '+' || k === '=' || k === '-')) { stop(); return prTimerAdd(k === '-' ? -60 : 60); }
   if (c === 'f') { stop(); return prFullToggle(); }
   if (c === 'p') { stop(); return prPick('pick'); }
   if (c === 'g') { stop(); return prPick('groups'); }
@@ -5877,7 +5916,7 @@ const LANG_ES = {
       a: ['En el Planificador, pulsa **Horario** en la barra lateral. Escribe tus clases, cuándo se reúne cada una y los días en que el centro está cerrado.', 'Desde entonces Hoy muestra las clases que das cada día con la lección planificada para cada una.'] },
     'present': { q: '¿Cómo presento una lección a la clase?', words: 'presentación pantalla completa proyector enseñar temporizador agenda mando',
       a: ['Abre la lección en el Planificador y pulsa **Present**. Sus diapositivas llenan la pantalla; las flechas o un mando las pasan. En Hoy, la clase que toca ahora o a continuación tiene su propio botón **Presentar**.',
-        'Mientras presentas: **A** muestra la agenda, **T** inicia un temporizador que la clase puede ver, **P** elige a un estudiante al azar, **G** hace grupos, **N** muestra tus notas, **B** deja la pantalla en blanco y **Esc** termina.', 'Después, una línea anota hasta dónde llegó la clase, y al presentar de nuevo se retoma desde ahí.'] },
+        'Mientras presentas: **A** muestra la agenda, **T** inicia un temporizador que la clase puede ver, **P** elige a un estudiante al azar, **G** hace grupos, **N** muestra tus notas, **B** deja la pantalla en blanco y **Esc** termina.', 'El temporizador acepta minutos y segundos. Mientras corre, su menú suma o quita 10 segundos o un minuto, lo pausa y lo reinicia; **+** y **−** suman o quitan un minuto. Marca **Show it big** para poner la cuenta atrás en el centro de la pantalla, para el fondo del aula.', 'Después, una línea anota hasta dónde llegó la clase, y al presentar de nuevo se retoma desde ahí.'] },
     'pptx': { q: '¿Puedo obtener mis diapositivas como archivo de PowerPoint?', words: 'powerpoint pptx exportar diapositivas keynote google slides descargar',
       a: ['Sí. Abre la lección y pulsa **Download .pptx**. El archivo se abre en PowerPoint, Keynote y Google Slides.'] },
     'privacy': { q: '¿Salen de mi ordenador los trabajos de los estudiantes?', words: 'privado protección de datos rgpd nube servidor seguro',
@@ -6237,7 +6276,7 @@ const LANG_ZH = {
       a: ['在備課頁面按側邊欄的**課表**。輸入你的班級、每個班級上課的時間，以及學校放假的日子。', '之後今天頁面會顯示你每天要上的班級，以及為每個班級準備的課程。'] },
     'present': { q: '怎麼向全班播放一堂課？', words: '簡報 全螢幕 投影機 上課 計時器 流程 遙控器 present',
       a: ['在備課頁面開啟課程，按 **Present**。投影片會填滿螢幕，用方向鍵或簡報遙控器換頁。在今天頁面，正在上或下一堂要上的班級有自己的**播放**按鈕。',
-        '播放時：**A** 顯示流程，**T** 啟動全班看得到的計時器，**P** 隨機抽一位學生，**G** 分組，**N** 顯示你的備註，**B** 讓螢幕變空白，**Esc** 結束。', '結束後會有一行記錄這個班級上到哪裡，下次播放時會從那裡繼續。'] },
+        '播放時：**A** 顯示流程，**T** 啟動全班看得到的計時器，**P** 隨機抽一位學生，**G** 分組，**N** 顯示你的備註，**B** 讓螢幕變空白，**Esc** 結束。', '計時器可以設定分鐘和秒數。計時中，選單可以增加或減少 10 秒或一分鐘、暫停和重新開始；按 **+** 或 **−** 增減一分鐘。勾選 **Show it big** 會把倒數放在螢幕中央，教室後面也看得清楚。', '結束後會有一行記錄這個班級上到哪裡，下次播放時會從那裡繼續。'] },
     'pptx': { q: '可以把投影片存成 PowerPoint 檔嗎？', words: 'powerpoint pptx 匯出 投影片 keynote google slides 下載',
       a: ['可以。開啟課程，按 **Download .pptx**。檔案可以用 PowerPoint、Keynote 和 Google 簡報開啟。'] },
     'privacy': { q: '學生作業會離開我的電腦嗎？', words: '隱私 資料保護 個資 雲端 伺服器 安全 privacy',
@@ -6516,8 +6555,8 @@ const HELP = [
     words: 'schedule periods classes times calendar holidays' },
   { id: 'present', sec: 'plan', where: 'p', q: 'How do I present a lesson to the class?',
     a: ['Open the lesson in the Planner and press **Present**. Its slides fill the screen; the arrow keys or a clicker move through them. On Today, the class that is on now or next has its own **Present** button.',
-      'While presenting: **A** shows the agenda, **T** starts a timer the class can see, **P** picks a student at random, **G** makes groups, **N** shows your notes, **B** blanks the screen and **Esc** finishes.', 'Afterwards one line notes where the class got to, and presenting again picks up there.'],
-    words: 'slideshow full screen projector teach timer agenda clicker' },
+      'While presenting: **A** shows the agenda, **T** starts a timer the class can see, **P** picks a student at random, **G** makes groups, **N** shows your notes, **B** blanks the screen and **Esc** finishes.', 'The timer takes minutes and seconds. While it runs, its menu adds or takes away 10 seconds or a minute, pauses, and restarts; **+** and **−** add or take away a minute. Tick **Show it big** to put the countdown in the middle of the screen for the back of the room.', 'Afterwards one line notes where the class got to, and presenting again picks up there.'],
+    words: 'slideshow full screen projector teach timer countdown seconds agenda clicker' },
   { id: 'pptx', sec: 'plan', where: 'p', q: 'Can I get my slides as a PowerPoint file?',
     a: ['Yes. Open the lesson and press **Download .pptx**. The file opens in PowerPoint, Keynote and Google Slides.'],
     words: 'powerpoint pptx export slides keynote google slides download' },

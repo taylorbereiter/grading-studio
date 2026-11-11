@@ -1,4 +1,9 @@
 {
+  "1.27.3": [
+    "The class timer in Present takes minutes and seconds: type them in, or pick 0:30 and the other quick times. The menu remembers the last time you typed.",
+    "While it runs, the timer's menu adds or takes away 10 seconds or a minute, pauses, and restarts from the time you set. + and − add or take away a minute without opening the menu.",
+    "Tick Show it big to put the countdown in the middle of the screen, large enough for the back of the room."
+  ],
   "1.27.2": [
     "In the gradebook, in-class assessments are now on the left and summatives on the right: the columns, the averages beside the term grade, and wherever you choose a type.",
     "The order is yours to change. In Term setup, the arrows beside each type move it, and the gradebook's columns follow from left to right.",

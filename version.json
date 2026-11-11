@@ -1,13 +1,13 @@
 {
- "version": "1.27.2",
- "build": "5db1351cccbe",
+ "version": "1.27.3",
+ "build": "5c765a53d233",
  "notes": [
-  "In the gradebook, in-class assessments are now on the left and summatives on the right: the columns, the averages beside the term grade, and wherever you choose a type.",
-  "The order is yours to change. In Term setup, the arrows beside each type move it, and the gradebook's columns follow from left to right.",
-  "You can make your own assignment types. In Term setup, rename a type or press + Add a type (Homework, Projects, Quizzes), and give each its share of the grade. Your own setup stays as it is until you change it."
+  "The class timer in Present takes minutes and seconds: type them in, or pick 0:30 and the other quick times. The menu remembers the last time you typed.",
+  "While it runs, the timer's menu adds or takes away 10 seconds or a minute, pauses, and restarts from the time you set. + and − add or take away a minute without opening the menu.",
+  "Tick Show it big to put the countdown in the middle of the screen, large enough for the back of the room."
  ],
  "files": {
-  "index.html": "5842b12ce0b49f641e312690b4229712c84513abf4cba29367085c9a8143955c",
-  "planner.html": "379f42266ca625949033afeb3e8f19062b4a331588edd43134c50235e9d8055b"
+  "index.html": "5e50e3fe16db915b7d786487f465ac6d5898f269a3ef6eb2119b145da96fa23c",
+  "planner.html": "ac3b176fcdb5d5da8c21c1db93a2399bdda9d4c43d7922cbc446df87e1857172"
  }
 }
