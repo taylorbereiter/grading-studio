@@ -107,6 +107,31 @@ test('each counting type’s average sits beside the term grade, Averages only s
   noErrors(page); await close();
 });
 
+test('students can be left out of the class averages for a what-if, without changing their own grades', async () => {
+  const { page, close } = await openApp(browser, { seed: seed() });
+  await openBook(page);
+  const foot = () => page.$$eval('#bkTab tr.bkfoot td.bksum', t => t.map(x => x.textContent.trim()));
+  assert.deepEqual(await foot(), ['78.13%', '78.13%', '78.13%']);
+  await page.click('[data-bkpickon]');
+  await page.waitForSelector('.bkpick');
+  await page.click('.bkpick[data-bkpick="Dov Madeup"]');
+  await page.waitForSelector('#bkTab tr.bkleft');
+  // Without Dov: summatives (85+70+97.5)/3, in-class (85+72.5+95)/3, grades (85+71.25+96.25)/3.
+  assert.deepEqual(await foot(), ['84.17%', '84.17%', '84.17%']);
+  assert.match(await page.$eval('#bkTab tr.bkfoot td.bknm', t => t.textContent), /without 1 student/);
+  assert.match(await page.$eval('#bkTab tr.bkleft', t => t.textContent), /Dov Madeup.*left out.*60\.00%/);
+  // The column average leaves Dov out too: Poetry test (90+70+100)/3.
+  assert.ok((await page.$$eval('#bkTab tr.bkfoot td', t => t.map(x => x.textContent.trim()))).includes('86.67%'));
+  await page.click('[data-bkpickon]');
+  await page.waitForFunction(() => !document.querySelector('.bkpick'));
+  await page.click('[data-bkterm="*"]'); await page.waitForSelector('#bkTab.bkyear');
+  assert.equal(await page.$eval('#bkTab tr.bkfoot td:last-child', t => t.textContent.trim()), '84.17%');
+  await page.click('[data-bkleftclear]');
+  await page.waitForFunction(() => !document.querySelector('#bkTab tr.bkleft'));
+  assert.equal(await page.$eval('#bkTab tr.bkfoot td:last-child', t => t.textContent.trim()), '78.13%');
+  noErrors(page); await close();
+});
+
 test('a type can be set on assignments that already exist, from the one-time list, a column, or Edit assignment', async () => {
   const { page, close } = await openApp(browser, { seed: seed() });
   await openBook(page);

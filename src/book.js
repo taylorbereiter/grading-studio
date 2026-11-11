@@ -168,7 +168,7 @@ function bkDraw() {
     '<div class="ovtabs bkterms" role="group" aria-label="Term">' + tabs.map(([id, l]) => '<button data-bkterm="' + esc(id) + '" aria-selected="' + (bk.term === id) + '">' + esc(l) + '</button>').join('') + '</div><span class="sp"></span>' +
     (bk.tab === 'table' && bk.term !== '*' ? '<div class="pseg" role="group" aria-label="Columns">' + [['', 'Every assignment'], ['1', 'Averages only']].map(([v, l]) => '<button data-bkonly="' + v + '" aria-pressed="' + (bkOnly() === !!v) + '">' + l + '</button>').join('') + '</div>' +
       (bkOnly() ? '' : '<div class="pseg" role="group" aria-label="Show">' + [['pct', 'Percent'], ['pts', 'Points']].map(([v, l]) => '<button data-bkshow="' + v + '" aria-pressed="' + (bk.show === v) + '">' + l + '</button>').join('') + '</div>') : '') +
-    (tools ? '<button class="btn sm" data-bksetup>Term setup</button>' + (bk.tab === 'table' ? '<button class="btn sm" data-bkcopy>Copy table</button>' : '') + '<button class="btn sm" data-bkaddxc>+ Extra credit</button><button class="btn sm primary" data-bkadd>+ Add scores</button>' : '') + '</div>';
+    (tools ? '<button class="btn sm" data-bksetup>Term setup</button>' + (bk.tab === 'table' ? '<button class="btn sm" data-bkpickon aria-pressed="' + !!bk.pick + '" title="Leave students out of the class averages to see how it changes">' + (bk.pick ? 'Done' : 'Leave out…') + '</button><button class="btn sm" data-bkcopy>Copy table</button>' : '') + '<button class="btn sm" data-bkaddxc>+ Extra credit</button><button class="btn sm primary" data-bkadd>+ Add scores</button>' : '') + '</div>';
   let main;
   if (!c.names.length) main = '<p class="muted bkpad">The gradebook lists the students on a class’s roster. Add a roster to ' + esc(c.name) + ' on its class page first.</p>';
   else if (bk.tab === 'class') main = bkClassView(c, cols, all, conf);
@@ -193,6 +193,15 @@ function bkGroups(cols) {
   const none = cols.filter(x => !x.type); if (none.length) g.push({ t: '', s: 'No type yet', cols: none });
   return g;
 }
+// What if: students left out of the class averages, to see how the class does without them. Their own grades don't change.
+// Kept for this visit only, per class, and never saved.
+const bkLeftAll = {};
+const bkLeft = () => bkLeftAll[bk.cls] || (bkLeftAll[bk.cls] = new Set());
+const bkIn = n => !bkLeft().has(n);
+// The name cell: in Leave out mode, a box to tick for each student who counts.
+const bkNameCell = (n, i) => '<td class="bknm">' + (bk.pick ? '<input type="checkbox" class="bkpick" data-bkpick="' + esc(n) + '"' + (bkIn(n) ? ' checked' : '') + ' aria-label="' + esc('Count ' + bkWho(n, i) + ' in the class average') + '"> ' : '') + bkName(n, i) + bkInfo(n) + (bkIn(n) ? '' : ' <span class="stag">left out</span>') + '</td>';
+const bkFootName = c => { const k = bkLeft().size; return '<td class="bknm">Class average' + (k ? '<small class="bkleftn"> without ' + people(k, 'student') + ' · <button class="linkbtn" data-bkleftclear>count everyone</button></small>' : '') + '</td>'; };
+const bkRowCls = n => bkIn(n) ? '' : ' class="bkleft"';
 // The types that count toward this teacher's grade (weight above 0), each with its own average column beside the grade.
 const bkCountTypes = conf => BK_TYPES.filter(([t]) => +conf.w[t] > 0);
 // Averages only: just each type's average and the grade, one row per student (kept for next time).
@@ -212,14 +221,14 @@ function bkTable(c, cols, conf) {
     '<tr><th class="bknm">Student</th>' + groups.map(g => g.cols.map(bkColHead).join('')).join('') + sums + '</tr></thead><tbody>';
   const grades = [];
   c.names.forEach((nm, i) => {
-    const r = bkGrade(nm, cols, conf); grades.push(r);
-    h += '<tr><td class="bknm">' + bkName(nm, i) + bkInfo(nm) + '</td>' + groups.map(g => g.cols.map(col => { const cell = col.cells.get(nm), ed = !!col.typed && !(cell && !cell.typed);
+    const r = bkGrade(nm, cols, conf); if (bkIn(nm)) grades.push(r);
+    h += '<tr' + bkRowCls(nm) + '>' + bkNameCell(nm, i) + groups.map(g => g.cols.map(col => { const cell = col.cells.get(nm), ed = !!col.typed && !(cell && !cell.typed);
       return '<td' + (ed ? ' class="bked" tabindex="0" data-bked="' + esc(col.key) + '" data-bkn="' + esc(nm) + '" title="Click to change"' : col.d ? ' title="Change this score in its download"' : '') + '>' + bkCellText(cell, bk.show, col) + '</td>'; }).join('')).join('') +
       ct.map(([t], j) => '<td class="bkavg bksum"' + bkStick(j, n) + '>' + bkAvgCell(r, t) + '</td>').join('') +
       '<td class="bkterm bksum"' + bkStick(n, n) + ' tabindex="0" ' + bkWhy(nm, r, conf) + '>' + bkGradeCell(r) + '</td></tr>';
   });
-  const colAvg = col => { if (col.type === 'xc') { const k = c.names.filter(x => col.cells.get(x)).length; return k + ' given'; } if (col.type === 'fm') { const k = c.names.filter(x => (col.cells.get(x) || {}).fb).length; return k + '/' + c.names.length; } const ps = c.names.map(x => col.cells.get(x)).filter(bkCounts).map(x => x.pct); return ps.length ? pctAvgText(bkMean(ps)) : '–'; };
-  h += '<tr class="bkfoot"><td class="bknm">Class average</td>' + groups.map(g => g.cols.map(col => '<td>' + colAvg(col) + '</td>').join('')).join('') + ct.map(([t], j) => '<td class="bkavg bksum"' + bkStick(j, n) + '>' + bkClassAvg(grades, t) + '</td>').join('') + '<td class="bkterm bksum"' + bkStick(n, n) + '>' + bkClassAvg(grades, '') + '</td></tr></tbody></table></div>' +
+  const inn = c.names.filter(bkIn), colAvg = col => { if (col.type === 'xc') { const k = inn.filter(x => col.cells.get(x)).length; return k + ' given'; } if (col.type === 'fm') { const k = inn.filter(x => (col.cells.get(x) || {}).fb).length; return k + '/' + inn.length; } const ps = inn.map(x => col.cells.get(x)).filter(bkCounts).map(x => x.pct); return ps.length ? pctAvgText(bkMean(ps)) : '–'; };
+  h += '<tr class="bkfoot">' + bkFootName(c) + groups.map(g => g.cols.map(col => '<td>' + colAvg(col) + '</td>').join('')).join('') + ct.map(([t], j) => '<td class="bkavg bksum"' + bkStick(j, n) + '>' + bkClassAvg(grades, t) + '</td>').join('') + '<td class="bkterm bksum"' + bkStick(n, n) + '>' + bkClassAvg(grades, '') + '</td></tr></tbody></table></div>' +
     '<p class="muted bkcap">Students are in your roster order. ' + (ct.length ? 'Each type’s average counts every assignment of that type the same; the ' + gradeName.toLowerCase() + ' weights them by your Term setup. ' : '') + 'Missing and Excused never count against a student. Point at a ' + gradeName.toLowerCase() + ' to see how it’s worked out' + (cols.some(x => x.type === 'xc') ? ', extra credit included' : '') + '.' + (only ? '' : ' Scores you typed in can be changed here; a graded download’s scores change in that download.') + '</p>';
   return h;
 }
@@ -243,11 +252,11 @@ function bkYear(c, all, conf) {
   for (const [i, n] of c.names.entries()) {
     const rs = per.map(cols => bkGrade(n, cols, conf)), vals = rs.map(r => keys.map(k => k ? r.by[k] : r.grade));
     const yr = keys.map((k, j) => { const have = vals.map(v => v[j]).filter(v => v != null); return have.length ? bkMean(have) : null; });
-    [...vals, yr].forEach((vs, a) => vs.forEach((v, j) => { if (v != null) colv[a][j].push(v); }));
+    if (bkIn(n)) [...vals, yr].forEach((vs, a) => vs.forEach((v, j) => { if (v != null) colv[a][j].push(v); }));
     const cell = (v, k) => '<td class="' + (k ? 'bkavg' : 'bkterm') + '">' + (v != null ? pctAvgText(v) : '<span class="bknone">–</span>') + '</td>';
-    h += '<tr><td class="bknm">' + bkName(n, i) + bkInfo(n) + '</td>' + vals.map(vs => vs.map((v, j) => cell(v, keys[j])).join('')).join('') + yr.map((v, j) => keys[j] ? cell(v, keys[j]) : '<td class="bkterm"><b>' + (v != null ? pctAvgText(v) : '–') + '</b></td>').join('') + '</tr>';
+    h += '<tr' + bkRowCls(n) + '>' + bkNameCell(n, i) + vals.map(vs => vs.map((v, j) => cell(v, keys[j])).join('')).join('') + yr.map((v, j) => keys[j] ? cell(v, keys[j]) : '<td class="bkterm"><b>' + (v != null ? pctAvgText(v) : '–') + '</b></td>').join('') + '</tr>';
   }
-  h += '<tr class="bkfoot"><td class="bknm">Class average</td>' + colv.map(a => a.map((vs, j) => '<td class="' + (keys[j] ? 'bkavg' : 'bkterm') + '">' + (vs.length ? pctAvgText(bkMean(vs)) : '–') + '</td>').join('')).join('') + '</tr></tbody></table></div>' +
+  h += '<tr class="bkfoot">' + bkFootName(c) + colv.map(a => a.map((vs, j) => '<td class="' + (keys[j] ? 'bkavg' : 'bkterm') + '">' + (vs.length ? pctAvgText(bkMean(vs)) : '–') + '</td>').join('')).join('') + '</tr></tbody></table></div>' +
     '<p class="muted bkcap">The year is the average of the terms each student has a grade in, and each type’s year average is the average of their term averages for it.</p>';
   return h;
 }
@@ -295,13 +304,13 @@ const bkTile = (l, v, s, main) => '<div class="ovt' + (main ? ' main' : '') + '"
 function bkScored(cols) { return cols.filter(x => x.type === 'sum' || x.type === 'ic'); }
 function bkClassView(c, cols, all, conf) {
   if (bk.term === '*') cols = all;
-  const grades = c.names.map((n, i) => ({ name: bkWho(n, i), r: bkGrade(n, cols, conf) })), gl = grades.filter(g => g.r.grade != null).map(g => ({ name: g.name, v: g.r.grade }));
+  const grades = c.names.map((n, i) => ({ n, name: bkWho(n, i), r: bkGrade(n, cols, conf) })).filter(g => bkIn(g.n)), gl = grades.filter(g => g.r.grade != null).map(g => ({ name: g.name, v: g.r.grade }));
   const typeAvg = t => { const ps = grades.map(g => g.r.by[t]).filter(v => v != null); return ps.length ? pctAvgText(bkMean(ps)) : '–'; };
   const sorted = gl.map(g => g.v).sort((a, b) => a - b), mid = sorted.length ? (sorted.length % 2 ? sorted[(sorted.length - 1) / 2] : (sorted[sorted.length / 2 - 1] + sorted[sorted.length / 2]) / 2) : null;
   const sc = bkScored(cols), avgOf = col => bkMean(c.names.map(n => col.cells.get(n)).filter(bkCounts).map(x => x.pct));
   const others = lib.classes.filter(k => k.names.length).map(k => { const kc = bkClassCols(k, bk.cols).filter(x => bk.term === '*' || x.termId === bk.term), gs = k.names.map(n => bkGrade(n, kc, conf).grade).filter(v => v != null); return { k, v: gs.length ? bkMean(gs) : null }; }).filter(x => x.v != null);
   const termAvg = gl.length ? bkMean(gl.map(g => g.v)) : null, miss = cols.flatMap(col => c.names.filter(n => (col.cells.get(n) || {}).st === 'missing'));
-  return '<div class="bkpad"><div class="ovtiles" id="bkTiles">' + bkTile(bk.term === '*' ? 'Average grade' : 'Term average', termAvg != null ? pctAvgText(termAvg) : '–', people(gl.length, 'student'), true) +
+  return '<div class="bkpad"><div class="ovtiles" id="bkTiles">' + bkTile(bk.term === '*' ? 'Average grade' : 'Term average', termAvg != null ? pctAvgText(termAvg) : '–', people(gl.length, 'student') + (bkLeft().size ? ' · ' + bkLeft().size + ' left out' : ''), true) +
     bkTile('Middle grade', mid != null ? pctAvgText(mid) : '–', 'half above, half below') + bkCountTypes(conf).map(([t, , l]) => bkTile(l + ' average', typeAvg(t), people(cols.filter(x => x.type === t).length, 'assignment'))).join('') +
     bkTile('Missing work', miss.length, miss.length ? 'across ' + people(new Set(miss).size, 'student') : 'nothing outstanding') + '</div>' + bkHeat(c, cols, conf) +
     '<div class="ovcharts">' + chSec('Who is moving', bkMoving(c, cols), 'Each student’s last three scores against their earlier ones, in points: the biggest rises and drops.') +
@@ -317,7 +326,7 @@ function bkClassView(c, cols, all, conf) {
 function bkOneView(c, cols, conf) {
   if (bk.term === '*') cols = bk.cols ? bkClassCols(c, bk.cols) : cols;
   bk.stu = Math.max(0, Math.min(c.names.length - 1, bk.stu));
-  const n = c.names[bk.stu], shown = bkWho(n, bk.stu), r = bkGrade(n, cols, conf), all = c.names.map(x => bkGrade(x, cols, conf));
+  const n = c.names[bk.stu], shown = bkWho(n, bk.stu), r = bkGrade(n, cols, conf), all = c.names.filter(bkIn).map(x => bkGrade(x, cols, conf));
   const cavg = t => { const ps = all.map(g => t ? g.by[t] : g.grade).filter(v => v != null); return ps.length ? bkMean(ps) : null; };
   const sc = bkScored(cols), fm = cols.filter(x => x.type === 'fm'), miss = cols.filter(x => (x.cells.get(n) || {}).st === 'missing');
   const bar = (l, v, ref, t) => '<div class="bkcmp"><span>' + l + '</span><div class="bkcmpt"><i class="' + t + '" style="width:' + Math.min(100, v || 0) + '%"></i>' + (ref != null ? '<em style="left:' + Math.min(100, ref) + '%" title="Class average ' + esc(pctAvgText(ref)) + '"></em>' : '') + '</div><b>' + (v != null ? pctAvgText(v) : '–') + '</b></div>';
@@ -548,6 +557,8 @@ function bkClick(e) {
   if (d.bkshow) { bk.show = d.bkshow; return bkDraw(); }
   if (d.bkonly != null) { try { localStorage.setItem('gs.bkOnly', d.bkonly ? '1' : ''); } catch (e) { } return bkDraw(); }
   if (d.bkcopy != null) return bkCopy();
+  if (d.bkpickon != null) { bk.pick = !bk.pick; return bkDraw(); }
+  if (d.bkleftclear != null) { bkLeft().clear(); return bkDraw(); }
   if (d.bksetup != null) return bkSetupView();
   if (d.bkadd != null) return bkAddView();
   if (d.bkaddxc != null) return bkAddView('', { type: 'xc' });
@@ -581,6 +592,7 @@ function bkChange(e) {
   if (t.id === 'bkCls') { bk.cls = t.value; bk.term = null; bk.stu = 0; bk.hi = ''; return bkDraw(); }
   if (t.id === 'bkDue' || t.id === 'bkTerm') { const k = $('#bkPop').dataset.key; bkSetCol(k, t.id === 'bkDue' ? { due: t.value } : { term: t.value }); return; }
   if (t.id === 'bkaMax') return bkAddRows();
+  if (t.dataset.bkpick != null) { const L = bkLeft(), n = t.dataset.bkpick; if (t.checked) L.delete(n); else L.add(n); return bkDraw(); }
   if (t.dataset.bkafb != null) { const n = bkClass().names[+t.dataset.bkafb]; bkAdd.s[n] = { ...(bkAdd.s[n] || {}), fb: t.checked }; return bkAddRows(); }
 }
 function bkInput(e) {
