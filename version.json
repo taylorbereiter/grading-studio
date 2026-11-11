@@ -1,13 +1,12 @@
 {
- "version": "1.21.0",
- "build": "0caed46cdc39",
+ "version": "1.22.0",
+ "build": "a9147b5f56ae",
  "notes": [
-  "Each class has a Missing work tab: every paper you marked Missing, by student or by assignment, for the term you pick.",
-  "Email reminder opens an email in your own mail app, addressed to the student and listing what they owe, for you to read and send. Email all writes one email to everyone who owes an assignment, with the addresses in Bcc. Grading Studio sends nothing itself.",
-  "Each reminder you open is noted beside the work, and Email wording… changes what every reminder says."
+  "Progress sheets for parent meetings: one printed page per student with the term grade, every score, a chart of how they moved, missing work, each term's grade, the report comment and lines for notes. Find it on a class's Students list, or Progress sheet on one student's page.",
+  "Choose the term and tick what goes on it; Print opens the print window, where you can pick a printer or Save as PDF. It is made on your computer and nothing is sent anywhere."
  ],
  "files": {
-  "index.html": "38ae0445aead4f6554bb8cd9e3871a73d7a3cb3eb0b8f848a69abad6ad62d37d",
-  "planner.html": "6c43721848635ee51514acf7f784f91b9cf944bae543e1e053c84e449fa19ebb"
+  "index.html": "0e5b274a182b8a0d61968d980a9b2ec49804addb292f433f2d4ff6132b260f71",
+  "planner.html": "50ad81bcd0b4d9748f9871a2f98992f8c5e96e093b22a0dfa4a321e85f25e0bb"
  }
 }

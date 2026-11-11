@@ -175,7 +175,7 @@ document.addEventListener('keydown', e => { if ((e.key === 'Enter' || e.key === 
 // A name goes to that student's own page of grades and charts; the ⓘ beside it opens their details.
 let peopleQuiet = false;
 function peoplePanel(el, c) {
-  el.innerHTML = '<div class="pplbar"><span class="muted" id="peopleSum"></span><span class="sp"></span><button class="btn sm" data-ppaste>Paste IDs and emails…</button><button class="btn sm" data-pmail>Copy all emails</button></div>' +
+  el.innerHTML = '<div class="pplbar"><span class="muted" id="peopleSum"></span><span class="sp"></span><button class="btn sm" data-ppaste>Paste IDs and emails…</button><button class="btn sm" data-pmail>Copy all emails</button><button class="btn sm" data-pssall title="One page per student to print for parent meetings">Progress sheets</button></div>' +
     '<div id="peoplePaste" hidden><p class="muted" style="margin:0 0 6px;font-size:13.5px">Paste a class list with names and a student ID or email column (from ' + (sysName() ? esc(sysName()) + ' or ' : '') + 'a spreadsheet). Each row fills in the student with the same name.</p><textarea class="big" id="peopleIn" placeholder="Name, student ID, email"></textarea>' +
     '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px"><button class="btn sm" data-pcancel>Cancel</button><button class="btn sm primary" data-pfill>Fill in</button></div></div><div id="peopleTbl"></div>' +
     '<p class="muted pplcap">Click a name for that student’s grades and charts. The ⓘ opens their details, with other spellings and a note.</p>';

@@ -180,7 +180,7 @@ function rptAll(c) {
   return c.names.map(n => [n, rptText(c, cols, conf, n, rc)]);
 }
 // The term bar's buttons while this tab is on (bkDraw puts them there).
-const rptBar = () => '<button class="btn sm" data-rptwords>Wording…</button><button class="btn sm" data-rptcopyall title="Every student’s name and comment, to paste into a spreadsheet or your report system">Copy all</button><button class="btn sm" data-rptcsv title="A spreadsheet file with every student’s name and comment">Download</button>';
+const rptBar = () => '<button class="btn sm" data-rptwords>Wording…</button><button class="btn sm" data-rptcopyall title="Every student’s name and comment, to paste into a spreadsheet or your report system">Copy all</button><button class="btn sm" data-rptcsv title="A spreadsheet file with every student’s name and comment">Download</button><button class="btn sm" data-pssall title="One page per student, with this comment, to print for parent meetings">Progress sheets</button>';
 function rptClick(e) {
   if (!$('#rpt') || !e.target.closest('#bkBody')) return;
   const b = e.target.closest('button'), c = bkClass(); if (!b || !c) return;
