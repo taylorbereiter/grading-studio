@@ -738,6 +738,7 @@ for (const slope of [false, true]) test('a name in a crooked scan stays covered 
   assert.deepEqual([level.screen, level.share], [0, 0], 'level page');
   await page.evaluate(() => window.__gs.setAnon(false));
   await openZip(page, zipOf({ 'Aria Testwell/Scan.pdf': await nameScan(page, 4.5, slope), 'Bram Sample/Essay.pdf': await makePaper({ title: 'Typed' }) }), 'Crooked.zip');
+  await page.waitForFunction(() => /Crooked/.test(window.__gs.state().batch.name));   // the level papers are still on screen until these take their place
   await shown(page);
   const auto = (await student(page)).skew[0];
   near(auto, -4.5, .4, 'straightened on opening');
