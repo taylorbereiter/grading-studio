@@ -130,6 +130,9 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
   --uz:1; --dfs:15px; --dlh:1.45;
   /* older names for corners, still used by a few rules */
   --r:10px; --r-sm:7px;
+  /* colour: the stage a lesson is presented on. The same in light and dark: black around the slide, a dark bar for the teacher, a light panel for what the class reads. */
+  --stage:#0B0D12; --stage-fg:#F3F4F7; --stage-muted:#A9B0C0; --stage-bar:#1B1F29; --stage-line:#3A4150; --stage-hover:#2C3342;
+  --stage-blue:#1A67A8; --stage-blue-2:#15568C; --stage-blue-soft:#E6F0F9; --stage-paper:#FFFFFF; --stage-ink:#1E2024; --stage-ink-2:#5C616A;
   /* colour: charts and the gradebook (types of assignment, the five steps of a heat map, up and down, the dot plot) */
   --bk-sum:#164E80; --bk-ic:#6FA3D2; --bk-fm:#8A919E; --ch1:#8FB5DC; --ch2:#5F96CB; --ch3:#3478B7; --ch4:#1A5D9A; --ch5:#0F3F6C; --ch-lo:#0D2740; --ch-hi:#FFFFFF; --ch-up:#1A67A8; --ch-down:#B4610F; --ch-band:#DCE7F3; --dot:var(--accent); --ov-bar:#1A67A8; --ov-mute:#8A919E;
 }
@@ -619,6 +622,95 @@ body.has-side .lsn{margin-right:var(--sidew,420px)}
 .fnone{padding:22px 18px;color:var(--muted)}
 .ffoot{display:flex;align-items:center;gap:14px;flex:none;height:40px;padding:0 18px;border-top:1px solid var(--line);background:var(--bg);font-size:12.5px;color:var(--muted)}
 .ffoot .sp{flex:1}
+
+/* ---------- Present: the lesson on the screen the class sees ----------
+   The stage is the same in light and dark: black around the slide, the slide's own colours on it, and a light panel
+   for the agenda so it reads in a lit room. What the class reads is sized by the height of the screen (vh), like the
+   slide itself, so it is as big on a projector as on a laptop. Colours come from the --stage tokens. */
+.pr{position:fixed;inset:0;z-index:60;background:var(--stage);color:var(--stage-fg);display:flex;flex-direction:column;outline:none;user-select:none;-webkit-user-select:none}
+.pr.idle{cursor:none}
+.pr svg{width:18px;height:18px;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.pr-stage{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.pr-fit{position:relative;overflow:hidden;flex:none}
+.pr-fit .ls-slide{transform:scale(var(--k));transform-origin:0 0}
+.pr-fit .ls-vid{cursor:pointer}
+.pr-fit .ls-vid iframe{width:100%;height:100%;border:0;background:var(--stage)}
+.pr-cover{position:absolute;inset:0;background:var(--stage);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.5vh;z-index:3}
+.pr-cover b{font:600 3.4vh/1.2 var(--f-display);color:var(--stage-fg)}
+.pr-cover span{font-size:2.2vh;color:var(--stage-muted)}
+
+/* the bar: for the teacher, shown when the mouse moves */
+.pr-bar{position:absolute;left:50%;bottom:calc(var(--nb,0px) + var(--space-4));transform:translateX(-50%);z-index:5;display:flex;align-items:center;gap:var(--space-1);padding:var(--space-1) var(--space-2);max-width:calc(100vw - var(--space-5));
+  background:var(--stage-bar);border:1px solid var(--stage-line);border-radius:var(--corner-5);box-shadow:var(--shadow);font-size:var(--text-control);transition:opacity .2s}
+.pr.idle .pr-bar:not(:focus-within){opacity:0;pointer-events:none}
+.pr-bar button{display:inline-flex;align-items:center;gap:var(--space-2);border:0;background:none;color:var(--stage-fg);border-radius:var(--corner-3);padding:var(--space-2) var(--space-3);font-weight:500;white-space:nowrap}
+.pr-bar button:hover,.pr-bar button[aria-pressed="true"],.pr-bar button[aria-expanded="true"]{background:var(--stage-hover)}
+.pr-bar button.ic{padding:var(--space-2)}
+.pr-bar .pr-end{background:var(--stage-blue);color:var(--stage-paper);font-weight:600}
+.pr-bar .pr-end:hover{background:var(--stage-blue-2)}
+.pr :focus-visible{outline:2px solid var(--stage-fg);outline-offset:2px}
+.pr-count{min-width:64px;text-align:center;font-variant-numeric:tabular-nums;color:var(--stage-fg)}
+.pr-sep{width:1px;align-self:stretch;margin:var(--space-1) var(--space-1);background:var(--stage-line)}
+.pr-time{padding:0 var(--space-3);color:var(--stage-muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+@media (max-width:900px){.pr-bar button:not(.pr-end) .lb{display:none}}
+
+/* the timer's menu, above the bar */
+.pr-menu{position:absolute;left:50%;bottom:calc(var(--nb,0px) + var(--space-4) + 56px);transform:translateX(-50%);z-index:6;width:min(340px,calc(100vw - var(--space-5)));padding:var(--space-3);
+  background:var(--stage-bar);border:1px solid var(--stage-line);border-radius:var(--corner-5);box-shadow:var(--shadow);font-size:var(--text-control)}
+.pr-menu h3{margin:0 0 var(--space-2);font-size:var(--text-control);font-weight:600;color:var(--stage-muted)}
+.pr-mins{display:grid;grid-template-columns:repeat(6,1fr);gap:var(--space-1)}
+.pr-menu button{border:1px solid var(--stage-line);background:none;color:var(--stage-fg);border-radius:var(--corner-3);padding:var(--space-2);font-weight:600}
+.pr-menu button:hover{background:var(--stage-hover)}
+.pr-own{display:flex;gap:var(--space-2);align-items:center;margin-top:var(--space-3);color:var(--stage-muted)}
+.pr-own input[type=number]{width:64px;border:1px solid var(--stage-line);background:var(--stage);color:var(--stage-fg);border-radius:var(--corner-3);padding:var(--space-2)}
+.pr-own .sp{flex:1}
+.pr-run{display:flex;gap:var(--space-2);flex-wrap:wrap}
+.pr-snd{display:flex;gap:var(--space-2);align-items:center;margin-top:var(--space-3);color:var(--stage-muted)}
+
+/* the countdown the class watches */
+.pr-chip{position:absolute;top:2.4vh;right:2.4vh;z-index:4;border:0;border-radius:var(--corner-5);padding:1vh 2.2vh;background:var(--stage-blue);color:var(--stage-paper);font:700 8vh/1 var(--f-display);font-variant-numeric:tabular-nums;letter-spacing:-.02em;box-shadow:var(--shadow)}
+.pr-chip.paused{background:var(--stage-bar);color:var(--stage-fg)}
+.pr-chip.done{background:var(--stage-paper);color:var(--stage-blue);animation:prPulse 1s ease-in-out 6}
+.pr-chip small{display:block;font:600 1.9vh/1.3 var(--f-body);letter-spacing:0;opacity:.85}
+@keyframes prPulse{50%{transform:scale(1.06)}}
+@media (prefers-reduced-motion:reduce){.pr-chip.done{animation:none}.pr-bar{transition:none}}
+
+/* the agenda: a light panel over the left of the slide */
+.pr-agenda{position:absolute;left:0;top:0;bottom:0;z-index:4;width:min(52vw,100vh);background:var(--stage-paper);color:var(--stage-ink);padding:5vh 4vh 96px;overflow:auto;box-shadow:0 0 6vh rgba(0,0,0,.45);display:flex;flex-direction:column;gap:1.2vh}
+.pr-agenda h2{margin:0 0 1.5vh;font:700 6.2vh/1.1 var(--f-display);letter-spacing:-.02em}
+.pr-ai{display:flex;align-items:flex-start;gap:1.8vh;width:100%;border:0;background:none;color:inherit;text-align:left;border-radius:var(--corner-4);padding:1.2vh 1.4vh;font:500 5.3vh/1.2 var(--f-body)}
+.pr-ai:hover{background:var(--stage-blue-soft)}
+.pr-ai .bx{flex:none;width:4.8vh;height:4.8vh;margin-top:.7vh;border:.35vh solid var(--stage-ink-2);border-radius:var(--corner-2);display:flex;align-items:center;justify-content:center}
+.pr-ai .bx svg{width:3.4vh;height:3.4vh;stroke-width:3;visibility:hidden}
+.pr-ai.done{color:var(--stage-ink-2)}
+.pr-ai.done .tx{text-decoration:line-through;text-decoration-thickness:.3vh}
+.pr-ai.done .bx{background:var(--stage-blue);border-color:var(--stage-blue);color:var(--stage-paper)}
+.pr-ai.done .bx svg{visibility:visible}
+.pr-ai.now{background:var(--stage-blue-soft)}
+.pr-ai.now .tx{font-weight:700}
+.pr-asub{padding:0 1.4vh 0 8vh;font:400 5.3vh/1.2 var(--f-body);color:var(--stage-ink-2)}
+.pr-aclock{margin-top:auto;padding-top:2vh;font:600 3.4vh/1.2 var(--f-body);color:var(--stage-ink-2);font-variant-numeric:tabular-nums}
+.pr-anone{font:400 3.4vh/1.3 var(--f-body);color:var(--stage-ink-2);margin:0 0 1vh}
+
+/* speaker notes, under the slide when asked for */
+.pr-notes{flex:none;max-height:26vh;overflow:auto;padding:1.6vh 3vh;background:var(--stage-bar);border-top:1px solid var(--stage-line);color:var(--stage-fg);font:400 2.6vh/1.4 var(--f-body);white-space:pre-wrap;user-select:text;-webkit-user-select:text}
+.pr-notes.none{color:var(--stage-muted)}
+.pr-hint{position:absolute;left:50%;top:var(--space-4);transform:translateX(-50%);z-index:5;max-width:calc(100vw - var(--space-6));padding:var(--space-2) var(--space-4);background:var(--stage-bar);border:1px solid var(--stage-line);border-radius:var(--corner-pill);color:var(--stage-fg);font-size:var(--text-control);text-align:center;pointer-events:none}
+.pr-say{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+
+/* in the Planner: the way in from today's card, and the note on where a class got to */
+.ls-go{right:35px;color:var(--accent);border-color:var(--accent)}
+.ls-go svg{width:14px;height:14px;fill:currentColor;stroke:none;vertical-align:-2px}
+.ls-cardw:has(.ls-go)>.ls-card{padding-right:66px}
+.pl-taught{font-size:var(--text-small);font-weight:600;color:var(--ok)}
+.ls-top .btn svg{width:14px;height:14px;fill:currentColor;stroke:none}
+.pl-tgs{display:flex;flex-direction:column;gap:var(--space-2);margin-top:var(--space-3)}
+.pl-tg{display:flex;align-items:baseline;gap:var(--space-3);flex-wrap:wrap;border:1px solid var(--line);border-radius:var(--corner-3);padding:var(--space-2) var(--space-3);font-size:var(--text-control)}
+.pl-tg .w{color:var(--muted)}
+.pl-tg .nt{flex:1;min-width:160px}
+.pl-tgd select,.pl-tgd input{justify-content:flex-start;text-align:left;width:100%}
+.pl-tgd input{cursor:text}
+.pl-tgd .who{margin:0 0 var(--space-3);font-weight:600}
 
 /* The sidebar stays put at the left edge; the Planner's own screen scrolls beside it. It folds to icons while a lesson, a unit or a document is open. */
 .rail{position:fixed;left:0;top:0;bottom:0;z-index:6}
@@ -1157,7 +1249,7 @@ async function versionsDlg(l) {
     const b = e.target.closest('[data-rv]'); if (!b) return;
     const v = vs[+b.dataset.rv];
     await saveVersion(l, 'Before going back to “' + v.label + '”');
-    const back = normLesson({ ...v.lesson, id: l.id, slots: l.slots, created: l.created });
+    const back = normLesson({ ...v.lesson, id: l.id, slots: l.slots, created: l.created, taught: l.taught });   // what was taught stays as it is
     const seen = new Set([back.final && back.final.id, ...(back.finals || []).map(f => f.id)]);
     const extra = [l.final, ...(l.finals || [])].filter(f => f && !seen.has(f.id));
     if (extra.length) back.finals = [...extra, ...(back.finals || [])];
@@ -1242,6 +1334,7 @@ async function undoAll(l) {
 }
 async function claudeChanged(old, l) {
   if (!old) return;
+  if (!l.taught && old.taught) l.taught = old.taught;   // a file written without the taught notes doesn't lose them
   if (JSON.stringify(old.slides.map(slideKey)) === JSON.stringify(l.slides.map(slideKey)) && old.title === l.title) { if (old.pending) l.pending = old.pending; return; }
   await saveVersion(old, 'Before Claude’s changes');
   l.pending = old.pending || { at: Date.now(), before: JSON.parse(JSON.stringify(old.slides)), title: old.title };
@@ -1444,6 +1537,7 @@ function normLesson(x) {
   const talk = (Array.isArray(x.talk) ? x.talk : []).filter(t => t && t.text).map(t => ({ by: t.by === 'claude' ? 'claude' : 'you', text: String(t.text), at: +t.at || 0, ...(t.done ? { done: true } : {}) }));
   if (talk.length) out.talk = talk;
   if (x.titleApart) out.titleApart = true;
+  const taught = normTaught(x.taught); if (taught.length) out.taught = taught;   // where each class got to (present.js)
   if (LOOKS[x.look]) out.look = x.look;
   if (/^https?:\/\//.test(x.atlas || '')) out.atlas = String(x.atlas);
   if (x.library) out.library = String(x.library).slice(0, 120);
@@ -1710,8 +1804,8 @@ function renderWeek() {
       for (const { c, m } of ms) {
         const ls = lessonsAt(c.id, d);
         h += '<div class="ls-slot" style="--cc:' + esc(c.color || '#1F6FB2') + '"><div class="ls-sh"><b>' + esc(c.name) + '</b><span>' + hm(m.start) + '–' + hm(m.end) + (m.label ? ' · ' + esc(m.label) : '') + '</span>' + mbBtn(c) + '</div>';
-        for (const l of ls) h += '<div class="ls-cardw"><button class="ls-card" data-open="' + l.id + '"><b>' + esc(l.title) + '</b>' + varTag(l) + statusChip(l) + (l.final ? '<span class="pl-done" title="' + esc(l.final.name) + '">Finished ✓</span>' : '') + '<span>' + l.slides.length + ' slide' + (l.slides.length === 1 ? '' : 's') + (l.slots.length > 1 ? ' · also ' + esc(l.slots.filter(s => !(s.classId === c.id && s.date === d)).map(s => className(s.classId) + ' ' + shortDate(s.date)).join(', ')) : '') + '</span></button>' +
-          '<button class="ls-dl" data-dl="' + l.id + '" title="' + (l.final ? 'Download ' + esc(l.final.name) : 'Download a PowerPoint made from these slides') + '" aria-label="Download">↓</button></div>';
+        for (const l of ls) h += '<div class="ls-cardw"><button class="ls-card" data-open="' + l.id + '"><b>' + esc(l.title) + '</b>' + varTag(l) + statusChip(l) + (l.final ? '<span class="pl-done" title="' + esc(l.final.name) + '">Finished ✓</span>' : '') + taughtChip(l, c.id, d) + '<span>' + l.slides.length + ' slide' + (l.slides.length === 1 ? '' : 's') + (l.slots.length > 1 ? ' · also ' + esc(l.slots.filter(s => !(s.classId === c.id && s.date === d)).map(s => className(s.classId) + ' ' + shortDate(s.date)).join(', ')) : '') + '</span></button>' +
+          presentCardBtn(l, c.id, d) + '<button class="ls-dl" data-dl="' + l.id + '" title="' + (l.final ? 'Download ' + esc(l.final.name) : 'Download a PowerPoint made from these slides') + '" aria-label="Download">↓</button></div>';
         h += '<div class="ls-add"><button class="btn sm ghost" data-new="' + esc(c.id) + '|' + d + '">+ New lesson</button>' + (L.lessons.length ? '<button class="btn sm ghost" data-attach="' + esc(c.id) + '|' + d + '">Use a lesson…</button>' : '') + '</div></div>';
       }
       h += '</div>';
@@ -1738,7 +1832,7 @@ function renderEditor() {
     commentsBtn(l) + '<button class="btn sm ghost" data-a="versions">Versions</button>' + panelBtn() +
     '<button class="btn sm ghost" data-a="more">More ▾</button>' +
     '<button class="btn sm" data-a="finzip" title="Upload the finished PowerPoint and its files as one .zip">↑ Upload lesson .zip</button>' +
-    '<button class="btn sm primary" data-a="pptx">Download .pptx</button></div>' + pendingBar(l) + variantBar(l);
+    '<button class="btn sm" data-a="pptx">Download .pptx</button><button class="btn sm primary" data-pr="present" title="Show this lesson full screen, from this slide">' + prIcon('play') + 'Present</button></div>' + pendingBar(l) + variantBar(l);
   h += '<div class="ls-ed-cols"><nav class="ls-thumbs" id="lsThumbs">' + l.slides.map((x, i) => thumbHtml(x, l, i)).join('') +
     '<div class="ls-addslide"><button class="btn sm" data-a="addslide">+ Add slide</button></div></nav>';
   h += '<section class="ls-main"><div class="ls-tools">' +
@@ -1751,7 +1845,7 @@ function renderEditor() {
     '<div class="ls-stagewrap" id="lsWrap"><div class="ls-stage" id="lsStage"><div class="ls-slide">' + slideHtml(s, l, true) + '</div></div></div>' +
     '<div class="ls-warn" id="lsWarn" hidden></div>' +
     '<label class="ls-notes">Speaker notes<textarea data-f="notes" rows="3" placeholder="Notes for you, not shown on the slide">' + esc(s.notes) + '</textarea></label>' +
-    slideTalkHtml(s) + lessonTalkHtml(l) + finishedHtml(l) + materialsHtml(l, 'lesson') +
+    slideTalkHtml(s) + lessonTalkHtml(l) + taughtHtml(l) + finishedHtml(l) + materialsHtml(l, 'lesson') +
     '<p class="muted ls-hint">Click any text on the slide to edit it. In bullets, start a line with Tab for a smaller point under the one above. Arrow keys move between slides when you’re not typing. Drag a picture in from another tab, or paste a picture or a YouTube link.</p>' +
     '</section></div><input type="file" id="lsPicIn" accept="image/*" hidden>';
   $('#lessons').innerHTML = h;
@@ -2169,6 +2263,7 @@ function lessonText(l) {
   boxNotesToSlides(l);
   let t = '# ' + l.title + (l.variantOf || l.variant ? ' (version: ' + varName(l) + ')' : '') + '\n' + (l.slots.length ? l.slots.map(s => className(s.classId) + ', ' + longDate(s.date)).join('; ') + '\n' : '');
   for (const x of lessonNotes(l)) t += 'My comment on the whole lesson: ' + x + '\n';
+  t += taughtText(l);
   l.slides.forEach((s, i) => {
     t += '\n## Slide ' + (i + 1) + ' (' + LAYOUTS[s.layout] + (s.layout !== 'title' && s.layout !== 'picture' ? ', ' + s.size + ' pt' : '') + ')\n' + (s.title ? 'Title: ' + s.title + '\n' : '');
     for (const k of EXTRA) if (s[k] && k !== 'body2') t += k + ': ' + s[k] + '\n';
@@ -2447,6 +2542,9 @@ stripe, band, bigtype, framed, notebook, chalk. Leave it out to use the teacher'
   "variant" its name, like "Shorter Friday"). It is a full lesson of its own; edit only the one you were asked about.
 - "final" and "finals" (on a lesson) are the teacher's finished PowerPoint and older ones (the files stay in the app). Leave them as they are.
 - "notebook" (on a lesson or unit) is the teacher's own jotted thoughts, as simple HTML. Read it for ideas; don't edit it.
+- "taught" (on a lesson) is where each class got to when the lesson was taught: [{ "classId", "date", "slide" (the slide
+  they reached, counting from 1), "of" (how many slides there were), "note" (the teacher's line for next time) }].
+  Read it to plan what comes next; leave it as it is.
 - A slide's "ask" is what the teacher wants on that slide. Use it, and leave it as it is.
 - A slide's "ctx" is screenshots the teacher added for context (like assignment instructions), not shown on the slide:
   [{ "id", "src": "images/ctx-….png", "w", "h", "note": "what it is" }]. Open the image files and use them; leave "ctx" as it is.
@@ -4069,7 +4167,7 @@ function copyLessonDlg(l) {
   };
 }
 async function copyLesson(l, slot, title) {
-  const j = JSON.parse(JSON.stringify(l)); delete j._file; delete j._mod; delete j.pending;
+  const j = JSON.parse(JSON.stringify(l)); delete j._file; delete j._mod; delete j.pending; delete j.taught;
   j.id = lid(); j.title = title || l.title; j.slots = slot ? [slot] : []; j.created = j.updated = Date.now(); j.status = ''; j.claudeNote = '';
   j.slides = j.slides.map(s => ({ ...s, id: lid() }));
   j.files = [];
@@ -4706,6 +4804,410 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Escape') { $('#nbAsk').hidden = true; $('#nbPage').focus(); }
 });
 
+/* ================= Present: teach from the lesson =================
+   The lesson's slides fill the screen. One key away: the agenda (tick items off as the class goes), a countdown the
+   class can watch, the speaker notes, a blank screen, and how long the class has left by the timetable.
+   Afterwards one line says where the class got to. It is kept on the lesson as "taught", so it goes to the Planner
+   folder with the lesson and shows on the week.
+   This reads the lesson and the timetable and nothing else. Its buttons carry data-pr and are handled here. */
+const PR = { on: false, askMs: 2 * 60 * 1000 };   // askMs: presenting for at least this long asks where the class got to
+const PR_I = {
+  play: '<path d="M8 5.5v13l10.5-6.5z"/>',
+  prev: '<path d="M14.5 6l-6 6 6 6"/>', next: '<path d="M9.5 6l6 6-6 6"/>',
+  agenda: '<path d="M9.5 7H19M9.5 12H19M9.5 17H19M5 7h.01M5 12h.01M5 17h.01"/>',
+  timer: '<circle cx="12" cy="13.5" r="6.5"/><path d="M12 10v3.5l2.3 1.4M10 3.5h4"/>',
+  notes: '<rect x="5" y="4" width="14" height="16" rx="2"/><path d="M8.5 9h7M8.5 13h7M8.5 17h4"/>',
+  blank: '<rect x="3.5" y="5" width="17" height="12" rx="1.5"/><path d="M9 20.5h6"/>',
+  full: '<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>',
+  check: '<path d="M5 12.5l4.5 4.5L19 7.5"/>'
+};
+const prIcon = k => '<svg viewBox="0 0 24 24" aria-hidden="true">' + PR_I[k] + '</svg>';
+const prToday = () => ymd(new Date());
+const prMin = t => { const [h, m] = String(t || '').split(':').map(Number); return (h || 0) * 60 + (m || 0); };
+const prNowMin = () => { const d = new Date(); return d.getHours() * 60 + d.getMinutes() + d.getSeconds() / 60; };
+const prSameSlot = (a, b) => !!a && !!b && a.classId === b.classId && a.date === b.date;
+
+/* ---------- which class this is, and how long it has ---------- */
+function prMeeting(slot) {
+  if (!slot) return null;
+  const ms = meetingsOn(slot.date).filter(x => x.c.id === slot.classId).map(x => x.m).filter(m => m.start && m.end);
+  if (!ms.length) return null;
+  const now = prNowMin();
+  return ms.find(m => prMin(m.start) <= now && now < prMin(m.end)) || ms.find(m => prMin(m.start) > now) || ms[ms.length - 1];
+}
+function prSlotNow(l) {
+  const today = l.slots.filter(s => s.date === prToday()); if (!today.length) return null;
+  const now = prNowMin();
+  const rank = s => { const m = prMeeting(s); if (!m) return [3, 0]; const a = prMin(m.start), b = prMin(m.end); return a - 10 <= now && now < b ? [0, a] : now < a ? [1, a] : [2, -b]; };
+  return today.map(s => ({ s, r: rank(s) })).sort((x, y) => x.r[0] - y.r[0] || x.r[1] - y.r[1])[0].s;
+}
+function prClock() {
+  const d = new Date(), t = (d.getHours() % 12 || 12) + ':' + String(d.getMinutes()).padStart(2, '0');
+  const m = PR.slot && PR.slot.date === prToday() ? prMeeting(PR.slot) : null; if (!m) return t;
+  const now = prNowMin(), a = prMin(m.start), b = prMin(m.end);
+  if (now < a) return t + ' · starts at ' + hm(m.start);
+  if (now >= b) return t + ' · class ended at ' + hm(m.end);
+  return t + ' · ' + Math.ceil(b - now) + ' min left';
+}
+const prSlideName = s => plainTitle(s.title) || LAYOUTS[s.layout];
+
+/* ---------- the note on where a class got to ("taught", kept on the lesson) ---------- */
+function normTaught(a) {
+  const seen = new Map();
+  for (const t of Array.isArray(a) ? a : []) {
+    if (!t || typeof t !== 'object' || !/^\d{4}-\d\d-\d\d$/.test(t.date)) continue;
+    const of = Math.max(1, Math.round(+t.of) || Math.round(+t.slide) || 1), slide = Math.max(1, Math.min(of, Math.round(+t.slide) || 1));
+    const o = { classId: typeof t.classId === 'string' ? t.classId : '', date: t.date, slide, of, note: String(t.note || '').replace(/\s+/g, ' ').trim().slice(0, 300), at: +t.at || 0 };
+    if (Array.isArray(t.agenda) && Math.round(+t.agenda[1]) > 0) { const n = Math.round(+t.agenda[1]); o.agenda = [Math.max(0, Math.min(n, Math.round(+t.agenda[0]) || 0)), n]; }
+    seen.set(o.classId + '|' + o.date, o);
+  }
+  return [...seen.values()].sort((x, y) => x.date.localeCompare(y.date) || x.at - y.at);
+}
+const taughtAt = (l, classId, date) => (l.taught || []).find(t => t.classId === classId && t.date === date);
+const taughtWhere = t => t.slide >= t.of ? 'finished all ' + t.of + ' slides' : 'got to slide ' + t.slide + ' of ' + t.of;
+const taughtWho = t => (t.classId ? className(t.classId) + ' · ' : '') + shortDate(t.date);
+function taughtChip(l, classId, date) {
+  const t = taughtAt(l, classId, date); if (!t) return '';
+  return '<span class="pl-taught" title="' + esc(taughtWho(t) + ': ' + taughtWhere(t) + (t.note ? '. ' + t.note : '')) + '">Taught · ' + (t.slide >= t.of ? 'finished' : 'to slide ' + t.slide + ' of ' + t.of) + '</span>';
+}
+function presentCardBtn(l, classId, date) {
+  return date === prToday() ? '<button class="ls-dl ls-go" data-pr="go" data-id="' + esc(l.id) + '" data-c="' + esc(classId) + '" data-d="' + date + '" title="Present this lesson" aria-label="Present ' + esc(l.title) + '">' + prIcon('play') + '</button>' : '';
+}
+function taughtHtml(l) {
+  const ts = l.taught || [], due = l.slots.some(s => s.date <= prToday());
+  if (!ts.length && !due) return '';
+  return '<div class="pl-fin" id="plTaught"><div class="pl-fin-h"><h3>Taught</h3><span class="muted sp-small">' + (ts.length ? 'Where each class got to.' : 'Nothing noted yet. Presenting the lesson on its day asks at the end.') +
+    '</span><span class="sp"></span><button class="btn sm ghost" data-pr="note">' + (ts.length ? 'Add a note' : 'Note where the class got to') + '</button></div>' +
+    (ts.length ? '<div class="pl-tgs">' + ts.map((t, i) => '<div class="pl-tg"><b>' + esc(taughtWho(t)) + '</b><span class="w">' + taughtWhere(t) + (t.agenda ? ' · agenda ' + t.agenda[0] + ' of ' + t.agenda[1] : '') + '</span><span class="nt">' + esc(t.note) + '</span>' +
+      '<button class="btn sm ghost" data-pr="tedit" data-i="' + i + '">Edit</button><button class="btn sm ghost" data-pr="tdel" data-i="' + i + '">Remove</button></div>').join('') + '</div>' : '') + '</div>';
+}
+function taughtText(l) {
+  return (l.taught || []).map(t => 'Taught: ' + (t.classId ? className(t.classId) + ', ' : '') + longDate(t.date) + ': ' + taughtWhere(t) + (t.agenda ? ' (agenda: ' + t.agenda[0] + ' of ' + t.agenda[1] + ' done)' : '') + (t.note ? '. Note: ' + t.note : '') + '\n').join('');
+}
+function taughtRedraw(l) { if (L.view === 'edit' && L.open === l) renderEditor(); else if (L.view === 'week') renderWeek(); }
+function taughtDlg(l, pre) {
+  pre = pre || {};
+  const today = prToday(), n = l.slides.length;
+  const slots = l.slots.length ? l.slots.slice().sort((a, b) => a.date.localeCompare(b.date)) : [{ classId: (pre.edit || {}).classId || '', date: (pre.edit || {}).date || today }];
+  const want = pre.edit || pre.slot || prSlotNow(l) || slots.filter(s => s.date <= today).pop() || slots[0];
+  let at = slots.findIndex(s => prSameSlot(s, want)); if (at < 0) { slots.push({ classId: want.classId, date: want.date }); at = slots.length - 1; }
+  const had = taughtAt(l, slots[at].classId, slots[at].date);
+  const slide = Math.max(1, Math.min(n, pre.slide || (had ? had.slide : n)));
+  const who = s => (s.classId ? className(s.classId) + ' · ' : '') + shortDate(s.date);
+  openDlg('<div class="bh"><h2>Where did the class get to?</h2></div><div class="bb pl-tgd">' +
+    (slots.length > 1 ? '<label class="ls-f">Class <select id="tgC" class="btn">' + slots.map((s, i) => '<option value="' + i + '"' + (i === at ? ' selected' : '') + '>' + esc(who(s)) + '</option>').join('') + '</select></label>' : '<p class="who">' + esc(who(slots[0])) + '</p>') +
+    '<label class="ls-f">Got to <select id="tgS" class="btn">' + l.slides.map((s, i) => '<option value="' + (i + 1) + '"' + (i + 1 === slide ? ' selected' : '') + '>Slide ' + (i + 1) + ' · ' + esc(prSlideName(s)) + (i === n - 1 ? ' (the end)' : '') + '</option>').join('') + '</select></label>' +
+    '<label class="ls-f">A line for next time <input id="tgN" class="btn" maxlength="200" autocomplete="off" placeholder="Optional. For example: start with the exit ticket" value="' + esc((had || {}).note || '') + '"></label>' +
+    '</div><div class="bf"><button class="btn" data-x>Not now</button><button class="btn primary" data-ok>Save</button></div>', true);
+  const box = $('#dlgBox'); $('#tgN').focus();
+  const save = async () => {
+    const s = slots[$('#tgC') ? +$('#tgC').value : 0], num = +$('#tgS').value || 1;
+    const t = { classId: s.classId, date: s.date, slide: num, of: n, note: $('#tgN').value, at: Date.now() };
+    if (pre.agenda && pre.agenda[1]) t.agenda = pre.agenda; else { const old = taughtAt(l, s.classId, s.date); if (old && old.agenda) t.agenda = old.agenda; }
+    l.taught = normTaught([...(l.taught || []).filter(x => !(pre.edit && x === pre.edit)), t]);
+    closeDlg(); await lPut(l); taughtRedraw(l); toast('Noted on the lesson');
+  };
+  box.onchange = e => { if (e.target.id !== 'tgC') return; const s = slots[+e.target.value], h = taughtAt(l, s.classId, s.date); if (h) { $('#tgS').value = h.slide; $('#tgN').value = h.note; } };
+  box.onkeydown = e => { if (e.key === 'Enter' && e.target.id === 'tgN') { e.preventDefault(); save(); } };
+  box.onclick = e => { if (e.target.closest('[data-x]')) return closeDlg(); if (e.target.closest('[data-ok]')) save(); };
+}
+
+/* ---------- starting ---------- */
+function prResume(l, slot) {
+  const ts = (l.taught || []).filter(t => !slot || t.classId === slot.classId), t = ts[ts.length - 1];
+  return t && t.slide < l.slides.length && t.slide < t.of ? t : null;
+}
+async function presentStart(l, o) {
+  if (!l || PR.on) return;
+  o = o || {};
+  try { editorCommit(); } catch { }
+  const slot = o.slot && l.slots.some(s => prSameSlot(s, o.slot)) ? o.slot : prSlotNow(l);
+  const back = prResume(l, slot), i = o.at > 0 ? Math.min(o.at, l.slides.length - 1) : back ? back.slide - 1 : 0;
+  const ag = l.slides.find(s => s.layout === 'agenda');
+  Object.assign(PR, { on: true, l, i, far: i, slot, began: Date.now(), ended: false, blank: false, notes: false, agenda: false, menu: false, ticks: new Set(), timer: null, num: '', keep: false, video: false, full: false, back: document.activeElement,
+    items: ag ? rtParse(ag.body).filter(x => x.text.trim()) : null, agTitle: ag ? plainTitle(ag.title) || 'Agenda' : '' });
+  const el = PR.el = document.createElement('div');
+  el.id = 'present'; el.className = 'pr'; el.tabIndex = -1; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-label', 'Presenting ' + l.title);
+  const b = (p, icon, label, key, cls) => '<button data-p="' + p + '"' + (cls ? ' class="' + cls + '"' : '') + ' title="' + label + ' (' + key + ')"' + (cls === 'ic' ? ' aria-label="' + label + '"' : '') + '>' + prIcon(icon) + (cls === 'ic' ? '' : '<span class="lb">' + label + '</span>') + '</button>';
+  el.innerHTML = '<div class="pr-stage" id="prStage"><div class="pr-fit" id="prFit"></div></div>' +
+    '<div class="pr-notes" id="prNotes" hidden></div>' +
+    '<aside class="pr-agenda" id="prAgenda" aria-label="Agenda" hidden></aside>' +
+    '<button class="pr-chip" id="prChip" data-p="chip" hidden></button>' +
+    '<div class="pr-cover" id="prCover" hidden></div>' +
+    '<div class="pr-menu" id="prMenu" role="group" aria-label="Timer" hidden></div>' +
+    '<div class="pr-hint" id="prHint" hidden></div><div class="pr-say" id="prSay" aria-live="polite"></div>' +
+    '<div class="pr-bar" id="prBar" role="toolbar" aria-label="Presenting">' + b('prev', 'prev', 'Previous slide', '←', 'ic') + '<span class="pr-count" id="prCount"></span>' + b('next', 'next', 'Next slide', '→', 'ic') + '<span class="pr-sep"></span>' +
+    b('agenda', 'agenda', 'Agenda', 'A') + b('timer', 'timer', 'Timer', 'T') + b('notes', 'notes', 'Notes', 'N') + b('blank', 'blank', 'Blank', 'B') + b('full', 'full', 'Full screen', 'F') +
+    '<span class="pr-sep"></span><span class="pr-time" id="prTime"></span><button data-p="end" class="pr-end" title="Finish (Esc)">Finish</button></div>';
+  document.body.appendChild(el);
+  document.addEventListener('keydown', prKey, true);
+  document.addEventListener('fullscreenchange', prFull);
+  window.addEventListener('resize', prFit);
+  el.addEventListener('click', prClick);
+  el.addEventListener('pointermove', prWake);
+  PR.tickT = setInterval(prTick, 250);
+  prShow(); prTick(); prWake(); el.focus();
+  if (!o.window) try { await el.requestFullscreen(); } catch { }
+  prFit();
+  try { PR.lock = await navigator.wakeLock.request('screen'); } catch { }
+  prHint(back && !(o.at > 0) ? 'Picking up at slide ' + back.slide + ', where ' + (back.classId ? className(back.classId) : 'the class') + ' stopped on ' + shortDate(back.date) + '. Home goes to slide 1.'
+    : (document.fullscreenElement ? '' : 'F for full screen · ') + '→ next · A agenda · T timer · Esc to finish', back && !(o.at > 0) ? 7000 : 4500);
+}
+function presentArrive(rest) {
+  const [id, classId] = rest.split('/'), l = L.lessons.find(x => x.id === id); if (!l) return;
+  openLesson(l);
+  presentStart(l, { slot: classId ? { classId, date: prToday() } : null, window: true });
+}
+
+/* ---------- drawing ---------- */
+function prFit() {
+  const st = $('#prStage'), f = $('#prFit'); if (!st || !f) return;
+  const k = Math.min(st.clientWidth / 1280, st.clientHeight / 720) || 1;
+  f.style.setProperty('--k', k); f.style.width = 1280 * k + 'px'; f.style.height = 720 * k + 'px';
+}
+function prShow() {
+  const l = PR.l, n = l.slides.length, s = l.slides[PR.i];
+  PR.video = false;
+  $('#prFit').innerHTML = '<div class="ls-slide">' + slideHtml(s, l, false) + '</div>';
+  prPaint();
+}
+function prPaint() {
+  const l = PR.l, n = l.slides.length, s = l.slides[PR.i];
+  $('#prCount').textContent = (PR.i + 1) + ' / ' + n;
+  const c = $('#prCover');
+  c.hidden = !PR.ended && !PR.blank;
+  c.innerHTML = PR.ended && !PR.blank ? '<b>End of the lesson</b><span>Click, or press Esc, to finish</span>' : '';
+  const nt = $('#prNotes'); nt.hidden = !PR.notes; nt.classList.toggle('none', !s.notes.trim()); nt.textContent = s.notes.trim() || 'No speaker notes on this slide.';
+  PR.el.style.setProperty('--nb', PR.notes ? nt.offsetHeight + 'px' : '0px');   // the bar sits above the notes
+  for (const [p, on] of [['agenda', PR.agenda], ['notes', PR.notes], ['blank', PR.blank]]) PR.el.querySelector('[data-p="' + p + '"]').setAttribute('aria-pressed', String(!!on));
+  PR.el.querySelector('[data-p="timer"]').setAttribute('aria-expanded', String(!!PR.menu));
+  PR.el.querySelector('[data-p="full"] .lb').textContent = document.fullscreenElement ? 'Leave full screen' : 'Full screen';
+  $('#prSay').textContent = PR.blank ? 'The screen is blank' : PR.ended ? 'End of the lesson' : 'Slide ' + (PR.i + 1) + ' of ' + n + (prSlideName(s) ? ': ' + prSlideName(s) : '');
+  prAgenda(); prFit();
+}
+function prAgenda() {
+  const a = $('#prAgenda'); a.hidden = !PR.agenda; if (!PR.agenda) return;
+  const it = PR.items || [], top = it.map((x, i) => ({ x, i })).filter(o => o.x.lvl === 0), now = top.find(o => !PR.ticks.has(o.i));
+  let h = '';
+  if (top.length) {
+    h = '<h2>' + esc(PR.agTitle) + '</h2>' + it.map((x, i) => x.lvl ? '<div class="pr-asub">' + rtInlineHtml(x.text) + '</div>'
+      : '<button class="pr-ai' + (PR.ticks.has(i) ? ' done' : '') + (now && now.i === i ? ' now' : '') + '" data-ag="' + i + '" aria-pressed="' + PR.ticks.has(i) + '"><span class="bx">' + prIcon('check') + '</span><span class="tx">' + rtInlineHtml(x.text) + '</span></button>').join('');
+  } else {
+    h = '<h2>Slides</h2><p class="pr-anone">This lesson has no agenda yet. Its slides:</p>' + PR.l.slides.map((s, i) => '<button class="pr-ai' + (i === PR.i ? ' now' : '') + '" data-goto="' + i + '"><span class="tx">' + (i + 1) + '. ' + esc(prSlideName(s)) + '</span></button>').join('');
+  }
+  a.innerHTML = h + '<div class="pr-aclock" id="prAClock">' + esc(prClock()) + '</div>';
+}
+let prHintT;
+function prHint(msg, ms) {
+  const h = $('#prHint'); if (!h) return;
+  h.textContent = msg; h.hidden = !msg; clearTimeout(prHintT);
+  if (msg) prHintT = setTimeout(() => { const x = $('#prHint'); if (x) x.hidden = true; }, ms || 3500);
+}
+function prWake() {
+  if (!PR.on) return;
+  PR.el.classList.remove('idle'); clearTimeout(PR.idleT);
+  PR.idleT = setTimeout(() => { if (PR.on && !PR.menu && !PR.el.querySelector('.pr-bar:hover')) PR.el.classList.add('idle'); }, 2600);
+}
+
+/* ---------- moving ---------- */
+function prGo(i) {
+  const n = PR.l.slides.length;
+  if (PR.blank) PR.blank = false;
+  if (i >= n) { if (PR.ended) return presentEnd(); PR.ended = true; PR.far = n - 1; return prShow(); }
+  PR.ended = false; PR.i = Math.max(0, i); PR.far = Math.max(PR.far, PR.i); prShow();
+}
+const prNext = () => prGo(PR.ended ? PR.l.slides.length : PR.i + 1);
+const prPrev = () => prGo(PR.ended ? PR.l.slides.length - 1 : PR.i - 1);
+function prToggle(k) {
+  if (k === 'blank') PR.blank = !PR.blank; else if (k === 'notes') PR.notes = !PR.notes; else if (k === 'agenda') PR.agenda = !PR.agenda;
+  prPaint();
+}
+async function prFullToggle() {
+  try { if (document.fullscreenElement) { PR.keep = true; await document.exitFullscreen(); } else await PR.el.requestFullscreen(); } catch { }
+}
+function prFull() {
+  if (!PR.on) return;
+  const full = document.fullscreenElement === PR.el, was = PR.full; PR.full = full;
+  if (was && !full && !PR.keep && !PR.video) return presentEnd();
+  PR.keep = false; prPaint();
+}
+function prPlay() {
+  const s = PR.l.slides[PR.i], v = s.video, box = PR.el.querySelector('.pr-fit .ls-vid'); if (!v || !box) return;
+  const id = ytId(v.url);
+  if (id && /^https?:$/.test(location.protocol)) {
+    PR.video = true;
+    box.innerHTML = '<iframe src="https://www.youtube-nocookie.com/embed/' + id + '?autoplay=1&rel=0' + (v.start ? '&start=' + v.start : '') + '" title="' + esc(v.title || 'Video') + '" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>';
+  } else { PR.keep = true; window.open(videoLink(v), '_blank', 'noopener'); }
+}
+
+/* ---------- the timer ---------- */
+const prSound = () => { try { return localStorage.getItem('gsp.presentSound') !== '0'; } catch { return true; } };
+function prChime() {
+  if (!prSound() || !PR.ac) return;
+  try {
+    const C = PR.ac, t0 = C.currentTime;
+    [[0, 660], [.4, 660], [.8, 880]].forEach(([d, f]) => {
+      const o = C.createOscillator(), g = C.createGain(); o.type = 'sine'; o.frequency.value = f;
+      g.gain.setValueAtTime(0.0001, t0 + d); g.gain.exponentialRampToValueAtTime(.3, t0 + d + .03); g.gain.exponentialRampToValueAtTime(.0001, t0 + d + .35);
+      o.connect(g); g.connect(C.destination); o.start(t0 + d); o.stop(t0 + d + .4);
+    });
+  } catch { }
+}
+function prTimerStart(sec) {
+  sec = Math.max(1, Math.min(180 * 60, Math.round(sec)));
+  PR.timer = { end: Date.now() + sec * 1000, left: sec, paused: false, done: false };
+  try { PR.ac = PR.ac || new (window.AudioContext || window.webkitAudioContext)(); } catch { }
+  prMenu(false); prTick();
+}
+function prTimerPause() {
+  const t = PR.timer; if (!t || t.done) return;
+  if (t.paused) { t.end = Date.now() + t.left * 1000; t.paused = false; } else { t.left = Math.max(0, Math.ceil((t.end - Date.now()) / 1000)); t.paused = true; }
+  prTick(); if (PR.menu) prMenu(true);
+}
+function prTimerAdd(sec) {
+  const t = PR.timer; if (!t) return prTimerStart(sec);
+  if (t.done) return prTimerStart(sec);
+  if (t.paused) t.left += sec; else t.end += sec * 1000;
+  prTick();
+}
+function prTimerStop() { PR.timer = null; prTick(); if (PR.menu) prMenu(true); }
+function prTick() {
+  if (!PR.on) return;
+  const clock = prClock(), tm = $('#prTime'), ac = $('#prAClock');
+  if (tm && tm.textContent !== clock) tm.textContent = clock;
+  if (ac && ac.textContent !== clock) ac.textContent = clock;
+  const t = PR.timer, chip = $('#prChip');
+  if (!t) { if (!chip.hidden) chip.hidden = true; return; }
+  if (!t.paused && !t.done) { t.left = Math.max(0, Math.ceil((t.end - Date.now()) / 1000)); if (!t.left) { t.done = true; prChime(); if (PR.menu) prMenu(true); } }
+  const txt = t.done ? 'Time’s up' : mmss(t.left) + (t.paused ? '<small>Paused</small>' : '');
+  if (chip.dataset.h !== txt) { chip.dataset.h = txt; chip.innerHTML = txt; }
+  chip.hidden = false; chip.className = 'pr-chip' + (t.done ? ' done' : t.paused ? ' paused' : '');
+  chip.setAttribute('aria-label', t.done ? 'Time’s up. Click to clear' : mmss(t.left) + ' left. Click to ' + (t.paused ? 'go on' : 'pause'));
+}
+function prMenu(open) {
+  PR.menu = !!open;
+  const m = $('#prMenu'); m.hidden = !PR.menu;
+  PR.el.querySelector('[data-p="timer"]').setAttribute('aria-expanded', String(PR.menu));
+  if (!PR.menu) return prWake();
+  const t = PR.timer, run = t && !t.done;
+  m.innerHTML = '<h3>' + (run ? 'Timer' : 'Start a timer the class can see') + '</h3>' +
+    (run ? '<div class="pr-run"><button data-p="tpause">' + (t.paused ? 'Go on' : 'Pause') + '</button><button data-p="tadd">+1 min</button><button data-p="tstop">Stop</button></div>'
+      : '<div class="pr-mins">' + [1, 2, 3, 5, 10, 15].map(n => '<button data-tm="' + n + '" aria-label="' + n + ' minute' + (n === 1 ? '' : 's') + '">' + n + '</button>').join('') + '</div>' +
+        '<div class="pr-own"><label for="prOwn">Minutes</label><input type="number" id="prOwn" min="1" max="180" step="1" inputmode="numeric"><span class="sp"></span><button data-p="town">Start</button></div>') +
+    '<label class="pr-snd"><input type="checkbox" id="prSnd"' + (prSound() ? ' checked' : '') + '> A sound when the time is up</label>';
+  m.querySelector('#prSnd').onchange = e => { try { localStorage.setItem('gsp.presentSound', e.target.checked ? '1' : '0'); } catch { } };
+}
+
+/* ---------- the mouse and the keys ---------- */
+function prClick(e) {
+  prWake();
+  const t = e.target;
+  if (e.detail && t.closest('#prBar,#prChip')) PR.el.focus();
+  if (t.closest('#prMenu')) {
+    const b = t.closest('button'); if (!b) return;
+    if (b.dataset.tm) return prTimerStart(+b.dataset.tm * 60);
+    if (b.dataset.p === 'town') { const v = +$('#prOwn').value; return v > 0 ? prTimerStart(v * 60) : $('#prOwn').focus(); }
+    if (b.dataset.p === 'tpause') return prTimerPause();
+    if (b.dataset.p === 'tadd') return prTimerAdd(60);
+    if (b.dataset.p === 'tstop') return prTimerStop();
+    return;
+  }
+  const p = (t.closest('[data-p]') || {}).dataset;
+  if (PR.menu && !(p && p.p === 'timer')) { prMenu(false); if (!p) return; }
+  if (p) {
+    if (p.p === 'prev') return prPrev();
+    if (p.p === 'next') return prNext();
+    if (p.p === 'agenda' || p.p === 'notes' || p.p === 'blank') return prToggle(p.p);
+    if (p.p === 'timer') return prMenu(!PR.menu);
+    if (p.p === 'full') return prFullToggle();
+    if (p.p === 'end') return presentEnd();
+    if (p.p === 'chip') return PR.timer && PR.timer.done ? prTimerStop() : prTimerPause();
+    return;
+  }
+  if (t.closest('#prBar')) return;
+  const ag = t.closest('#prAgenda');
+  if (ag) {
+    const a = t.closest('[data-ag]'), g = t.closest('[data-goto]');
+    if (a) { const i = +a.dataset.ag; if (PR.ticks.has(i)) PR.ticks.delete(i); else PR.ticks.add(i); return prAgenda(); }
+    if (g) return prGo(+g.dataset.goto);
+    return;
+  }
+  if (t.closest('#prNotes')) return;
+  if (PR.blank) return prToggle('blank');
+  if (PR.ended) return presentEnd();
+  if (t.closest('.pr-fit .ls-vid') && PR.l.slides[PR.i].video) { if (!PR.video) prPlay(); return; }
+  if (t.closest('.pr-fit a[href]')) return;
+  prNext();
+}
+function prKey(e) {
+  if (!PR.on) return;
+  e.stopPropagation();   // nothing behind the stage gets a key
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  const k = e.key, own = e.target && e.target.id === 'prOwn';
+  if (own) { if (k === 'Enter') { e.preventDefault(); const v = +e.target.value; if (v > 0) prTimerStart(v * 60); } else if (k === 'Escape') { e.preventDefault(); prMenu(false); PR.el.focus(); } return; }
+  if (k === 'Tab') return prWake();
+  if ((k === ' ' || k === 'Enter') && e.target && e.target.closest && e.target.closest('#present button,#present input')) return;   // the button in hand does its own thing
+  const stop = () => e.preventDefault();
+  if (PR.menu) {
+    stop();
+    if (/^[1-9]$/.test(k)) return prTimerStart(+k * 60);
+    if (k === 'Escape' || k.toLowerCase() === 't') return prMenu(false);
+    return;
+  }
+  if (PR.blank) { stop(); return prToggle('blank'); }
+  if (/^\d$/.test(k)) { stop(); PR.num = (PR.num + k).slice(-3); clearTimeout(PR.numT); PR.numT = setTimeout(() => { PR.num = ''; }, 2500); return prHint('Slide ' + PR.num + ': press Enter', 2500); }
+  if (k === 'Enter' && PR.num) { stop(); const i = +PR.num - 1; PR.num = ''; prHint(''); return prGo(Math.min(i, PR.l.slides.length - 1)); }
+  PR.num = '';
+  if (k === 'ArrowRight' || k === 'ArrowDown' || k === 'PageDown' || k === ' ' || k === 'Enter') { stop(); return prNext(); }
+  if (k === 'ArrowLeft' || k === 'ArrowUp' || k === 'PageUp' || k === 'Backspace') { stop(); return prPrev(); }
+  if (k === 'Home') { stop(); return prGo(0); }
+  if (k === 'End') { stop(); return prGo(PR.l.slides.length - 1); }
+  if (k === 'Escape') { stop(); return presentEnd(); }
+  const c = k.toLowerCase();
+  if (c === 'a') { stop(); return prToggle('agenda'); }
+  if (c === 'n') { stop(); return prToggle('notes'); }
+  if (c === 'b' || k === '.') { stop(); return prToggle('blank'); }
+  if (c === 't') { stop(); return prMenu(true); }
+  if (c === 'f') { stop(); return prFullToggle(); }
+}
+
+/* ---------- finishing ---------- */
+async function presentEnd() {
+  if (!PR.on) return;
+  const { l, i, far, slot, began, el, back, ticks, items } = PR;
+  PR.on = false;
+  clearInterval(PR.tickT); clearTimeout(PR.idleT); clearTimeout(prHintT); clearTimeout(PR.numT);
+  document.removeEventListener('keydown', prKey, true); document.removeEventListener('fullscreenchange', prFull); window.removeEventListener('resize', prFit);
+  const lock = PR.lock, ac = PR.ac, full = document.fullscreenElement === el;
+  PR.lock = PR.ac = PR.timer = PR.el = null;
+  el.remove();   // a full-screen stage taken off the page leaves full screen by itself
+  try { if (full && document.fullscreenElement) await document.exitFullscreen(); } catch { }
+  try { if (lock) await lock.release(); } catch { }
+  try { if (ac) ac.close(); } catch { }
+  if (L.view === 'edit' && L.open === l) { L.cur = Math.min(i, l.slides.length - 1); renderEditor(); }
+  if (back && back.isConnected && back.focus) try { back.focus({ preventScroll: true }); } catch { }
+  const top = (items || []).filter(x => x.lvl === 0).length, done = (items || []).filter((x, k) => x.lvl === 0 && ticks.has(k)).length;
+  if (slot && slot.date === prToday() && l.slots.some(s => prSameSlot(s, slot)) && Date.now() - began >= PR.askMs) taughtDlg(l, { slot, slide: far + 1, agenda: done ? [done, top] : null });
+}
+
+/* ---------- the buttons in the Planner ---------- */
+document.addEventListener('click', e => {
+  const b = e.target.closest && e.target.closest('[data-pr]'); if (!b || PR.on) return;
+  const a = b.dataset.pr, l = a === 'go' ? L.lessons.find(x => x.id === b.dataset.id) : L.open;
+  if (!l) return;
+  if (a === 'present') return presentStart(l, { at: L.cur });
+  if (a === 'go') return presentStart(l, { slot: { classId: b.dataset.c, date: b.dataset.d } });
+  if (a === 'note') return taughtDlg(l);
+  const t = (l.taught || [])[+b.dataset.i]; if (!t) return;
+  if (a === 'tedit') return taughtDlg(l, { edit: t });
+  if (a === 'tdel') {
+    l.taught = l.taught.filter(x => x !== t); if (!l.taught.length) delete l.taught;
+    lPut(l); taughtRedraw(l);
+    return undoToast('Note removed', () => { l.taught = normTaught([...(l.taught || []), t]); lPut(l); taughtRedraw(l); });
+  }
+});
+window.__present = { PR, start: presentStart, end: presentEnd, timer: prTimerStart, normTaught, taughtDlg };
+
 /* ================= The sidebar =================
    The same sidebar as on the grading page, drawn by the Planner's own code. Its classes are the ones on the Planner's
    timetable. It shows no grading counts and reads nothing of grading's: Home, a class and Settings are plain links
@@ -4845,6 +5347,7 @@ function arriveAt() {
   else if (h === 'rubrics') list('bank');
   else if (h === 'timetable') { list('week'); openTimetable(); }
   else if (h.startsWith('lesson/')) { const l = L.lessons.find(x => x.id === h.slice(7)); L.weekOf = ymd(mondayOf(new Date())); list('week'); if (l) openLesson(l); }
+  else if (h.startsWith('present/')) { L.weekOf = ymd(mondayOf(new Date())); list('week'); presentArrive(h.slice(8)); }
 }
 
 /* ================= Units and the semester =================

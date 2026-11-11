@@ -137,7 +137,8 @@ document.addEventListener('keydown', e => {
 }, true);
 
 /* ---------- arriving from the grading page ---------- */
-// planner.html#week opens this week, #timetable the timetable, #rubrics the rubric bank, #lesson/<id> one lesson.
+// planner.html#week opens this week, #timetable the timetable, #rubrics the rubric bank, #lesson/<id> one lesson,
+// #present/<id>/<class id> one lesson, presenting.
 // The address is tidied afterwards, so a refresh doesn't do it again.
 function arriveAt() {
   let h; try { h = decodeURIComponent(location.hash.replace(/^#\/?/, '')); } catch { h = ''; }
@@ -148,4 +149,5 @@ function arriveAt() {
   else if (h === 'rubrics') list('bank');
   else if (h === 'timetable') { list('week'); openTimetable(); }
   else if (h.startsWith('lesson/')) { const l = L.lessons.find(x => x.id === h.slice(7)); L.weekOf = ymd(mondayOf(new Date())); list('week'); if (l) openLesson(l); }
+  else if (h.startsWith('present/')) { L.weekOf = ymd(mondayOf(new Date())); list('week'); presentArrive(h.slice(8)); }
 }

@@ -1,15 +1,14 @@
 {
- "version": "1.6.0",
- "build": "8b915aedbe41",
+ "version": "1.10.0",
+ "build": "8bda055858b4",
  "notes": [
-  "A new browser opens on three questions (your classes, how you grade, where work is kept) and starts with nothing of anyone else’s in it.",
-  "A sample class of made-up students, with papers to mark, for trying things out. Remove it from Home when you’re done.",
-  "The app uses the name of your own school system. Choose it, and how you usually grade, in Settings.",
-  "Letter grades or IB 1 to 7 can show beside the percent, with boundaries you set.",
-  "Canvas and Moodle downloads are grouped by student. The Planner works without a setup file, and downloads lessons as PowerPoint with a plain built-in template."
+  "Present a lesson from the Planner: its slides fill the screen, and the arrow keys or a clicker move through them.",
+  "While presenting, A shows the agenda to tick off, T starts a timer the class can see, N shows your notes and B blanks the screen.",
+  "The bar shows how many minutes the class has left, from your timetable.",
+  "After a lesson is taught, one line says where the class got to. It shows on the lesson and on the week, and presenting again picks up there."
  ],
  "files": {
-  "index.html": "7c16f3183ba73e638cf15d491439c04d0be1082d479dc89902862628ae0b51d3",
-  "planner.html": "b36e40f7c04320dc441a855946d3ccb52b24e8d58f00942286d893ffae7f7e65"
+  "index.html": "3c8ae983cd4ad772be42cfc5c000879a0da927e5eea0801f642af861960c407e",
+  "planner.html": "4a00cb65a6f2439e533daae63f77c0a138cf2d567393fc2f601d39a07c3ab059"
  }
 }

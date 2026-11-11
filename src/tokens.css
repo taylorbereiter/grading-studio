@@ -27,6 +27,9 @@
   --uz:1; --dfs:15px; --dlh:1.45;
   /* older names for corners, still used by a few rules */
   --r:10px; --r-sm:7px;
+  /* colour: the stage a lesson is presented on. The same in light and dark: black around the slide, a dark bar for the teacher, a light panel for what the class reads. */
+  --stage:#0B0D12; --stage-fg:#F3F4F7; --stage-muted:#A9B0C0; --stage-bar:#1B1F29; --stage-line:#3A4150; --stage-hover:#2C3342;
+  --stage-blue:#1A67A8; --stage-blue-2:#15568C; --stage-blue-soft:#E6F0F9; --stage-paper:#FFFFFF; --stage-ink:#1E2024; --stage-ink-2:#5C616A;
   /* colour: charts and the gradebook (types of assignment, the five steps of a heat map, up and down, the dot plot) */
   --bk-sum:#164E80; --bk-ic:#6FA3D2; --bk-fm:#8A919E; --ch1:#8FB5DC; --ch2:#5F96CB; --ch3:#3478B7; --ch4:#1A5D9A; --ch5:#0F3F6C; --ch-lo:#0D2740; --ch-hi:#FFFFFF; --ch-up:#1A67A8; --ch-down:#B4610F; --ch-band:#DCE7F3; --dot:var(--accent); --ov-bar:#1A67A8; --ov-mute:#8A919E;
 }

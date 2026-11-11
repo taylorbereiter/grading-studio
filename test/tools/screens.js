@@ -61,6 +61,8 @@ const SCREENS = [
   { name: 'planner-timetable', where: 'p', hash: '#timetable' },
   { name: 'planner-rubrics', where: 'p', hash: '#rubrics' },
   { name: 'planner-lesson', where: 'p', hash: '#lesson/{L}' },
+  // presenting: the agenda open over a slide. The bar stays up while one of its buttons has the keys, and the hint has gone by the time of the picture.
+  { name: 'planner-present', where: 'p', hash: '#present/{L}', ready: '#present', then: async page => { await page.evaluate(() => { const b = document.querySelector('#present [data-p="agenda"]'); b.focus(); b.click(); }); await sleep(5200); } },
   { name: 'planner-find', where: 'p', hash: '#week', then: page => page.evaluate(() => document.querySelector('#railFind, .rfind').click()) },
   { name: 'first-visit', where: 'g', hash: '#/', ready: '#railClasses a, #rail', fresh: true },
   { name: 'first-visit-planner', where: 'p', hash: '', fresh: true },

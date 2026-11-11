@@ -1,15 +1,8 @@
-# Stage 3, any teacher. The version line reads 1.6.0 on Home, in Settings and in the Keys box. Home offers "a sample class".
-# Settings has two new parts: where students hand in work (Classes) and how you usually grade (Grading). The first visit is
-# the welcome. The Planner with no setup file starts with "Type in my classes", says "setup file" where it said "profile",
-# and a lesson with no slide template of the teacher's own shows the plain look that its download now has.
-home
-home-find
-first-visit
-first-visit-planner
-class-assignments
-mark-keys
-grades-sheet
-settings-*
-planner-timetable
+# Stage 5, teach from it. A lesson's top bar has Present (the one blue button; Download is plain), and a lesson whose day
+# has come has a Taught box under its comments. planner-present is new: a lesson being presented, with the agenda open.
+# The version line reads 1.10.0 on Home, in Settings and in the Keys box.
 planner-lesson
-planner-find
+planner-present
+home
+settings-*
+mark-keys
