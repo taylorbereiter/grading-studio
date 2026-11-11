@@ -90,7 +90,7 @@ function findMatch(rows, q) {
   if (!words.length) return rows.filter(r => r.group !== 'Lessons' && r.group !== 'Units' && r.group !== 'Help');
   const hit = [];
   for (const r of rows) {
-    const l = r.label.toLowerCase(), all = l + ' ' + r.sub.toLowerCase() + ' ' + r.group.toLowerCase() + ' ' + (r.words || '').toLowerCase();
+    const l = tr(r.label).toLowerCase(), all = l + ' ' + r.label.toLowerCase() + ' ' + r.sub.toLowerCase() + ' ' + tr(r.sub).toLowerCase() + ' ' + r.group.toLowerCase() + ' ' + tr(r.group).toLowerCase() + ' ' + (r.words || '').toLowerCase();   // in another language (lang.js) a row is found by its words in either
     if (!words.every(w => all.includes(w))) continue;
     hit.push({ r, rank: l.startsWith(words[0]) ? 0 : l.split(/[^a-z0-9]+/).some(p => p.startsWith(words[0])) ? 1 : words.every(w => l.includes(w)) ? 2 : 3 });
   }
@@ -114,7 +114,7 @@ function openFind() {
     for (const r of hits) { let g = groups.find(x => x.name === r.group); if (!g) groups.push(g = { name: r.group, rows: [] }); g.rows.push(r); }
     shown = groups.flatMap(g => g.rows); at = 0;
     let k = 0;
-    list.innerHTML = groups.map(g => '<div class="fcap">' + esc(g.name) + '</div>' + g.rows.map(r => '<button class="frow" role="option" id="fr' + k + '" data-fi="' + (k++) + '"><b>' + esc(r.label) + '</b><span>' + esc(r.sub) + '</span></button>').join('')).join('');
+    list.innerHTML = groups.map(g => '<div class="fcap">' + esc(g.name) + '</div>' + g.rows.map(r => '<button class="frow" role="option" id="fr' + k + '" data-fi="' + (k++) + '"><b' + (g.name === 'Classes' || g.name === 'Lessons' || g.name === 'Units' ? ' data-raw' : '') + '>' + esc(r.label) + '</b><span>' + esc(r.sub) + '</span></button>').join('')).join('');
     el.querySelector('#findCount').textContent = inp.value.trim() ? '' : 'Lessons, units, classes and settings';
     mark();
   };

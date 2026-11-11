@@ -124,7 +124,7 @@ test('the Planner’s sidebar reads nothing of grading’s', async () => {
     await page.waitForSelector('#findDlg .frow'); await page.keyboard.press('Escape');
     const t = await page.evaluate(() => ({ ls: [...window.__touched.ls], db: [...window.__touched.db] }));
     assert.deepEqual(t.db, ['gs-lessons']);
-    for (const k of t.ls) assert.ok(k === 'gs.theme' || k === 'gs.mblinks' || k === 'gs.words' || k.startsWith('gsp.'), 'the Planner touched ' + k);
+    for (const k of t.ls) assert.ok(k === 'gs.theme' || k === 'gs.lang' || k === 'gs.mblinks' || k === 'gs.words' || k.startsWith('gsp.'), 'the Planner touched ' + k);
     assert.deepEqual(page.errors, []);
   } finally { await ctx.close(); await srv.close(); }
 });
@@ -381,7 +381,7 @@ test('Settings is one page per subject, each with its own address', async () => 
   await goTo(page, '#/settings/timetable'); assert.deepEqual(await shown(), ['setTimetable']);
   await page.waitForFunction(() => /No timetable in this browser yet/.test(document.querySelector('#setTimetable').textContent));
   assert.equal(await page.$eval('#setTimetable a.btn', a => a.textContent), 'Set up the timetable');
-  await goTo(page, '#/settings/display'); assert.deepEqual(await shown(), ['setDisplay']);
+  await goTo(page, '#/settings/display'); assert.deepEqual(await shown(), ['setDisplay', 'setLang']);
   await goTo(page, '#/settings/claude'); assert.deepEqual(await shown(), ['setClaude']);
   await goTo(page, '#/settings/keys'); assert.deepEqual(await shown(), ['setKeys']);
   // a refresh stays on the section; Back walks the sections; an address that names no section is the first one

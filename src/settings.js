@@ -60,3 +60,6 @@ $('#setPane').addEventListener('click', async e => {
 });
 // A box that was opened from here may have changed what a card says: draw again when it closes.
 new MutationObserver(() => { if ($('#dlg').hidden) setRender(); }).observe($('#dlg'), { attributes: true, attributeFilter: ['hidden'] });
+
+// Settings, Display, Language (lang.js keeps the choice and draws the page again).
+$('#setLangBox').innerHTML = langPick('setLangPick');

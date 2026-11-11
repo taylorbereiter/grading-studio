@@ -1,13 +1,13 @@
 {
- "version": "1.18.0",
- "build": "aae57ecdf0c8",
+ "version": "1.19.0",
+ "build": "95151f18f4bf",
  "notes": [
-  "On a tablet, a pencil draws and the pen's line is wider where you press harder. Once you have used a pencil, one finger moves the page, two fingers pinch to zoom, and a hand resting on the screen does nothing.",
-  "Settings, Marking has a new Tablet and pencil section: choose what a finger does on the paper, or turn off the wider line.",
-  "On a touch screen the tools, the student rows and the score buttons are larger."
+  "The app can speak Spanish. Choose it in Settings, Display, App language, or at the top of the welcome.",
+  "Spanish covers the first screens so far: the sidebar, Today, the welcome, Find anything, Help, and the feedback page students get with a returned paper. The other screens are still in English.",
+  "Names you typed (classes, students, assignments, rubric rows) are never translated."
  ],
  "files": {
-  "index.html": "541dcec045eb511cc4cced0133c8a5679bcfcc9d97d5dfcc7194a793a96fedcd",
-  "planner.html": "aa55427cb813b376de9c64d5c34d2cabd50a1b818f00f14a6fc1428f803aa775"
+  "index.html": "7370afc647db739f17ebd103f49a5cd1052749d8b9ecf5da81bc36dff1123cb4",
+  "planner.html": "e3c9abe5d8488cf12a7dd65193e2cea51a183ed241d26d6e60ac8db5fd8e29a2"
  }
 }

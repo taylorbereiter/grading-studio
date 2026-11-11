@@ -54,7 +54,7 @@ function wlRender() {
   }
   const last = wl.step === WL_STEPS.length - 1;
   $('#welcome').innerHTML = '<div class="wlsheet" role="dialog" aria-modal="true" aria-labelledby="wlH"><div class="wll">' +
-    '<div class="wlbrand">Grading <i>Studio</i></div>' +
+    '<div class="wlbrand"><span>Grading <i>Studio</i></span>' + langPick('wlLang') + '</div>' +
     '<h1 id="wlH">Mark papers, plan lessons,<br>hand work back.</h1>' +
     '<p class="wllead">Three quick questions and you’re marking. You can change every answer later.</p>' +
     '<div class="wlsteps" aria-label="Step ' + (wl.step + 1) + ' of 3">' + steps + '</div>' +

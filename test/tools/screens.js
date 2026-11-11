@@ -38,6 +38,7 @@ const SCREENS = [
   { name: 'home', where: 'g', hash: '#/', ready: '#railClasses a' },
   { name: 'home-find', where: 'g', hash: '#/', ready: '#railClasses a', then: page => page.evaluate(() => window.__gs.openFind()) },
   { name: 'help', where: 'g', hash: '#/help/return', ready: '#hlp-return.on' },
+  { name: 'home-spanish', where: 'g', hash: '#/', ready: '#railClasses a', then: async page => { await page.evaluate(() => { localStorage.setItem('gs.lang', '"es"'); }); await page.reload(); await page.waitForSelector('#railClasses a'); await page.evaluate(() => { localStorage.removeItem('gs.lang'); }); } },
   { name: 'class-assignments', where: 'g', hash: '#/class/c1', ready: '#vClass:not([hidden]) .cls' },
   { name: 'class-gradebook', where: 'g', hash: '#/class/c1/gradebook', ready: '#bkTab' },
   { name: 'class-students', where: 'g', hash: '#/class/c1/students', ready: '#peopleTbl table' },

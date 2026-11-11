@@ -20,8 +20,8 @@ function fbData(st, d) {
   const comment = (st.grade.comment || '').trim(), scored = g.total != null && !g.partial;
   if (!scored && !rows.length && !comment && !notes.length) return null;
   const rn = rosterNames(), who = rn.get(st) || st.key;   // the paper goes back to its student, so it carries their name even while she marks with names hidden
-  return { title: (batch.assignment && batch.assignment.name) || batch.name, sub: [who, c && c.name, 'returned ' + fmtDay(Date.now())].filter(Boolean).join(' · '),
-    total: scored ? g.total : null, max: g.outOf != null ? g.outOf : maxPoints(), pct: scored ? g.pct : null, status: g.status ? STATUS_LABEL[g.status] : '', rows, comment, notes };
+  return { title: (batch.assignment && batch.assignment.name) || batch.name, sub: [who, c && c.name, tr('returned ' + fmtDay(Date.now()))].filter(Boolean).join(' · '),
+    total: scored ? g.total : null, max: g.outOf != null ? g.outOf : maxPoints(), pct: scored ? g.pct : null, status: g.status ? tr(STATUS_LABEL[g.status]) : '', rows, comment, notes };
 }
 
 // Lays the page out as blocks, each with a height and a way to draw itself at a y. off is how many feedback pages come before the paper.
@@ -65,7 +65,7 @@ function fbBlocks(ctx, data, W, M, off) {
 
   // each rubric row: its name, the level given as words and as a bar, and what that level means
   if (data.rows.length) {
-    cap('How it was scored');
+    cap(tr('How it was scored'));
     const nameW = Math.min(132, Math.round(cw * 0.25)), barW = 96, tx = M + nameW + barW + 14, tw = cw - nameW - barW - 14, any = data.rows.some(r => r.text);
     out.push({ h: 1, draw: y => { ctx.fillStyle = FB_LINE; ctx.fillRect(M, y, cw, 1); } });
     for (const r of data.rows) {
@@ -73,7 +73,7 @@ function fbBlocks(ctx, data, W, M, off) {
       const h = Math.max(nl.length * 16, dl.length * 16, 30) + 18, bx = any ? M + nameW : M + cw - barW;
       out.push({ h, draw: y => {
         text(nl, '600 12.5px ' + UI, FB_INK, M, y + 21, 16);
-        text([fmtNum(r.v) + ' of 4'], '600 12px ' + UI, FB_BLUE, bx, y + 21, 16);
+        text([tr(fmtNum(r.v) + ' of 4')], '600 12px ' + UI, FB_BLUE, bx, y + 21, 16);
         for (let k = 0; k < 4; k++) {   // four segments; a half point fills half of one
           const x = bx + k * 23, fill = Math.max(0, Math.min(1, r.v - k));
           ctx.fillStyle = FB_LINE; ctx.fillRect(x, y + 28, 20, 3.5);
@@ -87,7 +87,7 @@ function fbBlocks(ctx, data, W, M, off) {
 
   // her comment to the student
   if (data.comment) {
-    cap('From your teacher');
+    cap(tr('From your teacher'));
     const cl = wrap(data.comment, '12.5px ' + UI, cw - 28);
     // one block a line, so a long comment runs on to the next page where the page ends
     cl.forEach((line, i) => {
@@ -103,9 +103,9 @@ function fbBlocks(ctx, data, W, M, off) {
 
   // every comment written on the paper, with its number there and its page in this file
   if (data.notes.length) {
-    cap(data.notes.length === 1 ? 'Comment on your paper' : 'Comments on your paper');
+    cap(tr(data.notes.length === 1 ? 'Comment on your paper' : 'Comments on your paper'));
     for (const n of data.notes) {
-      const nl = wrap(n.text, '12px ' + UI, cw - 26 - 44), h = nl.length * 17 + 9, page = 'p. ' + (n.page + 1 + off);
+      const nl = wrap(n.text, '12px ' + UI, cw - 26 - 44), h = nl.length * 17 + 9, page = tr('p. ' + (n.page + 1 + off));
       const [r, g, b] = rgb(n.color || '#C8321F'), col = 'rgb(' + Math.round(r * 0.8) + ',' + Math.round(g * 0.8) + ',' + Math.round(b * 0.8) + ')';
       out.push({ h, draw: y => {
         if (n.n) {
@@ -148,7 +148,7 @@ async function fbAddPages(out, data, W, H, dpi) {
     const mine = fbPages(fbBlocks(ctx, data, W, M, pages.length), top, bottom)[i] || [];
     let y = top; for (const b of mine) { b.draw(y); y += b.h; }
     ctx.font = '10px ' + UI; ctx.fillStyle = FB_MUTED; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
-    ctx.fillText(i === pages.length - 1 ? 'Your marked paper starts on the next page.' : 'Your feedback continues on the next page.', M, H - M + 6);
+    ctx.fillText(tr(i === pages.length - 1 ? 'Your marked paper starts on the next page.' : 'Your feedback continues on the next page.'), M, H - M + 6);
     out.addPage([W, H]).drawImage(await out.embedJpg(await canvasJpg(c, 0.92)), { x: 0, y: 0, width: W, height: H });
     c.width = c.height = 0;
   }
