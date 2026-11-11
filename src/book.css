@@ -114,3 +114,13 @@ small.bkxc{font-weight:500}
 .bkxcall .sp{flex:1}
 .bkaddgrid .bktypef{grid-column:span 2}
 @media (max-width:900px){.bkaddgrid .bktypef{grid-column:auto}.bkaddgrid .bktypef .pseg{flex-wrap:wrap}}
+/* each type's average and the grade, together at the right, kept in view while the assignments scroll */
+.bktab .bksum{position:sticky;min-width:100px;max-width:100px;box-sizing:border-box;z-index:1}
+.bktab .bkterm.bksum{min-width:120px;max-width:120px}
+.bktab thead th.bksum{z-index:2}
+.bktab td.bkavg.bksum{background:var(--surface-2);color:var(--fg);font-weight:500}
+.bktab thead th.bkavg,.bktab thead th.bkterm{color:var(--fg)}
+.bktab th.bkavg small,.bktab th.bkterm small{display:block;font-size:var(--text-caption);color:var(--muted);font-weight:400}
+.bktab tr.bkfoot td.bkavg{background:var(--surface-2)}
+.bktab tr.bkg th.bkgsum{color:var(--accent);text-align:center;border-left:1px solid var(--line)}
+.bktab.bkyear .bkavg{background:var(--surface-2);color:var(--fg)}
