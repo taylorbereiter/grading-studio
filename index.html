@@ -2120,6 +2120,23 @@ html.welcoming .shell{visibility:hidden}
 .rptcuts{display:flex;align-items:center;gap:var(--space-3);flex-wrap:wrap;margin:0 0 var(--space-4);font-size:var(--text-control)}
 .rptcuts input{width:64px;height:28px;margin:0 2px 0 var(--space-1);padding:0 var(--space-1);border:1px solid var(--line-strong);border-radius:var(--corner-2);background:var(--surface);color:var(--fg);font:inherit}
 @media (max-width:900px){.rptgrid{grid-template-columns:minmax(0,1fr)}.rptlist{position:static;max-height:220px}}
+/* ---------- tablets: what a finger needs (touch.js). None of this applies with a mouse or a trackpad. ---------- */
+.settch{display:flex;align-items:center;gap:var(--space-2);flex-wrap:wrap}
+.settch select{max-width:100%}
+/* nothing can be pointed at, so what shows on pointing shows always */
+@media (hover:none){.pg .rchip{opacity:.92}.crit .sticks{opacity:1}}
+/* a fingertip is wider than a mouse pointer: the tools, the student rows and the score ticks get more room to be hit */
+@media (pointer:coarse){
+  .tools .tool{height:40px}
+  .tools .tool svg{width:20px;height:20px}
+  .tools .seg button{padding:8px 0}
+  .tools .icon{height:36px}
+  .tools .sw{width:22px;height:22px}
+  .tools .swatches{grid-template-columns:22px;gap:8px}
+  .stu{height:40px}
+  .sticks{height:28px}
+  .scores.slide .sticks button{min-width:28px;padding:4px 2px}
+}
 
 </style>
 
@@ -2226,6 +2243,12 @@ html.welcoming .shell{visibility:hidden}
         </section>
         <section class="lib setsec" id="setPapers" data-sec="marking" hidden>
           <div class="lhead"><h2>Word papers</h2><span class="muted">Mark them as they are, or turn each one into PDF pages you can mark anywhere. The Word file is always kept.</span><span class="sp"></span><span class="seg" id="setWordPdf"><button data-v="0" aria-pressed="true">Keep as Word</button><button data-v="1" aria-pressed="false">Convert to PDF pages</button></span></div>
+        </section>
+        <section class="lib setsec" id="setTouch" data-sec="marking" hidden>
+          <div class="lhead"><h2>Tablet and pencil</h2><span class="muted">For a touch screen. A mouse and a trackpad work as they always have.</span></div>
+          <p class="setp settch"><label for="setTouchMode"><b>A finger on the paper</b></label> <select id="setTouchMode" class="btn sm"><option value="auto">draws, until you use a pencil; from then on it moves the page</option><option value="move">always moves the page</option><option value="draw">always draws</option></select></p>
+          <p class="setp settch"><label><input type="checkbox" id="setPress" checked> A pencil’s line gets wider as you press harder</label></p>
+          <p class="muted setp">Two fingers always move the page, and a pinch zooms. While the pencil is on the paper, a hand resting on the screen does nothing.</p>
         </section>
         <section class="lib setsec" id="setTimetable" data-sec="timetable" hidden></section>
         <section class="lib setsec" id="setDisplay" data-sec="display" hidden>
@@ -3296,7 +3319,7 @@ SOFTWARE.
 <script>/* ---------------- saved-data versions: a safety copy, then any format changes, before the app starts ---------------- */
 const gsData = (() => {
   'use strict';
-  const APP_VERSION = "1.17.0";   // from package.json, the one place it's set
+  const APP_VERSION = "1.18.0";   // from package.json, the one place it's set
   const MIGRATIONS = [
   ];
   const DATA_V = Math.max(1, ...MIGRATIONS.map(s => s.to));
@@ -3579,8 +3602,12 @@ const HELP = [
     a: ['No. Open the file’s ⋯ menu, choose **Group work…** and click each partner.', 'With **Mark and grade once for the group** on, a mark or a score given to one partner is given to all of them, and each gets the marked paper back.'],
     words: 'partners pairs group poster shared together' },
   { id: 'tablet', sec: 'mark', q: 'Can I mark on a tablet with a pencil?',
-    a: ['The app runs in a tablet’s browser. A pencil or stylus draws with the tool you have picked.', 'Working on a laptop with a mouse or trackpad is the way the app has been tested most.'],
-    words: 'ipad pencil stylus touch surface tablet finger' },
+    a: ['Yes. Open the app in the tablet’s browser. A pencil or stylus draws with the tool you have picked, and with the pen the line is wider where you press harder.',
+      'Once you have used a pencil, one finger moves the page and two fingers pinch to zoom. Your hand can rest on the screen while you write. Until a pencil is used, one finger draws and two fingers move the page.',
+      'To change what a finger does, or to turn off the wider line, go to Settings, Marking, **Tablet and pencil**.',
+      'This has been tested with a made-up pencil and fingers, not yet on every tablet. If something feels wrong on yours, a laptop with a mouse or trackpad works the same as ever.'],
+    go: ['Open Tablet and pencil', '#/settings/marking'],
+    words: 'ipad pencil stylus touch surface tablet finger palm pinch zoom scroll pressure' },
 
   { id: 'rubric', sec: 'score', q: 'How do I score with a rubric?',
     a: ['The score panel is on the right of the paper. Each rubric row has a slider from 4 to 0, with half points. Drag it or click a number.',
@@ -4243,8 +4270,9 @@ function drawMarks(ctx, marks, W, H, side, screen) {
   for (const m of marks) {
     if (m.t === 'pen') {
       ctx.save(); ctx.strokeStyle = m.color; ctx.lineWidth = m.w; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-      strokePath(ctx, m.pts);
-      ctx.stroke(); ctx.restore();
+      if (hasPress(m.pts)) strokeWide(ctx, m.pts, m.w);
+      else { strokePath(ctx, m.pts); ctx.stroke(); }
+      ctx.restore();
     } else if (m.t === 'text' && !(screen && screen.editing === m)) {
       const L = textLayout(m, W);
       ctx.fillStyle = m.color; ctx.font = m.size + 'px ' + FONT; ctx.textBaseline = 'top';
@@ -4291,7 +4319,8 @@ function bboxOf(m, W) {
   if (m.t === 'pen') {
     let x1 = 1e9, y1 = 1e9, x2 = -1e9, y2 = -1e9;
     for (const [x, y] of m.pts) { x1 = Math.min(x1, x); y1 = Math.min(y1, y); x2 = Math.max(x2, x); y2 = Math.max(y2, y); }
-    return { x: x1 - m.w / 2, y: y1 - m.w / 2, w: x2 - x1 + m.w, h: y2 - y1 + m.w };
+    const w = m.w * (hasPress(m.pts) ? PRESS_MAX : 1);
+    return { x: x1 - w / 2, y: y1 - w / 2, w: x2 - x1 + w, h: y2 - y1 + w };
   }
   if (m.t === 'hl' || m.t === 'oval') return { x: m.x, y: m.y, w: m.w, h: m.h };
   if (m.t === 'text') { const L = textLayout(m, W); return { x: m.x, y: m.y, w: L.w, h: L.h }; }
@@ -4922,7 +4951,7 @@ function turnMarks(marks, W, H, dir) {
   const pt = ([x, y]) => dir > 0 ? [r1(H - y), r1(x)] : [r1(y), r1(W - x)];
   const box = b => { const [ax, ay] = pt([b.x, b.y]), [bx, by] = pt([b.x + b.w, b.y + b.h]); return { x: Math.min(ax, bx), y: Math.min(ay, by), w: Math.abs(bx - ax), h: Math.abs(by - ay) }; };
   for (const m of marks) {
-    if (m.t === 'pen') m.pts = m.pts.map(pt);
+    if (m.t === 'pen') m.pts = m.pts.map(q => keepP(pt(q), q));
     else if (m.t === 'hl' || m.t === 'oval') { Object.assign(m, box(m)); if (m.rects) m.rects = m.rects.map(box); if (m.pts) m.pts = m.pts.map(pt); }
     else if (m.t === 'check' || m.t === 'stamp') [m.x, m.y] = pt([m.x, m.y]);
     else if (m.t === 'note') { delete m.ly; [m.ax, m.ay] = pt([m.ax, m.ay]); if (m.hl) m.hl = box(m.hl); if (m.rects) m.rects = m.rects.map(box); }
@@ -5007,9 +5036,11 @@ function bindPage(pg) {
   const c = pg.canvas;
   const pt = e => { const r = c.getBoundingClientRect(); return [(e.clientX - r.left) / pg.s, (e.clientY - r.top) / pg.s]; };
   const onPage = (x, y) => x >= 0 && x <= pg.W && y >= 0 && y <= pg.H;
-  let g = null;   // the gesture in progress
+  let g = null, gid = -1;   // the gesture in progress, and the pointer it belongs to
   c.addEventListener('pointerdown', e => {
     if (e.button !== 0) return;
+    if (g && e.pointerId !== gid && ptrLive.has(gid)) return;   // a second finger, or her hand, while a stroke is being drawn: the stroke goes on as it was
+    gid = e.pointerId;
     const wasNote = !!(activeEditor && activeEditor.note);   // a comment was open: this click only closes it
     commitEditors();
     const ae = document.activeElement;
@@ -5049,6 +5080,7 @@ function bindPage(pg) {
     }
   });
   c.addEventListener('pointermove', e => {
+    if (g && e.pointerId !== gid) return;
     if (!g) { const [x, y] = pt(e), cu = hoverCursor(pg, x, y); c.style.cursor = cu || (tool === 'select' ? 'default' : tool === 'text' ? 'text' : 'crosshair'); return; }
     const [x, y] = pt(e);
     if (g.line) {
@@ -5087,8 +5119,8 @@ function bindPage(pg) {
       moveMark(g.move, dx, dy); if (g.move.t === 'text') keepOnPage(g.move, pg.W, pg.H); g.x = x; g.y = y; draw(pg);
     }
   });
-  const end = () => {
-    if (!g) return;
+  const end = e => {
+    if (!g || (e && e.pointerId != null && e.pointerId !== gid)) return;
     if (g.line) {
       const m = g.line, moved = g.moved; g = null; pg.lineOn = null;
       if (moved) { if (Math.abs(m.ly - m.ay) < 1) delete m.ly; changed(pg); } else draw(pg);
@@ -5130,6 +5162,7 @@ function bindPage(pg) {
   c.addEventListener('pointerleave', () => { if (!g && pg.lineOn) { pg.lineOn = null; draw(pg); } });
   c.addEventListener('pointerup', end);
   c.addEventListener('pointercancel', end);
+  c.addEventListener('gsdrop', () => { if (!g) return; if (g.m || g.text || g.note) { g = null; pg.ghost = null; draw(pg); } else end(); });
   c.addEventListener('contextmenu', e => {
     const [x, y] = pt(e);
     if (!onPage(x, y) || pg.editing || activeEditor) return;
@@ -5148,7 +5181,7 @@ function bindPage(pg) {
 const r1 = v => Math.round(v * 10) / 10;
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 function moveMark(m, dx, dy) {
-  if (m.t === 'pen') m.pts = m.pts.map(([x, y]) => [r1(x + dx), r1(y + dy)]);
+  if (m.t === 'pen') m.pts = m.pts.map(q => keepP([r1(q[0] + dx), r1(q[1] + dy)], q));
   else if (m.t === 'note') { m.ax = r1(m.ax + dx); m.ay = r1(m.ay + dy); if (m.ly != null) m.ly = r1(m.ly + dy); if (m.hl) m.hl = { ...m.hl, x: r1(m.hl.x + dx), y: r1(m.hl.y + dy) }; moveExtras(m, dx, dy); }
   else { m.x = r1(m.x + dx); m.y = r1(m.y + dy); moveExtras(m, dx, dy); }
 }
@@ -7924,7 +7957,7 @@ const routeOf = hash => {
 };
 const routeNow = () => routeOf(location.hash);
 const SET_SECS = [['saving', 'Saving and carrying', 'Folder, take-home file, safety copies'], ['history', 'Go back in time', 'Your work as it was on an earlier day'], ['classes', 'Classes and rosters', 'Names, students, ' + (sysName() ? sysName() + ' links' : 'class links')], ['terms', 'Terms and weights', 'Your terms and how each type counts'],
-  ['grading', 'Grading scale and rubrics', 'Your saved scales and rubrics'], ['marking', 'Marking', 'Mark key, Word papers'], ['timetable', 'Timetable and calendar', 'Class times and days off, in the Planner'],
+  ['grading', 'Grading scale and rubrics', 'Your saved scales and rubrics'], ['marking', 'Marking', 'Mark key, Word papers, tablet and pencil'], ['timetable', 'Timetable and calendar', 'Class times and days off, in the Planner'],
   ['display', 'Display', 'Text size, zoom, dark mode'], ['claude', 'Working with Claude', 'Optional. What Claude can and can’t see'], ['keys', 'Keys', 'Every shortcut'], ['about', 'About and updates', 'Version, what’s new, install as an app']];
 const CLASS_TABS = [['', 'Assignments'], ['gradebook', 'Gradebook'], ['students', 'Students'], ['charts', 'Charts'], ['reports', 'Report comments']];
 const classHash = (c, tab, stu) => '#/class/' + (c === lib.loose || !c.id ? '-' : encodeURIComponent(c.id)) + (tab ? '/' + tab + (stu != null ? '/' + (stu + 1) : '') : '');
@@ -10808,6 +10841,23 @@ function strokePath(ctx, p) {
   for (let i = 1; i < p.length - 1; i++) { const mx = (p[i][0] + p[i + 1][0]) / 2, my = (p[i][1] + p[i + 1][1]) / 2; ctx.quadraticCurveTo(p[i][0], p[i][1], mx, my); }
   if (p.length > 1) ctx.lineTo(p[p.length - 1][0], p[p.length - 1][1]);
 }
+const keepP = (n, q) => q.length > 2 ? [n[0], n[1], q[2]] : n;
+const pressOn = () => store.get('gs.press', true) !== false;
+const pressOf = e => e.pointerType === 'pen' && e.pressure > 0 ? Math.round(clamp(e.pressure, 0.05, 1) * 100) / 100 : null;
+const hasPress = p => p.some(q => q.length > 2);
+const pressW = (w, q) => w * (0.35 + 1.3 * (q[2] == null ? 0.5 : q[2]));
+const PRESS_MAX = 1.65;
+function strokeWide(ctx, p, w) {
+  if (p.length === 1) { ctx.lineWidth = pressW(w, p[0]); ctx.beginPath(); ctx.moveTo(p[0][0], p[0][1]); ctx.lineTo(p[0][0] + 0.01, p[0][1]); ctx.stroke(); return; }
+  let sx = p[0][0], sy = p[0][1];
+  for (let i = 1; i < p.length; i++) {
+    const last = i === p.length - 1, ex = last ? p[i][0] : (p[i][0] + p[i + 1][0]) / 2, ey = last ? p[i][1] : (p[i][1] + p[i + 1][1]) / 2;
+    ctx.lineWidth = (pressW(w, p[i - 1]) + pressW(w, p[i])) / 2;
+    ctx.beginPath(); ctx.moveTo(sx, sy);
+    if (last) ctx.lineTo(ex, ey); else ctx.quadraticCurveTo(p[i][0], p[i][1], ex, ey);
+    ctx.stroke(); sx = ex; sy = ey;
+  }
+}
 function fillHl(ctx, m) {
   if (m.pts) { ctx.save(); ctx.strokeStyle = m.color; ctx.lineWidth = m.sw; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; strokePath(ctx, m.pts); ctx.stroke(); ctx.restore(); return; }
   ctx.fillStyle = m.color;
@@ -10838,7 +10888,7 @@ function strokeHit(p, x, y, reach) {
   return false;
 }
 function hitShape(m, x, y, slop, W) {
-  if (m.t === 'pen') return strokeHit(m.pts, x, y, m.w / 2 + slop);
+  if (m.t === 'pen') return strokeHit(m.pts, x, y, m.w * (hasPress(m.pts) ? PRESS_MAX : 1) / 2 + slop);
   if (m.pts) return strokeHit(m.pts, x, y, m.sw / 2 + slop);
   if (m.rects) return m.rects.some(r => inRect(r, x, y, slop));
   if (m.t === 'text' && !(selected && selected.mark === m && !selected.fresh)) { const L = textLayout(m, W); return inRect({ x: m.x, y: m.y, w: Math.max(L.ink, 30), h: L.h }, x, y, slop); }   // the words, not the empty part of a wide box
@@ -10873,16 +10923,17 @@ function thinStroke(p, tol, gap) {
   out.push(p[p.length - 1]);
   return out;
 }
-const inkBegin = (m, x, y, e, s) => { const f = inkFilter(); f(x * s, y * s, e.timeStamp); return { m, f, raw: null }; };
+const inkBegin = (m, x, y, e, s) => { const f = inkFilter(); f(x * s, y * s, e.timeStamp); const pr = m.t === 'pen' && pressOn() ? pressOf(e) : null; if (pr != null) m.pts[0].push(pr); return { m, f, raw: null, press: pr != null, pr }; };
 function inkMove(pg, g, e, at) {
   const p = g.m.pts, s = pg.s, n0 = p.length, was = g.raw, all = e.getCoalescedEvents ? e.getCoalescedEvents() : [], list = all.length ? all : [e];
   const step = Math.min(0.7, 1 / s);
   for (const q of list) {
     const [ax, ay] = at(q), x = clamp(ax, 0, pg.W), y = clamp(ay, 0, pg.H), [fx, fy] = g.f(x * s, y * s, q.timeStamp);
     g.raw = [r1(x), r1(y)];
+    if (g.press) { const pr = pressOf(q); if (pr != null) g.pr = pr; g.raw.push(g.pr); }
     if (e.shiftKey) continue;
     const last = p[p.length - 1];
-    if (Math.hypot(fx / s - last[0], fy / s - last[1]) > step) p.push([r1(fx / s), r1(fy / s)]);
+    if (Math.hypot(fx / s - last[0], fy / s - last[1]) > step) p.push(g.press ? [r1(fx / s), r1(fy / s), g.pr] : [r1(fx / s), r1(fy / s)]);
   }
   if (e.shiftKey) {   // Shift: a straight line, level or upright when it's close
     const pt = g.raw, dx = Math.abs(pt[0] - p[0][0]), dy = Math.abs(pt[1] - p[0][1]);
@@ -10892,7 +10943,7 @@ function inkMove(pg, g, e, at) {
     return;
   }
   if (g.straight) { g.straight = false; draw(pg, [g.m]); return; }   // Shift let go: the straight line just drawn goes away
-  const pad = (g.m.t === 'pen' ? g.m.w : g.m.sw) / 2 + 2, near = p.slice(Math.max(0, n0 - 3)).concat(was ? [was] : [], g.raw ? [g.raw] : []);
+  const pad = (g.m.t === 'pen' ? g.m.w * (g.press ? PRESS_MAX : 1) : g.m.sw) / 2 + 2, near = p.slice(Math.max(0, n0 - 3)).concat(was ? [was] : [], g.raw ? [g.raw] : []);
   const xs = near.map(q => q[0]), ys = near.map(q => q[1]), x1 = Math.min(...xs) - pad, y1 = Math.min(...ys) - pad;
   if (g.raw) p.push(g.raw);
   draw(pg, [g.m], { x: x1, y: y1, w: Math.max(...xs) + pad - x1, h: Math.max(...ys) + pad - y1 });
@@ -10902,6 +10953,11 @@ function inkEnd(pg, g) {
   const p = g.m.pts;
   if (g.raw && !g.straight) { const l = p[p.length - 1]; if (l[0] !== g.raw[0] || l[1] !== g.raw[1]) p.push(g.raw); }   // ends where she let go
   g.m.pts = thinStroke(p, Math.min(0.12, 0.4 / pg.s), 6);
+  if (g.press) {
+    const q = g.m.pts, v = q.map(a => a[2] == null ? 0.5 : a[2]);
+    if (Math.max(...v) - Math.min(...v) < 0.06) g.m.pts = q.map(a => [a[0], a[1]]);
+    else g.m.pts = q.map((a, i) => [a[0], a[1], Math.round((v[Math.max(0, i - 1)] + v[i] * 2 + v[Math.min(v.length - 1, i + 1)]) / 4 * 100) / 100]);
+  }
 }
 
 /* ---------------- the page's typed lines, for the highlighter ---------------- */
@@ -15139,7 +15195,7 @@ function skewMarks(marks, W, H, by) {
   const pt = ([x, y]) => [r1(cx + (x - cx) * c - (y - cy) * s), r1(cy + (x - cx) * s + (y - cy) * c)];
   const box = b => { const [x, y] = pt([b.x + b.w / 2, b.y + b.h / 2]); return { x: r1(x - b.w / 2), y: r1(y - b.h / 2), w: b.w, h: b.h }; };   // a box stays square to the page and moves with its middle
   for (const m of marks) {
-    if (m.t === 'pen') m.pts = m.pts.map(pt);
+    if (m.t === 'pen') m.pts = m.pts.map(q => keepP(pt(q), q));
     else if (m.t === 'hl' || m.t === 'oval') { Object.assign(m, box(m)); if (m.rects) m.rects = m.rects.map(box); if (m.pts) m.pts = m.pts.map(pt); }
     else if (m.t === 'check' || m.t === 'stamp') [m.x, m.y] = pt([m.x, m.y]);
     else if (m.t === 'note') { [m.ax, m.ay] = pt([m.ax, m.ay]); if (m.hl) m.hl = box(m.hl); if (m.rects) m.rects = m.rects.map(box); }
@@ -20061,6 +20117,81 @@ function cmtClick(e) {
 }
 Object.assign(window.__gs, { flagsOf, lfSet, navOrder, kmClose, setList, listPeek, scoreRow: () => rowOn });
 
+/* ---------------- tablets: a finger that moves the page, a pencil that draws, and a palm that does nothing (Stage 6) ----------------
+   A page's canvas takes every pointer itself (touch-action: none), which is right for a mouse and a pencil but leaves a finger
+   unable to scroll the paper. So here a finger on a page is given one of two jobs:
+     - two fingers always move the page and pinch to zoom;
+     - one finger draws with the tool in hand, until a pencil has been used in this browser (gs.penSeen). From then on one finger
+       moves the page and the pencil does the marking. Settings, Marking can fix it either way (gs.touch: 'auto', 'move' or 'draw').
+   While the pencil is down, and for a moment after it lifts, a touch on the page is the side of her hand and does nothing.
+   Nothing here runs for a mouse or a trackpad. It is all pointer events on the paper, so it is the same in every browser. */
+const touchMode = () => { const v = store.get('gs.touch', 'auto'); return v === 'move' || v === 'draw' ? v : 'auto'; };
+const ptrLive = new Set();   // every pointer that is down now, for bindPage to know its own gesture is still going
+let penSeen = store.get('gs.penSeen', false) === true, penDown = 0, penUpAt = -1e9;   // a pencil used here once is remembered, so the next visit starts with a finger moving the page
+const tch = { f: new Map(), mode: '', z0: 1, d0: 0, glide: 0, v: [0, 0], last: 0, far: 0 };
+const fingerMoves = () => { const m = touchMode(); return m === 'move' || (m === 'auto' && penSeen); };
+const tchPts = () => [...tch.f.values()];
+const tchMid = () => { const p = tchPts(); return { x: p.reduce((a, q) => a + q.x, 0) / p.length, y: p.reduce((a, q) => a + q.y, 0) / p.length }; };
+const tchDist = () => { const p = tchPts(); return Math.hypot(p[0].x - p[1].x, p[0].y - p[1].y); };
+function tchGlide() {
+  cancelAnimationFrame(tch.glide);
+  let [vx, vy] = tch.v, t0 = performance.now();
+  if (Math.hypot(vx, vy) < 0.35) return;
+  const P = $('#paper'), step = t => { const dt = Math.min(40, t - t0); t0 = t; P.scrollLeft -= vx * dt; P.scrollTop -= vy * dt; const k = Math.pow(0.995, dt); vx *= k; vy *= k; if (Math.hypot(vx, vy) > 0.03) tch.glide = requestAnimationFrame(step); };
+  tch.glide = requestAnimationFrame(step);
+}
+$('#paper').addEventListener('pointerdown', e => {
+  ptrLive.add(e.pointerId);
+  cancelAnimationFrame(tch.glide);
+  if (e.pointerType === 'pen') {
+    if (!penSeen) { penSeen = true; store.set('gs.penSeen', true); }
+    penDown++;
+    if (tch.f.size) { if (!tch.mode) for (const c of document.querySelectorAll('#paper .pg canvas')) c.dispatchEvent(new Event('gsdrop')); tch.mode = 'lift'; }
+    return;
+  }
+  if (e.pointerType !== 'touch') return;
+  if (e.target.tagName !== 'CANVAS' || !e.target.closest('.pg')) return;   // anywhere else the browser scrolls and taps as usual
+  if (penDown > 0 || performance.now() - penUpAt < 500 || Math.max(e.width || 0, e.height || 0) > 60) { e.stopPropagation(); e.preventDefault(); return; }
+  tch.f.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  if (tch.f.size === 2) {
+    for (const c of document.querySelectorAll('#paper .pg canvas')) c.dispatchEvent(new Event('gsdrop'));
+    tch.mode = 'two'; tch.z0 = zoom; tch.d0 = tchDist(); tch.v = [0, 0];
+    e.stopPropagation(); e.preventDefault();
+  } else if (tch.f.size > 2) { e.stopPropagation(); e.preventDefault(); }
+  else if (fingerMoves()) { tch.mode = 'one'; tch.v = [0, 0]; tch.far = 0; tch.last = e.timeStamp; commitEditors(); e.stopPropagation(); e.preventDefault(); }
+  else tch.mode = '';   // this finger draws: the page's own handler takes it from here
+}, true);
+window.addEventListener('pointermove', e => {
+  const f = tch.f.get(e.pointerId); if (!f) return;
+  if (!tch.mode) { f.x = e.clientX; f.y = e.clientY; return; }   // this finger is drawing: only where it is now is kept, for when a second one lands
+  const was = tchMid(); f.x = e.clientX; f.y = e.clientY; const now = tchMid(), P = $('#paper'), dx = now.x - was.x, dy = now.y - was.y;
+  e.stopPropagation();
+  if (tch.mode === 'lift') return;
+  if (tch.mode === 'one' && tch.far < 8) { tch.far += Math.hypot(dx, dy); return; }
+  if (tch.mode === 'one' || tch.f.size >= 2) { P.scrollLeft -= dx; P.scrollTop -= dy; }
+  if (tch.mode === 'one') { const dt = Math.max(1, e.timeStamp - tch.last); tch.last = e.timeStamp; tch.v = [tch.v[0] * 0.6 + dx / dt * 0.4, tch.v[1] * 0.6 + dy / dt * 0.4]; }
+  if (tch.mode === 'two' && tch.f.size === 2 && tch.d0 > 20) { const k = tchDist() / tch.d0; if (Math.abs(k - 1) > 0.04 || zoom !== tch.z0) setZoom(tch.z0 * k, now); }
+}, true);
+const tchUp = e => {
+  ptrLive.delete(e.pointerId);
+  if (e.pointerType === 'pen') { penDown = Math.max(0, penDown - 1); penUpAt = performance.now(); return; }
+  if (!tch.f.delete(e.pointerId)) return;
+  if (tch.mode === 'one' && e.type === 'pointerup' && e.timeStamp - tch.last < 80) tchGlide();
+  if (tch.mode) e.stopPropagation();
+  if (!tch.f.size) tch.mode = '';
+  else if (tch.mode === 'two') tch.mode = 'lift';   // one of two fingers lifted: the other neither draws nor drags the page about
+};
+window.addEventListener('pointerup', tchUp, true);
+window.addEventListener('pointercancel', tchUp, true);
+{
+  const sel = $('#setTouchMode'), box = $('#setPress');
+  sel.value = touchMode(); box.checked = pressOn();
+  sel.onchange = () => { if (sel.value === 'auto') store.del('gs.touch'); else store.set('gs.touch', sel.value); };
+  box.onchange = () => { if (box.checked) store.del('gs.press'); else store.set('gs.press', false); };
+}
+$('#paper').addEventListener('pointerdown', e => { if (e.pointerType !== 'mouse' && !listOpen) listPeek(false, 60); });
+Object.assign(window.__gs, { touch: () => ({ penSeen, penDown, mode: tch.mode, fingers: tch.f.size, moves: fingerMoves(), set: touchMode() }), touchReset: () => { store.del('gs.penSeen'); penSeen = false; penDown = 0; penUpAt = -1e9; tch.f.clear(); tch.mode = ''; } });
+
 /* ---------------- Today: what she teaches, what is waiting to be marked, what is ready to hand back (stage 4) ---------------- */
 
 /* teaching today: a one-way read of the Planner's timetable */
@@ -20444,7 +20575,7 @@ $('#setHistory').addEventListener('click', e => {
 });
 
 /* updates she controls, and installing as an app */
-const WHATS_NEW = {"1.17.0":["Report comments: a new tab on each class's page drafts a comment for every student from your own gradebook, rubric scores and the comments you wrote on their papers. Edit each one, tick it done, then copy or download them all.","The drafts are put together on your computer from sentences you can change under Wording. Nothing about a student is sent anywhere."],"1.16.0":["Help is in the sidebar: short answers to the questions teachers ask most, from opening a set of papers to moving your work to another computer.","Find anything answers questions too. Type a few words, like “late paper” or “backup”, and the answer is in the list."],"1.15.0":["A picture dragged onto a slide that has text now sits beside the text, in a new Text + picture layout.","Drag several pictures in at once and each gets its own slide. Let a picture go on any slide in the list on the left to put it there.","New Full picture layout: the picture fills the whole slide."],"1.14.0":["Extra credit: points or a percent on one paper, and extra credit entries in the gradebook that add to the term grade or the in-class average.","The gradebook shows each type's average (summative, in-class) right beside the term grade, kept in view as you scroll. Averages only shows just those columns, and Whole year splits each term the same way.","Leave out… lets you untick students to see the class averages without them. Their own grades don't change, and nothing is saved."],"1.13.0":["Present a lesson from the Planner, or from Today when its class is on now or next: its slides fill the screen, and the arrow keys or a clicker move through them.","While presenting, A shows the agenda to tick off, T starts a timer the class can see, N shows your notes and B blanks the screen.","The bar shows how many minutes the class has left, from your timetable.","After a lesson is taught, one line says where the class got to. It shows on the lesson and on the week, and presenting again picks up there."],"1.12.0":["A returned paper starts with a feedback page: the score, each rubric row with the level given and what that level means, your comment, and every comment on the paper with its page number.","It is on unless you turn it off under Options on the Return tab. Your own pages are not changed, and bringing an export back in opens only those."],"1.11.0":["The Planner’s sections are in the sidebar: Calendar, Units, Past lessons, Activities and Rubrics. The row of tabs across the top is gone.","A lesson has a lighter top: its name, its classes, its status and Download. Copy for Claude, Versions, the upload and the links are under More.","Comments shows above a lesson once it has one."],"1.7.0":["Home is now Today: the classes you teach today with the lesson planned for each, the papers waiting to be marked, and the papers ready to hand back.","What the class needs next: after a set of papers is scored, Today shows the weakest rubric row and how many students to sit down with.","A class page is quieter. Click anywhere on an assignment’s row to open it; the only blue button is the one that adds an assignment.","Forget, and the other ways to open papers, moved into the ⋯ menu on each row."],"1.6.0":["A new browser opens on three questions (your classes, how you grade, where work is kept) and starts with nothing of anyone else’s in it.","A sample class of made-up students, with papers to mark, for trying things out. Remove it from Home when you’re done.","The app uses the name of your own school system. Choose it, and how you usually grade, in Settings.","Letter grades or IB 1 to 7 can show beside the percent, with boundaries you set.","Canvas and Moodle downloads are grouped by student. The Planner works without a setup file, and downloads lessons as PowerPoint with a plain built-in template."],"1.5.0":["The sidebar says “Not backed up”, in amber, until a folder holds a second copy of your work. Home asks for that folder once.","Go back in time, in Settings: any assignment as it was on an earlier day, restored on its own, with Undo.","Grading Studio can be installed as an app, and it opens with no internet.","A newer version now waits until you click Update now, so nothing changes in the middle of marking."]};
+const WHATS_NEW = {"1.18.0":["On a tablet, a pencil draws and the pen's line is wider where you press harder. Once you have used a pencil, one finger moves the page, two fingers pinch to zoom, and a hand resting on the screen does nothing.","Settings, Marking has a new Tablet and pencil section: choose what a finger does on the paper, or turn off the wider line.","On a touch screen the tools, the student rows and the score buttons are larger."],"1.17.0":["Report comments: a new tab on each class's page drafts a comment for every student from your own gradebook, rubric scores and the comments you wrote on their papers. Edit each one, tick it done, then copy or download them all.","The drafts are put together on your computer from sentences you can change under Wording. Nothing about a student is sent anywhere."],"1.16.0":["Help is in the sidebar: short answers to the questions teachers ask most, from opening a set of papers to moving your work to another computer.","Find anything answers questions too. Type a few words, like “late paper” or “backup”, and the answer is in the list."],"1.15.0":["A picture dragged onto a slide that has text now sits beside the text, in a new Text + picture layout.","Drag several pictures in at once and each gets its own slide. Let a picture go on any slide in the list on the left to put it there.","New Full picture layout: the picture fills the whole slide."],"1.14.0":["Extra credit: points or a percent on one paper, and extra credit entries in the gradebook that add to the term grade or the in-class average.","The gradebook shows each type's average (summative, in-class) right beside the term grade, kept in view as you scroll. Averages only shows just those columns, and Whole year splits each term the same way.","Leave out… lets you untick students to see the class averages without them. Their own grades don't change, and nothing is saved."],"1.13.0":["Present a lesson from the Planner, or from Today when its class is on now or next: its slides fill the screen, and the arrow keys or a clicker move through them.","While presenting, A shows the agenda to tick off, T starts a timer the class can see, N shows your notes and B blanks the screen.","The bar shows how many minutes the class has left, from your timetable.","After a lesson is taught, one line says where the class got to. It shows on the lesson and on the week, and presenting again picks up there."],"1.12.0":["A returned paper starts with a feedback page: the score, each rubric row with the level given and what that level means, your comment, and every comment on the paper with its page number.","It is on unless you turn it off under Options on the Return tab. Your own pages are not changed, and bringing an export back in opens only those."],"1.11.0":["The Planner’s sections are in the sidebar: Calendar, Units, Past lessons, Activities and Rubrics. The row of tabs across the top is gone.","A lesson has a lighter top: its name, its classes, its status and Download. Copy for Claude, Versions, the upload and the links are under More.","Comments shows above a lesson once it has one."],"1.7.0":["Home is now Today: the classes you teach today with the lesson planned for each, the papers waiting to be marked, and the papers ready to hand back.","What the class needs next: after a set of papers is scored, Today shows the weakest rubric row and how many students to sit down with.","A class page is quieter. Click anywhere on an assignment’s row to open it; the only blue button is the one that adds an assignment.","Forget, and the other ways to open papers, moved into the ⋯ menu on each row."],"1.6.0":["A new browser opens on three questions (your classes, how you grade, where work is kept) and starts with nothing of anyone else’s in it.","A sample class of made-up students, with papers to mark, for trying things out. Remove it from Home when you’re done.","The app uses the name of your own school system. Choose it, and how you usually grade, in Settings.","Letter grades or IB 1 to 7 can show beside the percent, with boundaries you set.","Canvas and Moodle downloads are grouped by student. The Planner works without a setup file, and downloads lessons as PowerPoint with a plain built-in template."],"1.5.0":["The sidebar says “Not backed up”, in amber, until a folder holds a second copy of your work. Home asks for that folder once.","Go back in time, in Settings: any assignment as it was on an earlier day, restored on its own, with Undo.","Grading Studio can be installed as an app, and it opens with no internet.","A newer version now waits until you click Update now, so nothing changes in the middle of marking."]};
 const upd = { on: false, st: null, mine: '', checking: false, said: '', install: null, installed: false, err: '' };
 const updCan = () => 'serviceWorker' in navigator && (location.protocol === 'https:' || /[?&]sw=1(&|$)/.test(location.search)) && !/Grading Studio\.html$/i.test(decodeURIComponent(location.pathname));
 const updSend = async msg => { const reg = await navigator.serviceWorker.ready; if (reg.active) reg.active.postMessage(msg); };
@@ -20925,6 +21056,7 @@ function findRows() {
   add('Settings', document.documentElement.dataset.theme === 'dark' ? 'Light mode' : 'Dark mode', 'Display', press('.themeBtn'));
   add('Settings', 'Text size and zoom', 'Display', () => openDisplay());
   add('Settings', 'Word papers', wordPdfAlways() ? 'Converted to PDF pages as each assignment opens' : 'Kept as Word files. They can be converted to PDF pages', () => go('#/settings/marking'));
+  add('Settings', 'Tablet and pencil', 'What a finger does on the paper, and pencil pressure', () => go('#/settings/marking'));
   add('Settings', 'All keys', 'Every keyboard shortcut', () => openKeys(), '?');
   for (const [k, t, sub] of SET_SECS) if (k !== 'saving' && k !== 'display' && k !== 'keys' && k !== 'history' && k !== 'about') add('Settings', t, sub, () => go(setHash(k)));
   if (plan) add('Go to', 'This week in the Planner', 'Today’s classes and the lessons planned for them', () => { location.href = planUrl('#week'); });

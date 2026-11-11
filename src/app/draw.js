@@ -96,8 +96,9 @@ function drawMarks(ctx, marks, W, H, side, screen) {
   for (const m of marks) {
     if (m.t === 'pen') {
       ctx.save(); ctx.strokeStyle = m.color; ctx.lineWidth = m.w; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-      strokePath(ctx, m.pts);
-      ctx.stroke(); ctx.restore();
+      if (hasPress(m.pts)) strokeWide(ctx, m.pts, m.w);
+      else { strokePath(ctx, m.pts); ctx.stroke(); }
+      ctx.restore();
     } else if (m.t === 'text' && !(screen && screen.editing === m)) {
       const L = textLayout(m, W);
       ctx.fillStyle = m.color; ctx.font = m.size + 'px ' + FONT; ctx.textBaseline = 'top';
@@ -145,7 +146,8 @@ function bboxOf(m, W) {
   if (m.t === 'pen') {
     let x1 = 1e9, y1 = 1e9, x2 = -1e9, y2 = -1e9;
     for (const [x, y] of m.pts) { x1 = Math.min(x1, x); y1 = Math.min(y1, y); x2 = Math.max(x2, x); y2 = Math.max(y2, y); }
-    return { x: x1 - m.w / 2, y: y1 - m.w / 2, w: x2 - x1 + m.w, h: y2 - y1 + m.w };
+    const w = m.w * (hasPress(m.pts) ? PRESS_MAX : 1);
+    return { x: x1 - w / 2, y: y1 - w / 2, w: x2 - x1 + w, h: y2 - y1 + w };
   }
   if (m.t === 'hl' || m.t === 'oval') return { x: m.x, y: m.y, w: m.w, h: m.h };
   if (m.t === 'text') { const L = textLayout(m, W); return { x: m.x, y: m.y, w: L.w, h: L.h }; }

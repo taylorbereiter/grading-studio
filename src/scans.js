@@ -307,7 +307,7 @@ function skewMarks(marks, W, H, by) {
   const pt = ([x, y]) => [r1(cx + (x - cx) * c - (y - cy) * s), r1(cy + (x - cx) * s + (y - cy) * c)];
   const box = b => { const [x, y] = pt([b.x + b.w / 2, b.y + b.h / 2]); return { x: r1(x - b.w / 2), y: r1(y - b.h / 2), w: b.w, h: b.h }; };   // a box stays square to the page and moves with its middle
   for (const m of marks) {
-    if (m.t === 'pen') m.pts = m.pts.map(pt);
+    if (m.t === 'pen') m.pts = m.pts.map(q => keepP(pt(q), q));
     else if (m.t === 'hl' || m.t === 'oval') { Object.assign(m, box(m)); if (m.rects) m.rects = m.rects.map(box); if (m.pts) m.pts = m.pts.map(pt); }
     else if (m.t === 'check' || m.t === 'stamp') [m.x, m.y] = pt([m.x, m.y]);
     else if (m.t === 'note') { [m.ax, m.ay] = pt([m.ax, m.ay]); if (m.hl) m.hl = box(m.hl); if (m.rects) m.rects = m.rects.map(box); }
