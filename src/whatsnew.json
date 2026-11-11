@@ -1,4 +1,9 @@
 {
+  "1.22.0": [
+    "Six more app languages: Simplified Chinese (简体中文), French, German, Portuguese, Japanese and Korean, beside Traditional Chinese and Spanish. Choose one in Settings, Display, App language.",
+    "Each covers the same first screens: the sidebar, Today, the welcome, Find anything, Help and the feedback page students get. The other screens are still in English.",
+    "None of the translations has been checked by a fluent speaker yet, so a line may read oddly."
+  ],
   "1.21.0": [
     "Each class has a Missing work tab: every paper you marked Missing, by student or by assignment, for the term you pick.",
     "Email reminder opens an email in your own mail app, addressed to the student and listing what they owe, for you to read and send. Email all writes one email to everyone who owes an assignment, with the addresses in Bcc. Grading Studio sends nothing itself.",

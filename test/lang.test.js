@@ -36,7 +36,7 @@ test('the app is in English until a language is picked, and Settings, Display sw
   assert.equal(await text(page, '#rail [data-nav="home"]'), 'Today');
   await goTo(page, '#/settings/display');
   assert.equal(await text(page, '#setLang h2'), 'App language');
-  assert.deepEqual(await page.$$eval('#setLangPick option', o => o.map(x => x.value + ' ' + x.textContent)), ['en English', 'zh-Hant 繁體中文', 'es Español']);
+  assert.deepEqual(await page.$$eval('#setLangPick option', o => o.map(x => x.value + ' ' + x.textContent)), ['en English', 'zh-Hant 繁體中文', 'zh-Hans 简体中文', 'es Español', 'fr Français', 'de Deutsch', 'pt-BR Português (Brasil)', 'ja 日本語', 'ko 한국어']);
   const before = await page.evaluate(() => Object.keys(localStorage).filter(k => k !== 'gs.lang').sort().map(k => k + '=' + localStorage.getItem(k)).join('\n'));
   await Promise.all([page.waitForNavigation(), page.select('#setLangPick', 'es')]);
   await page.waitForFunction(() => window.__gsLang && window.__gsLang.lang === 'es' && document.querySelector('#rail [data-nav="home"]').textContent.trim() === 'Hoy');

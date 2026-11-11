@@ -29,7 +29,7 @@ const LANG_ZH = {
   words: {
     /* the sidebar, on both pages */
     'Main': '主選單', 'Grading Studio, Today': 'Grading Studio，今天', 'Find anything': '搜尋', 'Today': '今天', 'Planner': '備課', 'Classes': '班級', 'Add a class': '新增班級',
-    'Help': '說明', 'Settings': '設定', 'Update ready': '有新版本', 'No class': '未指定班級', 'App language': '介面語言', 'English, Spanish or Traditional Chinese': '英文、西班牙文或繁體中文',
+    'Help': '說明', 'Settings': '設定', 'Update ready': '有新版本', 'No class': '未指定班級', 'App language': '介面語言', 'English and other languages': '英文與其他語言',
     'Find a student, an assignment, a tool or a setting': '搜尋學生、作業、工具或設定',
     'Find a lesson, a unit, a class or a setting': '搜尋課程、單元、班級或設定',
     'Today: what you teach, what is waiting to be marked, what is ready to hand back': '今天：要上的課、待批改的作業、可以發還的作業',
@@ -145,7 +145,7 @@ const LANG_ZH = {
     'Every keyboard shortcut is under': '所有鍵盤快速鍵都在', 'Settings, Keys': '設定、快速鍵', ', or press': '，或在批改時按', 'while marking.': '。',
     /* Settings, Display, Language */
     'The language the app speaks in this browser.': '這個瀏覽器裡介面使用的語言。',
-    'A language other than English covers the first screens so far: the sidebar, Today, the welcome, Help and the feedback page students get. The other screens are still in English.': '英文以外的語言目前涵蓋最先看到的畫面：側邊欄、今天、歡迎畫面、說明，以及學生收到的回饋頁。其他畫面仍是英文。',
+    'A language other than English covers the first screens so far: the sidebar, Today, the welcome, Help and the feedback page students get. The other screens are still in English. The translations have not yet been checked by fluent speakers, so a line may read oddly.': '英文以外的語言目前涵蓋最先看到的畫面：側邊欄、今天、歡迎畫面、說明，以及學生收到的回饋頁。其他畫面仍是英文。翻譯尚未經母語人士檢查，所以有些句子讀起來可能不太自然。',
     /* the feedback page in a returned paper */
     'How it was scored': '評分方式', 'From your teacher': '老師的話', 'Comment on your paper': '作業上的評語', 'Comments on your paper': '作業上的評語',
     'Your marked paper starts on the next page.': '批改後的作業從下一頁開始。', 'Your feedback continues on the next page.': '回饋接續在下一頁。',
@@ -218,7 +218,7 @@ const LANG_ZH = {
       a: ['1. 按側邊欄的**新增班級**，並為它命名。', '2. 貼上學生姓名，一行一位。順序會和你貼上的一樣。', '3. 開啟班級的 **Students** 分頁，可以為每位學生加上學號、電子郵件或備註。',
         '有了名單，開啟那個班級的作業時會列出每位學生，包括沒有繳交的人。'] },
     'language': { q: '介面可以換成其他語言嗎？', go: '開啟設定、顯示', words: '中文 繁體 西班牙文 英文 語言 翻譯 chinese language',
-      a: ['可以。目前有繁體中文和西班牙文。在設定、Display 的**介面語言**選擇，或在歡迎畫面最上方選擇。頁面會用你選的語言重新顯示。',
+      a: ['可以。在設定、Display 的**介面語言**選擇，或在歡迎畫面最上方選擇。頁面會用你選的語言重新顯示。',
         '英文以外的語言目前涵蓋側邊欄、今天、歡迎畫面、搜尋、說明，以及學生隨發還作業收到的回饋頁。其他畫面仍是英文。',
         '班級和學生的名稱，以及你輸入的所有內容，都不會被翻譯。'] },
     'scan-split': { q: '我把全班的作業掃描成一個檔案，要怎麼分開？', words: '掃描 pdf 影印機 頁面 分割 紙本 手寫 scan',

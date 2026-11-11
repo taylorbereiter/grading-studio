@@ -32,7 +32,7 @@ const LANG_ES = {
   words: {
     /* the sidebar, on both pages */
     'Main': 'Principal', 'Grading Studio, Today': 'Grading Studio, Hoy', 'Find anything': 'Buscar', 'Today': 'Hoy', 'Planner': 'Planificador', 'Classes': 'Clases', 'Add a class': 'Añadir una clase',
-    'Help': 'Ayuda', 'Settings': 'Ajustes', 'Update ready': 'Actualización lista', 'No class': 'Sin clase', 'App language': 'Idioma de la aplicación', 'English, Spanish or Traditional Chinese': 'Inglés, español o chino tradicional',
+    'Help': 'Ayuda', 'Settings': 'Ajustes', 'Update ready': 'Actualización lista', 'No class': 'Sin clase', 'App language': 'Idioma de la aplicación', 'English and other languages': 'Inglés y otros idiomas',
     'Find a student, an assignment, a tool or a setting': 'Busca un estudiante, una tarea, una herramienta o un ajuste',
     'Find a lesson, a unit, a class or a setting': 'Busca una lección, una unidad, una clase o un ajuste',
     'Today: what you teach, what is waiting to be marked, what is ready to hand back': 'Hoy: lo que enseñas, lo que falta por corregir y lo que está listo para devolver',
@@ -148,7 +148,7 @@ const LANG_ES = {
     'Every keyboard shortcut is under': 'Todos los atajos de teclado están en', 'Settings, Keys': 'Ajustes, Teclas', ', or press': ', o pulsa', 'while marking.': 'mientras corriges.',
     /* Settings, Display, Language */
     'The language the app speaks in this browser.': 'El idioma de la aplicación en este navegador.',
-    'A language other than English covers the first screens so far: the sidebar, Today, the welcome, Help and the feedback page students get. The other screens are still in English.': 'Por ahora, un idioma distinto del inglés cubre las primeras pantallas: la barra lateral, Hoy, la bienvenida, la Ayuda y la página de comentarios que reciben los estudiantes. Las demás pantallas siguen en inglés.',
+    'A language other than English covers the first screens so far: the sidebar, Today, the welcome, Help and the feedback page students get. The other screens are still in English. The translations have not yet been checked by fluent speakers, so a line may read oddly.': 'Por ahora, un idioma distinto del inglés cubre las primeras pantallas: la barra lateral, Hoy, la bienvenida, la Ayuda y la página de comentarios que reciben los estudiantes. Las demás pantallas siguen en inglés. Las traducciones aún no han sido revisadas por hablantes nativos, así que alguna línea puede sonar rara.',
     /* the feedback page in a returned paper */
     'How it was scored': 'Cómo se puntuó', 'From your teacher': 'De tu docente', 'Comment on your paper': 'Comentario en tu trabajo', 'Comments on your paper': 'Comentarios en tu trabajo',
     'Your marked paper starts on the next page.': 'Tu trabajo corregido empieza en la página siguiente.', 'Your feedback continues on the next page.': 'Tus comentarios continúan en la página siguiente.',
@@ -221,7 +221,7 @@ const LANG_ES = {
       a: ['1. Pulsa **Añadir una clase** en la barra lateral y ponle un nombre.', '2. Pega los nombres de los estudiantes, uno por línea. Se conservan en el orden en que los pegas.', '3. Abre la pestaña **Students** de la clase para añadir un identificador, un correo o una nota a cada uno.',
         'Con una lista, al abrir los trabajos de esa clase aparece cada estudiante, también quien no entregó nada.'] },
     'language': { q: '¿Puedo usar la aplicación en otro idioma?', go: 'Abrir Ajustes, Pantalla', words: 'español inglés chino idioma lengua traducir traducción',
-      a: ['Sí: español o chino tradicional. Elígelo en Ajustes, Display, **Idioma de la aplicación**, o en lo alto de la bienvenida. La página se vuelve a dibujar en el idioma que elijas.',
+      a: ['Sí. Elígelo en Ajustes, Display, **Idioma de la aplicación**, o en lo alto de la bienvenida. La página se vuelve a dibujar en el idioma que elijas.',
         'Por ahora, un idioma distinto del inglés cubre la barra lateral, Hoy, la bienvenida, Buscar, la Ayuda y la página de comentarios que reciben los estudiantes con un trabajo devuelto. Las demás pantallas siguen en inglés.',
         'Los nombres de las clases y de los estudiantes, y todo lo que escribas, nunca se traducen.'] },
     'scan-split': { q: 'Escaneé toda la clase en un solo archivo. ¿Cómo lo divido?', words: 'escáner pdf fotocopiadora páginas separar papel manuscrito',
