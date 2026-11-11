@@ -349,8 +349,8 @@ test('Settings is one page per subject, each with its own address', async () => 
   const shown = () => page.$$eval('#setPane [data-sec]', els => els.filter(e => e.checkVisibility()).map(e => e.id));
   await goTo(page, '#/settings');
   assert.deepEqual(await page.$$eval('#setNav .setlink b', b => b.map(x => x.textContent)), ['Saving and carrying', 'Go back in time', 'Classes and rosters', 'Terms and weights', 'Grading scale and rubrics', 'Marking', 'Timetable and calendar', 'Display', 'Working with Claude', 'Keys', 'About and updates']);
-  assert.deepEqual(await shown(), ['setSaving', 'setTake', 'setRemove']);
-  assert.equal(await page.$eval('#setNav .setlink.on', a => a.textContent), 'Saving and carryingFolder, take-home file, safety copies');
+  assert.deepEqual(await shown(), ['setSaving', 'setTake', 'setYear', 'setRemove']);
+  assert.equal(await page.$eval('#setNav .setlink.on', a => a.textContent), 'Saving and carryingFolder, take-home file, new school year');
   assert.equal(await page.title(), 'Settings · Grading Studio');
   // classes: counts, never names
   await page.click('#setNav [data-set="classes"]');
@@ -388,7 +388,7 @@ test('Settings is one page per subject, each with its own address', async () => 
   await page.reloadHere(); await appReady(page);
   assert.equal(await page.evaluate(() => location.hash), '#/settings/keys'); assert.deepEqual(await shown(), ['setKeys']);
   await page.goBack(); await page.waitForFunction(() => location.hash === '#/settings/claude'); assert.deepEqual(await shown(), ['setClaude']);
-  await goTo(page, '#/settings/nothing-here'); assert.deepEqual(await shown(), ['setSaving', 'setTake', 'setRemove']);
+  await goTo(page, '#/settings/nothing-here'); assert.deepEqual(await shown(), ['setSaving', 'setTake', 'setYear', 'setRemove']);
   // Find anything goes to a section
   const labels = await page.evaluate(() => window.__gs.findRows().filter(r => r.group === 'Settings').map(r => r.label));
   for (const want of ['Classes and rosters', 'Terms and weights', 'Grading scale and rubrics', 'Marking', 'Timetable and calendar', 'Working with Claude']) assert.ok(labels.includes(want), want);

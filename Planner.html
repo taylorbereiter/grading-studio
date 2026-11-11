@@ -1832,6 +1832,7 @@ async function openLessons() {
   renderLessons();
   arriveAt();
   await folderReconnect(false);
+  await yearMoveOn();
 }
 function renderLessons() {
   if (L.view === 'doc' && L.doc) return renderDoc();
@@ -5650,6 +5651,7 @@ const LANG_ES = {
     'Open student work': 'Abrir trabajos de estudiantes', 'The ZIP or PDFs': 'El ZIP o los PDF', 'A ZIP, PDFs, Word files or photos': 'Un ZIP, PDF, archivos de Word o fotos',
     'Open a folder of papers': 'Abrir una carpeta de trabajos', 'Split a scan of everyone’s papers': 'Dividir un escaneo con los trabajos de todos', 'Match files to a roster': 'Emparejar archivos con una lista',
     'Its name and roster': 'Su nombre y su lista', 'Made-up students and papers': 'Estudiantes y trabajos inventados',
+    'Start a new school year': 'Empezar un nuevo curso escolar', 'Same classes, empty class lists; this year saved to a file': 'Las mismas clases, listas vacías; este curso guardado en un archivo', 'Open an archived year': 'Abrir un curso archivado', 'Bring back a year saved to a file': 'Recuperar un curso guardado en un archivo',
     'Take my work with me': 'Llevarme mi trabajo', 'A take-home file for another computer': 'Un archivo para llevar a otro ordenador', 'Bring work in': 'Traer trabajo', 'From a take-home file': 'Desde un archivo para llevar',
     'Remove from this computer': 'Quitar de este ordenador', 'Clears student work from this browser': 'Borra de este navegador los trabajos de los estudiantes',
     'Where my work is saved': 'Dónde se guarda mi trabajo', 'This browser, and a folder you choose': 'Este navegador y una carpeta que tú eliges',
@@ -5855,6 +5857,10 @@ const LANG_ES = {
     'other-computer': { q: '¿Cómo llevo mi trabajo a otro ordenador?', go: 'Abrir Ajustes, Guardado', words: 'casa portátil transferir llevar sincronizar segundo ordenador usb',
       a: ['1. En Ajustes, **Saving and carrying**, pulsa **Take my work with me**. Crea un archivo protegido con una frase de contraseña que tú eliges.', '2. Lleva el archivo al otro ordenador.', '3. Allí, pulsa **Bring work in**. Muestra lo que va a cambiar antes de cambiar nada.',
         'El viaje de vuelta funciona igual. Si el mismo estudiante cambió en los dos sitios, ves las dos versiones y eliges.'] },
+    'new-year': { q: '¿Cómo empiezo un nuevo curso escolar?', go: 'Abrir Ajustes, Guardado', words: 'nuevo curso año escolar archivar empezar de cero septiembre lista vacía',
+      a: ['1. En Ajustes, **Saving and carrying**, pulsa **Start a new year**.', '2. Revisa los nombres de los dos cursos y lo que se conserva, elige una frase de contraseña y pulsa **Save the file and start the new year**. Este curso se guarda en un archivo protegido, y el archivo se vuelve a leer y se comprueba antes de borrar nada.',
+        'Tus clases, unidades y tarjetas de tareas se quedan, cada tarjeta con su rúbrica y sus casillas de Quick mark, y las fechas avanzan un año. Las listas de clase, los trabajos, las notas y los comentarios salen de este navegador y quedan en el archivo. El Planner avanza sus unidades un año la próxima vez que lo abras.',
+        'Para volver a ver un curso anterior, pulsa **Open an archived year** y elige su archivo. El curso en el que estás se guarda antes en su propio archivo, así que puedes volver.'] },
     'go-back': { q: 'Me equivoqué. ¿Puedo volver a como estaba todo?', go: 'Abrir Volver atrás en el tiempo', words: 'deshacer restaurar historial perdido borrado recuperar copia',
       a: ['Deshacer (Ctrl Z, o ⌘Z) retrocede por las marcas de la página.', 'Para algo mayor, en Ajustes, **Go back in time** muestra tu trabajo tal como estaba en días anteriores. **Look** compara entonces y ahora. **Restore this assignment** devuelve una tarea a ese día y deja el resto como está.'] },
     'offline': { q: '¿Funciona sin internet?', go: 'Abrir Acerca de y actualizaciones', words: 'sin conexión wifi instalar aplicación avión',
@@ -6001,6 +6007,7 @@ const LANG_ZH = {
     'Open student work': '開啟學生作業', 'The ZIP or PDFs': 'ZIP 或 PDF 檔', 'A ZIP, PDFs, Word files or photos': 'ZIP、PDF、Word 檔或照片',
     'Open a folder of papers': '開啟作業資料夾', 'Split a scan of everyone’s papers': '分割全班作業的掃描檔', 'Match files to a roster': '將檔案與名單配對',
     'Its name and roster': '名稱與名單', 'Made-up students and papers': '虛構的學生與作業',
+    'Start a new school year': '開始新的學年', 'Same classes, empty class lists; this year saved to a file': '同樣的班級、空白名單；這一學年存成檔案', 'Open an archived year': '開啟封存的學年', 'Bring back a year saved to a file': '找回存成檔案的學年',
     'Take my work with me': '帶走我的工作成果', 'A take-home file for another computer': '給另一台電腦用的攜帶檔', 'Bring work in': '帶入工作成果', 'From a take-home file': '從攜帶檔',
     'Remove from this computer': '從這台電腦移除', 'Clears student work from this browser': '清除這個瀏覽器裡的學生作業',
     'Where my work is saved': '我的工作成果存在哪裡', 'This browser, and a folder you choose': '這個瀏覽器，以及你選擇的資料夾',
@@ -6206,6 +6213,10 @@ const LANG_ZH = {
     'other-computer': { q: '怎麼把工作成果帶到另一台電腦？', go: '開啟設定、儲存', words: '家裡 筆電 轉移 帶走 同步 第二台電腦 usb',
       a: ['1. 在設定的 **Saving and carrying** 按 **Take my work with me**。它會建立一個用你自訂的密語保護的檔案。', '2. 把檔案帶到另一台電腦。', '3. 在那裡按 **Bring work in**。它會在更改任何東西之前，先顯示將會改變的內容。',
         '帶回來的方式也一樣。如果同一位學生在兩邊都有更改，你會看到兩個版本，再由你選擇。'] },
+    'new-year': { q: '怎麼開始新的學年？', go: '開啟設定、儲存', words: '新學年 下學年 封存 重新開始 九月 名單 清空',
+      a: ['1. 在設定的 **Saving and carrying** 按 **Start a new year**。', '2. 確認兩個學年的名稱和要帶過去的內容，選一個密語，再按 **Save the file and start the new year**。這一學年會存成一個受保護的檔案，而且在清除任何東西之前，會先把檔案讀回來檢查。',
+        '你的班級、單元和作業卡片都會保留，每張卡片連同它的評分規準和 Quick mark 框，日期也會往後移一年。班級名單、作業、分數和評語會離開這個瀏覽器，存在檔案裡。下次打開 Planner 時，它會把單元往後移一年。',
+        '想再看以前的學年，按 **Open an archived year** 並選擇它的檔案。你目前的學年會先存成自己的檔案，所以可以再換回來。'] },
     'go-back': { q: '我弄錯了，可以回到之前的狀態嗎？', go: '開啟回到先前的狀態', words: '復原 還原 紀錄 遺失 刪除 救回 備份 undo',
       a: ['復原（Ctrl Z 或 ⌘Z）會一步步退回頁面上的批註。', '更大的問題，可以在設定的 **Go back in time** 查看你的工作成果在前幾天的樣子。**Look** 會比較當時和現在。**Restore this assignment** 會把一份作業回復到那一天，其他的保持不變。'] },
     'offline': { q: '沒有網路也能用嗎？', go: '開啟關於與更新', words: '離線 wifi 安裝 應用程式 飛機 offline',
@@ -6469,6 +6480,11 @@ const HELP = [
     a: ['1. In Settings, **Saving and carrying**, press **Take my work with me**. It makes one file protected by a passphrase you choose.', '2. Carry the file to the other computer.', '3. There, press **Bring work in**. It shows what will change before anything does.',
       'The trip back works the same way. If the same student changed in both places, you see both versions and choose.'],
     go: ['Open Settings, Saving', '#/settings'], words: 'home laptop transfer take-home sync second computer usb' },
+  { id: 'new-year', sec: 'safe', q: 'How do I start a new school year?',
+    a: ['1. In Settings, **Saving and carrying**, press **Start a new year**.', '2. Check the two years’ names and what carries over, choose a passphrase and press **Save the file and start the new year**. This year goes into one protected file, and the file is read back and checked before anything is cleared.',
+      'Your classes, units and assignment cards stay, each card with its rubric and Quick mark boxes, and dates move on a year. Class lists, papers, scores and comments leave this browser for the file. The Planner moves its units on a year the next time you open it.',
+      'To look at an old year again, press **Open an archived year** and choose its file. The year you are in is saved to its own file first, so you can switch back.'],
+    go: ['Open Settings, Saving', '#/settings'], words: 'new year next year school year archive rollover reset fresh start august september roster empty' },
   { id: 'go-back', sec: 'safe', q: 'I made a mistake. Can I go back to how things were?',
     a: ['Undo (Ctrl Z, or ⌘Z) steps back through marks on the paper.', 'For anything bigger, Settings, **Go back in time** lists your work as it was on earlier days. **Look** compares then and now. **Restore this assignment** takes one assignment back and leaves the rest alone.'],
     go: ['Open Go back in time', '#/settings/history'], words: 'undo restore history lost deleted recover snapshot' },
@@ -6713,6 +6729,30 @@ async function unitDelete(u) {
   if (L.dir && L.dirOk && u._file) { try { const d = await L.dir.getDirectoryHandle('Units'); await d.removeEntry(u._file); await d.removeEntry(u._file.replace(/\.unit\.json$/, ' files'), { recursive: true }); } catch { } }
 }
 const fileBlob = id => kvGet('file:' + id);
+
+/* ---------- a new school year, started on the grading page (src/newyear.js) ---------- */
+async function yearMoveOn() {
+  let ask = null; try { ask = JSON.parse(localStorage.getItem('gsp.newYear') || 'null'); } catch { }
+  if (!ask || typeof ask.id !== 'string') return;
+  const done = (await kvGet('yearsDone')) || [];
+  if (done.includes(ask.id)) return;
+  const later = s => /^\d{4}-\d\d-\d\d$/.test(s || '') ? ymd(addDays(parseYmd(s), 364)) : s, from = String(ask.from || 'Last year').slice(0, 120);
+  let moved = 0;
+  for (const l of L.lessons.slice()) {
+    if (!l.slots.length && !(l.taught || []).length) continue;
+    if (l.slots.length && !l.library) l.library = from;
+    l.slots = []; delete l.taught; moved++;
+    await lPut(l);
+  }
+  for (const u of L.units) { u.start = later(u.start); await unitPut(u, true); }
+  if (L.setup) {
+    L.setup = { ...L.setup, semStart: later(L.setup.semStart), semEnd: later(L.setup.semEnd), daysOff: [], events: [] };
+    await kvSet('setup', L.setup); await folderWriteSchedule();
+  }
+  await kvSet('yearsDone', [...done, ask.id]);
+  renderLessons(); railRender();
+  toast('A new school year: units and the semester moved on a year' + (moved ? ', and ' + moved + (moved === 1 ? ' lesson is' : ' lessons are') + ' in Past lessons under “' + from + '”' : '') + '.', 8000);
+}
 
 /* ---------- courses, weeks, which unit a week is in ---------- */
 function courses() {

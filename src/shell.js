@@ -134,6 +134,8 @@ function findRows() {
     add('Do', 'Try it with a sample class', 'Made-up students and papers', press('#sample'));
     add('Settings', 'Take my work with me', 'A take-home file for another computer', press('#takeBtn'));
     add('Settings', 'Bring work in', 'From a take-home file', press('#restoreBtn'));
+    add('Settings', 'Start a new school year', 'Same classes, empty class lists; this year saved to a file', press('#yearBtn'));
+    add('Settings', 'Open an archived year', 'Bring back a year saved to a file', press('#yearOpenBtn'));
     add('Settings', 'Remove from this computer', 'Clears student work from this browser', () => go('#/settings'));
   }
   add('Settings', 'Where my work is saved', 'This browser, and a folder you choose', () => openWhere());

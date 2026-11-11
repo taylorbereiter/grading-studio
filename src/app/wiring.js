@@ -215,6 +215,7 @@ const keptFirst = loadKept();   // the address of an open assignment waits for t
 function renderBackup() {
   const el = $('#backupInfo'); if (!el) return;
   const t = store.get('gs.lastBackup', 0);
+  yearRender();
   el.textContent = t ? 'Last take-home file: ' + new Date(t).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : 'No take-home file made from this link yet.';
   // A nudge once a week has gone by since the last one, when there's work kept here and no folder holding a second copy.
   const due = keptMeta.size > 0 && Date.now() - t > 7 * 864e5 && fld.state === 'none';
