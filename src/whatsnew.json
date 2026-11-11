@@ -1,4 +1,9 @@
 {
+  "1.15.0": [
+    "A picture dragged onto a slide that has text now sits beside the text, in a new Text + picture layout.",
+    "Drag several pictures in at once and each gets its own slide. Let a picture go on any slide in the list on the left to put it there.",
+    "New Full picture layout: the picture fills the whole slide."
+  ],
   "1.14.0": [
     "Extra credit: points or a percent on one paper, and extra credit entries in the gradebook that add to the term grade or the in-class average.",
     "The gradebook shows each type's average (summative, in-class) right beside the term grade, kept in view as you scroll. Averages only shows just those columns, and Whole year splits each term the same way.",

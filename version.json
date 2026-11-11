@@ -1,13 +1,13 @@
 {
- "version": "1.14.0",
- "build": "507c0041a51c",
+ "version": "1.15.0",
+ "build": "8493d5f1ba01",
  "notes": [
-  "Extra credit: points or a percent on one paper, and extra credit entries in the gradebook that add to the term grade or the in-class average.",
-  "The gradebook shows each type's average (summative, in-class) right beside the term grade, kept in view as you scroll. Averages only shows just those columns, and Whole year splits each term the same way.",
-  "Leave out… lets you untick students to see the class averages without them. Their own grades don't change, and nothing is saved."
+  "A picture dragged onto a slide that has text now sits beside the text, in a new Text + picture layout.",
+  "Drag several pictures in at once and each gets its own slide. Let a picture go on any slide in the list on the left to put it there.",
+  "New Full picture layout: the picture fills the whole slide."
  ],
  "files": {
-  "index.html": "49c8a7b102755463cb1b4e5ff9b2bcbca55841a667c154ccdae22d83569dfcc8",
-  "planner.html": "4339c23682d44200fdf0f42c441cd986aff33eaf4e9d9f7fa3ed84e5ad66e0f6"
+  "index.html": "11833e46118c76667c1d9f9a6c99d51f0f014506fdd6e7dc0f51361ce4bde08a",
+  "planner.html": "ee6523fea6477ea7e17f30930fba4cd04b7725c047876297103b8b110b3f97f4"
  }
 }

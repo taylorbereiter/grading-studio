@@ -295,6 +295,11 @@ h1 i,.top .title i{font-style:normal;font-weight:500;color:var(--accent)}
 .ls-ed{cursor:text;outline:1.5px dashed transparent;outline-offset:2px;border-radius:3px}
 .ls-ed:hover,.ls-ed:focus{outline-color:rgba(31,111,178,.55)}
 .ls-pic.ls-ed{cursor:pointer}
+.ls-full{align-items:center;background:var(--lbg)}
+.ls-full img{width:100%;height:100%}
+.ls-fullsrc{left:0;top:696px;width:1280px}
+.ls-stagewrap.ls-dropping .ls-stage{outline:3px dashed var(--accent);outline-offset:4px}
+.ls-stagewrap.ls-dropping .ls-stage::after{content:"Let go to put it on this slide";position:absolute;left:50%;bottom:var(--space-3);transform:translateX(-50%);background:var(--accent);color:var(--accent-fg);font-size:var(--text-control);font-weight:600;padding:var(--space-1) var(--space-3);border-radius:var(--corner-pill);pointer-events:none}
 .ls-ph{color:#8a8580;text-transform:none}
 .ls-ta{position:absolute;border:0;outline:2px solid #1F6FB2;outline-offset:2px;background:rgba(255,255,255,.55);resize:none;font-family:Arial,Helvetica,sans-serif;color:#000;tab-size:2;-moz-tab-size:2}
 .ls-ta.ls-t{text-transform:none;line-height:1.1}.ls-ta.ls-ttl{text-transform:none;display:block;line-height:1.05}.ls-ta.ls-sub{text-transform:none}
@@ -1472,7 +1477,7 @@ const L = { db: null, lessons: [], units: [], setup: null, view: 'semester', wee
 const LDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const LDAYS_LONG = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 const LMONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-const LAYOUTS = { title: 'Title', agenda: 'Agenda', objectives: 'Objectives', warmup: 'Warm-up', exit: 'Exit ticket', steps: 'Directions with steps', discuss: 'Discussion question', content: 'Title and text', twocol: 'Two columns', text: 'Plain text', passage: 'Passage', vocab: 'Vocabulary', picture: 'Picture', picprompt: 'Picture + questions', video: 'Video' };
+const LAYOUTS = { title: 'Title', agenda: 'Agenda', objectives: 'Objectives', warmup: 'Warm-up', exit: 'Exit ticket', steps: 'Directions with steps', discuss: 'Discussion question', content: 'Title and text', twocol: 'Two columns', text: 'Plain text', passage: 'Passage', vocab: 'Vocabulary', picture: 'Picture', fullpic: 'Full picture', textpic: 'Text + picture', picprompt: 'Picture + questions', video: 'Video' };
 const SIZES = [28, 30, 32, 34, 36];   // slide text stays between 28 and 36 pt, big enough to read from the back of the room
 const lid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
 
@@ -1673,6 +1678,12 @@ function slideInner(s, lesson, edit, look) {
     h += '<div class="ls-sub' + (edit ? ' ls-ed' : '') + '" data-k="body"' + (edit ? ' tabindex="0"' : '') + '>' + sub.split('\n').map(esc).join('<br>') + '</div>';
     return h;
   }
+  if (s.layout === 'fullpic') {   // the picture is the whole slide; the slide's name is kept for the list of slides, not shown
+    const F = FULLPIC;
+    h += '<div class="ls-pic ls-full' + (edit ? ' ls-ed' : '') + '" data-k="img" style="left:' + F.x + 'px;top:' + F.y + 'px;width:' + F.w + 'px;height:' + F.h + 'px">' + (s.img ? '<img src="' + esc(imgSrc(s.img.src)) + '" alt="">' : edit ? '<span class="ls-ph">Click to add a picture, or drag one in</span>' : '') + '</div>';
+    h += '<div class="ls-src ls-fullsrc' + (edit ? ' ls-ed' : '') + '" data-k="source"' + (edit ? ' tabindex="0"' : '') + '>' + (s.img && s.img.source ? esc(s.img.source) : edit && s.img ? '<span class="ls-ph">Add the source line for this picture</span>' : '') + '</div>';
+    return h;
+  }
   h += ed('title', 'ls-t', s.title, TITLE_PH[s.layout] || 'Click to add a title') + '<div class="ls-rule"></div>';
   if (isTeach(s)) return h + teachHtml(s, edit, look);
   if (s.layout === 'video') {
@@ -1840,15 +1851,15 @@ function renderEditor() {
   h += '<section class="ls-main"><div class="ls-tools">' +
     '<button class="btn sm" data-a="layout" title="Pick a layout for this slide">Layout: ' + esc(LAYOUTS[s.layout]) + ' ▾</button>' +
     '<button class="btn sm" data-a="look" title="Colors and background for this lesson">Look: ' + esc(LOOKS[lookOf(l)].name) + '</button>' + rtToolHtml() +
-    (s.layout !== 'title' && s.layout !== 'picture' && s.layout !== 'video' ? '<label>Text <select data-f="size" class="btn sm">' + SIZES.map(z => '<option value="' + z + '"' + (z === s.size ? ' selected' : '') + '>' + z + ' pt</option>').join('') + '</select></label>' : '') +
-    (s.layout === 'picture' || s.layout === 'picprompt' ? '<button class="btn sm" data-a="pic">' + (s.img ? 'Change picture' : 'Add picture') + '</button>' : '') +
+    (s.layout !== 'title' && s.layout !== 'picture' && s.layout !== 'fullpic' && s.layout !== 'video' ? '<label>Text <select data-f="size" class="btn sm">' + SIZES.map(z => '<option value="' + z + '"' + (z === s.size ? ' selected' : '') + '>' + z + ' pt</option>').join('') + '</select></label>' : '') +
+    (hasPic(s) ? '<button class="btn sm" data-a="pic">' + (s.img ? 'Change picture' : 'Add picture') + '</button>' : '') +
     (s.layout === 'video' ? '<button class="btn sm" data-a="vid">' + (s.video ? 'Change video' : 'Add video link') + '</button>' + (s.video ? '<a class="btn sm ghost" href="' + esc(videoLink(s.video)) + '" target="_blank" rel="noopener">Watch</a>' : '') : '') +
     '<span class="sp"></span><button class="btn sm ghost" data-a="up" title="Move earlier">↑</button><button class="btn sm ghost" data-a="down" title="Move later">↓</button><button class="btn sm ghost" data-a="dup">Duplicate</button><button class="btn sm ghost" data-a="del">Delete slide</button></div>' +
     '<div class="ls-stagewrap" id="lsWrap"><div class="ls-stage" id="lsStage"><div class="ls-slide">' + slideHtml(s, l, true) + '</div></div></div>' +
     '<div class="ls-warn" id="lsWarn" hidden></div>' +
     '<label class="ls-notes">Speaker notes<textarea data-f="notes" rows="3" placeholder="Notes for you, not shown on the slide">' + esc(s.notes) + '</textarea></label>' +
     slideTalkHtml(s) + lessonTalkHtml(l) + taughtHtml(l) + finishedHtml(l) + materialsHtml(l, 'lesson') +
-    '<p class="muted ls-hint">Click any text on the slide to edit it. In bullets, start a line with Tab for a smaller point under the one above. Arrow keys move between slides when you’re not typing. Drag a picture in from another tab, or paste a picture or a YouTube link.</p>' +
+    '<p class="muted ls-hint">Click any text on the slide to edit it. In bullets, start a line with Tab for a smaller point under the one above. Arrow keys move between slides when you’re not typing. Drag a picture in from another tab or from your computer, onto the slide or onto any slide in the list, or paste a picture or a YouTube link. A picture on a slide that has text goes beside the text.</p>' +
     '</section></div><input type="file" id="lsPicIn" accept="image/*" hidden>';
   $('#lessons').innerHTML = h;
   fitStage(); checkFit(); panelContext();
@@ -2063,6 +2074,9 @@ function undoToast(msg, fn) {
 }
 document.addEventListener('dragstart', e => { const th = e.target.closest && e.target.closest('#lsThumbs .ls-th'); if (!th) return; e.dataTransfer.setData('text/x-slide', th.dataset.go); e.dataTransfer.effectAllowed = 'move'; });
 async function onLessonDrop(e) {
+  dragMark(false);
+  const got = {}; for (const k of ['text/html', 'text/uri-list', 'text/plain']) got[k] = e.dataTransfer.getData(k);
+  const dt = { getData: k => got[k] || '', files: [...(e.dataTransfer.files || [])] };
   const zf = [...(e.dataTransfer.files || [])].find(f => /\.zip$/i.test(f.name));
   if (await finishedDrop(e)) return;
   if (zf && !(e.target.closest && e.target.closest('[data-owner]'))) return packImport(zf);
@@ -2078,18 +2092,35 @@ async function onLessonDrop(e) {
     const i = +from, j = +th.dataset.go; if (i === j) return;
     const [s] = L.open.slides.splice(i, 1); L.open.slides.splice(j, 0, s); L.cur = j; lessonChanged(false); return renderEditor();
   }
-  const f = e.dataTransfer.files && e.dataTransfer.files[0];
-  if (!f) { if (L.open) return dropFromWeb(e.dataTransfer); return; }
+  const th = L.open && e.target.closest && e.target.closest('#lsThumbs .ls-th');
+  if (th) { editorCommit(); L.cur = Math.max(0, Math.min(L.open.slides.length - 1, +th.dataset.go)); }
+  const f = dt.files[0];
+  if (!f) { if (L.open) return dropFromWeb(dt); return; }
   if (/\.json$/i.test(f.name)) return importLessonText(await f.text(), f.name);
-  if (/^image\//.test(f.type) && L.open) { const s = pictureSlide(); return setPicture(f, webSource(e.dataTransfer)); }
+  const pics = dt.files.filter(x => /^image\//.test(x.type));
+  if (!pics.length || !L.open) return;
+  for (const [i, pic] of pics.entries()) {
+    if (i) { L.open.slides.splice(L.cur + 1, 0, normSlide({ layout: 'picture' })); L.cur++; } else pictureSlide();
+    await setPicture(pic, i ? '' : webSource(dt));
+  }
+  if (pics.length > 1) toast(pics.length + ' pictures, one on each slide');
 }
+function dragMark(on) { const w = $('#lsWrap'); if (w) w.classList.toggle('ls-dropping', !!on && L.view === 'edit' && !!L.open); }
+document.addEventListener('dragover', e => {
+  const t = e.dataTransfer && [...e.dataTransfer.types]; if (!t || t.includes('text/x-slide') || t.includes('text/x-bank')) return;
+  if (!(t.includes('Files') || t.includes('text/uri-list') || t.includes('text/html'))) return;
+  if (!(e.target.closest && e.target.closest('#lessons')) || (e.target.closest('.pl-ask, [data-owner]'))) return dragMark(false);
+  dragMark(true);
+}, true);
+for (const ev of ['dragleave', 'dragend', 'drop']) document.addEventListener(ev, e => { if (ev !== 'dragleave' || !e.relatedTarget) dragMark(false); }, true);
 function webSource(dt) {
   const html = dt.getData('text/html') || '', src = (/<img[^>]+src="([^"]+)"/i.exec(html) || [])[1] || dt.getData('text/uri-list') || '';
   return hostOf(src.replace(/&amp;/g, '&'));
 }
 function pictureSlide() {   // the current slide if it can take a picture, or a new picture slide after it
   const s = L.open.slides[L.cur];
-  if (s.layout === 'picture' || s.layout === 'picprompt' || ((s.layout === 'content' || s.layout === 'text') && !s.body.trim() && !s.img)) { s.layout = 'picture'; return s; }
+  if (hasPic(s)) return s;
+  if (s.layout === 'content' || s.layout === 'text') { s.layout = s.body.trim() ? 'textpic' : 'picture'; return s; }   // text already on the slide stays, with the picture beside it
   const n = normSlide({ layout: 'picture' }); L.open.slides.splice(L.cur + 1, 0, n); L.cur++; return n;
 }
 async function dropFromWeb(dt) {
@@ -2285,7 +2316,7 @@ function lessonText(l) {
   for (const x of lessonNotes(l)) t += 'My comment on the whole lesson: ' + x + '\n';
   t += taughtText(l);
   l.slides.forEach((s, i) => {
-    t += '\n## Slide ' + (i + 1) + ' (' + LAYOUTS[s.layout] + (s.layout !== 'title' && s.layout !== 'picture' ? ', ' + s.size + ' pt' : '') + ')\n' + (s.title ? 'Title: ' + s.title + '\n' : '');
+    t += '\n## Slide ' + (i + 1) + ' (' + LAYOUTS[s.layout] + (s.layout !== 'title' && s.layout !== 'picture' && s.layout !== 'fullpic' ? ', ' + s.size + ' pt' : '') + ')\n' + (s.title ? 'Title: ' + s.title + '\n' : '');
     for (const k of EXTRA) if (s[k] && k !== 'body2') t += k + ': ' + s[k] + '\n';
     if (s.body2) t += 'body2:\n' + s.body2 + '\n';
     if (s.body) t += s.body + '\n';
@@ -2443,6 +2474,13 @@ function slideXmlIn(s, lesson, media) {
         const cy = media ? Y + h + 30000 : Y, txt = media ? videoSource(s.video) : (s.video.title ? videoSource(s.video) + ': ' : '') + s.video.url, sz = media ? 1000 : 2800;
         tree += '<p:sp><p:nvSpPr><p:cNvPr id="5" name="Video link 4"/><p:cNvSpPr txBox="1"/><p:nvPr/></p:nvSpPr><p:spPr><a:xfrm><a:off x="' + X + '" y="' + cy + '"/><a:ext cx="' + W + '" cy="' + (media ? 260000 : 900000) + '"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom><a:noFill/></p:spPr><p:txBody><a:bodyPr wrap="square" lIns="0" tIns="0" rIns="0" bIns="0"><a:noAutofit/></a:bodyPr><a:lstStyle/><a:p><a:pPr algn="ctr"/><a:r><a:rPr lang="en-US" sz="' + sz + '" dirty="0">' + link + '</a:rPr><a:t>' + xe(txt) + '</a:t></a:r></a:p></p:txBody></p:sp>';
       }
+    } else if (s.layout === 'fullpic') {
+      const F = FULLPIC, look = pxLook;
+      tree += shapeXml(8, [0, 0, 1280, 720, LOOKS[look].bg]);
+      if (s.img && media) {
+        tree += picXml(4, picFit(s.img, F));
+        if (s.img.source) tree += teachBoxXml(9, { k: '_src', x: 0, y: 696, w: 1280, h: 20, sz: 10, col: 'text', algn: 'ctr' }, { _src: s.img.source }, look);
+      }
     } else if (s.layout === 'picture') {
       if (s.img && media) {
         const X = 1453896, Y = 2015732, W = 9607522, H = 3900000, r = Math.min(W / s.img.w, H / s.img.h);
@@ -2468,10 +2506,10 @@ function buildPptx(lesson) {
   let ct = str('[Content_Types].xml'), prel = str('ppt/_rels/presentation.xml.rels'), pres = str('ppt/presentation.xml'), ids = '';
   const exts = new Set();
   lesson.slides.forEach((s, i) => {
-    const n = i + 1, layout = s.layout === 'title' ? lay.title : s.layout === 'picture' || s.layout === 'video' || isTeach(s) ? lay.only : lay.content;
+    const n = i + 1, layout = s.layout === 'title' ? lay.title : s.layout === 'picture' || s.layout === 'fullpic' || s.layout === 'video' || isTeach(s) ? lay.only : lay.content;
     let rels = '<Relationship Id="rId1" Type="' + REL + 'slideLayout" Target="../slideLayouts/' + layout + '"/>';
     let media = null;
-    if ((s.layout === 'picture' || s.layout === 'picprompt') && s.img && imgSrc(s.img.src)) {
+    if (hasPic(s) && s.img && imgSrc(s.img.src)) {
       const m = /^data:image\/(png|jpeg);base64,(.*)$/.exec(s.img.src);
       if (m) { const ext = m[1] === 'png' ? 'png' : 'jpeg'; exts.add(ext); media = 'lesson' + n + '.' + ext; z['ppt/media/' + media] = b64ToU8(m[2]); rels += '<Relationship Id="rIdImg" Type="' + REL + 'image" Target="../media/' + media + '"/>'; }
     }
@@ -2545,6 +2583,8 @@ never are, and nothing here should point to a student.
     { "layout": "discuss", "title": "Let’s talk", "body": "The question", "foot": "Think · Pair · Share" },
     { "layout": "twocol", "title": "…", "h1": "Left heading", "body": "Left points", "h2": "Right heading", "body2": "Right points" },
     { "layout": "passage", "title": "Close read", "body": "“The passage”", "cite": "Author, title, page", "foot": "The question" },
+    { "layout": "fullpic", "title": "Name for the list of slides (not shown)", "img": { … } },
+    { "layout": "textpic", "title": "Title", "body": "Text on the left", "img": { … } },
     { "layout": "picprompt", "title": "See · Think · Wonder", "img": { … }, "body": "Question one\\nQuestion two" },
     { "layout": "vocab", "title": "Word of the day", "word": "ethos", "pos": "noun", "body": "Meaning", "foot": "Example sentence" },
     { "layout": "exit", "title": "Exit ticket", "tag": "On a sticky note", "body": "The question" }
@@ -2812,7 +2852,7 @@ function lookShapes(k, titleSlide) {
 const EXTRA = ['tag', 'foot', 'h1', 'h2', 'body2', 'cite', 'word', 'pos'];
 const TEACH = {
   warmup: { size: 36 }, objectives: { size: 32 }, steps: { size: 32 }, discuss: { size: 36 }, twocol: { size: 28 },
-  passage: { size: 30 }, picprompt: { size: 28 }, vocab: { size: 32 }, exit: { size: 36 }
+  passage: { size: 30 }, picprompt: { size: 28 }, textpic: { size: 28 }, vocab: { size: 32 }, exit: { size: 36 }
 };
 const TITLE_PH = { agenda: 'Agenda', objectives: 'Today we will', warmup: 'Warm-up', steps: 'Directions', discuss: 'Let’s talk', passage: 'Close read', picprompt: 'See · Think · Wonder', vocab: 'Word of the day', exit: 'Exit ticket' };
 const BODY_PH = { agenda: 'What you’ll do today, one line each', objectives: 'Your objectives, one line each', content: 'Click to add text', text: 'Click to add text' };
@@ -2829,6 +2869,8 @@ const TEACH_SAMPLE = {
   text: { title: 'Plain text', body: 'A paragraph of plain text, with no bullets.' },
   passage: { title: 'Close read', body: '“A short passage from the text goes here, in quotation marks.”', cite: 'Author, Title, page', foot: 'What does this show about the speaker?' },
   picture: { title: 'Picture', img: { src: SAMPLE_PIC, w: 16, h: 10 } },
+  fullpic: { title: 'Full picture', img: { src: SAMPLE_PIC, w: 16, h: 10 } },
+  textpic: { title: 'Text + picture', body: 'What the picture shows\nWhy it matters here', img: { src: SAMPLE_PIC, w: 16, h: 10 } },
   picprompt: { title: 'See · Think · Wonder', body: 'What do you see?\nWhat do you think is happening?\nWhat do you wonder?', img: { src: SAMPLE_PIC, w: 16, h: 10 } },
   vocab: { title: 'Word of the day', word: 'ethos', pos: 'noun', body: 'Trust in the speaker: why we should believe them.', foot: '“As a doctor for 20 years, I can tell you…”' },
   video: { title: 'Video' },
@@ -2858,6 +2900,8 @@ function teachBoxes(s) {
       B('foot', 152, 540, 1008, 90, { sz: 28, ph: 'The question to read for' })];
     case 'picprompt': return [
       B('body', 712, 214, 448, 410, { list: 'bullet', gap: 10, ph: 'Questions, one per line' })];
+    case 'textpic': return [
+      B('body', 152, 214, 448, 410, { gap: 10, ph: 'Click to add text' })];
     case 'vocab': return [
       B('word', 152, 214, 1008, 62, { sz: 36, b: 1, ph: 'The word' }),
       B('pos', 152, 282, 1008, 46, { sz: 28, i: 1, col: 'accent', ph: 'Part of speech' }),
@@ -2872,15 +2916,18 @@ function teachShapes(s, look) {
   if (s.layout === 'passage') return [[152, 214, 8, 262, a]];
   return [];
 }
-const PICBOX = { x: 152, y: 214, w: 520, h: 384 };   // the picture in Picture + prompt; its source line goes under it
+const PICBOX = { x: 152, y: 214, w: 520, h: 384 }, PICBOX_R = { x: 640, y: 214, w: 520, h: 384 };
+const picBox = s => s.layout === 'picprompt' ? PICBOX : s.layout === 'textpic' ? PICBOX_R : null;
+const hasPic = s => s.layout === 'picture' || s.layout === 'fullpic' || !!picBox(s);
+const FULLPIC = { x: 0, y: 0, w: 1280, h: 692 };
 const lineList = t => String(t || '').split('\n').map(x => x.replace(/^\s+/, '')).filter(Boolean);
 const fieldOf = (s, k) => k === 'title' ? s.title : String(s[k] || '');
 
 function teachHtml(s, edit, look) {
   let h = '';
   for (const [x, y, w, hh, fill] of teachShapes(s, look)) h += '<div class="ls-shape" style="left:' + x + 'px;top:' + y + 'px;width:' + w + 'px;height:' + hh + 'px;background:' + fill + '"></div>';
-  if (s.layout === 'picprompt') {
-    const P = PICBOX;
+  const P = picBox(s);
+  if (P) {
     h += '<div class="ls-pic' + (edit ? ' ls-ed' : '') + '" data-k="img" style="left:' + P.x + 'px;top:' + P.y + 'px;width:' + P.w + 'px;height:' + P.h + 'px">' + (s.img ? '<img src="' + esc(imgSrc(s.img.src)) + '" alt="">' : edit ? '<span class="ls-ph">Click to add a picture</span>' : '') + '</div>';
     h += '<div class="ls-src' + (edit ? ' ls-ed' : '') + '" data-k="source" style="left:' + P.x + 'px;top:' + (P.y + P.h + 6) + 'px;width:' + P.w + 'px"' + (edit ? ' tabindex="0"' : '') + '>' + (s.img && s.img.source ? esc(s.img.source) : edit && s.img ? '<span class="ls-ph">Add the source line</span>' : '') + '</div>';
   }
@@ -2922,13 +2969,21 @@ function teachBoxXml(id, b, s, look) {
   return '<p:sp><p:nvSpPr><p:cNvPr id="' + id + '" name="Text ' + id + '"/><p:cNvSpPr txBox="1"/><p:nvPr/></p:nvSpPr><p:spPr><a:xfrm><a:off x="' + Math.round(b.x * EX) + '" y="' + Math.round(b.y * EY) + '"/><a:ext cx="' + Math.round(b.w * EX) + '" cy="' + Math.round(b.h * EY) + '"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom><a:noFill/></p:spPr>' +
     '<p:txBody><a:bodyPr wrap="square" lIns="0" tIns="0" rIns="0" bIns="0" anchor="' + (b.anchor === 'ctr' ? 'ctr' : 't') + '"><a:noAutofit/></a:bodyPr><a:lstStyle/>' + ps + '</p:txBody></p:sp>';
 }
+function picFit(img, B, valign) {
+  const r = Math.min(B.w * EX / img.w, B.h * EY / img.h), w = img.w * r / EX, h = img.h * r / EY;
+  return { x: B.x + (B.w - w) / 2, y: valign === 'top' ? B.y : B.y + (B.h - h) / 2, w, h };
+}
+function picXml(id, f) {
+  return '<p:pic><p:nvPicPr><p:cNvPr id="' + id + '" name="Picture"/><p:cNvPicPr><a:picLocks noChangeAspect="1"/></p:cNvPicPr><p:nvPr/></p:nvPicPr><p:blipFill><a:blip r:embed="rIdImg"/><a:stretch><a:fillRect/></a:stretch></p:blipFill><p:spPr><a:xfrm><a:off x="' + Math.round(f.x * EX) + '" y="' + Math.round(f.y * EY) + '"/><a:ext cx="' + Math.round(f.w * EX) + '" cy="' + Math.round(f.h * EY) + '"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></p:spPr></p:pic>';
+}
 function teachXml(s, look, media) {
   let t = '', id = 10;
   for (const sh of teachShapes(s, look)) t += shapeXml(id++, sh);
-  if (s.layout === 'picprompt' && s.img && media) {
-    const P = PICBOX, r = Math.min(P.w / s.img.w, P.h / s.img.h), w = s.img.w * r, h = s.img.h * r, x = P.x + (P.w - w) / 2;
-    t += '<p:pic><p:nvPicPr><p:cNvPr id="' + (id++) + '" name="Picture"/><p:cNvPicPr><a:picLocks noChangeAspect="1"/></p:cNvPicPr><p:nvPr/></p:nvPicPr><p:blipFill><a:blip r:embed="rIdImg"/><a:stretch><a:fillRect/></a:stretch></p:blipFill><p:spPr><a:xfrm><a:off x="' + Math.round(x * EX) + '" y="' + Math.round(P.y * EY) + '"/><a:ext cx="' + Math.round(w * EX) + '" cy="' + Math.round(h * EY) + '"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></p:spPr></p:pic>';
-    if (s.img.source) t += teachBoxXml(id++, { k: '_src', x: P.x, y: P.y + h + 6, w: P.w, h: 22, sz: 10, col: 'text', algn: 'ctr' }, { _src: s.img.source }, look);
+  const P = picBox(s);
+  if (P && s.img && media) {
+    const f = picFit(s.img, P, 'top');
+    t += picXml(id++, f);
+    if (s.img.source) t += teachBoxXml(id++, { k: '_src', x: P.x, y: f.y + f.h + 6, w: P.w, h: 22, sz: 10, col: 'text', algn: 'ctr' }, { _src: s.img.source }, look);
   }
   for (const b of teachBoxes(s)) t += teachBoxXml(id++, b, s, look);
   return t;
@@ -2957,7 +3012,7 @@ function lookDlg() {
   };
   $('#dlgBox').onchange = async e => { if (e.target.id === 'lkDef') { L.defLook = e.target.checked ? lookOf(l) : ''; await kvSet('deflook', L.defLook); } };
 }
-const LAYOUT_GROUPS = [['Start and end', ['title', 'agenda', 'objectives', 'warmup', 'exit']], ['Teach and practice', ['steps', 'discuss', 'content', 'twocol', 'text', 'passage', 'vocab']], ['Pictures and video', ['picture', 'picprompt', 'video']]];
+const LAYOUT_GROUPS = [['Start and end', ['title', 'agenda', 'objectives', 'warmup', 'exit']], ['Teach and practice', ['steps', 'discuss', 'content', 'twocol', 'text', 'passage', 'vocab']], ['Pictures and video', ['picture', 'fullpic', 'textpic', 'picprompt', 'video']]];
 function addSlideDlg(mode) {
   const l = L.open; if (!l) return;
   const change = mode === 'change', cur = l.slides[L.cur];
