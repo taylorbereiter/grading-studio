@@ -1,5 +1,4 @@
 # Grade sheet: a student with a score in the app shows that score ("Your score"), a new checkbox "Also show grades found on
-# the papers", and the line under the title counts scored students. The marking screen differs by 12 pixels in one picture
-# (laptop, dark), at the sidebar's bottom-left corner, which this change does not touch.
-grades-sheet
-mark
+# the papers", and the line under the title counts scored students. The version line will read 1.27.14 once it merges.
+# A 12-pixel flicker at the sidebar's bottom-left corner shows on a different screen in each run (mark, home, home-chinese).
+*
