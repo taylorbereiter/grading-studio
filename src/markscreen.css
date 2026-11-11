@@ -156,6 +156,8 @@ button.pavg:hover .v{text-decoration:underline}
 /* the percent beside the total had picked up the student card's box (both were called .pc) */
 .total span.pc{width:auto;max-height:none;overflow:visible;background:none;border:0;border-radius:0;box-shadow:none;font-size:var(--text-title);font-weight:650;letter-spacing:-.02em}
 .total{padding:10px 2px 0;border-top:1px solid var(--line)}
+#stampScore{align-self:center;gap:5px;padding:3px 8px;color:var(--accent)}
+#stampScore svg{flex:none}
 .cmt textarea{min-height:72px;padding:9px 11px;border-radius:var(--corner-4);font-size:var(--text-control);line-height:1.45;display:block}
 .gstat{display:flex;flex-wrap:nowrap;align-items:center;gap:6px;margin:0}
 .gstat .seg{margin-left:0;flex:1;gap:6px;border:0;border-radius:0;overflow:visible}
