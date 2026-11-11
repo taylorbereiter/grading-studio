@@ -148,3 +148,71 @@ test('a mark moved on one paper only, then put back; size, filter, whole page an
   assert.deepEqual(page.errors, []);
   await close();
 });
+
+test('a short answer on a scale (0 Not shown, 1 Partial, 2 Full) beside right/wrong questions; each teacher sets the top and the words', async () => {
+  const { page, close } = await openApp(browser);
+  await openZip(page, zip, 'Quiz.zip');
+  await page.evaluate(() => window.__gs.openQuizBoxes());
+  await dragOn(page, 0, [0.1, 0.1], [0.6, 0.2]);
+  assert.equal(await page.$eval('.qbt tbody tr:nth-child(1) .qkind', e => e.value), 'rw', 'a 1-point box is right or wrong');
+  assert.equal(await page.$('.qword'), null, 'no scale words while nothing is on a scale');
+  await dragOn(page, 0, [0.1, 0.25], [0.6, 0.35]);
+  // Question 2 becomes a scale: worth 2, so 0 to 2, with Not shown / Partial / Full ready to change.
+  await setVal(page, '.qbt tbody tr:nth-child(2) .qkind', 'scale');
+  assert.equal(await page.$eval('.qbt tbody tr:nth-child(2) .qpts', e => e.value), '2');
+  assert.deepEqual(await page.$$eval('.qword', w => w.map(e => e.value)), ['Not shown', 'Partial', 'Full']);
+  // A third box after it is a scale too. Another teacher's scale: 0 to 4, with her own words.
+  await dragOn(page, 0, [0.1, 0.4], [0.6, 0.5]);
+  assert.equal(await page.$eval('.qbt tbody tr:nth-child(3) .qkind', e => e.value), 'scale');
+  await setVal(page, '.qbt tbody tr:nth-child(3) .qpts', '4');
+  assert.equal(await page.$$eval('.qword[data-top="4"]', w => w.length), 5);
+  await setVal(page, '.qword[data-top="4"][data-k="3"]', 'Meets');
+  await setVal(page, '.qword[data-top="2"][data-k="1"]', 'Some');
+  await page.click('[data-save]');
+  await page.waitForFunction(() => document.querySelectorAll('#qmBody .qmc img').length === 2);
+  const Q = await quiz(page);
+  assert.deepEqual(Q.qs.map(q => [q.kind, q.pts]), [[undefined, 1], ['scale', 2], ['scale', 4]]);
+  assert.equal(Q.words['2'][1], 'Some'); assert.equal(Q.words['4'][3], 'Meets');
+  assert.equal(await page.evaluate(() => JSON.parse(localStorage.getItem('gs.qmWords'))['4'][3]), 'Meets', 'her words start her next quiz');
+  // Question 2: buttons 0, 1, 2 with the words; Ann gets 1 by key, Ben 2 by button.
+  await page.keyboard.press(']');
+  await page.waitForFunction(() => /Question 2/.test(document.querySelector('#qmPick').selectedOptions[0].textContent));
+  await page.waitForSelector('#qmBody .qmc[data-st="0"] button[data-v="2"]');
+  assert.deepEqual(await page.$$eval('#qmBody .qmc[data-st="0"] .qmb[data-v]', b => b.map(e => e.textContent)), ['0Not shown', '1Some', '2Full']);
+  assert.match(await page.$eval('#qmNav', e => e.textContent), /Scale 0 to 2/);
+  await page.focus('#qmBody .qmc[data-st="0"]');
+  await page.keyboard.press('1');
+  await page.click('#qmBody .qmc[data-st="1"] button[data-v="2"]');
+  await page.waitForFunction(() => /2 of 2 marked/.test(document.querySelector('#qmProg').textContent));
+  const marks = await page.evaluate(() => window.__gs.state().batch.students.map(s => s.grade.q));
+  assert.equal(marks[0][Q.qs[1].id], 1); assert.equal(marks[1][Q.qs[1].id], 2);
+  assert.ok((await marksOf(page, 0)).some(m => m.text === '1/2'), 'partial shows as 1/2 on the paper');
+  // Question 3: 0 to 4, the middle steps she named show their word.
+  await page.keyboard.press(']');
+  await page.waitForFunction(() => /Question 3/.test(document.querySelector('#qmPick').selectedOptions[0].textContent));
+  await page.waitForSelector('#qmBody .qmc[data-st="0"] button[data-v="4"]');
+  assert.deepEqual(await page.$$eval('#qmBody .qmc[data-st="0"] .qmb[data-v]', b => b.map(e => e.textContent)), ['0Not shown', '1', '2', '3Meets', '4Full']);
+  assert.deepEqual(page.errors, []);
+  await close();
+});
+
+test('right or wrong on a question worth 2: ✗ gives 0, ✓ and the 1 key give all its points', async () => {
+  const { page, close } = await openApp(browser);
+  await openZip(page, zip, 'Quiz.zip');
+  await page.evaluate(() => window.__gs.openQuizBoxes());
+  await dragOn(page, 0, [0.1, 0.1], [0.6, 0.2]);
+  await setVal(page, '.qbt tbody tr:nth-child(1) .qpts', '2');
+  assert.equal(await page.$eval('.qbt tbody tr:nth-child(1) .qkind', e => e.value), 'scale', 'worth 2 with no choice yet reads as a scale, as before');
+  await setVal(page, '.qbt tbody tr:nth-child(1) .qkind', 'rw');
+  await page.click('[data-save]');
+  await page.waitForFunction(() => document.querySelectorAll('#qmBody .qmc img').length === 2);
+  assert.deepEqual(await page.$$eval('#qmBody .qmc[data-st="0"] .qmb[data-v]', b => b.map(e => e.textContent)), ['✗', '✓']);
+  await page.focus('#qmBody .qmc[data-st="0"]');
+  await page.keyboard.press('1');
+  await page.click('#qmBody .qmc[data-st="1"] button[data-v="0"]');
+  await page.waitForFunction(() => /2 of 2 marked/.test(document.querySelector('#qmProg').textContent));
+  const q = (await quiz(page)).qs[0], marks = await page.evaluate(() => window.__gs.state().batch.students.map(s => s.grade.q));
+  assert.equal(marks[0][q.id], 2); assert.equal(marks[1][q.id], 0);
+  assert.deepEqual(page.errors, []);
+  await close();
+});
