@@ -20,7 +20,12 @@ const PLATFORMS = {
   win: { platform: 'Win32', ua: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36' },
 };
 // A fresh section of the throwaway profile per call, with its own empty storage. seed plants saved data before the app first runs.
-async function openApp(browser, { html, platform, seed, server, context, noWait, beforeLoad } = {}) {
+// newTeacher: a browser nobody has used, which opens on the welcome. Without it the browser is one that used the app before the
+// welcome existed (the three starter classes that build added, and nothing else), which is the state every older test was written
+// in and the state real saved work is in: no welcome, and every word and default as it was.
+const USED_BEFORE = { 'gs.lib': JSON.stringify({ classes: ['12EL-1', '12EL-2', '11EL-2'].map((name, i) => ({ id: 'starter' + (i + 1), name, names: [], units: [] })), loose: { id: '', units: [] }, units: [], seed2627: true }), 'gs.syncT': JSON.stringify({ 'gs.lib': 1 }) };
+async function openApp(browser, { html, platform, seed, server, context, noWait, beforeLoad, newTeacher } = {}) {
+  if (!newTeacher && !(seed && seed.ls && seed.ls['gs.lib'] != null)) seed = { ...(seed || {}), ls: { ...USED_BEFORE, ...((seed && seed.ls) || {}) } };
   const srv = server || await serve(html || builtHtml());
   const ctx = context || await browser.createBrowserContext();
   const page = await ctx.newPage();
@@ -265,4 +270,4 @@ async function menuPick(page, sel) {
   await page.waitForSelector('.stampmenu [data-fly="' + where + '"]:not([hidden])');
   await page.click('.stampmenu [data-fly="' + where + '"] ' + sel);
 }
-module.exports = { openOwn, closeOwn, goTo, openClass, classPage, menuPick, press, pick, closeBox, MARK_BOXES, ROOT, BUILT, builtHtml, tmpDir, openApp, answerDlg, appReady, plant, idbRead, pickFile, openZip, waitPaper, goToStudent, toScreen, at, drag, clickAt, setTool, score, markPage, settle, catchDownloads, probePdf, probeScreen, workOf };
+module.exports = { USED_BEFORE, openOwn, closeOwn, goTo, openClass, classPage, menuPick, press, pick, closeBox, MARK_BOXES, ROOT, BUILT, builtHtml, tmpDir, openApp, answerDlg, appReady, plant, idbRead, pickFile, openZip, waitPaper, goToStudent, toScreen, at, drag, clickAt, setTool, score, markPage, settle, catchDownloads, probePdf, probeScreen, workOf };

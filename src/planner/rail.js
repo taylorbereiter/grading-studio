@@ -73,7 +73,7 @@ function findRows() {
   add('Do', 'Import a lesson', 'A lesson file, a lesson pack, or pasted text', () => importLesson());
   add('Do', 'Timetable', 'Your classes, when they meet, and the school calendar', () => openTimetable());
   if ('showDirectoryPicker' in window) add('Do', L.dir && L.dirOk ? 'Look in the Planner folder' : L.dir ? 'Reconnect the Planner folder' : 'Link the Planner folder', L.dir && L.dirOk ? 'For lessons added or changed there' : 'A second copy of your lessons, in a folder of their own', () => L.dir && L.dirOk ? folderRead(true) : L.dir ? folderReconnect(true) : folderLink());
-  add('Do', 'Side panel', 'Books, video, Atlas, the notebook and the Claude box', () => panelToggle());
+  add('Do', 'Side panel', 'Books, video, ' + (plCur() || 'the unit') + ', the notebook and the Claude box', () => panelToggle());
   add('Do', document.documentElement.dataset.theme === 'dark' ? 'Light mode' : 'Dark mode', 'Display', () => setTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'));
   return out;
 }

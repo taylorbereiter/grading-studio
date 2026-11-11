@@ -136,6 +136,7 @@ async function walk(ctx, place, { A, L }) {
   await page.goto(place.url('planner') + '#week'); await plannerReady(page);
   await page.goto(place.url('blank'));
   await page.goto(place.url('planner') + '#lesson/' + L); await plannerReady(page);
+  await page.waitForFunction(() => !!window.__planner.L.open, { timeout: 20000 }).catch(() => {});   // the lesson opens last, once the classes and everything else have been read
   seen.planner = await page.evaluate(() => { const P = window.__planner.L; return { classes: (P.setup && P.setup.classes || []).map(c => c.name), lessons: P.lessons.map(l => ({ id: l.id, title: l.title, slots: l.slots, slides: l.slides.map(s => [s.layout, s.title, s.body]) })), open: P.open && P.open.title }; });
   await sleep(500);
   errors.push(...page.errors);

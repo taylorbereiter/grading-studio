@@ -24,7 +24,7 @@ const routeOf = hash => {
 };
 const routeNow = () => routeOf(location.hash);
 // Settings is one page per subject: #/settings is the first, #/settings/<key> the others.
-const SET_SECS = [['saving', 'Saving and carrying', 'Folder, take-home file, safety copies'], ['history', 'Go back in time', 'Your work as it was on an earlier day'], ['classes', 'Classes and rosters', 'Names, students, ManageBac links'], ['terms', 'Terms and weights', 'Your terms and how each type counts'],
+const SET_SECS = [['saving', 'Saving and carrying', 'Folder, take-home file, safety copies'], ['history', 'Go back in time', 'Your work as it was on an earlier day'], ['classes', 'Classes and rosters', 'Names, students, ' + (sysName() ? sysName() + ' links' : 'class links')], ['terms', 'Terms and weights', 'Your terms and how each type counts'],
   ['grading', 'Grading scale and rubrics', 'Your saved scales and rubrics'], ['marking', 'Marking', 'Mark key, Word papers'], ['timetable', 'Timetable and calendar', 'Class times and days off, in the Planner'],
   ['display', 'Display', 'Text size, zoom, dark mode'], ['claude', 'Working with Claude', 'Optional. What Claude can and can’t see'], ['keys', 'Keys', 'Every shortcut'], ['about', 'About and updates', 'Version, what’s new, install as an app']];
 const CLASS_TABS = [['', 'Assignments'], ['gradebook', 'Gradebook'], ['students', 'Students'], ['charts', 'Charts']];
@@ -84,6 +84,7 @@ const rosterSig = c => { let h = 5381; for (const ch of c.names.join('\n')) h = 
 function classLeave() { const box = $('#classes'); if (box.firstChild) { box.innerHTML = ''; delete box.dataset.h; } if (shellReady) classPanelGone(); }
 function showScreen(r) {
   const grading = r.v === 'a' && !!batch;
+  if (grading && !$('#welcome').hidden) wlClose();   // papers opened past the welcome (dropped on the page): the questions wait on Home's card instead
   $('#shell').classList.toggle('grading', grading);
   $('#app').hidden = !grading; $('#start').hidden = grading;
   for (const [id, v] of [['vHome', 'home'], ['vClass', 'class'], ['vSettings', 'settings'], ['vOpening', 'opening']]) $('#' + id).hidden = grading || r.v !== v;
@@ -114,8 +115,8 @@ function renderLib() {
   };
   const unit = u => '<div class="unit" draggable="true" data-unit="' + u.id + '">' +
     '<div class="uhead" title="Drag to move this unit"><span class="nm">' + esc(u.name) + '</span><span class="ucount">' + u.items.length + (u.items.length === 1 ? ' assignment' : ' assignments') + '</span><span class="sp"></span>' +
-    '<span class="atl">' + (u.atlas ? '<a href="' + esc(u.atlas) + '" target="_blank" rel="noopener noreferrer" title="' + esc(u.atlas) + '">Open in Atlas ↗</a><button class="link" data-uatlas="' + u.id + '">Change</button>'
-      : '<button class="link" data-uatlas="' + u.id + '">+ Link to Atlas</button>') + '</span>' +
+    '<span class="atl">' + (u.atlas ? '<a href="' + esc(u.atlas) + '" target="_blank" rel="noopener noreferrer" title="' + esc(u.atlas) + '">' + (unitLinkName() ? 'Open in ' + esc(unitLinkName()) : 'Unit plan') + ' ↗</a><button class="link" data-uatlas="' + u.id + '">Change</button>'
+      : '<button class="link" data-uatlas="' + u.id + '">+ Link to ' + esc(unitLinkName() || 'a unit plan') + '</button>') + '</span>' +
     '<button class="icon" data-urename="' + u.id + '" title="Rename unit" aria-label="Rename unit">✎</button>' +
     '<button class="icon" data-udel="' + u.id + '" title="Delete unit" aria-label="Delete unit">✕</button></div>' +
     '<div class="cards">' + u.items.map(card).join('') + '</div>' +
@@ -248,7 +249,7 @@ $('#start').addEventListener('click', async e => {
   }
   if (b.dataset.openAsg) {
     asgTarget = findItem(b.dataset.openAsg).it;
-    openDlg('<div class="bh"><h2>Open “' + esc(asgTarget.name) + '”</h2></div><div class="bb"><p style="margin-top:0">Where is the ManageBac download? You can also drop the ZIP or the folder straight onto this assignment’s card.</p></div>' +
+    openDlg('<div class="bh"><h2>Open “' + esc(asgTarget.name) + '”</h2></div><div class="bb"><p style="margin-top:0">' + (sysName() ? 'Where is the ' + esc(sysName()) + ' download?' : 'Where are the papers?') + ' You can also drop the ZIP or the folder straight onto this assignment’s card.</p></div>' +
       '<div class="bf"><button class="btn" data-cancel>Cancel</button><button class="btn" data-pc>The ZIP or files…</button><button class="btn" data-dir>A whole folder…</button><button class="btn" data-scan>A scan of everyone’s papers…</button><button class="btn" data-match>Files to match to a roster…</button>' + (gcid() ? '<button class="btn primary" data-dv>From Google Drive…</button>' : '') + '</div>', true);
     $('#dlgBox').onclick = ev => { if (ev.target.closest('[data-cancel]')) return closeDlg(); if (ev.target.closest('[data-pc]')) { closeDlg(); $('#asgIn').click(); } if (ev.target.closest('[data-dir]')) { closeDlg(); pickDir('#asgDirIn'); } if (ev.target.closest('[data-scan]')) { closeDlg(); scanFor = asgTarget; $('#scanIn').click(); } if (ev.target.closest('[data-match]')) { const a = asgTarget; askFilesOrFolder('Match files to a roster', 'Each file is matched to a student by the name in its file name or folder name, and you can fix any match.', list => matchToRoster(list, a)); } if (ev.target.closest('[data-dv]')) { closeDlg(); openFromDrive(asgTarget); } };
     return;
@@ -256,10 +257,10 @@ $('#start').addEventListener('click', async e => {
   if (b.dataset.editClass != null) return editClass(+b.dataset.editClass);
   if (b.dataset.mbset != null) return askMb(+b.dataset.mbset);
 });
-// The unit's page in Atlas (web links only); empty removes it. Shown on the unit and in the top bar while grading.
+// The unit's page in the school's curriculum tool, Atlas for one (web links only); empty removes it. Shown on the unit and in the top bar while grading.
 async function askAtlas(unitId) {
   const f = findUnit(unitId); if (!f) return;
-  let v = await askTextDlg('Paste the Atlas link for ' + f.u.name + ' (leave empty to remove it)', f.u.atlas || '', { ok: 'Save' });
+  let v = await askTextDlg('Paste the ' + (unitLinkName() ? unitLinkName() + ' link' : 'link to the unit plan') + ' for ' + f.u.name + ' (leave empty to remove it)', f.u.atlas || '', { ok: 'Save' });
   if (v == null) return; v = v.trim();
   if (v && !/^https?:\/\//i.test(v)) v = 'https://' + v;
   if (v && !/^https?:\/\/[^\s]+$/i.test(v)) return toast('That doesn’t look like a web link');
@@ -269,12 +270,12 @@ async function askAtlas(unitId) {
 function renderTopAtlas() {
   const el = $('#topAtlas'); if (!el) return;
   const f = batch && batch.assignment && findItem(batch.assignment.id);
-  el.innerHTML = !f ? '' : f.u.atlas ? '<a href="' + esc(f.u.atlas) + '" target="_blank" rel="noopener noreferrer" title="' + esc(f.u.name) + ' in Atlas">Atlas ↗</a>'
-    : '<button class="link" data-uatlas="' + f.u.id + '" title="Link ' + esc(f.u.name) + ' to its Atlas page">+ Atlas link</button>';
-  // the class's ManageBac page, where the grades go
+  el.innerHTML = !f ? '' : f.u.atlas ? '<a href="' + esc(f.u.atlas) + '" target="_blank" rel="noopener noreferrer" title="' + esc(f.u.name) + (unitLinkName() ? ' in ' + esc(unitLinkName()) : ': its unit plan') + '">' + esc(unitLinkName() || 'Unit plan') + ' ↗</a>'
+    : '<button class="link" data-uatlas="' + f.u.id + '" title="Link ' + esc(f.u.name) + ' to its ' + (unitLinkName() ? esc(unitLinkName()) + ' page' : 'unit plan') + '">+ ' + esc(unitLinkName() || 'Unit plan') + ' link</button>';
+  // the class's page in the school's system, where the grades go
   const c = batchClass(), ci = c ? lib.classes.indexOf(c) : -1;
   const tm = $('#topMb'); if (tm) tm.innerHTML = c && mbOf(c) ? mbLink(c) : '';   // in the top bar, beside the Grades list
-  if (c) el.innerHTML += mbOf(c) ? ' <a href="' + esc(mbOf(c)) + '" target="_blank" rel="noopener" title="' + esc(c.name) + ' on ManageBac">ManageBac ↗</a>' : ' <button class="link" data-mbset="' + ci + '" title="Link ' + esc(c.name) + ' to its ManageBac page">+ ManageBac link</button>';
+  if (c) el.innerHTML += mbOf(c) ? ' <a href="' + esc(mbOf(c)) + '" target="_blank" rel="noopener" title="' + esc(c.name) + (sysName() ? ' on ' + esc(sysName()) : ': its class page') + '">' + esc(sysLink()) + ' ↗</a>' : ' <button class="link" data-mbset="' + ci + '" title="Link ' + esc(c.name) + ' to its ' + (sysName() ? esc(sysName()) + ' page' : 'page in your school’s system') + '">+ ' + esc(sysLink()) + ' link</button>';
 }
 $('#topAtlas').addEventListener('click', e => { const b = e.target.closest('[data-uatlas]'); if (b) askAtlas(b.dataset.uatlas); const m = e.target.closest('[data-mbset]'); if (m) askMb(+m.dataset.mbset); });
 // The unit list follows the class picked; a class with no units gets a "Unit 1" when the assignment is saved.
@@ -373,19 +374,19 @@ function parseRosterRows(text) {
   return out;
 }
 const parseRoster = text => parseRosterRows(text).map(r => r.name);
-// A class's ManageBac page, so it opens in one click from the class and its Grades list.
+// A class's page in the school's system (ManageBac, Google Classroom, Canvas…), so it opens in one click from the class and its Grades list.
 function mbUrl(v) { v = String(v || '').trim(); if (/^[\w.-]+\.[a-z]{2,}\//i.test(v)) v = 'https://' + v; return /^https?:\/\/[^\s"<>]+$/i.test(v) ? v : ''; }
 // Links are also remembered by class name in this browser, so the Planner shows the same link for "11 EL-2" as grading does for "11EL-2".
 const MB_KEY = 'gs.mblinks', mbNorm = s => String(s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
 function mbMap() { try { return JSON.parse(localStorage.getItem(MB_KEY) || '{}') || {}; } catch { return {}; } }
 function mbRemember(name, url) { try { const m = mbMap(), k = mbNorm(name); if (!k) return; if (url) m[k] = url; else delete m[k]; localStorage.setItem(MB_KEY, JSON.stringify(m)); } catch { } }
 const mbOf = c => (c && (mbUrl(c.mb) || mbUrl(mbMap()[mbNorm(c.name)]))) || '';
-const mbLink = (c, cls) => mbOf(c) ? '<a class="' + (cls || 'btn sm') + ' mb-go" href="' + esc(mbOf(c)) + '" target="_blank" rel="noopener" title="Open ' + esc(c.name) + ' on ManageBac">ManageBac ↗</a>' : '';
+const mbLink = (c, cls) => mbOf(c) ? '<a class="' + (cls || 'btn sm') + ' mb-go" href="' + esc(mbOf(c)) + '" target="_blank" rel="noopener" title="Open ' + esc(c.name) + (sysName() ? ' on ' + esc(sysName()) : '’s class page') + '">' + esc(sysLink()) + ' ↗</a>' : '';
 // On the class itself: the link, or a button to add one. ✎ changes it.
-const mbClassBtns = (c, ci) => mbOf(c) ? mbLink(c) + '<button class="icon" data-mbset="' + ci + '" title="Change the ManageBac link" aria-label="Change the ManageBac link">✎</button>' : '<button class="btn sm ghost mb-add" data-mbset="' + ci + '">+ ManageBac link</button>';
+const mbClassBtns = (c, ci) => mbOf(c) ? mbLink(c) + '<button class="icon" data-mbset="' + ci + '" title="Change the ' + esc(sysLink()) + ' link" aria-label="Change the ' + esc(sysLink()) + ' link">✎</button>' : '<button class="btn sm ghost mb-add" data-mbset="' + ci + '">+ ' + esc(sysLink()) + ' link</button>';
 async function askMb(ci) {
   const c = lib.classes[ci]; if (!c) return;
-  const v = await askTextDlg('Paste the ManageBac page for ' + c.name + ' (leave empty to remove it)', mbOf(c), { ok: 'Save' });
+  const v = await askTextDlg('Paste the ' + (sysName() ? sysName() + ' page' : 'web address of the class page') + ' for ' + c.name + ' (leave empty to remove it)', mbOf(c), { ok: 'Save' });
   if (v == null) return;
   const u = mbUrl(v); if (v.trim() && !u) return toast('That doesn’t look like a web link');
   if (u) c.mb = u; else delete c.mb; mbRemember(c.name, u);
@@ -395,9 +396,9 @@ function editClass(ci) {
   let upRows = [];
   const c = ci >= 0 ? lib.classes[ci] : { id: uid(), name: '', names: [], units: [] };
   openDlg('<div class="bh"><h2>' + (ci >= 0 ? 'Edit roster' : 'New roster') + '</h2></div><div class="bb">' +
-    '<div class="field"><label for="cName">Class name</label><input type="text" id="cName" value="' + esc(c.name) + '" placeholder="e.g. 11EL-2"></div>' +
-    '<div class="field"><label for="cMb">ManageBac link <span class="muted" style="font-weight:400">(optional)</span></label><input type="url" id="cMb" value="' + esc(mbOf(c)) + '" placeholder="Paste this class’s ManageBac page address"></div>' +
-    '<div class="field"><label for="cNames">Students, one per line, in the order you want (ManageBac order works well)</label><textarea class="big" id="cNames" placeholder="Paste from a spreadsheet or ManageBac, or upload a file. Student ID and email columns are kept as each student’s details.">' + esc(c.names.join('\n')) + '</textarea></div>' +
+    '<div class="field"><label for="cName">Class name</label><input type="text" id="cName" value="' + esc(c.name) + '" placeholder="e.g. Period 2 Biology"></div>' +
+    '<div class="field"><label for="cMb">' + esc(sysLink()) + ' link <span class="muted" style="font-weight:400">(optional)</span></label><input type="url" id="cMb" value="' + esc(mbOf(c)) + '" placeholder="Paste this class’s ' + (sysName() ? esc(sysName()) + ' page address' : 'page address in your school’s system') + '"></div>' +
+    '<div class="field"><label for="cNames">Students, one per line, in the order you want' + (sysName() ? ' (' + esc(sysName()) + ' order works well)' : '') + '</label><textarea class="big" id="cNames" placeholder="Paste from a spreadsheet' + (sysName() ? ' or ' + esc(sysName()) : '') + ', or upload a file. Student ID and email columns are kept as each student’s details.">' + esc(c.names.join('\n')) + '</textarea></div>' +
     '<button class="btn sm" data-up>Upload a list (.csv or .txt)…</button><input type="file" id="cFile" accept=".csv,.txt,text/csv,text/plain" hidden>' +
     '<p class="muted" style="font-size:13px">Kept in this browser.</p></div>' +
     '<div class="bf">' + (ci >= 0 ? '<button class="btn" data-del style="margin-right:auto">Delete</button>' : '') + '<button class="btn" data-cancel>Cancel</button><button class="btn primary" data-ok>Save</button></div>', true);
@@ -408,7 +409,7 @@ function editClass(ci) {
     if (e.target.closest('[data-del]')) { if (!await askDlg('Delete the ' + c.name + ' class? Its assignments move to “No class”.', { ok: 'Delete', danger: true })) return; for (const u of c.units) { for (const it of u.items) it.classId = ''; lib.loose.units.push(u); } lib.classes.splice(ci, 1); saveLib(); closeDlg(); renderLib(); if (!batch && routeNow().v !== 'class') go(lib.loose.units.some(u => u.items.length) ? classHash(lib.loose) : '#/', true); return; }
     if (e.target.closest('[data-ok]')) {
       const name = $('#cName').value.trim(); if (!name) { $('#cName').focus(); return; }
-      const mb = mbUrl($('#cMb').value); if ($('#cMb').value.trim() && !mb) { toast('That ManageBac link isn’t a web address'); $('#cMb').focus(); return; }
+      const mb = mbUrl($('#cMb').value); if ($('#cMb').value.trim() && !mb) { toast('That ' + sysLink() + ' link isn’t a web address'); $('#cMb').focus(); return; }
       c.name = name; const rows = parseRosterRows($('#cNames').value).map(r => ({ ...(upRows.find(u => u.name === r.name) || {}), ...r, id: r.id || (upRows.find(u => u.name === r.name) || {}).id || '', email: r.email || (upRows.find(u => u.name === r.name) || {}).email || '' })), was = c.names; c.names = rows.map(r => r.name); keepInfo(c, was, rows);
       if (mb) c.mb = mb; else delete c.mb; mbRemember(name, mb);
       if (ci < 0) lib.classes.push(c);
@@ -432,6 +433,13 @@ function rosterMatch(names) {
   for (const n of left()) {
     const w = new Set(nameWords(n)), hits = studs.filter(x => !used.has(x.st) && x.w.size === w.size && [...w].every(t => x.w.has(t)));
     if (w.size && hits.length === 1) give(n, hits[0]);
+  }
+  // Canvas names a student's files by their name with the words run together, family name first ("doejane"): one word that is the roster name's words joined.
+  for (const n of left()) {
+    const w = nameWords(n); if (w.length < 2 || w.length > 5) continue;
+    const forms = new Set([w.join(''), w.slice(1).concat(w[0]).join(''), [w[w.length - 1]].concat(w.slice(0, -1)).join('')]);
+    const hits = studs.filter(x => !used.has(x.st) && x.w.size === 1 && forms.has([...x.w][0]));
+    if (hits.length === 1) give(n, hits[0]);
   }
   const fits = (w, x) => w.every(t => x.w.has(t)) || (x.w.size >= 2 && [...x.w].every(t => w.includes(t)));
   const rest = left().map(n => ({ n, w: nameWords(n) })).filter(r => r.w.length);

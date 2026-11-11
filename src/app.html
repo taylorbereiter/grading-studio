@@ -2,7 +2,7 @@
 <script>try{document.documentElement.dataset.theme=JSON.parse(localStorage.getItem('gs.theme'))||'light'}catch(e){document.documentElement.dataset.theme='light'}</script>
 <style>
 /*@@FONT@@*/
-/* Three columns: students in folder order, the paper, the grade. A start screen takes the ManageBac download.
+/* Three columns: students in folder order, the paper, the grade. A start screen takes the class's papers.
    Look: "Calm Desk" in ocean blue (Taylor, 10/21): white and cool gray, one blue accent, red only for marks on the paper. */
 /*@@TOKENS@@*/
 /*@@PARTSCSS@@*/
@@ -545,6 +545,7 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
     <header class="vhead"><h1>Home</h1><span class="muted" id="homeDate"></span><span class="sp"></span><span class="gAcct"></span></header>
     <div class="hgrid">
       <div class="hmain">
+        <section class="safeask" id="sampleNote" hidden></section>
         <section class="safeask" id="safeAsk" hidden></section>
         <section class="lib today" hidden>
           <div class="lhead"><h2>Pick up where you left off</h2><span class="muted" id="keptSay">Newest first. Kept in this browser until you click Forget.</span></div>
@@ -552,8 +553,8 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
           <button class="link" id="keptAll" hidden></button>
         </section>
         <div class="drop" id="drop">
-          <h2>Open a ManageBac download</h2>
-          <p>The ZIP, or the unzipped folder with one folder per student. You can also drop it anywhere on this page.</p>
+          <h2 id="dropTitle">Open a ManageBac download</h2>
+          <p id="dropSay">The ZIP, or the unzipped folder with one folder per student. You can also drop it anywhere on this page.</p>
           <div class="row">
             <button class="btn primary" id="pickFiles">Choose the ZIP or PDFs…</button>
             <button class="btn" id="pickFolder">Choose a folder…</button>
@@ -572,16 +573,16 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
       <ol class="steps">
         <li><span class="n">1</span><span><b>Mark.</b> Pen, highlight, text, check marks, and comments that sit in the margin with a line to the spot. Arrange pages lets you combine a student’s files and drag pages into order.</span></li>
         <li><span class="n">2</span><span><b>Score.</b> Type a total, or click 0 to 4 on each rubric row (half points too). Or bring in your own rubric (Word, PDF or picture) once and grade right on each student’s copy. Students stay in their folder order.</span></li>
-        <li><span class="n">3</span><span><b>Enter grades.</b> Open the Grades tab and go down it in ManageBac. Click any score or comment to copy it. Marked in Kami instead? The Grade sheet finds what you typed, like “9 = 85%”, and shows a crop of it for every student. Files with no marks are left out as extra papers, and you can bring them back.</span></li>
+        <li><span class="n">3</span><span><b>Enter grades.</b> Open the Grades tab and go down it in <span class="sysWord">ManageBac</span>. Click any score or comment to copy it. Marked in Kami instead? The Grade sheet finds what you typed, like “9 = 85%”, and shows a crop of it for every student. Files with no marks are left out as extra papers, and you can bring them back.</span></li>
         <li><span class="n">4</span><span><b>Return.</b> Export gives you the marked files in the same student folders.</span></li>
       </ol>
     </details>
-    <p class="foot">Your marks, scores, units and rosters are kept in this browser, so you can close the tab and come back to pick up where you left off. <button class="link" id="sample">Try it with sample papers</button></p>
+    <p class="foot">Your marks, scores, units and rosters are kept in this browser, so you can close the tab and come back to pick up where you left off. <button class="link" id="sample">Try it with a sample class</button></p>
     <p class="foot gsVer"></p>
   </section>
   <section class="view" id="vClass" hidden>
     <div id="classes"></div>
-    <p class="muted vhint" id="classHint">Drag an assignment to another unit, or onto a class in the sidebar. Drag a unit’s name to move the unit. Drop a ManageBac ZIP on an assignment to open it there.</p>
+    <p class="muted vhint" id="classHint">Drag an assignment to another unit, or onto a class in the sidebar. Drag a unit’s name to move the unit. Drop <span class="sysZip">a ManageBac ZIP</span> on an assignment to open it there.</p>
   </section>
   <section class="view" id="vSettings" hidden>
     <header class="vhead"><h1>Settings</h1><span class="muted">Yours, kept on this computer.</span></header>
@@ -607,7 +608,9 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
         <section class="lib setsec" id="setAbout" data-sec="about" hidden></section>
         <section class="lib setsec" id="setInstall" data-sec="about" hidden></section>
         <section class="lib setsec" id="setClasses" data-sec="classes" hidden></section>
+        <section class="lib setsec" id="setSys" data-sec="classes" hidden></section>
         <section class="lib setsec" id="setTerms" data-sec="terms" hidden></section>
+        <section class="lib setsec" id="setWay" data-sec="grading" hidden></section>
         <section class="lib setsec" id="setGrading" data-sec="grading" hidden></section>
         <section class="lib setsec" id="setMarking" data-sec="marking" hidden>
           <div class="lhead"><h2>Mark key</h2><span class="muted">What each proofreading mark means, for the key on returned papers.</span><span class="sp"></span><button class="btn sm" id="setMkey">Mark key</button></div>
@@ -700,6 +703,7 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
 </div>
 </div>
 
+<div class="welcome" id="welcome" hidden></div>
 <div class="dlg" id="dlg" hidden><div class="box" id="dlgBox" role="dialog" aria-modal="true" tabindex="-1"></div></div>
 <div class="toast" role="status" aria-live="polite" aria-atomic="true" hidden></div>
 

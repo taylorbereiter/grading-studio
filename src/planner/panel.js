@@ -11,6 +11,7 @@
      says, copied in one go to paste into Claude. */
 const SP = { open: false, tab: 'books', w: 420, view: 'page', book: null, pdf: null, page: 1, outline: null, find: '', hits: null, texts: {}, video: '', box: { text: '', chips: [] } };
 const SP_TABS = { books: 'Books', acts: 'Activities', video: 'Video', atlas: 'Atlas', notes: 'Notebook', claude: 'Claude' };
+const spTabName = k => k === 'atlas' ? plCur() || 'Unit' : SP_TABS[k];   // the unit's tab carries the name of the school's curriculum tool, when it has one
 try { const v = JSON.parse(localStorage.getItem('gsp.panel') || '{}'); if (SP_TABS[v.tab]) SP.tab = v.tab; SP.open = !!v.open; if (v.w >= 300 && v.w <= 900) SP.w = v.w; } catch { }
 const spKeep = () => { try { localStorage.setItem('gsp.panel', JSON.stringify({ open: SP.open, tab: SP.tab, w: SP.w })); } catch { } };
 
@@ -38,13 +39,13 @@ async function panelToggle(on) {
   for (const b of document.querySelectorAll('[data-a="panel"]')) b.classList.toggle('on', SP.open);
   if (SP.open) await panelRender();
 }
-const panelBtn = () => '<button class="btn sm ghost' + (SP.open ? ' on' : '') + '" data-a="panel" title="Books, video, Atlas and the Claude box beside your work">Side panel</button>';
+const panelBtn = () => '<button class="btn sm ghost' + (SP.open ? ' on' : '') + '" data-a="panel" title="Books, video, ' + (plCur() ? esc(plCur()) : 'the unit') + ' and the Claude box beside your work">Side panel</button>';
 
 async function panelRender() {
   const d = $('#side'); if (!d || !SP.open) return;
   await nbFlush();
   const n = SP.box.chips.length;
-  d.innerHTML = '<div class="sp-edge" title="Drag to resize"></div><div class="sp-head"><nav class="sp-tabs">' + Object.entries(SP_TABS).map(([k, v]) => '<button class="' + (k === SP.tab ? 'on' : '') + '" data-st="' + k + '">' + v + (k === 'claude' && n ? ' <span class="sp-n">' + n + '</span>' : '') + '</button>').join('') +
+  d.innerHTML = '<div class="sp-edge" title="Drag to resize"></div><div class="sp-head"><nav class="sp-tabs">' + Object.entries(SP_TABS).map(([k, v]) => '<button class="' + (k === SP.tab ? 'on' : '') + '" data-st="' + k + '">' + esc(spTabName(k)) + (k === 'claude' && n ? ' <span class="sp-n">' + n + '</span>' : '') + '</button>').join('') +
     '</nav><button class="btn sm ghost" data-sa="close" aria-label="Close the side panel">×</button></div><div class="sp-body" id="spBody"></div>';
   const b = $('#spBody');
   if (SP.tab === 'books') b.innerHTML = await booksHtml();
@@ -188,11 +189,11 @@ async function atlasHtml() {
   const l = L.open, hits = l ? [lessonUnit(l)].filter(Boolean) : (L.view === 'unit' && L.unit ? [{ u: L.unit, n: -1 }] : courses().map(c => unitAt(c, L.weekOf)).filter(Boolean));
   const a = l && atlasOf(l);
   let h = '<div class="sp-pad">';
-  if (a) h += '<a class="btn" href="' + esc(a.url) + '" target="_blank" rel="noopener">Open Atlas ↗</a><p class="muted sp-small">Atlas asks for your school sign-in and can’t be shown inside another page, so it opens in its own tab.</p>';
+  if (a) h += '<a class="btn" href="' + esc(a.url) + '" target="_blank" rel="noopener">Open ' + (plCur() ? esc(plCur()) : 'the unit plan') + ' ↗</a><p class="muted sp-small">' + (plCur() ? esc(plCur()) + ' asks' : 'It may ask') + ' for your school sign-in and can’t be shown inside another page, so it opens in its own tab.</p>';
   if (!hits.length) h += '<p class="muted">' + (l ? 'This lesson isn’t in a unit yet. Units are under the Units tab.' : 'No unit this week.') + '</p>';
   for (const { u, n } of hits) {
     const w = n >= 0 ? u.weeks[n] : null;
-    h += '<div class="sp-unit"><b>' + esc(u.title) + '</b>' + (u.atlas && !a ? ' <a href="' + esc(u.atlas) + '" target="_blank" rel="noopener">Atlas ↗</a>' : '') +
+    h += '<div class="sp-unit"><b>' + esc(u.title) + '</b>' + (u.atlas && !a ? ' <a href="' + esc(u.atlas) + '" target="_blank" rel="noopener">' + esc(plCurLink()) + ' ↗</a>' : '') +
       (w ? '<div>Week ' + (n + 1) + ' of ' + u.weeks.length + (w.focus ? ': ' + esc(w.focus) : '') + '</div>' + (w.standards ? '<div class="muted">' + esc(w.standards) + '</div>' : '') + (w.notes ? '<div class="muted">' + esc(w.notes) + '</div>' : '') +
         '<button class="btn sm ghost" data-sa="weekbox" data-u="' + u.id + '" data-n="' + n + '">+ Claude box</button>' : '') + '<div class="sp-shots">';
     for (const f of u.files.filter(f => f.kind === 'atlas')) { const b = await fileBlob(f.id); if (b && /^image\//.test(b.type || f.type)) h += '<button class="sp-shot" data-shot="' + u.id + '|' + f.id + '" title="' + esc(f.name) + '"><img src="' + URL.createObjectURL(b) + '" alt="' + esc(f.name) + '"></button>'; }

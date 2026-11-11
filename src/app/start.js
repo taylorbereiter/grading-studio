@@ -1,5 +1,5 @@
 'use strict';
-/* Grading Studio: open a ManageBac download, mark PDFs, score with a rubric, list grades in folder order,
+/* Grading Studio: open a class's papers (a download from the school's system, a folder, scans), mark PDFs, score with a rubric, list grades in folder order,
    and export the marked files back into their student folders.
    Files live in memory only. Marks, scores and comments are kept in this browser's localStorage
    (per download), so the same download can be reopened later. Nothing is uploaded. */
@@ -40,7 +40,7 @@ const store = {
   del(k) { try { localStorage.removeItem(k); } catch {} },
 };
 
-/* ---------------- light by default (Taylor), with a switch ---------------- */
+/* ---------------- light by default, with a switch ---------------- */
 function applyTheme(t) {
   document.documentElement.dataset.theme = t;
   for (const b of document.querySelectorAll('.themeBtn')) b.textContent = t === 'dark' ? 'Light mode' : 'Dark mode';
@@ -53,16 +53,18 @@ document.addEventListener('click', e => {
 });
 
 /* ---------------- grading setup ---------------- */
-// Taylor's grading scale for a 12-point rubric. Half points fall halfway between two rows.
+// A grading scale for a 12-point rubric: the "usual" one offered in Rubric setup. Half points fall halfway between two rows.
 const SCALE12 = { 12: 100, 11: 95, 10: 91, 9: 86, 8: 82, 7: 77, 6: 73, 5: 68, 4: 64, 3: 60 };
 const RUBRIC_STEPS = [0, 1, 1.5, 2, 2.5, 3, 3.5, 4];
 const SCALE_FIVES = { 12: 100, 11: 95, 10: 90, 9: 85, 8: 80, 7: 75, 6: 70, 5: 65, 4: 60, 3: 55, 2: 50, 1: 45, 0: 40 };
+// What a new assignment starts with. In a browser from before the welcome it is this, as it always was; a teacher who has said how
+// they grade (the welcome, or Settings) gets their own instead: gradeDefaultApply, in library.js, once their answer has been read.
 const DEFAULT_SETUP = { mode: 'rubric', criteria: ['Criterion 1', 'Criterion 2', 'Criterion 3'], outOf: 10, scale: SCALE12 };
 let setup = { ...DEFAULT_SETUP, ...store.get('gs.setup', {}) };
 
 function maxPoints() { return setup.mode === 'rubric' ? setup.criteria.length * 4 : +setup.outOf || 0; }
 // Uses the grading scale when its top score matches the total possible; half points fall between two rows.
-// Percents are whole numbers, with halves rounded up (10.5 between 95 and 90 is 92.5, so 93%), as on Taylor's rubrics.
+// Percents are whole numbers, with halves rounded up (10.5 between 95 and 90 is 92.5, so 93%), the way a teacher rounds by hand.
 const roundPct = v => Math.max(0, Math.round(v + 1e-9));
 function percentFor(total) { return percentWith(total, maxPoints(), setup.scale); }
 function percentWith(total, max, sc) {
@@ -131,5 +133,5 @@ let disp = { ...DISP0, ...store.get('gs.disp', {}) };   // Display panel: app te
 let zoom = store.get('gs.zoom', 1);
 let undoStack = [];
 let selected = null;     // { page, mark }
-let bank = store.get('gs.bank', []);   // Taylor's saved comments (her own words, no student data)
+let bank = store.get('gs.bank', []);   // the teacher's saved comments (their own words, no student data)
 

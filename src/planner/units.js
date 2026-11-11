@@ -121,8 +121,8 @@ function renderSemester() {
   const cur = document.querySelector('.pl-row.now'); if (cur) cur.scrollIntoView({ block: 'center' });
 }
 function setupNeeded() {
-  return '<div class="ls-empty"><h2>Load your profile</h2><p>The Planner lines lessons and units up with your classes once it knows when they meet. Load your profile file (timetable, school calendar, semester dates, units and slide template), drop it on this page, or type your classes in. You do this once on each computer.</p>' +
-    '<div class="row"><button class="btn primary" data-a="loadsetup">Load my profile…</button><button class="btn" data-a="setup">Type in my classes</button></div></div>';
+  return '<div class="ls-empty"><h2>Tell the Planner when your classes meet</h2><p>The Planner lines lessons and units up with your classes once it knows when they meet. Type your classes and their times in, which takes a few minutes and is done once. If you already have a setup file from another computer, load it or drop it on this page.</p>' +
+    '<div class="row"><button class="btn primary" data-a="setup">Type in my classes</button><button class="btn" data-a="loadsetup">Load a setup file…</button></div></div>';
 }
 
 /* ---------- the unit strip above the week view ---------- */
@@ -141,7 +141,7 @@ function weekUnitsBar(monday) {
 function renderUnits() {
   let h = topBar('units', '<button class="btn sm" data-a="newunit">+ New unit</button>');
   const cs = courses();
-  if (!L.units.length) h += '<div class="ls-empty"><h2>No units yet</h2><p>Make a unit for each course: its weeks, what each week is about, your Atlas screenshots and the summative files, all in one place.</p><div class="row"><button class="btn primary" data-a="newunit">+ New unit</button></div></div>';
+  if (!L.units.length) h += '<div class="ls-empty"><h2>No units yet</h2><p>Make a unit for each course: its weeks, what each week is about, ' + (plCur() ? 'your ' + esc(plCur()) + ' screenshots' : 'screenshots of your unit plan') + ' and the summative files, all in one place.</p><div class="row"><button class="btn primary" data-a="newunit">+ New unit</button></div></div>';
   else {
     h += '<div class="pl-units">';
     for (const c of cs) {
@@ -165,12 +165,12 @@ function renderUnit() {
   h += '<section class="pl-card pl-meta"><label>Course <select class="btn sm" data-uf="course">' + cs.map(c => '<option' + (c.course === u.course ? ' selected' : '') + '>' + esc(c.course) + '</option>').join('') + '</select></label>' +
     '<label>Starts <select class="btn sm" data-uf="start">' + mons.map(m => '<option value="' + m + '"' + (m === u.start ? ' selected' : '') + '>' + (schoolWeek(m) ? 'Week ' + schoolWeek(m) + ' · ' : '') + rangeLabel(m) + '</option>').join('') + '</select></label>' +
     '<label>Weeks <span class="pl-step"><button class="btn sm" data-a="wkminus" aria-label="One week fewer">−</button><b>' + u.weeks.length + '</b><button class="btn sm" data-a="wkplus" aria-label="One week more">+</button></span></label>' +
-    '<label class="pl-atl">Atlas page <input class="btn sm" data-uf="atlas" placeholder="Paste the unit’s Atlas link" value="' + esc(u.atlas) + '">' + (u.atlas ? '<a class="btn sm" href="' + esc(u.atlas) + '" target="_blank" rel="noopener">Open</a>' : '') + '</label></section>';
+    '<label class="pl-atl">' + (plCur() ? esc(plCur()) + ' page' : 'Unit plan link') + ' <input class="btn sm" data-uf="atlas" placeholder="Paste ' + (plCur() ? 'the unit’s ' + esc(plCur()) + ' link' : 'a link to the unit plan') + '" value="' + esc(u.atlas) + '">' + (u.atlas ? '<a class="btn sm" href="' + esc(u.atlas) + '" target="_blank" rel="noopener">Open</a>' : '') + '</label></section>';
   // Atlas screenshots
-  h += '<section class="pl-card"><div class="lhead"><h2>From Atlas</h2><span class="sp"></span><button class="btn sm" data-a="addshot">Add screenshot…</button><button class="btn sm" data-a="pasteweeks">Type or paste the weeks…</button>' +
-    '<button class="btn sm primary" data-a="askweeks"' + (atlas.length ? '' : ' disabled title="Add an Atlas screenshot first"') + '>Ask Claude to fill the weeks</button></div>' +
+  h += '<section class="pl-card"><div class="lhead"><h2>' + (plCur() ? 'From ' + esc(plCur()) : 'From your unit plan') + '</h2><span class="sp"></span><button class="btn sm" data-a="addshot">Add screenshot…</button><button class="btn sm" data-a="pasteweeks">Type or paste the weeks…</button>' +
+    '<button class="btn sm primary" data-a="askweeks"' + (atlas.length ? '' : ' disabled title="Add a screenshot first"') + '>Ask Claude to fill the weeks</button></div>' +
     '<div class="pl-drop" id="plShotDrop" tabindex="0">' + (atlas.length ? '<div class="pl-shots">' + atlas.map(f => '<figure class="pl-shot"><button class="pl-shotimg" data-a="viewfile" data-fid="' + f.id + '" aria-label="Look at ' + esc(f.name) + '"><img data-fimg="' + f.id + '" alt=""></button><figcaption>' + esc(f.name) + '<button class="btn sm ghost" data-a="rmfile" data-fid="' + f.id + '">Remove</button></figcaption></figure>').join('') + '</div>' : '') +
-    '<p class="muted">' + (atlas.length ? 'Paste or drop more screenshots here.' : 'Take a screenshot of the unit in Atlas, then paste it here (Ctrl+V or ⌘V) or drop the picture in.') + '</p></div></section>';
+    '<p class="muted">' + (atlas.length ? 'Paste or drop more screenshots here.' : 'Take a screenshot of the unit ' + (plCur() ? 'in ' + esc(plCur()) : 'plan, wherever your school keeps it') + ', then paste it here (Ctrl+V or ⌘V) or drop the picture in.') + '</p></div></section>';
   // weeks
   h += '<section class="pl-card"><div class="lhead"><h2>Weeks</h2></div><div class="pl-weeks">';
   u.weeks.forEach((w, i) => {
@@ -223,7 +223,7 @@ async function addUnitFiles(u, files, kind) {
     if (f.size > MAX_FILE) { toast(f.name + ' is too big (over 40 MB)'); continue; }
     const k = kind || (/summative|task|rubric/i.test(f.name) ? 'summative' : 'other');
     const pasted = !f.name || f.name === 'image.png';   // a pasted screenshot has no real name
-    const id = lid(), name = uniqueName(u, pasted ? (k === 'atlas' ? 'Atlas ' + (u.files.filter(x => x.kind === 'atlas').length + 1) : 'Picture') + '.png' : f.name);
+    const id = lid(), name = uniqueName(u, pasted ? (k === 'atlas' ? (plCur() || 'Unit plan') + ' ' + (u.files.filter(x => x.kind === 'atlas').length + 1) : 'Picture') + '.png' : f.name);
     await kvSet('file:' + id, f);
     u.files.push({ id, name, kind: k, type: f.type || '', size: f.size, added: Date.now() }); n++;
   }
@@ -242,14 +242,14 @@ async function viewFile(u, id) {
   saveBlob(f.name, b);   // Word files and the rest open in their own app
 }
 function askWeeks(u) {
-  const where = L.dir && L.dirOk ? 'In my Planner folder ("' + L.dir.name + '"), the unit file is Units/' + unitBase(u) + '.unit.json and its Atlas screenshots are in Units/' + unitBase(u) + ' files/. ' : '';
-  const msg = 'Please fill in the weeks of my ' + u.course + ' unit "' + u.title + '" from its Atlas screenshots. ' + where +
+  const where = L.dir && L.dirOk ? 'In my Planner folder ("' + L.dir.name + '"), the unit file is Units/' + unitBase(u) + '.unit.json and its ' + (plCur() || 'unit plan') + ' screenshots are in Units/' + unitBase(u) + ' files/. ' : '';
+  const msg = 'Please fill in the weeks of my ' + u.course + ' unit "' + u.title + '" from its ' + (plCur() || 'unit plan') + ' screenshots. ' + where +
     'It starts the week of ' + shortDate(u.start) + ' and has ' + u.weeks.length + ' weeks. Read the screenshots and write each week\'s focus (and standards, if shown) into "weeks" in the unit file, one entry per week, in order. Keep my notes. Then tell me what you filled in and anything you weren\'t sure of.' +
     (where ? '' : '\n\n(My Planner folder isn\'t linked yet, so I\'ll attach the screenshots.)');
   copyText(msg).then(() => { toast(where ? 'Message copied. Paste it into Claude.' : 'Message copied. Link the Planner folder so Claude can read the screenshots, or attach them.', 6000); });
 }
 function pasteWeeksDlg(u) {
-  openDlg('<div class="bh"><h2>Weeks of ' + esc(u.title) + '</h2></div><div class="bb"><p class="muted" style="margin-top:0">One line per week: what that week is about. You can copy the week list straight out of Atlas. Lines starting with “Week 3:” or similar are fine.</p>' +
+  openDlg('<div class="bh"><h2>Weeks of ' + esc(u.title) + '</h2></div><div class="bb"><p class="muted" style="margin-top:0">One line per week: what that week is about. You can copy the week list straight out of ' + (plCur() ? esc(plCur()) : 'your unit plan') + '. Lines starting with “Week 3:” or similar are fine.</p>' +
     '<textarea id="pwT" rows="12" style="width:100%">' + esc(u.weeks.map(w => w.focus).join('\n')) + '</textarea></div><div class="bf"><button class="btn" data-x>Cancel</button><button class="btn primary" data-ok>Use these weeks</button></div>');
   $('#dlgBox').onclick = async e => {
     if (e.target.closest('[data-x]')) return closeDlg();

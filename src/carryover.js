@@ -6,7 +6,6 @@
 const nfc = s => String(s).normalize('NFC');
 const sameBytes = (a, b) => { if (!a || !b || a.length !== b.length) return false; for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return false; return true; };
 const hasWork = d => !!d && !!d.s && Object.keys(d.s).length > 0;
-const studentOf = path => { const parts = path.split('/').filter(Boolean); return parts.length > 1 ? parts[0] : parts[0].replace(/\.[^.]+$/, ''); };
 // Is this the rubric page she gives every student, as this saved work named it? It isn't one of the download's files.
 const rubricNamed = (d, path) => { const rp = d.setup && d.setup.rubricPage, base = path.split('/').pop(); return base === RUBRIC_NAME || (!!rp && !!rp.name && base === rp.name.replace(/[\\/]+/g, '-')); };
 

@@ -80,7 +80,7 @@ async function packImport(file) {
     if (ch) await unitPut(u, true);
   }
   const skipped = (p.lessons || []).length - lessons.length;
-  toast((p.name ? p.name + ': ' : '') + (nl ? nl + ' lesson' + (nl === 1 ? '' : 's') : 'no new lessons') + (nf ? ', ' + nf + ' files' : '') + (na ? ', ' + na + ' Atlas link' + (na === 1 ? '' : 's') : '') + (skipped > 0 ? ' (' + skipped + ' already here)' : ''), 6000);
+  toast((p.name ? p.name + ': ' : '') + (nl ? nl + ' lesson' + (nl === 1 ? '' : 's') : 'no new lessons') + (nf ? ', ' + nf + ' files' : '') + (na ? ', ' + na + ' ' + (plCur() || 'unit plan') + ' link' + (na === 1 ? '' : 's') : '') + (skipped > 0 ? ' (' + skipped + ' already here)' : ''), 6000);
   if (nl && L.view !== 'edit') { L.view = 'library'; }
   renderLessons();
 }

@@ -239,7 +239,7 @@ for (const [label, sizes] of [['just over the limit for one record', [[27, 5]]],
 });
 
 test('a brand-new browser: no safety copy of nothing, and no warning', async () => {
-  const { page, close } = await openApp(browser, { html: withSteps(OK_STEP) });
+  const { page, close } = await openApp(browser, { html: withSteps(OK_STEP), newTeacher: true });
   assert.equal((await dataOf(page)).v, 2);
   assert.deepEqual(await snaps(page), []);
   assert.equal(await page.$eval('#bootNote', e => e.hidden), true);
@@ -312,8 +312,9 @@ test('only the last three safety copies are kept', async () => {
 });
 
 test('restoring an old backup into an updated browser updates what it brought in', async () => {
-  const { page, close } = await openApp(browser, { html: withSteps(OK_STEP) });
+  const { page, close } = await openApp(browser, { html: withSteps(OK_STEP), newTeacher: true });
   assert.equal((await dataOf(page)).v, 2);
+  await page.click('#welcome [data-wlbring]');   // a new browser opens on the welcome; this is its way to work from another computer
   await openZipBackup(page, L.zip());
   await bringIt(page);
   const d = await dataOf(page);

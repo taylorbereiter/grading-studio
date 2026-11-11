@@ -122,7 +122,7 @@ async function openExport() {
   openDlg('<div class="bh"><h2>Return marked files</h2><button class="icon" data-close aria-label="Close">✕</button></div><div class="bb xp"><div class="rtmain">' +
     (plan.length
       ? '<p class="xbig">' + plan.length + (plan.length === 1 ? ' file' : ' files') + ' ready</p>' +
-        '<p class="xsub">From ' + nStu + (nStu === 1 ? ' student' : ' students') + ', in their own folders, ready to upload back on ManageBac.' +
+        '<p class="xsub">From ' + nStu + (nStu === 1 ? ' student' : ' students') + ', in their own folders, ready to ' + (sysName() ? 'upload back on ' + esc(sysName()) : 'hand back') + '.' +
           (skipped ? ' ' + skipped + ' ' + (skipped === 1 ? 'student has' : 'students have') + ' nothing marked, so they’re left out.' : '') +
           (nLeft ? ' ' + nLeft + (nLeft === 1 ? ' file you left out isn’t' : ' files you left out aren’t') + ' in it.' : '') + '</p>' +
         exportCheckHtml(exportCheck()) +

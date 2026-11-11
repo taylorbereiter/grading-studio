@@ -51,7 +51,7 @@ function railSavedRender() {
 // Home: the few things waiting on her, gathered from where each used to be said.
 function renderNeeds() {
   if (!shellReady) return;
-  safeAskRender();
+  safeAskRender(); sampleNoteRender();
   const el = $('#needs'), rows = [], chev = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>';
   for (const m of [...keptMeta.values()].sort((a, b) => b.t - a.t)) {
     if (m.partial && m.papers) rows.push({ t: m.partial + (m.partial === 1 ? ' paper is' : ' papers are') + ' partly scored', s: m.name || 'A download', open: m.id });
@@ -91,7 +91,7 @@ function findRows() {
     for (const b of document.querySelectorAll('#paper .who .km .mitem:not([data-whodo])')) { const s = b.querySelector('small'); add('This paper', (b.closest('.kmw').querySelector('#addMenuBtn') ? 'Add ' : '') + b.firstChild.textContent.trim().replace(/^A /, 'a ').replace(/^Pasted/, 'pasted').replace(/^From/, 'pages from'), s ? s.textContent : '', () => { toMark(); if (b.isConnected) b.click(); }); }
     const tabGo = (k, label, sub) => add('This assignment', label, sub, () => go(batchHash(batch.id, k)));
     tabGo('', 'Mark', 'The papers, one student at a time');
-    tabGo('grades', 'Grades', 'Scores and comments to copy into ManageBac, beside the grade written on each paper');
+    tabGo('grades', 'Grades', 'Scores and comments to copy into ' + sysOr('your gradebook') + ', beside the grade written on each paper');
     tabGo('grades/sheet', 'Grade sheet', 'Every grade found on the papers, with a crop of each');
     tabGo('insights', 'Insights', 'The class at a glance: average, spread, rubric rows, charts');
     tabGo('insights/consistency', 'Consistency check', 'Did you get harder or softer as you went?');
@@ -126,12 +126,12 @@ function findRows() {
   }
   for (const m of keptMeta.values()) if (!carded.has(m.id) && m.papers && !(batch && batch.id === m.id)) add('Assignments', m.name || 'A download', 'Kept in this browser · ' + keptState(m).done + ' of ' + keptState(m).of + ' scored', () => reopenKept(m.id));
   if (!batch) {
-    add('Do', 'Open a ManageBac download', 'The ZIP or PDFs', press('#pickFiles'));
+    add('Do', sysName() ? 'Open a ' + sysName() + ' download' : 'Open student work', sysName() ? 'The ZIP or PDFs' : 'A ZIP, PDFs, Word files or photos', press('#pickFiles'));
     add('Do', 'Open a folder of papers', '', press('#pickFolder'));
     add('Do', 'Split a scan of everyone’s papers', '', press('#pickScan'));
     add('Do', 'Match files to a roster', '', press('#pickMatch'));
     add('Do', 'Add a class', 'Its name and roster', press('#addClass'));
-    add('Do', 'Try it with sample papers', '', press('#sample'));
+    add('Do', 'Try it with a sample class', 'Made-up students and papers', press('#sample'));
     add('Settings', 'Take my work with me', 'A take-home file for another computer', press('#takeBtn'));
     add('Settings', 'Bring work in', 'From a take-home file', press('#restoreBtn'));
     add('Settings', 'Remove from this computer', 'Clears student work from this browser', () => go('#/settings'));

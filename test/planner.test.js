@@ -397,7 +397,7 @@ test('a profile brings the timetable, units and a default look, and never replac
     const prof = { ...SETUP, profile: 'Test profile', look: 'sage', units: [
       { id: 'p-a-u1', course: 'Course A', title: 'Unit 1: Stories', start: '2026-08-31', weeks: [{ focus: 'Openings' }, { focus: 'Endings' }] },
       { id: 'p-b-u1', course: 'Course B', title: 'Unit 1: Poems', start: '2026-09-07', weeks: [{ focus: 'Sound' }] }] };
-    assert.match(await page.$eval('#lessons', d => d.textContent), /Load your profile/);
+    assert.match(await page.$eval('#lessons', d => d.textContent), /Tell the Planner when your classes meet[\s\S]*Load a setup file/);
     // dropped on the page
     await page.evaluate(p => { const dt = new DataTransfer(); dt.items.add(new File([JSON.stringify(p)], 'My profile.json', { type: 'application/json' })); document.querySelector('#lessons').dispatchEvent(new DragEvent('drop', { dataTransfer: dt, bubbles: true, cancelable: true })); }, prof);
     await page.waitForFunction(() => window.__planner.L.setup && window.__planner.L.units.length === 2);

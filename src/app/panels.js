@@ -178,7 +178,7 @@ function renderGrade() {
   $('#grade').innerHTML = h;
 }
 // The comment that goes back with the score, with her saved comments one click away.
-const cmtHtml = g => '<div class="cmt"><textarea id="cmtIn" aria-label="Comment for ManageBac" placeholder="Comment for ManageBac (optional). It shows on the Grades tab so you can copy it.">' + esc(g.comment) + '</textarea>' + cmtChips() + '</div>';
+const cmtHtml = g => '<div class="cmt"><textarea id="cmtIn" aria-label="Comment for ' + esc(sysOr('the student')) + '" placeholder="Comment for ' + esc(sysOr('the student')) + ' (optional). It shows on the Grades tab so you can copy it.">' + esc(g.comment) + '</textarea>' + cmtChips() + '</div>';
 // Previous, the next paper that still needs a score, and plain Next. Once nothing is left, Next takes the wide button. Enter presses the wide one.
 function navHtml(st) {
   const o = navOrder(), at = o.indexOf(cur), first = at <= 0, last = at >= o.length - 1, fm = fmNow();
@@ -207,7 +207,7 @@ function fbToggle(next) {
 function totalHtml(st) {
   const gr = gradeOf(st), own = ownGrade(st);
   if (noScore(st)) return '<b>' + STATUS_LABEL[gr.status] + '</b><span style="width:100%;font-size:12.5px">No score counts. Giving a score takes this off.</span>';
-  let h = '<b>' + (gr.total == null ? '–' : fmtNum(gr.total)) + '</b><span>/ ' + (gr.outOf != null ? fmtNum(gr.outOf) : maxPoints()) + '</span><span class="pc">' + (gr.pct == null ? '' : fmtPct(gr.pct)) + '</span>';
+  let h = '<b>' + (gr.total == null ? '–' : fmtNum(gr.total)) + '</b><span>/ ' + (gr.outOf != null ? fmtNum(gr.outOf) : maxPoints()) + '</span><span class="pc">' + (gr.pct == null ? '' : fmtPct(gr.pct) + bandSay(gr.pct)) + '</span>';
   if (gr.partial) h += '<span class="sc-warn" style="width:100%">Partial: ' + partNote(st) + '. This total isn’t final.</span>';
   if (gr.paper) h += '<span style="width:100%;font-size:12.5px">From the paper (Grade sheet)</span>';
   const ps = paperScore(st);
