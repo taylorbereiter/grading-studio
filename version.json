@@ -1,14 +1,12 @@
 {
- "version": "1.23.0",
- "build": "4e4c99726647",
+ "version": "1.24.0",
+ "build": "c88f932ad39f",
  "notes": [
-  "Scores by learning goal, if you want them. Keep your own list of goals (a skill, or a standard from your school) in Settings, Grading, or add one wherever you tag.",
-  "Tag rubric rows in Rubric setup and quiz questions in Quiz boxes. An assignment scored with just a total can carry one goal for the whole score.",
-  "Each class page gets a Goals tab: the class average on each goal with the lowest first, every student by every goal, and where each number came from. A student's own page shows their goals beside the class average.",
-  "Nothing changes until you add a first goal, and tagging never changes a score or a grade."
+  "In the Planner's Timetable, Use my school’s template… picks your own PowerPoint template for slide downloads. Use the plain one goes back to the white one built in.",
+  "Save my setup file keeps your classes, meeting times, days off and slide template in one file to load on another computer."
  ],
  "files": {
-  "index.html": "6b3e4ee42570376f499de62f6106c09c3e929e00ad84af4a7f9bcb5e8dfc2875",
-  "planner.html": "7efb8ea232bdea2919015957726cb982bd14fe2ebcc444da82b43a00c25115d9"
+  "index.html": "60a1c53446680a4f21925ee805f95cb805f5cc96f14beb21a9ce553162a86084",
+  "planner.html": "3a7ffb8852357c41e3dc564f789773be5cef7b42e3c212fac94fce8431a9896c"
  }
 }
