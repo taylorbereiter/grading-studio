@@ -353,7 +353,26 @@ function pickToGrab(pg, hit, x, y, edit) {
 }
 const editMark = (pg, m) => { if (m.t === 'text') editText(pg, m); else if (m.t === 'note') openNote(pg, m); };
 // What the pointer can do here, shown by its shape. Empty: leave it as the tool set it.
+// The comment whose line is under the pointer. In the margin any tool can grab it; across the page only Select and Comment
+// can, so the pen still writes over a line. Not right at the spot, where dragging moves the comment itself.
+function noteLineAt(pg, x, y) {
+  const tol = Math.max(3, 5 / (pg.s || 1)), W = pg.W;
+  for (const b of pg.boxes || []) {
+    if (b.n.ro) continue;
+    if (x <= W + 4) {
+      if ((tool === 'select' || tool === 'note') && x >= b.ax + 8 && Math.abs(y - b.ry) <= tol) return b.n;
+      continue;
+    }
+    const x1 = W + 4, y1 = b.ry, x2 = b.x, y2 = b.y + Math.min(b.h / 2, 12), dx = x2 - x1, dy = y2 - y1, L = dx * dx + dy * dy;
+    const t = L ? Math.max(0, Math.min(1, ((x - x1) * dx + (y - y1) * dy) / L)) : 0;
+    if (Math.hypot(x - (x1 + t * dx), y - (y1 + t * dy)) <= tol) return b.n;
+  }
+  return null;
+}
 function hoverCursor(pg, x, y) {
+  const ln = tool !== 'erase' && !once ? noteLineAt(pg, x, y) : null;
+  if ((pg.lineOn || null) !== ln) { pg.lineOn = ln; draw(pg); }   // the line thickens under the pointer, to show it can be dragged
+  if (ln) return 'ns-resize';
   if (tool !== 'erase' && cornerAt(pg, x, y)) return 'nwse-resize';
   const grip = gripAt(pg, x, y);
   if (tool === 'select') return grip ? 'ew-resize' : hitMark(pg, x, y, 4) ? (x > pg.W ? 'pointer' : 'move') : 'default';

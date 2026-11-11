@@ -18,6 +18,7 @@ function renderTools() {
   const bar = once ? once.prev : tool;   // a one-time tool keeps her own tool's bar, so the toolbar doesn't jump
   const isHl = bar === 'hl';
   const sw = isHl ? Object.entries(HL).map(([k, v]) => '<button class="sw" data-hl="' + k + '" style="background:' + v + '" aria-pressed="' + (k === hlColor) + '" title="' + k + '"></button>').join('')
+    : bar === 'check' ? Object.entries(COLORS).map(([k, v]) => '<button class="sw" data-chk="' + k + '" style="background:' + v + '" aria-pressed="' + (k === checkInk) + '" title="Checks in ' + k + '"></button>').join('')   // the check tool sets the color every check shows in
     : Object.entries(COLORS).map(([k, v]) => '<button class="sw" data-ink="' + k + '" style="background:' + v + '" aria-pressed="' + (k === inkColor) + '" title="' + k + '"></button>').join('');
   // One dock down the left edge of the paper: the tools, what the tool in hand can be set to, undo and redo, zoom.
   const opts = (bar === 'select' || bar === 'erase' ? '' : '<span class="swatches">' + sw + '</span>') +
@@ -33,6 +34,7 @@ function renderTools() {
 $('#tools').addEventListener('click', e => {
   const t = e.target.closest('[data-tool]'); if (t) { setTool(t.dataset.tool); return; }
   const i = e.target.closest('[data-ink]'); if (i) { inkColor = i.dataset.ink; store.set('gs.ink', inkColor); recolorSelected(COLORS[inkColor]); renderTools(); return; }
+  const ck = e.target.closest('[data-chk]'); if (ck) { setCheckInk(ck.dataset.chk); renderTools(); redrawAll(); return; }
   const h = e.target.closest('[data-hl]'); if (h) { hlColor = h.dataset.hl; store.set('gs.hl', hlColor); renderTools(); return; }
   if (hlBarClick(e)) return;
   const w = e.target.closest('[data-w]'); if (w) { penW = +w.dataset.w; store.set('gs.penW', penW); renderTools(); return; }
@@ -208,6 +210,7 @@ function totalHtml(st) {
   const gr = gradeOf(st), own = ownGrade(st);
   if (noScore(st)) return '<b>' + STATUS_LABEL[gr.status] + '</b><span style="width:100%;font-size:12.5px">No score counts. Giving a score takes this off.</span>';
   let h = '<b>' + (gr.total == null ? '–' : fmtNum(gr.total)) + '</b><span>/ ' + (gr.outOf != null ? fmtNum(gr.outOf) : maxPoints()) + '</span><span class="pc">' + (gr.pct == null ? '' : fmtPct(gr.pct) + bandSay(gr.pct)) + '</span>';
+  if (gr.xc) h += '<span class="xcsay" style="width:100%">' + fmtNum(gr.base) + ' earned + ' + fmtNum(gr.xc) + (gr.xcU === 'pct' ? '%' : '') + ' extra credit</span>';
   if (gr.partial) h += '<span class="sc-warn" style="width:100%">Partial: ' + partNote(st) + '. This total isn’t final.</span>';
   if (gr.paper) h += '<span style="width:100%;font-size:12.5px">From the paper (Grade sheet)</span>';
   const ps = paperScore(st);
@@ -232,6 +235,9 @@ $('#grade').addEventListener('click', e => {
   const rn = e.target.closest('.crit .cn'); if (rn) return rowPick(+rn.parentNode.dataset.row);
   const sb = e.target.closest('[data-status]'); if (sb) return setStatus(batch.students[cur], sb.dataset.status);
   if (e.target.closest('#outAvg, [data-outoff]')) return setOutAvg(batch.students[cur]);
+  if (e.target.closest('[data-gxc]')) { kmClose(); return xcStart(batch.students[cur]); }
+  { const u = e.target.closest('[data-xcu]'); if (u) return xcUnitSet(batch.students[cur], u.dataset.xcu); }
+  if (e.target.closest('[data-xcoff]')) return xcSet(batch.students[cur], 0, true);
   if (e.target.closest('#prevBtn')) stepStudent(-1);
   if (e.target.closest('#nextBtn')) stepStudent(1);
   if (e.target.closest('#nextUn')) return nextUnscored();
@@ -323,6 +329,7 @@ function scoreKey(e, onRange) {
 $('#grade').addEventListener('input', e => {
   const st = batch.students[cur];
   if (e.target.id === 'cmtIn') { st.grade.comment = e.target.value; touchGrade(st); saveSoon(); }
+  if (e.target.id === 'xcIn') xcSet(st, e.target.value);
   if (e.target.id === 'ptsIn') {
     st.grade.points = e.target.value; const was = st.grade.status; scoreTouched(st); saveSoon(); renderList();
     if (was !== st.grade.status) { $('#gstat').outerHTML = statusHtml(st); }
@@ -330,10 +337,11 @@ $('#grade').addEventListener('input', e => {
   }
 });
 $('#grade').addEventListener('keydown', e => {   // Enter or Escape leaves the box, so the arrow keys go back to moving between students
+  if (e.target.id === 'xcIn' && (e.key === 'Enter' || e.key === 'Escape')) { e.preventDefault(); e.stopPropagation(); e.target.blur(); return; }
   if ((e.target.id === 'ptsIn' && e.key === 'Enter') || (e.target.id === 'cmtIn' && e.key === 'Escape')) { e.preventDefault(); e.target.blur(); }
   if (e.target.id === 'ptsIn' && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) { e.preventDefault(); e.stopPropagation(); stepStudent(e.key === 'ArrowDown' ? 1 : -1); }   // not half a point up or down: these keys move between students
 });
-$('#grade').addEventListener('wheel', e => { if (e.target.id === 'ptsIn') e.target.blur(); }, { passive: true });   // scrolling past the box mustn't change the score in it
+$('#grade').addEventListener('wheel', e => { if (e.target.id === 'ptsIn' || e.target.id === 'xcIn') e.target.blur(); }, { passive: true });   // scrolling past the box mustn't change the score in it
 
 /* ---------------- every key, in one list ( ? ) ---------------- */
 function openKeys() {

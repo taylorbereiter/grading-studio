@@ -105,3 +105,12 @@
 .fbtog[aria-checked=true] .bx{background:var(--accent);border-color:var(--accent)}
 .fbck{color:var(--accent);font-weight:700}
 .bkstart{color:var(--muted);font-size:11.5px}
+/* extra credit: points on top, never a score of its own */
+.bkpill.xc{background:var(--surface);color:var(--accent);border:1px solid var(--accent)}
+.bkxc{color:var(--accent);font-weight:600}
+small.bkxc{font-weight:500}
+.bkxcall{display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-2);margin:0 0 var(--space-2);padding:var(--space-2) var(--space-3);background:var(--accent-soft);border-radius:var(--corner-3)}
+.bkxcall .bksc{width:72px}
+.bkxcall .sp{flex:1}
+.bkaddgrid .bktypef{grid-column:span 2}
+@media (max-width:900px){.bkaddgrid .bktypef{grid-column:auto}.bkaddgrid .bktypef .pseg{flex-wrap:wrap}}

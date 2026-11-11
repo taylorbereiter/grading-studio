@@ -1,6 +1,6 @@
 {
  "version": "1.13.0",
- "build": "ff56df2b688a",
+ "build": "124fac7259e0",
  "notes": [
   "Present a lesson from the Planner, or from Today when its class is on now or next: its slides fill the screen, and the arrow keys or a clicker move through them.",
   "While presenting, A shows the agenda to tick off, T starts a timer the class can see, N shows your notes and B blanks the screen.",
@@ -8,7 +8,7 @@
   "After a lesson is taught, one line says where the class got to. It shows on the lesson and on the week, and presenting again picks up there."
  ],
  "files": {
-  "index.html": "e4600df84328257ea37e0d519d489121f365006c8e6926b7c10dffb39f2a8a94",
+  "index.html": "a743afa685f5eac55d3295facd87ab2b862a2a956c9763ee251847af2c769735",
   "planner.html": "4339c23682d44200fdf0f42c441cd986aff33eaf4e9d9f7fa3ed84e5ad66e0f6"
  }
 }

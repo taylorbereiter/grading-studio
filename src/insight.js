@@ -75,7 +75,7 @@ function pastScore(su, g) {
   if (total == null && hasSheet(g) && !isNaN(+g.sheet)) { total = +g.sheet; paper = true; }
   let pct = percentWith(total, max, s.scale);
   if (total == null && g.read) { const d = g.read; paper = true; total = d.score; if (d.outOf != null) max = d.outOf; pct = d.pct != null ? d.pct : percentWith(total, max, s.scale); }
-  return { total, max, pct, partial, paper, status: g.status || '', rows: rub ? s.criteria.map((c, i) => [c, r[i]]).filter(x => x[1] != null) : [] };
+  return addXc({ total, max, pct, partial, paper, status: g.status || '', rows: rub ? s.criteria.map((c, i) => [c, r[i]]).filter(x => x[1] != null) : [] }, g.xc, max, g.xcU);
 }
 // The class a saved download belongs to: its assignment card's, else what it saved, else the roster naming at least half its students (the rule the app itself opens with).
 function pastClass(d, m) {
