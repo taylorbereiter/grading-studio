@@ -150,7 +150,7 @@ const LANG_ZH = {
     /* the feedback page in a returned paper */
     'How it was scored': '評分方式', 'From your teacher': '老師的話', 'Comment on your paper': '作業上的評語', 'Comments on your paper': '作業上的評語',
     'Your marked paper starts on the next page.': '批改後的作業從下一頁開始。', 'Your feedback continues on the next page.': '回饋接續在下一頁。',
-    'Missing': '缺交', 'Excused': '免交', 'Late': '遲交',
+    'Missing': '缺交', 'Excused': '免交', 'Late': '遲交', 'Retake': '重做', 'First try': '第一次', 'counts as': '採計',
   },
   rules: [
     [/^(?:No classes today\.|\w+ class(?:es)? today\.|\w+ sets? of papers (?:to mark|ready to hand back)|[Nn]othing waiting to be marked\.)/, m => zhHomeSay(m.input)],
@@ -270,6 +270,8 @@ const LANG_ZH = {
       a: ['在評分面板中學生總分的下方，選擇 **Missing**、**Excused** 或 **Late**。旁邊的 ⋯ 裡有 **Leave out of the average**。', '缺交和免交的作業不需要分數，所以不會算在待批改裡。'] },
     'extra-credit': { q: '怎麼給加分？', words: '加分 額外分數 bonus extra credit',
       a: ['在一份作業上，開啟分數旁的 ⋯，選擇 **Extra credit points**。可以輸入分數或百分比。', '如果加分不屬於任何一份作業，請在班級成績冊按 **+ Extra credit**。學期設定決定加分是否計入學期成績，以及成績能否超過 100%。'] },
+    'retake': { q: '學生要重做作業，怎麼保留第一次的分數？', words: '重考 補考 重做 重交 第二次 再試一次 最高 最新 平均',
+      a: ['在該生的作業上，開啟 Missing、Excused、Late 旁的 ⋯，選擇 **Start a retake**。第一次的分數、評語和作業都會保留，評分欄會清空給重做的這一次。用 **+ Add** 加入新的作業。', '預設採計最高的一次；也可以改成最新的一次或平均：按重做方塊裡的 **Change**，或到成績冊的學期設定。這條規則適用於你所有的班級。', '如果分數是直接輸入成績冊的，請在格子裡輸入兩個分數，例如 **7 > 10**。'] },
     'past-work': { q: '批改時可以看學生以前的作業嗎？', words: '紀錄 以前 先前 進步 比較 history',
       a: ['可以。評分面板中 Next 下方的 **Past work** 會在目前的作業旁，顯示這位學生在其他作業的分數和你的評語。', '學生是依班級名單來配對的。'] },
     'return': { q: '怎麼發還批改好的作業？', words: '匯出 下載 發還 交回 zip 傳送 學生 export',
