@@ -2,7 +2,8 @@
 // Scores come from saved downloads in this browser and from scores typed in for work that has no download. Nothing leaves the browser.
 // Each assignment card can carry: type ('sum' | 'ic' | 'fm'), due ('YYYY-MM-DD'), term (a term id, when it's moved by hand),
 // typed: { max (points, or null for percents), s: { roster name: { v, st } } }. A download with no card keeps the same in lib.book.dl[its id].
-// lib.book: { terms: [{ id, name, start, end }], w: { sum, ic, fm }, empty: 'other' | 'zero', dl: {}, xcTo: 'term' | 'ic', xcCap: false when a grade may go over 100 }.
+// lib.book: { terms: [{ id, name, start, end }], w: { sum, ic, fm }, empty: 'other' | 'zero', dl: {}, xcTo: 'term' | 'ic', xcCap: false when a grade may go over 100, retake: 'high' | 'last' | 'avg' (which try of a retake counts; start.js withTries) }.
+// A typed-in score with a retake keeps the earlier tries beside it: typed.s[name] = { v, st, tries: [earlier scores] }, typed in the table as "7 > 10".
 // Extra credit with no paper behind it (a Kahoot, say) is a typed-in card of type 'xc': typed.s[name].v is that student's extra points,
 // and it.xcTo says what they add to ('term' or 'ic'; none: the teacher's own default from Term setup). One point is one percentage point
 // on what it adds to. It never sits inside a type's average, so a summative's own scale and every assignment's percent stay as they were.
@@ -39,14 +40,16 @@ function bkCellOf(p, g, d, k) {
   const cell = { pct: p.pct, total: p.total, max: p.max, st: p.status, partial: p.partial, out: !!(g && g.outAvg), fb, started };
   if (p.rows && p.rows.length) cell.rows = p.rows;   // each rubric row's score, for the charts
   const goals = d ? goalCell(d, g, p) : null; if (goals) cell.goals = goals;   // what this paper says about each learning goal (goals.js)
+  if (p.tries) cell.tries = triesSay(p);   // a retake: every try and which counts, in words
   return cell;
 }
 function bkTypedCell(ty, r) {
   if (!r) return null;
   if (r.st === 'missing' || r.st === 'excused') return { st: r.st, typed: true };
   if (r.v == null || r.v === '' || isNaN(+r.v)) return r.fb ? { fb: true, typed: true } : null;
-  const v = +r.v, max = ty.max ? +ty.max : null;
-  return { pct: max ? roundPct(v / max * 100) : roundPct(v), total: max ? v : null, max, st: r.st || '', typed: true, fb: true };
+  const v = +r.v, max = ty.max ? +ty.max : null, one = x => ({ pct: max ? roundPct(x / max * 100) : roundPct(x), total: max ? x : null, max });
+  const was = (r.tries || []).filter(x => x != null && !isNaN(+x)).map(x => one(+x)), p = was.length ? withTries(one(v), was, max, true) : one(v);
+  return { pct: p.pct, total: p.total, max, st: r.st || '', typed: true, fb: true, ...(was.length ? { tries: triesSay(p) } : {}) };
 }
 // Every column for every class, from saved work. Read once each time the gradebook opens.
 async function bkLoad() {
@@ -189,7 +192,7 @@ const bkCellText = (cell, show, col) => {
   if (cell.st === 'missing' || cell.st === 'excused') return '<span class="bkst">' + cell.st + '</span>';
   if (cell.pct == null) return cell.fb ? '<span class="bkfb" aria-label="Feedback given, no score">✓</span>' : '<span class="bknone">–</span>';
   const v = show === 'pts' && cell.total != null ? fmtNum(cell.total) + '<small>/' + fmtNum(cell.max) + '</small>' : cell.pct + '%';
-  return v + (cell.partial ? ' <span class="stag">partial</span>' : cell.out ? ' <span class="stag">left out</span>' : cell.st === 'late' ? ' <span class="stag">late</span>' : '');
+  return v + (cell.tries ? ' <span class="stag retk" title="' + esc(cell.tries) + '">retake</span>' : '') + (cell.partial ? ' <span class="stag">partial</span>' : cell.out ? ' <span class="stag">left out</span>' : cell.st === 'late' ? ' <span class="stag">late</span>' : '');
 };
 const bkColHead = col => '<th class="bkch' + (col.key === bk.hi ? ' hi' : '') + '"><button data-bkcol="' + esc(col.key) + '" title="Type, date and term">' + esc(col.name) + '<small>' + esc(bkDay(col.due)) + (col.typed ? ' · typed in' : '') + '</small></button></th>';
 function bkGroups(cols) {
@@ -342,7 +345,7 @@ function bkOneView(c, cols, conf) {
     '<div class="ovcharts">' + chSec('Against the class', bkBandLine(c, sc, n, shown), 'The shaded band is the middle half of the class, so it’s clear when a score is unusual and when the assignment was just hard.') +
     chSec('Rubric rows', bkStuRows(c, cols, n), 'Their average on each rubric row across the summatives, out of 4. The dashed line is the class average.') + goalsStu(c, cols, n) +
     '<section><h3 class="ovh3">By type</h3>' + bar('Summatives', r.by.sum, cavg('sum'), 'sum') + bar('In-class', r.by.ic, cavg('ic'), 'ic') + bar('Grade', r.grade, cavg(''), '') + '<p class="muted ovcap2">The dashed line is the class average.</p>' +
-    (fm.length ? '<h3 class="ovh3" style="margin-top:16px">Feedback</h3><p class="bkfbline">' + fm.filter(x => (x.cells.get(n) || {}).fb).length + ' of ' + fm.length + ' formative activities have feedback.</p>' : '') + '</section></div></div>';
+    (fm.length ? '<h3 class="ovh3" style="margin-top:16px">Feedback</h3><p class="bkfbline">' + fm.filter(x => (x.cells.get(n) || {}).fb).length + ' of ' + fm.length + ' formative activities have feedback.</p>' : '') + '</section>' + attStuHtml(c, n) + '</div></div>';
 }
 
 /* ---------- column menu: type, date, term ---------- */
@@ -396,7 +399,9 @@ function bkSetupView() {
     '<p class="muted bkhint">Early in a term with no summative yet, the grade is the in-class average, marked “so far”.</p>' +
     '<h3 class="ovh3" style="margin-top:16px">Extra credit</h3><div class="bkpf">New extra credit adds to</div><div class="pseg" role="group">' + [['term', 'The term grade'], ['ic', 'The in-class average']].map(([v, l]) => '<button data-bkxcto="' + v + '" aria-pressed="' + (conf.xcTo === v) + '">' + l + '</button>').join('') + '</div>' +
     '<p class="muted bkhint">One extra credit point adds one percentage point there. Added to the in-class average, it counts by that type’s weight. Summatives and each paper’s own percent are never changed by it.</p>' +
-    '<div class="bkpf" style="margin-top:10px">Above 100%</div><div class="pseg" role="group">' + [['cap', 'Keep grades at 100% at most'], ['over', 'Let a grade go over 100%']].map(([v, l]) => '<button data-bkxccap="' + v + '" aria-pressed="' + ((v === 'cap') === conf.xcCap) + '">' + l + '</button>').join('') + '</div></section>' +
+    '<div class="bkpf" style="margin-top:10px">Above 100%</div><div class="pseg" role="group">' + [['cap', 'Keep grades at 100% at most'], ['over', 'Let a grade go over 100%']].map(([v, l]) => '<button data-bkxccap="' + v + '" aria-pressed="' + ((v === 'cap') === conf.xcCap) + '">' + l + '</button>').join('') + '</div>' +
+    '<h3 class="ovh3" style="margin-top:16px">Retakes</h3><div class="bkpf">When a student has more than one try</div><div class="pseg" role="group">' + RETAKE_RULES.map(([v, l]) => '<button data-bkretake="' + v + '" aria-pressed="' + (retakeRule() === v) + '">' + l + ' counts</button>').join('') + '</div>' +
+    '<p class="muted bkhint">Start a retake from the ⋯ beside Missing, Excused and Late on a paper, or type both scores into a typed-in cell as “7 &gt; 10”. Every try is kept; this says which one goes into averages and grades.</p></section>' +
     '<div class="bkfootbtns"><button class="btn" data-bkback>Cancel</button><button class="btn primary" data-bksavesetup>Save</button></div></div>';
   bkWsum();
 }
@@ -408,8 +413,8 @@ function bkSetupSave() {
   if (bad) { toast('Give “' + bad.name + '” a start and an end date, with the end after the start.'); return false; }
   const w = {}; for (const i of document.querySelectorAll('[data-wt]')) w[i.dataset.wt] = Math.max(0, Math.min(100, +i.value || 0));
   if (!w.sum && !w.ic && !w.fm) { toast('Give at least one type some weight.'); return false; }
-  const e = document.querySelector('[data-bkempty][aria-pressed="true"]'), xt = document.querySelector('[data-bkxcto][aria-pressed="true"]'), xp = document.querySelector('[data-bkxccap][aria-pressed="true"]');
-  bkSave({ terms, w, empty: e ? e.dataset.bkempty : 'other', xcTo: xt ? xt.dataset.bkxcto : 'term', xcCap: !xp || xp.dataset.bkxccap === 'cap' });
+  const e = document.querySelector('[data-bkempty][aria-pressed="true"]'), xt = document.querySelector('[data-bkxcto][aria-pressed="true"]'), xp = document.querySelector('[data-bkxccap][aria-pressed="true"]'), rk = document.querySelector('[data-bkretake][aria-pressed="true"]');
+  bkSave({ terms, w, empty: e ? e.dataset.bkempty : 'other', xcTo: xt ? xt.dataset.bkxcto : 'term', xcCap: !xp || xp.dataset.bkxccap === 'cap', retake: rk ? rk.dataset.bkretake : 'high' });
   return true;
 }
 
@@ -484,7 +489,8 @@ function bkAddSave() {
   if (xc) for (const [n, r] of Object.entries(bkAdd.s)) { const v = r.v === '' || r.v == null || isNaN(+r.v) ? 0 : Math.round(+r.v * 2) / 2; if (v > 0) s[n] = { v }; }
   else for (const [n, r] of Object.entries(bkAdd.s)) {
     const v = fm || r.v === '' || r.v == null || isNaN(+r.v) ? null : Math.round(+r.v * 2) / 2;
-    if (fm ? r.fb || r.st : v != null || r.st) s[n] = fm && r.fb ? { v: null, st: r.st || '', fb: true } : { v, st: r.st || '' };
+    if (fm ? r.fb || r.st : v != null || r.st) s[n] = fm && r.fb ? { v: null, st: r.st || '', fb: true } : { v, st: r.st || '' }
+    if (s[n] && !fm && v != null && r.tries && r.tries.length) s[n].tries = r.tries;   // a retake typed in the table stays when the scores are edited here
   }
   const typed = { max, s };
   let it = bkAdd.it;
@@ -524,7 +530,7 @@ function bkCellEdit(td) {
     inp.addEventListener('blur', () => finish(true));
     return;
   }
-  td.innerHTML = '<input type="text" class="bkcin" value="' + esc(r.st === 'missing' || r.st === 'excused' ? r.st : r.v != null ? fmtNum(r.v) : '') + '" aria-label="Score' + (max ? ' out of ' + fmtNum(max) : ' as a percent') + '">';
+  td.innerHTML = '<input type="text" class="bkcin" value="' + esc(r.st === 'missing' || r.st === 'excused' ? r.st : r.v != null ? (r.tries || []).concat(r.v).map(fmtNum).join(' > ') : '') + '" aria-label="Score' + (max ? ' out of ' + fmtNum(max) : ' as a percent') + '">';
   const inp = td.querySelector('input'); inp.focus(); inp.select();
   let done = false;
   const finish = keep => {
@@ -534,6 +540,7 @@ function bkCellEdit(td) {
       if (!t) delete s[n];
       else if (/^m(issing)?$/.test(t)) s[n] = { v: null, st: 'missing' };
       else if (/^e(xcused)?$/.test(t)) s[n] = { v: null, st: 'excused' };
+      else if (/>/.test(t) && t.split('>').every(x => x.trim() && !isNaN(+x.replace('%', '')))) { const vs = t.split('>').map(x => Math.round(+x.replace('%', '') * 2) / 2); s[n] = { v: vs.pop(), st: r.st === 'late' ? 'late' : '', tries: vs }; }   // "7 > 10": a first try and its retake
       else if (!isNaN(+t.replace('%', ''))) s[n] = { v: Math.round(+t.replace('%', '') * 2) / 2, st: r.st === 'late' ? 'late' : '' };
       col.typed = { ...col.typed, s };
       if (col.it) { col.it.typed = col.typed; bkSaveLib(); }
@@ -580,7 +587,7 @@ function bkClick(e) {
   if (d.chsort) { const s = bk.sort || { k: 'grade', dir: -1 }; bk.sort = s.k === d.chsort ? { k: s.k, dir: -s.dir } : { k: d.chsort, dir: d.chsort === 'name' ? 1 : -1 }; return bkDraw(); }
   if (d.taddt != null) { const t = document.createElement('div'); t.innerHTML = '<div class="bktrow" data-tid="' + uid() + '"><input type="text" class="bkin" data-tf="name" value="Term ' + (document.querySelectorAll('#bkTerms .bktrow').length + 1) + '" aria-label="Term name"><input type="date" class="bkin" data-tf="start" aria-label="Starts"><input type="date" class="bkin" data-tf="end" aria-label="Ends"><button class="icon" data-tdel aria-label="Remove this term">✕</button></div>'; $('#bkTerms').appendChild(t.firstChild); return; }
   if (d.tdel != null) { b.closest('.bktrow').remove(); return; }
-  if (d.bkxcto || d.bkxccap) { const k = d.bkxcto ? 'bkxcto' : 'bkxccap'; for (const x of document.querySelectorAll('[data-' + k + ']')) x.setAttribute('aria-pressed', String(x === b)); return; }
+  if (d.bkxcto || d.bkxccap || d.bkretake) { const k = d.bkxcto ? 'bkxcto' : d.bkxccap ? 'bkxccap' : 'bkretake'; for (const x of document.querySelectorAll('[data-' + k + ']')) x.setAttribute('aria-pressed', String(x === b)); return; }
   if (d.bkcolxc) { const k = $('#bkPop').dataset.key; bkSetCol(k, { xcTo: d.bkcolxc }); for (const x of document.querySelectorAll('[data-bkcolxc]')) x.setAttribute('aria-pressed', String(x === b)); return; }
   if (d.bkaxcto) { bkAdd.xcTo = d.bkaxcto; for (const x of document.querySelectorAll('[data-bkaxcto]')) x.setAttribute('aria-pressed', String(x === b)); return bkAddRows(); }
   if (d.bkaxcall) { const v = Math.max(0, Math.round(+($('#bkaXcV') || {}).value * 2) / 2) || 0; for (const n of c.names) { if (d.bkaxcall === 'clear') delete bkAdd.s[n]; else if (d.bkaxcall === 'all' || !(+((bkAdd.s[n] || {}).v) > 0)) bkAdd.s[n] = { v }; } return bkAddRows(); }

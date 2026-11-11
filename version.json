@@ -1,13 +1,13 @@
 {
  "version": "1.26.0",
- "build": "a47bab548689",
+ "build": "514678e09ab5",
  "notes": [
   "Seating: a new tab on each class. Pick how the room is set up, drag students to desks, and Shuffle gives everyone a new seat. A student can be kept in their seat.",
   "Pick a name shows one student at random, and nobody twice until everyone has had a turn. Make groups deals the class into groups of any size.",
   "While presenting a lesson, P picks a name and G makes groups. Who’s here leaves out anyone who is away today."
  ],
  "files": {
-  "index.html": "1bfb56ce21746ddd70d48b7f682c5cab32a10aca1eeb2e812d1dc08c85c794da",
-  "planner.html": "b033974b8e702a97dd4863ae51c1de03734c67ec0a7354254ef4c3dcc2988075"
+  "index.html": "4d42ea5aa9461713174a13520c8ab2bbdc573a7470c72fdc4a57133b6553bcd1",
+  "planner.html": "fe53d18204d3a18cf8ee039c166ec1d45538e0c5229da8b6c7ece20466b12fb0"
  }
 }

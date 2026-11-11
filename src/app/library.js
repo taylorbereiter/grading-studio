@@ -27,6 +27,10 @@ const ME_NEW = { sys: '', unit: '', grade: { way: 'rubric' } };
 // so whatever it saves first, a class or a paper dropped past the welcome, carries them.
 if (fresh && !lib.me) lib.me = JSON.parse(JSON.stringify(ME_NEW));
 const me = () => lib.me || ME_OLD;
+// Whether this teacher takes attendance here (src/attend.js). On unless they turn it off in Settings; days already saved are kept either way.
+const attOn = () => me().att !== false;
+// A real day written YYYY-MM-DD. Here, not in attend.js, because the address is read before that file has run.
+const attDayOk = d => { if (!/^\d{4}-\d\d-\d\d$/.test(d || '')) return false; const t = new Date(d + 'T12:00:00'); return !isNaN(t) && t.getMonth() + 1 === +d.slice(5, 7) && t.getDate() === +d.slice(8); };
 function meSet(part) { lib.me = { ...me(), ...part }; saveLib(); gradeDefaultApply(); }
 // The school system by name, for the words on screen: "Open a ManageBac download", "Comment for Canvas". Empty: no system named.
 const sysName = () => String(me().sys || '').trim();

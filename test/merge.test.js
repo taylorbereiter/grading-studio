@@ -765,3 +765,23 @@ test('a row taken out and another renamed can’t be told apart, so she’s aske
   assert.equal(said.ask.length, 0);
   assert.deepEqual(plain(said.work.s.Ben.g.rubric), [null, 4]);
 });
+
+test('attendance: taken on two computers, every day is kept, and a day both changed is the one saved later', () => {
+  const cls = l => l.classes[0];
+  const was = stamped(L(['Aria', 'Bram']), 'home', 1000);
+  const lap = plain(was), home = plain(was);
+  cls(lap).att = { '2026-09-01': { t: 2000, m: { Aria: 'a' } }, '2026-09-03': { t: 2500, m: { Bram: 'l' } } };
+  cls(home).att = { '2026-09-02': { t: 3000, m: {} }, '2026-09-03': { t: 4000, m: { Bram: 'e' }, n: { Bram: 'Note from home' } } };
+  const a = stamped(lap, 'lap', 2600, was), b = stamped(home, 'home', 4100, was);
+  for (const m of [M.mergeLib(a, b), M.mergeLib(b, a)]) {
+    const att = plain(cls(m.lib).att);
+    assert.deepEqual(Object.keys(att).sort(), ['2026-09-01', '2026-09-02', '2026-09-03']);
+    assert.deepEqual(att['2026-09-01'].m, { Aria: 'a' });
+    assert.deepEqual(att['2026-09-03'], { t: 4000, m: { Bram: 'e' }, n: { Bram: 'Note from home' } });
+  }
+  // a day cleared later stays cleared
+  const c = plain(a); cls(c).att['2026-09-01'] = { t: 9000, off: 1 };
+  const d = plain(a); cls(d).att['2026-09-05'] = { t: 8000, m: {} };
+  const m = M.mergeLib(stamped(c, 'lap', 9000, a), stamped(d, 'home', 8000, a));
+  assert.equal(cls(m.lib).att['2026-09-01'].off, 1); assert.ok(cls(m.lib).att['2026-09-05']);
+});
