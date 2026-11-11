@@ -115,7 +115,7 @@ function backHtml(list, prim) {
   return '<h2 class="tcap">Ready to hand back</h2><div class="tcard">' + list.map(m => {
     const st = keptState(m), w = keptWhere(m), s = statOf(m);
     const sub = [w.cls ? w.cls.name : '', (st.of === 1 ? 'the one paper' : 'all ' + st.of) + ' scored', s && s.avg != null ? 'average ' + s.avg + '%' : '', m.papers ? '' : 'papers not kept, drop the download again'].filter(Boolean).join(' · ');
-    return '<div class="krow back"><div class="kn">' + keptName(m) + '<span class="ks">' + esc(sub) + '</span></div><div class="kact">' + (m.papers ? '<a class="btn sm' + (prim && m === list.find(x => x.papers) ? ' primary' : '') + '" href="' + batchHash(m.id, 'return') + '" data-kret="' + esc(m.id) + '">Return papers</a>' : '<span></span>') + keptDots(m) + '</div></div>';
+    return '<div class="krow back"><div class="kn">' + keptName(m) + '<span class="ks">' + esc(sub) + '</span></div>' + keptDots(m) + (m.papers ? '<div class="kact"><a class="btn sm' + (prim && m === list.find(x => x.papers) ? ' primary' : '') + '" href="' + batchHash(m.id, 'return') + '" data-kret="' + esc(m.id) + '">Return papers</a></div>' : '') + '</div>';
   }).join('') + '</div>';
 }
 // One card: the newest finished rubric assignment, its weakest row, and how many students to sit down with. Who they are is one click away, on Insights.

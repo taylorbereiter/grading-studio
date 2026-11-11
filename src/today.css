@@ -33,7 +33,7 @@ a.trow.now:hover{background:var(--accent-soft)}
 .krow{display:grid;grid-template-columns:minmax(0,1fr) minmax(120px,170px) auto auto;align-items:center;gap:var(--space-4);padding:var(--space-3) var(--space-2) var(--space-3) var(--space-4);border-top:1px solid var(--line)}
 .krow:first-child{border-top:0}
 .krow.old{grid-template-columns:minmax(0,1fr) auto}
-.krow.back{grid-template-columns:minmax(0,1fr);gap:var(--space-3);padding:var(--space-4)}
+.krow.back{grid-template-columns:minmax(0,1fr) auto;align-items:start;gap:var(--space-3) var(--space-2);padding:var(--space-4) var(--space-2) var(--space-4) var(--space-4)}
 .krow .kn{min-width:0;display:flex;flex-direction:column;align-items:flex-start}
 .kname{max-width:100%;border:0;background:none;padding:0;font-weight:600;font-size:var(--text-body);color:var(--fg);text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 button.kname:hover{color:var(--accent);text-decoration:underline;text-underline-offset:2px}
@@ -41,7 +41,7 @@ button.kname:hover{color:var(--accent);text-decoration:underline;text-underline-
 .krow .kp{min-width:0}
 .krow .kp .sbar{display:block;width:100%;height:5px}
 .krow .kl{display:block;margin-top:var(--space-1);font-size:var(--text-small);font-weight:500;color:var(--muted);font-variant-numeric:tabular-nums}
-.krow .kact{display:flex;align-items:center;justify-content:space-between;gap:var(--space-2)}
+.krow .kact{grid-column:1/-1}
 .krow .kdots{color:var(--muted)}
 .krow.old .kname{font-weight:500}
 .km .mitem[data-armed]{color:var(--warn);font-weight:600}
