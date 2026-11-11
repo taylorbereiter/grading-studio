@@ -136,6 +136,11 @@ const HELP = [
       '**Email reminder** opens an email in your own mail app, already addressed and listing what the student owes. Read it and send it yourself: Grading Studio sends nothing. **Email all** on an assignment writes one email with every address in Bcc.',
       'Emails come from the Students tab. **Email wording…** changes what every reminder says.'],
     words: 'late overdue not handed in owe chase nag email reminder parents' },
+  { id: 'progress-sheet', sec: 'class', q: 'Can I print a page about a student for a parent meeting?',
+    a: ['Yes. Open the class, choose **Students** and press **Progress sheets** for a page per student, or click a name and press **Progress sheet** for one.',
+      'Each page has the term grade, the average for each type, every score, a chart of how they moved, missing work, each term’s grade, the report comment and lines for notes. Choose the term at the top, and untick what you don’t want.',
+      'Press **Print** and choose a printer or Save as PDF. It is made on your computer and nothing is sent anywhere.'],
+    words: 'conference parent teacher meeting print pdf progress report summary one page' },
 
   { id: 'where-saved', sec: 'safe', q: 'Where is my work saved?',
     a: ['In this browser, on this computer, as you work. There is no save button and no account.', 'A browser can be cleared, so choose a folder as a second copy: Settings, **Saving and carrying**. Until then the sidebar says **Not backed up** in amber.',
