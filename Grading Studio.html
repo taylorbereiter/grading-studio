@@ -23121,7 +23121,8 @@ function nyLib(old, works, o) {
   for (const c of L.classes) {
     if (!o.roster) { c.names = []; delete c.info; }
     for (const k of NY_YEAR_ONLY) delete c[k];
-    nyStrip(c, names, ['id', 'name', 'units', ...(o.roster ? ['names', 'info'] : [])]);
+    if (!o.roster && c.seats && c.seats.desks && typeof c.seats.desks === 'object') c.seats = { ...c.seats, desks: Object.fromEntries(Object.keys(c.seats.desks).map(k => [k, ''])), pins: [] };
+    nyStrip(c, names, ['id', 'name', 'units', ...(o.roster ? ['names', 'info', 'seats'] : [])]);
   }
   for (const h of L.classes.concat([L.loose])) for (const u of h.units || []) { nyStrip(u, names, ['id', 'name', 'items']); u.items = (u.items || []).map(card); }
   if (L.book && typeof L.book === 'object') {

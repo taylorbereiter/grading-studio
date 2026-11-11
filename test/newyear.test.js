@@ -30,7 +30,8 @@ function seed() {
   const s = gradingSeed(), lib = JSON.parse(s.ls['gs.lib']);
   lib.classes[0].info = { 'Aria Testwell': { id: '20001', note: 'Made-up note' } };
   lib.classes[0].att = { '2026-09-01': { t: 1, m: { 'Aria Testwell': 'l', 'Bram Sample': 'e' }, n: { 'Aria Testwell': 'Bus' } }, '2026-09-02': { t: 2 } };   // attendance (attend.js)
-  lib.goals = [{ id: 'g1', name: 'Argue a claim', at: 1 }];   // learning goals (goals.js)
+  lib.goals = [{ id: 'g1', name: 'Argue a claim', at: 1 }];
+  lib.classes[0].seats = { w: 3, h: 2, desks: { '0,0': 'Aria Testwell', '1,0': 'Bram Sample', '2,0': '' }, pins: ['Aria Testwell'] };   // seating (seating.js)   // learning goals (goals.js)
   lib.classes[0].link = 'https://example.org/class/9';
   s.ls['gs.lib'] = JSON.stringify(lib);
   const w = JSON.parse(s.ls['gs.b.n1']);
@@ -109,7 +110,7 @@ test('a new year: this year goes to a checked file, the classes carry on empty, 
       const l = window.__gs.state().lib, c = l.classes[0];
       return { kept: window.__gs.kept().size, year: l.year, years: l.years.map(y => [y.name, y.file]), names: l.classes.map(c => c.names.length), info: 'info' in c, att: 'att' in c, link: c.link,
         units: c.units.map(u => u.name), cards: c.units.flatMap(u => u.items.map(i => [i.name, i.due, !!i.batchId, i.typed ? Object.keys(i.typed.s).length : null])),
-        quiz: c.units[0].items[2].quiz, goal: c.units[0].items[2].goal, goals: l.goals, setup: c.units[0].items[2].setup && c.units[0].items[2].setup.criteria, terms: l.book.terms.map(t => [t.start, t.end]), dl: 'dl' in l.book,
+        quiz: c.units[0].items[2].quiz, goal: c.units[0].items[2].goal, goals: l.goals, chart: c.seats, rolls: localStorage.getItem('gs.rolls'), setup: c.units[0].items[2].setup && c.units[0].items[2].setup.criteria, terms: l.book.terms.map(t => [t.start, t.end]), dl: 'dl' in l.book,
         bank: localStorage.getItem('gs.bank'), seats: localStorage.getItem('gs.seatsTry'), move: JSON.parse(localStorage.getItem('gsp.newYear')), work: Object.keys(localStorage).filter(k => k.startsWith('gs.b.')) };
     });
     assert.equal(now.kept, 0);
@@ -124,6 +125,8 @@ test('a new year: this year goes to a checked file, the classes carry on empty, 
     assert.equal(now.quiz.shift, undefined, 'without any one student’s nudges');
     assert.deepEqual(now.setup, ['Ideas', 'Organization', 'Language'], 'the rubric goes on the card');
     assert.equal(now.goal, 'g1', 'and the whole score’s learning goal');
+    assert.deepEqual(now.chart, { w: 3, h: 2, desks: { '0,0': '', '1,0': '', '2,0': '' }, pins: [] }, 'the room carries, with every desk empty');
+    assert.doesNotMatch(now.rolls || '', /Aria Testwell|Bram Sample/, 'the Planner’s name picker has nobody from last year');
     assert.deepEqual(now.goals, [{ id: 'g1', name: 'Argue a claim', at: 1 }], 'the teacher’s learning goals stay');
     assert.deepEqual(now.terms, [['2027-08-10', '2027-12-18']]);
     assert.equal(now.dl, false);
@@ -180,6 +183,7 @@ test('a new year: this year goes to a checked file, the classes carry on empty, 
     assert.deepEqual(got.years.map(y => [y.name, y.file]), [['2027–28', 'year-b.gswork']], 'and the year just left is listed with its file');
     assert.ok(back.seats);
     assert.deepEqual(got.classes[0].att['2026-09-02'], { t: 2 }, 'attendance comes back with the year');
+    assert.equal(got.classes[0].seats.desks['0,0'], 'Aria Testwell', 'and the seating chart');
     const tries = await page.evaluate(() => new Promise(res => { const r = indexedDB.open('grading-studio-keep'); r.onsuccess = () => { const q = r.result.transaction('work').objectStore('work').get('gs.b.n1'); q.onsuccess = () => { const w = q.result; res(w && w.s['Aria Testwell'].g.tries); r.result.close(); }; }; }));
     assert.deepEqual(tries, [{ rubric: [2, 2, 2], points: '', comment: 'First try', at: 1 }], 'and a retake’s first try');
     // the year just left is in its own file, and starting it again from there works the same way
