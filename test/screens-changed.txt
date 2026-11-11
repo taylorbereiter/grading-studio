@@ -1,3 +1,11 @@
+# Stage 4, one loop (part 2). The Planner's sections (Calendar, Units, Past lessons, Activities, Rubrics) are rows in its
+# sidebar and the row of tabs is gone from the top of every Planner page. A lesson's top bar keeps its name, classes, status
+# and Download, with the rest under More. The version line reads 1.11.0.
+planner-*
+first-visit-planner
+home
+settings-*
+mark-keys
 # Stage 4, one loop (part 1). Home is Today: the day as its title, teaching today, to mark, ready to hand back, what the
 # class needs next, and one dashed box for opening new work. The sidebar on every screen, grading and Planner, says Today
 # where it said Home, and the version line reads 1.7.0. A class page's rows are quiet: no blue button on a row, one line of

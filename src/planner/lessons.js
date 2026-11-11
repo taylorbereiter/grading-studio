@@ -137,10 +137,6 @@ function slideToTitle(l, s) {
   const t = plainTitle(s.title); if (!t) return;
   l.title = t; const i = $('#lessons [data-f="ltitle"]'); if (i && i.value !== t) i.value = t;
 }
-function titleLinkBtn(l) {
-  return titleSlideOf(l) ? '<button class="btn sm ghost pl-tlink' + (titlesLinked(l) ? ' on' : '') + '" data-a="tlink" title="' + (titlesLinked(l) ? 'The lesson name and the title slide match. Click to let them be different.' : 'The lesson name and the title slide are different. Click to match them again.') + '" aria-pressed="' + titlesLinked(l) + '">' + (titlesLinked(l) ? '🔗 Matches title slide' : 'Not matched') + '</button>' : '';
-}
-
 /* ---------- timetable ---------- */
 const classById = id => ((L.setup && L.setup.classes) || []).find(c => c.id === id);
 const className = id => { const c = classById(id); return c ? c.name : id; };
@@ -337,12 +333,6 @@ function renderLessons() {
   renderWeek();
 }
 
-function folderChip() {
-  if (!('showDirectoryPicker' in window)) return '<span class="muted ls-fold">The Planner folder needs Chrome</span>';
-  if (L.dir && L.dirOk) return '<button class="btn sm ghost" data-a="sync" title="Look for lessons Claude added or changed in your Planner folder">⟳ Planner folder: ' + esc(L.dir.name) + '</button>';
-  if (L.dir) return '<button class="btn sm" data-a="reconnect">Reconnect Planner folder</button>';
-  return '<button class="btn sm" data-a="link">Link the Planner folder…</button>';
-}
 function renderWeek() {
   const el = $('#lessons'), mon = parseYmd(L.weekOf);
   const days = [0, 1, 2, 3, 4].map(i => ymd(addDays(mon, i)));
@@ -350,7 +340,8 @@ function renderWeek() {
   let h = topBar('week', '<button class="btn sm ghost" data-a="wk" data-n="-7" aria-label="Previous week">‹</button>' +
     '<span class="ls-wk">' + LMONTHS[mon.getMonth()].slice(0, 3) + ' ' + mon.getDate() + ' – ' + (fri.getMonth() !== mon.getMonth() ? LMONTHS[fri.getMonth()].slice(0, 3) + ' ' : '') + fri.getDate() + '</span>' +
     '<button class="btn sm ghost" data-a="wk" data-n="7" aria-label="Next week">›</button><button class="btn sm ghost" data-a="today">This week</button>' +
-    '<input type="date" class="btn sm" data-a="jump" value="' + L.weekOf + '" aria-label="Go to a date">' + (L.setup ? '<button class="btn sm ghost" data-a="dlweek" title="Every lesson on the calendar this week, with its PowerPoint and materials, in one .zip">↓ Download week</button><button class="btn sm ghost" data-a="printweek">Print week</button>' : ''));
+    '<input type="date" class="btn sm" data-a="jump" value="' + L.weekOf + '" aria-label="Go to a date">',
+    L.setup ? '<button class="mi" role="menuitem" data-a="dlweek">Download week<small>Every lesson on the calendar this week, with its PowerPoint and materials, in one .zip</small></button><button class="mi" role="menuitem" data-a="printweek">Print week<small>Each day’s classes with their lessons and materials</small></button><hr>' : '');
   if (!L.setup) {
     h += '<div class="ls-empty"><h2>Tell the Planner when your classes meet</h2><p>Lessons line up with your classes once the Planner knows when they meet. Type your classes and their times in, which takes a few minutes and is done once. If you already have a setup file from another computer, load it or drop it on this page.</p>' +
       '<div class="row"><button class="btn primary" data-a="setup">Type in my classes</button><button class="btn" data-a="loadsetup">Load a setup file…</button><button class="btn" data-a="newfree">Make a lesson without a class</button></div></div>';
@@ -387,13 +378,11 @@ function renderEditor() {
   L.cur = Math.max(0, Math.min(L.cur, l.slides.length - 1));
   const s = l.slides[L.cur];
   let h = '<div class="ls-top"><button class="btn sm ghost" data-a="back">‹ ' + ({ semester: 'Semester', units: 'Units', unit: 'Unit', activities: 'Activities', library: 'Past lessons' }[L.backTo] || 'Week') + '</button>' +
-    '<input class="ls-title-in" data-f="ltitle" value="' + esc(l.title) + '" aria-label="Lesson name">' + titleLinkBtn(l) +
+    '<input class="ls-title-in" data-f="ltitle" value="' + esc(l.title) + '" aria-label="Lesson name">' +
     '<span class="ls-slots">' + l.slots.map((t, i) => '<span class="ls-chip" style="--cc:' + esc((classById(t.classId) || {}).color || '#1F6FB2') + '">' + esc(className(t.classId)) + ' · ' + shortDate(t.date) + mbBtn(classById(t.classId)) + '<button data-unslot="' + i + '" title="Take it off this class" aria-label="Remove">×</button></span>').join('') + '<button class="btn sm ghost" data-a="addslot">+ Class</button></span>' +
-    atlasChip(l) + '<span class="sp"></span>' + statusChip(l) + '<span class="savest" id="lsSaved">Saved</span>' +
-    '<button class="btn sm" data-a="send" title="Copy this lesson for Claude, to paste where you’re working with Claude">Copy for Claude</button>' +
-    commentsBtn(l) + '<button class="btn sm ghost" data-a="versions">Versions</button>' + panelBtn() +
-    '<button class="btn sm ghost" data-a="more">More ▾</button>' +
-    '<button class="btn sm" data-a="finzip" title="Upload the finished PowerPoint and its files as one .zip">↑ Upload lesson .zip</button>' +
+    '<span class="sp"></span>' + statusChip(l) + '<span class="savest" id="lsSaved">Saved</span>' +
+    // Above the slide: the lesson's name, where it is taught, its status and the download. The rest is one click away, in More.
+    (lessonTalk(l) ? commentsBtn(l) : '') + panelBtn() + moreHtml(l) +
     '<button class="btn sm primary" data-a="pptx">Download .pptx</button></div>' + pendingBar(l) + variantBar(l);
   h += '<div class="ls-ed-cols"><nav class="ls-thumbs" id="lsThumbs">' + l.slides.map((x, i) => thumbHtml(x, l, i)).join('') +
     '<div class="ls-addslide"><button class="btn sm" data-a="addslide">+ Add slide</button></div></nav>';
@@ -422,11 +411,6 @@ function atlasOf(l) {
     if (hit && hit.u.atlas) return { url: hit.u.atlas, own: false, unit: hit.u.title };
   }
   return null;
-}
-function atlasChip(l) {
-  const a = atlasOf(l);
-  return a ? '<a class="btn sm ghost" href="' + esc(a.url) + '" target="_blank" rel="noopener" title="' + (a.own ? 'This lesson’s ' + (plCur() ? esc(plCur()) + ' page' : 'unit plan') : (plCur() ? esc(plCur()) + ' page of ' : 'Unit plan of ') + esc(a.unit)) + '">' + esc(plCurLink()) + ' ↗</a><button class="btn sm ghost" data-a="atlas" title="Change the ' + esc(plCurLink()) + ' link" aria-label="Change the ' + esc(plCurLink()) + ' link">✎</button>'
-    : '<button class="btn sm ghost" data-a="atlas">+ ' + esc(plCurLink()) + ' link</button>';
 }
 function atlasDlg(l) {
   const a = atlasOf(l);
@@ -550,6 +534,8 @@ async function onLessonsClick(e) {
   if (t && t.dataset.mbset) return mbDlg(t.dataset.mbset);
   if (t && t.dataset.dl) return dlCard(t.dataset.dl);
   if (!t) return;
+  // an item of the More menu closes the menu, then does what its button used to do
+  if (t.dataset.a && t.dataset.a !== 'more' && t.dataset.a !== 'mdelete' && t.closest('.ls-menu')) moreClose();
   if (L.view === 'edit' && (await reviewClick(t) || await finishedClick(t) || await variantsClick(t))) return;
   if (L.view === 'activities' && t.dataset.a && await activitiesClick(t)) return;
   if (t.classList.contains('ls-ed') && !t.dataset.a) return startEdit(t);
@@ -573,10 +559,11 @@ async function onLessonsClick(e) {
   if (a === 'link') return folderLink();
   if (a === 'reconnect') return folderReconnect(true);
   if (a === 'sync') { await folderRead(true); return; }
+  if (a === 'more') return moreMenu(t);
   if (!l) return;
   if (a === 'pptx') { editorCommit(); return finOrMake(l); }
   if (a === 'ask') { editorCommit(); return askClaude(l); }
-  if (a === 'more') return moreMenu(t);
+  if (a === 'mexport' || a === 'mcopyto' || a === 'mcopy' || a === 'mdelete') return moreDo(a, t, l);
   if (a === 'addslot') return addSlotDlg();
   if (a === 'pic') return pickPicture();
   if (a === 'addslide') return addSlideDlg();
@@ -812,24 +799,48 @@ function showAllLessons() {
     closeDlg(); openLesson(L.lessons.find(x => x.id === b.dataset.pk));
   };
 }
-function moreMenu() {
-  const l = L.open;
-  openDlg('<div class="bh"><h2>' + esc(l.title) + '</h2></div><div class="bb ls-more">' +
-    '<button class="btn" data-m="export">Save lesson file (for Claude)…</button><p class="muted">A .lesson.json file with just this lesson. Give it to Claude, then bring Claude’s version back with Import.</p>' +
-    '<button class="btn" data-m="copyto">Copy to another class or day…</button><p class="muted">A separate copy with its own slides and materials.</p>' +
-    '<button class="btn" data-m="copy">Copy lesson as text</button><p class="muted">The slides and notes as plain text, to paste anywhere.</p>' +
-    '<button class="btn" data-m="delete">Delete this lesson</button></div><div class="bf"><button class="btn" data-x>Close</button></div>', true);
-  $('#dlgBox').onclick = async e => {
-    if (e.target.closest('[data-x]')) return closeDlg();
-    const m = e.target.closest('[data-m]'); if (!m) return;
-    if (m.dataset.m === 'export') { closeDlg(); return saveBlob(fileBase(l) + '.lesson.json', new Blob([JSON.stringify(lessonForFile(l, null), null, 2)], { type: 'application/json' })); }
-    if (m.dataset.m === 'copyto') { closeDlg(); return copyLessonDlg(l); }
-    if (m.dataset.m === 'copy') { await copyText(lessonText(l)); closeDlg(); return toast('Copied'); }
-    if (m.dataset.m === 'delete') {
-      if (m.dataset.sure !== '1') { m.dataset.sure = '1'; m.textContent = 'Click again to delete it for good'; return; }
-      await lDelete(l); closeDlg(); L.open = null; L.view = L.backTo || 'week'; renderLessons(); toast('Lesson deleted');
-    }
-  };
+// How many comments the lesson and its slides hold, answered ones too.
+const lessonTalk = l => l.slides.reduce((k, s) => k + (s.talk || []).length, (l.talk || []).length);
+// More: what is used now and then, in one menu beside Download.
+function moreHtml(l) {
+  const a = atlasOf(l), linked = titlesLinked(l), link = esc(plCurLink());
+  const it = (act, label, sub, cls) => '<button class="mi' + (cls ? ' ' + cls : '') + '" role="menuitem" data-a="' + act + '">' + label + (sub ? '<small>' + sub + '</small>' : '') + '</button>';
+  return '<span class="ls-morew"><button class="btn sm ghost" data-a="more" aria-haspopup="true" aria-expanded="false">More ▾</button><div class="ls-menu" role="menu" aria-label="More for this lesson" hidden>' +
+    it('send', 'Copy for Claude', 'To paste where you’re working with Claude') +
+    (lessonTalk(l) ? '' : it('comments', 'Comments', 'On the lesson and its slides')) +
+    it('versions', 'Versions', 'Earlier copies of this lesson') +
+    it('finzip', 'Upload lesson .zip', 'The finished PowerPoint and its files, as one .zip') + '<hr>' +
+    (titleSlideOf(l) ? it('tlink', linked ? 'Name matches the title slide ✓' : 'Match the name to the title slide', linked ? 'Click to let them be different' : 'They are different now', linked ? 'on' : '') : '') +
+    (a ? '<a class="mi" role="menuitem" href="' + esc(a.url) + '" target="_blank" rel="noopener">Open ' + link + ' ↗<small>' + (a.own ? 'This lesson’s own page' : 'The page of ' + esc(a.unit)) + '</small></a>' + it('atlas', 'Change the ' + link + ' link') : it('atlas', '+ ' + link + ' link')) + '<hr>' +
+    it('mexport', 'Save lesson file…', 'A .lesson.json of just this lesson, for Claude. Bring Claude’s version back with Import') +
+    it('mcopyto', 'Copy to another class or day…', 'A separate copy with its own slides and materials') +
+    it('mcopy', 'Copy lesson as text', 'The slides and notes as plain text') +
+    it('mdelete', 'Delete this lesson') + '</div></span>';
+}
+function moreClose() { const m = document.querySelector('#lessons .ls-menu'); if (!m || m.hidden) return false; m.hidden = true; m.previousElementSibling.setAttribute('aria-expanded', 'false'); return true; }
+function moreMenu(t) {
+  const m = t.nextElementSibling; if (!m.hidden) return moreClose();
+  m.hidden = false; t.setAttribute('aria-expanded', 'true'); const f = m.querySelector('.mi'); if (f) f.focus();
+}
+// A click anywhere else closes it, and so does Escape (which gives the button the focus back).
+document.addEventListener('click', e => { if (!e.target.closest('.ls-morew')) moreClose(); });
+document.addEventListener('keydown', e => {
+  const m = document.querySelector('#lessons .ls-menu'); if (!m || m.hidden) return;
+  if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); moreClose(); m.previousElementSibling.focus(); }
+  else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+    const xs = [...m.querySelectorAll('.mi')], i = xs.indexOf(document.activeElement); e.preventDefault();
+    xs[(i + (e.key === 'ArrowDown' ? 1 : -1) + xs.length) % xs.length].focus();
+  }
+}, true);
+async function moreDo(a, t, l) {
+  if (a === 'mdelete') {
+    if (t.dataset.sure !== '1') { t.dataset.sure = '1'; t.textContent = 'Click again to delete it for good'; return; }
+    await lDelete(l); L.open = null; L.view = L.backTo || 'week'; renderLessons(); return toast('Lesson deleted');
+  }
+  moreClose();
+  if (a === 'mexport') return saveBlob(fileBase(l) + '.lesson.json', new Blob([JSON.stringify(lessonForFile(l, null), null, 2)], { type: 'application/json' }));
+  if (a === 'mcopyto') return copyLessonDlg(l);
+  if (a === 'mcopy') { await copyText(lessonText(l)); return toast('Copied'); }
 }
 async function copyText(t) { try { await navigator.clipboard.writeText(t); } catch { const a = document.createElement('textarea'); a.value = t; document.body.appendChild(a); a.select(); document.execCommand('copy'); a.remove(); } }
 // A version's name next to the lesson's, when it has alternatives.
@@ -1177,7 +1188,7 @@ async function folderReconnect(ask) {
     L.dirOk = p === 'granted';
   } catch { L.dirOk = false; }
   if (L.dirOk) { await folderRead(false); if (ask) await folderWriteAll(); }
-  if (L.view === 'week') renderWeek(); else { const c = document.querySelector('#lessons [data-a="reconnect"],#lessons [data-a="sync"],#lessons [data-a="link"]'); if (c) c.outerHTML = folderChip(); }
+  if (L.view === 'week') renderWeek();
   railRender();
 }
 async function writeFile(dir, name, data) { const fh = await dir.getFileHandle(name, { create: true }); const w = await fh.createWritable(); await w.write(data); await w.close(); return (await fh.getFile()).lastModified; }
