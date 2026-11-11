@@ -45,6 +45,7 @@ const SCREENS = [
   { name: 'class-students', where: 'g', hash: '#/class/c1/students', ready: '#peopleTbl table' },
   { name: 'class-one-student', where: 'g', hash: '#/class/c1/students/2', ready: '#vClass:not([hidden])' },
   { name: 'class-charts', where: 'g', hash: '#/class/c1/charts', ready: '#vClass:not([hidden])' },
+  { name: 'class-missing', where: 'g', hash: '#/class/c1/missing', ready: '#mis' },
   { name: 'class-reports', where: 'g', hash: '#/class/c1/reports', ready: '#rptText' },
   { name: 'mark', where: 'g', hash: '#/a/{A}', paper: true },
   { name: 'mark-add-menu', where: 'g', hash: '#/a/{A}', paper: true, then: page => page.evaluate(() => { const b = [...document.querySelectorAll('[data-km]')].find(b => /Add/.test(b.textContent)); if (b) b.click(); }) },
