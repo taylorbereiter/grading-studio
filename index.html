@@ -2142,6 +2142,62 @@ html.welcoming .shell{visibility:hidden}
 .miswords label{display:block;margin:0 0 var(--space-3)}
 .miswords label span{display:block;font-size:var(--text-control);font-weight:600;margin:0 0 var(--space-1)}
 .miswords input,.miswords textarea{display:block;width:100%;padding:var(--space-2);border:1px solid var(--line-strong);border-radius:var(--corner-2);background:var(--surface);color:var(--fg);font:inherit;font-size:var(--text-control);line-height:1.5;resize:vertical}
+/* ---------- progress sheets (sheet.js): the box that shows them, and the pages as they print ---------- */
+.dlg .box.pssbox{width:min(1000px,100%);height:calc(100vh - 32px)}
+.pssbody{display:flex;flex-direction:column;gap:var(--space-2);overflow:auto;background:var(--surface-2)}
+.pssbar{display:flex;align-items:center;gap:var(--space-3);flex-wrap:wrap}
+.pssck{display:inline-flex;align-items:center;gap:6px;font-size:var(--text-control);color:var(--fg-2)}
+.pssnote{margin:0;font-size:var(--text-control)}
+.psswarn{color:var(--fg)}
+.psspages{display:flex;flex-direction:column;align-items:center;gap:var(--space-5);padding:var(--space-3) 0 var(--space-6)}
+/* one sheet: a sheet of paper on screen, the page itself in print */
+.pss{box-sizing:border-box;width:210mm;min-height:270mm;padding:12mm;background:var(--stage-paper);color:var(--stage-ink);box-shadow:var(--shadow);border-radius:var(--corner-1);font-size:var(--text-control)}
+.pssin{display:flex;flex-direction:column;gap:var(--space-3)}
+.pss h4{margin:0 0 6px;font-size:var(--text-small);text-transform:uppercase;letter-spacing:.06em;color:var(--stage-ink-2);font-weight:600}
+.psshead{display:flex;justify-content:space-between;align-items:flex-end;gap:var(--space-4);border-bottom:2px solid var(--stage-blue);padding-bottom:var(--space-2)}
+.psshead small{font-size:var(--text-small);color:var(--stage-blue);font-weight:600;text-transform:uppercase;letter-spacing:.08em}
+.psshead h3{margin:2px 0 0;font-size:var(--text-heading);font-weight:650;color:var(--stage-ink)}
+.psshead p{margin:0;text-align:right;font-size:var(--text-small);color:var(--stage-ink-2);line-height:1.5}
+.psstiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:var(--space-2)}
+.psst{border:1px solid var(--line);border-radius:var(--corner-3);padding:6px var(--space-3);display:flex;flex-direction:column;gap:2px}
+.psst span{font-size:var(--text-small);color:var(--stage-ink-2)}
+.psst b{font-size:var(--text-title);font-weight:650;font-variant-numeric:tabular-nums}
+.psst b small{font-size:var(--text-small);font-weight:500;color:var(--stage-ink-2)}
+.psst small{font-size:var(--text-caption);color:var(--stage-ink-2)}
+.psst.main{background:var(--stage-blue-soft);border-color:transparent}
+.psst.main b{color:var(--stage-blue)}
+.pss [data-pssline]{width:90%;margin:0 auto}
+.pss [data-pssline] .bkln{stroke:var(--stage-blue);stroke-width:2.5}
+.pss .bkleg{font-size:var(--text-caption)}
+.pssgrid{display:grid;grid-template-columns:1.35fr 1fr;gap:var(--space-5);align-items:start}
+.pssgrid.wide{grid-template-columns:1fr;gap:var(--space-3)}
+.pssgrid.wide aside{display:grid;grid-template-columns:1.35fr 1fr;gap:var(--space-5)}
+.psshalves{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-4);align-items:start}
+.pssgrid aside{display:flex;flex-direction:column;gap:var(--space-4)}
+.psstab{width:100%;border-collapse:collapse;font-size:var(--text-small);font-variant-numeric:tabular-nums}
+.psstab th{text-align:left;font-weight:600;color:var(--stage-ink-2);border-bottom:1px solid var(--line-strong);padding:3px 4px}
+.psstab td{border-bottom:1px solid var(--line);padding:3px 4px;vertical-align:top}
+.pssgrid.wide .psstab td{padding:1px 4px}
+.psstab .pssv{text-align:right;white-space:nowrap}
+.psstab small{color:var(--stage-ink-2)}
+.psstab .pssyr td{font-weight:650;border-bottom:none}
+.pssmiss{color:var(--ch-down);font-weight:600}
+.psslist{margin:0;padding-left:18px;font-size:var(--text-small)}
+.psslist small{color:var(--stage-ink-2)}
+.pssnone{margin:0;font-size:var(--text-small);color:var(--stage-ink-2)}
+.pssrep p{margin:0;line-height:1.55;white-space:pre-wrap}
+.pssnotes{display:flex;flex-direction:column}
+.pssnotes i{display:block;height:8mm;border-bottom:1px solid var(--line-strong)}
+#pssOut{display:none}
+@media print{
+  @page{margin:12mm}
+  html.pssprint,html.pssprint body{height:auto!important;overflow:visible!important;background:var(--stage-paper)!important}
+  html.pssprint body>*:not(#pssOut){display:none!important}
+  html.pssprint #pssOut{display:block}
+  #pssOut .pss{width:auto;min-height:0;padding:0;box-shadow:none;break-after:page;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  #pssOut .pss:last-child{break-after:auto}
+  #pssOut .pssgrid,#pssOut .psstiles,#pssOut .psschart,#pssOut tr{break-inside:avoid}
+}
 /* ---------- tablets: what a finger needs (touch.js). None of this applies with a mouse or a trackpad. ---------- */
 .settch{display:flex;align-items:center;gap:var(--space-2);flex-wrap:wrap}
 .settch select{max-width:100%}
@@ -3345,7 +3401,7 @@ SOFTWARE.
 <script>/* ---------------- saved-data versions: a safety copy, then any format changes, before the app starts ---------------- */
 const gsData = (() => {
   'use strict';
-  const APP_VERSION = "1.21.0";   // from package.json, the one place it's set
+  const APP_VERSION = "1.22.0";   // from package.json, the one place it's set
   const MIGRATIONS = [
   ];
   const DATA_V = Math.max(1, ...MIGRATIONS.map(s => s.to));
@@ -3859,6 +3915,10 @@ const LANG_ES = {
       a: ['Abre una clase y elige **Missing work**. Muestra cada trabajo que marcaste como Missing, por estudiante o por tarea, del periodo que elijas.',
         '**Email reminder** abre un correo en tu propia aplicación de correo, ya con la dirección y con lo que el estudiante debe. Léelo y envíalo tú: Grading Studio no envía nada. **Email all** en una tarea escribe un solo correo con todas las direcciones en copia oculta.',
         'Los correos salen de la pestaña Students. **Email wording…** cambia lo que dice cada recordatorio. Por ahora los recordatorios se escriben en inglés.'] },
+    'progress-sheet': { q: '¿Puedo imprimir una hoja sobre un estudiante para una reunión con la familia?', words: 'reunión familia tutoría imprimir pdf informe de progreso resumen una página',
+      a: ['Sí. Abre la clase, elige **Students** y pulsa **Progress sheets** para una página por estudiante, o haz clic en un nombre y pulsa **Progress sheet** para una sola.',
+        'Cada página tiene la nota del periodo, la media de cada tipo, todas las notas, un gráfico de cómo han evolucionado, los trabajos sin entregar, la nota de cada periodo, el comentario del informe y líneas para notas. Elige el periodo arriba y desmarca lo que no quieras.',
+        'Pulsa **Print** y elige una impresora o Guardar como PDF. Se hace en tu ordenador y no se envía nada a ningún sitio.'] },
     'where-saved': { q: '¿Dónde se guarda mi trabajo?', go: 'Abrir Ajustes, Guardado', words: 'guardar copia de seguridad carpeta almacenamiento perdido borrado seguro',
       a: ['En este navegador, en este ordenador, mientras trabajas. No hay botón de guardar ni cuenta.', 'Los datos de un navegador se pueden borrar, así que elige una carpeta como segunda copia: Ajustes, **Saving and carrying**. Hasta entonces la barra lateral dice **Sin copia de seguridad** en ámbar.',
         'En Safari y Firefox, que no pueden guardar en una carpeta, crea de vez en cuando un archivo para llevar.'] },
@@ -4187,6 +4247,10 @@ const LANG_ZH = {
       a: ['開啟班級，選擇 **Missing work**。這裡會依學生或依作業，列出你在所選學期標記為 Missing 的每份作業。',
         '**Email reminder** 會在你自己的郵件程式裡開啟一封信，已經填好收件人和學生缺交的作業。請自己讀過再寄出：Grading Studio 不會寄送任何東西。作業上的 **Email all** 會寫一封信，所有地址都放在密件副本。',
         '電子郵件地址來自 Students 分頁。**Email wording…** 可以修改每封提醒信的內容。目前提醒信是用英文寫的。'] },
+    'progress-sheet': { q: '可以印一頁學生資料，在家長會時使用嗎？', words: '家長會 親師座談 列印 PDF 學習進度 摘要 一頁 conference',
+      a: ['可以。開啟班級，選擇 **Students**，按 **Progress sheets** 為每位學生各印一頁；或點一個名字，按 **Progress sheet** 只印這位學生。',
+        '每一頁有學期成績、各類作業的平均、每一項分數、分數變化的圖表、缺交的作業、每學期的成績、成績單評語，以及可寫筆記的空行。在上方選擇學期，不需要的項目取消勾選即可。',
+        '按 **Print**，選擇印表機或另存為 PDF。資料在你的電腦上產生，不會傳送到任何地方。'] },
     'where-saved': { q: '我的工作成果存在哪裡？', go: '開啟設定、儲存', words: '儲存 備份 資料夾 存放 遺失 刪除 安全 backup',
       a: ['在你工作時，存在這台電腦的這個瀏覽器裡。沒有儲存按鈕，也不需要帳號。', '瀏覽器的資料可能被清除，所以請選擇一個資料夾作為第二份副本：設定的 **Saving and carrying**。在那之前，側邊欄會以琥珀色顯示**尚未備份**。',
         'Safari 和 Firefox 無法存到資料夾，請不時製作攜帶檔。'] },
@@ -4422,6 +4486,11 @@ const HELP = [
       '**Email reminder** opens an email in your own mail app, already addressed and listing what the student owes. Read it and send it yourself: Grading Studio sends nothing. **Email all** on an assignment writes one email with every address in Bcc.',
       'Emails come from the Students tab. **Email wording…** changes what every reminder says.'],
     words: 'late overdue not handed in owe chase nag email reminder parents' },
+  { id: 'progress-sheet', sec: 'class', q: 'Can I print a page about a student for a parent meeting?',
+    a: ['Yes. Open the class, choose **Students** and press **Progress sheets** for a page per student, or click a name and press **Progress sheet** for one.',
+      'Each page has the term grade, the average for each type, every score, a chart of how they moved, missing work, each term’s grade, the report comment and lines for notes. Choose the term at the top, and untick what you don’t want.',
+      'Press **Print** and choose a printer or Save as PDF. It is made on your computer and nothing is sent anywhere.'],
+    words: 'conference parent teacher meeting print pdf progress report summary one page' },
 
   { id: 'where-saved', sec: 'safe', q: 'Where is my work saved?',
     a: ['In this browser, on this computer, as you work. There is no save button and no account.', 'A browser can be cleared, so choose a folder as a second copy: Settings, **Saving and carrying**. Until then the sidebar says **Not backed up** in amber.',
@@ -14217,7 +14286,7 @@ function bkOneView(c, cols, conf) {
   const cavg = t => { const ps = all.map(g => t ? g.by[t] : g.grade).filter(v => v != null); return ps.length ? bkMean(ps) : null; };
   const sc = bkScored(cols), fm = cols.filter(x => x.type === 'fm'), miss = cols.filter(x => (x.cells.get(n) || {}).st === 'missing');
   const bar = (l, v, ref, t) => '<div class="bkcmp"><span>' + l + '</span><div class="bkcmpt"><i class="' + t + '" style="width:' + Math.min(100, v || 0) + '%"></i>' + (ref != null ? '<em style="left:' + Math.min(100, ref) + '%" title="Class average ' + esc(pctAvgText(ref)) + '"></em>' : '') + '</div><b>' + (v != null ? pctAvgText(v) : '–') + '</b></div>';
-  return '<div class="bkpad"><div class="bkstu"><button class="icon" data-bkstu="-1" aria-label="Previous student"' + (bk.stu ? '' : ' disabled') + '>‹</button><b id="bkStuName">' + esc(shown) + '</b>' + bkInfo(n) + '<button class="icon" data-bkstu="1" aria-label="Next student"' + (bk.stu < c.names.length - 1 ? '' : ' disabled') + '>›</button><span class="muted">' + (bk.stu + 1) + ' of ' + c.names.length + ' · ← → to move</span></div>' +
+  return '<div class="bkpad"><div class="bkstu"><button class="icon" data-bkstu="-1" aria-label="Previous student"' + (bk.stu ? '' : ' disabled') + '>‹</button><b id="bkStuName">' + esc(shown) + '</b>' + bkInfo(n) + '<button class="icon" data-bkstu="1" aria-label="Next student"' + (bk.stu < c.names.length - 1 ? '' : ' disabled') + '>›</button><span class="muted">' + (bk.stu + 1) + ' of ' + c.names.length + ' · ← → to move</span>' + (bkPage() ? '<span class="sp"></span><button class="btn sm" data-pssone title="A one-page summary to print for a parent meeting">Progress sheet</button>' : '') + '</div>' +
     '<div class="ovtiles" id="bkStuTiles">' + bkTile(bk.term === '*' ? 'Grade' : 'Term grade', r.grade != null ? pctAvgText(r.grade) + (r.soFar ? ' <small>so far</small>' : '') : '–', [r.xc ? 'includes +' + fmtNum(r.xc) + ' extra credit' : '', cavg('') != null ? 'class average ' + pctAvgText(cavg('')) : ''].filter(Boolean).join(' · '), true) +
     bkCountTypes(conf).map(([t, , l]) => bkTile(l + ' average', r.by[t] != null ? pctAvgText(r.by[t]) : '–', [cols.filter(x => x.type === t && bkCounts(x.cells.get(n))).length + ' of ' + cols.filter(x => x.type === t).length + ' counted', t === 'ic' && r.xcIc ? '+' + fmtNum(r.xcIc) + ' extra credit' : '', cavg(t) != null ? 'class ' + pctAvgText(cavg(t)) : ''].filter(Boolean).join(' · '))).join('') +
     bkTile('Missing', miss.length, miss.length ? miss.map(x => x.name).join(', ') : 'nothing outstanding') + '</div>' + bkStrip(c, cols, n) +
@@ -15618,7 +15687,7 @@ document.addEventListener('keydown', e => { if ((e.key === 'Enter' || e.key === 
 
 let peopleQuiet = false;
 function peoplePanel(el, c) {
-  el.innerHTML = '<div class="pplbar"><span class="muted" id="peopleSum"></span><span class="sp"></span><button class="btn sm" data-ppaste>Paste IDs and emails…</button><button class="btn sm" data-pmail>Copy all emails</button></div>' +
+  el.innerHTML = '<div class="pplbar"><span class="muted" id="peopleSum"></span><span class="sp"></span><button class="btn sm" data-ppaste>Paste IDs and emails…</button><button class="btn sm" data-pmail>Copy all emails</button><button class="btn sm" data-pssall title="One page per student to print for parent meetings">Progress sheets</button></div>' +
     '<div id="peoplePaste" hidden><p class="muted" style="margin:0 0 6px;font-size:13.5px">Paste a class list with names and a student ID or email column (from ' + (sysName() ? esc(sysName()) + ' or ' : '') + 'a spreadsheet). Each row fills in the student with the same name.</p><textarea class="big" id="peopleIn" placeholder="Name, student ID, email"></textarea>' +
     '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px"><button class="btn sm" data-pcancel>Cancel</button><button class="btn sm primary" data-pfill>Fill in</button></div></div><div id="peopleTbl"></div>' +
     '<p class="muted pplcap">Click a name for that student’s grades and charts. The ⓘ opens their details, with other spellings and a note.</p>';
@@ -20516,7 +20585,7 @@ function rptAll(c) {
   const conf = bkConf(), all = bkClassCols(c, bk.cols), cols = bk.term === '*' ? all : all.filter(x => x.termId === bk.term), rc = rptConf();
   return c.names.map(n => [n, rptText(c, cols, conf, n, rc)]);
 }
-const rptBar = () => '<button class="btn sm" data-rptwords>Wording…</button><button class="btn sm" data-rptcopyall title="Every student’s name and comment, to paste into a spreadsheet or your report system">Copy all</button><button class="btn sm" data-rptcsv title="A spreadsheet file with every student’s name and comment">Download</button>';
+const rptBar = () => '<button class="btn sm" data-rptwords>Wording…</button><button class="btn sm" data-rptcopyall title="Every student’s name and comment, to paste into a spreadsheet or your report system">Copy all</button><button class="btn sm" data-rptcsv title="A spreadsheet file with every student’s name and comment">Download</button><button class="btn sm" data-pssall title="One page per student, with this comment, to print for parent meetings">Progress sheets</button>';
 function rptClick(e) {
   if (!$('#rpt') || !e.target.closest('#bkBody')) return;
   const b = e.target.closest('button'), c = bkClass(); if (!b || !c) return;
@@ -20751,6 +20820,126 @@ function misWordsDlg() {
 $('#vClass').addEventListener('click', misClick);
 $('#vClass').addEventListener('change', misChange);
 Object.assign(window.__gs, { misDraft, misGroup, misHref, misByStu, MIS_WORDS });
+
+/* ---------------- progress sheets: one printed page per student, for a parent meeting (11/11) ---------------- */
+let pss = { cls: '', who: null, term: null, cols: null };
+function pssConf() { const s = (lib.book && lib.book.sheet) || {}; return { cls: s.cls !== false, rep: s.rep !== false, notes: s.notes !== false }; }
+function pssSave(part) { bkSave({ sheet: { ...((lib.book || {}).sheet || {}), ...part } }); }
+const pssToday = () => new Date().toLocaleDateString(LANG_LOCALE, { year: 'numeric', month: 'long', day: 'numeric' });
+async function openSheets(clsId, who) {
+  const c = classById(clsId);
+  if (!c || !c.names.length) return toast('Add a roster to this class first.');
+  rptKeep(true);
+  const cols = bk.cols || await bkLoad().catch(e => { console.error(e); return []; });
+  const conf = bkConf(), tabs = bkTabs(bkClassCols(c, cols));
+  pss = { cls: c.id, who: who && c.names.includes(who) ? who : null, cols, term: tabs.some(t => t[0] === bk.term) ? bk.term : conf.terms.length ? bkTermNow(conf.terms) : '' };
+  openDlg('<div class="bh"><h2 id="pssTitle"></h2><button class="icon" data-close aria-label="Close" style="margin-left:auto">✕</button></div><div class="bb pssbody" id="pssBody"></div>');
+  $('#dlgBox').classList.add('pssbox');
+  $('#dlgBox').onclick = pssClick;
+  $('#dlgBox').onchange = pssChange;
+  pssDraw();
+}
+const pssClass = () => classById(pss.cls);
+function pssRep(c, cols, conf, n, rc) {
+  const key = pss.term === '*' ? 'year' : pss.term || 'all', e = ((infoOf(c, n).rep || {})[key]) || {};
+  return { text: e.text != null ? e.text : rptDraft(c, n, rptFacts(c, cols, conf, n), rc, e.v), draft: !e.done && e.text == null, done: !!e.done };
+}
+function pssDraw() {
+  const c = pssClass(), body = $('#pssBody'); if (!c || !body) return;
+  const conf = bkConf(), all = bkClassCols(c, pss.cols), tabs = bkTabs(all), o = pssConf(), rc = rptConf();
+  if (!tabs.some(t => t[0] === pss.term)) pss.term = tabs[0][0];
+  const cols = pss.term === '*' ? all : all.filter(x => x.termId === pss.term), names = pss.who ? [pss.who] : c.names;
+  $('#pssTitle').textContent = pss.who ? 'Progress sheet' : 'Progress sheets';
+  const sheets = names.map(n => pssOne(c, all, cols, conf, n, o, rc)), drafts = o.rep ? sheets.filter(s => s.draft).length : 0;
+  const ck = (k, l, t) => '<label class="pssck" title="' + esc(t) + '"><input type="checkbox" data-pssopt="' + k + '"' + (o[k] ? ' checked' : '') + '> ' + l + '</label>';
+  body.innerHTML = '<div class="pssbar"><div class="ovtabs bkterms" role="group" aria-label="Term">' + tabs.map(([id, l]) => '<button data-pssterm="' + esc(id) + '" aria-selected="' + (pss.term === id) + '">' + esc(l) + '</button>').join('') + '</div><span class="sp"></span>' +
+    ck('cls', 'Class average', 'Show the class average beside each of the student’s numbers') + ck('rep', 'Report comment', 'The comment from the Report comments tab for this term') + ck('notes', 'Lines for notes', 'Empty lines at the bottom to write on during the meeting') +
+    '<button class="btn primary" data-pssprint>' + (names.length === 1 ? 'Print' : 'Print ' + people(names.length, 'page')) + '</button></div>' +
+    '<p class="muted pssnote" id="pssNote">' + (names.length === 1 ? 'One page' : 'One page for each student, in roster order') + ', made on this computer from your gradebook. Nothing is sent anywhere. In the print window, choose a printer or Save as PDF.' +
+    (drafts ? ' <span class="psswarn">' + (drafts === 1 ? (names.length === 1 ? 'The report comment is' : 'One report comment is') + ' still a draft you haven’t looked at.' : drafts + ' report comments are still drafts you haven’t looked at.') + ' <a href="' + classHash(c, 'reports') + '" data-close>Open Report comments</a></span>' : '') + '</p>' +
+    '<div class="psspages" id="pssPages">' + sheets.map(s => s.html).join('') + '</div>';
+  pssFit();
+}
+function pssFit() {
+  const room = 245 * 96 / 25.4;
+  for (const el of document.querySelectorAll('#pssPages .pssin')) {
+    el.style.zoom = '';
+    for (let k = 0, z = 1; k < 4; k++) {   // measured again each time: smaller text can wrap differently
+      const h = el.getBoundingClientRect().height; if (h <= room || z <= 0.6) break;
+      z = Math.max(0.6, Math.floor(z * room / h * 100) / 100); el.style.zoom = String(z);
+    }
+  }
+}
+function pssOne(c, all, cols, conf, n, o, rc) {
+  const i = c.names.indexOf(n), shown = bkWho(n, i), r = bkGrade(n, cols, conf), everyone = c.names.filter(bkIn).map(x => bkGrade(x, cols, conf));
+  const cavg = t => { const ps = everyone.map(g => t ? g.by[t] : g.grade).filter(v => v != null); return ps.length ? bkMean(ps) : null; };
+  const pct = v => v != null ? pctAvgText(v) : '–', vs = v => o.cls && v != null ? 'class ' + pctAvgText(v) : '';
+  const period = (bkTabs(all).find(t => t[0] === pss.term) || [, 'This year'])[1];
+  const fm = cols.filter(x => x.type === 'fm'), miss = cols.filter(x => x.type !== 'xc' && (x.cells.get(n) || {}).st === 'missing');
+  const tile = (l, v, s, main) => '<div class="psst' + (main ? ' main' : '') + '"><span>' + l + '</span><b>' + v + '</b><small>' + (s || '&nbsp;') + '</small></div>';
+  let h = '<article class="pss" data-pss="' + esc(n) + '"><div class="pssin"><header class="psshead"><div><small>Progress report</small><h3>' + esc(shown) + '</h3></div><p>' + esc(c.name) + '<br>' + esc(period) + ' · ' + esc(pssToday()) + '</p></header>' +
+    '<div class="psstiles">' + tile(pss.term === '*' || !conf.terms.length ? 'Grade' : 'Term grade', pct(r.grade) + (r.grade != null && r.soFar ? ' <small>so far</small>' : ''), [r.xc ? 'includes +' + fmtNum(r.xc) + ' extra credit' : '', vs(cavg(''))].filter(Boolean).join(' · '), true) +
+    bkCountTypes(conf).map(([t, , l]) => tile(l, pct(r.by[t]), [cols.filter(x => x.type === t && bkCounts(x.cells.get(n))).length + ' of ' + cols.filter(x => x.type === t).length + ' counted', vs(cavg(t))].filter(Boolean).join(' · '))).join('') +
+    tile('Missing', String(miss.length), miss.length ? (miss.length === 1 ? 'piece of work' : 'pieces of work') : 'nothing outstanding') +
+    (fm.length ? tile('Feedback', fm.filter(x => (x.cells.get(n) || {}).fb).length + ' of ' + fm.length, 'formative activities') : '') + '</div>';
+  const sc = bkScored(cols), w = bk.w;
+  bk.w = 860;   // drawn wider than the page, so it prints smaller: the chart takes a third of the page, not half
+  let chart;
+  try {
+    chart = o.cls ? bkBandLine(c, sc, n, shown) : bkLine(sc, [{ cls: 'bkln', pts: sc.map(col => { const x = col.cells.get(n); return bkCounts(x) ? x.pct : null; }), dots: true }], 'pssLine');
+  } finally { bk.w = w; }
+  h += '<section class="psschart"><h4>Scores over time</h4>' + chart.replace(/ id="(bkStuLine|pssLine)"/, ' data-pssline') + (o.cls ? '' : '<div class="bkleg"><span><i class="sum"></i>Summative</span><span><i class="ic"></i>In-class</span></div>') + '</section>';
+  const rows = cols.filter(x => x.type !== 'xc' || x.cells.get(n)).map(col => '<tr><td>' + esc(col.name) + '</td><td>' + esc(bkLabel(col.type, true)) + '</td><td>' + esc(bkDay(col.due)) + '</td><td class="pssv">' + pssScore(col, col.cells.get(n)) + '</td></tr>'), wide = rows.length > 14;
+  const tab = list => '<table class="psstab"><thead><tr><th>Assignment</th><th>Type</th><th>Date</th><th class="pssv">Score</th></tr></thead><tbody>' + list.join('') + '</tbody></table>', half = Math.ceil(rows.length / 2);
+  h += '<div class="pssgrid' + (wide ? ' wide' : '') + '"><section><h4>Assignments</h4>' + (!rows.length ? '<p class="muted">Nothing in this period yet.</p>' : wide ? '<div class="psshalves">' + tab(rows.slice(0, half)) + tab(rows.slice(half)) + '</div>' : tab(rows)) + '</section>' +
+    '<aside>' + pssTerms(c, all, conf, n, o) + '<section><h4>Missing work</h4>' + (miss.length ? '<ul class="psslist">' + miss.map(x => '<li>' + esc(x.name) + (x.due ? ' <small>' + esc(bkDay(x.due)) + '</small>' : '') + '</li>').join('') + '</ul>' : '<p class="pssnone">Nothing missing.</p>') + '</section></aside></div>';
+  const rep = o.rep ? pssRep(c, cols, conf, n, rc) : null;
+  if (rep && rep.text.trim()) h += '<section class="pssrep"><h4>Comment</h4><p>' + esc(rep.text) + '</p></section>';
+  if (o.notes) h += '<section class="pssnotes"><h4>Notes</h4><i></i><i></i><i></i></section>';
+  return { html: h + '</div></article>', draft: !!(rep && rep.draft && rep.text.trim()) };
+}
+function pssScore(col, cell) {
+  if (col.type === 'xc') return '+' + fmtNum(cell.xc) + ' extra';
+  if (cell && cell.st === 'missing') return '<b class="pssmiss">Missing</b>';
+  if (cell && cell.st === 'excused') return 'Excused';
+  if (col.type === 'fm') return cell && cell.fb ? '✓ Feedback' : 'No feedback yet';
+  if (!cell || cell.pct == null) return '<span class="muted">Not scored</span>';
+  return cell.pct + '%' + (cell.total != null ? ' <small>' + fmtNum(cell.total) + '/' + fmtNum(cell.max) + '</small>' : '') + (cell.st === 'late' ? ' <small>late</small>' : cell.partial ? ' <small>partial</small>' : cell.out ? ' <small>not counted</small>' : '');
+}
+function pssTerms(c, all, conf, n, o) {
+  const terms = conf.terms; if (!terms.length) return '';
+  const ct = bkCountTypes(conf), keys = ct.map(([t]) => t).concat(['']);
+  const vals = terms.map(t => { const cols = all.filter(x => x.termId === t.id), r = bkGrade(n, cols, conf), cl = c.names.filter(bkIn).map(x => bkGrade(x, cols, conf).grade).filter(v => v != null); return { name: t.name, v: keys.map(k => k ? r.by[k] : r.grade), cls: cl.length ? bkMean(cl) : null }; });
+  const yr = keys.map((k, j) => { const have = vals.map(x => x.v[j]).filter(v => v != null); return have.length ? bkMean(have) : null; });
+  const cell = v => '<td class="pssv">' + (v != null ? pctAvgText(v) : '–') + '</td>';
+  return '<section><h4>By term</h4><table class="psstab"><thead><tr><th></th>' + ct.map(([, , s]) => '<th class="pssv">' + esc(s) + '</th>').join('') + '<th class="pssv">Grade</th>' + (o.cls ? '<th class="pssv">Class</th>' : '') + '</tr></thead><tbody>' +
+    vals.map(x => '<tr><td>' + esc(x.name) + '</td>' + x.v.map(cell).join('') + (o.cls ? cell(x.cls) : '') + '</tr>').join('') +
+    '<tr class="pssyr"><td>Year</td>' + yr.map(cell).join('') + (o.cls ? '<td></td>' : '') + '</tr></tbody></table></section>';
+}
+function pssPrint() {
+  const pages = $('#pssPages'); if (!pages) return;
+  const old = $('#pssOut'); if (old) old.remove();
+  const out = document.createElement('div'); out.id = 'pssOut'; out.innerHTML = pages.innerHTML;
+  document.body.appendChild(out); document.documentElement.classList.add('pssprint');
+  const done = () => { window.removeEventListener('afterprint', done); out.remove(); document.documentElement.classList.remove('pssprint'); };
+  window.addEventListener('afterprint', done);
+  window.print();
+}
+function pssClick(e) {
+  if (e.target.closest('[data-close]')) return closeDlg();
+  const b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.pssterm != null) { pss.term = b.dataset.pssterm; return pssDraw(); }
+  if (b.dataset.pssprint != null) return pssPrint();
+}
+function pssChange(e) {
+  const t = e.target.closest('[data-pssopt]'); if (!t) return;
+  pssSave({ [t.dataset.pssopt]: t.checked });
+  pssDraw();
+}
+$('#vClass').addEventListener('click', e => {
+  const b = e.target.closest('[data-pssall], [data-pssone]'), r = routeNow(); if (!b || !r.c) return;
+  openSheets(r.c.id, b.dataset.pssone != null ? r.c.names[r.stu || 0] : null);
+});
 
 /* ---------------- an open assignment's tabs: Mark, Grades, Insights, Return (11/10) ---------------- */
 function tabsRender() {
@@ -21512,7 +21701,7 @@ $('#setHistory').addEventListener('click', e => {
 });
 
 /* updates she controls, and installing as an app */
-const WHATS_NEW = {"1.21.0":["Each class has a Missing work tab: every paper you marked Missing, by student or by assignment, for the term you pick.","Email reminder opens an email in your own mail app, addressed to the student and listing what they owe, for you to read and send. Email all writes one email to everyone who owes an assignment, with the addresses in Bcc. Grading Studio sends nothing itself.","Each reminder you open is noted beside the work, and Email wording… changes what every reminder says."],"1.20.0":["The app can speak Traditional Chinese (繁體中文). Choose it in Settings, Display, App language, or at the top of the welcome.","Like Spanish, it covers the first screens so far: the sidebar, Today, the welcome, Find anything, Help, and the feedback page students get with a returned paper. The other screens are still in English."],"1.19.0":["The app can speak Spanish. Choose it in Settings, Display, App language, or at the top of the welcome.","Spanish covers the first screens so far: the sidebar, Today, the welcome, Find anything, Help, and the feedback page students get with a returned paper. The other screens are still in English.","Names you typed (classes, students, assignments, rubric rows) are never translated."],"1.18.0":["On a tablet, a pencil draws and the pen's line is wider where you press harder. Once you have used a pencil, one finger moves the page, two fingers pinch to zoom, and a hand resting on the screen does nothing.","Settings, Marking has a new Tablet and pencil section: choose what a finger does on the paper, or turn off the wider line.","On a touch screen the tools, the student rows and the score buttons are larger."],"1.17.0":["Report comments: a new tab on each class's page drafts a comment for every student from your own gradebook, rubric scores and the comments you wrote on their papers. Edit each one, tick it done, then copy or download them all.","The drafts are put together on your computer from sentences you can change under Wording. Nothing about a student is sent anywhere."],"1.16.0":["Help is in the sidebar: short answers to the questions teachers ask most, from opening a set of papers to moving your work to another computer.","Find anything answers questions too. Type a few words, like “late paper” or “backup”, and the answer is in the list."],"1.15.0":["A picture dragged onto a slide that has text now sits beside the text, in a new Text + picture layout.","Drag several pictures in at once and each gets its own slide. Let a picture go on any slide in the list on the left to put it there.","New Full picture layout: the picture fills the whole slide."],"1.14.0":["Extra credit: points or a percent on one paper, and extra credit entries in the gradebook that add to the term grade or the in-class average.","The gradebook shows each type's average (summative, in-class) right beside the term grade, kept in view as you scroll. Averages only shows just those columns, and Whole year splits each term the same way.","Leave out… lets you untick students to see the class averages without them. Their own grades don't change, and nothing is saved."],"1.13.0":["Present a lesson from the Planner, or from Today when its class is on now or next: its slides fill the screen, and the arrow keys or a clicker move through them.","While presenting, A shows the agenda to tick off, T starts a timer the class can see, N shows your notes and B blanks the screen.","The bar shows how many minutes the class has left, from your timetable.","After a lesson is taught, one line says where the class got to. It shows on the lesson and on the week, and presenting again picks up there."],"1.12.0":["A returned paper starts with a feedback page: the score, each rubric row with the level given and what that level means, your comment, and every comment on the paper with its page number.","It is on unless you turn it off under Options on the Return tab. Your own pages are not changed, and bringing an export back in opens only those."],"1.11.0":["The Planner’s sections are in the sidebar: Calendar, Units, Past lessons, Activities and Rubrics. The row of tabs across the top is gone.","A lesson has a lighter top: its name, its classes, its status and Download. Copy for Claude, Versions, the upload and the links are under More.","Comments shows above a lesson once it has one."],"1.7.0":["Home is now Today: the classes you teach today with the lesson planned for each, the papers waiting to be marked, and the papers ready to hand back.","What the class needs next: after a set of papers is scored, Today shows the weakest rubric row and how many students to sit down with.","A class page is quieter. Click anywhere on an assignment’s row to open it; the only blue button is the one that adds an assignment.","Forget, and the other ways to open papers, moved into the ⋯ menu on each row."],"1.6.0":["A new browser opens on three questions (your classes, how you grade, where work is kept) and starts with nothing of anyone else’s in it.","A sample class of made-up students, with papers to mark, for trying things out. Remove it from Home when you’re done.","The app uses the name of your own school system. Choose it, and how you usually grade, in Settings.","Letter grades or IB 1 to 7 can show beside the percent, with boundaries you set.","Canvas and Moodle downloads are grouped by student. The Planner works without a setup file, and downloads lessons as PowerPoint with a plain built-in template."],"1.5.0":["The sidebar says “Not backed up”, in amber, until a folder holds a second copy of your work. Home asks for that folder once.","Go back in time, in Settings: any assignment as it was on an earlier day, restored on its own, with Undo.","Grading Studio can be installed as an app, and it opens with no internet.","A newer version now waits until you click Update now, so nothing changes in the middle of marking."]};
+const WHATS_NEW = {"1.22.0":["Progress sheets for parent meetings: one printed page per student with the term grade, every score, a chart of how they moved, missing work, each term's grade, the report comment and lines for notes. Find it on a class's Students list, or Progress sheet on one student's page.","Choose the term and tick what goes on it; Print opens the print window, where you can pick a printer or Save as PDF. It is made on your computer and nothing is sent anywhere."],"1.21.0":["Each class has a Missing work tab: every paper you marked Missing, by student or by assignment, for the term you pick.","Email reminder opens an email in your own mail app, addressed to the student and listing what they owe, for you to read and send. Email all writes one email to everyone who owes an assignment, with the addresses in Bcc. Grading Studio sends nothing itself.","Each reminder you open is noted beside the work, and Email wording… changes what every reminder says."],"1.20.0":["The app can speak Traditional Chinese (繁體中文). Choose it in Settings, Display, App language, or at the top of the welcome.","Like Spanish, it covers the first screens so far: the sidebar, Today, the welcome, Find anything, Help, and the feedback page students get with a returned paper. The other screens are still in English."],"1.19.0":["The app can speak Spanish. Choose it in Settings, Display, App language, or at the top of the welcome.","Spanish covers the first screens so far: the sidebar, Today, the welcome, Find anything, Help, and the feedback page students get with a returned paper. The other screens are still in English.","Names you typed (classes, students, assignments, rubric rows) are never translated."],"1.18.0":["On a tablet, a pencil draws and the pen's line is wider where you press harder. Once you have used a pencil, one finger moves the page, two fingers pinch to zoom, and a hand resting on the screen does nothing.","Settings, Marking has a new Tablet and pencil section: choose what a finger does on the paper, or turn off the wider line.","On a touch screen the tools, the student rows and the score buttons are larger."],"1.17.0":["Report comments: a new tab on each class's page drafts a comment for every student from your own gradebook, rubric scores and the comments you wrote on their papers. Edit each one, tick it done, then copy or download them all.","The drafts are put together on your computer from sentences you can change under Wording. Nothing about a student is sent anywhere."],"1.16.0":["Help is in the sidebar: short answers to the questions teachers ask most, from opening a set of papers to moving your work to another computer.","Find anything answers questions too. Type a few words, like “late paper” or “backup”, and the answer is in the list."],"1.15.0":["A picture dragged onto a slide that has text now sits beside the text, in a new Text + picture layout.","Drag several pictures in at once and each gets its own slide. Let a picture go on any slide in the list on the left to put it there.","New Full picture layout: the picture fills the whole slide."],"1.14.0":["Extra credit: points or a percent on one paper, and extra credit entries in the gradebook that add to the term grade or the in-class average.","The gradebook shows each type's average (summative, in-class) right beside the term grade, kept in view as you scroll. Averages only shows just those columns, and Whole year splits each term the same way.","Leave out… lets you untick students to see the class averages without them. Their own grades don't change, and nothing is saved."],"1.13.0":["Present a lesson from the Planner, or from Today when its class is on now or next: its slides fill the screen, and the arrow keys or a clicker move through them.","While presenting, A shows the agenda to tick off, T starts a timer the class can see, N shows your notes and B blanks the screen.","The bar shows how many minutes the class has left, from your timetable.","After a lesson is taught, one line says where the class got to. It shows on the lesson and on the week, and presenting again picks up there."],"1.12.0":["A returned paper starts with a feedback page: the score, each rubric row with the level given and what that level means, your comment, and every comment on the paper with its page number.","It is on unless you turn it off under Options on the Return tab. Your own pages are not changed, and bringing an export back in opens only those."],"1.11.0":["The Planner’s sections are in the sidebar: Calendar, Units, Past lessons, Activities and Rubrics. The row of tabs across the top is gone.","A lesson has a lighter top: its name, its classes, its status and Download. Copy for Claude, Versions, the upload and the links are under More.","Comments shows above a lesson once it has one."],"1.7.0":["Home is now Today: the classes you teach today with the lesson planned for each, the papers waiting to be marked, and the papers ready to hand back.","What the class needs next: after a set of papers is scored, Today shows the weakest rubric row and how many students to sit down with.","A class page is quieter. Click anywhere on an assignment’s row to open it; the only blue button is the one that adds an assignment.","Forget, and the other ways to open papers, moved into the ⋯ menu on each row."],"1.6.0":["A new browser opens on three questions (your classes, how you grade, where work is kept) and starts with nothing of anyone else’s in it.","A sample class of made-up students, with papers to mark, for trying things out. Remove it from Home when you’re done.","The app uses the name of your own school system. Choose it, and how you usually grade, in Settings.","Letter grades or IB 1 to 7 can show beside the percent, with boundaries you set.","Canvas and Moodle downloads are grouped by student. The Planner works without a setup file, and downloads lessons as PowerPoint with a plain built-in template."],"1.5.0":["The sidebar says “Not backed up”, in amber, until a folder holds a second copy of your work. Home asks for that folder once.","Go back in time, in Settings: any assignment as it was on an earlier day, restored on its own, with Undo.","Grading Studio can be installed as an app, and it opens with no internet.","A newer version now waits until you click Update now, so nothing changes in the middle of marking."]};
 const upd = { on: false, st: null, mine: '', checking: false, said: '', install: null, installed: false, err: '' };
 const updCan = () => 'serviceWorker' in navigator && (location.protocol === 'https:' || /[?&]sw=1(&|$)/.test(location.search)) && !/Grading Studio\.html$/i.test(decodeURIComponent(location.pathname));
 const updSend = async msg => { const reg = await navigator.serviceWorker.ready; if (reg.active) reg.active.postMessage(msg); };
