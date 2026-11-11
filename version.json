@@ -1,13 +1,13 @@
 {
  "version": "1.11.0",
- "build": "159dff7aacb2",
+ "build": "a2cfe76db5df",
  "notes": [
   "The Planner’s sections are in the sidebar: Calendar, Units, Past lessons, Activities and Rubrics. The row of tabs across the top is gone.",
   "A lesson has a lighter top: its name, its classes, its status and Download. Copy for Claude, Versions, the upload and the links are under More.",
   "Comments shows above a lesson once it has one."
  ],
  "files": {
-  "index.html": "1aa883b855e4787931f30340ae25c098b881195a951a257bfb2bd3ecdd03bbe1",
+  "index.html": "a687bd284d9872b694f4c6772530dd1c647f6b305fc90f57a723a4455f46a907",
   "planner.html": "8acd5c1af8216f1399363b2fca23845fe7e92d4b149e9f2f0fd6b4705f7d53d4"
  }
 }

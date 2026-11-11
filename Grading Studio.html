@@ -874,9 +874,9 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
 .qmhd .qmopts+[data-boxes]{margin-left:0}
 .qmch .qmchr{margin-left:auto;display:flex;align-items:center;gap:8px;flex:0 0 auto}
 .qmchip{font-size:var(--text-small);color:var(--muted);background:var(--surface-2);border-radius:var(--corner-pill);padding:1px 8px;white-space:nowrap}
-.qmmk{position:absolute;transform:translate(-50%,-50%);color:#C62B1A;font:700 26px/1 var(--f-body);cursor:grab;padding:2px 4px;border-radius:var(--corner-2);white-space:nowrap;text-shadow:0 0 3px #fff}
+.qmmk{position:absolute;transform:translate(-50%,-50%);color:var(--qm-x);font:700 26px/1 var(--f-body);cursor:grab;padding:2px 4px;border-radius:var(--corner-2);white-space:nowrap;text-shadow:0 0 3px #fff}
 .qmmk.txt{font-size:17px}
-.qmmk.ok{color:#1E8A4C}
+.qmmk.ok{color:var(--qm-ok)}
 .qmmk.ok:hover{background:rgba(30,138,76,.08)}
 .qmmk.pin{width:22px;height:22px;padding:0;box-sizing:border-box;border:1.5px dashed rgba(198,43,26,.45);border-radius:var(--corner-round);opacity:.55}
 .qmc:hover .qmmk.pin,.qmc:focus .qmmk.pin{opacity:1}
@@ -907,6 +907,25 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
 .qbt .qkind,.qbt .qhow{max-width:112px}
 .qbt .qkey{min-width:56px}
 .qbw input{width:84px}
+
+.qmink{position:relative;display:inline-flex}
+.qmdot{display:inline-block;width:9px;height:9px;border-radius:var(--corner-round);margin-left:4px;background:var(--qm-x)}
+.qmdot.ok{margin-left:2px;background:var(--qm-ok)}
+.qminkpop{position:absolute;right:0;top:calc(100% + 6px);z-index:30;background:var(--surface);border:1px solid var(--line);border-radius:var(--corner-2);box-shadow:0 8px 24px rgba(20,30,50,.14);padding:10px 12px;display:grid;gap:8px;min-width:250px}
+.qminkpop[hidden]{display:none}
+.qminkpop p{margin:0}
+.qmirow{display:flex;align-items:center;gap:6px}
+.qmirow .hsm{min-width:86px}
+.qmirow .sw{width:20px;height:20px;border-radius:var(--corner-round);border:2px solid transparent;box-shadow:inset 0 0 0 1px rgba(0,0,0,.12);padding:0;cursor:pointer}
+.qmirow .sw[aria-pressed="true"]{border-color:var(--surface);box-shadow:0 0 0 2px var(--accent)}
+
+.qmb.cm{font-weight:500;font-size:var(--text-control);color:var(--muted);min-width:0}
+.qmnote{display:block;width:100%;text-align:left;background:var(--accent-soft);border:0;border-radius:var(--corner-2,8px);padding:5px 8px;margin-top:6px;font:inherit;font-size:var(--text-control);color:var(--fg);cursor:pointer;white-space:pre-wrap;overflow-wrap:anywhere}
+.qmnote[hidden]{display:none}
+.qmned{margin-top:6px;display:grid;gap:6px}
+.qmned textarea{width:100%;box-sizing:border-box;font:inherit;font-size:var(--text-body);padding:6px 8px;border:1px solid var(--line-strong);border-radius:var(--corner-2,8px);background:var(--surface);color:var(--fg);resize:vertical}
+.qmnedb{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.qmnedb .btn{margin-left:auto}
 
 /* ---------- rubric library: what each score means, under the score buttons and in Rubric setup ---------- */
 .lvrow{display:flex;gap:8px;align-items:flex-start;margin-top:6px}
@@ -3500,7 +3519,9 @@ let cur = 0;             // index of the open student
 let tool = 'pen';
 let once = null, onceEl = null;   // a tool picked from the right-click for one go: { k, prev } (src/stamps.js)
 const COLORS = { red: '#D7263D', blue: '#1F5FD1', green: '#1E8A4C', purple: '#7B3FC4', black: '#1B1F27' };
-const CHECK_INK = COLORS.green;
+let checkInk = COLORS[store.get('gs.checkInk', 'green')] ? store.get('gs.checkInk', 'green') : 'green';
+let CHECK_INK = COLORS[checkInk];
+function setCheckInk(k) { if (!COLORS[k]) return; checkInk = k; CHECK_INK = COLORS[k]; store.set('gs.checkInk', k); }
 const HL = { yellow: '#FFE45C', green: '#B4F0A8', pink: '#FFB8D6', blue: '#B0E0FF' };
 let inkColor = store.get('gs.ink', 'red'), hlColor = store.get('gs.hl', 'yellow'), penW = store.get('gs.penW', 2);
 const DISP0 = { ui: 1, tsize: 14, fit: 'width', dfs: 15, dlh: 1.45, trim: true };
@@ -3877,14 +3898,14 @@ function textLayout(m, W) {
 }
 function layoutNotes(notes, W, H, side) {
   const M = 10, pad = 7, gap = 8, boxX = W + 12, boxW = side - 22;
-  const list = notes.map(n => ({ n, ax: n.ax, ay: n.ay })).sort((p, q) => p.ay - q.ay || p.ax - q.ax);
+  const list = notes.map(n => ({ n, ax: n.ax, ay: n.ay, ry: noteRunY(n, H) })).sort((p, q) => p.ry - q.ry || p.ax - q.ax);
   let fs = 10, boxes = [];
   const run = () => {
     const lh = fs * 1.3;
     measureCtx.font = fs + 'px ' + FONT;
     boxes = list.map(o => { const lines = wrapText(measureCtx, o.n.text, boxW - pad * 2); return { ...o, lines, lh, h: Math.max(1, lines.length) * lh + pad * 2 }; });
     let y = M;
-    for (const b of boxes) { b.y = Math.max(b.ay - 10, y); y = b.y + b.h + gap; }
+    for (const b of boxes) { b.y = Math.max(b.ry - 10, y); y = b.y + b.h + gap; }
     let bottom = H - M;
     for (let i = boxes.length - 1; i >= 0; i--) { if (boxes[i].y + boxes[i].h > bottom) boxes[i].y = bottom - boxes[i].h; bottom = boxes[i].y - gap; }
     return !boxes.length || boxes[0].y >= M - 0.5;
@@ -3892,6 +3913,13 @@ function layoutNotes(notes, W, H, side) {
   while (!run() && fs > 6) fs -= 0.5;
   for (const b of boxes) { b.x = boxX; b.w = boxW; b.y = Math.max(b.y, M / 2); b.fs = fs; b.pad = pad; }
   return boxes;
+}
+const noteRunY = (n, H) => n.ly == null ? n.ay : Math.max(0, Math.min(H, n.ly));
+function noteLeader(ctx, b, W) {
+  const midY = b.y + Math.min(b.h / 2, 12);
+  ctx.beginPath(); ctx.moveTo(b.ax, b.ay);
+  if (Math.abs(b.ry - b.ay) > 0.5) ctx.lineTo(Math.min(b.ax + 6, W), b.ry);
+  ctx.lineTo(W + 4, b.ry); ctx.lineTo(b.x, midY); ctx.stroke();
 }
 function drawCheck(ctx, m) {
   const s = m.size || 22;
@@ -3951,9 +3979,8 @@ function drawMarks(ctx, marks, W, H, side, screen) {
     boxes = layoutNotes(notes, W, H, side);
     for (const b of boxes) {
       const [r, g, bl] = rgb(b.n.color), dk = v => Math.round(v * 0.72), col = 'rgb(' + dk(r) + ',' + dk(g) + ',' + dk(bl) + ')';
-      const midY = b.y + Math.min(b.h / 2, 12);
-      ctx.strokeStyle = col; ctx.lineWidth = 0.7;
-      ctx.beginPath(); ctx.moveTo(b.ax, b.ay); ctx.lineTo(W + 4, b.ay); ctx.lineTo(b.x, midY); ctx.stroke();
+      ctx.strokeStyle = col; ctx.lineWidth = screen && screen.line === b.n ? 1.4 : 0.7;
+      noteLeader(ctx, b, W);
       ctx.fillStyle = col; ctx.beginPath(); ctx.arc(b.ax, b.ay, 2.2, 0, Math.PI * 2); ctx.fill();
       ctx.fillStyle = '#fff'; ctx.fillRect(b.x, b.y, b.w, b.h);
       ctx.fillStyle = 'rgba(' + r + ',' + g + ',' + bl + ',0.14)'; ctx.fillRect(b.x, b.y, b.w, b.h);
@@ -4571,7 +4598,7 @@ function draw(pg, live, part) {
   const anon = anonOn() && batch.students[cur];
   if (anon && pg.covers) { ctx.fillStyle = '#111'; for (const r of pg.covers) ctx.fillRect(r.x, r.y, r.w, r.h); }
   const marks = pg.marks().concat(anon ? scrubMarks(pg.extra || [], anonRx(anon)) : pg.extra || [], live || [], pg.pending ? [pg.pending] : []);
-  pg.boxes = drawMarks(ctx, marks, pg.W, pg.H, pg.side, { sel: selected && selected.page === pg && selected.mark !== pg.editing ? selected.mark : null, editing: pg.editing, s: pg.s });
+  pg.boxes = drawMarks(ctx, marks, pg.W, pg.H, pg.side, { sel: selected && selected.page === pg && selected.mark !== pg.editing ? selected.mark : null, editing: pg.editing, s: pg.s, line: pg.lineOn || null });
   if (pg.ghost) { const b = pg.ghost; ctx.save(); ctx.strokeStyle = '#1F6FB2'; ctx.setLineDash([4, 3]); ctx.lineWidth = 1; ctx.strokeRect(b.x, b.y, b.w, b.h); ctx.restore(); }
   if (part) ctx.restore();
 }
@@ -4613,7 +4640,7 @@ function turnMarks(marks, W, H, dir) {
     if (m.t === 'pen') m.pts = m.pts.map(pt);
     else if (m.t === 'hl' || m.t === 'oval') { Object.assign(m, box(m)); if (m.rects) m.rects = m.rects.map(box); if (m.pts) m.pts = m.pts.map(pt); }
     else if (m.t === 'check' || m.t === 'stamp') [m.x, m.y] = pt([m.x, m.y]);
-    else if (m.t === 'note') { [m.ax, m.ay] = pt([m.ax, m.ay]); if (m.hl) m.hl = box(m.hl); if (m.rects) m.rects = m.rects.map(box); }
+    else if (m.t === 'note') { delete m.ly; [m.ax, m.ay] = pt([m.ax, m.ay]); if (m.hl) m.hl = box(m.hl); if (m.rects) m.rects = m.rects.map(box); }
     else if (m.t === 'text') {
       const L = textLayout(m, W), [cx, cy] = pt([m.x + L.ink / 2, m.y + L.h / 2]);   // turns about the words, not the empty part of a wide box
       const want = m.bwFull || m.bw;
@@ -4706,6 +4733,8 @@ function bindPage(pg) {
     if (scorePlacing) { e.preventDefault(); if (onPage(x, y)) placeScore(pg, x, y); else stopScorePlace(); return; }
     const box = (pg.boxes || []).find(b => x >= b.x && x <= b.x + b.w && y >= b.y && y <= b.y + b.h);
     if (box && !box.n.ro && tool !== 'erase') { e.preventDefault(); openNote(pg, box.n); return; }
+    const ln = tool !== 'erase' && !once ? noteLineAt(pg, x, y) : null;
+    if (ln) { e.preventDefault(); c.setPointerCapture(e.pointerId); g = { line: ln, y0: y, ly0: noteRunY(ln, pg.H), moved: false }; return; }
     if (wasNote) { e.preventDefault(); return; }
     if (tool !== 'erase' && !once) { const cg = cornerAt(pg, x, y); if (cg) { e.preventDefault(); c.setPointerCapture(e.pointerId); g = cg; return; } }
     if (tool !== 'select' && tool !== 'erase' && !onPage(x, y)) return;
@@ -4735,9 +4764,13 @@ function bindPage(pg) {
     }
   });
   c.addEventListener('pointermove', e => {
-    if (!g) { const [x, y] = pt(e), cu = hoverCursor(pg, x, y); if (cu) c.style.cursor = cu; return; }
+    if (!g) { const [x, y] = pt(e), cu = hoverCursor(pg, x, y); c.style.cursor = cu || (tool === 'select' ? 'default' : tool === 'text' ? 'text' : 'crosshair'); return; }
     const [x, y] = pt(e);
-    if (g.text) {
+    if (g.line) {
+      if (!g.moved) { if (Math.abs(y - g.y0) < 1.5) return; snap(pg); g.moved = true; }
+      g.line.ly = r1(clamp(g.ly0 + y - g.y0, 2, pg.H - 2));
+      pg.lineOn = g.line; draw(pg);
+    } else if (g.text) {
       g.x1 = clamp(x, 0, pg.W);
       const w = Math.abs(g.x1 - g.x0);
       pg.ghost = w > 8 ? { x: Math.min(g.x0, g.x1), y: g.y0 - disp.tsize * 0.65, w, h: disp.tsize * 1.3 } : null;
@@ -4771,6 +4804,11 @@ function bindPage(pg) {
   });
   const end = () => {
     if (!g) return;
+    if (g.line) {
+      const m = g.line, moved = g.moved; g = null; pg.lineOn = null;
+      if (moved) { if (Math.abs(m.ly - m.ay) < 1) delete m.ly; changed(pg); } else draw(pg);
+      return;
+    }
     if (g.text) {
       pg.ghost = null;
       const w = Math.abs(g.x1 - g.x0), m = { t: 'text', color: COLORS[inkColor], x: r1(w > 24 ? Math.min(g.x0, g.x1) : Math.min(g.x0, pg.W - 106)), y: r1(g.y0 - disp.tsize / 2), size: disp.tsize, text: '' };
@@ -4804,6 +4842,7 @@ function bindPage(pg) {
     g = null;
     if (once && once.k !== 'pen') endOnce();   // a circle or highlight from the right-click: one, then back to her tool
   };
+  c.addEventListener('pointerleave', () => { if (!g && pg.lineOn) { pg.lineOn = null; draw(pg); } });
   c.addEventListener('pointerup', end);
   c.addEventListener('pointercancel', end);
   c.addEventListener('contextmenu', e => {
@@ -4825,7 +4864,7 @@ const r1 = v => Math.round(v * 10) / 10;
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 function moveMark(m, dx, dy) {
   if (m.t === 'pen') m.pts = m.pts.map(([x, y]) => [r1(x + dx), r1(y + dy)]);
-  else if (m.t === 'note') { m.ax = r1(m.ax + dx); m.ay = r1(m.ay + dy); if (m.hl) m.hl = { ...m.hl, x: r1(m.hl.x + dx), y: r1(m.hl.y + dy) }; moveExtras(m, dx, dy); }
+  else if (m.t === 'note') { m.ax = r1(m.ax + dx); m.ay = r1(m.ay + dy); if (m.ly != null) m.ly = r1(m.ly + dy); if (m.hl) m.hl = { ...m.hl, x: r1(m.hl.x + dx), y: r1(m.hl.y + dy) }; moveExtras(m, dx, dy); }
   else { m.x = r1(m.x + dx); m.y = r1(m.y + dy); moveExtras(m, dx, dy); }
 }
 function eraseAt(pg, x, y, g) {
@@ -4998,6 +5037,7 @@ function renderTools() {
   const bar = once ? once.prev : tool;   // a one-time tool keeps her own tool's bar, so the toolbar doesn't jump
   const isHl = bar === 'hl';
   const sw = isHl ? Object.entries(HL).map(([k, v]) => '<button class="sw" data-hl="' + k + '" style="background:' + v + '" aria-pressed="' + (k === hlColor) + '" title="' + k + '"></button>').join('')
+    : bar === 'check' ? Object.entries(COLORS).map(([k, v]) => '<button class="sw" data-chk="' + k + '" style="background:' + v + '" aria-pressed="' + (k === checkInk) + '" title="Checks in ' + k + '"></button>').join('')   // the check tool sets the color every check shows in
     : Object.entries(COLORS).map(([k, v]) => '<button class="sw" data-ink="' + k + '" style="background:' + v + '" aria-pressed="' + (k === inkColor) + '" title="' + k + '"></button>').join('');
   const opts = (bar === 'select' || bar === 'erase' ? '' : '<span class="swatches">' + sw + '</span>') +
     (bar === 'pen' ? '<span class="seg penw">' + [[1.2, 'Fine'], [2, 'Medium'], [3.5, 'Bold']].map(([w, l]) => '<button data-w="' + w + '" aria-pressed="' + (penW === w) + '" title="' + l + ' pen" aria-label="' + l + ' pen"><i style="--w:' + w + '"></i></button>').join('') + '</span>' : '') + (isHl ? hlBar() : '');
@@ -5011,6 +5051,7 @@ function renderTools() {
 $('#tools').addEventListener('click', e => {
   const t = e.target.closest('[data-tool]'); if (t) { setTool(t.dataset.tool); return; }
   const i = e.target.closest('[data-ink]'); if (i) { inkColor = i.dataset.ink; store.set('gs.ink', inkColor); recolorSelected(COLORS[inkColor]); renderTools(); return; }
+  const ck = e.target.closest('[data-chk]'); if (ck) { setCheckInk(ck.dataset.chk); renderTools(); redrawAll(); return; }
   const h = e.target.closest('[data-hl]'); if (h) { hlColor = h.dataset.hl; store.set('gs.hl', hlColor); renderTools(); return; }
   if (hlBarClick(e)) return;
   const w = e.target.closest('[data-w]'); if (w) { penW = +w.dataset.w; store.set('gs.penW', penW); renderTools(); return; }
@@ -10772,7 +10813,24 @@ function pickToGrab(pg, hit, x, y, edit) {
   return { move: hit, x, y, moved: false, edit };
 }
 const editMark = (pg, m) => { if (m.t === 'text') editText(pg, m); else if (m.t === 'note') openNote(pg, m); };
+function noteLineAt(pg, x, y) {
+  const tol = Math.max(3, 5 / (pg.s || 1)), W = pg.W;
+  for (const b of pg.boxes || []) {
+    if (b.n.ro) continue;
+    if (x <= W + 4) {
+      if ((tool === 'select' || tool === 'note') && x >= b.ax + 8 && Math.abs(y - b.ry) <= tol) return b.n;
+      continue;
+    }
+    const x1 = W + 4, y1 = b.ry, x2 = b.x, y2 = b.y + Math.min(b.h / 2, 12), dx = x2 - x1, dy = y2 - y1, L = dx * dx + dy * dy;
+    const t = L ? Math.max(0, Math.min(1, ((x - x1) * dx + (y - y1) * dy) / L)) : 0;
+    if (Math.hypot(x - (x1 + t * dx), y - (y1 + t * dy)) <= tol) return b.n;
+  }
+  return null;
+}
 function hoverCursor(pg, x, y) {
+  const ln = tool !== 'erase' && !once ? noteLineAt(pg, x, y) : null;
+  if ((pg.lineOn || null) !== ln) { pg.lineOn = ln; draw(pg); }   // the line thickens under the pointer, to show it can be dragged
+  if (ln) return 'ns-resize';
   if (tool !== 'erase' && cornerAt(pg, x, y)) return 'nwse-resize';
   const grip = gripAt(pg, x, y);
   if (tool === 'select') return grip ? 'ew-resize' : hitMark(pg, x, y, 4) ? (x > pg.W ? 'pointer' : 'move') : 'default';
@@ -16955,7 +17013,9 @@ function openQuiz(view) {
   openDlg('<div class="bh qmhd"><h2>Quick mark</h2><span class="seg" id="qmView"><button data-view="q">By question</button><button data-view="s">By student</button></span>' +
     '<span id="qmNav" class="qmnav"></span><span class="muted hsm" id="qmProg"></span>' +
     '<span class="qmopts"><span class="muted hsm">Size</span><span class="seg" id="qmSize">' + QZ_SIZES.map(s => '<button data-size="' + s + '" title="' + (s === 'F' ? 'One answer per row' : 'Answer size ' + s) + '">' + QZ_SIZE_SAY[s] + '</button>').join('') + '</span>' +
-    '<span class="seg" id="qmOnly"><button data-only="0">All</button><button data-only="1">Not marked</button></span></span>' +
+    '<span class="seg" id="qmOnly"><button data-only="0">All</button><button data-only="1">Not marked</button></span>' +
+    '<span class="qmink"><button class="btn sm" id="qmInkBtn" data-inkmenu aria-haspopup="true" aria-expanded="false" title="Colors for the marks">Colors <i class="qmdot x"></i><i class="qmdot ok"></i></button>' +
+    '<span class="qminkpop" id="qmInkPop" hidden></span></span></span>' +
     '<button class="btn sm" data-boxes>Boxes</button><button class="icon" data-close aria-label="Close">✕</button></div>' +
     '<div class="bb qmbody" id="qmBody"></div>' +
     '<div class="bf qmfoot"><span class="muted hsm" id="qmHint" style="margin-right:auto"></span><span id="qmFoot"></span></div>');
@@ -16966,6 +17026,10 @@ function openQuiz(view) {
   box.onclick = e => {
     if (e.target.closest('#qmPeek')) { if (e.target.closest('[data-peekx]') || e.target.id === 'qmPeek') qmPeekClose(); return; }
     if (e.target.closest('[data-close]')) return qmClose();
+    const ik = e.target.closest('[data-qink]'); if (ik) { inkColor = ik.dataset.qink; store.set('gs.ink', inkColor); renderTools(); return qmInkSet(); }
+    const ic = e.target.closest('[data-qchk]'); if (ic) { setCheckInk(ic.dataset.qchk); renderTools(); return qmInkSet(); }
+    if (e.target.closest('[data-inkmenu]')) return qmInkMenu();
+    if (!e.target.closest('#qmInkPop')) qmInkMenu(false);
     if (e.target.closest('[data-boxes]')) return openQuizBoxes(() => openQuiz());
     const v = e.target.closest('[data-view]'); if (v) { qzView = v.dataset.view; return qmRender(); }
     const sz = e.target.closest('[data-size]'); if (sz) { store.set('gs.qmSize', sz.dataset.size); return qmSizeSay(); }
@@ -16975,6 +17039,10 @@ function openQuiz(view) {
     const pk = e.target.closest('[data-peek]'); if (pk) return qmPeek(pk.closest('.qmc'));
     const rs = e.target.closest('[data-reset]'); if (rs) return qmSpotSet(rs.closest('.qmc'), null);
     if (e.target.closest('[data-rest]')) return qmRest();
+    const as = e.target.closest('.qmned [data-as]'); if (as) { for (const b of as.parentNode.children) b.setAttribute('aria-pressed', String(b === as)); as.closest('.qmned').querySelector('textarea').focus(); return; }
+    if (e.target.closest('[data-nsave]')) return qmNoteDone(e.target.closest('.qmc'), true);
+    if (e.target.closest('.qmned')) return;
+    const qn = e.target.closest('[data-qnote]'); if (qn) return qmNoteOpen(qn.closest('.qmc'));
     const hf = e.target.closest('[data-half]'); if (hf) return qmHalf(hf.closest('.qmc'));
     const b = e.target.closest('[data-v]');
     if (b) { const c = b.closest('[data-st]'); return qmMark(c, b.dataset.v === '' ? null : +b.dataset.v, true); }
@@ -16991,6 +17059,26 @@ function qmClose() {
   if (qzKeys) { document.removeEventListener('keydown', qzKeys, true); qzKeys = null; }
   closeDlg(); qzClose();
   if (batch && pages.length) openStudent(cur);   // the open paper shows the new marks
+}
+function qmInkSay() {
+  const body = $('#qmBody'), btn = $('#qmInkBtn');
+  for (const el of [body, btn]) if (el) { el.style.setProperty('--qm-x', COLORS[inkColor] || COLORS.red); el.style.setProperty('--qm-ok', CHECK_INK); }
+  const pop = $('#qmInkPop'); if (!pop || pop.hidden) return;
+  const row = (attr, on, say) => '<div class="qmirow"><span class="hsm">' + say + '</span>' + Object.entries(COLORS).map(([k, v]) => '<button class="sw" data-' + attr + '="' + k + '" style="background:' + v + '" aria-pressed="' + (k === on) + '" title="' + k + '" aria-label="' + say + ' ' + k + '"></button>').join('') + '</div>';
+  pop.innerHTML = row('qink', inkColor, '✗ and points') + row('qchk', checkInk, '✓ right') + '<p class="muted hsm">Marks already given change too.</p>';
+}
+function qmInkMenu(open) {
+  const pop = $('#qmInkPop'), btn = $('#qmInkBtn'); if (!pop) return;
+  const on = open == null ? pop.hidden : open;
+  if (on === !pop.hidden) return;
+  pop.hidden = !on; btn.setAttribute('aria-expanded', String(on)); qmInkSay();
+}
+function qmInkSet() {
+  for (const st of batch.students) for (const f of st.files || []) for (const list of Object.values(f.marks || {})) for (const m of list) {
+    if (!m.qz && !m.qzn) continue;
+    m.color = m.t === 'check' ? CHECK_INK : COLORS[inkColor] || COLORS.red;
+  }
+  saveSoon(); qmInkSay();
 }
 function qmSizeSay() {
   const s = qzSizeNow(), body = $('#qmBody');
@@ -17020,8 +17108,50 @@ const qmCard = (i, q, qi) => {
     '<span class="qmchr">' + (qzOwn(st, q) ? '<button class="link hsm" data-reset title="Put this mark back where the question’s mark goes">Reset spot</button>' : '') +
     '<button class="btn sm" data-peek title="See their whole page (Space)">⤢ Whole page</button></span></div>' +
     '<div class="qmimg" title="' + (qzByPts(q) && qzHow(q) === 'pts' ? 'Drag: line this paper up' : 'Click: wrong / right. Drag: line this paper up') + '"><span class="muted hsm">…</span></div>' +
-    '<div class="qmbtns">' + btns + (v != null ? '<button class="qmb clr" data-v="" title="Clear">Clear</button>' : '') + '</div></div>';
+    '<div class="qmbtns">' + btns + '<button class="qmb cm" data-qnote title="Write a comment or text on this paper (C)">Comment</button>' + (v != null ? '<button class="qmb clr" data-v="" title="Clear">Clear</button>' : '') + '</div>' + qmNoteLine(st, q) + '</div>';
 };
+function qzNoteOf(st, q) {
+  const [path, p] = quizPages(st)[q.n] || [], f = path && fileByPath(st, path), l = f && f.marks[p];
+  return (l && l.find(m => m.qzn === q.id)) || null;
+}
+const qmNoteLine = (st, q) => { const m = qzNoteOf(st, q); return m ? '<button class="qmnote" data-qnote title="Click to change it">' + (m.t === 'note' ? 'Comment: ' : 'Text: ') + esc(m.text) + '</button>' : ''; };
+function qmNoteOpen(el) {
+  if (!el || el.querySelector('.qmned')) return;
+  const st = batch.students[+el.dataset.st], q = batch.quiz.qs.find(x => x.id === el.dataset.q), m = qzNoteOf(st, q);
+  const as = m ? (m.t === 'note' ? 'note' : 'text') : store.get('gs.qmNoteAs', 'note');
+  const ln = el.querySelector('.qmnote'); if (ln) ln.hidden = true;
+  el.insertAdjacentHTML('beforeend', '<div class="qmned"><textarea rows="2" placeholder="Type what to write on their paper…" aria-label="Comment">' + esc(m ? m.text : '') + '</textarea>' +
+    '<div class="qmnedb"><span class="seg sm"><button data-as="note" aria-pressed="' + (as === 'note') + '" title="In the margin, with a line to the answer">Margin comment</button><button data-as="text" aria-pressed="' + (as === 'text') + '" title="Written on the page under the answer">Text on page</button></span>' +
+    '<span class="muted hsm">Enter to save, Esc to cancel</span><button class="btn sm primary" data-nsave>Save</button></div></div>');
+  const ta = el.querySelector('.qmned textarea'); ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length);
+}
+function qmNoteDone(el, save) {
+  const ed = el && el.querySelector('.qmned'); if (!ed) return;
+  const text = ed.querySelector('textarea').value.trim(), as = ed.querySelector('[data-as][aria-pressed="true"]').dataset.as;
+  ed.remove();
+  if (save) qzNoteSet(batch.students[+el.dataset.st], batch.quiz.qs.find(x => x.id === el.dataset.q), text, as).then(() => { if (el.isConnected) { qmRefresh(el); el.focus({ preventScroll: true }); } });
+  else { const ln = el.querySelector('.qmnote'); if (ln) ln.hidden = false; el.focus({ preventScroll: true }); }
+}
+async function qzNoteSet(st, q, text, as) {
+  const [path, p] = quizPages(st)[q.n] || [], f = path && fileByPath(st, path);
+  if (!f) return;
+  const list = (f.marks[p] ||= []), i = list.findIndex(m => m.qzn === q.id), old = i >= 0 ? list[i] : null;
+  if (i >= 0) list.splice(i, 1);
+  if (text) {
+    const sz = await qzPageSize(st, q.n); if (!sz) return;
+    store.set('gs.qmNoteAs', as);
+    const [dx, dy] = qzShift(st, q.n), W = sz.W, H = sz.H, color = COLORS[inkColor] || COLORS.red;
+    let m;
+    if (as === 'note') m = old && old.t === 'note' ? { ...old, text, color } : { t: 'note', color, ax: r1(clamp((q.x + q.w + dx) * W, 4, W - 4)), ay: r1(clamp((q.y + q.h / 2 + dy) * H, 4, H - 4)), text, qzn: q.id };
+    else {
+      m = old && old.t === 'text' ? { ...old, text, color } : { t: 'text', color, x: r1(clamp((q.x + dx) * W, 2, W - 60)), y: r1(clamp((q.y + q.h + dy) * H + 3, 2, H - 20)), size: disp.tsize, bw: r1(Math.max(120, q.w * W)), text, qzn: q.id };
+      keepOnPage(m, W, H);
+    }
+    list.push(m);
+  }
+  if (!list.length) delete f.marks[p];
+  saveSoon(); renderList();
+}
 const qmQ = q => (qzByPts(q) ? 'Scale 0 to ' + fmtNum(+q.pts || 1) : fmtNum(+q.pts || 1) + ((+q.pts || 1) === 1 ? ' point' : ' points') + ', right or wrong') + ' · ' + (QZ_HOW[q.how] || QZ_HOW.cx);
 let qmTok = 0;
 function qmRender() {
@@ -17039,7 +17169,7 @@ function qmRender() {
     $('#qmProg').textContent = done + ' of ' + who.length + ' marked';
     $('#qmFoot').innerHTML = '<button class="btn primary" data-rest' + (done === who.length ? ' disabled' : '') + '>' + (qzByPts(q) ? 'Give the rest ' + fmtNum(full) : 'Mark the rest right') + '</button>';
     $('#qmHint').textContent = (qzByPts(q) ? 'Keys: a number for its points, H adds ½' : 'Click an answer to put an ✗ on it, click again to take it off. Keys: 1 right, 0 or X wrong') +
-      ', arrows to move, Space whole page, Ctrl Z undo, [ and ] for the question. Drag a mark to move it on that paper.';
+      ', C comment, arrows to move, Space whole page, Ctrl Z undo, [ and ] for the question. Drag a mark to move it on that paper.';
     cards = who.map(i => [i, q, qzAt]);
     body.className = 'bb qmbody qmgrid';
   } else {
@@ -17050,12 +17180,12 @@ function qmRender() {
       '<span class="qmtot">' + fmtNum(quizSum(st)) + ' / ' + fmtNum(quizMax()) + (n === qs.length && percentFor(quizSum(st)) != null ? ' = ' + percentFor(quizSum(st)) + '%' : '') + '</span>';
     $('#qmProg').textContent = n + ' of ' + qs.length + ' marked';
     $('#qmFoot').innerHTML = '<button class="btn" data-open="' + qzStu + '">Open their paper</button><button class="btn primary" data-rest' + (n === qs.length ? ' disabled' : '') + '>Mark the rest right</button>';
-    $('#qmHint').textContent = 'Click an answer to put an ✗ on it, click again to take it off. Keys: ↑ ↓ to move, a number for its points, Space whole page, Ctrl Z undo, [ and ] for the student.';
+    $('#qmHint').textContent = 'Click an answer to put an ✗ on it, click again to take it off. Keys: ↑ ↓ to move, a number for its points, C comment, Space whole page, Ctrl Z undo, [ and ] for the student.';
     cards = qs.map((q, qi) => [qzStu, q, qi]);
     body.className = 'bb qmbody qmcol';
   }
   if (qzOnly) cards = cards.filter(([i, q]) => quizMarks(batch.students[i])[q.id] == null);
-  qmSizeSay();
+  qmSizeSay(); qmInkSay();
   const keep = document.activeElement && document.activeElement.closest && document.activeElement.closest('.qmc');
   const keepAt = keep ? keep.dataset.st + '|' + keep.dataset.q : null;
   body.innerHTML = cards.length ? cards.map(c => qmCard(...c)).join('') : '<p class="muted qmnone">Everything here is marked. Pick <b>All</b> to see the marked ones.</p>';
@@ -17097,6 +17227,8 @@ function qmRefresh(el) {
   el.className = fresh.className;
   el.querySelector('.qmch').replaceWith(fresh.querySelector('.qmch'));
   el.querySelector('.qmbtns').replaceWith(fresh.querySelector('.qmbtns'));
+  const nl = el.querySelector('.qmnote'), fl = fresh.querySelector('.qmnote');
+  if (!el.querySelector('.qmned')) { if (nl) nl.remove(); if (fl) el.querySelector('.qmbtns').after(fl); }
   qmMarkShow(el);
   const who = quizWho(), qs = batch.quiz.qs;
   if (qzView === 'q') {
@@ -17197,6 +17329,12 @@ function qmKey(e) {
   if (!$('#qmBody')) return;
   const stop = () => { e.preventDefault(); e.stopPropagation(); };
   if ($('#qmPeek')) { if (e.key === 'Escape' || e.key === ' ') { stop(); qmPeekClose(); } return; }
+  if (e.target.closest('.qmned')) {   // typing a comment: Enter saves, Shift Enter is a new line, Esc leaves it as it was
+    if (e.key === 'Escape') { stop(); qmNoteDone(e.target.closest('.qmc'), false); }
+    else if (e.key === 'Enter' && !e.shiftKey) { stop(); qmNoteDone(e.target.closest('.qmc'), true); }
+    else e.stopPropagation();
+    return;
+  }
   if (e.target.closest('select,input,textarea')) return;
   if ((e.ctrlKey || e.metaKey) && !e.altKey) {
     if (e.key === 'z' || e.key === 'Z') { if (!e.shiftKey) { stop(); qmUndoLast(); } return; }
@@ -17225,6 +17363,7 @@ function qmKey(e) {
   if (/^[0-9]$/.test(e.key) && scale) { stop(); return qmMark(el, +e.key); }
   if ((e.key === '1' || e.key === '0') && !scale) { stop(); return qmMark(el, e.key === '1' ? +q.pts || 1 : 0); }   // right is all its points
   if (e.key === 'x' || e.key === 'X') { stop(); return qmMark(el, 0); }
+  if (e.key === 'c' || e.key === 'C') { stop(); return qmNoteOpen(el); }
   if (e.key === 'Backspace' || e.key === 'Delete') { stop(); return qmMark(el, null, true); }
 }
 function qmBindDrag(body) {
