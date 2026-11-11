@@ -33,7 +33,7 @@ const OUT = path.join(ROOT, 'out', 'screens');
 /* ---------------- the screens ---------------- */
 // where: 'g' the grading page, 'p' the Planner. hash: the address. then: anything to open on top. ready: what to wait for.
 // {A} in an address is the open assignment made below.
-const tabNamed = t => async page => { await page.waitForFunction(t => [...document.querySelectorAll('.ls-top nav .pl-tab')].some(b => b.textContent.trim() === t), {}, t); await page.evaluate(t => [...document.querySelectorAll('.ls-top nav .pl-tab')].find(b => b.textContent.trim() === t).click(), t); };
+const tabNamed = t => async page => { await page.waitForFunction(t => [...document.querySelectorAll('#rail [data-v]')].some(b => b.textContent.trim() === t), {}, t); await page.evaluate(t => [...document.querySelectorAll('#rail [data-v]')].find(b => b.textContent.trim() === t).click(), t); };
 const SCREENS = [
   { name: 'home', where: 'g', hash: '#/', ready: '#railClasses a' },
   { name: 'home-find', where: 'g', hash: '#/', ready: '#railClasses a', then: page => page.evaluate(() => window.__gs.openFind()) },

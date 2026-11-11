@@ -56,9 +56,9 @@ test('the Planner has the same sidebar: its own classes, no grading counts, and 
     const page = await planner(ctx, srv);
     await page.evaluate(async s => { await window.__planner.applySetup(s); }, setupFor(2));
     await page.waitForSelector('#railClasses a');
-    // the same rows in the same order as on the grading page, with Timetable where Add a class is
+    // the same rows in the same order as on the grading page, with the Planner's own sections where its one row is, and Timetable where Add a class is
     assert.deepEqual(await page.$$eval('#rail > *', els => els.filter(e => e.checkVisibility() && e.innerText.trim()).map(e => e.innerText.replace(/\s+/g, ' ').trim().replace(/(Ctrl K|⌘K)$/, '').trim())),
-      ['Grading Studio', 'Find anything', 'Today', 'Planner', 'CLASSES', 'Course A-1 Course A 2 Course B-1', 'Timetable', 'Not backed up This browser', 'Settings']);
+      ['Grading Studio', 'Find anything', 'Today', 'PLANNER', 'Calendar', 'Units', 'Past lessons', 'Activities', 'Rubrics', 'CLASSES', 'Course A-1 Course A 2 Course B-1', 'Timetable', 'Not backed up This browser', 'Settings']);
     assert.equal(await page.$eval('#railPlanner', a => a.getAttribute('aria-current')), 'page');
     assert.equal(await page.$('#rail .rcnt'), null, 'no counts');
     assert.ok(!/\d+ left|to score/.test(await page.$eval('#rail', e => e.textContent + [...e.querySelectorAll('[title]')].map(x => x.title).join(' '))), 'nothing about grading in the Planner’s sidebar');
@@ -67,7 +67,11 @@ test('the Planner has the same sidebar: its own classes, no grading counts, and 
     assert.equal(await page.$('.ls-top [data-a="close"]'), null);
     assert.equal(await page.$('.ls-top .themeBtn'), null);
     assert.equal(await page.$('.ls-top [data-a="setup"]'), null);
-    assert.deepEqual(await page.$$eval('.ls-top nav .pl-tab', t => t.map(x => x.textContent)), ['Calendar', 'Units', 'Past lessons', 'Activities', 'Rubrics']);
+    // going between the Planner's sections is the sidebar's job: the page's head is its name and what the page itself does
+    assert.equal(await page.$('.ls-top nav'), null);
+    assert.equal(await page.$eval('.ls-top h1', e => e.textContent), 'Calendar');
+    assert.deepEqual(await page.$$eval('#rail [data-v]', t => t.map(x => x.textContent.trim())), ['Calendar', 'Units', 'Past lessons', 'Activities', 'Rubrics']);
+    assert.equal(await page.$('.ls-top [data-a="link"], .ls-top [data-a="sync"], .ls-top [data-a="reconnect"]'), null, 'the Planner folder is the sidebar’s Saved line');
 
     // a class goes to its page in grading, matched by name
     await Promise.all([page.waitForNavigation(), page.click('#railClasses a:nth-child(1)')]);
@@ -157,20 +161,26 @@ test('the Planner’s sidebar folds while a lesson is open, and what was typed i
   } finally { await ctx.close(); await srv.close(); }
 });
 
-test('the Planner’s calendar is one tab with Semester and Week under it', async () => {
+test('the Planner’s sections are in the sidebar, and the calendar is one of them with Week and Semester beside its name', async () => {
   const srv = await serveBoth(), ctx = await browser.createBrowserContext();
   try {
     const page = await planner(ctx, srv);
     await page.evaluate(async s => { const P = window.__planner; await P.applySetup(s); P.L.view = 'week'; P.renderLessons(); }, setupFor(2));
-    const on = () => page.$$eval('.ls-top .pl-tab.on', t => t.map(x => x.textContent));
-    assert.deepEqual(await on(), ['Calendar', 'Week']);
+    const on = () => page.$$eval('#rail [data-v].on, .ls-top h1, .ls-top .pl-tab.on', t => t.map(x => x.textContent.trim()));
+    assert.deepEqual(await on(), ['Calendar', 'Calendar', 'Week']);
     await page.click('.pl-tabs.cal [data-v="semester"]'); await page.waitForSelector('.pl-row[data-wk]');
-    assert.deepEqual(await on(), ['Calendar', 'Semester']);
-    await page.click('.ls-top nav [data-v="units"]'); await page.waitForFunction(() => window.__planner.L.view === 'units');
-    assert.deepEqual(await on(), ['Units']);
+    assert.deepEqual(await on(), ['Calendar', 'Calendar', 'Semester']);
+    await page.click('#rail [data-v="units"]'); await page.waitForFunction(() => window.__planner.L.view === 'units');
+    assert.deepEqual(await on(), ['Units', 'Units']);
+    assert.equal(await page.$eval('#rail [data-v="units"]', b => b.getAttribute('aria-current')), 'page');
+    assert.equal(await page.$eval('#railPlanner', b => b.getAttribute('aria-current')), null);
     assert.equal(await page.$('.pl-tabs.cal'), null, 'Semester | Week only shows on the calendar');
-    await page.click('.ls-top nav .pl-tab');   // Calendar: the view she used last
+    await page.click('#railPlanner');   // Calendar: the view she used last
     await page.waitForFunction(() => window.__planner.L.view === 'semester');
+    for (const [v, name] of [['library', 'Past lessons'], ['activities', 'Activities'], ['bank', 'Rubrics']]) {
+      await page.click('#rail [data-v="' + v + '"]'); await page.waitForFunction((v, name) => window.__planner.L.view === v && document.querySelector('.ls-top h1').textContent === name && document.querySelector('#rail [data-v].on').dataset.v === v, {}, v, name);   // some pages read their list before they draw
+      assert.deepEqual(await on(), [name, name]);
+    }
     assert.deepEqual(page.errors, []);
   } finally { await ctx.close(); await srv.close(); }
 });
