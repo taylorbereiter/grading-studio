@@ -330,6 +330,8 @@ const LANG_ES = {
         'Mientras presentas: **A** muestra la agenda, **T** inicia un temporizador que la clase puede ver, **N** muestra tus notas, **B** deja la pantalla en blanco y **Esc** termina.', 'Después, una línea anota hasta dónde llegó la clase, y al presentar de nuevo se retoma desde ahí.'] },
     'pptx': { q: '¿Puedo obtener mis diapositivas como archivo de PowerPoint?', words: 'powerpoint pptx exportar diapositivas keynote google slides descargar',
       a: ['Sí. Abre la lección y pulsa **Download .pptx**. El archivo se abre en PowerPoint, Keynote y Google Slides.'] },
+    'sharelesson': { q: '¿Cómo paso una lección a otro ordenador o se la doy a otro docente?', words: 'compartir enviar mover pasar copiar otro ordenador docente colega gslesson archivo importar',
+      a: ['Abre la lección y elige **More ▾ → Share lesson file…**. Obtienes un archivo pequeño con las diapositivas, las notas, las imágenes, los materiales y el PowerPoint terminado si lo hay.', 'En el otro ordenador, pulsa **Import a lesson** en el Planner y elige el archivo, o suéltalo en el Planner. Las clases y los días en que estaba, las notas de lo enseñado y los comentarios para Claude se quedan aquí.'] },
     'privacy': { q: '¿Salen de mi ordenador los trabajos de los estudiantes?', words: 'privado protección de datos rgpd nube servidor seguro',
       a: ['No. Los trabajos, los nombres, las notas y los comentarios se quedan en este navegador y en la carpeta que elijas. La aplicación no tiene servidor ni cuentas, y funciona sin internet.',
         'Lo único que sale son los archivos que tú exportas.'] },

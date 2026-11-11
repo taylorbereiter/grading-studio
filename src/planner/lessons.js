@@ -570,7 +570,7 @@ async function onLessonsClick(e) {
   if (!l) return;
   if (a === 'pptx') { editorCommit(); return finOrMake(l); }
   if (a === 'ask') { editorCommit(); return askClaude(l); }
-  if (a === 'mexport' || a === 'mcopyto' || a === 'mcopy' || a === 'mdelete') return moreDo(a, t, l);
+  if (a === 'mshare' || a === 'mexport' || a === 'mcopyto' || a === 'mcopy' || a === 'mdelete') return moreDo(a, t, l);
   if (a === 'addslot') return addSlotDlg();
   if (a === 'pic') return pickPicture();
   if (a === 'addslide') return addSlideDlg();
@@ -629,6 +629,8 @@ async function onLessonDrop(e) {
   const got = {}; for (const k of ['text/html', 'text/uri-list', 'text/plain']) got[k] = e.dataTransfer.getData(k);
   const dt = { getData: k => got[k] || '', files: [...(e.dataTransfer.files || [])] };
   const zf = [...(e.dataTransfer.files || [])].find(f => /\.zip$/i.test(f.name));
+  const sf = [...(e.dataTransfer.files || [])].find(isShareFile);
+  if (sf) return shareOpen(sf);
   if (await finishedDrop(e)) return;
   if (zf && !(e.target.closest && e.target.closest('[data-owner]'))) return packImport(zf);
   if (e.target.closest && e.target.closest('.pl-ask') && L.open) { const fs = [...(e.dataTransfer.files || [])].filter(f => /^image\//.test(f.type)); if (fs.length) return addCtxShots(fs); }
@@ -843,7 +845,8 @@ function moreHtml(l) {
     it('finzip', 'Upload lesson .zip', 'The finished PowerPoint and its files, as one .zip') + '<hr>' +
     (titleSlideOf(l) ? it('tlink', linked ? 'Name matches the title slide ✓' : 'Match the name to the title slide', linked ? 'Click to let them be different' : 'They are different now', linked ? 'on' : '') : '') +
     (a ? '<a class="mi" role="menuitem" href="' + esc(a.url) + '" target="_blank" rel="noopener">Open ' + link + ' ↗<small>' + (a.own ? 'This lesson’s own page' : 'The page of ' + esc(a.unit)) + '</small></a>' + it('atlas', 'Change the ' + link + ' link') : it('atlas', '+ ' + link + ' link')) + '<hr>' +
-    it('mexport', 'Save lesson file…', 'A .lesson.json of just this lesson, for Claude. Bring Claude’s version back with Import') +
+    it('mshare', 'Share lesson file…', 'Opens as this lesson on another computer or for another teacher. Classes and taught notes stay here') +
+    it('mexport', 'Save lesson file for Claude…', 'A .lesson.json of just this lesson, for Claude. Bring Claude’s version back with Import') +
     it('mcopyto', 'Copy to another class or day…', 'A separate copy with its own slides and materials') +
     it('mcopy', 'Copy lesson as text', 'The slides and notes as plain text') +
     it('mdelete', 'Delete this lesson') + '</div></span>';
@@ -869,6 +872,7 @@ async function moreDo(a, t, l) {
     await lDelete(l); L.open = null; L.view = L.backTo || 'week'; renderLessons(); return toast('Lesson deleted');
   }
   moreClose();
+  if (a === 'mshare') return shareSave(l);
   if (a === 'mexport') return saveBlob(fileBase(l) + '.lesson.json', new Blob([JSON.stringify(lessonForFile(l, null), null, 2)], { type: 'application/json' }));
   if (a === 'mcopyto') return copyLessonDlg(l);
   if (a === 'mcopy') { await copyText(lessonText(l)); return toast('Copied'); }
@@ -907,11 +911,11 @@ async function askClaude(l) {
 
 /* ---------- import ---------- */
 function importLesson() {
-  openDlg('<div class="bh"><h2>Import a lesson</h2></div><div class="bb"><p class="muted" style="margin-top:0">Choose a .lesson.json file (from Claude or another computer), or a lesson pack (.zip) of past lessons with their files. You can also paste a lesson below. A lesson with the same id replaces the one here; a pack leaves lessons you already have alone.</p>' +
-    '<button class="btn" id="imF">Choose a file…</button><input type="file" id="imIn" accept=".json,application/json,.zip,application/zip" hidden><textarea id="imT" rows="8" style="width:100%;margin-top:10px" placeholder="Or paste the lesson here"></textarea></div>' +
+  openDlg('<div class="bh"><h2>Import a lesson</h2></div><div class="bb"><p class="muted" style="margin-top:0">Choose a lesson file (.gslesson, from another computer or another teacher), a .lesson.json from Claude, or a lesson pack (.zip) of past lessons with their files. You can also paste a lesson below. A .lesson.json with the same id replaces the one here; a lesson file or a pack never replaces a lesson you have.</p>' +
+    '<button class="btn" id="imF">Choose a file…</button><input type="file" id="imIn" accept=".gslesson,.json,application/json,.zip,application/zip" hidden><textarea id="imT" rows="8" style="width:100%;margin-top:10px" placeholder="Or paste the lesson here"></textarea></div>' +
     '<div class="bf"><button class="btn" data-x>Cancel</button><button class="btn primary" data-ok>Import pasted text</button></div>', true);
   $('#imF').onclick = () => $('#imIn').click();
-  $('#imIn').onchange = async () => { const f = $('#imIn').files[0]; if (!f) return; closeDlg(); if (/\.zip$/i.test(f.name)) return packImport(f); importLessonText(await f.text(), f.name); };
+  $('#imIn').onchange = async () => { const f = $('#imIn').files[0]; if (!f) return; closeDlg(); if (isShareFile(f)) return shareOpen(f); if (/\.zip$/i.test(f.name)) return packImport(f); importLessonText(await f.text(), f.name); };
   $('#dlgBox').onclick = e => { if (e.target.closest('[data-x]')) return closeDlg(); if (e.target.closest('[data-ok]')) { const v = $('#imT').value; closeDlg(); importLessonText(v, ''); } };
 }
 async function importLessonText(text, name) {
