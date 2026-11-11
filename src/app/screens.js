@@ -1,5 +1,5 @@
 /* ---------------- where she is: every screen has its own address, the part after # ---------------- */
-// #/help is Help, with /<answer> for one answer. #/ is Home, #/class/<id> a class (- for "No class") with /gradebook, /students, /students/<place on the roster> and /charts under it, #/settings Settings,
+// #/help is Help, with /<answer> for one answer. #/ is Home, #/class/<id> a class (- for "No class") with /gradebook, /students, /students/<place on the roster>, /seating and /charts under it, #/settings Settings,
 // #/a/<download> an open assignment (its papers), with /grades, /grades/sheet, /insights, /insights/consistency and /return under it.
 // Back, Forward and Refresh follow it. Nothing here is saved: the address only says which screen to show.
 const routeOf = hash => {
@@ -28,7 +28,7 @@ const routeNow = () => routeOf(location.hash);
 const SET_SECS = [['saving', 'Saving and carrying', 'Folder, take-home file, safety copies'], ['history', 'Go back in time', 'Your work as it was on an earlier day'], ['classes', 'Classes and rosters', 'Names, students, ' + (sysName() ? sysName() + ' links' : 'class links')], ['terms', 'Terms and weights', 'Your terms and how each type counts'],
   ['grading', 'Grading scale and rubrics', 'Your saved scales and rubrics'], ['marking', 'Marking', 'Mark key, Word papers, tablet and pencil'], ['timetable', 'Timetable and calendar', 'Class times and days off, in the Planner'],
   ['display', 'Display', 'Text size, zoom, dark mode'], ['claude', 'Working with Claude', 'Optional. What Claude can and can’t see'], ['keys', 'Keys', 'Every shortcut'], ['about', 'About and updates', 'Version, what’s new, install as an app']];
-const CLASS_TABS = [['', 'Assignments'], ['gradebook', 'Gradebook'], ['students', 'Students'], ['charts', 'Charts'], ['reports', 'Report comments']];
+const CLASS_TABS = [['', 'Assignments'], ['gradebook', 'Gradebook'], ['students', 'Students'], ['seating', 'Seating'], ['charts', 'Charts'], ['reports', 'Report comments']];
 const classHash = (c, tab, stu) => '#/class/' + (c === lib.loose || !c.id ? '-' : encodeURIComponent(c.id)) + (tab ? '/' + tab + (stu != null ? '/' + (stu + 1) : '') : '');
 // An open assignment has four screens: the papers (Mark), Grades, Insights and Return. Grades and Insights each have a second view.
 const A_TABS = [['', 'Mark'], ['grades', 'Grades'], ['insights', 'Insights'], ['return', 'Return']], A_SUBS = { grades: ['sheet'], insights: ['consistency'] };

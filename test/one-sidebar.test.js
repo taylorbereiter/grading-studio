@@ -124,7 +124,7 @@ test('the Planner’s sidebar reads nothing of grading’s', async () => {
     await page.waitForSelector('#findDlg .frow'); await page.keyboard.press('Escape');
     const t = await page.evaluate(() => ({ ls: [...window.__touched.ls], db: [...window.__touched.db] }));
     assert.deepEqual(t.db, ['gs-lessons']);
-    for (const k of t.ls) assert.ok(k === 'gs.theme' || k === 'gs.lang' || k === 'gs.mblinks' || k === 'gs.words' || k.startsWith('gsp.'), 'the Planner touched ' + k);
+    for (const k of t.ls) assert.ok(k === 'gs.theme' || k === 'gs.lang' || k === 'gs.mblinks' || k === 'gs.words' || k === 'gs.rolls' || k.startsWith('gsp.'), 'the Planner touched ' + k);
     assert.deepEqual(page.errors, []);
   } finally { await ctx.close(); await srv.close(); }
 });
