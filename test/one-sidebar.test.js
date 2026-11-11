@@ -292,10 +292,13 @@ test('Today shows the day’s classes from the Planner’s timetable, and writes
     await page.reload(); await appReady(page);
     await page.waitForSelector('#today .trow');
     assert.equal(await page.$eval('#today h2', e => e.textContent), 'Teaching today');
+    // the class that is on now, or next, opens presenting; the others open the lesson
+    const hm = await page.evaluate(() => { const d = new Date(); return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'); });
+    const cur = ['10:30', '12:15', '15:00'].findIndex(e => e > hm), go = (i, t, c) => i === cur ? ['Present', 'planner.html#present/' + ids[t] + '/' + c] : ['Open', 'planner.html#lesson/' + ids[t]];
     assert.deepEqual(await page.$$eval('#today .trow', r => r.map(x => [x.querySelector('.tt').textContent, x.querySelector('b').textContent, x.querySelector('.ns').textContent, (x.querySelector('.btn') || {}).textContent, x.getAttribute('href')])), [
-      ['9:00', 'Course A 2', 'Annotating a sonnet · 3 slides · ready for you', 'Open', 'planner.html#lesson/' + ids['Annotating a sonnet']],
+      ['9:00', 'Course A 2', 'Annotating a sonnet · 3 slides · ready for you', ...go(0, 'Annotating a sonnet', 'A2')],
       ['10:45', 'Course B-1', 'No lesson planned yet', 'Plan it', 'planner.html#week'],
-      ['1:30', 'Course A-1', 'Rhetorical appeals · 3 slides · draft', 'Open', 'planner.html#lesson/' + ids['Rhetorical appeals']],
+      ['1:30', 'Course A-1', 'Rhetorical appeals · 3 slides · draft', ...go(2, 'Rhetorical appeals', 'A1')],
     ]);
     assert.deepEqual(await page.$$eval('#today .rdot', d => d.map(x => x.style.background)), ['rgb(123, 63, 196)', 'rgb(14, 124, 134)', 'rgb(31, 111, 178)']);
     assert.equal(await page.$eval('#today .tweek', a => a.getAttribute('href')), 'planner.html#week');
@@ -314,6 +317,23 @@ test('Today shows the day’s classes from the Planner’s timetable, and writes
     await Promise.all([page.waitForNavigation(), page.click('#today .trow')]);
     await plannerReady(page);
     assert.equal(await page.evaluate(() => window.__planner.L.open && window.__planner.L.open.title), 'Annotating a sonnet');
+    assert.equal(await page.evaluate(() => !!document.querySelector('#present')), cur === 0, 'the class on now or next opens presenting');
+    // where a class got to is said on its row, and a lesson taught to the end stops offering Present
+    const taught = async (slide) => {
+      await page.evaluate(async slide => {
+        const P = window.__planner, now = new Date(), d = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
+        if (document.querySelector('#present')) await window.__present.end();
+        if (!P.L.open) P.openLessonForTest(P.L.lessons.find(l => l.title === 'Annotating a sonnet'));
+        P.L.open.taught = [{ classId: 'A2', date: d, slide, of: 3, note: '', at: Date.now() }];
+        document.querySelector('[data-a="back"]').click(); await new Promise(r => setTimeout(r, 300));
+      }, slide);
+      await page.goto(srv.url); await appReady(page); await page.waitForSelector('#today .trow');
+      return page.$eval('#today .trow', x => [x.querySelector('.ns').textContent, x.querySelector('.btn').textContent]);
+    };
+    assert.deepEqual(await taught(2), ['Annotating a sonnet · 3 slides · taught to slide 2 of 3', cur === 0 ? 'Present' : 'Open']);
+    await page.goto(srv.url + 'planner.html'); await plannerReady(page);
+    assert.deepEqual(await taught(3), ['Annotating a sonnet · 3 slides · taught', 'Open']);
+    await page.goto(srv.url + 'planner.html'); await plannerReady(page);
     // a day off: said so, with no rows
     await page.evaluate(async () => { const P = window.__planner, now = new Date(), d = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0'); await P.applySetup({ ...P.L.setup, kind: 'grading-studio-lessons-setup', daysOff: [{ date: d, label: 'Founders’ day' }] }); });
     await page.goto(srv.url); await appReady(page);

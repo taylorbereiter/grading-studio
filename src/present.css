@@ -1,0 +1,88 @@
+/* ---------- Present: the lesson on the screen the class sees ----------
+   The stage is the same in light and dark: black around the slide, the slide's own colours on it, and a light panel
+   for the agenda so it reads in a lit room. What the class reads is sized by the height of the screen (vh), like the
+   slide itself, so it is as big on a projector as on a laptop. Colours come from the --stage tokens. */
+.pr{position:fixed;inset:0;z-index:60;background:var(--stage);color:var(--stage-fg);display:flex;flex-direction:column;outline:none;user-select:none;-webkit-user-select:none}
+.pr.idle{cursor:none}
+.pr svg{width:18px;height:18px;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.pr-stage{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.pr-fit{position:relative;overflow:hidden;flex:none}
+.pr-fit .ls-slide{transform:scale(var(--k));transform-origin:0 0}
+.pr-fit .ls-vid{cursor:pointer}
+.pr-fit .ls-vid iframe{width:100%;height:100%;border:0;background:var(--stage)}
+.pr-cover{position:absolute;inset:0;background:var(--stage);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.5vh;z-index:3}
+.pr-cover b{font:600 3.4vh/1.2 var(--f-display);color:var(--stage-fg)}
+.pr-cover span{font-size:2.2vh;color:var(--stage-muted)}
+
+/* the bar: for the teacher, shown when the mouse moves */
+.pr-bar{position:absolute;left:50%;bottom:calc(var(--nb,0px) + var(--space-4));transform:translateX(-50%);z-index:5;display:flex;align-items:center;gap:var(--space-1);padding:var(--space-1) var(--space-2);max-width:calc(100vw - var(--space-5));
+  background:var(--stage-bar);border:1px solid var(--stage-line);border-radius:var(--corner-5);box-shadow:var(--shadow);font-size:var(--text-control);transition:opacity .2s}
+.pr.idle .pr-bar:not(:focus-within){opacity:0;pointer-events:none}
+.pr-bar button{display:inline-flex;align-items:center;gap:var(--space-2);border:0;background:none;color:var(--stage-fg);border-radius:var(--corner-3);padding:var(--space-2) var(--space-3);font-weight:500;white-space:nowrap}
+.pr-bar button:hover,.pr-bar button[aria-pressed="true"],.pr-bar button[aria-expanded="true"]{background:var(--stage-hover)}
+.pr-bar button.ic{padding:var(--space-2)}
+.pr-bar .pr-end{background:var(--stage-blue);color:var(--stage-paper);font-weight:600}
+.pr-bar .pr-end:hover{background:var(--stage-blue-2)}
+.pr :focus-visible{outline:2px solid var(--stage-fg);outline-offset:2px}
+.pr-count{min-width:64px;text-align:center;font-variant-numeric:tabular-nums;color:var(--stage-fg)}
+.pr-sep{width:1px;align-self:stretch;margin:var(--space-1) var(--space-1);background:var(--stage-line)}
+.pr-time{padding:0 var(--space-3);color:var(--stage-muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+@media (max-width:900px){.pr-bar button:not(.pr-end) .lb{display:none}}
+
+/* the timer's menu, above the bar */
+.pr-menu{position:absolute;left:50%;bottom:calc(var(--nb,0px) + var(--space-4) + 56px);transform:translateX(-50%);z-index:6;width:min(340px,calc(100vw - var(--space-5)));padding:var(--space-3);
+  background:var(--stage-bar);border:1px solid var(--stage-line);border-radius:var(--corner-5);box-shadow:var(--shadow);font-size:var(--text-control)}
+.pr-menu h3{margin:0 0 var(--space-2);font-size:var(--text-control);font-weight:600;color:var(--stage-muted)}
+.pr-mins{display:grid;grid-template-columns:repeat(6,1fr);gap:var(--space-1)}
+.pr-menu button{border:1px solid var(--stage-line);background:none;color:var(--stage-fg);border-radius:var(--corner-3);padding:var(--space-2);font-weight:600}
+.pr-menu button:hover{background:var(--stage-hover)}
+.pr-own{display:flex;gap:var(--space-2);align-items:center;margin-top:var(--space-3);color:var(--stage-muted)}
+.pr-own input[type=number]{width:64px;border:1px solid var(--stage-line);background:var(--stage);color:var(--stage-fg);border-radius:var(--corner-3);padding:var(--space-2)}
+.pr-own .sp{flex:1}
+.pr-run{display:flex;gap:var(--space-2);flex-wrap:wrap}
+.pr-snd{display:flex;gap:var(--space-2);align-items:center;margin-top:var(--space-3);color:var(--stage-muted)}
+
+/* the countdown the class watches */
+.pr-chip{position:absolute;top:2.4vh;right:2.4vh;z-index:4;border:0;border-radius:var(--corner-5);padding:1vh 2.2vh;background:var(--stage-blue);color:var(--stage-paper);font:700 8vh/1 var(--f-display);font-variant-numeric:tabular-nums;letter-spacing:-.02em;box-shadow:var(--shadow)}
+.pr-chip.paused{background:var(--stage-bar);color:var(--stage-fg)}
+.pr-chip.done{background:var(--stage-paper);color:var(--stage-blue);animation:prPulse 1s ease-in-out 6}
+.pr-chip small{display:block;font:600 1.9vh/1.3 var(--f-body);letter-spacing:0;opacity:.85}
+@keyframes prPulse{50%{transform:scale(1.06)}}
+@media (prefers-reduced-motion:reduce){.pr-chip.done{animation:none}.pr-bar{transition:none}}
+
+/* the agenda: a light panel over the left of the slide */
+.pr-agenda{position:absolute;left:0;top:0;bottom:0;z-index:4;width:min(52vw,100vh);background:var(--stage-paper);color:var(--stage-ink);padding:5vh 4vh 96px;overflow:auto;box-shadow:0 0 6vh rgba(0,0,0,.45);display:flex;flex-direction:column;gap:1.2vh}
+.pr-agenda h2{margin:0 0 1.5vh;font:700 6.2vh/1.1 var(--f-display);letter-spacing:-.02em}
+.pr-ai{display:flex;align-items:flex-start;gap:1.8vh;width:100%;border:0;background:none;color:inherit;text-align:left;border-radius:var(--corner-4);padding:1.2vh 1.4vh;font:500 5.3vh/1.2 var(--f-body)}
+.pr-ai:hover{background:var(--stage-blue-soft)}
+.pr-ai .bx{flex:none;width:4.8vh;height:4.8vh;margin-top:.7vh;border:.35vh solid var(--stage-ink-2);border-radius:var(--corner-2);display:flex;align-items:center;justify-content:center}
+.pr-ai .bx svg{width:3.4vh;height:3.4vh;stroke-width:3;visibility:hidden}
+.pr-ai.done{color:var(--stage-ink-2)}
+.pr-ai.done .tx{text-decoration:line-through;text-decoration-thickness:.3vh}
+.pr-ai.done .bx{background:var(--stage-blue);border-color:var(--stage-blue);color:var(--stage-paper)}
+.pr-ai.done .bx svg{visibility:visible}
+.pr-ai.now{background:var(--stage-blue-soft)}
+.pr-ai.now .tx{font-weight:700}
+.pr-asub{padding:0 1.4vh 0 8vh;font:400 5.3vh/1.2 var(--f-body);color:var(--stage-ink-2)}
+.pr-aclock{margin-top:auto;padding-top:2vh;font:600 3.4vh/1.2 var(--f-body);color:var(--stage-ink-2);font-variant-numeric:tabular-nums}
+.pr-anone{font:400 3.4vh/1.3 var(--f-body);color:var(--stage-ink-2);margin:0 0 1vh}
+
+/* speaker notes, under the slide when asked for */
+.pr-notes{flex:none;max-height:26vh;overflow:auto;padding:1.6vh 3vh;background:var(--stage-bar);border-top:1px solid var(--stage-line);color:var(--stage-fg);font:400 2.6vh/1.4 var(--f-body);white-space:pre-wrap;user-select:text;-webkit-user-select:text}
+.pr-notes.none{color:var(--stage-muted)}
+.pr-hint{position:absolute;left:50%;top:var(--space-4);transform:translateX(-50%);z-index:5;max-width:calc(100vw - var(--space-6));padding:var(--space-2) var(--space-4);background:var(--stage-bar);border:1px solid var(--stage-line);border-radius:var(--corner-pill);color:var(--stage-fg);font-size:var(--text-control);text-align:center;pointer-events:none}
+.pr-say{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+
+/* in the Planner: the way in from today's card, and the note on where a class got to */
+.ls-go{right:35px;color:var(--accent);border-color:var(--accent)}
+.ls-go svg{width:14px;height:14px;fill:currentColor;stroke:none;vertical-align:-2px}
+.ls-cardw:has(.ls-go)>.ls-card{padding-right:66px}
+.pl-taught{font-size:var(--text-small);font-weight:600;color:var(--ok)}
+.ls-top .btn svg{width:14px;height:14px;fill:currentColor;stroke:none}
+.pl-tgs{display:flex;flex-direction:column;gap:var(--space-2);margin-top:var(--space-3)}
+.pl-tg{display:flex;align-items:baseline;gap:var(--space-3);flex-wrap:wrap;border:1px solid var(--line);border-radius:var(--corner-3);padding:var(--space-2) var(--space-3);font-size:var(--text-control)}
+.pl-tg .w{color:var(--muted)}
+.pl-tg .nt{flex:1;min-width:160px}
+.pl-tgd select,.pl-tgd input{justify-content:flex-start;text-align:left;width:100%}
+.pl-tgd input{cursor:text}
+.pl-tgd .who{margin:0 0 var(--space-3);font-weight:600}

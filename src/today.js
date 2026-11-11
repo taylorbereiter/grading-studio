@@ -19,7 +19,9 @@ async function planRead() {
   plan = !classes.length ? null : {
     classes, semStart: String(setup.semStart || ''), semEnd: String(setup.semEnd || ''),
     daysOff: (Array.isArray(setup.daysOff) ? setup.daysOff : []).filter(d => d && d.date).map(d => ({ date: String(d.date), label: String(d.label || '') })),
-    lessons: (Array.isArray(lessons) ? lessons : []).filter(l => l && l.id && Array.isArray(l.slots) && l.slots.length).map(l => ({ id: String(l.id), title: String(l.title || 'Untitled lesson'), status: String(l.status || ''), done: !!l.final, n: Array.isArray(l.slides) ? l.slides.length : 0, slots: l.slots.map(s => ({ classId: String(s.classId), date: String(s.date) })) })),
+    lessons: (Array.isArray(lessons) ? lessons : []).filter(l => l && l.id && Array.isArray(l.slots) && l.slots.length).map(l => ({ id: String(l.id), title: String(l.title || 'Untitled lesson'), status: String(l.status || ''), done: !!l.final, n: Array.isArray(l.slides) ? l.slides.length : 0,
+      taught: (Array.isArray(l.taught) ? l.taught : []).filter(t => t && t.date).map(t => ({ classId: String(t.classId || ''), date: String(t.date), slide: +t.slide || 1, of: +t.of || 1 })),   // where each class got to, noted after presenting
+      slots: l.slots.map(s => ({ classId: String(s.classId), date: String(s.date) })) })),
   };
   return plan;
 }
@@ -42,13 +44,15 @@ const T_ARROW = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M1
 const numWord = n => ['No', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Eleven', 'Twelve'][n] || String(n);
 function todayHtml(prim) {
   if (!plan) return '<h2 class="tcap">Teaching today</h2><div class="tcard"><div class="trow none"><span class="nt"><b>Your timetable isn’t here yet</b><span class="ns">Add your class times in the Planner, and each day’s classes and lessons show here.</span></span><a class="btn sm" href="' + esc(planUrl('#timetable')) + '">Open the Planner</a></div></div>';
-  const t = todayRows(plan), cur = nowRow(t.rows);
+  const t = todayRows(plan), cur = nowRow(t.rows), day = isoDay(Date.now());
   const say = l => l.done ? 'finished' : l.status === 'review' ? 'ready for you' : l.status === 'claude' ? 'with Claude' : 'draft';
   const row = r => {
     const { c, m, lessons } = r, l = lessons[0], more = lessons.length > 1 ? ' · and ' + (lessons.length - 1) + ' more' : '';
-    return '<a class="trow' + (r === cur ? ' now' : '') + '" href="' + esc(planUrl(l ? '#lesson/' + encodeURIComponent(l.id) : '#week')) + '" title="' + (l ? 'Open this lesson in the Planner' : 'Plan this class in the Planner') + '"><span class="tt">' + planTime(m.start) + '</span>' +
-      '<span class="nt"><b><span class="rdot" style="background:' + c.color + '"></span>' + esc(c.name) + '</b><span class="ns">' + (l ? esc(l.title) + (l.n ? ' · ' + l.n + (l.n === 1 ? ' slide' : ' slides') : '') + ' · ' + say(l) + more : 'No lesson planned yet') + '</span></span>' +
-      '<span class="btn sm' + (prim === 'lesson' && r === cur ? ' primary' : '') + '">' + (l ? 'Open' : 'Plan it') + '</span></a>';
+    // The class on now, or next: its lesson opens presenting, unless it has been taught to the end today.
+    const got = l && l.taught.find(t => t.classId === c.id && t.date === day), end = got && got.slide >= got.of, show = !!l && r === cur && !end;
+    return '<a class="trow' + (r === cur ? ' now' : '') + '" href="' + esc(planUrl(show ? '#present/' + encodeURIComponent(l.id) + '/' + encodeURIComponent(c.id) : l ? '#lesson/' + encodeURIComponent(l.id) : '#week')) + '" title="' + (show ? 'Present this lesson, from the Planner' : l ? 'Open this lesson in the Planner' : 'Plan this class in the Planner') + '"><span class="tt">' + planTime(m.start) + '</span>' +
+      '<span class="nt"><b><span class="rdot" style="background:' + c.color + '"></span>' + esc(c.name) + '</b><span class="ns">' + (l ? esc(l.title) + (l.n ? ' · ' + l.n + (l.n === 1 ? ' slide' : ' slides') : '') + ' · ' + (got ? (end ? 'taught' : 'taught to slide ' + got.slide + ' of ' + got.of) : say(l)) + more : 'No lesson planned yet') + '</span></span>' +
+      '<span class="btn sm' + (prim === 'lesson' && r === cur ? ' primary' : '') + '">' + (show ? 'Present' : l ? 'Open' : 'Plan it') + '</span></a>';
   };
   return '<div class="thd"><h2 class="tcap">Teaching today</h2><a class="link tweek" href="' + esc(planUrl('#week')) + '">Open the week</a></div><div class="tcard">' +
     (t.off ? '<div class="trow none"><span class="nt"><b>No classes today</b><span class="ns">' + esc(t.off) + '</span></span></div>' : t.rows.length ? t.rows.map(row).join('') : '<div class="trow none"><span class="nt"><span class="ns">No classes on your timetable today.</span></span></div>') + '</div>';
