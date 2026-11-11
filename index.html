@@ -1762,6 +1762,15 @@ a.opchip:hover{text-decoration:underline}
 .insxv small{color:var(--muted);font-size:11.5px;margin-left:2px}
 .insxax .insxt{height:14px}
 .insxax .insxt span{position:absolute;transform:translateX(-50%);font-size:var(--text-caption);color:var(--muted)}
+/* anchor papers on the Return tab */
+.anchlist{list-style:none;margin:0 0 10px;padding:0}
+.anchli{display:flex;align-items:baseline;gap:10px;padding:5px 0;border-top:1px solid var(--line);font-size:var(--text-control)}
+.anchli:first-child{border-top:0}
+.anchli b{width:38px;flex:none}
+.anchli .muted{margin-left:auto}
+.anchli.none .muted{margin-left:0}
+.anchcov{display:flex;align-items:center;gap:6px;font-size:var(--text-control);margin:0 0 6px}
+.rtcard p.anchsay{font-size:var(--text-small)}
 /* ---------------- the marking screen ---------------- */
 /* The tools: one slim dock down the left edge of the paper, so the paper keeps the full height. Zoom is a pill at the paper's foot. */
 .main{position:relative}
@@ -1968,6 +1977,14 @@ button.pavg:hover .v{text-decoration:underline}
 .xcsay{color:var(--accent);font-size:var(--text-small)}
 .xcnote .sp{flex:1}
 .xcnote label,.xcnote>span{white-space:nowrap}.xcnote input{width:52px}
+/* anchor papers (src/anchors.js): High, Mid, Low under the score, and the tag in the student list */
+.anchrow{display:flex;align-items:center;gap:8px;margin:8px 0 0}
+.anchlab{font-size:var(--text-small);color:var(--muted);white-space:nowrap}
+.anchseg{margin-left:0;flex:1;gap:6px;border:0;overflow:visible}
+.anchseg button{flex:none;padding:3px 10px;border:1px solid var(--line);border-radius:var(--corner-pill);background:none;font-size:var(--text-small);font-weight:500}
+.anchseg button:hover{color:var(--fg);border-color:var(--line-strong)}
+.anchseg button[aria-pressed=true]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent);font-weight:600}
+.stu .anch{font-size:var(--text-caption);font-weight:600;color:var(--accent);border:1px solid var(--accent);border-radius:var(--corner-pill);padding:0 6px;white-space:nowrap}
 /* ---------- safe by default: the folder ask on Home, Go back in time, About and updates ---------- */
 .safeask{display:flex;gap:var(--space-4);align-items:flex-start;padding:18px 20px;margin:0 0 var(--space-5);background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--warn);border-radius:var(--corner-5)}
 .safeask .saic{flex:none;width:40px;height:40px;display:flex;align-items:center;justify-content:center;border-radius:var(--corner-4);background:var(--warn-soft);color:var(--warn)}
@@ -3345,7 +3362,7 @@ SOFTWARE.
 <script>/* ---------------- saved-data versions: a safety copy, then any format changes, before the app starts ---------------- */
 const gsData = (() => {
   'use strict';
-  const APP_VERSION = "1.21.0";   // from package.json, the one place it's set
+  const APP_VERSION = "1.22.0";   // from package.json, the one place it's set
   const MIGRATIONS = [
   ];
   const DATA_V = Math.max(1, ...MIGRATIONS.map(s => s.to));
@@ -3836,6 +3853,10 @@ const LANG_ES = {
     'return': { q: '¿Cómo devuelvo los trabajos corregidos?', words: 'exportar descargar devolver entregar zip enviar estudiantes',
       a: ['1. Abre la pestaña **Return** de la tarea. Primero muestra lo que falta: notas sin poner, estudiantes sin trabajo.', '2. Pulsa el botón azul. La aplicación crea un ZIP con el archivo corregido de cada estudiante en las mismas carpetas en que llegaron.', '3. Sube ese ZIP, o los archivos que contiene, al sistema de tu centro.',
         'Para devolver un solo trabajo enseguida, usa el botón **Export … paper now** bajo Previous y Next.'] },
+    'anchor-papers': { q: '¿Cómo elijo y exporto los trabajos de referencia (anchor papers)?', words: 'referencia ejemplo alto medio bajo moderación estándar muestra anchor',
+      a: ['Los trabajos de referencia son el trabajo alto, el medio y el bajo que tu centro guarda de una evaluación sumativa. Mientras corriges, haz clic en **High**, **Mid** o **Low** debajo de la nota. Cada nivel pertenece a un solo trabajo, así que elegir otro lo mueve.',
+        'La pestaña **Return** muestra los tres. **Export anchor papers** los descarga en un ZIP, cada uno con el nombre de la tarea y su nivel, como “Ensayo - Summative High.pdf”.',
+        'Los nombres de los estudiantes se tapan igual que para Claude: los nombres escritos a máquina y tus propios recuadros quedan en negro. Un nombre escrito a mano necesita un recuadro, así que usa antes **Check the covers** en la tarjeta. Desmarca **Cover student names** para exportarlos tal como están.'] },
     'feedback-page': { q: '¿Qué es la página de comentarios de un trabajo devuelto?', words: 'portada resumen primera página estudiante ve informe',
       a: ['Cada trabajo devuelto empieza con una página para el estudiante: la nota, cada fila de la rúbrica con el nivel que diste y lo que significa, tu comentario y cada comentario del trabajo con su número de página.',
         'Está activada salvo que la desactives en **Options**, en la pestaña Return. Tus propias páginas no cambian. Con la aplicación en español, esa página sale en español.'] },
@@ -4164,6 +4185,10 @@ const LANG_ZH = {
     'return': { q: '怎麼發還批改好的作業？', words: '匯出 下載 發還 交回 zip 傳送 學生 export',
       a: ['1. 開啟作業的 **Return** 分頁。它會先顯示還缺什麼：尚未評分的作業、沒有作業的學生。', '2. 按藍色按鈕。程式會建立一個 ZIP，裡面是每位學生批改後的檔案，放在和原本相同的資料夾裡。', '3. 把這個 ZIP 或裡面的檔案上傳到學校系統。',
         '如果要立刻發還一份作業，請用 Previous 和 Next 下方的 **Export … paper now** 按鈕。'] },
+    'anchor-papers': { q: '怎麼選出並匯出範例作業（anchor papers）？', words: '範例 高 中 低 標準 樣本 評分 一致 anchor',
+      a: ['範例作業是學校從一次總結性評量中保留的高、中、低三份作業。批改時，在分數下方按 **High**、**Mid** 或 **Low**。每個等級只屬於一份作業，選了另一份就會移過去。',
+        '**Return** 分頁會列出這三份。**Export anchor papers** 會把它們放進一個 ZIP 下載，每個檔案以作業名稱和等級命名，例如「作文 - Summative High.pdf」。',
+        '學生姓名的遮蓋方式和給 Claude 的一樣：打字的姓名和你自己畫的遮蓋框會塗黑。手寫的姓名需要一個框，所以請先用卡片上的 **Check the covers**。取消勾選 **Cover student names** 就會照原樣匯出。'] },
     'feedback-page': { q: '發還的作業裡的回饋頁是什麼？', words: '封面 摘要 第一頁 學生 看到 報告 回饋',
       a: ['每份發還的作業開頭都有一頁給學生看的內容：分數、評分規準每個項目你給的等級和它的意義、你的評語，以及作業上每則評語和所在頁碼。',
         '這個功能預設開啟，可以在 Return 分頁的 **Options** 裡關閉。你自己的頁面不會改變。介面設為中文時，這一頁也會是中文。'] },
@@ -4390,6 +4415,11 @@ const HELP = [
     a: ['1. Open the assignment’s **Return** tab. It first lists anything unfinished: scores not given, students with no paper.', '2. Press the blue button. The app makes a ZIP with each student’s marked file in the same folders they came in.', '3. Upload that ZIP, or the files in it, to your school’s system.',
       'To hand back one paper straight away, use the **Export … paper now** button under Previous and Next.'],
     words: 'export download return give back zip send students flatten' },
+  { id: 'anchor-papers', sec: 'back', q: 'How do I pick and export anchor papers?',
+    a: ['Anchor papers are the high, middle and low paper your school keeps from a summative. While you mark, click **High**, **Mid** or **Low** under the score. Each level belongs to one paper, so picking another paper moves it.',
+      'The **Return** tab lists the three. **Export anchor papers** downloads them in one ZIP, each named for the assignment and its level, like “Persuasive essay - Summative High.pdf”.',
+      'Student names are covered the same way as for Claude: typed names and your own cover boxes are blacked out. A handwritten name needs a box, so use **Check the covers** on the card first. Untick **Cover student names** to export them as they are.'],
+    words: 'anchor exemplar high mid middle low moderation standard sample papers' },
   { id: 'feedback-page', sec: 'back', q: 'What is the feedback page on a returned paper?',
     a: ['Each returned paper starts with a page for the student: the score, each rubric row with the level you gave and what it means, your comment, and every comment on the paper with its page number.',
       'It is on unless you turn it off under **Options** on the Return tab. Your own pages are not changed.'],
@@ -6199,7 +6229,7 @@ function renderList() {
     const fm = fmNow(), sv = noScore(st) ? ['–', 'none'] : fm ? (st.grade.fb ? ['✓', 'ok'] : hasMarks(st) || (st.grade.comment || '').trim() ? ['', 'dot'] : st.files.length ? ['', 'ring'] : ['–', 'none'])
       : val != null ? [fmtNum(g.total != null ? g.total : g.pct) + (g.total == null ? '%' : ''), g.paper || g.out ? 'quiet' : g.done ? '' : 'part'] : manyReads(st) || (st.doubts && st.doubts.length) ? ['?', 'part'] : hasMarks(st) ? ['', 'dot'] : st.files.length ? ['', 'ring'] : ['–', 'none'];
     return '<button class="stu' + (i === cur ? ' on' : '') + (st.files.length ? '' : ' empty') + (sv[1] ? ' sv-' + sv[1] : '') + (g.status === 'late' ? ' is-late' : '') + '" data-i="' + i + '" data-sv="' + sv[0] + '"' + (i === cur ? ' aria-current="true"' : '') + '><span class="num">' + (pos + 1) + '</span><span class="nm" title="' + esc(full) + '">' + esc(nm) + '</span>' + (anonOn() ? '' : whoBtn('data-wi="' + i + '"', st.key)) +
-      '<span class="tail">' + (st.files.length || noScore(st) ? '' : '<span class="muted" style="font-size:11px">no paper</span>') + (g.status === 'late' ? '<span class="stag" title="You marked this student late">late</span>' : '') + (g.out ? '<span class="stag out" title="Left out of the average">left out</span>' : '') + (nAdd ? '<span class="add" title="' + nAdd + (nAdd === 1 ? ' file' : ' files') + ' added by you">+' + nAdd + '</span>' : '') + (re ? '<span class="add" title="A page needs a rescan">⚑</span>' : '') + (groupOf(st) ? '<span class="add grp" title="Group work: marked and graded once with ' + esc(groupNames(groupMates(st))) + '">group</span>' : grp ? '<span class="add grp" title="Group work: shares pages or a file with another student">shared</span>' : '') + carryPill(st) + sent + right + '</span></button>';
+      '<span class="tail">' + (st.files.length || noScore(st) ? '' : '<span class="muted" style="font-size:11px">no paper</span>') + (g.status === 'late' ? '<span class="stag" title="You marked this student late">late</span>' : '') + (g.out ? '<span class="stag out" title="Left out of the average">left out</span>' : '') + (nAdd ? '<span class="add" title="' + nAdd + (nAdd === 1 ? ' file' : ' files') + ' added by you">+' + nAdd + '</span>' : '') + (re ? '<span class="add" title="A page needs a rescan">⚑</span>' : '') + (groupOf(st) ? '<span class="add grp" title="Group work: marked and graded once with ' + esc(groupNames(groupMates(st))) + '">group</span>' : grp ? '<span class="add grp" title="Group work: shares pages or a file with another student">shared</span>' : '') + carryPill(st) + anchorTag(st) + sent + right + '</span></button>';
   }).join('');
   if (listFilter !== 'all' && !q && !order.some(i => lfMatch(batch.students[i]))) $('#stuList').insertAdjacentHTML('beforeend', '<div class="muted lfnone">No one else here. <button class="link" data-lf="all">Show everyone</button></div>');
   listToCur();
@@ -6264,7 +6294,7 @@ function renderGrade() {
     h += '<h3>Score <button class="link" id="editRubric">Edit</button></h3>' +
       '<div class="pts"><input type="number" step="0.5" min="0" id="ptsIn" value="' + esc(g.points) + '" aria-label="Points"><span class="muted">out of ' + esc(setup.outOf) + '</span></div>';
   }
-  h += '<div class="total">' + totalHtml(st) + '</div>' + statusHtml(st);
+  h += '<div class="total">' + totalHtml(st) + '</div>' + statusHtml(st) + anchorHtml(st);
   h += cmtHtml(g) + histSlot(st) + '<div class="gfoot"><div class="hint keysrow">' + (setup.mode === 'rubric' ? '<span><kbd>1</kbd>–<kbd>4</kbd> score</span><span><kbd>.</kbd> half</span>' : '<span>Type the score</span>') + '<button class="link" data-keys title="Every key">All keys <kbd>?</kbd></button></div>' + navHtml(st) + '</div>';
   $('#grade').innerHTML = h;
 }
@@ -6325,6 +6355,7 @@ $('#grade').addEventListener('click', e => {
   }
   const rn = e.target.closest('.crit .cn'); if (rn) return rowPick(+rn.parentNode.dataset.row);
   const sb = e.target.closest('[data-status]'); if (sb) return setStatus(batch.students[cur], sb.dataset.status);
+  const ab = e.target.closest('[data-anchor]'); if (ab) return setAnchor(batch.students[cur], ab.dataset.anchor);
   if (e.target.closest('#outAvg, [data-outoff]')) return setOutAvg(batch.students[cur]);
   if (e.target.closest('[data-gxc]')) { kmClose(); return xcStart(batch.students[cur]); }
   { const u = e.target.closest('[data-xcu]'); if (u) return xcUnitSet(batch.students[cur], u.dataset.xcu); }
@@ -19373,7 +19404,7 @@ function groupMates(st) { const g = groupOf(st); return g ? g.k.filter(k => k !=
 function groupNames(list) { return wordsJoin(list.map(s => shownName(s, batch.students.indexOf(s)))); }
 function groupFileOf(g, st) { const p = g.p && g.p[st.key]; return p ? st.files.find(f => f.path === p) || null : null; }
 
-const GROUP_SKIP = new Set(['reads', 'sent']);   // a partner's paper exported on its own isn't the others'
+const GROUP_SKIP = new Set(['reads', 'sent', 'anchor']);   // a partner's paper exported on its own isn't the others'
 function groupGradeCopy(to, from) {
   const a = to.grade, b = from.grade;
   for (const k of Object.keys(a)) if (!GROUP_SKIP.has(k) && !(k in b)) delete a[k];
@@ -19517,6 +19548,118 @@ function openShareFile(st, path) {
     toast((once ? 'In the group: ' : 'Shared with ') + shownName(to, +b.dataset.shto)); draw(); $('#mvFind').focus();
   };
   $('#mvFind').focus();
+}
+
+/* ---------------- anchor papers: the high, middle and low paper of a summative (11/11) ---------------- */
+const ANCHORS = [['high', 'High'], ['mid', 'Mid'], ['low', 'Low']];
+const anchorCoverOn = () => store.get('gs.anchorCover', true) !== false;
+function anchorKind() {
+  const a = batch && batch.assignment, f = a && findItem(a.id), t = ((f && f.it) || a || {}).type || '';
+  return t === 'ic' ? 'In-class' : t === 'fm' ? 'Formative' : 'Summative';
+}
+function anchorsHere() { const a = batch && batch.assignment, f = a && findItem(a.id), t = ((f && f.it) || a || {}).type || ''; return t === '' || t === 'sum'; }
+const anchorOf = lv => batch.students.findIndex(s => s.grade.anchor === lv);
+const anchorLabel = lv => anchorKind() + ' ' + (ANCHORS.find(a => a[0] === lv) || ['', ''])[1];
+function anchorFile(lv, k, n) { return (nameFreeText(batch.name) + ' - ' + anchorLabel(lv) + (n > 1 ? ' (' + (k + 1) + ')' : '') + '.pdf').replace(/[\\/:*?"<>|]+/g, '-'); }
+
+function anchorHtml(st) {
+  if (!anchorsHere() || !st.files.length || noScore(st)) return '';
+  const on = st.grade.anchor || '';
+  return '<div class="anchrow" id="anchRow"><span class="anchlab" title="The high, middle and low paper your school keeps from a summative. The Return tab exports all three, named and with names covered.">Anchor paper</span>' +
+    '<span class="seg anchseg" role="group" aria-label="Anchor paper">' + ANCHORS.map(([k, t]) => {
+      const j = anchorOf(k), other = j >= 0 && batch.students[j] !== st;
+      return '<button data-anchor="' + k + '" aria-pressed="' + (on === k) + '" title="' + esc(on === k ? 'This is the ' + anchorLabel(k).toLowerCase() + ' paper. Click again to take it off.' : other ? 'Make this the ' + t.toLowerCase() + ' paper instead of ' + (anonOn() ? 'another paper' : batch.students[j].key) : 'Make this the ' + t.toLowerCase() + ' anchor paper') + '">' + t + '</button>';
+    }).join('') + '</span></div>';
+}
+function setAnchor(st, lv) {
+  const was = st.grade.anchor || '';
+  if (was === lv) delete st.grade.anchor;
+  else {
+    for (const s of batch.students) if (s !== st && s.grade.anchor === lv) { delete s.grade.anchor; touchGrade(s); }
+    st.grade.anchor = lv;
+  }
+  touchGrade(st); saveSoon(); renderGrade(); renderList();
+  if (st.grade.anchor) toast(anchorLabel(lv) + ' anchor paper. It’s on the Return tab, ready to export.');
+}
+const anchorTag = st => st.grade.anchor && ANCHORS.some(a => a[0] === st.grade.anchor) ? '<span class="anch" title="' + esc(anchorLabel(st.grade.anchor)) + ' anchor paper">' + ANCHORS.find(a => a[0] === st.grade.anchor)[1].toLowerCase() + '</span>' : '';
+
+/* ---------- the Return tab's card ---------- */
+function anchorCardHtml() {
+  if (!anchorsHere() && !batch.students.some(s => s.grade.anchor)) return '';
+  const rows = ANCHORS.map(([k, t]) => {
+    const j = anchorOf(k), st = j >= 0 ? batch.students[j] : null, g = st && gradeOf(st);
+    const sc = g && g.total != null ? fmtNum(g.total) + ' / ' + fmtNum(g.outOf != null ? g.outOf : maxPoints()) + (g.pct != null ? ' · ' + fmtPct(g.pct) : '') : g && g.pct != null ? fmtPct(g.pct) : '';
+    return '<li class="anchli' + (st ? '' : ' none') + '"><b>' + t + '</b>' + (st ? '<button class="link" data-chk="' + j + '">' + esc(shownName(st, j)) + '</button><span class="muted">' + esc(sc) + '</span>' : '<span class="muted">Not picked yet</span>') + '</li>';
+  }).join('');
+  const n = ANCHORS.filter(([k]) => anchorOf(k) >= 0).length;
+  return '<section class="rtcard" id="rtAnchors"><h3>Anchor papers</h3>' +
+    (n ? '' : '<p class="muted">Pick a high, middle and low paper while you mark: under the score, click High, Mid or Low.</p>') +
+    '<ul class="anchlist">' + rows + '</ul>' +
+    (n ? '<label class="anchcov"><input type="checkbox" id="anchCover"' + (anchorCoverOn() ? ' checked' : '') + '> Cover student names</label>' +
+      '<p class="muted anchsay">Files come out as “' + esc(anchorFile(ANCHORS.find(([k]) => anchorOf(k) >= 0)[0], 0, 1)) + '”' + (n > 1 ? ', ' + n + ' in one ZIP' : '') + '. ' + (anchorCoverOn() ? 'Typed names and your own cover boxes are blacked out. A handwritten name needs a box: <button class="link" data-anchcheck>Check the covers</button>.' : 'Names stay as they are on the paper.') + '</p>' +
+      '<button class="btn primary" data-anchout>Export anchor papers</button>' : '') + '</section>';
+}
+function anchorCardDraw() { const el = $('#rtAnchors'), h = anchorCardHtml(); if (el) { if (h) el.outerHTML = h; else el.remove(); } }
+function anchorCardClick(e) {
+  const cb = e.target.closest('#anchCover');
+  if (cb) { store.set('gs.anchorCover', cb.checked); setTimeout(anchorCardDraw); return true; }
+  if (e.target.closest('[data-anchout]')) { anchorExport(); return true; }
+  if (e.target.closest('[data-anchcheck]')) {
+    const first = ANCHORS.map(([k]) => anchorOf(k)).find(j => j >= 0), b0 = batch;
+    const at = coverList().findIndex(x => x.st === batch.students[first]);
+    checkCovers(Math.max(0, at), () => { if (batch === b0) go(batchHash(batch.id, 'return')); });
+    return true;
+  }
+  return false;
+}
+
+/* ---------- export ---------- */
+async function anchorDocPdf(st, d, cover) {
+  if (!cover) return flattenDoc(st, d, 150, false, keyOn(), false);
+  const rx = coverRx(st), out = await PDFLib.PDFDocument.create(), js = new Map();
+  out.setTitle(''); out.setAuthor(''); out.setCreator('Grading Studio'); out.setProducer('');
+  try {
+    for (const [path, p] of d.pages) {
+      const f = fileByPath(st, path);
+      if (!js.has(path)) js.set(path, await pdfjsLib.getDocument({ data: (await viewBytes(f)).slice(), isEvalSupported: false }).promise);
+      const v1 = vpRot(f, p, await js.get(path).getPage(p + 1), 1);
+      const r = await sharePage(st, f, js.get(path), p, Math.min(150 / 72, 8000 / Math.max(v1.width * 1.5, v1.height)), rx, shareOpts(st));
+      out.addPage([r.W + r.side, r.H]).drawImage(await out.embedJpg(await canvasJpg(r.c, 0.88)), { x: 0, y: 0, width: r.W + r.side, height: r.H });
+      r.c.width = r.c.height = 0;
+    }
+  } finally { for (const v of js.values()) v.destroy(); }
+  return out.save();
+}
+const anchorDocs = st => layoutOf(st).filter(d => !(d.out === true || (d.file && st.inc && st.inc[d.file] === false))).map(d => ({ ...d, pages: d.pages.filter(([path]) => { const f = fileByPath(st, path); return f && viewable(f); }) })).filter(d => d.pages.length);
+async function anchorExport() {
+  if (xBusy) return toast('The last export is still going. It will say when it’s done.');
+  const picked = ANCHORS.map(([k]) => ({ k, j: anchorOf(k) })).filter(x => x.j >= 0);
+  if (!picked.length) return toast('Pick a high, middle or low paper first');
+  saveNow(); commitEditors();
+  if (batch.lineBusy) await batch.lineRun;
+  const b0 = batch, cover = anchorCoverOn(), files = {}, failed = [];
+  xBusy = true;
+  const btn = $('[data-anchout]'); if (btn) { btn.disabled = true; btn.textContent = 'Making the files…'; }
+  try {
+    await workerReady;
+    if (cover) await classCommon();
+    for (const { k, j } of picked) {
+      const st = batch.students[j], docs = anchorDocs(st);
+      if (!docs.length) { failed.push(anchorLabel(k) + ' (no pages to export)'); continue; }
+      for (let n = 0; n < docs.length; n++) {
+        try { files[anchorFile(k, n, docs.length)] = await anchorDocPdf(st, docs[n], cover); }
+        catch (er) { console.error(er); failed.push(anchorLabel(k) + ' (' + exportWhy(er, false) + ')'); }
+      }
+    }
+    if (batch !== b0) return;
+    const names = Object.keys(files);
+    if (!names.length) throw new Error(failed.join(', ') || 'nothing could be made');
+    if (names.length === 1) await saveBlob(names[0], new Blob([files[names[0]]], { type: 'application/pdf' }));
+    else { const z = {}; for (const nm of names) z[nm] = [files[nm], { level: 0 }]; await saveBlob('Anchor papers - ' + nameFreeText(batch.name) + '.zip', new Blob([fflate.zipSync(z)], { type: 'application/zip' })); }
+    toast(names.length === 1 ? 'Saved “' + names[0] + '”.' : 'Saved ' + names.length + ' anchor papers in one ZIP.', 5000);
+    if (failed.length) sayDlg('Not exported: ' + failed.join(', ') + '. The rest downloaded.');
+  } catch (er) { console.error(er); toast('Something went wrong: ' + (er.message || er), 6000); }
+  finally { xBusy = false; if (batch === b0) anchorCardDraw(); }
 }
 
 /* ---------------- comments on Word files: real Word comments, kept in the file's own comments part ---------------- */
@@ -20820,7 +20963,7 @@ function returnSideHtml() {
   const re = scanRescans(), nRe = new Set(re.map(x => x.i)).size;
   const row = (t, s, act, label) => '<div class="rtrow"><span><b>' + t + '</b><small>' + s + '</small></span><button class="btn sm" data-rtask="' + act + '">' + label + '</button></div>';
   return '<aside class="rtside" id="rtSide" aria-label="Other ways to give work back">' +
-    '<section class="rtcard" id="rtOne"><h3>One student at a time</h3><p class="muted">Give one student their marked paper now, without waiting for the rest.</p>' +
+    anchorCardHtml() + '<section class="rtcard" id="rtOne"><h3>One student at a time</h3><p class="muted">Give one student their marked paper now, without waiting for the rest.</p>' +
       (sent.length ? '<ul class="rtsent">' + sent.slice(0, 6).map(x => '<li><button class="link" data-chk="' + x.i + '">' + esc(shownName(x.s, x.i)) + '</button> <span class="muted">exported ' + esc(sentWhen(x.s.grade.sent)) + '</span></li>').join('') + (sent.length > 6 ? '<li class="muted">and ' + (sent.length - 6) + ' more</li>' : '') + '</ul>' : '') +
       (who ? '<button class="btn" data-rtone>Export ' + who + '</button>' : '<p class="muted">Open a student’s paper on the Mark tab first.</p>') + '</section>' +
     '<section class="rtcard" id="rtClaude"><h3>Ask Claude <span class="muted">(optional)</span></h3>' +
@@ -20831,6 +20974,7 @@ function returnSideHtml() {
     '</aside>';
 }
 function returnSideClick(e) {
+  if (anchorCardClick(e)) return true;
   if (e.target.closest('[data-unreturn]')) { delete batch.returned; saveSoon(); returnedDraw(); toast('Marked as not returned'); return true; }
   if (e.target.closest('[data-rtone]')) {
     const st = batch.students[cur], b0 = batch;
@@ -21512,7 +21656,7 @@ $('#setHistory').addEventListener('click', e => {
 });
 
 /* updates she controls, and installing as an app */
-const WHATS_NEW = {"1.21.0":["Each class has a Missing work tab: every paper you marked Missing, by student or by assignment, for the term you pick.","Email reminder opens an email in your own mail app, addressed to the student and listing what they owe, for you to read and send. Email all writes one email to everyone who owes an assignment, with the addresses in Bcc. Grading Studio sends nothing itself.","Each reminder you open is noted beside the work, and Email wording… changes what every reminder says."],"1.20.0":["The app can speak Traditional Chinese (繁體中文). Choose it in Settings, Display, App language, or at the top of the welcome.","Like Spanish, it covers the first screens so far: the sidebar, Today, the welcome, Find anything, Help, and the feedback page students get with a returned paper. The other screens are still in English."],"1.19.0":["The app can speak Spanish. Choose it in Settings, Display, App language, or at the top of the welcome.","Spanish covers the first screens so far: the sidebar, Today, the welcome, Find anything, Help, and the feedback page students get with a returned paper. The other screens are still in English.","Names you typed (classes, students, assignments, rubric rows) are never translated."],"1.18.0":["On a tablet, a pencil draws and the pen's line is wider where you press harder. Once you have used a pencil, one finger moves the page, two fingers pinch to zoom, and a hand resting on the screen does nothing.","Settings, Marking has a new Tablet and pencil section: choose what a finger does on the paper, or turn off the wider line.","On a touch screen the tools, the student rows and the score buttons are larger."],"1.17.0":["Report comments: a new tab on each class's page drafts a comment for every student from your own gradebook, rubric scores and the comments you wrote on their papers. Edit each one, tick it done, then copy or download them all.","The drafts are put together on your computer from sentences you can change under Wording. Nothing about a student is sent anywhere."],"1.16.0":["Help is in the sidebar: short answers to the questions teachers ask most, from opening a set of papers to moving your work to another computer.","Find anything answers questions too. Type a few words, like “late paper” or “backup”, and the answer is in the list."],"1.15.0":["A picture dragged onto a slide that has text now sits beside the text, in a new Text + picture layout.","Drag several pictures in at once and each gets its own slide. Let a picture go on any slide in the list on the left to put it there.","New Full picture layout: the picture fills the whole slide."],"1.14.0":["Extra credit: points or a percent on one paper, and extra credit entries in the gradebook that add to the term grade or the in-class average.","The gradebook shows each type's average (summative, in-class) right beside the term grade, kept in view as you scroll. Averages only shows just those columns, and Whole year splits each term the same way.","Leave out… lets you untick students to see the class averages without them. Their own grades don't change, and nothing is saved."],"1.13.0":["Present a lesson from the Planner, or from Today when its class is on now or next: its slides fill the screen, and the arrow keys or a clicker move through them.","While presenting, A shows the agenda to tick off, T starts a timer the class can see, N shows your notes and B blanks the screen.","The bar shows how many minutes the class has left, from your timetable.","After a lesson is taught, one line says where the class got to. It shows on the lesson and on the week, and presenting again picks up there."],"1.12.0":["A returned paper starts with a feedback page: the score, each rubric row with the level given and what that level means, your comment, and every comment on the paper with its page number.","It is on unless you turn it off under Options on the Return tab. Your own pages are not changed, and bringing an export back in opens only those."],"1.11.0":["The Planner’s sections are in the sidebar: Calendar, Units, Past lessons, Activities and Rubrics. The row of tabs across the top is gone.","A lesson has a lighter top: its name, its classes, its status and Download. Copy for Claude, Versions, the upload and the links are under More.","Comments shows above a lesson once it has one."],"1.7.0":["Home is now Today: the classes you teach today with the lesson planned for each, the papers waiting to be marked, and the papers ready to hand back.","What the class needs next: after a set of papers is scored, Today shows the weakest rubric row and how many students to sit down with.","A class page is quieter. Click anywhere on an assignment’s row to open it; the only blue button is the one that adds an assignment.","Forget, and the other ways to open papers, moved into the ⋯ menu on each row."],"1.6.0":["A new browser opens on three questions (your classes, how you grade, where work is kept) and starts with nothing of anyone else’s in it.","A sample class of made-up students, with papers to mark, for trying things out. Remove it from Home when you’re done.","The app uses the name of your own school system. Choose it, and how you usually grade, in Settings.","Letter grades or IB 1 to 7 can show beside the percent, with boundaries you set.","Canvas and Moodle downloads are grouped by student. The Planner works without a setup file, and downloads lessons as PowerPoint with a plain built-in template."],"1.5.0":["The sidebar says “Not backed up”, in amber, until a folder holds a second copy of your work. Home asks for that folder once.","Go back in time, in Settings: any assignment as it was on an earlier day, restored on its own, with Undo.","Grading Studio can be installed as an app, and it opens with no internet.","A newer version now waits until you click Update now, so nothing changes in the middle of marking."]};
+const WHATS_NEW = {"1.22.0":["Anchor papers: while you mark a summative, click High, Mid or Low under the score. The Return tab lists the three and exports them in one ZIP, each named for the assignment and its level, like “Essay - Summative High.pdf”, with student names covered."],"1.21.0":["Each class has a Missing work tab: every paper you marked Missing, by student or by assignment, for the term you pick.","Email reminder opens an email in your own mail app, addressed to the student and listing what they owe, for you to read and send. Email all writes one email to everyone who owes an assignment, with the addresses in Bcc. Grading Studio sends nothing itself.","Each reminder you open is noted beside the work, and Email wording… changes what every reminder says."],"1.20.0":["The app can speak Traditional Chinese (繁體中文). Choose it in Settings, Display, App language, or at the top of the welcome.","Like Spanish, it covers the first screens so far: the sidebar, Today, the welcome, Find anything, Help, and the feedback page students get with a returned paper. The other screens are still in English."],"1.19.0":["The app can speak Spanish. Choose it in Settings, Display, App language, or at the top of the welcome.","Spanish covers the first screens so far: the sidebar, Today, the welcome, Find anything, Help, and the feedback page students get with a returned paper. The other screens are still in English.","Names you typed (classes, students, assignments, rubric rows) are never translated."],"1.18.0":["On a tablet, a pencil draws and the pen's line is wider where you press harder. Once you have used a pencil, one finger moves the page, two fingers pinch to zoom, and a hand resting on the screen does nothing.","Settings, Marking has a new Tablet and pencil section: choose what a finger does on the paper, or turn off the wider line.","On a touch screen the tools, the student rows and the score buttons are larger."],"1.17.0":["Report comments: a new tab on each class's page drafts a comment for every student from your own gradebook, rubric scores and the comments you wrote on their papers. Edit each one, tick it done, then copy or download them all.","The drafts are put together on your computer from sentences you can change under Wording. Nothing about a student is sent anywhere."],"1.16.0":["Help is in the sidebar: short answers to the questions teachers ask most, from opening a set of papers to moving your work to another computer.","Find anything answers questions too. Type a few words, like “late paper” or “backup”, and the answer is in the list."],"1.15.0":["A picture dragged onto a slide that has text now sits beside the text, in a new Text + picture layout.","Drag several pictures in at once and each gets its own slide. Let a picture go on any slide in the list on the left to put it there.","New Full picture layout: the picture fills the whole slide."],"1.14.0":["Extra credit: points or a percent on one paper, and extra credit entries in the gradebook that add to the term grade or the in-class average.","The gradebook shows each type's average (summative, in-class) right beside the term grade, kept in view as you scroll. Averages only shows just those columns, and Whole year splits each term the same way.","Leave out… lets you untick students to see the class averages without them. Their own grades don't change, and nothing is saved."],"1.13.0":["Present a lesson from the Planner, or from Today when its class is on now or next: its slides fill the screen, and the arrow keys or a clicker move through them.","While presenting, A shows the agenda to tick off, T starts a timer the class can see, N shows your notes and B blanks the screen.","The bar shows how many minutes the class has left, from your timetable.","After a lesson is taught, one line says where the class got to. It shows on the lesson and on the week, and presenting again picks up there."],"1.12.0":["A returned paper starts with a feedback page: the score, each rubric row with the level given and what that level means, your comment, and every comment on the paper with its page number.","It is on unless you turn it off under Options on the Return tab. Your own pages are not changed, and bringing an export back in opens only those."],"1.11.0":["The Planner’s sections are in the sidebar: Calendar, Units, Past lessons, Activities and Rubrics. The row of tabs across the top is gone.","A lesson has a lighter top: its name, its classes, its status and Download. Copy for Claude, Versions, the upload and the links are under More.","Comments shows above a lesson once it has one."],"1.7.0":["Home is now Today: the classes you teach today with the lesson planned for each, the papers waiting to be marked, and the papers ready to hand back.","What the class needs next: after a set of papers is scored, Today shows the weakest rubric row and how many students to sit down with.","A class page is quieter. Click anywhere on an assignment’s row to open it; the only blue button is the one that adds an assignment.","Forget, and the other ways to open papers, moved into the ⋯ menu on each row."],"1.6.0":["A new browser opens on three questions (your classes, how you grade, where work is kept) and starts with nothing of anyone else’s in it.","A sample class of made-up students, with papers to mark, for trying things out. Remove it from Home when you’re done.","The app uses the name of your own school system. Choose it, and how you usually grade, in Settings.","Letter grades or IB 1 to 7 can show beside the percent, with boundaries you set.","Canvas and Moodle downloads are grouped by student. The Planner works without a setup file, and downloads lessons as PowerPoint with a plain built-in template."],"1.5.0":["The sidebar says “Not backed up”, in amber, until a folder holds a second copy of your work. Home asks for that folder once.","Go back in time, in Settings: any assignment as it was on an earlier day, restored on its own, with Undo.","Grading Studio can be installed as an app, and it opens with no internet.","A newer version now waits until you click Update now, so nothing changes in the middle of marking."]};
 const upd = { on: false, st: null, mine: '', checking: false, said: '', install: null, installed: false, err: '' };
 const updCan = () => 'serviceWorker' in navigator && (location.protocol === 'https:' || /[?&]sw=1(&|$)/.test(location.search)) && !/Grading Studio\.html$/i.test(decodeURIComponent(location.pathname));
 const updSend = async msg => { const reg = await navigator.serviceWorker.ready; if (reg.active) reg.active.postMessage(msg); };
