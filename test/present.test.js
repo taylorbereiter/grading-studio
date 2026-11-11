@@ -163,11 +163,45 @@ test('a timer the class can see counts down, pauses, and says when the time is u
     await page.keyboard.press('ArrowRight'); await wait(1300);
     assert.equal(await page.$eval('#prChip', c => c.textContent), held);
     assert.equal((await state(page)).i, 1);
-    // the menu now runs the timer: one more minute, then stop
+    // the menu now runs the timer: one more minute, ten seconds less, + and − by the minute, back to the start, then stop
     await page.keyboard.press('t');
-    await page.$eval('#prMenu [data-p="tadd"]', b => b.click());
-    assert.match(await page.$eval('#prChip', c => c.textContent), /^(6:00|5:59|5:58)Paused$/);
+    assert.match(await page.$eval('#prMenu h3', h => h.textContent), /started at 5:00/);
+    await page.$eval('#prMenu [data-ta="60"]', b => b.click());
+    const sec = () => page.$eval('#prChip', c => { const m = c.textContent.match(/^(\d+):(\d\d)/); return +m[1] * 60 + +m[2]; });
+    const t0 = await sec();
+    assert.ok(t0 >= 358 && t0 <= 360, 'one minute more: ' + t0);
+    await page.$eval('#prMenu [data-ta="-10"]', b => b.click());
+    assert.equal(await sec(), t0 - 10);
+    await page.keyboard.press('-');
+    assert.equal(await sec(), t0 - 70);
+    await page.keyboard.press('+');
+    assert.equal(await sec(), t0 - 10);
+    assert.match(await page.$eval('#prChip', c => c.textContent), /Paused$/, 'still paused after the changes');
+    await page.$eval('#prMenu [data-p="trestart"]', b => b.click());
+    assert.match(await page.$eval('#prChip', c => c.textContent), /^(5:00|4:59)$/, 'restart goes back to 5:00, running');
+    // big in the middle of the screen, and the choice is kept
+    await page.$eval('#prBigC', c => c.click());
+    assert.equal(await page.$eval('#prChip', c => c.classList.contains('big')), true);
+    assert.equal(await page.evaluate(() => localStorage.getItem('gsp.presentBig')), '1');
+    await page.$eval('#prBigC', c => c.click());
+    assert.equal(await page.$eval('#prChip', c => c.classList.contains('big')), false);
     await page.$eval('#prMenu [data-p="tstop"]', b => b.click());
+    // minutes and seconds typed in: 1 min 45 sec, and the menu remembers it next time
+    assert.equal(await page.$eval('#prMenu [data-ts]', b => b.textContent), '0:30');
+    await page.$eval('#prOwn', i => { i.value = '1'; }); await page.$eval('#prOwnS', i => { i.value = '45'; });
+    await page.$eval('#prMenu [data-p="town"]', b => b.click());
+    assert.match(await page.$eval('#prChip', c => c.textContent), /^(1:45|1:44)$/);
+    assert.equal(await page.evaluate(() => localStorage.getItem('gsp.presentOwn')), '105');
+    await page.keyboard.press('t');
+    await page.$eval('#prMenu [data-p="tstop"]', b => b.click());
+    assert.deepEqual(await page.$eval('#prOwn', i => i.value), '1');
+    assert.deepEqual(await page.$eval('#prOwnS', i => i.value), '45');
+    // taking away more than is left ends it
+    await page.$eval('#prMenu [data-ts]', b => b.click());
+    await page.keyboard.press('-');
+    await until(page, () => /Time’s up/.test(document.querySelector('#prChip').textContent));
+    await page.$eval('#prChip', c => c.click());
+    await page.keyboard.press('t');
     assert.equal(await page.$eval('#prChip', c => c.hidden), true);
     await page.keyboard.press('Escape');   // closes the menu, not the lesson
     assert.equal((await state(page)).on, true);

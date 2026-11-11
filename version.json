@@ -1,12 +1,13 @@
 {
- "version": "1.22.0",
- "build": "a9147b5f56ae",
+ "version": "1.23.0",
+ "build": "838a304e9e96",
  "notes": [
-  "Progress sheets for parent meetings: one printed page per student with the term grade, every score, a chart of how they moved, missing work, each term's grade, the report comment and lines for notes. Find it on a class's Students list, or Progress sheet on one student's page.",
-  "Choose the term and tick what goes on it; Print opens the print window, where you can pick a printer or Save as PDF. It is made on your computer and nothing is sent anywhere."
+  "The class timer in Present takes minutes and seconds: type them in, or pick 0:30 and the other quick times. The menu remembers the last time you typed.",
+  "While it runs, the timer's menu adds or takes away 10 seconds or a minute, pauses, and restarts from the time you set. + and − add or take away a minute without opening the menu.",
+  "Tick Show it big to put the countdown in the middle of the screen, large enough for the back of the room."
  ],
  "files": {
-  "index.html": "0e5b274a182b8a0d61968d980a9b2ec49804addb292f433f2d4ff6132b260f71",
-  "planner.html": "50ad81bcd0b4d9748f9871a2f98992f8c5e96e093b22a0dfa4a321e85f25e0bb"
+  "index.html": "d786576573b31fbc03cd3d425f4f0dfd4f6545f415ef566d4f0895c68b1d6184",
+  "planner.html": "60b6713a2e454824eb675875cc29b08c0d9b7ca5a7baf547af08267a64acb108"
  }
 }
