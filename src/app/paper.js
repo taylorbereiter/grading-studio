@@ -34,7 +34,7 @@ function turnMarks(marks, W, H, dir) {
     if (m.t === 'pen') m.pts = m.pts.map(pt);
     else if (m.t === 'hl' || m.t === 'oval') { Object.assign(m, box(m)); if (m.rects) m.rects = m.rects.map(box); if (m.pts) m.pts = m.pts.map(pt); }
     else if (m.t === 'check' || m.t === 'stamp') [m.x, m.y] = pt([m.x, m.y]);
-    else if (m.t === 'note') { [m.ax, m.ay] = pt([m.ax, m.ay]); if (m.hl) m.hl = box(m.hl); if (m.rects) m.rects = m.rects.map(box); }
+    else if (m.t === 'note') { delete m.ly; [m.ax, m.ay] = pt([m.ax, m.ay]); if (m.hl) m.hl = box(m.hl); if (m.rects) m.rects = m.rects.map(box); }
     else if (m.t === 'text') {
       const L = textLayout(m, W), [cx, cy] = pt([m.x + L.ink / 2, m.y + L.h / 2]);   // turns about the words, not the empty part of a wide box
       const want = m.bwFull || m.bw;
@@ -136,6 +136,9 @@ function bindPage(pg) {
     // A comment box in the margin always opens for editing, whatever the tool.
     const box = (pg.boxes || []).find(b => x >= b.x && x <= b.x + b.w && y >= b.y && y <= b.y + b.h);
     if (box && !box.n.ro && tool !== 'erase') { e.preventDefault(); openNote(pg, box.n); return; }
+    // A comment's line can be dragged up or down so it runs between lines of writing, not through them.
+    const ln = tool !== 'erase' && !once ? noteLineAt(pg, x, y) : null;
+    if (ln) { e.preventDefault(); c.setPointerCapture(e.pointerId); g = { line: ln, y0: y, ly0: noteRunY(ln, pg.H), moved: false }; return; }
     if (wasNote) { e.preventDefault(); return; }
     if (tool !== 'erase' && !once) { const cg = cornerAt(pg, x, y); if (cg) { e.preventDefault(); c.setPointerCapture(e.pointerId); g = cg; return; } }
     if (tool !== 'select' && tool !== 'erase' && !onPage(x, y)) return;
@@ -165,9 +168,13 @@ function bindPage(pg) {
     }
   });
   c.addEventListener('pointermove', e => {
-    if (!g) { const [x, y] = pt(e), cu = hoverCursor(pg, x, y); if (cu) c.style.cursor = cu; return; }
+    if (!g) { const [x, y] = pt(e), cu = hoverCursor(pg, x, y); c.style.cursor = cu || (tool === 'select' ? 'default' : tool === 'text' ? 'text' : 'crosshair'); return; }
     const [x, y] = pt(e);
-    if (g.text) {
+    if (g.line) {
+      if (!g.moved) { if (Math.abs(y - g.y0) < 1.5) return; snap(pg); g.moved = true; }
+      g.line.ly = r1(clamp(g.ly0 + y - g.y0, 2, pg.H - 2));
+      pg.lineOn = g.line; draw(pg);
+    } else if (g.text) {
       g.x1 = clamp(x, 0, pg.W);
       const w = Math.abs(g.x1 - g.x0);
       pg.ghost = w > 8 ? { x: Math.min(g.x0, g.x1), y: g.y0 - disp.tsize * 0.65, w, h: disp.tsize * 1.3 } : null;
@@ -201,6 +208,11 @@ function bindPage(pg) {
   });
   const end = () => {
     if (!g) return;
+    if (g.line) {
+      const m = g.line, moved = g.moved; g = null; pg.lineOn = null;
+      if (moved) { if (Math.abs(m.ly - m.ay) < 1) delete m.ly; changed(pg); } else draw(pg);
+      return;
+    }
     if (g.text) {
       pg.ghost = null;
       const w = Math.abs(g.x1 - g.x0), m = { t: 'text', color: COLORS[inkColor], x: r1(w > 24 ? Math.min(g.x0, g.x1) : Math.min(g.x0, pg.W - 106)), y: r1(g.y0 - disp.tsize / 2), size: disp.tsize, text: '' };
@@ -234,6 +246,7 @@ function bindPage(pg) {
     g = null;
     if (once && once.k !== 'pen') endOnce();   // a circle or highlight from the right-click: one, then back to her tool
   };
+  c.addEventListener('pointerleave', () => { if (!g && pg.lineOn) { pg.lineOn = null; draw(pg); } });
   c.addEventListener('pointerup', end);
   c.addEventListener('pointercancel', end);
   // A right-click on the page: a comment right there, or any other mark or tool, used once.
@@ -256,7 +269,7 @@ const r1 = v => Math.round(v * 10) / 10;
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 function moveMark(m, dx, dy) {
   if (m.t === 'pen') m.pts = m.pts.map(([x, y]) => [r1(x + dx), r1(y + dy)]);
-  else if (m.t === 'note') { m.ax = r1(m.ax + dx); m.ay = r1(m.ay + dy); if (m.hl) m.hl = { ...m.hl, x: r1(m.hl.x + dx), y: r1(m.hl.y + dy) }; moveExtras(m, dx, dy); }
+  else if (m.t === 'note') { m.ax = r1(m.ax + dx); m.ay = r1(m.ay + dy); if (m.ly != null) m.ly = r1(m.ly + dy); if (m.hl) m.hl = { ...m.hl, x: r1(m.hl.x + dx), y: r1(m.hl.y + dy) }; moveExtras(m, dx, dy); }
   else { m.x = r1(m.x + dx); m.y = r1(m.y + dy); moveExtras(m, dx, dy); }
 }
 function eraseAt(pg, x, y, g) {

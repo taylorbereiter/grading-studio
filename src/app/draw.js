@@ -31,14 +31,15 @@ function textLayout(m, W) {
 // Comment boxes in the right margin, each with a line to its spot (the look Taylor liked from Kami's flattened files).
 function layoutNotes(notes, W, H, side) {
   const M = 10, pad = 7, gap = 8, boxX = W + 12, boxW = side - 22;
-  const list = notes.map(n => ({ n, ax: n.ax, ay: n.ay })).sort((p, q) => p.ay - q.ay || p.ax - q.ax);
+  // ry is the height the line runs across the page at: its spot, unless she dragged the line up or down off the words (n.ly).
+  const list = notes.map(n => ({ n, ax: n.ax, ay: n.ay, ry: noteRunY(n, H) })).sort((p, q) => p.ry - q.ry || p.ax - q.ax);
   let fs = 10, boxes = [];
   const run = () => {
     const lh = fs * 1.3;
     measureCtx.font = fs + 'px ' + FONT;
     boxes = list.map(o => { const lines = wrapText(measureCtx, o.n.text, boxW - pad * 2); return { ...o, lines, lh, h: Math.max(1, lines.length) * lh + pad * 2 }; });
     let y = M;
-    for (const b of boxes) { b.y = Math.max(b.ay - 10, y); y = b.y + b.h + gap; }
+    for (const b of boxes) { b.y = Math.max(b.ry - 10, y); y = b.y + b.h + gap; }
     let bottom = H - M;
     for (let i = boxes.length - 1; i >= 0; i--) { if (boxes[i].y + boxes[i].h > bottom) boxes[i].y = bottom - boxes[i].h; bottom = boxes[i].y - gap; }
     return !boxes.length || boxes[0].y >= M - 0.5;
@@ -46,6 +47,14 @@ function layoutNotes(notes, W, H, side) {
   while (!run() && fs > 6) fs -= 0.5;
   for (const b of boxes) { b.x = boxX; b.w = boxW; b.y = Math.max(b.y, M / 2); b.fs = fs; b.pad = pad; }
   return boxes;
+}
+const noteRunY = (n, H) => n.ly == null ? n.ay : Math.max(0, Math.min(H, n.ly));
+// The line from a comment's spot to its box: across the page at ry, then up or down to the box in the margin.
+function noteLeader(ctx, b, W) {
+  const midY = b.y + Math.min(b.h / 2, 12);
+  ctx.beginPath(); ctx.moveTo(b.ax, b.ay);
+  if (Math.abs(b.ry - b.ay) > 0.5) ctx.lineTo(Math.min(b.ax + 6, W), b.ry);
+  ctx.lineTo(W + 4, b.ry); ctx.lineTo(b.x, midY); ctx.stroke();
 }
 function drawCheck(ctx, m) {
   const s = m.size || 22;
@@ -109,9 +118,8 @@ function drawMarks(ctx, marks, W, H, side, screen) {
     boxes = layoutNotes(notes, W, H, side);
     for (const b of boxes) {
       const [r, g, bl] = rgb(b.n.color), dk = v => Math.round(v * 0.72), col = 'rgb(' + dk(r) + ',' + dk(g) + ',' + dk(bl) + ')';
-      const midY = b.y + Math.min(b.h / 2, 12);
-      ctx.strokeStyle = col; ctx.lineWidth = 0.7;
-      ctx.beginPath(); ctx.moveTo(b.ax, b.ay); ctx.lineTo(W + 4, b.ay); ctx.lineTo(b.x, midY); ctx.stroke();
+      ctx.strokeStyle = col; ctx.lineWidth = screen && screen.line === b.n ? 1.4 : 0.7;
+      noteLeader(ctx, b, W);
       ctx.fillStyle = col; ctx.beginPath(); ctx.arc(b.ax, b.ay, 2.2, 0, Math.PI * 2); ctx.fill();
       ctx.fillStyle = '#fff'; ctx.fillRect(b.x, b.y, b.w, b.h);
       ctx.fillStyle = 'rgba(' + r + ',' + g + ',' + bl + ',0.14)'; ctx.fillRect(b.x, b.y, b.w, b.h);

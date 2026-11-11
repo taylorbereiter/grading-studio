@@ -132,9 +132,11 @@ let cur = 0;             // index of the open student
 let tool = 'pen';
 let once = null, onceEl = null;   // a tool picked from the right-click for one go: { k, prev } (src/stamps.js)
 const COLORS = { red: '#D7263D', blue: '#1F5FD1', green: '#1E8A4C', purple: '#7B3FC4', black: '#1B1F27' };
-// A check mark always shows green ("correct"), whatever ink is picked, on screen and in every export. Checks saved
-// before this kept the ink they were made in; they draw green too, and their stored color is left as it was.
-const CHECK_INK = COLORS.green;
+// Every check mark shows in one check color (green unless the teacher picks another), whatever ink is picked, on screen
+// and in every export. Checks saved before keep their stored color; they draw in the check color too.
+let checkInk = COLORS[store.get('gs.checkInk', 'green')] ? store.get('gs.checkInk', 'green') : 'green';
+let CHECK_INK = COLORS[checkInk];
+function setCheckInk(k) { if (!COLORS[k]) return; checkInk = k; CHECK_INK = COLORS[k]; store.set('gs.checkInk', k); }
 const HL = { yellow: '#FFE45C', green: '#B4F0A8', pink: '#FFB8D6', blue: '#B0E0FF' };
 let inkColor = store.get('gs.ink', 'red'), hlColor = store.get('gs.hl', 'yellow'), penW = store.get('gs.penW', 2);
 const DISP0 = { ui: 1, tsize: 14, fit: 'width', dfs: 15, dlh: 1.45, trim: true };

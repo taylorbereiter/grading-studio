@@ -18,6 +18,7 @@ function renderTools() {
   const bar = once ? once.prev : tool;   // a one-time tool keeps her own tool's bar, so the toolbar doesn't jump
   const isHl = bar === 'hl';
   const sw = isHl ? Object.entries(HL).map(([k, v]) => '<button class="sw" data-hl="' + k + '" style="background:' + v + '" aria-pressed="' + (k === hlColor) + '" title="' + k + '"></button>').join('')
+    : bar === 'check' ? Object.entries(COLORS).map(([k, v]) => '<button class="sw" data-chk="' + k + '" style="background:' + v + '" aria-pressed="' + (k === checkInk) + '" title="Checks in ' + k + '"></button>').join('')   // the check tool sets the color every check shows in
     : Object.entries(COLORS).map(([k, v]) => '<button class="sw" data-ink="' + k + '" style="background:' + v + '" aria-pressed="' + (k === inkColor) + '" title="' + k + '"></button>').join('');
   // One dock down the left edge of the paper: the tools, what the tool in hand can be set to, undo and redo, zoom.
   const opts = (bar === 'select' || bar === 'erase' ? '' : '<span class="swatches">' + sw + '</span>') +
@@ -33,6 +34,7 @@ function renderTools() {
 $('#tools').addEventListener('click', e => {
   const t = e.target.closest('[data-tool]'); if (t) { setTool(t.dataset.tool); return; }
   const i = e.target.closest('[data-ink]'); if (i) { inkColor = i.dataset.ink; store.set('gs.ink', inkColor); recolorSelected(COLORS[inkColor]); renderTools(); return; }
+  const ck = e.target.closest('[data-chk]'); if (ck) { setCheckInk(ck.dataset.chk); renderTools(); redrawAll(); return; }
   const h = e.target.closest('[data-hl]'); if (h) { hlColor = h.dataset.hl; store.set('gs.hl', hlColor); renderTools(); return; }
   if (hlBarClick(e)) return;
   const w = e.target.closest('[data-w]'); if (w) { penW = +w.dataset.w; store.set('gs.penW', penW); renderTools(); return; }
