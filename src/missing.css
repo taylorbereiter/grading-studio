@@ -1,0 +1,20 @@
+/* ---------- Missing work: a class page's tab (missing.js) ---------- */
+.misopts{display:flex;align-items:center;gap:var(--space-3) var(--space-4);flex-wrap:wrap;margin:0 0 var(--space-2)}
+.misopts label{display:flex;align-items:center;gap:var(--space-2);font-size:var(--text-control);color:var(--fg-2)}
+#misCls{width:180px;height:30px;padding:0 var(--space-2);border:1px solid var(--line-strong);border-radius:var(--corner-2);background:var(--surface);color:var(--fg);font:inherit;font-size:var(--text-control)}
+.misnote{margin:0 0 var(--space-4);font-size:var(--text-control);max-width:80ch}
+.missum{font-size:var(--text-caption);font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 var(--space-2)}
+.miscard{background:var(--surface);border:1px solid var(--line);border-radius:var(--corner-5);padding:var(--space-3) var(--space-4);margin:0 0 var(--space-3);max-width:900px}
+.mishead{display:flex;align-items:center;gap:var(--space-3);flex-wrap:wrap}
+.mishead h3{margin:0;font-size:var(--text-lead);font-weight:700}
+.mishead .sp,.mislist .sp{flex:1}
+.misaddr,.misnoaddr{font-size:var(--text-control)}
+.mislist{list-style:none;margin:var(--space-2) 0 0;padding:0}
+.mislist li{display:flex;align-items:center;gap:var(--space-2) var(--space-3);flex-wrap:wrap;min-height:36px;padding:var(--space-1) 0;border-top:1px solid var(--line)}
+.misw{font-weight:600}
+.misdue{font-size:var(--text-control);font-variant-numeric:tabular-nums}
+.misnone{background:var(--surface);border:1px solid var(--line);border-radius:var(--corner-5);padding:var(--space-5);max-width:900px}
+.misnone p{margin:var(--space-1) 0 0}
+.miswords label{display:block;margin:0 0 var(--space-3)}
+.miswords label span{display:block;font-size:var(--text-control);font-weight:600;margin:0 0 var(--space-1)}
+.miswords input,.miswords textarea{display:block;width:100%;padding:var(--space-2);border:1px solid var(--line-strong);border-radius:var(--corner-2);background:var(--surface);color:var(--fg);font:inherit;font-size:var(--text-control);line-height:1.5;resize:vertical}

@@ -137,6 +137,11 @@ const HELP = [
       '**Pick a name** shows one student at random, and nobody twice until everyone has had a turn. **Make groups** deals the class into groups of any size. **Who’s here** leaves out anyone who is away today.',
       'While presenting a lesson in the Planner, press **P** to pick a name and **G** for groups. The names are only shown: they are never put in a lesson or in the Planner folder.'],
     words: 'seat seats desk desks seating plan chart shuffle random picker name cold call groups teams pairs partners wheel' },
+  { id: 'missing-work', sec: 'class', q: 'How do I remind students about missing work?',
+    a: ['Open a class and choose **Missing work**. It lists every paper you marked Missing, by student or by assignment, for the term you pick.',
+      '**Email reminder** opens an email in your own mail app, already addressed and listing what the student owes. Read it and send it yourself: Grading Studio sends nothing. **Email all** on an assignment writes one email with every address in Bcc.',
+      'Emails come from the Students tab. **Email wording…** changes what every reminder says.'],
+    words: 'late overdue not handed in owe chase nag email reminder parents' },
 
   { id: 'where-saved', sec: 'safe', q: 'Where is my work saved?',
     a: ['In this browser, on this computer, as you work. There is no save button and no account.', 'A browser can be cleared, so choose a folder as a second copy: Settings, **Saving and carrying**. Until then the sidebar says **Not backed up** in amber.',
