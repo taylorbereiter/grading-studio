@@ -1,6 +1,6 @@
 /* Quick mark: quiz boxes and marking a question across the class */
 .qbdlg .bh,.qbwrap{user-select:none}
-.qbwrap{display:grid;grid-template-columns:minmax(0,1fr) 420px;gap:16px;flex:1;min-height:0;overflow:hidden !important;padding:0 !important}
+.qbwrap{display:grid;grid-template-columns:minmax(0,1fr) 460px;gap:16px;flex:1;min-height:0;overflow:hidden !important;padding:0 !important}
 .qbpages{overflow:auto;padding:16px;background:var(--surface-2);display:flex;flex-direction:column;align-items:center;gap:14px}
 .qbpg{position:relative;width:min(760px,100%);background:#fff;box-shadow:var(--shadow);cursor:crosshair;touch-action:none;user-select:none}
 .qbpg .qbimg{display:block;width:100%;height:auto}
@@ -47,7 +47,7 @@
 .qmimg img{display:block;width:100%;height:auto;user-select:none}
 .qmbtns{display:flex;gap:6px;flex-wrap:wrap}
 .qmb{min-width:44px;padding:5px 10px;border-radius:var(--corner-3);border:1px solid var(--line-strong);background:var(--surface);color:var(--fg);font-weight:700;font-size:15px;cursor:pointer}
-.qmb.ok,.qmb.no{font-size:19px;line-height:1;padding:4px 12px}
+.qmb.ok:not(.w),.qmb.no:not(.w){font-size:19px;line-height:1;padding:4px 12px}
 .qmb.ok{color:var(--ok)}.qmb.no{color:var(--bad)}
 .qmb[aria-pressed=true]{background:var(--fg);color:var(--surface);border-color:var(--fg)}
 .qmb.ok[aria-pressed=true]{background:var(--ok);border-color:var(--ok);color:#fff}
@@ -86,3 +86,17 @@
 .qmpkspot{position:absolute;width:24px;height:24px;transform:translate(-50%,-50%);border:2px dashed var(--bad);border-radius:var(--corner-round);pointer-events:none}
 .dlg .box.spbox{position:relative}
 @media (max-width:800px){.qbwrap{grid-template-columns:1fr;grid-template-rows:minmax(0,1fr) auto;overflow:auto !important}.qbside{padding:16px}}
+/* A scale's buttons: the points, with what they mean underneath (0 Not shown, 1 Partial, 2 Full). */
+.qmb.w{display:inline-flex;flex-direction:column;align-items:center;gap:1px;padding:4px 10px;line-height:1.1}
+.qmb small{font-size:var(--text-caption);font-weight:500;opacity:.85;white-space:nowrap}
+.qbt .qkind{width:auto;max-width:130px;padding:5px 4px;border:1px solid var(--line-strong);border-radius:var(--corner-2);font:inherit;background:var(--surface);color:var(--fg)}
+.qbwords{display:flex;flex-direction:column;gap:6px;margin:10px 0;padding:8px 10px;border:1px solid var(--line);border-radius:var(--corner-2);background:var(--surface-2)}
+.qbwrow{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.qbwrow>.muted{min-width:48px}
+.qbw{display:inline-flex;align-items:center;gap:4px;font-size:var(--text-control)}
+.qbw input{width:96px;padding:4px 6px;border:1px solid var(--line-strong);border-radius:var(--corner-2);font:inherit;background:var(--surface);color:var(--fg)}
+/* With the Scored column the table needs to fit the side panel: narrower fields. */
+.qbt .qlab{width:46px}.qbt .qpts{width:50px}
+.qbt .qkind,.qbt .qhow{max-width:112px}
+.qbt .qkey{min-width:56px}
+.qbw input{width:84px}
