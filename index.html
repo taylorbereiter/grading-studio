@@ -874,9 +874,9 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
 .qmhd .qmopts+[data-boxes]{margin-left:0}
 .qmch .qmchr{margin-left:auto;display:flex;align-items:center;gap:8px;flex:0 0 auto}
 .qmchip{font-size:var(--text-small);color:var(--muted);background:var(--surface-2);border-radius:var(--corner-pill);padding:1px 8px;white-space:nowrap}
-.qmmk{position:absolute;transform:translate(-50%,-50%);color:#C62B1A;font:700 26px/1 var(--f-body);cursor:grab;padding:2px 4px;border-radius:var(--corner-2);white-space:nowrap;text-shadow:0 0 3px #fff}
+.qmmk{position:absolute;transform:translate(-50%,-50%);color:var(--qm-x);font:700 26px/1 var(--f-body);cursor:grab;padding:2px 4px;border-radius:var(--corner-2);white-space:nowrap;text-shadow:0 0 3px #fff}
 .qmmk.txt{font-size:17px}
-.qmmk.ok{color:#1E8A4C}
+.qmmk.ok{color:var(--qm-ok)}
 .qmmk.ok:hover{background:rgba(30,138,76,.08)}
 .qmmk.pin{width:22px;height:22px;padding:0;box-sizing:border-box;border:1.5px dashed rgba(198,43,26,.45);border-radius:var(--corner-round);opacity:.55}
 .qmc:hover .qmmk.pin,.qmc:focus .qmmk.pin{opacity:1}
@@ -907,6 +907,25 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
 .qbt .qkind,.qbt .qhow{max-width:112px}
 .qbt .qkey{min-width:56px}
 .qbw input{width:84px}
+
+.qmink{position:relative;display:inline-flex}
+.qmdot{display:inline-block;width:9px;height:9px;border-radius:var(--corner-round);margin-left:4px;background:var(--qm-x)}
+.qmdot.ok{margin-left:2px;background:var(--qm-ok)}
+.qminkpop{position:absolute;right:0;top:calc(100% + 6px);z-index:30;background:var(--surface);border:1px solid var(--line);border-radius:var(--corner-2);box-shadow:0 8px 24px rgba(20,30,50,.14);padding:10px 12px;display:grid;gap:8px;min-width:250px}
+.qminkpop[hidden]{display:none}
+.qminkpop p{margin:0}
+.qmirow{display:flex;align-items:center;gap:6px}
+.qmirow .hsm{min-width:86px}
+.qmirow .sw{width:20px;height:20px;border-radius:var(--corner-round);border:2px solid transparent;box-shadow:inset 0 0 0 1px rgba(0,0,0,.12);padding:0;cursor:pointer}
+.qmirow .sw[aria-pressed="true"]{border-color:var(--surface);box-shadow:0 0 0 2px var(--accent)}
+
+.qmb.cm{font-weight:500;font-size:var(--text-control);color:var(--muted);min-width:0}
+.qmnote{display:block;width:100%;text-align:left;background:var(--accent-soft);border:0;border-radius:var(--corner-2,8px);padding:5px 8px;margin-top:6px;font:inherit;font-size:var(--text-control);color:var(--fg);cursor:pointer;white-space:pre-wrap;overflow-wrap:anywhere}
+.qmnote[hidden]{display:none}
+.qmned{margin-top:6px;display:grid;gap:6px}
+.qmned textarea{width:100%;box-sizing:border-box;font:inherit;font-size:var(--text-body);padding:6px 8px;border:1px solid var(--line-strong);border-radius:var(--corner-2,8px);background:var(--surface);color:var(--fg);resize:vertical}
+.qmnedb{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.qmnedb .btn{margin-left:auto}
 
 /* ---------- rubric library: what each score means, under the score buttons and in Rubric setup ---------- */
 .lvrow{display:flex;gap:8px;align-items:flex-start;margin-top:6px}
@@ -1147,6 +1166,15 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
 .fbtog[aria-checked=true] .bx{background:var(--accent);border-color:var(--accent)}
 .fbck{color:var(--accent);font-weight:700}
 .bkstart{color:var(--muted);font-size:11.5px}
+/* extra credit: points on top, never a score of its own */
+.bkpill.xc{background:var(--surface);color:var(--accent);border:1px solid var(--accent)}
+.bkxc{color:var(--accent);font-weight:600}
+small.bkxc{font-weight:500}
+.bkxcall{display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-2);margin:0 0 var(--space-2);padding:var(--space-2) var(--space-3);background:var(--accent-soft);border-radius:var(--corner-3)}
+.bkxcall .bksc{width:72px}
+.bkxcall .sp{flex:1}
+.bkaddgrid .bktypef{grid-column:span 2}
+@media (max-width:900px){.bkaddgrid .bktypef{grid-column:auto}.bkaddgrid .bktypef .pseg{flex-wrap:wrap}}
 
 /* the dots: the accent in light; a step deeper in dark, inside the range that reads as a mark on a dark surface */
 /* ---------- past work beside the paper ---------- */
@@ -1612,6 +1640,7 @@ a.btn.busy{opacity:.6;pointer-events:none}
 .bkcmp.chrow small{color:var(--muted);font-size:var(--text-small);white-space:nowrap}
 .bkcmp.chrow:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 @media (max-width:700px){.cpanel .ovcharts{grid-template-columns:minmax(0,1fr)}}
+.chc.xc{background:var(--surface);color:var(--accent);border:1px solid var(--accent)}
 /* ---------- an open assignment's tabs, and a tab's screen drawn on the page (11/10) ---------- */
 .atabs{display:flex;gap:2px;align-self:stretch;margin:-9px 0 -9px 8px;flex:none}
 .atab{display:flex;align-items:center;gap:6px;padding:0 13px;min-height:44px;font-size:var(--text-body);font-weight:500;color:var(--fg-2);text-decoration:none;border-bottom:2px solid transparent;border-top:2px solid transparent;white-space:nowrap}
@@ -1911,6 +1940,13 @@ button.pavg:hover .v{text-decoration:underline}
 .oneout-say:empty{display:none}
 .nextun{display:block;margin:8px auto 0;font-size:var(--text-control)}
 .nextun kbd,.hint kbd{font:500 var(--text-caption) var(--f-body);border:1px solid var(--line-strong);border-bottom-width:2px;border-radius:var(--corner-1);padding:0 4px;background:var(--surface);color:var(--muted)}
+/* extra credit on one paper: its own line under the score */
+.xcnote{display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-2);margin:7px 0 0;font-size:var(--text-small);color:var(--muted)}
+.xcnote label{display:flex;align-items:center;gap:var(--space-2);color:var(--fg-2);font-weight:600}
+.xcnote input{width:64px;font:inherit;padding:3px 6px;border:1px solid var(--line-strong);border-radius:var(--corner-2);background:var(--surface);color:var(--fg)}
+.xcsay{color:var(--accent);font-size:var(--text-small)}
+.xcnote .sp{flex:1}
+.xcnote label,.xcnote>span{white-space:nowrap}.xcnote input{width:52px}
 /* ---------- safe by default: the folder ask on Home, Go back in time, About and updates ---------- */
 .safeask{display:flex;gap:var(--space-4);align-items:flex-start;padding:18px 20px;margin:0 0 var(--space-5);background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--warn);border-radius:var(--corner-5)}
 .safeask .saic{flex:none;width:40px;height:40px;display:flex;align-items:center;justify-content:center;border-radius:var(--corner-4);background:var(--warn-soft);color:var(--warn)}
@@ -3254,7 +3290,7 @@ SOFTWARE.
 <script>/* ---------------- saved-data versions: a safety copy, then any format changes, before the app starts ---------------- */
 const gsData = (() => {
   'use strict';
-  const APP_VERSION = "1.11.0";   // from package.json, the one place it's set
+  const APP_VERSION = "1.12.0";   // from package.json, the one place it's set
   const MIGRATIONS = [
   ];
   const DATA_V = Math.max(1, ...MIGRATIONS.map(s => s.to));
@@ -3551,8 +3587,13 @@ function percentWith(total, max, sc) {
 }
 function gradeOf(st) {
   if (noScore(st)) return { total: null, pct: null, done: true, status: st.grade.status };   // missing or excused: settled, with no number
-  const g = scoreOf(st), r = st.grade.status === 'late' ? { ...g, status: 'late' } : g;
+  const g0 = scoreOf(st), g = addXc(g0, st.grade.xc, g0.outOf != null ? g0.outOf : maxPoints(), st.grade.xcU), r = st.grade.status === 'late' ? { ...g, status: 'late' } : g;
   return st.grade.outAvg ? { ...r, out: true } : r;   // left out of the average: the score stays and copies, it just isn't counted
+}
+function addXc(r, xc, max, unit) {
+  xc = +xc; if (!xc || isNaN(xc) || r.total == null) return r;
+  if (unit === 'pct') return { ...r, total: max ? r.total + Math.round(xc * max) / 100 : r.total, base: r.total, xc, xcU: 'pct', pct: r.pct == null ? r.pct : roundPct(r.pct + xc) };
+  return { ...r, total: r.total + xc, base: r.total, xc, pct: r.pct == null || !max ? r.pct : roundPct(r.pct + xc / max * 100) };
 }
 function scoreOf(st) {
   const own = ownGrade(st);
@@ -3587,7 +3628,9 @@ let cur = 0;             // index of the open student
 let tool = 'pen';
 let once = null, onceEl = null;   // a tool picked from the right-click for one go: { k, prev } (src/stamps.js)
 const COLORS = { red: '#D7263D', blue: '#1F5FD1', green: '#1E8A4C', purple: '#7B3FC4', black: '#1B1F27' };
-const CHECK_INK = COLORS.green;
+let checkInk = COLORS[store.get('gs.checkInk', 'green')] ? store.get('gs.checkInk', 'green') : 'green';
+let CHECK_INK = COLORS[checkInk];
+function setCheckInk(k) { if (!COLORS[k]) return; checkInk = k; CHECK_INK = COLORS[k]; store.set('gs.checkInk', k); }
 const HL = { yellow: '#FFE45C', green: '#B4F0A8', pink: '#FFB8D6', blue: '#B0E0FF' };
 let inkColor = store.get('gs.ink', 'red'), hlColor = store.get('gs.hl', 'yellow'), penW = store.get('gs.penW', 2);
 const DISP0 = { ui: 1, tsize: 14, fit: 'width', dfs: 15, dlh: 1.45, trim: true };
@@ -3964,14 +4007,14 @@ function textLayout(m, W) {
 }
 function layoutNotes(notes, W, H, side) {
   const M = 10, pad = 7, gap = 8, boxX = W + 12, boxW = side - 22;
-  const list = notes.map(n => ({ n, ax: n.ax, ay: n.ay })).sort((p, q) => p.ay - q.ay || p.ax - q.ax);
+  const list = notes.map(n => ({ n, ax: n.ax, ay: n.ay, ry: noteRunY(n, H) })).sort((p, q) => p.ry - q.ry || p.ax - q.ax);
   let fs = 10, boxes = [];
   const run = () => {
     const lh = fs * 1.3;
     measureCtx.font = fs + 'px ' + FONT;
     boxes = list.map(o => { const lines = wrapText(measureCtx, o.n.text, boxW - pad * 2); return { ...o, lines, lh, h: Math.max(1, lines.length) * lh + pad * 2 }; });
     let y = M;
-    for (const b of boxes) { b.y = Math.max(b.ay - 10, y); y = b.y + b.h + gap; }
+    for (const b of boxes) { b.y = Math.max(b.ry - 10, y); y = b.y + b.h + gap; }
     let bottom = H - M;
     for (let i = boxes.length - 1; i >= 0; i--) { if (boxes[i].y + boxes[i].h > bottom) boxes[i].y = bottom - boxes[i].h; bottom = boxes[i].y - gap; }
     return !boxes.length || boxes[0].y >= M - 0.5;
@@ -3979,6 +4022,13 @@ function layoutNotes(notes, W, H, side) {
   while (!run() && fs > 6) fs -= 0.5;
   for (const b of boxes) { b.x = boxX; b.w = boxW; b.y = Math.max(b.y, M / 2); b.fs = fs; b.pad = pad; }
   return boxes;
+}
+const noteRunY = (n, H) => n.ly == null ? n.ay : Math.max(0, Math.min(H, n.ly));
+function noteLeader(ctx, b, W) {
+  const midY = b.y + Math.min(b.h / 2, 12);
+  ctx.beginPath(); ctx.moveTo(b.ax, b.ay);
+  if (Math.abs(b.ry - b.ay) > 0.5) ctx.lineTo(Math.min(b.ax + 6, W), b.ry);
+  ctx.lineTo(W + 4, b.ry); ctx.lineTo(b.x, midY); ctx.stroke();
 }
 function drawCheck(ctx, m) {
   const s = m.size || 22;
@@ -4038,9 +4088,8 @@ function drawMarks(ctx, marks, W, H, side, screen) {
     boxes = layoutNotes(notes, W, H, side);
     for (const b of boxes) {
       const [r, g, bl] = rgb(b.n.color), dk = v => Math.round(v * 0.72), col = 'rgb(' + dk(r) + ',' + dk(g) + ',' + dk(bl) + ')';
-      const midY = b.y + Math.min(b.h / 2, 12);
-      ctx.strokeStyle = col; ctx.lineWidth = 0.7;
-      ctx.beginPath(); ctx.moveTo(b.ax, b.ay); ctx.lineTo(W + 4, b.ay); ctx.lineTo(b.x, midY); ctx.stroke();
+      ctx.strokeStyle = col; ctx.lineWidth = screen && screen.line === b.n ? 1.4 : 0.7;
+      noteLeader(ctx, b, W);
       ctx.fillStyle = col; ctx.beginPath(); ctx.arc(b.ax, b.ay, 2.2, 0, Math.PI * 2); ctx.fill();
       ctx.fillStyle = '#fff'; ctx.fillRect(b.x, b.y, b.w, b.h);
       ctx.fillStyle = 'rgba(' + r + ',' + g + ',' + bl + ',0.14)'; ctx.fillRect(b.x, b.y, b.w, b.h);
@@ -4659,7 +4708,7 @@ function draw(pg, live, part) {
   const anon = anonOn() && batch.students[cur];
   if (anon && pg.covers) { ctx.fillStyle = '#111'; for (const r of pg.covers) ctx.fillRect(r.x, r.y, r.w, r.h); }
   const marks = pg.marks().concat(anon ? scrubMarks(pg.extra || [], anonRx(anon)) : pg.extra || [], live || [], pg.pending ? [pg.pending] : []);
-  pg.boxes = drawMarks(ctx, marks, pg.W, pg.H, pg.side, { sel: selected && selected.page === pg && selected.mark !== pg.editing ? selected.mark : null, editing: pg.editing, s: pg.s });
+  pg.boxes = drawMarks(ctx, marks, pg.W, pg.H, pg.side, { sel: selected && selected.page === pg && selected.mark !== pg.editing ? selected.mark : null, editing: pg.editing, s: pg.s, line: pg.lineOn || null });
   if (pg.ghost) { const b = pg.ghost; ctx.save(); ctx.strokeStyle = '#1F6FB2'; ctx.setLineDash([4, 3]); ctx.lineWidth = 1; ctx.strokeRect(b.x, b.y, b.w, b.h); ctx.restore(); }
   if (part) ctx.restore();
 }
@@ -4701,7 +4750,7 @@ function turnMarks(marks, W, H, dir) {
     if (m.t === 'pen') m.pts = m.pts.map(pt);
     else if (m.t === 'hl' || m.t === 'oval') { Object.assign(m, box(m)); if (m.rects) m.rects = m.rects.map(box); if (m.pts) m.pts = m.pts.map(pt); }
     else if (m.t === 'check' || m.t === 'stamp') [m.x, m.y] = pt([m.x, m.y]);
-    else if (m.t === 'note') { [m.ax, m.ay] = pt([m.ax, m.ay]); if (m.hl) m.hl = box(m.hl); if (m.rects) m.rects = m.rects.map(box); }
+    else if (m.t === 'note') { delete m.ly; [m.ax, m.ay] = pt([m.ax, m.ay]); if (m.hl) m.hl = box(m.hl); if (m.rects) m.rects = m.rects.map(box); }
     else if (m.t === 'text') {
       const L = textLayout(m, W), [cx, cy] = pt([m.x + L.ink / 2, m.y + L.h / 2]);   // turns about the words, not the empty part of a wide box
       const want = m.bwFull || m.bw;
@@ -4794,6 +4843,8 @@ function bindPage(pg) {
     if (scorePlacing) { e.preventDefault(); if (onPage(x, y)) placeScore(pg, x, y); else stopScorePlace(); return; }
     const box = (pg.boxes || []).find(b => x >= b.x && x <= b.x + b.w && y >= b.y && y <= b.y + b.h);
     if (box && !box.n.ro && tool !== 'erase') { e.preventDefault(); openNote(pg, box.n); return; }
+    const ln = tool !== 'erase' && !once ? noteLineAt(pg, x, y) : null;
+    if (ln) { e.preventDefault(); c.setPointerCapture(e.pointerId); g = { line: ln, y0: y, ly0: noteRunY(ln, pg.H), moved: false }; return; }
     if (wasNote) { e.preventDefault(); return; }
     if (tool !== 'erase' && !once) { const cg = cornerAt(pg, x, y); if (cg) { e.preventDefault(); c.setPointerCapture(e.pointerId); g = cg; return; } }
     if (tool !== 'select' && tool !== 'erase' && !onPage(x, y)) return;
@@ -4823,9 +4874,13 @@ function bindPage(pg) {
     }
   });
   c.addEventListener('pointermove', e => {
-    if (!g) { const [x, y] = pt(e), cu = hoverCursor(pg, x, y); if (cu) c.style.cursor = cu; return; }
+    if (!g) { const [x, y] = pt(e), cu = hoverCursor(pg, x, y); c.style.cursor = cu || (tool === 'select' ? 'default' : tool === 'text' ? 'text' : 'crosshair'); return; }
     const [x, y] = pt(e);
-    if (g.text) {
+    if (g.line) {
+      if (!g.moved) { if (Math.abs(y - g.y0) < 1.5) return; snap(pg); g.moved = true; }
+      g.line.ly = r1(clamp(g.ly0 + y - g.y0, 2, pg.H - 2));
+      pg.lineOn = g.line; draw(pg);
+    } else if (g.text) {
       g.x1 = clamp(x, 0, pg.W);
       const w = Math.abs(g.x1 - g.x0);
       pg.ghost = w > 8 ? { x: Math.min(g.x0, g.x1), y: g.y0 - disp.tsize * 0.65, w, h: disp.tsize * 1.3 } : null;
@@ -4859,6 +4914,11 @@ function bindPage(pg) {
   });
   const end = () => {
     if (!g) return;
+    if (g.line) {
+      const m = g.line, moved = g.moved; g = null; pg.lineOn = null;
+      if (moved) { if (Math.abs(m.ly - m.ay) < 1) delete m.ly; changed(pg); } else draw(pg);
+      return;
+    }
     if (g.text) {
       pg.ghost = null;
       const w = Math.abs(g.x1 - g.x0), m = { t: 'text', color: COLORS[inkColor], x: r1(w > 24 ? Math.min(g.x0, g.x1) : Math.min(g.x0, pg.W - 106)), y: r1(g.y0 - disp.tsize / 2), size: disp.tsize, text: '' };
@@ -4892,6 +4952,7 @@ function bindPage(pg) {
     g = null;
     if (once && once.k !== 'pen') endOnce();   // a circle or highlight from the right-click: one, then back to her tool
   };
+  c.addEventListener('pointerleave', () => { if (!g && pg.lineOn) { pg.lineOn = null; draw(pg); } });
   c.addEventListener('pointerup', end);
   c.addEventListener('pointercancel', end);
   c.addEventListener('contextmenu', e => {
@@ -4913,7 +4974,7 @@ const r1 = v => Math.round(v * 10) / 10;
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 function moveMark(m, dx, dy) {
   if (m.t === 'pen') m.pts = m.pts.map(([x, y]) => [r1(x + dx), r1(y + dy)]);
-  else if (m.t === 'note') { m.ax = r1(m.ax + dx); m.ay = r1(m.ay + dy); if (m.hl) m.hl = { ...m.hl, x: r1(m.hl.x + dx), y: r1(m.hl.y + dy) }; moveExtras(m, dx, dy); }
+  else if (m.t === 'note') { m.ax = r1(m.ax + dx); m.ay = r1(m.ay + dy); if (m.ly != null) m.ly = r1(m.ly + dy); if (m.hl) m.hl = { ...m.hl, x: r1(m.hl.x + dx), y: r1(m.hl.y + dy) }; moveExtras(m, dx, dy); }
   else { m.x = r1(m.x + dx); m.y = r1(m.y + dy); moveExtras(m, dx, dy); }
 }
 function eraseAt(pg, x, y, g) {
@@ -5086,6 +5147,7 @@ function renderTools() {
   const bar = once ? once.prev : tool;   // a one-time tool keeps her own tool's bar, so the toolbar doesn't jump
   const isHl = bar === 'hl';
   const sw = isHl ? Object.entries(HL).map(([k, v]) => '<button class="sw" data-hl="' + k + '" style="background:' + v + '" aria-pressed="' + (k === hlColor) + '" title="' + k + '"></button>').join('')
+    : bar === 'check' ? Object.entries(COLORS).map(([k, v]) => '<button class="sw" data-chk="' + k + '" style="background:' + v + '" aria-pressed="' + (k === checkInk) + '" title="Checks in ' + k + '"></button>').join('')   // the check tool sets the color every check shows in
     : Object.entries(COLORS).map(([k, v]) => '<button class="sw" data-ink="' + k + '" style="background:' + v + '" aria-pressed="' + (k === inkColor) + '" title="' + k + '"></button>').join('');
   const opts = (bar === 'select' || bar === 'erase' ? '' : '<span class="swatches">' + sw + '</span>') +
     (bar === 'pen' ? '<span class="seg penw">' + [[1.2, 'Fine'], [2, 'Medium'], [3.5, 'Bold']].map(([w, l]) => '<button data-w="' + w + '" aria-pressed="' + (penW === w) + '" title="' + l + ' pen" aria-label="' + l + ' pen"><i style="--w:' + w + '"></i></button>').join('') + '</span>' : '') + (isHl ? hlBar() : '');
@@ -5099,6 +5161,7 @@ function renderTools() {
 $('#tools').addEventListener('click', e => {
   const t = e.target.closest('[data-tool]'); if (t) { setTool(t.dataset.tool); return; }
   const i = e.target.closest('[data-ink]'); if (i) { inkColor = i.dataset.ink; store.set('gs.ink', inkColor); recolorSelected(COLORS[inkColor]); renderTools(); return; }
+  const ck = e.target.closest('[data-chk]'); if (ck) { setCheckInk(ck.dataset.chk); renderTools(); redrawAll(); return; }
   const h = e.target.closest('[data-hl]'); if (h) { hlColor = h.dataset.hl; store.set('gs.hl', hlColor); renderTools(); return; }
   if (hlBarClick(e)) return;
   const w = e.target.closest('[data-w]'); if (w) { penW = +w.dataset.w; store.set('gs.penW', penW); renderTools(); return; }
@@ -5259,6 +5322,7 @@ function totalHtml(st) {
   const gr = gradeOf(st), own = ownGrade(st);
   if (noScore(st)) return '<b>' + STATUS_LABEL[gr.status] + '</b><span style="width:100%;font-size:12.5px">No score counts. Giving a score takes this off.</span>';
   let h = '<b>' + (gr.total == null ? '–' : fmtNum(gr.total)) + '</b><span>/ ' + (gr.outOf != null ? fmtNum(gr.outOf) : maxPoints()) + '</span><span class="pc">' + (gr.pct == null ? '' : fmtPct(gr.pct) + bandSay(gr.pct)) + '</span>';
+  if (gr.xc) h += '<span class="xcsay" style="width:100%">' + fmtNum(gr.base) + ' earned + ' + fmtNum(gr.xc) + (gr.xcU === 'pct' ? '%' : '') + ' extra credit</span>';
   if (gr.partial) h += '<span class="sc-warn" style="width:100%">Partial: ' + partNote(st) + '. This total isn’t final.</span>';
   if (gr.paper) h += '<span style="width:100%;font-size:12.5px">From the paper (Grade sheet)</span>';
   const ps = paperScore(st);
@@ -5282,6 +5346,9 @@ $('#grade').addEventListener('click', e => {
   const rn = e.target.closest('.crit .cn'); if (rn) return rowPick(+rn.parentNode.dataset.row);
   const sb = e.target.closest('[data-status]'); if (sb) return setStatus(batch.students[cur], sb.dataset.status);
   if (e.target.closest('#outAvg, [data-outoff]')) return setOutAvg(batch.students[cur]);
+  if (e.target.closest('[data-gxc]')) { kmClose(); return xcStart(batch.students[cur]); }
+  { const u = e.target.closest('[data-xcu]'); if (u) return xcUnitSet(batch.students[cur], u.dataset.xcu); }
+  if (e.target.closest('[data-xcoff]')) return xcSet(batch.students[cur], 0, true);
   if (e.target.closest('#prevBtn')) stepStudent(-1);
   if (e.target.closest('#nextBtn')) stepStudent(1);
   if (e.target.closest('#nextUn')) return nextUnscored();
@@ -5366,6 +5433,7 @@ function scoreKey(e, onRange) {
 $('#grade').addEventListener('input', e => {
   const st = batch.students[cur];
   if (e.target.id === 'cmtIn') { st.grade.comment = e.target.value; touchGrade(st); saveSoon(); }
+  if (e.target.id === 'xcIn') xcSet(st, e.target.value);
   if (e.target.id === 'ptsIn') {
     st.grade.points = e.target.value; const was = st.grade.status; scoreTouched(st); saveSoon(); renderList();
     if (was !== st.grade.status) { $('#gstat').outerHTML = statusHtml(st); }
@@ -5373,10 +5441,11 @@ $('#grade').addEventListener('input', e => {
   }
 });
 $('#grade').addEventListener('keydown', e => {   // Enter or Escape leaves the box, so the arrow keys go back to moving between students
+  if (e.target.id === 'xcIn' && (e.key === 'Enter' || e.key === 'Escape')) { e.preventDefault(); e.stopPropagation(); e.target.blur(); return; }
   if ((e.target.id === 'ptsIn' && e.key === 'Enter') || (e.target.id === 'cmtIn' && e.key === 'Escape')) { e.preventDefault(); e.target.blur(); }
   if (e.target.id === 'ptsIn' && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) { e.preventDefault(); e.stopPropagation(); stepStudent(e.key === 'ArrowDown' ? 1 : -1); }   // not half a point up or down: these keys move between students
 });
-$('#grade').addEventListener('wheel', e => { if (e.target.id === 'ptsIn') e.target.blur(); }, { passive: true });   // scrolling past the box mustn't change the score in it
+$('#grade').addEventListener('wheel', e => { if (e.target.id === 'ptsIn' || e.target.id === 'xcIn') e.target.blur(); }, { passive: true });   // scrolling past the box mustn't change the score in it
 
 /* ---------------- every key, in one list ( ? ) ---------------- */
 function openKeys() {
@@ -5675,7 +5744,7 @@ function exportPlan(keepFolders) {
   for (const o of out) { let p = o.path, k = 2; while (used.has(p.toLowerCase())) p = o.path.replace(/(\.[^./]+)?$/, ' (' + k++ + ')$1'); used.add(p.toLowerCase()); o.path = p; }
   return out;
 }
-async function flattenDoc(st, d, dpi, edit, key) {
+async function flattenDoc(st, d, dpi, edit, key, fb) {
   await workerReady;
   const srcs = new Map();
   const src = async path => {
@@ -5689,6 +5758,8 @@ async function flattenDoc(st, d, dpi, edit, key) {
   const out = await PDFLib.PDFDocument.create();
   out.setCreator('Grading Studio'); out.setProducer('Grading Studio');   // so a flattened file brought back in can say why its marks can't be changed
   try {
+    const said = fb ? fbData(st, d) : null;
+    if (said) { const [p0, n0] = d.pages[0], { f: f0, js: j0 } = await src(p0), v0 = vpRot(f0, n0, await j0.getPage(n0 + 1), 1); await fbAddPages(out, said, v0.width, v0.height, dpi); }
     for (const [path, p] of d.pages) {
       const { f, js, lib } = await src(path);
       const marks = (f.marks[p] || []).concat((f.kami && f.kami[p] && f.kami[p].notes) || []);
@@ -5774,6 +5845,7 @@ async function openExport() {
           '<label class="chk"><input type="checkbox" id="xSheet" checked> Add the grade sheet (a crop of each typed grade, in ' + listOrder() + ')</label>' +
           '<label class="chk"><input type="checkbox" id="xEdit"' + (xEdit() ? ' checked' : '') + '> Keep marks editable</label><p class="xhint">Bring a file back in later and change its marks. Files are about twice as big.</p>' +
           '<label class="chk"><input type="checkbox" id="xKey"' + (keyOn() ? ' checked' : '') + '> Add a key to the marks used on each paper</label><p class="xhint">' + (!nKey ? 'No file has proofreading marks yet. ' : nKey === plan.length ? (nKey === 1 ? 'The file gets one. ' : 'All ' + nKey + ' files get one. ') : nKey + ' of the ' + plan.length + ' files ' + (nKey === 1 ? 'gets' : 'get') + ' one. ') + '<button class="link" data-mkey>Change what they mean…</button></p>' +
+          '<label class="chk"><input type="checkbox" id="xFb"' + (fbOn() ? ' checked' : '') + '> Put a feedback page in front of each paper</label><p class="xhint">The score, each rubric row with what its level means, your comment, and the comments on the paper with their page numbers.</p>' +
           allBox +
           '<div class="chk" style="cursor:default">Sharpness <span class="seg" id="xDpi"><button data-dpi="150" aria-pressed="true">Standard</button><button data-dpi="220" aria-pressed="false">Extra sharp</button></span></div>' +
         '</details>' +
@@ -5788,13 +5860,14 @@ async function openExport() {
     if ($('#xSheet').checked) on.push('grade sheet');
     if ($('#xEdit').checked) on.push('marks stay editable');
     if ($('#xKey').checked) on.push('mark key');
+    if ($('#xFb').checked) on.push('feedback page');
     if (xAll()) on.push('files with no marks too');
     if (dpi > 150) on.push('extra sharp');
     el.textContent = on.length ? on.join(', ') : 'none';
   };
   optsSay();
   const xo = $('#xOpts'); if (xo) xo.ontoggle = () => store.set('gs.xopts', xo.open);
-  box.onchange = e => { optsSay(); if (e.target.id === 'xEdit') store.set('gs.xedit', e.target.checked); if (e.target.id === 'xKey') setKey(v => { v.on = e.target.checked; }); if (e.target.id === 'xAll') { store.set('gs.xall', e.target.checked); renderTools(); openExport(); } };
+  box.onchange = e => { optsSay(); if (e.target.id === 'xEdit') store.set('gs.xedit', e.target.checked); if (e.target.id === 'xKey') setKey(v => { v.on = e.target.checked; }); if (e.target.id === 'xFb') store.set('gs.xfb', e.target.checked); if (e.target.id === 'xAll') { store.set('gs.xall', e.target.checked); renderTools(); openExport(); } };
   box.onclick = async e => {
     if (e.target.closest('[data-close]')) return closeDlg();
     const ck = e.target.closest('[data-chk]'); if (ck) { return toPaper(+ck.dataset.chk, ck.dataset.file || undefined); }
@@ -5806,7 +5879,7 @@ async function openExport() {
     const go = e.target.closest('[data-go]'); if (!go) return;
     if (xBusy) return toast('The last export is still going. It will say when it’s done.');
     keep = $('#xKeep').checked;
-    const withSheet = $('#xSheet').checked, editable = $('#xEdit').checked, withKey = $('#xKey').checked;
+    const withSheet = $('#xSheet').checked, editable = $('#xEdit').checked, withKey = $('#xKey').checked, withFb = $('#xFb').checked, fbGiven = new Set();   // one feedback page a student, on the first of their files
     const say = (t, last) => { const el = $('#xStatus'); if (el) el.textContent = t; else if (last) toast(t, 6000); };
     let dir = null;
     if (go.dataset.go === 'dir') {
@@ -5841,7 +5914,7 @@ async function openExport() {
       for (let i = 0; i < items.length; i++) {
         say('Baking in marks ' + (i + 1) + ' of ' + items.length + '…');
         bar.firstChild.style.width = (30 + 70 * i / items.length) + '%';
-        if (await putOut(items[i].path, () => items[i].raw ? items[i].f.data : flattenDoc(items[i].st, items[i].d, dpi, editable, withKey), items[i].st)) nOut++;
+        if (await putOut(items[i].path, () => items[i].raw ? items[i].f.data : flattenDoc(items[i].st, items[i].d, dpi, editable, withKey, withFb && !fbGiven.has(items[i].st) && !!fbGiven.add(items[i].st)), items[i].st)) nOut++;
       }
       await unopenable(failed);
       bar.firstChild.style.width = '100%';
@@ -5887,12 +5960,13 @@ async function exportOne(st) {
   if (!items.length) { renderGrade(); return toast('Nothing on ' + who + ' is marked yet. Mark it, then export.'); }
   xBusy = true; if (btn) btn.disabled = true;
   const files = {}, failed = [];
+  let fbGiven = false;
   try {
     for (let i = 0; i < items.length; i++) {
       say(items.length > 1 ? 'Baking in marks ' + (i + 1) + ' of ' + items.length + '…' : 'Baking in marks…');
       const o = items[i];
       const base = o.path.split('/').pop(), name = base.includes(st.key) ? base : st.key + ' - ' + base;   // her own download names each file for its student
-      try { files[name] = o.raw ? o.f.data : await flattenDoc(st, o.d, 150, xEdit(), keyOn()); }
+      try { files[name] = o.raw ? o.f.data : await flattenDoc(st, o.d, 150, xEdit(), keyOn(), fbOn() && !fbGiven && (fbGiven = true)); }
       catch (er) { console.error(o.path, er); failed.push({ path: o.path, st, why: exportWhy(er, false) }); }
     }
     const names = Object.keys(files);
@@ -10862,7 +10936,24 @@ function pickToGrab(pg, hit, x, y, edit) {
   return { move: hit, x, y, moved: false, edit };
 }
 const editMark = (pg, m) => { if (m.t === 'text') editText(pg, m); else if (m.t === 'note') openNote(pg, m); };
+function noteLineAt(pg, x, y) {
+  const tol = Math.max(3, 5 / (pg.s || 1)), W = pg.W;
+  for (const b of pg.boxes || []) {
+    if (b.n.ro) continue;
+    if (x <= W + 4) {
+      if ((tool === 'select' || tool === 'note') && x >= b.ax + 8 && Math.abs(y - b.ry) <= tol) return b.n;
+      continue;
+    }
+    const x1 = W + 4, y1 = b.ry, x2 = b.x, y2 = b.y + Math.min(b.h / 2, 12), dx = x2 - x1, dy = y2 - y1, L = dx * dx + dy * dy;
+    const t = L ? Math.max(0, Math.min(1, ((x - x1) * dx + (y - y1) * dy) / L)) : 0;
+    if (Math.hypot(x - (x1 + t * dx), y - (y1 + t * dy)) <= tol) return b.n;
+  }
+  return null;
+}
 function hoverCursor(pg, x, y) {
+  const ln = tool !== 'erase' && !once ? noteLineAt(pg, x, y) : null;
+  if ((pg.lineOn || null) !== ln) { pg.lineOn = ln; draw(pg); }   // the line thickens under the pointer, to show it can be dragged
+  if (ln) return 'ns-resize';
   if (tool !== 'erase' && cornerAt(pg, x, y)) return 'nwse-resize';
   const grip = gripAt(pg, x, y);
   if (tool === 'select') return grip ? 'ew-resize' : hitMark(pg, x, y, 4) ? (x > pg.W ? 'pointer' : 'move') : 'default';
@@ -11316,7 +11407,7 @@ Object.assign(window.__gs, { unpackExport, keyRows, drawKeyPage, openMarkKey, ma
 const STATUS_LABEL = { missing: 'Missing', excused: 'Excused', late: 'Late' };
 function noScore(st) { const s = st.grade.status; return s === 'missing' || s === 'excused'; }
 const hasSheet = g => g.sheet != null && g.sheet !== '';
-const gradeHasWork = g => !!g && ((g.rubric || []).some(v => v != null) || (g.points != null && g.points !== '') || hasSheet(g) || !!g.comment || !!g.status || !!g.fb);
+const gradeHasWork = g => !!g && ((g.rubric || []).some(v => v != null) || (g.points != null && g.points !== '') || hasSheet(g) || !!g.comment || !!g.status || !!g.fb || !!+g.xc);
 const hasOwnScore = st => ownGrade(st).total != null || hasSheet(st.grade);
 function gradeWords(st) {
   const g = st.grade, own = ownGrade(st).total, out = [];
@@ -11355,8 +11446,34 @@ function statusHtml(st, plain) {
   return '<div id="gstat"><div class="gstat"><span class="seg" role="group" aria-label="Mark as">' + Object.keys(STATUS_LABEL).map(k => '<button data-status="' + k + '" aria-pressed="' + (on === k) + '">' + STATUS_LABEL[k] + '</button>').join('') + '</span>' +
     (plain ? '' : kmWrap('⋯', 'class="btn sm kdots" id="gMore" aria-label="More for this score" title="More for this score"',
       (noScore(st) ? '' : '<button class="outsw" id="outAvg" role="switch" aria-checked="' + out + '"><i></i><span><b>Leave out of the average</b><small>The score stays and still copies. It doesn’t count in the average or on the Insights tab.</small></span></button>') +
+      (noScore(st) ? '' : '<button class="mitem" data-gxc>Extra credit points</button>') +
       '<button class="mitem" data-gcalc>Calculator <kbd>=</kbd></button>', 'right')) + '</div>' +
-    (out && !noScore(st) && !plain ? '<p class="outnote">Left out of the average. <button class="link" data-outoff>Count it again</button></p>' : '') + '</div>';
+    (out && !noScore(st) && !plain ? '<p class="outnote">Left out of the average. <button class="link" data-outoff>Count it again</button></p>' : '') + (plain ? '' : xcHtml(st)) + '</div>';
+}
+/* ---------------- extra credit on one paper ---------------- */
+let xcOpen = null, xcUnit = store.get('gs.xcU', 'pts') === 'pct' ? 'pct' : 'pts';   // the last unit picked, on this computer, for the next paper
+function xcUnitSet(st, u) {
+  xcUnit = u; store.set('gs.xcU', u);
+  if (st.grade.xc) { if (u === 'pct') st.grade.xcU = 'pct'; else delete st.grade.xcU; touchGrade(st); saveSoon(); renderList(); }
+  renderGrade();
+}
+function xcHtml(st) {
+  const v = +st.grade.xc || 0;
+  if (noScore(st) || (!v && xcOpen !== st)) return '';
+  const u = st.grade.xc ? (st.grade.xcU === 'pct' ? 'pct' : 'pts') : xcUnit;
+  return '<p class="xcnote" id="xcNote"><label>Extra credit <input type="number" id="xcIn" step="0.5" min="0" value="' + (v ? fmtNum(v) : '') + '" aria-label="Extra credit ' + (u === 'pct' ? 'percent' : 'points') + '"></label><span class="pseg sm" role="group" aria-label="Extra credit in">' + [['pts', 'points'], ['pct', '%']].map(([k, l]) => '<button data-xcu="' + k + '" aria-pressed="' + (u === k) + '">' + l + '</button>').join('') + '</span><span class="sp"></span><button class="link" data-xcoff>Remove</button></p>';
+}
+function xcStart(st) {
+  xcOpen = st; const gs = $('#gstat'); if (gs) gs.outerHTML = statusHtml(st);
+  const i = $('#xcIn'); if (i) { i.focus(); i.select(); }
+}
+function xcSet(st, raw, redraw) {
+  const v = raw === '' || raw == null || isNaN(+raw) ? 0 : Math.max(0, Math.round(+raw * 2) / 2);
+  if ((+st.grade.xc || 0) === v) { if (redraw) { if (!v) xcOpen = null; renderGrade(); } return; }
+  if (v) { if (!(+st.grade.xc > 0)) { if (xcUnit === 'pct') st.grade.xcU = 'pct'; else delete st.grade.xcU; } st.grade.xc = v; }   // a new one takes the unit showing
+  else { delete st.grade.xc; delete st.grade.xcU; if (redraw) xcOpen = null; }
+  touchGrade(st); saveSoon(); renderList();
+  if (redraw) renderGrade(); else { const t = $('#grade .total'); if (t) t.innerHTML = totalHtml(st); }
 }
 function setOutAvg(st) {
   if (st.grade.outAvg) delete st.grade.outAvg; else st.grade.outAvg = true;
@@ -11972,6 +12089,152 @@ function exportReport(failed) {
   $('#xStatus').insertAdjacentHTML('afterend', '<div class="xfails" id="xFails" role="alert"><b>' + n + (n === 1 ? ' file isn’t' : ' files aren’t') + ' in this export:</b><ul>' +
     failed.map(x => '<li><b>' + esc(anon && x.st ? shownName(x.st, batch.students.indexOf(x.st)) : x.path) + '</b>: ' + esc(anon ? x.why.replace(/ \(.*$/s, '') : x.why) + '</li>').join('') + '</ul></div>');
 }
+
+/* ---------------- the feedback page: the first page of a returned paper ----------------
+   What the student reads first: the score, each rubric row with the level given and what that level means, the teacher's
+   comment, and every comment written on the paper with the page it is on. It is drawn when the paper is exported, from
+   what is already saved. Nothing new is stored but the choice to add it (gs.xfb), and bringing an editable export back
+   in rebuilds from the original pages, so the feedback page never comes back as a page of the paper. */
+const fbOn = () => store.get('gs.xfb', true) !== false;
+const FB_INK = '#1E2024', FB_INK2 = '#3F444C', FB_MUTED = '#5C616A', FB_LINE = '#E4E6EA', FB_BLUE = '#1F6FB2', FB_SOFT = '#E6F0F8';
+
+function fbData(st, d) {
+  const g = gradeOf(st), rub = setup.mode === 'rubric', c = batchClass();
+  const rows = rub ? setup.criteria.map((name, i) => { const v = st.grade.rubric[i]; return v == null ? null : { name, v, text: ((setup.levels && setup.levels[i] && setup.levels[i][Math.floor(v)]) || '').trim() }; }).filter(Boolean) : [];
+  const notes = [];
+  d.pages.forEach(([path, p], k) => {
+    const f = fileByPath(st, path); if (!f) return;
+    const all = (f.marks[p] || []).concat((f.kami && f.kami[p] && f.kami[p].notes) || []).filter(m => m.t === 'note' && (m.text || '').trim());
+    const numbered = all.filter(n => n.hl).sort((a, b) => a.ay - b.ay || a.ax - b.ax);   // the numbers the page itself shows
+    for (const n of [...all].sort((a, b) => a.ay - b.ay || a.ax - b.ax)) notes.push({ n: numbered.indexOf(n) + 1, text: n.text.trim(), color: n.color, page: k });
+  });
+  const comment = (st.grade.comment || '').trim(), scored = g.total != null && !g.partial;
+  if (!scored && !rows.length && !comment && !notes.length) return null;
+  const rn = rosterNames(), who = rn.get(st) || st.key;   // the paper goes back to its student, so it carries their name even while she marks with names hidden
+  return { title: (batch.assignment && batch.assignment.name) || batch.name, sub: [who, c && c.name, 'returned ' + fmtDay(Date.now())].filter(Boolean).join(' · '),
+    total: scored ? g.total : null, max: g.outOf != null ? g.outOf : maxPoints(), pct: scored ? g.pct : null, status: g.status ? STATUS_LABEL[g.status] : '', rows, comment, notes };
+}
+
+function fbBlocks(ctx, data, W, M, off) {
+  const UI = 'Inter, ' + FONT, cw = W - 2 * M, out = [];
+  const wrap = (t, font, w) => {
+    ctx.font = font; const lines = [];
+    for (const para of String(t).split(/\n/)) {
+      let line = '';
+      for (let word of para.split(/\s+/).filter(Boolean)) {
+        while (ctx.measureText(word).width > w) { let k = word.length - 1; while (k > 1 && ctx.measureText(word.slice(0, k)).width > w) k--; if (line) { lines.push(line); line = ''; } lines.push(word.slice(0, k)); word = word.slice(k); }   // a word longer than the line
+        const t2 = line ? line + ' ' + word : word;
+        if (line && ctx.measureText(t2).width > w) { lines.push(line); line = word; } else line = t2;
+      }
+      lines.push(line);
+    }
+    while (lines.length > 1 && !lines[lines.length - 1]) lines.pop();
+    return lines;
+  };
+  const text = (lines, font, color, x, y, lh) => { ctx.font = font; ctx.fillStyle = color; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic'; lines.forEach((l, i) => ctx.fillText(l, x, y + i * lh)); };
+  const cap = t => out.push({ h: 34, draw: y => { ctx.font = '600 8.5px ' + UI; ctx.fillStyle = FB_MUTED; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic'; try { ctx.letterSpacing = '0.9px'; } catch { } ctx.fillText(t.toUpperCase(), M, y + 26); try { ctx.letterSpacing = '0px'; } catch { } } });
+
+  const big = data.total != null ? fmtNum(data.total) : '', of = data.total != null && data.max ? ' / ' + fmtNum(data.max) : '';
+  ctx.font = '700 28px ' + UI; const bw = ctx.measureText(big).width; ctx.font = '13px ' + UI; const ow = ctx.measureText(of).width;
+  const sw = big ? Math.max(bw + ow, 64) + 18 : data.status ? 110 : 0;
+  const tl = wrap(data.title, '700 19px ' + UI, cw - sw), sl = wrap(data.sub, '11.5px ' + UI, cw - sw);
+  const hh = Math.max(tl.length * 24 + sl.length * 16 + 6, big ? 56 : 0) + 14;
+  out.push({ h: hh + 4, draw: y => {
+    text(tl, '700 19px ' + UI, FB_INK, M, y + 20, 24);
+    text(sl, '11.5px ' + UI, FB_MUTED, M, y + 20 + (tl.length - 1) * 24 + 20, 16);
+    ctx.textAlign = 'right';
+    if (big) {
+      ctx.font = '13px ' + UI; ctx.fillStyle = FB_MUTED; ctx.fillText(of, M + cw, y + 24);
+      ctx.font = '700 28px ' + UI; ctx.fillStyle = FB_INK; ctx.fillText(big, M + cw - ow, y + 24);
+      if (data.pct != null) { ctx.font = '700 14px ' + UI; ctx.fillStyle = FB_BLUE; ctx.fillText(data.pct + '%', M + cw, y + 44); }
+      if (data.status) { ctx.font = '11px ' + UI; ctx.fillStyle = FB_MUTED; ctx.fillText(data.status, M + cw, y + (data.pct != null ? 59 : 44)); }
+    } else if (data.status) { ctx.font = '600 13px ' + UI; ctx.fillStyle = FB_MUTED; ctx.fillText(data.status, M + cw, y + 20); }
+    ctx.textAlign = 'left'; ctx.fillStyle = FB_INK; ctx.fillRect(M, y + hh - 1, cw, 1.2);
+  } });
+
+  if (data.rows.length) {
+    cap('How it was scored');
+    const nameW = Math.min(132, Math.round(cw * 0.25)), barW = 96, tx = M + nameW + barW + 14, tw = cw - nameW - barW - 14, any = data.rows.some(r => r.text);
+    out.push({ h: 1, draw: y => { ctx.fillStyle = FB_LINE; ctx.fillRect(M, y, cw, 1); } });
+    for (const r of data.rows) {
+      const nl = wrap(r.name, '600 12.5px ' + UI, (any ? nameW : cw - barW - 14) - 10), dl = r.text ? wrap(r.text, '11.5px ' + UI, tw) : [];
+      const h = Math.max(nl.length * 16, dl.length * 16, 30) + 18, bx = any ? M + nameW : M + cw - barW;
+      out.push({ h, draw: y => {
+        text(nl, '600 12.5px ' + UI, FB_INK, M, y + 21, 16);
+        text([fmtNum(r.v) + ' of 4'], '600 12px ' + UI, FB_BLUE, bx, y + 21, 16);
+        for (let k = 0; k < 4; k++) {   // four segments; a half point fills half of one
+          const x = bx + k * 23, fill = Math.max(0, Math.min(1, r.v - k));
+          ctx.fillStyle = FB_LINE; ctx.fillRect(x, y + 28, 20, 3.5);
+          if (fill) { ctx.fillStyle = FB_BLUE; ctx.fillRect(x, y + 28, 20 * fill, 3.5); }
+        }
+        text(dl, '11.5px ' + UI, FB_INK2, tx, y + 21, 16);
+        ctx.fillStyle = FB_LINE; ctx.fillRect(M, y + h - 1, cw, 1);
+      } });
+    }
+  }
+
+  if (data.comment) {
+    cap('From your teacher');
+    const cl = wrap(data.comment, '12.5px ' + UI, cw - 28);
+    cl.forEach((line, i) => {
+      const first = !i, last = i === cl.length - 1, h = 19 + (first ? 11 : 0) + (last ? 11 : 0);
+      out.push({ h, draw: y => {
+        ctx.fillStyle = FB_SOFT; ctx.beginPath();
+        if (ctx.roundRect) ctx.roundRect(M, y, cw, h + (last ? 0 : 0.5), [first ? 6 : 0, first ? 6 : 0, last ? 6 : 0, last ? 6 : 0]); else ctx.rect(M, y, cw, h);
+        ctx.fill();
+        text([line], '12.5px ' + UI, FB_INK, M + 14, y + (first ? 11 : 0) + 14, 19);
+      } });
+    });
+  }
+
+  if (data.notes.length) {
+    cap(data.notes.length === 1 ? 'Comment on your paper' : 'Comments on your paper');
+    for (const n of data.notes) {
+      const nl = wrap(n.text, '12px ' + UI, cw - 26 - 44), h = nl.length * 17 + 9, page = 'p. ' + (n.page + 1 + off);
+      const [r, g, b] = rgb(n.color || '#C8321F'), col = 'rgb(' + Math.round(r * 0.8) + ',' + Math.round(g * 0.8) + ',' + Math.round(b * 0.8) + ')';
+      out.push({ h, draw: y => {
+        if (n.n) {
+          ctx.fillStyle = col; ctx.beginPath(); ctx.arc(M + 7, y + 11, 7, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = '#fff'; ctx.font = '700 ' + (n.n > 9 ? 7.5 : 8.5) + 'px ' + UI; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(String(n.n), M + 7, y + 11.4);
+        } else { ctx.fillStyle = col; ctx.beginPath(); ctx.arc(M + 7, y + 11, 2.6, 0, Math.PI * 2); ctx.fill(); }
+        text(nl, '12px ' + UI, FB_INK, M + 26, y + 15, 17);
+        ctx.font = '11px ' + UI; ctx.fillStyle = FB_MUTED; ctx.textAlign = 'right'; ctx.fillText(page, M + cw, y + 15); ctx.textAlign = 'left';
+      } });
+    }
+  }
+  return out;
+}
+
+function fbPages(blocks, top, bottom) {
+  const pages = [[]]; let y = top;
+  blocks.forEach((b, i) => {
+    const next = blocks[i + 1], need = b.h + (b.h === 34 && next ? next.h : 0);
+    if (pages[pages.length - 1].length && y + need > bottom) { pages.push([]); y = top; }
+    pages[pages.length - 1].push(b); y += b.h;
+  });
+  return pages;
+}
+
+async function fbAddPages(out, data, W, H, dpi) {
+  if (!(W >= 400 && H >= 500 && W <= 1300 && H <= 1300) || W > H) { W = 612; H = 792; }
+  const M = Math.max(44, Math.round(W * 0.095)), top = M, bottom = H - M - 22, UI = 'Inter, ' + FONT, scale = dpi / 72;
+  const probe = document.createElement('canvas').getContext('2d');
+  let n = 1, pages;
+  for (let pass = 0; pass < 3; pass++) { pages = fbPages(fbBlocks(probe, data, W, M, n), top, bottom); if (pages.length === n) break; n = pages.length; }
+  for (let i = 0; i < pages.length; i++) {
+    const c = document.createElement('canvas'); c.width = Math.ceil(W * scale); c.height = Math.ceil(H * scale);
+    const ctx = c.getContext('2d'); ctx.setTransform(scale, 0, 0, scale, 0, 0);
+    ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, W, H);
+    const mine = fbPages(fbBlocks(ctx, data, W, M, pages.length), top, bottom)[i] || [];
+    let y = top; for (const b of mine) { b.draw(y); y += b.h; }
+    ctx.font = '10px ' + UI; ctx.fillStyle = FB_MUTED; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+    ctx.fillText(i === pages.length - 1 ? 'Your marked paper starts on the next page.' : 'Your feedback continues on the next page.', M, H - M + 6);
+    out.addPage([W, H]).drawImage(await out.embedJpg(await canvasJpg(c, 0.92)), { x: 0, y: 0, width: W, height: H });
+    c.width = c.height = 0;
+  }
+  return pages.length;
+}
+Object.assign(window.__gs, { fbData: i => { const st = batch.students[i], d = layoutOf(st)[0]; return d ? fbData(st, d) : null; } });
 
 /* ---------------- rubric library: what each score means on each row, and saved rubrics to reuse ---------------- */
 const LEVELS = [4, 3, 2, 1, 0], levelsOpen = new Set(), levelEditOpen = new Set();
@@ -12653,13 +12916,16 @@ $('#overviewBtn').onclick = openOverview;
 Object.assign(window.__gs, { bankBusy: () => bankBusyN, classStats, openOverview, pctList, pctRows, pv: () => pv, pastAvg, openSetup, savedRubrics, levelOf, tidyLevels, spreadBins });
 
 /* ---------------- gradebook: every assignment for a class, by term, with a term grade from the teacher's own weights ---------------- */
-function bkLabel(t, short) { const x = BK_TYPES.find(y => y[0] === t); return x ? x[short ? 2 : 1] : 'No type yet'; }
+const BK_XC = ['xc', 'Extra credit', 'Extra credit'];
+function bkLabel(t, short) { const x = BK_TYPES.find(y => y[0] === t) || (t === 'xc' ? BK_XC : null); return x ? x[short ? 2 : 1] : 'No type yet'; }
 function bkPill(t) { return t ? '<span class="bkpill ' + t + '">' + bkLabel(t, true) + '</span>' : ''; }
 const BK_W0 = { sum: 50, ic: 50, fm: 0 };
 function bkConf() {
   const b = lib.book || {};
-  return { terms: (b.terms || []).filter(t => t && t.id), w: { ...BK_W0, ...(b.w || {}) }, empty: b.empty === 'zero' ? 'zero' : 'other', dl: b.dl || {} };
+  return { terms: (b.terms || []).filter(t => t && t.id), w: { ...BK_W0, ...(b.w || {}) }, empty: b.empty === 'zero' ? 'zero' : 'other', dl: b.dl || {}, xcTo: b.xcTo === 'ic' ? 'ic' : 'term', xcCap: b.xcCap !== false };
 }
+const bkXcTo = (col, conf) => (col.xcTo === 'ic' || col.xcTo === 'term') ? col.xcTo : conf.xcTo;
+const bkXcWhere = to => to === 'ic' ? 'the in-class average' : 'the term grade';
 function bkSaveLib() { saveLib(); bk.ver = libVer; }
 function bkSave(part) { lib.book = { ...(lib.book || {}), ...part }; bkSaveLib(); }
 const isoDay = t => { if (!t) return ''; const d = new Date(t); return isNaN(d) ? '' : d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
@@ -12700,7 +12966,7 @@ async function bkLoad() {
   }
   for (const c of lib.classes) for (const u of c.units) for (const it of u.items) {
     if (!it.typed || byKey.has(it.id)) { if (it.typed && byKey.has(it.id)) byKey.get(it.id).typed = it.typed; continue; }
-    byKey.set(it.id, { key: it.id, it, cls: c.id, name: it.name, type: it.type || '', due: it.due || isoDay(it.opened), term: it.term || '', typed: it.typed });
+    byKey.set(it.id, { key: it.id, it, cls: c.id, name: it.name, type: it.type || '', due: it.due || isoDay(it.opened), term: it.term || '', typed: it.typed, xcTo: it.xcTo || '' });
   }
   for (const col of byKey.values()) if (!col.typed && col.it && col.it.typed) col.typed = col.it.typed;
   return [...byKey.values()];
@@ -12718,24 +12984,31 @@ function bkClassCols(c, cols) {
         if (cell) cells.set(n, cell);
       }
     }
-    if (col.typed) for (const n of names) if (!cells.has(n) || (cells.get(n).pct == null && !cells.get(n).st)) { const cell = bkTypedCell(col.typed, col.typed.s && col.typed.s[n]); if (cell) cells.set(n, cell); }
+    if (col.type === 'xc') { cells.clear(); if (col.typed) for (const n of names) { const r = col.typed.s && col.typed.s[n], v = r ? +r.v : 0; if (v > 0) cells.set(n, { xc: v, typed: true }); } }
+    else if (col.typed) for (const n of names) if (!cells.has(n) || (cells.get(n).pct == null && !cells.get(n).st)) { const cell = bkTypedCell(col.typed, col.typed.s && col.typed.s[n]); if (cell) cells.set(n, cell); }
     return { ...col, cells, termId: bkTermOf(col, terms) };
   }).sort((a, b) => (a.due || '').localeCompare(b.due || '') || natural(a.name, b.name));
 }
 const bkCounts = cell => !!cell && cell.pct != null && !cell.partial && !cell.out && cell.st !== 'missing' && cell.st !== 'excused';
 function bkGrade(name, cols, conf) {
-  const by = {}, w = conf.w;
+  const by = {}, w = conf.w, xc = { term: 0, ic: 0 };
   let sum = 0, wt = 0, soFar = false;
+  for (const col of cols) if (col.type === 'xc') { const cell = col.cells.get(name); if (cell && cell.xc) xc[bkXcTo(col, conf)] += cell.xc; }
   for (const [t] of BK_TYPES) {
     const ps = cols.filter(x => x.type === t).map(x => x.cells.get(name)).filter(bkCounts).map(x => x.pct);
     by[t] = ps.length ? bkMean(ps) : null;
+    if (t === 'ic' && by.ic != null && xc.ic) by.ic += xc.ic;
     if (t === 'fm' || !(+w[t] > 0)) continue;
     if (by[t] == null) { if (cols.some(x => x.type === t)) soFar = true; if (conf.empty !== 'zero') continue; }
     sum += (by[t] || 0) * +w[t]; wt += +w[t];
   }
   const fmw = +w.fm > 0 ? by.fm : null;
   if (fmw != null) { sum += fmw * +w.fm; wt += +w.fm; }
-  return { by, grade: wt ? sum / wt : null, soFar };
+  let grade = wt ? sum / wt : null;
+  if (grade != null && xc.term) grade += xc.term;
+  const capped = grade != null && conf.xcCap && grade > 100;
+  if (capped) grade = 100;
+  return { by, grade, soFar, xc: (by.ic != null ? xc.ic : 0) + (grade != null ? xc.term : 0), xcIc: by.ic != null ? xc.ic : 0, xcTerm: grade != null ? xc.term : 0, capped };
 }
 
 /* ---------- the box ---------- */
@@ -12787,7 +13060,7 @@ function bkDraw() {
   const bar = '<div class="bkbar">' + (page ? (bk.tab === 'one' ? '<a class="btn sm" id="bkBackStu" href="' + classHash(c, 'students') + '">← Students</a>' : '') : '<label class="muted">Class <select class="btn sm" id="bkCls">' + lib.classes.map(k => '<option value="' + k.id + '"' + (k === c ? ' selected' : '') + '>' + esc(k.name) + '</option>').join('') + '</select></label>') +
     '<div class="ovtabs bkterms" role="group" aria-label="Term">' + tabs.map(([id, l]) => '<button data-bkterm="' + esc(id) + '" aria-selected="' + (bk.term === id) + '">' + esc(l) + '</button>').join('') + '</div><span class="sp"></span>' +
     (bk.tab === 'table' && bk.term !== '*' ? '<div class="pseg" role="group" aria-label="Show">' + [['pct', 'Percent'], ['pts', 'Points']].map(([v, l]) => '<button data-bkshow="' + v + '" aria-pressed="' + (bk.show === v) + '">' + l + '</button>').join('') + '</div>' : '') +
-    (tools ? '<button class="btn sm" data-bksetup>Term setup</button>' + (bk.tab === 'table' ? '<button class="btn sm" data-bkcopy>Copy table</button>' : '') + '<button class="btn sm primary" data-bkadd>+ Add scores</button>' : '') + '</div>';
+    (tools ? '<button class="btn sm" data-bksetup>Term setup</button>' + (bk.tab === 'table' ? '<button class="btn sm" data-bkcopy>Copy table</button>' : '') + '<button class="btn sm" data-bkaddxc>+ Extra credit</button><button class="btn sm primary" data-bkadd>+ Add scores</button>' : '') + '</div>';
   let main;
   if (!c.names.length) main = '<p class="muted bkpad">The gradebook lists the students on a class’s roster. Add a roster to ' + esc(c.name) + ' on its class page first.</p>';
   else if (bk.tab === 'class') main = bkClassView(c, cols, all, conf);
@@ -12797,6 +13070,7 @@ function bkDraw() {
   body.innerHTML = bar + (untyped.length ? '<div class="bknote">' + (untyped.length === 1 ? '“' + esc(untyped[0].name) + '” has' : untyped.length + ' assignments have') + ' no type yet, so ' + (untyped.length === 1 ? 'it doesn’t' : 'they don’t') + ' count toward a term grade. <button class="btn sm" data-bktypes>Set types</button></div>' : '') + main;
 }
 const bkCellText = (cell, show, col) => {
+  if (col.type === 'xc') return cell && cell.xc ? '<span class="bkxc">+' + fmtNum(cell.xc) + '</span>' : '<span class="bknone">–</span>';
   if (!cell) return '<span class="bknone">–</span>';
   if (col.type === 'fm') return cell.st === 'missing' ? '<span class="bkst">missing</span>' : cell.st === 'excused' ? '<span class="bkst">excused</span>' : cell.fb ? '<span class="bkfb" aria-label="Feedback complete">✓</span>' : cell.started ? '<span class="bkstart">started</span>' : '<span class="bknone">–</span>';
   if (cell.st === 'missing' || cell.st === 'excused') return '<span class="bkst">' + cell.st + '</span>';
@@ -12807,6 +13081,7 @@ const bkCellText = (cell, show, col) => {
 const bkColHead = col => '<th class="bkch' + (col.key === bk.hi ? ' hi' : '') + '"><button data-bkcol="' + esc(col.key) + '" title="Type, date and term">' + esc(col.name) + '<small>' + esc(bkDay(col.due)) + (col.typed ? ' · typed in' : '') + '</small></button></th>';
 function bkGroups(cols) {
   const g = BK_TYPES.map(([t, , s]) => ({ t, s, cols: cols.filter(x => x.type === t) })).filter(x => x.cols.length);
+  const xc = cols.filter(x => x.type === 'xc'); if (xc.length) g.push({ t: 'xc', s: 'Extra credit', cols: xc });
   const none = cols.filter(x => !x.type); if (none.length) g.push({ t: '', s: 'No type yet', cols: none });
   return g;
 }
@@ -12814,7 +13089,7 @@ function bkTable(c, cols, conf) {
   if (!cols.length) return '<p class="muted bkpad">Nothing graded for ' + esc(c.name) + ' in this term yet. Grade a download for it, or use + Add scores for work you did before.</p>';
   const groups = bkGroups(cols), w = conf.w, termName = (bkTabs(cols).find(t => t[0] === bk.term) || [, 'Term'])[1];
   const avgCol = g => g.t === 'sum' || g.t === 'ic';
-  let h = '<div class="bkwrap"><table class="bktab" id="bkTab"><thead><tr class="bkg"><th></th>' + groups.map(g => '<th colspan="' + (g.cols.length + (avgCol(g) ? 1 : 0)) + '" class="' + g.t + '">' + esc(g.s) + (g.t === 'fm' ? (+w.fm > 0 ? ' · ' + w.fm + '%' : ' · feedback only') : g.t ? ' · ' + (+w[g.t] || 0) + '%' : '') + '</th>').join('') + '<th></th></tr>' +
+  let h = '<div class="bkwrap"><table class="bktab" id="bkTab"><thead><tr class="bkg"><th></th>' + groups.map(g => '<th colspan="' + (g.cols.length + (avgCol(g) ? 1 : 0)) + '" class="' + g.t + '">' + esc(g.s) + (g.t === 'fm' ? (+w.fm > 0 ? ' · ' + w.fm + '%' : ' · feedback only') : g.t === 'xc' ? ' · points on top' : g.t ? ' · ' + (+w[g.t] || 0) + '%' : '') + '</th>').join('') + '<th></th></tr>' +
     '<tr><th class="bknm">Student</th>' + groups.map(g => g.cols.map(bkColHead).join('') + (avgCol(g) ? '<th class="bkavg">Avg</th>' : '')).join('') + '<th class="bkterm">' + esc(termName) + '</th></tr></thead><tbody>';
   const grades = [];
   c.names.forEach((n, i) => {
@@ -12822,17 +13097,20 @@ function bkTable(c, cols, conf) {
     h += '<tr><td class="bknm">' + bkName(n, i) + bkInfo(n) + '</td>' + groups.map(g => g.cols.map(col => { const cell = col.cells.get(n), ed = !!col.typed && !(cell && !cell.typed);
       return '<td' + (ed ? ' class="bked" tabindex="0" data-bked="' + esc(col.key) + '" data-bkn="' + esc(n) + '" title="Click to change"' : col.d ? ' title="Change this score in its download"' : '') + '>' + bkCellText(cell, bk.show, col) + '</td>'; }).join('') +
       (avgCol(g) ? '<td class="bkavg">' + (r.by[g.t] != null ? pctAvgText(r.by[g.t]) : '<span class="bknone">–</span>') + '</td>' : '')).join('') +
-      '<td class="bkterm" tabindex="0" ' + bkWhy(n, r, conf) + '>' + (r.grade != null ? pctAvgText(r.grade) + (r.soFar ? ' <small>so far</small>' : '') : '<span class="bknone">–</span>') + '</td></tr>';
+      '<td class="bkterm" tabindex="0" ' + bkWhy(n, r, conf) + '>' + (r.grade != null ? pctAvgText(r.grade) + (r.soFar ? ' <small>so far</small>' : '') + (r.xc ? ' <small class="bkxc" title="Includes extra credit">+xc</small>' : '') : '<span class="bknone">–</span>') + '</td></tr>';
   });
-  const colAvg = col => { if (col.type === 'fm') { const k = c.names.filter(n => (col.cells.get(n) || {}).fb).length; return k + '/' + c.names.length; } const ps = c.names.map(n => col.cells.get(n)).filter(bkCounts).map(x => x.pct); return ps.length ? pctAvgText(bkMean(ps)) : '–'; };
+  const colAvg = col => { if (col.type === 'xc') { const k = c.names.filter(n => col.cells.get(n)).length; return k + ' given'; } if (col.type === 'fm') { const k = c.names.filter(n => (col.cells.get(n) || {}).fb).length; return k + '/' + c.names.length; } const ps = c.names.map(n => col.cells.get(n)).filter(bkCounts).map(x => x.pct); return ps.length ? pctAvgText(bkMean(ps)) : '–'; };
   const typeAvg = t => { const ps = grades.map(r => r.by[t]).filter(v => v != null); return ps.length ? pctAvgText(bkMean(ps)) : '–'; };
   const gs = grades.map(r => r.grade).filter(v => v != null);
   h += '<tr class="bkfoot"><td class="bknm">Class average</td>' + groups.map(g => g.cols.map(col => '<td>' + colAvg(col) + '</td>').join('') + (avgCol(g) ? '<td class="bkavg">' + typeAvg(g.t) + '</td>' : '')).join('') + '<td class="bkterm">' + (gs.length ? pctAvgText(bkMean(gs)) : '–') + '</td></tr></tbody></table></div>' +
-    '<p class="muted bkcap">Students are in your roster order. Missing and Excused never count against a student. Point at a term grade to see how it’s worked out. Scores you typed in can be changed here; a graded download’s scores change in that download.</p>';
+    '<p class="muted bkcap">Students are in your roster order. Missing and Excused never count against a student. Point at a term grade to see how it’s worked out' + (cols.some(x => x.type === 'xc') ? ', extra credit included' : '') + '. Scores you typed in can be changed here; a graded download’s scores change in that download.</p>';
   return h;
 }
 function bkWhy(n, r, conf) {
   const w = conf.w, parts = BK_TYPES.filter(([t]) => t !== 'fm' || +w.fm > 0).filter(([t]) => +w[t] > 0).map(([t, , s]) => s + ' ' + w[t] + '%: ' + (r.by[t] != null ? pctAvgText(r.by[t]) : conf.empty === 'zero' ? 'none, counts as 0' : 'none yet, left out'));
+  if (r.xcIc) parts.push('Extra credit +' + fmtNum(r.xcIc) + ' on the in-class average');
+  if (r.xcTerm) parts.push('Extra credit +' + fmtNum(r.xcTerm) + ' on the grade');
+  if (r.capped) parts.push('kept at 100%');
   return 'data-tv="' + esc(r.grade != null ? pctAvgText(r.grade) : '–') + '" data-tl="' + esc(bkWho(n, bkClass().names.indexOf(n))) + '" data-tn="' + esc(parts.join(' · ')) + '"';
 }
 function bkYear(c, all, conf) {
@@ -12860,7 +13138,7 @@ function bkBands(list) {
 function bkLine(cols, series, id, refLine) {
   const vals = series.flatMap(s => s.pts).concat(refLine != null ? [refLine] : []).filter(v => v != null);
   if (cols.length < 1 || !vals.length) return '<p class="muted">Nothing to show yet.</p>';
-  const lo = Math.max(0, Math.floor((Math.min(...vals) - 5) / 10) * 10), hi = Math.min(100, Math.ceil((Math.max(...vals) + 2) / 10) * 10) || 100;
+  const top = Math.max(...vals), lo = Math.max(0, Math.floor((Math.min(...vals) - 5) / 10) * 10), hi = (top > 100 ? Math.ceil(top / 10) * 10 : Math.min(100, Math.ceil((top + 2) / 10) * 10)) || 100;   // a score above 100% (extra credit) stretches the scale instead of leaving the chart
   const W = bkW(), L = 44, R = 30, fit = chFit((W - L - R) / Math.max(1, cols.length), cols.length), lines = fit.lines, T = 16, B = 26 + lines * 14, H = 160 + B, X = i => L + (cols.length === 1 ? (W - L - R) / 2 : i * (W - L - R) / (cols.length - 1)), Y = v => T + (hi - v) / Math.max(10, hi - lo) * (H - T - B);
   let g = ''; for (let v = lo; v <= hi; v += 10) g += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + Y(v) + '" y2="' + Y(v) + '" class="tgl"/><text x="' + (L - 8) + '" y="' + (Y(v) + 4) + '" text-anchor="end" class="ttk">' + v + '%</text>';
   if (refLine != null) g += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + Y(refLine) + '" y2="' + Y(refLine) + '" class="bkref"/>';
@@ -12919,7 +13197,7 @@ function bkOneView(c, cols, conf) {
   const sc = bkScored(cols), fm = cols.filter(x => x.type === 'fm'), miss = cols.filter(x => (x.cells.get(n) || {}).st === 'missing');
   const bar = (l, v, ref, t) => '<div class="bkcmp"><span>' + l + '</span><div class="bkcmpt"><i class="' + t + '" style="width:' + Math.min(100, v || 0) + '%"></i>' + (ref != null ? '<em style="left:' + Math.min(100, ref) + '%" title="Class average ' + esc(pctAvgText(ref)) + '"></em>' : '') + '</div><b>' + (v != null ? pctAvgText(v) : '–') + '</b></div>';
   return '<div class="bkpad"><div class="bkstu"><button class="icon" data-bkstu="-1" aria-label="Previous student"' + (bk.stu ? '' : ' disabled') + '>‹</button><b id="bkStuName">' + esc(shown) + '</b>' + bkInfo(n) + '<button class="icon" data-bkstu="1" aria-label="Next student"' + (bk.stu < c.names.length - 1 ? '' : ' disabled') + '>›</button><span class="muted">' + (bk.stu + 1) + ' of ' + c.names.length + ' · ← → to move</span></div>' +
-    '<div class="ovtiles" id="bkStuTiles">' + bkTile(bk.term === '*' ? 'Grade' : 'Term grade', r.grade != null ? pctAvgText(r.grade) + (r.soFar ? ' <small>so far</small>' : '') : '–', cavg('') != null ? 'class average ' + pctAvgText(cavg('')) : '', true) +
+    '<div class="ovtiles" id="bkStuTiles">' + bkTile(bk.term === '*' ? 'Grade' : 'Term grade', r.grade != null ? pctAvgText(r.grade) + (r.soFar ? ' <small>so far</small>' : '') : '–', [r.xc ? 'includes +' + fmtNum(r.xc) + ' extra credit' : '', cavg('') != null ? 'class average ' + pctAvgText(cavg('')) : ''].filter(Boolean).join(' · '), true) +
     bkTile('Summatives', r.by.sum != null ? pctAvgText(r.by.sum) : '–', cols.filter(x => x.type === 'sum' && bkCounts(x.cells.get(n))).length + ' of ' + cols.filter(x => x.type === 'sum').length + ' counted') +
     bkTile('In-class', r.by.ic != null ? pctAvgText(r.by.ic) : '–', cols.filter(x => x.type === 'ic' && bkCounts(x.cells.get(n))).length + ' of ' + cols.filter(x => x.type === 'ic').length + ' counted') +
     bkTile('Missing', miss.length, miss.length ? miss.map(x => x.name).join(', ') : 'nothing outstanding') + '</div>' + bkStrip(c, cols, n) +
@@ -12935,10 +13213,12 @@ function bkColMenu(key, anchor) {
   bkPopClose();
   const terms = bkConf().terms, p = document.createElement('div');
   p.className = 'bkpop'; p.id = 'bkPop';
-  p.innerHTML = '<b>' + esc(col.name) + '</b><div class="bkpf">Type</div><div class="pseg bktypeseg" role="group">' + BK_TYPES.map(([t, , s]) => '<button data-bksettype="' + t + '" aria-pressed="' + (col.type === t) + '">' + s + '</button>').join('') + '</div>' +
+  const xcTo = bkXcTo(col, bkConf());
+  p.innerHTML = '<b>' + esc(col.name) + '</b>' + (col.type === 'xc' ? '<div class="bkpf">Extra credit adds to</div><div class="pseg bktypeseg" role="group">' + [['term', 'Term grade'], ['ic', 'In-class average']].map(([v, l]) => '<button data-bkcolxc="' + v + '" aria-pressed="' + (xcTo === v) + '">' + l + '</button>').join('') + '</div>'
+    : '<div class="bkpf">Type</div><div class="pseg bktypeseg" role="group">' + BK_TYPES.map(([t, , s]) => '<button data-bksettype="' + t + '" aria-pressed="' + (col.type === t) + '">' + s + '</button>').join('') + '</div>') +
     '<label class="bkpf">Due <input type="date" id="bkDue" value="' + esc(col.due || '') + '"></label>' +
     (terms.length ? '<label class="bkpf">Term <select id="bkTerm" class="btn sm"><option value="">By the date (' + esc((terms.find(t => t.id === bkTermOf({ ...col, term: '' }, terms)) || { name: 'none' }).name) + ')</option>' + terms.map(t => '<option value="' + t.id + '"' + (col.term === t.id ? ' selected' : '') + '>' + esc(t.name) + '</option>').join('') + '</select></label>' : '') +
-    (col.typed && col.it ? '<button class="btn sm" data-bkedittyped="' + esc(col.it.id) + '">Edit the typed-in scores</button>' : '') + '<button class="btn sm" data-bkpopclose>Done</button>';
+    (col.typed && col.it ? '<button class="btn sm" data-bkedittyped="' + esc(col.it.id) + '">' + (col.type === 'xc' ? 'Edit the extra credit' : 'Edit the typed-in scores') + '</button>' : '') + '<button class="btn sm" data-bkpopclose>Done</button>';
   p.dataset.key = key;
   const host = bkHost();
   host.appendChild(p);
@@ -12973,7 +13253,10 @@ function bkSetupView() {
     '<button class="link" data-taddt>+ Add a term</button><p class="muted bkhint">An assignment counts toward the term its due date falls in. You can move one to another term from its column. With no terms, everything is one year.</p></section>' +
     '<section><h3 class="ovh3">What a grade is made of</h3>' + BK_TYPES.map(wrow).join('') + '<p class="muted bkhint" id="bkWsum"></p><p class="muted bkhint">Inside each type, every assignment counts the same, whatever it’s out of: two summatives at 50% are 25% each.</p>' +
     '<h3 class="ovh3" style="margin-top:16px">When a type has nothing yet</h3><div class="pseg" role="group">' + [['other', 'Use the other types'], ['zero', 'Count it as 0']].map(([v, l]) => '<button data-bkempty="' + v + '" aria-pressed="' + (conf.empty === v) + '">' + l + '</button>').join('') + '</div>' +
-    '<p class="muted bkhint">Early in a term with no summative yet, the grade is the in-class average, marked “so far”.</p></section>' +
+    '<p class="muted bkhint">Early in a term with no summative yet, the grade is the in-class average, marked “so far”.</p>' +
+    '<h3 class="ovh3" style="margin-top:16px">Extra credit</h3><div class="bkpf">New extra credit adds to</div><div class="pseg" role="group">' + [['term', 'The term grade'], ['ic', 'The in-class average']].map(([v, l]) => '<button data-bkxcto="' + v + '" aria-pressed="' + (conf.xcTo === v) + '">' + l + '</button>').join('') + '</div>' +
+    '<p class="muted bkhint">One extra credit point adds one percentage point there. Added to the in-class average, it counts by that type’s weight. Summatives and each paper’s own percent are never changed by it.</p>' +
+    '<div class="bkpf" style="margin-top:10px">Above 100%</div><div class="pseg" role="group">' + [['cap', 'Keep grades at 100% at most'], ['over', 'Let a grade go over 100%']].map(([v, l]) => '<button data-bkxccap="' + v + '" aria-pressed="' + ((v === 'cap') === conf.xcCap) + '">' + l + '</button>').join('') + '</div></section>' +
     '<div class="bkfootbtns"><button class="btn" data-bkback>Cancel</button><button class="btn primary" data-bksavesetup>Save</button></div></div>';
   bkWsum();
 }
@@ -12985,34 +13268,47 @@ function bkSetupSave() {
   if (bad) { toast('Give “' + bad.name + '” a start and an end date, with the end after the start.'); return false; }
   const w = {}; for (const i of document.querySelectorAll('[data-wt]')) w[i.dataset.wt] = Math.max(0, Math.min(100, +i.value || 0));
   if (!w.sum && !w.ic && !w.fm) { toast('Give at least one type some weight.'); return false; }
-  const e = document.querySelector('[data-bkempty][aria-pressed="true"]');
-  bkSave({ terms, w, empty: e ? e.dataset.bkempty : 'other' });
+  const e = document.querySelector('[data-bkempty][aria-pressed="true"]'), xt = document.querySelector('[data-bkxcto][aria-pressed="true"]'), xp = document.querySelector('[data-bkxccap][aria-pressed="true"]');
+  bkSave({ terms, w, empty: e ? e.dataset.bkempty : 'other', xcTo: xt ? xt.dataset.bkxcto : 'term', xcCap: !xp || xp.dataset.bkxccap === 'cap' });
   return true;
 }
 
 /* ---------- add scores without papers ---------- */
 let bkAdd = null;
-function bkAddView(itId) {
+function bkAddView(itId, opts = {}) {
   const c = bkClass(), f = itId ? findItem(itId) : null, it = f && f.it;
-  bkAdd = { it, max: it && it.typed ? it.typed.max : 20, mode: it && it.typed && !it.typed.max ? 'pct' : 'pts', type: (it && it.type) || 'ic', s: JSON.parse(JSON.stringify((it && it.typed && it.typed.s) || {})) };
+  bkAdd = { it, max: it && it.typed && it.typed.max ? it.typed.max : 20, mode: it && it.typed && !it.typed.max && it.type !== 'xc' ? 'pct' : 'pts', type: (it && it.type) || opts.type || 'ic', xcTo: (it && it.xcTo) || bkConf().xcTo, s: JSON.parse(JSON.stringify((it && it.typed && it.typed.s) || {})) };
   const units = c.units;
   bkTabsOff();
   $('#bkBody').innerHTML = '<div class="bkpad bkaddv" id="bkAdd"><h3 class="bkh">' + (it ? 'Typed-in scores for ' + esc(it.name) : 'Add scores for ' + esc(c.name)) + '</h3><div class="bkaddgrid">' +
     '<label class="bkpf">Assignment<input type="text" class="bkin" id="bkaName" value="' + esc(it ? it.name : '') + '" placeholder="e.g. Vocab quiz 2"></label>' +
-    '<div class="bkpf">Type<div class="pseg" role="group">' + BK_TYPES.map(([t, , s]) => '<button data-bkatype="' + t + '" aria-pressed="' + (bkAdd.type === t) + '">' + s + '</button>').join('') + '</div></div>' +
+    '<div class="bkpf bktypef">Type<div class="pseg" role="group">' + BK_TYPES.concat([BK_XC]).map(([t, , s]) => '<button data-bkatype="' + t + '" aria-pressed="' + (bkAdd.type === t) + '">' + s + '</button>').join('') + '</div></div>' +
     '<label class="bkpf">Due<input type="date" class="bkin" id="bkaDue" value="' + esc((it && it.due) || isoDay(Date.now())) + '"></label>' +
     (it ? '' : '<label class="bkpf">Unit<select class="btn sm" id="bkaUnit">' + units.map(u => '<option value="' + u.id + '">' + esc(u.name) + '</option>').join('') + '<option value="">' + (units.length ? 'A new unit: Typed in' : 'Unit 1 (new)') + '</option></select></label>') +
     '<div class="bkpf">Scored as<div class="bkso"><div class="pseg" role="group"><button data-bkamode="pts" aria-pressed="' + (bkAdd.mode === 'pts') + '">Points out of</button><button data-bkamode="pct" aria-pressed="' + (bkAdd.mode === 'pct') + '">Percent</button></div>' +
-    '<input type="number" class="bkin bkmax" id="bkaMax" min="0.5" step="0.5" value="' + esc(bkAdd.max || 20) + '"' + (bkAdd.mode === 'pct' ? ' hidden' : '') + ' aria-label="Out of"></div></div></div>' +
-    '<textarea class="bkin bkpaste" id="bkaPaste" rows="2" placeholder="Paste a column of scores from a spreadsheet, in roster order. Or paste names with scores beside them. Or type them in below."></textarea><p class="muted bkhint" id="bkaPasteNote"></p>' +
+    '<input type="number" class="bkin bkmax" id="bkaMax" min="0.5" step="0.5" value="' + esc(bkAdd.max || 20) + '"' + (bkAdd.mode === 'pct' ? ' hidden' : '') + ' aria-label="Out of"></div></div>' +
+    '<div class="bkpf" id="bkaXcTo">Adds to<div class="pseg" role="group">' + [['term', 'Term grade'], ['ic', 'In-class average']].map(([v, l]) => '<button data-bkaxcto="' + v + '" aria-pressed="' + (bkAdd.xcTo === v) + '">' + l + '</button>').join('') + '</div></div></div>' +
+    '<div class="bkxcall" id="bkaXcAll"><span>Give</span><input type="number" class="bkin bksc" id="bkaXcV" step="0.5" min="0" value="1" aria-label="Points to give"><span>points to</span><button class="btn sm" data-bkaxcall="all">Everyone</button><button class="btn sm" data-bkaxcall="none">Everyone without any yet</button><span class="sp"></span><button class="link" data-bkaxcall="clear">Clear all</button></div>' +
+    '<p class="muted bkhint" id="bkaXcSay"></p><textarea class="bkin bkpaste" id="bkaPaste" rows="2" placeholder="Paste a column of scores from a spreadsheet, in roster order. Or paste names with scores beside them. Or type them in below."></textarea><p class="muted bkhint" id="bkaPasteNote"></p>' +
     '<table class="ptab bkent"><thead><tr id="bkaHead"></tr></thead><tbody id="bkaRows"></tbody></table>' +
     '<div class="bkfootbtns"><span class="muted" id="bkaCount"></span><span class="sp"></span><button class="btn" data-bkback>Cancel</button><button class="btn primary" data-bkasave>' + (it ? 'Save scores' : 'Add to gradebook') + '</button></div></div>';
   bkAddRows();
   setTimeout(() => { const n = $('#bkaName'); if (n && !it) n.focus(); }, 0);
 }
+function bkXcSay(v) { return v === '' || v == null || !(+v > 0) ? '' : '+' + fmtNum(+v) + (bkAdd.xcTo === 'ic' ? ' on the in-class average' : '% on the term grade'); }
 function bkAddMax() { return bkAdd.mode === 'pct' ? null : Math.max(0.5, +($('#bkaMax') || {}).value || 0) || null; }
 function bkAddRows() {
-  const c = bkClass(), max = bkAddMax(), fm = bkAdd.type === 'fm';
+  const c = bkClass(), max = bkAddMax(), fm = bkAdd.type === 'fm', xc = bkAdd.type === 'xc';
+  $('#bkaXcTo').hidden = $('#bkaXcAll').hidden = $('#bkaXcSay').hidden = !xc;
+  $('.bkso').closest('.bkpf').hidden = xc;
+  if (xc) {
+    $('#bkaXcSay').textContent = 'Each point adds one percentage point to ' + bkXcWhere(bkAdd.xcTo) + (bkAdd.xcTo === 'ic' ? ', which then counts by its weight' : '') + '. Leave a student blank for none. It doesn’t change any assignment’s score.';
+    $('#bkaHead').innerHTML = '<th>Student</th><th>Extra credit</th><th>Adds</th><th></th>';
+    $('#bkaRows').innerHTML = c.names.map((n, i) => { const r = bkAdd.s[n] || {}, v = r.v != null && r.v !== '' && +r.v ? r.v : '';
+      return '<tr><td>' + esc(n) + '</td><td><input type="number" class="bkin bksc" step="0.5" min="0" data-bkai="' + i + '" value="' + esc(v) + '" aria-label="Extra credit for ' + esc(n) + '"> points</td><td class="muted">' + bkXcSay(v) + '</td><td></td></tr>'; }).join('');
+    $('#bkaCount').textContent = c.names.filter(x => +((bkAdd.s[x] || {}).v) > 0).length + ' of ' + c.names.length + ' given extra credit';
+    return;
+  }
   $('#bkaHead').innerHTML = fm ? '<th>Student</th><th>Feedback complete</th><th></th><th>Mark as</th>' : '<th>Student</th><th>Score</th><th class="r">Percent</th><th>Mark as</th>';
   for (const el of document.querySelectorAll('.bkso,#bkaPaste,#bkaPasteNote')) el.closest('.bkpf, textarea, p').hidden = fm;
   if (fm) {
@@ -13042,24 +13338,25 @@ function bkPaste(text) {
 function bkAddSave() {
   const c = bkClass(), name = $('#bkaName').value.trim(), due = $('#bkaDue').value;
   if (!name) { $('#bkaName').focus(); return false; }
-  const max = bkAddMax(), s = {};
+  const xc = bkAdd.type === 'xc', max = xc ? null : bkAddMax(), s = {};
   const fm = bkAdd.type === 'fm';
-  for (const [n, r] of Object.entries(bkAdd.s)) {
+  if (xc) for (const [n, r] of Object.entries(bkAdd.s)) { const v = r.v === '' || r.v == null || isNaN(+r.v) ? 0 : Math.round(+r.v * 2) / 2; if (v > 0) s[n] = { v }; }
+  else for (const [n, r] of Object.entries(bkAdd.s)) {
     const v = fm || r.v === '' || r.v == null || isNaN(+r.v) ? null : Math.round(+r.v * 2) / 2;
     if (fm ? r.fb || r.st : v != null || r.st) s[n] = fm && r.fb ? { v: null, st: r.st || '', fb: true } : { v, st: r.st || '' };
   }
   const typed = { max, s };
   let it = bkAdd.it;
-  if (it) Object.assign(it, { name, type: bkAdd.type, due, typed });
+  if (it) { Object.assign(it, { name, type: bkAdd.type, due, typed }); if (xc) it.xcTo = bkAdd.xcTo; else delete it.xcTo; }
   else {
     const uid0 = $('#bkaUnit') && $('#bkaUnit').value;
     let u = c.units.find(x => x.id === uid0);
     if (!u) c.units.push(u = { id: uid(), name: c.units.length ? 'Typed in' : 'Unit 1', items: [] });
-    u.items.push(it = { id: uid(), name, classId: c.id, type: bkAdd.type, due, typed });
+    u.items.push(it = { id: uid(), name, classId: c.id, type: bkAdd.type, due, typed, ...(xc ? { xcTo: bkAdd.xcTo } : {}) });
   }
   bkSaveLib(); if (!batch) renderLib();
   const col = bk.cols.find(x => x.key === it.id);
-  if (col) Object.assign(col, { name, type: it.type, due, typed }); else bk.cols.push({ key: it.id, it, cls: c.id, name, type: it.type, due, term: it.term || '', typed });
+  if (col) Object.assign(col, { name, type: it.type, due, typed, xcTo: it.xcTo || '' }); else bk.cols.push({ key: it.id, it, cls: c.id, name, type: it.type, due, term: it.term || '', typed, xcTo: it.xcTo || '' });
   bk.term = bkTermOf({ due, term: it.term || '' }, bkConf().terms); bk.hi = it.id;
   return true;
 }
@@ -13070,6 +13367,19 @@ function bkCellEdit(td) {
     const s = { ...(col.typed.s || {}) }; s[n] = { ...r, v: null, fb: !r.fb };
     col.typed = { ...col.typed, s }; if (col.it) { col.it.typed = col.typed; bkSaveLib(); }
     bkDraw(); const back = document.querySelector('[data-bked="' + CSS.escape(col.key) + '"][data-bkn="' + CSS.escape(n) + '"]'); if (back) back.focus();
+    return;
+  }
+  if (col.type === 'xc') {
+    td.innerHTML = '<input type="text" class="bkcin" value="' + esc(+r.v > 0 ? fmtNum(+r.v) : '') + '" aria-label="Extra credit points">';
+    const inp = td.querySelector('input'); inp.focus(); inp.select();
+    let done = false;
+    const finish = keep => {
+      if (done) return; done = true;
+      if (keep) { const v = Math.round(+inp.value.trim().replace(/^\+/, '') * 2) / 2, s = { ...(col.typed.s || {}) }; if (v > 0) s[n] = { v }; else delete s[n]; col.typed = { ...col.typed, s }; if (col.it) { col.it.typed = col.typed; bkSaveLib(); } }
+      bkDraw(); const back = document.querySelector('[data-bked="' + CSS.escape(col.key) + '"][data-bkn="' + CSS.escape(n) + '"]'); if (back) back.focus();
+    };
+    inp.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); finish(true); } else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); finish(false); } });
+    inp.addEventListener('blur', () => finish(true));
     return;
   }
   td.innerHTML = '<input type="text" class="bkcin" value="' + esc(r.st === 'missing' || r.st === 'excused' ? r.st : r.v != null ? fmtNum(r.v) : '') + '" aria-label="Score' + (max ? ' out of ' + fmtNum(max) : ' as a percent') + '">';
@@ -13110,6 +13420,7 @@ function bkClick(e) {
   if (d.bkcopy != null) return bkCopy();
   if (d.bksetup != null) return bkSetupView();
   if (d.bkadd != null) return bkAddView();
+  if (d.bkaddxc != null) return bkAddView('', { type: 'xc' });
   if (d.bktypes != null) return bkTypesDlg();
   if (d.bkback != null) { bkAdd = null; return bkDraw(); }
   if (d.bkcol) { if ($('#bkPop') && $('#bkPop').dataset.key === d.bkcol) return bkPopClose(); return bkColMenu(d.bkcol, b); }
@@ -13123,6 +13434,10 @@ function bkClick(e) {
   if (d.chsort) { const s = bk.sort || { k: 'grade', dir: -1 }; bk.sort = s.k === d.chsort ? { k: s.k, dir: -s.dir } : { k: d.chsort, dir: d.chsort === 'name' ? 1 : -1 }; return bkDraw(); }
   if (d.taddt != null) { const t = document.createElement('div'); t.innerHTML = '<div class="bktrow" data-tid="' + uid() + '"><input type="text" class="bkin" data-tf="name" value="Term ' + (document.querySelectorAll('#bkTerms .bktrow').length + 1) + '" aria-label="Term name"><input type="date" class="bkin" data-tf="start" aria-label="Starts"><input type="date" class="bkin" data-tf="end" aria-label="Ends"><button class="icon" data-tdel aria-label="Remove this term">✕</button></div>'; $('#bkTerms').appendChild(t.firstChild); return; }
   if (d.tdel != null) { b.closest('.bktrow').remove(); return; }
+  if (d.bkxcto || d.bkxccap) { const k = d.bkxcto ? 'bkxcto' : 'bkxccap'; for (const x of document.querySelectorAll('[data-' + k + ']')) x.setAttribute('aria-pressed', String(x === b)); return; }
+  if (d.bkcolxc) { const k = $('#bkPop').dataset.key; bkSetCol(k, { xcTo: d.bkcolxc }); for (const x of document.querySelectorAll('[data-bkcolxc]')) x.setAttribute('aria-pressed', String(x === b)); return; }
+  if (d.bkaxcto) { bkAdd.xcTo = d.bkaxcto; for (const x of document.querySelectorAll('[data-bkaxcto]')) x.setAttribute('aria-pressed', String(x === b)); return bkAddRows(); }
+  if (d.bkaxcall) { const v = Math.max(0, Math.round(+($('#bkaXcV') || {}).value * 2) / 2) || 0; for (const n of c.names) { if (d.bkaxcall === 'clear') delete bkAdd.s[n]; else if (d.bkaxcall === 'all' || !(+((bkAdd.s[n] || {}).v) > 0)) bkAdd.s[n] = { v }; } return bkAddRows(); }
   if (d.bkempty) { for (const x of document.querySelectorAll('[data-bkempty]')) x.setAttribute('aria-pressed', String(x === b)); return; }
   if (d.bksavesetup != null) { if (bkSetupSave()) bkDraw(); return; }
   if (d.bkatype) { bkAdd.type = d.bkatype; for (const x of document.querySelectorAll('[data-bkatype]')) x.setAttribute('aria-pressed', String(x === b)); return bkAddRows(); }
@@ -13142,7 +13457,9 @@ function bkInput(e) {
   if (!bkHere(e)) return;
   const t = e.target;
   if (t.dataset.wt) return bkWsum();
-  if (t.dataset.bkai != null && t.classList.contains('bksc')) { const n = bkClass().names[+t.dataset.bkai]; bkAdd.s[n] = { ...(bkAdd.s[n] || {}), v: t.value === '' ? null : +t.value }; const max = bkAddMax(), p = t.closest('tr').children[2]; p.textContent = t.value === '' || isNaN(+t.value) ? '' : (max ? roundPct(+t.value / max * 100) : roundPct(+t.value)) + '%'; return; }
+  if (t.dataset.bkai != null && t.classList.contains('bksc')) { const n = bkClass().names[+t.dataset.bkai]; bkAdd.s[n] = { ...(bkAdd.s[n] || {}), v: t.value === '' ? null : +t.value }; const p = t.closest('tr').children[2];
+    if (bkAdd.type === 'xc') { p.textContent = bkXcSay(t.value); $('#bkaCount').textContent = bkClass().names.filter(x => +((bkAdd.s[x] || {}).v) > 0).length + ' of ' + bkClass().names.length + ' given extra credit'; return; }
+    const max = bkAddMax(); p.textContent = t.value === '' || isNaN(+t.value) ? '' : (max ? roundPct(+t.value / max * 100) : roundPct(+t.value)) + '%'; return; }
 }
 function bkPasted(e) {
   if (!bkHere(e) || e.target.id !== 'bkaPaste') return;
@@ -13731,7 +14048,7 @@ function pastScore(su, g) {
   if (total == null && hasSheet(g) && !isNaN(+g.sheet)) { total = +g.sheet; paper = true; }
   let pct = percentWith(total, max, s.scale);
   if (total == null && g.read) { const d = g.read; paper = true; total = d.score; if (d.outOf != null) max = d.outOf; pct = d.pct != null ? d.pct : percentWith(total, max, s.scale); }
-  return { total, max, pct, partial, paper, status: g.status || '', rows: rub ? s.criteria.map((c, i) => [c, r[i]]).filter(x => x[1] != null) : [] };
+  return addXc({ total, max, pct, partial, paper, status: g.status || '', rows: rub ? s.criteria.map((c, i) => [c, r[i]]).filter(x => x[1] != null) : [] }, g.xc, max, g.xcU);
 }
 function pastClass(d, m) {
   const f = m.asg && findItem(m.asg);
@@ -17045,7 +17362,9 @@ function openQuiz(view) {
   openDlg('<div class="bh qmhd"><h2>Quick mark</h2><span class="seg" id="qmView"><button data-view="q">By question</button><button data-view="s">By student</button></span>' +
     '<span id="qmNav" class="qmnav"></span><span class="muted hsm" id="qmProg"></span>' +
     '<span class="qmopts"><span class="muted hsm">Size</span><span class="seg" id="qmSize">' + QZ_SIZES.map(s => '<button data-size="' + s + '" title="' + (s === 'F' ? 'One answer per row' : 'Answer size ' + s) + '">' + QZ_SIZE_SAY[s] + '</button>').join('') + '</span>' +
-    '<span class="seg" id="qmOnly"><button data-only="0">All</button><button data-only="1">Not marked</button></span></span>' +
+    '<span class="seg" id="qmOnly"><button data-only="0">All</button><button data-only="1">Not marked</button></span>' +
+    '<span class="qmink"><button class="btn sm" id="qmInkBtn" data-inkmenu aria-haspopup="true" aria-expanded="false" title="Colors for the marks">Colors <i class="qmdot x"></i><i class="qmdot ok"></i></button>' +
+    '<span class="qminkpop" id="qmInkPop" hidden></span></span></span>' +
     '<button class="btn sm" data-boxes>Boxes</button><button class="icon" data-close aria-label="Close">✕</button></div>' +
     '<div class="bb qmbody" id="qmBody"></div>' +
     '<div class="bf qmfoot"><span class="muted hsm" id="qmHint" style="margin-right:auto"></span><span id="qmFoot"></span></div>');
@@ -17056,6 +17375,10 @@ function openQuiz(view) {
   box.onclick = e => {
     if (e.target.closest('#qmPeek')) { if (e.target.closest('[data-peekx]') || e.target.id === 'qmPeek') qmPeekClose(); return; }
     if (e.target.closest('[data-close]')) return qmClose();
+    const ik = e.target.closest('[data-qink]'); if (ik) { inkColor = ik.dataset.qink; store.set('gs.ink', inkColor); renderTools(); return qmInkSet(); }
+    const ic = e.target.closest('[data-qchk]'); if (ic) { setCheckInk(ic.dataset.qchk); renderTools(); return qmInkSet(); }
+    if (e.target.closest('[data-inkmenu]')) return qmInkMenu();
+    if (!e.target.closest('#qmInkPop')) qmInkMenu(false);
     if (e.target.closest('[data-boxes]')) return openQuizBoxes(() => openQuiz());
     const v = e.target.closest('[data-view]'); if (v) { qzView = v.dataset.view; return qmRender(); }
     const sz = e.target.closest('[data-size]'); if (sz) { store.set('gs.qmSize', sz.dataset.size); return qmSizeSay(); }
@@ -17066,6 +17389,10 @@ function openQuiz(view) {
     const ex = e.target.closest('[data-ex]'); if (ex) return exStar(ex.closest('.qmc'));
     const rs = e.target.closest('[data-reset]'); if (rs) return qmSpotSet(rs.closest('.qmc'), null);
     if (e.target.closest('[data-rest]')) return qmRest();
+    const as = e.target.closest('.qmned [data-as]'); if (as) { for (const b of as.parentNode.children) b.setAttribute('aria-pressed', String(b === as)); as.closest('.qmned').querySelector('textarea').focus(); return; }
+    if (e.target.closest('[data-nsave]')) return qmNoteDone(e.target.closest('.qmc'), true);
+    if (e.target.closest('.qmned')) return;
+    const qn = e.target.closest('[data-qnote]'); if (qn) return qmNoteOpen(qn.closest('.qmc'));
     const hf = e.target.closest('[data-half]'); if (hf) return qmHalf(hf.closest('.qmc'));
     const b = e.target.closest('[data-v]');
     if (b) { const c = b.closest('[data-st]'); return qmMark(c, b.dataset.v === '' ? null : +b.dataset.v, true); }
@@ -17082,6 +17409,26 @@ function qmClose() {
   if (qzKeys) { document.removeEventListener('keydown', qzKeys, true); qzKeys = null; }
   closeDlg(); qzClose();
   if (batch && pages.length) openStudent(cur);   // the open paper shows the new marks
+}
+function qmInkSay() {
+  const body = $('#qmBody'), btn = $('#qmInkBtn');
+  for (const el of [body, btn]) if (el) { el.style.setProperty('--qm-x', COLORS[inkColor] || COLORS.red); el.style.setProperty('--qm-ok', CHECK_INK); }
+  const pop = $('#qmInkPop'); if (!pop || pop.hidden) return;
+  const row = (attr, on, say) => '<div class="qmirow"><span class="hsm">' + say + '</span>' + Object.entries(COLORS).map(([k, v]) => '<button class="sw" data-' + attr + '="' + k + '" style="background:' + v + '" aria-pressed="' + (k === on) + '" title="' + k + '" aria-label="' + say + ' ' + k + '"></button>').join('') + '</div>';
+  pop.innerHTML = row('qink', inkColor, '✗ and points') + row('qchk', checkInk, '✓ right') + '<p class="muted hsm">Marks already given change too.</p>';
+}
+function qmInkMenu(open) {
+  const pop = $('#qmInkPop'), btn = $('#qmInkBtn'); if (!pop) return;
+  const on = open == null ? pop.hidden : open;
+  if (on === !pop.hidden) return;
+  pop.hidden = !on; btn.setAttribute('aria-expanded', String(on)); qmInkSay();
+}
+function qmInkSet() {
+  for (const st of batch.students) for (const f of st.files || []) for (const list of Object.values(f.marks || {})) for (const m of list) {
+    if (!m.qz && !m.qzn) continue;
+    m.color = m.t === 'check' ? CHECK_INK : COLORS[inkColor] || COLORS.red;
+  }
+  saveSoon(); qmInkSay();
 }
 function qmSizeSay() {
   const s = qzSizeNow(), body = $('#qmBody');
@@ -17111,8 +17458,50 @@ const qmCard = (i, q, qi) => {
     '<span class="qmchr">' + (qzOwn(st, q) ? '<button class="link hsm" data-reset title="Put this mark back where the question’s mark goes">Reset spot</button>' : '') +
     exStarBtn(st, q) + '<button class="btn sm" data-peek title="See their whole page (Space)">⤢ Whole page</button></span></div>' +
     '<div class="qmimg" title="' + (qzByPts(q) && qzHow(q) === 'pts' ? 'Drag: line this paper up' : 'Click: wrong / right. Drag: line this paper up') + '"><span class="muted hsm">…</span></div>' +
-    '<div class="qmbtns">' + btns + (v != null ? '<button class="qmb clr" data-v="" title="Clear">Clear</button>' : '') + '</div></div>';
+    '<div class="qmbtns">' + btns + '<button class="qmb cm" data-qnote title="Write a comment or text on this paper (C)">Comment</button>' + (v != null ? '<button class="qmb clr" data-v="" title="Clear">Clear</button>' : '') + '</div>' + qmNoteLine(st, q) + '</div>';
 };
+function qzNoteOf(st, q) {
+  const [path, p] = quizPages(st)[q.n] || [], f = path && fileByPath(st, path), l = f && f.marks[p];
+  return (l && l.find(m => m.qzn === q.id)) || null;
+}
+const qmNoteLine = (st, q) => { const m = qzNoteOf(st, q); return m ? '<button class="qmnote" data-qnote title="Click to change it">' + (m.t === 'note' ? 'Comment: ' : 'Text: ') + esc(m.text) + '</button>' : ''; };
+function qmNoteOpen(el) {
+  if (!el || el.querySelector('.qmned')) return;
+  const st = batch.students[+el.dataset.st], q = batch.quiz.qs.find(x => x.id === el.dataset.q), m = qzNoteOf(st, q);
+  const as = m ? (m.t === 'note' ? 'note' : 'text') : store.get('gs.qmNoteAs', 'note');
+  const ln = el.querySelector('.qmnote'); if (ln) ln.hidden = true;
+  el.insertAdjacentHTML('beforeend', '<div class="qmned"><textarea rows="2" placeholder="Type what to write on their paper…" aria-label="Comment">' + esc(m ? m.text : '') + '</textarea>' +
+    '<div class="qmnedb"><span class="seg sm"><button data-as="note" aria-pressed="' + (as === 'note') + '" title="In the margin, with a line to the answer">Margin comment</button><button data-as="text" aria-pressed="' + (as === 'text') + '" title="Written on the page under the answer">Text on page</button></span>' +
+    '<span class="muted hsm">Enter to save, Esc to cancel</span><button class="btn sm primary" data-nsave>Save</button></div></div>');
+  const ta = el.querySelector('.qmned textarea'); ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length);
+}
+function qmNoteDone(el, save) {
+  const ed = el && el.querySelector('.qmned'); if (!ed) return;
+  const text = ed.querySelector('textarea').value.trim(), as = ed.querySelector('[data-as][aria-pressed="true"]').dataset.as;
+  ed.remove();
+  if (save) qzNoteSet(batch.students[+el.dataset.st], batch.quiz.qs.find(x => x.id === el.dataset.q), text, as).then(() => { if (el.isConnected) { qmRefresh(el); el.focus({ preventScroll: true }); } });
+  else { const ln = el.querySelector('.qmnote'); if (ln) ln.hidden = false; el.focus({ preventScroll: true }); }
+}
+async function qzNoteSet(st, q, text, as) {
+  const [path, p] = quizPages(st)[q.n] || [], f = path && fileByPath(st, path);
+  if (!f) return;
+  const list = (f.marks[p] ||= []), i = list.findIndex(m => m.qzn === q.id), old = i >= 0 ? list[i] : null;
+  if (i >= 0) list.splice(i, 1);
+  if (text) {
+    const sz = await qzPageSize(st, q.n); if (!sz) return;
+    store.set('gs.qmNoteAs', as);
+    const [dx, dy] = qzShift(st, q.n), W = sz.W, H = sz.H, color = COLORS[inkColor] || COLORS.red;
+    let m;
+    if (as === 'note') m = old && old.t === 'note' ? { ...old, text, color } : { t: 'note', color, ax: r1(clamp((q.x + q.w + dx) * W, 4, W - 4)), ay: r1(clamp((q.y + q.h / 2 + dy) * H, 4, H - 4)), text, qzn: q.id };
+    else {
+      m = old && old.t === 'text' ? { ...old, text, color } : { t: 'text', color, x: r1(clamp((q.x + dx) * W, 2, W - 60)), y: r1(clamp((q.y + q.h + dy) * H + 3, 2, H - 20)), size: disp.tsize, bw: r1(Math.max(120, q.w * W)), text, qzn: q.id };
+      keepOnPage(m, W, H);
+    }
+    list.push(m);
+  }
+  if (!list.length) delete f.marks[p];
+  saveSoon(); renderList();
+}
 const qmQ = q => (qzByPts(q) ? 'Scale 0 to ' + fmtNum(+q.pts || 1) : fmtNum(+q.pts || 1) + ((+q.pts || 1) === 1 ? ' point' : ' points') + ', right or wrong') + ' · ' + (QZ_HOW[q.how] || QZ_HOW.cx);
 let qmTok = 0;
 function qmRender() {
@@ -17130,7 +17519,7 @@ function qmRender() {
     $('#qmProg').textContent = done + ' of ' + who.length + ' marked';
     $('#qmFoot').innerHTML = '<button class="btn primary" data-rest' + (done === who.length ? ' disabled' : '') + '>' + (qzByPts(q) ? 'Give the rest ' + fmtNum(full) : 'Mark the rest right') + '</button>';
     $('#qmHint').textContent = (qzByPts(q) ? 'Keys: a number for its points, H adds ½' : 'Click an answer to put an ✗ on it, click again to take it off. Keys: 1 right, 0 or X wrong') +
-      ', E example, arrows to move, Space whole page, Ctrl Z undo, [ and ] for the question. Drag a mark to move it on that paper.';
+      ', C comment, E example, arrows to move, Space whole page, Ctrl Z undo, [ and ] for the question. Drag a mark to move it on that paper.';
     cards = who.map(i => [i, q, qzAt]);
     body.className = 'bb qmbody qmgrid';
   } else {
@@ -17141,12 +17530,12 @@ function qmRender() {
       '<span class="qmtot">' + fmtNum(quizSum(st)) + ' / ' + fmtNum(quizMax()) + (n === qs.length && percentFor(quizSum(st)) != null ? ' = ' + percentFor(quizSum(st)) + '%' : '') + '</span>';
     $('#qmProg').textContent = n + ' of ' + qs.length + ' marked';
     $('#qmFoot').innerHTML = '<button class="btn" data-open="' + qzStu + '">Open their paper</button><button class="btn primary" data-rest' + (n === qs.length ? ' disabled' : '') + '>Mark the rest right</button>';
-    $('#qmHint').textContent = 'Click an answer to put an ✗ on it, click again to take it off. Keys: ↑ ↓ to move, a number for its points, E example, Space whole page, Ctrl Z undo, [ and ] for the student.';
+    $('#qmHint').textContent = 'Click an answer to put an ✗ on it, click again to take it off. Keys: ↑ ↓ to move, a number for its points, C comment, E example, Space whole page, Ctrl Z undo, [ and ] for the student.';
     cards = qs.map((q, qi) => [qzStu, q, qi]);
     body.className = 'bb qmbody qmcol';
   }
   if (qzOnly) cards = cards.filter(([i, q]) => quizMarks(batch.students[i])[q.id] == null);
-  qmSizeSay();
+  qmSizeSay(); qmInkSay();
   const keep = document.activeElement && document.activeElement.closest && document.activeElement.closest('.qmc');
   const keepAt = keep ? keep.dataset.st + '|' + keep.dataset.q : null;
   body.innerHTML = cards.length ? cards.map(c => qmCard(...c)).join('') : '<p class="muted qmnone">Everything here is marked. Pick <b>All</b> to see the marked ones.</p>';
@@ -17188,6 +17577,8 @@ function qmRefresh(el) {
   el.className = fresh.className;
   el.querySelector('.qmch').replaceWith(fresh.querySelector('.qmch'));
   el.querySelector('.qmbtns').replaceWith(fresh.querySelector('.qmbtns'));
+  const nl = el.querySelector('.qmnote'), fl = fresh.querySelector('.qmnote');
+  if (!el.querySelector('.qmned')) { if (nl) nl.remove(); if (fl) el.querySelector('.qmbtns').after(fl); }
   qmMarkShow(el);
   const who = quizWho(), qs = batch.quiz.qs;
   if (qzView === 'q') {
@@ -17288,6 +17679,12 @@ function qmKey(e) {
   if (!$('#qmBody')) return;
   const stop = () => { e.preventDefault(); e.stopPropagation(); };
   if ($('#qmPeek')) { if (e.key === 'Escape' || e.key === ' ') { stop(); qmPeekClose(); } return; }
+  if (e.target.closest('.qmned')) {   // typing a comment: Enter saves, Shift Enter is a new line, Esc leaves it as it was
+    if (e.key === 'Escape') { stop(); qmNoteDone(e.target.closest('.qmc'), false); }
+    else if (e.key === 'Enter' && !e.shiftKey) { stop(); qmNoteDone(e.target.closest('.qmc'), true); }
+    else e.stopPropagation();
+    return;
+  }
   if (e.target.closest('select,input,textarea')) return;
   if ((e.ctrlKey || e.metaKey) && !e.altKey) {
     if (e.key === 'z' || e.key === 'Z') { if (!e.shiftKey) { stop(); qmUndoLast(); } return; }
@@ -17317,6 +17714,7 @@ function qmKey(e) {
   if (/^[0-9]$/.test(e.key) && scale) { stop(); return qmMark(el, +e.key); }
   if ((e.key === '1' || e.key === '0') && !scale) { stop(); return qmMark(el, e.key === '1' ? +q.pts || 1 : 0); }   // right is all its points
   if (e.key === 'x' || e.key === 'X') { stop(); return qmMark(el, 0); }
+  if (e.key === 'c' || e.key === 'C') { stop(); return qmNoteOpen(el); }
   if (e.key === 'Backspace' || e.key === 'Delete') { stop(); return qmMark(el, null, true); }
 }
 function qmBindDrag(body) {
@@ -18744,10 +19142,11 @@ function chCell(col, cell, who) {
   const tag = cell.partial ? ['P', 'partly scored'] : cell.out ? ['O', 'left out of the average'] : cell.st === 'late' ? ['L', 'late'] : null;
   return '<span class="chc ' + (bkCounts(cell) ? 'b' + chBand(cell.pct) : 'nc') + '"' + tip(cell.pct + '%', [cell.total != null ? fmtNum(cell.total) + ' / ' + fmtNum(cell.max) : '', tag ? tag[1] : ''].filter(Boolean).join(' · ')) + '>' + cell.pct + (tag ? '<sup>' + tag[0] + '</sup>' : '') + '</span>';
 }
-function bkHeat(c, cols, conf) {
+function bkHeat(c, all, conf) {
+  const cols = all.filter(x => x.type !== 'xc');   // extra credit has no score of its own: it shows in the grade, which is worked out from everything
   if (!cols.length || !c.names.length) return '';
   const sort = bk.sort && (bk.sort.k === 'name' || bk.sort.k === 'grade' || cols.some(x => x.key === bk.sort.k)) ? bk.sort : { k: 'grade', dir: -1 }, scol = cols.find(x => x.key === sort.k);
-  const rows = c.names.map((n, i) => ({ n, i, shown: bkWho(n, i), r: bkGrade(n, cols, conf) }));
+  const rows = c.names.map((n, i) => ({ n, i, shown: bkWho(n, i), r: bkGrade(n, all, conf) }));
   const val = row => {
     if (sort.k === 'name') return row.i;
     if (sort.k === 'grade') return row.r.grade;
@@ -18874,11 +19273,13 @@ function bkScatter(c, cols, conf) {
 }
 
 /* ---------- one student ---------- */
-function bkStrip(c, cols, n) {
+function bkStrip(c, all, n) {
+  const cols = all.filter(x => x.type !== 'xc' || x.cells.get(n));
   if (!cols.length) return '';
   return '<section class="chstripsec" id="bkStrip"><h3 class="ovh3">' + (bk.term === '*' || !bkConf().terms.length ? 'The year so far' : 'The term so far') + '</h3><div class="chstrip">' + cols.map(col => {
     const cell = col.cells.get(n); let cls = 'none', txt = 'Not scored yet';
-    if (cell && cell.st === 'missing') { cls = 'miss'; txt = 'Missing'; }
+    if (col.type === 'xc') { cls = 'xc'; txt = '+' + fmtNum(cell.xc) + ' extra'; }
+    else if (cell && cell.st === 'missing') { cls = 'miss'; txt = 'Missing'; }
     else if (cell && cell.st === 'excused') { cls = 'exc'; txt = 'Excused'; }
     else if (col.type === 'fm') { cls = 'fm'; txt = cell && cell.fb ? '✓ Feedback given' : cell && cell.started ? 'Started' : 'No feedback yet'; }
     else if (cell && cell.pct != null) { cls = bkCounts(cell) ? 'b' + chBand(cell.pct) : 'nc'; txt = cell.pct + '%' + (cell.partial ? ' · partial' : cell.out ? ' · left out' : cell.st === 'late' ? ' · late' : ''); }
@@ -19958,7 +20359,8 @@ function setRender() {
     const terms = conf.terms.length ? conf.terms.map(t => '<div class="setrow"><span class="nt"><b>' + esc(t.name || 'Term') + '</b><span class="ns">' + (t.start && t.end ? bkDay(t.start) + ' to ' + bkDay(t.end) : 'No dates yet') + '</span></span></div>').join('') : '<div class="setrow"><span class="nt"><span class="ns">No terms yet: the gradebook treats the whole year as one.</span></span></div>';
     put('#setTerms', '<div class="lhead"><h2>Terms and weights</h2><span class="muted">For all your classes. An assignment counts toward the term its due date falls in.</span><span class="sp"></span><button class="btn sm primary" data-setterms' + (has ? '' : ' disabled title="Add a class with a roster first"') + '>Term setup</button></div>' +
       '<div class="setrows">' + terms + '</div>' +
-      '<p class="setp"><b>How each type counts:</b> ' + BK_TYPES.map(([t, l]) => esc(l.replace(/y$/, 'ie') + 's') + ' ' + (+conf.w[t] || 0) + '%').join(' · ') + '. ' + (conf.empty === 'zero' ? 'A type with nothing in it yet counts as 0.' : 'When a type has nothing in it yet, the other types are used.') + '</p>');
+      '<p class="setp"><b>How each type counts:</b> ' + BK_TYPES.map(([t, l]) => esc(l.replace(/y$/, 'ie') + 's') + ' ' + (+conf.w[t] || 0) + '%').join(' · ') + '. ' + (conf.empty === 'zero' ? 'A type with nothing in it yet counts as 0.' : 'When a type has nothing in it yet, the other types are used.') + '</p>' +
+      '<p class="setp"><b>Extra credit:</b> new entries add to ' + bkXcWhere(conf.xcTo) + ', one point for one percentage point. ' + (conf.xcCap ? 'Grades stay at 100% at most.' : 'A grade can go over 100%.') + '</p>');
   }
   if (r.sec === 'grading') {
     const n = gBankSeen;
@@ -20155,7 +20557,7 @@ $('#setHistory').addEventListener('click', e => {
 });
 
 /* updates she controls, and installing as an app */
-const WHATS_NEW = {"1.11.0":["The Planner’s sections are in the sidebar: Calendar, Units, Past lessons, Activities and Rubrics. The row of tabs across the top is gone.","A lesson has a lighter top: its name, its classes, its status and Download. Copy for Claude, Versions, the upload and the links are under More.","Comments shows above a lesson once it has one."],"1.7.0":["Home is now Today: the classes you teach today with the lesson planned for each, the papers waiting to be marked, and the papers ready to hand back.","What the class needs next: after a set of papers is scored, Today shows the weakest rubric row and how many students to sit down with.","A class page is quieter. Click anywhere on an assignment’s row to open it; the only blue button is the one that adds an assignment.","Forget, and the other ways to open papers, moved into the ⋯ menu on each row."],"1.6.0":["A new browser opens on three questions (your classes, how you grade, where work is kept) and starts with nothing of anyone else’s in it.","A sample class of made-up students, with papers to mark, for trying things out. Remove it from Home when you’re done.","The app uses the name of your own school system. Choose it, and how you usually grade, in Settings.","Letter grades or IB 1 to 7 can show beside the percent, with boundaries you set.","Canvas and Moodle downloads are grouped by student. The Planner works without a setup file, and downloads lessons as PowerPoint with a plain built-in template."],"1.5.0":["The sidebar says “Not backed up”, in amber, until a folder holds a second copy of your work. Home asks for that folder once.","Go back in time, in Settings: any assignment as it was on an earlier day, restored on its own, with Undo.","Grading Studio can be installed as an app, and it opens with no internet.","A newer version now waits until you click Update now, so nothing changes in the middle of marking."]};
+const WHATS_NEW = {"1.12.0":["A returned paper starts with a feedback page: the score, each rubric row with the level given and what that level means, your comment, and every comment on the paper with its page number.","It is on unless you turn it off under Options on the Return tab. Your own pages are not changed, and bringing an export back in opens only those."],"1.11.0":["The Planner’s sections are in the sidebar: Calendar, Units, Past lessons, Activities and Rubrics. The row of tabs across the top is gone.","A lesson has a lighter top: its name, its classes, its status and Download. Copy for Claude, Versions, the upload and the links are under More.","Comments shows above a lesson once it has one."],"1.7.0":["Home is now Today: the classes you teach today with the lesson planned for each, the papers waiting to be marked, and the papers ready to hand back.","What the class needs next: after a set of papers is scored, Today shows the weakest rubric row and how many students to sit down with.","A class page is quieter. Click anywhere on an assignment’s row to open it; the only blue button is the one that adds an assignment.","Forget, and the other ways to open papers, moved into the ⋯ menu on each row."],"1.6.0":["A new browser opens on three questions (your classes, how you grade, where work is kept) and starts with nothing of anyone else’s in it.","A sample class of made-up students, with papers to mark, for trying things out. Remove it from Home when you’re done.","The app uses the name of your own school system. Choose it, and how you usually grade, in Settings.","Letter grades or IB 1 to 7 can show beside the percent, with boundaries you set.","Canvas and Moodle downloads are grouped by student. The Planner works without a setup file, and downloads lessons as PowerPoint with a plain built-in template."],"1.5.0":["The sidebar says “Not backed up”, in amber, until a folder holds a second copy of your work. Home asks for that folder once.","Go back in time, in Settings: any assignment as it was on an earlier day, restored on its own, with Undo.","Grading Studio can be installed as an app, and it opens with no internet.","A newer version now waits until you click Update now, so nothing changes in the middle of marking."]};
 const upd = { on: false, st: null, mine: '', checking: false, said: '', install: null, installed: false, err: '' };
 const updCan = () => 'serviceWorker' in navigator && (location.protocol === 'https:' || /[?&]sw=1(&|$)/.test(location.search)) && !/Grading Studio\.html$/i.test(decodeURIComponent(location.pathname));
 const updSend = async msg => { const reg = await navigator.serviceWorker.ready; if (reg.active) reg.active.postMessage(msg); };
