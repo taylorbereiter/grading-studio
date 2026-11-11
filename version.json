@@ -1,12 +1,12 @@
 {
- "version": "1.16.0",
- "build": "e099f6f19991",
+ "version": "1.17.0",
+ "build": "968e051b7fb0",
  "notes": [
-  "Help is in the sidebar: short answers to the questions teachers ask most, from opening a set of papers to moving your work to another computer.",
-  "Find anything answers questions too. Type a few words, like “late paper” or “backup”, and the answer is in the list."
+  "Report comments: a new tab on each class's page drafts a comment for every student from your own gradebook, rubric scores and the comments you wrote on their papers. Edit each one, tick it done, then copy or download them all.",
+  "The drafts are put together on your computer from sentences you can change under Wording. Nothing about a student is sent anywhere."
  ],
  "files": {
-  "index.html": "1720cda66eb52179390a17d67db00a0caaede7a4749995dd7c6a35e8b3163be2",
-  "planner.html": "296abf172a68c982e2cc08c4c7e1afadbb118ee00bde948fd585f4111de83100"
+  "index.html": "ff2eac8c9921394a36d52d29b8a9aef4012aa4d9dbd2ac19ac1a6c1268f4afbf",
+  "planner.html": "fdca38674e05e442ace2af1581c4877892d0efae3d071bae51270b19f3fe5a2e"
  }
 }

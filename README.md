@@ -46,6 +46,7 @@ The sidebar says **Not backed up** until you choose a folder. Once you do, every
 ## More
 
 - **Help** in the app's sidebar has short answers to common questions, and **Find anything** lists them too.
+- **Report comments** (a tab on each class's page) drafts a comment for every student from the gradebook, the rubric scores and the comments written on their papers. The drafts are made in the browser from a bank of sentences the teacher can reword; nothing about a student is sent anywhere.
 - **[The full guide](docs/GUIDE.md)**: every screen, tool and shortcut, and the Planner.
 - **Settings** in the app holds your classes and rosters, where students hand in work, how you usually grade, terms and weights, the timetable and the display.
 - Nothing about any teacher, school or timetable is built in. A test opens a brand-new browser and fails if a class, a grading scale or a school system's name appears that nobody typed.
