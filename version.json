@@ -1,14 +1,13 @@
 {
- "version": "1.25.0",
- "build": "ac16f5324b07",
+ "version": "1.26.0",
+ "build": "514678e09ab5",
  "notes": [
-  "Attendance. Each class has an Attendance tab: everyone starts as present, so a day is one press for each student who is late, excused or absent, with a note if you want one.",
-  "Look back shows every saved day in one table with each student’s totals, and a student’s own page lists the days they missed.",
-  "Copy a day, or download the table as a spreadsheet, for your school’s system. Today has a line for it under each class.",
-  "If you don’t take attendance here, turn it off in Settings, Classes and rosters."
+  "Seating: a new tab on each class. Pick how the room is set up, drag students to desks, and Shuffle gives everyone a new seat. A student can be kept in their seat.",
+  "Pick a name shows one student at random, and nobody twice until everyone has had a turn. Make groups deals the class into groups of any size.",
+  "While presenting a lesson, P picks a name and G makes groups. Who’s here leaves out anyone who is away today."
  ],
  "files": {
-  "index.html": "53a5f6764d78344b972ec4b410267a01c8c8878f8d3c137c89e9c755df68a718",
-  "planner.html": "17140749c83a86fefac6b9b96b9bbf11cc49752b1e57817bd9aab563f288ab7a"
+  "index.html": "4d42ea5aa9461713174a13520c8ab2bbdc573a7470c72fdc4a57133b6553bcd1",
+  "planner.html": "fe53d18204d3a18cf8ee039c166ec1d45538e0c5229da8b6c7ece20466b12fb0"
  }
 }

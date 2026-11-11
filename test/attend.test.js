@@ -31,7 +31,7 @@ const copies = page => page.evaluate(() => { window.__copied = null; navigator.c
 test('a day is taken with one press for each student who isn’t present, and every press is saved', async () => {
   const { page, close } = await openApp(browser, { seed: seed() });
   await classPage(page, 'c1');
-  assert.deepEqual(await page.$$eval('.ctabs .ctab', xs => xs.map(x => x.textContent)), ['Assignments', 'Gradebook', 'Students', 'Attendance', 'Missing work', 'Charts', 'Report comments']);
+  assert.deepEqual(await page.$$eval('.ctabs .ctab', xs => xs.map(x => x.textContent)), ['Assignments', 'Gradebook', 'Students', 'Attendance', 'Seating', 'Missing work', 'Charts', 'Report comments']);
   await page.click('[data-ctab="attendance"]'); await page.waitForSelector('#attList');
   assert.equal(await hash(page), '#/class/c1/attendance');
   const today = await page.evaluate(() => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); });
@@ -156,7 +156,7 @@ test('attendance is the teacher’s to turn off: the tab, its address and Today�
   await page.waitForFunction(() => /2 days you saved are kept/.test(document.querySelector('#setAtt').textContent));
   assert.equal(await page.evaluate(() => window.__gs.attTodayLine({ name: 'Grade 9 English' })), '');
   await goTo(page, '#/class/c1/attendance'); await page.waitForSelector('.ctabs');
-  assert.deepEqual(await page.$$eval('.ctabs .ctab', xs => xs.map(x => x.textContent)), ['Assignments', 'Gradebook', 'Students', 'Missing work', 'Charts', 'Report comments']);
+  assert.deepEqual(await page.$$eval('.ctabs .ctab', xs => xs.map(x => x.textContent)), ['Assignments', 'Gradebook', 'Students', 'Seating', 'Missing work', 'Charts', 'Report comments']);
   assert.equal(await page.$('#attBody'), null, 'its address shows the class’s first tab');
   await goTo(page, '#/class/c1/students/4'); await page.waitForSelector('#bkStuName');
   assert.equal(await page.$('#attStu'), null);

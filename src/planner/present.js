@@ -1,6 +1,8 @@
 /* ================= Present: teach from the lesson =================
    The lesson's slides fill the screen. One key away: the agenda (tick items off as the class goes), a countdown the
    class can watch, the speaker notes, a blank screen, and how long the class has left by the timetable.
+   P picks a student at random and G deals the class into groups (src/pickshare.js), from the roster the grading page
+   keeps for this; the names are shown and never kept here.
    Afterwards one line says where the class got to. It is kept on the lesson as "taught", so it goes to the Planner
    folder with the lesson and shows on the week.
    This reads the lesson and the timetable and nothing else. Its buttons carry data-pr and are handled here. */
@@ -13,7 +15,9 @@ const PR_I = {
   notes: '<rect x="5" y="4" width="14" height="16" rx="2"/><path d="M8.5 9h7M8.5 13h7M8.5 17h4"/>',
   blank: '<rect x="3.5" y="5" width="17" height="12" rx="1.5"/><path d="M9 20.5h6"/>',
   full: '<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>',
-  check: '<path d="M5 12.5l4.5 4.5L19 7.5"/>'
+  check: '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
+  pick: '<circle cx="12" cy="8" r="3.5"/><path d="M5 19.5c.8-3.6 3.6-5.5 7-5.5s6.2 1.9 7 5.5"/>',
+  groups: '<circle cx="7" cy="8" r="2.5"/><circle cx="17" cy="8" r="2.5"/><circle cx="12" cy="16" r="2.5"/>'
 };
 const prIcon = k => '<svg viewBox="0 0 24 24" aria-hidden="true">' + PR_I[k] + '</svg>';
 const prToday = () => ymd(new Date());
@@ -141,7 +145,7 @@ async function presentStart(l, o) {
     '<div class="pr-menu" id="prMenu" role="group" aria-label="Timer" hidden></div>' +
     '<div class="pr-hint" id="prHint" hidden></div><div class="pr-say" id="prSay" aria-live="polite"></div>' +
     '<div class="pr-bar" id="prBar" role="toolbar" aria-label="Presenting">' + b('prev', 'prev', 'Previous slide', '←', 'ic') + '<span class="pr-count" id="prCount"></span>' + b('next', 'next', 'Next slide', '→', 'ic') + '<span class="pr-sep"></span>' +
-    b('agenda', 'agenda', 'Agenda', 'A') + b('timer', 'timer', 'Timer', 'T') + b('notes', 'notes', 'Notes', 'N') + b('blank', 'blank', 'Blank', 'B') + b('full', 'full', 'Full screen', 'F') +
+    b('agenda', 'agenda', 'Agenda', 'A') + b('timer', 'timer', 'Timer', 'T') + b('pick', 'pick', 'Pick a name', 'P') + b('groups', 'groups', 'Groups', 'G') + b('notes', 'notes', 'Notes', 'N') + b('blank', 'blank', 'Blank', 'B') + b('full', 'full', 'Full screen', 'F') +
     '<span class="pr-sep"></span><span class="pr-time" id="prTime"></span><button data-p="end" class="pr-end" title="Finish (Esc)">Finish</button></div>';
   document.body.appendChild(el);
   document.addEventListener('keydown', prKey, true);
@@ -155,7 +159,7 @@ async function presentStart(l, o) {
   prFit();
   try { PR.lock = await navigator.wakeLock.request('screen'); } catch { }
   prHint(back && !(o.at > 0) ? 'Picking up at slide ' + back.slide + ', where ' + (back.classId ? className(back.classId) : 'the class') + ' stopped on ' + shortDate(back.date) + '. Home goes to slide 1.'
-    : (document.fullscreenElement ? '' : 'F for full screen · ') + '→ next · A agenda · T timer · Esc to finish', back && !(o.at > 0) ? 7000 : 4500);
+    : (document.fullscreenElement ? '' : 'F for full screen · ') + '→ next · A agenda · T timer · P pick a name · Esc to finish', back && !(o.at > 0) ? 7000 : 4500);
 }
 // planner.html#present/<lesson id>/<class id>: the lesson opens and presents, in the window (a page can't go full screen by itself).
 function presentArrive(rest) {
@@ -251,6 +255,19 @@ function prPlay() {
   } else { PR.keep = true; window.open(videoLink(v), '_blank', 'noopener'); }
 }
 
+/* ---------- a name at random, and groups ---------- */
+// The class being taught, by the name on the timetable; the grading page's class of the same name has the roster.
+function prPick(mode) {
+  if (PK.on) return;
+  const rolls = pkRolls();
+  if (!rolls.length) return prHint('No rosters yet. Add a class and its students on the grading side, and they can be picked here.', 6000);
+  if (PR.menu) prMenu(false);
+  const ids = PR.slot ? [PR.slot.classId] : PR.l.slots.map(s => s.classId), want = ids.map(id => pkNorm(className(id)));
+  const at = rolls.findIndex(r => want.includes(pkNorm(r.name)));
+  if (at < 0 && PR.slot) prHint('No roster for ' + className(PR.slot.classId) + ' on the grading side yet. Showing ' + rolls[0].name + '.', 6000);
+  pkOpen({ host: PR.el, classes: rolls, at: Math.max(0, at), mode, keys: true, onClose: () => { if (PR.on) { PR.el.focus(); prWake(); } } });
+}
+
 /* ---------- the timer ---------- */
 const prSound = () => { try { return localStorage.getItem('gsp.presentSound') !== '0'; } catch { return true; } };
 function prChime() {
@@ -313,6 +330,7 @@ function prMenu(open) {
 function prClick(e) {
   prWake();
   const t = e.target;
+  if (t.closest('#pkStage')) return;   // the name picker looks after its own
   // A button pressed with the mouse gives the keys back to the slides, so Space still means the next slide.
   if (e.detail && t.closest('#prBar,#prChip')) PR.el.focus();
   if (t.closest('#prMenu')) {
@@ -331,6 +349,7 @@ function prClick(e) {
     if (p.p === 'next') return prNext();
     if (p.p === 'agenda' || p.p === 'notes' || p.p === 'blank') return prToggle(p.p);
     if (p.p === 'timer') return prMenu(!PR.menu);
+    if (p.p === 'pick' || p.p === 'groups') return prPick(p.p);
     if (p.p === 'full') return prFullToggle();
     if (p.p === 'end') return presentEnd();
     if (p.p === 'chip') return PR.timer && PR.timer.done ? prTimerStop() : prTimerPause();
@@ -354,6 +373,7 @@ function prClick(e) {
 function prKey(e) {
   if (!PR.on) return;
   e.stopPropagation();   // nothing behind the stage gets a key
+  if (PK.on) { pkKey(e); return; }
   if (e.metaKey || e.ctrlKey || e.altKey) return;
   const k = e.key, own = e.target && e.target.id === 'prOwn';
   if (own) { if (k === 'Enter') { e.preventDefault(); const v = +e.target.value; if (v > 0) prTimerStart(v * 60); } else if (k === 'Escape') { e.preventDefault(); prMenu(false); PR.el.focus(); } return; }
@@ -381,13 +401,15 @@ function prKey(e) {
   if (c === 'b' || k === '.') { stop(); return prToggle('blank'); }
   if (c === 't') { stop(); return prMenu(true); }
   if (c === 'f') { stop(); return prFullToggle(); }
+  if (c === 'p') { stop(); return prPick('pick'); }
+  if (c === 'g') { stop(); return prPick('groups'); }
 }
 
 /* ---------- finishing ---------- */
 async function presentEnd() {
   if (!PR.on) return;
   const { l, i, far, slot, began, el, back, ticks, items } = PR;
-  PR.on = false;
+  PR.on = false; pkClose();
   clearInterval(PR.tickT); clearTimeout(PR.idleT); clearTimeout(prHintT); clearTimeout(PR.numT);
   document.removeEventListener('keydown', prKey, true); document.removeEventListener('fullscreenchange', prFull); window.removeEventListener('resize', prFit);
   const lock = PR.lock, ac = PR.ac, full = document.fullscreenElement === el;
