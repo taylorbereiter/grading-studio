@@ -30,7 +30,7 @@ function railRender() {
   tabsRender(); setRender(); helpRender();
   if (!batch && r.v === 'home' && screenWas !== 'home') planRefresh();
   screenWas = batch ? 'a' : r.v;
-  const d = $('#homeDate'), today = new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' }); if (d.textContent !== today) d.textContent = today;   // Today's title is the day itself
+  const d = $('#homeDate'), today = new Date().toLocaleDateString(LANG_LOCALE, { weekday: 'long', month: 'long', day: 'numeric' }); if (d.textContent !== today) d.textContent = today;   // Today's title is the day itself
   // The tab's name goes into the browser's history, which some browsers copy to an account. A download's name can be a student's, so it stays out;
   // an assignment or class name she typed herself is fine.
   const asg = batch && batch.assignment && findItem(batch.assignment.id);
@@ -141,6 +141,7 @@ function findRows() {
   add('Settings', 'Updates and installing', 'This version, what’s new, install as an app', () => go(setHash('about')));
   add('Settings', document.documentElement.dataset.theme === 'dark' ? 'Light mode' : 'Dark mode', 'Display', press('.themeBtn'));
   add('Settings', 'Text size and zoom', 'Display', () => openDisplay());
+  add('Settings', 'App language', 'English or Spanish', () => go('#/settings/display'));
   add('Settings', 'Word papers', wordPdfAlways() ? 'Converted to PDF pages as each assignment opens' : 'Kept as Word files. They can be converted to PDF pages', () => go('#/settings/marking'));
   add('Settings', 'Tablet and pencil', 'What a finger does on the paper, and pencil pressure', () => go('#/settings/marking'));
   add('Settings', 'All keys', 'Every keyboard shortcut', () => openKeys(), '?');
@@ -155,12 +156,14 @@ function findMatch(rows, q) {
   if (!words.length) return rows.filter(r => r.group !== 'Students' && r.group !== 'Assignments' && r.group !== 'Class pages' && r.group !== 'Help' || batch && r.group === 'Students').slice(0, 60);
   const hit = [];
   for (const r of rows) {
-    const l = r.label.toLowerCase(), all = l + ' ' + r.sub.toLowerCase() + ' ' + r.group.toLowerCase() + ' ' + (r.words || '').toLowerCase();
+    const l = tr(r.label).toLowerCase(), all = l + ' ' + r.label.toLowerCase() + ' ' + r.sub.toLowerCase() + ' ' + tr(r.sub).toLowerCase() + ' ' + r.group.toLowerCase() + ' ' + tr(r.group).toLowerCase() + ' ' + (r.words || '').toLowerCase();   // in another language (lang.js) a row is found by its words in either
     if (!words.every(w => all.includes(w))) continue;
     hit.push({ r, rank: l.startsWith(words[0]) ? 0 : l.split(/[^a-z0-9]+/).some(p => p.startsWith(words[0])) ? 1 : words.every(w => l.includes(w)) ? 2 : 3 });
   }
   return hit.sort((a, b) => a.rank - b.rank).map(x => x.r).slice(0, 40);
 }
+// Rows named by something she typed (a class, a student, an assignment): never put into another language (lang.js).
+const FIND_NAMES = new Set(['Classes', 'Students', 'Assignments']);
 function openFind() {
   if ($('#findDlg') || $('#askDlg') || (!$('#dlg').hidden && !dlgPage)) return;
   commitEditors(); setMore(false);
@@ -177,7 +180,7 @@ function openFind() {
     for (const r of hits) { let g = groups.find(x => x.name === r.group); if (!g) groups.push(g = { name: r.group, rows: [] }); g.rows.push(r); }
     shown = groups.flatMap(g => g.rows); at = 0;
     let k = 0;
-    list.innerHTML = groups.map(g => '<div class="fcap">' + esc(g.name) + '</div>' + g.rows.map(r => '<button class="frow" role="option" id="fr' + k + '" data-fi="' + (k++) + '"><b>' + esc(r.label) + '</b><span>' + esc(r.sub) + '</span>' + (r.key ? '<kbd>' + esc(keyLabel(r.key)) + '</kbd>' : '') + '</button>').join('')).join('') || '<div class="fnone">Nothing matches “' + esc(inp.value.trim()) + '”.</div>';
+    list.innerHTML = groups.map(g => '<div class="fcap">' + esc(g.name) + '</div>' + g.rows.map(r => '<button class="frow" role="option" id="fr' + k + '" data-fi="' + (k++) + '"><b' + (FIND_NAMES.has(g.name) ? ' data-raw' : '') + '>' + esc(r.label) + '</b><span>' + esc(r.sub) + '</span>' + (r.key ? '<kbd>' + esc(keyLabel(r.key)) + '</kbd>' : '') + '</button>').join('')).join('') || '<div class="fnone">Nothing matches “' + esc(inp.value.trim()) + '”.</div>';
     el.querySelector('#findCount').textContent = inp.value.trim() ? shown.length + (shown.length === 1 ? ' match' : ' matches') : 'Students, assignments, tools and settings';
     mark();
   };

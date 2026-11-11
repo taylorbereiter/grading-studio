@@ -21,7 +21,7 @@ const bkXcWhere = to => to === 'ic' ? 'the in-class average' : 'the term grade';
 function bkSaveLib() { saveLib(); bk.ver = libVer; }
 function bkSave(part) { lib.book = { ...(lib.book || {}), ...part }; bkSaveLib(); }
 const isoDay = t => { if (!t) return ''; const d = new Date(t); return isNaN(d) ? '' : d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
-function bkDay(s) { return s ? new Date(s + 'T12:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : ''; }
+function bkDay(s) { return s ? new Date(s + 'T12:00:00').toLocaleDateString(LANG_LOCALE, { month: 'short', day: 'numeric' }) : ''; }
 // The term an assignment counts toward: the one it was moved to, else the one its due date falls in. '' is "no term": with no terms set up, that's the whole year.
 function bkTermOf(col, terms) {
   if (col.term && terms.some(t => t.id === col.term)) return col.term;

@@ -23,6 +23,11 @@ const HELP = [
     a: ['1. Press **Add a class** in the sidebar and give it a name.', '2. Paste the student names, one on a line. Students are kept in the order you paste them.', '3. Open the class’s **Students** tab to add an ID, an email or a note for each one.',
       'With a roster, every student is listed when you open papers for that class, including anyone who turned nothing in.'],
     words: 'roster students names list new class' },
+  { id: 'language', sec: 'start', q: 'Can I use the app in another language?',
+    a: ['Spanish is the first. Choose it in Settings, Display, **App language**, or at the top of the welcome. The page is drawn again in the language you pick.',
+      'So far Spanish covers the sidebar, Today, the welcome, Find anything, Help and the feedback page students get in a returned paper. The other screens are still in English.',
+      'Class names, student names and anything else you typed are never translated.'],
+    go: ['Open Settings, Display', '#/settings/display'], words: 'spanish español idioma language translate translation' },
   { id: 'scan-split', sec: 'start', q: 'I scanned the whole class as one file. How do I split it?',
     a: ['On Today, press **More ways**, then **A scan of everyone’s papers…** and pick the scan.', 'Drag pages onto each student’s name. Pages that are upside down or crooked are fixed and say so, with **Put back**. **Needs rescan** flags a page you can’t read.',
       'For a makeup scan later, use **Bring in files** under Setup, then **A scan to split…**.'],
@@ -172,3 +177,10 @@ const HELP = [
 ];
 // The first few words of an answer, for the line under its question in Find anything.
 const helpGist = t => { const s = t.a[0].replace(/^\d+\.\s*/, '').replace(/\*\*/g, ''); return s.length > 96 ? s.slice(0, s.lastIndexOf(' ', 92)) + '…' : s; };
+
+// In another language (lang.js): the same topics, with that language's questions and answers. The English search words are kept as well,
+// so a search in either language finds the answer. A topic the language file leaves out stays in English.
+if (LANG_PACK) {
+  for (const s of HELP_SECS) if (LANG_PACK.helpSecs[s[0]]) s[1] = LANG_PACK.helpSecs[s[0]];
+  for (const t of HELP) { const x = LANG_PACK.help[t.id]; if (!x) continue; t.words = [x.words, t.words, t.q].filter(Boolean).join(' '); t.q = x.q; t.a = x.a; if (x.go && t.go) t.go = [x.go, t.go[1]]; }
+}
