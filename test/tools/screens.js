@@ -26,6 +26,10 @@ const { plant, appReady, openZip, goToStudent, score, markPage, settle, builtHtm
 const { standardFiles, zipOf } = require('../helpers/fixtures');
 const { STEADY, serveBuild, gradingSeed, PLAN_SETUP, pagesAt, makeLesson, changedList, matches } = require('../helpers/steady');
 
+// Chrome draws with several threads at once, and the order they finish in can shade the soft edge of a thin icon a little
+// differently from one picture to the next (the Help and Settings icons in the dark folded sidebar, 12 pixels). One drawing
+// thread, drawn in full each time and without the graphics card, gives the same pixels every time.
+const STEADY_DRAWING = ['--num-raster-threads=1', '--disable-partial-raster', '--disable-gpu-rasterization'];
 const SIZES = [['small', 1024, 768], ['laptop', 1366, 768], ['desktop', 1920, 1080]];
 const THEMES = ['light', 'dark'];
 const OUT = path.join(ROOT, 'out', 'screens');
@@ -112,7 +116,7 @@ const quiet = (page, ms) => page.evaluate(ms => new Promise(res => {
 // The saved work every picture is taken of, made once through the app itself and left in a closed Chrome profile.
 // Each build is then pictured from its own copy of that profile, so both start from the same bytes.
 async function makeWork(pages, port, dir, want) {
-  const browser = await launch({ userDataDir: dir, keepProfile: true }), srv = await serveBuild(pages, port);
+  const browser = await launch({ userDataDir: dir, keepProfile: true, args: STEADY_DRAWING }), srv = await serveBuild(pages, port);
   try {
     const page = await newPage(browser.defaultBrowserContext());
     await page.setViewport({ width: 1366, height: 768 });
@@ -137,7 +141,7 @@ async function makeWork(pages, port, dir, want) {
 async function capture(pages, label, want, work, port) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'gs-screens-'));
   fs.cpSync(work.dir, dir, { recursive: true, filter: f => !/Singleton/.test(path.basename(f)) });
-  const browser = await launch({ userDataDir: dir }), srv = await serveBuild(pages, port), shots = {}, missed = {};
+  const browser = await launch({ userDataDir: dir, args: STEADY_DRAWING }), srv = await serveBuild(pages, port), shots = {}, missed = {};
   const ctx = browser.defaultBrowserContext(), fresh = await browser.createBrowserContext(), { A, L } = work;
   try {
     let page;

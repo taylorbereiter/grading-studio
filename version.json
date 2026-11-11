@@ -1,14 +1,12 @@
 {
- "version": "1.25.0",
- "build": "4c3e7f3a1cfb",
+ "version": "1.26.2",
+ "build": "7d973170cd2b",
  "notes": [
-  "Attendance. Each class has an Attendance tab: everyone starts as present, so a day is one press for each student who is late, excused or absent, with a note if you want one.",
-  "Look back shows every saved day in one table with each student’s totals, and a student’s own page lists the days they missed.",
-  "Copy a day, or download the table as a spreadsheet, for your school’s system. Today has a line for it under each class.",
-  "If you don’t take attendance here, turn it off in Settings, Classes and rosters."
+  "Rubric rows can be scored on your own scale. They start at 0 to 4 with half points, as before; when you set up an assignment you can pick any top from 1 to 10 and turn half points off.",
+  "Settings, Grading: choose the row scale new assignments start with. Assignments you already have keep theirs."
  ],
  "files": {
-  "index.html": "31c6fbc4001a931e447d615b7d2861f015c38b4969df5923fd162aefeed09c5e",
-  "planner.html": "425ba0e1e61db546a6de63298daa6a53d35600475b17dfc3f557a4d0b1a93cac"
+  "index.html": "41c866f88df1bc3d467dac18958725cbd0bc8fd4d5752944a66a2137be59af9e",
+  "planner.html": "ec22e76fc32a3dfd387a1c1e75a98b4795ba11e99261499a84a2bb23c1d3728c"
  }
 }
