@@ -1,4 +1,9 @@
-# Extra credit. The gradebook's toolbar has a "+ Extra credit" button beside "+ Add scores", and Settings, Terms and
-# weights, says where new extra credit goes and whether a grade may go over 100%.
+# Gradebook averages (1.13.0). The gradebook puts each type's average beside the term grade, with an Averages only switch
+# and a Leave out button; the one-student page has a tile per counting type with the class figure. The version shown at
+# the foot of the sidebar is now 1.13.0 (a small strip on every screen that shows it), and About lists what's new.
 class-gradebook
-settings-terms
+class-one-student
+home
+home-find
+mark-keys
+settings-*
