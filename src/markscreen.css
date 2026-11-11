@@ -195,3 +195,10 @@ button.pavg:hover .v{text-decoration:underline}
 .oneout-say:empty{display:none}
 .nextun{display:block;margin:8px auto 0;font-size:var(--text-control)}
 .nextun kbd,.hint kbd{font:500 var(--text-caption) var(--f-body);border:1px solid var(--line-strong);border-bottom-width:2px;border-radius:var(--corner-1);padding:0 4px;background:var(--surface);color:var(--muted)}
+/* extra credit on one paper: its own line under the score */
+.xcnote{display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-2);margin:7px 0 0;font-size:var(--text-small);color:var(--muted)}
+.xcnote label{display:flex;align-items:center;gap:var(--space-2);color:var(--fg-2);font-weight:600}
+.xcnote input{width:64px;font:inherit;padding:3px 6px;border:1px solid var(--line-strong);border-radius:var(--corner-2);background:var(--surface);color:var(--fg)}
+.xcsay{color:var(--accent);font-size:var(--text-small)}
+.xcnote .sp{flex:1}
+.xcnote label,.xcnote>span{white-space:nowrap}.xcnote input{width:52px}
