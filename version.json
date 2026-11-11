@@ -1,12 +1,12 @@
 {
- "version": "1.26.2",
- "build": "beddc2dee5e7",
+ "version": "1.27.0",
+ "build": "600681bf6fb4",
  "notes": [
-  "Rubric rows can be scored on your own scale. They start at 0 to 4 with half points, as before; when you set up an assignment you can pick any top from 1 to 10 and turn half points off.",
-  "Settings, Grading: choose the row scale new assignments start with. Assignments you already have keep theirs."
+  "Start a new school year, in Settings, Saving and carrying. Your classes, units and assignment cards carry on, each card with its rubric and Quick mark boxes, with empty class lists and dates a year later.",
+  "This year goes into one protected file first, and the file is checked before anything is cleared. Open an archived year brings a year back from its file."
  ],
  "files": {
-  "index.html": "4da180e501acb34d1f46d9b00fc9895bedb3c966e876af642302dc238fba1e86",
+  "index.html": "6d536e1ed97b0154fbb9e79a74b6334644394d0907768b8c208d128ae7aea92d",
   "planner.html": "9f2d81328312a2529cc4c1091a13f6535c0b3e8b866ff77b6a474a43393af2a5"
  }
 }
