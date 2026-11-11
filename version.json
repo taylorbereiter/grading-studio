@@ -1,13 +1,14 @@
 {
- "version": "1.24.0",
- "build": "493b9e1f3294",
+ "version": "1.25.0",
+ "build": "ac16f5324b07",
  "notes": [
-  "Retakes: a second try at the same assignment keeps the first try's score, comment and paper. Start one from the ⋯ beside Missing, Excused and Late on a paper.",
-  "You choose which try counts, for all your classes: the highest (to begin with), the latest, or the average. It is in the retake box and in the gradebook's Term setup.",
-  "A score typed into the gradebook takes a retake too: type both, like 7 > 10."
+  "Attendance. Each class has an Attendance tab: everyone starts as present, so a day is one press for each student who is late, excused or absent, with a note if you want one.",
+  "Look back shows every saved day in one table with each student’s totals, and a student’s own page lists the days they missed.",
+  "Copy a day, or download the table as a spreadsheet, for your school’s system. Today has a line for it under each class.",
+  "If you don’t take attendance here, turn it off in Settings, Classes and rosters."
  ],
  "files": {
-  "index.html": "6046e06ddfcd537678b215577bd5a874eb07c95995c844d0294aebbc4fd0dfa9",
-  "planner.html": "cefc2edb1bd588bc2df637c1f8d5c00a0e0b2e1b135a2e0e47fd24e9318441e5"
+  "index.html": "53a5f6764d78344b972ec4b410267a01c8c8878f8d3c137c89e9c755df68a718",
+  "planner.html": "17140749c83a86fefac6b9b96b9bbf11cc49752b1e57817bd9aab563f288ab7a"
  }
 }

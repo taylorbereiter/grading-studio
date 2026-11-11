@@ -34,7 +34,7 @@ const info = (page, n) => page.evaluate(n => JSON.parse(JSON.stringify((window._
 
 test('the Missing work tab lists who owes what, by student and by assignment', async () => {
   const { page, close } = await open();
-  assert.deepEqual(await page.$$eval('#vClass .ctabs a', a => a.map(x => x.textContent.trim())), ['Assignments', 'Gradebook', 'Students', 'Missing work', 'Charts', 'Report comments']);
+  assert.deepEqual(await page.$$eval('#vClass .ctabs a', a => a.map(x => x.textContent.trim())), ['Assignments', 'Gradebook', 'Students', 'Attendance', 'Missing work', 'Charts', 'Report comments']);
   assert.match(await page.$eval('.misnote', e => e.textContent), /opens in your own mail app.*Grading Studio sends nothing itself/);
   assert.equal(await page.$eval('#misSum', e => e.textContent), '3 students owe 4 pieces of work');
   const cards = await page.$$eval('[data-misstu]', xs => xs.map(x => [x.querySelector('h3').textContent, [...x.querySelectorAll('.misw')].map(w => w.textContent)]));

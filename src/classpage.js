@@ -13,6 +13,10 @@ function classPanelDraw(fresh) {
   const r = routeNow(), el = $('#classPanel');
   if (r.v !== 'class' || !r.tab || !el) { panelKey = ''; return; }
   const c = r.c, key = c.id + '/' + r.tab + '/' + (r.stu == null ? '' : r.stu);
+  if (r.tab === 'attendance') {   // attendance needs none of the gradebook's columns: it is drawn from the class itself (attend.js)
+    const k = key + r.att; if (!fresh && k === panelKey && el.firstChild && attLib === lib) return;
+    panelKey = k; panelTok++; bkPopClose(); ovTipHide(); return attPanel(el, c, r.att);
+  }
   if (!fresh && key === panelKey && el.firstChild && bk.lib === lib) return;
   panelKey = key;
   const tok = ++panelTok, list = r.tab === 'students' && r.stu == null, kept = bk.host === 'page' && !!bk.cols && bk.ver === libVer && bk.lib === lib;

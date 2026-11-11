@@ -52,7 +52,7 @@ function todayHtml(prim) {
     const got = l && l.taught.find(t => t.classId === c.id && t.date === day), end = got && got.slide >= got.of, show = !!l && r === cur && !end;
     return '<a class="trow' + (r === cur ? ' now' : '') + '" href="' + esc(planUrl(show ? '#present/' + encodeURIComponent(l.id) + '/' + encodeURIComponent(c.id) : l ? '#lesson/' + encodeURIComponent(l.id) : '#week')) + '" title="' + (show ? 'Present this lesson, from the Planner' : l ? 'Open this lesson in the Planner' : 'Plan this class in the Planner') + '"><span class="tt">' + planTime(m.start) + '</span>' +
       '<span class="nt"><b><span class="rdot" style="background:' + c.color + '"></span>' + esc(c.name) + '</b><span class="ns">' + (l ? esc(l.title) + (l.n ? ' · ' + l.n + (l.n === 1 ? ' slide' : ' slides') : '') + ' · ' + (got ? (end ? 'taught' : 'taught to slide ' + got.slide + ' of ' + got.of) : say(l)) + more : 'No lesson planned yet') + '</span></span>' +
-      '<span class="btn sm' + (prim === 'lesson' && r === cur ? ' primary' : '') + '">' + (show ? 'Present' : l ? 'Open' : 'Plan it') + '</span></a>';
+      '<span class="btn sm' + (prim === 'lesson' && r === cur ? ' primary' : '') + '">' + (show ? 'Present' : l ? 'Open' : 'Plan it') + '</span></a>' + attTodayLine(c);
   };
   return '<div class="thd"><h2 class="tcap">Teaching today</h2><a class="link tweek" href="' + esc(planUrl('#week')) + '">Open the week</a></div><div class="tcard">' +
     (t.off ? '<div class="trow none"><span class="nt"><b>No classes today</b><span class="ns">' + esc(t.off) + '</span></span></div>' : t.rows.length ? t.rows.map(row).join('') : '<div class="trow none"><span class="nt"><span class="ns">No classes on your timetable today.</span></span></div>') + '</div>';

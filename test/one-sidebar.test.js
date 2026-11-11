@@ -355,7 +355,7 @@ test('Settings is one page per subject, each with its own address', async () => 
   // classes: counts, never names
   await page.click('#setNav [data-set="classes"]');
   assert.equal(await page.evaluate(() => location.hash), '#/settings/classes');
-  assert.deepEqual(await shown(), ['setClasses', 'setSys']);
+  assert.deepEqual(await shown(), ['setClasses', 'setSys', 'setAtt']);
   assert.equal(await page.title(), 'Classes and rosters · Settings · Grading Studio');
   assert.deepEqual(await page.$$eval('#setClasses .setrow .nt', r => r.map(x => x.textContent)), ['Course A-14 students · No ManageBac link', 'CourseA21 student · No ManageBac link']);
   assert.ok(!(await page.$eval('#vSettings', e => e.textContent)).includes('Testwell'), 'no student names in Settings');

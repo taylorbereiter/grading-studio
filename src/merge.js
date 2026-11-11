@@ -590,7 +590,12 @@ function mergeLib(a0, b0, o = {}) {
       for (const k of new Set([...Object.keys(xi), ...Object.keys(yi)])) { const o2 = [...new Set([...((lo[k] || {}).other || []), ...((hi[k] || {}).other || [])])]; out[k] = { ...lo[k], ...hi[k], ...(o2.length ? { other: o2 } : {}) }; }
       e.fields.info = e.node.info = out;
     }
-    const other = m.both.filter(k => k !== 'names' && k !== 'info');
+    if (x.type === 'c' && m.both.includes('att')) {   // attendance: day by day, and for a day both changed, the one saved later
+      const xa = x.fields.att || {}, ya = y.fields.att || {}, out = {};
+      for (const k of new Set([...Object.keys(xa), ...Object.keys(ya)])) out[k] = !xa[k] ? ya[k] : !ya[k] ? xa[k] : (ya[k].t || 0) > (xa[k].t || 0) ? ya[k] : xa[k];
+      e.fields.att = e.node.att = out;
+    }
+    const other = m.both.filter(k => k !== 'names' && k !== 'info' && k !== 'att');
     if (other.length) notes.push({ kind: 'both', type: x.type, name: e.fields.name, rubric: other.includes('setup') });
     else if (m.fromY.some(k => k !== 'names')) notes.push({ kind: 'changed', type: x.type, name: e.fields.name });
     kept.set(id, e);

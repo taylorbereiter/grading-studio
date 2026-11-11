@@ -345,7 +345,7 @@ function bkOneView(c, cols, conf) {
     '<div class="ovcharts">' + chSec('Against the class', bkBandLine(c, sc, n, shown), 'The shaded band is the middle half of the class, so it’s clear when a score is unusual and when the assignment was just hard.') +
     chSec('Rubric rows', bkStuRows(c, cols, n), 'Their average on each rubric row across the summatives, out of 4. The dashed line is the class average.') + goalsStu(c, cols, n) +
     '<section><h3 class="ovh3">By type</h3>' + bar('Summatives', r.by.sum, cavg('sum'), 'sum') + bar('In-class', r.by.ic, cavg('ic'), 'ic') + bar('Grade', r.grade, cavg(''), '') + '<p class="muted ovcap2">The dashed line is the class average.</p>' +
-    (fm.length ? '<h3 class="ovh3" style="margin-top:16px">Feedback</h3><p class="bkfbline">' + fm.filter(x => (x.cells.get(n) || {}).fb).length + ' of ' + fm.length + ' formative activities have feedback.</p>' : '') + '</section></div></div>';
+    (fm.length ? '<h3 class="ovh3" style="margin-top:16px">Feedback</h3><p class="bkfbline">' + fm.filter(x => (x.cells.get(n) || {}).fb).length + ' of ' + fm.length + ' formative activities have feedback.</p>' : '') + '</section>' + attStuHtml(c, n) + '</div></div>';
 }
 
 /* ---------- column menu: type, date, term ---------- */
