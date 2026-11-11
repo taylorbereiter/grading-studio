@@ -119,3 +119,7 @@
 .qmned textarea{width:100%;box-sizing:border-box;font:inherit;font-size:var(--text-body);padding:6px 8px;border:1px solid var(--line-strong);border-radius:var(--corner-2,8px);background:var(--surface);color:var(--fg);resize:vertical}
 .qmnedb{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .qmnedb .btn{margin-left:auto}
+
+.qmcopynote{display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap;margin:0 16px;padding:10px 14px;border-radius:var(--corner-3);background:var(--accent-soft);font-size:var(--text-small);line-height:1.45}
+.qmcopynote p{margin:0;flex:1 1 320px}
+.qmcopynote [data-copyok]{align-self:center}
