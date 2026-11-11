@@ -46,8 +46,6 @@ fs.writeFileSync('out/Grading Studio.html', fullHtml);
 // The pages at the web address can be installed as an app: they name the install card and the icon. The double-click copies don't, having no address to install from.
 const HOSTED = '<meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"></head>';
 fs.writeFileSync('index.html', fullHtml.replace('</head>', HOSTED));
-fs.mkdirSync('out/netlify', { recursive: true });
-fs.writeFileSync('out/netlify/index.html', '<!doctype html>\n<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"></head><body>\n' + h + '\n</body></html>');
 fs.writeFileSync('out/artifact.html', h.split('�').join('\\uFFFD'));
 console.log((h.length / 1e6).toFixed(2) + 'MB');
 // The Planner: its own page, built only from src/planner. No grading code goes into it.
