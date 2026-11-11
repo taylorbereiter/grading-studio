@@ -96,3 +96,37 @@ test('Stamp by the score puts the score sticker on the paper without the calcula
   assert.deepEqual(page.errors, []);
   await close();
 });
+
+test('the stamp, the score panel and the grade sheet all say the score given in the app, not other numbers on the paper', async () => {
+  const { page, close } = await openApp(browser, { beforeLoad: p => p.evaluateOnNewDocument(() => { if (!localStorage.getItem('gs.setup')) localStorage.setItem('gs.setup', JSON.stringify({ mode: 'points', outOf: 15 })); }) });
+  // a made-up paper with a grade typed on it that isn't the score she gives
+  await openZip(page, zipOf({ 'Ann Example/Essay.pdf': await makePaper({ title: 'Ann', lines: ['Grade: 9/15 = 60%'] }) }), 'Sheet.zip');
+  await page.waitForSelector('#ptsIn');
+  await page.click('#ptsIn'); await page.keyboard.type('11.5'); await page.keyboard.press('Enter');
+  await page.waitForSelector('#stampScore');
+  await page.click('#stampScore');
+  const c = await page.evaluate(() => { const pg = window.__gs.state().pages[0], r = pg.canvas.getBoundingClientRect(); return { x: r.left + pg.W * pg.s * 0.75, y: r.top + 60 * pg.s }; });
+  await page.mouse.move(c.x, c.y); await page.mouse.click(c.x, c.y);
+  const stamp = () => page.evaluate(() => Object.values(window.__gs.state().batch.students[0].files[0].marks).flat().find(m => m.k === 'score').text);
+  assert.equal(await stamp(), '11.5/15 = 77%');
+  // the score changes: the stamp already on the paper changes with it
+  await page.$eval('#ptsIn', i => { i.value = '13'; i.dispatchEvent(new Event('input', { bubbles: true })); });
+  await page.waitForFunction(() => Object.values(window.__gs.state().batch.students[0].files[0].marks).flat().find(m => m.k === 'score').text.startsWith('13/'));
+  assert.equal(await stamp(), '13/15 = 87%');
+  // the grade sheet shows her score, with the stamp as the picture, and nothing to check about the 9/15 typed on the page
+  await page.evaluate(() => window.__gs.openSheet(false));
+  await page.waitForSelector('#dlgBox .big-sc');
+  const sheet = await page.evaluate(() => ({ big: [...document.querySelectorAll('#dlgBox .big-sc')].map(e => e.textContent), sub: document.querySelector('#shSub').textContent, asks: document.querySelectorAll('#dlgBox .rd-ask').length, imgs: document.querySelectorAll('#dlgBox td img').length, body: document.querySelector('#shBody').textContent }));
+  assert.deepEqual(sheet.big, ['13/ 15']);
+  assert.match(sheet.sub, /1 of 1 scored/);
+  assert.equal(sheet.asks, 0);
+  assert.equal(sheet.imgs, 1, 'the stamp shows as the picture');
+  assert.ok(!/9\/15/.test(sheet.body), sheet.body);
+  // asked for, what the paper says shows beside her score, and that it differs
+  await page.click('#dlgBox [data-sheetfound]');
+  await page.waitForFunction(() => /Found on the paper/.test(document.querySelector('#shBody').textContent));
+  assert.match(await page.$eval('#shBody', b => b.textContent), /Found on the paper: 9\/15 = 60%[\s\S]*says something else/);
+  assert.deepEqual(await page.$$eval('#dlgBox .big-sc', e => e.map(x => x.textContent)), ['13/ 15'], 'her score still counts');
+  assert.deepEqual(page.errors, []);
+  await close();
+});
