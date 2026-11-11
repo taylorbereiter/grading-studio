@@ -130,3 +130,26 @@ small.bkxc{font-weight:500}
 .bkpick{vertical-align:-2px;margin:0 4px 0 0;accent-color:var(--accent)}
 .bkleftn{display:block;font-weight:400;color:var(--muted);font-size:var(--text-caption)}
 .bkleftn .linkbtn{border:0;background:none;padding:0;font:inherit;color:var(--accent);cursor:pointer;text-decoration:underline}
+/* Import scores from a spreadsheet (bookimport.js) */
+.bkiv{max-width:1100px}
+.bkimeta{margin:calc(-1 * var(--space-1)) 0 var(--space-3);font-size:var(--text-control)}
+.bkidrop{display:flex;align-items:center;gap:var(--space-3);flex-wrap:wrap;padding:var(--space-4);border:1px dashed var(--line-strong);border-radius:var(--corner-4);margin-bottom:var(--space-2)}
+.bkierr{color:var(--fg);background:var(--surface-2);border:1px solid var(--line-strong);border-radius:var(--corner-3);padding:var(--space-2) var(--space-3);font-size:var(--text-control)}
+.bkisum{margin:0 0 var(--space-3);font-size:var(--text-body)}
+.bkiwrap{overflow-x:auto;margin-bottom:var(--space-3)}
+.bkitab{width:100%}
+.bkitab td{vertical-align:top}
+.bkitab .bkiname{width:100%;min-width:150px}
+.bkitab .bksc{width:64px;text-align:right;padding:3px 6px}
+.bkiscale{white-space:nowrap}
+.bkioff td:not(:first-child){opacity:.55}
+.bkiwhy{display:block;font-size:var(--text-small);margin-top:2px}
+.bkito{font-weight:600}
+.bkirow{display:flex;gap:var(--space-4);flex-wrap:wrap;align-items:flex-end}
+.bkiinl{display:flex;gap:var(--space-2);align-items:center}
+.bkiwho{width:auto;margin-top:var(--space-2)}
+.bkidet{margin-top:var(--space-2);font-size:var(--text-control)}
+.bkidet ul{margin:var(--space-1) 0 0;padding-left:var(--space-5);columns:2}
+.bkiclash{margin:var(--space-3) 0 0;flex-direction:column;align-items:flex-start}
+.bkiv .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.bkiv h4.ovh3{margin-top:var(--space-5)}

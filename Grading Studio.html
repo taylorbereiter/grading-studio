@@ -1194,6 +1194,29 @@ small.bkxc{font-weight:500}
 .bkpick{vertical-align:-2px;margin:0 4px 0 0;accent-color:var(--accent)}
 .bkleftn{display:block;font-weight:400;color:var(--muted);font-size:var(--text-caption)}
 .bkleftn .linkbtn{border:0;background:none;padding:0;font:inherit;color:var(--accent);cursor:pointer;text-decoration:underline}
+/* Import scores from a spreadsheet (bookimport.js) */
+.bkiv{max-width:1100px}
+.bkimeta{margin:calc(-1 * var(--space-1)) 0 var(--space-3);font-size:var(--text-control)}
+.bkidrop{display:flex;align-items:center;gap:var(--space-3);flex-wrap:wrap;padding:var(--space-4);border:1px dashed var(--line-strong);border-radius:var(--corner-4);margin-bottom:var(--space-2)}
+.bkierr{color:var(--fg);background:var(--surface-2);border:1px solid var(--line-strong);border-radius:var(--corner-3);padding:var(--space-2) var(--space-3);font-size:var(--text-control)}
+.bkisum{margin:0 0 var(--space-3);font-size:var(--text-body)}
+.bkiwrap{overflow-x:auto;margin-bottom:var(--space-3)}
+.bkitab{width:100%}
+.bkitab td{vertical-align:top}
+.bkitab .bkiname{width:100%;min-width:150px}
+.bkitab .bksc{width:64px;text-align:right;padding:3px 6px}
+.bkiscale{white-space:nowrap}
+.bkioff td:not(:first-child){opacity:.55}
+.bkiwhy{display:block;font-size:var(--text-small);margin-top:2px}
+.bkito{font-weight:600}
+.bkirow{display:flex;gap:var(--space-4);flex-wrap:wrap;align-items:flex-end}
+.bkiinl{display:flex;gap:var(--space-2);align-items:center}
+.bkiwho{width:auto;margin-top:var(--space-2)}
+.bkidet{margin-top:var(--space-2);font-size:var(--text-control)}
+.bkidet ul{margin:var(--space-1) 0 0;padding-left:var(--space-5);columns:2}
+.bkiclash{margin:var(--space-3) 0 0;flex-direction:column;align-items:flex-start}
+.bkiv .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.bkiv h4.ovh3{margin-top:var(--space-5)}
 
 /* the dots: the accent in light; a step deeper in dark, inside the range that reads as a mark on a dark surface */
 /* ---------- past work beside the paper ---------- */
@@ -3439,7 +3462,7 @@ SOFTWARE.
 <script>/* ---------------- saved-data versions: a safety copy, then any format changes, before the app starts ---------------- */
 const gsData = (() => {
   'use strict';
-  const APP_VERSION = "1.23.0";   // from package.json, the one place it's set
+  const APP_VERSION = "1.24.0";   // from package.json, the one place it's set
   const MIGRATIONS = [
   ];
   const DATA_V = Math.max(1, ...MIGRATIONS.map(s => s.to));
@@ -3942,6 +3965,9 @@ const LANG_ES = {
     'gradebook': { q: '¿Dónde está el libro de calificaciones?', words: 'notas tabla periodo media global libro',
       a: ['Abre una clase desde la barra lateral y elige su pestaña **Gradebook**. Tiene todas las tareas de la clase en una tabla, agrupadas por tipo, con una media por tipo y una nota del periodo.',
         '**+ Add scores** permite escribir notas de trabajos que no se corrigieron aquí.'] },
+    'import-scores': { q: '¿Puedo traer las notas de mi libro de calificaciones anterior?', words: 'importar hoja de cálculo csv excel xlsx subir notas anteriores',
+      a: ['Sí. En el libro de calificaciones de la clase pulsa **Import…** y elige un archivo CSV o Excel, o pega las celdas de tu hoja de cálculo. Una fila por estudiante y una columna por tarea.',
+        'Antes de guardar nada ves cada columna con su tipo, su fecha y sobre cuánto es, qué filas coinciden con tu lista y cualquier nota que ya esté en el libro. Las notas que ya están se quedan, salvo que elijas las del archivo.'] },
     'terms': { q: '¿Cómo configuro los periodos y cuánto cuenta cada tipo?', go: 'Abrir Ajustes, Periodos', words: 'semestre trimestre pesos porcentaje sumativa formativa ponderación',
       a: ['En Ajustes, **Terms and weights** están tus periodos y sus fechas, y qué parte de la nota del periodo aporta cada tipo de tarea. El trabajo formativo nunca cuenta para la nota.', 'Una tarea cuenta para el periodo en el que cae su fecha de entrega.'] },
     'one-student': { q: '¿Cómo veo todo sobre un estudiante?', words: 'perfil individual familia reunión tutoría progreso gráfico',
@@ -4279,6 +4305,9 @@ const LANG_ZH = {
     'gradebook': { q: '成績冊在哪裡？', words: '成績 表格 學期 平均 總成績 成績冊 gradebook',
       a: ['從側邊欄開啟一個班級，選擇它的 **Gradebook** 分頁。它用一個表格列出班級的所有作業，依類型分組，並顯示各類型的平均和學期成績。',
         '**+ Add scores** 可以輸入不是在這裡批改的作業分數。'] },
+    'import-scores': { q: '可以匯入舊成績冊的分數嗎？', words: '匯入 試算表 舊成績 上傳 csv excel xlsx',
+      a: ['可以。在班級的成績冊按 **Import…**，然後選擇 CSV 或 Excel 檔案，或貼上試算表中的儲存格。每位學生一列，每份作業一欄。',
+        '儲存之前，你會看到每一欄的類型、日期和滿分，哪些列對應到你的班級名單，以及成績冊中已經有的分數。已經有的分數會保留，除非你選擇使用檔案中的分數。'] },
     'terms': { q: '怎麼設定學期和各類作業的比重？', go: '開啟設定、學期', words: '學期 季 比重 百分比 總結性 形成性 加權',
       a: ['在設定的 **Terms and weights** 裡是你的學期和日期，以及每種作業類型占學期成績的比例。形成性作業不計入成績。', '作業計入繳交日所在的學期。'] },
     'one-student': { q: '怎麼查看一位學生的所有資料？', words: '個人檔案 個別 家長 會談 導師 進步 圖表',
@@ -4518,6 +4547,10 @@ const HELP = [
     a: ['Open a class from the sidebar and choose its **Gradebook** tab. It has every assignment for the class in one table, grouped by type, with an average for each type and a term grade.',
       '**+ Add scores** types in scores for work that was not marked here.'],
     words: 'grades table term average overall marks book' },
+  { id: 'import-scores', sec: 'class', q: 'Can I bring in scores from my old gradebook?',
+    a: ['Yes. In the class’s gradebook press **Import…**, then choose a CSV or Excel file, or paste the cells from your spreadsheet. One row per student, one column per assignment.',
+      'Before anything is saved you see each column with its type, date and what it is out of, which rows matched your roster, and any score that is already in the gradebook. Scores already there stay unless you choose the file’s.'],
+    words: 'import csv excel xlsx spreadsheet sheets upload old gradebook switch mid-year past scores' },
   { id: 'terms', sec: 'class', q: 'How do I set terms and how much each type counts?',
     a: ['Settings, **Terms and weights** has your terms and their dates, and what share of the term grade each type of assignment carries. Formative work never counts toward the grade.', 'An assignment counts toward the term its due date falls in.'],
     go: ['Open Settings, Terms', '#/settings/terms'], words: 'semester quarter weights percent summative formative weighting' },
@@ -14194,7 +14227,7 @@ function bkDraw() {
     (bk.tab === 'table' && bk.term !== '*' ? '<div class="pseg" role="group" aria-label="Columns">' + [['', 'Every assignment'], ['1', 'Averages only']].map(([v, l]) => '<button data-bkonly="' + v + '" aria-pressed="' + (bkOnly() === !!v) + '">' + l + '</button>').join('') + '</div>' +
       (bkOnly() ? '' : '<div class="pseg" role="group" aria-label="Show">' + [['pct', 'Percent'], ['pts', 'Points']].map(([v, l]) => '<button data-bkshow="' + v + '" aria-pressed="' + (bk.show === v) + '">' + l + '</button>').join('') + '</div>') : '') +
     (bk.tab === 'rep' && c.names.length ? rptBar() : '') + (bk.tab === 'miss' && c.names.length ? misBar() : '') +
-    (tools ? '<button class="btn sm" data-bksetup>Term setup</button>' + (bk.tab === 'table' ? '<button class="btn sm" data-bkpickon aria-pressed="' + !!bk.pick + '" title="Leave students out of the class averages to see how it changes">' + (bk.pick ? 'Done' : 'Leave out…') + '</button><button class="btn sm" data-bkcopy>Copy table</button>' : '') + '<button class="btn sm" data-bkaddxc>+ Extra credit</button><button class="btn sm primary" data-bkadd>+ Add scores</button>' : '') + '</div>';
+    (tools ? '<button class="btn sm" data-bksetup>Term setup</button>' + (bk.tab === 'table' ? '<button class="btn sm" data-bkpickon aria-pressed="' + !!bk.pick + '" title="Leave students out of the class averages to see how it changes">' + (bk.pick ? 'Done' : 'Leave out…') + '</button><button class="btn sm" data-bkcopy>Copy table</button>' : '') + '<button class="btn sm" data-bkimport title="Scores from your old gradebook: a CSV or Excel file, or cells pasted">Import…</button><button class="btn sm" data-bkaddxc>+ Extra credit</button><button class="btn sm primary" data-bkadd>+ Add scores</button>' : '') + '</div>';
   let main;
   if (!c.names.length) main = '<p class="muted bkpad">The gradebook lists the students on a class’s roster. Add a roster to ' + esc(c.name) + ' on its class page first.</p>';
   else if (bk.tab === 'class') main = bkClassView(c, cols, all, conf);
@@ -14632,6 +14665,316 @@ document.addEventListener('keydown', e => { if (bkPage() && $('#bkBody') && $('#
 $('#bookBtn').onclick = () => { openBook(batchClass() ? batchClass().id : '', { hi: batch && batch.assignment ? batch.assignment.id : '' }); };
 
 Object.assign(window.__gs, { openBook, bkLoad, bkClassCols, bkGrade, bkConf, bkTermOf, bk: () => bk });
+
+/* ---------------- gradebook import: past scores from a spreadsheet (CSV, TSV, Excel, or cells pasted) ----------------
+   For a teacher who starts mid-year: their old gradebook comes in as typed-in cards, one per assignment column, so nothing
+   starts from zero. It is read in this browser and nothing leaves it. Nothing is saved until the teacher has seen the preview
+   and pressed Import. Rows are matched to the class roster by name (rosterPairs, as everywhere else); a row it can't match is
+   shown so the teacher can pick the student or leave it out. A column with the same name as an assignment already in the class
+   adds to it, and a score already there is only replaced when the teacher says so: "Keep what's there" is the default.
+   Each imported column is stored exactly as "+ Add scores" stores one: item.typed = { max, s: { roster name: { v, st } } }. */
+
+function bkiParse(text) {
+  text = String(text || '').replace(/^﻿/, '');
+  const first = (text.split(/\r?\n/).find(l => l.trim()) || '');
+  const count = ch => first.split(ch).length - 1;
+  const sep = count('\t') ? '\t' : count(';') > count(',') ? ';' : ',';
+  const rows = []; let row = [], cell = '', q = false;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (q) { if (ch === '"') { if (text[i + 1] === '"') { cell += '"'; i++; } else q = false; } else cell += ch; continue; }
+    if (ch === '"' && !cell.trim()) { q = true; cell = ''; }
+    else if (ch === sep) { row.push(cell); cell = ''; }
+    else if (ch === '\n' || ch === '\r') { if (ch === '\r' && text[i + 1] === '\n') i++; row.push(cell); rows.push(row); row = []; cell = ''; }
+    else cell += ch;
+  }
+  if (cell !== '' || row.length) { row.push(cell); rows.push(row); }
+  return rows.map(r => r.map(c => c.trim())).filter(r => r.some(Boolean));
+}
+
+function bkiXlsx(bytes) {
+  const z = fflate.unzipSync(bytes), td = new TextDecoder(), dp = new DOMParser();
+  const xml = n => z[n] ? dp.parseFromString(td.decode(z[n]), 'application/xml') : null;
+  const strings = [...((xml('xl/sharedStrings.xml') || { getElementsByTagName: () => [] }).getElementsByTagName('si'))].map(si => [...si.getElementsByTagName('t')].map(t => t.textContent).join(''));
+  let path = 'xl/worksheets/sheet1.xml';
+  const wb = xml('xl/workbook.xml'), rel = xml('xl/_rels/workbook.xml.rels');
+  if (wb && rel) {   // the first sheet in the workbook's own order, which isn't always sheet1.xml
+    const s = wb.getElementsByTagName('sheet')[0], id = s && (s.getAttribute('r:id') || s.getAttributeNS('http://schemas.openxmlformats.org/officeDocument/2006/relationships', 'id'));
+    const r = id && [...rel.getElementsByTagName('Relationship')].find(x => x.getAttribute('Id') === id);
+    if (r) { const t = r.getAttribute('Target').replace(/^\/?(xl\/)?/, ''); if (z['xl/' + t]) path = 'xl/' + t; }
+  }
+  const sh = xml(path); if (!sh) throw new Error('no sheet');
+  const col = ref => { let n = 0; for (const ch of ref.replace(/\d+$/, '')) n = n * 26 + ch.charCodeAt(0) - 64; return n - 1; };
+  const rows = [];
+  for (const r of sh.getElementsByTagName('row')) {
+    const out = [];
+    for (const c of r.getElementsByTagName('c')) {
+      const t = c.getAttribute('t'), v = c.getElementsByTagName('v')[0], is = c.getElementsByTagName('is')[0];
+      let val = t === 's' ? strings[+(v && v.textContent)] || '' : t === 'inlineStr' ? (is ? is.textContent : '') : v ? v.textContent : '';
+      if (t !== 's' && t !== 'inlineStr' && t !== 'str' && val !== '' && !isNaN(+val)) val = String(Math.round(+val * 1e6) / 1e6);
+      const i = c.getAttribute('r') ? col(c.getAttribute('r')) : out.length;
+      out[i] = val;
+    }
+    rows.push([...out].map(x => (x || '').trim()));
+  }
+  return rows.filter(r => r.some(Boolean));
+}
+
+const BKI_MISS = /^(m|mi|mis|msg|missing|nhi|not handed in|not submitted|0\s*\(missing\))$/i, BKI_EXC = /^(e|ex|exc|excused|exempt|exempted)$/i;
+function bkiCell(s) {
+  s = String(s || '').trim();
+  if (!s || s === '-' || s === '–') return null;
+  if (BKI_MISS.test(s)) return { st: 'missing' };
+  if (BKI_EXC.test(s)) return { st: 'excused' };
+  const late = /\blate\b/i.test(s), t = s.replace(/\(?\blate\b\)?/i, '').trim().replace(/(\d),(\d)/, '$1.$2');
+  let m = t.match(/^(-?\d+(?:\.\d+)?)\s*\/\s*(\d+(?:\.\d+)?)$/);
+  if (m) return { v: +m[1], of: +m[2], st: late ? 'late' : '' };
+  m = t.match(/^(-?\d+(?:\.\d+)?)\s*%$/);
+  if (m) return { pct: +m[1], st: late ? 'late' : '' };
+  if (/^-?\d+(\.\d+)?$/.test(t)) return { v: +t, st: late ? 'late' : '' };
+  return { bad: true };
+}
+function bkiDate(s) {
+  s = String(s || '');
+  let m = s.match(/(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if (m) return m[1] + '-' + m[2].padStart(2, '0') + '-' + m[3].padStart(2, '0');
+  const now = new Date(), yr = (mo, d) => { const y = now.getFullYear(), t = new Date(y, mo - 1, d); return t - now > 60 * 864e5 ? y - 1 : y; };
+  const iso = (y, mo, d) => mo >= 1 && mo <= 12 && d >= 1 && d <= 31 ? y + '-' + String(mo).padStart(2, '0') + '-' + String(d).padStart(2, '0') : '';
+  m = s.match(/\b(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?\b/);
+  if (m && (m[3] || !/\d\s*\/\s*\d+\s*$/.test(s.trim()) || /\b(due|date)\b/i.test(s))) {   // "Quiz 17/20" is a score, not a date
+    let a = +m[1], b = +m[2], y = m[3] ? (+m[3] < 100 ? 2000 + +m[3] : +m[3]) : 0;
+    const dayFirst = /^(en-(gb|au|nz|ie|in|za)|es|fr|de|it|pt|nl)/i.test(navigator.language || '') || a > 12;
+    const [mo, d] = dayFirst ? [b, a] : [a, b];
+    return iso(y || yr(mo, d), mo, d);
+  }
+  const MON = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
+  m = s.match(/\b(\d{1,2})\s+([a-z]{3})[a-z]*\.?(?:\s+(\d{4}))?\b/i) || null;
+  if (m && MON.includes(m[2].toLowerCase())) { const mo = MON.indexOf(m[2].toLowerCase()) + 1, d = +m[1]; return iso(m[3] ? +m[3] : yr(mo, d), mo, d); }
+  m = s.match(/\b([a-z]{3})[a-z]*\.?\s+(\d{1,2})(?:,?\s+(\d{4}))?\b/i);
+  if (m && MON.includes(m[1].toLowerCase())) { const mo = MON.indexOf(m[1].toLowerCase()) + 1, d = +m[2]; return iso(m[3] ? +m[3] : yr(mo, d), mo, d); }
+  return '';
+}
+
+const BKI_SKIP = /(^|\b)(id|student\s*(id|no|number|#)|e-?mail|homeroom|advis[eo]r|section|period|gender|grade level|year level|dob|birth)(\b|$)|^#$|^no\.?$/i;
+const BKI_SUM = /(total|average|avg|overall|final grade|term grade|semester|quarter|grade to date|current grade|^grade$|^%$|percent)/i;
+const BKI_FIRST = /^(first|given|preferred)(\s*name)?$/i, BKI_LAST = /^(last|sur|family)(\s*name)?$|^surname$/i, BKI_NAME = /(name|student|pupil|learner)/i;
+const BKI_MAXROW = /^(points?\s*possible|possible|max(imum)?(\s*(points|score))?|out\s*of|total\s*points|pts\s*possible|worth)$/i, BKI_DUEROW = /^(due(\s*date)?|date(\s*due)?|assigned)$/i;
+const BKI_AVGROW = /^(class\s*)?(average|avg|mean|median|high|low|count)$/i;
+function bkiRead(rows) {
+  if (!rows.length) return null;
+  const w = Math.max(...rows.map(r => r.length));
+  rows = rows.map(r => { const x = r.slice(); while (x.length < w) x.push(''); return x; });
+  const isNum = s => { const c = bkiCell(s); return !!c && !c.bad; };
+  const hasHead = rows[0].filter(s => s && !isNum(s)).length >= Math.max(1, rows[0].filter(Boolean).length / 2);
+  const head = hasHead ? rows[0] : rows[0].map((_, i) => 'Column ' + (i + 1));
+  let body = hasHead ? rows.slice(1) : rows;
+  const textish = i => body.filter(r => r[i] && !isNum(r[i])).length;
+  let fi = head.findIndex(h => BKI_FIRST.test(h)), li = head.findIndex(h => BKI_LAST.test(h)), ni = -1;
+  if (fi < 0 || li < 0) { fi = li = -1; ni = head.findIndex((h, i) => BKI_NAME.test(h) && !BKI_SKIP.test(h) && textish(i) >= body.length / 2); }
+  if (fi < 0 && ni < 0) { let best = 0; head.forEach((h, i) => { const n = textish(i); if (n > best && !BKI_SKIP.test(h)) { best = n; ni = i; } }); }
+  if (fi < 0 && ni < 0) return { err: 'none' };
+  const nameOf = r => { let n = fi >= 0 ? (r[fi] + ' ' + r[li]).trim() : r[ni]; const m = n.match(/^([^,]+),\s*([^,]+)$/); return m ? m[2] + ' ' + m[1] : n; };   // "Testwell, Aria" is Aria Testwell
+  const nameCols = new Set([fi, li, ni].filter(i => i >= 0));
+  const maxRow = body.find(r => BKI_MAXROW.test(nameOf(r)) || BKI_MAXROW.test(r[0])), dueRow = body.find(r => BKI_DUEROW.test(nameOf(r)) || BKI_DUEROW.test(r[0]));
+  body = body.filter(r => r !== maxRow && r !== dueRow && !BKI_AVGROW.test(nameOf(r)) && nameOf(r));
+  const cols = [];
+  head.forEach((h, i) => {
+    if (nameCols.has(i) || BKI_SKIP.test(h)) return;
+    const cells = body.map(r => bkiCell(r[i])), filled = cells.filter(Boolean), good = filled.filter(c => !c.bad);
+    if (!good.length || good.length < filled.length / 2) return;
+    let max = null, how = '';
+    const mr = maxRow && bkiCell(maxRow[i]);
+    if (mr && mr.v > 0) { max = mr.v; how = 'row'; }
+    if (!max) { const ofs = good.filter(c => c.of).map(c => c.of); if (ofs.length) { max = ofs.sort((a, b) => ofs.filter(x => x === b).length - ofs.filter(x => x === a).length)[0]; how = 'cells'; } }
+    if (!max) { const m = h.match(/(?:\/\s*|out of\s*|\(\s*)(\d+(?:\.\d+)?)\s*(?:pts?|points?|marks?)?\s*\)?\s*$/i) || h.match(/\b(\d+(?:\.\d+)?)\s*(?:pts|points|marks)\b/i); if (m && +m[1] > 0) { max = +m[1]; how = 'head'; } }
+    const pcts = good.filter(c => c.pct != null).length, top = Math.max(0, ...good.filter(c => c.v != null).map(c => c.v));
+    let pct = false;
+    if (!max) { if (pcts >= good.filter(c => c.v != null).length || top > 20) { pct = true; how = pcts ? 'cells' : 'guess'; } else if (top > 0) { max = Math.ceil(top); how = 'guess'; } else { pct = true; how = 'guess'; } }
+    const name = h.replace(/\s*(?:\(\s*\d+(?:\.\d+)?\s*(?:pts?|points?|marks?)?\s*\)|\/\s*\d+(?:\.\d+)?|out of\s*\d+(?:\.\d+)?)\s*$/i, '').trim() || h;
+    const due = bkiDate(dueRow ? dueRow[i] : '') || bkiDate(h);
+    cols.push({ i, head: h, name, max, pct, how, due, on: !BKI_SUM.test(h), type: /\b(test|exam|essay|summative|project|final|unit\s*assessment|lab report)\b/i.test(h) ? 'sum' : 'ic',
+      bad: filled.length - good.length });
+  });
+  return { students: body.map(r => ({ name: nameOf(r), cells: r })), cols };
+}
+
+/* ---------- the screen ---------- */
+let bki = null;
+function bkImportView() {
+  const c = bkClass(); if (!c) return;
+  bki = { data: null, pick: {}, keep: true, unit: '', all: '' };
+  bkTabsOff();
+  $('#bkBody').innerHTML = '<div class="bkpad bkaddv bkiv" id="bkImp"><h3 class="bkh">Import scores from a spreadsheet · ' + esc(c.name) + '</h3>' +
+    '<p class="muted bkimeta">For work marked before you used this app: your old gradebook, one row per student and one column per assignment. Each column becomes a typed-in assignment. Nothing is saved until you check it and press Import, and nothing leaves this browser.</p>' +
+    '<div class="bkidrop" id="bkiDrop"><button class="btn primary" data-bkifile>Choose a file…</button><span class="muted">CSV, TSV or Excel (.xlsx). In Google Sheets: File, Download, CSV.</span><input type="file" id="bkiFile" accept=".csv,.tsv,.txt,.xlsx,text/csv,text/tab-separated-values,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" hidden></div>' +
+    '<textarea class="bkin bkpaste" id="bkiPaste" rows="3" placeholder="Or copy the cells in your spreadsheet, headings included, and paste them here."></textarea>' +
+    '<p class="bkierr" id="bkiErr" role="alert" hidden></p><div id="bkiOut"></div>' +
+    '<div class="bkfootbtns"><span class="muted" id="bkiCount"></span><span class="sp"></span><button class="btn" data-bkback>Cancel</button><button class="btn primary" data-bkisave disabled>Import</button></div></div>';
+}
+function bkiErr(msg) { const e = $('#bkiErr'); if (!e) return; e.hidden = !msg; e.textContent = msg || ''; }
+function bkiTake(rows) {
+  const r = bkiRead(rows || []);
+  if (!r || r.err) { bkiErr(r && r.err === 'none' ? 'There’s no column of student names in that. Keep the names in one column (or first and last names in two), with a heading row above.' : 'That looks empty.'); return; }
+  if (!r.cols.length) { bkiErr('No column of scores was found. Scores need to be numbers, percents, “17/20”, or Missing and Excused.'); return; }
+  bkiErr('');
+  const c = bkClass();
+  const keys = r.students.map(s => s.name), pairs = rosterPairs(c.names, keys);
+  r.match = new Map([...pairs].map(([n, k]) => [k, n]));
+  bki.data = r; bki.pick = {};
+  const ex = bkClassCols(c, bk.cols);
+  for (const col of r.cols) { const t = ex.find(x => x.it && x.type !== 'xc' && x.name.trim().toLowerCase() === col.name.trim().toLowerCase()); col.to = t ? t.it.id : ''; if (t && !col.due) col.due = t.due || ''; }
+  bkiDraw();
+}
+function bkiWho(s, i) { return Object.prototype.hasOwnProperty.call(bki.pick, i) ? bki.pick[i] : bki.data.match.get(s.name) || ''; }
+function bkiVal(cell, max) {
+  if (!cell || cell.bad) return null;
+  if (cell.st === 'missing' || cell.st === 'excused') return { v: null, st: cell.st };
+  let v;
+  if (cell.pct != null) v = max ? cell.pct / 100 * max : cell.pct;
+  else if (cell.of && cell.of !== max) v = max ? cell.v / cell.of * max : cell.v / cell.of * 100;
+  else v = cell.v;
+  return { v: Math.max(0, Math.round(v * 2) / 2), st: cell.st || '' };
+}
+function bkiFixed(col) {
+  if (!col.to) return undefined;
+  const t = findItem(col.to); if (t && t.it.typed) return t.it.typed.max || null;
+  const ex = bkClassCols(bkClass(), bk.cols).find(x => x.key === col.to), cell = ex && [...ex.cells.values()].find(x => !x.typed && x.max > 0);
+  return cell ? cell.max : undefined;
+}
+const bkiMax = col => { const f = bkiFixed(col); return f !== undefined ? f : col.pct ? null : col.max; };
+const bkiSame = (a, b) => (a.st || '') === (b.st || '') && (a.v == null ? null : +a.v) === (b.v == null ? null : +b.v);
+function bkiPlan() {
+  const d = bki.data, out = [];
+  for (const col of d.cols) {
+    if (!col.on) continue;
+    const max = bkiMax(col), t = col.to ? findItem(col.to) : null, old = (t && t.it.typed && t.it.typed.s) || {}, s = {}, clash = [];
+    const exCol = col.to ? bkClassCols(bkClass(), bk.cols).find(x => x.key === col.to) : null;
+    let papers = 0;
+    d.students.forEach((st, i) => {
+      const who = bkiWho(st, i); if (!who) return;
+      const v = bkiVal(bkiCell(st.cells[col.i]), max); if (!v) return;
+      const gc = exCol && exCol.cells.get(who);
+      if (gc && !gc.typed && (gc.pct != null || gc.st)) { papers++; return; }   // a graded paper's score always wins; it's changed in that paper
+      if (old[who] && (old[who].v != null || old[who].st) && !bkiSame(old[who], v)) clash.push({ who, was: old[who], now: v });
+      s[who] = col.type === 'fm' ? { ...v, fb: true } : v;
+    });
+    out.push({ col, max, t, s, old, clash, papers });
+  }
+  return out;
+}
+const bkiShow = (r, max) => r.st === 'missing' || r.st === 'excused' ? r.st : r.v == null ? '–' : fmtNum(r.v) + (max ? '/' + fmtNum(max) : '%') + (r.st === 'late' ? ' late' : '');
+function bkiDraw() {
+  const c = bkClass(), d = bki.data, out = $('#bkiOut'); if (!out || !d) return;
+  $('#bkiDrop').hidden = $('#bkiPaste').hidden = true;
+  const units = c.units, plan = bkiPlan(), clashes = plan.reduce((a, p) => a + p.clash.length, 0);
+  const matched = d.students.map((s, i) => bkiWho(s, i)).filter(Boolean), unmatched = d.students.map((s, i) => [s, i]).filter(([s, i]) => !bkiWho(s, i));
+  const taken = new Set(matched), absent = c.names.filter(n => !taken.has(n));
+  const typeSel = col => '<select class="btn sm" data-bkitype="' + col.i + '" aria-label="Type">' + BK_TYPES.map(([t, , s]) => '<option value="' + t + '"' + (col.type === t ? ' selected' : '') + '>' + s + '</option>').join('') + '</select>';
+  const scale = col => {
+    const f = bkiFixed(col);
+    if (f !== undefined) return '<span class="muted">' + (f ? 'Points out of ' + fmtNum(f) : 'Percent') + ', as it is now</span>';
+    return '<select class="btn sm" data-bkimode="' + col.i + '" aria-label="Scored as"><option value="pts"' + (col.pct ? '' : ' selected') + '>Points out of</option><option value="pct"' + (col.pct ? ' selected' : '') + '>Percent</option></select>' +
+      (col.pct ? '' : ' <input type="number" class="bkin bksc" min="0.5" step="0.5" data-bkimax="' + col.i + '" value="' + esc(col.max || '') + '" aria-label="Out of">') + (col.how === 'guess' ? ' <span class="stag" title="Nothing in the file said what it’s out of, so this is a guess from the scores">check</span>' : '');
+  };
+  const found = col => { const cs = d.students.map(s => bkiCell(s.cells[col.i])).filter(Boolean), n = cs.filter(x => x.v != null || x.pct != null).length, m = cs.filter(x => x.st === 'missing').length, e = cs.filter(x => x.st === 'excused').length;
+    return [people(n, 'score'), m ? m + ' missing' : '', e ? e + ' excused' : '', col.bad ? col.bad + ' not read' : ''].filter(Boolean).join(', '); };
+  const goes = col => { if (!col.to) return '<span class="muted">New assignment</span>'; const t = findItem(col.to); return '<span class="bkito">Adds to “' + esc(t ? t.it.name : col.name) + '”</span> <button class="link" data-bkinew="' + col.i + '">make it a new one</button>'; };
+  const n = d.cols.filter(x => x.on).length;
+  out.innerHTML = '<p class="bkisum">Found <b>' + people(d.cols.length, 'assignment') + '</b> and <b>' + people(d.students.length, 'student') + '</b>. ' + matched.length + ' of them match your roster.' + ' <button class="link" data-bkiagain>Use another file</button></p>' +
+    '<h4 class="ovh3">Assignments</h4><div class="bkiwrap"><table class="ptab bkitab"><thead><tr><th><span class="sr">Import</span></th><th>Assignment</th><th>Type</th><th>Due</th><th>Scored as</th><th>In the file</th><th>Goes to</th></tr></thead><tbody>' +
+    d.cols.map(col => '<tr class="' + (col.on ? '' : 'bkioff') + '"><td><input type="checkbox" data-bkion="' + col.i + '"' + (col.on ? ' checked' : '') + ' aria-label="' + esc('Import ' + col.name) + '"></td>' +
+      '<td><input type="text" class="bkin bkiname" data-bkiname="' + col.i + '" value="' + esc(col.name) + '" aria-label="Assignment name"' + (col.to ? ' disabled' : '') + '>' + (BKI_SUM.test(col.head) && !col.on ? '<small class="muted bkiwhy">Looks like a total, so it’s left out</small>' : '') + '</td>' +
+      '<td>' + typeSel(col) + '</td><td><input type="date" class="bkin" data-bkidue="' + col.i + '" value="' + esc(col.due) + '" aria-label="Due"></td><td class="bkiscale">' + scale(col) + '</td><td class="muted">' + found(col) + '</td><td>' + goes(col) + '</td></tr>').join('') + '</tbody></table></div>' +
+    '<div class="bkirow"><label class="bkpf">Date for every assignment without one<span class="bkiinl"><input type="date" class="bkin" id="bkiAll" value="' + esc(bki.all) + '"><button class="btn sm" data-bkiall>Use it</button></span></label>' +
+    '<label class="bkpf">New assignments go in<select class="btn sm" id="bkiUnit">' + units.map(u => '<option value="' + u.id + '"' + (bki.unit === u.id ? ' selected' : '') + '>' + esc(u.name) + '</option>').join('') + '<option value=""' + (bki.unit ? '' : ' selected') + '>A new unit: Imported</option></select></label></div>' +
+    (d.cols.some(x => x.on && !x.due) ? '<p class="muted bkhint">An assignment with no date counts in no term until it has one. Set it here, or later from its column in the gradebook.</p>' : '') +
+    '<h4 class="ovh3">Students</h4>' +
+    (unmatched.length ? '<p class="bkhint">' + (unmatched.length === 1 ? 'This row doesn’t' : 'These rows don’t') + ' match anyone on your roster. Pick the student, or leave the row out.</p><table class="ptab bkitab bkiwho"><tbody>' +
+      unmatched.map(([s, i]) => '<tr><td>' + esc(s.name) + '</td><td><select class="btn sm" data-bkipick="' + i + '" aria-label="' + esc('Roster student for ' + s.name) + '"><option value="">Leave this row out</option>' + absent.map(nm => '<option value="' + esc(nm) + '">' + esc(nm) + '</option>').join('') + '</select></td></tr>').join('') + '</tbody></table>' : '<p class="bkhint">Every row matches a student on your roster.</p>') +
+    (absent.length ? '<p class="muted bkhint">Not in the file, so nothing changes for them: ' + esc(absent.join(', ')) + '.</p>' : '') +
+    (matched.length ? '<details class="bkidet"><summary>' + people(matched.length, 'row') + ' matched</summary><ul>' + d.students.map((s, i) => [s.name, bkiWho(s, i)]).filter(x => x[1]).map(([f, r]) => '<li>' + esc(f) + (f === r ? '' : ' → ' + esc(r)) + '</li>').join('') + '</ul></details>' : '') +
+    (clashes ? '<div class="bknote bkiclash" id="bkiClash"><div><b>' + (clashes === 1 ? '1 score is' : clashes + ' scores are') + ' already in the gradebook and ' + (clashes === 1 ? 'differs' : 'differ') + ' from the file.</b> Which should stay?</div><div class="pseg" role="group">' +
+      [['keep', 'Keep what’s there'], ['file', 'Use the file’s scores']].map(([v, l]) => '<button data-bkikeep="' + v + '" aria-pressed="' + ((v === 'keep') === bki.keep) + '">' + l + '</button>').join('') + '</div>' +
+      '<details class="bkidet"><summary>See them</summary><ul>' + plan.flatMap(p => p.clash.map(x => '<li>' + esc(p.col.name) + ', ' + esc(x.who) + ': ' + esc(bkiShow(x.was, p.max)) + ' now, ' + esc(bkiShow(x.now, p.max)) + ' in the file</li>')).join('') + '</ul></details></div>' : '') +
+    (plan.some(p => p.papers) ? '<p class="muted bkhint">' + people(plan.reduce((a, p) => a + p.papers, 0), 'score') + ' already come from graded papers. Those stay as they are; change them in the paper.</p>' : '');
+  const sv = $('[data-bkisave]'); sv.disabled = !n || !matched.length; sv.textContent = n ? 'Import ' + people(n, 'assignment') : 'Import';
+  $('#bkiCount').textContent = n ? people(plan.reduce((a, p) => a + Object.keys(p.s).length, 0), 'score') + ' for ' + people(matched.length, 'student') : '';
+}
+function bkiSave() {
+  const c = bkClass(), plan = bkiPlan(); if (!plan.length) return false;
+  const bad = plan.find(p => bkiFixed(p.col) === undefined && !p.col.pct && !(p.col.max > 0));
+  if (bad) { toast('Say what “' + bad.col.name + '” is out of.'); return false; }
+  let u = null, first = null;
+  for (const p of plan) {
+    const col = p.col, name = col.name.trim() || col.head;
+    let it;
+    if (p.t) {
+      it = p.t.it;
+      const s = { ...p.old };
+      for (const [who, v] of Object.entries(p.s)) { const was = p.old[who]; if (!bki.keep || !was || (was.v == null && !was.st) || bkiSame(was, v)) s[who] = v; }
+      it.typed = { max: p.max, s };
+      if (!it.type) it.type = col.type;
+      if (!it.due && col.due) it.due = col.due;
+    } else {
+      if (!u) { u = c.units.find(x => x.id === bki.unit); if (!u) c.units.push(u = { id: uid(), name: 'Imported', items: [] }); }
+      u.items.push(it = { id: uid(), name, classId: c.id, type: col.type, due: col.due, typed: { max: p.max, s: p.s } });
+    }
+    const bc = bk.cols.find(x => x.key === it.id);
+    if (bc) Object.assign(bc, { typed: it.typed, type: it.type, due: it.due || bc.due });
+    else bk.cols.push({ key: it.id, it, cls: c.id, name: it.name, type: it.type, due: it.due || '', term: it.term || '', typed: it.typed, xcTo: '' });
+    if (!first) first = it;
+  }
+  bkSaveLib(); if (!batch) renderLib();
+  bk.term = bkTermOf({ due: first.due || '', term: first.term || '' }, bkConf().terms); bk.hi = first.id;
+  toast('Imported ' + people(plan.length, 'assignment') + '. Click a column’s name to change its type, date or term.');
+  return true;
+}
+async function bkiFile(f) {
+  if (!f) return;
+  try {
+    const buf = new Uint8Array(await f.arrayBuffer());
+    if (buf[0] === 0x50 && buf[1] === 0x4b) { let rows; try { rows = bkiXlsx(buf); } catch { return bkiErr('That Excel file couldn’t be read. Save it as CSV and choose that.'); } return bkiTake(rows); }
+    if (buf[0] === 0xd0 && buf[1] === 0xcf) return bkiErr('That is an old Excel file (.xls). Save it as .xlsx or CSV and choose that.');
+    bkiTake(bkiParse(new TextDecoder().decode(buf)));
+  } catch (e) { console.error(e); bkiErr('That file couldn’t be read.'); }
+}
+
+/* ---------- clicks: its own, on the same hosts as the gradebook's ---------- */
+const bkiCol = i => bki && bki.data && bki.data.cols.find(x => x.i === +i);
+function bkiClick(e) {
+  if (!bkHere(e)) return;
+  const b = e.target.closest('button'); if (!b) return;
+  const d = b.dataset;
+  if (d.bkimport != null) return bkImportView();
+  if (!bki || !$('#bkImp')) return;
+  if (d.bkifile != null) return $('#bkiFile').click();
+  if (d.bkiagain != null) return bkImportView();
+  if (d.bkinew != null) { const col = bkiCol(d.bkinew); col.to = ''; col.name = col.name + ' (imported)'; return bkiDraw(); }
+  if (d.bkiall != null) { const v = $('#bkiAll').value; bki.all = v; if (v) for (const col of bki.data.cols) if (!col.due) col.due = v; return bkiDraw(); }
+  if (d.bkikeep) { bki.keep = d.bkikeep === 'keep'; for (const x of document.querySelectorAll('[data-bkikeep]')) x.setAttribute('aria-pressed', String(x === b)); return; }
+  if (d.bkisave != null) { if (bkiSave()) { bki = null; bkAdd = null; bkDraw(); } }
+}
+function bkiChange(e) {
+  if (!bkHere(e) || !bki) return;
+  const t = e.target, d = t.dataset;
+  if (t.id === 'bkiFile') { bkiFile(t.files && t.files[0]); t.value = ''; return; }
+  if (!bki.data) return;
+  if (d.bkion != null) { bkiCol(d.bkion).on = t.checked; return bkiDraw(); }
+  if (d.bkitype != null) { bkiCol(d.bkitype).type = t.value; return bkiDraw(); }
+  if (d.bkidue != null) { bkiCol(d.bkidue).due = t.value; return; }
+  if (d.bkimode != null) { const col = bkiCol(d.bkimode); col.pct = t.value === 'pct'; if (!col.pct && !col.max) col.max = 20; col.how = ''; return bkiDraw(); }
+  if (d.bkimax != null) { const col = bkiCol(d.bkimax); col.max = Math.max(0.5, Math.round(+t.value * 2) / 2) || null; col.how = ''; return bkiDraw(); }
+  if (d.bkiname != null) { bkiCol(d.bkiname).name = t.value; return; }
+  if (d.bkipick != null) { bki.pick[d.bkipick] = t.value; return bkiDraw(); }
+  if (t.id === 'bkiUnit') { bki.unit = t.value; return; }
+}
+function bkiPasted(e) {
+  if (!bkHere(e) || e.target.id !== 'bkiPaste' || !bki) return;
+  e.preventDefault(); e.stopPropagation();
+  bkiTake(bkiParse((e.clipboardData || window.clipboardData).getData('text')));
+}
+for (const host of [$('#dlgBox'), $('#vClass')]) { host.addEventListener('click', bkiClick); host.addEventListener('change', bkiChange); host.addEventListener('paste', bkiPasted); }
+Object.assign(window.__gs, { bkiParse, bkiRead, bkiCell, bkiDate });
 
 /* ---------------- bringing files in: what a file really is, why one won't open and what to do next, late work, the opening report ---------------- */
 function realType(d) {
@@ -21978,7 +22321,7 @@ $('#setHistory').addEventListener('click', e => {
 });
 
 /* updates she controls, and installing as an app */
-const WHATS_NEW = {"1.23.0":["Scores by learning goal, if you want them. Keep your own list of goals (a skill, or a standard from your school) in Settings, Grading, or add one wherever you tag.","Tag rubric rows in Rubric setup and quiz questions in Quiz boxes. An assignment scored with just a total can carry one goal for the whole score.","Each class page gets a Goals tab: the class average on each goal with the lowest first, every student by every goal, and where each number came from. A student's own page shows their goals beside the class average.","Nothing changes until you add a first goal, and tagging never changes a score or a grade."],"1.22.0":["Progress sheets for parent meetings: one printed page per student with the term grade, every score, a chart of how they moved, missing work, each term's grade, the report comment and lines for notes. Find it on a class's Students list, or Progress sheet on one student's page.","Choose the term and tick what goes on it; Print opens the print window, where you can pick a printer or Save as PDF. It is made on your computer and nothing is sent anywhere."],"1.21.0":["Each class has a Missing work tab: every paper you marked Missing, by student or by assignment, for the term you pick.","Email reminder opens an email in your own mail app, addressed to the student and listing what they owe, for you to read and send. Email all writes one email to everyone who owes an assignment, with the addresses in Bcc. Grading Studio sends nothing itself.","Each reminder you open is noted beside the work, and Email wording… changes what every reminder says."],"1.20.0":["The app can speak Traditional Chinese (繁體中文). Choose it in Settings, Display, App language, or at the top of the welcome.","Like Spanish, it covers the first screens so far: the sidebar, Today, the welcome, Find anything, Help, and the feedback page students get with a returned paper. The other screens are still in English."],"1.19.0":["The app can speak Spanish. Choose it in Settings, Display, App language, or at the top of the welcome.","Spanish covers the first screens so far: the sidebar, Today, the welcome, Find anything, Help, and the feedback page students get with a returned paper. The other screens are still in English.","Names you typed (classes, students, assignments, rubric rows) are never translated."],"1.18.0":["On a tablet, a pencil draws and the pen's line is wider where you press harder. Once you have used a pencil, one finger moves the page, two fingers pinch to zoom, and a hand resting on the screen does nothing.","Settings, Marking has a new Tablet and pencil section: choose what a finger does on the paper, or turn off the wider line.","On a touch screen the tools, the student rows and the score buttons are larger."],"1.17.0":["Report comments: a new tab on each class's page drafts a comment for every student from your own gradebook, rubric scores and the comments you wrote on their papers. Edit each one, tick it done, then copy or download them all.","The drafts are put together on your computer from sentences you can change under Wording. Nothing about a student is sent anywhere."],"1.16.0":["Help is in the sidebar: short answers to the questions teachers ask most, from opening a set of papers to moving your work to another computer.","Find anything answers questions too. Type a few words, like “late paper” or “backup”, and the answer is in the list."],"1.15.0":["A picture dragged onto a slide that has text now sits beside the text, in a new Text + picture layout.","Drag several pictures in at once and each gets its own slide. Let a picture go on any slide in the list on the left to put it there.","New Full picture layout: the picture fills the whole slide."],"1.14.0":["Extra credit: points or a percent on one paper, and extra credit entries in the gradebook that add to the term grade or the in-class average.","The gradebook shows each type's average (summative, in-class) right beside the term grade, kept in view as you scroll. Averages only shows just those columns, and Whole year splits each term the same way.","Leave out… lets you untick students to see the class averages without them. Their own grades don't change, and nothing is saved."],"1.13.0":["Present a lesson from the Planner, or from Today when its class is on now or next: its slides fill the screen, and the arrow keys or a clicker move through them.","While presenting, A shows the agenda to tick off, T starts a timer the class can see, N shows your notes and B blanks the screen.","The bar shows how many minutes the class has left, from your timetable.","After a lesson is taught, one line says where the class got to. It shows on the lesson and on the week, and presenting again picks up there."],"1.12.0":["A returned paper starts with a feedback page: the score, each rubric row with the level given and what that level means, your comment, and every comment on the paper with its page number.","It is on unless you turn it off under Options on the Return tab. Your own pages are not changed, and bringing an export back in opens only those."],"1.11.0":["The Planner’s sections are in the sidebar: Calendar, Units, Past lessons, Activities and Rubrics. The row of tabs across the top is gone.","A lesson has a lighter top: its name, its classes, its status and Download. Copy for Claude, Versions, the upload and the links are under More.","Comments shows above a lesson once it has one."],"1.7.0":["Home is now Today: the classes you teach today with the lesson planned for each, the papers waiting to be marked, and the papers ready to hand back.","What the class needs next: after a set of papers is scored, Today shows the weakest rubric row and how many students to sit down with.","A class page is quieter. Click anywhere on an assignment’s row to open it; the only blue button is the one that adds an assignment.","Forget, and the other ways to open papers, moved into the ⋯ menu on each row."],"1.6.0":["A new browser opens on three questions (your classes, how you grade, where work is kept) and starts with nothing of anyone else’s in it.","A sample class of made-up students, with papers to mark, for trying things out. Remove it from Home when you’re done.","The app uses the name of your own school system. Choose it, and how you usually grade, in Settings.","Letter grades or IB 1 to 7 can show beside the percent, with boundaries you set.","Canvas and Moodle downloads are grouped by student. The Planner works without a setup file, and downloads lessons as PowerPoint with a plain built-in template."],"1.5.0":["The sidebar says “Not backed up”, in amber, until a folder holds a second copy of your work. Home asks for that folder once.","Go back in time, in Settings: any assignment as it was on an earlier day, restored on its own, with Undo.","Grading Studio can be installed as an app, and it opens with no internet.","A newer version now waits until you click Update now, so nothing changes in the middle of marking."]};
+const WHATS_NEW = {"1.24.0":["The gradebook can import your old scores: press Import… and choose a CSV or Excel file, or paste the cells. Each column becomes an assignment, matched to your roster.","You see everything before it is saved, and a score already in the gradebook stays unless you choose the file’s."],"1.23.0":["Scores by learning goal, if you want them. Keep your own list of goals (a skill, or a standard from your school) in Settings, Grading, or add one wherever you tag.","Tag rubric rows in Rubric setup and quiz questions in Quiz boxes. An assignment scored with just a total can carry one goal for the whole score.","Each class page gets a Goals tab: the class average on each goal with the lowest first, every student by every goal, and where each number came from. A student's own page shows their goals beside the class average.","Nothing changes until you add a first goal, and tagging never changes a score or a grade."],"1.22.0":["Progress sheets for parent meetings: one printed page per student with the term grade, every score, a chart of how they moved, missing work, each term's grade, the report comment and lines for notes. Find it on a class's Students list, or Progress sheet on one student's page.","Choose the term and tick what goes on it; Print opens the print window, where you can pick a printer or Save as PDF. It is made on your computer and nothing is sent anywhere."],"1.21.0":["Each class has a Missing work tab: every paper you marked Missing, by student or by assignment, for the term you pick.","Email reminder opens an email in your own mail app, addressed to the student and listing what they owe, for you to read and send. Email all writes one email to everyone who owes an assignment, with the addresses in Bcc. Grading Studio sends nothing itself.","Each reminder you open is noted beside the work, and Email wording… changes what every reminder says."],"1.20.0":["The app can speak Traditional Chinese (繁體中文). Choose it in Settings, Display, App language, or at the top of the welcome.","Like Spanish, it covers the first screens so far: the sidebar, Today, the welcome, Find anything, Help, and the feedback page students get with a returned paper. The other screens are still in English."],"1.19.0":["The app can speak Spanish. Choose it in Settings, Display, App language, or at the top of the welcome.","Spanish covers the first screens so far: the sidebar, Today, the welcome, Find anything, Help, and the feedback page students get with a returned paper. The other screens are still in English.","Names you typed (classes, students, assignments, rubric rows) are never translated."],"1.18.0":["On a tablet, a pencil draws and the pen's line is wider where you press harder. Once you have used a pencil, one finger moves the page, two fingers pinch to zoom, and a hand resting on the screen does nothing.","Settings, Marking has a new Tablet and pencil section: choose what a finger does on the paper, or turn off the wider line.","On a touch screen the tools, the student rows and the score buttons are larger."],"1.17.0":["Report comments: a new tab on each class's page drafts a comment for every student from your own gradebook, rubric scores and the comments you wrote on their papers. Edit each one, tick it done, then copy or download them all.","The drafts are put together on your computer from sentences you can change under Wording. Nothing about a student is sent anywhere."],"1.16.0":["Help is in the sidebar: short answers to the questions teachers ask most, from opening a set of papers to moving your work to another computer.","Find anything answers questions too. Type a few words, like “late paper” or “backup”, and the answer is in the list."],"1.15.0":["A picture dragged onto a slide that has text now sits beside the text, in a new Text + picture layout.","Drag several pictures in at once and each gets its own slide. Let a picture go on any slide in the list on the left to put it there.","New Full picture layout: the picture fills the whole slide."],"1.14.0":["Extra credit: points or a percent on one paper, and extra credit entries in the gradebook that add to the term grade or the in-class average.","The gradebook shows each type's average (summative, in-class) right beside the term grade, kept in view as you scroll. Averages only shows just those columns, and Whole year splits each term the same way.","Leave out… lets you untick students to see the class averages without them. Their own grades don't change, and nothing is saved."],"1.13.0":["Present a lesson from the Planner, or from Today when its class is on now or next: its slides fill the screen, and the arrow keys or a clicker move through them.","While presenting, A shows the agenda to tick off, T starts a timer the class can see, N shows your notes and B blanks the screen.","The bar shows how many minutes the class has left, from your timetable.","After a lesson is taught, one line says where the class got to. It shows on the lesson and on the week, and presenting again picks up there."],"1.12.0":["A returned paper starts with a feedback page: the score, each rubric row with the level given and what that level means, your comment, and every comment on the paper with its page number.","It is on unless you turn it off under Options on the Return tab. Your own pages are not changed, and bringing an export back in opens only those."],"1.11.0":["The Planner’s sections are in the sidebar: Calendar, Units, Past lessons, Activities and Rubrics. The row of tabs across the top is gone.","A lesson has a lighter top: its name, its classes, its status and Download. Copy for Claude, Versions, the upload and the links are under More.","Comments shows above a lesson once it has one."],"1.7.0":["Home is now Today: the classes you teach today with the lesson planned for each, the papers waiting to be marked, and the papers ready to hand back.","What the class needs next: after a set of papers is scored, Today shows the weakest rubric row and how many students to sit down with.","A class page is quieter. Click anywhere on an assignment’s row to open it; the only blue button is the one that adds an assignment.","Forget, and the other ways to open papers, moved into the ⋯ menu on each row."],"1.6.0":["A new browser opens on three questions (your classes, how you grade, where work is kept) and starts with nothing of anyone else’s in it.","A sample class of made-up students, with papers to mark, for trying things out. Remove it from Home when you’re done.","The app uses the name of your own school system. Choose it, and how you usually grade, in Settings.","Letter grades or IB 1 to 7 can show beside the percent, with boundaries you set.","Canvas and Moodle downloads are grouped by student. The Planner works without a setup file, and downloads lessons as PowerPoint with a plain built-in template."],"1.5.0":["The sidebar says “Not backed up”, in amber, until a folder holds a second copy of your work. Home asks for that folder once.","Go back in time, in Settings: any assignment as it was on an earlier day, restored on its own, with Undo.","Grading Studio can be installed as an app, and it opens with no internet.","A newer version now waits until you click Update now, so nothing changes in the middle of marking."]};
 const upd = { on: false, st: null, mine: '', checking: false, said: '', install: null, installed: false, err: '' };
 const updCan = () => 'serviceWorker' in navigator && (location.protocol === 'https:' || /[?&]sw=1(&|$)/.test(location.search)) && !/Grading Studio\.html$/i.test(decodeURIComponent(location.pathname));
 const updSend = async msg => { const reg = await navigator.serviceWorker.ready; if (reg.active) reg.active.postMessage(msg); };

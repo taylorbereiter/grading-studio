@@ -1,14 +1,12 @@
 {
- "version": "1.23.0",
- "build": "4e4c99726647",
+ "version": "1.24.0",
+ "build": "a25e1c23266d",
  "notes": [
-  "Scores by learning goal, if you want them. Keep your own list of goals (a skill, or a standard from your school) in Settings, Grading, or add one wherever you tag.",
-  "Tag rubric rows in Rubric setup and quiz questions in Quiz boxes. An assignment scored with just a total can carry one goal for the whole score.",
-  "Each class page gets a Goals tab: the class average on each goal with the lowest first, every student by every goal, and where each number came from. A student's own page shows their goals beside the class average.",
-  "Nothing changes until you add a first goal, and tagging never changes a score or a grade."
+  "The gradebook can import your old scores: press Import… and choose a CSV or Excel file, or paste the cells. Each column becomes an assignment, matched to your roster.",
+  "You see everything before it is saved, and a score already in the gradebook stays unless you choose the file’s."
  ],
  "files": {
-  "index.html": "6b3e4ee42570376f499de62f6106c09c3e929e00ad84af4a7f9bcb5e8dfc2875",
-  "planner.html": "7efb8ea232bdea2919015957726cb982bd14fe2ebcc444da82b43a00c25115d9"
+  "index.html": "9fd5be5c43d723c6f2e69cd0b3fcbefcbeadf404dd72b0d56734664c248a54a3",
+  "planner.html": "4e7797a5df934904a57526f57eea0af1a4b02db7998e0ea4abf49a7558b7d0bc"
  }
 }
