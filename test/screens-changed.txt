@@ -1,12 +1,6 @@
-# Stage 5, teach from it. A lesson's top bar has Present (the one blue button; Download is plain), and a lesson whose day
-# has come has a Taught box under its comments. planner-present is new: a lesson being presented, with the agenda open.
-# Today's lesson has a play button on its card in the week (planner-week, planner-semester, planner-find).
-# The version line reads 1.13.0 on Home (home, home-find), in Settings and in the Keys box.
+# Stage 5, teach from it (part 2). The hint under a lesson's slide says where a picture can be dragged (planner-lesson).
+# The version line reads 1.14.0 on Home (home, home-find), in Settings and in the Keys box.
 planner-lesson
-planner-present
-planner-week
-planner-semester
-planner-find
 home
 home-find
 settings-*

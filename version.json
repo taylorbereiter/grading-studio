@@ -1,14 +1,13 @@
 {
- "version": "1.13.0",
- "build": "124fac7259e0",
+ "version": "1.14.0",
+ "build": "925de34d47dc",
  "notes": [
-  "Present a lesson from the Planner, or from Today when its class is on now or next: its slides fill the screen, and the arrow keys or a clicker move through them.",
-  "While presenting, A shows the agenda to tick off, T starts a timer the class can see, N shows your notes and B blanks the screen.",
-  "The bar shows how many minutes the class has left, from your timetable.",
-  "After a lesson is taught, one line says where the class got to. It shows on the lesson and on the week, and presenting again picks up there."
+  "A picture dragged onto a slide that has text now sits beside the text, in a new Text + picture layout.",
+  "Drag several pictures in at once and each gets its own slide. Let a picture go on any slide in the list on the left to put it there.",
+  "New Full picture layout: the picture fills the whole slide."
  ],
  "files": {
-  "index.html": "a743afa685f5eac55d3295facd87ab2b862a2a956c9763ee251847af2c769735",
-  "planner.html": "4339c23682d44200fdf0f42c441cd986aff33eaf4e9d9f7fa3ed84e5ad66e0f6"
+  "index.html": "2b03e90cdd4beeaadd75e631bfa831b204fec1547aedd5dd8a37d88be365ae1e",
+  "planner.html": "ee6523fea6477ea7e17f30930fba4cd04b7725c047876297103b8b110b3f97f4"
  }
 }

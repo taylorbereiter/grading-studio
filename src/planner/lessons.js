@@ -7,7 +7,7 @@ const L = { db: null, lessons: [], units: [], setup: null, view: 'semester', wee
 const LDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const LDAYS_LONG = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 const LMONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-const LAYOUTS = { title: 'Title', agenda: 'Agenda', objectives: 'Objectives', warmup: 'Warm-up', exit: 'Exit ticket', steps: 'Directions with steps', discuss: 'Discussion question', content: 'Title and text', twocol: 'Two columns', text: 'Plain text', passage: 'Passage', vocab: 'Vocabulary', picture: 'Picture', picprompt: 'Picture + questions', video: 'Video' };
+const LAYOUTS = { title: 'Title', agenda: 'Agenda', objectives: 'Objectives', warmup: 'Warm-up', exit: 'Exit ticket', steps: 'Directions with steps', discuss: 'Discussion question', content: 'Title and text', twocol: 'Two columns', text: 'Plain text', passage: 'Passage', vocab: 'Vocabulary', picture: 'Picture', fullpic: 'Full picture', textpic: 'Text + picture', picprompt: 'Picture + questions', video: 'Video' };
 const SIZES = [28, 30, 32, 34, 36];   // slide text stays between 28 and 36 pt, big enough to read from the back of the room
 const lid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
 
@@ -219,6 +219,12 @@ function slideInner(s, lesson, edit, look) {
     h += '<div class="ls-sub' + (edit ? ' ls-ed' : '') + '" data-k="body"' + (edit ? ' tabindex="0"' : '') + '>' + sub.split('\n').map(esc).join('<br>') + '</div>';
     return h;
   }
+  if (s.layout === 'fullpic') {   // the picture is the whole slide; the slide's name is kept for the list of slides, not shown
+    const F = FULLPIC;
+    h += '<div class="ls-pic ls-full' + (edit ? ' ls-ed' : '') + '" data-k="img" style="left:' + F.x + 'px;top:' + F.y + 'px;width:' + F.w + 'px;height:' + F.h + 'px">' + (s.img ? '<img src="' + esc(imgSrc(s.img.src)) + '" alt="">' : edit ? '<span class="ls-ph">Click to add a picture, or drag one in</span>' : '') + '</div>';
+    h += '<div class="ls-src ls-fullsrc' + (edit ? ' ls-ed' : '') + '" data-k="source"' + (edit ? ' tabindex="0"' : '') + '>' + (s.img && s.img.source ? esc(s.img.source) : edit && s.img ? '<span class="ls-ph">Add the source line for this picture</span>' : '') + '</div>';
+    return h;
+  }
   h += ed('title', 'ls-t', s.title, TITLE_PH[s.layout] || 'Click to add a title') + '<div class="ls-rule"></div>';
   if (isTeach(s)) return h + teachHtml(s, edit, look);
   if (s.layout === 'video') {
@@ -390,15 +396,15 @@ function renderEditor() {
   h += '<section class="ls-main"><div class="ls-tools">' +
     '<button class="btn sm" data-a="layout" title="Pick a layout for this slide">Layout: ' + esc(LAYOUTS[s.layout]) + ' ▾</button>' +
     '<button class="btn sm" data-a="look" title="Colors and background for this lesson">Look: ' + esc(LOOKS[lookOf(l)].name) + '</button>' + rtToolHtml() +
-    (s.layout !== 'title' && s.layout !== 'picture' && s.layout !== 'video' ? '<label>Text <select data-f="size" class="btn sm">' + SIZES.map(z => '<option value="' + z + '"' + (z === s.size ? ' selected' : '') + '>' + z + ' pt</option>').join('') + '</select></label>' : '') +
-    (s.layout === 'picture' || s.layout === 'picprompt' ? '<button class="btn sm" data-a="pic">' + (s.img ? 'Change picture' : 'Add picture') + '</button>' : '') +
+    (s.layout !== 'title' && s.layout !== 'picture' && s.layout !== 'fullpic' && s.layout !== 'video' ? '<label>Text <select data-f="size" class="btn sm">' + SIZES.map(z => '<option value="' + z + '"' + (z === s.size ? ' selected' : '') + '>' + z + ' pt</option>').join('') + '</select></label>' : '') +
+    (hasPic(s) ? '<button class="btn sm" data-a="pic">' + (s.img ? 'Change picture' : 'Add picture') + '</button>' : '') +
     (s.layout === 'video' ? '<button class="btn sm" data-a="vid">' + (s.video ? 'Change video' : 'Add video link') + '</button>' + (s.video ? '<a class="btn sm ghost" href="' + esc(videoLink(s.video)) + '" target="_blank" rel="noopener">Watch</a>' : '') : '') +
     '<span class="sp"></span><button class="btn sm ghost" data-a="up" title="Move earlier">↑</button><button class="btn sm ghost" data-a="down" title="Move later">↓</button><button class="btn sm ghost" data-a="dup">Duplicate</button><button class="btn sm ghost" data-a="del">Delete slide</button></div>' +
     '<div class="ls-stagewrap" id="lsWrap"><div class="ls-stage" id="lsStage"><div class="ls-slide">' + slideHtml(s, l, true) + '</div></div></div>' +
     '<div class="ls-warn" id="lsWarn" hidden></div>' +
     '<label class="ls-notes">Speaker notes<textarea data-f="notes" rows="3" placeholder="Notes for you, not shown on the slide">' + esc(s.notes) + '</textarea></label>' +
     slideTalkHtml(s) + lessonTalkHtml(l) + taughtHtml(l) + finishedHtml(l) + materialsHtml(l, 'lesson') +
-    '<p class="muted ls-hint">Click any text on the slide to edit it. In bullets, start a line with Tab for a smaller point under the one above. Arrow keys move between slides when you’re not typing. Drag a picture in from another tab, or paste a picture or a YouTube link.</p>' +
+    '<p class="muted ls-hint">Click any text on the slide to edit it. In bullets, start a line with Tab for a smaller point under the one above. Arrow keys move between slides when you’re not typing. Drag a picture in from another tab or from your computer, onto the slide or onto any slide in the list, or paste a picture or a YouTube link. A picture on a slide that has text goes beside the text.</p>' +
     '</section></div><input type="file" id="lsPicIn" accept="image/*" hidden>';
   $('#lessons').innerHTML = h;
   fitStage(); checkFit(); panelContext();
@@ -618,6 +624,10 @@ function undoToast(msg, fn) {
 // Thumbnails drag to reorder.
 document.addEventListener('dragstart', e => { const th = e.target.closest && e.target.closest('#lsThumbs .ls-th'); if (!th) return; e.dataTransfer.setData('text/x-slide', th.dataset.go); e.dataTransfer.effectAllowed = 'move'; });
 async function onLessonDrop(e) {
+  dragMark(false);
+  // What was dragged is read now: the browser hands it over only while the drop is happening.
+  const got = {}; for (const k of ['text/html', 'text/uri-list', 'text/plain']) got[k] = e.dataTransfer.getData(k);
+  const dt = { getData: k => got[k] || '', files: [...(e.dataTransfer.files || [])] };
   const zf = [...(e.dataTransfer.files || [])].find(f => /\.zip$/i.test(f.name));
   if (await finishedDrop(e)) return;
   if (zf && !(e.target.closest && e.target.closest('[data-owner]'))) return packImport(zf);
@@ -633,11 +643,30 @@ async function onLessonDrop(e) {
     const i = +from, j = +th.dataset.go; if (i === j) return;
     const [s] = L.open.slides.splice(i, 1); L.open.slides.splice(j, 0, s); L.cur = j; lessonChanged(false); return renderEditor();
   }
-  const f = e.dataTransfer.files && e.dataTransfer.files[0];
-  if (!f) { if (L.open) return dropFromWeb(e.dataTransfer); return; }
+  // A picture let go on a slide in the list on the left goes on that slide.
+  const th = L.open && e.target.closest && e.target.closest('#lsThumbs .ls-th');
+  if (th) { editorCommit(); L.cur = Math.max(0, Math.min(L.open.slides.length - 1, +th.dataset.go)); }
+  const f = dt.files[0];
+  if (!f) { if (L.open) return dropFromWeb(dt); return; }
   if (/\.json$/i.test(f.name)) return importLessonText(await f.text(), f.name);
-  if (/^image\//.test(f.type) && L.open) { const s = pictureSlide(); return setPicture(f, webSource(e.dataTransfer)); }
+  const pics = dt.files.filter(x => /^image\//.test(x.type));
+  if (!pics.length || !L.open) return;
+  // Several pictures at once: the first goes where one would, and each of the rest gets a slide of its own after it.
+  for (const [i, pic] of pics.entries()) {
+    if (i) { L.open.slides.splice(L.cur + 1, 0, normSlide({ layout: 'picture' })); L.cur++; } else pictureSlide();
+    await setPicture(pic, i ? '' : webSource(dt));
+  }
+  if (pics.length > 1) toast(pics.length + ' pictures, one on each slide');
 }
+// While something is dragged over an open lesson, the slide says it can be let go there.
+function dragMark(on) { const w = $('#lsWrap'); if (w) w.classList.toggle('ls-dropping', !!on && L.view === 'edit' && !!L.open); }
+document.addEventListener('dragover', e => {
+  const t = e.dataTransfer && [...e.dataTransfer.types]; if (!t || t.includes('text/x-slide') || t.includes('text/x-bank')) return;
+  if (!(t.includes('Files') || t.includes('text/uri-list') || t.includes('text/html'))) return;
+  if (!(e.target.closest && e.target.closest('#lessons')) || (e.target.closest('.pl-ask, [data-owner]'))) return dragMark(false);
+  dragMark(true);
+}, true);
+for (const ev of ['dragleave', 'dragend', 'drop']) document.addEventListener(ev, e => { if (ev !== 'dragleave' || !e.relatedTarget) dragMark(false); }, true);
 // A picture or link dragged in from another tab. Chrome usually hands over the picture itself; when it only
 // hands over the address, the picture is fetched, which some sites don't allow.
 function webSource(dt) {
@@ -646,7 +675,8 @@ function webSource(dt) {
 }
 function pictureSlide() {   // the current slide if it can take a picture, or a new picture slide after it
   const s = L.open.slides[L.cur];
-  if (s.layout === 'picture' || s.layout === 'picprompt' || ((s.layout === 'content' || s.layout === 'text') && !s.body.trim() && !s.img)) { s.layout = 'picture'; return s; }
+  if (hasPic(s)) return s;
+  if (s.layout === 'content' || s.layout === 'text') { s.layout = s.body.trim() ? 'textpic' : 'picture'; return s; }   // text already on the slide stays, with the picture beside it
   const n = normSlide({ layout: 'picture' }); L.open.slides.splice(L.cur + 1, 0, n); L.cur++; return n;
 }
 async function dropFromWeb(dt) {
@@ -853,7 +883,7 @@ function lessonText(l) {
   for (const x of lessonNotes(l)) t += 'My comment on the whole lesson: ' + x + '\n';
   t += taughtText(l);
   l.slides.forEach((s, i) => {
-    t += '\n## Slide ' + (i + 1) + ' (' + LAYOUTS[s.layout] + (s.layout !== 'title' && s.layout !== 'picture' ? ', ' + s.size + ' pt' : '') + ')\n' + (s.title ? 'Title: ' + s.title + '\n' : '');
+    t += '\n## Slide ' + (i + 1) + ' (' + LAYOUTS[s.layout] + (s.layout !== 'title' && s.layout !== 'picture' && s.layout !== 'fullpic' ? ', ' + s.size + ' pt' : '') + ')\n' + (s.title ? 'Title: ' + s.title + '\n' : '');
     for (const k of EXTRA) if (s[k] && k !== 'body2') t += k + ': ' + s[k] + '\n';
     if (s.body2) t += 'body2:\n' + s.body2 + '\n';
     if (s.body) t += s.body + '\n';
@@ -1017,6 +1047,14 @@ function slideXmlIn(s, lesson, media) {
         const cy = media ? Y + h + 30000 : Y, txt = media ? videoSource(s.video) : (s.video.title ? videoSource(s.video) + ': ' : '') + s.video.url, sz = media ? 1000 : 2800;
         tree += '<p:sp><p:nvSpPr><p:cNvPr id="5" name="Video link 4"/><p:cNvSpPr txBox="1"/><p:nvPr/></p:nvSpPr><p:spPr><a:xfrm><a:off x="' + X + '" y="' + cy + '"/><a:ext cx="' + W + '" cy="' + (media ? 260000 : 900000) + '"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom><a:noFill/></p:spPr><p:txBody><a:bodyPr wrap="square" lIns="0" tIns="0" rIns="0" bIns="0"><a:noAutofit/></a:bodyPr><a:lstStyle/><a:p><a:pPr algn="ctr"/><a:r><a:rPr lang="en-US" sz="' + sz + '" dirty="0">' + link + '</a:rPr><a:t>' + xe(txt) + '</a:t></a:r></a:p></p:txBody></p:sp>';
       }
+    } else if (s.layout === 'fullpic') {
+      // The picture over the whole slide, on the look's background, which also covers the title kept for the outline.
+      const F = FULLPIC, look = pxLook;
+      tree += shapeXml(8, [0, 0, 1280, 720, LOOKS[look].bg]);
+      if (s.img && media) {
+        tree += picXml(4, picFit(s.img, F));
+        if (s.img.source) tree += teachBoxXml(9, { k: '_src', x: 0, y: 696, w: 1280, h: 20, sz: 10, col: 'text', algn: 'ctr' }, { _src: s.img.source }, look);
+      }
     } else if (s.layout === 'picture') {
       if (s.img && media) {
         // Fit the picture under the title rule, centered, with the source line under it.
@@ -1043,10 +1081,10 @@ function buildPptx(lesson) {
   let ct = str('[Content_Types].xml'), prel = str('ppt/_rels/presentation.xml.rels'), pres = str('ppt/presentation.xml'), ids = '';
   const exts = new Set();
   lesson.slides.forEach((s, i) => {
-    const n = i + 1, layout = s.layout === 'title' ? lay.title : s.layout === 'picture' || s.layout === 'video' || isTeach(s) ? lay.only : lay.content;
+    const n = i + 1, layout = s.layout === 'title' ? lay.title : s.layout === 'picture' || s.layout === 'fullpic' || s.layout === 'video' || isTeach(s) ? lay.only : lay.content;
     let rels = '<Relationship Id="rId1" Type="' + REL + 'slideLayout" Target="../slideLayouts/' + layout + '"/>';
     let media = null;
-    if ((s.layout === 'picture' || s.layout === 'picprompt') && s.img && imgSrc(s.img.src)) {
+    if (hasPic(s) && s.img && imgSrc(s.img.src)) {
       const m = /^data:image\/(png|jpeg);base64,(.*)$/.exec(s.img.src);
       if (m) { const ext = m[1] === 'png' ? 'png' : 'jpeg'; exts.add(ext); media = 'lesson' + n + '.' + ext; z['ppt/media/' + media] = b64ToU8(m[2]); rels += '<Relationship Id="rIdImg" Type="' + REL + 'image" Target="../media/' + media + '"/>'; }
     }
@@ -1120,6 +1158,8 @@ never are, and nothing here should point to a student.
     { "layout": "discuss", "title": "Let’s talk", "body": "The question", "foot": "Think · Pair · Share" },
     { "layout": "twocol", "title": "…", "h1": "Left heading", "body": "Left points", "h2": "Right heading", "body2": "Right points" },
     { "layout": "passage", "title": "Close read", "body": "“The passage”", "cite": "Author, title, page", "foot": "The question" },
+    { "layout": "fullpic", "title": "Name for the list of slides (not shown)", "img": { … } },
+    { "layout": "textpic", "title": "Title", "body": "Text on the left", "img": { … } },
     { "layout": "picprompt", "title": "See · Think · Wonder", "img": { … }, "body": "Question one\\nQuestion two" },
     { "layout": "vocab", "title": "Word of the day", "word": "ethos", "pos": "noun", "body": "Meaning", "foot": "Example sentence" },
     { "layout": "exit", "title": "Exit ticket", "tag": "On a sticky note", "body": "The question" }
