@@ -29,10 +29,13 @@ const has = (bytes, text) => Buffer.from(bytes).includes(Buffer.from(text));
 function seed() {
   const s = gradingSeed(), lib = JSON.parse(s.ls['gs.lib']);
   lib.classes[0].info = { 'Aria Testwell': { id: '20001', note: 'Made-up note' } };
-  lib.classes[0].att = { '2026-09-01': { 'Aria Testwell': 'late', 'Bram Sample': 'excused' } };
+  lib.classes[0].att = { '2026-09-01': { t: 1, m: { 'Aria Testwell': 'l', 'Bram Sample': 'e' }, n: { 'Aria Testwell': 'Bus' } }, '2026-09-02': { t: 2 } };   // attendance (attend.js)
+  lib.goals = [{ id: 'g1', name: 'Argue a claim', at: 1 }];   // learning goals (goals.js)
   lib.classes[0].link = 'https://example.org/class/9';
   s.ls['gs.lib'] = JSON.stringify(lib);
   const w = JSON.parse(s.ls['gs.b.n1']);
+  w.goal = 'g1';
+  w.s['Aria Testwell'].g.tries = [{ rubric: [2, 2, 2], points: '', comment: 'First try', at: 1 }];   // a retake (grades.js)
   w.quiz = { qs: [{ id: 'q1', lab: '1', n: 0, x: 0.1, y: 0.1, w: 0.3, h: 0.1, pts: 2, key: 'B' }], how: 'cx', side: 'left', total: null, shift: { 'Aria Testwell': { 0: [0.01, 0] } } };
   s.ls['gs.b.n1'] = JSON.stringify(w);
   s.ls['gs.seatsTry'] = JSON.stringify({ rows: [['Aria Testwell', 'Bram Sample']] });
@@ -106,7 +109,7 @@ test('a new year: this year goes to a checked file, the classes carry on empty, 
       const l = window.__gs.state().lib, c = l.classes[0];
       return { kept: window.__gs.kept().size, year: l.year, years: l.years.map(y => [y.name, y.file]), names: l.classes.map(c => c.names.length), info: 'info' in c, att: 'att' in c, link: c.link,
         units: c.units.map(u => u.name), cards: c.units.flatMap(u => u.items.map(i => [i.name, i.due, !!i.batchId, i.typed ? Object.keys(i.typed.s).length : null])),
-        quiz: c.units[0].items[2].quiz, setup: c.units[0].items[2].setup && c.units[0].items[2].setup.criteria, terms: l.book.terms.map(t => [t.start, t.end]), dl: 'dl' in l.book,
+        quiz: c.units[0].items[2].quiz, goal: c.units[0].items[2].goal, goals: l.goals, setup: c.units[0].items[2].setup && c.units[0].items[2].setup.criteria, terms: l.book.terms.map(t => [t.start, t.end]), dl: 'dl' in l.book,
         bank: localStorage.getItem('gs.bank'), seats: localStorage.getItem('gs.seatsTry'), move: JSON.parse(localStorage.getItem('gsp.newYear')), work: Object.keys(localStorage).filter(k => k.startsWith('gs.b.')) };
     });
     assert.equal(now.kept, 0);
@@ -120,6 +123,8 @@ test('a new year: this year goes to a checked file, the classes carry on empty, 
     assert.deepEqual(now.quiz.qs.map(q => [q.id, q.pts, q.key]), [['q1', 2, 'B']], 'the quiz boxes go on the card');
     assert.equal(now.quiz.shift, undefined, 'without any one student’s nudges');
     assert.deepEqual(now.setup, ['Ideas', 'Organization', 'Language'], 'the rubric goes on the card');
+    assert.equal(now.goal, 'g1', 'and the whole score’s learning goal');
+    assert.deepEqual(now.goals, [{ id: 'g1', name: 'Argue a claim', at: 1 }], 'the teacher’s learning goals stay');
     assert.deepEqual(now.terms, [['2027-08-10', '2027-12-18']]);
     assert.equal(now.dl, false);
     assert.equal(now.bank, '["Check your citations."]', 'the comment bank stays');
@@ -149,6 +154,7 @@ test('a new year: this year goes to a checked file, the classes carry on empty, 
     await page.evaluate(list => { const it = window.__gs.state().lib.classes[0].units[0].items[2]; return window.__gs.intake(list.map(e => ({ path: e.path, data: new Uint8Array(e.data) })), 'Narrative essay', it); }, entries);
     await waitPaper(page);
     assert.deepEqual(await page.evaluate(() => window.__gs.state().batch.quiz.qs.map(q => q.id)), ['q1']);
+    assert.equal(await page.evaluate(() => window.__gs.state().batch.goal), 'g1');
     await settle(page);
     await page.click('#closeBtn');
     // opening the old year back: a wrong passphrase changes nothing
@@ -173,6 +179,9 @@ test('a new year: this year goes to a checked file, the classes carry on empty, 
     assert.equal(got.year, '2026–27');
     assert.deepEqual(got.years.map(y => [y.name, y.file]), [['2027–28', 'year-b.gswork']], 'and the year just left is listed with its file');
     assert.ok(back.seats);
+    assert.deepEqual(got.classes[0].att['2026-09-02'], { t: 2 }, 'attendance comes back with the year');
+    const tries = await page.evaluate(() => new Promise(res => { const r = indexedDB.open('grading-studio-keep'); r.onsuccess = () => { const q = r.result.transaction('work').objectStore('work').get('gs.b.n1'); q.onsuccess = () => { const w = q.result; res(w && w.s['Aria Testwell'].g.tries); r.result.close(); }; }; }));
+    assert.deepEqual(tries, [{ rubric: [2, 2, 2], points: '', comment: 'First try', at: 1 }], 'and a retake’s first try');
     // the year just left is in its own file, and starting it again from there works the same way
     const b2 = await fileBytes(page, 'year-b.gswork');
     assert.ok(b2.length > 1000 && !has(b2, 'Narrative essay'));
@@ -203,7 +212,7 @@ test('the new year’s library works from the saved data, not a list of fields',
   const { page, close } = await openApp(browser, { seed: seed() });
   const r = await page.evaluate(() => {
     const G = window.__gs, old = { classes: [{ id: 'c', name: 'Made-up class', names: ['Kai Pretend', 'Lu Invented'], color: '#123456', goals: ['Argue a claim'], units: [{ id: 'u', name: 'U', items: [{ id: 'i', name: 'Essay', due: '2028-02-29', retake: { 'Kai Pretend': { n: 2 } }, goals: ['Argue a claim'], setup: { mode: 'points', outOf: 10 } }] }],
-      seats: [['Lu Invented', null]] }], loose: { id: '', units: [] }, book: { terms: [] }, someday: { 'Kai Pretend': 1 }, me: { sys: '' } };
+      seats: [['Lu Invented', null]], att: { '2028-01-05': { t: 1 } } }], loose: { id: '', units: [] }, book: { terms: [] }, someday: { 'Kai Pretend': 1 }, me: { sys: '' } };
     const a = G.nyLib(old, {}, { from: '2027–28', to: '2028–29', dates: true, roster: false, file: 'f.gswork' });
     const b = G.nyLib(old, {}, { from: '2027–28', to: '2028–29', dates: false, roster: true, file: 'f.gswork' });
     return { a, b, next: [G.nyNext('2025–26'), G.nyNext('2025-2026'), G.nyNext('2025'), G.nyNext('Year 7')] };
@@ -211,6 +220,8 @@ test('the new year’s library works from the saved data, not a list of fields',
   const c = r.a.classes[0], it = c.units[0].items[0];
   assert.deepEqual(c.names, []); assert.equal(c.color, '#123456'); assert.deepEqual(c.goals, ['Argue a claim']);
   assert.equal('seats' in c, false);
+  assert.equal('att' in c, false, 'attendance never carries, even a day with nobody in it');
+  assert.equal('att' in r.b.classes[0], false, 'nor when the class lists stay');
   assert.equal('retake' in it, false); assert.deepEqual(it.goals, ['Argue a claim']); assert.equal(it.due, '2029-02-28');
   assert.equal('someday' in r.a, false); assert.deepEqual(r.a.me, { sys: '' });
   assert.deepEqual(r.b.classes[0].names, ['Kai Pretend', 'Lu Invented'], 'kept class lists');

@@ -56,6 +56,8 @@ function nyAbout(v, names, depth = 0) {
 // Drops each field that's about a student, apart from the ones named in keep.
 const nyStrip = (o, names, keep) => { for (const k of Object.keys(o)) if (!keep.includes(k) && nyAbout(o[k], names)) delete o[k]; return o; };
 
+// Kept on a class but belonging to one year, so they never carry, even when a day has no student in it: attendance (attend.js).
+const NY_YEAR_ONLY = ['att'];
 /* the new year's library */
 // o: { roster: keep the class lists, dates: move dates on a year, from, to: the two years' names, file }. works: { download id: work }.
 function nyLib(old, works, o) {
@@ -67,11 +69,13 @@ function nyLib(old, works, o) {
     if (n.typed && typeof n.typed === 'object') n.typed = { max: n.typed.max == null ? null : n.typed.max, s: {} };
     if (!n.setup && w && w.setup) { n.setup = { ...w.setup }; delete n.setup.spot; delete n.setup.rubricPage; }
     if (!n.quiz && w && w.quiz && Array.isArray(w.quiz.qs) && w.quiz.qs.length) { const q = nyClone(w.quiz); delete q.shift; delete q.spot; n.quiz = q; }
+    if (!n.goal && w && typeof w.goal === 'string' && w.goal) n.goal = w.goal;   // a learning goal for the whole score (goals.js)
     if (o.dates && n.due) n.due = nyDay(n.due);
-    return nyStrip(n, names, ['id', 'name', 'setup', 'quiz', 'typed', 'classId']);
+    return nyStrip(n, names, ['id', 'name', 'setup', 'quiz', 'typed', 'classId', 'goal']);
   };
   for (const c of L.classes) {
     if (!o.roster) { c.names = []; delete c.info; }
+    for (const k of NY_YEAR_ONLY) delete c[k];
     nyStrip(c, names, ['id', 'name', 'units', ...(o.roster ? ['names', 'info'] : [])]);
   }
   for (const h of L.classes.concat([L.loose])) for (const u of h.units || []) { nyStrip(u, names, ['id', 'name', 'items']); u.items = (u.items || []).map(card); }

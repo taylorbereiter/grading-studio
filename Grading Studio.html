@@ -5278,6 +5278,7 @@ async function intake(entries, label, assignment, fromKeep) {   // entries: [{ p
   if (earlier) carryRoster(earlier);
   if (batch.restoredKey) { const k = batch.students.findIndex(st => st.key === batch.restoredKey); if (k >= 0) batch.restoredCur = k; }
   renderClassSel();
+  if (assignment && assignment.goal && !batch.goal && !assignment.batchId) batch.goal = assignment.goal;   // and its learning goal for the whole score
   if (assignment && assignment.quiz && !batch.quiz && !assignment.batchId) { batch.quiz = JSON.parse(JSON.stringify(assignment.quiz)); setTimeout(saveSoon, 0); }   // a card from last year starts with its Quick mark boxes
   if (assignment) { assignment.batchId = id; assignment.opened = Date.now(); if (!assignment.setup || rub.toCard) assignment.setup = { ...setup, spot: undefined }; shareRubric(assignment); saveLib(); }
   keepWait = keepPapers(batch, label, fromKeep ? null : keepList, sameSize.length > 0);
@@ -23102,6 +23103,7 @@ function nyAbout(v, names, depth = 0) {
 }
 const nyStrip = (o, names, keep) => { for (const k of Object.keys(o)) if (!keep.includes(k) && nyAbout(o[k], names)) delete o[k]; return o; };
 
+const NY_YEAR_ONLY = ['att'];
 /* the new year's library */
 function nyLib(old, works, o) {
   const L = nyClone(old), names = nyNames(old);
@@ -23112,11 +23114,13 @@ function nyLib(old, works, o) {
     if (n.typed && typeof n.typed === 'object') n.typed = { max: n.typed.max == null ? null : n.typed.max, s: {} };
     if (!n.setup && w && w.setup) { n.setup = { ...w.setup }; delete n.setup.spot; delete n.setup.rubricPage; }
     if (!n.quiz && w && w.quiz && Array.isArray(w.quiz.qs) && w.quiz.qs.length) { const q = nyClone(w.quiz); delete q.shift; delete q.spot; n.quiz = q; }
+    if (!n.goal && w && typeof w.goal === 'string' && w.goal) n.goal = w.goal;   // a learning goal for the whole score (goals.js)
     if (o.dates && n.due) n.due = nyDay(n.due);
-    return nyStrip(n, names, ['id', 'name', 'setup', 'quiz', 'typed', 'classId']);
+    return nyStrip(n, names, ['id', 'name', 'setup', 'quiz', 'typed', 'classId', 'goal']);
   };
   for (const c of L.classes) {
     if (!o.roster) { c.names = []; delete c.info; }
+    for (const k of NY_YEAR_ONLY) delete c[k];
     nyStrip(c, names, ['id', 'name', 'units', ...(o.roster ? ['names', 'info'] : [])]);
   }
   for (const h of L.classes.concat([L.loose])) for (const u of h.units || []) { nyStrip(u, names, ['id', 'name', 'items']); u.items = (u.items || []).map(card); }
