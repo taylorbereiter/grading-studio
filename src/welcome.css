@@ -5,7 +5,9 @@
 html.welcoming .shell{visibility:hidden}
 .wlsheet{width:min(1040px,100%);min-height:600px;margin:auto;background:var(--surface);border:1px solid var(--line);border-radius:var(--corner-5);box-shadow:var(--shadow);display:grid;grid-template-columns:minmax(0,1fr) 380px;overflow:hidden}
 .wll{padding:36px 52px 28px;display:flex;flex-direction:column;min-width:0}
-.wlbrand{font:600 var(--text-lead) var(--f-display);letter-spacing:-.01em}
+.wlbrand{font:600 var(--text-lead) var(--f-display);letter-spacing:-.01em;display:flex;align-items:center}
+.wlbrand .wllang{font-weight:400;letter-spacing:0;margin-left:auto}
+#homeDate::first-letter{text-transform:uppercase}
 .wlbrand i{font-style:normal;font-weight:500;color:var(--accent)}
 .wll h1{font:700 var(--text-display)/1.15 var(--f-display);letter-spacing:-.03em;margin:var(--space-4) 0 var(--space-2)}
 .wllead{font-size:var(--text-lead);color:var(--fg-2);max-width:44ch;margin:0 0 var(--space-4)}

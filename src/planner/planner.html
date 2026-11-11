@@ -124,6 +124,11 @@
 .ls-ed{cursor:text;outline:1.5px dashed transparent;outline-offset:2px;border-radius:3px}
 .ls-ed:hover,.ls-ed:focus{outline-color:rgba(31,111,178,.55)}
 .ls-pic.ls-ed{cursor:pointer}
+.ls-full{align-items:center;background:var(--lbg)}
+.ls-full img{width:100%;height:100%}
+.ls-fullsrc{left:0;top:696px;width:1280px}
+.ls-stagewrap.ls-dropping .ls-stage{outline:3px dashed var(--accent);outline-offset:4px}
+.ls-stagewrap.ls-dropping .ls-stage::after{content:"Let go to put it on this slide";position:absolute;left:50%;bottom:var(--space-3);transform:translateX(-50%);background:var(--accent);color:var(--accent-fg);font-size:var(--text-control);font-weight:600;padding:var(--space-1) var(--space-3);border-radius:var(--corner-pill);pointer-events:none}
 .ls-ph{color:#8a8580;text-transform:none}
 .ls-ta{position:absolute;border:0;outline:2px solid #1F6FB2;outline-offset:2px;background:rgba(255,255,255,.55);resize:none;font-family:Arial,Helvetica,sans-serif;color:#000;tab-size:2;-moz-tab-size:2}
 .ls-ta.ls-t{text-transform:none;line-height:1.1}.ls-ta.ls-ttl{text-transform:none;display:block;line-height:1.05}.ls-ta.ls-sub{text-transform:none}
@@ -416,6 +421,7 @@ body.has-side .lsn{margin-right:var(--sidew,420px)}
   <button class="rnav rtt" id="railTimetable" title="Your classes, when they meet, and the school calendar"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/></svg><span class="rl">Timetable</span></button>
   <span class="sp"></span>
   <button class="rsaved" id="railSaved"></button>
+  <a class="rnav" data-gs="#/help" href="./#/help" title="Help: short answers to common questions"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M9.7 9.6a2.4 2.4 0 1 1 3.7 2c-.9.6-1.4 1.1-1.4 2.1M12 16.8v.1"/></svg><span class="rl">Help</span></a>
   <a class="rnav" data-gs="#/settings" href="./#/settings" title="Settings"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg><span class="rl">Settings</span></a>
 </nav>
 <div id="lessons" class="lsn"></div>

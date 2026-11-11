@@ -4,7 +4,7 @@
 // Nothing here is saved, and nothing leaves the browser: every chart is worked out from the same columns the gradebook table shows.
 let panelKey = '', panelTok = 0;
 // Leaving the class pages: the scores can change before she's back (a paper graded), so the gradebook's copy is read again next time.
-function classPanelGone() { panelKey = ''; panelTok++; if (bk.host === 'page') { bk.cols = null; bkPopClose(); } }
+function classPanelGone() { rptKeep(true); panelKey = ''; panelTok++; if (bk.host === 'page') { bk.cols = null; bkPopClose(); } }
 // Part-way through something in the panel: a form open, or typing in a box. Another tab's changes wait until she's done (folder.js), as they do for an open box.
 function classPanelBusy() { const a = document.activeElement; return !!$('#bkAdd, #bkSetup, .bkcin, #bkPop, .bktypes') || (!!a && /INPUT|TEXTAREA|SELECT/.test(a.tagName) && !!a.closest('#classPanel')); }
 // fresh: app.js has just put a new, empty panel on the page. Otherwise the panel is left alone unless the address moved to another student,
@@ -17,7 +17,7 @@ function classPanelDraw(fresh) {
   panelKey = key;
   const tok = ++panelTok, list = r.tab === 'students' && r.stu == null, kept = bk.host === 'page' && !!bk.cols && bk.ver === libVer && bk.lib === lib;
   bkPopClose(); ovTipHide();
-  bk = { ...bk, host: 'page', lib, tab: r.tab === 'gradebook' ? 'table' : r.tab === 'charts' ? 'class' : 'one', cls: c.id, stu: r.stu || 0, hi: '', cols: kept ? bk.cols : null };
+  bk = { ...bk, host: 'page', lib, tab: r.tab === 'gradebook' ? 'table' : r.tab === 'charts' ? 'class' : r.tab === 'reports' ? 'rep' : 'one', cls: c.id, stu: r.stu || 0, hi: '', cols: kept ? bk.cols : null };
   if (list) peoplePanel(el, c);
   else el.innerHTML = '<div class="bkbody bkpage" id="bkBody"><p class="muted bkpad">Looking through your saved work…</p></div>';
   const show = () => list ? peopleGrades(c) : bkDraw();

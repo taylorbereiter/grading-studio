@@ -1,8 +1,40 @@
 {
-  "1.14.0": [
+  "1.21.0": [
     "Keep strong work as an example: press ☆ Example on an answer in Quick mark (or E), or pick Use as an example in the ⋯ beside a student’s name for a whole paper or part of a page. Names are covered, and your marks and the score stay off unless you switch them on. It is always optional.",
     "The Examples tab on an assignment, and Examples in the sidebar for every class, have Show to the class, Copy picture, Download and Download as a sheet.",
     "Examples go to your linked folder and into the take-home file with the rest of your work."
+  ],
+  "1.20.0": [
+    "The app can speak Traditional Chinese (繁體中文). Choose it in Settings, Display, App language, or at the top of the welcome.",
+    "Like Spanish, it covers the first screens so far: the sidebar, Today, the welcome, Find anything, Help, and the feedback page students get with a returned paper. The other screens are still in English."
+  ],
+  "1.19.0": [
+    "The app can speak Spanish. Choose it in Settings, Display, App language, or at the top of the welcome.",
+    "Spanish covers the first screens so far: the sidebar, Today, the welcome, Find anything, Help, and the feedback page students get with a returned paper. The other screens are still in English.",
+    "Names you typed (classes, students, assignments, rubric rows) are never translated."
+  ],
+  "1.18.0": [
+    "On a tablet, a pencil draws and the pen's line is wider where you press harder. Once you have used a pencil, one finger moves the page, two fingers pinch to zoom, and a hand resting on the screen does nothing.",
+    "Settings, Marking has a new Tablet and pencil section: choose what a finger does on the paper, or turn off the wider line.",
+    "On a touch screen the tools, the student rows and the score buttons are larger."
+  ],
+  "1.17.0": [
+    "Report comments: a new tab on each class's page drafts a comment for every student from your own gradebook, rubric scores and the comments you wrote on their papers. Edit each one, tick it done, then copy or download them all.",
+    "The drafts are put together on your computer from sentences you can change under Wording. Nothing about a student is sent anywhere."
+  ],
+  "1.16.0": [
+    "Help is in the sidebar: short answers to the questions teachers ask most, from opening a set of papers to moving your work to another computer.",
+    "Find anything answers questions too. Type a few words, like “late paper” or “backup”, and the answer is in the list."
+  ],
+  "1.15.0": [
+    "A picture dragged onto a slide that has text now sits beside the text, in a new Text + picture layout.",
+    "Drag several pictures in at once and each gets its own slide. Let a picture go on any slide in the list on the left to put it there.",
+    "New Full picture layout: the picture fills the whole slide."
+  ],
+  "1.14.0": [
+    "Extra credit: points or a percent on one paper, and extra credit entries in the gradebook that add to the term grade or the in-class average.",
+    "The gradebook shows each type's average (summative, in-class) right beside the term grade, kept in view as you scroll. Averages only shows just those columns, and Whole year splits each term the same way.",
+    "Leave out… lets you untick students to see the class averages without them. Their own grades don't change, and nothing is saved."
   ],
   "1.13.0": [
     "Present a lesson from the Planner, or from Today when its class is on now or next: its slides fill the screen, and the arrow keys or a clicker move through them.",

@@ -91,13 +91,13 @@ test('an extra credit entry gives points to some or all students, adds them to t
   assert.match(await page.$eval('#bkaRows tr:nth-child(4)', e => e.textContent), /\+3% on the term grade/);
   await page.click('[data-bkasave]');
   await page.waitForSelector('#bkTab');
-  assert.deepEqual(await page.$$eval('#bkTab tr.bkg th', t => t.map(x => x.textContent).filter(Boolean)), ['Summative · 50%', 'In-class · 50%', 'Extra credit · points on top']);
+  assert.deepEqual(await page.$$eval('#bkTab tr.bkg th', t => t.map(x => x.textContent).filter(Boolean)), ['Summative · 50%', 'In-class · 50%', 'Extra credit · points on top', 'Term 1']);
   // Cleo stays at 100% (kept there by default); Bram had none.
   const col = await termCol(page);
   assert.match(col[0], /^Aria Testwell 82\.00%/); assert.match(col[1], /^Bram Sample 70\.00%$/); assert.match(col[2], /^Cleo Fixture 100\.00%/); assert.match(col[3], /^Dov Madeup 63\.00%/);
   assert.match(await page.$eval('#bkTab tbody tr:nth-child(3) td.bkterm', t => t.dataset.tn), /Extra credit \+2 on the grade · kept at 100%/);
   // The assignments' own percents and averages don't move.
-  assert.deepEqual(await page.$$eval('#bkTab tbody tr:first-child td', t => t.map(x => x.textContent.trim()).slice(1, 6)), ['80%', '80.00%', '80%', '80.00%', '+2']);
+  assert.deepEqual(await page.$$eval('#bkTab tbody tr:first-child td', t => t.map(x => x.textContent.trim()).slice(1, 6)), ['80%', '80%', '+2', '80.00%', '80.00%']);
   const stored = await page.evaluate(() => window.__gs.state().lib.classes[0].units[0].items.find(x => x.type === 'xc'));
   assert.deepEqual(stored.typed, { max: null, s: { 'Aria Testwell': { v: 2 }, 'Cleo Fixture': { v: 2 }, 'Dov Madeup': { v: 3 } } });
   assert.equal(stored.xcTo, 'term');

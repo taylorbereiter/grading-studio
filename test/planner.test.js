@@ -327,7 +327,7 @@ test('looks and teaching layouts: every layout in every look, edited in place, a
       }
       return out;
     });
-    assert.equal(r.n, 14 * 15); assert.deepEqual(r.bad, []);
+    assert.equal(r.n, 14 * 17); assert.deepEqual(r.bad, []);
 
     // a lesson in Sage: add a Two columns slide from the picker and type into a heading and the right side
     await page.evaluate(async () => { const P = window.__planner, l = P.normLesson({ title: 'Looks', slides: [{ layout: 'title', title: 'Looks' }] }); P.L.lessons.push(l); P.openLessonForTest(l, 0); });
@@ -380,7 +380,7 @@ test('the layout picker shows pictures, changes a slide and keeps its text; less
     // Layout: pictures of every layout, the current one marked
     await page.click('[data-a="layout"]');
     await page.waitForSelector('#dlgBox .pl-look.on[data-addslide="content"] .pl-lmini');
-    assert.equal(await page.$$eval('#dlgBox [data-addslide]', b => b.length), 15);
+    assert.equal(await page.$$eval('#dlgBox [data-addslide]', b => b.length), 17);
     await page.click('#dlgBox [data-addslide="discuss"]');
     await page.waitForSelector('#lsStage .ls-bx[data-k="foot"]');
     const s = await page.evaluate(() => window.__planner.L.open.slides[1]);

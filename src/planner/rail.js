@@ -69,6 +69,7 @@ function findRows() {
   add('Go to', 'Activities', 'The activity bank', () => toView('activities'));
   add('Go to', 'Rubrics', 'Saved rubrics and grading scales', () => toView('bank'));
   add('Go to', 'Settings', 'Saving, classes, display and keys, on the grading page', () => leaveTo(gsUrl('#/settings')));
+  add('Go to', 'Help', 'Short answers to common questions', () => leaveTo(gsUrl('#/help')));
   for (const c of (L.setup && L.setup.classes) || []) add('Classes', c.name, 'Its assignments, gradebook and students', () => leaveTo(classUrl(c)));
   const when = l => l.slots.length ? l.slots.map(s => className(s.classId) + ' ' + shortDate(s.date)).join(', ') : l.library ? 'A past lesson' : 'Not on a class';
   for (const l of [...L.lessons].sort((a, b) => ((b.slots[0] || {}).date || '').localeCompare((a.slots[0] || {}).date || '') || b.updated - a.updated)) add('Lessons', l.title, when(l), async () => { await settleAll(); openLesson(l); });
@@ -79,15 +80,17 @@ function findRows() {
   if ('showDirectoryPicker' in window) add('Do', L.dir && L.dirOk ? 'Look in the Planner folder' : L.dir ? 'Reconnect the Planner folder' : 'Link the Planner folder', L.dir && L.dirOk ? 'For lessons added or changed there' : 'A second copy of your lessons, in a folder of their own', () => L.dir && L.dirOk ? folderRead(true) : L.dir ? folderReconnect(true) : folderLink());
   add('Do', 'Side panel', 'Books, video, ' + (plCur() || 'the unit') + ', the notebook and the Claude box', () => panelToggle());
   add('Do', document.documentElement.dataset.theme === 'dark' ? 'Light mode' : 'Dark mode', 'Display', () => setTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'));
+  // every help answer by its question; the answers are on the grading page's Help
+  for (const t of HELP) out.push({ group: 'Help', label: t.q, sub: helpGist(t), words: t.words || '', run: () => leaveTo(gsUrl('#/help/' + t.id)) });
   return out;
 }
 // Every word typed has to be somewhere in the row. A name that starts with what she typed comes first.
 function findMatch(rows, q) {
   const words = q.toLowerCase().split(/\s+/).filter(Boolean);
-  if (!words.length) return rows.filter(r => r.group !== 'Lessons' && r.group !== 'Units');
+  if (!words.length) return rows.filter(r => r.group !== 'Lessons' && r.group !== 'Units' && r.group !== 'Help');
   const hit = [];
   for (const r of rows) {
-    const l = r.label.toLowerCase(), all = l + ' ' + r.sub.toLowerCase() + ' ' + r.group.toLowerCase();
+    const l = tr(r.label).toLowerCase(), all = l + ' ' + r.label.toLowerCase() + ' ' + r.sub.toLowerCase() + ' ' + tr(r.sub).toLowerCase() + ' ' + r.group.toLowerCase() + ' ' + tr(r.group).toLowerCase() + ' ' + (r.words || '').toLowerCase();   // in another language (lang.js) a row is found by its words in either
     if (!words.every(w => all.includes(w))) continue;
     hit.push({ r, rank: l.startsWith(words[0]) ? 0 : l.split(/[^a-z0-9]+/).some(p => p.startsWith(words[0])) ? 1 : words.every(w => l.includes(w)) ? 2 : 3 });
   }
@@ -111,7 +114,7 @@ function openFind() {
     for (const r of hits) { let g = groups.find(x => x.name === r.group); if (!g) groups.push(g = { name: r.group, rows: [] }); g.rows.push(r); }
     shown = groups.flatMap(g => g.rows); at = 0;
     let k = 0;
-    list.innerHTML = groups.map(g => '<div class="fcap">' + esc(g.name) + '</div>' + g.rows.map(r => '<button class="frow" role="option" id="fr' + k + '" data-fi="' + (k++) + '"><b>' + esc(r.label) + '</b><span>' + esc(r.sub) + '</span></button>').join('')).join('');
+    list.innerHTML = groups.map(g => '<div class="fcap">' + esc(g.name) + '</div>' + g.rows.map(r => '<button class="frow" role="option" id="fr' + k + '" data-fi="' + (k++) + '"><b' + (g.name === 'Classes' || g.name === 'Lessons' || g.name === 'Units' ? ' data-raw' : '') + '>' + esc(r.label) + '</b><span>' + esc(r.sub) + '</span></button>').join('')).join('');
     el.querySelector('#findCount').textContent = inp.value.trim() ? '' : 'Lessons, units, classes and settings';
     mark();
   };

@@ -131,7 +131,7 @@ async function idbDo(mode, fn) {
   return new Promise((res, rej) => { const tx = db.transaction('files', mode), req = fn(tx.objectStore('files')); tx.oncomplete = () => res(req && req.result); tx.onerror = () => rej(tx.error); });
 }
 const addKey = (st, path) => batch.id + '|' + st.key + '|' + path;
-const fmtDay = t => new Date(t).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+const fmtDay = t => new Date(t).toLocaleDateString(LANG_LOCALE, { month: 'short', day: 'numeric' });
 const addTag = f => {
   const was = replacedOf(f);
   // pages made from the student's own Word file: a short tag, since nothing here is hers
