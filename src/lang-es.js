@@ -152,6 +152,8 @@ const LANG_ES = {
     /* the feedback page in a returned paper */
     'How it was scored': 'Cómo se puntuó', 'From your teacher': 'De tu docente', 'Comment on your paper': 'Comentario en tu trabajo', 'Comments on your paper': 'Comentarios en tu trabajo',
     'Your marked paper starts on the next page.': 'Tu trabajo corregido empieza en la página siguiente.', 'Your feedback continues on the next page.': 'Tus comentarios continúan en la página siguiente.',
+    /* returned file names: Student - Assignment - Graded.pdf */
+    'Graded': 'Corregido', 'Feedback': 'Comentarios', 'Student name': 'Nombre del estudiante',
     'Missing': 'No entregado', 'Excused': 'Justificado', 'Late': 'Con retraso',
   },
   rules: [

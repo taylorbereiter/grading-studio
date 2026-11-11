@@ -5436,6 +5436,8 @@ const LANG_ES = {
     /* the feedback page in a returned paper */
     'How it was scored': 'Cómo se puntuó', 'From your teacher': 'De tu docente', 'Comment on your paper': 'Comentario en tu trabajo', 'Comments on your paper': 'Comentarios en tu trabajo',
     'Your marked paper starts on the next page.': 'Tu trabajo corregido empieza en la página siguiente.', 'Your feedback continues on the next page.': 'Tus comentarios continúan en la página siguiente.',
+    /* returned file names: Student - Assignment - Graded.pdf */
+    'Graded': 'Corregido', 'Feedback': 'Comentarios', 'Student name': 'Nombre del estudiante',
     'Missing': 'No entregado', 'Excused': 'Justificado', 'Late': 'Con retraso',
   },
   rules: [
@@ -5764,6 +5766,8 @@ const LANG_ZH = {
     /* the feedback page in a returned paper */
     'How it was scored': '評分方式', 'From your teacher': '老師的話', 'Comment on your paper': '作業上的評語', 'Comments on your paper': '作業上的評語',
     'Your marked paper starts on the next page.': '批改後的作業從下一頁開始。', 'Your feedback continues on the next page.': '回饋接續在下一頁。',
+    /* returned file names: Student - Assignment - Graded.pdf */
+    'Graded': '已評分', 'Feedback': '回饋', 'Student name': '學生姓名',
     'Missing': '缺交', 'Excused': '免交', 'Late': '遲交',
   },
   rules: [
@@ -6113,6 +6117,7 @@ const HELP = [
 
   { id: 'return', sec: 'back', q: 'How do I hand marked papers back?',
     a: ['1. Open the assignment’s **Return** tab. It first lists anything unfinished: scores not given, students with no paper.', '2. Press the blue button. The app makes a ZIP with each student’s marked file in the same folders they came in.', '3. Upload that ZIP, or the files in it, to your school’s system.',
+      'Each file is named for the student, the assignment and what it is, like “Ana Lee - River essay - Graded.pdf”. It says **Feedback** in place of Graded when there is no score. To keep the names students turned in, untick **Name each file by student and assignment** under **Options**.',
       'To hand back one paper straight away, use the **Export … paper now** button under Previous and Next.'],
     words: 'export download return give back zip send students flatten' },
   { id: 'feedback-page', sec: 'back', q: 'What is the feedback page on a returned paper?',

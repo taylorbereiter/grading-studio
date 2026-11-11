@@ -1,13 +1,12 @@
 {
- "version": "1.21.0",
- "build": "0caed46cdc39",
+ "version": "1.22.0",
+ "build": "febbb9ef6ccc",
  "notes": [
-  "Each class has a Missing work tab: every paper you marked Missing, by student or by assignment, for the term you pick.",
-  "Email reminder opens an email in your own mail app, addressed to the student and listing what they owe, for you to read and send. Email all writes one email to everyone who owes an assignment, with the addresses in Bcc. Grading Studio sends nothing itself.",
-  "Each reminder you open is noted beside the work, and Email wording… changes what every reminder says."
+  "Returned files are named for the student, the assignment and what they are, like “Ana Lee - River essay - Graded.pdf”, or Feedback when there is no score. They still go in each student’s own folder.",
+  "To keep the names students turned in, untick Name each file by student and assignment under Options on the Return tab."
  ],
  "files": {
-  "index.html": "38ae0445aead4f6554bb8cd9e3871a73d7a3cb3eb0b8f848a69abad6ad62d37d",
-  "planner.html": "6c43721848635ee51514acf7f784f91b9cf944bae543e1e053c84e449fa19ebb"
+  "index.html": "e1d3c77a3ea79eebabfa39885815444b199f3bf669882b40d6c2d582edbdbb60",
+  "planner.html": "1f51ac2c74245256833fdcef18107e4ab6fcb54a35d0b843b44d53a5fcb6edf3"
  }
 }

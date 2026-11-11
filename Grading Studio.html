@@ -3345,7 +3345,7 @@ SOFTWARE.
 <script>/* ---------------- saved-data versions: a safety copy, then any format changes, before the app starts ---------------- */
 const gsData = (() => {
   'use strict';
-  const APP_VERSION = "1.21.0";   // from package.json, the one place it's set
+  const APP_VERSION = "1.22.0";   // from package.json, the one place it's set
   const MIGRATIONS = [
   ];
   const DATA_V = Math.max(1, ...MIGRATIONS.map(s => s.to));
@@ -3711,6 +3711,8 @@ const LANG_ES = {
     /* the feedback page in a returned paper */
     'How it was scored': 'Cómo se puntuó', 'From your teacher': 'De tu docente', 'Comment on your paper': 'Comentario en tu trabajo', 'Comments on your paper': 'Comentarios en tu trabajo',
     'Your marked paper starts on the next page.': 'Tu trabajo corregido empieza en la página siguiente.', 'Your feedback continues on the next page.': 'Tus comentarios continúan en la página siguiente.',
+    /* returned file names: Student - Assignment - Graded.pdf */
+    'Graded': 'Corregido', 'Feedback': 'Comentarios', 'Student name': 'Nombre del estudiante',
     'Missing': 'No entregado', 'Excused': 'Justificado', 'Late': 'Con retraso',
   },
   rules: [
@@ -4039,6 +4041,8 @@ const LANG_ZH = {
     /* the feedback page in a returned paper */
     'How it was scored': '評分方式', 'From your teacher': '老師的話', 'Comment on your paper': '作業上的評語', 'Comments on your paper': '作業上的評語',
     'Your marked paper starts on the next page.': '批改後的作業從下一頁開始。', 'Your feedback continues on the next page.': '回饋接續在下一頁。',
+    /* returned file names: Student - Assignment - Graded.pdf */
+    'Graded': '已評分', 'Feedback': '回饋', 'Student name': '學生姓名',
     'Missing': '缺交', 'Excused': '免交', 'Late': '遲交',
   },
   rules: [
@@ -4388,6 +4392,7 @@ const HELP = [
 
   { id: 'return', sec: 'back', q: 'How do I hand marked papers back?',
     a: ['1. Open the assignment’s **Return** tab. It first lists anything unfinished: scores not given, students with no paper.', '2. Press the blue button. The app makes a ZIP with each student’s marked file in the same folders they came in.', '3. Upload that ZIP, or the files in it, to your school’s system.',
+      'Each file is named for the student, the assignment and what it is, like “Ana Lee - River essay - Graded.pdf”. It says **Feedback** in place of Graded when there is no score. To keep the names students turned in, untick **Name each file by student and assignment** under **Options**.',
       'To hand back one paper straight away, use the **Export … paper now** button under Previous and Next.'],
     words: 'export download return give back zip send students flatten' },
   { id: 'feedback-page', sec: 'back', q: 'What is the feedback page on a returned paper?',
@@ -6725,6 +6730,35 @@ function exportPlan(keepFolders) {
   for (const o of out) { let p = o.path, k = 2; while (used.has(p.toLowerCase())) p = o.path.replace(/(\.[^./]+)?$/, ' (' + k++ + ')$1'); used.add(p.toLowerCase()); o.path = p; }
   return out;
 }
+const xNames = () => store.get('gs.xnames', true) !== false;
+const fileSafe = s => String(s || '').replace(/[\\/:*?"<>|\r\n\t]+/g, ' ').replace(/\s+/g, ' ').trim().replace(/[. ]+$/, '');
+const asgName = () => { const a = batch.assignment, f = a && findItem(a.id); return (f && f.it && f.it.name) || (a && a.name) || batch.name; };
+function outWord(st) {
+  if (fmNow()) return tr('Feedback');
+  const g = gradeOf(st);
+  const scored = (g.total != null && !g.partial) || st.files.some(f => (f.scan && f.scan.found && f.scan.found.length) || !!f.hand || (!!f.wscore && f.wscore.total != null));
+  return scored ? tr('Graded') : tr('Feedback');
+}
+function outStem(st, rn) { return [(rn || rosterNames()).get(st) || st.key, asgName(), outWord(st)].map(fileSafe).filter(Boolean).join(' - '); }
+function nameOut(items) {
+  if (!xNames() || !items.length) return items;
+  const rn = rosterNames(), by = new Map(), ext = p => (p.match(/\.[^./]+$/) || [''])[0];
+  for (const o of items) { if (!by.has(o.st)) by.set(o.st, []); by.get(o.st).push(o); }
+  for (const [st, list] of by) {
+    const stem = outStem(st, rn);
+    const named = list.map(o => {
+      const dir = o.path.includes('/') ? o.path.slice(0, o.path.lastIndexOf('/') + 1) : '', e = ext(o.path);
+      let base = o.path.slice(dir.length, o.path.length - e.length);
+      if (base.startsWith(st.key + ' - ')) base = base.slice(st.key.length + 3);   // "Student - " that a loose export put in front
+      const twin = list.filter(x => ext(x.path).toLowerCase() === e.toLowerCase()).length > 1;
+      return dir + stem + (twin && !base.startsWith(stem) ? ' - ' + fileSafe(base) : '') + e;
+    });
+    list.forEach((o, i) => { o.path = named[i]; });
+  }
+  const used = new Set();
+  for (const o of items) { let p = o.path, k = 2; while (used.has(p.toLowerCase())) p = o.path.replace(/(\.[^./]+)?$/, ' (' + k++ + ')$1'); used.add(p.toLowerCase()); o.path = p; }
+  return items;
+}
 async function flattenDoc(st, d, dpi, edit, key, fb) {
   await workerReady;
   const srcs = new Map();
@@ -6823,6 +6857,7 @@ async function openExport() {
         '<div class="prog" hidden><i></i></div><p class="muted" id="xStatus" style="font-size:13px"></p>' +
         '<details class="xopts" id="xOpts"' + (optsOpen ? ' open' : '') + '><summary>Options: <span id="xOptsSay"></span></summary>' +
           '<label class="chk"><input type="checkbox" id="xKeep" checked> Keep student folders</label>' +
+          '<label class="chk"><input type="checkbox" id="xNames"' + (xNames() ? ' checked' : '') + '> Name each file by student and assignment</label><p class="xhint" id="xNamesSay"></p>' +
           '<label class="chk"><input type="checkbox" id="xSheet" checked> Add the grade sheet (a crop of each typed grade, in ' + listOrder() + ')</label>' +
           '<label class="chk"><input type="checkbox" id="xEdit"' + (xEdit() ? ' checked' : '') + '> Keep marks editable</label><p class="xhint">Bring a file back in later and change its marks. Files are about twice as big.</p>' +
           '<label class="chk"><input type="checkbox" id="xKey"' + (keyOn() ? ' checked' : '') + '> Add a key to the marks used on each paper</label><p class="xhint">' + (!nKey ? 'No file has proofreading marks yet. ' : nKey === plan.length ? (nKey === 1 ? 'The file gets one. ' : 'All ' + nKey + ' files get one. ') : nKey + ' of the ' + plan.length + ' files ' + (nKey === 1 ? 'gets' : 'get') + ' one. ') + '<button class="link" data-mkey>Change what they mean…</button></p>' +
@@ -6838,6 +6873,7 @@ async function openExport() {
     const el = $('#xOptsSay'); if (!el) return;
     const on = [];
     if ($('#xKeep').checked) on.push('student folders');
+    if ($('#xNames').checked) on.push('files named by student');
     if ($('#xSheet').checked) on.push('grade sheet');
     if ($('#xEdit').checked) on.push('marks stay editable');
     if ($('#xKey').checked) on.push('mark key');
@@ -6846,9 +6882,15 @@ async function openExport() {
     if (dpi > 150) on.push('extra sharp');
     el.textContent = on.length ? on.join(', ') : 'none';
   };
-  optsSay();
+  const namesSay = () => {
+    const el = $('#xNamesSay'); if (!el) return;
+    const o = plan[0]; if (!o) { el.textContent = ''; return; }
+    const one = anonOn() ? [tr('Student name'), asgName(), outWord(o.st)].map(fileSafe).join(' - ') + '.pdf' : nameOut([{ ...o }])[0].path.split('/').pop();   // names hidden while she marks: no name here either
+    el.textContent = xNames() ? 'Like “' + one + '”. Graded when it has a score, Feedback when it doesn’t.' : 'Files keep the names they were turned in with.';
+  };
+  optsSay(); namesSay();
   const xo = $('#xOpts'); if (xo) xo.ontoggle = () => store.set('gs.xopts', xo.open);
-  box.onchange = e => { optsSay(); if (e.target.id === 'xEdit') store.set('gs.xedit', e.target.checked); if (e.target.id === 'xKey') setKey(v => { v.on = e.target.checked; }); if (e.target.id === 'xFb') store.set('gs.xfb', e.target.checked); if (e.target.id === 'xAll') { store.set('gs.xall', e.target.checked); renderTools(); openExport(); } };
+  box.onchange = e => { optsSay(); if (e.target.id === 'xEdit') store.set('gs.xedit', e.target.checked); if (e.target.id === 'xKey') setKey(v => { v.on = e.target.checked; }); if (e.target.id === 'xFb') store.set('gs.xfb', e.target.checked); if (e.target.id === 'xNames') { store.set('gs.xnames', e.target.checked); namesSay(); } if (e.target.id === 'xAll') { store.set('gs.xall', e.target.checked); renderTools(); openExport(); } };
   box.onclick = async e => {
     if (e.target.closest('[data-close]')) return closeDlg();
     const ck = e.target.closest('[data-chk]'); if (ck) { return toPaper(+ck.dataset.chk, ck.dataset.file || undefined); }
@@ -6886,7 +6928,7 @@ async function openExport() {
     try {
       say('Reading the grades…');
       await scanAll((n, t) => { bar.firstChild.style.width = (30 * n / t) + '%'; });
-      items = exportPlan(keep);
+      items = nameOut(exportPlan(keep));
       if (withSheet) {
         const name = ('Grade sheet - ' + batch.name + '.pdf').replace(/[\\/:*?"<>|]+/g, '-');
         await putOut(name, buildSheetPdf);
@@ -6934,7 +6976,7 @@ async function exportOne(st) {
   const btn = $('#oneOutBtn'), say = t => { const el = $('#oneOutSay'); if (el) { el.className = 'oneout-say'; el.textContent = t; } };
   saveNow(); commitEditors(); wordScoresAll();
   if (batch.lineBusy) await batch.lineRun;
-  const b0 = batch, mine = () => exportPlan(false).filter(o => o.st === st);
+  const b0 = batch, mine = () => nameOut(exportPlan(false).filter(o => o.st === st));
   let items = mine();
   if (!items.length && (!scanned || scanP)) { say('Reading the paper first…'); await scanAll(); if (batch !== b0) return; items = mine(); }   // a typed grade alone counts as a mark
   const who = anonOn() ? 'this paper' : st.key + '’s paper';
@@ -6946,17 +6988,17 @@ async function exportOne(st) {
     for (let i = 0; i < items.length; i++) {
       say(items.length > 1 ? 'Baking in marks ' + (i + 1) + ' of ' + items.length + '…' : 'Baking in marks…');
       const o = items[i];
-      const base = o.path.split('/').pop(), name = base.includes(st.key) ? base : st.key + ' - ' + base;   // her own download names each file for its student
+      const base = o.path.split('/').pop(), name = xNames() || base.includes(st.key) ? base : st.key + ' - ' + base;   // her own download names each file for its student
       try { files[name] = o.raw ? o.f.data : await flattenDoc(st, o.d, 150, xEdit(), keyOn(), fbOn() && !fbGiven && (fbGiven = true)); }
       catch (er) { console.error(o.path, er); failed.push({ path: o.path, st, why: exportWhy(er, false) }); }
     }
     const names = Object.keys(files);
     if (!names.length) throw new Error('the file couldn’t be made');
     if (names.length === 1) await saveBlob(names[0], new Blob([files[names[0]]], { type: /\.pdf$/i.test(names[0]) ? 'application/pdf' : 'application/octet-stream' }));
-    else { const z = {}; for (const n of names) z[n] = [files[n], { level: 0 }]; await saveBlob(st.key + ' - ' + batch.name + '.zip', new Blob([fflate.zipSync(z)], { type: 'application/zip' })); }
+    else { const z = {}; for (const n of names) z[n] = [files[n], { level: 0 }]; await saveBlob((xNames() ? outStem(st) : st.key + ' - ' + batch.name) + '.zip', new Blob([fflate.zipSync(z)], { type: 'application/zip' })); }
     if (batch !== b0) return;
     st.grade.sent = Date.now(); saveSoon();
-    toast(names.length === 1 ? 'Saved “' + names[0] + '”.' : 'Saved ' + names.length + ' files for ' + (anonOn() ? 'this student' : st.key) + ' in one ZIP.', 5000);
+    toast(anonOn() ? (names.length === 1 ? 'Saved this student’s file.' : 'Saved ' + names.length + ' files for this student in one ZIP.') : names.length === 1 ? 'Saved “' + names[0] + '”.' : 'Saved ' + names.length + ' files for ' + (anonOn() ? 'this student' : st.key) + ' in one ZIP.', 5000);
     if (failed.length) sayDlg(failed.length + (failed.length === 1 ? ' file couldn’t' : ' files couldn’t') + ' be made: ' + failed.map(f => f.path.split('/').pop() + ' (' + f.why + ')').join(', ') + '. The rest downloaded.');
   } catch (er) { console.error(er); toast('Something went wrong: ' + (er.message || er), 6000); }
   finally { xBusy = false; }
@@ -11341,7 +11383,7 @@ for (const el of document.querySelectorAll('.gsVer')) el.textContent = versionLa
 if (gsData.info.note) { const el = $('#bootNote'); el.textContent = gsData.info.note; el.hidden = false; toast(gsData.info.note, 15000); }
 
 window.__gs_pickMany = pickMany;
-window.__gs = { removeFile, bringBack, replaceFile, stickerText, startScorePlace, stopScorePlace, saveTrouble, batchIdOf, wordScore, wordScoresAll, restoreBackup, fileSeq, moveFile, openMoveFile, calcEval, openCalc, pageLit, setPageLit, lightMenuDo, lightChips, pageOwnL, setPageOwnL, lightForPage, ensureCounts, addRefs, refs: () => refFiles, matchToRoster, guessAmong, expandPicked, lightOpts, isRubricPage, openAnon, setAnon, anonOrder, anonOn, openLight, lightFor, lightAuto, openSplit, sp: () => SP, bringIn, sortGuess, openWord, wordBytes, reopenKept, forgetKept, kept: () => keptMeta, addFiles, removeAdded, nextUnscored, openDisplay, trimToInk, intake, parseGrade, scanFile, scanAll, state: () => ({ batch, cur, setup, pages, zoom, lib }), SCALE12, SCALE_FIVES, RUBRIC_STEPS, percentWith, ownGrade, roundPct, fmtNum, fmtPct, saveNow, undo, redo, gsData, gradeOf, percentFor, flattenDoc, exportPlan, layoutOf, docIn, openStudent, setTool };
+window.__gs = { removeFile, bringBack, replaceFile, stickerText, startScorePlace, stopScorePlace, saveTrouble, batchIdOf, wordScore, wordScoresAll, restoreBackup, fileSeq, moveFile, openMoveFile, calcEval, openCalc, pageLit, setPageLit, lightMenuDo, lightChips, pageOwnL, setPageOwnL, lightForPage, ensureCounts, addRefs, refs: () => refFiles, matchToRoster, guessAmong, expandPicked, lightOpts, isRubricPage, openAnon, setAnon, anonOrder, anonOn, openLight, lightFor, lightAuto, openSplit, sp: () => SP, bringIn, sortGuess, openWord, wordBytes, reopenKept, forgetKept, kept: () => keptMeta, addFiles, removeAdded, nextUnscored, openDisplay, trimToInk, intake, parseGrade, scanFile, scanAll, state: () => ({ batch, cur, setup, pages, zoom, lib }), SCALE12, SCALE_FIVES, RUBRIC_STEPS, percentWith, ownGrade, roundPct, fmtNum, fmtPct, saveNow, undo, redo, gsData, gradeOf, percentFor, flattenDoc, exportPlan, nameOut, layoutOf, docIn, openStudent, setTool };
 
 /* ---------------- names: finding a student's name in text, in any alphabet, for the Claude ZIP and anonymous grading ---------------- */
 const NAME_PLAIN = new Set(('al am an art as at august autumn ban bay be best bill bin black brown by can case chase chin dawn day de dean do don dung da ed faith far frank gay go grace gray green grey ha hang he hope ho hung if in is it ivy jade joy june king la lane le little long love major man mark may me min my new no nice on or page pan park pat pearl pen penny price rich rose ruby sandy sang short sing small so son song star stone su sue summer sun sung tan tang ten tin to tu up us van violet von we white will win wing won wood wu ye young april').split(' '));
@@ -21512,7 +21554,7 @@ $('#setHistory').addEventListener('click', e => {
 });
 
 /* updates she controls, and installing as an app */
-const WHATS_NEW = {"1.21.0":["Each class has a Missing work tab: every paper you marked Missing, by student or by assignment, for the term you pick.","Email reminder opens an email in your own mail app, addressed to the student and listing what they owe, for you to read and send. Email all writes one email to everyone who owes an assignment, with the addresses in Bcc. Grading Studio sends nothing itself.","Each reminder you open is noted beside the work, and Email wording… changes what every reminder says."],"1.20.0":["The app can speak Traditional Chinese (繁體中文). Choose it in Settings, Display, App language, or at the top of the welcome.","Like Spanish, it covers the first screens so far: the sidebar, Today, the welcome, Find anything, Help, and the feedback page students get with a returned paper. The other screens are still in English."],"1.19.0":["The app can speak Spanish. Choose it in Settings, Display, App language, or at the top of the welcome.","Spanish covers the first screens so far: the sidebar, Today, the welcome, Find anything, Help, and the feedback page students get with a returned paper. The other screens are still in English.","Names you typed (classes, students, assignments, rubric rows) are never translated."],"1.18.0":["On a tablet, a pencil draws and the pen's line is wider where you press harder. Once you have used a pencil, one finger moves the page, two fingers pinch to zoom, and a hand resting on the screen does nothing.","Settings, Marking has a new Tablet and pencil section: choose what a finger does on the paper, or turn off the wider line.","On a touch screen the tools, the student rows and the score buttons are larger."],"1.17.0":["Report comments: a new tab on each class's page drafts a comment for every student from your own gradebook, rubric scores and the comments you wrote on their papers. Edit each one, tick it done, then copy or download them all.","The drafts are put together on your computer from sentences you can change under Wording. Nothing about a student is sent anywhere."],"1.16.0":["Help is in the sidebar: short answers to the questions teachers ask most, from opening a set of papers to moving your work to another computer.","Find anything answers questions too. Type a few words, like “late paper” or “backup”, and the answer is in the list."],"1.15.0":["A picture dragged onto a slide that has text now sits beside the text, in a new Text + picture layout.","Drag several pictures in at once and each gets its own slide. Let a picture go on any slide in the list on the left to put it there.","New Full picture layout: the picture fills the whole slide."],"1.14.0":["Extra credit: points or a percent on one paper, and extra credit entries in the gradebook that add to the term grade or the in-class average.","The gradebook shows each type's average (summative, in-class) right beside the term grade, kept in view as you scroll. Averages only shows just those columns, and Whole year splits each term the same way.","Leave out… lets you untick students to see the class averages without them. Their own grades don't change, and nothing is saved."],"1.13.0":["Present a lesson from the Planner, or from Today when its class is on now or next: its slides fill the screen, and the arrow keys or a clicker move through them.","While presenting, A shows the agenda to tick off, T starts a timer the class can see, N shows your notes and B blanks the screen.","The bar shows how many minutes the class has left, from your timetable.","After a lesson is taught, one line says where the class got to. It shows on the lesson and on the week, and presenting again picks up there."],"1.12.0":["A returned paper starts with a feedback page: the score, each rubric row with the level given and what that level means, your comment, and every comment on the paper with its page number.","It is on unless you turn it off under Options on the Return tab. Your own pages are not changed, and bringing an export back in opens only those."],"1.11.0":["The Planner’s sections are in the sidebar: Calendar, Units, Past lessons, Activities and Rubrics. The row of tabs across the top is gone.","A lesson has a lighter top: its name, its classes, its status and Download. Copy for Claude, Versions, the upload and the links are under More.","Comments shows above a lesson once it has one."],"1.7.0":["Home is now Today: the classes you teach today with the lesson planned for each, the papers waiting to be marked, and the papers ready to hand back.","What the class needs next: after a set of papers is scored, Today shows the weakest rubric row and how many students to sit down with.","A class page is quieter. Click anywhere on an assignment’s row to open it; the only blue button is the one that adds an assignment.","Forget, and the other ways to open papers, moved into the ⋯ menu on each row."],"1.6.0":["A new browser opens on three questions (your classes, how you grade, where work is kept) and starts with nothing of anyone else’s in it.","A sample class of made-up students, with papers to mark, for trying things out. Remove it from Home when you’re done.","The app uses the name of your own school system. Choose it, and how you usually grade, in Settings.","Letter grades or IB 1 to 7 can show beside the percent, with boundaries you set.","Canvas and Moodle downloads are grouped by student. The Planner works without a setup file, and downloads lessons as PowerPoint with a plain built-in template."],"1.5.0":["The sidebar says “Not backed up”, in amber, until a folder holds a second copy of your work. Home asks for that folder once.","Go back in time, in Settings: any assignment as it was on an earlier day, restored on its own, with Undo.","Grading Studio can be installed as an app, and it opens with no internet.","A newer version now waits until you click Update now, so nothing changes in the middle of marking."]};
+const WHATS_NEW = {"1.22.0":["Returned files are named for the student, the assignment and what they are, like “Ana Lee - River essay - Graded.pdf”, or Feedback when there is no score. They still go in each student’s own folder.","To keep the names students turned in, untick Name each file by student and assignment under Options on the Return tab."],"1.21.0":["Each class has a Missing work tab: every paper you marked Missing, by student or by assignment, for the term you pick.","Email reminder opens an email in your own mail app, addressed to the student and listing what they owe, for you to read and send. Email all writes one email to everyone who owes an assignment, with the addresses in Bcc. Grading Studio sends nothing itself.","Each reminder you open is noted beside the work, and Email wording… changes what every reminder says."],"1.20.0":["The app can speak Traditional Chinese (繁體中文). Choose it in Settings, Display, App language, or at the top of the welcome.","Like Spanish, it covers the first screens so far: the sidebar, Today, the welcome, Find anything, Help, and the feedback page students get with a returned paper. The other screens are still in English."],"1.19.0":["The app can speak Spanish. Choose it in Settings, Display, App language, or at the top of the welcome.","Spanish covers the first screens so far: the sidebar, Today, the welcome, Find anything, Help, and the feedback page students get with a returned paper. The other screens are still in English.","Names you typed (classes, students, assignments, rubric rows) are never translated."],"1.18.0":["On a tablet, a pencil draws and the pen's line is wider where you press harder. Once you have used a pencil, one finger moves the page, two fingers pinch to zoom, and a hand resting on the screen does nothing.","Settings, Marking has a new Tablet and pencil section: choose what a finger does on the paper, or turn off the wider line.","On a touch screen the tools, the student rows and the score buttons are larger."],"1.17.0":["Report comments: a new tab on each class's page drafts a comment for every student from your own gradebook, rubric scores and the comments you wrote on their papers. Edit each one, tick it done, then copy or download them all.","The drafts are put together on your computer from sentences you can change under Wording. Nothing about a student is sent anywhere."],"1.16.0":["Help is in the sidebar: short answers to the questions teachers ask most, from opening a set of papers to moving your work to another computer.","Find anything answers questions too. Type a few words, like “late paper” or “backup”, and the answer is in the list."],"1.15.0":["A picture dragged onto a slide that has text now sits beside the text, in a new Text + picture layout.","Drag several pictures in at once and each gets its own slide. Let a picture go on any slide in the list on the left to put it there.","New Full picture layout: the picture fills the whole slide."],"1.14.0":["Extra credit: points or a percent on one paper, and extra credit entries in the gradebook that add to the term grade or the in-class average.","The gradebook shows each type's average (summative, in-class) right beside the term grade, kept in view as you scroll. Averages only shows just those columns, and Whole year splits each term the same way.","Leave out… lets you untick students to see the class averages without them. Their own grades don't change, and nothing is saved."],"1.13.0":["Present a lesson from the Planner, or from Today when its class is on now or next: its slides fill the screen, and the arrow keys or a clicker move through them.","While presenting, A shows the agenda to tick off, T starts a timer the class can see, N shows your notes and B blanks the screen.","The bar shows how many minutes the class has left, from your timetable.","After a lesson is taught, one line says where the class got to. It shows on the lesson and on the week, and presenting again picks up there."],"1.12.0":["A returned paper starts with a feedback page: the score, each rubric row with the level given and what that level means, your comment, and every comment on the paper with its page number.","It is on unless you turn it off under Options on the Return tab. Your own pages are not changed, and bringing an export back in opens only those."],"1.11.0":["The Planner’s sections are in the sidebar: Calendar, Units, Past lessons, Activities and Rubrics. The row of tabs across the top is gone.","A lesson has a lighter top: its name, its classes, its status and Download. Copy for Claude, Versions, the upload and the links are under More.","Comments shows above a lesson once it has one."],"1.7.0":["Home is now Today: the classes you teach today with the lesson planned for each, the papers waiting to be marked, and the papers ready to hand back.","What the class needs next: after a set of papers is scored, Today shows the weakest rubric row and how many students to sit down with.","A class page is quieter. Click anywhere on an assignment’s row to open it; the only blue button is the one that adds an assignment.","Forget, and the other ways to open papers, moved into the ⋯ menu on each row."],"1.6.0":["A new browser opens on three questions (your classes, how you grade, where work is kept) and starts with nothing of anyone else’s in it.","A sample class of made-up students, with papers to mark, for trying things out. Remove it from Home when you’re done.","The app uses the name of your own school system. Choose it, and how you usually grade, in Settings.","Letter grades or IB 1 to 7 can show beside the percent, with boundaries you set.","Canvas and Moodle downloads are grouped by student. The Planner works without a setup file, and downloads lessons as PowerPoint with a plain built-in template."],"1.5.0":["The sidebar says “Not backed up”, in amber, until a folder holds a second copy of your work. Home asks for that folder once.","Go back in time, in Settings: any assignment as it was on an earlier day, restored on its own, with Undo.","Grading Studio can be installed as an app, and it opens with no internet.","A newer version now waits until you click Update now, so nothing changes in the middle of marking."]};
 const upd = { on: false, st: null, mine: '', checking: false, said: '', install: null, installed: false, err: '' };
 const updCan = () => 'serviceWorker' in navigator && (location.protocol === 'https:' || /[?&]sw=1(&|$)/.test(location.search)) && !/Grading Studio\.html$/i.test(decodeURIComponent(location.pathname));
 const updSend = async msg => { const reg = await navigator.serviceWorker.ready; if (reg.active) reg.active.postMessage(msg); };

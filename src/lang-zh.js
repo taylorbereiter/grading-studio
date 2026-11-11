@@ -149,6 +149,8 @@ const LANG_ZH = {
     /* the feedback page in a returned paper */
     'How it was scored': '評分方式', 'From your teacher': '老師的話', 'Comment on your paper': '作業上的評語', 'Comments on your paper': '作業上的評語',
     'Your marked paper starts on the next page.': '批改後的作業從下一頁開始。', 'Your feedback continues on the next page.': '回饋接續在下一頁。',
+    /* returned file names: Student - Assignment - Graded.pdf */
+    'Graded': '已評分', 'Feedback': '回饋', 'Student name': '學生姓名',
     'Missing': '缺交', 'Excused': '免交', 'Late': '遲交',
   },
   rules: [
