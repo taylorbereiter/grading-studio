@@ -66,3 +66,10 @@
 .iboften>span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .bkpad>.ibfit{margin-left:0;margin-right:0}
 @media (max-width:640px){.ibstack,.iboften{grid-template-columns:minmax(0,1fr)}}
+/* marking an MYP task */
+.ibask{display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-2);margin-bottom:var(--space-3);padding:var(--space-3);border-radius:var(--corner-3);background:var(--accent-soft);font-size:var(--text-control)}
+.ibtl{display:inline-flex;flex-wrap:wrap;gap:var(--space-2);align-items:baseline}
+.ibtl .iblv{margin:0;gap:3px}.ibtl .iblv i{font-size:var(--text-control)}
+.ibtlsay{font-size:var(--text-control);margin-left:auto}
+.ibtaskl{display:grid;gap:var(--space-2);margin:var(--space-3) 0}
+#ibTaskSet.link{margin-left:var(--space-2)}

@@ -135,7 +135,7 @@ function openSetup() {
   box.addEventListener('click', async e => {
     const m = e.target.closest('[data-m]'); if (m) { draft.mode = m.dataset.m; return re(); }
     const rm = e.target.closest('[data-rm]'); if (rm) { draft.criteria.splice(+rm.dataset.rm, 1); levelsRowGone(draft, +rm.dataset.rm); return re(); }
-    if (e.target.closest('[data-add]')) { draft.criteria.push('Criterion ' + (draft.criteria.length + 1)); if (Array.isArray(draft.tops)) draft.tops.push(null); rubDlg.from.push(null); return re(); }
+    if (e.target.closest('[data-add]')) { draft.criteria.push('Criterion ' + (draft.criteria.length + 1)); if (Array.isArray(draft.tops)) draft.tops.push(null); if (Array.isArray(draft.ib)) draft.ib.push(null); rubDlg.from.push(null); return re(); }
     const pr = e.target.closest('[data-preset]');
     if (pr) {
       const max = draftMax(draft);

@@ -346,4 +346,69 @@ document.addEventListener('click', e => {
   if (d.ibcopy != null) return ibCopy(c);
 });
 document.addEventListener('change', e => { const t = e.target.closest('#ibAdd [data-ibacrit]'); if (!t || !ibk.add) return; ibAddRead(); const k = t.dataset.ibacrit, a = ibk.add; a.crit = ibCrit(bkClass()).map(x => x.k).filter(x => x === k ? t.checked : a.crit.includes(x)); bkDraw(); });
-Object.assign(window.__gs, { classWay, ibCrit, ibBounds, ibBoundsFor, ibGradeOf, ibTerm, ibEvidence, ibLevel, ibDlg, IB_GROUPS, ibCols, ibMid, ibk: () => ibk });
+/* ---------- marking an MYP task on the paper: its rubric rows are the criteria it assesses, each 0 to 8 ---------- */
+// The setup of such a task is a rubric whose rows carry their criterion: setup.ib = ['A', 'D'] beside setup.criteria, every row
+// 0 to 8 in whole levels. The gradebook reads the levels by the letters (ibCols), so a row a teacher renames still counts.
+// A task has no total and no percent: the levels are what it says.
+function ibSetup(su) { su = su || setup; return su.mode === 'rubric' && Array.isArray(su.ib) && su.ib.some(Boolean); }
+const ibTaskClass = () => { const c = batch && batchClass(); return c && classWay(c) === 'myp' ? c : null; };
+// A student's levels on this task, in the order of its rows: [['A', 6], ['D', null]].
+const ibTaskLevels = st => setup.ib.map((k, i) => [k, noScore(st) ? null : st.grade.rubric[i]]).filter(x => x[0]);
+// In the list of students: the levels alone, in the order of the rows.
+function ibListSay(st) { return ibTaskLevels(st).map(x => x[1] == null ? '–' : fmtNum(x[1])).join(' '); }
+function ibStampText(st) { return ibTaskLevels(st).filter(x => x[1] != null).map(([k, v]) => k + ' ' + fmtNum(v)).join('   '); }
+// In the score panel, where the total and percent of another task would be.
+function ibTotalHtml(st) {
+  const lv = ibTaskLevels(st), on = lv.filter(x => x[1] != null);
+  return '<span class="ibtl" id="ibTaskLv">' + (on.length ? on.map(([k, v]) => '<span class="iblv"><i>' + esc(k) + '</i><b>' + fmtNum(v) + '</b></span>').join('') : '<b>–</b>') + '</span><span class="ibtlsay muted">' + (on.length < lv.length ? on.length + ' of ' + lv.length + ' criteria marked' : 'levels, 0 to ' + IB_TOP) + '</span>' +
+    (on.length ? '<button class="btn sm ghost" id="stampScore" title="Put the levels on the paper: ' + esc(ibStampText(st)) + '">' + STAMP_ICON + 'Stamp</button>' : '');
+}
+// Above the rows: which criteria this task assesses, or, in an MYP class whose task has none yet, the way to choose them.
+function ibPanelHead() {
+  const c = ibTaskClass(); if (!c) return '';
+  return ibSetup() ? '<button class="link" id="ibTaskSet">Criteria</button>'
+    : '';
+}
+function ibPanelAsk() {
+  const c = ibTaskClass(); if (!c || ibSetup()) return '';
+  return '<div class="ibask" id="ibAsk"><span>' + esc(c.name) + ' is graded with MYP criteria.</span><button class="btn sm primary" id="ibTaskSet">Choose this task’s criteria</button></div>';
+}
+let ibTask = null;
+function ibTaskDlg() {
+  const c = ibTaskClass(); if (!c) return;
+  const crit = ibCrit(c), was = ibSetup() ? setup.ib.filter(Boolean) : [];
+  ibTask = { on: was.length ? was.slice() : [] };
+  openDlg('<div class="bh"><h2>Criteria this task assesses</h2></div><div class="bb" id="ibTaskBody"><p class="muted">Tick the criteria you are marking on this task. Each becomes a row scored 0 to ' + IB_TOP + '. A task usually assesses two or three.</p>' +
+    '<div class="ibtaskl" role="group" aria-label="Criteria">' + crit.map(x => '<label class="ibchk"><input type="checkbox" data-ibtk="' + esc(x.k) + '"' + (ibTask.on.includes(x.k) ? ' checked' : '') + '> <b>' + esc(x.k) + '</b> ' + esc(x.name) + '</label>').join('') + '</div>' +
+    '<p class="muted ibnote">What each level means on a row is yours to write: use Edit rubric afterwards and paste your own descriptors.</p></div>' +
+    '<div class="bf"><button class="btn" data-cancel>Cancel</button><button class="btn primary" data-ok>Save</button></div>');
+  $('#dlgBox').onchange = null; $('#dlgBox').oninput = null;
+  $('#dlgBox').onclick = e => { if (e.target.closest('[data-cancel]')) { ibTask = null; return closeDlg(); } if (e.target.closest('[data-ok]')) return ibTaskSave(); };
+}
+async function ibTaskSave() {
+  const c = ibTaskClass(); if (!c || !ibTask) return;
+  const keys = [...document.querySelectorAll('#ibTaskBody [data-ibtk]')].filter(i => i.checked).map(i => i.dataset.ibtk), crit = ibCrit(c).filter(x => keys.includes(x.k));
+  if (!crit.length) { toast('Tick at least one criterion'); return; }
+  const had = ibSetup(), old = had ? setup.ib : [], from = crit.map(x => old.indexOf(x.k));   // where each new row's scores come from, or -1
+  const scored = batch.students.filter(st => (st.grade.rubric || []).some((v, i) => v != null && !from.includes(i)) || (!had && st.grade.points !== '' && st.grade.points != null)).length;
+  if (scored && !await askDlg((had ? 'Taking a criterion off this task clears the levels given for it on ' : 'This task’s rows become the criteria, which clears the scores already given on ') + people(scored, 'paper') + '.', { ok: 'Save', cancel: 'Go back', danger: true })) return;
+  const pick = a => Array.isArray(a) ? from.map(i => i >= 0 && a[i] != null ? a[i] : null) : null;
+  const su = { ...setup, mode: 'rubric', criteria: crit.map((x, n) => from[n] >= 0 ? setup.criteria[from[n]] : x.k + ' ' + x.name), ib: crit.map(x => x.k), top: IB_TOP, half: false, scale: null };
+  delete su.tops;
+  const lv = pick(setup.levels), gl = pick(setup.goals);
+  if (lv && lv.some(Boolean)) su.levels = lv.map(x => x || []); else delete su.levels;
+  if (gl && gl.some(Boolean)) su.goals = gl.map(x => x || ''); else delete su.goals;
+  for (const st of batch.students) {
+    const g = st.grade, r = g.rubric || [], at = g.atR || {}, now = Date.now();
+    g.rubric = from.map(i => i >= 0 && r[i] != null ? r[i] : null);
+    const nat = {}; from.forEach((i, n) => { nat[n] = i >= 0 && at[i] ? at[i] : now; }); if (at.points) nat.points = now;
+    g.atR = nat; if (!had) g.points = '';
+  }
+  setup = su; store.set('gs.setup', { ...setup, spot: undefined, rubricPage: undefined });
+  if (batch.assignment) { batch.assignment.setup = { ...setup, spot: undefined }; shareRubric(batch.assignment); saveLib(); }
+  batch.students.forEach(refound);
+  ibTask = null; closeDlg(); rowStart(); renderGrade(); renderList(); saveSoon();
+  toast('This task assesses ' + crit.map(x => x.k).join(', '));
+}
+document.addEventListener('click', e => { if (e.target.closest('#ibTaskSet')) ibTaskDlg(); });
+Object.assign(window.__gs, { classWay, ibCrit, ibBounds, ibBoundsFor, ibGradeOf, ibTerm, ibEvidence, ibLevel, ibDlg, IB_GROUPS, ibCols, ibMid, ibSetup, ibTaskDlg, ibk: () => ibk });

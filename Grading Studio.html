@@ -1766,6 +1766,13 @@ p.goalline{display:block}
 .iboften>span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .bkpad>.ibfit{margin-left:0;margin-right:0}
 @media (max-width:640px){.ibstack,.iboften{grid-template-columns:minmax(0,1fr)}}
+/* marking an MYP task */
+.ibask{display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-2);margin-bottom:var(--space-3);padding:var(--space-3);border-radius:var(--corner-3);background:var(--accent-soft);font-size:var(--text-control)}
+.ibtl{display:inline-flex;flex-wrap:wrap;gap:var(--space-2);align-items:baseline}
+.ibtl .iblv{margin:0;gap:3px}.ibtl .iblv i{font-size:var(--text-control)}
+.ibtlsay{font-size:var(--text-control);margin-left:auto}
+.ibtaskl{display:grid;gap:var(--space-2);margin:var(--space-3) 0}
+#ibTaskSet.link{margin-left:var(--space-2)}
 /* ---------- an open assignment's tabs, and a tab's screen drawn on the page (11/10) ---------- */
 .atabs{display:flex;gap:2px;align-self:stretch;margin:-9px 0 -9px 8px;flex:none}
 .atab{display:flex;align-items:center;gap:6px;padding:0 13px;min-height:44px;font-size:var(--text-body);font-weight:500;color:var(--fg-2);text-decoration:none;border-bottom:2px solid transparent;border-top:2px solid transparent;white-space:nowrap}
@@ -5138,7 +5145,7 @@ let setup = setupOver(store.get('gs.setup', null));
 
 function maxPoints() { return setupMax(setup); }
 const roundPct = v => Math.max(0, Math.round(v + 1e-9));
-function percentFor(total) { return percentWith(total, maxPoints(), setup.scale); }
+function percentFor(total) { return ibSetup() ? null : percentWith(total, maxPoints(), setup.scale); }   // levels on MYP criteria are never a percent (ib.js)
 function percentWith(total, max, sc) {
   if (total == null || total === '' || isNaN(total)) return null;
   if (!max) return null;
@@ -6818,7 +6825,7 @@ function renderList() {
     if (!lfShows(i)) return '';
     const g = gradeOf(st);
     const val = g.total != null ? g.total : g.pct != null ? g.pct + '%' : null;
-    let right = noScore(st) ? '<span class="stag" title="You marked this student ' + g.status + '. No score counts.">' + STATUS_LABEL[g.status] + '</span>' : val != null ? '<span class="sc" title="' + (g.tries ? esc(triesSay(g)) : g.paper ? 'Read from the paper' : g.done ? 'Scored' : 'Partly scored') + '"' + (g.paper || g.out ? ' style="color:var(--muted);font-weight:600"' : g.done ? '' : ' style="color:var(--warn)"') + '>' + fmtNum(g.total != null ? g.total : g.pct) + (g.total == null ? '%' : g.outOf != null ? '/' + fmtNum(g.outOf) : '') + (g.partial ? '<small>partial</small>' : '') + '</span>'
+    let right = noScore(st) ? '<span class="stag" title="You marked this student ' + g.status + '. No score counts.">' + STATUS_LABEL[g.status] + '</span>' : val != null ? '<span class="sc" title="' + (g.tries ? esc(triesSay(g)) : g.paper ? 'Read from the paper' : g.done ? 'Scored' : 'Partly scored') + '"' + (g.paper || g.out ? ' style="color:var(--muted);font-weight:600"' : g.done ? '' : ' style="color:var(--warn)"') + '>' + (ibSetup() ? ibListSay(st) : fmtNum(g.total != null ? g.total : g.pct)) + (g.total == null ? '%' : g.outOf != null ? '/' + fmtNum(g.outOf) : '') + (g.partial ? '<small>partial</small>' : '') + '</span>'
       : manyReads(st) ? '<span class="sc" style="color:var(--warn)" title="More than one grade found on the paper. Check the Grade sheet.">?</span>'
       : st.doubts && st.doubts.length ? '<span class="sc" style="color:var(--warn)" title="A reading on the paper may not be a grade. Confirm it on the Grade sheet.">?</span>'
       : hasMarks(st) ? '<span class="dot" title="Marked"></span>' : '';
@@ -6826,7 +6833,7 @@ function renderList() {
     if (fmNow() && !noScore(st)) right = st.grade.fb ? '<span class="fbck" title="Feedback complete">✓</span>' : hasMarks(st) || (st.grade.comment || '').trim() ? '<span class="dot" title="Started, not complete yet"></span>' : '';
     const nAdd = st.files.filter(f => f.added && !f.from && !madeFromWord(f)).length, re = st.files.some(f => Object.values(f.sc || {}).some(r => r.re)), grp = st.files.some(f => f.from || Object.values(f.sc || {}).some(r => r.w)) || st.files.some(f => !f.added && shareCopies(st, f).length);
     const fm = fmNow(), sv = noScore(st) ? ['–', 'none'] : fm ? (st.grade.fb ? ['✓', 'ok'] : hasMarks(st) || (st.grade.comment || '').trim() ? ['', 'dot'] : st.files.length ? ['', 'ring'] : ['–', 'none'])
-      : val != null ? [fmtNum(g.total != null ? g.total : g.pct) + (g.total == null ? '%' : ''), g.paper || g.out ? 'quiet' : g.done ? '' : 'part'] : manyReads(st) || (st.doubts && st.doubts.length) ? ['?', 'part'] : hasMarks(st) ? ['', 'dot'] : st.files.length ? ['', 'ring'] : ['–', 'none'];
+      : val != null ? [ibSetup() ? ibListSay(st) : fmtNum(g.total != null ? g.total : g.pct) + (g.total == null ? '%' : ''), g.paper || g.out ? 'quiet' : g.done ? '' : 'part'] : manyReads(st) || (st.doubts && st.doubts.length) ? ['?', 'part'] : hasMarks(st) ? ['', 'dot'] : st.files.length ? ['', 'ring'] : ['–', 'none'];
     return '<button class="stu' + (i === cur ? ' on' : '') + (st.files.length ? '' : ' empty') + (sv[1] ? ' sv-' + sv[1] : '') + (g.status === 'late' ? ' is-late' : '') + '" data-i="' + i + '" data-sv="' + sv[0] + '"' + (i === cur ? ' aria-current="true"' : '') + '><span class="num">' + (pos + 1) + '</span><span class="nm" title="' + esc(full) + '">' + esc(nm) + '</span>' + (anonOn() ? '' : whoBtn('data-wi="' + i + '"', st.key)) +
       '<span class="tail">' + (st.files.length || noScore(st) ? '' : '<span class="muted" style="font-size:11px">no paper</span>') + (g.status === 'late' ? '<span class="stag" title="You marked this student late">late</span>' : '') + (g.out ? '<span class="stag out" title="Left out of the average">left out</span>' : '') + (g.tries ? '<span class="stag retk" title="' + esc(triesSay(g)) + '">retake</span>' : '') + (nAdd ? '<span class="add" title="' + nAdd + (nAdd === 1 ? ' file' : ' files') + ' added by you">+' + nAdd + '</span>' : '') + (re ? '<span class="add" title="A page needs a rescan">⚑</span>' : '') + (groupOf(st) ? '<span class="add grp" title="Group work: marked and graded once with ' + esc(groupNames(groupMates(st))) + '">group</span>' : grp ? '<span class="add grp" title="Group work: shares pages or a file with another student">shared</span>' : '') + carryPill(st) + sent + right + '</span></button>';
   }).join('');
@@ -6884,13 +6891,13 @@ function renderGrade() {
   if (fmNow()) return renderFeedback(st);
   if (setup.mode === 'rubric') {
     if (rowOn >= setup.criteria.length) rowOn = -1;
-    h += '<h3>Score <button class="link" id="editRubric">Edit rubric</button></h3><div class="crits">';
+    h += ibPanelAsk() + '<h3>Score <button class="link" id="editRubric">Edit rubric</button>' + ibPanelHead() + '</h3><div class="crits">';   // an MYP class's task is marked against its criteria (ib.js)
     h += setup.criteria.map((c, i) => { const v = g.rubric[i], steps = rowSteps(setup, i), k = steps.indexOf(v), top = rowTop(setup, i);
       return '<div class="crit' + (i === rowOn ? ' on' : '') + '" data-row="' + i + '"><div class="cn"><span title="' + esc(c) + '">' + esc(c) + '</span><em>' + critScore(v, i) + '</em></div><div class="scores slide' + (steps.length > 9 ? ' many' : '') + '" data-c="' + i + '" style="--n:' + (steps.length - 1) + '">' +
         '<input type="range" class="srange' + (v == null ? ' unset' : '') + '" style="--k:' + Math.max(0, k) + '" min="0" max="' + (steps.length - 1) + '" step="1" value="' + Math.max(0, k) + '" aria-label="Score for ' + esc(c) + '" aria-valuetext="' + (v == null ? 'Not scored' : fmtNum(v) + ' out of ' + top) + '">' +
         '<div class="sticks">' + steps.map((w, j) => '<button class="' + (w % 1 ? 'half' : '') + '" style="--k:' + j + '" data-v="' + w + '" tabindex="-1" aria-pressed="' + (v === w) + '">' + w + '</button>').join('') + '</div></div></div>'; }).join('') + '</div>' + lvBox();
   } else {
-    h += '<h3>Score <button class="link" id="editRubric">Edit</button></h3>' +
+    h += ibPanelAsk() + '<h3>Score <button class="link" id="editRubric">Edit</button></h3>' +
       '<div class="pts"><input type="number" step="0.5" min="0" id="ptsIn" value="' + esc(g.points) + '" aria-label="Points"><span class="muted">out of ' + esc(setup.outOf) + '</span></div>';
   }
   h += '<div class="total">' + totalHtml(st) + '</div>' + statusHtml(st);
@@ -6924,6 +6931,7 @@ function fbToggle(next) {
 function totalHtml(st) {
   const gr = noScore(st) ? gradeOf(st) : tryGrade(st), own = ownGrade(st);   // with a retake, the big number is the try being scored; what counts is in the retake box under it
   if (noScore(st)) return '<b>' + STATUS_LABEL[gr.status] + '</b><span style="width:100%;font-size:12.5px">No score counts. Giving a score takes this off.</span>';
+  if (ibSetup()) return ibTotalHtml(st);   // an MYP task has levels, no total and no percent
   let h = '<b>' + (gr.total == null ? '–' : fmtNum(gr.total)) + '</b><span>/ ' + (gr.outOf != null ? fmtNum(gr.outOf) : maxPoints()) + '</span><span class="pc">' + (gr.pct == null ? '' : fmtPct(gr.pct) + bandSay(gr.pct)) + '</span>';
   if (gr.total != null) h += '<button class="btn sm ghost" id="stampScore" title="Put the score on the paper: ' + esc(scoreStampText(gr)) + '">' + STAMP_ICON + 'Stamp</button>';
   if (gr.xc) h += '<span class="xcsay" style="width:100%">' + fmtNum(gr.base) + ' earned + ' + fmtNum(gr.xc) + (gr.xcU === 'pct' ? '%' : '') + ' extra credit</span>';
@@ -6935,6 +6943,7 @@ function totalHtml(st) {
 }
 const STAMP_ICON = '<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><rect x="2" y="9.5" width="12" height="3.5" rx="1"/><path d="M6 9.5V7.2a2 2 0 1 1 4 0v2.3M3.5 15h9"/></svg>';
 function scoreStampText(gr) {
+  if (ibSetup()) return ibStampText(batch.students[cur]);
   const max = gr.outOf != null ? gr.outOf : maxPoints();
   return fmtNum(gr.total) + (max ? '/' + fmtNum(max) : '') + (gr.pct != null ? ' = ' + gr.pct + '%' : '');
 }
@@ -7206,7 +7215,7 @@ function openSetup() {
   box.addEventListener('click', async e => {
     const m = e.target.closest('[data-m]'); if (m) { draft.mode = m.dataset.m; return re(); }
     const rm = e.target.closest('[data-rm]'); if (rm) { draft.criteria.splice(+rm.dataset.rm, 1); levelsRowGone(draft, +rm.dataset.rm); return re(); }
-    if (e.target.closest('[data-add]')) { draft.criteria.push('Criterion ' + (draft.criteria.length + 1)); if (Array.isArray(draft.tops)) draft.tops.push(null); rubDlg.from.push(null); return re(); }
+    if (e.target.closest('[data-add]')) { draft.criteria.push('Criterion ' + (draft.criteria.length + 1)); if (Array.isArray(draft.tops)) draft.tops.push(null); if (Array.isArray(draft.ib)) draft.ib.push(null); rubDlg.from.push(null); return re(); }
     const pr = e.target.closest('[data-preset]');
     if (pr) {
       const max = draftMax(draft);
@@ -13838,7 +13847,7 @@ function fbData(st, d) {
     const numbered = all.filter(n => n.hl).sort((a, b) => a.ay - b.ay || a.ax - b.ax);   // the numbers the page itself shows
     for (const n of [...all].sort((a, b) => a.ay - b.ay || a.ax - b.ax)) notes.push({ n: numbered.indexOf(n) + 1, text: n.text.trim(), color: n.color, page: k });
   });
-  const comment = ((old ? old.comment : st.grade.comment) || '').trim(), scored = g.total != null && !g.partial;
+  const comment = ((old ? old.comment : st.grade.comment) || '').trim(), scored = g.total != null && !g.partial && !ibSetup();   // an MYP task goes back with its levels, no total
   const trySay = old ? tr(tryName(tn)) : cnt ? tr('Retake') + (cnt.tryNow && cnt.pct !== g.pct ? ' · ' + tr('counts as') + ' ' + fmtPct(cnt.pct) : '') : '';
   if (!scored && !rows.length && !comment && !notes.length) return null;
   const rn = rosterNames(), who = rn.get(st) || st.key;   // the paper goes back to its student, so it carries their name even while she marks with names hidden
@@ -14029,7 +14038,7 @@ function levelsEditHtml(d, i) {
     lv.map(v => '<label class="lvin"><b>' + v + '</b><textarea rows="2" data-lvi="' + i + '" data-lvv="' + v + '" aria-label="What ' + v + ' means on this row">' + esc(levelIn(d, i, v)) + '</textarea></label>').join('') +
     '<span class="muted lvnote">Leave any of these blank.' + (rowHalf(d) ? ' A half point shows the two scores around it.' : '') + '</span></details>';
 }
-function levelsRowGone(d, i) { if (d.levels) d.levels.splice(i, 1); if (Array.isArray(d.tops)) d.tops.splice(i, 1); goalsRowGone(d, i); rubDlg.from.splice(i, 1); levelEditOpen.clear(); }
+function levelsRowGone(d, i) { if (d.levels) d.levels.splice(i, 1); if (Array.isArray(d.ib)) d.ib.splice(i, 1); if (Array.isArray(d.tops)) d.tops.splice(i, 1); goalsRowGone(d, i); rubDlg.from.splice(i, 1); levelEditOpen.clear(); }
 function tidyLevels(d) {
   const out = d.criteria.map((_, i) => { const r = {}; for (const v of rowLevels(d, i)) { const t = levelIn(d, i, v).trim(); if (t) r[v] = t; } return r; });
   return out.some(r => Object.keys(r).length) ? out : undefined;
@@ -22067,7 +22076,65 @@ document.addEventListener('click', e => {
   if (d.ibcopy != null) return ibCopy(c);
 });
 document.addEventListener('change', e => { const t = e.target.closest('#ibAdd [data-ibacrit]'); if (!t || !ibk.add) return; ibAddRead(); const k = t.dataset.ibacrit, a = ibk.add; a.crit = ibCrit(bkClass()).map(x => x.k).filter(x => x === k ? t.checked : a.crit.includes(x)); bkDraw(); });
-Object.assign(window.__gs, { classWay, ibCrit, ibBounds, ibBoundsFor, ibGradeOf, ibTerm, ibEvidence, ibLevel, ibDlg, IB_GROUPS, ibCols, ibMid, ibk: () => ibk });
+/* ---------- marking an MYP task on the paper: its rubric rows are the criteria it assesses, each 0 to 8 ---------- */
+function ibSetup(su) { su = su || setup; return su.mode === 'rubric' && Array.isArray(su.ib) && su.ib.some(Boolean); }
+const ibTaskClass = () => { const c = batch && batchClass(); return c && classWay(c) === 'myp' ? c : null; };
+const ibTaskLevels = st => setup.ib.map((k, i) => [k, noScore(st) ? null : st.grade.rubric[i]]).filter(x => x[0]);
+function ibListSay(st) { return ibTaskLevels(st).map(x => x[1] == null ? '–' : fmtNum(x[1])).join(' '); }
+function ibStampText(st) { return ibTaskLevels(st).filter(x => x[1] != null).map(([k, v]) => k + ' ' + fmtNum(v)).join('   '); }
+function ibTotalHtml(st) {
+  const lv = ibTaskLevels(st), on = lv.filter(x => x[1] != null);
+  return '<span class="ibtl" id="ibTaskLv">' + (on.length ? on.map(([k, v]) => '<span class="iblv"><i>' + esc(k) + '</i><b>' + fmtNum(v) + '</b></span>').join('') : '<b>–</b>') + '</span><span class="ibtlsay muted">' + (on.length < lv.length ? on.length + ' of ' + lv.length + ' criteria marked' : 'levels, 0 to ' + IB_TOP) + '</span>' +
+    (on.length ? '<button class="btn sm ghost" id="stampScore" title="Put the levels on the paper: ' + esc(ibStampText(st)) + '">' + STAMP_ICON + 'Stamp</button>' : '');
+}
+function ibPanelHead() {
+  const c = ibTaskClass(); if (!c) return '';
+  return ibSetup() ? '<button class="link" id="ibTaskSet">Criteria</button>'
+    : '';
+}
+function ibPanelAsk() {
+  const c = ibTaskClass(); if (!c || ibSetup()) return '';
+  return '<div class="ibask" id="ibAsk"><span>' + esc(c.name) + ' is graded with MYP criteria.</span><button class="btn sm primary" id="ibTaskSet">Choose this task’s criteria</button></div>';
+}
+let ibTask = null;
+function ibTaskDlg() {
+  const c = ibTaskClass(); if (!c) return;
+  const crit = ibCrit(c), was = ibSetup() ? setup.ib.filter(Boolean) : [];
+  ibTask = { on: was.length ? was.slice() : [] };
+  openDlg('<div class="bh"><h2>Criteria this task assesses</h2></div><div class="bb" id="ibTaskBody"><p class="muted">Tick the criteria you are marking on this task. Each becomes a row scored 0 to ' + IB_TOP + '. A task usually assesses two or three.</p>' +
+    '<div class="ibtaskl" role="group" aria-label="Criteria">' + crit.map(x => '<label class="ibchk"><input type="checkbox" data-ibtk="' + esc(x.k) + '"' + (ibTask.on.includes(x.k) ? ' checked' : '') + '> <b>' + esc(x.k) + '</b> ' + esc(x.name) + '</label>').join('') + '</div>' +
+    '<p class="muted ibnote">What each level means on a row is yours to write: use Edit rubric afterwards and paste your own descriptors.</p></div>' +
+    '<div class="bf"><button class="btn" data-cancel>Cancel</button><button class="btn primary" data-ok>Save</button></div>');
+  $('#dlgBox').onchange = null; $('#dlgBox').oninput = null;
+  $('#dlgBox').onclick = e => { if (e.target.closest('[data-cancel]')) { ibTask = null; return closeDlg(); } if (e.target.closest('[data-ok]')) return ibTaskSave(); };
+}
+async function ibTaskSave() {
+  const c = ibTaskClass(); if (!c || !ibTask) return;
+  const keys = [...document.querySelectorAll('#ibTaskBody [data-ibtk]')].filter(i => i.checked).map(i => i.dataset.ibtk), crit = ibCrit(c).filter(x => keys.includes(x.k));
+  if (!crit.length) { toast('Tick at least one criterion'); return; }
+  const had = ibSetup(), old = had ? setup.ib : [], from = crit.map(x => old.indexOf(x.k));   // where each new row's scores come from, or -1
+  const scored = batch.students.filter(st => (st.grade.rubric || []).some((v, i) => v != null && !from.includes(i)) || (!had && st.grade.points !== '' && st.grade.points != null)).length;
+  if (scored && !await askDlg((had ? 'Taking a criterion off this task clears the levels given for it on ' : 'This task’s rows become the criteria, which clears the scores already given on ') + people(scored, 'paper') + '.', { ok: 'Save', cancel: 'Go back', danger: true })) return;
+  const pick = a => Array.isArray(a) ? from.map(i => i >= 0 && a[i] != null ? a[i] : null) : null;
+  const su = { ...setup, mode: 'rubric', criteria: crit.map((x, n) => from[n] >= 0 ? setup.criteria[from[n]] : x.k + ' ' + x.name), ib: crit.map(x => x.k), top: IB_TOP, half: false, scale: null };
+  delete su.tops;
+  const lv = pick(setup.levels), gl = pick(setup.goals);
+  if (lv && lv.some(Boolean)) su.levels = lv.map(x => x || []); else delete su.levels;
+  if (gl && gl.some(Boolean)) su.goals = gl.map(x => x || ''); else delete su.goals;
+  for (const st of batch.students) {
+    const g = st.grade, r = g.rubric || [], at = g.atR || {}, now = Date.now();
+    g.rubric = from.map(i => i >= 0 && r[i] != null ? r[i] : null);
+    const nat = {}; from.forEach((i, n) => { nat[n] = i >= 0 && at[i] ? at[i] : now; }); if (at.points) nat.points = now;
+    g.atR = nat; if (!had) g.points = '';
+  }
+  setup = su; store.set('gs.setup', { ...setup, spot: undefined, rubricPage: undefined });
+  if (batch.assignment) { batch.assignment.setup = { ...setup, spot: undefined }; shareRubric(batch.assignment); saveLib(); }
+  batch.students.forEach(refound);
+  ibTask = null; closeDlg(); rowStart(); renderGrade(); renderList(); saveSoon();
+  toast('This task assesses ' + crit.map(x => x.k).join(', '));
+}
+document.addEventListener('click', e => { if (e.target.closest('#ibTaskSet')) ibTaskDlg(); });
+Object.assign(window.__gs, { classWay, ibCrit, ibBounds, ibBoundsFor, ibGradeOf, ibTerm, ibEvidence, ibLevel, ibDlg, IB_GROUPS, ibCols, ibMid, ibSetup, ibTaskDlg, ibk: () => ibk });
 
 /* ---------------- Report comments: a draft for each student, from her own scores and comments (Stage 6) ----------------
    A class page's Report comments tab (#/class/<id>/reports). The draft is put together here, in the browser, from the

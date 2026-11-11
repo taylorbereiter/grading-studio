@@ -4,7 +4,8 @@
 const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const { launch } = require('./helpers/chrome');
-const { openApp, classPage, goTo } = require('./helpers/app');
+const { openApp, classPage, goTo, openZip, score, settle, answerDlg } = require('./helpers/app');
+const { makePaper, zipOf } = require('./helpers/fixtures');
 const { ibSeed } = require('./helpers/ibseed');
 
 let browser;
@@ -230,5 +231,41 @@ test('a student’s page in an MYP class sets levels in place, and the Students 
   await goTo(page, '#/class/c1/students'); await page.waitForSelector('#peopleTbl td[data-pg]');
   await page.waitForFunction(() => document.querySelector('#peopleTbl td[data-pg]').textContent === '6');
   assert.deepEqual(await page.$$eval('#peopleTbl td[data-pg]', xs => xs.map(x => x.textContent)), ['6', '4', '7', '3 of 4 set', '–', '5']);
+  await close();
+});
+
+test('a task of an MYP class is marked on the paper against the criteria it assesses, 0 to 8, with no total or percent', async () => {
+  const zip = zipOf({ 'Aria Testwell/Lab.pdf': await makePaper({ title: 'Aria Testwell lab', pages: 1 }), 'Bram Sample/Lab.pdf': await makePaper({ title: 'Bram Sample lab', pages: 1 }), 'Cleo Fixture/Lab.pdf': await makePaper({ title: 'Cleo Fixture lab', pages: 1 }) });
+  const { page, close } = await openApp(browser, { seed: ibSeed() });
+  await openZip(page, zip, 'Forces lab.zip');
+  const st = () => page.evaluate(() => { const s = window.__gs.state(); return JSON.parse(JSON.stringify({ setup: s.setup, rubric: s.batch.students.map(x => x.grade.rubric), cls: s.batch.classId })); });
+  assert.equal((await st()).cls, 'c1', 'the papers are the MYP class’s');
+  await page.waitForSelector('#ibAsk');
+  await page.click('#ibTaskSet'); await page.waitForSelector('#ibTaskBody');
+  await page.click('#ibTaskBody [data-ibtk="B"]'); await page.click('#ibTaskBody [data-ibtk="C"]'); await page.click('#dlgBox [data-ok]'); await shut(page);
+  let s = await st();
+  assert.deepEqual([s.setup.ib, s.setup.criteria, s.setup.top, s.setup.half, s.setup.mode], [['B', 'C'], ['B Inquiring and designing', 'C Processing and evaluating'], 8, false, 'rubric']);
+  assert.equal(await page.$('#ibAsk'), null);
+  assert.deepEqual(await page.$$eval('.scores[data-c="0"] .sticks button', xs => xs.map(x => x.textContent)), ['0', '1', '2', '3', '4', '5', '6', '7', '8']);
+  await score(page, [6, null]);
+  assert.match(await page.$eval('#grade .total', e => e.textContent), /B6.*1 of 2 criteria marked/);
+  await score(page, [null, 7]);
+  const total = await page.$eval('#grade .total', e => e.textContent);
+  assert.match(total, /B6C7/); assert.equal(/%|\//.test(total), false, 'no percent and no total: ' + total);
+  assert.equal(await page.$eval('#stampScore', e => e.title), 'Put the levels on the paper: B 6   C 7');
+  assert.equal(await page.evaluate(() => window.__gs.gradeOf(window.__gs.state().batch.students[0]).pct), null);
+  // the task changes to C and D: C keeps its levels, B's go after a warning
+  await page.click('#ibTaskSet'); await page.waitForSelector('#ibTaskBody');
+  await page.click('#ibTaskBody [data-ibtk="B"]'); await page.click('#ibTaskBody [data-ibtk="D"]'); await page.click('#dlgBox [data-ok]');
+  await answerDlg(page); await shut(page);
+  assert.match(page.lastDialog, /clears the levels given for it on 1 paper/);
+  s = await st();
+  assert.deepEqual([s.setup.ib, s.rubric[0]], [['C', 'D'], [7, null]]);
+  await score(page, [null, 5]);
+  await settle(page);
+  // the gradebook reads the levels by their letters
+  await goTo(page, '#/class/c1/gradebook'); await page.waitForSelector('#ibTab');
+  const cols = await page.evaluate(() => { const g = window.__gs, c = g.state().lib.classes[0]; return g.ibCols(c, g.bkClassCols(c, g.bk().cols)).map(x => [x.name, x.crit, x.cells.has('Aria Testwell') ? x.cells.get('Aria Testwell').lv : null]); });
+  assert.deepEqual(cols.find(x => /Forces/.test(x[0])).slice(1), [['C', 'D'], { C: 7, D: 5 }]);
   await close();
 });
