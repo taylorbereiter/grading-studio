@@ -64,6 +64,22 @@ jobs:
             if [ -f /etc/apt/apt-mirrors.txt ]; then echo "http://archive.ubuntu.com/ubuntu/" | sudo tee /etc/apt/apt-mirrors.txt >/dev/null; fi
             sleep 20
           done
+          # Last, the same package files from mirrors that are not Ubuntu's own, each checked against the
+          # checksum in test/tools/ci-fonts.sha256 (the packages the runner image does not already have).
+          if [ -z "$got" ]; then
+            mkdir -p ~/font-debs && cd ~/font-debs
+            for base in https://mirrors.kernel.org/ubuntu https://ftp.halifax.rwth-aachen.de/ubuntu; do
+              ok=1
+              while read -r sum path; do
+                file=$(basename "$path")
+                echo "$sum  $file" | sha256sum -c --status 2>/dev/null && continue
+                curl -sSfL -m 120 --retry 2 -o "$file" "$base/pool/$path" && echo "$sum  $file" | sha256sum -c --status || { rm -f "$file"; ok=; break; }
+              done < "$GITHUB_WORKSPACE/test/tools/ci-fonts.sha256"
+              if [ -n "$ok" ] && sudo dpkg -i ./*.deb >/dev/null; then got=1; echo "Fonts: installed from $base"; break; fi
+              echo "Fonts: $base did not work"
+            done
+            cd "$GITHUB_WORKSPACE"
+          fi
           [ -n "$got" ]
           mkdir -p ~/.config/fontconfig && cp test/tools/ci-fonts.conf ~/.config/fontconfig/fonts.conf
           fc-cache -f >/dev/null
