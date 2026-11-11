@@ -1,3 +1,9 @@
+# A Stamp button beside the score total on the marking screen puts the score sticker on the paper. On a small window it
+# sits on its own line under the total.
+mark
+mark-add-menu
+mark-setup-menu
+mark-keys
 # Stage 5, teach from it. A lesson's top bar has Present (the one blue button; Download is plain), and a lesson whose day
 # has come has a Taught box under its comments. planner-present is new: a lesson being presented, with the agenda open.
 # Today's lesson has a play button on its card in the week (planner-week, planner-semester, planner-find).
