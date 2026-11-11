@@ -30,6 +30,11 @@ function esHomeSay(k) {
 const LANG_ES = {
   name: 'Español', locale: 'es',
   words: {
+    /* the to-do list: the sidebar, the card on Today, Find anything */
+    'To do': 'Pendientes', 'To do: your own list, with what the app noticed from your work': 'Pendientes: tu propia lista, con lo que la aplicación ha visto en tu trabajo', 'Add a to-do': 'Añadir un pendiente', 'Add a to-do…': 'Añadir un pendiente…',
+    'Open To do': 'Abrir Pendientes', 'Nothing on your list for today.': 'Nada en tu lista para hoy.', 'See everything': 'Ver todo', 'Done': 'Hecho', 'Tomorrow': 'Mañana', 'Note': 'Nota', 'Open it in To do': 'Abrirlo en Pendientes',
+    'Every school day': 'Cada día de clase', 'Every week': 'Cada semana', 'Each time this class meets': 'Cada vez que hay esta clase',
+    'Your own list, with what the app noticed from your work': 'Tu propia lista, con lo que la aplicación ha visto en tu trabajo', 'Type it the way you would say it': 'Escríbelo como lo dirías', 'Your own list, on the grading page': 'Tu propia lista, en la página de corrección',
     /* the sidebar, on both pages */
     'Main': 'Principal', 'Grading Studio, Today': 'Grading Studio, Hoy', 'Find anything': 'Buscar', 'Today': 'Hoy', 'Planner': 'Planificador', 'Classes': 'Clases', 'Add a class': 'Añadir una clase',
     'Help': 'Ayuda', 'Settings': 'Ajustes', 'Update ready': 'Actualización lista', 'No class': 'Sin clase', 'App language': 'Idioma de la aplicación', 'English, Spanish or Traditional Chinese': 'Inglés, español o chino tradicional',
@@ -155,6 +160,7 @@ const LANG_ES = {
     'Missing': 'No entregado', 'Excused': 'Justificado', 'Late': 'Con retraso',
   },
   rules: [
+    [/^(\d+) more on your list$/, m => m[1] + ' más en tu lista'], [/^(\d+) to do$/, m => m[1] + (m[1] === '1' ? ' pendiente' : ' pendientes')],
     [/^(?:No classes today\.|\w+ class(?:es)? today\.|\w+ sets? of papers (?:to mark|ready to hand back)|[Nn]othing waiting to be marked\.)/, m => esHomeSay(m.input)],
     [/^Grading Studio version (.+)$/, 'Grading Studio, versión $1'],
     [/^Step (\d) of 3$/, 'Paso $1 de 3'],
@@ -220,6 +226,11 @@ const LANG_ES = {
     'add-class': { q: '¿Cómo añado una clase y su lista?', words: 'lista estudiantes alumnos nombres nueva clase',
       a: ['1. Pulsa **Añadir una clase** en la barra lateral y ponle un nombre.', '2. Pega los nombres de los estudiantes, uno por línea. Se conservan en el orden en que los pegas.', '3. Abre la pestaña **Students** de la clase para añadir un identificador, un correo o una nota a cada uno.',
         'Con una lista, al abrir los trabajos de esa clase aparece cada estudiante, también quien no entregó nada.'] },
+    'todo': { q: '¿Cómo funciona la lista de pendientes?', go: 'Abrir Pendientes', words: 'pendientes tareas lista recordatorio recordar todo to-do',
+      a: ['**Pendientes**, en la barra lateral, es una sola lista. Tus propios pendientes llevan un círculo continuo. Las líneas con un círculo discontinuo son cosas que la aplicación ha visto en tu trabajo guardado: trabajos por corregir, trabajos por devolver, una clase sin lección planificada, trabajos sin entregar que reclamar.',
+        'Escribe un pendiente como lo dirías y pulsa Intro. Por ahora los días se leen en inglés: un día al final (“tomorrow”, “friday”, “nov 20”), el nombre de una clase o el de un estudiante se reconocen solos, y un clic en lo reconocido lo quita. Pulsa **N** en cualquier lugar fuera de un trabajo para añadir uno.',
+        'Haz clic en una línea para darle un día, una clase, algo con lo que va, una repetición o una nota. Las líneas de la aplicación se van solas cuando el trabajo está hecho. Puedes mover una a otro día, ocultarla o desactivar todo un tipo.',
+        '**Hoy** muestra una tarjeta corta con tus pendientes atrasados o de hoy. La lista se guarda con tu trabajo de corrección, nunca en la carpeta del Planificador.'] },
     'language': { q: '¿Puedo usar la aplicación en otro idioma?', go: 'Abrir Ajustes, Pantalla', words: 'español inglés chino idioma lengua traducir traducción',
       a: ['Sí: español o chino tradicional. Elígelo en Ajustes, Display, **Idioma de la aplicación**, o en lo alto de la bienvenida. La página se vuelve a dibujar en el idioma que elijas.',
         'Por ahora, un idioma distinto del inglés cubre la barra lateral, Hoy, la bienvenida, Buscar, la Ayuda y la página de comentarios que reciben los estudiantes con un trabajo devuelto. Las demás pantallas siguen en inglés.',

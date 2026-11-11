@@ -2142,6 +2142,84 @@ html.welcoming .shell{visibility:hidden}
 .miswords label{display:block;margin:0 0 var(--space-3)}
 .miswords label span{display:block;font-size:var(--text-control);font-weight:600;margin:0 0 var(--space-1)}
 .miswords input,.miswords textarea{display:block;width:100%;padding:var(--space-2);border:1px solid var(--line-strong);border-radius:var(--corner-2);background:var(--surface);color:var(--fg);font:inherit;font-size:var(--text-control);line-height:1.5;resize:vertical}
+/* ---------- To do: the page, the card on Today, the count in the sidebar. Every value is a token. ---------- */
+.tdchips{display:flex;flex-wrap:wrap;gap:var(--space-2);margin:0 0 var(--space-4)}
+.tdchip{display:inline-flex;align-items:center;gap:var(--space-2);min-height:28px;padding:0 var(--space-3);border:0;border-radius:var(--corner-pill);background:var(--surface-2);color:var(--fg-2);font:inherit;font-size:var(--text-control);font-weight:500;white-space:nowrap;cursor:pointer}
+.tdchip:hover{background:var(--hover)}
+.tdchip.on{background:var(--accent);color:var(--accent-fg)}
+.tdchip .rdot,.tdc .rdot{flex:none;width:8px;height:8px;border-radius:var(--corner-round)}
+.tdgrid{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:var(--space-5);align-items:start}
+@media (max-width:1080px){.tdgrid{grid-template-columns:minmax(0,1fr)}}
+.tdmainc{overflow:visible}
+
+/* adding one */
+.tdadd{display:flex;align-items:center;gap:var(--space-3);padding:0 var(--space-4);border-bottom:1px solid var(--line)}
+.tdadd svg{flex:none;width:18px;height:18px;fill:none;stroke:var(--accent);stroke-width:1.8;stroke-linecap:round}
+.tdadd input{flex:1;min-width:0;height:44px;border:0;outline:0;background:none;color:var(--fg);font:inherit;font-size:var(--text-body)}
+.tdadd input::placeholder{color:var(--faint)}
+.tdadd:focus-within{box-shadow:inset 0 0 0 2px var(--accent);border-radius:var(--corner-5) var(--corner-5) 0 0}
+.tdadd kbd{flex:none;font-weight:500;font-size:var(--text-caption);border:1px solid var(--line-strong);border-radius:var(--corner-1);padding:1px 5px;color:var(--muted)}
+.tdund{display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-2);padding:var(--space-2) var(--space-4);border-bottom:1px solid var(--line);font-size:var(--text-small);color:var(--muted)}
+.tdund[hidden]{display:none}
+.tdund .tdhint{margin-left:auto}
+
+/* one line */
+.tdgrp{display:flex;align-items:baseline;gap:var(--space-2);padding:var(--space-2) var(--space-4);border-top:1px solid var(--line);background:var(--bg);font-size:var(--text-small);font-weight:600;color:var(--fg-2)}
+.tdgrp:first-child{border-top:0}
+.tdgrp span{font-weight:500;color:var(--faint)}
+.tdgrp.late{color:var(--warn)}
+.tdrow{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;align-items:center;gap:var(--space-3);padding:var(--space-2) var(--space-4);border-top:1px solid var(--line)}
+.tdrow:first-child{border-top:0}
+.tdrow.sel{background:var(--accent-soft)}
+.tdck{flex:none;display:grid;place-items:center;width:20px;height:20px;padding:0;border:1.6px solid var(--line-strong);border-radius:var(--corner-round);background:var(--surface);color:var(--accent-fg);cursor:pointer}
+.tdck:hover{border-color:var(--accent)}
+.tdrow.auto .tdck{border-style:dashed;border-color:var(--accent)}
+.tdrow.done .tdck{background:var(--ok);border-color:var(--ok)}
+.tdck svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+.tdmain{display:flex;flex-direction:column;align-items:flex-start;gap:2px;min-width:0;padding:var(--space-1) 0;border:0;background:none;color:inherit;font:inherit;text-align:left;cursor:pointer}
+.tdx{max-width:100%;font-weight:500;overflow-wrap:anywhere}
+.tdmain:hover .tdx{color:var(--accent)}
+.tdrow.done .tdx{color:var(--faint);text-decoration:line-through}
+.tdm{display:flex;flex-wrap:wrap;align-items:center;gap:2px var(--space-3);font-size:var(--text-small);color:var(--muted)}
+.tdc{display:inline-flex;align-items:center;gap:var(--space-1)}
+.tdtag{padding:1px var(--space-2);border-radius:var(--corner-1);background:var(--accent-soft);color:var(--accent);font-weight:500}
+.tddue{min-width:52px;text-align:right;font-size:var(--text-small);font-weight:500;color:var(--muted);white-space:nowrap}
+.tddue.now{color:var(--accent);font-weight:600}
+.tddue.late{color:var(--warn);font-weight:600}
+.tdnone{margin:0;padding:var(--space-4);color:var(--muted);font-size:var(--text-control)}
+.tdfoot{display:flex;justify-content:space-between;gap:var(--space-3);padding:var(--space-3) var(--space-4);border-top:1px solid var(--line);background:var(--bg);font-size:var(--text-control);color:var(--muted)}
+.tdfoot .link{font-weight:500;text-decoration:none}
+.tdpre{color:var(--accent);font-weight:600}
+#todoCard .tdrow{grid-template-columns:auto minmax(0,1fr) auto;padding:var(--space-2) var(--space-4)}
+#todoCard .tcard{overflow:hidden}
+
+/* the side: what the app adds, or the line that is open */
+.tdkinds{padding:var(--space-2) var(--space-4) var(--space-4)}
+.tdkinds p{margin:var(--space-3) 0 0;padding-top:var(--space-3);border-top:1px solid var(--line);font-size:var(--text-small);line-height:1.45}
+.tdsw{display:flex;align-items:center;justify-content:space-between;gap:var(--space-3);width:100%;padding:var(--space-2) 0;border:0;background:none;color:var(--fg);font:inherit;font-size:var(--text-control);text-align:left;cursor:pointer}
+.tdsw i{flex:none;position:relative;width:30px;height:18px;border-radius:var(--corner-pill);background:var(--track);transition:.15s}
+.tdsw i::after{content:"";position:absolute;left:2px;top:2px;width:14px;height:14px;border-radius:var(--corner-round);background:var(--surface);transition:.15s}
+.tdsw[aria-checked=true] i{background:var(--accent)}
+.tdsw[aria-checked=true] i::after{left:14px}
+.tdpane{position:relative;padding:var(--space-4)}
+.tdclose{position:absolute;right:var(--space-2);top:var(--space-2)}
+.tdtitle{display:block;width:calc(100% - 32px);margin:0 0 var(--space-3);padding:var(--space-1) var(--space-2);border:1px solid transparent;border-radius:var(--corner-2);background:none;color:var(--fg);font:inherit;font-size:var(--text-lead);font-weight:600;line-height:1.3}
+h2.tdtitle{padding-left:0}
+textarea.tdtitle{resize:none;font-family:inherit}
+textarea.tdtitle:hover{border-color:var(--line)}
+textarea.tdtitle:focus{border-color:var(--accent);outline:0}
+.tdf{display:grid;grid-template-columns:76px minmax(0,1fr);align-items:center;gap:var(--space-2);padding:var(--space-2) 0;border-top:1px solid var(--line);font-size:var(--text-control)}
+.tdf.top{align-items:start}
+.tdl{color:var(--muted)}
+.tdv{display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-2);min-width:0}
+.tdv select{max-width:100%}
+.tdv input[type=date],.tdv textarea{border:1px solid var(--line-strong);border-radius:var(--corner-2);background:var(--surface);color:var(--fg);font:inherit;font-size:var(--text-control)}
+.tdv input[type=date]{height:28px;padding:0 var(--space-2)}
+.tdv textarea{width:100%;box-sizing:border-box;padding:var(--space-2);line-height:1.45;resize:vertical}
+.tdsay{margin:var(--space-3) 0 0;font-size:var(--text-small)}
+.tdacts{display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-2);margin-top:var(--space-4)}
+.tdacts .sp{flex:1}
+.tdacts .btn{padding-left:var(--space-3);padding-right:var(--space-3)}
 /* ---------- progress sheets (sheet.js): the box that shows them, and the pages as they print ---------- */
 .dlg .box.pssbox{width:min(1000px,100%);height:calc(100vh - 32px)}
 .pssbody{display:flex;flex-direction:column;gap:var(--space-2);overflow:auto;background:var(--surface-2)}
@@ -2224,6 +2302,7 @@ html.welcoming .shell{visibility:hidden}
   <a class="rbrand" href="#/" aria-label="Grading Studio, Today"><span class="rl">Grading <i>Studio</i></span><span class="rs" aria-hidden="true">G<i>S</i></span></a>
   <button class="rfind" id="findBtn" aria-haspopup="dialog" title="Find a student, an assignment, a tool or a setting"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5"/></svg><span class="rl">Find anything</span><kbd class="rl" id="findKey">Ctrl K</kbd></button>
   <a class="rnav" data-nav="home" href="#/" title="Today: what you teach, what is waiting to be marked, what is ready to hand back"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.6"/><path d="M12 3v2.2M12 18.8V21M3 12h2.2M18.8 12H21M5.6 5.6l1.6 1.6M16.8 16.8l1.6 1.6M5.6 18.4l1.6-1.6M16.8 7.2l1.6-1.6"/></svg><span class="rl">Today</span></a>
+  <a class="rnav" data-nav="todo" href="#/todo" title="To do: your own list, with what the app noticed from your work"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span class="rl rname">To do</span><span class="rl rcnt" id="railTodo"></span></a>
   <a class="rnav" id="lessonsBtn" href="planner.html" title="Plan units and lessons. The Planner is a separate page and never sees grading work."><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M8 3v4M16 3v4"/></svg><span class="rl">Planner</span></a>
   <div class="rcap"><span class="rl">Classes</span></div>
   <div id="railClasses"></div>
@@ -2273,7 +2352,7 @@ html.welcoming .shell{visibility:hidden}
           <button class="link" id="keptAll" hidden></button>
         </section>
       </div>
-      <aside class="hside" id="hside" hidden><section class="tsec" id="handBack" hidden></section><section class="tsec" id="needNext" hidden></section><div id="needs" hidden></div></aside>
+      <aside class="hside" id="hside"><section class="tsec" id="todoCard"><div class="thd"><h2 class="tcap">To do</h2><a class="link" href="#/todo">Open To do</a></div><div class="tcard"><form class="tdadd" id="tdCardAdd" autocomplete="off"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><input type="text" id="tdCardIn" maxlength="300" placeholder="Add a to-do…" aria-label="Add a to-do"></form><div id="tdCardList"></div></div></section><section class="tsec" id="handBack" hidden></section><section class="tsec" id="needNext" hidden></section><div id="needs" hidden></div></aside>
     </div>
     <p class="foot">Your marks, scores, units and rosters are kept in this browser, so you can close the tab and come back to pick up where you left off. <button class="link" id="sample">Try it with a sample class</button></p>
     <p class="foot gsVer"></p>
@@ -2281,6 +2360,19 @@ html.welcoming .shell{visibility:hidden}
   <section class="view" id="vClass" hidden>
     <div id="classes"></div>
     <p class="muted vhint" id="classHint">Drag an assignment to another unit, or onto a class in the sidebar. Drag a unit’s name to move the unit. Drop <span class="sysZip">a ManageBac ZIP</span> on an assignment to open it there.</p>
+  </section>
+  <section class="view" id="vTodo" hidden>
+    <header class="vhead"><h1>To do</h1><span class="muted" id="tdSay"></span><span class="sp"></span><button class="btn sm" id="tdDoneBtn" hidden></button></header>
+    <div class="tdchips" id="tdChips" role="group" aria-label="Show"></div>
+    <div class="tdgrid">
+      <div class="tcard tdmainc">
+        <form class="tdadd" id="tdAdd" autocomplete="off"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><input type="text" id="tdIn" maxlength="300" placeholder="Add a to-do, like “Print handouts tomorrow”" aria-label="Add a to-do"><kbd title="Press N anywhere outside a paper to add a to-do">N</kbd></form>
+        <div class="tdund" id="tdUnd" hidden></div>
+        <div id="tdList"></div>
+      </div>
+      <aside id="tdSide"></aside>
+    </div>
+    <p class="foot">Your list is saved with your grading work, in this browser and your folder. It never goes in the Planner’s folder.</p>
   </section>
   <section class="view" id="vHelp" hidden>
     <header class="vhead"><h1>Help</h1><span class="muted">Short answers. They are part of the app, so they work with no internet.</span></header>
@@ -3401,7 +3493,7 @@ SOFTWARE.
 <script>/* ---------------- saved-data versions: a safety copy, then any format changes, before the app starts ---------------- */
 const gsData = (() => {
   'use strict';
-  const APP_VERSION = "1.22.0";   // from package.json, the one place it's set
+  const APP_VERSION = "1.23.0";   // from package.json, the one place it's set
   const MIGRATIONS = [
   ];
   const DATA_V = Math.max(1, ...MIGRATIONS.map(s => s.to));
@@ -3645,6 +3737,11 @@ function esHomeSay(k) {
 const LANG_ES = {
   name: 'Español', locale: 'es',
   words: {
+    /* the to-do list: the sidebar, the card on Today, Find anything */
+    'To do': 'Pendientes', 'To do: your own list, with what the app noticed from your work': 'Pendientes: tu propia lista, con lo que la aplicación ha visto en tu trabajo', 'Add a to-do': 'Añadir un pendiente', 'Add a to-do…': 'Añadir un pendiente…',
+    'Open To do': 'Abrir Pendientes', 'Nothing on your list for today.': 'Nada en tu lista para hoy.', 'See everything': 'Ver todo', 'Done': 'Hecho', 'Tomorrow': 'Mañana', 'Note': 'Nota', 'Open it in To do': 'Abrirlo en Pendientes',
+    'Every school day': 'Cada día de clase', 'Every week': 'Cada semana', 'Each time this class meets': 'Cada vez que hay esta clase',
+    'Your own list, with what the app noticed from your work': 'Tu propia lista, con lo que la aplicación ha visto en tu trabajo', 'Type it the way you would say it': 'Escríbelo como lo dirías', 'Your own list, on the grading page': 'Tu propia lista, en la página de corrección',
     /* the sidebar, on both pages */
     'Main': 'Principal', 'Grading Studio, Today': 'Grading Studio, Hoy', 'Find anything': 'Buscar', 'Today': 'Hoy', 'Planner': 'Planificador', 'Classes': 'Clases', 'Add a class': 'Añadir una clase',
     'Help': 'Ayuda', 'Settings': 'Ajustes', 'Update ready': 'Actualización lista', 'No class': 'Sin clase', 'App language': 'Idioma de la aplicación', 'English, Spanish or Traditional Chinese': 'Inglés, español o chino tradicional',
@@ -3770,6 +3867,7 @@ const LANG_ES = {
     'Missing': 'No entregado', 'Excused': 'Justificado', 'Late': 'Con retraso',
   },
   rules: [
+    [/^(\d+) more on your list$/, m => m[1] + ' más en tu lista'], [/^(\d+) to do$/, m => m[1] + (m[1] === '1' ? ' pendiente' : ' pendientes')],
     [/^(?:No classes today\.|\w+ class(?:es)? today\.|\w+ sets? of papers (?:to mark|ready to hand back)|[Nn]othing waiting to be marked\.)/, m => esHomeSay(m.input)],
     [/^Grading Studio version (.+)$/, 'Grading Studio, versión $1'],
     [/^Step (\d) of 3$/, 'Paso $1 de 3'],
@@ -3835,6 +3933,11 @@ const LANG_ES = {
     'add-class': { q: '¿Cómo añado una clase y su lista?', words: 'lista estudiantes alumnos nombres nueva clase',
       a: ['1. Pulsa **Añadir una clase** en la barra lateral y ponle un nombre.', '2. Pega los nombres de los estudiantes, uno por línea. Se conservan en el orden en que los pegas.', '3. Abre la pestaña **Students** de la clase para añadir un identificador, un correo o una nota a cada uno.',
         'Con una lista, al abrir los trabajos de esa clase aparece cada estudiante, también quien no entregó nada.'] },
+    'todo': { q: '¿Cómo funciona la lista de pendientes?', go: 'Abrir Pendientes', words: 'pendientes tareas lista recordatorio recordar todo to-do',
+      a: ['**Pendientes**, en la barra lateral, es una sola lista. Tus propios pendientes llevan un círculo continuo. Las líneas con un círculo discontinuo son cosas que la aplicación ha visto en tu trabajo guardado: trabajos por corregir, trabajos por devolver, una clase sin lección planificada, trabajos sin entregar que reclamar.',
+        'Escribe un pendiente como lo dirías y pulsa Intro. Por ahora los días se leen en inglés: un día al final (“tomorrow”, “friday”, “nov 20”), el nombre de una clase o el de un estudiante se reconocen solos, y un clic en lo reconocido lo quita. Pulsa **N** en cualquier lugar fuera de un trabajo para añadir uno.',
+        'Haz clic en una línea para darle un día, una clase, algo con lo que va, una repetición o una nota. Las líneas de la aplicación se van solas cuando el trabajo está hecho. Puedes mover una a otro día, ocultarla o desactivar todo un tipo.',
+        '**Hoy** muestra una tarjeta corta con tus pendientes atrasados o de hoy. La lista se guarda con tu trabajo de corrección, nunca en la carpeta del Planificador.'] },
     'language': { q: '¿Puedo usar la aplicación en otro idioma?', go: 'Abrir Ajustes, Pantalla', words: 'español inglés chino idioma lengua traducir traducción',
       a: ['Sí: español o chino tradicional. Elígelo en Ajustes, Display, **Idioma de la aplicación**, o en lo alto de la bienvenida. La página se vuelve a dibujar en el idioma que elijas.',
         'Por ahora, un idioma distinto del inglés cubre la barra lateral, Hoy, la bienvenida, Buscar, la Ayuda y la página de comentarios que reciben los estudiantes con un trabajo devuelto. Las demás pantallas siguen en inglés.',
@@ -3977,6 +4080,11 @@ function zhHomeSay(k) {
 const LANG_ZH = {
   name: '繁體中文', locale: 'zh-Hant',
   words: {
+    /* the to-do list: the sidebar, the card on Today, Find anything */
+    'To do': '待辦事項', 'To do: your own list, with what the app noticed from your work': '待辦事項：你自己的清單，加上系統從你的工作中發現的事', 'Add a to-do': '新增待辦事項', 'Add a to-do…': '新增待辦事項…',
+    'Open To do': '開啟待辦事項', 'Nothing on your list for today.': '今天清單上沒有事項。', 'See everything': '查看全部', 'Done': '已完成', 'Tomorrow': '明天', 'Note': '備註', 'Open it in To do': '在待辦事項中開啟',
+    'Every school day': '每個上課日', 'Every week': '每週', 'Each time this class meets': '每次這個班上課時',
+    'Your own list, with what the app noticed from your work': '你自己的清單，加上系統從你的工作中發現的事', 'Type it the way you would say it': '照你平常說的方式輸入', 'Your own list, on the grading page': '你自己的清單，在批改頁面',
     /* the sidebar, on both pages */
     'Main': '主選單', 'Grading Studio, Today': 'Grading Studio，今天', 'Find anything': '搜尋', 'Today': '今天', 'Planner': '備課', 'Classes': '班級', 'Add a class': '新增班級',
     'Help': '說明', 'Settings': '設定', 'Update ready': '有新版本', 'No class': '未指定班級', 'App language': '介面語言', 'English, Spanish or Traditional Chinese': '英文、西班牙文或繁體中文',
@@ -4102,6 +4210,7 @@ const LANG_ZH = {
     'Missing': '缺交', 'Excused': '免交', 'Late': '遲交',
   },
   rules: [
+    [/^(\d+) more on your list$/, '清單上還有 $1 項'], [/^(\d+) to do$/, '$1 項待辦'],
     [/^(?:No classes today\.|\w+ class(?:es)? today\.|\w+ sets? of papers (?:to mark|ready to hand back)|[Nn]othing waiting to be marked\.)/, m => zhHomeSay(m.input)],
     [/^Grading Studio version (.+)$/, 'Grading Studio 版本 $1'],
     [/^Step (\d) of 3$/, '第 $1 步，共 3 步'],
@@ -4167,6 +4276,11 @@ const LANG_ZH = {
     'add-class': { q: '怎麼新增班級和名單？', words: '名單 學生 姓名 新班級 roster',
       a: ['1. 按側邊欄的**新增班級**，並為它命名。', '2. 貼上學生姓名，一行一位。順序會和你貼上的一樣。', '3. 開啟班級的 **Students** 分頁，可以為每位學生加上學號、電子郵件或備註。',
         '有了名單，開啟那個班級的作業時會列出每位學生，包括沒有繳交的人。'] },
+    'todo': { q: '待辦事項清單怎麼用？', go: '開啟待辦事項', words: '待辦 事項 清單 提醒 記得 工作 todo to-do task',
+      a: ['側邊欄的**待辦事項**是一份清單。你自己的事項是實線圓圈。虛線圓圈的是系統從你存好的工作中發現的事：要批改的作業、可以發還的作業、還沒備課的班級、需要催繳的缺交作業。',
+        '照你平常說的方式輸入，然後按 Enter。日期目前用英文辨識：句尾的日期（“tomorrow”、“friday”、“nov 20”）、班級名稱或學生姓名會自動辨識出來，點一下辨識到的項目就能取消。在作業畫面以外的任何地方按 **N** 就能新增。',
+        '點一下事項，可以設定日期、班級、相關的對象、重複或備註。系統加入的事項在工作完成後會自己消失。你可以把它移到另一天、隱藏，或關掉整個類別。',
+        '**今天**會顯示一張小卡，列出你逾期或今天到期的事項。清單和你的批改工作存在一起，絕不會放進備課的資料夾。'] },
     'language': { q: '介面可以換成其他語言嗎？', go: '開啟設定、顯示', words: '中文 繁體 西班牙文 英文 語言 翻譯 chinese language',
       a: ['可以。目前有繁體中文和西班牙文。在設定、Display 的**介面語言**選擇，或在歡迎畫面最上方選擇。頁面會用你選的語言重新顯示。',
         '英文以外的語言目前涵蓋側邊欄、今天、歡迎畫面、搜尋、說明，以及學生隨發還作業收到的回饋頁。其他畫面仍是英文。',
@@ -4373,6 +4487,12 @@ const HELP = [
     a: ['1. Press **Add a class** in the sidebar and give it a name.', '2. Paste the student names, one on a line. Students are kept in the order you paste them.', '3. Open the class’s **Students** tab to add an ID, an email or a note for each one.',
       'With a roster, every student is listed when you open papers for that class, including anyone who turned nothing in.'],
     words: 'roster students names list new class' },
+  { id: 'todo', sec: 'start', q: 'How does the to-do list work?',
+    a: ['**To do** in the sidebar is one list. Your own to-dos have a solid circle. Lines with a dashed circle are things the app noticed from your saved work: papers to mark, papers to hand back, a class with no lesson planned, missing work to chase.',
+      'Type a to-do the way you would say it and press Enter. A day at the end (“tomorrow”, “friday”, “nov 20”), a class name or a student’s name is picked out for you, and a click on what was understood takes it off. Press **N** anywhere outside a paper to add one.',
+      'Click a line to give it a day, a class, something it goes with, a repeat or a note. The app’s own lines go by themselves when the work is done. You can move one to another day, hide it, or switch a whole kind off.',
+      '**Today** shows a short card of your own to-dos that are overdue or due today. The list is saved with your grading work, never in the Planner’s folder.'],
+    go: ['Open To do', '#/todo'], words: 'todo task tasks list reminder remember checklist due' },
   { id: 'language', sec: 'start', q: 'Can I use the app in another language?',
     a: ['Yes: Traditional Chinese or Spanish. Choose one in Settings, Display, **App language**, or at the top of the welcome. The page is drawn again in the language you pick.',
       'So far a language other than English covers the sidebar, Today, the welcome, Find anything, Help and the feedback page students get in a returned paper. The other screens are still in English.',
@@ -8782,6 +8902,7 @@ const routeOf = hash => {
     }
   }
   if (p[0] === 'class-named' && p[1]) { const nk = s => String(s || '').toLowerCase().replace(/[^a-z0-9]/g, ''), k = nk(p.slice(1).join('/')), c = k && lib.classes.find(c => nk(c.name) === k); return c ? { v: 'class', c, tab: '', stu: null, named: true } : { v: 'home', noClass: p.slice(1).join('/').slice(0, 60) }; }
+  if (p[0] === 'todo') return { v: 'todo' };
   if (p[0] === 'help') return { v: 'help', topic: HELP.some(t => t.id === p[1]) ? p[1] : '' };
   if (p[0] === 'settings') return { v: 'settings', sec: SET_SECS.some(x => x[0] === p[1]) ? p[1] : 'saving' };
   if (p[0] === 'a' && p[1]) {
@@ -8848,7 +8969,7 @@ function showScreen(r) {
   if (grading && !$('#welcome').hidden) wlClose();   // papers opened past the welcome (dropped on the page): the questions wait on Home's card instead
   $('#shell').classList.toggle('grading', grading);
   $('#app').hidden = !grading; $('#start').hidden = grading;
-  for (const [id, v] of [['vHome', 'home'], ['vClass', 'class'], ['vSettings', 'settings'], ['vHelp', 'help'], ['vOpening', 'opening']]) $('#' + id).hidden = grading || r.v !== v;
+  for (const [id, v] of [['vHome', 'home'], ['vClass', 'class'], ['vSettings', 'settings'], ['vHelp', 'help'], ['vTodo', 'todo'], ['vOpening', 'opening']]) $('#' + id).hidden = grading || r.v !== v;
   if (r.v !== 'class') classLeave();
   const key = grading ? 'a' : r.v + (r.c ? ':' + r.c.id + ':' + r.tab + (r.stu != null ? ':one' : '') : '');   // moving from one student to the next keeps her place on the page
   if (!grading && key !== screenKey) $('#shellMain').scrollTop = 0;
@@ -16836,6 +16957,7 @@ function mergeLib(a0, b0, o = {}) {
   const lib = { ...b, ...a, classes: [], loose: { id: '', units: [] }, units: [] };
   const hasWork = l => ((l && l.classes) || []).some(c => (c.names || []).length || (c.units || []).some(u => u && (u.items || []).length));
   if (a.me && !b.me && hasWork(b) && !hasWork(a)) delete lib.me;
+  { const t = todoMerge(a.todo, b.todo); if (t) lib.todo = t; else delete lib.todo; }
   const by = t => [...kept.values()].filter(e => e.type === t);
   const shell = e => { const n = { ...e.node }; delete n.units; delete n.items; return n; };
   const units = new Map(), classes = new Map();
@@ -16859,6 +16981,19 @@ function mergeLib(a0, b0, o = {}) {
   if (Object.keys(gone).length) lib.gone = gone; else delete lib.gone;
   const same = (p, q) => JSON.stringify(canon(p)) === JSON.stringify(canon(q));
   return { lib, notes, asks, cards, mapA, mapB, toA: !same(lib, a0), toB: !same(lib, b0) };
+}
+function todoMerge(a, b) {
+  if (!a || !b) return a || b || null;
+  const by = new Map(), order = [];
+  for (const it of [...(Array.isArray(a.items) ? a.items : []), ...(Array.isArray(b.items) ? b.items : [])]) {
+    if (!it || !it.id) continue;
+    const had = by.get(it.id); if (!had) order.push(it.id);
+    if (!had || (it.t || 0) > (had.t || 0)) by.set(it.id, it);
+  }
+  const auto = { ...(b.auto || {}) };
+  for (const [k, v] of Object.entries(a.auto || {})) if (!auto[k] || (v.t || 0) >= (auto[k].t || 0)) auto[k] = v;
+  const offB = (b.offT || 0) > (a.offT || 0);
+  return { ...b, ...a, items: order.map(id => by.get(id)), auto, off: (offB ? b.off : a.off) || {}, offT: Math.max(a.offT || 0, b.offT || 0) };
 }
 function mergeFields(x, y, win, dev, now, said) {
   const fx = nodeParts(x), fy = nodeParts(y), parts = {}, fv = {}, both = [], fromY = [];
@@ -21361,7 +21496,7 @@ function todayHtml(prim) {
     const { c, m, lessons } = r, l = lessons[0], more = lessons.length > 1 ? ' · and ' + (lessons.length - 1) + ' more' : '';
     const got = l && l.taught.find(t => t.classId === c.id && t.date === day), end = got && got.slide >= got.of, show = !!l && r === cur && !end;
     return '<a class="trow' + (r === cur ? ' now' : '') + '" href="' + esc(planUrl(show ? '#present/' + encodeURIComponent(l.id) + '/' + encodeURIComponent(c.id) : l ? '#lesson/' + encodeURIComponent(l.id) : '#week')) + '" title="' + (show ? 'Present this lesson, from the Planner' : l ? 'Open this lesson in the Planner' : 'Plan this class in the Planner') + '"><span class="tt">' + planTime(m.start) + '</span>' +
-      '<span class="nt"><b><span class="rdot" style="background:' + c.color + '"></span>' + esc(c.name) + '</b><span class="ns">' + (l ? esc(l.title) + (l.n ? ' · ' + l.n + (l.n === 1 ? ' slide' : ' slides') : '') + ' · ' + (got ? (end ? 'taught' : 'taught to slide ' + got.slide + ' of ' + got.of) : say(l)) + more : 'No lesson planned yet') + '</span></span>' +
+      '<span class="nt"><b><span class="rdot" style="background:' + c.color + '"></span>' + esc(c.name) + '</b><span class="ns">' + (l ? esc(l.title) + (l.n ? ' · ' + l.n + (l.n === 1 ? ' slide' : ' slides') : '') + ' · ' + (got ? (end ? 'taught' : 'taught to slide ' + got.slide + ' of ' + got.of) : say(l)) + more : 'No lesson planned yet') + todoClassNote(c) + '</span></span>' +
       '<span class="btn sm' + (prim === 'lesson' && r === cur ? ' primary' : '') + '">' + (show ? 'Present' : l ? 'Open' : 'Plan it') + '</span></a>';
   };
   return '<div class="thd"><h2 class="tcap">Teaching today</h2><a class="link tweek" href="' + esc(planUrl('#week')) + '">Open the week</a></div><div class="tcard">' +
@@ -21441,7 +21576,7 @@ function nextHtml(groups) {
     '<div class="tbars" role="img" aria-label="' + esc(s.rows.map(r => r.name + ' ' + fmtNum(Math.round(r.avg * 10) / 10) + ' of 4').join(', ')) + '">' + s.rows.map(r => '<span class="tbn">' + esc(r.name) + '</span><span class="tbt"><i class="' + (r === low && !flat ? 'low' : '') + '" style="width:' + Math.round(r.avg / 4 * 100) + '%"></i></span><span class="tbv">' + (Math.round(r.avg * 10) / 10).toFixed(1) + '</span>').join('') + '</div>' +
     (flat ? '' : '<p class="tsay">' + who + '</p>') + (m.papers ? '<a class="tlink" href="' + batchHash(m.id, 'insights') + '">' + (low.low && !flat ? 'See who' : 'Open Insights') + T_ARROW + '</a>' : '') + '</div>';
 }
-function hsideShow() { $('#hside').hidden = $('#handBack').hidden && $('#needNext').hidden && $('#needs').hidden; }
+function hsideShow() { $('#hside').hidden = false; }   // the to-do card is always there
 const OLD_SHOWN = 3;
 let oldAll = false;
 function homeRender() {
@@ -21456,6 +21591,7 @@ function homeRender() {
   put($('#toMark'), g.mark.map(m => markRow(m, prim === 'mark' && m === firstMark)).join(''));
   put($('#handBack'), backHtml(g.back, prim === 'back'));
   put($('#needNext'), nextHtml(g));
+  tdCardRender();
   const old = oldAll ? g.old : g.old.slice(0, OLD_SHOWN);
   put($('#earlier'), old.map(oldRow).join(''));
   const more = $('#keptAll'); more.hidden = g.old.length <= OLD_SHOWN; more.textContent = oldAll ? 'Show only the newest' : 'Show all ' + g.old.length;
@@ -21475,6 +21611,370 @@ function planRefresh() {
 }
 document.addEventListener('visibilitychange', () => { if (!document.hidden && !batch) planRefresh(); });
 window.addEventListener('pageshow', e => { if (e.persisted) planRefresh(); });
+
+/* ---------------- To do: the teacher's own list, beside what the app noticed from their work ----------------
+   A page of its own (#/todo), a short card on Today, and a count in the sidebar. Two kinds of line:
+   - the teacher's own, typed in. Each can have a day, a class, a student or an assignment it goes with, a repeat and a note.
+   - lines the app works out from what is already saved: papers to mark, papers to hand back, a class with no lesson planned,
+     missing work nobody has been reminded about. These are never stored. They are worked out each time, they go when the work
+     is done, and each kind can be switched off.
+   What is saved, in lib.todo (so it goes wherever the classes go: the folder, the take-home file, safety copies), and never in the
+   Planner's folder, because a to-do can name a student:
+     items: [{ id, x: the words, d: 'YYYY-MM-DD' or '', c: class id, who: roster name, a: assignment id, rep: '' | 'day' | 'week' | 'meet',
+               note, done: time, made: time, t: time it last changed }]   (a deleted one stays as { id, t, gone: 1 } so it stays deleted after a merge)
+     off:   { mark | back | plan | miss: 1 } the kinds the app no longer adds, offT when that was last changed
+     auto:  { <line's key>: { d: day it was moved to, h: hidden while its number is this, t } } */
+const TD_KINDS = [['mark', 'Papers to mark'], ['back', 'Papers to hand back'], ['plan', 'Lessons not planned yet'], ['miss', 'Missing work to chase']];
+let tdS = { filter: 'all', sel: '', done: false, drop: {} };   // for this visit only
+const TD_DAY = 864e5;
+const tdData = () => { const t = lib.todo || {}; return { items: Array.isArray(t.items) ? t.items : [], off: t.off || {}, offT: t.offT || 0, auto: t.auto || {} }; };
+function tdSave(part) {
+  const d = { ...tdData(), ...part }, now = Date.now();
+  d.items = d.items.filter(it => it && it.id && !(it.gone && now - (it.t || 0) > 180 * TD_DAY) && !(it.done && now - it.done > 120 * TD_DAY));
+  d.auto = Object.fromEntries(Object.entries(d.auto).filter(([, a]) => a && now - (a.t || 0) < 60 * TD_DAY));
+  lib.todo = d; saveLib(); todoRender();
+}
+const tdItems = () => tdData().items.filter(it => it && it.id && !it.gone);
+const tdItem = id => tdItems().find(it => it.id === id) || null;
+function tdPut(id, part) { const now = Date.now(); tdSave({ items: tdData().items.map(it => it.id === id ? { ...it, ...part, t: now } : it) }); }
+function tdAutoPut(key, part) { const d = tdData(); tdSave({ auto: { ...d.auto, [key]: { ...(d.auto[key] || {}), ...part, t: Date.now() } } }); }
+
+/* ---------- days ---------- */
+const tdToday = () => isoDay(Date.now());
+const tdAt = day => new Date(day + 'T12:00:00');
+const tdAdd = (day, n) => { const d = tdAt(day); d.setDate(d.getDate() + n); return isoDay(d); };
+const tdGap = (day, from) => Math.round((tdAt(day) - tdAt(from)) / TD_DAY);
+const tdNextMon = day => tdAdd(day, (8 - tdAt(day).getDay()) % 7 || 7);
+function tdDaySay(d, today) {
+  if (!d) return '';
+  const n = tdGap(d, today);
+  return n === 0 ? 'Today' : n === 1 ? 'Tomorrow' : n > -7 && n < 7 ? tdAt(d).toLocaleDateString(LANG_LOCALE, { weekday: 'short' }) : bkDay(d);
+}
+const tdDayLong = d => tdAt(d).toLocaleDateString(LANG_LOCALE, { weekday: 'short', month: 'short', day: 'numeric' });
+
+/* ---------- reading what was typed: a day at the end, a class or a student named in it ---------- */
+const TD_DOW = { sunday: 0, monday: 1, mon: 1, tuesday: 2, tues: 2, tue: 2, wednesday: 3, wed: 3, thursday: 4, thurs: 4, thur: 4, thu: 4, friday: 5, fri: 5, saturday: 6 };
+const TD_MON = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
+const TD_DAYS_RX = 'sunday|monday|mon|tuesday|tues|tue|wednesday|wed|thursday|thurs|thur|thu|friday|fri|saturday', TD_MON_RX = '(?:' + TD_MON.join('|') + ')[a-z]*\\.?';
+const TD_TAIL = new RegExp('^(.*?)[\\s,]+(today|tonight|tomorrow|next week|(?:next\\s+)?(?:' + TD_DAYS_RX + ')|' + TD_MON_RX + '\\s+\\d{1,2}|\\d{1,2}\\s+' + TD_MON_RX + ')[.!]?$', 'i');
+function tdWordDay(w, today) {
+  w = w.toLowerCase().replace(/\s+/g, ' ').replace(/\.$/, '');
+  if (w === 'today' || w === 'tonight') return today;
+  if (w === 'tomorrow') return tdAdd(today, 1);
+  if (w === 'next week') return tdNextMon(today);
+  const next = /^next /.test(w), k = w.replace(/^next /, '');
+  if (k in TD_DOW) return next ? tdAdd(tdNextMon(today), (TD_DOW[k] + 6) % 7) : tdAdd(today, (TD_DOW[k] - tdAt(today).getDay() + 7) % 7);
+  const m = /^([a-z]+)\.? (\d{1,2})$/.exec(k) || (x => x && [0, x[2], x[1]])(/^(\d{1,2}) ([a-z]+)$/.exec(k));
+  if (!m) return '';
+  const mon = TD_MON.indexOf(m[1].slice(0, 3)), day = +m[2]; if (mon < 0 || day < 1 || day > 31) return '';
+  const at = y => { const d = new Date(y, mon, day, 12); return d.getMonth() === mon ? isoDay(d) : ''; };
+  const y = tdAt(today).getFullYear(), d = at(y);
+  return d && tdGap(d, today) < -30 ? at(y + 1) : d;   // a date well behind us means next year's
+}
+function tdReadDay(text, today) {
+  const lead = /^(today|tomorrow)[:,]?\s+(.+)$/i.exec(text);
+  if (lead) return { d: tdWordDay(lead[1], today), rep: '', x: lead[2] };
+  const m = TD_TAIL.exec(text); if (!m) return null;
+  let head = m[1].trim(), rep = '';
+  if (/(^|\s)(for|about|this|last|before|after|until|since|of|the)$/i.test(head)) return null;
+  const d = tdWordDay(m[2], today); if (!d) return null;
+  if (/(^|\s)every$/i.test(head) && m[2].toLowerCase() in TD_DOW) { rep = 'week'; head = head.replace(/\s*every$/i, ''); }
+  else head = head.replace(/[\s,]+(by|on|due)$/i, '');
+  head = head.replace(/[\s,;:]+$/, '');
+  return head ? { d, rep, x: head } : null;
+}
+const tdKey = s => String(s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+function tdReadWho(text) {
+  const low = text.toLowerCase();
+  for (const c of lib.classes) for (const n of c.names) if (n.length > 3 && low.includes(n.toLowerCase())) return { c: c.id, who: n };
+  const firsts = new Map();
+  for (const c of lib.classes) for (const n of c.names) { const f = n.trim().split(/\s+/)[0]; if (f && f.length > 2) firsts.set(f, firsts.has(f) ? null : { c: c.id, who: n }); }
+  for (const w of text.split(/[^\p{L}\p{M}'’-]+/u).slice(1)) { const hit = firsts.get(w.replace(/['’]s$/, '')); if (hit) return hit; }
+  for (const c of [...lib.classes].sort((a, b) => b.name.length - a.name.length)) if (c.name.trim().length > 2 && low.includes(c.name.trim().toLowerCase())) return { c: c.id, who: '' };
+  return { c: '', who: '' };
+}
+function todoRead(text, today) {
+  const raw = String(text || '').replace(/\s+/g, ' ').trim().slice(0, 300), day = tdReadDay(raw, today || tdToday()), who = tdReadWho(raw);
+  return { raw, x: day ? day.x : raw, d: day ? day.d : '', rep: day ? day.rep : '', c: who.c, who: who.who };
+}
+function todoAdd(text, drop, base) {
+  drop = drop || {};
+  const r = todoRead(text); if (!r.raw) return null;
+  const now = Date.now(), it = { id: 'td' + uid(), x: drop.d ? r.raw : r.x, d: drop.d ? '' : r.d, c: drop.c ? '' : r.c, who: drop.c || drop.who ? '' : r.who, a: '', rep: drop.d ? '' : r.rep, note: '', done: 0, made: now, t: now };
+  for (const [k, v] of Object.entries(base || {})) if (!it[k]) it[k] = v;
+  tdSave({ items: [...tdData().items, it] });
+  return it;
+}
+
+/* ---------- repeating, finishing, deleting ---------- */
+const tdPlanClass = c => (c && plan && plan.classes.find(p => tdKey(p.name) === tdKey(c.name))) || null;
+const tdGradeClass = p => lib.classes.find(c => tdKey(c.name) === tdKey(p.name)) || null;
+function tdNext(it) {
+  const today = tdToday(), from = it.d && it.d > today ? it.d : today;
+  if (it.rep === 'day') { let d = tdAdd(from, 1); while ([0, 6].includes(tdAt(d).getDay())) d = tdAdd(d, 1); return d; }
+  if (it.rep === 'meet') {
+    const p = tdPlanClass(classById(it.c)), dows = p ? new Set(p.meets.map(m => m.dow)) : null;
+    if (dows && dows.size) for (let i = 1; i <= 60; i++) { const d = tdAdd(from, i); if (dows.has(tdAt(d).getDay()) && !plan.daysOff.some(o => o.date === d)) return d; }
+  }
+  let d = it.d || today; do d = tdAdd(d, 7); while (d <= today);
+  return d;
+}
+function todoTick(id) {
+  const it = tdItem(id); if (!it) return;
+  const now = Date.now();
+  if (it.done) return tdPut(id, { done: 0 });
+  if (!it.rep) return tdPut(id, { done: now });
+  const copy = { ...it, id: 'td' + uid(), rep: '', done: now, t: now };
+  tdSave({ items: tdData().items.flatMap(x => x.id === id ? [{ ...x, d: tdNext(it), t: now }, copy] : [x]) });
+}
+function todoDelete(id) {
+  const it = tdItem(id); if (!it) return;
+  if (tdS.sel === id) tdS.sel = '';
+  tdSave({ items: tdData().items.map(x => x.id === id ? { id, t: Date.now(), gone: 1 } : x) });
+  toastDo('To-do deleted', 'Undo', () => tdSave({ items: tdData().items.map(x => x.id === id ? { ...it, t: Date.now() } : x) }));
+}
+
+/* ---------- what the app adds: worked out from saved work, never stored ---------- */
+let tdMiss = { by: {}, busy: false, at: 0 };
+function tdMissLoad() {
+  if (tdMiss.busy || tdData().off.miss || !lib.classes.some(c => c.names.length)) return;
+  tdMiss.busy = true;
+  bkLoad().then(cols => {
+    const by = {}, terms = bkConf().terms, term = terms.length ? bkTermNow(terms) : null;
+    for (const c of lib.classes) {
+      if (!c.names.length) continue;
+      const all = bkClassCols(c, cols), n = misByStu(c, term == null ? all : all.filter(x => x.termId === term)).filter(s => s.cols.some(col => !misNudge(c, s.n, col))).length;
+      if (n) by[c.id] = n;
+    }
+    const changed = JSON.stringify(by) !== JSON.stringify(tdMiss.by);
+    tdMiss = { by, busy: false, at: Date.now() };
+    if (changed) todoRender();
+  }).catch(e => { console.error(e); tdMiss.busy = false; });
+}
+function todoAuto() {
+  const d = tdData(), today = tdToday(), out = [];
+  const add = (kind, key, x, sub, c, day, btn, sig, color) => {
+    const a = d.auto[key] || {}; if (a.h != null && a.h === sig) return;
+    out.push({ auto: true, id: 'auto:' + key, key, kind, x, sub, c, d: a.d && a.d > day && a.d > today ? a.d : day < today ? today : day, btn, sig, color });
+  };
+  const g = homeGroups();
+  if (!d.off.mark) for (const m of g.mark) {
+    if (!m.papers) continue;
+    const st = keptState(m), w = keptWhere(m), fm = w.it && w.it.type === 'fm', began = st.done || m.partial, name = m.name || 'Student work';
+    add('mark', 'mark:' + m.id, (fm ? 'Give feedback on ' : began ? 'Finish marking ' : 'Mark ') + name, [w.cls ? w.cls.name : '', fm ? 'feedback only' : began ? st.left + ' of ' + st.of + ' left' : people(st.of, 'paper') + ', not started'].filter(Boolean).join(' · '), w.cls, today, { label: began || fm ? 'Continue' : 'Start', open: m.id }, 'x');
+  }
+  if (!d.off.back) for (const m of g.back) {
+    if (!m.papers) continue;
+    const st = keptState(m), w = keptWhere(m);
+    add('back', 'back:' + m.id, 'Hand back ' + (m.name || 'Student work'), [w.cls ? w.cls.name : '', (st.of === 1 ? 'the one paper' : 'all ' + st.of) + ' scored'].filter(Boolean).join(' · '), w.cls, today, { label: 'Return papers', href: batchHash(m.id, 'return') }, 'x');
+  }
+  if (!d.off.plan && plan) for (let i = 0; i < 4; i++) {
+    const day = tdAdd(today, i); if ((plan.semStart && day < plan.semStart) || (plan.semEnd && day > plan.semEnd)) continue;
+    const t = todayRows(plan, tdAt(day).getTime()), live = i ? null : nowRow(t.rows);
+    for (const r of t.rows) {
+      if (r.lessons.length || (!i && (!live || t.rows.indexOf(r) < t.rows.indexOf(live)))) continue;   // planned, or over already today
+      const when = i === 0 ? 'today’s' : i === 1 ? 'tomorrow’s' : tdAt(day).toLocaleDateString(LANG_LOCALE, { weekday: 'long' }) + '’s';
+      add('plan', 'plan:' + r.c.id + ':' + day + ':' + r.m.start, 'Plan ' + when + ' ' + r.c.name + ' lesson', [planTime(r.m.start), 'nothing planned yet'].filter(Boolean).join(' · '), tdGradeClass(r.c), day, { label: 'Plan it', href: planUrl('#week') }, 'x', r.c.color);
+    }
+  }
+  if (!d.off.miss) for (const c of lib.classes) {
+    const n = tdMiss.by[c.id]; if (!n) continue;
+    add('miss', 'miss:' + c.id, 'Remind ' + people(n, 'student') + ' about missing work', c.name, c, today, { label: 'See who', href: classHash(c, 'missing') }, n);
+  }
+  return out;
+}
+function todoRows() {
+  const own = tdItems().map(it => ({ own: true, id: it.id, it, x: it.x, d: it.d || '', c: it.c ? classById(it.c) || null : null, done: it.done || 0 }));
+  return [...own, ...todoAuto()];
+}
+const tdDoneToday = (r, today) => !!r.done && isoDay(r.done) === today;
+const todoCount = () => { const today = tdToday(); return todoRows().filter(r => !r.done && r.d && r.d <= today).length; };
+
+/* ---------- drawing ---------- */
+const TD_TICK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+const TD_REP = { day: 'Every school day', week: 'Every week', meet: 'Each time this class meets' };
+const tdDot = (c, color) => '<span class="rdot" style="background:' + (color || classColor(c)) + '"></span>';
+function tdRow(r, today, card) {
+  const done = !!r.done, late = !done && r.d && r.d < today, due = done ? 'Done' : tdDaySay(r.d, today);
+  const word = !due || due === 'Done' || due === 'Today' || due === 'Tomorrow';   // a weekday or a date is written by the browser in the app's language already
+  let meta = '';
+  if (r.auto) meta = '<span class="tdtag">From your work</span>' + (r.sub ? '<span data-raw>' + esc(r.sub) + '</span>' : '');
+  else {
+    const it = r.it, a = it.a && findItem(it.a);
+    meta = [r.c ? '<span class="tdc" data-raw>' + tdDot(r.c) + esc(r.c.name) + '</span>' : '', it.who ? '<span data-raw>' + esc(it.who) + '</span>' : '', a ? '<span data-raw>' + esc(a.it.name) + '</span>' : '',
+      it.rep ? '<span>' + TD_REP[it.rep] + '</span>' : '', it.note ? '<span>Note</span>' : ''].filter(Boolean).join('');
+  }
+  const btn = r.auto && !card ? (r.btn.open ? '<button class="btn sm" data-tdopen="' + esc(r.btn.open) + '">' + r.btn.label + '</button>' : '<a class="btn sm" href="' + esc(r.btn.href) + '">' + r.btn.label + '</a>') : '';
+  return '<div class="tdrow' + (done ? ' done' : '') + (r.auto ? ' auto' : '') + (!card && tdS.sel === r.id ? ' sel' : '') + '" data-td="' + esc(r.id) + '">' +
+    '<button class="tdck" data-raw data-tdtick="' + esc(r.id) + '" ' + (r.auto ? 'title="Hide this line. It goes by itself when the work is done." aria-label="Hide: ' + esc(r.x) + '"' : 'role="checkbox" aria-checked="' + done + '" aria-label="' + esc(r.x) + '" title="' + (done ? 'Not done after all' : 'Done') + '"') + '>' + (done ? TD_TICK : '') + '</button>' +
+    '<button class="tdmain" data-tdsel="' + esc(r.id) + '"' + (card ? ' title="Open it in To do"' : '') + '><span class="tdx" data-raw>' + esc(r.x) + '</span>' + (meta ? '<span class="tdm">' + meta + '</span>' : '') + '</button>' + btn +
+    '<span class="tddue' + (late ? ' late' : !done && r.d === today ? ' now' : '') + '"' + (word ? '' : ' data-raw title="' + esc(tdDayLong(r.d)) + '"') + '>' + esc(due) + '</span></div>';
+}
+const tdPutHtml = (el, h) => { if (el && el.dataset.h !== h) { el.dataset.h = h; el.innerHTML = h; } };
+const tdSort = (a, b) => (a.d || '9').localeCompare(b.d || '9') || (a.auto ? 1 : 0) - (b.auto ? 1 : 0) || ((a.it && a.it.made) || 0) - ((b.it && b.it.made) || 0);
+
+function tdCardRender() {
+  const box = $('#tdCardList'); if (!box) return;
+  const today = tdToday(), own = todoRows().filter(r => r.own);
+  const now = own.filter(r => (!r.done && r.d && r.d <= today) || tdDoneToday(r, today)).sort((a, b) => (a.done ? 1 : 0) - (b.done ? 1 : 0) || tdSort(a, b));
+  const shown = now.slice(0, 8), rest = own.filter(r => !r.done).length - shown.filter(r => !r.done).length;
+  const h = (shown.length ? shown.map(r => tdRow(r, today, true)).join('') : '<p class="tdnone">Nothing on your list for today.</p>') +
+    (rest > 0 ? '<div class="tdfoot"><span>' + rest + ' more on your list</span><a class="link" href="#/todo">See everything</a></div>' : '');
+  tdPutHtml(box, h);
+}
+function todoClassNote(planClass) {
+  const c = tdGradeClass(planClass); if (!c) return '';
+  const today = tdToday(), n = tdItems().filter(it => !it.done && it.c === c.id && it.d && it.d <= today).length;
+  return n ? ' · <span class="tdpre">' + n + ' to do</span>' : '';
+}
+
+function tdGroups(rows, today) {
+  const week = tdAdd(today, 7), g = { late: [], now: [], week: [], later: [], done: [] };
+  for (const r of rows) {
+    if (r.done) { if (tdDoneToday(r, today)) g.now.push(r); else if (Date.now() - r.done < 7 * TD_DAY) g.done.push(r); continue; }
+    if (!r.d) g.later.push(r); else if (r.d < today) g.late.push(r); else if (r.d === today) g.now.push(r); else if (r.d <= week) g.week.push(r); else g.later.push(r);
+  }
+  for (const k of ['late', 'now', 'week', 'later']) g[k].sort((a, b) => (a.done ? 1 : 0) - (b.done ? 1 : 0) || tdSort(a, b));
+  g.done.sort((a, b) => b.done - a.done);
+  return g;
+}
+function tdSideHtml(rows, today) {
+  const r = tdS.sel ? rows.find(x => x.id === tdS.sel) : null;
+  if (!r) {
+    const off = tdData().off;
+    return '<h2 class="tcap">The app adds these for you</h2><div class="tcard tdkinds">' + TD_KINDS.map(([k, l]) => '<button class="tdsw" role="switch" aria-checked="' + !off[k] + '" data-tdkind="' + k + '"><span>' + l + '</span><i aria-hidden="true"></i></button>').join('') +
+      '<p class="muted">These come from your saved work and go by themselves when the work is done. You can move one to another day or hide it, and you never have to type it.</p></div>';
+  }
+  const chip = (attr, on, label) => '<button class="tdchip' + (on ? ' on' : '') + '" ' + attr + ' aria-pressed="' + !!on + '">' + label + '</button>';
+  const when = '<div class="tdf"><span class="tdl">When</span><div class="tdv">' + chip('data-tdwhen="today"', r.d === today, 'Today') + chip('data-tdwhen="tomorrow"', r.d === tdAdd(today, 1), 'Tomorrow') + chip('data-tdwhen="week"', r.d === tdNextMon(today), 'Next week') + (r.own ? chip('data-tdwhen="none"', !r.d, 'No day') : '') +
+    '<input type="date" id="tdDate" value="' + esc(r.d) + '" aria-label="Pick a day" title="Pick a day"></div></div>';
+  const x = '<button class="icon tdclose" data-tdclose aria-label="Close" title="Close">✕</button>';
+  if (r.auto) return '<div class="tcard tdpane" data-tdpane="' + esc(r.id) + '">' + x + '<h2 class="tdtitle" data-raw>' + esc(r.x) + '</h2><p class="tdm"><span class="tdtag">From your work</span>' + (r.sub ? '<span data-raw>' + esc(r.sub) + '</span>' : '') + '</p>' + when +
+    '<p class="muted tdsay">The app noticed this from your saved work. It goes by itself when the work is done.</p><div class="tdacts">' + (r.btn.open ? '<button class="btn primary" data-tdopen="' + esc(r.btn.open) + '">' + r.btn.label + '</button>' : '<a class="btn primary" href="' + esc(r.btn.href) + '">' + r.btn.label + '</a>') +
+    '<span class="sp"></span><button class="btn" data-tdhide>Hide this</button></div></div>';
+  const it = r.it, c = r.c, pc = tdPlanClass(c);
+  const cls = '<div class="tdf"><label class="tdl" for="tdCls">Class</label><div class="tdv"><select id="tdCls" class="btn sm"><option value="">No class</option>' + lib.classes.map(k => '<option value="' + esc(k.id) + '"' + (k === c ? ' selected' : '') + '>' + esc(k.name) + '</option>').join('') + '</select></div></div>';
+  let goes = '';
+  if (c) {
+    const items = c.units.flatMap(u => u.items), si = it.who ? c.names.indexOf(it.who) : -1, a = it.a && items.find(i => i.id === it.a);
+    goes = '<div class="tdf"><label class="tdl" for="tdWith">Goes with</label><div class="tdv"><select id="tdWith" class="btn sm"><option value="">Nothing</option>' +
+      (items.length ? '<optgroup label="Assignments">' + items.map(i => '<option value="a:' + esc(i.id) + '"' + (i === a ? ' selected' : '') + '>' + esc(i.name) + '</option>').join('') + '</optgroup>' : '') +
+      (c.names.length ? '<optgroup label="Students">' + c.names.map((n, i) => '<option value="s:' + i + '"' + (i === si ? ' selected' : '') + '>' + esc(n) + '</option>').join('') + '</optgroup>' : '') + '</select>' +
+      (si >= 0 ? '<a class="link" href="' + classHash(c, 'students', si) + '">Open their page</a>' : a ? '<a class="link" href="' + classHash(c) + '">Open the class</a>' : '') + '</div></div>';
+  }
+  const rep = '<div class="tdf"><span class="tdl">Repeats</span><div class="tdv">' + chip('data-tdrep=""', !it.rep, 'No') + chip('data-tdrep="day"', it.rep === 'day', 'Every school day') + chip('data-tdrep="week"', it.rep === 'week', 'Every week') + (pc || it.rep === 'meet' ? chip('data-tdrep="meet"', it.rep === 'meet', 'Each time this class meets') : '') + '</div></div>';
+  return '<div class="tcard tdpane" data-tdpane="' + esc(r.id) + '">' + x + '<textarea class="tdtitle" id="tdX" rows="2" maxlength="300" aria-label="What to do">' + esc(it.x) + '</textarea>' + when + cls + goes + rep +
+    '<div class="tdf top"><label class="tdl" for="tdNote">Note</label><div class="tdv"><textarea id="tdNote" rows="3" maxlength="2000" placeholder="Anything to remember about it">' + esc(it.note || '') + '</textarea></div></div>' +
+    '<div class="tdacts"><button class="btn primary" data-tdfin>' + (it.done ? 'Not done after all' : 'Done') + '</button>' + (it.done ? '' : '<button class="btn" data-tdwhen="tomorrow">Move to tomorrow</button>') + '<span class="sp"></span><button class="btn ghost" data-tddel>Delete</button></div></div>';
+}
+function tdPageRender() {
+  const r = routeNow(); if (r.v !== 'todo' || batch) return;
+  const today = tdToday(), all = todoRows();
+  if (tdS.sel && !all.some(x => x.id === tdS.sel)) tdS.sel = '';
+  if (tdS.filter !== 'all' && tdS.filter !== 'mine' && !classById(tdS.filter)) tdS.filter = 'all';
+  const rows = all.filter(x => tdS.filter === 'all' || (tdS.filter === 'mine' ? x.own : x.c && x.c.id === tdS.filter)), g = tdGroups(rows, today);
+  const late = all.filter(x => !x.done && x.d && x.d < today).length, now = all.filter(x => !x.done && x.d === today).length;
+  const say = late || now ? [late ? numWord(late) + ' overdue' : '', now ? (late ? numWord(now).toLowerCase() : numWord(now)) + ' for today' : ''].filter(Boolean).join(', ') + '.' : all.some(x => !x.done) ? 'Nothing due today.' : 'Nothing on your list.';
+  if ($('#tdSay').textContent !== say) $('#tdSay').textContent = say;
+  const fchip = (k, label, c) => '<button class="tdchip' + (tdS.filter === k ? ' on' : '') + '" data-tdf="' + esc(k) + '" aria-pressed="' + (tdS.filter === k) + '">' + (c ? tdDot(c) : '') + '<span' + (c ? ' data-raw' : '') + '>' + esc(label) + '</span></button>';
+  tdPutHtml($('#tdChips'), fchip('all', 'Everything') + fchip('mine', 'Only mine') + lib.classes.map(c => fchip(c.id, c.name, c)).join(''));
+  const nDone = tdGroups(all, today).done.length, db = $('#tdDoneBtn');
+  db.hidden = !nDone; db.textContent = (tdS.done ? 'Hide' : 'Show') + ' done in the last 7 days · ' + nDone; db.setAttribute('aria-pressed', String(tdS.done));
+  const sec = (k, name, list) => list.length ? '<div class="tdgrp' + (k === 'late' ? ' late' : '') + '" data-tdgrp="' + k + '">' + name + ' <span>' + (k === 'done' ? list.length : list.filter(x => !x.done).length) + '</span></div>' + list.map(x => tdRow(x, today)).join('') : '';
+  const h = sec('late', 'Overdue', g.late) + sec('now', 'Today', g.now) + sec('week', 'Next 7 days', g.week) + sec('later', 'Later', g.later) + (tdS.done ? sec('done', 'Done in the last 7 days', g.done) : '');
+  tdPutHtml($('#tdList'), h || '<p class="tdnone">' + (tdS.filter === 'all' ? 'Nothing here yet. Type something above and press Enter, like “Print handouts tomorrow”.' : 'Nothing here for this view.') + '</p>');
+  tdPutHtml($('#tdSide'), tdSideHtml(all, today));
+}
+function tdUndRender() {
+  const box = $('#tdUnd'), r = todoRead($('#tdIn').value), c = r.c && classById(r.c), parts = [];
+  if (r.d && !tdS.drop.d) parts.push('<button class="tdchip on" data-tddrop="d" title="Not a day: leave these words in">' + esc(tdDayLong(r.d)) + (r.rep ? ' · every week' : '') + '</button>');
+  if (c && !tdS.drop.c) parts.push('<button class="tdchip" data-tddrop="c" title="Not about this class">' + tdDot(c) + '<span data-raw>' + esc(c.name) + '</span></button>');
+  if (c && r.who && !tdS.drop.c && !tdS.drop.who) parts.push('<button class="tdchip" data-tddrop="who" title="Not about this student"><span data-raw>' + esc(r.who) + '</span></button>');
+  box.hidden = !parts.length;
+  tdPutHtml(box, parts.length ? '<span>Understood as</span>' + parts.join('') + '<span class="tdhint">Click one to take it off</span>' : '');
+}
+let tdWas = '';
+function todoRender() {
+  if (!shellReady) return;
+  const r = routeNow(), scr = batch ? 'a' : r.v;
+  if (scr !== tdWas && (scr === 'todo' || scr === 'home')) tdMissLoad();   // coming to either screen: look again at who owes work
+  tdWas = scr;
+  const n = todoCount(), el = $('#railTodo'), s = n ? String(n) : '';
+  if (el.textContent !== s) el.textContent = s;
+  tdCardRender(); tdPageRender();
+}
+
+/* ---------- doing ---------- */
+function tdFocusAdd() { go('#/todo'); const i = $('#tdIn'); i.focus(); i.select(); }
+$('#tdAdd').addEventListener('submit', e => {
+  e.preventDefault();
+  const i = $('#tdIn'); if (!todoAdd(i.value, tdS.drop)) return;
+  i.value = ''; tdS.drop = {}; tdUndRender(); i.focus();
+});
+$('#tdIn').addEventListener('input', () => { if (!$('#tdIn').value.trim()) tdS.drop = {}; tdUndRender(); });
+$('#tdUnd').addEventListener('click', e => { const b = e.target.closest('[data-tddrop]'); if (!b) return; tdS.drop[b.dataset.tddrop] = 1; tdUndRender(); $('#tdIn').focus(); });
+$('#tdCardAdd').addEventListener('submit', e => {
+  e.preventDefault();
+  const i = $('#tdCardIn'); if (!todoAdd(i.value, null, { d: tdToday() })) return;
+  i.value = ''; i.focus();
+});
+function tdClick(e) {
+  const hit = a => e.target.closest('[' + a + ']');
+  let b;
+  if ((b = hit('data-tdtick'))) {
+    const id = b.dataset.tdtick;
+    if (id.startsWith('auto:')) {
+      const r = todoAuto().find(x => x.id === id); if (!r) return;
+      const was = tdData().auto[r.key];
+      tdAutoPut(r.key, { h: r.sig });
+      toastDo('Hidden. It comes back if the work changes.', 'Undo', () => { const a = { ...tdData().auto }; if (was) a[r.key] = was; else delete a[r.key]; tdSave({ auto: a }); });
+    } else todoTick(id);
+    return;
+  }
+  if ((b = hit('data-tdopen'))) { if (!b.disabled) { b.disabled = true; reopenKept(b.dataset.tdopen).finally(() => { b.disabled = false; }); } return; }
+  if ((b = hit('data-tdsel'))) {
+    const id = b.dataset.tdsel, onCard = !!b.closest('#todoCard');
+    tdS.sel = !onCard && tdS.sel === id ? '' : id;
+    if (onCard) { tdS.filter = 'all'; go('#/todo'); } else tdPageRender();
+    return;
+  }
+  if ((b = hit('data-tdf'))) { tdS.filter = b.dataset.tdf; tdPageRender(); return; }
+  if ((b = hit('data-tdkind'))) { const d = tdData(), off = { ...d.off }, k = b.dataset.tdkind; if (off[k]) delete off[k]; else off[k] = 1; tdSave({ off, offT: Date.now() }); if (k === 'miss' && !off.miss) tdMissLoad(); return; }
+  if (hit('data-tdclose')) { tdS.sel = ''; tdPageRender(); return; }
+  const id = tdS.sel, auto = id.startsWith('auto:'), r = auto ? todoAuto().find(x => x.id === id) : null;
+  if (!id || (auto && !r)) return;
+  const setDay = d => auto ? tdAutoPut(r.key, { d }) : tdPut(id, { d, ...(d ? {} : { rep: '' }) });
+  if ((b = hit('data-tdwhen'))) { const today = tdToday(), k = b.dataset.tdwhen; setDay(k === 'today' ? today : k === 'tomorrow' ? tdAdd(today, 1) : k === 'week' ? tdNextMon(today) : ''); return; }
+  if (hit('data-tdhide')) { tdAutoPut(r.key, { h: r.sig }); return; }
+  if (auto) return;
+  if ((b = hit('data-tdrep'))) { const rep = b.dataset.tdrep, it = tdItem(id); tdPut(id, { rep, ...(rep && !it.d ? { d: tdToday() } : {}) }); return; }
+  if (hit('data-tdfin')) { todoTick(id); return; }
+  if (hit('data-tddel')) todoDelete(id);
+}
+$('#vTodo').addEventListener('click', tdClick);
+$('#todoCard').addEventListener('click', tdClick);
+$('#tdDoneBtn').onclick = () => { tdS.done = !tdS.done; tdPageRender(); };
+$('#tdSide').addEventListener('change', e => {
+  const id = tdS.sel, t = e.target; if (!id) return;
+  if (t.id === 'tdDate') {
+    if (id.startsWith('auto:')) { const r = todoAuto().find(x => x.id === id); if (r && t.value) tdAutoPut(r.key, { d: t.value }); }
+    else tdPut(id, { d: t.value || '', ...(t.value ? {} : { rep: '' }) });
+    return;
+  }
+  if (id.startsWith('auto:')) return;
+  if (t.id === 'tdX') { const x = t.value.replace(/\s+/g, ' ').trim(); if (x) tdPut(id, { x }); else t.value = (tdItem(id) || {}).x || ''; }
+  else if (t.id === 'tdNote') tdPut(id, { note: t.value.trim() });
+  else if (t.id === 'tdCls') { const it = tdItem(id); tdPut(id, { c: t.value, who: '', a: '', ...(it.rep === 'meet' ? { rep: 'week' } : {}) }); }
+  else if (t.id === 'tdWith') { const it = tdItem(id), c = classById(it.c), v = t.value; tdPut(id, { who: v.startsWith('s:') && c ? c.names[+v.slice(2)] || '' : '', a: v.startsWith('a:') ? v.slice(2) : '' }); }
+});
+$('#tdSide').addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.id === 'tdX') { e.preventDefault(); e.target.blur(); } });
+document.addEventListener('keydown', e => {
+  if (e.key.toLowerCase() !== 'n' || e.ctrlKey || e.metaKey || e.altKey || e.defaultPrevented || batch || !shellReady) return;
+  const t = e.target;
+  if ((t.closest && t.closest('input, textarea, select, [contenteditable]')) || $('#findDlg') || $('#askDlg') || !$('#dlg').hidden || !$('#welcome').hidden) return;
+  e.preventDefault(); tdFocusAdd();
+});
+Object.assign(window.__gs, { todoRead, todoAdd, todoRows, todoCount, todoTick });
 
 /* ---------------- Settings: one page per subject, each with its own address (#/settings/<key>) ---------------- */
 let setSecWas = '';
@@ -21701,7 +22201,7 @@ $('#setHistory').addEventListener('click', e => {
 });
 
 /* updates she controls, and installing as an app */
-const WHATS_NEW = {"1.22.0":["Progress sheets for parent meetings: one printed page per student with the term grade, every score, a chart of how they moved, missing work, each term's grade, the report comment and lines for notes. Find it on a class's Students list, or Progress sheet on one student's page.","Choose the term and tick what goes on it; Print opens the print window, where you can pick a printer or Save as PDF. It is made on your computer and nothing is sent anywhere."],"1.21.0":["Each class has a Missing work tab: every paper you marked Missing, by student or by assignment, for the term you pick.","Email reminder opens an email in your own mail app, addressed to the student and listing what they owe, for you to read and send. Email all writes one email to everyone who owes an assignment, with the addresses in Bcc. Grading Studio sends nothing itself.","Each reminder you open is noted beside the work, and Email wording… changes what every reminder says."],"1.20.0":["The app can speak Traditional Chinese (繁體中文). Choose it in Settings, Display, App language, or at the top of the welcome.","Like Spanish, it covers the first screens so far: the sidebar, Today, the welcome, Find anything, Help, and the feedback page students get with a returned paper. The other screens are still in English."],"1.19.0":["The app can speak Spanish. Choose it in Settings, Display, App language, or at the top of the welcome.","Spanish covers the first screens so far: the sidebar, Today, the welcome, Find anything, Help, and the feedback page students get with a returned paper. The other screens are still in English.","Names you typed (classes, students, assignments, rubric rows) are never translated."],"1.18.0":["On a tablet, a pencil draws and the pen's line is wider where you press harder. Once you have used a pencil, one finger moves the page, two fingers pinch to zoom, and a hand resting on the screen does nothing.","Settings, Marking has a new Tablet and pencil section: choose what a finger does on the paper, or turn off the wider line.","On a touch screen the tools, the student rows and the score buttons are larger."],"1.17.0":["Report comments: a new tab on each class's page drafts a comment for every student from your own gradebook, rubric scores and the comments you wrote on their papers. Edit each one, tick it done, then copy or download them all.","The drafts are put together on your computer from sentences you can change under Wording. Nothing about a student is sent anywhere."],"1.16.0":["Help is in the sidebar: short answers to the questions teachers ask most, from opening a set of papers to moving your work to another computer.","Find anything answers questions too. Type a few words, like “late paper” or “backup”, and the answer is in the list."],"1.15.0":["A picture dragged onto a slide that has text now sits beside the text, in a new Text + picture layout.","Drag several pictures in at once and each gets its own slide. Let a picture go on any slide in the list on the left to put it there.","New Full picture layout: the picture fills the whole slide."],"1.14.0":["Extra credit: points or a percent on one paper, and extra credit entries in the gradebook that add to the term grade or the in-class average.","The gradebook shows each type's average (summative, in-class) right beside the term grade, kept in view as you scroll. Averages only shows just those columns, and Whole year splits each term the same way.","Leave out… lets you untick students to see the class averages without them. Their own grades don't change, and nothing is saved."],"1.13.0":["Present a lesson from the Planner, or from Today when its class is on now or next: its slides fill the screen, and the arrow keys or a clicker move through them.","While presenting, A shows the agenda to tick off, T starts a timer the class can see, N shows your notes and B blanks the screen.","The bar shows how many minutes the class has left, from your timetable.","After a lesson is taught, one line says where the class got to. It shows on the lesson and on the week, and presenting again picks up there."],"1.12.0":["A returned paper starts with a feedback page: the score, each rubric row with the level given and what that level means, your comment, and every comment on the paper with its page number.","It is on unless you turn it off under Options on the Return tab. Your own pages are not changed, and bringing an export back in opens only those."],"1.11.0":["The Planner’s sections are in the sidebar: Calendar, Units, Past lessons, Activities and Rubrics. The row of tabs across the top is gone.","A lesson has a lighter top: its name, its classes, its status and Download. Copy for Claude, Versions, the upload and the links are under More.","Comments shows above a lesson once it has one."],"1.7.0":["Home is now Today: the classes you teach today with the lesson planned for each, the papers waiting to be marked, and the papers ready to hand back.","What the class needs next: after a set of papers is scored, Today shows the weakest rubric row and how many students to sit down with.","A class page is quieter. Click anywhere on an assignment’s row to open it; the only blue button is the one that adds an assignment.","Forget, and the other ways to open papers, moved into the ⋯ menu on each row."],"1.6.0":["A new browser opens on three questions (your classes, how you grade, where work is kept) and starts with nothing of anyone else’s in it.","A sample class of made-up students, with papers to mark, for trying things out. Remove it from Home when you’re done.","The app uses the name of your own school system. Choose it, and how you usually grade, in Settings.","Letter grades or IB 1 to 7 can show beside the percent, with boundaries you set.","Canvas and Moodle downloads are grouped by student. The Planner works without a setup file, and downloads lessons as PowerPoint with a plain built-in template."],"1.5.0":["The sidebar says “Not backed up”, in amber, until a folder holds a second copy of your work. Home asks for that folder once.","Go back in time, in Settings: any assignment as it was on an earlier day, restored on its own, with Undo.","Grading Studio can be installed as an app, and it opens with no internet.","A newer version now waits until you click Update now, so nothing changes in the middle of marking."]};
+const WHATS_NEW = {"1.23.0":["A to-do list. To do in the sidebar holds your own list beside what the app noticed from your work: papers to mark, papers to hand back, a class with no lesson planned, missing work to chase. Those go by themselves when the work is done, and each kind can be switched off.","Type a to-do the way you would say it, like “Call Bram’s parents friday”, and it picks out the day, the class and the student. Press N anywhere outside a paper to add one.","A to-do can have a day, a class, a student or assignment it goes with, a repeat and a note. Today shows a short card of what is overdue or due today."],"1.22.0":["Progress sheets for parent meetings: one printed page per student with the term grade, every score, a chart of how they moved, missing work, each term's grade, the report comment and lines for notes. Find it on a class's Students list, or Progress sheet on one student's page.","Choose the term and tick what goes on it; Print opens the print window, where you can pick a printer or Save as PDF. It is made on your computer and nothing is sent anywhere."],"1.21.0":["Each class has a Missing work tab: every paper you marked Missing, by student or by assignment, for the term you pick.","Email reminder opens an email in your own mail app, addressed to the student and listing what they owe, for you to read and send. Email all writes one email to everyone who owes an assignment, with the addresses in Bcc. Grading Studio sends nothing itself.","Each reminder you open is noted beside the work, and Email wording… changes what every reminder says."],"1.20.0":["The app can speak Traditional Chinese (繁體中文). Choose it in Settings, Display, App language, or at the top of the welcome.","Like Spanish, it covers the first screens so far: the sidebar, Today, the welcome, Find anything, Help, and the feedback page students get with a returned paper. The other screens are still in English."],"1.19.0":["The app can speak Spanish. Choose it in Settings, Display, App language, or at the top of the welcome.","Spanish covers the first screens so far: the sidebar, Today, the welcome, Find anything, Help, and the feedback page students get with a returned paper. The other screens are still in English.","Names you typed (classes, students, assignments, rubric rows) are never translated."],"1.18.0":["On a tablet, a pencil draws and the pen's line is wider where you press harder. Once you have used a pencil, one finger moves the page, two fingers pinch to zoom, and a hand resting on the screen does nothing.","Settings, Marking has a new Tablet and pencil section: choose what a finger does on the paper, or turn off the wider line.","On a touch screen the tools, the student rows and the score buttons are larger."],"1.17.0":["Report comments: a new tab on each class's page drafts a comment for every student from your own gradebook, rubric scores and the comments you wrote on their papers. Edit each one, tick it done, then copy or download them all.","The drafts are put together on your computer from sentences you can change under Wording. Nothing about a student is sent anywhere."],"1.16.0":["Help is in the sidebar: short answers to the questions teachers ask most, from opening a set of papers to moving your work to another computer.","Find anything answers questions too. Type a few words, like “late paper” or “backup”, and the answer is in the list."],"1.15.0":["A picture dragged onto a slide that has text now sits beside the text, in a new Text + picture layout.","Drag several pictures in at once and each gets its own slide. Let a picture go on any slide in the list on the left to put it there.","New Full picture layout: the picture fills the whole slide."],"1.14.0":["Extra credit: points or a percent on one paper, and extra credit entries in the gradebook that add to the term grade or the in-class average.","The gradebook shows each type's average (summative, in-class) right beside the term grade, kept in view as you scroll. Averages only shows just those columns, and Whole year splits each term the same way.","Leave out… lets you untick students to see the class averages without them. Their own grades don't change, and nothing is saved."],"1.13.0":["Present a lesson from the Planner, or from Today when its class is on now or next: its slides fill the screen, and the arrow keys or a clicker move through them.","While presenting, A shows the agenda to tick off, T starts a timer the class can see, N shows your notes and B blanks the screen.","The bar shows how many minutes the class has left, from your timetable.","After a lesson is taught, one line says where the class got to. It shows on the lesson and on the week, and presenting again picks up there."],"1.12.0":["A returned paper starts with a feedback page: the score, each rubric row with the level given and what that level means, your comment, and every comment on the paper with its page number.","It is on unless you turn it off under Options on the Return tab. Your own pages are not changed, and bringing an export back in opens only those."],"1.11.0":["The Planner’s sections are in the sidebar: Calendar, Units, Past lessons, Activities and Rubrics. The row of tabs across the top is gone.","A lesson has a lighter top: its name, its classes, its status and Download. Copy for Claude, Versions, the upload and the links are under More.","Comments shows above a lesson once it has one."],"1.7.0":["Home is now Today: the classes you teach today with the lesson planned for each, the papers waiting to be marked, and the papers ready to hand back.","What the class needs next: after a set of papers is scored, Today shows the weakest rubric row and how many students to sit down with.","A class page is quieter. Click anywhere on an assignment’s row to open it; the only blue button is the one that adds an assignment.","Forget, and the other ways to open papers, moved into the ⋯ menu on each row."],"1.6.0":["A new browser opens on three questions (your classes, how you grade, where work is kept) and starts with nothing of anyone else’s in it.","A sample class of made-up students, with papers to mark, for trying things out. Remove it from Home when you’re done.","The app uses the name of your own school system. Choose it, and how you usually grade, in Settings.","Letter grades or IB 1 to 7 can show beside the percent, with boundaries you set.","Canvas and Moodle downloads are grouped by student. The Planner works without a setup file, and downloads lessons as PowerPoint with a plain built-in template."],"1.5.0":["The sidebar says “Not backed up”, in amber, until a folder holds a second copy of your work. Home asks for that folder once.","Go back in time, in Settings: any assignment as it was on an earlier day, restored on its own, with Undo.","Grading Studio can be installed as an app, and it opens with no internet.","A newer version now waits until you click Update now, so nothing changes in the middle of marking."]};
 const upd = { on: false, st: null, mine: '', checking: false, said: '', install: null, installed: false, err: '' };
 const updCan = () => 'serviceWorker' in navigator && (location.protocol === 'https:' || /[?&]sw=1(&|$)/.test(location.search)) && !/Grading Studio\.html$/i.test(decodeURIComponent(location.pathname));
 const updSend = async msg => { const reg = await navigator.serviceWorker.ready; if (reg.active) reg.active.postMessage(msg); };
@@ -22076,12 +22576,12 @@ function railRender() {
   for (const a of document.querySelectorAll('#rail [data-nav]')) { const on = !batch && a.dataset.nav === r.v; a.classList.toggle('on', on); if (on) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); }
   const cr = $('#crumbClass'); cr.hidden = !(batch && open);
   if (batch && open) { cr.textContent = open.name; cr.href = classHash(open); cr.title = 'Back to ' + open.name; }
-  tabsRender(); setRender(); helpRender();
+  tabsRender(); setRender(); helpRender(); todoRender();
   if (!batch && r.v === 'home' && screenWas !== 'home') planRefresh();
   screenWas = batch ? 'a' : r.v;
   const d = $('#homeDate'), today = new Date().toLocaleDateString(LANG_LOCALE, { weekday: 'long', month: 'long', day: 'numeric' }); if (d.textContent !== today) d.textContent = today;   // Today's title is the day itself
   const asg = batch && batch.assignment && findItem(batch.assignment.id);
-  document.title = batch ? (asg ? asg.it.name + ' · ' : '') + 'Grading Studio' : r.v === 'class' ? (r.c === lib.loose ? 'No class' : r.c.name) + ' · Grading Studio' : r.v === 'settings' ? (r.sec === 'saving' ? '' : SET_SECS.find(x => x[0] === r.sec)[1] + ' · ') + 'Settings · Grading Studio' : r.v === 'help' ? 'Help · Grading Studio' : 'Grading Studio';
+  document.title = batch ? (asg ? asg.it.name + ' · ' : '') + 'Grading Studio' : r.v === 'class' ? (r.c === lib.loose ? 'No class' : r.c.name) + ' · Grading Studio' : r.v === 'settings' ? (r.sec === 'saving' ? '' : SET_SECS.find(x => x[0] === r.sec)[1] + ' · ') + 'Settings · Grading Studio' : r.v === 'help' ? 'Help · Grading Studio' : r.v === 'todo' ? 'To do · Grading Studio' : 'Grading Studio';
 }
 function railSavedRender() {
   if (!shellReady) return;
@@ -22151,6 +22651,7 @@ function findRows() {
     add('This assignment', 'Close this assignment', 'Saved first, then back to Today', () => go('#/'));
   }
   add('Go to', 'Today', 'What you teach today, what is waiting to be marked, what is ready to hand back', () => go('#/'));
+  add('Go to', 'To do', 'Your own list, with what the app noticed from your work', () => go('#/todo'));
   add('Go to', 'Planner', 'Units and lessons, on its own page', () => { location.href = $('#lessonsBtn').href; });
   add('Go to', 'Settings', 'Saving, classes, terms, marking, display and keys', () => go('#/settings'));
   add('Go to', 'Help', 'Short answers to common questions', () => go('#/help'));
@@ -22176,6 +22677,7 @@ function findRows() {
     add('Settings', 'Bring work in', 'From a take-home file', press('#restoreBtn'));
     add('Settings', 'Remove from this computer', 'Clears student work from this browser', () => go('#/settings'));
   }
+  if (!batch) add('Do', 'Add a to-do', 'Type it the way you would say it', () => tdFocusAdd(), 'N');
   add('Settings', 'Where my work is saved', 'This browser, and a folder you choose', () => openWhere());
   add('Settings', 'Go back in time', 'An assignment, or everything, as it was on an earlier day', () => go(setHash('history')));
   add('Settings', 'Updates and installing', 'This version, what’s new, install as an app', () => go(setHash('about')));

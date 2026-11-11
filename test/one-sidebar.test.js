@@ -58,7 +58,7 @@ test('the Planner has the same sidebar: its own classes, no grading counts, and 
     await page.waitForSelector('#railClasses a');
     // the same rows in the same order as on the grading page, with the Planner's own sections where its one row is, and Timetable where Add a class is
     assert.deepEqual(await page.$$eval('#rail > *', els => els.filter(e => e.checkVisibility() && e.innerText.trim()).map(e => e.innerText.replace(/\s+/g, ' ').trim().replace(/(Ctrl K|⌘K)$/, '').trim())),
-      ['Grading Studio', 'Find anything', 'Today', 'PLANNER', 'Calendar', 'Units', 'Past lessons', 'Activities', 'Rubrics', 'CLASSES', 'Course A-1 Course A 2 Course B-1', 'Timetable', 'Not backed up This browser', 'Help', 'Settings']);
+      ['Grading Studio', 'Find anything', 'Today', 'To do', 'PLANNER', 'Calendar', 'Units', 'Past lessons', 'Activities', 'Rubrics', 'CLASSES', 'Course A-1 Course A 2 Course B-1', 'Timetable', 'Not backed up This browser', 'Help', 'Settings']);
     assert.equal(await page.$eval('#railPlanner', a => a.getAttribute('aria-current')), 'page');
     assert.equal(await page.$('#rail .rcnt'), null, 'no counts');
     assert.ok(!/\d+ left|to score/.test(await page.$eval('#rail', e => e.textContent + [...e.querySelectorAll('[title]')].map(x => x.title).join(' '))), 'nothing about grading in the Planner’s sidebar');

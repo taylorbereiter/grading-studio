@@ -512,6 +512,7 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
   <a class="rbrand" href="#/" aria-label="Grading Studio, Today"><span class="rl">Grading <i>Studio</i></span><span class="rs" aria-hidden="true">G<i>S</i></span></a>
   <button class="rfind" id="findBtn" aria-haspopup="dialog" title="Find a student, an assignment, a tool or a setting"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5"/></svg><span class="rl">Find anything</span><kbd class="rl" id="findKey">Ctrl K</kbd></button>
   <a class="rnav" data-nav="home" href="#/" title="Today: what you teach, what is waiting to be marked, what is ready to hand back"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.6"/><path d="M12 3v2.2M12 18.8V21M3 12h2.2M18.8 12H21M5.6 5.6l1.6 1.6M16.8 16.8l1.6 1.6M5.6 18.4l1.6-1.6M16.8 7.2l1.6-1.6"/></svg><span class="rl">Today</span></a>
+  <a class="rnav" data-nav="todo" href="#/todo" title="To do: your own list, with what the app noticed from your work"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span class="rl rname">To do</span><span class="rl rcnt" id="railTodo"></span></a>
   <a class="rnav" id="lessonsBtn" href="planner.html" title="Plan units and lessons. The Planner is a separate page and never sees grading work."><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M8 3v4M16 3v4"/></svg><span class="rl">Planner</span></a>
   <div class="rcap"><span class="rl">Classes</span></div>
   <div id="railClasses"></div>
@@ -561,7 +562,7 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
           <button class="link" id="keptAll" hidden></button>
         </section>
       </div>
-      <aside class="hside" id="hside" hidden><section class="tsec" id="handBack" hidden></section><section class="tsec" id="needNext" hidden></section><div id="needs" hidden></div></aside>
+      <aside class="hside" id="hside"><section class="tsec" id="todoCard"><div class="thd"><h2 class="tcap">To do</h2><a class="link" href="#/todo">Open To do</a></div><div class="tcard"><form class="tdadd" id="tdCardAdd" autocomplete="off"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><input type="text" id="tdCardIn" maxlength="300" placeholder="Add a to-do…" aria-label="Add a to-do"></form><div id="tdCardList"></div></div></section><section class="tsec" id="handBack" hidden></section><section class="tsec" id="needNext" hidden></section><div id="needs" hidden></div></aside>
     </div>
     <p class="foot">Your marks, scores, units and rosters are kept in this browser, so you can close the tab and come back to pick up where you left off. <button class="link" id="sample">Try it with a sample class</button></p>
     <p class="foot gsVer"></p>
@@ -569,6 +570,19 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
   <section class="view" id="vClass" hidden>
     <div id="classes"></div>
     <p class="muted vhint" id="classHint">Drag an assignment to another unit, or onto a class in the sidebar. Drag a unit’s name to move the unit. Drop <span class="sysZip">a ManageBac ZIP</span> on an assignment to open it there.</p>
+  </section>
+  <section class="view" id="vTodo" hidden>
+    <header class="vhead"><h1>To do</h1><span class="muted" id="tdSay"></span><span class="sp"></span><button class="btn sm" id="tdDoneBtn" hidden></button></header>
+    <div class="tdchips" id="tdChips" role="group" aria-label="Show"></div>
+    <div class="tdgrid">
+      <div class="tcard tdmainc">
+        <form class="tdadd" id="tdAdd" autocomplete="off"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><input type="text" id="tdIn" maxlength="300" placeholder="Add a to-do, like “Print handouts tomorrow”" aria-label="Add a to-do"><kbd title="Press N anywhere outside a paper to add a to-do">N</kbd></form>
+        <div class="tdund" id="tdUnd" hidden></div>
+        <div id="tdList"></div>
+      </div>
+      <aside id="tdSide"></aside>
+    </div>
+    <p class="foot">Your list is saved with your grading work, in this browser and your folder. It never goes in the Planner’s folder.</p>
   </section>
   <section class="view" id="vHelp" hidden>
     <header class="vhead"><h1>Help</h1><span class="muted">Short answers. They are part of the app, so they work with no internet.</span></header>

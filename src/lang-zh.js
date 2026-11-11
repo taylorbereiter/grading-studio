@@ -27,6 +27,11 @@ function zhHomeSay(k) {
 const LANG_ZH = {
   name: '繁體中文', locale: 'zh-Hant',
   words: {
+    /* the to-do list: the sidebar, the card on Today, Find anything */
+    'To do': '待辦事項', 'To do: your own list, with what the app noticed from your work': '待辦事項：你自己的清單，加上系統從你的工作中發現的事', 'Add a to-do': '新增待辦事項', 'Add a to-do…': '新增待辦事項…',
+    'Open To do': '開啟待辦事項', 'Nothing on your list for today.': '今天清單上沒有事項。', 'See everything': '查看全部', 'Done': '已完成', 'Tomorrow': '明天', 'Note': '備註', 'Open it in To do': '在待辦事項中開啟',
+    'Every school day': '每個上課日', 'Every week': '每週', 'Each time this class meets': '每次這個班上課時',
+    'Your own list, with what the app noticed from your work': '你自己的清單，加上系統從你的工作中發現的事', 'Type it the way you would say it': '照你平常說的方式輸入', 'Your own list, on the grading page': '你自己的清單，在批改頁面',
     /* the sidebar, on both pages */
     'Main': '主選單', 'Grading Studio, Today': 'Grading Studio，今天', 'Find anything': '搜尋', 'Today': '今天', 'Planner': '備課', 'Classes': '班級', 'Add a class': '新增班級',
     'Help': '說明', 'Settings': '設定', 'Update ready': '有新版本', 'No class': '未指定班級', 'App language': '介面語言', 'English, Spanish or Traditional Chinese': '英文、西班牙文或繁體中文',
@@ -152,6 +157,7 @@ const LANG_ZH = {
     'Missing': '缺交', 'Excused': '免交', 'Late': '遲交',
   },
   rules: [
+    [/^(\d+) more on your list$/, '清單上還有 $1 項'], [/^(\d+) to do$/, '$1 項待辦'],
     [/^(?:No classes today\.|\w+ class(?:es)? today\.|\w+ sets? of papers (?:to mark|ready to hand back)|[Nn]othing waiting to be marked\.)/, m => zhHomeSay(m.input)],
     [/^Grading Studio version (.+)$/, 'Grading Studio 版本 $1'],
     [/^Step (\d) of 3$/, '第 $1 步，共 3 步'],
@@ -217,6 +223,11 @@ const LANG_ZH = {
     'add-class': { q: '怎麼新增班級和名單？', words: '名單 學生 姓名 新班級 roster',
       a: ['1. 按側邊欄的**新增班級**，並為它命名。', '2. 貼上學生姓名，一行一位。順序會和你貼上的一樣。', '3. 開啟班級的 **Students** 分頁，可以為每位學生加上學號、電子郵件或備註。',
         '有了名單，開啟那個班級的作業時會列出每位學生，包括沒有繳交的人。'] },
+    'todo': { q: '待辦事項清單怎麼用？', go: '開啟待辦事項', words: '待辦 事項 清單 提醒 記得 工作 todo to-do task',
+      a: ['側邊欄的**待辦事項**是一份清單。你自己的事項是實線圓圈。虛線圓圈的是系統從你存好的工作中發現的事：要批改的作業、可以發還的作業、還沒備課的班級、需要催繳的缺交作業。',
+        '照你平常說的方式輸入，然後按 Enter。日期目前用英文辨識：句尾的日期（“tomorrow”、“friday”、“nov 20”）、班級名稱或學生姓名會自動辨識出來，點一下辨識到的項目就能取消。在作業畫面以外的任何地方按 **N** 就能新增。',
+        '點一下事項，可以設定日期、班級、相關的對象、重複或備註。系統加入的事項在工作完成後會自己消失。你可以把它移到另一天、隱藏，或關掉整個類別。',
+        '**今天**會顯示一張小卡，列出你逾期或今天到期的事項。清單和你的批改工作存在一起，絕不會放進備課的資料夾。'] },
     'language': { q: '介面可以換成其他語言嗎？', go: '開啟設定、顯示', words: '中文 繁體 西班牙文 英文 語言 翻譯 chinese language',
       a: ['可以。目前有繁體中文和西班牙文。在設定、Display 的**介面語言**選擇，或在歡迎畫面最上方選擇。頁面會用你選的語言重新顯示。',
         '英文以外的語言目前涵蓋側邊欄、今天、歡迎畫面、搜尋、說明，以及學生隨發還作業收到的回饋頁。其他畫面仍是英文。',
