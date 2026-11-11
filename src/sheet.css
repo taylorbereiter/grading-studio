@@ -1,0 +1,56 @@
+/* ---------- progress sheets (sheet.js): the box that shows them, and the pages as they print ---------- */
+.dlg .box.pssbox{width:min(1000px,100%);height:calc(100vh - 32px)}
+.pssbody{display:flex;flex-direction:column;gap:var(--space-2);overflow:auto;background:var(--surface-2)}
+.pssbar{display:flex;align-items:center;gap:var(--space-3);flex-wrap:wrap}
+.pssck{display:inline-flex;align-items:center;gap:6px;font-size:var(--text-control);color:var(--fg-2)}
+.pssnote{margin:0;font-size:var(--text-control)}
+.psswarn{color:var(--fg)}
+.psspages{display:flex;flex-direction:column;align-items:center;gap:var(--space-5);padding:var(--space-3) 0 var(--space-6)}
+/* one sheet: a sheet of paper on screen, the page itself in print */
+.pss{box-sizing:border-box;width:210mm;min-height:270mm;padding:12mm;background:var(--stage-paper);color:var(--stage-ink);box-shadow:var(--shadow);border-radius:var(--corner-1);font-size:var(--text-control)}
+.pssin{display:flex;flex-direction:column;gap:var(--space-3)}
+.pss h4{margin:0 0 6px;font-size:var(--text-small);text-transform:uppercase;letter-spacing:.06em;color:var(--stage-ink-2);font-weight:600}
+.psshead{display:flex;justify-content:space-between;align-items:flex-end;gap:var(--space-4);border-bottom:2px solid var(--stage-blue);padding-bottom:var(--space-2)}
+.psshead small{font-size:var(--text-small);color:var(--stage-blue);font-weight:600;text-transform:uppercase;letter-spacing:.08em}
+.psshead h3{margin:2px 0 0;font-size:var(--text-heading);font-weight:650;color:var(--stage-ink)}
+.psshead p{margin:0;text-align:right;font-size:var(--text-small);color:var(--stage-ink-2);line-height:1.5}
+.psstiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:var(--space-2)}
+.psst{border:1px solid var(--line);border-radius:var(--corner-3);padding:6px var(--space-3);display:flex;flex-direction:column;gap:2px}
+.psst span{font-size:var(--text-small);color:var(--stage-ink-2)}
+.psst b{font-size:var(--text-title);font-weight:650;font-variant-numeric:tabular-nums}
+.psst b small{font-size:var(--text-small);font-weight:500;color:var(--stage-ink-2)}
+.psst small{font-size:var(--text-caption);color:var(--stage-ink-2)}
+.psst.main{background:var(--stage-blue-soft);border-color:transparent}
+.psst.main b{color:var(--stage-blue)}
+.pss [data-pssline]{width:90%;margin:0 auto}
+.pss [data-pssline] .bkln{stroke:var(--stage-blue);stroke-width:2.5}
+.pss .bkleg{font-size:var(--text-caption)}
+.pssgrid{display:grid;grid-template-columns:1.35fr 1fr;gap:var(--space-5);align-items:start}
+.pssgrid.wide{grid-template-columns:1fr;gap:var(--space-3)}
+.pssgrid.wide aside{display:grid;grid-template-columns:1.35fr 1fr;gap:var(--space-5)}
+.psshalves{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-4);align-items:start}
+.pssgrid aside{display:flex;flex-direction:column;gap:var(--space-4)}
+.psstab{width:100%;border-collapse:collapse;font-size:var(--text-small);font-variant-numeric:tabular-nums}
+.psstab th{text-align:left;font-weight:600;color:var(--stage-ink-2);border-bottom:1px solid var(--line-strong);padding:3px 4px}
+.psstab td{border-bottom:1px solid var(--line);padding:3px 4px;vertical-align:top}
+.pssgrid.wide .psstab td{padding:1px 4px}
+.psstab .pssv{text-align:right;white-space:nowrap}
+.psstab small{color:var(--stage-ink-2)}
+.psstab .pssyr td{font-weight:650;border-bottom:none}
+.pssmiss{color:var(--ch-down);font-weight:600}
+.psslist{margin:0;padding-left:18px;font-size:var(--text-small)}
+.psslist small{color:var(--stage-ink-2)}
+.pssnone{margin:0;font-size:var(--text-small);color:var(--stage-ink-2)}
+.pssrep p{margin:0;line-height:1.55;white-space:pre-wrap}
+.pssnotes{display:flex;flex-direction:column}
+.pssnotes i{display:block;height:8mm;border-bottom:1px solid var(--line-strong)}
+#pssOut{display:none}
+@media print{
+  @page{margin:12mm}
+  html.pssprint,html.pssprint body{height:auto!important;overflow:visible!important;background:var(--stage-paper)!important}
+  html.pssprint body>*:not(#pssOut){display:none!important}
+  html.pssprint #pssOut{display:block}
+  #pssOut .pss{width:auto;min-height:0;padding:0;box-shadow:none;break-after:page;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  #pssOut .pss:last-child{break-after:auto}
+  #pssOut .pssgrid,#pssOut .psstiles,#pssOut .psschart,#pssOut tr{break-inside:avoid}
+}
