@@ -1,11 +1,12 @@
 {
- "version": "1.26.1",
- "build": "d7a769bd8803",
+ "version": "1.26.2",
+ "build": "7d973170cd2b",
  "notes": [
-  "Activities: See, think, wonder now says it comes from Project Zero at the Harvard Graduate School of Education."
+  "Rubric rows can be scored on your own scale. They start at 0 to 4 with half points, as before; when you set up an assignment you can pick any top from 1 to 10 and turn half points off.",
+  "Settings, Grading: choose the row scale new assignments start with. Assignments you already have keep theirs."
  ],
  "files": {
-  "index.html": "ebaa6cec6e6b61ded29fdc8313c71432e7466233539b233001d3cc5b1c7736af",
-  "planner.html": "871ffde948dfae1c2b3562abe6431bb873e9cb7ba5af3756af02d2963d70fb5d"
+  "index.html": "41c866f88df1bc3d467dac18958725cbd0bc8fd4d5752944a66a2137be59af9e",
+  "planner.html": "ec22e76fc32a3dfd387a1c1e75a98b4795ba11e99261499a84a2bb23c1d3728c"
  }
 }

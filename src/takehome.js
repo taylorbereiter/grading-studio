@@ -278,7 +278,7 @@ function partSide(part, v, other, t, anon) {
     const c = (v && v.criteria) || [];
     if (!v) out.push('<div>Nothing set up</div>');
     else if (v.mode === 'points') out.push('<div>Points, out of ' + esc(v.outOf) + '</div>');
-    else out.push('<div>Rubric with ' + c.length + (c.length === 1 ? ' row' : ' rows') + ', out of ' + c.length * 4 + '</div><div class="muted">' + esc(c.join(', ')) + '</div>');
+    else out.push('<div>Rubric with ' + c.length + (c.length === 1 ? ' row' : ' rows') + ', out of ' + rowsMax(v) + '</div><div class="muted">' + esc(c.join(', ')) + '</div>');
     if (v && other && scaleSay(v) !== scaleSay(other)) out.push('<div class="muted">' + scaleSay(v) + '</div>');
     if (v && v.rubricPage && v.rubricPage.name) out.push('<div class="muted">Rubric page: ' + esc(v.rubricPage.name) + '</div>');
   } else if (part === 'cls') { const c = (lib.classes || []).find(x => x.id === v); out.push('<div>' + (c ? esc(c.name) : 'No class') + '</div>'); }
