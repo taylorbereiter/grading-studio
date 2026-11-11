@@ -1,0 +1,4 @@
+# Seating and the name picker. The grading page now keeps a copy of each class's roster for the Planner's
+# name picker (src/pickshare.js). It is made again from the classes every time the page opens, so nothing is lost
+# when an older build leaves it alone.
+localStorage:gs.rolls

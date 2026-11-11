@@ -76,7 +76,7 @@ function bandOf(pct) {
   const b = g.bands.find(b => pct >= b[0]); return b ? b[1] : g.bands[g.bands.length - 1][1];
 }
 const bandSay = pct => { const b = bandOf(pct); return b ? ' · ' + b : ''; };
-function saveLib() { libVer++; if (!store.set('gs.lib', lib)) toast('This browser is out of room to keep your units and rosters.'); wordsShare(); }
+function saveLib() { libVer++; if (!store.set('gs.lib', lib)) toast('This browser is out of room to keep your units and rosters.'); wordsShare(); rollsShare(); }
 // The two names (the school's system, where unit plans live) are also kept where the Planner can read them, beside the class links:
 // it is a separate page that never opens grading's work. Only for a teacher who has said them; nothing is written otherwise.
 function wordsShare() {
