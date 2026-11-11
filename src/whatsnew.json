@@ -1,4 +1,11 @@
 {
+  "1.23.0": [
+    "Undo now takes back a score as well as a mark: press Ctrl Z (⌘Z on a Mac) after a slip on a slider, a number key, or Missing, Excused or Late. Redo puts it back.",
+    "Deleting a unit, an assignment or a class shows Undo for a few seconds, and Undo puts it back where it was.",
+    "“Picked up where you left off” shows once, when you open an assignment, and no longer on Today or other pages. The note about what opened leaves by itself when you move to the next student, if every file opened.",
+    "The Next button stays in one place from student to student, and the Grade heading on a class’s Students tab is drawn properly.",
+    "Find anything answers to more everyday words: export, hand back, backup, undo, shortcuts, csv."
+  ],
   "1.22.0": [
     "Progress sheets for parent meetings: one printed page per student with the term grade, every score, a chart of how they moved, missing work, each term's grade, the report comment and lines for notes. Find it on a class's Students list, or Progress sheet on one student's page.",
     "Choose the term and tick what goes on it; Print opens the print window, where you can pick a printer or Save as PDF. It is made on your computer and nothing is sent anywhere."

@@ -553,7 +553,7 @@ function renderWhere() {
     const h = s.act ? '<span class="wtext' + (s.cls ? ' ' + s.cls : '') + '">' + esc(s.text) + '.</span> <button class="btn sm primary" data-wact>' + s.act + '</button>' : '';
     if (first.dataset.h !== h) { first.dataset.h = h; first.innerHTML = h; first.hidden = !h; }
   }
-  if (top) { top.textContent = s.text; top.title = s.tip; top.className = 'savewhere link' + (s.cls ? ' ' + s.cls : ''); }
+  if (top) { const cut = /^Not backed up\. /.exec(s.text); top.textContent = cut ? 'Not backed up' : s.text; if (cut) { const more = document.createElement('span'); more.className = 'sw-more'; more.textContent = s.text.slice(13); top.append(more); } top.title = s.tip; top.className = 'savewhere link' + (s.cls ? ' ' + s.cls : ''); }
   if (line) {
     const h = '<span class="wtext' + (s.cls ? ' ' + s.cls : '') + '">' + (fld.state === 'none' && fld.booted ? 'Your work is saved only in this browser, and is not backed up' : 'Your work is saved: ' + esc(s.text.charAt(0).toLowerCase() + s.text.slice(1))) + '.</span> ' +
       (s.act ? '<button class="btn sm primary" data-wact>' + s.act + '</button> ' : '') +

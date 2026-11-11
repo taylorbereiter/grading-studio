@@ -151,7 +151,7 @@ const HELP = [
       'The trip back works the same way. If the same student changed in both places, you see both versions and choose.'],
     go: ['Open Settings, Saving', '#/settings'], words: 'home laptop transfer take-home sync second computer usb' },
   { id: 'go-back', sec: 'safe', q: 'I made a mistake. Can I go back to how things were?',
-    a: ['Undo (Ctrl Z, or ⌘Z) steps back through marks on the paper.', 'For anything bigger, Settings, **Go back in time** lists your work as it was on earlier days. **Look** compares then and now. **Restore this assignment** takes one assignment back and leaves the rest alone.'],
+    a: ['Undo (Ctrl Z, or ⌘Z) steps back through the marks on the paper and the scores you gave, one at a time.', 'Deleting a unit, an assignment or a class shows **Undo** for a few seconds.', 'For anything bigger, Settings, **Go back in time** lists your work as it was on earlier days. **Look** compares then and now. **Restore this assignment** takes one assignment back and leaves the rest alone.'],
     go: ['Open Go back in time', '#/settings/history'], words: 'undo restore history lost deleted recover snapshot' },
   { id: 'offline', sec: 'safe', q: 'Does it work without the internet?',
     a: ['Yes. After the first visit the app is kept on the computer and opens with no connection. Your work never needed one.', 'Settings, **About and updates** can install it as an app with its own window and icon.'],

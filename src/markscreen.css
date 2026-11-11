@@ -193,6 +193,7 @@ button.pavg:hover .v{text-decoration:underline}
 .nav .primary kbd{font:600 var(--text-caption) var(--f-body);border:1px solid color-mix(in srgb,var(--accent-fg) 55%,transparent);border-radius:var(--corner-1);padding:0 4px;margin-left:2px}
 .oneout{text-align:center;margin:0;flex-basis:100%}
 .oneout .link{font-size:var(--text-small);font-weight:500}
+.oneout-gap{visibility:hidden;pointer-events:none}
 .oneout-say{margin:3px 0 0}
 .oneout-say:empty{display:none}
 .nextun{display:block;margin:8px auto 0;font-size:var(--text-control)}
