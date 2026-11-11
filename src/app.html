@@ -8,15 +8,6 @@
 /*@@PARTSCSS@@*/
 a.btn{color:var(--fg);text-decoration:none;cursor:pointer}
 a.btn.mb-go{color:var(--accent);border-color:var(--accent);font-weight:600}.mb-add{color:var(--accent)}
-.drop{border:2px dashed var(--line-strong);border-radius:14px;background:var(--surface);padding:26px 20px;text-align:center;transition:.15s}
-.drop.over{border-color:var(--accent);background:var(--accent-soft)}
-.drop h2{font-family:var(--f-display);font-size:var(--text-title);margin:0 0 6px}
-.drop p{color:var(--muted);margin:0 0 16px}
-.drop .row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
-.steps{margin:26px 0 0;padding:0;list-style:none;display:grid;gap:10px}
-.steps li{display:grid;grid-template-columns:28px 1fr;gap:10px;color:var(--muted)}
-.steps b{color:var(--fg)}
-.steps .n{width:26px;height:26px;border-radius:var(--corner-round);background:var(--accent-soft);color:var(--accent);font-weight:700;display:flex;align-items:center;justify-content:center;font-size:var(--text-control)}
 .start .foot{margin-top:24px;color:var(--faint);font-size:var(--text-control)}
 .bootnote{background:var(--warn-soft);color:var(--warn);padding:10px 14px;border-radius:var(--corner-4);font-size:var(--text-body);margin:0 0 18px;max-width:80ch}
 
@@ -374,9 +365,6 @@ table.gl{border-collapse:collapse;width:100%;font-size:var(--text-body)}
 .ath.dragging{opacity:.35}
 .adrop .empty{color:var(--faint);font-size:var(--text-control);padding:30px 6px;text-align:center;width:100%}
 .lib{margin-top:28px}
-.kept{display:flex;flex-direction:column;gap:6px}
-.krow{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:var(--corner-4);padding:9px 12px}
-.krow .kn{flex:1;min-width:0;display:flex;flex-direction:column}.krow .kn b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.krow .kn .muted{font-size:12.5px}
 .lhead{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:10px}
 .lhead h2{font-family:var(--f-display);font-size:var(--text-title);margin:0}
 .lhead .muted{font-size:var(--text-control)}
@@ -412,8 +400,6 @@ table.gl{border-collapse:collapse;width:100%;font-size:var(--text-body)}
 .rcard.ins{box-shadow:-4px 0 0 var(--accent)}
 .rcard b{overflow-wrap:anywhere}
 .empty-note{color:var(--faint);font-size:var(--text-body);padding:6px 2px}
-.how{margin-top:26px;color:var(--muted)}
-.how summary{cursor:pointer;font-weight:600;color:var(--fg)}
 textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);border-radius:var(--corner-3);padding:8px;font-size:var(--text-body);background:var(--surface);resize:vertical}
 .media{background:var(--surface);border:1px solid var(--line);border-radius:var(--corner-5);box-shadow:var(--shadow);margin:0 auto 14px;max-width:900px}
 .mstick{position:sticky;top:-18px;z-index:3;background:var(--surface);border-radius:12px 12px 0 0;padding:12px 14px 10px;border-bottom:1px solid var(--line)}
@@ -523,9 +509,9 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
 <!-- the frame: a sidebar that is always there, and one screen beside it -->
 <div class="shell" id="shell">
 <nav class="rail" id="rail" aria-label="Main">
-  <a class="rbrand" href="#/" aria-label="Grading Studio, Home"><span class="rl">Grading <i>Studio</i></span><span class="rs" aria-hidden="true">G<i>S</i></span></a>
+  <a class="rbrand" href="#/" aria-label="Grading Studio, Today"><span class="rl">Grading <i>Studio</i></span><span class="rs" aria-hidden="true">G<i>S</i></span></a>
   <button class="rfind" id="findBtn" aria-haspopup="dialog" title="Find a student, an assignment, a tool or a setting"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5"/></svg><span class="rl">Find anything</span><kbd class="rl" id="findKey">Ctrl K</kbd></button>
-  <a class="rnav" data-nav="home" href="#/" title="Home"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11l8-7 8 7v8a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1z"/></svg><span class="rl">Home</span></a>
+  <a class="rnav" data-nav="home" href="#/" title="Today: what you teach, what is waiting to be marked, what is ready to hand back"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.6"/><path d="M12 3v2.2M12 18.8V21M3 12h2.2M18.8 12H21M5.6 5.6l1.6 1.6M16.8 16.8l1.6 1.6M5.6 18.4l1.6-1.6M16.8 7.2l1.6-1.6"/></svg><span class="rl">Today</span></a>
   <a class="rnav" id="lessonsBtn" href="planner.html" title="Plan units and lessons. The Planner is a separate page and never sees grading work."><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M8 3v4M16 3v4"/></svg><span class="rl">Planner</span></a>
   <div class="rcap"><span class="rl">Classes</span></div>
   <div id="railClasses"></div>
@@ -542,41 +528,40 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
   <p id="whereTop" hidden></p>
   <section class="view" id="vOpening" hidden><p class="muted vopening" role="status">Opening your papers…</p></section>
   <section class="view" id="vHome">
-    <header class="vhead"><h1>Home</h1><span class="muted" id="homeDate"></span><span class="sp"></span><span class="gAcct"></span></header>
+    <header class="vhead thead"><div class="tlead"><h1 id="homeDate">Today</h1><p class="muted" id="homeSay"></p></div><span class="sp"></span><span class="gAcct"></span></header>
     <div class="hgrid">
       <div class="hmain">
         <section class="safeask" id="sampleNote" hidden></section>
         <section class="safeask" id="safeAsk" hidden></section>
-        <section class="lib today" hidden>
-          <div class="lhead"><h2>Pick up where you left off</h2><span class="muted" id="keptSay">Newest first. Kept in this browser until you click Forget.</span></div>
-          <div class="kept" id="kept"></div>
-          <button class="link" id="keptAll" hidden></button>
+        <section class="tsec" id="today" hidden></section>
+        <section class="tsec today" id="toMark" hidden>
+          <h2 class="tcap">To mark</h2>
+          <div class="kept tcard" id="kept"></div>
         </section>
         <div class="drop" id="drop">
-          <h2 id="dropTitle">Open a ManageBac download</h2>
-          <p id="dropSay">The ZIP, or the unzipped folder with one folder per student. You can also drop it anywhere on this page.</p>
+          <svg class="dic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 11l5 5 5-5M5 20h14"/></svg>
+          <div class="dtx"><h2 id="dropTitle">Drop new student work anywhere</h2>
+          <p id="dropSay">A ZIP from your school system, a folder, a scan of the whole class, or photos.</p></div>
           <div class="row">
-            <button class="btn primary" id="pickFiles">Choose the ZIP or PDFs…</button>
-            <button class="btn" id="pickFolder">Choose a folder…</button>
-            <button class="btn" id="pickDrive">Open from Google Drive…</button>
-            <button class="btn" id="pickScan">Split a scan of everyone’s papers…</button>
-            <button class="btn" id="pickMatch">Match files to a roster…</button>
+            <button class="btn" id="pickFiles">Choose files…</button>
+            <span class="kmw"><button class="btn" id="pickMore" data-km aria-haspopup="true" aria-expanded="false" title="A folder, a scan of the whole class, or files to match to a roster">More ways</button><div class="km right" hidden>
+              <button class="mitem" id="pickFolder">A folder of papers…</button>
+              <button class="mitem" id="pickScan">A scan of everyone’s papers…</button>
+              <button class="mitem" id="pickMatch">Files to match to a roster…</button>
+              <button class="mitem" id="pickDrive">From Google Drive…</button>
+            </div></span>
           </div>
           <input type="file" id="fileIn" multiple hidden>
           <input type="file" id="dirIn" webkitdirectory multiple hidden>
         </div>
+        <section class="tsec" id="earlier" hidden>
+          <h2 class="tcap">Earlier work</h2>
+          <div class="kept tcard" id="keptOld"></div>
+          <button class="link" id="keptAll" hidden></button>
+        </section>
       </div>
-      <aside class="hside" id="hside" hidden><div id="today" hidden></div><div id="needs" hidden></div></aside>
+      <aside class="hside" id="hside" hidden><section class="tsec" id="handBack" hidden></section><section class="tsec" id="needNext" hidden></section><div id="needs" hidden></div></aside>
     </div>
-    <details class="how">
-      <summary>How it works</summary>
-      <ol class="steps">
-        <li><span class="n">1</span><span><b>Mark.</b> Pen, highlight, text, check marks, and comments that sit in the margin with a line to the spot. Arrange pages lets you combine a student’s files and drag pages into order.</span></li>
-        <li><span class="n">2</span><span><b>Score.</b> Type a total, or click 0 to 4 on each rubric row (half points too). Or bring in your own rubric (Word, PDF or picture) once and grade right on each student’s copy. Students stay in their folder order.</span></li>
-        <li><span class="n">3</span><span><b>Enter grades.</b> Open the Grades tab and go down it in <span class="sysWord">ManageBac</span>. Click any score or comment to copy it. Marked in Kami instead? The Grade sheet finds what you typed, like “9 = 85%”, and shows a crop of it for every student. Files with no marks are left out as extra papers, and you can bring them back.</span></li>
-        <li><span class="n">4</span><span><b>Return.</b> Export gives you the marked files in the same student folders.</span></li>
-      </ol>
-    </details>
     <p class="foot">Your marks, scores, units and rosters are kept in this browser, so you can close the tab and come back to pick up where you left off. <button class="link" id="sample">Try it with a sample class</button></p>
     <p class="foot gsVer"></p>
   </section>
@@ -685,7 +670,7 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
         <button class="mitem" id="keysBtn" data-fg="Tools">All keys <kbd>?</kbd></button>
       </div>
     </div>
-    <button class="icon" id="closeBtn" title="Close this assignment and go Home" aria-label="Close this assignment and go Home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+    <button class="icon" id="closeBtn" title="Close this assignment and go back to Today" aria-label="Close this assignment and go back to Today"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
   </div>
   <div class="cols" id="cols">
     <button class="pbtn" id="colL" title="Keep the student list open ( [ )" aria-label="Keep the student list open" aria-pressed="false"><span class="pa">›</span></button>

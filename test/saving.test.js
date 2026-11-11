@@ -18,7 +18,7 @@ const breakQuick = page => page.evaluate(() => { window.__set = Storage.prototyp
 const fixQuick = page => page.evaluate(() => { Storage.prototype.setItem = window.__set; });
 const rowsOf = page => page.evaluate(() => window.__gs.state().batch.students[0].grade.rubric);
 const idOf = page => page.evaluate(() => window.__gs.state().batch.id);
-const openKept = async (page, id) => { await page.waitForSelector('#kept [data-kopen="' + id + '"]'); await page.click('#kept [data-kopen="' + id + '"]'); await waitPaper(page); };
+const openKept = async (page, id) => { await page.waitForSelector('#vHome [data-kopen="' + id + '"]'); await page.click('#vHome [data-kopen="' + id + '"]'); await waitPaper(page); };
 
 test('“Saved” waits for the slower of the two writes', async () => {
   const { page, close } = await openApp(browser);

@@ -86,8 +86,8 @@ test('two files whose names differ only in accent spelling stay two files: marks
   assert.deepEqual(await counts(), { [first]: 1, [second]: 0 });
   const id = await page.evaluate(() => window.__gs.state().batch.id);
   await page.reload(); await appReady(page);
-  await page.waitForSelector('#kept [data-kopen]');
-  await page.click('#kept [data-kopen]');
+  await page.waitForSelector('#vHome [data-kopen]');
+  await page.click('#vHome [data-kopen]');
   await waitPaper(page);
   assert.equal(await page.evaluate(() => window.__gs.state().batch.id), id, 'the same download');
   assert.deepEqual(await counts(), { [first]: 1, [second]: 0 }, 'the stroke hasn’t spread to a paper she never marked');

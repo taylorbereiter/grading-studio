@@ -15,8 +15,8 @@ after(async () => { await browser.close(); });
 
 const ARIA = 'Aria Testwell/Essay.pdf';
 async function openKept(page, name) {
-  await page.waitForFunction(n => [...document.querySelectorAll('#kept .krow')].some(r => r.textContent.includes(n)), {}, name);
-  await page.evaluate(n => [...document.querySelectorAll('#kept .krow')].find(r => r.textContent.includes(n)).querySelector('[data-kopen]').click(), name);
+  await page.waitForFunction(n => [...document.querySelectorAll('#vHome .krow')].some(r => r.textContent.includes(n)), {}, name);
+  await page.evaluate(n => [...document.querySelectorAll('#vHome .krow')].find(r => r.textContent.includes(n)).querySelector('[data-kopen]').click(), name);
   await page.waitForFunction(n => { const s = window.__gs.state(); return s.batch && s.batch.name === n; }, {}, name);
   await waitPaper(page);
   await page.evaluate(() => window.__gs.scanAll());

@@ -1,15 +1,14 @@
 {
- "version": "1.6.0",
- "build": "4b0122c3438b",
+ "version": "1.7.0",
+ "build": "20fca0f9583d",
  "notes": [
-  "A new browser opens on three questions (your classes, how you grade, where work is kept) and starts with nothing of anyone else’s in it.",
-  "A sample class of made-up students, with papers to mark, for trying things out. Remove it from Home when you’re done.",
-  "The app uses the name of your own school system. Choose it, and how you usually grade, in Settings.",
-  "Letter grades or IB 1 to 7 can show beside the percent, with boundaries you set.",
-  "Canvas and Moodle downloads are grouped by student. The Planner works without a setup file, and downloads lessons as PowerPoint with a plain built-in template."
+  "Home is now Today: the classes you teach today with the lesson planned for each, the papers waiting to be marked, and the papers ready to hand back.",
+  "What the class needs next: after a set of papers is scored, Today shows the weakest rubric row and how many students to sit down with.",
+  "A class page is quieter. Click anywhere on an assignment’s row to open it; the only blue button is the one that adds an assignment.",
+  "Forget, and the other ways to open papers, moved into the ⋯ menu on each row."
  ],
  "files": {
-  "index.html": "2bcef1d9d818602d1e333c5e2bb30252429d054d7b2bc2a1bbc2b54267a9ff06",
-  "planner.html": "b36e40f7c04320dc441a855946d3ccb52b24e8d58f00942286d893ffae7f7e65"
+  "index.html": "738e8000bb8264445cea5b76180e4d89ce262a21eab115c3f967e08e6ff372f9",
+  "planner.html": "a3e9fd45fb63a9fcd660bd5ab4d187dc9304a5309609923faaeb9ff1a4142f5b"
  }
 }

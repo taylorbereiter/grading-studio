@@ -123,17 +123,8 @@ async function forgetKept(id) {
   keptMeta.delete(id); renderLib();
 }
 const fmtSize = b => b > 1e9 ? (b / 1e9).toFixed(1) + ' GB' : b > 1e6 ? Math.round(b / 1e6) + ' MB' : Math.max(1, Math.round(b / 1e3)) + ' KB';
-function renderKept() {
-  const el = $('#kept'); if (!el) return;
-  const list = [...keptMeta.values()].sort((a, b) => b.t - a.t);
-  el.closest('section').hidden = !list.length;
-  keptTidy(list.length);
-  const where = m => { const it = cardOfKept(m.id), f = it && findItem(it.id); return f ? (f.c === lib.loose ? '' : f.c.name + ' · ') + f.u.name : ''; };
-  const state = m => { const st = keptState(m); return '<span class="kst">' + stateBar(st) + stateChip(st) + '</span>'; };
-  el.innerHTML = list.map((m, i) => '<div class="krow' + (i ? '' : ' first') + '"><div class="kn"><b>' + esc(m.name || 'A download') + '</b>' + (where(m) ? '<span class="kw">' + esc(where(m)) + '</span>' : '') + '<span class="muted">' + m.n + (m.n === 1 ? ' student' : ' students') + ' · ' + (m.scored || 0) + ' scored' + keptMore(m) + ' · last worked on ' + fmtDay(m.t) + (m.size ? ' · ' + fmtSize(m.size) : '') + (m.newer && keptMeta.has(m.newer) ? ' · an older copy: your work went on in a newer one' : '') + (m.papers ? '' : ' · papers not kept, drop the download again') + '</span></div>' + state(m) +
-    (m.papers ? '<button class="btn sm' + (i ? '' : ' primary') + '" data-kopen="' + esc(m.id) + '">' + (i ? 'Open' : 'Continue') + '</button>' : '') + '<button class="btn sm" data-kforget="' + esc(m.id) + '" title="Removes the papers, your marks and scores for this download from this browser and any linked folder">Forget</button></div>').join('');
-  renderNeeds();
-}
+// The lists of kept work are on Today (today.js draws them).
+function renderKept() { if (shellReady) homeRender(); }
 async function idbDo(mode, fn) {
   const db = await addDb();
   return new Promise((res, rej) => { const tx = db.transaction('files', mode), req = fn(tx.objectStore('files')); tx.oncomplete = () => res(req && req.result); tx.onerror = () => rej(tx.error); });

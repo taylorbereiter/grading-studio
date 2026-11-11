@@ -72,8 +72,8 @@ const sumFiles = async () => {
 const dbNames = page => page.evaluate(async () => (await indexedDB.databases()).map(d => d.name).sort());
 const idbWork = async page => { const w = await idbRead(page, 'grading-studio-keep', 'work'); return w.v[w.k.indexOf(RIVER)]; };
 async function openRiver(page) {
-  await page.waitForFunction(() => [...document.querySelectorAll('#kept .krow')].some(r => r.textContent.includes('River essay')));
-  await page.evaluate(() => [...document.querySelectorAll('#kept .krow')].find(r => r.textContent.includes('River essay')).querySelector('[data-kopen]').click());
+  await page.waitForFunction(() => [...document.querySelectorAll('#vHome .krow')].some(r => r.textContent.includes('River essay')));
+  await page.evaluate(() => [...document.querySelectorAll('#vHome .krow')].find(r => r.textContent.includes('River essay')).querySelector('[data-kopen]').click());
   await waitPaper(page);
   await page.evaluate(() => window.__gs.scanAll());
 }
@@ -485,8 +485,8 @@ test('Forget takes a download out of every safety copy, and Put back can’t bri
   }
   await putBackRow(page, await oldest(page));
   await page.waitForFunction(() => window.__gs.kept().size === 1);
-  assert.doesNotMatch(await page.$eval('#kept', e => e.textContent), /River essay/);
-  assert.match(await page.$eval('#kept', e => e.textContent), /Quiz/);
+  assert.doesNotMatch(await page.$eval('#vHome', e => e.textContent), /River essay/);
+  assert.match(await page.$eval('#vHome', e => e.textContent), /Quiz/);
   assert.equal(await page.evaluate(id => localStorage.getItem(id), RIVER), null);
   assert.ok(!(await idbRead(page, 'grading-studio-keep', 'work')).k.includes(RIVER));
   assert.ok(!(await idbRead(page, 'grading-studio-added', 'files')).k.some(k => k.startsWith(RIVER)), 'late files and readings too');
@@ -504,13 +504,13 @@ test('Put back: a download opened since stays listed with no marks, Forget still
   await page.click('#closeBtn');
   await putBackRow(page, firstCopy);
   await page.waitForFunction(() => window.__gs.kept().size === 3);
-  assert.match(await page.$eval('#kept', e => e.textContent), /Unit test.*2 students.*0 scored/s);
+  assert.match(await page.$eval('#vHome', e => e.textContent), /Unit test.*2 papers, not started/s);
   assert.equal(await page.evaluate(id => localStorage.getItem(id), id), null);
   assert.ok(!(await idbRead(page, 'grading-studio-keep', 'work')).k.includes(id), 'the marks went');
   assert.ok((await idbRead(page, 'grading-studio-keep', 'papers')).k.includes(id), 'the papers stayed');
   await putBackRow(page, (await copies(page)).find(c => /Before putting back/.test(c.why)).id);   // a wrong click, undone
   await page.waitForFunction(() => window.__gs.kept().size === 3);
-  assert.match(await page.$eval('#kept', e => e.textContent), /Unit test.*2 students.*1 scored/s);
+  assert.match(await page.$eval('#vHome', e => e.textContent), /Unit test.*1 of 2 scored/s);
   await page.evaluate(id => [...document.querySelectorAll('[data-kopen]')].find(b => b.dataset.kopen === id).click(), id);
   await waitPaper(page);
   assert.deepEqual((await workOf(page))['Hana Pretend'].grade.rubric, [3, 3, 3]);
@@ -540,7 +540,7 @@ test('Put back of a copy from before the stores existed clears what came later',
   assert.equal(await page.evaluate(id => localStorage.getItem(id), id), null);
   assert.deepEqual((await idbRead(page, 'grading-studio-keep', 'work')).k, [], 'the marks went');
   assert.deepEqual((await idbRead(page, 'grading-studio-added', 'files')).k, [], 'and so did the late file');
-  assert.match(await page.$eval('#kept', e => e.textContent), /0 scored/);
+  assert.match(await page.$eval('#vHome', e => e.textContent), /not started/);
   assert.deepEqual(page.errors, []);
   await close();
 });

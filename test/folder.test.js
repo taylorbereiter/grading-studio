@@ -18,8 +18,8 @@ const baseOf = page => new URL(page.url()).origin + '/';
 const idOf = page => page.evaluate(() => window.__gs.state().batch.id);
 const topBar = page => page.$eval('#saveWhere', e => e.textContent);
 async function openKept(page, name) {
-  await page.waitForFunction(n => [...document.querySelectorAll('#kept .krow')].some(r => r.textContent.includes(n)), { timeout: 30000 }, name);
-  await page.evaluate(n => [...document.querySelectorAll('#kept .krow')].find(r => r.textContent.includes(n)).querySelector('[data-kopen]').click(), name);
+  await page.waitForFunction(n => [...document.querySelectorAll('#vHome .krow')].some(r => r.textContent.includes(n)), { timeout: 30000 }, name);
+  await page.evaluate(n => [...document.querySelectorAll('#vHome .krow')].find(r => r.textContent.includes(n)).querySelector('[data-kopen]').click(), name);
   await page.waitForFunction(n => { const s = window.__gs.state(); return s.batch && s.batch.name === n; }, {}, name);
   await waitPaper(page);
 }
@@ -630,8 +630,8 @@ test('a file missing from the folder doesn’t stop an empty browser getting the
   await folderWait(page);
   assert.equal((await folderInfo(page)).state, 'ok', 'the rest of the folder is fine');
   assert.deepEqual(await rosterOf(page, '12EL-1'), ['Aria Testwell', 'Bram Sample'], 'rosters came back');
-  await page.waitForFunction(() => document.querySelector('#kept .krow'));
-  assert.match(await page.$eval('#kept .krow', e => e.textContent), /papers not kept, drop the download again/);
+  await page.waitForFunction(() => document.querySelector('#vHome .krow'));
+  assert.match(await page.$eval('#vHome .krow', e => e.textContent), /papers not kept, drop the download again/);
   assert.deepEqual(await addedKeys(page), [id + '|Aria Testwell|Aria Testwell/Late.txt'], 'the late file that is there came back');
   // Told once: the next visit doesn't ask again.
   await page.reload(); await appReady(page); await settled(page);

@@ -1,6 +1,6 @@
 /* ================= The sidebar =================
    The same sidebar as on the grading page, drawn by the Planner's own code. Its classes are the ones on the Planner's
-   timetable. It shows no grading counts and reads nothing of grading's: Home, a class and Settings are plain links
+   timetable. It shows no grading counts and reads nothing of grading's: Today, a class and Settings are plain links
    to the grading page, which looks the class up by its name when it opens. */
 // Grading Studio sits next to this page: index.html online, "Grading Studio.html" for the double-click copy.
 const GS_PAGE = location.protocol === 'file:' || /Planner\.html$/.test(decodeURIComponent(location.pathname)) ? 'Grading Studio.html' : './';
@@ -57,7 +57,7 @@ new MutationObserver(railRender).observe($('#lessons'), { childList: true });
 // Everything she can go to or do from here. Each row does what the button for it does.
 function findRows() {
   const out = [], add = (group, label, sub, run) => { if (label) out.push({ group, label: String(label), sub: sub || '', run }); };
-  add('Go to', 'Home', 'Your grading: what to pick up, and what needs a look', () => leaveTo(gsUrl('#/')));
+  add('Go to', 'Today', 'What you teach today, what is waiting to be marked, what is ready to hand back', () => leaveTo(gsUrl('#/')));
   add('Go to', 'This week', 'The calendar, a week at a time', async () => { L.weekOf = ymd(mondayOf(new Date())); await toView('week'); });
   add('Go to', 'Semester', 'The calendar, every week and its units', () => toView('semester'));
   add('Go to', 'Units', 'Each unit, its weeks and its files', () => toView('units'));

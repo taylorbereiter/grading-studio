@@ -85,12 +85,12 @@ const classById = id => lib.classes.find(c => c.id === id);
 // The same words as the Grades list's own summary.
 const keptMore = m => (m.partial ? ' · ' + m.partial + ' partial' : '') + (m.off ? ' · ' + m.off + ' missing or excused' : '');
 function batchSummary(it) {
-  if (!it.batchId) return 'No download opened yet';
+  if (!it.batchId) return 'No papers yet';
   const data = store.get(it.batchId, null);
   const d = new Date(it.opened || (data && data.t) || Date.now());
   let n = 0;
   if (data) for (const k in data.s) { const g = data.s[k].g; if (g && (g.rubric.some(v => v != null) || g.points !== '')) n++; }
   const m = keptMeta.get(it.batchId);
-  if (m) return 'Last worked on ' + fmtDay(m.t) + ' · ' + (m.scored || 0) + ' of ' + (m.n - (m.off || 0)) + ' scored' + keptMore(m) + (m.papers ? '' : ' · drop the same ZIP to keep going');
+  if (m) return (m.scored || 0) + ' of ' + (m.n - (m.off || 0)) + ' scored' + keptMore(m) + (m.papers ? '' : ' · papers not kept');
   return 'Opened ' + d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) + (data ? ' · ' + n + ' scored' : '') + ' · drop the same ZIP to keep going';
 }

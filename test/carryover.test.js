@@ -91,9 +91,9 @@ test('one changed and one new file: marks and scores come over per student and f
   await settle(page);
   await page.waitForFunction(id => { const d = JSON.parse(localStorage.getItem(id)); return d.carry && !d.carry.flags['Bram Sample/Late.pdf']; }, {}, newId);
   await page.reload(); await appReady(page);
-  await page.waitForSelector('#kept [data-kopen="' + newId + '"]');
-  assert.match(await page.$eval('#kept', e => e.textContent), /an older copy/, 'the list says which is which');
-  await page.click('#kept [data-kopen="' + newId + '"]');
+  await page.waitForSelector('#vHome [data-kopen="' + newId + '"]');
+  assert.match(await page.$eval('#vHome', e => e.textContent), /an older copy/, 'the list says which is which');
+  await page.click('#vHome [data-kopen="' + newId + '"]');
   await waitPaper(page);
   await noBox(page);
   await goToStudent(page, 1);
@@ -102,8 +102,8 @@ test('one changed and one new file: marks and scores come over per student and f
 
   // The older copy still opens, whole, with Dov.
   await page.click('#closeBtn');
-  await page.waitForSelector('#kept [data-kopen="' + oldId + '"]');
-  await page.click('#kept [data-kopen="' + oldId + '"]');
+  await page.waitForSelector('#vHome [data-kopen="' + oldId + '"]');
+  await page.click('#vHome [data-kopen="' + oldId + '"]');
   await page.waitForFunction(id => { const b = window.__gs.state().batch; return b && b.id === id; }, { timeout: 30000 }, oldId);   // she left off on Dov, whose files are Word and text
   await noBox(page);
   const o = await workOf(page);
@@ -528,8 +528,8 @@ test('A file changed but the same size is flagged, her work stays, and the new o
   assert.deepEqual((await workOf(page))['Ann Alpha'].grade.rubric, [3, 3, 3]);
   await settle(page);
   await page.click('#closeBtn'); await sleep(300);
-  await page.waitForFunction(id => !!document.querySelector('#kept [data-kopen="' + id + '"]'), { timeout: 15000 }, id);
-  await page.click('#kept [data-kopen="' + id + '"]');
+  await page.waitForFunction(id => !!document.querySelector('#vHome [data-kopen="' + id + '"]'), { timeout: 15000 }, id);
+  await page.click('#vHome [data-kopen="' + id + '"]');
   await waitPaper(page);
   const text = await page.evaluate(() => new TextDecoder().decode(window.__gs.state().batch.students[0].files.find(f => /txt$/.test(f.path)).data));
   assert.equal(text, 'Score n1ne out of twelv');

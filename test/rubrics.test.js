@@ -38,8 +38,8 @@ const setupOf = page => page.evaluate(() => JSON.parse(JSON.stringify(window.__g
 test('an old setup looks as it did, and old work opens with the new parts empty', async () => {
   const L = await loadLegacy();
   const { page, close } = await openApp(browser, { seed: L.seed() });
-  await page.waitForFunction(() => document.querySelectorAll('#kept .krow').length > 0);
-  await page.evaluate(() => document.querySelector('#kept .krow [data-kopen]').click());
+  await page.waitForFunction(() => document.querySelectorAll('#vHome .krow').length > 0);
+  await page.evaluate(() => document.querySelector('#vHome .krow [data-kopen]').click());
   await waitPaper(page);
   assert.equal(await page.$$eval('.lvrow', e => e.length), 0, 'no description lines');
   assert.equal(await page.evaluate(() => window.__gs.state().setup.levels), undefined);
@@ -277,8 +277,8 @@ test('after an earlier Save, leaving Rubric setup keeps none of the changes, eve
   }
   await settle(page);
   await page.reload(); await appReady(page);
-  await page.waitForSelector('#kept [data-kopen]');
-  await page.click('#kept [data-kopen]');
+  await page.waitForSelector('#vHome [data-kopen]');
+  await page.click('#vHome [data-kopen]');
   await waitPaper(page);
   await goToStudent(page, 0);
   const back = await setupState(page);
