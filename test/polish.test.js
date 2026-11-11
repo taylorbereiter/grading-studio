@@ -510,7 +510,7 @@ test('Inter is built in, and opening the app contacts nobody', async () => {
 
 test('the built file stays a sensible size with the font in it', () => {
   const size = fs.statSync(path.join(ROOT, 'Grading Studio.html')).size;
-  assert.ok(size < 5.4e6, 'it’s ' + (size / 1e6).toFixed(2) + ' MB');   // about 5.3 MB, with going back in time and updates, with the Gradebook, the sidebar, Word papers as PDF and the assignment tabs: the iPhone photo decoder (about 0.7 MB), the Inter font (about 0.2 MB) and the stickers (about 0.15 MB) are bundled so the one file works offline
+  assert.ok(size < 5.5e6, 'it’s ' + (size / 1e6).toFixed(2) + ' MB');   // about 5.4 MB, with strong examples, going back in time and updates, with the Gradebook, the sidebar, Word papers as PDF and the assignment tabs: the iPhone photo decoder (about 0.7 MB), the Inter font (about 0.2 MB) and the stickers (about 0.15 MB) are bundled so the one file works offline
 });
 
 test('the build only leaves out lines that really are comments', () => {   // a // line inside a multi-line string would be lost from the app
