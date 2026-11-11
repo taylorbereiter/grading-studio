@@ -1,13 +1,11 @@
 {
- "version": "1.26.0",
- "build": "514678e09ab5",
+ "version": "1.26.1",
+ "build": "d7a769bd8803",
  "notes": [
-  "Seating: a new tab on each class. Pick how the room is set up, drag students to desks, and Shuffle gives everyone a new seat. A student can be kept in their seat.",
-  "Pick a name shows one student at random, and nobody twice until everyone has had a turn. Make groups deals the class into groups of any size.",
-  "While presenting a lesson, P picks a name and G makes groups. Who’s here leaves out anyone who is away today."
+  "Activities: See, think, wonder now says it comes from Project Zero at the Harvard Graduate School of Education."
  ],
  "files": {
-  "index.html": "4d42ea5aa9461713174a13520c8ab2bbdc573a7470c72fdc4a57133b6553bcd1",
-  "planner.html": "fe53d18204d3a18cf8ee039c166ec1d45538e0c5229da8b6c7ece20466b12fb0"
+  "index.html": "ebaa6cec6e6b61ded29fdc8313c71432e7466233539b233001d3cc5b1c7736af",
+  "planner.html": "871ffde948dfae1c2b3562abe6431bb873e9cb7ba5af3756af02d2963d70fb5d"
  }
 }
