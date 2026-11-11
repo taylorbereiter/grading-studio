@@ -1,6 +1,6 @@
 {
- "version": "1.23.0",
- "build": "5b43b8ffe5e7",
+ "version": "1.27.1",
+ "build": "2ccc3c1bb952",
  "notes": [
   "Undo now takes back a score as well as a mark: press Ctrl Z (⌘Z on a Mac) after a slip on a slider, a number key, or Missing, Excused or Late. Redo puts it back.",
   "Deleting a unit, an assignment or a class shows Undo for a few seconds, and Undo puts it back where it was.",
@@ -9,7 +9,7 @@
   "Find anything answers to more everyday words: export, hand back, backup, undo, shortcuts, csv."
  ],
  "files": {
-  "index.html": "3bf01b7a9cd899d8b9519e5269304b8887cde0d7e87f1ce5aabc42f8627c8854",
-  "planner.html": "05ebfbabd5575ae04005acf671c5f2b0c1b61f550dc040e5fb20593dceaf0a2c"
+  "index.html": "8609f25af70835623760565d80a5d0eb6020e94ab2cd9dd507c3545399b77ed8",
+  "planner.html": "a6d3d4869091bf29e54e766db999db48f96a90ee22e9b66601ed2bb4d8e51929"
  }
 }

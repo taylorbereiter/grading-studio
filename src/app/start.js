@@ -55,14 +55,36 @@ document.addEventListener('click', e => {
 /* ---------------- grading setup ---------------- */
 // A grading scale for a 12-point rubric: the "usual" one offered in Rubric setup. Half points fall halfway between two rows.
 const SCALE12 = { 12: 100, 11: 95, 10: 91, 9: 86, 8: 82, 7: 77, 6: 73, 5: 68, 4: 64, 3: 60 };
-const RUBRIC_STEPS = [0, 1, 1.5, 2, 2.5, 3, 3.5, 4];
+const RUBRIC_STEPS = [0, 1, 1.5, 2, 2.5, 3, 3.5, 4];   // the steps of a row scored 0 to 4 with half points: what every setup had before the row's scale was a choice
+// A rubric row's scale: 0 to its top. su.top is the top of every row, su.tops[i] one row's own (rows of one rubric can differ),
+// su.half === false means whole numbers only. A setup with none of them is 0 to 4 with half points, as it always was, so saved
+// work reads exactly as before. Everything that needs a row's top, its steps or a rubric's total asks here.
+const ROW_TOP = 4, ROW_TOP_MAX = 10;
+const topOk = v => { v = Math.round(+v); return v >= 1 && v <= ROW_TOP_MAX ? v : 0; };
+function rowTop(su, i) { su = su || setup; return (i != null && Array.isArray(su.tops) && topOk(su.tops[i])) || topOk(su.top) || ROW_TOP; }
+const rowHalf = su => (su || setup).half !== false;
+// The scores a row offers: 0, 1, then every half (when they're on) and whole number up to its top. There is no half below 1.
+function rowSteps(su, i) { const top = rowTop(su, i), half = rowHalf(su), out = [0, 1]; for (let k = 1; k < top; k++) { if (half) out.push(k + .5); out.push(k + 1); } return out; }
+function rowsMax(su) { su = su || setup; return (su.criteria || []).reduce((a, _, i) => a + rowTop(su, i), 0); }
+function setupMax(su) { su = su || setup; return su.mode === 'rubric' ? rowsMax(su) : +su.outOf || 0; }
+// The whole scores of a row, highest first: what a teacher can write a meaning for.
+const rowLevels = (su, i) => { const out = []; for (let v = rowTop(su, i); v >= 0; v--) out.push(v); return out; };
+// Every row's top when they are all the same, else null (rows with their own tops).
+function rowsTop(su) { su = su || setup; const n = (su.criteria || []).length, t = rowTop(su, 0); for (let i = 1; i < n; i++) if (rowTop(su, i) !== t) return null; return t; }
+// "0 to 4, half points too", for the words that describe a rubric.
+const rowsSay = su => { const t = rowsTop(su); return (t ? '0 to ' + t : 'each row on its own scale') + (rowHalf(su) ? ', half points too' : ''); };
+// Only the keys that say something: a setup that is 0 to 4 with halves carries none, so it is stored as it always was.
+function rowScaleOf(su) { const o = {}; if (su && topOk(su.top) && topOk(su.top) !== ROW_TOP) o.top = topOk(su.top); if (su && Array.isArray(su.tops) && su.tops.some(topOk)) o.tops = su.tops.map(v => topOk(v) || null); if (su && su.half === false) o.half = false; return o; }
 const SCALE_FIVES = { 12: 100, 11: 95, 10: 90, 9: 85, 8: 80, 7: 75, 6: 70, 5: 65, 4: 60, 3: 55, 2: 50, 1: 45, 0: 40 };
 // What a new assignment starts with. In a browser from before the welcome it is this, as it always was; a teacher who has said how
 // they grade (the welcome, or Settings) gets their own instead: gradeDefaultApply, in library.js, once their answer has been read.
 const DEFAULT_SETUP = { mode: 'rubric', criteria: ['Criterion 1', 'Criterion 2', 'Criterion 3'], outOf: 10, scale: SCALE12 };
-let setup = { ...DEFAULT_SETUP, ...store.get('gs.setup', {}) };
+// A saved setup laid over the teacher's usual one. A setup saved before the row scale was a choice carries no top, and that means
+// 0 to 4 with half points whatever the teacher's usual scale is now, so the usual one never leaks into it.
+function setupOver(su) { const out = { ...DEFAULT_SETUP, ...(su || {}) }; if (su && (su.criteria || su.mode)) for (const k of ['top', 'tops', 'half']) if (!(k in su)) delete out[k]; return out; }
+let setup = setupOver(store.get('gs.setup', null));
 
-function maxPoints() { return setup.mode === 'rubric' ? setup.criteria.length * 4 : +setup.outOf || 0; }
+function maxPoints() { return setupMax(setup); }
 // Uses the grading scale when its top score matches the total possible; half points fall between two rows.
 // Percents are whole numbers, with halves rounded up (10.5 between 95 and 90 is 92.5, so 93%), the way a teacher rounds by hand.
 const roundPct = v => Math.max(0, Math.round(v + 1e-9));
@@ -87,8 +109,33 @@ function percentWith(total, max, sc) {
 }
 function gradeOf(st) {
   if (noScore(st)) return { total: null, pct: null, done: true, status: st.grade.status };   // missing or excused: settled, with no number
-  const g0 = scoreOf(st), g = addXc(g0, st.grade.xc, g0.outOf != null ? g0.outOf : maxPoints(), st.grade.xcU), r = st.grade.status === 'late' ? { ...g, status: 'late' } : g;
+  const g0 = tryGrade(st), g = withTries(g0, st.grade.tries, g0.outOf != null ? g0.outOf : maxPoints(), !!g0.done && !g0.partial && g0.total != null), r = st.grade.status === 'late' ? { ...g, status: 'late' } : g;
   return st.grade.outAvg ? { ...r, out: true } : r;   // left out of the average: the score stays and copies, it just isn't counted
+}
+// The score of the try in hand, on its own: what the sliders and the points box show. gradeOf is what counts once earlier tries are weighed in.
+function tryGrade(st) { const g0 = scoreOf(st); return addXc(g0, st.grade.xc, g0.outOf != null ? g0.outOf : maxPoints(), st.grade.xcU); }
+/* Retakes. grade.tries holds the earlier tries, oldest first, each frozen as it stood when the next one began:
+   { t, total, max, pct, late, files: [paths on the paper then], and the rubric rows, points, comment… it had, so taking the retake off puts them back }.
+   The score fields of the grade itself are the newest try. Which one counts is the teacher's own rule, for every class (lib.book.retake):
+   'high' the best percent (the default), 'last' the newest try that has a full score, 'avg' the average of the tries.
+   A try counts once it has a full score; until then the earlier ones stand, and the paper still shows as waiting for a score. */
+const RETAKE_RULES = [['high', 'Highest', 'The best try counts'], ['last', 'Latest', 'The newest try counts, even if it is lower'], ['avg', 'Average', 'The average of the tries counts']];
+function retakeRule() { const r = typeof lib !== 'undefined' && lib && lib.book && lib.book.retake; return r === 'last' || r === 'avg' ? r : 'high'; }
+function withTries(r, tries, max, full) {
+  const was = (tries || []).filter(t => t && t.pct != null);
+  if (!was.length) return r;
+  const now = full ? { total: r.total, max, pct: r.pct, now: true } : null, all = now ? was.concat(now) : was, rule = retakeRule();
+  let c;
+  if (rule === 'last') c = all[all.length - 1];
+  else if (rule === 'avg' && all.length > 1) {
+    const same = all.every(t => t.total != null && t.max === all[0].max);
+    c = { pct: roundPct(all.reduce((a, t) => a + t.pct, 0) / all.length), max: same ? all[0].max : max, total: same ? Math.round(all.reduce((a, t) => a + t.total, 0) / all.length * 100) / 100 : null };
+    if (c.total == null && max) c.total = Math.round(c.pct * max) / 100;
+  } else c = all.reduce((a, t) => t.pct >= a.pct ? t : a);
+  const out = { ...r, total: c.total, pct: c.pct, tries: was, tryNow: now, tryRule: rule, tryOwn: { total: r.total, pct: r.pct } };
+  if (c !== now) { for (const k of ['xc', 'xcU', 'base', 'paper', 'outOf']) delete out[k]; if (c.max != null && c.max !== max) out.outOf = c.max; }
+  if (!now) { out.done = false; out.wait = true; delete out.partial; }   // the retake has no full score yet: the earlier tries stand
+  return out;
 }
 // Extra credit on one paper (grade.xc, in the assignment's own points) goes on top of the score. The score itself is still read on
 // the assignment's scale exactly as before; then each extra point adds its share of the total as percentage points. So 12/15 read as
