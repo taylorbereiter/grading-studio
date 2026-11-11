@@ -723,6 +723,47 @@ body.has-side .lsn{margin-right:var(--sidew,420px)}
 .pl-tgd select,.pl-tgd input{justify-content:flex-start;text-align:left;width:100%}
 .pl-tgd input{cursor:text}
 .pl-tgd .who{margin:0 0 var(--space-3);font-weight:600}
+/* ---------- Pick a name, make groups: what the class reads (src/pickshare.js), built into both pages ----------
+   The same stage as a presented lesson: dark around, a light card for the words, sized by the height of the screen. */
+.pk{position:fixed;inset:0;z-index:70;background:var(--stage);color:var(--stage-fg);display:flex;flex-direction:column;outline:none;user-select:none;-webkit-user-select:none}
+.pk-main{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2.4vh;padding:4vh 4vw 0;text-align:center;overflow:hidden}
+.pk-cls{font:600 2.6vh/1.2 var(--f-body);color:var(--stage-muted)}
+.pk-name{max-width:92vw;padding:4vh 6vh;border-radius:var(--corner-5);background:var(--stage-paper);color:var(--stage-ink);font-family:var(--f-display);font-weight:700;line-height:1.1;letter-spacing:-.02em;white-space:nowrap;opacity:.55}
+.pk-name.done{opacity:1;box-shadow:0 0 0 .8vh var(--stage-blue)}
+.pk-sub{min-height:3.4vh;font:500 2.6vh/1.3 var(--f-body);color:var(--stage-muted)}
+.pk-main.groups{justify-content:flex-start}
+.pk-groups{flex:1;min-height:0;width:100%;display:grid;grid-template-columns:repeat(var(--cols),minmax(0,1fr));gap:1.6vh;align-content:center;font-size:var(--fs)}
+.pk-g{background:var(--stage-paper);color:var(--stage-ink);border-radius:var(--corner-5);padding:.7em 1em .8em;text-align:left;line-height:1.3;font-weight:500;overflow:hidden}
+.pk-g h3{margin:0 0 .25em;font-size:.72em;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--stage-blue)}
+.pk-g div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* the bar: for the teacher */
+.pk-bar{flex:none;align-self:center;display:flex;align-items:center;flex-wrap:wrap;justify-content:center;gap:var(--space-1);margin:var(--space-4);padding:var(--space-1) var(--space-2);max-width:calc(100vw - var(--space-5));
+  background:var(--stage-bar);border:1px solid var(--stage-line);border-radius:var(--corner-5);font-size:var(--text-control)}
+.pk-bar>button,.pk-bar select{border-radius:var(--corner-3)}
+.pk-bar button,.pk-bar select{border:0;background:none;color:var(--stage-fg);padding:var(--space-2) var(--space-3);font:inherit;font-weight:500;white-space:nowrap}
+.pk-bar select{border:1px solid var(--stage-line);background:var(--stage);max-width:200px}
+.pk-bar button:hover,.pk-bar button[aria-pressed="true"]{background:var(--stage-hover)}
+.pk-bar .pk-go,.pk-bar .pk-end{font-weight:600}
+.pk-bar .pk-go{background:var(--stage-blue);color:var(--stage-paper)}
+.pk-bar .pk-go:hover{background:var(--stage-blue-2)}
+.pk-bar .pk-end{border:1px solid var(--stage-line)}
+.pk-seg{display:inline-flex;border:1px solid var(--stage-line);border-radius:var(--corner-3);overflow:hidden}
+.pk-seg button{padding:var(--space-2)}
+.pk-seg button[aria-pressed="true"]{background:var(--stage-blue);color:var(--stage-paper)}
+.pk-sep{width:1px;align-self:stretch;margin:var(--space-1);background:var(--stage-line)}
+.pk :focus-visible{outline:2px solid var(--stage-fg);outline-offset:2px}
+.pk-say{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+
+/* who is here: a panel on the right */
+.pk-who{position:absolute;right:0;top:0;bottom:0;z-index:2;width:min(420px,92vw);padding:var(--space-5) var(--space-5) 96px;overflow:auto;background:var(--stage-bar);border-left:1px solid var(--stage-line);font-size:var(--text-body)}
+.pk-who h2{margin:0 0 var(--space-2);font-size:var(--text-title)}
+.pk-who p{margin:0 0 var(--space-4);color:var(--stage-muted)}
+.pk-wl{display:flex;flex-wrap:wrap;gap:var(--space-2)}
+.pk-wl button{border:1px solid var(--stage-line);background:none;color:var(--stage-muted);border-radius:var(--corner-pill);padding:var(--space-1) var(--space-3);font:inherit;text-decoration:line-through}
+.pk-wl button[aria-pressed="true"]{background:var(--stage-paper);color:var(--stage-ink);border-color:var(--stage-paper);text-decoration:none;font-weight:500}
+.pk-wx{float:right;border:1px solid var(--stage-line);background:none;color:var(--stage-fg);border-radius:var(--corner-3);padding:var(--space-1) var(--space-3);font:inherit;font-weight:600}
+.pk-wx:hover{background:var(--stage-hover)}
 
 /* The sidebar stays put at the left edge; the Planner's own screen scrolls beside it. It folds to icons while a lesson, a unit or a document is open. */
 .rail{position:fixed;left:0;top:0;bottom:0;z-index:6}
@@ -4882,9 +4923,179 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Escape') { $('#nbAsk').hidden = true; $('#nbPage').focus(); }
 });
 
+/* ================= Pick a name, make groups: one screen the class can read =================
+   Built into both pages. On the grading page it opens from a class's Seating tab; in the Planner it opens while a lesson
+   is presented (P for a name, G for groups).
+   The Planner never opens grading's work. So that it can call on a student, the grading page keeps each class's roster
+   in one small record of its own (gs.rolls: [[class name, [names]], …]) in this browser. The Planner reads it here and
+   only shows it: a name is never put in a lesson, the Planner's own storage or the Planner folder.
+   Nothing here is saved. Who has had a turn and who is away today are remembered until the page is closed. */
+const PK = { on: false, fast: false, mem: new Map() };
+const PK_ROLLS = 'gs.rolls';
+const pkNorm = s => String(s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+const pkNice = n => { const s = String(n || '').trim(), m = /^([^,]+),\s*(.+)$/.exec(s); return m ? m[2].trim() + ' ' + m[1].trim() : s; };
+function pkShort(names) {
+  const parts = names.map(n => pkNice(n).split(/\s+/).filter(Boolean)), first = parts.map(p => p[0] || '?'), count = new Map();
+  for (const f of first) count.set(f.toLowerCase(), (count.get(f.toLowerCase()) || 0) + 1);
+  return parts.map((p, i) => count.get(first[i].toLowerCase()) > 1 && p.length > 1 ? first[i] + ' ' + [...p[p.length - 1]][0].toUpperCase() + '.' : first[i]);
+}
+function pkShuffle(list) {
+  const a = list.slice();
+  for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+  return a;
+}
+function pkCount(len, by, n) {
+  if (len < 1) return 0;
+  if (by === 'count') return Math.max(1, Math.min(len, n));
+  const up = Math.ceil(len / n), least = Math.floor(len / up);
+  return least >= Math.max(2, n - 1) || up === 1 ? up : Math.max(1, Math.floor(len / n));
+}
+function pkGroups(names, by, n) {
+  const k = pkCount(names.length, by, n), out = Array.from({ length: k }, () => []);
+  pkShuffle(names).forEach((nm, i) => out[i % k].push(nm));
+  return out;
+}
+function pkRolls() {
+  try {
+    const v = JSON.parse(localStorage.getItem(PK_ROLLS) || '[]');
+    return (Array.isArray(v) ? v : []).filter(r => Array.isArray(r) && typeof r[0] === 'string' && Array.isArray(r[1]) && r[1].length).map(r => ({ name: r[0], names: r[1].map(String) }));
+  } catch { return []; }
+}
+const pkEsc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+function pkMem(cls) {
+  const k = pkNorm(cls.name) + '|' + cls.names.length;
+  if (!PK.mem.has(k)) PK.mem.set(k, { away: new Set(), bag: [], turns: 0, last: '', by: 'size', n: 4, groups: null });
+  return PK.mem.get(k);
+}
+const pkHere = () => { const m = pkMem(PK.cls); return PK.cls.names.filter(n => !m.away.has(n)); };
+
+/* o: { host, classes: [{ name, names }], at, mode: 'pick' | 'groups', full: offer full screen, onClose } */
+function pkOpen(o) {
+  if (PK.on || !o.classes.length) return;
+  Object.assign(PK, { on: true, o, cls: o.classes[Math.max(0, o.at || 0)] || o.classes[0], mode: o.mode === 'groups' ? 'groups' : 'pick', who: false, back: document.activeElement, spin: 0 });
+  const el = PK.el = document.createElement('div');
+  el.id = 'pkStage'; el.className = 'pk'; el.tabIndex = -1; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true');
+  el.innerHTML = '<div class="pk-main" id="pkMain"></div><aside class="pk-who" id="pkWho" aria-label="Who is here" hidden></aside><div class="pk-bar" id="pkBar" role="toolbar"></div><div class="pk-say" id="pkSay" aria-live="polite"></div>';
+  o.host.appendChild(el);
+  el.addEventListener('click', pkClick);
+  el.addEventListener('change', e => { if (e.target.id === 'pkClass') { PK.cls = PK.o.classes[+e.target.value] || PK.cls; PK.who = false; pkRun(true); } });
+  if (!o.keys) document.addEventListener('keydown', pkKeyOwn, true);
+  pkRun(true); el.focus();
+}
+function pkClose() {
+  if (!PK.on) return;
+  const { el, back, o } = PK;
+  PK.on = false; clearInterval(PK.spin); PK.el = null;
+  document.removeEventListener('keydown', pkKeyOwn, true);
+  try { if (document.fullscreenElement === el) document.exitFullscreen(); } catch { }
+  el.remove();
+  if (o.onClose) o.onClose(); else if (back && back.isConnected && back.focus) try { back.focus({ preventScroll: true }); } catch { }
+}
+function pkRun(fresh) {
+  const m = pkMem(PK.cls), here = pkHere();
+  PK.el.setAttribute('aria-label', PK.mode === 'pick' ? 'Pick a name' : 'Groups');
+  if (PK.mode === 'pick') { if (fresh) pkNext(); else pkName(m.last, true); }
+  else { if (fresh || !m.groups) m.groups = pkGroups(here, m.by, m.n); pkDrawGroups(); }
+  pkBar(); pkWho();
+}
+function pkNext() {
+  const m = pkMem(PK.cls), here = pkHere();
+  clearInterval(PK.spin);
+  if (!here.length) { m.last = ''; return pkName('', true); }
+  m.bag = m.bag.filter(n => here.includes(n));
+  let again = false;
+  if (!m.bag.length) { m.bag = pkShuffle(here); again = m.turns > 0; m.turns = 0; if (m.bag.length > 1 && m.bag[m.bag.length - 1] === m.last) m.bag.reverse(); }
+  const name = m.bag.pop(); m.last = name; m.turns++; PK.again = again;
+  const still = PK.fast || here.length < 2 || (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+  if (still) return pkName(name, true);
+  let ticks = 0;
+  pkName(here[Math.floor(Math.random() * here.length)], false);
+  PK.spin = setInterval(() => { if (!PK.on) return clearInterval(PK.spin); if (++ticks >= 9) { clearInterval(PK.spin); return pkName(name, true); } pkName(here[Math.floor(Math.random() * here.length)], false); }, 70);
+}
+function pkName(name, done) {
+  const m = pkMem(PK.cls), here = pkHere(), nice = pkNice(name), main = PK.el.querySelector('#pkMain');
+  const sub = !here.length ? 'Nobody is marked as here. “Who’s here” puts students back.' : !done ? '' : (PK.again ? 'Everyone has had a turn. Starting again. ' : '') + m.turns + ' of ' + here.length + ' picked';
+  main.className = 'pk-main pick';
+  main.innerHTML = '<div class="pk-cls">' + pkEsc(PK.cls.name) + '</div><div class="pk-name' + (done ? ' done' : '') + '" id="pkName" style="font-size:min(15vh,' + (150 / Math.max(6, [...nice].length)).toFixed(1) + 'vw)">' + pkEsc(nice || '–') + '</div><div class="pk-sub" id="pkSub">' + pkEsc(sub) + '</div>';
+  if (done) PK.el.querySelector('#pkSay').textContent = nice ? nice : 'Nobody to pick';
+}
+function pkDrawGroups() {
+  const m = pkMem(PK.cls), g = m.groups || [], main = PK.el.querySelector('#pkMain');
+  const rows = Math.max(1, Math.round(Math.sqrt(g.length / 1.6))), cols = Math.max(1, Math.ceil(g.length / rows)), most = Math.max(1, ...g.map(x => x.length));
+  const long = Math.max(8, ...g.flat().map(n => [...pkNice(n)].length)), fs = Math.max(1.5, Math.min(4.6, 70 / (rows * (most + 1.9)) / 1.3)), fw = Math.max(.8, (90 / cols - 3) / (long * .6));
+  main.className = 'pk-main groups';
+  main.innerHTML = '<div class="pk-cls">' + pkEsc(PK.cls.name) + '</div>' + (g.length
+    ? '<div class="pk-groups" id="pkGroups" style="--cols:' + cols + ';--fs:min(' + fs.toFixed(2) + 'vh,' + fw.toFixed(2) + 'vw)">' + g.map((x, i) => '<section class="pk-g"><h3>Group ' + (i + 1) + '</h3>' + x.map(n => '<div>' + pkEsc(pkNice(n)) + '</div>').join('') + '</section>').join('') + '</div>'
+    : '<div class="pk-sub">Nobody is marked as here. “Who’s here” puts students back.</div>');
+  PK.el.querySelector('#pkSay').textContent = g.length + (g.length === 1 ? ' group' : ' groups');
+}
+function pkBar() {
+  const m = pkMem(PK.cls), o = PK.o, pick = PK.mode === 'pick', away = m.away.size;
+  const b = (k, label, key, more) => '<button data-pk="' + k + '" title="' + label + (key ? ' (' + key + ')' : '') + '"' + (more || '') + '>' + label + '</button>';
+  PK.el.querySelector('#pkBar').innerHTML =
+    (o.classes.length > 1 ? '<select id="pkClass" aria-label="Class">' + o.classes.map((c, i) => '<option value="' + i + '"' + (c === PK.cls ? ' selected' : '') + '>' + pkEsc(c.name) + '</option>').join('') + '</select><span class="pk-sep"></span>' : '') +
+    b('pick', 'Pick a name', 'P', ' aria-pressed="' + pick + '"') + b('groups', 'Groups', 'G', ' aria-pressed="' + !pick + '"') + '<span class="pk-sep"></span>' +
+    (pick ? b('again', 'Pick again', 'Space', ' class="pk-go"') + b('reset', 'Start over', '')
+      : '<span class="pk-seg" role="group" aria-label="How to group"><button data-pkby="size" aria-pressed="' + (m.by === 'size') + '">Groups of</button><button data-pkby="count" aria-pressed="' + (m.by === 'count') + '">Number of groups</button></span>' +
+        '<span class="pk-seg" role="group" aria-label="' + (m.by === 'size' ? 'Students in a group' : 'Groups') + '">' + [2, 3, 4, 5, 6, 7, 8].map(n => '<button data-pkn="' + n + '" aria-pressed="' + (m.n === n) + '">' + n + '</button>').join('') + '</span>' +
+        b('again', 'Shuffle again', 'Space', ' class="pk-go"') + b('copy', 'Copy', '')) +
+    '<span class="pk-sep"></span>' + b('who', 'Who’s here' + (away ? ' · ' + away + ' away' : ''), 'W', ' aria-pressed="' + PK.who + '"') +
+    (o.full ? b('full', 'Full screen', 'F') : '') + '<button data-pk="close" class="pk-end" title="Close (Esc)">Close</button>';
+}
+function pkWho() {
+  const w = PK.el.querySelector('#pkWho'); w.hidden = !PK.who; if (!PK.who) return;
+  const m = pkMem(PK.cls);
+  w.innerHTML = '<button data-pk="who" class="pk-wx">Done</button><h2>Who’s here</h2><p>Click anyone who is away today. They are left out of picks and groups until this page is closed.</p><div class="pk-wl">' +
+    PK.cls.names.map((n, i) => '<button data-pkw="' + i + '" aria-pressed="' + !m.away.has(n) + '">' + pkEsc(pkNice(n)) + '</button>').join('') + '</div>';
+}
+function pkDo(k) {
+  const m = pkMem(PK.cls);
+  if (k === 'close') return pkClose();
+  if (k === 'pick') { const was = PK.mode; PK.mode = 'pick'; return pkRun(was === 'pick' || !m.last); }
+  if (k === 'groups') { const was = PK.mode; PK.mode = 'groups'; return pkRun(was === 'groups'); }
+  if (k === 'again') return pkRun(true);
+  if (k === 'reset') { m.bag = []; m.turns = 0; m.last = ''; return pkRun(true); }
+  if (k === 'who') { PK.who = !PK.who; pkBar(); return pkWho(); }
+  if (k === 'full') { try { if (document.fullscreenElement) document.exitFullscreen(); else PK.el.requestFullscreen(); } catch { } return; }
+  if (k === 'copy') {
+    const text = (m.groups || []).map((g, i) => 'Group ' + (i + 1) + ': ' + g.map(pkNice).join(', ')).join('\n');
+    const said = ok => { const s = PK.el && PK.el.querySelector('[data-pk="copy"]'); if (s) { s.textContent = ok ? 'Copied' : 'Could not copy'; setTimeout(() => { if (s.isConnected) s.textContent = 'Copy'; }, 1600); } };
+    try { navigator.clipboard.writeText(text).then(() => said(true), () => said(false)); } catch { said(false); }
+  }
+}
+function pkClick(e) {
+  const t = e.target, m = pkMem(PK.cls);
+  if (e.detail && t.closest('#pkBar button')) PK.el.focus();   // a button pressed with the mouse gives the keys back, so Space still picks again
+  const w = t.closest('[data-pkw]');
+  if (w) { const n = PK.cls.names[+w.dataset.pkw]; if (m.away.has(n)) m.away.delete(n); else m.away.add(n); m.groups = null; w.setAttribute('aria-pressed', String(!m.away.has(n))); pkBar(); if (PK.mode === 'groups') pkRun(true); return; }
+  const by = t.closest('[data-pkby]'); if (by) { m.by = by.dataset.pkby; return pkRun(true); }
+  const n = t.closest('[data-pkn]'); if (n) { m.n = +n.dataset.pkn; return pkRun(true); }
+  const b = t.closest('[data-pk]'); if (b) return pkDo(b.dataset.pk);
+}
+function pkKey(e) {
+  if (!PK.on || e.metaKey || e.ctrlKey || e.altKey) return false;
+  const k = e.key, c = k.toLowerCase(), m = pkMem(PK.cls);
+  if (k === 'Tab') return false;
+  if (e.target && e.target.id === 'pkClass' && k !== 'Escape') return false;
+  if ((k === ' ' || k === 'Enter') && e.target && e.target.closest && e.target.closest('#pkStage button')) return false;   // the button in hand does its own thing
+  e.preventDefault();
+  if (k === 'Escape') { if (PK.who) pkDo('who'); else pkClose(); return true; }
+  if (k === ' ' || k === 'Enter') pkDo('again');
+  else if (c === 'p') pkDo('pick');
+  else if (c === 'g') pkDo('groups');
+  else if (c === 'w') pkDo('who');
+  else if (c === 'f' && PK.o.full) pkDo('full');
+  else if (PK.mode === 'groups' && /^[2-8]$/.test(k)) { m.n = +k; pkRun(true); }
+  return true;
+}
+function pkKeyOwn(e) { if (!PK.on) return; e.stopPropagation(); pkKey(e); }
+window.__pick = { PK, open: pkOpen, close: pkClose, groups: pkGroups, count: pkCount, short: pkShort, nice: pkNice, rolls: pkRolls };
+
 /* ================= Present: teach from the lesson =================
    The lesson's slides fill the screen. One key away: the agenda (tick items off as the class goes), a countdown the
    class can watch, the speaker notes, a blank screen, and how long the class has left by the timetable.
+   P picks a student at random and G deals the class into groups (src/pickshare.js), from the roster the grading page
+   keeps for this; the names are shown and never kept here.
    Afterwards one line says where the class got to. It is kept on the lesson as "taught", so it goes to the Planner
    folder with the lesson and shows on the week.
    This reads the lesson and the timetable and nothing else. Its buttons carry data-pr and are handled here. */
@@ -4897,7 +5108,9 @@ const PR_I = {
   notes: '<rect x="5" y="4" width="14" height="16" rx="2"/><path d="M8.5 9h7M8.5 13h7M8.5 17h4"/>',
   blank: '<rect x="3.5" y="5" width="17" height="12" rx="1.5"/><path d="M9 20.5h6"/>',
   full: '<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>',
-  check: '<path d="M5 12.5l4.5 4.5L19 7.5"/>'
+  check: '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
+  pick: '<circle cx="12" cy="8" r="3.5"/><path d="M5 19.5c.8-3.6 3.6-5.5 7-5.5s6.2 1.9 7 5.5"/>',
+  groups: '<circle cx="7" cy="8" r="2.5"/><circle cx="17" cy="8" r="2.5"/><circle cx="12" cy="16" r="2.5"/>'
 };
 const prIcon = k => '<svg viewBox="0 0 24 24" aria-hidden="true">' + PR_I[k] + '</svg>';
 const prToday = () => ymd(new Date());
@@ -5015,7 +5228,7 @@ async function presentStart(l, o) {
     '<div class="pr-menu" id="prMenu" role="group" aria-label="Timer" hidden></div>' +
     '<div class="pr-hint" id="prHint" hidden></div><div class="pr-say" id="prSay" aria-live="polite"></div>' +
     '<div class="pr-bar" id="prBar" role="toolbar" aria-label="Presenting">' + b('prev', 'prev', 'Previous slide', '←', 'ic') + '<span class="pr-count" id="prCount"></span>' + b('next', 'next', 'Next slide', '→', 'ic') + '<span class="pr-sep"></span>' +
-    b('agenda', 'agenda', 'Agenda', 'A') + b('timer', 'timer', 'Timer', 'T') + b('notes', 'notes', 'Notes', 'N') + b('blank', 'blank', 'Blank', 'B') + b('full', 'full', 'Full screen', 'F') +
+    b('agenda', 'agenda', 'Agenda', 'A') + b('timer', 'timer', 'Timer', 'T') + b('pick', 'pick', 'Pick a name', 'P') + b('groups', 'groups', 'Groups', 'G') + b('notes', 'notes', 'Notes', 'N') + b('blank', 'blank', 'Blank', 'B') + b('full', 'full', 'Full screen', 'F') +
     '<span class="pr-sep"></span><span class="pr-time" id="prTime"></span><button data-p="end" class="pr-end" title="Finish (Esc)">Finish</button></div>';
   document.body.appendChild(el);
   document.addEventListener('keydown', prKey, true);
@@ -5029,7 +5242,7 @@ async function presentStart(l, o) {
   prFit();
   try { PR.lock = await navigator.wakeLock.request('screen'); } catch { }
   prHint(back && !(o.at > 0) ? 'Picking up at slide ' + back.slide + ', where ' + (back.classId ? className(back.classId) : 'the class') + ' stopped on ' + shortDate(back.date) + '. Home goes to slide 1.'
-    : (document.fullscreenElement ? '' : 'F for full screen · ') + '→ next · A agenda · T timer · Esc to finish', back && !(o.at > 0) ? 7000 : 4500);
+    : (document.fullscreenElement ? '' : 'F for full screen · ') + '→ next · A agenda · T timer · P pick a name · Esc to finish', back && !(o.at > 0) ? 7000 : 4500);
 }
 function presentArrive(rest) {
   const [id, classId] = rest.split('/'), l = L.lessons.find(x => x.id === id); if (!l) return;
@@ -5118,6 +5331,18 @@ function prPlay() {
   } else { PR.keep = true; window.open(videoLink(v), '_blank', 'noopener'); }
 }
 
+/* ---------- a name at random, and groups ---------- */
+function prPick(mode) {
+  if (PK.on) return;
+  const rolls = pkRolls();
+  if (!rolls.length) return prHint('No rosters yet. Add a class and its students on the grading side, and they can be picked here.', 6000);
+  if (PR.menu) prMenu(false);
+  const ids = PR.slot ? [PR.slot.classId] : PR.l.slots.map(s => s.classId), want = ids.map(id => pkNorm(className(id)));
+  const at = rolls.findIndex(r => want.includes(pkNorm(r.name)));
+  if (at < 0 && PR.slot) prHint('No roster for ' + className(PR.slot.classId) + ' on the grading side yet. Showing ' + rolls[0].name + '.', 6000);
+  pkOpen({ host: PR.el, classes: rolls, at: Math.max(0, at), mode, keys: true, onClose: () => { if (PR.on) { PR.el.focus(); prWake(); } } });
+}
+
 /* ---------- the timer ---------- */
 const prSound = () => { try { return localStorage.getItem('gsp.presentSound') !== '0'; } catch { return true; } };
 function prChime() {
@@ -5180,6 +5405,7 @@ function prMenu(open) {
 function prClick(e) {
   prWake();
   const t = e.target;
+  if (t.closest('#pkStage')) return;   // the name picker looks after its own
   if (e.detail && t.closest('#prBar,#prChip')) PR.el.focus();
   if (t.closest('#prMenu')) {
     const b = t.closest('button'); if (!b) return;
@@ -5197,6 +5423,7 @@ function prClick(e) {
     if (p.p === 'next') return prNext();
     if (p.p === 'agenda' || p.p === 'notes' || p.p === 'blank') return prToggle(p.p);
     if (p.p === 'timer') return prMenu(!PR.menu);
+    if (p.p === 'pick' || p.p === 'groups') return prPick(p.p);
     if (p.p === 'full') return prFullToggle();
     if (p.p === 'end') return presentEnd();
     if (p.p === 'chip') return PR.timer && PR.timer.done ? prTimerStop() : prTimerPause();
@@ -5220,6 +5447,7 @@ function prClick(e) {
 function prKey(e) {
   if (!PR.on) return;
   e.stopPropagation();   // nothing behind the stage gets a key
+  if (PK.on) { pkKey(e); return; }
   if (e.metaKey || e.ctrlKey || e.altKey) return;
   const k = e.key, own = e.target && e.target.id === 'prOwn';
   if (own) { if (k === 'Enter') { e.preventDefault(); const v = +e.target.value; if (v > 0) prTimerStart(v * 60); } else if (k === 'Escape') { e.preventDefault(); prMenu(false); PR.el.focus(); } return; }
@@ -5247,13 +5475,15 @@ function prKey(e) {
   if (c === 'b' || k === '.') { stop(); return prToggle('blank'); }
   if (c === 't') { stop(); return prMenu(true); }
   if (c === 'f') { stop(); return prFullToggle(); }
+  if (c === 'p') { stop(); return prPick('pick'); }
+  if (c === 'g') { stop(); return prPick('groups'); }
 }
 
 /* ---------- finishing ---------- */
 async function presentEnd() {
   if (!PR.on) return;
   const { l, i, far, slot, began, el, back, ticks, items } = PR;
-  PR.on = false;
+  PR.on = false; pkClose();
   clearInterval(PR.tickT); clearTimeout(PR.idleT); clearTimeout(prHintT); clearTimeout(PR.numT);
   document.removeEventListener('keydown', prKey, true); document.removeEventListener('fullscreenchange', prFull); window.removeEventListener('resize', prFit);
   const lock = PR.lock, ac = PR.ac, full = document.fullscreenElement === el;
@@ -5405,6 +5635,7 @@ const LANG_ES = {
     'Every assignment by term, with each term grade': 'Todas las tareas por periodo, con la nota de cada periodo', 'The roster, with IDs and emails, and each student’s own page': 'La lista, con identificadores y correos, y la página de cada estudiante',
     'Grades and scores as charts': 'Notas y puntuaciones en gráficos', 'A draft comment for each student, from your own scores and comments': 'Un borrador de comentario para cada estudiante, a partir de tus notas y comentarios',
     'Who still owes work, with a reminder email for each student': 'Quién debe trabajos, con un correo de recordatorio para cada estudiante',
+    'Who was here, late, excused or absent, saved by day': 'Quién estuvo, llegó tarde, tuvo falta justificada o faltó, guardado por día', 'Take attendance': 'Pasar lista', 'Attendance taken': 'Lista pasada', 'everyone here': 'todos presentes',
     'Its assignments, gradebook and students': 'Sus tareas, libro de calificaciones y estudiantes',
     'Open student work': 'Abrir trabajos de estudiantes', 'The ZIP or PDFs': 'El ZIP o los PDF', 'A ZIP, PDFs, Word files or photos': 'Un ZIP, PDF, archivos de Word o fotos',
     'Open a folder of papers': 'Abrir una carpeta de trabajos', 'Split a scan of everyone’s papers': 'Dividir un escaneo con los trabajos de todos', 'Match files to a roster': 'Emparejar archivos con una lista',
@@ -5468,7 +5699,8 @@ const LANG_ES = {
     [/^A ZIP from (.+), a folder, a scan of the whole class, or photos\.$/, m => 'Un ZIP ' + (/^your school’?s? system$/.test(m[1]) ? 'del sistema de tu centro' : 'de ' + m[1]) + ', una carpeta, un escaneo de toda la clase o fotos.'],
     [/^Open a (.+) download$/, 'Abrir una descarga de $1'],
     [/^(\d+) students?$/, m => m[1] + (m[1] === '1' ? ' estudiante' : ' estudiantes')],
-    [/^(.+) (gradebook|students|missing work|charts|goals|report comments)$/, m => m[1] + ': ' + { gradebook: 'libro de calificaciones', students: 'estudiantes', charts: 'gráficos', goals: 'objetivos', 'report comments': 'comentarios de informe', 'missing work': 'trabajos sin entregar' }[m[2]]],
+    [/^(.+) (gradebook|students|attendance|missing work|charts|goals|report comments)$/, m => m[1] + ': ' + { gradebook: 'libro de calificaciones', students: 'estudiantes', attendance: 'asistencia', charts: 'gráficos', goals: 'objetivos', 'report comments': 'comentarios de informe', 'missing work': 'trabajos sin entregar' }[m[2]]],
+    [/^(\d+) (late|excused|absent)$/, m => m[1] + ' ' + { late: 'tarde', excused: +m[1] === 1 ? 'justificada' : 'justificadas', absent: +m[1] === 1 ? 'falta' : 'faltas' }[m[2]]],
     [/^Names, students, (.+) links$/, 'Nombres, estudiantes y enlaces de $1'], [/^Names, students, links to your school’s system$/, 'Nombres, estudiantes y enlaces al sistema de tu centro'],
     [/^Nothing matches “(.*)”\.$/, 'Nada coincide con «$1».'],
     [/^(\d+) match(?:es)?$/, m => m[1] + (m[1] === '1' ? ' resultado' : ' resultados')],
@@ -5581,6 +5813,10 @@ const LANG_ES = {
       a: ['En Ajustes, **Terms and weights** están tus periodos y sus fechas, y qué parte de la nota del periodo aporta cada tipo de tarea. El trabajo formativo nunca cuenta para la nota.', 'Una tarea cuenta para el periodo en el que cae su fecha de entrega.'] },
     'one-student': { q: '¿Cómo veo todo sobre un estudiante?', words: 'perfil individual familia reunión tutoría progreso gráfico',
       a: ['Abre la clase, elige **Students** y haz clic en un nombre. La página del estudiante tiene cada nota, la nota del periodo y cómo va evolucionando.', 'La pestaña **Charts** de la clase muestra los mismos números de todos a la vez.'] },
+    'attendance': { q: '¿Puedo pasar lista en la aplicación?', go: 'Abrir Ajustes, Clases', words: 'asistencia lista presente ausente falta tarde retraso justificada registro',
+      a: ['Sí. Abre una clase y elige **Attendance**. Todos empiezan como presentes, así que pulsa **Late**, **Excused** o **Absent** solo para quien no lo esté, o **Everyone is here** si están todos. Cada pulsación se guarda, con una nota si la quieres.',
+        '**Look back** muestra cada día guardado en una tabla, con los totales de cada estudiante. **Copy this day** y **Download as a spreadsheet** lo sacan para el sistema de tu centro.',
+        'La asistencia se queda en este navegador y en tu carpeta, como el resto de tu trabajo. Si no la usas, desactívala en Ajustes, **Classes and rosters**.'] },
     'learning-goals': { q: '¿Puedo ver las notas por objetivo de aprendizaje o estándar?', go: 'Abrir Ajustes, Calificación', words: 'estándares estándar destrezas objetivos resultados dominio repasar etiquetar competencia',
       a: ['Sí, y es opcional. En Ajustes, Calificación, **Learning goals** guarda tu propia lista: una destreza como «Usa evidencias», o un estándar de tu centro.',
         '1. En una tarea, elige Setup, luego **Rubric setup**, y escoge un objetivo junto a cada fila. En un examen en papel, escoge un objetivo debajo de cada pregunta en **Quiz boxes**.', '2. Abre la clase y elige **Goals**: la media de la clase en cada objetivo, con el más bajo primero, cada estudiante en cada objetivo, y de dónde sale cada número.',
@@ -5589,6 +5825,11 @@ const LANG_ES = {
       a: ['Sí. Abre una clase y elige **Report comments**. Cada estudiante tiene un borrador hecho a partir de la nota del periodo, las filas de rúbrica más fuerte y más floja, los trabajos sin entregar y cómo han evolucionado las notas.',
         'Cambia lo que quieras, trae lo que escribiste en sus trabajos con **Add** y pulsa **Done, next student**. **Copy all** copia todos los comentarios para tu sistema de informes.',
         'Ninguna IA escribe los borradores y no se envía nada a ningún sitio. **Wording…** te deja reescribir las frases con las que se construyen. Por ahora los borradores se escriben en inglés.'] },
+    'seating': { q: '¿Puedo hacer un plano de asientos, grupos o elegir a un estudiante al azar?', words: 'asiento asientos pupitre mesa plano sitio barajar azar sorteo nombre grupos equipos parejas',
+      a: ['Sí. Abre una clase y elige **Seating**. Elige cómo está colocada el aula y arrastra a cada estudiante a un pupitre. Si sueltas a un estudiante sobre otro, se cambian el sitio.',
+        '**Shuffle** da a todos un sitio nuevo, con Deshacer. Haz clic en un estudiante y elige **Keep in this seat** para quien no deba moverse. El menú **⋯** organiza los pupitres, muestra el plano a la clase y lo imprime.',
+        '**Pick a name** muestra a un estudiante al azar, y a nadie dos veces hasta que todos hayan tenido su turno. **Make groups** reparte la clase en grupos del tamaño que quieras. **Who’s here** deja fuera a quien falte hoy.',
+        'Mientras presentas una lección en el Planificador, pulsa **P** para elegir un nombre y **G** para hacer grupos. Los nombres solo se muestran: nunca se guardan en una lección ni en la carpeta del Planificador.'] },
     'missing-work': { q: '¿Cómo recuerdo a los estudiantes los trabajos sin entregar?', words: 'tarde atrasado sin entregar debe recordar correo recordatorio familias',
       a: ['Abre una clase y elige **Missing work**. Muestra cada trabajo que marcaste como Missing, por estudiante o por tarea, del periodo que elijas.',
         '**Email reminder** abre un correo en tu propia aplicación de correo, ya con la dirección y con lo que el estudiante debe. Léelo y envíalo tú: Grading Studio no envía nada. **Email all** en una tarea escribe un solo correo con todas las direcciones en copia oculta.',
@@ -5615,7 +5856,7 @@ const LANG_ES = {
       a: ['En el Planificador, pulsa **Horario** en la barra lateral. Escribe tus clases, cuándo se reúne cada una y los días en que el centro está cerrado.', 'Desde entonces Hoy muestra las clases que das cada día con la lección planificada para cada una.'] },
     'present': { q: '¿Cómo presento una lección a la clase?', words: 'presentación pantalla completa proyector enseñar temporizador agenda mando',
       a: ['Abre la lección en el Planificador y pulsa **Present**. Sus diapositivas llenan la pantalla; las flechas o un mando las pasan. En Hoy, la clase que toca ahora o a continuación tiene su propio botón **Presentar**.',
-        'Mientras presentas: **A** muestra la agenda, **T** inicia un temporizador que la clase puede ver, **N** muestra tus notas, **B** deja la pantalla en blanco y **Esc** termina.', 'Después, una línea anota hasta dónde llegó la clase, y al presentar de nuevo se retoma desde ahí.'] },
+        'Mientras presentas: **A** muestra la agenda, **T** inicia un temporizador que la clase puede ver, **P** elige a un estudiante al azar, **G** hace grupos, **N** muestra tus notas, **B** deja la pantalla en blanco y **Esc** termina.', 'Después, una línea anota hasta dónde llegó la clase, y al presentar de nuevo se retoma desde ahí.'] },
     'pptx': { q: '¿Puedo obtener mis diapositivas como archivo de PowerPoint?', words: 'powerpoint pptx exportar diapositivas keynote google slides descargar',
       a: ['Sí. Abre la lección y pulsa **Download .pptx**. El archivo se abre en PowerPoint, Keynote y Google Slides.'] },
     'privacy': { q: '¿Salen de mi ordenador los trabajos de los estudiantes?', words: 'privado protección de datos rgpd nube servidor seguro',
@@ -5744,6 +5985,7 @@ const LANG_ZH = {
     'Every assignment by term, with each term grade': '依學期列出所有作業，以及每學期的成績', 'The roster, with IDs and emails, and each student’s own page': '名單（含學號與電子郵件），以及每位學生自己的頁面',
     'Grades and scores as charts': '以圖表呈現成績與分數', 'A draft comment for each student, from your own scores and comments': '依你的分數與評語，為每位學生產生一份評語草稿',
     'Who still owes work, with a reminder email for each student': '誰還有作業沒交，並為每位學生準備一封提醒信',
+    'Who was here, late, excused or absent, saved by day': '誰出席、遲到、請假或缺席，按日期儲存', 'Take attendance': '點名', 'Attendance taken': '已點名', 'everyone here': '全員到齊',
     'Its assignments, gradebook and students': '它的作業、成績冊與學生',
     'Open student work': '開啟學生作業', 'The ZIP or PDFs': 'ZIP 或 PDF 檔', 'A ZIP, PDFs, Word files or photos': 'ZIP、PDF、Word 檔或照片',
     'Open a folder of papers': '開啟作業資料夾', 'Split a scan of everyone’s papers': '分割全班作業的掃描檔', 'Match files to a roster': '將檔案與名單配對',
@@ -5807,7 +6049,8 @@ const LANG_ZH = {
     [/^A ZIP from (.+), a folder, a scan of the whole class, or photos\.$/, m => (/^your school’?s? system$/.test(m[1]) ? '學校系統' : m[1]) + '的 ZIP、資料夾、全班的掃描檔或照片。'],
     [/^Open a (.+) download$/, '開啟 $1 的下載檔'],
     [/^(\d+) students?$/, '$1 位學生'],
-    [/^(.+) (gradebook|students|missing work|charts|goals|report comments)$/, m => m[1] + '：' + { gradebook: '成績冊', students: '學生', charts: '圖表', goals: '學習目標', 'report comments': '成績單評語', 'missing work': '缺交作業' }[m[2]]],
+    [/^(.+) (gradebook|students|attendance|missing work|charts|goals|report comments)$/, m => m[1] + '：' + { gradebook: '成績冊', students: '學生', attendance: '出缺席', charts: '圖表', goals: '學習目標', 'report comments': '成績單評語', 'missing work': '缺交作業' }[m[2]]],
+    [/^(\d+) (late|excused|absent)$/, m => m[1] + ' 人' + { late: '遲到', excused: '請假', absent: '缺席' }[m[2]]],
     [/^Names, students, (.+) links$/, '名稱、學生與 $1 連結'], [/^Names, students, links to your school’s system$/, '名稱、學生與學校系統的連結'],
     [/^Nothing matches “(.*)”\.$/, '找不到符合「$1」的項目。'],
     [/^(\d+) match(?:es)?$/, '$1 項結果'],
@@ -5920,6 +6163,10 @@ const LANG_ZH = {
       a: ['在設定的 **Terms and weights** 裡是你的學期和日期，以及每種作業類型占學期成績的比例。形成性作業不計入成績。', '作業計入繳交日所在的學期。'] },
     'one-student': { q: '怎麼查看一位學生的所有資料？', words: '個人檔案 個別 家長 會談 導師 進步 圖表',
       a: ['開啟班級，選擇 **Students**，再按學生的名字。學生頁面有每一項分數、學期成績和變化趨勢。', '班級的 **Charts** 分頁會同時顯示所有人的相同數據。'] },
+    'attendance': { q: '可以在這裡點名嗎？', go: '開啟設定、班級', words: '點名 出席 出缺席 缺席 遲到 請假 曠課 紀錄 attendance',
+      a: ['可以。開啟一個班級，選擇 **Attendance**。每個人一開始都是出席，所以只要替沒到的人按 **Late**、**Excused** 或 **Absent**；如果全員到齊，就按 **Everyone is here**。每按一次都會儲存，也可以加上備註。',
+        '**Look back** 會用一張表顯示每個已儲存的日期，以及每位學生的總計。**Copy this day** 和 **Download as a spreadsheet** 可以把資料帶到學校的系統。',
+        '出缺席紀錄和你其他的工作一樣，只留在這個瀏覽器和你的資料夾裡。如果用不到，可以在設定的 **Classes and rosters** 關閉。'] },
     'learning-goals': { q: '可以依學習目標或能力指標查看分數嗎？', go: '開啟設定的評分', words: '指標 標準 能力 目標 學習表現 精熟 重教 標記 素養',
       a: ['可以，而且可用可不用。在設定的評分裡，**Learning goals** 是你自己的清單：一項能力，例如「運用證據」，或學校的能力指標。',
         '1. 在一份作業裡選 Setup，再選 **Rubric setup**，在每個項目旁選一個目標。紙本小考則在 **Quiz boxes** 裡每一題的下方選一個目標。', '2. 開啟班級並選 **Goals**：每個目標的全班平均（最低的排最前面）、每位學生在每個目標的表現，以及每個數字的來源。',
@@ -5928,6 +6175,11 @@ const LANG_ZH = {
       a: ['可以。開啟一個班級，選擇 **Report comments**。每位學生都有一份草稿，內容來自學期成績、評分規準中最強和最弱的項目、缺交的作業，以及分數的變化。',
         '可以任意修改，用 **Add** 帶入你在作業上寫過的內容，然後按 **Done, next student**。**Copy all** 會複製所有評語，方便貼到成績單系統。',
         '草稿不是由 AI 寫的，也不會傳送到任何地方。**Wording…** 可以改寫用來組成草稿的句子。目前草稿是用英文寫的。'] },
+    'seating': { q: '可以排座位表、分組，或隨機抽一位學生嗎？', words: '座位 座位表 桌子 排座位 洗牌 隨機 抽籤 點名 分組 小組 兩人一組 seating',
+      a: ['可以。開啟一個班級，選擇 **Seating**。先選教室的排法，再把每位學生拖到一張桌子上。把一位學生放到另一位身上，兩人就會交換座位。',
+        '**Shuffle** 會讓每個人換到新座位，可以復原。按一下學生再選 **Keep in this seat**，這位學生就不會被移動。**⋯** 選單可以調整桌子、把座位表秀給全班看，或列印出來。',
+        '**Pick a name** 會隨機顯示一位學生，在每個人都輪過之前不會重複。**Make groups** 會把全班分成任意人數的小組。**Who’s here** 可以排除今天沒來的學生。',
+        '在備課頁面播放課程時，按 **P** 抽一位學生，按 **G** 分組。名字只會顯示在畫面上，不會存進課程或備課的資料夾。'] },
     'missing-work': { q: '怎麼提醒學生缺交的作業？', words: '遲交 逾期 沒交 欠交 催繳 電子郵件 提醒 家長 missing',
       a: ['開啟班級，選擇 **Missing work**。這裡會依學生或依作業，列出你在所選學期標記為 Missing 的每份作業。',
         '**Email reminder** 會在你自己的郵件程式裡開啟一封信，已經填好收件人和學生缺交的作業。請自己讀過再寄出：Grading Studio 不會寄送任何東西。作業上的 **Email all** 會寫一封信，所有地址都放在密件副本。',
@@ -5954,7 +6206,7 @@ const LANG_ZH = {
       a: ['在備課頁面按側邊欄的**課表**。輸入你的班級、每個班級上課的時間，以及學校放假的日子。', '之後今天頁面會顯示你每天要上的班級，以及為每個班級準備的課程。'] },
     'present': { q: '怎麼向全班播放一堂課？', words: '簡報 全螢幕 投影機 上課 計時器 流程 遙控器 present',
       a: ['在備課頁面開啟課程，按 **Present**。投影片會填滿螢幕，用方向鍵或簡報遙控器換頁。在今天頁面，正在上或下一堂要上的班級有自己的**播放**按鈕。',
-        '播放時：**A** 顯示流程，**T** 啟動全班看得到的計時器，**N** 顯示你的備註，**B** 讓螢幕變空白，**Esc** 結束。', '結束後會有一行記錄這個班級上到哪裡，下次播放時會從那裡繼續。'] },
+        '播放時：**A** 顯示流程，**T** 啟動全班看得到的計時器，**P** 隨機抽一位學生，**G** 分組，**N** 顯示你的備註，**B** 讓螢幕變空白，**Esc** 結束。', '結束後會有一行記錄這個班級上到哪裡，下次播放時會從那裡繼續。'] },
     'pptx': { q: '可以把投影片存成 PowerPoint 檔嗎？', words: 'powerpoint pptx 匯出 投影片 keynote google slides 下載',
       a: ['可以。開啟課程，按 **Download .pptx**。檔案可以用 PowerPoint、Keynote 和 Google 簡報開啟。'] },
     'privacy': { q: '學生作業會離開我的電腦嗎？', words: '隱私 資料保護 個資 雲端 伺服器 安全 privacy',
@@ -6164,6 +6416,11 @@ const HELP = [
   { id: 'one-student', sec: 'class', q: 'How do I see everything about one student?',
     a: ['Open the class, choose **Students** and click a name. The student’s page has every score, the term grade, and how they are moving.', 'The class’s **Charts** tab shows the same numbers for everyone at once.'],
     words: 'profile individual parent meeting conference progress chart' },
+  { id: 'attendance', sec: 'class', q: 'Can I take attendance in the app?',
+    a: ['Yes. Open a class and choose **Attendance**. Everyone starts as present, so press **Late**, **Excused** or **Absent** only for a student who isn’t, or **Everyone is here** if they all are. Each press is saved, with a note if you want one.',
+      '**Look back** shows every saved day in one table, with each student’s totals. **Copy this day** and **Download as a spreadsheet** take it out for your school’s system.',
+      'Attendance stays in this browser and your folder, like the rest of your work. If you don’t use it, turn it off in Settings, **Classes and rosters**.'],
+    go: ['Open Settings, Classes', '#/settings/classes'], words: 'attendance register roll call present absent absence late tardy excused' },
   { id: 'learning-goals', sec: 'class', q: 'Can I see scores by learning goal or standard?',
     a: ['Yes, and it is optional. In Settings, Grading, **Learning goals** holds your own list: a skill like “Uses evidence”, or a standard from your school.',
       '1. In an assignment, choose Setup, then **Rubric setup**, and pick a goal beside each row. For a paper quiz, pick a goal under each question in **Quiz boxes**.', '2. Open the class and choose **Goals**: the class average on each goal with the lowest first, every student by every goal, and where each number came from.',
@@ -6174,6 +6431,12 @@ const HELP = [
       'Change any of it, bring in what you wrote on their papers with **Add**, and press **Done, next student**. **Copy all** puts every comment on the clipboard for your report system.',
       'No AI writes the drafts and nothing is sent anywhere. **Wording…** lets you rewrite the sentences they are built from.'],
     words: 'report card term comment end of term narrative parents' },
+  { id: 'seating', sec: 'class', q: 'Can I make a seating chart, groups, or pick a student at random?',
+    a: ['Yes. Open a class and choose **Seating**. Pick how the room is set up, then drag each student to a desk. Dropping one student on another swaps them.',
+      '**Shuffle** gives everyone a new seat, with Undo. Click a student and choose **Keep in this seat** for anyone who should not move. The **⋯** menu arranges the desks, shows the chart to the class and prints it.',
+      '**Pick a name** shows one student at random, and nobody twice until everyone has had a turn. **Make groups** deals the class into groups of any size. **Who’s here** leaves out anyone who is away today.',
+      'While presenting a lesson in the Planner, press **P** to pick a name and **G** for groups. The names are only shown: they are never put in a lesson or in the Planner folder.'],
+    words: 'seat seats desk desks seating plan chart shuffle random picker name cold call groups teams pairs partners wheel' },
   { id: 'missing-work', sec: 'class', q: 'How do I remind students about missing work?',
     a: ['Open a class and choose **Missing work**. It lists every paper you marked Missing, by student or by assignment, for the term you pick.',
       '**Email reminder** opens an email in your own mail app, already addressed and listing what the student owes. Read it and send it yourself: Grading Studio sends nothing. **Email all** on an assignment writes one email with every address in Bcc.',
@@ -6211,7 +6474,7 @@ const HELP = [
     words: 'schedule periods classes times calendar holidays' },
   { id: 'present', sec: 'plan', where: 'p', q: 'How do I present a lesson to the class?',
     a: ['Open the lesson in the Planner and press **Present**. Its slides fill the screen; the arrow keys or a clicker move through them. On Today, the class that is on now or next has its own **Present** button.',
-      'While presenting: **A** shows the agenda, **T** starts a timer the class can see, **N** shows your notes, **B** blanks the screen and **Esc** finishes.', 'Afterwards one line notes where the class got to, and presenting again picks up there.'],
+      'While presenting: **A** shows the agenda, **T** starts a timer the class can see, **P** picks a student at random, **G** makes groups, **N** shows your notes, **B** blanks the screen and **Esc** finishes.', 'Afterwards one line notes where the class got to, and presenting again picks up there.'],
     words: 'slideshow full screen projector teach timer agenda clicker' },
   { id: 'pptx', sec: 'plan', where: 'p', q: 'Can I get my slides as a PowerPoint file?',
     a: ['Yes. Open the lesson and press **Download .pptx**. The file opens in PowerPoint, Keynote and Google Slides.'],

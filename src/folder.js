@@ -59,7 +59,7 @@ let setLibFrom, libNews;   // setLibFrom replaces the whole library, a merge hav
         let other = null; try { other = JSON.parse(now); } catch {}
         if (other) {
           const m = mergeLib(v, other, { dev: devId(), now: Date.now() });
-          v = lib = migrateLib(m.lib); prev = libPrev(v); refs();
+          v = lib = migrateLib(m.lib); prev = libPrev(v); refs(); rollsShare();
           if (batch && m.mapA[batch.classId]) batch.classId = m.mapA[batch.classId];
         }
       }
@@ -82,7 +82,7 @@ let setLibFrom, libNews;   // setLibFrom replaces the whole library, a merge hav
 }
 const browserFull = () => Object.assign(new DOMException('The small store is full', 'QuotaExceededError'), { small: true });
 // What travels with her work. Quick copies travel as work, and the rest belongs to this browser.
-const LS_LOCAL = /^gs\.(b\..+|batches|syncT|dataV|lastBackup|gcid|gEmail|tomb|refOpen\..*)$/;
+const LS_LOCAL = /^gs\.(b\..+|batches|syncT|dataV|lastBackup|gcid|gEmail|tomb|rolls|refOpen\..*)$/;   // rolls: a copy of the rosters for the Planner's name picker, made again from the classes wherever they go
 function carryLs() {
   const o = {};
   for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k && k.startsWith('gs.') && !LS_LOCAL.test(k)) o[k] = localStorage.getItem(k); }

@@ -124,7 +124,7 @@ test('the Planner’s sidebar reads nothing of grading’s', async () => {
     await page.waitForSelector('#findDlg .frow'); await page.keyboard.press('Escape');
     const t = await page.evaluate(() => ({ ls: [...window.__touched.ls], db: [...window.__touched.db] }));
     assert.deepEqual(t.db, ['gs-lessons']);
-    for (const k of t.ls) assert.ok(k === 'gs.theme' || k === 'gs.lang' || k === 'gs.mblinks' || k === 'gs.words' || k.startsWith('gsp.'), 'the Planner touched ' + k);
+    for (const k of t.ls) assert.ok(k === 'gs.theme' || k === 'gs.lang' || k === 'gs.mblinks' || k === 'gs.words' || k === 'gs.rolls' || k.startsWith('gsp.'), 'the Planner touched ' + k);
     assert.deepEqual(page.errors, []);
   } finally { await ctx.close(); await srv.close(); }
 });
@@ -355,7 +355,7 @@ test('Settings is one page per subject, each with its own address', async () => 
   // classes: counts, never names
   await page.click('#setNav [data-set="classes"]');
   assert.equal(await page.evaluate(() => location.hash), '#/settings/classes');
-  assert.deepEqual(await shown(), ['setClasses', 'setSys']);
+  assert.deepEqual(await shown(), ['setClasses', 'setSys', 'setAtt']);
   assert.equal(await page.title(), 'Classes and rosters · Settings · Grading Studio');
   assert.deepEqual(await page.$$eval('#setClasses .setrow .nt', r => r.map(x => x.textContent)), ['Course A-14 students · No ManageBac link', 'CourseA21 student · No ManageBac link']);
   assert.ok(!(await page.$eval('#vSettings', e => e.textContent)).includes('Testwell'), 'no student names in Settings');

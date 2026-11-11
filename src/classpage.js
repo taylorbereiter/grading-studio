@@ -13,11 +13,16 @@ function classPanelDraw(fresh) {
   const r = routeNow(), el = $('#classPanel');
   if (r.v !== 'class' || !r.tab || !el) { panelKey = ''; return; }
   const c = r.c, key = c.id + '/' + r.tab + '/' + (r.stu == null ? '' : r.stu);
+  if (r.tab === 'attendance') {   // attendance needs none of the gradebook's columns: it is drawn from the class itself (attend.js)
+    const k = key + r.att; if (!fresh && k === panelKey && el.firstChild && attLib === lib) return;
+    panelKey = k; panelTok++; bkPopClose(); ovTipHide(); return attPanel(el, c, r.att);
+  }
   if (!fresh && key === panelKey && el.firstChild && bk.lib === lib) return;
   panelKey = key;
   const tok = ++panelTok, list = r.tab === 'students' && r.stu == null, kept = bk.host === 'page' && !!bk.cols && bk.ver === libVer && bk.lib === lib;
   bkPopClose(); ovTipHide();
   bk = { ...bk, host: 'page', lib, tab: r.tab === 'gradebook' ? 'table' : r.tab === 'charts' ? 'class' : r.tab === 'reports' ? 'rep' : r.tab === 'missing' ? 'miss' : r.tab === 'goals' ? 'goals' : 'one', cls: c.id, stu: r.stu || 0, hi: '', cols: kept ? bk.cols : null };
+  if (r.tab === 'seating') return seatPanel(el, c);   // src/seating.js: it reads no scores
   if (list) peoplePanel(el, c);
   else el.innerHTML = '<div class="bkbody bkpage" id="bkBody"><p class="muted bkpad">Looking through your saved work…</p></div>';
   const show = () => list ? peopleGrades(c) : bkDraw();
