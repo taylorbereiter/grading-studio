@@ -1,12 +1,13 @@
 {
- "version": "1.12.0",
- "build": "8d22d0964006",
+ "version": "1.13.0",
+ "build": "9fa8ba3f72d8",
  "notes": [
-  "A returned paper starts with a feedback page: the score, each rubric row with the level given and what that level means, your comment, and every comment on the paper with its page number.",
-  "It is on unless you turn it off under Options on the Return tab. Your own pages are not changed, and bringing an export back in opens only those."
+  "Extra credit: points or a percent on one paper, and extra credit entries in the gradebook that add to the term grade or the in-class average.",
+  "The gradebook shows each type's average (summative, in-class) right beside the term grade, kept in view as you scroll. Averages only shows just those columns, and Whole year splits each term the same way.",
+  "Leave out… lets you untick students to see the class averages without them. Their own grades don't change, and nothing is saved."
  ],
  "files": {
-  "index.html": "6dee3685337f924d483a272dfd64f378420f2582a7fde746cafe1958d33ee538",
+  "index.html": "aa9781fb17c190673e6032b5fb1c0b7f14de1ec550f39c1043ac05895c8475df",
   "planner.html": "8acd5c1af8216f1399363b2fca23845fe7e92d4b149e9f2f0fd6b4705f7d53d4"
  }
 }

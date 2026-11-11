@@ -1,4 +1,9 @@
 {
+  "1.13.0": [
+    "Extra credit: points or a percent on one paper, and extra credit entries in the gradebook that add to the term grade or the in-class average.",
+    "The gradebook shows each type's average (summative, in-class) right beside the term grade, kept in view as you scroll. Averages only shows just those columns, and Whole year splits each term the same way.",
+    "Leave out… lets you untick students to see the class averages without them. Their own grades don't change, and nothing is saved."
+  ],
   "1.12.0": [
     "A returned paper starts with a feedback page: the score, each rubric row with the level given and what that level means, your comment, and every comment on the paper with its page number.",
     "It is on unless you turn it off under Options on the Return tab. Your own pages are not changed, and bringing an export back in opens only those."
