@@ -1,11 +1,14 @@
 /* ---------------- Quick mark: a paper quiz marked one question at a time, across the class ---------------- */
 // She draws a box around each question once, on any student's paper. Each box is kept as a share of its page, by its place in
 // the student's page list (the first page, the second, ...), so the same box finds the same question on every scan.
-// batch.quiz = { qs: [{ id, lab, n, x, y, w, h, pts, key, how, mx, my }], how, side: 'left' | 'right', total: { n, x, y } | null,
+// batch.quiz = { qs: [{ id, lab, n, x, y, w, h, pts, key, how, kind, mx, my }], how, words, side: 'left' | 'right', total: { n, x, y } | null,
 //   shift: { student: { n: [dx, dy] } }, spot: { student: { id: [x, y] } } }
 // how is the way a question is marked on the paper: 'x' an ✗ on wrong answers only, 'cx' a check and an ✗, 'pts' the points
 // ("1/2"). A question saved before there was a choice has none and keeps the old look. mx, my is the spot she picked for its
-// mark; without one it goes in the margin by the box. spot is a mark moved on one student's paper only.
+// mark; without one it goes in the margin by the box. kind is how it is scored: 'rw' right or wrong (none or all of its points),
+// 'scale' a point scale from 0 to its points, like a short answer: 0 understanding not shown, 1 partial, 2 full. A question
+// with no kind is a scale when it is worth more than 1 point or marked in points, as it was before there was a choice.
+// words are what 0, the middle and the top of a scale mean, shown on the scale's buttons. spot is a mark moved on one student's paper only.
 // A student's marks are st.grade.q = { id: points }. Each one also goes on the paper by its box (marks tagged qz: id),
 // and the sum is their points score, partial until every question is marked.
 const QZ_PAD = 0.012;   // a little room around each box, since scans sit a bit differently
@@ -14,8 +17,23 @@ const quizOn = () => !!(batch && batch.quiz && batch.quiz.qs && batch.quiz.qs.le
 const quizMax = () => quizOn() ? batch.quiz.qs.reduce((a, q) => a + (+q.pts || 0), 0) : 0;
 const quizLabel = (q, i) => (q.lab || '').trim() || String(i + 1);
 const qzHow = q => q.how || 'old';
-// Whole points as buttons (with halves from +½) when the question is scored in points or is worth more than 1.
-const qzByPts = q => qzHow(q) === 'pts' || (+q.pts || 1) !== 1;
+// A scale: whole points as buttons (with halves from +½). Otherwise ✗ and ✓, for none or all of its points.
+const qzByPts = q => q.kind ? q.kind === 'scale' : qzHow(q) === 'pts' || (+q.pts || 1) !== 1;
+const QZ_KIND = { rw: 'Right / wrong', scale: 'Scale' };
+// The steps of a scale up to pts: each whole point, and pts itself when it ends in a half.
+const qzSteps = pts => { const a = []; for (let s = 0; s <= pts; s++) a.push(s); if (pts % 1) a.push(pts); return a; };
+// What each step of a scale means, by its top: { '2': ['Not shown', 'Partial', 'Full'] }. Each teacher writes her own; a scale
+// she hasn't written words for starts with Not shown at the bottom and Full at the top.
+const qzWordsOk = w => w && typeof w === 'object' && !Array.isArray(w) && Object.values(w).every(l => Array.isArray(l) && l.every(x => typeof x === 'string'));
+const qzWordsMine = () => { const w = store.get('gs.qmWords', null); return qzWordsOk(w) ? w : {}; };
+const qzWordsAll = () => ({ ...qzWordsMine(), ...(batch && batch.quiz && qzWordsOk(batch.quiz.words) ? batch.quiz.words : {}) });
+function qzStepWords(pts, all = qzWordsAll()) {
+  const n = qzSteps(pts).length, own = all[String(pts)];
+  if (own && own.length === n) return own.slice();
+  if (n === 3) return ['Not shown', 'Partial', 'Full'];
+  return Array.from({ length: n }, (_, k) => k === 0 ? 'Not shown' : k === n - 1 ? 'Full' : '');
+}
+const qzWord = (s, pts) => qzStepWords(pts)[qzSteps(pts).indexOf(s)] || '';
 // Every page of their scan, in order, including a file still waiting for its first mark (left out only until then). A file she left out herself isn't.
 const quizPages = st => layoutOf(st).filter(d => docIn(st, d) || docAuto(st, d)).flatMap(d => d.pages.filter(([path]) => { const f = fileByPath(st, path); return f && !f.virtual && viewable(f); }));
 const quizMarks = st => (st.grade && st.grade.q) || {};
@@ -147,7 +165,7 @@ function qzLook(q, v) {
   const pts = +q.pts || 1, how = qzHow(q), text = fmtNum(v) + '/' + fmtNum(pts);
   if (how === 'pts') return { k: 'text', text };
   if (v <= 0) return { k: 'x' };
-  if (v >= pts) return how === 'x' ? null : how === 'cx' || pts === 1 ? { k: 'check' } : { k: 'text', text };
+  if (v >= pts) return how === 'x' ? null : how === 'cx' || pts === 1 || !qzByPts(q) ? { k: 'check' } : { k: 'text', text };
   return { k: 'text', text };
 }
 async function qzPaper(st, q, v) {
@@ -214,20 +232,22 @@ async function qzOutOf() {
   batch.students.forEach(refound);
   return true;
 }
+const qzKindOpts = q => '<option value="rw"' + (qzByPts(q) ? '' : ' selected') + '>Right / wrong</option><option value="scale"' + (qzByPts(q) ? ' selected' : '') + '>Scale 0 to ' + fmtNum(+q.pts || 1) + '</option>';
 const qzHowOpts = q => Object.entries(QZ_HOW).map(([k, t]) => '<option value="' + k + '"' + ((q.how || 'cx') === k ? ' selected' : '') + '>' + t + '</option>').join('');
 function openQuizBoxes(back) {
   const who = quizWho();
   if (!who.length) return toast('No scanned papers to draw boxes on');
   const Q = batch.quiz ? JSON.parse(JSON.stringify(batch.quiz)) : { qs: [], how: 'x', side: 'left', total: null, shift: {} };
   Q.how ||= 'x';
+  Q.words = JSON.parse(JSON.stringify(qzWordsAll()));
   let si = who[0], selId = null, picking = false, spotPick = false;
   if (Q.qs.length) { const was = who.find(i => batch.students[i].key === Q.from); if (was != null) si = was; }
   openDlg('<div class="bh"><h2>Quiz boxes</h2><label class="mrow" style="font-size:14px;gap:6px">Draw on <select id="qbWho" class="btn sm">' +
     who.map(i => '<option value="' + i + '">' + esc(shownName(batch.students[i], i)) + '</option>').join('') + '</select></label>' +
     '<button class="icon" data-close aria-label="Close">✕</button></div>' +
     '<div class="bb qbwrap"><div class="qbpages" id="qbPages" tabindex="-1"><p class="muted">Drawing the pages…</p></div><div class="qbside">' +
-    '<p class="hsm" style="margin-top:0">Drag a box around each question, in order. Boxes can overlap. Drag a box’s number to move it. Click a box to resize it from a corner or set where its mark goes. Then give each one its points, and the right answer if it has one.</p>' +
-    '<div id="qbList"></div><div id="qbSpot"></div>' +
+    '<p class="hsm" style="margin-top:0">Drag a box around each question, in order. Boxes can overlap. Drag a box’s number to move it. Click a box to resize it from a corner or set where its mark goes. Then give each one its points, how it’s scored (right or wrong, or a scale like 0 to 2 for a short answer) and the right answer if it has one.</p>' +
+    '<div id="qbList"></div><div id="qbWords"></div><div id="qbSpot"></div>' +
     '<div class="qbopt"><div class="chk" style="cursor:default;flex-wrap:wrap">New boxes mark with <span class="seg" id="qbHow">' + Object.entries(QZ_HOW).map(([k, t]) => '<button data-how="' + k + '">' + t + '</button>').join('') + '</span></div>' +
     '<div class="chk" style="cursor:default;flex-wrap:wrap">Marks go <span class="seg" id="qbSide"><button data-side="left">Left of each box</button><button data-side="right">Right</button></span><span class="muted hsm">unless you picked a spot</span></div>' +
     '<div class="chk" style="cursor:default;flex-wrap:wrap">Total <button class="btn sm" id="qbTotal"></button><span class="muted hsm" id="qbTotalSay"></span></div>' +
@@ -255,16 +275,28 @@ function openQuizBoxes(back) {
     el.innerHTML = '<div class="qbspot"><b class="hsm">Question ' + esc(quizLabel(q, Q.qs.indexOf(q))) + ' mark:</b><button class="btn sm" data-spot>' + (spotPick ? 'Click on the page…' : 'Pick mark spot') + '</button>' +
       (q.mx != null ? '<button class="link" data-margin>Back to the margin</button>' : '<span class="muted hsm">in the margin</span>') + '</div>';
   };
+  // What each step of each scale in this quiz means, shown on its buttons while marking. Only there while some question is on a scale.
+  const wordsSay = () => {
+    const el = $('#qbWords'), tops = [...new Set(Q.qs.filter(qzByPts).map(q => +q.pts || 1))].sort((a, b) => a - b);
+    const key = tops.join(','); if (el.dataset.tops === key) return;
+    el.dataset.tops = key;
+    el.innerHTML = tops.length ? '<div class="qbwords"><p class="hsm" style="margin:0"><b>What each point means</b> <span class="muted">shown on the buttons while you mark</span></p>' + tops.map(t => {
+      const w = Q.words[String(t)] && Q.words[String(t)].length === qzSteps(t).length ? Q.words[String(t)] : qzStepWords(t, Q.words);
+      return '<div class="qbwrow"><span class="muted hsm">0 to ' + fmtNum(t) + '</span>' + qzSteps(t).map((s, k) =>
+        '<label class="qbw"><b>' + fmtNum(s) + '</b><input class="qword" data-top="' + t + '" data-k="' + k + '" value="' + esc(w[k] || '') + '" placeholder="—" aria-label="What ' + fmtNum(s) + ' of ' + fmtNum(t) + ' means" maxlength="30"></label>').join('') + '</div>';
+    }).join('') + '</div>' : '';
+  };
   const sum = () => { const t = Q.qs.reduce((a, q) => a + (+q.pts || 0), 0); $('#qbSum').textContent = Q.qs.length ? Q.qs.length + (Q.qs.length === 1 ? ' question' : ' questions') + ', out of ' + fmtNum(t) + ' points' : 'No boxes yet'; };
   const list = () => {
-    $('#qbList').innerHTML = Q.qs.length ? '<table class="qbt"><thead><tr><th>Question</th><th>Points</th><th>How to mark</th><th>Answer</th><th></th></tr></thead><tbody>' + Q.qs.map((q, i) =>
+    $('#qbList').innerHTML = Q.qs.length ? '<table class="qbt"><thead><tr><th>Question</th><th>Points</th><th>Scored</th><th>How to mark</th><th>Answer</th><th></th></tr></thead><tbody>' + Q.qs.map((q, i) =>
       '<tr data-q="' + q.id + '"' + (q.id === selId ? ' class="on"' : '') + '><td><input class="qlab" value="' + esc(q.lab || String(i + 1)) + '" aria-label="Question name" maxlength="12"></td>' +
       '<td><input class="qpts" type="number" min="0.5" step="0.5" value="' + esc(String(q.pts)) + '" aria-label="Points"></td>' +
+      '<td><select class="qkind" aria-label="Scored">' + qzKindOpts(q) + '</select></td>' +
       '<td><select class="qhow" aria-label="How to mark">' + qzHowOpts(q) + '</select></td>' +
       '<td><input class="qkey" value="' + esc(q.key || '') + '" placeholder="optional" aria-label="Right answer" maxlength="40"></td>' +
       '<td><button class="icon" data-del="' + q.id + '" aria-label="Take out this box" title="Take out">✕</button></td></tr>').join('') + '</tbody></table>'
       : '<p class="muted hsm">No boxes yet.</p>';
-    sum(); spotSay();
+    wordsSay(); sum(); spotSay();
   };
   // Where a box's mark shows while setting up: her spot, or the margin by the box.
   const pinAt = q => {
@@ -368,15 +400,23 @@ function openQuizBoxes(back) {
       if (!d.sel || d.sel.w < 0.02 || d.sel.h < 0.01) return;
       const last = Q.qs[Q.qs.length - 1];
       const q = { id: uid(), lab: '', n: d.n, x: R(d.sel.x), y: R(d.sel.y), w: R(d.sel.w), h: R(d.sel.h), pts: last ? last.pts : 1, key: '', how: Q.how };
+      if (last && last.kind) q.kind = last.kind;   // after a short answer, the next box is one too
       Q.qs.push(q); return pick(q.id);
     }
     if (d.q) pick(d.q.id);
   };
   box.oninput = e => {
+    if (e.target.classList.contains('qword')) { const w = Q.words[e.target.dataset.top] ||= qzStepWords(+e.target.dataset.top, Q.words); w[+e.target.dataset.k] = e.target.value.trim().slice(0, 30); return; }
     const tr = e.target.closest('tr[data-q]'); if (!tr) return;
     const q = qOf(tr.dataset.q); if (!q) return;
     if (e.target.classList.contains('qlab')) q.lab = e.target.value.trim() === String(Q.qs.indexOf(q) + 1) ? '' : e.target.value;
-    if (e.target.classList.contains('qpts')) { const v = +e.target.value; if (v > 0 && v <= 100) q.pts = Math.round(v * 2) / 2; sum(); }
+    if (e.target.classList.contains('qpts')) { const v = +e.target.value; if (v > 0 && v <= 100) q.pts = Math.round(v * 2) / 2; tr.querySelector('.qkind').innerHTML = qzKindOpts(q); sum(); wordsSay(); }
+    if (e.target.classList.contains('qkind')) {
+      q.kind = e.target.value;
+      if (q.kind === 'scale' && (+q.pts || 1) <= 1) { q.pts = 2; tr.querySelector('.qpts').value = '2'; sum(); }   // a scale of 0 to 1 is right or wrong
+      tr.querySelector('.qkind').innerHTML = qzKindOpts(q);
+      wordsSay();
+    }
     if (e.target.classList.contains('qkey')) q.key = e.target.value;
     if (e.target.classList.contains('qhow')) q.how = e.target.value;
     overlays();
@@ -395,6 +435,8 @@ function openQuizBoxes(back) {
     if (e.target.closest('[data-nototal]')) { Q.total = null; totalSay(); overlays(); return; }
     if (e.target.closest('[data-save]')) {
       for (const q of Q.qs) if (!(+q.pts > 0)) q.pts = 1;
+      for (const t of Object.keys(Q.words)) if (Q.words[t].length !== qzSteps(+t).length) delete Q.words[t];
+      if (Object.keys(Q.words).length) store.set('gs.qmWords', { ...qzWordsMine(), ...Q.words }); else delete Q.words;   // her words start her next quiz too
       const old = batch.quiz;
       Q.from = st().key;
       batch.quiz = Q;
@@ -502,12 +544,11 @@ const qmCard = (i, q, qi) => {
   const st = batch.students[i], v = quizMarks(st)[q.id], pts = +q.pts || 1;
   const state = v == null ? '' : v >= pts ? ' right' : v <= 0 ? ' wrong' : ' some';
   let btns;
-  if (!qzByPts(q)) btns = '<button class="qmb no" data-v="0" aria-pressed="' + (v === 0) + '" title="Wrong (0)">✗</button><button class="qmb ok" data-v="1" aria-pressed="' + (v === 1) + '" title="Right (1)">✓</button>';
+  if (!qzByPts(q)) btns = '<button class="qmb no" data-v="0" aria-pressed="' + (v === 0) + '" title="Wrong (0)">✗</button><button class="qmb ok" data-v="' + pts + '" aria-pressed="' + (v === pts) + '" title="Right (' + fmtNum(pts) + ')">✓</button>';
   else {
-    const steps = []; for (let s = 0; s <= pts; s++) steps.push(s);
-    if (pts % 1) steps.push(pts);
-    const half = v != null && v % 1 !== 0;
-    btns = steps.map(s => '<button class="qmb' + (s >= pts ? ' ok' : s <= 0 ? ' no' : '') + '" data-v="' + s + '" aria-pressed="' + (v != null && (v === s || (half && Math.floor(v) === s && s !== pts))) + '">' + fmtNum(s) + '</button>').join('') +
+    const steps = qzSteps(pts), words = qzStepWords(pts);
+    const half = v != null && v % 1 !== 0 && !steps.includes(v);
+    btns = steps.map((s, k) => '<button class="qmb' + (s >= pts ? ' ok' : s <= 0 ? ' no' : '') + (words[k] ? ' w' : '') + '" data-v="' + s + '" aria-pressed="' + (v != null && (v === s || (half && Math.floor(v) === s && s !== pts))) + '"' + (words[k] ? ' title="' + esc(fmtNum(s) + ': ' + words[k]) + '"' : '') + '>' + fmtNum(s) + (words[k] ? '<small>' + esc(words[k]) + '</small>' : '') + '</button>').join('') +
       '<button class="qmb half" data-half aria-pressed="' + half + '" title="Add or take off half a point (H)">+½</button>';
   }
   const head = qzView === 'q' ? '<button class="link" data-open="' + i + '" title="Open their paper">' + esc(shownName(st, i)) + '</button>'
@@ -519,7 +560,7 @@ const qmCard = (i, q, qi) => {
     '<div class="qmimg" title="' + (qzByPts(q) && qzHow(q) === 'pts' ? 'Drag: line this paper up' : 'Click: wrong / right. Drag: line this paper up') + '"><span class="muted hsm">…</span></div>' +
     '<div class="qmbtns">' + btns + (v != null ? '<button class="qmb clr" data-v="" title="Clear">Clear</button>' : '') + '</div></div>';
 };
-const qmQ = q => fmtNum(+q.pts || 1) + ((+q.pts || 1) === 1 ? ' point' : ' points') + ' · ' + (QZ_HOW[q.how] || QZ_HOW.cx);
+const qmQ = q => (qzByPts(q) ? 'Scale 0 to ' + fmtNum(+q.pts || 1) : fmtNum(+q.pts || 1) + ((+q.pts || 1) === 1 ? ' point' : ' points') + ', right or wrong') + ' · ' + (QZ_HOW[q.how] || QZ_HOW.cx);
 let qmTok = 0;
 function qmRender() {
   const body = $('#qmBody'); if (!body) return;
@@ -725,8 +766,10 @@ function qmKey(e) {
   if (e.key === 'ArrowDown') { stop(); return move(cols); }
   if (e.key === 'ArrowUp') { stop(); return move(-cols); }
   if (e.key === ' ') { stop(); return qmPeek(el); }
-  if (e.key === 'h' || e.key === 'H' || e.key === '½') { stop(); return qmHalf(el); }
-  if (/^[0-9]$/.test(e.key)) { stop(); return qmMark(el, +e.key); }
+  const q = batch.quiz.qs.find(x => x.id === el.dataset.q), scale = !q || qzByPts(q);
+  if ((e.key === 'h' || e.key === 'H' || e.key === '½') && scale) { stop(); return qmHalf(el); }
+  if (/^[0-9]$/.test(e.key) && scale) { stop(); return qmMark(el, +e.key); }
+  if ((e.key === '1' || e.key === '0') && !scale) { stop(); return qmMark(el, e.key === '1' ? +q.pts || 1 : 0); }   // right is all its points
   if (e.key === 'x' || e.key === 'X') { stop(); return qmMark(el, 0); }
   if (e.key === 'Backspace' || e.key === 'Delete') { stop(); return qmMark(el, null, true); }
 }
