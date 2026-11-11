@@ -46,7 +46,9 @@ jobs:
           got=
           for try in 1 2 3; do
             if sudo timeout 180 apt-get -o Acquire::Retries=2 update -qq && sudo timeout 420 apt-get -o Acquire::Retries=2 install -y -qq $fonts; then got=1; break; fi
-            echo "Fonts: try $try failed"
+            echo "Fonts: try $try failed. What the runner can reach:"
+            getent hosts azure.archive.ubuntu.com archive.ubuntu.com security.ubuntu.com || echo "  a name did not resolve"
+            curl -sS -m 15 -o /dev/null -w "  archive.ubuntu.com answered %{http_code} in %{time_total}s\n" http://archive.ubuntu.com/ubuntu/dists/noble/InRelease || true
             if [ -f /etc/apt/apt-mirrors.txt ]; then echo "http://archive.ubuntu.com/ubuntu/" | sudo tee /etc/apt/apt-mirrors.txt >/dev/null; fi
             sleep 20
           done
