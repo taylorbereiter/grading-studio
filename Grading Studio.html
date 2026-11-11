@@ -1998,6 +1998,92 @@ html.welcoming .shell{visibility:hidden}
 .mebrow label{display:inline-flex;align-items:center;gap:6px;font-size:var(--text-control);color:var(--muted)}
 .mebrow input{height:32px;border:1px solid var(--line-strong);border-radius:var(--corner-2);padding:0 var(--space-2);font:inherit;font-size:var(--text-body);background:var(--surface);color:var(--fg);width:64px}
 .mebrow input.mebl{width:56px;font-weight:600}
+/* ---------- strong examples: the star in Quick mark, the Use as an example box, the Examples tab, Show to the class ---------- */
+.qmex[aria-pressed=true]{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+.qmex[aria-pressed=true]:hover{background:var(--accent-hover)}
+.qmex span{color:var(--accent)}
+.qmex[aria-pressed=true] span{color:var(--accent-fg)}
+.atab[hidden]{display:none}
+
+/* the box */
+.dlg .box.exbox{width:min(1180px,100%);height:calc((100vh - 32px - var(--savebar,0px)) / var(--uz))}
+.bb.exuse{flex:1;display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:var(--space-5);min-height:0;overflow:hidden;padding-bottom:var(--space-3)}
+.expv{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-4);align-content:start;overflow:auto;background:var(--surface-2);border-radius:var(--corner-5);padding:var(--space-4)}
+.expv.one{grid-template-columns:minmax(0,640px);justify-content:center}
+.expv>p{grid-column:1/-1;margin:var(--space-5) auto}
+.expg{position:relative}
+.excv{position:relative;cursor:crosshair;touch-action:none;line-height:0}
+.excv canvas{width:100%;height:auto;display:block;background:var(--paper-chip);box-shadow:var(--shadow);border-radius:var(--corner-1)}
+.expgn{position:absolute;right:var(--space-2);bottom:var(--space-2);background:var(--surface-2);color:var(--fg-2);border-radius:var(--corner-pill);padding:2px var(--space-2);font-size:var(--text-small)}
+.excrop,.exdrag{position:absolute;border:2px solid var(--accent);background:var(--accent-soft);opacity:.55;pointer-events:none;border-radius:var(--corner-1)}
+.excrop{opacity:1;background:none;box-shadow:0 0 0 9999px rgba(20,25,40,.28)}
+.exdrag{border-style:dashed;background:none;opacity:1;border-color:var(--fg-2)}
+.exdrag.part{border-color:var(--accent)}
+.expg:has(.excrop:not([hidden])){overflow:hidden;border-radius:var(--corner-1)}
+.exside{overflow:auto;display:flex;flex-direction:column;gap:var(--space-2);padding-right:var(--space-1)}
+.exh{margin:var(--space-3) 0 0;font-size:var(--text-small);font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.exh:first-child{margin-top:0}
+.exh .muted{text-transform:none;letter-spacing:0;font-weight:500}
+.exkind{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-2)}
+.exkind button{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;padding:var(--space-2) var(--space-3);border:1px solid var(--line-strong);border-radius:var(--corner-4);background:var(--surface);color:var(--fg)}
+.exkind button small{color:var(--muted);font-size:var(--text-control)}
+.exkind button[aria-pressed=true]{border-color:var(--accent);background:var(--accent-soft);color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.exnames{margin:0;font-size:var(--text-body);line-height:1.45;color:var(--fg-2)}
+.exnames b{color:var(--fg)}
+.exsw{display:flex;align-items:center;gap:var(--space-2);border:0;background:none;padding:2px 0;font:inherit;color:var(--fg);text-align:left}
+.exsw i{flex:none;width:34px;height:20px;border-radius:var(--corner-pill);background:var(--line-strong);position:relative;transition:background .15s}
+.exsw i::after{content:"";position:absolute;top:3px;left:3px;width:14px;height:14px;border-radius:var(--corner-round);background:var(--surface);transition:left .15s}
+.exsw[aria-checked=true] i{background:var(--accent)}
+.exsw[aria-checked=true] i::after{left:17px}
+.exwhyin{width:100%;box-sizing:border-box;border:1px solid var(--line-strong);border-radius:var(--corner-3);padding:var(--space-2) var(--space-3);font:inherit;background:var(--surface);color:var(--fg)}
+.exrows{display:flex;flex-wrap:wrap;gap:var(--space-2)}
+.exrow{border:0;border-radius:var(--corner-pill);padding:4px var(--space-3);background:var(--surface-2);color:var(--fg-2);font:inherit;font-size:var(--text-control)}
+.exrow[aria-pressed=true]{background:var(--accent-soft);color:var(--accent);font-weight:600}
+.exlock{display:inline-flex;align-items:center;gap:var(--space-2);color:var(--muted);font-size:var(--text-control);max-width:62%}
+.exlock svg{flex:none}
+@media (max-width:860px){.bb.exuse{grid-template-columns:minmax(0,1fr);overflow:auto}.expv{grid-template-columns:minmax(0,1fr)}}
+
+/* the tab */
+.exsub{font-size:var(--text-body)}
+.bb.exbb{max-width:1280px}
+.exsec{margin:var(--space-2) 0 var(--space-3);font-size:var(--text-small);font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.exsec~.exsec{margin-top:var(--space-6)}
+.exgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:var(--space-4);align-items:start}
+.excard{background:var(--surface);border:1px solid var(--line);border-radius:var(--corner-5);padding:var(--space-3);display:flex;flex-direction:column;gap:var(--space-2)}
+.exthumb{display:block;border:1px solid var(--line);border-radius:var(--corner-3);background:var(--paper-chip);padding:0;overflow:hidden;height:170px;cursor:zoom-in}
+.excard.paper .exthumb{height:280px}
+.exthumb img{width:100%;height:100%;object-fit:contain;object-position:top center;display:block}
+.excard.answer .exthumb img,.excard.part .exthumb img{object-position:top left}
+.exct{display:flex;align-items:center;gap:var(--space-2)}
+.exct b{font-size:var(--text-lead)}
+.exstar{color:var(--accent)}
+.exchip{margin-left:auto;background:var(--surface-2);color:var(--fg-2);border-radius:var(--corner-pill);padding:2px var(--space-2);font-size:var(--text-control)}
+.exrowtag{margin-left:auto;background:var(--accent-soft);color:var(--accent);border-radius:var(--corner-pill);padding:2px var(--space-2);font-size:var(--text-control);font-weight:600}
+.exwhy{margin:0;color:var(--fg-2);font-size:var(--text-body);min-height:20px}
+.exadd{color:var(--muted);font-weight:500;text-decoration:none}
+.exacts{display:flex;align-items:center;gap:var(--space-2);flex-wrap:wrap}
+.exwho{margin:0;display:flex;align-items:center;gap:6px;color:var(--muted);font-size:var(--text-control)}
+.excard.exnone{border-style:dashed;background:none;justify-content:center;min-height:200px;text-align:center;color:var(--fg-2)}
+.excard.exnone p{margin:0;line-height:1.6}
+.exempty{max-width:520px;margin:var(--space-7) auto;text-align:center}
+
+/* Show to the class */
+.exshow{position:fixed;inset:0;z-index:1000;background:var(--surface);color:var(--fg);display:flex;flex-direction:column;outline:0}
+.exshd{display:flex;align-items:center;gap:var(--space-3);padding:var(--space-5) var(--space-6) var(--space-3)}
+.exshd h2{margin:0;font-size:var(--text-display)}
+.exsbadge{background:var(--accent-soft);color:var(--accent);border-radius:var(--corner-pill);padding:4px var(--space-3);font-size:var(--text-lead);font-weight:500}
+.exshd .sp,.exsft .sp{flex:1}
+.exslink{border:0;background:none;font:inherit;font-size:var(--text-body);font-weight:500;color:var(--fg-2);padding:var(--space-2) var(--space-3);border-radius:var(--corner-3)}
+.exslink:hover{background:var(--hover)}
+.exsbody{flex:1;overflow:auto;padding:var(--space-4) var(--space-6)}
+.exspics{display:flex;flex-direction:column;align-items:center;gap:var(--space-4);margin:0 auto;width:calc(min(100%, 1600px) * var(--exz,1))}
+.exspics.paper{width:calc(min(100%, 900px) * var(--exz,1))}
+.exspics img{width:100%;height:auto;display:block;border:1px solid var(--line);border-radius:var(--corner-4);box-shadow:var(--shadow);background:var(--paper-chip)}
+.exsnote{display:flex;align-items:baseline;gap:var(--space-3);max-width:1600px;margin:var(--space-5) auto 0;font-size:var(--text-display);font-weight:500;line-height:1.3}
+.exsnote span{color:var(--accent)}
+.exsnote.top{max-width:900px;margin:0 auto var(--space-4);font-size:var(--text-heading)}
+.exsft{display:flex;align-items:center;gap:var(--space-3);padding:var(--space-3) var(--space-6) var(--space-4);font-size:var(--text-lead)}
+.exsft .muted{font-size:var(--text-body)}
 
 </style>
 
@@ -2127,6 +2213,7 @@ html.welcoming .shell{visibility:hidden}
       <a class="atab" id="markTab" data-atab="" href="#/">Mark</a>
       <a class="atab" id="gradesBtn" data-atab="grades" href="#/" title="Every score and comment, beside the grade written on each paper">Grades</a>
       <a class="atab" id="insightsTab" data-atab="insights" href="#/" title="How the class did, row by row, and whether your scoring stayed even">Insights</a>
+      <a class="atab" id="examplesTab" data-atab="examples" href="#/" hidden title="Strong work from this assignment, with no names on it">Examples <span class="atn" hidden></span></a>
       <a class="atab" id="exportBtn" data-atab="return" href="#/" title="Check the class, then get the marked files to give back">Return</a>
     </nav>
     <span class="sp"></span>
@@ -4164,6 +4251,7 @@ async function openStudent(i, filePath) {
       '<button class="mitem" id="addScanBtn">From a scan…<small>A stack of pages scanned as one PDF</small></button>') +
     kmWrap('⋯', 'id="whoMore" class="btn sm kdots" aria-label="More for this paper" title="More for this paper"',
       (st.files.some(viewable) || fileSeq(st).length > 1 ? '<button class="mitem" id="arrangeBtn">Arrange pages<small>Combine files, reorder or take pages out</small></button>' : '') +
+      (st.files.some(f => !f.virtual && !f.rubric && (viewable(f) || f.kind === 'docx')) ? '<button class="mitem" data-whodo="example">Use as an example<small>A strong paper or part of a page, with names covered</small></button>' : '') +
       '<button class="mitem" data-whodo="light">Lighting<small>Make a pale or too-bright scan easier to read</small></button>' +
       '<button class="mitem" data-whodo="calc">Calculator <kbd>=</kbd></button>', 'right') + '</div>' + groupBand(st);
   paper.scrollTop = 0;
@@ -4283,7 +4371,7 @@ $('#paper').addEventListener('click', e => {
   if (e.target.closest('#addFileBtn')) return pickAdd(batch.students[cur]);
   if (e.target.closest('#pasteTextBtn')) return openPasteText(batch.students[cur]);
   if (e.target.closest('#addScanBtn')) { scanInto = true; scanFor = null; return $('#scanIn').click(); }
-  const wd = e.target.closest('[data-whodo]'); if (wd) return wd.dataset.whodo === 'light' ? openLight() : openCalc();
+  const wd = e.target.closest('[data-whodo]'); if (wd) return wd.dataset.whodo === 'light' ? openLight() : wd.dataset.whodo === 'example' ? openUseExample(cur) : openCalc();
   const ra = e.target.closest('[data-rmfile]');
   if (ra) {   // two clicks, so a stray click can't throw a file away
     if (!ra.dataset.armed) { ra.dataset.armed = '1'; ra.textContent = 'Click again to remove'; ra.style.color = 'var(--warn)'; setTimeout(() => { if (ra.isConnected) { delete ra.dataset.armed; ra.textContent = 'Remove'; ra.style.color = ''; } }, 4000); return; }
@@ -5353,7 +5441,7 @@ function closeDlg() {
 }
 $('#dlg').addEventListener('pointerdown', e => { if (e.target.id === 'dlg' && !dlgPage) { if (SP) splitLeave(); else leaveDlg(); } });
 function toPaper(i, path) { closeDlg(); if (batch && routeNow().tab) go(batchHash(batch.id)); return openStudent(i, path); }
-const TAB_DRAW = { grades: () => openGrades(), 'grades/sheet': () => openSheet(false), insights: () => openOverview(), 'insights/consistency': () => openCons(), return: () => openExport() };
+const TAB_DRAW = { grades: () => openGrades(), 'grades/sheet': () => openSheet(false), insights: () => openOverview(), 'insights/consistency': () => openCons(), examples: () => openExamples(), return: () => openExport() };
 function tabShow(r) {
   const key = r.tab ? r.tab + (r.sub ? '/' + r.sub : '') : '';
   if (shellReady) tabsRender();
@@ -6477,15 +6565,16 @@ function keptCovers(cs, path, p, W, H) {
   return Object.assign(kept, { gone });
 }
 const scrubMarks = (marks, rx) => marks.map(m => m.text != null ? { ...m, text: scrub(m.text, rx) } : m);
-async function sharePage(st, f, js, p, scale, rx, opts) {
+async function sharePage(st, f, js, p, scale, rx, opts, look) {
   const page = await js.getPage(p + 1);
   const vp = vpRot(f, p, page, 1), W = vp.width, H = vp.height;
-  const marks = scrubMarks((f.marks[p] || []).concat((f.kami && f.kami[p] && f.kami[p].notes) || []), rx);
+  const marks = look && look.bare ? [] : scrubMarks((f.marks[p] || []).concat((f.kami && f.kami[p] && f.kami[p].notes) || []), rx);
   const side = marks.some(m => m.t === 'note') ? sideFor(W) : 0;
   const c = document.createElement('canvas');
   c.width = Math.ceil((W + side) * scale); c.height = Math.ceil(H * scale);
   const ctx = c.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
   await page.render({ canvasContext: ctx, ...vpDraw(f, p, page, scale), annotationMode: pdfjsLib.AnnotationMode.ENABLE }).promise;
+  if (look && look.light) { const L = lightForPage(st, f, p); if (L) lightCanvas(ctx, Math.ceil(W * scale), c.height, L); }
   scanClip(ctx, f, p, W * scale, c.width, c.height);
   ctx.setTransform(scale, 0, 0, scale, 0, 0);
   drawMarks(ctx, marks, W, H, side, null);
@@ -7583,7 +7672,7 @@ const SET_SECS = [['saving', 'Saving and carrying', 'Folder, take-home file, saf
   ['display', 'Display', 'Text size, zoom, dark mode'], ['claude', 'Working with Claude', 'Optional. What Claude can and can’t see'], ['keys', 'Keys', 'Every shortcut'], ['about', 'About and updates', 'Version, what’s new, install as an app']];
 const CLASS_TABS = [['', 'Assignments'], ['gradebook', 'Gradebook'], ['students', 'Students'], ['charts', 'Charts']];
 const classHash = (c, tab, stu) => '#/class/' + (c === lib.loose || !c.id ? '-' : encodeURIComponent(c.id)) + (tab ? '/' + tab + (stu != null ? '/' + (stu + 1) : '') : '');
-const A_TABS = [['', 'Mark'], ['grades', 'Grades'], ['insights', 'Insights'], ['return', 'Return']], A_SUBS = { grades: ['sheet'], insights: ['consistency'] };
+const A_TABS = [['', 'Mark'], ['grades', 'Grades'], ['insights', 'Insights'], ['examples', 'Examples'], ['return', 'Return']], A_SUBS = { grades: ['sheet'], insights: ['consistency'] };
 const batchHash = (id, tab) => '#/a/' + encodeURIComponent(String(id).replace(/^gs\.b\./, '')) + (tab ? '/' + tab : '');
 function reloadHome() { try { sessionStorage.setItem('gs.goHome', '1'); } catch {} location.reload(); }
 try { if (sessionStorage.getItem('gs.goHome')) { sessionStorage.removeItem('gs.goHome'); if (location.hash) history.replaceState(null, '', location.pathname + location.search); } } catch {}
@@ -8135,6 +8224,7 @@ async function forgetKept(id) {
   try { await gsData.forget(id); }   // first, so if this fails it can simply be clicked again
   catch (e) { console.error(e); return toast('That didn’t work, so nothing was forgotten. Try again.'); }
   lsPut(forgotKey(id), String(Date.now()));   // any tab with it open lets go now
+  await exForgetWork(id);   // its strong examples stay; whose they were goes
   await noteForgotten(id);
   try {
     await paperDrop(id);
@@ -16973,6 +17063,7 @@ function openQuiz(view) {
     const mv = e.target.closest('[data-qgo]'); if (mv) { qmGo(+mv.dataset.qgo); return; }
     const op = e.target.closest('[data-open]'); if (op) { qmClose(); return openStudent(+op.dataset.open); }
     const pk = e.target.closest('[data-peek]'); if (pk) return qmPeek(pk.closest('.qmc'));
+    const ex = e.target.closest('[data-ex]'); if (ex) return exStar(ex.closest('.qmc'));
     const rs = e.target.closest('[data-reset]'); if (rs) return qmSpotSet(rs.closest('.qmc'), null);
     if (e.target.closest('[data-rest]')) return qmRest();
     const hf = e.target.closest('[data-half]'); if (hf) return qmHalf(hf.closest('.qmc'));
@@ -17018,7 +17109,7 @@ const qmCard = (i, q, qi) => {
   const tag = v != null && qzByPts(q) ? '<span class="qmchip">' + fmtNum(v) + ' of ' + fmtNum(pts) + '</span>' : '';
   return '<div class="qmc' + state + '" tabindex="0" data-st="' + i + '" data-q="' + q.id + '"><div class="qmch">' + head + tag +
     '<span class="qmchr">' + (qzOwn(st, q) ? '<button class="link hsm" data-reset title="Put this mark back where the question’s mark goes">Reset spot</button>' : '') +
-    '<button class="btn sm" data-peek title="See their whole page (Space)">⤢ Whole page</button></span></div>' +
+    exStarBtn(st, q) + '<button class="btn sm" data-peek title="See their whole page (Space)">⤢ Whole page</button></span></div>' +
     '<div class="qmimg" title="' + (qzByPts(q) && qzHow(q) === 'pts' ? 'Drag: line this paper up' : 'Click: wrong / right. Drag: line this paper up') + '"><span class="muted hsm">…</span></div>' +
     '<div class="qmbtns">' + btns + (v != null ? '<button class="qmb clr" data-v="" title="Clear">Clear</button>' : '') + '</div></div>';
 };
@@ -17039,7 +17130,7 @@ function qmRender() {
     $('#qmProg').textContent = done + ' of ' + who.length + ' marked';
     $('#qmFoot').innerHTML = '<button class="btn primary" data-rest' + (done === who.length ? ' disabled' : '') + '>' + (qzByPts(q) ? 'Give the rest ' + fmtNum(full) : 'Mark the rest right') + '</button>';
     $('#qmHint').textContent = (qzByPts(q) ? 'Keys: a number for its points, H adds ½' : 'Click an answer to put an ✗ on it, click again to take it off. Keys: 1 right, 0 or X wrong') +
-      ', arrows to move, Space whole page, Ctrl Z undo, [ and ] for the question. Drag a mark to move it on that paper.';
+      ', E example, arrows to move, Space whole page, Ctrl Z undo, [ and ] for the question. Drag a mark to move it on that paper.';
     cards = who.map(i => [i, q, qzAt]);
     body.className = 'bb qmbody qmgrid';
   } else {
@@ -17050,7 +17141,7 @@ function qmRender() {
       '<span class="qmtot">' + fmtNum(quizSum(st)) + ' / ' + fmtNum(quizMax()) + (n === qs.length && percentFor(quizSum(st)) != null ? ' = ' + percentFor(quizSum(st)) + '%' : '') + '</span>';
     $('#qmProg').textContent = n + ' of ' + qs.length + ' marked';
     $('#qmFoot').innerHTML = '<button class="btn" data-open="' + qzStu + '">Open their paper</button><button class="btn primary" data-rest' + (n === qs.length ? ' disabled' : '') + '>Mark the rest right</button>';
-    $('#qmHint').textContent = 'Click an answer to put an ✗ on it, click again to take it off. Keys: ↑ ↓ to move, a number for its points, Space whole page, Ctrl Z undo, [ and ] for the student.';
+    $('#qmHint').textContent = 'Click an answer to put an ✗ on it, click again to take it off. Keys: ↑ ↓ to move, a number for its points, E example, Space whole page, Ctrl Z undo, [ and ] for the student.';
     cards = qs.map((q, qi) => [qzStu, q, qi]);
     body.className = 'bb qmbody qmcol';
   }
@@ -17220,6 +17311,7 @@ function qmKey(e) {
   if (e.key === 'ArrowDown') { stop(); return move(cols); }
   if (e.key === 'ArrowUp') { stop(); return move(-cols); }
   if (e.key === ' ') { stop(); return qmPeek(el); }
+  if (e.key === 'e' || e.key === 'E') { stop(); return exStar(el); }   // keep this answer as a strong example, or take it back
   const q = batch.quiz.qs.find(x => x.id === el.dataset.q), scale = !q || qzByPts(q);
   if ((e.key === 'h' || e.key === 'H' || e.key === '½') && scale) { stop(); return qmHalf(el); }
   if (/^[0-9]$/.test(e.key) && scale) { stop(); return qmMark(el, +e.key); }
@@ -18836,6 +18928,7 @@ Object.assign(window.__gs, { classPanelDraw, chBand, chRowAvgs });
 function tabsRender() {
   if (!batch) return;
   const r = routeNow(), on = r.v === 'a' ? r.tab : '';
+  exTabSay();
   for (const a of document.querySelectorAll('#aTabs .atab')) {
     const h = batchHash(batch.id, a.dataset.atab), cur = a.dataset.atab === on;
     if (a.getAttribute('href') !== h) a.setAttribute('href', h);
@@ -19131,6 +19224,557 @@ function cmtClick(e) {
   return false;
 }
 Object.assign(window.__gs, { flagsOf, lfSet, navOrder, kmClose, setList, listPeek, scoreRow: () => rowOn });
+
+/* ---------------- strong examples: a strong answer, paper or part of a page, kept as pictures with the names blacked out (11/11) ---------------- */
+const EX_DB = 'grading-studio-examples';
+let exDbP = null, exList = [], exReady = null;
+const exDb = () => exDbP ||= new Promise((res, rej) => {
+  const r = indexedDB.open(EX_DB, 1);
+  r.onupgradeneeded = () => { const db = r.result; if (!db.objectStoreNames.contains('ex')) db.createObjectStore('ex'); if (!db.objectStoreNames.contains('pix')) db.createObjectStore('pix'); };
+  r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
+});
+function exTx(stores, mode, fn) {
+  return exDb().then(db => new Promise((res, rej) => {
+    const tx = db.transaction(stores, mode), out = fn(tx);
+    tx.oncomplete = () => res(out && 'result' in out ? out.result : out); tx.onerror = () => rej(tx.error); tx.onabort = () => rej(tx.error);
+  }));
+}
+exReady = (async () => {
+  try {
+    const have = indexedDB.databases ? (await indexedDB.databases()).some(d => d.name === EX_DB) : true;
+    if (!have) return;
+    exList = (await exTx('ex', 'readonly', tx => tx.objectStore('ex').getAll())) || [];
+    exList.sort((a, b) => a.t - b.t);
+  } catch (e) { console.error(e); exList = []; }
+  exTabSay();
+  if (batch && dlgPage === 'examples') openExamples();   // the tab was drawn before the examples were read
+})();
+const exOfWork = id => exList.filter(r => r.work === id);
+async function exPut(rec, blobs) {
+  await exTx(['ex', 'pix'], 'readwrite', tx => {
+    tx.objectStore('ex').put(rec, rec.id);
+    if (blobs) blobs.forEach((b, n) => tx.objectStore('pix').put(b, rec.id + '|' + n));
+  });
+  const k = exList.findIndex(r => r.id === rec.id);
+  if (k >= 0) exList[k] = rec; else exList.push(rec);
+  exTabSay();
+}
+async function exDelete(id) {
+  const rec = exList.find(r => r.id === id); if (!rec) return;
+  await exTx(['ex', 'pix'], 'readwrite', tx => { tx.objectStore('ex').delete(id); tx.objectStore('pix').delete(IDBKeyRange.bound(id + '|', id + '|￿')); });
+  exList = exList.filter(r => r.id !== id);
+  for (const [k, u] of exUrls) if (k.startsWith(id + '|')) { u.then(x => x && URL.revokeObjectURL(x)); exUrls.delete(k); }
+  exTabSay();
+}
+const exPic = (id, n) => exTx('pix', 'readonly', tx => tx.objectStore('pix').get(id + '|' + n));
+const exUrls = new Map();
+const exUrl = (id, n) => { const k = id + '|' + n; if (!exUrls.has(k)) exUrls.set(k, exPic(id, n).then(b => b ? URL.createObjectURL(b) : null, () => null)); return exUrls.get(k); };
+async function exForgetWork(id) {
+  try { await exReady; } catch {}
+  for (const r of exOfWork(id)) if (r.from) { try { await exPut({ ...r, from: null }); } catch (e) { console.error(e); } }
+}
+
+/* how an example is named: never after the student */
+const exLabel = r => r.kind === 'answer' ? 'Question ' + ((r.q && r.q.lab) || '?') : r.kind === 'paper' ? 'Example ' + (r.letter || 'A') : 'Part of a page';
+const exFileLabel = r => r.kind === 'part' ? 'Part ' + (r.letter || 'A') : exLabel(r);
+const exTitleNow = () => nameFreeText((batch.assignment && batch.assignment.name) || batch.name || 'Assignment');
+const exFileName = (r, ext) => (nameFreeText(r.title || 'Assignment') + ' - ' + exFileLabel(r) + '.' + ext).replace(/[\\/:*?"<>|]+/g, '-');
+const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+function exNextLetter(work, kind) {
+  const used = exOfWork(work).filter(r => r.kind === kind).map(r => LETTERS.indexOf(r.letter));
+  return LETTERS[Math.min(25, Math.max(-1, ...used) + 1)];
+}
+const exFrom = st => ({ key: st.key });
+const exBase = (kind, st) => ({ id: uid() + uid(), t: Date.now(), kind, work: batch.id, asg: (batch.assignment && batch.assignment.id) || null, cls: (batchClass() || {}).id || null, title: exTitleNow(), q: null, row: null, why: '', letter: null, pages: [], marks: false, score: false, from: exFrom(st) });
+const exJpg = c => new Promise((res, rej) => c.toBlob(b => b ? res(b) : rej(new Error('picture too big')), 'image/jpeg', 0.88));
+async function exCovers(st, f, page, p) {
+  const vp = vpRot(f, p, page, 1);
+  let auto = [];
+  try { auto = keptCovers(await autoCovers(page, vp, coverRx(st), skewXf(f, p, vp), shareOpts(st)), f.path, p, vp.width, vp.height); } catch (e) { console.error(e); }
+  return auto.concat(ownCovers(f.path, p, vp.width, vp.height));
+}
+
+/* one answer, from Quick mark: cut from the clean page, so the teacher's ✗, ✓ or points aren't on it */
+const exAnswerOf = (st, q) => batch && exList.find(r => r.kind === 'answer' && r.work === batch.id && r.q && r.q.id === q.id && r.from && r.from.key === st.key);
+let exBusy = false;
+async function exAnswerPic(st, q) {
+  const [path, p] = quizPages(st)[q.n] || [], f = path && fileByPath(st, path);
+  if (!f) return null;
+  await workerReady; await classCommon();
+  const js = await qzDoc(f), page = await js.getPage(p + 1), v1 = vpRot(f, p, page, 1), k = Math.min(4, 2000 / v1.width);
+  const c = document.createElement('canvas'); c.width = Math.ceil(v1.width * k); c.height = Math.ceil(v1.height * k);
+  const ctx = c.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
+  await page.render({ canvasContext: ctx, ...vpDraw(f, p, page, k), annotationMode: pdfjsLib.AnnotationMode.ENABLE }).promise;
+  const L = lightForPage(st, f, p); if (L) lightCanvas(ctx, c.width, c.height, L);
+  ctx.fillStyle = '#111';
+  for (const r of await exCovers(st, f, page, p)) ctx.fillRect(r.x * k, r.y * k, r.w * k, r.h * k);
+  page.cleanup();
+  const [dx, dy] = qzShift(st, q.n), x0 = clamp(q.x + dx - QZ_PAD, 0, 1), y0 = clamp(q.y + dy - QZ_PAD, 0, 1), x1 = clamp(q.x + dx + q.w + QZ_PAD, 0, 1), y1 = clamp(q.y + dy + q.h + QZ_PAD, 0, 1);
+  const sx = Math.round(x0 * c.width), sy = Math.round(y0 * c.height), sw = Math.max(1, Math.round((x1 - x0) * c.width)), sh = Math.max(1, Math.round((y1 - y0) * c.height));
+  const out = document.createElement('canvas'); out.width = sw; out.height = sh;
+  out.getContext('2d').drawImage(c, sx, sy, sw, sh, 0, 0, sw, sh);
+  c.width = c.height = 0;
+  const blob = await exJpg(out), size = { w: sw, h: sh };
+  out.width = out.height = 0;
+  return { blob, size };
+}
+async function exStar(el) {
+  if (!el || !batch || !quizOn()) return;
+  const i = +el.dataset.st, st = batch.students[i], q = batch.quiz.qs.find(x => x.id === el.dataset.q), qi = batch.quiz.qs.indexOf(q);
+  if (!st || !q) return;
+  await exReady;
+  const had = exAnswerOf(st, q);
+  if (had) {
+    try { await exDelete(had.id); } catch (e) { console.error(e); return toast('That didn’t work. Try again.'); }
+    if (el.isConnected) qmRefresh(el);
+    return toast('Taken off the examples');
+  }
+  if (exBusy) return;
+  exBusy = true;
+  const b = el.querySelector('[data-ex]'); if (b) b.disabled = true;
+  try {
+    const pic = await exAnswerPic(st, q);
+    if (!pic) return toast('This page isn’t in their scan.');
+    const v = quizMarks(st)[q.id];
+    const rec = { ...exBase('answer', st), q: { id: q.id, lab: quizLabel(q, qi), pts: +q.pts || 1, v: v == null ? null : v }, pages: [pic.size] };
+    await exPut(rec, [pic.blob]);
+    if (el.isConnected) qmRefresh(el);
+    exToast('Saved as an example for Question ' + rec.q.lab + '.', [['See examples', () => { qmClose(); exGo(); }], ['Undo', async () => { await exDelete(rec.id); const c = el.isConnected ? el : null; if (c) qmRefresh(c); }]]);
+  } catch (e) { console.error(e); toast('That answer couldn’t be kept: ' + (e.message || e), 6000); }
+  finally { exBusy = false; if (b && b.isConnected) b.disabled = false; }
+}
+function exToast(msg, acts) {
+  const t = $('.toast');
+  toast(msg, 7000);
+  for (const [label, fn] of acts) {
+    const b = document.createElement('button'); b.className = 'tact'; b.textContent = label;
+    b.onclick = () => { t.hidden = true; t.textContent = ''; fn(); };
+    t.append(' ', b);
+  }
+}
+const exGo = () => { if (batch) go(batchHash(batch.id, 'examples')); };
+const exStarBtn = (st, q) => { const on = !!exAnswerOf(st, q); return '<button class="btn sm qmex' + (on ? ' on' : '') + '" data-ex aria-pressed="' + on + '" title="' + (on ? 'Kept as a strong example. Click to take it off (E)' : 'Keep this answer as a strong example, with the name covered (E)') + '"><span aria-hidden="true">' + (on ? '★' : '☆') + '</span> Example</button>'; };
+
+/* a whole paper or part of a page, from the paper's ⋯ menu */
+let EXU = null;
+function exItems(st) {
+  const out = [];
+  for (const d of layoutOf(st).filter(d => docIn(st, d) || docAuto(st, d))) for (const [path, p] of d.pages) { const f = fileByPath(st, path); if (f && !f.virtual && viewable(f)) out.push({ f, p, path }); }
+  for (const f of st.files) if (f.kind === 'docx' && !f.virtual && !f.rubric && f.data) out.push({ word: f });
+  return out;
+}
+const exCanUse = st => !!st && exItems(st).length > 0;
+async function exuDoc(it) {
+  const D = EXU.docs;
+  if (!D.has(it.path)) D.set(it.path, (async () => pdfjsLib.getDocument({ data: (await viewBytes(it.f)).slice(), isEvalSupported: false }).promise)());
+  return D.get(it.path);
+}
+async function exuExpand(items) {
+  const out = [];
+  for (const it of items) {
+    if (!it.word) { out.push(it); continue; }
+    try {
+      const bytes = await wordPagesPdf(it.word), path = it.word.path + '#pdf';
+      const doc = pdfjsLib.getDocument({ data: bytes, isEvalSupported: false }).promise;
+      EXU.docs.set(path, doc);
+      const f = { path, name: it.word.name, kind: 'docx', marks: {}, wordOf: it.word };
+      for (let p = 0; p < (await doc).numPages; p++) out.push({ f, p, path });
+    } catch (e) { console.error(e); }
+  }
+  return out;
+}
+function exScoreText(st) {
+  const g = gradeOf(st);
+  if (g.status === 'missing' || g.status === 'excused' || (g.total == null && g.pct == null)) return '';
+  return (g.total != null ? fmtNum(g.total) + ' / ' + fmtNum(g.outOf != null ? g.outOf : maxPoints()) : '') + (g.pct != null ? (g.total != null ? '   ' : '') + g.pct + '%' : '');
+}
+function exScoreOn(c, text) {
+  if (!text) return;
+  const ctx = c.getContext('2d'), s = Math.max(14, Math.round(c.width * 0.028));
+  ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.font = '600 ' + s + 'px Inter, Arial, sans-serif'; ctx.textAlign = 'right'; ctx.textBaseline = 'top'; ctx.fillStyle = COLORS.red;
+  ctx.fillText(text, c.width - s, s * 0.8);
+  ctx.restore();
+}
+async function exuCanvas(k, scale) {
+  const it = EXU.items[k], js = await exuDoc(it), st = EXU.st;
+  const r = await sharePage(st, it.f, js, it.p, scale, coverRx(st), shareOpts(st), { bare: !EXU.marks, light: true });
+  return r;
+}
+async function openUseExample(i) {
+  if (!batch) return;
+  if (i == null) i = cur;
+  const st = batch.students[i];
+  if (!exCanUse(st)) return toast('This paper has no pages to keep as an example.');
+  await exReady;
+  EXU = { st, i, items: [], kind: 'paper', marks: false, score: false, row: null, part: null, docs: new Map(), shown: [], tok: 0 };
+  const rows = setup.mode === 'rubric' ? setup.criteria.filter(c => String(c || '').trim() && !/^Criterion \d+$/.test(c)) : [];   // the rows of a rubric she has named, not the starting ones
+  openDlg('<div class="bh"><h2>Use as an example</h2><span class="sp"></span><button class="icon" data-close aria-label="Close">✕</button></div>' +
+    '<div class="bb exuse"><div class="expv" id="exPv"><p class="muted">Getting the pages ready…</p></div>' +
+    '<aside class="exside">' +
+      '<h3 class="exh">What to keep</h3><div class="exkind" role="group" aria-label="What to keep"><button data-exk="paper" aria-pressed="true"><b>Whole paper</b><small id="exPages"> </small></button><button data-exk="part" aria-pressed="false"><b>Part of a page</b><small>Drag a box</small></button></div>' +
+      '<h3 class="exh">Names</h3><p class="exnames" id="exNames">Looking for names…</p>' +
+      '<h3 class="exh">Show on it</h3><button class="exsw" role="switch" aria-checked="false" data-exsw="marks"><i></i>My marks and comments</button>' +
+        (exScoreText(st) ? '<button class="exsw" role="switch" aria-checked="false" data-exsw="score"><i></i>The score</button>' : '') +
+      '<h3 class="exh">Why it’s strong <span class="muted">(optional)</span></h3><input type="text" id="exWhy" class="exwhyin" maxlength="160" placeholder="Every claim is tied to a moment in the story." aria-label="Why it’s strong">' +
+      (rows.length ? '<div class="exrows" role="group" aria-label="Rubric row">' + rows.map(c => '<button class="exrow" data-exrow="' + esc(c) + '" aria-pressed="false">' + esc(c) + '</button>').join('') + '</div>' : '') +
+    '</aside></div>' +
+    '<div class="bf"><span class="exlock"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg><span id="exLockSay"></span></span><span class="sp"></span><button class="btn" data-close>Cancel</button><button class="btn primary" data-exsave disabled>Save example</button></div>');
+  const box = $('#dlgBox');
+  box.classList.add('exbox');
+  const shut = () => { if (!EXU) return; for (const d of EXU.docs.values()) d.then(x => x.destroy(), () => {}); EXU = null; };
+  dlgGone = shut;
+  exuLockSay();
+  box.onclick = e => {
+    if (e.target.closest('[data-close]')) return closeDlg();
+    const k = e.target.closest('[data-exk]');
+    if (k) { EXU.kind = k.dataset.exk; for (const b of box.querySelectorAll('[data-exk]')) b.setAttribute('aria-pressed', String(b === k)); exuCrop(); exuNames(); exuLockSay(); exuSaveOk(); return; }
+    const sw = e.target.closest('[data-exsw]');
+    if (sw) { const on = sw.getAttribute('aria-checked') !== 'true'; sw.setAttribute('aria-checked', String(on)); EXU[sw.dataset.exsw] = on; return exuDrawAll(); }
+    const rw = e.target.closest('[data-exrow]');
+    if (rw) { EXU.row = EXU.row === rw.dataset.exrow ? null : rw.dataset.exrow; for (const b of box.querySelectorAll('[data-exrow]')) b.setAttribute('aria-pressed', String(b.dataset.exrow === EXU.row)); return; }
+    if (e.target.closest('[data-exsave]')) return exuSave();
+  };
+  box.onkeydown = e => { if (e.key === 'Enter' && e.target.id === 'exWhy') { e.preventDefault(); exuSave(); } };
+  exuBind($('#exPv'));
+  try {
+    await workerReady; await classCommon();
+    if (!EXU || EXU.st !== st) return;
+    const items = await exuExpand(exItems(st));
+    if (!EXU || EXU.st !== st) return;
+    EXU.items = items;
+    if (!items.length) { $('#exPv').innerHTML = '<p class="muted">This paper couldn’t be drawn.</p>'; return; }
+    $('#exPages').textContent = items.length + (items.length === 1 ? ' page' : ' pages');
+    $('#exPv').innerHTML = items.map((_, k) => '<div class="expg" data-k="' + k + '"><div class="excv"><canvas></canvas><div class="excrop" hidden></div><div class="exdrag" hidden></div></div><span class="expgn">' + (k + 1) + ' of ' + items.length + '</span></div>').join('');
+    $('#exPv').classList.toggle('one', items.length === 1);
+    await exuDrawAll();
+  } catch (e) { console.error(e); if (EXU && $('#exPv')) $('#exPv').innerHTML = '<p class="muted">This paper couldn’t be drawn: ' + esc(e.message || String(e)) + '</p>'; }
+}
+const exuLockSay = () => { const el = $('#exLockSay'); if (!el || !EXU) return; const L = exNextLetter(batch.id, EXU.kind); el.textContent = 'Kept as pictures with the names blacked out for good. It’s called “' + (EXU.kind === 'paper' ? 'Example ' + L : 'Part of a page') + '”, never by name.'; };
+const exuSaveOk = () => { const b = $('#dlgBox [data-exsave]'); if (b && EXU) b.disabled = !EXU.items.length || (EXU.kind === 'part' && !EXU.part); };
+function exuNames() {
+  const el = $('#exNames'); if (!el || !EXU) return;
+  const n = EXU.shown.reduce((a, s) => a + (s ? exGroups(s.covers) : 0), 0);
+  el.innerHTML = '<b>' + (n === 1 ? '1 name covered.' : n + ' names covered.') + '</b> ' + (EXU.kind === 'part' ? 'Drag a box around the part to keep. Click a cover to take it off.' : 'Drag on a page to cover anything else, like a handwritten name. Click a cover to take it off.');
+}
+function exGroups(cs) {
+  const near = (a, b) => a.x <= b.x + b.w + 8 && b.x <= a.x + a.w + 8 && a.y <= b.y + b.h + 2 && b.y <= a.y + a.h + 2;
+  const seen = new Set(); let n = 0;
+  for (let i = 0; i < cs.length; i++) {
+    if (seen.has(i)) continue; n++;
+    const todo = [i]; seen.add(i);
+    while (todo.length) { const a = cs[todo.pop()]; cs.forEach((b, j) => { if (!seen.has(j) && near(a, b)) { seen.add(j); todo.push(j); } }); }
+  }
+  return n;
+}
+async function exuDrawAll() {
+  if (!EXU || !EXU.items.length) return;
+  const my = ++EXU.tok;
+  for (let k = 0; k < EXU.items.length; k++) { await exuDraw(k, my); if (!EXU || EXU.tok !== my) return; }
+  exuNames(); exuSaveOk();
+}
+async function exuDraw(k, my) {
+  const cell = $('#exPv .expg[data-k="' + k + '"]'); if (!cell || !EXU) return;
+  const it = EXU.items[k], js = await exuDoc(it), pg0 = await js.getPage(it.p + 1), v1 = vpRot(it.f, it.p, pg0, 1), dpr = window.devicePixelRatio || 1;
+  const colW = Math.max(240, cell.clientWidth || 360), scale = Math.min(3, colW * 1.25 / v1.width) * dpr;
+  const r = await exuCanvas(k, scale);
+  if (!EXU || (my != null && EXU.tok !== my) || !cell.isConnected) { r.c.width = 0; return; }
+  if (EXU.score && k === 0) exScoreOn(r.c, exScoreText(EXU.st));
+  const ctx = r.c.getContext('2d');
+  if (r.gone.length) { ctx.save(); ctx.setTransform(scale, 0, 0, scale, 0, 0); ctx.strokeStyle = '#1F6FB2'; ctx.lineWidth = 1.5 / scale * dpr; ctx.setLineDash([5 / scale * dpr, 3 / scale * dpr]); for (const g of r.gone) ctx.strokeRect(g.x, g.y, g.w, g.h); ctx.restore(); }
+  const old = cell.querySelector('canvas'); r.c.className = 'exc'; old.replaceWith(r.c); old.width = 0;
+  EXU.shown[k] = { W: r.W, H: r.H, side: r.side, covers: r.covers, gone: r.gone };
+  exuCrop();
+}
+function exuCrop() {
+  if (!EXU) return;
+  for (const cell of document.querySelectorAll('#exPv .expg')) {
+    const box = cell.querySelector('.excrop'), p = EXU.part, on = EXU.kind === 'part' && p && p.k === +cell.dataset.k;
+    box.hidden = !on;
+    if (on) Object.assign(box.style, { left: p.x * 100 + '%', top: p.y * 100 + '%', width: p.w * 100 + '%', height: p.h * 100 + '%' });
+  }
+}
+function exuBind(pv) {
+  let d = null;
+  pv.onpointerdown = e => {
+    const cv = e.target.closest('.excv'); if (!cv || e.button !== 0 || !EXU) return;
+    const k = +cv.closest('.expg').dataset.k; if (!EXU.shown[k]) return;
+    e.preventDefault(); cv.setPointerCapture(e.pointerId);
+    d = { cv, k, r: cv.getBoundingClientRect(), x0: e.clientX, y0: e.clientY, moved: false };
+  };
+  pv.onpointermove = e => {
+    if (!d) return;
+    if (!d.moved && Math.hypot(e.clientX - d.x0, e.clientY - d.y0) < 5) return;
+    d.moved = true;
+    const b = d.cv.querySelector('.exdrag'), x = Math.min(d.x0, e.clientX) - d.r.left, y = Math.min(d.y0, e.clientY) - d.r.top;
+    b.hidden = false; b.classList.toggle('part', EXU.kind === 'part');
+    Object.assign(b.style, { left: x + 'px', top: y + 'px', width: Math.abs(e.clientX - d.x0) + 'px', height: Math.abs(e.clientY - d.y0) + 'px' });
+  };
+  pv.onpointerup = e => {
+    if (!d || !EXU) { d = null; return; }
+    const g = d; d = null;
+    g.cv.querySelector('.exdrag').hidden = true;
+    const s = EXU.shown[g.k], it = EXU.items[g.k], fx = v => clamp((v - g.r.left) / (g.r.width || 1), 0, 1), fy = v => clamp((v - g.r.top) / (g.r.height || 1), 0, 1);
+    const ax = fx(Math.min(g.x0, e.clientX)), bx = fx(Math.max(g.x0, e.clientX)), ay = fy(Math.min(g.y0, e.clientY)), by = fy(Math.max(g.y0, e.clientY));
+    const TW = s.W + s.side, R = v => Math.round(v * 10000) / 10000;
+    if (!g.moved) return exuToggle(g.k, ax * TW, ay * s.H);
+    if (EXU.kind === 'part') { EXU.part = { k: g.k, x: R(ax), y: R(ay), w: R(Math.max(0.01, bx - ax)), h: R(Math.max(0.01, by - ay)) }; exuCrop(); exuSaveOk(); return; }
+    const x0 = Math.min(ax * TW, s.W) / s.W, x1 = Math.min(bx * TW, s.W) / s.W;
+    if (x1 - x0 < 0.002) return;
+    const k = boxKey(it.f.path, it.p), sh = shareState();
+    (sh.boxes[k] ||= []).push([R(x0), R(ay), R(x1 - x0), R(by - ay)]);
+    saveSoon(); exuDraw(g.k).then(exuNames);
+  };
+}
+function exuToggle(k, x, y) {
+  const s = EXU.shown[k], it = EXU.items[k], key = boxKey(it.f.path, it.p), sh = shareState();
+  const inside = q => x >= q.x - 2 && x <= q.x + q.w + 2 && y >= q.y - 2 && y <= q.y + q.h + 2;
+  const R = v => Math.round(v * 10000) / 10000, frac = q => [q.x / s.W, q.y / s.H, q.w / s.W, q.h / s.H].map(R);
+  const hit = s.covers.filter(inside).sort((a, b) => a.w * a.h - b.w * b.h)[0];
+  if (hit && hit.own) {
+    const own = sh.boxes[key] || [], at = own.findIndex(b => Math.abs(b[0] * s.W - hit.x) < 1 && Math.abs(b[1] * s.H - hit.y) < 1);
+    if (at >= 0) own.splice(at, 1); if (!own.length) delete sh.boxes[key];
+  } else if (hit) (sh.off ||= {})[key] = [...(sh.off[key] || []), frac(hit)];
+  else {
+    const g = s.gone.find(inside); if (!g) return;
+    const off = (sh.off || {})[key] || [], at = off.findIndex(b => sameSpot(g, b, s.W, s.H));
+    if (at >= 0) off.splice(at, 1); if (!off.length && sh.off) delete sh.off[key];
+  }
+  saveSoon(); exuDraw(k).then(exuNames);
+}
+async function exuSave() {
+  if (!EXU || !EXU.items.length) return;
+  const U = EXU, btn = $('#dlgBox [data-exsave]');
+  if (U.kind === 'part' && !U.part) return toast('Drag a box around the part to keep.');
+  if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
+  U.tok++;   // a redraw on its way stops
+  try {
+    const list = U.kind === 'paper' ? U.items.map((_, k) => k) : [U.part.k], blobs = [], pages = [], score = U.score ? exScoreText(U.st) : '';
+    for (const k of list) {
+      const it = U.items[k], js = await exuDoc(it), v1 = vpRot(it.f, it.p, await js.getPage(it.p + 1), 1);
+      const r = await exuCanvas(k, Math.min(4, (U.kind === 'part' ? 2400 : 1600) / v1.width));
+      let c = r.c;
+      if (U.kind === 'part') {
+        const p = U.part, sx = Math.round(p.x * c.width), sy = Math.round(p.y * c.height), sw = Math.max(1, Math.round(p.w * c.width)), sh = Math.max(1, Math.round(p.h * c.height));
+        const o = document.createElement('canvas'); o.width = sw; o.height = sh; o.getContext('2d').drawImage(c, sx, sy, sw, sh, 0, 0, sw, sh);
+        c.width = 0; c = o;
+      }
+      if (score && !blobs.length) exScoreOn(c, score);
+      blobs.push(await exJpg(c)); pages.push({ w: c.width, h: c.height });
+      c.width = c.height = 0;
+    }
+    const why = ($('#exWhy') ? $('#exWhy').value : '').trim().slice(0, 160);
+    const rec = { ...exBase(U.kind, U.st), why, row: U.row, letter: exNextLetter(batch.id, U.kind), pages, marks: U.marks, score: !!score };
+    await exPut(rec, blobs);
+    closeDlg();
+    exToast('Saved as ' + (rec.kind === 'paper' ? 'Example ' + rec.letter : 'an example') + '.', [['See examples', exGo]]);
+  } catch (e) {
+    console.error(e);
+    if (btn && btn.isConnected) { btn.disabled = false; btn.textContent = 'Save example'; }
+    toast('The example couldn’t be kept: ' + (e.message || e), 6000);
+  }
+}
+
+/* the Examples tab: between Insights and Return, once the assignment has an example */
+function exTabSay() {
+  const a = $('#examplesTab'); if (!a) return;
+  let n = 0; try { n = batch ? exOfWork(batch.id).length : 0; } catch { return; }   // asked before this file has run
+  const here = batch && routeNow().v === 'a' && routeNow().tab === 'examples';
+  a.hidden = !n && !here;
+  const c = a.querySelector('.atn'); if (c) { c.textContent = n || ''; c.hidden = !n; }
+}
+function exSorted(list) {
+  const qs = quizOn() ? batch.quiz.qs.map(q => q.id) : [], at = r => { const k = qs.indexOf(r.q && r.q.id); return k < 0 ? 999 : k; };
+  const ans = list.filter(r => r.kind === 'answer').sort((a, b) => at(a) - at(b) || natural(String(a.q && a.q.lab), String(b.q && b.q.lab)) || a.t - b.t);
+  const rest = list.filter(r => r.kind !== 'answer').sort((a, b) => (a.kind === b.kind ? 0 : a.kind === 'paper' ? -1 : 1) || a.t - b.t);
+  return [...ans, ...rest];
+}
+const exCanCopy = () => !!(navigator.clipboard && navigator.clipboard.write && window.ClipboardItem);
+function exCard(r) {
+  const chip = r.kind === 'answer' && r.q && r.q.v != null ? fmtNum(r.q.v) + ' of ' + fmtNum(r.q.pts) : r.kind === 'paper' ? r.pages.length + (r.pages.length === 1 ? ' page' : ' pages') : '';
+  const who = r.from && !anonOn() ? '<p class="exwho"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>Only you see this: ' + esc(r.from.key) + '</p>' : '';
+  return '<div class="excard ' + r.kind + '" data-exid="' + esc(r.id) + '"><button class="exthumb" data-exopen title="Show to the class"><img alt="' + esc(exLabel(r)) + '" data-expic="' + esc(r.id) + '"></button>' +
+    '<div class="exct"><span class="exstar" aria-hidden="true">★</span><b>' + esc(exLabel(r)) + '</b>' + (r.row ? '<span class="exrowtag">' + esc(r.row) + '</span>' : chip ? '<span class="exchip">' + esc(chip) + '</span>' : '') + '</div>' +
+    '<p class="exwhy">' + (r.why ? esc(r.why) : '<button class="link exadd" data-exwhy>Add why it’s strong</button>') + '</p>' +
+    '<div class="exacts">' + (r.kind !== 'paper' && exCanCopy() ? '<button class="btn sm" data-excopy>Copy picture</button>' : '') + '<button class="btn sm" data-exdl>Download</button>' +
+      kmWrap('⋯', 'class="icon kdots" aria-label="More for this example" title="More for this example"', '<button class="mitem" data-exopen>Show to the class</button><button class="mitem" data-exwhy>' + (r.why ? 'Change why it’s strong' : 'Add why it’s strong') + '</button><button class="mitem" data-exdel>Delete</button>') + '</div>' + who + '</div>';
+}
+function openExamples() {
+  if (!batch) return;
+  const list = exSorted(exOfWork(batch.id)), ans = list.filter(r => r.kind === 'answer'), rest = list.filter(r => r.kind !== 'answer');
+  const qs = quizOn() ? batch.quiz.qs : [], none = qs.map((q, i) => ({ q, i })).filter(x => !ans.some(r => r.q && r.q.id === x.q.id)).map(x => quizLabel(x.q, x.i));
+  const and = a => a.length < 2 ? a.join('') : a.slice(0, -1).join(', ') + ' and ' + a[a.length - 1];
+  const noneCard = qs.length && none.length ? '<div class="excard exnone"><p>' + (none.length === 1 ? 'Question ' + esc(none[0]) + ' has' : 'Questions ' + esc(and(none)) + ' have') + ' no example yet.<br>Press ☆ on an answer in Quick mark.</p></div>' : '';
+  tabNext('examples');
+  openDlg('<div class="bh"><h2>Examples</h2><span class="muted exsub">Strong work from this assignment, with no names on it.</span><span class="sp"></span>' +
+    (list.length ? '<button class="btn" data-exsheet><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>Download as a sheet</button><button class="btn primary" data-exshow><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" aria-hidden="true"><path d="M7 5l12 7-12 7z"/></svg>Show to the class</button>' : '') +
+    '<button class="icon" data-close aria-label="Close">✕</button></div>' +
+    '<div class="bb exbb" id="exBody">' +
+      (!list.length ? '<div class="exempty"><p><b>No examples yet.</b></p><p class="muted">Press ☆ Example on an answer in Quick mark, or pick <b>Use as an example</b> in a paper’s ⋯ menu. Picking one is always up to you.</p></div>' : '') +
+      (ans.length || noneCard ? '<h3 class="exsec">Answers, by question</h3><div class="exgrid">' + ans.map(exCard).join('') + noneCard + '</div>' : '') +
+      (rest.length ? '<h3 class="exsec">Whole papers and parts of pages</h3><div class="exgrid">' + rest.map(exCard).join('') + '</div>' : '') +
+    '</div>');
+  const box = $('#dlgBox');
+  box.classList.add('exbox-tab');
+  for (const im of box.querySelectorAll('img[data-expic]')) exUrl(im.dataset.expic, 0).then(u => { if (u && im.isConnected) im.src = u; });
+  box.onclick = e => {
+    if (e.target.closest('[data-close]')) return closeDlg();
+    if (e.target.closest('[data-exshow]')) return exShow(exSorted(exOfWork(batch.id)), 0);
+    if (e.target.closest('[data-exsheet]')) return exSheet(exSorted(exOfWork(batch.id)));
+    const card = e.target.closest('[data-exid]'); if (!card) return;
+    const r = exList.find(x => x.id === card.dataset.exid); if (!r) return;
+    if (e.target.closest('[data-exopen]')) { const all = exSorted(exOfWork(batch.id)); return exShow(all, Math.max(0, all.findIndex(x => x.id === r.id))); }
+    if (e.target.closest('[data-excopy]')) return exCopy(r);
+    if (e.target.closest('[data-exdl]')) return exDownload(r);
+    if (e.target.closest('[data-exwhy]')) return exWhyEdit(card, r);
+    const del = e.target.closest('[data-exdel]');
+    if (del) {   // two clicks, so a stray click can't throw an example away
+      if (!del.dataset.armed) { del.dataset.armed = '1'; del.textContent = 'Click again to delete'; del.style.color = 'var(--bad)'; setTimeout(() => { if (del.isConnected) { delete del.dataset.armed; del.textContent = 'Delete'; del.style.color = ''; } }, 4000); return; }
+      kmClose();
+      exDelete(r.id).then(() => { toast('Example deleted'); if (dlgPage === 'examples') openExamples(); }, er => { console.error(er); toast('That didn’t work. Try again.'); });
+    }
+  };
+}
+function exWhyEdit(card, r) {
+  kmClose();
+  const p = card.querySelector('.exwhy'); if (!p || p.querySelector('input')) return;
+  p.innerHTML = '<input type="text" class="exwhyin" maxlength="160" aria-label="Why it’s strong" placeholder="Why it’s strong">';
+  const inp = p.firstChild; inp.value = r.why || ''; inp.focus();
+  let done = false;
+  const save = async keep => {
+    if (done) return; done = true;
+    const why = keep ? inp.value.trim().slice(0, 160) : r.why || '';
+    if (why !== (r.why || '')) { try { await exPut({ ...r, why }); } catch (e) { console.error(e); toast('That didn’t work. Try again.'); } }
+    const now = exList.find(x => x.id === r.id) || r;
+    p.innerHTML = now.why ? esc(now.why) : '<button class="link exadd" data-exwhy>Add why it’s strong</button>';
+    const m = card.querySelector('[data-exwhy].mitem'); if (m) m.textContent = now.why ? 'Change why it’s strong' : 'Add why it’s strong';
+  };
+  inp.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); save(true); } else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); save(false); } };
+  inp.onblur = () => save(true);
+}
+
+/* the uses: Copy picture, Download, Download as a sheet, Show to the class */
+async function exPng(r, n) {
+  const b = await exPic(r.id, n); if (!b) throw new Error('the picture is missing');
+  const im = await createImageBitmap(b), c = document.createElement('canvas'); c.width = im.width; c.height = im.height;
+  c.getContext('2d').drawImage(im, 0, 0); im.close();
+  const png = await new Promise((res, rej) => c.toBlob(x => x ? res(x) : rej(new Error('picture too big')), 'image/png'));
+  c.width = 0;
+  return png;
+}
+async function exCopy(r) {
+  if (!exCanCopy()) return;
+  try {
+    await navigator.clipboard.write([new ClipboardItem({ 'image/png': exPng(r, 0) })]);
+    if (store.get('gs.exCopied', false)) toast('Copied');
+    else { store.set('gs.exCopied', true); toast('Copied. A picture you paste into a lesson is kept with that lesson.', 6000); }
+  } catch (e) { console.error(e); toast('Copying didn’t work here. Use Download instead.'); }
+}
+async function exPdfOf(r) {
+  const pdf = await PDFLib.PDFDocument.create();
+  pdf.setTitle(exFileLabel(r)); pdf.setAuthor(''); pdf.setCreator('Grading Studio'); pdf.setProducer('');
+  for (let n = 0; n < r.pages.length; n++) {
+    const b = await exPic(r.id, n); if (!b) continue;
+    const img = await pdf.embedJpg(new Uint8Array(await b.arrayBuffer())), W = 612, H = W * img.height / img.width;
+    pdf.addPage([W, H]).drawImage(img, { x: 0, y: 0, width: W, height: H });
+  }
+  return pdf.save();
+}
+async function exDownload(r) {
+  try {
+    if (r.kind === 'paper') saveBlob(exFileName(r, 'pdf'), new Blob([await exPdfOf(r)], { type: 'application/pdf' }));
+    else saveBlob(exFileName(r, 'png'), await exPng(r, 0));
+  } catch (e) { console.error(e); toast('That download couldn’t be made: ' + (e.message || e), 6000); }
+}
+const exPdfText = s => String(s || '').replace(/[‘’]/g, '\'').replace(/[“”]/g, '"').replace(/[–—]/g, '-').replace(/…/g, '...').replace(/[^\x20-\x7E\xA0-\xFF]/g, '');
+async function exSheet(list) {
+  if (!list.length) return;
+  toast('Making the sheet…');
+  try {
+    const pdf = await PDFLib.PDFDocument.create(), F = await pdf.embedFont(PDFLib.StandardFonts.Helvetica), B = await pdf.embedFont(PDFLib.StandardFonts.HelveticaBold);
+    const title = exPdfText(list[0].title || 'Assignment'), PW = 612, PH = 792, M = 48, CW = PW - 2 * M, ink = PDFLib.rgb(0.12, 0.13, 0.15), soft = PDFLib.rgb(0.36, 0.38, 0.42), blue = PDFLib.rgb(0.1, 0.4, 0.66);
+    pdf.setTitle(title + ' - Examples'); pdf.setAuthor(''); pdf.setCreator('Grading Studio'); pdf.setProducer('');
+    let pg = null, y = 0;
+    const page = () => { pg = pdf.addPage([PW, PH]); y = PH - M; };
+    const room = h => { if (!pg || y - h < M) page(); };
+    const wrap = (s, font, size, w) => { const out = []; let line = ''; for (const word of s.split(/\s+/).filter(Boolean)) { const t = line ? line + ' ' + word : word; if (font.widthOfTextAtSize(t, size) > w && line) { out.push(line); line = word; } else line = t; } if (line) out.push(line); return out; };
+    page();
+    pg.drawText(title, { x: M, y: y - 20, size: 20, font: B, color: ink }); y -= 30;
+    pg.drawText('Strong examples, with no names on them', { x: M, y: y - 12, size: 11, font: F, color: soft }); y -= 34;
+    let lastQ = null;
+    for (const r of list) {
+      const head = r.kind === 'answer' ? exLabel(r) : r.kind === 'paper' ? 'Example ' + (r.letter || 'A') : 'Part of a page';
+      if (r.kind !== 'answer' || lastQ !== (r.q && r.q.id)) {
+        if (r.kind === 'paper' && pg && y < PH - M - 80) page();
+        room(40);
+        pg.drawText(exPdfText(head) + (r.row ? '   ' + exPdfText(r.row) : ''), { x: M, y: y - 14, size: 14, font: B, color: ink }); y -= 24;
+        lastQ = r.kind === 'answer' ? r.q && r.q.id : null;
+      }
+      for (let n = 0; n < r.pages.length; n++) {
+        const b = await exPic(r.id, n); if (!b) continue;
+        const img = await pdf.embedJpg(new Uint8Array(await b.arrayBuffer()));
+        const maxH = r.kind === 'paper' ? PH - 2 * M - 30 : 300, k = Math.min(CW / img.width, maxH / img.height), w = img.width * k, h = img.height * k;
+        room(h + 8);
+        pg.drawImage(img, { x: M, y: y - h, width: w, height: h });
+        pg.drawRectangle({ x: M, y: y - h, width: w, height: h, borderColor: PDFLib.rgb(0.85, 0.86, 0.88), borderWidth: 0.6 });
+        y -= h + 8;
+      }
+      if (r.why) for (const line of wrap('* ' + exPdfText(r.why), F, 11, CW)) { room(16); pg.drawText(line, { x: M, y: y - 11, size: 11, font: F, color: blue }); y -= 15; }
+      y -= 14;
+    }
+    saveBlob((title + ' - Examples.pdf').replace(/[\\/:*?"<>|]+/g, '-'), new Blob([await pdf.save()], { type: 'application/pdf' }));
+  } catch (e) { console.error(e); toast('The sheet couldn’t be made: ' + (e.message || e), 6000); }
+}
+let exShowKeys = null;
+function exShow(list, start) {
+  if (!list.length) return;
+  exShowClose();
+  const S = { list, at: clamp(start || 0, 0, list.length - 1), zoom: 1, note: true, full: false };
+  const el = document.createElement('div'); el.id = 'exShow'; el.className = 'exshow'; el.tabIndex = -1; el.setAttribute('role', 'dialog'); el.setAttribute('aria-label', 'Show to the class');
+  document.body.appendChild(el);
+  const note = r => '<p class="exsnote' + (r.kind === 'paper' ? ' top' : '') + '"><span aria-hidden="true">★</span>' + esc(r.why) + '</p>';
+  const draw = () => {
+    const r = S.list[S.at];
+    el.innerHTML = '<div class="exshd"><h2>' + esc(exLabel(r)) + '</h2><span class="exsbadge">' + (r.kind === 'answer' ? 'A strong answer' : r.kind === 'paper' ? 'A strong paper' : 'Strong work') + '</span><span class="sp"></span>' +
+      (r.why ? '<button class="exslink" data-exsnote>' + (S.note ? 'Hide the note' : 'Show the note') + '</button>' : '') + '<button class="exslink" data-exsx>Esc to close</button></div>' +
+      '<div class="exsbody">' + (r.why && S.note && r.kind === 'paper' ? note(r) : '') + '<div class="exspics ' + r.kind + '" style="--exz:' + S.zoom + '">' + r.pages.map((_, n) => '<img alt="" data-n="' + n + '">').join('') + '</div>' +
+      (r.why && S.note && r.kind !== 'paper' ? note(r) : '') + '</div>' +
+      '<div class="exsft"><button class="btn" data-exsgo="-1" aria-label="Earlier example"' + (S.at ? '' : ' disabled') + '>‹</button><span>' + (S.at + 1) + ' of ' + S.list.length + '</span><button class="btn" data-exsgo="1" aria-label="Next example"' + (S.at < S.list.length - 1 ? '' : ' disabled') + '>›</button><span class="sp"></span><span class="muted">No names are shown. Arrow keys move, + and − zoom.</span></div>';
+    for (const im of el.querySelectorAll('img[data-n]')) exUrl(r.id, +im.dataset.n).then(u => { if (u && im.isConnected) im.src = u; });
+    el.querySelector('.exsbody').scrollTop = 0;
+  };
+  const move = d => { const n = clamp(S.at + d, 0, S.list.length - 1); if (n !== S.at) { S.at = n; draw(); } };
+  const zoom = d => { S.zoom = clamp(Math.round((S.zoom + d) * 100) / 100, 0.5, 2.5); const p = el.querySelector('.exspics'); if (p) p.style.setProperty('--exz', S.zoom); };
+  el.onclick = e => {
+    if (e.target.closest('[data-exsx]')) return exShowClose();
+    if (e.target.closest('[data-exsnote]')) { S.note = !S.note; return draw(); }
+    const g = e.target.closest('[data-exsgo]'); if (g) return move(+g.dataset.exsgo);
+  };
+  exShowKeys = e => {
+    if (!$('#exShow')) return;
+    const stop = () => { e.preventDefault(); e.stopPropagation(); };
+    if (e.key === 'Escape') { stop(); return exShowClose(); }
+    if (e.key === 'ArrowRight' || e.key === 'PageDown') { stop(); return move(1); }
+    if (e.key === 'ArrowLeft' || e.key === 'PageUp') { stop(); return move(-1); }
+    if (e.key === '+' || e.key === '=') { stop(); return zoom(0.25); }
+    if (e.key === '-' || e.key === '_' || e.key === '−') { stop(); return zoom(-0.25); }
+    if (e.key === 'n' || e.key === 'N') { stop(); S.note = !S.note; return draw(); }
+    stop();   // nothing underneath answers a key while the class is looking
+  };
+  document.addEventListener('keydown', exShowKeys, true);
+  el._fs = () => { if (S.full && !document.fullscreenElement) exShowClose(); };
+  document.addEventListener('fullscreenchange', el._fs);
+  draw(); el.focus();
+  try { const p = el.requestFullscreen && el.requestFullscreen(); if (p && p.then) p.then(() => { S.full = true; }, () => {}); } catch {}
+}
+function exShowClose() {
+  const el = $('#exShow'); if (!el) return;
+  if (exShowKeys) { document.removeEventListener('keydown', exShowKeys, true); exShowKeys = null; }
+  document.removeEventListener('fullscreenchange', el._fs);
+  el.remove();
+  if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+}
+Object.assign(window.__gs, { exList: () => exList, exReady: () => exReady, exStar, openUseExample, openExamples, exShow, exSheet, exPdfOf, exPng, exDownload, exForgetWork, exUse: () => EXU, exItems });
 
 /* ---------------- Today: what she teaches, what is waiting to be marked, what is ready to hand back (stage 4) ---------------- */
 
