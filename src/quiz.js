@@ -294,7 +294,9 @@ function openQuizBoxes(back) {
       '<td><select class="qkind" aria-label="Scored">' + qzKindOpts(q) + '</select></td>' +
       '<td><select class="qhow" aria-label="How to mark">' + qzHowOpts(q) + '</select></td>' +
       '<td><input class="qkey" value="' + esc(q.key || '') + '" placeholder="optional" aria-label="Right answer" maxlength="40"></td>' +
-      '<td><button class="icon" data-del="' + q.id + '" aria-label="Take out this box" title="Take out">✕</button></td></tr>').join('') + '</tbody></table>'
+      '<td><button class="icon" data-del="' + q.id + '" aria-label="Take out this box" title="Take out">✕</button></td></tr>' +
+      (goalList().length ? '<tr class="qgrow' + (q.id === selId ? ' on' : '') + '" data-q="' + q.id + '"><td colspan="6"><label>Goal ' + goalPick('data-qgoal', q.goal || '', 'Learning goal for question ' + quizLabel(q, i)) + '</label></td></tr>' : '')).join('') + '</tbody></table>' +
+      '<p class="hsm goalline"><button class="link" data-qgoals>' + (goalList().length ? 'Edit goals…' : 'Tag questions with learning goals…') + '</button></p>'
       : '<p class="muted hsm">No boxes yet.</p>';
     wordsSay(); sum(); spotSay();
   };
@@ -419,10 +421,14 @@ function openQuizBoxes(back) {
     }
     if (e.target.classList.contains('qkey')) q.key = e.target.value;
     if (e.target.classList.contains('qhow')) q.how = e.target.value;
+    if (e.target.dataset.qgoal != null) {   // a learning goal for this question (goals.js); the last choice makes a new one
+      if (e.target.value === '+') { goalsDlg({ add: true }).then(r => { if (r.added) q.goal = r.added; if (pagesEl.isConnected) list(); }); return; }
+      if (e.target.value) q.goal = e.target.value; else delete q.goal;
+    }
     overlays();
   };
   if (box._qbFocus) box.removeEventListener('focusin', box._qbFocus);
-  box._qbFocus = e => { if (!pagesEl.isConnected) return; const tr = e.target.closest && e.target.closest('tr[data-q]'); if (tr && tr.dataset.q !== selId) { selId = tr.dataset.q; spotPick = false; for (const x of box.querySelectorAll('tr[data-q]')) x.classList.toggle('on', x === tr); spotSay(); overlays(); } };
+  box._qbFocus = e => { if (!pagesEl.isConnected) return; const tr = e.target.closest && e.target.closest('tr[data-q]'); if (tr && tr.dataset.q !== selId) { selId = tr.dataset.q; spotPick = false; for (const x of box.querySelectorAll('tr[data-q]')) x.classList.toggle('on', x.dataset.q === selId); spotSay(); overlays(); } };
   box.addEventListener('focusin', box._qbFocus);
   box.onclick = async e => {
     if (e.target.closest('[data-close]')) { if (back) return back(); closeDlg(); return qzClose(); }
@@ -433,6 +439,7 @@ function openQuizBoxes(back) {
     if (e.target.closest('[data-margin]')) { const q = qOf(selId); if (q) { delete q.mx; delete q.my; } spotSay(); overlays(); return; }
     if (e.target.closest('#qbTotal')) { picking = !picking; spotPick = false; totalSay(); spotSay(); return; }
     if (e.target.closest('[data-nototal]')) { Q.total = null; totalSay(); overlays(); return; }
+    if (e.target.closest('[data-qgoals]')) { goalsDlg().then(() => { if (pagesEl.isConnected) list(); }); return; }
     if (e.target.closest('[data-save]')) {
       for (const q of Q.qs) if (!(+q.pts > 0)) q.pts = 1;
       for (const t of Object.keys(Q.words)) if (Q.words[t].length !== qzSteps(+t).length) delete Q.words[t];

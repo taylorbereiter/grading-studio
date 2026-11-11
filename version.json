@@ -1,12 +1,14 @@
 {
- "version": "1.22.0",
- "build": "a9147b5f56ae",
+ "version": "1.23.0",
+ "build": "4e4c99726647",
  "notes": [
-  "Progress sheets for parent meetings: one printed page per student with the term grade, every score, a chart of how they moved, missing work, each term's grade, the report comment and lines for notes. Find it on a class's Students list, or Progress sheet on one student's page.",
-  "Choose the term and tick what goes on it; Print opens the print window, where you can pick a printer or Save as PDF. It is made on your computer and nothing is sent anywhere."
+  "Scores by learning goal, if you want them. Keep your own list of goals (a skill, or a standard from your school) in Settings, Grading, or add one wherever you tag.",
+  "Tag rubric rows in Rubric setup and quiz questions in Quiz boxes. An assignment scored with just a total can carry one goal for the whole score.",
+  "Each class page gets a Goals tab: the class average on each goal with the lowest first, every student by every goal, and where each number came from. A student's own page shows their goals beside the class average.",
+  "Nothing changes until you add a first goal, and tagging never changes a score or a grade."
  ],
  "files": {
-  "index.html": "0e5b274a182b8a0d61968d980a9b2ec49804addb292f433f2d4ff6132b260f71",
-  "planner.html": "50ad81bcd0b4d9748f9871a2f98992f8c5e96e093b22a0dfa4a321e85f25e0bb"
+  "index.html": "6b3e4ee42570376f499de62f6106c09c3e929e00ad84af4a7f9bcb5e8dfc2875",
+  "planner.html": "7efb8ea232bdea2919015957726cb982bd14fe2ebcc444da82b43a00c25115d9"
  }
 }
