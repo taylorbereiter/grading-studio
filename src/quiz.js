@@ -35,7 +35,7 @@ function qzStepWords(pts, all = qzWordsAll()) {
 }
 const qzWord = (s, pts) => qzStepWords(pts)[qzSteps(pts).indexOf(s)] || '';
 // Every page of their scan, in order, including a file still waiting for its first mark (left out only until then). A file she left out herself isn't.
-const quizPages = st => layoutOf(st).filter(d => docIn(st, d) || docAuto(st, d)).flatMap(d => d.pages.filter(([path]) => { const f = fileByPath(st, path); return f && !f.virtual && viewable(f); }));
+const quizPages = st => layoutOf(st).filter(d => docIn(st, d) || docAuto(st, d)).flatMap(d => d.pages.filter(([path]) => { const f = fileByPath(st, path); return f && !f.virtual && viewable(f) && !tryOfFile(st, f); }));
 const quizMarks = st => (st.grade && st.grade.q) || {};
 function quizCount(st) { const m = quizMarks(st); return quizOn() ? batch.quiz.qs.filter(q => m[q.id] != null).length : 0; }
 // Some questions marked, not all: the score shows as partial.
