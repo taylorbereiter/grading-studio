@@ -1,13 +1,13 @@
 {
- "version": "1.14.0",
- "build": "3ddf77ab314f",
+ "version": "1.15.0",
+ "build": "8493d5f1ba01",
  "notes": [
   "A picture dragged onto a slide that has text now sits beside the text, in a new Text + picture layout.",
   "Drag several pictures in at once and each gets its own slide. Let a picture go on any slide in the list on the left to put it there.",
   "New Full picture layout: the picture fills the whole slide."
  ],
  "files": {
-  "index.html": "b213799d51111ac54e555d7e0aaacb83be68515a3f5cf53667f18211a0d0314c",
+  "index.html": "11833e46118c76667c1d9f9a6c99d51f0f014506fdd6e7dc0f51361ce4bde08a",
   "planner.html": "ee6523fea6477ea7e17f30930fba4cd04b7725c047876297103b8b110b3f97f4"
  }
 }
