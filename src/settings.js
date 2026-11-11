@@ -12,6 +12,7 @@ function setRender() {
   for (const el of document.querySelectorAll('#setPane [data-sec]')) el.hidden = el.dataset.sec !== r.sec;
   const put = (id, h) => { const el = $(id); if (el.dataset.h !== h) { el.dataset.h = h; el.innerHTML = h; } };
   meSetRender(r.sec);
+  if (r.sec === 'marking') setInksSay();
   if (r.sec === 'history') gbRender();
   if (r.sec === 'about') updRender();
   if (r.sec === 'classes') {
@@ -63,3 +64,12 @@ new MutationObserver(() => { if ($('#dlg').hidden) setRender(); }).observe($('#d
 
 // Settings, Display, Language (lang.js keeps the choice and draws the page again).
 $('#setLangBox').innerHTML = langPick('setLangPick');
+// Settings, Marking, Mark colors: the same three rows as Quick mark's Colors menu, drawn when Marking is shown.
+function setInksSay() { const el = $('#setInkRows'), h = el && inkRows('s'); if (el && el.dataset.h !== h) { el.dataset.h = h; el.innerHTML = h; } }
+$('#setInkRows').addEventListener('click', e => {
+  const b = e.target.closest('[data-sink], [data-schk], [data-spts]'); if (!b) return;
+  if (b.dataset.sink != null) { inkColor = b.dataset.sink; store.set('gs.ink', inkColor); }
+  else if (b.dataset.schk != null) setCheckInk(b.dataset.schk);
+  else setPtsInk(b.dataset.spts);
+  renderTools(); setInksSay();
+});

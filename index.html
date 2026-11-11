@@ -914,6 +914,10 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
 .qmink{position:relative;display:inline-flex}
 .qmdot{display:inline-block;width:9px;height:9px;border-radius:var(--corner-round);margin-left:4px;background:var(--qm-x)}
 .qmdot.ok{margin-left:2px;background:var(--qm-ok)}
+.qmdot.pts{margin-left:2px;background:var(--qm-pts,var(--qm-x))}
+.qmipts .chip{font-size:var(--text-small);padding:2px 8px;border-radius:var(--corner-round);border:1px solid var(--line);background:var(--surface);cursor:pointer;display:inline-flex;align-items:center;gap:3px;white-space:nowrap}
+.qmipts .chip[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.qmcr{display:inline-block;width:8px;height:8px;border-radius:var(--corner-round)}
 .qminkpop{position:absolute;right:0;top:calc(100% + 6px);z-index:30;background:var(--surface);border:1px solid var(--line);border-radius:var(--corner-2);box-shadow:0 8px 24px rgba(20,30,50,.14);padding:10px 12px;display:grid;gap:8px;min-width:250px}
 .qminkpop[hidden]{display:none}
 .qminkpop p{margin:0}
@@ -929,6 +933,8 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
 .qmned textarea{width:100%;box-sizing:border-box;font:inherit;font-size:var(--text-body);padding:6px 8px;border:1px solid var(--line-strong);border-radius:var(--corner-2,8px);background:var(--surface);color:var(--fg);resize:vertical}
 .qmnedb{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .qmnedb .btn{margin-left:auto}
+.setinks{display:grid;gap:8px;margin-top:10px}
+.setinks .qmirow .hsm{min-width:96px}
 
 /* ---------- rubric library: what each score means, under the score buttons and in Rubric setup ---------- */
 .lvrow{display:flex;gap:8px;align-items:flex-start;margin-top:6px}
@@ -2356,6 +2362,10 @@ html.welcoming .shell{visibility:hidden}
         <section class="lib setsec" id="setGrading" data-sec="grading" hidden></section>
         <section class="lib setsec" id="setMarking" data-sec="marking" hidden>
           <div class="lhead"><h2>Mark key</h2><span class="muted">What each proofreading mark means, for the key on returned papers.</span><span class="sp"></span><button class="btn sm" id="setMkey">Mark key</button></div>
+        </section>
+        <section class="lib setsec" id="setInks" data-sec="marking" hidden>
+          <div class="lhead"><h2>Mark colors</h2><span class="muted">The color of ✗ and the pen, of checks, and of points written on a paper. They apply to new marks; Quick mark’s Colors menu changes a quiz’s marks too.</span></div>
+          <div class="setinks" id="setInkRows"></div>
         </section>
         <section class="lib setsec" id="setPapers" data-sec="marking" hidden>
           <div class="lhead"><h2>Word papers</h2><span class="muted">Mark them as they are, or turn each one into PDF pages you can mark anywhere. The Word file is always kept.</span><span class="sp"></span><span class="seg" id="setWordPdf"><button data-v="0" aria-pressed="true">Keep as Word</button><button data-v="1" aria-pressed="false">Convert to PDF pages</button></span></div>
@@ -3788,7 +3798,8 @@ const LANG_ES = {
     'All keys': 'Todas las teclas', 'Every keyboard shortcut': 'Todos los atajos de teclado',
     'Classes and rosters': 'Clases y listas', 'Terms and weights': 'Periodos y pesos', 'Your terms and how each type counts': 'Tus periodos y cuánto cuenta cada tipo',
     'Grading scale and rubrics': 'Escala de calificación y rúbricas', 'Your saved scales and rubrics': 'Tus escalas y rúbricas guardadas',
-    'Marking': 'Corrección', 'Mark key, Word papers, tablet and pencil': 'Clave de marcas, trabajos de Word, tableta y lápiz',
+    'Marking': 'Corrección', 'Mark key, mark colors, Word papers, tablet and pencil': 'Clave de marcas, colores de las marcas, trabajos de Word, tableta y lápiz',
+    'Mark colors': 'Colores de las marcas', 'Colors for ✗, checks and points': 'Colores para ✗, marcas de correcto y puntos',
     'Timetable and calendar': 'Horario y calendario', 'Class times and days off, in the Planner': 'Horas de clase y días sin clase, en el Planificador',
     'Working with Claude': 'Trabajar con Claude', 'Optional. What Claude can and can’t see': 'Opcional. Lo que Claude puede ver y lo que no',
     'This week in the Planner': 'Esta semana en el Planificador', 'Today’s classes and the lessons planned for them': 'Las clases de hoy y las lecciones planificadas para ellas',
@@ -3905,6 +3916,10 @@ const LANG_ES = {
     'quick-mark': { q: '¿Cómo corrijo rápido un examen en papel?', words: 'examen prueba preguntas recuadros bien mal puntos test',
       a: ['Abre **Quick mark** en Setup. Dibuja una vez un recuadro alrededor de cada pregunta, en el escaneo de cualquier estudiante.', 'Luego corrige una pregunta para toda la clase, o el examen entero de un estudiante. Cada pregunta puede mostrar ✗ en las respuestas incorrectas, ✓ y ✗, puntos o una escala con tus propias palabras.',
         'El total pasa a la nota del estudiante.'] },
+    'mark-colors': { q: '¿Puedo cambiar el color de ✗, las marcas de correcto y los puntos?', go: 'Abrir Ajustes, Corrección', words: 'color tinta rojo verde amarillo ámbar puntos parcial crédito completo',
+      a: ['Sí. En Ajustes, Corrección, **Mark colors**, o en el menú **Colors** de Quick mark. ✗ usa el color de tu pluma y las marcas de correcto tienen el suyo.',
+        'Los puntos escritos en un trabajo, como 1/2, van en el color de ✗ salvo que elijas otro. **By credit** escribe los puntos completos en el color de correcto, los parciales en ámbar y ninguno en el color de ✗: verde, ámbar y rojo si dejas esos.',
+        'Los totales y los sellos de nota van en el color de puntos que elijas, o en el color de ✗ con By credit. En Quick mark, las marcas ya puestas en el examen cambian a los nuevos colores.'] },
     'late-work': { q: 'Un estudiante entregó tarde. ¿Cómo añado su trabajo?', words: 'tarde retraso falta añadir archivo reenviar nueva entrega',
       a: ['Con la tarea abierta, pulsa **+ Add** encima de la página y elige **A file…**, o suelta el archivo sobre el nombre del estudiante.', 'Para varios archivos tardíos a la vez, usa **Bring in files** en Setup. Lo que ya está aquí se deja fuera, así que solo quedan por colocar los archivos nuevos. Marca **Late** junto a quien quieras señalar como entrega tardía.'] },
     'group-work': { q: 'Varios estudiantes hicieron un trabajo juntos. ¿Lo corrijo para cada uno?', words: 'compañeros parejas grupo póster compartido juntos equipo',
@@ -4125,7 +4140,8 @@ const LANG_ZH = {
     'All keys': '所有快速鍵', 'Every keyboard shortcut': '所有鍵盤快速鍵',
     'Classes and rosters': '班級與名單', 'Terms and weights': '學期與比重', 'Your terms and how each type counts': '你的學期，以及各類作業所占的比重',
     'Grading scale and rubrics': '評分等第與評分規準', 'Your saved scales and rubrics': '你儲存的評分等第與評分規準',
-    'Marking': '批改', 'Mark key, Word papers, tablet and pencil': '批改符號表、Word 作業、平板與觸控筆',
+    'Marking': '批改', 'Mark key, mark colors, Word papers, tablet and pencil': '批改符號表、批改顏色、Word 作業、平板與觸控筆',
+    'Mark colors': '批改顏色', 'Colors for ✗, checks and points': '✗、勾號與分數的顏色',
     'Timetable and calendar': '課表與行事曆', 'Class times and days off, in the Planner': '上課時間與放假日，在備課頁面',
     'Working with Claude': '搭配 Claude 使用', 'Optional. What Claude can and can’t see': '可選用。Claude 看得到和看不到的內容',
     'This week in the Planner': '備課頁面的本週', 'Today’s classes and the lessons planned for them': '今天的班級與為它們準備的課程',
@@ -4242,6 +4258,10 @@ const LANG_ZH = {
     'quick-mark': { q: '怎麼快速批改紙本小考？', words: '小考 測驗 考試 題目 框 對 錯 分數 quiz',
       a: ['在 Setup 開啟 **Quick mark**。在任何一位學生的掃描檔上，為每一題畫一次框。', '接著可以一次批改全班的同一題，或一位學生的整份考卷。每一題可以在錯的答案上顯示 ✗、顯示 ✓ 和 ✗、給分，或使用你自訂文字的量尺。',
         '總分會成為學生的分數。'] },
+    'mark-colors': { q: '可以更改 ✗、勾號和分數的顏色嗎？', go: '開啟設定、批改', words: '顏色 墨水 紅 綠 黃 琥珀 分數 部分 得分 滿分',
+      a: ['可以。在設定、批改的 **Mark colors**，或 Quick mark 的 **Colors** 選單。✗ 使用筆的顏色，勾號有自己的顏色。',
+        '寫在作業上的分數，例如 1/2，除非另外選擇，否則使用 ✗ 的顏色。**By credit** 會把滿分寫成勾號的顏色，部分得分寫成琥珀色，零分寫成 ✗ 的顏色：保留預設就是綠、琥珀、紅。',
+        '總分和分數印章使用你選的分數顏色；選 By credit 時使用 ✗ 的顏色。在 Quick mark 中，這份小考已經給的批改會換成新的顏色。'] },
     'late-work': { q: '有學生遲交，怎麼加入他的作業？', words: '遲交 補交 缺交 新增 檔案 重新繳交',
       a: ['開啟那份作業後，按頁面上方的 **+ Add**，選擇 **A file…**，或把檔案拖到學生的名字上。', '如果一次有好幾個遲交的檔案，請用 Setup 裡的 **Bring in files**。已經在這裡的檔案會被略過，所以只需要處理新的檔案。要標示為遲交的人，請勾選旁邊的 **Late**。'] },
     'group-work': { q: '幾位學生一起完成一份作業，需要每個人都批改一次嗎？', words: '同伴 兩人 小組 海報 共同 一起 團隊 group',
@@ -4463,6 +4483,11 @@ const HELP = [
     a: ['Open **Quick mark** under Setup. Draw a box around each question once, on any student’s scan.', 'Then mark one question for the whole class, or one student’s whole quiz. Each question can show ✗ on wrong answers, ✓ and ✗, points, or a scale with your own words.',
       'The total goes into the student’s score.'],
     words: 'quiz test questions boxes right wrong points multiple' },
+  { id: 'mark-colors', sec: 'mark', q: 'Can I change the color of ✗, checks and points?',
+    a: ['Yes. In Settings, Marking, **Mark colors**, or the **Colors** menu in Quick mark. ✗ uses your pen’s color and checks have their own.',
+      'Points written on a paper, like 1/2, are in the ✗ color unless you pick another. **By credit** writes full points in the check color, part in amber and none in the ✗ color: green, amber and red if you keep those.',
+      'Totals and score stamps are in the points color you pick, or in the ✗ color with By credit. In Quick mark, marks already given on the quiz change to the new colors.'],
+    go: ['Open Settings, Marking', '#/settings/marking'], words: 'color colour ink red green yellow amber points partial credit full' },
   { id: 'late-work', sec: 'mark', q: 'A student handed in late. How do I add their paper?',
     a: ['With the assignment open, press **+ Add** above the paper and choose **A file…**, or drop the file on the student’s name.', 'For several late files at once, use **Bring in files** under Setup. Anything already here is left out, so only the new files are left to place. Tick **Late** beside anyone you want marked late.'],
     words: 'late missing add file resubmit new submission' },
@@ -4722,6 +4747,14 @@ const COLORS = { red: '#D7263D', blue: '#1F5FD1', green: '#1E8A4C', purple: '#7B
 let checkInk = COLORS[store.get('gs.checkInk', 'green')] ? store.get('gs.checkInk', 'green') : 'green';
 let CHECK_INK = COLORS[checkInk];
 function setCheckInk(k) { if (!COLORS[k]) return; checkInk = k; CHECK_INK = COLORS[k]; store.set('gs.checkInk', k); }
+const PTS_AMBER = '#A86400';
+let ptsInk = (k => k === 'credit' || COLORS[k] ? k : '')(store.get('gs.ptsInk', ''));
+function setPtsInk(k) { ptsInk = k === 'credit' || COLORS[k] ? k : ''; if (ptsInk) store.set('gs.ptsInk', ptsInk); else store.del('gs.ptsInk'); }
+function ptsColor(v, top) {
+  if (ptsInk === 'credit' && v != null && top != null) return +v <= 0 ? COLORS[inkColor] || COLORS.red : +v >= +top ? CHECK_INK : PTS_AMBER;
+  return COLORS[ptsInk] || COLORS[inkColor] || COLORS.red;
+}
+const totalInk = () => ptsColor();
 const HL = { yellow: '#FFE45C', green: '#B4F0A8', pink: '#FFB8D6', blue: '#B0E0FF' };
 let inkColor = store.get('gs.ink', 'red'), hlColor = store.get('gs.hl', 'yellow'), penW = store.get('gs.penW', 2);
 const DISP0 = { ui: 1, tsize: 14, fit: 'width', dfs: 15, dlh: 1.45, trim: true };
@@ -8850,7 +8883,7 @@ const routeOf = hash => {
 };
 const routeNow = () => routeOf(location.hash);
 const SET_SECS = [['saving', 'Saving and carrying', 'Folder, take-home file, safety copies'], ['history', 'Go back in time', 'Your work as it was on an earlier day'], ['classes', 'Classes and rosters', 'Names, students, ' + (sysName() ? sysName() + ' links' : 'class links')], ['terms', 'Terms and weights', 'Your terms and how each type counts'],
-  ['grading', 'Grading scale and rubrics', 'Your saved scales and rubrics'], ['marking', 'Marking', 'Mark key, Word papers, tablet and pencil'], ['timetable', 'Timetable and calendar', 'Class times and days off, in the Planner'],
+  ['grading', 'Grading scale and rubrics', 'Your saved scales and rubrics'], ['marking', 'Marking', 'Mark key, mark colors, Word papers, tablet and pencil'], ['timetable', 'Timetable and calendar', 'Class times and days off, in the Planner'],
   ['display', 'Display', 'Text size, zoom, dark mode'], ['claude', 'Working with Claude', 'Optional. What Claude can and can’t see'], ['keys', 'Keys', 'Every shortcut'], ['about', 'About and updates', 'Version, what’s new, install as an app']];
 const CLASS_TABS = [['', 'Assignments'], ['gradebook', 'Gradebook'], ['students', 'Students'], ['missing', 'Missing work'], ['charts', 'Charts'], ['goals', 'Goals'], ['reports', 'Report comments']];   // Goals shows only once the teacher has a learning goal (goals.js)
 const classHash = (c, tab, stu) => '#/class/' + (c === lib.loose || !c.id ? '-' : encodeURIComponent(c.id)) + (tab ? '/' + tab + (stu != null ? '/' + (stu + 1) : '') : '');
@@ -9904,7 +9937,7 @@ function startScorePlace(text) {
   const move = e => {
     const pg = pages.find(q => q.canvas === e.target);
     if (!pg) { gh.hidden = true; return; }
-    const m = { t: 'stamp', k: 'score', x: 0, y: 0, size: newStampSize('score'), color: COLORS[inkColor], text }, b = stampBox(m), dpr = window.devicePixelRatio || 1, k = pg.s;
+    const m = { t: 'stamp', k: 'score', x: 0, y: 0, size: newStampSize('score'), color: totalInk(), text }, b = stampBox(m), dpr = window.devicePixelRatio || 1, k = pg.s;
     gh.width = Math.ceil(b.w * k * dpr) + 2; gh.height = Math.ceil(b.h * k * dpr) + 2;
     gh.style.width = gh.width / dpr + 'px'; gh.style.height = gh.height / dpr + 'px';
     gh.style.left = (e.clientX - gh.width / dpr / 2) + 'px'; gh.style.top = (e.clientY - gh.height / dpr / 2) + 'px';
@@ -9919,7 +9952,7 @@ function startScorePlace(text) {
 function stopScorePlace() { if (scorePlacing) { scorePlacing.stop(); scorePlacing = null; } }
 function placeScore(pg, x, y) {
   const text = scorePlacing.text; stopScorePlace();
-  const m = { t: 'stamp', k: 'score', x: r1(x), y: r1(y), size: newStampSize('score'), color: COLORS[inkColor], text };
+  const m = { t: 'stamp', k: 'score', x: r1(x), y: r1(y), size: newStampSize('score'), color: totalInk(), text };
   const bb = stampBox(m);   // keep it on the page
   m.x = r1(m.x + Math.max(0, -bb.x) - Math.max(0, bb.x + bb.w - pg.W)); m.y = r1(m.y + Math.max(0, -bb.y) - Math.max(0, bb.y + bb.h - pg.H));
   snap(pg); pg.marks().push(m); selected = { page: pg, mark: m, fresh: true }; changed(pg); redrawAll();
@@ -18231,7 +18264,7 @@ async function qzPaper(st, q, v) {
       measureCtx.font = '14px ' + FONT;
       const tw = measureCtx.measureText(look.text).width, bx = (q.x + qzShift(st, q.n)[0]) * sz.W;
       const x = s.margin ? (s.right ? cx - 11 : Math.max(2, bx - tw - 6)) : cx - tw / 2;   // in the margin it sits beside the box, like before
-      list.push({ t: 'text', color, x: r1(Math.max(2, x)), y: r1(Math.max(2, cy - 8)), size: 14, text: look.text, qz: q.id });
+      list.push({ t: 'text', color: ptsColor(v, +q.pts || 1), x: r1(Math.max(2, x)), y: r1(Math.max(2, cy - 8)), size: 14, text: look.text, qz: q.id });
     }
   }
   if (!list.length) delete f.marks[p];
@@ -18243,7 +18276,7 @@ async function qzTotal(st) {
   const [path, p] = quizPages(st)[t.n] || [], f = path && fileByPath(st, path), sz = await qzPageSize(st, t.n);
   if (!f || !sz) return;
   const [dx, dy] = qzShift(st, t.n);
-  (f.marks[p] ||= []).push({ t: 'stamp', k: 'score', text: stickerText(quizSum(st)), x: r1((t.x + dx) * sz.W), y: r1((t.y + dy) * sz.H), size: 52, color: COLORS[inkColor] || COLORS.red, qz: 'total' });
+  (f.marks[p] ||= []).push({ t: 'stamp', k: 'score', text: stickerText(quizSum(st)), x: r1((t.x + dx) * sz.W), y: r1((t.y + dy) * sz.H), size: 52, color: totalInk(), qz: 'total' });
 }
 async function qzRedoPaper(st) {
   const m = quizMarks(st);
@@ -18536,7 +18569,7 @@ function openQuiz(view) {
     '<span id="qmNav" class="qmnav"></span><span class="muted hsm" id="qmProg"></span>' +
     '<span class="qmopts"><span class="muted hsm">Size</span><span class="seg" id="qmSize">' + QZ_SIZES.map(s => '<button data-size="' + s + '" title="' + (s === 'F' ? 'One answer per row' : 'Answer size ' + s) + '">' + QZ_SIZE_SAY[s] + '</button>').join('') + '</span>' +
     '<span class="seg" id="qmOnly"><button data-only="0">All</button><button data-only="1">Not marked</button></span>' +
-    '<span class="qmink"><button class="btn sm" id="qmInkBtn" data-inkmenu aria-haspopup="true" aria-expanded="false" title="Colors for the marks">Colors <i class="qmdot x"></i><i class="qmdot ok"></i></button>' +
+    '<span class="qmink"><button class="btn sm" id="qmInkBtn" data-inkmenu aria-haspopup="true" aria-expanded="false" title="Colors for the marks">Colors <i class="qmdot x"></i><i class="qmdot ok"></i><i class="qmdot pts"></i></button>' +
     '<span class="qminkpop" id="qmInkPop" hidden></span></span></span>' +
     '<button class="btn sm" data-boxes>Boxes</button><button class="icon" data-close aria-label="Close">✕</button></div>' +
     '<div class="bb qmbody" id="qmBody"></div>' +
@@ -18550,6 +18583,7 @@ function openQuiz(view) {
     if (e.target.closest('[data-close]')) return qmClose();
     const ik = e.target.closest('[data-qink]'); if (ik) { inkColor = ik.dataset.qink; store.set('gs.ink', inkColor); renderTools(); return qmInkSet(); }
     const ic = e.target.closest('[data-qchk]'); if (ic) { setCheckInk(ic.dataset.qchk); renderTools(); return qmInkSet(); }
+    const ip = e.target.closest('[data-qpts]'); if (ip) { setPtsInk(ip.dataset.qpts); return qmInkSet(); }
     if (e.target.closest('[data-inkmenu]')) return qmInkMenu();
     if (!e.target.closest('#qmInkPop')) qmInkMenu(false);
     if (e.target.closest('[data-boxes]')) return openQuizBoxes(() => openQuiz());
@@ -18584,10 +18618,20 @@ function qmClose() {
 }
 function qmInkSay() {
   const body = $('#qmBody'), btn = $('#qmInkBtn');
-  for (const el of [body, btn]) if (el) { el.style.setProperty('--qm-x', COLORS[inkColor] || COLORS.red); el.style.setProperty('--qm-ok', CHECK_INK); }
+  for (const el of [body, btn]) if (el) { el.style.setProperty('--qm-x', COLORS[inkColor] || COLORS.red); el.style.setProperty('--qm-ok', CHECK_INK); el.style.setProperty('--qm-pts', ptsInk === 'credit' ? 'conic-gradient(' + CHECK_INK + ' 0 33%, ' + PTS_AMBER + ' 0 66%, ' + (COLORS[inkColor] || COLORS.red) + ' 0)' : ptsColor()); }
+  if (body) for (const el of body.querySelectorAll('.qmmk[data-pv]')) el.style.color = ptsColor(+el.dataset.pv, +el.dataset.pt);
   const pop = $('#qmInkPop'); if (!pop || pop.hidden) return;
-  const row = (attr, on, say) => '<div class="qmirow"><span class="hsm">' + say + '</span>' + Object.entries(COLORS).map(([k, v]) => '<button class="sw" data-' + attr + '="' + k + '" style="background:' + v + '" aria-pressed="' + (k === on) + '" title="' + k + '" aria-label="' + say + ' ' + k + '"></button>').join('') + '</div>';
-  pop.innerHTML = row('qink', inkColor, '✗ and points') + row('qchk', checkInk, '✓ right') + '<p class="muted hsm">Marks already given change too.</p>';
+  pop.innerHTML = inkRows('q') + '<p class="muted hsm">Marks already given change too.</p>';
+}
+function inkRows(p) {
+  const sw = (attr, k, v, on, say) => '<button class="sw" data-' + p + attr + '="' + k + '" style="background:' + v + '" aria-pressed="' + on + '" title="' + k + '" aria-label="' + say + ' ' + k + '"></button>';
+  const row = (attr, on, say) => '<div class="qmirow"><span class="hsm">' + say + '</span>' + Object.entries(COLORS).map(([k, v]) => sw(attr, k, v, k === on, say)).join('') + '</div>';
+  const x = COLORS[inkColor] || COLORS.red;
+  return row('ink', inkColor, '✗ wrong') + row('chk', checkInk, '✓ right') +
+    '<div class="qmirow qmipts"><span class="hsm">Points</span><button class="chip" data-' + p + 'pts="" aria-pressed="' + (ptsInk === '') + '" title="Points in the ✗ color">Same as ✗</button>' +
+    Object.entries(COLORS).map(([k, v]) => sw('pts', k, v, k === ptsInk, 'Points')).join('') + '</div>' +
+    '<div class="qmirow qmipts"><span class="hsm"></span><button class="chip" data-' + p + 'pts="credit" aria-pressed="' + (ptsInk === 'credit') + '" title="Full points in the ✓ color, part in amber, none in the ✗ color">By credit <i class="qmcr" style="background:' + CHECK_INK + '"></i><i class="qmcr" style="background:' + PTS_AMBER + '"></i><i class="qmcr" style="background:' + x + '"></i></button></div>' +
+    (ptsInk === 'credit' ? '<p class="muted hsm">Full: 2/2 · part: 1/2 · none: 0/2. Totals and score stamps stay in the ✗ color.</p>' : '');
 }
 function qmInkMenu(open) {
   const pop = $('#qmInkPop'), btn = $('#qmInkBtn'); if (!pop) return;
@@ -18598,9 +18642,13 @@ function qmInkMenu(open) {
 function qmInkSet() {
   for (const st of batch.students) for (const f of st.files || []) for (const list of Object.values(f.marks || {})) for (const m of list) {
     if (!m.qz && !m.qzn) continue;
-    m.color = m.t === 'check' ? CHECK_INK : COLORS[inkColor] || COLORS.red;
+    m.color = m.t === 'check' ? CHECK_INK : m.qz === 'total' ? totalInk() : m.t === 'text' && m.qz ? qzMarkInk(m.qz, st) : COLORS[inkColor] || COLORS.red;
   }
   saveSoon(); qmInkSay();
+}
+function qzMarkInk(id, st) {
+  const q = batch.quiz.qs.find(x => x.id === id), v = quizMarks(st)[id];
+  return q && v != null ? ptsColor(v, +q.pts || 1) : ptsColor();
 }
 function qmSizeSay() {
   const s = qzSizeNow(), body = $('#qmBody');
@@ -18609,6 +18657,7 @@ function qmSizeSay() {
 }
 function qmMarkEl(q, v) {
   const look = qzLook(q, v);
+  if (look && look.k === 'text') return '<span class="qmmk txt" data-pv="' + v + '" data-pt="' + (+q.pts || 1) + '" style="color:' + ptsColor(v, +q.pts || 1) + '" title="Drag to move this mark on this paper only">' + esc(look.text) + '</span>';
   if (!look) return '<span class="qmmk pin" title="Where the mark goes on this paper. Drag to move it on this paper only."></span>';
   return '<span class="qmmk' + (look.k === 'text' ? ' txt' : look.k === 'check' ? ' ok' : '') + '" title="Drag to move this mark on this paper only">' + (look.k === 'check' ? '✓' : look.k === 'x' ? '✗' : esc(look.text)) + '</span>';
 }
@@ -21765,6 +21814,7 @@ function setRender() {
   for (const el of document.querySelectorAll('#setPane [data-sec]')) el.hidden = el.dataset.sec !== r.sec;
   const put = (id, h) => { const el = $(id); if (el.dataset.h !== h) { el.dataset.h = h; el.innerHTML = h; } };
   meSetRender(r.sec);
+  if (r.sec === 'marking') setInksSay();
   if (r.sec === 'history') gbRender();
   if (r.sec === 'about') updRender();
   if (r.sec === 'classes') {
@@ -21813,6 +21863,14 @@ $('#setPane').addEventListener('click', async e => {
 new MutationObserver(() => { if ($('#dlg').hidden) setRender(); }).observe($('#dlg'), { attributes: true, attributeFilter: ['hidden'] });
 
 $('#setLangBox').innerHTML = langPick('setLangPick');
+function setInksSay() { const el = $('#setInkRows'), h = el && inkRows('s'); if (el && el.dataset.h !== h) { el.dataset.h = h; el.innerHTML = h; } }
+$('#setInkRows').addEventListener('click', e => {
+  const b = e.target.closest('[data-sink], [data-schk], [data-spts]'); if (!b) return;
+  if (b.dataset.sink != null) { inkColor = b.dataset.sink; store.set('gs.ink', inkColor); }
+  else if (b.dataset.schk != null) setCheckInk(b.dataset.schk);
+  else setPtsInk(b.dataset.spts);
+  renderTools(); setInksSay();
+});
 
 /* ---------------- safe by default: the folder ask on Home, going back in time, and updates she controls (stage 2) ---------------- */
 
@@ -22461,6 +22519,7 @@ function findRows() {
   add('Settings', 'Text size and zoom', 'Display', () => openDisplay());
   add('Settings', 'App language', 'English, Spanish or Traditional Chinese', () => go('#/settings/display'));
   add('Settings', 'Word papers', wordPdfAlways() ? 'Converted to PDF pages as each assignment opens' : 'Kept as Word files. They can be converted to PDF pages', () => go('#/settings/marking'));
+  add('Settings', 'Mark colors', 'Colors for ✗, checks and points', () => go('#/settings/marking'));
   add('Settings', 'Tablet and pencil', 'What a finger does on the paper, and pencil pressure', () => go('#/settings/marking'));
   add('Settings', 'All keys', 'Every keyboard shortcut', () => openKeys(), '?');
   for (const [k, t, sub] of SET_SECS) if (k !== 'saving' && k !== 'display' && k !== 'keys' && k !== 'history' && k !== 'about') add('Settings', t, sub, () => go(setHash(k)));
