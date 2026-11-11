@@ -1,10 +1,10 @@
 /* ---------------- rubric library: what each score means on each row, and saved rubrics to reuse ---------------- */
-// setup.levels[row][score] is her words for a whole score, 0 to 4. Old setups don't have it and look as they always did.
+// setup.levels[row][score] is her words for a whole score, 0 to the row's top (rowLevels, start.js). Old setups don't have it and look as they always did.
 // gs.rubrics: [{ id, name, criteria, levels, scale, at }]. It's under gs.*, so the take-home file, the folder and safety copies carry it. A rubric file she brought in isn't part of a saved rubric.
-const LEVELS = [4, 3, 2, 1, 0], levelsOpen = new Set(), levelEditOpen = new Set();
+const levelsOpen = new Set(), levelEditOpen = new Set();
 const levelIn = (d, i, v) => { const r = d.levels && d.levels[i]; return (r && r[v]) || ''; };
 const levelOf = (i, v) => levelIn(setup, i, v);
-const rowHasLevels = i => LEVELS.some(v => levelOf(i, v));
+const rowHasLevels = i => rowLevels(setup, i).some(v => levelOf(i, v));
 // A half point sits between two levels, so it shows both.
 function levelPick(i, v) {
   if (v == null) return '';
@@ -17,7 +17,7 @@ function levelsHtml(i, v) {
   if (!rowHasLevels(i)) return '';
   if (levelsOpen.has(i)) {
     const on = v == null ? [] : [Math.ceil(v), Math.floor(v)];
-    return '<div class="lvrow"><ul class="lvall">' + LEVELS.filter(w => levelOf(i, w)).map(w => '<li' + (on.includes(w) ? ' class="on"' : '') + '><b>' + w + '</b><span>' + esc(levelOf(i, w)) + '</span></li>').join('') + '</ul><button class="link lvbtn" data-lvopen="' + i + '" aria-expanded="true">Less</button></div>';
+    return '<div class="lvrow"><ul class="lvall">' + rowLevels(setup, i).filter(w => levelOf(i, w)).map(w => '<li' + (on.includes(w) ? ' class="on"' : '') + '><b>' + w + '</b><span>' + esc(levelOf(i, w)) + '</span></li>').join('') + '</ul><button class="link lvbtn" data-lvopen="' + i + '" aria-expanded="true">Less</button></div>';
   }
   return '<div class="lvrow" data-lvline="' + i + '"><div class="lvtxt" aria-live="polite">' + levelHint(i, v) + '</div><button class="link lvbtn" data-lvopen="' + i + '" aria-expanded="false" aria-label="See what every score means on this row">All</button></div>';
 }
@@ -62,15 +62,15 @@ async function leaveDlg() {
   closeDlg();
 }
 function levelsEditHtml(d, i) {
-  const n = LEVELS.filter(v => levelIn(d, i, v).trim()).length;
-  return '<details class="lved" data-lvrow="' + i + '"' + (levelEditOpen.has(i) ? ' open' : '') + '><summary>What each score means' + (n ? ' (' + n + ' of 5 written)' : '') + '</summary>' +
-    LEVELS.map(v => '<label class="lvin"><b>' + v + '</b><textarea rows="2" data-lvi="' + i + '" data-lvv="' + v + '" aria-label="What ' + v + ' means on this row">' + esc(levelIn(d, i, v)) + '</textarea></label>').join('') +
-    '<span class="muted lvnote">Leave any of these blank. A half point shows the two scores around it.</span></details>';
+  const lv = rowLevels(d, i), n = lv.filter(v => levelIn(d, i, v).trim()).length;
+  return '<details class="lved" data-lvrow="' + i + '"' + (levelEditOpen.has(i) ? ' open' : '') + '><summary>What each score means' + (n ? ' (' + n + ' of ' + lv.length + ' written)' : '') + '</summary>' +
+    lv.map(v => '<label class="lvin"><b>' + v + '</b><textarea rows="2" data-lvi="' + i + '" data-lvv="' + v + '" aria-label="What ' + v + ' means on this row">' + esc(levelIn(d, i, v)) + '</textarea></label>').join('') +
+    '<span class="muted lvnote">Leave any of these blank.' + (rowHalf(d) ? ' A half point shows the two scores around it.' : '') + '</span></details>';
 }
-function levelsRowGone(d, i) { if (d.levels) d.levels.splice(i, 1); goalsRowGone(d, i); rubDlg.from.splice(i, 1); levelEditOpen.clear(); }
+function levelsRowGone(d, i) { if (d.levels) d.levels.splice(i, 1); if (Array.isArray(d.tops)) d.tops.splice(i, 1); goalsRowGone(d, i); rubDlg.from.splice(i, 1); levelEditOpen.clear(); }
 // Only what she wrote is kept, and nothing at all if she wrote nothing, so an old setup stays as it was.
 function tidyLevels(d) {
-  const out = d.criteria.map((_, i) => { const r = {}; for (const v of LEVELS) { const t = levelIn(d, i, v).trim(); if (t) r[v] = t; } return r; });
+  const out = d.criteria.map((_, i) => { const r = {}; for (const v of rowLevels(d, i)) { const t = levelIn(d, i, v).trim(); if (t) r[v] = t; } return r; });
   return out.some(r => Object.keys(r).length) ? out : undefined;
 }
 const savedRubrics = () => { const a = store.get('gs.rubrics', []); return Array.isArray(a) ? a.filter(r => r && r.id && r.name && Array.isArray(r.criteria) && r.criteria.length) : []; };
@@ -132,7 +132,7 @@ const bankStamp = (h, id) => h.replace('id="' + id + '"', 'id="' + id + '" data-
 function bankRedraw() {
   if (!rubDlg || !$('#setupBody')) return;
   const d = rubDlg.draft, a = $('#rbBank'), b = $('#rbScales');
-  const nb = rubricLibHtml(d), ns = scaleBankHtml(d, d.mode === 'rubric' ? d.criteria.length * 4 : Math.round(+d.outOf || 0));
+  const nb = rubricLibHtml(d), ns = scaleBankHtml(d, draftMax(d));
   if (a && a.dataset.h !== /data-h="([^"]*)"/.exec(nb)[1]) a.outerHTML = nb;
   if (b && b.dataset.h !== /data-h="([^"]*)"/.exec(ns)[1]) b.outerHTML = ns;
 }
@@ -274,6 +274,10 @@ function setupSaveNote(d, page) {
   const S = batch.students, gone = rowsGone(), out = [], has = v => v !== '' && v != null;
   const nGone = S.filter(st => gone.some(i => st.grade.rubric[i] != null)).length;
   if (nGone) out.push((nGone === 1 ? '1 student has a score' : nGone + ' students have scores') + ' on ' + (gone.length === 1 ? 'the row' : 'the rows') + ' you took out. ' + (nGone === 1 ? 'That score goes' : 'Those scores go') + ' with ' + (gone.length === 1 ? 'the row' : 'the rows') + ', and ' + (nGone === 1 ? 'that total changes' : 'those totals change') + '. Every other score stays on its own row.');
+  if (d.mode === 'rubric') {   // the rows' scale changed under scores already given
+    const off = S.filter(st => d.criteria.some((_, i) => { const from = rubDlg.from[i], v = from == null ? null : st.grade.rubric[from]; return v != null && !rowSteps(d, i).includes(v); })).length;
+    if (off) out.push((off === 1 ? '1 student has a score' : off + ' students have scores') + ' that this scale doesn’t have: above a row’s top, or a half point. ' + (off === 1 ? 'It stays' : 'They stay') + ' as given, and still count, until you change ' + (off === 1 ? 'it' : 'them') + '.');
+  }
   if (d.mode !== setup.mode && d.mode !== rubDlg.told) {
     if (d.mode === 'points') {
       const n = S.filter(st => st.grade.rubric.some(v => v != null)).length;
@@ -302,7 +306,8 @@ function rowsTakenOut() {
 async function rubricUse(r) {
   const { draft: d, re } = rubDlg, note = rubricUseNote(r, d);
   if (note && !await askDlg('Use “' + r.name + '”?\n\n' + note, { ok: 'Use it', cancel: 'Keep what I have' })) return;
-  Object.assign(d, { mode: 'rubric', criteria: r.criteria.slice(), levels: r.levels ? JSON.parse(JSON.stringify(r.levels)) : undefined, goals: Array.isArray(r.goals) ? r.goals.slice() : undefined, scale: r.scale ? { ...r.scale } : null, rubricName: r.name });
+  for (const k of ['top', 'tops', 'half']) delete d[k];   // the saved rubric's own row scale, or 0 to 4 with halves when it says none
+  Object.assign(d, rowScaleOf(r), { mode: 'rubric', criteria: r.criteria.slice(), levels: r.levels ? JSON.parse(JSON.stringify(r.levels)) : undefined, goals: Array.isArray(r.goals) ? r.goals.slice() : undefined, scale: r.scale ? { ...r.scale } : null, rubricName: r.name });
   Object.assign(rubDlg, { from: r.criteria.map((_, i) => i), n0: r.criteria.length, told: 'rubric' });   // a saved rubric's rows go by place, and this has just said so
   levelEditOpen.clear(); re();
   toast('“' + r.name + '” is filled in. Press Save to keep it.');
@@ -314,7 +319,7 @@ async function rubricSaveNow() {
   if (!got || !got.name) return;
   const name = got.name, list = bankRubrics(), old = list.find(r => r.name.toLowerCase() === name.toLowerCase());
   if (old && !await askDlg('You already have a rubric called “' + old.name + '”. Replace it with this one?', { ok: 'Replace it', cancel: 'Keep the old one', danger: true })) return;
-  const r = { id: old ? old.id : uid(), name, criteria: d.criteria.map((c, i) => c.trim() || 'Criterion ' + (i + 1)), levels: tidyLevels(d), scale: d.scale ? { ...d.scale } : null, at: Date.now() };
+  const r = { id: old ? old.id : uid(), name, criteria: d.criteria.map((c, i) => c.trim() || 'Criterion ' + (i + 1)), levels: tidyLevels(d), scale: d.scale ? { ...d.scale } : null, ...rowScaleOf(d), at: Date.now() };
   const tags = goalsTidy(d); if (tags) r.goals = tags;   // a saved rubric keeps its rows' learning goals
   const unit = keyRef(got.key, old && old.unit); if (unit) r.unit = unit;
   const legacy = savedRubrics().filter(x => x.id !== r.id && x.name.toLowerCase() !== name.toLowerCase()); legacy.push(r); legacy.sort((a, b) => natural(a.name, b.name));
@@ -336,7 +341,7 @@ async function rubricDeleteNow(r) {
 }
 function scaleSave() { return bankJob(() => scaleSaveNow()); }
 async function scaleSaveNow() {
-  const { draft: d, re } = rubDlg, max = d.mode === 'rubric' ? d.criteria.length * 4 : Math.round(+d.outOf || 0);
+  const { draft: d, re } = rubDlg, max = draftMax(d);
   const got = await askSaveDlg('Save this grading scale to the bank (top score ' + max + ')', 'Out of ' + max, rubDlg.bankKey && rubDlg.bankKey !== '*' ? rubDlg.bankKey : defaultUnitKey());
   if (!got || !got.name) return;
   const old = bankScales().find(s => s.name.toLowerCase() === got.name.toLowerCase());
@@ -414,7 +419,7 @@ function classStats() {
   if (setup.mode === 'rubric') {
     s.rows = setup.criteria.map((name, r) => {
       const v = batch.students.map(st => st.grade.outAvg ? null : rowShown(st, r)).filter(x => x != null);
-      return { r, name, n: v.length, avg: v.length ? mean(v) : null, low: v.filter(x => x <= 2).length };
+      const top = rowTop(setup, r); return { r, name, top, n: v.length, avg: v.length ? mean(v) : null, low: v.filter(x => x <= top / 2).length };
     }).sort((a, b) => (a.avg == null ? 9 : a.avg) - (b.avg == null ? 9 : b.avg) || a.r - b.r);
     const av = s.rows.filter(x => x.n).map(x => x.avg), least = Math.min(...av);
     for (const x of s.rows) x.lowest = x.n > 0 && x.avg === least && av.some(a => a !== least);
@@ -454,14 +459,14 @@ function spreadHtml(s) {
 function rowsHtml(s) {
   if (setup.mode !== 'rubric') return '<p class="muted">This assignment is scored with just a total, so there are no rows to compare.</p>';
   if (!s.rows.some(x => x.n)) return '<p class="muted">No rubric rows scored yet.</p>';
-  const nPart = s.partial.length, notes = ['Average out of 4, lowest first. It uses every row with a score' + (nPart ? ', including the scored rows on ' + (nPart === 1 ? '1 partial paper' : nPart + ' partial papers') : '') + '.'];
+  const nPart = s.partial.length, oneTop = rowsTop(setup), notes = ['Average out of ' + (oneTop || 'each row’s top') + ', lowest first. It uses every row with a score' + (nPart ? ', including the scored rows on ' + (nPart === 1 ? '1 partial paper' : nPart + ' partial papers') : '') + '.'];
   if (s.missing.length || s.excused.length) notes.push('Missing and excused students aren’t in it.');
   if (s.nRowless) notes.push((s.nRowless === 1 ? '1 score' : s.nRowless + ' scores') + ' read from the paper ' + (s.nRowless === 1 ? 'has' : 'have') + ' no rows, so ' + (s.nRowless === 1 ? 'it isn’t' : 'they aren’t') + ' here.');
   return '<div class="ovrows" role="group" aria-label="Rubric rows, lowest average first">' + s.rows.map(x => {
-    const sum = x.n ? people(x.n, 'score') + ', ' + x.low + ' at 2 or less' : 'No scores yet', tip = x.n ? oneDp(x.avg) + ' average' : 'No scores yet';
+    const sum = x.n ? people(x.n, 'score') + ', ' + x.low + ' at ' + fmtNum(x.top / 2) + ' or less' : 'No scores yet', tip = x.n ? oneDp(x.avg) + ' average' + (oneTop ? '' : ' out of ' + x.top) : 'No scores yet', w = 100 / x.top;
     return '<div class="ovr"' + (x.n ? ' tabindex="0"' : '') + ' aria-label="' + esc(x.name + ': ' + tip + '. ' + sum) + '" data-tv="' + esc(tip) + '" data-tl="' + esc(x.name) + '" data-tn="' + esc(sum) + '">' +
       '<div class="ovrn"><span>' + esc(x.name) + '</span>' + (x.lowest ? ' <span class="stag">lowest</span>' : '') + '</div>' +
-      '<div class="ovrt">' + [1, 2, 3].map(t => '<i style="left:' + t * 25 + '%"></i>').join('') + (x.n ? '<div class="ovrb' + (x.lowest ? ' on' : '') + '" style="width:' + x.avg * 25 + '%"></div>' : '') + '<span class="ovrv" style="left:' + (x.n ? x.avg * 25 : 0) + '%">' + (x.n ? oneDp(x.avg) : '–') + '</span></div>' +
+      '<div class="ovrt">' + Array.from({ length: x.top - 1 }, (_, t) => '<i style="left:' + (t + 1) * w + '%"></i>').join('') + (x.n ? '<div class="ovrb' + (x.lowest ? ' on' : '') + '" style="width:' + Math.min(100, x.avg * w) + '%"></div>' : '') + '<span class="ovrv" style="left:' + (x.n ? Math.min(100, x.avg * w) : 0) + '%">' + (x.n ? oneDp(x.avg) : '–') + '</span></div>' +
       '<div class="muted ovrs">' + sum + '</div></div>';
   }).join('') + '</div><div class="ovrx" aria-hidden="true"><span></span><div>' + [0, 1, 2, 3, 4].map(t => '<span style="left:' + t * 25 + '%">' + t + '</span>').join('') + '</div><span></span></div><p class="muted ovcap2">' + notes.join(' ') + '</p>';
 }

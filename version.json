@@ -1,13 +1,12 @@
 {
- "version": "1.26.0",
- "build": "adda5671e3f2",
+ "version": "1.26.2",
+ "build": "261ddc5ebc10",
  "notes": [
-  "Seating: a new tab on each class. Pick how the room is set up, drag students to desks, and Shuffle gives everyone a new seat. A student can be kept in their seat.",
-  "Pick a name shows one student at random, and nobody twice until everyone has had a turn. Make groups deals the class into groups of any size.",
-  "While presenting a lesson, P picks a name and G makes groups. Who’s here leaves out anyone who is away today."
+  "Rubric rows can be scored on your own scale. They start at 0 to 4 with half points, as before; when you set up an assignment you can pick any top from 1 to 10 and turn half points off.",
+  "Settings, Grading: choose the row scale new assignments start with. Assignments you already have keep theirs."
  ],
  "files": {
-  "index.html": "fde5952fdd52b35d9835e06397123ef2861bd64c2061e8997eede31a8f322202",
-  "planner.html": "fe53d18204d3a18cf8ee039c166ec1d45538e0c5229da8b6c7ece20466b12fb0"
+  "index.html": "4a68bc09f7fba10613c35f4d86af3893cc45af6e069685630ffe3a467204d9a7",
+  "planner.html": "ec22e76fc32a3dfd387a1c1e75a98b4795ba11e99261499a84a2bb23c1d3728c"
  }
 }

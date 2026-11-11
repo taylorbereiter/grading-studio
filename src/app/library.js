@@ -52,12 +52,13 @@ const GRADE_WAYS = [
   ['ib7', 'IB 1 to 7', '1 to 7, worked out from the percent. You set the boundaries for your subject.', { mode: 'points', criteria: ['Criterion 1', 'Criterion 2', 'Criterion 3'], outOf: 100, scale: null }, [[85, '7'], [70, '6'], [55, '5'], [40, '4'], [25, '3'], [10, '2'], [0, '1']]],
 ];
 const gradeWay = k => GRADE_WAYS.find(w => w[0] === k) || null;
-// What me() says about grading, tidied: { way, setup, bands }. No answer (a browser from before): null, and the old default stands.
+// What me() says about grading, tidied: { way, setup, bands }. setup can carry a row scale of the teacher's own (top, tops, half: start.js);
+// with none, a rubric row is 0 to 4 with half points. No answer (a browser from before): null, and the old default stands.
 function meGrade() {
   const g = me().grade; if (!g || typeof g !== 'object') return null;
   const w = gradeWay(g.way) || GRADE_WAYS[0], su = g.setup && typeof g.setup === 'object' ? g.setup : w[3];
   const bands = Array.isArray(g.bands) ? g.bands.filter(b => Array.isArray(b) && isFinite(+b[0]) && String(b[1] || '').trim()).map(b => [+b[0], String(b[1]).trim().slice(0, 12)]).sort((a, b) => b[0] - a[0]) : null;
-  return { way: w[0], setup: { mode: su.mode === 'points' ? 'points' : 'rubric', criteria: Array.isArray(su.criteria) && su.criteria.length ? su.criteria.map(String) : w[3].criteria.slice(), outOf: +su.outOf || w[3].outOf, scale: su.scale && typeof su.scale === 'object' ? su.scale : null }, bands: bands && bands.length ? bands : null };
+  return { way: w[0], setup: { mode: su.mode === 'points' ? 'points' : 'rubric', criteria: Array.isArray(su.criteria) && su.criteria.length ? su.criteria.map(String) : w[3].criteria.slice(), outOf: +su.outOf || w[3].outOf, scale: su.scale && typeof su.scale === 'object' ? su.scale : null, ...rowScaleOf(su) }, bands: bands && bands.length ? bands : null };
 }
 const DEFAULT_SETUP_OLD = { ...DEFAULT_SETUP };
 // Makes DEFAULT_SETUP this teacher's own. Called once their answer is read, and again when they change it.

@@ -121,9 +121,10 @@ function stampData(prev, data, dev, now, seen) {
 // What in a rubric decides a total or a percent: how many rows or points, and the grading scale when its top score is the total possible. A row's name and what each score means don't.
 // A setup too old to mention a scale has the usual one. One that says null chose No scale, and its percents are the plain share.
 function rubricKey(su) {
-  const s = su || {}, pts = s.mode === 'points', max = pts ? +(s.outOf == null ? 10 : s.outOf) || 0 : (s.criteria ? s.criteria.length : 3) * 4, sc = s.scale === undefined ? SCALE12 : s.scale || {};
+  const s = su || {}, pts = s.mode === 'points', max = pts ? +(s.outOf == null ? 10 : s.outOf) || 0 : (!s.criteria ? 12 : typeof rowsMax === 'function' ? rowsMax(s) : s.criteria.length * 4), sc   /* this file also runs on its own in tests, where a row is always 0 to 4 */ = s.scale === undefined ? SCALE12 : s.scale || {};
   const keys = Object.keys(sc).filter(k => sc[k] !== '' && sc[k] != null && !isNaN(+sc[k])).map(Number).sort((a, b) => a - b);
-  return JSON.stringify([pts, max, keys.length >= 2 && keys[keys.length - 1] === max ? keys.map(k => [k, +sc[k]]) : 0]);
+  const own = pts || typeof rowScaleOf !== 'function' ? {} : rowScaleOf(s);   // rows scored on another scale than 0 to 4 with halves: a different rubric, even when the total is the same
+  return JSON.stringify([pts, max, keys.length >= 2 && keys[keys.length - 1] === max ? keys.map(k => [k, +sc[k]]) : 0].concat(Object.keys(own).length ? [own] : []));
 }
 const rubricsDiffer = (x, y) => rubricKey(x) !== rubricKey(y);
 // Has this work got a score that another rubric would show differently? Missing and excused have no number.
