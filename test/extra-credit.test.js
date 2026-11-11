@@ -32,9 +32,23 @@ test('extra credit on one paper goes on top of the score, read on the scale firs
   await page.waitForFunction(() => !document.querySelector('#xcIn'));
   const after = await page.evaluate(() => { const G = window.__gs, s = G.state().batch.students[0]; return { g: G.gradeOf(s), xc: s.grade.xc }; });
   assert.equal(after.xc, undefined); assert.equal(after.g.total, 10.5); assert.equal(after.g.pct, 93);
+  // As a percent instead: 5 percentage points on the paper's 93%, and the total grows by 5% of 12.
+  await pick(page, '[data-gxc]'); await page.waitForSelector('#xcIn');
+  await page.click('[data-xcu="pct"]');
+  await page.type('#xcIn', '5');
+  await page.waitForFunction(() => /98%/.test(document.querySelector('#grade .total').textContent));
+  const pc = await page.evaluate(() => { const G = window.__gs, s = G.state().batch.students[0]; return { g: G.gradeOf(s), xc: s.grade.xc, u: s.grade.xcU }; });
+  assert.deepEqual([pc.xc, pc.u, pc.g.pct, pc.g.total], [5, 'pct', 98, 11.1]);
+  assert.match(await page.$eval('#grade .total', e => e.textContent), /10\.5 earned \+ 5% extra credit/);
+  // Back to points: the 5 now means 5 points.
+  await page.click('[data-xcu="pts"]');
+  assert.equal(await page.evaluate(() => window.__gs.gradeOf(window.__gs.state().batch.students[0]).total), 15.5);
+  await page.click('[data-xcoff]');
   // Saved work read back (the gradebook, Today, past work) adds it the same way: 18/20 = 90%, plus 3 extra is 105%.
   const past = await page.evaluate(() => window.__gs.pastScore({ mode: 'points', criteria: [], outOf: 20 }, { points: '18', xc: 3 }));
   assert.equal(past.total, 21); assert.equal(past.pct, 105); assert.equal(past.base, 18);
+  const pastPct = await page.evaluate(() => window.__gs.pastScore({ mode: 'points', criteria: [], outOf: 20 }, { points: '18', xc: 4, xcU: 'pct' }));
+  assert.equal(pastPct.pct, 94); assert.equal(pastPct.total, 18.8);
   noErrors(page); await close();
 });
 

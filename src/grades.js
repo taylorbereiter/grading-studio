@@ -53,13 +53,20 @@ function statusHtml(st, plain) {
     (out && !noScore(st) && !plain ? '<p class="outnote">Left out of the average. <button class="link" data-outoff>Count it again</button></p>' : '') + (plain ? '' : xcHtml(st)) + '</div>';
 }
 /* ---------------- extra credit on one paper ---------------- */
-// st.grade.xc: points on top of the score (half points, like any score). It shows as its own line under the score so it's never mistaken
+// st.grade.xc: points on top of the score (half points, like any score), or with st.grade.xcU 'pct' percentage points on its percent. It shows as its own line under the score so it's never mistaken
 // for what the paper earned; gradeOf adds it in (start.js addXc). xcOpen: the paper whose box is open before it has any extra credit.
-let xcOpen = null;
+let xcOpen = null, xcUnit = store.get('gs.xcU', 'pts') === 'pct' ? 'pct' : 'pts';   // the last unit picked, on this computer, for the next paper
+// Points or %: the number stays, what it means changes.
+function xcUnitSet(st, u) {
+  xcUnit = u; store.set('gs.xcU', u);
+  if (st.grade.xc) { if (u === 'pct') st.grade.xcU = 'pct'; else delete st.grade.xcU; touchGrade(st); saveSoon(); renderList(); }
+  renderGrade();
+}
 function xcHtml(st) {
   const v = +st.grade.xc || 0;
   if (noScore(st) || (!v && xcOpen !== st)) return '';
-  return '<p class="xcnote" id="xcNote"><label>Extra credit <input type="number" id="xcIn" step="0.5" min="0" value="' + (v ? fmtNum(v) : '') + '" aria-label="Extra credit points"></label><span>points</span><span class="sp"></span><button class="link" data-xcoff>Remove</button></p>';
+  const u = st.grade.xc ? (st.grade.xcU === 'pct' ? 'pct' : 'pts') : xcUnit;
+  return '<p class="xcnote" id="xcNote"><label>Extra credit <input type="number" id="xcIn" step="0.5" min="0" value="' + (v ? fmtNum(v) : '') + '" aria-label="Extra credit ' + (u === 'pct' ? 'percent' : 'points') + '"></label><span class="pseg sm" role="group" aria-label="Extra credit in">' + [['pts', 'points'], ['pct', '%']].map(([k, l]) => '<button data-xcu="' + k + '" aria-pressed="' + (u === k) + '">' + l + '</button>').join('') + '</span><span class="sp"></span><button class="link" data-xcoff>Remove</button></p>';
 }
 function xcStart(st) {
   xcOpen = st; const gs = $('#gstat'); if (gs) gs.outerHTML = statusHtml(st);
@@ -68,7 +75,8 @@ function xcStart(st) {
 function xcSet(st, raw, redraw) {
   const v = raw === '' || raw == null || isNaN(+raw) ? 0 : Math.max(0, Math.round(+raw * 2) / 2);
   if ((+st.grade.xc || 0) === v) { if (redraw) { if (!v) xcOpen = null; renderGrade(); } return; }
-  if (v) st.grade.xc = v; else { delete st.grade.xc; if (redraw) xcOpen = null; }
+  if (v) { if (!(+st.grade.xc > 0)) { if (xcUnit === 'pct') st.grade.xcU = 'pct'; else delete st.grade.xcU; } st.grade.xc = v; }   // a new one takes the unit showing
+  else { delete st.grade.xc; delete st.grade.xcU; if (redraw) xcOpen = null; }
   touchGrade(st); saveSoon(); renderList();
   if (redraw) renderGrade(); else { const t = $('#grade .total'); if (t) t.innerHTML = totalHtml(st); }
 }

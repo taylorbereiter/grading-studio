@@ -3481,11 +3481,12 @@ function percentWith(total, max, sc) {
 }
 function gradeOf(st) {
   if (noScore(st)) return { total: null, pct: null, done: true, status: st.grade.status };   // missing or excused: settled, with no number
-  const g0 = scoreOf(st), g = addXc(g0, st.grade.xc, g0.outOf != null ? g0.outOf : maxPoints()), r = st.grade.status === 'late' ? { ...g, status: 'late' } : g;
+  const g0 = scoreOf(st), g = addXc(g0, st.grade.xc, g0.outOf != null ? g0.outOf : maxPoints(), st.grade.xcU), r = st.grade.status === 'late' ? { ...g, status: 'late' } : g;
   return st.grade.outAvg ? { ...r, out: true } : r;   // left out of the average: the score stays and copies, it just isn't counted
 }
-function addXc(r, xc, max) {
+function addXc(r, xc, max, unit) {
   xc = +xc; if (!xc || isNaN(xc) || r.total == null) return r;
+  if (unit === 'pct') return { ...r, total: max ? r.total + Math.round(xc * max) / 100 : r.total, base: r.total, xc, xcU: 'pct', pct: r.pct == null ? r.pct : roundPct(r.pct + xc) };
   return { ...r, total: r.total + xc, base: r.total, xc, pct: r.pct == null || !max ? r.pct : roundPct(r.pct + xc / max * 100) };
 }
 function scoreOf(st) {
@@ -5192,7 +5193,7 @@ function totalHtml(st) {
   const gr = gradeOf(st), own = ownGrade(st);
   if (noScore(st)) return '<b>' + STATUS_LABEL[gr.status] + '</b><span style="width:100%;font-size:12.5px">No score counts. Giving a score takes this off.</span>';
   let h = '<b>' + (gr.total == null ? '–' : fmtNum(gr.total)) + '</b><span>/ ' + (gr.outOf != null ? fmtNum(gr.outOf) : maxPoints()) + '</span><span class="pc">' + (gr.pct == null ? '' : fmtPct(gr.pct) + bandSay(gr.pct)) + '</span>';
-  if (gr.xc) h += '<span class="xcsay" style="width:100%">' + fmtNum(gr.base) + ' earned + ' + fmtNum(gr.xc) + ' extra credit</span>';
+  if (gr.xc) h += '<span class="xcsay" style="width:100%">' + fmtNum(gr.base) + ' earned + ' + fmtNum(gr.xc) + (gr.xcU === 'pct' ? '%' : '') + ' extra credit</span>';
   if (gr.partial) h += '<span class="sc-warn" style="width:100%">Partial: ' + partNote(st) + '. This total isn’t final.</span>';
   if (gr.paper) h += '<span style="width:100%;font-size:12.5px">From the paper (Grade sheet)</span>';
   const ps = paperScore(st);
@@ -5217,6 +5218,7 @@ $('#grade').addEventListener('click', e => {
   const sb = e.target.closest('[data-status]'); if (sb) return setStatus(batch.students[cur], sb.dataset.status);
   if (e.target.closest('#outAvg, [data-outoff]')) return setOutAvg(batch.students[cur]);
   if (e.target.closest('[data-gxc]')) { kmClose(); return xcStart(batch.students[cur]); }
+  { const u = e.target.closest('[data-xcu]'); if (u) return xcUnitSet(batch.students[cur], u.dataset.xcu); }
   if (e.target.closest('[data-xcoff]')) return xcSet(batch.students[cur], 0, true);
   if (e.target.closest('#prevBtn')) stepStudent(-1);
   if (e.target.closest('#nextBtn')) stepStudent(1);
@@ -11301,11 +11303,17 @@ function statusHtml(st, plain) {
     (out && !noScore(st) && !plain ? '<p class="outnote">Left out of the average. <button class="link" data-outoff>Count it again</button></p>' : '') + (plain ? '' : xcHtml(st)) + '</div>';
 }
 /* ---------------- extra credit on one paper ---------------- */
-let xcOpen = null;
+let xcOpen = null, xcUnit = store.get('gs.xcU', 'pts') === 'pct' ? 'pct' : 'pts';   // the last unit picked, on this computer, for the next paper
+function xcUnitSet(st, u) {
+  xcUnit = u; store.set('gs.xcU', u);
+  if (st.grade.xc) { if (u === 'pct') st.grade.xcU = 'pct'; else delete st.grade.xcU; touchGrade(st); saveSoon(); renderList(); }
+  renderGrade();
+}
 function xcHtml(st) {
   const v = +st.grade.xc || 0;
   if (noScore(st) || (!v && xcOpen !== st)) return '';
-  return '<p class="xcnote" id="xcNote"><label>Extra credit <input type="number" id="xcIn" step="0.5" min="0" value="' + (v ? fmtNum(v) : '') + '" aria-label="Extra credit points"></label><span>points</span><span class="sp"></span><button class="link" data-xcoff>Remove</button></p>';
+  const u = st.grade.xc ? (st.grade.xcU === 'pct' ? 'pct' : 'pts') : xcUnit;
+  return '<p class="xcnote" id="xcNote"><label>Extra credit <input type="number" id="xcIn" step="0.5" min="0" value="' + (v ? fmtNum(v) : '') + '" aria-label="Extra credit ' + (u === 'pct' ? 'percent' : 'points') + '"></label><span class="pseg sm" role="group" aria-label="Extra credit in">' + [['pts', 'points'], ['pct', '%']].map(([k, l]) => '<button data-xcu="' + k + '" aria-pressed="' + (u === k) + '">' + l + '</button>').join('') + '</span><span class="sp"></span><button class="link" data-xcoff>Remove</button></p>';
 }
 function xcStart(st) {
   xcOpen = st; const gs = $('#gstat'); if (gs) gs.outerHTML = statusHtml(st);
@@ -11314,7 +11322,8 @@ function xcStart(st) {
 function xcSet(st, raw, redraw) {
   const v = raw === '' || raw == null || isNaN(+raw) ? 0 : Math.max(0, Math.round(+raw * 2) / 2);
   if ((+st.grade.xc || 0) === v) { if (redraw) { if (!v) xcOpen = null; renderGrade(); } return; }
-  if (v) st.grade.xc = v; else { delete st.grade.xc; if (redraw) xcOpen = null; }
+  if (v) { if (!(+st.grade.xc > 0)) { if (xcUnit === 'pct') st.grade.xcU = 'pct'; else delete st.grade.xcU; } st.grade.xc = v; }   // a new one takes the unit showing
+  else { delete st.grade.xc; delete st.grade.xcU; if (redraw) xcOpen = null; }
   touchGrade(st); saveSoon(); renderList();
   if (redraw) renderGrade(); else { const t = $('#grade .total'); if (t) t.innerHTML = totalHtml(st); }
 }
@@ -13891,7 +13900,7 @@ function pastScore(su, g) {
   if (total == null && hasSheet(g) && !isNaN(+g.sheet)) { total = +g.sheet; paper = true; }
   let pct = percentWith(total, max, s.scale);
   if (total == null && g.read) { const d = g.read; paper = true; total = d.score; if (d.outOf != null) max = d.outOf; pct = d.pct != null ? d.pct : percentWith(total, max, s.scale); }
-  return addXc({ total, max, pct, partial, paper, status: g.status || '', rows: rub ? s.criteria.map((c, i) => [c, r[i]]).filter(x => x[1] != null) : [] }, g.xc, max);
+  return addXc({ total, max, pct, partial, paper, status: g.status || '', rows: rub ? s.criteria.map((c, i) => [c, r[i]]).filter(x => x[1] != null) : [] }, g.xc, max, g.xcU);
 }
 function pastClass(d, m) {
   const f = m.asg && findItem(m.asg);

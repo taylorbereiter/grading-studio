@@ -87,14 +87,16 @@ function percentWith(total, max, sc) {
 }
 function gradeOf(st) {
   if (noScore(st)) return { total: null, pct: null, done: true, status: st.grade.status };   // missing or excused: settled, with no number
-  const g0 = scoreOf(st), g = addXc(g0, st.grade.xc, g0.outOf != null ? g0.outOf : maxPoints()), r = st.grade.status === 'late' ? { ...g, status: 'late' } : g;
+  const g0 = scoreOf(st), g = addXc(g0, st.grade.xc, g0.outOf != null ? g0.outOf : maxPoints(), st.grade.xcU), r = st.grade.status === 'late' ? { ...g, status: 'late' } : g;
   return st.grade.outAvg ? { ...r, out: true } : r;   // left out of the average: the score stays and copies, it just isn't counted
 }
 // Extra credit on one paper (grade.xc, in the assignment's own points) goes on top of the score. The score itself is still read on
 // the assignment's scale exactly as before; then each extra point adds its share of the total as percentage points. So 12/15 read as
 // 85% on a school's scale, plus 1 extra point, is 85 + 6.67 = 92% (13/15 on the paper). A score can go above 100% this way.
-function addXc(r, xc, max) {
+// unit 'pct' (grade.xcU): the extra credit is percentage points on the paper's percent instead, and the total grows by that share of the points.
+function addXc(r, xc, max, unit) {
   xc = +xc; if (!xc || isNaN(xc) || r.total == null) return r;
+  if (unit === 'pct') return { ...r, total: max ? r.total + Math.round(xc * max) / 100 : r.total, base: r.total, xc, xcU: 'pct', pct: r.pct == null ? r.pct : roundPct(r.pct + xc) };
   return { ...r, total: r.total + xc, base: r.total, xc, pct: r.pct == null || !max ? r.pct : roundPct(r.pct + xc / max * 100) };
 }
 function scoreOf(st) {
