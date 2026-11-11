@@ -63,10 +63,11 @@ function chCell(col, cell, who) {
   const tag = cell.partial ? ['P', 'partly scored'] : cell.out ? ['O', 'left out of the average'] : cell.st === 'late' ? ['L', 'late'] : null;
   return '<span class="chc ' + (bkCounts(cell) ? 'b' + chBand(cell.pct) : 'nc') + '"' + tip(cell.pct + '%', [cell.total != null ? fmtNum(cell.total) + ' / ' + fmtNum(cell.max) : '', tag ? tag[1] : ''].filter(Boolean).join(' · ')) + '>' + cell.pct + (tag ? '<sup>' + tag[0] + '</sup>' : '') + '</span>';
 }
-function bkHeat(c, cols, conf) {
+function bkHeat(c, all, conf) {
+  const cols = all.filter(x => x.type !== 'xc');   // extra credit has no score of its own: it shows in the grade, which is worked out from everything
   if (!cols.length || !c.names.length) return '';
   const sort = bk.sort && (bk.sort.k === 'name' || bk.sort.k === 'grade' || cols.some(x => x.key === bk.sort.k)) ? bk.sort : { k: 'grade', dir: -1 }, scol = cols.find(x => x.key === sort.k);
-  const rows = c.names.map((n, i) => ({ n, i, shown: bkWho(n, i), r: bkGrade(n, cols, conf) }));
+  const rows = c.names.map((n, i) => ({ n, i, shown: bkWho(n, i), r: bkGrade(n, all, conf) }));
   const val = row => {
     if (sort.k === 'name') return row.i;
     if (sort.k === 'grade') return row.r.grade;
@@ -198,11 +199,13 @@ function bkScatter(c, cols, conf) {
 
 /* ---------- one student ---------- */
 // Every assignment in date order, each as one block: scored, missing, late, or feedback given.
-function bkStrip(c, cols, n) {
+function bkStrip(c, all, n) {
+  const cols = all.filter(x => x.type !== 'xc' || x.cells.get(n));
   if (!cols.length) return '';
   return '<section class="chstripsec" id="bkStrip"><h3 class="ovh3">' + (bk.term === '*' || !bkConf().terms.length ? 'The year so far' : 'The term so far') + '</h3><div class="chstrip">' + cols.map(col => {
     const cell = col.cells.get(n); let cls = 'none', txt = 'Not scored yet';
-    if (cell && cell.st === 'missing') { cls = 'miss'; txt = 'Missing'; }
+    if (col.type === 'xc') { cls = 'xc'; txt = '+' + fmtNum(cell.xc) + ' extra'; }
+    else if (cell && cell.st === 'missing') { cls = 'miss'; txt = 'Missing'; }
     else if (cell && cell.st === 'excused') { cls = 'exc'; txt = 'Excused'; }
     else if (col.type === 'fm') { cls = 'fm'; txt = cell && cell.fb ? '✓ Feedback given' : cell && cell.started ? 'Started' : 'No feedback yet'; }
     else if (cell && cell.pct != null) { cls = bkCounts(cell) ? 'b' + chBand(cell.pct) : 'nc'; txt = cell.pct + '%' + (cell.partial ? ' · partial' : cell.out ? ' · left out' : cell.st === 'late' ? ' · late' : ''); }

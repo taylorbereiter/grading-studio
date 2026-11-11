@@ -1,5 +1,4 @@
-# Stage 4, one loop (part 1). Home is Today: the day as its title, teaching today, to mark, ready to hand back, what the
-# class needs next, and one dashed box for opening new work. The sidebar on every screen, grading and Planner, says Today
-# where it said Home, and the version line reads 1.7.0. A class page's rows are quiet: no blue button on a row, one line of
-# status, and a menu for the other ways in.
-*
+# Extra credit. The gradebook's toolbar has a "+ Extra credit" button beside "+ Add scores", and Settings, Terms and
+# weights, says where new extra credit goes and whether a grade may go over 100%.
+class-gradebook
+settings-terms
