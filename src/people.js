@@ -17,7 +17,7 @@ function infoHits(c, key) {
     const d = idDigits(i.id); return d.length >= 4 && nums.includes(d);
   });
 }
-const blankInfo = i => !i || (!i.id && !i.email && !(i.other || []).length && !(i.note || '').trim() && !i.call && !i.pro && !i.rep);   // call, pro, rep: report comments (reports.js)
+const blankInfo = i => !i || (!i.id && !i.email && !(i.other || []).length && !(i.note || '').trim() && !i.call && !i.pro && !i.rep && !i.nudge);   // call, pro, rep: report comments (reports.js); nudge: reminders (missing.js)
 function setInfo(c, n, patch) {
   c.info ||= {};
   const i = { ...c.info[n], ...patch };

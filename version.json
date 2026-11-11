@@ -1,12 +1,13 @@
 {
- "version": "1.20.0",
- "build": "9082b2a2a23f",
+ "version": "1.21.0",
+ "build": "0caed46cdc39",
  "notes": [
-  "The app can speak Traditional Chinese (繁體中文). Choose it in Settings, Display, App language, or at the top of the welcome.",
-  "Like Spanish, it covers the first screens so far: the sidebar, Today, the welcome, Find anything, Help, and the feedback page students get with a returned paper. The other screens are still in English."
+  "Each class has a Missing work tab: every paper you marked Missing, by student or by assignment, for the term you pick.",
+  "Email reminder opens an email in your own mail app, addressed to the student and listing what they owe, for you to read and send. Email all writes one email to everyone who owes an assignment, with the addresses in Bcc. Grading Studio sends nothing itself.",
+  "Each reminder you open is noted beside the work, and Email wording… changes what every reminder says."
  ],
  "files": {
-  "index.html": "3436faa0d8c7cf1080c0a8092a211f0eb1a811687dff798d2d31c69816d17462",
-  "planner.html": "bcf06d59fd469ef624812e97c8c1193e6134ca9961a5a715d60cbe333b4179b0"
+  "index.html": "38ae0445aead4f6554bb8cd9e3871a73d7a3cb3eb0b8f848a69abad6ad62d37d",
+  "planner.html": "6c43721848635ee51514acf7f784f91b9cf944bae543e1e053c84e449fa19ebb"
  }
 }

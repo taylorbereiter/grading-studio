@@ -131,6 +131,11 @@ const HELP = [
       'Change any of it, bring in what you wrote on their papers with **Add**, and press **Done, next student**. **Copy all** puts every comment on the clipboard for your report system.',
       'No AI writes the drafts and nothing is sent anywhere. **Wording…** lets you rewrite the sentences they are built from.'],
     words: 'report card term comment end of term narrative parents' },
+  { id: 'missing-work', sec: 'class', q: 'How do I remind students about missing work?',
+    a: ['Open a class and choose **Missing work**. It lists every paper you marked Missing, by student or by assignment, for the term you pick.',
+      '**Email reminder** opens an email in your own mail app, already addressed and listing what the student owes. Read it and send it yourself: Grading Studio sends nothing. **Email all** on an assignment writes one email with every address in Bcc.',
+      'Emails come from the Students tab. **Email wording…** changes what every reminder says.'],
+    words: 'late overdue not handed in owe chase nag email reminder parents' },
 
   { id: 'where-saved', sec: 'safe', q: 'Where is my work saved?',
     a: ['In this browser, on this computer, as you work. There is no save button and no account.', 'A browser can be cleared, so choose a folder as a second copy: Settings, **Saving and carrying**. Until then the sidebar says **Not backed up** in amber.',
