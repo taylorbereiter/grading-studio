@@ -3167,7 +3167,7 @@ SOFTWARE.
 <script>/* ---------------- saved-data versions: a safety copy, then any format changes, before the app starts ---------------- */
 const gsData = (() => {
   'use strict';
-  const APP_VERSION = "1.11.0";   // from package.json, the one place it's set
+  const APP_VERSION = "1.12.0";   // from package.json, the one place it's set
   const MIGRATIONS = [
   ];
   const DATA_V = Math.max(1, ...MIGRATIONS.map(s => s.to));
@@ -5587,7 +5587,7 @@ function exportPlan(keepFolders) {
   for (const o of out) { let p = o.path, k = 2; while (used.has(p.toLowerCase())) p = o.path.replace(/(\.[^./]+)?$/, ' (' + k++ + ')$1'); used.add(p.toLowerCase()); o.path = p; }
   return out;
 }
-async function flattenDoc(st, d, dpi, edit, key) {
+async function flattenDoc(st, d, dpi, edit, key, fb) {
   await workerReady;
   const srcs = new Map();
   const src = async path => {
@@ -5601,6 +5601,8 @@ async function flattenDoc(st, d, dpi, edit, key) {
   const out = await PDFLib.PDFDocument.create();
   out.setCreator('Grading Studio'); out.setProducer('Grading Studio');   // so a flattened file brought back in can say why its marks can't be changed
   try {
+    const said = fb ? fbData(st, d) : null;
+    if (said) { const [p0, n0] = d.pages[0], { f: f0, js: j0 } = await src(p0), v0 = vpRot(f0, n0, await j0.getPage(n0 + 1), 1); await fbAddPages(out, said, v0.width, v0.height, dpi); }
     for (const [path, p] of d.pages) {
       const { f, js, lib } = await src(path);
       const marks = (f.marks[p] || []).concat((f.kami && f.kami[p] && f.kami[p].notes) || []);
@@ -5686,6 +5688,7 @@ async function openExport() {
           '<label class="chk"><input type="checkbox" id="xSheet" checked> Add the grade sheet (a crop of each typed grade, in ' + listOrder() + ')</label>' +
           '<label class="chk"><input type="checkbox" id="xEdit"' + (xEdit() ? ' checked' : '') + '> Keep marks editable</label><p class="xhint">Bring a file back in later and change its marks. Files are about twice as big.</p>' +
           '<label class="chk"><input type="checkbox" id="xKey"' + (keyOn() ? ' checked' : '') + '> Add a key to the marks used on each paper</label><p class="xhint">' + (!nKey ? 'No file has proofreading marks yet. ' : nKey === plan.length ? (nKey === 1 ? 'The file gets one. ' : 'All ' + nKey + ' files get one. ') : nKey + ' of the ' + plan.length + ' files ' + (nKey === 1 ? 'gets' : 'get') + ' one. ') + '<button class="link" data-mkey>Change what they mean…</button></p>' +
+          '<label class="chk"><input type="checkbox" id="xFb"' + (fbOn() ? ' checked' : '') + '> Put a feedback page in front of each paper</label><p class="xhint">The score, each rubric row with what its level means, your comment, and the comments on the paper with their page numbers.</p>' +
           allBox +
           '<div class="chk" style="cursor:default">Sharpness <span class="seg" id="xDpi"><button data-dpi="150" aria-pressed="true">Standard</button><button data-dpi="220" aria-pressed="false">Extra sharp</button></span></div>' +
         '</details>' +
@@ -5700,13 +5703,14 @@ async function openExport() {
     if ($('#xSheet').checked) on.push('grade sheet');
     if ($('#xEdit').checked) on.push('marks stay editable');
     if ($('#xKey').checked) on.push('mark key');
+    if ($('#xFb').checked) on.push('feedback page');
     if (xAll()) on.push('files with no marks too');
     if (dpi > 150) on.push('extra sharp');
     el.textContent = on.length ? on.join(', ') : 'none';
   };
   optsSay();
   const xo = $('#xOpts'); if (xo) xo.ontoggle = () => store.set('gs.xopts', xo.open);
-  box.onchange = e => { optsSay(); if (e.target.id === 'xEdit') store.set('gs.xedit', e.target.checked); if (e.target.id === 'xKey') setKey(v => { v.on = e.target.checked; }); if (e.target.id === 'xAll') { store.set('gs.xall', e.target.checked); renderTools(); openExport(); } };
+  box.onchange = e => { optsSay(); if (e.target.id === 'xEdit') store.set('gs.xedit', e.target.checked); if (e.target.id === 'xKey') setKey(v => { v.on = e.target.checked; }); if (e.target.id === 'xFb') store.set('gs.xfb', e.target.checked); if (e.target.id === 'xAll') { store.set('gs.xall', e.target.checked); renderTools(); openExport(); } };
   box.onclick = async e => {
     if (e.target.closest('[data-close]')) return closeDlg();
     const ck = e.target.closest('[data-chk]'); if (ck) { return toPaper(+ck.dataset.chk, ck.dataset.file || undefined); }
@@ -5718,7 +5722,7 @@ async function openExport() {
     const go = e.target.closest('[data-go]'); if (!go) return;
     if (xBusy) return toast('The last export is still going. It will say when it’s done.');
     keep = $('#xKeep').checked;
-    const withSheet = $('#xSheet').checked, editable = $('#xEdit').checked, withKey = $('#xKey').checked;
+    const withSheet = $('#xSheet').checked, editable = $('#xEdit').checked, withKey = $('#xKey').checked, withFb = $('#xFb').checked, fbGiven = new Set();   // one feedback page a student, on the first of their files
     const say = (t, last) => { const el = $('#xStatus'); if (el) el.textContent = t; else if (last) toast(t, 6000); };
     let dir = null;
     if (go.dataset.go === 'dir') {
@@ -5753,7 +5757,7 @@ async function openExport() {
       for (let i = 0; i < items.length; i++) {
         say('Baking in marks ' + (i + 1) + ' of ' + items.length + '…');
         bar.firstChild.style.width = (30 + 70 * i / items.length) + '%';
-        if (await putOut(items[i].path, () => items[i].raw ? items[i].f.data : flattenDoc(items[i].st, items[i].d, dpi, editable, withKey), items[i].st)) nOut++;
+        if (await putOut(items[i].path, () => items[i].raw ? items[i].f.data : flattenDoc(items[i].st, items[i].d, dpi, editable, withKey, withFb && !fbGiven.has(items[i].st) && !!fbGiven.add(items[i].st)), items[i].st)) nOut++;
       }
       await unopenable(failed);
       bar.firstChild.style.width = '100%';
@@ -5799,12 +5803,13 @@ async function exportOne(st) {
   if (!items.length) { renderGrade(); return toast('Nothing on ' + who + ' is marked yet. Mark it, then export.'); }
   xBusy = true; if (btn) btn.disabled = true;
   const files = {}, failed = [];
+  let fbGiven = false;
   try {
     for (let i = 0; i < items.length; i++) {
       say(items.length > 1 ? 'Baking in marks ' + (i + 1) + ' of ' + items.length + '…' : 'Baking in marks…');
       const o = items[i];
       const base = o.path.split('/').pop(), name = base.includes(st.key) ? base : st.key + ' - ' + base;   // her own download names each file for its student
-      try { files[name] = o.raw ? o.f.data : await flattenDoc(st, o.d, 150, xEdit(), keyOn()); }
+      try { files[name] = o.raw ? o.f.data : await flattenDoc(st, o.d, 150, xEdit(), keyOn(), fbOn() && !fbGiven && (fbGiven = true)); }
       catch (er) { console.error(o.path, er); failed.push({ path: o.path, st, why: exportWhy(er, false) }); }
     }
     const names = Object.keys(files);
@@ -11882,6 +11887,152 @@ function exportReport(failed) {
   $('#xStatus').insertAdjacentHTML('afterend', '<div class="xfails" id="xFails" role="alert"><b>' + n + (n === 1 ? ' file isn’t' : ' files aren’t') + ' in this export:</b><ul>' +
     failed.map(x => '<li><b>' + esc(anon && x.st ? shownName(x.st, batch.students.indexOf(x.st)) : x.path) + '</b>: ' + esc(anon ? x.why.replace(/ \(.*$/s, '') : x.why) + '</li>').join('') + '</ul></div>');
 }
+
+/* ---------------- the feedback page: the first page of a returned paper ----------------
+   What the student reads first: the score, each rubric row with the level given and what that level means, the teacher's
+   comment, and every comment written on the paper with the page it is on. It is drawn when the paper is exported, from
+   what is already saved. Nothing new is stored but the choice to add it (gs.xfb), and bringing an editable export back
+   in rebuilds from the original pages, so the feedback page never comes back as a page of the paper. */
+const fbOn = () => store.get('gs.xfb', true) !== false;
+const FB_INK = '#1E2024', FB_INK2 = '#3F444C', FB_MUTED = '#5C616A', FB_LINE = '#E4E6EA', FB_BLUE = '#1F6FB2', FB_SOFT = '#E6F0F8';
+
+function fbData(st, d) {
+  const g = gradeOf(st), rub = setup.mode === 'rubric', c = batchClass();
+  const rows = rub ? setup.criteria.map((name, i) => { const v = st.grade.rubric[i]; return v == null ? null : { name, v, text: ((setup.levels && setup.levels[i] && setup.levels[i][Math.floor(v)]) || '').trim() }; }).filter(Boolean) : [];
+  const notes = [];
+  d.pages.forEach(([path, p], k) => {
+    const f = fileByPath(st, path); if (!f) return;
+    const all = (f.marks[p] || []).concat((f.kami && f.kami[p] && f.kami[p].notes) || []).filter(m => m.t === 'note' && (m.text || '').trim());
+    const numbered = all.filter(n => n.hl).sort((a, b) => a.ay - b.ay || a.ax - b.ax);   // the numbers the page itself shows
+    for (const n of [...all].sort((a, b) => a.ay - b.ay || a.ax - b.ax)) notes.push({ n: numbered.indexOf(n) + 1, text: n.text.trim(), color: n.color, page: k });
+  });
+  const comment = (st.grade.comment || '').trim(), scored = g.total != null && !g.partial;
+  if (!scored && !rows.length && !comment && !notes.length) return null;
+  const rn = rosterNames(), who = rn.get(st) || st.key;   // the paper goes back to its student, so it carries their name even while she marks with names hidden
+  return { title: (batch.assignment && batch.assignment.name) || batch.name, sub: [who, c && c.name, 'returned ' + fmtDay(Date.now())].filter(Boolean).join(' · '),
+    total: scored ? g.total : null, max: g.outOf != null ? g.outOf : maxPoints(), pct: scored ? g.pct : null, status: g.status ? STATUS_LABEL[g.status] : '', rows, comment, notes };
+}
+
+function fbBlocks(ctx, data, W, M, off) {
+  const UI = 'Inter, ' + FONT, cw = W - 2 * M, out = [];
+  const wrap = (t, font, w) => {
+    ctx.font = font; const lines = [];
+    for (const para of String(t).split(/\n/)) {
+      let line = '';
+      for (let word of para.split(/\s+/).filter(Boolean)) {
+        while (ctx.measureText(word).width > w) { let k = word.length - 1; while (k > 1 && ctx.measureText(word.slice(0, k)).width > w) k--; if (line) { lines.push(line); line = ''; } lines.push(word.slice(0, k)); word = word.slice(k); }   // a word longer than the line
+        const t2 = line ? line + ' ' + word : word;
+        if (line && ctx.measureText(t2).width > w) { lines.push(line); line = word; } else line = t2;
+      }
+      lines.push(line);
+    }
+    while (lines.length > 1 && !lines[lines.length - 1]) lines.pop();
+    return lines;
+  };
+  const text = (lines, font, color, x, y, lh) => { ctx.font = font; ctx.fillStyle = color; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic'; lines.forEach((l, i) => ctx.fillText(l, x, y + i * lh)); };
+  const cap = t => out.push({ h: 34, draw: y => { ctx.font = '600 8.5px ' + UI; ctx.fillStyle = FB_MUTED; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic'; try { ctx.letterSpacing = '0.9px'; } catch { } ctx.fillText(t.toUpperCase(), M, y + 26); try { ctx.letterSpacing = '0px'; } catch { } } });
+
+  const big = data.total != null ? fmtNum(data.total) : '', of = data.total != null && data.max ? ' / ' + fmtNum(data.max) : '';
+  ctx.font = '700 28px ' + UI; const bw = ctx.measureText(big).width; ctx.font = '13px ' + UI; const ow = ctx.measureText(of).width;
+  const sw = big ? Math.max(bw + ow, 64) + 18 : data.status ? 110 : 0;
+  const tl = wrap(data.title, '700 19px ' + UI, cw - sw), sl = wrap(data.sub, '11.5px ' + UI, cw - sw);
+  const hh = Math.max(tl.length * 24 + sl.length * 16 + 6, big ? 56 : 0) + 14;
+  out.push({ h: hh + 4, draw: y => {
+    text(tl, '700 19px ' + UI, FB_INK, M, y + 20, 24);
+    text(sl, '11.5px ' + UI, FB_MUTED, M, y + 20 + (tl.length - 1) * 24 + 20, 16);
+    ctx.textAlign = 'right';
+    if (big) {
+      ctx.font = '13px ' + UI; ctx.fillStyle = FB_MUTED; ctx.fillText(of, M + cw, y + 24);
+      ctx.font = '700 28px ' + UI; ctx.fillStyle = FB_INK; ctx.fillText(big, M + cw - ow, y + 24);
+      if (data.pct != null) { ctx.font = '700 14px ' + UI; ctx.fillStyle = FB_BLUE; ctx.fillText(data.pct + '%', M + cw, y + 44); }
+      if (data.status) { ctx.font = '11px ' + UI; ctx.fillStyle = FB_MUTED; ctx.fillText(data.status, M + cw, y + (data.pct != null ? 59 : 44)); }
+    } else if (data.status) { ctx.font = '600 13px ' + UI; ctx.fillStyle = FB_MUTED; ctx.fillText(data.status, M + cw, y + 20); }
+    ctx.textAlign = 'left'; ctx.fillStyle = FB_INK; ctx.fillRect(M, y + hh - 1, cw, 1.2);
+  } });
+
+  if (data.rows.length) {
+    cap('How it was scored');
+    const nameW = Math.min(132, Math.round(cw * 0.25)), barW = 96, tx = M + nameW + barW + 14, tw = cw - nameW - barW - 14, any = data.rows.some(r => r.text);
+    out.push({ h: 1, draw: y => { ctx.fillStyle = FB_LINE; ctx.fillRect(M, y, cw, 1); } });
+    for (const r of data.rows) {
+      const nl = wrap(r.name, '600 12.5px ' + UI, (any ? nameW : cw - barW - 14) - 10), dl = r.text ? wrap(r.text, '11.5px ' + UI, tw) : [];
+      const h = Math.max(nl.length * 16, dl.length * 16, 30) + 18, bx = any ? M + nameW : M + cw - barW;
+      out.push({ h, draw: y => {
+        text(nl, '600 12.5px ' + UI, FB_INK, M, y + 21, 16);
+        text([fmtNum(r.v) + ' of 4'], '600 12px ' + UI, FB_BLUE, bx, y + 21, 16);
+        for (let k = 0; k < 4; k++) {   // four segments; a half point fills half of one
+          const x = bx + k * 23, fill = Math.max(0, Math.min(1, r.v - k));
+          ctx.fillStyle = FB_LINE; ctx.fillRect(x, y + 28, 20, 3.5);
+          if (fill) { ctx.fillStyle = FB_BLUE; ctx.fillRect(x, y + 28, 20 * fill, 3.5); }
+        }
+        text(dl, '11.5px ' + UI, FB_INK2, tx, y + 21, 16);
+        ctx.fillStyle = FB_LINE; ctx.fillRect(M, y + h - 1, cw, 1);
+      } });
+    }
+  }
+
+  if (data.comment) {
+    cap('From your teacher');
+    const cl = wrap(data.comment, '12.5px ' + UI, cw - 28);
+    cl.forEach((line, i) => {
+      const first = !i, last = i === cl.length - 1, h = 19 + (first ? 11 : 0) + (last ? 11 : 0);
+      out.push({ h, draw: y => {
+        ctx.fillStyle = FB_SOFT; ctx.beginPath();
+        if (ctx.roundRect) ctx.roundRect(M, y, cw, h + (last ? 0 : 0.5), [first ? 6 : 0, first ? 6 : 0, last ? 6 : 0, last ? 6 : 0]); else ctx.rect(M, y, cw, h);
+        ctx.fill();
+        text([line], '12.5px ' + UI, FB_INK, M + 14, y + (first ? 11 : 0) + 14, 19);
+      } });
+    });
+  }
+
+  if (data.notes.length) {
+    cap(data.notes.length === 1 ? 'Comment on your paper' : 'Comments on your paper');
+    for (const n of data.notes) {
+      const nl = wrap(n.text, '12px ' + UI, cw - 26 - 44), h = nl.length * 17 + 9, page = 'p. ' + (n.page + 1 + off);
+      const [r, g, b] = rgb(n.color || '#C8321F'), col = 'rgb(' + Math.round(r * 0.8) + ',' + Math.round(g * 0.8) + ',' + Math.round(b * 0.8) + ')';
+      out.push({ h, draw: y => {
+        if (n.n) {
+          ctx.fillStyle = col; ctx.beginPath(); ctx.arc(M + 7, y + 11, 7, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = '#fff'; ctx.font = '700 ' + (n.n > 9 ? 7.5 : 8.5) + 'px ' + UI; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(String(n.n), M + 7, y + 11.4);
+        } else { ctx.fillStyle = col; ctx.beginPath(); ctx.arc(M + 7, y + 11, 2.6, 0, Math.PI * 2); ctx.fill(); }
+        text(nl, '12px ' + UI, FB_INK, M + 26, y + 15, 17);
+        ctx.font = '11px ' + UI; ctx.fillStyle = FB_MUTED; ctx.textAlign = 'right'; ctx.fillText(page, M + cw, y + 15); ctx.textAlign = 'left';
+      } });
+    }
+  }
+  return out;
+}
+
+function fbPages(blocks, top, bottom) {
+  const pages = [[]]; let y = top;
+  blocks.forEach((b, i) => {
+    const next = blocks[i + 1], need = b.h + (b.h === 34 && next ? next.h : 0);
+    if (pages[pages.length - 1].length && y + need > bottom) { pages.push([]); y = top; }
+    pages[pages.length - 1].push(b); y += b.h;
+  });
+  return pages;
+}
+
+async function fbAddPages(out, data, W, H, dpi) {
+  if (!(W >= 400 && H >= 500 && W <= 1300 && H <= 1300) || W > H) { W = 612; H = 792; }
+  const M = Math.max(44, Math.round(W * 0.095)), top = M, bottom = H - M - 22, UI = 'Inter, ' + FONT, scale = dpi / 72;
+  const probe = document.createElement('canvas').getContext('2d');
+  let n = 1, pages;
+  for (let pass = 0; pass < 3; pass++) { pages = fbPages(fbBlocks(probe, data, W, M, n), top, bottom); if (pages.length === n) break; n = pages.length; }
+  for (let i = 0; i < pages.length; i++) {
+    const c = document.createElement('canvas'); c.width = Math.ceil(W * scale); c.height = Math.ceil(H * scale);
+    const ctx = c.getContext('2d'); ctx.setTransform(scale, 0, 0, scale, 0, 0);
+    ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, W, H);
+    const mine = fbPages(fbBlocks(ctx, data, W, M, pages.length), top, bottom)[i] || [];
+    let y = top; for (const b of mine) { b.draw(y); y += b.h; }
+    ctx.font = '10px ' + UI; ctx.fillStyle = FB_MUTED; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+    ctx.fillText(i === pages.length - 1 ? 'Your marked paper starts on the next page.' : 'Your feedback continues on the next page.', M, H - M + 6);
+    out.addPage([W, H]).drawImage(await out.embedJpg(await canvasJpg(c, 0.92)), { x: 0, y: 0, width: W, height: H });
+    c.width = c.height = 0;
+  }
+  return pages.length;
+}
+Object.assign(window.__gs, { fbData: i => { const st = batch.students[i], d = layoutOf(st)[0]; return d ? fbData(st, d) : null; } });
 
 /* ---------------- rubric library: what each score means on each row, and saved rubrics to reuse ---------------- */
 const LEVELS = [4, 3, 2, 1, 0], levelsOpen = new Set(), levelEditOpen = new Set();
@@ -19511,7 +19662,7 @@ $('#setHistory').addEventListener('click', e => {
 });
 
 /* updates she controls, and installing as an app */
-const WHATS_NEW = {"1.11.0":["The Planner’s sections are in the sidebar: Calendar, Units, Past lessons, Activities and Rubrics. The row of tabs across the top is gone.","A lesson has a lighter top: its name, its classes, its status and Download. Copy for Claude, Versions, the upload and the links are under More.","Comments shows above a lesson once it has one."],"1.7.0":["Home is now Today: the classes you teach today with the lesson planned for each, the papers waiting to be marked, and the papers ready to hand back.","What the class needs next: after a set of papers is scored, Today shows the weakest rubric row and how many students to sit down with.","A class page is quieter. Click anywhere on an assignment’s row to open it; the only blue button is the one that adds an assignment.","Forget, and the other ways to open papers, moved into the ⋯ menu on each row."],"1.6.0":["A new browser opens on three questions (your classes, how you grade, where work is kept) and starts with nothing of anyone else’s in it.","A sample class of made-up students, with papers to mark, for trying things out. Remove it from Home when you’re done.","The app uses the name of your own school system. Choose it, and how you usually grade, in Settings.","Letter grades or IB 1 to 7 can show beside the percent, with boundaries you set.","Canvas and Moodle downloads are grouped by student. The Planner works without a setup file, and downloads lessons as PowerPoint with a plain built-in template."],"1.5.0":["The sidebar says “Not backed up”, in amber, until a folder holds a second copy of your work. Home asks for that folder once.","Go back in time, in Settings: any assignment as it was on an earlier day, restored on its own, with Undo.","Grading Studio can be installed as an app, and it opens with no internet.","A newer version now waits until you click Update now, so nothing changes in the middle of marking."]};
+const WHATS_NEW = {"1.12.0":["A returned paper starts with a feedback page: the score, each rubric row with the level given and what that level means, your comment, and every comment on the paper with its page number.","It is on unless you turn it off under Options on the Return tab. Your own pages are not changed, and bringing an export back in opens only those."],"1.11.0":["The Planner’s sections are in the sidebar: Calendar, Units, Past lessons, Activities and Rubrics. The row of tabs across the top is gone.","A lesson has a lighter top: its name, its classes, its status and Download. Copy for Claude, Versions, the upload and the links are under More.","Comments shows above a lesson once it has one."],"1.7.0":["Home is now Today: the classes you teach today with the lesson planned for each, the papers waiting to be marked, and the papers ready to hand back.","What the class needs next: after a set of papers is scored, Today shows the weakest rubric row and how many students to sit down with.","A class page is quieter. Click anywhere on an assignment’s row to open it; the only blue button is the one that adds an assignment.","Forget, and the other ways to open papers, moved into the ⋯ menu on each row."],"1.6.0":["A new browser opens on three questions (your classes, how you grade, where work is kept) and starts with nothing of anyone else’s in it.","A sample class of made-up students, with papers to mark, for trying things out. Remove it from Home when you’re done.","The app uses the name of your own school system. Choose it, and how you usually grade, in Settings.","Letter grades or IB 1 to 7 can show beside the percent, with boundaries you set.","Canvas and Moodle downloads are grouped by student. The Planner works without a setup file, and downloads lessons as PowerPoint with a plain built-in template."],"1.5.0":["The sidebar says “Not backed up”, in amber, until a folder holds a second copy of your work. Home asks for that folder once.","Go back in time, in Settings: any assignment as it was on an earlier day, restored on its own, with Undo.","Grading Studio can be installed as an app, and it opens with no internet.","A newer version now waits until you click Update now, so nothing changes in the middle of marking."]};
 const upd = { on: false, st: null, mine: '', checking: false, said: '', install: null, installed: false, err: '' };
 const updCan = () => 'serviceWorker' in navigator && (location.protocol === 'https:' || /[?&]sw=1(&|$)/.test(location.search)) && !/Grading Studio\.html$/i.test(decodeURIComponent(location.pathname));
 const updSend = async msg => { const reg = await navigator.serviceWorker.ready; if (reg.active) reg.active.postMessage(msg); };

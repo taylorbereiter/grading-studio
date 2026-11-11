@@ -24,7 +24,7 @@ const PLATFORMS = {
 // welcome existed (the three starter classes that build added, and nothing else), which is the state every older test was written
 // in and the state real saved work is in: no welcome, and every word and default as it was.
 const USED_BEFORE = { 'gs.lib': JSON.stringify({ classes: ['12EL-1', '12EL-2', '11EL-2'].map((name, i) => ({ id: 'starter' + (i + 1), name, names: [], units: [] })), loose: { id: '', units: [] }, units: [], seed2627: true }), 'gs.syncT': JSON.stringify({ 'gs.lib': 1 }) };
-async function openApp(browser, { html, platform, seed, server, context, noWait, beforeLoad, newTeacher } = {}) {
+async function openApp(browser, { html, platform, seed, server, context, noWait, beforeLoad, newTeacher, feedback } = {}) {
   const usedBefore = !newTeacher && !(seed && seed.ls && seed.ls['gs.lib'] != null);
   const srv = server || await serve(html || builtHtml());
   const ctx = context || await browser.createBrowserContext();
@@ -57,6 +57,9 @@ async function openApp(browser, { html, platform, seed, server, context, noWait,
     await page.goto(srv.url + 'blank');
     // a second tab in a browser that already has work keeps that work
     if (usedBefore && await page.evaluate(() => localStorage.getItem('gs.lib') == null)) seed = { ...(seed || {}), ls: { ...USED_BEFORE, ...((seed && seed.ls) || {}) } };
+    // A returned paper gets a feedback page in front unless she turns that off. Tests of everything else about a returned
+    // paper count its own pages, so they start with it off; feedback: true leaves the app as a teacher finds it.
+    if (!feedback && !(seed && seed.ls && 'gs.xfb' in seed.ls)) seed = { ...(seed || {}), ls: { ...((seed && seed.ls) || {}), 'gs.xfb': 'false' } };
     if (seed) await plant(page, seed);
   }
   if (beforeLoad) await beforeLoad(page);
