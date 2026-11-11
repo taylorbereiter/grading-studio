@@ -674,7 +674,7 @@ test('Windows and Word housekeeping files aren’t anyone’s work, and the down
   assert.equal((await facts(page)).cant.length, 0);
   const sized = Object.entries(files).map(([path, d]) => ({ path, data: { length: d.length } }));
   assert.equal(await page.evaluate(l => window.__gs.batchIdOf(l), sized), got.id, 'work saved before this keeps opening');
-  await page.waitForFunction(id => !!document.querySelector('#kept [data-kopen="' + id + '"]') || !document.querySelector('#app').hidden, {}, got.id);
+  await page.waitForFunction(id => !!document.querySelector('#vHome [data-kopen="' + id + '"]') || !document.querySelector('#app').hidden, {}, got.id);
   assert.deepEqual(page.errors, []);
   await close();
 });
@@ -692,9 +692,9 @@ test('Reading the report by way of More takes the bar down for good, and Forget 
   const seen = () => page.evaluate(id => Object.keys(JSON.parse(localStorage.getItem('gs.openSeen') || '{}')).includes(id), id);
   assert.equal(await seen(), true);
   await page.click('#closeBtn');
-  await page.waitForSelector('#kept [data-kforget]');
-  await page.click('#kept [data-kforget]'); await page.click('#kept [data-kforget]');
-  await page.waitForFunction(() => !document.querySelector('#kept [data-kforget]'), { timeout: 15000 });
+  await page.waitForSelector('#vHome [data-kforget]');
+  await pick(page, '#vHome [data-kforget]'); await page.click('#vHome [data-kforget]');
+  await page.waitForFunction(() => !document.querySelector('#vHome [data-kforget]'), { timeout: 15000 });
   assert.equal(await seen(), false);
   await openZip(page, zip);
   assert.match(await openBar(page), /couldn’t/);

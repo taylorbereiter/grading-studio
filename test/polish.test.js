@@ -267,7 +267,7 @@ for (const theme of ['light', 'dark']) test('every screen reads at WCAG AA in ' 
   await page.waitForFunction(() => !document.querySelector('#askDlg'));
   await settle(page);
   await page.click('#closeBtn');
-  await page.waitForSelector('#kept [data-kopen]');
+  await page.waitForSelector('#vHome [data-kopen]');
   await check('start, with work');
   assert.deepEqual(page.errors, []);
   await close();
@@ -526,24 +526,24 @@ test('the build only leaves out lines that really are comments', () => {   // a 
 });
 
 /* ---------------- Home ---------------- */
-test('Home puts today’s work first', async () => {
+test('Today puts the work to mark above opening new work', async () => {
   const { page, close } = await openApp(browser);
-  const order = () => page.evaluate(() => { const y = s => document.querySelector(s).getBoundingClientRect().top; return { kept: document.querySelector('#kept').checkVisibility() ? y('#kept') : null, drop: y('#drop'), classes: document.querySelector('#classes').checkVisibility() }; });
+  const order = () => page.evaluate(() => { const y = s => document.querySelector(s).getBoundingClientRect().top; return { kept: document.querySelector('#toMark').checkVisibility() ? y('#toMark') : null, drop: y('#drop'), classes: document.querySelector('#classes').checkVisibility() }; });
   assert.ok(await page.$eval('#pickDrive', e => e.hidden) && await page.$eval('.gAcct', e => e.hidden), 'no Google key built in, so no Google buttons');
   let o = await order();
   assert.equal(o.kept, null, 'nothing kept yet, so the download box comes first'); assert.equal(o.classes, false, 'classes are on their own pages now');
   await openZip(page, zip); await score(page, [3, 3, 3]); await settle(page);
   await page.click('#closeBtn');
-  await page.waitForSelector('#kept [data-kopen]');
+  await page.waitForSelector('#vHome [data-kopen]');
   o = await order();
   assert.ok(o.kept < o.drop && !o.classes, JSON.stringify(o));
-  assert.equal(await page.$eval('#kept .krow [data-kopen]', e => e.textContent), 'Continue');
-  // many downloads: the five newest, and the rest a click away
-  await page.evaluate(() => { const k = window.__gs.kept(), m = [...k.values()][0]; for (let i = 0; i < 7; i++) k.set('x' + i, { ...m, id: 'x' + i, name: 'Old ' + i, t: 1000 + i }); window.__gs.renderKept(); });
-  const shown = () => page.$$eval('#kept .krow', r => r.filter(e => e.checkVisibility()).length);
-  assert.equal(await shown(), 5);
+  assert.equal(await page.$eval('#toMark .krow .btn[data-kopen]', e => e.textContent), 'Continue');
+  // much earlier work: the three newest, and the rest a click away
+  await page.evaluate(() => { const k = window.__gs.kept(), m = [...k.values()][0]; for (let i = 0; i < 7; i++) k.set('x' + i, { ...m, id: 'x' + i, name: 'Old ' + i, t: 1000 + i, ret: 2000 }); window.__gs.renderKept(); });
+  const shown = () => page.$$eval('#earlier .krow', r => r.filter(e => e.checkVisibility()).length);
+  assert.equal(await shown(), 3);
   await page.click('#keptAll');
-  assert.equal(await shown(), 8);
+  assert.equal(await shown(), 7);
   assert.equal(await page.$eval('#keptAll', e => e.textContent), 'Show only the newest');
   assert.deepEqual(page.errors, []);
   await close();

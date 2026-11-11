@@ -58,8 +58,8 @@ test('Remove, Undo, Bring back and Replace on downloaded files, kept after reope
 
   // Reopen the download: still removed, marks still on the essay.
   await page.reload();
-  await page.waitForSelector('#kept [data-kopen]');
-  await page.click('#kept [data-kopen]');
+  await page.waitForSelector('#vHome [data-kopen]');
+  await page.click('#vHome [data-kopen]');
   await waitPaper(page);
   await goToStudent(page, 1);
   assert.deepEqual(await bram(page), { files: ['Bram Sample/Retake scan.pdf'], gone: [[NOTES, 0], [ESSAY, marks]] });
@@ -133,8 +133,8 @@ test('single pages: × takes one out (the rubric page too), Undo and Bring back 
   assert.equal((await PDFDocument.load(unzipSync(got.bytes)['Aria Testwell/Essay.pdf'])).getPageCount(), 2, 'page 1 and the rubric page');
   await closeBox(page, '#dlgBox .bf [data-close]');
   await page.reload();
-  await page.waitForSelector('#kept [data-kopen]');
-  await page.click('#kept [data-kopen]');
+  await page.waitForSelector('#vHome [data-kopen]');
+  await page.click('#vHome [data-kopen]');
   await waitPaper(page);
   await goToStudent(page, 0);
   await goneSays(page, /Essay\.pdf, page 2/);

@@ -65,8 +65,8 @@ test('a double-clicked copy (file://) opens, saves and reopens', async () => {
   let w = await workOf(page);
   assert.equal(w['Aria Testwell'].computed.pct, 88);   // a brand-new browser: 10.5 of 12 as a plain percent, with no one's scale applied
   await page.click('#closeBtn');
-  await page.waitForSelector('#kept [data-kopen]');
-  await page.click('#kept [data-kopen]');
+  await page.waitForSelector('#vHome [data-kopen]');
+  await page.click('#vHome [data-kopen]');
   await waitPaper(page);
   w = await workOf(page);
   assert.equal(w['Aria Testwell'].computed.pct, 88);

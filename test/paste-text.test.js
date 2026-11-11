@@ -42,8 +42,8 @@ test('Paste text adds a markable page that stays after reopening', async () => {
   await settle(page);
   assert.ok(await page.evaluate(p => window.__gs.state().batch.students[1].files.find(f => f.path === p).marks[0].length > 0, P));
   await page.reload();
-  await page.waitForSelector('#kept [data-kopen]');
-  await page.click('#kept [data-kopen]');
+  await page.waitForSelector('#vHome [data-kopen]');
+  await page.click('#vHome [data-kopen]');
   await waitPaper(page);
   await goToStudent(page, 1);
   const kept = await page.evaluate(p => { const f = window.__gs.state().batch.students[1].files.find(f => f.path === p); return f && f.added && f.marks[0] && f.marks[0].length; }, P);

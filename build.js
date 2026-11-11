@@ -14,7 +14,7 @@ rep('/*@@PARTSCSS@@*/', partsCss);
 rep('/*@@POLISHCSS@@*/', fs.readFileSync('src/polish.css', 'utf8') + fs.readFileSync('src/scans.css', 'utf8') + fs.readFileSync('src/quiz.css', 'utf8'));
 rep('/*@@RUBRICSCSS@@*/', fs.readFileSync('src/rubrics.css', 'utf8') + fs.readFileSync('src/book.css', 'utf8'));
 rep('/*@@INSIGHTCSS@@*/', fs.readFileSync('src/insight.css', 'utf8'));
-rep('/*@@SHELLCSS@@*/', fs.readFileSync('src/rail.css', 'utf8') + fs.readFileSync('src/shell.css', 'utf8') + fs.readFileSync('src/classpage.css', 'utf8') + fs.readFileSync('src/tabs.css', 'utf8') + fs.readFileSync('src/markscreen.css', 'utf8') + fs.readFileSync('src/safe.css', 'utf8') + fs.readFileSync('src/welcome.css', 'utf8'));
+rep('/*@@SHELLCSS@@*/', fs.readFileSync('src/rail.css', 'utf8') + fs.readFileSync('src/shell.css', 'utf8') + fs.readFileSync('src/today.css', 'utf8') + fs.readFileSync('src/classpage.css', 'utf8') + fs.readFileSync('src/tabs.css', 'utf8') + fs.readFileSync('src/markscreen.css', 'utf8') + fs.readFileSync('src/safe.css', 'utf8') + fs.readFileSync('src/welcome.css', 'utf8'));
 rep('/*@@PDFJS@@*/', fs.readFileSync(nm + 'pdfjs-dist/build/pdf.min.js', 'utf8'));
 rep('/*@@PDFLIB@@*/', fs.readFileSync(nm + 'pdf-lib/dist/pdf-lib.min.js', 'utf8'));
 rep('/*@@H2C@@*/', fs.readFileSync(nm + 'html2canvas/dist/html2canvas.min.js', 'utf8'));
@@ -46,8 +46,6 @@ fs.writeFileSync('out/Grading Studio.html', fullHtml);
 // The pages at the web address can be installed as an app: they name the install card and the icon. The double-click copies don't, having no address to install from.
 const HOSTED = '<meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"></head>';
 fs.writeFileSync('index.html', fullHtml.replace('</head>', HOSTED));
-fs.mkdirSync('out/netlify', { recursive: true });
-fs.writeFileSync('out/netlify/index.html', '<!doctype html>\n<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"></head><body>\n' + h + '\n</body></html>');
 fs.writeFileSync('out/artifact.html', h.split('�').join('\\uFFFD'));
 console.log((h.length / 1e6).toFixed(2) + 'MB');
 // The Planner: its own page, built only from src/planner. No grading code goes into it.

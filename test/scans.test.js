@@ -405,7 +405,7 @@ test('an upside-down crooked scan is fixed when opened, says so, and Put back un
   assert.ok(kept.scan['Aria Testwell/Scan.pdf'], 'what was decided is kept');
   assert.equal(kept.s['Aria Testwell'], undefined, 'and she has not started this student');
   await page.reload(); await appReady(page);
-  await page.waitForSelector('#kept [data-kopen]'); await page.click('#kept [data-kopen]'); await waitPaper(page);
+  await page.waitForSelector('#vHome [data-kopen]'); await page.click('#vHome [data-kopen]'); await waitPaper(page);
   s = await student(page);
   assert.equal(s.rot[0], 180); near(s.skew[0], -2.5, .4, 'still straight');
   // Put back
@@ -414,7 +414,7 @@ test('an upside-down crooked scan is fixed when opened, says so, and Put back un
   assert.deepEqual({ rot: s.rot, skew: s.skew }, { rot: {}, skew: {} }, 'as scanned');
   await settle(page);
   await page.reload(); await appReady(page);
-  await page.waitForSelector('#kept [data-kopen]'); await page.click('#kept [data-kopen]'); await waitPaper(page);
+  await page.waitForSelector('#vHome [data-kopen]'); await page.click('#vHome [data-kopen]'); await waitPaper(page);
   s = await student(page);
   assert.deepEqual({ rot: s.rot, skew: s.skew }, { rot: {}, skew: {} }, 'and it stays put back');
   assert.equal(await note(page), '');
@@ -450,14 +450,14 @@ test('a page with her marks on it is only ever asked about, and the marks stay o
   await settle(page);
   const id = await page.evaluate(() => window.__gs.state().batch.id);
   await page.reload(); await appReady(page);
-  await page.waitForSelector('#kept [data-kopen]');
+  await page.waitForSelector('#vHome [data-kopen]');
   await page.evaluate(async id => {
     const d = JSON.parse(localStorage.getItem(id)); delete d.scan; localStorage.setItem(id, JSON.stringify(d));
     const db = await new Promise(res => { const r = indexedDB.open('grading-studio-keep'); r.onsuccess = () => res(r.result); });
     await new Promise(res => { const tx = db.transaction('work', 'readwrite'), o = tx.objectStore('work'), q = o.get(id); q.onsuccess = () => { const w = q.result; delete w.scan; o.put(w, id); }; tx.oncomplete = res; });
     db.close();
   }, id);
-  await page.click('#kept [data-kopen]'); await waitPaper(page);
+  await page.click('#vHome [data-kopen]'); await waitPaper(page);
   const s = await student(page);
   assert.deepEqual({ rot: s.rot, skew: s.skew }, { rot: {}, skew: {} }, 'still as scanned');
   assert.equal(await page.evaluate(() => JSON.stringify(window.__gs.state().pages[0].marks())), before_, 'with her mark');

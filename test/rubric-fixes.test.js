@@ -109,7 +109,7 @@ const matchOpen = async () => {
   const { page, close } = await openApp(browser, { seed: seedMatch });
   const dir = tmpDir('match'), paths = [path.join(dir, 'zzz unknown.pdf'), path.join(dir, 'Ben Beta rubric.pdf')];
   fs.writeFileSync(paths[0], await makePaper({ title: 'First' })); fs.writeFileSync(paths[1], await makePaper({ title: 'Second' }));
-  await page.click('#pickMatch');
+  await pick(page, '#pickMatch');
   await page.waitForSelector('#dlgBox [data-pf]');
   const [fc] = await Promise.all([page.waitForFileChooser(), page.click('#dlgBox [data-pf]')]);
   await fc.accept(paths);
@@ -645,9 +645,9 @@ test('the start screen counts scores the way the Grades list does, and follows t
   await page.evaluate(() => window.__gs.saveNow());
   await settle(page);
   await page.click('#closeBtn');
-  await page.waitForSelector('#kept .krow');
-  const row = await page.$eval('#kept .krow', e => e.textContent);
-  assert.match(row, /5 students · 2 scored · 1 partial · 1 missing or excused/, row);
+  await page.waitForSelector('#vHome .krow');
+  const row = await page.$eval('#vHome .krow', e => e.textContent);
+  assert.match(row, /2 of 4 scored · 1 partial · 1 missing or excused/, row);
   assert.deepEqual(page.errors, []);
   await close();
 });
@@ -760,7 +760,7 @@ test('a Word rubric’s own Total line follows a new grading scale, on screen, i
   await settle(page);
   // It stays that way when the download is opened again.
   await page.reload(); await appReady(page);
-  await page.waitForSelector('#kept [data-kopen]'); await page.click('#kept [data-kopen]');
+  await page.waitForSelector('#vHome [data-kopen]'); await page.click('#vHome [data-kopen]');
   await page.waitForFunction(() => { const a = document.querySelector('#app'); return a && !a.hidden && !!window.__gs.state().batch; });
   await sleep(500);
   const dl = await catchDownloads(page);
@@ -813,7 +813,7 @@ test('replacing a Word rubric under a new name asks, and a copy she highlighted 
   assert.deepEqual([(await grade(page, 0)).total, (await grade(page, 0)).pct], [9, 86]);
   await settle(page);
   await page.reload(); await appReady(page);
-  await page.waitForSelector('#kept [data-kopen]'); await page.click('#kept [data-kopen]');
+  await page.waitForSelector('#vHome [data-kopen]'); await page.click('#vHome [data-kopen]');
   await page.waitForFunction(() => { const a = document.querySelector('#app'); return a && !a.hidden && !!window.__gs.state().batch; });
   await page.waitForSelector('td.rcell'); await sleep(500);
   assert.equal(await shaded(), 3, 'after opening it again');

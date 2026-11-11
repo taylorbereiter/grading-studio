@@ -18,8 +18,8 @@ after(async () => { await browser.close(); });
 
 const closeUp = async page => { await page.click('#closeBtn'); await page.waitForFunction(() => document.querySelector('#start').hidden === false); await new Promise(r => setTimeout(r, 300)); };
 const openKept = async (page, name) => {
-  await page.waitForFunction(n => [...document.querySelectorAll('#kept .krow')].some(r => r.textContent.includes(n)), { timeout: 30000 }, name);
-  await page.evaluate(n => [...document.querySelectorAll('#kept .krow')].find(r => r.textContent.includes(n)).querySelector('[data-kopen]').click(), name);
+  await page.waitForFunction(n => [...document.querySelectorAll('#vHome .krow')].some(r => r.textContent.includes(n)), { timeout: 30000 }, name);
+  await page.evaluate(n => [...document.querySelectorAll('#vHome .krow')].find(r => r.textContent.includes(n)).querySelector('[data-kopen]').click(), name);
   await page.waitForFunction(n => { const s = window.__gs.state(); return s.batch && s.batch.name === n; }, {}, name);
   await waitPaper(page);
 };

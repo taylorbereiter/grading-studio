@@ -134,12 +134,4 @@ function waitDlg(title, say) {
   return $('#dlgBox h2');
 }
 
-/* The start screen: the five newest downloads, with the rest a click away. */
-function keptTidy(n) {
-  const b = $('#keptAll'), all = $('#kept').classList.contains('all');
-  b.hidden = n <= 5;
-  b.textContent = all ? 'Show only the newest' : 'Show all ' + n + ' downloads';
-}
-$('#keptAll').onclick = () => { $('#kept').classList.toggle('all'); keptTidy($('#kept').children.length); };
-
 Object.assign(window.__gs, { isMac, modKey, keyLabel, askDlg, sayDlg, askTextDlg, renderKept, openArrange });

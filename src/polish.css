@@ -45,20 +45,6 @@
 /* start screen: today's work first */
 .start{padding-top:26px}
 .start .sub{margin:4px 0 20px}
-.start .lib.today{margin:0 0 20px}
-.today .lhead{margin-bottom:8px}
-.krow.first{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent);padding:13px 14px}
-.krow.first .kn b{font-size:var(--text-lead)}
-#kept:not(.all) .krow:nth-child(n+6){display:none}
-#keptAll{margin-top:8px;font-size:var(--text-control)}
-.today:not([hidden])~.drop{padding:14px 18px;text-align:left;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 16px;align-items:center}
-.today:not([hidden])~.drop h2{font-size:15px;margin:0;grid-column:1}
-.today:not([hidden])~.drop p{font-size:var(--text-control);margin:0;grid-column:1}
-.today:not([hidden])~.drop .row{grid-column:2;grid-row:1/3;justify-content:flex-end}
-.today:not([hidden])~.drop .btn{padding:6px 11px;font-size:var(--text-control)}
-.today:not([hidden])~.drop .btn.primary{background:var(--surface);border-color:var(--line-strong);color:var(--fg)}
-.today:not([hidden])~.drop .btn.primary:hover{background:var(--surface-2)}
-@media (max-width:1100px){.today:not([hidden])~.drop{grid-template-columns:1fr}.today:not([hidden])~.drop .row{grid-column:1;grid-row:auto;justify-content:flex-start;margin-top:8px}}
 /* where work is saved, and the take-home file */
 .savewhere{flex:0 1 auto;min-width:0;max-width:48ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12.5px;color:var(--faint);text-decoration:none}
 .savewhere:hover{text-decoration:underline}

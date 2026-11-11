@@ -38,7 +38,7 @@ function setRender() {
     put('#setTimetable', '<div class="lhead"><h2>Timetable and calendar</h2><span class="muted">When each class meets, the semester’s dates and the days off. It lives in the Planner.</span><span class="sp"></span><a class="btn sm primary" href="' + esc(planUrl('#timetable')) + '">' + (p ? 'Open the timetable' : 'Set up the timetable') + '</a></div>' +
       (p ? '<div class="setrows">' + p.classes.map(c => '<div class="setrow"><span class="rdot" style="background:' + c.color + '"></span><span class="nt"><b>' + esc(c.name) + '</b><span class="ns">' + (c.meets.length ? c.meets.length + (c.meets.length === 1 ? ' meeting' : ' meetings') + ' a week' : 'No meeting times yet') + '</span></span></div>').join('') + '</div>' +
         '<p class="muted setp">' + (p.semStart && p.semEnd ? 'Semester: ' + day(p.semStart) + ' to ' + day(p.semEnd) + '. ' : '') + (p.daysOff.length ? p.daysOff.length + (p.daysOff.length === 1 ? ' day off' : ' days off') : 'No days off') + ' on the calendar. Home shows today’s classes from this.</p>'
-        : '<p class="muted setp">No timetable in this browser yet. Once the Planner knows when your classes meet, Home shows today’s classes and the lesson planned for each.</p>'));
+        : '<p class="muted setp">No timetable in this browser yet. Once the Planner knows when your classes meet, Today shows the day’s classes and the lesson planned for each.</p>'));
   }
 }
 // The rubric bank is the Planner's; grading reads it one way (rubrics.js). Counted when the page is opened, not kept.

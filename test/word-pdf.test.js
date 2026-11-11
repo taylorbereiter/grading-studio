@@ -114,8 +114,8 @@ test('a converted paper is marked like any PDF, kept after reopening, and export
   assert.deepEqual(await exported(), [PDF]);
 
   await page.reload();
-  await page.waitForSelector('#kept [data-kopen]');
-  await page.click('#kept [data-kopen]');
+  await page.waitForSelector('#vHome [data-kopen]');
+  await page.click('#vHome [data-kopen]');
   await waitPaper(page);
   await goToStudent(page, 1);
   assert.deepEqual(await who(page, 'Bram Sample'), { files: [PDF], kinds: ['pdf'], gone: [WORD], removed: { [WORD]: 'by,t' } });
@@ -198,8 +198,8 @@ test('the setting converts Word papers as an assignment opens, leaves a brought-
   await page.waitForFunction(() => window.__gs.state().batch.students[1].files.length === 2);
   await settle(page);
   await page.reload();
-  await page.waitForSelector('#kept [data-kopen]');
-  await page.click('#kept [data-kopen]');
+  await page.waitForSelector('#vHome [data-kopen]');
+  await page.click('#vHome [data-kopen]');
   await waitPaper(page);
   await new Promise(r => setTimeout(r, 1500));
   assert.deepEqual((await who(page, 'Bram Sample')).files.slice().sort(), [WORD, PDF]);
