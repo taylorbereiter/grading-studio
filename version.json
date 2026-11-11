@@ -1,12 +1,15 @@
 {
- "version": "1.27.0",
- "build": "83495a7ad5b1",
+ "version": "1.27.1",
+ "build": "2ccc3c1bb952",
  "notes": [
-  "Start a new school year, in Settings, Saving and carrying. Your classes, units and assignment cards carry on, each card with its rubric and Quick mark boxes, with empty class lists and dates a year later.",
-  "This year goes into one protected file first, and the file is checked before anything is cleared. Open an archived year brings a year back from its file."
+  "Undo now takes back a score as well as a mark: press Ctrl Z (⌘Z on a Mac) after a slip on a slider, a number key, or Missing, Excused or Late. Redo puts it back.",
+  "Deleting a unit, an assignment or a class shows Undo for a few seconds, and Undo puts it back where it was.",
+  "“Picked up where you left off” shows once, when you open an assignment, and no longer on Today or other pages. The note about what opened leaves by itself when you move to the next student, if every file opened.",
+  "The Next button stays in one place from student to student, and the Grade heading on a class’s Students tab is drawn properly.",
+  "Find anything answers to more everyday words: export, hand back, backup, undo, shortcuts, csv."
  ],
  "files": {
-  "index.html": "ca59a058442a9d3d4a29e46c9f00cf5320260471ee3e108756568e768d197783",
-  "planner.html": "9f2d81328312a2529cc4c1091a13f6535c0b3e8b866ff77b6a474a43393af2a5"
+  "index.html": "8609f25af70835623760565d80a5d0eb6020e94ab2cd9dd507c3545399b77ed8",
+  "planner.html": "a6d3d4869091bf29e54e766db999db48f96a90ee22e9b66601ed2bb4d8e51929"
  }
 }

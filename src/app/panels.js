@@ -236,12 +236,13 @@ $('#grade').addEventListener('click', e => {
   const b = e.target.closest('.scores button');
   if (b) {
     const st = batch.students[cur], i = +b.closest('.scores').dataset.c, v = +b.dataset.v;
+    gradeSnap(st);
     st.grade.rubric[i] = st.grade.rubric[i] === v ? null : v;
     scoreTouched(st, i); rowOn = lvAt = i; rowKeyed = -1;
     renderGrade(); renderList(); saveSoon(); return;
   }
   const rn = e.target.closest('.crit .cn'); if (rn) return rowPick(+rn.parentNode.dataset.row);
-  const sb = e.target.closest('[data-status]'); if (sb) return setStatus(batch.students[cur], sb.dataset.status);
+  const sb = e.target.closest('[data-status]'); if (sb) { gradeSnap(batch.students[cur]); return setStatus(batch.students[cur], sb.dataset.status); }
   if (e.target.closest('#outAvg, [data-outoff]')) return setOutAvg(batch.students[cur]);
   if (e.target.closest('[data-gxc]')) { kmClose(); return xcStart(batch.students[cur]); }
   { const u = e.target.closest('[data-xcu]'); if (u) return xcUnitSet(batch.students[cur], u.dataset.xcu); }
@@ -266,6 +267,7 @@ $('#grade').addEventListener('click', e => {
 function slideTo(r, v) {
   const st = batch.students[cur], i = +r.closest('.scores').dataset.c;
   if (st.grade.rubric[i] === v && !r.classList.contains('unset')) return;
+  if (!slideSnap) { gradeSnap(st); slideSnap = true; }   // one step for a whole drag, however many scores it passed over
   st.grade.rubric[i] = v; scoreTouched(st, i);
   r.classList.remove('unset'); r.setAttribute('aria-valuetext', fmtNum(v) + ' out of ' + rowTop(setup, i)); r.style.setProperty('--k', r.value);
   const crit = r.closest('.crit'), em = crit.querySelector('.cn em'); if (em) em.innerHTML = critScore(v, i);
@@ -276,8 +278,8 @@ function slideTo(r, v) {
   renderList(); saveSoon();
 }
 // After the mouse, focus leaves the slider so ← → go on moving between students. After the keyboard, it stays.
-let slidePtr = false;
-function slideDone(r) { const i = r.closest('.scores').dataset.c, kb = !slidePtr; slidePtr = false; renderGrade(); const again = $('#grade .scores[data-c="' + i + '"] .srange'); if (again && kb) again.focus({ preventScroll: true }); }
+let slidePtr = false, slideSnap = false;
+function slideDone(r) { slideSnap = false; const i = r.closest('.scores').dataset.c, kb = !slidePtr; slidePtr = false; renderGrade(); const again = $('#grade .scores[data-c="' + i + '"] .srange'); if (again && kb) again.focus({ preventScroll: true }); }
 $('#grade').addEventListener('pointerdown', e => { if (e.target.closest && e.target.closest('.srange')) slidePtr = true; });
 $('#grade').addEventListener('input', e => { if (e.target.classList.contains('srange')) slideTo(e.target, rowSteps(setup, +e.target.closest('.scores').dataset.c)[+e.target.value]); });
 $('#grade').addEventListener('change', e => { if (e.target.classList.contains('srange')) slideDone(e.target); });
@@ -291,6 +293,7 @@ $('#grade').addEventListener('keydown', e => {
   if (!e.target.classList || !e.target.classList.contains('srange') || (e.key !== 'Delete' && e.key !== 'Backspace')) return;
   e.preventDefault(); e.stopPropagation();
   const st = batch.students[cur], i = +e.target.closest('.scores').dataset.c; if (st.grade.rubric[i] == null) return;
+  gradeSnap(st);
   st.grade.rubric[i] = null; scoreTouched(st, i); renderList(); saveSoon(); slideDone(e.target);
 });
 // Tab into a row's slider, and that row is the one in hand.
@@ -327,6 +330,7 @@ function scoreKey(e, onRange) {
     e.preventDefault();
     if (i < 0) { toast('Every row has a score. To change one, press Tab or click the row first.'); return true; }
     if (+e.key > rowTop(setup, i)) { toast('This row goes up to ' + rowTop(setup, i) + '.'); return true; }
+    gradeSnap(st);
     st.grade.rubric[i] = +e.key; scoreTouched(st, i);
     rowKeyed = i; rowOn = lvAt = Math.min(i + 1, n - 1);
     redraw(rowOn); return true;
@@ -336,16 +340,20 @@ function scoreKey(e, onRange) {
     const to = v % 1 ? Math.floor(v) : v + 0.5;
     e.preventDefault();
     if (!rowSteps(setup, rowKeyed).includes(to)) { toast('There’s no ' + fmtNum(to) + ' on this scale.'); return true; }
+    gradeSnap(st);
     st.grade.rubric[rowKeyed] = to; scoreTouched(st, rowKeyed);
     redraw(rowOn); return true;
   }
   return false;
 }
+let ptsSnapFor = null;
+$('#grade').addEventListener('focusout', e => { if (e.target.id === 'ptsIn') ptsSnapFor = null; });
 $('#grade').addEventListener('input', e => {
   const st = batch.students[cur];
   if (e.target.id === 'cmtIn') { st.grade.comment = e.target.value; touchGrade(st); saveSoon(); }
   if (e.target.id === 'xcIn') xcSet(st, e.target.value);
   if (e.target.id === 'ptsIn') {
+    if (ptsSnapFor !== e.target) { gradeSnap(st); ptsSnapFor = e.target; }   // one step for a visit to the box, not one a keystroke
     st.grade.points = e.target.value; const was = st.grade.status; scoreTouched(st); saveSoon(); renderList();
     if (was !== st.grade.status) { $('#gstat').outerHTML = statusHtml(st); }
     $('#grade .total').innerHTML = totalHtml(st);

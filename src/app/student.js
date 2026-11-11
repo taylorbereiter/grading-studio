@@ -15,6 +15,7 @@ async function openStudent(i, filePath) {
   const moved = cur !== Math.max(0, Math.min(batch.students.length - 1, i));
   cur = Math.max(0, Math.min(batch.students.length - 1, i));
   if (moved || rowOnOf !== batch.students[cur]) rowStart();
+  if (moved && repSaw && repAll && cur !== repAt) repSaw();
   selected = null;
   if ($('#lightPanel')) $('#lightPanel').refresh();
   const token = ++openToken;

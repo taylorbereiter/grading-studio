@@ -208,8 +208,8 @@ function peopleSum(c) {
 function fillPeople(c) {
   const t = $('#peopleTbl'); if (!t || peopleQuiet) return;
   peopleSum(c);
-  t.innerHTML = c.names.length ? '<table class="gl ppl"><thead><tr><th>#</th><th>Name</th><th class="pg" id="peopleGh">Grade</th><th>Student ID</th><th>Email</th><th>Last year</th><th>Also called</th></tr></thead><tbody>' + c.names.map((n, k) => { const i = infoOf(c, n);
-    return '<tr><td class="n">' + (k + 1) + '</td><td class="nm"><a class="link" href="' + classHash(c, 'students', k) + '">' + esc(n) + '</a>' + whoBtn('data-wc="' + esc(c.id) + '" data-wn="' + esc(n) + '"', n) + '</td><td class="pg" data-pg="' + k + '"></td>' +
+  t.innerHTML = c.names.length ? '<table class="gl ppl"><thead><tr><th>#</th><th>Name</th><th class="pgr" id="peopleGh">Grade</th><th>Student ID</th><th>Email</th><th>Last year</th><th>Also called</th></tr></thead><tbody>' + c.names.map((n, k) => { const i = infoOf(c, n);
+    return '<tr><td class="n">' + (k + 1) + '</td><td class="nm"><a class="link" href="' + classHash(c, 'students', k) + '">' + esc(n) + '</a>' + whoBtn('data-wc="' + esc(c.id) + '" data-wn="' + esc(n) + '"', n) + '</td><td class="pgr" data-pg="' + k + '"></td>' +
       '<td><input class="pc-in" data-pp="id" data-pi="' + k + '" value="' + esc(i.id || '') + '" placeholder="Student ID" aria-label="Student ID for ' + esc(n) + '"></td>' +
       '<td><input class="pc-in" type="email" data-pp="email" data-pi="' + k + '" value="' + esc(i.email || '') + '" placeholder="Email" aria-label="Email for ' + esc(n) + '"></td>' +
       '<td><input class="pc-in" data-pp="prev" data-pi="' + k + '" value="' + esc(i.prev || '') + '" placeholder="Optional" aria-label="Last year’s level for ' + esc(n) + '"></td>' +

@@ -155,6 +155,8 @@ document.addEventListener('keydown', e => {
   if (!batch || !$('#dlg').hidden) { if (e.key === 'Escape' && !$('#dlg').hidden) { if (SP) splitLeave(); else leaveDlg(); } return; }
   const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement && document.activeElement.tagName) || (document.activeElement && document.activeElement.isContentEditable);
   const cmd = e.metaKey || e.ctrlKey, key = e.key.toLowerCase();
+  // On a score's slider Ctrl Z is hers too: a slider has no typing of its own to undo.
+  if (cmd && !e.altKey && typing && document.activeElement.type === 'range' && (key === 'z' || key === 'y')) { e.preventDefault(); key === 'z' && !e.shiftKey ? undo() : redo(); return; }
   if (cmd && !typing && !e.altKey) {
     if (key === 'z') { e.preventDefault(); e.shiftKey ? redo() : undo(); return; }
     if (key === 'y') { e.preventDefault(); redo(); return; }

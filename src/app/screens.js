@@ -250,7 +250,11 @@ $('#start').addEventListener('click', async e => {
   if (b.dataset.udel != null) {
     const f = findUnit(b.dataset.udel); if (!f) return; const u = f.u;
     if (u.items.length && !await askDlg('Delete “' + u.name + '” and its ' + u.items.length + ' assignment' + (u.items.length === 1 ? '' : 's') + '? Saved marks for those downloads stay in this browser.', { ok: 'Delete', danger: true })) return;
-    f.c.units.splice(f.c.units.indexOf(u), 1); saveLib(); renderLib(); return;
+    const at = f.c.units.indexOf(u), n = u.items.length;
+    f.c.units.splice(at, 1); saveLib(); renderLib();
+    // A delete can be taken back for a few seconds: the unit goes back where it was, assignments and all.
+    toastDo('Deleted “' + u.name + '”' + (n ? ' and its ' + n + (n === 1 ? ' assignment' : ' assignments') : ''), 'Undo', () => { if (!holders().includes(f.c) || f.c.units.includes(u)) return; f.c.units.splice(Math.min(at, f.c.units.length), 0, u); saveLib(); renderLib(); });
+    return;
   }
   if (b.dataset.additem != null) return editAssignment(null, b.dataset.additem);
   if (b.dataset.editAsg) return editAssignment(b.dataset.editAsg);
@@ -333,7 +337,7 @@ function editAssignment(id, unitId, clsId) {
     if (e.target.closest('[data-cancel]')) return closeDlg();
     const tb = e.target.closest('[data-atype]');
     if (tb) { const on = tb.getAttribute('aria-pressed') !== 'true'; for (const x of document.querySelectorAll('[data-atype]')) x.setAttribute('aria-pressed', String(on && x === tb)); return; }
-    if (e.target.closest('[data-del]')) { if (!await askDlg('Delete “' + it.name + '”?', { ok: 'Delete', danger: true })) return; f.u.items.splice(f.u.items.indexOf(it), 1); saveLib(); closeDlg(); return renderLib(); }
+    if (e.target.closest('[data-del]')) { if (!await askDlg('Delete “' + it.name + '”?', { ok: 'Delete', danger: true })) return; const at = f.u.items.indexOf(it); f.u.items.splice(at, 1); saveLib(); closeDlg(); renderLib(); toastDo('Deleted “' + it.name + '”', 'Undo', () => { if (!holders().some(c => c.units.includes(f.u)) || f.u.items.includes(it)) return; f.u.items.splice(Math.min(at, f.u.items.length), 0, it); saveLib(); renderLib(); }); return; }
     if (e.target.closest('[data-ok]')) {
       const name = $('#aName').value.trim(); if (!name) { $('#aName').focus(); return; }
       const ty = document.querySelector('[data-atype][aria-pressed="true"]'), due = $('#aDue').value;
@@ -418,7 +422,10 @@ function editClass(ci) {
   $('#dlgBox').onclick = async e => {
     if (e.target.closest('[data-up]')) return $('#cFile').click();
     if (e.target.closest('[data-cancel]')) return closeDlg();
-    if (e.target.closest('[data-del]')) { if (!await askDlg('Delete the ' + c.name + ' class? Its assignments move to “No class”.', { ok: 'Delete', danger: true })) return; for (const u of c.units) { for (const it of u.items) it.classId = ''; lib.loose.units.push(u); } lib.classes.splice(ci, 1); saveLib(); closeDlg(); renderLib(); if (!batch && routeNow().v !== 'class') go(lib.loose.units.some(u => u.items.length) ? classHash(lib.loose) : '#/', true); return; }
+    if (e.target.closest('[data-del]')) { if (!await askDlg('Delete the ' + c.name + ' class? Its assignments move to “No class”.', { ok: 'Delete', danger: true })) return; const moved = c.units.slice(), wasIds = moved.map(u => u.items.map(it => it.classId)); for (const u of c.units) { for (const it of u.items) it.classId = ''; lib.loose.units.push(u); } lib.classes.splice(ci, 1); saveLib(); closeDlg(); renderLib(); if (!batch && routeNow().v !== 'class') go(lib.loose.units.some(u => u.items.length) ? classHash(lib.loose) : '#/', true);
+      // Undo puts the class back in its place, with its roster, gradebook and units; its assignments leave “No class” again.
+      toastDo('Deleted the ' + c.name + ' class', 'Undo', () => { if (lib.classes.includes(c)) return; lib.loose.units = lib.loose.units.filter(u => !moved.includes(u)); moved.forEach((u, k) => u.items.forEach((it, j) => { it.classId = wasIds[k][j] != null ? wasIds[k][j] : c.id; })); lib.classes.splice(Math.min(ci, lib.classes.length), 0, c); saveLib(); renderLib(); if (window.railRender) railRender(); });
+      return; }
     if (e.target.closest('[data-ok]')) {
       const name = $('#cName').value.trim(); if (!name) { $('#cName').focus(); return; }
       const mb = mbUrl($('#cMb').value); if ($('#cMb').value.trim() && !mb) { toast('That ' + sysLink() + ' link isn’t a web address'); $('#cMb').focus(); return; }
