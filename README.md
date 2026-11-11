@@ -51,7 +51,7 @@ The sidebar says **Not backed up** until you choose a folder. Once you do, every
 
 ## License
 
-No license has been chosen yet. Until one is added, the code is published here to read and the app is free to use from the link above.
+MIT. Use it, change it and share it, free of charge; see [LICENSE](LICENSE). The libraries built into the pages keep their own licenses.
 
 ## Rebuild, test and preview
 
