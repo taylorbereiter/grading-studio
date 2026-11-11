@@ -1,4 +1,9 @@
 {
+  "1.27.2": [
+    "In the gradebook, in-class assessments are now on the left and summatives on the right: the columns, the averages beside the term grade, and wherever you choose a type.",
+    "The order is yours to change. In Term setup, the arrows beside each type move it, and the gradebook's columns follow from left to right.",
+    "You can make your own assignment types. In Term setup, rename a type or press + Add a type (Homework, Projects, Quizzes), and give each its share of the grade. Your own setup stays as it is until you change it."
+  ],
   "1.27.1": [
     "Undo now takes back a score as well as a mark: press Ctrl Z (⌘Z on a Mac) after a slip on a slider, a number key, or Missing, Excused or Late. Redo puts it back.",
     "Deleting a unit, an assignment or a class shows Undo for a few seconds, and Undo puts it back where it was.",

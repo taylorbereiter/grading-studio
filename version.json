@@ -1,15 +1,13 @@
 {
- "version": "1.27.1",
- "build": "2ccc3c1bb952",
+ "version": "1.27.2",
+ "build": "5db1351cccbe",
  "notes": [
-  "Undo now takes back a score as well as a mark: press Ctrl Z (⌘Z on a Mac) after a slip on a slider, a number key, or Missing, Excused or Late. Redo puts it back.",
-  "Deleting a unit, an assignment or a class shows Undo for a few seconds, and Undo puts it back where it was.",
-  "“Picked up where you left off” shows once, when you open an assignment, and no longer on Today or other pages. The note about what opened leaves by itself when you move to the next student, if every file opened.",
-  "The Next button stays in one place from student to student, and the Grade heading on a class’s Students tab is drawn properly.",
-  "Find anything answers to more everyday words: export, hand back, backup, undo, shortcuts, csv."
+  "In the gradebook, in-class assessments are now on the left and summatives on the right: the columns, the averages beside the term grade, and wherever you choose a type.",
+  "The order is yours to change. In Term setup, the arrows beside each type move it, and the gradebook's columns follow from left to right.",
+  "You can make your own assignment types. In Term setup, rename a type or press + Add a type (Homework, Projects, Quizzes), and give each its share of the grade. Your own setup stays as it is until you change it."
  ],
  "files": {
-  "index.html": "8609f25af70835623760565d80a5d0eb6020e94ab2cd9dd507c3545399b77ed8",
-  "planner.html": "a6d3d4869091bf29e54e766db999db48f96a90ee22e9b66601ed2bb4d8e51929"
+  "index.html": "5842b12ce0b49f641e312690b4229712c84513abf4cba29367085c9a8143955c",
+  "planner.html": "379f42266ca625949033afeb3e8f19062b4a331588edd43134c50235e9d8055b"
  }
 }

@@ -84,7 +84,7 @@ function nyLib(old, works, o) {
   if (L.book && typeof L.book === 'object') {
     delete L.book.dl;   // type and date of downloads with no card: those downloads are in the file now
     if (o.dates) L.book.terms = (L.book.terms || []).map(t => ({ ...t, start: nyDay(t.start), end: nyDay(t.end) }));
-    nyStrip(L.book, names, ['terms']);
+    nyStrip(L.book, names, ['terms', 'cats', 'w']);   // her terms, her own types and their weights carry, whatever they are called
   }
   nyStrip(L, names, ['classes', 'loose', 'me', 'book', 'gone', 'years']);
   L.year = o.to;

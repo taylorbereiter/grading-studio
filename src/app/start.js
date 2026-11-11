@@ -6,7 +6,11 @@
 const $ = s => document.querySelector(s);
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 // Assignment types, for the Gradebook's term grades (src/book.js): key, full name, short name.
-const BK_TYPES = [['sum', 'Summative assessment', 'Summative'], ['ic', 'In-class assessment', 'In-class'], ['fm', 'Formative activity', 'Formative']];
+// In the order the gradebook shows them, left to right.
+// BK_TYPES is kept as the teacher's own list of types (bkCats in src/book.js); BK_DEF is the usual three, as they start out.
+const BK_TYPES = [['ic', 'In-class assessment', 'In-class'], ['sum', 'Summative assessment', 'Summative'], ['fm', 'Formative activity', 'Formative']];
+const BK_DEF = BK_TYPES.map(x => x.slice());
+let bkCatsSeen;
 let libVer = 0;   // goes up each time the units and rosters are saved, so a screen that kept a copy knows it's out of date
 const natural = (a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
 

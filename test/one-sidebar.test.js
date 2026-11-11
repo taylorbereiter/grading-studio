@@ -369,7 +369,7 @@ test('Settings is one page per subject, each with its own address', async () => 
   // terms and weights: what is set, and the same Term setup as the gradebook's
   await goTo(page, '#/settings/terms');
   assert.deepEqual(await shown(), ['setTerms']);
-  assert.match(await page.$eval('#setTerms', e => e.textContent), /Term 1Aug 31 to Nov 20.*Summative assessments 50% · In-class assessments 50% · Formative activities 0%/);
+  assert.match(await page.$eval('#setTerms', e => e.textContent), /Term 1Aug 31 to Nov 20.*In-class assessments 50% · Summative assessments 50% · Formative activities 0%/);
   await page.click('#setTerms [data-setterms]'); await page.waitForSelector('#bkSetup');
   assert.match(await page.$eval('#bkSetup', e => e.textContent), /Term setup.*for all your classes/);
   await closeBox(page);
