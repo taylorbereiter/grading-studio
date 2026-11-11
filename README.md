@@ -46,6 +46,7 @@ The sidebar says **Not backed up** until you choose a folder. Once you do, every
 ## More
 
 - **Help** in the app's sidebar has short answers to common questions, and **Find anything** lists them too.
+- **Learning goals** (optional): keep your own list of goals or standards, tag rubric rows and quiz questions with them, and each class page gets a Goals tab that shows the class and every student by goal, lowest first.
 - **Report comments** (a tab on each class's page) drafts a comment for every student from the gradebook, the rubric scores and the comments written on their papers. The drafts are made in the browser from a bank of sentences the teacher can reword; nothing about a student is sent anywhere.
 - **Progress sheets** (on a class's Students list, or one student's page) print one page per student for a parent meeting: the term grade, type averages, every score, a chart of how the scores moved, missing work, each term's grade, the report comment and lines for notes. Printed from the browser; nothing is sent.
 - **Tablet and pencil**: on a touch screen a pencil draws (with pressure), a finger moves the page, two fingers zoom and a resting palm is ignored (src/touch.js). Tested with the browser's synthetic pen and touch input; a real tablet is still the proof.

@@ -77,11 +77,12 @@ function openSetup() {
       '<span class="muted" style="font-size:12.5px;margin-top:4px">Grading right on your own rubric? Use Just the total: one score box, and the Grades tab and percents still work.</span></div>';
     h += rubricLibHtml(draft);
     if (draft.mode === 'rubric') {
-      h += '<div class="field"><label>Rubric rows</label>' + draft.criteria.map((c, i) => '<div class="critrow"><input type="text" data-ci="' + i + '" value="' + esc(c) + '">' + (draft.criteria.length > 1 ? '<button class="btn sm" data-rm="' + i + '" aria-label="Remove row">×</button>' : '') + '</div>' + levelsEditHtml(draft, i)).join('') +
+      h += '<div class="field"><label>Rubric rows</label>' + draft.criteria.map((c, i) => '<div class="critrow"><input type="text" data-ci="' + i + '" value="' + esc(c) + '">' + goalRowHtml(draft, i) + (draft.criteria.length > 1 ? '<button class="btn sm" data-rm="' + i + '" aria-label="Remove row">×</button>' : '') + '</div>' + levelsEditHtml(draft, i)).join('') +
         (draft.criteria.length < 6 ? '<div><button class="btn sm" data-add>+ Add a row</button></div>' : '') + '</div>';
     } else {
       h += '<div class="field"><label for="outOf">Out of</label><input type="number" id="outOf" min="1" step="0.5" value="' + esc(draft.outOf) + '" style="width:120px"></div>';
     }
+    h += goalsSetupHtml(draft);
     h += '<div class="field"><label>Grading scale</label><span style="display:flex;gap:6px;flex-wrap:wrap">' + (me().scale12 ? '<button class="btn sm" data-preset="usual">12 = 100, 11 = 95, 10 = 91…</button>' : '') + '<button class="btn sm" data-preset="fives">Steps of 5 (9 = 85%)</button><button class="btn sm" data-preset="none">No scale</button>' + scaleBankHtml(draft, draft.mode === 'rubric' ? draft.criteria.length * 4 : Math.round(+draft.outOf || 0)) + '</span>' + scaleRows() + '</div>';
     const rp = newPage === undefined ? draft.rubricPage : newPage;
     h += '<div class="field"><label>Your rubric, for every student</label><span class="muted" style="font-size:13px">Bring in your rubric once and every student gets their own copy to grade on. A Word rubric (.docx or .docm) stays a Word file: type in it, check its boxes and shade its cells. A PDF or picture is added as a page you can mark up. Each copy goes back with that student’s work.</span>' +
@@ -140,6 +141,8 @@ function openSetup() {
       if (note && !await askDlg(note, { ok: 'Save', cancel: 'Go back' })) return;
       draft.criteria = draft.criteria.map((c, i) => c.trim() || 'Criterion ' + (i + 1));
       draft.levels = tidyLevels(draft);
+      draft.goals = goalsTidy(draft);
+      if (batch && rubDlg.goalAll !== (batch.goal || '')) { if (rubDlg.goalAll) batch.goal = rubDlg.goalAll; else delete batch.goal; }
       if (newPage === null) { if (draft.rubricPage) store.del('gs.rp.' + draft.rubricPage.id); draft.rubricPage = null; }
       else if (newPage) {
         const id = uid();
