@@ -207,7 +207,7 @@ function rubricLibRaw(d) {
   return '<div class="field" id="rbBank"><label for="rbUnit">Rubric bank</label>' +
     (list.length ? '<select id="rbUnit" class="rbunit" aria-label="Show rubrics from">' + unitOptionsHtml(key, true) + '</select>' : '') +
     (shown.length ? '<div class="rlib">' + rows + '</div>' : list.length ? '<span class="muted" style="font-size:13px">Nothing saved for this unit yet.</span>'
-      : '<span class="muted" style="font-size:13px">Save this rubric to the bank to use it again. It keeps the rows, what each score means and the grading scale, sorted by unit. The Planner’s Rubrics tab shows the same bank.</span>') +
+      : '<span class="muted" style="font-size:13px">Save this rubric to the bank to use it again. It keeps the rows, what each score means and the grading scale, sorted by unit. Rubrics in the Planner’s sidebar shows the same bank.</span>') +
     (d.mode === 'rubric' ? '<div style="margin-top:4px"><button class="btn sm" data-rbsave>Save to the bank…</button></div>' : '') + '</div>';
 }
 // Under the grading-scale buttons: saved scales with the same top score, and a way to save this one.

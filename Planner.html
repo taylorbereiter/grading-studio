@@ -196,7 +196,7 @@ h1 i,.top .title i{font-style:normal;font-weight:500;color:var(--accent)}
 .lsn .sp{flex:1}
 .lsn .muted{color:var(--muted)}
 .ls-wk{font-weight:600;min-width:110px;text-align:center}
-.ls-fold{font-size:var(--text-control)}
+
 .ls-empty{max-width:640px;margin:60px auto;padding:28px;background:var(--surface);border:1px solid var(--line);border-radius:14px;text-align:center}
 .ls-empty h2{margin:0 0 8px;font-size:22px}.ls-empty p{color:var(--muted)}
 .ls-empty .row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:14px}
@@ -220,12 +220,19 @@ h1 i,.top .title i{font-style:normal;font-weight:500;color:var(--accent)}
 .ls-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px}
 .ls-pick{display:flex;flex-direction:column;gap:6px}
 .ls-row{display:flex;gap:6px;align-items:center}
-.ls-more{display:flex;flex-direction:column;align-items:flex-start}.ls-more p{margin:4px 0 14px;font-size:var(--text-control)}
+.ls-morew{position:relative;display:inline-flex}
+.ls-menu{position:absolute;top:calc(100% + 4px);right:0;z-index:20;width:300px;max-height:min(72vh,560px);overflow:auto;background:var(--surface);border:1px solid var(--line-strong);border-radius:var(--corner-4);box-shadow:var(--shadow);padding:6px}
+.ls-menu[hidden]{display:none}
+.ls-menu .mi{display:block;width:100%;text-align:left;border:0;background:none;border-radius:var(--corner-2);padding:7px 10px;font:inherit;font-size:var(--text-body);font-weight:500;color:var(--fg);text-decoration:none;line-height:1.3;cursor:pointer}
+.ls-menu .mi:hover,.ls-menu .mi:focus-visible{background:var(--hover)}
+.ls-menu .mi small{display:block;font-size:var(--text-small);font-weight:400;color:var(--muted);margin-top:1px}
+.ls-menu .mi[data-sure]{color:var(--bad)}
+.ls-menu hr{border:0;border-top:1px solid var(--line);margin:6px 4px}
 .ls-f{display:flex;flex-direction:column;gap:4px;margin-bottom:10px;font-weight:500}
 .ls-tc{border:1px solid var(--line);border-radius:var(--corner-4);padding:8px;margin-bottom:8px}
 .ls-mrow{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:6px}
 .ls-title-in{font:600 16px var(--f-body);border:1px solid transparent;border-radius:7px;padding:5px 8px;background:none;min-width:180px;max-width:340px}
-.pl-tlink{font-size:12.5px;color:var(--muted)}.pl-tlink.on{color:var(--accent)}
+
 .ls-title-in:hover,.ls-title-in:focus{border-color:var(--line-strong);background:var(--surface)}
 .ls-slots{display:flex;gap:4px;flex-wrap:wrap;align-items:center}
 .ls-chip{display:inline-flex;align-items:center;gap:2px;font-size:12.5px;border-left:3px solid var(--cc);background:var(--surface-2);border-radius:var(--corner-2);padding:2px 2px 2px 7px}
@@ -718,15 +725,22 @@ body.has-side .lsn{margin-right:var(--sidew,420px)}
 .pfold .lsn{margin-left:60px}
 @media (max-width:1100px){.lsn{margin-left:60px}}
 .rail .rtt{color:var(--muted)}
-.pl-tabs.cal{margin:0}
-.ls-brk{flex-basis:100%;height:0}
-.ls-top .title{margin-right:10px}
+.pl-tabs.cal{margin:0 6px 0 0}
+.ls-top .title{margin:0 12px 0 0}
+.ls-top.head{min-height:52px}
+/* on a narrow screen the head stays one line: Find anything in the sidebar searches inside lessons too */
+@media (max-width:1100px){.ls-top.head .pl-find{display:none}}
 </style>
 <nav class="rail" id="rail" aria-label="Main">
   <a class="rbrand" data-gs="#/" href="./#/" aria-label="Grading Studio, Today"><span class="rl">Grading <i>Studio</i></span><span class="rs" aria-hidden="true">G<i>S</i></span></a>
   <button class="rfind" id="findBtn" aria-haspopup="dialog" title="Find a lesson, a unit, a class or a setting"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5"/></svg><span class="rl">Find anything</span><kbd class="rl" id="findKey">Ctrl K</kbd></button>
   <a class="rnav" data-gs="#/" href="./#/" title="Today: what you teach, what is waiting to be marked, what is ready to hand back"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.6"/><path d="M12 3v2.2M12 18.8V21M3 12h2.2M18.8 12H21M5.6 5.6l1.6 1.6M16.8 16.8l1.6 1.6M5.6 18.4l1.6-1.6M16.8 7.2l1.6-1.6"/></svg><span class="rl">Today</span></a>
-  <a class="rnav on" id="railPlanner" href="#week" aria-current="page" title="Planner: this week"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M8 3v4M16 3v4"/></svg><span class="rl">Planner</span></a>
+  <div class="rcap"><span class="rl">Planner</span></div>
+  <a class="rnav on" id="railPlanner" data-v="cal" href="#week" aria-current="page" title="Calendar: your lessons by week, or the whole semester"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M8 3v4M16 3v4"/></svg><span class="rl">Calendar</span></a>
+  <button class="rnav" data-v="units" title="Units: each unit, its weeks and its files"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4l8 4-8 4-8-4 8-4zM4 12l8 4 8-4M4 16l8 4 8-4"/></svg><span class="rl">Units</span></button>
+  <button class="rnav" data-v="library" title="Past lessons: old decks and their handouts, to use again"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16v4H4zM6 10v9h12v-9M10 14h4"/></svg><span class="rl">Past lessons</span></button>
+  <button class="rnav" data-v="activities" title="Activities: the activity bank"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 3L5 13h6l-1 8 8-10h-6l1-8z"/></svg><span class="rl">Activities</span></button>
+  <button class="rnav" data-v="bank" title="Rubrics: saved rubrics and grading scales"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="14" rx="2"/><path d="M4 10h16M4 14.5h16M10 5v14"/></svg><span class="rl">Rubrics</span></button>
   <div class="rcap"><span class="rl">Classes</span></div>
   <div id="railClasses"></div>
   <button class="rnav rtt" id="railTimetable" title="Your classes, when they meet, and the school calendar"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/></svg><span class="rl">Timetable</span></button>
@@ -1581,10 +1595,6 @@ function slideToTitle(l, s) {
   const t = plainTitle(s.title); if (!t) return;
   l.title = t; const i = $('#lessons [data-f="ltitle"]'); if (i && i.value !== t) i.value = t;
 }
-function titleLinkBtn(l) {
-  return titleSlideOf(l) ? '<button class="btn sm ghost pl-tlink' + (titlesLinked(l) ? ' on' : '') + '" data-a="tlink" title="' + (titlesLinked(l) ? 'The lesson name and the title slide match. Click to let them be different.' : 'The lesson name and the title slide are different. Click to match them again.') + '" aria-pressed="' + titlesLinked(l) + '">' + (titlesLinked(l) ? '🔗 Matches title slide' : 'Not matched') + '</button>' : '';
-}
-
 /* ---------- timetable ---------- */
 const classById = id => ((L.setup && L.setup.classes) || []).find(c => c.id === id);
 const className = id => { const c = classById(id); return c ? c.name : id; };
@@ -1775,12 +1785,6 @@ function renderLessons() {
   renderWeek();
 }
 
-function folderChip() {
-  if (!('showDirectoryPicker' in window)) return '<span class="muted ls-fold">The Planner folder needs Chrome</span>';
-  if (L.dir && L.dirOk) return '<button class="btn sm ghost" data-a="sync" title="Look for lessons Claude added or changed in your Planner folder">⟳ Planner folder: ' + esc(L.dir.name) + '</button>';
-  if (L.dir) return '<button class="btn sm" data-a="reconnect">Reconnect Planner folder</button>';
-  return '<button class="btn sm" data-a="link">Link the Planner folder…</button>';
-}
 function renderWeek() {
   const el = $('#lessons'), mon = parseYmd(L.weekOf);
   const days = [0, 1, 2, 3, 4].map(i => ymd(addDays(mon, i)));
@@ -1788,7 +1792,8 @@ function renderWeek() {
   let h = topBar('week', '<button class="btn sm ghost" data-a="wk" data-n="-7" aria-label="Previous week">‹</button>' +
     '<span class="ls-wk">' + LMONTHS[mon.getMonth()].slice(0, 3) + ' ' + mon.getDate() + ' – ' + (fri.getMonth() !== mon.getMonth() ? LMONTHS[fri.getMonth()].slice(0, 3) + ' ' : '') + fri.getDate() + '</span>' +
     '<button class="btn sm ghost" data-a="wk" data-n="7" aria-label="Next week">›</button><button class="btn sm ghost" data-a="today">This week</button>' +
-    '<input type="date" class="btn sm" data-a="jump" value="' + L.weekOf + '" aria-label="Go to a date">' + (L.setup ? '<button class="btn sm ghost" data-a="dlweek" title="Every lesson on the calendar this week, with its PowerPoint and materials, in one .zip">↓ Download week</button><button class="btn sm ghost" data-a="printweek">Print week</button>' : ''));
+    '<input type="date" class="btn sm" data-a="jump" value="' + L.weekOf + '" aria-label="Go to a date">',
+    L.setup ? '<button class="mi" role="menuitem" data-a="dlweek">Download week<small>Every lesson on the calendar this week, with its PowerPoint and materials, in one .zip</small></button><button class="mi" role="menuitem" data-a="printweek">Print week<small>Each day’s classes with their lessons and materials</small></button><hr>' : '');
   if (!L.setup) {
     h += '<div class="ls-empty"><h2>Tell the Planner when your classes meet</h2><p>Lessons line up with your classes once the Planner knows when they meet. Type your classes and their times in, which takes a few minutes and is done once. If you already have a setup file from another computer, load it or drop it on this page.</p>' +
       '<div class="row"><button class="btn primary" data-a="setup">Type in my classes</button><button class="btn" data-a="loadsetup">Load a setup file…</button><button class="btn" data-a="newfree">Make a lesson without a class</button></div></div>';
@@ -1825,13 +1830,10 @@ function renderEditor() {
   L.cur = Math.max(0, Math.min(L.cur, l.slides.length - 1));
   const s = l.slides[L.cur];
   let h = '<div class="ls-top"><button class="btn sm ghost" data-a="back">‹ ' + ({ semester: 'Semester', units: 'Units', unit: 'Unit', activities: 'Activities', library: 'Past lessons' }[L.backTo] || 'Week') + '</button>' +
-    '<input class="ls-title-in" data-f="ltitle" value="' + esc(l.title) + '" aria-label="Lesson name">' + titleLinkBtn(l) +
+    '<input class="ls-title-in" data-f="ltitle" value="' + esc(l.title) + '" aria-label="Lesson name">' +
     '<span class="ls-slots">' + l.slots.map((t, i) => '<span class="ls-chip" style="--cc:' + esc((classById(t.classId) || {}).color || '#1F6FB2') + '">' + esc(className(t.classId)) + ' · ' + shortDate(t.date) + mbBtn(classById(t.classId)) + '<button data-unslot="' + i + '" title="Take it off this class" aria-label="Remove">×</button></span>').join('') + '<button class="btn sm ghost" data-a="addslot">+ Class</button></span>' +
-    atlasChip(l) + '<span class="sp"></span>' + statusChip(l) + '<span class="savest" id="lsSaved">Saved</span>' +
-    '<button class="btn sm" data-a="send" title="Copy this lesson for Claude, to paste where you’re working with Claude">Copy for Claude</button>' +
-    commentsBtn(l) + '<button class="btn sm ghost" data-a="versions">Versions</button>' + panelBtn() +
-    '<button class="btn sm ghost" data-a="more">More ▾</button>' +
-    '<button class="btn sm" data-a="finzip" title="Upload the finished PowerPoint and its files as one .zip">↑ Upload lesson .zip</button>' +
+    '<span class="sp"></span>' + statusChip(l) + '<span class="savest" id="lsSaved">Saved</span>' +
+    (lessonTalk(l) ? commentsBtn(l) : '') + panelBtn() + moreHtml(l) +
     '<button class="btn sm" data-a="pptx">Download .pptx</button><button class="btn sm primary" data-pr="present" title="Show this lesson full screen, from this slide">' + prIcon('play') + 'Present</button></div>' + pendingBar(l) + variantBar(l);
   h += '<div class="ls-ed-cols"><nav class="ls-thumbs" id="lsThumbs">' + l.slides.map((x, i) => thumbHtml(x, l, i)).join('') +
     '<div class="ls-addslide"><button class="btn sm" data-a="addslide">+ Add slide</button></div></nav>';
@@ -1859,11 +1861,6 @@ function atlasOf(l) {
     if (hit && hit.u.atlas) return { url: hit.u.atlas, own: false, unit: hit.u.title };
   }
   return null;
-}
-function atlasChip(l) {
-  const a = atlasOf(l);
-  return a ? '<a class="btn sm ghost" href="' + esc(a.url) + '" target="_blank" rel="noopener" title="' + (a.own ? 'This lesson’s ' + (plCur() ? esc(plCur()) + ' page' : 'unit plan') : (plCur() ? esc(plCur()) + ' page of ' : 'Unit plan of ') + esc(a.unit)) + '">' + esc(plCurLink()) + ' ↗</a><button class="btn sm ghost" data-a="atlas" title="Change the ' + esc(plCurLink()) + ' link" aria-label="Change the ' + esc(plCurLink()) + ' link">✎</button>'
-    : '<button class="btn sm ghost" data-a="atlas">+ ' + esc(plCurLink()) + ' link</button>';
 }
 function atlasDlg(l) {
   const a = atlasOf(l);
@@ -1985,6 +1982,7 @@ async function onLessonsClick(e) {
   if (t && t.dataset.mbset) return mbDlg(t.dataset.mbset);
   if (t && t.dataset.dl) return dlCard(t.dataset.dl);
   if (!t) return;
+  if (t.dataset.a && t.dataset.a !== 'more' && t.dataset.a !== 'mdelete' && t.closest('.ls-menu')) moreClose();
   if (L.view === 'edit' && (await reviewClick(t) || await finishedClick(t) || await variantsClick(t))) return;
   if (L.view === 'activities' && t.dataset.a && await activitiesClick(t)) return;
   if (t.classList.contains('ls-ed') && !t.dataset.a) return startEdit(t);
@@ -2008,10 +2006,11 @@ async function onLessonsClick(e) {
   if (a === 'link') return folderLink();
   if (a === 'reconnect') return folderReconnect(true);
   if (a === 'sync') { await folderRead(true); return; }
+  if (a === 'more') return moreMenu(t);
   if (!l) return;
   if (a === 'pptx') { editorCommit(); return finOrMake(l); }
   if (a === 'ask') { editorCommit(); return askClaude(l); }
-  if (a === 'more') return moreMenu(t);
+  if (a === 'mexport' || a === 'mcopyto' || a === 'mcopy' || a === 'mdelete') return moreDo(a, t, l);
   if (a === 'addslot') return addSlotDlg();
   if (a === 'pic') return pickPicture();
   if (a === 'addslide') return addSlideDlg();
@@ -2238,24 +2237,45 @@ function showAllLessons() {
     closeDlg(); openLesson(L.lessons.find(x => x.id === b.dataset.pk));
   };
 }
-function moreMenu() {
-  const l = L.open;
-  openDlg('<div class="bh"><h2>' + esc(l.title) + '</h2></div><div class="bb ls-more">' +
-    '<button class="btn" data-m="export">Save lesson file (for Claude)…</button><p class="muted">A .lesson.json file with just this lesson. Give it to Claude, then bring Claude’s version back with Import.</p>' +
-    '<button class="btn" data-m="copyto">Copy to another class or day…</button><p class="muted">A separate copy with its own slides and materials.</p>' +
-    '<button class="btn" data-m="copy">Copy lesson as text</button><p class="muted">The slides and notes as plain text, to paste anywhere.</p>' +
-    '<button class="btn" data-m="delete">Delete this lesson</button></div><div class="bf"><button class="btn" data-x>Close</button></div>', true);
-  $('#dlgBox').onclick = async e => {
-    if (e.target.closest('[data-x]')) return closeDlg();
-    const m = e.target.closest('[data-m]'); if (!m) return;
-    if (m.dataset.m === 'export') { closeDlg(); return saveBlob(fileBase(l) + '.lesson.json', new Blob([JSON.stringify(lessonForFile(l, null), null, 2)], { type: 'application/json' })); }
-    if (m.dataset.m === 'copyto') { closeDlg(); return copyLessonDlg(l); }
-    if (m.dataset.m === 'copy') { await copyText(lessonText(l)); closeDlg(); return toast('Copied'); }
-    if (m.dataset.m === 'delete') {
-      if (m.dataset.sure !== '1') { m.dataset.sure = '1'; m.textContent = 'Click again to delete it for good'; return; }
-      await lDelete(l); closeDlg(); L.open = null; L.view = L.backTo || 'week'; renderLessons(); toast('Lesson deleted');
-    }
-  };
+const lessonTalk = l => l.slides.reduce((k, s) => k + (s.talk || []).length, (l.talk || []).length);
+function moreHtml(l) {
+  const a = atlasOf(l), linked = titlesLinked(l), link = esc(plCurLink());
+  const it = (act, label, sub, cls) => '<button class="mi' + (cls ? ' ' + cls : '') + '" role="menuitem" data-a="' + act + '">' + label + (sub ? '<small>' + sub + '</small>' : '') + '</button>';
+  return '<span class="ls-morew"><button class="btn sm ghost" data-a="more" aria-haspopup="true" aria-expanded="false">More ▾</button><div class="ls-menu" role="menu" aria-label="More for this lesson" hidden>' +
+    it('send', 'Copy for Claude', 'To paste where you’re working with Claude') +
+    (lessonTalk(l) ? '' : it('comments', 'Comments', 'On the lesson and its slides')) +
+    it('versions', 'Versions', 'Earlier copies of this lesson') +
+    it('finzip', 'Upload lesson .zip', 'The finished PowerPoint and its files, as one .zip') + '<hr>' +
+    (titleSlideOf(l) ? it('tlink', linked ? 'Name matches the title slide ✓' : 'Match the name to the title slide', linked ? 'Click to let them be different' : 'They are different now', linked ? 'on' : '') : '') +
+    (a ? '<a class="mi" role="menuitem" href="' + esc(a.url) + '" target="_blank" rel="noopener">Open ' + link + ' ↗<small>' + (a.own ? 'This lesson’s own page' : 'The page of ' + esc(a.unit)) + '</small></a>' + it('atlas', 'Change the ' + link + ' link') : it('atlas', '+ ' + link + ' link')) + '<hr>' +
+    it('mexport', 'Save lesson file…', 'A .lesson.json of just this lesson, for Claude. Bring Claude’s version back with Import') +
+    it('mcopyto', 'Copy to another class or day…', 'A separate copy with its own slides and materials') +
+    it('mcopy', 'Copy lesson as text', 'The slides and notes as plain text') +
+    it('mdelete', 'Delete this lesson') + '</div></span>';
+}
+function moreClose() { const m = document.querySelector('#lessons .ls-menu'); if (!m || m.hidden) return false; m.hidden = true; m.previousElementSibling.setAttribute('aria-expanded', 'false'); return true; }
+function moreMenu(t) {
+  const m = t.nextElementSibling; if (!m.hidden) return moreClose();
+  m.hidden = false; t.setAttribute('aria-expanded', 'true'); const f = m.querySelector('.mi'); if (f) f.focus();
+}
+document.addEventListener('click', e => { if (!e.target.closest('.ls-morew')) moreClose(); });
+document.addEventListener('keydown', e => {
+  const m = document.querySelector('#lessons .ls-menu'); if (!m || m.hidden) return;
+  if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); moreClose(); m.previousElementSibling.focus(); }
+  else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+    const xs = [...m.querySelectorAll('.mi')], i = xs.indexOf(document.activeElement); e.preventDefault();
+    xs[(i + (e.key === 'ArrowDown' ? 1 : -1) + xs.length) % xs.length].focus();
+  }
+}, true);
+async function moreDo(a, t, l) {
+  if (a === 'mdelete') {
+    if (t.dataset.sure !== '1') { t.dataset.sure = '1'; t.textContent = 'Click again to delete it for good'; return; }
+    await lDelete(l); L.open = null; L.view = L.backTo || 'week'; renderLessons(); return toast('Lesson deleted');
+  }
+  moreClose();
+  if (a === 'mexport') return saveBlob(fileBase(l) + '.lesson.json', new Blob([JSON.stringify(lessonForFile(l, null), null, 2)], { type: 'application/json' }));
+  if (a === 'mcopyto') return copyLessonDlg(l);
+  if (a === 'mcopy') { await copyText(lessonText(l)); return toast('Copied'); }
 }
 async function copyText(t) { try { await navigator.clipboard.writeText(t); } catch { const a = document.createElement('textarea'); a.value = t; document.body.appendChild(a); a.select(); document.execCommand('copy'); a.remove(); } }
 const varTag = l => (l.variantOf || variantsOf(l).length > 1) ? '<span class="pl-vtag">' + esc(varName(l)) + '</span>' : '';
@@ -2598,7 +2618,7 @@ async function folderReconnect(ask) {
     L.dirOk = p === 'granted';
   } catch { L.dirOk = false; }
   if (L.dirOk) { await folderRead(false); if (ask) await folderWriteAll(); }
-  if (L.view === 'week') renderWeek(); else { const c = document.querySelector('#lessons [data-a="reconnect"],#lessons [data-a="sync"],#lessons [data-a="link"]'); if (c) c.outerHTML = folderChip(); }
+  if (L.view === 'week') renderWeek();
   railRender();
 }
 async function writeFile(dir, name, data) { const fh = await dir.getFileHandle(name, { create: true }); const w = await fh.createWritable(); await w.write(data); await w.close(); return (await fh.getFile()).lastModified; }
@@ -4470,7 +4490,7 @@ async function atlasHtml() {
   const a = l && atlasOf(l);
   let h = '<div class="sp-pad">';
   if (a) h += '<a class="btn" href="' + esc(a.url) + '" target="_blank" rel="noopener">Open ' + (plCur() ? esc(plCur()) : 'the unit plan') + ' ↗</a><p class="muted sp-small">' + (plCur() ? esc(plCur()) + ' asks' : 'It may ask') + ' for your school sign-in and can’t be shown inside another page, so it opens in its own tab.</p>';
-  if (!hits.length) h += '<p class="muted">' + (l ? 'This lesson isn’t in a unit yet. Units are under the Units tab.' : 'No unit this week.') + '</p>';
+  if (!hits.length) h += '<p class="muted">' + (l ? 'This lesson isn’t in a unit yet. Units are in the sidebar.' : 'No unit this week.') + '</p>';
   for (const { u, n } of hits) {
     const w = n >= 0 ? u.weeks[n] : null;
     h += '<div class="sp-unit"><b>' + esc(u.title) + '</b>' + (u.atlas && !a ? ' <a href="' + esc(u.atlas) + '" target="_blank" rel="noopener">' + esc(plCurLink()) + ' ↗</a>' : '') +
@@ -5210,7 +5230,7 @@ window.__present = { PR, start: presentStart, end: presentEnd, timer: prTimerSta
 
 /* ================= The sidebar =================
    The same sidebar as on the grading page, drawn by the Planner's own code. Its classes are the ones on the Planner's
-   timetable. It shows no grading counts and reads nothing of grading's: Today, a class and Settings are plain links
+   timetable, and the Planner's own sections (Calendar, Units, Past lessons, Activities, Rubrics) are in it. It shows no grading counts and reads nothing of grading's: Today, a class and Settings are plain links
    to the grading page, which looks the class up by its name when it opens. */
 const GS_PAGE = location.protocol === 'file:' || /Planner\.html$/.test(decodeURIComponent(location.pathname)) ? 'Grading Studio.html' : './';
 const gsUrl = hash => GS_PAGE + (hash || '#/');
@@ -5240,17 +5260,20 @@ function railRender() {
   if (el.dataset.h !== s) { el.dataset.h = s; el.innerHTML = s; }
   document.body.classList.toggle('pfold', L.view === 'edit' || L.view === 'doc' || L.view === 'unit');
   if (L.view === 'week' || L.view === 'semester') calView = L.view;
+  const at = { week: 'cal', semester: 'cal', units: 'units', unit: 'units', library: 'library', activities: 'activities', bank: 'bank' }[L.view === 'edit' || L.view === 'doc' ? L.backTo || 'week' : L.view] || 'cal';
+  for (const x of document.querySelectorAll('#rail [data-v]')) { const on = x.dataset.v === at; x.classList.toggle('on', on); if (on) x.setAttribute('aria-current', 'page'); else x.removeAttribute('aria-current'); }
   const t = (L.view === 'edit' && L.open ? L.open.title + ' · ' : L.view === 'unit' && L.unit ? L.unit.title + ' · ' : '') + 'Planner · Grading Studio';
   if (document.title !== t) document.title = t;
 }
 $('#rail').addEventListener('click', async e => {
   const a = e.target.closest('a[href]');
   if (a) {
-    if (a.id === 'railPlanner') { e.preventDefault(); return toView('week'); }
+    if (a.id === 'railPlanner') { e.preventDefault(); return toView(L.view === 'week' || L.view === 'semester' ? L.view : calView); }
     if (e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;   // a new tab, as the browser does it
     e.preventDefault(); return leaveTo(a.href);
   }
   const b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.v) return toView(b.dataset.v);
   if (b.id === 'findBtn') return openFind();
   if (b.id === 'railTimetable') return openTimetable();
   if (b.id === 'railSaved') return L.dir && L.dirOk ? folderRead(true) : L.dir ? folderReconnect(true) : folderLink();
@@ -5358,14 +5381,15 @@ function arriveAt() {
 const UNIT_COLORS = ['#1F6FB2', '#7B3FC4', '#B71E42', '#0E7C66', '#B35C00', '#3D5A80', '#8E3B8A', '#2F6B2F'];
 const MAX_FILE = 40 * 1024 * 1024;
 
-/* ---------- top bar shared by every Planner view ---------- */
-function topBar(view, extra) {
+const VIEW_NAMES = { week: 'Calendar', semester: 'Calendar', units: 'Units', library: 'Past lessons', activities: 'Activities', bank: 'Rubrics' };
+function topBar(view, extra, more) {
   const cal = view === 'week' || view === 'semester';
-  const tab = (v, t, on) => '<button class="pl-tab' + (on ? ' on' : '') + '" data-a="tab" data-v="' + v + '"' + (on ? ' aria-current="page"' : '') + '>' + t + '</button>';
-  return '<div class="ls-top"><span class="title">Planner</span><nav class="pl-tabs" aria-label="Views">' + tab(cal ? view : calView, 'Calendar', cal) + tab('units', 'Units', view === 'units') + tab('library', 'Past lessons', view === 'library') + tab('activities', 'Activities', view === 'activities') + tab('bank', 'Rubrics', view === 'bank') + '</nav>' +
-    (cal ? '' : extra || '') + '<span class="sp"></span><input type="search" id="plFind" class="pl-find" placeholder="Search lessons…" aria-label="Search lessons, slides, documents and units">' + folderChip() +
-    panelBtn() + '<button class="btn sm ghost" data-a="import">Import…</button>' +
-    (cal ? '<span class="ls-brk"></span><span class="pl-tabs cal" role="group" aria-label="Calendar view">' + tab('semester', 'Semester', view === 'semester') + tab('week', 'Week', view === 'week') + '</span>' + (extra || '') : '') + '</div>';
+  const tab = (v, t, on) => '<button class="pl-tab' + (on ? ' on' : '') + '" data-a="tab" data-v="' + v + '" aria-pressed="' + !!on + '">' + t + '</button>';
+  return '<div class="ls-top head"><h1 class="title">' + VIEW_NAMES[view] + '</h1>' +
+    (cal ? '<span class="pl-tabs cal" role="group" aria-label="Calendar view">' + tab('week', 'Week', view === 'week') + tab('semester', 'Semester', view === 'semester') + '</span>' : '') + (extra || '') +
+    '<span class="sp"></span><input type="search" id="plFind" class="pl-find" placeholder="Search lessons…" aria-label="Search lessons, slides, documents and units">' +
+    panelBtn() + (more ? '<span class="ls-morew"><button class="btn sm ghost" data-a="more" aria-haspopup="true" aria-expanded="false">More ▾</button><div class="ls-menu" role="menu" hidden>' + more +
+      '<button class="mi" role="menuitem" data-a="import">Import…<small>A lesson file, a lesson pack, or pasted text</small></button></div></span>' : '<button class="btn sm ghost" data-a="import">Import…</button>') + '</div>';
 }
 
 async function notGradingFolder(h) {

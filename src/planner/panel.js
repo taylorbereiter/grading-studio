@@ -190,7 +190,7 @@ async function atlasHtml() {
   const a = l && atlasOf(l);
   let h = '<div class="sp-pad">';
   if (a) h += '<a class="btn" href="' + esc(a.url) + '" target="_blank" rel="noopener">Open ' + (plCur() ? esc(plCur()) : 'the unit plan') + ' ↗</a><p class="muted sp-small">' + (plCur() ? esc(plCur()) + ' asks' : 'It may ask') + ' for your school sign-in and can’t be shown inside another page, so it opens in its own tab.</p>';
-  if (!hits.length) h += '<p class="muted">' + (l ? 'This lesson isn’t in a unit yet. Units are under the Units tab.' : 'No unit this week.') + '</p>';
+  if (!hits.length) h += '<p class="muted">' + (l ? 'This lesson isn’t in a unit yet. Units are in the sidebar.' : 'No unit this week.') + '</p>';
   for (const { u, n } of hits) {
     const w = n >= 0 ? u.weeks[n] : null;
     h += '<div class="sp-unit"><b>' + esc(u.title) + '</b>' + (u.atlas && !a ? ' <a href="' + esc(u.atlas) + '" target="_blank" rel="noopener">' + esc(plCurLink()) + ' ↗</a>' : '') +
