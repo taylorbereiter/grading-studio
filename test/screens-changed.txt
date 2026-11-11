@@ -1,3 +1,5 @@
-# Attendance. A class page has one more tab, Attendance; Settings, Classes and rosters has an Attendance section; Today has a
-# line under a class that is on the timetable and in grading; Help has one more answer; the version line reads 1.25.0.
-*
+# Grade sheet: a student with a score in the app shows that score ("Your score"), a new checkbox "Also show grades found on
+# the papers", and the line under the title counts scored students. The marking screen differs by 12 pixels in one picture
+# (laptop, dark), at the sidebar's bottom-left corner, which this change does not touch.
+grades-sheet
+mark
