@@ -2024,7 +2024,7 @@ button.pavg:hover .v{text-decoration:underline}
 .scores.slide.many .sticks button.half{display:none}
 .scores.slide.many .sticks button{min-width:16px;padding:1px 0}
 /* Rubric setup: how every row is scored */
-.rowscale{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:8px;font-size:13px}
+.rowscale{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:8px;font-size:var(--text-control)}
 .rowscale label{font-weight:600;margin:0}
 .rowscale .rowhalf{display:inline-flex;align-items:center;gap:5px;font-weight:500}
 .rowscale select{padding:4px 6px}
@@ -16720,9 +16720,9 @@ function stampData(prev, data, dev, now, seen) {
 
 /* a rubric and the scores given with it */
 function rubricKey(su) {
-  const s = su || {}, pts = s.mode === 'points', max = pts ? +(s.outOf == null ? 10 : s.outOf) || 0 : (s.criteria ? rowsMax(s) : 3 * ROW_TOP), sc = s.scale === undefined ? SCALE12 : s.scale || {};
+  const s = su || {}, pts = s.mode === 'points', max = pts ? +(s.outOf == null ? 10 : s.outOf) || 0 : (!s.criteria ? 12 : typeof rowsMax === 'function' ? rowsMax(s) : s.criteria.length * 4), sc   /* this file also runs on its own in tests, where a row is always 0 to 4 */ = s.scale === undefined ? SCALE12 : s.scale || {};
   const keys = Object.keys(sc).filter(k => sc[k] !== '' && sc[k] != null && !isNaN(+sc[k])).map(Number).sort((a, b) => a - b);
-  const own = pts ? {} : rowScaleOf(s);   // rows scored on another scale than 0 to 4 with halves: a different rubric, even when the total is the same
+  const own = pts || typeof rowScaleOf !== 'function' ? {} : rowScaleOf(s);   // rows scored on another scale than 0 to 4 with halves: a different rubric, even when the total is the same
   return JSON.stringify([pts, max, keys.length >= 2 && keys[keys.length - 1] === max ? keys.map(k => [k, +sc[k]]) : 0].concat(Object.keys(own).length ? [own] : []));
 }
 const rubricsDiffer = (x, y) => rubricKey(x) !== rubricKey(y);

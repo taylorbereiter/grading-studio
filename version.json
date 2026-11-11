@@ -1,6 +1,6 @@
 {
  "version": "1.25.0",
- "build": "60e6656c41ac",
+ "build": "4c3e7f3a1cfb",
  "notes": [
   "Attendance. Each class has an Attendance tab: everyone starts as present, so a day is one press for each student who is late, excused or absent, with a note if you want one.",
   "Look back shows every saved day in one table with each student’s totals, and a student’s own page lists the days they missed.",
@@ -8,7 +8,7 @@
   "If you don’t take attendance here, turn it off in Settings, Classes and rosters."
  ],
  "files": {
-  "index.html": "a712acb8846f272227ce7479bdf1ad7505c079f7ab40353dceb36991138556be",
+  "index.html": "31c6fbc4001a931e447d615b7d2861f015c38b4969df5923fd162aefeed09c5e",
   "planner.html": "425ba0e1e61db546a6de63298daa6a53d35600475b17dfc3f557a4d0b1a93cac"
  }
 }
