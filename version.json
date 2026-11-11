@@ -1,13 +1,13 @@
 {
- "version": "1.23.0",
- "build": "bfecc2b3e309",
+ "version": "1.24.0",
+ "build": "3207f023beae",
  "notes": [
   "A to-do list. To do in the sidebar holds your own list beside what the app noticed from your work: papers to mark, papers to hand back, a class with no lesson planned, missing work to chase. Those go by themselves when the work is done, and each kind can be switched off.",
   "Type a to-do the way you would say it, like “Call Bram’s parents friday”, and it picks out the day, the class and the student. Press N anywhere outside a paper to add one.",
   "A to-do can have a day, a class, a student or assignment it goes with, a repeat and a note. Today shows a short card of what is overdue or due today."
  ],
  "files": {
-  "index.html": "ed6bf73b5ba8a808ef3758c43e543a3596c3b6298f7d0632cbaf8be16d4f7d83",
-  "planner.html": "befe904ef409cf107747fdbc503e886a95994482826cd97d1c3de8d99962bb0f"
+  "index.html": "9bb3466d917605ccf43b0327ad707f51ddbb10eac27b6f3318de79b58655b9e0",
+  "planner.html": "4a93bccaf14a93c4fbdc01d0605570dc7e1febbfc7ef441c6e08139adf0fa2c8"
  }
 }

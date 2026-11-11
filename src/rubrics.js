@@ -50,15 +50,15 @@ $('#grade').addEventListener('click', e => {
 /* In Rubric setup. */
 let rubDlg = null;   // the setup being edited: { draft, re, was, pageNew, from, n0, told }
 // The setup as Save would keep it, to tell if anything changed. The name of a rubric she saved for later isn't a change to this setup.
-const setupSnap = d => JSON.stringify({ ...d, levels: tidyLevels(d), rubricName: undefined });
+const setupSnap = d => JSON.stringify({ ...d, levels: tidyLevels(d), goals: goalsTidy(d), rubricName: undefined });
 // from: where each row in the draft came from, by its place when the dialog opened (null for a new row). told: the scoring mode she's already been asked about.
 function rubricsSetup(draft, re, pageNew) {
-  rubDlg = { draft, re, was: setupSnap(draft), pageNew, from: draft.criteria.map((_, i) => i), n0: draft.criteria.length, told: null, bankKey: null };
+  rubDlg = { draft, re, was: setupSnap(draft), pageNew, from: draft.criteria.map((_, i) => i), n0: draft.criteria.length, told: null, bankKey: null, goalAll: (batch && batch.goal) || '' };
   const me = rubDlg; bankJob(() => bankRead(true).catch(() => { gBank = { rubrics: savedRubrics(), scales: [], gone: {}, units: [] }; }).then(() => { if (rubDlg === me) bankRedraw(); }));
 }
 // Esc or a click outside. All that writing only lives in the dialog until Save, so Rubric setup asks first. Its Cancel button is already a clear choice.
 async function leaveDlg() {
-  if ($('#setupBody') && (rubDlg.pageNew() || setupSnap(rubDlg.draft) !== rubDlg.was) && !await askDlg('Leave Rubric setup without saving? The changes you made here won’t be kept.', { ok: 'Leave', cancel: 'Keep editing', danger: true })) return;
+  if ($('#setupBody') && (rubDlg.pageNew() || setupSnap(rubDlg.draft) !== rubDlg.was || rubDlg.goalAll !== ((batch && batch.goal) || '')) && !await askDlg('Leave Rubric setup without saving? The changes you made here won’t be kept.', { ok: 'Leave', cancel: 'Keep editing', danger: true })) return;
   closeDlg();
 }
 function levelsEditHtml(d, i) {
@@ -67,7 +67,7 @@ function levelsEditHtml(d, i) {
     LEVELS.map(v => '<label class="lvin"><b>' + v + '</b><textarea rows="2" data-lvi="' + i + '" data-lvv="' + v + '" aria-label="What ' + v + ' means on this row">' + esc(levelIn(d, i, v)) + '</textarea></label>').join('') +
     '<span class="muted lvnote">Leave any of these blank. A half point shows the two scores around it.</span></details>';
 }
-function levelsRowGone(d, i) { if (d.levels) d.levels.splice(i, 1); rubDlg.from.splice(i, 1); levelEditOpen.clear(); }
+function levelsRowGone(d, i) { if (d.levels) d.levels.splice(i, 1); goalsRowGone(d, i); rubDlg.from.splice(i, 1); levelEditOpen.clear(); }
 // Only what she wrote is kept, and nothing at all if she wrote nothing, so an old setup stays as it was.
 function tidyLevels(d) {
   const out = d.criteria.map((_, i) => { const r = {}; for (const v of LEVELS) { const t = levelIn(d, i, v).trim(); if (t) r[v] = t; } return r; });
@@ -302,7 +302,7 @@ function rowsTakenOut() {
 async function rubricUse(r) {
   const { draft: d, re } = rubDlg, note = rubricUseNote(r, d);
   if (note && !await askDlg('Use “' + r.name + '”?\n\n' + note, { ok: 'Use it', cancel: 'Keep what I have' })) return;
-  Object.assign(d, { mode: 'rubric', criteria: r.criteria.slice(), levels: r.levels ? JSON.parse(JSON.stringify(r.levels)) : undefined, scale: r.scale ? { ...r.scale } : null, rubricName: r.name });
+  Object.assign(d, { mode: 'rubric', criteria: r.criteria.slice(), levels: r.levels ? JSON.parse(JSON.stringify(r.levels)) : undefined, goals: Array.isArray(r.goals) ? r.goals.slice() : undefined, scale: r.scale ? { ...r.scale } : null, rubricName: r.name });
   Object.assign(rubDlg, { from: r.criteria.map((_, i) => i), n0: r.criteria.length, told: 'rubric' });   // a saved rubric's rows go by place, and this has just said so
   levelEditOpen.clear(); re();
   toast('“' + r.name + '” is filled in. Press Save to keep it.');
@@ -315,6 +315,7 @@ async function rubricSaveNow() {
   const name = got.name, list = bankRubrics(), old = list.find(r => r.name.toLowerCase() === name.toLowerCase());
   if (old && !await askDlg('You already have a rubric called “' + old.name + '”. Replace it with this one?', { ok: 'Replace it', cancel: 'Keep the old one', danger: true })) return;
   const r = { id: old ? old.id : uid(), name, criteria: d.criteria.map((c, i) => c.trim() || 'Criterion ' + (i + 1)), levels: tidyLevels(d), scale: d.scale ? { ...d.scale } : null, at: Date.now() };
+  const tags = goalsTidy(d); if (tags) r.goals = tags;   // a saved rubric keeps its rows' learning goals
   const unit = keyRef(got.key, old && old.unit); if (unit) r.unit = unit;
   const legacy = savedRubrics().filter(x => x.id !== r.id && x.name.toLowerCase() !== name.toLowerCase()); legacy.push(r); legacy.sort((a, b) => natural(a.name, b.name));
   store.set('gs.rubrics', legacy);   // so the take-home file still carries it, and so it's listed right away
