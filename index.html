@@ -2098,6 +2098,9 @@ html.welcoming .shell{visibility:hidden}
         <section class="lib setsec" id="setPapers" data-sec="marking" hidden>
           <div class="lhead"><h2>Word papers</h2><span class="muted">Mark them as they are, or turn each one into PDF pages you can mark anywhere. The Word file is always kept.</span><span class="sp"></span><span class="seg" id="setWordPdf"><button data-v="0" aria-pressed="true">Keep as Word</button><button data-v="1" aria-pressed="false">Convert to PDF pages</button></span></div>
         </section>
+        <section class="lib setsec" id="setNames" data-sec="marking" hidden>
+          <div class="lhead"><h2>Name covers</h2><span class="muted">You cover names yourself in Check the covers. Finding them on its own can cover words that aren’t names.</span><span class="sp"></span><span class="seg" id="setNameFind" aria-label="Find names on their own"><button data-v="0" aria-pressed="true">Cover names myself</button><button data-v="1" aria-pressed="false">Also find typed names</button></span></div>
+        </section>
         <section class="lib setsec" id="setTimetable" data-sec="timetable" hidden></section>
         <section class="lib setsec" id="setDisplay" data-sec="display" hidden>
           <div class="lhead"><h2>Display</h2><span class="muted">Light mode is the usual look. Text size and zoom apply while you grade.</span><span class="sp"></span><button class="btn sm themeBtn">Dark mode</button><button class="btn sm" id="setDisp">Text size and zoom</button></div>
@@ -6407,7 +6410,7 @@ function labelCovers(items, cover) {
 }
 async function autoCovers(page, vp, rx, xf, opts) {
   const out = [];
-  if (!rx) return out;
+  if (!rx || !nameFindOn()) return out;
   const tc = await page.getTextContent();
   const cover = (it, from, n, tall) => {
     const tx = pdfjsLib.Util.transform(vp.transform, it.transform), fh = Math.hypot(tx[2], tx[3]) || 10, run = Math.hypot(tx[0], tx[1]) || 1;
@@ -6495,7 +6498,7 @@ async function sharePage(st, f, js, p, scale, rx, opts) {
   page.cleanup();
   return { c, W, H, side, covers, gone: auto.gone };
 }
-const shareDocs = st => layoutOf(st).filter(d => docIn(st, d)).map(d => ({ ...d, pages: d.pages.filter(([path]) => { const f = fileByPath(st, path); return f && !f.virtual && viewable(f); }) })).filter(d => d.pages.length);
+const shareDocs = (st, all) => layoutOf(st).filter(d => all || docIn(st, d)).map(d => ({ ...d, pages: d.pages.filter(([path]) => { const f = fileByPath(st, path); return f && !f.virtual && viewable(f); }) })).filter(d => d.pages.length);
 
 function openShare() {
   saveNow(); commitEditors(); shareState(); saveSoon();
@@ -6504,8 +6507,8 @@ function openShare() {
     '<div id="shPapers"><p style="margin-top:0">This makes a ZIP you can give to Claude with <b>no names in it</b><span id="shPromise">' + esc(namePromise()) + '</span>. <span id="shWho"></span> The list of who is who stays only in this browser.</p>' +
     '<details class="cclist" style="margin:0 0 12px"><summary>What goes in it</summary><ul style="list-style:disc;margin:6px 0 0;padding-left:20px;line-height:1.55;max-height:none">' +
     '<li>Every page becomes a picture, so no hidden text or file details go with it.</li>' +
-    '<li>Names are covered in black wherever they’re typed on the page' + (batchClass() ? ' (folder names and your roster names)' : ' (from the folder names)') + ', and in any Kami box that has a name.</li>' +
-    '<li>Email addresses and long ID numbers typed on the page are covered too.</li>' +
+    (nameFindOn() ? '<li>Names are covered in black wherever they’re typed on the page' + (batchClass() ? ' (folder names and your roster names)' : ' (from the folder names)') + ', and in any Kami box that has a name.</li>' +
+    '<li>Email addresses and long ID numbers typed on the page are covered too.</li>' : '<li>Names are covered where you box them in Check the covers.</li>') +
     '<li>Your scores, rubric and comments go too, with names swapped for [name].</li>' +
     '<li><b>Only PDFs and pictures go in.</b> A Word file stays out until it’s PDF pages: Convert to PDF on the Word paper’s bar makes them.</li></ul></details>' +
     '<div id="shSteps"></div>' +
@@ -6530,10 +6533,10 @@ function openShare() {
   };
 }
 
-async function checkCovers(start, onDone) {
+async function checkCovers(start, onDone, all) {
   await ensureCounts();
   await classCommon();
-  const list = coverList();
+  const list = coverList(all);
   if (!list.length) return toast('No papers to share');
   let pos = Math.min(start || 0, list.length - 1), token = 0, last = null, drawn = 0;
   let find = '', only = 'all', undo = [];
@@ -6543,7 +6546,7 @@ async function checkCovers(start, onDone) {
     '<span class="seg ccseg"><button data-ccf="all"></button><button data-ccf="todo"></button><button data-ccf="flag"></button></span></div>' +
     '<ul class="ccrows" id="ccRows"></ul><div class="ccalldone" id="ccAllDone" hidden>✓ Every paper is checked.</div></aside>' +
     '<div class="bb" id="ccBody"></div></div>' +
-    '<div class="bf" style="justify-content:space-between"><span class="muted" style="font-size:13px;align-self:center;max-width:46%">Drag a box over a name it missed. Click any black box that isn’t a name to take it off, and click a dashed one to put it back. ' + keyLabel('⌘Z') + ' takes back the last change.</span><span style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end"><button class="btn" data-every hidden>Use my last box on every paper</button><button class="btn" data-back>◀ Back</button><button class="btn primary" data-next>Next ▶</button></span></div>');
+    '<div class="bf" style="justify-content:space-between"><span class="muted" style="font-size:13px;align-self:center;max-width:46%">Drag over a name to cover it. Click a box to take it off. ' + keyLabel('⌘Z') + ' undoes.</span><span style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end"><button class="btn" data-every hidden>Use my last box on every paper</button><button class="btn" data-back>◀ Back</button><button class="btn primary" data-next>Next ▶</button></span></div>');
   const box = $('#dlgBox');
   box.classList.add('ccbox');
   const finish = () => { if (eachKeys) document.removeEventListener('keydown', eachKeys, true); eachKeys = null; saveSoon(); (onDone || openShare)(); };
@@ -6566,8 +6569,8 @@ async function checkCovers(start, onDone) {
     showFlag();
   }
   const boxCount = d => d.pages.reduce((n, [path, p]) => n + ((shareState().boxes[boxKey(path, p)] || []).length), 0);
-  const codeLine = x => codeOf(x.st) + (x.k ? '-' + (x.k + 1) : '');
-  const flagOf = x => coverOk(x.st, x.d) ? '' : nameFlag(x.st, x.d).replace(/, check this one$/, '');
+  const codeLine = x => all ? '' : codeOf(x.st) + (x.k ? '-' + (x.k + 1) : '');
+  const flagOf = x => coverOk(x.st, x.d) ? '' : nameFlag(x.st, x.d);
   const shown = () => {
     const q = find.trim().toLowerCase();
     return list.map((x, i) => i).filter(i => (only === 'all' || (only === 'todo' ? !coverOk(list[i].st, list[i].d) : !!flagOf(list[i]))) && (!q || (coverName(list[i].st, list[i].k) + ' ' + codeLine(list[i])).toLowerCase().includes(q)));
@@ -6593,7 +6596,7 @@ async function checkCovers(start, onDone) {
   }
   async function show() {
     const my = ++token, { st, d, k } = list[pos], rx = coverRx(st);
-    $('#ccTitle').textContent = coverName(st, 0) + ' → ' + codeOf(st) + (k ? '-' + (k + 1) : '');
+    $('#ccTitle').textContent = all ? coverName(st, k) : coverName(st, 0) + ' → ' + codeOf(st) + (k ? '-' + (k + 1) : '');
     head(); rows();
     $('#ccCount').textContent = 'paper ' + (pos + 1) + ' of ' + list.length;
     box.querySelector('[data-back]').disabled = pos === 0;
@@ -6647,8 +6650,10 @@ async function checkCovers(start, onDone) {
         body.appendChild(c);
         if (pg0) pg0.cleanup();
       }
-      if (my === token) drawn = my;
-    } finally { for (const v of js.values()) v.destroy(); }
+    } catch (er) {
+      console.error(er);
+      if (my === token) body.insertAdjacentHTML('beforeend', '<p class="muted" style="text-align:center">This page couldn’t be shown.</p>');
+    } finally { if (my === token) drawn = my; for (const v of js.values()) v.destroy(); }
   }
   const step = dd => { const vis = shown(); if (!vis.length) return; const at = vis.indexOf(pos); const to = at < 0 ? vis.find(i => dd > 0 ? i > pos : i < pos) : vis[at + dd]; if (to == null || to === pos) return; pos = to; show(); };
   $('#ccFind').oninput = e => { find = e.target.value; rows(); };
@@ -8444,6 +8449,7 @@ function anonScrub() {
   for (const el of document.querySelectorAll('#paper .fhead > span:first-child, #paper .refd > summary, #paper .nofile b, #paper .mhead b')) {
     rf.lastIndex = 0; if (rf.test(el.textContent)) el.textContent = scrub(el.textContent, rf);
   }
+  if (!nameFindOn()) return;   // lines with a name are only found when finding names is on
   for (const el of document.querySelectorAll('#paper .dpage p, #paper .dpage td, #paper .dpage li, #paper .dpage')) {
     if (el.classList.contains('anonhide') || (el.classList.contains('dpage') && el.querySelector('p,td,li'))) continue;
     rx.lastIndex = 0; if (rx.test(el.textContent)) el.classList.add('anonhide');
@@ -8462,19 +8468,16 @@ function openAnon() {
   if (anonOn()) return setAnon(false);
   const seen = batch.anon && batch.anon.order && batch.anon.order.length;
   openDlg('<div class="bh"><h2>Anonymous grading</h2><button class="icon" data-cancel aria-label="Close">✕</button></div><div class="bb">' +
-    '<p style="margin-top:0">Papers show up as <b>Paper 1, Paper 2…</b> in a random order, with names covered. Every mark and score still goes to the right student, and you can switch back any time.</p>' +
-    '<ol style="margin:0 0 12px;padding-left:20px;line-height:1.6">' +
-    '<li><b>Get everything in order first:</b> late files, split scans, your rubric.</li>' +
-    '<li><b>Cover the names.</b> Typed names (from the folder names' + (batchClass() ? ' and your roster' : '') + ') are covered on their own. For handwritten names, check the covers: drag a box over the name once, then use it on every paper. <span id="anCover">' + esc(coverLine()) + '</span>' + nameWarnings() + '<div id="nameFlags" data-before="before you start" style="margin-top:8px">' + nameFlagsHtml('before you start') + '</div></li>' +
-    '<li><b>Start.</b> ' + (seen ? 'It keeps the same random order as last time, or you can shuffle a new one.' : 'The order is shuffled once and kept, so you can stop and come back.') + '</li></ol>' +
-    '<p class="muted" style="font-size:13px;margin:0">The Grades tab, the grade sheet and returned files still use names, since that’s where you copy grades out.</p></div>' +
+    '<p style="margin-top:0">Papers show as <b>Paper 1, Paper 2…</b> in a random order. Scores still go to the right student.</p>' +
+    '<p><b>Cover the names first.</b> In Check the covers, drag a box over a name, then use it on every paper. <span id="anCover">' + esc(coverLine(true)) + '</span></p>' +
+    nameWarnings() + '<div id="nameFlags" data-before="before you start">' + nameFlagsHtml('before you start') + '</div></div>' +
     '<div class="bf"><button class="btn" data-check style="margin-right:auto">Check the covers…</button>' + (seen ? '<button class="btn" data-shuf>Shuffle a new order and start</button>' : '') + '<button class="btn primary" data-go>Start anonymous grading</button></div>', true);
-  ensureCounts().then(() => { const el = $('#anCover'); if (el) el.textContent = coverLine(); findNames(); });
+  ensureCounts().then(() => { const el = $('#anCover'); if (el) el.textContent = coverLine(true); findNames(); });
   $('#dlgBox').onclick = e => {
     if (e.target.closest('[data-cancel]')) return closeDlg();
-    const cc = e.target.closest('[data-cc]'); if (cc) return checkCovers(+cc.dataset.cc, openAnon);
+    const cc = e.target.closest('[data-cc]'); if (cc) return checkCovers(+cc.dataset.cc, openAnon, true);
     const wp = e.target.closest('[data-wp]'); if (wp) { return toPaper(+wp.dataset.wp); }
-    if (e.target.closest('[data-check]')) return ensureCounts().then(() => checkCovers(coverFirst(), openAnon));
+    if (e.target.closest('[data-check]')) return ensureCounts().then(() => checkCovers(coverFirst(true), openAnon, true));
     if (e.target.closest('[data-shuf]')) { anonShuffle(); closeDlg(); return setAnon(true); }
     if (e.target.closest('[data-go]')) { closeDlg(); return setAnon(true); }
   };
@@ -10339,11 +10342,21 @@ function classRx() { const N = namesNow(); return N.cls === null ? (N.cls = N.cl
 const NOT_LATIN = /(?![\p{Script=Latin}\p{Script=Common}\p{Script=Inherited}])\p{L}/u;
 const namesLost = () => namesNow().all.some(n => NOT_LATIN.test(n));
 function nameWarnings() {
+  if (!nameFindOn()) return '';
   const out = [], says = w => isLatin(w) ? nameFold(w) : w, words = [...new Set(namesNow().all.flatMap(rawWords).filter(w => isLatin(w) ? (NAME_PLAIN.has(nameFold(w)) && !NAME_MOSTLY.has(nameFold(w))) || shortBare(w) : plainForms(w).length).map(says))];
   if (namesLost()) out.push('A name typed in another alphabet, like Hindi, Thai, Arabic, Chinese, Burmese, Khmer or a similar one, can’t always be read off the page, so it may not be covered, on that student’s paper or on a classmate’s. In the check, look for them and drag a box over each one.');
   if (words.length) out.push('Some names here are everyday words too' + (anonOn() ? '' : ' (' + words.slice(0, 4).map(w => esc(w[0].toUpperCase() + w.slice(1))).join(', ') + (words.length > 4 ? '…' : '') + ')') + '. A classmate’s name that looks just like the word, as it does at the start of a sentence, stays as typed. Look for it on the papers and in your comments.');
   return out.length ? '<div class="bbmiss" id="nameWarn" style="margin-bottom:12px"><b>Worth a look:</b><ul style="list-style:disc;margin:4px 0 0;padding-left:20px">' + out.map(x => '<li>' + x + '</li>').join('') + '</ul></div>' : '';
 }
+/* ---------------- finding names on its own: off unless she turns it on (11/11) ---------------- */
+const nameFindOn = () => !!store.get('gs.nameFind', false);
+function nameFindShow() { for (const b of document.querySelectorAll('#setNameFind button')) b.setAttribute('aria-pressed', String((b.dataset.v === '1') === nameFindOn())); }
+$('#setNameFind').addEventListener('click', e => {
+  const b = e.target.closest('button[data-v]'); if (!b) return;
+  if (b.dataset.v === '1') store.set('gs.nameFind', true); else store.del('gs.nameFind');
+  nameFindShow();
+});
+nameFindShow();
 /* ---------------- the safety net: a paper says so when its own student's name can't be found on it, or can't be trusted when it is ---------------- */
 function sureRx(st) {
   const N = namesNow(); let rx = N.sure.get(st.key);
@@ -10404,8 +10417,9 @@ function shareOpts(st) {
 }
 let nameLook = null;
 function findNames() {
+  if (!nameFindOn()) return Promise.resolve();
   return nameLook ||= (async () => {
-    const b = batch, left = () => batch === b ? coverList().filter(x => !namesNow().found.has(paperKey(x.st, x.d))) : [];
+    const b = batch, left = () => batch === b ? coverList(true).filter(x => !namesNow().found.has(paperKey(x.st, x.d))) : [];
     try {
       await ensureCounts();
       for (let list = left(); list.length; list = left()) for (const x of list) {
@@ -10418,13 +10432,14 @@ function findNames() {
     finally { nameLook = null; }
   })();
 }
-const namesLooking = () => stillCounting() || coverList().some(x => !namesNow().found.has(paperKey(x.st, x.d)));
+const namesLooking = () => nameFindOn() && (stillCounting() || coverList(true).some(x => !namesNow().found.has(paperKey(x.st, x.d))));
 function nameFlag(st, d) {
+  if (!nameFindOn()) return '';
   const r = namesNow().found.get(paperKey(st, d));
-  if (r === 'none') return 'Name not found, check this one';
-  return r === 'found' && ownNames(st).flat().some(w => NOT_LATIN.test(w)) ? 'Name in another alphabet, check this one' : '';
+  if (r === 'none') return 'Name not found';
+  return r === 'found' && ownNames(st).flat().some(w => NOT_LATIN.test(w)) ? 'Name in another alphabet' : '';
 }
-const nameFlagged = () => coverList().map((x, i) => ({ ...x, i, say: nameFlag(x.st, x.d) })).filter(x => x.say && !coverOk(x.st, x.d));
+const nameFlagged = all => coverList(all).map((x, i) => ({ ...x, i, say: nameFlag(x.st, x.d) })).filter(x => x.say && !coverOk(x.st, x.d));
 function wordNoName(st, f) {
   if (f.virtual || !f.data || (f.kind !== 'docx' && f.kind !== 'text')) return false;
   if (f.kind === 'docx') { wordScore(f); if (f.wtext == null) return true; }
@@ -10433,18 +10448,18 @@ function wordNoName(st, f) {
   return !rx || t.search(rx) < 0;
 }
 function wordFlagsHtml() {
-  const list = batch.students.flatMap((st, i) => st.files.filter(f => wordNoName(st, f)).map(f => ({ st, i, f }))), one = list.length === 1;
+  const off = !nameFindOn(), list = batch.students.flatMap((st, i) => st.files.filter(f => off ? !f.virtual && f.kind === 'docx' : wordNoName(st, f)).map(f => ({ st, i, f }))), one = list.length === 1;
   if (!list.length) return '';
-  return '<div class="bbmiss" id="wordFlags" style="margin-bottom:12px"><b>Look at ' + (one ? 'this Word or text paper' : 'these ' + list.length + ' Word or text papers') + ' before you start:</b> the student’s name wasn’t found in ' + (one ? 'it' : 'them') + ', so a nickname or initials would still show while you grade. These can’t be boxed in Check the covers. To cover a name on one, save it as a PDF and add that instead.<ul class="ccflag">' + list.map(x => '<li><button class="link" data-wp="' + x.i + '">' + esc(x.st.key) + '</button> ' + esc(x.f.name) + '</li>').join('') + '</ul></div>';
+  return '<div class="bbmiss" id="wordFlags" style="margin-bottom:12px"><b>' + (off ? (one ? 'This Word paper shows' : 'These Word papers show') + ' names.' : (one ? 'This paper' : 'These papers') + ' may show a name.') + '</b> Turn ' + (one ? 'it' : 'them') + ' into PDF pages to cover ' + (off ? 'them' : 'it') + '.<ul class="ccflag">' + list.map(x => '<li><button class="link" data-wp="' + x.i + '">' + esc(x.st.key) + '</button> ' + esc(x.f.name) + '</li>').join('') + '</ul></div>';
 }
 function nameFlagsHtml(before) {
-  const word = before === 'before you start' ? wordFlagsHtml() : '';
-  if (namesLooking()) return '<p class="muted" style="margin:0 0 12px;font-size:13px">Looking for each student’s name on their paper…</p>' + word;
-  const list = nameFlagged(), one = list.length === 1;
-  return word + (list.length ? '<div class="bbmiss" style="margin-bottom:12px"><b>Check ' + (one ? 'this paper' : 'these ' + list.length + ' papers') + ' ' + before + ':</b> the automatic cover can’t be trusted on ' + (one ? 'it' : 'them') + '. Open ' + (one ? 'it' : 'each one') + ' in Check the covers and drag a box over any name you see.<ul class="ccflag">' + list.map(x => '<li><button class="link" data-cc="' + x.i + '">' + esc(coverName(x.st, x.k)) + '</button> ' + esc(x.say) + '</li>').join('') + '</ul></div>' : '');
+  const anon = before === 'before you start', word = anon ? wordFlagsHtml() : '';
+  if (namesLooking()) return '<p class="muted" style="margin:0 0 12px;font-size:13px">Looking for names…</p>' + word;
+  const list = nameFlagged(anon);
+  return word + (list.length ? '<div class="bbmiss" style="margin-bottom:12px"><b>Check ' + (list.length === 1 ? 'this one' : 'these') + ' first:</b><ul class="ccflag">' + list.map(x => '<li><button class="link" data-cc="' + x.i + '">' + esc(coverName(x.st, x.k)) + '</button> ' + esc(x.say) + '</li>').join('') + '</ul></div>' : '');
 }
-const namesInDoubt = () => namesLost() && coverList().some(x => !coverOk(x.st, x.d));
-const namePromise = () => namesInDoubt() ? ', once you’ve boxed the ones it can’t read (see below)' : namesLooking() || nameFlagged().length ? ', once you’ve checked the papers listed below' : '';
+const namesInDoubt = () => nameFindOn() && namesLost() && coverList().some(x => !coverOk(x.st, x.d));
+const namePromise = () => !nameFindOn() ? (coverList().every(x => coverOk(x.st, x.d)) ? '' : ', once you’ve boxed the names in Check the covers') : namesInDoubt() ? ', once you’ve boxed the ones it can’t read (see below)' : namesLooking() || nameFlagged().length ? ', once you’ve checked the papers listed below' : '';
 function nameFlagsShow() {
   const el = $('#nameFlags'); if (!el) return;
   el.innerHTML = nameFlagsHtml(el.dataset.before);
@@ -10452,7 +10467,7 @@ function nameFlagsShow() {
   if ($('#shMade')) $('#shMade').innerHTML = shareMadeLine();
 }
 const fileShown = (st, name) => anonOn() && st ? scrub(name, fileRx(st)) : name;
-Object.assign(window.__gs, { coverRx, fileRx, classRx, autoCovers, classCommon, shareOpts, labelCovers, nameFlagged, namesLooking, findNames, wordNoName });
+Object.assign(window.__gs, { nameFindOn, coverRx, fileRx, classRx, autoCovers, classCommon, shareOpts, labelCovers, nameFlagged, namesLooking, findNames, wordNoName });
 
 /* ---------------- marking: smoother ink, a highlighter that knows the page's lines, easier text boxes ---------------- */
 
@@ -13916,7 +13931,7 @@ async function sbsDraw(c) {
 $('#consBtn').onclick = openCons;
 
 /* ---------------- the Claude steps, and which papers have had their name covers checked ---------------- */
-const coverList = () => { const list = []; for (const st of batch.students) shareDocs(st).forEach((d, k) => list.push({ st, d, k })); return list; };
+const coverList = all => { const list = []; for (const st of batch.students) shareDocs(st, all).forEach((d, k) => list.push({ st, d, k })); return list; };
 const coverSig = f => (f.data && f.data.length) || 0;
 function coverOk(st, d) {
   const c = shareState().checked || {};
@@ -13945,11 +13960,11 @@ function coverPut(f, p, was) {
   if (was) sh.boxes[k] = JSON.parse(was); else delete sh.boxes[k];
 }
 const coverName = (st, k) => (anonOn() ? shownName(st, batch.students.indexOf(st)) : st.key) + (k ? ' (paper ' + (k + 1) + ')' : '');
-const coverFirst = () => Math.max(0, coverList().findIndex(x => !coverOk(x.st, x.d)));
+const coverFirst = all => Math.max(0, coverList(all).findIndex(x => !coverOk(x.st, x.d)));
 const stillCounting = () => batch.students.some(s => s.files.some(f => viewable(f) && !f.numPages && !f.bad));
-function coverLine() {
+function coverLine(all) {
   if (stillCounting()) return 'Counting the papers…';
-  const list = coverList(), n = list.filter(x => coverOk(x.st, x.d)).length;
+  const list = coverList(all), n = list.filter(x => coverOk(x.st, x.d)).length;
   if (!list.length) return 'No PDFs or pictures to check.';
   return n + ' of ' + list.length + (list.length === 1 ? ' paper' : ' papers') + ' checked.';
 }
@@ -13978,7 +13993,7 @@ function shareOut() {
 }
 function shareMadeLine() {
   const sh = shareState();
-  return sh.made ? 'Made ' + esc(whenLabel(sh.made)) + (sh.madeOpen ? ', with ' + sh.madeOpen + (sh.madeOpen === 1 ? ' paper' : ' papers') + ' not checked.' : '.') : (namesInDoubt() ? 'Box the names the cover can’t read first. It' : namesLooking() || nameFlagged().length ? 'Check the papers listed above first. It' : 'It has no names in it, and it') + ' stays on your computer until you give it to Claude.';
+  return sh.made ? 'Made ' + esc(whenLabel(sh.made)) + (sh.madeOpen ? ', with ' + sh.madeOpen + (sh.madeOpen === 1 ? ' paper' : ' papers') + ' not checked.' : '.') : (namesInDoubt() ? 'Box the names the cover can’t read first. It' : namesLooking() || nameFlagged().length ? 'Check the papers listed above first. It' : nameFindOn() || coverList().every(x => coverOk(x.st, x.d)) ? 'It has no names in it, and it' : 'It') + ' stays on your computer until you give it to Claude.';
 }
 function shareSteps() {
   const sh = shareState(), list = coverList().map((x, i) => ({ ...x, i, ok: coverOk(x.st, x.d) })), todo = list.filter(x => !x.ok), done = list.filter(x => x.ok);
@@ -13988,7 +14003,7 @@ function shareSteps() {
   if ($('#shWho')) $('#shWho').innerHTML = shareWho();
   if ($('#shPromise')) $('#shPromise').textContent = namePromise();
   $('#shSteps').innerHTML = shareOut() + nameWarnings() + '<div id="nameFlags" data-before="before you make the ZIP">' + nameFlagsHtml('before you make the ZIP') + '</div><ol class="shsteps">' +
-    '<li><b>Check the covers.</b> <span id="shCount"' + (todo.length ? ' class="stag"' : '') + '>' + (todo.length || !list.length ? '' : '<span aria-hidden="true">✓ </span>') + esc(coverLine()) + '</span> The automatic cover can’t see handwriting or a name inside a picture. In the check, drag a box over anything it missed. If students write their name in the same spot, box it once and use it on every paper.' + group('ccTodo', 'Not checked yet', todo, true) + group('ccDone', 'Checked', done, !todo.length) + '</li>' +
+    '<li><b>Check the covers.</b> <span id="shCount"' + (todo.length ? ' class="stag"' : '') + '>' + (todo.length || !list.length ? '' : '<span aria-hidden="true">✓ </span>') + esc(coverLine()) + '</span> ' + (nameFindOn() ? 'Typed names are found on their own. Drag a box over anything missed, like handwriting.' : 'Drag a box over each name.') + ' If names are in the same spot, box it once and use it on every paper.' + group('ccTodo', 'Not checked yet', todo, true) + group('ccDone', 'Checked', done, !todo.length) + '</li>' +
     '<li><b>Download the ZIP.</b> <span id="shMade">' + shareMadeLine() + '</span></li>' +
     '<li><b>Give it to Claude,</b> with this message. Change it however you like.<textarea id="shAsk" rows="4" aria-label="What to say to Claude"></textarea><div class="shrow"><button class="btn sm" data-shcopy>Copy the message</button><button class="btn sm" data-shopen>Open Claude ↗</button></div></li>' +
     '<li><b>Bring the reply back.</b> <button class="btn sm" data-shback>Bring back from Claude</button></li></ol>';
@@ -19948,6 +19963,7 @@ function findRows() {
   add('Settings', document.documentElement.dataset.theme === 'dark' ? 'Light mode' : 'Dark mode', 'Display', press('.themeBtn'));
   add('Settings', 'Text size and zoom', 'Display', () => openDisplay());
   add('Settings', 'Word papers', wordPdfAlways() ? 'Converted to PDF pages as each assignment opens' : 'Kept as Word files. They can be converted to PDF pages', () => go('#/settings/marking'));
+  add('Settings', 'Name covers', nameFindOn() ? 'You cover names, and typed names are found too' : 'You cover names yourself in Check the covers', () => go('#/settings/marking'));
   add('Settings', 'All keys', 'Every keyboard shortcut', () => openKeys(), '?');
   for (const [k, t, sub] of SET_SECS) if (k !== 'saving' && k !== 'display' && k !== 'keys' && k !== 'history' && k !== 'about') add('Settings', t, sub, () => go(setHash(k)));
   if (plan) add('Go to', 'This week in the Planner', 'Today’s classes and the lessons planned for them', () => { location.href = planUrl('#week'); });

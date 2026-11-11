@@ -23,8 +23,9 @@ const PLATFORMS = {
 // newTeacher: a browser nobody has used, which opens on the welcome. Without it the browser is one that used the app before the
 // welcome existed (the three starter classes that build added, and nothing else), which is the state every older test was written
 // in and the state real saved work is in: no welcome, and every word and default as it was.
-const USED_BEFORE = { 'gs.lib': JSON.stringify({ classes: ['12EL-1', '12EL-2', '11EL-2'].map((name, i) => ({ id: 'starter' + (i + 1), name, names: [], units: [] })), loose: { id: '', units: [] }, units: [], seed2627: true }), 'gs.syncT': JSON.stringify({ 'gs.lib': 1 }) };
-async function openApp(browser, { html, platform, seed, server, context, noWait, beforeLoad, newTeacher } = {}) {
+// It also has finding names on its own turned on, as every browser did before 11/11; a test of the new default passes nameFind: false.
+const USED_BEFORE = { 'gs.nameFind': 'true', 'gs.lib': JSON.stringify({ classes: ['12EL-1', '12EL-2', '11EL-2'].map((name, i) => ({ id: 'starter' + (i + 1), name, names: [], units: [] })), loose: { id: '', units: [] }, units: [], seed2627: true }), 'gs.syncT': JSON.stringify({ 'gs.lib': 1 }) };
+async function openApp(browser, { html, platform, seed, server, context, noWait, beforeLoad, newTeacher, nameFind } = {}) {
   const usedBefore = !newTeacher && !(seed && seed.ls && seed.ls['gs.lib'] != null);
   const srv = server || await serve(html || builtHtml());
   const ctx = context || await browser.createBrowserContext();
@@ -57,6 +58,7 @@ async function openApp(browser, { html, platform, seed, server, context, noWait,
     await page.goto(srv.url + 'blank');
     // a second tab in a browser that already has work keeps that work
     if (usedBefore && await page.evaluate(() => localStorage.getItem('gs.lib') == null)) seed = { ...(seed || {}), ls: { ...USED_BEFORE, ...((seed && seed.ls) || {}) } };
+    if (nameFind === false && seed) { seed = { ...seed, ls: { ...seed.ls } }; delete seed.ls['gs.nameFind']; }
     if (seed) await plant(page, seed);
   }
   if (beforeLoad) await beforeLoad(page);
