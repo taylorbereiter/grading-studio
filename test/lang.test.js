@@ -8,6 +8,7 @@ const { launch } = require('./helpers/chrome');
 const { ROOT, builtHtml, openApp, openZip, goTo, score, settle, setTool, drag, catchDownloads, closeBox } = require('./helpers/app');
 const { standardFiles, zipOf } = require('./helpers/fixtures');
 const { gradingSeed } = require('./helpers/steady');
+const { langFile } = require('./helpers/serve');
 
 let browser, zip;
 before(async () => { browser = await launch(); zip = zipOf(await standardFiles()); });
@@ -17,11 +18,13 @@ const pause = ms => new Promise(r => setTimeout(r, ms));
 const ES = { 'gs.lang': '"es"' };
 const inSpanish = s => { const o = s || gradingSeed(); return { ...o, ls: { ...o.ls, ...ES } }; };
 const text = (page, sel) => page.$eval(sel, e => e.innerText.replace(/\s+/g, ' ').trim());
-const tr = (page, s) => page.evaluate(s => window.__gsLang.tr(s, 'es'), s);
+// A page in English has fetched no language, so the one asked about is fetched first (load does nothing when it is already there).
+const tr = (page, s) => page.evaluate(async s => { await window.__gsLang.load('es'); return window.__gsLang.tr(s, 'es'); }, s);
 function serveBoth() {
   builtHtml();
   const srv = http.createServer((req, res) => {
     const p = req.url.split('?')[0], file = p === '/' || p === '/index.html' ? 'index.html' : p === '/planner.html' ? 'planner.html' : null;
+    if (langFile(res, p)) return;
     if (!file && p !== '/blank') { res.writeHead(404); return res.end(); }
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' });
     res.end(file ? fs.readFileSync(path.join(ROOT, file), 'utf8') : '<!doctype html><title>blank</title>');
@@ -111,7 +114,7 @@ test('the sentences Today builds come out as Spanish sentences', async () => {
 });
 
 test('every word on the covered screens is in each language file (run in English, the screens are walked and what is missing is listed)', async () => {
-  const miss = async (page, where, own) => { for (const k of await page.evaluate(() => window.__gsLang.packs)) { const m = (await page.evaluate(k => window.__gsLang.missing(k), k)).filter(s => !own.some(o => o === s || (o instanceof RegExp && o.test(s)))); assert.deepEqual(m, [], where + ': not in the ' + k + ' language file'); } };
+  const miss = async (page, where, own) => { for (const k of await page.evaluate(() => window.__gsLang.packs)) { const m = (await page.evaluate(async k => { if (!await window.__gsLang.load(k)) throw new Error('lang/' + k + '.js could not be fetched'); return window.__gsLang.missing(k); }, k)).filter(s => !own.some(o => o === s || (o instanceof RegExp && o.test(s)))); assert.deepEqual(m, [], where + ': not in the ' + k + ' language file'); } };
   // a new browser: the welcome, each step and each choice, then Today as a new teacher finds it
   {
     const { page, close } = await openApp(browser, { newTeacher: true });
@@ -333,4 +336,52 @@ test('Traditional Chinese: the feedback page in a returned paper is in Chinese',
   await closeBox(page, '#dlgBox .bf [data-close]');
   assert.deepEqual(page.errors, []);
   await close();
+});
+
+/* ---- a language is fetched only when it is chosen ---- */
+// A server that counts what a page asks for, and can refuse the language files, as with no internet on a computer that never used one.
+function serveCounting(html, { noLangs } = {}) {
+  const asked = [];
+  const srv = http.createServer((req, res) => {
+    const p = req.url.split('?')[0]; asked.push(p);
+    if (!noLangs && langFile(res, p)) return;
+    if (p !== '/' && p !== '/index.html' && p !== '/blank') { res.writeHead(404); return res.end(); }
+    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' });
+    res.end(p === '/blank' ? '<!doctype html><title>blank</title>' : html);
+  });
+  return new Promise(r => srv.listen(0, '127.0.0.1', () => { srv.unref(); r({ asked, url: 'http://localhost:' + srv.address().port + '/', close: () => new Promise(d => { srv.closeAllConnections(); srv.close(d); }) }); }));
+}
+test('the page at the web address carries no language: English asks for none, and Spanish fetches its one file', async () => {
+  const html = builtHtml();
+  assert.match(html, /const LANG_PACKED = \{\};/, 'no language is inside the page');
+  for (const f of fs.readdirSync(path.join(ROOT, 'lang'))) assert.ok(fs.statSync(path.join(ROOT, 'lang', f)).size < 120e3, f + ' is a small file');
+  let srv = await serveCounting(html), o = await openApp(browser, { server: srv, seed: gradingSeed() });
+  assert.equal(await o.page.evaluate(() => window.__gsLang.lang), 'en');
+  assert.deepEqual(srv.asked.filter(p => p.startsWith('/lang/')), [], 'in English nothing is fetched');
+  assert.deepEqual(o.page.errors, []); await o.close(); await srv.close();
+  srv = await serveCounting(html); o = await openApp(browser, { server: srv, seed: inSpanish() });
+  await o.page.waitForFunction(() => document.querySelector('#rail [data-nav="home"]').textContent.trim() === 'Hoy');
+  assert.deepEqual([...new Set(srv.asked.filter(p => p.startsWith('/lang/')))], ['/lang/es.js'], 'Spanish fetches Spanish and no other');
+  assert.deepEqual(o.page.errors, []); await o.close(); await srv.close();
+});
+test('a language that can’t be fetched leaves the app in English for that visit, keeps the choice, and says so in Settings', async () => {
+  const srv = await serveCounting(builtHtml(), { noLangs: true }), { page, close } = await openApp(browser, { server: srv, seed: inSpanish() });
+  assert.equal(await page.evaluate(() => window.__gsLang.lang), 'en');
+  assert.equal(await text(page, '#rail [data-nav="home"]'), 'Today');
+  assert.equal(await page.evaluate(() => localStorage.getItem('gs.lang')), '"es"', 'the choice is kept');
+  await goTo(page, '#/settings/display');
+  assert.equal(await page.$eval('#setLangPick', e => e.value), 'es', 'and the picker still shows it');
+  assert.match(await text(page, '#setLangMiss'), /^Español could not be fetched just now, so this visit is in English\./);
+  assert.deepEqual(page.errors.filter(e => !/lang\/es\.js/.test(e)), []);
+  await close(); await srv.close();
+});
+test('the double-click copy has every language inside and fetches nothing', async () => {
+  const one = fs.readFileSync(path.join(ROOT, 'Grading Studio.html'), 'utf8');
+  assert.ok(!/gsL=JSON\.parse/.test(one), 'it has no fetching step');
+  const srv = await serveCounting(one, { noLangs: true }), { page, close } = await openApp(browser, { server: srv, seed: { ...gradingSeed(), ls: { ...gradingSeed().ls, 'gs.lang': '"ja"' } } });
+  await page.waitForFunction(() => document.querySelector('#rail [data-nav="home"]').textContent.trim() === '今日');
+  assert.equal(await page.evaluate(() => window.__gsLang.lang), 'ja');
+  assert.deepEqual(srv.asked.filter(p => p.startsWith('/lang/')), []);
+  assert.deepEqual(page.errors, []);
+  await close(); await srv.close();
 });

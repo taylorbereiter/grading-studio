@@ -173,6 +173,7 @@ test('with no folder, Go back in time says why there are no days yet and offers 
 async function site() {
   const dir = fs.mkdtempSync(path.join(require('os').tmpdir(), 'gs-test-site-'));
   for (const f of ['index.html', 'planner.html', 'sw.js', 'manifest.webmanifest', 'version.json']) fs.copyFileSync(path.join(ROOT, f), path.join(dir, f));
+  fs.mkdirSync(path.join(dir, 'lang')); for (const f of fs.readdirSync(path.join(ROOT, 'lang'))) fs.copyFileSync(path.join(ROOT, 'lang', f), path.join(dir, 'lang', f));
   fs.mkdirSync(path.join(dir, 'icons')); for (const f of fs.readdirSync(path.join(ROOT, 'icons'))) fs.copyFileSync(path.join(ROOT, 'icons', f), path.join(dir, 'icons', f));
   const s = { dir, down: false, hits: [] };
   const types = { html: 'text/html; charset=utf-8', js: 'text/javascript', json: 'application/json', webmanifest: 'application/manifest+json', png: 'image/png' };
@@ -189,11 +190,20 @@ async function site() {
   await new Promise(r => srv.listen(0, '127.0.0.1', r)); srv.unref();
   const sha = b => crypto.createHash('sha256').update(b).digest('hex');
   // A new version: the same pages with a mark in them, and a version.json that describes them. half: version.json runs ahead of the pages, as in the middle of an upload.
-  s.put = (version, mark, { half } = {}) => {
-    const index = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8').replace('</body>', '<i id="buildMark" hidden>' + mark + '</i></body>'), planner = fs.readFileSync(path.join(ROOT, 'planner.html'));
-    if (!half) fs.writeFileSync(path.join(dir, 'index.html'), index);
+  s.put = (version, mark, { half, langMark } = {}) => {
+    let index = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8').replace('</body>', '<i id="buildMark" hidden>' + mark + '</i></body>'), planner = fs.readFileSync(path.join(ROOT, 'planner.html'));
     const files = { 'index.html': sha(Buffer.from(index)), 'planner.html': sha(planner) };
-    fs.writeFileSync(path.join(dir, 'version.json'), JSON.stringify({ version, build: sha(files['index.html'] + files['planner.html']).slice(0, 12), notes: ['A note about ' + mark], files }));
+    // A new version can bring a changed language file too (langMark): the offline copy takes it with the pages.
+    const langs = {};
+    for (const f of fs.readdirSync(path.join(dir, 'lang'))) {
+      const was = sha(fs.readFileSync(path.join(dir, 'lang', f)));
+      if (langMark) fs.appendFileSync(path.join(dir, 'lang', f), '\nwindow.__langMark = ' + JSON.stringify(langMark) + ';\n');
+      langs['lang/' + f] = sha(fs.readFileSync(path.join(dir, 'lang', f)));
+      index = index.split('"' + was.slice(0, 8) + '"').join('"' + langs['lang/' + f].slice(0, 8) + '"');   // the page asks for each language by a stamp of its contents
+    }
+    if (!half) fs.writeFileSync(path.join(dir, 'index.html'), index);
+    files['index.html'] = sha(Buffer.from(index));
+    fs.writeFileSync(path.join(dir, 'version.json'), JSON.stringify({ version, build: sha(files['index.html'] + files['planner.html'] + Object.values(langs).join('')).slice(0, 12), notes: ['A note about ' + mark], files, langs }));
   };
   s.url = 'http://localhost:' + srv.address().port + '/?sw=1';
   s.close = () => new Promise(r => { srv.closeAllConnections(); srv.close(r); });
@@ -245,6 +255,37 @@ test('a newer version waits until she says so: the page stays as it is, the side
   await kept(page);
   assert.equal(await page.$eval('#railUpdate', e => e.hidden), true);
   assert.deepEqual((await idbRead(page, 'grading-studio-keep', 'work'))[id], before, 'her work is exactly as it was');
+  assert.deepEqual(page.errors, []);
+  await close(); await s.close();
+});
+
+test('the language she chose is kept with the app: it opens in it with no internet, and a new version brings its language along', async () => {
+  const s = await site(), { page, close } = await openOwn({ server: s });
+  await kept(page);
+  const langsKept = () => page.evaluate(async () => (await (await caches.open('gs-app-1')).keys()).map(r => new URL(r.url).pathname).filter(p => p.startsWith('/lang/')).sort());
+  assert.deepEqual(await langsKept(), [], 'in English no language is kept');
+  await page.evaluate(() => localStorage.setItem('gs.lang', '"es"'));
+  await reloadApp(page);
+  await page.waitForFunction(() => window.__gsLang.lang === 'es' && document.querySelector('#rail [data-nav="home"]').textContent.trim() === 'Hoy');
+  await page.waitForFunction(async () => !!(await (await caches.open('gs-app-1')).match('lang/es.js')), { timeout: 30000, polling: 200 });
+  assert.deepEqual(await langsKept(), ['/lang/es.js'], 'the one she chose, and no other');
+  s.down = true;
+  await reloadApp(page);
+  assert.equal(await page.evaluate(() => window.__gsLang.lang), 'es', 'with no internet the app still opens in Spanish');
+  s.down = false;
+  // A new version whose Spanish file changed: nothing changes until she says so, then the page and its language arrive together.
+  s.put('9.9.9', 'B', { langMark: 'B' });
+  await reloadApp(page);
+  await page.waitForFunction(() => !document.querySelector('#railUpdate').hidden, { timeout: 60000, polling: 200 });
+  assert.equal(await page.evaluate(() => window.__langMark || ''), '', 'still the Spanish of the version she had');
+  await page.evaluate(() => navigator.serviceWorker.ready.then(r => r.active.postMessage({ type: 'gs-apply' })));
+  await page.waitForFunction(() => { const u = window.__gs.updState(); return u.st && u.st.current && u.st.current.version === '9.9.9'; }, { timeout: 60000, polling: 200 });
+  s.down = true;
+  await reloadApp(page);
+  assert.equal(await markOf(page), 'B');
+  assert.equal(await page.evaluate(() => window.__gsLang.lang), 'es', 'the new version opens in Spanish with no internet');
+  assert.equal(await page.evaluate(() => window.__langMark), 'B', 'with the Spanish that came with it');
+  s.down = false;
   assert.deepEqual(page.errors, []);
   await close(); await s.close();
 });

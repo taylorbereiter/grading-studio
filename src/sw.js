@@ -30,11 +30,37 @@ async function download(name, v) {
     if (hex(await crypto.subtle.digest('SHA-256', buf)) !== v.files[p]) throw new Error(p + ' is not the page version.json describes');   // caught between two versions going up: try again later
     got.push([p, new Response(buf, { headers: { 'Content-Type': 'text/html; charset=utf-8' } })]);
   }
+  // The languages in use on this computer come along, so a version is whole in her language too. One the new version no longer has is left out.
+  for (const p of await langsKept()) {
+    if (!v.langs || !v.langs[p]) continue;
+    const r = await fetch(at(p), { cache: 'no-store' });
+    if (!r.ok) throw new Error(p + ': ' + r.status);
+    const buf = await r.arrayBuffer();
+    if (hex(await crypto.subtle.digest('SHA-256', buf)) !== v.langs[p]) throw new Error(p + ' is not the file version.json describes');
+    got.push([p, new Response(buf, { headers: { 'Content-Type': 'text/javascript; charset=utf-8' } })]);
+  }
   await caches.delete(name);
   const c = await caches.open(name);
   for (const [p, r] of got) await c.put(at(p), r);
   for (const p of EXTRA) { try { const r = await fetch(at(p), { cache: 'no-store' }); if (r.ok) await c.put(at(p), r); } catch {} }   // the icon and the install card: nice to have
   await c.put(at('version.json'), new Response(JSON.stringify(v), { headers: { 'Content-Type': 'application/json' } }));
+}
+// A language is one file beside the pages, lang/<code>.js. Only the ones a teacher on this computer chose are kept: the first time
+// a page asks for one it comes from the web and, if it is the file the version in use describes, it is kept with that version.
+const LANG_FILE = /^lang\/[A-Za-z-]+\.js$/;
+const langsIn = async name => { try { if (!await caches.has(name)) return []; const from = SCOPE.length; return (await (await caches.open(name)).keys()).map(r => r.url.slice(from)).filter(p => LANG_FILE.test(p)); } catch { return []; } };
+const langsKept = () => langsIn(APP);
+async function answerLang(key, req) {
+  try { if (await versionIn(APP)) { const hit = await (await caches.open(APP)).match(at(key)); if (hit) return hit; } } catch {}
+  const r = await fetch(req);
+  try {
+    const cur = await versionIn(APP);
+    if (r.ok && cur && cur.langs && cur.langs[key]) {
+      const buf = await r.clone().arrayBuffer();
+      if (hex(await crypto.subtle.digest('SHA-256', buf)) === cur.langs[key]) await (await caches.open(APP)).put(at(key), new Response(buf, { headers: { 'Content-Type': 'text/javascript; charset=utf-8' } }));
+    }
+  } catch {}
+  return r;
 }
 const latest = async () => { const r = await fetch(at('version.json'), { cache: 'no-store' }); if (!r.ok) throw new Error('version.json: ' + r.status); const v = await r.json(); if (!v || !v.build || !v.files) throw new Error('version.json is not a version'); return v; };
 // Looks for a newer version. The first time, there is nothing kept yet, so the version on the web becomes the one in use.
@@ -50,7 +76,9 @@ async function promote() {
   const nx = await versionIn(NEXT); if (!nx) return false;
   const from = await caches.open(NEXT), to = await caches.open(APP);
   await to.delete(at('version.json'));   // not a whole version again until the last piece is across
-  for (const p of [...PAGES, ...EXTRA, 'version.json']) { const r = await from.match(at(p)); if (r) await to.put(at(p), r); }
+  const langs = await langsIn(NEXT);
+  for (const p of await langsKept()) if (!langs.includes(p)) await to.delete(at(p));   // chosen after the new version was fetched: it is fetched again, for the new pages
+  for (const p of [...PAGES, ...EXTRA, ...langs, 'version.json']) { const r = await from.match(at(p)); if (r) await to.put(at(p), r); }
   await caches.delete(NEXT);
   return true;
 }
@@ -74,6 +102,7 @@ self.addEventListener('fetch', e => {
   const req = e.request; if (req.method !== 'GET' || !req.url.startsWith(SCOPE)) return;
   const rel = new URL(req.url).pathname.slice(new URL(SCOPE).pathname.length);
   const key = rel === '' || rel === 'index.html' ? 'index.html' : rel === 'planner.html' ? 'planner.html' : EXTRA.includes(rel) ? rel : null;
+  if (!key && LANG_FILE.test(rel)) { e.respondWith(answerLang(rel, req)); return; }
   if (!key) return;   // everything else goes to the web as if this file weren't here
   const page = req.mode === 'navigate';
   if (!page && !EXTRA.includes(key)) return;

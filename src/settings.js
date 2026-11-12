@@ -78,6 +78,8 @@ new MutationObserver(() => { if ($('#dlg').hidden) setRender(); }).observe($('#d
 
 // Settings, Display, Language (lang.js keeps the choice and draws the page again).
 $('#setLangBox').innerHTML = langPick('setLangPick');
+// The chosen language is fetched once and then kept with the app. If it couldn't be fetched, say why the page is in English.
+if (LANG_WANT !== LANG) $('#setLang').insertAdjacentHTML('beforeend', '<p class="setp" id="setLangMiss">' + esc(LANG_NAMES[LANG_WANT]) + ' could not be fetched just now, so this visit is in English. It comes back by itself the next time you open the app with internet.</p>');
 // Settings, Marking, Mark colors: the same three rows as Quick mark's Colors menu, drawn when Marking is shown.
 function setInksSay() { const el = $('#setInkRows'), h = el && inkRows('s'); if (el && el.dataset.h !== h) { el.dataset.h = h; el.innerHTML = h; } }
 $('#setInkRows').addEventListener('click', e => {

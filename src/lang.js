@@ -8,15 +8,24 @@
    The choice is one setting in this browser (gs.lang), read by both pages. English adds nothing and runs none of this.
    To add a language: copy src/lang-es.js (Spanish) or src/lang-zh.js (Traditional Chinese), translate it, and name it in LANGS in build.js. test/lang.test.js lists what a
    file still leaves in English on the screens it covers. */
-// The build puts every language in the page squeezed (LANG_PACKED, by its code) with its own name for itself (LANG_NAMES).
-// One is unpacked when it is asked for, which for a teacher is the one she chose and no other.
+// Where a language comes from. A page at the web address fetched the chosen one before this ran (lang/<code>.js, which leaves it in
+// window.__gsLangs; build.js says how). A double-click copy carries every language squeezed (LANG_PACKED) and unpacks the one asked for.
+// LANG_NAMES lists every language by its code, with its own name for itself.
 const LANG_OPEN = {};
 function langPack(k) {
+  if (!Object.prototype.hasOwnProperty.call(LANG_NAMES, k)) return null;
+  if (window.__gsLangs && window.__gsLangs[k]) return window.__gsLangs[k];
   if (!Object.prototype.hasOwnProperty.call(LANG_PACKED, k)) return null;
   if (!LANG_OPEN[k]) { try { const b = atob(LANG_PACKED[k]), u = new Uint8Array(b.length); for (let i = 0; i < b.length; i++) u[i] = b.charCodeAt(i); LANG_OPEN[k] = new Function(fflate.strFromU8(fflate.inflateSync(u)))(); } catch (e) { console.error(e); return null; } }
   return LANG_OPEN[k];
 }
-const LANG_WANT = (() => { try { const v = JSON.parse(localStorage.getItem('gs.lang')); return typeof v === 'string' && Object.prototype.hasOwnProperty.call(LANG_PACKED, v) ? v : 'en'; } catch { return 'en'; } })();
+// Fetches a language that isn't here yet. The app itself never needs this (the page fetched the chosen one as it opened); the tests do.
+const langLoad = k => langPack(k) || !Object.prototype.hasOwnProperty.call(LANG_NAMES, k) ? Promise.resolve(!!langPack(k)) : new Promise(done => {
+  const s = document.createElement('script'); s.src = 'lang/' + k + '.js' + (window.gsLangV && window.gsLangV[k] ? '?' + window.gsLangV[k] : ''); s.onload = () => done(!!langPack(k)); s.onerror = () => done(false); document.head.appendChild(s);
+});
+// The language she chose. If its file could not be fetched (no internet, and never used on this computer), this visit is in English
+// and the choice stays, so it comes back by itself.
+const LANG_WANT = (() => { try { const v = JSON.parse(localStorage.getItem('gs.lang')); return typeof v === 'string' && Object.prototype.hasOwnProperty.call(LANG_NAMES, v) ? v : 'en'; } catch { return 'en'; } })();
 const LANG_PACK = LANG_WANT === 'en' ? null : langPack(LANG_WANT);
 const LANG = LANG_PACK ? LANG_WANT : 'en';
 // For dates: the browser's own way of writing them in English, the language's way otherwise.
@@ -62,7 +71,7 @@ if (LANG_PACK) {
   }).observe(document.documentElement, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: LANG_ATTRS });
 }
 // The language picker, in Settings and on the welcome: choosing one keeps it and draws the page again in it.
-const langPick = id => '<select id="' + id + '" class="btn sm wllang" aria-label="Language">' + [['en', 'English'], ...Object.entries(LANG_NAMES)].map(([k, n]) => '<option value="' + k + '"' + (k === LANG ? ' selected' : '') + '>' + n + '</option>').join('') + '</select>';
+const langPick = id => '<select id="' + id + '" class="btn sm wllang" aria-label="Language">' + [['en', 'English'], ...Object.entries(LANG_NAMES)].map(([k, n]) => '<option value="' + k + '"' + (k === LANG_WANT ? ' selected' : '') + '>' + n + '</option>').join('') + '</select>';
 document.addEventListener('change', e => {
   const el = e.target; if (!el || (el.id !== 'setLangPick' && el.id !== 'wlLang')) return;
   try { if (el.value === 'en') localStorage.removeItem('gs.lang'); else localStorage.setItem('gs.lang', JSON.stringify(el.value)); } catch {}
@@ -70,7 +79,7 @@ document.addEventListener('change', e => {
 });
 // For the tests and for whoever writes a language file: every piece on the covered parts of the screen as it is now that the language doesn't know.
 // Run it with the app in English.
-window.__gsLang = { lang: LANG, packs: Object.keys(LANG_NAMES), tr: (s, k) => trWith(s, langPack(k)), missing(k) {
+window.__gsLang = { lang: LANG, want: LANG_WANT, packs: Object.keys(LANG_NAMES), load: langLoad, tr: (s, k) => trWith(s, langPack(k)), missing(k) {
   const P = langPack(k), out = new Set(), see = s => { const t = (s || '').trim(); if (!t || !/[A-Za-z]{2}/.test(t)) return; if (trPiece(t, P) != null) return; for (const p of t.split(' · ')) { const q = p.trim(); if (q && /[A-Za-z]{2}/.test(q) && trPiece(q, P) == null) out.add(q); } };
   for (const r of document.querySelectorAll(LANG_ROOTS)) {
     if (!r.checkVisibility()) continue;
