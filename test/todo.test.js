@@ -331,6 +331,23 @@ test('the week: each line on its day under the class that meets, what is late un
   await close();
 });
 
+test('a new school year carries what is still to do, and leaves behind what is done or about a student', async () => {
+  const { page, close } = await open(null, null);
+  const r = await page.evaluate(() => {
+    const it = (id, x, more) => ({ id, x, d: '', c: '', who: '', a: '', rep: '', note: '', done: 0, made: 1, t: 1, ...more });
+    const old = { classes: [{ id: 'c', name: 'Made-up class', names: ['Kai Pretend', 'Lu Invented'], units: [] }], loose: { id: '', units: [] },
+      todo: { items: [it('1', 'Order the novels', { c: 'c', rep: 'week', d: '2028-03-03' }), it('2', 'Call home', { c: 'c', who: 'Kai Pretend' }), it('3', 'Letter for lu invented'), it('4', 'Tidy the shelf', { note: 'Ask Kai Pretend to help' }),
+        it('5', 'Print handouts', { done: 5 }), { id: '6', t: 2, gone: 1 }], off: { miss: 1 }, offT: 4, auto: { 'mark:b1': { h: 'x', t: 1 } } } };
+    const G = window.__gs, o = { from: '2027–28', to: '2028–29', dates: true, file: 'f.gswork' };
+    return { a: G.nyLib(old, {}, { ...o, roster: false }).todo, b: G.nyLib(old, {}, { ...o, roster: true }).todo, none: 'todo' in G.nyLib({ classes: [], loose: { id: '', units: [] } }, {}, { ...o, roster: false }) };
+  });
+  assert.deepEqual(r.a.items.map(i => i.id), ['1'], 'only the line that names nobody and is not done');
+  assert.deepEqual([r.a.items[0].c, r.a.items[0].rep, r.a.off, r.a.offT, r.a.auto], ['c', 'week', { miss: 1 }, 4, {}], 'its class, its repeat and the switches carry; what was hidden for last year’s work does not');
+  assert.deepEqual(r.b.items.map(i => i.id), ['1', '2', '3', '4'], 'when the class lists stay, so do the lines about students');
+  assert.equal(r.none, false);
+  await close();
+});
+
 test('two copies of the list merge line by line: the later change wins, and a deleted line stays deleted', () => {
   const M = vm.runInNewContext(fs.readFileSync(path.join(__dirname, '..', 'src', 'merge.js'), 'utf8') + ';({ todoMerge, mergeLib })');
   const plain = o => JSON.parse(JSON.stringify(o));

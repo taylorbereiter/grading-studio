@@ -27,14 +27,14 @@ function railRender() {
   for (const a of document.querySelectorAll('#rail [data-nav]')) { const on = !batch && a.dataset.nav === r.v; a.classList.toggle('on', on); if (on) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); }
   const cr = $('#crumbClass'); cr.hidden = !(batch && open);
   if (batch && open) { cr.textContent = open.name; cr.href = classHash(open); cr.title = 'Back to ' + open.name; }
-  tabsRender(); setRender(); helpRender(); todoRender();
+  tabsRender(); setRender(); helpRender(); schRender(); todoRender();
   if (!batch && r.v === 'home' && screenWas !== 'home') planRefresh();
   screenWas = batch ? 'a' : r.v;
   const d = $('#homeDate'), today = new Date().toLocaleDateString(LANG_LOCALE, { weekday: 'long', month: 'long', day: 'numeric' }); if (d.textContent !== today) d.textContent = today;   // Today's title is the day itself
   // The tab's name goes into the browser's history, which some browsers copy to an account. A download's name can be a student's, so it stays out;
   // an assignment or class name she typed herself is fine.
   const asg = batch && batch.assignment && findItem(batch.assignment.id);
-  document.title = batch ? (asg ? asg.it.name + ' · ' : '') + 'Grading Studio' : r.v === 'class' ? (r.c === lib.loose ? 'No class' : r.c.name) + ' · Grading Studio' : r.v === 'settings' ? (r.sec === 'saving' ? '' : SET_SECS.find(x => x[0] === r.sec)[1] + ' · ') + 'Settings · Grading Studio' : r.v === 'help' ? 'Help · Grading Studio' : r.v === 'todo' ? 'To do · Grading Studio' : 'Grading Studio';
+  document.title = batch ? (asg ? asg.it.name + ' · ' : '') + 'Grading Studio' : r.v === 'class' ? (r.c === lib.loose ? 'No class' : r.c.name) + ' · Grading Studio' : r.v === 'settings' ? (r.sec === 'saving' ? '' : SET_SECS.find(x => x[0] === r.sec)[1] + ' · ') + 'Settings · Grading Studio' : r.v === 'help' ? 'Help · Grading Studio' : r.v === 'todo' ? 'To do · Grading Studio' : r.v === 'school' ? 'School resources · Grading Studio' : r.v === 'examples' ? 'Examples · Grading Studio' : 'Grading Studio';
 }
 // "Saved", and where: the same words as the top bar while grading and the line in Settings (folder.js says them).
 function railSavedRender() {
@@ -79,22 +79,23 @@ new MutationObserver(railSavedRender).observe($('#saveState'), { childList: true
 /* ---------------- Find anything (Ctrl K, or ⌘K): one box that reaches every student, assignment, tool and setting ---------------- */
 // Everything she can go to or do right now. Each row presses the same button or runs the same function as doing it by hand.
 function findRows() {
-  const out = [], add = (group, label, sub, run, key) => { if (label) out.push({ group, label: String(label), sub: sub || '', run, key: key || '' }); };
+  const out = [], add = (group, label, sub, run, key, words) => { if (label) out.push({ group, label: String(label), sub: sub || '', run, key: key || '', words: words || '' }); };   // words: other things she might type for it (export for Return, backup for the folder)
   const press = sel => () => { const b = $(sel); if (b) b.click(); };
   const toMark = () => { if (dlgPage) closeDlg(); };   // a student or a marking tool is on the papers: a tab's screen steps aside first
   if (batch) {
     const order = anonOn() ? anonOrder() : batch.students.map((_, i) => i);
-    order.forEach((i, pos) => { const st = batch.students[i], g = gradeOf(st); add('Students', shownName(st, i), noScore(st) ? STATUS_LABEL[g.status] : g.done ? 'Scored' : g.total != null ? 'Partly scored' : st.files.length ? 'Not scored yet' : 'No paper', () => { toMark(); openStudent(i); }, String(pos + 1)); });
+    order.forEach((i, pos) => { const st = batch.students[i], g = gradeOf(st); add('Students', shownName(st, i), noScore(st) ? STATUS_LABEL[g.status] : g.done ? 'Scored' : g.wait ? 'Retake to score' : g.total != null ? 'Partly scored' : st.files.length ? 'Not scored yet' : 'No paper', () => { toMark(); openStudent(i); }, String(pos + 1)); });
     for (const b of document.querySelectorAll('#tools .tool[data-tool]')) { const m = /^(.*?) \((.*)\)$/.exec(b.title) || [0, b.title, '']; add('Marking tools', m[1], 'Tool for the paper', () => { toMark(); setTool(b.dataset.tool); }, m[2]); }
     // what + Add and the ⋯ beside the student's name hold, for the paper that is open
     for (const b of document.querySelectorAll('#paper .who .km .mitem:not([data-whodo])')) { const s = b.querySelector('small'); add('This paper', (b.closest('.kmw').querySelector('#addMenuBtn') ? 'Add ' : '') + b.firstChild.textContent.trim().replace(/^A /, 'a ').replace(/^Pasted/, 'pasted').replace(/^From/, 'pages from'), s ? s.textContent : '', () => { toMark(); if (b.isConnected) b.click(); }); }
-    const tabGo = (k, label, sub) => add('This assignment', label, sub, () => go(batchHash(batch.id, k)));
+    const tabGo = (k, label, sub, words) => add('This assignment', label, sub, () => go(batchHash(batch.id, k)), '', words);
     tabGo('', 'Mark', 'The papers, one student at a time');
-    tabGo('grades', 'Grades', 'Scores and comments to copy into ' + sysOr('your gradebook') + ', beside the grade written on each paper');
+    tabGo('grades', 'Grades', 'Scores and comments to copy into ' + sysOr('your gradebook') + ', beside the grade written on each paper', 'scores marks results spreadsheet csv copy totals percents');
     tabGo('grades/sheet', 'Grade sheet', 'Every grade found on the papers, with a crop of each');
-    tabGo('insights', 'Insights', 'The class at a glance: average, spread, rubric rows, charts');
+    tabGo('insights', 'Insights', 'The class at a glance: average, spread, rubric rows, charts', 'statistics stats overview analysis graph mean median');
     tabGo('insights/consistency', 'Consistency check', 'Did you get harder or softer as you went?');
-    tabGo('return', 'Return marked files', 'The marked files, back in their student folders');
+    if (exOfWork(batch.id).length) tabGo('examples', 'Examples', 'Strong work from this assignment, with no names on it', 'strong example exemplar model answer anchor show class');
+    tabGo('return', 'Return marked files', 'The marked files, back in their student folders', 'export download zip hand back send give feedback finished done');
     { const b = $('#quizTop'); if (b && !b.hidden) add('This assignment', b.textContent, b.title, press('#quizTop')); }
     for (const b of document.querySelectorAll('#moreMenu .mitem, #toolStash .mitem')) {
       if (b.hidden || b.classList.contains('themeBtn') || b.id === 'keysBtn' || b.id === 'sheetBtn' || b.id === 'overviewBtn' || b.id === 'consBtn') continue;
@@ -114,11 +115,13 @@ function findRows() {
   add('Go to', 'To do', 'Your own list, with what the app noticed from your work', () => go('#/todo'));
   add('Go to', 'To do, by week', 'Your list laid out on the days of the week, under the classes that meet', () => go('#/todo/week'));
   add('Go to', 'Planner', 'Units and lessons, on its own page', () => { location.href = $('#lessonsBtn').href; });
+  add('Go to', 'School resources', 'Links, files and notes about your school', () => go('#/school'));
+  if (exList.length) add('Go to', 'Examples', 'Strong work from every class, with no names on it', () => go('#/examples'), '', 'strong example exemplar model answer show class');
   add('Go to', 'Settings', 'Saving, classes, terms, marking, display and keys', () => go('#/settings'));
   add('Go to', 'Help', 'Short answers to common questions', () => go('#/help'));
   for (const c of lib.classes) {
     add('Classes', c.name, (c.names.length ? c.names.length + ' students' : 'No roster yet') + (classLeft(c) ? ' · ' + classLeft(c) + ' left to score' : ''), () => go(classHash(c)));
-    if (c.names.length) for (const [k, l, sub] of [['gradebook', 'gradebook', 'Every assignment by term, with each term grade'], ['students', 'students', 'The roster, with IDs and emails, and each student’s own page'], ['missing', 'missing work', 'Who still owes work, with a reminder email for each student'], ['charts', 'charts', 'Grades and scores as charts'], ['reports', 'report comments', 'A draft comment for each student, from your own scores and comments']].concat(goalList().length ? [['goals', 'goals', 'The class and each student by learning goal: what to reteach']] : [])) add('Class pages', c.name + ' ' + l, sub, () => go(classHash(c, k)));
+    if (c.names.length) for (const [k, l, sub] of [['gradebook', 'gradebook', 'Every assignment by term, with each term grade'], ['students', 'students', 'The roster, with IDs and emails, and each student’s own page'], ...(attOn() ? [['attendance', 'attendance', 'Who was here, late, excused or absent, saved by day']] : []), ['seating', 'seating', 'Who sits where, shuffle, groups, and picking a name'], ['missing', 'missing work', 'Who still owes work, with a reminder email for each student'], ['charts', 'charts', 'Grades and scores as charts'], ['reports', 'report comments', 'A draft comment for each student, from your own scores and comments']].concat(goalList().length ? [['goals', 'goals', 'The class and each student by learning goal: what to reteach']] : [])) add('Class pages', c.name + ' ' + l, sub, () => go(classHash(c, k)));
   }
   const carded = new Set();
   for (const c of holders()) for (const u of c.units) for (const it of u.items) {
@@ -134,40 +137,43 @@ function findRows() {
     add('Do', 'Match files to a roster', '', press('#pickMatch'));
     add('Do', 'Add a class', 'Its name and roster', press('#addClass'));
     add('Do', 'Try it with a sample class', 'Made-up students and papers', press('#sample'));
-    add('Settings', 'Take my work with me', 'A take-home file for another computer', press('#takeBtn'));
-    add('Settings', 'Bring work in', 'From a take-home file', press('#restoreBtn'));
+    add('Settings', 'Take my work with me', 'A take-home file for another computer', press('#takeBtn'), '', 'backup back up export carry home laptop transfer');
+    add('Settings', 'Bring work in', 'From a take-home file', press('#restoreBtn'), '', 'import restore backup load');
+    add('Settings', 'Start a new school year', 'Same classes, empty class lists; this year saved to a file', press('#yearBtn'));
+    add('Settings', 'Open an archived year', 'Bring back a year saved to a file', press('#yearOpenBtn'));
     add('Settings', 'Remove from this computer', 'Clears student work from this browser', () => go('#/settings'));
   }
-  if (!batch) add('Do', 'Add a to-do', 'Type it the way you would say it', () => tdFocusAdd(), 'N');
-  add('Settings', 'Where my work is saved', 'This browser, and a folder you choose', () => openWhere());
+  if (!batch) add('Do', 'Add a to-do', 'Type it the way you would say it', () => tdFocusAdd(), 'N', 'todo task reminder remember list new');
+  add('Settings', 'Where my work is saved', 'This browser, and a folder you choose', () => openWhere(), '', 'backup back up safe save storage location choose a folder');
   add('Settings', 'Learning goals', 'Your own list of goals, to see scores by', () => goalsDlg());
-  add('Settings', 'Go back in time', 'An assignment, or everything, as it was on an earlier day', () => go(setHash('history')));
-  add('Settings', 'Updates and installing', 'This version, what’s new, install as an app', () => go(setHash('about')));
-  add('Settings', document.documentElement.dataset.theme === 'dark' ? 'Light mode' : 'Dark mode', 'Display', press('.themeBtn'));
-  add('Settings', 'Text size and zoom', 'Display', () => openDisplay());
+  add('Settings', 'Go back in time', 'An assignment, or everything, as it was on an earlier day', () => go(setHash('history')), '', 'undo restore history backup recover lost mistake earlier version yesterday');
+  add('Settings', 'Updates and installing', 'This version, what’s new, install as an app', () => go(setHash('about')), '', 'about update offline download app');
+  add('Settings', document.documentElement.dataset.theme === 'dark' ? 'Light mode' : 'Dark mode', 'Display', press('.themeBtn'), '', 'theme night colours colors appearance');
+  add('Settings', 'Text size and zoom', 'Display', () => openDisplay(), '', 'font bigger smaller larger magnify');
   add('Settings', 'App language', 'English, Spanish or Traditional Chinese', () => go('#/settings/display'));
   add('Settings', 'Word papers', wordPdfAlways() ? 'Converted to PDF pages as each assignment opens' : 'Kept as Word files. They can be converted to PDF pages', () => go('#/settings/marking'));
+  add('Settings', 'Name covers', nameFindOn() ? 'You cover names, and typed names are found too' : 'You cover names yourself in Check the covers', () => go('#/settings/marking'), undefined, 'anonymous redact hide names find names');
   add('Settings', 'Tablet and pencil', 'What a finger does on the paper, and pencil pressure', () => go('#/settings/marking'));
-  add('Settings', 'All keys', 'Every keyboard shortcut', () => openKeys(), '?');
+  add('Settings', 'All keys', 'Every keyboard shortcut', () => openKeys(), '?', 'shortcuts hotkeys keyboard');
   for (const [k, t, sub] of SET_SECS) if (k !== 'saving' && k !== 'display' && k !== 'keys' && k !== 'history' && k !== 'about') add('Settings', t, sub, () => go(setHash(k)));
   if (plan) add('Go to', 'This week in the Planner', 'Today’s classes and the lessons planned for them', () => { location.href = planUrl('#week'); });
-  out.push(...helpFindRows());
+  out.push(...schFindRows(), ...helpFindRows());
   return out;
 }
 // Every word typed has to be somewhere in the row. A name that starts with what she typed comes first.
 function findMatch(rows, q) {
   const words = q.toLowerCase().split(/\s+/).filter(Boolean);
-  if (!words.length) return rows.filter(r => r.group !== 'Students' && r.group !== 'Assignments' && r.group !== 'Class pages' && r.group !== 'Help' || batch && r.group === 'Students').slice(0, 60);
+  if (!words.length) return rows.filter(r => r.group !== 'Students' && r.group !== 'Assignments' && r.group !== 'Class pages' && r.group !== 'Help' && r.group !== 'School resources' || batch && r.group === 'Students').slice(0, 60);
   const hit = [];
   for (const r of rows) {
     const l = tr(r.label).toLowerCase(), all = l + ' ' + r.label.toLowerCase() + ' ' + r.sub.toLowerCase() + ' ' + tr(r.sub).toLowerCase() + ' ' + r.group.toLowerCase() + ' ' + tr(r.group).toLowerCase() + ' ' + (r.words || '').toLowerCase();   // in another language (lang.js) a row is found by its words in either
     if (!words.every(w => all.includes(w))) continue;
-    hit.push({ r, rank: l.startsWith(words[0]) ? 0 : l.split(/[^a-z0-9]+/).some(p => p.startsWith(words[0])) ? 1 : words.every(w => l.includes(w)) ? 2 : 3 });
+    hit.push({ r, rank: l.startsWith(words[0]) ? 0 : l.split(/[^a-z0-9]+/).some(p => p.startsWith(words[0])) || (r.words || '').split(' ').some(p => p.startsWith(words[0])) ? 1 : words.every(w => l.includes(w)) ? 2 : 3 });   // one of its other words counts like a word of its name
   }
   return hit.sort((a, b) => a.rank - b.rank).map(x => x.r).slice(0, 40);
 }
 // Rows named by something she typed (a class, a student, an assignment): never put into another language (lang.js).
-const FIND_NAMES = new Set(['Classes', 'Students', 'Assignments']);
+const FIND_NAMES = new Set(['Classes', 'Students', 'Assignments', 'School resources']);
 function openFind() {
   if ($('#findDlg') || $('#askDlg') || (!$('#dlg').hidden && !dlgPage)) return;
   commitEditors(); setMore(false);
@@ -217,4 +223,4 @@ document.addEventListener('keydown', e => {
 shellReady = true;
 railSavedRender(); renderNeeds(); safeAskRender(); updRender();
 applyRoute();
-Object.assign(window.__gs, { go, routeNow, applyRoute, openFind, findRows, keptState, classLeft });
+Object.assign(window.__gs, { go, routeNow, applyRoute, openFind, findRows, findMatch, keptState, classLeft });

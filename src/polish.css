@@ -26,6 +26,8 @@
 .dlg .box{max-height:calc((100vh - 32px - var(--savebar,0px)) / var(--uz))}
 .dlg .box.spbox,.dlg .box.arrbox{height:calc((100vh - 32px - var(--savebar,0px)) / var(--uz))}
 .toast{bottom:calc(24px + var(--savebar,0px))}
+/* a short note never lands on the bar that says what opened: it sits above it while the bar is up */
+body:has(#openRep:not([hidden])) .toast{bottom:calc(76px + var(--savebar,0px))}
 
 ::placeholder{color:var(--muted)}
 .dlg .box:focus{outline:none}
@@ -49,6 +51,9 @@
 .savewhere{flex:0 1 auto;min-width:0;max-width:48ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12.5px;color:var(--faint);text-decoration:none}
 .savewhere:hover{text-decoration:underline}
 .savewhere.warn,.wtext.warn{color:var(--warn);font-weight:600}
+/* in a narrow window the line keeps to its first words ("Not backed up") and is never cut mid-word; the tip still says the rest */
+@media (max-width:1180px){.savewhere .sw-more{display:none}}
+.nyrow{display:flex;gap:12px}.nyrow .tkf{flex:1}.nyh{margin:16px 0 4px;font-size:var(--text-body)}.nyck{display:flex;gap:10px;align-items:flex-start;margin:8px 0;font-size:var(--text-body)}.nyck input{margin-top:3px}.nyck small{display:block;color:var(--muted);font-size:var(--text-small)}
 .tkf{display:block;margin:10px 0;font-size:var(--text-body)}.tkf input{display:block;width:100%;margin-top:4px;padding:8px 10px;border:1px solid var(--line);border-radius:var(--corner-3);background:var(--surface);color:var(--fg);font:inherit}
 .tkerr{color:var(--bad);font-size:var(--text-body);font-weight:600}
 .cfrow{border-top:1px solid var(--line);padding:10px 0}.cfrow h3{margin:0 0 6px;font-size:15px}
