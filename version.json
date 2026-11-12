@@ -1,11 +1,11 @@
 {
- "version": "1.27.29",
- "build": "7ef6e90c79a6",
+ "version": "1.27.32",
+ "build": "37f5c2989806",
  "notes": [
-  "IB MYP tasks: the Grades tab shows each criterion’s level with no total or percent, and Copy all levels copies them. Insights leaves out the percent tiles, and text shared with an assistant says the rows are levels, not points to add up. Help has two new answers, for IB MYP and IB DP."
+  "IB MYP classes: report comments are drafted from the levels you set and the 1 to 7, and a progress sheet shows each criterion’s level, the total, the grade and every task’s levels, with no percent. A new year keeps a class’s criteria and boundaries and leaves the students’ levels behind. My setup now brings an MYP teacher in as IB MYP criteria."
  ],
  "files": {
-  "index.html": "515d0279bc0e65f6258394a23e6ec13d3a84cc4a5bce028e6056c9c5a65e2d62",
-  "planner.html": "627c5478f9a2bbbd279b6e955fda4f1054e420488d2f0a5d4279fdae246e3f6c"
+  "index.html": "f0c395ea088306b7f2e45f71efce871c4fedb208e63395e023b01fb442ab7d5a",
+  "planner.html": "5ce0fb02ac7c2646bda86af060cc7cbe23b61bd4b83ac622ff7e448a661f43c2"
  }
 }

@@ -41,6 +41,13 @@
 .schpin[aria-pressed=true]{color:var(--accent)}
 .schpin[aria-pressed=true] svg{fill:currentColor}
 .schrow .kdots{flex:none;border-color:transparent}
+.schfor{display:flex;flex-wrap:wrap;gap:var(--space-2);margin:0 0 var(--space-4)}
+.schforb{border:1px solid var(--line-strong);border-radius:var(--corner-pill);padding:var(--space-1) var(--space-3);background:var(--surface);color:var(--fg-2);font:inherit;font-size:var(--text-control);font-weight:500;cursor:pointer}
+.schforb:hover{background:var(--hover)}
+.schforb[aria-pressed=true]{border-color:var(--accent);background:var(--accent-soft);color:var(--accent);font-weight:600}
+.schforb:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.schcls{display:flex;flex-wrap:wrap;gap:var(--space-2)}
+.schform .schcls+.schsay{margin-top:var(--space-1)}
 .schfoot{margin:0 var(--space-1);font-size:var(--text-control)}
 .schform .field input[type=text],.schform .field textarea{width:100%;border:1px solid var(--line-strong);border-radius:var(--corner-2);padding:var(--space-2) var(--space-3);background:var(--surface);color:var(--fg);font:inherit;font-size:var(--text-body)}
 .schform .field textarea{resize:vertical;line-height:1.5}
