@@ -2415,7 +2415,7 @@ html.welcoming .shell{visibility:hidden}
 #attPick{font:inherit;font-size:var(--text-control);color:var(--fg-2);background:var(--surface);border:1px solid var(--line-strong);border-radius:var(--corner-3);padding:3px 6px;height:28px;width:132px}
 .attsum{margin:var(--space-3) 18px 0;font-size:var(--text-control);font-weight:600;color:var(--fg-2);font-variant-numeric:tabular-nums}
 .attsum.no{color:var(--warn);font-weight:600}
-.attlist{column-width:460px;column-gap:var(--space-6);padding:var(--space-2) 18px 0}
+.attlist{column-width:560px;column-gap:var(--space-6);padding:var(--space-2) 18px 0}
 .attrow{display:flex;align-items:center;gap:var(--space-2) var(--space-3);flex-wrap:wrap;padding:var(--space-2) 0;border-bottom:1px solid var(--line);break-inside:avoid}
 .attn{flex:1;min-width:120px;display:flex;align-items:center;gap:6px}
 .attname{font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -2437,6 +2437,9 @@ html.welcoming .shell{visibility:hidden}
 .atttab .attn2{position:sticky;left:0;background:var(--surface);text-align:left;font-weight:500;padding-right:var(--space-4);z-index:1;max-width:220px;overflow:hidden;text-overflow:ellipsis}
 .atttab thead .attn2{z-index:2}
 .atttab .attt{font-variant-numeric:tabular-nums;font-weight:600;min-width:58px}
+.atttab thead .attt small{display:block;font-size:var(--text-caption);color:var(--muted);font-weight:400}
+.attunk{margin:0 18px var(--space-4);padding:var(--space-2) var(--space-3);border-radius:var(--corner-3);background:var(--accent-soft);font-size:var(--text-control);color:var(--fg-2);line-height:1.6}
+.attunk b{color:var(--fg)}
 .atttab td.attt.z{color:var(--faint);font-weight:400}
 .atttab .attd a{display:block;color:inherit;text-decoration:none;font-weight:500;font-size:var(--text-small);padding:2px 4px;border-radius:var(--corner-1)}
 .atttab .attd a:hover{background:var(--hover);color:var(--accent)}
@@ -4581,7 +4584,8 @@ const LANG_ES = {
     'one-student': { q: '¿Cómo veo todo sobre un estudiante?', words: 'perfil individual familia reunión tutoría progreso gráfico',
       a: ['Abre la clase, elige **Students** y haz clic en un nombre. La página del estudiante tiene cada nota, la nota del periodo y cómo va evolucionando.', 'La pestaña **Charts** de la clase muestra los mismos números de todos a la vez.'] },
     'attendance': { q: '¿Puedo pasar lista en la aplicación?', go: 'Abrir Ajustes, Clases', words: 'asistencia lista presente ausente falta tarde retraso justificada registro',
-      a: ['Sí. Abre una clase y elige **Attendance**. Todos empiezan como presentes, así que pulsa **Late**, **Excused** o **Absent** solo para quien no lo esté, o **Everyone is here** si están todos. Cada pulsación se guarda, con una nota si la quieres.',
+      a: ['Sí. Abre una clase y elige **Attendance**. Todos empiezan como presentes, así que pulsa **Late** o **Absent, reason unknown** solo para quien no lo esté, o **Everyone is here** si están todos. Cada pulsación se guarda, con una nota si la quieres.',
+        'Cuando sepas que una falta está justificada, abre ese día y pulsa **Absent, excused**. **Look back** muestra las faltas que aún no tienen motivo.',
         '**Look back** muestra cada día guardado en una tabla, con los totales de cada estudiante. **Copy this day** y **Download as a spreadsheet** lo sacan para el sistema de tu centro.',
         'La asistencia se queda en este navegador y en tu carpeta, como el resto de tu trabajo. Si no la usas, desactívala en Ajustes, **Classes and rosters**.'] },
     'learning-goals': { q: '¿Puedo ver las notas por objetivo de aprendizaje o estándar?', go: 'Abrir Ajustes, Calificación', words: 'estándares estándar destrezas objetivos resultados dominio repasar etiquetar competencia',
@@ -4980,7 +4984,8 @@ const LANG_ZH = {
     'one-student': { q: '怎麼查看一位學生的所有資料？', words: '個人檔案 個別 家長 會談 導師 進步 圖表',
       a: ['開啟班級，選擇 **Students**，再按學生的名字。學生頁面有每一項分數、學期成績和變化趨勢。', '班級的 **Charts** 分頁會同時顯示所有人的相同數據。'] },
     'attendance': { q: '可以在這裡點名嗎？', go: '開啟設定、班級', words: '點名 出席 出缺席 缺席 遲到 請假 曠課 紀錄 attendance',
-      a: ['可以。開啟一個班級，選擇 **Attendance**。每個人一開始都是出席，所以只要替沒到的人按 **Late**、**Excused** 或 **Absent**；如果全員到齊，就按 **Everyone is here**。每按一次都會儲存，也可以加上備註。',
+      a: ['可以。開啟一個班級，選擇 **Attendance**。每個人一開始都是出席，所以只要替沒到的人按 **Late** 或 **Absent, reason unknown**；如果全員到齊，就按 **Everyone is here**。每按一次都會儲存，也可以加上備註。',
+        '知道某次缺席是請假之後，打開那一天，按 **Absent, excused**。**Look back** 會列出還不知道原因的缺席。',
         '**Look back** 會用一張表顯示每個已儲存的日期，以及每位學生的總計。**Copy this day** 和 **Download as a spreadsheet** 可以把資料帶到學校的系統。',
         '出缺席紀錄和你其他的工作一樣，只留在這個瀏覽器和你的資料夾裡。如果用不到，可以在設定的 **Classes and rosters** 關閉。'] },
     'learning-goals': { q: '可以依學習目標或能力指標查看分數嗎？', go: '開啟設定的評分', words: '指標 標準 能力 目標 學習表現 精熟 重教 標記 素養',
@@ -5278,10 +5283,11 @@ const HELP = [
     a: ['Open the class, choose **Students** and click a name. The student’s page has every score, the term grade, and how they are moving.', 'The class’s **Charts** tab shows the same numbers for everyone at once.'],
     words: 'profile individual parent meeting conference progress chart' },
   { id: 'attendance', sec: 'class', q: 'Can I take attendance in the app?',
-    a: ['Yes. Open a class and choose **Attendance**. Everyone starts as present, so press **Late**, **Excused** or **Absent** only for a student who isn’t, or **Everyone is here** if they all are. Each press is saved, with a note if you want one.',
+    a: ['Yes. Open a class and choose **Attendance**. Everyone starts as present, so press **Late** or **Absent, reason unknown** only for a student who isn’t, or **Everyone is here** if they all are. Each press is saved, with a note if you want one.',
+      'When you learn an absence is excused, open that day and press **Absent, excused**. **Look back** lists the absences that still have no reason.',
       '**Look back** shows every saved day in one table, with each student’s totals. **Copy this day** and **Download as a spreadsheet** take it out for your school’s system.',
       'Attendance stays in this browser and your folder, like the rest of your work. If you don’t use it, turn it off in Settings, **Classes and rosters**.'],
-    go: ['Open Settings, Classes', '#/settings/classes'], words: 'attendance register roll call present absent absence late tardy excused' },
+    go: ['Open Settings, Classes', '#/settings/classes'], words: 'attendance register roll call present absent absence late tardy excused unexcused unknown reason' },
   { id: 'learning-goals', sec: 'class', q: 'Can I see scores by learning goal or standard?',
     a: ['Yes, and it is optional. In Settings, Grading, **Learning goals** holds your own list: a skill like “Uses evidence”, or a standard from your school.',
       '1. In an assignment, choose Setup, then **Rubric setup**, and pick a goal beside each row. For a paper quiz, pick a goal under each question in **Quiz boxes**.', '2. Open the class and choose **Goals**: the class average on each goal with the lowest first, every student by every goal, and where each number came from.',
@@ -22818,8 +22824,9 @@ function rollsShare() {
 rollsShare();
 Object.assign(window.__gs, { seatOf, seatList, seatRoom, seatPut, seatFill, rollsShare, saveLib, carryLs });
 
-/* ---------------- attendance: who was here, late, excused or absent, saved by day for each class (11/11) ---------------- */
-const ATT_WAYS = [['p', 'Present'], ['l', 'Late'], ['e', 'Excused'], ['a', 'Absent']], ATT_WORD = Object.fromEntries(ATT_WAYS);
+/* ---------------- attendance: who was here, late or absent (reason unknown or excused), saved by day for each class (11/11) ---------------- */
+const ATT_WAYS = [['p', 'Present'], ['l', 'Late'], ['a', 'Absent, reason unknown'], ['e', 'Absent, excused']], ATT_WORD = Object.fromEntries(ATT_WAYS);
+const ATT_SHORT = { p: 'present', l: 'late', a: 'absent, reason unknown', e: 'excused' };
 const attToday = () => isoDay(Date.now());
 const attRec = (c, d) => { const r = c && c.att && c.att[d]; return r && !r.off ? r : null; };
 const attOf = (c, d, n) => { const r = attRec(c, d); return r ? (r.m && r.m[n]) || 'p' : ''; };
@@ -22857,7 +22864,8 @@ function attStep(c, d, dir) {
 }
 const attHash = (c, sub) => classHash(c, 'attendance') + (sub ? '/' + sub : '');
 const attLong = d => new Date(d + 'T12:00:00').toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' });
-const attSay = o => [[o.p, 'present'], [o.l, 'late'], [o.e, 'excused'], [o.a, 'absent']].filter(x => x[0]).map(x => x[0] + ' ' + x[1]).join(' · ');
+const attSay = o => ['p', 'l', 'a', 'e'].filter(k => o[k]).map(k => o[k] + ' ' + ATT_SHORT[k]).join(' · ');
+const attUnknown = (c, days) => days.flatMap(d => c.names.filter(n => attOf(c, d, n) === 'a').map(n => ({ d, n }))).reverse();
 
 /* ---------- the tab ---------- */
 let attSt = { term: null }, attLib = null;
@@ -22890,8 +22898,9 @@ function attList(c, d) {
     return '<div class="attrow s' + s + '" data-attrow="' + i + '"><span class="attn"><span class="attname">' + esc(shown) + '</span>' + (anonOn() ? '' : whoBtn('data-wc="' + esc(c.id) + '" data-wn="' + esc(n) + '"', n)) + '</span>' +
       '<div class="pseg attseg" role="group" aria-label="' + esc(shown) + '">' + ATT_WAYS.map(([k, l]) => '<button data-atts="' + k + '" aria-pressed="' + (s === k) + '">' + l + '</button>').join('') + '</div>' +
       (s !== 'p' || note ? '<input type="text" class="attnote" data-attnote maxlength="120" value="' + esc(note) + '" placeholder="Note, if you want one" aria-label="Note for ' + esc(shown) + '">' : '') + '</div>';
-  }).join('') + '</div><p class="muted attcap">' + (r ? 'Each press is saved as you make it.' : 'Everyone starts as present. Press Late, Excused or Absent for anyone who isn’t, or “Everyone is here” if they all are.') +
-    ' With a name in focus, P, L, E and A set it and move to the next student.</p>';
+  }).join('') + '</div><p class="muted attcap">' + (r ? 'Each press is saved as you make it.' : 'Everyone starts as present. Press Late or Absent for anyone who isn’t, or “Everyone is here” if they all are.') +
+    ' Absent starts as “reason unknown”; press “Absent, excused” once you know the absence is excused.' +
+    ' With a name in focus, P, L, A and E set it and move to the next student.</p>';
 }
 function attBackBar(c) {
   const g = attRange();
@@ -22904,13 +22913,20 @@ function attBack(c) {
   if (!days.length) return '<p class="muted bkpad" id="attNone">No attendance saved ' + (attSt.term === '*' ? 'for this class yet' : 'in ' + esc(g.name)) + '. <a class="link" href="' + attHash(c) + '">Take today’s</a></p>';
   const cell = (n, d, shown) => { const s = attOf(c, d, n), note = attNote(c, d, n); return '<td><span class="attc s' + s + '" title="' + esc(shown + ' · ' + ATT_WORD[s] + (note ? ' · ' + note : '')) + '">' + (s === 'p' ? '' : s.toUpperCase()) + (note ? '<i></i>' : '') + '</span></td>'; };
   const num = v => '<td class="attt' + (v ? '' : ' z') + '">' + v + '</td>';
-  return '<div class="attwrap"><table class="atttab" id="attTab"><thead><tr><th class="attn2">Student</th><th class="attt">Absent</th><th class="attt">Late</th><th class="attt">Excused</th>' +
+  return '<div class="attwrap"><table class="atttab" id="attTab"><thead><tr><th class="attn2">Student</th><th class="attt" title="Absent, reason unknown">Absent<small>reason unknown</small></th><th class="attt" title="Absent, excused">Absent<small>excused</small></th><th class="attt">Late</th>' +
     days.map(d => { const [w, s] = attShort(d); return '<th class="attd"><a href="' + attHash(c, d) + '" title="Open ' + esc(attLong(d)) + '"><small>' + esc(w) + '</small>' + esc(s) + '</a></th>'; }).join('') + '</tr></thead><tbody>' +
     c.names.map((n, i) => { const shown = bkWho(n, i), o = attCount(c, n, days);
-      return '<tr><th class="attn2" scope="row"><a class="bklink" href="' + classHash(c, 'students', i) + '">' + esc(shown) + '</a></th>' + num(o.a) + num(o.l) + num(o.e) + days.map(d => cell(n, d, shown)).join('') + '</tr>'; }).join('') +
+      return '<tr><th class="attn2" scope="row"><a class="bklink" href="' + classHash(c, 'students', i) + '">' + esc(shown) + '</a></th>' + num(o.a) + num(o.e) + num(o.l) + days.map(d => cell(n, d, shown)).join('') + '</tr>'; }).join('') +
     '<tr class="attfoot"><th class="attn2" scope="row">Here</th><td></td><td></td><td></td>' + days.map(d => { const o = attDayCount(c, d); return '<td>' + (o.p + o.l) + '</td>'; }).join('') + '</tr></tbody></table></div>' +
-    '<div class="attleg"><span><b class="attc sp"></b>Present</span><span><b class="attc sl">L</b>Late</span><span><b class="attc se">E</b>Excused</span><span><b class="attc sa">A</b>Absent</span><span><b class="attc sp"><i></i></b>Has a note</span></div>' +
-    '<p class="muted attcap">' + people(days.length, 'day') + ' taken' + (attSt.term === '*' ? '' : ' in ' + esc(g.name)) + '. Click a date to open or change that day, or a name for that student’s page. “Here” counts everyone present or late.</p>';
+    '<div class="attleg"><span><b class="attc sp"></b>Present</span><span><b class="attc sl">L</b>Late</span><span><b class="attc sa">A</b>Absent, reason unknown</span><span><b class="attc se">E</b>Absent, excused</span><span><b class="attc sp"><i></i></b>Has a note</span></div>' +
+    '<p class="muted attcap">' + people(days.length, 'day') + ' taken' + (attSt.term === '*' ? '' : ' in ' + esc(g.name)) + '. Click a date to open or change that day, or a name for that student’s page. “Here” counts everyone present or late.</p>' + attUnknownNote(c, days);
+}
+function attUnknownNote(c, days) {
+  const u = attUnknown(c, days); if (!u.length) return '';
+  const day = d => new Date(d + 'T12:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  return '<p class="attunk" id="attUnk"><b>' + people(u.length, 'absence') + ' still ' + (u.length === 1 ? 'has' : 'have') + ' no reason.</b> ' +
+    u.slice(0, 8).map(x => '<a class="link" href="' + attHash(c, x.d) + '">' + esc(bkWho(x.n, c.names.indexOf(x.n)) + ', ' + day(x.d)) + '</a>').join(' · ') + (u.length > 8 ? ' and ' + (u.length - 8) + ' more' : '') +
+    '. Open the day and press “Absent, excused” when you hear why.</p>';
 }
 function attRedraw(focus) {
   const el = $('#classPanel'), r = routeNow(); if (!el || r.v !== 'class' || r.tab !== 'attendance') return;
@@ -22927,7 +22943,7 @@ function attDayRows(c, d) {
 }
 function attTableRows(c, days) {
   const ids = c.names.some(n => infoOf(c, n).id);
-  return [[...(ids ? ['ID'] : []), 'Student', 'Absent', 'Late', 'Excused', ...days], ...c.names.map(n => { const o = attCount(c, n, days); return [...(ids ? [infoOf(c, n).id || ''] : []), n, o.a, o.l, o.e, ...days.map(d => ATT_WORD[attOf(c, d, n)])]; })];
+  return [[...(ids ? ['ID'] : []), 'Student', 'Absent, reason unknown', 'Absent, excused', 'Late', ...days], ...c.names.map(n => { const o = attCount(c, n, days); return [...(ids ? [infoOf(c, n).id || ''] : []), n, o.a, o.e, o.l, ...days.map(d => ATT_WORD[attOf(c, d, n)])]; })];
 }
 const attCsv = rows => rows.map(r => r.map(v => { const s = csvSafe(v); return /[",\r\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; }).join(',')).join('\r\n');
 const attCopy = (rows, say) => navigator.clipboard.writeText(rows.map(r => tsvLine(r.map(String))).join('\n')).then(() => toast(say), () => toast('Copying didn’t work in this browser.'));
@@ -22975,7 +22991,7 @@ function attStuHtml(c, n) {
   if (!days.length) return '';
   const o = attCount(c, n, days), day = d => new Date(d + 'T12:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
   const line = (k, l) => { const ds = days.filter(d => attOf(c, d, n) === k); return ds.length ? '<p class="attstu"><b>' + l + '</b> ' + ds.map(d => '<a class="link" href="' + attHash(c, d) + '">' + esc(day(d)) + '</a>' + (attNote(c, d, n) ? ' (' + esc(attNote(c, d, n)) + ')' : '')).join(', ') + '</p>' : ''; };
-  return '<section id="attStu"><h3 class="ovh3">Attendance</h3><p class="bkfbline">Here ' + (o.p + o.l) + ' of ' + people(days.length, 'day') + (o.a || o.l || o.e ? ': ' + attSay({ ...o, p: 0 }) + '.' : ', never late.') + '</p>' + line('a', 'Absent') + line('l', 'Late') + line('e', 'Excused') + '</section>';
+  return '<section id="attStu"><h3 class="ovh3">Attendance</h3><p class="bkfbline">Here ' + (o.p + o.l) + ' of ' + people(days.length, 'day') + (o.a || o.l || o.e ? ': ' + attSay({ ...o, p: 0 }) + '.' : ', never late.') + '</p>' + line('a', 'Absent, reason unknown') + line('e', 'Absent, excused') + line('l', 'Late') + '</section>';
 }
 
 /* ---------- Today: a line under each of the day's classes ---------- */

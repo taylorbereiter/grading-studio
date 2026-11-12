@@ -1,12 +1,16 @@
-/* ---------------- attendance: who was here, late, excused or absent, saved by day for each class (11/11) ---------------- */
+/* ---------------- attendance: who was here, late or absent (reason unknown or excused), saved by day for each class (11/11) ---------------- */
 // A class page's Attendance tab. Everyone starts as present, so taking a day is one press for each student who isn't, or one press
 // on "Everyone is here". Looking back is one table, students down and days across, with each student's totals.
-// What is saved: on the class, beside its roster, c.att = { 'YYYY-MM-DD': { t, m: { roster name: 'l' | 'e' | 'a' }, n: { roster name: note } } }.
+// What is saved: on the class, beside its roster, c.att = { 'YYYY-MM-DD': { t, m: { roster name: 'l' | 'a' | 'e' }, n: { roster name: note } } }.
 // Only who wasn't simply present is written down; a day with a record and nobody in it is a day everyone was here. A day that was
 // cleared stays as { t, off: 1 }, so clearing it on one computer isn't undone by an older copy on another (merge.js).
 // It lives in lib, so it stays in this browser, goes in the teacher's own folder and take-home file, and never anywhere else.
 // Whether a teacher takes attendance here at all is theirs to say: Settings, Classes and rosters (attOn, library.js).
-const ATT_WAYS = [['p', 'Present'], ['l', 'Late'], ['e', 'Excused'], ['a', 'Absent']], ATT_WORD = Object.fromEntries(ATT_WAYS);
+// Four ways, kept to four on purpose (11/12): a student is here, here but late, or away. Away is 'a' until the teacher knows why,
+// and 'e' once the absence is excused. 'a' was called plain "Absent" before 11/12; the saved letters are the same, so old days read the new way.
+const ATT_WAYS = [['p', 'Present'], ['l', 'Late'], ['a', 'Absent, reason unknown'], ['e', 'Absent, excused']], ATT_WORD = Object.fromEntries(ATT_WAYS);
+// The short words for a summary line.
+const ATT_SHORT = { p: 'present', l: 'late', a: 'absent, reason unknown', e: 'excused' };
 const attToday = () => isoDay(Date.now());
 const attRec = (c, d) => { const r = c && c.att && c.att[d]; return r && !r.off ? r : null; };
 // How one student stood on a day: 'p', 'l', 'e' or 'a', or '' when the day wasn't taken.
@@ -54,7 +58,9 @@ function attStep(c, d, dir) {
 const attHash = (c, sub) => classHash(c, 'attendance') + (sub ? '/' + sub : '');
 const attLong = d => new Date(d + 'T12:00:00').toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' });
 // "22 present · 1 late · 1 absent": only what there is.
-const attSay = o => [[o.p, 'present'], [o.l, 'late'], [o.e, 'excused'], [o.a, 'absent']].filter(x => x[0]).map(x => x[0] + ' ' + x[1]).join(' · ');
+const attSay = o => ['p', 'l', 'a', 'e'].filter(k => o[k]).map(k => o[k] + ' ' + ATT_SHORT[k]).join(' · ');
+// Each absence in these days whose reason still isn't known, newest first.
+const attUnknown = (c, days) => days.flatMap(d => c.names.filter(n => attOf(c, d, n) === 'a').map(n => ({ d, n }))).reverse();
 
 /* ---------- the tab ---------- */
 let attSt = { term: null }, attLib = null;
@@ -88,8 +94,9 @@ function attList(c, d) {
     return '<div class="attrow s' + s + '" data-attrow="' + i + '"><span class="attn"><span class="attname">' + esc(shown) + '</span>' + (anonOn() ? '' : whoBtn('data-wc="' + esc(c.id) + '" data-wn="' + esc(n) + '"', n)) + '</span>' +
       '<div class="pseg attseg" role="group" aria-label="' + esc(shown) + '">' + ATT_WAYS.map(([k, l]) => '<button data-atts="' + k + '" aria-pressed="' + (s === k) + '">' + l + '</button>').join('') + '</div>' +
       (s !== 'p' || note ? '<input type="text" class="attnote" data-attnote maxlength="120" value="' + esc(note) + '" placeholder="Note, if you want one" aria-label="Note for ' + esc(shown) + '">' : '') + '</div>';
-  }).join('') + '</div><p class="muted attcap">' + (r ? 'Each press is saved as you make it.' : 'Everyone starts as present. Press Late, Excused or Absent for anyone who isn’t, or “Everyone is here” if they all are.') +
-    ' With a name in focus, P, L, E and A set it and move to the next student.</p>';
+  }).join('') + '</div><p class="muted attcap">' + (r ? 'Each press is saved as you make it.' : 'Everyone starts as present. Press Late or Absent for anyone who isn’t, or “Everyone is here” if they all are.') +
+    ' Absent starts as “reason unknown”; press “Absent, excused” once you know the absence is excused.' +
+    ' With a name in focus, P, L, A and E set it and move to the next student.</p>';
 }
 function attBackBar(c) {
   const g = attRange();
@@ -102,13 +109,21 @@ function attBack(c) {
   if (!days.length) return '<p class="muted bkpad" id="attNone">No attendance saved ' + (attSt.term === '*' ? 'for this class yet' : 'in ' + esc(g.name)) + '. <a class="link" href="' + attHash(c) + '">Take today’s</a></p>';
   const cell = (n, d, shown) => { const s = attOf(c, d, n), note = attNote(c, d, n); return '<td><span class="attc s' + s + '" title="' + esc(shown + ' · ' + ATT_WORD[s] + (note ? ' · ' + note : '')) + '">' + (s === 'p' ? '' : s.toUpperCase()) + (note ? '<i></i>' : '') + '</span></td>'; };
   const num = v => '<td class="attt' + (v ? '' : ' z') + '">' + v + '</td>';
-  return '<div class="attwrap"><table class="atttab" id="attTab"><thead><tr><th class="attn2">Student</th><th class="attt">Absent</th><th class="attt">Late</th><th class="attt">Excused</th>' +
+  return '<div class="attwrap"><table class="atttab" id="attTab"><thead><tr><th class="attn2">Student</th><th class="attt" title="Absent, reason unknown">Absent<small>reason unknown</small></th><th class="attt" title="Absent, excused">Absent<small>excused</small></th><th class="attt">Late</th>' +
     days.map(d => { const [w, s] = attShort(d); return '<th class="attd"><a href="' + attHash(c, d) + '" title="Open ' + esc(attLong(d)) + '"><small>' + esc(w) + '</small>' + esc(s) + '</a></th>'; }).join('') + '</tr></thead><tbody>' +
     c.names.map((n, i) => { const shown = bkWho(n, i), o = attCount(c, n, days);
-      return '<tr><th class="attn2" scope="row"><a class="bklink" href="' + classHash(c, 'students', i) + '">' + esc(shown) + '</a></th>' + num(o.a) + num(o.l) + num(o.e) + days.map(d => cell(n, d, shown)).join('') + '</tr>'; }).join('') +
+      return '<tr><th class="attn2" scope="row"><a class="bklink" href="' + classHash(c, 'students', i) + '">' + esc(shown) + '</a></th>' + num(o.a) + num(o.e) + num(o.l) + days.map(d => cell(n, d, shown)).join('') + '</tr>'; }).join('') +
     '<tr class="attfoot"><th class="attn2" scope="row">Here</th><td></td><td></td><td></td>' + days.map(d => { const o = attDayCount(c, d); return '<td>' + (o.p + o.l) + '</td>'; }).join('') + '</tr></tbody></table></div>' +
-    '<div class="attleg"><span><b class="attc sp"></b>Present</span><span><b class="attc sl">L</b>Late</span><span><b class="attc se">E</b>Excused</span><span><b class="attc sa">A</b>Absent</span><span><b class="attc sp"><i></i></b>Has a note</span></div>' +
-    '<p class="muted attcap">' + people(days.length, 'day') + ' taken' + (attSt.term === '*' ? '' : ' in ' + esc(g.name)) + '. Click a date to open or change that day, or a name for that student’s page. “Here” counts everyone present or late.</p>';
+    '<div class="attleg"><span><b class="attc sp"></b>Present</span><span><b class="attc sl">L</b>Late</span><span><b class="attc sa">A</b>Absent, reason unknown</span><span><b class="attc se">E</b>Absent, excused</span><span><b class="attc sp"><i></i></b>Has a note</span></div>' +
+    '<p class="muted attcap">' + people(days.length, 'day') + ' taken' + (attSt.term === '*' ? '' : ' in ' + esc(g.name)) + '. Click a date to open or change that day, or a name for that student’s page. “Here” counts everyone present or late.</p>' + attUnknownNote(c, days);
+}
+// Absences still marked "reason unknown": a reminder with a link to each day, so they can be changed to excused when the reason comes in.
+function attUnknownNote(c, days) {
+  const u = attUnknown(c, days); if (!u.length) return '';
+  const day = d => new Date(d + 'T12:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  return '<p class="attunk" id="attUnk"><b>' + people(u.length, 'absence') + ' still ' + (u.length === 1 ? 'has' : 'have') + ' no reason.</b> ' +
+    u.slice(0, 8).map(x => '<a class="link" href="' + attHash(c, x.d) + '">' + esc(bkWho(x.n, c.names.indexOf(x.n)) + ', ' + day(x.d)) + '</a>').join(' · ') + (u.length > 8 ? ' and ' + (u.length - 8) + ' more' : '') +
+    '. Open the day and press “Absent, excused” when you hear why.</p>';
 }
 function attRedraw(focus) {
   const el = $('#classPanel'), r = routeNow(); if (!el || r.v !== 'class' || r.tab !== 'attendance') return;
@@ -126,7 +141,7 @@ function attDayRows(c, d) {
 }
 function attTableRows(c, days) {
   const ids = c.names.some(n => infoOf(c, n).id);
-  return [[...(ids ? ['ID'] : []), 'Student', 'Absent', 'Late', 'Excused', ...days], ...c.names.map(n => { const o = attCount(c, n, days); return [...(ids ? [infoOf(c, n).id || ''] : []), n, o.a, o.l, o.e, ...days.map(d => ATT_WORD[attOf(c, d, n)])]; })];
+  return [[...(ids ? ['ID'] : []), 'Student', 'Absent, reason unknown', 'Absent, excused', 'Late', ...days], ...c.names.map(n => { const o = attCount(c, n, days); return [...(ids ? [infoOf(c, n).id || ''] : []), n, o.a, o.e, o.l, ...days.map(d => ATT_WORD[attOf(c, d, n)])]; })];
 }
 const attCsv = rows => rows.map(r => r.map(v => { const s = csvSafe(v); return /[",\r\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; }).join(',')).join('\r\n');
 const attCopy = (rows, say) => navigator.clipboard.writeText(rows.map(r => tsvLine(r.map(String))).join('\n')).then(() => toast(say), () => toast('Copying didn’t work in this browser.'));
@@ -160,7 +175,7 @@ document.addEventListener('change', e => {
   if (t.id === 'attPick') { if (attDayOk(t.value)) go(attHash(x.c, t.value === attToday() ? '' : t.value)); return; }
   if (t.dataset.attnote != null) { const row = t.closest('[data-attrow]'), n = x.c.names[+row.dataset.attrow]; if (attNote(x.c, x.d, n) !== t.value.trim()) { attSet(x.c, x.d, n, null, t.value); const sum = $('#attSum'); if (sum && !attRec(x.c, x.d)) attRedraw(); } }
 });
-// P, L, E and A set the student whose row has the focus and move to the next; the up and down arrows move between students.
+// P, L, A and E set the student whose row has the focus and move to the next; the up and down arrows move between students.
 document.addEventListener('keydown', e => {
   const row = e.target.closest && e.target.closest('#attList [data-attrow]'); if (!row || e.target.tagName === 'INPUT' || e.metaKey || e.ctrlKey || e.altKey) return;
   const i = +row.dataset.attrow, k = e.key.toLowerCase(), to = j => { const b = $('[data-attrow="' + j + '"] [aria-pressed="true"]'); if (b) b.focus(); };
@@ -175,7 +190,7 @@ function attStuHtml(c, n) {
   if (!days.length) return '';
   const o = attCount(c, n, days), day = d => new Date(d + 'T12:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
   const line = (k, l) => { const ds = days.filter(d => attOf(c, d, n) === k); return ds.length ? '<p class="attstu"><b>' + l + '</b> ' + ds.map(d => '<a class="link" href="' + attHash(c, d) + '">' + esc(day(d)) + '</a>' + (attNote(c, d, n) ? ' (' + esc(attNote(c, d, n)) + ')' : '')).join(', ') + '</p>' : ''; };
-  return '<section id="attStu"><h3 class="ovh3">Attendance</h3><p class="bkfbline">Here ' + (o.p + o.l) + ' of ' + people(days.length, 'day') + (o.a || o.l || o.e ? ': ' + attSay({ ...o, p: 0 }) + '.' : ', never late.') + '</p>' + line('a', 'Absent') + line('l', 'Late') + line('e', 'Excused') + '</section>';
+  return '<section id="attStu"><h3 class="ovh3">Attendance</h3><p class="bkfbline">Here ' + (o.p + o.l) + ' of ' + people(days.length, 'day') + (o.a || o.l || o.e ? ': ' + attSay({ ...o, p: 0 }) + '.' : ', never late.') + '</p>' + line('a', 'Absent, reason unknown') + line('e', 'Absent, excused') + line('l', 'Late') + '</section>';
 }
 
 /* ---------- Today: a line under each of the day's classes ---------- */

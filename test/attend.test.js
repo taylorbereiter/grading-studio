@@ -44,7 +44,7 @@ test('a day is taken with one press for each student who isn’t present, and ev
   await page.click('[data-attrow="3"] [data-atts="a"]');
   await page.click('[data-attrow="4"] [data-atts="l"]');
   assert.equal(await pressed(page), 'pppalp');
-  assert.equal(await text(page, '#attSum'), '4 present · 1 late · 1 absent');
+  assert.equal(await text(page, '#attSum'), '4 present · 1 late · 1 absent, reason unknown');
   assert.equal(await page.$('[data-attall]'), null);
   assert.deepEqual((await stored(page, today)).m, { 'Dov Madeup': 'a', 'Esme Placeholder': 'l' }, 'saved as it is pressed, and only who wasn’t simply present');
   // a note, for someone who isn't present
@@ -86,7 +86,7 @@ test('another day has its own address; “Everyone is here” takes it, and Clea
   await page.click('[data-attcopy]'); await page.waitForFunction(() => window.__copied);
   const lines = (await page.evaluate(() => window.__copied)).split('\n').map(l => l.split('\t'));
   assert.deepEqual(lines[0].slice(0, 2), ['ID', 'Student']); assert.equal(lines[0][3], 'Note');
-  assert.deepEqual(lines[4], ['900104', 'Dov Madeup', 'Absent', '']);
+  assert.deepEqual(lines[4], ['900104', 'Dov Madeup', 'Absent, reason unknown', '']);
   assert.deepEqual(lines[5], ['', 'Esme Placeholder', 'Late', 'Bus']);
   assert.deepEqual(lines[1], ['', 'Aria Testwell', 'Present', '']);
   // clearing: the day reads as never taken, here and after the next save
@@ -110,24 +110,27 @@ test('Look back is one table of students and days with each student’s totals, 
   assert.deepEqual(await page.$$eval('#attTab thead .attd a', a => a.map(x => x.getAttribute('href'))), ['#/class/c1/attendance/2026-09-01', '#/class/c1/attendance/2026-09-02']);
   const rows = await page.$$eval('#attTab tbody tr', rs => rs.map(r => [...r.children].map(c => c.textContent.trim())));
   assert.deepEqual(rows[3], ['Dov Madeup', '1', '0', '0', 'A', '']);
-  assert.deepEqual(rows[4], ['Esme Placeholder', '0', '1', '0', 'L', '']);
+  assert.deepEqual(rows[4], ['Esme Placeholder', '0', '0', '1', 'L', '']);
   assert.deepEqual(rows[0], ['Aria Testwell', '0', '0', '0', '', '']);
   assert.deepEqual(rows[6], ['Here', '', '', '', '5', '6'], 'late is here; absent is not');
   assert.match(await page.$eval('#attTab tbody tr:nth-child(5) .attc.sl', e => e.title), /Esme Placeholder · Late · Bus/);
+  // the one absence with no reason yet is listed, with a link to its day
+  assert.match(await text(page, '#attUnk'), /^1 absence still has no reason\. Dov Madeup, Sep 1\. Open the day/);
+  assert.equal(await page.$eval('#attUnk a', a => a.getAttribute('href')), '#/class/c1/attendance/2026-09-01');
   await page.click('[data-attterm="t2"]'); await page.waitForFunction(() => document.querySelectorAll('#attTab thead .attd').length === 1);
   await page.click('[data-attterm="*"]'); await page.waitForFunction(() => document.querySelectorAll('#attTab thead .attd').length === 3);
   // copy and download: full words, one column a day
   await copies(page);
   await page.click('[data-attcopyall]'); await page.waitForFunction(() => window.__copied);
   const t = (await page.evaluate(() => window.__copied)).split('\n').map(l => l.split('\t'));
-  assert.deepEqual(t[0], ['ID', 'Student', 'Absent', 'Late', 'Excused', '2026-09-01', '2026-09-02', '2027-02-01']);
-  assert.deepEqual(t[2], ['', 'Bram Sample', '0', '0', '1', 'Present', 'Present', 'Excused']);
-  assert.deepEqual(t[4], ['900104', 'Dov Madeup', '1', '0', '0', 'Absent', 'Present', 'Present']);
+  assert.deepEqual(t[0], ['ID', 'Student', 'Absent, reason unknown', 'Absent, excused', 'Late', '2026-09-01', '2026-09-02', '2027-02-01']);
+  assert.deepEqual(t[2], ['', 'Bram Sample', '0', '1', '0', 'Present', 'Present', 'Absent, excused']);
+  assert.deepEqual(t[4], ['900104', 'Dov Madeup', '1', '0', '0', 'Absent, reason unknown', 'Present', 'Present']);
   const dl = await catchDownloads(page);
   const f = await dl.next(() => page.click('[data-attcsv]'));
   assert.equal(f.name, 'Grade 9 English attendance 2026-09-01 to 2027-02-01.csv');
   const csv = Buffer.from(f.bytes).toString('utf8').replace(/^﻿/, '').split('\r\n');
-  assert.equal(csv.length, 7); assert.equal(csv[5], ',Esme Placeholder,0,1,0,Late,Present,Present');
+  assert.equal(csv.length, 7); assert.equal(csv[5], ',Esme Placeholder,0,0,1,Late,Present,Present');
   await dl.close();
   // a date opens that day
   await page.click('#attTab thead .attd a'); await page.waitForSelector('#attList');
@@ -135,7 +138,7 @@ test('Look back is one table of students and days with each student’s totals, 
   // a student's own page lists what they missed
   await goTo(page, '#/class/c1/students/4'); await page.waitForSelector('#bkStuName');
   await page.click('[data-bkterm="t1"]'); await page.waitForSelector('#attStu');
-  assert.match(await text(page, '#attStu'), /Here 1 of 2 days: 1 absent\.\s*Absent Sep 1$/);
+  assert.match(await text(page, '#attStu'), /Here 1 of 2 days: 1 absent, reason unknown\.\s*Absent, reason unknown Sep 1$/);
   await goTo(page, '#/class/c1/students/1'); await page.waitForSelector('#bkStuName');
   assert.match(await text(page, '#attStu'), /Here 2 of 2 days, never late\./);
   assert.deepEqual(page.errors, []);
@@ -148,7 +151,7 @@ test('attendance is the teacher’s to turn off: the tab, its address and Today�
   assert.match(await page.evaluate(() => window.__gs.attTodayLine({ name: 'grade 9 english' })), /Take attendance/);
   assert.equal(await page.evaluate(() => window.__gs.attTodayLine({ name: 'Some other class' })), '');
   await page.evaluate(() => { const G = window.__gs, d = new Date(), c = G.state().lib.classes[0]; G.attSet(c, d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'), 'Finn Example', 'a'); });
-  assert.match(await page.evaluate(() => window.__gs.attTodayLine({ name: 'Grade 9 English' })), /Attendance taken · 1 absent/);
+  assert.match(await page.evaluate(() => window.__gs.attTodayLine({ name: 'Grade 9 English' })), /Attendance taken · 1 absent, reason unknown/);
   await page.evaluate(() => { const G = window.__gs, d = new Date(), c = G.state().lib.classes[0]; G.attClear(c, d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0')); delete c.att[Object.keys(c.att).sort().pop()]; });
   await goTo(page, '#/settings/classes'); await page.waitForSelector('#attOnBox');
   assert.equal(await page.$eval('#attOnBox', b => b.checked), true, 'on until she says otherwise');
