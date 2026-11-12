@@ -164,7 +164,7 @@ const LANG_ZH = {
     'Your marked paper starts on the next page.': '批改後的作業從下一頁開始。', 'Your feedback continues on the next page.': '回饋接續在下一頁。',
     /* returned file names: Student - Assignment - Graded.pdf */
     'Graded': '已評分', 'Feedback': '回饋', 'Student name': '學生姓名',
-    'Missing': '缺交', 'Excused': '免交', 'Late': '遲交', 'Retake': '重做', 'First try': '第一次', 'counts as': '採計',
+    'Missing': '缺交', 'Excused': '免交', 'Late': '遲交', 'Retake': '重做', 'Answer': '答案', 'First try': '第一次', 'counts as': '採計',
   },
   rules: [
     [/^(\d+) more on your list$/, '清單上還有 $1 項'], [/^(\d+) to do$/, '$1 項待辦'],

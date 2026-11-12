@@ -167,7 +167,7 @@ const LANG_ES = {
     'Your marked paper starts on the next page.': 'Tu trabajo corregido empieza en la página siguiente.', 'Your feedback continues on the next page.': 'Tus comentarios continúan en la página siguiente.',
     /* returned file names: Student - Assignment - Graded.pdf */
     'Graded': 'Corregido', 'Feedback': 'Comentarios', 'Student name': 'Nombre del estudiante',
-    'Missing': 'No entregado', 'Excused': 'Justificado', 'Late': 'Con retraso', 'Retake': 'Nuevo intento', 'First try': 'Primer intento', 'counts as': 'cuenta como',
+    'Missing': 'No entregado', 'Excused': 'Justificado', 'Late': 'Con retraso', 'Retake': 'Nuevo intento', 'Answer': 'Respuesta', 'First try': 'Primer intento', 'counts as': 'cuenta como',
   },
   rules: [
     [/^(\d+) more on your list$/, m => m[1] + ' más en tu lista'], [/^(\d+) to do$/, m => m[1] + (m[1] === '1' ? ' pendiente' : ' pendientes')],
