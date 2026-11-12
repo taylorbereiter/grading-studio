@@ -1,11 +1,12 @@
 {
- "version": "1.27.20",
- "build": "f87649654fc8",
+ "version": "1.27.21",
+ "build": "38551280be93",
  "notes": [
-  "Feedback-only work no longer says 0 of 20 scored. A formative activity counts the students whose feedback is complete, on its card, in Find, Today, To do, the Grades box and the grade sheet, and says Ready to return once everyone has feedback."
+  "Comments are easier to work with. Change a comment’s color at any time, even while typing it: its box has a Color row, and a Highlight row when it is on highlighted words. Text boxes and Quick mark comments have colors too.",
+  "Drag a new comment’s line up or down before you type a word, and press Enter to finish a comment or text box. Shift Enter starts a new line."
  ],
  "files": {
-  "index.html": "0bd88f5934a458055e1762a1e0d776831666c5d7724a78c852c6272f78caa0a1",
-  "planner.html": "5b7c193698dfd27caaeca51332183a16656903b387027639fceb145b5e383167"
+  "index.html": "de33cef5c10348f0ec6dda49bad2e288389cbd08a268bb2d3692337145b53053",
+  "planner.html": "9e82c731b161cb9ce91e8cb4704f3b85e4da94a494f0b823f357836a417b354f"
  }
 }
