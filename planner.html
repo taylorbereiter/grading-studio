@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"476d1d13","zh-Hans":"50fedcbb","es":"c600fb36","fr":"fcfd1fc1","de":"04e391b9","pt-BR":"787cd333","ja":"3225a044","ko":"77157879"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script></head><body>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"84df816b","zh-Hans":"63077d96","es":"e84d3e8f","fr":"730dd8f5","de":"8bc3df18","pt-BR":"5988ebd3","ja":"3c91652b","ko":"785fc6c6"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script></head><body>
 <title>Planner · Grading Studio</title>
 <script>try{document.documentElement.dataset.theme=JSON.parse(localStorage.getItem('gs.theme'))||'light'}catch(e){document.documentElement.dataset.theme='light'}</script>
 <style>
@@ -6200,23 +6200,60 @@ const LANG_WANT = (() => { try { const v = JSON.parse(localStorage.getItem('gs.l
 const LANG_PACK = LANG_WANT === 'en' ? null : langPack(LANG_WANT);
 const LANG = LANG_PACK ? LANG_WANT : 'en';
 const LANG_LOCALE = LANG_PACK ? LANG_PACK.locale : undefined;
-function trPiece(k, P) {
-  if (Object.prototype.hasOwnProperty.call(P.words, k)) return P.words[k];
-  for (const [re, to] of P.rules) { const m = re.exec(k); if (!m) continue; const hit = typeof to === 'function' ? to(m) : k.replace(re, to); if (hit != null) return hit; }
-  return null;
+const langCap = s => s.charAt(0).toUpperCase() + s.slice(1);
+function langFill(t, m, P) {
+  const s = Array.isArray(t) ? t[+m[1] === 1 ? 0 : 1] : t;
+  return s.replace(/\{(t?)(\d)\}/g, (x, w, i) => { const v = m[+i] == null ? '' : m[+i]; if (!w) return v; const h = trPiece(v, P); return h != null ? h : (trPiece(langCap(v), P) || v); });
 }
-function trWith(s, P) {
+const LANG_ATT = { present: 'attp', late: 'attl', 'absent, reason unknown': 'atta', excused: 'atte' };
+const LANG_FILLS = [
+  ['sdet', /^Student details for (.+)$/], ['cnt', /^Count (.+) in the class average$/], ['wout', /^without (\d+) students? ·$/],
+  ['nograde', /^Nothing graded for (.+) in this term yet\. Grade a download for it, or use \+ Add scores for work you did before\.$/],
+  ['noroster', /^The gradebook lists the students on a class’s roster\. Add a roster to (.+) on its class page first\.$/],
+  ['untyped1', /^“(.+)” has no type yet, so it doesn’t count toward a term grade\.$/], ['untypedN', /^(\d+) assignments have no type yet, so they don’t count toward a term grade\.$/],
+  ['given', /^(\d+) given$/], ['bydate', /^By the date \((.+)\)$/], ['typedfor', /^Typed-in scores for (.+)$/], ['addfor', /^Add scores for (.+)$/],
+  ['xcfor', /^Extra credit for (.+)$/], ['scfor', /^Score for (.+)$/], ['ofxc', /^(\d+) of (\d+) given extra credit$/], ['ofdone', /^(\d+) of (\d+) complete$/], ['ofent', /^(\d+) of (\d+) entered$/],
+  ['xcI', /^Each point adds one percentage point to the (.+), which then counts by its weight\. Leave a student blank for none\. It doesn’t change any assignment’s score\.$/],
+  ['xcon', /^\+([\d.,]+)% on the term grade$/], ['xconi', /^\+([\d.,]+) on the (.+)$/], ['avg', /^([^·.:]{1,40}) average$/], ['scout', /^Score out of ([\d.,]+)$/],
+  ['notros', /^Not on the roster, so left out: (.+)\. Type their scores in by hand\.$/],
+  ['how', /^Students are in your roster order\. (?:Each type’s average counts every assignment of that type the same; the (term grade|grade) weights them by your Term setup\. )?Missing and Excused never count against a student\. Point at a (term grade|grade) to see how it’s worked out(, extra credit included)?\.( Scores you typed in can be changed here; a graded download’s scores change in that download\.)?$/,
+    (m, F) => [F.how1, m[1] ? (m[1] === 'grade' ? F.how2g : F.how2t) : '', F.how3, (m[2] === 'grade' ? F.how4g : F.how4t).replace('{xc}', m[3] ? F.howxc : ''), m[4] ? F.how5 : ''].filter(Boolean).join(F.sp)],
+  ['pasteS', /^Paste a class list with names and a student ID or email column \(from (.+) or a spreadsheet\)\. Each row fills in the student with the same name\.$/],
+  ['withid', /^(\d+) with an ID$/], ['idfor', /^Student ID for (.+)$/], ['emfor', /^Email for (.+)$/], ['lyfor', /^Last year’s level for (.+)$/],
+  ['notefor', /^Note for (.+)$/], ['att', /^(\d+) (present|late|absent, reason unknown|excused)$/, (m, F, P) => langFill(F[LANG_ATT[m[2]]], m, P)],
+  ['cap', /^(Each press is saved as you make it\.|Everyone starts as present\. Press Late or Absent for anyone who isn’t, or “Everyone is here” if they all are\.) Absent starts as “reason unknown”; press “Absent, excused” once you know the absence is excused\. With a name in focus, P, L, A and E set it and move to the next student\.$/,
+    (m, F) => (m[1].startsWith('Each') ? F.capA : F.capB) + F.sp + F.capR],
+  ['noatt', /^No attendance saved in (.+)\.$/], ['openday', /^Open (?!in )(.*\d.*)$/],
+  ['taken', /^(\d+) days? taken(?: in (.+))?\. Click a date to open or change that day, or a name for that student’s page\. “Here” counts everyone present or late\.$/,
+    (m, F, P) => langFill(m[2] ? F.takenin : F.taken, m, P) + F.sp + F.takenR],
+  ['unk', /^(\d+) absences? still ha(?:s|ve) no reason\.$/], ['andmore', /^and (\d+) more\. Open the day and press “Absent, excused” when you hear why\.$/],
+  ['owes', /^(\d+) students? owes? (\d+) pieces? of work$/, (m, F, P) => langFill(F.owesA, m, P) + F.sp + langFill(F.owesB, [0, m[2]], P)],
+  ['reminded', /^Reminded (.+)$/], ['ago', /^(\d+) days? ago$/],
+  ['pick', /^Pick the closest one\. There is a desk for each of the (\d+) students, and any desk can be moved or taken away afterwards\.$/],
+  ['seated', /^(\d+) of (\d+) seated$/], ['needed', /^(\d+) more desks? needed$/], ['desk', /^Desk, (.+)\. Click to take it away$/],
+];
+function trPiece(k, P, ctx) {
+  if (ctx && Object.prototype.hasOwnProperty.call(P.words, ctx + '|' + k)) return P.words[ctx + '|' + k];
+  if (Object.prototype.hasOwnProperty.call(P.words, k)) return P.words[k];
+  const fills = () => { if (P.fill) for (const [key, re, fn] of LANG_FILLS) { const m = re.exec(k); if (!m) continue; const hit = fn ? fn(m, P.fill, P) : P.fill[key] != null ? langFill(P.fill[key], m, P) : null; if (hit != null) return hit; } return null; };
+  if (ctx) { const hit = fills(); if (hit != null) return hit; }
+  for (const [re, to] of P.rules) { const m = re.exec(k); if (!m) continue; const hit = typeof to === 'function' ? to(m) : k.replace(re, to); if (hit != null) return hit; }
+  return ctx ? null : fills();
+}
+function trWith(s, P, ctx) {
   const k = s.trim(); if (!k) return s;
-  let hit = trPiece(k, P);
-  if (hit == null && k.includes(' · ')) { const parts = k.split(' · '), out = parts.map(p => { const h = trPiece(p.trim(), P); return h == null ? p : h; }); if (out.some((p, i) => p !== parts[i])) hit = out.join(' · '); }
+  let hit = trPiece(k, P, ctx);
+  if (hit == null && k.includes(' · ')) { const parts = k.split(' · '), out = parts.map(p => { const h = trPiece(p.trim(), P, ctx); return h == null ? p : h; }); if (out.some((p, i) => p !== parts[i])) hit = out.join(' · '); }
   return hit == null ? s : s.replace(k, () => hit);
 }
-const tr = s => LANG_PACK && typeof s === 'string' ? trWith(s, LANG_PACK) : s;
-const LANG_ROOTS = '#rail, #vHome, #vHelp, #welcome, #findDlg, #setLang, #vSettings, #vClass .clshead, #vClass .ctabs, #vClass .ctools, #vClass .board, #classHint';
-const LANG_RAW = 'script, style, textarea, [contenteditable], [data-raw], .kname, #railClasses .rl, .wllang, .tbn, .trow:not(.none) b, .hlpa p:not(.hlpgo), .hlpa ol, kbd, .rbrand, .wlbrand, #homeDate, .aiWord, .updnotes, #vSettings .nt b, #meSys option:not([value]), #meAi option:not([value]), #wlSys option:not([value]), #vClass .clshead h1, #vClass .uhead .nm, #vClass .card .t';
+const tr = (s, ctx) => LANG_PACK && typeof s === 'string' ? trWith(s, LANG_PACK, ctx) : s;
+const LANG_ROOTS = '#rail, #vHome, #vHelp, #welcome, #findDlg, #setLang, #vSettings, #vClass .clshead, #vClass .ctabs, #vClass .ctools, #vClass .board, #classHint, ' + ['gradebook', 'students', 'attendance', 'seating', 'missing'].map(t => '#classPanel[data-tab="' + t + '"]').join(', ');
+const LANG_RAW = 'script, style, textarea, [contenteditable], [data-raw], .kname, #railClasses .rl, .wllang, .tbn, .trow:not(.none) b, .hlpa p:not(.hlpgo), .hlpa ol, kbd, .rbrand, .wlbrand, #homeDate, .aiWord, .updnotes, #vSettings .nt b, #meSys option:not([value]), #meAi option:not([value]), #wlSys option:not([value]), #vClass .clshead h1, #vClass .uhead .nm, #vClass .card .t, #classPanel .bklink, #classPanel .bkpop > b, #bkaRows td:first-child, #bkaUnit option:not([value=""]), #peopleTbl td.nm a, .attname, #attDate, .attunk a, .misw, .mishead h3, .misaddr, .seat span, .seatchip, #seatSel b';
 const LANG_ATTRS = ['title', 'aria-label', 'placeholder'];
-const langText = n => { const p = n.parentElement; if (!p || p.closest(LANG_RAW)) return; const v = tr(n.nodeValue); if (v !== n.nodeValue) n.nodeValue = v; };
-const langAttrs = el => { if (el.closest(LANG_RAW)) return; for (const a of LANG_ATTRS) if (el.hasAttribute(a)) { const was = el.getAttribute(a), v = tr(was); if (v !== was) el.setAttribute(a, v); } };
+const langCtx = el => { const c = el.closest('[data-lc]'); return c ? c.dataset.lc : ''; };
+const langText = n => { const p = n.parentElement; if (!p || p.closest(LANG_RAW)) return; const v = tr(n.nodeValue, langCtx(p)); if (v !== n.nodeValue) n.nodeValue = v; };
+const langRawEl = el => { const r = el.closest(LANG_RAW); return !!r && !(r === el && el.tagName === 'TEXTAREA' && !el.parentElement.closest(LANG_RAW)); };
+const langAttrs = el => { if (langRawEl(el)) return; for (const a of LANG_ATTRS) if (el.hasAttribute(a)) { const was = el.getAttribute(a), v = tr(was, langCtx(el)); if (v !== was) el.setAttribute(a, v); } };
 function langEl(el) {
   langAttrs(el); for (const x of el.querySelectorAll('[title], [aria-label], [placeholder]')) langAttrs(x);
   const w = document.createTreeWalker(el, NodeFilter.SHOW_TEXT); for (let n; (n = w.nextNode());) langText(n);
@@ -6243,11 +6280,11 @@ document.addEventListener('change', e => {
   location.reload();
 });
 window.__gsLang = { lang: LANG, want: LANG_WANT, packs: Object.keys(LANG_NAMES), load: langLoad, tr: (s, k) => trWith(s, langPack(k)), missing(k) {
-  const P = langPack(k), out = new Set(), see = s => { const t = (s || '').trim(); if (!t || !/[A-Za-z]{2}/.test(t)) return; if (trPiece(t, P) != null) return; for (const p of t.split(' · ')) { const q = p.trim(); if (q && /[A-Za-z]{2}/.test(q) && trPiece(q, P) == null) out.add(q); } };
+  const P = langPack(k), out = new Set(), see = (s, el) => { const t = (s || '').trim(), c = langCtx(el); if (!t || !/[A-Za-z]{2}/.test(t)) return; if (trPiece(t, P, c) != null) return; for (const p of t.split(' · ')) { const q = p.trim(); if (q && /[A-Za-z]{2}/.test(q) && trPiece(q, P, c) == null) out.add(q); } };
   for (const r of document.querySelectorAll(LANG_ROOTS)) {
     if (!r.checkVisibility()) continue;
-    for (const x of [r, ...r.querySelectorAll('[title], [aria-label], [placeholder]')]) if (!x.closest(LANG_RAW)) for (const a of LANG_ATTRS) see(x.getAttribute(a));
-    const w = document.createTreeWalker(r, NodeFilter.SHOW_TEXT); for (let n; (n = w.nextNode());) if (n.parentElement && !n.parentElement.closest(LANG_RAW) && !n.parentElement.closest('#hlpList') && (n.parentElement.closest('select') || n.parentElement).checkVisibility()) see(n.nodeValue);   // the Help answers are the language file's own (help), not looked up
+    for (const x of [r, ...r.querySelectorAll('[title], [aria-label], [placeholder]')]) if (!langRawEl(x)) for (const a of LANG_ATTRS) see(x.getAttribute(a), x);
+    const w = document.createTreeWalker(r, NodeFilter.SHOW_TEXT); for (let n; (n = w.nextNode());) if (n.parentElement && !n.parentElement.closest(LANG_RAW) && !n.parentElement.closest('#hlpList') && (n.parentElement.closest('select') || n.parentElement).checkVisibility()) see(n.nodeValue, n.parentElement);   // the Help answers are the language file's own (help), not looked up
   }
   return [...out];
 } };
@@ -6299,7 +6336,7 @@ const HELP = [
     go: ['Open School resources', '#/school'], words: 'handbook calendar policy policies portal bookmark link file document resources staff bell schedule forms class course lesson links website textbook' },
   { id: 'language', sec: 'start', q: 'Can I use the app in another language?',
     a: ['Yes. Choose one in Settings, Display, **App language**, or at the top of the welcome. The page is drawn again in the language you pick.',
-      'So far a language other than English covers the sidebar, Today, the welcome, Settings, Find anything, Help and the feedback page students get in a returned paper. The other screens are still in English.',
+      'So far a language other than English covers the sidebar, Today, the welcome, Settings, most of a class page (Assignments, Gradebook, Students, Attendance, Seating and Missing work), Find anything, Help and the feedback page students get in a returned paper. The other screens are still in English.',
       'Class names, student names and anything else you typed are never translated.'],
     go: ['Open Settings, Display', '#/settings/display'], words: 'spanish español idioma language translate translation' },
   { id: 'scan-split', sec: 'start', q: 'I scanned the whole class as one file. How do I split it?',

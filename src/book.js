@@ -247,7 +247,7 @@ const bkCellText = (cell, show, col) => {
   const v = show === 'pts' && cell.total != null ? fmtNum(cell.total) + '<small>/' + fmtNum(cell.max) + '</small>' : cell.pct + '%';
   return v + (cell.tries ? ' <span class="stag retk" title="' + esc(cell.tries) + '">retake</span>' : '') + (cell.partial ? ' <span class="stag">partial</span>' : cell.out ? ' <span class="stag">left out</span>' : cell.st === 'late' ? ' <span class="stag">late</span>' : '');
 };
-const bkColHead = col => '<th class="bkch' + (col.key === bk.hi ? ' hi' : '') + '"><button data-bkcol="' + esc(col.key) + '" title="Type, date and term">' + esc(col.name) + '<small>' + esc(bkDay(col.due)) + (col.typed ? ' · typed in' : '') + '</small></button></th>';
+const bkColHead = col => '<th class="bkch' + (col.key === bk.hi ? ' hi' : '') + '"><button data-bkcol="' + esc(col.key) + '" title="Type, date and term"><span data-raw>' + esc(col.name) + '</span><small>' + esc(bkDay(col.due)) + (col.typed ? ' · typed in' : '') + '</small></button></th>';
 function bkGroups(cols) {
   const g = bkCats().map(([t, , s]) => ({ t, s, cols: cols.filter(x => x.type === t) })).filter(x => x.cols.length);
   const xc = cols.filter(x => x.type === 'xc'); if (xc.length) g.push({ t: 'xc', s: 'Extra credit', cols: xc });

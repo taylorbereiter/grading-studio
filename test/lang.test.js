@@ -83,9 +83,21 @@ test('in Spanish the sidebar and Today read in Spanish, with the date written th
   await page.click('#railClasses a'); await page.waitForFunction(() => location.hash.startsWith('#/class')); await page.waitForSelector('#vClass .card');
   const cls = await text(page, '#vClass');
   for (const w of ['Grade 9 English', 'Libro de calificaciones', '6 estudiantes en la lista', 'Unit 1: Stories', 'Narrative essay', '+ Tarea', '+ Unidad']) assert.ok(cls.includes(w), w + ' is on the class page');
-  // a screen that is not translated yet is simply still in English, and works
+  // the Gradebook tab reads in Spanish, with the students, the assignments and the term under the names she gave them
   await page.click('#vClass .ctab[data-ctab="gradebook"]'); await page.waitForSelector('#classPanel table');
-  assert.match(await text(page, '#classPanel'), /Class average/);
+  const gb = await text(page, '#classPanel');
+  for (const w of ['Promedio de la clase', 'Estudiante', 'Nota del periodo', 'Todo el curso', '+ Añadir notas', 'Aria Testwell', 'Reading check 1', 'Term 1', 'escrita a mano']) assert.ok(gb.includes(w), w + ' is in the gradebook');
+  assert.match(gb, /1 sept/, 'a due date is written the Spanish way');
+  // "Late" means one thing for a paper and another for a student: on the Attendance tab it is the student's
+  const base = await page.$eval('#railClasses a', a => a.getAttribute('href'));
+  await goTo(page, base + '/attendance'); await page.waitForSelector('#attList');
+  assert.deepEqual(await page.$$eval('[data-attrow="0"] [data-atts]', b => b.map(x => x.textContent)), ['Presente', 'Tarde', 'Ausente, motivo desconocido', 'Ausente, justificado']);
+  await page.click('[data-attrow="0"] [data-atts="l"]'); await page.waitForFunction(() => /Tarde: 1/.test(document.querySelector('#attSum').textContent));
+  assert.equal(await text(page, '#attSum'), 'Presentes: 5 · Tarde: 1');
+  assert.equal(await page.$eval('[data-attrow="0"] .attnote', x => x.placeholder), 'Una nota, si quieres');
+  // a screen that is not translated yet is simply still in English, and works
+  await goTo(page, base + '/charts'); await page.waitForFunction(() => /Term grades/.test(document.querySelector('#classPanel').innerText));
+  assert.match(await text(page, '#classPanel'), /Who is moving/);
   assert.deepEqual(page.errors, []);
   await close();
 });
@@ -118,6 +130,16 @@ test('the sentences Today builds come out as Spanish sentences', async () => {
     // a class page
     '6 students on the roster': '6 estudiantes en la lista', '1 assignment': '1 tarea', 'Due Sep 19': 'Entrega: Sep 19', 'Keep Missing work in the tab row': 'Mantener Trabajos sin entregar en la fila de pestañas',
     '6 of 6 scored · papers not kept': '6 de 6 con nota · trabajos no guardados', 'a Canvas ZIP': 'un ZIP de Canvas', 'Add the Class page link…': 'Añadir el enlace de la página de la clase…',
+    // the Gradebook, Students, Attendance, Seating and Missing work tabs
+    'Student details for Aria Testwell': 'Datos de Aria Testwell', 'without 2 students ·': 'sin 2 estudiantes ·', 'By the date (Term 1)': 'Según la fecha (Term 1)', 'By the date (none)': 'Según la fecha (ninguno)',
+    '3 of 6 entered': '3 de 6 introducidas', '+2% on the term grade': '+2% en la nota del periodo', '+1.5 on the in-class average': '+1.5 en: Promedio: En clase', 'In-class average': 'Promedio: En clase',
+    'Each point adds one percentage point to the in-class average, which then counts by its weight. Leave a student blank for none. It doesn’t change any assignment’s score.': 'Cada punto suma un punto porcentual a: Promedio: En clase, que luego cuenta según su peso. Deja a un estudiante en blanco si no recibe ninguno. No cambia la nota de ninguna tarea.',
+    'Students are in your roster order. Missing and Excused never count against a student. Point at a grade to see how it’s worked out, extra credit included.': 'Los estudiantes están en el orden de tu lista. No entregado y Justificado nunca cuentan en contra de un estudiante. Señala una nota para ver cómo se calcula, puntos extra incluidos.',
+    '6 students · 2 with an ID': '6 estudiantes · 2 con ID', 'Email for Bram Sample': 'Correo de Bram Sample',
+    '3 days taken in Term 1. Click a date to open or change that day, or a name for that student’s page. “Here” counts everyone present or late.': '3 días registrados en Term 1. Haz clic en una fecha para abrir o cambiar ese día, o en un nombre para ir a la página de ese estudiante. “Presentes” cuenta a todos los presentes o que llegaron tarde.',
+    '1 absence still has no reason.': '1 ausencia sigue sin motivo.', '2 students owe 3 pieces of work': '2 estudiantes deben 3 trabajos', '1 student owes 1 piece of work': '1 estudiante debe 1 trabajo',
+    'Due Oct 29 · 14 days ago': 'Entrega: Oct 29 · hace 14 días', '4 of 6 seated · 2 more desks needed': '4 de 6 sentados · faltan 2 pupitres', 'Desk, Aria Testwell. Click to take it away': 'Pupitre, Aria Testwell. Haz clic para quitarlo',
+    'Late': 'Con retraso', 'Open in Canvas ↗': 'Abrir en Canvas ↗',
     // what the app doesn't know is left exactly as it is
     'Aria Testwell': 'Aria Testwell', 'Narrative essay · Unit 1': 'Narrative essay · Unit 1', '  Today  ': '  Hoy  ',
   };
@@ -162,8 +184,45 @@ test('every word on the covered screens is in each language file (run in English
     await page.click('#clsSetup'); await pause(200); await miss(page, 'class page, Class setup', own); await page.keyboard.press('Escape');
     await page.click('#vClass .card .kdots'); await pause(200); await miss(page, 'class page, an assignment’s menu', own); await page.keyboard.press('Escape');
     await page.click('#vClass .uhead .kdots'); await pause(200); await miss(page, 'class page, a unit’s menu', own); await page.keyboard.press('Escape');
+    // the Gradebook tab: the table, its menu, a column's box, the averages, the whole year, students left out, and scores typed in each way
+    {
+      const base = await page.$eval('#railClasses a', a => a.getAttribute('href')), mine = [...own, /^Term \d/, /^[A-Z][a-z]{2} \d{1,2}$/];
+      const at = async (where, f) => { await f(); await pause(400); await miss(page, 'class page, ' + where, mine); };
+      await goTo(page, base + '/gradebook'); await page.waitForSelector('#classPanel table'); await at('Gradebook', () => page.click('#classPanel .bkhow summary'));
+      await at('Gradebook, More', () => page.click('#bkMore')); await page.keyboard.press('Escape');
+      await at('Gradebook, a column', () => page.click('#classPanel [data-bkcol]')); await page.click('#bkPop [data-bkpopclose]');
+      await at('Gradebook, averages only', () => page.click('#classPanel [data-bkonly="1"]')); await page.click('#classPanel [data-bkonly=""]');
+      await at('Gradebook, whole year', () => page.click('#classPanel [data-bkterm="*"]')); await page.click('#classPanel [data-bkterm]:first-child'); await pause(300);
+      await at('Gradebook, students left out', async () => { await page.click('#bkMore'); await pause(200); await page.click('[data-bkpickon]'); await pause(300); await page.click('#classPanel .bkpick'); });
+      await page.click('#classPanel [data-bkpickon]'); await pause(300);
+      await at('Gradebook, add scores', () => page.click('#classPanel [data-bkadd]'));
+      await at('Gradebook, add extra credit', async () => { await page.click('#classPanel [data-bkatype="xc"]'); await page.click('#classPanel [data-bkaxcall="all"]'); });
+      await at('Gradebook, add feedback only', () => page.click('#classPanel [data-bkatype="fm"]'));
+      await at('Gradebook, add percents', async () => { await page.click('#classPanel [data-bkatype="ic"]'); await page.click('#classPanel [data-bkamode="pct"]'); });
+      await page.click('#classPanel [data-bkback]');
+      // the Students tab, with the box for pasting IDs open
+      await goTo(page, base + '/students'); await page.waitForSelector('#peopleTbl table'); await at('Students', () => page.click('#classPanel [data-ppaste]'));
+      // the Attendance tab: a day not taken, a day taken with each way a student can stand, its menu, and Look back
+      await goTo(page, base + '/attendance'); await page.waitForSelector('#attList'); await miss(page, 'class page, Attendance', mine);
+      await at('Attendance, taken', async () => { for (const [i, k] of [[0, 'l'], [1, 'a'], [2, 'e']]) { await page.click('[data-attrow="' + i + '"] [data-atts="' + k + '"]'); await pause(150); } });
+      await at('Attendance, a day’s menu', () => page.click('#classPanel .kdots')); await page.keyboard.press('Escape');
+      await goTo(page, base + '/attendance/all'); await page.waitForSelector('#attTab'); await miss(page, 'class page, Attendance, Look back', mine);
+      await at('Attendance, all dates', () => page.click('#classPanel [data-attterm="*"]'));
+      await page.evaluate(() => document.querySelector('#classPanel [data-attterm]').click()); await pause(200);
+      // the Seating tab: choosing a room, the chart with a student picked, its menu, and arranging the room
+      await goTo(page, base + '/seating'); await page.waitForSelector('#seatStart'); await miss(page, 'class page, Seating, a new room', mine);
+      await at('Seating', () => page.click('#classPanel [data-seatroom]'));
+      await at('Seating, a student picked', () => page.click('#classPanel .seatchip'));
+      await at('Seating, seated', async () => { await page.click('#classPanel [data-desk]'); await pause(200); await page.click('#classPanel [data-desk][data-n]'); });
+      await at('Seating, menu', () => page.click('#classPanel .kdots'));
+      await at('Seating, arranging', () => page.click('[data-seat="arrange"]')); await page.click('#classPanel [data-seat="done"]');
+      // the Missing work tab, by student and by assignment, and the year
+      await goTo(page, base + '/missing'); await page.waitForSelector('#mis'); await miss(page, 'class page, Missing work', mine);
+      await at('Missing work, by assignment', () => page.click('#classPanel [data-misview="col"]'));
+      await at('Missing work, whole year', () => page.click('#classPanel [data-bkterm="*"]'));
+    }
     // every page of Settings
-    for (const k of ['saving', 'classes', 'terms', 'marking', 'setup', 'display', 'about']) { await goTo(page, '#/settings/' + k); await pause(500); await miss(page, 'Settings, ' + k, own); }
+    for (const k of ['saving', 'classes', 'terms', 'marking', 'setup', 'display', 'about']) { await goTo(page, '#/settings/' + k); await pause(500); await miss(page, 'Settings, ' + k, [...own, '{ "gradingStudioSetup": 1, … }']); }
     await goTo(page, '#/'); await openZip(page, zip); await score(page, [3]); await settle(page);
     await page.click('#closeBtn'); await page.waitForSelector('#toMark .krow');
     await miss(page, 'Today, with papers to mark', own);
@@ -376,7 +435,7 @@ function serveCounting(html, { noLangs } = {}) {
 test('the page at the web address carries no language: English asks for none, and Spanish fetches its one file', async () => {
   const html = builtHtml();
   assert.match(html, /const LANG_PACKED = \{\};/, 'no language is inside the page');
-  for (const f of fs.readdirSync(path.join(ROOT, 'lang'))) assert.ok(fs.statSync(path.join(ROOT, 'lang', f)).size < 120e3, f + ' is a small file');
+  for (const f of fs.readdirSync(path.join(ROOT, 'lang'))) assert.ok(fs.statSync(path.join(ROOT, 'lang', f)).size < 250e3, f + ' is a small file');
   let srv = await serveCounting(html), o = await openApp(browser, { server: srv, seed: gradingSeed() });
   assert.equal(await o.page.evaluate(() => window.__gsLang.lang), 'en');
   assert.deepEqual(srv.asked.filter(p => p.startsWith('/lang/')), [], 'in English nothing is fetched');

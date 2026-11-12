@@ -1,21 +1,22 @@
 {
- "version": "1.28.3",
- "build": "36f2ca632cbe",
+ "version": "1.28.4",
+ "build": "34e4fc6ef3a9",
  "notes": [
-  "In another language, a class page now reads in that language too: its header, its row of tabs and the Assignments tab, with your own class, unit and assignment names left as you typed them. The Gradebook and the other tabs are still in English."
+  "In another language, more of a class page now reads in that language: the Gradebook, Students, Attendance, Seating and Missing work tabs, with dates written that language’s way and your own names left as you typed them.",
+  "Still in English: a student’s own page, Charts, Goals, Report comments, the gradebook of a class graded with IB criteria, and the boxes that open from these tabs."
  ],
  "files": {
-  "index.html": "e1d3416cca26e77721778637126eb22b903eb25e1ffd3863b540cc34950d1dfe",
-  "planner.html": "84eeb3f0822c11b163d5fdac5c84c63d1c886e71584108d2000db8b91497898e"
+  "index.html": "7114daee4f03eccc5b575dee81092ed7a73c3c0be2e80ce57867a135972b4ba5",
+  "planner.html": "4be4369924cbf1631cd1725b9e55437eb270505da6f9a79800968039c0427a06"
  },
  "langs": {
-  "lang/zh-Hant.js": "476d1d1321ebd7310c38bd8617e4d1dbac0d18c7698d404778729c8eb4ff07eb",
-  "lang/zh-Hans.js": "50fedcbb182f57ee5c4b96a519febe28dd8a5736b54195f12727c2bdd97ccd84",
-  "lang/es.js": "c600fb36ddffd952617d4382eda5689dfde38b265b4cf9ab8ecb63db94a1ae7e",
-  "lang/fr.js": "fcfd1fc12c70fdea03d49e41c6202b165e73b167eec1a8642780f3f88e2919c4",
-  "lang/de.js": "04e391b90f8f20dc2ce35350ae80067c9841eac36ac7fd69692b81ac78726e93",
-  "lang/pt-BR.js": "787cd333d9995745611fdfaff2be91d958346aceda020e6126d157d16c97a935",
-  "lang/ja.js": "3225a04490e239a13fe90e7a00ef39d884fbf69d62e89012f05da39e8beabee8",
-  "lang/ko.js": "77157879208edc0c5eca37b1042418176cca2bfb2b91152bffe25b640f46d046"
+  "lang/zh-Hant.js": "84df816bda86e40b6d76295c8f264c91c89e20b738b44acac41b1fda701718e0",
+  "lang/zh-Hans.js": "63077d966afc62a01ff9b02b020cad109163f11a4972514ecd35a9cea4d90c80",
+  "lang/es.js": "e84d3e8f4e6a38317f2e66575a6d973f6840fe5c6f5368228e6055b77fc1123d",
+  "lang/fr.js": "730dd8f51f6a27c0b37e916b11f4d4a740b72944a1c13ef13e6bb38f0eb496b7",
+  "lang/de.js": "8bc3df1833ea6a24aaa8f1a02f963f08dc2ccd3b06dca2b967384fae8a282c69",
+  "lang/pt-BR.js": "5988ebd37143ff0467a8f1044d9cbdf7726476c0262c41ecb53c1751dad11178",
+  "lang/ja.js": "3c91652b008dbc83216295c50ff7da79cebdb4403dbd77118e2c77c9be18b1b7",
+  "lang/ko.js": "785fc6c6bb9773678d72fbc71b949bf1b9a439696e04f7e9a77dde2c2cd7dbba"
  }
 }
