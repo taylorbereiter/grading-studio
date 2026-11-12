@@ -20,7 +20,7 @@ const gsData = (() => {
   const DATA_V = Math.max(1, ...MIGRATIONS.map(s => s.to));
   const SAFETY_DB = 'grading-studio-safety', SNAP_KEEP = 3, STUCK_MS = 30000, KEEP_DB = 'grading-studio-keep', SLICE_MAX = 32e6, TRY_KEY = 'gsm.try';   // TRY_KEY is outside gs.*, so copies and backups never carry it
   // What a safety copy holds, besides every gs.* key in localStorage. Papers stay out: they're large and never change.
-  const STORES = [[KEEP_DB, 'work'], [KEEP_DB, 'meta'], [KEEP_DB, 'edits'], ['grading-studio-added', 'files']];
+  const STORES = [[KEEP_DB, 'work'], [KEEP_DB, 'meta'], [KEEP_DB, 'edits'], ['grading-studio-added', 'files'], ['grading-studio-examples', 'ex'], ['grading-studio-examples', 'pix']];   // examples' pictures are small, and a copy put back needs them
   const info = { note: '' };   // shown once the app is up
   const endTry = () => { try { localStorage.removeItem(TRY_KEY); } catch {} };
   let stopped = false;   // she stopped a stuck update: a step still running can't change anything from here on

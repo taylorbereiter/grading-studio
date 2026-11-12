@@ -63,19 +63,20 @@ function rptPut(c, n, patch, term) {
 const rptPairs = new WeakMap();
 function rptFacts(c, cols, conf, n) {
   const g = bkGrade(n, cols, conf), scored = bkScored(cols).map(col => ({ col, cell: col.cells.get(n) })).filter(x => bkCounts(x.cell));
-  const rows = new Map();
-  for (const { col, cell } of scored) for (const [nm, v] of cell.rows || []) {
+  const rows = new Map(), T = chRowTop(scored.map(x => x.col));   // rows on different scales are put on the one most of them use
+  for (const { col, cell } of scored) for (const [nm, v0, t] of cell.rows || []) {
+    const v = (t || ROW_TOP) !== T && v0 != null ? +v0 * T / (t || ROW_TOP) : v0;
     const name = chRowName(nm), k = name.toLowerCase(); if (!k || v == null || isNaN(+v)) continue;
     if (!rows.has(k)) rows.set(k, { name, v: [] });
     const e = rows.get(k); e.v.push(+v); e.col = col; e.raw = nm;
   }
   const avg = [...rows.values()].map(e => ({ ...e, avg: bkMean(e.v) })).sort((a, b) => b.avg - a.avg);
   // A strongest and a weakest row only when they really differ: a quarter of a point across the term.
-  const apart = avg.length >= 2 && avg[0].avg - avg[avg.length - 1].avg >= 0.25, strong = apart ? avg[0] : null, weak = apart ? avg[avg.length - 1] : null;
+  const apart = avg.length >= 2 && avg[0].avg - avg[avg.length - 1].avg >= 0.25 * T / ROW_TOP, strong = apart ? avg[0] : null, weak = apart ? avg[avg.length - 1] : null;
   let words = '';
   if (weak && weak.col.d) {   // her own words for the level above where the student is now, from the newest rubric with that row
     const s = weak.col.d.setup || {}, i = (s.criteria || []).findIndex(x => chRowName(x).toLowerCase() === weak.name.toLowerCase());
-    if (i >= 0) words = String(levelIn(s, i, Math.min(4, Math.floor(weak.avg + 1e-9) + 1)) || '').trim().replace(/[.。]+$/, '');
+    if (i >= 0) words = String(levelIn(s, i, Math.min(rowTop(s, i), Math.floor(weak.avg * rowTop(s, i) / T + 1e-9) + 1)) || '').trim().replace(/[.。]+$/, '');
   }
   const v = scored.map(x => x.cell.pct), move = v.length >= 4 ? bkMean(v.slice(-3)) - bkMean(v.slice(0, -3)) : 0;
   const missing = cols.filter(x => x.type !== 'xc' && (x.cells.get(n) || {}).st === 'missing').map(x => x.name);
@@ -180,7 +181,7 @@ function rptAll(c) {
   return c.names.map(n => [n, rptText(c, cols, conf, n, rc)]);
 }
 // The term bar's buttons while this tab is on (bkDraw puts them there).
-const rptBar = () => '<button class="btn sm" data-rptwords>Wording…</button><button class="btn sm" data-rptcopyall title="Every student’s name and comment, to paste into a spreadsheet or your report system">Copy all</button><button class="btn sm" data-rptcsv title="A spreadsheet file with every student’s name and comment">Download</button>';
+const rptBar = () => '<button class="btn sm" data-rptwords>Wording…</button><button class="btn sm" data-rptcopyall title="Every student’s name and comment, to paste into a spreadsheet or your report system">Copy all</button><button class="btn sm" data-rptcsv title="A spreadsheet file with every student’s name and comment">Download</button><button class="btn sm" data-pssall title="One page per student, with this comment, to print for parent meetings">Progress sheets</button>';
 function rptClick(e) {
   if (!$('#rpt') || !e.target.closest('#bkBody')) return;
   const b = e.target.closest('button'), c = bkClass(); if (!b || !c) return;

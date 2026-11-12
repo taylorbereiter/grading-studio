@@ -6,13 +6,14 @@
 // paper's own grade as st.grade.anchor = 'high' | 'mid' | 'low', so it travels with her marks, the folder and the take-home file.
 const ANCHORS = [['high', 'High'], ['mid', 'Mid'], ['low', 'Low']];
 const anchorCoverOn = () => store.get('gs.anchorCover', true) !== false;
-// The assignment's type word for the file names: a summative (or an assignment with no type yet) is "Summative".
+// The assignment's type, and the word for the file names: the teacher's own name for the type (bkCats), or "Summative" for an assignment with no type yet.
+function anchorType() { const a = batch && batch.assignment, f = a && findItem(a.id); return ((f && f.it) || a || {}).type || ''; }
 function anchorKind() {
-  const a = batch && batch.assignment, f = a && findItem(a.id), t = ((f && f.it) || a || {}).type || '';
-  return t === 'ic' ? 'In-class' : t === 'fm' ? 'Formative' : 'Summative';
+  const t = anchorType(), c = t && bkCats().find(x => x[0] === t);
+  return c ? c[2] || c[1] : 'Summative';
 }
-// Tagging shows on summatives and on assignments with no type; in-class and formative work doesn't have anchors.
-function anchorsHere() { const a = batch && batch.assignment, f = a && findItem(a.id), t = ((f && f.it) || a || {}).type || ''; return t === '' || t === 'sum'; }
+// Tagging shows on summatives, on the teacher's own counted types and on assignments with no type; in-class and formative work doesn't have anchors.
+function anchorsHere() { const t = anchorType(); return t !== 'ic' && t !== 'fm' && t !== 'xc'; }
 const anchorOf = lv => batch.students.findIndex(s => s.grade.anchor === lv);
 const anchorLabel = lv => anchorKind() + ' ' + (ANCHORS.find(a => a[0] === lv) || ['', ''])[1];
 function anchorFile(lv, k, n) { return (nameFreeText(batch.name) + ' - ' + anchorLabel(lv) + (n > 1 ? ' (' + (k + 1) + ')' : '') + '.pdf').replace(/[\\/:*?"<>|]+/g, '-'); }

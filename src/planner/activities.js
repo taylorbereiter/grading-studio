@@ -3,6 +3,8 @@
    student-facing steps for a slide. Written for this app in plain words. Where an activity is one of
    the routines in Fisher, Brozo, Frey & Ivey, 50 Instructional Routines to Develop Content Literacy
    (3rd ed., Pearson, 2015), "book" gives its routine number so the teacher can look up the full version.
+   Only method names and routine numbers come from the book; every description and step here is the app's
+   own wording, so keep it that way: never paste text, handouts or examples from the book into this file.
    parts: where it fits in a class (warmup, activity, review). Teachers add their own; those are saved
    with the Planner and written to the Planner folder as activities.json. */
 const PARTS = { warmup: 'Warm-up', activity: 'Activity', review: 'Review' };
@@ -99,7 +101,7 @@ const ACTIVITIES = [
     ['Act it out: no words', 'Your team guesses', 'Then: what gave it away?'], 0),
   A('see-think-wonder', 'See, think, wonder', 'talk', ['warmup', 'activity'], 'Pairs', 'Students look closely at an image, then say what they see, what they think about it and what they wonder.',
     ['Show one rich image.', 'Students list what they see, only what is visible.', 'Then what they think is going on, with reasons from the image.', 'Then what they wonder. Keep the questions for later.'],
-    ['What do you see?', 'What do you think is going on?', 'What do you wonder?'], 0),
+    ['What do you see?', 'What do you think is going on?', 'What do you wonder?'], 0, 'A thinking routine from Project Zero at the Harvard Graduate School of Education.'),
   A('kwl', 'Know, want to know, learned', 'check', ['warmup', 'review'], 'Whole class', 'A three-column chart: what we already know, what we want to find out, and what we learned.',
     ['Students list what they already know about the topic.', 'Then what they want to know.', 'At the end of the lesson or unit, fill in what they learned.', 'Check the middle column: what’s still open?'],
     ['Know: what do you already know?', 'Want: what do you want to find out?', 'Learned: fill this in at the end'], 17),

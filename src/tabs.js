@@ -4,6 +4,7 @@
 function tabsRender() {
   if (!batch) return;
   const r = routeNow(), on = r.v === 'a' ? r.tab : '';
+  exTabSay();
   for (const a of document.querySelectorAll('#aTabs .atab')) {
     const h = batchHash(batch.id, a.dataset.atab), cur = a.dataset.atab === on;
     if (a.getAttribute('href') !== h) a.setAttribute('href', h);
@@ -103,18 +104,19 @@ function returnSideClick(e) {
 // Every scored row counted by level, in the rubric's own order. A half point counts with the whole number below it.
 function insRowsHtml() {
   if (setup.mode !== 'rubric') return '';
-  const lv = [0, 1, 2, 3, 4], rows = setup.criteria.map((name, r) => {
+  const hi = Math.max(...setup.criteria.map((_, r) => rowTop(setup, r))), lv = Array.from({ length: hi + 1 }, (_, v) => v), shade = v => 'b' + (1 + Math.round(v / hi * 4));   // five blues, spread over whatever the top is
+  const rows = setup.criteria.map((name, r) => {
     const by = lv.map(() => []);
-    batch.students.forEach((st, i) => { const v = st.grade.outAvg ? null : rowShown(st, r); if (v != null) by[Math.max(0, Math.min(4, Math.floor(v)))].push(shownName(st, i)); });
+    batch.students.forEach((st, i) => { const v = st.grade.outAvg ? null : rowShown(st, r); if (v != null) by[Math.max(0, Math.min(hi, Math.floor(v)))].push(shownName(st, i)); });
     return { name, by, n: by.reduce((a, b) => a + b.length, 0) };
   });
   if (!rows.some(x => x.n)) return '';
   const zero = rows.some(x => x.by[0].length), shown = zero ? lv : lv.slice(1);
   return '<section id="insRows"><h3 class="ovh3">How each row was scored</h3><div class="insrows" role="group" aria-label="Papers at each score, row by row">' + rows.map(x =>
     '<div class="insr"><div class="insn" title="' + esc(x.name) + '">' + esc(x.name) + '</div><div class="inst">' + (x.n ? shown.map(v => { const who = x.by[v], k = who.length; if (!k) return '';
-      return '<i class="chseg b' + (v + 1) + '" style="flex:' + k + '" tabindex="0" aria-label="' + esc(x.name + ': ' + people(k, 'paper') + ' at ' + v) + '"' + chTip(people(k, 'paper') + ' · ' + Math.round(k / x.n * 100) + '%', 'Scored ' + v + ' on ' + x.name, who.slice(0, 12).join(', ') + (k > 12 ? ' and ' + (k - 12) + ' more' : '')) + '>' + (k / x.n > .07 ? k : '') + '</i>'; }).join('') : '<span class="muted">No scores yet</span>') + '</div></div>').join('') +
-    '</div><div class="bkleg">' + shown.map(v => '<span><i class="chsw b' + (v + 1) + '"></i>' + v + '</span>').join('') + '</div>' +
-    '<p class="muted ovcap2">How many papers got each score on each row, in the rubric’s order. A half point counts with the whole number below it. The stronger the blue, the higher the score.</p></section>';
+      return '<i class="chseg ' + shade(v) + '" style="flex:' + k + '" tabindex="0" aria-label="' + esc(x.name + ': ' + people(k, 'paper') + ' at ' + v) + '"' + chTip(people(k, 'paper') + ' · ' + Math.round(k / x.n * 100) + '%', 'Scored ' + v + ' on ' + x.name, who.slice(0, 12).join(', ') + (k > 12 ? ' and ' + (k - 12) + ' more' : '')) + '>' + (k / x.n > .07 ? k : '') + '</i>'; }).join('') : '<span class="muted">No scores yet</span>') + '</div></div>').join('') +
+    '</div><div class="bkleg">' + shown.map(v => '<span><i class="chsw ' + shade(v) + '"></i>' + v + '</span>').join('') + '</div>' +
+    '<p class="muted ovcap2">How many papers got each score on each row, in the rubric’s order.' + (rowHalf(setup) ? ' A half point counts with the whole number below it.' : '') + ' The stronger the blue, the higher the score.</p></section>';
 }
 // This assignment's finished percents by roster name, as they stand on screen now.
 function insNow(c) {
