@@ -111,7 +111,7 @@ async function scanFile(f, spot) {
       for (const m of (f.marks || {})[p] || []) {
         if (m.t === 'text') { const L = textLayout(m, vp.width); add(ofMark(m.text), [m.x, m.y, m.x + L.ink, m.y + L.h], 'note', m.text); }
         if (m.t === 'note') add(ofMark(m.text), [m.ax - 4, m.ay - 4, m.ax + 4, m.ay + 4], 'note', m.text, true);
-        if (m.t === 'stamp' && m.k === 'score') { const b = stampBox(m); add(ofMark(m.text), [b.x, b.y, b.x + b.w, b.y + b.h], 'note', m.text); }   // her score sticker
+        if (m.t === 'stamp' && m.k === 'score') { const b = stampBox(m); add(ofMark(m.text) && { ...ofMark(m.text), stamp: true }, [b.x, b.y, b.x + b.w, b.y + b.h], 'note', m.text); }   // her score sticker
       }
       // text in the page itself (already flattened files): strict "9.5 = 88%" form only, so essay numbers don't count.
       // A student could type this, so it's only offered, unless she boxed this very paper by hand. A rubric page's own printing isn't anyone's grade.
@@ -219,6 +219,7 @@ async function scanRun(onStep) {
   const files = batch.students.flatMap(st => st.files.filter(f => viewable(f)));
   let n = 0;
   for (const st of batch.students) {
+    if (syncScoreStamps(st)) saveSoon();   // a stamp says the score as it is now before the paper is read
     for (const f of st.files.filter(f => viewable(f))) {
       if (batch !== b0) return;
       try { f.scan = await scanFile(f, f.hand || spot); if (f.hand) f.scan.hand = true; }
@@ -243,6 +244,32 @@ function foundLabel(fd) {
   if (!fd) return '';
   return (fd.score != null ? fmtNum(fd.score) + (fd.outOf ? '/' + fmtNum(fd.outOf) : '') : '') + (fd.pct != null ? (fd.score != null ? ' = ' : '') + fmtNum(fd.pct) + '%' : '');
 }
+/* Where each row's score comes from. The score given in the app (rubric, points, Quick mark, typed on this sheet, with extra credit
+   and the try that counts) is the student's score, and the sheet shows exactly that: gradeOf, the same number the score panel,
+   the Stamp and Copy all scores use. Grades found by reading the papers (typed comments, page text) are only offered for a student
+   with no score in the app yet, or when "Also show grades found on the papers" is on. A score stamp and a hand-drawn box always
+   show as pictures. */
+let sheetFound = !!store.get('gs.sheetfound', false);
+const appScored = st => { if (noScore(st)) return true; const g = gradeOf(st); return g.total != null && !g.paper; };
+// Only what she put there herself shows as a picture beside an app score: the score stamp, or a spot she boxed.
+const appShots = (st, f, shots) => !appScored(st) || sheetFound ? shots : shots.filter(g => g.stamp || g.boxed || g.none || f.hand);
+// Beside her score nothing is asked; what she already answered keeps its Undo, so a score brought in from the paper can be taken back.
+const quietReads = r => ({ ok: [], ask: [], mine: [], yes: r.yes, no: r.no });
+function appScoreHtml(st) {
+  if (noScore(st)) return '<div class="big-sc">' + esc(STATUS_LABEL[st.grade.status]) + '</div>';
+  const g = gradeOf(st), max = g.outOf != null ? g.outOf : maxPoints();
+  return '<div class="big-sc" data-copy="' + esc(fmtNum(g.total)) + '" title="Click to copy">' + fmtNum(g.total) + (max ? '<small>/ ' + fmtNum(max) + '</small>' : '') + '</div>' +
+    (g.pct != null ? '<div class="muted" style="font-size:13px;margin-top:4px;font-weight:500">= ' + fmtNum(g.pct) + '%</div>' : '') +
+    '<div class="muted" style="font-size:12px;margin-top:2px;font-weight:400">Your score' + (g.partial ? ' (partial)' : g.tries ? ' (the try that counts)' : '') + '</div>';
+}
+// The paper's own words beside an app score, when she wants them: what was found, and whether it says something else.
+function foundBesideHtml(st, list) {
+  if (!sheetFound || noScore(st) || !list.length) return '';
+  const g = gradeOf(st), own = list.filter(r => !r.stamp);
+  if (!own.length) return '';
+  const off = own.some(r => r.score != null ? Math.abs(r.score - g.total) > 0.001 : r.pct != null && g.pct != null && Math.abs(r.pct - g.pct) > 1);
+  return '<div class="muted" style="font-size:12.5px;margin-top:6px;font-weight:400">Found on the paper: ' + own.map(r => esc(foundLabel(r))).join(', ') + '</div>' + (off ? '<span class="sc-warn">The paper says something else</span>' : '');
+}
 // One row per file (and one for each empty folder), in the order of the student list.
 let sheetShowOut = false;
 // The sheet lists only files with a grade on them (read, boxed or highlighted); "Show files with no grade" lists every file.
@@ -257,6 +284,7 @@ function sheetRows(box) {
     const inc = fs.filter(f => fileIn(st, f)), out = fs.filter(f => !fileIn(st, f));
     const cand = words.map(f => ({ st, i, f, word: true })).concat(inc.map(f => ({ st, i, f })));
     const shown = box || sheetAll ? cand : cand.filter(rowGraded);
+    if (!shown.length && cand.length && appScored(st)) shown.push(cand[0]);   // her score shows beside the paper it's for
     if (!shown.length && (!out.length || !sheetShowOut)) rows.push({ st, i, f: null, none: !fs.length && !st.files.length, nograde: cand.length > 0, first: cand[0] && cand[0].f });
     rows.push(...shown);
     if (sheetShowOut) for (const f of out) rows.push({ st, i, f, out: true });
@@ -276,6 +304,7 @@ async function openSheet(rescan) {
     if (e.target.closest('[data-each]')) return pickEach();
     const rb = e.target.closest('[data-rebox]'); if (rb) return pickEach(rb.dataset.rebox);
     if (e.target.matches('[data-sheetall]')) { sheetAll = e.target.checked; store.set('gs.sheetall', sheetAll); return renderSheet(); }
+    if (e.target.matches('[data-sheetfound]')) { sheetFound = e.target.checked; store.set('gs.sheetfound', sheetFound); return renderSheet(); }
     if (e.target.closest('[data-showout]')) { sheetShowOut = !sheetShowOut; return renderSheet(); }
     const io = e.target.closest('[data-bring],[data-leave]');
     if (io) {
@@ -307,43 +336,49 @@ async function openSheet(rescan) {
 function renderSheet() {
   const rows = sheetRows();
   const nOut = batch.students.reduce((a, st) => a + st.files.filter(f => viewable(f) && !fileIn(st, f)).length, 0);
-  const nOne = batch.students.filter(st => st.found).length, nMany = batch.students.filter(manyReads).length, nAsk = batch.students.reduce((a, st) => a + (st.doubts && !manyReads(st) ? st.doubts.length : 0), 0);
-  $('#shSub').textContent = (setup.spot ? 'Same spot on every paper · ' : '') + nOne + ' of ' + batch.students.length + ' read' + (nMany ? ' · ' + nMany + ' to check' : '') + (nAsk ? ' · ' + nAsk + ' to confirm' : '');
+  const asked = st => !appScored(st) || sheetFound;   // a student with a score in the app has nothing to check here
+  const nApp = batch.students.filter(appScored).length, nOne = batch.students.filter(st => !appScored(st) && st.found).length, nMany = batch.students.filter(st => asked(st) && manyReads(st)).length, nAsk = batch.students.reduce((a, st) => a + (asked(st) && st.doubts && !manyReads(st) ? st.doubts.length : 0), 0);
+  $('#shSub').textContent = (setup.spot ? 'Same spot on every paper · ' : '') + nApp + ' of ' + batch.students.length + ' scored' + (nOne ? ' · ' + nOne + ' read from the paper' : '') + (nMany ? ' · ' + nMany + ' to check' : '') + (nAsk ? ' · ' + nAsk + ' to confirm' : '');
   const spotted = !!setup.spot || batch.students.some(st => st.files.some(f => f.hand));
   const nHidden = sheetAll ? 0 : batch.students.reduce((a, st) => a + st.files.filter(f => f.kind === 'docx').map(f => ({ f, st, word: true })).concat(st.files.filter(f => viewable(f) && fileIn(st, f)).map(f => ({ f }))).filter(r => !rowGraded(r)).length, 0);
   $('#shBody').innerHTML = '<p class="muted" style="margin:0 0 10px;font-size:14px">Every row is made from the file named on it, inside that student’s folder. Click a picture to open that exact file. Click a score to copy it.</p>' +
+    '<label class="chk" style="margin:0 0 10px;font-size:14px"><input type="checkbox" data-sheetfound' + (sheetFound ? ' checked' : '') + '> Also show grades found on the papers<span class="muted" style="font-weight:400">&nbsp;· a score you gave in Grading Studio always counts</span></label>' +
     '<label class="chk" style="margin:0 0 10px;font-size:14px"><input type="checkbox" data-sheetall' + (sheetAll ? ' checked' : '') + '> Show files with no grade' + (sheetAll ? '' : nHidden ? ' (' + nHidden + ' hidden)' : '') + '<span class="muted" style="font-weight:400">&nbsp;· the downloaded sheet shows the same rows</span></label>' +
     (spotted ? '<label class="chk" style="margin:0 0 10px;font-size:14px"><input type="checkbox" data-trim' + (disp.trim ? ' checked' : '') + '> Trim each spot down to your marks</label>' : '') +
     (nOut ? '<p style="margin:0 0 10px;font-size:14px;background:var(--warn-soft);padding:8px 10px;border-radius:8px">' + nOut + (nOut === 1 ? ' file has' : ' files have') + ' no marks, so ' + (nOut === 1 ? 'it’s' : 'they’re') + ' left out as extra papers. <button class="link" data-showout>' + (sheetShowOut ? 'Hide them' : 'Show them') + '</button></p>' : '') +
     '<table class="gl"><thead><tr><th>#</th><th>Folder and file</th><th>On the paper</th><th>Read as</th></tr></thead><tbody>' +
-    rows.map(({ st, i, f, out, none, word, nograde, first }) => {
+    rows.map(({ st, i, f, out, none, word, nograde, first }, at) => {
+      const app = appScored(st), lead = rows.findIndex(r => r.st === st && !r.out) === at;   // her score shows once, on the student's first row
+      const appCell = () => lead ? appScoreHtml(st) : '<span class="muted" style="font-weight:400;font-size:13px">Score on the row above</span>';
       const where = '<div style="font-weight:600">' + esc(st.key) + '</div>' + (f ? '<div class="muted" style="font-size:13px;overflow-wrap:anywhere">' + esc(f.path) + '</div>' : '');
       if (word) {   // her Word rubric: the highlighted boxes, read straight from the file
-        const w = f.wscore, tyAll = wordFound(f, st), rdw = splitReads(st, tyAll), ty = rdw.ok, hs = (f.hand && f.scan && f.scan.shots) || [], ri = rows.findIndex(r => r.f === f);
+        const w = f.wscore, tyAll = wordFound(f, st), rdw = splitReads(st, tyAll), ty = rdw.ok, hs = appShots(st, f, (f.hand && f.scan && f.scan.shots) || []), ri = rows.findIndex(r => r.f === f);
         const info = w ? w.crits.map((c, k) => esc(c.length > 28 ? c.slice(0, 28) + '…' : c) + ' <b>' + (w.per[k] == null ? '–' : fmtNum(w.per[k])) + '</b>').join(' · ') + (w.total != null && !w.done ? '<div class="muted" style="font-size:12px">Not every criterion is highlighted yet</div>' : '') : '';
         const pics = hs.map(g => '<div style="margin-bottom:6px"><img src="' + g.img + '" alt="" data-open="' + i + '" data-file="' + esc(f.path) + '" title="Open this file" style="display:block;max-width:360px;max-height:150px;border:1px solid var(--line);border-radius:4px;cursor:pointer;background:#fff"><div class="muted" style="font-size:12px">Page ' + (g.page + 1) + '</div></div>').join('');
         const big = (v, of, pct) => '<div class="big-sc" data-copy="' + esc(fmtNum(v)) + '" title="Click to copy">' + fmtNum(v) + (of ? '<small>/ ' + fmtNum(of) + '</small>' : '') + '</div>' + (pct != null ? '<div class="muted" style="font-size:13px;margin-top:4px;font-weight:500">= ' + fmtNum(pct) + '%</div>' : '');
         const hf = (f.hand && f.scan && f.scan.found) || [];
-        const reads = w && w.total != null && (f.virtual || ty.length) ? big(w.total, w.max, w.pct)
+        const reads = app ? appCell() + (lead ? foundBesideHtml(st, tyAll.concat((f.hand && f.scan && f.scan.found) || [])) : '')
+          : w && w.total != null && (f.virtual || ty.length) ? big(w.total, w.max, w.pct)
           : ty.length ? (manyReads(st) ? '<span class="pill warn" style="display:inline-block;font-size:12px;font-weight:700;padding:3px 9px;border-radius:999px;background:var(--warn-soft);color:var(--warn);margin-bottom:6px">' + readsCount(st) + ' grades found, check</span>' : ty.map(g => '<div class="big-sc" data-copy="' + esc(fmtNum(g.score != null ? g.score : g.pct)) + '" title="Click to copy">' + esc(foundLabel(g)) + '</div>').join(''))
           : hf.length === 1 ? big(hf[0].score != null ? hf[0].score : hf[0].pct, hf[0].outOf, hf[0].score != null ? hf[0].pct : null)
           : hs.length ? '<input class="sc-in" type="text" inputmode="decimal" data-typed="' + i + '" value="' + esc(st.grade.sheet ?? '') + '" placeholder="Score" aria-label="Type the score you see in the picture"><div class="muted" style="font-size:12px;margin-top:4px;font-weight:400">Type what you see</div>'
           : rdw.ask.length ? '' : '<span class="muted" style="font-weight:400">No grade found yet</span>';
         return '<tr><td class="n">' + (i + 1) + '</td><td>' + where + '</td><td>' + pics + '<button class="link" data-open="' + i + '" data-file="' + esc(f.path) + '" style="text-align:left">' + (w ? 'Word rubric' : 'Word file') + '</button>' +
           (info ? '<div class="muted" style="font-size:13px">' + info + '</div>' : '') + tyAll.filter(g => !g.table).map(g => '<div class="muted" style="font-size:13px;max-width:360px">Typed: “' + esc(g.text) + '”</div>').join('') +
-          '<div style="margin-top:4px"><button class="link" style="font-size:12px" data-rebox="' + i + '|' + esc(f.path) + '">' + (f.hand ? 'Boxed by hand · redo' : 'Box it by hand') + '</button></div></td><td style="font-weight:700">' + reads + readsHtml(i, rdw) + '</td></tr>';
+          '<div style="margin-top:4px"><button class="link" style="font-size:12px" data-rebox="' + i + '|' + esc(f.path) + '">' + (f.hand ? 'Boxed by hand · redo' : 'Box it by hand') + '</button></div></td><td style="font-weight:700">' + reads + readsHtml(i, app && !sheetFound ? quietReads(rdw) : rdw) + '</td></tr>';
       }
-      if (!f) return '<tr><td class="n">' + (i + 1) + '</td><td>' + where + '</td><td class="muted">' + (none ? 'Nothing turned in' : nograde ? 'No grade yet. <button class="link" style="font-size:13px" data-rebox="' + i + '|' + esc(first.path) + '">Box it by hand</button>' : 'Only unmarked files, left out') + '</td><td></td></tr>';
+      if (!f) return '<tr><td class="n">' + (i + 1) + '</td><td>' + where + '</td><td class="muted">' + (none ? 'Nothing turned in' : nograde ? 'No grade yet. <button class="link" style="font-size:13px" data-rebox="' + i + '|' + esc(first.path) + '">Box it by hand</button>' : 'Only unmarked files, left out') + '</td><td style="font-weight:700">' + (app ? appCell() : '') + '</td></tr>';
       if (out) return '<tr style="opacity:.7"><td class="n">' + (i + 1) + '</td><td>' + where + '</td><td class="muted">Left out (no marks). <button class="link" data-bring="' + i + '|' + esc(f.path) + '">Bring back</button></td><td></td></tr>';
       const sc = f.scan || { found: [], shots: [] };
-      const rdf = splitReads(st, sc.found), okF = rdf.ok, many = manyReads(st);
-      const pics = sc.shots.map(g => '<div style="margin-bottom:6px"><img src="' + g.img + '" alt="" data-open="' + i + '" data-file="' + esc(f.path) + '" title="Open this file" style="display:block;max-width:360px;max-height:150px;border:1px solid ' + (many ? 'var(--warn)' : 'var(--line)') + ';border-radius:4px;cursor:pointer;background:#fff">' +
+      const rdf = splitReads(st, sc.found), okF = rdf.ok, many = (!app || sheetFound) && manyReads(st), shots = appShots(st, f, sc.shots);
+      const pics = shots.map(g => '<div style="margin-bottom:6px"><img src="' + g.img + '" alt="" data-open="' + i + '" data-file="' + esc(f.path) + '" title="Open this file" style="display:block;max-width:360px;max-height:150px;border:1px solid ' + (many ? 'var(--warn)' : 'var(--line)') + ';border-radius:4px;cursor:pointer;background:#fff">' +
         (g.text && g.from === 'note' ? '<div class="muted" style="font-size:12px;max-width:360px">Typed: “' + esc(g.text) + '” · page ' + (g.page + 1) + '</div>' : '<div class="muted" style="font-size:12px">Page ' + (g.page + 1) + '</div>') + '</div>').join('') ||
-        '<span class="muted">' + (f.hand ? 'Boxed by hand' : sc.err ? 'Couldn’t read this file' : sc.seen && sc.seen.length ? 'No grade in the typed text I found: “' + esc(sc.seen.join('” · “')) + '”' : sc.nAnnots ? 'There are marks here but no typed text, so the grade may be handwritten or flattened. Try Box it by hand.' : 'No marks or typed text in this file. If you marked it in Kami, the marks may not have been saved into the file. Try Box it by hand.') + '</span>';
+        '<span class="muted">' + (f.hand ? 'Boxed by hand' : app && !sc.err ? 'No score stamp on this paper yet. Use Stamp by the total to put your score on it.' : sc.err ? 'Couldn’t read this file' : sc.seen && sc.seen.length ? 'No grade in the typed text I found: “' + esc(sc.seen.join('” · “')) + '”' : sc.nAnnots ? 'There are marks here but no typed text, so the grade may be handwritten or flattened. Try Box it by hand.' : 'No marks or typed text in this file. If you marked it in Kami, the marks may not have been saved into the file. Try Box it by hand.') + '</span>';
       const ri = rows.findIndex(r => r.f === f);
       const handNote = '<div style="margin-top:4px;display:flex;gap:14px"><button class="link" style="font-size:12px" data-rebox="' + i + '|' + esc(f.path) + '">' + (f.hand ? 'Boxed by hand · redo' : 'Box it by hand') + '</button><button class="link" style="font-size:12px;color:var(--muted)" data-leave="' + i + '|' + esc(f.path) + '">Leave out</button></div>';
       let reads;
-      if (okF.length === 1 && !many) {   // clearly one score: show it big beside the picture
+      if (app) reads = appCell() + (lead ? foundBesideHtml(st, sc.found) : '');
+      else if (okF.length === 1 && !many) {   // clearly one score: show it big beside the picture
         const g0 = okF[0];
         reads = '<div class="big-sc" data-copy="' + esc(fmtNum(g0.score != null ? g0.score : g0.pct)) + '" title="Click to copy">' + (g0.score != null ? fmtNum(g0.score) + (g0.outOf ? '<small>/ ' + fmtNum(g0.outOf) + '</small>' : '') : fmtNum(g0.pct) + '<small>%</small>') + '</div>' +
           (g0.score != null && g0.pct != null ? '<div class="muted" style="font-size:13px;margin-top:4px;font-weight:500">= ' + fmtNum(g0.pct) + '%</div>' : '');
@@ -351,9 +386,9 @@ function renderSheet() {
       else if (!okF.length && sc.shots.length && !rdf.ask.length) reads = '<input class="sc-in" type="text" inputmode="decimal" data-typed="' + i + '" value="' + esc(st.grade.sheet ?? '') + '" placeholder="Score" aria-label="Type the score you see in the picture"><div class="muted" style="font-size:12px;margin-top:4px;font-weight:400">Type what you see</div>';
       else reads = '';
       const own = ownGrade(st), ps = okF.length === 1 ? okF[0].score : okF.length ? null : paperScore(st);
-      if (own.total != null && ps != null && Math.abs(own.total - ps) > 0.001) reads += '<span class="sc-warn">Your score in Grading Studio is ' + fmtNum(own.total) + (own.partial ? ' (partial)' : '') + '</span>';
+      if (!app && own.total != null && ps != null && Math.abs(own.total - ps) > 0.001) reads += '<span class="sc-warn">Your score in Grading Studio is ' + fmtNum(own.total) + (own.partial ? ' (partial)' : '') + '</span>';
       return '<tr><td class="n">' + (i + 1) + '</td><td>' + where + '</td><td>' + pics + handNote + '</td><td style="font-weight:700">' +
-        (many ? '<span class="pill warn" style="display:inline-block;font-size:12px;font-weight:700;padding:3px 9px;border-radius:999px;background:var(--warn-soft);color:var(--warn);margin-bottom:6px">' + readsCount(st) + ' grades found, check</span>' : '') + reads + readsHtml(i, rdf) + '</td></tr>';
+        (many ? '<span class="pill warn" style="display:inline-block;font-size:12px;font-weight:700;padding:3px 9px;border-radius:999px;background:var(--warn-soft);color:var(--warn);margin-bottom:6px">' + readsCount(st) + ' grades found, check</span>' : '') + reads + readsHtml(i, app && !sheetFound ? quietReads(rdf) : rdf) + '</td></tr>';
     }).join('') + '</tbody></table>';
 }
 // Box each grade by hand: one paper at a time, drag a box around the grade, and it moves to the next paper.
@@ -503,11 +538,12 @@ async function buildSheetPdf() {
     let y = M + 6;
     while (ri < rows.length) {
       const { st, i, f, word } = rows[ri], wty = word ? wordFound(f, st).filter(g => !g.table) : [], sc = word ? { found: f.virtual && f.wscore && f.wscore.total != null ? [{ score: f.wscore.total, outOf: f.wscore.max, pct: f.wscore.pct }] : wordFound(f, st).length ? wordFound(f, st) : (f.hand && f.scan && f.scan.found) || [], shots: (f.hand && f.scan && f.scan.shots) || [] } : f && f.scan ? f.scan : { found: [], shots: [] };
-      const rd = splitReads(st, sc.found), okF = rd.ok;
+      const app = appScored(st), quiet = app && !sheetFound;   // her score is the score: what the papers say only shows when she asks
+      const rd = quiet ? { ok: [], ask: [] } : splitReads(st, sc.found), okF = app ? [] : rd.ok;
       const imgs = [];
-      for (const g of sc.shots) { const im = await loadImg(g.img); if (im) imgs.push({ im, h: Math.min(90, maxW * im.height / im.width) }); }
-      const mine = sheetOwnLines(st, sheetSaid);
-      const rh = Math.max(64 + mine.length * 15, imgs.reduce((a, o) => a + o.h + 6, 0) + (word && imgs.length && f.wscore ? 44 : 0)) + 10;
+      for (const g of f ? appShots(st, f, sc.shots) : []) { const im = await loadImg(g.img); if (im) imgs.push({ im, h: Math.min(90, maxW * im.height / im.width) }); }
+      const mine = app ? [] : sheetOwnLines(st, sheetSaid), lead = app && !sheetSaid.has(st);
+      const rh = Math.max(64 + mine.length * 15 + (lead ? 30 : 0), imgs.reduce((a, o) => a + o.h + 6, 0) + (word && imgs.length && f.wscore ? 44 : 0)) + 10;
       if (y + rh > PH - M && y > M + 6) break;
       ctx.fillStyle = '#8A90A0'; ctx.font = '11px ' + FONT; ctx.fillText(String(i + 1), M, y + 13);
       ctx.fillStyle = '#151922'; ctx.font = 'bold 12px ' + FONT;
@@ -517,16 +553,23 @@ async function buildSheetPdf() {
       if (f) for (const ln of wrapText(ctx, f.path, 170).slice(0, 2)) { ctx.fillText(ln, M + 20, ly); ly += 12; }
       ctx.font = 'bold 12px ' + FONT;
       for (const [ln, warn] of mine) { sheetSaid.add(st); ctx.fillStyle = warn ? '#9A6411' : '#151922'; ctx.fillText(ln, M + 20, ly + 4); ly += 15; }
-      if (manyReads(st)) { ctx.fillStyle = '#9A6411'; ctx.fillText(readsCount(st) + ' grades found, check', M + 20, ly + 4); ly += 16; }
+      if (lead) {   // her score, big, once per student
+        sheetSaid.add(st); ctx.fillStyle = '#1C7F54'; ctx.font = 'bold 18px ' + FONT;
+        const g = gradeOf(st), max = g.outOf != null ? g.outOf : maxPoints();
+        ctx.fillText(noScore(st) ? STATUS_LABEL[st.grade.status] : fmtNum(g.total) + (max ? '/' + fmtNum(max) : '') + (g.pct != null ? ' = ' + fmtNum(g.pct) + '%' : ''), M + 20, ly + 12);
+        ctx.font = '9.5px ' + FONT; ctx.fillStyle = '#5D6475'; if (!noScore(st)) ctx.fillText('Your score' + (g.partial ? ' (partial)' : g.tries ? ' (the try that counts)' : ''), M + 20, ly + 24); ly += 30;
+        const d = sheetFound && disagreeNote(st); if (d) { ctx.font = 'bold 12px ' + FONT; ctx.fillStyle = '#9A6411'; ctx.fillText(d.replace(/^.*, t/, 'T'), M + 20, ly + 4); ly += 16; }
+      }
+      if (!quiet && manyReads(st)) { ctx.fillStyle = '#9A6411'; ctx.fillText(readsCount(st) + ' grades found, check', M + 20, ly + 4); ly += 16; }
       if (rd.ask.length) { ctx.fillStyle = '#9A6411'; ctx.fillText('To confirm: ' + rd.ask.map(foundLabel).join(', '), M + 20, ly + 4); ly += 16; }
       ctx.fillStyle = '#1C7F54';
       if (okF.length === 1 && !manyReads(st)) { ctx.font = 'bold 18px ' + FONT; ctx.fillText(foundLabel(okF[0]), M + 20, ly + 12); ly += 22; }
       else for (const g of okF) { ctx.fillText(foundLabel(g), M + 20, ly + 4); ly += 15; }
-      if (f && !okF.length && hasSheet(st.grade)) { ctx.font = 'bold 18px ' + FONT; ctx.fillText(String(st.grade.sheet), M + 20, ly + 12); ctx.font = '9.5px ' + FONT; ctx.fillStyle = '#5D6475'; ctx.fillText('typed from the picture', M + 20, ly + 24); }
+      if (f && !app && !okF.length && hasSheet(st.grade)) { ctx.font = 'bold 18px ' + FONT; ctx.fillText(String(st.grade.sheet), M + 20, ly + 12); ctx.font = '9.5px ' + FONT; ctx.fillStyle = '#5D6475'; ctx.fillText('typed from the picture', M + 20, ly + 24); }
       let iy = y;
       for (const { im, h } of imgs) { const w = h * im.width / im.height; ctx.drawImage(im, X, iy, w, h); ctx.strokeStyle = manyReads(st) ? '#E8B451' : '#DADDE6'; ctx.strokeRect(X, iy, w, h); iy += h + 6; }
       if (word) { ctx.fillStyle = '#151922'; ctx.font = '11px ' + FONT; let wy = (imgs.length ? iy : y) + 13; for (const ln of wrapText(ctx, !f.wscore || wty.length ? (wty.length ? 'Word file, typed: ' + wty.map(g => '“' + g.text + '”').join(' · ') : imgs.length ? '' : 'Word file') : 'Word rubric: ' + f.wscore.crits.map((c, k) => c + ' ' + (f.wscore.per[k] == null ? '–' : fmtNum(f.wscore.per[k]))).join(' · '), maxW).slice(0, 4)) { ctx.fillText(ln, X, wy); wy += 14; } }
-      else if (!imgs.length) { ctx.fillStyle = '#8A90A0'; ctx.font = 'italic 11px ' + FONT; ctx.fillText(f ? 'No typed grade found' : rows[ri].nograde ? 'No grade yet' : 'Nothing turned in', X, y + 13); }
+      else if (!imgs.length) { ctx.fillStyle = '#8A90A0'; ctx.font = 'italic 11px ' + FONT; ctx.fillText(f ? (app ? 'No score stamp on this paper' : 'No typed grade found') : rows[ri].nograde ? 'No grade yet' : 'Nothing turned in', X, y + 13); }
       y += rh; ctx.strokeStyle = '#ECEEF3'; ctx.beginPath(); ctx.moveTo(M, y - 5); ctx.lineTo(PW - M, y - 5); ctx.stroke();
       ri++;
     }

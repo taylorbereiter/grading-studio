@@ -728,10 +728,19 @@ test('the printed grade sheet says her own score, missing and excused, and where
   await page.waitForSelector('#dlgBox [data-pdf]');
   await page.click('#dlgBox [data-pdf]');
   await page.waitForFunction(() => window.__said.some(t => /Excused/.test(t)));
-  const said = await page.evaluate(() => window.__said);
-  assert.ok(said.includes('Your score: 9 / 12 = 86%'), said.join(' | '));
-  assert.ok(said.includes('The paper says 10'), said.join(' | '));
+  let said = await page.evaluate(() => window.__said);
+  // her score is the score: printed big, with nothing from the paper beside it unless she asks for that
+  assert.ok(said.includes('9/12 = 86%'), said.join(' | '));
+  assert.ok(said.includes('Your score'), said.join(' | '));
+  assert.ok(!said.includes('The paper says 10'), said.join(' | '));
   assert.ok(said.includes('Excused'));
+  await page.evaluate(() => { window.__said = []; });
+  await page.click('#dlgBox [data-sheetfound]');
+  await page.click('#dlgBox [data-pdf]');
+  await page.waitForFunction(() => window.__said.some(t => /Excused/.test(t)));
+  said = await page.evaluate(() => window.__said);
+  assert.ok(said.includes('9/12 = 86%'), said.join(' | '));
+  assert.ok(said.includes('The paper says 10'), said.join(' | '));
   assert.deepEqual(page.errors, []);
   await close();
 });

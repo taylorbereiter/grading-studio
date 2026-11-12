@@ -178,6 +178,7 @@ function renderGrade() {
   h += '<div class="total">' + totalHtml(st) + '</div>' + statusHtml(st) + anchorHtml(st);
   h += cmtHtml(g) + histSlot(st) + '<div class="gfoot"><div class="hint keysrow">' + (setup.mode === 'rubric' ? '<span><kbd>1</kbd>–<kbd>' + Math.min(9, Math.max(...setup.criteria.map((_, i) => rowTop(setup, i)))) + '</kbd> score</span>' + (rowHalf(setup) ? '<span><kbd>.</kbd> half</span>' : '') : '<span>Type the score</span>') + '<button class="link" data-keys title="Every key">All keys <kbd>?</kbd></button></div>' + navHtml(st) + '</div>';
   $('#grade').innerHTML = h;
+  if (syncScoreStamps(st)) { for (const pg of pages) draw(pg); saveSoon(); }
 }
 // The comment that goes back with the score, with her saved comments one click away.
 const cmtHtml = g => '<div class="cmt"><textarea id="cmtIn" aria-label="Comment for ' + esc(sysOr('the student')) + '" placeholder="Comment for ' + esc(sysOr('the student')) + ' (optional). It shows on the Grades tab so you can copy it.">' + esc(g.comment) + '</textarea>' + cmtChips() + '</div>';
@@ -224,6 +225,21 @@ const STAMP_ICON = '<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden=
 function scoreStampText(gr) {
   const max = gr.outOf != null ? gr.outOf : maxPoints();
   return fmtNum(gr.total) + (max ? '/' + fmtNum(max) : '') + (gr.pct != null ? ' = ' + gr.pct + '%' : '');
+}
+// Every score stamp on a paper says the score the app holds for that student, so the stamp, the score panel, the grade sheet
+// and the export all show one number. A stamp placed earlier changes when the score does (more points, extra credit, a retake).
+// Stamps on an earlier try's paper keep that try's words. With no score in the app, a stamp keeps what it says. True when one changed.
+function syncScoreStamps(st) {
+  if (!st || noScore(st)) return false;
+  const gr = gradeOf(st);
+  if (gr.total == null || gr.paper) return false;   // a score read off the paper itself isn't the app's own
+  const text = scoreStampText(gr);
+  let changed = false;
+  for (const f of st.files) {
+    if (!f.marks || tryOfFile(st, f)) continue;
+    for (const l of Object.values(f.marks)) for (const m of l || []) if (m.t === 'stamp' && m.k === 'score' && m.text !== text) { m.text = text; changed = true; }
+  }
+  return changed;
 }
 // The score on the paper: read from typed text, or typed by her on the Grade sheet from the picture.
 function paperScore(st) {

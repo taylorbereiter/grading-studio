@@ -68,6 +68,7 @@ function nameOut(items) {
 // Builds one returned file from its pages (possibly from several turned-in files), baking in every mark.
 // fb: the feedback page goes in front (src/feedback.js), when there is anything for it to say.
 async function flattenDoc(st, d, dpi, edit, key, fb) {
+  syncScoreStamps(st);   // a score stamp goes out saying the score as it is now
   await workerReady;
   const srcs = new Map();
   const src = async path => {
