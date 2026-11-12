@@ -63,7 +63,7 @@ const SCREENS = [
   { name: 'insights', where: 'g', hash: '#/a/{A}/insights', ready: '#dlg.aspage' },
   { name: 'insights-consistency', where: 'g', hash: '#/a/{A}/insights/consistency', ready: '#dlg.aspage' },
   { name: 'return', where: 'g', hash: '#/a/{A}/return', ready: '#dlg.aspage' },
-  ...['saving', 'history', 'classes', 'terms', 'grading', 'marking', 'timetable', 'display', 'claude', 'keys', 'about'].map(k => ({ name: 'settings-' + k, where: 'g', hash: '#/settings/' + k, ready: '#vSettings:not([hidden]), [data-sec]' })),
+  ...['saving', 'history', 'setup', 'classes', 'terms', 'grading', 'marking', 'timetable', 'display', 'claude', 'keys', 'about'].map(k => ({ name: 'settings-' + k, where: 'g', hash: '#/settings/' + k, ready: '#vSettings:not([hidden]), [data-sec]' })),
   { name: 'planner-week', where: 'p', hash: '#week' },
   { name: 'planner-semester', where: 'p', hash: '' },
   { name: 'planner-units', where: 'p', hash: '', then: tabNamed('Units') },

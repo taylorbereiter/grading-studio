@@ -63,7 +63,7 @@ function wlRender() {
     '<div class="wlbody">' + body + '</div>' +
     '<div class="wlact">' + (wl.step ? '<button class="btn" data-wlback>Back</button>' : '') + '<button class="btn primary" data-wlnext>' + (last ? 'Start' : 'Continue') + '</button>' +
     (hasSample() ? '' : '<button class="link" data-wlsample>Look around with a sample class first</button>') + '</div>' +
-    (wl.step === 0 && !lib.classes.length ? '<p class="wlfoot">Already use Grading Studio on another computer? <button class="link" data-wlbring>Bring your work in</button></p>' : '') +
+    (wl.step === 0 && !lib.classes.length ? '<p class="wlfoot">Already use Grading Studio on another computer? <button class="link" data-wlbring>Bring your work in</button></p><p class="wlfoot wlfoot2">Have an AI assistant that knows how you teach? <button class="link" data-wlai>Let it set this up</button></p>' : '') +
     '</div><div class="wlr">' +
     [['lock', 'Private', 'Student work never leaves this computer. No account, nothing uploaded.'],
       ['drop', 'Works with what you have', 'Google Classroom, ManageBac, Canvas, Teams, a folder of files, or a scan of the whole class.'],
@@ -110,6 +110,7 @@ $('#welcome').addEventListener('click', async e => {
   if (e.target.closest('[data-wlnext]')) return wlNext();
   if (e.target.closest('[data-wlfolder]')) { wl.busy = true; try { await folderPick(); } finally { wl.busy = false; } if (wl.on) wlRender(); return; }
   if (e.target.closest('[data-wlsample]')) { wlRead(); wlClose(); return sampleClass(); }
+  if (e.target.closest('[data-wlai]')) { wlClose(); return go('#/settings/setup'); }
   if (e.target.closest('[data-wlbring]')) { wlClose(); go('#/settings'); toast('Choose your Grading Studio folder, or bring in a take-home file. Your classes and work come with it.', 8000); }
 });
 $('#welcome').addEventListener('input', e => {
