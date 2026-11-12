@@ -27,6 +27,18 @@ function frHomeSay(k) {
 const LANG_FR = {
   name: 'Français', locale: 'fr',
   words: {
+    /* a class page: its header, its tab row and the Assignments tab */
+    'Class setup': 'Configurer la classe', 'Gradebook': 'Carnet de notes', 'Seating': 'Plan de classe', 'Missing work': 'Travaux manquants', 'Charts': 'Graphiques', 'Goals': 'Objectifs', 'Report comments': 'Appréciations de bulletin', '+ Assignment': '+ Devoir',
+    '+ Unit': '+ Séquence', 'In-class': 'En classe', 'Summative': 'Sommatif', 'Typed in': 'Notes saisies', 'Scores typed in': 'Notes saisies à la main', 'papers not kept': 'copies non conservées', 'Ready to return': 'Prêt à rendre', 'Returned': 'Rendu',
+    'Giving feedback': 'Commentaires en cours', 'Scoring': 'Notation en cours', 'Not started': 'Pas commencé', 'Add papers…': 'Ajouter des copies…', 'Scores typed in: open the gradebook': 'Notes saisies à la main : ouvrir le carnet de notes',
+    'Add this assignment’s papers': 'Ajouter les copies de ce devoir', 'Edit': 'Modifier', 'Name, type, due date, unit, rubric': 'Nom, type, date de remise, séquence, grille', 'Mark this one’s papers here as well': 'Corriger aussi ici les copies de ce devoir',
+    'Open other papers…': 'Ouvrir d’autres copies…', 'A newer download, or a different set of files': 'Un téléchargement plus récent, ou un autre ensemble de fichiers', 'Drag to move this unit': 'Faites glisser pour déplacer cette séquence',
+    'Unit plan ↗': 'Plan de séquence ↗', 'Rename': 'Renommer', 'Delete unit': 'Supprimer la séquence', 'The other pages of this class': 'Les autres pages de cette classe', 'The pin keeps a page in the tab row.': 'L’épingle garde une page dans la rangée d’onglets.',
+    'Edit roster': 'Modifier la liste', 'Add roster': 'Ajouter la liste', 'Names, and the name of the class': 'Les noms, et le nom de la classe', 'Move up in the sidebar': 'Monter dans la barre latérale', 'Move down in the sidebar': 'Descendre dans la barre latérale',
+    'Assignments with no roster. Drag them onto a class in the sidebar, or use Edit to pick a class.': 'Devoirs sans liste. Faites-les glisser sur une classe de la barre latérale, ou utilisez Modifier pour choisir une classe.', 'No units yet. Click + Unit.': 'Pas encore de séquence. Cliquez sur + Séquence.',
+    'Drag an assignment or a unit to move it. Drop': 'Faites glisser un devoir ou une séquence pour le déplacer. Déposez', 'on an assignment to open it there.': 'sur un devoir pour l’y ouvrir.', 'a ZIP': 'un ZIP', 'No papers yet': 'Pas encore de copies',
+    'Grading': 'Notation', 'Points and percent, or IB criteria': 'Points et pourcentage, ou critères de l’IB', 'This class is graded with IB MYP criteria': 'Cette classe est notée avec les critères du PEI de l’IB (MYP)', 'This class is graded as an IB DP class': 'Cette classe est notée comme une classe du Diplôme de l’IB (DP)',
+    'Link to a unit plan…': 'Lier à un plan de séquence…', 'Change the unit plan link': 'Changer le lien du plan de séquence', 'drop the same ZIP to keep going': 'déposez le même ZIP pour continuer',
     /* the Settings pages */
     'On paper, or not said': 'Sur papier, ou non précisé', 'None, or not said': 'Aucun, ou non précisé', 'Another one…': 'Un autre…', 'draws, until you use a pencil; from then on it moves the page': 'dessine, jusqu’à ce que vous utilisiez un stylet ; ensuite il déplace la page', 'always moves the page': 'déplace toujours la page', 'always draws': 'dessine toujours', 'Add goals': 'Ajouter des objectifs', 'Edit goals': 'Modifier les objectifs', 'Tag rubric rows in Rubric setup and quiz questions in Quiz boxes. Each class page then has a Goals tab.': 'Associez un objectif aux lignes de grille dans Rubric setup et aux questions de quiz dans Quiz boxes. Chaque page de classe a alors un onglet Goals.',
     'Find names on their own': 'Trouver les noms automatiquement', 'Yours, kept on this computer.': 'À vous, gardé sur cet ordinateur.', 'Saving and carrying': 'Enregistrer et emporter', 'Folder, take-home file, earlier days, new school year': 'Dossier, fichier à emporter, jours précédents, nouvelle année scolaire',
@@ -214,6 +226,12 @@ const LANG_FR = {
     'Missing': 'Non rendu', 'Excused': 'Dispensé', 'Late': 'En retard',
   },
   rules: [
+    /* a class page */
+    [/^(\d+) students? on the roster$/, m => (m[1] === '1' ? '{n} élève sur la liste' : '{n} élèves sur la liste').replace('{n}', m[1])], [/^(\d+) assignments?$/, m => (m[1] === '1' ? '{n} devoir' : '{n} devoirs').replace('{n}', m[1])], [/^Due (.+)$/, 'À rendre : $1'],
+    [/^Keep (.+) in the tab row$/, m => 'Garder {x} dans la rangée d’onglets'.replace('{x}', (LANG_FR.words[m[1]] || m[1]))], [/^Take (.+) out of the tab row$/, m => 'Retirer {x} de la rangée d’onglets'.replace('{x}', (LANG_FR.words[m[1]] || m[1]))],
+    [/^More for (.+)$/, 'Plus pour $1'], [/^Open in (.+) ↗$/, 'Ouvrir dans $1 ↗'],
+    [/^Change the (.+) link$/, m => 'Changer le lien {x}'.replace('{x}', (m[1] === 'Class page' ? 'de la page de la classe' : m[1]))], [/^Link to (.+)…$/, m => 'Lier à {x}…'.replace('{x}', m[1])], [/^Add the (.+) link…$/, m => 'Ajouter le lien {x}…'.replace('{x}', (m[1] === 'Class page' ? 'de la page de la classe' : m[1]))],
+    [/^(\d+) of (\d+) feedback complete$/, '$1 sur $2 avec commentaires complets'], [/^a (.+) ZIP$/, 'un ZIP $1'], [/^Opened (.+)$/, 'Ouvert : $1'], [/^(\d+) feedback complete$/, '$1 avec commentaires complets'], [/^(\d+) scored$/, '$1 notés'],
     /* the Settings pages */
     [/^(.{3,16}) to (.{3,16})$/, m => /\d/.test(m[1]) && /\d/.test(m[2]) ? m[1] + ' – ' + m[2] : null],   // a term's dates, as the browser writes them in this language
     [/^new entries add to (.+), one point for one percentage point\. (Grades stay at 100% at most\.|A grade can go over 100%\.)$/, m => 'les nouvelles entrées s’ajoutent à {w}, un point pour un point de pourcentage.'.replace('{w}', m[1] === 'the term grade' ? 'la note de la période' : m[1].replace(/^the /, '')) + ' ' + (m[2][0] === 'G' ? 'Les notes ne dépassent pas 100 %.' : 'Une note peut dépasser 100 %.')],

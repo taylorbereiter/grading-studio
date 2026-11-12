@@ -1,22 +1,21 @@
 {
- "version": "1.28.2",
- "build": "1c99b126ed12",
+ "version": "1.28.3",
+ "build": "36f2ca632cbe",
  "notes": [
-  "Settings is now in your language too: all seven pages, in each of the eight languages. Help answers name the Settings buttons the way Settings shows them.",
-  "Boxes that open from Settings, such as Term setup and the mark key, are still in English, and so are the class and marking screens."
+  "In another language, a class page now reads in that language too: its header, its row of tabs and the Assignments tab, with your own class, unit and assignment names left as you typed them. The Gradebook and the other tabs are still in English."
  ],
  "files": {
-  "index.html": "63d2cc3268248aeeb85063b83889ac7abd57681ac477e0c3798ab8b15049a16f",
-  "planner.html": "8a3159a39c1c60a9318654ca796eaa27969e39a024145d4047903759a5fc9f64"
+  "index.html": "e1d3416cca26e77721778637126eb22b903eb25e1ffd3863b540cc34950d1dfe",
+  "planner.html": "84eeb3f0822c11b163d5fdac5c84c63d1c886e71584108d2000db8b91497898e"
  },
  "langs": {
-  "lang/zh-Hant.js": "e95e33e9ff34b848cf8a666d14a24a4ed98f68c1805891176ae47c7d88fad6b0",
-  "lang/zh-Hans.js": "d7dcdf45f698d424f6640c4cb32fa5983b10d96831235b2507130cbfa5f4284d",
-  "lang/es.js": "d49170c452d6cd02f7ccbd773ff2f48b1c2908e592f25410d903789c2b7b21e3",
-  "lang/fr.js": "69ea3aa85663520d1a178f46600126c998e48f064567206321d69e7db6798db7",
-  "lang/de.js": "f41d073fe007ee5d53f5c4d3f8c915438be4254a91d08637821f0215b7370124",
-  "lang/pt-BR.js": "b6e53a11d75eb7b2db0c8564685a27f7fef456b46d408ed2ebd9110e58c6b1dc",
-  "lang/ja.js": "bf312164e21c622fd33bf88be3703421efa83d7ad0e095023e4ac3c6a61f2a0c",
-  "lang/ko.js": "ba19397c4d120e512e7c08c38b325003a87bfd77ee08354446013bbae73f47e1"
+  "lang/zh-Hant.js": "476d1d1321ebd7310c38bd8617e4d1dbac0d18c7698d404778729c8eb4ff07eb",
+  "lang/zh-Hans.js": "50fedcbb182f57ee5c4b96a519febe28dd8a5736b54195f12727c2bdd97ccd84",
+  "lang/es.js": "c600fb36ddffd952617d4382eda5689dfde38b265b4cf9ab8ecb63db94a1ae7e",
+  "lang/fr.js": "fcfd1fc12c70fdea03d49e41c6202b165e73b167eec1a8642780f3f88e2919c4",
+  "lang/de.js": "04e391b90f8f20dc2ce35350ae80067c9841eac36ac7fd69692b81ac78726e93",
+  "lang/pt-BR.js": "787cd333d9995745611fdfaff2be91d958346aceda020e6126d157d16c97a935",
+  "lang/ja.js": "3225a04490e239a13fe90e7a00ef39d884fbf69d62e89012f05da39e8beabee8",
+  "lang/ko.js": "77157879208edc0c5eca37b1042418176cca2bfb2b91152bffe25b640f46d046"
  }
 }

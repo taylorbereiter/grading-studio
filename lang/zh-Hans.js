@@ -26,6 +26,15 @@ function zhsHomeSay(k) {
 const LANG_ZHS = {
   name: '简体中文', locale: 'zh-Hans',
   words: {
+    /* a class page: its header, its tab row and the Assignments tab */
+    'Class setup': '班级设置', 'Gradebook': '成绩册', 'Seating': '座位', 'Missing work': '缺交作业', 'Charts': '图表', 'Goals': '学习目标', 'Report comments': '成绩单评语', '+ Assignment': '+ 作业', '+ Unit': '+ 单元', 'In-class': '课堂', 'Summative': '总结性', 'Typed in': '手动输入',
+    'Scores typed in': '分数已手动输入', 'papers not kept': '学生文件未保留', 'Ready to return': '可以发回', 'Returned': '已发回', 'Giving feedback': '反馈进行中', 'Scoring': '评分进行中', 'Not started': '尚未开始', 'Add papers…': '加入学生作业…', 'Scores typed in: open the gradebook': '分数已手动输入：打开成绩册',
+    'Add this assignment’s papers': '加入这份作业的学生文件', 'Edit': '编辑', 'Name, type, due date, unit, rubric': '名称、类型、缴交期限、单元、评分标准', 'Mark this one’s papers here as well': '也在这里批改这份作业的学生文件', 'Open other papers…': '打开其他学生文件…', 'A newer download, or a different set of files': '较新的下载文件，或另一组文件',
+    'Drag to move this unit': '拖曳以移动这个单元', 'Unit plan ↗': '单元计划 ↗', 'Rename': '重命名', 'Delete unit': '删除单元', 'The other pages of this class': '这个班级的其他页面', 'The pin keeps a page in the tab row.': '钉选的页面会留在标签页列。', 'Edit roster': '编辑名单', 'Add roster': '添加名单',
+    'Names, and the name of the class': '学生姓名和班级名称', 'Move up in the sidebar': '在侧边栏上移', 'Move down in the sidebar': '在侧边栏下移', 'Assignments with no roster. Drag them onto a class in the sidebar, or use Edit to pick a class.': '没有名单的作业。把它们拖到侧边栏的班级上，或用“编辑”选择班级。',
+    'No units yet. Click + Unit.': '还没有单元。请按“+ 单元”。', 'Drag an assignment or a unit to move it. Drop': '拖曳作业或单元可以移动。把', 'on an assignment to open it there.': '放到作业上，就会在那里打开。', 'a ZIP': 'ZIP 文件', 'No papers yet': '还没有学生文件', 'Grading': '评分方式',
+    'Points and percent, or IB criteria': '分数和百分比，或 IB 评分标准', 'This class is graded with IB MYP criteria': '这个班级使用 IB MYP 评分标准评分', 'This class is graded as an IB DP class': '这个班级以 IB DP 班级评分', 'Link to a unit plan…': '链接到单元计划…', 'Change the unit plan link': '变更单元计划的链接',
+    'drop the same ZIP to keep going': '放入同一个 ZIP 就能继续',
     /* the Settings pages */
     'On paper, or not said': '纸本，或未指定', 'None, or not said': '没有，或未指定', 'Another one…': '其他…', 'draws, until you use a pencil; from then on it moves the page': '会画线，直到你用过触摸笔；之后改为移动页面', 'always moves the page': '一律移动页面', 'always draws': '一律画线', 'Add goals': '添加目标', 'Edit goals': '编辑目标', 'Tag rubric rows in Rubric setup and quiz questions in Quiz boxes. Each class page then has a Goals tab.': '在 Rubric setup 为评分标准的列标上目标，在 Quiz boxes 为小考题目标上目标。之后每个班级页面都会有 Goals 标签页。',
     'Find names on their own': '自动寻找姓名', 'Yours, kept on this computer.': '属于你，存在这台电脑上。', 'Saving and carrying': '保存与携带', 'Folder, take-home file, earlier days, new school year': '文件夹、随身文件、先前的日子、新学年', 'Classes and timetable': '班级与课程表', 'Rosters, class times, days off, links': '名单、上课时间、放假日、链接',
@@ -37,7 +46,7 @@ const LANG_ZHS = {
     'This year:': '本学年：', '(from your term dates)': '（依你的学期日期）', 'Clears student work from this browser when you are finished here. A linked folder and Planner work are not touched.': '在这里的工作结束后，从这个浏览器清除学生作业。已链接的文件夹和备课内容不受影响。', 'One assignment, or everything, as it was on an earlier day.': '一份作业或全部内容，回到先前某一天的样子。',
     'A copy of each day you work is kept in the folder you choose, so there is always an earlier day to go back to. No folder is chosen yet, so those copies have not started.': '你工作的每一天都会在你选择的文件夹里留下一份副本，所以随时都有先前的日子可以回去。目前还没选择文件夹，所以还没开始保留副本。',
     'The roster, the assignments and the grades, from two downloads': '名单、作业和成绩，来自两个下载文件', 'Where students hand in work': '学生缴交作业的地方', 'From Google Classroom…': '从 Google Classroom…', 'Name and roster': '名称与名单', 'Only for the words on screen. Nothing is connected to it.': '只用于画面上的文本，不会连接到它。',
-    'Attendance': '点名', 'Each class has an Attendance tab, and Today has a line for it under each class.': '每个班级都有 Attendance 标签页，今天页面的每个班级下方也有一行点名。', 'Take attendance in Grading Studio': '在 Grading Studio 点名', 'When each class meets, the semester’s dates and the days off. It lives in the Planner.': '每个班级的上课时间、学期日期和放假日。它存放在备课里。',
+    'Attendance': '出缺席', 'Each class has an Attendance tab, and Today has a line for it under each class.': '每个班级都有 Attendance 标签页，今天页面的每个班级下方也有一行点名。', 'Take attendance in Grading Studio': '在 Grading Studio 点名', 'When each class meets, the semester’s dates and the days off. It lives in the Planner.': '每个班级的上课时间、学期日期和放假日。它存放在备课里。',
     'Set up the timetable': '设置课程表', 'No timetable in this browser yet. Once the Planner knows when your classes meet, Today shows the day’s classes and the lesson planned for each.': '这个浏览器还没有课程表。备课知道各班上课时间后，今天页面就会显示当天的课和每堂课规划的课程。', 'How you usually grade': '你平常的评分方式',
     'For all your classes. An assignment counts toward the term its due date falls in.': '适用于所有班级。作业会计入缴交期限所在的学期。', 'Term setup': '学期设置', 'How each type counts:': '各类型的计算方式：', 'When a type has nothing in it yet, the other types are used.': '某个类型还没有内容时，会以其他类型计算。',
     'Extra credit:': '加分：', 'What a new assignment starts with. Any assignment can be scored another way, in its Rubric setup.': '新作业一开始的设置。任何作业都可以在它的 Rubric setup 里改用其他方式评分。', 'Not chosen: a new assignment starts as it always has here, with three rubric rows and the 12-point scale (12 = 100, 11 = 95, 10 = 91…). Choosing one changes only assignments you make from then on.': '尚未选择：新作业会照这里一向的方式开始，使用三列评分标准和 12 分等级（12 = 100、11 = 95、10 = 91…）。选择后只会改变之后创建的作业。',
@@ -60,7 +69,7 @@ const LANG_ZHS = {
     'Papers, names, scores and comments stay in this browser and in your own linked folder.': '作业、姓名、分数和评语都留在这个浏览器和你自己链接的文件夹里。', 'Light mode is the usual look. Text size and zoom apply while you grade.': '浅色模式是平常的外观。文本大小和缩放会在批改时套用。', 'Keys': '按键',
     'Every keyboard shortcut for marking and scoring.': '批改和评分的所有键盘快捷键。', 'Show all keys': '显示所有按键', 'This copy gets the newest version each time the page is loaded.': '这份副本每次加载页面时都会取得最新版本。', 'New in this version': '这个版本的新功能', 'Install as an app': '安装成应用程序',
     'Its own window and its own icon. No installer, nothing for school IT to approve.': '有自己的窗口和图标。不需要安装程序，也不需要学校信息部门核准。', 'Installing works from the web address in Chrome or Edge, not from a copy saved on this computer.': '安装要从 Chrome 或 Edge 的网址进行，无法从存在这台电脑上的副本安装。',
-    'No dates yet': '尚未设置日期', 'No terms yet: the gradebook treats the whole year as one.': '尚未设置学期：成绩簿把整个学年当成一个学期。', 'A type with nothing in it yet counts as 0.': '还没有内容的类型以 0 计算。', 'A class has its roster, its units and its link to your school’s system.': '班级有自己的名单、单元和连到学校系统的链接。',
+    'No dates yet': '尚未设置日期', 'No terms yet: the gradebook treats the whole year as one.': '尚未设置学期：成绩册把整个学年当成一个学期。', 'A type with nothing in it yet counts as 0.': '还没有内容的类型以 0 计算。', 'A class has its roster, its units and its link to your school’s system.': '班级有自己的名单、单元和连到学校系统的链接。',
     /* added with the features that came after this file was first written */
     'To do': '待办事项', 'To do: your own list, with what the app noticed from your work': '待办事项：你自己的清单，加上系统从你的工作中发现的事', 'Add a to-do': '添加待办事项', 'Add a to-do…': '添加待办事项…', 'To do, by week': '待办事项（周查看）', 'Your list laid out on the days of the week, under the classes that meet': '把清单排在一周的每一天，列在当天的课底下',
     'Open To do': '打开待办事项', 'Nothing on your list for today.': '今天清单上没有事项。', 'See everything': '查看全部', 'Done': '已完成', 'Tomorrow': '明天', 'Note': '笔记', 'Open it in To do': '在待办事项中打开', 'Every school day': '每个上课日', 'Every week': '每周', 'Each time this class meets': '每次这个班上课时',
@@ -200,6 +209,12 @@ const LANG_ZHS = {
     'Missing': '缺交', 'Excused': '免交', 'Late': '迟交',
   },
   rules: [
+    /* a class page */
+    [/^(\d+) students? on the roster$/, m => (m[1] === '1' ? '名单上有 {n} 位学生' : '名单上有 {n} 位学生').replace('{n}', m[1])], [/^(\d+) assignments?$/, m => (m[1] === '1' ? '{n} 份作业' : '{n} 份作业').replace('{n}', m[1])], [/^Due (.+)$/, '期限：$1'],
+    [/^Keep (.+) in the tab row$/, m => '把“{x}”留在标签页列'.replace('{x}', (LANG_ZHS.words[m[1]] || m[1]))], [/^Take (.+) out of the tab row$/, m => '把“{x}”移出标签页列'.replace('{x}', (LANG_ZHS.words[m[1]] || m[1]))],
+    [/^More for (.+)$/, '$1 的更多操作'], [/^Open in (.+) ↗$/, '在 $1 打开 ↗'],
+    [/^Change the (.+) link$/, m => '变更{x}的链接'.replace('{x}', (m[1] === 'Class page' ? '班级页面' : m[1]))], [/^Link to (.+)…$/, m => '链接到{x}…'.replace('{x}', m[1])], [/^Add the (.+) link…$/, m => '添加{x}的链接…'.replace('{x}', (m[1] === 'Class page' ? '班级页面' : m[1]))],
+    [/^(\d+) of (\d+) feedback complete$/, '$2 份中 $1 份反馈完成'], [/^a (.+) ZIP$/, '$1 的 ZIP 文件'], [/^Opened (.+)$/, '打开日期：$1'], [/^(\d+) feedback complete$/, '$1 份反馈完成'], [/^(\d+) scored$/, '$1 份已评分'],
     /* the Settings pages */
     [/^(.{3,16}) to (.{3,16})$/, m => /\d/.test(m[1]) && /\d/.test(m[2]) ? m[1] + ' – ' + m[2] : null],   // a term's dates, as the browser writes them in this language
     [/^new entries add to (.+), one point for one percentage point\. (Grades stay at 100% at most\.|A grade can go over 100%\.)$/, m => '新的加分会加到{w}，一分等于一个百分点。'.replace('{w}', m[1] === 'the term grade' ? '学期成绩' : m[1].replace(/^the /, '')) + ' ' + (m[2][0] === 'G' ? '成绩最高为 100%。' : '成绩可以超过 100%。')],
