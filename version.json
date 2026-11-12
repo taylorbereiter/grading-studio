@@ -1,11 +1,11 @@
 {
- "version": "1.27.17",
- "build": "7612efdabbd9",
+ "version": "1.27.20",
+ "build": "f87649654fc8",
  "notes": [
-  "Answer notes for quizzes: type each question's answer in Quiz boxes, and it goes on the returned papers in a gold note labelled Answer, by each question a student lost points on. In Quiz boxes, Answer notes can be set to every question or off."
+  "Feedback-only work no longer says 0 of 20 scored. A formative activity counts the students whose feedback is complete, on its card, in Find, Today, To do, the Grades box and the grade sheet, and says Ready to return once everyone has feedback."
  ],
  "files": {
-  "index.html": "8484e874ca464ad1e8b6c8fe6d2320301a67c89711db5eddfc3589bb76344198",
-  "planner.html": "43a5a7b29e8f9fd2fcba06a738b509f97048c3122e9649deb9dba3b69e0ea876"
+  "index.html": "0bd88f5934a458055e1762a1e0d776831666c5d7724a78c852c6272f78caa0a1",
+  "planner.html": "5b7c193698dfd27caaeca51332183a16656903b387027639fceb145b5e383167"
  }
 }
