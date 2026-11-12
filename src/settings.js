@@ -3,11 +3,11 @@
 // Most of what is here opens the same box as the button elsewhere in the app, so there is one place each thing is changed.
 // Seven subjects on the left (11/12). Each shows the cards of one or two of the twelve keys, and every old address still opens:
 // #/settings/history is the Saving page, scrolled to Go back in time.
-const SET_GROUPS = [['saving', 'Saving and backups', 'Folder, take-home file, earlier days, new school year', ['saving', 'history']],
+const SET_GROUPS = [['saving', 'Saving and carrying', 'Folder, take-home file, earlier days, new school year', ['saving', 'history']],
   ['classes', 'Classes and timetable', 'Rosters, class times, days off, links', ['classes', 'timetable']],
   ['terms', 'Grades', 'Terms, weights, scales and rubrics', ['terms', 'grading']],
   ['marking', 'Marking', 'Mark key, mark colors, Word papers, tablet and pencil', ['marking']],
-  ['setup', 'AI assistant', 'Optional. Your setup, and what an assistant can and can’t see', ['setup', 'claude']],
+  ['setup', 'Working with AI', 'Optional. Your setup, and what an AI assistant can and can’t see', ['setup', 'claude']],
   ['display', 'Display and keys', 'Text size, zoom, dark mode, every shortcut', ['display', 'keys']],
   ['about', 'About and updates', 'Version, what’s new, install as an app', ['about']]];
 const setGroupOf = k => SET_GROUPS.find(g => g[3].includes(k)) || SET_GROUPS[0];

@@ -65,3 +65,8 @@ mark-word-paper
 # versions bar shows only when a lesson has more than one version, the paragraph of tips is behind an Editing tips button,
 # About lists what is new, and the version line reads 1.27.31.
 *
+# A simpler interface: a class page's tab row is Assignments, Gradebook, Students and More, its heading has one Class setup
+# button, and a unit and an assignment each have one menu. The gradebook's toolbar is one blue button and one More menu, with
+# its footnote folded away. Settings has seven pages. In the Planner's week, an empty slot shows only + New lesson until it is
+# pointed at, and Activities has no blue buttons. On the Grades tab a row to check is drawn in line with the table.
+*

@@ -573,7 +573,7 @@ test('each class can keep its ManageBac link: set on the roster, opened from the
     assert.equal(await page.$('[data-cls="' + c.id + '"] .clshead a'), null);
     assert.equal(await page.evaluate(() => 'mb' in window.__gs.state().lib.classes.find(c => c.name === 'MB-Class')), false);
     // without opening the roster: + ManageBac link right on the class
-    await page.click('[data-cls="' + c.id + '"] [data-mbset]');
+    await pick(page, '[data-cls="' + c.id + '"] [data-mbset]');
     await answerDlg(page, { typed: 'https://school.example.org/classes/456' });
     await page.waitForSelector('[data-cls="' + c.id + '"] a.mb-go');
     assert.equal(await page.$eval('[data-cls="' + c.id + '"] a.mb-go', a => a.href), 'https://school.example.org/classes/456');

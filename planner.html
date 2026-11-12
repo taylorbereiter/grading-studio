@@ -218,8 +218,8 @@ h1 i,.top .title i{font-style:normal;font-weight:500;color:var(--accent)}
 .ls-add{display:flex;flex-wrap:wrap;gap:0}
 .ls-add .btn{padding:5px 7px}
 /* a quiet week (11/12): an empty slot shows + New lesson; the rest shows when the slot is pointed at or has the keys */
-@media (hover:hover){.ls-add [data-attach],.ls-add.has .btn{opacity:0;transition:opacity .12s}
-.ls-slot:hover .ls-add .btn,.ls-slot:focus-within .ls-add .btn{opacity:1}}
+@media (hover:hover){.ls-add [data-attach],.ls-add.has .btn,.ls-slot .pl-mb.add{opacity:0;transition:opacity .12s}
+.ls-slot:hover .ls-add .btn,.ls-slot:focus-within .ls-add .btn,.ls-slot:hover .pl-mb.add,.ls-slot:focus-within .pl-mb.add{opacity:1}}
 .ls-loose{margin:4px 14px 30px;background:var(--surface);border:1px solid var(--line);border-radius:var(--corner-5);padding:12px 14px}
 .ls-loose .lhead{display:flex;gap:8px;align-items:center;margin-bottom:8px}.ls-loose h2{font-size:var(--text-lead);margin:0}
 .ls-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px}
@@ -1980,7 +1980,7 @@ function renderWeek() {
       if (!ms.length && !off) h += '<div class="ls-none">No classes</div>';
       for (const { c, m } of ms) {
         const ls = lessonsAt(c.id, d);
-        h += '<div class="ls-slot" style="--cc:' + esc(c.color || '#1F6FB2') + '"><div class="ls-sh"><b>' + esc(c.name) + '</b><span>' + hm(m.start) + '–' + hm(m.end) + (m.label ? ' · ' + esc(m.label) : '') + '</span>' + (mbOf(c) ? mbA(c) : '') + '</div>';   // the link once it is set (Timetable sets it); no "add" on every slot
+        h += '<div class="ls-slot" style="--cc:' + esc(c.color || '#1F6FB2') + '"><div class="ls-sh"><b>' + esc(c.name) + '</b><span>' + hm(m.start) + '–' + hm(m.end) + (m.label ? ' · ' + esc(m.label) : '') + '</span>' + mbBtn(c) + '</div>';
         for (const l of ls) h += '<div class="ls-cardw"><button class="ls-card" data-open="' + l.id + '"><b>' + esc(l.title) + '</b>' + varTag(l) + statusChip(l) + (l.final ? '<span class="pl-done" title="' + esc(l.final.name) + '">Finished ✓</span>' : '') + taughtChip(l, c.id, d) + '<span>' + l.slides.length + ' slide' + (l.slides.length === 1 ? '' : 's') + (l.slots.length > 1 ? ' · also ' + esc(l.slots.filter(s => !(s.classId === c.id && s.date === d)).map(s => className(s.classId) + ' ' + shortDate(s.date)).join(', ')) : '') + '</span></button>' +
           presentCardBtn(l, c.id, d) + '<button class="ls-dl" data-dl="' + l.id + '" title="' + (l.final ? 'Download ' + esc(l.final.name) : 'Download a PowerPoint made from these slides') + '" aria-label="Download">↓</button></div>';
         h += '<div class="ls-add' + (ls.length ? ' has' : '') + '"><button class="btn sm ghost" data-new="' + esc(c.id) + '|' + d + '">+ New lesson</button>' + (L.lessons.length ? '<button class="btn sm ghost" data-attach="' + esc(c.id) + '|' + d + '">Use a lesson…</button>' : '') + '</div></div>';

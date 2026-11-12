@@ -1644,12 +1644,13 @@ a.btn.busy{opacity:.6;pointer-events:none}
 /* ---------- a class page's tabs, and what each one shows (11/10) ---------- */
 .clshead{margin-bottom:10px}
 .ctabs{display:flex;flex-wrap:wrap;gap:4px;border-bottom:1px solid var(--line);margin:0 0 16px}
-.ctab{flex:none;padding:9px 14px;font-size:14.5px;font-weight:500;color:var(--fg-2);text-decoration:none;border-bottom:2px solid transparent;margin-bottom:-1px;border-radius:6px 6px 0 0}
+.ctab,.ctmore{flex:none;padding:9px 14px;font-size:14.5px;font-weight:500;color:var(--fg-2);text-decoration:none;border-bottom:2px solid transparent;margin-bottom:-1px;border-radius:6px 6px 0 0}
 .ctab:hover{color:var(--fg);background:var(--hover)}
 .ctab.on{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
 /* More: the class's other pages, each with a pin that keeps it in the row (11/12) */
 .ctabs .kmw{margin-bottom:-1px}
-.ctmore{border:0;border-bottom:2px solid transparent;background:none;font-family:inherit;cursor:pointer}
+.ctmore{border-top:0;border-left:0;border-right:0;background:none;font-family:inherit;cursor:pointer}
+.ctmore:hover{color:var(--fg);background:var(--hover)}
 .ctmore[aria-expanded=true]{color:var(--fg);background:var(--hover)}
 .ctrow{display:flex;align-items:center;gap:2px}
 .ctrow .mitem{flex:1}
@@ -10641,7 +10642,7 @@ function renderLib() {
       return '<a class="ctab' + (on ? ' on' : '') + '" href="' + classHash(c, k) + '" data-ctab="' + k + '"' + (k === 'gradebook' ? ' data-book="' + esc(c.id) + '"' : k === 'students' ? ' data-people="' + ci + '"' : '') + (on ? ' aria-current="page"' : '') + '>' + l + '</a>'; };
     const pin = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 17v5M9 3h6l-1 6 3 3v2H7v-2l3-3z"/></svg>';
     return '<nav class="ctabs" aria-label="' + esc(c.name) + '">' + all.filter(t => TABS_FIRST.includes(t[0]) || kept.includes(t[0]) || t[0] === tab).map(link).join('') +
-      (more.length ? kmWrap('More <span aria-hidden="true">▾</span>', 'class="ctab ctmore" id="ctMore" title="The other pages of this class"', more.map(([k, l]) => { const on = kept.includes(k);
+      (more.length ? kmWrap('More <span aria-hidden="true">▾</span>', 'class="ctmore" id="ctMore" title="The other pages of this class"', more.map(([k, l]) => { const on = kept.includes(k);
         return '<div class="ctrow"><a class="mitem' + (tab === k ? ' on' : '') + '" href="' + classHash(c, k) + '" data-ctab="' + k + '">' + l + '</a><button class="icon ctpin" data-ctpin="' + k + '" aria-pressed="' + on + '" title="' + (on ? 'Take ' + l + ' out of the tab row' : 'Keep ' + l + ' in the tab row') + '" aria-label="' + (on ? 'Take ' + l + ' out of the tab row' : 'Keep ' + l + ' in the tab row') + '">' + pin + '</button></div>'; }).join('') +
         '<p class="kmsay">The pin keeps a page in the tab row.</p>') : '') + '</nav>'; };
   const setup = (c, ci) => kmWrap('Class setup', 'class="btn sm" id="clsSetup"',
@@ -26831,11 +26832,11 @@ document.addEventListener('keydown', e => {
 Object.assign(window.__gs, { todoRead, todoAdd, todoRows, todoCount, todoTick, todoMove });
 
 /* ---------------- Settings: one page per subject, each with its own address (#/settings/<key>) ---------------- */
-const SET_GROUPS = [['saving', 'Saving and backups', 'Folder, take-home file, earlier days, new school year', ['saving', 'history']],
+const SET_GROUPS = [['saving', 'Saving and carrying', 'Folder, take-home file, earlier days, new school year', ['saving', 'history']],
   ['classes', 'Classes and timetable', 'Rosters, class times, days off, links', ['classes', 'timetable']],
   ['terms', 'Grades', 'Terms, weights, scales and rubrics', ['terms', 'grading']],
   ['marking', 'Marking', 'Mark key, mark colors, Word papers, tablet and pencil', ['marking']],
-  ['setup', 'AI assistant', 'Optional. Your setup, and what an assistant can and can’t see', ['setup', 'claude']],
+  ['setup', 'Working with AI', 'Optional. Your setup, and what an AI assistant can and can’t see', ['setup', 'claude']],
   ['display', 'Display and keys', 'Text size, zoom, dark mode, every shortcut', ['display', 'keys']],
   ['about', 'About and updates', 'Version, what’s new, install as an app', ['about']]];
 const setGroupOf = k => SET_GROUPS.find(g => g[3].includes(k)) || SET_GROUPS[0];
@@ -28827,7 +28828,7 @@ function railRender() {
   screenWas = batch ? 'a' : r.v;
   const d = $('#homeDate'), today = new Date().toLocaleDateString(LANG_LOCALE, { weekday: 'long', month: 'long', day: 'numeric' }); if (d.textContent !== today) d.textContent = today;   // Today's title is the day itself
   const asg = batch && batch.assignment && findItem(batch.assignment.id);
-  document.title = batch ? (asg ? asg.it.name + ' · ' : '') + 'Grading Studio' : r.v === 'class' ? (r.c === lib.loose ? 'No class' : r.c.name) + ' · Grading Studio' : r.v === 'settings' ? (setGroupOf(r.sec)[0] === 'saving' ? '' : setGroupOf(r.sec)[1] + ' · ') + 'Settings · Grading Studio' : r.v === 'help' ? 'Help · Grading Studio' : r.v === 'todo' ? 'To do · Grading Studio' : r.v === 'school' ? 'School resources · Grading Studio' : r.v === 'examples' ? 'Examples · Grading Studio' : 'Grading Studio';
+  document.title = batch ? (asg ? asg.it.name + ' · ' : '') + 'Grading Studio' : r.v === 'class' ? (r.c === lib.loose ? 'No class' : r.c.name) + ' · Grading Studio' : r.v === 'settings' ? (r.sec === 'saving' ? '' : (setGroupOf(r.sec)[0] === r.sec ? setGroupOf(r.sec)[1] : SET_SECS.find(x => x[0] === r.sec)[1]) + ' · ') + 'Settings · Grading Studio' : r.v === 'help' ? 'Help · Grading Studio' : r.v === 'todo' ? 'To do · Grading Studio' : r.v === 'school' ? 'School resources · Grading Studio' : r.v === 'examples' ? 'Examples · Grading Studio' : 'Grading Studio';
 }
 function railSavedRender() {
   if (!shellReady) return;

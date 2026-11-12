@@ -50,7 +50,7 @@ function seed(goals = GOALS) {
   const meta = Object.keys(all).map(id => [id, { id, name: 'A download', n: 4, t: all[id].t, asg: asg[id] }]);
   return { ls, idb: { 'grading-studio-keep': { version: 2, stores: { papers: [], work: [], edits: [], meta } } } };
 }
-const tabs = page => page.$$eval('.ctabs .ctab', xs => xs.map(x => x.textContent));
+const tabs = page => page.$$eval('.ctabs > .ctab, .ctabs .ctrow a', xs => xs.map(x => x.textContent));
 const libOf = page => page.evaluate(() => JSON.parse(JSON.stringify(window.__gs.state().lib)));
 const openSetup = async page => { await page.evaluate(() => window.__gs.openSetup()); await page.waitForSelector('#setupBody'); await page.waitForFunction(() => !window.__gs.bankBusy()); };
 const saveSetup = async page => { await page.click('#dlgBox [data-save]'); await page.waitForFunction(() => document.querySelector('#dlg').hidden); };

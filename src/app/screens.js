@@ -147,7 +147,7 @@ function renderLib() {
       return '<a class="ctab' + (on ? ' on' : '') + '" href="' + classHash(c, k) + '" data-ctab="' + k + '"' + (k === 'gradebook' ? ' data-book="' + esc(c.id) + '"' : k === 'students' ? ' data-people="' + ci + '"' : '') + (on ? ' aria-current="page"' : '') + '>' + l + '</a>'; };
     const pin = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 17v5M9 3h6l-1 6 3 3v2H7v-2l3-3z"/></svg>';
     return '<nav class="ctabs" aria-label="' + esc(c.name) + '">' + all.filter(t => TABS_FIRST.includes(t[0]) || kept.includes(t[0]) || t[0] === tab).map(link).join('') +
-      (more.length ? kmWrap('More <span aria-hidden="true">▾</span>', 'class="ctab ctmore" id="ctMore" title="The other pages of this class"', more.map(([k, l]) => { const on = kept.includes(k);
+      (more.length ? kmWrap('More <span aria-hidden="true">▾</span>', 'class="ctmore" id="ctMore" title="The other pages of this class"', more.map(([k, l]) => { const on = kept.includes(k);
         return '<div class="ctrow"><a class="mitem' + (tab === k ? ' on' : '') + '" href="' + classHash(c, k) + '" data-ctab="' + k + '">' + l + '</a><button class="icon ctpin" data-ctpin="' + k + '" aria-pressed="' + on + '" title="' + (on ? 'Take ' + l + ' out of the tab row' : 'Keep ' + l + ' in the tab row') + '" aria-label="' + (on ? 'Take ' + l + ' out of the tab row' : 'Keep ' + l + ' in the tab row') + '">' + pin + '</button></div>'; }).join('') +
         '<p class="kmsay">The pin keeps a page in the tab row.</p>') : '') + '</nav>'; };
   // one button for what is set once: the school link, how the class is graded, the roster, its place in the sidebar

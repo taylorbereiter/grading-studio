@@ -70,7 +70,7 @@ test('Class setup holds the roster, grading, the school link and the class’s p
   await classPage(page, 'c1');
   assert.equal(await shown(page, '.clshead button'), 1, 'one button in the class’s heading');
   assert.equal(await page.$eval('#clsSetup', b => b.textContent), 'Class setup');
-  assert.deepEqual(await page.$$eval('#clsSetup + .km .mitem', xs => xs.map(x => x.firstChild.textContent)), ['Edit roster', 'Grading', 'Add the Class page link…', 'Move up in the sidebar', 'Move down in the sidebar']);
+  assert.deepEqual(await page.$$eval('#clsSetup + .km .mitem', xs => xs.map(x => x.firstChild.textContent)), ['Edit roster', 'Grading', 'Add the ManageBac link…', 'Move up in the sidebar', 'Move down in the sidebar']);
   assert.ok(await page.$eval('#clsSetup + .km [data-cmove="0:-1"]', b => b.disabled), 'the first class can’t go up');
   await pick(page, '[data-cmove="0:1"]');
   assert.deepEqual((await lib(page)).classes.map(c => c.id), ['c2', 'c1']);
