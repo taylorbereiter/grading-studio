@@ -1,4 +1,8 @@
 {
+  "1.27.5": [
+    "The gradebook can import your old scores: press Import… and choose a CSV or Excel file, or paste the cells. Each column becomes an assignment, matched to your roster.",
+    "You see everything before it is saved, and a score already in the gradebook stays unless you choose the file’s."
+  ],
   "1.27.4": [
     "School is a new page in the sidebar for the things about your school you look up again and again: the handbook, the calendar, the bell schedule, portals, forms, who to call.",
     "Add a link, a file (a copy is kept with your work) or a note. Name your own groups, and star the ones you open most to keep them along the top.",

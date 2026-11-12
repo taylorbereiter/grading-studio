@@ -1,13 +1,12 @@
 {
- "version": "1.27.4",
- "build": "84d9a606de74",
+ "version": "1.27.5",
+ "build": "b3c96a94b0a1",
  "notes": [
-  "School is a new page in the sidebar for the things about your school you look up again and again: the handbook, the calendar, the bell schedule, portals, forms, who to call.",
-  "Add a link, a file (a copy is kept with your work) or a note. Name your own groups, and star the ones you open most to keep them along the top.",
-  "Drop files on the page or paste a web address. Find anything lists every resource. They are kept in your folder and take-home file, and stay when you start a new school year."
+  "The gradebook can import your old scores: press Import… and choose a CSV or Excel file, or paste the cells. Each column becomes an assignment, matched to your roster.",
+  "You see everything before it is saved, and a score already in the gradebook stays unless you choose the file’s."
  ],
  "files": {
-  "index.html": "ddb294d34adcdad3e13cb27013db71a68ec77af898d39d9ab88a317607459c42",
-  "planner.html": "c2290b19761fac300f112a050b27e3805d59a98488b604fb9a656ecf437116ba"
+  "index.html": "2a13e03f387a0ee4a9def89fccf53fd7437599cc4b2d2cd139cfcb707cd37802",
+  "planner.html": "f1ef9198314a09006b1361fd77cd0c2081226ca8d428474813aa5a8bea6dc7f8"
  }
 }
