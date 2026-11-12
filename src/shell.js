@@ -127,9 +127,9 @@ function findRows() {
   for (const c of holders()) for (const u of c.units) for (const it of u.items) {
     const m = it.batchId ? keptMeta.get(it.batchId) : null; if (it.batchId) carded.add(it.batchId);
     const here = batch && batch.id === it.batchId;
-    add('Assignments', it.name, (c === lib.loose ? 'No class' : c.name) + ' · ' + u.name + (here ? ' · open now' : m && m.papers ? ' · ' + keptState(m).done + ' of ' + keptState(m).of + ' scored' : ''), () => here ? null : m && m.papers ? reopenKept(it.batchId, it) : go(classHash(c)));
+    add('Assignments', it.name, (c === lib.loose ? 'No class' : c.name) + ' · ' + u.name + (here ? ' · open now' : m && m.papers ? ' · ' + keptSay(m) : ''), () => here ? null : m && m.papers ? reopenKept(it.batchId, it) : go(classHash(c)));
   }
-  for (const m of keptMeta.values()) if (!carded.has(m.id) && m.papers && !(batch && batch.id === m.id)) add('Assignments', m.name || 'A download', 'Kept in this browser · ' + keptState(m).done + ' of ' + keptState(m).of + ' scored', () => reopenKept(m.id));
+  for (const m of keptMeta.values()) if (!carded.has(m.id) && m.papers && !(batch && batch.id === m.id)) add('Assignments', m.name || 'A download', 'Kept in this browser · ' + keptSay(m), () => reopenKept(m.id));
   if (!batch) {
     add('Do', sysName() ? 'Open a ' + sysName() + ' download' : 'Open student work', sysName() ? 'The ZIP or PDFs' : 'A ZIP, PDFs, Word files or photos', press('#pickFiles'));
     add('Do', 'Open a folder of papers', '', press('#pickFolder'));

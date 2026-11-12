@@ -8639,7 +8639,7 @@ function renderSheet() {
   const nOut = batch.students.reduce((a, st) => a + st.files.filter(f => viewable(f) && !fileIn(st, f)).length, 0);
   const asked = st => !appScored(st) || sheetFound;   // a student with a score in the app has nothing to check here
   const nApp = batch.students.filter(appScored).length, nOne = batch.students.filter(st => !appScored(st) && st.found).length, nMany = batch.students.filter(st => asked(st) && manyReads(st)).length, nAsk = batch.students.reduce((a, st) => a + (asked(st) && st.doubts && !manyReads(st) ? st.doubts.length : 0), 0);
-  $('#shSub').textContent = (setup.spot ? 'Same spot on every paper · ' : '') + nApp + ' of ' + batch.students.length + ' scored' + (nOne ? ' · ' + nOne + ' read from the paper' : '') + (nMany ? ' · ' + nMany + ' to check' : '') + (nAsk ? ' · ' + nAsk + ' to confirm' : '');
+  $('#shSub').textContent = (setup.spot ? 'Same spot on every paper · ' : '') + (fmNow() ? batch.students.filter(st => !noScore(st) && st.grade.fb).length + ' of ' + batch.students.filter(st => !noScore(st)).length + ' feedback complete' : nApp + ' of ' + batch.students.length + ' scored') + (nOne ? ' · ' + nOne + ' read from the paper' : '') + (nMany ? ' · ' + nMany + ' to check' : '') + (nAsk ? ' · ' + nAsk + ' to confirm' : '');
   const spotted = !!setup.spot || batch.students.some(st => st.files.some(f => f.hand));
   const nHidden = sheetAll ? 0 : batch.students.reduce((a, st) => a + st.files.filter(f => f.kind === 'docx').map(f => ({ f, st, word: true })).concat(st.files.filter(f => viewable(f) && fileIn(st, f)).map(f => ({ f }))).filter(r => !rowGraded(r)).length, 0);
   $('#shBody').innerHTML = '<p class="muted" style="margin:0 0 10px;font-size:14px">Every row is made from the file named on it, inside that student’s folder. Click a picture to open that exact file. Click a score to copy it.</p>' +
@@ -10090,10 +10090,11 @@ function batchSummary(it) {
   const data = store.get(it.batchId, null);
   const d = new Date(it.opened || (data && data.t) || Date.now());
   let n = 0;
-  if (data) for (const k in data.s) { const g = data.s[k].g; if (g && (g.rubric.some(v => v != null) || g.points !== '')) n++; }
+  const fm = it.type === 'fm';
+  if (data) for (const k in data.s) { const g = data.s[k].g; if (g && (fm ? g.fb : (g.rubric || []).some(v => v != null) || g.points !== '')) n++; }
   const m = keptMeta.get(it.batchId);
-  if (m) return (m.scored || 0) + ' of ' + (m.n - (m.off || 0)) + ' scored' + keptMore(m) + (m.papers ? '' : ' · papers not kept');
-  return 'Opened ' + d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) + (data ? ' · ' + n + ' scored' : '') + ' · drop the same ZIP to keep going';
+  if (m) return keptSay(m) + (m.papers ? '' : ' · papers not kept');
+  return 'Opened ' + d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) + (data ? ' · ' + n + (fm ? ' feedback complete' : ' scored') : '') + ' · drop the same ZIP to keep going';
 }
 /* ---------------- where she is: every screen has its own address, the part after # ---------------- */
 const routeOf = hash => {
@@ -10188,11 +10189,13 @@ function showScreen(r) {
   if (grading) tabShow(r); else if (dlgPage) dlgShut();
 }
 function keptState(m) {
-  const of = Math.max(0, (m.n || 0) - (m.off || 0)), done = Math.min(of, m.scored || 0), left = of - done;
-  return { of, done, left, pct: of ? Math.round(done / of * 100) : 0, label: !of ? '' : !left ? (m.ret ? 'Returned' : 'Ready to return') : done || m.partial ? 'Scoring' : 'Not started', cls: !of ? '' : !left ? (m.ret ? 'ret' : 'ok') : done || m.partial ? 'on' : '' };
+  const it = typeof cardOfKept === 'function' ? cardOfKept(m.id) : null, fm = !!it && it.type === 'fm';
+  const of = Math.max(0, (m.n || 0) - (m.off || 0)), done = Math.min(of, (fm ? m.fb : m.scored) || 0), left = of - done, began = done || (!fm && m.partial);
+  return { of, done, left, fm, word: fm ? 'feedback complete' : 'scored', pct: of ? Math.round(done / of * 100) : 0, label: !of ? '' : !left ? (m.ret ? 'Returned' : 'Ready to return') : began ? (fm ? 'Giving feedback' : 'Scoring') : 'Not started', cls: !of ? '' : !left ? (m.ret ? 'ret' : 'ok') : began ? 'on' : '' };
 }
+const keptSay = (m, st = keptState(m)) => st.done + ' of ' + st.of + ' ' + st.word + (st.fm ? (m.off ? ' · ' + m.off + ' missing or excused' : '') : keptMore(m));
 const stateChip = st => st.label ? '<span class="schip ' + st.cls + '">' + st.label + '</span>' : '';
-const stateBar = st => st.of ? '<span class="sbar" role="img" aria-label="' + st.done + ' of ' + st.of + ' scored"><i style="width:' + st.pct + '%"></i></span>' : '';
+const stateBar = st => st.of ? '<span class="sbar" role="img" aria-label="' + st.done + ' of ' + st.of + ' ' + st.word + '"><i style="width:' + st.pct + '%"></i></span>' : '';
 function renderLib() {
   renderKept();
   const card = it => {
@@ -10599,8 +10602,20 @@ const kget = (name, k) => kdo(name, 'readonly', o => o.get(k)).catch(() => null)
 let keptMeta = new Map();
 async function loadKept() {
   try { const all = await kdo('meta', 'readonly', o => o.getAll()); keepOk = true; keptMeta = new Map((all || []).map(m => [m.id, m])); } catch { keptMeta = new Map(); }
+  await keptFbCounts();
   if (!batch) renderLib();
   renderBackup();
+}
+async function keptFbCounts() {
+  for (const m of keptMeta.values()) {
+    if (m.fb != null || !m.n) continue;
+    const it = cardOfKept(m.id); if (!it || it.type !== 'fm') continue;
+    try {
+      const work = await kget('work', m.id), fb = work && workCounts(work).fb; if (!fb) continue;   // none complete: nothing to store
+      const n = { ...m, fb };
+      await kdo('meta', 'readwrite', o => o.put(n, m.id)); keptMeta.set(m.id, n);
+    } catch (e) { console.error(e); }
+  }
 }
 let askedKeep = false;
 function askToKeep() {   // asks the browser not to clear this site's storage when the disk gets full
@@ -10663,7 +10678,8 @@ async function keepPapers(b, label, list, again) {
 }
 let keepT = null;
 function keepWork(b, data) {
-  const m = { ...(keptMeta.get(b.id) || { id: b.id, name: b.name }), n: b.students.length, t: data.t, ...workCounts(data) };
+  const m = { ...(keptMeta.get(b.id) || { id: b.id, name: b.name }), n: b.students.length, t: data.t };
+  delete m.fb; Object.assign(m, workCounts(data));   // fb is there only while some feedback is complete
   if (!data.returned) delete m.ret;
   keptMeta.set(b.id, m);
   return kdo('work', 'readwrite', o => o.put(data, b.id)).then(() => kdo('meta', 'readwrite', o => o.put(m, b.id))).then(() => { keepOk = true; return true; })
@@ -14016,6 +14032,7 @@ function triesSay(g) {
 }
 function gradesSummary() {
   const all = batch.students, on = all.filter(s => !noScore(s)), nOff = all.length - on.length, nPart = on.filter(s => gradeOf(s).partial).length;
+  if (typeof fmNow === 'function' && fmNow()) return on.filter(s => s.grade.fb).length + ' of ' + on.length + ' feedback complete' + (nOff ? ' · ' + nOff + ' missing or excused' : '');
   return on.filter(s => gradeOf(s).done).length + ' of ' + on.length + ' scored' + (nPart ? ' · ' + nPart + ' partial' : '') + (nOff ? ' · ' + nOff + ' missing or excused' : '');
 }
 const gradesAsk = text => askDlg(text, { ok: 'Copy anyway', cancel: 'Don’t copy' });
@@ -18481,14 +18498,16 @@ function mergeEdits(aEd = {}, bEd = {}, work, rows, prefer) {
 }
 function workCounts(work) {
   const su = work.setup || {}, s = work.s || {}, read = work.read || {}, blank = v => v == null || v === '';
-  const out = { scored: 0, partial: 0, off: 0 };
+  const out = { scored: 0, partial: 0, off: 0, fb: 0 };   // fb: Feedback complete switched on, what a formative activity counts in place of scores
   for (const k of new Set([...Object.keys(s), ...Object.keys(read)])) {
     const g = (s[k] && s[k].g) || {}, r = g.rubric || [], rows = su.criteria ? su.criteria.map((_, i) => r[i]) : r, on = rows.filter(v => v != null).length;
+    if (g.status !== 'missing' && g.status !== 'excused' && g.fb) out.fb++;
     if (g.status === 'missing' || g.status === 'excused') out.off++;
     else if (su.mode === 'points' ? !blank(g.points) && !isNaN(+g.points) : on === rows.length && on) out.scored++;
     else if (su.mode !== 'points' && on) out.partial++;
     else if ((!blank(g.sheet) && !isNaN(+g.sheet)) || read[k]) out.scored++;
   }
+  if (!out.fb) delete out.fb;   // kept only when there is some, so work with no Feedback complete is stored as before
   if (work.returned) out.ret = work.returned.t;   // the marked files went back to the students
   return out;
 }
@@ -18497,6 +18516,7 @@ function metaFor(ma, mb, work, id) {
   if (!m.name) m.name = 'A download';   // work from before the list of downloads was kept says nothing about its name
   if (work) {
     m.t = work.t || m.t;
+    delete m.fb;
     Object.assign(m, workCounts(work));
     if (!work.returned) delete m.ret;
     m.n = Math.max(m.n || 0, Object.keys(work.s || {}).length);
@@ -24857,15 +24877,15 @@ const keptName = m => m.papers ? '<button class="kname" data-kopen="' + esc(m.id
 function markRow(m, prim) {
   const st = keptState(m), w = keptWhere(m), fm = w.it && w.it.type === 'fm', began = st.done || m.partial;
   const sub = [w.cls ? w.cls.name : '', w.it && w.it.due ? 'due ' + bkDay(w.it.due) : 'last worked on ' + fmtDay(m.t), m.papers ? '' : 'papers not kept, drop the download again'].filter(Boolean).join(' · ');
-  const say = fm ? 'Formative · feedback only' : began ? st.done + ' of ' + st.of + ' scored' + keptMore(m) : st.of + (st.of === 1 ? ' paper' : ' papers') + ', not started' + (m.off ? ' · ' + m.off + ' missing or excused' : '');
+  const say = fm ? 'Formative · feedback only' + (st.done ? ' · ' + keptSay(m, st) : st.of ? ' · ' + people(st.of, 'paper') + ', not started' : '') : began ? st.done + ' of ' + st.of + ' scored' + keptMore(m) : st.of + (st.of === 1 ? ' paper' : ' papers') + ', not started' + (m.off ? ' · ' + m.off + ' missing or excused' : '');
   return '<div class="krow"><div class="kn">' + keptName(m) + '<span class="ks">' + esc(sub) + '</span></div>' +
-    '<div class="kp">' + (fm ? '' : stateBar(st)) + '<span class="kl">' + esc(say) + '</span></div>' +
+    '<div class="kp">' + stateBar(st) + '<span class="kl">' + esc(say) + '</span></div>' +
     (m.papers ? '<button class="btn sm' + (prim ? ' primary' : '') + '" data-kopen="' + esc(m.id) + '">' + (began || fm ? 'Continue' : 'Start') + '</button>' : '<span></span>') + keptDots(m) + '</div>';
 }
 function oldRow(m) {
   const st = keptState(m), w = keptWhere(m), stale = m.newer && keptMeta.has(m.newer);
   const sub = [w.cls ? w.cls.name : '', stale ? 'an older copy: your work went on in a newer one' : m.ret ? 'returned ' + fmtDay(m.ret) : 'last worked on ' + fmtDay(m.t),
-    st.of ? st.done + ' of ' + st.of + ' scored' + keptMore(m) : '', m.papers ? '' : 'papers not kept, drop the download again'].filter(Boolean).join(' · ');
+    st.of ? keptSay(m, st) : '', m.papers ? '' : 'papers not kept, drop the download again'].filter(Boolean).join(' · ');
   return '<div class="krow old"><div class="kn">' + keptName(m) + '<span class="ks">' + esc(sub) + '</span></div>' + keptDots(m) + '</div>';
 }
 const homeStat = new Map();
@@ -24896,7 +24916,7 @@ function backHtml(list, prim) {
   if (!list.length) return '';
   return '<h2 class="tcap">Ready to hand back</h2><div class="tcard">' + list.map(m => {
     const st = keptState(m), w = keptWhere(m), s = statOf(m);
-    const sub = [w.cls ? w.cls.name : '', (st.of === 1 ? 'the one paper' : 'all ' + st.of) + ' scored', s && s.avg != null ? 'average ' + s.avg + '%' : '', m.papers ? '' : 'papers not kept, drop the download again'].filter(Boolean).join(' · ');
+    const sub = [w.cls ? w.cls.name : '', (st.of === 1 ? 'the one paper' : 'all ' + st.of) + ' ' + st.word, s && s.avg != null ? 'average ' + s.avg + '%' : '', m.papers ? '' : 'papers not kept, drop the download again'].filter(Boolean).join(' · ');
     return '<div class="krow back"><div class="kn">' + keptName(m) + '<span class="ks">' + esc(sub) + '</span></div>' + keptDots(m) + (m.papers ? '<div class="kact"><a class="btn sm' + (prim && m === list.find(x => x.papers) ? ' primary' : '') + '" href="' + batchHash(m.id, 'return') + '" data-kret="' + esc(m.id) + '">Return papers</a></div>' : '') + '</div>';
   }).join('') + '</div>';
 }
@@ -25097,12 +25117,12 @@ function todoAuto() {
   if (!d.off.mark) for (const m of g.mark) {
     if (!m.papers) continue;
     const st = keptState(m), w = keptWhere(m), fm = w.it && w.it.type === 'fm', began = st.done || m.partial, name = m.name || 'Student work';
-    add('mark', 'mark:' + m.id, (fm ? 'Give feedback on ' : began ? 'Finish marking ' : 'Mark ') + name, [w.cls ? w.cls.name : '', fm ? 'feedback only' : began ? st.left + ' of ' + st.of + ' left' : people(st.of, 'paper') + ', not started'].filter(Boolean).join(' · '), w.cls, today, { label: began || fm ? 'Continue' : 'Start', open: m.id }, 'x');
+    add('mark', 'mark:' + m.id, (fm ? 'Give feedback on ' : began ? 'Finish marking ' : 'Mark ') + name, [w.cls ? w.cls.name : '', fm ? 'feedback only' + (st.done ? ' · ' + st.left + ' of ' + st.of + ' left' : '') : began ? st.left + ' of ' + st.of + ' left' : people(st.of, 'paper') + ', not started'].filter(Boolean).join(' · '), w.cls, today, { label: began || fm ? 'Continue' : 'Start', open: m.id }, 'x');
   }
   if (!d.off.back) for (const m of g.back) {
     if (!m.papers) continue;
     const st = keptState(m), w = keptWhere(m);
-    add('back', 'back:' + m.id, 'Hand back ' + (m.name || 'Student work'), [w.cls ? w.cls.name : '', (st.of === 1 ? 'the one paper' : 'all ' + st.of) + ' scored'].filter(Boolean).join(' · '), w.cls, today, { label: 'Return papers', href: batchHash(m.id, 'return') }, 'x');
+    add('back', 'back:' + m.id, 'Hand back ' + (m.name || 'Student work'), [w.cls ? w.cls.name : '', (st.of === 1 ? 'the one paper' : 'all ' + st.of) + ' ' + st.word].filter(Boolean).join(' · '), w.cls, today, { label: 'Return papers', href: batchHash(m.id, 'return') }, 'x');
   }
   if (!d.off.plan && plan) for (let i = 0; i < 4; i++) {
     const day = tdAdd(today, i); if ((plan.semStart && day < plan.semStart) || (plan.semEnd && day > plan.semEnd)) continue;
@@ -26704,9 +26724,9 @@ function findRows() {
   for (const c of holders()) for (const u of c.units) for (const it of u.items) {
     const m = it.batchId ? keptMeta.get(it.batchId) : null; if (it.batchId) carded.add(it.batchId);
     const here = batch && batch.id === it.batchId;
-    add('Assignments', it.name, (c === lib.loose ? 'No class' : c.name) + ' · ' + u.name + (here ? ' · open now' : m && m.papers ? ' · ' + keptState(m).done + ' of ' + keptState(m).of + ' scored' : ''), () => here ? null : m && m.papers ? reopenKept(it.batchId, it) : go(classHash(c)));
+    add('Assignments', it.name, (c === lib.loose ? 'No class' : c.name) + ' · ' + u.name + (here ? ' · open now' : m && m.papers ? ' · ' + keptSay(m) : ''), () => here ? null : m && m.papers ? reopenKept(it.batchId, it) : go(classHash(c)));
   }
-  for (const m of keptMeta.values()) if (!carded.has(m.id) && m.papers && !(batch && batch.id === m.id)) add('Assignments', m.name || 'A download', 'Kept in this browser · ' + keptState(m).done + ' of ' + keptState(m).of + ' scored', () => reopenKept(m.id));
+  for (const m of keptMeta.values()) if (!carded.has(m.id) && m.papers && !(batch && batch.id === m.id)) add('Assignments', m.name || 'A download', 'Kept in this browser · ' + keptSay(m), () => reopenKept(m.id));
   if (!batch) {
     add('Do', sysName() ? 'Open a ' + sysName() + ' download' : 'Open student work', sysName() ? 'The ZIP or PDFs' : 'A ZIP, PDFs, Word files or photos', press('#pickFiles'));
     add('Do', 'Open a folder of papers', '', press('#pickFolder'));

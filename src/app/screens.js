@@ -104,12 +104,16 @@ function showScreen(r) {
   if (grading) tabShow(r); else if (dlgPage) dlgShut();
 }
 // How far along a kept download is, in the same words everywhere: on Home, on a class page and in the sidebar's counts.
+// A formative activity (feedback only) counts the students whose feedback is complete, never scores.
 function keptState(m) {
-  const of = Math.max(0, (m.n || 0) - (m.off || 0)), done = Math.min(of, m.scored || 0), left = of - done;
-  return { of, done, left, pct: of ? Math.round(done / of * 100) : 0, label: !of ? '' : !left ? (m.ret ? 'Returned' : 'Ready to return') : done || m.partial ? 'Scoring' : 'Not started', cls: !of ? '' : !left ? (m.ret ? 'ret' : 'ok') : done || m.partial ? 'on' : '' };
+  const it = typeof cardOfKept === 'function' ? cardOfKept(m.id) : null, fm = !!it && it.type === 'fm';
+  const of = Math.max(0, (m.n || 0) - (m.off || 0)), done = Math.min(of, (fm ? m.fb : m.scored) || 0), left = of - done, began = done || (!fm && m.partial);
+  return { of, done, left, fm, word: fm ? 'feedback complete' : 'scored', pct: of ? Math.round(done / of * 100) : 0, label: !of ? '' : !left ? (m.ret ? 'Returned' : 'Ready to return') : began ? (fm ? 'Giving feedback' : 'Scoring') : 'Not started', cls: !of ? '' : !left ? (m.ret ? 'ret' : 'ok') : began ? 'on' : '' };
 }
+// "12 of 20 scored", or "12 of 20 feedback complete" on a formative activity.
+const keptSay = (m, st = keptState(m)) => st.done + ' of ' + st.of + ' ' + st.word + (st.fm ? (m.off ? ' · ' + m.off + ' missing or excused' : '') : keptMore(m));
 const stateChip = st => st.label ? '<span class="schip ' + st.cls + '">' + st.label + '</span>' : '';
-const stateBar = st => st.of ? '<span class="sbar" role="img" aria-label="' + st.done + ' of ' + st.of + ' scored"><i style="width:' + st.pct + '%"></i></span>' : '';
+const stateBar = st => st.of ? '<span class="sbar" role="img" aria-label="' + st.done + ' of ' + st.of + ' ' + st.word + '"><i style="width:' + st.pct + '%"></i></span>' : '';
 function renderLib() {
   renderKept();
   const card = it => {
