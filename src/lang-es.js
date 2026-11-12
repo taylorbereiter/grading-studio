@@ -136,6 +136,7 @@ const LANG_ES = {
     'Dark mode': 'Modo oscuro', 'Light mode': 'Modo claro', 'Display': 'Pantalla', 'Text size and zoom': 'Tamaño del texto y zoom',
     'Word papers': 'Trabajos de Word', 'Kept as Word files. They can be converted to PDF pages': 'Se conservan como archivos de Word. Se pueden convertir en páginas PDF', 'Converted to PDF pages as each assignment opens': 'Se convierten en páginas PDF al abrir cada tarea',
     'Tablet and pencil': 'Tableta y lápiz', 'What a finger does on the paper, and pencil pressure': 'Qué hace un dedo sobre la página, y la presión del lápiz',
+    'Name covers': 'Tapar nombres', 'You cover names yourself in Check the covers': 'Tú tapas los nombres en Revisar lo tapado', 'You cover names, and typed names are found too': 'Tú tapas los nombres, y además se buscan los nombres escritos a máquina',
     'All keys': 'Todas las teclas', 'Every keyboard shortcut': 'Todos los atajos de teclado',
     'Classes and rosters': 'Clases y listas', 'Terms and weights': 'Periodos y pesos', 'Your terms and how each type counts': 'Tus periodos y cuánto cuenta cada tipo',
     'Grading scale and rubrics': 'Escala de calificación y rúbricas', 'Your saved scales and rubrics': 'Tus escalas y rúbricas guardadas',

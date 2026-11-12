@@ -133,6 +133,7 @@ const LANG_ZH = {
     'Dark mode': '深色模式', 'Light mode': '淺色模式', 'Display': '顯示', 'Text size and zoom': '文字大小與縮放',
     'Word papers': 'Word 作業', 'Kept as Word files. They can be converted to PDF pages': '保留為 Word 檔。可以轉換成 PDF 頁面', 'Converted to PDF pages as each assignment opens': '每份作業開啟時轉換成 PDF 頁面',
     'Tablet and pencil': '平板與觸控筆', 'What a finger does on the paper, and pencil pressure': '手指在頁面上的作用，以及筆的壓力',
+    'Name covers': '遮蓋姓名', 'You cover names yourself in Check the covers': '你在「檢查遮蓋」中自己遮蓋姓名', 'You cover names, and typed names are found too': '你自己遮蓋姓名，也會自動找出打字的姓名',
     'All keys': '所有快速鍵', 'Every keyboard shortcut': '所有鍵盤快速鍵',
     'Classes and rosters': '班級與名單', 'Terms and weights': '學期與比重', 'Your terms and how each type counts': '你的學期，以及各類作業所占的比重',
     'Grading scale and rubrics': '評分等第與評分規準', 'Your saved scales and rubrics': '你儲存的評分等第與評分規準',
