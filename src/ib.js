@@ -81,7 +81,7 @@ function ibEvidence(list) {
 // A new class starts the way its teacher grades: MYP for a teacher who said so in the welcome or Settings, else points and percent.
 function classNewWay() { const g = meGrade(); return (g && g.way === 'myp') || /^\s*(ib\s*)?myp\b/i.test(me().prog || '') ? { way: 'myp' } : {}; }   // me().prog: the programme My setup brought in (setupin.js)
 function ibPill(c) { const w = classWay(c); return w ? '<span class="ibpill" title="' + (w === 'myp' ? 'This class is graded with IB MYP criteria' : 'This class is graded as an IB DP class') + '">' + (w === 'myp' ? 'MYP' : 'DP') + '</span>' : ''; }
-function ibClassBtn(c, ci) { return '<button class="btn sm" data-ib-class="' + ci + '">Grading</button>'; }
+function ibClassItem(c, ci) { return '<button class="mitem" data-ib-class="' + ci + '">Grading<small>Points and percent, or IB criteria</small></button>'; }
 
 // A DP class's term grade: the 1 to 7 its percent earns on the class's own boundaries, shown after the percent. '' for any other class.
 // With a student's name, the grade the teacher predicted for the term that is on follows it.
@@ -435,7 +435,7 @@ function ibPredCopy(c) {
   navigator.clipboard.writeText(rows.join('\n')).then(() => toast('Copied. Paste it into a spreadsheet' + (sysName() ? ' or ' + sysName() : '') + '.'), () => toast('Copying didn’t work in this browser.'));
 }
 document.addEventListener('click', e => {
-  const b = e.target.closest('#bkBody [data-ibpredopen], #bkBody [data-ibback], #bkBody [data-ibpred], #bkBody [data-ibpcopy]');
+  const b = e.target.closest('[data-ibpredopen], #bkBody [data-ibback], #bkBody [data-ibpred], #bkBody [data-ibpcopy]');
   if (!b) return; const c = bkClass(), d = b.dataset; if (!c || classWay(c) !== 'dp') return;
   if (d.ibpredopen != null) { ibk.view = 'pred'; return bkDraw(); }
   if (d.ibback != null) { ibk.view = 'table'; return bkDraw(); }

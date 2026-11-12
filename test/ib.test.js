@@ -4,7 +4,7 @@
 const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const { launch } = require('./helpers/chrome');
-const { openApp, classPage, goTo, openZip, score, settle, answerDlg, closeBox } = require('./helpers/app');
+const { openApp, classPage, goTo, openZip, score, settle, answerDlg, closeBox, pick } = require('./helpers/app');
 const { makePaper, zipOf } = require('./helpers/fixtures');
 const { ibSeed } = require('./helpers/ibseed');
 
@@ -57,7 +57,7 @@ test('a class is set to MYP, a criterion renamed and one boundary changed; the o
   const { page, close } = await openApp(browser, { seed: seed() });
   await classPage(page, 'c1');
   assert.equal(await page.$('.clshead .ibpill'), null);
-  await page.click('[data-ib-class="0"]'); await page.waitForSelector('#ibBody');
+  await pick(page, '[data-ib-class="0"]'); await page.waitForSelector('#ibBody');
   assert.equal(await page.$('#ibGroup'), null, 'points and percent shows no IB fields');
   await page.click('[data-ibway="myp"]'); await page.waitForSelector('#ibGroup');
   await page.select('#ibGroup', 'langacq');
@@ -77,7 +77,7 @@ test('a class is set to MYP, a criterion renamed and one boundary changed; the o
 test('three criteria get a scaled table, a boundary out of order is refused, and DP keeps its own percents', async () => {
   const { page, close } = await openApp(browser, { seed: seed() });
   await classPage(page, 'c1');
-  await page.click('[data-ib-class="0"]'); await page.waitForSelector('#ibBody');
+  await pick(page, '[data-ib-class="0"]'); await page.waitForSelector('#ibBody');
   await page.click('[data-ibway="myp"]'); await page.waitForSelector('#ibGroup');
   await page.select('#ibGroup', 'pp');
   assert.equal((await page.$$('[data-ibcrit]')).length, 3);
@@ -94,7 +94,7 @@ test('three criteria get a scaled table, a boundary out of order is refused, and
   assert.equal(c.way, 'dp'); assert.deepEqual(c.ib.bounds[0], [77, 7]);
   assert.equal(await page.$eval('.clshead .ibpill', e => e.textContent), 'DP');
   // back to points and percent: the pill goes, and what was typed is still there if the class comes back to IB
-  await page.click('[data-ib-class="0"]'); await page.waitForSelector('#ibBody');
+  await pick(page, '[data-ib-class="0"]'); await page.waitForSelector('#ibBody');
   await page.click('[data-ibway=""]'); await page.click('#dlgBox [data-ok]'); await shut(page);
   c = (await stored(page)).classes[0];
   assert.equal(c.way, undefined); assert.deepEqual(c.ib.bounds[0], [77, 7]);
@@ -377,7 +377,7 @@ test('a DP class weighs its components its own way, and no other class changes',
   const { page, close } = await openApp(browser, { seed: dpSeed() });
   await goTo(page, '#/class/c1/gradebook'); await page.waitForSelector('#bkTab');
   assert.deepEqual(await grades(page), ['61.50% 5', '75.00% 6']);   // the usual weights: 83% and 40%, 50% and 100%, each type half
-  await page.click('#vClass [data-ib-class]'); await page.waitForSelector('#ibComps [data-ibw]');
+  await pick(page, '[data-ib-class="0"]'); await page.waitForSelector('#ibComps [data-ibw]');
   assert.deepEqual(await page.$$eval('#ibComps [data-ibw]', xs => xs.map(x => x.dataset.ibw + ' ' + x.value)), ['ic 50', 'sum 50']);
   await type(page, '#ibComps [data-ibw="sum"]', '80'); await type(page, '#ibComps [data-ibw="ic"]', '20');
   await page.click('#dlgBox [data-ok]'); await shut(page);
@@ -390,7 +390,7 @@ test('a DP class weighs its components its own way, and no other class changes',
   assert.deepEqual(await grades(page), ['61.50%', '75.00%'], 'the points class keeps the usual weights');
   // every component at nothing is refused; the usual weights again leave nothing stored
   await goTo(page, '#/class/c1/gradebook'); await page.waitForSelector('#bkTab');
-  await page.click('#vClass [data-ib-class]'); await page.waitForSelector('#ibComps [data-ibw]');
+  await pick(page, '[data-ib-class="0"]'); await page.waitForSelector('#ibComps [data-ibw]');
   await type(page, '#ibComps [data-ibw="sum"]', '0'); await type(page, '#ibComps [data-ibw="ic"]', '0');
   await page.click('#dlgBox [data-ok]'); await page.waitForFunction(() => /At least one component/.test(document.body.textContent));
   await type(page, '#ibComps [data-ibw="sum"]', '50'); await type(page, '#ibComps [data-ibw="ic"]', '50');
@@ -401,8 +401,8 @@ test('a DP class weighs its components its own way, and no other class changes',
 
 test('predicted grades for a DP class: the worked-out grade is a hint, a click sets one and a second click clears it', async () => {
   const { page, close } = await openApp(browser, { seed: dpSeed() });
-  await goTo(page, '#/class/c1/gradebook'); await page.waitForSelector('#bkBody [data-ibpredopen]');
-  await page.click('#bkBody [data-ibpredopen]'); await page.waitForSelector('#ibPred');
+  await goTo(page, '#/class/c1/gradebook'); await page.waitForSelector('#bkTab');
+  await pick(page, '[data-ibpredopen]'); await page.waitForSelector('#ibPred');
   const rows = () => page.$$eval('#ibPred tbody tr', xs => xs.map(r => [r.cells[1].textContent, r.cells[2].textContent, (r.querySelector('.iblvl .hint') || {}).textContent || '', (r.querySelector('.iblvl .on') || {}).textContent || ''].join(' | ')));
   assert.deepEqual(await rows(), ['61.50% | 5 | 5 | ', '75.00% | 6 | 6 | ']);
   assert.equal((await stored(page)).classes[0].pred, undefined, 'the hint sets nothing');
@@ -420,8 +420,8 @@ test('predicted grades for a DP class: the worked-out grade is a hint, a click s
   const ny = await page.evaluate(() => { const G = window.__gs, old = JSON.parse(localStorage.getItem('gs.lib')); old.classes[0].ib.w = { sum: 80, ic: 20 };
     const c = G.nyLib(old, {}, { from: '2026–27', to: '2027–28', dates: false, roster: true, file: 'f.gswork' }).classes[0]; return [c.way, c.ib.w, 'pred' in c]; });
   assert.deepEqual(ny, ['dp', { sum: 80, ic: 20 }, false]);
-  await goTo(page, '#/class/c1/gradebook'); await page.waitForSelector('#bkBody [data-ibpredopen]');
-  await page.click('#bkBody [data-ibpredopen]'); await page.waitForSelector('#ibPred');
+  await goTo(page, '#/class/c1/gradebook'); await page.waitForSelector('#bkTab');
+  await pick(page, '[data-ibpredopen]'); await page.waitForSelector('#ibPred');
   await page.click('#ibPred [data-ibpred="1:7"]'); await page.waitForFunction(() => !document.querySelector('#ibPred .iblvl .on'));
   assert.equal((await stored(page)).classes[0].pred.t1['Bram Sample'].g, undefined);
   assert.equal(await page.evaluate(() => window.__gs.ibPredOf(window.__gs.state().lib.classes[0], 'Bram Sample', 't1')), null);

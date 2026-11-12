@@ -388,7 +388,7 @@ function renderWeek() {
         h += '<div class="ls-slot" style="--cc:' + esc(c.color || '#1F6FB2') + '"><div class="ls-sh"><b>' + esc(c.name) + '</b><span>' + hm(m.start) + '–' + hm(m.end) + (m.label ? ' · ' + esc(m.label) : '') + '</span>' + mbBtn(c) + '</div>';
         for (const l of ls) h += '<div class="ls-cardw"><button class="ls-card" data-open="' + l.id + '"><b>' + esc(l.title) + '</b>' + varTag(l) + statusChip(l) + (l.final ? '<span class="pl-done" title="' + esc(l.final.name) + '">Finished ✓</span>' : '') + taughtChip(l, c.id, d) + '<span>' + l.slides.length + ' slide' + (l.slides.length === 1 ? '' : 's') + (l.slots.length > 1 ? ' · also ' + esc(l.slots.filter(s => !(s.classId === c.id && s.date === d)).map(s => className(s.classId) + ' ' + shortDate(s.date)).join(', ')) : '') + '</span></button>' +
           presentCardBtn(l, c.id, d) + '<button class="ls-dl" data-dl="' + l.id + '" title="' + (l.final ? 'Download ' + esc(l.final.name) : 'Download a PowerPoint made from these slides') + '" aria-label="Download">↓</button></div>';
-        h += '<div class="ls-add"><button class="btn sm ghost" data-new="' + esc(c.id) + '|' + d + '">+ New lesson</button>' + (L.lessons.length ? '<button class="btn sm ghost" data-attach="' + esc(c.id) + '|' + d + '">Use a lesson…</button>' : '') + '</div></div>';
+        h += '<div class="ls-add' + (ls.length ? ' has' : '') + '"><button class="btn sm ghost" data-new="' + esc(c.id) + '|' + d + '">+ New lesson</button>' + (L.lessons.length ? '<button class="btn sm ghost" data-attach="' + esc(c.id) + '|' + d + '">Use a lesson…</button>' : '') + '</div></div>';
       }
       h += '</div>';
     }
@@ -1238,7 +1238,8 @@ never are, and nothing here should point to a student.
   are in the folder next to it with the same name plus " files".
 - \`activities.json\`: the teacher's own activities, a list of { "name", "what", "kind" (talk, read, write,
   words, move, check), "parts" (warmup, activity, review), "group", "how": [steps for the teacher],
-  "slide": [steps for students] }. Add or edit entries here; the built-in bank isn't in this file.
+  "slide": [steps for students], "video" (optional: a web address of a video showing it in a classroom) }.
+  Add or edit entries here; the built-in bank isn't in this file.
 
 ## Lesson shape
 {

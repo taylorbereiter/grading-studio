@@ -5,7 +5,7 @@ const assert = require('node:assert/strict');
 const fs = require('fs'), os = require('os'), path = require('path');
 const fflate = require('fflate');
 const { launch } = require('./helpers/chrome');
-const { classPage, openApp } = require('./helpers/app');
+const { classPage, openApp, pick } = require('./helpers/app');
 
 let browser;
 before(async () => { browser = await launch(); });
@@ -39,7 +39,7 @@ async function openImport(page) {
   await page.waitForSelector('[data-book="c1"]');
   await page.click('[data-book="c1"]');
   await page.waitForSelector('[data-bkimport]');
-  await page.click('[data-bkimport]');
+  await pick(page, '[data-bkimport]');
   await page.waitForSelector('#bkImp');
 }
 const paste = (page, text) => page.evaluate(t => { const el = document.querySelector('#bkiPaste'), dt = new DataTransfer(); dt.setData('text/plain', t); el.dispatchEvent(new ClipboardEvent('paste', { clipboardData: dt, bubbles: true, cancelable: true })); }, text);
@@ -117,7 +117,7 @@ test('a column named like an assignment already there adds to it, keeps what’s
   assert.deepEqual(its.find(x => x.id === 'i1').typed, { max: 20, s: { 'Cleo Fixture': { v: 12, st: '' } } });
   assert.match(await page.$eval('[data-bkn="Aria Testwell"][data-bked="i2"]', e => e.textContent), /90%/);
   // Again, this time using the file's scores.
-  await page.click('[data-bkimport]'); await page.waitForSelector('#bkImp');
+  await pick(page, '[data-bkimport]'); await page.waitForSelector('#bkImp');
   await paste(page, 'Student,Poetry test\nAria Testwell,24\n');
   await page.waitForSelector('#bkiClash');
   await page.click('[data-bkikeep="file"]');

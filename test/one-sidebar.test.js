@@ -348,15 +348,15 @@ test('Settings is one page per subject, each with its own address', async () => 
   const { page, close } = await openApp(browser, { seed: GRADING });
   const shown = () => page.$$eval('#setPane [data-sec]', els => els.filter(e => e.checkVisibility()).map(e => e.id));
   await goTo(page, '#/settings');
-  assert.deepEqual(await page.$$eval('#setNav .setlink b', b => b.map(x => x.textContent)), ['Saving and carrying', 'Go back in time', 'My setup', 'Classes and rosters', 'Terms and weights', 'Grading scale and rubrics', 'Marking', 'Timetable and calendar', 'Display', 'Working with AI', 'Keys', 'About and updates']);
-  assert.deepEqual(await shown(), ['setSaving', 'setTake', 'setYear', 'setRemove']);
-  assert.equal(await page.$eval('#setNav .setlink.on', a => a.textContent), 'Saving and carryingFolder, take-home file, new school year');
+  assert.deepEqual(await page.$$eval('#setNav .setlink b', b => b.map(x => x.textContent)), ['Saving and carrying', 'Classes and timetable', 'Grades', 'Marking', 'Working with AI', 'Display and keys', 'About and updates']);
+  assert.deepEqual((await shown()).filter(x => x !== 'setMoving'), ['setSaving', 'setTake', 'setYear', 'setRemove', 'setHistory']);
+  assert.equal(await page.$eval('#setNav .setlink.on', a => a.textContent), 'Saving and carryingFolder, take-home file, earlier days, new school year');
   assert.equal(await page.title(), 'Settings · Grading Studio');
   // classes: counts, never names
   await page.click('#setNav [data-set="classes"]');
   assert.equal(await page.evaluate(() => location.hash), '#/settings/classes');
-  assert.deepEqual(await shown(), ['setClasses', 'setSys', 'setAtt']);
-  assert.equal(await page.title(), 'Classes and rosters · Settings · Grading Studio');
+  assert.deepEqual(await shown(), ['setClasses', 'setSys', 'setAtt', 'setTimetable']);
+  assert.equal(await page.title(), 'Classes and timetable · Settings · Grading Studio');
   assert.deepEqual(await page.$$eval('#setClasses .setrow .nt', r => r.map(x => x.textContent)), ['Course A-14 students · No ManageBac link', 'CourseA21 student · No ManageBac link']);
   assert.ok(!(await page.$eval('#vSettings', e => e.textContent)).includes('Testwell'), 'no student names in Settings');
   await page.click('#setClasses [data-setcls="1"]'); await page.waitForSelector('#cName');
@@ -368,27 +368,27 @@ test('Settings is one page per subject, each with its own address', async () => 
   await page.click('#setClasses [data-setadd]'); await page.waitForSelector('#cName'); await closeBox(page, '#dlgBox [data-cancel]');
   // terms and weights: what is set, and the same Term setup as the gradebook's
   await goTo(page, '#/settings/terms');
-  assert.deepEqual(await shown(), ['setTerms']);
+  assert.deepEqual(await shown(), ['setTerms', 'setWay', 'setGrading']);
   assert.match(await page.$eval('#setTerms', e => e.textContent), /Term 1Aug 31 to Nov 20.*In-class assessments 50% · Summative assessments 50% · Formative activities 0%/);
   await page.click('#setTerms [data-setterms]'); await page.waitForSelector('#bkSetup');
   assert.match(await page.$eval('#bkSetup', e => e.textContent), /Term setup.*for all your classes/);
   await closeBox(page);
   // the rest
-  await goTo(page, '#/settings/grading'); assert.deepEqual(await shown(), ['setWay', 'setGrading']);
+  await goTo(page, '#/settings/grading'); assert.deepEqual(await shown(), ['setTerms', 'setWay', 'setGrading']);
   await page.waitForFunction(() => /0 saved rubrics and 0 saved grading scales/.test(document.querySelector('#setGrading').textContent));
   assert.equal(await page.$eval('#setGrading a.btn', a => a.getAttribute('href')), 'planner.html#rubrics');
   await goTo(page, '#/settings/marking'); assert.deepEqual(await shown(), ['setMarking', 'setInks', 'setPapers', 'setNames', 'setTouch']);
-  await goTo(page, '#/settings/timetable'); assert.deepEqual(await shown(), ['setTimetable']);
+  await goTo(page, '#/settings/timetable'); assert.deepEqual(await shown(), ['setClasses', 'setSys', 'setAtt', 'setTimetable']);
   await page.waitForFunction(() => /No timetable in this browser yet/.test(document.querySelector('#setTimetable').textContent));
   assert.equal(await page.$eval('#setTimetable a.btn', a => a.textContent), 'Set up the timetable');
-  await goTo(page, '#/settings/display'); assert.deepEqual(await shown(), ['setDisplay', 'setLang']);
-  await goTo(page, '#/settings/claude'); assert.deepEqual(await shown(), ['setClaude']);
-  await goTo(page, '#/settings/keys'); assert.deepEqual(await shown(), ['setKeys']);
+  await goTo(page, '#/settings/display'); assert.deepEqual(await shown(), ['setDisplay', 'setLang', 'setKeys']);
+  await goTo(page, '#/settings/claude'); assert.deepEqual(await shown(), ['setSetupIn', 'setSetupOut', 'setClaude']);
+  await goTo(page, '#/settings/keys'); assert.deepEqual(await shown(), ['setDisplay', 'setLang', 'setKeys']);
   // a refresh stays on the section; Back walks the sections; an address that names no section is the first one
   await page.reloadHere(); await appReady(page);
-  assert.equal(await page.evaluate(() => location.hash), '#/settings/keys'); assert.deepEqual(await shown(), ['setKeys']);
-  await page.goBack(); await page.waitForFunction(() => location.hash === '#/settings/claude'); assert.deepEqual(await shown(), ['setClaude']);
-  await goTo(page, '#/settings/nothing-here'); assert.deepEqual(await shown(), ['setSaving', 'setTake', 'setYear', 'setRemove']);
+  assert.equal(await page.evaluate(() => location.hash), '#/settings/keys'); assert.deepEqual(await shown(), ['setDisplay', 'setLang', 'setKeys']);
+  await page.goBack(); await page.waitForFunction(() => location.hash === '#/settings/claude'); assert.deepEqual(await shown(), ['setSetupIn', 'setSetupOut', 'setClaude']);
+  await goTo(page, '#/settings/nothing-here'); assert.deepEqual((await shown()).filter(x => x !== 'setMoving'), ['setSaving', 'setTake', 'setYear', 'setRemove', 'setHistory']);
   // Find anything goes to a section
   const labels = await page.evaluate(() => window.__gs.findRows().filter(r => r.group === 'Settings').map(r => r.label));
   for (const want of ['Classes and rosters', 'Terms and weights', 'Grading scale and rubrics', 'Marking', 'Timetable and calendar', 'Working with AI']) assert.ok(labels.includes(want), want);

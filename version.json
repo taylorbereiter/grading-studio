@@ -1,11 +1,11 @@
 {
- "version": "1.27.32",
- "build": "9fa9b2d95ecd",
+ "version": "1.27.35",
+ "build": "e94b058da397",
  "notes": [
-  "IB MYP classes: report comments are drafted from the levels you set and the 1 to 7, and a progress sheet shows each criterion’s level, the total, the grade and every task’s levels, with no percent. A new year keeps a class’s criteria and boundaries and leaves the students’ levels behind. My setup now brings an MYP teacher in as IB MYP criteria."
+  "IB DP classes: the Grading box now has Components, where each type of work (Paper 1, the internal assessment and so on) gets its own weight for that class alone. In the Gradebook, More has Predicted grades: click the 1 to 7 you predict for each student, with the grade the percent earns outlined as a hint. Predicted grades show in the gradebook and on progress sheets."
  ],
  "files": {
-  "index.html": "257e02255755b2ac76f50ce5ce5d3f6a124424f964c66e35772869c65ed0517d",
-  "planner.html": "d0b5d8a32d2a87c418073436881978d53db2af66fb66afd0ecb1f84660b74d17"
+  "index.html": "95aeb630f1a7fe0e5815125700764d64debfcafc29d32edae1530f00593c5eb1",
+  "planner.html": "13c81f7fece4e903f9bfd621b5b20ad73e9b46274d887dcb905d110cec238289"
  }
 }

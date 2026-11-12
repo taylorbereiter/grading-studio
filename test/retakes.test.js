@@ -137,7 +137,7 @@ test('a typed-in score takes a retake as "14 > 18", and Term setup holds the rul
   await page.waitForFunction(() => /retake/.test(document.querySelector('#bkTab tbody tr:nth-child(1)').textContent));
   assert.match(await rowText(page, 1), /Aria Testwell80% retake/);
   for (const [rule, a, b] of [['avg', '70%', '80%'], ['last', '60%', '90%'], ['high', '80%', '90%']]) {
-    await page.click('[data-bksetup]');
+    await pick(page, '[data-bksetup]');
     await page.waitForSelector('[data-bkretake]');
     await page.click('[data-bkretake="' + rule + '"]');
     await page.click('[data-bksavesetup]');

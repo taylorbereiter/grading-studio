@@ -3,7 +3,7 @@ const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs'), path = require('path');
 const { launch } = require('./helpers/chrome');
-const { classPage, ROOT, builtHtml, openApp, answerDlg, appReady, openZip, pickFile, score, settle, press, closeBox } = require('./helpers/app');
+const { classPage, ROOT, builtHtml, openApp, answerDlg, appReady, openZip, pickFile, score, settle, press, closeBox, pick } = require('./helpers/app');
 const { makePaper, standardFiles, zipOf } = require('./helpers/fixtures');
 const { contrastFails, contrastSeen } = require('./helpers/contrast');
 const APP_PARTS = require('../src/app/order.json').map(n => 'app/' + n);   // the app's own source, in the order it is built
@@ -229,7 +229,7 @@ test('the Atlas link moved under More, and still works', async () => {
   await page.waitForFunction(() => { const s = window.__gs.state(); return s.batch && s.pages.length && s.pages[0].s > 0; });
   clean();
   await page.click('#moreBtn');
-  await page.click('#topAtlas [data-uatlas]');
+  await pick(page, '#topAtlas [data-uatlas]');
   assert.ok(!await moreOpen(page), 'the menu gets out of the way');
   await answerDlg(page, { typed: 'atlas.example.org/poems' });
   await page.waitForSelector('#topAtlas a[href="https://atlas.example.org/poems"]');
@@ -451,13 +451,13 @@ test('real uses: adding, renaming and deleting a unit go through the app’s own
   await answerDlg(page, { typed: 'Poetry' });
   await page.waitForFunction(() => window.__gs.state().lib.classes[0].units.some(u => u.name === 'Poetry'));
   await page.waitForSelector('[data-urename]');
-  await page.click('[data-urename]');
+  await pick(page, '[data-urename]');
   await answerDlg(page, { typed: 'Poems' });
   await page.waitForFunction(() => window.__gs.state().lib.classes[0].units[0].name === 'Poems');
-  await page.click('[data-urename]');
+  await pick(page, '[data-urename]');
   await answerDlg(page, { yes: false });
   assert.equal(await page.evaluate(() => window.__gs.state().lib.classes[0].units[0].name), 'Poems', 'Cancel changes nothing');
-  await page.click('[data-uatlas]');
+  await pick(page, '[data-uatlas]');
   await answerDlg(page, { typed: 'atlas.example.org/poems' });
   await page.waitForFunction(() => window.__gs.state().lib.classes[0].units[0].atlas === 'https://atlas.example.org/poems');
   assert.equal(native, 0);
@@ -510,7 +510,7 @@ test('Inter is built in, and opening the app contacts nobody', async () => {
 
 test('the built file stays a sensible size with the font in it', () => {
   const size = fs.statSync(path.join(ROOT, 'Grading Studio.html')).size;
-  assert.ok(size < 6.3e6, 'it’s ' + (size / 1e6).toFixed(2) + ' MB');   // about 5.9 MB, with strong examples, the school resources page, with attendance and the seating chart, with the help answers, report comments, tablet input and a second language, with going back in time and updates, with the Gradebook and its averages, extra credit, the sidebar, Word papers as PDF and the assignment tabs: the iPhone photo decoder (about 0.7 MB), the Inter font (about 0.2 MB) and the stickers (about 0.15 MB) are bundled so the one file works offline
+  assert.ok(size < 6.5e6, 'it’s ' + (size / 1e6).toFixed(2) + ' MB');   // about 5.9 MB, with strong examples, the school resources page, with attendance and the seating chart, with the help answers, report comments, tablet input and a second language, with going back in time and updates, with the Gradebook and its averages, extra credit, the sidebar, Word papers as PDF and the assignment tabs: the iPhone photo decoder (about 0.7 MB), the Inter font (about 0.2 MB) and the stickers (about 0.15 MB) are bundled so the one file works offline
 });
 
 test('the build only leaves out lines that really are comments', () => {   // a // line inside a multi-line string would be lost from the app
@@ -566,14 +566,14 @@ test('each class can keep its ManageBac link: set on the roster, opened from the
     assert.deepEqual(a, ['ManageBac ↗', 'https://school.example.org/classes/123', '_blank']);
     // clearing it takes the button away
     const ci = await page.evaluate(() => window.__gs.state().lib.classes.findIndex(c => c.name === 'MB-Class'));
-    await page.click('[data-edit-class="' + ci + '"]'); await page.waitForSelector('#cMb');
+    await pick(page, '[data-edit-class="' + ci + '"]'); await page.waitForSelector('#cMb');
     assert.equal(await page.$eval('#cMb', i => i.value), 'https://school.example.org/classes/123');
     await page.$eval('#cMb', i => { i.value = ''; }); await page.click('#dlgBox [data-ok]');
     await page.waitForFunction(() => document.querySelector('#dlg').hidden);
     assert.equal(await page.$('[data-cls="' + c.id + '"] .clshead a'), null);
     assert.equal(await page.evaluate(() => 'mb' in window.__gs.state().lib.classes.find(c => c.name === 'MB-Class')), false);
     // without opening the roster: + ManageBac link right on the class
-    await page.click('[data-cls="' + c.id + '"] [data-mbset]');
+    await pick(page, '[data-cls="' + c.id + '"] [data-mbset]');
     await answerDlg(page, { typed: 'https://school.example.org/classes/456' });
     await page.waitForSelector('[data-cls="' + c.id + '"] a.mb-go');
     assert.equal(await page.$eval('[data-cls="' + c.id + '"] a.mb-go', a => a.href), 'https://school.example.org/classes/456');

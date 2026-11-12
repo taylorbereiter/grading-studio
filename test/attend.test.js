@@ -31,8 +31,8 @@ const copies = page => page.evaluate(() => { window.__copied = null; navigator.c
 test('a day is taken with one press for each student who isn’t present, and every press is saved', async () => {
   const { page, close } = await openApp(browser, { seed: seed() });
   await classPage(page, 'c1');
-  assert.deepEqual(await page.$$eval('.ctabs .ctab', xs => xs.map(x => x.textContent)), ['Assignments', 'Gradebook', 'Students', 'Attendance', 'Seating', 'Missing work', 'Charts', 'Report comments']);
-  await page.click('[data-ctab="attendance"]'); await page.waitForSelector('#attList');
+  assert.deepEqual(await page.$$eval('.ctabs .ctrow a', xs => xs.map(x => x.textContent)), ['Attendance', 'Seating', 'Missing work', 'Charts', 'Report comments']);
+  await pick(page, '[data-ctab="attendance"]'); await page.waitForSelector('#attList');
   assert.equal(await hash(page), '#/class/c1/attendance');
   const today = await page.evaluate(() => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); });
   // today, not taken: everyone shows as present, nothing is saved, and one button says they are all here
@@ -159,7 +159,7 @@ test('attendance is the teacher’s to turn off: the tab, its address and Today�
   await page.waitForFunction(() => /2 days you saved are kept/.test(document.querySelector('#setAtt').textContent));
   assert.equal(await page.evaluate(() => window.__gs.attTodayLine({ name: 'Grade 9 English' })), '');
   await goTo(page, '#/class/c1/attendance'); await page.waitForSelector('.ctabs');
-  assert.deepEqual(await page.$$eval('.ctabs .ctab', xs => xs.map(x => x.textContent)), ['Assignments', 'Gradebook', 'Students', 'Seating', 'Missing work', 'Charts', 'Report comments']);
+  assert.deepEqual(await page.$$eval('.ctabs .ctrow a', xs => xs.map(x => x.textContent)), ['Seating', 'Missing work', 'Charts', 'Report comments']);
   assert.equal(await page.$('#attBody'), null, 'its address shows the class’s first tab');
   await goTo(page, '#/class/c1/students/4'); await page.waitForSelector('#bkStuName');
   assert.equal(await page.$('#attStu'), null);
@@ -177,7 +177,7 @@ test('attendance is the teacher’s to turn off: the tab, its address and Today�
 test('a student renamed on the roster keeps their days when their ID says who they are', async () => {
   const { page, close } = await openApp(browser, { seed: seed() });
   await classPage(page, 'c1');
-  await page.click('[data-edit-class="0"]'); await page.waitForSelector('#cNames');
+  await pick(page, '[data-edit-class="0"]'); await page.waitForSelector('#cNames');
   await page.$eval('#cNames', (t, v) => { t.value = v; t.dispatchEvent(new Event('input', { bubbles: true })); }, NAMES.map(n => n === 'Dov Madeup' ? 'Dov Renamed\t900104' : n).join('\n'));
   await page.click('#dlg .btn.primary'); await page.waitForFunction(() => window.__gs.state().lib.classes[0].names.includes('Dov Renamed'));
   assert.deepEqual((await att(page, '2026-09-01')).m, { 'Dov Renamed': 'a', 'Esme Placeholder': 'l' });

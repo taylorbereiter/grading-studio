@@ -216,10 +216,17 @@ function bkDraw() {
   const bar = '<div class="bkbar">' + (page ? (bk.tab === 'one' ? '<a class="btn sm" id="bkBackStu" href="' + classHash(c, 'students') + '">← Students</a>' : '') : '<label class="muted">Class <select class="btn sm" id="bkCls">' + lib.classes.map(k => '<option value="' + k.id + '"' + (k === c ? ' selected' : '') + '>' + esc(k.name) + '</option>').join('') + '</select></label>') +
     '<div class="ovtabs bkterms" role="group" aria-label="Term">' + tabs.map(([id, l]) => '<button data-bkterm="' + esc(id) + '" aria-selected="' + (bk.term === id) + '">' + esc(l) + '</button>').join('') + '</div><span class="sp"></span>' +
     (bk.tab === 'table' && bk.term !== '*' ? '<div class="pseg" role="group" aria-label="Columns">' + [['', 'Every assignment'], ['1', 'Averages only']].map(([v, l]) => '<button data-bkonly="' + v + '" aria-pressed="' + (bkOnly() === !!v) + '">' + l + '</button>').join('') + '</div>' +
-      (bkOnly() ? '' : '<div class="pseg" role="group" aria-label="Show">' + [['pct', 'Percent'], ['pts', 'Points']].map(([v, l]) => '<button data-bkshow="' + v + '" aria-pressed="' + (bk.show === v) + '">' + l + '</button>').join('') + '</div>') : '') +
+      '' : '') +
     (bk.tab === 'rep' && c.names.length ? rptBar() : '') + (bk.tab === 'miss' && c.names.length ? misBar() : '') +
-    (dp && bk.tab === 'table' && c.names.length ? '<button class="btn sm" data-ibpredopen title="The grade from 1 to 7 you predict for each student">Predicted grades</button>' : '') +
-    (tools ? '<button class="btn sm" data-bksetup>Term setup</button>' + (bk.tab === 'table' ? '<button class="btn sm" data-bkpickon aria-pressed="' + !!bk.pick + '" title="Leave students out of the class averages to see how it changes">' + (bk.pick ? 'Done' : 'Leave out…') + '</button><button class="btn sm" data-bkcopy>Copy table</button>' : '') + '<button class="btn sm" data-bkimport title="Scores from your old gradebook: a CSV or Excel file, or cells pasted">Import…</button><button class="btn sm" data-bkaddxc>+ Extra credit</button><button class="btn sm primary" data-bkadd>+ Add scores</button>' : '') + '</div>';
+    // One blue button, and one menu for what is used now and then. While students are being left out, Done stays in sight.
+    (tools ? (bk.pick ? '<button class="btn sm" data-bkpickon aria-pressed="true">Done</button>' : '') + '<button class="btn sm primary" data-bkadd>+ Add scores</button>' +
+      kmWrap('More <span aria-hidden="true">▾</span>', 'class="btn sm" id="bkMore"',
+        (dp && bk.tab === 'table' && c.names.length ? '<button class="mitem" data-ibpredopen>Predicted grades<small>The 1 to 7 you predict for each student</small></button>' : '') +
+        (bk.tab === 'table' && bk.term !== '*' && !bkOnly() ? '<button class="mitem" data-bkshow="' + (bk.show === 'pts' ? 'pct' : 'pts') + '">' + (bk.show === 'pts' ? 'Show percent' : 'Show points') + '<small>Now ' + (bk.show === 'pts' ? 'points' : 'percent') + '</small></button>' : '') +
+        '<button class="mitem" data-bksetup>Term setup<small>Terms, types and weights</small></button><hr>' +
+        '<button class="mitem" data-bkaddxc>Add extra credit…</button>' +
+        '<button class="mitem" data-bkimport>Import scores…<small>From your old gradebook: a CSV or Excel file, or cells pasted</small></button>' +
+        (bk.tab === 'table' ? '<button class="mitem" data-bkcopy>Copy the table</button>' + (bk.pick ? '' : '<hr><button class="mitem" data-bkpickon aria-pressed="false">Leave students out…<small>See the class averages without them</small></button>') : ''), 'right') : '') + '</div>';
   let main;
   if (!c.names.length) main = '<p class="muted bkpad">The gradebook lists the students on a class’s roster. Add a roster to ' + esc(c.name) + ' on its class page first.</p>';
   else if (bk.tab === 'class') main = myp ? ibClassView(c, cols, all) : bkClassView(c, cols, all, conf);   // an MYP class has levels, not percents (ib.js)
@@ -284,7 +291,7 @@ function bkTable(c, cols, conf) {
   });
   const inn = c.names.filter(bkIn), colAvg = col => { if (col.type === 'xc') { const k = inn.filter(x => col.cells.get(x)).length; return k + ' given'; } if (col.type === 'fm') { const k = inn.filter(x => (col.cells.get(x) || {}).fb).length; return k + '/' + inn.length; } const ps = inn.map(x => col.cells.get(x)).filter(bkCounts).map(x => x.pct); return ps.length ? pctAvgText(bkMean(ps)) : '–'; };
   h += '<tr class="bkfoot">' + bkFootName(c) + groups.map(g => g.cols.map(col => '<td>' + colAvg(col) + '</td>').join('')).join('') + ct.map(([t], j) => '<td class="bkavg bksum"' + bkStick(j, n) + '>' + bkClassAvg(grades, t) + '</td>').join('') + '<td class="bkterm bksum"' + bkStick(n, n) + '>' + bkClassAvg(grades, '') + '</td></tr></tbody></table></div>' +
-    '<p class="muted bkcap">Students are in your roster order. ' + (ct.length ? 'Each type’s average counts every assignment of that type the same; the ' + gradeName.toLowerCase() + ' weights them by your Term setup. ' : '') + 'Missing and Excused never count against a student. Point at a ' + gradeName.toLowerCase() + ' to see how it’s worked out' + (cols.some(x => x.type === 'xc') ? ', extra credit included' : '') + '.' + (only ? '' : ' Scores you typed in can be changed here; a graded download’s scores change in that download.') + '</p>';
+    '<details class="bkhow"><summary>How this is worked out</summary><p class="muted bkcap">Students are in your roster order. ' + (ct.length ? 'Each type’s average counts every assignment of that type the same; the ' + gradeName.toLowerCase() + ' weights them by your Term setup. ' : '') + 'Missing and Excused never count against a student. Point at a ' + gradeName.toLowerCase() + ' to see how it’s worked out' + (cols.some(x => x.type === 'xc') ? ', extra credit included' : '') + '.' + (only ? '' : ' Scores you typed in can be changed here; a graded download’s scores change in that download.') + '</p></details>';
   return h;
 }
 function bkWhy(n, r, conf) {
@@ -312,7 +319,7 @@ function bkYear(c, all, conf) {
     h += '<tr' + bkRowCls(n) + '>' + bkNameCell(n, i) + vals.map(vs => vs.map((v, j) => cell(v, keys[j])).join('')).join('') + yr.map((v, j) => keys[j] ? cell(v, keys[j]) : '<td class="bkterm"><b>' + (v != null ? pctAvgText(v) : '–') + '</b></td>').join('') + '</tr>';
   }
   h += '<tr class="bkfoot">' + bkFootName(c) + colv.map(a => a.map((vs, j) => '<td class="' + (keys[j] ? 'bkavg' : 'bkterm') + '">' + (vs.length ? pctAvgText(bkMean(vs)) : '–') + '</td>').join('')).join('') + '</tr></tbody></table></div>' +
-    '<p class="muted bkcap">The year is the average of the terms each student has a grade in, and each type’s year average is the average of their term averages for it.</p>';
+    '<details class="bkhow"><summary>How this is worked out</summary><p class="muted bkcap">The year is the average of the terms each student has a grade in, and each type’s year average is the average of their term averages for it.</p></details>';
   return h;
 }
 
