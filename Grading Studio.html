@@ -4203,7 +4203,7 @@ const LANG_ES = {
         'Un clic derecho sobre la página ofrece casi cualquier herramienta para un solo uso, y la herramienta que tenías sigue elegida.', 'Pulsa **?** para ver todas las teclas.'] },
     'comment': { q: '¿Cómo escribo un comentario en el trabajo?', words: 'nota margen comentarios anotar guardados banco',
       a: ['Elige **Comment** (C) y haz clic en el punto, o arrastra sobre palabras escritas a máquina para resaltarlas. Se abre un cuadro en el margen con una línea hasta el punto.',
-        'Haz clic fuera del cuadro para cerrarlo; lo que escribiste se conserva. Haz clic en el cuadro otra vez para cambiarlo. Arrastra la línea arriba o abajo para que pase entre renglones.',
+        'Pulsa Enter o haz clic fuera del cuadro para terminar; lo que escribiste se conserva. Mayús Enter empieza un renglón nuevo. Haz clic en el cuadro otra vez para cambiarlo o cambiar su color. Arrastra la línea arriba o abajo para que pase entre renglones, incluso antes de escribir.',
         'Los comentarios que usas a menudo se pueden guardar: **Saved comments**, bajo el cuadro de comentario del panel de notas.'] },
     'next-student': { q: '¿Cómo paso de un estudiante a otro?', words: 'siguiente anterior lista nombres tira navegar',
       a: ['Pulsa **Intro** o **N** para ir al siguiente trabajo que aún necesita nota. Las flechas junto al botón van al trabajo anterior y al siguiente.',
@@ -4572,7 +4572,7 @@ const LANG_ZH = {
         '在頁面上按右鍵，幾乎可以選用任何工具一次，原本選的工具不會改變。', '按 **?** 可以看到所有快速鍵。'] },
     'comment': { q: '怎麼在作業上寫評語？', words: '評語 註解 邊欄 回饋 已儲存 評語庫 comment',
       a: ['選擇 **Comment**（C），然後在要評論的位置按一下，或拖曳選取打字的文字來標示。邊欄會出現一個輸入框，並有一條線連到那個位置。',
-        '在輸入框外按一下就會關閉，寫好的內容會保留。再按一下輸入框可以修改。上下拖曳那條線，可以讓它從行與行之間穿過。',
+        '按 Enter 或在輸入框外按一下就會完成，寫好的內容會保留。按 Shift Enter 換行。再按一下輸入框可以修改內容或顏色。上下拖曳那條線，可以讓它從行與行之間穿過，還沒打字之前也可以。',
         '常用的評語可以存起來：在評分面板的評語框下方的 **Saved comments**。'] },
     'next-student': { q: '怎麼切換到下一位學生？', words: '下一位 上一位 名單 姓名 切換 瀏覽',
       a: ['按 **Enter** 或 **N** 前往下一份還需要評分的作業。按鈕旁的箭頭可以到上一份和下一份。',
@@ -4814,7 +4814,7 @@ const HELP = [
     words: 'pen highlighter draw write annotate circle eraser undo keys shortcuts' },
   { id: 'comment', sec: 'mark', q: 'How do I write a comment on the paper?',
     a: ['Pick **Comment** (C) and click the spot, or drag over typed words to highlight them. A box opens in the margin with a line to the spot.',
-      'Click off the box to close it; what you typed is kept. Click the box again to change it. Drag the line up or down so it runs between lines of writing.',
+      'Press Enter or click off the box to finish; what you typed is kept. Shift Enter starts a new line. Click the box again to change it or its color. Drag the line up or down so it runs between lines of writing, even before you type.',
       'Comments you use often can be saved: **Saved comments** under the comment box in the score panel.'],
     words: 'note margin feedback annotate saved comments bank' },
   { id: 'next-student', sec: 'mark', q: 'How do I move between students?',
@@ -6567,6 +6567,10 @@ function bindPage(pg) {
     if (e.button !== 0) return;
     if (g && e.pointerId !== gid && ptrLive.has(gid)) return;   // a second finger, or her hand, while a stroke is being drawn: the stroke goes on as it was
     gid = e.pointerId;
+    if (activeEditor && activeEditor.note && activeEditor.pg === pg && tool !== 'erase' && !once) {
+      const [x, y] = pt(e), own = noteLineAt(pg, x, y);
+      if (own === activeEditor.m) { e.preventDefault(); c.setPointerCapture(e.pointerId); g = { line: own, y0: y, ly0: noteRunY(own, pg.H), moved: false, open: activeEditor }; return; }
+    }
     const wasNote = !!(activeEditor && activeEditor.note);   // a comment was open: this click only closes it
     commitEditors();
     const ae = document.activeElement;
@@ -6610,7 +6614,7 @@ function bindPage(pg) {
     if (!g) { const [x, y] = pt(e), cu = hoverCursor(pg, x, y); c.style.cursor = cu || (tool === 'select' ? 'default' : tool === 'text' ? 'text' : 'crosshair'); return; }
     const [x, y] = pt(e);
     if (g.line) {
-      if (!g.moved) { if (Math.abs(y - g.y0) < 1.5) return; snap(pg); g.moved = true; }
+      if (!g.moved) { if (Math.abs(y - g.y0) < 1.5) return; if (!g.open) snap(pg); g.moved = true; }   // an open comment's line is kept with the comment's own step when it's done
       g.line.ly = r1(clamp(g.ly0 + y - g.y0, 2, pg.H - 2));
       pg.lineOn = g.line; draw(pg);
     } else if (g.text) {
@@ -6648,7 +6652,8 @@ function bindPage(pg) {
   const end = e => {
     if (!g || (e && e.pointerId != null && e.pointerId !== gid)) return;
     if (g.line) {
-      const m = g.line, moved = g.moved; g = null; pg.lineOn = null;
+      const m = g.line, moved = g.moved, open = g.open; g = null; pg.lineOn = null;
+      if (open) { if (moved && Math.abs(m.ly - m.ay) < 1) delete m.ly; draw(pg); if (activeEditor === open) open.ta.focus({ preventScroll: true }); return; }
       if (moved) { if (Math.abs(m.ly - m.ay) < 1) delete m.ly; changed(pg); } else draw(pg);
       return;
     }
@@ -6788,7 +6793,7 @@ function editText(pg, m, isNew) {
     fit(); ta.focus();
   });
   ta.addEventListener('keydown', e => {
-    if (e.key === 'Escape' || (e.key === 'Enter' && (e.metaKey || e.ctrlKey))) { e.preventDefault(); commitEditors(); }
+    if (e.key === 'Escape' || (e.key === 'Enter' && !e.shiftKey && !e.isComposing && e.keyCode !== 229)) { e.preventDefault(); commitEditors(); }   // as in a comment: Enter finishes, Shift Enter is a new line
     e.stopPropagation();
   });
   const me = { commit() {
@@ -6810,14 +6815,14 @@ function openNote(pg, m, isNew) {
   const s = pg.s;
   pop.innerHTML =
     '<div class="lbl">' + (isNew ? 'New comment' : 'Comment') + '</div>' +
-    '<textarea placeholder="Type a comment…"></textarea>' +
+    '<textarea placeholder="Type a comment… Enter to finish, Shift Enter for a new line"></textarea>' +
     noteSwatches(m) +
     '<div class="lbl" data-bank>My saved comments</div><div class="chips"></div>' +
     '<div class="row"><button class="btn sm" data-a="star" title="Keep this comment so you can reuse it">☆ Save for reuse</button><span class="sp"></span>' +
     (isNew ? '' : '<button class="btn sm" data-a="del">Delete</button>') +
     '<button class="btn sm primary" data-a="ok">Done</button></div>';
   const ta = pop.querySelector('textarea'); ta.value = m.text;
-  const was = { color: m.color, hc: m.hc };
+  const was = { color: m.color, hc: m.hc, ly: m.ly };
   const chips = () => {
     pop.querySelector('.chips').innerHTML = bank.map((t, i) => '<span class="chip" data-i="' + i + '"><span title="' + esc(t) + '">' + esc(t) + '</span><button data-x="' + i + '" title="Remove from saved comments" aria-label="Remove">×</button></span>').join('');
     pop.querySelector('[data-bank]').hidden = !bank.length;
@@ -6835,21 +6840,21 @@ function openNote(pg, m, isNew) {
   const close = save => {
     pop.remove(); activeEditor = null;
     if (pg.pending === m) pg.pending = null;
-    const text = ta.value.trim(), now = { color: m.color, hc: m.hc };
-    Object.assign(m, was); if (m.hc === undefined) delete m.hc;   // the step Ctrl Z goes back to holds the colors it had when it opened
+    const text = ta.value.trim(), now = { color: m.color, hc: m.hc, ly: m.ly };
+    Object.assign(m, was); for (const k of ['hc', 'ly']) if (m[k] === undefined) delete m[k];   // the step Ctrl Z goes back to holds the colors and line it had when it opened
     if (!save) { draw(pg); return; }
     const a = pg.marks(), i = a.indexOf(m);
     if (!text) { if (selected && selected.mark === m) selected = null; if (i >= 0) { snap(pg); a.splice(i, 1); changed(pg); } else draw(pg); return; }
-    const recolored = now.color !== was.color || now.hc !== was.hc;
+    const recolored = now.color !== was.color || now.hc !== was.hc || now.ly !== was.ly;
     if (text === m.text && i >= 0 && !recolored) { draw(pg); return; }
-    snap(pg); m.text = text; m.color = now.color; if (now.hc !== undefined) m.hc = now.hc; if (i < 0) a.push(m); changed(pg);
+    snap(pg); m.text = text; m.color = now.color; for (const k of ['hc', 'ly']) if (now[k] !== undefined) m[k] = now[k]; if (i < 0) a.push(m); changed(pg);
   };
-  activeEditor = { commit: () => close(true), note: true };
+  activeEditor = { commit: () => close(true), note: true, m, pg, ta };
   pop.addEventListener('pointerdown', e => e.stopPropagation());
   pop.addEventListener('keydown', e => {
     e.stopPropagation();
     if (e.key === 'Escape') { e.preventDefault(); close(false); }
-    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); close(true); }
+    if (e.key === 'Enter' && !e.shiftKey && !e.isComposing && e.keyCode !== 229) { e.preventDefault(); close(true); }   // Enter finishes it, Shift Enter is a new line; never while a Chinese or Japanese word is still being put together
   });
   pop.addEventListener('click', e => {
     const nc = e.target.closest('[data-nc]'), nh = e.target.closest('[data-nh]');
@@ -20053,7 +20058,7 @@ function qmKey(e) {
   if ($('#qmPeek')) { if (e.key === 'Escape' || e.key === ' ') { stop(); qmPeekClose(); } return; }
   if (e.target.closest('.qmned')) {   // typing a comment: Enter saves, Shift Enter is a new line, Esc leaves it as it was
     if (e.key === 'Escape') { stop(); qmNoteDone(e.target.closest('.qmc'), false); }
-    else if (e.key === 'Enter' && !e.shiftKey) { stop(); qmNoteDone(e.target.closest('.qmc'), true); }
+    else if (e.key === 'Enter' && !e.shiftKey && !e.isComposing && e.keyCode !== 229) { stop(); qmNoteDone(e.target.closest('.qmc'), true); }
     else e.stopPropagation();
     return;
   }
@@ -21057,7 +21062,7 @@ function wNotesPaint(w, page, aside) {
 function wNotePop(host, near, text, isNew, done) {
   for (const p of host.querySelectorAll('.pop')) p.remove();
   const pop = document.createElement('div'); pop.className = 'pop wpop';
-  pop.innerHTML = '<div class="lbl">' + (isNew ? 'New comment' : 'Comment') + '</div><textarea placeholder="Type a comment…"></textarea>' +
+  pop.innerHTML = '<div class="lbl">' + (isNew ? 'New comment' : 'Comment') + '</div><textarea placeholder="Type a comment… Enter to finish, Shift Enter for a new line"></textarea>' +
     '<div class="lbl" data-bank>My saved comments</div><div class="chips"></div>' +
     '<div class="row"><button class="btn sm" data-a="star" title="Keep this comment so you can reuse it">☆ Save for reuse</button><span class="sp"></span>' +
     (isNew ? '' : '<button class="btn sm" data-a="del">Delete</button>') + '<button class="btn sm primary" data-a="ok">Done</button></div>';
@@ -21079,7 +21084,7 @@ function wNotePop(host, near, text, isNew, done) {
   pop.addEventListener('keydown', e => {
     e.stopPropagation();
     if (e.key === 'Escape') { e.preventDefault(); close(null); }
-    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); close(ta.value.trim()); }
+    if (e.key === 'Enter' && !e.shiftKey && !e.isComposing && e.keyCode !== 229) { e.preventDefault(); close(ta.value.trim()); }   // Enter finishes, Shift Enter is a new line, as on a PDF paper
   });
   pop.addEventListener('click', e => {
     e.stopPropagation();

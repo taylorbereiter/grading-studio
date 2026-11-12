@@ -44,7 +44,7 @@ const HELP = [
     words: 'pen highlighter draw write annotate circle eraser undo keys shortcuts' },
   { id: 'comment', sec: 'mark', q: 'How do I write a comment on the paper?',
     a: ['Pick **Comment** (C) and click the spot, or drag over typed words to highlight them. A box opens in the margin with a line to the spot.',
-      'Click off the box to close it; what you typed is kept. Click the box again to change it. Drag the line up or down so it runs between lines of writing.',
+      'Press Enter or click off the box to finish; what you typed is kept. Shift Enter starts a new line. Click the box again to change it or its color. Drag the line up or down so it runs between lines of writing, even before you type.',
       'Comments you use often can be saved: **Saved comments** under the comment box in the score panel.'],
     words: 'note margin feedback annotate saved comments bank' },
   { id: 'next-student', sec: 'mark', q: 'How do I move between students?',

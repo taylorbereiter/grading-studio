@@ -242,7 +242,7 @@ const LANG_ES = {
         'Un clic derecho sobre la página ofrece casi cualquier herramienta para un solo uso, y la herramienta que tenías sigue elegida.', 'Pulsa **?** para ver todas las teclas.'] },
     'comment': { q: '¿Cómo escribo un comentario en el trabajo?', words: 'nota margen comentarios anotar guardados banco',
       a: ['Elige **Comment** (C) y haz clic en el punto, o arrastra sobre palabras escritas a máquina para resaltarlas. Se abre un cuadro en el margen con una línea hasta el punto.',
-        'Haz clic fuera del cuadro para cerrarlo; lo que escribiste se conserva. Haz clic en el cuadro otra vez para cambiarlo. Arrastra la línea arriba o abajo para que pase entre renglones.',
+        'Pulsa Enter o haz clic fuera del cuadro para terminar; lo que escribiste se conserva. Mayús Enter empieza un renglón nuevo. Haz clic en el cuadro otra vez para cambiarlo o cambiar su color. Arrastra la línea arriba o abajo para que pase entre renglones, incluso antes de escribir.',
         'Los comentarios que usas a menudo se pueden guardar: **Saved comments**, bajo el cuadro de comentario del panel de notas.'] },
     'next-student': { q: '¿Cómo paso de un estudiante a otro?', words: 'siguiente anterior lista nombres tira navegar',
       a: ['Pulsa **Intro** o **N** para ir al siguiente trabajo que aún necesita nota. Las flechas junto al botón van al trabajo anterior y al siguiente.',

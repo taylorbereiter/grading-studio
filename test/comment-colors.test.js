@@ -1,11 +1,12 @@
 // A comment's color can be changed after it is made: the ink (words and line) and, for a comment on highlighted
 // words, the highlight behind them. Typed text boxes get the same choice in their bar. One Ctrl Z takes it back.
+// A new comment's line can be dragged before anything is typed, and Enter finishes a comment (Shift Enter is a new line).
 // Made-up students only.
 const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const { PDFDocument, StandardFonts, rgb } = require('pdf-lib');
 const { launch } = require('./helpers/chrome');
-const { openApp, openZip, clickAt, setTool } = require('./helpers/app');
+const { openApp, openZip, at, clickAt, setTool } = require('./helpers/app');
 const { zipOf } = require('./helpers/fixtures');
 
 let browser, zip;
@@ -116,6 +117,66 @@ test('a typed text box can change color from its bar', async () => {
   await page.keyboard.press('Escape');
   assert.equal((await marks(page))[0].color, '#1F5FD1');
   assert.equal(await page.evaluate(() => localStorage.getItem('gs.ink')), null, 'the pen keeps its own color');
+  assert.deepEqual(page.errors, []);
+  await close();
+});
+
+test('a new comment\'s line can be dragged before typing; the box stays open, and Enter finishes it', async () => {
+  const { page, close } = await openApp(browser);
+  await open(page);
+  await setTool(page, 'note');
+  await clickAt(page, 0, 300, 140);
+  await page.waitForSelector('.pop textarea');
+  // The line runs across the page from the spot to the margin; drag it down from a point along it.
+  const ry = await page.evaluate(() => window.__gs.state().pages[0].boxes[0].ry);
+  const p = await at(page, 0, 420, ry);
+  await page.mouse.move(p.x, p.y); await page.mouse.down();
+  const q = await at(page, 0, 420, ry + 9);
+  await page.mouse.move(q.x, q.y, { steps: 6 }); await page.mouse.up();
+  assert.ok(await page.$('.pop textarea'), 'the comment box is still open');
+  assert.equal(await page.evaluate(() => document.activeElement.tagName), 'TEXTAREA', 'and ready for typing');
+  await page.keyboard.type('First line');
+  await page.keyboard.down('Shift'); await page.keyboard.press('Enter'); await page.keyboard.up('Shift');
+  await page.keyboard.type('second line');
+  assert.ok(await page.$('.pop textarea'), 'Shift Enter keeps it open');
+  await page.keyboard.press('Enter');
+  assert.equal(await page.$('.pop'), null, 'Enter finishes it');
+  const m = (await marks(page))[0];
+  assert.equal(m.text, 'First line\nsecond line');
+  assert.ok(m.ly != null && Math.abs(m.ly - (ry + 9)) < 3, 'the line stays where it was dragged: ' + [m.ly, ry]);
+  await page.evaluate(() => window.__gs.undo());
+  assert.equal((await marks(page)).length, 0, 'one undo takes the whole new comment away');
+  assert.deepEqual(page.errors, []);
+  await close();
+});
+
+test('an open comment\'s line moved and then Escape puts the line back', async () => {
+  const { page, close } = await openApp(browser);
+  await open(page);
+  await page.evaluate(() => { const pg = window.__gs.state().pages[0]; pg.marks().push({ t: 'note', color: '#D7263D', ax: 300, ay: 140, text: 'Why?' }); window.__gs.draw(pg); });
+  await setTool(page, 'note');
+  await openBox(page);
+  const p = await at(page, 0, 420, 140), q = await at(page, 0, 420, 152);
+  await page.mouse.move(p.x, p.y); await page.mouse.down(); await page.mouse.move(q.x, q.y, { steps: 6 }); await page.mouse.up();
+  assert.ok((await marks(page))[0].ly > 145, 'moved while open');
+  await page.keyboard.press('Escape');
+  assert.equal((await marks(page))[0].ly, undefined, 'Escape puts the line back');
+  assert.deepEqual(page.errors, []);
+  await close();
+});
+
+test('Enter finishes a text box too; Shift Enter is a new line', async () => {
+  const { page, close } = await openApp(browser);
+  await open(page);
+  await setTool(page, 'text');
+  await clickAt(page, 0, 100, 400);
+  await page.waitForSelector('.pg .ed');
+  await page.keyboard.type('One');
+  await page.keyboard.down('Shift'); await page.keyboard.press('Enter'); await page.keyboard.up('Shift');
+  await page.keyboard.type('Two');
+  await page.keyboard.press('Enter');
+  assert.equal(await page.$('.pg .ed'), null);
+  assert.equal((await marks(page))[0].text, 'One\nTwo');
   assert.deepEqual(page.errors, []);
   await close();
 });

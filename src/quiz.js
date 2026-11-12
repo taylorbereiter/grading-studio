@@ -833,7 +833,7 @@ function qmKey(e) {
   if ($('#qmPeek')) { if (e.key === 'Escape' || e.key === ' ') { stop(); qmPeekClose(); } return; }
   if (e.target.closest('.qmned')) {   // typing a comment: Enter saves, Shift Enter is a new line, Esc leaves it as it was
     if (e.key === 'Escape') { stop(); qmNoteDone(e.target.closest('.qmc'), false); }
-    else if (e.key === 'Enter' && !e.shiftKey) { stop(); qmNoteDone(e.target.closest('.qmc'), true); }
+    else if (e.key === 'Enter' && !e.shiftKey && !e.isComposing && e.keyCode !== 229) { stop(); qmNoteDone(e.target.closest('.qmc'), true); }
     else e.stopPropagation();
     return;
   }
