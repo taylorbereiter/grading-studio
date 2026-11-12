@@ -375,13 +375,13 @@ test('a paper whose own name can’t be found says so, and so does one in anothe
   await namesDone(page);
   const flags = Object.fromEntries(await page.evaluate(() => window.__gs.nameFlagged().map(x => [x.st.key, x.say])));
   assert.deepEqual(flags, {
-    'Ben Carter': 'Name not found, check this one', 'Will Stone': 'Name not found, check this one', 'My Nguyen': 'Name not found, check this one', 'Sam Scan': 'Name not found, check this one', 'Нина Орлова': 'Name not found, check this one',
-    'Андрей Петров': 'Name in another alphabet, check this one',
+    'Ben Carter': 'Name not found', 'Will Stone': 'Name not found', 'My Nguyen': 'Name not found', 'Sam Scan': 'Name not found', 'Нина Орлова': 'Name not found',
+    'Андрей Петров': 'Name in another alphabet',
   });
   const said = await page.$eval('#dlgBox .bb', e => e.innerText);
-  assert.match(said, /Check these 6 papers before you make the ZIP/, said);
-  assert.match(said, /Ben Carter Name not found, check this one/, said);
-  assert.match(said, /Андрей Петров Name in another alphabet, check this one/, said);
+  assert.match(said, /Check these first/, said);
+  assert.match(said, /Ben Carter Name not found/, said);
+  assert.match(said, /Андрей Петров Name in another alphabet/, said);
   assert.match(said, /no names in it, once you’ve/, said);
   assert.doesNotMatch(said, /It has no names in it/, said);
   assert.doesNotMatch(await page.$eval('#nameFlags', e => e.innerText), /Lena|Uma|Ana/);
@@ -389,7 +389,7 @@ test('a paper whose own name can’t be found says so, and so does one in anothe
   await page.click('#nameFlags [data-cc]');
   await page.waitForSelector('#ccBody canvas');
   assert.equal(await page.$eval('#ccState', e => e.textContent), 'Not checked yet');
-  assert.match(await page.$eval('#ccFlag', e => e.textContent), /^Name (not found|in another alphabet), check this one$/);
+  assert.match(await page.$eval('#ccFlag', e => e.textContent), /^Name (not found|in another alphabet)$/);
   const who = await page.$eval('#ccTitle', e => e.textContent);
   await page.waitForFunction(() => { const c = document.querySelector('#ccBody canvas'); return c && !document.querySelector('#ccBody .ccwait'); });
   await new Promise(r => setTimeout(r, 300));
@@ -398,14 +398,14 @@ test('a paper whose own name can’t be found says so, and so does one in anothe
   await page.click('#dlgBox [data-done]');
   await page.waitForSelector('#nameFlags .bbmiss');
   const after = await page.$eval('#nameFlags', e => e.innerText);
-  assert.match(after, /Check these 5 papers/, after);
+  assert.match(after, /Check these first/, after);
   assert.ok(!after.includes(who.split(' → ')[0]), 'a paper she’s checked is off the list: ' + after);
   await closeDlg(page);
   // The same before anonymous grading, and with no names once it's on.
   await page.click('#anonSw'); await page.waitForSelector('[data-go]');
   await page.waitForSelector('#nameFlags .bbmiss');
-  assert.match(await page.$eval('#nameFlags', e => e.innerText), /Check these 5 papers before you start/);
-  assert.match(await page.$eval('#nameFlags', e => e.innerText), /Name not found, check this one/);
+  assert.match(await page.$eval('#nameFlags', e => e.innerText), /Check these first/);
+  assert.match(await page.$eval('#nameFlags', e => e.innerText), /Name not found/);
   await page.click('#nameFlags [data-cc]');
   await page.waitForSelector('#ccBody canvas');
   await page.click('#dlgBox [data-done]');
@@ -415,7 +415,7 @@ test('a paper whose own name can’t be found says so, and so does one in anothe
   await openShareBox(page);
   await namesDone(page);
   const hidden = await page.$eval('#nameFlags', e => e.innerText);
-  assert.match(hidden, /Paper \d+ Name not found, check this one/, hidden);
+  assert.match(hidden, /Paper \d+ Name not found/, hidden);
   assert.ok(!/Ben|Will|Nguyen|Sam|Нина|Андрей/.test(hidden), hidden);
   assert.deepEqual(page.errors, []);
   await close();
@@ -440,7 +440,7 @@ test('the name search finishing doesn’t turn the ZIP buttons back on while a Z
   assert.ok(got.bytes.length > 0);
   assert.doesNotMatch(during.status, /^Done/, 'still making it: ' + during.status);
   assert.deepEqual([during.disabled, during.check], [true, true], 'buttons stay off');
-  assert.match(during.flags, /Check these 12 papers/, 'and the list still came up');
+  assert.match(during.flags, /Check these first/, 'and the list still came up');
   assert.deepEqual(page.errors, []);
   await close();
 });
@@ -505,8 +505,8 @@ test('Thai names with stacked marks are covered, and their papers are marked to 
   assert.match(text, /Thai/, text);
   await namesDone(page);
   const flags = Object.fromEntries(await page.evaluate(() => window.__gs.nameFlagged().map(x => [x.st.key, x.say])));
-  for (const n of names) assert.equal(flags[n], 'Name in another alphabet, check this one', n);
-  assert.equal(flags['มาลี รักดี'], 'Name not found, check this one');
+  for (const n of names) assert.equal(flags[n], 'Name in another alphabet', n);
+  assert.equal(flags['มาลี รักดี'], 'Name not found');
   assert.deepEqual(page.errors, []);
   await close();
 });
@@ -878,9 +878,9 @@ test('a page with only handwriting drawn on it, or only a small picture, is mark
   assert.doesNotMatch(text, /It has no names in it/);
   await namesDone(page);
   const flags = Object.fromEntries(await page.evaluate(() => window.__gs.nameFlagged().map(x => [x.st.key, x.say])));
-  assert.deepEqual(flags, { 'Vic Lane': 'Name not found, check this one', 'Ivy Smallpic': 'Name not found, check this one' });
+  assert.deepEqual(flags, { 'Vic Lane': 'Name not found', 'Ivy Smallpic': 'Name not found' });
   const said = await page.$eval('#dlgBox .bb', e => e.innerText);
-  assert.match(said, /Check these 2 papers before you make the ZIP/, said);
+  assert.match(said, /Check these first/, said);
   assert.doesNotMatch(said, /It has no names in it/, said);
   assert.deepEqual(page.errors, []);
   await close();
@@ -899,7 +899,7 @@ test('a Word paper with no sign of its student’s name is listed before anonymo
   await page.waitForSelector('#wordFlags');
   await namesDone(page);
   const box = await page.$eval('#wordFlags', e => e.innerText);
-  assert.match(box, /Look at this Word or text paper before you start/, box);
+  assert.match(box, /This paper may show a name/, box);
   assert.match(box, /Katherine Bell Essay\.docx/, box);
   assert.doesNotMatch(box, /Dora|Milo|Pia|Ana/, box);
   assert.deepEqual(await page.evaluate(() => window.__gs.nameFlagged().map(x => x.st.key)), [], 'PDFs go through Check the covers, and Word papers can’t');

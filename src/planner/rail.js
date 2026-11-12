@@ -70,6 +70,7 @@ function findRows() {
   add('Go to', 'Rubrics', 'Saved rubrics and grading scales', () => toView('bank'));
   add('Go to', 'School resources', 'Links, files and notes about your school, on the grading page', () => leaveTo(gsUrl('#/school')));
   add('Go to', 'Settings', 'Saving, classes, display and keys, on the grading page', () => leaveTo(gsUrl('#/settings')));
+  add('Go to', 'To do', 'Your own list, on the grading page', () => leaveTo(gsUrl('#/todo')));
   add('Go to', 'Help', 'Short answers to common questions', () => leaveTo(gsUrl('#/help')));
   for (const c of (L.setup && L.setup.classes) || []) add('Classes', c.name, 'Its assignments, gradebook and students', () => leaveTo(classUrl(c)));
   const when = l => l.slots.length ? l.slots.map(s => className(s.classId) + ' ' + shortDate(s.date)).join(', ') : l.library ? 'A past lesson' : 'Not on a class';
@@ -79,7 +80,7 @@ function findRows() {
   add('Do', 'Import a lesson', 'A lesson file, a lesson pack, or pasted text', () => importLesson());
   add('Do', 'Timetable', 'Your classes, when they meet, and the school calendar', () => openTimetable());
   if ('showDirectoryPicker' in window) add('Do', L.dir && L.dirOk ? 'Look in the Planner folder' : L.dir ? 'Reconnect the Planner folder' : 'Link the Planner folder', L.dir && L.dirOk ? 'For lessons added or changed there' : 'A second copy of your lessons, in a folder of their own', () => L.dir && L.dirOk ? folderRead(true) : L.dir ? folderReconnect(true) : folderLink());
-  add('Do', 'Side panel', 'Books, video, ' + (plCur() || 'the unit') + ', the notebook and the Claude box', () => panelToggle());
+  add('Do', 'Side panel', 'Books, video, ' + (plCur() || 'the unit') + ', the notebook and the ' + plAiTag() + ' box', () => panelToggle());
   add('Do', document.documentElement.dataset.theme === 'dark' ? 'Light mode' : 'Dark mode', 'Display', () => setTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'));
   // every help answer by its question; the answers are on the grading page's Help
   for (const t of HELP) out.push({ group: 'Help', label: t.q, sub: helpGist(t), words: t.words || '', run: () => leaveTo(gsUrl('#/help/' + t.id)) });

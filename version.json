@@ -1,12 +1,12 @@
 {
- "version": "1.27.5",
- "build": "1e1ef174487e",
+ "version": "1.27.21",
+ "build": "38551280be93",
  "notes": [
-  "The gradebook can import your old scores: press Import… and choose a CSV or Excel file, or paste the cells. Each column becomes an assignment, matched to your roster.",
-  "You see everything before it is saved, and a score already in the gradebook stays unless you choose the file’s."
+  "Comments are easier to work with. Change a comment’s color at any time, even while typing it: its box has a Color row, and a Highlight row when it is on highlighted words. Text boxes and Quick mark comments have colors too.",
+  "Drag a new comment’s line up or down before you type a word, and press Enter to finish a comment or text box. Shift Enter starts a new line."
  ],
  "files": {
-  "index.html": "122e0cf39d3f1ff8025654a5b2d81c5d7e986eec0d1555978d68e6fc71bc8009",
-  "planner.html": "9d9a3c7902f5ee0f5d07928a8f57a65b568c923d17470e1259fb64b4e0499dd5"
+  "index.html": "de33cef5c10348f0ec6dda49bad2e288389cbd08a268bb2d3692337145b53053",
+  "planner.html": "9e82c731b161cb9ce91e8cb4704f3b85e4da94a494f0b823f357836a417b354f"
  }
 }
