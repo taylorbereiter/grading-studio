@@ -43,6 +43,14 @@
 .pr-own .sp{flex:1}
 .pr-run{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--space-1)}
 .pr-snd{display:flex;gap:var(--space-2);align-items:center;margin-top:var(--space-3);color:var(--stage-muted)}
+/* the lesson's links and the class's, above the bar (planner/links.js) */
+.pr-links{width:min(420px,calc(100vw - var(--space-5)));max-height:60vh;overflow:auto;display:flex;flex-direction:column;gap:var(--space-1)}
+.pr-links h3:not(:first-child){margin-top:var(--space-3)}
+.pr-links p{margin:0;color:var(--stage-muted)}
+.pr-links button{display:flex;align-items:center;gap:var(--space-3);text-align:left;font-weight:400}
+.pr-links kbd{flex:none;min-width:22px;text-align:center;border:1px solid var(--stage-line);border-radius:var(--corner-1);padding:0 var(--space-1);font:600 var(--text-small)/1.6 var(--f-body);color:var(--stage-muted)}
+.pr-links .tx{display:flex;flex-direction:column;min-width:0}.pr-links .tx b{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pr-links .tx small{color:var(--stage-muted);font-size:var(--text-small);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
 /* the countdown the class watches */
 .pr-chip{position:absolute;top:2.4vh;right:2.4vh;z-index:4;border:0;border-radius:var(--corner-5);padding:1vh 2.2vh;background:var(--stage-blue);color:var(--stage-paper);font:700 8vh/1 var(--f-display);font-variant-numeric:tabular-nums;letter-spacing:-.02em;box-shadow:var(--shadow)}
@@ -93,3 +101,15 @@
 .pl-tgd select,.pl-tgd input{justify-content:flex-start;text-align:left;width:100%}
 .pl-tgd input{cursor:text}
 .pl-tgd .who{margin:0 0 var(--space-3);font-weight:600}
+
+/* the timer after presenting: a small box in the corner of the Planner (prFloat in src/planner/present.js) */
+.prf{position:fixed;right:var(--space-5);bottom:var(--space-5);z-index:55;display:flex;align-items:stretch;background:var(--surface);color:var(--accent);border:1px solid var(--line);border-radius:var(--corner-4);box-shadow:var(--shadow);overflow:hidden}
+.prf button{border:0;background:none;color:inherit;font:inherit}
+.prf-t{padding:var(--space-2) var(--space-4);font:700 var(--text-title)/1.1 var(--f-display);font-variant-numeric:tabular-nums;text-align:left}
+.prf-t small{display:block;font:600 var(--text-caption)/1.3 var(--f-body);color:var(--muted)}
+.prf-x{padding:0 var(--space-3);border-left:1px solid var(--line);color:var(--muted);font-size:var(--text-lead)}
+.prf button:hover{background:var(--hover)}
+.prf.paused{color:var(--fg)}
+.prf.done{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.prf.done .prf-x{color:var(--accent-fg);border-color:var(--accent-hover)}
+.prf.done button:hover{background:var(--accent-hover)}

@@ -11,13 +11,14 @@ function setRender() {
   const box = $('#setNav'); if (box.dataset.h !== nav) { box.dataset.h = nav; box.innerHTML = nav; }
   for (const el of document.querySelectorAll('#setPane [data-sec]')) el.hidden = el.dataset.sec !== r.sec;
   const put = (id, h) => { const el = $(id); if (el.dataset.h !== h) { el.dataset.h = h; el.innerHTML = h; } };
-  meSetRender(r.sec); attSetRender(r.sec);
+  meSetRender(r.sec); attSetRender(r.sec); stpSetRender(r.sec);
+  if (r.sec === 'marking') setInksSay();
   if (r.sec === 'history') gbRender();
   if (r.sec === 'about') updRender();
   if (r.sec === 'classes') {
     const row = (c, ci) => '<div class="setrow"><span class="rdot" style="background:' + classColor(c) + '"></span><span class="nt"><b>' + esc(c.name) + '</b><span class="ns">' + (c.names.length ? c.names.length + (c.names.length === 1 ? ' student' : ' students') : 'No roster yet') + ' · ' + (mbOf(c) ? esc(sysLink()) + ' link saved' : 'No ' + esc(sysLink()) + ' link') + '</span></span>' +
       '<a class="btn sm" href="' + classHash(c) + '">Open</a><button class="btn sm" data-setcls="' + ci + '">Name and roster</button><button class="btn sm" data-setmb="' + ci + '">' + esc(sysLink()) + ' link</button></div>';
-    put('#setClasses', '<div class="lhead"><h2>Classes and rosters</h2><span class="muted">A class has its roster, its units and its ' + (sysName() ? esc(sysName()) + ' page' : 'link to your school’s system') + '.</span><span class="sp"></span><button class="btn sm primary" data-setadd>Add a class</button></div>' +
+    put('#setClasses', '<div class="lhead"><h2>Classes and rosters</h2><span class="muted">A class has its roster, its units and its ' + (sysName() ? esc(sysName()) + ' page' : 'link to your school’s system') + '.</span><span class="sp"></span><button class="btn sm" data-setgc title="The roster, the assignments and the grades, from two downloads">From Google Classroom…</button><button class="btn sm primary" data-setadd>Add a class</button></div>' +
       (lib.classes.length ? '<div class="setrows">' + lib.classes.map(row).join('') + '</div>' : '<p class="muted setp">No classes yet. A class holds a roster, so papers match to students and the gradebook has rows.</p>'));
   }
   if (r.sec === 'terms') {
@@ -54,6 +55,7 @@ async function setBankCount() {
 }
 $('#setPane').addEventListener('click', async e => {
   if (e.target.closest('[data-setadd]')) return editClass(-1);
+  if (e.target.closest('[data-setgc]')) return gcOpen();
   const c = e.target.closest('[data-setcls]'); if (c) return editClass(+c.dataset.setcls);
   const m = e.target.closest('[data-setmb]'); if (m) { await askMb(+m.dataset.setmb); return setRender(); }
   if (e.target.closest('[data-setterms]')) { const k = lib.classes.find(c => c.names.length); if (!k) return; await openBook(k.id); if ($('#bkBody')) bkSetupView(); }
@@ -63,3 +65,12 @@ new MutationObserver(() => { if ($('#dlg').hidden) setRender(); }).observe($('#d
 
 // Settings, Display, Language (lang.js keeps the choice and draws the page again).
 $('#setLangBox').innerHTML = langPick('setLangPick');
+// Settings, Marking, Mark colors: the same three rows as Quick mark's Colors menu, drawn when Marking is shown.
+function setInksSay() { const el = $('#setInkRows'), h = el && inkRows('s'); if (el && el.dataset.h !== h) { el.dataset.h = h; el.innerHTML = h; } }
+$('#setInkRows').addEventListener('click', e => {
+  const b = e.target.closest('[data-sink], [data-schk], [data-spts]'); if (!b) return;
+  if (b.dataset.sink != null) { inkColor = b.dataset.sink; store.set('gs.ink', inkColor); }
+  else if (b.dataset.schk != null) setCheckInk(b.dataset.schk);
+  else setPtsInk(b.dataset.spts);
+  renderTools(); setInksSay();
+});

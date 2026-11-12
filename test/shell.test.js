@@ -112,7 +112,7 @@ test('npm run preview serves the built app on localhost, and only that', async (
     const server = { url: base + '/', close: async () => {} };
     const { page, close } = await openApp(browser, { server });
     assert.ok((await page.$eval('#start .gsVer', e => e.textContent)).includes('preview copy'), 'it says it’s the preview');
-    assert.notEqual(new URL(page.url()).origin, 'https://taylorbereiter.github.io', 'so it can’t share saved work with the real link');
+    assert.notEqual(new URL(page.url()).origin, new URL(require(path.join(ROOT, 'site.json')).address).origin, 'so it can’t share saved work with the real link');
     await page.click('#sample');
     await waitPaper(page);
     assert.deepEqual(page.errors, []);
@@ -128,9 +128,10 @@ test('a busy preview port stops with a plain message', async () => {
   await s.close();
 });
 
-test('the README explains why a preview can’t live on the github.io address', () => {
+test('the README explains why a preview can’t live on the live address', () => {
   const r = fs.readFileSync(path.join(ROOT, 'README.md'), 'utf8');
   assert.match(r, /npm run check/); assert.match(r, /npm run preview/); assert.match(r, /same address/i);
+  assert.ok(r.includes(require(path.join(ROOT, 'site.json')).address), 'the link at the top is the address site.json names');
 });
 
 /* ---------------- finding Chrome ---------------- */

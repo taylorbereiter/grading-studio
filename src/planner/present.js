@@ -5,6 +5,9 @@
    keeps for this; the names are shown and never kept here.
    Afterwards one line says where the class got to. It is kept on the lesson as "taught", so it goes to the Planner
    folder with the lesson and shows on the week.
+   The timer outlives the stage: finishing, or leaving full screen by accident, leaves it running in a small box in the
+   corner of the Planner, and presenting again shows it on the slides once more. It is kept in this browser (gsp.presentTimer)
+   so a refresh does not lose it either.
    This reads the lesson and the timetable and nothing else. Its buttons carry data-pr and are handled here. */
 const PR = { on: false, askMs: 2 * 60 * 1000 };   // askMs: presenting for at least this long asks where the class got to
 const PR_I = {
@@ -17,7 +20,8 @@ const PR_I = {
   full: '<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>',
   check: '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
   pick: '<circle cx="12" cy="8" r="3.5"/><path d="M5 19.5c.8-3.6 3.6-5.5 7-5.5s6.2 1.9 7 5.5"/>',
-  groups: '<circle cx="7" cy="8" r="2.5"/><circle cx="17" cy="8" r="2.5"/><circle cx="12" cy="16" r="2.5"/>'
+  groups: '<circle cx="7" cy="8" r="2.5"/><circle cx="17" cy="8" r="2.5"/><circle cx="12" cy="16" r="2.5"/>',
+  link: '<path d="M10.5 13.5a4 4 0 0 0 5.7 0l2.6-2.6a4 4 0 0 0-5.7-5.7l-.9.9M13.5 10.5a4 4 0 0 0-5.7 0l-2.6 2.6a4 4 0 0 0 5.7 5.7l.9-.9"/>'
 };
 const prIcon = k => '<svg viewBox="0 0 24 24" aria-hidden="true">' + PR_I[k] + '</svg>';
 const prToday = () => ymd(new Date());
@@ -132,7 +136,7 @@ async function presentStart(l, o) {
   const slot = o.slot && l.slots.some(s => prSameSlot(s, o.slot)) ? o.slot : prSlotNow(l);
   const back = prResume(l, slot), i = o.at > 0 ? Math.min(o.at, l.slides.length - 1) : back ? back.slide - 1 : 0;
   const ag = l.slides.find(s => s.layout === 'agenda');
-  Object.assign(PR, { on: true, l, i, far: i, slot, began: Date.now(), ended: false, blank: false, notes: false, agenda: false, menu: false, ticks: new Set(), timer: null, num: '', keep: false, video: false, full: false, back: document.activeElement,
+  Object.assign(PR, { on: true, l, i, far: i, slot, began: Date.now(), ended: false, blank: false, notes: false, agenda: false, menu: false, links: false, ticks: new Set(), num: '', keep: false, video: false, full: false, back: document.activeElement,
     items: ag ? rtParse(ag.body).filter(x => x.text.trim()) : null, agTitle: ag ? plainTitle(ag.title) || 'Agenda' : '' });
   const el = PR.el = document.createElement('div');
   el.id = 'present'; el.className = 'pr'; el.tabIndex = -1; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-label', 'Presenting ' + l.title);
@@ -143,9 +147,10 @@ async function presentStart(l, o) {
     '<button class="pr-chip" id="prChip" data-p="chip" hidden></button>' +
     '<div class="pr-cover" id="prCover" hidden></div>' +
     '<div class="pr-menu" id="prMenu" role="group" aria-label="Timer" hidden></div>' +
+    '<div class="pr-menu pr-links" id="prLinks" role="group" aria-label="Links" hidden></div>' +
     '<div class="pr-hint" id="prHint" hidden></div><div class="pr-say" id="prSay" aria-live="polite"></div>' +
     '<div class="pr-bar" id="prBar" role="toolbar" aria-label="Presenting">' + b('prev', 'prev', 'Previous slide', '←', 'ic') + '<span class="pr-count" id="prCount"></span>' + b('next', 'next', 'Next slide', '→', 'ic') + '<span class="pr-sep"></span>' +
-    b('agenda', 'agenda', 'Agenda', 'A') + b('timer', 'timer', 'Timer', 'T') + b('pick', 'pick', 'Pick a name', 'P') + b('groups', 'groups', 'Groups', 'G') + b('notes', 'notes', 'Notes', 'N') + b('blank', 'blank', 'Blank', 'B') + b('full', 'full', 'Full screen', 'F') +
+    b('agenda', 'agenda', 'Agenda', 'A') + b('timer', 'timer', 'Timer', 'T') + b('pick', 'pick', 'Pick a name', 'P') + b('groups', 'groups', 'Groups', 'G') + b('notes', 'notes', 'Notes', 'N') + (lkAny(l, slot) ? b('links', 'link', 'Links', 'L') : '') + b('blank', 'blank', 'Blank', 'B') + b('full', 'full', 'Full screen', 'F') +
     '<span class="pr-sep"></span><span class="pr-time" id="prTime"></span><button data-p="end" class="pr-end" title="Finish (Esc)">Finish</button></div>';
   document.body.appendChild(el);
   document.addEventListener('keydown', prKey, true);
@@ -154,12 +159,12 @@ async function presentStart(l, o) {
   el.addEventListener('click', prClick);
   el.addEventListener('pointermove', prWake);
   PR.tickT = setInterval(prTick, 250);
-  prShow(); prTick(); prWake(); el.focus();
+  prFloat(); prShow(); prTick(); prWake(); el.focus();
   if (!o.window) try { await el.requestFullscreen(); } catch { }
   prFit();
   try { PR.lock = await navigator.wakeLock.request('screen'); } catch { }
   prHint(back && !(o.at > 0) ? 'Picking up at slide ' + back.slide + ', where ' + (back.classId ? className(back.classId) : 'the class') + ' stopped on ' + shortDate(back.date) + '. Home goes to slide 1.'
-    : (document.fullscreenElement ? '' : 'F for full screen · ') + '→ next · A agenda · T timer · P pick a name · Esc to finish', back && !(o.at > 0) ? 7000 : 4500);
+    : (document.fullscreenElement === el ? '' : 'F for full screen · ') + '→ next · A agenda · T timer · P pick a name · Esc to finish', back && !(o.at > 0) ? 7000 : 4500);
 }
 // planner.html#present/<lesson id>/<class id>: the lesson opens and presents, in the window (a page can't go full screen by itself).
 function presentArrive(rest) {
@@ -191,7 +196,7 @@ function prPaint() {
   PR.el.style.setProperty('--nb', PR.notes ? nt.offsetHeight + 'px' : '0px');   // the bar sits above the notes
   for (const [p, on] of [['agenda', PR.agenda], ['notes', PR.notes], ['blank', PR.blank]]) PR.el.querySelector('[data-p="' + p + '"]').setAttribute('aria-pressed', String(!!on));
   PR.el.querySelector('[data-p="timer"]').setAttribute('aria-expanded', String(!!PR.menu));
-  PR.el.querySelector('[data-p="full"] .lb').textContent = document.fullscreenElement ? 'Leave full screen' : 'Full screen';
+  PR.el.querySelector('[data-p="full"] .lb').textContent = document.fullscreenElement === PR.el ? 'Leave full screen' : 'Full screen';
   $('#prSay').textContent = PR.blank ? 'The screen is blank' : PR.ended ? 'End of the lesson' : 'Slide ' + (PR.i + 1) + ' of ' + n + (prSlideName(s) ? ': ' + prSlideName(s) : '');
   prAgenda(); prFit();
 }
@@ -218,7 +223,7 @@ function prHint(msg, ms) {
 function prWake() {
   if (!PR.on) return;
   PR.el.classList.remove('idle'); clearTimeout(PR.idleT);
-  PR.idleT = setTimeout(() => { if (PR.on && !PR.menu && !PR.el.querySelector('.pr-bar:hover')) PR.el.classList.add('idle'); }, 2600);
+  PR.idleT = setTimeout(() => { if (PR.on && !PR.menu && !PR.links && !PR.el.querySelector('.pr-bar:hover')) PR.el.classList.add('idle'); }, 2600);
 }
 
 /* ---------- moving ---------- */
@@ -235,7 +240,7 @@ function prToggle(k) {
   prPaint();
 }
 async function prFullToggle() {
-  try { if (document.fullscreenElement) { PR.keep = true; await document.exitFullscreen(); } else await PR.el.requestFullscreen(); } catch { }
+  try { if (document.fullscreenElement === PR.el) { PR.keep = true; await document.exitFullscreen(); } else await PR.el.requestFullscreen(); } catch { }
 }
 // Esc in full screen is taken by the browser to leave full screen: that is the teacher finishing.
 function prFull() {
@@ -271,9 +276,11 @@ function prPick(mode) {
 /* ---------- the timer ---------- */
 const prSound = () => { try { return localStorage.getItem('gsp.presentSound') !== '0'; } catch { return true; } };
 function prChime() {
-  if (!prSound() || !PR.ac) return;
+  if (!prSound()) return;
   try {
-    const C = PR.ac, t0 = C.currentTime;
+    // a timer brought back after a refresh has no sound yet: made now (the browser may still keep it quiet until a click)
+    const C = PR.ac = PR.ac || new (window.AudioContext || window.webkitAudioContext)(); if (C.state === 'suspended') C.resume();
+    const t0 = C.currentTime;
     [[0, 660], [.4, 660], [.8, 880]].forEach(([d, f]) => {
       const o = C.createOscillator(), g = C.createGain(); o.type = 'sine'; o.frequency.value = f;
       g.gain.setValueAtTime(0.0001, t0 + d); g.gain.exponentialRampToValueAtTime(.3, t0 + d + .03); g.gain.exponentialRampToValueAtTime(.0001, t0 + d + .35);
@@ -285,12 +292,12 @@ function prTimerStart(sec) {
   sec = Math.max(1, Math.min(180 * 60, Math.round(sec)));
   PR.timer = { end: Date.now() + sec * 1000, left: sec, total: sec, paused: false, done: false };
   try { PR.ac = PR.ac || new (window.AudioContext || window.webkitAudioContext)(); } catch { }
-  prMenu(false); prTick();
+  prTimerSave(); if (PR.on) prMenu(false); prTick();
 }
 function prTimerPause() {
   const t = PR.timer; if (!t || t.done) return;
   if (t.paused) { t.end = Date.now() + t.left * 1000; t.paused = false; } else { t.left = Math.max(0, Math.ceil((t.end - Date.now()) / 1000)); t.paused = true; }
-  prTick(); if (PR.menu) prMenu(true);
+  prTimerSave(); prTick(); if (PR.on && PR.menu) prMenu(true);
 }
 // More time or less, while it runs or while it is paused. Taking away more than is left ends it: time's up.
 function prTimerAdd(sec) {
@@ -298,14 +305,57 @@ function prTimerAdd(sec) {
   if (t.paused) t.left = Math.max(0, Math.min(180 * 60, t.left + sec));
   else { const left = Math.max(0, Math.ceil((t.end - Date.now()) / 1000)); t.end = Date.now() + Math.max(0, Math.min(180 * 60, left + sec)) * 1000; }
   if (t.paused && !t.left) { t.paused = false; t.end = Date.now(); }
-  prTick(); if (PR.menu && t.done) prMenu(true);
+  prTimerSave(); prTick(); if (PR.on && PR.menu && t.done) prMenu(true);
 }
 // Back to the time it was started with, and running.
 function prTimerRestart() {
   const t = PR.timer; if (!t) return;
   prTimerStart(t.total); prMenu(true);
 }
-function prTimerStop() { PR.timer = null; prTick(); if (PR.menu) prMenu(true); }
+function prTimerStop() { PR.timer = null; prTimerSave(); prTick(); if (PR.on && PR.menu) prMenu(true); }
+// Kept in this browser, so the timer outlives the stage and a refresh. Only times: nothing about the class.
+const PR_TKEY = 'gsp.presentTimer';
+function prTimerSave() {
+  try { if (PR.timer && !PR.timer.done) localStorage.setItem(PR_TKEY, JSON.stringify(PR.timer)); else localStorage.removeItem(PR_TKEY); } catch { }
+}
+function prTimerLoad() {
+  let t = null; try { t = JSON.parse(localStorage.getItem(PR_TKEY) || 'null'); } catch { }
+  const num = v => typeof v === 'number' && isFinite(v);
+  if (!t || typeof t !== 'object' || !num(t.end) || !num(t.left) || !num(t.total) || t.done) return;
+  // one that ran out while the page was closed is over; one that ran out a moment ago still says so
+  if (!t.paused && t.end < Date.now() - 60 * 1000) { try { localStorage.removeItem(PR_TKEY); } catch { } return; }
+  PR.timer = { end: t.end, left: Math.max(0, Math.round(t.left)), total: Math.max(1, Math.round(t.total)), paused: !!t.paused, done: false };
+}
+// The time left, worked out from the clock; the sound once when it runs out.
+function prTimerStep() {
+  const t = PR.timer; if (!t || t.paused || t.done) return t;
+  t.left = Math.max(0, Math.ceil((t.end - Date.now()) / 1000));
+  if (!t.left) { t.done = true; prTimerSave(); prChime(); if (PR.on && PR.menu) prMenu(true); }
+  return t;
+}
+// Away from the slides, the timer is a small box in the corner of the Planner: click the time to pause or go on, × to stop.
+function prFloat() {
+  let f = document.getElementById('prFloat');
+  const t = PR.on ? null : prTimerStep();
+  if (!t) { if (f) f.remove(); return; }
+  if (!f) {
+    f = document.createElement('div'); f.id = 'prFloat'; f.className = 'prf'; f.setAttribute('role', 'timer');
+    f.innerHTML = '<button class="prf-t" data-prf="go"></button><button class="prf-x" data-prf="x" title="Stop the timer" aria-label="Stop the timer">×</button>';
+    document.body.appendChild(f);
+  }
+  const txt = t.done ? 'Time’s up' : mmss(t.left) + (t.paused ? '<small>Paused</small>' : ''), b = f.querySelector('.prf-t');
+  if (b.dataset.h !== txt) { b.dataset.h = txt; b.innerHTML = txt; }
+  f.className = 'prf' + (t.done ? ' done' : t.paused ? ' paused' : '');
+  b.setAttribute('aria-label', t.done ? 'Time’s up. Click to clear' : mmss(t.left) + ' left on the timer. Click to ' + (t.paused ? 'go on' : 'pause'));
+  b.title = t.done ? 'Clear' : t.paused ? 'Go on' : 'Pause';
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest && e.target.closest('[data-prf]'); if (!b || PR.on) return;
+  if (b.dataset.prf === 'x' || (PR.timer && PR.timer.done)) prTimerStop(); else prTimerPause();
+  prFloat();
+});
+prTimerLoad();
+setInterval(() => { if (!PR.on && (PR.timer || document.getElementById('prFloat'))) prFloat(); }, 250);
 // Minutes and seconds typed in the menu. A seconds box over 59 is fine: 90 seconds is 1:30.
 function prOwnSec() {
   const m = Math.max(0, +($('#prOwn') || {}).value || 0), s = Math.max(0, +($('#prOwnS') || {}).value || 0);
@@ -329,9 +379,8 @@ function prTick() {
   const clock = prClock(), tm = $('#prTime'), ac = $('#prAClock');
   if (tm && tm.textContent !== clock) tm.textContent = clock;
   if (ac && ac.textContent !== clock) ac.textContent = clock;
-  const t = PR.timer, chip = $('#prChip');
+  const t = prTimerStep(), chip = $('#prChip');
   if (!t) { if (!chip.hidden) chip.hidden = true; return; }
-  if (!t.paused && !t.done) { t.left = Math.max(0, Math.ceil((t.end - Date.now()) / 1000)); if (!t.left) { t.done = true; prChime(); if (PR.menu) prMenu(true); } }
   const txt = t.done ? 'Time’s up' : mmss(t.left) + (t.paused ? '<small>Paused</small>' : '');
   if (chip.dataset.h !== txt) { chip.dataset.h = txt; chip.innerHTML = txt; }
   chip.hidden = false; chip.className = 'pr-chip' + (prBig() ? ' big' : '') + (t.done ? ' done' : t.paused ? ' paused' : '');
@@ -362,7 +411,7 @@ function prMenu(open) {
 function prClick(e) {
   prWake();
   const t = e.target;
-  if (t.closest('#pkStage')) return;   // the name picker looks after its own
+  if (PK.on && (t.closest('#pkStage') || !t.isConnected)) return;   // the name picker looks after its own (and a button it has just drawn again is off the page)
   // A button pressed with the mouse gives the keys back to the slides, so Space still means the next slide.
   if (e.detail && t.closest('#prBar,#prChip')) PR.el.focus();
   if (t.closest('#prMenu')) {
@@ -376,13 +425,16 @@ function prClick(e) {
     if (b.dataset.p === 'tstop') return prTimerStop();
     return;
   }
+  if (t.closest('#prLinks')) { const b = t.closest('[data-url]'); if (b) prLinkOpen(b.dataset.url); return; }
   const p = (t.closest('[data-p]') || {}).dataset;
   if (PR.menu && !(p && p.p === 'timer')) { prMenu(false); if (!p) return; }
+  if (PR.links && !(p && p.p === 'links')) { prLinks(false); if (!p) return; }
   if (p) {
     if (p.p === 'prev') return prPrev();
     if (p.p === 'next') return prNext();
     if (p.p === 'agenda' || p.p === 'notes' || p.p === 'blank') return prToggle(p.p);
     if (p.p === 'timer') return prMenu(!PR.menu);
+    if (p.p === 'links') return prLinks(!PR.links);
     if (p.p === 'pick' || p.p === 'groups') return prPick(p.p);
     if (p.p === 'full') return prFullToggle();
     if (p.p === 'end') return presentEnd();
@@ -421,6 +473,12 @@ function prKey(e) {
     if (k === 'Escape' || k.toLowerCase() === 't') return prMenu(false);
     return;
   }
+  if (PR.links) {   // the list of links is open: a number opens that one, Esc or L closes the list
+    stop();
+    if (/^[1-9]$/.test(k)) { const x = prLinkAt(+k); return x ? prLinkOpen(x.url) : undefined; }
+    if (k === 'Escape' || k.toLowerCase() === 'l') return prLinks(false);
+    return;
+  }
   if (PR.blank) { stop(); return prToggle('blank'); }
   if (/^\d$/.test(k)) { stop(); PR.num = (PR.num + k).slice(-3); clearTimeout(PR.numT); PR.numT = setTimeout(() => { PR.num = ''; }, 2500); return prHint('Slide ' + PR.num + ': press Enter', 2500); }
   if (k === 'Enter' && PR.num) { stop(); const i = +PR.num - 1; PR.num = ''; prHint(''); return prGo(Math.min(i, PR.l.slides.length - 1)); }
@@ -435,6 +493,7 @@ function prKey(e) {
   if (c === 'n') { stop(); return prToggle('notes'); }
   if (c === 'b' || k === '.') { stop(); return prToggle('blank'); }
   if (c === 't') { stop(); return prMenu(true); }
+  if (c === 'l' && lkAny(PR.l, PR.slot)) { stop(); return prLinks(true); }
   if (PR.timer && !PR.timer.done && (k === '+' || k === '=' || k === '-')) { stop(); return prTimerAdd(k === '-' ? -60 : 60); }
   if (c === 'f') { stop(); return prFullToggle(); }
   if (c === 'p') { stop(); return prPick('pick'); }
@@ -448,12 +507,14 @@ async function presentEnd() {
   PR.on = false; pkClose();
   clearInterval(PR.tickT); clearTimeout(PR.idleT); clearTimeout(prHintT); clearTimeout(PR.numT);
   document.removeEventListener('keydown', prKey, true); document.removeEventListener('fullscreenchange', prFull); window.removeEventListener('resize', prFit);
-  const lock = PR.lock, ac = PR.ac, full = document.fullscreenElement === el;
-  PR.lock = PR.ac = PR.timer = PR.el = null;
-  el.remove();   // a full-screen stage taken off the page leaves full screen by itself
-  try { if (full && document.fullscreenElement) await document.exitFullscreen(); } catch { }
+  const lock = PR.lock, full = document.fullscreenElement === el;
+  PR.lock = PR.el = null;   // the timer, and its sound, go on (prFloat)
+  if (!gsFull.drop(el)) {   // with the whole Planner in full screen under it, back to that (src/fullscreen.js)
+    el.remove();   // a full-screen stage taken off the page leaves full screen by itself
+    try { if (full && document.fullscreenElement) await document.exitFullscreen(); } catch { }
+  }
   try { if (lock) await lock.release(); } catch { }
-  try { if (ac) ac.close(); } catch { }
+  prFloat();
   if (L.view === 'edit' && L.open === l) { L.cur = Math.min(i, l.slides.length - 1); renderEditor(); }
   if (back && back.isConnected && back.focus) try { back.focus({ preventScroll: true }); } catch { }
   // Taught on its day, for more than a moment: one line on where the class got to.

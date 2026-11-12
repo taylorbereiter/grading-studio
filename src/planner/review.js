@@ -6,9 +6,10 @@
    - Versions: a copy is kept when it's sent, before Claude's changes come in, and on request.
    - When Claude changes a lesson in the Planner folder, the teacher's copy from just before is kept, and the
      editor offers a side-by-side look with Keep Claude's / Keep mine for each slide. */
-const STATUS = { claude: 'With Claude', review: 'Ready for you' };
+const STATUS = { claude: 'With the assistant', review: 'Ready for you' };   // the chip's words are read when it is drawn (statusSay): the assistant's name is the teacher's own
+const statusSay = k => k === 'claude' ? 'With ' + plAi() : STATUS[k];
 const MAX_VERSIONS = 30;
-const statusChip = l => l.status && STATUS[l.status] ? '<span class="pl-st st-' + l.status + '">' + STATUS[l.status] + '</span>' : '';
+const statusChip = l => l.status && STATUS[l.status] ? '<span class="pl-st st-' + l.status + '">' + statusSay(l.status) + '</span>' : '';
 
 /* ---------- versions: kv 'ver:<lesson id>' ---------- */
 const snap = l => { const c = JSON.parse(JSON.stringify(l)); delete c._file; delete c._mod; delete c.pending; return c; };
@@ -21,7 +22,7 @@ async function saveVersion(l, label, from) {
 async function versionsDlg(l) {
   const vs = await versionsOf(l);
   openDlg('<div class="bh"><h2>Versions of “' + esc(l.title) + '”</h2><button class="btn sm" data-sv>Save a version now</button></div><div class="bb"><div class="ls-pick">' +
-    (vs.length ? vs.map((v, i) => '<div class="ls-row"><div class="ls-card" style="flex:1;cursor:default"><b>' + esc(v.label) + '</b><span>' + new Date(v.at).toLocaleString() + ' · ' + v.lesson.slides.length + ' slides</span></div><button class="btn sm" data-rv="' + i + '">Go back to this</button></div>').join('') : '<p class="muted">No versions yet. One is kept each time you send the lesson to Claude, when Claude’s changes come in, and when you approve it.</p>') +
+    (vs.length ? vs.map((v, i) => '<div class="ls-row"><div class="ls-card" style="flex:1;cursor:default"><b>' + esc(v.label) + '</b><span>' + new Date(v.at).toLocaleString() + ' · ' + v.lesson.slides.length + ' slides</span></div><button class="btn sm" data-rv="' + i + '">Go back to this</button></div>').join('') : '<p class="muted">No versions yet. One is kept each time you send the lesson to ' + plAi() + ', when ' + plAi() + '’s changes come in, and when you approve it.</p>') +
     '</div></div><div class="bf"><button class="btn" data-x>Close</button></div>');
   $('#dlgBox').onclick = async e => {
     if (e.target.closest('[data-x]')) return closeDlg();
@@ -42,18 +43,18 @@ async function versionsDlg(l) {
 /* ---------- sending to Claude, approving ---------- */
 async function sendToClaude(l) {
   editorCommit(); boxNotesToSlides(l);
-  await saveVersion(l, 'Sent to Claude');
+  await saveVersion(l, 'Sent to ' + plAi());
   l.status = 'claude'; await lPut(l);
   const asks = l.slides.filter(s => s.ask.trim()).length, talks = l.slides.filter(s => s.talk.some(t => t.by === 'you' && !t.done)).length;
   const file = fileBase(l) + '.lesson.json';
   const msg = L.dir && L.dirOk
-    ? 'Please work on my lesson "' + l.title + '" in my Planner folder ("' + L.dir.name + '"), file "' + file + '". Read "README - for Claude.md" there first.\n\n' +
+    ? 'Please work on my lesson "' + l.title + '" in my Planner folder ("' + L.dir.name + '"), file "' + file + '". Read "README - for ' + plAi() + '.md" there first.\n\n' +
       (asks ? asks + ' slide' + (asks === 1 ? ' has' : 's have') + ' an "ask" saying what I want on it. ' : '') + (talks ? talks + ' slide' + (talks === 1 ? ' has' : 's have') + ' comments from me in "talk". ' : '') + (lessonNotes(l).length ? 'My comments on the whole lesson are in the lesson\'s own "talk". ' : '') +
       lessonNotes(l).map(x => 'My comment on the whole lesson: ' + x + '\n').join('') +
       'Build the lesson out from my outline and those notes. Keep my wording where I wrote it. When you\'re done, reply to my comments in "talk", put a short summary in "claudeNote", and set "status" to "review". Don\'t change "id" or "slots". I\'ll look at your version slide by slide in the Planner.'
-    : 'Here is a lesson from my Planner. Each slide may have "What I want here" notes and comments for you. Build it out, keep my wording where I wrote it, slide 1 stays the title slide and slide 2 the agenda, and slide text stays 28 to 36 pt.\n\n' + lessonText(l);
+    : 'Here is a lesson from my Planner. Each slide may have "What I want here" notes and comments for you. Build it out, keep my wording where I wrote it, slide 1 stays the title slide' + (deckAgenda() ? ' and slide 2 the agenda' : '') + ', and slide text stays ' + deckSizeSay() + ' pt.\n\n' + lessonText(l);
   await copyText(msg);
-  toast(L.dir && L.dirOk ? 'Copied. Paste it into Claude. Claude’s changes show up here when it saves.' : 'Lesson copied. Paste it into Claude. Link the Planner folder so Claude can save straight back.', 7000);
+  toast(L.dir && L.dirOk ? 'Copied. Paste it into ' + plAi() + '. ' + PlAi() + '’s changes show up here when it saves.' : 'Lesson copied. Paste it into ' + plAi() + '. Link the Planner folder so ' + plAi() + ' can save straight back.', 7000);
   renderEditor();
 }
 
@@ -67,20 +68,20 @@ function changesOf(l) {
   return out;
 }
 function pendingBar(l) {
-  if (!l.pending) return l.claudeNote && l.status === 'review' ? '<div class="pl-claude"><b>Claude’s note</b><span>' + esc(l.claudeNote) + '</span></div>' : '';
+  if (!l.pending) return l.claudeNote && l.status === 'review' ? '<div class="pl-claude"><b>' + PlAi() + '’s note</b><span>' + esc(l.claudeNote) + '</span></div>' : '';
   const ch = changesOf(l);
-  return '<div class="pl-claude pending"><div><b>Claude changed this lesson</b><span>' + (ch.length ? ch.length + ' slide' + (ch.length === 1 ? '' : 's') + ' changed, added or taken out.' : 'No slides changed.') + (l.claudeNote ? ' “' + esc(l.claudeNote) + '”' : '') + '</span></div>' +
+  return '<div class="pl-claude pending"><div><b>' + PlAi() + ' changed this lesson</b><span>' + (ch.length ? ch.length + ' slide' + (ch.length === 1 ? '' : 's') + ' changed, added or taken out.' : 'No slides changed.') + (l.claudeNote ? ' “' + esc(l.claudeNote) + '”' : '') + '</span></div>' +
     '<span class="sp"></span>' + (ch.length ? '<button class="btn sm primary" data-a="cmp">Look slide by slide</button>' : '') + '<button class="btn sm" data-a="keepall">Keep all of it</button><button class="btn sm ghost" data-a="undoall">Go back to mine</button></div>';
 }
 function compareDlg(l) {
   const ch = changesOf(l), pick = ch.map(() => 'claude');
   const mini = s => s ? '<div class="pl-cmini"><div class="ls-slide">' + slideHtml(s, l, false) + '</div></div>' : '<div class="pl-cmini none">Not there</div>';
-  const row = (c, i) => '<div class="pl-crow" data-i="' + i + '"><div class="pl-ch">' + (c.kind === 'added' ? 'Claude added a slide' : c.kind === 'removed' ? 'Claude took out a slide' : 'Slide ' + (l.slides.indexOf(c.now) + 1) + ' changed') + '</div>' +
+  const row = (c, i) => '<div class="pl-crow" data-i="' + i + '"><div class="pl-ch">' + (c.kind === 'added' ? PlAi() + ' added a slide' : c.kind === 'removed' ? PlAi() + ' took out a slide' : 'Slide ' + (l.slides.indexOf(c.now) + 1) + ' changed') + '</div>' +
     '<div class="pl-cpair"><label class="pl-side' + (pick[i] === 'mine' ? ' on' : '') + '"><input type="radio" name="c' + i + '" value="mine"' + (pick[i] === 'mine' ? ' checked' : '') + '>' + mini(c.was) + '<span>' + (c.kind === 'added' ? 'Leave it out' : 'Keep mine') + '</span></label>' +
-    '<label class="pl-side' + (pick[i] === 'claude' ? ' on' : '') + '"><input type="radio" name="c' + i + '" value="claude"' + (pick[i] === 'claude' ? ' checked' : '') + '>' + mini(c.now) + '<span>' + (c.kind === 'removed' ? 'Take it out' : 'Keep Claude’s') + '</span></label></div>' +
-    (c.now && c.now.talk.some(t => t.by === 'claude') ? '<div class="pl-ctalk">' + c.now.talk.filter(t => t.by === 'claude').map(t => '<span>Claude: ' + esc(t.text) + '</span>').join('') + '</div>' : '') + '</div>';
-  openDlg('<div class="bh"><h2>Claude’s changes</h2><span class="muted" style="font-size:13px">Yours on the left, Claude’s on the right. Pick one for each.</span></div><div class="bb pl-cmp">' + ch.map(row).join('') + '</div>' +
-    '<div class="bf"><button class="btn" data-all="mine">All mine</button><button class="btn" data-all="claude">All Claude’s</button><span class="sp" style="flex:1"></span><button class="btn" data-x>Later</button><button class="btn primary" data-ok>Done</button></div>');
+    '<label class="pl-side' + (pick[i] === 'claude' ? ' on' : '') + '"><input type="radio" name="c' + i + '" value="claude"' + (pick[i] === 'claude' ? ' checked' : '') + '>' + mini(c.now) + '<span>' + (c.kind === 'removed' ? 'Take it out' : 'Keep ' + plAi() + '’s') + '</span></label></div>' +
+    (c.now && c.now.talk.some(t => t.by === 'claude') ? '<div class="pl-ctalk">' + c.now.talk.filter(t => t.by === 'claude').map(t => '<span>' + PlAi() + ': ' + esc(t.text) + '</span>').join('') + '</div>' : '') + '</div>';
+  openDlg('<div class="bh"><h2>' + PlAi() + '’s changes</h2><span class="muted" style="font-size:13px">Yours on the left, ' + plAi() + '’s on the right. Pick one for each.</span></div><div class="bb pl-cmp">' + ch.map(row).join('') + '</div>' +
+    '<div class="bf"><button class="btn" data-all="mine">All mine</button><button class="btn" data-all="claude">All ' + plAi() + '’s</button><span class="sp" style="flex:1"></span><button class="btn" data-x>Later</button><button class="btn primary" data-ok>Done</button></div>');
   const box = $('#dlgBox');
   box.onchange = e => { const r = e.target.closest('.pl-crow'); if (!r) return; pick[+r.dataset.i] = e.target.value; for (const s of r.querySelectorAll('.pl-side')) s.classList.toggle('on', s.querySelector('input').checked); };
   box.onclick = async e => {
@@ -105,29 +106,29 @@ function applyPicks(l, ch, pick) {
   const mine = pick.filter(p => p === 'mine').length;
   delete l.pending; L.cur = Math.min(L.cur, l.slides.length - 1);
   lessonChanged(false); renderEditor();
-  toast(mine ? 'Done. Kept yours on ' + mine + ', Claude’s on ' + (pick.length - mine) + '.' : 'Done. Kept all of Claude’s changes.');
+  toast(mine ? 'Done. Kept yours on ' + mine + ', ' + plAi() + '’s on ' + (pick.length - mine) + '.' : 'Done. Kept all of ' + plAi() + '’s changes.');
 }
 async function undoAll(l) {
   const before = l.pending.before, title = l.pending.title;
-  await saveVersion(l, 'Claude’s version (you went back to yours)');
+  await saveVersion(l, PlAi() + '’s version (you went back to yours)');
   l.slides = before.map(normSlide); if (title) l.title = title; delete l.pending;
-  L.cur = Math.min(L.cur, l.slides.length - 1); lessonChanged(false); renderEditor(); toast('Back to your version. Claude’s is under Versions.');
+  L.cur = Math.min(L.cur, l.slides.length - 1); lessonChanged(false); renderEditor(); toast('Back to your version. ' + PlAi() + '’s is under Versions.');
 }
 // Called by the folder reader when a lesson file changed outside the app.
 async function claudeChanged(old, l) {
   if (!old) return;
   if (!l.taught && old.taught) l.taught = old.taught;   // a file written without the taught notes doesn't lose them
   if (JSON.stringify(old.slides.map(slideKey)) === JSON.stringify(l.slides.map(slideKey)) && old.title === l.title) { if (old.pending) l.pending = old.pending; return; }
-  await saveVersion(old, 'Before Claude’s changes');
+  await saveVersion(old, 'Before ' + plAi() + '’s changes');
   l.pending = old.pending || { at: Date.now(), before: JSON.parse(JSON.stringify(old.slides)), title: old.title };
 }
 
 /* ---------- the slide's "for Claude" note and comments ---------- */
 function slideTalkHtml(s) {
-  // One box for everything said to Claude about this slide: what I want, screenshots for context, then the comments.
-  return '<div class="pl-ask"><label class="ls-notes"><span>What I want on this slide <span class="muted">(for Claude, not shown on the slide)</span></span><textarea data-f="ask" rows="4" placeholder="Like: a short video on ethos here, or three examples from Ch 4">' + esc(s.ask) + '</textarea></label>' +
+  // One box for everything said to the assistant about this slide: what I want, screenshots for context, then the comments.
+  return '<div class="pl-ask"><label class="ls-notes"><span>What I want on this slide <span class="muted">(for ' + plAi() + ', not shown on the slide)</span></span><textarea data-f="ask" rows="4" placeholder="Like: a short video on ethos here, or three examples from Ch 4">' + esc(s.ask) + '</textarea></label>' +
     ctxHtml(s) +
-    '<div class="pl-talk">' + s.talk.map((t, i) => '<div class="pl-msg ' + (t.by === 'claude' ? 'cl' : 'me') + (t.done ? ' done' : '') + '"><b>' + (t.by === 'claude' ? 'Claude' : 'You') + '</b><span>' + esc(t.text) + '</span><button class="btn sm ghost" data-talkdone="' + i + '">' + (t.done ? 'Open again' : 'Done') + '</button></div>').join('') +
+    '<div class="pl-talk">' + s.talk.map((t, i) => '<div class="pl-msg ' + (t.by === 'claude' ? 'cl' : 'me') + (t.done ? ' done' : '') + '"><b>' + (t.by === 'claude' ? PlAi() : 'You') + '</b><span>' + esc(t.text) + '</span><button class="btn sm ghost" data-talkdone="' + i + '">' + (t.done ? 'Open again' : 'Done') + '</button></div>').join('') +
     '<div class="pl-say"><input class="btn sm" data-f="say" placeholder="Comment on this slide…" aria-label="Comment on this slide" title="A comment can be answered and ticked Done. What you want on the slide goes in the box above."><button class="btn sm ghost pl-mic" data-dict="[data-f=&quot;say&quot;]" title="Say it instead of typing">🎤</button><button class="btn sm" data-a="say">Add</button></div></div></div>';
 }
 /* ---------- screenshots for context: on the slide's "for Claude" area, not on the slide ---------- */
@@ -138,7 +139,7 @@ function ctxHtml(s) {
     '<span class="muted pl-cs-tip">Screenshots are for context, not on the slide. Crop out student names and faces first.</span></div>' +
     (c.length ? '<div class="pl-cs-list">' + c.map((x, i) => '<div class="pl-csi"><button class="pl-csi-img" data-ctxview="' + i + '" title="See it bigger"><img src="' + esc(imgSrc(x.src)) + '" alt="' + esc(x.note || 'Screenshot') + '"></button>' +
       '<input class="btn sm" data-f="ctxnote" data-i="' + i + '" value="' + esc(x.note) + '" placeholder="What is it? (like: the task sheet)" aria-label="What this screenshot is">' +
-      '<div class="pl-csi-b"><button class="btn sm" data-ctxput="' + i + '" title="Make a picture slide of it after this one">Put on a slide</button><button class="btn sm ghost" data-ctxcopy="' + i + '" title="Copy the picture to paste into Claude">Copy</button><button class="btn sm ghost" data-ctxdel="' + i + '" title="Remove">×</button></div></div>').join('') + '</div>'
+      '<div class="pl-csi-b"><button class="btn sm" data-ctxput="' + i + '" title="Make a picture slide of it after this one">Put on a slide</button><button class="btn sm ghost" data-ctxcopy="' + i + '" title="Copy the picture to paste into ' + plAi() + '">Copy</button><button class="btn sm ghost" data-ctxdel="' + i + '" title="Remove">×</button></div></div>').join('') + '</div>'
       : '') + '</div>';
 }
 async function addCtxShots(files) {
@@ -156,7 +157,7 @@ async function ctxCopy(x) {
     const c = document.createElement('canvas'); c.width = im.naturalWidth; c.height = im.naturalHeight; c.getContext('2d').drawImage(im, 0, 0);
     const b = await new Promise(r => c.toBlob(r, 'image/png'));
     await navigator.clipboard.write([new ClipboardItem({ 'image/png': b })]);
-    toast('Screenshot copied. Paste it into Claude.');
+    toast('Screenshot copied. Paste it into ' + plAi() + '.');
   } catch { toast('This browser couldn’t copy the picture. Right-click it and choose Copy image.', 6000); }
 }
 function ctxView(x) {
@@ -171,8 +172,8 @@ function ctxPut(x) {
 /* ---------- comments on the whole lesson: kept on the lesson ("talk"), shown under the slide's ---------- */
 function lessonTalkHtml(l) {
   const ms = l.talk || [];
-  return '<div class="pl-ltalk"><div class="pl-ltalk-h"><h3>For Claude: the whole lesson</h3><span class="muted sp-small">Comments on how the lesson should go overall. They go with it when you copy it for Claude.</span></div>' +
-    '<div class="pl-talk">' + ms.map((t, i) => '<div class="pl-msg ' + (t.by === 'claude' ? 'cl' : 'me') + (t.done ? ' done' : '') + '"><b>' + (t.by === 'claude' ? 'Claude' : 'You') + '</b><span>' + esc(t.text) + '</span><button class="btn sm ghost" data-ltalkdone="' + i + '">' + (t.done ? 'Open again' : 'Done') + '</button></div>').join('') +
+  return '<div class="pl-ltalk"><div class="pl-ltalk-h"><h3>For ' + plAi() + ': the whole lesson</h3><span class="muted sp-small">Comments on how the lesson should go overall. They go with it when you copy it for ' + plAi() + '.</span></div>' +
+    '<div class="pl-talk">' + ms.map((t, i) => '<div class="pl-msg ' + (t.by === 'claude' ? 'cl' : 'me') + (t.done ? ' done' : '') + '"><b>' + (t.by === 'claude' ? PlAi() : 'You') + '</b><span>' + esc(t.text) + '</span><button class="btn sm ghost" data-ltalkdone="' + i + '">' + (t.done ? 'Open again' : 'Done') + '</button></div>').join('') +
     '<div class="pl-say"><input class="btn sm" data-f="lsay" placeholder="Comment on the whole lesson…" aria-label="Comment on the whole lesson"><button class="btn sm ghost pl-mic" data-dict="[data-f=&quot;lsay&quot;]" title="Say it instead of typing">🎤</button><button class="btn sm" data-a="lsay">Add</button></div></div></div>';
 }
 function addLessonComment() {
@@ -192,8 +193,8 @@ function commentsDlg(l, showDone) {
   const done = l.slides.reduce((k, s) => k + (s.talk || []).filter(t => t.done).length, (l.talk || []).filter(t => t.done).length);
   openDlg('<div class="bh"><h2>Comments on “' + esc(l.title) + '”</h2></div><div class="bb pl-cmts">' +
     (rows.length ? rows.map(r => '<div class="pl-cmt-s">' + (r.i < 0 ? '<button class="link" data-cgo="-1"><b>The whole lesson</b></button>' : '<button class="link" data-cgo="' + r.i + '"><b>Slide ' + (r.i + 1) + '</b>' + (r.s.title ? ': ' + esc(r.s.title.replace(/[*_{}]|\{\w*\}/g, '')) : '') + '</button>') +
-      r.ms.map(m => '<div class="pl-msg ' + (m.t.by === 'claude' ? 'cl' : 'me') + (m.t.done ? ' done' : '') + '"><b>' + (m.t.by === 'claude' ? 'Claude' : 'You') + '</b><span>' + esc(m.t.text) + '</span><button class="btn sm ghost" data-cdone="' + r.i + ':' + m.j + '">' + (m.t.done ? 'Open again' : 'Done') + '</button></div>').join('') + '</div>').join('')
-      : '<p class="muted">' + (done ? 'No open comments. ' : 'No comments on this lesson yet. Add one under a slide or in “For Claude: the whole lesson”, or right-click a slide and choose Comment for Claude.') + '</p>') +
+      r.ms.map(m => '<div class="pl-msg ' + (m.t.by === 'claude' ? 'cl' : 'me') + (m.t.done ? ' done' : '') + '"><b>' + (m.t.by === 'claude' ? PlAi() : 'You') + '</b><span>' + esc(m.t.text) + '</span><button class="btn sm ghost" data-cdone="' + r.i + ':' + m.j + '">' + (m.t.done ? 'Open again' : 'Done') + '</button></div>').join('') + '</div>').join('')
+      : '<p class="muted">' + (done ? 'No open comments. ' : 'No comments on this lesson yet. Add one under a slide or in “For ' + plAi() + ': the whole lesson”, or right-click a slide and choose Comment for ' + plAi() + '.') + '</p>') +
     '</div><div class="bf">' + (done ? '<button class="btn ghost" data-cshow>' + (showDone ? 'Hide done' : 'Show done (' + done + ')') + '</button>' : '') + '<span class="sp"></span><button class="btn" data-x>Close</button></div>');
   $('#dlgBox').onclick = e => {
     if (e.target.closest('[data-x]')) return closeDlg();
@@ -224,7 +225,7 @@ async function reviewClick(t) {
   if (a === 'send') { await sendToClaude(l); return true; }
   if (a === 'versions') { editorCommit(); await versionsDlg(l); return true; }
   if (a === 'cmp') { editorCommit(); compareDlg(l); return true; }
-  if (a === 'keepall') { delete l.pending; lessonChanged(false); renderEditor(); toast('Kept all of Claude’s changes. Your version is under Versions.'); return true; }
+  if (a === 'keepall') { delete l.pending; lessonChanged(false); renderEditor(); toast('Kept all of ' + plAi() + '’s changes. Your version is under Versions.'); return true; }
   if (a === 'undoall') { await undoAll(l); return true; }
   if (a === 'say') { addComment(); return true; }
   if (a === 'lsay') { addLessonComment(); return true; }

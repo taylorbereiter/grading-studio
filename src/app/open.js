@@ -63,7 +63,7 @@ async function intake(entries, label, assignment, fromKeep) {   // entries: [{ p
   const id = batchIdOf(raw);
   const paperList = keepList.filter(e => !houseFile(e.path));
   const sameSize = fromKeep ? [] : await changedInPlace(id, paperList).catch(e => { console.error(e); return []; });   // same names and sizes, different bytes
-  const earlier = fromKeep ? null : await findEarlier(id, paperList, assignment).catch(e => { console.error(e); return null; });   // an older copy of this download, already worked on?
+  const earlier = fromKeep || paperList.every(e => isNotes(e.data)) ? null : await findEarlier(id, paperList, assignment).catch(e => { console.error(e); return null; });   // an older copy of this download, already worked on?
   if (earlier && earlier.asg) assignment = earlier.asg;
   if (!assignment && !fromKeep) assignment = cardOfKept(id);   // the same download dropped again still belongs to its card, the same as opening it from the list
   const rub = await rubricAtOpen(assignment, earlier ? earlier.d : newestWork(store.get(id, null), await kget('work', id)), (assignment && assignment.name) || label || 'This download');
@@ -171,6 +171,16 @@ function groupRaw(raw) {
 // the paths they came with, so the export hands back the same names. A download already worked on before this was known keeps the
 // students it had: srcRead leaves it alone.
 const SRC_CANVAS = /^([^_\/A-Z\s]*[^_\/A-Z\s\d][^_\/A-Z\s]*)_(?:LATE_|late_)?(\d{3,})_(\d{3,})_[^\/]+$/, SRC_MOODLE = /^([^\/]+?)_(\d+)_assignsubmission_[a-z]+_(?:\/.+|[^\/]*)$/i;
+// Google Classroom names the copy it makes for each student "Jane Doe - Essay template", all in the assignment's one Drive folder. When loose
+// files are named that way, with more than one student and the same titles coming up again and again, each student's files are put together
+// under their name. A file a student uploaded under its own name has no student in it, and stays as it came.
+const SRC_GCLASS = /^([^\/]*[^\/\s\d][^\/]*?) - ([^\/]+?)(?:\.[^.\/]+)?$/;
+function srcClassroom(list) {
+  const hits = list.map(r => [r, SRC_GCLASS.exec(r.path)]).filter(x => x[1] && !/\d{3,}/.test(x[1][1]) && x[1][1].trim().split(/\s+/).length <= 5);
+  const whos = new Set(hits.map(x => nameFold(x[1][1].trim()))), titles = new Set(hits.map(x => nameFold(x[1][2].replace(/\s*\(\d+\)$/, '').trim())));
+  if (hits.length < 2 || whos.size < 2 || titles.size * 2 > whos.size) return null;
+  return new Map(hits.map(([r, m]) => [r.path, m[1].trim()]));
+}
 let srcWho = new Map();   // path -> student, for the download being opened or open
 const plainStudent = path => { const parts = path.split('/').filter(Boolean); return parts.length > 1 ? parts[0] : parts[0].replace(/\.[^.]+$/, ''); };
 const studentOf = path => srcWho.get(path) || plainStudent(path);
@@ -178,9 +188,11 @@ async function srcRead(raw) {
   srcWho = new Map();
   const list = raw.filter(r => !houseFile(r.path) && !/^Grade sheet - [^/]*\.pdf$/i.test(r.path));
   const rx = list.length >= 2 && [SRC_CANVAS, SRC_MOODLE].find(x => list.every(r => x.test(r.path)));
-  if (!rx) return;
+  const gcl = rx ? null : srcClassroom(list);
+  if (!rx && !gcl) return;
   const id = batchIdOf(raw);   // as it would have opened before: with work saved that way, it stays that way
   if (store.get(id, null) || keptMeta.has(id) || await kget('work', id)) return;
+  if (gcl) { srcWho = gcl; return; }
   const ids = new Map();   // two students whose names read the same are told apart by their number
   for (const r of list) { const m = rx.exec(r.path), n = m[1].trim(); if (!ids.has(n)) ids.set(n, new Set()); ids.get(n).add(m[2]); }
   if (ids.size < 2) return;   // one name for every file is a naming habit (IMG_2026_1110_…), not a class
@@ -209,7 +221,7 @@ async function spellLikeSaved(raw) {
 async function makeFile(path, data) {
   const name = path.split('/').pop();
   const magic = data && data.length > 4 && data[0] === 0x25 && data[1] === 0x50 && data[2] === 0x44 && data[3] === 0x46;   // "%PDF"
-  let kind = trueKind(isPdf(name) || magic ? 'pdf' : isImg(name) || IMG_MORE.test(name) ? 'img' : MEDIA_RX.test(name) ? 'media' : WORD_RX.test(name) ? 'docx' : TEXT_RX.test(name) ? 'text' : 'other', name, data);
+  let kind = trueKind(isPdf(name) || magic ? 'pdf' : isImg(name) || IMG_MORE.test(name) ? 'img' : MEDIA_RX.test(name) ? 'media' : WORD_RX.test(name) ? 'docx' : TEXT_RX.test(name) ? 'text' : LINK_RX.test(name) && linkOf(data) ? 'link' : 'other', name, data);
   let pdf = kind === 'pdf' ? data : null;
   if (kind === 'pdf' && gsExportLike(data)) {   // a file exported from here with its marks kept: back to the original pages and the marks
     const back = await unpackExport(data);

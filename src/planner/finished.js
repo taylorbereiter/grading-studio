@@ -225,7 +225,7 @@ async function pptxToSlides(u8) {
       const ph = kid(kid(sp, PX.p, 'nvPr'), PX.p, 'ph'); if (!ph || (ph.getAttribute('type') && ph.getAttribute('type') !== 'body')) continue;
       notes = kids(sp, PX.a, 'p').map(p => kids(p, PX.a, 't').map(t => t.textContent).join('')).join('\n').trim();
     }
-    const big = sizes.filter(s => s >= 20), size = big.length ? SIZES.reduce((a, b) => Math.abs(b - Math.min(...big)) < Math.abs(a - Math.min(...big)) ? b : a) : 28;
+    const big = sizes.filter(s => s >= 20), size = big.length ? deckSizes().reduce((a, b) => Math.abs(b - Math.min(...big)) < Math.abs(a - Math.min(...big)) ? b : a) : 28;
     title = title.replace(/[\u200b\ufeff]/g, '').trim();
     const s = { title, body: numberLines(body).join('\n'), notes, size };
     if (ctr || (i === 0 && !pic && body.length <= 2)) { s.layout = 'title'; s.body = body.join('\n').replace(/^[•\t ]+|^\d+\. /gm, ''); }
@@ -261,7 +261,7 @@ async function dlLessonZip(l) {
 }
 // Every lesson on the calendar this week, a folder per class and day.
 async function dlWeek() {
-  const mon = parseYmd(L.weekOf), days = [0, 1, 2, 3, 4].map(i => ymd(addDays(mon, i)));
+  const mon = parseYmd(L.weekOf), days = plWeekOffs().map(i => ymd(addDays(mon, i)));
   const all = {}; let n = 0;
   toast('Getting the week’s lessons ready…', 60000);
   for (const d of days) for (const { c } of meetingsOn(d)) for (const l of lessonsAt(c.id, d)) {
