@@ -85,3 +85,7 @@
 .ibpredtab .iblvl { justify-content: flex-start; }
 .ibcomp { grid-template-columns: minmax(0, 1fr) 76px 16px; max-width: 340px; }
 .ibcomp span:first-child { overflow-wrap: anywhere; }
+/* a paper quiz in an MYP class: the points each level takes */
+.ibqlv .ibqrow{display:flex;flex-direction:column;gap:4px;margin-top:8px}
+.ibqlv .qbw input{width:54px}
+.qbt .qgrow select.qib{max-width:230px}

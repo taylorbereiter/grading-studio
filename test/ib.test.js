@@ -427,3 +427,74 @@ test('predicted grades for a DP class: the worked-out grade is a hint, a click s
   assert.equal(await page.evaluate(() => window.__gs.ibPredOf(window.__gs.state().lib.classes[0], 'Bram Sample', 't1')), null);
   await close();
 });
+
+test('a paper quiz in an MYP class: each question counts for a criterion, and the teacher’s table turns points into levels', async () => {
+  const zip = zipOf({ 'Aria Testwell/Quiz.pdf': await makePaper({ title: 'Aria Testwell quiz', pages: 1 }), 'Bram Sample/Quiz.pdf': await makePaper({ title: 'Bram Sample quiz', pages: 1 }) });
+  const { page, close } = await openApp(browser, { seed: ibSeed() });
+  await openZip(page, zip, 'Unit quiz.zip');
+  const sums = await page.evaluate(() => { const g = window.__gs; return [g.ibQzEven(12), g.ibQzEven(4), g.ibQzLevel([2, 3, 4, 5, 6, 7, 8, 9], 1.5), g.ibQzLevel([2, 3, 4, 5, 6, 7, 8, 9], 5), g.ibQzLevel([2, 3, 4, 5, 6, 7, 8, 9], 20), g.ibQzLevel([1, 1, 2, 2, 3, 3, 4, 4], 2)]; });
+  assert.deepEqual(sums, [[1.5, 3, 4.5, 6, 7.5, 9, 10.5, 12], [0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4], 0, 4, 8, 4]);
+  const st = () => page.evaluate(() => { const s = window.__gs.state(); return JSON.parse(JSON.stringify({ setup: s.setup, quiz: s.batch.quiz, g: s.batch.students.map(x => ({ r: x.grade.rubric, p: x.grade.points, a: x.grade.qAutoL || null })) })); });
+  const box = async (a, b) => {
+    await page.waitForSelector('.qbpg[data-n="0"] canvas');
+    const r = await page.$eval('.qbpg[data-n="0"] canvas', c => { c.scrollIntoView({ block: 'center' }); const b = c.getBoundingClientRect(); return { x: b.left, y: b.top, w: b.width, h: b.height }; });
+    await page.mouse.move(r.x + a[0] * r.w, r.y + a[1] * r.h); await page.mouse.down(); await page.mouse.move(r.x + b[0] * r.w, r.y + b[1] * r.h, { steps: 6 }); await page.mouse.up();
+  };
+  const set = (sel, v) => page.$eval(sel, (e, v) => { e.value = v; e.dispatchEvent(new Event('input', { bubbles: true })); }, v);
+  await page.evaluate(() => window.__gs.openQuizBoxes());
+  await box([0.1, 0.1], [0.6, 0.2]); await box([0.1, 0.3], [0.6, 0.4]); await box([0.1, 0.5], [0.6, 0.6]);
+  assert.equal(await page.$$eval('.qbt .qib', xs => xs.length), 3, 'every question has a criterion');
+  // questions 1 and 2 count for A (4 points), question 3 for C (a scale of 0 to 4)
+  const rows = await page.$$eval('.qbt tbody tr:not(.qgrow)', xs => xs.map(x => x.dataset.q));
+  for (const id of rows.slice(0, 2)) await set('.qbt tr:not(.qgrow)[data-q="' + id + '"] .qpts', '2');
+  await set('.qbt tr:not(.qgrow)[data-q="' + rows[2] + '"] .qpts', '4');
+  await page.$eval('.qbt tr:not(.qgrow)[data-q="' + rows[2] + '"] .qkind', e => { e.value = 'scale'; e.dispatchEvent(new Event('input', { bubbles: true })); });
+  await page.$eval('.qbt tr.qgrow[data-q="' + rows[2] + '"] .qib', e => { e.value = 'C'; e.dispatchEvent(new Event('input', { bubbles: true })); });
+  assert.deepEqual(await page.$$eval('#qbLv .ibqrow', xs => xs.map(x => x.dataset.ibqk + ' ' + x.querySelector('.muted').textContent)), ['A out of 4', 'C out of 4']);
+  assert.match(await page.$eval('#qbLv [data-ibqk="A"] [data-ibqsay]', e => e.textContent), /No levels yet/);
+  // a table that is started has to be finished
+  await set('#qbLv [data-ibqk="A"] [data-ibql="0"]', '1');
+  assert.match(await page.$eval('#qbLv [data-ibqk="A"] [data-ibqsay]', e => e.textContent), /Fill in all eight/);
+  await page.click('[data-save]');
+  await page.waitForFunction(() => /Finish the levels for criterion A/.test(document.body.textContent));
+  assert.ok(await page.$('#qbLv'), 'the boxes stay open');
+  await page.click('#qbLv [data-ibqeven="A"]');
+  assert.deepEqual(await page.$$eval('#qbLv [data-ibqk="A"] [data-ibql]', xs => xs.map(x => x.value)), ['0.5', '1', '1.5', '2', '2.5', '3', '3.5', '4']);
+  await page.click('[data-save]');
+  await page.waitForFunction(() => document.querySelectorAll('#qmBody .qmc img').length === 2);
+  let s = await st();
+  assert.deepEqual([s.setup.mode, s.setup.ib, s.setup.top, s.quiz.qs.map(q => q.ib), s.quiz.lvb], ['rubric', ['A', 'C'], 8, ['A', 'A', 'C'], { A: [0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4] }], 'the task assesses the criteria its questions count for');
+  // Aria: question 1 right. A has a table but is not all marked, so no level yet.
+  await page.click('#qmBody .qmc[data-st="0"] button[data-v="2"]');
+  await page.waitForFunction(() => (window.__gs.state().batch.students[0].grade.q || {})[window.__gs.state().batch.quiz.qs[0].id] === 2);
+  s = await st();
+  assert.deepEqual([s.g[0].r, s.g[0].p, s.g[0].a], [[null, null], '', null]);
+  // by student: question 2 wrong and question 3 gets 3 of 4. A is 2 of 4, level 4. C has no table, so points only.
+  await page.click('#qmView [data-view="s"]');
+  await page.waitForFunction(() => document.querySelectorAll('#qmBody .qmc img').length === 3);
+  await page.click('#qmBody .qmc[data-q="' + rows[1] + '"] button[data-v="0"]');
+  await page.click('#qmBody .qmc[data-q="' + rows[2] + '"] button[data-v="3"]');
+  await page.waitForFunction(() => /C 3 \/ 4/.test(document.querySelector('.qmtot').textContent));
+  assert.equal(await page.$eval('.qmtot', e => e.textContent), 'A 2 / 4, level 4 · C 3 / 4');
+  s = await st();
+  assert.deepEqual([s.g[0].r, s.g[0].p, s.g[0].a, s.g[1].r], [[4, null], '', { A: 1 }, [null, null]], 'a level for A, none for C, no points score, and nothing for the other student');
+  // the teacher gives C a table: the level follows without marking again
+  await page.click('#dlgBox [data-boxes]'); await page.waitForSelector('#qbLv [data-ibqk="C"]');
+  for (const [i, v] of [1, 1, 2, 2, 3, 3, 4, 4].entries()) await set('#qbLv [data-ibqk="C"] [data-ibql="' + i + '"]', String(v));
+  assert.equal(await page.$eval('#qbLv [data-ibqk="C"] [data-ibqsay]', e => e.textContent), '');
+  await page.click('[data-save]');
+  await page.waitForFunction(() => document.querySelector('#qmBody .qmc'));
+  s = await st();
+  assert.deepEqual([s.g[0].r, s.g[0].a], [[4, 6], { A: 1, C: 1 }]);
+  // a mark taken off takes the level it gave with it
+  await page.click('#qmView [data-view="s"]');
+  await page.waitForFunction(() => document.querySelectorAll('#qmBody .qmc').length === 3);
+  await page.click('#qmBody .qmc[data-q="' + rows[2] + '"] button[data-v=""]');
+  await page.waitForFunction(() => window.__gs.state().batch.students[0].grade.rubric[1] == null);
+  s = await st();
+  assert.deepEqual([s.g[0].r, s.g[0].a], [[4, null], { A: 1 }]);
+  await closeBox(page); await shut(page);
+  const total = await page.$eval('#grade .total', e => e.textContent);
+  assert.match(total, /A4.*1 of 2 criteria marked/); assert.equal(/%/.test(total), false, 'no percent: ' + total);
+  await close();
+});
