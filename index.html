@@ -1419,17 +1419,17 @@ small.bkxc{font-weight:500}
 .rsaved .rl{display:block;flex:1;min-width:0;overflow-wrap:anywhere}
 
 /* while a paper is open the sidebar folds to a strip of icons, so the paper gets the room */
-:is(.shell.grading,.pfold) .rail{width:60px;padding:12px 8px;align-items:center;overflow:hidden auto}
-:is(.shell.grading,.pfold) .rail .rl{display:none}
-:is(.shell.grading,.pfold) .rbrand{padding:4px 0 12px}
-:is(.shell.grading,.pfold) .rbrand .rs{display:inline}
-:is(.shell.grading,.pfold) .rnav,:is(.shell.grading,.pfold) .rfind{justify-content:center;width:40px;min-height:40px;height:40px;padding:0;margin:0 0 2px;flex:none}
-:is(.shell.grading,.pfold) .rcap{width:24px;height:0;padding:0;margin:8px 0;border-top:1px solid var(--line)}
-:is(.shell.grading,.pfold) .radd{display:none}
-:is(.shell.grading,.pfold) #railClasses{display:flex;flex-direction:column;align-items:center}
-:is(.shell.grading,.pfold) .rdot{width:10px;height:10px}
-:is(.shell.grading,.pfold) .rsaved{justify-content:center;width:40px;padding:12px 0}
-:is(.shell.grading,.pfold) .rsaved .rdot{margin:0}
+:is(.shell.grading,.pfold,.gsfull) .rail{width:60px;padding:12px 8px;align-items:center;overflow:hidden auto}
+:is(.shell.grading,.pfold,.gsfull) .rail .rl{display:none}
+:is(.shell.grading,.pfold,.gsfull) .rbrand{padding:4px 0 12px}
+:is(.shell.grading,.pfold,.gsfull) .rbrand .rs{display:inline}
+:is(.shell.grading,.pfold,.gsfull) .rnav,:is(.shell.grading,.pfold,.gsfull) .rfind{justify-content:center;width:40px;min-height:40px;height:40px;padding:0;margin:0 0 2px;flex:none}
+:is(.shell.grading,.pfold,.gsfull) .rcap{width:24px;height:0;padding:0;margin:8px 0;border-top:1px solid var(--line)}
+:is(.shell.grading,.pfold,.gsfull) .radd{display:none}
+:is(.shell.grading,.pfold,.gsfull) #railClasses{display:flex;flex-direction:column;align-items:center}
+:is(.shell.grading,.pfold,.gsfull) .rdot{width:10px;height:10px}
+:is(.shell.grading,.pfold,.gsfull) .rsaved{justify-content:center;width:40px;padding:12px 0}
+:is(.shell.grading,.pfold,.gsfull) .rsaved .rdot{margin:0}
 @media (max-width:1100px){
   .rail{width:60px;padding:12px 8px;align-items:center}
   .rail .rl{display:none}
@@ -1442,6 +1442,13 @@ small.bkxc{font-weight:500}
   .rsaved{justify-content:center;width:40px;padding:12px 0}
   .rsaved .rdot{margin:0}
 }
+/* full screen (src/fullscreen.js): the sidebar folds to icons, and while a paper is open it goes, so the paper has the room.
+   On the marking screen the button is in the top bar instead. */
+[data-gsfull] .fs-out{display:none}
+.gsfull [data-gsfull] .fs-in{display:none}
+.gsfull [data-gsfull] .fs-out{display:inline}
+.shell.grading #railFull{display:none}
+.gsfull .shell.grading .rail{display:none}
 /* ---------- Find anything ---------- */
 .finddlg{align-items:flex-start;padding-top:12vh;z-index:34}
 .fbox{width:min(640px,100%);max-height:min(560px,76vh);display:flex;flex-direction:column;background:var(--surface);border-radius:14px;box-shadow:0 4px 12px rgba(20,25,40,.12),0 24px 60px rgba(20,25,40,.28);overflow:hidden}
@@ -1764,6 +1771,81 @@ p.goalline{display:block}
 #glFrom{margin-top:0}
 @media (max-width:700px){.glbar{grid-template-columns:minmax(0,1fr) 56px}.glbar .bkcmpt,.glbar small{grid-column:1 / -1}}
 #glView section{margin:0 0 var(--space-5)}
+/* IB classes: the MYP or DP pill beside a class's name, and the box that says how a class is graded (src/ib.js) */
+.ibpill{display:inline-flex;align-items:center;height:20px;padding:0 var(--space-2);border-radius:var(--corner-pill);background:var(--accent-soft);color:var(--accent);font-size:var(--text-caption);font-weight:600;letter-spacing:.02em}
+.ibways{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--space-2);margin-bottom:var(--space-4)}
+.ibcols{display:grid;grid-template-columns:1.3fr 1fr;gap:var(--space-5)}
+.ibcap{margin:var(--space-3) 0 var(--space-2);font-size:var(--text-control)}
+.ibcrit{display:flex;align-items:center;gap:var(--space-2);margin-bottom:var(--space-2)}
+.ibcrit b{width:18px}
+.ibcrit input{flex:1;min-width:0}
+.ibbounds{display:grid;gap:var(--space-1)}
+.ibbound{display:grid;grid-template-columns:72px 36px 76px;align-items:center;gap:var(--space-2);font-size:var(--text-control)}
+.ibbound input{width:76px}
+.ibnote{font-size:var(--text-control);margin:var(--space-3) 0 0}
+@media (max-width:640px){.ibways,.ibcols{grid-template-columns:1fr}}
+/* an MYP class's gradebook */
+.iblv{display:inline-flex;align-items:baseline;gap:2px;margin:0 3px}
+.iblv i{font-style:normal;font-size:var(--text-caption);font-weight:600;color:var(--muted)}
+.ibtab .ibfm{color:var(--muted)}
+.ibset button{font:inherit;color:inherit;background:none;border:0;padding:2px 6px;border-radius:var(--corner-1);cursor:pointer;min-width:28px}
+.ibset button:hover{background:var(--hover)}
+.ibtodo{color:var(--faint)}
+.ibnone{display:inline-block;padding:1px var(--space-2);border-radius:var(--corner-pill);background:var(--warn-soft);color:var(--warn);font-size:var(--text-caption);font-weight:600}
+.ibfit,.ibadd{margin:var(--space-3) 18px var(--space-4);padding:var(--space-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--corner-4)}
+.ibfithead,.ibaddhead{display:flex;align-items:baseline;gap:var(--space-3);margin-bottom:var(--space-2)}
+.ibfithead h3,.ibaddhead h3{margin:0;font-size:var(--text-lead)}
+.ibrow{display:grid;grid-template-columns:minmax(160px,230px) 1fr auto;gap:var(--space-4);align-items:center;padding:var(--space-3) 0;border-top:1px solid var(--line)}
+.ibev{display:flex;flex-wrap:wrap;gap:var(--space-2)}
+.ibchip{display:inline-flex;align-items:center;gap:var(--space-1);height:24px;padding:0 var(--space-2);border-radius:var(--corner-pill);background:var(--surface-2);color:var(--fg-2);font-size:var(--text-small)}
+.ibchip.fm{background:none;border:1px dashed var(--line-strong);color:var(--muted)}
+.iblvl{display:flex;gap:var(--space-1)}
+.iblvl button{width:30px;height:30px;border:1px solid var(--line-strong);border-radius:var(--corner-2);background:var(--surface);color:var(--fg);font:500 var(--text-control) var(--f-body);cursor:pointer}
+.iblvl button:hover{background:var(--hover)}
+.iblvl button.on{background:var(--accent);border-color:var(--accent);color:var(--accent-fg);font-weight:700}
+.iblvl button.hint{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
+.ibsay{font-size:var(--text-small);margin-top:var(--space-1)}
+.ibsum{display:flex;align-items:center;gap:var(--space-5);border-top:1px solid var(--line);padding-top:var(--space-3)}
+.ibsum b{font-size:var(--text-title)}
+.ibsum .ibg{color:var(--accent)}
+.ibsum>span{flex:1;font-size:var(--text-control)}
+.ibcapw{display:block;font-size:var(--text-caption);font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.ibaddtop,.ibaddcrit{display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-4);margin:var(--space-3) 0;font-size:var(--text-control)}
+.ibaddtop label{display:flex;align-items:center;gap:var(--space-2)}
+.ibchk{display:inline-flex;align-items:center;gap:var(--space-1)}
+.ibadd .bkwrap{margin:var(--space-3) 0 0}
+.ibain{width:56px;text-align:center}
+.ibaddfoot{display:flex;justify-content:flex-end;gap:var(--space-2);margin-top:var(--space-4)}
+@media (max-width:820px){.ibrow{grid-template-columns:1fr}}
+.bktab.ibtab .bksum{position:static;min-width:52px;max-width:none}
+.bktab.ibtab .bkterm.bksum{min-width:72px;max-width:none}
+.ibtab th small,.ibaddtab th small{display:block;font-weight:400;color:var(--muted);font-size:var(--text-caption)}
+.ibtab .bkch button,.ibtab .bkch>span{max-width:150px;min-width:96px}
+.ibtab .bkch>span{display:flex;flex-direction:column;align-items:center;gap:2px;white-space:normal;line-height:1.2;margin:0 auto}
+.ibg7{display:inline-block;min-width:20px;margin-left:var(--space-1);padding:0 var(--space-1);border-radius:var(--corner-1);background:var(--accent);color:var(--accent-fg);font-weight:700;text-align:center}
+/* an MYP class's Charts tab */
+.ibstacks{display:grid;gap:var(--space-2)}
+.ibstack{display:grid;grid-template-columns:minmax(0,190px) minmax(0,1fr) 56px;gap:10px;align-items:center;font-size:var(--text-control)}
+.ibstack>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ibsegs{display:flex;height:22px;border-radius:var(--corner-1);overflow:hidden;background:var(--surface-2)}
+.ibseg{display:flex;align-items:center;justify-content:center;min-width:16px;font-style:normal;font-size:var(--text-caption);font-weight:600;font-variant-numeric:tabular-nums}
+.ibseg.s0{background:var(--bk-fm);color:var(--ch-hi)}.ibseg.s1{background:var(--ch1);color:var(--ch-lo)}.ibseg.s2{background:var(--ch2);color:var(--ch-lo)}.ibseg.s3{background:var(--ch4);color:var(--ch-hi)}.ibseg.s4{background:var(--ch5);color:var(--ch-hi)}
+.ibseg.sn{background:var(--surface-2);color:var(--muted);box-shadow:inset 0 0 0 1px var(--line-strong)}
+.ibseg:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.ibmid{text-align:right;font-variant-numeric:tabular-nums}
+.bkleg.ibleg{flex-wrap:wrap}.bkleg.ibleg i.ibseg{width:10px;height:10px;min-width:0;border-radius:var(--corner-round)}
+.ibtaskw{margin:0}.bktab.ibtasks{width:100%;min-width:0}.bktab.ibtasks th,.bktab.ibtasks td{min-width:0;max-width:none;padding-left:6px;padding-right:6px;white-space:nowrap}.ibtasks td,.ibtasks th{text-align:center}.ibtasks .bknm{text-align:left;position:static}
+.iboften{display:grid;grid-template-columns:minmax(0,190px) minmax(0,1fr) auto;gap:10px;align-items:center;font-size:var(--text-control);margin:6px 0}
+.iboften>span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bkpad>.ibfit{margin-left:0;margin-right:0}
+@media (max-width:640px){.ibstack,.iboften{grid-template-columns:minmax(0,1fr)}}
+/* marking an MYP task */
+.ibask{display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-2);margin-bottom:var(--space-3);padding:var(--space-3);border-radius:var(--corner-3);background:var(--accent-soft);font-size:var(--text-control)}
+.ibtl{display:inline-flex;flex-wrap:wrap;gap:var(--space-2);align-items:baseline}
+.ibtl .iblv{margin:0;gap:3px}.ibtl .iblv i{font-size:var(--text-control)}
+.ibtlsay{font-size:var(--text-control);margin-left:auto}
+.ibtaskl{display:grid;gap:var(--space-2);margin:var(--space-3) 0}
+#ibTaskSet.link{margin-left:var(--space-2)}
 /* ---------- an open assignment's tabs, and a tab's screen drawn on the page (11/10) ---------- */
 .atabs{display:flex;gap:2px;align-self:stretch;margin:-9px 0 -9px 8px;flex:none}
 .atab{display:flex;align-items:center;gap:6px;padding:0 13px;min-height:44px;font-size:var(--text-body);font-weight:500;color:var(--fg-2);text-decoration:none;border-bottom:2px solid transparent;border-top:2px solid transparent;white-space:nowrap}
@@ -2829,6 +2911,19 @@ button.seat[data-n]:hover{border-color:var(--accent)}
 .pk-wl button[aria-pressed="true"]{background:var(--stage-paper);color:var(--stage-ink);border-color:var(--stage-paper);text-decoration:none;font-weight:500}
 .pk-wx{float:right;border:1px solid var(--stage-line);background:none;color:var(--stage-fg);border-radius:var(--corner-3);padding:var(--space-1) var(--space-3);font:inherit;font-weight:600}
 .pk-wx:hover{background:var(--stage-hover)}
+/* Screenshot (src/snip.js): the layer she drags on, the bar along the top and the box being drawn */
+.sniplay{position:fixed;inset:0;z-index:2000;cursor:crosshair;background:rgba(20,25,40,.18);outline:0;touch-action:none;user-select:none}
+.sniplay:has(.snipbox:not([hidden])){background:transparent}
+.snipbox{position:fixed;border:2px solid var(--accent);border-radius:var(--corner-1);box-shadow:0 0 0 9999px rgba(20,25,40,.28);pointer-events:none}
+.snipbar{position:fixed;top:12px;left:50%;transform:translateX(-50%);width:min(620px,calc(100vw - 32px));box-sizing:border-box;background:var(--surface);color:var(--fg);border:1px solid var(--line);border-radius:var(--corner-4);box-shadow:var(--shadow),0 8px 24px rgba(20,25,40,.14);padding:10px 12px;cursor:default;display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px}
+.sniplay.dragging .snipbar{opacity:.35;pointer-events:none}
+.snipt{display:flex;flex-direction:column;gap:2px;flex:1 1 240px;min-width:0}
+.snipt b{font-weight:600}
+.snipt span{color:var(--fg-2);font-size:var(--text-control)}
+.snipacts{display:flex;align-items:center;gap:8px;flex:none}
+.snipmk{display:flex;align-items:center;gap:6px;font-size:var(--text-control);color:var(--fg-2);cursor:pointer;margin-right:4px}
+.snipmk input{accent-color:var(--accent);margin:0}
+.snipnote{flex:1 0 100%;margin:0;color:var(--muted);font-size:var(--text-small)}
 /* a video by its link, partners, and the notes page (src/video.js) */
 .vlink .vlslot{margin:0 0 10px}
 .vlink .vlslot iframe,.vlink .vlslot video{display:block;width:100%;height:38vh;min-height:220px;border:0;border-radius:var(--corner-3);background:var(--fg)}
@@ -2929,6 +3024,7 @@ textarea.stptext{min-height:132px;margin-top:var(--space-2);font:var(--text-cont
   <span class="sp"></span>
   <a class="rnav rupd" id="railUpdate" href="#/settings/about" hidden><span class="rdot"></span><span class="rl">Update ready</span></a>
   <button class="rsaved" id="railSaved" data-wopen></button>
+  <button class="rnav" id="railFull" data-gsfull title="Full screen ( F )" aria-label="Full screen" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="fs-in" d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/><path class="fs-out" d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg><span class="rl">Full screen</span></button>
   <a class="rnav" data-nav="help" href="#/help" title="Help: short answers to common questions"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M9.7 9.6a2.4 2.4 0 1 1 3.7 2c-.9.6-1.4 1.1-1.4 2.1M12 16.8v.1"/></svg><span class="rl">Help</span></a>
   <a class="rnav" data-nav="settings" href="#/settings" title="Settings"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg><span class="rl">Settings</span></a>
 </nav>
@@ -3143,6 +3239,7 @@ textarea.stptext{min-height:132px;margin-top:var(--space-2);font:var(--text-cont
         <button class="mitem" id="keysBtn" data-fg="Tools">All keys <kbd>?</kbd></button>
       </div>
     </div>
+    <button class="icon" id="fullBtn" data-gsfull title="Full screen ( F )" aria-label="Full screen" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path class="fs-in" d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/><path class="fs-out" d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg></button>
     <button class="icon" id="closeBtn" title="Close this assignment and go back to Today" aria-label="Close this assignment and go back to Today"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
   </div>
   <div class="cols" id="cols">
@@ -4145,7 +4242,7 @@ SOFTWARE.
 <script>/* ---------------- saved-data versions: a safety copy, then any format changes, before the app starts ---------------- */
 const gsData = (() => {
   'use strict';
-  const APP_VERSION = "1.27.24";   // from package.json, the one place it's set
+  const APP_VERSION = "1.27.28";   // from package.json, the one place it's set
   const MIGRATIONS = [
   ];
   const DATA_V = Math.max(1, ...MIGRATIONS.map(s => s.to));
@@ -4465,7 +4562,8 @@ const LANG_ES = {
     'Points': 'Puntos', 'Type a total, like 17 out of 20. Each assignment has its own “out of”.': 'Escribe un total, como 17 de 20. Cada tarea tiene su propio máximo.',
     'Percent': 'Porcentaje', 'Type a percent for each paper.': 'Escribe un porcentaje para cada trabajo.',
     'Letter grades': 'Letras', 'A to F, worked out from the percent. You set where each letter starts.': 'De la A a la F, a partir del porcentaje. Tú decides dónde empieza cada letra.',
-    'IB 1 to 7': 'IB del 1 al 7', '1 to 7, worked out from the percent. You set the boundaries for your subject.': 'Del 1 al 7, a partir del porcentaje. Tú fijas los límites de tu asignatura.',
+    'IB DP 1 to 7': 'IB DP del 1 al 7', 'A final grade of 1 to 7, worked out from the percent, as in the Diploma. You set the boundaries for your subject.': 'Una nota final del 1 al 7, a partir del porcentaje, como en el Diploma. Tú fijas los límites de tu asignatura.',
+    'IB MYP criteria': 'Criterios del PAI (IB MYP)', 'Each criterion is marked 0 to 8. You choose the level that fits best, and the total becomes a final grade of 1 to 7.': 'Cada criterio se califica de 0 a 8. Tú eliges el nivel que mejor encaja, y el total se convierte en una nota final del 1 al 7.',
     'This is only what a new assignment starts with. Any assignment can be scored another way.': 'Esto es solo el punto de partida de una tarea nueva. Cualquier tarea se puede puntuar de otra manera.',
     'Where should your work be kept?': '¿Dónde quieres guardar tu trabajo?',
     'Your classes, papers, marks and scores are kept in this browser. Choose a folder on this computer and every save goes there too, with a copy of each day to go back to. Nothing is uploaded.': 'Tus clases, trabajos, marcas y notas se guardan en este navegador. Elige una carpeta de este ordenador y todo se guardará también allí, con una copia de cada día a la que puedes volver. No se sube nada.',
@@ -4503,10 +4601,12 @@ const LANG_ES = {
     'Word papers': 'Trabajos de Word', 'Kept as Word files. They can be converted to PDF pages': 'Se conservan como archivos de Word. Se pueden convertir en páginas PDF', 'Converted to PDF pages as each assignment opens': 'Se convierten en páginas PDF al abrir cada tarea',
     'Tablet and pencil': 'Tableta y lápiz', 'What a finger does on the paper, and pencil pressure': 'Qué hace un dedo sobre la página, y la presión del lápiz',
     'Name covers': 'Tapar nombres', 'You cover names yourself in Check the covers': 'Tú tapas los nombres en Revisar lo tapado', 'You cover names, and typed names are found too': 'Tú tapas los nombres, y además se buscan los nombres escritos a máquina',
+    'Tools': 'Herramientas', 'Screenshot': 'Captura de pantalla', 'Drag over part of the screen to copy a picture of it': 'Arrastra sobre una parte de la pantalla para copiar una imagen de ella',
     'All keys': 'Todas las teclas', 'Every keyboard shortcut': 'Todos los atajos de teclado',
     'Classes and rosters': 'Clases y listas', 'Terms and weights': 'Periodos y pesos', 'Your terms and how each type counts': 'Tus periodos y cuánto cuenta cada tipo',
     'Grading scale and rubrics': 'Escala de calificación y rúbricas', 'Your saved scales and rubrics': 'Tus escalas y rúbricas guardadas',
     'Marking': 'Corrección', 'Mark key, mark colors, Word papers, tablet and pencil': 'Clave de marcas, colores de las marcas, trabajos de Word, tableta y lápiz',
+    'Full screen': 'Pantalla completa', 'Leave full screen': 'Salir de pantalla completa', 'Full screen ( F )': 'Pantalla completa ( F )', 'Leave full screen ( F or Esc )': 'Salir de pantalla completa ( F o Esc )', 'The page fills the screen. F or Esc to leave': 'La página ocupa toda la pantalla. F o Esc para salir',
     'Mark colors': 'Colores de las marcas', 'Colors for ✗, checks and points': 'Colores para ✗, marcas de correcto y puntos',
     'Timetable and calendar': 'Horario y calendario', 'Class times and days off, in the Planner': 'Horas de clase y días sin clase, en el Planificador',
     'Working with AI': 'Trabajar con IA', 'Optional. What an AI assistant can and can’t see': 'Opcional. Lo que un asistente de IA puede ver y lo que no',
@@ -4595,6 +4695,9 @@ const LANG_ES = {
     'find-anything': { q: '¿Qué es Buscar?', words: 'buscar encontrar paleta ctrl k atajo',
       a: ['Un solo cuadro que llega a cada estudiante, tarea, herramienta, ajuste y respuesta de ayuda. Ábrelo desde lo alto de la barra lateral o pulsa **Ctrl K** (**⌘K** en un Mac).',
         'Escribe unas letras de lo que buscas, muévete con las flechas y pulsa Intro. Cada fila hace lo mismo que su botón.'] },
+    'full-screen': { q: '¿Puede la aplicación ocupar toda la pantalla?', words: 'pantalla completa maximizar más espacio concentrarse ocultar barra lateral',
+      a: ['Sí. Pulsa **F**, o **Pantalla completa** cerca del final de la barra lateral. Con un trabajo abierto, el botón está en la barra de arriba, junto a ✕. Las barras del navegador desaparecen y la barra lateral se pliega a iconos. En la pantalla de corrección la barra lateral también desaparece, para que el trabajo tenga el espacio.',
+        'Pulsa **F** otra vez, el mismo botón o **Esc** para salir. Nada se cierra ni se pierde al entrar o salir. En el trabajo formativo, F es para los comentarios, así que allí usa el botón. El Planner funciona igual.'] },
     'add-class': { q: '¿Cómo añado una clase y su lista?', words: 'lista estudiantes alumnos nombres nueva clase',
       a: ['1. Pulsa **Añadir una clase** en la barra lateral y ponle un nombre.', '2. Pega los nombres de los estudiantes, uno por línea. Se conservan en el orden en que los pegas.', '3. Abre la pestaña **Students** de la clase para añadir un identificador, un correo o una nota a cada uno.',
         'Con una lista, al abrir los trabajos de esa clase aparece cada estudiante, también quien no entregó nada.'] },
@@ -4641,6 +4744,9 @@ const LANG_ES = {
     'quick-mark': { q: '¿Cómo corrijo rápido un examen en papel?', words: 'examen prueba preguntas recuadros bien mal puntos test copiar imagen captura claude',
       a: ['Abre **Quick mark** en Setup. Dibuja una vez un recuadro alrededor de cada pregunta, en el escaneo de cualquier estudiante.', 'Luego corrige una pregunta para toda la clase, o el examen entero de un estudiante. Cada pregunta puede mostrar ✗ en las respuestas incorrectas, ✓ y ✗, puntos o una escala con tus propias palabras.',
         'El total pasa a la nota del estudiante. ¿No estás seguro de una respuesta? Pulsa **P** o **⧉ Copy** sobre ella para copiar una imagen solo de esa respuesta, con la pregunta y tu respuesta correcta arriba, y pégala en un asistente de IA para preguntar. El nombre, la nota y tu marca no aparecen, pero la imagen sigue mostrando la letra y las palabras del estudiante.'] },
+    'screenshot': { q: '¿Cómo hago una captura de pantalla?', words: 'captura pantalla recorte imagen copiar portapapeles área zona',
+      a: ['Pulsa **S** en un trabajo, **Alt S** (⌥S en un Mac) en cualquier parte de la app, o el botón de captura al pie de las herramientas de corrección. Arrastra sobre lo que quieras, haz clic en una página para la página entera, o pulsa Intro para todo lo que hay en pantalla. La imagen va al portapapeles, lista para pegar.',
+        'En un trabajo, la página se dibuja de nuevo desde el archivo: los recuadros que tapan nombres se pintan, y el nombre del estudiante y el nombre del archivo sobre el trabajo no aparecen. Desmarca **With my marks** para la página sin tus marcas. Todo lo demás, como la lista de estudiantes, sale tal como se ve en pantalla. No se envía nada a ningún sitio.'] },
     'mark-colors': { q: '¿Puedo cambiar el color de ✗, las marcas de correcto y los puntos?', go: 'Abrir Ajustes, Corrección', words: 'color tinta rojo verde amarillo ámbar puntos parcial crédito completo',
       a: ['Sí. En Ajustes, Corrección, **Mark colors**, o en el menú **Colors** de Quick mark. ✗ usa el color de tu pluma y las marcas de correcto tienen el suyo.',
         'Los puntos escritos en un trabajo, como 1/2, van en el color de ✗ salvo que elijas otro. **By credit** escribe los puntos completos en el color de correcto, los parciales en ámbar y ninguno en el color de ✗: verde, ámbar y rojo si dejas esos.',
@@ -4672,7 +4778,7 @@ const LANG_ES = {
         'Una configuración nunca lleva estudiantes. El texto le dice al asistente que los deje fuera, y cualquier cosa sobre un estudiante se deja fuera y se indica. La aplicación no envía nada: el texto lo llevas tú.',
         '**Copy my setup**, en la misma página, da tu propia configuración como el mismo tipo de texto, para que un colega parta de ella.'] },
     'grading-way': { q: 'Mi centro califica con letras, porcentajes o del 1 al 7. ¿Puedo configurarlo?', go: 'Abrir Ajustes, Calificación', words: 'letras A B C porcentaje IB 7 límites bandas escala',
-      a: ['Sí. En Ajustes, **Grading scale and rubrics** está tu forma de calificar: filas de rúbrica, puntos, porcentaje, letras o IB del 1 al 7, con los límites de cada letra o nivel.', 'Es tu punto de partida para las tareas nuevas. Cada tarea se puede configurar a su manera en Rubric setup.'] },
+      a: ['Sí. En Ajustes, **Grading scale and rubrics** está tu forma de calificar: filas de rúbrica, puntos, porcentaje, letras, criterios del PAI (0 a 8) o IB DP del 1 al 7, con los límites de cada letra o nivel.', 'Es tu punto de partida para las tareas nuevas. Cada tarea se puede configurar a su manera en Rubric setup.'] },
     'status': { q: '¿Cómo marco un trabajo como no entregado, justificado o con retraso?', words: 'ausente sin trabajo exento tarde estado falta',
       a: ['Bajo el total del estudiante en el panel de notas, elige **Missing**, **Excused** o **Late**. El ⋯ de al lado tiene **Leave out of the average**.', 'Los trabajos no entregados y justificados no esperan nota, así que no cuentan como pendientes de corregir.'] },
     'extra-credit': { q: '¿Cómo doy puntos extra?', words: 'bonus puntos extra adicional',
@@ -4884,7 +4990,8 @@ const LANG_ZH = {
     'Points': '分數', 'Type a total, like 17 out of 20. Each assignment has its own “out of”.': '輸入總分，例如滿分 20 得 17。每份作業有自己的滿分。',
     'Percent': '百分比', 'Type a percent for each paper.': '為每份作業輸入百分比。',
     'Letter grades': '等第', 'A to F, worked out from the percent. You set where each letter starts.': 'A 到 F，依百分比換算。每個等第的起點由你設定。',
-    'IB 1 to 7': 'IB 1 到 7', '1 to 7, worked out from the percent. You set the boundaries for your subject.': '1 到 7，依百分比換算。各級的分界由你依科目設定。',
+    'IB DP 1 to 7': 'IB DP 1 到 7', 'A final grade of 1 to 7, worked out from the percent, as in the Diploma. You set the boundaries for your subject.': '最終成績 1 到 7，依百分比換算，如同 DP。各級的分界由你依科目設定。',
+    'IB MYP criteria': 'IB MYP 評量標準', 'Each criterion is marked 0 to 8. You choose the level that fits best, and the total becomes a final grade of 1 to 7.': '每項標準評 0 到 8。由你選出最符合的等級，總分再換算成 1 到 7 的最終成績。',
     'This is only what a new assignment starts with. Any assignment can be scored another way.': '這只是新作業的預設方式。任何作業都可以改用其他方式評分。',
     'Where should your work be kept?': '工作成果要存在哪裡？',
     'Your classes, papers, marks and scores are kept in this browser. Choose a folder on this computer and every save goes there too, with a copy of each day to go back to. Nothing is uploaded.': '你的班級、作業、批註和分數都存在這個瀏覽器。選擇這台電腦上的資料夾，之後每次儲存也會存到那裡，並保留每天的副本，方便回復。不會上傳任何資料。',
@@ -4922,10 +5029,12 @@ const LANG_ZH = {
     'Word papers': 'Word 作業', 'Kept as Word files. They can be converted to PDF pages': '保留為 Word 檔。可以轉換成 PDF 頁面', 'Converted to PDF pages as each assignment opens': '每份作業開啟時轉換成 PDF 頁面',
     'Tablet and pencil': '平板與觸控筆', 'What a finger does on the paper, and pencil pressure': '手指在頁面上的作用，以及筆的壓力',
     'Name covers': '遮蓋姓名', 'You cover names yourself in Check the covers': '你在「檢查遮蓋」中自己遮蓋姓名', 'You cover names, and typed names are found too': '你自己遮蓋姓名，也會自動找出打字的姓名',
+    'Tools': '工具', 'Screenshot': '截圖', 'Drag over part of the screen to copy a picture of it': '拖曳框住畫面的一部分，複製成圖片',
     'All keys': '所有快速鍵', 'Every keyboard shortcut': '所有鍵盤快速鍵',
     'Classes and rosters': '班級與名單', 'Terms and weights': '學期與比重', 'Your terms and how each type counts': '你的學期，以及各類作業所占的比重',
     'Grading scale and rubrics': '評分等第與評分規準', 'Your saved scales and rubrics': '你儲存的評分等第與評分規準',
     'Marking': '批改', 'Mark key, mark colors, Word papers, tablet and pencil': '批改符號表、批改顏色、Word 作業、平板與觸控筆',
+    'Full screen': '全螢幕', 'Leave full screen': '離開全螢幕', 'Full screen ( F )': '全螢幕（F）', 'Leave full screen ( F or Esc )': '離開全螢幕（F 或 Esc）', 'The page fills the screen. F or Esc to leave': '頁面佔滿整個螢幕。按 F 或 Esc 離開',
     'Mark colors': '批改顏色', 'Colors for ✗, checks and points': '✗、勾號與分數的顏色',
     'Timetable and calendar': '課表與行事曆', 'Class times and days off, in the Planner': '上課時間與放假日，在備課頁面',
     'Working with AI': '搭配 AI 使用', 'Optional. What an AI assistant can and can’t see': '可選用。AI 助理看得到和看不到的內容',
@@ -5014,6 +5123,9 @@ const LANG_ZH = {
     'find-anything': { q: '「搜尋」是什麼？', words: '搜尋 尋找 指令 ctrl k 快速鍵 find',
       a: ['一個可以找到每位學生、每份作業、每個工具、每項設定和每則說明的輸入框。從側邊欄最上方開啟，或按 **Ctrl K**（Mac 是 **⌘K**）。',
         '輸入幾個字，用方向鍵移動，再按 Enter。每一列的作用和它的按鈕相同。'] },
+    'full-screen': { q: '應用程式可以佔滿整個螢幕嗎？', words: '全螢幕 最大化 更大 專心 隱藏 側邊欄 full screen',
+      a: ['可以。按 **F**，或按側邊欄下方的 **全螢幕**。開啟作業時，這個按鈕在上方列的 ✕ 旁邊。瀏覽器的工具列會隱藏，側邊欄會收合成圖示。在批改畫面中側邊欄也會隱藏，讓作業有最大的空間。',
+        '再按一次 **F**、同一個按鈕或 **Esc** 即可離開。進入或離開時，不會關閉或遺失任何內容。形成性評量中 F 用於回饋，請在那裡改用按鈕。Planner 也一樣。'] },
     'add-class': { q: '怎麼新增班級和名單？', words: '名單 學生 姓名 新班級 roster',
       a: ['1. 按側邊欄的**新增班級**，並為它命名。', '2. 貼上學生姓名，一行一位。順序會和你貼上的一樣。', '3. 開啟班級的 **Students** 分頁，可以為每位學生加上學號、電子郵件或備註。',
         '有了名單，開啟那個班級的作業時會列出每位學生，包括沒有繳交的人。'] },
@@ -5060,6 +5172,9 @@ const LANG_ZH = {
     'quick-mark': { q: '怎麼快速批改紙本小考？', words: '小考 測驗 考試 題目 框 對 錯 分數 quiz 複製 圖片 截圖 claude',
       a: ['在 Setup 開啟 **Quick mark**。在任何一位學生的掃描檔上，為每一題畫一次框。', '接著可以一次批改全班的同一題，或一位學生的整份考卷。每一題可以在錯的答案上顯示 ✗、顯示 ✓ 和 ✗、給分，或使用你自訂文字的量尺。',
         '總分會成為學生的分數。不確定某個答案？在它上面按 **P** 或 **⧉ Copy**，就會複製只有這個答案的圖片，上方附有題目和你的標準答案，可以貼到 AI 助理詢問。圖片不含姓名、分數和你的批改記號，但仍會顯示學生的筆跡和文字。'] },
+    'screenshot': { q: '怎麼截圖？', words: '截圖 螢幕 擷取 圖片 複製 剪貼簿 範圍 區域',
+      a: ['在作業上按 **S**，在應用程式任何地方按 **Alt S**（Mac 上是 ⌥S），或按批改工具最下方的截圖按鈕。拖曳框住想要的部分，點一頁可截整頁，按 Enter 可截整個畫面。圖片會放到剪貼簿，可以直接貼上。',
+        '在作業上，頁面會從檔案重新繪製：遮蓋姓名的框會塗上，作業上方的學生姓名和檔名不會出現。取消勾選 **With my marks** 可得到沒有你批改記號的頁面。其他部分，例如學生名單，會照畫面上的樣子出現。不會傳送到任何地方。'] },
     'mark-colors': { q: '可以更改 ✗、勾號和分數的顏色嗎？', go: '開啟設定、批改', words: '顏色 墨水 紅 綠 黃 琥珀 分數 部分 得分 滿分',
       a: ['可以。在設定、批改的 **Mark colors**，或 Quick mark 的 **Colors** 選單。✗ 使用筆的顏色，勾號有自己的顏色。',
         '寫在作業上的分數，例如 1/2，除非另外選擇，否則使用 ✗ 的顏色。**By credit** 會把滿分寫成勾號的顏色，部分得分寫成琥珀色，零分寫成 ✗ 的顏色：保留預設就是綠、琥珀、紅。',
@@ -5091,7 +5206,7 @@ const LANG_ZH = {
         '設定裡絕不會有學生資料。提示會要求助理不要放入學生資料；文字中任何與學生有關的內容都會被略過並說明。應用程式不會傳送任何東西：文字由你自己帶過來。',
         '同一個頁面的 **Copy my setup** 會把你自己的設定變成同樣的文字，讓同事可以從它開始。'] },
     'grading-way': { q: '我的學校用等第、百分比或 1 到 7 評分，可以設定嗎？', go: '開啟設定、評分', words: '等第 A B C 百分比 IB 7 分界 級距 量尺',
-      a: ['可以。在設定的 **Grading scale and rubrics** 裡是你的評分方式：評分規準項目、分數、百分比、等第或 IB 1 到 7，以及每個等第或級別的分界。', '這是新作業的預設方式。每份作業都可以在 Rubric setup 裡另外設定。'] },
+      a: ['可以。在設定的 **Grading scale and rubrics** 裡是你的評分方式：評分規準項目、分數、百分比、等第、IB MYP 評量標準（0 到 8）或 IB DP 1 到 7，以及每個等第或級別的分界。', '這是新作業的預設方式。每份作業都可以在 Rubric setup 裡另外設定。'] },
     'status': { q: '怎麼把作業標示為缺交、免交或遲交？', words: '缺席 沒交 免除 遲交 狀態 缺交',
       a: ['在評分面板中學生總分的下方，選擇 **Missing**、**Excused** 或 **Late**。旁邊的 ⋯ 裡有 **Leave out of the average**。', '缺交和免交的作業不需要分數，所以不會算在待批改裡。'] },
     'extra-credit': { q: '怎麼給加分？', words: '加分 額外分數 bonus extra credit',
@@ -5287,6 +5402,10 @@ const HELP = [
     a: ['One box that reaches every student, assignment, tool, setting and help answer. Open it from the top of the sidebar, or press **Ctrl K** (**⌘K** on a Mac).',
       'Type a few letters of what you want, move with the arrow keys and press Enter. Each row does the same thing as the button for it.'],
     words: 'search command palette ctrl k shortcut' },
+  { id: 'full-screen', sec: 'start', q: 'Can the app fill the whole screen?',
+    a: ['Yes. Press **F**, or **Full screen** near the bottom of the sidebar. While a paper is open the button is in the top bar, beside ✕. The browser’s bars go away and the sidebar folds to icons. On the marking screen the sidebar goes away too, so the paper gets the room.',
+      'Press **F** again, the same button, or **Esc** to leave. Nothing is closed or lost on the way in or out. On formative work F is for feedback, so use the button there. The Planner works the same way.'],
+    words: 'fullscreen maximize maximise bigger room focus distraction hide sidebar' },
   { id: 'add-class', sec: 'start', q: 'How do I add a class and its roster?',
     a: ['1. Press **Add a class** in the sidebar and give it a name.', '2. Paste the student names, one on a line. Students are kept in the order you paste them.', '3. Open the class’s **Students** tab to add an ID, an email or a note for each one.',
       'With a roster, every student is listed when you open papers for that class, including anyone who turned nothing in.'],
@@ -5348,6 +5467,10 @@ const HELP = [
     a: ['Open **Quick mark** under Setup. Draw a box around each question once, on any student’s scan.', 'Then mark one question for the whole class, or one student’s whole quiz. Each question can show ✗ on wrong answers, ✓ and ✗, points, or a scale with your own words.',
       'The total goes into the student’s score. Not sure about an answer? Press **P** or **⧉ Copy** on it to copy a picture of just that answer, with the question and your answer key on top, to paste into an AI assistant. The name, score and your mark are left off, but the picture still shows the student’s handwriting and words.'],
     words: 'quiz test questions boxes right wrong points multiple copy picture screenshot ai assistant claude chatgpt' },
+  { id: 'screenshot', sec: 'mark', q: 'How do I take a screenshot?',
+    a: ['Press **S** on a paper, **Alt S** (⌥S on a Mac) anywhere in the app, or the screenshot button at the foot of the marking tools. Drag over what you want, click a page for the whole page, or press Enter for everything on screen. The picture goes on the clipboard, ready to paste.',
+      'On a paper, the page is drawn fresh from the file: name covers are painted in, and the student’s name and file name above the paper are left off. Untick **With my marks** for the page without your marks. Anything else, like the student list, shows as it is on screen. Nothing is sent anywhere.'],
+    words: 'screenshot snip capture picture image copy clipboard grab area region' },
   { id: 'mark-colors', sec: 'mark', q: 'Can I change the color of ✗, checks and points?',
     a: ['Yes. In Settings, Marking, **Mark colors**, or the **Colors** menu in Quick mark. ✗ uses your pen’s color and checks have their own.',
       'Points written on a paper, like 1/2, are in the ✗ color unless you pick another. **By credit** writes full points in the check color, part in amber and none in the ✗ color: green, amber and red if you keep those.',
@@ -5389,7 +5512,7 @@ const HELP = [
       '**Copy my setup** on the same page gives your own setup as the same kind of text, for a colleague to start from.'],
     go: ['Open My setup', '#/settings/setup'], words: 'import ai claude chatgpt gemini prompt setup configure profile colleague share myp dp ib onboarding' },
   { id: 'grading-way', sec: 'score', q: 'My school grades with letters, percent or 1 to 7. Can I set that?',
-    a: ['Yes. Settings, **Grading scale and rubrics** has how you grade: rubric rows, points, percent, letter grades or IB 1 to 7, with the boundaries for each letter or level.', 'It is your default for new assignments. Each assignment can still be set its own way in Rubric setup.'],
+    a: ['Yes. Settings, **Grading scale and rubrics** has how you grade: rubric rows, points, percent, letter grades, IB MYP criteria (0 to 8) or IB DP 1 to 7, with the boundaries for each letter or level.', 'It is your default for new assignments. Each assignment can still be set its own way in Rubric setup.'],
     go: ['Open Settings, Grading', '#/settings/grading'], words: 'letters A B C percent IB 7 boundaries bands default scale' },
   { id: 'status', sec: 'score', q: 'How do I mark a paper missing, excused or late?',
     a: ['Under the student’s total in the score panel, pick **Missing**, **Excused** or **Late**. The ⋯ beside them has **Leave out of the average**.', 'Missing and excused papers have no score to wait for, so they don’t count as left to mark.'],
@@ -5623,8 +5746,7 @@ function pkClose() {
   pkDragEnd();
   PK.on = false; clearInterval(PK.spin); PK.el = null;
   document.removeEventListener('keydown', pkKeyOwn, true);
-  try { if (document.fullscreenElement === el) document.exitFullscreen(); } catch { }
-  el.remove();
+  if (!gsFull.drop(el)) { try { if (document.fullscreenElement === el) document.exitFullscreen(); } catch { } el.remove(); }
   if (o.onClose) o.onClose(); else if (back && back.isConnected && back.focus) try { back.focus({ preventScroll: true }); } catch { }
 }
 function pkRun(fresh) {
@@ -5918,7 +6040,7 @@ let setup = setupOver(store.get('gs.setup', null));
 
 function maxPoints() { return setupMax(setup); }
 const roundPct = v => Math.max(0, Math.round(v + 1e-9));
-function percentFor(total) { return percentWith(total, maxPoints(), setup.scale); }
+function percentFor(total) { return ibSetup() ? null : percentWith(total, maxPoints(), setup.scale); }   // levels on MYP criteria are never a percent (ib.js)
 function percentWith(total, max, sc) {
   if (total == null || total === '' || isNaN(total)) return null;
   if (!max) return null;
@@ -7603,6 +7725,7 @@ const IC = {
   erase: '<path d="M8 20h12"/><path d="M4 15l9-9 6 6-7 7H8z"/>',
   undo: '<path d="M9 7L4 12l5 5"/><path d="M4 12h11a5 5 0 0 1 0 10h-3"/>',
   redo: '<path d="M15 7l5 5-5 5"/><path d="M20 12H9a5 5 0 0 0 0 10h3"/>',
+  snip: '<path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3"/><circle cx="12" cy="12" r="3"/>',
   minus: '<path d="M5 12h14"/>', plus: '<path d="M5 12h14M12 5v14"/>',
 };
 const svg = p => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + p + '</svg>';
@@ -7618,7 +7741,8 @@ function renderTools() {
   $('#tools').innerHTML = TOOLS.map(([k, l, key]) => '<button class="tool' + (once && once.k === k ? ' once' : '') + '" data-tool="' + k + '" aria-pressed="' + ((once ? once.prev : tool) === k) + '" title="' + l + ' (' + key + ')">' + svg(IC[k]) + '<span class="lb">' + l + '</span></button>').join('') +
     (opts ? '<span class="sep"></span><span class="topts">' + opts + '</span>' : '') + '<span class="sep"></span>' +
     '<span class="tpair"><button class="icon" id="undoBtn" title="Undo (' + keyLabel('⌘Z') + ')" aria-label="Undo" ' + (undoStack.length ? '' : 'disabled') + '>' + svg(IC.undo) + '</button>' +
-    '<button class="icon" id="redoBtn" title="Redo (' + keyLabel('⇧⌘Z') + ')" aria-label="Redo" ' + (redoStack.length ? '' : 'disabled') + '>' + svg(IC.redo) + '</button></span>';
+    '<button class="icon" id="redoBtn" title="Redo (' + keyLabel('⇧⌘Z') + ')" aria-label="Redo" ' + (redoStack.length ? '' : 'disabled') + '>' + svg(IC.redo) + '</button></span>' +
+    '<span class="sep"></span><button class="icon" id="snipBtn" title="Screenshot (S): copy a picture of part of the screen" aria-label="Screenshot">' + svg(IC.snip) + '</button>';
   $('#zoomPill').innerHTML = '<span class="zoom"><button class="icon" data-z="-1" aria-label="Zoom out" title="Zoom out (' + keyLabel('⌘−') + ')">' + svg(IC.minus) + '</button><button class="zlab" data-z0 title="' + keyLabel('Back to 100% (⌘0). Pinch or ⌘-scroll on the paper to zoom.') + '">' + Math.round(zoom * 100) + '%</button><button class="icon" data-z="1" aria-label="Zoom in" title="Zoom in (' + keyLabel('⌘+') + ')">' + svg(IC.plus) + '</button></span>';
   for (const pg of pages) pg.canvas.style.cursor = tool === 'select' ? 'default' : tool === 'text' ? 'text' : 'crosshair';
 }
@@ -7631,6 +7755,7 @@ $('#tools').addEventListener('click', e => {
   const w = e.target.closest('[data-w]'); if (w) { penW = +w.dataset.w; store.set('gs.penW', penW); renderTools(); return; }
   if (e.target.closest('#undoBtn')) { undo(); return; }
   if (e.target.closest('#redoBtn')) { redo(); return; }
+  if (e.target.closest('#snipBtn')) { snipStart(); return; }
 });
 $('#zoomPill').addEventListener('click', e => {
   const z = e.target.closest('[data-z]');
@@ -7679,7 +7804,7 @@ function renderList() {
     if (!lfShows(i)) return '';
     const g = gradeOf(st);
     const val = g.total != null ? g.total : g.pct != null ? g.pct + '%' : null;
-    let right = noScore(st) ? '<span class="stag" title="You marked this student ' + g.status + '. No score counts.">' + STATUS_LABEL[g.status] + '</span>' : val != null ? '<span class="sc" title="' + (g.tries ? esc(triesSay(g)) : g.paper ? 'Read from the paper' : g.done ? 'Scored' : 'Partly scored') + '"' + (g.paper || g.out ? ' style="color:var(--muted);font-weight:600"' : g.done ? '' : ' style="color:var(--warn)"') + '>' + fmtNum(g.total != null ? g.total : g.pct) + (g.total == null ? '%' : g.outOf != null ? '/' + fmtNum(g.outOf) : '') + (g.partial ? '<small>partial</small>' : '') + '</span>'
+    let right = noScore(st) ? '<span class="stag" title="You marked this student ' + g.status + '. No score counts.">' + STATUS_LABEL[g.status] + '</span>' : val != null ? '<span class="sc" title="' + (g.tries ? esc(triesSay(g)) : g.paper ? 'Read from the paper' : g.done ? 'Scored' : 'Partly scored') + '"' + (g.paper || g.out ? ' style="color:var(--muted);font-weight:600"' : g.done ? '' : ' style="color:var(--warn)"') + '>' + (ibSetup() ? ibListSay(st) : fmtNum(g.total != null ? g.total : g.pct)) + (g.total == null ? '%' : g.outOf != null ? '/' + fmtNum(g.outOf) : '') + (g.partial ? '<small>partial</small>' : '') + '</span>'
       : manyReads(st) ? '<span class="sc" style="color:var(--warn)" title="More than one grade found on the paper. Check the Grade sheet.">?</span>'
       : st.doubts && st.doubts.length ? '<span class="sc" style="color:var(--warn)" title="A reading on the paper may not be a grade. Confirm it on the Grade sheet.">?</span>'
       : hasMarks(st) ? '<span class="dot" title="Marked"></span>' : '';
@@ -7687,7 +7812,7 @@ function renderList() {
     if (fmNow() && !noScore(st)) right = st.grade.fb ? '<span class="fbck" title="Feedback complete">✓</span>' : hasMarks(st) || (st.grade.comment || '').trim() ? '<span class="dot" title="Started, not complete yet"></span>' : '';
     const nAdd = st.files.filter(f => f.added && !f.from && !madeFromWord(f)).length, re = st.files.some(f => Object.values(f.sc || {}).some(r => r.re)), grp = st.files.some(f => f.from || Object.values(f.sc || {}).some(r => r.w)) || st.files.some(f => !f.added && shareCopies(st, f).length);
     const fm = fmNow(), sv = noScore(st) ? ['–', 'none'] : fm ? (st.grade.fb ? ['✓', 'ok'] : hasMarks(st) || (st.grade.comment || '').trim() ? ['', 'dot'] : st.files.length ? ['', 'ring'] : ['–', 'none'])
-      : val != null ? [fmtNum(g.total != null ? g.total : g.pct) + (g.total == null ? '%' : ''), g.paper || g.out ? 'quiet' : g.done ? '' : 'part'] : manyReads(st) || (st.doubts && st.doubts.length) ? ['?', 'part'] : hasMarks(st) ? ['', 'dot'] : st.files.length ? ['', 'ring'] : ['–', 'none'];
+      : val != null ? [ibSetup() ? ibListSay(st) : fmtNum(g.total != null ? g.total : g.pct) + (g.total == null ? '%' : ''), g.paper || g.out ? 'quiet' : g.done ? '' : 'part'] : manyReads(st) || (st.doubts && st.doubts.length) ? ['?', 'part'] : hasMarks(st) ? ['', 'dot'] : st.files.length ? ['', 'ring'] : ['–', 'none'];
     return '<button class="stu' + (i === cur ? ' on' : '') + (st.files.length ? '' : ' empty') + (sv[1] ? ' sv-' + sv[1] : '') + (g.status === 'late' ? ' is-late' : '') + '" data-i="' + i + '" data-sv="' + sv[0] + '"' + (i === cur ? ' aria-current="true"' : '') + '><span class="num">' + (pos + 1) + '</span><span class="nm" title="' + esc(full) + '">' + esc(nm) + '</span>' + (anonOn() ? '' : whoBtn('data-wi="' + i + '"', st.key)) +
       '<span class="tail">' + (st.files.length || noScore(st) ? '' : '<span class="muted" style="font-size:11px">no paper</span>') + (g.status === 'late' ? '<span class="stag" title="You marked this student late">late</span>' : '') + (g.out ? '<span class="stag out" title="Left out of the average">left out</span>' : '') + (g.tries ? '<span class="stag retk" title="' + esc(triesSay(g)) + '">retake</span>' : '') + (nAdd ? '<span class="add" title="' + nAdd + (nAdd === 1 ? ' file' : ' files') + ' added by you">+' + nAdd + '</span>' : '') + (re ? '<span class="add" title="A page needs a rescan">⚑</span>' : '') + (groupOf(st) ? '<span class="add grp" title="Group work: marked and graded once with ' + esc(groupNames(groupMates(st))) + '">group</span>' : grp ? '<span class="add grp" title="Group work: shares pages or a file with another student">shared</span>' : '') + carryPill(st) + anchorTag(st) + sent + right + '</span></button>';
   }).join('');
@@ -7745,13 +7870,13 @@ function renderGrade() {
   if (fmNow()) return renderFeedback(st);
   if (setup.mode === 'rubric') {
     if (rowOn >= setup.criteria.length) rowOn = -1;
-    h += '<h3>Score <button class="link" id="editRubric">Edit rubric</button></h3><div class="crits">';
+    h += ibPanelAsk() + '<h3>Score <button class="link" id="editRubric">Edit rubric</button>' + ibPanelHead() + '</h3><div class="crits">';   // an MYP class's task is marked against its criteria (ib.js)
     h += setup.criteria.map((c, i) => { const v = g.rubric[i], steps = rowSteps(setup, i), k = steps.indexOf(v), top = rowTop(setup, i);
       return '<div class="crit' + (i === rowOn ? ' on' : '') + '" data-row="' + i + '"><div class="cn"><span title="' + esc(c) + '">' + esc(c) + '</span><em>' + critScore(v, i) + '</em></div><div class="scores slide' + (steps.length > 9 ? ' many' : '') + '" data-c="' + i + '" style="--n:' + (steps.length - 1) + '">' +
         '<input type="range" class="srange' + (v == null ? ' unset' : '') + '" style="--k:' + Math.max(0, k) + '" min="0" max="' + (steps.length - 1) + '" step="1" value="' + Math.max(0, k) + '" aria-label="Score for ' + esc(c) + '" aria-valuetext="' + (v == null ? 'Not scored' : fmtNum(v) + ' out of ' + top) + '">' +
         '<div class="sticks">' + steps.map((w, j) => '<button class="' + (w % 1 ? 'half' : '') + '" style="--k:' + j + '" data-v="' + w + '" tabindex="-1" aria-pressed="' + (v === w) + '">' + w + '</button>').join('') + '</div></div></div>'; }).join('') + '</div>' + lvBox();
   } else {
-    h += '<h3>Score <button class="link" id="editRubric">Edit</button></h3>' +
+    h += ibPanelAsk() + '<h3>Score <button class="link" id="editRubric">Edit</button></h3>' +
       '<div class="pts"><input type="number" step="0.5" min="0" id="ptsIn" value="' + esc(g.points) + '" aria-label="Points"><span class="muted">out of ' + esc(setup.outOf) + '</span></div>';
   }
   h += '<div class="total">' + totalHtml(st) + '</div>' + statusHtml(st) + anchorHtml(st);
@@ -7786,6 +7911,7 @@ function fbToggle(next) {
 function totalHtml(st) {
   const gr = noScore(st) ? gradeOf(st) : tryGrade(st), own = ownGrade(st);   // with a retake, the big number is the try being scored; what counts is in the retake box under it
   if (noScore(st)) return '<b>' + STATUS_LABEL[gr.status] + '</b><span style="width:100%;font-size:12.5px">No score counts. Giving a score takes this off.</span>';
+  if (ibSetup()) return ibTotalHtml(st);   // an MYP task has levels, no total and no percent
   let h = '<b>' + (gr.total == null ? '–' : fmtNum(gr.total)) + '</b><span>/ ' + (gr.outOf != null ? fmtNum(gr.outOf) : maxPoints()) + '</span><span class="pc">' + (gr.pct == null ? '' : fmtPct(gr.pct) + bandSay(gr.pct)) + '</span>';
   if (gr.total != null) h += '<button class="btn sm ghost" id="stampScore" title="Put the score on the paper: ' + esc(scoreStampText(gr)) + '">' + STAMP_ICON + 'Stamp</button>';
   if (gr.xc) h += '<span class="xcsay" style="width:100%">' + fmtNum(gr.base) + ' earned + ' + fmtNum(gr.xc) + (gr.xcU === 'pct' ? '%' : '') + ' extra credit</span>';
@@ -7797,6 +7923,7 @@ function totalHtml(st) {
 }
 const STAMP_ICON = '<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><rect x="2" y="9.5" width="12" height="3.5" rx="1"/><path d="M6 9.5V7.2a2 2 0 1 1 4 0v2.3M3.5 15h9"/></svg>';
 function scoreStampText(gr) {
+  if (ibSetup()) return ibStampText(batch.students[cur]);
   const max = gr.outOf != null ? gr.outOf : maxPoints();
   return fmtNum(gr.total) + (max ? '/' + fmtNum(max) : '') + (gr.pct != null ? ' = ' + gr.pct + '%' : '');
 }
@@ -7955,9 +8082,9 @@ function openKeys() {
     '<h4>Marking</h4>' + row('V', 'Select') + row('P', 'Pen (hold Shift for a straight line)') + row('H', 'Highlight, snapping to typed lines. Press H again for freehand (Shift for straight)') + row('O', 'Circle') + row('T', 'Text') + row('C', 'Comment') + row('K', 'Check mark') + row('E', 'Eraser') +
     row('⌘Z', 'Undo') + row('⇧⌘Z', 'Redo (⌘Y works too)') +
     '<h4>A picked mark (Select tool)</h4>' + row('← → ↑ ↓', 'Nudge it (Shift for bigger steps)') + row('⌘C ⌘V', 'Copy it, then paste on the page you’re looking at, even on another student’s paper') + row('⌘D', 'Make a copy of it') + row('+ −', 'Make it bigger or smaller (or drag the square at its corner)') + row('Delete', 'Remove it') + row('Esc', 'Let go of it (the arrows go back to moving between students)') +
-    '<h4>The paper</h4>' + row('⌘+ ⌘−', 'Zoom in / out (or pinch, or ⌘-scroll)') + row('⌘0', 'Back to 100%') + row('[ ]', 'Keep the student list open / fold away the score panel') +
+    '<h4>The paper</h4>' + row('⌘+ ⌘−', 'Zoom in / out (or pinch, or ⌘-scroll)') + row('⌘0', 'Back to 100%') + row('[ ]', 'Keep the student list open / fold away the score panel') + row('S', 'Screenshot: drag over part of the screen to copy a picture of it, or click a page for all of it') + row('F', 'Full screen, and back (Esc leaves too). On formative work F is for feedback; use the button beside ✕ instead') +
     'Turn a page: point at it and use ⟲ ⟳ in its top corner, or “Turn all pages” under the file’s ⋯. In Arrange pages, pick pages and press R.'.replace(/^/, '<h4>Turning pages</h4><span style="grid-column:1/-1">') + '</span>' +
-    '<h4>Other</h4>' + row('=', 'Calculator') + row('Shift =', 'Answer, in the calculator (= on its own adds, Enter answers too)') + row('Space', 'Play / pause a recording') + row('J L', 'Back / ahead 5 seconds') + row('?', 'This list') +
+    '<h4>Other</h4>' + row('=', 'Calculator') + row('Shift =', 'Answer, in the calculator (= on its own adds, Enter answers too)') + row('⌥S', 'Screenshot, from anywhere in the app') + row('Space', 'Play / pause a recording') + row('J L', 'Back / ahead 5 seconds') + row('?', 'This list') +
     '</div></div><div class="bf"><span class="muted gsVer" style="margin-right:auto;font-size:13px">' + esc(versionLabel()) + '</span><button class="btn primary" data-close>Close</button></div>', true);
   $('#dlgBox').onclick = e => { if (e.target.closest('[data-close]')) closeDlg(); };
 }
@@ -8089,7 +8216,7 @@ function openSetup() {
   box.addEventListener('click', async e => {
     const m = e.target.closest('[data-m]'); if (m) { draft.mode = m.dataset.m; return re(); }
     const rm = e.target.closest('[data-rm]'); if (rm) { draft.criteria.splice(+rm.dataset.rm, 1); levelsRowGone(draft, +rm.dataset.rm); return re(); }
-    if (e.target.closest('[data-add]')) { draft.criteria.push('Criterion ' + (draft.criteria.length + 1)); if (Array.isArray(draft.tops)) draft.tops.push(null); rubDlg.from.push(null); return re(); }
+    if (e.target.closest('[data-add]')) { draft.criteria.push('Criterion ' + (draft.criteria.length + 1)); if (Array.isArray(draft.tops)) draft.tops.push(null); if (Array.isArray(draft.ib)) draft.ib.push(null); rubDlg.from.push(null); return re(); }
     const pr = e.target.closest('[data-preset]');
     if (pr) {
       const max = draftMax(draft);
@@ -10281,7 +10408,8 @@ const GRADE_WAYS = [
   ['points', 'Points', 'Type a total, like 17 out of 20. Each assignment has its own “out of”.', { mode: 'points', criteria: ['Criterion 1', 'Criterion 2', 'Criterion 3'], outOf: 20, scale: null }, null],
   ['percent', 'Percent', 'Type a percent for each paper.', { mode: 'points', criteria: ['Criterion 1', 'Criterion 2', 'Criterion 3'], outOf: 100, scale: null }, null],
   ['letters', 'Letter grades', 'A to F, worked out from the percent. You set where each letter starts.', { mode: 'points', criteria: ['Criterion 1', 'Criterion 2', 'Criterion 3'], outOf: 100, scale: null }, [[90, 'A'], [80, 'B'], [70, 'C'], [60, 'D'], [0, 'F']]],
-  ['ib7', 'IB 1 to 7', '1 to 7, worked out from the percent. You set the boundaries for your subject.', { mode: 'points', criteria: ['Criterion 1', 'Criterion 2', 'Criterion 3'], outOf: 100, scale: null }, [[85, '7'], [70, '6'], [55, '5'], [40, '4'], [25, '3'], [10, '2'], [0, '1']]],
+  ['myp', 'IB MYP criteria', 'Each criterion is marked 0 to 8. You choose the level that fits best, and the total becomes a final grade of 1 to 7.', { mode: 'rubric', criteria: ['Criterion 1', 'Criterion 2', 'Criterion 3'], outOf: 10, scale: null }, null],   // new classes start as MYP classes (classNewWay, ib.js)
+  ['ib7', 'IB DP 1 to 7', 'A final grade of 1 to 7, worked out from the percent, as in the Diploma. You set the boundaries for your subject.', { mode: 'points', criteria: ['Criterion 1', 'Criterion 2', 'Criterion 3'], outOf: 100, scale: null }, [[85, '7'], [70, '6'], [55, '5'], [40, '4'], [25, '3'], [10, '2'], [0, '1']]],
 ];
 const gradeWay = k => GRADE_WAYS.find(w => w[0] === k) || null;
 function meGrade() {
@@ -10299,6 +10427,8 @@ function gradeDefaultApply() {
 }
 gradeDefaultApply();
 function bandOf(pct) {
+  const dp = batch ? batchClass() : null;   // a paper of a DP class: that class's own boundaries, whatever the teacher's usual way (ib.js)
+  if (dp && classWay(dp) === 'dp') { const v = pct == null || isNaN(pct) ? null : ibGradeOf(roundPct(pct), ibBounds(dp)); return v == null ? '' : String(v); }
   const g = meGrade(); if (!g || !g.bands || pct == null || isNaN(pct)) return '';
   const b = g.bands.find(b => pct >= b[0]); return b ? b[1] : g.bands[g.bands.length - 1][1];
 }
@@ -10448,9 +10578,9 @@ function renderLib() {
   const r = routeNow(), c = r.v === 'class' ? r.c : null, tab = c ? r.tab : '';
   const tabs = (c, ci) => ci < 0 || !c.names.length ? '' : '<nav class="ctabs" aria-label="' + esc(c.name) + '">' + classTabs().filter(t => t[0] !== 'goals' || tab === 'goals' || goalList().length).map(([k, l]) => { const on = tab === k;
     return '<a class="ctab' + (on ? ' on' : '') + '" href="' + classHash(c, k) + '" data-ctab="' + k + '"' + (k === 'gradebook' ? ' data-book="' + esc(c.id) + '"' : k === 'students' ? ' data-people="' + ci + '"' : '') + (on ? ' aria-current="page"' : '') + '>' + l + '</a>'; }).join('') + '</nav>';
-  const block = (c, ci) => '<div class="cls" data-cls="' + esc(c.id) + '"><div class="clshead"><h1>' + esc(ci < 0 ? 'No class' : c.name) + '</h1>' +
+  const block = (c, ci) => '<div class="cls" data-cls="' + esc(c.id) + '"><div class="clshead"><h1>' + esc(ci < 0 ? 'No class' : c.name) + '</h1>' + (ci < 0 ? '' : ibPill(c)) +
     (ci < 0 ? '<span class="muted">Assignments with no roster. Drag them onto a class in the sidebar, or use Edit to pick a class.</span><span class="sp"></span>' :
-      '<span class="muted">' + (c.names.length ? c.names.length + ' students on the roster' : 'No roster yet') + '</span><span class="sp"></span>' + mbClassBtns(c, ci) + '<button class="btn sm" data-edit-class="' + ci + '">' + (c.names.length ? 'Edit roster' : 'Add roster') + '</button>' +
+      '<span class="muted">' + (c.names.length ? c.names.length + ' students on the roster' : 'No roster yet') + '</span><span class="sp"></span>' + mbClassBtns(c, ci) + ibClassBtn(c, ci) + '<button class="btn sm" data-edit-class="' + ci + '">' + (c.names.length ? 'Edit roster' : 'Add roster') + '</button>' +
       '<button class="icon" data-cmove="' + ci + ':-1" title="Move this class up in the sidebar" aria-label="Move this class up in the sidebar"' + (ci ? '' : ' disabled') + '>↑</button><button class="icon" data-cmove="' + ci + ':1" title="Move this class down in the sidebar" aria-label="Move this class down in the sidebar"' + (ci < lib.classes.length - 1 ? '' : ' disabled') + '>↓</button>') + '</div>' + tabs(c, ci) +
     (tab ? '<div class="cpanel" id="classPanel" data-sig="' + rosterSig(c) + '"></div>'
       : '<div class="ctools"><span class="sp"></span><button class="btn sm" data-addunit="' + esc(c.id) + '">+ Unit</button><button class="btn sm primary" data-newasg="' + esc(c.id) + '">+ Assignment</button></div>' +
@@ -10730,7 +10860,7 @@ function editClass(ci) {
       const mb = mbUrl($('#cMb').value); if ($('#cMb').value.trim() && !mb) { toast('That ' + sysLink() + ' link isn’t a web address'); $('#cMb').focus(); return; }
       c.name = name; const rows = parseRosterRows($('#cNames').value).map(r => ({ ...(upRows.find(u => u.name === r.name) || {}), ...r, id: r.id || (upRows.find(u => u.name === r.name) || {}).id || '', email: r.email || (upRows.find(u => u.name === r.name) || {}).email || '' })), was = c.names, wasInfo = c.info; c.names = rows.map(r => r.name); keepInfo(c, was, rows); keepAtt(c, was, wasInfo);
       if (mb) c.mb = mb; else delete c.mb; mbRemember(name, mb);
-      if (ci < 0) lib.classes.push(c);
+      if (ci < 0) { Object.assign(c, classNewWay()); lib.classes.push(c); }
       saveLib(); closeDlg(); renderLib();
       if (ci < 0 && !batch) go(classHash(c));
     }
@@ -12953,6 +13083,7 @@ document.addEventListener('keydown', e => {
   if (e.key.toLowerCase() === 'h' && tool === 'hl') { setHlMode(hlMode === 'free' ? 'auto' : 'free', true); return; }
   if (map[e.key.toLowerCase()]) { setTool(map[e.key.toLowerCase()]); return; }
   if (e.key.toLowerCase() === 'n') { nextUnscored(); return; }
+  if (e.key.toLowerCase() === 's' && !e.shiftKey) { e.preventDefault(); snipStart(); return; }   // a screenshot (src/snip.js)
   if (e.key.toLowerCase() === 'f' && !e.metaKey && !e.ctrlKey && !e.altKey && fmNow()) { e.preventDefault(); fbToggle(e.shiftKey); return; }
   if (e.key === '=' && !$('#calcPanel')) { e.preventDefault(); openCalc(); return; }
   if ($('#calcPanel') && e.key !== '/' && !(e.key === 'x' || e.key === 'X')) { const k = calcKeyOf(e); if (k && k !== 'Escape' && (k !== '=' || e.code === 'Equal' || e.code === 'NumpadEqual')) { e.preventDefault(); $('#calcPanel').typeIn(k); return; } }
@@ -12996,7 +13127,7 @@ for (const el of document.querySelectorAll('.gsVer')) el.textContent = versionLa
 if (gsData.info.note) { const el = $('#bootNote'); el.textContent = gsData.info.note; el.hidden = false; toast(gsData.info.note, 15000); }
 
 window.__gs_pickMany = pickMany;
-window.__gs = { aiName, aiSay, aiTag, aiLink, DEFAULT_SETUP, rowTop, rowSteps, rowsMax, setupMax, setupOver, rowScaleOf, pastScore, removeFile, bringBack, replaceFile, stickerText, startScorePlace, stopScorePlace, saveTrouble, batchIdOf, wordScore, wordScoresAll, restoreBackup, fileSeq, moveFile, openMoveFile, calcEval, openCalc, pageLit, setPageLit, lightMenuDo, lightChips, pageOwnL, setPageOwnL, lightForPage, ensureCounts, addRefs, refs: () => refFiles, matchToRoster, guessAmong, expandPicked, lightOpts, isRubricPage, openAnon, setAnon, anonOrder, anonOn, openLight, lightFor, lightAuto, openSplit, sp: () => SP, bringIn, sortGuess, openWord, wordBytes, reopenKept, forgetKept, kept: () => keptMeta, addFiles, removeAdded, nextUnscored, openDisplay, trimToInk, intake, parseGrade, scanFile, scanAll, state: () => ({ batch, cur, setup, pages, zoom, lib }), SCALE12, SCALE_FIVES, RUBRIC_STEPS, percentWith, ownGrade, roundPct, fmtNum, fmtPct, saveNow, undo, redo, gsData, gradeOf, percentFor, flattenDoc, exportPlan, nameOut, layoutOf, docIn, openStudent, setTool };
+window.__gs = { aiName, aiSay, aiTag, aiLink, DEFAULT_SETUP, rowTop, rowSteps, rowsMax, setupMax, setupOver, rowScaleOf, pastScore, removeFile, bringBack, replaceFile, stickerText, startScorePlace, stopScorePlace, saveTrouble, batchIdOf, wordScore, wordScoresAll, restoreBackup, fileSeq, moveFile, openMoveFile, calcEval, openCalc, pageLit, setPageLit, lightMenuDo, lightChips, pageOwnL, setPageOwnL, lightForPage, ensureCounts, addRefs, refs: () => refFiles, matchToRoster, guessAmong, expandPicked, lightOpts, isRubricPage, openAnon, setAnon, anonOrder, anonOn, openLight, lightFor, lightAuto, openSplit, sp: () => SP, bringIn, sortGuess, openWord, wordBytes, reopenKept, forgetKept, kept: () => keptMeta, addFiles, removeAdded, nextUnscored, openDisplay, trimToInk, intake, parseGrade, scanFile, scanAll, state: () => ({ batch, cur, setup, pages, zoom, lib }), SCALE12, SCALE_FIVES, RUBRIC_STEPS, percentWith, ownGrade, roundPct, fmtNum, fmtPct, saveNow, undo, redo, gsData, gradeOf, percentFor, flattenDoc, exportPlan, nameOut, layoutOf, docIn, openStudent, setTool, redrawAll };
 
 /* ---------------- names: finding a student's name in text, in any alphabet, for the Claude ZIP and anonymous grading ---------------- */
 const NAME_PLAIN = new Set(('al am an art as at august autumn ban bay be best bill bin black brown by can case chase chin dawn day de dean do don dung da ed faith far frank gay go grace gray green grey ha hang he hope ho hung if in is it ivy jade joy june king la lane le little long love major man mark may me min my new no nice on or page pan park pat pearl pen penny price rich rose ruby sandy sang short sing small so son song star stone su sue summer sun sung tan tang ten tin to tu up us van violet von we white will win wing won wood wu ye young april').split(' '));
@@ -14861,7 +14992,7 @@ function fbData(st, d) {
     const numbered = all.filter(n => n.hl).sort((a, b) => a.ay - b.ay || a.ax - b.ax);   // the numbers the page itself shows
     for (const n of [...all].sort((a, b) => a.ay - b.ay || a.ax - b.ax)) notes.push({ n: numbered.indexOf(n) + 1, text: n.text.trim(), color: n.color, page: k });
   });
-  const comment = ((old ? old.comment : st.grade.comment) || '').trim(), scored = g.total != null && !g.partial;
+  const comment = ((old ? old.comment : st.grade.comment) || '').trim(), scored = g.total != null && !g.partial && !ibSetup();   // an MYP task goes back with its levels, no total
   const trySay = old ? tr(tryName(tn)) : cnt ? tr('Retake') + (cnt.tryNow && cnt.pct !== g.pct ? ' · ' + tr('counts as') + ' ' + fmtPct(cnt.pct) : '') : '';
   if (!scored && !rows.length && !comment && !notes.length) return null;
   const rn = rosterNames(), who = rn.get(st) || st.key;   // the paper goes back to its student, so it carries their name even while she marks with names hidden
@@ -15052,7 +15183,7 @@ function levelsEditHtml(d, i) {
     lv.map(v => '<label class="lvin"><b>' + v + '</b><textarea rows="2" data-lvi="' + i + '" data-lvv="' + v + '" aria-label="What ' + v + ' means on this row">' + esc(levelIn(d, i, v)) + '</textarea></label>').join('') +
     '<span class="muted lvnote">Leave any of these blank.' + (rowHalf(d) ? ' A half point shows the two scores around it.' : '') + '</span></details>';
 }
-function levelsRowGone(d, i) { if (d.levels) d.levels.splice(i, 1); if (Array.isArray(d.tops)) d.tops.splice(i, 1); goalsRowGone(d, i); rubDlg.from.splice(i, 1); levelEditOpen.clear(); }
+function levelsRowGone(d, i) { if (d.levels) d.levels.splice(i, 1); if (Array.isArray(d.ib)) d.ib.splice(i, 1); if (Array.isArray(d.tops)) d.tops.splice(i, 1); goalsRowGone(d, i); rubDlg.from.splice(i, 1); levelEditOpen.clear(); }
 function tidyLevels(d) {
   const out = d.criteria.map((_, i) => { const r = {}; for (const v of rowLevels(d, i)) { const t = levelIn(d, i, v).trim(); if (t) r[v] = t; } return r; });
   return out.some(r => Object.keys(r).length) ? out : undefined;
@@ -15849,7 +15980,8 @@ function bkDraw() {
   const conf = bkConf(), all = bkClassCols(c, bk.cols), tabs = bkTabs(all);
   if (bk.term == null || !tabs.some(t => t[0] === bk.term)) bk.term = conf.terms.length ? bkTermNow(conf.terms) : '';
   const cols = bk.term === '*' ? all : all.filter(x => x.termId === bk.term);
-  const page = bkPage(), tools = !page || bk.tab === 'table';
+  const myp = classWay(c) === 'myp', page = bkPage(), tools = (!page || bk.tab === 'table') && !myp;
+  if (myp && bk.tab === 'table' && c.names.length) { body.innerHTML = ibBookView(c, cols, all, tabs); return; }   // an MYP class: levels by criterion, not percents (ib.js)
   { const room = body.clientWidth - 36, gap = page ? 36 : 28, min = page ? 440 : 520, n = Math.max(1, Math.floor((room + gap) / (min + gap))); bk.w = room > 0 ? Math.max(320, Math.min(760, Math.round((room - (n - 1) * gap) / n))) : 640; }   // on a class page the class is the page's, and the table's tools stay with the table
   const bar = '<div class="bkbar">' + (page ? (bk.tab === 'one' ? '<a class="btn sm" id="bkBackStu" href="' + classHash(c, 'students') + '">← Students</a>' : '') : '<label class="muted">Class <select class="btn sm" id="bkCls">' + lib.classes.map(k => '<option value="' + k.id + '"' + (k === c ? ' selected' : '') + '>' + esc(k.name) + '</option>').join('') + '</select></label>') +
     '<div class="ovtabs bkterms" role="group" aria-label="Term">' + tabs.map(([id, l]) => '<button data-bkterm="' + esc(id) + '" aria-selected="' + (bk.term === id) + '">' + esc(l) + '</button>').join('') + '</div><span class="sp"></span>' +
@@ -15859,14 +15991,14 @@ function bkDraw() {
     (tools ? '<button class="btn sm" data-bksetup>Term setup</button>' + (bk.tab === 'table' ? '<button class="btn sm" data-bkpickon aria-pressed="' + !!bk.pick + '" title="Leave students out of the class averages to see how it changes">' + (bk.pick ? 'Done' : 'Leave out…') + '</button><button class="btn sm" data-bkcopy>Copy table</button>' : '') + '<button class="btn sm" data-bkimport title="Scores from your old gradebook: a CSV or Excel file, or cells pasted">Import…</button><button class="btn sm" data-bkaddxc>+ Extra credit</button><button class="btn sm primary" data-bkadd>+ Add scores</button>' : '') + '</div>';
   let main;
   if (!c.names.length) main = '<p class="muted bkpad">The gradebook lists the students on a class’s roster. Add a roster to ' + esc(c.name) + ' on its class page first.</p>';
-  else if (bk.tab === 'class') main = bkClassView(c, cols, all, conf);
-  else if (bk.tab === 'one') main = bkOneView(c, cols, conf);
+  else if (bk.tab === 'class') main = myp ? ibClassView(c, cols, all) : bkClassView(c, cols, all, conf);   // an MYP class has levels, not percents (ib.js)
+  else if (bk.tab === 'one') main = myp ? ibOneView(c, cols, all) : bkOneView(c, cols, conf);
   else if (bk.tab === 'rep') main = rptView(c, cols, conf);
   else if (bk.tab === 'miss') main = misView(c, cols);   // missing.js
   else if (bk.tab === 'goals') main = goalsView(c, cols, all);
   else main = bk.term === '*' ? bkYear(c, all, conf) : bkTable(c, cols, conf);
   const untyped = all.filter(x => !x.type);
-  body.innerHTML = bar + (untyped.length ? '<div class="bknote">' + (untyped.length === 1 ? '“' + esc(untyped[0].name) + '” has' : untyped.length + ' assignments have') + ' no type yet, so ' + (untyped.length === 1 ? 'it doesn’t' : 'they don’t') + ' count toward a term grade. <button class="btn sm" data-bktypes>Set types</button></div>' : '') + main;
+  body.innerHTML = bar + (untyped.length && !myp ? '<div class="bknote">' + (untyped.length === 1 ? '“' + esc(untyped[0].name) + '” has' : untyped.length + ' assignments have') + ' no type yet, so ' + (untyped.length === 1 ? 'it doesn’t' : 'they don’t') + ' count toward a term grade. <button class="btn sm" data-bktypes>Set types</button></div>' : '') + main;
 }
 const bkCellText = (cell, show, col) => {
   if (col.type === 'xc') return cell && cell.xc ? '<span class="bkxc">+' + fmtNum(cell.xc) + '</span>' : '<span class="bknone">–</span>';
@@ -15893,7 +16025,7 @@ const bkRowCls = n => bkIn(n) ? '' : ' class="bkleft"';
 const bkCountTypes = conf => bkCats().filter(([t]) => +conf.w[t] > 0);
 const bkOnly = () => { try { return localStorage.getItem('gs.bkOnly') === '1'; } catch (e) { return false; } };
 const bkAvgCell = (r, t) => r.by[t] != null ? pctAvgText(r.by[t]) + (t === 'ic' && r.xcIc ? ' <small class="bkxc" title="Includes extra credit">+xc</small>' : '') : '<span class="bknone">–</span>';
-const bkGradeCell = r => r.grade != null ? pctAvgText(r.grade) + (r.soFar ? ' <small>so far</small>' : '') + (r.xcTerm ? ' <small class="bkxc" title="Includes extra credit">+xc</small>' : '') : '<span class="bknone">–</span>';
+const bkGradeCell = r => r.grade != null ? pctAvgText(r.grade) + ibDpSay(r.grade, bkClass()) + (r.soFar ? ' <small>so far</small>' : '') + (r.xcTerm ? ' <small class="bkxc" title="Includes extra credit">+xc</small>' : '') : '<span class="bknone">–</span>';
 const bkStick = (j, n) => j < n && n > 3 ? ' style="position:static"' : ' style="right:' + (j >= n ? 0 : 120 + (n - 1 - j) * 100) + 'px"';
 const bkClassAvg = (grades, t) => { const ps = grades.map(r => t ? r.by[t] : r.grade).filter(v => v != null); return ps.length ? pctAvgText(bkMean(ps)) : '–'; };
 function bkTable(c, cols, conf) {
@@ -17035,7 +17167,7 @@ function isMac() { return /mac|iphone|ipad/i.test(navigator.platform || navigato
 function modKey() { return isMac() ? '⌘' : 'Ctrl'; }
 function keyLabel(s) {
   if (isMac()) return s;
-  return s.replace(/⇧⌘/g, 'Ctrl+Shift+').replace(/⌘([+−])/g, 'Ctrl $1').replace(/⌘(?=-)/g, 'Ctrl').replace(/⌘/g, 'Ctrl+');
+  return s.replace(/⌥/g, 'Alt+').replace(/⇧⌘/g, 'Ctrl+Shift+').replace(/⌘([+−])/g, 'Ctrl $1').replace(/⌘(?=-)/g, 'Ctrl').replace(/⌘/g, 'Ctrl+');
 }
 
 const FOCUSABLE = 'a[href],button,input,select,textarea,summary,audio[controls],video[controls],[tabindex]:not([tabindex="-1"])';
@@ -17821,6 +17953,7 @@ function peopleGrades(c) {
   const t = $('#peopleTbl'); if (!t || bk.host !== 'page' || !bk.cols) return;
   const conf = bkConf(), term = conf.terms.length ? bkTermNow(conf.terms) : '', cols = bkClassCols(c, bk.cols).filter(x => x.termId === term), tn = conf.terms.find(x => x.id === term);
   const h = $('#peopleGh'); if (h) h.textContent = tn ? tn.name || 'Term' : 'Grade';
+  if (classWay(c) === 'myp') { for (const td of t.querySelectorAll('td[data-pg]')) td.textContent = ibPeopleSay(c, c.names[+td.dataset.pg], term); return; }   // levels and a 1 to 7, not a percent (ib.js)
   for (const td of t.querySelectorAll('td[data-pg]')) { const r = bkGrade(c.names[+td.dataset.pg], cols, conf); td.textContent = r.grade != null ? pctAvgText(r.grade) : '–'; }
 }
 
@@ -18932,7 +19065,12 @@ function mergeLib(a0, b0, o = {}) {
       for (const k of new Set([...Object.keys(xa), ...Object.keys(ya)])) out[k] = !xa[k] ? ya[k] : !ya[k] ? xa[k] : (ya[k].t || 0) > (xa[k].t || 0) ? ya[k] : xa[k];
       e.fields.att = e.node.att = out;
     }
-    const other = m.both.filter(k => k !== 'names' && k !== 'info' && k !== 'att');
+    if (x.type === 'c' && m.both.includes('lv')) {   // an MYP class's term levels: student by student within each term, the one saved later
+      const xl = x.fields.lv || {}, yl = y.fields.lv || {}, out = {};
+      for (const t of new Set([...Object.keys(xl), ...Object.keys(yl)])) { const a = xl[t] || {}, b = yl[t] || {}; out[t] = {}; for (const n of new Set([...Object.keys(a), ...Object.keys(b)])) out[t][n] = !a[n] ? b[n] : !b[n] ? a[n] : (b[n].t || 0) > (a[n].t || 0) ? b[n] : a[n]; }
+      e.fields.lv = e.node.lv = out;
+    }
+    const other = m.both.filter(k => k !== 'names' && k !== 'info' && k !== 'att' && k !== 'lv');
     if (other.length) notes.push({ kind: 'both', type: x.type, name: e.fields.name, rubric: other.includes('setup') });
     else if (m.fromY.some(k => k !== 'names')) notes.push({ kind: 'changed', type: x.type, name: e.fields.name });
     kept.set(id, e);
@@ -21079,19 +21217,11 @@ async function qmCopy(el) {
   if (!el) return;
   const st = batch.students[+el.dataset.st], q = batch.quiz.qs.find(x => x.id === el.dataset.q), qi = batch.quiz.qs.indexOf(q);
   if (!st || !q) return;
-  const blobP = qzAnswerPic(st, q, qi).then(c => { if (!c) throw new Error('no page'); return new Promise(res => c.toBlob(b => { c.width = c.height = 0; res(b); }, 'image/png')); });
+  const blobP = qzAnswerPic(st, q, qi).then(c => { if (!c) throw new Error('no page'); return canvasPng(c); });
   const say = 'Question ' + quizLabel(q, qi);
-  let copied = false;
-  try {
-    if (!navigator.clipboard || !navigator.clipboard.write || typeof ClipboardItem === 'undefined') throw new Error('no clipboard');
-    await navigator.clipboard.write([new ClipboardItem({ 'image/png': blobP })]);   // a promise, so Safari still counts the click
-    copied = true;
-  } catch (e) { /* saved as a file below */ }
-  let blob = null;
-  if (!copied) {
-    try { blob = await blobP; } catch { return toast('This page isn’t in their scan.'); }
-    await saveBlob('Question ' + quizLabel(q, qi) + '.png', blob);
-  }
+  const how = await copyPicture(blobP, say + '.png');   // the clipboard, or a file where the browser can't copy pictures (src/snip.js)
+  if (how === 'none') return toast('This page isn’t in their scan.');
+  const copied = how === 'copied';
   toast(copied ? 'Picture of ' + say + ' copied. Paste it into ' + aiSay() + ' to ask about it.' : 'This browser can’t copy pictures, so ' + say + ' was saved as a picture file.', 4000);
   if (!store.get('gs.qmCopySeen', 0) && !$('#qmCopyNote') && $('#qmBody'))
     $('#qmBody').insertAdjacentHTML('beforebegin', '<div class="qmcopynote" id="qmCopyNote" role="status"><p><b>What the picture shows.</b> Only this answer, with the question and your answer key on top. The student’s name, their score, your mark and the file name are left off, and any name covers are painted in. It still shows the student’s own handwriting and words.</p>' +
@@ -23479,7 +23609,7 @@ function seatShow(c) {
   el.id = 'seatShow'; el.className = 'seatshow'; el.tabIndex = -1; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-label', 'Seating chart for ' + c.name);
   el.innerHTML = '<h2>' + esc(c.name) + '</h2><div class="seatroom" style="--sw:' + s.w + ';--sh:' + s.h + '">' + seatGrid(c, s, 'show', false) + '</div><button class="seatshowx" data-x>Close (Esc)</button>';
   document.body.appendChild(el); el.focus();
-  const shut = () => { document.removeEventListener('keydown', key, true); document.removeEventListener('fullscreenchange', full); try { if (document.fullscreenElement === el) document.exitFullscreen(); } catch { } el.remove(); if (back && back.isConnected) back.focus(); };
+  const shut = () => { document.removeEventListener('keydown', key, true); document.removeEventListener('fullscreenchange', full); if (!gsFull.drop(el)) { try { if (document.fullscreenElement === el) document.exitFullscreen(); } catch { } el.remove(); } if (back && back.isConnected) back.focus(); };
   const key = e => { e.stopPropagation(); if (e.key === 'Escape') { e.preventDefault(); shut(); } };
   let was = false; const full = () => { const on = document.fullscreenElement === el; if (was && !on) shut(); was = on; };   // Esc in full screen leaves full screen: that closes it too
   document.addEventListener('keydown', key, true); document.addEventListener('fullscreenchange', full);
@@ -23894,6 +24024,380 @@ function goalsStu(c, cols, n) {
     'Their average on each goal, from the rubric rows and quiz questions tagged with it. The dashed line is the class average.');
 }
 Object.assign(window.__gs, { goalList, goalCell, goalData, goalsDlg });
+
+/* ---------------- IB classes: MYP criteria and levels, DP boundaries (11/11) ---------------- */
+const IB_TOP = 8;
+const IB_BANDS = [[1, 2, 'limited'], [3, 4, 'adequate'], [5, 6, 'substantial'], [7, 8, 'excellent']];
+const IB_GROUPS = [
+  ['langlit', 'Language and literature', ['Analysing', 'Organizing', 'Producing text', 'Using language']],
+  ['langacq', 'Language acquisition', ['Listening', 'Reading', 'Speaking', 'Writing']],
+  ['indsoc', 'Individuals and societies', ['Knowing and understanding', 'Investigating', 'Communicating', 'Thinking critically']],
+  ['sci', 'Sciences', ['Knowing and understanding', 'Inquiring and designing', 'Processing and evaluating', 'Reflecting on the impacts of science']],
+  ['math', 'Mathematics', ['Knowing and understanding', 'Investigating patterns', 'Communicating', 'Applying mathematics in real-life contexts']],
+  ['arts', 'Arts', ['Investigating', 'Developing', 'Creating or performing', 'Evaluating']],
+  ['phe', 'Physical and health education', ['Knowing and understanding', 'Planning for performance', 'Applying and performing', 'Reflecting and improving performance']],
+  ['design', 'Design', ['Inquiring and analysing', 'Developing ideas', 'Creating the solution', 'Evaluating']],
+  ['idu', 'Interdisciplinary', ['Evaluating', 'Synthesizing', 'Reflecting']],
+  ['pp', 'Personal project', ['Planning', 'Applying skills', 'Reflecting']],
+  ['own', 'Another subject', ['Criterion A', 'Criterion B', 'Criterion C', 'Criterion D']],
+];
+const IB_BOUNDS_32 = [[28, 7], [24, 6], [19, 5], [15, 4], [10, 3], [6, 2], [1, 1]];
+const IB_BOUNDS_DP = [[80, 7], [68, 6], [56, 5], [44, 4], [32, 3], [18, 2], [0, 1]];
+const IB_WAYS = [
+  ['', 'Points and percent', 'Rubrics, points, a percent and a term average.'],
+  ['myp', 'IB MYP', 'Criteria marked 0 to 8, a best-fit level each term, a 1 to 7 grade.'],
+  ['dp', 'IB DP', 'Marks for each component, turned into 1 to 7 by your boundaries.'],
+];
+const ibLetter = i => String.fromCharCode(65 + i);
+function classWay(c) { return c && (c.way === 'myp' || c.way === 'dp') ? c.way : ''; }
+const ibGroup = k => IB_GROUPS.find(g => g[0] === k) || null;
+const ibGroupCrit = k => (ibGroup(k) || IB_GROUPS[IB_GROUPS.length - 1])[2].map((name, i) => ({ k: ibLetter(i), name }));
+function ibBoundsFor(n) {
+  if (n === 4) return IB_BOUNDS_32.map(b => b.slice());
+  const top = n * IB_TOP; let last = top + 1;
+  return IB_BOUNDS_32.map(([lo, g]) => { const v = Math.max(g === 1 ? 1 : 2, Math.min(last - 1, Math.round(lo * top / 32))); last = v; return [v, g]; });
+}
+function ibBoundsClean(b, def) {
+  const rows = Array.isArray(b) ? b.filter(r => Array.isArray(r) && isFinite(+r[0]) && r[0] !== '' && r[0] != null && isFinite(+r[1])).map(r => [+r[0], +r[1]]) : [];
+  const seen = new Set(), out = rows.sort((a, c) => c[1] - a[1]).filter(r => !seen.has(r[1]) && seen.add(r[1]));
+  for (let i = 1; i < out.length; i++) if (out[i][0] >= out[i - 1][0]) return def.map(r => r.slice());
+  return out.length >= 2 ? out : def.map(r => r.slice());
+}
+function ibCrit(c) {
+  const ib = c && c.ib || {}, own = Array.isArray(ib.crit) ? ib.crit.filter(x => x && String(x.k || '').trim()).map(x => ({ k: String(x.k).trim().slice(0, 2), name: String(x.name || '').trim().slice(0, 80) })) : [];
+  return own.length ? own : ibGroupCrit(ib.group);
+}
+function ibBounds(c) {
+  if (classWay(c) === 'dp') return ibBoundsClean(c.ib && c.ib.bounds, IB_BOUNDS_DP);
+  return ibBoundsClean(c && c.ib && c.ib.bounds, ibBoundsFor(ibCrit(c).length));
+}
+function ibGradeOf(v, bounds) { if (v == null || v === '' || isNaN(v)) return null; const b = bounds.find(r => +v >= r[0]); return b ? b[1] : null; }
+const ibLevel = v => v === '' || v == null || isNaN(v) || +v < 0 || +v > IB_TOP || Math.round(+v) !== +v ? null : +v;
+const ibBandName = v => { const b = IB_BANDS.find(b => v >= b[0] && v <= b[1]); return b ? b[2] : ''; };
+function ibTerm(levels, crit, bounds) {
+  const lv = crit.map(x => ibLevel((levels || {})[x.k])), need = crit.filter((x, i) => lv[i] == null).map(x => x.k);
+  if (need.length) return { total: null, grade: null, need, set: crit.length - need.length };
+  const total = lv.reduce((a, b) => a + b, 0);
+  return { total, grade: ibGradeOf(total, bounds), need, set: crit.length };
+}
+function ibEvidence(list) {
+  const ev = (list || []).filter(e => e && ibLevel(e.v) != null).sort((a, b) => (a.t || 0) - (b.t || 0));
+  if (!ev.length) return { n: 0, hint: null, last: null, high: null };
+  return { n: ev.length, hint: ev[ev.length - 1].v, last: ev[ev.length - 1].v, high: Math.max(...ev.map(e => e.v)) };
+}
+function classNewWay() { const g = meGrade(); return (g && g.way === 'myp') || /^\s*(ib\s*)?myp\b/i.test(me().prog || '') ? { way: 'myp' } : {}; }   // me().prog: the programme My setup brought in (setupin.js)
+function ibPill(c) { const w = classWay(c); return w ? '<span class="ibpill" title="' + (w === 'myp' ? 'This class is graded with IB MYP criteria' : 'This class is graded as an IB DP class') + '">' + (w === 'myp' ? 'MYP' : 'DP') + '</span>' : ''; }
+function ibClassBtn(c, ci) { return '<button class="btn sm" data-ib-class="' + ci + '">Grading</button>'; }
+
+function ibDpSay(pct, c) { if (classWay(c) !== 'dp' || pct == null) return ''; const g = ibGradeOf(roundPct(pct), ibBounds(c)); return g == null ? '' : ' <b class="ibg7" title="On this class’s boundaries">' + g + '</b>'; }
+
+/* ---------- how this class is graded: the box behind the Grading button on a class ---------- */
+let ibDraft = null;
+function ibDlg(ci) {
+  const c = lib.classes[ci]; if (!c) return;
+  const way = classWay(c), ib = c.ib || {};
+  ibDraft = { ci, way, group: ibGroup(ib.group) ? ib.group : 'own', crit: way === 'myp' ? ibCrit(c) : ibGroupCrit(ibGroup(ib.group) ? ib.group : 'sci'), mypB: way === 'myp' ? ibBounds(c) : null, dpB: way === 'dp' ? ibBounds(c) : IB_BOUNDS_DP.map(r => r.slice()), fresh: way !== 'myp' };
+  if (ibDraft.fresh) ibDraft.group = 'sci';
+  openDlg('<div class="bh"><h2>How ' + esc(c.name) + ' is graded</h2></div><div class="bb" id="ibBody"></div>' +
+    '<div class="bf"><button class="btn" data-cancel>Cancel</button><button class="btn primary" data-ok>Save</button></div>');
+  ibDlgDraw();
+  $('#dlgBox').onclick = ibDlgClick; $('#dlgBox').onchange = ibDlgChange; $('#dlgBox').oninput = ibDlgInput;
+}
+function ibDlgDraw() {
+  const d = ibDraft, el = $('#ibBody'); if (!d || !el) return;
+  let h = '<div class="ibways" role="radiogroup" aria-label="How this class is graded">' + IB_WAYS.map(([k, t, s]) => '<button class="wlway' + (d.way === k ? ' on' : '') + '" role="radio" aria-checked="' + (d.way === k) + '" data-ibway="' + k + '"><b>' + t + '</b><span>' + s + '</span></button>').join('') + '</div>';
+  if (d.way === 'myp') {
+    const b = d.mypB || ibBoundsFor(d.crit.length), top = d.crit.length * IB_TOP;
+    h += '<div class="ibcols"><div><div class="field"><label for="ibGroup">Subject group</label><select id="ibGroup">' + IB_GROUPS.map(g => '<option value="' + g[0] + '"' + (d.group === g[0] ? ' selected' : '') + '>' + esc(g[1]) + '</option>').join('') + '</select></div>' +
+      '<p class="ibcap"><b>Criteria</b> <span class="muted">Each is marked 0 to ' + IB_TOP + '. The names are yours to change.</span></p>' +
+      d.crit.map((x, i) => '<div class="ibcrit"><b>' + esc(x.k) + '</b><input type="text" data-ibcrit="' + i + '" value="' + esc(x.name) + '" maxlength="80" aria-label="Name of criterion ' + esc(x.k) + '">' +
+        '<button class="icon" data-ibcut="' + i + '" title="Remove criterion ' + esc(x.k) + '" aria-label="Remove criterion ' + esc(x.k) + '"' + (d.crit.length > 1 ? '' : ' disabled') + '>×</button></div>').join('') +
+      (d.crit.length < 6 ? '<button class="link" data-ibadd>+ Add a criterion</button>' : '') + '</div>' +
+      '<div><p class="ibcap"><b>Grade boundaries</b> <span class="muted">The lowest total of ' + top + ' for each grade.</span></p>' + ibBoundRows(b, top) +
+      '<p class="muted ibnote">' + (d.crit.length === 4 ? 'These start as the published MYP boundaries. Change them if your school uses others.' : 'No table is published for ' + d.crit.length + ' criteria, so these are scaled from the four-criterion one. Check them against your school’s.') + '</p></div></div>' +
+      '<p class="muted ibnote">The app holds the names of the criteria and these boundaries, nothing else from the IB. Descriptors are yours to paste in.</p>';
+  } else if (d.way === 'dp') {
+    h += '<div class="ibcols"><div><p class="ibcap"><b>Grade boundaries</b> <span class="muted">The lowest percent for each grade.</span></p>' + ibBoundRows(d.dpB, 100) + '</div>' +
+      '<div><p class="muted ibnote">These numbers are only somewhere to start, and are not any subject’s own. Type in the boundaries your subject and level use; they are different for each subject and can change with each exam session.</p>' +
+      '<p class="muted ibnote">Work is still marked in points or with a rubric. The percent is turned into 1 to 7 with this table.</p></div></div>';
+  } else h += '<p class="muted ibnote">Each assignment has its own rubric or points, and the gradebook works out a percent and a term average.</p>';
+  el.innerHTML = h;
+}
+const ibBoundRows = (b, top) => '<div class="ibbounds">' + b.map(([lo, g], i) => '<label class="ibbound"><span>Grade ' + g + '</span><span class="muted">from</span><input type="number" data-ibb="' + i + '" value="' + lo + '" min="0" max="' + top + '" step="1" aria-label="Lowest for grade ' + g + '"></label>').join('') + '</div>';
+function ibDlgRead() {
+  const d = ibDraft; if (!d) return;
+  for (const i of document.querySelectorAll('#ibBody [data-ibcrit]')) d.crit[+i.dataset.ibcrit].name = i.value.trim();
+  const b = d.way === 'myp' ? (d.mypB ||= ibBoundsFor(d.crit.length)) : d.way === 'dp' ? d.dpB : null;
+  if (b) for (const i of document.querySelectorAll('#ibBody [data-ibb]')) if (i.value !== '' && isFinite(+i.value)) b[+i.dataset.ibb][0] = Math.round(+i.value);
+}
+function ibDlgInput(e) { if (e.target.closest('[data-ibb]') && ibDraft) ibDraft.touched = true; }
+function ibDlgChange(e) {
+  const d = ibDraft; if (!d) return;
+  if (e.target.id === 'ibGroup') { ibDlgRead(); d.group = e.target.value; d.crit = ibGroupCrit(d.group); if (!d.touched) d.mypB = null; ibDlgDraw(); }
+}
+function ibDlgClick(e) {
+  const d = ibDraft; if (!d) return;
+  const t = e.target, w = t.closest('[data-ibway]');
+  if (w) { ibDlgRead(); d.way = w.dataset.ibway; ibDlgDraw(); const on = $('#ibBody [data-ibway="' + d.way + '"]'); if (on) on.focus(); return; }
+  if (t.closest('[data-ibadd]')) { ibDlgRead(); d.crit.push({ k: ibLetter(d.crit.length), name: 'Criterion ' + ibLetter(d.crit.length) }); if (!d.touched) d.mypB = null; return ibDlgDraw(); }
+  const cut = t.closest('[data-ibcut]');
+  if (cut) { ibDlgRead(); d.crit.splice(+cut.dataset.ibcut, 1); d.crit.forEach((x, i) => { x.k = ibLetter(i); }); if (!d.touched) d.mypB = null; return ibDlgDraw(); }
+  if (t.closest('[data-cancel]')) { ibDraft = null; return closeDlg(); }
+  if (t.closest('[data-ok]')) return ibDlgSave();
+}
+function ibDlgSave() {
+  const d = ibDraft, c = lib.classes[d.ci]; if (!c) return;
+  ibDlgRead();
+  if (d.way === 'myp') {
+    const crit = d.crit.map((x, i) => ({ k: x.k, name: x.name || 'Criterion ' + ibLetter(i) })), def = ibBoundsFor(crit.length), b = d.mypB || def;
+    for (let i = 1; i < b.length; i++) if (b[i][0] >= b[i - 1][0]) { toast('Each grade’s boundary has to be higher than the one below it'); return; }
+    c.way = 'myp'; c.ib = { ...(c.ib || {}), group: d.group, crit, bounds: b.map(r => r.slice()) };
+  } else if (d.way === 'dp') {
+    const b = d.dpB;
+    for (let i = 1; i < b.length; i++) if (b[i][0] >= b[i - 1][0]) { toast('Each grade’s boundary has to be higher than the one below it'); return; }
+    c.way = 'dp'; c.ib = { ...(c.ib || {}), bounds: b.map(r => r.slice()) };
+  } else delete c.way;   // c.ib stays, so switching back later finds the criteria and boundaries as they were
+  ibDraft = null; saveLib(); closeDlg(); renderLib();
+  toast(d.way === 'myp' ? c.name + ' is graded with MYP criteria' : d.way === 'dp' ? c.name + ' is graded as a DP class' : c.name + ' is graded with points and percent');
+}
+document.addEventListener('click', e => { const b = e.target.closest('[data-ib-class]'); if (b) ibDlg(+b.dataset.ibClass); });
+/* ---------- an MYP class's gradebook: the evidence for each criterion, and the level the teacher judges fits best ---------- */
+let ibk = { view: 'table', stu: 0, add: null };
+const ibTermKey = () => bk.term == null ? '' : bk.term;
+const ibLvOf = (c, name) => ((c.lv || {})[ibTermKey()] || {})[name] || {};
+function ibLvSet(c, name, k, v) {
+  const t = ibTermKey(); c.lv ||= {}; c.lv[t] ||= {};
+  const r = { ...(c.lv[t][name] || {}) }; if (v == null) delete r[k]; else r[k] = v; r.t = Date.now();
+  if (Object.keys(r).length > 1) c.lv[t][name] = r; else delete c.lv[t][name];
+  bkSaveLib();
+}
+function ibCols(c, cols) {
+  const keys = new Set(ibCrit(c).map(x => x.k));
+  return cols.map(col => {
+    const cells = new Map(); let crit = [];
+    if (col.typed && col.typed.lv) {
+      crit = ((col.it && col.it.crit) || []).filter(k => keys.has(k));
+      for (const n of c.names) { const r = col.typed.s && col.typed.s[n]; if (!r) continue; const lv = {}; for (const k of crit) { const v = ibLevel((r.l || {})[k]); if (v != null) lv[k] = v; } if (Object.keys(lv).length || r.st) cells.set(n, { lv, st: r.st || '' }); }
+    } else if (col.d && col.d.setup && Array.isArray(col.d.setup.ib)) {
+      const d = col.d, rows = d.setup.ib, pairs = rosterPairs(c.names, Object.keys(d.s || {}));
+      crit = rows.filter(k => keys.has(k));
+      for (const n of c.names) { const k = pairs.get(n), g = k && d.s[k] && d.s[k].g; if (!g) continue; const lv = {}; rows.forEach((ck, i) => { const v = ibLevel((g.rubric || [])[i]); if (keys.has(ck) && v != null) lv[ck] = v; });
+        const st = g.status === 'missing' || g.status === 'excused' ? g.status : ''; if (Object.keys(lv).length || st) cells.set(n, { lv, st }); }
+    } else return null;
+    return { key: col.key, name: col.name, due: col.due, fm: col.type === 'fm', crit, cells, typed: !!(col.typed && col.typed.lv), t: Date.parse((col.due || '1970-01-01') + 'T12:00:00') || 0 };
+  }).filter(Boolean);
+}
+const ibEvFor = (icols, name, k) => icols.filter(x => x.cells.has(name) && x.cells.get(name).lv[k] != null).map(x => ({ v: x.cells.get(name).lv[k], t: x.t, name: x.name, fm: x.fm }));
+const ibLvText = (lv, crit) => crit.filter(k => lv[k] != null).map(k => '<span class="iblv"><i>' + esc(k) + '</i>' + lv[k] + '</span>').join('') || '<span class="bknone">–</span>';
+function ibBar(c, tabs, more) {
+  return '<div class="bkbar"><div class="ovtabs bkterms" role="group" aria-label="Term">' + tabs.map(([id, l]) => '<button data-bkterm="' + esc(id) + '" aria-selected="' + (bk.term === id) + '">' + esc(l) + '</button>').join('') + '</div><span class="sp"></span>' + more + '</div>';
+}
+function ibBookView(c, cols, all, tabs) {
+  if (ibk.view === 'add' && ibk.add) return ibAddView(c);
+  const crit = ibCrit(c), bounds = ibBounds(c), icols = ibCols(c, cols), top = crit.length * IB_TOP, termName = (tabs.find(t => t[0] === bk.term) || [, 'This year'])[1];
+  if (ibk.view === 'fit') return ibFitView(c, crit, bounds, icols, tabs, termName);
+  const bar = ibBar(c, tabs, '<button class="btn sm" data-bksetup>Term setup</button><button class="btn sm" data-ib-class="' + lib.classes.indexOf(c) + '">Criteria and boundaries</button><button class="btn sm" data-ibcopy>Copy levels</button><button class="btn sm primary" data-ibadd-lv>+ Add levels</button>');
+  let h = '<div class="bkwrap"><table class="bktab ibtab" id="ibTab"><thead><tr class="bkg"><th></th>' + (icols.length ? '<th colspan="' + icols.length + '">Evidence</th>' : '') + '<th colspan="' + (crit.length + 2) + '" class="bkgsum">' + esc(termName) + ' · your judgment</th></tr>' +
+    '<tr><th class="bknm">Student</th>' + icols.map(x => '<th class="bkch' + (x.fm ? ' ibfm' : '') + '">' + (x.typed ? '<button data-ibedit="' + esc(x.key) + '" title="Change these levels">' : '<span>') + esc(x.name) + '<small>' + esc(bkDay(x.due)) + ' · ' + esc(x.crit.join(' ') || 'no criteria') + (x.fm ? ' · formative' : '') + '</small>' + (x.typed ? '</button>' : '</span>') + '</th>').join('') +
+    crit.map(x => '<th class="bkavg bksum" title="' + esc(x.name) + '">' + esc(x.k) + '</th>').join('') + '<th class="bkavg bksum">Total<small>of ' + top + '</small></th><th class="bkterm bksum">Grade<small>1 to 7</small></th></tr></thead><tbody>';
+  c.names.forEach((nm, i) => {
+    const lv = ibLvOf(c, nm), r = ibTerm(lv, crit, bounds);
+    h += '<tr><td class="bknm">' + bkName(nm, i) + bkInfo(nm) + '</td>' + icols.map(x => { const cell = x.cells.get(nm); return '<td' + (x.fm ? ' class="ibfm"' : '') + '>' + (!cell ? '<span class="bknone">–</span>' : cell.st ? '<span class="bkst">' + cell.st + '</span>' : ibLvText(cell.lv, x.crit)) + '</td>'; }).join('') +
+      crit.map(x => { const v = ibLevel(lv[x.k]), n = ibEvFor(icols, nm, x.k).length;
+        return '<td class="bkavg bksum ibset"><button data-ibfit="' + i + '" aria-label="' + esc(x.k + ' for ' + bkWho(nm, i) + ': ' + (v != null ? v : n ? 'not set' : 'no evidence')) + '">' + (v != null ? '<b>' + v + '</b>' : n ? '<span class="ibtodo">set</span>' : '<span class="ibnone">no evidence</span>') + '</button></td>'; }).join('') +
+      '<td class="bkavg bksum">' + (r.total != null ? r.total : '<span class="bknone">–</span>') + '</td><td class="bkterm bksum">' + (r.grade != null ? '<b>' + r.grade + '</b>' : '<span class="bknone">–</span>') + '</td></tr>';
+  });
+  h += '</tbody></table></div>';
+  const yr = ibCols(c, all).filter(x => !x.fm), few = crit.map(x => [x.k, yr.filter(y => y.crit.includes(x.k)).length]).filter(x => x[1] < 2);
+  const note = yr.length && few.length ? '<div class="bknote ibfew">' + few.map(([k, n]) => 'Criterion ' + esc(k) + ' has been assessed ' + (n ? 'once' : 'in no task') + ' this year').join('. ') + '. Each criterion is usually assessed at least twice a year.</div>' : '';
+  return bar + note + (icols.length || c.names.some(n => Object.keys(ibLvOf(c, n)).length) ? h : '<p class="muted bkpad">No levels for ' + esc(c.name) + ' in this term yet. Use + Add levels to type in the levels each student earned on a task.</p>' + h) +
+    '<p class="muted bkcap">Each task shows the level given for the criteria it assessed. The levels on the right are yours to set: click one to see all of a student’s evidence and choose the level that fits best. Levels are never averaged. The total and the grade appear once every criterion has a level.</p>';
+}
+function ibFitView(c, crit, bounds, icols, tabs, termName) {
+  const i = Math.max(0, Math.min(c.names.length - 1, ibk.stu));
+  const bar = ibBar(c, tabs, '<button class="btn sm" data-ibback>← Gradebook</button><button class="btn sm" data-ibstep="-1"' + (i ? '' : ' disabled') + '>Previous student</button><button class="btn sm primary" data-ibstep="1"' + (i < c.names.length - 1 ? '' : ' disabled') + '>Next student</button>');
+  return bar + ibFitBox(c, crit, bounds, icols, i, termName, true);
+}
+function ibFitBox(c, crit, bounds, icols, i, termName, named) {
+  const nm = c.names[i], lv = ibLvOf(c, nm), r = ibTerm(lv, crit, bounds), top = crit.length * IB_TOP;
+  let h = '<div class="ibfit" id="ibFit" data-ibstu="' + i + '"><div class="ibfithead"><h3>' + (named ? esc(bkWho(nm, i)) : 'Levels') + '</h3><span class="muted">' + esc(termName) + ' · choose the level that fits best · ' + r.set + ' of ' + crit.length + ' set</span></div>';
+  for (const x of crit) {
+    const list = ibEvFor(icols, nm, x.k), ev = ibEvidence(list), v = ibLevel(lv[x.k]);
+    h += '<div class="ibrow"><div class="ibrowname"><b>' + esc(x.k) + '</b> ' + esc(x.name) + '</div><div class="ibev">' + (list.length ? list.sort((a, b) => a.t - b.t).map(e => '<span class="ibchip' + (e.fm ? ' fm' : '') + '">' + esc(e.name) + ' <b>' + e.v + '</b></span>').join('') : '<span class="ibnone">no evidence</span>') + '</div>' +
+      '<div><div class="iblvl" role="radiogroup" aria-label="' + esc('Level for ' + x.k) + '">' + Array.from({ length: IB_TOP + 1 }, (_, n) => '<button role="radio" aria-checked="' + (v === n) + '" class="' + (v === n ? 'on' : v == null && ev.hint === n ? 'hint' : '') + '" data-iblv="' + esc(x.k) + ':' + n + '">' + n + '</button>').join('') + '</div>' +
+      '<div class="muted ibsay">' + (v != null ? (ev.n ? 'Most recent ' + ev.last + ', highest ' + ev.high : 'Set with no evidence here') + ' · ' + ibBandName(v) : ev.n ? 'Most recent is ' + ev.last + '. Not set yet.' : 'Nothing to judge from yet.') + '</div></div></div>';
+  }
+  h += '<div class="ibsum"><div><span class="ibcapw">Total</span><b>' + (r.total != null ? r.total : '–') + '</b> <span class="muted">of ' + top + '</span></div><div><span class="ibcapw">Grade</span><b class="ibg">' + (r.grade != null ? r.grade : '–') + '</b></div>' +
+    '<span class="muted">' + (r.need.length ? 'Still to set: ' + esc(r.need.join(', ')) + '.' : r.grade == null ? 'This total is below the lowest boundary.' : '') + ' The outlined number is only a hint from the most recent work. Nothing is set until you click, and clicking a set level again clears it.</span></div></div>';
+  return h;
+}
+
+/* ---------- an MYP class's Charts tab, a student's own page, and the grade on the Students list ---------- */
+function ibMid(list) { const v = list.filter(x => x != null).sort((a, b) => a - b), n = v.length; if (!n) return null; const a = v[Math.floor((n - 1) / 2)], b = v[Math.ceil((n - 1) / 2)]; return a === b ? String(a) : a + ' to ' + b; }
+const IB_SEGS = [['0', v => v === 0]].concat(IB_BANDS.map(([lo, hi, l]) => [lo + ' to ' + hi + ' ' + l, v => v >= lo && v <= hi]));
+function ibStack(crit, valsOf, id, noneWord) {
+  return '<div class="ibstacks" id="' + id + '">' + crit.map(x => {
+    const vals = valsOf(x.k), n = vals.length || 1, none = vals.filter(p => p.v == null);
+    const seg = (cls, list, label) => list.length ? '<i class="' + cls + '" style="flex:' + list.length + '" tabindex="0"' + chTip(people(list.length, 'student'), x.k + ' ' + x.name + ' · ' + label, list.map(p => p.name).join(', ')) + '>' + list.length + '</i>' : '';
+    return '<div class="ibstack"><span title="' + esc(x.name) + '"><b>' + esc(x.k) + '</b> ' + esc(x.name) + '</span><div class="ibsegs">' + IB_SEGS.map(([l, fn], i) => seg('ibseg s' + i, vals.filter(p => p.v != null && fn(p.v)), l)).join('') + seg('ibseg sn', none, noneWord) + '</div><b class="ibmid">' + (ibMid(vals.map(p => p.v)) ?? '–') + '</b></div>';
+  }).join('') + '</div><div class="bkleg ibleg">' + IB_SEGS.map(([l], i) => '<span><i class="ibseg s' + i + '"></i>' + esc(l) + '</span>').join('') + '<span><i class="ibseg sn"></i>' + esc(noneWord) + '</span></div>';
+}
+function ibClassView(c, cols, all) {
+  const crit = ibCrit(c), bounds = ibBounds(c), icols = ibCols(c, bk.term === '*' ? all : cols), who = c.names.map((n, i) => ({ n, name: bkWho(n, i) })).filter(p => bkIn(p.n));
+  const terms = who.map(p => ({ ...p, lv: ibLvOf(c, p.n), r: ibTerm(ibLvOf(c, p.n), crit, bounds) })), graded = terms.filter(t => t.r.grade != null);
+  const miss = icols.flatMap(x => who.filter(p => (x.cells.get(p.n) || {}).st === 'missing').map(p => p.n)), most = Math.max(1, ...[1, 2, 3, 4, 5, 6, 7].map(g => graded.filter(t => t.r.grade === g).length));
+  const grades = '<div class="pbands" id="ibGrades">' + [7, 6, 5, 4, 3, 2, 1].map(g => { const l = graded.filter(t => t.r.grade === g); return '<div class="pband"' + (l.length ? ' tabindex="0"' : '') + chTip(people(l.length, 'student'), 'Grade ' + g, l.map(t => t.name).join(', ')) + '><span>Grade ' + g + '</span><div class="pbt"><i style="width:' + l.length / most * 100 + '%"></i></div><span class="pbn"><b>' + l.length + '</b></span></div>'; }).join('') + '</div>';
+  const tasks = icols.length ? '<div class="bkwrap ibtaskw"><table class="bktab ibtasks" id="ibTasks"><thead><tr><th class="bknm">Task</th>' + crit.map(x => '<th title="' + esc(x.name) + '">' + esc(x.k) + '</th>').join('') + '<th>Marked</th></tr></thead><tbody>' +
+    icols.map(x => '<tr' + (x.fm ? ' class="ibfm"' : '') + '><td class="bknm">' + esc(x.name) + '<small class="muted"> ' + esc(bkDay(x.due)) + (x.fm ? ' · formative' : '') + '</small></td>' + crit.map(k => { if (!x.crit.includes(k.k)) return '<td><span class="bknone">·</span></td>'; const v = who.map(p => (x.cells.get(p.n) || { lv: {} }).lv[k.k]).filter(v => v != null); return '<td>' + (v.length ? '<b>' + ibMid(v) + '</b><small class="muted"> ' + (Math.min(...v) === Math.max(...v) ? '' : Math.min(...v) + '–' + Math.max(...v)) + '</small>' : '<span class="bknone">–</span>') + '</td>'; }).join('') +
+      '<td>' + who.filter(p => x.cells.has(p.n) && Object.keys(x.cells.get(p.n).lv).length).length + ' of ' + who.length + '</td></tr>').join('') + '</tbody></table></div>' : '<p class="muted">No task has levels in this term yet.</p>';
+  const yr = ibCols(c, all), often = '<div id="ibOften">' + crit.map(x => { const s = yr.filter(y => !y.fm && y.crit.includes(x.k)).length, f = yr.filter(y => y.fm && y.crit.includes(x.k)).length;
+    return '<div class="iboften"><span><b>' + esc(x.k) + '</b> ' + esc(x.name) + '</span><span>' + people(s, 'task') + (f ? ' <span class="muted">+ ' + f + ' formative</span>' : '') + '</span>' + (s < 2 ? '<span class="ibnone">fewer than two</span>' : '<span></span>') + '</div>'; }).join('') + '</div>';
+  return '<div class="bkpad"><div class="ovtiles" id="ibTiles">' + bkTile('Grades set', graded.length + ' of ' + who.length, 'every criterion has a level' + (bkLeft().size ? ' · ' + bkLeft().size + ' left out' : ''), true) +
+    bkTile('Middle grade', ibMid(graded.map(t => t.r.grade)) ?? '–', 'half above, half below') + crit.map(x => bkTile(esc(x.k) + ' middle level', ibMid(terms.map(t => ibLevel(t.lv[x.k]))) ?? '–', esc(x.name))).join('') +
+    bkTile('Missing work', miss.length, miss.length ? 'across ' + people(new Set(miss).size, 'student') : 'nothing outstanding') + '</div>' +
+    '<div class="ovcharts">' + chSec('Levels you set, by criterion', ibStack(crit, k => terms.map(t => ({ name: t.name, v: ibLevel(t.lv[k]) })), 'ibSet', 'not set'), 'How many students sit in each band on each criterion, from the levels you set for this term. The number on the right is the middle level.') +
+    chSec('Most recent level, by criterion', ibStack(crit, k => who.map(p => ({ name: p.name, v: ibEvidence(ibEvFor(icols, p.n, k)).last })), 'ibLast', 'no evidence'), 'The same picture from each student’s latest task on each criterion, before you have set anything.') +
+    chSec('Grades', grades, 'Students whose every criterion has a level, by the 1 to 7 their total earns on this class’s boundaries.') +
+    chSec('Each task', tasks, 'The middle level the class reached on each criterion a task assessed, with the lowest and highest.') +
+    chSec('How often each criterion was assessed this year', often, 'Each criterion is usually assessed at least twice a year.') + '</div>' +
+    '<p class="muted ovcap2">Nothing here is an average of levels: a middle level is the one that half the class is at or above.</p></div>';
+}
+function ibOneView(c, cols, all) {
+  bk.stu = Math.max(0, Math.min(c.names.length - 1, bk.stu));
+  const crit = ibCrit(c), bounds = ibBounds(c), icols = ibCols(c, bk.term === '*' ? all : cols), i = bk.stu, n = c.names[i], lv = ibLvOf(c, n), r = ibTerm(lv, crit, bounds);
+  const miss = icols.filter(x => (x.cells.get(n) || {}).st === 'missing'), termName = (bkTabs(all).find(t => t[0] === bk.term) || [, 'This year'])[1];
+  return '<div class="bkpad"><div class="bkstu"><button class="icon" data-bkstu="-1" aria-label="Previous student"' + (i ? '' : ' disabled') + '>‹</button><b id="bkStuName">' + esc(bkWho(n, i)) + '</b>' + bkInfo(n) + '<button class="icon" data-bkstu="1" aria-label="Next student"' + (i < c.names.length - 1 ? '' : ' disabled') + '>›</button><span class="muted">' + (i + 1) + ' of ' + c.names.length + ' · ← → to move</span></div>' +
+    '<div class="ovtiles" id="bkStuTiles">' + bkTile('Grade', r.grade != null ? r.grade : '–', r.need.length ? 'still to set: ' + esc(r.need.join(', ')) : '1 to 7', true) + bkTile('Total', r.total != null ? r.total : '–', 'of ' + crit.length * IB_TOP) +
+    crit.map(x => { const v = ibLevel(lv[x.k]), ev = ibEvidence(ibEvFor(icols, n, x.k)); return bkTile(esc(x.k) + ' ' + esc(x.name), v != null ? v : '–', v != null ? ibBandName(v) : ev.n ? 'most recent ' + ev.last + ', not set' : 'no evidence'); }).join('') +
+    bkTile('Missing', miss.length, miss.length ? esc(miss.map(x => x.name).join(', ')) : 'nothing outstanding') + '</div>' + ibFitBox(c, crit, bounds, icols, i, termName, false) + '<div class="ovcharts">' + attStuHtml(c, n) + '</div></div>';
+}
+function ibPeopleSay(c, name, term) { const crit = ibCrit(c), r = ibTerm(((c.lv || {})[term] || {})[name], crit, ibBounds(c)); return r.grade != null ? String(r.grade) : r.set ? r.set + ' of ' + crit.length + ' set' : '–'; }
+function ibAddOpen(c, itId) {
+  const f = itId && findItem(itId), it = f ? f.it : null, crit = ibCrit(c);
+  ibk.add = { it, name: it ? it.name : '', due: it ? it.due || '' : isoDay(Date.now()), fm: !!it && it.type === 'fm', crit: it ? (it.crit || []).slice() : crit.slice(0, 2).map(x => x.k),
+    s: it ? JSON.parse(JSON.stringify((it.typed && it.typed.s) || {})) : {} };
+  ibk.view = 'add'; bkDraw(); const n = $('#ibaName'); if (n && !it) n.focus();
+}
+function ibAddView(c) {
+  const a = ibk.add, crit = ibCrit(c), on = crit.filter(x => a.crit.includes(x.k));
+  return '<div class="ibadd" id="ibAdd"><div class="ibaddhead"><h3>' + (a.it ? 'Change levels' : 'Add levels') + '</h3><span class="muted">For a task you marked on paper or somewhere else.</span></div>' +
+    '<div class="ibaddtop"><label>Task <input type="text" id="ibaName" value="' + esc(a.name) + '" maxlength="80" placeholder="e.g. Cells lab report"></label><label>Date <input type="date" id="ibaDue" value="' + esc(a.due) + '"></label>' +
+    '<label class="ibchk"><input type="checkbox" id="ibaFm"' + (a.fm ? ' checked' : '') + '> Formative</label></div>' +
+    '<div class="ibaddcrit" role="group" aria-label="Criteria this task assessed"><span class="muted">Assessed:</span>' + crit.map(x => '<label class="ibchk" title="' + esc(x.name) + '"><input type="checkbox" data-ibacrit="' + esc(x.k) + '"' + (a.crit.includes(x.k) ? ' checked' : '') + '> ' + esc(x.k) + ' <span class="muted">' + esc(x.name) + '</span></label>').join('') + '</div>' +
+    (on.length ? '<div class="bkwrap"><table class="bktab ibaddtab"><thead><tr><th class="bknm">Student</th>' + on.map(x => '<th>' + esc(x.k) + '<small>0 to ' + IB_TOP + '</small></th>').join('') + '</tr></thead><tbody>' +
+      c.names.map((nm, i) => '<tr><td class="bknm">' + esc(bkWho(nm, i)) + '</td>' + on.map(x => { const v = ((a.s[nm] || {}).l || {})[x.k]; return '<td><input type="number" class="ibain" min="0" max="' + IB_TOP + '" step="1" data-iban="' + esc(nm) + '" data-ibak="' + esc(x.k) + '" value="' + (v == null ? '' : v) + '" aria-label="' + esc(x.k + ' for ' + bkWho(nm, i)) + '"></td>'; }).join('') + '</tr>').join('') + '</tbody></table></div>'
+      : '<p class="muted bkpad">Tick the criteria this task assessed.</p>') +
+    '<div class="ibaddfoot">' + (a.it ? '<button class="btn" data-ibadel style="margin-right:auto">Delete these levels</button>' : '') + '<button class="btn" data-ibacancel>Cancel</button><button class="btn primary" data-ibasave>Save</button></div></div>';
+}
+function ibAddRead() {
+  const a = ibk.add; if (!a || !$('#ibAdd')) return;
+  a.name = $('#ibaName').value.trim(); a.due = $('#ibaDue').value; a.fm = $('#ibaFm').checked;
+  for (const i of document.querySelectorAll('#ibAdd .ibain')) { const n = i.dataset.iban, k = i.dataset.ibak, v = i.value === '' ? null : ibLevel(i.value); a.s[n] ||= {}; a.s[n].l ||= {}; if (v == null) delete a.s[n].l[k]; else a.s[n].l[k] = v; }
+}
+function ibAddSave(c) {
+  const a = ibk.add; ibAddRead();
+  if (!a.name) { $('#ibaName').focus(); return; }
+  const bad = [...document.querySelectorAll('#ibAdd .ibain')].find(i => i.value !== '' && ibLevel(i.value) == null);
+  if (bad) { toast('A level is a whole number from 0 to ' + IB_TOP); bad.focus(); return; }
+  if (!a.crit.length) { toast('Tick the criteria this task assessed'); return; }
+  const s = {};
+  for (const [n, r] of Object.entries(a.s)) { const l = {}; for (const k of a.crit) if (r.l && r.l[k] != null) l[k] = r.l[k]; if (Object.keys(l).length || r.st) s[n] = { l, ...(r.st ? { st: r.st } : {}) }; }
+  const typed = { lv: true, s }, type = a.fm ? 'fm' : 'sum', due = a.due || isoDay(Date.now());
+  let it = a.it;
+  if (it) Object.assign(it, { name: a.name, type, due, crit: a.crit.slice(), typed });
+  else { let u = c.units[c.units.length - 1]; if (!u) c.units.push(u = { id: uid(), name: 'Unit 1', items: [] }); u.items.push(it = { id: uid(), name: a.name, classId: c.id, type, due, crit: a.crit.slice(), typed }); }
+  bkSaveLib(); if (!batch) renderLib();
+  const col = bk.cols.find(x => x.key === it.id);
+  if (col) Object.assign(col, { name: it.name, type, due, typed }); else bk.cols.push({ key: it.id, it, cls: c.id, name: it.name, type, due, term: it.term || '', typed, xcTo: '' });
+  if (bk.term !== '*') bk.term = bkTermOf({ due, term: it.term || '' }, bkConf().terms);
+  ibk.view = 'table'; ibk.add = null; bkDraw(); toast('Levels saved');
+}
+async function ibAddDel(c) {
+  const a = ibk.add, it = a && a.it; if (!it) return;
+  if (!await askDlg('Delete the levels typed in for “' + it.name + '”?', { ok: 'Delete', danger: true })) return;
+  for (const u of c.units) { const i = u.items.indexOf(it); if (i >= 0) u.items.splice(i, 1); }
+  bk.cols = bk.cols.filter(x => x.key !== it.id); bkSaveLib(); if (!batch) renderLib();
+  ibk.view = 'table'; ibk.add = null; bkDraw();
+}
+function ibCopy(c) {
+  const crit = ibCrit(c), bounds = ibBounds(c);
+  const rows = [['Student', ...crit.map(x => x.k), 'Total', 'Grade'].join('\t')].concat(c.names.map((nm, i) => { const lv = ibLvOf(c, nm), r = ibTerm(lv, crit, bounds); return [bkWho(nm, i), ...crit.map(x => ibLevel(lv[x.k]) == null ? '' : lv[x.k]), r.total == null ? '' : r.total, r.grade == null ? '' : r.grade].join('\t'); }));
+  navigator.clipboard.writeText(rows.join('\n')).then(() => toast('Copied. Paste it into a spreadsheet' + (sysName() ? ' or ' + sysName() : '') + '.'), () => toast('Copying didn’t work in this browser.'));
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest('#bkBody [data-ibfit], #bkBody [data-ibback], #bkBody [data-ibstep], #bkBody [data-iblv], #bkBody [data-ibadd-lv], #bkBody [data-ibedit], #bkBody [data-ibacancel], #bkBody [data-ibasave], #bkBody [data-ibadel], #bkBody [data-ibcopy]');
+  if (!b) return; const c = bkClass(), d = b.dataset; if (!c || classWay(c) !== 'myp') return;
+  if (d.ibfit != null) { ibk.view = 'fit'; ibk.stu = +d.ibfit; return bkDraw(); }
+  if (d.ibback != null) { ibk.view = 'table'; return bkDraw(); }
+  if (d.ibstep) { ibk.stu = Math.max(0, Math.min(c.names.length - 1, ibk.stu + +d.ibstep)); return bkDraw(); }
+  if (d.iblv) { const [k, n] = d.iblv.split(':'), nm = c.names[+b.closest('[data-ibstu]').dataset.ibstu], was = ibLevel(ibLvOf(c, nm)[k]); ibLvSet(c, nm, k, was === +n ? null : +n); bkDraw(); const on = $('#bkBody [data-iblv="' + k + ':' + n + '"]'); if (on) on.focus(); return; }
+  if (d.ibaddLv != null) return ibAddOpen(c, '');
+  if (d.ibedit) return ibAddOpen(c, d.ibedit);
+  if (d.ibacancel != null) { ibk.view = 'table'; ibk.add = null; return bkDraw(); }
+  if (d.ibasave != null) return ibAddSave(c);
+  if (d.ibadel != null) return ibAddDel(c);
+  if (d.ibcopy != null) return ibCopy(c);
+});
+document.addEventListener('change', e => { const t = e.target.closest('#ibAdd [data-ibacrit]'); if (!t || !ibk.add) return; ibAddRead(); const k = t.dataset.ibacrit, a = ibk.add; a.crit = ibCrit(bkClass()).map(x => x.k).filter(x => x === k ? t.checked : a.crit.includes(x)); bkDraw(); });
+/* ---------- marking an MYP task on the paper: its rubric rows are the criteria it assesses, each 0 to 8 ---------- */
+function ibSetup(su) { su = su || setup; return su.mode === 'rubric' && Array.isArray(su.ib) && su.ib.some(Boolean); }
+const ibTaskClass = () => { const c = batch && batchClass(); return c && classWay(c) === 'myp' ? c : null; };
+const ibTaskLevels = st => setup.ib.map((k, i) => [k, noScore(st) ? null : st.grade.rubric[i]]).filter(x => x[0]);
+function ibListSay(st) { return ibTaskLevels(st).map(x => x[1] == null ? '–' : fmtNum(x[1])).join(' '); }
+function ibStampText(st) { return ibTaskLevels(st).filter(x => x[1] != null).map(([k, v]) => k + ' ' + fmtNum(v)).join('   '); }
+function ibTotalHtml(st) {
+  const lv = ibTaskLevels(st), on = lv.filter(x => x[1] != null);
+  return '<span class="ibtl" id="ibTaskLv">' + (on.length ? on.map(([k, v]) => '<span class="iblv"><i>' + esc(k) + '</i><b>' + fmtNum(v) + '</b></span>').join('') : '<b>–</b>') + '</span><span class="ibtlsay muted">' + (on.length < lv.length ? on.length + ' of ' + lv.length + ' criteria marked' : 'levels, 0 to ' + IB_TOP) + '</span>' +
+    (on.length ? '<button class="btn sm ghost" id="stampScore" title="Put the levels on the paper: ' + esc(ibStampText(st)) + '">' + STAMP_ICON + 'Stamp</button>' : '');
+}
+function ibPanelHead() {
+  const c = ibTaskClass(); if (!c) return '';
+  return ibSetup() ? '<button class="link" id="ibTaskSet">Criteria</button>'
+    : '';
+}
+function ibPanelAsk() {
+  const c = ibTaskClass(); if (!c || ibSetup()) return '';
+  return '<div class="ibask" id="ibAsk"><span>' + esc(c.name) + ' is graded with MYP criteria.</span><button class="btn sm primary" id="ibTaskSet">Choose this task’s criteria</button></div>';
+}
+let ibTask = null;
+function ibTaskDlg() {
+  const c = ibTaskClass(); if (!c) return;
+  const crit = ibCrit(c), was = ibSetup() ? setup.ib.filter(Boolean) : [];
+  ibTask = { on: was.length ? was.slice() : [] };
+  openDlg('<div class="bh"><h2>Criteria this task assesses</h2></div><div class="bb" id="ibTaskBody"><p class="muted">Tick the criteria you are marking on this task. Each becomes a row scored 0 to ' + IB_TOP + '. A task usually assesses two or three.</p>' +
+    '<div class="ibtaskl" role="group" aria-label="Criteria">' + crit.map(x => '<label class="ibchk"><input type="checkbox" data-ibtk="' + esc(x.k) + '"' + (ibTask.on.includes(x.k) ? ' checked' : '') + '> <b>' + esc(x.k) + '</b> ' + esc(x.name) + '</label>').join('') + '</div>' +
+    '<p class="muted ibnote">What each level means on a row is yours to write: use Edit rubric afterwards and paste your own descriptors.</p></div>' +
+    '<div class="bf"><button class="btn" data-cancel>Cancel</button><button class="btn primary" data-ok>Save</button></div>');
+  $('#dlgBox').onchange = null; $('#dlgBox').oninput = null;
+  $('#dlgBox').onclick = e => { if (e.target.closest('[data-cancel]')) { ibTask = null; return closeDlg(); } if (e.target.closest('[data-ok]')) return ibTaskSave(); };
+}
+async function ibTaskSave() {
+  const c = ibTaskClass(); if (!c || !ibTask) return;
+  const keys = [...document.querySelectorAll('#ibTaskBody [data-ibtk]')].filter(i => i.checked).map(i => i.dataset.ibtk), crit = ibCrit(c).filter(x => keys.includes(x.k));
+  if (!crit.length) { toast('Tick at least one criterion'); return; }
+  const had = ibSetup(), old = had ? setup.ib : [], from = crit.map(x => old.indexOf(x.k));   // where each new row's scores come from, or -1
+  const scored = batch.students.filter(st => (st.grade.rubric || []).some((v, i) => v != null && !from.includes(i)) || (!had && st.grade.points !== '' && st.grade.points != null)).length;
+  if (scored && !await askDlg((had ? 'Taking a criterion off this task clears the levels given for it on ' : 'This task’s rows become the criteria, which clears the scores already given on ') + people(scored, 'paper') + '.', { ok: 'Save', cancel: 'Go back', danger: true })) return;
+  const pick = a => Array.isArray(a) ? from.map(i => i >= 0 && a[i] != null ? a[i] : null) : null;
+  const su = { ...setup, mode: 'rubric', criteria: crit.map((x, n) => from[n] >= 0 ? setup.criteria[from[n]] : x.k + ' ' + x.name), ib: crit.map(x => x.k), top: IB_TOP, half: false, scale: null };
+  delete su.tops;
+  const lv = pick(setup.levels), gl = pick(setup.goals);
+  if (lv && lv.some(Boolean)) su.levels = lv.map(x => x || []); else delete su.levels;
+  if (gl && gl.some(Boolean)) su.goals = gl.map(x => x || ''); else delete su.goals;
+  for (const st of batch.students) {
+    const g = st.grade, r = g.rubric || [], at = g.atR || {}, now = Date.now();
+    g.rubric = from.map(i => i >= 0 && r[i] != null ? r[i] : null);
+    const nat = {}; from.forEach((i, n) => { nat[n] = i >= 0 && at[i] ? at[i] : now; }); if (at.points) nat.points = now;
+    g.atR = nat; if (!had) g.points = '';
+  }
+  setup = su; store.set('gs.setup', { ...setup, spot: undefined, rubricPage: undefined });
+  if (batch.assignment) { batch.assignment.setup = { ...setup, spot: undefined }; shareRubric(batch.assignment); saveLib(); }
+  batch.students.forEach(refound);
+  ibTask = null; closeDlg(); rowStart(); renderGrade(); renderList(); saveSoon();
+  toast('This task assesses ' + crit.map(x => x.k).join(', '));
+}
+document.addEventListener('click', e => { if (e.target.closest('#ibTaskSet')) ibTaskDlg(); });
+Object.assign(window.__gs, { classWay, ibCrit, ibBounds, ibBoundsFor, ibGradeOf, ibTerm, ibEvidence, ibLevel, ibDlg, IB_GROUPS, ibCols, ibMid, ibSetup, ibTaskDlg, classNewWay, GRADE_WAYS, ibk: () => ibk });
 
 /* ---------------- Report comments: a draft for each student, from her own scores and comments (Stage 6) ----------------
    A class page's Report comments tab (#/class/<id>/reports). The draft is put together here, in the browser, from the
@@ -25279,6 +25783,7 @@ function exShowClose() {
   const el = $('#exShow'); if (!el) return;
   if (exShowKeys) { document.removeEventListener('keydown', exShowKeys, true); exShowKeys = null; }
   document.removeEventListener('fullscreenchange', el._fs);
+  if (gsFull.drop(el)) return;   // the whole page in full screen under it stays so (src/fullscreen.js)
   el.remove();
   if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
 }
@@ -25418,6 +25923,163 @@ function exPageRender() {
 exReady.then(exRailSay);
 
 Object.assign(window.__gs, { exList: () => exList, exReady: () => exReady, exStar, openUseExample, openExamples, exShow, exSheet, exPdfOf, exPng, exDownload, exForgetWork, exUse: () => EXU, exItems, exAll, exFolderSync: () => exFolderSync(), exMergePlan, exPageRender, exPageF, exDeleteTest: exDelete });
+
+/* ---------------- Screenshot: drag over part of the screen and a picture of it goes on the clipboard ---------------- */
+
+async function copyPicture(blobP, name) {
+  try {
+    if (!navigator.clipboard || !navigator.clipboard.write || typeof ClipboardItem === 'undefined') throw new Error('no clipboard');
+    await navigator.clipboard.write([new ClipboardItem({ 'image/png': blobP })]);
+    return 'copied';
+  } catch (e) { /* saved as a file below */ }
+  let blob = null;
+  try { blob = await blobP; } catch { return 'none'; }
+  if (!blob) return 'none';
+  await saveBlob(name, blob);
+  return 'saved';
+}
+const canvasPng = c => new Promise((res, rej) => c.toBlob(b => { c.width = c.height = 0; b ? res(b) : rej(new Error('no picture')); }, 'image/png'));
+
+let snipOn = null;
+const snipPaper = () => !!(batch && pages.length && $('#paper') && $('#paper').offsetParent && $('#dlg').hidden);
+const snipMarks = () => !!store.get('gs.snipMarks', 1);
+function snipStart() {
+  if (snipOn || $('#findDlg')) return;
+  commitEditors();
+  const paper = snipPaper();
+  const el = document.createElement('div');
+  el.id = 'snipLayer'; el.className = 'sniplay'; el.tabIndex = -1;
+  el.innerHTML = '<div class="snipbar" role="dialog" aria-label="Screenshot"><div class="snipt"><b>Screenshot</b><span>Drag over what you want to copy' + (paper ? ', or click a page for all of it' : '') + '.</span></div>' +
+    '<div class="snipacts">' + (paper ? '<label class="snipmk"><input type="checkbox" id="snipMk"' + (snipMarks() ? ' checked' : '') + '> With my marks</label>' : '') +
+    '<button class="btn sm" data-snipall title="Everything on screen (Enter)">Whole screen</button><button class="btn sm" data-snipx title="Esc">Cancel</button></div>' +
+    '<p class="snipnote">' + (paper ? 'On the paper, name covers are painted in and the student’s name and file name are left off. ' : '') + 'Anything else shows as it is on screen.</p></div><div class="snipbox" hidden></div>';
+  document.body.appendChild(el);
+  snipOn = el; el.focus({ preventScroll: true });
+  const box = el.querySelector('.snipbox');
+  let d = null;
+  el.addEventListener('pointerdown', e => {
+    if (e.button !== 0 || e.target.closest('.snipbar')) return;
+    e.preventDefault(); el.setPointerCapture(e.pointerId);
+    d = { x: e.clientX, y: e.clientY, id: e.pointerId };
+    el.classList.add('dragging');
+  });
+  el.addEventListener('pointermove', e => {
+    if (!d || e.pointerId !== d.id) return;
+    const r = snipRect(d, e);
+    if (r.w < 4 && r.h < 4) return;
+    box.hidden = false; Object.assign(box.style, { left: r.x + 'px', top: r.y + 'px', width: r.w + 'px', height: r.h + 'px' });
+  });
+  el.addEventListener('pointerup', e => {
+    if (!d || e.pointerId !== d.id) return;
+    const r = snipRect(d, e); d = null; el.classList.remove('dragging');
+    if (r.w >= 6 || r.h >= 6) return snipTake(r);
+    const pg = paper && pages.find(q => { const b = q.canvas.getBoundingClientRect(); return e.clientX >= b.left && e.clientX <= b.right && e.clientY >= b.top && e.clientY <= b.bottom; });
+    if (pg) return snipTake(null, pg);
+    box.hidden = true;
+    toast(paper ? 'Drag over an area, or click a page.' : 'Drag over an area to copy it.');
+  });
+  el.addEventListener('pointercancel', () => { d = null; box.hidden = true; el.classList.remove('dragging'); });
+  el.addEventListener('click', e => {
+    if (e.target.closest('[data-snipx]')) return snipStop();
+    if (e.target.closest('[data-snipall]')) return snipTake({ x: 0, y: 0, w: innerWidth, h: innerHeight });
+  });
+  el.addEventListener('change', e => { if (e.target.id === 'snipMk') { if (e.target.checked) store.del('gs.snipMarks'); else store.set('gs.snipMarks', 0); } });
+  el.addEventListener('keydown', snipKey);
+}
+function snipKey(e) {
+  e.stopPropagation();   // nothing behind gets a key while this is up
+  if (e.key === 'Escape') { e.preventDefault(); snipStop(); }
+  else if (e.key === 'Enter' && !e.target.closest('button')) { e.preventDefault(); snipTake({ x: 0, y: 0, w: innerWidth, h: innerHeight }); }
+}
+const snipRect = (a, e) => {
+  const x = clamp(Math.min(a.x, e.clientX), 0, innerWidth), y = clamp(Math.min(a.y, e.clientY), 0, innerHeight);
+  return { x, y, w: clamp(Math.max(a.x, e.clientX), 0, innerWidth) - x, h: clamp(Math.max(a.y, e.clientY), 0, innerHeight) - y };
+};
+function snipStop() {
+  if (!snipOn) return;
+  snipOn.remove(); snipOn = null;
+}
+async function snipTake(R, pg) {
+  const marks = snipPaper() ? snipMarks() : true;
+  snipStop();
+  const blobP = (R ? snipArea(R, marks) : snipWhole(pg, marks)).then(canvasPng);
+  const how = await copyPicture(blobP, 'Screenshot.png');
+  if (how === 'none') return toast('That picture couldn’t be made. Try a smaller area.');
+  toast(how === 'copied' ? 'Picture copied. Paste it wherever you need it.' : 'This browser can’t copy pictures, so it was saved as Screenshot.png.', 4000);
+}
+async function snipPage(pg, k, marks) {
+  const st = batch.students[cur], f = pg.file, p = pg.idx, page = pg.page, W = pg.W, H = pg.H, side = pg.side, rx = anonRx(st);
+  const c = document.createElement('canvas'); c.width = Math.ceil((W + side) * k); c.height = Math.ceil(H * k);
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
+  ctx.fillStyle = '#F6F7F9'; ctx.fillRect(Math.round(W * k), 0, c.width, c.height);
+  await page.render({ canvasContext: ctx, ...vpDraw(f, p, page, k), annotationMode: pdfjsLib.AnnotationMode.ENABLE }).promise;
+  const L = lightForPage(st, f, p); if (L) lightCanvas(ctx, Math.ceil(W * k), c.height, L);
+  scanClip(ctx, f, p, W * k, Math.ceil(W * k), c.height);
+  ctx.setTransform(k, 0, 0, k, 0, 0);
+  if (marks) drawMarks(ctx, scrubMarks(pg.marks().concat(pg.extra || []), rx), W, H, side, null);
+  ctx.fillStyle = '#111';
+  for (const r of await anonCovers(st, pg)) ctx.fillRect(r.x, r.y, r.w, r.h);   // after the marks, so a mark can't show a name either
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  return c;
+}
+async function snipWhole(pg, marks) {
+  const k = clamp(1700 / pg.W, 1, 4), c = await snipPage(pg, k, marks);
+  const notes = marks && pg.marks().concat(pg.extra || []).some(m => m.t === 'note');
+  if (notes) return c;
+  const o = document.createElement('canvas'); o.width = Math.ceil(pg.W * k); o.height = c.height;
+  o.getContext('2d').drawImage(c, 0, 0); c.width = c.height = 0;
+  return o;
+}
+async function snipArea(R, marks) {
+  const k = clamp(window.devicePixelRatio || 1, 2, 3);
+  let out = null;
+  try {
+    out = await html2canvas(document.body, { x: R.x + scrollX, y: R.y + scrollY, width: R.w, height: R.h, scale: k, backgroundColor: getComputedStyle(document.body).backgroundColor || '#ffffff', logging: false, useCORS: true,
+      ignoreElements: el => el.id === 'snipLayer' || (el.classList && el.classList.contains('toast')), onclone: snipClean });
+  } catch (e) { console.error(e); }
+  if (!out) { out = document.createElement('canvas'); out.width = Math.ceil(R.w * k); out.height = Math.ceil(R.h * k); const x = out.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, out.width, out.height); }
+  if (!snipPaper()) return out;
+  const P = $('#paper').getBoundingClientRect(), ctx = out.getContext('2d');
+  ctx.setTransform(1, 0, 0, 1, 0, 0);   // html2canvas leaves its own scale on the canvas
+  const vis = { l: Math.max(R.x, P.left), t: Math.max(R.y, P.top), r: Math.min(R.x + R.w, P.left + $('#paper').clientWidth), b: Math.min(R.y + R.h, P.top + $('#paper').clientHeight) };
+  for (const pg of pages) {
+    const b = pg.canvas.getBoundingClientRect();
+    if (b.right <= vis.l || b.left >= vis.r || b.bottom <= vis.t || b.top >= vis.b || !pg.s) continue;
+    const c = await snipPage(pg, pg.s * k, marks);
+    ctx.save();
+    ctx.beginPath(); ctx.rect((vis.l - R.x) * k, (vis.t - R.y) * k, (vis.r - vis.l) * k, (vis.b - vis.t) * k); ctx.clip();
+    ctx.drawImage(c, (b.left - R.x) * k, (b.top - R.y) * k, b.width * k, b.height * k);
+    ctx.restore();
+    c.width = c.height = 0;
+  }
+  return out;
+}
+function snipClean(doc) {
+  const st = batch && batch.students[cur];
+  if (st && snipPaper()) {
+    for (const el of doc.querySelectorAll('#paper .who, #paper .lchip, #paper .rchip')) el.style.visibility = 'hidden';
+    const rf = fileRx(st), rx = anonRx(st);
+    for (const el of doc.querySelectorAll('#paper .fhead > span:first-child, #paper .refd > summary, #paper .nofile b, #paper .mhead b')) el.textContent = scrub(el.textContent, rf);
+    if (nameFindOn()) for (const el of doc.querySelectorAll('#paper .dpage p, #paper .dpage td, #paper .dpage li')) { rx.lastIndex = 0; if (rx.test(el.textContent)) el.classList.add('anonhide'); }
+  }
+  const win = doc.defaultView, odd = /\b(?:color|oklab|oklch|lab|lch)\(/;
+  if (!win) return;
+  for (const el of doc.body.querySelectorAll('*')) {
+    const cs = win.getComputedStyle(el);
+    for (const p of SNIP_COLOR_PROPS) { const v = cs[p]; if (v && odd.test(v)) el.style[p] = snipRgb(v); }
+  }
+}
+const SNIP_COLOR_PROPS = ['color', 'backgroundColor', 'backgroundImage', 'borderTopColor', 'borderRightColor', 'borderBottomColor', 'borderLeftColor', 'outlineColor', 'boxShadow', 'textDecorationColor', 'textShadow', 'fill', 'stroke'];
+const snipRgb = v => v.replace(/\bcolor\(srgb ([\d.e-]+) ([\d.e-]+) ([\d.e-]+)(?: \/ ([\d.e-]+))?\)/g, (m, r, g, b, a) => 'rgba(' + [r, g, b].map(n => Math.round(clamp(+n, 0, 1) * 255)).join(', ') + ', ' + (a == null ? 1 : +a) + ')')
+  .replace(/\b(?:color|oklab|oklch|lab|lch)\([^)]*\)/g, 'rgba(0, 0, 0, 0)');
+document.addEventListener('keydown', e => {
+  if (!e.altKey || e.ctrlKey || e.metaKey || e.code !== 'KeyS' || snipOn) return;
+  const a = document.activeElement;
+  if (a && (/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName) || a.isContentEditable)) return;
+  e.preventDefault(); e.stopPropagation(); snipStart();
+}, true);
+Object.assign(window.__gs || (window.__gs = {}), { snipStart, snipStop, copyPicture });
 
 /* ---------------- tablets: a finger that moves the page, a pencil that draws, and a palm that does nothing (Stage 6) ----------------
    A page's canvas takes every pointer itself (touch-action: none), which is right for a mouse and a pencil but leaves a finger
@@ -26323,7 +26985,7 @@ $('#setHistory').addEventListener('click', e => {
 });
 
 /* updates she controls, and installing as an app */
-const WHATS_NEW = {"1.27.24":["My setup, in Settings: copy a prompt into your AI assistant, and it writes your setup as one block of text: classes and when they meet, the calendar, terms, what a grade is made of, how you grade, IB criteria and boundaries, rubrics, saved comments and learning goals.","Paste the block back and press Check it. You see what would change, untick anything you don’t want, and can undo it afterwards. Anything about students is left out and said so.","Copy my setup gives your own setup as the same kind of text, for a colleague to start from. The welcome has a line that leads here."],"1.27.23":["Take my work with me now carries your Planner too: lessons, units, timetable and their files. Bring work in takes it in. A Planner already in use only receives the lessons and files it doesn’t have, so nothing there is replaced.","If Grading Studio ever moves to a new web address, the old address tells you and shows the three steps for taking your work along. Help has an answer for it."],"1.27.22":["Attendance has a choice for a student who is away when you don’t know why yet: Absent, reason unknown. Change it to Absent, excused when you hear the reason. It is still four choices, and days you saved before keep their marks. Look back lists the absences that still have no reason."],"1.27.21":["Comments are easier to work with. Change a comment’s color at any time, even while typing it: its box has a Color row, and a Highlight row when it is on highlighted words. Text boxes and Quick mark comments have colors too.","Drag a new comment’s line up or down before you type a word, and press Enter to finish a comment or text box. Shift Enter starts a new line."],"1.27.20":["Feedback-only work no longer says 0 of 20 scored. A formative activity counts the students whose feedback is complete, on its card, in Find, Today, To do, the Grades box and the grade sheet, and says Ready to return once everyone has feedback."],"1.27.19":["Presentations and videos. On an assignment’s card, Add papers… now has No papers: presentations or videos…, which gives every student on the roster a notes page to write on while you watch. Pick lined, your rubric’s rows, two columns or blank.","On a student’s page, + Add has A video…: paste a link from Google Drive, YouTube or anywhere else, and tick the partners in it. One set of notes and one grade covers the group. Only the link is kept, so the video stays where it is.","Play here shows the video above the notes page; Open in its own window puts it beside the app. + Add also has A notes page… for one more page at any time.","Clips: under a video, + Clip saves a part worth showing, as a start time, an end time and a title. Show to the class plays it full screen with the title and without the student’s name, and Clips to show the class under Setup plays them one after another."],"1.27.18":["The app no longer assumes your AI assistant is Claude. Settings, Working with AI lets you pick Claude, ChatGPT, Gemini, Copilot, another name, or none, and buttons and hints use that name. If you already used the app, yours stays Claude.","Planner, Timetable has a Slides section: the agenda on slide 2 and keeping text between 28 and 36 pt are both on, and each can be turned off.","The week shows Saturday, or Sunday in front of Monday, when a class meets then. Short dates follow your computer's day and month order."],"1.27.17":["Answer notes for quizzes: type each question's answer in Quiz boxes, and it goes on the returned papers in a gold note labelled Answer, by each question a student lost points on. In Quiz boxes, Answer notes can be set to every question or off."],"1.27.16":["The grade sheet shows the score you gave each paper in Grading Studio, the same number as the score panel, with extra credit and the retake that counts. Grades found typed on the papers only show for papers with no score yet, or when you tick Also show grades found on the papers. A score stamp already on a paper now changes when the score does."],"1.27.15":["Copy one quiz answer as a picture: in Quick mark, press P or ⧉ Copy on an answer, then paste it into Claude to ask whether it is right. The picture shows only that answer, with the question and your answer key on top. The name, score, your mark and the file name are left off, and name covers are painted in, but the student’s handwriting and words still show."],"1.27.14":["Points written on a paper can have their own color. In Quick mark’s Colors menu, or Settings, Marking, Mark colors: the ✗ color as before, one color of your own, or By credit, with full points in the check color, part in amber and none in the ✗ color."],"1.27.13":["Share lesson file, under More in a lesson: one small file with the slides, notes, pictures, materials and finished PowerPoint. Open it with Import a lesson on another computer, or give it to another teacher.","Which classes and days a lesson is on, taught notes and comments for Claude stay behind, and opening one never replaces a lesson you have."],"1.27.12":["A to-do list. To do in the sidebar holds your own list beside what the app noticed from your work: papers to mark, papers to hand back, a class with no lesson planned, missing work to chase. Those go by themselves when the work is done, and each kind can be switched off.","Type a to-do the way you would say it, like “Call Bram’s parents friday”, and it picks out the day, the class and the student. Press N anywhere outside a paper to add one.","A to-do can have a day, a class, a student or assignment it goes with, a repeat and a note. Today shows a short card of what is overdue or due today.","Week, at the top right of To do, shows your week: each line on its day, under the class that meets then. Type in a day to add one, or drag a line to another day. Anything not done moves to today on its own."],"1.27.11":["Groups in Present mode: shuffling no longer moves the slides or ends the lesson, and each shuffle keeps last time's groups apart.","Change groups by hand: drag a name to another group, or click a name and then a group. Make my own starts with empty groups, and Undo or Ctrl Z takes back a move or a shuffle.","The Present timer keeps running after you finish or leave full screen, in the corner of the Planner, and comes back on the slides when you present again."],"1.27.10":["Finding names on its own is now off unless you turn it on, in Settings, Marking, Name covers. Only the boxes you draw in Check the covers cover anything, and the check before anonymous grading lists every paper."],"1.27.9":["In the Planner's Timetable, Use my school’s template… picks your own PowerPoint template for slide downloads. Use the plain one goes back to the white one built in.","Save my setup file keeps your classes, meeting times, days off and slide template in one file to load on another computer."],"1.27.8":["Anchor papers: while you mark a summative, click High, Mid or Low under the score. The Return tab lists the three and exports them in one ZIP, each named for the assignment and its level, like “River essay - Summative High.pdf”, with student names covered."],"1.27.7":["Keep strong work as an example: press ☆ Example on an answer in Quick mark (or E), or pick Use as an example in the ⋯ beside a student’s name for a whole paper or part of a page. Names are covered, and your marks and the score stay off unless you switch them on. It is always optional.","The Examples tab on an assignment, and Examples in the sidebar for every class, have Show to the class, Copy picture, Download and Download as a sheet.","Examples go to your linked folder and into the take-home file with the rest of your work."],"1.27.6":["Returned files are named for the student, the assignment and what they are, like “Ana Lee - River essay - Graded.pdf”, or Feedback when there is no score. They still go in each student’s own folder.","To keep the names students turned in, untick Name each file by student and assignment under Options on the Return tab."],"1.27.5":["The gradebook can import your old scores: press Import… and choose a CSV or Excel file, or paste the cells. Each column becomes an assignment, matched to your roster.","You see everything before it is saved, and a score already in the gradebook stays unless you choose the file’s."],"1.27.4":["School is a new page in the sidebar for the things about your school you look up again and again: the handbook, the calendar, the bell schedule, portals, forms, who to call.","Add a link, a file (a copy is kept with your work) or a note. Name your own groups, and star the ones you open most to keep them along the top.","Drop files on the page or paste a web address. Find anything lists every resource. They are kept in your folder and take-home file, and stay when you start a new school year."],"1.27.3":["The class timer in Present takes minutes and seconds: type them in, or pick 0:30 and the other quick times. The menu remembers the last time you typed.","While it runs, the timer's menu adds or takes away 10 seconds or a minute, pauses, and restarts from the time you set. + and − add or take away a minute without opening the menu.","Tick Show it big to put the countdown in the middle of the screen, large enough for the back of the room."],"1.27.2":["In the gradebook, in-class assessments are now on the left and summatives on the right: the columns, the averages beside the term grade, and wherever you choose a type.","The order is yours to change. In Term setup, the arrows beside each type move it, and the gradebook's columns follow from left to right.","You can make your own assignment types. In Term setup, rename a type or press + Add a type (Homework, Projects, Quizzes), and give each its share of the grade. Your own setup stays as it is until you change it."],"1.27.1":["Undo now takes back a score as well as a mark: press Ctrl Z (⌘Z on a Mac) after a slip on a slider, a number key, or Missing, Excused or Late. Redo puts it back.","Deleting a unit, an assignment or a class shows Undo for a few seconds, and Undo puts it back where it was.","“Picked up where you left off” shows once, when you open an assignment, and no longer on Today or other pages. The note about what opened leaves by itself when you move to the next student, if every file opened.","The Next button stays in one place from student to student, and the Grade heading on a class’s Students tab is drawn properly.","Find anything answers to more everyday words: export, hand back, backup, undo, shortcuts, csv."],"1.27.0":["Start a new school year, in Settings, Saving and carrying. Your classes, units and assignment cards carry on, each card with its rubric and Quick mark boxes, with empty class lists and dates a year later.","This year goes into one protected file first, and the file is checked before anything is cleared. Open an archived year brings a year back from its file."],"1.26.2":["Rubric rows can be scored on your own scale. They start at 0 to 4 with half points, as before; when you set up an assignment you can pick any top from 1 to 10 and turn half points off.","Settings, Grading: choose the row scale new assignments start with. Assignments you already have keep theirs."],"1.26.1":["Activities: See, think, wonder now says it comes from Project Zero at the Harvard Graduate School of Education."],"1.26.0":["Seating: a new tab on each class. Pick how the room is set up, drag students to desks, and Shuffle gives everyone a new seat. A student can be kept in their seat.","Pick a name shows one student at random, and nobody twice until everyone has had a turn. Make groups deals the class into groups of any size.","While presenting a lesson, P picks a name and G makes groups. Who’s here leaves out anyone who is away today."],"1.25.0":["Attendance. Each class has an Attendance tab: everyone starts as present, so a day is one press for each student who is late, excused or absent, with a note if you want one.","Look back shows every saved day in one table with each student’s totals, and a student’s own page lists the days they missed.","Copy a day, or download the table as a spreadsheet, for your school’s system. Today has a line for it under each class.","If you don’t take attendance here, turn it off in Settings, Classes and rosters."],"1.24.0":["Retakes: a second try at the same assignment keeps the first try's score, comment and paper. Start one from the ⋯ beside Missing, Excused and Late on a paper.","You choose which try counts, for all your classes: the highest (to begin with), the latest, or the average. It is in the retake box and in the gradebook's Term setup.","A score typed into the gradebook takes a retake too: type both, like 7 > 10."],"1.23.0":["Scores by learning goal, if you want them. Keep your own list of goals (a skill, or a standard from your school) in Settings, Grading, or add one wherever you tag.","Tag rubric rows in Rubric setup and quiz questions in Quiz boxes. An assignment scored with just a total can carry one goal for the whole score.","Each class page gets a Goals tab: the class average on each goal with the lowest first, every student by every goal, and where each number came from. A student's own page shows their goals beside the class average.","Nothing changes until you add a first goal, and tagging never changes a score or a grade."],"1.22.0":["Progress sheets for parent meetings: one printed page per student with the term grade, every score, a chart of how they moved, missing work, each term's grade, the report comment and lines for notes. Find it on a class's Students list, or Progress sheet on one student's page.","Choose the term and tick what goes on it; Print opens the print window, where you can pick a printer or Save as PDF. It is made on your computer and nothing is sent anywhere."],"1.21.0":["Each class has a Missing work tab: every paper you marked Missing, by student or by assignment, for the term you pick.","Email reminder opens an email in your own mail app, addressed to the student and listing what they owe, for you to read and send. Email all writes one email to everyone who owes an assignment, with the addresses in Bcc. Grading Studio sends nothing itself.","Each reminder you open is noted beside the work, and Email wording… changes what every reminder says."],"1.20.0":["The app can speak Traditional Chinese (繁體中文). Choose it in Settings, Display, App language, or at the top of the welcome.","Like Spanish, it covers the first screens so far: the sidebar, Today, the welcome, Find anything, Help, and the feedback page students get with a returned paper. The other screens are still in English."],"1.19.0":["The app can speak Spanish. Choose it in Settings, Display, App language, or at the top of the welcome.","Spanish covers the first screens so far: the sidebar, Today, the welcome, Find anything, Help, and the feedback page students get with a returned paper. The other screens are still in English.","Names you typed (classes, students, assignments, rubric rows) are never translated."],"1.18.0":["On a tablet, a pencil draws and the pen's line is wider where you press harder. Once you have used a pencil, one finger moves the page, two fingers pinch to zoom, and a hand resting on the screen does nothing.","Settings, Marking has a new Tablet and pencil section: choose what a finger does on the paper, or turn off the wider line.","On a touch screen the tools, the student rows and the score buttons are larger."],"1.17.0":["Report comments: a new tab on each class's page drafts a comment for every student from your own gradebook, rubric scores and the comments you wrote on their papers. Edit each one, tick it done, then copy or download them all.","The drafts are put together on your computer from sentences you can change under Wording. Nothing about a student is sent anywhere."],"1.16.0":["Help is in the sidebar: short answers to the questions teachers ask most, from opening a set of papers to moving your work to another computer.","Find anything answers questions too. Type a few words, like “late paper” or “backup”, and the answer is in the list."],"1.15.0":["A picture dragged onto a slide that has text now sits beside the text, in a new Text + picture layout.","Drag several pictures in at once and each gets its own slide. Let a picture go on any slide in the list on the left to put it there.","New Full picture layout: the picture fills the whole slide."],"1.14.0":["Extra credit: points or a percent on one paper, and extra credit entries in the gradebook that add to the term grade or the in-class average.","The gradebook shows each type's average (summative, in-class) right beside the term grade, kept in view as you scroll. Averages only shows just those columns, and Whole year splits each term the same way.","Leave out… lets you untick students to see the class averages without them. Their own grades don't change, and nothing is saved."],"1.13.0":["Present a lesson from the Planner, or from Today when its class is on now or next: its slides fill the screen, and the arrow keys or a clicker move through them.","While presenting, A shows the agenda to tick off, T starts a timer the class can see, N shows your notes and B blanks the screen.","The bar shows how many minutes the class has left, from your timetable.","After a lesson is taught, one line says where the class got to. It shows on the lesson and on the week, and presenting again picks up there."],"1.12.0":["A returned paper starts with a feedback page: the score, each rubric row with the level given and what that level means, your comment, and every comment on the paper with its page number.","It is on unless you turn it off under Options on the Return tab. Your own pages are not changed, and bringing an export back in opens only those."],"1.11.0":["The Planner’s sections are in the sidebar: Calendar, Units, Past lessons, Activities and Rubrics. The row of tabs across the top is gone.","A lesson has a lighter top: its name, its classes, its status and Download. Copy for Claude, Versions, the upload and the links are under More.","Comments shows above a lesson once it has one."],"1.7.0":["Home is now Today: the classes you teach today with the lesson planned for each, the papers waiting to be marked, and the papers ready to hand back.","What the class needs next: after a set of papers is scored, Today shows the weakest rubric row and how many students to sit down with.","A class page is quieter. Click anywhere on an assignment’s row to open it; the only blue button is the one that adds an assignment.","Forget, and the other ways to open papers, moved into the ⋯ menu on each row."],"1.6.0":["A new browser opens on three questions (your classes, how you grade, where work is kept) and starts with nothing of anyone else’s in it.","A sample class of made-up students, with papers to mark, for trying things out. Remove it from Home when you’re done.","The app uses the name of your own school system. Choose it, and how you usually grade, in Settings.","Letter grades or IB 1 to 7 can show beside the percent, with boundaries you set.","Canvas and Moodle downloads are grouped by student. The Planner works without a setup file, and downloads lessons as PowerPoint with a plain built-in template."],"1.5.0":["The sidebar says “Not backed up”, in amber, until a folder holds a second copy of your work. Home asks for that folder once.","Go back in time, in Settings: any assignment as it was on an earlier day, restored on its own, with Undo.","Grading Studio can be installed as an app, and it opens with no internet.","A newer version now waits until you click Update now, so nothing changes in the middle of marking."]};
+const WHATS_NEW = {"1.27.28":["Coming from Google Classroom? Settings, Classes and rosters has a new button, From Google Classroom…. Choose the grades file you download from Classroom and it makes the class with its students, then shows every assignment and score for you to check before they go into the gradebook. A folder of student work downloaded from Google Drive now opens with each student’s files together. Nothing is sent anywhere and there is no sign-in. Help has an answer for it."],"1.27.27":["Screenshot: press S on a paper, Alt S (⌥S on a Mac) anywhere, or the button at the foot of the marking tools. Drag over what you want, click a page for the whole page, or press Enter for the whole screen, and the picture is copied, ready to paste. On a paper, name covers stay painted in and the student’s name and file name are left off; With my marks chooses whether your marks come too."],"1.27.26":["Full screen: press F, or Full screen near the bottom of the sidebar (beside ✕ while a paper is open). The browser’s bars go away and the sidebar folds to icons, or goes while you mark, so the paper gets the room. F again, the same button or Esc leaves, and nothing is closed or lost. On formative work F is for feedback, so use the button there."],"1.27.25":["IB classes. Each class has a Grading button: points and percent, IB MYP or IB DP. The welcome and Settings offer IB MYP criteria (0 to 8) and IB DP 1 to 7 as two separate choices.","An MYP class is marked against the criteria a task assesses, each 0 to 8, with no percent. Its gradebook shows every level a student earned, you choose the level that fits best for each criterion, and the total becomes a final grade of 1 to 7. Levels are never averaged.","Criterion names and the grade boundaries are yours to change. A DP class shows the 1 to 7 its percent earns on boundaries you type in."],"1.27.24":["My setup, in Settings: copy a prompt into your AI assistant, and it writes your setup as one block of text: classes and when they meet, the calendar, terms, what a grade is made of, how you grade, IB criteria and boundaries, rubrics, saved comments and learning goals.","Paste the block back and press Check it. You see what would change, untick anything you don’t want, and can undo it afterwards. Anything about students is left out and said so.","Copy my setup gives your own setup as the same kind of text, for a colleague to start from. The welcome has a line that leads here."],"1.27.23":["Take my work with me now carries your Planner too: lessons, units, timetable and their files. Bring work in takes it in. A Planner already in use only receives the lessons and files it doesn’t have, so nothing there is replaced.","If Grading Studio ever moves to a new web address, the old address tells you and shows the three steps for taking your work along. Help has an answer for it."],"1.27.22":["Attendance has a choice for a student who is away when you don’t know why yet: Absent, reason unknown. Change it to Absent, excused when you hear the reason. It is still four choices, and days you saved before keep their marks. Look back lists the absences that still have no reason."],"1.27.21":["Comments are easier to work with. Change a comment’s color at any time, even while typing it: its box has a Color row, and a Highlight row when it is on highlighted words. Text boxes and Quick mark comments have colors too.","Drag a new comment’s line up or down before you type a word, and press Enter to finish a comment or text box. Shift Enter starts a new line."],"1.27.20":["Feedback-only work no longer says 0 of 20 scored. A formative activity counts the students whose feedback is complete, on its card, in Find, Today, To do, the Grades box and the grade sheet, and says Ready to return once everyone has feedback."],"1.27.19":["Presentations and videos. On an assignment’s card, Add papers… now has No papers: presentations or videos…, which gives every student on the roster a notes page to write on while you watch. Pick lined, your rubric’s rows, two columns or blank.","On a student’s page, + Add has A video…: paste a link from Google Drive, YouTube or anywhere else, and tick the partners in it. One set of notes and one grade covers the group. Only the link is kept, so the video stays where it is.","Play here shows the video above the notes page; Open in its own window puts it beside the app. + Add also has A notes page… for one more page at any time.","Clips: under a video, + Clip saves a part worth showing, as a start time, an end time and a title. Show to the class plays it full screen with the title and without the student’s name, and Clips to show the class under Setup plays them one after another."],"1.27.18":["The app no longer assumes your AI assistant is Claude. Settings, Working with AI lets you pick Claude, ChatGPT, Gemini, Copilot, another name, or none, and buttons and hints use that name. If you already used the app, yours stays Claude.","Planner, Timetable has a Slides section: the agenda on slide 2 and keeping text between 28 and 36 pt are both on, and each can be turned off.","The week shows Saturday, or Sunday in front of Monday, when a class meets then. Short dates follow your computer's day and month order."],"1.27.17":["Answer notes for quizzes: type each question's answer in Quiz boxes, and it goes on the returned papers in a gold note labelled Answer, by each question a student lost points on. In Quiz boxes, Answer notes can be set to every question or off."],"1.27.16":["The grade sheet shows the score you gave each paper in Grading Studio, the same number as the score panel, with extra credit and the retake that counts. Grades found typed on the papers only show for papers with no score yet, or when you tick Also show grades found on the papers. A score stamp already on a paper now changes when the score does."],"1.27.15":["Copy one quiz answer as a picture: in Quick mark, press P or ⧉ Copy on an answer, then paste it into Claude to ask whether it is right. The picture shows only that answer, with the question and your answer key on top. The name, score, your mark and the file name are left off, and name covers are painted in, but the student’s handwriting and words still show."],"1.27.14":["Points written on a paper can have their own color. In Quick mark’s Colors menu, or Settings, Marking, Mark colors: the ✗ color as before, one color of your own, or By credit, with full points in the check color, part in amber and none in the ✗ color."],"1.27.13":["Share lesson file, under More in a lesson: one small file with the slides, notes, pictures, materials and finished PowerPoint. Open it with Import a lesson on another computer, or give it to another teacher.","Which classes and days a lesson is on, taught notes and comments for Claude stay behind, and opening one never replaces a lesson you have."],"1.27.12":["A to-do list. To do in the sidebar holds your own list beside what the app noticed from your work: papers to mark, papers to hand back, a class with no lesson planned, missing work to chase. Those go by themselves when the work is done, and each kind can be switched off.","Type a to-do the way you would say it, like “Call Bram’s parents friday”, and it picks out the day, the class and the student. Press N anywhere outside a paper to add one.","A to-do can have a day, a class, a student or assignment it goes with, a repeat and a note. Today shows a short card of what is overdue or due today.","Week, at the top right of To do, shows your week: each line on its day, under the class that meets then. Type in a day to add one, or drag a line to another day. Anything not done moves to today on its own."],"1.27.11":["Groups in Present mode: shuffling no longer moves the slides or ends the lesson, and each shuffle keeps last time's groups apart.","Change groups by hand: drag a name to another group, or click a name and then a group. Make my own starts with empty groups, and Undo or Ctrl Z takes back a move or a shuffle.","The Present timer keeps running after you finish or leave full screen, in the corner of the Planner, and comes back on the slides when you present again."],"1.27.10":["Finding names on its own is now off unless you turn it on, in Settings, Marking, Name covers. Only the boxes you draw in Check the covers cover anything, and the check before anonymous grading lists every paper."],"1.27.9":["In the Planner's Timetable, Use my school’s template… picks your own PowerPoint template for slide downloads. Use the plain one goes back to the white one built in.","Save my setup file keeps your classes, meeting times, days off and slide template in one file to load on another computer."],"1.27.8":["Anchor papers: while you mark a summative, click High, Mid or Low under the score. The Return tab lists the three and exports them in one ZIP, each named for the assignment and its level, like “River essay - Summative High.pdf”, with student names covered."],"1.27.7":["Keep strong work as an example: press ☆ Example on an answer in Quick mark (or E), or pick Use as an example in the ⋯ beside a student’s name for a whole paper or part of a page. Names are covered, and your marks and the score stay off unless you switch them on. It is always optional.","The Examples tab on an assignment, and Examples in the sidebar for every class, have Show to the class, Copy picture, Download and Download as a sheet.","Examples go to your linked folder and into the take-home file with the rest of your work."],"1.27.6":["Returned files are named for the student, the assignment and what they are, like “Ana Lee - River essay - Graded.pdf”, or Feedback when there is no score. They still go in each student’s own folder.","To keep the names students turned in, untick Name each file by student and assignment under Options on the Return tab."],"1.27.5":["The gradebook can import your old scores: press Import… and choose a CSV or Excel file, or paste the cells. Each column becomes an assignment, matched to your roster.","You see everything before it is saved, and a score already in the gradebook stays unless you choose the file’s."],"1.27.4":["School is a new page in the sidebar for the things about your school you look up again and again: the handbook, the calendar, the bell schedule, portals, forms, who to call.","Add a link, a file (a copy is kept with your work) or a note. Name your own groups, and star the ones you open most to keep them along the top.","Drop files on the page or paste a web address. Find anything lists every resource. They are kept in your folder and take-home file, and stay when you start a new school year."],"1.27.3":["The class timer in Present takes minutes and seconds: type them in, or pick 0:30 and the other quick times. The menu remembers the last time you typed.","While it runs, the timer's menu adds or takes away 10 seconds or a minute, pauses, and restarts from the time you set. + and − add or take away a minute without opening the menu.","Tick Show it big to put the countdown in the middle of the screen, large enough for the back of the room."],"1.27.2":["In the gradebook, in-class assessments are now on the left and summatives on the right: the columns, the averages beside the term grade, and wherever you choose a type.","The order is yours to change. In Term setup, the arrows beside each type move it, and the gradebook's columns follow from left to right.","You can make your own assignment types. In Term setup, rename a type or press + Add a type (Homework, Projects, Quizzes), and give each its share of the grade. Your own setup stays as it is until you change it."],"1.27.1":["Undo now takes back a score as well as a mark: press Ctrl Z (⌘Z on a Mac) after a slip on a slider, a number key, or Missing, Excused or Late. Redo puts it back.","Deleting a unit, an assignment or a class shows Undo for a few seconds, and Undo puts it back where it was.","“Picked up where you left off” shows once, when you open an assignment, and no longer on Today or other pages. The note about what opened leaves by itself when you move to the next student, if every file opened.","The Next button stays in one place from student to student, and the Grade heading on a class’s Students tab is drawn properly.","Find anything answers to more everyday words: export, hand back, backup, undo, shortcuts, csv."],"1.27.0":["Start a new school year, in Settings, Saving and carrying. Your classes, units and assignment cards carry on, each card with its rubric and Quick mark boxes, with empty class lists and dates a year later.","This year goes into one protected file first, and the file is checked before anything is cleared. Open an archived year brings a year back from its file."],"1.26.2":["Rubric rows can be scored on your own scale. They start at 0 to 4 with half points, as before; when you set up an assignment you can pick any top from 1 to 10 and turn half points off.","Settings, Grading: choose the row scale new assignments start with. Assignments you already have keep theirs."],"1.26.1":["Activities: See, think, wonder now says it comes from Project Zero at the Harvard Graduate School of Education."],"1.26.0":["Seating: a new tab on each class. Pick how the room is set up, drag students to desks, and Shuffle gives everyone a new seat. A student can be kept in their seat.","Pick a name shows one student at random, and nobody twice until everyone has had a turn. Make groups deals the class into groups of any size.","While presenting a lesson, P picks a name and G makes groups. Who’s here leaves out anyone who is away today."],"1.25.0":["Attendance. Each class has an Attendance tab: everyone starts as present, so a day is one press for each student who is late, excused or absent, with a note if you want one.","Look back shows every saved day in one table with each student’s totals, and a student’s own page lists the days they missed.","Copy a day, or download the table as a spreadsheet, for your school’s system. Today has a line for it under each class.","If you don’t take attendance here, turn it off in Settings, Classes and rosters."],"1.24.0":["Retakes: a second try at the same assignment keeps the first try's score, comment and paper. Start one from the ⋯ beside Missing, Excused and Late on a paper.","You choose which try counts, for all your classes: the highest (to begin with), the latest, or the average. It is in the retake box and in the gradebook's Term setup.","A score typed into the gradebook takes a retake too: type both, like 7 > 10."],"1.23.0":["Scores by learning goal, if you want them. Keep your own list of goals (a skill, or a standard from your school) in Settings, Grading, or add one wherever you tag.","Tag rubric rows in Rubric setup and quiz questions in Quiz boxes. An assignment scored with just a total can carry one goal for the whole score.","Each class page gets a Goals tab: the class average on each goal with the lowest first, every student by every goal, and where each number came from. A student's own page shows their goals beside the class average.","Nothing changes until you add a first goal, and tagging never changes a score or a grade."],"1.22.0":["Progress sheets for parent meetings: one printed page per student with the term grade, every score, a chart of how they moved, missing work, each term's grade, the report comment and lines for notes. Find it on a class's Students list, or Progress sheet on one student's page.","Choose the term and tick what goes on it; Print opens the print window, where you can pick a printer or Save as PDF. It is made on your computer and nothing is sent anywhere."],"1.21.0":["Each class has a Missing work tab: every paper you marked Missing, by student or by assignment, for the term you pick.","Email reminder opens an email in your own mail app, addressed to the student and listing what they owe, for you to read and send. Email all writes one email to everyone who owes an assignment, with the addresses in Bcc. Grading Studio sends nothing itself.","Each reminder you open is noted beside the work, and Email wording… changes what every reminder says."],"1.20.0":["The app can speak Traditional Chinese (繁體中文). Choose it in Settings, Display, App language, or at the top of the welcome.","Like Spanish, it covers the first screens so far: the sidebar, Today, the welcome, Find anything, Help, and the feedback page students get with a returned paper. The other screens are still in English."],"1.19.0":["The app can speak Spanish. Choose it in Settings, Display, App language, or at the top of the welcome.","Spanish covers the first screens so far: the sidebar, Today, the welcome, Find anything, Help, and the feedback page students get with a returned paper. The other screens are still in English.","Names you typed (classes, students, assignments, rubric rows) are never translated."],"1.18.0":["On a tablet, a pencil draws and the pen's line is wider where you press harder. Once you have used a pencil, one finger moves the page, two fingers pinch to zoom, and a hand resting on the screen does nothing.","Settings, Marking has a new Tablet and pencil section: choose what a finger does on the paper, or turn off the wider line.","On a touch screen the tools, the student rows and the score buttons are larger."],"1.17.0":["Report comments: a new tab on each class's page drafts a comment for every student from your own gradebook, rubric scores and the comments you wrote on their papers. Edit each one, tick it done, then copy or download them all.","The drafts are put together on your computer from sentences you can change under Wording. Nothing about a student is sent anywhere."],"1.16.0":["Help is in the sidebar: short answers to the questions teachers ask most, from opening a set of papers to moving your work to another computer.","Find anything answers questions too. Type a few words, like “late paper” or “backup”, and the answer is in the list."],"1.15.0":["A picture dragged onto a slide that has text now sits beside the text, in a new Text + picture layout.","Drag several pictures in at once and each gets its own slide. Let a picture go on any slide in the list on the left to put it there.","New Full picture layout: the picture fills the whole slide."],"1.14.0":["Extra credit: points or a percent on one paper, and extra credit entries in the gradebook that add to the term grade or the in-class average.","The gradebook shows each type's average (summative, in-class) right beside the term grade, kept in view as you scroll. Averages only shows just those columns, and Whole year splits each term the same way.","Leave out… lets you untick students to see the class averages without them. Their own grades don't change, and nothing is saved."],"1.13.0":["Present a lesson from the Planner, or from Today when its class is on now or next: its slides fill the screen, and the arrow keys or a clicker move through them.","While presenting, A shows the agenda to tick off, T starts a timer the class can see, N shows your notes and B blanks the screen.","The bar shows how many minutes the class has left, from your timetable.","After a lesson is taught, one line says where the class got to. It shows on the lesson and on the week, and presenting again picks up there."],"1.12.0":["A returned paper starts with a feedback page: the score, each rubric row with the level given and what that level means, your comment, and every comment on the paper with its page number.","It is on unless you turn it off under Options on the Return tab. Your own pages are not changed, and bringing an export back in opens only those."],"1.11.0":["The Planner’s sections are in the sidebar: Calendar, Units, Past lessons, Activities and Rubrics. The row of tabs across the top is gone.","A lesson has a lighter top: its name, its classes, its status and Download. Copy for Claude, Versions, the upload and the links are under More.","Comments shows above a lesson once it has one."],"1.7.0":["Home is now Today: the classes you teach today with the lesson planned for each, the papers waiting to be marked, and the papers ready to hand back.","What the class needs next: after a set of papers is scored, Today shows the weakest rubric row and how many students to sit down with.","A class page is quieter. Click anywhere on an assignment’s row to open it; the only blue button is the one that adds an assignment.","Forget, and the other ways to open papers, moved into the ⋯ menu on each row."],"1.6.0":["A new browser opens on three questions (your classes, how you grade, where work is kept) and starts with nothing of anyone else’s in it.","A sample class of made-up students, with papers to mark, for trying things out. Remove it from Home when you’re done.","The app uses the name of your own school system. Choose it, and how you usually grade, in Settings.","Letter grades or IB 1 to 7 can show beside the percent, with boundaries you set.","Canvas and Moodle downloads are grouped by student. The Planner works without a setup file, and downloads lessons as PowerPoint with a plain built-in template."],"1.5.0":["The sidebar says “Not backed up”, in amber, until a folder holds a second copy of your work. Home asks for that folder once.","Go back in time, in Settings: any assignment as it was on an earlier day, restored on its own, with Undo.","Grading Studio can be installed as an app, and it opens with no internet.","A newer version now waits until you click Update now, so nothing changes in the middle of marking."]};
 const upd = { on: false, st: null, mine: '', checking: false, said: '', install: null, installed: false, err: '' };
 const updCan = () => 'serviceWorker' in navigator && (location.protocol === 'https:' || /[?&]sw=1(&|$)/.test(location.search)) && !/Grading Studio\.html$/i.test(decodeURIComponent(location.pathname));
 const updSend = async msg => { const reg = await navigator.serviceWorker.ready; if (reg.active) reg.active.postMessage(msg); };
@@ -26819,7 +27481,7 @@ function wlSave() {
   const seen = new Set(lib.classes.map(c => normName(c.name)));
   for (const raw of wl.classes.slice(wl.had)) {
     const name = raw.trim().replace(/\s+/g, ' '); if (!name || seen.has(normName(name))) continue;
-    seen.add(normName(name)); lib.classes.push({ id: uid(), name, names: [], units: [] });
+    seen.add(normName(name)); lib.classes.push({ id: uid(), name, names: [], units: [], ...(wl.way === 'myp' ? { way: 'myp' } : {}) });   // a teacher who grades with MYP criteria starts with MYP classes (ib.js)
   }
   const way = gradeWay(wl.way) || GRADE_WAYS[0];
   if (!lib.me && lib.classes.some(c => c.names.length || c.units.some(u => u.items.length))) saveLib();
@@ -27221,7 +27883,7 @@ function stpDiff(S, planNow) {
   if (S.grading) {
     const g = S.grading, now = meGrade(), same = now && JSON.stringify({ way: now.way, setup: { ...now.setup, ...(me().grade.setup && me().grade.setup.top ? { top: me().grade.setup.top } : {}), ...(me().grade.setup && typeof me().grade.setup.half === 'boolean' ? { half: me().grade.setup.half } : {}) }, ...(now.bands ? { bands: now.bands } : {}) }) === JSON.stringify(g);
     if (!same) {
-      const L = ['A new assignment starts with <b>' + esc(stpWayLow(g.way)) + '</b>' + (now ? ' (now ' + esc(stpWayLow(now.way)) + ')' : '')];
+      const L = ['A new assignment starts with <b>' + esc(g.way === 'ib7' && g.setup.mode === 'rubric' ? 'IB criteria rows and a 1 to 7' : stpWayLow(g.way)) + '</b>' + (now ? ' (now ' + esc(stpWayLow(now.way)) + ')' : '')];
       if (g.setup.mode === 'rubric') L.push('Rubric rows: ' + esc(stpList(g.setup.criteria, 8))); else L.push('Scored with a total out of ' + g.setup.outOf);
       if (g.setup.top) L.push('Each row is scored 0 to ' + g.setup.top + (g.setup.half === false ? ', whole points only' : ''));
       if (g.setup.scale) L.push('A grading scale from scores to percents (' + Object.keys(g.setup.scale).length + ' steps)');
@@ -28149,12 +28811,14 @@ function findRows() {
   add('Settings', 'Updates and installing', 'This version, what’s new, install as an app', () => go(setHash('about')), '', 'about update offline download app');
   add('Settings', document.documentElement.dataset.theme === 'dark' ? 'Light mode' : 'Dark mode', 'Display', press('.themeBtn'), '', 'theme night colours colors appearance');
   add('Settings', 'Text size and zoom', 'Display', () => openDisplay(), '', 'font bigger smaller larger magnify');
+  if (gsFull.can()) add('Settings', gsFull.on() ? 'Leave full screen' : 'Full screen', 'The page fills the screen. F or Esc to leave', () => gsFull.toggle(), 'F', 'fullscreen maximize maximise bigger room focus distraction');
   add('Settings', 'App language', 'English, Spanish or Traditional Chinese', () => go('#/settings/display'));
   add('Settings', 'Word papers', wordPdfAlways() ? 'Converted to PDF pages as each assignment opens' : 'Kept as Word files. They can be converted to PDF pages', () => go('#/settings/marking'));
   add('Settings', 'Mark colors', 'Colors for ✗, checks and points', () => go('#/settings/marking'));
   add('Settings', 'Name covers', nameFindOn() ? 'You cover names, and typed names are found too' : 'You cover names yourself in Check the covers', () => go('#/settings/marking'), undefined, 'anonymous redact hide names find names');
   add('Settings', 'Tablet and pencil', 'What a finger does on the paper, and pencil pressure', () => go('#/settings/marking'));
   add('Settings', 'All keys', 'Every keyboard shortcut', () => openKeys(), '?', 'shortcuts hotkeys keyboard');
+  add('Tools', 'Screenshot', 'Drag over part of the screen to copy a picture of it', () => snipStart(), batch && pages.length ? 'S' : '⌥S', 'screenshot snip capture picture image copy clipboard grab');
   for (const [k, t, sub] of SET_SECS) if (k !== 'saving' && k !== 'display' && k !== 'keys' && k !== 'history' && k !== 'about') add('Settings', t, sub, () => go(setHash(k)));
   if (plan) add('Go to', 'This week in the Planner', 'Today’s classes and the lessons planned for them', () => { location.href = planUrl('#week'); });
   out.push(...schFindRows(), ...helpFindRows());
@@ -28253,6 +28917,52 @@ function moveAsk() {
 moveCard();
 Promise.resolve(keptFirst).then(() => setTimeout(() => { if (keptMeta.size || ((lib && lib.classes) || []).length) moveAsk(); }, 1200));
 Object.assign(window.__gs, { movingTo, moveTest: to => { MOVE = { address: location.href, movingTo: to }; try { localStorage.removeItem('gsc.moveSeen'); } catch {} moveCard(); moveAsk(); } });
+
+/* ---------------- Full screen (11/12): the whole page fills the screen, on both pages and every screen ----------------
+   The Full screen button (in the sidebar, and in the top bar while a paper is open), F, or Find anything puts the page in the browser's
+   full screen. F again, the button, or Esc leaves it. Only the look changes: no screen is closed and nothing is saved or lost on the way
+   in or out. While it is on, the sidebar folds to icons, and while a paper is open it goes away so the paper gets the room.
+   Nothing is stored: a browser lets a page go full screen only when she asks, so it can't come back by itself on the next visit.
+   Present, the seating chart, the name picker and the Examples show put their own stage in full screen on top of this; when they end,
+   the page is back in full screen as it was. */
+const gsFull = {
+  on: () => document.fullscreenElement === document.documentElement,
+  can: () => !!(document.fullscreenEnabled && document.documentElement.requestFullscreen),
+  async toggle() {
+    try {
+      if (gsFull.on()) await document.exitFullscreen();
+      else if (!document.fullscreenElement) await document.documentElement.requestFullscreen({ navigationUI: 'hide' });
+    } catch { }
+  },
+  paint() {
+    const root = document.documentElement, fe = document.fullscreenElement;
+    if (!fe) root.classList.remove('gsfull'); else if (fe === root) root.classList.add('gsfull');
+    const on = root.classList.contains('gsfull'), can = gsFull.can();
+    for (const b of document.querySelectorAll('[data-gsfull]')) {
+      b.hidden = !can;
+      const say = on ? 'Leave full screen' : 'Full screen', tip = on ? 'Leave full screen ( F or Esc )' : 'Full screen ( F )';
+      if (b.title !== tip) { b.title = tip; b.setAttribute('aria-label', say); }
+      b.setAttribute('aria-pressed', on ? 'true' : 'false');
+      const l = b.querySelector('.rl'); if (l && l.dataset.en !== say) { l.dataset.en = say; l.textContent = say; }
+    }
+  },
+  drop(el) {
+    if (document.fullscreenElement !== el || !document.documentElement.classList.contains('gsfull')) return false;
+    const go = () => el.remove(); document.exitFullscreen().then(go, go); return true;
+  },
+};
+document.addEventListener('fullscreenchange', () => gsFull.paint());
+document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-gsfull]'); if (b) { e.preventDefault(); gsFull.toggle(); } });
+document.addEventListener('keydown', e => {
+  if (e.defaultPrevented || e.repeat || e.metaKey || e.ctrlKey || e.altKey || e.shiftKey || (e.key !== 'f' && e.key !== 'F')) return;
+  const a = document.activeElement;
+  if (a && (/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName) || a.isContentEditable)) return;
+  if (document.fullscreenElement && !gsFull.on()) return;   // a stage of its own is showing
+  if (!gsFull.can()) return;
+  e.preventDefault(); gsFull.toggle();
+});
+gsFull.paint();
+window.__gsFull = gsFull;
 
 });</script>
 

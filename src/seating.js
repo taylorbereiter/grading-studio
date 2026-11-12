@@ -223,7 +223,7 @@ function seatShow(c) {
   el.id = 'seatShow'; el.className = 'seatshow'; el.tabIndex = -1; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-label', 'Seating chart for ' + c.name);
   el.innerHTML = '<h2>' + esc(c.name) + '</h2><div class="seatroom" style="--sw:' + s.w + ';--sh:' + s.h + '">' + seatGrid(c, s, 'show', false) + '</div><button class="seatshowx" data-x>Close (Esc)</button>';
   document.body.appendChild(el); el.focus();
-  const shut = () => { document.removeEventListener('keydown', key, true); document.removeEventListener('fullscreenchange', full); try { if (document.fullscreenElement === el) document.exitFullscreen(); } catch { } el.remove(); if (back && back.isConnected) back.focus(); };
+  const shut = () => { document.removeEventListener('keydown', key, true); document.removeEventListener('fullscreenchange', full); if (!gsFull.drop(el)) { try { if (document.fullscreenElement === el) document.exitFullscreen(); } catch { } el.remove(); } if (back && back.isConnected) back.focus(); };
   const key = e => { e.stopPropagation(); if (e.key === 'Escape') { e.preventDefault(); shut(); } };
   let was = false; const full = () => { const on = document.fullscreenElement === el; if (was && !on) shut(); was = on; };   // Esc in full screen leaves full screen: that closes it too
   document.addEventListener('keydown', key, true); document.addEventListener('fullscreenchange', full);

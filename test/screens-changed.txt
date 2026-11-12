@@ -38,5 +38,19 @@
 # settings-setup screen), the welcome has one more line, Help has one more answer, About lists what is new, and the
 # version line reads 1.27.24.
 *
-# Google Classroom: Settings, Classes and rosters has one more button, "From Google Classroom…", beside Add a class.
-settings-classes
+# IB classes: a class page's head has one more button, Grading, on every tab of a class. The welcome's and Settings' ways of
+# grading have IB MYP criteria and IB DP 1 to 7 in place of IB 1 to 7, About lists what is new, and the version line reads 1.27.25.
+*
+# Full screen: a Full screen entry near the foot of every sidebar, a full screen button beside ✕ in the marking screen's top
+# bar, Help has one more answer, About lists what is new, the keys list has F, and the version line reads 1.27.26.
+*
+# Screenshot: the marking tool dock has a screenshot button at its foot, and the Keys list has rows for S and ⌥S.
+mark
+mark-add-menu
+mark-setup-menu
+mark-keys
+mark-word-paper
+*
+# Google Classroom: Settings, Classes and rosters has one more button, "From Google Classroom…", beside Add a class, Help has
+# one more answer, About lists what is new, and the version line reads 1.27.28.
+*

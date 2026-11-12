@@ -1,13 +1,11 @@
 {
- "version": "1.27.24",
- "build": "d2bd4f4a4419",
+ "version": "1.27.28",
+ "build": "4221f01c8aee",
  "notes": [
-  "My setup, in Settings: copy a prompt into your AI assistant, and it writes your setup as one block of text: classes and when they meet, the calendar, terms, what a grade is made of, how you grade, IB criteria and boundaries, rubrics, saved comments and learning goals.",
-  "Paste the block back and press Check it. You see what would change, untick anything you don’t want, and can undo it afterwards. Anything about students is left out and said so.",
-  "Copy my setup gives your own setup as the same kind of text, for a colleague to start from. The welcome has a line that leads here."
+  "Coming from Google Classroom? Settings, Classes and rosters has a new button, From Google Classroom…. Choose the grades file you download from Classroom and it makes the class with its students, then shows every assignment and score for you to check before they go into the gradebook. A folder of student work downloaded from Google Drive now opens with each student’s files together. Nothing is sent anywhere and there is no sign-in. Help has an answer for it."
  ],
  "files": {
-  "index.html": "c1ffd03cb270c7c4604a7270ed59985da6ef10e16eb4022ec2da754d70984ca7",
-  "planner.html": "fbd205f1bd21843cd50d3398ec9c705a312a5439d6d1815b26b965ad6c249484"
+  "index.html": "8032c8d4180470fb1dc72eb076c03cb2d14efb925e7d59c66358bd4ca6fb2f91",
+  "planner.html": "ad78bebe290bbbdc5890ef5419cbbc6b2d3602d0944029eb8ec469a5d4ca55d1"
  }
 }

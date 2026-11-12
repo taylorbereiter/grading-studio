@@ -92,7 +92,7 @@ function maxPoints() { return setupMax(setup); }
 // Uses the grading scale when its top score matches the total possible; half points fall between two rows.
 // Percents are whole numbers, with halves rounded up (10.5 between 95 and 90 is 92.5, so 93%), the way a teacher rounds by hand.
 const roundPct = v => Math.max(0, Math.round(v + 1e-9));
-function percentFor(total) { return percentWith(total, maxPoints(), setup.scale); }
+function percentFor(total) { return ibSetup() ? null : percentWith(total, maxPoints(), setup.scale); }   // levels on MYP criteria are never a percent (ib.js)
 function percentWith(total, max, sc) {
   if (total == null || total === '' || isNaN(total)) return null;
   if (!max) return null;

@@ -67,7 +67,7 @@ function levelsEditHtml(d, i) {
     lv.map(v => '<label class="lvin"><b>' + v + '</b><textarea rows="2" data-lvi="' + i + '" data-lvv="' + v + '" aria-label="What ' + v + ' means on this row">' + esc(levelIn(d, i, v)) + '</textarea></label>').join('') +
     '<span class="muted lvnote">Leave any of these blank.' + (rowHalf(d) ? ' A half point shows the two scores around it.' : '') + '</span></details>';
 }
-function levelsRowGone(d, i) { if (d.levels) d.levels.splice(i, 1); if (Array.isArray(d.tops)) d.tops.splice(i, 1); goalsRowGone(d, i); rubDlg.from.splice(i, 1); levelEditOpen.clear(); }
+function levelsRowGone(d, i) { if (d.levels) d.levels.splice(i, 1); if (Array.isArray(d.ib)) d.ib.splice(i, 1); if (Array.isArray(d.tops)) d.tops.splice(i, 1); goalsRowGone(d, i); rubDlg.from.splice(i, 1); levelEditOpen.clear(); }
 // Only what she wrote is kept, and nothing at all if she wrote nothing, so an old setup stays as it was.
 function tidyLevels(d) {
   const out = d.criteria.map((_, i) => { const r = {}; for (const v of rowLevels(d, i)) { const t = levelIn(d, i, v).trim(); if (t) r[v] = t; } return r; });
