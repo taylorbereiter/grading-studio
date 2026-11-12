@@ -649,7 +649,7 @@ const qmCard = (i, q, qi) => {
   const tag = v != null && qzByPts(q) ? '<span class="qmchip">' + fmtNum(v) + ' of ' + fmtNum(pts) + '</span>' : '';
   return '<div class="qmc' + state + '" tabindex="0" data-st="' + i + '" data-q="' + q.id + '"><div class="qmch">' + head + tag +
     '<span class="qmchr">' + (qzOwn(st, q) ? '<button class="link hsm" data-reset title="Put this mark back where the question’s mark goes">Reset spot</button>' : '') +
-    '<button class="btn sm" data-qcopy title="Copy this answer as a picture, to paste into Claude or anywhere else. No name, score or mark on it (P)">⧉ Copy</button>' +
+    '<button class="btn sm" data-qcopy title="Copy this answer as a picture, to paste into ' + esc(aiSay()) + ' or anywhere else. No name, score or mark on it (P)">⧉ Copy</button>' +
     exStarBtn(st, q) + '<button class="btn sm" data-peek title="See their whole page (Space)">⤢ Whole page</button></span></div>' +
     '<div class="qmimg" title="' + (qzByPts(q) && qzHow(q) === 'pts' ? 'Drag: line this paper up' : 'Click: wrong / right. Drag: line this paper up') + '"><span class="muted hsm">…</span></div>' +
     '<div class="qmbtns">' + btns + '<button class="qmb cm" data-qnote title="Write a comment or text on this paper (C)">Comment</button>' + (v != null ? '<button class="qmb clr" data-v="" title="Clear">Clear</button>' : '') + '</div>' + qmNoteLine(st, q) + qmAnsLine(st, q) + '</div>';
@@ -943,7 +943,7 @@ async function qmCopy(el) {
     try { blob = await blobP; } catch { return toast('This page isn’t in their scan.'); }
     await saveBlob('Question ' + quizLabel(q, qi) + '.png', blob);
   }
-  toast(copied ? 'Picture of ' + say + ' copied. Paste it into Claude to ask about it.' : 'This browser can’t copy pictures, so ' + say + ' was saved as a picture file.', 4000);
+  toast(copied ? 'Picture of ' + say + ' copied. Paste it into ' + aiSay() + ' to ask about it.' : 'This browser can’t copy pictures, so ' + say + ' was saved as a picture file.', 4000);
   if (!store.get('gs.qmCopySeen', 0) && !$('#qmCopyNote') && $('#qmBody'))
     $('#qmBody').insertAdjacentHTML('beforebegin', '<div class="qmcopynote" id="qmCopyNote" role="status"><p><b>What the picture shows.</b> Only this answer, with the question and your answer key on top. The student’s name, their score, your mark and the file name are left off, and any name covers are painted in. It still shows the student’s own handwriting and words.</p>' +
       '<p>Nothing is sent anywhere. The picture stays on this computer until you paste it somewhere yourself.</p><button class="btn sm" data-copyok>Got it</button></div>');

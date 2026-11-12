@@ -9,6 +9,8 @@ function sysWords() {
   put('#dropSay', 'A ZIP from ' + (s || 'your school’s system') + ', a folder, a scan of the whole class, or photos.');
   put('.sysWord', s || 'your gradebook');
   put('.sysZip', s ? 'a ' + s + ' ZIP' : 'a ZIP');
+  put('.aiWord', aiSay());
+  put('#shareBtn', 'Share with ' + aiSay()); put('#backBtn', 'Bring back from ' + aiSay());   // the whole label, since Find anything lists these buttons by their words
 }
 
 /* the welcome */
@@ -211,6 +213,12 @@ function meSetRender(sec) {
       '<p class="setp merow"><select id="meSys" aria-label="Where students hand in work"><option value="">On paper, or not said</option>' + SYS_LIST.map(x => '<option' + (x === s ? ' selected' : '') + '>' + esc(x) + '</option>').join('') +
       '<option value="other"' + (s && !known ? ' selected' : '') + '>Somewhere else…</option></select>' + (s && !known ? '<input type="text" id="meSysOther" maxlength="40" value="' + esc(s) + '" aria-label="Its name">' : '') + '</p>');
   }
+  if (sec === 'claude') {
+    const a = aiName(), known = AI_LIST.some(x => x[0] === a);
+    put('#setAi', '<p class="setp merow"><label for="meAi"><b>Your AI assistant</b></label> <select id="meAi"><option value="">None, or not said</option>' + AI_LIST.map(x => '<option' + (x[0] === a ? ' selected' : '') + '>' + x[0] + '</option>').join('') +
+      '<option value="other"' + (a && !known ? ' selected' : '') + '>Another one…</option></select>' + (a && !known ? '<input type="text" id="meAiOther" maxlength="30" value="' + esc(a) + '" aria-label="Its name">' : '') +
+      ' <span class="muted">Only for the words on screen and the names of the files you make for it. Nothing is connected to it.</span></p>');
+  }
   if (sec === 'grading') {
     const g = meGrade(), way = g ? g.way : '';
     put('#setWay', '<div class="lhead"><h2>How you usually grade</h2><span class="muted">What a new assignment starts with. Any assignment can be scored another way, in its Rubric setup.</span></div>' +
@@ -225,6 +233,8 @@ function meSetRender(sec) {
 $('#setPane').addEventListener('change', e => {
   const t = e.target;
   if (t.id === 'meSys') { if (t.value === 'other') { meSet({ sys: 'My school’s system' }); sysWords(); setRender(); const o = $('#meSysOther'); if (o) { o.focus(); o.select(); } return; } meSet({ sys: t.value }); sysWords(); return setRender(); }
+  if (t.id === 'meAi') { if (t.value === 'other') { meSet({ ai: 'My assistant' }); sysWords(); setRender(); const o = $('#meAiOther'); if (o) { o.focus(); o.select(); } return; } meSet({ ai: t.value }); sysWords(); return setRender(); }
+  if (t.id === 'meAiOther') { meSet({ ai: t.value.trim().slice(0, 30) }); sysWords(); return setRender(); }
   if (t.id === 'meSysOther') { meSet({ sys: t.value.trim().slice(0, 40) }); sysWords(); return setRender(); }
   if (t.id === 'meRowTop' || t.id === 'meRowHalf') {   // the teacher's usual row scale: only new assignments start with it
     const g = meGrade(); if (!g) return;

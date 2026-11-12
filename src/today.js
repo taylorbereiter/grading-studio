@@ -45,7 +45,7 @@ const numWord = n => ['No', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven
 function todayHtml(prim) {
   if (!plan) return '<h2 class="tcap">Teaching today</h2><div class="tcard"><div class="trow none"><span class="nt"><b>Your timetable isn’t here yet</b><span class="ns">Add your class times in the Planner, and each day’s classes and lessons show here.</span></span><a class="btn sm" href="' + esc(planUrl('#timetable')) + '">Open the Planner</a></div></div>';
   const t = todayRows(plan), cur = nowRow(t.rows), day = isoDay(Date.now());
-  const say = l => l.done ? 'finished' : l.status === 'review' ? 'ready for you' : l.status === 'claude' ? 'with Claude' : 'draft';
+  const say = l => l.done ? 'finished' : l.status === 'review' ? 'ready for you' : l.status === 'claude' ? 'with ' + aiSay() : 'draft';
   const row = r => {
     const { c, m, lessons } = r, l = lessons[0], more = lessons.length > 1 ? ' · and ' + (lessons.length - 1) + ' more' : '';
     // The class on now, or next: its lesson opens presenting, unless it has been taught to the end today.
