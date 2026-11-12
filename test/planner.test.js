@@ -283,6 +283,11 @@ test('the activity bank: filter, add one to a lesson as a steps slide, and keep 
     await page.type('[data-f="actq"]', 'fishbowl');
     await page.waitForFunction(() => document.querySelectorAll('.pl-act').length === 1);
     assert.match(await page.$eval('.pl-act h3', h => h.textContent), /Fishbowl/i);
+    // a classroom video of it, opening in a new tab
+    assert.deepEqual(await page.$eval('.pl-act [data-vid]', a => [a.dataset.vid, a.target, /^https:\/\/www\.youtube\.com\/watch\?v=[\w-]{11}$/.test(a.href), a.textContent]), ['found', '_blank', true, '▶ See it in action ↗']);
+    const vids = await page.evaluate(() => { const P = window.__planner, ids = P.ACTIVITIES.map(a => a.id); return { stray: Object.keys(P.VIDEOS).filter(k => !ids.includes(k)), n: Object.keys(P.VIDEOS).length, none: P.actVideo(P.ACTIVITIES.find(a => !P.VIDEOS[a.id])) }; });
+    assert.deepEqual(vids.stray, [], 'every picked video belongs to an activity'); assert.ok(vids.n >= 20);
+    assert.equal(vids.none.found, false); assert.match(vids.none.url, /^https:\/\/www\.youtube\.com\/results\?search_query=/);
 
     // into a new lesson: a slide with the student steps, the how-to in the notes
     await page.click('[data-a="useact"]');
@@ -291,6 +296,7 @@ test('the activity bank: filter, add one to a lesson as a steps slide, and keep 
     await page.waitForFunction(() => window.__planner.L.view === 'edit');
     const s = await page.evaluate(() => { const L = window.__planner.L, s = L.open.slides[L.cur]; return { n: L.open.slides.length, layout: s.layout, body: s.body, notes: s.notes }; });
     assert.equal(s.n, 3); assert.equal(s.layout, 'steps'); assert.ok(s.body.split('\n').length >= 2); assert.match(s.notes, /^How to run it:/);
+    assert.match(s.notes, /\nSee it in action: https:\/\/www\.youtube\.com\/watch\?v=/);
     assert.match(await page.$eval('[data-a="back"]', b => b.textContent), /Activities/);
     await page.click('[data-a="back"]');
     await page.waitForSelector('.pl-bank');
@@ -301,9 +307,14 @@ test('the activity bank: filter, add one to a lesson as a steps slide, and keep 
     await page.type('#aeN', 'Four corners debate');
     await page.type('#aeH', 'Post four positions\nStudents move\nEach corner explains');
     await page.type('#aeS', 'Pick a corner\nTalk with your corner');
+    await page.type('#aeV', 'not a link');
+    await page.click('#dlgBox [data-ok]');
+    await page.waitForFunction(() => /https/.test(document.querySelector('.toast')?.textContent || ''));
+    await page.$eval('#aeV', i => { i.value = 'https://example.org/corners-video'; });
     await page.click('#dlgBox [data-ok]');
     await page.waitForFunction(() => [...document.querySelectorAll('.pl-act h3')].some(h => h.textContent === 'Four corners debate'));
     assert.ok(await page.$('.pl-act [data-a="editact"]'));
+    assert.equal(await page.$eval('.pl-act [data-vid="found"]', a => a.href), 'https://example.org/corners-video');
     assert.deepEqual(errors, []);
   } finally { await a.done(); }
 });

@@ -131,6 +131,36 @@ const ACTIVITIES = [
     ['Hook us in', 'Tell a little, not the ending', 'Say who would like it'], 36)
 ];
 
+/* ---------- see it in action ----------
+   A public classroom video for an activity, picked from channels that tend to keep their videos up
+   (Edutopia, EL Education, Reading Rockets, Project Zero, regional teacher centers). Each is a YouTube id,
+   who made it and its length. An activity with no good video gets a YouTube search for its name instead,
+   so the button never leads nowhere. A teacher's own activity can carry its own video link. */
+const VIDEOS = {
+  'journal': ['ZeaO-0_Kc3g', 'Edutopia', '1 min'], 'quickwrite-pair': ['H5BWms1KAKk', 'Edutopia', '3 min'],
+  'think-pair-share': ['P4xUbicJTA4', 'EL Education', '3 min'], 'fishbowl': ['JVCFGLVZA3w', 'Edutopia', '1 min'],
+  'socratic': ['e3IBLKYaK1E', 'Edutopia', '4 min'], 'debate': ['M2XmJQ9FL5A', 'ESC Region 13', '2 min'],
+  'anticipation': ['jQCKXQUquTc', 'Reading Rockets', '8 min'], 'close-read': ['84VyogMSuv0', 'EL Education', '8 min'],
+  'jigsaw': ['VsI9EpSSavo', 'Edutopia', '3 min'], 'reciprocal': ['My68SDGeTHI', 'Reading Rockets', '2 min'],
+  'qta': ['tAIj2MqEz9s', 'Literacy How', '3 min'], 'dr-ta': ['ya6c1Im3-NU', 'Willans Hill', '3 min'],
+  'split-notes': ['nX-xshA_0m8', 'Cornell Learning Strategies Center', '4 min'], 'writing-frame': ['f3rXwstobh8', 'Colorín Colorado', '1 min'],
+  'exit-slip': ['PWUxFSXEsC8', 'Edutopia', '5 min'], 'trashketball': ['rOZlSwLUQGw', 'Ole Miss News', '3 min'],
+  'gallery-walk': ['ElVO7RWAxa4', 'ESC Region 13', '2 min'], 'stations': ['Kg38A1ggYiE', 'Edutopia', '5 min'],
+  'readers-theatre': ['4L5q0Y8hukU', 'Chase Young', '6 min'], 'see-think-wonder': ['oKV_S5NpDdc', 'Project Zero', '5 min'],
+  'kwl': ['5JYkfJnqAbk', 'Educational Partners International', '4 min'], 'word-sort': ['d_R5wfmWIlQ', 'Reading Rockets', '6 min'],
+  'vocab-cards': ['x83RVBIAnYQ', 'ESC Region 13', '2 min'], 'think-aloud': ['UmhLgsBD1-I', 'Smekens Education', '2 min'],
+  'student-questions': ['JJJ6V4p1nfs', 'Right Question Institute', '1 min'], 'booktalk': ['lH5LghhwQDQ', 'We Are Teachers', '2 min']
+};
+const vidOk = u => /^https?:\/\/\S+$/i.test(String(u || '').trim());
+// { url, note, found } — found: a picked or own video; otherwise a search for the activity's name.
+function actVideo(a) {
+  if (a.mine && vidOk(a.video)) return { url: a.video.trim(), note: 'Your video link', found: true };
+  const v = !a.mine && VIDEOS[a.id];
+  if (v) return { url: 'https://www.youtube.com/watch?v=' + v[0], note: v[1] + ', ' + v[2], found: true };
+  return { url: 'https://www.youtube.com/results?search_query=' + encodeURIComponent(a.name + ' classroom strategy'), note: 'Search YouTube for classroom videos', found: false };
+}
+const actVidHtml = (a, cls) => { const v = actVideo(a); return '<a class="' + cls + '" href="' + esc(v.url) + '" target="_blank" rel="noopener" data-vid="' + (v.found ? 'found' : 'search') + '" title="' + esc(v.note) + '">' + (v.found ? '▶ See it in action' : 'Find a video') + ' ↗</a>'; };
+
 /* ---------- the bank view ---------- */
 const AB = { q: '', part: '', kind: '' };
 async function myActivities() { return ((await kvGet('activities')) || []).filter(a => a && a.name); }
@@ -150,9 +180,9 @@ function actCard(a) {
   return '<article class="pl-act"><div class="pl-ah"><h3>' + esc(a.name) + '</h3>' + (a.mine ? '<span class="pl-st st-claude">Mine</span>' : '') + '</div>' +
     '<div class="pl-meta2">' + a.parts.map(p => '<span>' + PARTS[p] + '</span>').join('') + '<span>' + esc(KINDS[a.kind] || '') + '</span><span>' + esc(a.group) + '</span>' + (a.book ? '<span title="' + esc(BOOK) + '">Routine ' + a.book + '</span>' : '') + '</div>' +
     '<p>' + esc(a.what) + '</p><details><summary>How to run it</summary><ol>' + a.how.map(x => '<li>' + esc(x) + '</li>').join('') + '</ol>' + (a.tip ? '<p class="muted">' + esc(a.tip) + '</p>' : '') + '</details>' +
-    '<div class="pl-aa"><button class="btn sm primary" data-a="useact" data-id="' + esc(a.id) + '">Add to a lesson…</button>' + (a.mine ? '<button class="btn sm ghost" data-a="editact" data-id="' + esc(a.id) + '">Edit</button>' : '') + '</div></article>';
+    '<div class="pl-aa"><button class="btn sm primary" data-a="useact" data-id="' + esc(a.id) + '">Add to a lesson…</button>' + actVidHtml(a, 'btn sm') + (a.mine ? '<button class="btn sm ghost" data-a="editact" data-id="' + esc(a.id) + '">Edit</button>' : '') + '</div></article>';
 }
-const actSlide = a => normSlide({ layout: 'steps', title: a.name, body: a.slide.map((x, i) => (i + 1) + '. ' + x).join('\n'), size: 32, fmt: 2, notes: 'How to run it:\n' + a.how.map((x, i) => (i + 1) + '. ' + x).join('\n') + (a.book ? '\n(' + BOOK + ', routine ' + a.book + ')' : '') });
+const actSlide = a => normSlide({ layout: 'steps', title: a.name, body: a.slide.map((x, i) => (i + 1) + '. ' + x).join('\n'), size: 32, fmt: 2, notes: 'How to run it:\n' + a.how.map((x, i) => (i + 1) + '. ' + x).join('\n') + (a.book ? '\n(' + BOOK + ', routine ' + a.book + ')' : '') + (actVideo(a).found ? '\nSee it in action: ' + actVideo(a).url : '') });
 
 /* ---------- the bank in the side panel, next to the lesson you're on ---------- */
 const SA = { q: '', part: '', kind: '', open: '' };
@@ -166,7 +196,7 @@ async function spActsList() {
     return '<div class="sp-act' + (open ? ' open' : '') + '"><button class="sp-act-h" data-sact="' + esc(a.id) + '"><b>' + esc(a.name) + '</b><span>' + a.parts.map(p => PARTS[p]).join(' · ') + ' · ' + esc(a.group) + (a.book ? ' · Routine ' + a.book : '') + (a.mine ? ' · Mine' : '') + '</span></button>' +
       (open ? '<div class="sp-act-b"><p>' + esc(a.what) + '</p><b class="sp-small">How to run it</b><ol>' + a.how.map(x => '<li>' + esc(x) + '</li>').join('') + '</ol>' + (a.tip ? '<p class="muted sp-small">' + esc(a.tip) + '</p>' : '') +
         '<b class="sp-small">On the slide for students</b><ol>' + a.slide.map(x => '<li>' + esc(x) + '</li>').join('') + '</ol>' +
-        (can ? '<button class="btn sm primary" data-sactadd="' + esc(a.id) + '">+ Add after the slide I’m on</button>' : '<button class="btn sm" data-sactuse="' + esc(a.id) + '">Add to a lesson…</button>') + '</div>' : '') + '</div>';
+        '<div class="sp-act-aa">' + (can ? '<button class="btn sm primary" data-sactadd="' + esc(a.id) + '">+ Add after the slide I’m on</button>' : '<button class="btn sm" data-sactuse="' + esc(a.id) + '">Add to a lesson…</button>') + actVidHtml(a, 'btn sm') + '</div></div>' : '') + '</div>';
   }).join('');
 }
 async function spActsHtml() {
@@ -226,7 +256,8 @@ async function actEditDlg(id) {
     Object.entries(PARTS).map(([k, v]) => '<label><input type="checkbox" data-part="' + k + '"' + (a.parts.includes(k) ? ' checked' : '') + '> ' + v + '</label>').join('') +
     '<label>Grouping <input id="aeG" class="btn sm" value="' + esc(a.group) + '" placeholder="Pairs, groups of 4…"></label></div>' +
     '<label class="ls-f">How to run it (one step per line)<textarea id="aeH" rows="5">' + esc(a.how.join('\n')) + '</textarea></label>' +
-    '<label class="ls-f">Steps for students on the slide (one per line)<textarea id="aeS" rows="4">' + esc(a.slide.join('\n')) + '</textarea></label></div>' +
+    '<label class="ls-f">Steps for students on the slide (one per line)<textarea id="aeS" rows="4">' + esc(a.slide.join('\n')) + '</textarea></label>' +
+    '<label class="ls-f">A video of it in action (optional)<input id="aeV" class="btn" style="justify-content:flex-start" placeholder="https://…" value="' + esc(a.video || '') + '"></label></div>' +
     '<div class="bf">' + (mine.some(x => x.id === a.id) ? '<button class="btn" data-del>Delete</button><span style="flex:1"></span>' : '') + '<button class="btn" data-x>Cancel</button><button class="btn primary" data-ok>Save</button></div>');
   $('#dlgBox').onclick = async e => {
     if (e.target.closest('[data-x]')) return closeDlg();
@@ -234,6 +265,7 @@ async function actEditDlg(id) {
     if (!e.target.closest('[data-ok]')) return;
     const lines = id => $(id).value.split('\n').map(x => x.trim()).filter(Boolean);
     const n = { id: a.id, name: $('#aeN').value.trim(), what: $('#aeW').value.trim(), kind: $('#aeK').value, parts: [...document.querySelectorAll('[data-part]')].filter(c => c.checked).map(c => c.dataset.part), group: $('#aeG').value.trim(), how: lines('#aeH'), slide: lines('#aeS'), book: 0, tip: '' };
+    const vid = $('#aeV').value.trim(); if (vid && !vidOk(vid)) return toast('The video link needs to start with https://'); if (vid) n.video = vid;
     if (!n.name) return toast('Give it a name');
     if (!n.parts.length) n.parts = ['activity'];
     await kvSet('activities', [n, ...mine.filter(x => x.id !== a.id)]); await actFolderWrite(); closeDlg(); AB.q = AB.part = AB.kind = ''; renderActivities();
@@ -242,7 +274,7 @@ async function actEditDlg(id) {
 function normActivity(x) {
   if (!x || typeof x.name !== 'string' || !x.name.trim()) return null;
   const arr = v => (Array.isArray(v) ? v : []).map(String).filter(Boolean);
-  return { id: typeof x.id === 'string' && x.id ? x.id : 'my-' + lid(), name: x.name.trim(), what: String(x.what || ''), kind: KINDS[x.kind] ? x.kind : 'talk', parts: arr(x.parts).filter(p => PARTS[p]).length ? arr(x.parts).filter(p => PARTS[p]) : ['activity'], group: String(x.group || ''), how: arr(x.how), slide: arr(x.slide), book: 0, tip: String(x.tip || '') };
+  return { id: typeof x.id === 'string' && x.id ? x.id : 'my-' + lid(), name: x.name.trim(), what: String(x.what || ''), kind: KINDS[x.kind] ? x.kind : 'talk', parts: arr(x.parts).filter(p => PARTS[p]).length ? arr(x.parts).filter(p => PARTS[p]) : ['activity'], group: String(x.group || ''), how: arr(x.how), slide: arr(x.slide), book: 0, tip: String(x.tip || ''), ...(vidOk(x.video) ? { video: String(x.video).trim() } : {}) };
 }
 // Her own activities go to the folder as activities.json, so Claude can read them and add new ones.
 let actMod = 0;
