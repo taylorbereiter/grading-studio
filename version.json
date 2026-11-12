@@ -1,11 +1,11 @@
 {
- "version": "1.27.35",
- "build": "e94b058da397",
+ "version": "1.27.36",
+ "build": "951096961aac",
  "notes": [
-  "IB DP classes: the Grading box now has Components, where each type of work (Paper 1, the internal assessment and so on) gets its own weight for that class alone. In the Gradebook, More has Predicted grades: click the 1 to 7 you predict for each student, with the grade the percent earns outlined as a hint. Predicted grades show in the gradebook and on progress sheets."
+  "IB MYP classes: Quick mark now gives levels for a paper quiz. On the boxes screen each question counts for one criterion, and under Points to levels you type the lowest points that earn each level. The quiz then gives a level for each criterion, with no total and no percent."
  ],
  "files": {
-  "index.html": "95aeb630f1a7fe0e5815125700764d64debfcafc29d32edae1530f00593c5eb1",
-  "planner.html": "13c81f7fece4e903f9bfd621b5b20ad73e9b46274d887dcb905d110cec238289"
+  "index.html": "29b790cfce5f2de44f4b3b9518201d7989ebaa1e7e36534ec95e115af678a0e5",
+  "planner.html": "60eb772acad069f6519de41772e91a812779cd48df0830fb1e771151649f7c63"
  }
 }

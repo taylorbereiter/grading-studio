@@ -96,7 +96,7 @@ function xcSet(st, raw, redraw) {
 }
 /* ---------------- retakes: a second try that keeps the first ---------------- */
 // How the tries are kept and which one counts: start.js (withTries). Here: starting one, taking it off, and what the score panel says.
-const TRY_KEEP = ['rubric', 'points', 'sheet', 'xc', 'xcU', 'q', 'qAuto', 'comment'];
+const TRY_KEEP = ['rubric', 'points', 'sheet', 'xc', 'xcU', 'q', 'qAuto', 'qAutoL', 'comment'];
 const tryName = n => n === 1 ? 'First try' : 'Try ' + n;
 // Which earlier try a file belongs to (1 is the first), or 0 for the try in hand: it was on the paper when a retake began.
 function tryOfFile(st, f) {
@@ -117,7 +117,7 @@ function retakeStart(st) {
   was.files = st.files.filter(f => !tryOfFile(st, f) && !(batch.carry && batch.carry.flags[f.path] === 'new') && (!f.virtual || (f.kind === 'docx' && (f.edited || (wordScore(f) && f.wscore.total != null))))).map(f => f.path);
   (g.tries ||= []).push(was);
   g.rubric = []; g.points = ''; g.comment = '';
-  for (const k of ['sheet', 'xc', 'xcU', 'q', 'qAuto', 'atR']) delete g[k];
+  for (const k of ['sheet', 'xc', 'xcU', 'q', 'qAuto', 'qAutoL', 'atR']) delete g[k];
   if (g.status === 'late') g.status = '';
   touchGrade(st); if (st.found !== undefined) refound(st);
   rowOnOf = null; saveSoon(); renderList(); renderGrade();
@@ -133,7 +133,7 @@ function retakeOff(st) {
   tryOffArm = null;
   const was = ts.pop(); if (!ts.length) delete g.tries;
   g.rubric = []; g.points = ''; g.comment = '';
-  for (const k of ['sheet', 'xc', 'xcU', 'q', 'qAuto', 'atR']) delete g[k];
+  for (const k of ['sheet', 'xc', 'xcU', 'q', 'qAuto', 'qAutoL', 'atR']) delete g[k];
   for (const k of TRY_KEEP) if (was[k] != null) g[k] = was[k];
   if (was.late && !g.status) g.status = 'late';
   touchGrade(st); if (st.found !== undefined) refound(st);
