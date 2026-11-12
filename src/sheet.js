@@ -24,7 +24,7 @@ const pssClass = () => classById(pss.cls);
 // The comment for the period on the sheet: what she wrote or ticked done on the Report comments tab, else the draft that tab would show.
 function pssRep(c, cols, conf, n, rc) {
   const key = pss.term === '*' ? 'year' : pss.term || 'all', e = ((infoOf(c, n).rep || {})[key]) || {};
-  return { text: e.text != null ? e.text : rptDraft(c, n, rptFacts(c, cols, conf, n), rc, e.v), draft: !e.done && e.text == null, done: !!e.done };
+  return { text: e.text != null ? e.text : rptDraft(c, n, rptFacts(c, cols, conf, n, pss.term), rc, e.v), draft: !e.done && e.text == null, done: !!e.done };
 }
 function pssDraw() {
   const c = pssClass(), body = $('#pssBody'); if (!c || !body) return;
@@ -35,7 +35,7 @@ function pssDraw() {
   const sheets = names.map(n => pssOne(c, all, cols, conf, n, o, rc)), drafts = o.rep ? sheets.filter(s => s.draft).length : 0;
   const ck = (k, l, t) => '<label class="pssck" title="' + esc(t) + '"><input type="checkbox" data-pssopt="' + k + '"' + (o[k] ? ' checked' : '') + '> ' + l + '</label>';
   body.innerHTML = '<div class="pssbar"><div class="ovtabs bkterms" role="group" aria-label="Term">' + tabs.map(([id, l]) => '<button data-pssterm="' + esc(id) + '" aria-selected="' + (pss.term === id) + '">' + esc(l) + '</button>').join('') + '</div><span class="sp"></span>' +
-    ck('cls', 'Class average', 'Show the class average beside each of the student’s numbers') + ck('rep', 'Report comment', 'The comment from the Report comments tab for this term') + ck('notes', 'Lines for notes', 'Empty lines at the bottom to write on during the meeting') +
+    (classWay(c) === 'myp' ? ck('cls', 'Class middle level', 'Show the level half the class is at or above beside each of the student’s levels') : ck('cls', 'Class average', 'Show the class average beside each of the student’s numbers')) + ck('rep', 'Report comment', 'The comment from the Report comments tab for this term') + ck('notes', 'Lines for notes', 'Empty lines at the bottom to write on during the meeting') +
     '<button class="btn primary" data-pssprint>' + (names.length === 1 ? 'Print' : 'Print ' + people(names.length, 'page')) + '</button></div>' +
     '<p class="muted pssnote" id="pssNote">' + (names.length === 1 ? 'One page' : 'One page for each student, in roster order') + ', made on this computer from your gradebook. Nothing is sent anywhere. In the print window, choose a printer or Save as PDF.' +
     (drafts ? ' <span class="psswarn">' + (drafts === 1 ? (names.length === 1 ? 'The report comment is' : 'One report comment is') + ' still a draft you haven’t looked at.' : drafts + ' report comments are still drafts you haven’t looked at.') + ' <a href="' + classHash(c, 'reports') + '" data-close>Open Report comments</a></span>' : '') + '</p>' +
@@ -56,6 +56,7 @@ function pssFit() {
 }
 // One student's page. all: every column this year; cols: the ones in the period on the sheet.
 function pssOne(c, all, cols, conf, n, o, rc) {
+  if (classWay(c) === 'myp') return ibSheetOne(c, all, cols, conf, n, o, rc);   // levels by criterion and a 1 to 7, never a percent (ib.js)
   const i = c.names.indexOf(n), shown = bkWho(n, i), r = bkGrade(n, cols, conf), everyone = c.names.filter(bkIn).map(x => bkGrade(x, cols, conf));
   const cavg = t => { const ps = everyone.map(g => t ? g.by[t] : g.grade).filter(v => v != null); return ps.length ? bkMean(ps) : null; };
   const pct = v => v != null ? pctAvgText(v) : '–', vs = v => o.cls && v != null ? 'class ' + pctAvgText(v) : '';

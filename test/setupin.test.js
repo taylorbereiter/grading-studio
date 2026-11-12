@@ -74,7 +74,8 @@ test('a new teacher’s whole setup comes in from one pasted block, after a prev
   const prev = await text(page, '.stpprev');
   assert.match(prev, /Setup for Ms Example, MYP Sciences/);
   assert.match(prev, /4 new classes: MYP 4 Sciences A, MYP 5 Sciences B, DP Biology SL, Homeroom 9C/);
-  assert.match(prev, /Grades: 7 from 87\.5% · 6 from 75% · 5 from 59\.4% · 4 from 46\.9% · 3 from 31\.3% · 2 from 18\.8% · 1 from 0%/);
+  // an MYP teacher comes in as IB MYP criteria: the boundaries are each class's own, in points, so no percent grades are listed
+  assert.match(prev, /A new assignment starts with IB MYP criteria/); assert.doesNotMatch(prev, /Grades: 7 from/);
   assert.match(prev, /Each row is scored 0 to 8/); assert.doesNotMatch(prev, /0 to 4/);
   assert.match(prev, /4 days off: Autumn break, No school/);
   assert.equal(await page.$('#stpLeft'), null, 'nothing about students was in it');
@@ -90,9 +91,9 @@ test('a new teacher’s whole setup comes in from one pasted block, after a prev
   assert.deepEqual(l.classes[2].ib, { bounds: [[80, 7], [68, 6], [56, 5], [44, 4], [30, 3], [15, 2], [0, 1]] });
   assert.match(prev, /IB programme, criteria and grade boundaries for MYP 5 Sciences B \(MYP\), DP Biology SL \(DP\)/);
   assert.equal(l.me.sys, 'ManageBac'); assert.equal(l.me.unit, 'Atlas'); assert.equal(l.me.prog, 'MYP'); assert.equal(l.me.att, false);
-  assert.equal(l.me.grade.way, 'ib7');
-  assert.deepEqual(l.me.grade.setup, { mode: 'rubric', criteria: MYP.grading.criteria, outOf: 100, scale: null, top: 8, half: false });
-  assert.deepEqual(l.me.grade.bands, [[87.5, '7'], [75, '6'], [59.4, '5'], [46.9, '4'], [31.3, '3'], [18.8, '2'], [0, '1']]);
+  assert.equal(l.me.grade.way, 'myp');
+  assert.deepEqual(l.me.grade.setup, { mode: 'rubric', criteria: MYP.grading.criteria, outOf: 10, scale: null, top: 8, half: false });
+  assert.equal(l.me.grade.bands, undefined);
   assert.deepEqual(l.book.terms.map(t => [t.name, t.start, t.end]), [['Term 1', '2026-08-17', '2026-10-30'], ['Term 2', '2026-11-02', '2027-01-15']]);
   assert.deepEqual([l.book.w.sum, l.book.w.ic, l.book.empty, l.book.xcTo, l.book.xcCap, l.book.retake], [70, 30, 'zero', 'ic', false, 'last']);
   assert.deepEqual(l.goals.map(g => g.name), ['Uses evidence', 'Designs a fair test']);
@@ -102,7 +103,7 @@ test('a new teacher’s whole setup comes in from one pasted block, after a prev
   assert.deepEqual(await ls(page, 'gs.bank'), MYP.comments);
   assert.equal((await ls(page, 'gs.setup')).mode, 'rubric', 'the next new assignment starts from it');
   assert.deepEqual([await ls(page, 'gs.xnames'), await ls(page, 'gs.anchorCover'), await ls(page, 'gs.nameFind'), await ls(page, 'gs.ptsInk'), await ls(page, 'gs.sheetfound')], [false, false, true, 'credit', true]);
-  assert.equal(await page.evaluate(() => window.__gs.bandOf(76)), '6');
+  assert.equal(await page.evaluate(() => window.__gs.bandOf(76)), '', 'an MYP grade comes from levels, never from a percent');
   // the timetable and calendar are the Planner's
   const p = await plan(page);
   assert.deepEqual(p.classes.map(c => [c.name, c.course, c.meets.map(m => m.dow + ' ' + m.start + '-' + m.end + ' ' + m.label)]), [['MYP 4 Sciences A', 'MYP 4 Sciences', ['1 08:30-09:50 P1-2', '4 13:00-13:40 ']], ['MYP 5 Sciences B', '', ['2 10:10-11:30 ']]]);
@@ -164,7 +165,7 @@ test('a browser with work in it keeps its students and its work; one part can be
   const prev = await text(page, '.stpprev');
   assert.match(prev, /3 new classes: MYP 5 Sciences B, DP Biology SL, Homeroom 9C/);
   assert.match(prev, /Students hand work in on ManageBac \(now Canvas\)/);
-  assert.match(prev, /A new assignment starts with IB criteria rows and a 1 to 7 \(now points\)/);
+  assert.match(prev, /A new assignment starts with IB MYP criteria \(now points\)/);
   assert.match(prev, /Term 1 moves to Aug 17, 2026 to Oct 30, 2026/);
   assert.match(prev, /1 comment to pick while marking/);
   assert.match(prev, /New units in MYP 4 Sciences A \(1\)/);
@@ -237,7 +238,7 @@ test('Copy my setup gives the same block back, with no student in it, and it set
   assert.ok(!/Cell quiz/.test(out), 'no assignment');
   assert.equal(j.gradingStudioSetup, 1);
   assert.deepEqual(j.classes[0], { name: 'MYP 4 Sciences A', course: 'MYP 4 Sciences', link: 'https://school.example/classes/41', meets: [{ day: 'Mon', start: '08:30', end: '09:50', label: 'P1-2' }, { day: 'Thu', start: '13:00', end: '13:40' }], units: ['Unit 1: Cells', 'Unit 2: Forces'] });
-  assert.deepEqual(j.grading.bands[1], { grade: '6', from: 75 });
+  assert.deepEqual([j.grading.way, j.grading.bands], ['myp', undefined]);
   assert.equal(j.grading.rowTop, 8); assert.equal(j.programme, 'MYP');
   assert.deepEqual([j.classes[1].programme, j.classes[1].subjectGroup, j.classes[1].criteria[1], j.classes[1].boundaries.outOf, j.classes[1].boundaries.grades[0], j.classes[2].programme, j.classes[2].boundaries.grades[1]], ['MYP', 'sci', { letter: 'B', name: 'Inquiring and designing' }, 32, { grade: 7, from: 28 }, 'DP', { grade: 6, from: 68 }]);
   assert.deepEqual(j.slides, { agenda: false, textSizes: 'any' });
@@ -274,7 +275,10 @@ test('the prompt tells an assistant to leave students out, and is one press to c
   const S = await page.evaluate(t => { const r = window.__gs.stpParse(t); return r.err ? r : window.__gs.stpRead(r.j); }, ex);
   assert.equal(S.err, undefined);
   assert.deepEqual([S.unknown, S.left, S.notes], [[], [], []]);
-  assert.deepEqual([S.classes.length, S.classes[0].meets.length, S.terms.length, S.rubrics.length, S.comments.length, S.goals.length, S.calendar.daysOff.length, S.grading.bands.length, S.book.retake], [1, 2, 1, 1, 1, 2, 5, 7, 'high']);
+  assert.deepEqual([S.classes.length, S.classes[0].meets.length, S.terms.length, S.rubrics.length, S.comments.length, S.goals.length, S.calendar.daysOff.length, S.grading.way, S.grading.bands, S.book.retake], [1, 2, 1, 1, 1, 2, 5, 'myp', undefined, 'high']);
+  // boundaries given in points still come in as percents for a way that has them (the Diploma's 1 to 7)
+  const D = await page.evaluate(() => window.__gs.stpRead({ gradingStudioSetup: 1, programme: 'DP', grading: { way: 'ib7', bandsOutOf: 32, bands: [{ grade: '7', from: 28 }, { grade: '6', from: 24 }, { grade: '1', from: 0 }] } }).grading);
+  assert.deepEqual([D.way, D.bands], ['ib7', [[87.5, '7'], [75, '6'], [0, '1']]]);
   // "Read it first" shows the same words
   await page.click('[data-stpsee]'); await page.waitForSelector('.stppre');
   assert.equal(await page.$eval('.stppre', e => e.textContent), p);

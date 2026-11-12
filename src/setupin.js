@@ -79,7 +79,7 @@ function stpIb(o) {
   if (bounds.length >= 2 && bounds.every((x, i) => !i || x[0] < bounds[i - 1][0])) out.bounds = bounds;
   return out;
 }
-const STP_WAYS = { rubric: 'rubric', rubricrows: 'rubric', rows: 'rubric', points: 'points', percent: 'percent', percentage: 'percent', letters: 'letters', lettergrades: 'letters', letter: 'letters', ib7: 'ib7', ib: 'ib7', ib1to7: 'ib7', myp: 'ib7', dp: 'ib7' };
+const STP_WAYS = { rubric: 'rubric', rubricrows: 'rubric', rows: 'rubric', points: 'points', percent: 'percent', percentage: 'percent', letters: 'letters', lettergrades: 'letters', letter: 'letters', ib7: 'ib7', ib: 'ib7', ib1to7: 'ib7', myp: 'myp', mypcriteria: 'myp', ibmyp: 'myp', dp: 'ib7' };
 function stpRead(j) {
   const S = { left: [], unknown: [], notes: [] }, known = new Set(['gradingStudioSetup', 'teacher', 'about', 'school', 'programme', 'program', 'grading', 'classes', 'calendar', 'terms', 'gradebook', 'rubrics', 'comments', 'goals', 'attendance', 'slides', 'marking']);
   for (const k of Object.keys(j)) {
@@ -95,10 +95,12 @@ function stpRead(j) {
   // how a new assignment is graded
   const g = stpObj(j.grading);
   if (g) {
-    const way = STP_WAYS[stpKey(g.way)] || (stpArr(g.criteria).length ? 'rubric' : '');
+    let way = STP_WAYS[stpKey(g.way)] || (stpArr(g.criteria).length ? 'rubric' : '');
+    // an MYP teacher's criteria rows: "ib7" with rows is how an older prompt asked for it
+    if (way === 'ib7' && /^\s*(ib\s*)?myp\b/i.test(prog) && /^(rows?|rubric|criteria)$/i.test(stpStr(g.score, 12))) way = 'myp';
     if (way) {
       const base = gradeWay(way)[3], crit = stpArr(g.criteria, 12).map(c => stpStr(stpObj(c) ? c.name : c, 80)).filter(Boolean);
-      const rows = /^(rows?|rubric|criteria)$/i.test(stpStr(g.score, 12)) ? true : /^(total|points?|percent)$/i.test(stpStr(g.score, 12)) ? false : way === 'rubric';
+      const rows = /^(rows?|rubric|criteria)$/i.test(stpStr(g.score, 12)) ? true : /^(total|points?|percent)$/i.test(stpStr(g.score, 12)) ? false : way === 'rubric' || way === 'myp';
       const outOf = stpNum(g.outOf, 1, 1000), top = stpNum(g.rowTop, 1, 10), scale = stpScale(g.scale);
       let bands = stpArr(g.bands, 20).map(b => Array.isArray(b) ? [stpNum(b[0], 0, 1000), stpStr(b[1], 12)] : stpObj(b) ? [stpNum(b.from, 0, 1000), stpStr(b.grade != null ? b.grade : b.label, 12)] : [null, '']).filter(b => b[0] != null && b[1]);
       const of = stpNum(g.bandsOutOf, 1, 1000);
@@ -106,8 +108,10 @@ function stpRead(j) {
       bands = bands.filter(b => b[0] <= 100).sort((x, y) => y[0] - x[0]);
       if (bands.length) bands[bands.length - 1][0] = 0;   // the lowest grade starts at nothing, as in Settings
       if (!bands.length && gradeWay(way)[4]) bands = gradeWay(way)[4].map(b => b.slice());
+      // MYP boundaries are in points and belong to each class (ib.js), so none are kept here
+      if (way === 'myp') bands = [];
       S.grading = { way, setup: { mode: rows ? 'rubric' : 'points', criteria: crit.length ? crit : base.criteria.slice(), outOf: outOf != null ? outOf : base.outOf, scale: scale || null, ...stpRowScale(top, g.halfPoints) }, ...(bands.length ? { bands } : {}) };
-    } else if (Object.keys(g).length) S.notes.push('“grading” has no “way” this version knows (rubric, points, percent, letters or ib7), so it is left as it is.');
+    } else if (Object.keys(g).length) S.notes.push('“grading” has no “way” this version knows (rubric, points, percent, letters, myp or ib7), so it is left as it is.');
   }
   // classes: a name, a link, when it meets, unit names. Never who is in it.
   const seen = new Set(); S.classes = [];
@@ -219,7 +223,7 @@ function stpPlanNext(old, S, pick) {
 /* ---- what would change: one part per subject, each with the lines the preview shows ---- */
 const stpDay = s => new Date(s + 'T12:00:00').toLocaleDateString(LANG_LOCALE, { month: 'short', day: 'numeric', year: 'numeric' });
 const stpList = (a, n) => a.slice(0, n || 6).join(', ') + (a.length > (n || 6) ? ' and ' + (a.length - (n || 6)) + ' more' : '');
-const stpWayName = k => gradeWay(k)[1], stpWayLow = k => k === 'ib7' ? stpWayName(k) : stpWayName(k).toLowerCase();
+const stpWayName = k => gradeWay(k)[1], stpWayLow = k => k === 'ib7' || k === 'myp' ? stpWayName(k) : stpWayName(k).toLowerCase();
 const stpTypeName = id => { const t = BK_TYPES.find(x => x[0] === id); return t ? t[2] : id; };
 function stpDiff(S, planNow) {
   const parts = [], add = (key, title, lines, sub) => { if (lines.length) parts.push({ key, title, lines, sub: sub || '' }); };
@@ -493,13 +497,11 @@ Every part except the first line is optional. Leave a part out rather than leavi
   "programme": "MYP",
   "school": { "system": "ManageBac", "unitPlans": "Atlas", "assistant": "Claude" },
   "grading": {
-    "way": "ib7",
+    "way": "myp",
     "score": "rows",
     "criteria": ["A: Knowing and understanding", "B: Inquiring and designing", "C: Processing and evaluating", "D: Reflecting on the impacts of science"],
     "rowTop": 8,
-    "halfPoints": false,
-    "bandsOutOf": 32,
-    "bands": [{ "grade": "7", "from": 28 }, { "grade": "6", "from": 24 }, { "grade": "5", "from": 19 }, { "grade": "4", "from": 15 }, { "grade": "3", "from": 10 }, { "grade": "2", "from": 6 }, { "grade": "1", "from": 0 }]
+    "halfPoints": false
   },
   "classes": [
     { "name": "MYP 4 Sciences A", "course": "MYP 4 Sciences", "link": "https://example.org/classes/123",
@@ -535,7 +537,7 @@ Every part except the first line is optional. Leave a part out rather than leavi
 }
 
 FIELD NOTES
-- "way" is one of "rubric", "points", "percent", "letters", "ib7". "score" is "rows" (a rubric, each row scored) or "total" (one number, out of "outOf").
+- "way" is one of "rubric", "points", "percent", "letters", "myp", "ib7". "myp" is IB MYP criteria, each marked 0 to 8, with the 1 to 7 boundaries given on each class. "ib7" is the IB Diploma's 1 to 7 from a percent. "score" is "rows" (a rubric, each row scored) or "total" (one number, out of "outOf").
 - "bands" are the grades a percent earns, highest first, each with the lowest percent that earns it. If my boundaries are in points, give them in points and add "bandsOutOf" with the total.
 - "scale" (optional, inside "grading" or a rubric) turns a score into a percent, like { "12": 100, "11": 95, "10": 91 }.
 - Days are "Sun" to "Sat". Times are 24-hour, like "13:05". Dates are YYYY-MM-DD.

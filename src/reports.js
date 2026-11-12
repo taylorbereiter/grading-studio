@@ -61,7 +61,20 @@ function rptPut(c, n, patch, term) {
 
 /* ---------- what the gradebook knows about one student this term ---------- */
 const rptPairs = new WeakMap();
-function rptFacts(c, cols, conf, n) {
+function rptSaid(c, cols, n) {
+  const said = [];
+  for (const col of cols) {
+    if (!col.d || !col.d.s) continue;
+    let pairs = rptPairs.get(col); if (!pairs) rptPairs.set(col, pairs = rosterPairs(c.names, Object.keys({ ...col.d.s, ...col.d.read })));
+    const k = pairs.get(n), t = k && col.d.s[k] && col.d.s[k].g ? String(col.d.s[k].g.comment || '').trim() : '';
+    if (t) said.push({ work: col.name, text: t });
+  }
+  return said;
+}
+// term: the period the comment is for, when it isn't the one the gradebook is on (a progress sheet, sheet.js).
+function rptFacts(c, cols, conf, n, term) {
+  // an MYP class has levels and a 1 to 7, never a percent (ib.js)
+  if (classWay(c) === 'myp') return ibRptFacts(c, cols, n, term, rptSaid(c, cols, n));
   const g = bkGrade(n, cols, conf), scored = bkScored(cols).map(col => ({ col, cell: col.cells.get(n) })).filter(x => bkCounts(x.cell));
   const rows = new Map(), T = chRowTop(scored.map(x => x.col));   // rows on different scales are put on the one most of them use
   for (const { col, cell } of scored) for (const [nm, v0, t] of cell.rows || []) {
@@ -81,14 +94,7 @@ function rptFacts(c, cols, conf, n) {
   const v = scored.map(x => x.cell.pct), move = v.length >= 4 ? bkMean(v.slice(-3)) - bkMean(v.slice(0, -3)) : 0;
   const missing = cols.filter(x => x.type !== 'xc' && (x.cells.get(n) || {}).st === 'missing').map(x => x.name);
   const best = scored.length >= 2 ? scored.reduce((a, b) => b.cell.pct > a.cell.pct ? b : a) : null;
-  // What she wrote in the comment box on each of their papers this term.
-  const said = [];
-  for (const col of cols) {
-    if (!col.d || !col.d.s) continue;
-    let pairs = rptPairs.get(col); if (!pairs) rptPairs.set(col, pairs = rosterPairs(c.names, Object.keys({ ...col.d.s, ...col.d.read })));
-    const k = pairs.get(n), t = k && col.d.s[k] && col.d.s[k].g ? String(col.d.s[k].g.comment || '').trim() : '';
-    if (t) said.push({ work: col.name, text: t });
-  }
+  const said = rptSaid(c, cols, n);
   return { grade: g.grade, soFar: g.soFar, strong, weak, words, move, missing, best: best && best.cell.pct >= 70 ? best.col.name : '', said, scored: scored.length };
 }
 
@@ -97,7 +103,7 @@ const rptHash = s => { let h = 7; for (const ch of String(s)) h = (h * 31 + ch.c
 const rptList = a => a.length <= 1 ? a.join('') : a.slice(0, -1).join(', ') + ' and ' + a[a.length - 1];
 function rptFill(t, c, n, f, rc) {
   const call = rptCall(c, n), pro = rptPro(c, n), P = RPT_PRO[pro] || [call, call, call + '’s', 'is', 'has', 's'], subj = (rc.subj[c.id] || '').trim();
-  const map = { name: call, they: P[0], them: P[1], their: P[2], is: P[3], has: P[4], s: P[5], in: subj ? ' in ' + subj : '', subject: subj, grade: f.grade != null ? roundPct(f.grade) + '%' : '',
+  const map = { name: call, they: P[0], them: P[1], their: P[2], is: P[3], has: P[4], s: P[5], in: subj ? ' in ' + subj : '', subject: subj, grade: f.gradeText != null ? f.gradeText : f.grade != null ? roundPct(f.grade) + '%' : '',
     row: '', work: f.best, n: String(f.missing.length), list: rptList(f.missing), words: f.words };
   const out = t.replace(/\{(\w+)\}/g, (m, k) => {
     const low = k[0].toLowerCase() + k.slice(1); if (!(low in map)) return m;
@@ -107,7 +113,7 @@ function rptFill(t, c, n, f, rc) {
 }
 // v: which way of saying each sentence. "Draft again" moves it on by one, so the same facts come out in other words.
 function rptDraft(c, n, f, rc, v) {
-  const band = f.grade == null ? 'None' : f.grade >= rc.cut[0] ? 'High' : f.grade >= rc.cut[1] ? 'Good' : f.grade >= rc.cut[2] ? 'Mid' : 'Low';
+  const band = f.band ? f.band : f.grade == null ? 'None' : f.grade >= rc.cut[0] ? 'High' : f.grade >= rc.cut[1] ? 'Good' : f.grade >= rc.cut[2] ? 'Mid' : 'Low';
   const say = (k, row) => { const own = (rc.words[k] || []).filter(Boolean), list = own.length ? own : RPT_WORDS[k]; return rptFill(list[(rptHash(n + k) + (v || 0)) % list.length].replace(/\{row\}/g, row || ''), c, n, f, rc); };
   const long = rc.len === 'long', short = rc.len === 'short', out = [say('open' + band)];
   if (rc.grade && f.grade != null) out.push(say('grade'));
@@ -127,7 +133,7 @@ const rptState = e => e.done ? ['ok', 'Done'] : e.text != null ? ['on', 'Edited'
 /* ---------- the page ---------- */
 function rptFactChips(f) {
   const one = v => fmtNum(Math.round(v * 10) / 10), out = [];
-  out.push('<span class="schip">' + (f.grade != null ? 'Grade ' + pctAvgText(f.grade) + (f.soFar ? ' so far' : '') : 'No grade yet') + '</span>');
+  out.push('<span class="schip">' + (f.chip ? esc(f.chip) : f.grade != null ? 'Grade ' + pctAvgText(f.grade) + (f.soFar ? ' so far' : '') : 'No grade yet') + '</span>');
   if (f.strong) out.push('<span class="schip">Strongest: ' + esc(f.strong.name) + ' ' + one(f.strong.avg) + '</span>');
   if (f.weak) out.push('<span class="schip">To work on: ' + esc(f.weak.name) + ' ' + one(f.weak.avg) + '</span>');
   if (Math.abs(f.move) >= 5) out.push('<span class="schip">Last three scores ' + (f.move > 0 ? 'up ' : 'down ') + Math.abs(Math.round(f.move)) + '</span>');
