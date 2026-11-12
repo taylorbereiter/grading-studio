@@ -44,7 +44,7 @@ const HELP = [
       'Everything is saved with the rest of your work: in this browser, in your folder and in a take-home file. Find anything finds each one by its name.'],
     go: ['Open School resources', '#/school'], words: 'handbook calendar policy policies portal bookmark link file document resources staff bell schedule forms class course lesson links website textbook' },
   { id: 'language', sec: 'start', q: 'Can I use the app in another language?',
-    a: ['Yes: Traditional Chinese or Spanish. Choose one in Settings, Display, **App language**, or at the top of the welcome. The page is drawn again in the language you pick.',
+    a: ['Yes. Choose one in Settings, Display, **App language**, or at the top of the welcome. The page is drawn again in the language you pick.',
       'So far a language other than English covers the sidebar, Today, the welcome, Find anything, Help and the feedback page students get in a returned paper. The other screens are still in English.',
       'Class names, student names and anything else you typed are never translated.'],
     go: ['Open Settings, Display', '#/settings/display'], words: 'spanish español idioma language translate translation' },

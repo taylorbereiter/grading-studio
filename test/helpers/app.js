@@ -260,10 +260,17 @@ const workOf = page => page.evaluate(() => {
 const press = (page, sel) => page.$eval(sel, b => b.click());
 // Clicks something that lives in one of the small menus on the marking screen (+ Add, the ⋯ on a file or beside the student's name,
 // the ⋯ beside Missing, Excused, Late): opens its menu first, as she would, then clicks it.
+// If the page is drawn again between opening the menu and the click (a slow machine), the menu is closed again and the click finds
+// nothing to press: it opens the menu and tries once more, a few times, before giving up.
 async function pick(page, sel) {
-  await page.waitForSelector(sel);
-  await page.evaluate(sel => { const m = document.querySelector(sel).closest('.km'); if (m && m.hidden) m.previousElementSibling.click(); }, sel);
-  await page.click(sel);
+  for (let i = 0; ; i++) {
+    await page.waitForSelector(sel);
+    await page.evaluate(sel => { const m = document.querySelector(sel).closest('.km'); if (m && m.hidden) m.previousElementSibling.click(); }, sel);
+    try { await page.click(sel); return; } catch (e) {
+      if (i >= 4 || !/not clickable|detached/i.test(e.message)) throw e;
+      await new Promise(r => setTimeout(r, 200));
+    }
+  }
 }
 // Closes what is open: a box by its ✕ or its Close button, a tab's screen (Grades, Insights, Return; it has neither) by going back to the papers.
 const closeBox = (page, sel = '#dlgBox [data-close]') => page.evaluate(sel => {

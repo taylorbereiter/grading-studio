@@ -40,7 +40,7 @@ const LANG_ES = {
     'Main': 'Principal', 'Grading Studio, Today': 'Grading Studio, Hoy', 'Find anything': 'Buscar', 'Today': 'Hoy', 'Planner': 'Planificador', 'Classes': 'Clases', 'Add a class': 'Añadir una clase', 'Examples': 'Ejemplos', 'Strong work from every class, with no names on it': 'Trabajos destacados de todas las clases, sin nombres',
     'School': 'Centro', 'School resources': 'Recursos del centro', 'School resources: links, files and notes about your school': 'Recursos del centro: enlaces, archivos y notas sobre tu centro',
     'Links, files and notes about your school': 'Enlaces, archivos y notas sobre tu centro', 'Links, files and notes about your school, on the grading page': 'Enlaces, archivos y notas sobre tu centro, en la página de calificación', 'Link': 'Enlace', 'File': 'Archivo', 'Note': 'Nota',
-    'Help': 'Ayuda', 'Settings': 'Ajustes', 'Update ready': 'Actualización lista', 'No class': 'Sin clase', 'App language': 'Idioma de la aplicación', 'English, Spanish or Traditional Chinese': 'Inglés, español o chino tradicional',
+    'Help': 'Ayuda', 'Settings': 'Ajustes', 'Update ready': 'Actualización lista', 'No class': 'Sin clase', 'App language': 'Idioma de la aplicación', 'English and other languages': 'Inglés y otros idiomas',
     'Find a student, an assignment, a tool or a setting': 'Busca un estudiante, una tarea, una herramienta o un ajuste',
     'Find a lesson, a unit, a class or a setting': 'Busca una lección, una unidad, una clase o un ajuste',
     'Today: what you teach, what is waiting to be marked, what is ready to hand back': 'Hoy: lo que enseñas, lo que falta por corregir y lo que está listo para devolver',
@@ -165,7 +165,7 @@ const LANG_ES = {
     'Every keyboard shortcut is under': 'Todos los atajos de teclado están en', 'Settings, Keys': 'Ajustes, Teclas', ', or press': ', o pulsa', 'while marking.': 'mientras corriges.',
     /* Settings, Display, Language */
     'The language the app speaks in this browser.': 'El idioma de la aplicación en este navegador.',
-    'A language other than English covers the first screens so far: the sidebar, Today, the welcome, Help and the feedback page students get. The other screens are still in English.': 'Por ahora, un idioma distinto del inglés cubre las primeras pantallas: la barra lateral, Hoy, la bienvenida, la Ayuda y la página de comentarios que reciben los estudiantes. Las demás pantallas siguen en inglés.',
+    'A language other than English covers the first screens so far: the sidebar, Today, the welcome, Help and the feedback page students get. The other screens are still in English. The translations have not yet been checked by fluent speakers, so a line may read oddly.': 'Por ahora, un idioma distinto del inglés cubre las primeras pantallas: la barra lateral, Hoy, la bienvenida, la Ayuda y la página de comentarios que reciben los estudiantes. Las demás pantallas siguen en inglés. Las traducciones aún no han sido revisadas por hablantes nativos, así que alguna línea puede sonar rara.',
     /* the feedback page in a returned paper */
     'How it was scored': 'Cómo se puntuó', 'From your teacher': 'De tu docente', 'Comment on your paper': 'Comentario en tu trabajo', 'Comments on your paper': 'Comentarios en tu trabajo',
     'Your marked paper starts on the next page.': 'Tu trabajo corregido empieza en la página siguiente.', 'Your feedback continues on the next page.': 'Tus comentarios continúan en la página siguiente.',
@@ -259,7 +259,7 @@ const LANG_ES = {
         'Marca una clase en **For a class** cuando un enlace, archivo o nota es de una sola clase. La página puede entonces mostrar una clase cada vez, y un enlace de una clase aparece en todas las lecciones de esa clase en el Planificador, en **Links** y en **Present**, todo el año. Los enlaces propios de una lección van en ese mismo cuadro **Links**, escritos o elegidos de aquí.',
         'Todo se guarda con el resto de tu trabajo: en este navegador, en tu carpeta y en el archivo para llevar. Buscar encuentra cada uno por su nombre.'] },
     'language': { q: '¿Puedo usar la aplicación en otro idioma?', go: 'Abrir Ajustes, Pantalla', words: 'español inglés chino idioma lengua traducir traducción',
-      a: ['Sí: español o chino tradicional. Elígelo en Ajustes, Display, **Idioma de la aplicación**, o en lo alto de la bienvenida. La página se vuelve a dibujar en el idioma que elijas.',
+      a: ['Sí. Elígelo en Ajustes, Display, **Idioma de la aplicación**, o en lo alto de la bienvenida. La página se vuelve a dibujar en el idioma que elijas.',
         'Por ahora, un idioma distinto del inglés cubre la barra lateral, Hoy, la bienvenida, Buscar, la Ayuda y la página de comentarios que reciben los estudiantes con un trabajo devuelto. Las demás pantallas siguen en inglés.',
         'Los nombres de las clases y de los estudiantes, y todo lo que escribas, nunca se traducen.'] },
     'scan-split': { q: 'Escaneé toda la clase en un solo archivo. ¿Cómo lo divido?', words: 'escáner pdf fotocopiadora páginas separar papel manuscrito',

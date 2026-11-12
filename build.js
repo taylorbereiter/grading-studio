@@ -34,7 +34,20 @@ rep('/*@@HEICLICENSE@@*/', 'libheif-js ' + require('./' + nm + 'libheif-js/packa
 // Lines that are only a comment stay in src/ but don't ship, to keep the one file from growing. A test in polish.test.js checks each one really is a comment.
 // The stickers in the right-click menu: small pictures in src/stickers, built in so nothing is fetched.
 const stickerSrc = JSON.stringify(Object.fromEntries(fs.readdirSync('src/stickers').filter(f => f.endsWith('.webp')).sort().map(f => [f.slice(0, -5), 'data:image/webp;base64,' + fs.readFileSync('src/stickers/' + f).toString('base64')])));
-rep('/*@@APP@@*/', (fs.readFileSync('src/migrate.js', 'utf8') + '\ngsData.boot(function () {\n' + ['lang-es', 'lang-zh', 'lang', 'helpdata', 'pickshare', APP, 'names', 'marking', 'stamps', 'grades', 'saving', 'carryover', 'exportreport', 'feedback', 'rubrics', 'book', 'bookimport', 'intake', 'polish', 'insight', 'people', 'scans', 'merge', 'folder', 'takehome', 'quiz', 'imported', 'marksout', 'pastetext', 'groups', 'video', 'anchors', 'wordnotes', 'wordpdf', 'classpage', 'seating', 'attend', 'goals', 'ib', 'reports', 'missing', 'sheet', 'tabs', 'markscreen', 'examples', 'snip', 'touch', 'today', 'todo', 'settings', 'safe', 'newyear', 'welcome', 'setupin', 'help', 'school', 'classroom', 'shell', 'moving', 'fullscreen'].map(n => n === APP ? appSrc : fs.readFileSync('src/' + n + '.js', 'utf8')).join('\n') + '\n});').replace(/^[ \t]*\/\/.*\r?\n/gm, '').replace('/*@@STICKERS@@*/{}', () => stickerSrc));
+// The languages (src/lang.js says how they are used). Each is one file, src/lang-<file>.js, that ends up as one line of the page:
+// its source, squeezed and written as text, so that twenty languages cost the page little and only the one in use is ever unpacked.
+// To add a language, add its file and a line here: the code a browser knows it by, the file, the name of the object the file makes.
+const LANGS = [['zh-Hant', 'zh', 'LANG_ZH'], ['zh-Hans', 'zh-hans', 'LANG_ZHS'], ['es', 'es', 'LANG_ES'], ['fr', 'fr', 'LANG_FR'], ['de', 'de', 'LANG_DE'], ['pt-BR', 'pt', 'LANG_PT'], ['ja', 'ja', 'LANG_JA'], ['ko', 'ko', 'LANG_KO']];
+const langSrc = (() => {
+  const fflate = require('fflate'), names = {}, packed = {};
+  for (const [code, file, obj] of LANGS) {
+    const src = fs.readFileSync('src/lang-' + file + '.js', 'utf8') + '\nreturn ' + obj + ';';
+    names[code] = new Function(src)().name;
+    packed[code] = Buffer.from(fflate.deflateSync(Buffer.from(src, 'utf8'), { level: 9 })).toString('base64');
+  }
+  return 'const LANG_NAMES = ' + JSON.stringify(names) + ';\nconst LANG_PACKED = ' + JSON.stringify(packed) + ';';
+})();
+rep('/*@@APP@@*/', (fs.readFileSync('src/migrate.js', 'utf8') + '\ngsData.boot(function () {\n' + ['@langs', 'lang', 'helpdata', 'pickshare', APP, 'names', 'marking', 'stamps', 'grades', 'saving', 'carryover', 'exportreport', 'feedback', 'rubrics', 'book', 'bookimport', 'intake', 'polish', 'insight', 'people', 'scans', 'merge', 'folder', 'takehome', 'quiz', 'imported', 'marksout', 'pastetext', 'groups', 'video', 'anchors', 'wordnotes', 'wordpdf', 'classpage', 'seating', 'attend', 'goals', 'ib', 'reports', 'missing', 'sheet', 'tabs', 'markscreen', 'examples', 'snip', 'touch', 'today', 'todo', 'settings', 'safe', 'newyear', 'welcome', 'setupin', 'help', 'school', 'classroom', 'shell', 'moving', 'fullscreen'].map(n => n === APP ? appSrc : n === '@langs' ? langSrc : fs.readFileSync('src/' + n + '.js', 'utf8')).join('\n') + '\n});').replace(/^[ \t]*\/\/.*\r?\n/gm, '').replace('/*@@STICKERS@@*/{}', () => stickerSrc));
 rep("'/*@@GCID@@*/'", JSON.stringify(process.env.GCID || ''));
 // Where this copy lives and where it is moving to (site.json), only while a move is on. Otherwise the app has no address written into it.
 { const site = require('./site.json'); rep("'/*@@SITE@@*/'", JSON.stringify(site.movingTo ? { address: site.address || '', movingTo: site.movingTo } : null)); }
@@ -64,7 +77,7 @@ console.log((h.length / 1e6).toFixed(2) + 'MB');
   prep('/*@@PDFJS@@*/', fs.readFileSync(nm + 'pdfjs-dist/build/pdf.min.js', 'utf8'));
   prep('/*@@MAMMOTH@@*/', fs.readFileSync(nm + 'mammoth/mammoth.browser.min.js', 'utf8'));
   prep('/*@@WORKER@@*/', fs.readFileSync(nm + 'pdfjs-dist/build/pdf.worker.min.js', 'utf8'));
-  prep('/*@@PLANNER@@*/', ('(() => {\n' + ['base', 'bank', 'review', 'lessons', 'plain', 'looks', 'rich', 'activities', 'materials', 'links', 'finished', 'share', 'variants', 'extras', 'library', 'panel', 'notebook', '../pickshare', 'present', '../lang-es', '../lang-zh', '../lang', '../helpdata', 'rail', 'units', '../fullscreen'].map(n => fs.readFileSync('src/planner/' + n + '.js', 'utf8')).join('\n') + '\n})();').replace(/^[ \t]*\/\/.*\r?\n/gm, ''));
+  prep('/*@@PLANNER@@*/', ('(() => {\n' + ['base', 'bank', 'review', 'lessons', 'plain', 'looks', 'rich', 'activities', 'materials', 'links', 'finished', 'share', 'variants', 'extras', 'library', 'panel', 'notebook', '../pickshare', 'present', '@langs', '../lang', '../helpdata', 'rail', 'units', '../fullscreen'].map(n => n === '@langs' ? langSrc : fs.readFileSync('src/planner/' + n + '.js', 'utf8')).join('\n') + '\n})();').replace(/^[ \t]*\/\/.*\r?\n/gm, ''));
   const page = '<!doctype html>\n<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"></head><body>\n' + p + '\n</body></html>';
   fs.writeFileSync('planner.html', page.replace('<meta name="robots" content="noindex"></head>', HOSTED));
   fs.writeFileSync('Planner.html', page);
