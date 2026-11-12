@@ -1,4 +1,9 @@
 {
+  "1.27.11": [
+    "Groups in Present mode: shuffling no longer moves the slides or ends the lesson, and each shuffle keeps last time's groups apart.",
+    "Change groups by hand: drag a name to another group, or click a name and then a group. Make my own starts with empty groups, and Undo or Ctrl Z takes back a move or a shuffle.",
+    "The Present timer keeps running after you finish or leave full screen, in the corner of the Planner, and comes back on the slides when you present again."
+  ],
   "1.27.10": [
     "Finding names on its own is now off unless you turn it on, in Settings, Marking, Name covers. Only the boxes you draw in Check the covers cover anything, and the check before anonymous grading lists every paper."
   ],

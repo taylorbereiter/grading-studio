@@ -5,6 +5,9 @@
    keeps for this; the names are shown and never kept here.
    Afterwards one line says where the class got to. It is kept on the lesson as "taught", so it goes to the Planner
    folder with the lesson and shows on the week.
+   The timer outlives the stage: finishing, or leaving full screen by accident, leaves it running in a small box in the
+   corner of the Planner, and presenting again shows it on the slides once more. It is kept in this browser (gsp.presentTimer)
+   so a refresh does not lose it either.
    This reads the lesson and the timetable and nothing else. Its buttons carry data-pr and are handled here. */
 const PR = { on: false, askMs: 2 * 60 * 1000 };   // askMs: presenting for at least this long asks where the class got to
 const PR_I = {
@@ -132,7 +135,7 @@ async function presentStart(l, o) {
   const slot = o.slot && l.slots.some(s => prSameSlot(s, o.slot)) ? o.slot : prSlotNow(l);
   const back = prResume(l, slot), i = o.at > 0 ? Math.min(o.at, l.slides.length - 1) : back ? back.slide - 1 : 0;
   const ag = l.slides.find(s => s.layout === 'agenda');
-  Object.assign(PR, { on: true, l, i, far: i, slot, began: Date.now(), ended: false, blank: false, notes: false, agenda: false, menu: false, ticks: new Set(), timer: null, num: '', keep: false, video: false, full: false, back: document.activeElement,
+  Object.assign(PR, { on: true, l, i, far: i, slot, began: Date.now(), ended: false, blank: false, notes: false, agenda: false, menu: false, ticks: new Set(), num: '', keep: false, video: false, full: false, back: document.activeElement,
     items: ag ? rtParse(ag.body).filter(x => x.text.trim()) : null, agTitle: ag ? plainTitle(ag.title) || 'Agenda' : '' });
   const el = PR.el = document.createElement('div');
   el.id = 'present'; el.className = 'pr'; el.tabIndex = -1; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-label', 'Presenting ' + l.title);
@@ -154,7 +157,7 @@ async function presentStart(l, o) {
   el.addEventListener('click', prClick);
   el.addEventListener('pointermove', prWake);
   PR.tickT = setInterval(prTick, 250);
-  prShow(); prTick(); prWake(); el.focus();
+  prFloat(); prShow(); prTick(); prWake(); el.focus();
   if (!o.window) try { await el.requestFullscreen(); } catch { }
   prFit();
   try { PR.lock = await navigator.wakeLock.request('screen'); } catch { }
@@ -271,9 +274,11 @@ function prPick(mode) {
 /* ---------- the timer ---------- */
 const prSound = () => { try { return localStorage.getItem('gsp.presentSound') !== '0'; } catch { return true; } };
 function prChime() {
-  if (!prSound() || !PR.ac) return;
+  if (!prSound()) return;
   try {
-    const C = PR.ac, t0 = C.currentTime;
+    // a timer brought back after a refresh has no sound yet: made now (the browser may still keep it quiet until a click)
+    const C = PR.ac = PR.ac || new (window.AudioContext || window.webkitAudioContext)(); if (C.state === 'suspended') C.resume();
+    const t0 = C.currentTime;
     [[0, 660], [.4, 660], [.8, 880]].forEach(([d, f]) => {
       const o = C.createOscillator(), g = C.createGain(); o.type = 'sine'; o.frequency.value = f;
       g.gain.setValueAtTime(0.0001, t0 + d); g.gain.exponentialRampToValueAtTime(.3, t0 + d + .03); g.gain.exponentialRampToValueAtTime(.0001, t0 + d + .35);
@@ -285,12 +290,12 @@ function prTimerStart(sec) {
   sec = Math.max(1, Math.min(180 * 60, Math.round(sec)));
   PR.timer = { end: Date.now() + sec * 1000, left: sec, total: sec, paused: false, done: false };
   try { PR.ac = PR.ac || new (window.AudioContext || window.webkitAudioContext)(); } catch { }
-  prMenu(false); prTick();
+  prTimerSave(); if (PR.on) prMenu(false); prTick();
 }
 function prTimerPause() {
   const t = PR.timer; if (!t || t.done) return;
   if (t.paused) { t.end = Date.now() + t.left * 1000; t.paused = false; } else { t.left = Math.max(0, Math.ceil((t.end - Date.now()) / 1000)); t.paused = true; }
-  prTick(); if (PR.menu) prMenu(true);
+  prTimerSave(); prTick(); if (PR.on && PR.menu) prMenu(true);
 }
 // More time or less, while it runs or while it is paused. Taking away more than is left ends it: time's up.
 function prTimerAdd(sec) {
@@ -298,14 +303,57 @@ function prTimerAdd(sec) {
   if (t.paused) t.left = Math.max(0, Math.min(180 * 60, t.left + sec));
   else { const left = Math.max(0, Math.ceil((t.end - Date.now()) / 1000)); t.end = Date.now() + Math.max(0, Math.min(180 * 60, left + sec)) * 1000; }
   if (t.paused && !t.left) { t.paused = false; t.end = Date.now(); }
-  prTick(); if (PR.menu && t.done) prMenu(true);
+  prTimerSave(); prTick(); if (PR.on && PR.menu && t.done) prMenu(true);
 }
 // Back to the time it was started with, and running.
 function prTimerRestart() {
   const t = PR.timer; if (!t) return;
   prTimerStart(t.total); prMenu(true);
 }
-function prTimerStop() { PR.timer = null; prTick(); if (PR.menu) prMenu(true); }
+function prTimerStop() { PR.timer = null; prTimerSave(); prTick(); if (PR.on && PR.menu) prMenu(true); }
+// Kept in this browser, so the timer outlives the stage and a refresh. Only times: nothing about the class.
+const PR_TKEY = 'gsp.presentTimer';
+function prTimerSave() {
+  try { if (PR.timer && !PR.timer.done) localStorage.setItem(PR_TKEY, JSON.stringify(PR.timer)); else localStorage.removeItem(PR_TKEY); } catch { }
+}
+function prTimerLoad() {
+  let t = null; try { t = JSON.parse(localStorage.getItem(PR_TKEY) || 'null'); } catch { }
+  const num = v => typeof v === 'number' && isFinite(v);
+  if (!t || typeof t !== 'object' || !num(t.end) || !num(t.left) || !num(t.total) || t.done) return;
+  // one that ran out while the page was closed is over; one that ran out a moment ago still says so
+  if (!t.paused && t.end < Date.now() - 60 * 1000) { try { localStorage.removeItem(PR_TKEY); } catch { } return; }
+  PR.timer = { end: t.end, left: Math.max(0, Math.round(t.left)), total: Math.max(1, Math.round(t.total)), paused: !!t.paused, done: false };
+}
+// The time left, worked out from the clock; the sound once when it runs out.
+function prTimerStep() {
+  const t = PR.timer; if (!t || t.paused || t.done) return t;
+  t.left = Math.max(0, Math.ceil((t.end - Date.now()) / 1000));
+  if (!t.left) { t.done = true; prTimerSave(); prChime(); if (PR.on && PR.menu) prMenu(true); }
+  return t;
+}
+// Away from the slides, the timer is a small box in the corner of the Planner: click the time to pause or go on, × to stop.
+function prFloat() {
+  let f = document.getElementById('prFloat');
+  const t = PR.on ? null : prTimerStep();
+  if (!t) { if (f) f.remove(); return; }
+  if (!f) {
+    f = document.createElement('div'); f.id = 'prFloat'; f.className = 'prf'; f.setAttribute('role', 'timer');
+    f.innerHTML = '<button class="prf-t" data-prf="go"></button><button class="prf-x" data-prf="x" title="Stop the timer" aria-label="Stop the timer">×</button>';
+    document.body.appendChild(f);
+  }
+  const txt = t.done ? 'Time’s up' : mmss(t.left) + (t.paused ? '<small>Paused</small>' : ''), b = f.querySelector('.prf-t');
+  if (b.dataset.h !== txt) { b.dataset.h = txt; b.innerHTML = txt; }
+  f.className = 'prf' + (t.done ? ' done' : t.paused ? ' paused' : '');
+  b.setAttribute('aria-label', t.done ? 'Time’s up. Click to clear' : mmss(t.left) + ' left on the timer. Click to ' + (t.paused ? 'go on' : 'pause'));
+  b.title = t.done ? 'Clear' : t.paused ? 'Go on' : 'Pause';
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest && e.target.closest('[data-prf]'); if (!b || PR.on) return;
+  if (b.dataset.prf === 'x' || (PR.timer && PR.timer.done)) prTimerStop(); else prTimerPause();
+  prFloat();
+});
+prTimerLoad();
+setInterval(() => { if (!PR.on && (PR.timer || document.getElementById('prFloat'))) prFloat(); }, 250);
 // Minutes and seconds typed in the menu. A seconds box over 59 is fine: 90 seconds is 1:30.
 function prOwnSec() {
   const m = Math.max(0, +($('#prOwn') || {}).value || 0), s = Math.max(0, +($('#prOwnS') || {}).value || 0);
@@ -329,9 +377,8 @@ function prTick() {
   const clock = prClock(), tm = $('#prTime'), ac = $('#prAClock');
   if (tm && tm.textContent !== clock) tm.textContent = clock;
   if (ac && ac.textContent !== clock) ac.textContent = clock;
-  const t = PR.timer, chip = $('#prChip');
+  const t = prTimerStep(), chip = $('#prChip');
   if (!t) { if (!chip.hidden) chip.hidden = true; return; }
-  if (!t.paused && !t.done) { t.left = Math.max(0, Math.ceil((t.end - Date.now()) / 1000)); if (!t.left) { t.done = true; prChime(); if (PR.menu) prMenu(true); } }
   const txt = t.done ? 'Time’s up' : mmss(t.left) + (t.paused ? '<small>Paused</small>' : '');
   if (chip.dataset.h !== txt) { chip.dataset.h = txt; chip.innerHTML = txt; }
   chip.hidden = false; chip.className = 'pr-chip' + (prBig() ? ' big' : '') + (t.done ? ' done' : t.paused ? ' paused' : '');
@@ -362,7 +409,7 @@ function prMenu(open) {
 function prClick(e) {
   prWake();
   const t = e.target;
-  if (t.closest('#pkStage')) return;   // the name picker looks after its own
+  if (PK.on && (t.closest('#pkStage') || !t.isConnected)) return;   // the name picker looks after its own (and a button it has just drawn again is off the page)
   // A button pressed with the mouse gives the keys back to the slides, so Space still means the next slide.
   if (e.detail && t.closest('#prBar,#prChip')) PR.el.focus();
   if (t.closest('#prMenu')) {
@@ -448,12 +495,12 @@ async function presentEnd() {
   PR.on = false; pkClose();
   clearInterval(PR.tickT); clearTimeout(PR.idleT); clearTimeout(prHintT); clearTimeout(PR.numT);
   document.removeEventListener('keydown', prKey, true); document.removeEventListener('fullscreenchange', prFull); window.removeEventListener('resize', prFit);
-  const lock = PR.lock, ac = PR.ac, full = document.fullscreenElement === el;
-  PR.lock = PR.ac = PR.timer = PR.el = null;
+  const lock = PR.lock, full = document.fullscreenElement === el;
+  PR.lock = PR.el = null;   // the timer, and its sound, go on (prFloat)
   el.remove();   // a full-screen stage taken off the page leaves full screen by itself
   try { if (full && document.fullscreenElement) await document.exitFullscreen(); } catch { }
   try { if (lock) await lock.release(); } catch { }
-  try { if (ac) ac.close(); } catch { }
+  prFloat();
   if (L.view === 'edit' && L.open === l) { L.cur = Math.min(i, l.slides.length - 1); renderEditor(); }
   if (back && back.isConnected && back.focus) try { back.focus({ preventScroll: true }); } catch { }
   // Taught on its day, for more than a moment: one line on where the class got to.
