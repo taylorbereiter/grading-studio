@@ -1,13 +1,11 @@
 {
- "version": "1.27.18",
- "build": "397644d4e0bd",
+ "version": "1.27.22",
+ "build": "106bef3dfdf3",
  "notes": [
-  "The app no longer assumes your AI assistant is Claude. Settings, Working with AI lets you pick Claude, ChatGPT, Gemini, Copilot, another name, or none, and buttons and hints use that name. If you already used the app, yours stays Claude.",
-  "Planner, Timetable has a Slides section: the agenda on slide 2 and keeping text between 28 and 36 pt are both on, and each can be turned off.",
-  "The week shows Saturday, or Sunday in front of Monday, when a class meets then. Short dates follow your computer's day and month order."
+  "Attendance has a choice for a student who is away when you don’t know why yet: Absent, reason unknown. Change it to Absent, excused when you hear the reason. It is still four choices, and days you saved before keep their marks. Look back lists the absences that still have no reason."
  ],
  "files": {
-  "index.html": "3703b50212dcc79959cfce6f893cf4b494bda4ddf8ce2bd0e5657c890bd5ff7e",
-  "planner.html": "3a7d14118d2b71771257ab6b9b91a72264fc1414671eec022eb28a14c27582c6"
+  "index.html": "0cecd5bbdf72306702ac22fb69a92b4fb78f2cc8e9982fa384c7da2d172b2b50",
+  "planner.html": "87cddf1df8ef2d14f9e0cce4939b15c418d7c992715423672b93360c60e62f69"
  }
 }

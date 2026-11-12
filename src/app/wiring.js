@@ -75,6 +75,7 @@ document.addEventListener('drop', async e => {
   addFiles(batch.students[t.i], r.list);
 });
 $('#trAllBtn').onclick = openTranscripts;
+$('#clipsBtn').onclick = () => { const c = (batch.clips || [])[0]; if (c) clipShow(c.id); };
 $('#dispBtn').onclick = openDisplay;
 $('#mkeyBtn').onclick = () => openMarkKey();
 $('#setMkey').onclick = () => openMarkKey();

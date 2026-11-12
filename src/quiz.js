@@ -563,6 +563,8 @@ function openQuiz(view) {
     const rs = e.target.closest('[data-reset]'); if (rs) return qmSpotSet(rs.closest('.qmc'), null);
     if (e.target.closest('[data-rest]')) return qmRest();
     const as = e.target.closest('.qmned [data-as]'); if (as) { for (const b of as.parentNode.children) b.setAttribute('aria-pressed', String(b === as)); as.closest('.qmned').querySelector('textarea').focus(); return; }
+    const nc = e.target.closest('.qmned [data-qnc]');
+    if (nc) { const ed = nc.closest('.qmned'), v = COLORS[nc.dataset.qnc]; ed.dataset.col = v; ed.querySelector('textarea').style.color = v; for (const b of ed.querySelectorAll('[data-qnc]')) b.setAttribute('aria-pressed', String(b === nc)); ed.querySelector('textarea').focus(); return; }
     if (e.target.closest('[data-nsave]')) return qmNoteDone(e.target.closest('.qmc'), true);
     if (e.target.closest('.qmned')) return;
     const qn = e.target.closest('[data-qnote]'); if (qn) return qmNoteOpen(qn.closest('.qmc'));
@@ -668,19 +670,21 @@ function qmNoteOpen(el) {
   const st = batch.students[+el.dataset.st], q = batch.quiz.qs.find(x => x.id === el.dataset.q), m = qzNoteOf(st, q);
   const as = m ? (m.t === 'note' ? 'note' : 'text') : store.get('gs.qmNoteAs', 'note');
   const ln = el.querySelector('.qmnote'); if (ln) ln.hidden = true;
-  el.insertAdjacentHTML('beforeend', '<div class="qmned"><textarea rows="2" placeholder="Type what to write on their paper…" aria-label="Comment">' + esc(m ? m.text : '') + '</textarea>' +
+  const col = (m && m.color) || COLORS[inkColor] || COLORS.red;   // its color can change while she types, before it is saved
+  el.insertAdjacentHTML('beforeend', '<div class="qmned" data-col="' + col + '"><textarea rows="2" placeholder="Type what to write on their paper…" aria-label="Comment" style="color:' + col + '">' + esc(m ? m.text : '') + '</textarea>' +
+    '<div class="qmnedc"><span class="muted hsm">Color</span>' + Object.entries(COLORS).map(([k, v]) => '<button type="button" class="sw" data-qnc="' + k + '" style="background:' + v + '" aria-pressed="' + (v === col) + '" title="' + k + '" aria-label="Comment in ' + k + '"></button>').join('') + '</div>' +
     '<div class="qmnedb"><span class="seg sm"><button data-as="note" aria-pressed="' + (as === 'note') + '" title="In the margin, with a line to the answer">Margin comment</button><button data-as="text" aria-pressed="' + (as === 'text') + '" title="Written on the page under the answer">Text on page</button></span>' +
     '<span class="muted hsm">Enter to save, Esc to cancel</span><button class="btn sm primary" data-nsave>Save</button></div></div>');
   const ta = el.querySelector('.qmned textarea'); ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length);
 }
 function qmNoteDone(el, save) {
   const ed = el && el.querySelector('.qmned'); if (!ed) return;
-  const text = ed.querySelector('textarea').value.trim(), as = ed.querySelector('[data-as][aria-pressed="true"]').dataset.as;
+  const text = ed.querySelector('textarea').value.trim(), as = ed.querySelector('[data-as][aria-pressed="true"]').dataset.as, col = ed.dataset.col;
   ed.remove();
-  if (save) qzNoteSet(batch.students[+el.dataset.st], batch.quiz.qs.find(x => x.id === el.dataset.q), text, as).then(() => { if (el.isConnected) { qmRefresh(el); el.focus({ preventScroll: true }); } });
+  if (save) qzNoteSet(batch.students[+el.dataset.st], batch.quiz.qs.find(x => x.id === el.dataset.q), text, as, col).then(() => { if (el.isConnected) { qmRefresh(el); el.focus({ preventScroll: true }); } });
   else { const ln = el.querySelector('.qmnote'); if (ln) ln.hidden = false; el.focus({ preventScroll: true }); }
 }
-async function qzNoteSet(st, q, text, as) {
+async function qzNoteSet(st, q, text, as, col) {
   const [path, p] = quizPages(st)[q.n] || [], f = path && fileByPath(st, path);
   if (!f) return;
   const list = (f.marks[p] ||= []), i = list.findIndex(m => m.qzn === q.id), old = i >= 0 ? list[i] : null;
@@ -688,7 +692,7 @@ async function qzNoteSet(st, q, text, as) {
   if (text) {
     const sz = await qzPageSize(st, q.n); if (!sz) return;
     store.set('gs.qmNoteAs', as);
-    const [dx, dy] = qzShift(st, q.n), W = sz.W, H = sz.H, color = COLORS[inkColor] || COLORS.red;
+    const [dx, dy] = qzShift(st, q.n), W = sz.W, H = sz.H, color = col || COLORS[inkColor] || COLORS.red;
     let m;
     if (as === 'note') m = old && old.t === 'note' ? { ...old, text, color } : { t: 'note', color, ax: r1(clamp((q.x + q.w + dx) * W, 4, W - 4)), ay: r1(clamp((q.y + q.h / 2 + dy) * H, 4, H - 4)), text, qzn: q.id };
     else {
@@ -954,7 +958,7 @@ function qmKey(e) {
   if ($('#qmPeek')) { if (e.key === 'Escape' || e.key === ' ') { stop(); qmPeekClose(); } return; }
   if (e.target.closest('.qmned')) {   // typing a comment: Enter saves, Shift Enter is a new line, Esc leaves it as it was
     if (e.key === 'Escape') { stop(); qmNoteDone(e.target.closest('.qmc'), false); }
-    else if (e.key === 'Enter' && !e.shiftKey) { stop(); qmNoteDone(e.target.closest('.qmc'), true); }
+    else if (e.key === 'Enter' && !e.shiftKey && !e.isComposing && e.keyCode !== 229) { stop(); qmNoteDone(e.target.closest('.qmc'), true); }
     else e.stopPropagation();
     return;
   }

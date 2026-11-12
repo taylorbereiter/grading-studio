@@ -298,6 +298,14 @@ body{padding-bottom:var(--savebar,0px)}.app{height:calc(100vh - var(--savebar,0p
 .chip button{border:0;background:none;color:var(--faint);padding:0 4px;font-size:var(--text-body);line-height:1}
 .pop .row{display:flex;gap:6px;align-items:center}
 .pop .row .sp{flex:1}
+.pop .ncol{gap:6px}
+.pop .ncol .lbl{min-width:62px}
+.pop .nsw{width:18px;height:18px;border-radius:var(--corner-round);border:0;padding:0;flex:none;cursor:pointer;box-shadow:inset 0 0 0 1px rgba(0,0,0,.12)}
+.pop .nsw.sq{border-radius:var(--corner-1)}
+.pop .nsw[aria-pressed=true]{box-shadow:0 0 0 2px var(--surface),0 0 0 4px var(--accent)}
+.pg .edbar .edsw{width:16px;height:16px;padding:0;margin:0 2px;border-radius:var(--corner-round);background:var(--c);box-shadow:inset 0 0 0 1px rgba(255,255,255,.35)}
+.pg .edbar .edsw:hover{background:var(--c);opacity:.85}
+.pg .edbar .edsw.on{background:var(--c);box-shadow:0 0 0 2px var(--stage-ink),0 0 0 4px var(--stage-paper)}
 .pop .lbl{font-size:var(--text-small);color:var(--faint);font-weight:600}
 
 .grade{border-left:1px solid var(--line);background:var(--surface);overflow:auto;padding:16px;display:flex;flex-direction:column;gap:12px;zoom:var(--uz)}
@@ -941,6 +949,9 @@ body:has(#openRep:not([hidden])) .toast{bottom:calc(76px + var(--savebar,0px))}
 .qmnote[hidden]{display:none}
 .qmned{margin-top:6px;display:grid;gap:6px}
 .qmned textarea{width:100%;box-sizing:border-box;font:inherit;font-size:var(--text-body);padding:6px 8px;border:1px solid var(--line-strong);border-radius:var(--corner-2,8px);background:var(--surface);color:var(--fg);resize:vertical}
+.qmnedc{display:flex;align-items:center;gap:6px}
+.qmnedc .sw{width:20px;height:20px;border-radius:var(--corner-round);border:2px solid transparent;box-shadow:inset 0 0 0 1px rgba(0,0,0,.12);padding:0;cursor:pointer}
+.qmnedc .sw[aria-pressed="true"]{border-color:var(--surface);box-shadow:0 0 0 2px var(--accent)}
 .qmnedb{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .qmnedb .btn{margin-left:auto}
 .setinks{display:grid;gap:8px;margin-top:10px}
@@ -2801,6 +2812,61 @@ button.seat[data-n]:hover{border-color:var(--accent)}
 .pk-wl button[aria-pressed="true"]{background:var(--stage-paper);color:var(--stage-ink);border-color:var(--stage-paper);text-decoration:none;font-weight:500}
 .pk-wx{float:right;border:1px solid var(--stage-line);background:none;color:var(--stage-fg);border-radius:var(--corner-3);padding:var(--space-1) var(--space-3);font:inherit;font-weight:600}
 .pk-wx:hover{background:var(--stage-hover)}
+/* a video by its link, partners, and the notes page (src/video.js) */
+.vlink .vlslot{margin:0 0 10px}
+.vlink .vlslot iframe,.vlink .vlslot video{display:block;width:100%;height:38vh;min-height:220px;border:0;border-radius:var(--corner-3);background:var(--fg)}
+.vlink .vlslot audio{display:block;width:100%}
+.vlink .vlnote{margin:8px 0 0;font-size:var(--text-small);line-height:1.45}
+.vdbox{display:flex;flex-direction:column;gap:var(--space-2)}
+.vdbox input.btn{width:100%;text-align:left;cursor:text}
+.vdbox input.bad{border-color:var(--warn)}
+.vdlab{font-size:var(--text-control);font-weight:600;color:var(--fg);margin-top:var(--space-3)}
+.vdlab small{display:block;font-weight:400;font-size:var(--text-small);color:var(--muted);line-height:1.45;margin-top:2px}
+.vdsay{margin:0;font-size:var(--text-small);line-height:1.45}
+.vdsay .link{font-size:inherit}
+.vdlist{max-height:26vh}
+.vdrow span:first-child{display:flex;align-items:center;gap:var(--space-2)}
+.vdrow i{flex:none;width:16px;height:16px;border:1.5px solid var(--line-strong);border-radius:var(--corner-1);background:var(--surface);position:relative}
+.vdrow[aria-checked=true] i{background:var(--accent);border-color:var(--accent)}
+.vdrow[aria-checked=true] i::after{content:"";position:absolute;left:4.5px;top:1px;width:4px;height:8px;border:solid var(--surface);border-width:0 2px 2px 0;transform:rotate(45deg)}
+.vdrow:disabled{opacity:.7;cursor:default}
+.nptiles{display:flex;gap:var(--space-2);flex-wrap:wrap;margin-top:var(--space-1)}
+.nptile{display:flex;flex-direction:column;align-items:center;gap:var(--space-1);width:92px;padding:var(--space-2) var(--space-1);border:1px solid var(--line);border-radius:var(--corner-3);background:var(--surface);font:inherit;color:var(--fg-2);cursor:pointer}
+.nptile:hover{background:var(--hover)}
+.nptile[aria-pressed=true]{border-color:var(--accent);background:var(--accent-soft);color:var(--accent)}
+.nptile:disabled{opacity:.45;cursor:default}
+.nptile b{font-size:var(--text-small);font-weight:600}
+.nptile svg{width:40px;height:50px;fill:none;stroke:var(--line-strong);stroke-width:1}
+.nptile svg .pg{fill:var(--surface);stroke:var(--line-strong)}
+.nptile svg .e{stroke:var(--muted)}
+.nptile svg .k{stroke:var(--fg-2);stroke-width:1.6;stroke-linecap:round}
+.nptile svg.none .e{stroke-width:2;stroke-linecap:round}
+.clips{margin-top:var(--space-2)}
+.cliprow{display:flex;flex-wrap:wrap;gap:var(--space-2);align-items:center}
+.clip{display:inline-flex;align-items:stretch;border:1px solid var(--line-strong);border-radius:var(--corner-pill);background:var(--surface);overflow:hidden}
+.clip button{border:0;background:none;font:inherit;font-size:var(--text-small);color:var(--fg-2);padding:var(--space-1) var(--space-2);cursor:pointer}
+.clip button:first-child{font-weight:600;color:var(--fg);padding-left:var(--space-3)}
+.clip button+button{border-left:1px solid var(--line)}
+.clip button:hover{background:var(--hover)}
+.clip button small{font-weight:400;color:var(--muted);margin-left:var(--space-1)}
+.clipform{display:flex;flex-wrap:wrap;gap:var(--space-2);align-items:center;margin-top:var(--space-2);font-size:var(--text-control)}
+.clipform label{display:inline-flex;align-items:center;gap:var(--space-1);color:var(--fg-2)}
+.clipform input.btn{cursor:text;text-align:left;width:64px}
+.clipform input.clipname{flex:1;min-width:180px;width:auto}
+.clipform small{flex-basis:100%;font-size:var(--text-small)}
+.clipform .link{font-size:var(--text-small)}
+.clipstage{user-select:auto;-webkit-user-select:auto}
+.clipbar{display:flex;align-items:center;gap:1.6vh;padding:1.6vh 2.4vh;background:var(--stage-bar);font:500 2.2vh/1.3 var(--f-body);color:var(--stage-muted)}
+.clipbar b{font:700 3.2vh/1.2 var(--f-display);color:var(--stage-fg)}
+.clipbar .sp{flex:1}
+.clipbar button{border:1px solid var(--stage-line);border-radius:var(--corner-3);background:none;color:var(--stage-fg);font:inherit;padding:.6vh 1.4vh;cursor:pointer}
+.clipbar button:hover{background:var(--stage-hover)}
+.clipbar button:disabled{opacity:.35;cursor:default}
+.clipbar kbd{font:inherit;color:var(--stage-muted)}
+.clipmain{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;padding:2vh}
+.clipmain iframe,.clipmain video{width:100%;height:100%;border:0;background:var(--stage)}
+.clipmain audio{width:min(900px,90vw)}
+.clipmain p{font:500 2.6vh/1.4 var(--f-body);color:var(--stage-muted)}
 
 </style>
 
@@ -3008,6 +3074,7 @@ button.seat[data-n]:hover{border-color:var(--accent)}
           <button class="mitem" id="bringBtn" title="Late work, or many files at once; each goes to its student by the name in the file name">Bring in files</button>
           <button class="mitem" id="openRepBtn" title="What opened from this download, what didn’t, who has nothing, and anything odd">What opened</button>
           <button class="mitem" id="trAllBtn" hidden title="Make a transcript for every recording in this assignment">Transcripts</button>
+          <button class="mitem" id="clipsBtn" hidden title="The parts of videos you saved, one after another, with their labels and no names">Clips to show the class</button>
           <button class="mitem" id="quizBtn" title="For a scanned paper quiz: box each question once, then mark the same question for everyone at once">Quick mark (paper quiz)</button>
           <button class="mitem" id="impBtn" title="Comments and marks made in Kami, Acrobat or Preview, made into your own so you can change them">Marks from other apps</button>
           <span class="mlink" id="topAtlas"></span>
@@ -4033,7 +4100,7 @@ SOFTWARE.
 <script>/* ---------------- saved-data versions: a safety copy, then any format changes, before the app starts ---------------- */
 const gsData = (() => {
   'use strict';
-  const APP_VERSION = "1.27.18";   // from package.json, the one place it's set
+  const APP_VERSION = "1.27.22";   // from package.json, the one place it's set
   const MIGRATIONS = [
   ];
   const DATA_V = Math.max(1, ...MIGRATIONS.map(s => s.to));
@@ -4509,7 +4576,7 @@ const LANG_ES = {
         'Un clic derecho sobre la página ofrece casi cualquier herramienta para un solo uso, y la herramienta que tenías sigue elegida.', 'Pulsa **?** para ver todas las teclas.'] },
     'comment': { q: '¿Cómo escribo un comentario en el trabajo?', words: 'nota margen comentarios anotar guardados banco',
       a: ['Elige **Comment** (C) y haz clic en el punto, o arrastra sobre palabras escritas a máquina para resaltarlas. Se abre un cuadro en el margen con una línea hasta el punto.',
-        'Haz clic fuera del cuadro para cerrarlo; lo que escribiste se conserva. Haz clic en el cuadro otra vez para cambiarlo. Arrastra la línea arriba o abajo para que pase entre renglones.',
+        'Pulsa Enter o haz clic fuera del cuadro para terminar; lo que escribiste se conserva. Mayús Enter empieza un renglón nuevo. Haz clic en el cuadro otra vez para cambiarlo o cambiar su color. Arrastra la línea arriba o abajo para que pase entre renglones, incluso antes de escribir.',
         'Los comentarios que usas a menudo se pueden guardar: **Saved comments**, bajo el cuadro de comentario del panel de notas.'] },
     'next-student': { q: '¿Cómo paso de un estudiante a otro?', words: 'siguiente anterior lista nombres tira navegar',
       a: ['Pulsa **Intro** o **N** para ir al siguiente trabajo que aún necesita nota. Las flechas junto al botón van al trabajo anterior y al siguiente.',
@@ -4536,6 +4603,11 @@ const LANG_ES = {
       a: ['Con la tarea abierta, pulsa **+ Add** encima de la página y elige **A file…**, o suelta el archivo sobre el nombre del estudiante.', 'Para varios archivos tardíos a la vez, usa **Bring in files** en Setup. Lo que ya está aquí se deja fuera, así que solo quedan por colocar los archivos nuevos. Marca **Late** junto a quien quieras señalar como entrega tardía.'] },
     'group-work': { q: 'Varios estudiantes hicieron un trabajo juntos. ¿Lo corrijo para cada uno?', words: 'compañeros parejas grupo póster compartido juntos equipo',
       a: ['No. Abre el menú ⋯ del archivo, elige **Group work…** y haz clic en cada compañero.', 'Con **Mark and grade once for the group** activado, una marca o una nota dada a un compañero se da a todos, y cada uno recibe el trabajo corregido.'] },
+    'video': { q: '¿Cómo califico una presentación o un vídeo en lugar de un trabajo escrito?', words: 'vídeo video presentación exposición discurso oral grabación enlace google drive youtube compañeros parejas notas página',
+      a: ['En la tarjeta de la tarea pulsa **Add papers…** y elige **No papers: presentations or videos…**. Cada estudiante de la lista recibe una página de notas para escribir mientras miras. Se corrige, se puntúa y se devuelve como un trabajo.',
+        'Para una grabación, abre a un estudiante, pulsa **+ Add** y elige **A video…**. Pega el enlace (Google Drive, YouTube o cualquier otro sitio) y marca a los compañeros que salen en él. Un solo juego de notas y una sola nota sirven entonces para todo el grupo.',
+        'Solo se guarda el enlace, así que el vídeo se queda donde está. **Play here** lo muestra encima de la página de notas, y **Open in its own window** lo pone al lado de la aplicación. **+ Add** también tiene **A notes page…** para añadir otra página.',
+        'Para guardar una parte que valga la pena enseñar a la clase, pulsa **+ Clip** debajo del vídeo y escribe sus tiempos y un título; **Edit** los cambia después. **Show to the class** la reproduce a pantalla completa con el título y sin el nombre del estudiante. **Clips to show the class**, en Setup, los reproduce todos por orden.'] },
     'tablet': { q: '¿Puedo corregir en una tableta con un lápiz?', go: 'Abrir Tableta y lápiz', words: 'ipad lápiz stylus táctil surface tableta dedo palma pellizcar zoom desplazar presión',
       a: ['Sí. Abre la aplicación en el navegador de la tableta. Un lápiz o stylus dibuja con la herramienta que hayas elegido, y con el bolígrafo la línea es más ancha donde aprietas más.',
         'Una vez que has usado un lápiz, un dedo mueve la página y dos dedos pellizcan para hacer zoom. Tu mano puede descansar en la pantalla mientras escribes. Hasta que se usa un lápiz, un dedo dibuja y dos dedos mueven la página.',
@@ -4909,7 +4981,7 @@ const LANG_ZH = {
         '在頁面上按右鍵，幾乎可以選用任何工具一次，原本選的工具不會改變。', '按 **?** 可以看到所有快速鍵。'] },
     'comment': { q: '怎麼在作業上寫評語？', words: '評語 註解 邊欄 回饋 已儲存 評語庫 comment',
       a: ['選擇 **Comment**（C），然後在要評論的位置按一下，或拖曳選取打字的文字來標示。邊欄會出現一個輸入框，並有一條線連到那個位置。',
-        '在輸入框外按一下就會關閉，寫好的內容會保留。再按一下輸入框可以修改。上下拖曳那條線，可以讓它從行與行之間穿過。',
+        '按 Enter 或在輸入框外按一下就會完成，寫好的內容會保留。按 Shift Enter 換行。再按一下輸入框可以修改內容或顏色。上下拖曳那條線，可以讓它從行與行之間穿過，還沒打字之前也可以。',
         '常用的評語可以存起來：在評分面板的評語框下方的 **Saved comments**。'] },
     'next-student': { q: '怎麼切換到下一位學生？', words: '下一位 上一位 名單 姓名 切換 瀏覽',
       a: ['按 **Enter** 或 **N** 前往下一份還需要評分的作業。按鈕旁的箭頭可以到上一份和下一份。',
@@ -4936,6 +5008,11 @@ const LANG_ZH = {
       a: ['開啟那份作業後，按頁面上方的 **+ Add**，選擇 **A file…**，或把檔案拖到學生的名字上。', '如果一次有好幾個遲交的檔案，請用 Setup 裡的 **Bring in files**。已經在這裡的檔案會被略過，所以只需要處理新的檔案。要標示為遲交的人，請勾選旁邊的 **Late**。'] },
     'group-work': { q: '幾位學生一起完成一份作業，需要每個人都批改一次嗎？', words: '同伴 兩人 小組 海報 共同 一起 團隊 group',
       a: ['不用。開啟檔案的 ⋯ 選單，選擇 **Group work…**，然後按每一位組員。', '開啟 **Mark and grade once for the group** 後，給其中一位組員的批註或分數會套用到所有人，每個人都會收到批改後的作業。'] },
+    'video': { q: '要評分的是口頭報告或影片，不是紙本作業，該怎麼做？', words: '影片 報告 口頭報告 演講 表演 錄影 連結 雲端硬碟 google drive youtube 同伴 兩人 筆記 筆記頁 video',
+      a: ['在作業的卡片上按 **Add papers…**，選擇 **No papers: presentations or videos…**。名單上的每位學生都會有一張筆記頁，讓你邊看邊寫。它可以像紙本作業一樣批註、評分和發還。',
+        '如果有錄影，開啟一位學生，按 **+ Add**，選擇 **A video…**。貼上連結（Google 雲端硬碟、YouTube 或其他任何地方），再勾選一起出現在影片裡的組員。之後一份筆記和一個分數就適用於整組。',
+        '只會保存連結，影片本身留在原來的地方。**Play here** 會把影片顯示在筆記頁上方，**Open in its own window** 會把它開在程式旁邊。**+ Add** 裡也有 **A notes page…**，可以再加一頁。',
+        '想保留值得給全班看的片段，按影片下方的 **+ Clip**，填入時間和標題；之後按 **Edit** 可以修改。**Show to the class** 會全螢幕播放，只顯示標題，不顯示學生姓名。Setup 裡的 **Clips to show the class** 會依序播放所有片段。'] },
     'tablet': { q: '可以用平板和觸控筆批改嗎？', go: '開啟平板與觸控筆', words: 'ipad 觸控筆 手寫筆 pencil stylus 觸控 surface 平板 手指 手掌 縮放 捲動 壓力',
       a: ['可以。在平板的瀏覽器開啟這個程式。觸控筆會用你選的工具來畫，使用筆工具時，壓得越用力線條越粗。',
         '用過觸控筆之後，一根手指用來移動頁面，兩根手指用來縮放。寫字時手可以放在螢幕上。在使用觸控筆之前，一根手指用來畫，兩根手指用來移動頁面。',
@@ -5172,7 +5249,7 @@ const HELP = [
     words: 'pen highlighter draw write annotate circle eraser undo keys shortcuts' },
   { id: 'comment', sec: 'mark', q: 'How do I write a comment on the paper?',
     a: ['Pick **Comment** (C) and click the spot, or drag over typed words to highlight them. A box opens in the margin with a line to the spot.',
-      'Click off the box to close it; what you typed is kept. Click the box again to change it. Drag the line up or down so it runs between lines of writing.',
+      'Press Enter or click off the box to finish; what you typed is kept. Shift Enter starts a new line. Click the box again to change it or its color. Drag the line up or down so it runs between lines of writing, even before you type.',
       'Comments you use often can be saved: **Saved comments** under the comment box in the score panel.'],
     words: 'note margin feedback annotate saved comments bank' },
   { id: 'next-student', sec: 'mark', q: 'How do I move between students?',
@@ -5209,6 +5286,12 @@ const HELP = [
   { id: 'group-work', sec: 'mark', q: 'Several students made one paper together. Do I mark it for each?',
     a: ['No. Open the file’s ⋯ menu, choose **Group work…** and click each partner.', 'With **Mark and grade once for the group** on, a mark or a score given to one partner is given to all of them, and each gets the marked paper back.'],
     words: 'partners pairs group poster shared together' },
+  { id: 'video', sec: 'mark', q: 'How do I grade a presentation or a video instead of a paper?',
+    a: ['On the assignment’s card press **Add papers…** and choose **No papers: presentations or videos…**. Every student on the roster gets a notes page to write on while you watch. It is marked, scored and returned like a paper.',
+      'For a recording, open a student, press **+ Add** and choose **A video…**. Paste the link (Google Drive, YouTube or anywhere else) and tick the partners who are in it. One set of notes and one grade then covers the group.',
+      'Only the link is kept, so the video stays where it is. **Play here** shows it above the notes page, and **Open in its own window** puts it beside the app. **+ Add** also has **A notes page…** for one more page.',
+      'To keep a part worth showing the class, press **+ Clip** under the video and give its times and a title; **Edit** changes them later. **Show to the class** plays it full screen with the title and without the student’s name. **Clips to show the class** under Setup plays them all in turn.'],
+    words: 'clip clips excerpt highlight moment example show class video presentation speech performance oral recording link google drive youtube partners pairs notes page blank lined watch' },
   { id: 'tablet', sec: 'mark', q: 'Can I mark on a tablet with a pencil?',
     a: ['Yes. Open the app in the tablet’s browser. A pencil or stylus draws with the tool you have picked, and with the pen the line is wider where you press harder.',
       'Once you have used a pencil, one finger moves the page and two fingers pinch to zoom. Your hand can rest on the screen while you write. Until a pencil is used, one finger draws and two fingers move the page.',
@@ -5911,7 +5994,7 @@ async function intake(entries, label, assignment, fromKeep) {   // entries: [{ p
   const id = batchIdOf(raw);
   const paperList = keepList.filter(e => !houseFile(e.path));
   const sameSize = fromKeep ? [] : await changedInPlace(id, paperList).catch(e => { console.error(e); return []; });   // same names and sizes, different bytes
-  const earlier = fromKeep ? null : await findEarlier(id, paperList, assignment).catch(e => { console.error(e); return null; });   // an older copy of this download, already worked on?
+  const earlier = fromKeep || paperList.every(e => isNotes(e.data)) ? null : await findEarlier(id, paperList, assignment).catch(e => { console.error(e); return null; });   // an older copy of this download, already worked on?
   if (earlier && earlier.asg) assignment = earlier.asg;
   if (!assignment && !fromKeep) assignment = cardOfKept(id);   // the same download dropped again still belongs to its card, the same as opening it from the list
   const rub = await rubricAtOpen(assignment, earlier ? earlier.d : newestWork(store.get(id, null), await kget('work', id)), (assignment && assignment.name) || label || 'This download');
@@ -6042,7 +6125,7 @@ async function spellLikeSaved(raw) {
 async function makeFile(path, data) {
   const name = path.split('/').pop();
   const magic = data && data.length > 4 && data[0] === 0x25 && data[1] === 0x50 && data[2] === 0x44 && data[3] === 0x46;   // "%PDF"
-  let kind = trueKind(isPdf(name) || magic ? 'pdf' : isImg(name) || IMG_MORE.test(name) ? 'img' : MEDIA_RX.test(name) ? 'media' : WORD_RX.test(name) ? 'docx' : TEXT_RX.test(name) ? 'text' : 'other', name, data);
+  let kind = trueKind(isPdf(name) || magic ? 'pdf' : isImg(name) || IMG_MORE.test(name) ? 'img' : MEDIA_RX.test(name) ? 'media' : WORD_RX.test(name) ? 'docx' : TEXT_RX.test(name) ? 'text' : LINK_RX.test(name) && linkOf(data) ? 'link' : 'other', name, data);
   let pdf = kind === 'pdf' ? data : null;
   if (kind === 'pdf' && gsExportLike(data)) {   // a file exported from here with its marks kept: back to the original pages and the marks
     const back = await unpackExport(data);
@@ -6122,6 +6205,7 @@ function saveNow(leaving) {
   clearTimeout(saveT); saveDue = false;
   if (batch.revs && tabForgot(batch)) return tabLetGo();
   const data = { t: Date.now(), carry: batch.carry, cur, ck: batch.students[cur] && batch.students[cur].key, setup, cls: batch.classId, share: batch.share, drive: batch.drive, light: batch.light, lightOpt: batch.lightOpt, lightPg: batch.lightPg, lightPgL: batch.lightPgL, anon: batch.anon, moved: batch.moved, removed: batch.removed, refSkip: batch.refSkip, quiz: batch.quiz, groups: batch.groups && batch.groups.length ? batch.groups : undefined, returned: batch.returned || undefined, read: (batch.read = paperReads()), s: {} };
+  if (batch.clips && batch.clips.length) data.clips = batch.clips;   // parts of videos to show the class (video.js); no key at all without one
   if (batch.goal) data.goal = batch.goal;   // a learning goal for the whole score (goals.js); no key at all without one
   for (const st of batch.students) {
     const f = {};
@@ -6192,6 +6276,7 @@ function restore() {
   if (data.goal) batch.goal = data.goal;
   if (data.returned) batch.returned = data.returned;
   batch.groups = data.groups || [];
+  batch.clips = data.clips || [];
   groupSync();
   if (data.drive && !batch.drive) batch.drive = data.drive;
   batch.restoredCur = Math.min(data.cur || 0, batch.students.length - 1); batch.restoredKey = data.ck;
@@ -6528,6 +6613,8 @@ async function openStudent(i, filePath) {
     kmWrap('<span aria-hidden="true">+</span> Add', 'id="addMenuBtn" class="btn sm" title="Add late or forgotten work to this student. You can also drop files on the paper or on a name."',
       '<button class="mitem" id="addFileBtn">A file…<small>A late or forgotten paper</small></button>' +
       '<button class="mitem" id="pasteTextBtn">Pasted text…<small>Work sent in an email or a message</small></button>' +
+      '<button class="mitem" id="addVideoBtn">A video…<small>A link to a recording, and who is in it</small></button>' +
+      '<button class="mitem" id="addNotesBtn">A notes page…<small>To write on while you watch or listen</small></button>' +
       '<button class="mitem" id="addScanBtn">From a scan…<small>A stack of pages scanned as one PDF</small></button>') +
     kmWrap('⋯', 'id="whoMore" class="btn sm kdots" aria-label="More for this paper" title="More for this paper"',
       (st.files.some(viewable) || fileSeq(st).length > 1 ? '<button class="mitem" id="arrangeBtn">Arrange pages<small>Combine files, reorder or take pages out</small></button>' : '') +
@@ -6539,12 +6626,15 @@ async function openStudent(i, filePath) {
   const sheetOff = () => { const g = $('#sheet0'); if (g) g.remove(); };
   if (!st.files.length) {
     paper.insertAdjacentHTML('beforeend', '<div class="nofile"><b>Nothing turned in yet.</b> Add their paper here, or drop the file on the page or on their name. You can still give a score without one.' +
-      '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button class="btn sm primary" id="gapFile">Add their file…</button><button class="btn sm" id="gapPaste">Paste text…</button>' + (st.gap || batch.students.some(x => x.files.length) ? '<button class="btn sm" id="gapScan">From a scan…</button>' : '') + '</div></div>');
+      '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button class="btn sm primary" id="gapFile">Add their file…</button><button class="btn sm" id="gapPaste">Paste text…</button><button class="btn sm" id="gapVideo">A video…</button><button class="btn sm" id="gapNotes">A notes page…</button>' + (st.gap || batch.students.some(x => x.files.length) ? '<button class="btn sm" id="gapScan">From a scan…</button>' : '') + '</div></div>');
     $('#gapFile').onclick = () => pickAdd(st);
     $('#gapPaste').onclick = () => openPasteText(st);
+    $('#gapVideo').onclick = () => openAddVideo(st);
+    $('#gapNotes').onclick = () => openAddNotes(st);
     const gs = $('#gapScan'); if (gs) gs.onclick = () => { scanInto = true; scanFor = null; $('#scanIn').click(); };
   }
-  curMedia = null;
+  curMedia = null; clipsBtn();
+  for (const f of st.files.filter(f => f.kind === 'link')) { paper.insertAdjacentHTML('beforeend', '<div class="fhead"><span style="color:var(--fg)">' + esc(linkTitle(f)) + '</span><span>Video link</span>' + tryTag(st, f) + (f.added ? addTag(f) : '') + carryTag(f) + '<span style="flex:1"></span>' + fileMenu(moveLink(f) + removeLink(f)) + '</div>'); paper.appendChild(linkCard(st, f)); }
   for (const f of st.files.filter(f => f.kind === 'media')) { if (f.added || carryTag(f) || tryTag(st, f)) paper.insertAdjacentHTML('beforeend', '<div class="fhead"><span style="color:var(--fg)">' + esc(f.name) + '</span>' + tryTag(st, f) + (f.added ? addTag(f) : '') + carryTag(f) + '<span style="flex:1"></span>' + fileMenu(fileLinks(f)) + '</div>'); paper.appendChild(mediaCard(st, f)); }
   const rd = refDoc();
   if (rd) { const det = document.createElement('details'); det.className = 'refd'; det.open = store.get('gs.rdOpen', true); det.innerHTML = '<summary>Your document: ' + esc(rd.name) + '</summary>'; det.ontoggle = () => store.set('gs.rdOpen', det.open); paper.appendChild(det); docxCard(rd, rd.name).then(c => { c.querySelector('.fhead').remove(); det.appendChild(c); }); }
@@ -6565,7 +6655,7 @@ async function openStudent(i, filePath) {
     }
   }
   if (token !== openToken) return;
-  const seq = fileSeq(st), oneFile = seq.length === 1 && !!seq[0].d && !st.files.some(f => f.kind === 'media');
+  const seq = fileSeq(st), oneFile = seq.length === 1 && !!seq[0].d && !st.files.some(f => f.kind === 'media' || f.kind === 'link');
   if (!oneFile) sheetOff();
   for (const it of seq) {
     if (it.f) {   // a Word, text or other file, as one card
@@ -6650,6 +6740,8 @@ $('#paper').addEventListener('click', e => {
   const mvf = e.target.closest('[data-mvfile]'); if (mvf) return openMoveFile(batch.students[cur], mvf.dataset.mvfile);
   if (e.target.closest('#addFileBtn')) return pickAdd(batch.students[cur]);
   if (e.target.closest('#pasteTextBtn')) return openPasteText(batch.students[cur]);
+  if (e.target.closest('#addVideoBtn')) return openAddVideo(batch.students[cur]);
+  if (e.target.closest('#addNotesBtn')) return openAddNotes(batch.students[cur]);
   if (e.target.closest('#addScanBtn')) { scanInto = true; scanFor = null; return $('#scanIn').click(); }
   const wd = e.target.closest('[data-whodo]'); if (wd) return wd.dataset.whodo === 'light' ? openLight() : wd.dataset.whodo === 'example' ? openUseExample(cur) : openCalc();
   const ra = e.target.closest('[data-rmfile]');
@@ -7084,6 +7176,10 @@ function bindPage(pg) {
     if (e.button !== 0) return;
     if (g && e.pointerId !== gid && ptrLive.has(gid)) return;   // a second finger, or her hand, while a stroke is being drawn: the stroke goes on as it was
     gid = e.pointerId;
+    if (activeEditor && activeEditor.note && activeEditor.pg === pg && tool !== 'erase' && !once) {
+      const [x, y] = pt(e), own = noteLineAt(pg, x, y);
+      if (own === activeEditor.m) { e.preventDefault(); c.setPointerCapture(e.pointerId); g = { line: own, y0: y, ly0: noteRunY(own, pg.H), moved: false, open: activeEditor }; return; }
+    }
     const wasNote = !!(activeEditor && activeEditor.note);   // a comment was open: this click only closes it
     commitEditors();
     const ae = document.activeElement;
@@ -7127,7 +7223,7 @@ function bindPage(pg) {
     if (!g) { const [x, y] = pt(e), cu = hoverCursor(pg, x, y); c.style.cursor = cu || (tool === 'select' ? 'default' : tool === 'text' ? 'text' : 'crosshair'); return; }
     const [x, y] = pt(e);
     if (g.line) {
-      if (!g.moved) { if (Math.abs(y - g.y0) < 1.5) return; snap(pg); g.moved = true; }
+      if (!g.moved) { if (Math.abs(y - g.y0) < 1.5) return; if (!g.open) snap(pg); g.moved = true; }   // an open comment's line is kept with the comment's own step when it's done
       g.line.ly = r1(clamp(g.ly0 + y - g.y0, 2, pg.H - 2));
       pg.lineOn = g.line; draw(pg);
     } else if (g.text) {
@@ -7165,7 +7261,8 @@ function bindPage(pg) {
   const end = e => {
     if (!g || (e && e.pointerId != null && e.pointerId !== gid)) return;
     if (g.line) {
-      const m = g.line, moved = g.moved; g = null; pg.lineOn = null;
+      const m = g.line, moved = g.moved, open = g.open; g = null; pg.lineOn = null;
+      if (open) { if (moved && Math.abs(m.ly - m.ay) < 1) delete m.ly; draw(pg); if (activeEditor === open) open.ta.focus({ preventScroll: true }); return; }
       if (moved) { if (Math.abs(m.ly - m.ay) < 1) delete m.ly; changed(pg); } else draw(pg);
       return;
     }
@@ -7283,7 +7380,8 @@ function editText(pg, m, isNew) {
     Object.assign(hd.style, { left: (m.x + L.maxW) * s + 'px', top: m.y * s + Math.min(ta.offsetHeight / 2, 18) + 'px' });
     Object.assign(bar.style, { left: m.x * s + 'px', top: m.y * s + 'px' });
     bar.innerHTML = '<span class="edgrip" data-grip title="Drag to move this box">⠿ Move</span><button data-sz="-1" title="Smaller text">A−</button><b>' + m.size + '</b><button data-sz="1" title="Bigger text">A+</button>' +
-      '<span style="width:1px;height:16px;background:rgba(255,255,255,.25);margin:0 3px"></span><button data-full class="' + (m.bw ? '' : 'on') + '" title="Wrap at the edge of the page">Page width</button>';
+      '<span style="width:1px;height:16px;background:rgba(255,255,255,.25);margin:0 3px"></span><button data-full class="' + (m.bw ? '' : 'on') + '" title="Wrap at the edge of the page">Page width</button>' +
+      '<span style="width:1px;height:16px;background:rgba(255,255,255,.25);margin:0 3px"></span>' + Object.entries(COLORS).map(([k, v]) => '<button data-tc="' + k + '" class="edsw' + (v === m.color ? ' on' : '') + '" style="--c:' + v + '" title="' + k + '" aria-label="Text in ' + k + '" aria-pressed="' + (v === m.color) + '"></button>').join('');
   };
   pg.wrap.append(ta, hd, bar); fit(); ta.focus();
   if (!isNew) snap(pg);
@@ -7300,10 +7398,11 @@ function editText(pg, m, isNew) {
     const z = e.target.closest('[data-sz]');
     if (z) { m.size = clamp(m.size + 2 * z.dataset.sz, 8, 40); disp.tsize = m.size; store.set('gs.disp', disp); }   // the next new box uses this size too
     if (e.target.closest('[data-full]')) delete m.bw;
+    const tc = e.target.closest('[data-tc]'); if (tc) m.color = COLORS[tc.dataset.tc];   // this box only; the pen keeps its own color
     fit(); ta.focus();
   });
   ta.addEventListener('keydown', e => {
-    if (e.key === 'Escape' || (e.key === 'Enter' && (e.metaKey || e.ctrlKey))) { e.preventDefault(); commitEditors(); }
+    if (e.key === 'Escape' || (e.key === 'Enter' && !e.shiftKey && !e.isComposing && e.keyCode !== 229)) { e.preventDefault(); commitEditors(); }   // as in a comment: Enter finishes, Shift Enter is a new line
     e.stopPropagation();
   });
   const me = { commit() {
@@ -7325,12 +7424,14 @@ function openNote(pg, m, isNew) {
   const s = pg.s;
   pop.innerHTML =
     '<div class="lbl">' + (isNew ? 'New comment' : 'Comment') + '</div>' +
-    '<textarea placeholder="Type a comment…"></textarea>' +
+    '<textarea placeholder="Type a comment… Enter to finish, Shift Enter for a new line"></textarea>' +
+    noteSwatches(m) +
     '<div class="lbl" data-bank>My saved comments</div><div class="chips"></div>' +
     '<div class="row"><button class="btn sm" data-a="star" title="Keep this comment so you can reuse it">☆ Save for reuse</button><span class="sp"></span>' +
     (isNew ? '' : '<button class="btn sm" data-a="del">Delete</button>') +
     '<button class="btn sm primary" data-a="ok">Done</button></div>';
   const ta = pop.querySelector('textarea'); ta.value = m.text;
+  const was = { color: m.color, hc: m.hc, ly: m.ly };
   const chips = () => {
     pop.querySelector('.chips').innerHTML = bank.map((t, i) => '<span class="chip" data-i="' + i + '"><span title="' + esc(t) + '">' + esc(t) + '</span><button data-x="' + i + '" title="Remove from saved comments" aria-label="Remove">×</button></span>').join('');
     pop.querySelector('[data-bank]').hidden = !bank.length;
@@ -7348,21 +7449,30 @@ function openNote(pg, m, isNew) {
   const close = save => {
     pop.remove(); activeEditor = null;
     if (pg.pending === m) pg.pending = null;
-    const text = ta.value.trim();
+    const text = ta.value.trim(), now = { color: m.color, hc: m.hc, ly: m.ly };
+    Object.assign(m, was); for (const k of ['hc', 'ly']) if (m[k] === undefined) delete m[k];   // the step Ctrl Z goes back to holds the colors and line it had when it opened
     if (!save) { draw(pg); return; }
     const a = pg.marks(), i = a.indexOf(m);
     if (!text) { if (selected && selected.mark === m) selected = null; if (i >= 0) { snap(pg); a.splice(i, 1); changed(pg); } else draw(pg); return; }
-    if (text === m.text && i >= 0) return;
-    snap(pg); m.text = text; if (i < 0) a.push(m); changed(pg);
+    const recolored = now.color !== was.color || now.hc !== was.hc || now.ly !== was.ly;
+    if (text === m.text && i >= 0 && !recolored) { draw(pg); return; }
+    snap(pg); m.text = text; m.color = now.color; for (const k of ['hc', 'ly']) if (now[k] !== undefined) m[k] = now[k]; if (i < 0) a.push(m); changed(pg);
   };
-  activeEditor = { commit: () => close(true), note: true };
+  activeEditor = { commit: () => close(true), note: true, m, pg, ta };
   pop.addEventListener('pointerdown', e => e.stopPropagation());
   pop.addEventListener('keydown', e => {
     e.stopPropagation();
     if (e.key === 'Escape') { e.preventDefault(); close(false); }
-    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); close(true); }
+    if (e.key === 'Enter' && !e.shiftKey && !e.isComposing && e.keyCode !== 229) { e.preventDefault(); close(true); }   // Enter finishes it, Shift Enter is a new line; never while a Chinese or Japanese word is still being put together
   });
   pop.addEventListener('click', e => {
+    const nc = e.target.closest('[data-nc]'), nh = e.target.closest('[data-nh]');
+    if (nc || nh) {
+      if (nc) m.color = COLORS[nc.dataset.nc]; else m.hc = HL[nh.dataset.nh];
+      for (const b of pop.querySelectorAll('[data-nc]')) b.setAttribute('aria-pressed', COLORS[b.dataset.nc] === m.color);
+      for (const b of pop.querySelectorAll('[data-nh]')) b.setAttribute('aria-pressed', HL[b.dataset.nh] === (m.hc || HL.yellow));
+      draw(pg); ta.focus({ preventScroll: true }); return;
+    }
     const x = e.target.closest('[data-x]');
     if (x) { bank.splice(+x.dataset.x, 1); store.set('gs.bank', bank); chips(); return; }
     const ch = e.target.closest('.chip');
@@ -7375,6 +7485,11 @@ function openNote(pg, m, isNew) {
     if (b.dataset.a === 'ok') close(true);
     if (b.dataset.a === 'del') { ta.value = ''; close(true); }
   });
+}
+function noteSwatches(m) {
+  const inks = Object.entries(COLORS).map(([k, v]) => '<button type="button" class="nsw" data-nc="' + k + '" style="background:' + v + '" aria-pressed="' + (v === m.color) + '" title="' + k + '" aria-label="Comment in ' + k + '"></button>').join('');
+  const hls = m.hl ? '<div class="row ncol"><span class="lbl">Highlight</span>' + Object.entries(HL).map(([k, v]) => '<button type="button" class="nsw sq" data-nh="' + k + '" style="background:' + v + '" aria-pressed="' + (v === (m.hc || HL.yellow)) + '" title="' + k + ' highlight" aria-label="Highlight in ' + k + '"></button>').join('') + '</div>' : '';
+  return '<div class="row ncol"><span class="lbl">Color</span>' + inks + '</div>' + hls;
 }
 function commitEditors() { if (activeEditor) { const a = activeEditor; activeEditor = null; a.commit(); } }
 
@@ -8020,7 +8135,7 @@ async function copy(text, msg) {
 let xBusy = false;
 const xAll = () => !!store.get('gs.xall', false);
 const xEdit = () => store.get('gs.xedit', true) !== false;   // "Keep marks editable"   // "Also include files with no marks"
-const rawOut = f => !viewable(f) && !!f.data && (f.virtual ? f.kind === 'docx' && (!!f.edited || !!(wordScore(f) && f.wscore.total != null)) : xAll() || !!f.edited || !!f.added || !!(wordScore(f) && f.wscore.total != null));
+const rawOut = f => !viewable(f) && !!f.data && f.kind !== 'link' && (f.virtual ? f.kind === 'docx' && (!!f.edited || !!(wordScore(f) && f.wscore.total != null)) : xAll() || !!f.edited || !!f.added || !!(wordScore(f) && f.wscore.total != null));
 function madeFromWord(f) {
   if (!f || !f.added || !batch || !batch.removed || !/\.pdf$/i.test(f.name)) return false;
   return Object.keys(batch.removed).some(k => { const r = batch.removed[k]; if (r.by !== f.path || r.back || !WORD_RX.test(k)) return false; const base = k.slice(k.lastIndexOf('/') + 1).replace(WORD_RX, ''); return f.name === base + '.pdf' || (f.name.startsWith(base + ' (added ') && /^ \(added \d+\)\.pdf$/.test(f.name.slice(base.length))); });
@@ -8648,7 +8763,7 @@ function renderSheet() {
   const nOut = batch.students.reduce((a, st) => a + st.files.filter(f => viewable(f) && !fileIn(st, f)).length, 0);
   const asked = st => !appScored(st) || sheetFound;   // a student with a score in the app has nothing to check here
   const nApp = batch.students.filter(appScored).length, nOne = batch.students.filter(st => !appScored(st) && st.found).length, nMany = batch.students.filter(st => asked(st) && manyReads(st)).length, nAsk = batch.students.reduce((a, st) => a + (asked(st) && st.doubts && !manyReads(st) ? st.doubts.length : 0), 0);
-  $('#shSub').textContent = (setup.spot ? 'Same spot on every paper · ' : '') + nApp + ' of ' + batch.students.length + ' scored' + (nOne ? ' · ' + nOne + ' read from the paper' : '') + (nMany ? ' · ' + nMany + ' to check' : '') + (nAsk ? ' · ' + nAsk + ' to confirm' : '');
+  $('#shSub').textContent = (setup.spot ? 'Same spot on every paper · ' : '') + (fmNow() ? batch.students.filter(st => !noScore(st) && st.grade.fb).length + ' of ' + batch.students.filter(st => !noScore(st)).length + ' feedback complete' : nApp + ' of ' + batch.students.length + ' scored') + (nOne ? ' · ' + nOne + ' read from the paper' : '') + (nMany ? ' · ' + nMany + ' to check' : '') + (nAsk ? ' · ' + nAsk + ' to confirm' : '');
   const spotted = !!setup.spot || batch.students.some(st => st.files.some(f => f.hand));
   const nHidden = sheetAll ? 0 : batch.students.reduce((a, st) => a + st.files.filter(f => f.kind === 'docx').map(f => ({ f, st, word: true })).concat(st.files.filter(f => viewable(f) && fileIn(st, f)).map(f => ({ f }))).filter(r => !rowGraded(r)).length, 0);
   $('#shBody').innerHTML = '<p class="muted" style="margin:0 0 10px;font-size:14px">Every row is made from the file named on it, inside that student’s folder. Click a picture to open that exact file. Click a score to copy it.</p>' +
@@ -9655,6 +9770,7 @@ function mediaCard(st, f) {
   m.onratechange = () => {};
   mediaWatch(el, m, f);
   if (!curMedia) curMedia = m;
+  clipStrip(el.querySelector('.mstick'), f, () => m, c => clipRun(m, c));
   const tr = el.querySelector('.trans');
   const showTr = () => {
     if (!f.tr) return;
@@ -10105,10 +10221,11 @@ function batchSummary(it) {
   const data = store.get(it.batchId, null);
   const d = new Date(it.opened || (data && data.t) || Date.now());
   let n = 0;
-  if (data) for (const k in data.s) { const g = data.s[k].g; if (g && (g.rubric.some(v => v != null) || g.points !== '')) n++; }
+  const fm = it.type === 'fm';
+  if (data) for (const k in data.s) { const g = data.s[k].g; if (g && (fm ? g.fb : (g.rubric || []).some(v => v != null) || g.points !== '')) n++; }
   const m = keptMeta.get(it.batchId);
-  if (m) return (m.scored || 0) + ' of ' + (m.n - (m.off || 0)) + ' scored' + keptMore(m) + (m.papers ? '' : ' · papers not kept');
-  return 'Opened ' + d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) + (data ? ' · ' + n + ' scored' : '') + ' · drop the same ZIP to keep going';
+  if (m) return keptSay(m) + (m.papers ? '' : ' · papers not kept');
+  return 'Opened ' + d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) + (data ? ' · ' + n + (fm ? ' feedback complete' : ' scored') : '') + ' · drop the same ZIP to keep going';
 }
 /* ---------------- where she is: every screen has its own address, the part after # ---------------- */
 const routeOf = hash => {
@@ -10203,11 +10320,13 @@ function showScreen(r) {
   if (grading) tabShow(r); else if (dlgPage) dlgShut();
 }
 function keptState(m) {
-  const of = Math.max(0, (m.n || 0) - (m.off || 0)), done = Math.min(of, m.scored || 0), left = of - done;
-  return { of, done, left, pct: of ? Math.round(done / of * 100) : 0, label: !of ? '' : !left ? (m.ret ? 'Returned' : 'Ready to return') : done || m.partial ? 'Scoring' : 'Not started', cls: !of ? '' : !left ? (m.ret ? 'ret' : 'ok') : done || m.partial ? 'on' : '' };
+  const it = typeof cardOfKept === 'function' ? cardOfKept(m.id) : null, fm = !!it && it.type === 'fm';
+  const of = Math.max(0, (m.n || 0) - (m.off || 0)), done = Math.min(of, (fm ? m.fb : m.scored) || 0), left = of - done, began = done || (!fm && m.partial);
+  return { of, done, left, fm, word: fm ? 'feedback complete' : 'scored', pct: of ? Math.round(done / of * 100) : 0, label: !of ? '' : !left ? (m.ret ? 'Returned' : 'Ready to return') : began ? (fm ? 'Giving feedback' : 'Scoring') : 'Not started', cls: !of ? '' : !left ? (m.ret ? 'ret' : 'ok') : began ? 'on' : '' };
 }
+const keptSay = (m, st = keptState(m)) => st.done + ' of ' + st.of + ' ' + st.word + (st.fm ? (m.off ? ' · ' + m.off + ' missing or excused' : '') : keptMore(m));
 const stateChip = st => st.label ? '<span class="schip ' + st.cls + '">' + st.label + '</span>' : '';
-const stateBar = st => st.of ? '<span class="sbar" role="img" aria-label="' + st.done + ' of ' + st.of + ' scored"><i style="width:' + st.pct + '%"></i></span>' : '';
+const stateBar = st => st.of ? '<span class="sbar" role="img" aria-label="' + st.done + ' of ' + st.of + ' ' + st.word + '"><i style="width:' + st.pct + '%"></i></span>' : '';
 function renderLib() {
   renderKept();
   const card = it => {
@@ -10361,8 +10480,8 @@ $('#start').addEventListener('click', async e => {
   if (b.dataset.openAsg) {
     asgTarget = findItem(b.dataset.openAsg).it;
     openDlg('<div class="bh"><h2>Open “' + esc(asgTarget.name) + '”</h2></div><div class="bb"><p style="margin-top:0">' + (sysName() ? 'Where is the ' + esc(sysName()) + ' download?' : 'Where are the papers?') + ' You can also drop the ZIP or the folder straight onto this assignment’s card.</p></div>' +
-      '<div class="bf"><button class="btn" data-cancel>Cancel</button><button class="btn" data-pc>The ZIP or files…</button><button class="btn" data-dir>A whole folder…</button><button class="btn" data-scan>A scan of everyone’s papers…</button><button class="btn" data-match>Files to match to a roster…</button>' + (gcid() ? '<button class="btn primary" data-dv>From Google Drive…</button>' : '') + '</div>', true);
-    $('#dlgBox').onclick = ev => { if (ev.target.closest('[data-cancel]')) return closeDlg(); if (ev.target.closest('[data-pc]')) { closeDlg(); $('#asgIn').click(); } if (ev.target.closest('[data-dir]')) { closeDlg(); pickDir('#asgDirIn'); } if (ev.target.closest('[data-scan]')) { closeDlg(); scanFor = asgTarget; $('#scanIn').click(); } if (ev.target.closest('[data-match]')) { const a = asgTarget; askFilesOrFolder('Match files to a roster', 'Each file is matched to a student by the name in its file name or folder name, and you can fix any match.', list => matchToRoster(list, a)); } if (ev.target.closest('[data-dv]')) { closeDlg(); openFromDrive(asgTarget); } };
+      '<div class="bf"><button class="btn" data-cancel>Cancel</button><button class="btn" data-pc>The ZIP or files…</button><button class="btn" data-dir>A whole folder…</button><button class="btn" data-scan>A scan of everyone’s papers…</button><button class="btn" data-match>Files to match to a roster…</button><button class="btn" data-nopaper title="For presentations, speeches and videos: a notes page for each student instead of a paper">No papers: presentations or videos…</button>' + (gcid() ? '<button class="btn primary" data-dv>From Google Drive…</button>' : '') + '</div>', true);
+    $('#dlgBox').onclick = ev => { if (ev.target.closest('[data-cancel]')) return closeDlg(); if (ev.target.closest('[data-nopaper]')) { closeDlg(); return openStartNotes(asgTarget); } if (ev.target.closest('[data-pc]')) { closeDlg(); $('#asgIn').click(); } if (ev.target.closest('[data-dir]')) { closeDlg(); pickDir('#asgDirIn'); } if (ev.target.closest('[data-scan]')) { closeDlg(); scanFor = asgTarget; $('#scanIn').click(); } if (ev.target.closest('[data-match]')) { const a = asgTarget; askFilesOrFolder('Match files to a roster', 'Each file is matched to a student by the name in its file name or folder name, and you can fix any match.', list => matchToRoster(list, a)); } if (ev.target.closest('[data-dv]')) { closeDlg(); openFromDrive(asgTarget); } };
     return;
   }
   if (b.dataset.editClass != null) return editClass(+b.dataset.editClass);
@@ -10614,8 +10733,20 @@ const kget = (name, k) => kdo(name, 'readonly', o => o.get(k)).catch(() => null)
 let keptMeta = new Map();
 async function loadKept() {
   try { const all = await kdo('meta', 'readonly', o => o.getAll()); keepOk = true; keptMeta = new Map((all || []).map(m => [m.id, m])); } catch { keptMeta = new Map(); }
+  await keptFbCounts();
   if (!batch) renderLib();
   renderBackup();
+}
+async function keptFbCounts() {
+  for (const m of keptMeta.values()) {
+    if (m.fb != null || !m.n) continue;
+    const it = cardOfKept(m.id); if (!it || it.type !== 'fm') continue;
+    try {
+      const work = await kget('work', m.id), fb = work && workCounts(work).fb; if (!fb) continue;   // none complete: nothing to store
+      const n = { ...m, fb };
+      await kdo('meta', 'readwrite', o => o.put(n, m.id)); keptMeta.set(m.id, n);
+    } catch (e) { console.error(e); }
+  }
 }
 let askedKeep = false;
 function askToKeep() {   // asks the browser not to clear this site's storage when the disk gets full
@@ -10678,7 +10809,8 @@ async function keepPapers(b, label, list, again) {
 }
 let keepT = null;
 function keepWork(b, data) {
-  const m = { ...(keptMeta.get(b.id) || { id: b.id, name: b.name }), n: b.students.length, t: data.t, ...workCounts(data) };
+  const m = { ...(keptMeta.get(b.id) || { id: b.id, name: b.name }), n: b.students.length, t: data.t };
+  delete m.fb; Object.assign(m, workCounts(data));   // fb is there only while some feedback is complete
   if (!data.returned) delete m.ret;
   keptMeta.set(b.id, m);
   return kdo('work', 'readwrite', o => o.put(data, b.id)).then(() => kdo('meta', 'readwrite', o => o.put(m, b.id))).then(() => { keepOk = true; return true; })
@@ -12613,6 +12745,7 @@ document.addEventListener('drop', async e => {
   addFiles(batch.students[t.i], r.list);
 });
 $('#trAllBtn').onclick = openTranscripts;
+$('#clipsBtn').onclick = () => { const c = (batch.clips || [])[0]; if (c) clipShow(c.id); };
 $('#dispBtn').onclick = openDisplay;
 $('#mkeyBtn').onclick = () => openMarkKey();
 $('#setMkey').onclick = () => openMarkKey();
@@ -14031,6 +14164,7 @@ function triesSay(g) {
 }
 function gradesSummary() {
   const all = batch.students, on = all.filter(s => !noScore(s)), nOff = all.length - on.length, nPart = on.filter(s => gradeOf(s).partial).length;
+  if (typeof fmNow === 'function' && fmNow()) return on.filter(s => s.grade.fb).length + ' of ' + on.length + ' feedback complete' + (nOff ? ' · ' + nOff + ' missing or excused' : '');
   return on.filter(s => gradeOf(s).done).length + ' of ' + on.length + ' scored' + (nPart ? ' · ' + nPart + ' partial' : '') + (nOff ? ' · ' + nOff + ' missing or excused' : '');
 }
 const gradesAsk = text => askDlg(text, { ok: 'Copy anyway', cancel: 'Don’t copy' });
@@ -14472,7 +14606,8 @@ async function carryInto(e, list) {
   const share = d.share && { ...d.share, boxes: mapBoxes(d.share.boxes, c.map), checked: mapBoxes(d.share.checked, c.map) };
   const scan = c.unchecked || !d.scan ? undefined : mapPaths(d.scan, Object.fromEntries(Object.entries(c.map).filter(([, to]) => !c.flags[to])));
   const groups = d.groups && d.groups.map(g => ({ k: g.k.map(k => keyOf.get(nfc(k)) || k), p: Object.fromEntries(Object.entries(g.p || {}).map(([k, p]) => [keyOf.get(nfc(k)) || k, c.map[p] || p])) }));
-  batch.keptWork = { ...d, t: Date.now(), s, moved, removed, carry, scan, share, groups, lightPg: mapLit(d.lightPg, c.map), lightPgL: mapLit(d.lightPgL, c.map) };
+  const clips = d.clips && d.clips.map(x => (x.p ? { ...x, p: c.map[x.p] || x.p } : x));   // a clip on a video file follows the file to its new name
+  batch.keptWork = { ...d, t: Date.now(), s, moved, removed, carry, scan, share, groups, clips, lightPg: mapLit(d.lightPg, c.map), lightPgL: mapLit(d.lightPgL, c.map) };
   batch.carry = carry;
   await carryExtras(from, carry);
   const m = keptMeta.get(from);
@@ -16597,7 +16732,7 @@ function troubleOf(f) {
     if (f.badIs === 'locked') return { why: 'This PDF is locked with a password.', next: 'Ask the student for a copy with no password. If you know the password, open it in Chrome, print it, choose Save as PDF, and ' + dropIt + '.' };
     return { why: 'This PDF is damaged, or it didn’t finish uploading.', next: 'Download it and try opening it on your computer. If it opens, print it to a new PDF and ' + dropIt + '. If not, ' + askLow };
   }
-  if (f.kind === 'text') return null;
+  if (f.kind === 'text' || f.kind === 'link') return null;
   if (f.kind === 'docx') {
     const bad = wordBad(f); if (!bad) return null;
     if (bad === 'page') return WEB_PAGE;
@@ -16683,7 +16818,7 @@ function openingFacts() {
     }
   });
   const bySize = new Map();
-  batch.students.forEach((st, i) => { for (const f of st.files) if (!f.virtual && f.kind !== 'img' && f.size) { if (!bySize.has(f.size)) bySize.set(f.size, []); bySize.get(f.size).push({ st, i, f }); } });
+  batch.students.forEach((st, i) => { for (const f of st.files) if (!f.virtual && f.kind !== 'img' && f.kind !== 'link' && f.size && !isNotes(f.data)) { if (!bySize.has(f.size)) bySize.set(f.size, []); bySize.get(f.size).push({ st, i, f }); } });
   for (const list of bySize.values()) {
     const groups = [];
     for (const o of list) { const g = groups.find(q => sameBytes(q[0].f.data, o.f.data)); if (g) g.push(o); else groups.push([o]); }
@@ -18204,7 +18339,7 @@ function decideRec(a, b, ta, tb) {
   return x === y ? { pick: 'ask' } : { pick: x > y ? 'a' : 'b', by: 'date' };
 }
 const BLANK_REC = () => ({ f: {}, g: { rubric: [], points: '', comment: '' }, h: {} });
-const WORK_SET = ['carry', 'setup', 'cls', 'share', 'drive', 'light', 'lightOpt', 'lightPg', 'lightPgL', 'anon', 'moved', 'removed', 'refSkip', 'quiz', 'groups', 'returned', 'goal'];
+const WORK_SET = ['carry', 'setup', 'cls', 'share', 'drive', 'light', 'lightOpt', 'lightPg', 'lightPgL', 'anon', 'moved', 'removed', 'refSkip', 'quiz', 'groups', 'returned', 'goal', 'clips'];
 const setOf = w => { const o = {}; if (w) for (const k of WORK_SET) if (w[k] !== undefined) o[k] = w[k]; return o; };
 const setV = w => w && w.sv ? w.sv : (h => h ? { ['~' + h]: 1 } : {})(hashOf(setOf(w)));
 const partV = (w, k) => (w.pv && w.pv[k]) || (h => h ? { ['~' + h]: 1 } : {})(hashOf(w[k]));
@@ -18496,14 +18631,16 @@ function mergeEdits(aEd = {}, bEd = {}, work, rows, prefer) {
 }
 function workCounts(work) {
   const su = work.setup || {}, s = work.s || {}, read = work.read || {}, blank = v => v == null || v === '';
-  const out = { scored: 0, partial: 0, off: 0 };
+  const out = { scored: 0, partial: 0, off: 0, fb: 0 };   // fb: Feedback complete switched on, what a formative activity counts in place of scores
   for (const k of new Set([...Object.keys(s), ...Object.keys(read)])) {
     const g = (s[k] && s[k].g) || {}, r = g.rubric || [], rows = su.criteria ? su.criteria.map((_, i) => r[i]) : r, on = rows.filter(v => v != null).length;
+    if (g.status !== 'missing' && g.status !== 'excused' && g.fb) out.fb++;
     if (g.status === 'missing' || g.status === 'excused') out.off++;
     else if (su.mode === 'points' ? !blank(g.points) && !isNaN(+g.points) : on === rows.length && on) out.scored++;
     else if (su.mode !== 'points' && on) out.partial++;
     else if ((!blank(g.sheet) && !isNaN(+g.sheet)) || read[k]) out.scored++;
   }
+  if (!out.fb) delete out.fb;   // kept only when there is some, so work with no Feedback complete is stored as before
   if (work.returned) out.ret = work.returned.t;   // the marked files went back to the students
   return out;
 }
@@ -18512,6 +18649,7 @@ function metaFor(ma, mb, work, id) {
   if (!m.name) m.name = 'A download';   // work from before the list of downloads was kept says nothing about its name
   if (work) {
     m.t = work.t || m.t;
+    delete m.fb;
     Object.assign(m, workCounts(work));
     if (!work.returned) delete m.ret;
     m.n = Math.max(m.n || 0, Object.keys(work.s || {}).length);
@@ -19683,7 +19821,7 @@ function sideHtml(r, t, anon, crit) {
   if (out.length === 1) out.push('<div class="muted">No score, comment or marks</div>');
   return out.join('');
 }
-const PART_SAY = { setup: 'Rubric setup', cls: 'Class', share: 'Cover boxes and share codes', drive: 'Google Drive link', light: 'Lighting', lightOpt: 'Lighting', lightPg: 'Lighting', lightPgL: 'Lighting', anon: 'Anonymous grading', moved: 'Moved files', removed: 'Removed and replaced files', refSkip: 'Which readings each student sees', quiz: 'Quick mark boxes', groups: 'Group work', returned: 'Returned to students', carry: 'Flags on new and changed files', scan: 'Your answers about scanned pages' };
+const PART_SAY = { setup: 'Rubric setup', cls: 'Class', share: 'Cover boxes and share codes', drive: 'Google Drive link', light: 'Lighting', lightOpt: 'Lighting', lightPg: 'Lighting', lightPgL: 'Lighting', anon: 'Anonymous grading', moved: 'Moved files', removed: 'Removed and replaced files', refSkip: 'Which readings each student sees', quiz: 'Quick mark boxes', groups: 'Group work', clips: 'Video clips', returned: 'Returned to students', carry: 'Flags on new and changed files', scan: 'Your answers about scanned pages' };
 const partNames = list => [...new Set(list.map(k => PART_SAY[k] || k))].join(', ');
 const scaleSay = su => !rubricsDiffer(su, { ...su, scale: null }) ? 'No scale: percent is the plain share of points' : !rubricsDiffer(su, { ...su, scale: SCALE12 }) ? 'The usual grading scale' : 'A grading scale of its own';
 function partSide(part, v, other, t, anon) {
@@ -20444,6 +20582,8 @@ function openQuiz(view) {
     const rs = e.target.closest('[data-reset]'); if (rs) return qmSpotSet(rs.closest('.qmc'), null);
     if (e.target.closest('[data-rest]')) return qmRest();
     const as = e.target.closest('.qmned [data-as]'); if (as) { for (const b of as.parentNode.children) b.setAttribute('aria-pressed', String(b === as)); as.closest('.qmned').querySelector('textarea').focus(); return; }
+    const nc = e.target.closest('.qmned [data-qnc]');
+    if (nc) { const ed = nc.closest('.qmned'), v = COLORS[nc.dataset.qnc]; ed.dataset.col = v; ed.querySelector('textarea').style.color = v; for (const b of ed.querySelectorAll('[data-qnc]')) b.setAttribute('aria-pressed', String(b === nc)); ed.querySelector('textarea').focus(); return; }
     if (e.target.closest('[data-nsave]')) return qmNoteDone(e.target.closest('.qmc'), true);
     if (e.target.closest('.qmned')) return;
     const qn = e.target.closest('[data-qnote]'); if (qn) return qmNoteOpen(qn.closest('.qmc'));
@@ -20541,19 +20681,21 @@ function qmNoteOpen(el) {
   const st = batch.students[+el.dataset.st], q = batch.quiz.qs.find(x => x.id === el.dataset.q), m = qzNoteOf(st, q);
   const as = m ? (m.t === 'note' ? 'note' : 'text') : store.get('gs.qmNoteAs', 'note');
   const ln = el.querySelector('.qmnote'); if (ln) ln.hidden = true;
-  el.insertAdjacentHTML('beforeend', '<div class="qmned"><textarea rows="2" placeholder="Type what to write on their paper…" aria-label="Comment">' + esc(m ? m.text : '') + '</textarea>' +
+  const col = (m && m.color) || COLORS[inkColor] || COLORS.red;   // its color can change while she types, before it is saved
+  el.insertAdjacentHTML('beforeend', '<div class="qmned" data-col="' + col + '"><textarea rows="2" placeholder="Type what to write on their paper…" aria-label="Comment" style="color:' + col + '">' + esc(m ? m.text : '') + '</textarea>' +
+    '<div class="qmnedc"><span class="muted hsm">Color</span>' + Object.entries(COLORS).map(([k, v]) => '<button type="button" class="sw" data-qnc="' + k + '" style="background:' + v + '" aria-pressed="' + (v === col) + '" title="' + k + '" aria-label="Comment in ' + k + '"></button>').join('') + '</div>' +
     '<div class="qmnedb"><span class="seg sm"><button data-as="note" aria-pressed="' + (as === 'note') + '" title="In the margin, with a line to the answer">Margin comment</button><button data-as="text" aria-pressed="' + (as === 'text') + '" title="Written on the page under the answer">Text on page</button></span>' +
     '<span class="muted hsm">Enter to save, Esc to cancel</span><button class="btn sm primary" data-nsave>Save</button></div></div>');
   const ta = el.querySelector('.qmned textarea'); ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length);
 }
 function qmNoteDone(el, save) {
   const ed = el && el.querySelector('.qmned'); if (!ed) return;
-  const text = ed.querySelector('textarea').value.trim(), as = ed.querySelector('[data-as][aria-pressed="true"]').dataset.as;
+  const text = ed.querySelector('textarea').value.trim(), as = ed.querySelector('[data-as][aria-pressed="true"]').dataset.as, col = ed.dataset.col;
   ed.remove();
-  if (save) qzNoteSet(batch.students[+el.dataset.st], batch.quiz.qs.find(x => x.id === el.dataset.q), text, as).then(() => { if (el.isConnected) { qmRefresh(el); el.focus({ preventScroll: true }); } });
+  if (save) qzNoteSet(batch.students[+el.dataset.st], batch.quiz.qs.find(x => x.id === el.dataset.q), text, as, col).then(() => { if (el.isConnected) { qmRefresh(el); el.focus({ preventScroll: true }); } });
   else { const ln = el.querySelector('.qmnote'); if (ln) ln.hidden = false; el.focus({ preventScroll: true }); }
 }
-async function qzNoteSet(st, q, text, as) {
+async function qzNoteSet(st, q, text, as, col) {
   const [path, p] = quizPages(st)[q.n] || [], f = path && fileByPath(st, path);
   if (!f) return;
   const list = (f.marks[p] ||= []), i = list.findIndex(m => m.qzn === q.id), old = i >= 0 ? list[i] : null;
@@ -20561,7 +20703,7 @@ async function qzNoteSet(st, q, text, as) {
   if (text) {
     const sz = await qzPageSize(st, q.n); if (!sz) return;
     store.set('gs.qmNoteAs', as);
-    const [dx, dy] = qzShift(st, q.n), W = sz.W, H = sz.H, color = COLORS[inkColor] || COLORS.red;
+    const [dx, dy] = qzShift(st, q.n), W = sz.W, H = sz.H, color = col || COLORS[inkColor] || COLORS.red;
     let m;
     if (as === 'note') m = old && old.t === 'note' ? { ...old, text, color } : { t: 'note', color, ax: r1(clamp((q.x + q.w + dx) * W, 4, W - 4)), ay: r1(clamp((q.y + q.h / 2 + dy) * H, 4, H - 4)), text, qzn: q.id };
     else {
@@ -20815,7 +20957,7 @@ function qmKey(e) {
   if ($('#qmPeek')) { if (e.key === 'Escape' || e.key === ' ') { stop(); qmPeekClose(); } return; }
   if (e.target.closest('.qmned')) {   // typing a comment: Enter saves, Shift Enter is a new line, Esc leaves it as it was
     if (e.key === 'Escape') { stop(); qmNoteDone(e.target.closest('.qmc'), false); }
-    else if (e.key === 'Enter' && !e.shiftKey) { stop(); qmNoteDone(e.target.closest('.qmc'), true); }
+    else if (e.key === 'Enter' && !e.shiftKey && !e.isComposing && e.keyCode !== 229) { stop(); qmNoteDone(e.target.closest('.qmc'), true); }
     else e.stopPropagation();
     return;
   }
@@ -21625,12 +21767,407 @@ function openShareFile(st, path) {
     const b = e.target.closest('[data-shto]'); if (!b || b.disabled) return;
     const to = batch.students[+b.dataset.shto]; b.disabled = true;
     if (!copyOf(to)) await addFiles(to, [{ path: f.name, file: new File([f.data], f.name), from: st.key }], true);
-    if (once) groupAdd(st, f, to, copyOf(to));
+    if (once) { groupAdd(st, f, to, copyOf(to)); for (const lf of st.files.filter(x => x.kind === 'link')) await partnerCopy(st, lf, to); }   // the group's video goes with it
     saveSoon(); renderList();
     toast((once ? 'In the group: ' : 'Shared with ') + shownName(to, +b.dataset.shto)); draw(); $('#mvFind').focus();
   };
   $('#mvFind').focus();
 }
+
+/* ---------------- work with no paper: a video by its link, the partners in it, and a page for notes ---------------- */
+const LINK_RX = /\.(url|webloc)$/i;
+function linkClean(v) {
+  v = String(v || '').trim().replace(/&amp;/g, '&'); if (!v || /\s/.test(v)) return '';
+  if (!/^[a-z][a-z0-9+.-]*:/i.test(v)) v = 'https://' + v;
+  try { const u = new URL(v); return /^https?:$/.test(u.protocol) && u.hostname.includes('.') ? u.href : ''; } catch { return ''; }
+}
+function linkOf(data) {
+  if (!data || !data.length || data.length > 20000) return '';
+  let s = ''; try { s = new TextDecoder().decode(data); } catch { return ''; }
+  const m = /^\s*URL\s*=\s*(\S+)/mi.exec(s) || /<string>\s*([^<\s]+)\s*<\/string>/i.exec(s);
+  return m ? linkClean(m[1]) : '';
+}
+const linkBytes = url => new TextEncoder().encode('[InternetShortcut]\r\nURL=' + url + '\r\n');
+const linkHost = url => { try { return new URL(url).hostname.replace(/^www\./, ''); } catch { return ''; } };
+function linkPlayer(url) {
+  let u; try { u = new URL(url); } catch { return null; }
+  const h = u.hostname.replace(/^www\./, '').toLowerCase(), p = u.pathname, id = s => (/^[\w-]{6,}$/.test(s || '') ? s : '');
+  let m;
+  if (h === 'drive.google.com') { const k = id((m = /\/file\/d\/([^/]+)/.exec(p)) ? m[1] : u.searchParams.get('id')); return k ? { frame: 'https://drive.google.com/file/d/' + k + '/preview' } : null; }
+  if (h === 'docs.google.com' && (m = /^\/presentation\/d\/([^/]+)/.exec(p)) && id(m[1])) return { frame: 'https://docs.google.com/presentation/d/' + m[1] + '/embed' };
+  if (h === 'youtu.be') { const k = id(p.slice(1).split('/')[0]); return k ? { frame: 'https://www.youtube-nocookie.com/embed/' + k } : null; }
+  if (h === 'youtube.com' || h === 'm.youtube.com') { const k = id((m = /^\/(?:shorts|embed|live)\/([^/]+)/.exec(p)) ? m[1] : u.searchParams.get('v')); return k ? { frame: 'https://www.youtube-nocookie.com/embed/' + k } : null; }
+  if (h === 'vimeo.com' && (m = /^\/(\d+)/.exec(p))) return { frame: 'https://player.vimeo.com/video/' + m[1] };
+  if (h === 'loom.com' && (m = /^\/share\/([\w-]+)/.exec(p))) return { frame: 'https://www.loom.com/embed/' + m[1] };
+  if (MEDIA_RX.test(p)) return VIDEO_RX.test(p) ? { video: url } : { audio: url };
+  return null;
+}
+const linkTitle = f => f.name.replace(LINK_RX, '').replace(/ \(added \d+\)$/, '');
+
+function linkCard(st, f) {
+  const url = linkOf(f.data), play = linkPlayer(url);
+  const el = document.createElement('div'); el.className = 'media vlink';
+  el.innerHTML = '<div class="mstick"><div class="mhead"><b>' + esc(linkTitle(f)) + '</b><span class="muted">' + esc(linkHost(url)) + '</span></div><div class="vlslot" hidden></div>' +
+    '<div class="mctl">' + (play ? '<button class="btn sm primary" data-vplay aria-pressed="false">▶ Play here</button>' : '') +
+    '<button class="btn sm' + (play ? '' : ' primary') + '" data-vopen title="Opens the video in a window of its own, to keep beside this one">Open in its own window</button>' +
+    '<button class="btn sm" data-vcopy>Copy link</button></div>' +
+    '<p class="muted vlnote">' + (play ? 'Only the link is kept here; the video stays where it is. If it asks you to sign in or won’t play, open it in its own window.' : 'Only the link is kept here. This site can’t play inside the page, so it opens in a window of its own.') + '</p></div>';
+  el.onclick = e => {
+    if (e.target.closest('[data-vopen]')) { window.open(url, '_blank', 'noopener,noreferrer,popup,width=980,height=640'); return; }
+    if (e.target.closest('[data-vcopy]')) { navigator.clipboard.writeText(url).then(() => toast('Link copied'), () => toast('The link couldn’t be copied')); return; }
+    const b = e.target.closest('[data-vplay]'); if (!b) return;
+    const slot = el.querySelector('.vlslot'), on = slot.hidden;
+    slot.hidden = !on; b.setAttribute('aria-pressed', on); b.textContent = on ? 'Close the player' : '▶ Play here';
+    if (!on) { slot.innerHTML = ''; return; }
+    fill();
+  };
+  const fill = c => {
+    const slot = el.querySelector('.vlslot'), b = el.querySelector('[data-vplay]');
+    slot.hidden = false; slot.innerHTML = ''; b.setAttribute('aria-pressed', 'true'); b.textContent = 'Close the player';
+    if (play.frame) slot.appendChild(playerFrame(c ? clipFrame(play.frame, c).src : play.frame, linkTitle(f)));
+    else { const m = document.createElement(play.video ? 'video' : 'audio'); m.controls = true; m.preload = 'metadata'; m.src = play.video || play.audio; slot.appendChild(m); if (c) clipRun(m, c); }
+  };
+  clipStrip(el.querySelector('.mstick'), f, () => el.querySelector('.vlslot video, .vlslot audio'), c => (play ? fill(c) : clipShow(c.id)));
+  return el;
+}
+
+/* ---------- the notes page ---------- */
+const NP_W = 595.28, NP_H = 841.89, NP_M = 48, NP_TAIL = '%GradingStudio-notes';
+const NP_KINDS = [['lined', 'Lined', 'Ruled lines, with a margin for the time'], ['rubric', 'Rubric rows', 'A box for each row of the rubric'], ['cols', 'Two columns', 'Went well, and to work on'], ['blank', 'Blank', 'Only the title']];
+const isNotes = d => !!d && d.length > 64 && new TextDecoder('latin1').decode(d.subarray(d.length - 64)).includes(NP_TAIL);
+const notesFileOf = st => st.files.find(f => f.kind === 'pdf' && !f.virtual && isNotes(f.data)) || null;
+let npLast = 'lined';
+async function notesPdf(kind, title, rows) {
+  const { rgb } = PDFLib, doc = await PDFLib.PDFDocument.create();
+  title = String(title || '').replace(/\s+/g, ' ').trim().slice(0, 90) || 'Notes';
+  doc.setTitle(title);   // no Creator: 'Grading Studio' there means a flattened export (imported.js)
+  const font = await doc.embedFont(PDFLib.StandardFonts.Helvetica), bold = await doc.embedFont(PDFLib.StandardFonts.HelveticaBold);
+  const can = new Set(font.getCharacterSet()), ink = rgb(0.1, 0.1, 0.12), gray = rgb(0.42, 0.45, 0.5), rule = rgb(0.8, 0.84, 0.9), edge = rgb(0.66, 0.71, 0.79);
+  const label = async (page, text, x, y, size, o) => {
+    o = o || {}; const f = o.bold ? bold : font, col = o.gray ? gray : ink;
+    if ([...text].every(ch => can.has(ch.codePointAt(0)))) {
+      let t = text; if (o.max) while (t.length > 1 && f.widthOfTextAtSize(t, size) > o.max) t = t.slice(0, -2).trimEnd() + '…';
+      const w = f.widthOfTextAtSize(t, size); page.drawText(t, { x: o.right ? x - w : x, y, size, font: f, color: col }); return;
+    }
+    const S = 3, c = document.createElement('canvas'), g = c.getContext('2d'), face = (o.bold ? 700 : 400) + ' ' + size * S + 'px "Inter", system-ui, -apple-system, "Segoe UI", "Noto Sans", "Noto Sans Thai", Tahoma, sans-serif';
+    g.font = face; const w = Math.min(g.measureText(text).width / S, o.max || 1e4);
+    c.width = Math.max(1, Math.ceil(w * S)); c.height = Math.ceil(size * 1.6 * S);
+    const g2 = c.getContext('2d'); g2.font = face; g2.fillStyle = o.gray ? '#6B7280' : '#1a1a1f'; g2.textBaseline = 'alphabetic'; g2.fillText(text, 0, size * 1.2 * S);
+    const png = await new Promise(r => c.toBlob(r, 'image/png')), img = await doc.embedPng(new Uint8Array(await png.arrayBuffer()));
+    page.drawImage(img, { x: o.right ? x - w : x, y: y - size * 0.4, width: w, height: size * 1.6 });
+  };
+  const line = (page, x1, y1, x2, y2, col, t) => page.drawLine({ start: { x: x1, y: y1 }, end: { x: x2, y: y2 }, thickness: t || 0.7, color: col || rule });
+  const R = NP_W - NP_M, top = NP_H - NP_M;
+  const start = async () => {
+    const page = doc.addPage([NP_W, NP_H]);
+    await label(page, title, NP_M, top - 14, 15, { bold: true, max: R - NP_M - 70 });
+    await label(page, tr('Notes'), R, top - 13, 9, { gray: true, right: true });
+    line(page, NP_M, top - 24, R, top - 24, edge, 0.9);
+    return page;
+  };
+  const ruled = (page, x1, x2, from, to, step) => { for (let y = from; y >= to; y -= step) line(page, x1, y, x2, y); };
+  if (kind === 'rubric' && rows && rows.length) {
+    const all = rows.map(r => String(r || '').trim() || tr('Row')).concat(rows.length % 5 !== 0 ? [tr('Other notes')] : []);
+    for (let i = 0; i < all.length; i += 5) {
+      const page = await start(), part = all.slice(i, i + 5), gap = 10, y0 = top - 38, h = Math.min(190, (y0 - NP_M - gap * (part.length - 1)) / part.length);
+      for (const [k, name] of part.entries()) {
+        const t = y0 - k * (h + gap);
+        page.drawRectangle({ x: NP_M, y: t - h, width: R - NP_M, height: h, borderColor: edge, borderWidth: 0.8 });
+        await label(page, name, NP_M + 10, t - 17, 10.5, { bold: true, max: R - NP_M - 20 });
+        ruled(page, NP_M + 10, R - 10, t - 46, t - h + 12, 24);
+      }
+    }
+  } else if (kind === 'cols') {
+    const page = await start(), mid = NP_W / 2;
+    await label(page, tr('Went well'), NP_M, top - 44, 10.5, { bold: true });
+    await label(page, tr('To work on'), mid + 12, top - 44, 10.5, { bold: true });
+    line(page, mid, top - 30, mid, NP_M, edge, 0.8);
+    ruled(page, NP_M, mid - 12, top - 78, NP_M, 26); ruled(page, mid + 12, R, top - 78, NP_M, 26);
+  } else if (kind === 'blank') {
+    await start();
+  } else {
+    const page = await start(), mx = NP_M + 52;
+    await label(page, tr('Time'), NP_M, top - 40, 8, { gray: true });
+    line(page, mx, top - 30, mx, NP_M, edge, 0.8);
+    ruled(page, NP_M, R, top - 72, NP_M, 26);
+  }
+  const bytes = await doc.save(), tail = new TextEncoder().encode('\n' + NP_TAIL + ' ' + uid().slice(0, 8).padEnd(8, '0') + '\n'), out = new Uint8Array(bytes.length + tail.length);
+  out.set(bytes); out.set(tail, bytes.length); return out;
+}
+const NP_ART = {
+  lined: '<path d="M6 12h36M6 19h36M6 26h36M6 33h36M6 40h36M6 47h36" /><path d="M14 9v43" class="e"/>',
+  rubric: '<rect x="6" y="10" width="36" height="12" rx="1.5" class="e"/><rect x="6" y="25" width="36" height="12" rx="1.5" class="e"/><rect x="6" y="40" width="36" height="12" rx="1.5" class="e"/><path d="M9 14h12M9 29h12M9 44h12" class="k"/>',
+  cols: '<path d="M24 9v43" class="e"/><path d="M6 12h10M28 12h10" class="k"/><path d="M6 19h14M6 26h14M6 33h14M6 40h14M6 47h14M28 19h14M28 26h14M28 33h14M28 40h14M28 47h14"/>',
+  blank: '',
+};
+function npTiles(sel, rows, none) {
+  return '<div class="nptiles" role="group" aria-label="Notes page">' + (none ? '<button class="nptile" data-np="" aria-pressed="' + (!sel) + '"><svg viewBox="0 0 48 60" aria-hidden="true" class="none"><path d="M12 18l24 24M36 18L12 42" class="e"/></svg><b>None</b></button>' : '') +
+    NP_KINDS.map(([k, name, about]) => { const off = k === 'rubric' && !(rows && rows.length);
+      return '<button class="nptile" data-np="' + k + '" aria-pressed="' + (sel === k) + '"' + (off ? ' disabled title="This assignment has no rubric rows"' : ' title="' + esc(about) + '"') + '><svg viewBox="0 0 48 60" aria-hidden="true"><rect x="1" y="1" width="46" height="58" rx="3" class="pg"/><path d="M6 6h16" class="k"/>' + NP_ART[k] + '</svg><b>' + name + '</b></button>'; }).join('') + '</div>';
+}
+const npPick = (box, k) => { for (const b of box.querySelectorAll('.nptile')) b.setAttribute('aria-pressed', b.dataset.np === k); };
+const npRows = su => (su && su.mode === 'rubric' && Array.isArray(su.criteria) ? su.criteria : []);
+const npFileName = s => (String(s || '').replace(/[\\/:*?"<>|\u0000-\u001F]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 80) || 'Notes');
+
+async function addAndFind(st, list) {
+  const had = new Set(st.files);
+  await addFiles(st, list, true);
+  return st.files.filter(f => !had.has(f));
+}
+const copyFor = (st, f) => ({ path: f.name, file: new File([f.data], f.name), from: st.key });
+async function partnerCopy(st, f, to) {
+  if (f.kind === 'link') { const have = to.files.find(x => x.kind === 'link' && linkOf(x.data) === linkOf(f.data)); if (have) return have; }
+  const have = to.files.find(x => x.from === st.key && x.name === f.name); if (have) return have;
+  return (await addAndFind(to, [copyFor(st, f)]))[0] || null;
+}
+async function partnersJoin(st, anchor, list, extra) {
+  const g0 = groupOf(st), shared = g0 && groupFileOf(g0, st);
+  if (shared) anchor = shared;
+  for (const to of list) {
+    for (const f of extra) if (f !== anchor) await partnerCopy(st, f, to);
+    if (groupMates(st).includes(to)) continue;
+    let theirs = null;
+    if (anchor && anchor.kind !== 'media') theirs = (isNotes(anchor.data) && !anchor.added && notesFileOf(to)) || await partnerCopy(st, anchor, to);
+    groupAdd(st, anchor, to, theirs);
+  }
+}
+
+function partnerList(st, picked, locked) {
+  const anon = anonOn(), others = batch.students.map((s, i) => ({ s, i, label: shownName(s, i) })).filter(x => x.s !== st);
+  if (anon) others.sort((a, b) => anonPos(a.i) - anonPos(b.i));
+  const draw = () => {
+    const q = $('#vdFind').value.toLowerCase().split(/\s+/).filter(Boolean);
+    const list = others.filter(x => q.every(w => x.label.toLowerCase().split(/[\s,_-]+/).some(y => y.startsWith(w))));
+    $('#vdList').innerHTML = list.length ? list.map(x => { const lock = locked.has(x.s), on = lock || picked.has(x.s);
+      return '<button class="mvrow vdrow" role="checkbox" aria-checked="' + on + '" data-vdto="' + x.i + '"' + (lock ? ' disabled' : '') + '><span><i aria-hidden="true"></i>' + esc(x.label) + '</span><span class="muted">' + (lock ? 'In the group' : on ? 'Partner' : '') + '</span></button>'; }).join('') : '<p class="muted">No name matches.</p>';
+  };
+  return { draw, html: '<input class="btn" id="vdFind" placeholder="' + (anon ? 'Type a paper number' : 'Type a name') + '" autocomplete="off" style="width:100%;margin-bottom:8px"><div id="vdList" class="mvlist vdlist"></div>' };
+}
+
+/* ---------- Add: A video… ---------- */
+const VIDEO_BIG = 120e6;   // about what this browser can keep of one added file
+function openAddVideo(st) {
+  if (!st) return;
+  const who = shownName(st, batch.students.indexOf(st)), rows = npRows(setup), picked = new Set(), locked = new Set(groupMates(st));
+  let np = notesFileOf(st) ? '' : (npLast === 'rubric' && !rows.length ? 'lined' : npLast), file = null;
+  const pl = partnerList(st, picked, locked);
+  openDlg('<div class="bh"><h2>Video for ' + esc(who) + '</h2><button class="icon" data-cancel aria-label="Close" style="margin-left:auto">✕</button></div>' +
+    '<div class="bb vdbox"><label class="vdlab" for="vdLink">Link to the video</label><input class="btn" id="vdLink" placeholder="Paste the link: Google Drive, YouTube or anywhere else" autocomplete="off" spellcheck="false">' +
+    '<p class="muted vdsay" id="vdSay">Only the link is kept here, so the video stays where it is and nothing slows down. <button class="link" id="vdFile">Use a video file on this computer instead…</button></p>' +
+    '<label class="vdlab" for="vdName">Name it</label><input class="btn" id="vdName" value="Presentation video" autocomplete="off">' +
+    '<div class="vdlab">Notes page<small>A page to write on while you watch. It is marked, scored and returned like a paper.</small></div>' + npTiles(np, rows, true) +
+    '<div class="vdlab">Partners<small>Tick everyone else in the video. They get the link and the notes page, and one set of marks and one grade covers the group.</small></div>' + pl.html + '</div>' +
+    '<div class="bf"><button class="btn" data-cancel>Cancel</button><button class="btn primary" id="vdAdd" disabled>Add to ' + esc(who) + '</button></div>');
+  const link = $('#vdLink'), add = $('#vdAdd'), say = $('#vdSay'), say0 = say.innerHTML;
+  const ready = () => {
+    const v = link.value.trim(), ok = file ? true : !!linkClean(v);
+    add.disabled = !ok; link.classList.toggle('bad', !!v && !ok && !file);
+    add.textContent = 'Add to ' + who + (picked.size ? ' and ' + picked.size + (picked.size === 1 ? ' partner' : ' partners') : '');
+  };
+  pl.draw(); link.oninput = ready; $('#vdFind').oninput = pl.draw;
+  $('#dlgBox').onclick = async e => {
+    if (e.target.closest('[data-cancel]')) return closeDlg();
+    const t = e.target.closest('.nptile'); if (t && !t.disabled) { np = t.dataset.np; npPick($('#dlgBox'), np); return; }
+    const row = e.target.closest('[data-vdto]'); if (row && !row.disabled) { const s = batch.students[+row.dataset.vdto]; if (picked.has(s)) picked.delete(s); else picked.add(s); pl.draw(); ready(); return; }
+    if (e.target.closest('#vdFile')) {
+      const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'video/*,audio/*';
+      inp.onchange = () => { file = inp.files[0] || null; if (!file) return; link.value = ''; link.disabled = true; link.placeholder = file.name;
+        say.innerHTML = '<b>' + esc(file.name) + '</b> (' + Math.max(1, Math.round(file.size / 1e6)) + ' MB) will be kept in this browser, on ' + esc(who) + '’s paper. Short clips only: for anything long, a link is better. Partners share the notes page and the grade. <button class="link" id="vdUnfile">Use a link instead</button>'; ready(); };
+      inp.click(); return;
+    }
+    if (e.target.closest('#vdUnfile')) { file = null; link.disabled = false; link.placeholder = 'Paste the link: Google Drive, YouTube or anywhere else'; say.innerHTML = say0; ready(); link.focus(); return; }
+    if (e.target !== add || add.disabled) return;
+    const url = file ? '' : linkClean(link.value), name = npFileName($('#vdName').value || 'Presentation video'), partners = [...picked], kind = np;
+    if (file && file.size > VIDEO_BIG && !await askDlg('This video is ' + Math.round(file.size / 1e6) + ' MB. A file that big usually can’t be kept in this browser, so it may be gone the next time you open this assignment.\n\nA link to the video works at any size.', { ok: 'Add the file anyway', cancel: 'Go back' })) return;
+    add.disabled = true; add.textContent = 'Adding…';
+    closeDlg();
+    try { await videoAdd(st, { url, file, name, kind, partners }); } catch (err) { console.error(err); toast('That couldn’t be added: ' + ((err && err.message) || err)); }
+  };
+  link.focus();
+}
+async function videoAdd(st, o) {
+  const list = [];
+  if (o.file) list.push({ path: o.file.name, file: o.file });
+  else list.push({ path: o.name + '.url', file: new File([linkBytes(o.url)], o.name + '.url') });
+  if (o.kind) { npLast = o.kind; const n = npFileName(o.name.replace(/\s*video$/i, '') + ' notes') + '.pdf'; list.push({ path: n, file: new File([await notesPdf(o.kind, batch.name, npRows(setup))], n, { type: 'application/pdf' }) }); }
+  const made = await addAndFind(st, list), vid = made.find(f => f.kind === 'link' || f.kind === 'media') || made[0], page = made.find(f => f.kind === 'pdf') || notesFileOf(st);
+  const all = [...new Set([...groupMates(st), ...(o.partners || [])])];
+  if (all.length) await partnersJoin(st, page || vid, all, made.filter(f => f.kind !== 'media'));
+  saveSoon(); renderList();
+  toast('Added the video to ' + groupNames([st, ...all]));
+  await openStudent(batch.students.indexOf(st), vid && vid.path);
+  return made;
+}
+
+/* ---------- Add: A notes page… ---------- */
+function openAddNotes(st) {
+  if (!st) return;
+  const who = shownName(st, batch.students.indexOf(st)), rows = npRows(setup), mates = groupMates(st), g = groupOf(st), share = mates.length && !(g && groupFileOf(g, st));
+  let np = npLast === 'rubric' && !rows.length ? 'lined' : npLast;
+  openDlg('<div class="bh"><h2>Notes page for ' + esc(who) + '</h2><button class="icon" data-cancel aria-label="Close" style="margin-left:auto">✕</button></div>' +
+    '<div class="bb vdbox"><p class="muted" style="margin:0 0 4px;font-size:14px">A page to write on while you watch or listen: a presentation, a speech, a performance. Write with the pen or type on it, then score and return it like a paper.' + (share ? ' ' + esc(groupNames(mates)) + (mates.length > 1 ? ' get' : ' gets') + ' it too, with the same marks.' : '') + '</p>' +
+    npTiles(np, rows, false) + '<label class="vdlab" for="npName">Name it</label><input class="btn" id="npName" value="Notes" autocomplete="off"></div>' +
+    '<div class="bf"><button class="btn" data-cancel>Cancel</button><button class="btn primary" id="npAdd">Add to ' + esc(who) + '</button></div>', true);
+  $('#dlgBox').onclick = async e => {
+    if (e.target.closest('[data-cancel]')) return closeDlg();
+    const t = e.target.closest('.nptile'); if (t && !t.disabled) { np = t.dataset.np; npPick($('#dlgBox'), np); return; }
+    if (e.target.id !== 'npAdd') return;
+    const name = npFileName($('#npName').value) + '.pdf';
+    closeDlg(); npLast = np;
+    try {
+      const made = await addAndFind(st, [{ path: name, file: new File([await notesPdf(np, batch.name, rows)], name, { type: 'application/pdf' }) }]);
+      if (share && made[0]) await partnersJoin(st, made[0], mates.slice(), []);
+      if (share && made[0]) { const gg = groupOf(st); if (gg) { gg.p[st.key] = made[0].path; for (const m of mates) { const c = m.files.find(x => x.from === st.key && x.name === made[0].name); if (c) gg.p[m.key] = c.path; } groupSync(); } }
+      saveSoon(); renderList(); toast('Added a notes page to ' + groupNames(share ? [st, ...mates] : [st]));
+      await openStudent(batch.students.indexOf(st), made[0] && made[0].path);
+    } catch (err) { console.error(err); toast('That page couldn’t be added: ' + ((err && err.message) || err)); }
+  };
+}
+
+/* ---------- an assignment with no papers at all: a notes page for everyone on the roster ---------- */
+function openStartNotes(it) {
+  const f = findItem(it.id), c = f && f.c !== lib.loose ? f.c : null, names = c ? c.names.filter(n => String(n).trim()) : [];
+  if (!names.length) return sayDlg('This needs the class’s roster, so there is a page for each student. Add the students to the class first, then come back to this assignment.');
+  const rows = npRows(it.setup);
+  let np = npLast === 'rubric' && !rows.length ? 'lined' : npLast;
+  openDlg('<div class="bh"><h2>“' + esc(it.name) + '” with no papers</h2></div>' +
+    '<div class="bb vdbox"><p style="margin:0 0 4px">For presentations, speeches, performances and videos. Each of the ' + names.length + ' students in ' + esc(c.name) + ' gets a notes page to write on while you watch. Mark it, score it and return it like a paper.</p>' +
+    '<p class="muted" style="margin:0 0 4px;font-size:14px">Once it is open, <b>+ Add</b> on a student’s page takes a link to their video, and that is where you say who their partners are.</p>' + npTiles(np, rows, false) +
+    (rows.length ? '' : '<p class="muted" style="margin:8px 0 0;font-size:13px">Rubric rows can be picked once this assignment has a rubric.</p>') + '</div>' +
+    '<div class="bf"><button class="btn" data-cancel>Cancel</button><button class="btn primary" id="snGo">Make the pages and open</button></div>', true);
+  $('#dlgBox').onclick = async e => {
+    if (e.target.closest('[data-cancel]')) return closeDlg();
+    const t = e.target.closest('.nptile'); if (t && !t.disabled) { np = t.dataset.np; npPick($('#dlgBox'), np); return; }
+    if (e.target.id !== 'snGo') return;
+    e.target.disabled = true; npLast = np;
+    try {
+      const bytes = await notesPdf(np, it.name, rows), folder = n => String(n).replace(/[\\/:*?"<>|\u0000-\u001F]+/g, '-').trim();
+      const make = k => names.map(n => ({ path: folder(n) + '/' + npFileName(it.name) + ' notes' + (k > 1 ? ' (' + k + ')' : '') + '.pdf', data: bytes.slice() }));
+      let k = 1, list = make(k);
+      while (k < 50 && (store.get(batchIdOf(list), null) || keptMeta.has(batchIdOf(list)))) list = make(++k);
+      closeDlg();
+      await intake(list, it.name, it);
+    } catch (err) { console.error(err); closeDlg(); toast('The pages couldn’t be made: ' + ((err && err.message) || err)); }
+  };
+}
+Object.assign(window.__gs, { linkOf, linkClean, linkPlayer, notesPdf, isNotes, videoAdd, openAddVideo, openAddNotes, openStartNotes });
+
+/* ---------------- clips: a part of a video worth showing the class ---------------- */
+function clipSecs(v) {
+  v = String(v == null ? '' : v).trim(); if (!v) return null;
+  if (!/^\d+(:\d{1,2}){0,2}(\.\d+)?$/.test(v)) return NaN;
+  return v.split(':').reduce((n, x) => n * 60 + parseFloat(x), 0);
+}
+const clipSpan = c => fmtTime(c.a) + (c.b != null ? '–' + fmtTime(c.b) : '');
+const clipsOf = f => (batch.clips || []).filter(c => (f.kind === 'link' ? c.u && c.u === linkOf(f.data) : c.p === f.path));
+function clipFile(c) {
+  for (const st of batch.students) for (const f of st.files) if (c.u ? f.kind === 'link' && linkOf(f.data) === c.u : f.path === c.p) return f;
+  return null;
+}
+function clipFrame(src, c) {
+  const a = Math.floor(c.a), b = c.b != null ? Math.ceil(c.b) : null;
+  if (/youtube-nocookie\.com\/embed\//.test(src)) return { src: src + '?start=' + a + (b != null ? '&end=' + b : '') + '&autoplay=1', stops: b != null };
+  if (/player\.vimeo\.com\//.test(src)) return { src: src + '#t=' + a + 's', stops: false };
+  if (/drive\.google\.com\/file\//.test(src) || /loom\.com\/embed\//.test(src)) return { src: src + '?t=' + a, stops: false };
+  return { src, stops: false };
+}
+function clipRun(m, c) {
+  const go = () => { try { m.currentTime = c.a; } catch {} m.play().catch(() => {}); };
+  if (m.readyState >= 1) go(); else m.addEventListener('loadedmetadata', go, { once: true });
+  m.onclipstop && m.removeEventListener('timeupdate', m.onclipstop);
+  if (c.b != null) { m.onclipstop = () => { if (m.currentTime >= c.b) { m.pause(); m.removeEventListener('timeupdate', m.onclipstop); m.onclipstop = null; } }; m.addEventListener('timeupdate', m.onclipstop); }
+}
+function playerFrame(src, title) {
+  const fr = document.createElement('iframe');
+  fr.title = title; fr.allow = 'autoplay; fullscreen; encrypted-media; picture-in-picture'; fr.allowFullscreen = true;
+  fr.referrerPolicy = 'strict-origin-when-cross-origin'; fr.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-popups allow-forms allow-presentation');
+  fr.src = src; return fr;
+}
+const clipsBtn = () => { const b = $('#clipsBtn'); if (b) b.hidden = !(batch && batch.clips && batch.clips.length); };
+function clipStrip(host, f, media, play) {
+  const box = document.createElement('div'); box.className = 'clips'; host.appendChild(box);
+  let form = false, edit = null;   // edit: the clip whose title and times are being changed
+  const draw = () => {
+    const list = clipsOf(f), own = !!media();
+    box.innerHTML = '<div class="cliprow">' + list.map(c => '<span class="clip"><button data-clipplay="' + c.id + '" title="Play this part">▶ ' + esc(c.t) + ' <small>' + clipSpan(c) + '</small></button>' +
+      '<button data-clipshow="' + c.id + '" title="Full screen, with the label and without the student’s name">Show to the class</button><button data-clipedit="' + c.id + '" title="Change this clip’s title or its times">Edit</button><button data-clipdel="' + c.id + '" aria-label="Delete the clip ' + esc(c.t) + '" title="Delete this clip">×</button></span>').join('') +
+      (form ? '' : '<button class="btn sm" data-clipnew title="Save a part of this video to show the class later">+ Clip</button>') + '</div>' +
+      (form ? '<div class="clipform"><label>From <input class="btn sm" data-ca placeholder="0:00" inputmode="numeric" autocomplete="off" aria-label="Where the clip starts"></label>' + (own ? '<button class="link" data-cnow="a">now</button>' : '') +
+        '<label>to <input class="btn sm" data-cb placeholder="end" inputmode="numeric" autocomplete="off" aria-label="Where the clip ends"></label>' + (own ? '<button class="link" data-cnow="b">now</button>' : '') +
+        '<input class="btn sm clipname" data-ct placeholder="What it shows, like Strong opening" maxlength="80" autocomplete="off" aria-label="What the clip shows">' +
+        '<button class="btn sm primary" data-clipsave>' + (edit ? 'Save changes' : 'Save clip') + '</button><button class="btn sm" data-clipcancel>Cancel</button>' +
+        '<small class="muted">' + (own ? 'Press now at the start and at the end, or type the times.' : 'Type the times from the player, like 2:15.') + ' Nothing is cut: a clip is the two times and its label.</small></div>' : '');
+  };
+  draw();
+  box.onclick = e => {
+    e.stopPropagation();
+    const q = s => box.querySelector(s), by = id => (batch.clips || []).find(c => c.id === id);
+    if (e.target.closest('[data-clipnew]')) { form = true; edit = null; draw(); const m = media(); if (m && m.currentTime > 0) q('[data-ca]').value = fmtTime(m.currentTime); q(m && m.currentTime > 0 ? '[data-ct]' : '[data-ca]').focus(); return; }
+    if (e.target.closest('[data-clipcancel]')) { form = false; edit = null; draw(); return; }
+    const ed = e.target.closest('[data-clipedit]');
+    if (ed) { const c = by(ed.dataset.clipedit); if (!c) return; form = true; edit = c; draw(); q('[data-ca]').value = fmtTime(c.a); q('[data-cb]').value = c.b != null ? fmtTime(c.b) : ''; const t = q('[data-ct]'); t.value = c.t; t.focus(); t.select(); return; }
+    const now = e.target.closest('[data-cnow]'); if (now) { const m = media(); if (m) q('[data-c' + now.dataset.cnow + ']').value = fmtTime(m.currentTime); return; }
+    if (e.target.closest('[data-clipsave]')) {
+      const a = clipSecs(q('[data-ca]').value), b = clipSecs(q('[data-cb]').value);
+      if (a == null || isNaN(a)) { q('[data-ca]').focus(); return toast('Type where the clip starts, like 2:15'); }
+      if (isNaN(b) || (b != null && b <= a)) { q('[data-cb]').focus(); return toast('The end has to be after the start'); }
+      if (edit) { edit.a = a; if (b != null) edit.b = b; else delete edit.b; edit.t = q('[data-ct]').value.trim().slice(0, 80) || edit.t; form = false; edit = null; saveSoon(); draw(); return; }
+      const n = (batch.clips ||= []).length + 1;
+      batch.clips.push({ id: uid(), ...(f.kind === 'link' ? { u: linkOf(f.data) } : { p: f.path }), a, ...(b != null ? { b } : {}), t: q('[data-ct]').value.trim().slice(0, 80) || 'Clip ' + n });
+      form = false; saveSoon(); clipsBtn(); draw(); return;
+    }
+    const d = e.target.closest('[data-clipdel]');
+    if (d) { const c = by(d.dataset.clipdel), at = batch.clips.indexOf(c); if (!c) return; batch.clips.splice(at, 1); saveSoon(); clipsBtn(); draw();
+      toastDo('Deleted the clip “' + c.t + '”', 'Undo', () => { batch.clips.splice(Math.min(at, batch.clips.length), 0, c); saveSoon(); clipsBtn(); if (box.isConnected) draw(); }); return; }
+    const p = e.target.closest('[data-clipplay]'); if (p) { const c = by(p.dataset.clipplay); if (c) play(c); return; }
+    const s = e.target.closest('[data-clipshow]'); if (s) clipShow(s.dataset.clipshow);
+  };
+  box.onkeydown = e => { if (e.key === 'Enter' && e.target.closest('.clipform input')) { e.preventDefault(); box.querySelector('[data-clipsave]').click(); } e.stopPropagation(); };
+}
+
+/* ---------- a clip on the screen the class sees ---------- */
+let clipStage = null;
+function clipShow(id) {
+  const list = () => (batch.clips || []).filter(c => clipFile(c));
+  let at = Math.max(0, list().findIndex(c => c.id === id));
+  clipClose();
+  const el = document.createElement('div'); el.id = 'clipStage'; el.className = 'pk clipstage'; el.tabIndex = -1; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-label', 'A clip, shown to the class');
+  document.body.appendChild(el);
+  const draw = () => {
+    const all = list(), c = all[at]; if (!c) return clipClose();
+    const f = clipFile(c), url = f.kind === 'link' ? linkOf(f.data) : '', pl = url ? linkPlayer(url) : { [VIDEO_RX.test(f.name) ? 'video' : 'audio']: mediaUrl(f) };
+    const fr = pl && pl.frame ? clipFrame(pl.frame, c) : null;
+    el.innerHTML = '<div class="clipbar"><b>' + esc(c.t) + '</b><span>' + (c.b != null ? fmtTime(c.a) + ' to ' + fmtTime(c.b) : 'from ' + fmtTime(c.a)) + (fr && !fr.stops && c.b != null ? ' · stop it at ' + fmtTime(c.b) : '') + '</span><span class="sp"></span>' +
+      (all.length > 1 ? '<button data-cs="prev" aria-label="The clip before"' + (at ? '' : ' disabled') + '>‹</button><span>' + (at + 1) + ' of ' + all.length + '</span><button data-cs="next" aria-label="The next clip"' + (at < all.length - 1 ? '' : ' disabled') + '>›</button>' : '') +
+      '<button data-cs="again">Play again</button><button data-cs="full">Full screen</button><button data-cs="close">Close <kbd>Esc</kbd></button></div><div class="clipmain"></div>';
+    const main = el.querySelector('.clipmain');
+    if (!pl) { main.innerHTML = '<p>This site can’t play inside the page. Close this and use Open in its own window.</p>'; return; }
+    if (fr) main.appendChild(playerFrame(fr.src, c.t));
+    else { const m = document.createElement(pl.video ? 'video' : 'audio'); m.controls = true; m.playsInline = true; m.src = pl.video || pl.audio; main.appendChild(m); clipRun(m, c); }
+  };
+  const key = e => {
+    if (e.key === 'Escape') clipClose(); else if (e.key === 'ArrowRight' && at < list().length - 1) { at++; draw(); } else if (e.key === 'ArrowLeft' && at > 0) { at--; draw(); } else if (e.target.closest && e.target.closest('#clipStage')) { e.stopPropagation(); return; } else return;
+    e.preventDefault(); e.stopPropagation();
+  };
+  el.onclick = e => {
+    const b = e.target.closest('[data-cs]'); if (!b) return;
+    const k = b.dataset.cs;
+    if (k === 'close') return clipClose();
+    if (k === 'full') { try { if (document.fullscreenElement) document.exitFullscreen(); else { const p = el.requestFullscreen(); if (p && p.catch) p.catch(() => {}); } } catch {} return; }
+    if (k === 'prev') at--; if (k === 'next') at++;
+    draw();
+  };
+  document.addEventListener('keydown', key, true);
+  clipStage = { el, key };
+  draw(); el.focus();
+}
+function clipClose() {
+  if (!clipStage) return;
+  document.removeEventListener('keydown', clipStage.key, true);
+  try { if (document.fullscreenElement) document.exitFullscreen(); } catch {}
+  clipStage.el.remove(); clipStage = null;
+}
+Object.assign(window.__gs, { clipSecs, clipFrame, clipShow, clipClose, clipsOf });
 
 /* ---------------- anchor papers: the high, middle and low paper of a summative (11/11) ---------------- */
 const ANCHORS = [['high', 'High'], ['mid', 'Mid'], ['low', 'Low']];
@@ -21934,7 +22471,7 @@ function wNotesPaint(w, page, aside) {
 function wNotePop(host, near, text, isNew, done) {
   for (const p of host.querySelectorAll('.pop')) p.remove();
   const pop = document.createElement('div'); pop.className = 'pop wpop';
-  pop.innerHTML = '<div class="lbl">' + (isNew ? 'New comment' : 'Comment') + '</div><textarea placeholder="Type a comment…"></textarea>' +
+  pop.innerHTML = '<div class="lbl">' + (isNew ? 'New comment' : 'Comment') + '</div><textarea placeholder="Type a comment… Enter to finish, Shift Enter for a new line"></textarea>' +
     '<div class="lbl" data-bank>My saved comments</div><div class="chips"></div>' +
     '<div class="row"><button class="btn sm" data-a="star" title="Keep this comment so you can reuse it">☆ Save for reuse</button><span class="sp"></span>' +
     (isNew ? '' : '<button class="btn sm" data-a="del">Delete</button>') + '<button class="btn sm primary" data-a="ok">Done</button></div>';
@@ -21956,7 +22493,7 @@ function wNotePop(host, near, text, isNew, done) {
   pop.addEventListener('keydown', e => {
     e.stopPropagation();
     if (e.key === 'Escape') { e.preventDefault(); close(null); }
-    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); close(ta.value.trim()); }
+    if (e.key === 'Enter' && !e.shiftKey && !e.isComposing && e.keyCode !== 229) { e.preventDefault(); close(ta.value.trim()); }   // Enter finishes, Shift Enter is a new line, as on a PDF paper
   });
   pop.addEventListener('click', e => {
     e.stopPropagation();
@@ -24882,15 +25419,15 @@ const keptName = m => m.papers ? '<button class="kname" data-kopen="' + esc(m.id
 function markRow(m, prim) {
   const st = keptState(m), w = keptWhere(m), fm = w.it && w.it.type === 'fm', began = st.done || m.partial;
   const sub = [w.cls ? w.cls.name : '', w.it && w.it.due ? 'due ' + bkDay(w.it.due) : 'last worked on ' + fmtDay(m.t), m.papers ? '' : 'papers not kept, drop the download again'].filter(Boolean).join(' · ');
-  const say = fm ? 'Formative · feedback only' : began ? st.done + ' of ' + st.of + ' scored' + keptMore(m) : st.of + (st.of === 1 ? ' paper' : ' papers') + ', not started' + (m.off ? ' · ' + m.off + ' missing or excused' : '');
+  const say = fm ? 'Formative · feedback only' + (st.done ? ' · ' + keptSay(m, st) : st.of ? ' · ' + people(st.of, 'paper') + ', not started' : '') : began ? st.done + ' of ' + st.of + ' scored' + keptMore(m) : st.of + (st.of === 1 ? ' paper' : ' papers') + ', not started' + (m.off ? ' · ' + m.off + ' missing or excused' : '');
   return '<div class="krow"><div class="kn">' + keptName(m) + '<span class="ks">' + esc(sub) + '</span></div>' +
-    '<div class="kp">' + (fm ? '' : stateBar(st)) + '<span class="kl">' + esc(say) + '</span></div>' +
+    '<div class="kp">' + stateBar(st) + '<span class="kl">' + esc(say) + '</span></div>' +
     (m.papers ? '<button class="btn sm' + (prim ? ' primary' : '') + '" data-kopen="' + esc(m.id) + '">' + (began || fm ? 'Continue' : 'Start') + '</button>' : '<span></span>') + keptDots(m) + '</div>';
 }
 function oldRow(m) {
   const st = keptState(m), w = keptWhere(m), stale = m.newer && keptMeta.has(m.newer);
   const sub = [w.cls ? w.cls.name : '', stale ? 'an older copy: your work went on in a newer one' : m.ret ? 'returned ' + fmtDay(m.ret) : 'last worked on ' + fmtDay(m.t),
-    st.of ? st.done + ' of ' + st.of + ' scored' + keptMore(m) : '', m.papers ? '' : 'papers not kept, drop the download again'].filter(Boolean).join(' · ');
+    st.of ? keptSay(m, st) : '', m.papers ? '' : 'papers not kept, drop the download again'].filter(Boolean).join(' · ');
   return '<div class="krow old"><div class="kn">' + keptName(m) + '<span class="ks">' + esc(sub) + '</span></div>' + keptDots(m) + '</div>';
 }
 const homeStat = new Map();
@@ -24921,7 +25458,7 @@ function backHtml(list, prim) {
   if (!list.length) return '';
   return '<h2 class="tcap">Ready to hand back</h2><div class="tcard">' + list.map(m => {
     const st = keptState(m), w = keptWhere(m), s = statOf(m);
-    const sub = [w.cls ? w.cls.name : '', (st.of === 1 ? 'the one paper' : 'all ' + st.of) + ' scored', s && s.avg != null ? 'average ' + s.avg + '%' : '', m.papers ? '' : 'papers not kept, drop the download again'].filter(Boolean).join(' · ');
+    const sub = [w.cls ? w.cls.name : '', (st.of === 1 ? 'the one paper' : 'all ' + st.of) + ' ' + st.word, s && s.avg != null ? 'average ' + s.avg + '%' : '', m.papers ? '' : 'papers not kept, drop the download again'].filter(Boolean).join(' · ');
     return '<div class="krow back"><div class="kn">' + keptName(m) + '<span class="ks">' + esc(sub) + '</span></div>' + keptDots(m) + (m.papers ? '<div class="kact"><a class="btn sm' + (prim && m === list.find(x => x.papers) ? ' primary' : '') + '" href="' + batchHash(m.id, 'return') + '" data-kret="' + esc(m.id) + '">Return papers</a></div>' : '') + '</div>';
   }).join('') + '</div>';
 }
@@ -25122,12 +25659,12 @@ function todoAuto() {
   if (!d.off.mark) for (const m of g.mark) {
     if (!m.papers) continue;
     const st = keptState(m), w = keptWhere(m), fm = w.it && w.it.type === 'fm', began = st.done || m.partial, name = m.name || 'Student work';
-    add('mark', 'mark:' + m.id, (fm ? 'Give feedback on ' : began ? 'Finish marking ' : 'Mark ') + name, [w.cls ? w.cls.name : '', fm ? 'feedback only' : began ? st.left + ' of ' + st.of + ' left' : people(st.of, 'paper') + ', not started'].filter(Boolean).join(' · '), w.cls, today, { label: began || fm ? 'Continue' : 'Start', open: m.id }, 'x');
+    add('mark', 'mark:' + m.id, (fm ? 'Give feedback on ' : began ? 'Finish marking ' : 'Mark ') + name, [w.cls ? w.cls.name : '', fm ? 'feedback only' + (st.done ? ' · ' + st.left + ' of ' + st.of + ' left' : '') : began ? st.left + ' of ' + st.of + ' left' : people(st.of, 'paper') + ', not started'].filter(Boolean).join(' · '), w.cls, today, { label: began || fm ? 'Continue' : 'Start', open: m.id }, 'x');
   }
   if (!d.off.back) for (const m of g.back) {
     if (!m.papers) continue;
     const st = keptState(m), w = keptWhere(m);
-    add('back', 'back:' + m.id, 'Hand back ' + (m.name || 'Student work'), [w.cls ? w.cls.name : '', (st.of === 1 ? 'the one paper' : 'all ' + st.of) + ' scored'].filter(Boolean).join(' · '), w.cls, today, { label: 'Return papers', href: batchHash(m.id, 'return') }, 'x');
+    add('back', 'back:' + m.id, 'Hand back ' + (m.name || 'Student work'), [w.cls ? w.cls.name : '', (st.of === 1 ? 'the one paper' : 'all ' + st.of) + ' ' + st.word].filter(Boolean).join(' · '), w.cls, today, { label: 'Return papers', href: batchHash(m.id, 'return') }, 'x');
   }
   if (!d.off.plan && plan) for (let i = 0; i < 4; i++) {
     const day = tdAdd(today, i); if ((plan.semStart && day < plan.semStart) || (plan.semEnd && day > plan.semEnd)) continue;
@@ -25639,7 +26176,7 @@ $('#setHistory').addEventListener('click', e => {
 });
 
 /* updates she controls, and installing as an app */
-const WHATS_NEW = {"1.27.18":["The app no longer assumes your AI assistant is Claude. Settings, Working with AI lets you pick Claude, ChatGPT, Gemini, Copilot, another name, or none, and buttons and hints use that name. If you already used the app, yours stays Claude.","Planner, Timetable has a Slides section: the agenda on slide 2 and keeping text between 28 and 36 pt are both on, and each can be turned off.","The week shows Saturday, or Sunday in front of Monday, when a class meets then. Short dates follow your computer's day and month order."],"1.27.17":["Answer notes for quizzes: type each question's answer in Quiz boxes, and it goes on the returned papers in a gold note labelled Answer, by each question a student lost points on. In Quiz boxes, Answer notes can be set to every question or off."],"1.27.16":["The grade sheet shows the score you gave each paper in Grading Studio, the same number as the score panel, with extra credit and the retake that counts. Grades found typed on the papers only show for papers with no score yet, or when you tick Also show grades found on the papers. A score stamp already on a paper now changes when the score does."],"1.27.15":["Copy one quiz answer as a picture: in Quick mark, press P or ⧉ Copy on an answer, then paste it into Claude to ask whether it is right. The picture shows only that answer, with the question and your answer key on top. The name, score, your mark and the file name are left off, and name covers are painted in, but the student’s handwriting and words still show."],"1.27.14":["Points written on a paper can have their own color. In Quick mark’s Colors menu, or Settings, Marking, Mark colors: the ✗ color as before, one color of your own, or By credit, with full points in the check color, part in amber and none in the ✗ color."],"1.27.13":["Share lesson file, under More in a lesson: one small file with the slides, notes, pictures, materials and finished PowerPoint. Open it with Import a lesson on another computer, or give it to another teacher.","Which classes and days a lesson is on, taught notes and comments for Claude stay behind, and opening one never replaces a lesson you have."],"1.27.12":["A to-do list. To do in the sidebar holds your own list beside what the app noticed from your work: papers to mark, papers to hand back, a class with no lesson planned, missing work to chase. Those go by themselves when the work is done, and each kind can be switched off.","Type a to-do the way you would say it, like “Call Bram’s parents friday”, and it picks out the day, the class and the student. Press N anywhere outside a paper to add one.","A to-do can have a day, a class, a student or assignment it goes with, a repeat and a note. Today shows a short card of what is overdue or due today.","Week, at the top right of To do, shows your week: each line on its day, under the class that meets then. Type in a day to add one, or drag a line to another day. Anything not done moves to today on its own."],"1.27.11":["Groups in Present mode: shuffling no longer moves the slides or ends the lesson, and each shuffle keeps last time's groups apart.","Change groups by hand: drag a name to another group, or click a name and then a group. Make my own starts with empty groups, and Undo or Ctrl Z takes back a move or a shuffle.","The Present timer keeps running after you finish or leave full screen, in the corner of the Planner, and comes back on the slides when you present again."],"1.27.10":["Finding names on its own is now off unless you turn it on, in Settings, Marking, Name covers. Only the boxes you draw in Check the covers cover anything, and the check before anonymous grading lists every paper."],"1.27.9":["In the Planner's Timetable, Use my school’s template… picks your own PowerPoint template for slide downloads. Use the plain one goes back to the white one built in.","Save my setup file keeps your classes, meeting times, days off and slide template in one file to load on another computer."],"1.27.8":["Anchor papers: while you mark a summative, click High, Mid or Low under the score. The Return tab lists the three and exports them in one ZIP, each named for the assignment and its level, like “River essay - Summative High.pdf”, with student names covered."],"1.27.7":["Keep strong work as an example: press ☆ Example on an answer in Quick mark (or E), or pick Use as an example in the ⋯ beside a student’s name for a whole paper or part of a page. Names are covered, and your marks and the score stay off unless you switch them on. It is always optional.","The Examples tab on an assignment, and Examples in the sidebar for every class, have Show to the class, Copy picture, Download and Download as a sheet.","Examples go to your linked folder and into the take-home file with the rest of your work."],"1.27.6":["Returned files are named for the student, the assignment and what they are, like “Ana Lee - River essay - Graded.pdf”, or Feedback when there is no score. They still go in each student’s own folder.","To keep the names students turned in, untick Name each file by student and assignment under Options on the Return tab."],"1.27.5":["The gradebook can import your old scores: press Import… and choose a CSV or Excel file, or paste the cells. Each column becomes an assignment, matched to your roster.","You see everything before it is saved, and a score already in the gradebook stays unless you choose the file’s."],"1.27.4":["School is a new page in the sidebar for the things about your school you look up again and again: the handbook, the calendar, the bell schedule, portals, forms, who to call.","Add a link, a file (a copy is kept with your work) or a note. Name your own groups, and star the ones you open most to keep them along the top.","Drop files on the page or paste a web address. Find anything lists every resource. They are kept in your folder and take-home file, and stay when you start a new school year."],"1.27.3":["The class timer in Present takes minutes and seconds: type them in, or pick 0:30 and the other quick times. The menu remembers the last time you typed.","While it runs, the timer's menu adds or takes away 10 seconds or a minute, pauses, and restarts from the time you set. + and − add or take away a minute without opening the menu.","Tick Show it big to put the countdown in the middle of the screen, large enough for the back of the room."],"1.27.2":["In the gradebook, in-class assessments are now on the left and summatives on the right: the columns, the averages beside the term grade, and wherever you choose a type.","The order is yours to change. In Term setup, the arrows beside each type move it, and the gradebook's columns follow from left to right.","You can make your own assignment types. In Term setup, rename a type or press + Add a type (Homework, Projects, Quizzes), and give each its share of the grade. Your own setup stays as it is until you change it."],"1.27.1":["Undo now takes back a score as well as a mark: press Ctrl Z (⌘Z on a Mac) after a slip on a slider, a number key, or Missing, Excused or Late. Redo puts it back.","Deleting a unit, an assignment or a class shows Undo for a few seconds, and Undo puts it back where it was.","“Picked up where you left off” shows once, when you open an assignment, and no longer on Today or other pages. The note about what opened leaves by itself when you move to the next student, if every file opened.","The Next button stays in one place from student to student, and the Grade heading on a class’s Students tab is drawn properly.","Find anything answers to more everyday words: export, hand back, backup, undo, shortcuts, csv."],"1.27.0":["Start a new school year, in Settings, Saving and carrying. Your classes, units and assignment cards carry on, each card with its rubric and Quick mark boxes, with empty class lists and dates a year later.","This year goes into one protected file first, and the file is checked before anything is cleared. Open an archived year brings a year back from its file."],"1.26.2":["Rubric rows can be scored on your own scale. They start at 0 to 4 with half points, as before; when you set up an assignment you can pick any top from 1 to 10 and turn half points off.","Settings, Grading: choose the row scale new assignments start with. Assignments you already have keep theirs."],"1.26.1":["Activities: See, think, wonder now says it comes from Project Zero at the Harvard Graduate School of Education."],"1.26.0":["Seating: a new tab on each class. Pick how the room is set up, drag students to desks, and Shuffle gives everyone a new seat. A student can be kept in their seat.","Pick a name shows one student at random, and nobody twice until everyone has had a turn. Make groups deals the class into groups of any size.","While presenting a lesson, P picks a name and G makes groups. Who’s here leaves out anyone who is away today."],"1.25.0":["Attendance. Each class has an Attendance tab: everyone starts as present, so a day is one press for each student who is late, excused or absent, with a note if you want one.","Look back shows every saved day in one table with each student’s totals, and a student’s own page lists the days they missed.","Copy a day, or download the table as a spreadsheet, for your school’s system. Today has a line for it under each class.","If you don’t take attendance here, turn it off in Settings, Classes and rosters."],"1.24.0":["Retakes: a second try at the same assignment keeps the first try's score, comment and paper. Start one from the ⋯ beside Missing, Excused and Late on a paper.","You choose which try counts, for all your classes: the highest (to begin with), the latest, or the average. It is in the retake box and in the gradebook's Term setup.","A score typed into the gradebook takes a retake too: type both, like 7 > 10."],"1.23.0":["Scores by learning goal, if you want them. Keep your own list of goals (a skill, or a standard from your school) in Settings, Grading, or add one wherever you tag.","Tag rubric rows in Rubric setup and quiz questions in Quiz boxes. An assignment scored with just a total can carry one goal for the whole score.","Each class page gets a Goals tab: the class average on each goal with the lowest first, every student by every goal, and where each number came from. A student's own page shows their goals beside the class average.","Nothing changes until you add a first goal, and tagging never changes a score or a grade."],"1.22.0":["Progress sheets for parent meetings: one printed page per student with the term grade, every score, a chart of how they moved, missing work, each term's grade, the report comment and lines for notes. Find it on a class's Students list, or Progress sheet on one student's page.","Choose the term and tick what goes on it; Print opens the print window, where you can pick a printer or Save as PDF. It is made on your computer and nothing is sent anywhere."],"1.21.0":["Each class has a Missing work tab: every paper you marked Missing, by student or by assignment, for the term you pick.","Email reminder opens an email in your own mail app, addressed to the student and listing what they owe, for you to read and send. Email all writes one email to everyone who owes an assignment, with the addresses in Bcc. Grading Studio sends nothing itself.","Each reminder you open is noted beside the work, and Email wording… changes what every reminder says."],"1.20.0":["The app can speak Traditional Chinese (繁體中文). Choose it in Settings, Display, App language, or at the top of the welcome.","Like Spanish, it covers the first screens so far: the sidebar, Today, the welcome, Find anything, Help, and the feedback page students get with a returned paper. The other screens are still in English."],"1.19.0":["The app can speak Spanish. Choose it in Settings, Display, App language, or at the top of the welcome.","Spanish covers the first screens so far: the sidebar, Today, the welcome, Find anything, Help, and the feedback page students get with a returned paper. The other screens are still in English.","Names you typed (classes, students, assignments, rubric rows) are never translated."],"1.18.0":["On a tablet, a pencil draws and the pen's line is wider where you press harder. Once you have used a pencil, one finger moves the page, two fingers pinch to zoom, and a hand resting on the screen does nothing.","Settings, Marking has a new Tablet and pencil section: choose what a finger does on the paper, or turn off the wider line.","On a touch screen the tools, the student rows and the score buttons are larger."],"1.17.0":["Report comments: a new tab on each class's page drafts a comment for every student from your own gradebook, rubric scores and the comments you wrote on their papers. Edit each one, tick it done, then copy or download them all.","The drafts are put together on your computer from sentences you can change under Wording. Nothing about a student is sent anywhere."],"1.16.0":["Help is in the sidebar: short answers to the questions teachers ask most, from opening a set of papers to moving your work to another computer.","Find anything answers questions too. Type a few words, like “late paper” or “backup”, and the answer is in the list."],"1.15.0":["A picture dragged onto a slide that has text now sits beside the text, in a new Text + picture layout.","Drag several pictures in at once and each gets its own slide. Let a picture go on any slide in the list on the left to put it there.","New Full picture layout: the picture fills the whole slide."],"1.14.0":["Extra credit: points or a percent on one paper, and extra credit entries in the gradebook that add to the term grade or the in-class average.","The gradebook shows each type's average (summative, in-class) right beside the term grade, kept in view as you scroll. Averages only shows just those columns, and Whole year splits each term the same way.","Leave out… lets you untick students to see the class averages without them. Their own grades don't change, and nothing is saved."],"1.13.0":["Present a lesson from the Planner, or from Today when its class is on now or next: its slides fill the screen, and the arrow keys or a clicker move through them.","While presenting, A shows the agenda to tick off, T starts a timer the class can see, N shows your notes and B blanks the screen.","The bar shows how many minutes the class has left, from your timetable.","After a lesson is taught, one line says where the class got to. It shows on the lesson and on the week, and presenting again picks up there."],"1.12.0":["A returned paper starts with a feedback page: the score, each rubric row with the level given and what that level means, your comment, and every comment on the paper with its page number.","It is on unless you turn it off under Options on the Return tab. Your own pages are not changed, and bringing an export back in opens only those."],"1.11.0":["The Planner’s sections are in the sidebar: Calendar, Units, Past lessons, Activities and Rubrics. The row of tabs across the top is gone.","A lesson has a lighter top: its name, its classes, its status and Download. Copy for Claude, Versions, the upload and the links are under More.","Comments shows above a lesson once it has one."],"1.7.0":["Home is now Today: the classes you teach today with the lesson planned for each, the papers waiting to be marked, and the papers ready to hand back.","What the class needs next: after a set of papers is scored, Today shows the weakest rubric row and how many students to sit down with.","A class page is quieter. Click anywhere on an assignment’s row to open it; the only blue button is the one that adds an assignment.","Forget, and the other ways to open papers, moved into the ⋯ menu on each row."],"1.6.0":["A new browser opens on three questions (your classes, how you grade, where work is kept) and starts with nothing of anyone else’s in it.","A sample class of made-up students, with papers to mark, for trying things out. Remove it from Home when you’re done.","The app uses the name of your own school system. Choose it, and how you usually grade, in Settings.","Letter grades or IB 1 to 7 can show beside the percent, with boundaries you set.","Canvas and Moodle downloads are grouped by student. The Planner works without a setup file, and downloads lessons as PowerPoint with a plain built-in template."],"1.5.0":["The sidebar says “Not backed up”, in amber, until a folder holds a second copy of your work. Home asks for that folder once.","Go back in time, in Settings: any assignment as it was on an earlier day, restored on its own, with Undo.","Grading Studio can be installed as an app, and it opens with no internet.","A newer version now waits until you click Update now, so nothing changes in the middle of marking."]};
+const WHATS_NEW = {"1.27.22":["Attendance has a choice for a student who is away when you don’t know why yet: Absent, reason unknown. Change it to Absent, excused when you hear the reason. It is still four choices, and days you saved before keep their marks. Look back lists the absences that still have no reason."],"1.27.21":["Comments are easier to work with. Change a comment’s color at any time, even while typing it: its box has a Color row, and a Highlight row when it is on highlighted words. Text boxes and Quick mark comments have colors too.","Drag a new comment’s line up or down before you type a word, and press Enter to finish a comment or text box. Shift Enter starts a new line."],"1.27.20":["Feedback-only work no longer says 0 of 20 scored. A formative activity counts the students whose feedback is complete, on its card, in Find, Today, To do, the Grades box and the grade sheet, and says Ready to return once everyone has feedback."],"1.27.19":["Presentations and videos. On an assignment’s card, Add papers… now has No papers: presentations or videos…, which gives every student on the roster a notes page to write on while you watch. Pick lined, your rubric’s rows, two columns or blank.","On a student’s page, + Add has A video…: paste a link from Google Drive, YouTube or anywhere else, and tick the partners in it. One set of notes and one grade covers the group. Only the link is kept, so the video stays where it is.","Play here shows the video above the notes page; Open in its own window puts it beside the app. + Add also has A notes page… for one more page at any time.","Clips: under a video, + Clip saves a part worth showing, as a start time, an end time and a title. Show to the class plays it full screen with the title and without the student’s name, and Clips to show the class under Setup plays them one after another."],"1.27.18":["The app no longer assumes your AI assistant is Claude. Settings, Working with AI lets you pick Claude, ChatGPT, Gemini, Copilot, another name, or none, and buttons and hints use that name. If you already used the app, yours stays Claude.","Planner, Timetable has a Slides section: the agenda on slide 2 and keeping text between 28 and 36 pt are both on, and each can be turned off.","The week shows Saturday, or Sunday in front of Monday, when a class meets then. Short dates follow your computer's day and month order."],"1.27.17":["Answer notes for quizzes: type each question's answer in Quiz boxes, and it goes on the returned papers in a gold note labelled Answer, by each question a student lost points on. In Quiz boxes, Answer notes can be set to every question or off."],"1.27.16":["The grade sheet shows the score you gave each paper in Grading Studio, the same number as the score panel, with extra credit and the retake that counts. Grades found typed on the papers only show for papers with no score yet, or when you tick Also show grades found on the papers. A score stamp already on a paper now changes when the score does."],"1.27.15":["Copy one quiz answer as a picture: in Quick mark, press P or ⧉ Copy on an answer, then paste it into Claude to ask whether it is right. The picture shows only that answer, with the question and your answer key on top. The name, score, your mark and the file name are left off, and name covers are painted in, but the student’s handwriting and words still show."],"1.27.14":["Points written on a paper can have their own color. In Quick mark’s Colors menu, or Settings, Marking, Mark colors: the ✗ color as before, one color of your own, or By credit, with full points in the check color, part in amber and none in the ✗ color."],"1.27.13":["Share lesson file, under More in a lesson: one small file with the slides, notes, pictures, materials and finished PowerPoint. Open it with Import a lesson on another computer, or give it to another teacher.","Which classes and days a lesson is on, taught notes and comments for Claude stay behind, and opening one never replaces a lesson you have."],"1.27.12":["A to-do list. To do in the sidebar holds your own list beside what the app noticed from your work: papers to mark, papers to hand back, a class with no lesson planned, missing work to chase. Those go by themselves when the work is done, and each kind can be switched off.","Type a to-do the way you would say it, like “Call Bram’s parents friday”, and it picks out the day, the class and the student. Press N anywhere outside a paper to add one.","A to-do can have a day, a class, a student or assignment it goes with, a repeat and a note. Today shows a short card of what is overdue or due today.","Week, at the top right of To do, shows your week: each line on its day, under the class that meets then. Type in a day to add one, or drag a line to another day. Anything not done moves to today on its own."],"1.27.11":["Groups in Present mode: shuffling no longer moves the slides or ends the lesson, and each shuffle keeps last time's groups apart.","Change groups by hand: drag a name to another group, or click a name and then a group. Make my own starts with empty groups, and Undo or Ctrl Z takes back a move or a shuffle.","The Present timer keeps running after you finish or leave full screen, in the corner of the Planner, and comes back on the slides when you present again."],"1.27.10":["Finding names on its own is now off unless you turn it on, in Settings, Marking, Name covers. Only the boxes you draw in Check the covers cover anything, and the check before anonymous grading lists every paper."],"1.27.9":["In the Planner's Timetable, Use my school’s template… picks your own PowerPoint template for slide downloads. Use the plain one goes back to the white one built in.","Save my setup file keeps your classes, meeting times, days off and slide template in one file to load on another computer."],"1.27.8":["Anchor papers: while you mark a summative, click High, Mid or Low under the score. The Return tab lists the three and exports them in one ZIP, each named for the assignment and its level, like “River essay - Summative High.pdf”, with student names covered."],"1.27.7":["Keep strong work as an example: press ☆ Example on an answer in Quick mark (or E), or pick Use as an example in the ⋯ beside a student’s name for a whole paper or part of a page. Names are covered, and your marks and the score stay off unless you switch them on. It is always optional.","The Examples tab on an assignment, and Examples in the sidebar for every class, have Show to the class, Copy picture, Download and Download as a sheet.","Examples go to your linked folder and into the take-home file with the rest of your work."],"1.27.6":["Returned files are named for the student, the assignment and what they are, like “Ana Lee - River essay - Graded.pdf”, or Feedback when there is no score. They still go in each student’s own folder.","To keep the names students turned in, untick Name each file by student and assignment under Options on the Return tab."],"1.27.5":["The gradebook can import your old scores: press Import… and choose a CSV or Excel file, or paste the cells. Each column becomes an assignment, matched to your roster.","You see everything before it is saved, and a score already in the gradebook stays unless you choose the file’s."],"1.27.4":["School is a new page in the sidebar for the things about your school you look up again and again: the handbook, the calendar, the bell schedule, portals, forms, who to call.","Add a link, a file (a copy is kept with your work) or a note. Name your own groups, and star the ones you open most to keep them along the top.","Drop files on the page or paste a web address. Find anything lists every resource. They are kept in your folder and take-home file, and stay when you start a new school year."],"1.27.3":["The class timer in Present takes minutes and seconds: type them in, or pick 0:30 and the other quick times. The menu remembers the last time you typed.","While it runs, the timer's menu adds or takes away 10 seconds or a minute, pauses, and restarts from the time you set. + and − add or take away a minute without opening the menu.","Tick Show it big to put the countdown in the middle of the screen, large enough for the back of the room."],"1.27.2":["In the gradebook, in-class assessments are now on the left and summatives on the right: the columns, the averages beside the term grade, and wherever you choose a type.","The order is yours to change. In Term setup, the arrows beside each type move it, and the gradebook's columns follow from left to right.","You can make your own assignment types. In Term setup, rename a type or press + Add a type (Homework, Projects, Quizzes), and give each its share of the grade. Your own setup stays as it is until you change it."],"1.27.1":["Undo now takes back a score as well as a mark: press Ctrl Z (⌘Z on a Mac) after a slip on a slider, a number key, or Missing, Excused or Late. Redo puts it back.","Deleting a unit, an assignment or a class shows Undo for a few seconds, and Undo puts it back where it was.","“Picked up where you left off” shows once, when you open an assignment, and no longer on Today or other pages. The note about what opened leaves by itself when you move to the next student, if every file opened.","The Next button stays in one place from student to student, and the Grade heading on a class’s Students tab is drawn properly.","Find anything answers to more everyday words: export, hand back, backup, undo, shortcuts, csv."],"1.27.0":["Start a new school year, in Settings, Saving and carrying. Your classes, units and assignment cards carry on, each card with its rubric and Quick mark boxes, with empty class lists and dates a year later.","This year goes into one protected file first, and the file is checked before anything is cleared. Open an archived year brings a year back from its file."],"1.26.2":["Rubric rows can be scored on your own scale. They start at 0 to 4 with half points, as before; when you set up an assignment you can pick any top from 1 to 10 and turn half points off.","Settings, Grading: choose the row scale new assignments start with. Assignments you already have keep theirs."],"1.26.1":["Activities: See, think, wonder now says it comes from Project Zero at the Harvard Graduate School of Education."],"1.26.0":["Seating: a new tab on each class. Pick how the room is set up, drag students to desks, and Shuffle gives everyone a new seat. A student can be kept in their seat.","Pick a name shows one student at random, and nobody twice until everyone has had a turn. Make groups deals the class into groups of any size.","While presenting a lesson, P picks a name and G makes groups. Who’s here leaves out anyone who is away today."],"1.25.0":["Attendance. Each class has an Attendance tab: everyone starts as present, so a day is one press for each student who is late, excused or absent, with a note if you want one.","Look back shows every saved day in one table with each student’s totals, and a student’s own page lists the days they missed.","Copy a day, or download the table as a spreadsheet, for your school’s system. Today has a line for it under each class.","If you don’t take attendance here, turn it off in Settings, Classes and rosters."],"1.24.0":["Retakes: a second try at the same assignment keeps the first try's score, comment and paper. Start one from the ⋯ beside Missing, Excused and Late on a paper.","You choose which try counts, for all your classes: the highest (to begin with), the latest, or the average. It is in the retake box and in the gradebook's Term setup.","A score typed into the gradebook takes a retake too: type both, like 7 > 10."],"1.23.0":["Scores by learning goal, if you want them. Keep your own list of goals (a skill, or a standard from your school) in Settings, Grading, or add one wherever you tag.","Tag rubric rows in Rubric setup and quiz questions in Quiz boxes. An assignment scored with just a total can carry one goal for the whole score.","Each class page gets a Goals tab: the class average on each goal with the lowest first, every student by every goal, and where each number came from. A student's own page shows their goals beside the class average.","Nothing changes until you add a first goal, and tagging never changes a score or a grade."],"1.22.0":["Progress sheets for parent meetings: one printed page per student with the term grade, every score, a chart of how they moved, missing work, each term's grade, the report comment and lines for notes. Find it on a class's Students list, or Progress sheet on one student's page.","Choose the term and tick what goes on it; Print opens the print window, where you can pick a printer or Save as PDF. It is made on your computer and nothing is sent anywhere."],"1.21.0":["Each class has a Missing work tab: every paper you marked Missing, by student or by assignment, for the term you pick.","Email reminder opens an email in your own mail app, addressed to the student and listing what they owe, for you to read and send. Email all writes one email to everyone who owes an assignment, with the addresses in Bcc. Grading Studio sends nothing itself.","Each reminder you open is noted beside the work, and Email wording… changes what every reminder says."],"1.20.0":["The app can speak Traditional Chinese (繁體中文). Choose it in Settings, Display, App language, or at the top of the welcome.","Like Spanish, it covers the first screens so far: the sidebar, Today, the welcome, Find anything, Help, and the feedback page students get with a returned paper. The other screens are still in English."],"1.19.0":["The app can speak Spanish. Choose it in Settings, Display, App language, or at the top of the welcome.","Spanish covers the first screens so far: the sidebar, Today, the welcome, Find anything, Help, and the feedback page students get with a returned paper. The other screens are still in English.","Names you typed (classes, students, assignments, rubric rows) are never translated."],"1.18.0":["On a tablet, a pencil draws and the pen's line is wider where you press harder. Once you have used a pencil, one finger moves the page, two fingers pinch to zoom, and a hand resting on the screen does nothing.","Settings, Marking has a new Tablet and pencil section: choose what a finger does on the paper, or turn off the wider line.","On a touch screen the tools, the student rows and the score buttons are larger."],"1.17.0":["Report comments: a new tab on each class's page drafts a comment for every student from your own gradebook, rubric scores and the comments you wrote on their papers. Edit each one, tick it done, then copy or download them all.","The drafts are put together on your computer from sentences you can change under Wording. Nothing about a student is sent anywhere."],"1.16.0":["Help is in the sidebar: short answers to the questions teachers ask most, from opening a set of papers to moving your work to another computer.","Find anything answers questions too. Type a few words, like “late paper” or “backup”, and the answer is in the list."],"1.15.0":["A picture dragged onto a slide that has text now sits beside the text, in a new Text + picture layout.","Drag several pictures in at once and each gets its own slide. Let a picture go on any slide in the list on the left to put it there.","New Full picture layout: the picture fills the whole slide."],"1.14.0":["Extra credit: points or a percent on one paper, and extra credit entries in the gradebook that add to the term grade or the in-class average.","The gradebook shows each type's average (summative, in-class) right beside the term grade, kept in view as you scroll. Averages only shows just those columns, and Whole year splits each term the same way.","Leave out… lets you untick students to see the class averages without them. Their own grades don't change, and nothing is saved."],"1.13.0":["Present a lesson from the Planner, or from Today when its class is on now or next: its slides fill the screen, and the arrow keys or a clicker move through them.","While presenting, A shows the agenda to tick off, T starts a timer the class can see, N shows your notes and B blanks the screen.","The bar shows how many minutes the class has left, from your timetable.","After a lesson is taught, one line says where the class got to. It shows on the lesson and on the week, and presenting again picks up there."],"1.12.0":["A returned paper starts with a feedback page: the score, each rubric row with the level given and what that level means, your comment, and every comment on the paper with its page number.","It is on unless you turn it off under Options on the Return tab. Your own pages are not changed, and bringing an export back in opens only those."],"1.11.0":["The Planner’s sections are in the sidebar: Calendar, Units, Past lessons, Activities and Rubrics. The row of tabs across the top is gone.","A lesson has a lighter top: its name, its classes, its status and Download. Copy for Claude, Versions, the upload and the links are under More.","Comments shows above a lesson once it has one."],"1.7.0":["Home is now Today: the classes you teach today with the lesson planned for each, the papers waiting to be marked, and the papers ready to hand back.","What the class needs next: after a set of papers is scored, Today shows the weakest rubric row and how many students to sit down with.","A class page is quieter. Click anywhere on an assignment’s row to open it; the only blue button is the one that adds an assignment.","Forget, and the other ways to open papers, moved into the ⋯ menu on each row."],"1.6.0":["A new browser opens on three questions (your classes, how you grade, where work is kept) and starts with nothing of anyone else’s in it.","A sample class of made-up students, with papers to mark, for trying things out. Remove it from Home when you’re done.","The app uses the name of your own school system. Choose it, and how you usually grade, in Settings.","Letter grades or IB 1 to 7 can show beside the percent, with boundaries you set.","Canvas and Moodle downloads are grouped by student. The Planner works without a setup file, and downloads lessons as PowerPoint with a plain built-in template."],"1.5.0":["The sidebar says “Not backed up”, in amber, until a folder holds a second copy of your work. Home asks for that folder once.","Go back in time, in Settings: any assignment as it was on an earlier day, restored on its own, with Undo.","Grading Studio can be installed as an app, and it opens with no internet.","A newer version now waits until you click Update now, so nothing changes in the middle of marking."]};
 const upd = { on: false, st: null, mine: '', checking: false, said: '', install: null, installed: false, err: '' };
 const updCan = () => 'serviceWorker' in navigator && (location.protocol === 'https:' || /[?&]sw=1(&|$)/.test(location.search)) && !/Grading Studio\.html$/i.test(decodeURIComponent(location.pathname));
 const updSend = async msg => { const reg = await navigator.serviceWorker.ready; if (reg.active) reg.active.postMessage(msg); };
@@ -26739,9 +27276,9 @@ function findRows() {
   for (const c of holders()) for (const u of c.units) for (const it of u.items) {
     const m = it.batchId ? keptMeta.get(it.batchId) : null; if (it.batchId) carded.add(it.batchId);
     const here = batch && batch.id === it.batchId;
-    add('Assignments', it.name, (c === lib.loose ? 'No class' : c.name) + ' · ' + u.name + (here ? ' · open now' : m && m.papers ? ' · ' + keptState(m).done + ' of ' + keptState(m).of + ' scored' : ''), () => here ? null : m && m.papers ? reopenKept(it.batchId, it) : go(classHash(c)));
+    add('Assignments', it.name, (c === lib.loose ? 'No class' : c.name) + ' · ' + u.name + (here ? ' · open now' : m && m.papers ? ' · ' + keptSay(m) : ''), () => here ? null : m && m.papers ? reopenKept(it.batchId, it) : go(classHash(c)));
   }
-  for (const m of keptMeta.values()) if (!carded.has(m.id) && m.papers && !(batch && batch.id === m.id)) add('Assignments', m.name || 'A download', 'Kept in this browser · ' + keptState(m).done + ' of ' + keptState(m).of + ' scored', () => reopenKept(m.id));
+  for (const m of keptMeta.values()) if (!carded.has(m.id) && m.papers && !(batch && batch.id === m.id)) add('Assignments', m.name || 'A download', 'Kept in this browser · ' + keptSay(m), () => reopenKept(m.id));
   if (!batch) {
     add('Do', sysName() ? 'Open a ' + sysName() + ' download' : 'Open student work', sysName() ? 'The ZIP or PDFs' : 'A ZIP, PDFs, Word files or photos', press('#pickFiles'));
     add('Do', 'Open a folder of papers', '', press('#pickFolder'));
