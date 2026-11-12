@@ -7,7 +7,7 @@ Mark student papers, score them, plan lessons and hand work back, in your browse
 ## What it does
 
 - **Mark** PDFs, Word files, photos and scans with a pen, highlighter, text, margin comments, check marks and proofreading marks.
-- **Score** with rubric rows (0 to 4, half points too), plain points or a percent. Letter grades or IB 1 to 7 can be worked out from the percent, with boundaries you set.
+- **Score** with rubric rows (0 to 4, half points too), plain points or a percent. Letter grades or an IB DP 1 to 7 can be worked out from the percent, with boundaries you set. An IB MYP class is marked against its criteria, 0 to 8, with a best-fit level per criterion and a final grade of 1 to 7.
 - **See the class**: a Grades list to copy from, a gradebook with terms and weights, and charts for each class and each student.
 - **Hand work back**: one click makes the marked files, in the same student folders they came in.
 - **Plan and teach**: the Planner keeps units, lessons and slides beside your timetable. Present a lesson full screen, with its agenda and a timer for the class, and note where the class got to. Lessons also download as PowerPoint files.

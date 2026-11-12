@@ -236,7 +236,8 @@ function stpDiff(S, planNow) {
   if (S.grading) {
     const g = S.grading, now = meGrade(), same = now && JSON.stringify({ way: now.way, setup: { ...now.setup, ...(me().grade.setup && me().grade.setup.top ? { top: me().grade.setup.top } : {}), ...(me().grade.setup && typeof me().grade.setup.half === 'boolean' ? { half: me().grade.setup.half } : {}) }, ...(now.bands ? { bands: now.bands } : {}) }) === JSON.stringify(g);
     if (!same) {
-      const L = ['A new assignment starts with <b>' + esc(stpWayLow(g.way)) + '</b>' + (now ? ' (now ' + esc(stpWayLow(now.way)) + ')' : '')];
+      // rows with a 1 to 7 is how an MYP teacher's setup comes in; plain ib7 is the DP's percent
+      const L = ['A new assignment starts with <b>' + esc(g.way === 'ib7' && g.setup.mode === 'rubric' ? 'IB criteria rows and a 1 to 7' : stpWayLow(g.way)) + '</b>' + (now ? ' (now ' + esc(stpWayLow(now.way)) + ')' : '')];
       if (g.setup.mode === 'rubric') L.push('Rubric rows: ' + esc(stpList(g.setup.criteria, 8))); else L.push('Scored with a total out of ' + g.setup.outOf);
       if (g.setup.top) L.push('Each row is scored 0 to ' + g.setup.top + (g.setup.half === false ? ', whole points only' : ''));
       if (g.setup.scale) L.push('A grading scale from scores to percents (' + Object.keys(g.setup.scale).length + ' steps)');

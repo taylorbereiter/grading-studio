@@ -121,7 +121,7 @@ const HELP = [
       '**Copy my setup** on the same page gives your own setup as the same kind of text, for a colleague to start from.'],
     go: ['Open My setup', '#/settings/setup'], words: 'import ai claude chatgpt gemini prompt setup configure profile colleague share myp dp ib onboarding' },
   { id: 'grading-way', sec: 'score', q: 'My school grades with letters, percent or 1 to 7. Can I set that?',
-    a: ['Yes. Settings, **Grading scale and rubrics** has how you grade: rubric rows, points, percent, letter grades or IB 1 to 7, with the boundaries for each letter or level.', 'It is your default for new assignments. Each assignment can still be set its own way in Rubric setup.'],
+    a: ['Yes. Settings, **Grading scale and rubrics** has how you grade: rubric rows, points, percent, letter grades, IB MYP criteria (0 to 8) or IB DP 1 to 7, with the boundaries for each letter or level.', 'It is your default for new assignments. Each assignment can still be set its own way in Rubric setup.'],
     go: ['Open Settings, Grading', '#/settings/grading'], words: 'letters A B C percent IB 7 boundaries bands default scale' },
   { id: 'status', sec: 'score', q: 'How do I mark a paper missing, excused or late?',
     a: ['Under the student’s total in the score panel, pick **Missing**, **Excused** or **Late**. The ⋯ beside them has **Leave out of the average**.', 'Missing and excused papers have no score to wait for, so they don’t count as left to mark.'],

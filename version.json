@@ -1,13 +1,13 @@
 {
- "version": "1.27.24",
- "build": "90cc8d478c44",
+ "version": "1.27.25",
+ "build": "22dc88927c6d",
  "notes": [
-  "My setup, in Settings: copy a prompt into your AI assistant, and it writes your setup as one block of text: classes and when they meet, the calendar, terms, what a grade is made of, how you grade, IB criteria and boundaries, rubrics, saved comments and learning goals.",
-  "Paste the block back and press Check it. You see what would change, untick anything you don’t want, and can undo it afterwards. Anything about students is left out and said so.",
-  "Copy my setup gives your own setup as the same kind of text, for a colleague to start from. The welcome has a line that leads here."
+  "IB classes. Each class has a Grading button: points and percent, IB MYP or IB DP. The welcome and Settings offer IB MYP criteria (0 to 8) and IB DP 1 to 7 as two separate choices.",
+  "An MYP class is marked against the criteria a task assesses, each 0 to 8, with no percent. Its gradebook shows every level a student earned, you choose the level that fits best for each criterion, and the total becomes a final grade of 1 to 7. Levels are never averaged.",
+  "Criterion names and the grade boundaries are yours to change. A DP class shows the 1 to 7 its percent earns on boundaries you type in."
  ],
  "files": {
-  "index.html": "ccc453ce11b787e50c11d7ac1626a868d71a4896bbf104f77a1520b0851b5f6b",
-  "planner.html": "3d64a24c3d39f1290f71f4bc559e924f6b71a21d1bc4554d036af130a38736b5"
+  "index.html": "474a17e39b7fe2f3801d38eaa7d2c1ef5ca1daa44cc8a5b6fd2edb4c635edad6",
+  "planner.html": "012ee61dd847a0ba729950ef51cab0179a19b0caabc85191b36f614359bf3a04"
  }
 }
