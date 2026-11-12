@@ -1233,7 +1233,7 @@ test('a lesson’s top bar is light: its name, its classes, status, Download and
     assert.equal(await page.$eval('.ls-top [data-a="more"]', b => b.getAttribute('aria-expanded')), 'true');
     const items = await page.$$eval('.ls-menu .mi', x => x.map(e => e.firstChild.textContent.trim()));
     assert.deepEqual(items.slice(0, 4), ['Copy for Claude', 'Comments', 'Versions', 'Upload lesson .zip']);
-    assert.deepEqual(items.slice(-4), ['Save lesson file…', 'Copy to another class or day…', 'Copy lesson as text', 'Delete this lesson']);
+    assert.deepEqual(items.slice(-5), ['Share lesson file…', 'Save lesson file for Claude…', 'Copy to another class or day…', 'Copy lesson as text', 'Delete this lesson']);
     assert.ok(items.includes('Name matches the title slide ✓'));
     // Escape closes it, and so does a click somewhere else
     await page.keyboard.press('Escape');

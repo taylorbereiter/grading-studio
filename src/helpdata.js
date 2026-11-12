@@ -227,6 +227,10 @@ const HELP = [
   { id: 'pptx', sec: 'plan', where: 'p', q: 'Can I get my slides as a PowerPoint file?',
     a: ['Yes. Open the lesson and press **Download .pptx**. The file opens in PowerPoint, Keynote and Google Slides.', 'Slides use a plain white template unless you give it your own: in **Timetable**, press **Use my school’s template…** and pick a PowerPoint file with a Title Slide and a Title and Content layout.'],
     words: 'powerpoint pptx template school master export slides keynote google slides download' },
+  { id: 'sharelesson', sec: 'plan', where: 'p', q: 'How do I move a lesson to another computer or give it to another teacher?',
+    a: ['Open the lesson and choose **More ▾ → Share lesson file…**. You get one small file with the slides, notes, pictures, materials and the finished PowerPoint if there is one.',
+      'On the other computer, press **Import a lesson** in the Planner and choose the file, or drop it on the Planner. Which classes and days it was on, taught notes and comments for Claude stay behind.'],
+    words: 'share send move transfer copy another computer teacher colleague gslesson file import' },
 
   { id: 'privacy', sec: 'private', q: 'Does student work leave my computer?',
     a: ['No. Papers, names, scores and comments stay in this browser and in the folder you choose. The app has no server and no accounts, and it works with the internet off.',
