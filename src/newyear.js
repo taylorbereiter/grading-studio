@@ -339,6 +339,7 @@ async function nyReplace(B, rd, was) {
     if (!lsPut('gs.school', JSON.stringify(schoolMerge(rd2((B.ls || {})['gs.school']), rd2(schWas)).out))) throw browserFull();
   }
   await schBring(src, B);
+  try { await exTake((await exBringPlan(B)).list, src.exPics); } catch (e) { console.error(e); }   // examples, like the school resources, belong to every year: those here stay, and the year's own come back beside them
   for (const id of new Set([...Object.keys(B.meta), ...Object.keys(B.work), ...Object.keys(B.papers)])) {
     const rec = await src.papers(id);
     if (rec) await paperPut(id, rec);

@@ -34,6 +34,7 @@ async function openStudent(i, filePath) {
       '<button class="mitem" id="addScanBtn">From a scan…<small>A stack of pages scanned as one PDF</small></button>') +
     kmWrap('⋯', 'id="whoMore" class="btn sm kdots" aria-label="More for this paper" title="More for this paper"',
       (st.files.some(viewable) || fileSeq(st).length > 1 ? '<button class="mitem" id="arrangeBtn">Arrange pages<small>Combine files, reorder or take pages out</small></button>' : '') +
+      (st.files.some(f => !f.virtual && !f.rubric && (viewable(f) || f.kind === 'docx')) ? '<button class="mitem" data-whodo="example">Use as an example<small>A strong paper or part of a page, with names covered</small></button>' : '') +
       '<button class="mitem" data-whodo="light">Lighting<small>Make a pale or too-bright scan easier to read</small></button>' +
       '<button class="mitem" data-whodo="calc">Calculator <kbd>=</kbd></button>', 'right') + '</div>' + groupBand(st);
   paper.scrollTop = 0;
@@ -155,7 +156,7 @@ $('#paper').addEventListener('click', e => {
   if (e.target.closest('#addFileBtn')) return pickAdd(batch.students[cur]);
   if (e.target.closest('#pasteTextBtn')) return openPasteText(batch.students[cur]);
   if (e.target.closest('#addScanBtn')) { scanInto = true; scanFor = null; return $('#scanIn').click(); }
-  const wd = e.target.closest('[data-whodo]'); if (wd) return wd.dataset.whodo === 'light' ? openLight() : openCalc();
+  const wd = e.target.closest('[data-whodo]'); if (wd) return wd.dataset.whodo === 'light' ? openLight() : wd.dataset.whodo === 'example' ? openUseExample(cur) : openCalc();
   const ra = e.target.closest('[data-rmfile]');
   if (ra) {   // two clicks, so a stray click can't throw a file away
     if (!ra.dataset.armed) { ra.dataset.armed = '1'; ra.textContent = 'Click again to remove'; ra.style.color = 'var(--warn)'; setTimeout(() => { if (ra.isConnected) { delete ra.dataset.armed; ra.textContent = 'Remove'; ra.style.color = ''; } }, 4000); return; }

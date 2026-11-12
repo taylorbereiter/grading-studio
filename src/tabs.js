@@ -4,6 +4,7 @@
 function tabsRender() {
   if (!batch) return;
   const r = routeNow(), on = r.v === 'a' ? r.tab : '';
+  exTabSay();
   for (const a of document.querySelectorAll('#aTabs .atab')) {
     const h = batchHash(batch.id, a.dataset.atab), cur = a.dataset.atab === on;
     if (a.getAttribute('href') !== h) a.setAttribute('href', h);

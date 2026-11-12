@@ -513,6 +513,7 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
   <button class="rfind" id="findBtn" aria-haspopup="dialog" title="Find a student, an assignment, a tool or a setting"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5"/></svg><span class="rl">Find anything</span><kbd class="rl" id="findKey">Ctrl K</kbd></button>
   <a class="rnav" data-nav="home" href="#/" title="Today: what you teach, what is waiting to be marked, what is ready to hand back"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.6"/><path d="M12 3v2.2M12 18.8V21M3 12h2.2M18.8 12H21M5.6 5.6l1.6 1.6M16.8 16.8l1.6 1.6M5.6 18.4l1.6-1.6M16.8 7.2l1.6-1.6"/></svg><span class="rl">Today</span></a>
   <a class="rnav" id="lessonsBtn" href="planner.html" title="Plan units and lessons. The Planner is a separate page and never sees grading work."><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M8 3v4M16 3v4"/></svg><span class="rl">Planner</span></a>
+  <a class="rnav" data-nav="examples" id="railExamples" href="#/examples" hidden title="Strong work from every class, with no names on it"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4l2.4 5 5.4.6-4 3.7 1.1 5.3L12 16l-4.9 2.6 1.1-5.3-4-3.7 5.4-.6z"/></svg><span class="rl">Examples</span></a>
   <a class="rnav" data-nav="school" href="#/school" title="School resources: links, files and notes about your school"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 20.5h17M5.5 20.5v-9M18.5 20.5v-9M3.5 11.5L12 5l8.5 6.5M10 20.5v-5h4v5M12 5V3h3"/></svg><span class="rl">School</span></a>
   <div class="rcap"><span class="rl">Classes</span></div>
   <div id="railClasses"></div>
@@ -570,6 +571,10 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
   <section class="view" id="vClass" hidden>
     <div id="classes"></div>
     <p class="muted vhint" id="classHint">Drag an assignment to another unit, or onto a class in the sidebar. Drag a unit’s name to move the unit. Drop <span class="sysZip">a ManageBac ZIP</span> on an assignment to open it there.</p>
+  </section>
+  <section class="view" id="vExamples" hidden>
+    <header class="vhead"><h1>Examples</h1><span class="muted">Strong work from every class, with no names on it.</span></header>
+    <div id="exPage"></div>
   </section>
   <section class="view" id="vSchool" hidden>
     <header class="vhead"><h1>School resources</h1><span class="muted">Links, files and notes about your school, kept with your work on this computer.</span></header>
@@ -666,6 +671,7 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
       <a class="atab" id="markTab" data-atab="" href="#/">Mark</a>
       <a class="atab" id="gradesBtn" data-atab="grades" href="#/" title="Every score and comment, beside the grade written on each paper">Grades</a>
       <a class="atab" id="insightsTab" data-atab="insights" href="#/" title="How the class did, row by row, and whether your scoring stayed even">Insights</a>
+      <a class="atab" id="examplesTab" data-atab="examples" href="#/" hidden title="Strong work from this assignment, with no names on it">Examples <span class="atn" hidden></span></a>
       <a class="atab" id="exportBtn" data-atab="return" href="#/" title="Check the class, then get the marked files to give back">Return</a>
     </nav>
     <span class="sp"></span>

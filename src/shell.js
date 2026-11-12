@@ -34,7 +34,7 @@ function railRender() {
   // The tab's name goes into the browser's history, which some browsers copy to an account. A download's name can be a student's, so it stays out;
   // an assignment or class name she typed herself is fine.
   const asg = batch && batch.assignment && findItem(batch.assignment.id);
-  document.title = batch ? (asg ? asg.it.name + ' · ' : '') + 'Grading Studio' : r.v === 'class' ? (r.c === lib.loose ? 'No class' : r.c.name) + ' · Grading Studio' : r.v === 'settings' ? (r.sec === 'saving' ? '' : SET_SECS.find(x => x[0] === r.sec)[1] + ' · ') + 'Settings · Grading Studio' : r.v === 'help' ? 'Help · Grading Studio' : r.v === 'school' ? 'School resources · Grading Studio' : 'Grading Studio';
+  document.title = batch ? (asg ? asg.it.name + ' · ' : '') + 'Grading Studio' : r.v === 'class' ? (r.c === lib.loose ? 'No class' : r.c.name) + ' · Grading Studio' : r.v === 'settings' ? (r.sec === 'saving' ? '' : SET_SECS.find(x => x[0] === r.sec)[1] + ' · ') + 'Settings · Grading Studio' : r.v === 'help' ? 'Help · Grading Studio' : r.v === 'school' ? 'School resources · Grading Studio' : r.v === 'examples' ? 'Examples · Grading Studio' : 'Grading Studio';
 }
 // "Saved", and where: the same words as the top bar while grading and the line in Settings (folder.js says them).
 function railSavedRender() {
@@ -94,6 +94,7 @@ function findRows() {
     tabGo('grades/sheet', 'Grade sheet', 'Every grade found on the papers, with a crop of each');
     tabGo('insights', 'Insights', 'The class at a glance: average, spread, rubric rows, charts', 'statistics stats overview analysis graph mean median');
     tabGo('insights/consistency', 'Consistency check', 'Did you get harder or softer as you went?');
+    if (exOfWork(batch.id).length) tabGo('examples', 'Examples', 'Strong work from this assignment, with no names on it', 'strong example exemplar model answer anchor show class');
     tabGo('return', 'Return marked files', 'The marked files, back in their student folders', 'export download zip hand back send give feedback finished done');
     { const b = $('#quizTop'); if (b && !b.hidden) add('This assignment', b.textContent, b.title, press('#quizTop')); }
     for (const b of document.querySelectorAll('#moreMenu .mitem, #toolStash .mitem')) {
@@ -113,6 +114,7 @@ function findRows() {
   add('Go to', 'Today', 'What you teach today, what is waiting to be marked, what is ready to hand back', () => go('#/'));
   add('Go to', 'Planner', 'Units and lessons, on its own page', () => { location.href = $('#lessonsBtn').href; });
   add('Go to', 'School resources', 'Links, files and notes about your school', () => go('#/school'));
+  if (exList.length) add('Go to', 'Examples', 'Strong work from every class, with no names on it', () => go('#/examples'), '', 'strong example exemplar model answer show class');
   add('Go to', 'Settings', 'Saving, classes, terms, marking, display and keys', () => go('#/settings'));
   add('Go to', 'Help', 'Short answers to common questions', () => go('#/help'));
   for (const c of lib.classes) {

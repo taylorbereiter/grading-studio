@@ -1,12 +1,13 @@
 {
- "version": "1.27.6",
- "build": "8dd89a3080bf",
+ "version": "1.27.7",
+ "build": "d05bacf68389",
  "notes": [
-  "Returned files are named for the student, the assignment and what they are, like “Ana Lee - River essay - Graded.pdf”, or Feedback when there is no score. They still go in each student’s own folder.",
-  "To keep the names students turned in, untick Name each file by student and assignment under Options on the Return tab."
+  "Keep strong work as an example: press ☆ Example on an answer in Quick mark (or E), or pick Use as an example in the ⋯ beside a student’s name for a whole paper or part of a page. Names are covered, and your marks and the score stay off unless you switch them on. It is always optional.",
+  "The Examples tab on an assignment, and Examples in the sidebar for every class, have Show to the class, Copy picture, Download and Download as a sheet.",
+  "Examples go to your linked folder and into the take-home file with the rest of your work."
  ],
  "files": {
-  "index.html": "24e200f670915c160b57928ac70da7217e2ae4fa9f404509b79070e1b4facc8e",
-  "planner.html": "114272ffcdc0feefae04c31c0dd71d019106670b46defd86c4d68ada37c17d1e"
+  "index.html": "1873cdd1a8059bf183904be0cd06c567f8c195314f0f3fbca2659139147bf669",
+  "planner.html": "387d765476c0a64c33d7d72cb088fd901f844eaec06c0761ab5b6fb7288b93af"
  }
 }

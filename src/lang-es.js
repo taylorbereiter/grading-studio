@@ -31,7 +31,7 @@ const LANG_ES = {
   name: 'Español', locale: 'es',
   words: {
     /* the sidebar, on both pages */
-    'Main': 'Principal', 'Grading Studio, Today': 'Grading Studio, Hoy', 'Find anything': 'Buscar', 'Today': 'Hoy', 'Planner': 'Planificador', 'Classes': 'Clases', 'Add a class': 'Añadir una clase',
+    'Main': 'Principal', 'Grading Studio, Today': 'Grading Studio, Hoy', 'Find anything': 'Buscar', 'Today': 'Hoy', 'Planner': 'Planificador', 'Classes': 'Clases', 'Add a class': 'Añadir una clase', 'Examples': 'Ejemplos', 'Strong work from every class, with no names on it': 'Trabajos destacados de todas las clases, sin nombres',
     'School': 'Centro', 'School resources': 'Recursos del centro', 'School resources: links, files and notes about your school': 'Recursos del centro: enlaces, archivos y notas sobre tu centro',
     'Links, files and notes about your school': 'Enlaces, archivos y notas sobre tu centro', 'Links, files and notes about your school, on the grading page': 'Enlaces, archivos y notas sobre tu centro, en la página de calificación', 'Link': 'Enlace', 'File': 'Archivo', 'Note': 'Nota',
     'Help': 'Ayuda', 'Settings': 'Ajustes', 'Update ready': 'Actualización lista', 'No class': 'Sin clase', 'App language': 'Idioma de la aplicación', 'English, Spanish or Traditional Chinese': 'Inglés, español o chino tradicional',

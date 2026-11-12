@@ -2158,6 +2158,102 @@ html.welcoming .shell{visibility:hidden}
 .mebrow label{display:inline-flex;align-items:center;gap:6px;font-size:var(--text-control);color:var(--muted)}
 .mebrow input{height:32px;border:1px solid var(--line-strong);border-radius:var(--corner-2);padding:0 var(--space-2);font:inherit;font-size:var(--text-body);background:var(--surface);color:var(--fg);width:64px}
 .mebrow input.mebl{width:56px;font-weight:600}
+/* ---------- strong examples: the star in Quick mark, the Use as an example box, the Examples tab, Show to the class ---------- */
+.qmex[aria-pressed=true]{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+.qmex[aria-pressed=true]:hover{background:var(--accent-hover)}
+.qmex span{color:var(--accent)}
+.qmex[aria-pressed=true] span{color:var(--accent-fg)}
+.atab[hidden]{display:none}
+
+/* the box */
+.dlg .box.exbox{width:min(1180px,100%);height:calc((100vh - 32px - var(--savebar,0px)) / var(--uz))}
+.bb.exuse{flex:1;display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:var(--space-5);min-height:0;overflow:hidden;padding-bottom:var(--space-3)}
+.expv{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-4);align-content:start;overflow:auto;background:var(--surface-2);border-radius:var(--corner-5);padding:var(--space-4)}
+.expv.one{grid-template-columns:minmax(0,640px);justify-content:center}
+.expv>p{grid-column:1/-1;margin:var(--space-5) auto}
+.expg{position:relative}
+.excv{position:relative;cursor:crosshair;touch-action:none;line-height:0}
+.excv canvas{width:100%;height:auto;display:block;background:var(--paper-chip);box-shadow:var(--shadow);border-radius:var(--corner-1)}
+.expgn{position:absolute;right:var(--space-2);bottom:var(--space-2);background:var(--surface-2);color:var(--fg-2);border-radius:var(--corner-pill);padding:2px var(--space-2);font-size:var(--text-small)}
+.excrop,.exdrag{position:absolute;border:2px solid var(--accent);background:var(--accent-soft);opacity:.55;pointer-events:none;border-radius:var(--corner-1)}
+.excrop{opacity:1;background:none;box-shadow:0 0 0 9999px rgba(20,25,40,.28)}
+.exdrag{border-style:dashed;background:none;opacity:1;border-color:var(--fg-2)}
+.exdrag.part{border-color:var(--accent)}
+.expg:has(.excrop:not([hidden])){overflow:hidden;border-radius:var(--corner-1)}
+.exside{overflow:auto;display:flex;flex-direction:column;gap:var(--space-2);padding-right:var(--space-1)}
+.exh{margin:var(--space-3) 0 0;font-size:var(--text-small);font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.exh:first-child{margin-top:0}
+.exh .muted{text-transform:none;letter-spacing:0;font-weight:500}
+.exkind{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-2)}
+.exkind button{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;padding:var(--space-2) var(--space-3);border:1px solid var(--line-strong);border-radius:var(--corner-4);background:var(--surface);color:var(--fg)}
+.exkind button small{color:var(--muted);font-size:var(--text-control)}
+.exkind button[aria-pressed=true]{border-color:var(--accent);background:var(--accent-soft);color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.exnames{margin:0;font-size:var(--text-body);line-height:1.45;color:var(--fg-2)}
+.exnames b{color:var(--fg)}
+.exsw{display:flex;align-items:center;gap:var(--space-2);border:0;background:none;padding:2px 0;font:inherit;color:var(--fg);text-align:left}
+.exsw i{flex:none;width:34px;height:20px;border-radius:var(--corner-pill);background:var(--line-strong);position:relative;transition:background .15s}
+.exsw i::after{content:"";position:absolute;top:3px;left:3px;width:14px;height:14px;border-radius:var(--corner-round);background:var(--surface);transition:left .15s}
+.exsw[aria-checked=true] i{background:var(--accent)}
+.exsw[aria-checked=true] i::after{left:17px}
+.exwhyin{width:100%;box-sizing:border-box;border:1px solid var(--line-strong);border-radius:var(--corner-3);padding:var(--space-2) var(--space-3);font:inherit;background:var(--surface);color:var(--fg)}
+.exrows{display:flex;flex-wrap:wrap;gap:var(--space-2)}
+.exrow{border:0;border-radius:var(--corner-pill);padding:4px var(--space-3);background:var(--surface-2);color:var(--fg-2);font:inherit;font-size:var(--text-control)}
+.exrow[aria-pressed=true]{background:var(--accent-soft);color:var(--accent);font-weight:600}
+.exlock{display:inline-flex;align-items:center;gap:var(--space-2);color:var(--muted);font-size:var(--text-control);max-width:62%}
+.exlock svg{flex:none}
+@media (max-width:860px){.bb.exuse{grid-template-columns:minmax(0,1fr);overflow:auto}.expv{grid-template-columns:minmax(0,1fr)}}
+
+/* the tab */
+.exsub{font-size:var(--text-body)}
+.bb.exbb{max-width:1280px}
+.exsec{margin:var(--space-2) 0 var(--space-3);font-size:var(--text-small);font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.exsec~.exsec{margin-top:var(--space-6)}
+.exgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:var(--space-4);align-items:start}
+.excard{background:var(--surface);border:1px solid var(--line);border-radius:var(--corner-5);padding:var(--space-3);display:flex;flex-direction:column;gap:var(--space-2)}
+.exthumb{display:block;border:1px solid var(--line);border-radius:var(--corner-3);background:var(--paper-chip);padding:0;overflow:hidden;height:170px;cursor:zoom-in}
+.excard.paper .exthumb{height:280px}
+.exthumb img{width:100%;height:100%;object-fit:contain;object-position:top center;display:block}
+.excard.answer .exthumb img,.excard.part .exthumb img{object-position:top left}
+.exct{display:flex;align-items:center;gap:var(--space-2)}
+.exct b{font-size:var(--text-lead)}
+.exstar{color:var(--accent)}
+.exchip{margin-left:auto;background:var(--surface-2);color:var(--fg-2);border-radius:var(--corner-pill);padding:2px var(--space-2);font-size:var(--text-control)}
+.exrowtag{margin-left:auto;background:var(--accent-soft);color:var(--accent);border-radius:var(--corner-pill);padding:2px var(--space-2);font-size:var(--text-control);font-weight:600}
+.exwhy{margin:0;color:var(--fg-2);font-size:var(--text-body);min-height:20px}
+.exadd{color:var(--muted);font-weight:500;text-decoration:none}
+.exacts{display:flex;align-items:center;gap:var(--space-2);flex-wrap:wrap}
+.exwho{margin:0;display:flex;align-items:center;gap:6px;color:var(--muted);font-size:var(--text-control)}
+.excard.exnone{border-style:dashed;background:none;justify-content:center;min-height:200px;text-align:center;color:var(--fg-2)}
+.excard.exnone p{margin:0;line-height:1.6}
+.exempty{max-width:520px;margin:var(--space-7) auto;text-align:center}
+
+/* Show to the class */
+.exshow{position:fixed;inset:0;z-index:1000;background:var(--surface);color:var(--fg);display:flex;flex-direction:column;outline:0}
+.exshd{display:flex;align-items:center;gap:var(--space-3);padding:var(--space-5) var(--space-6) var(--space-3)}
+.exshd h2{margin:0;font-size:var(--text-display)}
+.exsbadge{background:var(--accent-soft);color:var(--accent);border-radius:var(--corner-pill);padding:4px var(--space-3);font-size:var(--text-lead);font-weight:500}
+.exshd .sp,.exsft .sp{flex:1}
+.exslink{border:0;background:none;font:inherit;font-size:var(--text-body);font-weight:500;color:var(--fg-2);padding:var(--space-2) var(--space-3);border-radius:var(--corner-3)}
+.exslink:hover{background:var(--hover)}
+.exsbody{flex:1;overflow:auto;padding:var(--space-4) var(--space-6)}
+.exspics{display:flex;flex-direction:column;align-items:center;gap:var(--space-4);margin:0 auto;width:calc(min(100%, 1600px) * var(--exz,1))}
+.exspics.paper{width:calc(min(100%, 900px) * var(--exz,1))}
+.exspics img{width:100%;height:auto;display:block;border:1px solid var(--line);border-radius:var(--corner-4);box-shadow:var(--shadow);background:var(--paper-chip)}
+.exsnote{display:flex;align-items:baseline;gap:var(--space-3);max-width:1600px;margin:var(--space-5) auto 0;font-size:var(--text-display);font-weight:500;line-height:1.3}
+.exsnote span{color:var(--accent)}
+.exsnote.top{max-width:900px;margin:0 auto var(--space-4);font-size:var(--text-heading)}
+.exsft{display:flex;align-items:center;gap:var(--space-3);padding:var(--space-3) var(--space-6) var(--space-4);font-size:var(--text-lead)}
+.exsft .muted{font-size:var(--text-body)}
+
+/* the Examples page in the sidebar */
+.exbar{display:flex;align-items:center;flex-wrap:wrap;gap:var(--space-2);margin:0 0 var(--space-5)}
+.exbar .sp{flex:1}
+.exbar select{max-width:220px}
+.exn{font-size:var(--text-control)}
+.exnone2{margin:var(--space-6) 0}
+.exgroup{margin:0 0 var(--space-7)}
+.exgh{margin:0 0 var(--space-3);font-size:var(--text-lead);font-weight:600}
+.exgh .muted{font-weight:500;font-size:var(--text-body)}
 /* ---------- Help: short answers on a page of their own ---------- */
 #vHelp{max-width:760px}
 .hlpfind{position:relative;margin:0 0 var(--space-5)}
@@ -2543,6 +2639,7 @@ button.seat[data-n]:hover{border-color:var(--accent)}
   <button class="rfind" id="findBtn" aria-haspopup="dialog" title="Find a student, an assignment, a tool or a setting"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5"/></svg><span class="rl">Find anything</span><kbd class="rl" id="findKey">Ctrl K</kbd></button>
   <a class="rnav" data-nav="home" href="#/" title="Today: what you teach, what is waiting to be marked, what is ready to hand back"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.6"/><path d="M12 3v2.2M12 18.8V21M3 12h2.2M18.8 12H21M5.6 5.6l1.6 1.6M16.8 16.8l1.6 1.6M5.6 18.4l1.6-1.6M16.8 7.2l1.6-1.6"/></svg><span class="rl">Today</span></a>
   <a class="rnav" id="lessonsBtn" href="planner.html" title="Plan units and lessons. The Planner is a separate page and never sees grading work."><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M8 3v4M16 3v4"/></svg><span class="rl">Planner</span></a>
+  <a class="rnav" data-nav="examples" id="railExamples" href="#/examples" hidden title="Strong work from every class, with no names on it"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4l2.4 5 5.4.6-4 3.7 1.1 5.3L12 16l-4.9 2.6 1.1-5.3-4-3.7 5.4-.6z"/></svg><span class="rl">Examples</span></a>
   <a class="rnav" data-nav="school" href="#/school" title="School resources: links, files and notes about your school"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 20.5h17M5.5 20.5v-9M18.5 20.5v-9M3.5 11.5L12 5l8.5 6.5M10 20.5v-5h4v5M12 5V3h3"/></svg><span class="rl">School</span></a>
   <div class="rcap"><span class="rl">Classes</span></div>
   <div id="railClasses"></div>
@@ -2600,6 +2697,10 @@ button.seat[data-n]:hover{border-color:var(--accent)}
   <section class="view" id="vClass" hidden>
     <div id="classes"></div>
     <p class="muted vhint" id="classHint">Drag an assignment to another unit, or onto a class in the sidebar. Drag a unit’s name to move the unit. Drop <span class="sysZip">a ManageBac ZIP</span> on an assignment to open it there.</p>
+  </section>
+  <section class="view" id="vExamples" hidden>
+    <header class="vhead"><h1>Examples</h1><span class="muted">Strong work from every class, with no names on it.</span></header>
+    <div id="exPage"></div>
   </section>
   <section class="view" id="vSchool" hidden>
     <header class="vhead"><h1>School resources</h1><span class="muted">Links, files and notes about your school, kept with your work on this computer.</span></header>
@@ -2696,6 +2797,7 @@ button.seat[data-n]:hover{border-color:var(--accent)}
       <a class="atab" id="markTab" data-atab="" href="#/">Mark</a>
       <a class="atab" id="gradesBtn" data-atab="grades" href="#/" title="Every score and comment, beside the grade written on each paper">Grades</a>
       <a class="atab" id="insightsTab" data-atab="insights" href="#/" title="How the class did, row by row, and whether your scoring stayed even">Insights</a>
+      <a class="atab" id="examplesTab" data-atab="examples" href="#/" hidden title="Strong work from this assignment, with no names on it">Examples <span class="atn" hidden></span></a>
       <a class="atab" id="exportBtn" data-atab="return" href="#/" title="Check the class, then get the marked files to give back">Return</a>
     </nav>
     <span class="sp"></span>
@@ -3736,12 +3838,12 @@ SOFTWARE.
 <script>/* ---------------- saved-data versions: a safety copy, then any format changes, before the app starts ---------------- */
 const gsData = (() => {
   'use strict';
-  const APP_VERSION = "1.27.6";   // from package.json, the one place it's set
+  const APP_VERSION = "1.27.7";   // from package.json, the one place it's set
   const MIGRATIONS = [
   ];
   const DATA_V = Math.max(1, ...MIGRATIONS.map(s => s.to));
   const SAFETY_DB = 'grading-studio-safety', SNAP_KEEP = 3, STUCK_MS = 30000, KEEP_DB = 'grading-studio-keep', SLICE_MAX = 32e6, TRY_KEY = 'gsm.try';   // TRY_KEY is outside gs.*, so copies and backups never carry it
-  const STORES = [[KEEP_DB, 'work'], [KEEP_DB, 'meta'], [KEEP_DB, 'edits'], ['grading-studio-added', 'files']];
+  const STORES = [[KEEP_DB, 'work'], [KEEP_DB, 'meta'], [KEEP_DB, 'edits'], ['grading-studio-added', 'files'], ['grading-studio-examples', 'ex'], ['grading-studio-examples', 'pix']];   // examples' pictures are small, and a copy put back needs them
   const info = { note: '' };   // shown once the app is up
   const endTry = () => { try { localStorage.removeItem(TRY_KEY); } catch {} };
   let stopped = false;   // she stopped a stuck update: a step still running can't change anything from here on
@@ -3981,7 +4083,7 @@ const LANG_ES = {
   name: 'Español', locale: 'es',
   words: {
     /* the sidebar, on both pages */
-    'Main': 'Principal', 'Grading Studio, Today': 'Grading Studio, Hoy', 'Find anything': 'Buscar', 'Today': 'Hoy', 'Planner': 'Planificador', 'Classes': 'Clases', 'Add a class': 'Añadir una clase',
+    'Main': 'Principal', 'Grading Studio, Today': 'Grading Studio, Hoy', 'Find anything': 'Buscar', 'Today': 'Hoy', 'Planner': 'Planificador', 'Classes': 'Clases', 'Add a class': 'Añadir una clase', 'Examples': 'Ejemplos', 'Strong work from every class, with no names on it': 'Trabajos destacados de todas las clases, sin nombres',
     'School': 'Centro', 'School resources': 'Recursos del centro', 'School resources: links, files and notes about your school': 'Recursos del centro: enlaces, archivos y notas sobre tu centro',
     'Links, files and notes about your school': 'Enlaces, archivos y notas sobre tu centro', 'Links, files and notes about your school, on the grading page': 'Enlaces, archivos y notas sobre tu centro, en la página de calificación', 'Link': 'Enlace', 'File': 'Archivo', 'Note': 'Nota',
     'Help': 'Ayuda', 'Settings': 'Ajustes', 'Update ready': 'Actualización lista', 'No class': 'Sin clase', 'App language': 'Idioma de la aplicación', 'English, Spanish or Traditional Chinese': 'Inglés, español o chino tradicional',
@@ -4352,7 +4454,7 @@ const LANG_ZH = {
   name: '繁體中文', locale: 'zh-Hant',
   words: {
     /* the sidebar, on both pages */
-    'Main': '主選單', 'Grading Studio, Today': 'Grading Studio，今天', 'Find anything': '搜尋', 'Today': '今天', 'Planner': '備課', 'Classes': '班級', 'Add a class': '新增班級',
+    'Main': '主選單', 'Grading Studio, Today': 'Grading Studio，今天', 'Find anything': '搜尋', 'Today': '今天', 'Planner': '備課', 'Classes': '班級', 'Add a class': '新增班級', 'Examples': '範例', 'Strong work from every class, with no names on it': '各班的優秀作品，不顯示姓名',
     'School': '學校', 'School resources': '學校資源', 'School resources: links, files and notes about your school': '學校資源：學校的連結、檔案與筆記',
     'Links, files and notes about your school': '學校的連結、檔案與筆記', 'Links, files and notes about your school, on the grading page': '學校的連結、檔案與筆記，在批改頁面', 'Link': '連結', 'File': '檔案', 'Note': '筆記',
     'Help': '說明', 'Settings': '設定', 'Update ready': '有新版本', 'No class': '未指定班級', 'App language': '介面語言', 'English, Spanish or Traditional Chinese': '英文、西班牙文或繁體中文',
@@ -6008,6 +6110,7 @@ async function openStudent(i, filePath) {
       '<button class="mitem" id="addScanBtn">From a scan…<small>A stack of pages scanned as one PDF</small></button>') +
     kmWrap('⋯', 'id="whoMore" class="btn sm kdots" aria-label="More for this paper" title="More for this paper"',
       (st.files.some(viewable) || fileSeq(st).length > 1 ? '<button class="mitem" id="arrangeBtn">Arrange pages<small>Combine files, reorder or take pages out</small></button>' : '') +
+      (st.files.some(f => !f.virtual && !f.rubric && (viewable(f) || f.kind === 'docx')) ? '<button class="mitem" data-whodo="example">Use as an example<small>A strong paper or part of a page, with names covered</small></button>' : '') +
       '<button class="mitem" data-whodo="light">Lighting<small>Make a pale or too-bright scan easier to read</small></button>' +
       '<button class="mitem" data-whodo="calc">Calculator <kbd>=</kbd></button>', 'right') + '</div>' + groupBand(st);
   paper.scrollTop = 0;
@@ -6127,7 +6230,7 @@ $('#paper').addEventListener('click', e => {
   if (e.target.closest('#addFileBtn')) return pickAdd(batch.students[cur]);
   if (e.target.closest('#pasteTextBtn')) return openPasteText(batch.students[cur]);
   if (e.target.closest('#addScanBtn')) { scanInto = true; scanFor = null; return $('#scanIn').click(); }
-  const wd = e.target.closest('[data-whodo]'); if (wd) return wd.dataset.whodo === 'light' ? openLight() : openCalc();
+  const wd = e.target.closest('[data-whodo]'); if (wd) return wd.dataset.whodo === 'light' ? openLight() : wd.dataset.whodo === 'example' ? openUseExample(cur) : openCalc();
   const ra = e.target.closest('[data-rmfile]');
   if (ra) {   // two clicks, so a stray click can't throw a file away
     if (!ra.dataset.armed) { ra.dataset.armed = '1'; ra.textContent = 'Click again to remove'; ra.style.color = 'var(--warn)'; setTimeout(() => { if (ra.isConnected) { delete ra.dataset.armed; ra.textContent = 'Remove'; ra.style.color = ''; } }, 4000); return; }
@@ -7258,7 +7361,7 @@ function closeDlg() {
 }
 $('#dlg').addEventListener('pointerdown', e => { if (e.target.id === 'dlg' && !dlgPage) { if (SP) splitLeave(); else leaveDlg(); } });
 function toPaper(i, path) { closeDlg(); if (batch && routeNow().tab) go(batchHash(batch.id)); return openStudent(i, path); }
-const TAB_DRAW = { grades: () => openGrades(), 'grades/sheet': () => openSheet(false), insights: () => openOverview(), 'insights/consistency': () => openCons(), return: () => openExport() };
+const TAB_DRAW = { grades: () => openGrades(), 'grades/sheet': () => openSheet(false), insights: () => openOverview(), 'insights/consistency': () => openCons(), examples: () => openExamples(), return: () => openExport() };
 function tabShow(r) {
   const key = r.tab ? r.tab + (r.sub ? '/' + r.sub : '') : '';
   if (shellReady) tabsRender();
@@ -8439,15 +8542,16 @@ function keptCovers(cs, path, p, W, H) {
   return Object.assign(kept, { gone });
 }
 const scrubMarks = (marks, rx) => marks.map(m => m.text != null ? { ...m, text: scrub(m.text, rx) } : m);
-async function sharePage(st, f, js, p, scale, rx, opts) {
+async function sharePage(st, f, js, p, scale, rx, opts, look) {
   const page = await js.getPage(p + 1);
   const vp = vpRot(f, p, page, 1), W = vp.width, H = vp.height;
-  const marks = scrubMarks((f.marks[p] || []).concat((f.kami && f.kami[p] && f.kami[p].notes) || []), rx);
+  const marks = look && look.bare ? [] : scrubMarks((f.marks[p] || []).concat((f.kami && f.kami[p] && f.kami[p].notes) || []), rx);
   const side = marks.some(m => m.t === 'note') ? sideFor(W) : 0;
   const c = document.createElement('canvas');
   c.width = Math.ceil((W + side) * scale); c.height = Math.ceil(H * scale);
   const ctx = c.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
   await page.render({ canvasContext: ctx, ...vpDraw(f, p, page, scale), annotationMode: pdfjsLib.AnnotationMode.ENABLE }).promise;
+  if (look && look.light) { const L = lightForPage(st, f, p); if (L) lightCanvas(ctx, Math.ceil(W * scale), c.height, L); }
   scanClip(ctx, f, p, W * scale, c.width, c.height);
   ctx.setTransform(scale, 0, 0, scale, 0, 0);
   drawMarks(ctx, marks, W, H, side, null);
@@ -9535,6 +9639,7 @@ const routeOf = hash => {
     }
   }
   if (p[0] === 'class-named' && p[1]) { const nk = s => String(s || '').toLowerCase().replace(/[^a-z0-9]/g, ''), k = nk(p.slice(1).join('/')), c = k && lib.classes.find(c => nk(c.name) === k); return c ? { v: 'class', c, tab: '', stu: null, named: true } : { v: 'home', noClass: p.slice(1).join('/').slice(0, 60) }; }
+  if (p[0] === 'examples') return { v: 'examples' };
   if (p[0] === 'school') return { v: 'school' };
   if (p[0] === 'help') return { v: 'help', topic: HELP.some(t => t.id === p[1]) ? p[1] : '' };
   if (p[0] === 'settings') return { v: 'settings', sec: SET_SECS.some(x => x[0] === p[1]) ? p[1] : 'saving' };
@@ -9551,7 +9656,7 @@ const SET_SECS = [['saving', 'Saving and carrying', 'Folder, take-home file, new
 const CLASS_TABS = [['', 'Assignments'], ['gradebook', 'Gradebook'], ['students', 'Students'], ['attendance', 'Attendance'], ['seating', 'Seating'], ['missing', 'Missing work'], ['charts', 'Charts'], ['goals', 'Goals'], ['reports', 'Report comments']];   // Goals shows only once the teacher has a learning goal (goals.js)
 const classTabs = () => CLASS_TABS.filter(t => t[0] !== 'attendance' || attOn());   // attendance is the teacher's to turn off
 const classHash = (c, tab, stu) => '#/class/' + (c === lib.loose || !c.id ? '-' : encodeURIComponent(c.id)) + (tab ? '/' + tab + (stu != null ? '/' + (stu + 1) : '') : '');
-const A_TABS = [['', 'Mark'], ['grades', 'Grades'], ['insights', 'Insights'], ['return', 'Return']], A_SUBS = { grades: ['sheet'], insights: ['consistency'] };
+const A_TABS = [['', 'Mark'], ['grades', 'Grades'], ['insights', 'Insights'], ['examples', 'Examples'], ['return', 'Return']], A_SUBS = { grades: ['sheet'], insights: ['consistency'] };
 const batchHash = (id, tab) => '#/a/' + encodeURIComponent(String(id).replace(/^gs\.b\./, '')) + (tab ? '/' + tab : '');
 function reloadHome() { try { sessionStorage.setItem('gs.goHome', '1'); } catch {} location.reload(); }
 try { if (sessionStorage.getItem('gs.goHome')) { sessionStorage.removeItem('gs.goHome'); if (location.hash) history.replaceState(null, '', location.pathname + location.search); } } catch {}
@@ -9603,12 +9708,13 @@ function showScreen(r) {
   if (grading && !$('#welcome').hidden) wlClose();   // papers opened past the welcome (dropped on the page): the questions wait on Home's card instead
   $('#shell').classList.toggle('grading', grading);
   $('#app').hidden = !grading; $('#start').hidden = grading;
-  for (const [id, v] of [['vHome', 'home'], ['vClass', 'class'], ['vSettings', 'settings'], ['vHelp', 'help'], ['vSchool', 'school'], ['vOpening', 'opening']]) $('#' + id).hidden = grading || r.v !== v;
+  for (const [id, v] of [['vHome', 'home'], ['vClass', 'class'], ['vSettings', 'settings'], ['vHelp', 'help'], ['vSchool', 'school'], ['vExamples', 'examples'], ['vOpening', 'opening']]) $('#' + id).hidden = grading || r.v !== v;
   if (r.v !== 'class') classLeave();
   const key = grading ? 'a' : r.v + (r.c ? ':' + r.c.id + ':' + r.tab + (r.stu != null ? ':one' : '') : '');   // moving from one student to the next keeps her place on the page
   if (!grading && key !== screenKey) $('#shellMain').scrollTop = 0;
   screenKey = key;
   railRender();
+  if (!grading && r.v === 'examples') exPageRender();
   if (grading) tabShow(r); else if (dlgPage) dlgShut();
 }
 function keptState(m) {
@@ -10108,6 +10214,7 @@ async function forgetKept(id) {
   try { await gsData.forget(id); }   // first, so if this fails it can simply be clicked again
   catch (e) { console.error(e); return toast('That didn’t work, so nothing was forgotten. Try again.'); }
   lsPut(forgotKey(id), String(Date.now()));   // any tab with it open lets go now
+  await exForgetWork(id);   // its strong examples stay; whose they were goes
   await noteForgotten(id);
   try {
     await paperDrop(id);
@@ -18527,6 +18634,7 @@ async function folderGoBack(name) {
   for (const [id, m] of Object.entries(s.meta || {})) put('grading-studio-keep/meta', id, m);
   for (const [id, list] of Object.entries(s.edits || {})) for (const [p, r] of Object.entries(list)) put('grading-studio-keep/edits', id + '|' + p, { t: r.t, data: await getBlob(r.data), orig: r.orig ? await getBlob(r.orig) : null });
   for (const [id, list] of Object.entries(s.added || {})) for (const [k, r] of Object.entries(list)) { const { hash, size, ...x } = r; put('grading-studio-added/files', id + '|' + k, { ...x, data: await getBlob({ hash, size }) }); }
+  await exKeepFor(rec);
   batch = null;
   await gsData.putBackData(rec);
   carryAfterPutBack();
@@ -18554,6 +18662,7 @@ async function folderRemove(id) {
     }
     for (const x of Object.keys(s.added || {})) markAll(s.added[x], s.edits && s.edits[x]);
   }
+  for (const h of await exFolderHashes()) used.add(h);   // examples' pictures live in files/ too
   const files = await fld.root.getDirectoryHandle('files', { create: true }), drop = [];
   for await (const [n] of files.entries()) if (!used.has(n.replace(/\.dat$/, ''))) drop.push(n);
   for (const n of drop) await files.removeEntry(n).catch(() => {});
@@ -18664,6 +18773,7 @@ async function reconcileNow() {
   for (const [k, v] of Object.entries(set)) lsPut(k, v);
   await pushLibrary();
   await schFolderSync();   // the files of the school resources, either way
+  try { await exFolderSync(true); } catch (e) { console.error(e); }   // examples merge on their own, by id, and never hold up the rest
   fld.lib = false; fld.answers = {};
   try { localStorage.removeItem('gsc.win'); } catch {}
   await dailySnapshot();
@@ -18844,6 +18954,7 @@ async function takeWrite(sink, pass, onp, stop, more) {
   });
   await schReady;   // the files of the school resources (school.js)
   for (const f of schRefs()) { const data = await schBytes(f.hash); if (data) await frame({ k: 'school', hash: f.hash }, data); }
+  await exTakeFrames(frame);
   if (more && more.extra) await more.extra(frame);
   await frame({ k: 'end' });
   await seal(true);
@@ -18899,7 +19010,7 @@ async function takeOpen(file, pass) {
   return { read, chunkAt, chunk, plainLen };
 }
 async function takeScan(rd, onp) {
-  const B = { work: {}, meta: {}, tomb: {}, added: {}, edits: {}, papers: {}, addedAt: {}, editAt: {}, school: {}, ls: {}, lib: null, info: null, need: 0 };
+  const B = { work: {}, meta: {}, tomb: {}, added: {}, edits: {}, papers: {}, addedAt: {}, editAt: {}, school: {}, ex: {}, exAt: {}, ls: {}, lib: null, info: null, need: 0 };
   let pos = 0, seen = -1, ended = false;
   const skipTo = async end => { const stop = Math.ceil(end / rd.chunk); for (let i = seen + 1; i < stop; i++) { await rd.chunkAt(i); seen = i; if (onp) onp((i + 1) * rd.chunk); } };
   try {
@@ -18917,6 +19028,8 @@ async function takeScan(rd, onp) {
       else if (f.k === 'paper') { const p = B.papers[f.id] ||= { label: f.label, entries: [], size: 0 }; p.entries.push({ path: f.path, off: pos, n, none: f.none }); p.size += n; }
       else if (f.k === 'added') { (B.addedAt[f.id] ||= {})[f.lk] = { rec: f.rec, off: pos, n }; (B.added[f.id] ||= {})[f.lk] = f.rec.added || 0; }
       else if (f.k === 'edit') { (B.editAt[f.id] ||= {})[f.path] = { t: f.t, off: pos, n, nd: f.nd, hasOrig: f.hasOrig }; (B.edits[f.id] ||= {})[f.path] = f.t; }
+      else if (f.k === 'ex') { if (f.rec && f.rec.id) B.ex[f.rec.id] = f.rec; }
+      else if (f.k === 'expix') B.exAt[f.id + '|' + f.i] = { off: pos, n };
       else if (f.k === 'school') B.school[f.hash] = { off: pos, n };
       else if (f.k === 'plan') (B.plan ||= []).push({ f, off: pos, n });   // the Planner's records, in a year's archive
       else if (f.k === 'end') ended = true;
@@ -18940,6 +19053,11 @@ const takeSource = (rd, B) => ({
     const both = await rd.read(e.off, e.n);
     return { t: e.t, data: both.slice(0, e.nd), orig: e.hasOrig ? both.slice(e.nd) : null };
   },
+  async exPics(r) {
+    const out = [];
+    for (let i = 0; i < (r.pages || []).length; i++) { const a = B.exAt[r.id + '|' + i]; if (!a) return null; out.push(new Blob([await rd.read(a.off, a.n)], { type: 'image/jpeg' })); }
+    return out;
+  },
   async school(hash) { const s = B.school && B.school[hash]; return s ? rd.read(s.off, s.n) : null; },
 });
 const TAKE_SAY = {
@@ -18955,7 +19073,7 @@ const papersLacking = () => [...keptMeta.values()].filter(m => !m.papers).map(m 
 function openTake() {
   if (batch) saveNow();
   openDlg('<div class="bh"><h2>Take my work with me</h2><button class="icon" data-close aria-label="Close">✕</button></div><div class="bb" id="takeBox">' +
-    '<p style="margin-top:0">Makes one protected file with everything you need to grade on another computer: student files, marks, scores, comments, rosters, rubrics, readings, Word edits and added files. Planner work stays here.</p>' +
+    '<p style="margin-top:0">Makes one protected file with everything you need to grade on another computer: student files, marks, scores, comments, rosters, rubrics, readings, Word edits, added files and strong examples. Planner work stays here.</p>' +
     '<p class="muted" style="font-size:14px">Choose a passphrase of a few words. If you forget it, nobody can open this file, you included, but your work here isn’t affected. Keep the file somewhere private all the same.</p>' +
     passFields() + '<label class="tkf">Again, to be sure<input type="password" id="takeP2" autocomplete="off"></label><p class="tkerr" id="takeErr" role="alert" hidden></p></div>' +
     '<div class="bf"><button class="btn" data-close>Cancel</button><button class="btn primary" id="takeGo">Make the file</button></div>', true);
@@ -19124,7 +19242,7 @@ async function bringPlan(B) {
 }
 const askSig = a => a.gone ? '!' + a.id + '|' + (a.work && a.work.t) : a.id + '|' + a.key + '|' + recHash(a.a);
 async function bringPreview(B, src, label, sub, again) {
-  const { plan, libm, lsSet } = await bringPlan(B), rows = plan.rows, lines = [], asks = [...plan.asks, ...libm.asks], shown = new Set(asks.map(askSig));
+  const { plan, libm, lsSet } = await bringPlan(B), rows = plan.rows, lines = [], asks = [...plan.asks, ...libm.asks], shown = new Set(asks.map(askSig)), ex = await exBringPlan(B);
   const nw = rows.filter(r => r.kind === 'new'), mg = rows.filter(r => r.kind === 'merge'), gn = rows.filter(r => r.kind === 'gone');
   const li = t => '<li>' + t + '</li>';
   if (nw.length) lines.push('<p><b>' + nw.length + ' new ' + (nw.length === 1 ? 'download' : 'downloads') + '</b></p><ul>' + nw.map(r => li(esc(r.name) + ' <span class="muted">· ' + (r.meta && r.meta.n || Object.keys((r.work && r.work.s) || {}).length) + ' ' + ((r.meta && r.meta.n || Object.keys((r.work && r.work.s) || {}).length) === 1 ? 'student' : 'students') + (r.work ? ', ' + r.meta.scored + ' scored' : '') + (B.papers && B.papers[r.id] ? ', ' + fmtSize(B.papers[r.id].size) : '') + '</span>')).join('') + '</ul>');
@@ -19144,7 +19262,8 @@ async function bringPreview(B, src, label, sub, again) {
   if (off.length) lines.push('<p id="bringCardOff">The rubric saved with ' + off.map(r => '<b>' + esc(r.name) + '</b>').join(', ') + ' doesn’t match ' + (off.length === 1 ? 'its assignment card' : 'their assignment cards') + '. Bringing this in doesn’t settle that, so you’ll be asked which one to use when you open ' + (off.length === 1 ? 'it' : 'them') + '.</p>');
   const lsReal = Object.keys(lsSet).filter(k => k !== 'gs.rubricsGone' && /^gs\.(bank|setup|rubrics|school|rp\.|rd\.)/.test(k));
   if (lsReal.length) lines.push('<p><b>Also</b></p><ul>' + (lsSet['gs.bank'] ? li('Saved comments from the other computer are added to yours') : '') + (lsSet['gs.school'] ? li('School resources added or changed on the other computer') : '') + (lsReal.some(k => k !== 'gs.bank' && k !== 'gs.school') ? li('Rubrics or settings you don’t have here yet') : '') + '</ul>');
-  const nothing = !nw.length && !gn.some(r => r.onA) && !libm.notes.length && !lsReal.length && !asks.length && !mg.some(r => r.extra || r.setIn.length || r.rows.some(x => x.pick === 'b'));
+  if (ex.add || ex.change || ex.drop) lines.push('<p><b>Examples</b></p><ul id="bringEx">' + (ex.add ? li(ex.add + (ex.add === 1 ? ' new example' : ' new examples')) : '') + (ex.change ? li(ex.change + (ex.change === 1 ? ' example was changed' : ' examples were changed') + ' there') : '') + (ex.drop ? li(ex.drop + (ex.drop === 1 ? ' example was deleted there, so it goes here too' : ' examples were deleted there, so they go here too')) : '') + '</ul>');
+  const nothing = !ex.list.length && !nw.length && !gn.some(r => r.onA) && !libm.notes.length && !lsReal.length && !asks.length && !mg.some(r => r.extra || r.setIn.length || r.rows.some(x => x.pick === 'b'));
   const sameN = rows.filter(r => r.kind === 'same' || r.kind === 'onlyA').length;
   const need = rows.filter(r => r.kind === 'new').reduce((a, r) => a + ((B.papers && B.papers[r.id] && B.papers[r.id].size) || 0), 0);
   let room = '';
@@ -19214,6 +19333,7 @@ async function bringApply(B0, src, shown, answers) {
     await applyRow(r, none);
   }
   store.set('gs.tomb', plan.tomb);
+  if (src.exPics) await exTake((await exBringPlan(B0)).list, src.exPics);
   const v = B.info && B.info.dataV;
   if (!v) store.del('gs.dataV'); else if (v < gsData.version()) store.set('gs.dataV', v);
   return true;
@@ -19255,7 +19375,7 @@ async function removeHere() {
   const folderLine = linked ? '\n\nYour linked folder “' + fld.name + '” isn’t touched: its files stay where they are, and this browser stops saving to it. To delete them, delete that folder yourself.' : '';
   const warn = !list.length ? '' : !last ? '\n\nYou haven’t made a take-home file from this browser, so anything done here may not be anywhere else.'
     : newer.length ? '\n\n' + newer.length + (newer.length === 1 ? ' download has' : ' downloads have') + ' changes since your last take-home file (' + whenOf(last) + '). Those changes aren’t in that file.' : '\n\nYour last take-home file was made ' + whenOf(last) + ', after your last change.';
-  const typed = await askTextDlg('This removes all student work from this browser: ' + list.length + (list.length === 1 ? ' download' : ' downloads') + ' with their papers, marks, scores and comments, plus rosters, units, rubrics, late files, readings, Word edits, school resources and safety copies.' + warn + folderLine + '\n\nPlanner work isn’t touched. This can’t be undone.\n\nType REMOVE to go ahead.', '', { ok: 'Remove from this computer', cancel: 'Keep it', danger: true });
+  const typed = await askTextDlg('This removes all student work from this browser: ' + list.length + (list.length === 1 ? ' download' : ' downloads') + ' with their papers, marks, scores and comments, plus rosters, units, rubrics, late files, readings, Word edits, school resources, examples and safety copies.' + warn + folderLine + '\n\nPlanner work isn’t touched. This can’t be undone.\n\nType REMOVE to go ahead.', '', { ok: 'Remove from this computer', cancel: 'Keep it', danger: true });
   if (typed == null) return;
   if (typed.trim().toUpperCase() !== 'REMOVE') return sayDlg('That didn’t say REMOVE, so nothing was removed.');
   await keepWait;   // papers still going in would land after the clearing
@@ -19268,6 +19388,7 @@ async function removeHere() {
     await idbDo('readwrite', o => o.clear());
     await new Promise(res => { const r = indexedDB.deleteDatabase('grading-studio-safety'); r.onsuccess = r.onerror = r.onblocked = () => res(); });
     await schRemoveAll();
+    await exRemoveAll();
   } catch (e) { console.error(e); tabsOver('done'); return sayDlg('Not everything could be removed. Close any other Grading Studio tabs and try again.'); }
   for (let i = localStorage.length - 1; i >= 0; i--) { const k = localStorage.key(i); if (k && (k.startsWith('gsc.saved.') || k.startsWith('gsc.forgot.') || k.startsWith('gs.') && !LS_LOOKS.test(k))) localStorage.removeItem(k); }
   try { localStorage.removeItem('gsc.win'); } catch {}
@@ -19767,6 +19888,7 @@ function openQuiz(view) {
     const mv = e.target.closest('[data-qgo]'); if (mv) { qmGo(+mv.dataset.qgo); return; }
     const op = e.target.closest('[data-open]'); if (op) { qmClose(); return openStudent(+op.dataset.open); }
     const pk = e.target.closest('[data-peek]'); if (pk) return qmPeek(pk.closest('.qmc'));
+    const ex = e.target.closest('[data-ex]'); if (ex) return exStar(ex.closest('.qmc'));
     const rs = e.target.closest('[data-reset]'); if (rs) return qmSpotSet(rs.closest('.qmc'), null);
     if (e.target.closest('[data-rest]')) return qmRest();
     const as = e.target.closest('.qmned [data-as]'); if (as) { for (const b of as.parentNode.children) b.setAttribute('aria-pressed', String(b === as)); as.closest('.qmned').querySelector('textarea').focus(); return; }
@@ -19836,7 +19958,7 @@ const qmCard = (i, q, qi) => {
   const tag = v != null && qzByPts(q) ? '<span class="qmchip">' + fmtNum(v) + ' of ' + fmtNum(pts) + '</span>' : '';
   return '<div class="qmc' + state + '" tabindex="0" data-st="' + i + '" data-q="' + q.id + '"><div class="qmch">' + head + tag +
     '<span class="qmchr">' + (qzOwn(st, q) ? '<button class="link hsm" data-reset title="Put this mark back where the question’s mark goes">Reset spot</button>' : '') +
-    '<button class="btn sm" data-peek title="See their whole page (Space)">⤢ Whole page</button></span></div>' +
+    exStarBtn(st, q) + '<button class="btn sm" data-peek title="See their whole page (Space)">⤢ Whole page</button></span></div>' +
     '<div class="qmimg" title="' + (qzByPts(q) && qzHow(q) === 'pts' ? 'Drag: line this paper up' : 'Click: wrong / right. Drag: line this paper up') + '"><span class="muted hsm">…</span></div>' +
     '<div class="qmbtns">' + btns + '<button class="qmb cm" data-qnote title="Write a comment or text on this paper (C)">Comment</button>' + (v != null ? '<button class="qmb clr" data-v="" title="Clear">Clear</button>' : '') + '</div>' + qmNoteLine(st, q) + '</div>';
 };
@@ -19899,7 +20021,7 @@ function qmRender() {
     $('#qmProg').textContent = done + ' of ' + who.length + ' marked';
     $('#qmFoot').innerHTML = '<button class="btn primary" data-rest' + (done === who.length ? ' disabled' : '') + '>' + (qzByPts(q) ? 'Give the rest ' + fmtNum(full) : 'Mark the rest right') + '</button>';
     $('#qmHint').textContent = (qzByPts(q) ? 'Keys: a number for its points, H adds ½' : 'Click an answer to put an ✗ on it, click again to take it off. Keys: 1 right, 0 or X wrong') +
-      ', C comment, arrows to move, Space whole page, Ctrl Z undo, [ and ] for the question. Drag a mark to move it on that paper.';
+      ', C comment, E example, arrows to move, Space whole page, Ctrl Z undo, [ and ] for the question. Drag a mark to move it on that paper.';
     cards = who.map(i => [i, q, qzAt]);
     body.className = 'bb qmbody qmgrid';
   } else {
@@ -19910,7 +20032,7 @@ function qmRender() {
       '<span class="qmtot">' + fmtNum(quizSum(st)) + ' / ' + fmtNum(quizMax()) + (n === qs.length && percentFor(quizSum(st)) != null ? ' = ' + percentFor(quizSum(st)) + '%' : '') + '</span>';
     $('#qmProg').textContent = n + ' of ' + qs.length + ' marked';
     $('#qmFoot').innerHTML = '<button class="btn" data-open="' + qzStu + '">Open their paper</button><button class="btn primary" data-rest' + (n === qs.length ? ' disabled' : '') + '>Mark the rest right</button>';
-    $('#qmHint').textContent = 'Click an answer to put an ✗ on it, click again to take it off. Keys: ↑ ↓ to move, a number for its points, C comment, Space whole page, Ctrl Z undo, [ and ] for the student.';
+    $('#qmHint').textContent = 'Click an answer to put an ✗ on it, click again to take it off. Keys: ↑ ↓ to move, a number for its points, C comment, E example, Space whole page, Ctrl Z undo, [ and ] for the student.';
     cards = qs.map((q, qi) => [qzStu, q, qi]);
     body.className = 'bb qmbody qmcol';
   }
@@ -20088,6 +20210,7 @@ function qmKey(e) {
   if (e.key === 'ArrowDown') { stop(); return move(cols); }
   if (e.key === 'ArrowUp') { stop(); return move(-cols); }
   if (e.key === ' ') { stop(); return qmPeek(el); }
+  if (e.key === 'e' || e.key === 'E') { stop(); return exStar(el); }   // keep this answer as a strong example, or take it back
   const q = batch.quiz.qs.find(x => x.id === el.dataset.q), scale = !q || qzByPts(q);
   if ((e.key === 'h' || e.key === 'H' || e.key === '½') && scale) { stop(); return qmHalf(el); }
   if (/^[0-9]$/.test(e.key) && scale) { stop(); return qmMark(el, +e.key); }
@@ -22863,6 +22986,7 @@ $('#vClass').addEventListener('click', e => {
 function tabsRender() {
   if (!batch) return;
   const r = routeNow(), on = r.v === 'a' ? r.tab : '';
+  exTabSay();
   for (const a of document.querySelectorAll('#aTabs .atab')) {
     const h = batchHash(batch.id, a.dataset.atab), cur = a.dataset.atab === on;
     if (a.getAttribute('href') !== h) a.setAttribute('href', h);
@@ -23159,6 +23283,701 @@ function cmtClick(e) {
   return false;
 }
 Object.assign(window.__gs, { flagsOf, lfSet, navOrder, kmClose, setList, listPeek, scoreRow: () => rowOn });
+
+/* ---------------- strong examples: a strong answer, paper or part of a page, kept as pictures with the names blacked out (11/11) ---------------- */
+const EX_DB = 'grading-studio-examples';
+let exDbP = null, exList = [], exReady = null;
+const exDb = () => exDbP ||= new Promise((res, rej) => {
+  const r = indexedDB.open(EX_DB, 1);
+  r.onupgradeneeded = () => { const db = r.result; if (!db.objectStoreNames.contains('ex')) db.createObjectStore('ex'); if (!db.objectStoreNames.contains('pix')) db.createObjectStore('pix'); };
+  r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
+});
+function exTx(stores, mode, fn) {
+  return exDb().then(db => new Promise((res, rej) => {
+    const tx = db.transaction(stores, mode), out = fn(tx);
+    tx.oncomplete = () => res(out && 'result' in out ? out.result : out); tx.onerror = () => rej(tx.error); tx.onabort = () => rej(tx.error);
+  }));
+}
+const exU = r => r.u || r.t || 0;
+const exHave = async () => !indexedDB.databases || (await indexedDB.databases()).some(d => d.name === EX_DB);
+exReady = (async () => {
+  try {
+    if (!await exHave()) return;
+    exList = ((await exTx('ex', 'readonly', tx => tx.objectStore('ex').getAll())) || []).filter(r => !r.gone);
+    exList.sort((a, b) => a.t - b.t);
+  } catch (e) { console.error(e); exList = []; }
+  exTabSay();
+  if (batch && dlgPage === 'examples') openExamples();   // the tab was drawn before the examples were read
+})();
+const exOfWork = id => exList.filter(r => r.work === id);
+async function exPut(rec, blobs, raw) {
+  if (!raw) rec = { ...rec, u: Date.now() };
+  await exTx(['ex', 'pix'], 'readwrite', tx => {
+    tx.objectStore('ex').put(rec, rec.id);
+    if (rec.gone) tx.objectStore('pix').delete(IDBKeyRange.bound(rec.id + '|', rec.id + '|\uffff'));
+    if (blobs) blobs.forEach((b, n) => tx.objectStore('pix').put(b, rec.id + '|' + n));
+  });
+  const k = exList.findIndex(r => r.id === rec.id);
+  if (rec.gone) { if (k >= 0) exList.splice(k, 1); exUrlsDrop(rec.id); }
+  else if (k >= 0) exList[k] = rec; else { exList.push(rec); exList.sort((a, b) => a.t - b.t); }
+  exTabSay(); exRailSay();
+  if (!raw) exFolderSoon();
+  return rec;
+}
+async function exDelete(id) {
+  if (!exList.some(r => r.id === id)) return;
+  await exPut({ id, t: Date.now(), gone: true });
+}
+const exUrlsDrop = id => { for (const [k, u] of exUrls) if (k.startsWith(id + '|')) { u.then(x => x && URL.revokeObjectURL(x)); exUrls.delete(k); } };
+const exAll = async () => await exHave() ? (await exTx('ex', 'readonly', tx => tx.objectStore('ex').getAll())) || [] : [];
+const exPics = async r => { const out = []; for (let n = 0; n < (r.pages || []).length; n++) { const b = await exPic(r.id, n); if (!b) return null; out.push(b); } return out; };
+const exPic = (id, n) => exTx('pix', 'readonly', tx => tx.objectStore('pix').get(id + '|' + n));
+const exUrls = new Map();
+const exUrl = (id, n) => { const k = id + '|' + n; if (!exUrls.has(k)) exUrls.set(k, exPic(id, n).then(b => b ? URL.createObjectURL(b) : null, () => null)); return exUrls.get(k); };
+async function exForgetWork(id) {
+  try { await exReady; } catch {}
+  for (const r of exOfWork(id)) if (r.from) { try { await exPut({ ...r, from: null }); } catch (e) { console.error(e); } }
+}
+
+/* how an example is named: never after the student */
+const exLabel = r => r.kind === 'answer' ? 'Question ' + ((r.q && r.q.lab) || '?') : r.kind === 'paper' ? 'Example ' + (r.letter || 'A') : 'Part of a page';
+const exFileLabel = r => r.kind === 'part' ? 'Part ' + (r.letter || 'A') : exLabel(r);
+const exTitleNow = () => nameFreeText((batch.assignment && batch.assignment.name) || batch.name || 'Assignment');
+const exFileName = (r, ext) => (nameFreeText(r.title || 'Assignment') + ' - ' + exFileLabel(r) + '.' + ext).replace(/[\\/:*?"<>|]+/g, '-');
+const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+function exNextLetter(work, kind) {
+  const used = exOfWork(work).filter(r => r.kind === kind).map(r => LETTERS.indexOf(r.letter));
+  return LETTERS[Math.min(25, Math.max(-1, ...used) + 1)];
+}
+const exFrom = st => ({ key: st.key });
+const exBase = (kind, st) => ({ id: uid() + uid(), t: Date.now(), kind, work: batch.id, asg: (batch.assignment && batch.assignment.id) || null, cls: (batchClass() || {}).id || null, title: exTitleNow(), q: null, row: null, why: '', letter: null, pages: [], marks: false, score: false, from: exFrom(st) });
+const exJpg = c => new Promise((res, rej) => c.toBlob(b => b ? res(b) : rej(new Error('picture too big')), 'image/jpeg', 0.88));
+async function exCovers(st, f, page, p) {
+  const vp = vpRot(f, p, page, 1);
+  let auto = [];
+  try { auto = keptCovers(await autoCovers(page, vp, coverRx(st), skewXf(f, p, vp), shareOpts(st)), f.path, p, vp.width, vp.height); } catch (e) { console.error(e); }
+  return auto.concat(ownCovers(f.path, p, vp.width, vp.height));
+}
+
+/* one answer, from Quick mark: cut from the clean page, so the teacher's ✗, ✓ or points aren't on it */
+const exAnswerOf = (st, q) => batch && exList.find(r => r.kind === 'answer' && r.work === batch.id && r.q && r.q.id === q.id && r.from && r.from.key === st.key);
+let exBusy = false;
+async function exAnswerPic(st, q) {
+  const [path, p] = quizPages(st)[q.n] || [], f = path && fileByPath(st, path);
+  if (!f) return null;
+  await workerReady; await classCommon();
+  const js = await qzDoc(f), page = await js.getPage(p + 1), v1 = vpRot(f, p, page, 1), k = Math.min(4, 2000 / v1.width);
+  const c = document.createElement('canvas'); c.width = Math.ceil(v1.width * k); c.height = Math.ceil(v1.height * k);
+  const ctx = c.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
+  await page.render({ canvasContext: ctx, ...vpDraw(f, p, page, k), annotationMode: pdfjsLib.AnnotationMode.ENABLE }).promise;
+  const L = lightForPage(st, f, p); if (L) lightCanvas(ctx, c.width, c.height, L);
+  ctx.fillStyle = '#111';
+  for (const r of await exCovers(st, f, page, p)) ctx.fillRect(r.x * k, r.y * k, r.w * k, r.h * k);
+  page.cleanup();
+  const [dx, dy] = qzShift(st, q.n), x0 = clamp(q.x + dx - QZ_PAD, 0, 1), y0 = clamp(q.y + dy - QZ_PAD, 0, 1), x1 = clamp(q.x + dx + q.w + QZ_PAD, 0, 1), y1 = clamp(q.y + dy + q.h + QZ_PAD, 0, 1);
+  const sx = Math.round(x0 * c.width), sy = Math.round(y0 * c.height), sw = Math.max(1, Math.round((x1 - x0) * c.width)), sh = Math.max(1, Math.round((y1 - y0) * c.height));
+  const out = document.createElement('canvas'); out.width = sw; out.height = sh;
+  out.getContext('2d').drawImage(c, sx, sy, sw, sh, 0, 0, sw, sh);
+  c.width = c.height = 0;
+  const blob = await exJpg(out), size = { w: sw, h: sh };
+  out.width = out.height = 0;
+  return { blob, size };
+}
+async function exStar(el) {
+  if (!el || !batch || !quizOn()) return;
+  const i = +el.dataset.st, st = batch.students[i], q = batch.quiz.qs.find(x => x.id === el.dataset.q), qi = batch.quiz.qs.indexOf(q);
+  if (!st || !q) return;
+  await exReady;
+  const had = exAnswerOf(st, q);
+  if (had) {
+    try { await exDelete(had.id); } catch (e) { console.error(e); return toast('That didn’t work. Try again.'); }
+    if (el.isConnected) qmRefresh(el);
+    return toast('Taken off the examples');
+  }
+  if (exBusy) return;
+  exBusy = true;
+  const b = el.querySelector('[data-ex]'); if (b) b.disabled = true;
+  try {
+    const pic = await exAnswerPic(st, q);
+    if (!pic) return toast('This page isn’t in their scan.');
+    const v = quizMarks(st)[q.id];
+    const rec = { ...exBase('answer', st), q: { id: q.id, lab: quizLabel(q, qi), pts: +q.pts || 1, v: v == null ? null : v }, pages: [pic.size] };
+    await exPut(rec, [pic.blob]);
+    if (el.isConnected) qmRefresh(el);
+    exToast('Saved as an example for Question ' + rec.q.lab + '.', [['See examples', () => { qmClose(); exGo(); }], ['Undo', async () => { await exDelete(rec.id); const c = el.isConnected ? el : null; if (c) qmRefresh(c); }]]);
+  } catch (e) { console.error(e); toast('That answer couldn’t be kept: ' + (e.message || e), 6000); }
+  finally { exBusy = false; if (b && b.isConnected) b.disabled = false; }
+}
+function exToast(msg, acts) {
+  const t = $('.toast');
+  toast(msg, 7000);
+  for (const [label, fn] of acts) {
+    const b = document.createElement('button'); b.className = 'tact'; b.textContent = label;
+    b.onclick = () => { t.hidden = true; t.textContent = ''; fn(); };
+    t.append(' ', b);
+  }
+}
+const exGo = () => { if (batch) go(batchHash(batch.id, 'examples')); };
+const exStarBtn = (st, q) => { const on = !!exAnswerOf(st, q); return '<button class="btn sm qmex' + (on ? ' on' : '') + '" data-ex aria-pressed="' + on + '" title="' + (on ? 'Kept as a strong example. Click to take it off (E)' : 'Keep this answer as a strong example, with the name covered (E)') + '"><span aria-hidden="true">' + (on ? '★' : '☆') + '</span> Example</button>'; };
+
+/* a whole paper or part of a page, from the paper's ⋯ menu */
+let EXU = null;
+function exItems(st) {
+  const out = [];
+  for (const d of layoutOf(st).filter(d => docIn(st, d) || docAuto(st, d))) for (const [path, p] of d.pages) { const f = fileByPath(st, path); if (f && !f.virtual && viewable(f)) out.push({ f, p, path }); }
+  for (const f of st.files) if (f.kind === 'docx' && !f.virtual && !f.rubric && f.data) out.push({ word: f });
+  return out;
+}
+const exCanUse = st => !!st && exItems(st).length > 0;
+async function exuDoc(it) {
+  const D = EXU.docs;
+  if (!D.has(it.path)) D.set(it.path, (async () => pdfjsLib.getDocument({ data: (await viewBytes(it.f)).slice(), isEvalSupported: false }).promise)());
+  return D.get(it.path);
+}
+async function exuExpand(items) {
+  const out = [];
+  for (const it of items) {
+    if (!it.word) { out.push(it); continue; }
+    try {
+      const bytes = await wordPagesPdf(it.word), path = it.word.path + '#pdf';
+      const doc = pdfjsLib.getDocument({ data: bytes, isEvalSupported: false }).promise;
+      EXU.docs.set(path, doc);
+      const f = { path, name: it.word.name, kind: 'docx', marks: {}, wordOf: it.word };
+      for (let p = 0; p < (await doc).numPages; p++) out.push({ f, p, path });
+    } catch (e) { console.error(e); }
+  }
+  return out;
+}
+function exScoreText(st) {
+  const g = gradeOf(st);
+  if (g.status === 'missing' || g.status === 'excused' || (g.total == null && g.pct == null)) return '';
+  return (g.total != null ? fmtNum(g.total) + ' / ' + fmtNum(g.outOf != null ? g.outOf : maxPoints()) : '') + (g.pct != null ? (g.total != null ? '   ' : '') + g.pct + '%' : '');
+}
+function exScoreOn(c, text) {
+  if (!text) return;
+  const ctx = c.getContext('2d'), s = Math.max(14, Math.round(c.width * 0.028));
+  ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.font = '600 ' + s + 'px Inter, Arial, sans-serif'; ctx.textAlign = 'right'; ctx.textBaseline = 'top'; ctx.fillStyle = COLORS.red;
+  ctx.fillText(text, c.width - s, s * 0.8);
+  ctx.restore();
+}
+async function exuCanvas(k, scale) {
+  const it = EXU.items[k], js = await exuDoc(it), st = EXU.st;
+  const r = await sharePage(st, it.f, js, it.p, scale, coverRx(st), shareOpts(st), { bare: !EXU.marks, light: true });
+  return r;
+}
+async function openUseExample(i) {
+  if (!batch) return;
+  if (i == null) i = cur;
+  const st = batch.students[i];
+  if (!exCanUse(st)) return toast('This paper has no pages to keep as an example.');
+  await exReady;
+  EXU = { st, i, items: [], kind: 'paper', marks: false, score: false, row: null, part: null, docs: new Map(), shown: [], tok: 0 };
+  const rows = setup.mode === 'rubric' ? setup.criteria.filter(c => String(c || '').trim() && !/^Criterion \d+$/.test(c)) : [];   // the rows of a rubric she has named, not the starting ones
+  openDlg('<div class="bh"><h2>Use as an example</h2><span class="sp"></span><button class="icon" data-close aria-label="Close">✕</button></div>' +
+    '<div class="bb exuse"><div class="expv" id="exPv"><p class="muted">Getting the pages ready…</p></div>' +
+    '<aside class="exside">' +
+      '<h3 class="exh">What to keep</h3><div class="exkind" role="group" aria-label="What to keep"><button data-exk="paper" aria-pressed="true"><b>Whole paper</b><small id="exPages"> </small></button><button data-exk="part" aria-pressed="false"><b>Part of a page</b><small>Drag a box</small></button></div>' +
+      '<h3 class="exh">Names</h3><p class="exnames" id="exNames">Looking for names…</p>' +
+      '<h3 class="exh">Show on it</h3><button class="exsw" role="switch" aria-checked="false" data-exsw="marks"><i></i>My marks and comments</button>' +
+        (exScoreText(st) ? '<button class="exsw" role="switch" aria-checked="false" data-exsw="score"><i></i>The score</button>' : '') +
+      '<h3 class="exh">Why it’s strong <span class="muted">(optional)</span></h3><input type="text" id="exWhy" class="exwhyin" maxlength="160" placeholder="Every claim is tied to a moment in the story." aria-label="Why it’s strong">' +
+      (rows.length ? '<div class="exrows" role="group" aria-label="Rubric row">' + rows.map(c => '<button class="exrow" data-exrow="' + esc(c) + '" aria-pressed="false">' + esc(c) + '</button>').join('') + '</div>' : '') +
+    '</aside></div>' +
+    '<div class="bf"><span class="exlock"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg><span id="exLockSay"></span></span><span class="sp"></span><button class="btn" data-close>Cancel</button><button class="btn primary" data-exsave disabled>Save example</button></div>');
+  const box = $('#dlgBox');
+  box.classList.add('exbox');
+  const shut = () => { if (!EXU) return; for (const d of EXU.docs.values()) d.then(x => x.destroy(), () => {}); EXU = null; };
+  dlgGone = shut;
+  exuLockSay();
+  box.onclick = e => {
+    if (e.target.closest('[data-close]')) return closeDlg();
+    const k = e.target.closest('[data-exk]');
+    if (k) { EXU.kind = k.dataset.exk; for (const b of box.querySelectorAll('[data-exk]')) b.setAttribute('aria-pressed', String(b === k)); exuCrop(); exuNames(); exuLockSay(); exuSaveOk(); return; }
+    const sw = e.target.closest('[data-exsw]');
+    if (sw) { const on = sw.getAttribute('aria-checked') !== 'true'; sw.setAttribute('aria-checked', String(on)); EXU[sw.dataset.exsw] = on; return exuDrawAll(); }
+    const rw = e.target.closest('[data-exrow]');
+    if (rw) { EXU.row = EXU.row === rw.dataset.exrow ? null : rw.dataset.exrow; for (const b of box.querySelectorAll('[data-exrow]')) b.setAttribute('aria-pressed', String(b.dataset.exrow === EXU.row)); return; }
+    if (e.target.closest('[data-exsave]')) return exuSave();
+  };
+  box.onkeydown = e => { if (e.key === 'Enter' && e.target.id === 'exWhy') { e.preventDefault(); exuSave(); } };
+  exuBind($('#exPv'));
+  try {
+    await workerReady; await classCommon();
+    if (!EXU || EXU.st !== st) return;
+    const items = await exuExpand(exItems(st));
+    if (!EXU || EXU.st !== st) return;
+    EXU.items = items;
+    if (!items.length) { $('#exPv').innerHTML = '<p class="muted">This paper couldn’t be drawn.</p>'; return; }
+    $('#exPages').textContent = items.length + (items.length === 1 ? ' page' : ' pages');
+    $('#exPv').innerHTML = items.map((_, k) => '<div class="expg" data-k="' + k + '"><div class="excv"><canvas></canvas><div class="excrop" hidden></div><div class="exdrag" hidden></div></div><span class="expgn">' + (k + 1) + ' of ' + items.length + '</span></div>').join('');
+    $('#exPv').classList.toggle('one', items.length === 1);
+    await exuDrawAll();
+  } catch (e) { console.error(e); if (EXU && $('#exPv')) $('#exPv').innerHTML = '<p class="muted">This paper couldn’t be drawn: ' + esc(e.message || String(e)) + '</p>'; }
+}
+const exuLockSay = () => { const el = $('#exLockSay'); if (!el || !EXU) return; const L = exNextLetter(batch.id, EXU.kind); el.textContent = 'Kept as pictures with the names blacked out for good. It’s called “' + (EXU.kind === 'paper' ? 'Example ' + L : 'Part of a page') + '”, never by name.'; };
+const exuSaveOk = () => { const b = $('#dlgBox [data-exsave]'); if (b && EXU) b.disabled = !EXU.items.length || (EXU.kind === 'part' && !EXU.part); };
+function exuNames() {
+  const el = $('#exNames'); if (!el || !EXU) return;
+  const n = EXU.shown.reduce((a, s) => a + (s ? exGroups(s.covers) : 0), 0);
+  el.innerHTML = '<b>' + (n === 1 ? '1 name covered.' : n + ' names covered.') + '</b> ' + (EXU.kind === 'part' ? 'Drag a box around the part to keep. Click a cover to take it off.' : 'Drag on a page to cover anything else, like a handwritten name. Click a cover to take it off.');
+}
+function exGroups(cs) {
+  const near = (a, b) => a.x <= b.x + b.w + 8 && b.x <= a.x + a.w + 8 && a.y <= b.y + b.h + 2 && b.y <= a.y + a.h + 2;
+  const seen = new Set(); let n = 0;
+  for (let i = 0; i < cs.length; i++) {
+    if (seen.has(i)) continue; n++;
+    const todo = [i]; seen.add(i);
+    while (todo.length) { const a = cs[todo.pop()]; cs.forEach((b, j) => { if (!seen.has(j) && near(a, b)) { seen.add(j); todo.push(j); } }); }
+  }
+  return n;
+}
+async function exuDrawAll() {
+  if (!EXU || !EXU.items.length) return;
+  const my = ++EXU.tok;
+  for (let k = 0; k < EXU.items.length; k++) { await exuDraw(k, my); if (!EXU || EXU.tok !== my) return; }
+  exuNames(); exuSaveOk();
+}
+async function exuDraw(k, my) {
+  const cell = $('#exPv .expg[data-k="' + k + '"]'); if (!cell || !EXU) return;
+  const it = EXU.items[k], js = await exuDoc(it), pg0 = await js.getPage(it.p + 1), v1 = vpRot(it.f, it.p, pg0, 1), dpr = window.devicePixelRatio || 1;
+  const colW = Math.max(240, cell.clientWidth || 360), scale = Math.min(3, colW * 1.25 / v1.width) * dpr;
+  const r = await exuCanvas(k, scale);
+  if (!EXU || (my != null && EXU.tok !== my) || !cell.isConnected) { r.c.width = 0; return; }
+  if (EXU.score && k === 0) exScoreOn(r.c, exScoreText(EXU.st));
+  const ctx = r.c.getContext('2d');
+  if (r.gone.length) { ctx.save(); ctx.setTransform(scale, 0, 0, scale, 0, 0); ctx.strokeStyle = '#1F6FB2'; ctx.lineWidth = 1.5 / scale * dpr; ctx.setLineDash([5 / scale * dpr, 3 / scale * dpr]); for (const g of r.gone) ctx.strokeRect(g.x, g.y, g.w, g.h); ctx.restore(); }
+  const old = cell.querySelector('canvas'); r.c.className = 'exc'; old.replaceWith(r.c); old.width = 0;
+  EXU.shown[k] = { W: r.W, H: r.H, side: r.side, covers: r.covers, gone: r.gone };
+  exuCrop();
+}
+function exuCrop() {
+  if (!EXU) return;
+  for (const cell of document.querySelectorAll('#exPv .expg')) {
+    const box = cell.querySelector('.excrop'), p = EXU.part, on = EXU.kind === 'part' && p && p.k === +cell.dataset.k;
+    box.hidden = !on;
+    if (on) Object.assign(box.style, { left: p.x * 100 + '%', top: p.y * 100 + '%', width: p.w * 100 + '%', height: p.h * 100 + '%' });
+  }
+}
+function exuBind(pv) {
+  let d = null;
+  pv.onpointerdown = e => {
+    const cv = e.target.closest('.excv'); if (!cv || e.button !== 0 || !EXU) return;
+    const k = +cv.closest('.expg').dataset.k; if (!EXU.shown[k]) return;
+    e.preventDefault(); cv.setPointerCapture(e.pointerId);
+    d = { cv, k, r: cv.getBoundingClientRect(), x0: e.clientX, y0: e.clientY, moved: false };
+  };
+  pv.onpointermove = e => {
+    if (!d) return;
+    if (!d.moved && Math.hypot(e.clientX - d.x0, e.clientY - d.y0) < 5) return;
+    d.moved = true;
+    const b = d.cv.querySelector('.exdrag'), x = Math.min(d.x0, e.clientX) - d.r.left, y = Math.min(d.y0, e.clientY) - d.r.top;
+    b.hidden = false; b.classList.toggle('part', EXU.kind === 'part');
+    Object.assign(b.style, { left: x + 'px', top: y + 'px', width: Math.abs(e.clientX - d.x0) + 'px', height: Math.abs(e.clientY - d.y0) + 'px' });
+  };
+  pv.onpointerup = e => {
+    if (!d || !EXU) { d = null; return; }
+    const g = d; d = null;
+    g.cv.querySelector('.exdrag').hidden = true;
+    const s = EXU.shown[g.k], it = EXU.items[g.k], fx = v => clamp((v - g.r.left) / (g.r.width || 1), 0, 1), fy = v => clamp((v - g.r.top) / (g.r.height || 1), 0, 1);
+    const ax = fx(Math.min(g.x0, e.clientX)), bx = fx(Math.max(g.x0, e.clientX)), ay = fy(Math.min(g.y0, e.clientY)), by = fy(Math.max(g.y0, e.clientY));
+    const TW = s.W + s.side, R = v => Math.round(v * 10000) / 10000;
+    if (!g.moved) return exuToggle(g.k, ax * TW, ay * s.H);
+    if (EXU.kind === 'part') { EXU.part = { k: g.k, x: R(ax), y: R(ay), w: R(Math.max(0.01, bx - ax)), h: R(Math.max(0.01, by - ay)) }; exuCrop(); exuSaveOk(); return; }
+    const x0 = Math.min(ax * TW, s.W) / s.W, x1 = Math.min(bx * TW, s.W) / s.W;
+    if (x1 - x0 < 0.002) return;
+    const k = boxKey(it.f.path, it.p), sh = shareState();
+    (sh.boxes[k] ||= []).push([R(x0), R(ay), R(x1 - x0), R(by - ay)]);
+    saveSoon(); exuDraw(g.k).then(exuNames);
+  };
+}
+function exuToggle(k, x, y) {
+  const s = EXU.shown[k], it = EXU.items[k], key = boxKey(it.f.path, it.p), sh = shareState();
+  const inside = q => x >= q.x - 2 && x <= q.x + q.w + 2 && y >= q.y - 2 && y <= q.y + q.h + 2;
+  const R = v => Math.round(v * 10000) / 10000, frac = q => [q.x / s.W, q.y / s.H, q.w / s.W, q.h / s.H].map(R);
+  const hit = s.covers.filter(inside).sort((a, b) => a.w * a.h - b.w * b.h)[0];
+  if (hit && hit.own) {
+    const own = sh.boxes[key] || [], at = own.findIndex(b => Math.abs(b[0] * s.W - hit.x) < 1 && Math.abs(b[1] * s.H - hit.y) < 1);
+    if (at >= 0) own.splice(at, 1); if (!own.length) delete sh.boxes[key];
+  } else if (hit) (sh.off ||= {})[key] = [...(sh.off[key] || []), frac(hit)];
+  else {
+    const g = s.gone.find(inside); if (!g) return;
+    const off = (sh.off || {})[key] || [], at = off.findIndex(b => sameSpot(g, b, s.W, s.H));
+    if (at >= 0) off.splice(at, 1); if (!off.length && sh.off) delete sh.off[key];
+  }
+  saveSoon(); exuDraw(k).then(exuNames);
+}
+async function exuSave() {
+  if (!EXU || !EXU.items.length) return;
+  const U = EXU, btn = $('#dlgBox [data-exsave]');
+  if (U.kind === 'part' && !U.part) return toast('Drag a box around the part to keep.');
+  if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
+  U.tok++;   // a redraw on its way stops
+  try {
+    const list = U.kind === 'paper' ? U.items.map((_, k) => k) : [U.part.k], blobs = [], pages = [], score = U.score ? exScoreText(U.st) : '';
+    for (const k of list) {
+      const it = U.items[k], js = await exuDoc(it), v1 = vpRot(it.f, it.p, await js.getPage(it.p + 1), 1);
+      const r = await exuCanvas(k, Math.min(4, (U.kind === 'part' ? 2400 : 1600) / v1.width));
+      let c = r.c;
+      if (U.kind === 'part') {
+        const p = U.part, sx = Math.round(p.x * c.width), sy = Math.round(p.y * c.height), sw = Math.max(1, Math.round(p.w * c.width)), sh = Math.max(1, Math.round(p.h * c.height));
+        const o = document.createElement('canvas'); o.width = sw; o.height = sh; o.getContext('2d').drawImage(c, sx, sy, sw, sh, 0, 0, sw, sh);
+        c.width = 0; c = o;
+      }
+      if (score && !blobs.length) exScoreOn(c, score);
+      blobs.push(await exJpg(c)); pages.push({ w: c.width, h: c.height });
+      c.width = c.height = 0;
+    }
+    const why = ($('#exWhy') ? $('#exWhy').value : '').trim().slice(0, 160);
+    const rec = { ...exBase(U.kind, U.st), why, row: U.row, letter: exNextLetter(batch.id, U.kind), pages, marks: U.marks, score: !!score };
+    await exPut(rec, blobs);
+    closeDlg();
+    exToast('Saved as ' + (rec.kind === 'paper' ? 'Example ' + rec.letter : 'an example') + '.', [['See examples', exGo]]);
+  } catch (e) {
+    console.error(e);
+    if (btn && btn.isConnected) { btn.disabled = false; btn.textContent = 'Save example'; }
+    toast('The example couldn’t be kept: ' + (e.message || e), 6000);
+  }
+}
+
+/* the Examples tab: between Insights and Return, once the assignment has an example */
+function exTabSay() {
+  const a = $('#examplesTab'); if (!a) return;
+  let n = 0; try { n = batch ? exOfWork(batch.id).length : 0; } catch { return; }   // asked before this file has run
+  const here = batch && routeNow().v === 'a' && routeNow().tab === 'examples';
+  a.hidden = !n && !here;
+  const c = a.querySelector('.atn'); if (c) { c.textContent = n || ''; c.hidden = !n; }
+}
+function exSorted(list) {
+  const qs = quizOn() ? batch.quiz.qs.map(q => q.id) : [], at = r => { const k = qs.indexOf(r.q && r.q.id); return k < 0 ? 999 : k; };
+  const ans = list.filter(r => r.kind === 'answer').sort((a, b) => at(a) - at(b) || natural(String(a.q && a.q.lab), String(b.q && b.q.lab)) || a.t - b.t);
+  const rest = list.filter(r => r.kind !== 'answer').sort((a, b) => (a.kind === b.kind ? 0 : a.kind === 'paper' ? -1 : 1) || a.t - b.t);
+  return [...ans, ...rest];
+}
+const exCanCopy = () => !!(navigator.clipboard && navigator.clipboard.write && window.ClipboardItem);
+function exCard(r) {
+  const chip = r.kind === 'answer' && r.q && r.q.v != null ? fmtNum(r.q.v) + ' of ' + fmtNum(r.q.pts) : r.kind === 'paper' ? r.pages.length + (r.pages.length === 1 ? ' page' : ' pages') : '';
+  const who = r.from && !anonOn() ? '<p class="exwho"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>Only you see this: ' + esc(r.from.key) + '</p>' : '';
+  return '<div class="excard ' + r.kind + '" data-exid="' + esc(r.id) + '"><button class="exthumb" data-exopen title="Show to the class"><img alt="' + esc(exLabel(r)) + '" data-expic="' + esc(r.id) + '"></button>' +
+    '<div class="exct"><span class="exstar" aria-hidden="true">★</span><b>' + esc(exLabel(r)) + '</b>' + (r.row ? '<span class="exrowtag">' + esc(r.row) + '</span>' : chip ? '<span class="exchip">' + esc(chip) + '</span>' : '') + '</div>' +
+    '<p class="exwhy">' + (r.why ? esc(r.why) : '<button class="link exadd" data-exwhy>Add why it’s strong</button>') + '</p>' +
+    '<div class="exacts">' + (r.kind !== 'paper' && exCanCopy() ? '<button class="btn sm" data-excopy>Copy picture</button>' : '') + '<button class="btn sm" data-exdl>Download</button>' +
+      kmWrap('⋯', 'class="icon kdots" aria-label="More for this example" title="More for this example"', '<button class="mitem" data-exopen>Show to the class</button><button class="mitem" data-exwhy>' + (r.why ? 'Change why it’s strong' : 'Add why it’s strong') + '</button><button class="mitem" data-exdel>Delete</button>') + '</div>' + who + '</div>';
+}
+function openExamples() {
+  if (!batch) return;
+  const list = exSorted(exOfWork(batch.id)), ans = list.filter(r => r.kind === 'answer'), rest = list.filter(r => r.kind !== 'answer');
+  const qs = quizOn() ? batch.quiz.qs : [], none = qs.map((q, i) => ({ q, i })).filter(x => !ans.some(r => r.q && r.q.id === x.q.id)).map(x => quizLabel(x.q, x.i));
+  const and = a => a.length < 2 ? a.join('') : a.slice(0, -1).join(', ') + ' and ' + a[a.length - 1];
+  const noneCard = qs.length && none.length ? '<div class="excard exnone"><p>' + (none.length === 1 ? 'Question ' + esc(none[0]) + ' has' : 'Questions ' + esc(and(none)) + ' have') + ' no example yet.<br>Press ☆ on an answer in Quick mark.</p></div>' : '';
+  tabNext('examples');
+  openDlg('<div class="bh"><h2>Examples</h2><span class="muted exsub">Strong work from this assignment, with no names on it.</span><span class="sp"></span>' +
+    (list.length ? '<button class="btn" data-exsheet><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>Download as a sheet</button><button class="btn primary" data-exshow><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" aria-hidden="true"><path d="M7 5l12 7-12 7z"/></svg>Show to the class</button>' : '') +
+    '<button class="icon" data-close aria-label="Close">✕</button></div>' +
+    '<div class="bb exbb" id="exBody">' +
+      (!list.length ? '<div class="exempty"><p><b>No examples yet.</b></p><p class="muted">Press ☆ Example on an answer in Quick mark, or pick <b>Use as an example</b> in a paper’s ⋯ menu. Picking one is always up to you.</p></div>' : '') +
+      (ans.length || noneCard ? '<h3 class="exsec">Answers, by question</h3><div class="exgrid">' + ans.map(exCard).join('') + noneCard + '</div>' : '') +
+      (rest.length ? '<h3 class="exsec">Whole papers and parts of pages</h3><div class="exgrid">' + rest.map(exCard).join('') + '</div>' : '') +
+    '</div>');
+  const box = $('#dlgBox');
+  box.classList.add('exbox-tab');
+  for (const im of box.querySelectorAll('img[data-expic]')) exUrl(im.dataset.expic, 0).then(u => { if (u && im.isConnected) im.src = u; });
+  box.onclick = e => {
+    if (e.target.closest('[data-close]')) return closeDlg();
+    if (e.target.closest('[data-exshow]')) return exShow(exSorted(exOfWork(batch.id)), 0);
+    if (e.target.closest('[data-exsheet]')) return exSheet(exSorted(exOfWork(batch.id)));
+    exCardAct(e, () => exSorted(exOfWork(batch.id)), () => { if (dlgPage === 'examples') openExamples(); });
+  };
+}
+function exCardAct(e, list, after) {
+  const card = e.target.closest('[data-exid]'); if (!card) return;
+  const r = exList.find(x => x.id === card.dataset.exid); if (!r) return;
+  if (e.target.closest('[data-exopen]')) { const all = list(); return exShow(all, Math.max(0, all.findIndex(x => x.id === r.id))); }
+  if (e.target.closest('[data-excopy]')) return exCopy(r);
+  if (e.target.closest('[data-exdl]')) return exDownload(r);
+  if (e.target.closest('[data-exwhy]')) return exWhyEdit(card, r);
+  const del = e.target.closest('[data-exdel]');
+  if (del) {   // two clicks, so a stray click can't throw an example away
+    if (!del.dataset.armed) { del.dataset.armed = '1'; del.textContent = 'Click again to delete'; del.style.color = 'var(--bad)'; setTimeout(() => { if (del.isConnected) { delete del.dataset.armed; del.textContent = 'Delete'; del.style.color = ''; } }, 4000); return; }
+    kmClose();
+    exDelete(r.id).then(() => { toast('Example deleted'); after(); }, er => { console.error(er); toast('That didn’t work. Try again.'); });
+  }
+}
+function exWhyEdit(card, r) {
+  kmClose();
+  const p = card.querySelector('.exwhy'); if (!p || p.querySelector('input')) return;
+  p.innerHTML = '<input type="text" class="exwhyin" maxlength="160" aria-label="Why it’s strong" placeholder="Why it’s strong">';
+  const inp = p.firstChild; inp.value = r.why || ''; inp.focus();
+  let done = false;
+  const save = async keep => {
+    if (done) return; done = true;
+    const why = keep ? inp.value.trim().slice(0, 160) : r.why || '';
+    if (why !== (r.why || '')) { try { await exPut({ ...r, why }); } catch (e) { console.error(e); toast('That didn’t work. Try again.'); } }
+    const now = exList.find(x => x.id === r.id) || r;
+    p.innerHTML = now.why ? esc(now.why) : '<button class="link exadd" data-exwhy>Add why it’s strong</button>';
+    const m = card.querySelector('[data-exwhy].mitem'); if (m) m.textContent = now.why ? 'Change why it’s strong' : 'Add why it’s strong';
+  };
+  inp.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); save(true); } else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); save(false); } };
+  inp.onblur = () => save(true);
+}
+
+/* the uses: Copy picture, Download, Download as a sheet, Show to the class */
+async function exPng(r, n) {
+  const b = await exPic(r.id, n); if (!b) throw new Error('the picture is missing');
+  const im = await createImageBitmap(b), c = document.createElement('canvas'); c.width = im.width; c.height = im.height;
+  c.getContext('2d').drawImage(im, 0, 0); im.close();
+  const png = await new Promise((res, rej) => c.toBlob(x => x ? res(x) : rej(new Error('picture too big')), 'image/png'));
+  c.width = 0;
+  return png;
+}
+async function exCopy(r) {
+  if (!exCanCopy()) return;
+  try {
+    await navigator.clipboard.write([new ClipboardItem({ 'image/png': exPng(r, 0) })]);
+    if (store.get('gs.exCopied', false)) toast('Copied');
+    else { store.set('gs.exCopied', true); toast('Copied. A picture you paste into a lesson is kept with that lesson.', 6000); }
+  } catch (e) { console.error(e); toast('Copying didn’t work here. Use Download instead.'); }
+}
+async function exPdfOf(r) {
+  const pdf = await PDFLib.PDFDocument.create();
+  pdf.setTitle(exFileLabel(r)); pdf.setAuthor(''); pdf.setCreator('Grading Studio'); pdf.setProducer('');
+  for (let n = 0; n < r.pages.length; n++) {
+    const b = await exPic(r.id, n); if (!b) continue;
+    const img = await pdf.embedJpg(new Uint8Array(await b.arrayBuffer())), W = 612, H = W * img.height / img.width;
+    pdf.addPage([W, H]).drawImage(img, { x: 0, y: 0, width: W, height: H });
+  }
+  return pdf.save();
+}
+async function exDownload(r) {
+  try {
+    if (r.kind === 'paper') saveBlob(exFileName(r, 'pdf'), new Blob([await exPdfOf(r)], { type: 'application/pdf' }));
+    else saveBlob(exFileName(r, 'png'), await exPng(r, 0));
+  } catch (e) { console.error(e); toast('That download couldn’t be made: ' + (e.message || e), 6000); }
+}
+const exPdfText = s => String(s || '').replace(/[‘’]/g, '\'').replace(/[“”]/g, '"').replace(/[–—]/g, '-').replace(/…/g, '...').replace(/[^\x20-\x7E\xA0-\xFF]/g, '');
+async function exSheet(list) {
+  if (!list.length) return;
+  toast('Making the sheet…');
+  try {
+    const pdf = await PDFLib.PDFDocument.create(), F = await pdf.embedFont(PDFLib.StandardFonts.Helvetica), B = await pdf.embedFont(PDFLib.StandardFonts.HelveticaBold);
+    const title = exPdfText(list[0].title || 'Assignment'), PW = 612, PH = 792, M = 48, CW = PW - 2 * M, ink = PDFLib.rgb(0.12, 0.13, 0.15), soft = PDFLib.rgb(0.36, 0.38, 0.42), blue = PDFLib.rgb(0.1, 0.4, 0.66);
+    pdf.setTitle(title + ' - Examples'); pdf.setAuthor(''); pdf.setCreator('Grading Studio'); pdf.setProducer('');
+    let pg = null, y = 0;
+    const page = () => { pg = pdf.addPage([PW, PH]); y = PH - M; };
+    const room = h => { if (!pg || y - h < M) page(); };
+    const wrap = (s, font, size, w) => { const out = []; let line = ''; for (const word of s.split(/\s+/).filter(Boolean)) { const t = line ? line + ' ' + word : word; if (font.widthOfTextAtSize(t, size) > w && line) { out.push(line); line = word; } else line = t; } if (line) out.push(line); return out; };
+    page();
+    pg.drawText(title, { x: M, y: y - 20, size: 20, font: B, color: ink }); y -= 30;
+    pg.drawText('Strong examples, with no names on them', { x: M, y: y - 12, size: 11, font: F, color: soft }); y -= 34;
+    let lastQ = null;
+    for (const r of list) {
+      const head = r.kind === 'answer' ? exLabel(r) : r.kind === 'paper' ? 'Example ' + (r.letter || 'A') : 'Part of a page';
+      if (r.kind !== 'answer' || lastQ !== (r.q && r.q.id)) {
+        if (r.kind === 'paper' && pg && y < PH - M - 80) page();
+        room(40);
+        pg.drawText(exPdfText(head) + (r.row ? '   ' + exPdfText(r.row) : ''), { x: M, y: y - 14, size: 14, font: B, color: ink }); y -= 24;
+        lastQ = r.kind === 'answer' ? r.q && r.q.id : null;
+      }
+      for (let n = 0; n < r.pages.length; n++) {
+        const b = await exPic(r.id, n); if (!b) continue;
+        const img = await pdf.embedJpg(new Uint8Array(await b.arrayBuffer()));
+        const maxH = r.kind === 'paper' ? PH - 2 * M - 30 : 300, k = Math.min(CW / img.width, maxH / img.height), w = img.width * k, h = img.height * k;
+        room(h + 8);
+        pg.drawImage(img, { x: M, y: y - h, width: w, height: h });
+        pg.drawRectangle({ x: M, y: y - h, width: w, height: h, borderColor: PDFLib.rgb(0.85, 0.86, 0.88), borderWidth: 0.6 });
+        y -= h + 8;
+      }
+      if (r.why) for (const line of wrap('* ' + exPdfText(r.why), F, 11, CW)) { room(16); pg.drawText(line, { x: M, y: y - 11, size: 11, font: F, color: blue }); y -= 15; }
+      y -= 14;
+    }
+    saveBlob((title + ' - Examples.pdf').replace(/[\\/:*?"<>|]+/g, '-'), new Blob([await pdf.save()], { type: 'application/pdf' }));
+  } catch (e) { console.error(e); toast('The sheet couldn’t be made: ' + (e.message || e), 6000); }
+}
+let exShowKeys = null;
+function exShow(list, start) {
+  if (!list.length) return;
+  exShowClose();
+  const S = { list, at: clamp(start || 0, 0, list.length - 1), zoom: 1, note: true, full: false };
+  const el = document.createElement('div'); el.id = 'exShow'; el.className = 'exshow'; el.tabIndex = -1; el.setAttribute('role', 'dialog'); el.setAttribute('aria-label', 'Show to the class');
+  document.body.appendChild(el);
+  const note = r => '<p class="exsnote' + (r.kind === 'paper' ? ' top' : '') + '"><span aria-hidden="true">★</span>' + esc(r.why) + '</p>';
+  const draw = () => {
+    const r = S.list[S.at];
+    el.innerHTML = '<div class="exshd"><h2>' + esc(exLabel(r)) + '</h2><span class="exsbadge">' + (r.kind === 'answer' ? 'A strong answer' : r.kind === 'paper' ? 'A strong paper' : 'Strong work') + '</span><span class="sp"></span>' +
+      (r.why ? '<button class="exslink" data-exsnote>' + (S.note ? 'Hide the note' : 'Show the note') + '</button>' : '') + '<button class="exslink" data-exsx>Esc to close</button></div>' +
+      '<div class="exsbody">' + (r.why && S.note && r.kind === 'paper' ? note(r) : '') + '<div class="exspics ' + r.kind + '" style="--exz:' + S.zoom + '">' + r.pages.map((_, n) => '<img alt="" data-n="' + n + '">').join('') + '</div>' +
+      (r.why && S.note && r.kind !== 'paper' ? note(r) : '') + '</div>' +
+      '<div class="exsft"><button class="btn" data-exsgo="-1" aria-label="Earlier example"' + (S.at ? '' : ' disabled') + '>‹</button><span>' + (S.at + 1) + ' of ' + S.list.length + '</span><button class="btn" data-exsgo="1" aria-label="Next example"' + (S.at < S.list.length - 1 ? '' : ' disabled') + '>›</button><span class="sp"></span><span class="muted">No names are shown. Arrow keys move, + and − zoom.</span></div>';
+    for (const im of el.querySelectorAll('img[data-n]')) exUrl(r.id, +im.dataset.n).then(u => { if (u && im.isConnected) im.src = u; });
+    el.querySelector('.exsbody').scrollTop = 0;
+  };
+  const move = d => { const n = clamp(S.at + d, 0, S.list.length - 1); if (n !== S.at) { S.at = n; draw(); } };
+  const zoom = d => { S.zoom = clamp(Math.round((S.zoom + d) * 100) / 100, 0.5, 2.5); const p = el.querySelector('.exspics'); if (p) p.style.setProperty('--exz', S.zoom); };
+  el.onclick = e => {
+    if (e.target.closest('[data-exsx]')) return exShowClose();
+    if (e.target.closest('[data-exsnote]')) { S.note = !S.note; return draw(); }
+    const g = e.target.closest('[data-exsgo]'); if (g) return move(+g.dataset.exsgo);
+  };
+  exShowKeys = e => {
+    if (!$('#exShow')) return;
+    const stop = () => { e.preventDefault(); e.stopPropagation(); };
+    if (e.key === 'Escape') { stop(); return exShowClose(); }
+    if (e.key === 'ArrowRight' || e.key === 'PageDown') { stop(); return move(1); }
+    if (e.key === 'ArrowLeft' || e.key === 'PageUp') { stop(); return move(-1); }
+    if (e.key === '+' || e.key === '=') { stop(); return zoom(0.25); }
+    if (e.key === '-' || e.key === '_' || e.key === '−') { stop(); return zoom(-0.25); }
+    if (e.key === 'n' || e.key === 'N') { stop(); S.note = !S.note; return draw(); }
+    stop();   // nothing underneath answers a key while the class is looking
+  };
+  document.addEventListener('keydown', exShowKeys, true);
+  el._fs = () => { if (S.full && !document.fullscreenElement) exShowClose(); };
+  document.addEventListener('fullscreenchange', el._fs);
+  draw(); el.focus();
+  try { const p = el.requestFullscreen && el.requestFullscreen(); if (p && p.then) p.then(() => { S.full = true; }, () => {}); } catch {}
+}
+function exShowClose() {
+  const el = $('#exShow'); if (!el) return;
+  if (exShowKeys) { document.removeEventListener('keydown', exShowKeys, true); exShowKeys = null; }
+  document.removeEventListener('fullscreenchange', el._fs);
+  el.remove();
+  if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+}
+/* carrying examples: the linked folder, the take-home file and Bring work in (part 2) */
+function exMergePlan(A, B) {
+  const a = new Map(A.map(r => [r.id, r])), b = new Map(B.map(r => [r.id, r]));
+  return { toA: B.filter(r => !a.has(r.id) ? !r.gone : exU(r) > exU(a.get(r.id))), toB: A.filter(r => !b.has(r.id) || exU(r) > exU(b.get(r.id))) };
+}
+async function exTake(list, pics) {
+  let n = 0;
+  for (const r of list) {
+    if (r.gone) { await exPut(r, null, true); n++; continue; }
+    const blobs = await pics(r); if (!blobs || blobs.length !== (r.pages || []).length) continue;
+    await exPut(r, blobs, true); n++;
+  }
+  return n;
+}
+function exRefreshViews() {
+  exTabSay(); exRailSay();
+  if (batch && dlgPage === 'examples') openExamples();
+  if (!batch && routeNow().v === 'examples') exPageRender();
+}
+let exSyncP = null, exSyncAgain = false, exSyncT = 0;
+function exFolderSoon() { clearTimeout(exSyncT); exSyncT = setTimeout(() => exFolderSync().catch(e => console.error(e)), 400); }
+function exFolderSync(inSync) {
+  if (typeof fld === 'undefined' || !fld.root || fld.state === 'none' || fld.state === 'ask' || fld.state === 'lost') return Promise.resolve();
+  if (!inSync && (fld.run || fld.sync)) { exFolderSoon(); return Promise.resolve(); }   // the folder's sync brings examples up to date at its end anyway
+  if (exSyncP) { exSyncAgain = true; return exSyncP; }
+  exSyncP = exFolderRun().finally(() => { exSyncP = null; if (exSyncAgain) { exSyncAgain = false; exFolderSoon(); } });
+  return exSyncP;
+}
+async function exFolderRun() {
+  const dir = await fld.root.getDirectoryHandle('examples', { create: true }), ids = new Set(), B = new Map();
+  for await (const [nm, h] of dir.entries()) { const m = h.kind === 'file' && /^(.+)\.json(?:\.new)?$/.exec(nm); if (m) ids.add(m[1]); }
+  for (const id of ids) { const o = await readJson(dir, id + '.json'); if (o && o.rec && o.rec.id === id) B.set(id, o); }
+  const A = await exAll();
+  if (!A.length && !B.size) return;
+  const { toA, toB } = exMergePlan(A, [...B.values()].map(o => o.rec));
+  const got = await exTake(toA, async r => {
+    const out = [];
+    for (const ref of B.get(r.id).pix || []) { try { out.push(new Blob([await getBlob(ref)], { type: 'image/jpeg' })); } catch (e) { if (e.damaged || e.name === 'NotFoundError') return null; throw e; } }
+    return out;
+  });
+  for (const r of toB) {
+    if (r.gone) { await writeJson(dir, r.id + '.json', { rec: r, pix: [] }); continue; }
+    const blobs = await exPics(r); if (!blobs) continue;
+    const pix = []; for (const b of blobs) pix.push(await putBlob(new Uint8Array(await b.arrayBuffer())));
+    await writeJson(dir, r.id + '.json', { rec: r, pix });
+  }
+  if (got) exRefreshViews();
+}
+async function exFolderHashes() {
+  try { await exSyncP; } catch {}
+  const out = new Set();
+  let dir; try { dir = await fld.root.getDirectoryHandle('examples'); } catch (e) { if (e.name === 'NotFoundError') return out; throw e; }
+  const ids = new Set();
+  for await (const [nm, h] of dir.entries()) { const m = h.kind === 'file' && /^(.+)\.json(?:\.new)?$/.exec(nm); if (m) ids.add(m[1]); }
+  for (const id of ids) { const o = await readJson(dir, id + '.json'); for (const ref of (o && o.pix) || []) if (ref && ref.hash) out.add(ref.hash); }
+  return out;
+}
+async function exKeepFor(rec) {
+  if (!await exHave()) return;
+  for (const name of ['ex', 'pix']) {
+    const got = await exTx(name, 'readonly', tx => { const o = tx.objectStore(name), a = o.getAll(), b = o.getAllKeys(); return { get result() { return { k: b.result, v: a.result }; } }; });
+    rec.stores[EX_DB + '/' + name] = got;
+  }
+}
+async function exTakeFrames(frame) {
+  for (const r of await exAll()) {
+    if (r.gone) { await frame({ k: 'ex', rec: r }); continue; }
+    const blobs = await exPics(r); if (!blobs) continue;
+    await frame({ k: 'ex', rec: r });
+    for (let i = 0; i < blobs.length; i++) await frame({ k: 'expix', id: r.id, i }, new Uint8Array(await blobs[i].arrayBuffer()));
+  }
+}
+async function exBringPlan(B) {
+  const A = await exAll(), { toA } = exMergePlan(A, Object.values(B.ex || {})), had = new Set(A.filter(r => !r.gone).map(r => r.id));
+  return { list: toA, add: toA.filter(r => !r.gone && !had.has(r.id)).length, change: toA.filter(r => !r.gone && had.has(r.id)).length, drop: toA.filter(r => r.gone && had.has(r.id)).length };
+}
+async function exRemoveAll() {
+  clearTimeout(exSyncT);
+  if (exDbP) { try { (await exDbP).close(); } catch {} exDbP = null; }
+  await new Promise(res => { const r = indexedDB.deleteDatabase(EX_DB); r.onsuccess = r.onerror = r.onblocked = () => res(); });
+  exList = [];
+}
+
+/* the Examples page in the sidebar: every example, from every class and year (part 2) */
+function exRailSay() {
+  const a = $('#railExamples'); if (!a) return;
+  let here = false; try { here = !batch && routeNow().v === 'examples'; } catch {}
+  a.hidden = !exList.length && !here;
+}
+const exPageF = { cls: '', asg: '', kind: '', row: '' };
+const EX_KINDS = [['answer', 'Answers'], ['paper', 'Whole papers'], ['part', 'Parts of pages']];
+const exAsgKey = r => r.asg || 'w:' + r.work;
+const exClassName = id => { const c = id && classById(id); return c ? c.name : id ? 'A class no longer here' : 'No class'; };
+function exPageList() {
+  return exList.filter(r => (!exPageF.cls || (r.cls || '-') === exPageF.cls) && (!exPageF.asg || exAsgKey(r) === exPageF.asg) && (!exPageF.kind || r.kind === exPageF.kind) && (!exPageF.row || r.row === exPageF.row));
+}
+const exPageSort = list => list.slice().sort((a, b) => (a.kind === b.kind ? 0 : a.kind === 'answer' ? -1 : b.kind === 'answer' ? 1 : a.kind === 'paper' ? -1 : 1) || (a.kind === 'answer' ? natural(String(a.q && a.q.lab), String(b.q && b.q.lab)) : 0) || a.t - b.t);
+function exPageGroups(list) {
+  const g = new Map();
+  for (const r of list) { const k = exAsgKey(r); if (!g.has(k)) g.set(k, []); g.get(k).push(r); }
+  return [...g.values()].map(exPageSort).sort((a, b) => Math.max(...b.map(r => r.t)) - Math.max(...a.map(r => r.t)));
+}
+function exPageRender() {
+  const el = $('#exPage'); if (!el) return;
+  exRailSay();
+  const opts = (key, list, all) => '<select class="btn sm" data-exf="' + key + '" aria-label="' + all + '"><option value="">' + all + '</option>' + list.map(([v, l]) => '<option value="' + esc(v) + '"' + (exPageF[key] === v ? ' selected' : '') + '>' + esc(l) + '</option>').join('') + '</select>';
+  const uniq = pairs => [...new Map(pairs).entries()];
+  const classes = uniq(exList.map(r => [r.cls || '-', exClassName(r.cls)])).sort((a, b) => natural(a[1], b[1]));
+  const asgs = uniq(exList.filter(r => !exPageF.cls || (r.cls || '-') === exPageF.cls).map(r => [exAsgKey(r), r.title || 'Assignment'])).sort((a, b) => natural(a[1], b[1]));
+  const rows = uniq(exList.filter(r => r.row).map(r => [r.row, r.row])).sort((a, b) => natural(a[1], b[1]));
+  const list = exPageList(), groups = exPageGroups(list), filtered = Object.values(exPageF).some(Boolean);
+  const one = groups.length === 1;
+  el.innerHTML = !exList.length ? '<div class="exempty"><p><b>No examples yet.</b></p><p class="muted">Press ☆ Example on an answer in Quick mark, or pick <b>Use as an example</b> in a paper’s ⋯ menu. Every example from every class shows here.</p></div>'
+    : '<div class="exbar">' + opts('cls', classes, 'Every class') + opts('asg', asgs, 'Every assignment') + opts('kind', EX_KINDS.filter(k => exList.some(r => r.kind === k[0])), 'Every kind') + (rows.length ? opts('row', rows, 'Every rubric row') : '') +
+      (filtered ? '<button class="link" data-exfclear>Clear</button>' : '') + '<span class="sp"></span><span class="muted exn">' + list.length + (list.length === 1 ? ' example' : ' examples') + '</span>' +
+      (one ? '<button class="btn sm" data-exsheet>Download as a sheet</button>' : '') + (list.length ? '<button class="btn sm primary" data-exshow>Show to the class</button>' : '') + '</div>' +
+      (!list.length ? '<p class="muted exnone2">None match. <button class="link" data-exfclear>Clear the filters</button></p>' : '') +
+      groups.map(g => '<section class="exgroup"><h2 class="exgh">' + esc(g[0].title || 'Assignment') + ' <span class="muted">· ' + esc(exClassName(g[0].cls)) + ' · ' + esc(new Date(Math.max(...g.map(r => r.t))).toLocaleDateString(undefined, { month: 'short', year: 'numeric' })) + '</span></h2><div class="exgrid">' + g.map(exCard).join('') + '</div></section>').join('');
+  for (const im of el.querySelectorAll('img[data-expic]')) exUrl(im.dataset.expic, 0).then(u => { if (u && im.isConnected) im.src = u; });
+}
+{
+  const page = () => exPageGroups(exPageList()).flat();
+  const el = $('#exPage');
+  if (el) {
+    el.addEventListener('change', e => { const f = e.target.closest('[data-exf]'); if (!f) return; exPageF[f.dataset.exf] = f.value; if (f.dataset.exf === 'cls') exPageF.asg = ''; exPageRender(); });
+    el.addEventListener('click', e => {
+      if (e.target.closest('[data-exfclear]')) { for (const k of Object.keys(exPageF)) exPageF[k] = ''; return exPageRender(); }
+      if (e.target.closest('[data-exshow]')) return exShow(page(), 0);
+      if (e.target.closest('[data-exsheet]')) return exSheet(page());
+      exCardAct(e, page, exPageRender);
+    });
+  }
+}
+exReady.then(exRailSay);
+
+Object.assign(window.__gs, { exList: () => exList, exReady: () => exReady, exStar, openUseExample, openExamples, exShow, exSheet, exPdfOf, exPng, exDownload, exForgetWork, exUse: () => EXU, exItems, exAll, exFolderSync: () => exFolderSync(), exMergePlan, exPageRender, exPageF, exDeleteTest: exDelete });
 
 /* ---------------- tablets: a finger that moves the page, a pencil that draws, and a palm that does nothing (Stage 6) ----------------
    A page's canvas takes every pointer itself (touch-action: none), which is right for a mouse and a pencil but leaves a finger
@@ -23620,7 +24439,7 @@ $('#setHistory').addEventListener('click', e => {
 });
 
 /* updates she controls, and installing as an app */
-const WHATS_NEW = {"1.27.6":["Returned files are named for the student, the assignment and what they are, like “Ana Lee - River essay - Graded.pdf”, or Feedback when there is no score. They still go in each student’s own folder.","To keep the names students turned in, untick Name each file by student and assignment under Options on the Return tab."],"1.27.5":["The gradebook can import your old scores: press Import… and choose a CSV or Excel file, or paste the cells. Each column becomes an assignment, matched to your roster.","You see everything before it is saved, and a score already in the gradebook stays unless you choose the file’s."],"1.27.4":["School is a new page in the sidebar for the things about your school you look up again and again: the handbook, the calendar, the bell schedule, portals, forms, who to call.","Add a link, a file (a copy is kept with your work) or a note. Name your own groups, and star the ones you open most to keep them along the top.","Drop files on the page or paste a web address. Find anything lists every resource. They are kept in your folder and take-home file, and stay when you start a new school year."],"1.27.3":["The class timer in Present takes minutes and seconds: type them in, or pick 0:30 and the other quick times. The menu remembers the last time you typed.","While it runs, the timer's menu adds or takes away 10 seconds or a minute, pauses, and restarts from the time you set. + and − add or take away a minute without opening the menu.","Tick Show it big to put the countdown in the middle of the screen, large enough for the back of the room."],"1.27.2":["In the gradebook, in-class assessments are now on the left and summatives on the right: the columns, the averages beside the term grade, and wherever you choose a type.","The order is yours to change. In Term setup, the arrows beside each type move it, and the gradebook's columns follow from left to right.","You can make your own assignment types. In Term setup, rename a type or press + Add a type (Homework, Projects, Quizzes), and give each its share of the grade. Your own setup stays as it is until you change it."],"1.27.1":["Undo now takes back a score as well as a mark: press Ctrl Z (⌘Z on a Mac) after a slip on a slider, a number key, or Missing, Excused or Late. Redo puts it back.","Deleting a unit, an assignment or a class shows Undo for a few seconds, and Undo puts it back where it was.","“Picked up where you left off” shows once, when you open an assignment, and no longer on Today or other pages. The note about what opened leaves by itself when you move to the next student, if every file opened.","The Next button stays in one place from student to student, and the Grade heading on a class’s Students tab is drawn properly.","Find anything answers to more everyday words: export, hand back, backup, undo, shortcuts, csv."],"1.27.0":["Start a new school year, in Settings, Saving and carrying. Your classes, units and assignment cards carry on, each card with its rubric and Quick mark boxes, with empty class lists and dates a year later.","This year goes into one protected file first, and the file is checked before anything is cleared. Open an archived year brings a year back from its file."],"1.26.2":["Rubric rows can be scored on your own scale. They start at 0 to 4 with half points, as before; when you set up an assignment you can pick any top from 1 to 10 and turn half points off.","Settings, Grading: choose the row scale new assignments start with. Assignments you already have keep theirs."],"1.26.1":["Activities: See, think, wonder now says it comes from Project Zero at the Harvard Graduate School of Education."],"1.26.0":["Seating: a new tab on each class. Pick how the room is set up, drag students to desks, and Shuffle gives everyone a new seat. A student can be kept in their seat.","Pick a name shows one student at random, and nobody twice until everyone has had a turn. Make groups deals the class into groups of any size.","While presenting a lesson, P picks a name and G makes groups. Who’s here leaves out anyone who is away today."],"1.25.0":["Attendance. Each class has an Attendance tab: everyone starts as present, so a day is one press for each student who is late, excused or absent, with a note if you want one.","Look back shows every saved day in one table with each student’s totals, and a student’s own page lists the days they missed.","Copy a day, or download the table as a spreadsheet, for your school’s system. Today has a line for it under each class.","If you don’t take attendance here, turn it off in Settings, Classes and rosters."],"1.24.0":["Retakes: a second try at the same assignment keeps the first try's score, comment and paper. Start one from the ⋯ beside Missing, Excused and Late on a paper.","You choose which try counts, for all your classes: the highest (to begin with), the latest, or the average. It is in the retake box and in the gradebook's Term setup.","A score typed into the gradebook takes a retake too: type both, like 7 > 10."],"1.23.0":["Scores by learning goal, if you want them. Keep your own list of goals (a skill, or a standard from your school) in Settings, Grading, or add one wherever you tag.","Tag rubric rows in Rubric setup and quiz questions in Quiz boxes. An assignment scored with just a total can carry one goal for the whole score.","Each class page gets a Goals tab: the class average on each goal with the lowest first, every student by every goal, and where each number came from. A student's own page shows their goals beside the class average.","Nothing changes until you add a first goal, and tagging never changes a score or a grade."],"1.22.0":["Progress sheets for parent meetings: one printed page per student with the term grade, every score, a chart of how they moved, missing work, each term's grade, the report comment and lines for notes. Find it on a class's Students list, or Progress sheet on one student's page.","Choose the term and tick what goes on it; Print opens the print window, where you can pick a printer or Save as PDF. It is made on your computer and nothing is sent anywhere."],"1.21.0":["Each class has a Missing work tab: every paper you marked Missing, by student or by assignment, for the term you pick.","Email reminder opens an email in your own mail app, addressed to the student and listing what they owe, for you to read and send. Email all writes one email to everyone who owes an assignment, with the addresses in Bcc. Grading Studio sends nothing itself.","Each reminder you open is noted beside the work, and Email wording… changes what every reminder says."],"1.20.0":["The app can speak Traditional Chinese (繁體中文). Choose it in Settings, Display, App language, or at the top of the welcome.","Like Spanish, it covers the first screens so far: the sidebar, Today, the welcome, Find anything, Help, and the feedback page students get with a returned paper. The other screens are still in English."],"1.19.0":["The app can speak Spanish. Choose it in Settings, Display, App language, or at the top of the welcome.","Spanish covers the first screens so far: the sidebar, Today, the welcome, Find anything, Help, and the feedback page students get with a returned paper. The other screens are still in English.","Names you typed (classes, students, assignments, rubric rows) are never translated."],"1.18.0":["On a tablet, a pencil draws and the pen's line is wider where you press harder. Once you have used a pencil, one finger moves the page, two fingers pinch to zoom, and a hand resting on the screen does nothing.","Settings, Marking has a new Tablet and pencil section: choose what a finger does on the paper, or turn off the wider line.","On a touch screen the tools, the student rows and the score buttons are larger."],"1.17.0":["Report comments: a new tab on each class's page drafts a comment for every student from your own gradebook, rubric scores and the comments you wrote on their papers. Edit each one, tick it done, then copy or download them all.","The drafts are put together on your computer from sentences you can change under Wording. Nothing about a student is sent anywhere."],"1.16.0":["Help is in the sidebar: short answers to the questions teachers ask most, from opening a set of papers to moving your work to another computer.","Find anything answers questions too. Type a few words, like “late paper” or “backup”, and the answer is in the list."],"1.15.0":["A picture dragged onto a slide that has text now sits beside the text, in a new Text + picture layout.","Drag several pictures in at once and each gets its own slide. Let a picture go on any slide in the list on the left to put it there.","New Full picture layout: the picture fills the whole slide."],"1.14.0":["Extra credit: points or a percent on one paper, and extra credit entries in the gradebook that add to the term grade or the in-class average.","The gradebook shows each type's average (summative, in-class) right beside the term grade, kept in view as you scroll. Averages only shows just those columns, and Whole year splits each term the same way.","Leave out… lets you untick students to see the class averages without them. Their own grades don't change, and nothing is saved."],"1.13.0":["Present a lesson from the Planner, or from Today when its class is on now or next: its slides fill the screen, and the arrow keys or a clicker move through them.","While presenting, A shows the agenda to tick off, T starts a timer the class can see, N shows your notes and B blanks the screen.","The bar shows how many minutes the class has left, from your timetable.","After a lesson is taught, one line says where the class got to. It shows on the lesson and on the week, and presenting again picks up there."],"1.12.0":["A returned paper starts with a feedback page: the score, each rubric row with the level given and what that level means, your comment, and every comment on the paper with its page number.","It is on unless you turn it off under Options on the Return tab. Your own pages are not changed, and bringing an export back in opens only those."],"1.11.0":["The Planner’s sections are in the sidebar: Calendar, Units, Past lessons, Activities and Rubrics. The row of tabs across the top is gone.","A lesson has a lighter top: its name, its classes, its status and Download. Copy for Claude, Versions, the upload and the links are under More.","Comments shows above a lesson once it has one."],"1.7.0":["Home is now Today: the classes you teach today with the lesson planned for each, the papers waiting to be marked, and the papers ready to hand back.","What the class needs next: after a set of papers is scored, Today shows the weakest rubric row and how many students to sit down with.","A class page is quieter. Click anywhere on an assignment’s row to open it; the only blue button is the one that adds an assignment.","Forget, and the other ways to open papers, moved into the ⋯ menu on each row."],"1.6.0":["A new browser opens on three questions (your classes, how you grade, where work is kept) and starts with nothing of anyone else’s in it.","A sample class of made-up students, with papers to mark, for trying things out. Remove it from Home when you’re done.","The app uses the name of your own school system. Choose it, and how you usually grade, in Settings.","Letter grades or IB 1 to 7 can show beside the percent, with boundaries you set.","Canvas and Moodle downloads are grouped by student. The Planner works without a setup file, and downloads lessons as PowerPoint with a plain built-in template."],"1.5.0":["The sidebar says “Not backed up”, in amber, until a folder holds a second copy of your work. Home asks for that folder once.","Go back in time, in Settings: any assignment as it was on an earlier day, restored on its own, with Undo.","Grading Studio can be installed as an app, and it opens with no internet.","A newer version now waits until you click Update now, so nothing changes in the middle of marking."]};
+const WHATS_NEW = {"1.27.7":["Keep strong work as an example: press ☆ Example on an answer in Quick mark (or E), or pick Use as an example in the ⋯ beside a student’s name for a whole paper or part of a page. Names are covered, and your marks and the score stay off unless you switch them on. It is always optional.","The Examples tab on an assignment, and Examples in the sidebar for every class, have Show to the class, Copy picture, Download and Download as a sheet.","Examples go to your linked folder and into the take-home file with the rest of your work."],"1.27.6":["Returned files are named for the student, the assignment and what they are, like “Ana Lee - River essay - Graded.pdf”, or Feedback when there is no score. They still go in each student’s own folder.","To keep the names students turned in, untick Name each file by student and assignment under Options on the Return tab."],"1.27.5":["The gradebook can import your old scores: press Import… and choose a CSV or Excel file, or paste the cells. Each column becomes an assignment, matched to your roster.","You see everything before it is saved, and a score already in the gradebook stays unless you choose the file’s."],"1.27.4":["School is a new page in the sidebar for the things about your school you look up again and again: the handbook, the calendar, the bell schedule, portals, forms, who to call.","Add a link, a file (a copy is kept with your work) or a note. Name your own groups, and star the ones you open most to keep them along the top.","Drop files on the page or paste a web address. Find anything lists every resource. They are kept in your folder and take-home file, and stay when you start a new school year."],"1.27.3":["The class timer in Present takes minutes and seconds: type them in, or pick 0:30 and the other quick times. The menu remembers the last time you typed.","While it runs, the timer's menu adds or takes away 10 seconds or a minute, pauses, and restarts from the time you set. + and − add or take away a minute without opening the menu.","Tick Show it big to put the countdown in the middle of the screen, large enough for the back of the room."],"1.27.2":["In the gradebook, in-class assessments are now on the left and summatives on the right: the columns, the averages beside the term grade, and wherever you choose a type.","The order is yours to change. In Term setup, the arrows beside each type move it, and the gradebook's columns follow from left to right.","You can make your own assignment types. In Term setup, rename a type or press + Add a type (Homework, Projects, Quizzes), and give each its share of the grade. Your own setup stays as it is until you change it."],"1.27.1":["Undo now takes back a score as well as a mark: press Ctrl Z (⌘Z on a Mac) after a slip on a slider, a number key, or Missing, Excused or Late. Redo puts it back.","Deleting a unit, an assignment or a class shows Undo for a few seconds, and Undo puts it back where it was.","“Picked up where you left off” shows once, when you open an assignment, and no longer on Today or other pages. The note about what opened leaves by itself when you move to the next student, if every file opened.","The Next button stays in one place from student to student, and the Grade heading on a class’s Students tab is drawn properly.","Find anything answers to more everyday words: export, hand back, backup, undo, shortcuts, csv."],"1.27.0":["Start a new school year, in Settings, Saving and carrying. Your classes, units and assignment cards carry on, each card with its rubric and Quick mark boxes, with empty class lists and dates a year later.","This year goes into one protected file first, and the file is checked before anything is cleared. Open an archived year brings a year back from its file."],"1.26.2":["Rubric rows can be scored on your own scale. They start at 0 to 4 with half points, as before; when you set up an assignment you can pick any top from 1 to 10 and turn half points off.","Settings, Grading: choose the row scale new assignments start with. Assignments you already have keep theirs."],"1.26.1":["Activities: See, think, wonder now says it comes from Project Zero at the Harvard Graduate School of Education."],"1.26.0":["Seating: a new tab on each class. Pick how the room is set up, drag students to desks, and Shuffle gives everyone a new seat. A student can be kept in their seat.","Pick a name shows one student at random, and nobody twice until everyone has had a turn. Make groups deals the class into groups of any size.","While presenting a lesson, P picks a name and G makes groups. Who’s here leaves out anyone who is away today."],"1.25.0":["Attendance. Each class has an Attendance tab: everyone starts as present, so a day is one press for each student who is late, excused or absent, with a note if you want one.","Look back shows every saved day in one table with each student’s totals, and a student’s own page lists the days they missed.","Copy a day, or download the table as a spreadsheet, for your school’s system. Today has a line for it under each class.","If you don’t take attendance here, turn it off in Settings, Classes and rosters."],"1.24.0":["Retakes: a second try at the same assignment keeps the first try's score, comment and paper. Start one from the ⋯ beside Missing, Excused and Late on a paper.","You choose which try counts, for all your classes: the highest (to begin with), the latest, or the average. It is in the retake box and in the gradebook's Term setup.","A score typed into the gradebook takes a retake too: type both, like 7 > 10."],"1.23.0":["Scores by learning goal, if you want them. Keep your own list of goals (a skill, or a standard from your school) in Settings, Grading, or add one wherever you tag.","Tag rubric rows in Rubric setup and quiz questions in Quiz boxes. An assignment scored with just a total can carry one goal for the whole score.","Each class page gets a Goals tab: the class average on each goal with the lowest first, every student by every goal, and where each number came from. A student's own page shows their goals beside the class average.","Nothing changes until you add a first goal, and tagging never changes a score or a grade."],"1.22.0":["Progress sheets for parent meetings: one printed page per student with the term grade, every score, a chart of how they moved, missing work, each term's grade, the report comment and lines for notes. Find it on a class's Students list, or Progress sheet on one student's page.","Choose the term and tick what goes on it; Print opens the print window, where you can pick a printer or Save as PDF. It is made on your computer and nothing is sent anywhere."],"1.21.0":["Each class has a Missing work tab: every paper you marked Missing, by student or by assignment, for the term you pick.","Email reminder opens an email in your own mail app, addressed to the student and listing what they owe, for you to read and send. Email all writes one email to everyone who owes an assignment, with the addresses in Bcc. Grading Studio sends nothing itself.","Each reminder you open is noted beside the work, and Email wording… changes what every reminder says."],"1.20.0":["The app can speak Traditional Chinese (繁體中文). Choose it in Settings, Display, App language, or at the top of the welcome.","Like Spanish, it covers the first screens so far: the sidebar, Today, the welcome, Find anything, Help, and the feedback page students get with a returned paper. The other screens are still in English."],"1.19.0":["The app can speak Spanish. Choose it in Settings, Display, App language, or at the top of the welcome.","Spanish covers the first screens so far: the sidebar, Today, the welcome, Find anything, Help, and the feedback page students get with a returned paper. The other screens are still in English.","Names you typed (classes, students, assignments, rubric rows) are never translated."],"1.18.0":["On a tablet, a pencil draws and the pen's line is wider where you press harder. Once you have used a pencil, one finger moves the page, two fingers pinch to zoom, and a hand resting on the screen does nothing.","Settings, Marking has a new Tablet and pencil section: choose what a finger does on the paper, or turn off the wider line.","On a touch screen the tools, the student rows and the score buttons are larger."],"1.17.0":["Report comments: a new tab on each class's page drafts a comment for every student from your own gradebook, rubric scores and the comments you wrote on their papers. Edit each one, tick it done, then copy or download them all.","The drafts are put together on your computer from sentences you can change under Wording. Nothing about a student is sent anywhere."],"1.16.0":["Help is in the sidebar: short answers to the questions teachers ask most, from opening a set of papers to moving your work to another computer.","Find anything answers questions too. Type a few words, like “late paper” or “backup”, and the answer is in the list."],"1.15.0":["A picture dragged onto a slide that has text now sits beside the text, in a new Text + picture layout.","Drag several pictures in at once and each gets its own slide. Let a picture go on any slide in the list on the left to put it there.","New Full picture layout: the picture fills the whole slide."],"1.14.0":["Extra credit: points or a percent on one paper, and extra credit entries in the gradebook that add to the term grade or the in-class average.","The gradebook shows each type's average (summative, in-class) right beside the term grade, kept in view as you scroll. Averages only shows just those columns, and Whole year splits each term the same way.","Leave out… lets you untick students to see the class averages without them. Their own grades don't change, and nothing is saved."],"1.13.0":["Present a lesson from the Planner, or from Today when its class is on now or next: its slides fill the screen, and the arrow keys or a clicker move through them.","While presenting, A shows the agenda to tick off, T starts a timer the class can see, N shows your notes and B blanks the screen.","The bar shows how many minutes the class has left, from your timetable.","After a lesson is taught, one line says where the class got to. It shows on the lesson and on the week, and presenting again picks up there."],"1.12.0":["A returned paper starts with a feedback page: the score, each rubric row with the level given and what that level means, your comment, and every comment on the paper with its page number.","It is on unless you turn it off under Options on the Return tab. Your own pages are not changed, and bringing an export back in opens only those."],"1.11.0":["The Planner’s sections are in the sidebar: Calendar, Units, Past lessons, Activities and Rubrics. The row of tabs across the top is gone.","A lesson has a lighter top: its name, its classes, its status and Download. Copy for Claude, Versions, the upload and the links are under More.","Comments shows above a lesson once it has one."],"1.7.0":["Home is now Today: the classes you teach today with the lesson planned for each, the papers waiting to be marked, and the papers ready to hand back.","What the class needs next: after a set of papers is scored, Today shows the weakest rubric row and how many students to sit down with.","A class page is quieter. Click anywhere on an assignment’s row to open it; the only blue button is the one that adds an assignment.","Forget, and the other ways to open papers, moved into the ⋯ menu on each row."],"1.6.0":["A new browser opens on three questions (your classes, how you grade, where work is kept) and starts with nothing of anyone else’s in it.","A sample class of made-up students, with papers to mark, for trying things out. Remove it from Home when you’re done.","The app uses the name of your own school system. Choose it, and how you usually grade, in Settings.","Letter grades or IB 1 to 7 can show beside the percent, with boundaries you set.","Canvas and Moodle downloads are grouped by student. The Planner works without a setup file, and downloads lessons as PowerPoint with a plain built-in template."],"1.5.0":["The sidebar says “Not backed up”, in amber, until a folder holds a second copy of your work. Home asks for that folder once.","Go back in time, in Settings: any assignment as it was on an earlier day, restored on its own, with Undo.","Grading Studio can be installed as an app, and it opens with no internet.","A newer version now waits until you click Update now, so nothing changes in the middle of marking."]};
 const upd = { on: false, st: null, mine: '', checking: false, said: '', install: null, installed: false, err: '' };
 const updCan = () => 'serviceWorker' in navigator && (location.protocol === 'https:' || /[?&]sw=1(&|$)/.test(location.search)) && !/Grading Studio\.html$/i.test(decodeURIComponent(location.pathname));
 const updSend = async msg => { const reg = await navigator.serviceWorker.ready; if (reg.active) reg.active.postMessage(msg); };
@@ -24006,6 +24825,7 @@ async function nyReplace(B, rd, was) {
     if (!lsPut('gs.school', JSON.stringify(schoolMerge(rd2((B.ls || {})['gs.school']), rd2(schWas)).out))) throw browserFull();
   }
   await schBring(src, B);
+  try { await exTake((await exBringPlan(B)).list, src.exPics); } catch (e) { console.error(e); }   // examples, like the school resources, belong to every year: those here stay, and the year's own come back beside them
   for (const id of new Set([...Object.keys(B.meta), ...Object.keys(B.work), ...Object.keys(B.papers)])) {
     const rec = await src.papers(id);
     if (rec) await paperPut(id, rec);
@@ -24619,7 +25439,7 @@ function railRender() {
   screenWas = batch ? 'a' : r.v;
   const d = $('#homeDate'), today = new Date().toLocaleDateString(LANG_LOCALE, { weekday: 'long', month: 'long', day: 'numeric' }); if (d.textContent !== today) d.textContent = today;   // Today's title is the day itself
   const asg = batch && batch.assignment && findItem(batch.assignment.id);
-  document.title = batch ? (asg ? asg.it.name + ' · ' : '') + 'Grading Studio' : r.v === 'class' ? (r.c === lib.loose ? 'No class' : r.c.name) + ' · Grading Studio' : r.v === 'settings' ? (r.sec === 'saving' ? '' : SET_SECS.find(x => x[0] === r.sec)[1] + ' · ') + 'Settings · Grading Studio' : r.v === 'help' ? 'Help · Grading Studio' : r.v === 'school' ? 'School resources · Grading Studio' : 'Grading Studio';
+  document.title = batch ? (asg ? asg.it.name + ' · ' : '') + 'Grading Studio' : r.v === 'class' ? (r.c === lib.loose ? 'No class' : r.c.name) + ' · Grading Studio' : r.v === 'settings' ? (r.sec === 'saving' ? '' : SET_SECS.find(x => x[0] === r.sec)[1] + ' · ') + 'Settings · Grading Studio' : r.v === 'help' ? 'Help · Grading Studio' : r.v === 'school' ? 'School resources · Grading Studio' : r.v === 'examples' ? 'Examples · Grading Studio' : 'Grading Studio';
 }
 function railSavedRender() {
   if (!shellReady) return;
@@ -24672,6 +25492,7 @@ function findRows() {
     tabGo('grades/sheet', 'Grade sheet', 'Every grade found on the papers, with a crop of each');
     tabGo('insights', 'Insights', 'The class at a glance: average, spread, rubric rows, charts', 'statistics stats overview analysis graph mean median');
     tabGo('insights/consistency', 'Consistency check', 'Did you get harder or softer as you went?');
+    if (exOfWork(batch.id).length) tabGo('examples', 'Examples', 'Strong work from this assignment, with no names on it', 'strong example exemplar model answer anchor show class');
     tabGo('return', 'Return marked files', 'The marked files, back in their student folders', 'export download zip hand back send give feedback finished done');
     { const b = $('#quizTop'); if (b && !b.hidden) add('This assignment', b.textContent, b.title, press('#quizTop')); }
     for (const b of document.querySelectorAll('#moreMenu .mitem, #toolStash .mitem')) {
@@ -24691,6 +25512,7 @@ function findRows() {
   add('Go to', 'Today', 'What you teach today, what is waiting to be marked, what is ready to hand back', () => go('#/'));
   add('Go to', 'Planner', 'Units and lessons, on its own page', () => { location.href = $('#lessonsBtn').href; });
   add('Go to', 'School resources', 'Links, files and notes about your school', () => go('#/school'));
+  if (exList.length) add('Go to', 'Examples', 'Strong work from every class, with no names on it', () => go('#/examples'), '', 'strong example exemplar model answer show class');
   add('Go to', 'Settings', 'Saving, classes, terms, marking, display and keys', () => go('#/settings'));
   add('Go to', 'Help', 'Short answers to common questions', () => go('#/help'));
   for (const c of lib.classes) {
