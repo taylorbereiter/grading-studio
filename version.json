@@ -1,11 +1,11 @@
 {
- "version": "1.27.26",
- "build": "d40bd89d6ecd",
+ "version": "1.27.27",
+ "build": "7148705a739c",
  "notes": [
-  "Full screen: press F, or Full screen near the bottom of the sidebar (beside ✕ while a paper is open). The browser’s bars go away and the sidebar folds to icons, or goes while you mark, so the paper gets the room. F again, the same button or Esc leaves, and nothing is closed or lost. On formative work F is for feedback, so use the button there."
+  "Screenshot: press S on a paper, Alt S (⌥S on a Mac) anywhere, or the button at the foot of the marking tools. Drag over what you want, click a page for the whole page, or press Enter for the whole screen, and the picture is copied, ready to paste. On a paper, name covers stay painted in and the student’s name and file name are left off; With my marks chooses whether your marks come too."
  ],
  "files": {
-  "index.html": "2925b07faf86a2c28328197bcfc1c2ab8af59f04c0c0f982e0f5a5b88a84bf16",
-  "planner.html": "cbea12a85d6ddbaf00d4ca0ad016e5a1811d3be318a8631020c72e0b333fdbec"
+  "index.html": "12a381824ecb5503708be14a4550097e2cdcb097570d0201425a1eadff7c941f",
+  "planner.html": "021885ef3af4d85b1e86fd3c78423747adce565eddbc0d44d774df4591e1eea6"
  }
 }

@@ -44,3 +44,10 @@
 # Full screen: a Full screen entry near the foot of every sidebar, a full screen button beside ✕ in the marking screen's top
 # bar, Help has one more answer, About lists what is new, the keys list has F, and the version line reads 1.27.26.
 *
+# Screenshot: the marking tool dock has a screenshot button at its foot, and the Keys list has rows for S and ⌥S.
+mark
+mark-add-menu
+mark-setup-menu
+mark-keys
+mark-word-paper
+*
