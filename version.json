@@ -1,12 +1,13 @@
 {
- "version": "1.26.2",
- "build": "c5c32c634576",
+ "version": "1.27.18",
+ "build": "13d1ff512357",
  "notes": [
-  "Rubric rows can be scored on your own scale. They start at 0 to 4 with half points, as before; when you set up an assignment you can pick any top from 1 to 10 and turn half points off.",
-  "Settings, Grading: choose the row scale new assignments start with. Assignments you already have keep theirs."
+  "The app no longer assumes your AI assistant is Claude. Settings, Working with AI lets you pick Claude, ChatGPT, Gemini, Copilot, another name, or none, and buttons and hints use that name. If you already used the app, yours stays Claude.",
+  "Planner, Timetable has a Slides section: the agenda on slide 2 and keeping text between 28 and 36 pt are both on, and each can be turned off.",
+  "The week shows Saturday, or Sunday in front of Monday, when a class meets then. Short dates follow your computer's day and month order."
  ],
  "files": {
-  "index.html": "3928d2f202e2fa6d28258c641543f9cfb49b2f86dad967f730e734b3531c8bbf",
-  "planner.html": "df219244c9f200f63bf2e0c1e37894e4c1220ce69cee0ee3b296e30330a6ede1"
+  "index.html": "5489abd2621b05e7b3d5d815151b413f2078593a9838218d80026ac09976aeb1",
+  "planner.html": "44f10c904f6fc6a0256281fc532c8eec7dbb81d0ae99f0452f6ce595ddafe050"
  }
 }

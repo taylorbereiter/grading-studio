@@ -5,7 +5,8 @@
 //   chunks of AES-256-GCM, each chunk bytes of plain data and a 16-byte tag, the last one shorter or equal.
 // A chunk's nonce is np (7 random bytes), its number (4 bytes) and 1 if it's the last, and the hash of everything up to the check block is authenticated with each one.
 // So a changed byte, a changed header, chunks swapped or cut off, all fail. The key comes from the passphrase with a salt that's new for each file.
-// Inside, frames: 4 bytes of JSON length, the JSON, then { n } bytes. Frames with no bytes come first (info, ls, tomb, dl), then the papers, late files, readings and Word edits, and last { k: 'end' }.
+// Inside, frames: 4 bytes of JSON length, the JSON, then { n } bytes. Frames with no bytes come first (info, ls, tomb, dl), then the papers, late files, readings and Word edits,
+// then strong examples (ex and expix, which an older copy skips), and last { k: 'end' }.
 // Nothing is ever all in memory. Records are read one at a time, chunks go straight to the disk, and reading back slices the file.
 const TAKE_MAGIC = 'GSWORK1\n', TAKE_ITER = 1000000, TAKE_CHUNK = 4 * 1024 * 1024, TAKE_EXT = '.gswork';
 const te = new TextEncoder(), td = new TextDecoder();
@@ -21,7 +22,8 @@ const CHECK_I = 0xffffffff;
 
 /* writing */
 // sink: { write(bytes), close(), abort() }. onp(bytes so far).
-async function takeWrite(sink, pass, onp, stop) {
+// more (a new year's archive): { info: more fields for the info frame, extra: async frame => more frames before the end }.
+async function takeWrite(sink, pass, onp, stop, more) {
   const salt = crypto.getRandomValues(new Uint8Array(16)), np = crypto.getRandomValues(new Uint8Array(7));
   const hdr = te.encode(JSON.stringify({ v: 1, kdf: { name: 'PBKDF2', hash: 'SHA-256', iter: TAKE_ITER, salt: b64(salt) }, cipher: 'AES-256-GCM', chunk: TAKE_CHUNK, np: b64(np) }));
   const head = new Uint8Array(TAKE_MAGIC.length + 4 + hdr.length);
@@ -51,7 +53,7 @@ async function takeWrite(sink, pass, onp, stop) {
   await keepWait;   // a big download may still be going in
   const A = await localState();
   const metas = Object.keys(A.meta), ids = [...new Set([...metas, ...Object.keys(A.work)])];
-  await frame({ k: 'info', app: 'Grading Studio', kind: 'take-home', t: Date.now(), from: location.host || 'an offline copy', ver: gsData.APP_VERSION, dataV: gsData.version(), downloads: ids.length });
+  await frame({ k: 'info', app: 'Grading Studio', kind: 'take-home', t: Date.now(), from: location.host || 'an offline copy', ver: gsData.APP_VERSION, dataV: gsData.version(), downloads: ids.length, ...((more && more.info) || {}) });
   await frame({ k: 'ls', ls: carryLs() });
   await frame({ k: 'tomb', tomb: A.tomb });
   for (const id of ids) await frame({ k: 'dl', id, work: A.work[id] || null, meta: A.meta[id] || null });
@@ -65,6 +67,10 @@ async function takeWrite(sink, pass, onp, stop) {
     both.set(rec.data); both.set(orig, rec.data.length);
     await frame({ k: 'edit', id: k.slice(0, i), path: k.slice(i + 1), t: rec.t || 1, nd: rec.data.length, hasOrig: !!rec.orig }, both);
   });
+  await schReady;   // the files of the school resources (school.js)
+  for (const f of schRefs()) { const data = await schBytes(f.hash); if (data) await frame({ k: 'school', hash: f.hash }, data); }
+  await exTakeFrames(frame);
+  if (more && more.extra) await more.extra(frame);
   await frame({ k: 'end' });
   await seal(true);
   await sink.close();
@@ -123,7 +129,7 @@ async function takeOpen(file, pass) {
 }
 // Goes through the whole file first, so a damaged or changed one fails before anything is touched, and collects all but the bytes.
 async function takeScan(rd, onp) {
-  const B = { work: {}, meta: {}, tomb: {}, added: {}, edits: {}, papers: {}, addedAt: {}, editAt: {}, ls: {}, lib: null, info: null, need: 0 };
+  const B = { work: {}, meta: {}, tomb: {}, added: {}, edits: {}, papers: {}, addedAt: {}, editAt: {}, school: {}, ex: {}, exAt: {}, ls: {}, lib: null, info: null, need: 0 };
   let pos = 0, seen = -1, ended = false;
   const skipTo = async end => { const stop = Math.ceil(end / rd.chunk); for (let i = seen + 1; i < stop; i++) { await rd.chunkAt(i); seen = i; if (onp) onp((i + 1) * rd.chunk); } };
   try {
@@ -141,6 +147,10 @@ async function takeScan(rd, onp) {
       else if (f.k === 'paper') { const p = B.papers[f.id] ||= { label: f.label, entries: [], size: 0 }; p.entries.push({ path: f.path, off: pos, n, none: f.none }); p.size += n; }
       else if (f.k === 'added') { (B.addedAt[f.id] ||= {})[f.lk] = { rec: f.rec, off: pos, n }; (B.added[f.id] ||= {})[f.lk] = f.rec.added || 0; }
       else if (f.k === 'edit') { (B.editAt[f.id] ||= {})[f.path] = { t: f.t, off: pos, n, nd: f.nd, hasOrig: f.hasOrig }; (B.edits[f.id] ||= {})[f.path] = f.t; }
+      else if (f.k === 'ex') { if (f.rec && f.rec.id) B.ex[f.rec.id] = f.rec; }
+      else if (f.k === 'expix') B.exAt[f.id + '|' + f.i] = { off: pos, n };
+      else if (f.k === 'school') B.school[f.hash] = { off: pos, n };
+      else if (f.k === 'plan') (B.plan ||= []).push({ f, off: pos, n });   // the Planner's records, in a year's archive
       else if (f.k === 'end') ended = true;
       await skipTo(pos + n);
       pos += n;
@@ -162,6 +172,12 @@ const takeSource = (rd, B) => ({
     const both = await rd.read(e.off, e.n);
     return { t: e.t, data: both.slice(0, e.nd), orig: e.hasOrig ? both.slice(e.nd) : null };
   },
+  async exPics(r) {
+    const out = [];
+    for (let i = 0; i < (r.pages || []).length; i++) { const a = B.exAt[r.id + '|' + i]; if (!a) return null; out.push(new Blob([await rd.read(a.off, a.n)], { type: 'image/jpeg' })); }
+    return out;
+  },
+  async school(hash) { const s = B.school && B.school[hash]; return s ? rd.read(s.off, s.n) : null; },
 });
 const TAKE_SAY = {
   notours: 'That isn’t a Grading Studio take-home file.',
@@ -177,7 +193,7 @@ const papersLacking = () => [...keptMeta.values()].filter(m => !m.papers).map(m 
 function openTake() {
   if (batch) saveNow();
   openDlg('<div class="bh"><h2>Take my work with me</h2><button class="icon" data-close aria-label="Close">✕</button></div><div class="bb" id="takeBox">' +
-    '<p style="margin-top:0">Makes one protected file with everything you need to grade on another computer: student files, marks, scores, comments, rosters, rubrics, readings, Word edits and added files. Planner work stays here.</p>' +
+    '<p style="margin-top:0">Makes one protected file with everything you need to grade on another computer: student files, marks, scores, comments, rosters, rubrics, readings, Word edits, added files and strong examples. Planner work stays here.</p>' +
     '<p class="muted" style="font-size:14px">Choose a passphrase of a few words. If you forget it, nobody can open this file, you included, but your work here isn’t affected. Keep the file somewhere private all the same.</p>' +
     passFields() + '<label class="tkf">Again, to be sure<input type="password" id="takeP2" autocomplete="off"></label><p class="tkerr" id="takeErr" role="alert" hidden></p></div>' +
     '<div class="bf"><button class="btn" data-close>Cancel</button><button class="btn primary" id="takeGo">Make the file</button></div>', true);
@@ -354,7 +370,7 @@ async function bringPlan(B) {
 const askSig = a => a.gone ? '!' + a.id + '|' + (a.work && a.work.t) : a.id + '|' + a.key + '|' + recHash(a.a);
 // What will change, then her say-so. Nothing has been touched up to here.
 async function bringPreview(B, src, label, sub, again) {
-  const { plan, libm, lsSet } = await bringPlan(B), rows = plan.rows, lines = [], asks = [...plan.asks, ...libm.asks], shown = new Set(asks.map(askSig));
+  const { plan, libm, lsSet } = await bringPlan(B), rows = plan.rows, lines = [], asks = [...plan.asks, ...libm.asks], shown = new Set(asks.map(askSig)), ex = await exBringPlan(B);
   const nw = rows.filter(r => r.kind === 'new'), mg = rows.filter(r => r.kind === 'merge'), gn = rows.filter(r => r.kind === 'gone');
   const li = t => '<li>' + t + '</li>';
   if (nw.length) lines.push('<p><b>' + nw.length + ' new ' + (nw.length === 1 ? 'download' : 'downloads') + '</b></p><ul>' + nw.map(r => li(esc(r.name) + ' <span class="muted">· ' + (r.meta && r.meta.n || Object.keys((r.work && r.work.s) || {}).length) + ' ' + ((r.meta && r.meta.n || Object.keys((r.work && r.work.s) || {}).length) === 1 ? 'student' : 'students') + (r.work ? ', ' + r.meta.scored + ' scored' : '') + (B.papers && B.papers[r.id] ? ', ' + fmtSize(B.papers[r.id].size) : '') + '</span>')).join('') + '</ul>');
@@ -372,10 +388,11 @@ async function bringPreview(B, src, label, sub, again) {
   if (libm.notes.length) lines.push('<p><b>Classes, units and rosters</b></p><ul id="bringLib">' + libm.notes.map(n => li(noteLine(n))).join('') + '</ul>');
   const off = rows.filter(r => r.cardOff);
   if (off.length) lines.push('<p id="bringCardOff">The rubric saved with ' + off.map(r => '<b>' + esc(r.name) + '</b>').join(', ') + ' doesn’t match ' + (off.length === 1 ? 'its assignment card' : 'their assignment cards') + '. Bringing this in doesn’t settle that, so you’ll be asked which one to use when you open ' + (off.length === 1 ? 'it' : 'them') + '.</p>');
-  const lsReal = Object.keys(lsSet).filter(k => k !== 'gs.rubricsGone' && /^gs\.(bank|setup|rubrics|rp\.|rd\.)/.test(k));
-  if (lsReal.length) lines.push('<p><b>Also</b></p><ul>' + (lsSet['gs.bank'] ? li('Saved comments from the other computer are added to yours') : '') + (lsReal.some(k => k !== 'gs.bank') ? li('Rubrics or settings you don’t have here yet') : '') + '</ul>');
+  const lsReal = Object.keys(lsSet).filter(k => k !== 'gs.rubricsGone' && /^gs\.(bank|setup|rubrics|school|rp\.|rd\.)/.test(k));
+  if (lsReal.length) lines.push('<p><b>Also</b></p><ul>' + (lsSet['gs.bank'] ? li('Saved comments from the other computer are added to yours') : '') + (lsSet['gs.school'] ? li('School resources added or changed on the other computer') : '') + (lsReal.some(k => k !== 'gs.bank' && k !== 'gs.school') ? li('Rubrics or settings you don’t have here yet') : '') + '</ul>');
+  if (ex.add || ex.change || ex.drop) lines.push('<p><b>Examples</b></p><ul id="bringEx">' + (ex.add ? li(ex.add + (ex.add === 1 ? ' new example' : ' new examples')) : '') + (ex.change ? li(ex.change + (ex.change === 1 ? ' example was changed' : ' examples were changed') + ' there') : '') + (ex.drop ? li(ex.drop + (ex.drop === 1 ? ' example was deleted there, so it goes here too' : ' examples were deleted there, so they go here too')) : '') + '</ul>');
   // Things only ever being kept as they are here, or looks like a pen color, aren't reason to ask.
-  const nothing = !nw.length && !gn.some(r => r.onA) && !libm.notes.length && !lsReal.length && !asks.length && !mg.some(r => r.extra || r.setIn.length || r.rows.some(x => x.pick === 'b'));
+  const nothing = !ex.list.length && !nw.length && !gn.some(r => r.onA) && !libm.notes.length && !lsReal.length && !asks.length && !mg.some(r => r.extra || r.setIn.length || r.rows.some(x => x.pick === 'b'));
   const sameN = rows.filter(r => r.kind === 'same' || r.kind === 'onlyA').length;
   const need = rows.filter(r => r.kind === 'new').reduce((a, r) => a + ((B.papers && B.papers[r.id] && B.papers[r.id].size) || 0), 0);
   let room = '';
@@ -433,6 +450,7 @@ async function bringApply(B0, src, shown, answers) {
       if (r.files) for (const k of r.files.fromB) { const rec = await src.added(r.id, k); if (rec) await idbDo('readwrite', o => o.put(rec, r.id + '|' + k)); }
       if (r.edits) for (const p of r.edits.fromB) { const rec = await src.edit(r.id, p); if (rec) await kdo('edits', 'readwrite', o => o.put(rec, r.id + '|' + p)); }
     }
+    await schBring(src, B);
     // Rosters next, with no marks or scores changed yet. A score with no paper hangs on its roster, so if that doesn't fit she's told, and nothing goes on without it.
     if (libm.toA) { lib = migrateLib(libm.lib); if (!setLibFrom(lib)) throw browserFull(); }
     for (const [k, v] of Object.entries(lsSet)) if (!lsPut(k, v)) throw browserFull();
@@ -447,6 +465,7 @@ async function bringApply(B0, src, shown, answers) {
     await applyRow(r, none);
   }
   store.set('gs.tomb', plan.tomb);
+  if (src.exPics) await exTake((await exBringPlan(B0)).list, src.exPics);
   // Work from an older format updates itself on the reload, and every step is safe to run twice.
   const v = B.info && B.info.dataV;
   if (!v) store.del('gs.dataV'); else if (v < gsData.version()) store.set('gs.dataV', v);
@@ -490,7 +509,7 @@ async function removeHere() {
   const folderLine = linked ? '\n\nYour linked folder “' + fld.name + '” isn’t touched: its files stay where they are, and this browser stops saving to it. To delete them, delete that folder yourself.' : '';
   const warn = !list.length ? '' : !last ? '\n\nYou haven’t made a take-home file from this browser, so anything done here may not be anywhere else.'
     : newer.length ? '\n\n' + newer.length + (newer.length === 1 ? ' download has' : ' downloads have') + ' changes since your last take-home file (' + whenOf(last) + '). Those changes aren’t in that file.' : '\n\nYour last take-home file was made ' + whenOf(last) + ', after your last change.';
-  const typed = await askTextDlg('This removes all student work from this browser: ' + list.length + (list.length === 1 ? ' download' : ' downloads') + ' with their papers, marks, scores and comments, plus rosters, units, rubrics, late files, readings, Word edits and safety copies.' + warn + folderLine + '\n\nPlanner work isn’t touched. This can’t be undone.\n\nType REMOVE to go ahead.', '', { ok: 'Remove from this computer', cancel: 'Keep it', danger: true });
+  const typed = await askTextDlg('This removes all student work from this browser: ' + list.length + (list.length === 1 ? ' download' : ' downloads') + ' with their papers, marks, scores and comments, plus rosters, units, rubrics, late files, readings, Word edits, school resources, examples and safety copies.' + warn + folderLine + '\n\nPlanner work isn’t touched. This can’t be undone.\n\nType REMOVE to go ahead.', '', { ok: 'Remove from this computer', cancel: 'Keep it', danger: true });
   if (typed == null) return;
   if (typed.trim().toUpperCase() !== 'REMOVE') return sayDlg('That didn’t say REMOVE, so nothing was removed.');
   await keepWait;   // papers still going in would land after the clearing
@@ -502,6 +521,8 @@ async function removeHere() {
     for (const n of ['papers', 'work', 'meta', 'edits']) await kdo(n, 'readwrite', o => o.clear());
     await idbDo('readwrite', o => o.clear());
     await new Promise(res => { const r = indexedDB.deleteDatabase('grading-studio-safety'); r.onsuccess = r.onerror = r.onblocked = () => res(); });
+    await schRemoveAll();
+    await exRemoveAll();
   } catch (e) { console.error(e); tabsOver('done'); return sayDlg('Not everything could be removed. Close any other Grading Studio tabs and try again.'); }
   for (let i = localStorage.length - 1; i >= 0; i--) { const k = localStorage.key(i); if (k && (k.startsWith('gsc.saved.') || k.startsWith('gsc.forgot.') || k.startsWith('gs.') && !LS_LOOKS.test(k))) localStorage.removeItem(k); }
   try { localStorage.removeItem('gsc.win'); } catch {}

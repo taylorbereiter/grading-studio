@@ -4,12 +4,31 @@ let redoStack = [];
 const stepOf = (file, idx, withRot) => ({ file, idx, before: JSON.stringify(file.marks[idx] || []), rot: withRot ? rotOf(file, idx) : undefined, skew: withRot ? skewOf(file, idx) : 0, cov: withRot ? coverCopy(file, idx) : undefined });
 function pushUndo(u) { undoStack.push(u); if (undoStack.length > 200) undoStack.shift(); redoStack = []; renderTools(); }
 function snap(pg) { pushUndo(stepOf(pg.file, pg.idx)); }
+// A score is a step too: the student's whole score as it was (rows, points, status), so Ctrl Z takes back a slip of the
+// hand on a slider or a number key the same way it takes back a mark. Called just before the score changes.
+const gradeStep = st => ({ grade: st, before: JSON.stringify(st.grade) });
+function gradeSnap(st) { pushUndo(gradeStep(st)); }
+function gradeBack(u, to) {
+  const st = u.grade, si = batch.students.indexOf(st); if (si < 0) return;
+  to.push(gradeStep(st));
+  const was = st.grade, g = JSON.parse(u.before), t = Date.now();
+  // What comes back is a change made now: its times are now, so an older copy of her work (another tab, the folder) can't win over it.
+  g.at = t;
+  for (let i = 0, n = Math.max((was.rubric || []).length, (g.rubric || []).length); i < n; i++) if ((was.rubric || [])[i] !== (g.rubric || [])[i]) (g.atR ||= {})[i] = t;
+  if (was.points !== g.points) (g.atR ||= {}).points = t;
+  st.grade = g;
+  if (st.found !== undefined) refound(st);
+  rowKeyed = -1;
+  if (si !== cur) openStudent(si); else renderGrade();
+  saveSoon(); renderList(); renderTools();
+}
 function changed(pg) { scanned = false; draw(pg); gradeMarksChanged(pg.file); saveSoon(); renderList(); }
 function undo() { swapStep(undoStack, redoStack); }
 function redo() { swapStep(redoStack, undoStack); }
 function swapStep(from, to) {
   commitEditors();
   const u = from.pop(); if (!u) return;
+  if (u.grade) return gradeBack(u, to);
   scanned = false;
   to.push(stepOf(u.file, u.idx, u.rot !== undefined));
   u.file.marks[u.idx] = JSON.parse(u.before);
@@ -82,7 +101,7 @@ async function rescanFile(f) {
 // The panel's total, without touching the comment box she may be typing in.
 function gradeShown(st) { const t = $('#grade .total'); if (t && st === batch.students[cur]) t.innerHTML = totalHtml(st); }
 // A grade lives in the mark that holds it. "page|words" for each of her marks with a grade in it.
-const gradeMarks = f => Object.entries(f.marks || {}).flatMap(([p, a]) => a.filter(m => (m.t === 'text' || m.t === 'note' || (m.t === 'stamp' && m.k === 'score')) && m.text && parseGrade(m.text, false)).map(m => p + '|' + m.text)).sort();
+const gradeMarks = f => Object.entries(f.marks || {}).flatMap(([p, a]) => a.filter(m => !m.qza && (m.t === 'text' || m.t === 'note' || (m.t === 'stamp' && m.k === 'score')) && m.text && parseGrade(m.text, false)).map(m => p + '|' + m.text)).sort();
 const rereadTimers = new Map();
 let rereadQ = Promise.resolve(), rereadsLeft = 0;
 // When those marks change, the old reading goes this moment and the file is read again for the new one. Pen strokes and plain comments change nothing here.

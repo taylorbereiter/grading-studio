@@ -85,10 +85,10 @@ function bkHeat(c, all, conf) {
   const avg = col => { if (col.type === 'fm') return c.names.filter(n => (col.cells.get(n) || {}).fb).length + '/' + c.names.length; const ps = c.names.map(n => col.cells.get(n)).filter(bkCounts).map(x => x.pct); return ps.length ? roundPct(bkMean(ps)) + '%' : '–'; };
   const gs = rows.map(x => x.r.grade).filter(v => v != null), gname = bk.term === '*' ? 'Grade' : (bkTabs(cols).find(t => t[0] === bk.term) || [, 'Grade'])[1];
   return '<section class="chheat" id="bkHeat"><h3 class="ovh3">Every student, every assignment</h3><div class="chwrap"><table class="chtab"><thead><tr>' + head('name', 'Student', 'chn', 'roster order') +
-    cols.map(col => head(col.key, '<i class="chdot ' + (col.type || 'no') + '"></i><span>' + esc(col.name) + '</span><small>' + esc(bkDay(col.due)) + '</small>', 'chh', col.name)).join('') + head('grade', esc(gname), 'chg', 'grade') + '</tr></thead><tbody>' +
+    cols.map(col => head(col.key, '<i class="chdot ' + (bkCls(col.type) || 'no') + '"></i><span>' + esc(col.name) + '</span><small>' + esc(bkDay(col.due)) + '</small>', 'chh', col.name)).join('') + head('grade', esc(gname), 'chg', 'grade') + '</tr></thead><tbody>' +
     rows.map(row => '<tr><th class="chn" scope="row">' + name(row) + '</th>' + cols.map(col => '<td>' + chCell(col, col.cells.get(row.n), row.shown) + '</td>').join('') + '<td class="chg">' + (row.r.grade != null ? pctAvgText(row.r.grade) : '–') + '</td></tr>').join('') +
     '<tr class="chfoot"><th class="chn" scope="row">Class average</th>' + cols.map(col => '<td>' + avg(col) + '</td>').join('') + '<td class="chg">' + (gs.length ? pctAvgText(bkMean(gs)) : '–') + '</td></tr></tbody></table></div>' +
-    '<div class="bkleg chleg">' + chBandLegend().join('') + '<span><i class="chsw miss"></i>Missing</span><span><i class="chsw fm">✓</i>Feedback given (formative)</span><span><i class="chdot sum"></i>Summative</span><span><i class="chdot ic"></i>In-class</span></div>' +
+    '<div class="bkleg chleg">' + chBandLegend().join('') + '<span><i class="chsw miss"></i>Missing</span><span><i class="chsw fm">✓</i>Feedback given (formative)</span>' + bkLeg('chdot') + '</div>' +
     '<p class="muted ovcap2">The stronger the blue, the higher the score, so a faint row is a student having a hard time and a faint column is an assignment the class found hard. Click a heading to sort by it. L is late; a score with no fill (P partly scored, O left out) isn’t in the average.</p></section>';
 }
 
@@ -193,16 +193,17 @@ function bkRubricRows(c, cols) {
 /* ---------- summatives against in-class work: one dot per student ---------- */
 function bkScatter(c, cols, conf) {
   const pts = c.names.map((n, i) => { const r = bkGrade(n, cols, conf); return r.by.sum != null && r.by.ic != null ? { name: bkWho(n, i), x: r.by.ic, y: r.by.sum } : null; }).filter(Boolean);
-  if (pts.length < 2) return '<p class="muted" id="bkScatter">This shows once students have both a summative and an in-class score.</p>';
+  const usual = bkIsDef('sum') && bkIsDef('ic'), sn = bkLabel('sum', true), inm = bkLabel('ic', true);
+  if (pts.length < 2) return '<p class="muted" id="bkScatter">This shows once students have both ' + (usual ? 'a summative and an in-class score' : esc('a score in ' + sn + ' and one in ' + inm)) + '.</p>';
   const all = pts.flatMap(p => [p.x, p.y]), lo = Math.max(0, Math.floor((Math.min(...all) - 3) / 10) * 10), hi = Math.max(100, Math.ceil(Math.max(...all) / 10) * 10);
   const W = Math.min(480, bkW()), H = Math.round(W * .72), L = 58, R = 16, T = 12, B = 46, X = v => L + (v - lo) / (hi - lo) * (W - L - R), Y = v => T + (hi - v) / (hi - lo) * (H - T - B), tick = hi - lo > 60 ? 20 : 10;
   let s = '';
   for (let v = lo; v <= hi; v += tick) s += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + Y(v) + '" y2="' + Y(v) + '" class="tgl"/><line x1="' + X(v) + '" x2="' + X(v) + '" y1="' + T + '" y2="' + (H - B) + '" class="tgl"/>' +
     '<text x="' + (L - 8) + '" y="' + (Y(v) + 4) + '" text-anchor="end" class="ttk">' + v + '%</text><text x="' + X(v) + '" y="' + (H - B + 16) + '" text-anchor="middle" class="ttk">' + v + '%</text>';
   s += '<line x1="' + X(lo) + '" y1="' + Y(lo) + '" x2="' + X(hi) + '" y2="' + Y(hi) + '" class="chdiag"/>' +
-    '<text x="' + (L + 8) + '" y="' + (T + 16) + '" class="ttk">Stronger on summatives</text><text x="' + (W - R - 8) + '" y="' + (H - B - 8) + '" text-anchor="end" class="ttk">Stronger in class</text>' +
-    '<text x="' + (L + (W - L - R) / 2) + '" y="' + (H - 6) + '" text-anchor="middle" class="ttk">In-class average</text><text transform="translate(12 ' + (T + (H - T - B) / 2) + ') rotate(-90)" text-anchor="middle" class="ttk">Summative average</text>';
-  for (const p of pts) s += '<circle class="chpt" cx="' + X(Math.min(hi, p.x)) + '" cy="' + Y(Math.min(hi, p.y)) + '" r="5.5" tabindex="0"' + chTip(p.name, 'Summatives ' + pctAvgText(p.y), 'In-class ' + pctAvgText(p.x)) + '/>';
+    '<text x="' + (L + 8) + '" y="' + (T + 16) + '" class="ttk">' + (usual ? 'Stronger on summatives' : esc('Stronger on ' + sn)) + '</text><text x="' + (W - R - 8) + '" y="' + (H - B - 8) + '" text-anchor="end" class="ttk">' + (usual ? 'Stronger in class' : esc('Stronger on ' + inm)) + '</text>' +
+    '<text x="' + (L + (W - L - R) / 2) + '" y="' + (H - 6) + '" text-anchor="middle" class="ttk">' + esc(inm) + ' average</text><text transform="translate(12 ' + (T + (H - T - B) / 2) + ') rotate(-90)" text-anchor="middle" class="ttk">' + esc(sn) + ' average</text>';
+  for (const p of pts) s += '<circle class="chpt" cx="' + X(Math.min(hi, p.x)) + '" cy="' + Y(Math.min(hi, p.y)) + '" r="5.5" tabindex="0"' + chTip(p.name, (usual ? 'Summatives' : sn) + ' ' + pctAvgText(p.y), inm + ' ' + pctAvgText(p.x)) + '/>';
   // the two students furthest from the line get their names
   for (const p of [...pts].sort((a, b) => Math.abs(b.y - b.x) - Math.abs(a.y - a.x)).slice(0, 2)) if (Math.abs(p.y - p.x) >= 8) {
     const up = p.y > p.x, nm = chCut(p.name, 20), w = nm.length * 6.8, left = up ? X(p.x) - 10 - w >= L + 4 : X(p.x) + 10 + w > W - R;   // above the line there's room to the upper left, below it to the lower right
@@ -247,13 +248,13 @@ function bkBandLine(c, sc, n, shown) {
   cols.forEach((x, i) => { if (x.me == null) { if (run.length) seg.push(run); run = []; } else run.push(X(i) + ',' + Y(x.me)); }); if (run.length) seg.push(run);
   s += seg.map(r => '<polyline class="bkln" points="' + r.join(' ') + '"/>').join('');
   cols.forEach((x, i) => {
-    if (x.me != null) s += '<circle class="bkdot ' + (x.col.type || '') + '" cx="' + X(i) + '" cy="' + Y(x.me) + '" r="5.5" tabindex="0"' + chTip(x.me + '%', x.col.name, bkLabel(x.col.type) + (q[i] ? ' · class middle half ' + roundPct(q[i][0]) + '–' + roundPct(q[i][2]) + '%' : '')) + '/>';
+    if (x.me != null) s += '<circle class="bkdot ' + bkCls(x.col.type) + '" cx="' + X(i) + '" cy="' + Y(x.me) + '" r="5.5" tabindex="0"' + chTip(x.me + '%', x.col.name, bkLabel(x.col.type) + (q[i] ? ' · class middle half ' + roundPct(q[i][0]) + '–' + roundPct(q[i][2]) + '%' : '')) + '/>';
     else if (x.miss) s += '<circle class="chmiss" cx="' + X(i) + '" cy="' + (H - B - 10) + '" r="6" tabindex="0"' + chTip('Missing', x.col.name) + '/><text x="' + X(i) + '" y="' + (H - B - 22) + '" text-anchor="middle" class="ttk">missing</text>';
     chLines(x.col.name, fit.chars, lines).forEach((l, j) => { s += '<text x="' + X(i) + '" y="' + (H - B + 18 + j * 14) + '" text-anchor="middle" class="tlb">' + esc(l) + '</text>'; });
     if (i % fit.dates === 0) s += '<text x="' + X(i) + '" y="' + (H - 4) + '" text-anchor="middle" class="ttk">' + esc(bkDay(x.col.due)) + '</text>';
   });
   return '<svg class="tsvg" id="bkStuLine" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' + esc(cols.map((x, i) => x.col.name + ' ' + (x.me != null ? x.me + '%' : x.miss ? 'missing' : '–') + (q[i] ? ', class middle ' + roundPct(q[i][1]) + '%' : '')).join('. ')) + '">' + s + '</svg>' +
-    '<div class="bkleg"><span><i class="me"></i>' + esc(shown) + '</span><span><i class="sum"></i>Summative</span><span><i class="ic"></i>In-class</span><span><i class="chsw band"></i>Middle half of the class</span><span><i class="mute"></i>Class middle score</span></div>';
+    '<div class="bkleg"><span><i class="me"></i>' + esc(shown) + '</span>' + bkLeg() + '<span><i class="chsw band"></i>Middle half of the class</span><span><i class="mute"></i>Class middle score</span></div>';
 }
 // This student's average on each rubric row across the summatives, with the class average as a tick.
 function bkStuRows(c, cols, n) {

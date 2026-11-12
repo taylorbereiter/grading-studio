@@ -37,7 +37,7 @@ function layoutNotes(notes, W, H, side) {
   const run = () => {
     const lh = fs * 1.3;
     measureCtx.font = fs + 'px ' + FONT;
-    boxes = list.map(o => { const lines = wrapText(measureCtx, o.n.text, boxW - pad * 2); return { ...o, lines, lh, h: Math.max(1, lines.length) * lh + pad * 2 }; });
+    boxes = list.map(o => { const lines = wrapText(measureCtx, o.n.text, boxW - pad * 2 - (o.n.qza ? 4 : 0)); return { ...o, lines, lh, h: Math.max(1, lines.length) * lh + pad * 2 }; });
     let y = M;
     for (const b of boxes) { b.y = Math.max(b.ry - 10, y); y = b.y + b.h + gap; }
     let bottom = H - M;
@@ -127,7 +127,14 @@ function drawMarks(ctx, marks, W, H, side, screen) {
       ctx.strokeStyle = col; ctx.lineWidth = 0.9; ctx.strokeRect(b.x, b.y, b.w, b.h);
       ctx.fillStyle = col; ctx.fillRect(b.x, b.y, 2.5, b.h);
       ctx.fillStyle = '#1B1F27'; ctx.font = b.fs + 'px ' + FONT;
-      b.lines.forEach((ln, i) => ctx.fillText(ln, b.x + b.pad, b.y + b.pad + b.fs * 0.95 + i * b.lh));
+      b.lines.forEach((ln, i) => {
+        const x = b.x + b.pad, y = b.y + b.pad + b.fs * 0.95 + i * b.lh, k = i ? -1 : ln.indexOf(':');
+        if (!b.n.qza || k < 1) return ctx.fillText(ln, x, y);
+        // a quiz answer note: its label (Answer:) in bold gold, the answer after it in the usual dark text
+        ctx.fillStyle = col; ctx.font = '700 ' + b.fs + 'px ' + FONT; ctx.fillText(ln.slice(0, k + 1), x, y);
+        const w = ctx.measureText(ln.slice(0, k + 1)).width;
+        ctx.fillStyle = '#1B1F27'; ctx.font = b.fs + 'px ' + FONT; ctx.fillText(ln.slice(k + 1), x + w, y);
+      });
       if (b.n.hl) numberBadge(ctx, b.x + 1.25, b.y, order.indexOf(b.n) + 1, col);
     }
   }
