@@ -289,3 +289,73 @@ test('the welcome names MYP criteria (0 to 8) apart from the DP 1 to 7, and an M
   assert.deepEqual(await page.evaluate(() => { const g = window.__gs, l = g.state().lib; l.me.grade = { way: 'rubric' }; return g.classNewWay(); }), {});
   await close();
 });
+
+// Bram has one task marked Missing, on top of the usual made-up class.
+function seedMissing() {
+  const s = ibSeed(), lib = JSON.parse(s.ls['gs.lib']);
+  lib.classes[0].units[0].items[2].typed.s['Bram Sample'] = { st: 'missing' };
+  return { ls: { 'gs.lib': JSON.stringify(lib) } };
+}
+test('report comments for an MYP class are drafted from the levels and the 1 to 7, with no percent', async () => {
+  const { page, close } = await openApp(browser, { seed: seedMissing() });
+  await goTo(page, '#/class/c1/reports'); await page.waitForSelector('#rptText');
+  const chips = () => page.$$eval('#rptFacts .schip', xs => xs.map(x => x.textContent)), text = () => page.$eval('#rptText', e => e.value);
+  // Aria: D is not set, so there is no grade yet; the criterion with no level is judged by its most recent task
+  assert.deepEqual(await chips(), ['3 of 4 criteria set', 'Strongest: Knowing and understanding 7', 'To work on: Reflecting on the impacts of science 6']);
+  assert.match(await text(), /not yet finished enough work/); assert.match(await text(), /Knowing and understanding/);
+  await page.click('#rpt [data-rptstu="2"]'); await page.waitForFunction(() => document.querySelector('#rptName').textContent === 'Cleo Fixture');
+  assert.deepEqual(await chips(), ['Grade 7 · total 30 of 32', 'Strongest: Knowing and understanding 8', 'To work on: Reflecting on the impacts of science 7']);
+  await page.click('#rptGrade'); await page.waitForFunction(() => /term grade is 7 out of 7/.test(document.querySelector('#rptText').value));
+  await page.click('#rpt [data-rptstu="1"]'); await page.waitForFunction(() => document.querySelector('#rptName').textContent === 'Bram Sample');
+  assert.deepEqual(await chips(), ['Grade 4 · total 17 of 32', 'Strongest: Processing and evaluating 5', 'To work on: Reflecting on the impacts of science 4', 'Missing 1']);
+  assert.match(await text(), /one piece of work to hand in: Unit test/);
+  for (const i of [0, 1, 2, 3, 4, 5]) { await page.click('#rpt [data-rptstu="' + i + '"]'); await page.waitForFunction(i => document.querySelector('#rpt .rptrow.on').dataset.rptstu === String(i), {}, i); assert.doesNotMatch(await text() + (await chips()).join(' '), /%|NaN|undefined|null/); }
+  // the Missing work tab lists the same paper
+  await goTo(page, '#/class/c1/missing'); await page.waitForFunction(() => /Unit test/.test(document.querySelector('#bkBody').textContent));
+  assert.match(await page.$eval('#bkBody', e => e.textContent), /Bram Sample/);
+  await close();
+});
+
+test('a progress sheet for an MYP class shows levels, the total and the 1 to 7, each term’s levels, and no percent', async () => {
+  const { page, close } = await openApp(browser, { seed: seedMissing() });
+  await goTo(page, '#/class/c1/students/3'); await page.waitForSelector('#bkBody [data-pssone]');
+  await page.click('#bkBody [data-pssone]'); await page.waitForSelector('#pssPages .pss');
+  const sheet = () => page.$eval('#pssPages .pss', a => ({
+    who: a.querySelector('h3').textContent, tiles: [...a.querySelectorAll('.psst')].map(t => [...t.children].map(x => x.textContent.replace(/\s+/g, ' ').trim()).join(' | ')),
+    tasks: [...a.querySelectorAll('.pssgrid > section tbody tr')].map(r => [...r.cells].map(x => x.textContent).join(' | ')),
+    terms: [...a.querySelectorAll('aside table tr')].map(r => [...r.cells].map(x => x.textContent).join(' ')), all: a.textContent }));
+  let s = await sheet();
+  assert.equal(s.who, 'Cleo Fixture');
+  assert.deepEqual(s.tiles, ['Term grade | 7 out of 7 | total 30 of 32 · class middle 5', 'A Knowing and understanding | 8 of 8 | excellent · class middle 6', 'B Inquiring and designing | 8 of 8 | excellent · class middle 5',
+    'C Processing and evaluating | 7 of 8 | excellent · class middle 6', 'D Reflecting on the impacts of science | 7 of 8 | excellent · class middle 6', 'Missing | 0 | nothing outstanding']);
+  assert.deepEqual(s.tasks, ['Cells lab report | A D | Sep 12 | A 8 · D 7', 'Density inquiry | B C | Sep 30 | B 7 · C 8', 'Unit test | A | Oct 14 | A 8', 'Energy investigation | B C D | Nov 3 | B 8 · C 7 · D 7']);
+  assert.deepEqual(s.terms, [' A B C D Total Grade', 'Term 1 8 8 7 7 30 7', 'Term 2 – – – – – –']);
+  assert.doesNotMatch(s.all, /%|NaN|undefined|null|Scores over time/);
+  assert.match(await page.$eval('#pssBody .pssbar', e => e.textContent), /Class middle level/);
+  // without the class beside it
+  await page.click('#pssBody [data-pssopt="cls"]'); await page.waitForFunction(() => !/class middle/.test(document.querySelector('#pssPages').textContent));
+  assert.equal((await sheet()).tiles[0], 'Term grade | 7 out of 7 | total 30 of 32');
+  await closeBox(page);
+  // every student, from the Report comments tab: a grade that is not set says what is still to set, and Missing is named
+  await goTo(page, '#/class/c1/reports'); await page.waitForSelector('#bkBody [data-pssall]');
+  await page.click('#bkBody [data-pssall]'); await page.waitForFunction(() => document.querySelectorAll('#pssPages .pss').length === 6);
+  const pages = await page.$$eval('#pssPages .pss', xs => xs.map(a => a.querySelector('.psst.main').textContent.replace(/\s+/g, ' ') + ' / ' + a.querySelector('aside').textContent));
+  assert.match(pages[0], /–still to set: D/); assert.match(pages[1], /Missing workUnit test/); assert.match(pages[4], /still to set: A, B, C, D/);
+  await close();
+});
+
+test('a new year keeps how an MYP class is graded, its criteria and its tasks’ criteria, and none of the levels', async () => {
+  const { page, close } = await openApp(browser, { seed: ibSeed() });
+  const r = await page.evaluate(() => {
+    const G = window.__gs, old = JSON.parse(localStorage.getItem('gs.lib')); old.classes[0].ib.crit = [{ k: 'A', name: 'Knowing' }, { k: 'B', name: 'Inquiring' }, { k: 'C', name: 'Processing' }, { k: 'D', name: 'Reflecting' }];
+    const o = { from: '2026–27', to: '2027–28', dates: false, file: 'f.gswork' };
+    return [true, false].map(roster => { const c = G.nyLib(old, {}, { ...o, roster }).classes[0]; return { way: c.way, ib: c.ib, lv: 'lv' in c, names: c.names.length, items: c.units[0].items.map(i => [i.name, i.crit, i.typed]) }; });
+  });
+  for (const c of r) {
+    assert.equal(c.way, 'myp'); assert.equal(c.lv, false, 'no student’s levels carry');
+    assert.deepEqual(c.ib, { group: 'sci', crit: [{ k: 'A', name: 'Knowing' }, { k: 'B', name: 'Inquiring' }, { k: 'C', name: 'Processing' }, { k: 'D', name: 'Reflecting' }] });
+    assert.deepEqual(c.items[0], ['Cells lab report', ['A', 'D'], { max: null, lv: true, s: {} }]);
+  }
+  assert.deepEqual(r.map(c => c.names), [6, 0]);
+  await close();
+});

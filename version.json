@@ -1,12 +1,11 @@
 {
- "version": "1.27.31",
- "build": "8c0fc57a0d27",
+ "version": "1.27.33",
+ "build": "6be1d9cdbb96",
  "notes": [
-  "A lesson in the Planner is tidier under the slide. This slide has your speaker notes beside one box for your AI assistant. The whole lesson has Materials, Links, Finished PowerPoint, comments and Taught as matching cards.",
-  "The tips for editing a slide are behind an Editing tips button, and Alternative version is in More until a lesson has more than one version."
+  "Every activity in the Planner’s Activities bank has a video button. See it in action opens a short classroom video of it from sources such as Edutopia, EL Education and Reading Rockets; where there isn’t a good one, Find a video searches YouTube for it. Your own activities can carry a video link, and the link goes into the speaker notes when you add an activity to a lesson."
  ],
  "files": {
-  "index.html": "6fceba664e4a2cc6d0670dc3ecaff0ba211faf260e1a658a6e60758d70a5bf7b",
+  "index.html": "4cabccae16afbd453368389236a085aa80bb5630c8ed016f6212e6c86c5ae247",
   "planner.html": "a489a355f217cb9420bea9e8be1ca787699b7c12d000df4d086cd4f7acc9b9d0"
  }
 }
