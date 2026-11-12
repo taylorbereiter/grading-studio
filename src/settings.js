@@ -11,7 +11,8 @@ function setRender() {
   const box = $('#setNav'); if (box.dataset.h !== nav) { box.dataset.h = nav; box.innerHTML = nav; }
   for (const el of document.querySelectorAll('#setPane [data-sec]')) el.hidden = el.dataset.sec !== r.sec;
   const put = (id, h) => { const el = $(id); if (el.dataset.h !== h) { el.dataset.h = h; el.innerHTML = h; } };
-  meSetRender(r.sec);
+  meSetRender(r.sec); attSetRender(r.sec);
+  if (r.sec === 'marking') setInksSay();
   if (r.sec === 'history') gbRender();
   if (r.sec === 'about') updRender();
   if (r.sec === 'classes') {
@@ -25,7 +26,7 @@ function setRender() {
     const terms = conf.terms.length ? conf.terms.map(t => '<div class="setrow"><span class="nt"><b>' + esc(t.name || 'Term') + '</b><span class="ns">' + (t.start && t.end ? bkDay(t.start) + ' to ' + bkDay(t.end) : 'No dates yet') + '</span></span></div>').join('') : '<div class="setrow"><span class="nt"><span class="ns">No terms yet: the gradebook treats the whole year as one.</span></span></div>';
     put('#setTerms', '<div class="lhead"><h2>Terms and weights</h2><span class="muted">For all your classes. An assignment counts toward the term its due date falls in.</span><span class="sp"></span><button class="btn sm primary" data-setterms' + (has ? '' : ' disabled title="Add a class with a roster first"') + '>Term setup</button></div>' +
       '<div class="setrows">' + terms + '</div>' +
-      '<p class="setp"><b>How each type counts:</b> ' + BK_TYPES.map(([t, l]) => esc(l.replace(/y$/, 'ie') + 's') + ' ' + (+conf.w[t] || 0) + '%').join(' · ') + '. ' + (conf.empty === 'zero' ? 'A type with nothing in it yet counts as 0.' : 'When a type has nothing in it yet, the other types are used.') + '</p>' +
+      '<p class="setp"><b>How each type counts:</b> ' + bkCats().map(x => esc(bkPlural(x)) + ' ' + (+conf.w[x[0]] || 0) + '%').join(' · ') + '. ' + (conf.empty === 'zero' ? 'A type with nothing in it yet counts as 0.' : 'When a type has nothing in it yet, the other types are used.') + '</p>' +
       '<p class="setp"><b>Extra credit:</b> new entries add to ' + bkXcWhere(conf.xcTo) + ', one point for one percentage point. ' + (conf.xcCap ? 'Grades stay at 100% at most.' : 'A grade can go over 100%.') + '</p>');
   }
   if (r.sec === 'grading') {
@@ -63,3 +64,12 @@ new MutationObserver(() => { if ($('#dlg').hidden) setRender(); }).observe($('#d
 
 // Settings, Display, Language (lang.js keeps the choice and draws the page again).
 $('#setLangBox').innerHTML = langPick('setLangPick');
+// Settings, Marking, Mark colors: the same three rows as Quick mark's Colors menu, drawn when Marking is shown.
+function setInksSay() { const el = $('#setInkRows'), h = el && inkRows('s'); if (el && el.dataset.h !== h) { el.dataset.h = h; el.innerHTML = h; } }
+$('#setInkRows').addEventListener('click', e => {
+  const b = e.target.closest('[data-sink], [data-schk], [data-spts]'); if (!b) return;
+  if (b.dataset.sink != null) { inkColor = b.dataset.sink; store.set('gs.ink', inkColor); }
+  else if (b.dataset.schk != null) setCheckInk(b.dataset.schk);
+  else setPtsInk(b.dataset.spts);
+  renderTools(); setInksSay();
+});

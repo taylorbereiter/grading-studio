@@ -131,11 +131,11 @@ document.addEventListener('change', e => {
 // paper's scored rows and marked questions are real scores, so they count, as they do in the rubric row charts.
 function goalCell(d, g, p) {
   if (!g || !p || p.status === 'missing' || p.status === 'excused' || g.outAvg) return null;
-  const s = { ...DEFAULT_SETUP, ...(d.setup || {}) }, rub = s.mode === 'rubric', out = {};
-  const max = rub ? s.criteria.length * 4 : +s.outOf || 0;
+  const s = setupOver(d.setup), rub = s.mode === 'rubric', out = {};
+  const max = setupMax(s);
   const put = (id, got, of, part) => { if (!id || !(of > 0) || got == null || isNaN(+got)) return; const e = out[id] ||= { got: 0, of: 0, parts: [] }; e.got += +got; e.of += of; if (!e.parts.includes(part)) e.parts.push(part); };
   const qs = !rub && d.quiz && Array.isArray(d.quiz.qs) ? d.quiz.qs : [], q = g.q || {};
-  if (rub) s.criteria.forEach((c, i) => put(s.goals && s.goals[i], (g.rubric || [])[i], 4, String(c)));
+  if (rub) s.criteria.forEach((c, i) => put(s.goals && s.goals[i], (g.rubric || [])[i], rowTop(s, i), String(c)));
   else if (qs.some(x => q[x.id] != null)) qs.forEach((x, i) => put(x.goal || d.goal, q[x.id], +x.pts || 0, 'Question ' + ((x.lab || '').trim() || String(i + 1))));
   else if (d.goal && p.pct != null && !p.partial) out[d.goal] = { got: p.total != null ? p.total : p.pct, of: p.total != null && p.max ? p.max : 100, pct: p.pct, parts: ['The whole score'] };
   for (const e of Object.values(out)) if (e.pct == null) { const share = Math.max(0, Math.min(1, e.got / e.of)), v = max ? percentWith(share * max, max, s.scale) : null; e.pct = v == null ? share * 100 : Math.max(0, v); }

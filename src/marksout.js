@@ -103,9 +103,9 @@ async function marksFileText(onStep) {
   }
   out.push('# Marks for Claude: ' + one(nameFreeText(batch.name)), '');
   out.push(plural(who.length, 'student') + ', each named by a random code (S-XXXX). Names in the teacher’s text became [name].');
-  out.push(rubric ? 'Rubric: ' + plural(crit.length, 'row') + ', scored 0 to 4 (half points allowed from 1 up), out of ' + maxPoints() + '.' : 'Scored in points, out of ' + maxPoints() + '.');
+  out.push(rubric ? 'Rubric: ' + plural(crit.length, 'row') + ', scored ' + (rowsTop(setup) ? '0 to ' + rowsTop(setup) : setup.criteria.map((_, i) => '0 to ' + rowTop(setup, i)).join(', ')) + (rowHalf(setup) ? ' (half points allowed from 1 up)' : ' (whole numbers only)') + ', out of ' + maxPoints() + '.' : 'Scored in points, out of ' + maxPoints() + '.');
   if (o.scores && rubric) {
-    const lv = crit.map((c, i) => { const w = [4, 3, 2, 1, 0].map(v => { const t = (setup.levels && setup.levels[i] && setup.levels[i][v]) || ''; return t ? '  - ' + v + ': ' + one(nameFreeText(t)) : ''; }).filter(Boolean); return w.length ? ['- ' + one(nameFreeText(c)), ...w].join('\n') : ''; }).filter(Boolean);
+    const lv = crit.map((c, i) => { const w = rowLevels(setup, i).map(v => { const t = (setup.levels && setup.levels[i] && setup.levels[i][v]) || ''; return t ? '  - ' + v + ': ' + one(nameFreeText(t)) : ''; }).filter(Boolean); return w.length ? ['- ' + one(nameFreeText(c)), ...w].join('\n') : ''; }).filter(Boolean);
     if (lv.length) out.push('', '## What each score means', ...lv);
   }
   out.push('', '## Class at a glance');
