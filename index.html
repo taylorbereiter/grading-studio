@@ -2775,6 +2775,9 @@ button.seat[data-n]:hover{border-color:var(--accent)}
         <section class="lib setsec" id="setPapers" data-sec="marking" hidden>
           <div class="lhead"><h2>Word papers</h2><span class="muted">Mark them as they are, or turn each one into PDF pages you can mark anywhere. The Word file is always kept.</span><span class="sp"></span><span class="seg" id="setWordPdf"><button data-v="0" aria-pressed="true">Keep as Word</button><button data-v="1" aria-pressed="false">Convert to PDF pages</button></span></div>
         </section>
+        <section class="lib setsec" id="setNames" data-sec="marking" hidden>
+          <div class="lhead"><h2>Name covers</h2><span class="muted">You cover names yourself in Check the covers. Finding them on its own can cover words that aren’t names.</span><span class="sp"></span><span class="seg" id="setNameFind" aria-label="Find names on their own"><button data-v="0" aria-pressed="true">Cover names myself</button><button data-v="1" aria-pressed="false">Also find typed names</button></span></div>
+        </section>
         <section class="lib setsec" id="setTouch" data-sec="marking" hidden>
           <div class="lhead"><h2>Tablet and pencil</h2><span class="muted">For a touch screen. A mouse and a trackpad work as they always have.</span></div>
           <p class="setp settch"><label for="setTouchMode"><b>A finger on the paper</b></label> <select id="setTouchMode" class="btn sm"><option value="auto">draws, until you use a pencil; from then on it moves the page</option><option value="move">always moves the page</option><option value="draw">always draws</option></select></p>
@@ -3855,7 +3858,7 @@ SOFTWARE.
 <script>/* ---------------- saved-data versions: a safety copy, then any format changes, before the app starts ---------------- */
 const gsData = (() => {
   'use strict';
-  const APP_VERSION = "1.27.9";   // from package.json, the one place it's set
+  const APP_VERSION = "1.27.10";   // from package.json, the one place it's set
   const MIGRATIONS = [
   ];
   const DATA_V = Math.max(1, ...MIGRATIONS.map(s => s.to));
@@ -4205,6 +4208,7 @@ const LANG_ES = {
     'Dark mode': 'Modo oscuro', 'Light mode': 'Modo claro', 'Display': 'Pantalla', 'Text size and zoom': 'Tamaño del texto y zoom',
     'Word papers': 'Trabajos de Word', 'Kept as Word files. They can be converted to PDF pages': 'Se conservan como archivos de Word. Se pueden convertir en páginas PDF', 'Converted to PDF pages as each assignment opens': 'Se convierten en páginas PDF al abrir cada tarea',
     'Tablet and pencil': 'Tableta y lápiz', 'What a finger does on the paper, and pencil pressure': 'Qué hace un dedo sobre la página, y la presión del lápiz',
+    'Name covers': 'Tapar nombres', 'You cover names yourself in Check the covers': 'Tú tapas los nombres en Revisar lo tapado', 'You cover names, and typed names are found too': 'Tú tapas los nombres, y además se buscan los nombres escritos a máquina',
     'All keys': 'Todas las teclas', 'Every keyboard shortcut': 'Todos los atajos de teclado',
     'Classes and rosters': 'Clases y listas', 'Terms and weights': 'Periodos y pesos', 'Your terms and how each type counts': 'Tus periodos y cuánto cuenta cada tipo',
     'Grading scale and rubrics': 'Escala de calificación y rúbricas', 'Your saved scales and rubrics': 'Tus escalas y rúbricas guardadas',
@@ -4580,6 +4584,7 @@ const LANG_ZH = {
     'Dark mode': '深色模式', 'Light mode': '淺色模式', 'Display': '顯示', 'Text size and zoom': '文字大小與縮放',
     'Word papers': 'Word 作業', 'Kept as Word files. They can be converted to PDF pages': '保留為 Word 檔。可以轉換成 PDF 頁面', 'Converted to PDF pages as each assignment opens': '每份作業開啟時轉換成 PDF 頁面',
     'Tablet and pencil': '平板與觸控筆', 'What a finger does on the paper, and pencil pressure': '手指在頁面上的作用，以及筆的壓力',
+    'Name covers': '遮蓋姓名', 'You cover names yourself in Check the covers': '你在「檢查遮蓋」中自己遮蓋姓名', 'You cover names, and typed names are found too': '你自己遮蓋姓名，也會自動找出打字的姓名',
     'All keys': '所有快速鍵', 'Every keyboard shortcut': '所有鍵盤快速鍵',
     'Classes and rosters': '班級與名單', 'Terms and weights': '學期與比重', 'Your terms and how each type counts': '你的學期，以及各類作業所占的比重',
     'Grading scale and rubrics': '評分等第與評分規準', 'Your saved scales and rubrics': '你儲存的評分等第與評分規準',
@@ -8503,7 +8508,7 @@ function labelCovers(items, cover) {
 }
 async function autoCovers(page, vp, rx, xf, opts) {
   const out = [];
-  if (!rx) return out;
+  if (!rx || !nameFindOn()) return out;
   const tc = await page.getTextContent();
   const cover = (it, from, n, tall) => {
     const tx = pdfjsLib.Util.transform(vp.transform, it.transform), fh = Math.hypot(tx[2], tx[3]) || 10, run = Math.hypot(tx[0], tx[1]) || 1;
@@ -8592,7 +8597,7 @@ async function sharePage(st, f, js, p, scale, rx, opts, look) {
   page.cleanup();
   return { c, W, H, side, covers, gone: auto.gone };
 }
-const shareDocs = st => layoutOf(st).filter(d => docIn(st, d)).map(d => ({ ...d, pages: d.pages.filter(([path]) => { const f = fileByPath(st, path); return f && !f.virtual && viewable(f); }) })).filter(d => d.pages.length);
+const shareDocs = (st, all) => layoutOf(st).filter(d => all || docIn(st, d)).map(d => ({ ...d, pages: d.pages.filter(([path]) => { const f = fileByPath(st, path); return f && !f.virtual && viewable(f); }) })).filter(d => d.pages.length);
 
 function openShare() {
   saveNow(); commitEditors(); shareState(); saveSoon();
@@ -8601,8 +8606,8 @@ function openShare() {
     '<div id="shPapers"><p style="margin-top:0">This makes a ZIP you can give to Claude with <b>no names in it</b><span id="shPromise">' + esc(namePromise()) + '</span>. <span id="shWho"></span> The list of who is who stays only in this browser.</p>' +
     '<details class="cclist" style="margin:0 0 12px"><summary>What goes in it</summary><ul style="list-style:disc;margin:6px 0 0;padding-left:20px;line-height:1.55;max-height:none">' +
     '<li>Every page becomes a picture, so no hidden text or file details go with it.</li>' +
-    '<li>Names are covered in black wherever they’re typed on the page' + (batchClass() ? ' (folder names and your roster names)' : ' (from the folder names)') + ', and in any Kami box that has a name.</li>' +
-    '<li>Email addresses and long ID numbers typed on the page are covered too.</li>' +
+    (nameFindOn() ? '<li>Names are covered in black wherever they’re typed on the page' + (batchClass() ? ' (folder names and your roster names)' : ' (from the folder names)') + ', and in any Kami box that has a name.</li>' +
+    '<li>Email addresses and long ID numbers typed on the page are covered too.</li>' : '<li>Names are covered where you box them in Check the covers.</li>') +
     '<li>Your scores, rubric and comments go too, with names swapped for [name].</li>' +
     '<li><b>Only PDFs and pictures go in.</b> A Word file stays out until it’s PDF pages: Convert to PDF on the Word paper’s bar makes them.</li></ul></details>' +
     '<div id="shSteps"></div>' +
@@ -8627,10 +8632,10 @@ function openShare() {
   };
 }
 
-async function checkCovers(start, onDone) {
+async function checkCovers(start, onDone, all) {
   await ensureCounts();
   await classCommon();
-  const list = coverList();
+  const list = coverList(all);
   if (!list.length) return toast('No papers to share');
   let pos = Math.min(start || 0, list.length - 1), token = 0, last = null, drawn = 0;
   let find = '', only = 'all', undo = [];
@@ -8640,7 +8645,7 @@ async function checkCovers(start, onDone) {
     '<span class="seg ccseg"><button data-ccf="all"></button><button data-ccf="todo"></button><button data-ccf="flag"></button></span></div>' +
     '<ul class="ccrows" id="ccRows"></ul><div class="ccalldone" id="ccAllDone" hidden>✓ Every paper is checked.</div></aside>' +
     '<div class="bb" id="ccBody"></div></div>' +
-    '<div class="bf" style="justify-content:space-between"><span class="muted" style="font-size:13px;align-self:center;max-width:46%">Drag a box over a name it missed. Click any black box that isn’t a name to take it off, and click a dashed one to put it back. ' + keyLabel('⌘Z') + ' takes back the last change.</span><span style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end"><button class="btn" data-every hidden>Use my last box on every paper</button><button class="btn" data-back>◀ Back</button><button class="btn primary" data-next>Next ▶</button></span></div>');
+    '<div class="bf" style="justify-content:space-between"><span class="muted" style="font-size:13px;align-self:center;max-width:46%">Drag over a name to cover it. Click a box to take it off. ' + keyLabel('⌘Z') + ' undoes.</span><span style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end"><button class="btn" data-every hidden>Use my last box on every paper</button><button class="btn" data-back>◀ Back</button><button class="btn primary" data-next>Next ▶</button></span></div>');
   const box = $('#dlgBox');
   box.classList.add('ccbox');
   const finish = () => { if (eachKeys) document.removeEventListener('keydown', eachKeys, true); eachKeys = null; saveSoon(); (onDone || openShare)(); };
@@ -8663,8 +8668,8 @@ async function checkCovers(start, onDone) {
     showFlag();
   }
   const boxCount = d => d.pages.reduce((n, [path, p]) => n + ((shareState().boxes[boxKey(path, p)] || []).length), 0);
-  const codeLine = x => codeOf(x.st) + (x.k ? '-' + (x.k + 1) : '');
-  const flagOf = x => coverOk(x.st, x.d) ? '' : nameFlag(x.st, x.d).replace(/, check this one$/, '');
+  const codeLine = x => all ? '' : codeOf(x.st) + (x.k ? '-' + (x.k + 1) : '');
+  const flagOf = x => coverOk(x.st, x.d) ? '' : nameFlag(x.st, x.d);
   const shown = () => {
     const q = find.trim().toLowerCase();
     return list.map((x, i) => i).filter(i => (only === 'all' || (only === 'todo' ? !coverOk(list[i].st, list[i].d) : !!flagOf(list[i]))) && (!q || (coverName(list[i].st, list[i].k) + ' ' + codeLine(list[i])).toLowerCase().includes(q)));
@@ -8690,7 +8695,7 @@ async function checkCovers(start, onDone) {
   }
   async function show() {
     const my = ++token, { st, d, k } = list[pos], rx = coverRx(st);
-    $('#ccTitle').textContent = coverName(st, 0) + ' → ' + codeOf(st) + (k ? '-' + (k + 1) : '');
+    $('#ccTitle').textContent = all ? coverName(st, k) : coverName(st, 0) + ' → ' + codeOf(st) + (k ? '-' + (k + 1) : '');
     head(); rows();
     $('#ccCount').textContent = 'paper ' + (pos + 1) + ' of ' + list.length;
     box.querySelector('[data-back]').disabled = pos === 0;
@@ -8744,8 +8749,10 @@ async function checkCovers(start, onDone) {
         body.appendChild(c);
         if (pg0) pg0.cleanup();
       }
-      if (my === token) drawn = my;
-    } finally { for (const v of js.values()) v.destroy(); }
+    } catch (er) {
+      console.error(er);
+      if (my === token) body.insertAdjacentHTML('beforeend', '<p class="muted" style="text-align:center">This page couldn’t be shown.</p>');
+    } finally { if (my === token) drawn = my; for (const v of js.values()) v.destroy(); }
   }
   const step = dd => { const vis = shown(); if (!vis.length) return; const at = vis.indexOf(pos); const to = at < 0 ? vis.find(i => dd > 0 ? i > pos : i < pos) : vis[at + dd]; if (to == null || to === pos) return; pos = to; show(); };
   $('#ccFind').oninput = e => { find = e.target.value; rows(); };
@@ -10556,6 +10563,7 @@ function anonScrub() {
   for (const el of document.querySelectorAll('#paper .fhead > span:first-child, #paper .refd > summary, #paper .nofile b, #paper .mhead b')) {
     rf.lastIndex = 0; if (rf.test(el.textContent)) el.textContent = scrub(el.textContent, rf);
   }
+  if (!nameFindOn()) return;   // lines with a name are only found when finding names is on
   for (const el of document.querySelectorAll('#paper .dpage p, #paper .dpage td, #paper .dpage li, #paper .dpage')) {
     if (el.classList.contains('anonhide') || (el.classList.contains('dpage') && el.querySelector('p,td,li'))) continue;
     rx.lastIndex = 0; if (rx.test(el.textContent)) el.classList.add('anonhide');
@@ -10574,19 +10582,16 @@ function openAnon() {
   if (anonOn()) return setAnon(false);
   const seen = batch.anon && batch.anon.order && batch.anon.order.length;
   openDlg('<div class="bh"><h2>Anonymous grading</h2><button class="icon" data-cancel aria-label="Close">✕</button></div><div class="bb">' +
-    '<p style="margin-top:0">Papers show up as <b>Paper 1, Paper 2…</b> in a random order, with names covered. Every mark and score still goes to the right student, and you can switch back any time.</p>' +
-    '<ol style="margin:0 0 12px;padding-left:20px;line-height:1.6">' +
-    '<li><b>Get everything in order first:</b> late files, split scans, your rubric.</li>' +
-    '<li><b>Cover the names.</b> Typed names (from the folder names' + (batchClass() ? ' and your roster' : '') + ') are covered on their own. For handwritten names, check the covers: drag a box over the name once, then use it on every paper. <span id="anCover">' + esc(coverLine()) + '</span>' + nameWarnings() + '<div id="nameFlags" data-before="before you start" style="margin-top:8px">' + nameFlagsHtml('before you start') + '</div></li>' +
-    '<li><b>Start.</b> ' + (seen ? 'It keeps the same random order as last time, or you can shuffle a new one.' : 'The order is shuffled once and kept, so you can stop and come back.') + '</li></ol>' +
-    '<p class="muted" style="font-size:13px;margin:0">The Grades tab, the grade sheet and returned files still use names, since that’s where you copy grades out.</p></div>' +
+    '<p style="margin-top:0">Papers show as <b>Paper 1, Paper 2…</b> in a random order. Scores still go to the right student.</p>' +
+    '<p><b>Cover the names first.</b> In Check the covers, drag a box over a name, then use it on every paper. <span id="anCover">' + esc(coverLine(true)) + '</span></p>' +
+    nameWarnings() + '<div id="nameFlags" data-before="before you start">' + nameFlagsHtml('before you start') + '</div></div>' +
     '<div class="bf"><button class="btn" data-check style="margin-right:auto">Check the covers…</button>' + (seen ? '<button class="btn" data-shuf>Shuffle a new order and start</button>' : '') + '<button class="btn primary" data-go>Start anonymous grading</button></div>', true);
-  ensureCounts().then(() => { const el = $('#anCover'); if (el) el.textContent = coverLine(); findNames(); });
+  ensureCounts().then(() => { const el = $('#anCover'); if (el) el.textContent = coverLine(true); findNames(); });
   $('#dlgBox').onclick = e => {
     if (e.target.closest('[data-cancel]')) return closeDlg();
-    const cc = e.target.closest('[data-cc]'); if (cc) return checkCovers(+cc.dataset.cc, openAnon);
+    const cc = e.target.closest('[data-cc]'); if (cc) return checkCovers(+cc.dataset.cc, openAnon, true);
     const wp = e.target.closest('[data-wp]'); if (wp) { return toPaper(+wp.dataset.wp); }
-    if (e.target.closest('[data-check]')) return ensureCounts().then(() => checkCovers(coverFirst(), openAnon));
+    if (e.target.closest('[data-check]')) return ensureCounts().then(() => checkCovers(coverFirst(true), openAnon, true));
     if (e.target.closest('[data-shuf]')) { anonShuffle(); closeDlg(); return setAnon(true); }
     if (e.target.closest('[data-go]')) { closeDlg(); return setAnon(true); }
   };
@@ -12454,11 +12459,21 @@ function classRx() { const N = namesNow(); return N.cls === null ? (N.cls = N.cl
 const NOT_LATIN = /(?![\p{Script=Latin}\p{Script=Common}\p{Script=Inherited}])\p{L}/u;
 const namesLost = () => namesNow().all.some(n => NOT_LATIN.test(n));
 function nameWarnings() {
+  if (!nameFindOn()) return '';
   const out = [], says = w => isLatin(w) ? nameFold(w) : w, words = [...new Set(namesNow().all.flatMap(rawWords).filter(w => isLatin(w) ? (NAME_PLAIN.has(nameFold(w)) && !NAME_MOSTLY.has(nameFold(w))) || shortBare(w) : plainForms(w).length).map(says))];
   if (namesLost()) out.push('A name typed in another alphabet, like Hindi, Thai, Arabic, Chinese, Burmese, Khmer or a similar one, can’t always be read off the page, so it may not be covered, on that student’s paper or on a classmate’s. In the check, look for them and drag a box over each one.');
   if (words.length) out.push('Some names here are everyday words too' + (anonOn() ? '' : ' (' + words.slice(0, 4).map(w => esc(w[0].toUpperCase() + w.slice(1))).join(', ') + (words.length > 4 ? '…' : '') + ')') + '. A classmate’s name that looks just like the word, as it does at the start of a sentence, stays as typed. Look for it on the papers and in your comments.');
   return out.length ? '<div class="bbmiss" id="nameWarn" style="margin-bottom:12px"><b>Worth a look:</b><ul style="list-style:disc;margin:4px 0 0;padding-left:20px">' + out.map(x => '<li>' + x + '</li>').join('') + '</ul></div>' : '';
 }
+/* ---------------- finding names on its own: off unless she turns it on (11/11) ---------------- */
+const nameFindOn = () => !!store.get('gs.nameFind', false);
+function nameFindShow() { for (const b of document.querySelectorAll('#setNameFind button')) b.setAttribute('aria-pressed', String((b.dataset.v === '1') === nameFindOn())); }
+$('#setNameFind').addEventListener('click', e => {
+  const b = e.target.closest('button[data-v]'); if (!b) return;
+  if (b.dataset.v === '1') store.set('gs.nameFind', true); else store.del('gs.nameFind');
+  nameFindShow();
+});
+nameFindShow();
 /* ---------------- the safety net: a paper says so when its own student's name can't be found on it, or can't be trusted when it is ---------------- */
 function sureRx(st) {
   const N = namesNow(); let rx = N.sure.get(st.key);
@@ -12519,8 +12534,9 @@ function shareOpts(st) {
 }
 let nameLook = null;
 function findNames() {
+  if (!nameFindOn()) return Promise.resolve();
   return nameLook ||= (async () => {
-    const b = batch, left = () => batch === b ? coverList().filter(x => !namesNow().found.has(paperKey(x.st, x.d))) : [];
+    const b = batch, left = () => batch === b ? coverList(true).filter(x => !namesNow().found.has(paperKey(x.st, x.d))) : [];
     try {
       await ensureCounts();
       for (let list = left(); list.length; list = left()) for (const x of list) {
@@ -12533,13 +12549,14 @@ function findNames() {
     finally { nameLook = null; }
   })();
 }
-const namesLooking = () => stillCounting() || coverList().some(x => !namesNow().found.has(paperKey(x.st, x.d)));
+const namesLooking = () => nameFindOn() && (stillCounting() || coverList(true).some(x => !namesNow().found.has(paperKey(x.st, x.d))));
 function nameFlag(st, d) {
+  if (!nameFindOn()) return '';
   const r = namesNow().found.get(paperKey(st, d));
-  if (r === 'none') return 'Name not found, check this one';
-  return r === 'found' && ownNames(st).flat().some(w => NOT_LATIN.test(w)) ? 'Name in another alphabet, check this one' : '';
+  if (r === 'none') return 'Name not found';
+  return r === 'found' && ownNames(st).flat().some(w => NOT_LATIN.test(w)) ? 'Name in another alphabet' : '';
 }
-const nameFlagged = () => coverList().map((x, i) => ({ ...x, i, say: nameFlag(x.st, x.d) })).filter(x => x.say && !coverOk(x.st, x.d));
+const nameFlagged = all => coverList(all).map((x, i) => ({ ...x, i, say: nameFlag(x.st, x.d) })).filter(x => x.say && !coverOk(x.st, x.d));
 function wordNoName(st, f) {
   if (f.virtual || !f.data || (f.kind !== 'docx' && f.kind !== 'text')) return false;
   if (f.kind === 'docx') { wordScore(f); if (f.wtext == null) return true; }
@@ -12548,18 +12565,18 @@ function wordNoName(st, f) {
   return !rx || t.search(rx) < 0;
 }
 function wordFlagsHtml() {
-  const list = batch.students.flatMap((st, i) => st.files.filter(f => wordNoName(st, f)).map(f => ({ st, i, f }))), one = list.length === 1;
+  const off = !nameFindOn(), list = batch.students.flatMap((st, i) => st.files.filter(f => off ? !f.virtual && f.kind === 'docx' : wordNoName(st, f)).map(f => ({ st, i, f }))), one = list.length === 1;
   if (!list.length) return '';
-  return '<div class="bbmiss" id="wordFlags" style="margin-bottom:12px"><b>Look at ' + (one ? 'this Word or text paper' : 'these ' + list.length + ' Word or text papers') + ' before you start:</b> the student’s name wasn’t found in ' + (one ? 'it' : 'them') + ', so a nickname or initials would still show while you grade. These can’t be boxed in Check the covers. To cover a name on one, save it as a PDF and add that instead.<ul class="ccflag">' + list.map(x => '<li><button class="link" data-wp="' + x.i + '">' + esc(x.st.key) + '</button> ' + esc(x.f.name) + '</li>').join('') + '</ul></div>';
+  return '<div class="bbmiss" id="wordFlags" style="margin-bottom:12px"><b>' + (off ? (one ? 'This Word paper shows' : 'These Word papers show') + ' names.' : (one ? 'This paper' : 'These papers') + ' may show a name.') + '</b> Turn ' + (one ? 'it' : 'them') + ' into PDF pages to cover ' + (off ? 'them' : 'it') + '.<ul class="ccflag">' + list.map(x => '<li><button class="link" data-wp="' + x.i + '">' + esc(x.st.key) + '</button> ' + esc(x.f.name) + '</li>').join('') + '</ul></div>';
 }
 function nameFlagsHtml(before) {
-  const word = before === 'before you start' ? wordFlagsHtml() : '';
-  if (namesLooking()) return '<p class="muted" style="margin:0 0 12px;font-size:13px">Looking for each student’s name on their paper…</p>' + word;
-  const list = nameFlagged(), one = list.length === 1;
-  return word + (list.length ? '<div class="bbmiss" style="margin-bottom:12px"><b>Check ' + (one ? 'this paper' : 'these ' + list.length + ' papers') + ' ' + before + ':</b> the automatic cover can’t be trusted on ' + (one ? 'it' : 'them') + '. Open ' + (one ? 'it' : 'each one') + ' in Check the covers and drag a box over any name you see.<ul class="ccflag">' + list.map(x => '<li><button class="link" data-cc="' + x.i + '">' + esc(coverName(x.st, x.k)) + '</button> ' + esc(x.say) + '</li>').join('') + '</ul></div>' : '');
+  const anon = before === 'before you start', word = anon ? wordFlagsHtml() : '';
+  if (namesLooking()) return '<p class="muted" style="margin:0 0 12px;font-size:13px">Looking for names…</p>' + word;
+  const list = nameFlagged(anon);
+  return word + (list.length ? '<div class="bbmiss" style="margin-bottom:12px"><b>Check ' + (list.length === 1 ? 'this one' : 'these') + ' first:</b><ul class="ccflag">' + list.map(x => '<li><button class="link" data-cc="' + x.i + '">' + esc(coverName(x.st, x.k)) + '</button> ' + esc(x.say) + '</li>').join('') + '</ul></div>' : '');
 }
-const namesInDoubt = () => namesLost() && coverList().some(x => !coverOk(x.st, x.d));
-const namePromise = () => namesInDoubt() ? ', once you’ve boxed the ones it can’t read (see below)' : namesLooking() || nameFlagged().length ? ', once you’ve checked the papers listed below' : '';
+const namesInDoubt = () => nameFindOn() && namesLost() && coverList().some(x => !coverOk(x.st, x.d));
+const namePromise = () => !nameFindOn() ? (coverList().every(x => coverOk(x.st, x.d)) ? '' : ', once you’ve boxed the names in Check the covers') : namesInDoubt() ? ', once you’ve boxed the ones it can’t read (see below)' : namesLooking() || nameFlagged().length ? ', once you’ve checked the papers listed below' : '';
 function nameFlagsShow() {
   const el = $('#nameFlags'); if (!el) return;
   el.innerHTML = nameFlagsHtml(el.dataset.before);
@@ -12567,7 +12584,7 @@ function nameFlagsShow() {
   if ($('#shMade')) $('#shMade').innerHTML = shareMadeLine();
 }
 const fileShown = (st, name) => anonOn() && st ? scrub(name, fileRx(st)) : name;
-Object.assign(window.__gs, { coverRx, fileRx, classRx, autoCovers, classCommon, shareOpts, labelCovers, nameFlagged, namesLooking, findNames, wordNoName });
+Object.assign(window.__gs, { nameFindOn, coverRx, fileRx, classRx, autoCovers, classCommon, shareOpts, labelCovers, nameFlagged, namesLooking, findNames, wordNoName });
 
 /* ---------------- marking: smoother ink, a highlighter that knows the page's lines, easier text boxes ---------------- */
 
@@ -16794,7 +16811,7 @@ async function sbsDraw(c) {
 $('#consBtn').onclick = openCons;
 
 /* ---------------- the Claude steps, and which papers have had their name covers checked ---------------- */
-const coverList = () => { const list = []; for (const st of batch.students) shareDocs(st).forEach((d, k) => list.push({ st, d, k })); return list; };
+const coverList = all => { const list = []; for (const st of batch.students) shareDocs(st, all).forEach((d, k) => list.push({ st, d, k })); return list; };
 const coverSig = f => (f.data && f.data.length) || 0;
 function coverOk(st, d) {
   const c = shareState().checked || {};
@@ -16823,11 +16840,11 @@ function coverPut(f, p, was) {
   if (was) sh.boxes[k] = JSON.parse(was); else delete sh.boxes[k];
 }
 const coverName = (st, k) => (anonOn() ? shownName(st, batch.students.indexOf(st)) : st.key) + (k ? ' (paper ' + (k + 1) + ')' : '');
-const coverFirst = () => Math.max(0, coverList().findIndex(x => !coverOk(x.st, x.d)));
+const coverFirst = all => Math.max(0, coverList(all).findIndex(x => !coverOk(x.st, x.d)));
 const stillCounting = () => batch.students.some(s => s.files.some(f => viewable(f) && !f.numPages && !f.bad));
-function coverLine() {
+function coverLine(all) {
   if (stillCounting()) return 'Counting the papers…';
-  const list = coverList(), n = list.filter(x => coverOk(x.st, x.d)).length;
+  const list = coverList(all), n = list.filter(x => coverOk(x.st, x.d)).length;
   if (!list.length) return 'No PDFs or pictures to check.';
   return n + ' of ' + list.length + (list.length === 1 ? ' paper' : ' papers') + ' checked.';
 }
@@ -16856,7 +16873,7 @@ function shareOut() {
 }
 function shareMadeLine() {
   const sh = shareState();
-  return sh.made ? 'Made ' + esc(whenLabel(sh.made)) + (sh.madeOpen ? ', with ' + sh.madeOpen + (sh.madeOpen === 1 ? ' paper' : ' papers') + ' not checked.' : '.') : (namesInDoubt() ? 'Box the names the cover can’t read first. It' : namesLooking() || nameFlagged().length ? 'Check the papers listed above first. It' : 'It has no names in it, and it') + ' stays on your computer until you give it to Claude.';
+  return sh.made ? 'Made ' + esc(whenLabel(sh.made)) + (sh.madeOpen ? ', with ' + sh.madeOpen + (sh.madeOpen === 1 ? ' paper' : ' papers') + ' not checked.' : '.') : (namesInDoubt() ? 'Box the names the cover can’t read first. It' : namesLooking() || nameFlagged().length ? 'Check the papers listed above first. It' : nameFindOn() || coverList().every(x => coverOk(x.st, x.d)) ? 'It has no names in it, and it' : 'It') + ' stays on your computer until you give it to Claude.';
 }
 function shareSteps() {
   const sh = shareState(), list = coverList().map((x, i) => ({ ...x, i, ok: coverOk(x.st, x.d) })), todo = list.filter(x => !x.ok), done = list.filter(x => x.ok);
@@ -16866,7 +16883,7 @@ function shareSteps() {
   if ($('#shWho')) $('#shWho').innerHTML = shareWho();
   if ($('#shPromise')) $('#shPromise').textContent = namePromise();
   $('#shSteps').innerHTML = shareOut() + nameWarnings() + '<div id="nameFlags" data-before="before you make the ZIP">' + nameFlagsHtml('before you make the ZIP') + '</div><ol class="shsteps">' +
-    '<li><b>Check the covers.</b> <span id="shCount"' + (todo.length ? ' class="stag"' : '') + '>' + (todo.length || !list.length ? '' : '<span aria-hidden="true">✓ </span>') + esc(coverLine()) + '</span> The automatic cover can’t see handwriting or a name inside a picture. In the check, drag a box over anything it missed. If students write their name in the same spot, box it once and use it on every paper.' + group('ccTodo', 'Not checked yet', todo, true) + group('ccDone', 'Checked', done, !todo.length) + '</li>' +
+    '<li><b>Check the covers.</b> <span id="shCount"' + (todo.length ? ' class="stag"' : '') + '>' + (todo.length || !list.length ? '' : '<span aria-hidden="true">✓ </span>') + esc(coverLine()) + '</span> ' + (nameFindOn() ? 'Typed names are found on their own. Drag a box over anything missed, like handwriting.' : 'Drag a box over each name.') + ' If names are in the same spot, box it once and use it on every paper.' + group('ccTodo', 'Not checked yet', todo, true) + group('ccDone', 'Checked', done, !todo.length) + '</li>' +
     '<li><b>Download the ZIP.</b> <span id="shMade">' + shareMadeLine() + '</span></li>' +
     '<li><b>Give it to Claude,</b> with this message. Change it however you like.<textarea id="shAsk" rows="4" aria-label="What to say to Claude"></textarea><div class="shrow"><button class="btn sm" data-shcopy>Copy the message</button><button class="btn sm" data-shopen>Open Claude ↗</button></div></li>' +
     '<li><b>Bring the reply back.</b> <button class="btn sm" data-shback>Bring back from Claude</button></li></ol>';
@@ -24584,7 +24601,7 @@ $('#setHistory').addEventListener('click', e => {
 });
 
 /* updates she controls, and installing as an app */
-const WHATS_NEW = {"1.27.9":["In the Planner's Timetable, Use my school’s template… picks your own PowerPoint template for slide downloads. Use the plain one goes back to the white one built in.","Save my setup file keeps your classes, meeting times, days off and slide template in one file to load on another computer."],"1.27.8":["Anchor papers: while you mark a summative, click High, Mid or Low under the score. The Return tab lists the three and exports them in one ZIP, each named for the assignment and its level, like “River essay - Summative High.pdf”, with student names covered."],"1.27.7":["Keep strong work as an example: press ☆ Example on an answer in Quick mark (or E), or pick Use as an example in the ⋯ beside a student’s name for a whole paper or part of a page. Names are covered, and your marks and the score stay off unless you switch them on. It is always optional.","The Examples tab on an assignment, and Examples in the sidebar for every class, have Show to the class, Copy picture, Download and Download as a sheet.","Examples go to your linked folder and into the take-home file with the rest of your work."],"1.27.6":["Returned files are named for the student, the assignment and what they are, like “Ana Lee - River essay - Graded.pdf”, or Feedback when there is no score. They still go in each student’s own folder.","To keep the names students turned in, untick Name each file by student and assignment under Options on the Return tab."],"1.27.5":["The gradebook can import your old scores: press Import… and choose a CSV or Excel file, or paste the cells. Each column becomes an assignment, matched to your roster.","You see everything before it is saved, and a score already in the gradebook stays unless you choose the file’s."],"1.27.4":["School is a new page in the sidebar for the things about your school you look up again and again: the handbook, the calendar, the bell schedule, portals, forms, who to call.","Add a link, a file (a copy is kept with your work) or a note. Name your own groups, and star the ones you open most to keep them along the top.","Drop files on the page or paste a web address. Find anything lists every resource. They are kept in your folder and take-home file, and stay when you start a new school year."],"1.27.3":["The class timer in Present takes minutes and seconds: type them in, or pick 0:30 and the other quick times. The menu remembers the last time you typed.","While it runs, the timer's menu adds or takes away 10 seconds or a minute, pauses, and restarts from the time you set. + and − add or take away a minute without opening the menu.","Tick Show it big to put the countdown in the middle of the screen, large enough for the back of the room."],"1.27.2":["In the gradebook, in-class assessments are now on the left and summatives on the right: the columns, the averages beside the term grade, and wherever you choose a type.","The order is yours to change. In Term setup, the arrows beside each type move it, and the gradebook's columns follow from left to right.","You can make your own assignment types. In Term setup, rename a type or press + Add a type (Homework, Projects, Quizzes), and give each its share of the grade. Your own setup stays as it is until you change it."],"1.27.1":["Undo now takes back a score as well as a mark: press Ctrl Z (⌘Z on a Mac) after a slip on a slider, a number key, or Missing, Excused or Late. Redo puts it back.","Deleting a unit, an assignment or a class shows Undo for a few seconds, and Undo puts it back where it was.","“Picked up where you left off” shows once, when you open an assignment, and no longer on Today or other pages. The note about what opened leaves by itself when you move to the next student, if every file opened.","The Next button stays in one place from student to student, and the Grade heading on a class’s Students tab is drawn properly.","Find anything answers to more everyday words: export, hand back, backup, undo, shortcuts, csv."],"1.27.0":["Start a new school year, in Settings, Saving and carrying. Your classes, units and assignment cards carry on, each card with its rubric and Quick mark boxes, with empty class lists and dates a year later.","This year goes into one protected file first, and the file is checked before anything is cleared. Open an archived year brings a year back from its file."],"1.26.2":["Rubric rows can be scored on your own scale. They start at 0 to 4 with half points, as before; when you set up an assignment you can pick any top from 1 to 10 and turn half points off.","Settings, Grading: choose the row scale new assignments start with. Assignments you already have keep theirs."],"1.26.1":["Activities: See, think, wonder now says it comes from Project Zero at the Harvard Graduate School of Education."],"1.26.0":["Seating: a new tab on each class. Pick how the room is set up, drag students to desks, and Shuffle gives everyone a new seat. A student can be kept in their seat.","Pick a name shows one student at random, and nobody twice until everyone has had a turn. Make groups deals the class into groups of any size.","While presenting a lesson, P picks a name and G makes groups. Who’s here leaves out anyone who is away today."],"1.25.0":["Attendance. Each class has an Attendance tab: everyone starts as present, so a day is one press for each student who is late, excused or absent, with a note if you want one.","Look back shows every saved day in one table with each student’s totals, and a student’s own page lists the days they missed.","Copy a day, or download the table as a spreadsheet, for your school’s system. Today has a line for it under each class.","If you don’t take attendance here, turn it off in Settings, Classes and rosters."],"1.24.0":["Retakes: a second try at the same assignment keeps the first try's score, comment and paper. Start one from the ⋯ beside Missing, Excused and Late on a paper.","You choose which try counts, for all your classes: the highest (to begin with), the latest, or the average. It is in the retake box and in the gradebook's Term setup.","A score typed into the gradebook takes a retake too: type both, like 7 > 10."],"1.23.0":["Scores by learning goal, if you want them. Keep your own list of goals (a skill, or a standard from your school) in Settings, Grading, or add one wherever you tag.","Tag rubric rows in Rubric setup and quiz questions in Quiz boxes. An assignment scored with just a total can carry one goal for the whole score.","Each class page gets a Goals tab: the class average on each goal with the lowest first, every student by every goal, and where each number came from. A student's own page shows their goals beside the class average.","Nothing changes until you add a first goal, and tagging never changes a score or a grade."],"1.22.0":["Progress sheets for parent meetings: one printed page per student with the term grade, every score, a chart of how they moved, missing work, each term's grade, the report comment and lines for notes. Find it on a class's Students list, or Progress sheet on one student's page.","Choose the term and tick what goes on it; Print opens the print window, where you can pick a printer or Save as PDF. It is made on your computer and nothing is sent anywhere."],"1.21.0":["Each class has a Missing work tab: every paper you marked Missing, by student or by assignment, for the term you pick.","Email reminder opens an email in your own mail app, addressed to the student and listing what they owe, for you to read and send. Email all writes one email to everyone who owes an assignment, with the addresses in Bcc. Grading Studio sends nothing itself.","Each reminder you open is noted beside the work, and Email wording… changes what every reminder says."],"1.20.0":["The app can speak Traditional Chinese (繁體中文). Choose it in Settings, Display, App language, or at the top of the welcome.","Like Spanish, it covers the first screens so far: the sidebar, Today, the welcome, Find anything, Help, and the feedback page students get with a returned paper. The other screens are still in English."],"1.19.0":["The app can speak Spanish. Choose it in Settings, Display, App language, or at the top of the welcome.","Spanish covers the first screens so far: the sidebar, Today, the welcome, Find anything, Help, and the feedback page students get with a returned paper. The other screens are still in English.","Names you typed (classes, students, assignments, rubric rows) are never translated."],"1.18.0":["On a tablet, a pencil draws and the pen's line is wider where you press harder. Once you have used a pencil, one finger moves the page, two fingers pinch to zoom, and a hand resting on the screen does nothing.","Settings, Marking has a new Tablet and pencil section: choose what a finger does on the paper, or turn off the wider line.","On a touch screen the tools, the student rows and the score buttons are larger."],"1.17.0":["Report comments: a new tab on each class's page drafts a comment for every student from your own gradebook, rubric scores and the comments you wrote on their papers. Edit each one, tick it done, then copy or download them all.","The drafts are put together on your computer from sentences you can change under Wording. Nothing about a student is sent anywhere."],"1.16.0":["Help is in the sidebar: short answers to the questions teachers ask most, from opening a set of papers to moving your work to another computer.","Find anything answers questions too. Type a few words, like “late paper” or “backup”, and the answer is in the list."],"1.15.0":["A picture dragged onto a slide that has text now sits beside the text, in a new Text + picture layout.","Drag several pictures in at once and each gets its own slide. Let a picture go on any slide in the list on the left to put it there.","New Full picture layout: the picture fills the whole slide."],"1.14.0":["Extra credit: points or a percent on one paper, and extra credit entries in the gradebook that add to the term grade or the in-class average.","The gradebook shows each type's average (summative, in-class) right beside the term grade, kept in view as you scroll. Averages only shows just those columns, and Whole year splits each term the same way.","Leave out… lets you untick students to see the class averages without them. Their own grades don't change, and nothing is saved."],"1.13.0":["Present a lesson from the Planner, or from Today when its class is on now or next: its slides fill the screen, and the arrow keys or a clicker move through them.","While presenting, A shows the agenda to tick off, T starts a timer the class can see, N shows your notes and B blanks the screen.","The bar shows how many minutes the class has left, from your timetable.","After a lesson is taught, one line says where the class got to. It shows on the lesson and on the week, and presenting again picks up there."],"1.12.0":["A returned paper starts with a feedback page: the score, each rubric row with the level given and what that level means, your comment, and every comment on the paper with its page number.","It is on unless you turn it off under Options on the Return tab. Your own pages are not changed, and bringing an export back in opens only those."],"1.11.0":["The Planner’s sections are in the sidebar: Calendar, Units, Past lessons, Activities and Rubrics. The row of tabs across the top is gone.","A lesson has a lighter top: its name, its classes, its status and Download. Copy for Claude, Versions, the upload and the links are under More.","Comments shows above a lesson once it has one."],"1.7.0":["Home is now Today: the classes you teach today with the lesson planned for each, the papers waiting to be marked, and the papers ready to hand back.","What the class needs next: after a set of papers is scored, Today shows the weakest rubric row and how many students to sit down with.","A class page is quieter. Click anywhere on an assignment’s row to open it; the only blue button is the one that adds an assignment.","Forget, and the other ways to open papers, moved into the ⋯ menu on each row."],"1.6.0":["A new browser opens on three questions (your classes, how you grade, where work is kept) and starts with nothing of anyone else’s in it.","A sample class of made-up students, with papers to mark, for trying things out. Remove it from Home when you’re done.","The app uses the name of your own school system. Choose it, and how you usually grade, in Settings.","Letter grades or IB 1 to 7 can show beside the percent, with boundaries you set.","Canvas and Moodle downloads are grouped by student. The Planner works without a setup file, and downloads lessons as PowerPoint with a plain built-in template."],"1.5.0":["The sidebar says “Not backed up”, in amber, until a folder holds a second copy of your work. Home asks for that folder once.","Go back in time, in Settings: any assignment as it was on an earlier day, restored on its own, with Undo.","Grading Studio can be installed as an app, and it opens with no internet.","A newer version now waits until you click Update now, so nothing changes in the middle of marking."]};
+const WHATS_NEW = {"1.27.10":["Finding names on its own is now off unless you turn it on, in Settings, Marking, Name covers. Only the boxes you draw in Check the covers cover anything, and the check before anonymous grading lists every paper."],"1.27.9":["In the Planner's Timetable, Use my school’s template… picks your own PowerPoint template for slide downloads. Use the plain one goes back to the white one built in.","Save my setup file keeps your classes, meeting times, days off and slide template in one file to load on another computer."],"1.27.8":["Anchor papers: while you mark a summative, click High, Mid or Low under the score. The Return tab lists the three and exports them in one ZIP, each named for the assignment and its level, like “River essay - Summative High.pdf”, with student names covered."],"1.27.7":["Keep strong work as an example: press ☆ Example on an answer in Quick mark (or E), or pick Use as an example in the ⋯ beside a student’s name for a whole paper or part of a page. Names are covered, and your marks and the score stay off unless you switch them on. It is always optional.","The Examples tab on an assignment, and Examples in the sidebar for every class, have Show to the class, Copy picture, Download and Download as a sheet.","Examples go to your linked folder and into the take-home file with the rest of your work."],"1.27.6":["Returned files are named for the student, the assignment and what they are, like “Ana Lee - River essay - Graded.pdf”, or Feedback when there is no score. They still go in each student’s own folder.","To keep the names students turned in, untick Name each file by student and assignment under Options on the Return tab."],"1.27.5":["The gradebook can import your old scores: press Import… and choose a CSV or Excel file, or paste the cells. Each column becomes an assignment, matched to your roster.","You see everything before it is saved, and a score already in the gradebook stays unless you choose the file’s."],"1.27.4":["School is a new page in the sidebar for the things about your school you look up again and again: the handbook, the calendar, the bell schedule, portals, forms, who to call.","Add a link, a file (a copy is kept with your work) or a note. Name your own groups, and star the ones you open most to keep them along the top.","Drop files on the page or paste a web address. Find anything lists every resource. They are kept in your folder and take-home file, and stay when you start a new school year."],"1.27.3":["The class timer in Present takes minutes and seconds: type them in, or pick 0:30 and the other quick times. The menu remembers the last time you typed.","While it runs, the timer's menu adds or takes away 10 seconds or a minute, pauses, and restarts from the time you set. + and − add or take away a minute without opening the menu.","Tick Show it big to put the countdown in the middle of the screen, large enough for the back of the room."],"1.27.2":["In the gradebook, in-class assessments are now on the left and summatives on the right: the columns, the averages beside the term grade, and wherever you choose a type.","The order is yours to change. In Term setup, the arrows beside each type move it, and the gradebook's columns follow from left to right.","You can make your own assignment types. In Term setup, rename a type or press + Add a type (Homework, Projects, Quizzes), and give each its share of the grade. Your own setup stays as it is until you change it."],"1.27.1":["Undo now takes back a score as well as a mark: press Ctrl Z (⌘Z on a Mac) after a slip on a slider, a number key, or Missing, Excused or Late. Redo puts it back.","Deleting a unit, an assignment or a class shows Undo for a few seconds, and Undo puts it back where it was.","“Picked up where you left off” shows once, when you open an assignment, and no longer on Today or other pages. The note about what opened leaves by itself when you move to the next student, if every file opened.","The Next button stays in one place from student to student, and the Grade heading on a class’s Students tab is drawn properly.","Find anything answers to more everyday words: export, hand back, backup, undo, shortcuts, csv."],"1.27.0":["Start a new school year, in Settings, Saving and carrying. Your classes, units and assignment cards carry on, each card with its rubric and Quick mark boxes, with empty class lists and dates a year later.","This year goes into one protected file first, and the file is checked before anything is cleared. Open an archived year brings a year back from its file."],"1.26.2":["Rubric rows can be scored on your own scale. They start at 0 to 4 with half points, as before; when you set up an assignment you can pick any top from 1 to 10 and turn half points off.","Settings, Grading: choose the row scale new assignments start with. Assignments you already have keep theirs."],"1.26.1":["Activities: See, think, wonder now says it comes from Project Zero at the Harvard Graduate School of Education."],"1.26.0":["Seating: a new tab on each class. Pick how the room is set up, drag students to desks, and Shuffle gives everyone a new seat. A student can be kept in their seat.","Pick a name shows one student at random, and nobody twice until everyone has had a turn. Make groups deals the class into groups of any size.","While presenting a lesson, P picks a name and G makes groups. Who’s here leaves out anyone who is away today."],"1.25.0":["Attendance. Each class has an Attendance tab: everyone starts as present, so a day is one press for each student who is late, excused or absent, with a note if you want one.","Look back shows every saved day in one table with each student’s totals, and a student’s own page lists the days they missed.","Copy a day, or download the table as a spreadsheet, for your school’s system. Today has a line for it under each class.","If you don’t take attendance here, turn it off in Settings, Classes and rosters."],"1.24.0":["Retakes: a second try at the same assignment keeps the first try's score, comment and paper. Start one from the ⋯ beside Missing, Excused and Late on a paper.","You choose which try counts, for all your classes: the highest (to begin with), the latest, or the average. It is in the retake box and in the gradebook's Term setup.","A score typed into the gradebook takes a retake too: type both, like 7 > 10."],"1.23.0":["Scores by learning goal, if you want them. Keep your own list of goals (a skill, or a standard from your school) in Settings, Grading, or add one wherever you tag.","Tag rubric rows in Rubric setup and quiz questions in Quiz boxes. An assignment scored with just a total can carry one goal for the whole score.","Each class page gets a Goals tab: the class average on each goal with the lowest first, every student by every goal, and where each number came from. A student's own page shows their goals beside the class average.","Nothing changes until you add a first goal, and tagging never changes a score or a grade."],"1.22.0":["Progress sheets for parent meetings: one printed page per student with the term grade, every score, a chart of how they moved, missing work, each term's grade, the report comment and lines for notes. Find it on a class's Students list, or Progress sheet on one student's page.","Choose the term and tick what goes on it; Print opens the print window, where you can pick a printer or Save as PDF. It is made on your computer and nothing is sent anywhere."],"1.21.0":["Each class has a Missing work tab: every paper you marked Missing, by student or by assignment, for the term you pick.","Email reminder opens an email in your own mail app, addressed to the student and listing what they owe, for you to read and send. Email all writes one email to everyone who owes an assignment, with the addresses in Bcc. Grading Studio sends nothing itself.","Each reminder you open is noted beside the work, and Email wording… changes what every reminder says."],"1.20.0":["The app can speak Traditional Chinese (繁體中文). Choose it in Settings, Display, App language, or at the top of the welcome.","Like Spanish, it covers the first screens so far: the sidebar, Today, the welcome, Find anything, Help, and the feedback page students get with a returned paper. The other screens are still in English."],"1.19.0":["The app can speak Spanish. Choose it in Settings, Display, App language, or at the top of the welcome.","Spanish covers the first screens so far: the sidebar, Today, the welcome, Find anything, Help, and the feedback page students get with a returned paper. The other screens are still in English.","Names you typed (classes, students, assignments, rubric rows) are never translated."],"1.18.0":["On a tablet, a pencil draws and the pen's line is wider where you press harder. Once you have used a pencil, one finger moves the page, two fingers pinch to zoom, and a hand resting on the screen does nothing.","Settings, Marking has a new Tablet and pencil section: choose what a finger does on the paper, or turn off the wider line.","On a touch screen the tools, the student rows and the score buttons are larger."],"1.17.0":["Report comments: a new tab on each class's page drafts a comment for every student from your own gradebook, rubric scores and the comments you wrote on their papers. Edit each one, tick it done, then copy or download them all.","The drafts are put together on your computer from sentences you can change under Wording. Nothing about a student is sent anywhere."],"1.16.0":["Help is in the sidebar: short answers to the questions teachers ask most, from opening a set of papers to moving your work to another computer.","Find anything answers questions too. Type a few words, like “late paper” or “backup”, and the answer is in the list."],"1.15.0":["A picture dragged onto a slide that has text now sits beside the text, in a new Text + picture layout.","Drag several pictures in at once and each gets its own slide. Let a picture go on any slide in the list on the left to put it there.","New Full picture layout: the picture fills the whole slide."],"1.14.0":["Extra credit: points or a percent on one paper, and extra credit entries in the gradebook that add to the term grade or the in-class average.","The gradebook shows each type's average (summative, in-class) right beside the term grade, kept in view as you scroll. Averages only shows just those columns, and Whole year splits each term the same way.","Leave out… lets you untick students to see the class averages without them. Their own grades don't change, and nothing is saved."],"1.13.0":["Present a lesson from the Planner, or from Today when its class is on now or next: its slides fill the screen, and the arrow keys or a clicker move through them.","While presenting, A shows the agenda to tick off, T starts a timer the class can see, N shows your notes and B blanks the screen.","The bar shows how many minutes the class has left, from your timetable.","After a lesson is taught, one line says where the class got to. It shows on the lesson and on the week, and presenting again picks up there."],"1.12.0":["A returned paper starts with a feedback page: the score, each rubric row with the level given and what that level means, your comment, and every comment on the paper with its page number.","It is on unless you turn it off under Options on the Return tab. Your own pages are not changed, and bringing an export back in opens only those."],"1.11.0":["The Planner’s sections are in the sidebar: Calendar, Units, Past lessons, Activities and Rubrics. The row of tabs across the top is gone.","A lesson has a lighter top: its name, its classes, its status and Download. Copy for Claude, Versions, the upload and the links are under More.","Comments shows above a lesson once it has one."],"1.7.0":["Home is now Today: the classes you teach today with the lesson planned for each, the papers waiting to be marked, and the papers ready to hand back.","What the class needs next: after a set of papers is scored, Today shows the weakest rubric row and how many students to sit down with.","A class page is quieter. Click anywhere on an assignment’s row to open it; the only blue button is the one that adds an assignment.","Forget, and the other ways to open papers, moved into the ⋯ menu on each row."],"1.6.0":["A new browser opens on three questions (your classes, how you grade, where work is kept) and starts with nothing of anyone else’s in it.","A sample class of made-up students, with papers to mark, for trying things out. Remove it from Home when you’re done.","The app uses the name of your own school system. Choose it, and how you usually grade, in Settings.","Letter grades or IB 1 to 7 can show beside the percent, with boundaries you set.","Canvas and Moodle downloads are grouped by student. The Planner works without a setup file, and downloads lessons as PowerPoint with a plain built-in template."],"1.5.0":["The sidebar says “Not backed up”, in amber, until a folder holds a second copy of your work. Home asks for that folder once.","Go back in time, in Settings: any assignment as it was on an earlier day, restored on its own, with Undo.","Grading Studio can be installed as an app, and it opens with no internet.","A newer version now waits until you click Update now, so nothing changes in the middle of marking."]};
 const upd = { on: false, st: null, mine: '', checking: false, said: '', install: null, installed: false, err: '' };
 const updCan = () => 'serviceWorker' in navigator && (location.protocol === 'https:' || /[?&]sw=1(&|$)/.test(location.search)) && !/Grading Studio\.html$/i.test(decodeURIComponent(location.pathname));
 const updSend = async msg => { const reg = await navigator.serviceWorker.ready; if (reg.active) reg.active.postMessage(msg); };
@@ -25692,6 +25709,7 @@ function findRows() {
   add('Settings', 'Text size and zoom', 'Display', () => openDisplay(), '', 'font bigger smaller larger magnify');
   add('Settings', 'App language', 'English, Spanish or Traditional Chinese', () => go('#/settings/display'));
   add('Settings', 'Word papers', wordPdfAlways() ? 'Converted to PDF pages as each assignment opens' : 'Kept as Word files. They can be converted to PDF pages', () => go('#/settings/marking'));
+  add('Settings', 'Name covers', nameFindOn() ? 'You cover names, and typed names are found too' : 'You cover names yourself in Check the covers', () => go('#/settings/marking'), undefined, 'anonymous redact hide names find names');
   add('Settings', 'Tablet and pencil', 'What a finger does on the paper, and pencil pressure', () => go('#/settings/marking'));
   add('Settings', 'All keys', 'Every keyboard shortcut', () => openKeys(), '?', 'shortcuts hotkeys keyboard');
   for (const [k, t, sub] of SET_SECS) if (k !== 'saving' && k !== 'display' && k !== 'keys' && k !== 'history' && k !== 'about') add('Settings', t, sub, () => go(setHash(k)));

@@ -632,6 +632,9 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
         <section class="lib setsec" id="setPapers" data-sec="marking" hidden>
           <div class="lhead"><h2>Word papers</h2><span class="muted">Mark them as they are, or turn each one into PDF pages you can mark anywhere. The Word file is always kept.</span><span class="sp"></span><span class="seg" id="setWordPdf"><button data-v="0" aria-pressed="true">Keep as Word</button><button data-v="1" aria-pressed="false">Convert to PDF pages</button></span></div>
         </section>
+        <section class="lib setsec" id="setNames" data-sec="marking" hidden>
+          <div class="lhead"><h2>Name covers</h2><span class="muted">You cover names yourself in Check the covers. Finding them on its own can cover words that aren’t names.</span><span class="sp"></span><span class="seg" id="setNameFind" aria-label="Find names on their own"><button data-v="0" aria-pressed="true">Cover names myself</button><button data-v="1" aria-pressed="false">Also find typed names</button></span></div>
+        </section>
         <section class="lib setsec" id="setTouch" data-sec="marking" hidden>
           <div class="lhead"><h2>Tablet and pencil</h2><span class="muted">For a touch screen. A mouse and a trackpad work as they always have.</span></div>
           <p class="setp settch"><label for="setTouchMode"><b>A finger on the paper</b></label> <select id="setTouchMode" class="btn sm"><option value="auto">draws, until you use a pencil; from then on it moves the page</option><option value="move">always moves the page</option><option value="draw">always draws</option></select></p>
