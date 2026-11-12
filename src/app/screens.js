@@ -1,5 +1,5 @@
 /* ---------------- where she is: every screen has its own address, the part after # ---------------- */
-// #/help is Help, with /<answer> for one answer. #/ is Home, #/class/<id> a class (- for "No class") with /gradebook, /students, /students/<place on the roster> and /charts under it, #/examples every example, #/settings Settings,
+// #/help is Help, with /<answer> for one answer. #/school is School resources, #/examples every example. #/ is Home, #/class/<id> a class (- for "No class") with /gradebook, /students, /students/<place on the roster>, /attendance (with /<day> or /all), /seating, /missing, /charts and /reports under it, #/settings Settings,
 // #/a/<download> an open assignment (its papers), with /grades, /grades/sheet, /insights, /insights/consistency, /examples and /return under it.
 // Back, Forward and Refresh follow it. Nothing here is saved: the address only says which screen to show.
 const routeOf = hash => {
@@ -7,15 +7,18 @@ const routeOf = hash => {
   if (p[0] === 'class' && p[1]) {
     const c = p[1] === '-' ? lib.loose : classById(p[1]);
     if (c) {
-      const tab = c !== lib.loose && c.names.length && CLASS_TABS.some(t => t[0] && t[0] === p[2]) ? p[2] : '';
+      const tab = c !== lib.loose && c.names.length && classTabs().some(t => t[0] && t[0] === p[2]) ? p[2] : '';
       // one student: by place on the roster, never by name, since an address stays in the browser's history
       const stu = tab === 'students' && /^\d+$/.test(p[3] || '') && +p[3] >= 1 && +p[3] <= c.names.length ? +p[3] - 1 : null;
-      return { v: 'class', c, tab, stu };
+      // attendance: a day (YYYY-MM-DD), 'all' for looking back, or nothing for today
+      const att = tab !== 'attendance' ? null : p[3] === 'all' ? 'all' : attDayOk(p[3]) ? p[3] : '';
+      return { v: 'class', c, tab, stu, att };
     }
   }
   // from the Planner's sidebar, which knows a class only by the name on its timetable (spaces, dashes and capitals don’t count: “Course A 2” there is “CourseA2” here)
   if (p[0] === 'class-named' && p[1]) { const nk = s => String(s || '').toLowerCase().replace(/[^a-z0-9]/g, ''), k = nk(p.slice(1).join('/')), c = k && lib.classes.find(c => nk(c.name) === k); return c ? { v: 'class', c, tab: '', stu: null, named: true } : { v: 'home', noClass: p.slice(1).join('/').slice(0, 60) }; }
   if (p[0] === 'examples') return { v: 'examples' };
+  if (p[0] === 'school') return { v: 'school' };
   if (p[0] === 'help') return { v: 'help', topic: HELP.some(t => t.id === p[1]) ? p[1] : '' };
   if (p[0] === 'settings') return { v: 'settings', sec: SET_SECS.some(x => x[0] === p[1]) ? p[1] : 'saving' };
   if (p[0] === 'a' && p[1]) {
@@ -26,10 +29,11 @@ const routeOf = hash => {
 };
 const routeNow = () => routeOf(location.hash);
 // Settings is one page per subject: #/settings is the first, #/settings/<key> the others.
-const SET_SECS = [['saving', 'Saving and carrying', 'Folder, take-home file, safety copies'], ['history', 'Go back in time', 'Your work as it was on an earlier day'], ['classes', 'Classes and rosters', 'Names, students, ' + (sysName() ? sysName() + ' links' : 'class links')], ['terms', 'Terms and weights', 'Your terms and how each type counts'],
+const SET_SECS = [['saving', 'Saving and carrying', 'Folder, take-home file, new school year'], ['history', 'Go back in time', 'Your work as it was on an earlier day'], ['classes', 'Classes and rosters', 'Names, students, ' + (sysName() ? sysName() + ' links' : 'class links')], ['terms', 'Terms and weights', 'Your terms and how each type counts'],
   ['grading', 'Grading scale and rubrics', 'Your saved scales and rubrics'], ['marking', 'Marking', 'Mark key, Word papers, tablet and pencil'], ['timetable', 'Timetable and calendar', 'Class times and days off, in the Planner'],
   ['display', 'Display', 'Text size, zoom, dark mode'], ['claude', 'Working with Claude', 'Optional. What Claude can and can’t see'], ['keys', 'Keys', 'Every shortcut'], ['about', 'About and updates', 'Version, what’s new, install as an app']];
-const CLASS_TABS = [['', 'Assignments'], ['gradebook', 'Gradebook'], ['students', 'Students'], ['charts', 'Charts'], ['reports', 'Report comments']];
+const CLASS_TABS = [['', 'Assignments'], ['gradebook', 'Gradebook'], ['students', 'Students'], ['attendance', 'Attendance'], ['seating', 'Seating'], ['missing', 'Missing work'], ['charts', 'Charts'], ['goals', 'Goals'], ['reports', 'Report comments']];   // Goals shows only once the teacher has a learning goal (goals.js)
+const classTabs = () => CLASS_TABS.filter(t => t[0] !== 'attendance' || attOn());   // attendance is the teacher's to turn off
 const classHash = (c, tab, stu) => '#/class/' + (c === lib.loose || !c.id ? '-' : encodeURIComponent(c.id)) + (tab ? '/' + tab + (stu != null ? '/' + (stu + 1) : '') : '');
 // An open assignment has four screens: the papers (Mark), Grades, Insights and Return. Grades and Insights each have a second view.
 const A_TABS = [['', 'Mark'], ['grades', 'Grades'], ['insights', 'Insights'], ['examples', 'Examples'], ['return', 'Return']], A_SUBS = { grades: ['sheet'], insights: ['consistency'] };
@@ -89,7 +93,7 @@ function showScreen(r) {
   if (grading && !$('#welcome').hidden) wlClose();   // papers opened past the welcome (dropped on the page): the questions wait on Home's card instead
   $('#shell').classList.toggle('grading', grading);
   $('#app').hidden = !grading; $('#start').hidden = grading;
-  for (const [id, v] of [['vHome', 'home'], ['vClass', 'class'], ['vSettings', 'settings'], ['vHelp', 'help'], ['vExamples', 'examples'], ['vOpening', 'opening']]) $('#' + id).hidden = grading || r.v !== v;
+  for (const [id, v] of [['vHome', 'home'], ['vClass', 'class'], ['vSettings', 'settings'], ['vHelp', 'help'], ['vSchool', 'school'], ['vExamples', 'examples'], ['vOpening', 'opening']]) $('#' + id).hidden = grading || r.v !== v;
   if (r.v !== 'class') classLeave();
   const key = grading ? 'a' : r.v + (r.c ? ':' + r.c.id + ':' + r.tab + (r.stu != null ? ':one' : '') : '');   // moving from one student to the next keeps her place on the page
   if (!grading && key !== screenKey) $('#shellMain').scrollTop = 0;
@@ -126,7 +130,7 @@ function renderLib() {
     '<div class="cards">' + u.items.map(card).join('') + '</div>' +
     '<button class="addcard" data-additem="' + u.id + '">+ Assignment</button></div>';
   const r = routeNow(), c = r.v === 'class' ? r.c : null, tab = c ? r.tab : '';
-  const tabs = (c, ci) => ci < 0 || !c.names.length ? '' : '<nav class="ctabs" aria-label="' + esc(c.name) + '">' + CLASS_TABS.map(([k, l]) => { const on = tab === k;
+  const tabs = (c, ci) => ci < 0 || !c.names.length ? '' : '<nav class="ctabs" aria-label="' + esc(c.name) + '">' + classTabs().filter(t => t[0] !== 'goals' || tab === 'goals' || goalList().length).map(([k, l]) => { const on = tab === k;
     return '<a class="ctab' + (on ? ' on' : '') + '" href="' + classHash(c, k) + '" data-ctab="' + k + '"' + (k === 'gradebook' ? ' data-book="' + esc(c.id) + '"' : k === 'students' ? ' data-people="' + ci + '"' : '') + (on ? ' aria-current="page"' : '') + '>' + l + '</a>'; }).join('') + '</nav>';
   const block = (c, ci) => '<div class="cls" data-cls="' + esc(c.id) + '"><div class="clshead"><h1>' + esc(ci < 0 ? 'No class' : c.name) + '</h1>' +
     (ci < 0 ? '<span class="muted">Assignments with no roster. Drag them onto a class in the sidebar, or use Edit to pick a class.</span><span class="sp"></span>' :
@@ -249,7 +253,11 @@ $('#start').addEventListener('click', async e => {
   if (b.dataset.udel != null) {
     const f = findUnit(b.dataset.udel); if (!f) return; const u = f.u;
     if (u.items.length && !await askDlg('Delete “' + u.name + '” and its ' + u.items.length + ' assignment' + (u.items.length === 1 ? '' : 's') + '? Saved marks for those downloads stay in this browser.', { ok: 'Delete', danger: true })) return;
-    f.c.units.splice(f.c.units.indexOf(u), 1); saveLib(); renderLib(); return;
+    const at = f.c.units.indexOf(u), n = u.items.length;
+    f.c.units.splice(at, 1); saveLib(); renderLib();
+    // A delete can be taken back for a few seconds: the unit goes back where it was, assignments and all.
+    toastDo('Deleted “' + u.name + '”' + (n ? ' and its ' + n + (n === 1 ? ' assignment' : ' assignments') : ''), 'Undo', () => { if (!holders().includes(f.c) || f.c.units.includes(u)) return; f.c.units.splice(Math.min(at, f.c.units.length), 0, u); saveLib(); renderLib(); });
+    return;
   }
   if (b.dataset.additem != null) return editAssignment(null, b.dataset.additem);
   if (b.dataset.editAsg) return editAssignment(b.dataset.editAsg);
@@ -303,7 +311,7 @@ function editAssignment(id, unitId, clsId) {
     '<div class="field"><label for="aName">Name</label><input type="text" id="aName" value="' + esc(it.name) + '" placeholder="e.g. Ch 3 Analysis Paragraph"></div>' +
     classPick +
     '<div class="field"><label for="aUnit">Unit</label><select id="aUnit" class="btn" style="justify-content:flex-start"></select><p class="muted" id="aUnitNote" style="font-size:13px;margin:6px 0 0" hidden></p></div>' +
-    '<div class="field"><label>Type</label><div class="pseg" role="group" id="aType">' + BK_TYPES.map(([t, l]) => '<button type="button" data-atype="' + t + '" aria-pressed="' + (it.type === t) + '">' + l.replace(' assessment', '').replace(' activity', '') + '</button>').join('') + '</div><p class="muted" style="font-size:12.5px;margin:4px 0 0">Summatives and in-class assessments count toward the term grade in the Gradebook. Formative activities are feedback only.</p></div>' +
+    '<div class="field"><label>Type</label><div class="pseg" role="group" id="aType">' + bkCats().map(([t, , s]) => '<button type="button" data-atype="' + esc(t) + '" aria-pressed="' + (it.type === t) + '">' + esc(s) + '</button>').join('') + '</div><p class="muted" style="font-size:12.5px;margin:4px 0 0">' + esc(bkCountSay()) + '</p></div>' +
     '<div class="field"><label for="aDue">Due</label><input type="date" id="aDue" class="btn" value="' + esc(it.due || '') + '"></div>' +
     '<p class="muted" style="font-size:13px;margin:0">The rubric is set the first time you open a download for it, with Rubric setup, and it’s remembered for this assignment.' + (f ? '' : ' Copies in other classes get the same rubric.') + '</p></div>' +
     '<div class="bf">' + (f ? '<button class="btn" data-del style="margin-right:auto">Delete</button>' : '') + '<button class="btn" data-cancel>Cancel</button><button class="btn primary" data-ok>Save</button></div>', true);
@@ -332,7 +340,7 @@ function editAssignment(id, unitId, clsId) {
     if (e.target.closest('[data-cancel]')) return closeDlg();
     const tb = e.target.closest('[data-atype]');
     if (tb) { const on = tb.getAttribute('aria-pressed') !== 'true'; for (const x of document.querySelectorAll('[data-atype]')) x.setAttribute('aria-pressed', String(on && x === tb)); return; }
-    if (e.target.closest('[data-del]')) { if (!await askDlg('Delete “' + it.name + '”?', { ok: 'Delete', danger: true })) return; f.u.items.splice(f.u.items.indexOf(it), 1); saveLib(); closeDlg(); return renderLib(); }
+    if (e.target.closest('[data-del]')) { if (!await askDlg('Delete “' + it.name + '”?', { ok: 'Delete', danger: true })) return; const at = f.u.items.indexOf(it); f.u.items.splice(at, 1); saveLib(); closeDlg(); renderLib(); toastDo('Deleted “' + it.name + '”', 'Undo', () => { if (!holders().some(c => c.units.includes(f.u)) || f.u.items.includes(it)) return; f.u.items.splice(Math.min(at, f.u.items.length), 0, it); saveLib(); renderLib(); }); return; }
     if (e.target.closest('[data-ok]')) {
       const name = $('#aName').value.trim(); if (!name) { $('#aName').focus(); return; }
       const ty = document.querySelector('[data-atype][aria-pressed="true"]'), due = $('#aDue').value;
@@ -417,11 +425,14 @@ function editClass(ci) {
   $('#dlgBox').onclick = async e => {
     if (e.target.closest('[data-up]')) return $('#cFile').click();
     if (e.target.closest('[data-cancel]')) return closeDlg();
-    if (e.target.closest('[data-del]')) { if (!await askDlg('Delete the ' + c.name + ' class? Its assignments move to “No class”.', { ok: 'Delete', danger: true })) return; for (const u of c.units) { for (const it of u.items) it.classId = ''; lib.loose.units.push(u); } lib.classes.splice(ci, 1); saveLib(); closeDlg(); renderLib(); if (!batch && routeNow().v !== 'class') go(lib.loose.units.some(u => u.items.length) ? classHash(lib.loose) : '#/', true); return; }
+    if (e.target.closest('[data-del]')) { if (!await askDlg('Delete the ' + c.name + ' class? Its assignments move to “No class”.', { ok: 'Delete', danger: true })) return; const moved = c.units.slice(), wasIds = moved.map(u => u.items.map(it => it.classId)); for (const u of c.units) { for (const it of u.items) it.classId = ''; lib.loose.units.push(u); } lib.classes.splice(ci, 1); saveLib(); closeDlg(); renderLib(); if (!batch && routeNow().v !== 'class') go(lib.loose.units.some(u => u.items.length) ? classHash(lib.loose) : '#/', true);
+      // Undo puts the class back in its place, with its roster, gradebook and units; its assignments leave “No class” again.
+      toastDo('Deleted the ' + c.name + ' class', 'Undo', () => { if (lib.classes.includes(c)) return; lib.loose.units = lib.loose.units.filter(u => !moved.includes(u)); moved.forEach((u, k) => u.items.forEach((it, j) => { it.classId = wasIds[k][j] != null ? wasIds[k][j] : c.id; })); lib.classes.splice(Math.min(ci, lib.classes.length), 0, c); saveLib(); renderLib(); if (window.railRender) railRender(); });
+      return; }
     if (e.target.closest('[data-ok]')) {
       const name = $('#cName').value.trim(); if (!name) { $('#cName').focus(); return; }
       const mb = mbUrl($('#cMb').value); if ($('#cMb').value.trim() && !mb) { toast('That ' + sysLink() + ' link isn’t a web address'); $('#cMb').focus(); return; }
-      c.name = name; const rows = parseRosterRows($('#cNames').value).map(r => ({ ...(upRows.find(u => u.name === r.name) || {}), ...r, id: r.id || (upRows.find(u => u.name === r.name) || {}).id || '', email: r.email || (upRows.find(u => u.name === r.name) || {}).email || '' })), was = c.names; c.names = rows.map(r => r.name); keepInfo(c, was, rows);
+      c.name = name; const rows = parseRosterRows($('#cNames').value).map(r => ({ ...(upRows.find(u => u.name === r.name) || {}), ...r, id: r.id || (upRows.find(u => u.name === r.name) || {}).id || '', email: r.email || (upRows.find(u => u.name === r.name) || {}).email || '' })), was = c.names, wasInfo = c.info; c.names = rows.map(r => r.name); keepInfo(c, was, rows); keepAtt(c, was, wasInfo);
       if (mb) c.mb = mb; else delete c.mb; mbRemember(name, mb);
       if (ci < 0) lib.classes.push(c);
       saveLib(); closeDlg(); renderLib();

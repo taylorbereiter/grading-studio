@@ -116,6 +116,7 @@ async function carryInto(e, list) {
     const nk = keyOf.get(nfc(key));
     if (!nk) { carry.goneStudents.push(key); continue; }
     const x = { ...o, f: mapPaths(o.f, c.map) || {}, h: mapPaths(o.h, c.map), tr: mapPaths(o.tr, c.map), r: mapPaths(o.r, c.map), sk: mapPaths(o.sk, c.map), inc: mapPaths(o.inc, c.map) };
+    if (o.g && o.g.tries) x.g = { ...o.g, tries: o.g.tries.map(t => t.files ? { ...t, files: t.files.map(q => c.map[q] || q) } : t) };   // an earlier try's papers keep their label under their new names
     // A hand-made page order can't know about pages that came or went, so a student whose files changed goes back to the plain order. Marks stay on their pages.
     if (o.L || o.o) {
       if (touched(key)) { delete x.L; delete x.o; if (o.L) carry.layouts.push(nk); }

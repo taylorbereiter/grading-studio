@@ -448,7 +448,7 @@ async function makeSharePackage(onStep) {
   const enc = s => new TextEncoder().encode(s);
   files['scores.csv'] = enc('﻿' + [head].concat(rows).map(r => r.map(csvCell).join(',')).join('\r\n'));
   files['comments.json'] = enc(JSON.stringify(notes, null, 1));
-  files['rubric.json'] = enc(JSON.stringify({ mode: setup.mode, criteria: crit, levels: setup.mode === 'rubric' ? '0 to 4 per row, half points allowed from 1 up' : undefined, outOf: maxPoints(), scale: setup.scale || null }, null, 1));
+  files['rubric.json'] = enc(JSON.stringify({ mode: setup.mode, criteria: crit, levels: setup.mode === 'rubric' ? (rowsTop(setup) ? '0 to ' + rowsTop(setup) + ' per row' : 'rows in order: ' + setup.criteria.map((_, i) => '0 to ' + rowTop(setup, i)).join(', ')) + (rowHalf(setup) ? ', half points allowed from 1 up' : ', whole numbers only') : undefined, outOf: maxPoints(), scale: setup.scale || null }, null, 1));
   files['README.txt'] = enc(README_FOR_CLAUDE(seen.size));
   saveBlob(('For Claude - ' + nameFreeText(batch.name) + '.zip'), new Blob([fflate.zipSync(files)], { type: 'application/zip' }));
 }

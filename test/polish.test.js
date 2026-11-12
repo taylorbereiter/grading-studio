@@ -510,7 +510,7 @@ test('Inter is built in, and opening the app contacts nobody', async () => {
 
 test('the built file stays a sensible size with the font in it', () => {
   const size = fs.statSync(path.join(ROOT, 'Grading Studio.html')).size;
-  assert.ok(size < 5.7e6, 'it’s ' + (size / 1e6).toFixed(2) + ' MB');   // about 5.5 MB, with strong examples, the help answers, report comments, tablet input and a second language, with going back in time and updates, with the Gradebook and its averages, extra credit, the sidebar, Word papers as PDF and the assignment tabs: the iPhone photo decoder (about 0.7 MB), the Inter font (about 0.2 MB) and the stickers (about 0.15 MB) are bundled so the one file works offline
+  assert.ok(size < 6.0e6, 'it’s ' + (size / 1e6).toFixed(2) + ' MB');   // about 5.9 MB, with strong examples, the school resources page, with attendance and the seating chart, with the help answers, report comments, tablet input and a second language, with going back in time and updates, with the Gradebook and its averages, extra credit, the sidebar, Word papers as PDF and the assignment tabs: the iPhone photo decoder (about 0.7 MB), the Inter font (about 0.2 MB) and the stickers (about 0.15 MB) are bundled so the one file works offline
 });
 
 test('the build only leaves out lines that really are comments', () => {   // a // line inside a multi-line string would be lost from the app
@@ -533,15 +533,17 @@ test('Today puts the work to mark above opening new work', async () => {
   let o = await order();
   assert.equal(o.kept, null, 'nothing kept yet, so the download box comes first'); assert.equal(o.classes, false, 'classes are on their own pages now');
   await openZip(page, zip); await score(page, [3, 3, 3]); await settle(page);
+  await page.evaluate(() => { window.__keptWas = window.__gs.kept(); });
   await page.click('#closeBtn');
   await page.waitForSelector('#vHome [data-kopen]');
+  await page.waitForFunction(() => window.__gs.kept() !== window.__keptWas);   // closing reads the kept list again; rows added to the old list below would be dropped when that lands
   o = await order();
   assert.ok(o.kept < o.drop && !o.classes, JSON.stringify(o));
   assert.equal(await page.$eval('#toMark .krow .btn[data-kopen]', e => e.textContent), 'Continue');
   // much earlier work: the three newest, and the rest a click away
   await page.evaluate(() => { const k = window.__gs.kept(), m = [...k.values()][0]; for (let i = 0; i < 7; i++) k.set('x' + i, { ...m, id: 'x' + i, name: 'Old ' + i, t: 1000 + i, ret: 2000 }); window.__gs.renderKept(); });
   const shown = () => page.$$eval('#earlier .krow', r => r.filter(e => e.checkVisibility()).length);
-  assert.equal(await shown(), 3);
+  assert.equal(await shown(), 3, await page.evaluate(() => JSON.stringify({ home: document.querySelector('#vHome').checkVisibility(), kept: window.__gs.kept().size, earlier: document.querySelectorAll('#earlier .krow').length, at: location.hash })));
   await page.click('#keptAll');
   assert.equal(await shown(), 7);
   assert.equal(await page.$eval('#keptAll', e => e.textContent), 'Show only the newest');
