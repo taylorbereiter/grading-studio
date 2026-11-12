@@ -1,13 +1,11 @@
 {
- "version": "1.27.25",
- "build": "22dc88927c6d",
+ "version": "1.27.26",
+ "build": "d40bd89d6ecd",
  "notes": [
-  "IB classes. Each class has a Grading button: points and percent, IB MYP or IB DP. The welcome and Settings offer IB MYP criteria (0 to 8) and IB DP 1 to 7 as two separate choices.",
-  "An MYP class is marked against the criteria a task assesses, each 0 to 8, with no percent. Its gradebook shows every level a student earned, you choose the level that fits best for each criterion, and the total becomes a final grade of 1 to 7. Levels are never averaged.",
-  "Criterion names and the grade boundaries are yours to change. A DP class shows the 1 to 7 its percent earns on boundaries you type in."
+  "Full screen: press F, or Full screen near the bottom of the sidebar (beside ✕ while a paper is open). The browser’s bars go away and the sidebar folds to icons, or goes while you mark, so the paper gets the room. F again, the same button or Esc leaves, and nothing is closed or lost. On formative work F is for feedback, so use the button there."
  ],
  "files": {
-  "index.html": "474a17e39b7fe2f3801d38eaa7d2c1ef5ca1daa44cc8a5b6fd2edb4c635edad6",
-  "planner.html": "012ee61dd847a0ba729950ef51cab0179a19b0caabc85191b36f614359bf3a04"
+  "index.html": "2925b07faf86a2c28328197bcfc1c2ab8af59f04c0c0f982e0f5a5b88a84bf16",
+  "planner.html": "cbea12a85d6ddbaf00d4ca0ad016e5a1811d3be318a8631020c72e0b333fdbec"
  }
 }

@@ -162,7 +162,7 @@ async function presentStart(l, o) {
   prFit();
   try { PR.lock = await navigator.wakeLock.request('screen'); } catch { }
   prHint(back && !(o.at > 0) ? 'Picking up at slide ' + back.slide + ', where ' + (back.classId ? className(back.classId) : 'the class') + ' stopped on ' + shortDate(back.date) + '. Home goes to slide 1.'
-    : (document.fullscreenElement ? '' : 'F for full screen · ') + '→ next · A agenda · T timer · P pick a name · Esc to finish', back && !(o.at > 0) ? 7000 : 4500);
+    : (document.fullscreenElement === el ? '' : 'F for full screen · ') + '→ next · A agenda · T timer · P pick a name · Esc to finish', back && !(o.at > 0) ? 7000 : 4500);
 }
 // planner.html#present/<lesson id>/<class id>: the lesson opens and presents, in the window (a page can't go full screen by itself).
 function presentArrive(rest) {
@@ -194,7 +194,7 @@ function prPaint() {
   PR.el.style.setProperty('--nb', PR.notes ? nt.offsetHeight + 'px' : '0px');   // the bar sits above the notes
   for (const [p, on] of [['agenda', PR.agenda], ['notes', PR.notes], ['blank', PR.blank]]) PR.el.querySelector('[data-p="' + p + '"]').setAttribute('aria-pressed', String(!!on));
   PR.el.querySelector('[data-p="timer"]').setAttribute('aria-expanded', String(!!PR.menu));
-  PR.el.querySelector('[data-p="full"] .lb').textContent = document.fullscreenElement ? 'Leave full screen' : 'Full screen';
+  PR.el.querySelector('[data-p="full"] .lb').textContent = document.fullscreenElement === PR.el ? 'Leave full screen' : 'Full screen';
   $('#prSay').textContent = PR.blank ? 'The screen is blank' : PR.ended ? 'End of the lesson' : 'Slide ' + (PR.i + 1) + ' of ' + n + (prSlideName(s) ? ': ' + prSlideName(s) : '');
   prAgenda(); prFit();
 }
@@ -238,7 +238,7 @@ function prToggle(k) {
   prPaint();
 }
 async function prFullToggle() {
-  try { if (document.fullscreenElement) { PR.keep = true; await document.exitFullscreen(); } else await PR.el.requestFullscreen(); } catch { }
+  try { if (document.fullscreenElement === PR.el) { PR.keep = true; await document.exitFullscreen(); } else await PR.el.requestFullscreen(); } catch { }
 }
 // Esc in full screen is taken by the browser to leave full screen: that is the teacher finishing.
 function prFull() {
@@ -497,8 +497,10 @@ async function presentEnd() {
   document.removeEventListener('keydown', prKey, true); document.removeEventListener('fullscreenchange', prFull); window.removeEventListener('resize', prFit);
   const lock = PR.lock, full = document.fullscreenElement === el;
   PR.lock = PR.el = null;   // the timer, and its sound, go on (prFloat)
-  el.remove();   // a full-screen stage taken off the page leaves full screen by itself
-  try { if (full && document.fullscreenElement) await document.exitFullscreen(); } catch { }
+  if (!gsFull.drop(el)) {   // with the whole Planner in full screen under it, back to that (src/fullscreen.js)
+    el.remove();   // a full-screen stage taken off the page leaves full screen by itself
+    try { if (full && document.fullscreenElement) await document.exitFullscreen(); } catch { }
+  }
   try { if (lock) await lock.release(); } catch { }
   prFloat();
   if (L.view === 'edit' && L.open === l) { L.cur = Math.min(i, l.slides.length - 1); renderEditor(); }

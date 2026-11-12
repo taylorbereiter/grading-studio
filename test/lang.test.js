@@ -241,7 +241,7 @@ test('the Planner’s sidebar and its Find anything follow the same setting, and
     await page.waitForFunction(() => window.__planner && document.querySelector('#lessons .ls-top'));
     assert.equal(await page.evaluate(() => window.__gsLang.lang), 'es');
     assert.deepEqual(await page.$$eval('#rail .rnav .rl, #rail .rcap .rl', els => els.filter(e => e.checkVisibility()).map(e => e.textContent.trim())),
-      ['Hoy', 'Pendientes', 'Centro', 'Planificador', 'Calendario', 'Unidades', 'Lecciones anteriores', 'Actividades', 'Rúbricas', 'Clases', 'Configura tu horario', 'Ayuda', 'Ajustes']);
+      ['Hoy', 'Pendientes', 'Centro', 'Planificador', 'Calendario', 'Unidades', 'Lecciones anteriores', 'Actividades', 'Rúbricas', 'Clases', 'Configura tu horario', 'Pantalla completa', 'Ayuda', 'Ajustes']);
     assert.match(await text(page, '#railSaved'), /^Sin copia de seguridad\s*Este navegador$/);
     await page.click('#findBtn'); await page.waitForSelector('#findIn'); await page.type('#findIn', 'copia de seg');
     await page.waitForFunction(() => [...document.querySelectorAll('#findDlg .frow b')].some(b => b.textContent === '¿Dónde se guarda mi trabajo?'));

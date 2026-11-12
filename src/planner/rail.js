@@ -82,6 +82,7 @@ function findRows() {
   if ('showDirectoryPicker' in window) add('Do', L.dir && L.dirOk ? 'Look in the Planner folder' : L.dir ? 'Reconnect the Planner folder' : 'Link the Planner folder', L.dir && L.dirOk ? 'For lessons added or changed there' : 'A second copy of your lessons, in a folder of their own', () => L.dir && L.dirOk ? folderRead(true) : L.dir ? folderReconnect(true) : folderLink());
   add('Do', 'Side panel', 'Books, video, ' + (plCur() || 'the unit') + ', the notebook and the ' + plAiTag() + ' box', () => panelToggle());
   add('Do', document.documentElement.dataset.theme === 'dark' ? 'Light mode' : 'Dark mode', 'Display', () => setTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'));
+  if (gsFull.can()) add('Do', gsFull.on() ? 'Leave full screen' : 'Full screen', 'The page fills the screen. F or Esc to leave', () => gsFull.toggle());
   // every help answer by its question; the answers are on the grading page's Help
   for (const t of HELP) out.push({ group: 'Help', label: t.q, sub: helpGist(t), words: t.words || '', run: () => leaveTo(gsUrl('#/help/' + t.id)) });
   return out;
