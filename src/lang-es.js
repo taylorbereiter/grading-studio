@@ -30,6 +30,12 @@ function esHomeSay(k) {
 const LANG_ES = {
   name: 'Español', locale: 'es',
   words: {
+    /* the to-do list: the sidebar, the card on Today, Find anything */
+    'To do': 'Pendientes', 'To do: your own list, with what the app noticed from your work': 'Pendientes: tu propia lista, con lo que la aplicación ha visto en tu trabajo', 'Add a to-do': 'Añadir un pendiente', 'Add a to-do…': 'Añadir un pendiente…',
+    'To do, by week': 'Pendientes, por semana', 'Your list laid out on the days of the week, under the classes that meet': 'Tu lista repartida en los días de la semana, bajo las clases de cada día',
+    'Open To do': 'Abrir Pendientes', 'Nothing on your list for today.': 'Nada en tu lista para hoy.', 'See everything': 'Ver todo', 'Done': 'Hecho', 'Tomorrow': 'Mañana', 'Note': 'Nota', 'Open it in To do': 'Abrirlo en Pendientes',
+    'Every school day': 'Cada día de clase', 'Every week': 'Cada semana', 'Each time this class meets': 'Cada vez que hay esta clase',
+    'Your own list, with what the app noticed from your work': 'Tu propia lista, con lo que la aplicación ha visto en tu trabajo', 'Type it the way you would say it': 'Escríbelo como lo dirías', 'Your own list, on the grading page': 'Tu propia lista, en la página de corrección',
     /* the sidebar, on both pages */
     'Main': 'Principal', 'Grading Studio, Today': 'Grading Studio, Hoy', 'Find anything': 'Buscar', 'Today': 'Hoy', 'Planner': 'Planificador', 'Classes': 'Clases', 'Add a class': 'Añadir una clase', 'Examples': 'Ejemplos', 'Strong work from every class, with no names on it': 'Trabajos destacados de todas las clases, sin nombres',
     'School': 'Centro', 'School resources': 'Recursos del centro', 'School resources: links, files and notes about your school': 'Recursos del centro: enlaces, archivos y notas sobre tu centro',
@@ -163,6 +169,7 @@ const LANG_ES = {
     'Missing': 'No entregado', 'Excused': 'Justificado', 'Late': 'Con retraso', 'Retake': 'Nuevo intento', 'First try': 'Primer intento', 'counts as': 'cuenta como',
   },
   rules: [
+    [/^(\d+) more on your list$/, m => m[1] + ' más en tu lista'], [/^(\d+) to do$/, m => m[1] + (m[1] === '1' ? ' pendiente' : ' pendientes')],
     [/^(?:No classes today\.|\w+ class(?:es)? today\.|\w+ sets? of papers (?:to mark|ready to hand back)|[Nn]othing waiting to be marked\.)/, m => esHomeSay(m.input)],
     [/^Grading Studio version (.+)$/, 'Grading Studio, versión $1'],
     [/^Step (\d) of 3$/, 'Paso $1 de 3'],
@@ -229,6 +236,14 @@ const LANG_ES = {
     'add-class': { q: '¿Cómo añado una clase y su lista?', words: 'lista estudiantes alumnos nombres nueva clase',
       a: ['1. Pulsa **Añadir una clase** en la barra lateral y ponle un nombre.', '2. Pega los nombres de los estudiantes, uno por línea. Se conservan en el orden en que los pegas.', '3. Abre la pestaña **Students** de la clase para añadir un identificador, un correo o una nota a cada uno.',
         'Con una lista, al abrir los trabajos de esa clase aparece cada estudiante, también quien no entregó nada.'] },
+    'todo': { q: '¿Cómo funciona la lista de pendientes?', go: 'Abrir Pendientes', words: 'pendientes tareas lista recordatorio recordar todo to-do',
+      a: ['**Pendientes**, en la barra lateral, es una sola lista. Tus propios pendientes llevan un círculo continuo. Las líneas con un círculo discontinuo son cosas que la aplicación ha visto en tu trabajo guardado: trabajos por corregir, trabajos por devolver, una clase sin lección planificada, trabajos sin entregar que reclamar.',
+        'Escribe un pendiente como lo dirías y pulsa Intro. Por ahora los días se leen en inglés: un día al final (“tomorrow”, “friday”, “nov 20”), el nombre de una clase o el de un estudiante se reconocen solos, y un clic en lo reconocido lo quita. Pulsa **N** en cualquier lugar fuera de un trabajo para añadir uno.',
+        'Haz clic en una línea para darle un día, una clase, algo con lo que va, una repetición o una nota. Las líneas de la aplicación se van solas cuando el trabajo está hecho. Puedes mover una a otro día, ocultarla o desactivar todo un tipo.',
+        '**Hoy** muestra una tarjeta corta con tus pendientes atrasados o de hoy. La lista se guarda con tu trabajo de corrección, nunca en la carpeta del Planificador.'] },
+    'todo-week': { q: '¿Puedo ver mis pendientes por semana?', go: 'Abrir la semana', words: 'pendientes semana semanal calendario días arrastrar mover',
+      a: ['Sí. En **Pendientes**, elige **Week** arriba a la derecha. Las mismas líneas aparecen en los días que les corresponden, cada una bajo la clase que se reúne ese día, con una columna Later para el resto.',
+        'Escribe en un día para añadir un pendiente para ese día y arrastra una línea a otro día. Lo que no se hace en su día pasa solo a hoy, e indica de qué día era.'] },
     'school-resources': { q: '¿Dónde puedo guardar los enlaces y archivos de mi centro?', go: 'Abrir Recursos del centro', words: 'manual calendario normas portal marcador enlace archivo documento recursos centro colegio escuela horario formularios',
       a: ['En **School** (Centro), en la barra lateral. Guarda el manual, el calendario, el horario, los portales en los que inicias sesión, los formularios y notas como a quién llamar. Ponlos en grupos con el nombre que quieras y pulsa la estrella de los que más abres para tenerlos arriba.',
         '**Add a link** cuando el centro lo tiene en línea, porque un enlace se mantiene al día solo. **Add files…** guarda una copia del archivo con tu trabajo, hasta 50 MB cada uno. También puedes soltar archivos en la página o pegar una dirección web.',

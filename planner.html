@@ -818,6 +818,7 @@ body.has-side .lsn{margin-right:var(--sidew,420px)}
   <a class="rbrand" data-gs="#/" href="./#/" aria-label="Grading Studio, Today"><span class="rl">Grading <i>Studio</i></span><span class="rs" aria-hidden="true">G<i>S</i></span></a>
   <button class="rfind" id="findBtn" aria-haspopup="dialog" title="Find a lesson, a unit, a class or a setting"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5"/></svg><span class="rl">Find anything</span><kbd class="rl" id="findKey">Ctrl K</kbd></button>
   <a class="rnav" data-gs="#/" href="./#/" title="Today: what you teach, what is waiting to be marked, what is ready to hand back"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.6"/><path d="M12 3v2.2M12 18.8V21M3 12h2.2M18.8 12H21M5.6 5.6l1.6 1.6M16.8 16.8l1.6 1.6M5.6 18.4l1.6-1.6M16.8 7.2l1.6-1.6"/></svg><span class="rl">Today</span></a>
+  <a class="rnav" data-gs="#/todo" href="./#/todo" title="To do: your own list, with what the app noticed from your work"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span class="rl">To do</span></a>
   <a class="rnav" data-gs="#/school" href="./#/school" title="School resources: links, files and notes about your school"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 20.5h17M5.5 20.5v-9M18.5 20.5v-9M3.5 11.5L12 5l8.5 6.5M10 20.5v-5h4v5M12 5V3h3"/></svg><span class="rl">School</span></a>
   <div class="rcap"><span class="rl">Planner</span></div>
   <a class="rnav on" id="railPlanner" data-v="cal" href="#week" aria-current="page" title="Calendar: your lessons by week, or the whole semester"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M8 3v4M16 3v4"/></svg><span class="rl">Calendar</span></a>
@@ -5838,6 +5839,12 @@ function esHomeSay(k) {
 const LANG_ES = {
   name: 'Español', locale: 'es',
   words: {
+    /* the to-do list: the sidebar, the card on Today, Find anything */
+    'To do': 'Pendientes', 'To do: your own list, with what the app noticed from your work': 'Pendientes: tu propia lista, con lo que la aplicación ha visto en tu trabajo', 'Add a to-do': 'Añadir un pendiente', 'Add a to-do…': 'Añadir un pendiente…',
+    'To do, by week': 'Pendientes, por semana', 'Your list laid out on the days of the week, under the classes that meet': 'Tu lista repartida en los días de la semana, bajo las clases de cada día',
+    'Open To do': 'Abrir Pendientes', 'Nothing on your list for today.': 'Nada en tu lista para hoy.', 'See everything': 'Ver todo', 'Done': 'Hecho', 'Tomorrow': 'Mañana', 'Note': 'Nota', 'Open it in To do': 'Abrirlo en Pendientes',
+    'Every school day': 'Cada día de clase', 'Every week': 'Cada semana', 'Each time this class meets': 'Cada vez que hay esta clase',
+    'Your own list, with what the app noticed from your work': 'Tu propia lista, con lo que la aplicación ha visto en tu trabajo', 'Type it the way you would say it': 'Escríbelo como lo dirías', 'Your own list, on the grading page': 'Tu propia lista, en la página de corrección',
     /* the sidebar, on both pages */
     'Main': 'Principal', 'Grading Studio, Today': 'Grading Studio, Hoy', 'Find anything': 'Buscar', 'Today': 'Hoy', 'Planner': 'Planificador', 'Classes': 'Clases', 'Add a class': 'Añadir una clase', 'Examples': 'Ejemplos', 'Strong work from every class, with no names on it': 'Trabajos destacados de todas las clases, sin nombres',
     'School': 'Centro', 'School resources': 'Recursos del centro', 'School resources: links, files and notes about your school': 'Recursos del centro: enlaces, archivos y notas sobre tu centro',
@@ -5971,6 +5978,7 @@ const LANG_ES = {
     'Missing': 'No entregado', 'Excused': 'Justificado', 'Late': 'Con retraso', 'Retake': 'Nuevo intento', 'First try': 'Primer intento', 'counts as': 'cuenta como',
   },
   rules: [
+    [/^(\d+) more on your list$/, m => m[1] + ' más en tu lista'], [/^(\d+) to do$/, m => m[1] + (m[1] === '1' ? ' pendiente' : ' pendientes')],
     [/^(?:No classes today\.|\w+ class(?:es)? today\.|\w+ sets? of papers (?:to mark|ready to hand back)|[Nn]othing waiting to be marked\.)/, m => esHomeSay(m.input)],
     [/^Grading Studio version (.+)$/, 'Grading Studio, versión $1'],
     [/^Step (\d) of 3$/, 'Paso $1 de 3'],
@@ -6037,6 +6045,14 @@ const LANG_ES = {
     'add-class': { q: '¿Cómo añado una clase y su lista?', words: 'lista estudiantes alumnos nombres nueva clase',
       a: ['1. Pulsa **Añadir una clase** en la barra lateral y ponle un nombre.', '2. Pega los nombres de los estudiantes, uno por línea. Se conservan en el orden en que los pegas.', '3. Abre la pestaña **Students** de la clase para añadir un identificador, un correo o una nota a cada uno.',
         'Con una lista, al abrir los trabajos de esa clase aparece cada estudiante, también quien no entregó nada.'] },
+    'todo': { q: '¿Cómo funciona la lista de pendientes?', go: 'Abrir Pendientes', words: 'pendientes tareas lista recordatorio recordar todo to-do',
+      a: ['**Pendientes**, en la barra lateral, es una sola lista. Tus propios pendientes llevan un círculo continuo. Las líneas con un círculo discontinuo son cosas que la aplicación ha visto en tu trabajo guardado: trabajos por corregir, trabajos por devolver, una clase sin lección planificada, trabajos sin entregar que reclamar.',
+        'Escribe un pendiente como lo dirías y pulsa Intro. Por ahora los días se leen en inglés: un día al final (“tomorrow”, “friday”, “nov 20”), el nombre de una clase o el de un estudiante se reconocen solos, y un clic en lo reconocido lo quita. Pulsa **N** en cualquier lugar fuera de un trabajo para añadir uno.',
+        'Haz clic en una línea para darle un día, una clase, algo con lo que va, una repetición o una nota. Las líneas de la aplicación se van solas cuando el trabajo está hecho. Puedes mover una a otro día, ocultarla o desactivar todo un tipo.',
+        '**Hoy** muestra una tarjeta corta con tus pendientes atrasados o de hoy. La lista se guarda con tu trabajo de corrección, nunca en la carpeta del Planificador.'] },
+    'todo-week': { q: '¿Puedo ver mis pendientes por semana?', go: 'Abrir la semana', words: 'pendientes semana semanal calendario días arrastrar mover',
+      a: ['Sí. En **Pendientes**, elige **Week** arriba a la derecha. Las mismas líneas aparecen en los días que les corresponden, cada una bajo la clase que se reúne ese día, con una columna Later para el resto.',
+        'Escribe en un día para añadir un pendiente para ese día y arrastra una línea a otro día. Lo que no se hace en su día pasa solo a hoy, e indica de qué día era.'] },
     'school-resources': { q: '¿Dónde puedo guardar los enlaces y archivos de mi centro?', go: 'Abrir Recursos del centro', words: 'manual calendario normas portal marcador enlace archivo documento recursos centro colegio escuela horario formularios',
       a: ['En **School** (Centro), en la barra lateral. Guarda el manual, el calendario, el horario, los portales en los que inicias sesión, los formularios y notas como a quién llamar. Ponlos en grupos con el nombre que quieras y pulsa la estrella de los que más abres para tenerlos arriba.',
         '**Add a link** cuando el centro lo tiene en línea, porque un enlace se mantiene al día solo. **Add files…** guarda una copia del archivo con tu trabajo, hasta 50 MB cada uno. También puedes soltar archivos en la página o pegar una dirección web.',
@@ -6214,6 +6230,12 @@ function zhHomeSay(k) {
 const LANG_ZH = {
   name: '繁體中文', locale: 'zh-Hant',
   words: {
+    /* the to-do list: the sidebar, the card on Today, Find anything */
+    'To do': '待辦事項', 'To do: your own list, with what the app noticed from your work': '待辦事項：你自己的清單，加上系統從你的工作中發現的事', 'Add a to-do': '新增待辦事項', 'Add a to-do…': '新增待辦事項…',
+    'To do, by week': '待辦事項（週檢視）', 'Your list laid out on the days of the week, under the classes that meet': '把清單排在一週的每一天，列在當天的課底下',
+    'Open To do': '開啟待辦事項', 'Nothing on your list for today.': '今天清單上沒有事項。', 'See everything': '查看全部', 'Done': '已完成', 'Tomorrow': '明天', 'Note': '備註', 'Open it in To do': '在待辦事項中開啟',
+    'Every school day': '每個上課日', 'Every week': '每週', 'Each time this class meets': '每次這個班上課時',
+    'Your own list, with what the app noticed from your work': '你自己的清單，加上系統從你的工作中發現的事', 'Type it the way you would say it': '照你平常說的方式輸入', 'Your own list, on the grading page': '你自己的清單，在批改頁面',
     /* the sidebar, on both pages */
     'Main': '主選單', 'Grading Studio, Today': 'Grading Studio，今天', 'Find anything': '搜尋', 'Today': '今天', 'Planner': '備課', 'Classes': '班級', 'Add a class': '新增班級', 'Examples': '範例', 'Strong work from every class, with no names on it': '各班的優秀作品，不顯示姓名',
     'School': '學校', 'School resources': '學校資源', 'School resources: links, files and notes about your school': '學校資源：學校的連結、檔案與筆記',
@@ -6347,6 +6369,7 @@ const LANG_ZH = {
     'Missing': '缺交', 'Excused': '免交', 'Late': '遲交', 'Retake': '重做', 'First try': '第一次', 'counts as': '採計',
   },
   rules: [
+    [/^(\d+) more on your list$/, '清單上還有 $1 項'], [/^(\d+) to do$/, '$1 項待辦'],
     [/^(?:No classes today\.|\w+ class(?:es)? today\.|\w+ sets? of papers (?:to mark|ready to hand back)|[Nn]othing waiting to be marked\.)/, m => zhHomeSay(m.input)],
     [/^Grading Studio version (.+)$/, 'Grading Studio 版本 $1'],
     [/^Step (\d) of 3$/, '第 $1 步，共 3 步'],
@@ -6413,6 +6436,14 @@ const LANG_ZH = {
     'add-class': { q: '怎麼新增班級和名單？', words: '名單 學生 姓名 新班級 roster',
       a: ['1. 按側邊欄的**新增班級**，並為它命名。', '2. 貼上學生姓名，一行一位。順序會和你貼上的一樣。', '3. 開啟班級的 **Students** 分頁，可以為每位學生加上學號、電子郵件或備註。',
         '有了名單，開啟那個班級的作業時會列出每位學生，包括沒有繳交的人。'] },
+    'todo': { q: '待辦事項清單怎麼用？', go: '開啟待辦事項', words: '待辦 事項 清單 提醒 記得 工作 todo to-do task',
+      a: ['側邊欄的**待辦事項**是一份清單。你自己的事項是實線圓圈。虛線圓圈的是系統從你存好的工作中發現的事：要批改的作業、可以發還的作業、還沒備課的班級、需要催繳的缺交作業。',
+        '照你平常說的方式輸入，然後按 Enter。日期目前用英文辨識：句尾的日期（“tomorrow”、“friday”、“nov 20”）、班級名稱或學生姓名會自動辨識出來，點一下辨識到的項目就能取消。在作業畫面以外的任何地方按 **N** 就能新增。',
+        '點一下事項，可以設定日期、班級、相關的對象、重複或備註。系統加入的事項在工作完成後會自己消失。你可以把它移到另一天、隱藏，或關掉整個類別。',
+        '**今天**會顯示一張小卡，列出你逾期或今天到期的事項。清單和你的批改工作存在一起，絕不會放進備課的資料夾。'] },
+    'todo-week': { q: '可以按週查看待辦事項嗎？', go: '開啟本週', words: '待辦 事項 週 每週 行事曆 日期 拖曳 移動 week',
+      a: ['可以。在**待辦事項**頁面右上角選 **Week**。同樣的事項會排在各自的日期，放在當天上課的班級底下，其餘的在 Later 欄。',
+        '在某一天輸入就能新增那天的事項，也可以把事項拖到另一天。當天沒完成的會自動移到今天，並標出原本是哪一天。'] },
     'school-resources': { q: '學校的連結和檔案可以放在哪裡？', go: '開啟學校資源', words: '手冊 行事曆 規定 政策 入口網站 書籤 連結 檔案 文件 資源 學校 作息表 表單 handbook calendar link file',
       a: ['在側邊欄的**School**（學校）。把教師手冊、行事曆、作息表、常登入的入口網站、表單，以及「該找誰」這類筆記都放在這裡。可以自己命名分組，常開的項目按星號就會排在最上面。',
         '學校已經放在網路上的內容，用 **Add a link**，連結會自己保持最新。**Add files…** 會把檔案的副本和你的工作存在一起，每個檔案最多 50 MB。也可以把檔案拖到頁面上，或貼上網址。',
@@ -6654,6 +6685,16 @@ const HELP = [
     a: ['1. Press **Add a class** in the sidebar and give it a name.', '2. Paste the student names, one on a line. Students are kept in the order you paste them.', '3. Open the class’s **Students** tab to add an ID, an email or a note for each one.',
       'With a roster, every student is listed when you open papers for that class, including anyone who turned nothing in.'],
     words: 'roster students names list new class' },
+  { id: 'todo', sec: 'start', q: 'How does the to-do list work?',
+    a: ['**To do** in the sidebar is one list. Your own to-dos have a solid circle. Lines with a dashed circle are things the app noticed from your saved work: papers to mark, papers to hand back, a class with no lesson planned, missing work to chase.',
+      'Type a to-do the way you would say it and press Enter. A day at the end (“tomorrow”, “friday”, “nov 20”), a class name or a student’s name is picked out for you, and a click on what was understood takes it off. Press **N** anywhere outside a paper to add one.',
+      'Click a line to give it a day, a class, something it goes with, a repeat or a note. The app’s own lines go by themselves when the work is done. You can move one to another day, hide it, or switch a whole kind off.',
+      '**Today** shows a short card of your own to-dos that are overdue or due today. The list is saved with your grading work, never in the Planner’s folder.'],
+    go: ['Open To do', '#/todo'], words: 'todo task tasks list reminder remember checklist due' },
+  { id: 'todo-week', sec: 'start', q: 'Can I see my to-dos by week?',
+    a: ['Yes. On **To do**, choose **Week** at the top right. The same lines sit on the days they are for, each under the class that meets that day, with a Later column for the rest.',
+      'Type in a day to add a to-do for it, and drag a line to another day. Anything not done by its day moves to today on its own, and says which day it was for.'],
+    go: ['Open the week', '#/todo/week'], words: 'todo task week weekly calendar days plan drag move' },
   { id: 'school-resources', sec: 'start', q: 'Where can I keep my school’s links and files?',
     a: ['On **School** in the sidebar. Keep the handbook, the calendar, the bell schedule, the portals you sign in to, forms, and notes like who to call. Put them in groups you name, and press the star on the ones you open most to keep them at the top.',
       '**Add a link** when the school keeps it online, since a link stays up to date by itself. **Add files…** keeps a copy of a file with your work, up to 50 MB each. You can also drop files on the page or paste a web address.',
@@ -6931,6 +6972,7 @@ function findRows() {
   add('Go to', 'Rubrics', 'Saved rubrics and grading scales', () => toView('bank'));
   add('Go to', 'School resources', 'Links, files and notes about your school, on the grading page', () => leaveTo(gsUrl('#/school')));
   add('Go to', 'Settings', 'Saving, classes, display and keys, on the grading page', () => leaveTo(gsUrl('#/settings')));
+  add('Go to', 'To do', 'Your own list, on the grading page', () => leaveTo(gsUrl('#/todo')));
   add('Go to', 'Help', 'Short answers to common questions', () => leaveTo(gsUrl('#/help')));
   for (const c of (L.setup && L.setup.classes) || []) add('Classes', c.name, 'Its assignments, gradebook and students', () => leaveTo(classUrl(c)));
   const when = l => l.slots.length ? l.slots.map(s => className(s.classId) + ' ' + shortDate(s.date)).join(', ') : l.library ? 'A past lesson' : 'Not on a class';

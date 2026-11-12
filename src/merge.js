@@ -612,6 +612,7 @@ function mergeLib(a0, b0, o = {}) {
   libGoals(lib, a, b);
   const hasWork = l => ((l && l.classes) || []).some(c => (c.names || []).length || (c.units || []).some(u => u && (u.items || []).length));
   if (a.me && !b.me && hasWork(b) && !hasWork(a)) delete lib.me;
+  { const t = todoMerge(a.todo, b.todo); if (t) lib.todo = t; else delete lib.todo; }
   const by = t => [...kept.values()].filter(e => e.type === t);
   const shell = e => { const n = { ...e.node }; delete n.units; delete n.items; return n; };
   const units = new Map(), classes = new Map();
@@ -635,6 +636,21 @@ function mergeLib(a0, b0, o = {}) {
   if (Object.keys(gone).length) lib.gone = gone; else delete lib.gone;
   const same = (p, q) => JSON.stringify(canon(p)) === JSON.stringify(canon(q));
   return { lib, notes, asks, cards, mapA, mapB, toA: !same(lib, a0), toB: !same(lib, b0) };
+}
+// The to-do list (todo.js), line by line: whichever copy changed a line last has it, and a deleted line stays deleted. A line only
+// one copy has is kept. The switches for what the app adds go with whichever copy set them last.
+function todoMerge(a, b) {
+  if (!a || !b) return a || b || null;
+  const by = new Map(), order = [];
+  for (const it of [...(Array.isArray(a.items) ? a.items : []), ...(Array.isArray(b.items) ? b.items : [])]) {
+    if (!it || !it.id) continue;
+    const had = by.get(it.id); if (!had) order.push(it.id);
+    if (!had || (it.t || 0) > (had.t || 0)) by.set(it.id, it);
+  }
+  const auto = { ...(b.auto || {}) };
+  for (const [k, v] of Object.entries(a.auto || {})) if (!auto[k] || (v.t || 0) >= (auto[k].t || 0)) auto[k] = v;
+  const offB = (b.offT || 0) > (a.offT || 0);
+  return { ...b, ...a, items: order.map(id => by.get(id)), auto, off: (offB ? b.off : a.off) || {}, offT: Math.max(a.offT || 0, b.offT || 0) };
 }
 function mergeFields(x, y, win, dev, now, said) {
   const fx = nodeParts(x), fy = nodeParts(y), parts = {}, fv = {}, both = [], fromY = [];

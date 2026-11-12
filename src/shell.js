@@ -27,14 +27,14 @@ function railRender() {
   for (const a of document.querySelectorAll('#rail [data-nav]')) { const on = !batch && a.dataset.nav === r.v; a.classList.toggle('on', on); if (on) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); }
   const cr = $('#crumbClass'); cr.hidden = !(batch && open);
   if (batch && open) { cr.textContent = open.name; cr.href = classHash(open); cr.title = 'Back to ' + open.name; }
-  tabsRender(); setRender(); helpRender(); schRender();
+  tabsRender(); setRender(); helpRender(); schRender(); todoRender();
   if (!batch && r.v === 'home' && screenWas !== 'home') planRefresh();
   screenWas = batch ? 'a' : r.v;
   const d = $('#homeDate'), today = new Date().toLocaleDateString(LANG_LOCALE, { weekday: 'long', month: 'long', day: 'numeric' }); if (d.textContent !== today) d.textContent = today;   // Today's title is the day itself
   // The tab's name goes into the browser's history, which some browsers copy to an account. A download's name can be a student's, so it stays out;
   // an assignment or class name she typed herself is fine.
   const asg = batch && batch.assignment && findItem(batch.assignment.id);
-  document.title = batch ? (asg ? asg.it.name + ' · ' : '') + 'Grading Studio' : r.v === 'class' ? (r.c === lib.loose ? 'No class' : r.c.name) + ' · Grading Studio' : r.v === 'settings' ? (r.sec === 'saving' ? '' : SET_SECS.find(x => x[0] === r.sec)[1] + ' · ') + 'Settings · Grading Studio' : r.v === 'help' ? 'Help · Grading Studio' : r.v === 'school' ? 'School resources · Grading Studio' : r.v === 'examples' ? 'Examples · Grading Studio' : 'Grading Studio';
+  document.title = batch ? (asg ? asg.it.name + ' · ' : '') + 'Grading Studio' : r.v === 'class' ? (r.c === lib.loose ? 'No class' : r.c.name) + ' · Grading Studio' : r.v === 'settings' ? (r.sec === 'saving' ? '' : SET_SECS.find(x => x[0] === r.sec)[1] + ' · ') + 'Settings · Grading Studio' : r.v === 'help' ? 'Help · Grading Studio' : r.v === 'todo' ? 'To do · Grading Studio' : r.v === 'school' ? 'School resources · Grading Studio' : r.v === 'examples' ? 'Examples · Grading Studio' : 'Grading Studio';
 }
 // "Saved", and where: the same words as the top bar while grading and the line in Settings (folder.js says them).
 function railSavedRender() {
@@ -112,6 +112,8 @@ function findRows() {
     add('This assignment', 'Close this assignment', 'Saved first, then back to Today', () => go('#/'));
   }
   add('Go to', 'Today', 'What you teach today, what is waiting to be marked, what is ready to hand back', () => go('#/'));
+  add('Go to', 'To do', 'Your own list, with what the app noticed from your work', () => go('#/todo'));
+  add('Go to', 'To do, by week', 'Your list laid out on the days of the week, under the classes that meet', () => go('#/todo/week'));
   add('Go to', 'Planner', 'Units and lessons, on its own page', () => { location.href = $('#lessonsBtn').href; });
   add('Go to', 'School resources', 'Links, files and notes about your school', () => go('#/school'));
   if (exList.length) add('Go to', 'Examples', 'Strong work from every class, with no names on it', () => go('#/examples'), '', 'strong example exemplar model answer show class');
@@ -141,6 +143,7 @@ function findRows() {
     add('Settings', 'Open an archived year', 'Bring back a year saved to a file', press('#yearOpenBtn'));
     add('Settings', 'Remove from this computer', 'Clears student work from this browser', () => go('#/settings'));
   }
+  if (!batch) add('Do', 'Add a to-do', 'Type it the way you would say it', () => tdFocusAdd(), 'N', 'todo task reminder remember list new');
   add('Settings', 'Where my work is saved', 'This browser, and a folder you choose', () => openWhere(), '', 'backup back up safe save storage location choose a folder');
   add('Settings', 'Learning goals', 'Your own list of goals, to see scores by', () => goalsDlg());
   add('Settings', 'Go back in time', 'An assignment, or everything, as it was on an earlier day', () => go(setHash('history')), '', 'undo restore history backup recover lost mistake earlier version yesterday');

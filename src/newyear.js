@@ -86,7 +86,13 @@ function nyLib(old, works, o) {
     if (o.dates) L.book.terms = (L.book.terms || []).map(t => ({ ...t, start: nyDay(t.start), end: nyDay(t.end) }));
     nyStrip(L.book, names, ['terms', 'cats', 'w']);   // her terms, her own types and their weights carry, whatever they are called
   }
-  nyStrip(L, names, ['classes', 'loose', 'me', 'book', 'gone', 'years']);
+  // The to-do list (todo.js): what is still to do carries. A line about a student (or that says a student's name) does not, unless the
+  // class lists are kept; what was done, and what was said about the app's own lines for this year's work, stays behind in the file.
+  if (L.todo && typeof L.todo === 'object') {
+    const low = [...names].map(n => n.toLowerCase()), says = i => { const t = (String(i.x || '') + ' ' + String(i.note || '')).toLowerCase(); return low.some(n => t.includes(n)); };
+    L.todo = { items: (Array.isArray(L.todo.items) ? L.todo.items : []).filter(i => i && !i.gone && !i.done && (o.roster || !(i.who || says(i)))), off: { ...(L.todo.off || {}) }, offT: L.todo.offT || 0, auto: {} };
+  }
+  nyStrip(L, names, ['classes', 'loose', 'me', 'book', 'gone', 'years', 'todo']);
   L.year = o.to;
   L.years = [...(Array.isArray(old.years) ? old.years : []), { name: o.from, at: Date.now(), file: o.file }];
   return L;

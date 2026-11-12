@@ -45,6 +45,7 @@ The sidebar says **Not backed up** until you choose a folder. Once you do, every
 
 ## More
 
+- **To do** in the sidebar is a to-do list: the teacher's own to-dos (with a day, a class, a student or assignment, a repeat and a note) beside lines the app works out from saved work, such as papers to mark, papers to hand back, a class with no lesson planned and missing work to chase. Those are never stored and go when the work is done. A Week view (`#/todo/week`) lays the same lines out by day under the classes that meet, and a drag moves a line to another day. Today shows a short card of what is overdue or due today. The list is saved with the grading work (src/todo.js), never in the Planner's folder.
 - **School** in the sidebar is a page for the links, files and notes about your school: the handbook, the calendar, the portals, who to call. They are kept with your work (`gs.school`, and the files in their own store), so they reach the folder and the take-home file too. The code is src/school.js.
 - **Help** in the app's sidebar has short answers to common questions, and **Find anything** lists them too.
 - **Learning goals** (optional): keep your own list of goals or standards, tag rubric rows and quiz questions with them, and each class page gets a Goals tab that shows the class and every student by goal, lowest first.

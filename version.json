@@ -1,13 +1,14 @@
 {
- "version": "1.27.11",
- "build": "953bd728801f",
+ "version": "1.27.12",
+ "build": "c9b5917d25f2",
  "notes": [
-  "Groups in Present mode: shuffling no longer moves the slides or ends the lesson, and each shuffle keeps last time's groups apart.",
-  "Change groups by hand: drag a name to another group, or click a name and then a group. Make my own starts with empty groups, and Undo or Ctrl Z takes back a move or a shuffle.",
-  "The Present timer keeps running after you finish or leave full screen, in the corner of the Planner, and comes back on the slides when you present again."
+  "A to-do list. To do in the sidebar holds your own list beside what the app noticed from your work: papers to mark, papers to hand back, a class with no lesson planned, missing work to chase. Those go by themselves when the work is done, and each kind can be switched off.",
+  "Type a to-do the way you would say it, like “Call Bram’s parents friday”, and it picks out the day, the class and the student. Press N anywhere outside a paper to add one.",
+  "A to-do can have a day, a class, a student or assignment it goes with, a repeat and a note. Today shows a short card of what is overdue or due today.",
+  "Week, at the top right of To do, shows your week: each line on its day, under the class that meets then. Type in a day to add one, or drag a line to another day. Anything not done moves to today on its own."
  ],
  "files": {
-  "index.html": "b044dc226d8b0303384087e61f69114ba2b2e4bad5ed9bcc5272d6f8502a56be",
-  "planner.html": "0129de8542dcd6f0803ccd841e57227080019ce1fc8ce3e1685cb3cbbb26b1e5"
+  "index.html": "1d7760007b32594bb1acdc64bc3426784574fbea789ca8c8268c621c2f478b37",
+  "planner.html": "bb4a090b22c3c837034614c0f3baf16e971960d62640da971c4b451f88a225cb"
  }
 }

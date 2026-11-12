@@ -27,6 +27,12 @@ function zhHomeSay(k) {
 const LANG_ZH = {
   name: '繁體中文', locale: 'zh-Hant',
   words: {
+    /* the to-do list: the sidebar, the card on Today, Find anything */
+    'To do': '待辦事項', 'To do: your own list, with what the app noticed from your work': '待辦事項：你自己的清單，加上系統從你的工作中發現的事', 'Add a to-do': '新增待辦事項', 'Add a to-do…': '新增待辦事項…',
+    'To do, by week': '待辦事項（週檢視）', 'Your list laid out on the days of the week, under the classes that meet': '把清單排在一週的每一天，列在當天的課底下',
+    'Open To do': '開啟待辦事項', 'Nothing on your list for today.': '今天清單上沒有事項。', 'See everything': '查看全部', 'Done': '已完成', 'Tomorrow': '明天', 'Note': '備註', 'Open it in To do': '在待辦事項中開啟',
+    'Every school day': '每個上課日', 'Every week': '每週', 'Each time this class meets': '每次這個班上課時',
+    'Your own list, with what the app noticed from your work': '你自己的清單，加上系統從你的工作中發現的事', 'Type it the way you would say it': '照你平常說的方式輸入', 'Your own list, on the grading page': '你自己的清單，在批改頁面',
     /* the sidebar, on both pages */
     'Main': '主選單', 'Grading Studio, Today': 'Grading Studio，今天', 'Find anything': '搜尋', 'Today': '今天', 'Planner': '備課', 'Classes': '班級', 'Add a class': '新增班級', 'Examples': '範例', 'Strong work from every class, with no names on it': '各班的優秀作品，不顯示姓名',
     'School': '學校', 'School resources': '學校資源', 'School resources: links, files and notes about your school': '學校資源：學校的連結、檔案與筆記',
@@ -160,6 +166,7 @@ const LANG_ZH = {
     'Missing': '缺交', 'Excused': '免交', 'Late': '遲交', 'Retake': '重做', 'First try': '第一次', 'counts as': '採計',
   },
   rules: [
+    [/^(\d+) more on your list$/, '清單上還有 $1 項'], [/^(\d+) to do$/, '$1 項待辦'],
     [/^(?:No classes today\.|\w+ class(?:es)? today\.|\w+ sets? of papers (?:to mark|ready to hand back)|[Nn]othing waiting to be marked\.)/, m => zhHomeSay(m.input)],
     [/^Grading Studio version (.+)$/, 'Grading Studio 版本 $1'],
     [/^Step (\d) of 3$/, '第 $1 步，共 3 步'],
@@ -226,6 +233,14 @@ const LANG_ZH = {
     'add-class': { q: '怎麼新增班級和名單？', words: '名單 學生 姓名 新班級 roster',
       a: ['1. 按側邊欄的**新增班級**，並為它命名。', '2. 貼上學生姓名，一行一位。順序會和你貼上的一樣。', '3. 開啟班級的 **Students** 分頁，可以為每位學生加上學號、電子郵件或備註。',
         '有了名單，開啟那個班級的作業時會列出每位學生，包括沒有繳交的人。'] },
+    'todo': { q: '待辦事項清單怎麼用？', go: '開啟待辦事項', words: '待辦 事項 清單 提醒 記得 工作 todo to-do task',
+      a: ['側邊欄的**待辦事項**是一份清單。你自己的事項是實線圓圈。虛線圓圈的是系統從你存好的工作中發現的事：要批改的作業、可以發還的作業、還沒備課的班級、需要催繳的缺交作業。',
+        '照你平常說的方式輸入，然後按 Enter。日期目前用英文辨識：句尾的日期（“tomorrow”、“friday”、“nov 20”）、班級名稱或學生姓名會自動辨識出來，點一下辨識到的項目就能取消。在作業畫面以外的任何地方按 **N** 就能新增。',
+        '點一下事項，可以設定日期、班級、相關的對象、重複或備註。系統加入的事項在工作完成後會自己消失。你可以把它移到另一天、隱藏，或關掉整個類別。',
+        '**今天**會顯示一張小卡，列出你逾期或今天到期的事項。清單和你的批改工作存在一起，絕不會放進備課的資料夾。'] },
+    'todo-week': { q: '可以按週查看待辦事項嗎？', go: '開啟本週', words: '待辦 事項 週 每週 行事曆 日期 拖曳 移動 week',
+      a: ['可以。在**待辦事項**頁面右上角選 **Week**。同樣的事項會排在各自的日期，放在當天上課的班級底下，其餘的在 Later 欄。',
+        '在某一天輸入就能新增那天的事項，也可以把事項拖到另一天。當天沒完成的會自動移到今天，並標出原本是哪一天。'] },
     'school-resources': { q: '學校的連結和檔案可以放在哪裡？', go: '開啟學校資源', words: '手冊 行事曆 規定 政策 入口網站 書籤 連結 檔案 文件 資源 學校 作息表 表單 handbook calendar link file',
       a: ['在側邊欄的**School**（學校）。把教師手冊、行事曆、作息表、常登入的入口網站、表單，以及「該找誰」這類筆記都放在這裡。可以自己命名分組，常開的項目按星號就會排在最上面。',
         '學校已經放在網路上的內容，用 **Add a link**，連結會自己保持最新。**Add files…** 會把檔案的副本和你的工作存在一起，每個檔案最多 50 MB。也可以把檔案拖到頁面上，或貼上網址。',
