@@ -164,7 +164,7 @@ test('a browser with work in it keeps its students and its work; one part can be
   const prev = await text(page, '.stpprev');
   assert.match(prev, /3 new classes: MYP 5 Sciences B, DP Biology SL, Homeroom 9C/);
   assert.match(prev, /Students hand work in on ManageBac \(now Canvas\)/);
-  assert.match(prev, /A new assignment starts with IB 1 to 7 \(now points\)/);
+  assert.match(prev, /A new assignment starts with IB criteria rows and a 1 to 7 \(now points\)/);
   assert.match(prev, /Term 1 moves to Aug 17, 2026 to Oct 30, 2026/);
   assert.match(prev, /1 comment to pick while marking/);
   assert.match(prev, /New units in MYP 4 Sciences A \(1\)/);
