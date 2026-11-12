@@ -380,13 +380,9 @@ const LANG_ZH = {
       a: ['在備課頁面開啟課程，按 **Present**。投影片會填滿螢幕，用方向鍵或簡報遙控器換頁。在今天頁面，正在上或下一堂要上的班級有自己的**播放**按鈕。',
         '播放時：**A** 顯示流程，**T** 啟動全班看得到的計時器，**P** 隨機抽一位學生，**G** 分組，**N** 顯示你的備註，**B** 讓螢幕變空白，**Esc** 結束。', '計時器可以設定分鐘和秒數。計時中，選單可以增加或減少 10 秒或一分鐘、暫停和重新開始；按 **+** 或 **−** 增減一分鐘。勾選 **Show it big** 會把倒數放在螢幕中央，教室後面也看得清楚。', '結束播放或離開全螢幕後，計時器會繼續倒數，停在備課頁面的角落。結束後會有一行記錄這個班級上到哪裡，下次播放時會從那裡繼續。'] },
     'pptx': { q: '可以把投影片存成 PowerPoint 檔嗎？', words: 'powerpoint pptx 匯出 投影片 keynote google slides 下載',
-<<<<<<< HEAD
-      a: ['可以。開啟課程，按 **Download .pptx**。檔案可以用 PowerPoint、Keynote 和 Google 簡報開啟。'] },
+      a: ['可以。開啟課程，按 **Download .pptx**。檔案可以用 PowerPoint、Keynote 和 Google 簡報開啟。', '投影片預設使用簡單的白色範本。要用你自己的範本：在**課表**按 **Use my school’s template…**，選一個有 Title Slide 和 Title and Content 版面配置的 PowerPoint 檔。'] },
     'sharelesson': { q: '怎麼把課程搬到另一台電腦，或分享給其他老師？', words: '分享 傳送 搬移 轉移 複製 另一台電腦 老師 同事 gslesson 檔案 匯入',
       a: ['開啟課程，選 **More ▾ → Share lesson file…**。會得到一個小檔案，裡面有投影片、備註、圖片、教材，以及已上傳的完成版 PowerPoint。', '在另一台電腦上，於 Planner 按 **Import a lesson** 再選這個檔案，或直接把檔案拖到 Planner 上。原本排在哪些班級和日期、上課紀錄，以及給 Claude 的留言都不會帶走。'] },
-=======
-      a: ['可以。開啟課程，按 **Download .pptx**。檔案可以用 PowerPoint、Keynote 和 Google 簡報開啟。', '投影片預設使用簡單的白色範本。要用你自己的範本：在**課表**按 **Use my school’s template…**，選一個有 Title Slide 和 Title and Content 版面配置的 PowerPoint 檔。'] },
->>>>>>> origin/main
     'privacy': { q: '學生作業會離開我的電腦嗎？', words: '隱私 資料保護 個資 雲端 伺服器 安全 privacy',
       a: ['不會。作業、姓名、分數和評語都留在這個瀏覽器和你選擇的資料夾裡。這個程式沒有伺服器，也沒有帳號，沒有網路也能使用。',
         '唯一會離開的，是你自己匯出的檔案。'] },
