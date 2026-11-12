@@ -227,3 +227,11 @@ button.pavg:hover .v{text-decoration:underline}
 .rowscale label{font-weight:600;margin:0}
 .rowscale .rowhalf{display:inline-flex;align-items:center;gap:5px;font-weight:500}
 .rowscale select{padding:4px 6px}
+/* anchor papers (src/anchors.js): High, Mid, Low under the score, and the tag in the student list */
+.anchrow{display:flex;align-items:center;gap:8px;margin:8px 0 0}
+.anchlab{font-size:var(--text-small);color:var(--muted);white-space:nowrap}
+.anchseg{margin-left:0;flex:1;gap:6px;border:0;overflow:visible}
+.anchseg button{flex:none;padding:3px 10px;border:1px solid var(--line);border-radius:var(--corner-pill);background:none;font-size:var(--text-small);font-weight:500}
+.anchseg button:hover{color:var(--fg);border-color:var(--line-strong)}
+.anchseg button[aria-pressed=true]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent);font-weight:600}
+.stu .anch{font-size:var(--text-caption);font-weight:600;color:var(--accent);border:1px solid var(--accent);border-radius:var(--corner-pill);padding:0 6px;white-space:nowrap}
