@@ -104,3 +104,19 @@ test('Add scores for a formative activity ticks Feedback complete per student', 
   await page.waitForFunction(c => document.querySelector(c).textContent.includes('✓'), {}, cell);
   noErrors(page); await close();
 });
+
+test('a formative card counts feedback complete, never "0 of 4 scored", even for work saved before the count was kept', async () => {
+  const lib = JSON.parse(seed('fm').ls['gs.lib']); lib.classes[0].units[0].items[0].batchId = 'gs.b.fm1';
+  const g = fb => ({ rubric: [], points: '', comment: '', fb });
+  const work = { t: 5, s: { a: { g: g(true) }, b: { g: g(true) }, c: { g: g(undefined) }, d: { g: g(undefined) } } };
+  const meta = { id: 'gs.b.fm1', name: 'Story map', n: 4, scored: 0, partial: 0, off: 0, t: 5, asg: 'i1', papers: true };   // saved before fb was counted
+  const { page, close } = await openApp(browser, { seed: { ls: { 'gs.lib': JSON.stringify(lib) }, idb: { 'grading-studio-keep': { version: 2, stores: { papers: [], edits: [], work: [['gs.b.fm1', work]], meta: [['gs.b.fm1', meta]] } } } } });
+  await classPage(page, 'c1');
+  await page.waitForSelector('[data-card="i1"] .cstate .m');
+  await page.waitForFunction(() => /feedback complete/.test(document.querySelector('[data-card="i1"] .cstate .m').textContent));
+  assert.equal(await page.$eval('[data-card="i1"] .cstate .m', e => e.textContent), '2 of 4 feedback complete');
+  assert.equal(await page.$eval('[data-card="i1"] .sbar', e => e.getAttribute('aria-label')), '2 of 4 feedback complete');
+  assert.equal(await page.$eval('[data-card="i1"] .schip', e => e.textContent), 'Giving feedback');
+  assert.equal(await page.evaluate(() => window.__gs.keptState({ id: 'gs.b.fm1', n: 4, fb: 4, scored: 0 }).label), 'Ready to return');
+  noErrors(page); await close();
+});

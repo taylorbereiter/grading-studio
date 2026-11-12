@@ -1,11 +1,12 @@
 {
- "version": "1.27.17",
- "build": "49048268c0cf",
+ "version": "1.27.23",
+ "build": "59a8d8679cf3",
  "notes": [
-  "Answer notes for quizzes: type each question's answer in Quiz boxes, and it goes on the returned papers in a gold note labelled Answer, by each question a student lost points on. In Quiz boxes, Answer notes can be set to every question or off."
+  "Take my work with me now carries your Planner too: lessons, units, timetable and their files. Bring work in takes it in. A Planner already in use only receives the lessons and files it doesn’t have, so nothing there is replaced.",
+  "If Grading Studio ever moves to a new web address, the old address tells you and shows the three steps for taking your work along. Help has an answer for it."
  ],
  "files": {
-  "index.html": "3cd9fee6aab006cd6b3d68d0c7c22ceda9d83e1900bc91f011fe4e81d7c5a0b2",
-  "planner.html": "72ded1d62e69503a39f4c6b1c5dd5540b3f317ed173be7e7fced6350ca0dbd5a"
+  "index.html": "8a0363d70f63c4f8b292e2f67c46e359b15e288bb27c1a815332ff18364b9778",
+  "planner.html": "3db0887c9b7a93ca2a93b77a4fab85c4dc90e87933ff04b5365504c03baf8f8e"
  }
 }

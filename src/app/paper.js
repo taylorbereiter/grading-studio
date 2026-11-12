@@ -147,6 +147,11 @@ function bindPage(pg) {
     if (e.button !== 0) return;
     if (g && e.pointerId !== gid && ptrLive.has(gid)) return;   // a second finger, or her hand, while a stroke is being drawn: the stroke goes on as it was
     gid = e.pointerId;
+    // The open comment's own line can be dragged while its box stays open, even before a word is typed.
+    if (activeEditor && activeEditor.note && activeEditor.pg === pg && tool !== 'erase' && !once) {
+      const [x, y] = pt(e), own = noteLineAt(pg, x, y);
+      if (own === activeEditor.m) { e.preventDefault(); c.setPointerCapture(e.pointerId); g = { line: own, y0: y, ly0: noteRunY(own, pg.H), moved: false, open: activeEditor }; return; }
+    }
     const wasNote = !!(activeEditor && activeEditor.note);   // a comment was open: this click only closes it
     commitEditors();
     // Clicking the paper leaves the score or comment box, so the arrow keys move between students again.
@@ -193,7 +198,7 @@ function bindPage(pg) {
     if (!g) { const [x, y] = pt(e), cu = hoverCursor(pg, x, y); c.style.cursor = cu || (tool === 'select' ? 'default' : tool === 'text' ? 'text' : 'crosshair'); return; }
     const [x, y] = pt(e);
     if (g.line) {
-      if (!g.moved) { if (Math.abs(y - g.y0) < 1.5) return; snap(pg); g.moved = true; }
+      if (!g.moved) { if (Math.abs(y - g.y0) < 1.5) return; if (!g.open) snap(pg); g.moved = true; }   // an open comment's line is kept with the comment's own step when it's done
       g.line.ly = r1(clamp(g.ly0 + y - g.y0, 2, pg.H - 2));
       pg.lineOn = g.line; draw(pg);
     } else if (g.text) {
@@ -231,7 +236,8 @@ function bindPage(pg) {
   const end = e => {
     if (!g || (e && e.pointerId != null && e.pointerId !== gid)) return;
     if (g.line) {
-      const m = g.line, moved = g.moved; g = null; pg.lineOn = null;
+      const m = g.line, moved = g.moved, open = g.open; g = null; pg.lineOn = null;
+      if (open) { if (moved && Math.abs(m.ly - m.ay) < 1) delete m.ly; draw(pg); if (activeEditor === open) open.ta.focus({ preventScroll: true }); return; }
       if (moved) { if (Math.abs(m.ly - m.ay) < 1) delete m.ly; changed(pg); } else draw(pg);
       return;
     }
@@ -352,7 +358,8 @@ function editText(pg, m, isNew) {
     Object.assign(hd.style, { left: (m.x + L.maxW) * s + 'px', top: m.y * s + Math.min(ta.offsetHeight / 2, 18) + 'px' });
     Object.assign(bar.style, { left: m.x * s + 'px', top: m.y * s + 'px' });
     bar.innerHTML = '<span class="edgrip" data-grip title="Drag to move this box">⠿ Move</span><button data-sz="-1" title="Smaller text">A−</button><b>' + m.size + '</b><button data-sz="1" title="Bigger text">A+</button>' +
-      '<span style="width:1px;height:16px;background:rgba(255,255,255,.25);margin:0 3px"></span><button data-full class="' + (m.bw ? '' : 'on') + '" title="Wrap at the edge of the page">Page width</button>';
+      '<span style="width:1px;height:16px;background:rgba(255,255,255,.25);margin:0 3px"></span><button data-full class="' + (m.bw ? '' : 'on') + '" title="Wrap at the edge of the page">Page width</button>' +
+      '<span style="width:1px;height:16px;background:rgba(255,255,255,.25);margin:0 3px"></span>' + Object.entries(COLORS).map(([k, v]) => '<button data-tc="' + k + '" class="edsw' + (v === m.color ? ' on' : '') + '" style="--c:' + v + '" title="' + k + '" aria-label="Text in ' + k + '" aria-pressed="' + (v === m.color) + '"></button>').join('');
   };
   pg.wrap.append(ta, hd, bar); fit(); ta.focus();
   if (!isNew) snap(pg);
@@ -369,10 +376,11 @@ function editText(pg, m, isNew) {
     const z = e.target.closest('[data-sz]');
     if (z) { m.size = clamp(m.size + 2 * z.dataset.sz, 8, 40); disp.tsize = m.size; store.set('gs.disp', disp); }   // the next new box uses this size too
     if (e.target.closest('[data-full]')) delete m.bw;
+    const tc = e.target.closest('[data-tc]'); if (tc) m.color = COLORS[tc.dataset.tc];   // this box only; the pen keeps its own color
     fit(); ta.focus();
   });
   ta.addEventListener('keydown', e => {
-    if (e.key === 'Escape' || (e.key === 'Enter' && (e.metaKey || e.ctrlKey))) { e.preventDefault(); commitEditors(); }
+    if (e.key === 'Escape' || (e.key === 'Enter' && !e.shiftKey && !e.isComposing && e.keyCode !== 229)) { e.preventDefault(); commitEditors(); }   // as in a comment: Enter finishes, Shift Enter is a new line
     e.stopPropagation();
   });
   const me = { commit() {
@@ -394,12 +402,15 @@ function openNote(pg, m, isNew) {
   const s = pg.s;
   pop.innerHTML =
     '<div class="lbl">' + (isNew ? 'New comment' : 'Comment') + '</div>' +
-    '<textarea placeholder="Type a comment…"></textarea>' +
+    '<textarea placeholder="Type a comment… Enter to finish, Shift Enter for a new line"></textarea>' +
+    noteSwatches(m) +
     '<div class="lbl" data-bank>My saved comments</div><div class="chips"></div>' +
     '<div class="row"><button class="btn sm" data-a="star" title="Keep this comment so you can reuse it">☆ Save for reuse</button><span class="sp"></span>' +
     (isNew ? '' : '<button class="btn sm" data-a="del">Delete</button>') +
     '<button class="btn sm primary" data-a="ok">Done</button></div>';
   const ta = pop.querySelector('textarea'); ta.value = m.text;
+  // Its color can change at any time, new or old: shown on the paper straight away, kept with Done, put back on Escape.
+  const was = { color: m.color, hc: m.hc, ly: m.ly };
   const chips = () => {
     pop.querySelector('.chips').innerHTML = bank.map((t, i) => '<span class="chip" data-i="' + i + '"><span title="' + esc(t) + '">' + esc(t) + '</span><button data-x="' + i + '" title="Remove from saved comments" aria-label="Remove">×</button></span>').join('');
     pop.querySelector('[data-bank]').hidden = !bank.length;
@@ -418,21 +429,30 @@ function openNote(pg, m, isNew) {
   const close = save => {
     pop.remove(); activeEditor = null;
     if (pg.pending === m) pg.pending = null;
-    const text = ta.value.trim();
+    const text = ta.value.trim(), now = { color: m.color, hc: m.hc, ly: m.ly };
+    Object.assign(m, was); for (const k of ['hc', 'ly']) if (m[k] === undefined) delete m[k];   // the step Ctrl Z goes back to holds the colors and line it had when it opened
     if (!save) { draw(pg); return; }
     const a = pg.marks(), i = a.indexOf(m);
     if (!text) { if (selected && selected.mark === m) selected = null; if (i >= 0) { snap(pg); a.splice(i, 1); changed(pg); } else draw(pg); return; }
-    if (text === m.text && i >= 0) return;
-    snap(pg); m.text = text; if (i < 0) a.push(m); changed(pg);
+    const recolored = now.color !== was.color || now.hc !== was.hc || now.ly !== was.ly;
+    if (text === m.text && i >= 0 && !recolored) { draw(pg); return; }
+    snap(pg); m.text = text; m.color = now.color; for (const k of ['hc', 'ly']) if (now[k] !== undefined) m[k] = now[k]; if (i < 0) a.push(m); changed(pg);
   };
-  activeEditor = { commit: () => close(true), note: true };
+  activeEditor = { commit: () => close(true), note: true, m, pg, ta };
   pop.addEventListener('pointerdown', e => e.stopPropagation());
   pop.addEventListener('keydown', e => {
     e.stopPropagation();
     if (e.key === 'Escape') { e.preventDefault(); close(false); }
-    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); close(true); }
+    if (e.key === 'Enter' && !e.shiftKey && !e.isComposing && e.keyCode !== 229) { e.preventDefault(); close(true); }   // Enter finishes it, Shift Enter is a new line; never while a Chinese or Japanese word is still being put together
   });
   pop.addEventListener('click', e => {
+    const nc = e.target.closest('[data-nc]'), nh = e.target.closest('[data-nh]');
+    if (nc || nh) {
+      if (nc) m.color = COLORS[nc.dataset.nc]; else m.hc = HL[nh.dataset.nh];
+      for (const b of pop.querySelectorAll('[data-nc]')) b.setAttribute('aria-pressed', COLORS[b.dataset.nc] === m.color);
+      for (const b of pop.querySelectorAll('[data-nh]')) b.setAttribute('aria-pressed', HL[b.dataset.nh] === (m.hc || HL.yellow));
+      draw(pg); ta.focus({ preventScroll: true }); return;
+    }
     const x = e.target.closest('[data-x]');
     if (x) { bank.splice(+x.dataset.x, 1); store.set('gs.bank', bank); chips(); return; }
     const ch = e.target.closest('.chip');
@@ -445,6 +465,12 @@ function openNote(pg, m, isNew) {
     if (b.dataset.a === 'ok') close(true);
     if (b.dataset.a === 'del') { ta.value = ''; close(true); }
   });
+}
+// The comment's color row: its ink (the words and the line), and the highlight behind the words when it has one.
+function noteSwatches(m) {
+  const inks = Object.entries(COLORS).map(([k, v]) => '<button type="button" class="nsw" data-nc="' + k + '" style="background:' + v + '" aria-pressed="' + (v === m.color) + '" title="' + k + '" aria-label="Comment in ' + k + '"></button>').join('');
+  const hls = m.hl ? '<div class="row ncol"><span class="lbl">Highlight</span>' + Object.entries(HL).map(([k, v]) => '<button type="button" class="nsw sq" data-nh="' + k + '" style="background:' + v + '" aria-pressed="' + (v === (m.hc || HL.yellow)) + '" title="' + k + ' highlight" aria-label="Highlight in ' + k + '"></button>').join('') + '</div>' : '';
+  return '<div class="row ncol"><span class="lbl">Color</span>' + inks + '</div>' + hls;
 }
 function commitEditors() { if (activeEditor) { const a = activeEditor; activeEditor = null; a.commit(); } }
 
