@@ -8,6 +8,10 @@
 .bknote{margin:12px 18px 0;padding:8px 12px;border:1px solid var(--line-strong);border-radius:var(--corner-4);background:var(--surface-2);font-size:13.5px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .bkpad{padding:16px 18px}
 .bkcap{margin:8px 18px 16px;font-size:12.5px}
+.bkhow{margin:6px 0 4px}
+.bkhow summary{margin:0 18px;padding:4px 0;font-size:var(--text-small);color:var(--muted);cursor:pointer;width:max-content}
+.bkhow summary:hover{color:var(--accent)}
+.bkhow .bkcap{margin-top:4px}
 .bkpill{display:inline-block;font-size:var(--text-caption);font-weight:600;border-radius:var(--corner-pill);padding:1px 8px;white-space:nowrap;vertical-align:1px}
 .bkpill.sum{background:var(--bk-sum);color:#fff}
 .bkpill.ic{background:var(--accent-soft);color:var(--accent);border:1px solid color-mix(in srgb,var(--accent) 30%,transparent)}

@@ -44,6 +44,9 @@
 .ls-card b{font-size:var(--text-body)}.ls-card span{font-size:var(--text-small);color:var(--muted)}
 .ls-add{display:flex;flex-wrap:wrap;gap:0}
 .ls-add .btn{padding:5px 7px}
+/* a quiet week (11/12): an empty slot shows + New lesson; the rest shows when the slot is pointed at or has the keys */
+@media (hover:hover){.ls-add [data-attach],.ls-add.has .btn{opacity:0;transition:opacity .12s}
+.ls-slot:hover .ls-add .btn,.ls-slot:focus-within .ls-add .btn{opacity:1}}
 .ls-loose{margin:4px 14px 30px;background:var(--surface);border:1px solid var(--line);border-radius:var(--corner-5);padding:12px 14px}
 .ls-loose .lhead{display:flex;gap:8px;align-items:center;margin-bottom:8px}.ls-loose h2{font-size:var(--text-lead);margin:0}
 .ls-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px}

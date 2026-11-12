@@ -150,7 +150,7 @@ function actCard(a) {
   return '<article class="pl-act"><div class="pl-ah"><h3>' + esc(a.name) + '</h3>' + (a.mine ? '<span class="pl-st st-claude">Mine</span>' : '') + '</div>' +
     '<div class="pl-meta2">' + a.parts.map(p => '<span>' + PARTS[p] + '</span>').join('') + '<span>' + esc(KINDS[a.kind] || '') + '</span><span>' + esc(a.group) + '</span>' + (a.book ? '<span title="' + esc(BOOK) + '">Routine ' + a.book + '</span>' : '') + '</div>' +
     '<p>' + esc(a.what) + '</p><details><summary>How to run it</summary><ol>' + a.how.map(x => '<li>' + esc(x) + '</li>').join('') + '</ol>' + (a.tip ? '<p class="muted">' + esc(a.tip) + '</p>' : '') + '</details>' +
-    '<div class="pl-aa"><button class="btn sm primary" data-a="useact" data-id="' + esc(a.id) + '">Add to a lesson…</button>' + (a.mine ? '<button class="btn sm ghost" data-a="editact" data-id="' + esc(a.id) + '">Edit</button>' : '') + '</div></article>';
+    '<div class="pl-aa"><button class="btn sm" data-a="useact" data-id="' + esc(a.id) + '">Add to a lesson…</button>' + (a.mine ? '<button class="btn sm ghost" data-a="editact" data-id="' + esc(a.id) + '">Edit</button>' : '') + '</div></article>';
 }
 const actSlide = a => normSlide({ layout: 'steps', title: a.name, body: a.slide.map((x, i) => (i + 1) + '. ' + x).join('\n'), size: 32, fmt: 2, notes: 'How to run it:\n' + a.how.map((x, i) => (i + 1) + '. ' + x).join('\n') + (a.book ? '\n(' + BOOK + ', routine ' + a.book + ')' : '') });
 

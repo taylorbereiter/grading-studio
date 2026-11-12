@@ -2,7 +2,7 @@
 const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const { launch } = require('./helpers/chrome');
-const { classPage, openApp } = require('./helpers/app');
+const { classPage, openApp, pick } = require('./helpers/app');
 
 let browser;
 before(async () => { browser = await launch(); });
@@ -112,7 +112,7 @@ test('students can be left out of the class averages for a what-if, without chan
   await openBook(page);
   const foot = () => page.$$eval('#bkTab tr.bkfoot td.bksum', t => t.map(x => x.textContent.trim()));
   assert.deepEqual(await foot(), ['78.13%', '78.13%', '78.13%']);
-  await page.click('[data-bkpickon]');
+  await pick(page, '[data-bkpickon]');
   await page.waitForSelector('.bkpick');
   await page.click('.bkpick[data-bkpick="Dov Madeup"]');
   await page.waitForSelector('#bkTab tr.bkleft');
@@ -122,7 +122,7 @@ test('students can be left out of the class averages for a what-if, without chan
   assert.match(await page.$eval('#bkTab tr.bkleft', t => t.textContent), /Dov Madeup.*left out.*60\.00%/);
   // The column average leaves Dov out too: Poetry test (90+70+100)/3.
   assert.ok((await page.$$eval('#bkTab tr.bkfoot td', t => t.map(x => x.textContent.trim()))).includes('86.67%'));
-  await page.click('[data-bkpickon]');
+  await pick(page, '[data-bkpickon]');
   await page.waitForFunction(() => !document.querySelector('.bkpick'));
   await page.click('[data-bkterm="*"]'); await page.waitForSelector('#bkTab.bkyear');
   assert.equal(await page.$eval('#bkTab tr.bkfoot td:last-child', t => t.textContent.trim()), '84.17%');
@@ -164,7 +164,7 @@ test('a type can be set on assignments that already exist, from the one-time lis
   await page.click('[data-ctab=""]');
   // Edit assignment on the class's Assignments tab.
   await page.waitForSelector('[data-edit-asg="i3"]');
-  await page.click('[data-edit-asg="i3"]');
+  await pick(page, '[data-edit-asg="i3"]');
   await page.waitForSelector('[data-atype="sum"]');
   assert.equal(await page.$eval('[data-atype="ic"]', b => b.getAttribute('aria-pressed')), 'true');
   await page.click('[data-atype="sum"]');
@@ -232,7 +232,7 @@ test('scores for past work go in by typing or pasting, become a card, and can be
 test('term setup comes from the teacher’s own settings, and the charts and one-student view draw from the same numbers', async () => {
   const { page, close } = await openApp(browser, { seed: seed() });
   await openBook(page);
-  await page.click('[data-bksetup]');
+  await pick(page, '[data-bksetup]');
   await page.waitForSelector('#bkSetup');
   assert.equal(await page.$$eval('#bkTerms .bktrow', r => r.length), 2);
   await page.$eval('[data-wt="sum"]', i => { i.value = '60'; i.dispatchEvent(new Event('input', { bubbles: true })); });
@@ -244,7 +244,7 @@ test('term setup comes from the teacher’s own settings, and the charts and one
   assert.equal((await termCol(page))[0], 'Aria Testwell 85.00%');
   assert.equal((await termCol(page))[1], 'Bram Sample 71.00%', '70 × 60% + 72.5 × 40%');
   // A term with no end date isn't saved.
-  await page.click('[data-bksetup]');
+  await pick(page, '[data-bksetup]');
   await page.waitForSelector('#bkSetup');
   await page.click('[data-taddt]');
   await page.click('[data-bksavesetup]');
@@ -252,7 +252,7 @@ test('term setup comes from the teacher’s own settings, and the charts and one
   await page.click('[data-bkback]');
   await page.waitForSelector('#bkTab');
   // Class charts: the Charts tab, for the same term.
-  await page.click('[data-ctab="charts"]');
+  await pick(page, '[data-ctab="charts"]');
   await page.waitForSelector('#bkTiles');
   assert.equal(await page.$eval('[data-bkterm="t1"]', b => b.getAttribute('aria-selected')), 'true', 'the term she picked stays picked from tab to tab');
   assert.match(await page.$eval('#bkTiles', t => t.textContent), /Term average/);

@@ -81,7 +81,7 @@ function ibEvidence(list) {
 // A new class starts the way its teacher grades: MYP for a teacher who said so in the welcome or Settings, else points and percent.
 function classNewWay() { const g = meGrade(); return (g && g.way === 'myp') || /^\s*(ib\s*)?myp\b/i.test(me().prog || '') ? { way: 'myp' } : {}; }   // me().prog: the programme My setup brought in (setupin.js)
 function ibPill(c) { const w = classWay(c); return w ? '<span class="ibpill" title="' + (w === 'myp' ? 'This class is graded with IB MYP criteria' : 'This class is graded as an IB DP class') + '">' + (w === 'myp' ? 'MYP' : 'DP') + '</span>' : ''; }
-function ibClassBtn(c, ci) { return '<button class="btn sm" data-ib-class="' + ci + '">Grading</button>'; }
+function ibClassItem(c, ci) { return '<button class="mitem" data-ib-class="' + ci + '">Grading<small>Points and percent, or IB criteria</small></button>'; }
 
 // A DP class's term grade: the 1 to 7 its percent earns on the class's own boundaries, shown after the percent. '' for any other class.
 function ibDpSay(pct, c) { if (classWay(c) !== 'dp' || pct == null) return ''; const g = ibGradeOf(roundPct(pct), ibBounds(c)); return g == null ? '' : ' <b class="ibg7" title="On this class’s boundaries">' + g + '</b>'; }

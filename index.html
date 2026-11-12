@@ -1103,6 +1103,10 @@ body:has(#openRep:not([hidden])) .toast{bottom:calc(76px + var(--savebar,0px))}
 .bknote{margin:12px 18px 0;padding:8px 12px;border:1px solid var(--line-strong);border-radius:var(--corner-4);background:var(--surface-2);font-size:13.5px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .bkpad{padding:16px 18px}
 .bkcap{margin:8px 18px 16px;font-size:12.5px}
+.bkhow{margin:6px 0 4px}
+.bkhow summary{margin:0 18px;padding:4px 0;font-size:var(--text-small);color:var(--muted);cursor:pointer;width:max-content}
+.bkhow summary:hover{color:var(--accent)}
+.bkhow .bkcap{margin-top:4px}
 .bkpill{display:inline-block;font-size:var(--text-caption);font-weight:600;border-radius:var(--corner-pill);padding:1px 8px;white-space:nowrap;vertical-align:1px}
 .bkpill.sum{background:var(--bk-sum);color:#fff}
 .bkpill.ic{background:var(--accent-soft);color:var(--accent);border:1px solid color-mix(in srgb,var(--accent) 30%,transparent)}
@@ -1639,10 +1643,27 @@ a.btn.busy{opacity:.6;pointer-events:none}
 .safeask{margin-bottom:var(--space-5)}
 /* ---------- a class page's tabs, and what each one shows (11/10) ---------- */
 .clshead{margin-bottom:10px}
-.ctabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin:0 0 16px;overflow-x:auto}
+.ctabs{display:flex;flex-wrap:wrap;gap:4px;border-bottom:1px solid var(--line);margin:0 0 16px}
 .ctab{flex:none;padding:9px 14px;font-size:14.5px;font-weight:500;color:var(--fg-2);text-decoration:none;border-bottom:2px solid transparent;margin-bottom:-1px;border-radius:6px 6px 0 0}
 .ctab:hover{color:var(--fg);background:var(--hover)}
 .ctab.on{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
+/* More: the class's other pages, each with a pin that keeps it in the row (11/12) */
+.ctabs .kmw{margin-bottom:-1px}
+.ctmore{border:0;border-bottom:2px solid transparent;background:none;font-family:inherit;cursor:pointer}
+.ctmore[aria-expanded=true]{color:var(--fg);background:var(--hover)}
+.ctrow{display:flex;align-items:center;gap:2px}
+.ctrow .mitem{flex:1}
+.ctrow .mitem.on{color:var(--accent);font-weight:600}
+.ctpin{flex:none;width:28px;height:28px;border-color:transparent;color:var(--muted);opacity:.55}
+.ctpin svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.ctpin:hover,.ctpin:focus-visible{opacity:1;background:var(--hover)}
+.ctpin[aria-pressed=true]{opacity:1;color:var(--accent)}
+.ctpin[aria-pressed=true] svg{fill:currentColor}
+.km hr{border:0;border-top:1px solid var(--line);margin:5px 4px}
+.km .mitem:disabled{color:var(--muted);opacity:.6}
+.board>.addunit{width:100%;border:1px dashed var(--line-strong);border-radius:var(--corner-5);background:none;padding:10px 16px;font:inherit;font-weight:500;color:var(--fg-2);cursor:pointer}
+.board>.addunit:hover{background:var(--hover);color:var(--accent)}
+.uhead .kdots{color:var(--muted)}
 .ctools{display:flex;gap:8px;align-items:center;margin:0 0 12px}
 .ctools .sp{flex:1}
 #vClass{position:relative}
@@ -1886,6 +1907,9 @@ a.opchip:hover{text-decoration:underline}
 #glChk b{color:var(--warn)}
 #glChk span{flex:1;min-width:200px}
 #glTable.only tbody tr:not(.chk){display:none}
+/* a row to check is still a table row: .chk is also the name of a tick-box label, which lays out as a line (11/12) */
+#glTable tr.chk{display:table-row;margin:0;cursor:auto}
+#glTable th:first-child,#glTable td.n{width:44px}
 
 /* Return */
 #dlg.aspage .bb.xp{display:grid;grid-template-columns:minmax(0,1fr) minmax(280px,360px);gap:24px;align-content:start;align-items:start}
@@ -3081,7 +3105,7 @@ textarea.stptext{min-height:132px;margin-top:var(--space-2);font:var(--text-cont
   </section>
   <section class="view" id="vClass" hidden>
     <div id="classes"></div>
-    <p class="muted vhint" id="classHint">Drag an assignment to another unit, or onto a class in the sidebar. Drag a unit’s name to move the unit. Drop <span class="sysZip">a ManageBac ZIP</span> on an assignment to open it there.</p>
+    <p class="muted vhint" id="classHint">Drag an assignment or a unit to move it. Drop <span class="sysZip">a ManageBac ZIP</span> on an assignment to open it there.</p>
   </section>
   <section class="view" id="vTodo" hidden>
     <header class="vhead"><h1>To do</h1><span class="muted" id="tdSay"></span><span class="sp"></span><button class="btn sm" id="tdDoneBtn" hidden></button><div class="pseg" id="tdView" role="group" aria-label="View"><button data-tdview="" aria-pressed="true">List</button><button data-tdview="week" aria-pressed="false">Week</button></div></header>
@@ -10514,6 +10538,9 @@ const SET_SECS = [['saving', 'Saving and carrying', 'Folder, take-home file, new
   ['grading', 'Grading scale and rubrics', 'Your saved scales and rubrics'], ['marking', 'Marking', 'Mark key, mark colors, Word papers, tablet and pencil'], ['timetable', 'Timetable and calendar', 'Class times and days off, in the Planner'],
   ['display', 'Display', 'Text size, zoom, dark mode'], ['claude', 'Working with AI', 'Optional. What an AI assistant can and can’t see'], ['keys', 'Keys', 'Every shortcut'], ['about', 'About and updates', 'Version, what’s new, install as an app']];
 const CLASS_TABS = [['', 'Assignments'], ['gradebook', 'Gradebook'], ['students', 'Students'], ['attendance', 'Attendance'], ['seating', 'Seating'], ['missing', 'Missing work'], ['charts', 'Charts'], ['goals', 'Goals'], ['reports', 'Report comments']];   // Goals shows only once the teacher has a learning goal (goals.js)
+const TABS_FIRST = ['', 'gradebook', 'students'];
+const tabsKept = () => (Array.isArray(me().tabs) ? me().tabs : []).filter(k => CLASS_TABS.some(t => t[0] === k) && !TABS_FIRST.includes(k));
+function tabKeep(k) { const now = tabsKept(), on = !now.includes(k), l = (CLASS_TABS.find(t => t[0] === k) || [])[1]; if (!l) return; meSet({ tabs: on ? [...now, k] : now.filter(x => x !== k) }); renderLib(); toast(on ? l + ' stays in the tab row' : l + ' is under More'); }
 const classTabs = () => CLASS_TABS.filter(t => t[0] !== 'attendance' || attOn());   // attendance is the teacher's to turn off
 const classHash = (c, tab, stu) => '#/class/' + (c === lib.loose || !c.id ? '-' : encodeURIComponent(c.id)) + (tab ? '/' + tab + (stu != null ? '/' + (stu + 1) : '') : '');
 const A_TABS = [['', 'Mark'], ['grades', 'Grades'], ['insights', 'Insights'], ['examples', 'Examples'], ['return', 'Return']], A_SUBS = { grades: ['sheet'], insights: ['consistency'] };
@@ -10594,27 +10621,40 @@ function renderLib() {
       '<div class="cdue">' + (it.due ? 'Due ' + bkDay(it.due) : '') + '</div>' +
       '<div class="cstate">' + (st ? stateBar(st) : '') + '<div class="m">' + esc(it.typed && !it.batchId ? 'Scores typed in' : batchSummary(it)) + '</div>' + (st ? stateChip(st) : '') + '</div>' +
       '<div class="row">' + (m && m.papers ? '<button class="btn sm" data-kopen="' + esc(it.batchId) + '" data-kasg="' + it.id + '">Open</button>'
-        : typedOnly ? '' : '<button class="btn sm" data-open-asg="' + it.id + '">Add papers…</button>') + '<button class="btn sm ghost" data-edit-asg="' + it.id + '">Edit</button>' +
-        (m && m.papers || typedOnly ? kmWrap('⋯', 'class="icon kdots" aria-label="More for ' + esc(it.name) + '" title="More"', '<button class="mitem" data-open-asg="' + it.id + '">' + (typedOnly ? 'Add papers…<small>Mark this one’s papers here as well</small>' : 'Open other papers…<small>A newer download, or a different set of files</small>') + '</button>', 'right') : '') + '</div></div>';
+        : typedOnly ? '' : '<button class="btn sm" data-open-asg="' + it.id + '">Add papers…</button>') +
+        kmWrap('⋯', 'class="icon kdots" aria-label="More for ' + esc(it.name) + '" title="More"', '<button class="mitem" data-edit-asg="' + it.id + '">Edit<small>Name, type, due date, unit, rubric</small></button>' +
+          (m && m.papers || typedOnly ? '<button class="mitem" data-open-asg="' + it.id + '">' + (typedOnly ? 'Add papers…<small>Mark this one’s papers here as well</small>' : 'Open other papers…<small>A newer download, or a different set of files</small>') + '</button>' : ''), 'right') + '</div></div>';
   };
   const unit = u => '<div class="unit" draggable="true" data-unit="' + u.id + '">' +
     '<div class="uhead" title="Drag to move this unit"><span class="nm">' + esc(u.name) + '</span><span class="ucount">' + u.items.length + (u.items.length === 1 ? ' assignment' : ' assignments') + '</span><span class="sp"></span>' +
-    '<span class="atl">' + (u.atlas ? '<a href="' + esc(u.atlas) + '" target="_blank" rel="noopener noreferrer" title="' + esc(u.atlas) + '">' + (unitLinkName() ? 'Open in ' + esc(unitLinkName()) : 'Unit plan') + ' ↗</a><button class="link" data-uatlas="' + u.id + '">Change</button>'
-      : '<button class="link" data-uatlas="' + u.id + '">+ Link to ' + esc(unitLinkName() || 'a unit plan') + '</button>') + '</span>' +
-    '<button class="icon" data-urename="' + u.id + '" title="Rename unit" aria-label="Rename unit">✎</button>' +
-    '<button class="icon" data-udel="' + u.id + '" title="Delete unit" aria-label="Delete unit">✕</button></div>' +
+    (u.atlas ? '<span class="atl"><a href="' + esc(u.atlas) + '" target="_blank" rel="noopener noreferrer" title="' + esc(u.atlas) + '">' + (unitLinkName() ? 'Open in ' + esc(unitLinkName()) : 'Unit plan') + ' ↗</a></span>' : '') +
+    kmWrap('⋯', 'class="icon kdots" aria-label="More for ' + esc(u.name) + '" title="More"',
+      '<button class="mitem" data-urename="' + u.id + '">Rename</button>' +
+      '<button class="mitem" data-uatlas="' + u.id + '">' + (u.atlas ? 'Change the ' + esc(unitLinkName() || 'unit plan') + ' link' : 'Link to ' + esc(unitLinkName() || 'a unit plan') + '…') + '</button>' +
+      '<hr><button class="mitem" data-udel="' + u.id + '">Delete unit</button>', 'right') + '</div>' +
     '<div class="cards">' + u.items.map(card).join('') + '</div>' +
     '<button class="addcard" data-additem="' + u.id + '">+ Assignment</button></div>';
   const r = routeNow(), c = r.v === 'class' ? r.c : null, tab = c ? r.tab : '';
-  const tabs = (c, ci) => ci < 0 || !c.names.length ? '' : '<nav class="ctabs" aria-label="' + esc(c.name) + '">' + classTabs().filter(t => t[0] !== 'goals' || tab === 'goals' || goalList().length).map(([k, l]) => { const on = tab === k;
-    return '<a class="ctab' + (on ? ' on' : '') + '" href="' + classHash(c, k) + '" data-ctab="' + k + '"' + (k === 'gradebook' ? ' data-book="' + esc(c.id) + '"' : k === 'students' ? ' data-people="' + ci + '"' : '') + (on ? ' aria-current="page"' : '') + '>' + l + '</a>'; }).join('') + '</nav>';
+  const tabs = (c, ci) => { if (ci < 0 || !c.names.length) return '';
+    const all = classTabs().filter(t => t[0] !== 'goals' || tab === 'goals' || goalList().length), kept = tabsKept(), more = all.filter(t => !TABS_FIRST.includes(t[0]));
+    const link = ([k, l]) => { const on = tab === k;
+      return '<a class="ctab' + (on ? ' on' : '') + '" href="' + classHash(c, k) + '" data-ctab="' + k + '"' + (k === 'gradebook' ? ' data-book="' + esc(c.id) + '"' : k === 'students' ? ' data-people="' + ci + '"' : '') + (on ? ' aria-current="page"' : '') + '>' + l + '</a>'; };
+    const pin = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 17v5M9 3h6l-1 6 3 3v2H7v-2l3-3z"/></svg>';
+    return '<nav class="ctabs" aria-label="' + esc(c.name) + '">' + all.filter(t => TABS_FIRST.includes(t[0]) || kept.includes(t[0]) || t[0] === tab).map(link).join('') +
+      (more.length ? kmWrap('More <span aria-hidden="true">▾</span>', 'class="ctab ctmore" id="ctMore" title="The other pages of this class"', more.map(([k, l]) => { const on = kept.includes(k);
+        return '<div class="ctrow"><a class="mitem' + (tab === k ? ' on' : '') + '" href="' + classHash(c, k) + '" data-ctab="' + k + '">' + l + '</a><button class="icon ctpin" data-ctpin="' + k + '" aria-pressed="' + on + '" title="' + (on ? 'Take ' + l + ' out of the tab row' : 'Keep ' + l + ' in the tab row') + '" aria-label="' + (on ? 'Take ' + l + ' out of the tab row' : 'Keep ' + l + ' in the tab row') + '">' + pin + '</button></div>'; }).join('') +
+        '<p class="kmsay">The pin keeps a page in the tab row.</p>') : '') + '</nav>'; };
+  const setup = (c, ci) => kmWrap('Class setup', 'class="btn sm" id="clsSetup"',
+    '<button class="mitem" data-edit-class="' + ci + '">' + (c.names.length ? 'Edit roster' : 'Add roster') + '<small>Names, and the name of the class</small></button>' +
+    ibClassItem(c, ci) +
+    '<button class="mitem" data-mbset="' + ci + '">' + (mbOf(c) ? 'Change the ' + esc(sysLink()) + ' link' : 'Add the ' + esc(sysLink()) + ' link…') + '</button>' +
+    '<hr><button class="mitem" data-cmove="' + ci + ':-1"' + (ci ? '' : ' disabled') + '>Move up in the sidebar</button><button class="mitem" data-cmove="' + ci + ':1"' + (ci < lib.classes.length - 1 ? '' : ' disabled') + '>Move down in the sidebar</button>', 'right');
   const block = (c, ci) => '<div class="cls" data-cls="' + esc(c.id) + '"><div class="clshead"><h1>' + esc(ci < 0 ? 'No class' : c.name) + '</h1>' + (ci < 0 ? '' : ibPill(c)) +
     (ci < 0 ? '<span class="muted">Assignments with no roster. Drag them onto a class in the sidebar, or use Edit to pick a class.</span><span class="sp"></span>' :
-      '<span class="muted">' + (c.names.length ? c.names.length + ' students on the roster' : 'No roster yet') + '</span><span class="sp"></span>' + mbClassBtns(c, ci) + ibClassBtn(c, ci) + '<button class="btn sm" data-edit-class="' + ci + '">' + (c.names.length ? 'Edit roster' : 'Add roster') + '</button>' +
-      '<button class="icon" data-cmove="' + ci + ':-1" title="Move this class up in the sidebar" aria-label="Move this class up in the sidebar"' + (ci ? '' : ' disabled') + '>↑</button><button class="icon" data-cmove="' + ci + ':1" title="Move this class down in the sidebar" aria-label="Move this class down in the sidebar"' + (ci < lib.classes.length - 1 ? '' : ' disabled') + '>↓</button>') + '</div>' + tabs(c, ci) +
+      '<span class="muted">' + (c.names.length ? c.names.length + ' students on the roster' : 'No roster yet') + '</span><span class="sp"></span>' + (mbOf(c) ? mbLink(c) : '') + (c.names.length ? '' : '<button class="btn sm primary" data-edit-class="' + ci + '">Add roster</button>') + setup(c, ci)) + '</div>' + tabs(c, ci) +
     (tab ? '<div class="cpanel" id="classPanel" data-sig="' + rosterSig(c) + '"></div>'
-      : '<div class="ctools"><span class="sp"></span><button class="btn sm" data-addunit="' + esc(c.id) + '">+ Unit</button><button class="btn sm primary" data-newasg="' + esc(c.id) + '">+ Assignment</button></div>' +
-        '<div class="board">' + (c.units.map(unit).join('') || '<div class="empty-note">No units yet. Click + Unit.</div>') + '</div>') + '</div>';
+      : '<div class="ctools"><span class="sp"></span><button class="btn sm' + (ci >= 0 && !c.names.length ? '' : ' primary') + '" data-newasg="' + esc(c.id) + '">+ Assignment</button></div>' +
+        '<div class="board">' + (c.units.map(unit).join('') || '<div class="empty-note">No units yet. Click + Unit.</div>') + '<button class="addunit" data-addunit="' + esc(c.id) + '">+ Unit</button></div>') + '</div>';
   const box = $('#classes'), h = c ? block(c, c === lib.loose ? -1 : lib.classes.indexOf(c)) : '';
   const fresh = !tab || box.dataset.h !== h;
   if (fresh) { box.dataset.h = h; box.innerHTML = h; }
@@ -10717,6 +10757,7 @@ $('#start').addEventListener('click', async e => {
   }
   if (b.dataset.addunit != null) { const c = holderById(b.dataset.addunit); const name = await askTextDlg('Unit name', 'Unit ' + (c.units.length + 1), { ok: 'Add unit' }); if (name && name.trim()) { c.units.push({ id: uid(), name: name.trim(), items: [] }); saveLib(); renderLib(); } return; }
   if (b.dataset.newasg != null) return editAssignment(null, null, b.dataset.newasg);
+  if (b.dataset.ctpin != null) return tabKeep(b.dataset.ctpin);
   if (b.dataset.cmove) { const [ci, d] = b.dataset.cmove.split(':').map(Number), j = ci + d; if (j >= 0 && j < lib.classes.length) { [lib.classes[ci], lib.classes[j]] = [lib.classes[j], lib.classes[ci]]; saveLib(); renderLib(); const again = $('#classes [data-cmove="' + j + ':' + d + '"]'); if (again && !again.disabled) again.focus(); } return; }
   if (b.dataset.urename != null) { const f = findUnit(b.dataset.urename); if (!f) return; const name = await askTextDlg('Unit name', f.u.name, { ok: 'Rename' }); if (name && name.trim()) { f.u.name = name.trim(); saveLib(); renderLib(); } return; }
   if (b.dataset.uatlas != null) return askAtlas(b.dataset.uatlas);
@@ -10858,7 +10899,6 @@ function mbMap() { try { return JSON.parse(localStorage.getItem(MB_KEY) || '{}')
 function mbRemember(name, url) { try { const m = mbMap(), k = mbNorm(name); if (!k) return; if (url) m[k] = url; else delete m[k]; localStorage.setItem(MB_KEY, JSON.stringify(m)); } catch { } }
 const mbOf = c => (c && (mbUrl(c.mb) || mbUrl(mbMap()[mbNorm(c.name)]))) || '';
 const mbLink = (c, cls) => mbOf(c) ? '<a class="' + (cls || 'btn sm') + ' mb-go" href="' + esc(mbOf(c)) + '" target="_blank" rel="noopener" title="Open ' + esc(c.name) + (sysName() ? ' on ' + esc(sysName()) : '’s class page') + '">' + esc(sysLink()) + ' ↗</a>' : '';
-const mbClassBtns = (c, ci) => mbOf(c) ? mbLink(c) + '<button class="icon" data-mbset="' + ci + '" title="Change the ' + esc(sysLink()) + ' link" aria-label="Change the ' + esc(sysLink()) + ' link">✎</button>' : '<button class="btn sm ghost mb-add" data-mbset="' + ci + '">+ ' + esc(sysLink()) + ' link</button>';
 async function askMb(ci) {
   const c = lib.classes[ci]; if (!c) return;
   const v = await askTextDlg('Paste the ' + (sysName() ? sysName() + ' page' : 'web address of the class page') + ' for ' + c.name + ' (leave empty to remove it)', mbOf(c), { ok: 'Save' });
@@ -16018,9 +16058,15 @@ function bkDraw() {
   const bar = '<div class="bkbar">' + (page ? (bk.tab === 'one' ? '<a class="btn sm" id="bkBackStu" href="' + classHash(c, 'students') + '">← Students</a>' : '') : '<label class="muted">Class <select class="btn sm" id="bkCls">' + lib.classes.map(k => '<option value="' + k.id + '"' + (k === c ? ' selected' : '') + '>' + esc(k.name) + '</option>').join('') + '</select></label>') +
     '<div class="ovtabs bkterms" role="group" aria-label="Term">' + tabs.map(([id, l]) => '<button data-bkterm="' + esc(id) + '" aria-selected="' + (bk.term === id) + '">' + esc(l) + '</button>').join('') + '</div><span class="sp"></span>' +
     (bk.tab === 'table' && bk.term !== '*' ? '<div class="pseg" role="group" aria-label="Columns">' + [['', 'Every assignment'], ['1', 'Averages only']].map(([v, l]) => '<button data-bkonly="' + v + '" aria-pressed="' + (bkOnly() === !!v) + '">' + l + '</button>').join('') + '</div>' +
-      (bkOnly() ? '' : '<div class="pseg" role="group" aria-label="Show">' + [['pct', 'Percent'], ['pts', 'Points']].map(([v, l]) => '<button data-bkshow="' + v + '" aria-pressed="' + (bk.show === v) + '">' + l + '</button>').join('') + '</div>') : '') +
+      '' : '') +
     (bk.tab === 'rep' && c.names.length ? rptBar() : '') + (bk.tab === 'miss' && c.names.length ? misBar() : '') +
-    (tools ? '<button class="btn sm" data-bksetup>Term setup</button>' + (bk.tab === 'table' ? '<button class="btn sm" data-bkpickon aria-pressed="' + !!bk.pick + '" title="Leave students out of the class averages to see how it changes">' + (bk.pick ? 'Done' : 'Leave out…') + '</button><button class="btn sm" data-bkcopy>Copy table</button>' : '') + '<button class="btn sm" data-bkimport title="Scores from your old gradebook: a CSV or Excel file, or cells pasted">Import…</button><button class="btn sm" data-bkaddxc>+ Extra credit</button><button class="btn sm primary" data-bkadd>+ Add scores</button>' : '') + '</div>';
+    (tools ? (bk.pick ? '<button class="btn sm" data-bkpickon aria-pressed="true">Done</button>' : '') + '<button class="btn sm primary" data-bkadd>+ Add scores</button>' +
+      kmWrap('More <span aria-hidden="true">▾</span>', 'class="btn sm" id="bkMore"',
+        (bk.tab === 'table' && bk.term !== '*' && !bkOnly() ? '<button class="mitem" data-bkshow="' + (bk.show === 'pts' ? 'pct' : 'pts') + '">' + (bk.show === 'pts' ? 'Show percent' : 'Show points') + '<small>Now ' + (bk.show === 'pts' ? 'points' : 'percent') + '</small></button>' : '') +
+        '<button class="mitem" data-bksetup>Term setup<small>Terms, types and weights</small></button><hr>' +
+        '<button class="mitem" data-bkaddxc>Add extra credit…</button>' +
+        '<button class="mitem" data-bkimport>Import scores…<small>From your old gradebook: a CSV or Excel file, or cells pasted</small></button>' +
+        (bk.tab === 'table' ? '<button class="mitem" data-bkcopy>Copy the table</button>' + (bk.pick ? '' : '<hr><button class="mitem" data-bkpickon aria-pressed="false">Leave students out…<small>See the class averages without them</small></button>') : ''), 'right') : '') + '</div>';
   let main;
   if (!c.names.length) main = '<p class="muted bkpad">The gradebook lists the students on a class’s roster. Add a roster to ' + esc(c.name) + ' on its class page first.</p>';
   else if (bk.tab === 'class') main = myp ? ibClassView(c, cols, all) : bkClassView(c, cols, all, conf);   // an MYP class has levels, not percents (ib.js)
@@ -16076,7 +16122,7 @@ function bkTable(c, cols, conf) {
   });
   const inn = c.names.filter(bkIn), colAvg = col => { if (col.type === 'xc') { const k = inn.filter(x => col.cells.get(x)).length; return k + ' given'; } if (col.type === 'fm') { const k = inn.filter(x => (col.cells.get(x) || {}).fb).length; return k + '/' + inn.length; } const ps = inn.map(x => col.cells.get(x)).filter(bkCounts).map(x => x.pct); return ps.length ? pctAvgText(bkMean(ps)) : '–'; };
   h += '<tr class="bkfoot">' + bkFootName(c) + groups.map(g => g.cols.map(col => '<td>' + colAvg(col) + '</td>').join('')).join('') + ct.map(([t], j) => '<td class="bkavg bksum"' + bkStick(j, n) + '>' + bkClassAvg(grades, t) + '</td>').join('') + '<td class="bkterm bksum"' + bkStick(n, n) + '>' + bkClassAvg(grades, '') + '</td></tr></tbody></table></div>' +
-    '<p class="muted bkcap">Students are in your roster order. ' + (ct.length ? 'Each type’s average counts every assignment of that type the same; the ' + gradeName.toLowerCase() + ' weights them by your Term setup. ' : '') + 'Missing and Excused never count against a student. Point at a ' + gradeName.toLowerCase() + ' to see how it’s worked out' + (cols.some(x => x.type === 'xc') ? ', extra credit included' : '') + '.' + (only ? '' : ' Scores you typed in can be changed here; a graded download’s scores change in that download.') + '</p>';
+    '<details class="bkhow"><summary>How this is worked out</summary><p class="muted bkcap">Students are in your roster order. ' + (ct.length ? 'Each type’s average counts every assignment of that type the same; the ' + gradeName.toLowerCase() + ' weights them by your Term setup. ' : '') + 'Missing and Excused never count against a student. Point at a ' + gradeName.toLowerCase() + ' to see how it’s worked out' + (cols.some(x => x.type === 'xc') ? ', extra credit included' : '') + '.' + (only ? '' : ' Scores you typed in can be changed here; a graded download’s scores change in that download.') + '</p></details>';
   return h;
 }
 function bkWhy(n, r, conf) {
@@ -16102,7 +16148,7 @@ function bkYear(c, all, conf) {
     h += '<tr' + bkRowCls(n) + '>' + bkNameCell(n, i) + vals.map(vs => vs.map((v, j) => cell(v, keys[j])).join('')).join('') + yr.map((v, j) => keys[j] ? cell(v, keys[j]) : '<td class="bkterm"><b>' + (v != null ? pctAvgText(v) : '–') + '</b></td>').join('') + '</tr>';
   }
   h += '<tr class="bkfoot">' + bkFootName(c) + colv.map(a => a.map((vs, j) => '<td class="' + (keys[j] ? 'bkavg' : 'bkterm') + '">' + (vs.length ? pctAvgText(bkMean(vs)) : '–') + '</td>').join('')).join('') + '</tr></tbody></table></div>' +
-    '<p class="muted bkcap">The year is the average of the terms each student has a grade in, and each type’s year average is the average of their term averages for it.</p>';
+    '<details class="bkhow"><summary>How this is worked out</summary><p class="muted bkcap">The year is the average of the terms each student has a grade in, and each type’s year average is the average of their term averages for it.</p></details>';
   return h;
 }
 
@@ -24121,7 +24167,7 @@ function ibEvidence(list) {
 }
 function classNewWay() { const g = meGrade(); return (g && g.way === 'myp') || /^\s*(ib\s*)?myp\b/i.test(me().prog || '') ? { way: 'myp' } : {}; }   // me().prog: the programme My setup brought in (setupin.js)
 function ibPill(c) { const w = classWay(c); return w ? '<span class="ibpill" title="' + (w === 'myp' ? 'This class is graded with IB MYP criteria' : 'This class is graded as an IB DP class') + '">' + (w === 'myp' ? 'MYP' : 'DP') + '</span>' : ''; }
-function ibClassBtn(c, ci) { return '<button class="btn sm" data-ib-class="' + ci + '">Grading</button>'; }
+function ibClassItem(c, ci) { return '<button class="mitem" data-ib-class="' + ci + '">Grading<small>Points and percent, or IB criteria</small></button>'; }
 
 function ibDpSay(pct, c) { if (classWay(c) !== 'dp' || pct == null) return ''; const g = ibGradeOf(roundPct(pct), ibBounds(c)); return g == null ? '' : ' <b class="ibg7" title="On this class’s boundaries">' + g + '</b>'; }
 
@@ -26785,27 +26831,37 @@ document.addEventListener('keydown', e => {
 Object.assign(window.__gs, { todoRead, todoAdd, todoRows, todoCount, todoTick, todoMove });
 
 /* ---------------- Settings: one page per subject, each with its own address (#/settings/<key>) ---------------- */
+const SET_GROUPS = [['saving', 'Saving and backups', 'Folder, take-home file, earlier days, new school year', ['saving', 'history']],
+  ['classes', 'Classes and timetable', 'Rosters, class times, days off, links', ['classes', 'timetable']],
+  ['terms', 'Grades', 'Terms, weights, scales and rubrics', ['terms', 'grading']],
+  ['marking', 'Marking', 'Mark key, mark colors, Word papers, tablet and pencil', ['marking']],
+  ['setup', 'AI assistant', 'Optional. Your setup, and what an assistant can and can’t see', ['setup', 'claude']],
+  ['display', 'Display and keys', 'Text size, zoom, dark mode, every shortcut', ['display', 'keys']],
+  ['about', 'About and updates', 'Version, what’s new, install as an app', ['about']]];
+const setGroupOf = k => SET_GROUPS.find(g => g[3].includes(k)) || SET_GROUPS[0];
 let setSecWas = '';
 const setHash = k => '#/settings' + (k && k !== 'saving' ? '/' + k : '');
 function setRender() {
   if (!shellReady) return;
   const r = routeNow(); if (r.v !== 'settings' || batch) { setSecWas = ''; return; }
-  if (r.sec !== setSecWas) { setSecWas = r.sec; if (r.sec === 'grading') setBankCount(); if (r.sec === 'timetable') planRefresh(); if (r.sec === 'history') gbOpen(); }
-  const nav = SET_SECS.map(([k, t, s]) => '<a class="setlink' + (k === r.sec ? ' on' : '') + '" href="' + setHash(k) + '" data-set="' + k + '"' + (k === r.sec ? ' aria-current="page"' : '') + '><b>' + t + '</b><span>' + s + '</span></a>').join('');
+  const grp = setGroupOf(r.sec), on = k => grp[3].includes(k), moved = r.sec !== setSecWas;
+  if (moved) { const was = setSecWas; setSecWas = r.sec; if (!was || setGroupOf(was) !== grp) { if (on('grading')) setBankCount(); if (on('timetable')) planRefresh(); if (on('history')) gbOpen(); } }
+  const nav = SET_GROUPS.map(([k, t, s]) => '<a class="setlink' + (k === grp[0] ? ' on' : '') + '" href="' + setHash(k) + '" data-set="' + k + '"' + (k === grp[0] ? ' aria-current="page"' : '') + '><b>' + t + '</b><span>' + s + '</span></a>').join('');
   const box = $('#setNav'); if (box.dataset.h !== nav) { box.dataset.h = nav; box.innerHTML = nav; }
-  for (const el of document.querySelectorAll('#setPane [data-sec]')) el.hidden = el.dataset.sec !== r.sec;
+  for (const el of document.querySelectorAll('#setPane [data-sec]')) el.hidden = !on(el.dataset.sec);
   const put = (id, h) => { const el = $(id); if (el.dataset.h !== h) { el.dataset.h = h; el.innerHTML = h; } };
-  meSetRender(r.sec); attSetRender(r.sec); stpSetRender(r.sec);
-  if (r.sec === 'marking') setInksSay();
-  if (r.sec === 'history') gbRender();
-  if (r.sec === 'about') updRender();
-  if (r.sec === 'classes') {
+  for (const k of grp[3]) { meSetRender(k); attSetRender(k); stpSetRender(k); }
+  if (on('marking')) setInksSay();
+  if (on('history')) gbRender();
+  if (on('about')) updRender();
+  if (moved) { const el = r.sec !== grp[0] && document.querySelector('#setPane [data-sec="' + r.sec + '"]'); if (el) el.scrollIntoView({ block: 'start' }); else { const sc = $('#setPane').closest('.view'); if (sc) sc.scrollTop = 0; window.scrollTo(0, 0); } }
+  if (on('classes')) {
     const row = (c, ci) => '<div class="setrow"><span class="rdot" style="background:' + classColor(c) + '"></span><span class="nt"><b>' + esc(c.name) + '</b><span class="ns">' + (c.names.length ? c.names.length + (c.names.length === 1 ? ' student' : ' students') : 'No roster yet') + ' · ' + (mbOf(c) ? esc(sysLink()) + ' link saved' : 'No ' + esc(sysLink()) + ' link') + '</span></span>' +
       '<a class="btn sm" href="' + classHash(c) + '">Open</a><button class="btn sm" data-setcls="' + ci + '">Name and roster</button><button class="btn sm" data-setmb="' + ci + '">' + esc(sysLink()) + ' link</button></div>';
     put('#setClasses', '<div class="lhead"><h2>Classes and rosters</h2><span class="muted">A class has its roster, its units and its ' + (sysName() ? esc(sysName()) + ' page' : 'link to your school’s system') + '.</span><span class="sp"></span><button class="btn sm" data-setgc title="The roster, the assignments and the grades, from two downloads">From Google Classroom…</button><button class="btn sm primary" data-setadd>Add a class</button></div>' +
       (lib.classes.length ? '<div class="setrows">' + lib.classes.map(row).join('') + '</div>' : '<p class="muted setp">No classes yet. A class holds a roster, so papers match to students and the gradebook has rows.</p>'));
   }
-  if (r.sec === 'terms') {
+  if (on('terms')) {
     const conf = bkConf(), has = lib.classes.some(c => c.names.length);
     const terms = conf.terms.length ? conf.terms.map(t => '<div class="setrow"><span class="nt"><b>' + esc(t.name || 'Term') + '</b><span class="ns">' + (t.start && t.end ? bkDay(t.start) + ' to ' + bkDay(t.end) : 'No dates yet') + '</span></span></div>').join('') : '<div class="setrow"><span class="nt"><span class="ns">No terms yet: the gradebook treats the whole year as one.</span></span></div>';
     put('#setTerms', '<div class="lhead"><h2>Terms and weights</h2><span class="muted">For all your classes. An assignment counts toward the term its due date falls in.</span><span class="sp"></span><button class="btn sm primary" data-setterms' + (has ? '' : ' disabled title="Add a class with a roster first"') + '>Term setup</button></div>' +
@@ -26813,13 +26869,13 @@ function setRender() {
       '<p class="setp"><b>How each type counts:</b> ' + bkCats().map(x => esc(bkPlural(x)) + ' ' + (+conf.w[x[0]] || 0) + '%').join(' · ') + '. ' + (conf.empty === 'zero' ? 'A type with nothing in it yet counts as 0.' : 'When a type has nothing in it yet, the other types are used.') + '</p>' +
       '<p class="setp"><b>Extra credit:</b> new entries add to ' + bkXcWhere(conf.xcTo) + ', one point for one percentage point. ' + (conf.xcCap ? 'Grades stay at 100% at most.' : 'A grade can go over 100%.') + '</p>');
   }
-  if (r.sec === 'grading') {
+  if (on('grading')) {
     const n = gBankSeen;
     put('#setGrading', '<div class="lhead"><h2>Grading scale and rubrics</h2><span class="muted">Saved once, picked on any assignment.</span><span class="sp"></span><a class="btn sm" href="' + esc(planUrl('#rubrics')) + '">Open the rubric bank</a></div>' +
       '<p class="setp">' + (n ? 'You have ' + n.r + (n.r === 1 ? ' saved rubric' : ' saved rubrics') + ' and ' + n.s + (n.s === 1 ? ' saved grading scale' : ' saved grading scales') + '.' : 'Looking for your saved rubrics…') + ' They are kept in the rubric bank, sorted by unit, and hold only a rubric’s wording and a scale’s percents.</p>' +
       '<p class="muted setp">To use one, open an assignment and choose Setup, then Rubric setup. A rubric or scale you make there can be saved to the bank from the same box.</p>' + goalsSetHtml());
   }
-  if (r.sec === 'timetable') {
+  if (on('timetable')) {
     const p = plan, day = s => s ? new Date(s + 'T12:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : '';
     put('#setTimetable', '<div class="lhead"><h2>Timetable and calendar</h2><span class="muted">When each class meets, the semester’s dates and the days off. It lives in the Planner.</span><span class="sp"></span><a class="btn sm primary" href="' + esc(planUrl('#timetable')) + '">' + (p ? 'Open the timetable' : 'Set up the timetable') + '</a></div>' +
       (p ? '<div class="setrows">' + p.classes.map(c => '<div class="setrow"><span class="rdot" style="background:' + c.color + '"></span><span class="nt"><b>' + esc(c.name) + '</b><span class="ns">' + (c.meets.length ? c.meets.length + (c.meets.length === 1 ? ' meeting' : ' meetings') + ' a week' : 'No meeting times yet') + '</span></span></div>').join('') + '</div>' +
@@ -27774,7 +27830,7 @@ function stpIb(o) {
 }
 const STP_WAYS = { rubric: 'rubric', rubricrows: 'rubric', rows: 'rubric', points: 'points', percent: 'percent', percentage: 'percent', letters: 'letters', lettergrades: 'letters', letter: 'letters', ib7: 'ib7', ib: 'ib7', ib1to7: 'ib7', myp: 'ib7', dp: 'ib7' };
 function stpRead(j) {
-  const S = { left: [], unknown: [], notes: [] }, known = new Set(['gradingStudioSetup', 'teacher', 'about', 'school', 'programme', 'program', 'grading', 'classes', 'calendar', 'terms', 'gradebook', 'rubrics', 'comments', 'goals', 'attendance', 'slides', 'marking']);
+  const S = { left: [], unknown: [], notes: [] }, known = new Set(['gradingStudioSetup', 'teacher', 'about', 'school', 'programme', 'program', 'grading', 'classes', 'calendar', 'terms', 'gradebook', 'rubrics', 'comments', 'goals', 'attendance', 'classTabs', 'slides', 'marking']);
   for (const k of Object.keys(j)) {
     if (STP_STUDENT.test(k)) { if (stpCount(j[k])) S.left.push('Something about students (“' + stpStr(k, 30) + '”).'); }
     else if (!known.has(k)) S.unknown.push(stpStr(k, 30));
@@ -27858,6 +27914,7 @@ function stpRead(j) {
     if (Object.keys(m).length) S.mark = m;
   }
   if (typeof j.attendance === 'boolean') S.att = j.attendance; else if (j.attendance != null && stpCount(j.attendance)) S.left.push('Attendance records.');
+  if (Array.isArray(j.classTabs)) S.tabs = [...new Set(j.classTabs.map(x => (CLASS_TABS.find(t => stpKey(t[1]) === stpKey(x) && !TABS_FIRST.includes(t[0])) || [])[0]).filter(Boolean))];
   return S;
 }
 
@@ -27988,6 +28045,7 @@ function stpDiff(S, planNow) {
     add('mark', 'Marking and handing back', L, 'No paper, mark or score changes.');
   }
   if (S.att != null && S.att !== attOn()) add('att', 'Attendance', [S.att ? 'Take attendance in Grading Studio' : 'Don’t take attendance in Grading Studio'], S.att ? '' : 'Days already saved are kept.');
+  if (S.tabs && S.tabs.join() !== tabsKept().join()) add('tabs', 'Class tabs', [S.tabs.length ? 'Kept in the tab row: ' + S.tabs.map(k => CLASS_TABS.find(t => t[0] === k)[1]).join(', ') : 'Only Assignments, Gradebook and Students in the tab row'], 'The other pages stay under More.');
   return parts;
 }
 const stpMarkNow = () => ({ xnames: xNames(), anchorCover: anchorCoverOn(), nameFind: nameFindOn(), ptsInk, sheetfound: !!store.get('gs.sheetfound', false) });
@@ -28006,7 +28064,7 @@ const stpOwnTypes = () => typeof bkCats === 'function';
 const stpClone = v => v == null ? v : JSON.parse(JSON.stringify(v));
 async function stpApply(S, pick) {
   const U = { t: Date.now(), parts: Object.keys(pick).filter(k => pick[k]) }, now = Date.now();
-  if (pick.school || pick.grading || pick.att) { U.hadMe = !!lib.me; U.me = stpClone(lib.me || null); }
+  if (pick.school || pick.grading || pick.att || pick.tabs) { U.hadMe = !!lib.me; U.me = stpClone(lib.me || null); }
   if (pick.school) meSet({ ...(S.school || {}), ...(S.prog ? { prog: S.prog } : {}) });
   if (pick.grading) {
     U.setupLs = localStorage.getItem('gs.setup');
@@ -28015,6 +28073,7 @@ async function stpApply(S, pick) {
     if (!batch) setup = { ...DEFAULT_SETUP };
   }
   if (pick.att) meSet({ att: S.att });
+  if (pick.tabs) meSet({ tabs: S.tabs });
   if (pick.classes) {
     U.classes = []; U.links = []; U.units = []; U.ib = []; U.mbWas = localStorage.getItem(MB_KEY);
     for (const c of S.classes) {
@@ -28126,6 +28185,7 @@ async function stpExport() {
   if (bank.length) out.comments = bank.slice(0, 200);
   if (goalList().length) out.goals = goalList().map(x => x.name);
   if (lib.me && typeof lib.me.att === 'boolean') out.attendance = lib.me.att;
+  if (tabsKept().length) out.classTabs = tabsKept().map(k => CLASS_TABS.find(t => t[0] === k)[1]);
   { const m = stpMarkNow(), o = { ...(m.xnames ? {} : { studentFileNames: false }), ...(m.anchorCover ? {} : { coverNamesOnAnchors: false }), ...(m.nameFind ? { findTypedNames: true } : {}), ...(m.ptsInk ? { pointsColor: m.ptsInk } : {}), ...(m.sheetfound ? { gradeSheetFromPapers: true } : {}) }; if (Object.keys(o).length) out.marking = o; }
   return JSON.stringify(out, null, 1);
 }
@@ -28203,6 +28263,7 @@ Every part except the first line is optional. Leave a part out rather than leavi
   "comments": ["Explain how your evidence supports your claim."],
   "goals": ["Uses evidence", "Designs a fair test"],
   "attendance": true,
+  "classTabs": ["Missing work"],
   "slides": { "agenda": true, "textSizes": "usual" },
   "marking": { "pointsColor": "credit", "studentFileNames": true, "coverNamesOnAnchors": true, "findTypedNames": false, "gradeSheetFromPapers": false }
 }
@@ -28214,6 +28275,7 @@ FIELD NOTES
 - Days are "Sun" to "Sat". Times are 24-hour, like "13:05". Dates are YYYY-MM-DD.
 - "daysOff" and "events" take one day, or a first and last day with "to".
 - "emptyType" is "other" (when a type has nothing in it yet, the others are used) or "zero". "extraCredit.addsTo" is "term" or "inClass"; "cap" true keeps grades at 100% at most. "retakes" is "highest", "latest" or "average".
+- "classTabs" are the class pages I want kept in the tab row beside Assignments, Gradebook and Students: any of "Attendance", "Seating", "Missing work", "Charts", "Goals", "Report comments". Leave it out unless I ask.
 - "slides" is for the lesson planner: "agenda" false stops an agenda being added as slide 2, and "textSizes" is "usual" (28 to 36 pt) or "any" (18 to 44 pt). Leave it out unless I ask.
 - "marking" holds small choices; leave out any I have not asked for. "pointsColor" is "pen", "credit" (full points green, part amber, none red) or one of red, blue, green, purple, black. "studentFileNames" names each file I hand back for the student and assignment. "coverNamesOnAnchors" covers names on example papers I export. "findTypedNames" lets the app look for typed names to cover. "gradeSheetFromPapers" also shows grades the app finds written on papers.
 - A rubric row is a name, or a name with "levels" keyed "4" down to "0". A rubric whose rows go higher takes "rowTop" (up to 10), and "halfPoints": false when only whole points are given.
@@ -28765,7 +28827,7 @@ function railRender() {
   screenWas = batch ? 'a' : r.v;
   const d = $('#homeDate'), today = new Date().toLocaleDateString(LANG_LOCALE, { weekday: 'long', month: 'long', day: 'numeric' }); if (d.textContent !== today) d.textContent = today;   // Today's title is the day itself
   const asg = batch && batch.assignment && findItem(batch.assignment.id);
-  document.title = batch ? (asg ? asg.it.name + ' · ' : '') + 'Grading Studio' : r.v === 'class' ? (r.c === lib.loose ? 'No class' : r.c.name) + ' · Grading Studio' : r.v === 'settings' ? (r.sec === 'saving' ? '' : SET_SECS.find(x => x[0] === r.sec)[1] + ' · ') + 'Settings · Grading Studio' : r.v === 'help' ? 'Help · Grading Studio' : r.v === 'todo' ? 'To do · Grading Studio' : r.v === 'school' ? 'School resources · Grading Studio' : r.v === 'examples' ? 'Examples · Grading Studio' : 'Grading Studio';
+  document.title = batch ? (asg ? asg.it.name + ' · ' : '') + 'Grading Studio' : r.v === 'class' ? (r.c === lib.loose ? 'No class' : r.c.name) + ' · Grading Studio' : r.v === 'settings' ? (setGroupOf(r.sec)[0] === 'saving' ? '' : setGroupOf(r.sec)[1] + ' · ') + 'Settings · Grading Studio' : r.v === 'help' ? 'Help · Grading Studio' : r.v === 'todo' ? 'To do · Grading Studio' : r.v === 'school' ? 'School resources · Grading Studio' : r.v === 'examples' ? 'Examples · Grading Studio' : 'Grading Studio';
 }
 function railSavedRender() {
   if (!shellReady) return;

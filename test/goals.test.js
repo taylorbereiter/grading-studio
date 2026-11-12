@@ -4,7 +4,7 @@ const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs'), path = require('path'), vm = require('vm');
 const { launch } = require('./helpers/chrome');
-const { openApp, openZip, goTo, classPage, settle } = require('./helpers/app');
+const { openApp, openZip, goTo, classPage, settle, pick } = require('./helpers/app');
 const { makePaper, zipOf } = require('./helpers/fixtures');
 
 let browser, zip;
@@ -82,7 +82,7 @@ test('the Goals tab: what to reteach lowest first, every student by every goal, 
   const { page, close } = await openApp(browser, { seed: seed() });
   await classPage(page, 'c1');
   assert.deepEqual(await tabs(page), ['Assignments', 'Gradebook', 'Students', 'Attendance', 'Seating', 'Missing work', 'Charts', 'Goals', 'Report comments']);
-  await page.click('[data-ctab="goals"]'); await page.waitForSelector('#glBars');
+  await pick(page, '[data-ctab="goals"]'); await page.waitForSelector('#glBars');
   assert.equal(await page.evaluate(() => location.hash), '#/class/c1/goals');
   // Claim: Aria 100 and 100, Bram 50 and 50, Cleo 75 (her quiz is missing), Dov 100 from the quiz alone (his essay is left out).
   // Evidence: Aria 50 and 100, Bram 50 and 0, Cleo 100, Dov 100. Reasoning is the exit ticket: 90, 50, 80.

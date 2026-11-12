@@ -34,6 +34,10 @@ const SET_SECS = [['saving', 'Saving and carrying', 'Folder, take-home file, new
   ['grading', 'Grading scale and rubrics', 'Your saved scales and rubrics'], ['marking', 'Marking', 'Mark key, mark colors, Word papers, tablet and pencil'], ['timetable', 'Timetable and calendar', 'Class times and days off, in the Planner'],
   ['display', 'Display', 'Text size, zoom, dark mode'], ['claude', 'Working with AI', 'Optional. What an AI assistant can and can’t see'], ['keys', 'Keys', 'Every shortcut'], ['about', 'About and updates', 'Version, what’s new, install as an app']];
 const CLASS_TABS = [['', 'Assignments'], ['gradebook', 'Gradebook'], ['students', 'Students'], ['attendance', 'Attendance'], ['seating', 'Seating'], ['missing', 'Missing work'], ['charts', 'Charts'], ['goals', 'Goals'], ['reports', 'Report comments']];   // Goals shows only once the teacher has a learning goal (goals.js)
+// Assignments, Gradebook and Students are always in the tab row. The rest sit under More, and a teacher keeps the ones they use beside them (lib.me.tabs).
+const TABS_FIRST = ['', 'gradebook', 'students'];
+const tabsKept = () => (Array.isArray(me().tabs) ? me().tabs : []).filter(k => CLASS_TABS.some(t => t[0] === k) && !TABS_FIRST.includes(k));
+function tabKeep(k) { const now = tabsKept(), on = !now.includes(k), l = (CLASS_TABS.find(t => t[0] === k) || [])[1]; if (!l) return; meSet({ tabs: on ? [...now, k] : now.filter(x => x !== k) }); renderLib(); toast(on ? l + ' stays in the tab row' : l + ' is under More'); }
 const classTabs = () => CLASS_TABS.filter(t => t[0] !== 'attendance' || attOn());   // attendance is the teacher's to turn off
 const classHash = (c, tab, stu) => '#/class/' + (c === lib.loose || !c.id ? '-' : encodeURIComponent(c.id)) + (tab ? '/' + tab + (stu != null ? '/' + (stu + 1) : '') : '');
 // An open assignment has four screens: the papers (Mark), Grades, Insights and Return. Grades and Insights each have a second view.
@@ -123,27 +127,41 @@ function renderLib() {
       '<div class="cdue">' + (it.due ? 'Due ' + bkDay(it.due) : '') + '</div>' +
       '<div class="cstate">' + (st ? stateBar(st) : '') + '<div class="m">' + esc(it.typed && !it.batchId ? 'Scores typed in' : batchSummary(it)) + '</div>' + (st ? stateChip(st) : '') + '</div>' +
       '<div class="row">' + (m && m.papers ? '<button class="btn sm" data-kopen="' + esc(it.batchId) + '" data-kasg="' + it.id + '">Open</button>'
-        : typedOnly ? '' : '<button class="btn sm" data-open-asg="' + it.id + '">Add papers…</button>') + '<button class="btn sm ghost" data-edit-asg="' + it.id + '">Edit</button>' +
-        (m && m.papers || typedOnly ? kmWrap('⋯', 'class="icon kdots" aria-label="More for ' + esc(it.name) + '" title="More"', '<button class="mitem" data-open-asg="' + it.id + '">' + (typedOnly ? 'Add papers…<small>Mark this one’s papers here as well</small>' : 'Open other papers…<small>A newer download, or a different set of files</small>') + '</button>', 'right') : '') + '</div></div>';
+        : typedOnly ? '' : '<button class="btn sm" data-open-asg="' + it.id + '">Add papers…</button>') +
+        kmWrap('⋯', 'class="icon kdots" aria-label="More for ' + esc(it.name) + '" title="More"', '<button class="mitem" data-edit-asg="' + it.id + '">Edit<small>Name, type, due date, unit, rubric</small></button>' +
+          (m && m.papers || typedOnly ? '<button class="mitem" data-open-asg="' + it.id + '">' + (typedOnly ? 'Add papers…<small>Mark this one’s papers here as well</small>' : 'Open other papers…<small>A newer download, or a different set of files</small>') + '</button>' : ''), 'right') + '</div></div>';
   };
   const unit = u => '<div class="unit" draggable="true" data-unit="' + u.id + '">' +
     '<div class="uhead" title="Drag to move this unit"><span class="nm">' + esc(u.name) + '</span><span class="ucount">' + u.items.length + (u.items.length === 1 ? ' assignment' : ' assignments') + '</span><span class="sp"></span>' +
-    '<span class="atl">' + (u.atlas ? '<a href="' + esc(u.atlas) + '" target="_blank" rel="noopener noreferrer" title="' + esc(u.atlas) + '">' + (unitLinkName() ? 'Open in ' + esc(unitLinkName()) : 'Unit plan') + ' ↗</a><button class="link" data-uatlas="' + u.id + '">Change</button>'
-      : '<button class="link" data-uatlas="' + u.id + '">+ Link to ' + esc(unitLinkName() || 'a unit plan') + '</button>') + '</span>' +
-    '<button class="icon" data-urename="' + u.id + '" title="Rename unit" aria-label="Rename unit">✎</button>' +
-    '<button class="icon" data-udel="' + u.id + '" title="Delete unit" aria-label="Delete unit">✕</button></div>' +
+    (u.atlas ? '<span class="atl"><a href="' + esc(u.atlas) + '" target="_blank" rel="noopener noreferrer" title="' + esc(u.atlas) + '">' + (unitLinkName() ? 'Open in ' + esc(unitLinkName()) : 'Unit plan') + ' ↗</a></span>' : '') +
+    kmWrap('⋯', 'class="icon kdots" aria-label="More for ' + esc(u.name) + '" title="More"',
+      '<button class="mitem" data-urename="' + u.id + '">Rename</button>' +
+      '<button class="mitem" data-uatlas="' + u.id + '">' + (u.atlas ? 'Change the ' + esc(unitLinkName() || 'unit plan') + ' link' : 'Link to ' + esc(unitLinkName() || 'a unit plan') + '…') + '</button>' +
+      '<hr><button class="mitem" data-udel="' + u.id + '">Delete unit</button>', 'right') + '</div>' +
     '<div class="cards">' + u.items.map(card).join('') + '</div>' +
     '<button class="addcard" data-additem="' + u.id + '">+ Assignment</button></div>';
   const r = routeNow(), c = r.v === 'class' ? r.c : null, tab = c ? r.tab : '';
-  const tabs = (c, ci) => ci < 0 || !c.names.length ? '' : '<nav class="ctabs" aria-label="' + esc(c.name) + '">' + classTabs().filter(t => t[0] !== 'goals' || tab === 'goals' || goalList().length).map(([k, l]) => { const on = tab === k;
-    return '<a class="ctab' + (on ? ' on' : '') + '" href="' + classHash(c, k) + '" data-ctab="' + k + '"' + (k === 'gradebook' ? ' data-book="' + esc(c.id) + '"' : k === 'students' ? ' data-people="' + ci + '"' : '') + (on ? ' aria-current="page"' : '') + '>' + l + '</a>'; }).join('') + '</nav>';
+  const tabs = (c, ci) => { if (ci < 0 || !c.names.length) return '';
+    const all = classTabs().filter(t => t[0] !== 'goals' || tab === 'goals' || goalList().length), kept = tabsKept(), more = all.filter(t => !TABS_FIRST.includes(t[0]));
+    const link = ([k, l]) => { const on = tab === k;
+      return '<a class="ctab' + (on ? ' on' : '') + '" href="' + classHash(c, k) + '" data-ctab="' + k + '"' + (k === 'gradebook' ? ' data-book="' + esc(c.id) + '"' : k === 'students' ? ' data-people="' + ci + '"' : '') + (on ? ' aria-current="page"' : '') + '>' + l + '</a>'; };
+    const pin = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 17v5M9 3h6l-1 6 3 3v2H7v-2l3-3z"/></svg>';
+    return '<nav class="ctabs" aria-label="' + esc(c.name) + '">' + all.filter(t => TABS_FIRST.includes(t[0]) || kept.includes(t[0]) || t[0] === tab).map(link).join('') +
+      (more.length ? kmWrap('More <span aria-hidden="true">▾</span>', 'class="ctab ctmore" id="ctMore" title="The other pages of this class"', more.map(([k, l]) => { const on = kept.includes(k);
+        return '<div class="ctrow"><a class="mitem' + (tab === k ? ' on' : '') + '" href="' + classHash(c, k) + '" data-ctab="' + k + '">' + l + '</a><button class="icon ctpin" data-ctpin="' + k + '" aria-pressed="' + on + '" title="' + (on ? 'Take ' + l + ' out of the tab row' : 'Keep ' + l + ' in the tab row') + '" aria-label="' + (on ? 'Take ' + l + ' out of the tab row' : 'Keep ' + l + ' in the tab row') + '">' + pin + '</button></div>'; }).join('') +
+        '<p class="kmsay">The pin keeps a page in the tab row.</p>') : '') + '</nav>'; };
+  // one button for what is set once: the school link, how the class is graded, the roster, its place in the sidebar
+  const setup = (c, ci) => kmWrap('Class setup', 'class="btn sm" id="clsSetup"',
+    '<button class="mitem" data-edit-class="' + ci + '">' + (c.names.length ? 'Edit roster' : 'Add roster') + '<small>Names, and the name of the class</small></button>' +
+    ibClassItem(c, ci) +
+    '<button class="mitem" data-mbset="' + ci + '">' + (mbOf(c) ? 'Change the ' + esc(sysLink()) + ' link' : 'Add the ' + esc(sysLink()) + ' link…') + '</button>' +
+    '<hr><button class="mitem" data-cmove="' + ci + ':-1"' + (ci ? '' : ' disabled') + '>Move up in the sidebar</button><button class="mitem" data-cmove="' + ci + ':1"' + (ci < lib.classes.length - 1 ? '' : ' disabled') + '>Move down in the sidebar</button>', 'right');
   const block = (c, ci) => '<div class="cls" data-cls="' + esc(c.id) + '"><div class="clshead"><h1>' + esc(ci < 0 ? 'No class' : c.name) + '</h1>' + (ci < 0 ? '' : ibPill(c)) +
     (ci < 0 ? '<span class="muted">Assignments with no roster. Drag them onto a class in the sidebar, or use Edit to pick a class.</span><span class="sp"></span>' :
-      '<span class="muted">' + (c.names.length ? c.names.length + ' students on the roster' : 'No roster yet') + '</span><span class="sp"></span>' + mbClassBtns(c, ci) + ibClassBtn(c, ci) + '<button class="btn sm" data-edit-class="' + ci + '">' + (c.names.length ? 'Edit roster' : 'Add roster') + '</button>' +
-      '<button class="icon" data-cmove="' + ci + ':-1" title="Move this class up in the sidebar" aria-label="Move this class up in the sidebar"' + (ci ? '' : ' disabled') + '>↑</button><button class="icon" data-cmove="' + ci + ':1" title="Move this class down in the sidebar" aria-label="Move this class down in the sidebar"' + (ci < lib.classes.length - 1 ? '' : ' disabled') + '>↓</button>') + '</div>' + tabs(c, ci) +
+      '<span class="muted">' + (c.names.length ? c.names.length + ' students on the roster' : 'No roster yet') + '</span><span class="sp"></span>' + (mbOf(c) ? mbLink(c) : '') + (c.names.length ? '' : '<button class="btn sm primary" data-edit-class="' + ci + '">Add roster</button>') + setup(c, ci)) + '</div>' + tabs(c, ci) +
     (tab ? '<div class="cpanel" id="classPanel" data-sig="' + rosterSig(c) + '"></div>'
-      : '<div class="ctools"><span class="sp"></span><button class="btn sm" data-addunit="' + esc(c.id) + '">+ Unit</button><button class="btn sm primary" data-newasg="' + esc(c.id) + '">+ Assignment</button></div>' +
-        '<div class="board">' + (c.units.map(unit).join('') || '<div class="empty-note">No units yet. Click + Unit.</div>') + '</div>') + '</div>';
+      : '<div class="ctools"><span class="sp"></span><button class="btn sm' + (ci >= 0 && !c.names.length ? '' : ' primary') + '" data-newasg="' + esc(c.id) + '">+ Assignment</button></div>' +
+        '<div class="board">' + (c.units.map(unit).join('') || '<div class="empty-note">No units yet. Click + Unit.</div>') + '<button class="addunit" data-addunit="' + esc(c.id) + '">+ Unit</button></div>') + '</div>';
   // One class at a time: the one whose page she's on. The Gradebook, Students and Charts tabs draw themselves into the panel (classpage.js),
   // and keep what's in it while nothing around it has changed, so a list she's part-way through isn't redrawn under her.
   const box = $('#classes'), h = c ? block(c, c === lib.loose ? -1 : lib.classes.indexOf(c)) : '';
@@ -252,6 +270,7 @@ $('#start').addEventListener('click', async e => {
   }
   if (b.dataset.addunit != null) { const c = holderById(b.dataset.addunit); const name = await askTextDlg('Unit name', 'Unit ' + (c.units.length + 1), { ok: 'Add unit' }); if (name && name.trim()) { c.units.push({ id: uid(), name: name.trim(), items: [] }); saveLib(); renderLib(); } return; }
   if (b.dataset.newasg != null) return editAssignment(null, null, b.dataset.newasg);
+  if (b.dataset.ctpin != null) return tabKeep(b.dataset.ctpin);
   if (b.dataset.cmove) { const [ci, d] = b.dataset.cmove.split(':').map(Number), j = ci + d; if (j >= 0 && j < lib.classes.length) { [lib.classes[ci], lib.classes[j]] = [lib.classes[j], lib.classes[ci]]; saveLib(); renderLib(); const again = $('#classes [data-cmove="' + j + ':' + d + '"]'); if (again && !again.disabled) again.focus(); } return; }
   if (b.dataset.urename != null) { const f = findUnit(b.dataset.urename); if (!f) return; const name = await askTextDlg('Unit name', f.u.name, { ok: 'Rename' }); if (name && name.trim()) { f.u.name = name.trim(); saveLib(); renderLib(); } return; }
   if (b.dataset.uatlas != null) return askAtlas(b.dataset.uatlas);
@@ -407,7 +426,6 @@ function mbRemember(name, url) { try { const m = mbMap(), k = mbNorm(name); if (
 const mbOf = c => (c && (mbUrl(c.mb) || mbUrl(mbMap()[mbNorm(c.name)]))) || '';
 const mbLink = (c, cls) => mbOf(c) ? '<a class="' + (cls || 'btn sm') + ' mb-go" href="' + esc(mbOf(c)) + '" target="_blank" rel="noopener" title="Open ' + esc(c.name) + (sysName() ? ' on ' + esc(sysName()) : '’s class page') + '">' + esc(sysLink()) + ' ↗</a>' : '';
 // On the class itself: the link, or a button to add one. ✎ changes it.
-const mbClassBtns = (c, ci) => mbOf(c) ? mbLink(c) + '<button class="icon" data-mbset="' + ci + '" title="Change the ' + esc(sysLink()) + ' link" aria-label="Change the ' + esc(sysLink()) + ' link">✎</button>' : '<button class="btn sm ghost mb-add" data-mbset="' + ci + '">+ ' + esc(sysLink()) + ' link</button>';
 async function askMb(ci) {
   const c = lib.classes[ci]; if (!c) return;
   const v = await askTextDlg('Paste the ' + (sysName() ? sysName() + ' page' : 'web address of the class page') + ' for ' + c.name + ' (leave empty to remove it)', mbOf(c), { ok: 'Save' });
