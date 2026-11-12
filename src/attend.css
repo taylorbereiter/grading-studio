@@ -1,0 +1,55 @@
+/* ---------- attendance: a class page's Attendance tab (11/11) ---------- */
+/* Present is quiet, late is amber, excused is gray, absent is the darkest blue. Red stays for marks on a paper. */
+.attbar{display:flex;align-items:center;gap:var(--space-2) var(--space-3);flex-wrap:wrap;padding:var(--space-3) 18px;border-bottom:1px solid var(--line);min-height:52px}
+.attbar .sp{flex:1}
+.attbar .bkterms{margin-left:0}
+.attv{font-size:var(--text-control);font-weight:500;padding:5px 12px;color:var(--fg-2);text-decoration:none;white-space:nowrap}
+.attv+.attv{border-left:1px solid var(--line)}
+.attv[aria-current=page]{background:var(--accent-soft);color:var(--accent);font-weight:600}
+.attnav{display:flex;align-items:center;gap:var(--space-2);flex-wrap:wrap}
+.attnav b{font-size:var(--text-lead);font-weight:600;min-width:0}
+.attnav a.icon{text-decoration:none;display:inline-flex;align-items:center;justify-content:center}
+#attPick{font:inherit;font-size:var(--text-control);color:var(--fg-2);background:var(--surface);border:1px solid var(--line-strong);border-radius:var(--corner-3);padding:3px 6px;height:28px;width:132px}
+.attsum{margin:var(--space-3) 18px 0;font-size:var(--text-control);font-weight:600;color:var(--fg-2);font-variant-numeric:tabular-nums}
+.attsum.no{color:var(--warn);font-weight:600}
+.attlist{column-width:460px;column-gap:var(--space-6);padding:var(--space-2) 18px 0}
+.attrow{display:flex;align-items:center;gap:var(--space-2) var(--space-3);flex-wrap:wrap;padding:var(--space-2) 0;border-bottom:1px solid var(--line);break-inside:avoid}
+.attn{flex:1;min-width:120px;display:flex;align-items:center;gap:6px}
+.attname{font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.attrow.sa .attname,.attrow.sl .attname,.attrow.se .attname{font-weight:600}
+.attseg{flex:none}
+.attseg button{min-width:62px;min-height:30px}
+.attseg button[data-atts=l][aria-pressed=true]{background:var(--warn-soft);color:var(--warn)}
+.attseg button[data-atts=e][aria-pressed=true]{background:var(--surface-2);color:var(--fg)}
+.attseg button[data-atts=a][aria-pressed=true]{background:var(--bk-sum);color:var(--ch-hi)}
+.attlist.untaken .attseg button[data-atts=p][aria-pressed=true]{background:none;color:var(--muted);font-weight:500}
+.attnote{flex:1 1 100%;font:inherit;font-size:var(--text-control);color:var(--fg);background:var(--surface);border:1px solid var(--line-strong);border-radius:var(--corner-3);padding:5px 8px}
+.attcap{margin:var(--space-3) 18px var(--space-4);font-size:var(--text-small)}
+.attopt{display:inline-flex;align-items:center;gap:var(--space-2);font-weight:500}
+/* looking back: students down, days across */
+.attwrap{overflow:auto;max-height:calc(100vh - 290px);min-height:160px;padding:0 18px}
+.atttab{border-collapse:separate;border-spacing:0;font-size:var(--text-control)}
+.atttab th,.atttab td{padding:3px 4px;border-bottom:1px solid var(--line);text-align:center;white-space:nowrap}
+.atttab thead th{position:sticky;top:0;background:var(--surface);z-index:1;font-weight:600;color:var(--fg-2);vertical-align:bottom;padding-top:var(--space-3)}
+.atttab .attn2{position:sticky;left:0;background:var(--surface);text-align:left;font-weight:500;padding-right:var(--space-4);z-index:1;max-width:220px;overflow:hidden;text-overflow:ellipsis}
+.atttab thead .attn2{z-index:2}
+.atttab .attt{font-variant-numeric:tabular-nums;font-weight:600;min-width:58px}
+.atttab td.attt.z{color:var(--faint);font-weight:400}
+.atttab .attd a{display:block;color:inherit;text-decoration:none;font-weight:500;font-size:var(--text-small);padding:2px 4px;border-radius:var(--corner-1)}
+.atttab .attd a:hover{background:var(--hover);color:var(--accent)}
+.atttab .attd small{display:block;font-size:var(--text-caption);color:var(--muted);font-weight:400}
+.attfoot th,.attfoot td{border-bottom:0;color:var(--muted);font-variant-numeric:tabular-nums;font-size:var(--text-small);padding-top:var(--space-2)}
+.attc{position:relative;display:inline-flex;align-items:center;justify-content:center;width:26px;height:24px;border-radius:var(--corner-1);font-size:var(--text-small);font-weight:600;font-style:normal;line-height:1}
+.attc.sp::before{content:"";width:5px;height:5px;border-radius:var(--corner-round);background:var(--track)}
+.attc.sl{background:var(--warn-soft);color:var(--warn)}
+.attc.se{background:var(--surface-2);color:var(--fg-2);box-shadow:inset 0 0 0 1px var(--line-strong)}
+.attc.sa{background:var(--bk-sum);color:var(--ch-hi)}
+.attc i{position:absolute;right:-2px;top:-2px;width:6px;height:6px;border-radius:var(--corner-round);background:var(--accent);box-shadow:0 0 0 1.5px var(--surface)}
+.attleg{display:flex;flex-wrap:wrap;gap:var(--space-2) var(--space-4);padding:var(--space-3) 18px 0;font-size:var(--text-small);color:var(--fg-2)}
+.attleg span{display:inline-flex;align-items:center;gap:6px}
+.attstu{margin:4px 0;font-size:var(--text-control)}
+/* Today: a line under a class that is on the timetable */
+.tatt{display:block;margin:-6px 0 0;padding:0 var(--space-4) var(--space-3) calc(52px + var(--space-4) + var(--space-2));font-size:var(--text-small);font-weight:500;color:var(--accent);text-decoration:none}
+.tatt:hover{text-decoration:underline}
+.tatt.done{color:var(--muted)}
+@media (max-width:700px){.attseg button{min-width:0;padding:5px 8px}.attlist{column-width:auto}}

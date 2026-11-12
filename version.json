@@ -1,14 +1,11 @@
 {
- "version": "1.23.0",
- "build": "ce80e47e897e",
+ "version": "1.27.14",
+ "build": "e5b7c907568a",
  "notes": [
-  "Scores by learning goal, if you want them. Keep your own list of goals (a skill, or a standard from your school) in Settings, Grading, or add one wherever you tag.",
-  "Tag rubric rows in Rubric setup and quiz questions in Quiz boxes. An assignment scored with just a total can carry one goal for the whole score.",
-  "Each class page gets a Goals tab: the class average on each goal with the lowest first, every student by every goal, and where each number came from. A student's own page shows their goals beside the class average.",
-  "Nothing changes until you add a first goal, and tagging never changes a score or a grade."
+  "Points written on a paper can have their own color. In Quick mark’s Colors menu, or Settings, Marking, Mark colors: the ✗ color as before, one color of your own, or By credit, with full points in the check color, part in amber and none in the ✗ color."
  ],
  "files": {
-  "index.html": "4d4f622015ecb435f7b3fe42647fc48d8e696ebbf8a7c12d327975e25aa0911b",
-  "planner.html": "e44ec16c824333fbcf694dfd38f6431790fa1c97715fe1c9462976d6f406c591"
+  "index.html": "6465cee53c44807fa02f2b8d1e1f109901c728e2c8eacf8e2369f002c637bfb1",
+  "planner.html": "3d60d2483d2d7949be03a1bffdfacb5e5b1da56879227dc0450498847751b215"
  }
 }

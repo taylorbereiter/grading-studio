@@ -66,7 +66,7 @@ async function typeGoals(page, names) {
 test('with no goals nothing extra shows: no Goals tab, no pickers, nothing stored', async () => {
   const { page, close } = await openApp(browser, { seed: seed(null) });
   await classPage(page, 'c1');
-  assert.deepEqual(await tabs(page), ['Assignments', 'Gradebook', 'Students', 'Missing work', 'Charts', 'Report comments']);
+  assert.deepEqual(await tabs(page), ['Assignments', 'Gradebook', 'Students', 'Attendance', 'Seating', 'Missing work', 'Charts', 'Report comments']);
   await page.click('[data-ctab="students"]'); await page.waitForSelector('#peopleTbl table');
   await goTo(page, '#/class/c1/students/1'); await page.waitForSelector('#bkStuTiles');
   assert.equal(await page.$('#glStu'), null, 'a student’s page has no goals part');
@@ -81,7 +81,7 @@ test('with no goals nothing extra shows: no Goals tab, no pickers, nothing store
 test('the Goals tab: what to reteach lowest first, every student by every goal, and where the scores came from', async () => {
   const { page, close } = await openApp(browser, { seed: seed() });
   await classPage(page, 'c1');
-  assert.deepEqual(await tabs(page), ['Assignments', 'Gradebook', 'Students', 'Missing work', 'Charts', 'Goals', 'Report comments']);
+  assert.deepEqual(await tabs(page), ['Assignments', 'Gradebook', 'Students', 'Attendance', 'Seating', 'Missing work', 'Charts', 'Goals', 'Report comments']);
   await page.click('[data-ctab="goals"]'); await page.waitForSelector('#glBars');
   assert.equal(await page.evaluate(() => location.hash), '#/class/c1/goals');
   // Claim: Aria 100 and 100, Bram 50 and 50, Cleo 75 (her quiz is missing), Dov 100 from the quiz alone (his essay is left out).

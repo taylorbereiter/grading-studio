@@ -69,7 +69,7 @@ async function intake(entries, label, assignment, fromKeep) {   // entries: [{ p
   const rub = await rubricAtOpen(assignment, earlier ? earlier.d : newestWork(store.get(id, null), await kget('work', id)), (assignment && assignment.name) || label || 'This download');
   if (!rub) { toast('Nothing was opened. It will ask again when you open it.', 5000); return; }
   batch = { id, name: (assignment && assignment.name) || label || 'Your download', students, assignment: assignment || null, zipBad, seen: lsRaw(savedKey(id)), opened: Date.now() };   // seen: from before the work is read, so a save by another tab from here on is noticed
-  if (rub.su) setup = { ...DEFAULT_SETUP, ...rub.su };
+  if (rub.su) setup = setupOver(rub.su);
   delete setup.spot;   // the grade spot belongs to one download, and restore() brings its own back
   thumbCache.clear();
   askToKeep();
@@ -94,6 +94,8 @@ async function intake(entries, label, assignment, fromKeep) {   // entries: [{ p
   if (earlier) carryRoster(earlier);
   if (batch.restoredKey) { const k = batch.students.findIndex(st => st.key === batch.restoredKey); if (k >= 0) batch.restoredCur = k; }
   renderClassSel();
+  if (assignment && assignment.goal && !batch.goal && !assignment.batchId) batch.goal = assignment.goal;   // and its learning goal for the whole score
+  if (assignment && assignment.quiz && !batch.quiz && !assignment.batchId) { batch.quiz = JSON.parse(JSON.stringify(assignment.quiz)); setTimeout(saveSoon, 0); }   // a card from last year starts with its Quick mark boxes
   if (assignment) { assignment.batchId = id; assignment.opened = Date.now(); if (!assignment.setup || rub.toCard) assignment.setup = { ...setup, spot: undefined }; shareRubric(assignment); saveLib(); }
   keepWait = keepPapers(batch, label, fromKeep ? null : keepList, sameSize.length > 0);
   cur = 0; undoStack = []; selected = null;
@@ -121,7 +123,7 @@ async function rubricAtOpen(card, work, name) {
     return said && (said === 'a' ? { su: mine, said } : { su: own, said, toCard: true });
   }
   if (mine || own) return { su: mine || own };
-  const last = { ...DEFAULT_SETUP, ...(card ? store.get('gs.setup', {}) : setup) }, fit = workScored(work) ? rubricFitting(work, last) : null;
+  const last = setupOver(card ? store.get('gs.setup', null) : setup), fit = workScored(work) ? rubricFitting(work, last) : null;
   if (fit) {
     const said = await ask({ a: last, b: fit, la: 'The last rubric you saved', lb: 'One that fits these scores' }, 'This work doesn’t say which rubric its scores were given with, and they don’t fit the last one you saved.');
     return said && { su: said === 'a' ? last : fit, said };
@@ -144,7 +146,7 @@ function rubricFitting(work, last) {
 function revsBase(saved) {
   if (!saved) return saved;
   const w = { ...saved, s: { ...saved.s } };
-  if (w.setup) w.setup = { ...DEFAULT_SETUP, ...w.setup };
+  if (w.setup) w.setup = setupOver(w.setup);
   for (const st of batch.students) for (const f of st.files) {
     const r = w.s[st.key];
     if (f.edited && !(r && r.v) && !(r && r.e && r.e[f.path])) w.s[st.key] = { ...(r || { f: {}, g: st.grade, h: {} }), e: { ...(r && r.e), [f.path]: f.edited } };
