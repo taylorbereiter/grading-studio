@@ -24,6 +24,7 @@ function mediaCard(st, f) {
   m.onratechange = () => {};
   mediaWatch(el, m, f);
   if (!curMedia) curMedia = m;
+  clipStrip(el.querySelector('.mstick'), f, () => m, c => clipRun(m, c));
   const tr = el.querySelector('.trans');
   const showTr = () => {
     if (!f.tr) return;

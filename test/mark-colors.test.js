@@ -87,6 +87,21 @@ test('Quick mark: C writes a margin comment or text on that paper; marking again
   await page.waitForSelector('#qmBody .qmc[data-st="1"] .qmnote');
   ms = (await paperMarks(page, 1)).filter(m => m.qzn);
   assert.equal(ms[0].t, 'text'); assert.equal(ms[0].text, 'Nice');
+  // Its color can be changed while typing it, and opening it again shows that color.
+  await page.click('#qmBody .qmc[data-st="1"] .qmnote');
+  await page.waitForSelector('#qmBody .qmc[data-st="1"] .qmned [data-qnc="red"][aria-pressed="true"]');
+  await page.keyboard.type('!');
+  await page.click('#qmBody .qmc[data-st="1"] [data-qnc="green"]');
+  assert.equal(await page.$eval('#qmBody .qmc[data-st="1"] .qmned textarea', t => getComputedStyle(t).color), 'rgb(30, 138, 76)', 'the words turn green as she types');
+  await page.click('#qmBody .qmc[data-st="1"] [data-nsave]');
+  await page.waitForSelector('#qmBody .qmc[data-st="1"] .qmnote');
+  ms = (await paperMarks(page, 1)).filter(m => m.qzn);
+  assert.equal(ms[0].color, '#1E8A4C'); assert.equal(ms[0].text, 'Nice!');
+  await page.click('#qmBody .qmc[data-st="1"] .qmnote');
+  await page.waitForSelector('#qmBody .qmc[data-st="1"] .qmned [data-qnc="green"][aria-pressed="true"]');
+  await page.click('#qmBody .qmc[data-st="1"] [data-nsave]');
+  await page.waitForSelector('#qmBody .qmc[data-st="1"] .qmnote');
+  assert.equal((await paperMarks(page, 1)).filter(m => m.qzn)[0].color, '#1E8A4C', 'saving again keeps the color she picked');
   // Marking the question wrong and clearing it again keeps the words.
   await page.click('#qmBody .qmc[data-st="0"] .qmimg');
   await page.waitForFunction(() => document.querySelector('#qmBody .qmc[data-st="0"]').classList.contains('wrong'));

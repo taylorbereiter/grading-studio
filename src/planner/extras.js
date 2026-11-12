@@ -36,7 +36,7 @@ function ctxOpen(e) {
   const c = ctxTarget(e.target), x = e.clientX, y = e.clientY;
   const what = c.kind === 'slide' ? 'this slide' : c.kind === 'lesson' ? 'this lesson' : c.kind === 'file' ? 'this file' : c.kind === 'quote' && getSelection().toString().trim() ? 'the selected text' : 'this';
   const box = document.createElement('div'); box.className = 'pl-ctx'; box.setAttribute('role', 'menu');
-  box.innerHTML = '<button role="menuitem" data-cx="note">💬 Comment for Claude on ' + what + '…</button><button role="menuitem" data-cx="add">＋ Add ' + what + ' to the Claude box</button>' +
+  box.innerHTML = '<button role="menuitem" data-cx="note">💬 Comment for ' + plAi() + ' on ' + what + '…</button><button role="menuitem" data-cx="add">＋ Add ' + what + ' to the ' + plAiTag() + ' box</button>' +
     (c.kind === 'lesson' || (c.kind === 'slide' && L.view === 'edit') ? '<button role="menuitem" data-cx="copy">⧉ Copy ' + (c.kind === 'lesson' ? 'this lesson' : 'the lesson') + ' to another day…</button>' : '') +
     '<span class="pl-ctx-hint">Shift + right-click for the usual menu</span>';
   ctxEl = box; ctxPlace(box, x, y);
@@ -52,8 +52,8 @@ function ctxOpen(e) {
 function noteOpen(c, x, y) {
   ctxClose();
   const box = document.createElement('div'); box.className = 'pl-ctx pl-note';
-  box.innerHTML = '<b>Comment for Claude</b><span class="muted sp-small">' + esc(chipLabelNow(c)) + '</span><textarea id="plNoteT" rows="4" placeholder="What should Claude change or think about here?"></textarea>' +
-    '<div class="sp-bar"><button class="btn sm" data-dict="#plNoteT">🎤 Dictate</button><span class="sp"></span><button class="btn sm ghost" data-nx>Cancel</button><button class="btn sm primary" data-nok>Add to Claude box</button></div>';
+  box.innerHTML = '<b>Comment for ' + plAi() + '</b><span class="muted sp-small">' + esc(chipLabelNow(c)) + '</span><textarea id="plNoteT" rows="4" placeholder="What should ' + plAi() + ' change or think about here?"></textarea>' +
+    '<div class="sp-bar"><button class="btn sm" data-dict="#plNoteT">🎤 Dictate</button><span class="sp"></span><button class="btn sm ghost" data-nx>Cancel</button><button class="btn sm primary" data-nok>Add to ' + plAiTag() + ' box</button></div>';
   ctxEl = box; ctxPlace(box, x, y);
   const t = box.querySelector('textarea'); t.focus();
   const ok = async () => {
@@ -175,14 +175,14 @@ async function copyLesson(l, slot, title) {
 
 /* ---------- print a week ---------- */
 function printWeek() {
-  const mon = parseYmd(L.weekOf), days = [0, 1, 2, 3, 4].map(i => ymd(addDays(mon, i)));
+  const mon = parseYmd(L.weekOf), days = plWeekOffs().map(i => ymd(addDays(mon, i)));
   const P = s => esc(s);
   let h = '<h1>Week of ' + LMONTHS[mon.getMonth()] + ' ' + mon.getDate() + '</h1>';
   const units = courses().map(c => { const at = unitAt(c.course, L.weekOf); return at ? '<li><b>' + P(c.course) + ':</b> ' + P(at.u.title) + ', week ' + (at.n + 1) + ' of ' + at.u.weeks.length + (at.u.weeks[at.n].focus ? ' (' + P(at.u.weeks[at.n].focus) + ')' : '') + '</li>' : ''; }).join('');
   if (units) h += '<ul class="units">' + units + '</ul>';
   for (const d of days) {
     const off = dayOff(d), ev = eventsOn(d), ms = meetingsOn(d);
-    h += '<section><h2>' + LDAYS[parseYmd(d).getDay()] + ' ' + (parseYmd(d).getMonth() + 1) + '/' + parseYmd(d).getDate() + (off ? ' · ' + P(off.label || 'No school') : '') + ev.map(x => ' · ' + P(x.label)).join('') + '</h2>';
+    h += '<section><h2>' + LDAYS[parseYmd(d).getDay()] + ' ' + plMd(d) + (off ? ' · ' + P(off.label || 'No school') : '') + ev.map(x => ' · ' + P(x.label)).join('') + '</h2>';
     if (!ms.length && !off) h += '<p class="none">No classes</p>';
     for (const { c, m } of ms) {
       const ls = lessonsAt(c.id, d);

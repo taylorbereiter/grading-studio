@@ -21,8 +21,8 @@ let lib = migrateLib(store.get('gs.lib', null) || { classes: [] });
 // Where their students hand work in, what a unit links to, and how they usually grade. Asked in the welcome (src/welcome.js) and
 // changed in Settings. It lives in lib, so it goes wherever their classes go. A browser from before the welcome has no lib.me and
 // reads as ME_OLD, which is every word and default the app had then: nothing is written for it until its teacher changes a setting.
-const ME_OLD = { sys: 'ManageBac', unit: 'Atlas', scale12: true };   // scale12: Rubric setup offers the 12-point scale (12 = 100, 11 = 95…) as a preset
-const ME_NEW = { sys: '', unit: '', grade: { way: 'rubric' } };
+const ME_OLD = { sys: 'ManageBac', unit: 'Atlas', scale12: true, ai: 'Claude' };   // scale12: Rubric setup offers the 12-point scale (12 = 100, 11 = 95…) as a preset
+const ME_NEW = { sys: '', unit: '', ai: '', grade: { way: 'rubric' } };
 // A brand-new browser has the new teacher's answers from its first moment (in memory: nothing is stored until something is saved),
 // so whatever it saves first, a class or a paper dropped past the welcome, carries them.
 if (fresh && !lib.me) lib.me = JSON.parse(JSON.stringify(ME_NEW));
@@ -38,6 +38,15 @@ const SYS_LIST = ['Google Classroom', 'ManageBac', 'Canvas', 'Microsoft Teams', 
 const sysOr = other => sysName() || other;
 const sysLink = () => sysName() || 'Class page';   // the link each class can carry to its page in the school's system
 const sysDl = () => sysName() ? 'the ' + sysName() + ' download' : 'the papers';
+// The AI assistant this teacher uses, if they use one: only for the words on screen and the names of the files made for it. Nothing
+// is connected to it. A browser from before this was asked reads as Claude, which is the word the app had; a new one names none
+// and reads "your AI assistant". me().ai can be absent in a lib.me written before the question existed: that teacher had Claude's words too.
+const AI_LIST = [['Claude', 'https://claude.ai/new'], ['ChatGPT', 'https://chatgpt.com/'], ['Gemini', 'https://gemini.google.com/app'], ['Copilot', 'https://copilot.microsoft.com/']];
+function aiName() { const m = me(), v = m.ai == null ? (m.scale12 ? 'Claude' : '') : m.ai; return String(v || '').trim().slice(0, 30); }
+function aiSay() { return aiName() || 'your AI assistant'; }   // in the middle of a sentence
+function AiSay() { return aiName() || 'Your AI assistant'; }   // at the start of one
+function aiTag() { return aiName() || 'AI'; }                  // in front of another word: "the AI codes"
+function aiLink() { const a = AI_LIST.find(x => x[0].toLowerCase() === aiName().toLowerCase()); return a ? a[1] : ''; }   // where "Open …" goes; none for an assistant the app doesn't know
 // The same idea for a unit: where its plan lives. "Atlas" for a teacher who had it before.
 const unitWord = () => unitLinkName() || 'unit plan';
 // The link a unit can carry: "Atlas" for a teacher who had it before, a plain "unit plan" for everyone else.
@@ -49,7 +58,8 @@ const GRADE_WAYS = [
   ['points', 'Points', 'Type a total, like 17 out of 20. Each assignment has its own “out of”.', { mode: 'points', criteria: ['Criterion 1', 'Criterion 2', 'Criterion 3'], outOf: 20, scale: null }, null],
   ['percent', 'Percent', 'Type a percent for each paper.', { mode: 'points', criteria: ['Criterion 1', 'Criterion 2', 'Criterion 3'], outOf: 100, scale: null }, null],
   ['letters', 'Letter grades', 'A to F, worked out from the percent. You set where each letter starts.', { mode: 'points', criteria: ['Criterion 1', 'Criterion 2', 'Criterion 3'], outOf: 100, scale: null }, [[90, 'A'], [80, 'B'], [70, 'C'], [60, 'D'], [0, 'F']]],
-  ['ib7', 'IB 1 to 7', '1 to 7, worked out from the percent. You set the boundaries for your subject.', { mode: 'points', criteria: ['Criterion 1', 'Criterion 2', 'Criterion 3'], outOf: 100, scale: null }, [[85, '7'], [70, '6'], [55, '5'], [40, '4'], [25, '3'], [10, '2'], [0, '1']]],
+  ['myp', 'IB MYP criteria', 'Each criterion is marked 0 to 8. You choose the level that fits best, and the total becomes a final grade of 1 to 7.', { mode: 'rubric', criteria: ['Criterion 1', 'Criterion 2', 'Criterion 3'], outOf: 10, scale: null }, null],   // new classes start as MYP classes (classNewWay, ib.js)
+  ['ib7', 'IB DP 1 to 7', 'A final grade of 1 to 7, worked out from the percent, as in the Diploma. You set the boundaries for your subject.', { mode: 'points', criteria: ['Criterion 1', 'Criterion 2', 'Criterion 3'], outOf: 100, scale: null }, [[85, '7'], [70, '6'], [55, '5'], [40, '4'], [25, '3'], [10, '2'], [0, '1']]],
 ];
 const gradeWay = k => GRADE_WAYS.find(w => w[0] === k) || null;
 // What me() says about grading, tidied: { way, setup, bands }. setup can carry a row scale of the teacher's own (top, tops, half: start.js);
@@ -71,6 +81,8 @@ function gradeDefaultApply() {
 gradeDefaultApply();
 // The grade a percent earns, for a teacher who grades in letters or 1 to 7: the first boundary it reaches. '' when they don't.
 function bandOf(pct) {
+  const dp = batch ? batchClass() : null;   // a paper of a DP class: that class's own boundaries, whatever the teacher's usual way (ib.js)
+  if (dp && classWay(dp) === 'dp') { const v = pct == null || isNaN(pct) ? null : ibGradeOf(roundPct(pct), ibBounds(dp)); return v == null ? '' : String(v); }
   const g = meGrade(); if (!g || !g.bands || pct == null || isNaN(pct)) return '';
   const b = g.bands.find(b => pct >= b[0]); return b ? b[1] : g.bands[g.bands.length - 1][1];
 }
@@ -80,7 +92,7 @@ function saveLib() { libVer++; if (!store.set('gs.lib', lib)) toast('This browse
 // it is a separate page that never opens grading's work. Only for a teacher who has said them; nothing is written otherwise.
 function wordsShare() {
   if (!lib.me) return;
-  try { const v = JSON.stringify({ sys: sysName(), unit: unitLinkName(), ...(me().scale12 ? { scale12: true } : {}) }); if (localStorage.getItem('gs.words') !== v) localStorage.setItem('gs.words', v); } catch {}
+  try { const v = JSON.stringify({ sys: sysName(), unit: unitLinkName(), ai: aiName(), ...(me().scale12 ? { scale12: true } : {}) }); if (localStorage.getItem('gs.words') !== v) localStorage.setItem('gs.words', v); } catch {}
 }
 const holders = () => lib.classes.concat([lib.loose]);
 const holderById = id => id ? lib.classes.find(c => c.id === id) || null : lib.loose;
@@ -94,8 +106,9 @@ function batchSummary(it) {
   const data = store.get(it.batchId, null);
   const d = new Date(it.opened || (data && data.t) || Date.now());
   let n = 0;
-  if (data) for (const k in data.s) { const g = data.s[k].g; if (g && (g.rubric.some(v => v != null) || g.points !== '')) n++; }
+  const fm = it.type === 'fm';
+  if (data) for (const k in data.s) { const g = data.s[k].g; if (g && (fm ? g.fb : (g.rubric || []).some(v => v != null) || g.points !== '')) n++; }
   const m = keptMeta.get(it.batchId);
-  if (m) return (m.scored || 0) + ' of ' + (m.n - (m.off || 0)) + ' scored' + keptMore(m) + (m.papers ? '' : ' · papers not kept');
-  return 'Opened ' + d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) + (data ? ' · ' + n + ' scored' : '') + ' · drop the same ZIP to keep going';
+  if (m) return keptSay(m) + (m.papers ? '' : ' · papers not kept');
+  return 'Opened ' + d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) + (data ? ' · ' + n + (fm ? ' feedback complete' : ' scored') : '') + ' · drop the same ZIP to keep going';
 }

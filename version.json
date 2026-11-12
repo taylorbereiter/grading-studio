@@ -1,11 +1,11 @@
 {
- "version": "1.27.17",
- "build": "708c791b39b8",
+ "version": "1.27.26",
+ "build": "d40bd89d6ecd",
  "notes": [
-  "Answer notes for quizzes: type each question's answer in Quiz boxes, and it goes on the returned papers in a gold note labelled Answer, by each question a student lost points on. In Quiz boxes, Answer notes can be set to every question or off."
+  "Full screen: press F, or Full screen near the bottom of the sidebar (beside ✕ while a paper is open). The browser’s bars go away and the sidebar folds to icons, or goes while you mark, so the paper gets the room. F again, the same button or Esc leaves, and nothing is closed or lost. On formative work F is for feedback, so use the button there."
  ],
  "files": {
-  "index.html": "76e98e69368a87287c6530f682c49e4b48426b79f2857c577ad3e2dfdc7cee84",
-  "planner.html": "40ed473ad76ac782738dd050ccc93f7ffcd930aeda1596e0c25e74f3f8fe9cd8"
+  "index.html": "2925b07faf86a2c28328197bcfc1c2ab8af59f04c0c0f982e0f5a5b88a84bf16",
+  "planner.html": "cbea12a85d6ddbaf00d4ca0ad016e5a1811d3be318a8631020c72e0b333fdbec"
  }
 }

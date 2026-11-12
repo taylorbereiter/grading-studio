@@ -6,7 +6,7 @@
 // A chunk's nonce is np (7 random bytes), its number (4 bytes) and 1 if it's the last, and the hash of everything up to the check block is authenticated with each one.
 // So a changed byte, a changed header, chunks swapped or cut off, all fail. The key comes from the passphrase with a salt that's new for each file.
 // Inside, frames: 4 bytes of JSON length, the JSON, then { n } bytes. Frames with no bytes come first (info, ls, tomb, dl), then the papers, late files, readings and Word edits,
-// then strong examples (ex and expix, which an older copy skips), and last { k: 'end' }.
+// then strong examples (ex and expix, which an older copy skips), the Planner's records (plan and planls, skipped the same way), and last { k: 'end' }.
 // Nothing is ever all in memory. Records are read one at a time, chunks go straight to the disk, and reading back slices the file.
 const TAKE_MAGIC = 'GSWORK1\n', TAKE_ITER = 1000000, TAKE_CHUNK = 4 * 1024 * 1024, TAKE_EXT = '.gswork';
 const te = new TextEncoder(), td = new TextDecoder();
@@ -22,7 +22,7 @@ const CHECK_I = 0xffffffff;
 
 /* writing */
 // sink: { write(bytes), close(), abort() }. onp(bytes so far).
-// more (a new year's archive): { info: more fields for the info frame, extra: async frame => more frames before the end }.
+// more (a new year's archive): { info: more fields for the info frame, onPlan: n => told how many Planner records went in, extra: async frame => more frames before the end }.
 async function takeWrite(sink, pass, onp, stop, more) {
   const salt = crypto.getRandomValues(new Uint8Array(16)), np = crypto.getRandomValues(new Uint8Array(7));
   const hdr = te.encode(JSON.stringify({ v: 1, kdf: { name: 'PBKDF2', hash: 'SHA-256', iter: TAKE_ITER, salt: b64(salt) }, cipher: 'AES-256-GCM', chunk: TAKE_CHUNK, np: b64(np) }));
@@ -70,6 +70,10 @@ async function takeWrite(sink, pass, onp, stop, more) {
   await schReady;   // the files of the school resources (school.js)
   for (const f of schRefs()) { const data = await schBytes(f.hash); if (data) await frame({ k: 'school', hash: f.hash }, data); }
   await exTakeFrames(frame);
+  // The Planner: its lessons, units, timetable and files, one record at a time (nyPlanFrames, in newyear.js), and its few settings kept by this browser.
+  const planN = await nyPlanFrames(frame);
+  await frame({ k: 'planls', ls: planLs() });
+  if (more && more.onPlan) more.onPlan(planN);
   if (more && more.extra) await more.extra(frame);
   await frame({ k: 'end' });
   await seal(true);
@@ -150,7 +154,8 @@ async function takeScan(rd, onp) {
       else if (f.k === 'ex') { if (f.rec && f.rec.id) B.ex[f.rec.id] = f.rec; }
       else if (f.k === 'expix') B.exAt[f.id + '|' + f.i] = { off: pos, n };
       else if (f.k === 'school') B.school[f.hash] = { off: pos, n };
-      else if (f.k === 'plan') (B.plan ||= []).push({ f, off: pos, n });   // the Planner's records, in a year's archive
+      else if (f.k === 'plan') (B.plan ||= []).push({ f, off: pos, n });   // the Planner's records
+      else if (f.k === 'planls') B.planLs = f.ls || {};
       else if (f.k === 'end') ended = true;
       await skipTo(pos + n);
       pos += n;
@@ -178,6 +183,7 @@ const takeSource = (rd, B) => ({
     return out;
   },
   async school(hash) { const s = B.school && B.school[hash]; return s ? rd.read(s.off, s.n) : null; },
+  async plan(r) { return r.n ? rd.read(r.off, r.n) : new Uint8Array(0); },
 });
 const TAKE_SAY = {
   notours: 'That isn’t a Grading Studio take-home file.',
@@ -193,7 +199,7 @@ const papersLacking = () => [...keptMeta.values()].filter(m => !m.papers).map(m 
 function openTake() {
   if (batch) saveNow();
   openDlg('<div class="bh"><h2>Take my work with me</h2><button class="icon" data-close aria-label="Close">✕</button></div><div class="bb" id="takeBox">' +
-    '<p style="margin-top:0">Makes one protected file with everything you need to grade on another computer: student files, marks, scores, comments, rosters, rubrics, readings, Word edits, added files and strong examples. Planner work stays here.</p>' +
+    '<p style="margin-top:0">Makes one protected file with everything you need to grade on another computer: student files, marks, scores, comments, rosters, rubrics, readings, Word edits, added files and strong examples. Your Planner goes too: lessons, units, timetable and their files.</p>' +
     '<p class="muted" style="font-size:14px">Choose a passphrase of a few words. If you forget it, nobody can open this file, you included, but your work here isn’t affected. Keep the file somewhere private all the same.</p>' +
     passFields() + '<label class="tkf">Again, to be sure<input type="password" id="takeP2" autocomplete="off"></label><p class="tkerr" id="takeErr" role="alert" hidden></p></div>' +
     '<div class="bf"><button class="btn" data-close>Cancel</button><button class="btn primary" id="takeGo">Make the file</button></div>', true);
@@ -221,7 +227,7 @@ function openTake() {
       const size = await takeWrite(sink, p1, n => { const b = $('#takeBar'), m = $('#takeMsg'); if (b && total) { b.max = total; b.value = Math.min(n, total); } if (m) m.textContent = 'Packing your work… ' + fmtSize(n) + (total ? ' of about ' + fmtSize(total) : ''); }, () => stopped);
       store.set('gs.lastBackup', Date.now()); renderBackup();
       const lacking = papersLacking();
-      end('Done: <b>' + esc(sink.name) + '</b> (' + fmtSize(size) + '). Open Grading Studio on the other computer and use <b>Bring work in</b>. The same goes for the trip back.' + (lacking.length ? '<br><br><b>Its papers aren’t in the file for: ' + esc(lacking.join(', ')) + '.</b> Only the marks and scores went. You’ll need those downloads on the other computer.' : ''), 'Done');
+      end('Done: <b>' + esc(sink.name) + '</b> (' + fmtSize(size) + '). ' + (movingTo() ? 'Now open the new address, <b>' + esc(movingTo()) + '</b>, and use <b>Bring work in</b> in Settings.' : 'Open Grading Studio on the other computer and use <b>Bring work in</b>. The same goes for the trip back.') + (lacking.length ? '<br><br><b>Its papers aren’t in the file for: ' + esc(lacking.join(', ')) + '.</b> Only the marks and scores went. You’ll need those downloads on the other computer.' : ''), 'Done');
     } catch (er) {
       try { await sink.abort(); } catch {}
       if (er && er.name === 'AbortError') return closeDlg();
@@ -284,7 +290,7 @@ function sideHtml(r, t, anon, crit) {
   if (out.length === 1) out.push('<div class="muted">No score, comment or marks</div>');
   return out.join('');
 }
-const PART_SAY = { setup: 'Rubric setup', cls: 'Class', share: 'Cover boxes and Claude codes', drive: 'Google Drive link', light: 'Lighting', lightOpt: 'Lighting', lightPg: 'Lighting', lightPgL: 'Lighting', anon: 'Anonymous grading', moved: 'Moved files', removed: 'Removed and replaced files', refSkip: 'Which readings each student sees', quiz: 'Quick mark boxes', groups: 'Group work', returned: 'Returned to students', carry: 'Flags on new and changed files', scan: 'Your answers about scanned pages' };
+const PART_SAY = { setup: 'Rubric setup', cls: 'Class', share: 'Cover boxes and share codes', drive: 'Google Drive link', light: 'Lighting', lightOpt: 'Lighting', lightPg: 'Lighting', lightPgL: 'Lighting', anon: 'Anonymous grading', moved: 'Moved files', removed: 'Removed and replaced files', refSkip: 'Which readings each student sees', quiz: 'Quick mark boxes', groups: 'Group work', clips: 'Video clips', returned: 'Returned to students', carry: 'Flags on new and changed files', scan: 'Your answers about scanned pages' };
 const partNames = list => [...new Set(list.map(k => PART_SAY[k] || k))].join(', ');
 const scaleSay = su => !rubricsDiffer(su, { ...su, scale: null }) ? 'No scale: percent is the plain share of points' : !rubricsDiffer(su, { ...su, scale: SCALE12 }) ? 'The usual grading scale' : 'A grading scale of its own';
 // One side of a setting that changed in both places.
@@ -370,7 +376,7 @@ async function bringPlan(B) {
 const askSig = a => a.gone ? '!' + a.id + '|' + (a.work && a.work.t) : a.id + '|' + a.key + '|' + recHash(a.a);
 // What will change, then her say-so. Nothing has been touched up to here.
 async function bringPreview(B, src, label, sub, again) {
-  const { plan, libm, lsSet } = await bringPlan(B), rows = plan.rows, lines = [], asks = [...plan.asks, ...libm.asks], shown = new Set(asks.map(askSig)), ex = await exBringPlan(B);
+  const { plan, libm, lsSet } = await bringPlan(B), rows = plan.rows, lines = [], asks = [...plan.asks, ...libm.asks], shown = new Set(asks.map(askSig)), ex = await exBringPlan(B), pl = await planBringPlan(B);
   const nw = rows.filter(r => r.kind === 'new'), mg = rows.filter(r => r.kind === 'merge'), gn = rows.filter(r => r.kind === 'gone');
   const li = t => '<li>' + t + '</li>';
   if (nw.length) lines.push('<p><b>' + nw.length + ' new ' + (nw.length === 1 ? 'download' : 'downloads') + '</b></p><ul>' + nw.map(r => li(esc(r.name) + ' <span class="muted">· ' + (r.meta && r.meta.n || Object.keys((r.work && r.work.s) || {}).length) + ' ' + ((r.meta && r.meta.n || Object.keys((r.work && r.work.s) || {}).length) === 1 ? 'student' : 'students') + (r.work ? ', ' + r.meta.scored + ' scored' : '') + (B.papers && B.papers[r.id] ? ', ' + fmtSize(B.papers[r.id].size) : '') + '</span>')).join('') + '</ul>');
@@ -391,8 +397,10 @@ async function bringPreview(B, src, label, sub, again) {
   const lsReal = Object.keys(lsSet).filter(k => k !== 'gs.rubricsGone' && /^gs\.(bank|setup|rubrics|school|rp\.|rd\.)/.test(k));
   if (lsReal.length) lines.push('<p><b>Also</b></p><ul>' + (lsSet['gs.bank'] ? li('Saved comments from the other computer are added to yours') : '') + (lsSet['gs.school'] ? li('School resources added or changed on the other computer') : '') + (lsReal.some(k => k !== 'gs.bank' && k !== 'gs.school') ? li('Rubrics or settings you don’t have here yet') : '') + '</ul>');
   if (ex.add || ex.change || ex.drop) lines.push('<p><b>Examples</b></p><ul id="bringEx">' + (ex.add ? li(ex.add + (ex.add === 1 ? ' new example' : ' new examples')) : '') + (ex.change ? li(ex.change + (ex.change === 1 ? ' example was changed' : ' examples were changed') + ' there') : '') + (ex.drop ? li(ex.drop + (ex.drop === 1 ? ' example was deleted there, so it goes here too' : ' examples were deleted there, so they go here too')) : '') + '</ul>');
+  if (pl.n) lines.push('<p><b>Planner</b></p><ul id="bringPlanner">' + (pl.empty ? li('Your Planner comes in' + (pl.lessons ? ': ' + pl.lessons + (pl.lessons === 1 ? ' lesson' : ' lessons') + ', with its units, timetable and files' : ', with its units, timetable and files') + '. Link its folder again in the Planner if you use one.')
+    : (pl.lessons ? li(pl.lessons + (pl.lessons === 1 ? ' lesson' : ' lessons') + ' you don’t have here') : '') + (pl.other ? li(pl.other + (pl.other === 1 ? ' file or setting' : ' files or settings') + ' the Planner here doesn’t have') : '') + li('<span class="muted">Lessons, units and the timetable already in the Planner here stay as they are.</span>')) + '</ul>');
   // Things only ever being kept as they are here, or looks like a pen color, aren't reason to ask.
-  const nothing = !ex.list.length && !nw.length && !gn.some(r => r.onA) && !libm.notes.length && !lsReal.length && !asks.length && !mg.some(r => r.extra || r.setIn.length || r.rows.some(x => x.pick === 'b'));
+  const nothing = !pl.n && !ex.list.length && !nw.length && !gn.some(r => r.onA) && !libm.notes.length && !lsReal.length && !asks.length && !mg.some(r => r.extra || r.setIn.length || r.rows.some(x => x.pick === 'b'));
   const sameN = rows.filter(r => r.kind === 'same' || r.kind === 'onlyA').length;
   const need = rows.filter(r => r.kind === 'new').reduce((a, r) => a + ((B.papers && B.papers[r.id] && B.papers[r.id].size) || 0), 0);
   let room = '';
@@ -451,6 +459,7 @@ async function bringApply(B0, src, shown, answers) {
       if (r.edits) for (const p of r.edits.fromB) { const rec = await src.edit(r.id, p); if (rec) await kdo('edits', 'readwrite', o => o.put(rec, r.id + '|' + p)); }
     }
     await schBring(src, B);
+    await planTake(B0, src);
     // Rosters next, with no marks or scores changed yet. A score with no paper hangs on its roster, so if that doesn't fit she's told, and nothing goes on without it.
     if (libm.toA) { lib = migrateLib(libm.lib); if (!setLibFrom(lib)) throw browserFull(); }
     for (const [k, v] of Object.entries(lsSet)) if (!lsPut(k, v)) throw browserFull();
@@ -470,6 +479,47 @@ async function bringApply(B0, src, shown, answers) {
   const v = B.info && B.info.dataV;
   if (!v) store.del('gs.dataV'); else if (v < gsData.version()) store.set('gs.dataV', v);
   return true;
+}
+
+/* the Planner's records, from a file */
+// A year's archive is left alone: the Planner moved itself on when that year ended, and last year's lessons are in Past lessons.
+// A Planner with nothing in it takes everything. One in use only takes what it hasn't got, by lesson and by record, so nothing made here is ever replaced.
+const PLAN_LS_SKIP = /^gsp\.presentTimer$/;
+function planLs() {
+  const o = {};
+  try { for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k && k.startsWith('gsp.') && !PLAN_LS_SKIP.test(k)) o[k] = localStorage.getItem(k); } } catch {}
+  return o;
+}
+async function planBringPlan(B) {
+  const none = { n: 0, lessons: 0, other: 0, empty: false, list: [] };
+  if (!B.plan || !B.plan.length || (B.info && B.info.kind === 'year')) return none;
+  const have = { lessons: new Set(), kv: new Set() }; let units = 0;
+  const db = await planDb(false);
+  if (db) {
+    try {
+      for (const s of ['lessons', 'kv']) for (const k of await idbP(db.transaction(s).objectStore(s).getAllKeys())) have[s].add(k);
+      if (have.kv.has('units')) { const u = await idbP(db.transaction('kv').objectStore('kv').get('units')); units = Array.isArray(u) ? u.length : 0; }
+    } catch (e) { console.error(e); } finally { db.close(); }
+  }
+  const empty = !have.lessons.size && !have.kv.has('setup') && !units;
+  const list = B.plan.filter(r => (r.f.s === 'lessons' || r.f.s === 'kv') && (empty || !have[r.f.s].has(r.f.key)));
+  const lessons = list.filter(r => r.f.s === 'lessons').length;
+  return { n: list.length, lessons, other: list.length - lessons, empty, list };
+}
+async function planTake(B, src) {
+  if (!src.plan) return 0;
+  const pl = await planBringPlan(B); if (!pl.n) return 0;
+  const db = await planDb(true); if (!db) throw new Error('The Planner’s store could not be opened');
+  try {
+    for (const r of pl.list) {   // one record at a time: a Planner can hold big files
+      const f = r.f; let v = f.v;
+      if ('blob' in f) { const bytes = await src.plan(r); v = f.fname ? new File([bytes], f.fname, { type: f.blob || '' }) : new Blob([bytes], { type: f.blob || '' }); }
+      await new Promise((res, rej) => { const tx = db.transaction(f.s, 'readwrite'); if (f.s === 'lessons') tx.objectStore(f.s).put(v); else tx.objectStore(f.s).put(v, f.key); tx.oncomplete = res; tx.onerror = tx.onabort = () => rej(tx.error); });
+    }
+  } finally { db.close(); }
+  for (const [k, v] of Object.entries(B.planLs || {})) { try { if (k.startsWith('gsp.') && !PLAN_LS_SKIP.test(k) && (pl.empty || localStorage.getItem(k) == null)) localStorage.setItem(k, v); } catch {} }
+  try { const ch = new BroadcastChannel('gs-plan-in'); ch.postMessage('in'); ch.close(); } catch {}   // a Planner open in another tab starts again from what is stored now
+  return pl.n;
 }
 
 /* old backup ZIPs */
@@ -532,4 +582,4 @@ async function removeHere() {
 }
 $('#takeBtn').onclick = openTake;
 $('#removeBtn').onclick = removeHere;
-Object.assign(window.__gs, { saveLib, reloadKept: loadKept, applyRubricPage, folderTroubleTest: folderTrouble, bank: () => bank, takeWrite, takeOpen, takeScan, bringFile, openTake, removeHere, takeUse: h => { takeSinkFor = h; }, carryLs, localState });
+Object.assign(window.__gs, { saveLib, reloadKept: loadKept, applyRubricPage, folderTroubleTest: folderTrouble, bank: () => bank, takeWrite, takeOpen, takeScan, bringFile, openTake, removeHere, takeUse: h => { takeSinkFor = h; }, carryLs, localState, planBringPlan });

@@ -83,7 +83,7 @@ test('three answers and she is set up: her classes in the sidebar, her school’
   assert.equal(l.me.scale12, undefined);
   assert.deepEqual(await page.$$eval('#railClasses [data-railcls] .rname', a => a.map(e => e.textContent)), ['Period 2 Biology', 'Period 5 Chemistry']);
   assert.equal(await page.$eval('#dropSay', e => e.textContent), 'A ZIP from Canvas, a folder, a scan of the whole class, or photos.');
-  assert.deepEqual(JSON.parse(await page.evaluate(() => localStorage.getItem('gs.words'))), { sys: 'Canvas', unit: '' });
+  assert.deepEqual(JSON.parse(await page.evaluate(() => localStorage.getItem('gs.words'))), { sys: 'Canvas', unit: '', ai: '' });
   await noneOfHers(page, 'Home after the welcome');
   // a new assignment starts as she said: a percent, with the letter it earns
   await openZip(page, zipOf({ 'Ada Example/Essay.pdf': await makePaper({ title: 'Ada' }), 'Ben Sample/Essay.pdf': await makePaper({ title: 'Ben' }) }), 'Cells essay.zip');
@@ -192,7 +192,7 @@ test('Settings changes the same answers, and a teacher from before keeps the res
   await goTo(page, '#/settings/classes');
   await page.select('#meSys', 'Google Classroom');
   let l = await lib(page);
-  assert.deepEqual(l.me, { sys: 'Google Classroom', unit: 'Atlas', scale12: true });
+  assert.deepEqual(l.me, { sys: 'Google Classroom', unit: 'Atlas', scale12: true, ai: 'Claude' });
   await goTo(page, '#/');
   assert.equal(await page.$eval('#dropSay', e => e.textContent), 'A ZIP from Google Classroom, a folder, a scan of the whole class, or photos.');
   await goTo(page, '#/settings/classes');

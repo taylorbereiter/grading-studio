@@ -12,7 +12,7 @@
 #attPick{font:inherit;font-size:var(--text-control);color:var(--fg-2);background:var(--surface);border:1px solid var(--line-strong);border-radius:var(--corner-3);padding:3px 6px;height:28px;width:132px}
 .attsum{margin:var(--space-3) 18px 0;font-size:var(--text-control);font-weight:600;color:var(--fg-2);font-variant-numeric:tabular-nums}
 .attsum.no{color:var(--warn);font-weight:600}
-.attlist{column-width:460px;column-gap:var(--space-6);padding:var(--space-2) 18px 0}
+.attlist{column-width:560px;column-gap:var(--space-6);padding:var(--space-2) 18px 0}
 .attrow{display:flex;align-items:center;gap:var(--space-2) var(--space-3);flex-wrap:wrap;padding:var(--space-2) 0;border-bottom:1px solid var(--line);break-inside:avoid}
 .attn{flex:1;min-width:120px;display:flex;align-items:center;gap:6px}
 .attname{font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -34,6 +34,9 @@
 .atttab .attn2{position:sticky;left:0;background:var(--surface);text-align:left;font-weight:500;padding-right:var(--space-4);z-index:1;max-width:220px;overflow:hidden;text-overflow:ellipsis}
 .atttab thead .attn2{z-index:2}
 .atttab .attt{font-variant-numeric:tabular-nums;font-weight:600;min-width:58px}
+.atttab thead .attt small{display:block;font-size:var(--text-caption);color:var(--muted);font-weight:400}
+.attunk{margin:0 18px var(--space-4);padding:var(--space-2) var(--space-3);border-radius:var(--corner-3);background:var(--accent-soft);font-size:var(--text-control);color:var(--fg-2);line-height:1.6}
+.attunk b{color:var(--fg)}
 .atttab td.attt.z{color:var(--faint);font-weight:400}
 .atttab .attd a{display:block;color:inherit;text-decoration:none;font-weight:500;font-size:var(--text-small);padding:2px 4px;border-radius:var(--corner-1)}
 .atttab .attd a:hover{background:var(--hover);color:var(--accent)}
