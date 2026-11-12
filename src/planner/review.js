@@ -124,21 +124,22 @@ async function claudeChanged(old, l) {
 
 /* ---------- the slide's "for Claude" note and comments ---------- */
 function slideTalkHtml(s) {
-  return '<div class="pl-ask"><label class="ls-notes">What I want on this slide <span class="muted" style="font-weight:400">(for Claude, not shown on the slide)</span><textarea data-f="ask" rows="2" placeholder="Like: a short video on ethos here, or three examples from Ch 4">' + esc(s.ask) + '</textarea></label><button class="btn sm ghost pl-mic" data-dict="[data-f=&quot;ask&quot;]" title="Say it instead of typing">🎤 Dictate</button>' +
+  // One box for everything said to Claude about this slide: what I want, screenshots for context, then the comments.
+  return '<div class="pl-ask"><label class="ls-notes"><span>What I want on this slide <span class="muted">(for Claude, not shown on the slide)</span></span><textarea data-f="ask" rows="4" placeholder="Like: a short video on ethos here, or three examples from Ch 4">' + esc(s.ask) + '</textarea></label>' +
     ctxHtml(s) +
     '<div class="pl-talk">' + s.talk.map((t, i) => '<div class="pl-msg ' + (t.by === 'claude' ? 'cl' : 'me') + (t.done ? ' done' : '') + '"><b>' + (t.by === 'claude' ? 'Claude' : 'You') + '</b><span>' + esc(t.text) + '</span><button class="btn sm ghost" data-talkdone="' + i + '">' + (t.done ? 'Open again' : 'Done') + '</button></div>').join('') +
-    '<div class="pl-say"><input class="btn sm" data-f="say" placeholder="Comment on this slide…" aria-label="Comment on this slide"><button class="btn sm" data-a="say">Add</button></div></div></div>';
+    '<div class="pl-say"><input class="btn sm" data-f="say" placeholder="Comment on this slide…" aria-label="Comment on this slide" title="A comment can be answered and ticked Done. What you want on the slide goes in the box above."><button class="btn sm ghost pl-mic" data-dict="[data-f=&quot;say&quot;]" title="Say it instead of typing">🎤</button><button class="btn sm" data-a="say">Add</button></div></div></div>';
 }
 /* ---------- screenshots for context: on the slide's "for Claude" area, not on the slide ---------- */
 function ctxHtml(s) {
   const c = s.ctx || [];
-  return '<div class="pl-cs"><div class="pl-cs-h"><b>Screenshots</b> <span class="muted">for context, not on the slide. Paste (Ctrl+V or ⌘V) or drop one here.</span>' +
-    '<button class="btn sm" data-a="ctxadd">+ Screenshot</button><input type="file" id="ctxIn" accept="image/*" multiple hidden></div>' +
+  return '<div class="pl-cs"><div class="pl-cs-h"><button class="btn sm ghost pl-mic" data-dict="[data-f=&quot;ask&quot;]" title="Say it instead of typing">🎤 Dictate</button>' +
+    '<button class="btn sm ghost" data-a="ctxadd" title="A screenshot for context, not put on the slide. You can also paste one (Ctrl+V or ⌘V) or drop one here.">+ Screenshot</button><input type="file" id="ctxIn" accept="image/*" multiple hidden>' +
+    '<span class="muted pl-cs-tip">Screenshots are for context, not on the slide. Crop out student names and faces first.</span></div>' +
     (c.length ? '<div class="pl-cs-list">' + c.map((x, i) => '<div class="pl-csi"><button class="pl-csi-img" data-ctxview="' + i + '" title="See it bigger"><img src="' + esc(imgSrc(x.src)) + '" alt="' + esc(x.note || 'Screenshot') + '"></button>' +
       '<input class="btn sm" data-f="ctxnote" data-i="' + i + '" value="' + esc(x.note) + '" placeholder="What is it? (like: the task sheet)" aria-label="What this screenshot is">' +
       '<div class="pl-csi-b"><button class="btn sm" data-ctxput="' + i + '" title="Make a picture slide of it after this one">Put on a slide</button><button class="btn sm ghost" data-ctxcopy="' + i + '" title="Copy the picture to paste into Claude">Copy</button><button class="btn sm ghost" data-ctxdel="' + i + '" title="Remove">×</button></div></div>').join('') + '</div>'
-      : '') +
-    '<p class="muted pl-cs-tip">Crop out student names and faces first.</p></div>';
+      : '') + '</div>';
 }
 async function addCtxShots(files) {
   const s = L.open.slides[L.cur]; let n = 0;
@@ -170,7 +171,7 @@ function ctxPut(x) {
 /* ---------- comments on the whole lesson: kept on the lesson ("talk"), shown under the slide's ---------- */
 function lessonTalkHtml(l) {
   const ms = l.talk || [];
-  return '<div class="pl-ltalk"><div class="pl-ltalk-h"><b>For Claude: the whole lesson</b> <span class="muted">Comments on how the lesson should go overall. They go with it when you copy it for Claude.</span></div>' +
+  return '<div class="pl-ltalk"><div class="pl-ltalk-h"><h3>For Claude: the whole lesson</h3><span class="muted sp-small">Comments on how the lesson should go overall. They go with it when you copy it for Claude.</span></div>' +
     '<div class="pl-talk">' + ms.map((t, i) => '<div class="pl-msg ' + (t.by === 'claude' ? 'cl' : 'me') + (t.done ? ' done' : '') + '"><b>' + (t.by === 'claude' ? 'Claude' : 'You') + '</b><span>' + esc(t.text) + '</span><button class="btn sm ghost" data-ltalkdone="' + i + '">' + (t.done ? 'Open again' : 'Done') + '</button></div>').join('') +
     '<div class="pl-say"><input class="btn sm" data-f="lsay" placeholder="Comment on the whole lesson…" aria-label="Comment on the whole lesson"><button class="btn sm ghost pl-mic" data-dict="[data-f=&quot;lsay&quot;]" title="Say it instead of typing">🎤</button><button class="btn sm" data-a="lsay">Add</button></div></div></div>';
 }
