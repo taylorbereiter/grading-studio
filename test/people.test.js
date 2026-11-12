@@ -2,7 +2,7 @@
 const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const { launch } = require('./helpers/chrome');
-const { classPage, openApp, openZip, score, settle } = require('./helpers/app');
+const { classPage, openApp, openZip, score, settle, pick } = require('./helpers/app');
 const { makePaper, zipOf } = require('./helpers/fixtures');
 
 let browser;
@@ -69,13 +69,13 @@ test('a pasted roster with ID and email columns keeps them as details, not in th
   });
   if (out) assert.deepEqual(out, [{ name: 'Alpha Ann', id: '20477', email: 'ann@example.org' }, { name: 'Ben Beta', id: '20481', email: 'ben@example.org' }]);
   await classPage(page, 0);
-  await page.click('[data-edit-class="0"]');
+  await pick(page, '[data-edit-class="0"]');
   await page.$eval('#cNames', e => { e.value = 'Alpha, Ann\t20477\tann@example.org\nBen Beta\t20481\tben@example.org'; });
   await page.click('#dlgBox [data-ok]');
   let l = await libNow(page);
   assert.deepEqual(l.classes[0].names, ['Alpha Ann', 'Ben Beta']);
   assert.deepEqual(l.classes[0].info['Ben Beta'], { id: '20481', email: 'ben@example.org' });
-  await page.click('[data-edit-class="0"]');
+  await pick(page, '[data-edit-class="0"]');
   await page.$eval('#cNames', e => { e.value = 'Alpha, Ann\nBenjamin Beta\t20481'; });
   await page.click('#dlgBox [data-ok]');
   l = await libNow(page);

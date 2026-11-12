@@ -3,7 +3,7 @@
 const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const { launch } = require('./helpers/chrome');
-const { classPage, openApp, answerDlg, pickFile } = require('./helpers/app');
+const { classPage, openApp, answerDlg, pickFile, pick } = require('./helpers/app');
 const { standardFiles, zipOf } = require('./helpers/fixtures');
 
 let browser, zip;
@@ -49,7 +49,7 @@ test('a new assignment goes to every ticked class, each in its unit of that name
   await page.click('#dlgBox [data-cancel]');
   // Edit stays one class
   await classPage(page, cards[1].id);
-  await page.click('[data-edit-asg="' + cards[1].id + '"]'); await page.waitForSelector('#aClass');
+  await pick(page, '[data-edit-asg="' + cards[1].id + '"]'); await page.waitForSelector('#aClass');
   assert.equal(await page.$('#aClasses'), null);
   await page.click('#dlgBox [data-cancel]');
   // opening one copy sets its rubric, and the other copy takes it

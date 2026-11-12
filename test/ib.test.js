@@ -4,7 +4,7 @@
 const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const { launch } = require('./helpers/chrome');
-const { openApp, classPage, goTo, openZip, score, settle, answerDlg, closeBox } = require('./helpers/app');
+const { openApp, classPage, goTo, openZip, score, settle, answerDlg, closeBox, pick } = require('./helpers/app');
 const { makePaper, zipOf } = require('./helpers/fixtures');
 const { ibSeed } = require('./helpers/ibseed');
 
@@ -57,7 +57,7 @@ test('a class is set to MYP, a criterion renamed and one boundary changed; the o
   const { page, close } = await openApp(browser, { seed: seed() });
   await classPage(page, 'c1');
   assert.equal(await page.$('.clshead .ibpill'), null);
-  await page.click('[data-ib-class="0"]'); await page.waitForSelector('#ibBody');
+  await pick(page, '[data-ib-class="0"]'); await page.waitForSelector('#ibBody');
   assert.equal(await page.$('#ibGroup'), null, 'points and percent shows no IB fields');
   await page.click('[data-ibway="myp"]'); await page.waitForSelector('#ibGroup');
   await page.select('#ibGroup', 'langacq');
@@ -77,7 +77,7 @@ test('a class is set to MYP, a criterion renamed and one boundary changed; the o
 test('three criteria get a scaled table, a boundary out of order is refused, and DP keeps its own percents', async () => {
   const { page, close } = await openApp(browser, { seed: seed() });
   await classPage(page, 'c1');
-  await page.click('[data-ib-class="0"]'); await page.waitForSelector('#ibBody');
+  await pick(page, '[data-ib-class="0"]'); await page.waitForSelector('#ibBody');
   await page.click('[data-ibway="myp"]'); await page.waitForSelector('#ibGroup');
   await page.select('#ibGroup', 'pp');
   assert.equal((await page.$$('[data-ibcrit]')).length, 3);
@@ -94,7 +94,7 @@ test('three criteria get a scaled table, a boundary out of order is refused, and
   assert.equal(c.way, 'dp'); assert.deepEqual(c.ib.bounds[0], [77, 7]);
   assert.equal(await page.$eval('.clshead .ibpill', e => e.textContent), 'DP');
   // back to points and percent: the pill goes, and what was typed is still there if the class comes back to IB
-  await page.click('[data-ib-class="0"]'); await page.waitForSelector('#ibBody');
+  await pick(page, '[data-ib-class="0"]'); await page.waitForSelector('#ibBody');
   await page.click('[data-ibway=""]'); await page.click('#dlgBox [data-ok]'); await shut(page);
   c = (await stored(page)).classes[0];
   assert.equal(c.way, undefined); assert.deepEqual(c.ib.bounds[0], [77, 7]);

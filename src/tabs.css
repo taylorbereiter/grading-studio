@@ -38,6 +38,9 @@ a.opchip:hover{text-decoration:underline}
 #glChk b{color:var(--warn)}
 #glChk span{flex:1;min-width:200px}
 #glTable.only tbody tr:not(.chk){display:none}
+/* a row to check is still a table row: .chk is also the name of a tick-box label, which lays out as a line (11/12) */
+#glTable tr.chk{display:table-row;margin:0;cursor:auto}
+#glTable th:first-child,#glTable td.n{width:44px}
 
 /* Return */
 #dlg.aspage .bb.xp{display:grid;grid-template-columns:minmax(0,1fr) minmax(280px,360px);gap:24px;align-content:start;align-items:start}

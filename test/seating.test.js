@@ -34,7 +34,7 @@ async function dragTo(page, from, to) {
 test('a class has a Seating tab: the room is chosen once, and students are clicked or dragged to desks', async () => {
   const { page, close } = await open();
   try {
-    assert.deepEqual(await page.$$eval('#vClass .ctabs a', a => a.map(x => x.textContent.trim())), ['Assignments', 'Gradebook', 'Students', 'Attendance', 'Seating', 'Missing work', 'Charts', 'Report comments']);
+    assert.deepEqual(await page.$$eval('#vClass .ctabs .ctrow a', a => a.map(x => x.textContent.trim())), ['Attendance', 'Seating', 'Missing work', 'Charts', 'Report comments']);
     // nothing is kept until a room is chosen
     assert.equal(await stored(page), null);
     assert.equal(await page.$$eval('#seatStart [data-seatroom]', b => b.length), 4);

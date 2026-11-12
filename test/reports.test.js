@@ -36,7 +36,7 @@ const libStored = page => page.evaluate(() => localStorage.getItem('gs.lib'));
 
 test('a class has a Report comments tab, and each draft says what the gradebook knows about that student', async () => {
   const { page, close } = await open();
-  assert.deepEqual(await page.$$eval('#vClass .ctabs a', a => a.map(x => x.textContent.trim())), ['Assignments', 'Gradebook', 'Students', 'Attendance', 'Seating', 'Missing work', 'Charts', 'Report comments']);
+  assert.deepEqual(await page.$$eval('#vClass .ctabs .ctrow a', a => a.map(x => x.textContent.trim())), ['Attendance', 'Seating', 'Missing work', 'Charts', 'Report comments']);
   assert.match(await page.$eval('.rptnote', e => e.textContent), /on this computer from your own scores and comments\. No AI writes it, and nothing is sent anywhere/);
   assert.equal(await page.$eval('#rptName', e => e.textContent), 'Aria Testwell');
   assert.equal(await page.$eval('#rptCall', e => e.value), 'Aria', 'called by the first name');

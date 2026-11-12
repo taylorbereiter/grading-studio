@@ -81,7 +81,7 @@ function stpIb(o) {
 }
 const STP_WAYS = { rubric: 'rubric', rubricrows: 'rubric', rows: 'rubric', points: 'points', percent: 'percent', percentage: 'percent', letters: 'letters', lettergrades: 'letters', letter: 'letters', ib7: 'ib7', ib: 'ib7', ib1to7: 'ib7', myp: 'myp', mypcriteria: 'myp', ibmyp: 'myp', dp: 'ib7' };
 function stpRead(j) {
-  const S = { left: [], unknown: [], notes: [] }, known = new Set(['gradingStudioSetup', 'teacher', 'about', 'school', 'programme', 'program', 'grading', 'classes', 'calendar', 'terms', 'gradebook', 'rubrics', 'comments', 'goals', 'attendance', 'slides', 'marking']);
+  const S = { left: [], unknown: [], notes: [] }, known = new Set(['gradingStudioSetup', 'teacher', 'about', 'school', 'programme', 'program', 'grading', 'classes', 'calendar', 'terms', 'gradebook', 'rubrics', 'comments', 'goals', 'attendance', 'classTabs', 'slides', 'marking']);
   for (const k of Object.keys(j)) {
     if (STP_STUDENT.test(k)) { if (stpCount(j[k])) S.left.push('Something about students (“' + stpStr(k, 30) + '”).'); }
     else if (!known.has(k)) S.unknown.push(stpStr(k, 30));
@@ -178,6 +178,8 @@ function stpRead(j) {
     if (Object.keys(m).length) S.mark = m;
   }
   if (typeof j.attendance === 'boolean') S.att = j.attendance; else if (j.attendance != null && stpCount(j.attendance)) S.left.push('Attendance records.');
+  // the class pages kept in the tab row, by name: ["Attendance", "Charts"]. The others stay under More.
+  if (Array.isArray(j.classTabs)) S.tabs = [...new Set(j.classTabs.map(x => (CLASS_TABS.find(t => stpKey(t[1]) === stpKey(x) && !TABS_FIRST.includes(t[0])) || [])[0]).filter(Boolean))];
   return S;
 }
 
@@ -317,6 +319,7 @@ function stpDiff(S, planNow) {
     add('mark', 'Marking and handing back', L, 'No paper, mark or score changes.');
   }
   if (S.att != null && S.att !== attOn()) add('att', 'Attendance', [S.att ? 'Take attendance in Grading Studio' : 'Don’t take attendance in Grading Studio'], S.att ? '' : 'Days already saved are kept.');
+  if (S.tabs && S.tabs.join() !== tabsKept().join()) add('tabs', 'Class tabs', [S.tabs.length ? 'Kept in the tab row: ' + S.tabs.map(k => CLASS_TABS.find(t => t[0] === k)[1]).join(', ') : 'Only Assignments, Gradebook and Students in the tab row'], 'The other pages stay under More.');
   return parts;
 }
 const stpMarkNow = () => ({ xnames: xNames(), anchorCover: anchorCoverOn(), nameFind: nameFindOn(), ptsInk, sheetfound: !!store.get('gs.sheetfound', false) });
@@ -336,7 +339,7 @@ const stpOwnTypes = () => typeof bkCats === 'function';
 const stpClone = v => v == null ? v : JSON.parse(JSON.stringify(v));
 async function stpApply(S, pick) {
   const U = { t: Date.now(), parts: Object.keys(pick).filter(k => pick[k]) }, now = Date.now();
-  if (pick.school || pick.grading || pick.att) { U.hadMe = !!lib.me; U.me = stpClone(lib.me || null); }
+  if (pick.school || pick.grading || pick.att || pick.tabs) { U.hadMe = !!lib.me; U.me = stpClone(lib.me || null); }
   if (pick.school) meSet({ ...(S.school || {}), ...(S.prog ? { prog: S.prog } : {}) });
   if (pick.grading) {
     U.setupLs = localStorage.getItem('gs.setup');
@@ -345,6 +348,7 @@ async function stpApply(S, pick) {
     if (!batch) setup = { ...DEFAULT_SETUP };
   }
   if (pick.att) meSet({ att: S.att });
+  if (pick.tabs) meSet({ tabs: S.tabs });
   if (pick.classes) {
     U.classes = []; U.links = []; U.units = []; U.ib = []; U.mbWas = localStorage.getItem(MB_KEY);
     for (const c of S.classes) {
@@ -457,6 +461,7 @@ async function stpExport() {
   if (bank.length) out.comments = bank.slice(0, 200);
   if (goalList().length) out.goals = goalList().map(x => x.name);
   if (lib.me && typeof lib.me.att === 'boolean') out.attendance = lib.me.att;
+  if (tabsKept().length) out.classTabs = tabsKept().map(k => CLASS_TABS.find(t => t[0] === k)[1]);
   { const m = stpMarkNow(), o = { ...(m.xnames ? {} : { studentFileNames: false }), ...(m.anchorCover ? {} : { coverNamesOnAnchors: false }), ...(m.nameFind ? { findTypedNames: true } : {}), ...(m.ptsInk ? { pointsColor: m.ptsInk } : {}), ...(m.sheetfound ? { gradeSheetFromPapers: true } : {}) }; if (Object.keys(o).length) out.marking = o; }
   return JSON.stringify(out, null, 1);
 }
@@ -532,6 +537,7 @@ Every part except the first line is optional. Leave a part out rather than leavi
   "comments": ["Explain how your evidence supports your claim."],
   "goals": ["Uses evidence", "Designs a fair test"],
   "attendance": true,
+  "classTabs": ["Missing work"],
   "slides": { "agenda": true, "textSizes": "usual" },
   "marking": { "pointsColor": "credit", "studentFileNames": true, "coverNamesOnAnchors": true, "findTypedNames": false, "gradeSheetFromPapers": false }
 }
@@ -543,6 +549,7 @@ FIELD NOTES
 - Days are "Sun" to "Sat". Times are 24-hour, like "13:05". Dates are YYYY-MM-DD.
 - "daysOff" and "events" take one day, or a first and last day with "to".
 - "emptyType" is "other" (when a type has nothing in it yet, the others are used) or "zero". "extraCredit.addsTo" is "term" or "inClass"; "cap" true keeps grades at 100% at most. "retakes" is "highest", "latest" or "average".
+- "classTabs" are the class pages I want kept in the tab row beside Assignments, Gradebook and Students: any of "Attendance", "Seating", "Missing work", "Charts", "Goals", "Report comments". Leave it out unless I ask.
 - "slides" is for the lesson planner: "agenda" false stops an agenda being added as slide 2, and "textSizes" is "usual" (28 to 36 pt) or "any" (18 to 44 pt). Leave it out unless I ask.
 - "marking" holds small choices; leave out any I have not asked for. "pointsColor" is "pen", "credit" (full points green, part amber, none red) or one of red, blue, green, purple, black. "studentFileNames" names each file I hand back for the student and assignment. "coverNamesOnAnchors" covers names on example papers I export. "findTypedNames" lets the app look for typed names to cover. "gradeSheetFromPapers" also shows grades the app finds written on papers.
 - A rubric row is a name, or a name with "levels" keyed "4" down to "0". A rubric whose rows go higher takes "rowTop" (up to 10), and "halfPoints": false when only whole points are given.

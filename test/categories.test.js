@@ -2,7 +2,7 @@
 const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const { launch } = require('./helpers/chrome');
-const { classPage, openApp } = require('./helpers/app');
+const { classPage, openApp, pick } = require('./helpers/app');
 
 let browser;
 before(async () => { browser = await launch(); });
@@ -55,7 +55,7 @@ const lib = page => page.evaluate(() => window.__gs.state().lib);
 
 const groups = page => page.$$eval('#bkTab tr.bkg th', t => t.map(x => x.textContent).filter(Boolean));
 const heads = page => page.$$eval('#bkTab thead tr:last-child th.bksum', t => t.map(x => x.firstChild.textContent));
-const setup = async page => { await page.click('[data-bksetup]'); await page.waitForSelector('#bkSetup'); };
+const setup = async page => { await pick(page, '[data-bksetup]'); await page.waitForSelector('#bkSetup'); };
 const save = async page => { await page.click('[data-bksavesetup]'); await page.waitForSelector('#bkTab'); };
 const rows = page => page.$$eval('#bkCats .bkcrow', r => r.map(x => x.querySelector('[data-cname]').value));
 const type = (page, sel, v) => page.$eval(sel, (i, v) => { i.value = v; i.dispatchEvent(new Event('input', { bubbles: true })); }, v);
@@ -160,7 +160,7 @@ test('a teacher with only their own types gets a grade, and a type that was remo
   assert.equal((await termCol(page))[1], 'Bram Sample 67.50%');
   assert.equal(await page.$$eval('#bkTab thead tr:last-child th.bkch', t => t.length), 9, 'the assignments of the types that are gone are still listed');
   // The charts and one student draw without the usual types.
-  await page.click('[data-ctab="charts"]'); await page.waitForSelector('#bkHeat');
+  await pick(page, '[data-ctab="charts"]'); await page.waitForSelector('#bkHeat');
   assert.equal(await page.$('#bkScatter'), null, 'summatives against in-class has nothing to compare');
   assert.match(await page.$eval('#bkTiles', e => e.textContent), /Quizzes average.*Tests average/);
   await page.click('[data-ctab="students"]'); await page.waitForSelector('#peopleTbl table');
