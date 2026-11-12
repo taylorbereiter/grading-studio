@@ -1,14 +1,11 @@
 {
- "version": "1.25.0",
- "build": "5f4c5023f1b3",
+ "version": "1.27.15",
+ "build": "07aed3665d39",
  "notes": [
-  "Attendance. Each class has an Attendance tab: everyone starts as present, so a day is one press for each student who is late, excused or absent, with a note if you want one.",
-  "Look back shows every saved day in one table with each student’s totals, and a student’s own page lists the days they missed.",
-  "Copy a day, or download the table as a spreadsheet, for your school’s system. Today has a line for it under each class.",
-  "If you don’t take attendance here, turn it off in Settings, Classes and rosters."
+  "Copy one quiz answer as a picture: in Quick mark, press P or ⧉ Copy on an answer, then paste it into Claude to ask whether it is right. The picture shows only that answer, with the question and your answer key on top. The name, score, your mark and the file name are left off, and name covers are painted in, but the student’s handwriting and words still show."
  ],
  "files": {
-  "index.html": "75131ca8fbb0b717ae9eca15e49e8c3924c63dcb7738da953f04e18bf9211ac4",
-  "planner.html": "3cde234b5a247b468d59d75bc4807973946b6c0a9ce160f55bb11d45d9b8c10d"
+  "index.html": "7ebd6a0fb64c4101b7ce07feb809e40e7784c891650b468241024940d97ce083",
+  "planner.html": "e67bf02e63920938cfd803942a20ddb6d0ea23dba1829ca0c25da3bfe00b8cf6"
  }
 }

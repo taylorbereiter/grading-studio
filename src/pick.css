@@ -1,0 +1,59 @@
+/* ---------- Pick a name, make groups: what the class reads (src/pickshare.js), built into both pages ----------
+   The same stage as a presented lesson: dark around, a light card for the words, sized by the height of the screen. */
+.pk{position:fixed;inset:0;z-index:70;background:var(--stage);color:var(--stage-fg);display:flex;flex-direction:column;outline:none;user-select:none;-webkit-user-select:none}
+.pk-main{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2.4vh;padding:4vh 4vw 0;text-align:center;overflow:hidden}
+.pk-cls{font:600 2.6vh/1.2 var(--f-body);color:var(--stage-muted)}
+.pk-name{max-width:92vw;padding:4vh 6vh;border-radius:var(--corner-5);background:var(--stage-paper);color:var(--stage-ink);font-family:var(--f-display);font-weight:700;line-height:1.1;letter-spacing:-.02em;white-space:nowrap;opacity:.55}
+.pk-name.done{opacity:1;box-shadow:0 0 0 .8vh var(--stage-blue)}
+.pk-sub{min-height:3.4vh;font:500 2.6vh/1.3 var(--f-body);color:var(--stage-muted)}
+.pk-main.groups{justify-content:flex-start}
+.pk-groups{flex:1;min-height:0;width:100%;display:grid;grid-template-columns:repeat(var(--cols),minmax(0,1fr));gap:1.6vh;align-content:center;font-size:var(--fs)}
+.pk-g{background:var(--stage-paper);color:var(--stage-ink);border-radius:var(--corner-5);padding:.7em 1em .8em;text-align:left;line-height:1.3;font-weight:500;overflow:hidden}
+.pk-g h3{margin:0 0 .25em;font-size:.72em;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--stage-blue)}
+.pk-g{position:relative;min-height:4.2em}
+/* a name in a group can be dragged to another, or clicked and then put where the next click says */
+.pk-s{margin:0 -.3em;padding:0 .3em;border-radius:var(--corner-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:grab;touch-action:none}
+.pk-s:hover{background:var(--stage-blue-soft)}
+.pk-s.sel{background:var(--stage-blue);color:var(--stage-paper)}
+.pk-s.pk-from{opacity:.3}
+.pk-ghost{position:fixed;left:0;top:0;z-index:5;margin:0;width:max-content;padding:.1em .6em;pointer-events:none;background:var(--stage-paper);color:var(--stage-ink);font-weight:600;box-shadow:var(--shadow);cursor:grabbing}
+.pk-dragging,.pk-dragging *{cursor:grabbing}
+.pk-g.pk-over,.pk-pool.pk-over{box-shadow:0 0 0 .6vh var(--stage-blue)}
+.pk-empty{margin:0;font-size:.8em;color:var(--stage-ink-2)}
+.pk-gx{position:absolute;top:.3em;right:.4em;border:0;background:none;color:var(--stage-ink-2);font:inherit;font-size:.8em;line-height:1;padding:.2em .4em;border-radius:var(--corner-2)}
+.pk-gx:hover{background:var(--stage-blue-soft)}
+/* students not in a group yet, when the groups are made by hand */
+.pk-pool{width:100%;flex:none;background:var(--stage-bar);border:1px dashed var(--stage-line);border-radius:var(--corner-5);padding:.5em 1em;text-align:left;font-size:calc(var(--fs) * .8)}
+.pk-pool h3{margin:0 0 .3em;font-size:.72em;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--stage-muted)}
+.pk-pl{display:flex;flex-wrap:wrap;gap:.3em .5em}
+.pk-pool .pk-s{margin:0;padding:.1em .6em;background:var(--stage-paper);color:var(--stage-ink);font-weight:500}
+.pk-pool .pk-s.sel{background:var(--stage-blue);color:var(--stage-paper)}
+.pk-pool .pk-empty{color:var(--stage-muted)}
+
+/* the bar: for the teacher */
+.pk-bar{flex:none;align-self:center;display:flex;align-items:center;flex-wrap:wrap;justify-content:center;gap:var(--space-1);margin:var(--space-4);padding:var(--space-1) var(--space-2);max-width:calc(100vw - var(--space-5));
+  background:var(--stage-bar);border:1px solid var(--stage-line);border-radius:var(--corner-5);font-size:var(--text-control)}
+.pk-bar>button,.pk-bar select{border-radius:var(--corner-3)}
+.pk-bar button,.pk-bar select{border:0;background:none;color:var(--stage-fg);padding:var(--space-2) var(--space-3);font:inherit;font-weight:500;white-space:nowrap}
+.pk-bar select{border:1px solid var(--stage-line);background:var(--stage);max-width:200px}
+.pk-bar button:hover,.pk-bar button[aria-pressed="true"]{background:var(--stage-hover)}
+.pk-bar .pk-go,.pk-bar .pk-end{font-weight:600}
+.pk-bar .pk-go{background:var(--stage-blue);color:var(--stage-paper)}
+.pk-bar .pk-go:hover{background:var(--stage-blue-2)}
+.pk-bar .pk-end{border:1px solid var(--stage-line)}
+.pk-seg{display:inline-flex;border:1px solid var(--stage-line);border-radius:var(--corner-3);overflow:hidden}
+.pk-seg button{padding:var(--space-2)}
+.pk-seg button[aria-pressed="true"]{background:var(--stage-blue);color:var(--stage-paper)}
+.pk-sep{width:1px;align-self:stretch;margin:var(--space-1);background:var(--stage-line)}
+.pk :focus-visible{outline:2px solid var(--stage-fg);outline-offset:2px}
+.pk-say{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+
+/* who is here: a panel on the right */
+.pk-who{position:absolute;right:0;top:0;bottom:0;z-index:2;width:min(420px,92vw);padding:var(--space-5) var(--space-5) 96px;overflow:auto;background:var(--stage-bar);border-left:1px solid var(--stage-line);font-size:var(--text-body)}
+.pk-who h2{margin:0 0 var(--space-2);font-size:var(--text-title)}
+.pk-who p{margin:0 0 var(--space-4);color:var(--stage-muted)}
+.pk-wl{display:flex;flex-wrap:wrap;gap:var(--space-2)}
+.pk-wl button{border:1px solid var(--stage-line);background:none;color:var(--stage-muted);border-radius:var(--corner-pill);padding:var(--space-1) var(--space-3);font:inherit;text-decoration:line-through}
+.pk-wl button[aria-pressed="true"]{background:var(--stage-paper);color:var(--stage-ink);border-color:var(--stage-paper);text-decoration:none;font-weight:500}
+.pk-wx{float:right;border:1px solid var(--stage-line);background:none;color:var(--stage-fg);border-radius:var(--corner-3);padding:var(--space-1) var(--space-3);font:inherit;font-weight:600}
+.pk-wx:hover{background:var(--stage-hover)}

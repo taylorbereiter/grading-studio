@@ -74,7 +74,7 @@ function pssOne(c, all, cols, conf, n, o, rc) {
   try {
     chart = o.cls ? bkBandLine(c, sc, n, shown) : bkLine(sc, [{ cls: 'bkln', pts: sc.map(col => { const x = col.cells.get(n); return bkCounts(x) ? x.pct : null; }), dots: true }], 'pssLine');
   } finally { bk.w = w; }
-  h += '<section class="psschart"><h4>Scores over time</h4>' + chart.replace(/ id="(bkStuLine|pssLine)"/, ' data-pssline') + (o.cls ? '' : '<div class="bkleg"><span><i class="sum"></i>Summative</span><span><i class="ic"></i>In-class</span></div>') + '</section>';
+  h += '<section class="psschart"><h4>Scores over time</h4>' + chart.replace(/ id="(bkStuLine|pssLine)"/, ' data-pssline') + (o.cls ? '' : '<div class="bkleg">' + bkLeg() + '</div>') + '</section>';
   // every assignment in the period, beside each term's numbers and the missing work
   // a long list goes across the whole page in two halves, with the term table and the missing work underneath
   const rows = cols.filter(x => x.type !== 'xc' || x.cells.get(n)).map(col => '<tr><td>' + esc(col.name) + '</td><td>' + esc(bkLabel(col.type, true)) + '</td><td>' + esc(bkDay(col.due)) + '</td><td class="pssv">' + pssScore(col, col.cells.get(n)) + '</td></tr>'), wide = rows.length > 14;

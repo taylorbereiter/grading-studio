@@ -6,7 +6,11 @@
 const $ = s => document.querySelector(s);
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 // Assignment types, for the Gradebook's term grades (src/book.js): key, full name, short name.
-const BK_TYPES = [['sum', 'Summative assessment', 'Summative'], ['ic', 'In-class assessment', 'In-class'], ['fm', 'Formative activity', 'Formative']];
+// In the order the gradebook shows them, left to right.
+// BK_TYPES is kept as the teacher's own list of types (bkCats in src/book.js); BK_DEF is the usual three, as they start out.
+const BK_TYPES = [['ic', 'In-class assessment', 'In-class'], ['sum', 'Summative assessment', 'Summative'], ['fm', 'Formative activity', 'Formative']];
+const BK_DEF = BK_TYPES.map(x => x.slice());
+let bkCatsSeen;
 let libVer = 0;   // goes up each time the units and rosters are saved, so a screen that kept a copy knows it's out of date
 const natural = (a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
 
@@ -55,14 +59,36 @@ document.addEventListener('click', e => {
 /* ---------------- grading setup ---------------- */
 // A grading scale for a 12-point rubric: the "usual" one offered in Rubric setup. Half points fall halfway between two rows.
 const SCALE12 = { 12: 100, 11: 95, 10: 91, 9: 86, 8: 82, 7: 77, 6: 73, 5: 68, 4: 64, 3: 60 };
-const RUBRIC_STEPS = [0, 1, 1.5, 2, 2.5, 3, 3.5, 4];
+const RUBRIC_STEPS = [0, 1, 1.5, 2, 2.5, 3, 3.5, 4];   // the steps of a row scored 0 to 4 with half points: what every setup had before the row's scale was a choice
+// A rubric row's scale: 0 to its top. su.top is the top of every row, su.tops[i] one row's own (rows of one rubric can differ),
+// su.half === false means whole numbers only. A setup with none of them is 0 to 4 with half points, as it always was, so saved
+// work reads exactly as before. Everything that needs a row's top, its steps or a rubric's total asks here.
+const ROW_TOP = 4, ROW_TOP_MAX = 10;
+const topOk = v => { v = Math.round(+v); return v >= 1 && v <= ROW_TOP_MAX ? v : 0; };
+function rowTop(su, i) { su = su || setup; return (i != null && Array.isArray(su.tops) && topOk(su.tops[i])) || topOk(su.top) || ROW_TOP; }
+const rowHalf = su => (su || setup).half !== false;
+// The scores a row offers: 0, 1, then every half (when they're on) and whole number up to its top. There is no half below 1.
+function rowSteps(su, i) { const top = rowTop(su, i), half = rowHalf(su), out = [0, 1]; for (let k = 1; k < top; k++) { if (half) out.push(k + .5); out.push(k + 1); } return out; }
+function rowsMax(su) { su = su || setup; return (su.criteria || []).reduce((a, _, i) => a + rowTop(su, i), 0); }
+function setupMax(su) { su = su || setup; return su.mode === 'rubric' ? rowsMax(su) : +su.outOf || 0; }
+// The whole scores of a row, highest first: what a teacher can write a meaning for.
+const rowLevels = (su, i) => { const out = []; for (let v = rowTop(su, i); v >= 0; v--) out.push(v); return out; };
+// Every row's top when they are all the same, else null (rows with their own tops).
+function rowsTop(su) { su = su || setup; const n = (su.criteria || []).length, t = rowTop(su, 0); for (let i = 1; i < n; i++) if (rowTop(su, i) !== t) return null; return t; }
+// "0 to 4, half points too", for the words that describe a rubric.
+const rowsSay = su => { const t = rowsTop(su); return (t ? '0 to ' + t : 'each row on its own scale') + (rowHalf(su) ? ', half points too' : ''); };
+// Only the keys that say something: a setup that is 0 to 4 with halves carries none, so it is stored as it always was.
+function rowScaleOf(su) { const o = {}; if (su && topOk(su.top) && topOk(su.top) !== ROW_TOP) o.top = topOk(su.top); if (su && Array.isArray(su.tops) && su.tops.some(topOk)) o.tops = su.tops.map(v => topOk(v) || null); if (su && su.half === false) o.half = false; return o; }
 const SCALE_FIVES = { 12: 100, 11: 95, 10: 90, 9: 85, 8: 80, 7: 75, 6: 70, 5: 65, 4: 60, 3: 55, 2: 50, 1: 45, 0: 40 };
 // What a new assignment starts with. In a browser from before the welcome it is this, as it always was; a teacher who has said how
 // they grade (the welcome, or Settings) gets their own instead: gradeDefaultApply, in library.js, once their answer has been read.
 const DEFAULT_SETUP = { mode: 'rubric', criteria: ['Criterion 1', 'Criterion 2', 'Criterion 3'], outOf: 10, scale: SCALE12 };
-let setup = { ...DEFAULT_SETUP, ...store.get('gs.setup', {}) };
+// A saved setup laid over the teacher's usual one. A setup saved before the row scale was a choice carries no top, and that means
+// 0 to 4 with half points whatever the teacher's usual scale is now, so the usual one never leaks into it.
+function setupOver(su) { const out = { ...DEFAULT_SETUP, ...(su || {}) }; if (su && (su.criteria || su.mode)) for (const k of ['top', 'tops', 'half']) if (!(k in su)) delete out[k]; return out; }
+let setup = setupOver(store.get('gs.setup', null));
 
-function maxPoints() { return setup.mode === 'rubric' ? setup.criteria.length * 4 : +setup.outOf || 0; }
+function maxPoints() { return setupMax(setup); }
 // Uses the grading scale when its top score matches the total possible; half points fall between two rows.
 // Percents are whole numbers, with halves rounded up (10.5 between 95 and 90 is 92.5, so 93%), the way a teacher rounds by hand.
 const roundPct = v => Math.max(0, Math.round(v + 1e-9));
@@ -162,6 +188,18 @@ const COLORS = { red: '#D7263D', blue: '#1F5FD1', green: '#1E8A4C', purple: '#7B
 let checkInk = COLORS[store.get('gs.checkInk', 'green')] ? store.get('gs.checkInk', 'green') : 'green';
 let CHECK_INK = COLORS[checkInk];
 function setCheckInk(k) { if (!COLORS[k]) return; checkInk = k; CHECK_INK = COLORS[k]; store.set('gs.checkInk', k); }
+// Points written on a paper ("1/2" in Quick mark, the total, a score stamp). By default they are in the pen's ink, as they always were.
+// A teacher can pick one color for them, or 'credit': full points in the ✓ color, none in the ✗ color, part in amber.
+// The amber is darker than a yellow so it reads on white paper and in print (4.7 to 1 on white, between the red and the green).
+const PTS_AMBER = '#A86400';
+let ptsInk = (k => k === 'credit' || COLORS[k] ? k : '')(store.get('gs.ptsInk', ''));
+function setPtsInk(k) { ptsInk = k === 'credit' || COLORS[k] ? k : ''; if (ptsInk) store.set('gs.ptsInk', ptsInk); else store.del('gs.ptsInk'); }
+// The color of v points out of top. A total or a score stamp is a sum, not one answer, so with 'credit' it stays in the pen's ink.
+function ptsColor(v, top) {
+  if (ptsInk === 'credit' && v != null && top != null) return +v <= 0 ? COLORS[inkColor] || COLORS.red : +v >= +top ? CHECK_INK : PTS_AMBER;
+  return COLORS[ptsInk] || COLORS[inkColor] || COLORS.red;
+}
+const totalInk = () => ptsColor();
 const HL = { yellow: '#FFE45C', green: '#B4F0A8', pink: '#FFB8D6', blue: '#B0E0FF' };
 let inkColor = store.get('gs.ink', 'red'), hlColor = store.get('gs.hl', 'yellow'), penW = store.get('gs.penW', 2);
 const DISP0 = { ui: 1, tsize: 14, fit: 'width', dfs: 15, dlh: 1.45, trim: true };
