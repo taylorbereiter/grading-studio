@@ -369,7 +369,8 @@ $('#consBtn').onclick = openCons;
 
 /* ---------------- the Claude steps, and which papers have had their name covers checked ---------------- */
 // share.checked: { 'path|page': the file's size when she looked }, so a page is only checked for the file she saw. A paper is checked when all of its pages are.
-const coverList = () => { const list = []; for (const st of batch.students) shareDocs(st).forEach((d, k) => list.push({ st, d, k })); return list; };
+// all: every paper she'll see while grading anonymously. Without it, the papers that go in the ZIP, which leaves out a bare paper once other papers have marks.
+const coverList = all => { const list = []; for (const st of batch.students) shareDocs(st, all).forEach((d, k) => list.push({ st, d, k })); return list; };
 const coverSig = f => (f.data && f.data.length) || 0;
 function coverOk(st, d) {
   const c = shareState().checked || {};
@@ -401,12 +402,12 @@ function coverPut(f, p, was) {
   if (was) sh.boxes[k] = JSON.parse(was); else delete sh.boxes[k];
 }
 const coverName = (st, k) => (anonOn() ? shownName(st, batch.students.indexOf(st)) : st.key) + (k ? ' (paper ' + (k + 1) + ')' : '');
-const coverFirst = () => Math.max(0, coverList().findIndex(x => !coverOk(x.st, x.d)));
+const coverFirst = all => Math.max(0, coverList(all).findIndex(x => !coverOk(x.st, x.d)));
 // Pages are counted as a download opens. Until then the list of papers is short, so any number would be wrong.
 const stillCounting = () => batch.students.some(s => s.files.some(f => viewable(f) && !f.numPages && !f.bad));
-function coverLine() {
+function coverLine(all) {
   if (stillCounting()) return 'Counting the papers…';
-  const list = coverList(), n = list.filter(x => coverOk(x.st, x.d)).length;
+  const list = coverList(all), n = list.filter(x => coverOk(x.st, x.d)).length;
   if (!list.length) return 'No PDFs or pictures to check.';
   return n + ' of ' + list.length + (list.length === 1 ? ' paper' : ' papers') + ' checked.';
 }
@@ -437,7 +438,7 @@ function shareOut() {
 // What's said about the ZIP before she makes it: it only says it has no names when nothing is still in doubt.
 function shareMadeLine() {
   const sh = shareState();
-  return sh.made ? 'Made ' + esc(whenLabel(sh.made)) + (sh.madeOpen ? ', with ' + sh.madeOpen + (sh.madeOpen === 1 ? ' paper' : ' papers') + ' not checked.' : '.') : (namesInDoubt() ? 'Box the names the cover can’t read first. It' : namesLooking() || nameFlagged().length ? 'Check the papers listed above first. It' : 'It has no names in it, and it') + ' stays on your computer until you give it to Claude.';
+  return sh.made ? 'Made ' + esc(whenLabel(sh.made)) + (sh.madeOpen ? ', with ' + sh.madeOpen + (sh.madeOpen === 1 ? ' paper' : ' papers') + ' not checked.' : '.') : (namesInDoubt() ? 'Box the names the cover can’t read first. It' : namesLooking() || nameFlagged().length ? 'Check the papers listed above first. It' : nameFindOn() || coverList().every(x => coverOk(x.st, x.d)) ? 'It has no names in it, and it' : 'It') + ' stays on your computer until you give it to Claude.';
 }
 function shareSteps() {
   const sh = shareState(), list = coverList().map((x, i) => ({ ...x, i, ok: coverOk(x.st, x.d) })), todo = list.filter(x => !x.ok), done = list.filter(x => x.ok);
@@ -447,7 +448,7 @@ function shareSteps() {
   if ($('#shWho')) $('#shWho').innerHTML = shareWho();
   if ($('#shPromise')) $('#shPromise').textContent = namePromise();
   $('#shSteps').innerHTML = shareOut() + nameWarnings() + '<div id="nameFlags" data-before="before you make the ZIP">' + nameFlagsHtml('before you make the ZIP') + '</div><ol class="shsteps">' +
-    '<li><b>Check the covers.</b> <span id="shCount"' + (todo.length ? ' class="stag"' : '') + '>' + (todo.length || !list.length ? '' : '<span aria-hidden="true">✓ </span>') + esc(coverLine()) + '</span> The automatic cover can’t see handwriting or a name inside a picture. In the check, drag a box over anything it missed. If students write their name in the same spot, box it once and use it on every paper.' + group('ccTodo', 'Not checked yet', todo, true) + group('ccDone', 'Checked', done, !todo.length) + '</li>' +
+    '<li><b>Check the covers.</b> <span id="shCount"' + (todo.length ? ' class="stag"' : '') + '>' + (todo.length || !list.length ? '' : '<span aria-hidden="true">✓ </span>') + esc(coverLine()) + '</span> ' + (nameFindOn() ? 'Typed names are found on their own. Drag a box over anything missed, like handwriting.' : 'Drag a box over each name.') + ' If names are in the same spot, box it once and use it on every paper.' + group('ccTodo', 'Not checked yet', todo, true) + group('ccDone', 'Checked', done, !todo.length) + '</li>' +
     '<li><b>Download the ZIP.</b> <span id="shMade">' + shareMadeLine() + '</span></li>' +
     '<li><b>Give it to Claude,</b> with this message. Change it however you like.<textarea id="shAsk" rows="4" aria-label="What to say to Claude"></textarea><div class="shrow"><button class="btn sm" data-shcopy>Copy the message</button><button class="btn sm" data-shopen>Open Claude ↗</button></div></li>' +
     '<li><b>Bring the reply back.</b> <button class="btn sm" data-shback>Bring back from Claude</button></li></ol>';

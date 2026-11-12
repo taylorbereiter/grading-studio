@@ -1,16 +1,31 @@
 {
+  "1.27.11": [
+    "Groups in Present mode: shuffling no longer moves the slides or ends the lesson, and each shuffle keeps last time's groups apart.",
+    "Change groups by hand: drag a name to another group, or click a name and then a group. Make my own starts with empty groups, and Undo or Ctrl Z takes back a move or a shuffle.",
+    "The Present timer keeps running after you finish or leave full screen, in the corner of the Planner, and comes back on the slides when you present again."
+  ],
+  "1.27.10": [
+    "Finding names on its own is now off unless you turn it on, in Settings, Marking, Name covers. Only the boxes you draw in Check the covers cover anything, and the check before anonymous grading lists every paper."
+  ],
+  "1.27.9": [
+    "In the Planner's Timetable, Use my school\u2019s template\u2026 picks your own PowerPoint template for slide downloads. Use the plain one goes back to the white one built in.",
+    "Save my setup file keeps your classes, meeting times, days off and slide template in one file to load on another computer."
+  ],
+  "1.27.8": [
+    "Anchor papers: while you mark a summative, click High, Mid or Low under the score. The Return tab lists the three and exports them in one ZIP, each named for the assignment and its level, like \u201cRiver essay - Summative High.pdf\u201d, with student names covered."
+  ],
   "1.27.7": [
-    "Keep strong work as an example: press ☆ Example on an answer in Quick mark (or E), or pick Use as an example in the ⋯ beside a student’s name for a whole paper or part of a page. Names are covered, and your marks and the score stay off unless you switch them on. It is always optional.",
+    "Keep strong work as an example: press \u2606 Example on an answer in Quick mark (or E), or pick Use as an example in the \u22ef beside a student\u2019s name for a whole paper or part of a page. Names are covered, and your marks and the score stay off unless you switch them on. It is always optional.",
     "The Examples tab on an assignment, and Examples in the sidebar for every class, have Show to the class, Copy picture, Download and Download as a sheet.",
     "Examples go to your linked folder and into the take-home file with the rest of your work."
   ],
   "1.27.6": [
-    "Returned files are named for the student, the assignment and what they are, like “Ana Lee - River essay - Graded.pdf”, or Feedback when there is no score. They still go in each student’s own folder.",
+    "Returned files are named for the student, the assignment and what they are, like \u201cAna Lee - River essay - Graded.pdf\u201d, or Feedback when there is no score. They still go in each student\u2019s own folder.",
     "To keep the names students turned in, untick Name each file by student and assignment under Options on the Return tab."
   ],
   "1.27.5": [
-    "The gradebook can import your old scores: press Import… and choose a CSV or Excel file, or paste the cells. Each column becomes an assignment, matched to your roster.",
-    "You see everything before it is saved, and a score already in the gradebook stays unless you choose the file’s."
+    "The gradebook can import your old scores: press Import\u2026 and choose a CSV or Excel file, or paste the cells. Each column becomes an assignment, matched to your roster.",
+    "You see everything before it is saved, and a score already in the gradebook stays unless you choose the file\u2019s."
   ],
   "1.27.4": [
     "School is a new page in the sidebar for the things about your school you look up again and again: the handbook, the calendar, the bell schedule, portals, forms, who to call.",
@@ -19,7 +34,7 @@
   ],
   "1.27.3": [
     "The class timer in Present takes minutes and seconds: type them in, or pick 0:30 and the other quick times. The menu remembers the last time you typed.",
-    "While it runs, the timer's menu adds or takes away 10 seconds or a minute, pauses, and restarts from the time you set. + and − add or take away a minute without opening the menu.",
+    "While it runs, the timer's menu adds or takes away 10 seconds or a minute, pauses, and restarts from the time you set. + and \u2212 add or take away a minute without opening the menu.",
     "Tick Show it big to put the countdown in the middle of the screen, large enough for the back of the room."
   ],
   "1.27.2": [
@@ -28,10 +43,10 @@
     "You can make your own assignment types. In Term setup, rename a type or press + Add a type (Homework, Projects, Quizzes), and give each its share of the grade. Your own setup stays as it is until you change it."
   ],
   "1.27.1": [
-    "Undo now takes back a score as well as a mark: press Ctrl Z (⌘Z on a Mac) after a slip on a slider, a number key, or Missing, Excused or Late. Redo puts it back.",
+    "Undo now takes back a score as well as a mark: press Ctrl Z (\u2318Z on a Mac) after a slip on a slider, a number key, or Missing, Excused or Late. Redo puts it back.",
     "Deleting a unit, an assignment or a class shows Undo for a few seconds, and Undo puts it back where it was.",
-    "“Picked up where you left off” shows once, when you open an assignment, and no longer on Today or other pages. The note about what opened leaves by itself when you move to the next student, if every file opened.",
-    "The Next button stays in one place from student to student, and the Grade heading on a class’s Students tab is drawn properly.",
+    "\u201cPicked up where you left off\u201d shows once, when you open an assignment, and no longer on Today or other pages. The note about what opened leaves by itself when you move to the next student, if every file opened.",
+    "The Next button stays in one place from student to student, and the Grade heading on a class\u2019s Students tab is drawn properly.",
     "Find anything answers to more everyday words: export, hand back, backup, undo, shortcuts, csv."
   ],
   "1.27.0": [
@@ -48,16 +63,16 @@
   "1.26.0": [
     "Seating: a new tab on each class. Pick how the room is set up, drag students to desks, and Shuffle gives everyone a new seat. A student can be kept in their seat.",
     "Pick a name shows one student at random, and nobody twice until everyone has had a turn. Make groups deals the class into groups of any size.",
-    "While presenting a lesson, P picks a name and G makes groups. Who’s here leaves out anyone who is away today."
+    "While presenting a lesson, P picks a name and G makes groups. Who\u2019s here leaves out anyone who is away today."
   ],
   "1.25.0": [
     "Attendance. Each class has an Attendance tab: everyone starts as present, so a day is one press for each student who is late, excused or absent, with a note if you want one.",
-    "Look back shows every saved day in one table with each student’s totals, and a student’s own page lists the days they missed.",
-    "Copy a day, or download the table as a spreadsheet, for your school’s system. Today has a line for it under each class.",
-    "If you don’t take attendance here, turn it off in Settings, Classes and rosters."
+    "Look back shows every saved day in one table with each student\u2019s totals, and a student\u2019s own page lists the days they missed.",
+    "Copy a day, or download the table as a spreadsheet, for your school\u2019s system. Today has a line for it under each class.",
+    "If you don\u2019t take attendance here, turn it off in Settings, Classes and rosters."
   ],
   "1.24.0": [
-    "Retakes: a second try at the same assignment keeps the first try's score, comment and paper. Start one from the ⋯ beside Missing, Excused and Late on a paper.",
+    "Retakes: a second try at the same assignment keeps the first try's score, comment and paper. Start one from the \u22ef beside Missing, Excused and Late on a paper.",
     "You choose which try counts, for all your classes: the highest (to begin with), the latest, or the average. It is in the retake box and in the gradebook's Term setup.",
     "A score typed into the gradebook takes a retake too: type both, like 7 > 10."
   ],
@@ -74,10 +89,10 @@
   "1.21.0": [
     "Each class has a Missing work tab: every paper you marked Missing, by student or by assignment, for the term you pick.",
     "Email reminder opens an email in your own mail app, addressed to the student and listing what they owe, for you to read and send. Email all writes one email to everyone who owes an assignment, with the addresses in Bcc. Grading Studio sends nothing itself.",
-    "Each reminder you open is noted beside the work, and Email wording… changes what every reminder says."
+    "Each reminder you open is noted beside the work, and Email wording\u2026 changes what every reminder says."
   ],
   "1.20.0": [
-    "The app can speak Traditional Chinese (繁體中文). Choose it in Settings, Display, App language, or at the top of the welcome.",
+    "The app can speak Traditional Chinese (\u7e41\u9ad4\u4e2d\u6587). Choose it in Settings, Display, App language, or at the top of the welcome.",
     "Like Spanish, it covers the first screens so far: the sidebar, Today, the welcome, Find anything, Help, and the feedback page students get with a returned paper. The other screens are still in English."
   ],
   "1.19.0": [
@@ -96,7 +111,7 @@
   ],
   "1.16.0": [
     "Help is in the sidebar: short answers to the questions teachers ask most, from opening a set of papers to moving your work to another computer.",
-    "Find anything answers questions too. Type a few words, like “late paper” or “backup”, and the answer is in the list."
+    "Find anything answers questions too. Type a few words, like \u201clate paper\u201d or \u201cbackup\u201d, and the answer is in the list."
   ],
   "1.15.0": [
     "A picture dragged onto a slide that has text now sits beside the text, in a new Text + picture layout.",
@@ -106,7 +121,7 @@
   "1.14.0": [
     "Extra credit: points or a percent on one paper, and extra credit entries in the gradebook that add to the term grade or the in-class average.",
     "The gradebook shows each type's average (summative, in-class) right beside the term grade, kept in view as you scroll. Averages only shows just those columns, and Whole year splits each term the same way.",
-    "Leave out… lets you untick students to see the class averages without them. Their own grades don't change, and nothing is saved."
+    "Leave out\u2026 lets you untick students to see the class averages without them. Their own grades don't change, and nothing is saved."
   ],
   "1.13.0": [
     "Present a lesson from the Planner, or from Today when its class is on now or next: its slides fill the screen, and the arrow keys or a clicker move through them.",
@@ -119,25 +134,25 @@
     "It is on unless you turn it off under Options on the Return tab. Your own pages are not changed, and bringing an export back in opens only those."
   ],
   "1.11.0": [
-    "The Planner’s sections are in the sidebar: Calendar, Units, Past lessons, Activities and Rubrics. The row of tabs across the top is gone.",
+    "The Planner\u2019s sections are in the sidebar: Calendar, Units, Past lessons, Activities and Rubrics. The row of tabs across the top is gone.",
     "A lesson has a lighter top: its name, its classes, its status and Download. Copy for Claude, Versions, the upload and the links are under More.",
     "Comments shows above a lesson once it has one."
   ],
   "1.7.0": [
     "Home is now Today: the classes you teach today with the lesson planned for each, the papers waiting to be marked, and the papers ready to hand back.",
     "What the class needs next: after a set of papers is scored, Today shows the weakest rubric row and how many students to sit down with.",
-    "A class page is quieter. Click anywhere on an assignment’s row to open it; the only blue button is the one that adds an assignment.",
-    "Forget, and the other ways to open papers, moved into the ⋯ menu on each row."
+    "A class page is quieter. Click anywhere on an assignment\u2019s row to open it; the only blue button is the one that adds an assignment.",
+    "Forget, and the other ways to open papers, moved into the \u22ef menu on each row."
   ],
   "1.6.0": [
-    "A new browser opens on three questions (your classes, how you grade, where work is kept) and starts with nothing of anyone else’s in it.",
-    "A sample class of made-up students, with papers to mark, for trying things out. Remove it from Home when you’re done.",
+    "A new browser opens on three questions (your classes, how you grade, where work is kept) and starts with nothing of anyone else\u2019s in it.",
+    "A sample class of made-up students, with papers to mark, for trying things out. Remove it from Home when you\u2019re done.",
     "The app uses the name of your own school system. Choose it, and how you usually grade, in Settings.",
     "Letter grades or IB 1 to 7 can show beside the percent, with boundaries you set.",
     "Canvas and Moodle downloads are grouped by student. The Planner works without a setup file, and downloads lessons as PowerPoint with a plain built-in template."
   ],
   "1.5.0": [
-    "The sidebar says “Not backed up”, in amber, until a folder holds a second copy of your work. Home asks for that folder once.",
+    "The sidebar says \u201cNot backed up\u201d, in amber, until a folder holds a second copy of your work. Home asks for that folder once.",
     "Go back in time, in Settings: any assignment as it was on an earlier day, restored on its own, with Undo.",
     "Grading Studio can be installed as an app, and it opens with no internet.",
     "A newer version now waits until you click Update now, so nothing changes in the middle of marking."

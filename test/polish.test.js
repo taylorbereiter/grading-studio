@@ -186,7 +186,7 @@ test('Box each grade, Box it by hand and Check the covers show the paper', async
   await page.evaluate(() => window.__gs.openAnon());
   await page.waitForSelector('#dlgBox [data-check]'); await page.click('#dlgBox [data-check]');
   await page.waitForSelector('#ccBody canvas');
-  assert.match(await named(), / → S-/, 'its title is the student and their code');
+  assert.doesNotMatch(await named(), / → S-/, 'from anonymous grading its title is the student alone, with no Claude code');
   await page.keyboard.press('Escape');
   await page.waitForSelector('#dlgBox [data-go]');
   assert.deepEqual(page.errors, []);

@@ -1,13 +1,13 @@
 {
- "version": "1.27.7",
- "build": "de97ef256a7a",
+ "version": "1.27.11",
+ "build": "953bd728801f",
  "notes": [
-  "Keep strong work as an example: press ☆ Example on an answer in Quick mark (or E), or pick Use as an example in the ⋯ beside a student’s name for a whole paper or part of a page. Names are covered, and your marks and the score stay off unless you switch them on. It is always optional.",
-  "The Examples tab on an assignment, and Examples in the sidebar for every class, have Show to the class, Copy picture, Download and Download as a sheet.",
-  "Examples go to your linked folder and into the take-home file with the rest of your work."
+  "Groups in Present mode: shuffling no longer moves the slides or ends the lesson, and each shuffle keeps last time's groups apart.",
+  "Change groups by hand: drag a name to another group, or click a name and then a group. Make my own starts with empty groups, and Undo or Ctrl Z takes back a move or a shuffle.",
+  "The Present timer keeps running after you finish or leave full screen, in the corner of the Planner, and comes back on the slides when you present again."
  ],
  "files": {
-  "index.html": "f52cbe9c60dfc4ed7b077f7467699eec9936e5aef50234b6415087bc2c68e897",
-  "planner.html": "063491c9df32459c966ce8862aed238579f6e77c0aad134129bf38ed9a1e1424"
+  "index.html": "b044dc226d8b0303384087e61f69114ba2b2e4bad5ed9bcc5272d6f8502a56be",
+  "planner.html": "0129de8542dcd6f0803ccd841e57227080019ce1fc8ce3e1685cb3cbbb26b1e5"
  }
 }
