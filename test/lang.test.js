@@ -106,6 +106,11 @@ test('the sentences Today builds come out as Spanish sentences', async () => {
     'A ZIP from Canvas, a folder, a scan of the whole class, or photos.': 'Un ZIP de Canvas, una carpeta, un escaneo de toda la clase o fotos.',
     'In this browser and your “Marking” folder': 'En este navegador y en tu carpeta “Marking”',
     '2 matches': '2 resultados',
+    // Settings: lines with a date, a count or the school's own system in them
+    'Aug 10 to Dec 18': 'Aug 10 – Dec 18',
+    'You have 1 saved rubric and 2 saved grading scales. They are kept in the rubric bank, sorted by unit, and hold only a rubric’s wording and a scale’s percents.': 'Tienes 1 rúbrica guardada y 2 escalas de calificación guardadas. Se guardan en el banco de rúbricas, ordenadas por unidad, y solo contienen el texto de una rúbrica y los porcentajes de una escala.',
+    'new entries add to the term grade, one point for one percentage point. Grades stay at 100% at most.': 'las entradas nuevas se suman a la nota del periodo, un punto por cada punto porcentual. Las notas llegan como máximo al 100%.',
+    'No Canvas link': 'Sin enlace de Canvas', 'A class has its roster, its units and its Canvas page.': 'Una clase tiene su lista, sus unidades y su página de Canvas.',
     // what the app doesn't know is left exactly as it is
     'Aria Testwell': 'Aria Testwell', 'Narrative essay · Unit 1': 'Narrative essay · Unit 1', '  Today  ': '  Hoy  ',
   };
@@ -144,7 +149,8 @@ test('every word on the covered screens is in each language file (run in English
     await page.keyboard.press('Escape');
     await goTo(page, '#/help'); await page.waitForSelector('#hlpList .hlpq'); await miss(page, 'Help', own);
     await page.type('#hlpIn', 'zzzz'); await pause(200); await miss(page, 'Help, nothing found', own);
-    await goTo(page, '#/settings/display'); await miss(page, 'Settings, Display', own);
+    // every page of Settings
+    for (const k of ['saving', 'classes', 'terms', 'marking', 'setup', 'display', 'about']) { await goTo(page, '#/settings/' + k); await pause(500); await miss(page, 'Settings, ' + k, own); }
     await goTo(page, '#/'); await openZip(page, zip); await score(page, [3]); await settle(page);
     await page.click('#closeBtn'); await page.waitForSelector('#toMark .krow');
     await miss(page, 'Today, with papers to mark', own);
@@ -173,9 +179,12 @@ test('Help is in Spanish, topic for topic, and is found by Spanish or English wo
   assert.match(await text(page, '#hlp-where-saved .hlpa'), /No hay botón de guardar ni cuenta/);
   assert.equal(await text(page, '#hlp-where-saved .hlpgo'), 'Abrir Ajustes, Guardado');
   assert.equal(await page.$eval('#vHelp .hlpsec h2', e => e.textContent), 'Primeros pasos');
-  // a button on a screen that is still in English keeps its English name in the answer, so it can be found
+  // a button in Settings has its Spanish name in the answer, as Settings shows it
   await goTo(page, '#/help/tablet'); await page.waitForSelector('#hlp-tablet.on');
-  assert.match(await page.$eval('#hlp-tablet .hlpa', e => e.innerHTML), /<b>Tablet and pencil<\/b>/);
+  assert.match(await page.$eval('#hlp-tablet .hlpa', e => e.innerHTML), /<b>Tableta y lápiz<\/b>/);
+  // a button on a screen that is still in English keeps its English name in the answer, so it can be found
+  await goTo(page, '#/help/quick-mark'); await page.waitForSelector('#hlp-quick-mark.on');
+  assert.match(await page.$eval('#hlp-quick-mark .hlpa', e => e.innerHTML), /<b>Points to levels<\/b>/);
   for (const [q, id] of [['copia de seguridad', 'where-saved'], ['backup', 'where-saved'], ['rúbrica', 'rubric']]) {
     await page.$eval('#hlpIn', e => { e.value = ''; }); await page.type('#hlpIn', q);
     await page.waitForFunction(id => !!document.querySelector('#hlp-' + id) && /respuestas?$/.test(document.querySelector('#hlpList h2').textContent), {}, id);

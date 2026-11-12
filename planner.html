@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"a091cb28","zh-Hans":"4a4fb00b","es":"3c624c50","fr":"022715b8","de":"fac43cad","pt-BR":"33aedd3b","ja":"a705120c","ko":"0cfd49e6"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script></head><body>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"e95e33e9","zh-Hans":"d7dcdf45","es":"d49170c4","fr":"69ea3aa8","de":"f41d073f","pt-BR":"b6e53a11","ja":"bf312164","ko":"ba19397c"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script></head><body>
 <title>Planner · Grading Studio</title>
 <script>try{document.documentElement.dataset.theme=JSON.parse(localStorage.getItem('gs.theme'))||'light'}catch(e){document.documentElement.dataset.theme='light'}</script>
 <style>
@@ -6212,8 +6212,8 @@ function trWith(s, P) {
   return hit == null ? s : s.replace(k, () => hit);
 }
 const tr = s => LANG_PACK && typeof s === 'string' ? trWith(s, LANG_PACK) : s;
-const LANG_ROOTS = '#rail, #vHome, #vHelp, #welcome, #findDlg, #setLang';
-const LANG_RAW = 'script, style, textarea, [contenteditable], [data-raw], .kname, #railClasses .rl, .wllang, .tbn, .trow:not(.none) b, .hlpa p:not(.hlpgo), .hlpa ol, kbd, .rbrand, .wlbrand, #homeDate';
+const LANG_ROOTS = '#rail, #vHome, #vHelp, #welcome, #findDlg, #setLang, #vSettings';
+const LANG_RAW = 'script, style, textarea, [contenteditable], [data-raw], .kname, #railClasses .rl, .wllang, .tbn, .trow:not(.none) b, .hlpa p:not(.hlpgo), .hlpa ol, kbd, .rbrand, .wlbrand, #homeDate, .aiWord, .updnotes, #vSettings .nt b, #meSys option:not([value]), #meAi option:not([value]), #wlSys option:not([value])';
 const LANG_ATTRS = ['title', 'aria-label', 'placeholder'];
 const langText = n => { const p = n.parentElement; if (!p || p.closest(LANG_RAW)) return; const v = tr(n.nodeValue); if (v !== n.nodeValue) n.nodeValue = v; };
 const langAttrs = el => { if (el.closest(LANG_RAW)) return; for (const a of LANG_ATTRS) if (el.hasAttribute(a)) { const was = el.getAttribute(a), v = tr(was); if (v !== was) el.setAttribute(a, v); } };
@@ -6247,7 +6247,7 @@ window.__gsLang = { lang: LANG, want: LANG_WANT, packs: Object.keys(LANG_NAMES),
   for (const r of document.querySelectorAll(LANG_ROOTS)) {
     if (!r.checkVisibility()) continue;
     for (const x of [r, ...r.querySelectorAll('[title], [aria-label], [placeholder]')]) if (!x.closest(LANG_RAW)) for (const a of LANG_ATTRS) see(x.getAttribute(a));
-    const w = document.createTreeWalker(r, NodeFilter.SHOW_TEXT); for (let n; (n = w.nextNode());) if (n.parentElement && !n.parentElement.closest(LANG_RAW) && !n.parentElement.closest('#hlpList') && n.parentElement.checkVisibility()) see(n.nodeValue);   // the Help answers are the language file's own (help), not looked up
+    const w = document.createTreeWalker(r, NodeFilter.SHOW_TEXT); for (let n; (n = w.nextNode());) if (n.parentElement && !n.parentElement.closest(LANG_RAW) && !n.parentElement.closest('#hlpList') && (n.parentElement.closest('select') || n.parentElement).checkVisibility()) see(n.nodeValue);   // the Help answers are the language file's own (help), not looked up
   }
   return [...out];
 } };
@@ -6299,7 +6299,7 @@ const HELP = [
     go: ['Open School resources', '#/school'], words: 'handbook calendar policy policies portal bookmark link file document resources staff bell schedule forms class course lesson links website textbook' },
   { id: 'language', sec: 'start', q: 'Can I use the app in another language?',
     a: ['Yes. Choose one in Settings, Display, **App language**, or at the top of the welcome. The page is drawn again in the language you pick.',
-      'So far a language other than English covers the sidebar, Today, the welcome, Find anything, Help and the feedback page students get in a returned paper. The other screens are still in English.',
+      'So far a language other than English covers the sidebar, Today, the welcome, Settings, Find anything, Help and the feedback page students get in a returned paper. The other screens are still in English.',
       'Class names, student names and anything else you typed are never translated.'],
     go: ['Open Settings, Display', '#/settings/display'], words: 'spanish español idioma language translate translation' },
   { id: 'scan-split', sec: 'start', q: 'I scanned the whole class as one file. How do I split it?',

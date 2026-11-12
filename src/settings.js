@@ -39,7 +39,7 @@ function setRender() {
     const terms = conf.terms.length ? conf.terms.map(t => '<div class="setrow"><span class="nt"><b>' + esc(t.name || 'Term') + '</b><span class="ns">' + (t.start && t.end ? bkDay(t.start) + ' to ' + bkDay(t.end) : 'No dates yet') + '</span></span></div>').join('') : '<div class="setrow"><span class="nt"><span class="ns">No terms yet: the gradebook treats the whole year as one.</span></span></div>';
     put('#setTerms', '<div class="lhead"><h2>Terms and weights</h2><span class="muted">For all your classes. An assignment counts toward the term its due date falls in.</span><span class="sp"></span><button class="btn sm primary" data-setterms' + (has ? '' : ' disabled title="Add a class with a roster first"') + '>Term setup</button></div>' +
       '<div class="setrows">' + terms + '</div>' +
-      '<p class="setp"><b>How each type counts:</b> ' + bkCats().map(x => esc(bkPlural(x)) + ' ' + (+conf.w[x[0]] || 0) + '%').join(' · ') + '. ' + (conf.empty === 'zero' ? 'A type with nothing in it yet counts as 0.' : 'When a type has nothing in it yet, the other types are used.') + '</p>' +
+      '<p class="setp"><b>How each type counts:</b> <span data-raw>' + bkCats().map(x => esc(bkPlural(x)) + ' ' + (+conf.w[x[0]] || 0) + '%').join(' · ') + '.</span> ' + (conf.empty === 'zero' ? 'A type with nothing in it yet counts as 0.' : 'When a type has nothing in it yet, the other types are used.') + '</p>' +
       '<p class="setp"><b>Extra credit:</b> new entries add to ' + bkXcWhere(conf.xcTo) + ', one point for one percentage point. ' + (conf.xcCap ? 'Grades stay at 100% at most.' : 'A grade can go over 100%.') + '</p>');
   }
   if (on('grading')) {

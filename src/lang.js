@@ -46,8 +46,8 @@ function trWith(s, P) {
 // For words that are drawn rather than put on the page, like the feedback page in a returned paper.
 const tr = s => LANG_PACK && typeof s === 'string' ? trWith(s, LANG_PACK) : s;
 // The parts of the page that are put into the language, and what inside them is never touched (what a teacher typed).
-const LANG_ROOTS = '#rail, #vHome, #vHelp, #welcome, #findDlg, #setLang';
-const LANG_RAW = 'script, style, textarea, [contenteditable], [data-raw], .kname, #railClasses .rl, .wllang, .tbn, .trow:not(.none) b, .hlpa p:not(.hlpgo), .hlpa ol, kbd, .rbrand, .wlbrand, #homeDate';
+const LANG_ROOTS = '#rail, #vHome, #vHelp, #welcome, #findDlg, #setLang, #vSettings';
+const LANG_RAW = 'script, style, textarea, [contenteditable], [data-raw], .kname, #railClasses .rl, .wllang, .tbn, .trow:not(.none) b, .hlpa p:not(.hlpgo), .hlpa ol, kbd, .rbrand, .wlbrand, #homeDate, .aiWord, .updnotes, #vSettings .nt b, #meSys option:not([value]), #meAi option:not([value]), #wlSys option:not([value])';
 const LANG_ATTRS = ['title', 'aria-label', 'placeholder'];
 const langText = n => { const p = n.parentElement; if (!p || p.closest(LANG_RAW)) return; const v = tr(n.nodeValue); if (v !== n.nodeValue) n.nodeValue = v; };
 const langAttrs = el => { if (el.closest(LANG_RAW)) return; for (const a of LANG_ATTRS) if (el.hasAttribute(a)) { const was = el.getAttribute(a), v = tr(was); if (v !== was) el.setAttribute(a, v); } };
@@ -84,7 +84,7 @@ window.__gsLang = { lang: LANG, want: LANG_WANT, packs: Object.keys(LANG_NAMES),
   for (const r of document.querySelectorAll(LANG_ROOTS)) {
     if (!r.checkVisibility()) continue;
     for (const x of [r, ...r.querySelectorAll('[title], [aria-label], [placeholder]')]) if (!x.closest(LANG_RAW)) for (const a of LANG_ATTRS) see(x.getAttribute(a));
-    const w = document.createTreeWalker(r, NodeFilter.SHOW_TEXT); for (let n; (n = w.nextNode());) if (n.parentElement && !n.parentElement.closest(LANG_RAW) && !n.parentElement.closest('#hlpList') && n.parentElement.checkVisibility()) see(n.nodeValue);   // the Help answers are the language file's own (help), not looked up
+    const w = document.createTreeWalker(r, NodeFilter.SHOW_TEXT); for (let n; (n = w.nextNode());) if (n.parentElement && !n.parentElement.closest(LANG_RAW) && !n.parentElement.closest('#hlpList') && (n.parentElement.closest('select') || n.parentElement).checkVisibility()) see(n.nodeValue);   // the Help answers are the language file's own (help), not looked up
   }
   return [...out];
 } };
