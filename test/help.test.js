@@ -98,7 +98,7 @@ test('Find anything answers a question: typed words find the answer and Enter op
   assert.deepEqual(await page.evaluate(() => { window.__gs.openFind(); return [...document.querySelectorAll('#findList .fcap')].map(e => e.textContent).filter(t => t === 'Help'); }), []);
   assert.ok(await page.$$eval('#findList .frow b', b => b.some(x => x.textContent === 'Help')), 'Help itself is a place to go');
   await page.type('#findIn', 'move another computer');
-  assert.deepEqual(await page.$$eval('#findList .frow b', b => b.map(x => x.textContent)), ['How do I move my work to another computer?']);
+  assert.deepEqual(await page.$$eval('#findList .frow b', b => b.map(x => x.textContent)), ['How do I move my work to another computer?', 'How do I move a lesson to another computer or give it to another teacher?']);   // the whole of one's work first, then one lesson
   assert.equal(await page.$eval('#findList .fcap', e => e.textContent), 'Help');
   await page.keyboard.press('Enter');
   await until(page, () => !document.querySelector('#vHelp').hidden && document.querySelector('#hlp-other-computer.on'));

@@ -13,7 +13,7 @@ function fbData(st, d) {
   const g = old ? { total: old.total, pct: old.pct, outOf: old.max, status: old.late ? 'late' : '' } : tries.length ? tryGrade(st) : gradeOf(st), rub = setup.mode === 'rubric', c = batchClass();
   if (cnt && !g.status && st.grade.status === 'late') g.status = 'late';
   const rubricOf = old ? old.rubric || [] : st.grade.rubric;
-  const rows = rub ? setup.criteria.map((name, i) => { const v = rubricOf[i]; return v == null ? null : { name, v, text: ((setup.levels && setup.levels[i] && setup.levels[i][Math.floor(v)]) || '').trim() }; }).filter(Boolean) : [];
+  const rows = rub ? setup.criteria.map((name, i) => { const v = rubricOf[i]; return v == null ? null : { name, v, ...(rowTop(setup, i) !== ROW_TOP ? { top: rowTop(setup, i) } : {}), text: ((setup.levels && setup.levels[i] && setup.levels[i][Math.floor(v)]) || '').trim() }; }).filter(Boolean) : [];
   const notes = [];
   d.pages.forEach(([path, p], k) => {
     const f = fileByPath(st, path); if (!f) return;
@@ -78,11 +78,12 @@ function fbBlocks(ctx, data, W, M, off) {
       const h = Math.max(nl.length * 16, dl.length * 16, 30) + 18, bx = any ? M + nameW : M + cw - barW;
       out.push({ h, draw: y => {
         text(nl, '600 12.5px ' + UI, FB_INK, M, y + 21, 16);
-        text([tr(fmtNum(r.v) + ' of 4')], '600 12px ' + UI, FB_BLUE, bx, y + 21, 16);
-        for (let k = 0; k < 4; k++) {   // four segments; a half point fills half of one
-          const x = bx + k * 23, fill = Math.max(0, Math.min(1, r.v - k));
-          ctx.fillStyle = FB_LINE; ctx.fillRect(x, y + 28, 20, 3.5);
-          if (fill) { ctx.fillStyle = FB_BLUE; ctx.fillRect(x, y + 28, 20 * fill, 3.5); }
+        const top = r.top || ROW_TOP, sw = (89 - (top - 1) * 3) / top;   // one segment for each point, the same width in all as four always were; a half point fills half of one
+        text([tr(fmtNum(r.v) + ' of ' + top)], '600 12px ' + UI, FB_BLUE, bx, y + 21, 16);
+        for (let k = 0; k < top; k++) {
+          const x = bx + k * (sw + 3), fill = Math.max(0, Math.min(1, r.v - k));
+          ctx.fillStyle = FB_LINE; ctx.fillRect(x, y + 28, sw, 3.5);
+          if (fill) { ctx.fillStyle = FB_BLUE; ctx.fillRect(x, y + 28, sw * fill, 3.5); }
         }
         text(dl, '11.5px ' + UI, FB_INK2, tx, y + 21, 16);
         ctx.fillStyle = FB_LINE; ctx.fillRect(M, y + h - 1, cw, 1);

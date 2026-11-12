@@ -139,7 +139,7 @@ test('a Word file keeps Comment, Edit and Convert to PDF in sight, with Download
 test('the ⋯ beside the student’s name has Arrange pages, Lighting and the Calculator', async () => {
   const { page, close } = await standard();
   await page.click('#whoMore');
-  assert.deepEqual(await texts(page, '#whoMore + .km .mitem'), ['Arrange pages', 'Lighting', 'Calculator']);
+  assert.deepEqual(await texts(page, '#whoMore + .km .mitem'), ['Arrange pages', 'Use as an example', 'Lighting', 'Calculator']);
   await page.click('#whoMore + .km [data-whodo="calc"]');
   await page.waitForSelector('#calcPanel', { timeout: 5000 });
   await close();

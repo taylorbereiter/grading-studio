@@ -66,16 +66,16 @@ function paperReads() {
 }
 // A saved score, worked out by the rubric and scale that download had, in the order the app uses: her own score, then one typed on the Grade sheet, then one read off the paper. Nothing in it depends on what's open now.
 function pastScore(su, g) {
-  const s = { ...DEFAULT_SETUP, ...su }, rub = s.mode === 'rubric';
+  const s = setupOver(su), rub = s.mode === 'rubric';
   if (g.status === 'missing' || g.status === 'excused') return { total: null, pct: null, status: g.status, rows: [] };
   const r = g.rubric || [];
-  let max = rub ? s.criteria.length * 4 : +s.outOf || 0, total = null, partial = false, paper = false;
+  let max = setupMax(s), total = null, partial = false, paper = false;
   if (rub) { const v = s.criteria.map((_, i) => r[i]); if (v.some(x => x != null)) { total = v.reduce((a, x) => a + (x || 0), 0); partial = v.some(x => x == null); } }
   else if (g.points !== '' && g.points != null && !isNaN(+g.points)) total = +g.points;
   if (total == null && hasSheet(g) && !isNaN(+g.sheet)) { total = +g.sheet; paper = true; }
   let pct = percentWith(total, max, s.scale);
   if (total == null && g.read && !(g.tries && g.tries.length)) { const d = g.read; paper = true; total = d.score; if (d.outOf != null) max = d.outOf; pct = d.pct != null ? d.pct : percentWith(total, max, s.scale); }
-  const one = addXc({ total, max, pct, partial, paper, status: g.status || '', rows: rub ? s.criteria.map((c, i) => [c, r[i]]).filter(x => x[1] != null) : [] }, g.xc, max, g.xcU);
+  const one = addXc({ total, max, pct, partial, paper, status: g.status || '', rows: rub ? s.criteria.map((c, i) => rowTop(s, i) === ROW_TOP ? [c, r[i]] : [c, r[i], rowTop(s, i)]).filter(x => x[1] != null) : [] }, g.xc, max, g.xcU);
   if (!g.tries || !g.tries.length) return one;
   const out = withTries(one, g.tries, max, one.total != null && !partial);   // a retake: the try that counts by the teacher's rule (start.js)
   if (out.outOf != null) { out.max = out.outOf; delete out.outOf; }
@@ -253,18 +253,18 @@ function consData() {
 }
 // Each rubric row on its own, in the order that row was scored. Several rows mean several chances to see something by chance, so the bar is higher per row.
 function rowDrifts() {
-  const max = 4, cut = 0.05 / setup.criteria.length;
+  const cut = 0.05 / setup.criteria.length;
   return setup.criteria.map((name, r) => {
     const pts = [];
     for (const st of batch.students) { const v = st.grade.rubric[r], t = st.grade.atR && st.grade.atR[r]; if (!noScore(st) && !st.grade.outAvg && v != null && t) pts.push({ v, t }); }
     const { out } = dropBatched(pts.sort((a, b) => a.t - b.t));
-    return { name, read: driftRead(out.map(p => p.v), max, cut) };
+    return { name, top: rowTop(setup, r), read: driftRead(out.map(p => p.v), rowTop(setup, r), cut) };
   });
 }
 function rowSay(rows) {
   if (setup.mode !== 'rubric' || rows.length < 2) return '';
   if (!rows.some(x => x.read.n >= DRIFT_SURE)) return '<p class="muted hsm">Rubric rows aren’t read one by one with fewer than ' + DRIFT_SURE + ' papers: each row is too noisy on its own.</p>';
-  return '<ul class="crows">' + rows.map(({ name, read: r }) => '<li><b>' + esc(name) + ':</b> ' + (r.n < DRIFT_SURE ? 'too few papers with a time' : r.level === 'none' ? 'no clear change' : 'later papers ' + (r.gap < 0 ? 'lower' : 'higher') + ', by about ' + roughGap(r, 4)) + '</li>').join('') + '</ul>';
+  return '<ul class="crows">' + rows.map(({ name, top, read: r }) => '<li><b>' + esc(name) + ':</b> ' + (r.n < DRIFT_SURE ? 'too few papers with a time' : r.level === 'none' ? 'no clear change' : 'later papers ' + (r.gap < 0 ? 'lower' : 'higher') + ', by about ' + roughGap(r, top || ROW_TOP)) + '</li>').join('') + '</ul>';
 }
 const ordinal = n => { const t = n % 100, u = n % 10; return n + (t > 10 && t < 14 ? 'th' : u === 1 ? 'st' : u === 2 ? 'nd' : u === 3 ? 'rd' : 'th'); };
 const whenLabel = t => new Date(t).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
@@ -369,7 +369,8 @@ $('#consBtn').onclick = openCons;
 
 /* ---------------- the Claude steps, and which papers have had their name covers checked ---------------- */
 // share.checked: { 'path|page': the file's size when she looked }, so a page is only checked for the file she saw. A paper is checked when all of its pages are.
-const coverList = () => { const list = []; for (const st of batch.students) shareDocs(st).forEach((d, k) => list.push({ st, d, k })); return list; };
+// all: every paper she'll see while grading anonymously. Without it, the papers that go in the ZIP, which leaves out a bare paper once other papers have marks.
+const coverList = all => { const list = []; for (const st of batch.students) shareDocs(st, all).forEach((d, k) => list.push({ st, d, k })); return list; };
 const coverSig = f => (f.data && f.data.length) || 0;
 function coverOk(st, d) {
   const c = shareState().checked || {};
@@ -401,12 +402,12 @@ function coverPut(f, p, was) {
   if (was) sh.boxes[k] = JSON.parse(was); else delete sh.boxes[k];
 }
 const coverName = (st, k) => (anonOn() ? shownName(st, batch.students.indexOf(st)) : st.key) + (k ? ' (paper ' + (k + 1) + ')' : '');
-const coverFirst = () => Math.max(0, coverList().findIndex(x => !coverOk(x.st, x.d)));
+const coverFirst = all => Math.max(0, coverList(all).findIndex(x => !coverOk(x.st, x.d)));
 // Pages are counted as a download opens. Until then the list of papers is short, so any number would be wrong.
 const stillCounting = () => batch.students.some(s => s.files.some(f => viewable(f) && !f.numPages && !f.bad));
-function coverLine() {
+function coverLine(all) {
   if (stillCounting()) return 'Counting the papers…';
-  const list = coverList(), n = list.filter(x => coverOk(x.st, x.d)).length;
+  const list = coverList(all), n = list.filter(x => coverOk(x.st, x.d)).length;
   if (!list.length) return 'No PDFs or pictures to check.';
   return n + ' of ' + list.length + (list.length === 1 ? ' paper' : ' papers') + ' checked.';
 }
@@ -437,7 +438,7 @@ function shareOut() {
 // What's said about the ZIP before she makes it: it only says it has no names when nothing is still in doubt.
 function shareMadeLine() {
   const sh = shareState();
-  return sh.made ? 'Made ' + esc(whenLabel(sh.made)) + (sh.madeOpen ? ', with ' + sh.madeOpen + (sh.madeOpen === 1 ? ' paper' : ' papers') + ' not checked.' : '.') : (namesInDoubt() ? 'Box the names the cover can’t read first. It' : namesLooking() || nameFlagged().length ? 'Check the papers listed above first. It' : 'It has no names in it, and it') + ' stays on your computer until you give it to Claude.';
+  return sh.made ? 'Made ' + esc(whenLabel(sh.made)) + (sh.madeOpen ? ', with ' + sh.madeOpen + (sh.madeOpen === 1 ? ' paper' : ' papers') + ' not checked.' : '.') : (namesInDoubt() ? 'Box the names the cover can’t read first. It' : namesLooking() || nameFlagged().length ? 'Check the papers listed above first. It' : nameFindOn() || coverList().every(x => coverOk(x.st, x.d)) ? 'It has no names in it, and it' : 'It') + ' stays on your computer until you give it to Claude.';
 }
 function shareSteps() {
   const sh = shareState(), list = coverList().map((x, i) => ({ ...x, i, ok: coverOk(x.st, x.d) })), todo = list.filter(x => !x.ok), done = list.filter(x => x.ok);
@@ -447,7 +448,7 @@ function shareSteps() {
   if ($('#shWho')) $('#shWho').innerHTML = shareWho();
   if ($('#shPromise')) $('#shPromise').textContent = namePromise();
   $('#shSteps').innerHTML = shareOut() + nameWarnings() + '<div id="nameFlags" data-before="before you make the ZIP">' + nameFlagsHtml('before you make the ZIP') + '</div><ol class="shsteps">' +
-    '<li><b>Check the covers.</b> <span id="shCount"' + (todo.length ? ' class="stag"' : '') + '>' + (todo.length || !list.length ? '' : '<span aria-hidden="true">✓ </span>') + esc(coverLine()) + '</span> The automatic cover can’t see handwriting or a name inside a picture. In the check, drag a box over anything it missed. If students write their name in the same spot, box it once and use it on every paper.' + group('ccTodo', 'Not checked yet', todo, true) + group('ccDone', 'Checked', done, !todo.length) + '</li>' +
+    '<li><b>Check the covers.</b> <span id="shCount"' + (todo.length ? ' class="stag"' : '') + '>' + (todo.length || !list.length ? '' : '<span aria-hidden="true">✓ </span>') + esc(coverLine()) + '</span> ' + (nameFindOn() ? 'Typed names are found on their own. Drag a box over anything missed, like handwriting.' : 'Drag a box over each name.') + ' If names are in the same spot, box it once and use it on every paper.' + group('ccTodo', 'Not checked yet', todo, true) + group('ccDone', 'Checked', done, !todo.length) + '</li>' +
     '<li><b>Download the ZIP.</b> <span id="shMade">' + shareMadeLine() + '</span></li>' +
     '<li><b>Give it to Claude,</b> with this message. Change it however you like.<textarea id="shAsk" rows="4" aria-label="What to say to Claude"></textarea><div class="shrow"><button class="btn sm" data-shcopy>Copy the message</button><button class="btn sm" data-shopen>Open Claude ↗</button></div></li>' +
     '<li><b>Bring the reply back.</b> <button class="btn sm" data-shback>Bring back from Claude</button></li></ol>';
