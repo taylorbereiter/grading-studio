@@ -27,6 +27,10 @@ const ME_NEW = { sys: '', unit: '', grade: { way: 'rubric' } };
 // so whatever it saves first, a class or a paper dropped past the welcome, carries them.
 if (fresh && !lib.me) lib.me = JSON.parse(JSON.stringify(ME_NEW));
 const me = () => lib.me || ME_OLD;
+// Whether this teacher takes attendance here (src/attend.js). On unless they turn it off in Settings; days already saved are kept either way.
+const attOn = () => me().att !== false;
+// A real day written YYYY-MM-DD. Here, not in attend.js, because the address is read before that file has run.
+const attDayOk = d => { if (!/^\d{4}-\d\d-\d\d$/.test(d || '')) return false; const t = new Date(d + 'T12:00:00'); return !isNaN(t) && t.getMonth() + 1 === +d.slice(5, 7) && t.getDate() === +d.slice(8); };
 function meSet(part) { lib.me = { ...me(), ...part }; saveLib(); gradeDefaultApply(); }
 // The school system by name, for the words on screen: "Open a ManageBac download", "Comment for Canvas". Empty: no system named.
 const sysName = () => String(me().sys || '').trim();
@@ -48,12 +52,13 @@ const GRADE_WAYS = [
   ['ib7', 'IB 1 to 7', '1 to 7, worked out from the percent. You set the boundaries for your subject.', { mode: 'points', criteria: ['Criterion 1', 'Criterion 2', 'Criterion 3'], outOf: 100, scale: null }, [[85, '7'], [70, '6'], [55, '5'], [40, '4'], [25, '3'], [10, '2'], [0, '1']]],
 ];
 const gradeWay = k => GRADE_WAYS.find(w => w[0] === k) || null;
-// What me() says about grading, tidied: { way, setup, bands }. No answer (a browser from before): null, and the old default stands.
+// What me() says about grading, tidied: { way, setup, bands }. setup can carry a row scale of the teacher's own (top, tops, half: start.js);
+// with none, a rubric row is 0 to 4 with half points. No answer (a browser from before): null, and the old default stands.
 function meGrade() {
   const g = me().grade; if (!g || typeof g !== 'object') return null;
   const w = gradeWay(g.way) || GRADE_WAYS[0], su = g.setup && typeof g.setup === 'object' ? g.setup : w[3];
   const bands = Array.isArray(g.bands) ? g.bands.filter(b => Array.isArray(b) && isFinite(+b[0]) && String(b[1] || '').trim()).map(b => [+b[0], String(b[1]).trim().slice(0, 12)]).sort((a, b) => b[0] - a[0]) : null;
-  return { way: w[0], setup: { mode: su.mode === 'points' ? 'points' : 'rubric', criteria: Array.isArray(su.criteria) && su.criteria.length ? su.criteria.map(String) : w[3].criteria.slice(), outOf: +su.outOf || w[3].outOf, scale: su.scale && typeof su.scale === 'object' ? su.scale : null }, bands: bands && bands.length ? bands : null };
+  return { way: w[0], setup: { mode: su.mode === 'points' ? 'points' : 'rubric', criteria: Array.isArray(su.criteria) && su.criteria.length ? su.criteria.map(String) : w[3].criteria.slice(), outOf: +su.outOf || w[3].outOf, scale: su.scale && typeof su.scale === 'object' ? su.scale : null, ...rowScaleOf(su) }, bands: bands && bands.length ? bands : null };
 }
 const DEFAULT_SETUP_OLD = { ...DEFAULT_SETUP };
 // Makes DEFAULT_SETUP this teacher's own. Called once their answer is read, and again when they change it.
@@ -70,7 +75,7 @@ function bandOf(pct) {
   const b = g.bands.find(b => pct >= b[0]); return b ? b[1] : g.bands[g.bands.length - 1][1];
 }
 const bandSay = pct => { const b = bandOf(pct); return b ? ' · ' + b : ''; };
-function saveLib() { libVer++; if (!store.set('gs.lib', lib)) toast('This browser is out of room to keep your units and rosters.'); wordsShare(); }
+function saveLib() { libVer++; if (!store.set('gs.lib', lib)) toast('This browser is out of room to keep your units and rosters.'); wordsShare(); rollsShare(); }
 // The two names (the school's system, where unit plans live) are also kept where the Planner can read them, beside the class links:
 // it is a separate page that never opens grading's work. Only for a teacher who has said them; nothing is written otherwise.
 function wordsShare() {

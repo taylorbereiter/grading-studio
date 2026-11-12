@@ -147,15 +147,17 @@ function keptCovers(cs, path, p, W, H) {
 }
 const scrubMarks = (marks, rx) => marks.map(m => m.text != null ? { ...m, text: scrub(m.text, rx) } : m);
 // Renders one page the way Claude will see it: her marks (names scrubbed from her text) and black covers.
-async function sharePage(st, f, js, p, scale, rx, opts) {
+// look, for a strong example: { bare: leave her marks off, light: with the page's lighting }.
+async function sharePage(st, f, js, p, scale, rx, opts, look) {
   const page = await js.getPage(p + 1);
   const vp = vpRot(f, p, page, 1), W = vp.width, H = vp.height;
-  const marks = scrubMarks((f.marks[p] || []).concat((f.kami && f.kami[p] && f.kami[p].notes) || []), rx);
+  const marks = look && look.bare ? [] : scrubMarks((f.marks[p] || []).concat((f.kami && f.kami[p] && f.kami[p].notes) || []), rx);
   const side = marks.some(m => m.t === 'note') ? sideFor(W) : 0;
   const c = document.createElement('canvas');
   c.width = Math.ceil((W + side) * scale); c.height = Math.ceil(H * scale);
   const ctx = c.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
   await page.render({ canvasContext: ctx, ...vpDraw(f, p, page, scale), annotationMode: pdfjsLib.AnnotationMode.ENABLE }).promise;
+  if (look && look.light) { const L = lightForPage(st, f, p); if (L) lightCanvas(ctx, Math.ceil(W * scale), c.height, L); }
   scanClip(ctx, f, p, W * scale, c.width, c.height);
   ctx.setTransform(scale, 0, 0, scale, 0, 0);
   drawMarks(ctx, marks, W, H, side, null);
@@ -446,7 +448,7 @@ async function makeSharePackage(onStep) {
   const enc = s => new TextEncoder().encode(s);
   files['scores.csv'] = enc('﻿' + [head].concat(rows).map(r => r.map(csvCell).join(',')).join('\r\n'));
   files['comments.json'] = enc(JSON.stringify(notes, null, 1));
-  files['rubric.json'] = enc(JSON.stringify({ mode: setup.mode, criteria: crit, levels: setup.mode === 'rubric' ? '0 to 4 per row, half points allowed from 1 up' : undefined, outOf: maxPoints(), scale: setup.scale || null }, null, 1));
+  files['rubric.json'] = enc(JSON.stringify({ mode: setup.mode, criteria: crit, levels: setup.mode === 'rubric' ? (rowsTop(setup) ? '0 to ' + rowsTop(setup) + ' per row' : 'rows in order: ' + setup.criteria.map((_, i) => '0 to ' + rowTop(setup, i)).join(', ')) + (rowHalf(setup) ? ', half points allowed from 1 up' : ', whole numbers only') : undefined, outOf: maxPoints(), scale: setup.scale || null }, null, 1));
   files['README.txt'] = enc(README_FOR_CLAUDE(seen.size));
   saveBlob(('For Claude - ' + nameFreeText(batch.name) + '.zip'), new Blob([fflate.zipSync(files)], { type: 'application/zip' }));
 }

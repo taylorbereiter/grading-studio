@@ -155,6 +155,8 @@ document.addEventListener('keydown', e => {
   if (!batch || !$('#dlg').hidden) { if (e.key === 'Escape' && !$('#dlg').hidden) { if (SP) splitLeave(); else leaveDlg(); } return; }
   const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement && document.activeElement.tagName) || (document.activeElement && document.activeElement.isContentEditable);
   const cmd = e.metaKey || e.ctrlKey, key = e.key.toLowerCase();
+  // On a score's slider Ctrl Z is hers too: a slider has no typing of its own to undo.
+  if (cmd && !e.altKey && typing && document.activeElement.type === 'range' && (key === 'z' || key === 'y')) { e.preventDefault(); key === 'z' && !e.shiftKey ? undo() : redo(); return; }
   if (cmd && !typing && !e.altKey) {
     if (key === 'z') { e.preventDefault(); e.shiftKey ? redo() : undo(); return; }
     if (key === 'y') { e.preventDefault(); redo(); return; }
@@ -215,6 +217,7 @@ const keptFirst = loadKept();   // the address of an open assignment waits for t
 function renderBackup() {
   const el = $('#backupInfo'); if (!el) return;
   const t = store.get('gs.lastBackup', 0);
+  yearRender();
   el.textContent = t ? 'Last take-home file: ' + new Date(t).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : 'No take-home file made from this link yet.';
   // A nudge once a week has gone by since the last one, when there's work kept here and no folder holding a second copy.
   const due = keptMeta.size > 0 && Date.now() - t > 7 * 864e5 && fld.state === 'none';
@@ -238,4 +241,4 @@ for (const el of document.querySelectorAll('.gsVer')) el.textContent = versionLa
 if (gsData.info.note) { const el = $('#bootNote'); el.textContent = gsData.info.note; el.hidden = false; toast(gsData.info.note, 15000); }
 
 window.__gs_pickMany = pickMany;
-window.__gs = { removeFile, bringBack, replaceFile, stickerText, startScorePlace, stopScorePlace, saveTrouble, batchIdOf, wordScore, wordScoresAll, restoreBackup, fileSeq, moveFile, openMoveFile, calcEval, openCalc, pageLit, setPageLit, lightMenuDo, lightChips, pageOwnL, setPageOwnL, lightForPage, ensureCounts, addRefs, refs: () => refFiles, matchToRoster, guessAmong, expandPicked, lightOpts, isRubricPage, openAnon, setAnon, anonOrder, anonOn, openLight, lightFor, lightAuto, openSplit, sp: () => SP, bringIn, sortGuess, openWord, wordBytes, reopenKept, forgetKept, kept: () => keptMeta, addFiles, removeAdded, nextUnscored, openDisplay, trimToInk, intake, parseGrade, scanFile, scanAll, state: () => ({ batch, cur, setup, pages, zoom, lib }), SCALE12, SCALE_FIVES, RUBRIC_STEPS, percentWith, ownGrade, roundPct, fmtNum, fmtPct, saveNow, undo, redo, gsData, gradeOf, percentFor, flattenDoc, exportPlan, layoutOf, docIn, openStudent, setTool };
+window.__gs = { DEFAULT_SETUP, rowTop, rowSteps, rowsMax, setupMax, setupOver, rowScaleOf, pastScore, removeFile, bringBack, replaceFile, stickerText, startScorePlace, stopScorePlace, saveTrouble, batchIdOf, wordScore, wordScoresAll, restoreBackup, fileSeq, moveFile, openMoveFile, calcEval, openCalc, pageLit, setPageLit, lightMenuDo, lightChips, pageOwnL, setPageOwnL, lightForPage, ensureCounts, addRefs, refs: () => refFiles, matchToRoster, guessAmong, expandPicked, lightOpts, isRubricPage, openAnon, setAnon, anonOrder, anonOn, openLight, lightFor, lightAuto, openSplit, sp: () => SP, bringIn, sortGuess, openWord, wordBytes, reopenKept, forgetKept, kept: () => keptMeta, addFiles, removeAdded, nextUnscored, openDisplay, trimToInk, intake, parseGrade, scanFile, scanAll, state: () => ({ batch, cur, setup, pages, zoom, lib }), SCALE12, SCALE_FIVES, RUBRIC_STEPS, percentWith, ownGrade, roundPct, fmtNum, fmtPct, saveNow, undo, redo, gsData, gradeOf, percentFor, flattenDoc, exportPlan, nameOut, layoutOf, docIn, openStudent, setTool };

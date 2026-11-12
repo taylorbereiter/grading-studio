@@ -121,9 +121,10 @@ function stampData(prev, data, dev, now, seen) {
 // What in a rubric decides a total or a percent: how many rows or points, and the grading scale when its top score is the total possible. A row's name and what each score means don't.
 // A setup too old to mention a scale has the usual one. One that says null chose No scale, and its percents are the plain share.
 function rubricKey(su) {
-  const s = su || {}, pts = s.mode === 'points', max = pts ? +(s.outOf == null ? 10 : s.outOf) || 0 : (s.criteria ? s.criteria.length : 3) * 4, sc = s.scale === undefined ? SCALE12 : s.scale || {};
+  const s = su || {}, pts = s.mode === 'points', max = pts ? +(s.outOf == null ? 10 : s.outOf) || 0 : (!s.criteria ? 12 : typeof rowsMax === 'function' ? rowsMax(s) : s.criteria.length * 4), sc   /* this file also runs on its own in tests, where a row is always 0 to 4 */ = s.scale === undefined ? SCALE12 : s.scale || {};
   const keys = Object.keys(sc).filter(k => sc[k] !== '' && sc[k] != null && !isNaN(+sc[k])).map(Number).sort((a, b) => a - b);
-  return JSON.stringify([pts, max, keys.length >= 2 && keys[keys.length - 1] === max ? keys.map(k => [k, +sc[k]]) : 0]);
+  const own = pts || typeof rowScaleOf !== 'function' ? {} : rowScaleOf(s);   // rows scored on another scale than 0 to 4 with halves: a different rubric, even when the total is the same
+  return JSON.stringify([pts, max, keys.length >= 2 && keys[keys.length - 1] === max ? keys.map(k => [k, +sc[k]]) : 0].concat(Object.keys(own).length ? [own] : []));
 }
 const rubricsDiffer = (x, y) => rubricKey(x) !== rubricKey(y);
 // Has this work got a score that another rubric would show differently? Missing and excused have no number.
@@ -590,7 +591,12 @@ function mergeLib(a0, b0, o = {}) {
       for (const k of new Set([...Object.keys(xi), ...Object.keys(yi)])) { const o2 = [...new Set([...((lo[k] || {}).other || []), ...((hi[k] || {}).other || [])])]; out[k] = { ...lo[k], ...hi[k], ...(o2.length ? { other: o2 } : {}) }; }
       e.fields.info = e.node.info = out;
     }
-    const other = m.both.filter(k => k !== 'names' && k !== 'info');
+    if (x.type === 'c' && m.both.includes('att')) {   // attendance: day by day, and for a day both changed, the one saved later
+      const xa = x.fields.att || {}, ya = y.fields.att || {}, out = {};
+      for (const k of new Set([...Object.keys(xa), ...Object.keys(ya)])) out[k] = !xa[k] ? ya[k] : !ya[k] ? xa[k] : (ya[k].t || 0) > (xa[k].t || 0) ? ya[k] : xa[k];
+      e.fields.att = e.node.att = out;
+    }
+    const other = m.both.filter(k => k !== 'names' && k !== 'info' && k !== 'att');
     if (other.length) notes.push({ kind: 'both', type: x.type, name: e.fields.name, rubric: other.includes('setup') });
     else if (m.fromY.some(k => k !== 'names')) notes.push({ kind: 'changed', type: x.type, name: e.fields.name });
     kept.set(id, e);
@@ -676,6 +682,17 @@ function libHold(text, held) {
   for (const e of libWalk(l).values()) if (held[e.id]) { for (const k of Object.keys(e.node)) delete e.node[k]; Object.assign(e.node, held[e.id]); }
   return JSON.stringify(l);
 }
+// Two copies of the school resources list (school.js) made one. Each item carries when it was last changed, a deleted one too,
+// so the later change wins either way; the order of the groups is whichever copy set it later. toA: x has something to take.
+function schoolMerge(x, y) {
+  const norm = v => ({ items: v && Array.isArray(v.items) ? v.items.filter(i => i && i.id) : [], order: v && Array.isArray(v.order) ? v.order : [], ot: (v && v.ot) || 0 });
+  const X = norm(x), Y = norm(y), by = new Map(X.items.map(i => [i.id, i]));
+  let toA = false;
+  for (const i of Y.items) { const o = by.get(i.id); if (!o || (i.at || 0) > (o.at || 0)) { by.set(i.id, i); toA = true; } }
+  const out = { items: [...by.values()], order: X.order, ot: X.ot };
+  if (Y.ot > X.ot) { out.order = Y.order; out.ot = Y.ot; toA = true; }
+  return { out, toA };
+}
 // Other saved things: comments saved for reuse are pooled, and anything else she hasn't got here comes in. Nothing she has here is replaced, unless she replaced it there later.
 function mergeLs(a, b, skip = () => false) {
   const set = {}, parse = (t, d) => { try { return JSON.parse(t) || d; } catch { return d; } };
@@ -704,6 +721,9 @@ function mergeLs(a, b, skip = () => false) {
       try { x = JSON.parse(a[k] || '{}'); y = JSON.parse(v); } catch {}
       const add = Object.keys(y).filter(n => !(n in x));
       if (add.length) set[k] = a[k] == null ? v : JSON.stringify({ ...x, ...Object.fromEntries(add.map(n => [n, y[n]])) });
+    } else if (k === 'gs.school') {   // school resources: an item at a time, and the one changed later is kept
+      const m = schoolMerge(parse((a || {})[k], null), parse(v, null));
+      if (m.toA) set[k] = JSON.stringify(m.out);
     } else if (k.startsWith('gs.rd.') && a[k] != null) {   // the Word document for a download, replaced there later
       const x = parse(a[k], {}), y = parse(v, {});
       if (y.at > (x.at || 0)) set[k] = v;

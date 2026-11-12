@@ -327,6 +327,7 @@ async function openRep() {
   };
 }
 // Runs by itself after a download opens, and says something only if there's something new to say. What she's seen is kept as hashes, so no file names stay behind if she forgets the download.
+let repAt = 0, repAll = false;   // the student she was on when the bar came up, and whether every file opened: then going to another student counts as having seen it
 let repSaw = null;   // reading the report by way of More counts as seeing it, the same as the bar's own buttons
 async function openingReport() {
   repSaw = null;
@@ -339,7 +340,7 @@ async function openingReport() {
   const saw = () => { const all = store.get('gs.openSeen', {}); all[b.id] = [...new Set(seen.concat(keys))]; store.set('gs.openSeen', all); show(false); repSaw = null; };
   bar.innerHTML = '<span style="flex:1">' + esc(repHead(x)) + '</span><button class="btn sm" data-rep>See the list</button><button class="icon" data-repx aria-label="Close this message" title="Close this message">✕</button>';
   show(true);
-  repSaw = saw;
+  repSaw = saw; repAt = cur; repAll = !x.cant.length && !x.zip;
   bar.querySelector('[data-rep]').onclick = () => { saw(); openRep(); };
   bar.querySelector('[data-repx]').onclick = saw;
 }
