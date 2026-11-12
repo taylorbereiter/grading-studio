@@ -156,6 +156,7 @@ async function quizSet(st, q, v) {
 }
 // The points score follows her marks. Nothing marked: the score the marks gave goes too.
 function quizScore(st) {
+  if (ibQzOn()) return ibQzScore(st);
   const g = st.grade, n = quizCount(st);
   const v = n ? fmtNum(quizSum(st)) : '';
   if (!n && !g.qAuto) return;
@@ -223,10 +224,12 @@ async function qzTotal(st) {
   const t = batch.quiz.total;
   for (const [path, p] of quizPages(st)) { const f = fileByPath(st, path), l = f && f.marks[p]; if (l) for (let i = l.length - 1; i >= 0; i--) if (l[i].qz === 'total') l.splice(i, 1); }
   if (!t || quizCount(st) < batch.quiz.qs.length) return;
+  const text = ibQzOn() ? ibStampText(st) : stickerText(quizSum(st));
+  if (!text) return;
   const [path, p] = quizPages(st)[t.n] || [], f = path && fileByPath(st, path), sz = await qzPageSize(st, t.n);
   if (!f || !sz) return;
   const [dx, dy] = qzShift(st, t.n);
-  (f.marks[p] ||= []).push({ t: 'stamp', k: 'score', text: stickerText(quizSum(st)), x: r1((t.x + dx) * sz.W), y: r1((t.y + dy) * sz.H), size: 52, color: totalInk(), qz: 'total' });
+  (f.marks[p] ||= []).push({ t: 'stamp', k: 'score', text, x: r1((t.x + dx) * sz.W), y: r1((t.y + dy) * sz.H), size: 52, color: totalInk(), qz: 'total' });
 }
 // After boxes move or a student's page is lined up again, the marks already given move with them.
 async function qzRedoPaper(st) {
@@ -250,6 +253,7 @@ function qzDropGone(keep) {
 // The score is out of the quiz's points. A rubric download changes to points, after she says so if it has rubric scores.
 async function qzOutOf() {
   const max = quizMax();
+  if (max && ibTaskClass()) return ibQzOutOf();
   if (!max || (setup.mode === 'points' && +setup.outOf === max)) return true;
   if (setup.mode === 'rubric' && batch.students.some(st => (st.grade.rubric || []).some(v => v != null)) &&
     !await askDlg('This assignment is scored with a rubric, and some students have rubric scores. Quick mark scores it out of ' + fmtNum(max) + ' points instead. The rubric scores stay saved but stop counting.', { ok: 'Score out of ' + fmtNum(max), cancel: 'Go back' })) return false;
@@ -275,7 +279,7 @@ function openQuizBoxes(back) {
     '<button class="icon" data-close aria-label="Close">✕</button></div>' +
     '<div class="bb qbwrap"><div class="qbpages" id="qbPages" tabindex="-1"><p class="muted">Drawing the pages…</p></div><div class="qbside">' +
     '<p class="hsm" style="margin-top:0">Drag a box around each question, in order. Boxes can overlap. Drag a box’s number to move it. Click a box to resize it from a corner or set where its mark goes. Then give each one its points, how it’s scored (right or wrong, or a scale like 0 to 2 for a short answer) and the right answer if it has one. The answer can go on the returned papers in a gold note.</p>' +
-    '<div id="qbList"></div><div id="qbWords"></div><div id="qbSpot"></div>' +
+    '<div id="qbList"></div><div id="qbLv"></div><div id="qbWords"></div><div id="qbSpot"></div>' +
     '<div class="qbopt"><div class="chk" style="cursor:default;flex-wrap:wrap">New boxes mark with <span class="seg" id="qbHow">' + Object.entries(QZ_HOW).map(([k, t]) => '<button data-how="' + k + '">' + t + '</button>').join('') + '</span></div>' +
     '<div class="chk" style="cursor:default;flex-wrap:wrap">Marks go <span class="seg" id="qbSide"><button data-side="left">Left of each box</button><button data-side="right">Right</button></span><span class="muted hsm">unless you picked a spot</span></div>' +
     '<div class="chk" style="cursor:default;flex-wrap:wrap">Answer notes <span class="seg" id="qbAns">' + Object.entries(QZ_ANS).map(([k, t]) => '<button data-ans="' + k + '">' + t + '</button>').join('') + '</span>' +
@@ -298,7 +302,7 @@ function openQuizBoxes(back) {
   };
   const totalSay = () => {
     $('#qbTotal').textContent = picking ? 'Click on the page…' : Q.total ? 'Move it' : 'Pick a spot';
-    $('#qbTotalSay').textContent = Q.total ? 'The score goes on page ' + (Q.total.n + 1) + ' once every question is marked.' : 'Optional: a spot on the paper for the score, like 18/20 = 90%.';
+    $('#qbTotalSay').textContent = Q.total ? (ibTaskClass() ? 'The levels go on page ' : 'The score goes on page ') + (Q.total.n + 1) + ' once every question is marked.' : (ibTaskClass() ? 'Optional: a spot on the paper for the levels, like A 6.' : 'Optional: a spot on the paper for the score, like 18/20 = 90%.');
     if (Q.total && !picking) $('#qbTotalSay').insertAdjacentHTML('beforeend', ' <button class="link" data-nototal>No total</button>');
   };
   const spotSay = () => {
@@ -327,10 +331,10 @@ function openQuizBoxes(back) {
       '<td><select class="qhow" aria-label="How to mark">' + qzHowOpts(q) + '</select></td>' +
       '<td><input class="qkey" value="' + esc(q.key || '') + '" placeholder="optional" aria-label="Right answer" maxlength="160"></td>' +
       '<td><button class="icon" data-del="' + q.id + '" aria-label="Take out this box" title="Take out">✕</button></td></tr>' +
-      (goalList().length ? '<tr class="qgrow' + (q.id === selId ? ' on' : '') + '" data-q="' + q.id + '"><td colspan="6"><label>Goal ' + goalPick('data-qgoal', q.goal || '', 'Learning goal for question ' + quizLabel(q, i)) + '</label></td></tr>' : '')).join('') + '</tbody></table>' +
+      (goalList().length || ibTaskClass() ? '<tr class="qgrow' + (q.id === selId ? ' on' : '') + '" data-q="' + q.id + '"><td colspan="6">' + ibQzPick(q, i, Q) + (goalList().length ? '<label>Goal ' + goalPick('data-qgoal', q.goal || '', 'Learning goal for question ' + quizLabel(q, i)) + '</label>' : '') + '</td></tr>' : '')).join('') + '</tbody></table>' +
       '<p class="hsm goalline"><button class="link" data-qgoals>' + (goalList().length ? 'Edit goals…' : 'Tag questions with learning goals…') + '</button></p>'
       : '<p class="muted hsm">No boxes yet.</p>';
-    wordsSay(); sum(); spotSay();
+    wordsSay(); sum(); spotSay(); ibQzLvSay(Q);
   };
   // Where a box's mark shows while setting up: her spot, or the margin by the box.
   const pinAt = q => {
@@ -434,6 +438,7 @@ function openQuizBoxes(back) {
       if (!d.sel || d.sel.w < 0.02 || d.sel.h < 0.01) return;
       const last = Q.qs[Q.qs.length - 1];
       const q = { id: uid(), lab: '', n: d.n, x: R(d.sel.x), y: R(d.sel.y), w: R(d.sel.w), h: R(d.sel.h), pts: last ? last.pts : 1, key: '', how: Q.how };
+      if (last && last.ib) q.ib = last.ib;
       if (last && last.kind) q.kind = last.kind;   // after a short answer, the next box is one too
       Q.qs.push(q); return pick(q.id);
     }
@@ -441,10 +446,12 @@ function openQuizBoxes(back) {
   };
   box.oninput = e => {
     if (e.target.classList.contains('qword')) { const w = Q.words[e.target.dataset.top] ||= qzStepWords(+e.target.dataset.top, Q.words); w[+e.target.dataset.k] = e.target.value.trim().slice(0, 30); return; }
+    if (e.target.dataset.ibql != null) return ibQzLvIn(Q, e.target);
     const tr = e.target.closest('tr[data-q]'); if (!tr) return;
     const q = qOf(tr.dataset.q); if (!q) return;
+    if (e.target.classList.contains('qib')) { q.ib = e.target.value; ibQzLvSay(Q); }
     if (e.target.classList.contains('qlab')) q.lab = e.target.value.trim() === String(Q.qs.indexOf(q) + 1) ? '' : e.target.value;
-    if (e.target.classList.contains('qpts')) { const v = +e.target.value; if (v > 0 && v <= 100) q.pts = Math.round(v * 2) / 2; tr.querySelector('.qkind').innerHTML = qzKindOpts(q); sum(); wordsSay(); }
+    if (e.target.classList.contains('qpts')) { const v = +e.target.value; if (v > 0 && v <= 100) q.pts = Math.round(v * 2) / 2; tr.querySelector('.qkind').innerHTML = qzKindOpts(q); sum(); wordsSay(); ibQzLvSay(Q); }
     if (e.target.classList.contains('qkind')) {
       q.kind = e.target.value;
       if (q.kind === 'scale' && (+q.pts || 1) <= 1) { q.pts = 2; tr.querySelector('.qpts').value = '2'; sum(); }   // a scale of 0 to 1 is right or wrong
@@ -472,8 +479,10 @@ function openQuizBoxes(back) {
     if (e.target.closest('[data-margin]')) { const q = qOf(selId); if (q) { delete q.mx; delete q.my; } spotSay(); overlays(); return; }
     if (e.target.closest('#qbTotal')) { picking = !picking; spotPick = false; totalSay(); spotSay(); return; }
     if (e.target.closest('[data-nototal]')) { Q.total = null; totalSay(); overlays(); return; }
+    if (ibQzLvClick(Q, e)) return;
     if (e.target.closest('[data-qgoals]')) { goalsDlg().then(() => { if (pagesEl.isConnected) list(); }); return; }
     if (e.target.closest('[data-save]')) {
+      if (!ibQzLvOk(Q)) return;
       for (const q of Q.qs) if (!(+q.pts > 0)) q.pts = 1;
       for (const t of Object.keys(Q.words)) if (Q.words[t].length !== qzSteps(+t).length) delete Q.words[t];
       if (Object.keys(Q.words).length) store.set('gs.qmWords', { ...qzWordsMine(), ...Q.words }); else delete Q.words;   // her words start her next quiz too
@@ -707,6 +716,7 @@ async function qzNoteSet(st, q, text, as, col) {
 const qmKeySay = () => 'The right answer. ' + (qzAnsMode() === 'off' ? 'Answer notes are off; turn them on in Boxes.' : qzAnsMode() === 'all' ? 'It goes on every paper in a gold note.' : 'It goes in a gold note on papers that lost points here.');
 const qmQ = q => (qzByPts(q) ? 'Scale 0 to ' + fmtNum(+q.pts || 1) : fmtNum(+q.pts || 1) + ((+q.pts || 1) === 1 ? ' point' : ' points') + ', right or wrong') + ' · ' + (QZ_HOW[q.how] || QZ_HOW.cx);
 let qmTok = 0;
+const qmTot = (st, n) => ibQzOn() ? ibQzSay(st) : fmtNum(quizSum(st)) + ' / ' + fmtNum(quizMax()) + (n === batch.quiz.qs.length && percentFor(quizSum(st)) != null ? ' = ' + percentFor(quizSum(st)) + '%' : '');
 function qmRender() {
   const body = $('#qmBody'); if (!body) return;
   const qs = batch.quiz.qs, who = quizWho(), my = ++qmTok;
@@ -730,7 +740,7 @@ function qmRender() {
     $('#qmNav').innerHTML = '<button class="btn sm" data-qgo="-1" aria-label="Earlier student"' + (who.indexOf(qzStu) > 0 ? '' : ' disabled') + '>‹</button><select id="qmPick" class="btn sm" aria-label="Student">' +
       who.map(i => '<option value="' + i + '"' + (i === qzStu ? ' selected' : '') + '>' + esc(shownName(batch.students[i], i)) + '</option>').join('') + '</select>' +
       '<button class="btn sm" data-qgo="1" aria-label="Next student"' + (who.indexOf(qzStu) < who.length - 1 ? '' : ' disabled') + '>›</button>' +
-      '<span class="qmtot">' + fmtNum(quizSum(st)) + ' / ' + fmtNum(quizMax()) + (n === qs.length && percentFor(quizSum(st)) != null ? ' = ' + percentFor(quizSum(st)) + '%' : '') + '</span>';
+      '<span class="qmtot">' + qmTot(st, n) + '</span>';
     $('#qmProg').textContent = n + ' of ' + qs.length + ' marked';
     $('#qmFoot').innerHTML = '<button class="btn" data-open="' + qzStu + '">Open their paper</button><button class="btn primary" data-rest' + (n === qs.length ? ' disabled' : '') + '>Mark the rest right</button>';
     $('#qmHint').textContent = 'Click an answer to put an ✗ on it, click again to take it off. Keys: ↑ ↓ to move, a number for its points, C comment, E example, P copy a picture, Space whole page, Ctrl Z undo, [ and ] for the student.';
@@ -796,7 +806,7 @@ function qmRefresh(el) {
   } else {
     const st = batch.students[qzStu], n = quizCount(st);
     $('#qmProg').textContent = n + ' of ' + qs.length + ' marked';
-    const t = $('#qmNav').querySelector('.qmtot'); if (t) t.textContent = fmtNum(quizSum(st)) + ' / ' + fmtNum(quizMax()) + (n === qs.length && percentFor(quizSum(st)) != null ? ' = ' + percentFor(quizSum(st)) + '%' : '');
+    const t = $('#qmNav').querySelector('.qmtot'); if (t) t.textContent = qmTot(st, n);
     const r = $('#qmFoot').querySelector('[data-rest]'); if (r) r.disabled = n === qs.length;
   }
 }

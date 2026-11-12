@@ -226,8 +226,8 @@ function totalHtml(st) {
 // The score stamp, the same one the calculator's "Score sticker" places: "12.5/15 = 83%", from the score however it was given
 // (rubric, points, Quick mark or the grade sheet), so she doesn't need the calculator to get it onto the paper.
 const STAMP_ICON = '<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><rect x="2" y="9.5" width="12" height="3.5" rx="1"/><path d="M6 9.5V7.2a2 2 0 1 1 4 0v2.3M3.5 15h9"/></svg>';
-function scoreStampText(gr) {
-  if (ibSetup()) return ibStampText(batch.students[cur]);
+function scoreStampText(gr, st) {
+  if (ibSetup()) return ibStampText(st || batch.students[cur]);
   const max = gr.outOf != null ? gr.outOf : maxPoints();
   return fmtNum(gr.total) + (max ? '/' + fmtNum(max) : '') + (gr.pct != null ? ' = ' + gr.pct + '%' : '');
 }
@@ -238,7 +238,7 @@ function syncScoreStamps(st) {
   if (!st || noScore(st)) return false;
   const gr = gradeOf(st);
   if (gr.total == null || gr.paper) return false;   // a score read off the paper itself isn't the app's own
-  const text = scoreStampText(gr);
+  const text = scoreStampText(gr, st);
   let changed = false;
   for (const f of st.files) {
     if (!f.marks || tryOfFile(st, f)) continue;

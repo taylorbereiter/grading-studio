@@ -233,6 +233,8 @@ test('a newer version waits until she says so: the page stays as it is, the side
   assert.equal(await page.$eval('#railUpdate', e => e.textContent.trim()), 'Update ready');
   await reloadApp(page);
   assert.equal(await markOf(page), '', 'and still, however often the page is loaded');
+  // The reload puts her back on the paper she was marking. Going to Settings before that has finished would be undone by it.
+  await page.waitForFunction(() => { const st = window.__gs.state(); return st.batch && st.pages && st.pages.length > 0 && !!st.pages[0].bmp; }, { timeout: 60000 });
   await goTo(page, '#/settings/about');
   await page.waitForSelector('#setAbout [data-updnow]');
   assert.match(await page.$eval('#setAbout', e => e.innerText), /Version 9\.9\.9 is ready\.[\s\S]*A note about B/);

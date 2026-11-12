@@ -483,11 +483,19 @@ function ibTaskDlg() {
 }
 async function ibTaskSave() {
   const c = ibTaskClass(); if (!c || !ibTask) return;
-  const keys = [...document.querySelectorAll('#ibTaskBody [data-ibtk]')].filter(i => i.checked).map(i => i.dataset.ibtk), crit = ibCrit(c).filter(x => keys.includes(x.k));
-  if (!crit.length) { toast('Tick at least one criterion'); return; }
+  const keys = [...document.querySelectorAll('#ibTaskBody [data-ibtk]')].filter(i => i.checked).map(i => i.dataset.ibtk);
+  if (!keys.length) { toast('Tick at least one criterion'); return; }
+  if (!await ibTaskApply(c, keys)) return;
+  ibTask = null; closeDlg();
+  toast('This task assesses ' + setup.ib.join(', '));
+}
+// The task's rows become these criteria, in the class's order. Levels already given for a criterion that stays are kept.
+async function ibTaskApply(c, keys) {
+  const crit = ibCrit(c).filter(x => keys.includes(x.k));
+  if (!crit.length) return false;
   const had = ibSetup(), old = had ? setup.ib : [], from = crit.map(x => old.indexOf(x.k));   // where each new row's scores come from, or -1
   const scored = batch.students.filter(st => (st.grade.rubric || []).some((v, i) => v != null && !from.includes(i)) || (!had && st.grade.points !== '' && st.grade.points != null)).length;
-  if (scored && !await askDlg((had ? 'Taking a criterion off this task clears the levels given for it on ' : 'This task’s rows become the criteria, which clears the scores already given on ') + people(scored, 'paper') + '.', { ok: 'Save', cancel: 'Go back', danger: true })) return;
+  if (scored && !await askDlg((had ? 'Taking a criterion off this task clears the levels given for it on ' : 'This task’s rows become the criteria, which clears the scores already given on ') + people(scored, 'paper') + '.', { ok: 'Save', cancel: 'Go back', danger: true })) return false;
   const pick = a => Array.isArray(a) ? from.map(i => i >= 0 && a[i] != null ? a[i] : null) : null;
   const su = { ...setup, mode: 'rubric', criteria: crit.map((x, n) => from[n] >= 0 ? setup.criteria[from[n]] : x.k + ' ' + x.name), ib: crit.map(x => x.k), top: IB_TOP, half: false, scale: null };
   delete su.tops;
@@ -498,13 +506,100 @@ async function ibTaskSave() {
     const g = st.grade, r = g.rubric || [], at = g.atR || {}, now = Date.now();
     g.rubric = from.map(i => i >= 0 && r[i] != null ? r[i] : null);
     const nat = {}; from.forEach((i, n) => { nat[n] = i >= 0 && at[i] ? at[i] : now; }); if (at.points) nat.points = now;
-    g.atR = nat; if (!had) g.points = '';
+    g.atR = nat; if (!had) { g.points = ''; delete g.qAuto; }
   }
   setup = su; store.set('gs.setup', { ...setup, spot: undefined, rubricPage: undefined });
   if (batch.assignment) { batch.assignment.setup = { ...setup, spot: undefined }; shareRubric(batch.assignment); saveLib(); }
   batch.students.forEach(refound);
-  ibTask = null; closeDlg(); rowStart(); renderGrade(); renderList(); saveSoon();
-  toast('This task assesses ' + crit.map(x => x.k).join(', '));
+  rowStart(); renderGrade(); renderList(); saveSoon();
+  return true;
+}
+/* ---------- a paper quiz in an MYP class (Quick mark): each question counts for one criterion, and the teacher's own table turns the points into a level ---------- */
+// q.ib = 'A' on each question; batch.quiz.lvb = { A: [lowest points for level 1, …, for level 8] }. A criterion with no table
+// shows its points and is given no level: how many points a level takes is the teacher's call, so nothing is worked out for them.
+const ibQzOn = () => !!(ibTaskClass() && quizOn());
+function ibQzOf(q, c) { const ks = ibCrit(c).map(x => x.k); return ks.includes(q.ib) ? q.ib : (ibSetup() && setup.ib.find(k => ks.includes(k))) || ks[0]; }
+function ibQzUsed(Q, c) { const u = new Set(Q.qs.map(q => ibQzOf(q, c))); return ibCrit(c).filter(x => u.has(x.k)).map(x => x.k); }
+const ibQzMax = (Q, c, k) => Q.qs.reduce((a, q) => a + (ibQzOf(q, c) === k ? +q.pts || 0 : 0), 0);
+const ibQzRaw = (Q, k) => { const t = Q.lvb && Q.lvb[k]; return Array.isArray(t) && t.length === IB_TOP ? t : null; };
+function ibQzTable(Q, k) { const t = ibQzRaw(Q, k); return t && t.every((v, i) => typeof v === 'number' && v > 0 && (!i || v >= t[i - 1])) ? t : null; }
+function ibQzLevel(t, pts) { let l = 0; t.forEach((v, i) => { if (pts >= v) l = i + 1; }); return l; }
+const ibQzEven = max => Array.from({ length: IB_TOP }, (_, i) => Math.max(0.5, Math.ceil(max * (i + 1) / IB_TOP * 2) / 2));
+// For each criterion this quiz has questions for: the points so far, and the level once all of its questions are marked and it has a table.
+function ibQzParts(st) {
+  const c = ibTaskClass(), Q = batch.quiz, m = quizMarks(st);
+  return ibQzUsed(Q, c).map(k => {
+    const qs = Q.qs.filter(q => ibQzOf(q, c) === k), done = qs.every(q => m[q.id] != null), t = ibQzTable(Q, k);
+    const pts = qs.reduce((a, q) => a + (m[q.id] != null ? +m[q.id] : 0), 0);
+    return { k, pts, max: ibQzMax(Q, c, k), any: qs.some(q => m[q.id] != null), lv: done && t ? ibQzLevel(t, pts) : null };
+  });
+}
+// The levels follow the marks, as a points score does: a level the quiz gave goes again when a mark comes off.
+function ibQzScore(st) {
+  const g = st.grade, was = g.qAutoL || {}, now = {}; let hit = false;
+  g.rubric ||= [];
+  for (const p of ibQzParts(st)) {
+    const i = setup.ib.indexOf(p.k); if (i < 0 || p.lv == null) continue;
+    now[p.k] = 1;
+    if (g.rubric[i] !== p.lv) { g.rubric[i] = p.lv; touchGrade(st, i); hit = true; }
+  }
+  for (const k of Object.keys(was)) { const i = setup.ib.indexOf(k); if (!now[k] && i >= 0 && g.rubric[i] != null) { g.rubric[i] = null; touchGrade(st, i); } }
+  if (g.qAuto) { g.points = ''; delete g.qAuto; }
+  if (Object.keys(now).length) g.qAutoL = now; else delete g.qAutoL;
+  if (hit) liftStatus(st);
+}
+function ibQzSay(st) { return ibQzParts(st).map(p => p.k + ' ' + fmtNum(p.pts) + ' / ' + fmtNum(p.max) + (p.lv != null ? ', level ' + p.lv : '')).join(' · '); }
+// Saving the boxes: every question says its criterion, and the task assesses each criterion the quiz has questions for.
+async function ibQzOutOf() {
+  const c = ibTaskClass(), Q = batch.quiz;
+  for (const q of Q.qs) q.ib = ibQzOf(q, c);
+  const used = ibQzUsed(Q, c), have = ibSetup() ? setup.ib.filter(Boolean) : [];
+  return used.every(k => have.includes(k)) ? true : ibTaskApply(c, [...have, ...used]);
+}
+// In the boxes screen: the criterion of one question, and below the list the table of points for each level.
+function ibQzPick(q, i, Q) {
+  const c = ibTaskClass(); if (!c) return '';
+  const on = ibQzOf(q, c);
+  return '<label>Criterion <select class="qib" aria-label="Criterion for question ' + esc(quizLabel(q, i)) + '">' + ibCrit(c).map(x => '<option value="' + esc(x.k) + '"' + (x.k === on ? ' selected' : '') + '>' + esc(x.k + ' ' + x.name) + '</option>').join('') + '</select></label>';
+}
+function ibQzLvNote(Q, c, k) {
+  const t = ibQzRaw(Q, k), max = ibQzMax(Q, c, k);
+  if (!t || t.every(v => v == null)) return 'No levels yet: this criterion shows its points only.';
+  if (!ibQzTable(Q, k)) return 'Fill in all eight, each at least as many points as the one before.';
+  return t[IB_TOP - 1] > max ? 'Level ' + IB_TOP + ' needs ' + fmtNum(t[IB_TOP - 1]) + ' points and these questions add up to ' + fmtNum(max) + '.' : '';
+}
+function ibQzLvSay(Q) {
+  const el = $('#qbLv'), c = ibTaskClass(); if (!el) return;
+  if (!c || !Q.qs.length) { el.innerHTML = ''; return; }
+  el.innerHTML = '<div class="qbwords ibqlv"><p class="hsm" style="margin:0"><b>Points to levels</b> <span class="muted">the lowest points that earn each level</span></p>' + ibQzUsed(Q, c).map(k => {
+    const t = ibQzRaw(Q, k) || [], max = ibQzMax(Q, c, k), x = ibCrit(c).find(y => y.k === k);
+    return '<div class="ibqrow" data-ibqk="' + esc(k) + '"><span class="hsm"><b>' + esc(k) + '</b> ' + esc(x.name) + ' <span class="muted">out of ' + fmtNum(max) + '</span></span><div class="qbwrow">' +
+      Array.from({ length: IB_TOP }, (_, i) => '<label class="qbw"><b>' + (i + 1) + '</b><input type="number" min="0.5" step="0.5" data-ibql="' + i + '" value="' + (t[i] != null ? esc(String(t[i])) : '') + '" aria-label="Lowest points for level ' + (i + 1) + ' of criterion ' + esc(k) + '"></label>').join('') + '</div>' +
+      '<span class="hsm"><button class="link" data-ibqeven="' + esc(k) + '">Spread evenly</button> <button class="link" data-ibqclear="' + esc(k) + '">Clear</button> <span class="muted" data-ibqsay>' + esc(ibQzLvNote(Q, c, k)) + '</span></span></div>';
+  }).join('') + '</div>';
+}
+function ibQzLvIn(Q, inp) {
+  const row = inp.closest('[data-ibqk]'), k = row.dataset.ibqk, v = inp.value.trim() === '' ? null : Math.round(+inp.value * 2) / 2;
+  Q.lvb ||= {}; const t = Q.lvb[k] = ibQzRaw(Q, k) || Array(IB_TOP).fill(null);
+  t[+inp.dataset.ibql] = v != null && v > 0 && v <= 1000 ? v : null;
+  row.querySelector('[data-ibqsay]').textContent = ibQzLvNote(Q, ibTaskClass(), k);
+}
+function ibQzLvClick(Q, e) {
+  const ev = e.target.closest('[data-ibqeven]'), cl = e.target.closest('[data-ibqclear]');
+  if (!ev && !cl) return false;
+  Q.lvb ||= {};
+  if (ev) Q.lvb[ev.dataset.ibqeven] = ibQzEven(ibQzMax(Q, ibTaskClass(), ev.dataset.ibqeven)); else delete Q.lvb[cl.dataset.ibqclear];
+  ibQzLvSay(Q);
+  return true;
+}
+// Before the boxes are saved: a table that is started has to be finished, and one left empty is dropped.
+function ibQzLvOk(Q) {
+  const c = ibTaskClass(); if (!c) return true;
+  for (const k of Object.keys(Q.lvb || {})) { const t = ibQzRaw(Q, k); if (!t || t.every(v => v == null)) delete Q.lvb[k]; }
+  const bad = Object.keys(Q.lvb || {}).filter(k => !ibQzTable(Q, k));
+  if (bad.length) { toast('Finish the levels for criterion ' + bad.join(', ') + ', or clear them'); return false; }
+  if (Q.lvb && !Object.keys(Q.lvb).length) delete Q.lvb;
+  return true;
 }
 document.addEventListener('click', e => { if (e.target.closest('#ibTaskSet')) ibTaskDlg(); });
-Object.assign(window.__gs, { classWay, ibCrit, ibBounds, ibBoundsFor, ibGradeOf, ibTerm, ibEvidence, ibLevel, ibDlg, IB_GROUPS, ibCols, ibMid, ibSetup, ibTaskDlg, classNewWay, GRADE_WAYS, ibConf, ibPredOf, ibk: () => ibk });
+Object.assign(window.__gs, { classWay, ibCrit, ibBounds, ibBoundsFor, ibGradeOf, ibTerm, ibEvidence, ibLevel, ibDlg, IB_GROUPS, ibCols, ibMid, ibSetup, ibTaskDlg, ibQzLevel, ibQzEven, ibQzParts, classNewWay, GRADE_WAYS, ibConf, ibPredOf, ibk: () => ibk });
