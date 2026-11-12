@@ -220,10 +220,10 @@ function fillPeople(c) {
 // Each student's grade for the term that's on now, by the gradebook's own sums, once the saved work has been read.
 function peopleGrades(c) {
   const t = $('#peopleTbl'); if (!t || bk.host !== 'page' || !bk.cols) return;
-  const conf = bkConf(), term = conf.terms.length ? bkTermNow(conf.terms) : '', cols = bkClassCols(c, bk.cols).filter(x => x.termId === term), tn = conf.terms.find(x => x.id === term);
+  const conf = ibConf(c, bkConf()), term = conf.terms.length ? bkTermNow(conf.terms) : '', cols = bkClassCols(c, bk.cols).filter(x => x.termId === term), tn = conf.terms.find(x => x.id === term);
   const h = $('#peopleGh'); if (h) h.textContent = tn ? tn.name || 'Term' : 'Grade';
   if (classWay(c) === 'myp') { for (const td of t.querySelectorAll('td[data-pg]')) td.textContent = ibPeopleSay(c, c.names[+td.dataset.pg], term); return; }   // levels and a 1 to 7, not a percent (ib.js)
-  for (const td of t.querySelectorAll('td[data-pg]')) { const r = bkGrade(c.names[+td.dataset.pg], cols, conf); td.textContent = r.grade != null ? pctAvgText(r.grade) : '–'; }
+  for (const td of t.querySelectorAll('td[data-pg]')) { const r = bkGrade(c.names[+td.dataset.pg], cols, conf); const g7 = r.grade != null && classWay(c) === 'dp' ? ibGradeOf(roundPct(r.grade), ibBounds(c)) : null; td.textContent = r.grade != null ? pctAvgText(r.grade) + (g7 != null ? ' · ' + g7 : '') : '–'; }
 }
 
 // Class overview: this assignment's average by the level each student was in last year, if she's filled any in. Optional, so it's only there when there's something to show.

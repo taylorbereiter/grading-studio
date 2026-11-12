@@ -84,14 +84,29 @@ function ibPill(c) { const w = classWay(c); return w ? '<span class="ibpill" tit
 function ibClassBtn(c, ci) { return '<button class="btn sm" data-ib-class="' + ci + '">Grading</button>'; }
 
 // A DP class's term grade: the 1 to 7 its percent earns on the class's own boundaries, shown after the percent. '' for any other class.
-function ibDpSay(pct, c) { if (classWay(c) !== 'dp' || pct == null) return ''; const g = ibGradeOf(roundPct(pct), ibBounds(c)); return g == null ? '' : ' <b class="ibg7" title="On this class’s boundaries">' + g + '</b>'; }
+// With a student's name, the grade the teacher predicted for the term that is on follows it.
+function ibDpSay(pct, c, name) {
+  if (classWay(c) !== 'dp') return '';
+  const g = pct == null ? null : ibGradeOf(roundPct(pct), ibBounds(c)), p = name == null ? null : ibPredOf(c, name);
+  return (g == null ? '' : ' <b class="ibg7" title="On this class’s boundaries">' + g + '</b>') + (p == null ? '' : ' <small class="ibpred" title="The grade you predicted">predicted ' + p + '</small>');
+}
+// A DP class can weigh its components (the types of work: Paper 1, Paper 2, the internal assessment) its own way:
+// c.ib.w = { type id: weight }. Every other class, and a DP class with none, uses the teacher's usual weights.
+function ibConf(c, conf) { const w = classWay(c) === 'dp' && c.ib && c.ib.w && typeof c.ib.w === 'object' ? c.ib.w : null; return w ? { ...conf, w: { ...conf.w, ...w } } : conf; }
+// The grade a teacher predicts for a student of a DP class: c.pred[term][name] = { g: 1 to 7, t } ('' with no terms, '*' for the
+// whole year). It is hers alone: the worked-out grade is only a hint beside it. A cleared one keeps its time, so a merge knows.
+function ibPredOf(c, name, term) { const p = ((c.pred || {})[term == null ? ibTermKey() : term] || {})[name]; return p && Number.isInteger(p.g) && p.g >= 1 && p.g <= 7 ? p.g : null; }
+function ibPredSet(c, name, g) { const t = ibTermKey(); c.pred ||= {}; c.pred[t] ||= {}; c.pred[t][name] = g == null ? { t: Date.now() } : { g, t: Date.now() }; bkSaveLib(); }
+// A DP student's grade tile on a progress sheet: the 1 to 7 the percent earns, and the predicted grade when there is one.
+function ibDpTile(c, pct, name, term) { if (classWay(c) !== 'dp') return ''; const g = pct == null ? null : ibGradeOf(roundPct(pct), ibBounds(c)), p = ibPredOf(c, name, term); return [g != null ? 'IB grade ' + g : '', p != null ? 'predicted ' + p : ''].filter(Boolean).join(' · '); }
 
 /* ---------- how this class is graded: the box behind the Grading button on a class ---------- */
 let ibDraft = null;
 function ibDlg(ci) {
   const c = lib.classes[ci]; if (!c) return;
   const way = classWay(c), ib = c.ib || {};
-  ibDraft = { ci, way, group: ibGroup(ib.group) ? ib.group : 'own', crit: way === 'myp' ? ibCrit(c) : ibGroupCrit(ibGroup(ib.group) ? ib.group : 'sci'), mypB: way === 'myp' ? ibBounds(c) : null, dpB: way === 'dp' ? ibBounds(c) : IB_BOUNDS_DP.map(r => r.slice()), fresh: way !== 'myp' };
+  ibDraft = { ci, way, group: ibGroup(ib.group) ? ib.group : 'own', crit: way === 'myp' ? ibCrit(c) : ibGroupCrit(ibGroup(ib.group) ? ib.group : 'sci'), mypB: way === 'myp' ? ibBounds(c) : null, dpB: way === 'dp' ? ibBounds(c) : IB_BOUNDS_DP.map(r => r.slice()), fresh: way !== 'myp',
+    dpW: Object.fromEntries(bkCats().filter(t => t[0] !== 'fm').map(t => [t[0], +((way === 'dp' && ib.w && ib.w[t[0]] != null ? ib.w : bkConf().w)[t[0]]) || 0])) };
   if (ibDraft.fresh) ibDraft.group = 'sci';
   openDlg('<div class="bh"><h2>How ' + esc(c.name) + ' is graded</h2></div><div class="bb" id="ibBody"></div>' +
     '<div class="bf"><button class="btn" data-cancel>Cancel</button><button class="btn primary" data-ok>Save</button></div>');
@@ -112,9 +127,12 @@ function ibDlgDraw() {
       '<p class="muted ibnote">' + (d.crit.length === 4 ? 'These start as the published MYP boundaries. Change them if your school uses others.' : 'No table is published for ' + d.crit.length + ' criteria, so these are scaled from the four-criterion one. Check them against your school’s.') + '</p></div></div>' +
       '<p class="muted ibnote">The app holds the names of the criteria and these boundaries, nothing else from the IB. Descriptors are yours to paste in.</p>';
   } else if (d.way === 'dp') {
-    h += '<div class="ibcols"><div><p class="ibcap"><b>Grade boundaries</b> <span class="muted">The lowest percent for each grade.</span></p>' + ibBoundRows(d.dpB, 100) + '</div>' +
-      '<div><p class="muted ibnote">These numbers are only somewhere to start, and are not any subject’s own. Type in the boundaries your subject and level use; they are different for each subject and can change with each exam session.</p>' +
-      '<p class="muted ibnote">Work is still marked in points or with a rubric. The percent is turned into 1 to 7 with this table.</p></div></div>';
+    h += '<div class="ibcols"><div><p class="ibcap"><b>Grade boundaries</b> <span class="muted">The lowest percent for each grade.</span></p>' + ibBoundRows(d.dpB, 100) +
+      '<p class="muted ibnote">These numbers are only somewhere to start, and are not any subject’s own. Type in the boundaries your subject and level use; they are different for each subject and can change with each exam session.</p></div>' +
+      '<div><p class="ibcap"><b>Components</b> <span class="muted">How much each type of work counts in this class.</span></p><div class="ibbounds" id="ibComps">' +
+      bkCats().filter(t => t[0] !== 'fm').map(t => '<label class="ibbound ibcomp"><span>' + esc(t[1]) + '</span><input type="number" data-ibw="' + esc(t[0]) + '" value="' + (d.dpW[t[0]] || 0) + '" min="0" max="100" step="1" aria-label="' + esc('Weight of ' + t[1]) + '"><span class="muted">%</span></label>').join('') + '</div>' +
+      '<p class="muted ibnote">A component is a type of work, such as Paper 1 or the internal assessment. Add or rename types in the gradebook’s Term setup. These weights are for this class only: your other classes keep your usual ones.</p>' +
+      '<p class="muted ibnote">Work is still marked in points or with a rubric. The weighted percent is turned into 1 to 7 with the boundaries.</p></div></div>';
   } else h += '<p class="muted ibnote">Each assignment has its own rubric or points, and the gradebook works out a percent and a term average.</p>';
   el.innerHTML = h;
 }
@@ -124,6 +142,7 @@ function ibDlgRead() {
   for (const i of document.querySelectorAll('#ibBody [data-ibcrit]')) d.crit[+i.dataset.ibcrit].name = i.value.trim();
   const b = d.way === 'myp' ? (d.mypB ||= ibBoundsFor(d.crit.length)) : d.way === 'dp' ? d.dpB : null;
   if (b) for (const i of document.querySelectorAll('#ibBody [data-ibb]')) if (i.value !== '' && isFinite(+i.value)) b[+i.dataset.ibb][0] = Math.round(+i.value);
+  for (const i of document.querySelectorAll('#ibBody [data-ibw]')) if (i.value !== '' && isFinite(+i.value)) d.dpW[i.dataset.ibw] = Math.max(0, Math.min(100, Math.round(+i.value)));
 }
 function ibDlgInput(e) { if (e.target.closest('[data-ibb]') && ibDraft) ibDraft.touched = true; }
 function ibDlgChange(e) {
@@ -150,9 +169,13 @@ function ibDlgSave() {
   } else if (d.way === 'dp') {
     const b = d.dpB;
     for (let i = 1; i < b.length; i++) if (b[i][0] >= b[i - 1][0]) { toast('Each grade’s boundary has to be higher than the one below it'); return; }
+    if (!Object.values(d.dpW).some(v => v > 0)) { toast('At least one component has to count'); return; }
     c.way = 'dp'; c.ib = { ...(c.ib || {}), bounds: b.map(r => r.slice()) };
+    // weights are kept only when they differ from the teacher's usual ones
+    const usual = bkConf().w; if (Object.keys(d.dpW).every(k => d.dpW[k] === (+usual[k] || 0))) delete c.ib.w; else c.ib.w = { ...d.dpW };
   } else delete c.way;   // c.ib stays, so switching back later finds the criteria and boundaries as they were
   ibDraft = null; saveLib(); closeDlg(); renderLib();
+  if ($('#bkBody') && bk.cols && bkClass() === c) { bk.ver = libVer; bkDraw(); }   // the gradebook on screen shows the new weights and boundaries straight away
   toast(d.way === 'myp' ? c.name + ' is graded with MYP criteria' : d.way === 'dp' ? c.name + ' is graded as a DP class' : c.name + ' is graded with points and percent');
 }
 document.addEventListener('click', e => { const b = e.target.closest('[data-ib-class]'); if (b) ibDlg(+b.dataset.ibClass); });
@@ -390,6 +413,35 @@ document.addEventListener('click', e => {
   if (d.ibcopy != null) return ibCopy(c);
 });
 document.addEventListener('change', e => { const t = e.target.closest('#ibAdd [data-ibacrit]'); if (!t || !ibk.add) return; ibAddRead(); const k = t.dataset.ibacrit, a = ibk.add; a.crit = ibCrit(bkClass()).map(x => x.k).filter(x => x === k ? t.checked : a.crit.includes(x)); bkDraw(); });
+/* ---------- a DP class's predicted grades: one screen, a grade from 1 to 7 for each student ---------- */
+// The percent a student has for the period on screen: the term's, or for the whole year the average of the terms' grades.
+function ibDpPct(nm, cols, all, conf) {
+  if (bk.term !== '*' || !conf.terms.length) return bkGrade(nm, cols, conf).grade;
+  const v = conf.terms.map(t => bkGrade(nm, all.filter(x => x.termId === t.id), conf).grade).filter(v => v != null); return v.length ? bkMean(v) : null;
+}
+function ibPredView(c, cols, all, conf, tabs) {
+  const bounds = ibBounds(c), termName = (tabs.find(t => t[0] === bk.term) || [, 'This year'])[1];
+  const bar = ibBar(c, tabs, '<button class="btn sm" data-ibback>← Gradebook</button><button class="btn sm" data-ibpcopy>Copy predicted grades</button>');
+  let h = '<div class="bkwrap"><table class="bktab ibpredtab" id="ibPred"><thead><tr><th class="bknm">Student</th><th>' + esc(termName) + '<small>percent</small></th><th>Worked out<small>1 to 7</small></th><th>Predicted<small>yours</small></th></tr></thead><tbody>';
+  c.names.forEach((nm, i) => {
+    const pct = ibDpPct(nm, cols, all, conf), g = pct == null ? null : ibGradeOf(roundPct(pct), bounds), p = ibPredOf(c, nm);
+    h += '<tr><td class="bknm">' + bkName(nm, i) + '</td><td>' + (pct != null ? pctAvgText(pct) : '<span class="bknone">–</span>') + '</td><td>' + (g != null ? '<b>' + g + '</b>' : '<span class="bknone">–</span>') + '</td>' +
+      '<td><div class="iblvl" role="radiogroup" aria-label="' + esc('Predicted grade for ' + bkWho(nm, i)) + '">' + [1, 2, 3, 4, 5, 6, 7].map(n => '<button role="radio" aria-checked="' + (p === n) + '" class="' + (p === n ? 'on' : p == null && g === n ? 'hint' : '') + '" data-ibpred="' + i + ':' + n + '">' + n + '</button>').join('') + '</div></td></tr>';
+  });
+  return bar + h + '</tbody></table></div><p class="muted bkcap">A predicted grade is your own judgment. The outlined number is what the percent earns on this class’s boundaries, as a hint. Nothing is set until you click, and clicking a set grade again clears it.</p>';
+}
+function ibPredCopy(c) {
+  const rows = [['Student', 'Predicted'].join('\t')].concat(c.names.map((nm, i) => [bkWho(nm, i), ibPredOf(c, nm) ?? ''].join('\t')));
+  navigator.clipboard.writeText(rows.join('\n')).then(() => toast('Copied. Paste it into a spreadsheet' + (sysName() ? ' or ' + sysName() : '') + '.'), () => toast('Copying didn’t work in this browser.'));
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest('#bkBody [data-ibpredopen], #bkBody [data-ibback], #bkBody [data-ibpred], #bkBody [data-ibpcopy]');
+  if (!b) return; const c = bkClass(), d = b.dataset; if (!c || classWay(c) !== 'dp') return;
+  if (d.ibpredopen != null) { ibk.view = 'pred'; return bkDraw(); }
+  if (d.ibback != null) { ibk.view = 'table'; return bkDraw(); }
+  if (d.ibpcopy != null) return ibPredCopy(c);
+  if (d.ibpred) { const [i, n] = d.ibpred.split(':'), nm = c.names[+i]; ibPredSet(c, nm, ibPredOf(c, nm) === +n ? null : +n); bkDraw(); const on = $('#bkBody [data-ibpred="' + i + ':' + n + '"]'); if (on) on.focus(); }
+});
 /* ---------- marking an MYP task on the paper: its rubric rows are the criteria it assesses, each 0 to 8 ---------- */
 // The setup of such a task is a rubric whose rows carry their criterion: setup.ib = ['A', 'D'] beside setup.criteria, every row
 // 0 to 8 in whole levels. The gradebook reads the levels by the letters (ibCols), so a row a teacher renames still counts.
@@ -455,4 +507,4 @@ async function ibTaskSave() {
   toast('This task assesses ' + crit.map(x => x.k).join(', '));
 }
 document.addEventListener('click', e => { if (e.target.closest('#ibTaskSet')) ibTaskDlg(); });
-Object.assign(window.__gs, { classWay, ibCrit, ibBounds, ibBoundsFor, ibGradeOf, ibTerm, ibEvidence, ibLevel, ibDlg, IB_GROUPS, ibCols, ibMid, ibSetup, ibTaskDlg, classNewWay, GRADE_WAYS, ibk: () => ibk });
+Object.assign(window.__gs, { classWay, ibCrit, ibBounds, ibBoundsFor, ibGradeOf, ibTerm, ibEvidence, ibLevel, ibDlg, IB_GROUPS, ibCols, ibMid, ibSetup, ibTaskDlg, classNewWay, GRADE_WAYS, ibConf, ibPredOf, ibk: () => ibk });

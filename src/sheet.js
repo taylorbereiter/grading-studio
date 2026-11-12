@@ -12,7 +12,7 @@ async function openSheets(clsId, who) {
   if (!c || !c.names.length) return toast('Add a roster to this class first.');
   rptKeep(true);
   const cols = bk.cols || await bkLoad().catch(e => { console.error(e); return []; });
-  const conf = bkConf(), tabs = bkTabs(bkClassCols(c, cols));
+  const conf = ibConf(c, bkConf()), tabs = bkTabs(bkClassCols(c, cols));
   pss = { cls: c.id, who: who && c.names.includes(who) ? who : null, cols, term: tabs.some(t => t[0] === bk.term) ? bk.term : conf.terms.length ? bkTermNow(conf.terms) : '' };
   openDlg('<div class="bh"><h2 id="pssTitle"></h2><button class="icon" data-close aria-label="Close" style="margin-left:auto">✕</button></div><div class="bb pssbody" id="pssBody"></div>');
   $('#dlgBox').classList.add('pssbox');
@@ -28,7 +28,7 @@ function pssRep(c, cols, conf, n, rc) {
 }
 function pssDraw() {
   const c = pssClass(), body = $('#pssBody'); if (!c || !body) return;
-  const conf = bkConf(), all = bkClassCols(c, pss.cols), tabs = bkTabs(all), o = pssConf(), rc = rptConf();
+  const conf = ibConf(c, bkConf()), all = bkClassCols(c, pss.cols), tabs = bkTabs(all), o = pssConf(), rc = rptConf();
   if (!tabs.some(t => t[0] === pss.term)) pss.term = tabs[0][0];
   const cols = pss.term === '*' ? all : all.filter(x => x.termId === pss.term), names = pss.who ? [pss.who] : c.names;
   $('#pssTitle').textContent = pss.who ? 'Progress sheet' : 'Progress sheets';
@@ -64,7 +64,7 @@ function pssOne(c, all, cols, conf, n, o, rc) {
   const fm = cols.filter(x => x.type === 'fm'), miss = cols.filter(x => x.type !== 'xc' && (x.cells.get(n) || {}).st === 'missing');
   const tile = (l, v, s, main) => '<div class="psst' + (main ? ' main' : '') + '"><span>' + l + '</span><b>' + v + '</b><small>' + (s || '&nbsp;') + '</small></div>';
   let h = '<article class="pss" data-pss="' + esc(n) + '"><div class="pssin"><header class="psshead"><div><small>Progress report</small><h3>' + esc(shown) + '</h3></div><p>' + esc(c.name) + '<br>' + esc(period) + ' · ' + esc(pssToday()) + '</p></header>' +
-    '<div class="psstiles">' + tile(pss.term === '*' || !conf.terms.length ? 'Grade' : 'Term grade', pct(r.grade) + (r.grade != null && r.soFar ? ' <small>so far</small>' : ''), [r.xc ? 'includes +' + fmtNum(r.xc) + ' extra credit' : '', vs(cavg(''))].filter(Boolean).join(' · '), true) +
+    '<div class="psstiles">' + tile(pss.term === '*' || !conf.terms.length ? 'Grade' : 'Term grade', pct(r.grade) + (r.grade != null && r.soFar ? ' <small>so far</small>' : ''), [ibDpTile(c, r.grade, n, pss.term), r.xc ? 'includes +' + fmtNum(r.xc) + ' extra credit' : '', vs(cavg(''))].filter(Boolean).join(' · '), true) +
     bkCountTypes(conf).map(([t, , l]) => tile(l, pct(r.by[t]), [cols.filter(x => x.type === t && bkCounts(x.cells.get(n))).length + ' of ' + cols.filter(x => x.type === t).length + ' counted', vs(cavg(t))].filter(Boolean).join(' · '))).join('') +
     tile('Missing', String(miss.length), miss.length ? (miss.length === 1 ? 'piece of work' : 'pieces of work') : 'nothing outstanding') +
     (fm.length ? tile('Feedback', fm.filter(x => (x.cells.get(n) || {}).fb).length + ' of ' + fm.length, 'formative activities') : '') + '</div>';

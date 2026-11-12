@@ -286,3 +286,24 @@ test('the prompt tells an assistant to leave students out, and is one press to c
   assert.deepEqual(page.errors, []);
   await close();
 });
+
+test('a DP class’s own component weights come in by the names of the gradebook’s types, go out again, and are undone', async () => {
+  const { page, close } = await openApp(browser, {});
+  const r = await page.evaluate(async () => {
+    const G = window.__gs, lib = () => JSON.parse(localStorage.getItem('gs.lib')).classes.find(c => c.name === 'DP Made-up HL');
+    const S = G.stpRead({ gradingStudioSetup: 1, gradebook: { types: [{ name: 'Paper 1', weight: 30 }] },
+      classes: [{ name: 'DP Made-up HL', programme: 'DP', weights: [{ name: 'Paper 1', weight: 60 }, { name: 'Summative', weight: 40 }, { name: 'In-class', weight: 0 }, { name: 'No such type', weight: 5 }] }] });
+    await G.stpApply(S, { classes: true, book: true });
+    const c = lib(), book = JSON.parse(localStorage.getItem('gs.lib')).book, p1 = book.cats.find(x => x.name === 'Paper 1').id;
+    const ex = await G.stpExport(), out = (typeof ex === 'string' ? JSON.parse(ex) : ex).classes.find(x => x.name === 'DP Made-up HL');
+    const again = G.stpRead({ gradingStudioSetup: 1, classes: [out] }).classes[0].ib.wn;
+    await G.stpUndo();
+    return { way: c.way, w: c.ib.w, p1, out: out.weights, again, after: lib() || null };
+  });
+  assert.equal(r.way, 'dp');
+  assert.deepEqual(r.w, { [r.p1]: 60, sum: 40, ic: 0 });
+  assert.deepEqual(r.out, [{ name: 'Paper 1', weight: 60 }, { name: 'Summative assessment', weight: 40 }, { name: 'In-class assessment', weight: 0 }]);
+  assert.deepEqual(r.again, r.out);
+  assert.equal(r.after, null, 'undo takes the class it made away again');
+  await close();
+});

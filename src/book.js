@@ -205,17 +205,20 @@ function bkTermNow(terms) { const t = isoDay(Date.now()), x = terms.find(y => y.
 function bkDraw() {
   const body = $('#bkBody'), c = bkClass(); if (!body || !c || !bk.cols) return;
   for (const b of document.querySelectorAll('[data-bktab]')) b.setAttribute('aria-selected', String(b.dataset.bktab === bk.tab));
-  const conf = bkConf(), all = bkClassCols(c, bk.cols), tabs = bkTabs(all);
+  const conf = ibConf(c, bkConf()), all = bkClassCols(c, bk.cols), tabs = bkTabs(all);   // a DP class can weigh its components its own way (ib.js)
   if (bk.term == null || !tabs.some(t => t[0] === bk.term)) bk.term = conf.terms.length ? bkTermNow(conf.terms) : '';
   const cols = bk.term === '*' ? all : all.filter(x => x.termId === bk.term);
   const myp = classWay(c) === 'myp', page = bkPage(), tools = (!page || bk.tab === 'table') && !myp;
   if (myp && bk.tab === 'table' && c.names.length) { body.innerHTML = ibBookView(c, cols, all, tabs); return; }   // an MYP class: levels by criterion, not percents (ib.js)
+  const dp = classWay(c) === 'dp'; if (bk.tab !== 'table' && ibk.view === 'pred') ibk.view = 'table';
+  if (dp && bk.tab === 'table' && ibk.view === 'pred' && c.names.length) { body.innerHTML = ibPredView(c, cols, all, conf, tabs); return; }   // a DP class's predicted grades (ib.js)
   { const room = body.clientWidth - 36, gap = page ? 36 : 28, min = page ? 440 : 520, n = Math.max(1, Math.floor((room + gap) / (min + gap))); bk.w = room > 0 ? Math.max(320, Math.min(760, Math.round((room - (n - 1) * gap) / n))) : 640; }   // on a class page the class is the page's, and the table's tools stay with the table
   const bar = '<div class="bkbar">' + (page ? (bk.tab === 'one' ? '<a class="btn sm" id="bkBackStu" href="' + classHash(c, 'students') + '">← Students</a>' : '') : '<label class="muted">Class <select class="btn sm" id="bkCls">' + lib.classes.map(k => '<option value="' + k.id + '"' + (k === c ? ' selected' : '') + '>' + esc(k.name) + '</option>').join('') + '</select></label>') +
     '<div class="ovtabs bkterms" role="group" aria-label="Term">' + tabs.map(([id, l]) => '<button data-bkterm="' + esc(id) + '" aria-selected="' + (bk.term === id) + '">' + esc(l) + '</button>').join('') + '</div><span class="sp"></span>' +
     (bk.tab === 'table' && bk.term !== '*' ? '<div class="pseg" role="group" aria-label="Columns">' + [['', 'Every assignment'], ['1', 'Averages only']].map(([v, l]) => '<button data-bkonly="' + v + '" aria-pressed="' + (bkOnly() === !!v) + '">' + l + '</button>').join('') + '</div>' +
       (bkOnly() ? '' : '<div class="pseg" role="group" aria-label="Show">' + [['pct', 'Percent'], ['pts', 'Points']].map(([v, l]) => '<button data-bkshow="' + v + '" aria-pressed="' + (bk.show === v) + '">' + l + '</button>').join('') + '</div>') : '') +
     (bk.tab === 'rep' && c.names.length ? rptBar() : '') + (bk.tab === 'miss' && c.names.length ? misBar() : '') +
+    (dp && bk.tab === 'table' && c.names.length ? '<button class="btn sm" data-ibpredopen title="The grade from 1 to 7 you predict for each student">Predicted grades</button>' : '') +
     (tools ? '<button class="btn sm" data-bksetup>Term setup</button>' + (bk.tab === 'table' ? '<button class="btn sm" data-bkpickon aria-pressed="' + !!bk.pick + '" title="Leave students out of the class averages to see how it changes">' + (bk.pick ? 'Done' : 'Leave out…') + '</button><button class="btn sm" data-bkcopy>Copy table</button>' : '') + '<button class="btn sm" data-bkimport title="Scores from your old gradebook: a CSV or Excel file, or cells pasted">Import…</button><button class="btn sm" data-bkaddxc>+ Extra credit</button><button class="btn sm primary" data-bkadd>+ Add scores</button>' : '') + '</div>';
   let main;
   if (!c.names.length) main = '<p class="muted bkpad">The gradebook lists the students on a class’s roster. Add a roster to ' + esc(c.name) + ' on its class page first.</p>';
@@ -259,7 +262,7 @@ const bkCountTypes = conf => bkCats().filter(([t]) => +conf.w[t] > 0);
 const bkOnly = () => { try { return localStorage.getItem('gs.bkOnly') === '1'; } catch (e) { return false; } };
 // One type's average in a cell; the in-class average says when extra credit is in it.
 const bkAvgCell = (r, t) => r.by[t] != null ? pctAvgText(r.by[t]) + (t === 'ic' && r.xcIc ? ' <small class="bkxc" title="Includes extra credit">+xc</small>' : '') : '<span class="bknone">–</span>';
-const bkGradeCell = r => r.grade != null ? pctAvgText(r.grade) + ibDpSay(r.grade, bkClass()) + (r.soFar ? ' <small>so far</small>' : '') + (r.xcTerm ? ' <small class="bkxc" title="Includes extra credit">+xc</small>' : '') : '<span class="bknone">–</span>';
+const bkGradeCell = (r, nm) => r.grade != null ? pctAvgText(r.grade) + ibDpSay(r.grade, bkClass(), nm) + (r.soFar ? ' <small>so far</small>' : '') + (r.xcTerm ? ' <small class="bkxc" title="Includes extra credit">+xc</small>' : '') : '<span class="bknone">–</span>';
 // The class average of one type's averages, or of the grades ('' for the grade).
 // The type averages and the grade stay in view at the right while the assignments scroll under them.
 // With more than three averages they scroll with the table, so the assignments still have room; the grade always stays.
@@ -277,7 +280,7 @@ function bkTable(c, cols, conf) {
     h += '<tr' + bkRowCls(nm) + '>' + bkNameCell(nm, i) + groups.map(g => g.cols.map(col => { const cell = col.cells.get(nm), ed = !!col.typed && !(cell && !cell.typed);
       return '<td' + (ed ? ' class="bked" tabindex="0" data-bked="' + esc(col.key) + '" data-bkn="' + esc(nm) + '" title="Click to change"' : col.d ? ' title="Change this score in its download"' : '') + '>' + bkCellText(cell, bk.show, col) + '</td>'; }).join('')).join('') +
       ct.map(([t], j) => '<td class="bkavg bksum"' + bkStick(j, n) + '>' + bkAvgCell(r, t) + '</td>').join('') +
-      '<td class="bkterm bksum"' + bkStick(n, n) + ' tabindex="0" ' + bkWhy(nm, r, conf) + '>' + bkGradeCell(r) + '</td></tr>';
+      '<td class="bkterm bksum"' + bkStick(n, n) + ' tabindex="0" ' + bkWhy(nm, r, conf) + '>' + bkGradeCell(r, nm) + '</td></tr>';
   });
   const inn = c.names.filter(bkIn), colAvg = col => { if (col.type === 'xc') { const k = inn.filter(x => col.cells.get(x)).length; return k + ' given'; } if (col.type === 'fm') { const k = inn.filter(x => (col.cells.get(x) || {}).fb).length; return k + '/' + inn.length; } const ps = inn.map(x => col.cells.get(x)).filter(bkCounts).map(x => x.pct); return ps.length ? pctAvgText(bkMean(ps)) : '–'; };
   h += '<tr class="bkfoot">' + bkFootName(c) + groups.map(g => g.cols.map(col => '<td>' + colAvg(col) + '</td>').join('')).join('') + ct.map(([t], j) => '<td class="bkavg bksum"' + bkStick(j, n) + '>' + bkClassAvg(grades, t) + '</td>').join('') + '<td class="bkterm bksum"' + bkStick(n, n) + '>' + bkClassAvg(grades, '') + '</td></tr></tbody></table></div>' +

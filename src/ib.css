@@ -77,3 +77,11 @@
 /* an MYP class's progress sheet */
 .ibpsscap { margin: 6px 0 0; font-size: var(--text-caption); color: var(--stage-ink-2); }
 .ibpss .psst span b { font-size: inherit; font-weight: 700; }
+
+/* a DP class: predicted grades and component weights */
+.ibpred { display: block; color: var(--stage-ink-2); font-weight: 500; white-space: nowrap; }
+.ibpredtab th small { display: block; font-weight: 400; }
+.ibpredtab td, .ibpredtab th { text-align: left; }
+.ibpredtab .iblvl { justify-content: flex-start; }
+.ibcomp { grid-template-columns: minmax(0, 1fr) 76px 16px; max-width: 340px; }
+.ibcomp span:first-child { overflow-wrap: anywhere; }

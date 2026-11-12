@@ -1850,6 +1850,14 @@ p.goalline{display:block}
 /* an MYP class's progress sheet */
 .ibpsscap { margin: 6px 0 0; font-size: var(--text-caption); color: var(--stage-ink-2); }
 .ibpss .psst span b { font-size: inherit; font-weight: 700; }
+
+/* a DP class: predicted grades and component weights */
+.ibpred { display: block; color: var(--stage-ink-2); font-weight: 500; white-space: nowrap; }
+.ibpredtab th small { display: block; font-weight: 400; }
+.ibpredtab td, .ibpredtab th { text-align: left; }
+.ibpredtab .iblvl { justify-content: flex-start; }
+.ibcomp { grid-template-columns: minmax(0, 1fr) 76px 16px; max-width: 340px; }
+.ibcomp span:first-child { overflow-wrap: anywhere; }
 /* ---------- an open assignment's tabs, and a tab's screen drawn on the page (11/10) ---------- */
 .atabs{display:flex;gap:2px;align-self:stretch;margin:-9px 0 -9px 8px;flex:none}
 .atab{display:flex;align-items:center;gap:6px;padding:0 13px;min-height:44px;font-size:var(--text-body);font-weight:500;color:var(--fg-2);text-decoration:none;border-bottom:2px solid transparent;border-top:2px solid transparent;white-space:nowrap}
@@ -4796,7 +4804,7 @@ const LANG_ES = {
         '1. Abre una tarea de esa clase y pulsa **Choose this task’s criteria**. Marca los criterios que evalúa la tarea. Cada uno pasa a ser una fila que se califica de 0 a 8, sin total ni porcentaje.', '2. En el **Gradebook** de la clase, cada tarea muestra los niveles que dio. Haz clic en un nivel a la derecha para ver todas las evidencias de un estudiante en un criterio y elegir el nivel que mejor encaja.',
         '3. Cuando todos los criterios tienen nivel, el total se convierte en la nota final del 1 al 7. Los niveles nunca se promedian por ti. Para una tarea corregida en papel, usa **+ Add levels** en el Gradebook.'] },
     'ib-dp': { q: 'Doy clase en el Diploma del IB (DP). ¿De dónde salen las notas del 1 al 7?', words: 'IB DP diploma 1 7 límites porcentaje nota',
-      a: ['En la página de la clase, pulsa **Grading** y elige **IB DP**; después escribe el porcentaje más bajo que da cada nota en tu asignatura. Los límites cambian según la asignatura y la convocatoria, así que los que aparecen al principio son solo un punto de partida.', 'El Gradebook muestra entonces la nota del 1 al 7 junto al porcentaje del periodo de cada estudiante.'] },
+      a: ['En la página de la clase, pulsa **Grading** y elige **IB DP**; después escribe el porcentaje más bajo que da cada nota en tu asignatura. Los límites cambian según la asignatura y la convocatoria, así que los que aparecen al principio son solo un punto de partida.', 'El Gradebook muestra entonces la nota del 1 al 7 junto al porcentaje del periodo de cada estudiante.', 'En el mismo cuadro, **Components** fija cuánto cuenta cada tipo de trabajo solo en esta clase. En el Gradebook, **Predicted grades** abre una lista donde pulsas la nota que prevés para cada estudiante. La nota que da el porcentaje aparece resaltada como pista.'] },
     'status': { q: '¿Cómo marco un trabajo como no entregado, justificado o con retraso?', words: 'ausente sin trabajo exento tarde estado falta',
       a: ['Bajo el total del estudiante en el panel de notas, elige **Missing**, **Excused** o **Late**. El ⋯ de al lado tiene **Leave out of the average**.', 'Los trabajos no entregados y justificados no esperan nota, así que no cuentan como pendientes de corregir.'] },
     'extra-credit': { q: '¿Cómo doy puntos extra?', words: 'bonus puntos extra adicional',
@@ -5231,7 +5239,7 @@ const LANG_ZH = {
         '1. 開啟該班的一份作業，按 **Choose this task’s criteria**，勾選這份作業評量的標準。每項標準成為一個評 0 到 8 的項目，沒有總分也沒有百分比。', '2. 在班級的 **Gradebook** 裡，每份作業會顯示給出的等級。點右側的等級，可以看到一位學生在某項標準的所有表現，再選出最符合的等級。',
         '3. 每項標準都有等級之後，總分會換算成 1 到 7 的最終成績。等級不會自動取平均。紙本批改的作業，請在 Gradebook 用 **+ Add levels**。'] },
     'ib-dp': { q: '我教 IB DP。1 到 7 的成績是怎麼來的？', words: 'IB DP 文憑 1 7 分界 百分比 成績',
-      a: ['在班級頁面按 **Grading**，選 **IB DP**，再輸入你的科目每個成績所需的最低百分比。分界會因科目和考期不同，一開始顯示的只是起點。', 'Gradebook 之後會在每位學生的學期百分比旁顯示 1 到 7。'] },
+      a: ['在班級頁面按 **Grading**，選 **IB DP**，再輸入你的科目每個成績所需的最低百分比。分界會因科目和考期不同，一開始顯示的只是起點。', 'Gradebook 之後會在每位學生的學期百分比旁顯示 1 到 7。', '在同一個視窗裡，**Components** 可設定各類作業在這個班級所佔的比重。在 Gradebook 按 **Predicted grades** 會開啟名單，點選你為每位學生預估的成績。百分比換算出的成績會以外框標示，作為參考。'] },
     'status': { q: '怎麼把作業標示為缺交、免交或遲交？', words: '缺席 沒交 免除 遲交 狀態 缺交',
       a: ['在評分面板中學生總分的下方，選擇 **Missing**、**Excused** 或 **Late**。旁邊的 ⋯ 裡有 **Leave out of the average**。', '缺交和免交的作業不需要分數，所以不會算在待批改裡。'] },
     'extra-credit': { q: '怎麼給加分？', words: '加分 額外分數 bonus extra credit',
@@ -5511,8 +5519,8 @@ const HELP = [
       '3. Once every criterion has a level, the total becomes the final grade of 1 to 7. Levels are never averaged for you. For a task marked on paper, use **+ Add levels** in the Gradebook.'],
     words: 'IB MYP criteria criterion A B C D levels 0 8 best fit 1 7 boundaries middle years descriptors' },
   { id: 'ib-dp', sec: 'score', q: 'I teach IB DP. Where do the 1 to 7 grades come from?',
-    a: ['On the class page, press **Grading** and choose **IB DP**, then type the lowest percent that earns each grade for your subject. Boundaries differ by subject and session, so the ones shown at first are only a place to start.', 'The Gradebook then shows the 1 to 7 beside each student’s term percent.'],
-    words: 'IB DP diploma 1 7 boundaries percent grade predicted' },
+    a: ['On the class page, press **Grading** and choose **IB DP**, then type the lowest percent that earns each grade for your subject. Boundaries differ by subject and session, so the ones shown at first are only a place to start.', 'The Gradebook then shows the 1 to 7 beside each student’s term percent.', 'In the same box, **Components** sets how much each type of work counts in this class alone. In the Gradebook, **Predicted grades** opens a list where you click the grade you predict for each student. The grade the percent earns is outlined as a hint.'],
+    words: 'IB DP diploma 1 7 boundaries percent grade predicted components weights paper internal assessment' },
   { id: 'group-work', sec: 'mark', q: 'Several students made one paper together. Do I mark it for each?',
     a: ['No. Open the file’s ⋯ menu, choose **Group work…** and click each partner.', 'With **Mark and grade once for the group** on, a mark or a score given to one partner is given to all of them, and each gets the marked paper back.'],
     words: 'partners pairs group poster shared together' },
@@ -16013,17 +16021,20 @@ function bkTermNow(terms) { const t = isoDay(Date.now()), x = terms.find(y => y.
 function bkDraw() {
   const body = $('#bkBody'), c = bkClass(); if (!body || !c || !bk.cols) return;
   for (const b of document.querySelectorAll('[data-bktab]')) b.setAttribute('aria-selected', String(b.dataset.bktab === bk.tab));
-  const conf = bkConf(), all = bkClassCols(c, bk.cols), tabs = bkTabs(all);
+  const conf = ibConf(c, bkConf()), all = bkClassCols(c, bk.cols), tabs = bkTabs(all);   // a DP class can weigh its components its own way (ib.js)
   if (bk.term == null || !tabs.some(t => t[0] === bk.term)) bk.term = conf.terms.length ? bkTermNow(conf.terms) : '';
   const cols = bk.term === '*' ? all : all.filter(x => x.termId === bk.term);
   const myp = classWay(c) === 'myp', page = bkPage(), tools = (!page || bk.tab === 'table') && !myp;
   if (myp && bk.tab === 'table' && c.names.length) { body.innerHTML = ibBookView(c, cols, all, tabs); return; }   // an MYP class: levels by criterion, not percents (ib.js)
+  const dp = classWay(c) === 'dp'; if (bk.tab !== 'table' && ibk.view === 'pred') ibk.view = 'table';
+  if (dp && bk.tab === 'table' && ibk.view === 'pred' && c.names.length) { body.innerHTML = ibPredView(c, cols, all, conf, tabs); return; }   // a DP class's predicted grades (ib.js)
   { const room = body.clientWidth - 36, gap = page ? 36 : 28, min = page ? 440 : 520, n = Math.max(1, Math.floor((room + gap) / (min + gap))); bk.w = room > 0 ? Math.max(320, Math.min(760, Math.round((room - (n - 1) * gap) / n))) : 640; }   // on a class page the class is the page's, and the table's tools stay with the table
   const bar = '<div class="bkbar">' + (page ? (bk.tab === 'one' ? '<a class="btn sm" id="bkBackStu" href="' + classHash(c, 'students') + '">← Students</a>' : '') : '<label class="muted">Class <select class="btn sm" id="bkCls">' + lib.classes.map(k => '<option value="' + k.id + '"' + (k === c ? ' selected' : '') + '>' + esc(k.name) + '</option>').join('') + '</select></label>') +
     '<div class="ovtabs bkterms" role="group" aria-label="Term">' + tabs.map(([id, l]) => '<button data-bkterm="' + esc(id) + '" aria-selected="' + (bk.term === id) + '">' + esc(l) + '</button>').join('') + '</div><span class="sp"></span>' +
     (bk.tab === 'table' && bk.term !== '*' ? '<div class="pseg" role="group" aria-label="Columns">' + [['', 'Every assignment'], ['1', 'Averages only']].map(([v, l]) => '<button data-bkonly="' + v + '" aria-pressed="' + (bkOnly() === !!v) + '">' + l + '</button>').join('') + '</div>' +
       (bkOnly() ? '' : '<div class="pseg" role="group" aria-label="Show">' + [['pct', 'Percent'], ['pts', 'Points']].map(([v, l]) => '<button data-bkshow="' + v + '" aria-pressed="' + (bk.show === v) + '">' + l + '</button>').join('') + '</div>') : '') +
     (bk.tab === 'rep' && c.names.length ? rptBar() : '') + (bk.tab === 'miss' && c.names.length ? misBar() : '') +
+    (dp && bk.tab === 'table' && c.names.length ? '<button class="btn sm" data-ibpredopen title="The grade from 1 to 7 you predict for each student">Predicted grades</button>' : '') +
     (tools ? '<button class="btn sm" data-bksetup>Term setup</button>' + (bk.tab === 'table' ? '<button class="btn sm" data-bkpickon aria-pressed="' + !!bk.pick + '" title="Leave students out of the class averages to see how it changes">' + (bk.pick ? 'Done' : 'Leave out…') + '</button><button class="btn sm" data-bkcopy>Copy table</button>' : '') + '<button class="btn sm" data-bkimport title="Scores from your old gradebook: a CSV or Excel file, or cells pasted">Import…</button><button class="btn sm" data-bkaddxc>+ Extra credit</button><button class="btn sm primary" data-bkadd>+ Add scores</button>' : '') + '</div>';
   let main;
   if (!c.names.length) main = '<p class="muted bkpad">The gradebook lists the students on a class’s roster. Add a roster to ' + esc(c.name) + ' on its class page first.</p>';
@@ -16061,7 +16072,7 @@ const bkRowCls = n => bkIn(n) ? '' : ' class="bkleft"';
 const bkCountTypes = conf => bkCats().filter(([t]) => +conf.w[t] > 0);
 const bkOnly = () => { try { return localStorage.getItem('gs.bkOnly') === '1'; } catch (e) { return false; } };
 const bkAvgCell = (r, t) => r.by[t] != null ? pctAvgText(r.by[t]) + (t === 'ic' && r.xcIc ? ' <small class="bkxc" title="Includes extra credit">+xc</small>' : '') : '<span class="bknone">–</span>';
-const bkGradeCell = r => r.grade != null ? pctAvgText(r.grade) + ibDpSay(r.grade, bkClass()) + (r.soFar ? ' <small>so far</small>' : '') + (r.xcTerm ? ' <small class="bkxc" title="Includes extra credit">+xc</small>' : '') : '<span class="bknone">–</span>';
+const bkGradeCell = (r, nm) => r.grade != null ? pctAvgText(r.grade) + ibDpSay(r.grade, bkClass(), nm) + (r.soFar ? ' <small>so far</small>' : '') + (r.xcTerm ? ' <small class="bkxc" title="Includes extra credit">+xc</small>' : '') : '<span class="bknone">–</span>';
 const bkStick = (j, n) => j < n && n > 3 ? ' style="position:static"' : ' style="right:' + (j >= n ? 0 : 120 + (n - 1 - j) * 100) + 'px"';
 const bkClassAvg = (grades, t) => { const ps = grades.map(r => t ? r.by[t] : r.grade).filter(v => v != null); return ps.length ? pctAvgText(bkMean(ps)) : '–'; };
 function bkTable(c, cols, conf) {
@@ -16076,7 +16087,7 @@ function bkTable(c, cols, conf) {
     h += '<tr' + bkRowCls(nm) + '>' + bkNameCell(nm, i) + groups.map(g => g.cols.map(col => { const cell = col.cells.get(nm), ed = !!col.typed && !(cell && !cell.typed);
       return '<td' + (ed ? ' class="bked" tabindex="0" data-bked="' + esc(col.key) + '" data-bkn="' + esc(nm) + '" title="Click to change"' : col.d ? ' title="Change this score in its download"' : '') + '>' + bkCellText(cell, bk.show, col) + '</td>'; }).join('')).join('') +
       ct.map(([t], j) => '<td class="bkavg bksum"' + bkStick(j, n) + '>' + bkAvgCell(r, t) + '</td>').join('') +
-      '<td class="bkterm bksum"' + bkStick(n, n) + ' tabindex="0" ' + bkWhy(nm, r, conf) + '>' + bkGradeCell(r) + '</td></tr>';
+      '<td class="bkterm bksum"' + bkStick(n, n) + ' tabindex="0" ' + bkWhy(nm, r, conf) + '>' + bkGradeCell(r, nm) + '</td></tr>';
   });
   const inn = c.names.filter(bkIn), colAvg = col => { if (col.type === 'xc') { const k = inn.filter(x => col.cells.get(x)).length; return k + ' given'; } if (col.type === 'fm') { const k = inn.filter(x => (col.cells.get(x) || {}).fb).length; return k + '/' + inn.length; } const ps = inn.map(x => col.cells.get(x)).filter(bkCounts).map(x => x.pct); return ps.length ? pctAvgText(bkMean(ps)) : '–'; };
   h += '<tr class="bkfoot">' + bkFootName(c) + groups.map(g => g.cols.map(col => '<td>' + colAvg(col) + '</td>').join('')).join('') + ct.map(([t], j) => '<td class="bkavg bksum"' + bkStick(j, n) + '>' + bkClassAvg(grades, t) + '</td>').join('') + '<td class="bkterm bksum"' + bkStick(n, n) + '>' + bkClassAvg(grades, '') + '</td></tr></tbody></table></div>' +
@@ -17987,10 +17998,10 @@ function fillPeople(c) {
 }
 function peopleGrades(c) {
   const t = $('#peopleTbl'); if (!t || bk.host !== 'page' || !bk.cols) return;
-  const conf = bkConf(), term = conf.terms.length ? bkTermNow(conf.terms) : '', cols = bkClassCols(c, bk.cols).filter(x => x.termId === term), tn = conf.terms.find(x => x.id === term);
+  const conf = ibConf(c, bkConf()), term = conf.terms.length ? bkTermNow(conf.terms) : '', cols = bkClassCols(c, bk.cols).filter(x => x.termId === term), tn = conf.terms.find(x => x.id === term);
   const h = $('#peopleGh'); if (h) h.textContent = tn ? tn.name || 'Term' : 'Grade';
   if (classWay(c) === 'myp') { for (const td of t.querySelectorAll('td[data-pg]')) td.textContent = ibPeopleSay(c, c.names[+td.dataset.pg], term); return; }   // levels and a 1 to 7, not a percent (ib.js)
-  for (const td of t.querySelectorAll('td[data-pg]')) { const r = bkGrade(c.names[+td.dataset.pg], cols, conf); td.textContent = r.grade != null ? pctAvgText(r.grade) : '–'; }
+  for (const td of t.querySelectorAll('td[data-pg]')) { const r = bkGrade(c.names[+td.dataset.pg], cols, conf); const g7 = r.grade != null && classWay(c) === 'dp' ? ibGradeOf(roundPct(r.grade), ibBounds(c)) : null; td.textContent = r.grade != null ? pctAvgText(r.grade) + (g7 != null ? ' · ' + g7 : '') : '–'; }
 }
 
 function levelHtml(s) {
@@ -19101,12 +19112,12 @@ function mergeLib(a0, b0, o = {}) {
       for (const k of new Set([...Object.keys(xa), ...Object.keys(ya)])) out[k] = !xa[k] ? ya[k] : !ya[k] ? xa[k] : (ya[k].t || 0) > (xa[k].t || 0) ? ya[k] : xa[k];
       e.fields.att = e.node.att = out;
     }
-    if (x.type === 'c' && m.both.includes('lv')) {   // an MYP class's term levels: student by student within each term, the one saved later
-      const xl = x.fields.lv || {}, yl = y.fields.lv || {}, out = {};
+    for (const f of ['lv', 'pred']) if (x.type === 'c' && m.both.includes(f)) {
+      const xl = x.fields[f] || {}, yl = y.fields[f] || {}, out = {};
       for (const t of new Set([...Object.keys(xl), ...Object.keys(yl)])) { const a = xl[t] || {}, b = yl[t] || {}; out[t] = {}; for (const n of new Set([...Object.keys(a), ...Object.keys(b)])) out[t][n] = !a[n] ? b[n] : !b[n] ? a[n] : (b[n].t || 0) > (a[n].t || 0) ? b[n] : a[n]; }
-      e.fields.lv = e.node.lv = out;
+      e.fields[f] = e.node[f] = out;
     }
-    const other = m.both.filter(k => k !== 'names' && k !== 'info' && k !== 'att' && k !== 'lv');
+    const other = m.both.filter(k => k !== 'names' && k !== 'info' && k !== 'att' && k !== 'lv' && k !== 'pred');
     if (other.length) notes.push({ kind: 'both', type: x.type, name: e.fields.name, rubric: other.includes('setup') });
     else if (m.fromY.some(k => k !== 'names')) notes.push({ kind: 'changed', type: x.type, name: e.fields.name });
     kept.set(id, e);
@@ -24127,14 +24138,23 @@ function classNewWay() { const g = meGrade(); return (g && g.way === 'myp') || /
 function ibPill(c) { const w = classWay(c); return w ? '<span class="ibpill" title="' + (w === 'myp' ? 'This class is graded with IB MYP criteria' : 'This class is graded as an IB DP class') + '">' + (w === 'myp' ? 'MYP' : 'DP') + '</span>' : ''; }
 function ibClassBtn(c, ci) { return '<button class="btn sm" data-ib-class="' + ci + '">Grading</button>'; }
 
-function ibDpSay(pct, c) { if (classWay(c) !== 'dp' || pct == null) return ''; const g = ibGradeOf(roundPct(pct), ibBounds(c)); return g == null ? '' : ' <b class="ibg7" title="On this class’s boundaries">' + g + '</b>'; }
+function ibDpSay(pct, c, name) {
+  if (classWay(c) !== 'dp') return '';
+  const g = pct == null ? null : ibGradeOf(roundPct(pct), ibBounds(c)), p = name == null ? null : ibPredOf(c, name);
+  return (g == null ? '' : ' <b class="ibg7" title="On this class’s boundaries">' + g + '</b>') + (p == null ? '' : ' <small class="ibpred" title="The grade you predicted">predicted ' + p + '</small>');
+}
+function ibConf(c, conf) { const w = classWay(c) === 'dp' && c.ib && c.ib.w && typeof c.ib.w === 'object' ? c.ib.w : null; return w ? { ...conf, w: { ...conf.w, ...w } } : conf; }
+function ibPredOf(c, name, term) { const p = ((c.pred || {})[term == null ? ibTermKey() : term] || {})[name]; return p && Number.isInteger(p.g) && p.g >= 1 && p.g <= 7 ? p.g : null; }
+function ibPredSet(c, name, g) { const t = ibTermKey(); c.pred ||= {}; c.pred[t] ||= {}; c.pred[t][name] = g == null ? { t: Date.now() } : { g, t: Date.now() }; bkSaveLib(); }
+function ibDpTile(c, pct, name, term) { if (classWay(c) !== 'dp') return ''; const g = pct == null ? null : ibGradeOf(roundPct(pct), ibBounds(c)), p = ibPredOf(c, name, term); return [g != null ? 'IB grade ' + g : '', p != null ? 'predicted ' + p : ''].filter(Boolean).join(' · '); }
 
 /* ---------- how this class is graded: the box behind the Grading button on a class ---------- */
 let ibDraft = null;
 function ibDlg(ci) {
   const c = lib.classes[ci]; if (!c) return;
   const way = classWay(c), ib = c.ib || {};
-  ibDraft = { ci, way, group: ibGroup(ib.group) ? ib.group : 'own', crit: way === 'myp' ? ibCrit(c) : ibGroupCrit(ibGroup(ib.group) ? ib.group : 'sci'), mypB: way === 'myp' ? ibBounds(c) : null, dpB: way === 'dp' ? ibBounds(c) : IB_BOUNDS_DP.map(r => r.slice()), fresh: way !== 'myp' };
+  ibDraft = { ci, way, group: ibGroup(ib.group) ? ib.group : 'own', crit: way === 'myp' ? ibCrit(c) : ibGroupCrit(ibGroup(ib.group) ? ib.group : 'sci'), mypB: way === 'myp' ? ibBounds(c) : null, dpB: way === 'dp' ? ibBounds(c) : IB_BOUNDS_DP.map(r => r.slice()), fresh: way !== 'myp',
+    dpW: Object.fromEntries(bkCats().filter(t => t[0] !== 'fm').map(t => [t[0], +((way === 'dp' && ib.w && ib.w[t[0]] != null ? ib.w : bkConf().w)[t[0]]) || 0])) };
   if (ibDraft.fresh) ibDraft.group = 'sci';
   openDlg('<div class="bh"><h2>How ' + esc(c.name) + ' is graded</h2></div><div class="bb" id="ibBody"></div>' +
     '<div class="bf"><button class="btn" data-cancel>Cancel</button><button class="btn primary" data-ok>Save</button></div>');
@@ -24155,9 +24175,12 @@ function ibDlgDraw() {
       '<p class="muted ibnote">' + (d.crit.length === 4 ? 'These start as the published MYP boundaries. Change them if your school uses others.' : 'No table is published for ' + d.crit.length + ' criteria, so these are scaled from the four-criterion one. Check them against your school’s.') + '</p></div></div>' +
       '<p class="muted ibnote">The app holds the names of the criteria and these boundaries, nothing else from the IB. Descriptors are yours to paste in.</p>';
   } else if (d.way === 'dp') {
-    h += '<div class="ibcols"><div><p class="ibcap"><b>Grade boundaries</b> <span class="muted">The lowest percent for each grade.</span></p>' + ibBoundRows(d.dpB, 100) + '</div>' +
-      '<div><p class="muted ibnote">These numbers are only somewhere to start, and are not any subject’s own. Type in the boundaries your subject and level use; they are different for each subject and can change with each exam session.</p>' +
-      '<p class="muted ibnote">Work is still marked in points or with a rubric. The percent is turned into 1 to 7 with this table.</p></div></div>';
+    h += '<div class="ibcols"><div><p class="ibcap"><b>Grade boundaries</b> <span class="muted">The lowest percent for each grade.</span></p>' + ibBoundRows(d.dpB, 100) +
+      '<p class="muted ibnote">These numbers are only somewhere to start, and are not any subject’s own. Type in the boundaries your subject and level use; they are different for each subject and can change with each exam session.</p></div>' +
+      '<div><p class="ibcap"><b>Components</b> <span class="muted">How much each type of work counts in this class.</span></p><div class="ibbounds" id="ibComps">' +
+      bkCats().filter(t => t[0] !== 'fm').map(t => '<label class="ibbound ibcomp"><span>' + esc(t[1]) + '</span><input type="number" data-ibw="' + esc(t[0]) + '" value="' + (d.dpW[t[0]] || 0) + '" min="0" max="100" step="1" aria-label="' + esc('Weight of ' + t[1]) + '"><span class="muted">%</span></label>').join('') + '</div>' +
+      '<p class="muted ibnote">A component is a type of work, such as Paper 1 or the internal assessment. Add or rename types in the gradebook’s Term setup. These weights are for this class only: your other classes keep your usual ones.</p>' +
+      '<p class="muted ibnote">Work is still marked in points or with a rubric. The weighted percent is turned into 1 to 7 with the boundaries.</p></div></div>';
   } else h += '<p class="muted ibnote">Each assignment has its own rubric or points, and the gradebook works out a percent and a term average.</p>';
   el.innerHTML = h;
 }
@@ -24167,6 +24190,7 @@ function ibDlgRead() {
   for (const i of document.querySelectorAll('#ibBody [data-ibcrit]')) d.crit[+i.dataset.ibcrit].name = i.value.trim();
   const b = d.way === 'myp' ? (d.mypB ||= ibBoundsFor(d.crit.length)) : d.way === 'dp' ? d.dpB : null;
   if (b) for (const i of document.querySelectorAll('#ibBody [data-ibb]')) if (i.value !== '' && isFinite(+i.value)) b[+i.dataset.ibb][0] = Math.round(+i.value);
+  for (const i of document.querySelectorAll('#ibBody [data-ibw]')) if (i.value !== '' && isFinite(+i.value)) d.dpW[i.dataset.ibw] = Math.max(0, Math.min(100, Math.round(+i.value)));
 }
 function ibDlgInput(e) { if (e.target.closest('[data-ibb]') && ibDraft) ibDraft.touched = true; }
 function ibDlgChange(e) {
@@ -24193,9 +24217,12 @@ function ibDlgSave() {
   } else if (d.way === 'dp') {
     const b = d.dpB;
     for (let i = 1; i < b.length; i++) if (b[i][0] >= b[i - 1][0]) { toast('Each grade’s boundary has to be higher than the one below it'); return; }
+    if (!Object.values(d.dpW).some(v => v > 0)) { toast('At least one component has to count'); return; }
     c.way = 'dp'; c.ib = { ...(c.ib || {}), bounds: b.map(r => r.slice()) };
+    const usual = bkConf().w; if (Object.keys(d.dpW).every(k => d.dpW[k] === (+usual[k] || 0))) delete c.ib.w; else c.ib.w = { ...d.dpW };
   } else delete c.way;   // c.ib stays, so switching back later finds the criteria and boundaries as they were
   ibDraft = null; saveLib(); closeDlg(); renderLib();
+  if ($('#bkBody') && bk.cols && bkClass() === c) { bk.ver = libVer; bkDraw(); }   // the gradebook on screen shows the new weights and boundaries straight away
   toast(d.way === 'myp' ? c.name + ' is graded with MYP criteria' : d.way === 'dp' ? c.name + ' is graded as a DP class' : c.name + ' is graded with points and percent');
 }
 document.addEventListener('click', e => { const b = e.target.closest('[data-ib-class]'); if (b) ibDlg(+b.dataset.ibClass); });
@@ -24414,6 +24441,34 @@ document.addEventListener('click', e => {
   if (d.ibcopy != null) return ibCopy(c);
 });
 document.addEventListener('change', e => { const t = e.target.closest('#ibAdd [data-ibacrit]'); if (!t || !ibk.add) return; ibAddRead(); const k = t.dataset.ibacrit, a = ibk.add; a.crit = ibCrit(bkClass()).map(x => x.k).filter(x => x === k ? t.checked : a.crit.includes(x)); bkDraw(); });
+/* ---------- a DP class's predicted grades: one screen, a grade from 1 to 7 for each student ---------- */
+function ibDpPct(nm, cols, all, conf) {
+  if (bk.term !== '*' || !conf.terms.length) return bkGrade(nm, cols, conf).grade;
+  const v = conf.terms.map(t => bkGrade(nm, all.filter(x => x.termId === t.id), conf).grade).filter(v => v != null); return v.length ? bkMean(v) : null;
+}
+function ibPredView(c, cols, all, conf, tabs) {
+  const bounds = ibBounds(c), termName = (tabs.find(t => t[0] === bk.term) || [, 'This year'])[1];
+  const bar = ibBar(c, tabs, '<button class="btn sm" data-ibback>← Gradebook</button><button class="btn sm" data-ibpcopy>Copy predicted grades</button>');
+  let h = '<div class="bkwrap"><table class="bktab ibpredtab" id="ibPred"><thead><tr><th class="bknm">Student</th><th>' + esc(termName) + '<small>percent</small></th><th>Worked out<small>1 to 7</small></th><th>Predicted<small>yours</small></th></tr></thead><tbody>';
+  c.names.forEach((nm, i) => {
+    const pct = ibDpPct(nm, cols, all, conf), g = pct == null ? null : ibGradeOf(roundPct(pct), bounds), p = ibPredOf(c, nm);
+    h += '<tr><td class="bknm">' + bkName(nm, i) + '</td><td>' + (pct != null ? pctAvgText(pct) : '<span class="bknone">–</span>') + '</td><td>' + (g != null ? '<b>' + g + '</b>' : '<span class="bknone">–</span>') + '</td>' +
+      '<td><div class="iblvl" role="radiogroup" aria-label="' + esc('Predicted grade for ' + bkWho(nm, i)) + '">' + [1, 2, 3, 4, 5, 6, 7].map(n => '<button role="radio" aria-checked="' + (p === n) + '" class="' + (p === n ? 'on' : p == null && g === n ? 'hint' : '') + '" data-ibpred="' + i + ':' + n + '">' + n + '</button>').join('') + '</div></td></tr>';
+  });
+  return bar + h + '</tbody></table></div><p class="muted bkcap">A predicted grade is your own judgment. The outlined number is what the percent earns on this class’s boundaries, as a hint. Nothing is set until you click, and clicking a set grade again clears it.</p>';
+}
+function ibPredCopy(c) {
+  const rows = [['Student', 'Predicted'].join('\t')].concat(c.names.map((nm, i) => [bkWho(nm, i), ibPredOf(c, nm) ?? ''].join('\t')));
+  navigator.clipboard.writeText(rows.join('\n')).then(() => toast('Copied. Paste it into a spreadsheet' + (sysName() ? ' or ' + sysName() : '') + '.'), () => toast('Copying didn’t work in this browser.'));
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest('#bkBody [data-ibpredopen], #bkBody [data-ibback], #bkBody [data-ibpred], #bkBody [data-ibpcopy]');
+  if (!b) return; const c = bkClass(), d = b.dataset; if (!c || classWay(c) !== 'dp') return;
+  if (d.ibpredopen != null) { ibk.view = 'pred'; return bkDraw(); }
+  if (d.ibback != null) { ibk.view = 'table'; return bkDraw(); }
+  if (d.ibpcopy != null) return ibPredCopy(c);
+  if (d.ibpred) { const [i, n] = d.ibpred.split(':'), nm = c.names[+i]; ibPredSet(c, nm, ibPredOf(c, nm) === +n ? null : +n); bkDraw(); const on = $('#bkBody [data-ibpred="' + i + ':' + n + '"]'); if (on) on.focus(); }
+});
 /* ---------- marking an MYP task on the paper: its rubric rows are the criteria it assesses, each 0 to 8 ---------- */
 function ibSetup(su) { su = su || setup; return su.mode === 'rubric' && Array.isArray(su.ib) && su.ib.some(Boolean); }
 const ibTaskClass = () => { const c = batch && batchClass(); return c && classWay(c) === 'myp' ? c : null; };
@@ -24472,7 +24527,7 @@ async function ibTaskSave() {
   toast('This task assesses ' + crit.map(x => x.k).join(', '));
 }
 document.addEventListener('click', e => { if (e.target.closest('#ibTaskSet')) ibTaskDlg(); });
-Object.assign(window.__gs, { classWay, ibCrit, ibBounds, ibBoundsFor, ibGradeOf, ibTerm, ibEvidence, ibLevel, ibDlg, IB_GROUPS, ibCols, ibMid, ibSetup, ibTaskDlg, classNewWay, GRADE_WAYS, ibk: () => ibk });
+Object.assign(window.__gs, { classWay, ibCrit, ibBounds, ibBoundsFor, ibGradeOf, ibTerm, ibEvidence, ibLevel, ibDlg, IB_GROUPS, ibCols, ibMid, ibSetup, ibTaskDlg, classNewWay, GRADE_WAYS, ibConf, ibPredOf, ibk: () => ibk });
 
 /* ---------------- Report comments: a draft for each student, from her own scores and comments (Stage 6) ----------------
    A class page's Report comments tab (#/class/<id>/reports). The draft is put together here, in the browser, from the
@@ -24646,7 +24701,7 @@ function rptMarks(c) {
 }
 function rptGo(i) { rptKeep(true); rpt.stu = i; bkDraw(); const ta = $('#rptText'); if (ta) ta.focus({ preventScroll: true }); const on = $('#rpt .rptrow.on'); if (on) on.scrollIntoView({ block: 'nearest' }); }
 function rptAll(c) {
-  const conf = bkConf(), all = bkClassCols(c, bk.cols), cols = bk.term === '*' ? all : all.filter(x => x.termId === bk.term), rc = rptConf();
+  const conf = ibConf(c, bkConf()), all = bkClassCols(c, bk.cols), cols = bk.term === '*' ? all : all.filter(x => x.termId === bk.term), rc = rptConf();
   return c.names.map(n => [n, rptText(c, cols, conf, n, rc)]);
 }
 const rptBar = () => '<button class="btn sm" data-rptwords>Wording…</button><button class="btn sm" data-rptcopyall title="Every student’s name and comment, to paste into a spreadsheet or your report system">Copy all</button><button class="btn sm" data-rptcsv title="A spreadsheet file with every student’s name and comment">Download</button><button class="btn sm" data-pssall title="One page per student, with this comment, to print for parent meetings">Progress sheets</button>';
@@ -24670,7 +24725,7 @@ function rptClick(e) {
   }
   if (d.rptundone != null) { rptPut(c, n, { done: false }); return bkDraw(); }
   if (d.rptadd != null) {
-    const conf = bkConf(), all = bkClassCols(c, bk.cols), cols = bk.term === '*' ? all : all.filter(x => x.termId === bk.term), s = rptFacts(c, cols, conf, n).said[+d.rptadd]; if (!s) return;
+    const conf = ibConf(c, bkConf()), all = bkClassCols(c, bk.cols), cols = bk.term === '*' ? all : all.filter(x => x.termId === bk.term), s = rptFacts(c, cols, conf, n).said[+d.rptadd]; if (!s) return;
     ta.value = (ta.value.trim() ? ta.value.trim() + ' ' : '') + s.text; rptTyped(ta); rptKeep(true); $('#rptCount').innerHTML = rptCount(ta.value, rptConf()); return ta.focus();
   }
   if (d.rptcopyall != null) { rptKeep(true); return navigator.clipboard.writeText(rptAll(c).map(r => tsvLine(r)).join('\n')).then(() => toast('Copied ' + people(c.names.length, 'comment') + ', each with its student’s name. Paste them into a spreadsheet.', 6000), () => toast('Copying didn’t work in this browser.')); }
@@ -24895,7 +24950,7 @@ async function openSheets(clsId, who) {
   if (!c || !c.names.length) return toast('Add a roster to this class first.');
   rptKeep(true);
   const cols = bk.cols || await bkLoad().catch(e => { console.error(e); return []; });
-  const conf = bkConf(), tabs = bkTabs(bkClassCols(c, cols));
+  const conf = ibConf(c, bkConf()), tabs = bkTabs(bkClassCols(c, cols));
   pss = { cls: c.id, who: who && c.names.includes(who) ? who : null, cols, term: tabs.some(t => t[0] === bk.term) ? bk.term : conf.terms.length ? bkTermNow(conf.terms) : '' };
   openDlg('<div class="bh"><h2 id="pssTitle"></h2><button class="icon" data-close aria-label="Close" style="margin-left:auto">✕</button></div><div class="bb pssbody" id="pssBody"></div>');
   $('#dlgBox').classList.add('pssbox');
@@ -24910,7 +24965,7 @@ function pssRep(c, cols, conf, n, rc) {
 }
 function pssDraw() {
   const c = pssClass(), body = $('#pssBody'); if (!c || !body) return;
-  const conf = bkConf(), all = bkClassCols(c, pss.cols), tabs = bkTabs(all), o = pssConf(), rc = rptConf();
+  const conf = ibConf(c, bkConf()), all = bkClassCols(c, pss.cols), tabs = bkTabs(all), o = pssConf(), rc = rptConf();
   if (!tabs.some(t => t[0] === pss.term)) pss.term = tabs[0][0];
   const cols = pss.term === '*' ? all : all.filter(x => x.termId === pss.term), names = pss.who ? [pss.who] : c.names;
   $('#pssTitle').textContent = pss.who ? 'Progress sheet' : 'Progress sheets';
@@ -24943,7 +24998,7 @@ function pssOne(c, all, cols, conf, n, o, rc) {
   const fm = cols.filter(x => x.type === 'fm'), miss = cols.filter(x => x.type !== 'xc' && (x.cells.get(n) || {}).st === 'missing');
   const tile = (l, v, s, main) => '<div class="psst' + (main ? ' main' : '') + '"><span>' + l + '</span><b>' + v + '</b><small>' + (s || '&nbsp;') + '</small></div>';
   let h = '<article class="pss" data-pss="' + esc(n) + '"><div class="pssin"><header class="psshead"><div><small>Progress report</small><h3>' + esc(shown) + '</h3></div><p>' + esc(c.name) + '<br>' + esc(period) + ' · ' + esc(pssToday()) + '</p></header>' +
-    '<div class="psstiles">' + tile(pss.term === '*' || !conf.terms.length ? 'Grade' : 'Term grade', pct(r.grade) + (r.grade != null && r.soFar ? ' <small>so far</small>' : ''), [r.xc ? 'includes +' + fmtNum(r.xc) + ' extra credit' : '', vs(cavg(''))].filter(Boolean).join(' · '), true) +
+    '<div class="psstiles">' + tile(pss.term === '*' || !conf.terms.length ? 'Grade' : 'Term grade', pct(r.grade) + (r.grade != null && r.soFar ? ' <small>so far</small>' : ''), [ibDpTile(c, r.grade, n, pss.term), r.xc ? 'includes +' + fmtNum(r.xc) + ' extra credit' : '', vs(cavg(''))].filter(Boolean).join(' · '), true) +
     bkCountTypes(conf).map(([t, , l]) => tile(l, pct(r.by[t]), [cols.filter(x => x.type === t && bkCounts(x.cells.get(n))).length + ' of ' + cols.filter(x => x.type === t).length + ' counted', vs(cavg(t))].filter(Boolean).join(' · '))).join('') +
     tile('Missing', String(miss.length), miss.length ? (miss.length === 1 ? 'piece of work' : 'pieces of work') : 'nothing outstanding') +
     (fm.length ? tile('Feedback', fm.filter(x => (x.cells.get(n) || {}).fb).length + ' of ' + fm.length, 'formative activities') : '') + '</div>';
@@ -27179,7 +27234,7 @@ function nyAbout(v, names, depth = 0) {
 }
 const nyStrip = (o, names, keep) => { for (const k of Object.keys(o)) if (!keep.includes(k) && nyAbout(o[k], names)) delete o[k]; return o; };
 
-const NY_YEAR_ONLY = ['att', 'lv'];
+const NY_YEAR_ONLY = ['att', 'lv', 'pred'];
 /* the new year's library */
 function nyLib(old, works, o) {
   const L = nyClone(old), names = nyNames(old);
@@ -27817,6 +27872,8 @@ function stpIb(o) {
   if (way === 'dp' && of && of !== 100) bounds = bounds.map(x => [Math.round(x[0] / of * 100), x[1]]);
   bounds = [...new Map(bounds.map(x => [x[1], x])).values()].sort((x, y) => y[1] - x[1]);
   if (bounds.length >= 2 && bounds.every((x, i) => !i || x[0] < bounds[i - 1][0])) out.bounds = bounds;
+  const wn = way === 'dp' ? stpArr(o.weights, 8).map(stpObj).filter(Boolean).map(t => ({ name: stpStr(t.name, 40), weight: stpNum(t.weight, 0, 100) })).filter(t => t.name && t.weight != null) : [];
+  if (wn.length) out.wn = wn;
   return out;
 }
 const STP_WAYS = { rubric: 'rubric', rubricrows: 'rubric', rows: 'rubric', points: 'points', percent: 'percent', percentage: 'percent', letters: 'letters', lettergrades: 'letters', letter: 'letters', ib7: 'ib7', ib: 'ib7', ib1to7: 'ib7', myp: 'myp', mypcriteria: 'myp', ibmyp: 'myp', dp: 'ib7' };
@@ -28048,7 +28105,12 @@ function stpMarkSet(m) {
   if (m.sheetfound != null) { sheetFound = m.sheetfound; store.set('gs.sheetfound', sheetFound); }
 }
 const stpIbNext = (c, ib) => ({ way: ib.way, ib: { ...(stpObj(c.ib) || {}), ...(ib.group ? { group: ib.group } : {}), ...(ib.crit ? { crit: ib.crit } : {}), ...(ib.bounds ? { bounds: ib.bounds } : {}) } });
-const stpIbChanges = (c, ib) => { const n = stpIbNext(c, ib); return c.way !== n.way || JSON.stringify(c.ib || {}) !== JSON.stringify(n.ib); };
+function stpIbW(wn) {
+  const T = typeof bkCats === 'function' ? bkCats() : BK_TYPES, w = {};
+  for (const t of wn || []) { const x = T.find(x => stpKey(x[1]) === stpKey(t.name) || stpKey(x[2]) === stpKey(t.name)); if (x && x[0] !== 'fm') w[x[0]] = Math.round(t.weight); }
+  return Object.keys(w).length ? w : null;
+}
+const stpIbChanges = (c, ib) => { const n = stpIbNext(c, ib); return c.way !== n.way || JSON.stringify(c.ib || {}) !== JSON.stringify(n.ib) || (!!ib.wn && JSON.stringify(stpIbW(ib.wn)) !== JSON.stringify((c.ib || {}).w || null)); };
 const stpOwnTypes = () => typeof bkCats === 'function';
 
 /* ---- bringing it in, and what to put back ---- */
@@ -28095,6 +28157,12 @@ async function stpApply(S, pick) {
       }
     }
     lib.book = nb;
+  }
+  if (pick.classes) for (const c of S.classes) if (c.ib && c.ib.wn) {
+    const had = lib.classes.find(x => stpKey(x.name) === stpKey(c.name)), w = stpIbW(c.ib.wn);
+    if (!had || !w || had.way !== 'dp' || JSON.stringify(w) === JSON.stringify((had.ib || {}).w || null)) continue;
+    if (!U.ib.some(x => x[0] === had.id)) U.ib.push([had.id, had.way || '', stpClone(had.ib || null)]);
+    had.ib = { ...(had.ib || {}), w };
   }
   if (pick.goals) {
     U.goals = []; lib.goals = Array.isArray(lib.goals) ? lib.goals : [];
@@ -28163,7 +28231,7 @@ async function stpExport() {
   for (const c of pc) if (!names.some(n => stpKey(n) === stpKey(c.name))) names.push(String(c.name));
   if (names.length) out.classes = names.map(n => {
     const c = lib.classes.find(x => stpKey(x.name) === stpKey(n)), q = pc.find(x => stpKey(x.name) === stpKey(n)), link = (c && mbOf(c)) || (q && mbUrl(q.mb)) || '';
-    const ib = c && (c.way === 'myp' || c.way === 'dp') ? { programme: c.way.toUpperCase(), ...(c.ib && c.ib.group ? { subjectGroup: c.ib.group } : {}), ...(c.ib && Array.isArray(c.ib.crit) && c.ib.crit.length ? { criteria: c.ib.crit.map(x => ({ letter: x.k, name: x.name })) } : {}), ...(c.ib && Array.isArray(c.ib.bounds) && c.ib.bounds.length ? { boundaries: { outOf: c.way === 'dp' ? 100 : ((c.ib.crit || []).length || 4) * 8, grades: c.ib.bounds.map(b => ({ grade: b[1], from: b[0] })) } } : {}) } : {};
+    const ib = c && (c.way === 'myp' || c.way === 'dp') ? { programme: c.way.toUpperCase(), ...(c.way === 'dp' && c.ib && c.ib.w && typeof c.ib.w === 'object' ? { weights: Object.entries(c.ib.w).filter(([id]) => BK_TYPES.some(t => t[0] === id)).map(([id, w]) => ({ name: BK_TYPES.find(t => t[0] === id)[1], weight: +w || 0 })) } : {}), ...(c.ib && c.ib.group ? { subjectGroup: c.ib.group } : {}), ...(c.ib && Array.isArray(c.ib.crit) && c.ib.crit.length ? { criteria: c.ib.crit.map(x => ({ letter: x.k, name: x.name })) } : {}), ...(c.ib && Array.isArray(c.ib.bounds) && c.ib.bounds.length ? { boundaries: { outOf: c.way === 'dp' ? 100 : ((c.ib.crit || []).length || 4) * 8, grades: c.ib.bounds.map(b => ({ grade: b[1], from: b[0] })) } } : {}) } : {};
     return { name: n, ...(q && q.course ? { course: String(q.course) } : {}), ...ib, ...(link ? { link } : {}), ...(q && Array.isArray(q.meets) && q.meets.length ? { meets: q.meets.filter(m => day[+m.dow]).map(m => ({ day: day[+m.dow], start: String(m.start), end: String(m.end), ...(m.label ? { label: String(m.label) } : {}) })) } : {}), ...(c && c.units.length ? { units: c.units.map(u => u.name) } : {}) };
   });
   if (p && (p.semStart || (p.daysOff || []).length || (p.events || []).length)) out.calendar = { ...(p.semStart && p.semEnd ? { start: p.semStart, end: p.semEnd } : {}), ...((p.daysOff || []).length ? { daysOff: p.daysOff.map(d => ({ date: d.date, label: d.label })) } : {}), ...((p.events || []).length ? { events: p.events.map(e => ({ date: e.date, ...(e.to ? { to: e.to } : {}), label: e.label })) } : {}) };
@@ -28203,7 +28271,7 @@ WHAT TO FIND OUT
 IB TEACHERS
 IB grading belongs to each class, so put it on the class:
 - MYP class: "programme": "MYP", "subjectGroup" (one of langlit, langacq, indsoc, sci, math, arts, phe, design, idu, pp, or own for my own criteria), "criteria" with each letter and its name, and "boundaries" on the total of the levels. Unless I tell you my school uses others, the boundaries out of 32 are 7 from 28, 6 from 24, 5 from 19, 4 from 15, 3 from 10, 2 from 6, 1 from 1.
-- DP class: "programme": "DP" and "boundaries" with "outOf": 100 and my subject's own grade boundaries in percent. These differ by subject, level and session, so ask me for them and do not guess.
+- DP class: "programme": "DP" and "boundaries" with "outOf": 100 and my subject's own grade boundaries in percent. These differ by subject, level and session, so ask me for them and do not guess. If the components of this class (such as Paper 1, Paper 2 and the internal assessment) count differently from my other classes, add "weights": [{ "name": "Paper 1", "weight": 20 }] to the class, with the same names as the "types" in "gradebook".
 - Give the names of the criteria only. Never include the IB's level descriptors or any other text copied from IB documents.
 - If most of my classes are MYP, also set the top-level "programme" and the "grading" part as in the example, so a new assignment starts with my four criteria scored 0 to 8.
 

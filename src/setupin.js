@@ -77,6 +77,9 @@ function stpIb(o) {
   if (way === 'dp' && of && of !== 100) bounds = bounds.map(x => [Math.round(x[0] / of * 100), x[1]]);
   bounds = [...new Map(bounds.map(x => [x[1], x])).values()].sort((x, y) => y[1] - x[1]);
   if (bounds.length >= 2 && bounds.every((x, i) => !i || x[0] < bounds[i - 1][0])) out.bounds = bounds;
+  // a DP class's own component weights, by the names of the gradebook's types
+  const wn = way === 'dp' ? stpArr(o.weights, 8).map(stpObj).filter(Boolean).map(t => ({ name: stpStr(t.name, 40), weight: stpNum(t.weight, 0, 100) })).filter(t => t.name && t.weight != null) : [];
+  if (wn.length) out.wn = wn;
   return out;
 }
 const STP_WAYS = { rubric: 'rubric', rubricrows: 'rubric', rows: 'rubric', points: 'points', percent: 'percent', percentage: 'percent', letters: 'letters', lettergrades: 'letters', letter: 'letters', ib7: 'ib7', ib: 'ib7', ib1to7: 'ib7', myp: 'myp', mypcriteria: 'myp', ibmyp: 'myp', dp: 'ib7' };
@@ -328,7 +331,13 @@ function stpMarkSet(m) {
   if (m.sheetfound != null) { sheetFound = m.sheetfound; store.set('gs.sheetfound', sheetFound); }
 }
 const stpIbNext = (c, ib) => ({ way: ib.way, ib: { ...(stpObj(c.ib) || {}), ...(ib.group ? { group: ib.group } : {}), ...(ib.crit ? { crit: ib.crit } : {}), ...(ib.bounds ? { bounds: ib.bounds } : {}) } });
-const stpIbChanges = (c, ib) => { const n = stpIbNext(c, ib); return c.way !== n.way || JSON.stringify(c.ib || {}) !== JSON.stringify(n.ib); };
+// Component weights as the class keeps them, { type id: weight }, from the names of the types the gradebook has now; null when none is known.
+function stpIbW(wn) {
+  const T = typeof bkCats === 'function' ? bkCats() : BK_TYPES, w = {};
+  for (const t of wn || []) { const x = T.find(x => stpKey(x[1]) === stpKey(t.name) || stpKey(x[2]) === stpKey(t.name)); if (x && x[0] !== 'fm') w[x[0]] = Math.round(t.weight); }
+  return Object.keys(w).length ? w : null;
+}
+const stpIbChanges = (c, ib) => { const n = stpIbNext(c, ib); return c.way !== n.way || JSON.stringify(c.ib || {}) !== JSON.stringify(n.ib) || (!!ib.wn && JSON.stringify(stpIbW(ib.wn)) !== JSON.stringify((c.ib || {}).w || null)); };
 // Whether this version lets a teacher add gradebook types of their own (the gradebook's own setup knows).
 const stpOwnTypes = () => typeof bkCats === 'function';
 
@@ -376,6 +385,13 @@ async function stpApply(S, pick) {
       }
     }
     lib.book = nb;
+  }
+  // a DP class's own component weights, once the gradebook has the types they name (it may just have been given them)
+  if (pick.classes) for (const c of S.classes) if (c.ib && c.ib.wn) {
+    const had = lib.classes.find(x => stpKey(x.name) === stpKey(c.name)), w = stpIbW(c.ib.wn);
+    if (!had || !w || had.way !== 'dp' || JSON.stringify(w) === JSON.stringify((had.ib || {}).w || null)) continue;
+    if (!U.ib.some(x => x[0] === had.id)) U.ib.push([had.id, had.way || '', stpClone(had.ib || null)]);
+    had.ib = { ...(had.ib || {}), w };
   }
   if (pick.goals) {
     U.goals = []; lib.goals = Array.isArray(lib.goals) ? lib.goals : [];
@@ -445,7 +461,7 @@ async function stpExport() {
   for (const c of pc) if (!names.some(n => stpKey(n) === stpKey(c.name))) names.push(String(c.name));
   if (names.length) out.classes = names.map(n => {
     const c = lib.classes.find(x => stpKey(x.name) === stpKey(n)), q = pc.find(x => stpKey(x.name) === stpKey(n)), link = (c && mbOf(c)) || (q && mbUrl(q.mb)) || '';
-    const ib = c && (c.way === 'myp' || c.way === 'dp') ? { programme: c.way.toUpperCase(), ...(c.ib && c.ib.group ? { subjectGroup: c.ib.group } : {}), ...(c.ib && Array.isArray(c.ib.crit) && c.ib.crit.length ? { criteria: c.ib.crit.map(x => ({ letter: x.k, name: x.name })) } : {}), ...(c.ib && Array.isArray(c.ib.bounds) && c.ib.bounds.length ? { boundaries: { outOf: c.way === 'dp' ? 100 : ((c.ib.crit || []).length || 4) * 8, grades: c.ib.bounds.map(b => ({ grade: b[1], from: b[0] })) } } : {}) } : {};
+    const ib = c && (c.way === 'myp' || c.way === 'dp') ? { programme: c.way.toUpperCase(), ...(c.way === 'dp' && c.ib && c.ib.w && typeof c.ib.w === 'object' ? { weights: Object.entries(c.ib.w).filter(([id]) => BK_TYPES.some(t => t[0] === id)).map(([id, w]) => ({ name: BK_TYPES.find(t => t[0] === id)[1], weight: +w || 0 })) } : {}), ...(c.ib && c.ib.group ? { subjectGroup: c.ib.group } : {}), ...(c.ib && Array.isArray(c.ib.crit) && c.ib.crit.length ? { criteria: c.ib.crit.map(x => ({ letter: x.k, name: x.name })) } : {}), ...(c.ib && Array.isArray(c.ib.bounds) && c.ib.bounds.length ? { boundaries: { outOf: c.way === 'dp' ? 100 : ((c.ib.crit || []).length || 4) * 8, grades: c.ib.bounds.map(b => ({ grade: b[1], from: b[0] })) } } : {}) } : {};
     return { name: n, ...(q && q.course ? { course: String(q.course) } : {}), ...ib, ...(link ? { link } : {}), ...(q && Array.isArray(q.meets) && q.meets.length ? { meets: q.meets.filter(m => day[+m.dow]).map(m => ({ day: day[+m.dow], start: String(m.start), end: String(m.end), ...(m.label ? { label: String(m.label) } : {}) })) } : {}), ...(c && c.units.length ? { units: c.units.map(u => u.name) } : {}) };
   });
   if (p && (p.semStart || (p.daysOff || []).length || (p.events || []).length)) out.calendar = { ...(p.semStart && p.semEnd ? { start: p.semStart, end: p.semEnd } : {}), ...((p.daysOff || []).length ? { daysOff: p.daysOff.map(d => ({ date: d.date, label: d.label })) } : {}), ...((p.events || []).length ? { events: p.events.map(e => ({ date: e.date, ...(e.to ? { to: e.to } : {}), label: e.label })) } : {}) };
@@ -485,7 +501,7 @@ WHAT TO FIND OUT
 IB TEACHERS
 IB grading belongs to each class, so put it on the class:
 - MYP class: "programme": "MYP", "subjectGroup" (one of langlit, langacq, indsoc, sci, math, arts, phe, design, idu, pp, or own for my own criteria), "criteria" with each letter and its name, and "boundaries" on the total of the levels. Unless I tell you my school uses others, the boundaries out of 32 are 7 from 28, 6 from 24, 5 from 19, 4 from 15, 3 from 10, 2 from 6, 1 from 1.
-- DP class: "programme": "DP" and "boundaries" with "outOf": 100 and my subject's own grade boundaries in percent. These differ by subject, level and session, so ask me for them and do not guess.
+- DP class: "programme": "DP" and "boundaries" with "outOf": 100 and my subject's own grade boundaries in percent. These differ by subject, level and session, so ask me for them and do not guess. If the components of this class (such as Paper 1, Paper 2 and the internal assessment) count differently from my other classes, add "weights": [{ "name": "Paper 1", "weight": 20 }] to the class, with the same names as the "types" in "gradebook".
 - Give the names of the criteria only. Never include the IB's level descriptors or any other text copied from IB documents.
 - If most of my classes are MYP, also set the top-level "programme" and the "grading" part as in the example, so a new assignment starts with my four criteria scored 0 to 8.
 
