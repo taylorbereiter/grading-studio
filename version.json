@@ -1,11 +1,13 @@
 {
- "version": "1.27.16",
- "build": "5b919fa7f854",
+ "version": "1.27.25",
+ "build": "cda0c4476d2d",
  "notes": [
-  "The grade sheet shows the score you gave each paper in Grading Studio, the same number as the score panel, with extra credit and the retake that counts. Grades found typed on the papers only show for papers with no score yet, or when you tick Also show grades found on the papers. A score stamp already on a paper now changes when the score does."
+  "IB classes. Each class has a Grading button: points and percent, IB MYP or IB DP. The welcome and Settings offer IB MYP criteria (0 to 8) and IB DP 1 to 7 as two separate choices.",
+  "An MYP class is marked against the criteria a task assesses, each 0 to 8, with no percent. Its gradebook shows every level a student earned, you choose the level that fits best for each criterion, and the total becomes a final grade of 1 to 7. Levels are never averaged.",
+  "Criterion names and the grade boundaries are yours to change. A DP class shows the 1 to 7 its percent earns on boundaries you type in."
  ],
  "files": {
-  "index.html": "64d9cb0732aadc3b82030cc7489f32a36f598c9f54486bd433a763dc683d1845",
-  "planner.html": "4879e64469a2b28337179811f534bb779a44d6f7ec47ba9331aebc792ffe4615"
+  "index.html": "5979f229b5e5fcc61587104a9a43be304768ce5a83b6f507ffcc683cff946309",
+  "planner.html": "012ee61dd847a0ba729950ef51cab0179a19b0caabc85191b36f614359bf3a04"
  }
 }

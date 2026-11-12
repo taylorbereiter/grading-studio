@@ -2,7 +2,7 @@
    A panel beside whatever the teacher is working on, kept outside #lessons so redrawing a lesson never
    resets it. Tabs:
    - Books: the teacher's own PDFs (a routines book, a textbook), stored in this browser only. Chapters
-     from the PDF's own bookmarks, search, and pages that can go to the Claude box.
+     from the PDF's own bookmarks, search, and pages that can go to the ' + plAiTag() + ' box.
    - Video: a YouTube link plays here; words search YouTube in a new tab (YouTube doesn't allow its search
      inside other sites).
    - Atlas: the lesson's Atlas link (Atlas needs its own sign-in, so it opens in a tab), the unit's week and
@@ -10,8 +10,8 @@
    - Claude: things gathered for Claude (slides, pages, a video, a unit week) plus what the teacher types or
      says, copied in one go to paste into Claude. */
 const SP = { open: false, tab: 'books', w: 420, view: 'page', book: null, pdf: null, page: 1, outline: null, find: '', hits: null, texts: {}, video: '', box: { text: '', chips: [] } };
-const SP_TABS = { books: 'Books', acts: 'Activities', video: 'Video', atlas: 'Atlas', notes: 'Notebook', claude: 'Claude' };
-const spTabName = k => k === 'atlas' ? plCur() || 'Unit' : SP_TABS[k];   // the unit's tab carries the name of the school's curriculum tool, when it has one
+const SP_TABS = { books: 'Books', acts: 'Activities', video: 'Video', atlas: 'Atlas', notes: 'Notebook', claude: 'AI' };   // the tab reads the teacher's own assistant's name when it is drawn (spTabName)
+const spTabName = k => k === 'atlas' ? plCur() || 'Unit' : k === 'claude' ? plAiTag() : SP_TABS[k];   // the unit's tab carries the name of the school's curriculum tool, when it has one
 try { const v = JSON.parse(localStorage.getItem('gsp.panel') || '{}'); if (SP_TABS[v.tab]) SP.tab = v.tab; SP.open = !!v.open; if (v.w >= 300 && v.w <= 900) SP.w = v.w; } catch { }
 const spKeep = () => { try { localStorage.setItem('gsp.panel', JSON.stringify({ open: SP.open, tab: SP.tab, w: SP.w })); } catch { } };
 
@@ -39,7 +39,7 @@ async function panelToggle(on) {
   for (const b of document.querySelectorAll('[data-a="panel"]')) b.classList.toggle('on', SP.open);
   if (SP.open) await panelRender();
 }
-const panelBtn = () => '<button class="btn sm ghost' + (SP.open ? ' on' : '') + '" data-a="panel" title="Books, video, ' + (plCur() ? esc(plCur()) : 'the unit') + ' and the Claude box beside your work">Side panel</button>';
+const panelBtn = () => '<button class="btn sm ghost' + (SP.open ? ' on' : '') + '" data-a="panel" title="Books, video, ' + (plCur() ? esc(plCur()) : 'the unit') + ' and the ' + plAiTag() + ' box beside your work">Side panel</button>';
 
 async function panelRender() {
   const d = $('#side'); if (!d || !SP.open) return;
@@ -87,7 +87,7 @@ async function booksHtml() {
   const bk = list.find(x => x.id === SP.book) || {};
   return '<div class="sp-bar"><button class="btn sm ghost" data-sa="books">‹ Books</button><b class="sp-title">' + esc(bk.name || '') + '</b></div>' +
     '<div class="sp-bar"><input class="btn sm sp-find" data-sf="find" placeholder="Search this book" value="' + esc(SP.find) + '"><button class="btn sm' + (SP.view === 'toc' ? ' on' : ' ghost') + '" data-sa="toc">Contents</button></div>' +
-    '<div class="sp-split"><div class="sp-toc" id="spToc"' + (SP.view === 'toc' ? '' : ' hidden') + '>' + tocHtml() + '</div><div class="sp-pageview" id="spPageView"' + (SP.view === 'toc' ? ' hidden' : '') + '><div class="sp-bar"><button class="btn sm ghost" data-sa="prev" aria-label="Previous page">‹</button><span id="spPg">Page ' + SP.page + ' of ' + (SP.pdf ? SP.pdf.numPages : '…') + '</span><button class="btn sm ghost" data-sa="next" aria-label="Next page">›</button><span class="sp"></span><button class="btn sm" data-sa="pagebox" title="Put this page’s text in the Claude box">+ Claude box</button></div><div class="sp-canvas" id="spCanvas" draggable="true"></div></div></div>';
+    '<div class="sp-split"><div class="sp-toc" id="spToc"' + (SP.view === 'toc' ? '' : ' hidden') + '>' + tocHtml() + '</div><div class="sp-pageview" id="spPageView"' + (SP.view === 'toc' ? ' hidden' : '') + '><div class="sp-bar"><button class="btn sm ghost" data-sa="prev" aria-label="Previous page">‹</button><span id="spPg">Page ' + SP.page + ' of ' + (SP.pdf ? SP.pdf.numPages : '…') + '</span><button class="btn sm ghost" data-sa="next" aria-label="Next page">›</button><span class="sp"></span><button class="btn sm" data-sa="pagebox" title="Put this page’s text in the ' + plAiTag() + ' box">+ ' + plAiTag() + ' box</button></div><div class="sp-canvas" id="spCanvas" draggable="true"></div></div></div>';
 }
 function tocHtml() {
   if (SP.hits) return '<div class="muted sp-small">' + SP.hits.length + ' page' + (SP.hits.length === 1 ? '' : 's') + ' with “' + esc(SP.find) + '”</div>' + SP.hits.map(h => '<button class="sp-toci" data-pg="' + h.p + '" draggable="true" data-chip=\'' + esc(JSON.stringify({ kind: 'page', book: SP.book, page: h.p, title: 'p. ' + h.p })) + '\'><b>p. ' + h.p + '</b> ' + esc(h.snip) + '</button>').join('');
@@ -171,7 +171,7 @@ function videoHtml() {
   const id = ytId(SP.video), st = ytStart(SP.video);
   return '<div class="sp-pad"><div class="sp-bar"><input class="btn sm sp-find" data-sf="vid" placeholder="Paste a YouTube link, or type words to search" value="' + esc(SP.video) + '"><button class="btn sm" data-sa="vidgo">Go</button></div>' +
     (id ? '<div class="sp-vid"><iframe src="https://www.youtube-nocookie.com/embed/' + id + (st ? '?start=' + st : '') + '" title="Video" allow="encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe></div>' +
-      '<div class="sp-bar"><button class="btn sm" data-sa="vidslide">Put on a slide</button><button class="btn sm ghost" data-sa="vidbox">+ Claude box</button><a class="btn sm ghost" href="' + esc(SP.video) + '" target="_blank" rel="noopener">YouTube ↗</a></div>'
+      '<div class="sp-bar"><button class="btn sm" data-sa="vidslide">Put on a slide</button><button class="btn sm ghost" data-sa="vidbox">+ ' + plAiTag() + ' box</button><a class="btn sm ghost" href="' + esc(SP.video) + '" target="_blank" rel="noopener">YouTube ↗</a></div>'
       : '<p class="muted">YouTube doesn’t allow its search inside other sites, so words open YouTube’s search in a new tab. Copy a video’s link there and paste it here to watch it beside your lesson.</p>') + '</div>';
 }
 function videoGo(v) {
@@ -195,7 +195,7 @@ async function atlasHtml() {
     const w = n >= 0 ? u.weeks[n] : null;
     h += '<div class="sp-unit"><b>' + esc(u.title) + '</b>' + (u.atlas && !a ? ' <a href="' + esc(u.atlas) + '" target="_blank" rel="noopener">' + esc(plCurLink()) + ' ↗</a>' : '') +
       (w ? '<div>Week ' + (n + 1) + ' of ' + u.weeks.length + (w.focus ? ': ' + esc(w.focus) : '') + '</div>' + (w.standards ? '<div class="muted">' + esc(w.standards) + '</div>' : '') + (w.notes ? '<div class="muted">' + esc(w.notes) + '</div>' : '') +
-        '<button class="btn sm ghost" data-sa="weekbox" data-u="' + u.id + '" data-n="' + n + '">+ Claude box</button>' : '') + '<div class="sp-shots">';
+        '<button class="btn sm ghost" data-sa="weekbox" data-u="' + u.id + '" data-n="' + n + '">+ ' + plAiTag() + ' box</button>' : '') + '<div class="sp-shots">';
     for (const f of u.files.filter(f => f.kind === 'atlas')) { const b = await fileBlob(f.id); if (b && /^image\//.test(b.type || f.type)) h += '<button class="sp-shot" data-shot="' + u.id + '|' + f.id + '" title="' + esc(f.name) + '"><img src="' + URL.createObjectURL(b) + '" alt="' + esc(f.name) + '"></button>'; }
     h += '</div></div>';
   }
@@ -205,10 +205,10 @@ async function atlasHtml() {
 /* ---------- the Claude box ---------- */
 const CHIP_ICON = { notebook: '📓', slide: '▭', page: '📖', video: '▶', week: '📅', file: '📄', lesson: '📘', quote: '❝', note: '💬' };
 function boxHtml() {
-  return '<div class="sp-pad sp-box"><p class="muted sp-small">Drag slides, book pages and chapters here, or use the “+ Claude box” buttons. Then say or type what you want, and copy it all for Claude.</p>' +
+  return '<div class="sp-pad sp-box"><p class="muted sp-small">Drag slides, book pages and chapters here, or use the “+ ' + plAiTag() + ' box” buttons. Then say or type what you want, and copy it all for ' + plAi() + '.</p>' +
     '<div class="sp-chips" id="spChips">' + (SP.box.chips.length ? SP.box.chips.map((c, i) => '<span class="sp-chip">' + (CHIP_ICON[c.kind] || '•') + ' ' + esc(c.label) + '<button data-schip="' + i + '" aria-label="Remove">×</button></span>').join('') : '<span class="muted sp-small">Nothing here yet.</span>') + '</div>' +
-    '<textarea id="spText" data-sf="boxtext" rows="7" placeholder="What do you want Claude to do with these?">' + esc(SP.box.text) + '</textarea>' +
-    '<div class="sp-bar"><button class="btn sm" data-dict="#spText">🎤 Dictate</button><span class="sp"></span><button class="btn sm ghost" data-sa="boxclear">Clear</button><button class="btn sm primary" data-sa="boxcopy">Copy for Claude</button></div></div>';
+    '<textarea id="spText" data-sf="boxtext" rows="7" placeholder="What do you want ' + plAi() + ' to do with these?">' + esc(SP.box.text) + '</textarea>' +
+    '<div class="sp-bar"><button class="btn sm" data-dict="#spText">🎤 Dictate</button><span class="sp"></span><button class="btn sm ghost" data-sa="boxclear">Clear</button><button class="btn sm primary" data-sa="boxcopy">Copy for ' + plAi() + '</button></div></div>';
 }
 async function boxSave() { await kvSet('cbox', SP.box); }
 // Gives a chip its name; false if what it points at is gone.
@@ -224,7 +224,7 @@ async function chipLabel(c) {
 async function boxAdd(c) {
   if (!c || !c.kind || !(await chipLabel(c))) return;
   SP.box.chips.push(c); await boxSave();
-  if (SP.open && SP.tab === 'claude') panelRender(); else { if (SP.open) panelRender(); toast(c.kind === 'note' ? 'Comment added to the Claude box' : 'Added to the Claude box'); }
+  if (SP.open && SP.tab === 'claude') panelRender(); else { if (SP.open) panelRender(); toast(c.kind === 'note' ? 'Comment added to the ' + plAiTag() + ' box' : 'Added to the ' + plAiTag() + ' box'); }
 }
 async function chipText(c) {
   if (c.kind === 'page') { const bk = (await booksList()).find(x => x.id === c.book); const t = await pageText(c.book, c.page).catch(() => ''); return '[' + (bk ? bk.name : 'Book') + ', ' + (c.title && !/^p\. \d+$/.test(c.title) ? c.title + ', ' : '') + 'page ' + c.page + ']\n' + (t || '(no text on this page)'); }
@@ -253,8 +253,8 @@ async function boxCopy() {
   const parts = [];
   for (const c of SP.box.chips) parts.push(await chipText(c));
   const t = (SP.box.text.trim() ? SP.box.text.trim() + '\n\n' : '') + parts.join('\n\n');
-  if (!t.trim()) return toast('The Claude box is empty');
-  await copyText(t); toast('Copied. Paste it into Claude.', 4000);
+  if (!t.trim()) return toast('The ' + plAiTag() + ' box is empty');
+  await copyText(t); toast('Copied. Paste it into ' + plAi() + '.', 4000);
 }
 
 /* ---------- voice typing (Chrome) ---------- */

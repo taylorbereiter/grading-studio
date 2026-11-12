@@ -357,7 +357,7 @@ async function bankFolderRead() {
     const ref = j.unit ? (unitRef(L.units.find(u => u.course === String(j.unit.course || '') && u.title.trim().toLowerCase() === String(j.unit.title || '').trim().toLowerCase())) || normRef(j.unit)) : null;
     const item = kind === 'rubrics' ? normRubric({ ...j, id: old ? old.id : j.id, unit: ref }) : normBankScale({ ...j, id: old ? old.id : j.id, unit: ref });
     const dupe = list.find(x => x.id !== item.id && x.name.toLowerCase() === item.name.toLowerCase());
-    if (dupe) item.name += ' (from Claude)';
+    if (dupe) item.name += ' (from ' + plAi() + ')';
     item.at = Date.now();
     await bankUpdate(b => { const l = b[kind], i = l.findIndex(x => x.id === item.id); if (i >= 0) l[i] = item; else l.push(item); l.sort((x, y) => bankNatural(x.name, y.name)); delete b.gone[item.id]; });
     files[item.id] = { file: name, mod: f.lastModified, text: '' }; await kvSet('bankFiles', files);

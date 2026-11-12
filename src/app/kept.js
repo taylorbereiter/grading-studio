@@ -20,8 +20,21 @@ const kget = (name, k) => kdo(name, 'readonly', o => o.get(k)).catch(() => null)
 let keptMeta = new Map();
 async function loadKept() {
   try { const all = await kdo('meta', 'readonly', o => o.getAll()); keepOk = true; keptMeta = new Map((all || []).map(m => [m.id, m])); } catch { keptMeta = new Map(); }
+  await keptFbCounts();
   if (!batch) renderLib();
   renderBackup();
+}
+// Work saved before formative activities counted Feedback complete has no count of it yet: worked out once from the saved work, so a feedback-only card never reads "0 of 20".
+async function keptFbCounts() {
+  for (const m of keptMeta.values()) {
+    if (m.fb != null || !m.n) continue;
+    const it = cardOfKept(m.id); if (!it || it.type !== 'fm') continue;
+    try {
+      const work = await kget('work', m.id), fb = work && workCounts(work).fb; if (!fb) continue;   // none complete: nothing to store
+      const n = { ...m, fb };
+      await kdo('meta', 'readwrite', o => o.put(n, m.id)); keptMeta.set(m.id, n);
+    } catch (e) { console.error(e); }
+  }
 }
 let askedKeep = false;
 function askToKeep() {   // asks the browser not to clear this site's storage when the disk gets full
@@ -87,7 +100,8 @@ async function keepPapers(b, label, list, again) {
 }
 let keepT = null;
 function keepWork(b, data) {
-  const m = { ...(keptMeta.get(b.id) || { id: b.id, name: b.name }), n: b.students.length, t: data.t, ...workCounts(data) };
+  const m = { ...(keptMeta.get(b.id) || { id: b.id, name: b.name }), n: b.students.length, t: data.t };
+  delete m.fb; Object.assign(m, workCounts(data));   // fb is there only while some feedback is complete
   if (!data.returned) delete m.ret;
   keptMeta.set(b.id, m);
   return kdo('work', 'readwrite', o => o.put(data, b.id)).then(() => kdo('meta', 'readwrite', o => o.put(m, b.id))).then(() => { keepOk = true; return true; })

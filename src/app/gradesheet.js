@@ -110,7 +110,7 @@ async function scanFile(f, spot) {
       for (const a of annots) { const t = annText(a); if (t && seen.length < 4) seen.push(t.length > 60 ? t.slice(0, 60) + '…' : t); if (t && !f.virtual) add(parseGrade(annText(a, true), false), vp.convertToViewportRectangle(a.rect), 'note', t, isPopupComment(a)); }
       for (const m of (f.marks || {})[p] || []) {
         if (m.t === 'text') { const L = textLayout(m, vp.width); add(ofMark(m.text), [m.x, m.y, m.x + L.ink, m.y + L.h], 'note', m.text); }
-        if (m.t === 'note') add(ofMark(m.text), [m.ax - 4, m.ay - 4, m.ax + 4, m.ay + 4], 'note', m.text, true);
+        if (m.t === 'note' && !m.qza) add(ofMark(m.text), [m.ax - 4, m.ay - 4, m.ax + 4, m.ay + 4], 'note', m.text, true);
         if (m.t === 'stamp' && m.k === 'score') { const b = stampBox(m); add(ofMark(m.text) && { ...ofMark(m.text), stamp: true }, [b.x, b.y, b.x + b.w, b.y + b.h], 'note', m.text); }   // her score sticker
       }
       // text in the page itself (already flattened files): strict "9.5 = 88%" form only, so essay numbers don't count.
@@ -338,7 +338,7 @@ function renderSheet() {
   const nOut = batch.students.reduce((a, st) => a + st.files.filter(f => viewable(f) && !fileIn(st, f)).length, 0);
   const asked = st => !appScored(st) || sheetFound;   // a student with a score in the app has nothing to check here
   const nApp = batch.students.filter(appScored).length, nOne = batch.students.filter(st => !appScored(st) && st.found).length, nMany = batch.students.filter(st => asked(st) && manyReads(st)).length, nAsk = batch.students.reduce((a, st) => a + (asked(st) && st.doubts && !manyReads(st) ? st.doubts.length : 0), 0);
-  $('#shSub').textContent = (setup.spot ? 'Same spot on every paper · ' : '') + nApp + ' of ' + batch.students.length + ' scored' + (nOne ? ' · ' + nOne + ' read from the paper' : '') + (nMany ? ' · ' + nMany + ' to check' : '') + (nAsk ? ' · ' + nAsk + ' to confirm' : '');
+  $('#shSub').textContent = (setup.spot ? 'Same spot on every paper · ' : '') + (fmNow() ? batch.students.filter(st => !noScore(st) && st.grade.fb).length + ' of ' + batch.students.filter(st => !noScore(st)).length + ' feedback complete' : nApp + ' of ' + batch.students.length + ' scored') + (nOne ? ' · ' + nOne + ' read from the paper' : '') + (nMany ? ' · ' + nMany + ' to check' : '') + (nAsk ? ' · ' + nAsk + ' to confirm' : '');
   const spotted = !!setup.spot || batch.students.some(st => st.files.some(f => f.hand));
   const nHidden = sheetAll ? 0 : batch.students.reduce((a, st) => a + st.files.filter(f => f.kind === 'docx').map(f => ({ f, st, word: true })).concat(st.files.filter(f => viewable(f) && fileIn(st, f)).map(f => ({ f }))).filter(r => !rowGraded(r)).length, 0);
   $('#shBody').innerHTML = '<p class="muted" style="margin:0 0 10px;font-size:14px">Every row is made from the file named on it, inside that student’s folder. Click a picture to open that exact file. Click a score to copy it.</p>' +
