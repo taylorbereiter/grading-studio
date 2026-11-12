@@ -98,6 +98,7 @@ function normLesson(x) {
   if (typeof x.notebook === 'string' && x.notebook.trim()) out.notebook = nbClean(x.notebook);
   const files = (Array.isArray(x.files) ? x.files : []).filter(f => f && typeof f.id === 'string' && typeof f.name === 'string').map(f => ({ id: f.id, name: f.name, kind: f.kind === 'doc' ? 'doc' : 'other', type: String(f.type || ''), size: +f.size || 0, added: +f.added || 0 }));
   if (files.length) out.files = files;
+  const links = normLinks(x.links); if (links.length) out.links = links;   // web pages for this lesson (links.js)
   const fin = f => f && typeof f.id === 'string' && typeof f.name === 'string' ? { id: f.id, name: f.name, size: +f.size || 0, at: +f.at || 0, sig: String(f.sig || '') } : null;
   if (fin(x.final)) out.final = fin(x.final);
   const finals = (Array.isArray(x.finals) ? x.finals : []).map(fin).filter(Boolean);
@@ -404,7 +405,7 @@ function renderEditor() {
     '<div class="ls-stagewrap" id="lsWrap"><div class="ls-stage" id="lsStage"><div class="ls-slide">' + slideHtml(s, l, true) + '</div></div></div>' +
     '<div class="ls-warn" id="lsWarn" hidden></div>' +
     '<label class="ls-notes">Speaker notes<textarea data-f="notes" rows="3" placeholder="Notes for you, not shown on the slide">' + esc(s.notes) + '</textarea></label>' +
-    slideTalkHtml(s) + lessonTalkHtml(l) + taughtHtml(l) + finishedHtml(l) + materialsHtml(l, 'lesson') +
+    slideTalkHtml(s) + lessonTalkHtml(l) + taughtHtml(l) + finishedHtml(l) + materialsHtml(l, 'lesson') + linksHtml(l) +
     '<p class="muted ls-hint">Click any text on the slide to edit it. In bullets, start a line with Tab for a smaller point under the one above. Arrow keys move between slides when you’re not typing. Drag a picture in from another tab or from your computer, onto the slide or onto any slide in the list, or paste a picture or a YouTube link. A picture on a slide that has text goes beside the text.</p>' +
     '</section></div><input type="file" id="lsPicIn" accept="image/*" hidden>';
   $('#lessons').innerHTML = h;
@@ -536,6 +537,7 @@ async function onLessonsClick(e) {
   if (await docClick(e)) return;
   if (await libraryClick(e)) return;
   const mt = e.target.closest('[data-ma]'); if (mt && await matClick(mt)) return;
+  if (e.target.closest('#lsLinks') && linkClick(e.target)) return;
   if (await bankClick(e)) return;
   if (await unitsClick(e)) return;
   const t = e.target.closest('[data-a],[data-mbset],[data-open],[data-new],[data-attach],[data-go],[data-addslide],[data-unslot],[data-talkdone],[data-ltalkdone],[data-ctxview],[data-ctxcopy],[data-ctxput],[data-ctxdel],[data-var],[data-dl],.ls-ed');
@@ -1166,7 +1168,8 @@ never are, and nothing here should point to a student.
     { "layout": "exit", "title": "Exit ticket", "tag": "On a sticky note", "body": "The question" }
   ],
   "look": "wood",
-  "atlas": "https://…"              // optional: this lesson's Atlas page (otherwise its unit's link is used)
+  "atlas": "https://…",             // optional: this lesson's Atlas page (otherwise its unit's link is used)
+  "links": [ { "name": "Article to read", "url": "https://…" } ]   // optional: web pages the teacher opens while teaching this lesson
 }
 "look" is the lesson's colors: wood (the teacher's template), white, cream, sage, sky, blush, charcoal, navy,
 stripe, band, bigtype, framed, notebook, chalk. Leave it out to use the teacher's default; change it only when asked.

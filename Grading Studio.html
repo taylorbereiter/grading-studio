@@ -2324,6 +2324,13 @@ html.welcoming .shell{visibility:hidden}
 .schpin[aria-pressed=true]{color:var(--accent)}
 .schpin[aria-pressed=true] svg{fill:currentColor}
 .schrow .kdots{flex:none;border-color:transparent}
+.schfor{display:flex;flex-wrap:wrap;gap:var(--space-2);margin:0 0 var(--space-4)}
+.schforb{border:1px solid var(--line-strong);border-radius:var(--corner-pill);padding:var(--space-1) var(--space-3);background:var(--surface);color:var(--fg-2);font:inherit;font-size:var(--text-control);font-weight:500;cursor:pointer}
+.schforb:hover{background:var(--hover)}
+.schforb[aria-pressed=true]{border-color:var(--accent);background:var(--accent-soft);color:var(--accent);font-weight:600}
+.schforb:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.schcls{display:flex;flex-wrap:wrap;gap:var(--space-2)}
+.schform .schcls+.schsay{margin-top:var(--space-1)}
 .schfoot{margin:0 var(--space-1);font-size:var(--text-control)}
 .schform .field input[type=text],.schform .field textarea{width:100%;border:1px solid var(--line-strong);border-radius:var(--corner-2);padding:var(--space-2) var(--space-3);background:var(--surface);color:var(--fg);font:inherit;font-size:var(--text-body)}
 .schform .field textarea{resize:vertical;line-height:1.5}
@@ -4283,6 +4290,7 @@ const LANG_ES = {
     'school-resources': { q: '¿Dónde puedo guardar los enlaces y archivos de mi centro?', go: 'Abrir Recursos del centro', words: 'manual calendario normas portal marcador enlace archivo documento recursos centro colegio escuela horario formularios',
       a: ['En **School** (Centro), en la barra lateral. Guarda el manual, el calendario, el horario, los portales en los que inicias sesión, los formularios y notas como a quién llamar. Ponlos en grupos con el nombre que quieras y pulsa la estrella de los que más abres para tenerlos arriba.',
         '**Add a link** cuando el centro lo tiene en línea, porque un enlace se mantiene al día solo. **Add files…** guarda una copia del archivo con tu trabajo, hasta 50 MB cada uno. También puedes soltar archivos en la página o pegar una dirección web.',
+        'Marca una clase en **For a class** cuando un enlace, archivo o nota es de una sola clase. La página puede entonces mostrar una clase cada vez, y un enlace de una clase aparece en todas las lecciones de esa clase en el Planificador, en **Links** y en **Present**, todo el año. Los enlaces propios de una lección van en ese mismo cuadro **Links**, escritos o elegidos de aquí.',
         'Todo se guarda con el resto de tu trabajo: en este navegador, en tu carpeta y en el archivo para llevar. Buscar encuentra cada uno por su nombre.'] },
     'language': { q: '¿Puedo usar la aplicación en otro idioma?', go: 'Abrir Ajustes, Pantalla', words: 'español inglés chino idioma lengua traducir traducción',
       a: ['Sí: español o chino tradicional. Elígelo en Ajustes, Display, **Idioma de la aplicación**, o en lo alto de la bienvenida. La página se vuelve a dibujar en el idioma que elijas.',
@@ -4654,6 +4662,7 @@ const LANG_ZH = {
     'school-resources': { q: '學校的連結和檔案可以放在哪裡？', go: '開啟學校資源', words: '手冊 行事曆 規定 政策 入口網站 書籤 連結 檔案 文件 資源 學校 作息表 表單 handbook calendar link file',
       a: ['在側邊欄的**School**（學校）。把教師手冊、行事曆、作息表、常登入的入口網站、表單，以及「該找誰」這類筆記都放在這裡。可以自己命名分組，常開的項目按星號就會排在最上面。',
         '學校已經放在網路上的內容，用 **Add a link**，連結會自己保持最新。**Add files…** 會把檔案的副本和你的工作存在一起，每個檔案最多 50 MB。也可以把檔案拖到頁面上，或貼上網址。',
+        '連結、檔案或筆記只屬於某一個班級時，在 **For a class** 勾選那個班級。頁面就可以一次只看一個班級，而班級的連結整年都會出現在備課裡那個班級的每一堂課，在 **Links** 和 **Present** 裡。單堂課自己的連結也放在同一個 **Links** 方塊，可以輸入，也可以從這裡挑選。',
         '所有內容都和你其他的工作一起儲存：在這個瀏覽器、你的資料夾，以及帶著走的檔案裡。用搜尋輸入名稱就能找到每一項。'] },
     'language': { q: '介面可以換成其他語言嗎？', go: '開啟設定、顯示', words: '中文 繁體 西班牙文 英文 語言 翻譯 chinese language',
       a: ['可以。目前有繁體中文和西班牙文。在設定、Display 的**介面語言**選擇，或在歡迎畫面最上方選擇。頁面會用你選的語言重新顯示。',
@@ -4891,8 +4900,9 @@ const HELP = [
   { id: 'school-resources', sec: 'start', q: 'Where can I keep my school’s links and files?',
     a: ['On **School** in the sidebar. Keep the handbook, the calendar, the bell schedule, the portals you sign in to, forms, and notes like who to call. Put them in groups you name, and press the star on the ones you open most to keep them at the top.',
       '**Add a link** when the school keeps it online, since a link stays up to date by itself. **Add files…** keeps a copy of a file with your work, up to 50 MB each. You can also drop files on the page or paste a web address.',
+      'Tick a class under **For a class** when a link, file or note belongs to one class. The page can then show one class at a time, and a link for a class shows on every lesson for that class in the Planner, under **Links** and in **Present**, all year. A lesson’s own links go in that same **Links** box, typed or picked from here.',
       'Everything is saved with the rest of your work: in this browser, in your folder and in a take-home file. Find anything finds each one by its name.'],
-    go: ['Open School resources', '#/school'], words: 'handbook calendar policy policies portal bookmark link file document resources staff bell schedule forms' },
+    go: ['Open School resources', '#/school'], words: 'handbook calendar policy policies portal bookmark link file document resources staff bell schedule forms class course lesson links website textbook' },
   { id: 'language', sec: 'start', q: 'Can I use the app in another language?',
     a: ['Yes: Traditional Chinese or Spanish. Choose one in Settings, Display, **App language**, or at the top of the welcome. The page is drawn again in the language you pick.',
       'So far a language other than English covers the sidebar, Today, the welcome, Find anything, Help and the feedback page students get in a returned paper. The other screens are still in English.',
@@ -25151,7 +25161,7 @@ const SCH_IC = {
   note: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h14v10l-4 4H5zM15 19v-4h4M8.5 9.5h7M8.5 12.5h4"/></svg>',
   star: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4.2l2.4 4.9 5.4.8-3.9 3.8.9 5.4-4.8-2.6-4.8 2.6.9-5.4-3.9-3.8 5.4-.8z"/></svg>',
 };
-let schQ = '', schHave = new Set(), schDbP = null, schBusy = false, schAgain = '';
+let schQ = '', schHave = new Set(), schDbP = null, schBusy = false, schAgain = '', schFor = '', schClasses = [], schClsAt = 0;
 
 /* the list */
 function schNow() {
@@ -25173,6 +25183,25 @@ function schUrl(t) {
   try { const u = new URL(s); return /^https?:$/.test(u.protocol) && u.hostname ? u.href : ''; } catch { return ''; }
 }
 const schHost = u => { try { return new URL(u).hostname.replace(/^www\./, ''); } catch { return ''; } };
+/* by class */
+const schNorm = n => String(n || '').normalize('NFKC').toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
+const schCls = i => (Array.isArray(i.cls) ? i.cls : []).map(String).filter(Boolean);
+async function schClsLoad() {
+  if (Date.now() - schClsAt < 4000) return; schClsAt = Date.now();
+  let setup = null;
+  try { const db = await planDb(false); if (db) { try { setup = await idbP(db.transaction('kv').objectStore('kv').get('setup')); } catch {} db.close(); } } catch {}
+  let names = (setup && Array.isArray(setup.classes) ? setup.classes : []).map(c => String((c && (c.course || c.name)) || '').trim()).filter(Boolean);
+  if (!names.length) names = lib.classes.map(c => c.name);
+  const seen = new Set(), out = names.filter(n => { const k = schNorm(n); return k && !seen.has(k) && seen.add(k); });
+  if (out.join('\n') !== schClasses.join('\n')) { schClasses = out; schRender(); }
+}
+function schClsUsed(items) {
+  const by = new Map(); for (const i of items) for (const n of schCls(i)) if (!by.has(schNorm(n))) by.set(schNorm(n), n);
+  const out = schClasses.filter(n => by.has(schNorm(n))), have = new Set(out.map(schNorm));
+  for (const [k, n] of by) if (!have.has(k)) out.push(n);
+  return out;
+}
+const schForNames = () => schFor ? schClsUsed(schLive()).filter(n => schNorm(n) === schFor) : [];
 const schExt = n => { const m = /\.([a-z0-9]{1,6})$/i.exec(n || ''); return m ? m[1].toUpperCase() : 'File'; };
 function schGroups(s, items) {
   const names = [...new Set(items.map(i => i.group || '').filter(Boolean))], at = n => { const i = s.order.indexOf(n); return i < 0 ? 1e9 : i; };
@@ -25250,7 +25279,7 @@ function schOpen(id) {
 /* the page */
 function schRowHtml(it) {
   const k = schKindOf(it), here = k !== 'file' || schHave.has(it.file.hash);
-  const sub = k === 'link' ? schHost(it.url) : k === 'file' ? schExt(it.file.name) + ' · ' + fmtSize(it.file.size) + (here ? '' : ' · not on this computer yet') : '';
+  const cls = schCls(it), sub = [k === 'link' ? schHost(it.url) : k === 'file' ? schExt(it.file.name) + ' · ' + fmtSize(it.file.size) + (here ? '' : ' · not on this computer yet') : '', cls.length ? 'For ' + cls.join(', ') : ''].filter(Boolean).join(' · ');
   const body = '<span class="schic ' + k + '">' + SCH_IC[k] + '</span><span class="schtx"><b>' + esc(it.name) + '</b>' + (sub ? '<span class="schsub">' + esc(sub) + '</span>' : '') + (it.note ? '<span class="schnote">' + esc(it.note) + '</span>' : '') + '</span>';
   const open = k === 'link' ? '<a class="schopen" href="' + esc(it.url) + '" target="_blank" rel="noopener noreferrer" title="Opens in a new tab">' + body + '</a>'
     : '<button class="schopen" data-schopen title="' + (k === 'file' ? 'Open the file' : 'Edit this note') + '">' + body + '</button>';
@@ -25266,17 +25295,23 @@ function schRender() {
   if (!shellReady) return;
   const r = routeNow(); if (r.v !== 'school' || batch) return;
   const s = schNow(), all = schLive(s), words = schQ.toLowerCase().split(/\s+/).filter(Boolean);
-  const hit = i => { const t = [i.name, i.group, i.note, i.url, i.file && i.file.name].filter(Boolean).join(' ').toLowerCase(); return words.every(w => t.includes(w)); };
-  const items = words.length ? all.filter(hit) : all, groups = schGroups(s, items), named = groups.filter(Boolean);
+  const hit = i => { const t = [i.name, i.group, i.note, i.url, i.file && i.file.name, ...schCls(i)].filter(Boolean).join(' ').toLowerCase(); return words.every(w => t.includes(w)); };
+  schClsLoad();
+  const used = schClsUsed(all); if (schFor && !used.some(n => schNorm(n) === schFor)) schFor = '';
+  const mine = schFor ? all.filter(i => schCls(i).some(n => schNorm(n) === schFor)) : all;
+  const items = words.length ? mine.filter(hit) : mine, groups = schGroups(s, items), named = groups.filter(Boolean);
   $('#schFind').hidden = all.length < 6 && !schQ;
   let h = '';
   if (!all.length) {
     h = '<div class="schnone"><h2>Keep what you look up again and again in one place</h2>' +
       '<p>The staff handbook, the school calendar, the bell schedule, the portals you sign in to, forms, who to call about what. Add a link when the school keeps it online, a file when you only have the file, or a short note of your own.</p>' +
       '<p class="muted">Everything here stays on this computer with the rest of your work. Drop files anywhere on this page, or paste a web address.</p></div>';
-  } else if (!items.length) h = '<p class="muted schnohit">Nothing here matches “' + esc(schQ.trim()) + '”.</p>';
-  else {
-    const pins = words.length ? [] : schSort(all.filter(i => i.pin));
+  } else {
+    if (used.length) h += '<div class="schfor" role="group" aria-label="Show">' + [['', 'Everything'], ...used.map(n => [schNorm(n), n])].map(([k, n]) => '<button class="schforb" data-schfor="' + esc(k) + '" aria-pressed="' + (k === schFor) + '">' + esc(n) + '</button>').join('') + '</div>';
+    if (!items.length) h += '<p class="muted schnohit">Nothing here matches “' + esc(schQ.trim()) + '”.</p>';
+  }
+  if (all.length && items.length) {
+    const pins = words.length ? [] : schSort(mine.filter(i => i.pin));
     if (pins.length) h += '<div class="schpins" aria-label="Kept at the top">' + pins.map(i => { const k = schKindOf(i), inner = '<span class="schic ' + k + '">' + SCH_IC[k] + '</span><span>' + esc(i.name) + '</span>'; return k === 'link' ? '<a class="schchip" href="' + esc(i.url) + '" target="_blank" rel="noopener noreferrer">' + inner + '</a>' : '<button class="schchip" data-schchip="' + esc(i.id) + '">' + inner + '</button>'; }).join('') + '</div>';
     for (const g of groups) {
       const list = schSort(items.filter(i => (i.group || '') === g)), gi = named.indexOf(g);
@@ -25297,29 +25332,33 @@ function schForm(o) {
   const groups = [...new Set([...schGroups(s, schLive(s)).filter(Boolean), ...SCH_IDEAS])];
   const title = it ? 'Edit “' + it.name + '”' : kind === 'link' ? 'Add a link' : kind === 'note' ? 'Add a note' : files.length === 1 ? 'Add a file' : 'Add ' + files.length + ' files';
   const one = it || files.length <= 1;
+  const on = new Set((it ? schCls(it) : o.cls || []).map(schNorm)), clsAll = [...schClasses, ...(it ? schCls(it) : []).filter(n => !schClasses.some(c => schNorm(c) === schNorm(n)))];
   openDlg('<div class="bh"><h2>' + esc(title) + '</h2></div><div class="bb schform">' +
     (kind === 'link' ? '<div class="field"><label for="schUrl">Web address</label><input type="text" id="schUrl" inputmode="url" autocomplete="off" spellcheck="false" value="' + esc(it ? it.url : o.url || '') + '" placeholder="Paste it from your browser’s address bar"></div>' : '') +
     (one ? '<div class="field"><label for="schName">Name</label><input type="text" id="schName" autocomplete="off" value="' + esc(it ? it.name : files[0] ? files[0].name.replace(/\.[^.]+$/, '') : '') + '" placeholder="' + (kind === 'link' ? 'e.g. Staff handbook' : kind === 'note' ? 'e.g. Who to call' : '') + '"></div>'
       : '<div class="field"><label>Files</label><ul class="schfiles">' + files.map(f => '<li>' + esc(f.name) + ' <span class="muted">' + fmtSize(f.size) + '</span></li>').join('') + '</ul></div>') +
     '<div class="field"><label for="schGroup">Group <span class="muted">(optional)</span></label><input type="text" id="schGroup" list="schGroups" autocomplete="off" value="' + esc(it ? it.group || '' : o.group || '') + '" placeholder="Pick one or type a new one"><datalist id="schGroups">' + groups.map(g => '<option value="' + esc(g) + '">').join('') + '</datalist></div>' +
     '<div class="field"><label for="schNote">' + (kind === 'note' ? 'Note' : 'Note <span class="muted">(optional)</span>') + '</label><textarea id="schNote" rows="' + (kind === 'note' ? 6 : 2) + '" placeholder="' + (kind === 'note' ? 'Room numbers, phone extensions, how something is done here' : 'What it is for, or where to look in it') + '">' + esc(it ? it.note || '' : '') + '</textarea></div>' +
+    (clsAll.length ? '<div class="field"><label id="schClsL">For a class <span class="muted">(optional)</span></label><div class="schcls" role="group" aria-labelledby="schClsL">' + clsAll.map(n => '<label class="ctag"><input type="checkbox" data-schcls value="' + esc(n) + '"' + (on.has(schNorm(n)) ? ' checked' : '') + '>' + esc(n) + '</label>').join('') + '</div>' +
+      '<p class="muted schsay">' + (kind === 'link' ? 'A link for a class shows on every lesson for that class in the Planner, all year.' : 'Leave them empty when it is for the whole school.') + '</p></div>' : '') +
     (kind === 'file' && !it ? '<p class="muted schsay">A copy of ' + (files.length === 1 ? 'the file' : 'each file') + ' is kept with your work. If the school keeps it online, a link stays up to date by itself.</p>' : '') +
     '<p class="tkerr" id="schErr" role="alert" hidden></p></div>' +
     '<div class="bf"><button class="btn" data-cancel>Cancel</button><button class="btn primary" data-ok>' + (it ? 'Save' : 'Add') + '</button></div>', true);
   const box = $('#dlgBox'), err = (t, sel) => { const el = $('#schErr'); el.textContent = t; el.hidden = false; if (sel) $(sel).focus(); };
   const save = async () => {
     const name = one ? $('#schName').value.trim() : '', group = $('#schGroup').value.trim().slice(0, 60), note = $('#schNote').value.trim(), now = Date.now();
+    const cls = [...box.querySelectorAll('[data-schcls]:checked')].map(c => c.value), forIt = cls.length ? { cls } : {};
     let url = '';
     if (kind === 'link') { url = schUrl($('#schUrl').value); if (!url) return err('That doesn’t look like a web address. Paste it from your browser’s address bar.', '#schUrl'); }
     if (kind === 'note' && !note) return err('Write the note first.', '#schNote');
     const named = name || (kind === 'link' ? schHost(url) : kind === 'note' ? note.split('\n')[0].slice(0, 60) : '');
-    if (it) { closeDlg(); return schChange(s => { const x = s.items.find(i => i.id === it.id); if (x) Object.assign(x, { name: named || x.name, group, note, at: now }, kind === 'link' ? { url } : {}); }); }
-    if (kind !== 'file') { closeDlg(); return schChange(s => { s.items.push({ id: uid(), at: now, kind, name: named, group, note, ...(kind === 'link' ? { url } : {}) }); }); }
+    if (it) { closeDlg(); return schChange(s => { const x = s.items.find(i => i.id === it.id); if (x) { Object.assign(x, { name: named || x.name, group, note, at: now }, kind === 'link' ? { url } : {}, forIt); if (!cls.length) delete x.cls; } }); }
+    if (kind !== 'file') { closeDlg(); return schChange(s => { s.items.push({ id: uid(), at: now, kind, name: named, group, note, ...(kind === 'link' ? { url } : {}), ...forIt }); }); }
     box.querySelector('[data-ok]').disabled = true;
     const got = await schTake(files);
     closeDlg();
     if (!got.length) return;
-    schChange(s => { for (const { f, file } of got) s.items.push({ id: uid(), at: Date.now(), kind: 'file', name: files.length === 1 && named ? named : f.name.replace(/\.[^.]+$/, '') || f.name, group, note, file }); });
+    schChange(s => { for (const { f, file } of got) s.items.push({ id: uid(), at: Date.now(), kind: 'file', name: files.length === 1 && named ? named : f.name.replace(/\.[^.]+$/, '') || f.name, group, note, file, ...forIt }); });
     toast(got.length === 1 ? 'Added.' : 'Added ' + got.length + ' files.');
   };
   box.onclick = e => { if (e.target.closest('[data-cancel]')) return closeDlg(); if (e.target.closest('[data-ok]')) save(); };
@@ -25341,7 +25380,7 @@ async function schTake(files) {
 }
 function schPick(files) {
   const list = [...files].filter(f => f && f.name); if (!list.length) return;
-  if (!schAgain) return schForm({ files: list });
+  if (!schAgain) return schForm({ files: list, cls: schForNames() });
   const id = schAgain; schAgain = '';   // Replace the file: the same item, new bytes
   return schTake(list.slice(0, 1)).then(got => { if (!got.length) return; schChange(s => { const x = s.items.find(i => i.id === id && !i.gone); if (x) { x.file = got[0].file; x.at = Date.now(); } }); toast('Replaced.'); });
 }
@@ -25364,7 +25403,8 @@ async function schGroupDo(g, what) {
 }
 $('#vSchool').addEventListener('click', e => {
   const add = e.target.closest('[data-schadd]');
-  if (add) { if (add.dataset.schadd === 'file') { schAgain = ''; return $('#schIn').click(); } return schForm({ kind: add.dataset.schadd }); }
+  if (add) { if (add.dataset.schadd === 'file') { schAgain = ''; return $('#schIn').click(); } return schClsLoad().then(() => schForm({ kind: add.dataset.schadd, cls: schForNames() })); }
+  const fb = e.target.closest('[data-schfor]'); if (fb) { schFor = fb.dataset.schfor; return schRender(); }
   const chip = e.target.closest('[data-schchip]'); if (chip) return schOpen(chip.dataset.schchip);
   const gdo = e.target.closest('[data-schg]'); if (gdo) return schGroupDo(gdo.closest('[data-schgroup]').dataset.schgroup, gdo.dataset.schg);
   const row = e.target.closest('[data-sch]'); if (!row) return;
@@ -25392,21 +25432,21 @@ document.addEventListener('drop', e => {
   e.preventDefault(); e.stopPropagation();
   if (e.dataTransfer.files.length) { schAgain = ''; return schPick(e.dataTransfer.files); }
   const u = schUrl((e.dataTransfer.getData('text/uri-list') || '').split(/\r?\n/).find(l => l && !l.startsWith('#')));
-  if (u) schForm({ kind: 'link', url: u });
+  if (u) schForm({ kind: 'link', url: u, cls: schForNames() });
 }, true);
 document.addEventListener('paste', e => {
   if (!schOn() || e.target.closest('input, textarea, [contenteditable]')) return;
   const fs = [...((e.clipboardData && e.clipboardData.files) || [])];
   if (fs.length) { e.preventDefault(); schAgain = ''; return schPick(fs); }
   const u = schUrl((e.clipboardData && e.clipboardData.getData('text/plain')) || '');
-  if (u) { e.preventDefault(); schForm({ kind: 'link', url: u }); }
+  if (u) { e.preventDefault(); schForm({ kind: 'link', url: u, cls: schForNames() }); }
 });
 window.addEventListener('storage', e => { if (e.key === SCH_KEY && (!e.storageArea || e.storageArea === localStorage)) schRender(); });
-schReady.then(schRender);
+schReady.then(() => { schClsLoad(); schRender(); });
 
 /* Find anything: every resource by its name */
 const SCH_KIND_SAY = { link: 'Link', file: 'File', note: 'Note' };
-const schFindRows = () => schSort(schLive()).map(i => { const k = schKindOf(i); return { group: 'School resources', label: i.name, sub: SCH_KIND_SAY[k] + (i.group ? ' · ' + i.group : k === 'link' ? ' · ' + schHost(i.url) : ''), key: '', words: [i.url, i.note, i.file && i.file.name].filter(Boolean).join(' '), run: () => schOpen(i.id) }; });
+const schFindRows = () => schSort(schLive()).map(i => { const k = schKindOf(i); return { group: 'School resources', label: i.name, sub: SCH_KIND_SAY[k] + (i.group ? ' · ' + i.group : k === 'link' ? ' · ' + schHost(i.url) : '') + (schCls(i).length ? ' · For ' + schCls(i).join(', ') : ''), key: '', words: [i.url, i.note, i.file && i.file.name, ...schCls(i)].filter(Boolean).join(' '), run: () => schOpen(i.id) }; });
 Object.assign(window.__gs, { schNow, schHashes, schUrl, schoolMerge, schHave: async () => { await schReady; return [...schHave].sort(); } });
 
 /* ---------------- the frame: the sidebar, Home's "Needs a look", and Find anything (11/9) ---------------- */

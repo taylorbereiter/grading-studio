@@ -477,6 +477,19 @@ h1 i,.top .title i{font-style:normal;font-weight:500;color:var(--accent)}
 .pl-mats{margin:14px 0 4px;border:1px solid var(--line);border-radius:var(--corner-5);padding:10px 12px;background:var(--surface)}
 .pl-mats-h{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px}.pl-mats-h h3{margin:0;font-size:15px}
 .pl-mats .pl-file{padding:5px 8px}.pl-mats .pl-ft{width:32px;height:32px}
+/* links on a lesson, and the class's lasting links under them (links.js) */
+.pl-links .pl-ft svg,.pl-lkpick .pl-ft svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.pl-link a.pl-fn{text-decoration:none;color:inherit}.pl-link a.pl-fn:hover b{color:var(--accent);text-decoration:underline}
+.pl-lkh{display:flex;align-items:center;gap:var(--space-2);margin:var(--space-3) 0 var(--space-2);font-size:var(--text-control);color:var(--fg-2)}
+.pl-lkh a,.pl-lktip a{color:var(--accent);font-size:var(--text-small)}.pl-lktip a{font-size:inherit}
+.pl-lktip{margin:var(--space-2) 0 0}
+.pl-lkdlg{display:flex;flex-direction:column;gap:var(--space-3)}.pl-lkdlg .ls-f input{justify-content:flex-start;cursor:text}
+.pl-lkdlg h3{margin:var(--space-2) 0 0;font-size:var(--text-body)}
+.pl-lkpicks{display:flex;flex-direction:column;gap:var(--space-1);max-height:260px;overflow:auto}
+.pl-lkpick{display:flex;align-items:center;gap:var(--space-2);width:100%;text-align:left;border:1px solid var(--line);border-radius:var(--corner-3);padding:var(--space-1) var(--space-2);background:var(--surface);color:inherit;font:inherit;cursor:pointer}
+.pl-lkpick:hover:not(:disabled){border-color:var(--accent);background:var(--accent-soft)}.pl-lkpick:disabled{cursor:default}
+.pl-lkpick .pl-ft{width:28px;height:28px}
+.pl-lkadd{flex:none;font-size:var(--text-small);font-weight:600;color:var(--accent)}.pl-lkpick:disabled .pl-lkadd{color:var(--ok)}
 .pl-dochead{position:sticky;top:0;z-index:5;background:var(--surface)}
 .pl-doctools{display:flex;flex-wrap:wrap;gap:3px;align-items:center;padding:6px 14px;border-bottom:1px solid var(--line);background:var(--surface)}
 .pl-dsep{width:1px;height:20px;background:var(--line);margin:0 4px}
@@ -680,6 +693,14 @@ body.has-side .lsn{margin-right:var(--sidew,420px)}
 .pr-own .sp{flex:1}
 .pr-run{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--space-1)}
 .pr-snd{display:flex;gap:var(--space-2);align-items:center;margin-top:var(--space-3);color:var(--stage-muted)}
+/* the lesson's links and the class's, above the bar (planner/links.js) */
+.pr-links{width:min(420px,calc(100vw - var(--space-5)));max-height:60vh;overflow:auto;display:flex;flex-direction:column;gap:var(--space-1)}
+.pr-links h3:not(:first-child){margin-top:var(--space-3)}
+.pr-links p{margin:0;color:var(--stage-muted)}
+.pr-links button{display:flex;align-items:center;gap:var(--space-3);text-align:left;font-weight:400}
+.pr-links kbd{flex:none;min-width:22px;text-align:center;border:1px solid var(--stage-line);border-radius:var(--corner-1);padding:0 var(--space-1);font:600 var(--text-small)/1.6 var(--f-body);color:var(--stage-muted)}
+.pr-links .tx{display:flex;flex-direction:column;min-width:0}.pr-links .tx b{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pr-links .tx small{color:var(--stage-muted);font-size:var(--text-small);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
 /* the countdown the class watches */
 .pr-chip{position:absolute;top:2.4vh;right:2.4vh;z-index:4;border:0;border-radius:var(--corner-5);padding:1vh 2.2vh;background:var(--stage-blue);color:var(--stage-paper);font:700 8vh/1 var(--f-display);font-variant-numeric:tabular-nums;letter-spacing:-.02em;box-shadow:var(--shadow)}
@@ -1626,6 +1647,7 @@ function normLesson(x) {
   if (typeof x.notebook === 'string' && x.notebook.trim()) out.notebook = nbClean(x.notebook);
   const files = (Array.isArray(x.files) ? x.files : []).filter(f => f && typeof f.id === 'string' && typeof f.name === 'string').map(f => ({ id: f.id, name: f.name, kind: f.kind === 'doc' ? 'doc' : 'other', type: String(f.type || ''), size: +f.size || 0, added: +f.added || 0 }));
   if (files.length) out.files = files;
+  const links = normLinks(x.links); if (links.length) out.links = links;   // web pages for this lesson (links.js)
   const fin = f => f && typeof f.id === 'string' && typeof f.name === 'string' ? { id: f.id, name: f.name, size: +f.size || 0, at: +f.at || 0, sig: String(f.sig || '') } : null;
   if (fin(x.final)) out.final = fin(x.final);
   const finals = (Array.isArray(x.finals) ? x.finals : []).map(fin).filter(Boolean);
@@ -1919,7 +1941,7 @@ function renderEditor() {
     '<div class="ls-stagewrap" id="lsWrap"><div class="ls-stage" id="lsStage"><div class="ls-slide">' + slideHtml(s, l, true) + '</div></div></div>' +
     '<div class="ls-warn" id="lsWarn" hidden></div>' +
     '<label class="ls-notes">Speaker notes<textarea data-f="notes" rows="3" placeholder="Notes for you, not shown on the slide">' + esc(s.notes) + '</textarea></label>' +
-    slideTalkHtml(s) + lessonTalkHtml(l) + taughtHtml(l) + finishedHtml(l) + materialsHtml(l, 'lesson') +
+    slideTalkHtml(s) + lessonTalkHtml(l) + taughtHtml(l) + finishedHtml(l) + materialsHtml(l, 'lesson') + linksHtml(l) +
     '<p class="muted ls-hint">Click any text on the slide to edit it. In bullets, start a line with Tab for a smaller point under the one above. Arrow keys move between slides when you’re not typing. Drag a picture in from another tab or from your computer, onto the slide or onto any slide in the list, or paste a picture or a YouTube link. A picture on a slide that has text goes beside the text.</p>' +
     '</section></div><input type="file" id="lsPicIn" accept="image/*" hidden>';
   $('#lessons').innerHTML = h;
@@ -2048,6 +2070,7 @@ async function onLessonsClick(e) {
   if (await docClick(e)) return;
   if (await libraryClick(e)) return;
   const mt = e.target.closest('[data-ma]'); if (mt && await matClick(mt)) return;
+  if (e.target.closest('#lsLinks') && linkClick(e.target)) return;
   if (await bankClick(e)) return;
   if (await unitsClick(e)) return;
   const t = e.target.closest('[data-a],[data-mbset],[data-open],[data-new],[data-attach],[data-go],[data-addslide],[data-unslot],[data-talkdone],[data-ltalkdone],[data-ctxview],[data-ctxcopy],[data-ctxput],[data-ctxdel],[data-var],[data-dl],.ls-ed');
@@ -2651,7 +2674,8 @@ never are, and nothing here should point to a student.
     { "layout": "exit", "title": "Exit ticket", "tag": "On a sticky note", "body": "The question" }
   ],
   "look": "wood",
-  "atlas": "https://…"              // optional: this lesson's Atlas page (otherwise its unit's link is used)
+  "atlas": "https://…",             // optional: this lesson's Atlas page (otherwise its unit's link is used)
+  "links": [ { "name": "Article to read", "url": "https://…" } ]   // optional: web pages the teacher opens while teaching this lesson
 }
 "look" is the lesson's colors: wood (the teacher's template), white, cream, sage, sky, blush, charcoal, navy,
 stripe, band, bigtype, framed, notebook, chalk. Leave it out to use the teacher's default; change it only when asked.
@@ -3818,6 +3842,143 @@ async function docxOf(html, title) {
   const z = {}; for (const k in files) z[k] = te.encode(files[k]);
   return new Blob([fflate.zipSync(z)], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
 }
+
+/* ================= Planner: links on a lesson, and a class's lasting links =================
+   A lesson keeps its own links in "links": [{ id, name, url }], beside its materials. They are only addresses: nothing is
+   fetched, and each opens in a new tab.
+   A class's lasting links (the class site, the textbook, a shared folder) are not kept here. They are School resources on the
+   grading page (gs.school, read here and never written) that the teacher marked "For" a class or a course. A lesson shows the
+   ones for the classes it is taught to, so they are on every lesson of that class all year without being added again. */
+const LK_MAX = 40;
+function lkUrl(t) {
+  let s = String(t || '').trim(); if (!s || /\s/.test(s)) return '';
+  if (!/^[a-z][a-z0-9+.-]*:/i.test(s)) { if (!/\.[a-z]{2,}/i.test(s)) return ''; s = 'https://' + s; }
+  try { const u = new URL(s); return /^https?:$/.test(u.protocol) && u.hostname ? u.href : ''; } catch { return ''; }
+}
+const lkHost = u => { try { return new URL(u).hostname.replace(/^www\./, ''); } catch { return ''; } };
+const lkNorm = s => String(s || '').normalize('NFKC').toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
+const LK_IC = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10.5 13.5a4 4 0 0 0 5.7 0l2.6-2.6a4 4 0 0 0-5.7-5.7l-.9.9M13.5 10.5a4 4 0 0 0-5.7 0l-2.6 2.6a4 4 0 0 0 5.7 5.7l.9-.9"/></svg>';
+function normLinks(v) {
+  const seen = new Set(), out = [];
+  for (const x of Array.isArray(v) ? v : []) {
+    const url = x && typeof x === 'object' ? lkUrl(x.url) : ''; if (!url || seen.has(url) || out.length >= LK_MAX) continue;
+    seen.add(url); out.push({ id: typeof x.id === 'string' && x.id ? x.id : lid(), name: String(x.name || '').trim().slice(0, 120) || lkHost(url), url });
+  }
+  return out;
+}
+function lkSchool(other) {
+  let v = null; try { v = JSON.parse(localStorage.getItem('gs.school') || 'null'); } catch { }
+  const isLink = i => i.kind === 'link' && !!lkUrl(i.url);
+  const items = (v && Array.isArray(v.items) ? v.items : []).filter(i => i && i.id && !i.gone && (other ? !isLink(i) : isLink(i)));
+  return items.map(i => ({ id: String(i.id), name: String(i.name || lkHost(i.url)), url: other ? '' : lkUrl(i.url), group: String(i.group || ''), note: String(i.note || ''), pin: !!i.pin, cls: (Array.isArray(i.cls) ? i.cls : []).map(String).filter(Boolean) }))
+    .sort((a, b) => (b.pin ? 1 : 0) - (a.pin ? 1 : 0) || a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }));
+}
+function lkClassGroups(l, slot) {
+  const all = lkSchool().filter(i => i.cls.length), rest = lkSchool(true).filter(i => i.cls.length); if (!all.length && !rest.length) return [];
+  const out = [], seen = new Set();
+  for (const t of slot ? [slot] : l.slots) {
+    const c = classById(t.classId); if (!c) continue;
+    const label = c.course || c.name, k = lkNorm(label); if (seen.has(k)) continue; seen.add(k);
+    const keys = new Set([lkNorm(c.course), lkNorm(c.name)].filter(Boolean));
+    const mine = i => i.cls.some(n => keys.has(lkNorm(n))), links = all.filter(mine), more = rest.filter(mine).map(i => i.name);
+    if (links.length || more.length) out.push({ label, links, more });
+  }
+  return out;
+}
+const lkAny = (l, slot) => (l.links || []).length > 0 || lkClassGroups(l, slot).some(g => g.links.length);
+const lkSchoolA = txt => '<a href="' + esc(gsUrl('#/school')) + '" data-lk="school">' + txt + '</a>';
+
+/* ---------- the box in the lesson, under Materials ---------- */
+function linksHtml(l) {
+  const own = l.links || [], groups = lkClassGroups(l);
+  const row = (x, mine) => '<div class="pl-file pl-link"><span class="pl-ft">' + LK_IC + '</span><a class="pl-fn" href="' + esc(x.url) + '" target="_blank" rel="noopener noreferrer" title="Opens in a new tab"><b>' + esc(x.name) + '</b><span>' + esc(lkHost(x.url)) + '</span></a>' +
+    (mine ? '<button class="btn sm ghost" data-lk="edit" data-id="' + esc(x.id) + '">Edit</button><button class="btn sm ghost" data-lk="rm" data-id="' + esc(x.id) + '" title="Remove" aria-label="Remove ' + esc(x.name) + '">×</button>' : '') + '</div>';
+  return '<div class="pl-mats pl-links" id="lsLinks"><div class="pl-mats-h"><h3>Links</h3><span class="muted sp-small">Web pages to open while you plan or teach this lesson.</span><span class="sp"></span><button class="btn sm" data-lk="add">+ Add link</button></div>' +
+    (own.length ? '<div class="pl-files">' + own.map(x => row(x, true)).join('') + '</div>' : groups.length ? '' : '<p class="muted sp-small" style="margin:4px 0 0">Nothing yet.</p>') +
+    groups.map(g => '<div class="pl-lkh"><b>For ' + esc(g.label) + ', all year</b><span class="sp"></span>' + lkSchoolA('Change in School resources ↗') + '</div>' + (g.links.length ? '<div class="pl-files">' + g.links.map(x => row(x, false)).join('') + '</div>' : '') +
+      (g.more.length ? '<p class="muted sp-small pl-lktip">' + (g.links.length ? 'Also for ' : 'For ') + esc(g.label) + ' in School resources: ' + esc(g.more.join(', ')) + '.</p>' : '')).join('') +
+    (groups.length ? '' : '<p class="muted sp-small pl-lktip">For a link you use with a class all year, add it in ' + lkSchoolA('School resources') + ' and choose the class. It then shows here on every lesson for that class.</p>') + '</div>';
+}
+function linksRedraw() { const box = $('#lsLinks'); if (box && L.open) box.outerHTML = linksHtml(L.open); }
+function linkSave(l) { if (!l.links.length) delete l.links; lessonChanged(false); linksRedraw(); }
+function linkDlg(l, id) {
+  const was = id ? (l.links || []).find(x => x.id === id) : null, school = was ? [] : lkSchool();
+  let picked = 0, q = '';
+  const has = url => (l.links || []).some(x => x.url === url);
+  const list = () => {
+    const words = q.toLowerCase().split(/\s+/).filter(Boolean), hits = school.filter(i => { const t = [i.name, i.group, i.url, i.note, ...i.cls].join(' ').toLowerCase(); return words.every(w => t.includes(w)); });
+    return hits.length ? hits.map(i => '<button class="pl-lkpick" data-pick="' + esc(i.id) + '"' + (has(i.url) ? ' disabled' : '') + '><span class="pl-ft">' + LK_IC + '</span><span class="pl-fn"><b>' + esc(i.name) + '</b><span>' + esc([lkHost(i.url), i.group, ...i.cls].filter(Boolean).join(' · ')) + '</span></span><span class="pl-lkadd">' + (has(i.url) ? 'Added ✓' : '+ Add') + '</span></button>').join('')
+      : '<p class="muted sp-small">Nothing in School resources matches “' + esc(q.trim()) + '”.</p>';
+  };
+  openDlg('<div class="bh"><h2>' + (was ? 'Edit the link' : 'Add a link') + '</h2></div><div class="bb pl-lkdlg">' +
+    '<label class="ls-f">Web address<input id="lkU" class="btn" inputmode="url" autocomplete="off" spellcheck="false" placeholder="Paste it from your browser’s address bar" value="' + esc(was ? was.url : '') + '"></label>' +
+    '<label class="ls-f"><span>Name <span class="muted">(optional)</span></span><input id="lkN" class="btn" autocomplete="off" placeholder="What you want to call it" value="' + esc(was ? was.name : '') + '"></label>' +
+    (school.length ? '<h3>Or pick from School resources</h3>' + (school.length > 6 ? '<input id="lkQ" class="btn" type="search" placeholder="Search your school links" aria-label="Search your school links">' : '') + '<div class="pl-lkpicks" id="lkPicks">' + list() + '</div>' : '') +
+    '</div><div class="bf"><button class="btn" data-x>Cancel</button><button class="btn primary" data-ok>' + (was ? 'Save' : 'Add') + '</button></div>', true);
+  const box = $('#dlgBox');
+  const save = () => {
+    const raw = $('#lkU').value, url = lkUrl(raw), name = $('#lkN').value.trim().slice(0, 120);
+    if (!raw.trim() && picked) return closeDlg();
+    if (!url) { toast('That doesn’t look like a web address. Paste it from your browser’s address bar.', 5000); return $('#lkU').focus(); }
+    l.links = l.links || [];
+    if (was) { if (l.links.some(x => x !== was && x.url === url)) return toast('That link is already on this lesson'); was.url = url; was.name = name || lkHost(url); }
+    else {
+      if (has(url)) return toast('That link is already on this lesson');
+      if (l.links.length >= LK_MAX) return toast('A lesson holds up to ' + LK_MAX + ' links');
+      l.links.push({ id: lid(), name: name || lkHost(url), url });
+    }
+    closeDlg(); linkSave(l);
+  };
+  box.onclick = e => {
+    if (e.target.closest('[data-x]')) return closeDlg();
+    if (e.target.closest('[data-ok]')) return save();
+    const p = e.target.closest('[data-pick]'), it = p && school.find(i => i.id === p.dataset.pick); if (!it || has(it.url)) return;
+    l.links = l.links || [];
+    if (l.links.length >= LK_MAX) return toast('A lesson holds up to ' + LK_MAX + ' links');
+    l.links.push({ id: lid(), name: it.name, url: it.url }); picked++;
+    linkSave(l); $('#lkPicks').innerHTML = list();
+    box.querySelector('[data-x]').textContent = 'Done';
+  };
+  box.oninput = e => { if (e.target.id === 'lkQ') { q = e.target.value; $('#lkPicks').innerHTML = list(); } };
+  box.onkeydown = e => { if (e.key === 'Enter' && (e.target.id === 'lkU' || e.target.id === 'lkN')) { e.preventDefault(); save(); } };
+}
+function linkClick(t) {
+  const b = t.closest('[data-lk]'), l = L.open; if (!b || !l) return false;
+  const a = b.dataset.lk, id = b.dataset.id;
+  if (a === 'school') return false;   // a plain link to the grading page
+  if (a === 'add') linkDlg(l);
+  else if (a === 'edit') linkDlg(l, id);
+  else if (a === 'rm') {
+    const at = (l.links || []).findIndex(x => x.id === id); if (at < 0) return true;
+    const was = l.links.splice(at, 1)[0]; linkSave(l);
+    undoToast('Removed “' + was.name + '”', () => { l.links = l.links || []; l.links.splice(Math.min(at, l.links.length), 0, was); linkSave(l); });
+  }
+  return true;
+}
+
+/* ---------- while presenting: the lesson's links and the class's, one click away ---------- */
+function prLinksAll() {
+  const l = PR.l, out = [];
+  if ((l.links || []).length) out.push({ label: 'This lesson', links: l.links });
+  for (const g of lkClassGroups(l, PR.slot)) if (g.links.length) out.push({ label: g.label, links: g.links });
+  return out;
+}
+function prLinks(open) {
+  const m = $('#prLinks'), btn = PR.el.querySelector('[data-p="links"]'); if (!m) return;
+  PR.links = !!open; m.hidden = !PR.links;
+  if (btn) btn.setAttribute('aria-expanded', String(PR.links));
+  if (!PR.links) return prWake();
+  const groups = prLinksAll(); let n = 0;
+  m.innerHTML = groups.length ? groups.map(g => '<h3>' + esc(g.label) + '</h3>' + g.links.map(x => { n++; return '<button data-url="' + esc(x.url) + '" title="Opens in a new tab">' + (n <= 9 ? '<kbd>' + n + '</kbd>' : '') + '<span class="tx"><b>' + esc(x.name) + '</b><small>' + esc(lkHost(x.url)) + '</small></span></button>'; }).join('')).join('')
+    : '<h3>Links</h3><p>No links on this lesson yet. Add them under Links in the lesson.</p>';
+}
+function prLinkOpen(url) {
+  if (!url) return;
+  if (document.fullscreenElement) PR.keep = true;
+  prLinks(false);
+  window.open(url, '_blank', 'noopener,noreferrer');
+}
+const prLinkAt = n => prLinksAll().flatMap(g => g.links)[n - 1];
 
 /* ================= Planner: the finished PowerPoint =================
    A lesson can keep one finished .pptx (the deck as it will be taught), in "final": { id, name, size, at, sig }.
@@ -5129,7 +5290,8 @@ const PR_I = {
   full: '<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>',
   check: '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
   pick: '<circle cx="12" cy="8" r="3.5"/><path d="M5 19.5c.8-3.6 3.6-5.5 7-5.5s6.2 1.9 7 5.5"/>',
-  groups: '<circle cx="7" cy="8" r="2.5"/><circle cx="17" cy="8" r="2.5"/><circle cx="12" cy="16" r="2.5"/>'
+  groups: '<circle cx="7" cy="8" r="2.5"/><circle cx="17" cy="8" r="2.5"/><circle cx="12" cy="16" r="2.5"/>',
+  link: '<path d="M10.5 13.5a4 4 0 0 0 5.7 0l2.6-2.6a4 4 0 0 0-5.7-5.7l-.9.9M13.5 10.5a4 4 0 0 0-5.7 0l-2.6 2.6a4 4 0 0 0 5.7 5.7l.9-.9"/>'
 };
 const prIcon = k => '<svg viewBox="0 0 24 24" aria-hidden="true">' + PR_I[k] + '</svg>';
 const prToday = () => ymd(new Date());
@@ -5234,7 +5396,7 @@ async function presentStart(l, o) {
   const slot = o.slot && l.slots.some(s => prSameSlot(s, o.slot)) ? o.slot : prSlotNow(l);
   const back = prResume(l, slot), i = o.at > 0 ? Math.min(o.at, l.slides.length - 1) : back ? back.slide - 1 : 0;
   const ag = l.slides.find(s => s.layout === 'agenda');
-  Object.assign(PR, { on: true, l, i, far: i, slot, began: Date.now(), ended: false, blank: false, notes: false, agenda: false, menu: false, ticks: new Set(), timer: null, num: '', keep: false, video: false, full: false, back: document.activeElement,
+  Object.assign(PR, { on: true, l, i, far: i, slot, began: Date.now(), ended: false, blank: false, notes: false, agenda: false, menu: false, links: false, ticks: new Set(), timer: null, num: '', keep: false, video: false, full: false, back: document.activeElement,
     items: ag ? rtParse(ag.body).filter(x => x.text.trim()) : null, agTitle: ag ? plainTitle(ag.title) || 'Agenda' : '' });
   const el = PR.el = document.createElement('div');
   el.id = 'present'; el.className = 'pr'; el.tabIndex = -1; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-label', 'Presenting ' + l.title);
@@ -5245,9 +5407,10 @@ async function presentStart(l, o) {
     '<button class="pr-chip" id="prChip" data-p="chip" hidden></button>' +
     '<div class="pr-cover" id="prCover" hidden></div>' +
     '<div class="pr-menu" id="prMenu" role="group" aria-label="Timer" hidden></div>' +
+    '<div class="pr-menu pr-links" id="prLinks" role="group" aria-label="Links" hidden></div>' +
     '<div class="pr-hint" id="prHint" hidden></div><div class="pr-say" id="prSay" aria-live="polite"></div>' +
     '<div class="pr-bar" id="prBar" role="toolbar" aria-label="Presenting">' + b('prev', 'prev', 'Previous slide', '←', 'ic') + '<span class="pr-count" id="prCount"></span>' + b('next', 'next', 'Next slide', '→', 'ic') + '<span class="pr-sep"></span>' +
-    b('agenda', 'agenda', 'Agenda', 'A') + b('timer', 'timer', 'Timer', 'T') + b('pick', 'pick', 'Pick a name', 'P') + b('groups', 'groups', 'Groups', 'G') + b('notes', 'notes', 'Notes', 'N') + b('blank', 'blank', 'Blank', 'B') + b('full', 'full', 'Full screen', 'F') +
+    b('agenda', 'agenda', 'Agenda', 'A') + b('timer', 'timer', 'Timer', 'T') + b('pick', 'pick', 'Pick a name', 'P') + b('groups', 'groups', 'Groups', 'G') + b('notes', 'notes', 'Notes', 'N') + (lkAny(l, slot) ? b('links', 'link', 'Links', 'L') : '') + b('blank', 'blank', 'Blank', 'B') + b('full', 'full', 'Full screen', 'F') +
     '<span class="pr-sep"></span><span class="pr-time" id="prTime"></span><button data-p="end" class="pr-end" title="Finish (Esc)">Finish</button></div>';
   document.body.appendChild(el);
   document.addEventListener('keydown', prKey, true);
@@ -5316,7 +5479,7 @@ function prHint(msg, ms) {
 function prWake() {
   if (!PR.on) return;
   PR.el.classList.remove('idle'); clearTimeout(PR.idleT);
-  PR.idleT = setTimeout(() => { if (PR.on && !PR.menu && !PR.el.querySelector('.pr-bar:hover')) PR.el.classList.add('idle'); }, 2600);
+  PR.idleT = setTimeout(() => { if (PR.on && !PR.menu && !PR.links && !PR.el.querySelector('.pr-bar:hover')) PR.el.classList.add('idle'); }, 2600);
 }
 
 /* ---------- moving ---------- */
@@ -5465,13 +5628,16 @@ function prClick(e) {
     if (b.dataset.p === 'tstop') return prTimerStop();
     return;
   }
+  if (t.closest('#prLinks')) { const b = t.closest('[data-url]'); if (b) prLinkOpen(b.dataset.url); return; }
   const p = (t.closest('[data-p]') || {}).dataset;
   if (PR.menu && !(p && p.p === 'timer')) { prMenu(false); if (!p) return; }
+  if (PR.links && !(p && p.p === 'links')) { prLinks(false); if (!p) return; }
   if (p) {
     if (p.p === 'prev') return prPrev();
     if (p.p === 'next') return prNext();
     if (p.p === 'agenda' || p.p === 'notes' || p.p === 'blank') return prToggle(p.p);
     if (p.p === 'timer') return prMenu(!PR.menu);
+    if (p.p === 'links') return prLinks(!PR.links);
     if (p.p === 'pick' || p.p === 'groups') return prPick(p.p);
     if (p.p === 'full') return prFullToggle();
     if (p.p === 'end') return presentEnd();
@@ -5510,6 +5676,12 @@ function prKey(e) {
     if (k === 'Escape' || k.toLowerCase() === 't') return prMenu(false);
     return;
   }
+  if (PR.links) {   // the list of links is open: a number opens that one, Esc or L closes the list
+    stop();
+    if (/^[1-9]$/.test(k)) { const x = prLinkAt(+k); return x ? prLinkOpen(x.url) : undefined; }
+    if (k === 'Escape' || k.toLowerCase() === 'l') return prLinks(false);
+    return;
+  }
   if (PR.blank) { stop(); return prToggle('blank'); }
   if (/^\d$/.test(k)) { stop(); PR.num = (PR.num + k).slice(-3); clearTimeout(PR.numT); PR.numT = setTimeout(() => { PR.num = ''; }, 2500); return prHint('Slide ' + PR.num + ': press Enter', 2500); }
   if (k === 'Enter' && PR.num) { stop(); const i = +PR.num - 1; PR.num = ''; prHint(''); return prGo(Math.min(i, PR.l.slides.length - 1)); }
@@ -5524,6 +5696,7 @@ function prKey(e) {
   if (c === 'n') { stop(); return prToggle('notes'); }
   if (c === 'b' || k === '.') { stop(); return prToggle('blank'); }
   if (c === 't') { stop(); return prMenu(true); }
+  if (c === 'l' && lkAny(PR.l, PR.slot)) { stop(); return prLinks(true); }
   if (PR.timer && !PR.timer.done && (k === '+' || k === '=' || k === '-')) { stop(); return prTimerAdd(k === '-' ? -60 : 60); }
   if (c === 'f') { stop(); return prFullToggle(); }
   if (c === 'p') { stop(); return prPick('pick'); }
@@ -5798,6 +5971,7 @@ const LANG_ES = {
     'school-resources': { q: '¿Dónde puedo guardar los enlaces y archivos de mi centro?', go: 'Abrir Recursos del centro', words: 'manual calendario normas portal marcador enlace archivo documento recursos centro colegio escuela horario formularios',
       a: ['En **School** (Centro), en la barra lateral. Guarda el manual, el calendario, el horario, los portales en los que inicias sesión, los formularios y notas como a quién llamar. Ponlos en grupos con el nombre que quieras y pulsa la estrella de los que más abres para tenerlos arriba.',
         '**Add a link** cuando el centro lo tiene en línea, porque un enlace se mantiene al día solo. **Add files…** guarda una copia del archivo con tu trabajo, hasta 50 MB cada uno. También puedes soltar archivos en la página o pegar una dirección web.',
+        'Marca una clase en **For a class** cuando un enlace, archivo o nota es de una sola clase. La página puede entonces mostrar una clase cada vez, y un enlace de una clase aparece en todas las lecciones de esa clase en el Planificador, en **Links** y en **Present**, todo el año. Los enlaces propios de una lección van en ese mismo cuadro **Links**, escritos o elegidos de aquí.',
         'Todo se guarda con el resto de tu trabajo: en este navegador, en tu carpeta y en el archivo para llevar. Buscar encuentra cada uno por su nombre.'] },
     'language': { q: '¿Puedo usar la aplicación en otro idioma?', go: 'Abrir Ajustes, Pantalla', words: 'español inglés chino idioma lengua traducir traducción',
       a: ['Sí: español o chino tradicional. Elígelo en Ajustes, Display, **Idioma de la aplicación**, o en lo alto de la bienvenida. La página se vuelve a dibujar en el idioma que elijas.',
@@ -6169,6 +6343,7 @@ const LANG_ZH = {
     'school-resources': { q: '學校的連結和檔案可以放在哪裡？', go: '開啟學校資源', words: '手冊 行事曆 規定 政策 入口網站 書籤 連結 檔案 文件 資源 學校 作息表 表單 handbook calendar link file',
       a: ['在側邊欄的**School**（學校）。把教師手冊、行事曆、作息表、常登入的入口網站、表單，以及「該找誰」這類筆記都放在這裡。可以自己命名分組，常開的項目按星號就會排在最上面。',
         '學校已經放在網路上的內容，用 **Add a link**，連結會自己保持最新。**Add files…** 會把檔案的副本和你的工作存在一起，每個檔案最多 50 MB。也可以把檔案拖到頁面上，或貼上網址。',
+        '連結、檔案或筆記只屬於某一個班級時，在 **For a class** 勾選那個班級。頁面就可以一次只看一個班級，而班級的連結整年都會出現在備課裡那個班級的每一堂課，在 **Links** 和 **Present** 裡。單堂課自己的連結也放在同一個 **Links** 方塊，可以輸入，也可以從這裡挑選。',
         '所有內容都和你其他的工作一起儲存：在這個瀏覽器、你的資料夾，以及帶著走的檔案裡。用搜尋輸入名稱就能找到每一項。'] },
     'language': { q: '介面可以換成其他語言嗎？', go: '開啟設定、顯示', words: '中文 繁體 西班牙文 英文 語言 翻譯 chinese language',
       a: ['可以。目前有繁體中文和西班牙文。在設定、Display 的**介面語言**選擇，或在歡迎畫面最上方選擇。頁面會用你選的語言重新顯示。',
@@ -6406,8 +6581,9 @@ const HELP = [
   { id: 'school-resources', sec: 'start', q: 'Where can I keep my school’s links and files?',
     a: ['On **School** in the sidebar. Keep the handbook, the calendar, the bell schedule, the portals you sign in to, forms, and notes like who to call. Put them in groups you name, and press the star on the ones you open most to keep them at the top.',
       '**Add a link** when the school keeps it online, since a link stays up to date by itself. **Add files…** keeps a copy of a file with your work, up to 50 MB each. You can also drop files on the page or paste a web address.',
+      'Tick a class under **For a class** when a link, file or note belongs to one class. The page can then show one class at a time, and a link for a class shows on every lesson for that class in the Planner, under **Links** and in **Present**, all year. A lesson’s own links go in that same **Links** box, typed or picked from here.',
       'Everything is saved with the rest of your work: in this browser, in your folder and in a take-home file. Find anything finds each one by its name.'],
-    go: ['Open School resources', '#/school'], words: 'handbook calendar policy policies portal bookmark link file document resources staff bell schedule forms' },
+    go: ['Open School resources', '#/school'], words: 'handbook calendar policy policies portal bookmark link file document resources staff bell schedule forms class course lesson links website textbook' },
   { id: 'language', sec: 'start', q: 'Can I use the app in another language?',
     a: ['Yes: Traditional Chinese or Spanish. Choose one in Settings, Display, **App language**, or at the top of the welcome. The page is drawn again in the language you pick.',
       'So far a language other than English covers the sidebar, Today, the welcome, Find anything, Help and the feedback page students get in a returned paper. The other screens are still in English.',

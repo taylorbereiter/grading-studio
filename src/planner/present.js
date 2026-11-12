@@ -17,7 +17,8 @@ const PR_I = {
   full: '<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>',
   check: '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
   pick: '<circle cx="12" cy="8" r="3.5"/><path d="M5 19.5c.8-3.6 3.6-5.5 7-5.5s6.2 1.9 7 5.5"/>',
-  groups: '<circle cx="7" cy="8" r="2.5"/><circle cx="17" cy="8" r="2.5"/><circle cx="12" cy="16" r="2.5"/>'
+  groups: '<circle cx="7" cy="8" r="2.5"/><circle cx="17" cy="8" r="2.5"/><circle cx="12" cy="16" r="2.5"/>',
+  link: '<path d="M10.5 13.5a4 4 0 0 0 5.7 0l2.6-2.6a4 4 0 0 0-5.7-5.7l-.9.9M13.5 10.5a4 4 0 0 0-5.7 0l-2.6 2.6a4 4 0 0 0 5.7 5.7l.9-.9"/>'
 };
 const prIcon = k => '<svg viewBox="0 0 24 24" aria-hidden="true">' + PR_I[k] + '</svg>';
 const prToday = () => ymd(new Date());
@@ -132,7 +133,7 @@ async function presentStart(l, o) {
   const slot = o.slot && l.slots.some(s => prSameSlot(s, o.slot)) ? o.slot : prSlotNow(l);
   const back = prResume(l, slot), i = o.at > 0 ? Math.min(o.at, l.slides.length - 1) : back ? back.slide - 1 : 0;
   const ag = l.slides.find(s => s.layout === 'agenda');
-  Object.assign(PR, { on: true, l, i, far: i, slot, began: Date.now(), ended: false, blank: false, notes: false, agenda: false, menu: false, ticks: new Set(), timer: null, num: '', keep: false, video: false, full: false, back: document.activeElement,
+  Object.assign(PR, { on: true, l, i, far: i, slot, began: Date.now(), ended: false, blank: false, notes: false, agenda: false, menu: false, links: false, ticks: new Set(), timer: null, num: '', keep: false, video: false, full: false, back: document.activeElement,
     items: ag ? rtParse(ag.body).filter(x => x.text.trim()) : null, agTitle: ag ? plainTitle(ag.title) || 'Agenda' : '' });
   const el = PR.el = document.createElement('div');
   el.id = 'present'; el.className = 'pr'; el.tabIndex = -1; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-label', 'Presenting ' + l.title);
@@ -143,9 +144,10 @@ async function presentStart(l, o) {
     '<button class="pr-chip" id="prChip" data-p="chip" hidden></button>' +
     '<div class="pr-cover" id="prCover" hidden></div>' +
     '<div class="pr-menu" id="prMenu" role="group" aria-label="Timer" hidden></div>' +
+    '<div class="pr-menu pr-links" id="prLinks" role="group" aria-label="Links" hidden></div>' +
     '<div class="pr-hint" id="prHint" hidden></div><div class="pr-say" id="prSay" aria-live="polite"></div>' +
     '<div class="pr-bar" id="prBar" role="toolbar" aria-label="Presenting">' + b('prev', 'prev', 'Previous slide', '←', 'ic') + '<span class="pr-count" id="prCount"></span>' + b('next', 'next', 'Next slide', '→', 'ic') + '<span class="pr-sep"></span>' +
-    b('agenda', 'agenda', 'Agenda', 'A') + b('timer', 'timer', 'Timer', 'T') + b('pick', 'pick', 'Pick a name', 'P') + b('groups', 'groups', 'Groups', 'G') + b('notes', 'notes', 'Notes', 'N') + b('blank', 'blank', 'Blank', 'B') + b('full', 'full', 'Full screen', 'F') +
+    b('agenda', 'agenda', 'Agenda', 'A') + b('timer', 'timer', 'Timer', 'T') + b('pick', 'pick', 'Pick a name', 'P') + b('groups', 'groups', 'Groups', 'G') + b('notes', 'notes', 'Notes', 'N') + (lkAny(l, slot) ? b('links', 'link', 'Links', 'L') : '') + b('blank', 'blank', 'Blank', 'B') + b('full', 'full', 'Full screen', 'F') +
     '<span class="pr-sep"></span><span class="pr-time" id="prTime"></span><button data-p="end" class="pr-end" title="Finish (Esc)">Finish</button></div>';
   document.body.appendChild(el);
   document.addEventListener('keydown', prKey, true);
@@ -218,7 +220,7 @@ function prHint(msg, ms) {
 function prWake() {
   if (!PR.on) return;
   PR.el.classList.remove('idle'); clearTimeout(PR.idleT);
-  PR.idleT = setTimeout(() => { if (PR.on && !PR.menu && !PR.el.querySelector('.pr-bar:hover')) PR.el.classList.add('idle'); }, 2600);
+  PR.idleT = setTimeout(() => { if (PR.on && !PR.menu && !PR.links && !PR.el.querySelector('.pr-bar:hover')) PR.el.classList.add('idle'); }, 2600);
 }
 
 /* ---------- moving ---------- */
@@ -376,13 +378,16 @@ function prClick(e) {
     if (b.dataset.p === 'tstop') return prTimerStop();
     return;
   }
+  if (t.closest('#prLinks')) { const b = t.closest('[data-url]'); if (b) prLinkOpen(b.dataset.url); return; }
   const p = (t.closest('[data-p]') || {}).dataset;
   if (PR.menu && !(p && p.p === 'timer')) { prMenu(false); if (!p) return; }
+  if (PR.links && !(p && p.p === 'links')) { prLinks(false); if (!p) return; }
   if (p) {
     if (p.p === 'prev') return prPrev();
     if (p.p === 'next') return prNext();
     if (p.p === 'agenda' || p.p === 'notes' || p.p === 'blank') return prToggle(p.p);
     if (p.p === 'timer') return prMenu(!PR.menu);
+    if (p.p === 'links') return prLinks(!PR.links);
     if (p.p === 'pick' || p.p === 'groups') return prPick(p.p);
     if (p.p === 'full') return prFullToggle();
     if (p.p === 'end') return presentEnd();
@@ -421,6 +426,12 @@ function prKey(e) {
     if (k === 'Escape' || k.toLowerCase() === 't') return prMenu(false);
     return;
   }
+  if (PR.links) {   // the list of links is open: a number opens that one, Esc or L closes the list
+    stop();
+    if (/^[1-9]$/.test(k)) { const x = prLinkAt(+k); return x ? prLinkOpen(x.url) : undefined; }
+    if (k === 'Escape' || k.toLowerCase() === 'l') return prLinks(false);
+    return;
+  }
   if (PR.blank) { stop(); return prToggle('blank'); }
   if (/^\d$/.test(k)) { stop(); PR.num = (PR.num + k).slice(-3); clearTimeout(PR.numT); PR.numT = setTimeout(() => { PR.num = ''; }, 2500); return prHint('Slide ' + PR.num + ': press Enter', 2500); }
   if (k === 'Enter' && PR.num) { stop(); const i = +PR.num - 1; PR.num = ''; prHint(''); return prGo(Math.min(i, PR.l.slides.length - 1)); }
@@ -435,6 +446,7 @@ function prKey(e) {
   if (c === 'n') { stop(); return prToggle('notes'); }
   if (c === 'b' || k === '.') { stop(); return prToggle('blank'); }
   if (c === 't') { stop(); return prMenu(true); }
+  if (c === 'l' && lkAny(PR.l, PR.slot)) { stop(); return prLinks(true); }
   if (PR.timer && !PR.timer.done && (k === '+' || k === '=' || k === '-')) { stop(); return prTimerAdd(k === '-' ? -60 : 60); }
   if (c === 'f') { stop(); return prFullToggle(); }
   if (c === 'p') { stop(); return prPick('pick'); }
