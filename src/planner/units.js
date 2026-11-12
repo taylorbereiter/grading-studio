@@ -58,6 +58,34 @@ async function unitDelete(u) {
 }
 const fileBlob = id => kvGet('file:' + id);
 
+/* ---------- a new school year, started on the grading page (src/newyear.js) ---------- */
+// It leaves gsp.newYear = { id, from } in this browser, and the Planner moves on once, the next time it opens: units and the
+// semester 52 weeks later (a Monday stays a Monday), the old year's days off and events gone, and every lesson that was on a
+// class goes to Past lessons under the old year's name, with no dates and no taught notes. Nothing is deleted. The old year
+// as it was is in the file the grading page made. kv 'yearsDone' remembers which moves are done.
+async function yearMoveOn() {
+  let ask = null; try { ask = JSON.parse(localStorage.getItem('gsp.newYear') || 'null'); } catch { }
+  if (!ask || typeof ask.id !== 'string') return;
+  const done = (await kvGet('yearsDone')) || [];
+  if (done.includes(ask.id)) return;
+  const later = s => /^\d{4}-\d\d-\d\d$/.test(s || '') ? ymd(addDays(parseYmd(s), 364)) : s, from = String(ask.from || 'Last year').slice(0, 120);
+  let moved = 0;
+  for (const l of L.lessons.slice()) {
+    if (!l.slots.length && !(l.taught || []).length) continue;
+    if (l.slots.length && !l.library) l.library = from;
+    l.slots = []; delete l.taught; moved++;
+    await lPut(l);
+  }
+  for (const u of L.units) { u.start = later(u.start); await unitPut(u, true); }
+  if (L.setup) {
+    L.setup = { ...L.setup, semStart: later(L.setup.semStart), semEnd: later(L.setup.semEnd), daysOff: [], events: [] };
+    await kvSet('setup', L.setup); await folderWriteSchedule();
+  }
+  await kvSet('yearsDone', [...done, ask.id]);
+  renderLessons(); railRender();
+  toast('A new school year: units and the semester moved on a year' + (moved ? ', and ' + moved + (moved === 1 ? ' lesson is' : ' lessons are') + ' in Past lessons under “' + from + '”' : '') + '.', 8000);
+}
+
 /* ---------- courses, weeks, which unit a week is in ---------- */
 function courses() {
   const out = [];

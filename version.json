@@ -1,12 +1,12 @@
 {
- "version": "1.23.0",
- "build": "06b359186879",
+ "version": "1.27.6",
+ "build": "8dd89a3080bf",
  "notes": [
   "Returned files are named for the student, the assignment and what they are, like “Ana Lee - River essay - Graded.pdf”, or Feedback when there is no score. They still go in each student’s own folder.",
   "To keep the names students turned in, untick Name each file by student and assignment under Options on the Return tab."
  ],
  "files": {
-  "index.html": "bbc1c02d8baeeb9e25feab17d646146650bcceea993545e70a08d5f1da58710b",
-  "planner.html": "c060b27f3fb6b30105a3e338ef13e64faceb704ef759a6ae7842b88d13292079"
+  "index.html": "24e200f670915c160b57928ac70da7217e2ae4fa9f404509b79070e1b4facc8e",
+  "planner.html": "114272ffcdc0feefae04c31c0dd71d019106670b46defd86c4d68ada37c17d1e"
  }
 }

@@ -143,7 +143,7 @@ body{padding-bottom:var(--savebar,0px)}.app{height:calc(100vh - var(--savebar,0p
 .srange.unset::-moz-range-thumb{background:var(--surface);border-color:var(--line-strong);box-shadow:none}
 .srange:focus-visible{outline:none}.srange:focus-visible::-webkit-slider-thumb{outline:2px solid var(--accent);outline-offset:2px}
 .sticks{position:relative;height:24px}
-.scores.slide .sticks button{position:absolute;top:0;left:calc(var(--th) / 2 + var(--k) * (100% - var(--th)) / 7);transform:translateX(-50%);min-width:26px;padding:2px 3px;border:0;background:none;border-radius:5px;font-size:12.5px}
+.scores.slide .sticks button{position:absolute;top:0;left:calc(var(--th) / 2 + var(--k) * (100% - var(--th)) / var(--n, 7));transform:translateX(-50%);min-width:26px;padding:2px 3px;border:0;background:none;border-radius:5px;font-size:12.5px}
 .scores.slide .sticks button.half{font-size:11.5px}
 .scores.slide .sticks button:hover{background:var(--surface-2)}
 .scores.slide .sticks button[aria-pressed=true]{background:none;box-shadow:none;color:var(--accent);font-weight:700}
@@ -513,6 +513,7 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
   <button class="rfind" id="findBtn" aria-haspopup="dialog" title="Find a student, an assignment, a tool or a setting"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5"/></svg><span class="rl">Find anything</span><kbd class="rl" id="findKey">Ctrl K</kbd></button>
   <a class="rnav" data-nav="home" href="#/" title="Today: what you teach, what is waiting to be marked, what is ready to hand back"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.6"/><path d="M12 3v2.2M12 18.8V21M3 12h2.2M18.8 12H21M5.6 5.6l1.6 1.6M16.8 16.8l1.6 1.6M5.6 18.4l1.6-1.6M16.8 7.2l1.6-1.6"/></svg><span class="rl">Today</span></a>
   <a class="rnav" id="lessonsBtn" href="planner.html" title="Plan units and lessons. The Planner is a separate page and never sees grading work."><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M8 3v4M16 3v4"/></svg><span class="rl">Planner</span></a>
+  <a class="rnav" data-nav="school" href="#/school" title="School resources: links, files and notes about your school"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 20.5h17M5.5 20.5v-9M18.5 20.5v-9M3.5 11.5L12 5l8.5 6.5M10 20.5v-5h4v5M12 5V3h3"/></svg><span class="rl">School</span></a>
   <div class="rcap"><span class="rl">Classes</span></div>
   <div id="railClasses"></div>
   <button class="rnav radd" id="addClass" title="Add a class"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span class="rl">Add a class</span></button>
@@ -570,6 +571,16 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
     <div id="classes"></div>
     <p class="muted vhint" id="classHint">Drag an assignment to another unit, or onto a class in the sidebar. Drag a unit’s name to move the unit. Drop <span class="sysZip">a ManageBac ZIP</span> on an assignment to open it there.</p>
   </section>
+  <section class="view" id="vSchool" hidden>
+    <header class="vhead"><h1>School resources</h1><span class="muted">Links, files and notes about your school, kept with your work on this computer.</span></header>
+    <div class="schbar">
+      <button class="btn primary" data-schadd="link">Add a link</button><button class="btn" data-schadd="file">Add files…</button><button class="btn" data-schadd="note">Add a note</button>
+      <span class="sp"></span>
+      <div class="hlpfind" id="schFind" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5"/></svg><input type="search" id="schQ" autocomplete="off" spellcheck="false" placeholder="Search your school resources" aria-label="Search your school resources"></div>
+    </div>
+    <div id="schList"></div>
+    <input type="file" id="schIn" multiple hidden>
+  </section>
   <section class="view" id="vHelp" hidden>
     <header class="vhead"><h1>Help</h1><span class="muted">Short answers. They are part of the app, so they work with no internet.</span></header>
     <div class="hlpfind"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5"/></svg><input type="search" id="hlpIn" autocomplete="off" spellcheck="false" placeholder="Search help" aria-label="Search help"></div>
@@ -592,6 +603,11 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
           <p class="muted" id="backupInfo" style="margin:0;font-size:13px"></p><input type="file" id="restoreIn" accept=".gswork,.zip,application/zip" hidden>
           <div id="safetyList" hidden></div>
         </section>
+        <section class="lib setsec" id="setYear" data-sec="saving">
+          <div class="lhead"><h2>School year</h2><span class="sp"></span><button class="btn sm" id="yearOpenBtn">Open an archived year…</button><button class="btn sm primary" id="yearBtn">Start a new year…</button></div>
+          <p class="muted setp">Starts a fresh year with the same classes, units, rubrics and quizzes and empty class lists. This year goes into one protected file first, and it is checked before anything is cleared.</p>
+          <p id="yearLine" style="margin:0;font-size:13px"></p><input type="file" id="yearIn" accept=".gswork" hidden>
+        </section>
         <section class="lib setsec" id="setRemove" data-sec="saving">
           <div class="lhead"><h2>Remove from this computer</h2><span class="sp"></span><button class="btn sm" id="removeBtn">Remove from this computer</button></div>
           <p class="muted setp">Clears student work from this browser when you are finished here. A linked folder and Planner work are not touched.</p>
@@ -601,6 +617,7 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
         <section class="lib setsec" id="setInstall" data-sec="about" hidden></section>
         <section class="lib setsec" id="setClasses" data-sec="classes" hidden></section>
         <section class="lib setsec" id="setSys" data-sec="classes" hidden></section>
+        <section class="lib setsec" id="setAtt" data-sec="classes" hidden></section>
         <section class="lib setsec" id="setTerms" data-sec="terms" hidden></section>
         <section class="lib setsec" id="setWay" data-sec="grading" hidden></section>
         <section class="lib setsec" id="setGrading" data-sec="grading" hidden></section>

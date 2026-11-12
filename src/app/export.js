@@ -284,7 +284,7 @@ function sentWhen(t) {
   return d.toDateString() === now.toDateString() ? hm : d.toLocaleDateString([], { day: 'numeric', month: 'short' }) + ', ' + hm;
 }
 function oneOutHtml(st) {
-  if (!st.files.length) return '';
+  if (!st.files.length) return '<div class="oneout" aria-hidden="true"><span class="link oneout-gap">&nbsp;</span></div>';   // the same height with nothing to export, so Previous and Next stay where they were
   const nm = anonOn() ? 'this' : esc(st.key) + '’s', g = st.grade;
   return '<div class="oneout"><button class="link" id="oneOutBtn" title="Download just this student’s marked file, ready to upload. Uses the options on the Return tab.">Export ' + nm + ' paper now</button>' +
     '<p class="oneout-say' + (g.sent ? ' ok' : '') + '" id="oneOutSay">' + (g.sent ? '✓ Exported at ' + esc(sentWhen(g.sent)) + '. Export again after any change.' : '') + '</p></div>';

@@ -1,0 +1,4 @@
+# First polish fixes. The bar that says what opened now counts as seen once she moves to another student (when every
+# file opened), so gs.openSeen is written then, in the form it always had, and not only when she presses the bar's
+# buttons. No work is in it: it holds hashes of what the bar has already said.
+localStorage:gs.openSeen
