@@ -1846,6 +1846,10 @@ p.goalline{display:block}
 .ibtlsay{font-size:var(--text-control);margin-left:auto}
 .ibtaskl{display:grid;gap:var(--space-2);margin:var(--space-3) 0}
 #ibTaskSet.link{margin-left:var(--space-2)}
+
+/* an MYP class's progress sheet */
+.ibpsscap { margin: 6px 0 0; font-size: var(--text-caption); color: var(--stage-ink-2); }
+.ibpss .psst span b { font-size: inherit; font-weight: 700; }
 /* ---------- an open assignment's tabs, and a tab's screen drawn on the page (11/10) ---------- */
 .atabs{display:flex;gap:2px;align-self:stretch;margin:-9px 0 -9px 8px;flex:none}
 .atab{display:flex;align-items:center;gap:6px;padding:0 13px;min-height:44px;font-size:var(--text-body);font-weight:500;color:var(--fg-2);text-decoration:none;border-bottom:2px solid transparent;border-top:2px solid transparent;white-space:nowrap}
@@ -24290,12 +24294,49 @@ function ibOneView(c, cols, all) {
   bk.stu = Math.max(0, Math.min(c.names.length - 1, bk.stu));
   const crit = ibCrit(c), bounds = ibBounds(c), icols = ibCols(c, bk.term === '*' ? all : cols), i = bk.stu, n = c.names[i], lv = ibLvOf(c, n), r = ibTerm(lv, crit, bounds);
   const miss = icols.filter(x => (x.cells.get(n) || {}).st === 'missing'), termName = (bkTabs(all).find(t => t[0] === bk.term) || [, 'This year'])[1];
-  return '<div class="bkpad"><div class="bkstu"><button class="icon" data-bkstu="-1" aria-label="Previous student"' + (i ? '' : ' disabled') + '>‹</button><b id="bkStuName">' + esc(bkWho(n, i)) + '</b>' + bkInfo(n) + '<button class="icon" data-bkstu="1" aria-label="Next student"' + (i < c.names.length - 1 ? '' : ' disabled') + '>›</button><span class="muted">' + (i + 1) + ' of ' + c.names.length + ' · ← → to move</span></div>' +
+  return '<div class="bkpad"><div class="bkstu"><button class="icon" data-bkstu="-1" aria-label="Previous student"' + (i ? '' : ' disabled') + '>‹</button><b id="bkStuName">' + esc(bkWho(n, i)) + '</b>' + bkInfo(n) + '<button class="icon" data-bkstu="1" aria-label="Next student"' + (i < c.names.length - 1 ? '' : ' disabled') + '>›</button><span class="muted">' + (i + 1) + ' of ' + c.names.length + ' · ← → to move</span><span class="sp"></span><button class="btn sm" data-pssone title="A one-page summary to print for a parent meeting">Progress sheet</button></div>' +
     '<div class="ovtiles" id="bkStuTiles">' + bkTile('Grade', r.grade != null ? r.grade : '–', r.need.length ? 'still to set: ' + esc(r.need.join(', ')) : '1 to 7', true) + bkTile('Total', r.total != null ? r.total : '–', 'of ' + crit.length * IB_TOP) +
     crit.map(x => { const v = ibLevel(lv[x.k]), ev = ibEvidence(ibEvFor(icols, n, x.k)); return bkTile(esc(x.k) + ' ' + esc(x.name), v != null ? v : '–', v != null ? ibBandName(v) : ev.n ? 'most recent ' + ev.last + ', not set' : 'no evidence'); }).join('') +
     bkTile('Missing', miss.length, miss.length ? esc(miss.map(x => x.name).join(', ')) : 'nothing outstanding') + '</div>' + ibFitBox(c, crit, bounds, icols, i, termName, false) + '<div class="ovcharts">' + attStuHtml(c, n) + '</div></div>';
 }
 function ibPeopleSay(c, name, term) { const crit = ibCrit(c), r = ibTerm(((c.lv || {})[term] || {})[name], crit, ibBounds(c)); return r.grade != null ? String(r.grade) : r.set ? r.set + ' of ' + crit.length + ' set' : '–'; }
+/* ---------- an MYP class's report comments and progress sheets ---------- */
+const ibLvAt = (c, term, name) => ((c.lv || {})[term == null ? ibTermKey() : term] || {})[name] || {};
+function ibRptFacts(c, cols, n, term, said) {
+  const crit = ibCrit(c), icols = ibCols(c, cols), lv = ibLvAt(c, term, n), r = ibTerm(lv, crit, ibBounds(c)), g = r.grade;
+  const at = crit.map(x => { const v = ibLevel(lv[x.k]); return { name: x.name, avg: v != null ? v : ibEvidence(ibEvFor(icols, n, x.k)).last }; }).filter(x => x.avg != null).sort((a, b) => b.avg - a.avg);
+  const apart = at.length >= 2 && at[0].avg - at[at.length - 1].avg >= 1;
+  return { grade: g, soFar: false, band: g == null ? 'None' : g >= 6 ? 'High' : g === 5 ? 'Good' : g >= 3 ? 'Mid' : 'Low', gradeText: g != null ? g + ' out of 7' : '',
+    chip: g != null ? 'Grade ' + g + ' · total ' + r.total + ' of ' + crit.length * IB_TOP : r.set ? r.set + ' of ' + crit.length + ' criteria set' : 'No levels set yet',
+    strong: apart ? at[0] : null, weak: apart ? at[at.length - 1] : null, words: '', move: 0, best: '', said,
+    missing: icols.filter(x => (x.cells.get(n) || {}).st === 'missing').map(x => x.name), scored: icols.filter(x => x.cells.has(n) && Object.keys(x.cells.get(n).lv).length).length };
+}
+function ibSheetOne(c, all, cols, conf, n, o, rc) {
+  const i = c.names.indexOf(n), shown = bkWho(n, i), crit = ibCrit(c), bounds = ibBounds(c), icols = ibCols(c, cols), top = crit.length * IB_TOP, cls = c.names.filter(bkIn);
+  const lv = ibLvAt(c, pss.term, n), r = ibTerm(lv, crit, bounds), period = (bkTabs(all).find(t => t[0] === pss.term) || [, 'This year'])[1];
+  const miss = icols.filter(x => (x.cells.get(n) || {}).st === 'missing'), mid = list => { const m = o.cls ? ibMid(list) : null; return m != null ? 'class middle ' + m : ''; };
+  const tile = (l, v, s, main) => '<div class="psst' + (main ? ' main' : '') + '"><span>' + l + '</span><b>' + v + '</b><small>' + (s || '&nbsp;') + '</small></div>', dash = v => v != null ? v : '–';
+  let h = '<article class="pss ibpss" data-pss="' + esc(n) + '"><div class="pssin"><header class="psshead"><div><small>Progress report</small><h3>' + esc(shown) + '</h3></div><p>' + esc(c.name) + '<br>' + esc(period) + ' · ' + esc(pssToday()) + '</p></header>' +
+    '<div class="psstiles">' + tile(pss.term === '*' || !conf.terms.length ? 'Grade' : 'Term grade', dash(r.grade) + (r.grade != null ? ' <small>out of 7</small>' : ''), [r.need.length ? 'still to set: ' + esc(r.need.join(', ')) : 'total ' + r.total + ' of ' + top, mid(cls.map(x => ibTerm(ibLvAt(c, pss.term, x), crit, bounds).grade))].filter(Boolean).join(' · '), true) +
+    crit.map(x => { const v = ibLevel(lv[x.k]); return tile('<b>' + esc(x.k) + '</b> ' + esc(x.name), dash(v) + (v != null ? ' <small>of ' + IB_TOP + '</small>' : ''), [v != null ? ibBandName(v) : 'not set yet', mid(cls.map(y => ibLevel(ibLvAt(c, pss.term, y)[x.k])))].filter(Boolean).join(' · ')); }).join('') +
+    tile('Missing', String(miss.length), miss.length ? (miss.length === 1 ? 'piece of work' : 'pieces of work') : 'nothing outstanding') + '</div>' +
+    '<p class="ibpsscap">Each criterion is marked from 0 to 8 with the level that fits the student’s work best. The grade from 1 to 7 comes from the total of the levels.</p>';
+  const say = (x, cell) => !cell ? '<span class="muted">Not marked</span>' : cell.st === 'missing' ? '<b class="pssmiss">Missing</b>' : cell.st === 'excused' ? 'Excused' : x.crit.filter(k => cell.lv[k] != null).map(k => esc(k) + ' <b>' + cell.lv[k] + '</b>').join(' · ') || '<span class="muted">Not marked</span>';
+  const rows = icols.map(x => '<tr><td>' + esc(x.name) + (x.fm ? ' <small>formative</small>' : '') + '</td><td>' + esc(x.crit.join(' ')) + '</td><td>' + esc(bkDay(x.due)) + '</td><td class="pssv">' + say(x, x.cells.get(n)) + '</td></tr>'), wide = rows.length > 14, half = Math.ceil(rows.length / 2);
+  const tab = list => '<table class="psstab"><thead><tr><th>Task</th><th>Criteria</th><th>Date</th><th class="pssv">Levels</th></tr></thead><tbody>' + list.join('') + '</tbody></table>';
+  let terms = '';
+  if (conf.terms.length) {
+    const line = (name, t, cl) => { const l = ibLvAt(c, t, n), q = ibTerm(l, crit, bounds); return '<tr' + cl + '><td>' + esc(name) + '</td>' + crit.map(x => '<td class="pssv">' + dash(ibLevel(l[x.k])) + '</td>').join('') + '<td class="pssv">' + dash(q.total) + '</td><td class="pssv">' + (q.grade != null ? '<b>' + q.grade + '</b>' : '–') + '</td></tr>'; };
+    terms = '<section><h4>By term</h4><table class="psstab"><thead><tr><th></th>' + crit.map(x => '<th class="pssv" title="' + esc(x.name) + '">' + esc(x.k) + '</th>').join('') + '<th class="pssv">Total</th><th class="pssv">Grade</th></tr></thead><tbody>' +
+      conf.terms.map(t => line(t.name, t.id, '')).join('') + (Object.keys(ibLvAt(c, '*', n)).length ? line('Year', '*', ' class="pssyr"') : '') + '</tbody></table></section>';
+  }
+  h += '<div class="pssgrid' + (wide ? ' wide' : '') + '"><section><h4>Tasks</h4>' + (!rows.length ? '<p class="muted">Nothing in this period yet.</p>' : wide ? '<div class="psshalves">' + tab(rows.slice(0, half)) + tab(rows.slice(half)) + '</div>' : tab(rows)) + '</section>' +
+    '<aside>' + terms + '<section><h4>Missing work</h4>' + (miss.length ? '<ul class="psslist">' + miss.map(x => '<li>' + esc(x.name) + (x.due ? ' <small>' + esc(bkDay(x.due)) + '</small>' : '') + '</li>').join('') + '</ul>' : '<p class="pssnone">Nothing missing.</p>') + '</section></aside></div>';
+  const rep = o.rep ? pssRep(c, cols, conf, n, rc) : null;
+  if (rep && rep.text.trim()) h += '<section class="pssrep"><h4>Comment</h4><p>' + esc(rep.text) + '</p></section>';
+  if (o.notes) h += '<section class="pssnotes"><h4>Notes</h4><i></i><i></i><i></i></section>';
+  return { html: h + '</div></article>', draft: !!(rep && rep.text.trim() && rep.draft) };
+}
 function ibAddOpen(c, itId) {
   const f = itId && findItem(itId), it = f ? f.it : null, crit = ibCrit(c);
   ibk.add = { it, name: it ? it.name : '', due: it ? it.due || '' : isoDay(Date.now()), fm: !!it && it.type === 'fm', crit: it ? (it.crit || []).slice() : crit.slice(0, 2).map(x => x.k),
@@ -24481,7 +24522,18 @@ function rptPut(c, n, patch, term) {
 
 /* ---------- what the gradebook knows about one student this term ---------- */
 const rptPairs = new WeakMap();
-function rptFacts(c, cols, conf, n) {
+function rptSaid(c, cols, n) {
+  const said = [];
+  for (const col of cols) {
+    if (!col.d || !col.d.s) continue;
+    let pairs = rptPairs.get(col); if (!pairs) rptPairs.set(col, pairs = rosterPairs(c.names, Object.keys({ ...col.d.s, ...col.d.read })));
+    const k = pairs.get(n), t = k && col.d.s[k] && col.d.s[k].g ? String(col.d.s[k].g.comment || '').trim() : '';
+    if (t) said.push({ work: col.name, text: t });
+  }
+  return said;
+}
+function rptFacts(c, cols, conf, n, term) {
+  if (classWay(c) === 'myp') return ibRptFacts(c, cols, n, term, rptSaid(c, cols, n));
   const g = bkGrade(n, cols, conf), scored = bkScored(cols).map(col => ({ col, cell: col.cells.get(n) })).filter(x => bkCounts(x.cell));
   const rows = new Map(), T = chRowTop(scored.map(x => x.col));   // rows on different scales are put on the one most of them use
   for (const { col, cell } of scored) for (const [nm, v0, t] of cell.rows || []) {
@@ -24500,13 +24552,7 @@ function rptFacts(c, cols, conf, n) {
   const v = scored.map(x => x.cell.pct), move = v.length >= 4 ? bkMean(v.slice(-3)) - bkMean(v.slice(0, -3)) : 0;
   const missing = cols.filter(x => x.type !== 'xc' && (x.cells.get(n) || {}).st === 'missing').map(x => x.name);
   const best = scored.length >= 2 ? scored.reduce((a, b) => b.cell.pct > a.cell.pct ? b : a) : null;
-  const said = [];
-  for (const col of cols) {
-    if (!col.d || !col.d.s) continue;
-    let pairs = rptPairs.get(col); if (!pairs) rptPairs.set(col, pairs = rosterPairs(c.names, Object.keys({ ...col.d.s, ...col.d.read })));
-    const k = pairs.get(n), t = k && col.d.s[k] && col.d.s[k].g ? String(col.d.s[k].g.comment || '').trim() : '';
-    if (t) said.push({ work: col.name, text: t });
-  }
+  const said = rptSaid(c, cols, n);
   return { grade: g.grade, soFar: g.soFar, strong, weak, words, move, missing, best: best && best.cell.pct >= 70 ? best.col.name : '', said, scored: scored.length };
 }
 
@@ -24515,7 +24561,7 @@ const rptHash = s => { let h = 7; for (const ch of String(s)) h = (h * 31 + ch.c
 const rptList = a => a.length <= 1 ? a.join('') : a.slice(0, -1).join(', ') + ' and ' + a[a.length - 1];
 function rptFill(t, c, n, f, rc) {
   const call = rptCall(c, n), pro = rptPro(c, n), P = RPT_PRO[pro] || [call, call, call + '’s', 'is', 'has', 's'], subj = (rc.subj[c.id] || '').trim();
-  const map = { name: call, they: P[0], them: P[1], their: P[2], is: P[3], has: P[4], s: P[5], in: subj ? ' in ' + subj : '', subject: subj, grade: f.grade != null ? roundPct(f.grade) + '%' : '',
+  const map = { name: call, they: P[0], them: P[1], their: P[2], is: P[3], has: P[4], s: P[5], in: subj ? ' in ' + subj : '', subject: subj, grade: f.gradeText != null ? f.gradeText : f.grade != null ? roundPct(f.grade) + '%' : '',
     row: '', work: f.best, n: String(f.missing.length), list: rptList(f.missing), words: f.words };
   const out = t.replace(/\{(\w+)\}/g, (m, k) => {
     const low = k[0].toLowerCase() + k.slice(1); if (!(low in map)) return m;
@@ -24524,7 +24570,7 @@ function rptFill(t, c, n, f, rc) {
   return out.replace(/\s+([.,;:!?])/g, '$1').replace(/\s{2,}/g, ' ').trim().replace(/^./, ch => ch.toUpperCase());
 }
 function rptDraft(c, n, f, rc, v) {
-  const band = f.grade == null ? 'None' : f.grade >= rc.cut[0] ? 'High' : f.grade >= rc.cut[1] ? 'Good' : f.grade >= rc.cut[2] ? 'Mid' : 'Low';
+  const band = f.band ? f.band : f.grade == null ? 'None' : f.grade >= rc.cut[0] ? 'High' : f.grade >= rc.cut[1] ? 'Good' : f.grade >= rc.cut[2] ? 'Mid' : 'Low';
   const say = (k, row) => { const own = (rc.words[k] || []).filter(Boolean), list = own.length ? own : RPT_WORDS[k]; return rptFill(list[(rptHash(n + k) + (v || 0)) % list.length].replace(/\{row\}/g, row || ''), c, n, f, rc); };
   const long = rc.len === 'long', short = rc.len === 'short', out = [say('open' + band)];
   if (rc.grade && f.grade != null) out.push(say('grade'));
@@ -24543,7 +24589,7 @@ const rptState = e => e.done ? ['ok', 'Done'] : e.text != null ? ['on', 'Edited'
 /* ---------- the page ---------- */
 function rptFactChips(f) {
   const one = v => fmtNum(Math.round(v * 10) / 10), out = [];
-  out.push('<span class="schip">' + (f.grade != null ? 'Grade ' + pctAvgText(f.grade) + (f.soFar ? ' so far' : '') : 'No grade yet') + '</span>');
+  out.push('<span class="schip">' + (f.chip ? esc(f.chip) : f.grade != null ? 'Grade ' + pctAvgText(f.grade) + (f.soFar ? ' so far' : '') : 'No grade yet') + '</span>');
   if (f.strong) out.push('<span class="schip">Strongest: ' + esc(f.strong.name) + ' ' + one(f.strong.avg) + '</span>');
   if (f.weak) out.push('<span class="schip">To work on: ' + esc(f.weak.name) + ' ' + one(f.weak.avg) + '</span>');
   if (Math.abs(f.move) >= 5) out.push('<span class="schip">Last three scores ' + (f.move > 0 ? 'up ' : 'down ') + Math.abs(Math.round(f.move)) + '</span>');
@@ -24850,7 +24896,7 @@ async function openSheets(clsId, who) {
 const pssClass = () => classById(pss.cls);
 function pssRep(c, cols, conf, n, rc) {
   const key = pss.term === '*' ? 'year' : pss.term || 'all', e = ((infoOf(c, n).rep || {})[key]) || {};
-  return { text: e.text != null ? e.text : rptDraft(c, n, rptFacts(c, cols, conf, n), rc, e.v), draft: !e.done && e.text == null, done: !!e.done };
+  return { text: e.text != null ? e.text : rptDraft(c, n, rptFacts(c, cols, conf, n, pss.term), rc, e.v), draft: !e.done && e.text == null, done: !!e.done };
 }
 function pssDraw() {
   const c = pssClass(), body = $('#pssBody'); if (!c || !body) return;
@@ -24861,7 +24907,7 @@ function pssDraw() {
   const sheets = names.map(n => pssOne(c, all, cols, conf, n, o, rc)), drafts = o.rep ? sheets.filter(s => s.draft).length : 0;
   const ck = (k, l, t) => '<label class="pssck" title="' + esc(t) + '"><input type="checkbox" data-pssopt="' + k + '"' + (o[k] ? ' checked' : '') + '> ' + l + '</label>';
   body.innerHTML = '<div class="pssbar"><div class="ovtabs bkterms" role="group" aria-label="Term">' + tabs.map(([id, l]) => '<button data-pssterm="' + esc(id) + '" aria-selected="' + (pss.term === id) + '">' + esc(l) + '</button>').join('') + '</div><span class="sp"></span>' +
-    ck('cls', 'Class average', 'Show the class average beside each of the student’s numbers') + ck('rep', 'Report comment', 'The comment from the Report comments tab for this term') + ck('notes', 'Lines for notes', 'Empty lines at the bottom to write on during the meeting') +
+    (classWay(c) === 'myp' ? ck('cls', 'Class middle level', 'Show the level half the class is at or above beside each of the student’s levels') : ck('cls', 'Class average', 'Show the class average beside each of the student’s numbers')) + ck('rep', 'Report comment', 'The comment from the Report comments tab for this term') + ck('notes', 'Lines for notes', 'Empty lines at the bottom to write on during the meeting') +
     '<button class="btn primary" data-pssprint>' + (names.length === 1 ? 'Print' : 'Print ' + people(names.length, 'page')) + '</button></div>' +
     '<p class="muted pssnote" id="pssNote">' + (names.length === 1 ? 'One page' : 'One page for each student, in roster order') + ', made on this computer from your gradebook. Nothing is sent anywhere. In the print window, choose a printer or Save as PDF.' +
     (drafts ? ' <span class="psswarn">' + (drafts === 1 ? (names.length === 1 ? 'The report comment is' : 'One report comment is') + ' still a draft you haven’t looked at.' : drafts + ' report comments are still drafts you haven’t looked at.') + ' <a href="' + classHash(c, 'reports') + '" data-close>Open Report comments</a></span>' : '') + '</p>' +
@@ -24879,6 +24925,7 @@ function pssFit() {
   }
 }
 function pssOne(c, all, cols, conf, n, o, rc) {
+  if (classWay(c) === 'myp') return ibSheetOne(c, all, cols, conf, n, o, rc);   // levels by criterion and a 1 to 7, never a percent (ib.js)
   const i = c.names.indexOf(n), shown = bkWho(n, i), r = bkGrade(n, cols, conf), everyone = c.names.filter(bkIn).map(x => bkGrade(x, cols, conf));
   const cavg = t => { const ps = everyone.map(g => t ? g.by[t] : g.grade).filter(v => v != null); return ps.length ? bkMean(ps) : null; };
   const pct = v => v != null ? pctAvgText(v) : '–', vs = v => o.cls && v != null ? 'class ' + pctAvgText(v) : '';
@@ -27122,7 +27169,7 @@ function nyAbout(v, names, depth = 0) {
 }
 const nyStrip = (o, names, keep) => { for (const k of Object.keys(o)) if (!keep.includes(k) && nyAbout(o[k], names)) delete o[k]; return o; };
 
-const NY_YEAR_ONLY = ['att'];
+const NY_YEAR_ONLY = ['att', 'lv'];
 /* the new year's library */
 function nyLib(old, works, o) {
   const L = nyClone(old), names = nyNames(old);
@@ -27130,18 +27177,18 @@ function nyLib(old, works, o) {
   const card = it => {
     const w = it.batchId ? works[it.batchId] : null, n = { ...it };
     delete n.batchId; delete n.opened;
-    if (n.typed && typeof n.typed === 'object') n.typed = { max: n.typed.max == null ? null : n.typed.max, s: {} };
+    if (n.typed && typeof n.typed === 'object') n.typed = { max: n.typed.max == null ? null : n.typed.max, ...(n.typed.lv ? { lv: true } : {}), s: {} };
     if (!n.setup && w && w.setup) { n.setup = { ...w.setup }; delete n.setup.spot; delete n.setup.rubricPage; }
     if (!n.quiz && w && w.quiz && Array.isArray(w.quiz.qs) && w.quiz.qs.length) { const q = nyClone(w.quiz); delete q.shift; delete q.spot; n.quiz = q; }
     if (!n.goal && w && typeof w.goal === 'string' && w.goal) n.goal = w.goal;   // a learning goal for the whole score (goals.js)
     if (o.dates && n.due) n.due = nyDay(n.due);
-    return nyStrip(n, names, ['id', 'name', 'setup', 'quiz', 'typed', 'classId', 'goal']);
+    return nyStrip(n, names, ['id', 'name', 'setup', 'quiz', 'typed', 'classId', 'goal', 'crit']);
   };
   for (const c of L.classes) {
     if (!o.roster) { c.names = []; delete c.info; }
     for (const k of NY_YEAR_ONLY) delete c[k];
     if (!o.roster && c.seats && c.seats.desks && typeof c.seats.desks === 'object') c.seats = { ...c.seats, desks: Object.fromEntries(Object.keys(c.seats.desks).map(k => [k, ''])), pins: [] };
-    nyStrip(c, names, ['id', 'name', 'units', ...(o.roster ? ['names', 'info', 'seats'] : [])]);
+    nyStrip(c, names, ['id', 'name', 'units', 'way', 'ib', ...(o.roster ? ['names', 'info', 'seats'] : [])]);
   }
   for (const h of L.classes.concat([L.loose])) for (const u of h.units || []) { nyStrip(u, names, ['id', 'name', 'items']); u.items = (u.items || []).map(card); }
   if (L.book && typeof L.book === 'object') {
@@ -27762,7 +27809,7 @@ function stpIb(o) {
   if (bounds.length >= 2 && bounds.every((x, i) => !i || x[0] < bounds[i - 1][0])) out.bounds = bounds;
   return out;
 }
-const STP_WAYS = { rubric: 'rubric', rubricrows: 'rubric', rows: 'rubric', points: 'points', percent: 'percent', percentage: 'percent', letters: 'letters', lettergrades: 'letters', letter: 'letters', ib7: 'ib7', ib: 'ib7', ib1to7: 'ib7', myp: 'ib7', dp: 'ib7' };
+const STP_WAYS = { rubric: 'rubric', rubricrows: 'rubric', rows: 'rubric', points: 'points', percent: 'percent', percentage: 'percent', letters: 'letters', lettergrades: 'letters', letter: 'letters', ib7: 'ib7', ib: 'ib7', ib1to7: 'ib7', myp: 'myp', mypcriteria: 'myp', ibmyp: 'myp', dp: 'ib7' };
 function stpRead(j) {
   const S = { left: [], unknown: [], notes: [] }, known = new Set(['gradingStudioSetup', 'teacher', 'about', 'school', 'programme', 'program', 'grading', 'classes', 'calendar', 'terms', 'gradebook', 'rubrics', 'comments', 'goals', 'attendance', 'slides', 'marking']);
   for (const k of Object.keys(j)) {
@@ -27776,10 +27823,11 @@ function stpRead(j) {
   if (sc) { const o = {}; for (const [k, to] of [['system', 'sys'], ['unitPlans', 'unit'], ['assistant', 'ai']]) if (typeof sc[k] === 'string') o[to] = stpStr(sc[k], 40); if (Object.keys(o).length) S.school = o; }
   const g = stpObj(j.grading);
   if (g) {
-    const way = STP_WAYS[stpKey(g.way)] || (stpArr(g.criteria).length ? 'rubric' : '');
+    let way = STP_WAYS[stpKey(g.way)] || (stpArr(g.criteria).length ? 'rubric' : '');
+    if (way === 'ib7' && /^\s*(ib\s*)?myp\b/i.test(prog) && /^(rows?|rubric|criteria)$/i.test(stpStr(g.score, 12))) way = 'myp';
     if (way) {
       const base = gradeWay(way)[3], crit = stpArr(g.criteria, 12).map(c => stpStr(stpObj(c) ? c.name : c, 80)).filter(Boolean);
-      const rows = /^(rows?|rubric|criteria)$/i.test(stpStr(g.score, 12)) ? true : /^(total|points?|percent)$/i.test(stpStr(g.score, 12)) ? false : way === 'rubric';
+      const rows = /^(rows?|rubric|criteria)$/i.test(stpStr(g.score, 12)) ? true : /^(total|points?|percent)$/i.test(stpStr(g.score, 12)) ? false : way === 'rubric' || way === 'myp';
       const outOf = stpNum(g.outOf, 1, 1000), top = stpNum(g.rowTop, 1, 10), scale = stpScale(g.scale);
       let bands = stpArr(g.bands, 20).map(b => Array.isArray(b) ? [stpNum(b[0], 0, 1000), stpStr(b[1], 12)] : stpObj(b) ? [stpNum(b.from, 0, 1000), stpStr(b.grade != null ? b.grade : b.label, 12)] : [null, '']).filter(b => b[0] != null && b[1]);
       const of = stpNum(g.bandsOutOf, 1, 1000);
@@ -27787,8 +27835,9 @@ function stpRead(j) {
       bands = bands.filter(b => b[0] <= 100).sort((x, y) => y[0] - x[0]);
       if (bands.length) bands[bands.length - 1][0] = 0;   // the lowest grade starts at nothing, as in Settings
       if (!bands.length && gradeWay(way)[4]) bands = gradeWay(way)[4].map(b => b.slice());
+      if (way === 'myp') bands = [];
       S.grading = { way, setup: { mode: rows ? 'rubric' : 'points', criteria: crit.length ? crit : base.criteria.slice(), outOf: outOf != null ? outOf : base.outOf, scale: scale || null, ...stpRowScale(top, g.halfPoints) }, ...(bands.length ? { bands } : {}) };
-    } else if (Object.keys(g).length) S.notes.push('“grading” has no “way” this version knows (rubric, points, percent, letters or ib7), so it is left as it is.');
+    } else if (Object.keys(g).length) S.notes.push('“grading” has no “way” this version knows (rubric, points, percent, letters, myp or ib7), so it is left as it is.');
   }
   const seen = new Set(); S.classes = [];
   for (const c of stpArr(j.classes, 40)) {
@@ -27892,7 +27941,7 @@ function stpPlanNext(old, S, pick) {
 /* ---- what would change: one part per subject, each with the lines the preview shows ---- */
 const stpDay = s => new Date(s + 'T12:00:00').toLocaleDateString(LANG_LOCALE, { month: 'short', day: 'numeric', year: 'numeric' });
 const stpList = (a, n) => a.slice(0, n || 6).join(', ') + (a.length > (n || 6) ? ' and ' + (a.length - (n || 6)) + ' more' : '');
-const stpWayName = k => gradeWay(k)[1], stpWayLow = k => k === 'ib7' ? stpWayName(k) : stpWayName(k).toLowerCase();
+const stpWayName = k => gradeWay(k)[1], stpWayLow = k => k === 'ib7' || k === 'myp' ? stpWayName(k) : stpWayName(k).toLowerCase();
 const stpTypeName = id => { const t = BK_TYPES.find(x => x[0] === id); return t ? t[2] : id; };
 function stpDiff(S, planNow) {
   const parts = [], add = (key, title, lines, sub) => { if (lines.length) parts.push({ key, title, lines, sub: sub || '' }); };
@@ -28156,13 +28205,11 @@ Every part except the first line is optional. Leave a part out rather than leavi
   "programme": "MYP",
   "school": { "system": "ManageBac", "unitPlans": "Atlas", "assistant": "Claude" },
   "grading": {
-    "way": "ib7",
+    "way": "myp",
     "score": "rows",
     "criteria": ["A: Knowing and understanding", "B: Inquiring and designing", "C: Processing and evaluating", "D: Reflecting on the impacts of science"],
     "rowTop": 8,
-    "halfPoints": false,
-    "bandsOutOf": 32,
-    "bands": [{ "grade": "7", "from": 28 }, { "grade": "6", "from": 24 }, { "grade": "5", "from": 19 }, { "grade": "4", "from": 15 }, { "grade": "3", "from": 10 }, { "grade": "2", "from": 6 }, { "grade": "1", "from": 0 }]
+    "halfPoints": false
   },
   "classes": [
     { "name": "MYP 4 Sciences A", "course": "MYP 4 Sciences", "link": "https://example.org/classes/123",
@@ -28198,7 +28245,7 @@ Every part except the first line is optional. Leave a part out rather than leavi
 }
 
 FIELD NOTES
-- "way" is one of "rubric", "points", "percent", "letters", "ib7". "score" is "rows" (a rubric, each row scored) or "total" (one number, out of "outOf").
+- "way" is one of "rubric", "points", "percent", "letters", "myp", "ib7". "myp" is IB MYP criteria, each marked 0 to 8, with the 1 to 7 boundaries given on each class. "ib7" is the IB Diploma's 1 to 7 from a percent. "score" is "rows" (a rubric, each row scored) or "total" (one number, out of "outOf").
 - "bands" are the grades a percent earns, highest first, each with the lowest percent that earns it. If my boundaries are in points, give them in points and add "bandsOutOf" with the total.
 - "scale" (optional, inside "grading" or a rubric) turns a score into a percent, like { "12": 100, "11": 95, "10": 91 }.
 - Days are "Sun" to "Sat". Times are 24-hour, like "13:05". Dates are YYYY-MM-DD.
