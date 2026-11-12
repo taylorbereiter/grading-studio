@@ -78,7 +78,7 @@ const HELP = [
     words: 'audio mp3 mp4 video speaking oral presentation transcript' },
   { id: 'quick-mark', sec: 'mark', q: 'How do I mark a paper quiz quickly?',
     a: ['Open **Quick mark** under Setup. Draw a box around each question once, on any student’s scan.', 'Then mark one question for the whole class, or one student’s whole quiz. Each question can show ✗ on wrong answers, ✓ and ✗, points, or a scale with your own words.',
-      'The total goes into the student’s score. Not sure about an answer? Press **P** or **⧉ Copy** on it to copy a picture of just that answer, with the question and your answer key on top, and paste it into an AI assistant to ask. The name, score and your mark are left off, but the picture still shows the student’s handwriting and words.'],
+      'The total goes into the student’s score. Not sure about an answer? Press **P** or **⧉ Copy** on it to copy a picture of just that answer, with the question and your answer key on top, to paste into an AI assistant. The name, score and your mark are left off, but the picture still shows the student’s handwriting and words.'],
     words: 'quiz test questions boxes right wrong points multiple copy picture screenshot ai assistant claude chatgpt' },
   { id: 'mark-colors', sec: 'mark', q: 'Can I change the color of ✗, checks and points?',
     a: ['Yes. In Settings, Marking, **Mark colors**, or the **Colors** menu in Quick mark. ✗ uses your pen’s color and checks have their own.',

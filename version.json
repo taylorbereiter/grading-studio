@@ -1,13 +1,13 @@
 {
  "version": "1.27.18",
- "build": "13d1ff512357",
+ "build": "cea72f24ea2d",
  "notes": [
   "The app no longer assumes your AI assistant is Claude. Settings, Working with AI lets you pick Claude, ChatGPT, Gemini, Copilot, another name, or none, and buttons and hints use that name. If you already used the app, yours stays Claude.",
   "Planner, Timetable has a Slides section: the agenda on slide 2 and keeping text between 28 and 36 pt are both on, and each can be turned off.",
   "The week shows Saturday, or Sunday in front of Monday, when a class meets then. Short dates follow your computer's day and month order."
  ],
  "files": {
-  "index.html": "5489abd2621b05e7b3d5d815151b413f2078593a9838218d80026ac09976aeb1",
-  "planner.html": "44f10c904f6fc6a0256281fc532c8eec7dbb81d0ae99f0452f6ce595ddafe050"
+  "index.html": "896f0e5c5f3fc38530ea05175b307a4558de945dda21dbd8ef1dc4ecc2149c08",
+  "planner.html": "9ac34ce3070ed1c8885f08c6c03fd0b6f71fb7bc512bdaaeb8ec96d447dbc207"
  }
 }
