@@ -352,7 +352,8 @@ function editText(pg, m, isNew) {
     Object.assign(hd.style, { left: (m.x + L.maxW) * s + 'px', top: m.y * s + Math.min(ta.offsetHeight / 2, 18) + 'px' });
     Object.assign(bar.style, { left: m.x * s + 'px', top: m.y * s + 'px' });
     bar.innerHTML = '<span class="edgrip" data-grip title="Drag to move this box">⠿ Move</span><button data-sz="-1" title="Smaller text">A−</button><b>' + m.size + '</b><button data-sz="1" title="Bigger text">A+</button>' +
-      '<span style="width:1px;height:16px;background:rgba(255,255,255,.25);margin:0 3px"></span><button data-full class="' + (m.bw ? '' : 'on') + '" title="Wrap at the edge of the page">Page width</button>';
+      '<span style="width:1px;height:16px;background:rgba(255,255,255,.25);margin:0 3px"></span><button data-full class="' + (m.bw ? '' : 'on') + '" title="Wrap at the edge of the page">Page width</button>' +
+      '<span style="width:1px;height:16px;background:rgba(255,255,255,.25);margin:0 3px"></span>' + Object.entries(COLORS).map(([k, v]) => '<button data-tc="' + k + '" class="edsw' + (v === m.color ? ' on' : '') + '" style="--c:' + v + '" title="' + k + '" aria-label="Text in ' + k + '" aria-pressed="' + (v === m.color) + '"></button>').join('');
   };
   pg.wrap.append(ta, hd, bar); fit(); ta.focus();
   if (!isNew) snap(pg);
@@ -369,6 +370,7 @@ function editText(pg, m, isNew) {
     const z = e.target.closest('[data-sz]');
     if (z) { m.size = clamp(m.size + 2 * z.dataset.sz, 8, 40); disp.tsize = m.size; store.set('gs.disp', disp); }   // the next new box uses this size too
     if (e.target.closest('[data-full]')) delete m.bw;
+    const tc = e.target.closest('[data-tc]'); if (tc) m.color = COLORS[tc.dataset.tc];   // this box only; the pen keeps its own color
     fit(); ta.focus();
   });
   ta.addEventListener('keydown', e => {
@@ -395,11 +397,14 @@ function openNote(pg, m, isNew) {
   pop.innerHTML =
     '<div class="lbl">' + (isNew ? 'New comment' : 'Comment') + '</div>' +
     '<textarea placeholder="Type a comment…"></textarea>' +
+    noteSwatches(m) +
     '<div class="lbl" data-bank>My saved comments</div><div class="chips"></div>' +
     '<div class="row"><button class="btn sm" data-a="star" title="Keep this comment so you can reuse it">☆ Save for reuse</button><span class="sp"></span>' +
     (isNew ? '' : '<button class="btn sm" data-a="del">Delete</button>') +
     '<button class="btn sm primary" data-a="ok">Done</button></div>';
   const ta = pop.querySelector('textarea'); ta.value = m.text;
+  // Its color can change at any time, new or old: shown on the paper straight away, kept with Done, put back on Escape.
+  const was = { color: m.color, hc: m.hc };
   const chips = () => {
     pop.querySelector('.chips').innerHTML = bank.map((t, i) => '<span class="chip" data-i="' + i + '"><span title="' + esc(t) + '">' + esc(t) + '</span><button data-x="' + i + '" title="Remove from saved comments" aria-label="Remove">×</button></span>').join('');
     pop.querySelector('[data-bank]').hidden = !bank.length;
@@ -418,12 +423,14 @@ function openNote(pg, m, isNew) {
   const close = save => {
     pop.remove(); activeEditor = null;
     if (pg.pending === m) pg.pending = null;
-    const text = ta.value.trim();
+    const text = ta.value.trim(), now = { color: m.color, hc: m.hc };
+    Object.assign(m, was); if (m.hc === undefined) delete m.hc;   // the step Ctrl Z goes back to holds the colors it had when it opened
     if (!save) { draw(pg); return; }
     const a = pg.marks(), i = a.indexOf(m);
     if (!text) { if (selected && selected.mark === m) selected = null; if (i >= 0) { snap(pg); a.splice(i, 1); changed(pg); } else draw(pg); return; }
-    if (text === m.text && i >= 0) return;
-    snap(pg); m.text = text; if (i < 0) a.push(m); changed(pg);
+    const recolored = now.color !== was.color || now.hc !== was.hc;
+    if (text === m.text && i >= 0 && !recolored) { draw(pg); return; }
+    snap(pg); m.text = text; m.color = now.color; if (now.hc !== undefined) m.hc = now.hc; if (i < 0) a.push(m); changed(pg);
   };
   activeEditor = { commit: () => close(true), note: true };
   pop.addEventListener('pointerdown', e => e.stopPropagation());
@@ -433,6 +440,13 @@ function openNote(pg, m, isNew) {
     if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); close(true); }
   });
   pop.addEventListener('click', e => {
+    const nc = e.target.closest('[data-nc]'), nh = e.target.closest('[data-nh]');
+    if (nc || nh) {
+      if (nc) m.color = COLORS[nc.dataset.nc]; else m.hc = HL[nh.dataset.nh];
+      for (const b of pop.querySelectorAll('[data-nc]')) b.setAttribute('aria-pressed', COLORS[b.dataset.nc] === m.color);
+      for (const b of pop.querySelectorAll('[data-nh]')) b.setAttribute('aria-pressed', HL[b.dataset.nh] === (m.hc || HL.yellow));
+      draw(pg); ta.focus({ preventScroll: true }); return;
+    }
     const x = e.target.closest('[data-x]');
     if (x) { bank.splice(+x.dataset.x, 1); store.set('gs.bank', bank); chips(); return; }
     const ch = e.target.closest('.chip');
@@ -445,6 +459,12 @@ function openNote(pg, m, isNew) {
     if (b.dataset.a === 'ok') close(true);
     if (b.dataset.a === 'del') { ta.value = ''; close(true); }
   });
+}
+// The comment's color row: its ink (the words and the line), and the highlight behind the words when it has one.
+function noteSwatches(m) {
+  const inks = Object.entries(COLORS).map(([k, v]) => '<button type="button" class="nsw" data-nc="' + k + '" style="background:' + v + '" aria-pressed="' + (v === m.color) + '" title="' + k + '" aria-label="Comment in ' + k + '"></button>').join('');
+  const hls = m.hl ? '<div class="row ncol"><span class="lbl">Highlight</span>' + Object.entries(HL).map(([k, v]) => '<button type="button" class="nsw sq" data-nh="' + k + '" style="background:' + v + '" aria-pressed="' + (v === (m.hc || HL.yellow)) + '" title="' + k + ' highlight" aria-label="Highlight in ' + k + '"></button>').join('') + '</div>' : '';
+  return '<div class="row ncol"><span class="lbl">Color</span>' + inks + '</div>' + hls;
 }
 function commitEditors() { if (activeEditor) { const a = activeEditor; activeEditor = null; a.commit(); } }
 
