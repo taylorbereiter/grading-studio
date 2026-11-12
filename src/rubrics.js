@@ -489,22 +489,24 @@ async function openOverview(tab) {
   ovTab = tab === 'pct' ? 'pct' : 'sum'; ovDraw();
 }
 // Insights has three views: Summary and Percents here, and the Consistency check (insight.js), which has its own address.
-const insTabs = on => '<div class="ovtabs" role="tablist">' + [['sum', 'Summary'], ['pct', 'Percents'], ['cons', 'Consistency']].map(([k, l]) => '<button role="tab" data-ovtab="' + k + '" aria-selected="' + (on === k) + '">' + l + '</button>').join('') + '</div>';
+const insTabs = on => '<div class="ovtabs" role="tablist">' + [['sum', 'Summary'], ['pct', 'Percents'], ['cons', 'Consistency']].filter(x => x[0] !== 'pct' || !ibSetup()).map(([k, l]) => '<button role="tab" data-ovtab="' + k + '" aria-selected="' + (on === k) + '">' + l + '</button>').join('') + '</div>';
 let ovTab = 'sum';
 // The whole box, on the tab she's on. Summary is what the class looks like; Percents is hers to slice.
 function ovDraw() {
+  const ib = ibSetup();   // an MYP task has levels by criterion: no total, percent or spread of totals (ib.js)
+  if (ib && ovTab === 'pct') ovTab = 'sum';
   const s = classStats(), on = ovTab === 'pct';
   tabNext('insights');
   openDlg('<div class="bh"><h2>Insights</h2>' + insTabs(ovTab) + '<button class="icon" data-close aria-label="Close" style="margin-left:auto">✕</button></div>' +
     (on ? '<div class="bb pbody" id="ovBody">' + pctShell() + '</div>' :
     '<div class="bb" id="ovBody">' +
     '<p class="ovleft" id="ovLeft">' + esc(leftOutText(s)) + '</p>' +
-    (s.n ? '<div class="ovtiles" id="ovTiles">' + (s.meanPct != null
+    (s.n && !ib ? '<div class="ovtiles" id="ovTiles">' + (s.meanPct != null
       ? ovTile('Average', pctAvgText(s.meanPct), oneDp(s.mean) + ' / ' + fmtNum(s.max), true) + ovTile('Middle score', s.medPct + '%', fmtNum(s.median) + ' / ' + fmtNum(s.max)) + ovTile('Lowest', s.lowPct + '%', fmtNum(s.low) + ' / ' + fmtNum(s.max)) + ovTile('Highest', s.highPct + '%', fmtNum(s.high) + ' / ' + fmtNum(s.max))
       : ovTile('Average', oneDp(s.mean), '/ ' + fmtNum(s.max), true) + ovTile('Middle score', fmtNum(s.median)) + ovTile('Lowest', fmtNum(s.low)) + ovTile('Highest', fmtNum(s.high))) + '</div>' : '') +
     (s.meanPct != null ? '<div class="ovcharts"><section id="ovBands"><h3 class="ovh3">Grade bands</h3>' + bandsHtml(s.counted, PCT_TENS) + '<p class="muted ovcap2">How many papers landed in each range of percents.</p></section>' +
       '<section id="ovStrip"><h3 class="ovh3">Every paper’s percent</h3>' + stripHtml(s.counted, s.meanPct, 'Average') + '<p class="muted ovcap2">One dot for each paper. Point at one to see whose it is, and click it to open them.</p></section></div>' : '') +
-    '<div class="ovcharts"><section id="ovSpread"><h3 class="ovh3">Score spread</h3>' + spreadHtml(s) + '</section><section id="ovRows"><h3 class="ovh3">Rows the class found hardest</h3>' + rowsHtml(s) + '</section>' + insRowsHtml() + '</div>' +
+    '<div class="ovcharts">' + (ib ? '' : '<section id="ovSpread"><h3 class="ovh3">Score spread</h3>' + spreadHtml(s) + '</section>') + '<section id="ovRows"><h3 class="ovh3">Rows the class found hardest</h3>' + rowsHtml(s) + '</section>' + insRowsHtml() + '</div>' +
     '<div id="insMore"></div>' + trendHtml(s) + levelHtml(s) +
     '<section id="ovWho"><h3 class="ovh3">Who’s missing or unfinished</h3>' + whoHtml(s) + '</section></div>') +
     '<div class="bf"><button class="btn primary" data-close>Close</button></div>');

@@ -1,11 +1,11 @@
 {
- "version": "1.27.28",
- "build": "4221f01c8aee",
+ "version": "1.27.29",
+ "build": "5fc4289e8536",
  "notes": [
-  "Coming from Google Classroom? Settings, Classes and rosters has a new button, From Google Classroom…. Choose the grades file you download from Classroom and it makes the class with its students, then shows every assignment and score for you to check before they go into the gradebook. A folder of student work downloaded from Google Drive now opens with each student’s files together. Nothing is sent anywhere and there is no sign-in. Help has an answer for it."
+  "IB MYP tasks: the Grades tab shows each criterion’s level with no total or percent, and Copy all levels copies them. Insights leaves out the percent tiles, and text shared with an assistant says the rows are levels, not points to add up. Help has two new answers, for IB MYP and IB DP."
  ],
  "files": {
-  "index.html": "8032c8d4180470fb1dc72eb076c03cb2d14efb925e7d59c66358bd4ca6fb2f91",
-  "planner.html": "ad78bebe290bbbdc5890ef5419cbbc6b2d3602d0944029eb8ec469a5d4ca55d1"
+  "index.html": "461699f83ebfef340506dce0998af683ad47ec50be77387d9525c8fe5eb45ca1",
+  "planner.html": "627c5478f9a2bbbd279b6e955fda4f1054e420488d2f0a5d4279fdae246e3f6c"
  }
 }

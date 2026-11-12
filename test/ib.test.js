@@ -4,7 +4,7 @@
 const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const { launch } = require('./helpers/chrome');
-const { openApp, classPage, goTo, openZip, score, settle, answerDlg } = require('./helpers/app');
+const { openApp, classPage, goTo, openZip, score, settle, answerDlg, closeBox } = require('./helpers/app');
 const { makePaper, zipOf } = require('./helpers/fixtures');
 const { ibSeed } = require('./helpers/ibseed');
 
@@ -254,6 +254,14 @@ test('a task of an MYP class is marked on the paper against the criteria it asse
   assert.match(total, /B6C7/); assert.equal(/%|\//.test(total), false, 'no percent and no total: ' + total);
   assert.equal(await page.$eval('#stampScore', e => e.title), 'Put the levels on the paper: B 6   C 7');
   assert.equal(await page.evaluate(() => window.__gs.gradeOf(window.__gs.state().batch.students[0]).pct), null);
+  // the Grades tab and Insights show the levels, with no total or percent
+  await page.evaluate(() => window.__gs.openGrades()); await page.waitForSelector('#glTable');
+  assert.deepEqual(await page.$$eval('#glTable th', xs => xs.map(x => x.textContent)), ['#', 'Student', 'B Inquiring and designing', 'C Processing and evaluating', 'Status', 'On the paper', 'Comment']);
+  assert.match(await page.$eval('#dlgBox .bf', e => e.textContent), /Copy all levels/);
+  assert.equal(await page.$eval('#glTable', e => e.textContent.includes('%')), false);
+  await page.evaluate(() => window.__gs.openOverview()); await page.waitForSelector('#ovRows');
+  assert.deepEqual([await page.$('#ovTiles'), await page.$('#ovSpread'), await page.$('[data-ovtab="pct"]')], [null, null, null]);
+  await closeBox(page); await shut(page);
   // the task changes to C and D: C keeps its levels, B's go after a warning
   await page.click('#ibTaskSet'); await page.waitForSelector('#ibTaskBody');
   await page.click('#ibTaskBody [data-ibtk="B"]'); await page.click('#ibTaskBody [data-ibtk="D"]'); await page.click('#dlgBox [data-ok]');
