@@ -63,7 +63,7 @@ async function intake(entries, label, assignment, fromKeep) {   // entries: [{ p
   const id = batchIdOf(raw);
   const paperList = keepList.filter(e => !houseFile(e.path));
   const sameSize = fromKeep ? [] : await changedInPlace(id, paperList).catch(e => { console.error(e); return []; });   // same names and sizes, different bytes
-  const earlier = fromKeep ? null : await findEarlier(id, paperList, assignment).catch(e => { console.error(e); return null; });   // an older copy of this download, already worked on?
+  const earlier = fromKeep || paperList.every(e => isNotes(e.data)) ? null : await findEarlier(id, paperList, assignment).catch(e => { console.error(e); return null; });   // an older copy of this download, already worked on?
   if (earlier && earlier.asg) assignment = earlier.asg;
   if (!assignment && !fromKeep) assignment = cardOfKept(id);   // the same download dropped again still belongs to its card, the same as opening it from the list
   const rub = await rubricAtOpen(assignment, earlier ? earlier.d : newestWork(store.get(id, null), await kget('work', id)), (assignment && assignment.name) || label || 'This download');
@@ -209,7 +209,7 @@ async function spellLikeSaved(raw) {
 async function makeFile(path, data) {
   const name = path.split('/').pop();
   const magic = data && data.length > 4 && data[0] === 0x25 && data[1] === 0x50 && data[2] === 0x44 && data[3] === 0x46;   // "%PDF"
-  let kind = trueKind(isPdf(name) || magic ? 'pdf' : isImg(name) || IMG_MORE.test(name) ? 'img' : MEDIA_RX.test(name) ? 'media' : WORD_RX.test(name) ? 'docx' : TEXT_RX.test(name) ? 'text' : 'other', name, data);
+  let kind = trueKind(isPdf(name) || magic ? 'pdf' : isImg(name) || IMG_MORE.test(name) ? 'img' : MEDIA_RX.test(name) ? 'media' : WORD_RX.test(name) ? 'docx' : TEXT_RX.test(name) ? 'text' : LINK_RX.test(name) && linkOf(data) ? 'link' : 'other', name, data);
   let pdf = kind === 'pdf' ? data : null;
   if (kind === 'pdf' && gsExportLike(data)) {   // a file exported from here with its marks kept: back to the original pages and the marks
     const back = await unpackExport(data);

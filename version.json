@@ -1,13 +1,14 @@
 {
- "version": "1.27.18",
- "build": "cea72f24ea2d",
+ "version": "1.27.19",
+ "build": "110d3d4d0bc6",
  "notes": [
-  "The app no longer assumes your AI assistant is Claude. Settings, Working with AI lets you pick Claude, ChatGPT, Gemini, Copilot, another name, or none, and buttons and hints use that name. If you already used the app, yours stays Claude.",
-  "Planner, Timetable has a Slides section: the agenda on slide 2 and keeping text between 28 and 36 pt are both on, and each can be turned off.",
-  "The week shows Saturday, or Sunday in front of Monday, when a class meets then. Short dates follow your computer's day and month order."
+  "Presentations and videos. On an assignment’s card, Add papers… now has No papers: presentations or videos…, which gives every student on the roster a notes page to write on while you watch. Pick lined, your rubric’s rows, two columns or blank.",
+  "On a student’s page, + Add has A video…: paste a link from Google Drive, YouTube or anywhere else, and tick the partners in it. One set of notes and one grade covers the group. Only the link is kept, so the video stays where it is.",
+  "Play here shows the video above the notes page; Open in its own window puts it beside the app. + Add also has A notes page… for one more page at any time.",
+  "Clips: under a video, + Clip saves a part worth showing, as a start time, an end time and a title. Show to the class plays it full screen with the title and without the student’s name, and Clips to show the class under Setup plays them one after another."
  ],
  "files": {
-  "index.html": "896f0e5c5f3fc38530ea05175b307a4558de945dda21dbd8ef1dc4ecc2149c08",
-  "planner.html": "9ac34ce3070ed1c8885f08c6c03fd0b6f71fb7bc512bdaaeb8ec96d447dbc207"
+  "index.html": "02a49b6541f41104cf367bf34a2e69669041f03446f295b0012c3b4e1250a885",
+  "planner.html": "5b7c193698dfd27caaeca51332183a16656903b387027639fceb145b5e383167"
  }
 }
