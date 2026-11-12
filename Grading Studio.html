@@ -2162,6 +2162,56 @@ html.welcoming .shell{visibility:hidden}
 .hlpnone{padding:var(--space-5) var(--space-1)}
 .hlpfoot{color:var(--muted);margin:0 var(--space-1)}
 @media (prefers-reduced-motion:reduce){.hlph svg{transition:none}}
+/* ---------- School resources: links, files and notes on a page of their own (school.js) ---------- */
+#vSchool{max-width:900px}
+#vSchool.over{outline:2px dashed var(--accent);outline-offset:var(--space-2);border-radius:var(--corner-5)}
+.schbar{display:flex;align-items:center;gap:var(--space-2);flex-wrap:wrap;margin:0 0 var(--space-5)}
+.schbar .hlpfind{flex:0 1 300px;margin:0}
+.schbar .hlpfind input{height:36px;font-size:var(--text-body);border-radius:var(--corner-3)}
+.schbar .sp{flex:1}
+.schnone{background:var(--surface);border:1px solid var(--line);border-radius:var(--corner-5);padding:var(--space-5);max-width:66ch}
+.schnone h2{margin:0 0 var(--space-2);font-size:var(--text-title)}
+.schnone p{margin:0 0 var(--space-2);font-size:var(--text-lead);line-height:1.55;color:var(--fg-2)}
+.schnone p.muted{margin:0;font-size:var(--text-body);color:var(--muted)}
+.schnohit{padding:var(--space-5) var(--space-1)}
+.schpins{display:flex;flex-wrap:wrap;gap:var(--space-2);margin:0 0 var(--space-5)}
+.schchip{display:inline-flex;align-items:center;gap:var(--space-2);min-height:36px;max-width:100%;padding:var(--space-1) var(--space-3) var(--space-1) var(--space-1);border:1px solid var(--line-strong);border-radius:var(--corner-pill);background:var(--surface);color:var(--fg);font:inherit;font-size:var(--text-body);font-weight:500;text-decoration:none;cursor:pointer}
+.schchip:hover{background:var(--hover)}
+.schchip:focus-visible,.schopen:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.schchip span:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.schchip .schic{width:26px;height:26px;border-radius:var(--corner-round)}
+.schchip .schic svg{width:15px;height:15px}
+.schsec{margin:0 0 var(--space-5)}
+.schhead{display:flex;align-items:center;gap:var(--space-2);margin:0 0 var(--space-2) var(--space-1);min-height:28px}
+.schhead h2{margin:0;font-size:var(--text-caption);font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.schhead .schn{font-size:var(--text-caption);font-weight:600;color:var(--faint);font-variant-numeric:tabular-nums}
+.schhead .sp{flex:1}
+.schhead .kdots{opacity:.7}
+.schcard{background:var(--surface);border:1px solid var(--line);border-radius:var(--corner-5)}
+.schrow{display:flex;align-items:center;gap:var(--space-1);padding:0 var(--space-2) 0 0}
+.schrow+.schrow{border-top:1px solid var(--line)}
+.schopen{flex:1;min-width:0;display:flex;align-items:flex-start;gap:var(--space-3);padding:var(--space-3) var(--space-2) var(--space-3) var(--space-4);border:0;border-radius:var(--corner-5);background:none;color:var(--fg);font:inherit;text-align:left;text-decoration:none;cursor:pointer}
+.schopen:hover b{color:var(--accent)}
+.schic{flex:none;display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:var(--corner-3);background:var(--accent-soft);color:var(--accent)}
+.schic.note{background:var(--surface-2);color:var(--fg-2)}
+.schic svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.schtx{display:flex;flex-direction:column;min-width:0;gap:2px}
+.schtx b{font-size:var(--text-lead);font-weight:600;overflow-wrap:anywhere}
+.schsub{font-size:var(--text-control);color:var(--muted);overflow-wrap:anywhere}
+.schnote{font-size:var(--text-body);line-height:1.5;color:var(--fg-2);white-space:pre-wrap;overflow-wrap:anywhere;max-width:66ch}
+.schpin{flex:none;color:var(--faint)}
+.schpin svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linejoin:round}
+.schpin:hover{color:var(--accent)}
+.schpin[aria-pressed=true]{color:var(--accent)}
+.schpin[aria-pressed=true] svg{fill:currentColor}
+.schrow .kdots{flex:none;border-color:transparent}
+.schfoot{margin:0 var(--space-1);font-size:var(--text-control)}
+.schform .field input[type=text],.schform .field textarea{width:100%;border:1px solid var(--line-strong);border-radius:var(--corner-2);padding:var(--space-2) var(--space-3);background:var(--surface);color:var(--fg);font:inherit;font-size:var(--text-body)}
+.schform .field textarea{resize:vertical;line-height:1.5}
+.schform .field label .muted{font-weight:400}
+.schform .schsay{margin:0;font-size:var(--text-control)}
+.schfiles{margin:0;padding-left:1.2em;font-size:var(--text-body);max-height:160px;overflow:auto}
+@media (max-width:640px){.schbar .btn{flex:1 1 auto}}
 /* ---------- Report comments: a class page's tab (reports.js) ---------- */
 .rptopts{display:flex;align-items:center;gap:var(--space-3) var(--space-4);flex-wrap:wrap;margin:0 0 var(--space-2)}
 .rptopts label,.rptopts .rptlab,.rpthead label{display:flex;align-items:center;gap:var(--space-2);font-size:var(--text-control);color:var(--fg-2)}
@@ -2470,6 +2520,7 @@ button.seat[data-n]:hover{border-color:var(--accent)}
   <button class="rfind" id="findBtn" aria-haspopup="dialog" title="Find a student, an assignment, a tool or a setting"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5"/></svg><span class="rl">Find anything</span><kbd class="rl" id="findKey">Ctrl K</kbd></button>
   <a class="rnav" data-nav="home" href="#/" title="Today: what you teach, what is waiting to be marked, what is ready to hand back"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.6"/><path d="M12 3v2.2M12 18.8V21M3 12h2.2M18.8 12H21M5.6 5.6l1.6 1.6M16.8 16.8l1.6 1.6M5.6 18.4l1.6-1.6M16.8 7.2l1.6-1.6"/></svg><span class="rl">Today</span></a>
   <a class="rnav" id="lessonsBtn" href="planner.html" title="Plan units and lessons. The Planner is a separate page and never sees grading work."><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M8 3v4M16 3v4"/></svg><span class="rl">Planner</span></a>
+  <a class="rnav" data-nav="school" href="#/school" title="School resources: links, files and notes about your school"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 20.5h17M5.5 20.5v-9M18.5 20.5v-9M3.5 11.5L12 5l8.5 6.5M10 20.5v-5h4v5M12 5V3h3"/></svg><span class="rl">School</span></a>
   <div class="rcap"><span class="rl">Classes</span></div>
   <div id="railClasses"></div>
   <button class="rnav radd" id="addClass" title="Add a class"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span class="rl">Add a class</span></button>
@@ -2526,6 +2577,16 @@ button.seat[data-n]:hover{border-color:var(--accent)}
   <section class="view" id="vClass" hidden>
     <div id="classes"></div>
     <p class="muted vhint" id="classHint">Drag an assignment to another unit, or onto a class in the sidebar. Drag a unit’s name to move the unit. Drop <span class="sysZip">a ManageBac ZIP</span> on an assignment to open it there.</p>
+  </section>
+  <section class="view" id="vSchool" hidden>
+    <header class="vhead"><h1>School resources</h1><span class="muted">Links, files and notes about your school, kept with your work on this computer.</span></header>
+    <div class="schbar">
+      <button class="btn primary" data-schadd="link">Add a link</button><button class="btn" data-schadd="file">Add files…</button><button class="btn" data-schadd="note">Add a note</button>
+      <span class="sp"></span>
+      <div class="hlpfind" id="schFind" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5"/></svg><input type="search" id="schQ" autocomplete="off" spellcheck="false" placeholder="Search your school resources" aria-label="Search your school resources"></div>
+    </div>
+    <div id="schList"></div>
+    <input type="file" id="schIn" multiple hidden>
   </section>
   <section class="view" id="vHelp" hidden>
     <header class="vhead"><h1>Help</h1><span class="muted">Short answers. They are part of the app, so they work with no internet.</span></header>
@@ -3652,7 +3713,7 @@ SOFTWARE.
 <script>/* ---------------- saved-data versions: a safety copy, then any format changes, before the app starts ---------------- */
 const gsData = (() => {
   'use strict';
-  const APP_VERSION = "1.27.3";   // from package.json, the one place it's set
+  const APP_VERSION = "1.27.4";   // from package.json, the one place it's set
   const MIGRATIONS = [
   ];
   const DATA_V = Math.max(1, ...MIGRATIONS.map(s => s.to));
@@ -3898,6 +3959,8 @@ const LANG_ES = {
   words: {
     /* the sidebar, on both pages */
     'Main': 'Principal', 'Grading Studio, Today': 'Grading Studio, Hoy', 'Find anything': 'Buscar', 'Today': 'Hoy', 'Planner': 'Planificador', 'Classes': 'Clases', 'Add a class': 'Añadir una clase',
+    'School': 'Centro', 'School resources': 'Recursos del centro', 'School resources: links, files and notes about your school': 'Recursos del centro: enlaces, archivos y notas sobre tu centro',
+    'Links, files and notes about your school': 'Enlaces, archivos y notas sobre tu centro', 'Links, files and notes about your school, on the grading page': 'Enlaces, archivos y notas sobre tu centro, en la página de calificación', 'Link': 'Enlace', 'File': 'Archivo', 'Note': 'Nota',
     'Help': 'Ayuda', 'Settings': 'Ajustes', 'Update ready': 'Actualización lista', 'No class': 'Sin clase', 'App language': 'Idioma de la aplicación', 'English, Spanish or Traditional Chinese': 'Inglés, español o chino tradicional',
     'Find a student, an assignment, a tool or a setting': 'Busca un estudiante, una tarea, una herramienta o un ajuste',
     'Find a lesson, a unit, a class or a setting': 'Busca una lección, una unidad, una clase o un ajuste',
@@ -4090,6 +4153,10 @@ const LANG_ES = {
     'add-class': { q: '¿Cómo añado una clase y su lista?', words: 'lista estudiantes alumnos nombres nueva clase',
       a: ['1. Pulsa **Añadir una clase** en la barra lateral y ponle un nombre.', '2. Pega los nombres de los estudiantes, uno por línea. Se conservan en el orden en que los pegas.', '3. Abre la pestaña **Students** de la clase para añadir un identificador, un correo o una nota a cada uno.',
         'Con una lista, al abrir los trabajos de esa clase aparece cada estudiante, también quien no entregó nada.'] },
+    'school-resources': { q: '¿Dónde puedo guardar los enlaces y archivos de mi centro?', go: 'Abrir Recursos del centro', words: 'manual calendario normas portal marcador enlace archivo documento recursos centro colegio escuela horario formularios',
+      a: ['En **School** (Centro), en la barra lateral. Guarda el manual, el calendario, el horario, los portales en los que inicias sesión, los formularios y notas como a quién llamar. Ponlos en grupos con el nombre que quieras y pulsa la estrella de los que más abres para tenerlos arriba.',
+        '**Add a link** cuando el centro lo tiene en línea, porque un enlace se mantiene al día solo. **Add files…** guarda una copia del archivo con tu trabajo, hasta 50 MB cada uno. También puedes soltar archivos en la página o pegar una dirección web.',
+        'Todo se guarda con el resto de tu trabajo: en este navegador, en tu carpeta y en el archivo para llevar. Buscar encuentra cada uno por su nombre.'] },
     'language': { q: '¿Puedo usar la aplicación en otro idioma?', go: 'Abrir Ajustes, Pantalla', words: 'español inglés chino idioma lengua traducir traducción',
       a: ['Sí: español o chino tradicional. Elígelo en Ajustes, Display, **Idioma de la aplicación**, o en lo alto de la bienvenida. La página se vuelve a dibujar en el idioma que elijas.',
         'Por ahora, un idioma distinto del inglés cubre la barra lateral, Hoy, la bienvenida, Buscar, la Ayuda y la página de comentarios que reciben los estudiantes con un trabajo devuelto. Las demás pantallas siguen en inglés.',
@@ -4258,6 +4325,8 @@ const LANG_ZH = {
   words: {
     /* the sidebar, on both pages */
     'Main': '主選單', 'Grading Studio, Today': 'Grading Studio，今天', 'Find anything': '搜尋', 'Today': '今天', 'Planner': '備課', 'Classes': '班級', 'Add a class': '新增班級',
+    'School': '學校', 'School resources': '學校資源', 'School resources: links, files and notes about your school': '學校資源：學校的連結、檔案與筆記',
+    'Links, files and notes about your school': '學校的連結、檔案與筆記', 'Links, files and notes about your school, on the grading page': '學校的連結、檔案與筆記，在批改頁面', 'Link': '連結', 'File': '檔案', 'Note': '筆記',
     'Help': '說明', 'Settings': '設定', 'Update ready': '有新版本', 'No class': '未指定班級', 'App language': '介面語言', 'English, Spanish or Traditional Chinese': '英文、西班牙文或繁體中文',
     'Find a student, an assignment, a tool or a setting': '搜尋學生、作業、工具或設定',
     'Find a lesson, a unit, a class or a setting': '搜尋課程、單元、班級或設定',
@@ -4450,6 +4519,10 @@ const LANG_ZH = {
     'add-class': { q: '怎麼新增班級和名單？', words: '名單 學生 姓名 新班級 roster',
       a: ['1. 按側邊欄的**新增班級**，並為它命名。', '2. 貼上學生姓名，一行一位。順序會和你貼上的一樣。', '3. 開啟班級的 **Students** 分頁，可以為每位學生加上學號、電子郵件或備註。',
         '有了名單，開啟那個班級的作業時會列出每位學生，包括沒有繳交的人。'] },
+    'school-resources': { q: '學校的連結和檔案可以放在哪裡？', go: '開啟學校資源', words: '手冊 行事曆 規定 政策 入口網站 書籤 連結 檔案 文件 資源 學校 作息表 表單 handbook calendar link file',
+      a: ['在側邊欄的**School**（學校）。把教師手冊、行事曆、作息表、常登入的入口網站、表單，以及「該找誰」這類筆記都放在這裡。可以自己命名分組，常開的項目按星號就會排在最上面。',
+        '學校已經放在網路上的內容，用 **Add a link**，連結會自己保持最新。**Add files…** 會把檔案的副本和你的工作存在一起，每個檔案最多 50 MB。也可以把檔案拖到頁面上，或貼上網址。',
+        '所有內容都和你其他的工作一起儲存：在這個瀏覽器、你的資料夾，以及帶著走的檔案裡。用搜尋輸入名稱就能找到每一項。'] },
     'language': { q: '介面可以換成其他語言嗎？', go: '開啟設定、顯示', words: '中文 繁體 西班牙文 英文 語言 翻譯 chinese language',
       a: ['可以。目前有繁體中文和西班牙文。在設定、Display 的**介面語言**選擇，或在歡迎畫面最上方選擇。頁面會用你選的語言重新顯示。',
         '英文以外的語言目前涵蓋側邊欄、今天、歡迎畫面、搜尋、說明，以及學生隨發還作業收到的回饋頁。其他畫面仍是英文。',
@@ -4680,6 +4753,11 @@ const HELP = [
     a: ['1. Press **Add a class** in the sidebar and give it a name.', '2. Paste the student names, one on a line. Students are kept in the order you paste them.', '3. Open the class’s **Students** tab to add an ID, an email or a note for each one.',
       'With a roster, every student is listed when you open papers for that class, including anyone who turned nothing in.'],
     words: 'roster students names list new class' },
+  { id: 'school-resources', sec: 'start', q: 'Where can I keep my school’s links and files?',
+    a: ['On **School** in the sidebar. Keep the handbook, the calendar, the bell schedule, the portals you sign in to, forms, and notes like who to call. Put them in groups you name, and press the star on the ones you open most to keep them at the top.',
+      '**Add a link** when the school keeps it online, since a link stays up to date by itself. **Add files…** keeps a copy of a file with your work, up to 50 MB each. You can also drop files on the page or paste a web address.',
+      'Everything is saved with the rest of your work: in this browser, in your folder and in a take-home file. Find anything finds each one by its name.'],
+    go: ['Open School resources', '#/school'], words: 'handbook calendar policy policies portal bookmark link file document resources staff bell schedule forms' },
   { id: 'language', sec: 'start', q: 'Can I use the app in another language?',
     a: ['Yes: Traditional Chinese or Spanish. Choose one in Settings, Display, **App language**, or at the top of the welcome. The page is drawn again in the language you pick.',
       'So far a language other than English covers the sidebar, Today, the welcome, Find anything, Help and the feedback page students get in a returned paper. The other screens are still in English.',
@@ -9383,6 +9461,7 @@ const routeOf = hash => {
     }
   }
   if (p[0] === 'class-named' && p[1]) { const nk = s => String(s || '').toLowerCase().replace(/[^a-z0-9]/g, ''), k = nk(p.slice(1).join('/')), c = k && lib.classes.find(c => nk(c.name) === k); return c ? { v: 'class', c, tab: '', stu: null, named: true } : { v: 'home', noClass: p.slice(1).join('/').slice(0, 60) }; }
+  if (p[0] === 'school') return { v: 'school' };
   if (p[0] === 'help') return { v: 'help', topic: HELP.some(t => t.id === p[1]) ? p[1] : '' };
   if (p[0] === 'settings') return { v: 'settings', sec: SET_SECS.some(x => x[0] === p[1]) ? p[1] : 'saving' };
   if (p[0] === 'a' && p[1]) {
@@ -9450,7 +9529,7 @@ function showScreen(r) {
   if (grading && !$('#welcome').hidden) wlClose();   // papers opened past the welcome (dropped on the page): the questions wait on Home's card instead
   $('#shell').classList.toggle('grading', grading);
   $('#app').hidden = !grading; $('#start').hidden = grading;
-  for (const [id, v] of [['vHome', 'home'], ['vClass', 'class'], ['vSettings', 'settings'], ['vHelp', 'help'], ['vOpening', 'opening']]) $('#' + id).hidden = grading || r.v !== v;
+  for (const [id, v] of [['vHome', 'home'], ['vClass', 'class'], ['vSettings', 'settings'], ['vHelp', 'help'], ['vSchool', 'school'], ['vOpening', 'opening']]) $('#' + id).hidden = grading || r.v !== v;
   if (r.v !== 'class') classLeave();
   const key = grading ? 'a' : r.v + (r.c ? ':' + r.c.id + ':' + r.tab + (r.stu != null ? ':one' : '') : '');   // moving from one student to the next keeps her place on the page
   if (!grading && key !== screenKey) $('#shellMain').scrollTop = 0;
@@ -17691,6 +17770,15 @@ function libHold(text, held) {
   for (const e of libWalk(l).values()) if (held[e.id]) { for (const k of Object.keys(e.node)) delete e.node[k]; Object.assign(e.node, held[e.id]); }
   return JSON.stringify(l);
 }
+function schoolMerge(x, y) {
+  const norm = v => ({ items: v && Array.isArray(v.items) ? v.items.filter(i => i && i.id) : [], order: v && Array.isArray(v.order) ? v.order : [], ot: (v && v.ot) || 0 });
+  const X = norm(x), Y = norm(y), by = new Map(X.items.map(i => [i.id, i]));
+  let toA = false;
+  for (const i of Y.items) { const o = by.get(i.id); if (!o || (i.at || 0) > (o.at || 0)) { by.set(i.id, i); toA = true; } }
+  const out = { items: [...by.values()], order: X.order, ot: X.ot };
+  if (Y.ot > X.ot) { out.order = Y.order; out.ot = Y.ot; toA = true; }
+  return { out, toA };
+}
 function mergeLs(a, b, skip = () => false) {
   const set = {}, parse = (t, d) => { try { return JSON.parse(t) || d; } catch { return d; } };
   const ga = parse((a || {})['gs.rubricsGone'], {}), gb = parse((b || {})['gs.rubricsGone'], {}), gone = { ...ga };
@@ -17717,6 +17805,9 @@ function mergeLs(a, b, skip = () => false) {
       try { x = JSON.parse(a[k] || '{}'); y = JSON.parse(v); } catch {}
       const add = Object.keys(y).filter(n => !(n in x));
       if (add.length) set[k] = a[k] == null ? v : JSON.stringify({ ...x, ...Object.fromEntries(add.map(n => [n, y[n]])) });
+    } else if (k === 'gs.school') {   // school resources: an item at a time, and the one changed later is kept
+      const m = schoolMerge(parse((a || {})[k], null), parse(v, null));
+      if (m.toA) set[k] = JSON.stringify(m.out);
     } else if (k.startsWith('gs.rd.') && a[k] != null) {   // the Word document for a download, replaced there later
       const x = parse(a[k], {}), y = parse(v, {});
       if (y.at > (x.at || 0)) set[k] = v;
@@ -17769,7 +17860,7 @@ function folderPapers(b) { if (tombs()[b.id]) saveSoon(); else if (fld.state !==
 function folderSaved(b, data) { if (fld.state === 'none') return; fld.work.set(b.id, data); folderKick(); }
 let setLibFrom, libNews;   // setLibFrom replaces the whole library, a merge having already stamped it, and says if it fit. libNews: another tab changed it.
 {
-  const raw = store.set.bind(store), rawDel = store.del.bind(store), LIB_RX = /^gs\.(lib|setup|bank|tomb|carryNo|rubrics|rubricsGone|histSame|rp\..+|rd\..+)$/;
+  const raw = store.set.bind(store), rawDel = store.del.bind(store), LIB_RX = /^gs\.(lib|setup|bank|tomb|carryNo|rubrics|rubricsGone|histSame|school|rp\..+|rd\..+)$/;
   let prev = libPrev(store.get('gs.lib', null)), libSeen = lsRaw('gs.lib');
   const mark = k => { if (LIB_RX.test(k) && fld.state !== 'none') { fld.lib = true; folderKick(); } };
   const roomy = (k, v) => { let ok = raw(k, v); while (!ok && !k.startsWith('gs.b.') && freeQuick()) ok = raw(k, v); return ok; };   // a roster matters more than a quick copy with its full copy kept
@@ -18060,9 +18151,11 @@ async function folderRemove(id) {
     const i = await readJson(h, 'info.json'); if (!i) continue;
     (i.papers || []).forEach(mark); markAll(i.added, i.edits);
   }
+  for (const h of schHashes(lsRaw('gs.school'))) used.add(h);   // school resources keep their files here too (school.js)
   const dir = await fld.root.getDirectoryHandle('snapshots', { create: true });
   for (const { name } of await snapList()) {
     let s; try { s = await gzRead(dir, name); } catch { continue; }
+    for (const h of schHashes((s.ls || {})['gs.school'], s.t)) used.add(h);
     if (s.work && s.work[id] || s.meta && s.meta[id] || s.added && s.added[id] || s.edits && s.edits[id] || Object.keys(s.ls || {}).some(k => k.includes(id))) {
       for (const part of [s.work, s.meta, s.added, s.edits]) if (part) delete part[id];
       for (const k of Object.keys(s.ls || {})) if (k.includes(id)) delete s.ls[k];
@@ -18092,7 +18185,7 @@ async function folderRun() {
       try { await pushDownload(id, data); }
       catch (e) { if (!fld.work.has(id)) fld.work.set(id, data); throw e; }
     }
-    if (fld.lib) { fld.lib = false; try { await pushLibrary(); } catch (e) { fld.lib = true; throw e; } }
+    if (fld.lib) { fld.lib = false; try { await pushLibrary(); await schFolderSync(); } catch (e) { fld.lib = true; throw e; } }
     await dailySnapshot();
     fld.at = Date.now(); setWhere(fld.asks.length ? 'decide' : 'ok');
   } catch (e) { await folderTrouble(e); }
@@ -18179,6 +18272,7 @@ async function reconcileNow() {
   const set = prefer ? {} : mergeLs(carryLs(), B.ls || {}, k => Object.keys(tomb).some(id => k.includes(id)));   // going back: the folder takes what's here, and nothing newer comes back
   for (const [k, v] of Object.entries(set)) lsPut(k, v);
   await pushLibrary();
+  await schFolderSync();   // the files of the school resources, either way
   fld.lib = false; fld.answers = {};
   try { localStorage.removeItem('gsc.win'); } catch {}
   await dailySnapshot();
@@ -18263,7 +18357,7 @@ function renderWhere() {
       (fld.state !== 'none' && fld.root ? ' <a class="btn sm" href="#/settings/history">Go back in time…</a>' : '');
     if (line.dataset.h !== h) { line.dataset.h = h; line.innerHTML = h; }   // a button shouldn't vanish under her click just because a save went by
   }
-  railSavedRender(); renderNeeds(); safeAskRender();
+  railSavedRender(); renderNeeds(); safeAskRender(); schRender();
 }
 function whereAct() { if (fld.state === 'decide') openFolderAsks(); else folderResume(true); }
 document.addEventListener('click', e => {
@@ -18357,6 +18451,8 @@ async function takeWrite(sink, pass, onp, stop, more) {
     both.set(rec.data); both.set(orig, rec.data.length);
     await frame({ k: 'edit', id: k.slice(0, i), path: k.slice(i + 1), t: rec.t || 1, nd: rec.data.length, hasOrig: !!rec.orig }, both);
   });
+  await schReady;   // the files of the school resources (school.js)
+  for (const f of schRefs()) { const data = await schBytes(f.hash); if (data) await frame({ k: 'school', hash: f.hash }, data); }
   if (more && more.extra) await more.extra(frame);
   await frame({ k: 'end' });
   await seal(true);
@@ -18412,7 +18508,7 @@ async function takeOpen(file, pass) {
   return { read, chunkAt, chunk, plainLen };
 }
 async function takeScan(rd, onp) {
-  const B = { work: {}, meta: {}, tomb: {}, added: {}, edits: {}, papers: {}, addedAt: {}, editAt: {}, ls: {}, lib: null, info: null, need: 0 };
+  const B = { work: {}, meta: {}, tomb: {}, added: {}, edits: {}, papers: {}, addedAt: {}, editAt: {}, school: {}, ls: {}, lib: null, info: null, need: 0 };
   let pos = 0, seen = -1, ended = false;
   const skipTo = async end => { const stop = Math.ceil(end / rd.chunk); for (let i = seen + 1; i < stop; i++) { await rd.chunkAt(i); seen = i; if (onp) onp((i + 1) * rd.chunk); } };
   try {
@@ -18430,6 +18526,7 @@ async function takeScan(rd, onp) {
       else if (f.k === 'paper') { const p = B.papers[f.id] ||= { label: f.label, entries: [], size: 0 }; p.entries.push({ path: f.path, off: pos, n, none: f.none }); p.size += n; }
       else if (f.k === 'added') { (B.addedAt[f.id] ||= {})[f.lk] = { rec: f.rec, off: pos, n }; (B.added[f.id] ||= {})[f.lk] = f.rec.added || 0; }
       else if (f.k === 'edit') { (B.editAt[f.id] ||= {})[f.path] = { t: f.t, off: pos, n, nd: f.nd, hasOrig: f.hasOrig }; (B.edits[f.id] ||= {})[f.path] = f.t; }
+      else if (f.k === 'school') B.school[f.hash] = { off: pos, n };
       else if (f.k === 'plan') (B.plan ||= []).push({ f, off: pos, n });   // the Planner's records, in a year's archive
       else if (f.k === 'end') ended = true;
       await skipTo(pos + n);
@@ -18452,6 +18549,7 @@ const takeSource = (rd, B) => ({
     const both = await rd.read(e.off, e.n);
     return { t: e.t, data: both.slice(0, e.nd), orig: e.hasOrig ? both.slice(e.nd) : null };
   },
+  async school(hash) { const s = B.school && B.school[hash]; return s ? rd.read(s.off, s.n) : null; },
 });
 const TAKE_SAY = {
   notours: 'That isn’t a Grading Studio take-home file.',
@@ -18653,8 +18751,8 @@ async function bringPreview(B, src, label, sub, again) {
   if (libm.notes.length) lines.push('<p><b>Classes, units and rosters</b></p><ul id="bringLib">' + libm.notes.map(n => li(noteLine(n))).join('') + '</ul>');
   const off = rows.filter(r => r.cardOff);
   if (off.length) lines.push('<p id="bringCardOff">The rubric saved with ' + off.map(r => '<b>' + esc(r.name) + '</b>').join(', ') + ' doesn’t match ' + (off.length === 1 ? 'its assignment card' : 'their assignment cards') + '. Bringing this in doesn’t settle that, so you’ll be asked which one to use when you open ' + (off.length === 1 ? 'it' : 'them') + '.</p>');
-  const lsReal = Object.keys(lsSet).filter(k => k !== 'gs.rubricsGone' && /^gs\.(bank|setup|rubrics|rp\.|rd\.)/.test(k));
-  if (lsReal.length) lines.push('<p><b>Also</b></p><ul>' + (lsSet['gs.bank'] ? li('Saved comments from the other computer are added to yours') : '') + (lsReal.some(k => k !== 'gs.bank') ? li('Rubrics or settings you don’t have here yet') : '') + '</ul>');
+  const lsReal = Object.keys(lsSet).filter(k => k !== 'gs.rubricsGone' && /^gs\.(bank|setup|rubrics|school|rp\.|rd\.)/.test(k));
+  if (lsReal.length) lines.push('<p><b>Also</b></p><ul>' + (lsSet['gs.bank'] ? li('Saved comments from the other computer are added to yours') : '') + (lsSet['gs.school'] ? li('School resources added or changed on the other computer') : '') + (lsReal.some(k => k !== 'gs.bank' && k !== 'gs.school') ? li('Rubrics or settings you don’t have here yet') : '') + '</ul>');
   const nothing = !nw.length && !gn.some(r => r.onA) && !libm.notes.length && !lsReal.length && !asks.length && !mg.some(r => r.extra || r.setIn.length || r.rows.some(x => x.pick === 'b'));
   const sameN = rows.filter(r => r.kind === 'same' || r.kind === 'onlyA').length;
   const need = rows.filter(r => r.kind === 'new').reduce((a, r) => a + ((B.papers && B.papers[r.id] && B.papers[r.id].size) || 0), 0);
@@ -18711,6 +18809,7 @@ async function bringApply(B0, src, shown, answers) {
       if (r.files) for (const k of r.files.fromB) { const rec = await src.added(r.id, k); if (rec) await idbDo('readwrite', o => o.put(rec, r.id + '|' + k)); }
       if (r.edits) for (const p of r.edits.fromB) { const rec = await src.edit(r.id, p); if (rec) await kdo('edits', 'readwrite', o => o.put(rec, r.id + '|' + p)); }
     }
+    await schBring(src, B);
     if (libm.toA) { lib = migrateLib(libm.lib); if (!setLibFrom(lib)) throw browserFull(); }
     for (const [k, v] of Object.entries(lsSet)) if (!lsPut(k, v)) throw browserFull();
   } catch (e) {
@@ -18765,7 +18864,7 @@ async function removeHere() {
   const folderLine = linked ? '\n\nYour linked folder “' + fld.name + '” isn’t touched: its files stay where they are, and this browser stops saving to it. To delete them, delete that folder yourself.' : '';
   const warn = !list.length ? '' : !last ? '\n\nYou haven’t made a take-home file from this browser, so anything done here may not be anywhere else.'
     : newer.length ? '\n\n' + newer.length + (newer.length === 1 ? ' download has' : ' downloads have') + ' changes since your last take-home file (' + whenOf(last) + '). Those changes aren’t in that file.' : '\n\nYour last take-home file was made ' + whenOf(last) + ', after your last change.';
-  const typed = await askTextDlg('This removes all student work from this browser: ' + list.length + (list.length === 1 ? ' download' : ' downloads') + ' with their papers, marks, scores and comments, plus rosters, units, rubrics, late files, readings, Word edits and safety copies.' + warn + folderLine + '\n\nPlanner work isn’t touched. This can’t be undone.\n\nType REMOVE to go ahead.', '', { ok: 'Remove from this computer', cancel: 'Keep it', danger: true });
+  const typed = await askTextDlg('This removes all student work from this browser: ' + list.length + (list.length === 1 ? ' download' : ' downloads') + ' with their papers, marks, scores and comments, plus rosters, units, rubrics, late files, readings, Word edits, school resources and safety copies.' + warn + folderLine + '\n\nPlanner work isn’t touched. This can’t be undone.\n\nType REMOVE to go ahead.', '', { ok: 'Remove from this computer', cancel: 'Keep it', danger: true });
   if (typed == null) return;
   if (typed.trim().toUpperCase() !== 'REMOVE') return sayDlg('That didn’t say REMOVE, so nothing was removed.');
   await keepWait;   // papers still going in would land after the clearing
@@ -18777,6 +18876,7 @@ async function removeHere() {
     for (const n of ['papers', 'work', 'meta', 'edits']) await kdo(n, 'readwrite', o => o.clear());
     await idbDo('readwrite', o => o.clear());
     await new Promise(res => { const r = indexedDB.deleteDatabase('grading-studio-safety'); r.onsuccess = r.onerror = r.onblocked = () => res(); });
+    await schRemoveAll();
   } catch (e) { console.error(e); tabsOver('done'); return sayDlg('Not everything could be removed. Close any other Grading Studio tabs and try again.'); }
   for (let i = localStorage.length - 1; i >= 0; i--) { const k = localStorage.key(i); if (k && (k.startsWith('gsc.saved.') || k.startsWith('gsc.forgot.') || k.startsWith('gs.') && !LS_LOOKS.test(k))) localStorage.removeItem(k); }
   try { localStorage.removeItem('gsc.win'); } catch {}
@@ -23129,7 +23229,7 @@ $('#setHistory').addEventListener('click', e => {
 });
 
 /* updates she controls, and installing as an app */
-const WHATS_NEW = {"1.27.3":["The class timer in Present takes minutes and seconds: type them in, or pick 0:30 and the other quick times. The menu remembers the last time you typed.","While it runs, the timer's menu adds or takes away 10 seconds or a minute, pauses, and restarts from the time you set. + and − add or take away a minute without opening the menu.","Tick Show it big to put the countdown in the middle of the screen, large enough for the back of the room."],"1.27.2":["In the gradebook, in-class assessments are now on the left and summatives on the right: the columns, the averages beside the term grade, and wherever you choose a type.","The order is yours to change. In Term setup, the arrows beside each type move it, and the gradebook's columns follow from left to right.","You can make your own assignment types. In Term setup, rename a type or press + Add a type (Homework, Projects, Quizzes), and give each its share of the grade. Your own setup stays as it is until you change it."],"1.27.1":["Undo now takes back a score as well as a mark: press Ctrl Z (⌘Z on a Mac) after a slip on a slider, a number key, or Missing, Excused or Late. Redo puts it back.","Deleting a unit, an assignment or a class shows Undo for a few seconds, and Undo puts it back where it was.","“Picked up where you left off” shows once, when you open an assignment, and no longer on Today or other pages. The note about what opened leaves by itself when you move to the next student, if every file opened.","The Next button stays in one place from student to student, and the Grade heading on a class’s Students tab is drawn properly.","Find anything answers to more everyday words: export, hand back, backup, undo, shortcuts, csv."],"1.27.0":["Start a new school year, in Settings, Saving and carrying. Your classes, units and assignment cards carry on, each card with its rubric and Quick mark boxes, with empty class lists and dates a year later.","This year goes into one protected file first, and the file is checked before anything is cleared. Open an archived year brings a year back from its file."],"1.26.2":["Rubric rows can be scored on your own scale. They start at 0 to 4 with half points, as before; when you set up an assignment you can pick any top from 1 to 10 and turn half points off.","Settings, Grading: choose the row scale new assignments start with. Assignments you already have keep theirs."],"1.26.1":["Activities: See, think, wonder now says it comes from Project Zero at the Harvard Graduate School of Education."],"1.26.0":["Seating: a new tab on each class. Pick how the room is set up, drag students to desks, and Shuffle gives everyone a new seat. A student can be kept in their seat.","Pick a name shows one student at random, and nobody twice until everyone has had a turn. Make groups deals the class into groups of any size.","While presenting a lesson, P picks a name and G makes groups. Who’s here leaves out anyone who is away today."],"1.25.0":["Attendance. Each class has an Attendance tab: everyone starts as present, so a day is one press for each student who is late, excused or absent, with a note if you want one.","Look back shows every saved day in one table with each student’s totals, and a student’s own page lists the days they missed.","Copy a day, or download the table as a spreadsheet, for your school’s system. Today has a line for it under each class.","If you don’t take attendance here, turn it off in Settings, Classes and rosters."],"1.24.0":["Retakes: a second try at the same assignment keeps the first try's score, comment and paper. Start one from the ⋯ beside Missing, Excused and Late on a paper.","You choose which try counts, for all your classes: the highest (to begin with), the latest, or the average. It is in the retake box and in the gradebook's Term setup.","A score typed into the gradebook takes a retake too: type both, like 7 > 10."],"1.23.0":["Scores by learning goal, if you want them. Keep your own list of goals (a skill, or a standard from your school) in Settings, Grading, or add one wherever you tag.","Tag rubric rows in Rubric setup and quiz questions in Quiz boxes. An assignment scored with just a total can carry one goal for the whole score.","Each class page gets a Goals tab: the class average on each goal with the lowest first, every student by every goal, and where each number came from. A student's own page shows their goals beside the class average.","Nothing changes until you add a first goal, and tagging never changes a score or a grade."],"1.22.0":["Progress sheets for parent meetings: one printed page per student with the term grade, every score, a chart of how they moved, missing work, each term's grade, the report comment and lines for notes. Find it on a class's Students list, or Progress sheet on one student's page.","Choose the term and tick what goes on it; Print opens the print window, where you can pick a printer or Save as PDF. It is made on your computer and nothing is sent anywhere."],"1.21.0":["Each class has a Missing work tab: every paper you marked Missing, by student or by assignment, for the term you pick.","Email reminder opens an email in your own mail app, addressed to the student and listing what they owe, for you to read and send. Email all writes one email to everyone who owes an assignment, with the addresses in Bcc. Grading Studio sends nothing itself.","Each reminder you open is noted beside the work, and Email wording… changes what every reminder says."],"1.20.0":["The app can speak Traditional Chinese (繁體中文). Choose it in Settings, Display, App language, or at the top of the welcome.","Like Spanish, it covers the first screens so far: the sidebar, Today, the welcome, Find anything, Help, and the feedback page students get with a returned paper. The other screens are still in English."],"1.19.0":["The app can speak Spanish. Choose it in Settings, Display, App language, or at the top of the welcome.","Spanish covers the first screens so far: the sidebar, Today, the welcome, Find anything, Help, and the feedback page students get with a returned paper. The other screens are still in English.","Names you typed (classes, students, assignments, rubric rows) are never translated."],"1.18.0":["On a tablet, a pencil draws and the pen's line is wider where you press harder. Once you have used a pencil, one finger moves the page, two fingers pinch to zoom, and a hand resting on the screen does nothing.","Settings, Marking has a new Tablet and pencil section: choose what a finger does on the paper, or turn off the wider line.","On a touch screen the tools, the student rows and the score buttons are larger."],"1.17.0":["Report comments: a new tab on each class's page drafts a comment for every student from your own gradebook, rubric scores and the comments you wrote on their papers. Edit each one, tick it done, then copy or download them all.","The drafts are put together on your computer from sentences you can change under Wording. Nothing about a student is sent anywhere."],"1.16.0":["Help is in the sidebar: short answers to the questions teachers ask most, from opening a set of papers to moving your work to another computer.","Find anything answers questions too. Type a few words, like “late paper” or “backup”, and the answer is in the list."],"1.15.0":["A picture dragged onto a slide that has text now sits beside the text, in a new Text + picture layout.","Drag several pictures in at once and each gets its own slide. Let a picture go on any slide in the list on the left to put it there.","New Full picture layout: the picture fills the whole slide."],"1.14.0":["Extra credit: points or a percent on one paper, and extra credit entries in the gradebook that add to the term grade or the in-class average.","The gradebook shows each type's average (summative, in-class) right beside the term grade, kept in view as you scroll. Averages only shows just those columns, and Whole year splits each term the same way.","Leave out… lets you untick students to see the class averages without them. Their own grades don't change, and nothing is saved."],"1.13.0":["Present a lesson from the Planner, or from Today when its class is on now or next: its slides fill the screen, and the arrow keys or a clicker move through them.","While presenting, A shows the agenda to tick off, T starts a timer the class can see, N shows your notes and B blanks the screen.","The bar shows how many minutes the class has left, from your timetable.","After a lesson is taught, one line says where the class got to. It shows on the lesson and on the week, and presenting again picks up there."],"1.12.0":["A returned paper starts with a feedback page: the score, each rubric row with the level given and what that level means, your comment, and every comment on the paper with its page number.","It is on unless you turn it off under Options on the Return tab. Your own pages are not changed, and bringing an export back in opens only those."],"1.11.0":["The Planner’s sections are in the sidebar: Calendar, Units, Past lessons, Activities and Rubrics. The row of tabs across the top is gone.","A lesson has a lighter top: its name, its classes, its status and Download. Copy for Claude, Versions, the upload and the links are under More.","Comments shows above a lesson once it has one."],"1.7.0":["Home is now Today: the classes you teach today with the lesson planned for each, the papers waiting to be marked, and the papers ready to hand back.","What the class needs next: after a set of papers is scored, Today shows the weakest rubric row and how many students to sit down with.","A class page is quieter. Click anywhere on an assignment’s row to open it; the only blue button is the one that adds an assignment.","Forget, and the other ways to open papers, moved into the ⋯ menu on each row."],"1.6.0":["A new browser opens on three questions (your classes, how you grade, where work is kept) and starts with nothing of anyone else’s in it.","A sample class of made-up students, with papers to mark, for trying things out. Remove it from Home when you’re done.","The app uses the name of your own school system. Choose it, and how you usually grade, in Settings.","Letter grades or IB 1 to 7 can show beside the percent, with boundaries you set.","Canvas and Moodle downloads are grouped by student. The Planner works without a setup file, and downloads lessons as PowerPoint with a plain built-in template."],"1.5.0":["The sidebar says “Not backed up”, in amber, until a folder holds a second copy of your work. Home asks for that folder once.","Go back in time, in Settings: any assignment as it was on an earlier day, restored on its own, with Undo.","Grading Studio can be installed as an app, and it opens with no internet.","A newer version now waits until you click Update now, so nothing changes in the middle of marking."]};
+const WHATS_NEW = {"1.27.4":["School is a new page in the sidebar for the things about your school you look up again and again: the handbook, the calendar, the bell schedule, portals, forms, who to call.","Add a link, a file (a copy is kept with your work) or a note. Name your own groups, and star the ones you open most to keep them along the top.","Drop files on the page or paste a web address. Find anything lists every resource. They are kept in your folder and take-home file, and stay when you start a new school year."],"1.27.3":["The class timer in Present takes minutes and seconds: type them in, or pick 0:30 and the other quick times. The menu remembers the last time you typed.","While it runs, the timer's menu adds or takes away 10 seconds or a minute, pauses, and restarts from the time you set. + and − add or take away a minute without opening the menu.","Tick Show it big to put the countdown in the middle of the screen, large enough for the back of the room."],"1.27.2":["In the gradebook, in-class assessments are now on the left and summatives on the right: the columns, the averages beside the term grade, and wherever you choose a type.","The order is yours to change. In Term setup, the arrows beside each type move it, and the gradebook's columns follow from left to right.","You can make your own assignment types. In Term setup, rename a type or press + Add a type (Homework, Projects, Quizzes), and give each its share of the grade. Your own setup stays as it is until you change it."],"1.27.1":["Undo now takes back a score as well as a mark: press Ctrl Z (⌘Z on a Mac) after a slip on a slider, a number key, or Missing, Excused or Late. Redo puts it back.","Deleting a unit, an assignment or a class shows Undo for a few seconds, and Undo puts it back where it was.","“Picked up where you left off” shows once, when you open an assignment, and no longer on Today or other pages. The note about what opened leaves by itself when you move to the next student, if every file opened.","The Next button stays in one place from student to student, and the Grade heading on a class’s Students tab is drawn properly.","Find anything answers to more everyday words: export, hand back, backup, undo, shortcuts, csv."],"1.27.0":["Start a new school year, in Settings, Saving and carrying. Your classes, units and assignment cards carry on, each card with its rubric and Quick mark boxes, with empty class lists and dates a year later.","This year goes into one protected file first, and the file is checked before anything is cleared. Open an archived year brings a year back from its file."],"1.26.2":["Rubric rows can be scored on your own scale. They start at 0 to 4 with half points, as before; when you set up an assignment you can pick any top from 1 to 10 and turn half points off.","Settings, Grading: choose the row scale new assignments start with. Assignments you already have keep theirs."],"1.26.1":["Activities: See, think, wonder now says it comes from Project Zero at the Harvard Graduate School of Education."],"1.26.0":["Seating: a new tab on each class. Pick how the room is set up, drag students to desks, and Shuffle gives everyone a new seat. A student can be kept in their seat.","Pick a name shows one student at random, and nobody twice until everyone has had a turn. Make groups deals the class into groups of any size.","While presenting a lesson, P picks a name and G makes groups. Who’s here leaves out anyone who is away today."],"1.25.0":["Attendance. Each class has an Attendance tab: everyone starts as present, so a day is one press for each student who is late, excused or absent, with a note if you want one.","Look back shows every saved day in one table with each student’s totals, and a student’s own page lists the days they missed.","Copy a day, or download the table as a spreadsheet, for your school’s system. Today has a line for it under each class.","If you don’t take attendance here, turn it off in Settings, Classes and rosters."],"1.24.0":["Retakes: a second try at the same assignment keeps the first try's score, comment and paper. Start one from the ⋯ beside Missing, Excused and Late on a paper.","You choose which try counts, for all your classes: the highest (to begin with), the latest, or the average. It is in the retake box and in the gradebook's Term setup.","A score typed into the gradebook takes a retake too: type both, like 7 > 10."],"1.23.0":["Scores by learning goal, if you want them. Keep your own list of goals (a skill, or a standard from your school) in Settings, Grading, or add one wherever you tag.","Tag rubric rows in Rubric setup and quiz questions in Quiz boxes. An assignment scored with just a total can carry one goal for the whole score.","Each class page gets a Goals tab: the class average on each goal with the lowest first, every student by every goal, and where each number came from. A student's own page shows their goals beside the class average.","Nothing changes until you add a first goal, and tagging never changes a score or a grade."],"1.22.0":["Progress sheets for parent meetings: one printed page per student with the term grade, every score, a chart of how they moved, missing work, each term's grade, the report comment and lines for notes. Find it on a class's Students list, or Progress sheet on one student's page.","Choose the term and tick what goes on it; Print opens the print window, where you can pick a printer or Save as PDF. It is made on your computer and nothing is sent anywhere."],"1.21.0":["Each class has a Missing work tab: every paper you marked Missing, by student or by assignment, for the term you pick.","Email reminder opens an email in your own mail app, addressed to the student and listing what they owe, for you to read and send. Email all writes one email to everyone who owes an assignment, with the addresses in Bcc. Grading Studio sends nothing itself.","Each reminder you open is noted beside the work, and Email wording… changes what every reminder says."],"1.20.0":["The app can speak Traditional Chinese (繁體中文). Choose it in Settings, Display, App language, or at the top of the welcome.","Like Spanish, it covers the first screens so far: the sidebar, Today, the welcome, Find anything, Help, and the feedback page students get with a returned paper. The other screens are still in English."],"1.19.0":["The app can speak Spanish. Choose it in Settings, Display, App language, or at the top of the welcome.","Spanish covers the first screens so far: the sidebar, Today, the welcome, Find anything, Help, and the feedback page students get with a returned paper. The other screens are still in English.","Names you typed (classes, students, assignments, rubric rows) are never translated."],"1.18.0":["On a tablet, a pencil draws and the pen's line is wider where you press harder. Once you have used a pencil, one finger moves the page, two fingers pinch to zoom, and a hand resting on the screen does nothing.","Settings, Marking has a new Tablet and pencil section: choose what a finger does on the paper, or turn off the wider line.","On a touch screen the tools, the student rows and the score buttons are larger."],"1.17.0":["Report comments: a new tab on each class's page drafts a comment for every student from your own gradebook, rubric scores and the comments you wrote on their papers. Edit each one, tick it done, then copy or download them all.","The drafts are put together on your computer from sentences you can change under Wording. Nothing about a student is sent anywhere."],"1.16.0":["Help is in the sidebar: short answers to the questions teachers ask most, from opening a set of papers to moving your work to another computer.","Find anything answers questions too. Type a few words, like “late paper” or “backup”, and the answer is in the list."],"1.15.0":["A picture dragged onto a slide that has text now sits beside the text, in a new Text + picture layout.","Drag several pictures in at once and each gets its own slide. Let a picture go on any slide in the list on the left to put it there.","New Full picture layout: the picture fills the whole slide."],"1.14.0":["Extra credit: points or a percent on one paper, and extra credit entries in the gradebook that add to the term grade or the in-class average.","The gradebook shows each type's average (summative, in-class) right beside the term grade, kept in view as you scroll. Averages only shows just those columns, and Whole year splits each term the same way.","Leave out… lets you untick students to see the class averages without them. Their own grades don't change, and nothing is saved."],"1.13.0":["Present a lesson from the Planner, or from Today when its class is on now or next: its slides fill the screen, and the arrow keys or a clicker move through them.","While presenting, A shows the agenda to tick off, T starts a timer the class can see, N shows your notes and B blanks the screen.","The bar shows how many minutes the class has left, from your timetable.","After a lesson is taught, one line says where the class got to. It shows on the lesson and on the week, and presenting again picks up there."],"1.12.0":["A returned paper starts with a feedback page: the score, each rubric row with the level given and what that level means, your comment, and every comment on the paper with its page number.","It is on unless you turn it off under Options on the Return tab. Your own pages are not changed, and bringing an export back in opens only those."],"1.11.0":["The Planner’s sections are in the sidebar: Calendar, Units, Past lessons, Activities and Rubrics. The row of tabs across the top is gone.","A lesson has a lighter top: its name, its classes, its status and Download. Copy for Claude, Versions, the upload and the links are under More.","Comments shows above a lesson once it has one."],"1.7.0":["Home is now Today: the classes you teach today with the lesson planned for each, the papers waiting to be marked, and the papers ready to hand back.","What the class needs next: after a set of papers is scored, Today shows the weakest rubric row and how many students to sit down with.","A class page is quieter. Click anywhere on an assignment’s row to open it; the only blue button is the one that adds an assignment.","Forget, and the other ways to open papers, moved into the ⋯ menu on each row."],"1.6.0":["A new browser opens on three questions (your classes, how you grade, where work is kept) and starts with nothing of anyone else’s in it.","A sample class of made-up students, with papers to mark, for trying things out. Remove it from Home when you’re done.","The app uses the name of your own school system. Choose it, and how you usually grade, in Settings.","Letter grades or IB 1 to 7 can show beside the percent, with boundaries you set.","Canvas and Moodle downloads are grouped by student. The Planner works without a setup file, and downloads lessons as PowerPoint with a plain built-in template."],"1.5.0":["The sidebar says “Not backed up”, in amber, until a folder holds a second copy of your work. Home asks for that folder once.","Go back in time, in Settings: any assignment as it was on an earlier day, restored on its own, with Undo.","Grading Studio can be installed as an app, and it opens with no internet.","A newer version now waits until you click Update now, so nothing changes in the middle of marking."]};
 const upd = { on: false, st: null, mine: '', checking: false, said: '', install: null, installed: false, err: '' };
 const updCan = () => 'serviceWorker' in navigator && (location.protocol === 'https:' || /[?&]sw=1(&|$)/.test(location.search)) && !/Grading Studio\.html$/i.test(decodeURIComponent(location.pathname));
 const updSend = async msg => { const reg = await navigator.serviceWorker.ready; if (reg.active) reg.active.postMessage(msg); };
@@ -23352,7 +23452,7 @@ async function nyStart(o) {
   const left = [...keptMeta.keys()];
   if (left.length) throw new Error(left.length + ' downloads could not be cleared');
   for (const [k, v] of Object.entries(carryLs())) {
-    if (k === 'gs.lib') continue;
+    if (k === 'gs.lib' || k === 'gs.school') continue;   // the school's links, files and notes aren't about a student, whatever they're called
     let x; try { x = JSON.parse(v); } catch { continue; }
     if (nyAbout(x, names)) localStorage.removeItem(k);
   }
@@ -23496,6 +23596,7 @@ async function nyReplace(B, rd, was) {
   await keepWait;
   await tabsFinish(); tabsOver('go');
   batch = null; clearTimeout(saveT); saveBad.clear();
+  const schWas = localStorage.getItem('gs.school');   // the school resources belong to the school, not to one year: what is here stays
   try { await gsData.snapshot('Before opening ' + (B.info.year || 'an archived year'), gsData.version()); } catch (e) { console.error(e); }
   if (fld.state !== 'none') await folderUnlink();
   const years = Array.isArray(lib.years) ? lib.years : [];
@@ -23509,6 +23610,11 @@ async function nyReplace(B, rd, was) {
   } catch (e) { if (e && e.small) throw e; console.error(e); }
   store.set('gs.tomb', B.tomb || {});
   const src = takeSource(rd, B);
+  if (schWas) {
+    const rd2 = t => { try { return JSON.parse(t); } catch { return null; } };
+    if (!lsPut('gs.school', JSON.stringify(schoolMerge(rd2((B.ls || {})['gs.school']), rd2(schWas)).out))) throw browserFull();
+  }
+  await schBring(src, B);
   for (const id of new Set([...Object.keys(B.meta), ...Object.keys(B.work), ...Object.keys(B.papers)])) {
     const rec = await src.papers(id);
     if (rec) await paperPut(id, rec);
@@ -23825,6 +23931,273 @@ $('#hlpIn').addEventListener('keydown', e => { if (e.key === 'Escape' && helpQ) 
 const helpFindRows = () => HELP.map(t => ({ group: 'Help', label: t.q, sub: helpGist(t), key: '', words: t.words || '', run: () => go('#/help/' + t.id) }));
 Object.assign(window.__gs, { routeOf, helpTopics: () => HELP.map(t => ({ id: t.id, sec: t.sec, q: t.q, a: t.a, go: t.go || null, where: t.where || '' })) });
 
+/* ---------------- School resources: links, files and notes about the school, on a page of their own (#/school) ---------------- */
+const SCH_KEY = 'gs.school', SCH_MAX = 50 * 1024 * 1024, SCH_DAYS = 14;
+const SCH_IDEAS = ['Handbook and policies', 'Calendar and schedules', 'Portals', 'Forms', 'People and rooms'];
+const SCH_IC = {
+  link: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10.5 13.5a4 4 0 0 0 5.7 0l2.6-2.6a4 4 0 0 0-5.7-5.7l-.9.9M13.5 10.5a4 4 0 0 0-5.7 0l-2.6 2.6a4 4 0 0 0 5.7 5.7l.9-.9"/></svg>',
+  file: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3.5h7l4 4v13H7zM14 3.5v4h4M10 12.5h5M10 16h5"/></svg>',
+  note: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h14v10l-4 4H5zM15 19v-4h4M8.5 9.5h7M8.5 12.5h4"/></svg>',
+  star: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4.2l2.4 4.9 5.4.8-3.9 3.8.9 5.4-4.8-2.6-4.8 2.6.9-5.4-3.9-3.8 5.4-.8z"/></svg>',
+};
+let schQ = '', schHave = new Set(), schDbP = null, schBusy = false, schAgain = '';
+
+/* the list */
+function schNow() {
+  const v = store.get(SCH_KEY, null) || {};
+  return { items: Array.isArray(v.items) ? v.items.filter(i => i && i.id) : [], order: Array.isArray(v.order) ? v.order.map(String) : [], ot: v.ot || 0 };
+}
+function schChange(fn) {
+  const s = schNow(); fn(s);
+  if (!store.set(SCH_KEY, s)) toast('This browser is out of room to keep that.');
+  schRender();
+}
+const schLive = s => (s || schNow()).items.filter(i => !i.gone);
+const schItem = id => schNow().items.find(i => i.id === id && !i.gone) || null;
+const schKindOf = i => i.kind === 'file' && i.file ? 'file' : i.kind === 'link' && i.url ? 'link' : 'note';
+function schUrl(t) {
+  let s = String(t || '').trim(); if (!s || /\s/.test(s)) return '';
+  const bare = !/^[a-z][a-z0-9+.-]*:/i.test(s);
+  if (bare) { if (!/\.[a-z]{2,}/i.test(s)) return ''; s = 'https://' + s; }
+  try { const u = new URL(s); return /^https?:$/.test(u.protocol) && u.hostname ? u.href : ''; } catch { return ''; }
+}
+const schHost = u => { try { return new URL(u).hostname.replace(/^www\./, ''); } catch { return ''; } };
+const schExt = n => { const m = /\.([a-z0-9]{1,6})$/i.exec(n || ''); return m ? m[1].toUpperCase() : 'File'; };
+function schGroups(s, items) {
+  const names = [...new Set(items.map(i => i.group || '').filter(Boolean))], at = n => { const i = s.order.indexOf(n); return i < 0 ? 1e9 : i; };
+  names.sort((a, b) => at(a) - at(b) || a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
+  return items.some(i => !i.group) ? [...names, ''] : names;
+}
+const schSort = list => [...list].sort((a, b) => (b.pin ? 1 : 0) - (a.pin ? 1 : 0) || String(a.name).localeCompare(String(b.name), undefined, { numeric: true, sensitivity: 'base' }));
+function schHashes(v, now) {
+  let s = v; if (typeof v === 'string') { try { s = JSON.parse(v); } catch { s = null; } }
+  const out = new Set(), t = now || Date.now();
+  for (const i of (s && Array.isArray(s.items) ? s.items : [])) if (i && i.file && i.file.hash && (!i.gone || t - (i.at || 0) < SCH_DAYS * 864e5)) out.add(i.file.hash);
+  return out;
+}
+function schRefs() { const seen = new Set(), out = []; for (const i of schLive()) if (i.file && i.file.hash && !seen.has(i.file.hash)) { seen.add(i.file.hash); out.push(i.file); } return out; }
+
+/* the bytes */
+const schDb = () => schDbP ||= new Promise((res, rej) => { const r = indexedDB.open('grading-studio-school', 1); r.onupgradeneeded = () => r.result.createObjectStore('files'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
+async function schDo(mode, fn) { const db = await schDb(); return new Promise((res, rej) => { const tx = db.transaction('files', mode), q = fn(tx.objectStore('files')); tx.oncomplete = () => res(q && q.result); tx.onerror = tx.onabort = () => rej(tx.error); }); }
+async function schPut(hash, data) { await schDo('readwrite', o => o.put({ data }, hash)); schHave.add(hash); }
+async function schBytes(hash) { if (!schHave.has(hash)) return null; const r = await schDo('readonly', o => o.get(hash)).catch(() => null); return r && r.data ? r.data : null; }
+const schReady = (async () => {
+  if (!schHashes(schNow()).size) return;
+  try {
+    for (const k of (await schDo('readonly', o => o.getAllKeys())) || []) schHave.add(k);
+    const need = schHashes(schNow());
+    if (tabLive()) for (const k of [...schHave]) if (!need.has(k)) { await schDo('readwrite', o => o.delete(k)); schHave.delete(k); }
+  } catch (e) { console.error(e); }
+})();
+async function schRemoveAll() {
+  try { if (schDbP) (await schDbP).close(); } catch {}
+  schDbP = null; schHave.clear();
+  await new Promise(res => { const r = indexedDB.deleteDatabase('grading-studio-school'); r.onsuccess = r.onerror = r.onblocked = () => res(); });
+}
+
+/* the folder, and the take-home file */
+async function schFolderSync() {
+  await schReady;
+  const refs = schRefs(); if (!refs.length || !fld.root) return;
+  const dir = await fld.root.getDirectoryHandle('files', { create: true });
+  let came = false;
+  for (const f of refs) {
+    let there = false;
+    try { there = (await (await dir.getFileHandle(f.hash + '.dat')).getFile()).size === f.size; } catch (e) { if (e.name !== 'NotFoundError') throw e; }
+    if (schHave.has(f.hash)) { if (!there) { const b = await schBytes(f.hash); if (b) await putBlob(b); } }
+    else if (there) { try { await schPut(f.hash, await getBlob(f)); came = true; } catch (e) { if (!e.damaged) throw e; } }
+  }
+  if (came) schRender();
+}
+async function schBring(src, B) {
+  if (!src.school) return;
+  await schReady;
+  for (const h of Object.keys(B.school || {})) if (!schHave.has(h)) { const b = await src.school(h); if (b) await schPut(h, b); }
+}
+
+/* opening one */
+const SCH_SHOW = /^(application\/pdf|image\/(png|jpeg|gif|webp)|text\/plain)$/;
+async function schOpenFile(it, save) {
+  await schReady;
+  const b = await schBytes(it.file.hash);
+  if (!b) return toast('“' + it.name + '” isn’t on this computer yet. Link your folder, or use Replace the file in its menu.', 7000);
+  const type = it.file.type || '', blob = new Blob([b], { type: type || 'application/octet-stream' });
+  if (save || !SCH_SHOW.test(type)) return saveBlob(it.file.name || it.name, blob);
+  const url = URL.createObjectURL(blob);
+  window.open(url, '_blank', 'noopener');
+  setTimeout(() => URL.revokeObjectURL(url), 120000);
+}
+function schOpen(id) {
+  const it = schItem(id); if (!it) return;
+  const k = schKindOf(it);
+  if (k === 'link') window.open(it.url, '_blank', 'noopener,noreferrer');
+  else if (k === 'file') schOpenFile(it);
+  else { if (routeNow().v !== 'school') go('#/school'); schForm({ item: it }); }
+}
+
+/* the page */
+function schRowHtml(it) {
+  const k = schKindOf(it), here = k !== 'file' || schHave.has(it.file.hash);
+  const sub = k === 'link' ? schHost(it.url) : k === 'file' ? schExt(it.file.name) + ' · ' + fmtSize(it.file.size) + (here ? '' : ' · not on this computer yet') : '';
+  const body = '<span class="schic ' + k + '">' + SCH_IC[k] + '</span><span class="schtx"><b>' + esc(it.name) + '</b>' + (sub ? '<span class="schsub">' + esc(sub) + '</span>' : '') + (it.note ? '<span class="schnote">' + esc(it.note) + '</span>' : '') + '</span>';
+  const open = k === 'link' ? '<a class="schopen" href="' + esc(it.url) + '" target="_blank" rel="noopener noreferrer" title="Opens in a new tab">' + body + '</a>'
+    : '<button class="schopen" data-schopen title="' + (k === 'file' ? 'Open the file' : 'Edit this note') + '">' + body + '</button>';
+  const menu = '<button class="mitem" data-schdo="edit">Edit…</button>' +
+    (k === 'link' ? '<button class="mitem" data-schdo="copy">Copy the link</button>' : '') +
+    (k === 'file' ? '<button class="mitem" data-schdo="save">Download</button><button class="mitem" data-schdo="again">Replace the file…</button>' : '') +
+    '<button class="mitem" data-schdo="del">Delete</button>';
+  return '<div class="schrow" data-sch="' + esc(it.id) + '">' + open +
+    '<button class="icon schpin" data-schpin aria-pressed="' + !!it.pin + '" title="' + (it.pin ? 'Kept at the top. Click to stop' : 'Keep at the top') + '" aria-label="' + (it.pin ? 'Stop keeping ' : 'Keep ') + esc(it.name) + ' at the top">' + SCH_IC.star + '</button>' +
+    kmWrap('⋯', 'class="icon kdots" aria-label="More for ' + esc(it.name) + '" title="More"', menu, 'right') + '</div>';
+}
+function schRender() {
+  if (!shellReady) return;
+  const r = routeNow(); if (r.v !== 'school' || batch) return;
+  const s = schNow(), all = schLive(s), words = schQ.toLowerCase().split(/\s+/).filter(Boolean);
+  const hit = i => { const t = [i.name, i.group, i.note, i.url, i.file && i.file.name].filter(Boolean).join(' ').toLowerCase(); return words.every(w => t.includes(w)); };
+  const items = words.length ? all.filter(hit) : all, groups = schGroups(s, items), named = groups.filter(Boolean);
+  $('#schFind').hidden = all.length < 6 && !schQ;
+  let h = '';
+  if (!all.length) {
+    h = '<div class="schnone"><h2>Keep what you look up again and again in one place</h2>' +
+      '<p>The staff handbook, the school calendar, the bell schedule, the portals you sign in to, forms, who to call about what. Add a link when the school keeps it online, a file when you only have the file, or a short note of your own.</p>' +
+      '<p class="muted">Everything here stays on this computer with the rest of your work. Drop files anywhere on this page, or paste a web address.</p></div>';
+  } else if (!items.length) h = '<p class="muted schnohit">Nothing here matches “' + esc(schQ.trim()) + '”.</p>';
+  else {
+    const pins = words.length ? [] : schSort(all.filter(i => i.pin));
+    if (pins.length) h += '<div class="schpins" aria-label="Kept at the top">' + pins.map(i => { const k = schKindOf(i), inner = '<span class="schic ' + k + '">' + SCH_IC[k] + '</span><span>' + esc(i.name) + '</span>'; return k === 'link' ? '<a class="schchip" href="' + esc(i.url) + '" target="_blank" rel="noopener noreferrer">' + inner + '</a>' : '<button class="schchip" data-schchip="' + esc(i.id) + '">' + inner + '</button>'; }).join('') + '</div>';
+    for (const g of groups) {
+      const list = schSort(items.filter(i => (i.group || '') === g)), gi = named.indexOf(g);
+      const menu = g ? kmWrap('⋯', 'class="icon kdots" aria-label="More for the group ' + esc(g) + '" title="More"',
+        '<button class="mitem" data-schg="rename">Rename the group…</button>' + (gi > 0 ? '<button class="mitem" data-schg="up">Move up</button>' : '') + (gi < named.length - 1 ? '<button class="mitem" data-schg="down">Move down</button>' : ''), 'right') : '';
+      h += '<section class="schsec" data-schgroup="' + esc(g) + '">' + (g || named.length ? '<div class="schhead"><h2>' + esc(g || 'Other') + '</h2><span class="schn">' + list.length + '</span><span class="sp"></span>' + menu + '</div>' : '') +
+        '<div class="schcard">' + list.map(schRowHtml).join('') + '</div></section>';
+    }
+    const files = schRefs(), size = files.reduce((a, f) => a + (f.size || 0), 0), w = whereSay();
+    h += '<p class="muted schfoot">' + all.length + (all.length === 1 ? ' thing' : ' things') + ' kept here' + (files.length ? ', ' + files.length + (files.length === 1 ? ' file' : ' files') + ' (' + fmtSize(size) + ')' : '') + '. ' + esc(w.safe ? w.text : 'Only in this browser, like the rest of your work, until you choose a folder') + '.</p>';
+  }
+  const box = $('#schList'); if (box.dataset.h !== h) { box.dataset.h = h; box.innerHTML = h; }
+}
+
+/* adding and changing */
+function schForm(o) {
+  const it = o.item || null, kind = it ? schKindOf(it) : o.files ? 'file' : o.kind, files = o.files || [], s = schNow();
+  const groups = [...new Set([...schGroups(s, schLive(s)).filter(Boolean), ...SCH_IDEAS])];
+  const title = it ? 'Edit “' + it.name + '”' : kind === 'link' ? 'Add a link' : kind === 'note' ? 'Add a note' : files.length === 1 ? 'Add a file' : 'Add ' + files.length + ' files';
+  const one = it || files.length <= 1;
+  openDlg('<div class="bh"><h2>' + esc(title) + '</h2></div><div class="bb schform">' +
+    (kind === 'link' ? '<div class="field"><label for="schUrl">Web address</label><input type="text" id="schUrl" inputmode="url" autocomplete="off" spellcheck="false" value="' + esc(it ? it.url : o.url || '') + '" placeholder="Paste it from your browser’s address bar"></div>' : '') +
+    (one ? '<div class="field"><label for="schName">Name</label><input type="text" id="schName" autocomplete="off" value="' + esc(it ? it.name : files[0] ? files[0].name.replace(/\.[^.]+$/, '') : '') + '" placeholder="' + (kind === 'link' ? 'e.g. Staff handbook' : kind === 'note' ? 'e.g. Who to call' : '') + '"></div>'
+      : '<div class="field"><label>Files</label><ul class="schfiles">' + files.map(f => '<li>' + esc(f.name) + ' <span class="muted">' + fmtSize(f.size) + '</span></li>').join('') + '</ul></div>') +
+    '<div class="field"><label for="schGroup">Group <span class="muted">(optional)</span></label><input type="text" id="schGroup" list="schGroups" autocomplete="off" value="' + esc(it ? it.group || '' : o.group || '') + '" placeholder="Pick one or type a new one"><datalist id="schGroups">' + groups.map(g => '<option value="' + esc(g) + '">').join('') + '</datalist></div>' +
+    '<div class="field"><label for="schNote">' + (kind === 'note' ? 'Note' : 'Note <span class="muted">(optional)</span>') + '</label><textarea id="schNote" rows="' + (kind === 'note' ? 6 : 2) + '" placeholder="' + (kind === 'note' ? 'Room numbers, phone extensions, how something is done here' : 'What it is for, or where to look in it') + '">' + esc(it ? it.note || '' : '') + '</textarea></div>' +
+    (kind === 'file' && !it ? '<p class="muted schsay">A copy of ' + (files.length === 1 ? 'the file' : 'each file') + ' is kept with your work. If the school keeps it online, a link stays up to date by itself.</p>' : '') +
+    '<p class="tkerr" id="schErr" role="alert" hidden></p></div>' +
+    '<div class="bf"><button class="btn" data-cancel>Cancel</button><button class="btn primary" data-ok>' + (it ? 'Save' : 'Add') + '</button></div>', true);
+  const box = $('#dlgBox'), err = (t, sel) => { const el = $('#schErr'); el.textContent = t; el.hidden = false; if (sel) $(sel).focus(); };
+  const save = async () => {
+    const name = one ? $('#schName').value.trim() : '', group = $('#schGroup').value.trim().slice(0, 60), note = $('#schNote').value.trim(), now = Date.now();
+    let url = '';
+    if (kind === 'link') { url = schUrl($('#schUrl').value); if (!url) return err('That doesn’t look like a web address. Paste it from your browser’s address bar.', '#schUrl'); }
+    if (kind === 'note' && !note) return err('Write the note first.', '#schNote');
+    const named = name || (kind === 'link' ? schHost(url) : kind === 'note' ? note.split('\n')[0].slice(0, 60) : '');
+    if (it) { closeDlg(); return schChange(s => { const x = s.items.find(i => i.id === it.id); if (x) Object.assign(x, { name: named || x.name, group, note, at: now }, kind === 'link' ? { url } : {}); }); }
+    if (kind !== 'file') { closeDlg(); return schChange(s => { s.items.push({ id: uid(), at: now, kind, name: named, group, note, ...(kind === 'link' ? { url } : {}) }); }); }
+    box.querySelector('[data-ok]').disabled = true;
+    const got = await schTake(files);
+    closeDlg();
+    if (!got.length) return;
+    schChange(s => { for (const { f, file } of got) s.items.push({ id: uid(), at: Date.now(), kind: 'file', name: files.length === 1 && named ? named : f.name.replace(/\.[^.]+$/, '') || f.name, group, note, file }); });
+    toast(got.length === 1 ? 'Added.' : 'Added ' + got.length + ' files.');
+  };
+  box.onclick = e => { if (e.target.closest('[data-cancel]')) return closeDlg(); if (e.target.closest('[data-ok]')) save(); };
+  box.onkeydown = e => { if (e.key === 'Enter' && e.target.tagName === 'INPUT') { e.preventDefault(); save(); } };
+  const first = $(kind === 'link' && !(it || o.url) ? '#schUrl' : one ? '#schName' : '#schGroup'); first.focus(); if (first.select) first.select();
+}
+async function schTake(files) {
+  await schReady;
+  const big = files.filter(f => f.size > SCH_MAX), ok = files.filter(f => f.size <= SCH_MAX && f.size > 0), got = [];
+  try {
+    for (const f of ok) {
+      const data = new Uint8Array(await f.arrayBuffer()), hash = await shaOf(data);
+      if (!schHave.has(hash)) await schPut(hash, data);
+      got.push({ f, file: { hash, size: data.length, type: f.type || '', name: f.name } });
+    }
+  } catch (e) { console.error(e); toast(e && e.name === 'QuotaExceededError' ? 'This browser is out of room, so that file wasn’t added.' : 'That file couldn’t be read, so it wasn’t added.', 6000); }
+  if (big.length) sayDlg((big.length === 1 ? '“' + big[0].name + '” is' : big.length + ' of those files are') + ' larger than ' + fmtSize(SCH_MAX) + ', so ' + (big.length === 1 ? 'it wasn’t' : 'they weren’t') + ' added. For a file that size, add a link to where the school keeps it.');
+  return got;
+}
+function schPick(files) {
+  const list = [...files].filter(f => f && f.name); if (!list.length) return;
+  if (!schAgain) return schForm({ files: list });
+  const id = schAgain; schAgain = '';   // Replace the file: the same item, new bytes
+  return schTake(list.slice(0, 1)).then(got => { if (!got.length) return; schChange(s => { const x = s.items.find(i => i.id === id && !i.gone); if (x) { x.file = got[0].file; x.at = Date.now(); } }); toast('Replaced.'); });
+}
+function schDelete(id) {
+  const was = schItem(id); if (!was) return;
+  schChange(s => { const i = s.items.findIndex(x => x.id === id); if (i >= 0) s.items[i] = { id, at: Date.now(), gone: 1, ...(was.file ? { file: { hash: was.file.hash, size: was.file.size } } : {}) }; });
+  toastDo('Deleted “' + was.name + '”.', 'Undo', () => schChange(s => { const i = s.items.findIndex(x => x.id === id); if (i >= 0) s.items[i] = { ...was, at: Date.now() }; }));
+}
+async function schGroupDo(g, what) {
+  if (what === 'rename') {
+    const v = await askTextDlg('A new name for the group “' + g + '”', g, { ok: 'Rename' }), to = v == null ? '' : v.trim().slice(0, 60);
+    if (!to || to === g) return;
+    return schChange(s => { const now = Date.now(); for (const i of s.items) if (!i.gone && i.group === g) { i.group = to; i.at = now; } const at = s.order.indexOf(g); if (at >= 0) { s.order[at] = to; s.ot = now; } });
+  }
+  schChange(s => {
+    const names = schGroups(s, schLive(s)).filter(Boolean), i = names.indexOf(g), j = i + (what === 'up' ? -1 : 1);
+    if (i < 0 || j < 0 || j >= names.length) return;
+    [names[i], names[j]] = [names[j], names[i]]; s.order = names; s.ot = Date.now();
+  });
+}
+$('#vSchool').addEventListener('click', e => {
+  const add = e.target.closest('[data-schadd]');
+  if (add) { if (add.dataset.schadd === 'file') { schAgain = ''; return $('#schIn').click(); } return schForm({ kind: add.dataset.schadd }); }
+  const chip = e.target.closest('[data-schchip]'); if (chip) return schOpen(chip.dataset.schchip);
+  const gdo = e.target.closest('[data-schg]'); if (gdo) return schGroupDo(gdo.closest('[data-schgroup]').dataset.schgroup, gdo.dataset.schg);
+  const row = e.target.closest('[data-sch]'); if (!row) return;
+  const id = row.dataset.sch, it = schItem(id); if (!it) return;
+  if (e.target.closest('[data-schopen]')) return schOpen(id);
+  if (e.target.closest('[data-schpin]')) return schChange(s => { const x = s.items.find(i => i.id === id); if (x) { if (x.pin) delete x.pin; else x.pin = 1; x.at = Date.now(); } });
+  const b = e.target.closest('[data-schdo]'); if (!b) return;
+  const what = b.dataset.schdo;
+  if (what === 'edit') schForm({ item: it });
+  else if (what === 'del') schDelete(id);
+  else if (what === 'save') schOpenFile(it, true);
+  else if (what === 'again') { schAgain = id; $('#schIn').click(); }
+  else if (what === 'copy') navigator.clipboard.writeText(it.url).then(() => toast('Link copied.'), () => toast('The link couldn’t be copied here. Open it and copy its address.'));
+});
+$('#schIn').onchange = e => { const fs = [...e.target.files]; e.target.value = ''; schPick(fs); };
+$('#schQ').addEventListener('input', e => { schQ = e.target.value; schRender(); });
+$('#schQ').addEventListener('keydown', e => { if (e.key === 'Escape' && schQ) { e.preventDefault(); e.target.value = ''; schQ = ''; schRender(); } });
+const schOn = () => !batch && shellReady && routeNow().v === 'school' && $('#dlg').hidden && !$('#findDlg') && !$('#askDlg');
+const schDragHas = e => !!e.dataTransfer && [...(e.dataTransfer.types || [])].some(t => t === 'Files' || t === 'text/uri-list');
+for (const ev of ['dragenter', 'dragover']) document.addEventListener(ev, e => { if (!schOn() || !schDragHas(e)) return; e.preventDefault(); e.stopPropagation(); e.dataTransfer.dropEffect = 'copy'; $('#vSchool').classList.add('over'); }, true);
+document.addEventListener('dragleave', e => { if (!e.relatedTarget) $('#vSchool').classList.remove('over'); }, true);
+document.addEventListener('drop', e => {
+  $('#vSchool').classList.remove('over');
+  if (!schOn() || !schDragHas(e)) return;
+  e.preventDefault(); e.stopPropagation();
+  if (e.dataTransfer.files.length) { schAgain = ''; return schPick(e.dataTransfer.files); }
+  const u = schUrl((e.dataTransfer.getData('text/uri-list') || '').split(/\r?\n/).find(l => l && !l.startsWith('#')));
+  if (u) schForm({ kind: 'link', url: u });
+}, true);
+document.addEventListener('paste', e => {
+  if (!schOn() || e.target.closest('input, textarea, [contenteditable]')) return;
+  const fs = [...((e.clipboardData && e.clipboardData.files) || [])];
+  if (fs.length) { e.preventDefault(); schAgain = ''; return schPick(fs); }
+  const u = schUrl((e.clipboardData && e.clipboardData.getData('text/plain')) || '');
+  if (u) { e.preventDefault(); schForm({ kind: 'link', url: u }); }
+});
+window.addEventListener('storage', e => { if (e.key === SCH_KEY && (!e.storageArea || e.storageArea === localStorage)) schRender(); });
+schReady.then(schRender);
+
+/* Find anything: every resource by its name */
+const SCH_KIND_SAY = { link: 'Link', file: 'File', note: 'Note' };
+const schFindRows = () => schSort(schLive()).map(i => { const k = schKindOf(i); return { group: 'School resources', label: i.name, sub: SCH_KIND_SAY[k] + (i.group ? ' · ' + i.group : k === 'link' ? ' · ' + schHost(i.url) : ''), key: '', words: [i.url, i.note, i.file && i.file.name].filter(Boolean).join(' '), run: () => schOpen(i.id) }; });
+Object.assign(window.__gs, { schNow, schHashes, schUrl, schoolMerge, schHave: async () => { await schReady; return [...schHave].sort(); } });
+
 /* ---------------- the frame: the sidebar, Home's "Needs a look", and Find anything (11/9) ---------------- */
 var shellReady, screenWas = '';
 
@@ -23850,12 +24223,12 @@ function railRender() {
   for (const a of document.querySelectorAll('#rail [data-nav]')) { const on = !batch && a.dataset.nav === r.v; a.classList.toggle('on', on); if (on) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); }
   const cr = $('#crumbClass'); cr.hidden = !(batch && open);
   if (batch && open) { cr.textContent = open.name; cr.href = classHash(open); cr.title = 'Back to ' + open.name; }
-  tabsRender(); setRender(); helpRender();
+  tabsRender(); setRender(); helpRender(); schRender();
   if (!batch && r.v === 'home' && screenWas !== 'home') planRefresh();
   screenWas = batch ? 'a' : r.v;
   const d = $('#homeDate'), today = new Date().toLocaleDateString(LANG_LOCALE, { weekday: 'long', month: 'long', day: 'numeric' }); if (d.textContent !== today) d.textContent = today;   // Today's title is the day itself
   const asg = batch && batch.assignment && findItem(batch.assignment.id);
-  document.title = batch ? (asg ? asg.it.name + ' · ' : '') + 'Grading Studio' : r.v === 'class' ? (r.c === lib.loose ? 'No class' : r.c.name) + ' · Grading Studio' : r.v === 'settings' ? (r.sec === 'saving' ? '' : SET_SECS.find(x => x[0] === r.sec)[1] + ' · ') + 'Settings · Grading Studio' : r.v === 'help' ? 'Help · Grading Studio' : 'Grading Studio';
+  document.title = batch ? (asg ? asg.it.name + ' · ' : '') + 'Grading Studio' : r.v === 'class' ? (r.c === lib.loose ? 'No class' : r.c.name) + ' · Grading Studio' : r.v === 'settings' ? (r.sec === 'saving' ? '' : SET_SECS.find(x => x[0] === r.sec)[1] + ' · ') + 'Settings · Grading Studio' : r.v === 'help' ? 'Help · Grading Studio' : r.v === 'school' ? 'School resources · Grading Studio' : 'Grading Studio';
 }
 function railSavedRender() {
   if (!shellReady) return;
@@ -23926,6 +24299,7 @@ function findRows() {
   }
   add('Go to', 'Today', 'What you teach today, what is waiting to be marked, what is ready to hand back', () => go('#/'));
   add('Go to', 'Planner', 'Units and lessons, on its own page', () => { location.href = $('#lessonsBtn').href; });
+  add('Go to', 'School resources', 'Links, files and notes about your school', () => go('#/school'));
   add('Go to', 'Settings', 'Saving, classes, terms, marking, display and keys', () => go('#/settings'));
   add('Go to', 'Help', 'Short answers to common questions', () => go('#/help'));
   for (const c of lib.classes) {
@@ -23964,12 +24338,12 @@ function findRows() {
   add('Settings', 'All keys', 'Every keyboard shortcut', () => openKeys(), '?', 'shortcuts hotkeys keyboard');
   for (const [k, t, sub] of SET_SECS) if (k !== 'saving' && k !== 'display' && k !== 'keys' && k !== 'history' && k !== 'about') add('Settings', t, sub, () => go(setHash(k)));
   if (plan) add('Go to', 'This week in the Planner', 'Today’s classes and the lessons planned for them', () => { location.href = planUrl('#week'); });
-  out.push(...helpFindRows());
+  out.push(...schFindRows(), ...helpFindRows());
   return out;
 }
 function findMatch(rows, q) {
   const words = q.toLowerCase().split(/\s+/).filter(Boolean);
-  if (!words.length) return rows.filter(r => r.group !== 'Students' && r.group !== 'Assignments' && r.group !== 'Class pages' && r.group !== 'Help' || batch && r.group === 'Students').slice(0, 60);
+  if (!words.length) return rows.filter(r => r.group !== 'Students' && r.group !== 'Assignments' && r.group !== 'Class pages' && r.group !== 'Help' && r.group !== 'School resources' || batch && r.group === 'Students').slice(0, 60);
   const hit = [];
   for (const r of rows) {
     const l = tr(r.label).toLowerCase(), all = l + ' ' + r.label.toLowerCase() + ' ' + r.sub.toLowerCase() + ' ' + tr(r.sub).toLowerCase() + ' ' + r.group.toLowerCase() + ' ' + tr(r.group).toLowerCase() + ' ' + (r.words || '').toLowerCase();   // in another language (lang.js) a row is found by its words in either
@@ -23978,7 +24352,7 @@ function findMatch(rows, q) {
   }
   return hit.sort((a, b) => a.rank - b.rank).map(x => x.r).slice(0, 40);
 }
-const FIND_NAMES = new Set(['Classes', 'Students', 'Assignments']);
+const FIND_NAMES = new Set(['Classes', 'Students', 'Assignments', 'School resources']);
 function openFind() {
   if ($('#findDlg') || $('#askDlg') || (!$('#dlg').hidden && !dlgPage)) return;
   commitEditors(); setMore(false);

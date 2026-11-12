@@ -174,7 +174,7 @@ async function nyStart(o) {
   if (left.length) throw new Error(left.length + ' downloads could not be cleared');
   // Anything else kept with her work that's about a student (keyed by name). Settings, the comment bank and saved rubrics stay.
   for (const [k, v] of Object.entries(carryLs())) {
-    if (k === 'gs.lib') continue;
+    if (k === 'gs.lib' || k === 'gs.school') continue;   // the school's links, files and notes aren't about a student, whatever they're called
     let x; try { x = JSON.parse(v); } catch { continue; }
     if (nyAbout(x, names)) localStorage.removeItem(k);
   }
@@ -319,6 +319,7 @@ async function nyReplace(B, rd, was) {
   await keepWait;
   await tabsFinish(); tabsOver('go');
   batch = null; clearTimeout(saveT); saveBad.clear();
+  const schWas = localStorage.getItem('gs.school');   // the school resources belong to the school, not to one year: what is here stays
   try { await gsData.snapshot('Before opening ' + (B.info.year || 'an archived year'), gsData.version()); } catch (e) { console.error(e); }
   if (fld.state !== 'none') await folderUnlink();
   const years = Array.isArray(lib.years) ? lib.years : [];
@@ -333,6 +334,11 @@ async function nyReplace(B, rd, was) {
   } catch (e) { if (e && e.small) throw e; console.error(e); }
   store.set('gs.tomb', B.tomb || {});
   const src = takeSource(rd, B);
+  if (schWas) {
+    const rd2 = t => { try { return JSON.parse(t); } catch { return null; } };
+    if (!lsPut('gs.school', JSON.stringify(schoolMerge(rd2((B.ls || {})['gs.school']), rd2(schWas)).out))) throw browserFull();
+  }
+  await schBring(src, B);
   for (const id of new Set([...Object.keys(B.meta), ...Object.keys(B.work), ...Object.keys(B.papers)])) {
     const rec = await src.papers(id);
     if (rec) await paperPut(id, rec);

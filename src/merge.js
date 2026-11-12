@@ -682,6 +682,17 @@ function libHold(text, held) {
   for (const e of libWalk(l).values()) if (held[e.id]) { for (const k of Object.keys(e.node)) delete e.node[k]; Object.assign(e.node, held[e.id]); }
   return JSON.stringify(l);
 }
+// Two copies of the school resources list (school.js) made one. Each item carries when it was last changed, a deleted one too,
+// so the later change wins either way; the order of the groups is whichever copy set it later. toA: x has something to take.
+function schoolMerge(x, y) {
+  const norm = v => ({ items: v && Array.isArray(v.items) ? v.items.filter(i => i && i.id) : [], order: v && Array.isArray(v.order) ? v.order : [], ot: (v && v.ot) || 0 });
+  const X = norm(x), Y = norm(y), by = new Map(X.items.map(i => [i.id, i]));
+  let toA = false;
+  for (const i of Y.items) { const o = by.get(i.id); if (!o || (i.at || 0) > (o.at || 0)) { by.set(i.id, i); toA = true; } }
+  const out = { items: [...by.values()], order: X.order, ot: X.ot };
+  if (Y.ot > X.ot) { out.order = Y.order; out.ot = Y.ot; toA = true; }
+  return { out, toA };
+}
 // Other saved things: comments saved for reuse are pooled, and anything else she hasn't got here comes in. Nothing she has here is replaced, unless she replaced it there later.
 function mergeLs(a, b, skip = () => false) {
   const set = {}, parse = (t, d) => { try { return JSON.parse(t) || d; } catch { return d; } };
@@ -710,6 +721,9 @@ function mergeLs(a, b, skip = () => false) {
       try { x = JSON.parse(a[k] || '{}'); y = JSON.parse(v); } catch {}
       const add = Object.keys(y).filter(n => !(n in x));
       if (add.length) set[k] = a[k] == null ? v : JSON.stringify({ ...x, ...Object.fromEntries(add.map(n => [n, y[n]])) });
+    } else if (k === 'gs.school') {   // school resources: an item at a time, and the one changed later is kept
+      const m = schoolMerge(parse((a || {})[k], null), parse(v, null));
+      if (m.toA) set[k] = JSON.stringify(m.out);
     } else if (k.startsWith('gs.rd.') && a[k] != null) {   // the Word document for a download, replaced there later
       const x = parse(a[k], {}), y = parse(v, {});
       if (y.at > (x.at || 0)) set[k] = v;

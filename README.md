@@ -45,6 +45,7 @@ The sidebar says **Not backed up** until you choose a folder. Once you do, every
 
 ## More
 
+- **School** in the sidebar is a page for the links, files and notes about your school: the handbook, the calendar, the portals, who to call. They are kept with your work (`gs.school`, and the files in their own store), so they reach the folder and the take-home file too. The code is src/school.js.
 - **Help** in the app's sidebar has short answers to common questions, and **Find anything** lists them too.
 - **Learning goals** (optional): keep your own list of goals or standards, tag rubric rows and quiz questions with them, and each class page gets a Goals tab that shows the class and every student by goal, lowest first.
 - **Report comments** (a tab on each class's page) drafts a comment for every student from the gradebook, the rubric scores and the comments written on their papers. The drafts are made in the browser from a bank of sentences the teacher can reword; nothing about a student is sent anywhere.

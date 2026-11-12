@@ -75,6 +75,17 @@ test('a new year: this year goes to a checked file, the classes carry on empty, 
     await openZip(page, zip, 'River essay.zip');   // a download with its papers, and a score on it
     await score(page, [3, 3, 3]);
     await settle(page);
+    // school resources (school.js): a link, a note that happens to read like a name on a class list, and a file
+    await goTo(page, '#/school');
+    await page.click('#vSchool [data-schadd="link"]'); await page.waitForSelector('#schUrl');
+    await page.$eval('#schUrl', e => { e.value = 'https://example.org/handbook'; }); await page.$eval('#schName', e => { e.value = 'Staff handbook'; }); await page.$eval('#schNote', e => { e.value = 'Aria Testwell'; });
+    await page.click('#dlgBox [data-ok]');
+    const schClean = await pickFile(page, '#schIn', new Uint8Array(Buffer.from('%PDF-1.4\n% a made-up bell schedule\n%%EOF\n')), 'Bell schedule.pdf');
+    await page.waitForSelector('#schName'); await page.click('#dlgBox [data-ok]');
+    await page.waitForFunction(() => window.__gs.schNow().items.length === 2);
+    schClean();
+    const school = await page.evaluate(async () => ({ list: localStorage.getItem('gs.school'), have: await window.__gs.schHave() }));
+    assert.equal(school.have.length, 1);
     await goTo(page, '#/settings');
     const before = await page.evaluate(() => ({ kept: window.__gs.kept().size, lib: localStorage.getItem('gs.lib') }));
     assert.equal(before.kept, 3);
@@ -134,6 +145,9 @@ test('a new year: this year goes to a checked file, the classes carry on empty, 
     assert.equal(now.seats, null, 'a key of its own about students goes');
     assert.equal(now.move.from, '2026–27');
     assert.deepEqual(now.work, []);
+    assert.deepEqual(await page.evaluate(async () => ({ list: localStorage.getItem('gs.school'), have: await window.__gs.schHave() })), school, 'the school’s links, files and notes stay for the new year');
+    // one more link in the new year
+    await page.evaluate(() => { const v = JSON.parse(localStorage.getItem('gs.school')); v.items.push({ id: 'later1', at: Date.now(), kind: 'link', name: 'Staff calendar', group: '', note: '', pin: 0, url: 'https://example.org/calendar' }); localStorage.setItem('gs.school', JSON.stringify(v)); });
     assert.doesNotMatch(await page.evaluate(() => localStorage.getItem('gs.lib')), /Aria Testwell|Bram Sample|Made-up note/);
     assert.match(await page.$eval('#yearLine', e => e.textContent), /This year: 2027–28\. Archived: 2026–27 in year-a\.gswork/);
 
@@ -182,6 +196,9 @@ test('a new year: this year goes to a checked file, the classes carry on empty, 
     assert.equal(got.year, '2026–27');
     assert.deepEqual(got.years.map(y => [y.name, y.file]), [['2027–28', 'year-b.gswork']], 'and the year just left is listed with its file');
     assert.ok(back.seats);
+    const sch2 = await page.evaluate(async () => ({ names: window.__gs.schNow().items.map(i => i.name).sort(), have: await window.__gs.schHave() }));
+    assert.deepEqual(sch2.names, ['Bell schedule', 'Staff calendar', 'Staff handbook'], 'school resources are not one year’s: the link added since is still here');
+    assert.deepEqual(sch2.have, school.have, 'and the file');
     assert.deepEqual(got.classes[0].att['2026-09-02'], { t: 2 }, 'attendance comes back with the year');
     assert.equal(got.classes[0].seats.desks['0,0'], 'Aria Testwell', 'and the seating chart');
     const tries = await page.evaluate(() => new Promise(res => { const r = indexedDB.open('grading-studio-keep'); r.onsuccess = () => { const q = r.result.transaction('work').objectStore('work').get('gs.b.n1'); q.onsuccess = () => { const w = q.result; res(w && w.s['Aria Testwell'].g.tries); r.result.close(); }; }; }));

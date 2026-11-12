@@ -45,7 +45,7 @@ function folderPapers(b) { if (tombs()[b.id]) saveSoon(); else if (fld.state !==
 function folderSaved(b, data) { if (fld.state === 'none') return; fld.work.set(b.id, data); folderKick(); }
 let setLibFrom, libNews;   // setLibFrom replaces the whole library, a merge having already stamped it, and says if it fit. libNews: another tab changed it.
 {
-  const raw = store.set.bind(store), rawDel = store.del.bind(store), LIB_RX = /^gs\.(lib|setup|bank|tomb|carryNo|rubrics|rubricsGone|histSame|rp\..+|rd\..+)$/;
+  const raw = store.set.bind(store), rawDel = store.del.bind(store), LIB_RX = /^gs\.(lib|setup|bank|tomb|carryNo|rubrics|rubricsGone|histSame|school|rp\..+|rd\..+)$/;
   let prev = libPrev(store.get('gs.lib', null)), libSeen = lsRaw('gs.lib');
   const mark = k => { if (LIB_RX.test(k) && fld.state !== 'none') { fld.lib = true; folderKick(); } };
   const roomy = (k, v) => { let ok = raw(k, v); while (!ok && !k.startsWith('gs.b.') && freeQuick()) ok = raw(k, v); return ok; };   // a roster matters more than a quick copy with its full copy kept
@@ -354,9 +354,11 @@ async function folderRemove(id) {
     const i = await readJson(h, 'info.json'); if (!i) continue;
     (i.papers || []).forEach(mark); markAll(i.added, i.edits);
   }
+  for (const h of schHashes(lsRaw('gs.school'))) used.add(h);   // school resources keep their files here too (school.js)
   const dir = await fld.root.getDirectoryHandle('snapshots', { create: true });
   for (const { name } of await snapList()) {
     let s; try { s = await gzRead(dir, name); } catch { continue; }
+    for (const h of schHashes((s.ls || {})['gs.school'], s.t)) used.add(h);
     if (s.work && s.work[id] || s.meta && s.meta[id] || s.added && s.added[id] || s.edits && s.edits[id] || Object.keys(s.ls || {}).some(k => k.includes(id))) {
       for (const part of [s.work, s.meta, s.added, s.edits]) if (part) delete part[id];
       for (const k of Object.keys(s.ls || {})) if (k.includes(id)) delete s.ls[k];
@@ -386,7 +388,7 @@ async function folderRun() {
       try { await pushDownload(id, data); }
       catch (e) { if (!fld.work.has(id)) fld.work.set(id, data); throw e; }
     }
-    if (fld.lib) { fld.lib = false; try { await pushLibrary(); } catch (e) { fld.lib = true; throw e; } }
+    if (fld.lib) { fld.lib = false; try { await pushLibrary(); await schFolderSync(); } catch (e) { fld.lib = true; throw e; } }
     await dailySnapshot();
     fld.at = Date.now(); setWhere(fld.asks.length ? 'decide' : 'ok');
   } catch (e) { await folderTrouble(e); }
@@ -475,6 +477,7 @@ async function reconcileNow() {
   const set = prefer ? {} : mergeLs(carryLs(), B.ls || {}, k => Object.keys(tomb).some(id => k.includes(id)));   // going back: the folder takes what's here, and nothing newer comes back
   for (const [k, v] of Object.entries(set)) lsPut(k, v);
   await pushLibrary();
+  await schFolderSync();   // the files of the school resources, either way
   fld.lib = false; fld.answers = {};
   try { localStorage.removeItem('gsc.win'); } catch {}
   await dailySnapshot();
@@ -561,7 +564,7 @@ function renderWhere() {
       (fld.state !== 'none' && fld.root ? ' <a class="btn sm" href="#/settings/history">Go back in time…</a>' : '');
     if (line.dataset.h !== h) { line.dataset.h = h; line.innerHTML = h; }   // a button shouldn't vanish under her click just because a save went by
   }
-  railSavedRender(); renderNeeds(); safeAskRender();
+  railSavedRender(); renderNeeds(); safeAskRender(); schRender();
 }
 function whereAct() { if (fld.state === 'decide') openFolderAsks(); else folderResume(true); }
 document.addEventListener('click', e => {
