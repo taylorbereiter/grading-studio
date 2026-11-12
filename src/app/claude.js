@@ -148,15 +148,17 @@ function keptCovers(cs, path, p, W, H) {
 }
 const scrubMarks = (marks, rx) => marks.map(m => m.text != null ? { ...m, text: scrub(m.text, rx) } : m);
 // Renders one page the way Claude will see it: her marks (names scrubbed from her text) and black covers.
-async function sharePage(st, f, js, p, scale, rx, opts) {
+// look, for a strong example: { bare: leave her marks off, light: with the page's lighting }.
+async function sharePage(st, f, js, p, scale, rx, opts, look) {
   const page = await js.getPage(p + 1);
   const vp = vpRot(f, p, page, 1), W = vp.width, H = vp.height;
-  const marks = scrubMarks((f.marks[p] || []).concat((f.kami && f.kami[p] && f.kami[p].notes) || []), rx);
+  const marks = look && look.bare ? [] : scrubMarks((f.marks[p] || []).concat((f.kami && f.kami[p] && f.kami[p].notes) || []), rx);
   const side = marks.some(m => m.t === 'note') ? sideFor(W) : 0;
   const c = document.createElement('canvas');
   c.width = Math.ceil((W + side) * scale); c.height = Math.ceil(H * scale);
   const ctx = c.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
   await page.render({ canvasContext: ctx, ...vpDraw(f, p, page, scale), annotationMode: pdfjsLib.AnnotationMode.ENABLE }).promise;
+  if (look && look.light) { const L = lightForPage(st, f, p); if (L) lightCanvas(ctx, Math.ceil(W * scale), c.height, L); }
   scanClip(ctx, f, p, W * scale, c.width, c.height);
   ctx.setTransform(scale, 0, 0, scale, 0, 0);
   drawMarks(ctx, marks, W, H, side, null);

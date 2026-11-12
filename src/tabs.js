@@ -4,6 +4,7 @@
 function tabsRender() {
   if (!batch) return;
   const r = routeNow(), on = r.v === 'a' ? r.tab : '';
+  exTabSay();
   for (const a of document.querySelectorAll('#aTabs .atab')) {
     const h = batchHash(batch.id, a.dataset.atab), cur = a.dataset.atab === on;
     if (a.getAttribute('href') !== h) a.setAttribute('href', h);
@@ -71,7 +72,7 @@ function returnSideHtml() {
   const re = scanRescans(), nRe = new Set(re.map(x => x.i)).size;
   const row = (t, s, act, label) => '<div class="rtrow"><span><b>' + t + '</b><small>' + s + '</small></span><button class="btn sm" data-rtask="' + act + '">' + label + '</button></div>';
   return '<aside class="rtside" id="rtSide" aria-label="Other ways to give work back">' +
-    '<section class="rtcard" id="rtOne"><h3>One student at a time</h3><p class="muted">Give one student their marked paper now, without waiting for the rest.</p>' +
+    anchorCardHtml() + '<section class="rtcard" id="rtOne"><h3>One student at a time</h3><p class="muted">Give one student their marked paper now, without waiting for the rest.</p>' +
       (sent.length ? '<ul class="rtsent">' + sent.slice(0, 6).map(x => '<li><button class="link" data-chk="' + x.i + '">' + esc(shownName(x.s, x.i)) + '</button> <span class="muted">exported ' + esc(sentWhen(x.s.grade.sent)) + '</span></li>').join('') + (sent.length > 6 ? '<li class="muted">and ' + (sent.length - 6) + ' more</li>' : '') + '</ul>' : '') +
       (who ? '<button class="btn" data-rtone>Export ' + who + '</button>' : '<p class="muted">Open a student’s paper on the Mark tab first.</p>') + '</section>' +
     '<section class="rtcard" id="rtClaude"><h3>Ask Claude <span class="muted">(optional)</span></h3>' +
@@ -83,6 +84,7 @@ function returnSideHtml() {
 }
 // true when the click was one of these cards'.
 function returnSideClick(e) {
+  if (anchorCardClick(e)) return true;
   if (e.target.closest('[data-unreturn]')) { delete batch.returned; saveSoon(); returnedDraw(); toast('Marked as not returned'); return true; }
   if (e.target.closest('[data-rtone]')) {
     const st = batch.students[cur], b0 = batch;

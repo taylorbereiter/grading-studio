@@ -1,12 +1,11 @@
 {
- "version": "1.27.6",
- "build": "ce376dfe2514",
+ "version": "1.27.10",
+ "build": "36d45420fb7a",
  "notes": [
-  "Returned files are named for the student, the assignment and what they are, like “Ana Lee - River essay - Graded.pdf”, or Feedback when there is no score. They still go in each student’s own folder.",
-  "To keep the names students turned in, untick Name each file by student and assignment under Options on the Return tab."
+  "Finding names on its own is now off unless you turn it on, in Settings, Marking, Name covers. Only the boxes you draw in Check the covers cover anything, and the check before anonymous grading lists every paper."
  ],
  "files": {
-  "index.html": "3ed987dd6af1e02f19a9cb7e3057a6060851c5b9200e181e7926973b94670416",
-  "planner.html": "91573d26b55474bb5382dd5278373bf22847964c8b2fd413424c0478cbda04f1"
+  "index.html": "44d26a57c6ec8e6dd0f9e58e516fcb562cfc4abba6e7c3848af08bc3184b4d0e",
+  "planner.html": "bec17dbe35d8cc021b5cea9f742109f505d42e7f04614ddf9e5bfc0d0d686eb8"
  }
 }
