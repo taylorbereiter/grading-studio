@@ -73,3 +73,7 @@
 .ibtlsay{font-size:var(--text-control);margin-left:auto}
 .ibtaskl{display:grid;gap:var(--space-2);margin:var(--space-3) 0}
 #ibTaskSet.link{margin-left:var(--space-2)}
+
+/* an MYP class's progress sheet */
+.ibpsscap { margin: 6px 0 0; font-size: var(--text-caption); color: var(--stage-ink-2); }
+.ibpss .psst span b { font-size: inherit; font-weight: 700; }

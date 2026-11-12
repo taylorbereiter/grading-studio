@@ -1,12 +1,13 @@
 {
- "version": "1.27.31",
- "build": "31fee0167d64",
+ "version": "1.27.34",
+ "build": "7b9be4228ed0",
  "notes": [
-  "A lesson in the Planner is tidier under the slide. This slide has your speaker notes beside one box for your AI assistant. The whole lesson has Materials, Links, Finished PowerPoint, comments and Taught as matching cards.",
-  "The tips for editing a slide are behind an Editing tips button, and Alternative version is in More until a lesson has more than one version."
+  "A class page is simpler. The tab row has Assignments, Gradebook, Students and More; the pin beside a page in More keeps it in the row. Roster, grading and the class link are under one Class setup button.",
+  "The gradebook has one More menu for Term setup, extra credit, import and copy. Settings has seven pages in place of twelve, and nothing has been removed.",
+  "In the Planner’s week, Use a lesson shows when you point at a class slot."
  ],
  "files": {
-  "index.html": "e7f02eab17b0c1cdd5d34b48a336dd6dae32f831b24b07bc89181283903dc2b1",
-  "planner.html": "651ecfb5070e22564359e148622b6ca094e42d0756be99506c510095d24d53ad"
+  "index.html": "4088ddf3d9c32fcab8cab77f06406120943523634a4fc284027677a209fe025c",
+  "planner.html": "114414a6b84c4d74131ba5d82f86f956fc31bb473b0111b62b5848b2a0705236"
  }
 }

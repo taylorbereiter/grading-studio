@@ -272,13 +272,55 @@ function ibOneView(c, cols, all) {
   bk.stu = Math.max(0, Math.min(c.names.length - 1, bk.stu));
   const crit = ibCrit(c), bounds = ibBounds(c), icols = ibCols(c, bk.term === '*' ? all : cols), i = bk.stu, n = c.names[i], lv = ibLvOf(c, n), r = ibTerm(lv, crit, bounds);
   const miss = icols.filter(x => (x.cells.get(n) || {}).st === 'missing'), termName = (bkTabs(all).find(t => t[0] === bk.term) || [, 'This year'])[1];
-  return '<div class="bkpad"><div class="bkstu"><button class="icon" data-bkstu="-1" aria-label="Previous student"' + (i ? '' : ' disabled') + '>‹</button><b id="bkStuName">' + esc(bkWho(n, i)) + '</b>' + bkInfo(n) + '<button class="icon" data-bkstu="1" aria-label="Next student"' + (i < c.names.length - 1 ? '' : ' disabled') + '>›</button><span class="muted">' + (i + 1) + ' of ' + c.names.length + ' · ← → to move</span></div>' +
+  return '<div class="bkpad"><div class="bkstu"><button class="icon" data-bkstu="-1" aria-label="Previous student"' + (i ? '' : ' disabled') + '>‹</button><b id="bkStuName">' + esc(bkWho(n, i)) + '</b>' + bkInfo(n) + '<button class="icon" data-bkstu="1" aria-label="Next student"' + (i < c.names.length - 1 ? '' : ' disabled') + '>›</button><span class="muted">' + (i + 1) + ' of ' + c.names.length + ' · ← → to move</span><span class="sp"></span><button class="btn sm" data-pssone title="A one-page summary to print for a parent meeting">Progress sheet</button></div>' +
     '<div class="ovtiles" id="bkStuTiles">' + bkTile('Grade', r.grade != null ? r.grade : '–', r.need.length ? 'still to set: ' + esc(r.need.join(', ')) : '1 to 7', true) + bkTile('Total', r.total != null ? r.total : '–', 'of ' + crit.length * IB_TOP) +
     crit.map(x => { const v = ibLevel(lv[x.k]), ev = ibEvidence(ibEvFor(icols, n, x.k)); return bkTile(esc(x.k) + ' ' + esc(x.name), v != null ? v : '–', v != null ? ibBandName(v) : ev.n ? 'most recent ' + ev.last + ', not set' : 'no evidence'); }).join('') +
     bkTile('Missing', miss.length, miss.length ? esc(miss.map(x => x.name).join(', ')) : 'nothing outstanding') + '</div>' + ibFitBox(c, crit, bounds, icols, i, termName, false) + '<div class="ovcharts">' + attStuHtml(c, n) + '</div></div>';
 }
 // The Students list on a class page: the 1 to 7 for the term that is on now, or how far the levels have got.
 function ibPeopleSay(c, name, term) { const crit = ibCrit(c), r = ibTerm(((c.lv || {})[term] || {})[name], crit, ibBounds(c)); return r.grade != null ? String(r.grade) : r.set ? r.set + ' of ' + crit.length + ' set' : '–'; }
+/* ---------- an MYP class's report comments and progress sheets ---------- */
+const ibLvAt = (c, term, name) => ((c.lv || {})[term == null ? ibTermKey() : term] || {})[name] || {};
+// What a report comment is drafted from (rptFacts, reports.js), for one student of an MYP class. The grade is the 1 to 7, and it
+// exists only once every criterion has a level. Strongest and to work on come from the levels she set, or, for a criterion she
+// has not set, the most recent level a task gave. Nothing is averaged, so there is no "scores going up".
+function ibRptFacts(c, cols, n, term, said) {
+  const crit = ibCrit(c), icols = ibCols(c, cols), lv = ibLvAt(c, term, n), r = ibTerm(lv, crit, ibBounds(c)), g = r.grade;
+  const at = crit.map(x => { const v = ibLevel(lv[x.k]); return { name: x.name, avg: v != null ? v : ibEvidence(ibEvFor(icols, n, x.k)).last }; }).filter(x => x.avg != null).sort((a, b) => b.avg - a.avg);
+  const apart = at.length >= 2 && at[0].avg - at[at.length - 1].avg >= 1;
+  return { grade: g, soFar: false, band: g == null ? 'None' : g >= 6 ? 'High' : g === 5 ? 'Good' : g >= 3 ? 'Mid' : 'Low', gradeText: g != null ? g + ' out of 7' : '',
+    chip: g != null ? 'Grade ' + g + ' · total ' + r.total + ' of ' + crit.length * IB_TOP : r.set ? r.set + ' of ' + crit.length + ' criteria set' : 'No levels set yet',
+    strong: apart ? at[0] : null, weak: apart ? at[at.length - 1] : null, words: '', move: 0, best: '', said,
+    missing: icols.filter(x => (x.cells.get(n) || {}).st === 'missing').map(x => x.name), scored: icols.filter(x => x.cells.has(n) && Object.keys(x.cells.get(n).lv).length).length };
+}
+// One student's printed page (pssOne, sheet.js): the grade and each criterion's level for the period, every task with the levels
+// it gave, each term's levels, missing work and the comment. Beside each level, when she asks, the level half the class is at or above.
+function ibSheetOne(c, all, cols, conf, n, o, rc) {
+  const i = c.names.indexOf(n), shown = bkWho(n, i), crit = ibCrit(c), bounds = ibBounds(c), icols = ibCols(c, cols), top = crit.length * IB_TOP, cls = c.names.filter(bkIn);
+  const lv = ibLvAt(c, pss.term, n), r = ibTerm(lv, crit, bounds), period = (bkTabs(all).find(t => t[0] === pss.term) || [, 'This year'])[1];
+  const miss = icols.filter(x => (x.cells.get(n) || {}).st === 'missing'), mid = list => { const m = o.cls ? ibMid(list) : null; return m != null ? 'class middle ' + m : ''; };
+  const tile = (l, v, s, main) => '<div class="psst' + (main ? ' main' : '') + '"><span>' + l + '</span><b>' + v + '</b><small>' + (s || '&nbsp;') + '</small></div>', dash = v => v != null ? v : '–';
+  let h = '<article class="pss ibpss" data-pss="' + esc(n) + '"><div class="pssin"><header class="psshead"><div><small>Progress report</small><h3>' + esc(shown) + '</h3></div><p>' + esc(c.name) + '<br>' + esc(period) + ' · ' + esc(pssToday()) + '</p></header>' +
+    '<div class="psstiles">' + tile(pss.term === '*' || !conf.terms.length ? 'Grade' : 'Term grade', dash(r.grade) + (r.grade != null ? ' <small>out of 7</small>' : ''), [r.need.length ? 'still to set: ' + esc(r.need.join(', ')) : 'total ' + r.total + ' of ' + top, mid(cls.map(x => ibTerm(ibLvAt(c, pss.term, x), crit, bounds).grade))].filter(Boolean).join(' · '), true) +
+    crit.map(x => { const v = ibLevel(lv[x.k]); return tile('<b>' + esc(x.k) + '</b> ' + esc(x.name), dash(v) + (v != null ? ' <small>of ' + IB_TOP + '</small>' : ''), [v != null ? ibBandName(v) : 'not set yet', mid(cls.map(y => ibLevel(ibLvAt(c, pss.term, y)[x.k])))].filter(Boolean).join(' · ')); }).join('') +
+    tile('Missing', String(miss.length), miss.length ? (miss.length === 1 ? 'piece of work' : 'pieces of work') : 'nothing outstanding') + '</div>' +
+    '<p class="ibpsscap">Each criterion is marked from 0 to 8 with the level that fits the student’s work best. The grade from 1 to 7 comes from the total of the levels.</p>';
+  const say = (x, cell) => !cell ? '<span class="muted">Not marked</span>' : cell.st === 'missing' ? '<b class="pssmiss">Missing</b>' : cell.st === 'excused' ? 'Excused' : x.crit.filter(k => cell.lv[k] != null).map(k => esc(k) + ' <b>' + cell.lv[k] + '</b>').join(' · ') || '<span class="muted">Not marked</span>';
+  const rows = icols.map(x => '<tr><td>' + esc(x.name) + (x.fm ? ' <small>formative</small>' : '') + '</td><td>' + esc(x.crit.join(' ')) + '</td><td>' + esc(bkDay(x.due)) + '</td><td class="pssv">' + say(x, x.cells.get(n)) + '</td></tr>'), wide = rows.length > 14, half = Math.ceil(rows.length / 2);
+  const tab = list => '<table class="psstab"><thead><tr><th>Task</th><th>Criteria</th><th>Date</th><th class="pssv">Levels</th></tr></thead><tbody>' + list.join('') + '</tbody></table>';
+  let terms = '';
+  if (conf.terms.length) {
+    const line = (name, t, cl) => { const l = ibLvAt(c, t, n), q = ibTerm(l, crit, bounds); return '<tr' + cl + '><td>' + esc(name) + '</td>' + crit.map(x => '<td class="pssv">' + dash(ibLevel(l[x.k])) + '</td>').join('') + '<td class="pssv">' + dash(q.total) + '</td><td class="pssv">' + (q.grade != null ? '<b>' + q.grade + '</b>' : '–') + '</td></tr>'; };
+    terms = '<section><h4>By term</h4><table class="psstab"><thead><tr><th></th>' + crit.map(x => '<th class="pssv" title="' + esc(x.name) + '">' + esc(x.k) + '</th>').join('') + '<th class="pssv">Total</th><th class="pssv">Grade</th></tr></thead><tbody>' +
+      conf.terms.map(t => line(t.name, t.id, '')).join('') + (Object.keys(ibLvAt(c, '*', n)).length ? line('Year', '*', ' class="pssyr"') : '') + '</tbody></table></section>';
+  }
+  h += '<div class="pssgrid' + (wide ? ' wide' : '') + '"><section><h4>Tasks</h4>' + (!rows.length ? '<p class="muted">Nothing in this period yet.</p>' : wide ? '<div class="psshalves">' + tab(rows.slice(0, half)) + tab(rows.slice(half)) + '</div>' : tab(rows)) + '</section>' +
+    '<aside>' + terms + '<section><h4>Missing work</h4>' + (miss.length ? '<ul class="psslist">' + miss.map(x => '<li>' + esc(x.name) + (x.due ? ' <small>' + esc(bkDay(x.due)) + '</small>' : '') + '</li>').join('') + '</ul>' : '<p class="pssnone">Nothing missing.</p>') + '</section></aside></div>';
+  const rep = o.rep ? pssRep(c, cols, conf, n, rc) : null;
+  if (rep && rep.text.trim()) h += '<section class="pssrep"><h4>Comment</h4><p>' + esc(rep.text) + '</p></section>';
+  if (o.notes) h += '<section class="pssnotes"><h4>Notes</h4><i></i><i></i><i></i></section>';
+  return { html: h + '</div></article>', draft: !!(rep && rep.text.trim() && rep.draft) };
+}
 // Levels typed in for one task: its name, date, the criteria it assessed, and a level per student for each.
 function ibAddOpen(c, itId) {
   const f = itId && findItem(itId), it = f ? f.it : null, crit = ibCrit(c);
