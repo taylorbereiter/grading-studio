@@ -261,7 +261,27 @@ h1 i,.top .title i{font-style:normal;font-weight:500;color:var(--accent)}
 .ls-warn{margin-top:8px;padding:8px 12px;border-radius:var(--corner-3);background:var(--warn-soft);color:var(--warn);font-weight:500;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .ls-notes{display:flex;flex-direction:column;gap:4px;margin-top:12px;font-weight:600;font-size:13.5px}
 .ls-notes textarea{font-weight:400;border:1px solid var(--line-strong);border-radius:var(--corner-3);padding:8px;background:var(--surface);resize:vertical}
-.ls-hint{font-size:12.5px;margin:8px 0 0}
+.ls-notes .muted{font-weight:400}
+/* Under the slide: "This slide", then "The whole lesson". Two columns when there is room for them. */
+.ls-below{container-type:inline-size}
+.ls-sec{display:flex;align-items:baseline;gap:var(--space-2);flex-wrap:wrap;margin:var(--space-5) 0 var(--space-3);padding-top:var(--space-4);border-top:1px solid var(--line)}
+.ls-sec:first-child{margin-top:var(--space-4);padding-top:0;border-top:0}
+.ls-sec h3{margin:0;font-size:var(--text-lead);letter-spacing:-.01em}
+.ls-sec .muted{font-size:var(--text-control)}
+.ls-sec .btn{align-self:center}
+.ls-this{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:var(--space-4);align-items:start}
+.ls-this .ls-notes,.ls-this>.pl-ask{margin-top:0}
+.ls-whole{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:var(--space-3)}
+.ls-below .ls-whole>*{margin:0;border:1px solid var(--line);border-radius:var(--corner-5);padding:var(--space-3) var(--space-4);background:var(--surface);min-width:0}
+.ls-whole>:last-child:nth-child(odd){grid-column:1/-1}
+.ls-below .ls-whole h3{margin:0 auto 0 0;font-size:var(--text-body)}
+.ls-below .pl-fin-h,.ls-below .pl-mats-h,.ls-below .pl-ltalk-h{display:flex;align-items:center;gap:var(--space-2) var(--space-3);flex-wrap:wrap;margin:0}
+.ls-whole .sp-small{order:3;flex:1 1 100%;font-size:var(--text-control)}
+.ls-whole .sp{display:none}
+.ls-below .ls-whole .pl-files,.ls-below .ls-whole .pl-tgs{margin-top:var(--space-3)}.ls-whole .pl-ltalk{gap:var(--space-3)}
+.ls-whole .pl-tg .w{margin-right:auto}.ls-whole .pl-tg .nt{order:5;flex:1 1 100%}.ls-whole .pl-tg .nt:empty{display:none}
+.ls-tips{margin:0;padding-left:var(--space-5);display:flex;flex-direction:column;gap:var(--space-2);line-height:1.45}
+@container (max-width:720px){.ls-this,.ls-whole{grid-template-columns:minmax(0,1fr)}}
 /* the slide itself: always the deck's own light colors, Arial like the template */
 .ls-slide{position:relative;width:1280px;height:720px;overflow:hidden;font-family:Arial,Helvetica,sans-serif;color:#000;background:#DFDBD5}
 .ls-bg{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 50%,#ECEAE6 0%,#E2DED9 45%,#B9B6B1 100%)}
@@ -341,15 +361,14 @@ h1 i,.top .title i{font-style:normal;font-weight:500;color:var(--accent)}
 .pl-talk{display:flex;flex-direction:column;gap:6px}
 .pl-ltalk{margin-top:14px;padding:12px 14px;border:1px solid var(--line);border-radius:var(--corner-4);background:var(--surface);display:flex;flex-direction:column;gap:8px}
 .pl-ltalk-h{font-size:var(--text-body)}.pl-ltalk-h .muted{font-size:var(--text-control)}
-.pl-cs{border:1px dashed var(--line);border-radius:var(--corner-4);padding:8px 10px;display:flex;flex-direction:column;gap:8px}
+.pl-cs{display:flex;flex-direction:column;gap:var(--space-2)}
 .pl-cs-h{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:var(--text-control)}
-.pl-cs-h .btn{margin-left:auto}
 .pl-cs-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px}
 .pl-csi{display:flex;flex-direction:column;gap:6px;background:var(--card,#fff);border:1px solid var(--line);border-radius:var(--corner-3);padding:6px}
 .pl-csi-img{padding:0;border:0;background:none;cursor:zoom-in;display:block}
 .pl-csi-img img{width:100%;height:110px;object-fit:contain;background:#f4f4f4;border-radius:var(--corner-1);display:block}
 .pl-csi-b{display:flex;gap:4px;flex-wrap:wrap}
-.pl-cs-tip{margin:0;font-size:var(--text-small)}
+.pl-cs-tip{margin:0;font-size:var(--text-small);flex:1 1 180px}
 .pl-var{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:8px 16px;border-bottom:1px solid var(--line);font-size:13.5px;background:var(--surface)}
 .pl-vt{border:1px solid var(--line);border-radius:var(--corner-pill);padding:3px 12px;background:var(--surface);font:inherit;cursor:pointer;color:var(--fg)}
 .pl-vt.on{background:var(--accent-soft);border-color:var(--accent);font-weight:600;cursor:default;display:inline-flex;align-items:center;gap:6px}
@@ -573,7 +592,7 @@ body.has-side .lsn{margin-right:var(--sidew,420px)}
 .nb-page .nb-vid{position:relative;aspect-ratio:16/9;background:#000;border-radius:var(--corner-3);overflow:hidden;margin:6px 0}.nb-page .nb-vid iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
 .sp-box textarea{width:100%;box-sizing:border-box;font:14px/1.45 var(--f-body);border:1px solid var(--line-strong);border-radius:9px;padding:8px;background:var(--surface);color:var(--fg);resize:vertical}
 .btn.rec{background:var(--danger,#c0392b);color:#fff;border-color:transparent}
-.pl-mic{margin-top:4px}
+.pl-mic{margin-top:4px}.pl-ask .pl-mic,.pl-ltalk .pl-mic{margin-top:0}
 .ls-top .btn.on{background:var(--accent-soft);color:var(--accent)}
 @media (max-width:900px){body.has-side .lsn{margin-right:0}.pl-side-panel{width:100%}}
 @media (max-width:900px){.pl-row{grid-template-columns:90px repeat(var(--cols),minmax(0,1fr))}.pl-week{grid-template-columns:1fr}}
@@ -1485,21 +1504,21 @@ async function claudeChanged(old, l) {
 
 /* ---------- the slide's "for Claude" note and comments ---------- */
 function slideTalkHtml(s) {
-  return '<div class="pl-ask"><label class="ls-notes">What I want on this slide <span class="muted" style="font-weight:400">(for ' + plAi() + ', not shown on the slide)</span><textarea data-f="ask" rows="2" placeholder="Like: a short video on ethos here, or three examples from Ch 4">' + esc(s.ask) + '</textarea></label><button class="btn sm ghost pl-mic" data-dict="[data-f=&quot;ask&quot;]" title="Say it instead of typing">🎤 Dictate</button>' +
+  return '<div class="pl-ask"><label class="ls-notes"><span>What I want on this slide <span class="muted">(for ' + plAi() + ', not shown on the slide)</span></span><textarea data-f="ask" rows="4" placeholder="Like: a short video on ethos here, or three examples from Ch 4">' + esc(s.ask) + '</textarea></label>' +
     ctxHtml(s) +
     '<div class="pl-talk">' + s.talk.map((t, i) => '<div class="pl-msg ' + (t.by === 'claude' ? 'cl' : 'me') + (t.done ? ' done' : '') + '"><b>' + (t.by === 'claude' ? PlAi() : 'You') + '</b><span>' + esc(t.text) + '</span><button class="btn sm ghost" data-talkdone="' + i + '">' + (t.done ? 'Open again' : 'Done') + '</button></div>').join('') +
-    '<div class="pl-say"><input class="btn sm" data-f="say" placeholder="Comment on this slide…" aria-label="Comment on this slide"><button class="btn sm" data-a="say">Add</button></div></div></div>';
+    '<div class="pl-say"><input class="btn sm" data-f="say" placeholder="Comment on this slide…" aria-label="Comment on this slide" title="A comment can be answered and ticked Done. What you want on the slide goes in the box above."><button class="btn sm ghost pl-mic" data-dict="[data-f=&quot;say&quot;]" title="Say it instead of typing">🎤</button><button class="btn sm" data-a="say">Add</button></div></div></div>';
 }
 /* ---------- screenshots for context: on the slide's "for Claude" area, not on the slide ---------- */
 function ctxHtml(s) {
   const c = s.ctx || [];
-  return '<div class="pl-cs"><div class="pl-cs-h"><b>Screenshots</b> <span class="muted">for context, not on the slide. Paste (Ctrl+V or ⌘V) or drop one here.</span>' +
-    '<button class="btn sm" data-a="ctxadd">+ Screenshot</button><input type="file" id="ctxIn" accept="image/*" multiple hidden></div>' +
+  return '<div class="pl-cs"><div class="pl-cs-h"><button class="btn sm ghost pl-mic" data-dict="[data-f=&quot;ask&quot;]" title="Say it instead of typing">🎤 Dictate</button>' +
+    '<button class="btn sm ghost" data-a="ctxadd" title="A screenshot for context, not put on the slide. You can also paste one (Ctrl+V or ⌘V) or drop one here.">+ Screenshot</button><input type="file" id="ctxIn" accept="image/*" multiple hidden>' +
+    '<span class="muted pl-cs-tip">Screenshots are for context, not on the slide. Crop out student names and faces first.</span></div>' +
     (c.length ? '<div class="pl-cs-list">' + c.map((x, i) => '<div class="pl-csi"><button class="pl-csi-img" data-ctxview="' + i + '" title="See it bigger"><img src="' + esc(imgSrc(x.src)) + '" alt="' + esc(x.note || 'Screenshot') + '"></button>' +
       '<input class="btn sm" data-f="ctxnote" data-i="' + i + '" value="' + esc(x.note) + '" placeholder="What is it? (like: the task sheet)" aria-label="What this screenshot is">' +
       '<div class="pl-csi-b"><button class="btn sm" data-ctxput="' + i + '" title="Make a picture slide of it after this one">Put on a slide</button><button class="btn sm ghost" data-ctxcopy="' + i + '" title="Copy the picture to paste into ' + plAi() + '">Copy</button><button class="btn sm ghost" data-ctxdel="' + i + '" title="Remove">×</button></div></div>').join('') + '</div>'
-      : '') +
-    '<p class="muted pl-cs-tip">Crop out student names and faces first.</p></div>';
+      : '') + '</div>';
 }
 async function addCtxShots(files) {
   const s = L.open.slides[L.cur]; let n = 0;
@@ -1531,7 +1550,7 @@ function ctxPut(x) {
 /* ---------- comments on the whole lesson: kept on the lesson ("talk"), shown under the slide's ---------- */
 function lessonTalkHtml(l) {
   const ms = l.talk || [];
-  return '<div class="pl-ltalk"><div class="pl-ltalk-h"><b>For ' + plAi() + ': the whole lesson</b> <span class="muted">Comments on how the lesson should go overall. They go with it when you copy it for ' + plAi() + '.</span></div>' +
+  return '<div class="pl-ltalk"><div class="pl-ltalk-h"><h3>For ' + plAi() + ': the whole lesson</h3><span class="muted sp-small">Comments on how the lesson should go overall. They go with it when you copy it for ' + plAi() + '.</span></div>' +
     '<div class="pl-talk">' + ms.map((t, i) => '<div class="pl-msg ' + (t.by === 'claude' ? 'cl' : 'me') + (t.done ? ' done' : '') + '"><b>' + (t.by === 'claude' ? PlAi() : 'You') + '</b><span>' + esc(t.text) + '</span><button class="btn sm ghost" data-ltalkdone="' + i + '">' + (t.done ? 'Open again' : 'Done') + '</button></div>').join('') +
     '<div class="pl-say"><input class="btn sm" data-f="lsay" placeholder="Comment on the whole lesson…" aria-label="Comment on the whole lesson"><button class="btn sm ghost pl-mic" data-dict="[data-f=&quot;lsay&quot;]" title="Say it instead of typing">🎤</button><button class="btn sm" data-a="lsay">Add</button></div></div></div>';
 }
@@ -1993,16 +2012,28 @@ function renderEditor() {
     (s.layout !== 'title' && s.layout !== 'picture' && s.layout !== 'fullpic' && s.layout !== 'video' ? '<label>Text <select data-f="size" class="btn sm">' + deckSizes().map(z => '<option value="' + z + '"' + (z === s.size ? ' selected' : '') + '>' + z + ' pt</option>').join('') + '</select></label>' : '') +
     (hasPic(s) ? '<button class="btn sm" data-a="pic">' + (s.img ? 'Change picture' : 'Add picture') + '</button>' : '') +
     (s.layout === 'video' ? '<button class="btn sm" data-a="vid">' + (s.video ? 'Change video' : 'Add video link') + '</button>' + (s.video ? '<a class="btn sm ghost" href="' + esc(videoLink(s.video)) + '" target="_blank" rel="noopener">Watch</a>' : '') : '') +
-    '<span class="sp"></span><button class="btn sm ghost" data-a="up" title="Move earlier">↑</button><button class="btn sm ghost" data-a="down" title="Move later">↓</button><button class="btn sm ghost" data-a="dup">Duplicate</button><button class="btn sm ghost" data-a="del">Delete slide</button></div>' +
+    '<span class="sp"></span><button class="btn sm ghost" data-a="up" title="Move earlier">↑</button><button class="btn sm ghost" data-a="down" title="Move later">↓</button><button class="btn sm ghost" data-a="dup" title="Make a copy of this slide">Duplicate</button><button class="btn sm ghost" data-a="del" title="Delete this slide">Delete</button></div>' +
     '<div class="ls-stagewrap" id="lsWrap"><div class="ls-stage" id="lsStage"><div class="ls-slide">' + slideHtml(s, l, true) + '</div></div></div>' +
     '<div class="ls-warn" id="lsWarn" hidden></div>' +
-    '<label class="ls-notes">Speaker notes<textarea data-f="notes" rows="3" placeholder="Notes for you, not shown on the slide">' + esc(s.notes) + '</textarea></label>' +
-    slideTalkHtml(s) + lessonTalkHtml(l) + taughtHtml(l) + finishedHtml(l) + materialsHtml(l, 'lesson') + linksHtml(l) +
-    '<p class="muted ls-hint">Click any text on the slide to edit it. In bullets, start a line with Tab for a smaller point under the one above. Arrow keys move between slides when you’re not typing. Drag a picture in from another tab or from your computer, onto the slide or onto any slide in the list, or paste a picture or a YouTube link. A picture on a slide that has text goes beside the text.</p>' +
+    '<div class="ls-below">' +
+    '<div class="ls-sec"><h3>This slide</h3><span class="muted">' + (L.cur + 1) + ' of ' + l.slides.length + '</span><span class="sp"></span><button class="btn sm ghost" data-a="tips">Editing tips</button></div>' +
+    '<div class="ls-this"><label class="ls-notes">Speaker notes<textarea data-f="notes" rows="4" placeholder="Notes for you, not shown on the slide">' + esc(s.notes) + '</textarea></label>' + slideTalkHtml(s) + '</div>' +
+    '<div class="ls-sec"><h3>The whole lesson</h3><span class="muted">The same on every slide</span><span class="sp"></span><button class="btn sm ghost" data-a="finall" title="The PowerPoint and every file in Materials, in one .zip">↓ Download all (.zip)</button></div>' +
+    '<div class="ls-whole">' + materialsHtml(l, 'lesson') + linksHtml(l) + finishedHtml(l) + lessonTalkHtml(l) + taughtHtml(l) + '</div></div>' +
     '</section></div><input type="file" id="lsPicIn" accept="image/*" hidden>';
   $('#lessons').innerHTML = h;
   fitStage(); checkFit(); panelContext();
   const th = $('#lsThumbs .ls-th.on'); if (th) th.scrollIntoView({ block: 'nearest' });
+}
+function tipsDlg() {
+  openDlg('<div class="bh"><h2>Editing tips</h2></div><div class="bb"><ul class="ls-tips">' +
+    '<li>Click any text on the slide to edit it.</li>' +
+    '<li>In bullets, start a line with Tab for a smaller point under the one above.</li>' +
+    '<li>Arrow keys move between slides when you’re not typing.</li>' +
+    '<li>Drag a picture in from another tab or from your computer, onto the slide or onto any slide in the list, or paste a picture or a YouTube link.</li>' +
+    '<li>A picture on a slide that has text goes beside the text.</li>' +
+    '<li>Right-click a slide to comment on it.</li></ul></div><div class="bf"><button class="btn primary" data-x>Close</button></div>', true);
+  $('#dlgBox').onclick = e => { if (e.target.closest('[data-x]')) closeDlg(); };
 }
 function atlasOf(l) {
   if (l.atlas) return { url: l.atlas, own: true };
@@ -2171,6 +2202,7 @@ async function onLessonsClick(e) {
   if (a === 'look') return lookDlg();
   if (a === 'vid') return videoDlg();
   if (a === 'split') return splitOverflow();
+  if (a === 'tips') return tipsDlg();
   if (a === 'tlink') {
     editorCommit();
     if (titlesLinked(l)) { l.titleApart = true; toast('The lesson name and the title slide can be different now'); }
@@ -2419,6 +2451,7 @@ function moreHtml(l) {
     it('send', 'Copy for ' + plAi(), 'To paste where you’re working with ' + plAi()) +
     (lessonTalk(l) ? '' : it('comments', 'Comments', 'On the lesson and its slides')) +
     it('versions', 'Versions', 'Earlier copies of this lesson') +
+    it('varnew', 'Alternative version…', 'A copy to change, like a shorter one for Friday') +
     it('finzip', 'Upload lesson .zip', 'The finished PowerPoint and its files, as one .zip') + '<hr>' +
     (titleSlideOf(l) ? it('tlink', linked ? 'Name matches the title slide ✓' : 'Match the name to the title slide', linked ? 'Click to let them be different' : 'They are different now', linked ? 'on' : '') : '') +
     (a ? '<a class="mi" role="menuitem" href="' + esc(a.url) + '" target="_blank" rel="noopener">Open ' + link + ' ↗<small>' + (a.own ? 'This lesson’s own page' : 'The page of ' + esc(a.unit)) + '</small></a>' + it('atlas', 'Change the ' + link + ' link') : it('atlas', '+ ' + link + ' link')) + '<hr>' +
@@ -4104,7 +4137,7 @@ function finishedHtml(l) {
   const f = l.final, old = l.finals || [];
   return '<div class="pl-fin" id="plFin"><div class="pl-fin-h"><h3>Finished PowerPoint</h3><span class="muted sp-small">' +
     (f ? 'The deck you’ll teach from. Uploading a new one replaces it; the old one is kept below.' : 'Upload the deck when it’s done. Its slides replace the ones here, and this version is kept under Versions.') +
-    '</span><span class="sp"></span><button class="btn sm' + (f ? ' ghost' : ' primary') + '" data-a="finup">' + (f ? 'Upload a newer one…' : 'Upload finished .pptx…') + '</button><button class="btn sm ghost" data-a="finall" title="The PowerPoint and every file in Materials, in one .zip">↓ Download all (.zip)</button><button class="btn sm ghost" data-a="finzip" title="A .zip with the finished PowerPoint and the lesson’s handouts and files">Upload lesson .zip…</button><input type="file" id="finIn" accept=".pptx,.zip,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/zip" hidden></div>' +
+    '</span><span class="sp"></span><button class="btn sm" data-a="finup" title="A finished .pptx, or a lesson .zip with the PowerPoint and its handouts">' + (f ? 'Upload a newer one…' : 'Upload .pptx or .zip…') + '</button><input type="file" id="finIn" accept=".pptx,.zip,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/zip" hidden></div>' +
     (f ? '<div class="pl-files"><div class="pl-file"><span class="pl-ft">PPT</span><span class="pl-fn"><b>' + esc(f.name) + '</b><span>' + finSize(f.size) + ' · uploaded ' + finWhen(f.at) + (finFresh(l) ? '' : ' · slides changed here since') + '</span></span>' +
       '<button class="btn sm" data-a="findl" data-id="' + f.id + '">Download</button></div></div>' : '') +
     (old.length ? '<details class="pl-fin-old"><summary>Older finished decks (' + old.length + ')</summary><div class="pl-files">' + old.map(o => '<div class="pl-file"><span class="pl-ft">PPT</span><span class="pl-fn"><b>' + esc(o.name) + '</b><span>' + finSize(o.size) + ' · uploaded ' + finWhen(o.at) + '</span></span>' +
@@ -4453,7 +4486,8 @@ function variantsOf(l) {
 }
 function variantBar(l) {
   const vs = variantsOf(l);
-  return '<div class="pl-var"><span class="muted">' + (vs.length > 1 ? 'Versions of this lesson:' : 'This lesson:') + '</span>' +
+  if (vs.length < 2) return '';
+  return '<div class="pl-var"><span class="muted">Versions of this lesson:</span>' +
     vs.map(v => v.id === l.id
       ? '<span class="pl-vt on">' + esc(varName(v)) + '<button class="pl-vr" data-a="varname" title="Rename this version" aria-label="Rename">✎</button></span>'
       : '<button class="pl-vt" data-var="' + v.id + '" title="' + esc(v.slots.length ? v.slots.map(s => className(s.classId) + ' ' + shortDate(s.date)).join(', ') : 'Not on a class') + '">' + esc(varName(v)) + '</button>').join('') +

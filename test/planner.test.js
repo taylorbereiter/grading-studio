@@ -1004,8 +1004,11 @@ test('a lesson .zip: the finished PowerPoint goes to Finished, every other file 
     assert.deepEqual(r.first, { final: 'Book Cover Prep.pptx', slides: 2, files: [['Triangle handout.pdf', 'application/pdf'], ['Exit ticket.docx', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']] });
     assert.equal(r.final, 'v2.pptx'); assert.deepEqual(r.older, ['Book Cover Prep.pptx']);
     assert.deepEqual(r.files, [['Exit ticket.docx', 4], ['Triangle handout.pdf', 14]]);
-    await page.waitForSelector('#plFin [data-a="finzip"]');
-    assert.ok(await page.$('.ls-top .ls-menu [data-a="finzip"]'));   // in More, beside Download
+    // one upload button under Finished PowerPoint takes a .pptx or a .zip; the .zip is also in More, beside Download
+    await page.waitForSelector('#plFin [data-a="finup"]');
+    assert.match(await page.$eval('#finIn', i => i.accept), /\.zip/);
+    assert.ok(!(await page.$('#plFin [data-a="finzip"]')));
+    assert.ok(await page.$('.ls-top .ls-menu [data-a="finzip"]'));
     assert.match(await page.$eval('.pl-mats', d => d.textContent), /Exit ticket\.docx[\s\S]*Triangle handout\.pdf/);
     assert.deepEqual(errors, []);
   } finally { await a.done(); }
@@ -1020,8 +1023,9 @@ test('alternative versions: made from the lesson I am on, named, switched from t
       const l = P.normLesson({ title: 'Book Cover Prep', fmt: 2, slots: [{ classId: 'A1', date: '2026-11-03' }], slides: [{ layout: 'title', title: 'Book Cover Prep' }, { layout: 'content', title: 'Advice', body: '• One', ask: 'Add the triangle', talk: [{ by: 'you', text: 'keep' }] }] });
       P.L.lessons.push(l); await P.createLesson; P.openLessonForTest(l, 1);
     }, SETUP);
-    await page.waitForSelector('.pl-var [data-a="varnew"]');
-    await page.click('.pl-var [data-a="varnew"]'); await page.waitForSelector('#varN');
+    // a lesson with one version has no versions bar: the alternative is made from More
+    assert.ok(!(await page.$('.pl-var')));
+    await more(page, 'varnew'); await page.waitForSelector('#varN');
     await page.type('#varN', 'Shorter Friday');
     await page.click('#varSame'); await page.click('[data-ok]');
     await page.waitForFunction(() => window.__planner.L.open.variant === 'Shorter Friday');
@@ -1236,7 +1240,7 @@ test('a lesson’s top bar is light: its name, its classes, status, Download and
     await page.click('.ls-top [data-a="more"]');
     assert.equal(await page.$eval('.ls-top [data-a="more"]', b => b.getAttribute('aria-expanded')), 'true');
     const items = await page.$$eval('.ls-menu .mi', x => x.map(e => e.firstChild.textContent.trim()));
-    assert.deepEqual(items.slice(0, 4), ['Copy for Claude', 'Comments', 'Versions', 'Upload lesson .zip']);
+    assert.deepEqual(items.slice(0, 5), ['Copy for Claude', 'Comments', 'Versions', 'Alternative version…', 'Upload lesson .zip']);
     assert.deepEqual(items.slice(-5), ['Share lesson file…', 'Save lesson file for Claude…', 'Copy to another class or day…', 'Copy lesson as text', 'Delete this lesson']);
     assert.ok(items.includes('Name matches the title slide ✓'));
     // Escape closes it, and so does a click somewhere else
@@ -1260,6 +1264,52 @@ test('a lesson’s top bar is light: its name, its classes, status, Download and
     assert.ok(!await page.$eval('.ls-menu', m => m.hidden));
     await page.click('.ls-menu [data-a="mdelete"]');
     await page.waitForFunction(() => window.__planner.L.view === 'week' && !window.__planner.L.lessons.length);
+    assert.deepEqual(errors, []);
+  } finally { await a.done(); }
+});
+
+test('under the slide: what belongs to this slide, then what belongs to the whole lesson, with one blue button on the screen', async () => {
+  const a = await open();
+  try {
+    const { page, errors } = a;
+    await page.evaluate(async s => {
+      const P = window.__planner; await P.applySetup(s);
+      const l = P.normLesson({ title: 'Reading a poem aloud', fmt: 2, slots: [{ classId: 'A1', date: '2026-11-03' }], slides: [{ layout: 'title', title: 'Reading a poem aloud' }, { layout: 'content', title: 'Warm-up', body: '• Read it once', notes: 'Two minutes' }] });
+      P.L.lessons.push(l); P.openLessonForTest(l, 1);
+    }, SETUP);
+    await page.waitForSelector('.ls-below .ls-whole');
+    const st = () => page.evaluate(() => ({
+      heads: [...document.querySelectorAll('.ls-below .ls-sec h3')].map(h => h.textContent),
+      count: document.querySelector('.ls-below .ls-sec .muted').textContent,
+      slide: [...document.querySelector('.ls-this').children].map(c => c.className),
+      whole: [...document.querySelector('.ls-whole').children].map(c => c.id || c.className),
+      notes: document.querySelector('.ls-this [data-f="notes"]').value,
+      blue: [...document.querySelectorAll('#lessons .btn.primary')].map(b => b.textContent.trim()),
+      hint: !!document.querySelector('.ls-hint'), bar: !!document.querySelector('.pl-var'),
+      zip: !!document.querySelector('.ls-sec [data-a="finall"]')
+    }));
+    assert.deepEqual(await st(), { heads: ['This slide', 'The whole lesson'], count: '2 of 2', slide: ['ls-notes', 'pl-ask'], whole: ['pl-mats', 'lsLinks', 'plFin', 'pl-ltalk', 'plTaught'],
+      notes: 'Two minutes', blue: ['Present'], hint: false, bar: false, zip: true });
+    // the two parts sit side by side when there is room, and stack when there isn't
+    const cols = sel => page.$eval(sel, e => getComputedStyle(e).gridTemplateColumns.split(' ').length);
+    assert.equal(await cols('.ls-this'), 2); assert.equal(await cols('.ls-whole'), 2);
+    await page.setViewport({ width: 800, height: 900 });
+    await page.waitForFunction(() => getComputedStyle(document.querySelector('.ls-this')).gridTemplateColumns.split(' ').length === 1);
+    assert.equal(await cols('.ls-whole'), 1);
+    // the slide is fitted to the new width when the window's resize event arrives, which can be after the columns restack
+    await page.waitForFunction(() => document.documentElement.scrollWidth <= innerWidth, { timeout: 10000 }).catch(() => assert.fail('no sideways scroll'));
+    await page.setViewport({ width: 1500, height: 950 });
+    // another slide: its own notes, the same lesson parts
+    await page.click('#lsThumbs [data-go="0"]');
+    await page.waitForFunction(() => document.querySelector('.ls-below .ls-sec .muted').textContent === '1 of 2');
+    assert.equal((await st()).notes, '');
+    assert.deepEqual((await st()).whole, ['pl-mats', 'lsLinks', 'plFin', 'pl-ltalk', 'plTaught']);
+    // the tips that used to be a paragraph under every slide open from a button
+    await page.click('.ls-sec [data-a="tips"]'); await page.waitForSelector('#dlgBox .ls-tips li');
+    assert.match(await page.$eval('#dlgBox', d => d.textContent), /Click any text on the slide to edit it/);
+    await page.click('#dlgBox [data-x]'); await page.waitForFunction(() => document.querySelector('#dlg').hidden);
+    // dictating a comment is offered on the slide as it is on the whole lesson
+    assert.ok(await page.$('.pl-ask .pl-say [data-dict]')); assert.ok(await page.$('.pl-ltalk .pl-say [data-dict]'));
     assert.deepEqual(errors, []);
   } finally { await a.done(); }
 });
