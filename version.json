@@ -1,11 +1,11 @@
 {
- "version": "1.27.16",
- "build": "f4c8e98a4369",
+ "version": "1.27.17",
+ "build": "708c791b39b8",
  "notes": [
-  "The grade sheet shows the score you gave each paper in Grading Studio, the same number as the score panel, with extra credit and the retake that counts. Grades found typed on the papers only show for papers with no score yet, or when you tick Also show grades found on the papers. A score stamp already on a paper now changes when the score does."
+  "Answer notes for quizzes: type each question's answer in Quiz boxes, and it goes on the returned papers in a gold note labelled Answer, by each question a student lost points on. In Quiz boxes, Answer notes can be set to every question or off."
  ],
  "files": {
-  "index.html": "b7c21f65edf0a35a8d2129af28ae3f866b45f34204cedf38ad5ebb372bdb52d9",
-  "planner.html": "1c465237d39d38e9e88fd19148e76ff230fe14d640bb89c17c4f47b8130c1327"
+  "index.html": "76e98e69368a87287c6530f682c49e4b48426b79f2857c577ad3e2dfdc7cee84",
+  "planner.html": "40ed473ad76ac782738dd050ccc93f7ffcd930aeda1596e0c25e74f3f8fe9cd8"
  }
 }

@@ -116,6 +116,7 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
   --accent:#1A67A8; --accent-hover:#15568C; --accent-fg:#FFFFFF; --accent-soft:#E6F0F9;
   /* colour: saying how things stand. Each has a soft background to sit on. */
   --warn:#8A5A0E; --warn-soft:#FBF0D9; --ok:#17704A; --ok-soft:#DFF3E9; --bad:#B4321F; --bad-soft:#FCE7E3; --warn-fg:#FFFFFF;
+  --gold:#8A6500; --gold-soft:#FBF3D6; --gold-line:#C08C00; --gold-fg:#FFFFFF;
   --paper-chip:#FFFFFF;
   --shadow:0 1px 2px rgba(20,25,40,.06),0 4px 14px rgba(20,25,40,.06);
   /* type */
@@ -141,6 +142,7 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
   --fg:#E7E9EF; --fg-2:#CDD2DE; --muted:#A9B0C0; --faint:#8E95A6;
   --accent:#5AA6E6; --accent-hover:#7DB9EC; --accent-fg:#0C1520; --accent-soft:#16283A;
   --warn:#E8B451; --warn-soft:#352A14; --ok:#4FC690; --ok-soft:#15302A; --bad:#FF7A64; --bad-soft:#3A1E1A; --warn-fg:#1C1405;
+  --gold:#E8C35A; --gold-soft:#33290F; --gold-line:#B8901E; --gold-fg:#1C1405;
   --paper-chip:#1E222C;
   --shadow:0 1px 2px rgba(0,0,0,.3),0 4px 14px rgba(0,0,0,.25);
   --bk-sum:#7FB2E0; --bk-ic:#3F78AE; --bk-fm:#6B7280; --bk-k1:#4FC1C7; --bk-k2:#A99BE6; --bk-k3:#E0A052; --bk-k4:#D18BC5; --bk-k5:#A5ADBA; --ch1:#3A6590; --ch2:#4A80B5; --ch3:#5E9AD1; --ch4:#84B5E2; --ch5:#B3D3F0; --ch-lo:#FFFFFF; --ch-hi:#0B1F33; --ch-up:#4A93D6; --ch-down:#C98230; --ch-band:#22324A; --dot:#4A9ADF; --ov-bar:#4793D4; --ov-mute:#6B7280;
@@ -6075,7 +6077,7 @@ const LANG_ES = {
     'Your marked paper starts on the next page.': 'Tu trabajo corregido empieza en la página siguiente.', 'Your feedback continues on the next page.': 'Tus comentarios continúan en la página siguiente.',
     /* returned file names: Student - Assignment - Graded.pdf */
     'Graded': 'Corregido', 'Feedback': 'Comentarios', 'Student name': 'Nombre del estudiante',
-    'Missing': 'No entregado', 'Excused': 'Justificado', 'Late': 'Con retraso', 'Retake': 'Nuevo intento', 'First try': 'Primer intento', 'counts as': 'cuenta como',
+    'Missing': 'No entregado', 'Excused': 'Justificado', 'Late': 'Con retraso', 'Retake': 'Nuevo intento', 'Answer': 'Respuesta', 'First try': 'Primer intento', 'counts as': 'cuenta como',
   },
   rules: [
     [/^(\d+) more on your list$/, m => m[1] + ' más en tu lista'], [/^(\d+) to do$/, m => m[1] + (m[1] === '1' ? ' pendiente' : ' pendientes')],
@@ -6477,7 +6479,7 @@ const LANG_ZH = {
     'Your marked paper starts on the next page.': '批改後的作業從下一頁開始。', 'Your feedback continues on the next page.': '回饋接續在下一頁。',
     /* returned file names: Student - Assignment - Graded.pdf */
     'Graded': '已評分', 'Feedback': '回饋', 'Student name': '學生姓名',
-    'Missing': '缺交', 'Excused': '免交', 'Late': '遲交', 'Retake': '重做', 'First try': '第一次', 'counts as': '採計',
+    'Missing': '缺交', 'Excused': '免交', 'Late': '遲交', 'Retake': '重做', 'Answer': '答案', 'First try': '第一次', 'counts as': '採計',
   },
   rules: [
     [/^(\d+) more on your list$/, '清單上還有 $1 項'], [/^(\d+) to do$/, '$1 項待辦'],

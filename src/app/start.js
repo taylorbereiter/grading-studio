@@ -192,6 +192,8 @@ function setCheckInk(k) { if (!COLORS[k]) return; checkInk = k; CHECK_INK = COLO
 // A teacher can pick one color for them, or 'credit': full points in the ✓ color, none in the ✗ color, part in amber.
 // The amber is darker than a yellow so it reads on white paper and in print (4.7 to 1 on white, between the red and the green).
 const PTS_AMBER = '#A86400';
+// A quiz answer note (quiz.js) is a comment in gold, drawn a shade darker (#8A6500), which reads on white paper and in black-and-white print.
+const QZ_GOLD = '#C08C00';
 let ptsInk = (k => k === 'credit' || COLORS[k] ? k : '')(store.get('gs.ptsInk', ''));
 function setPtsInk(k) { ptsInk = k === 'credit' || COLORS[k] ? k : ''; if (ptsInk) store.set('gs.ptsInk', ptsInk); else store.del('gs.ptsInk'); }
 // The color of v points out of top. A total or a score stamp is a sum, not one answer, so with 'credit' it stays in the pen's ink.
