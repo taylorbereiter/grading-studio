@@ -125,3 +125,7 @@
 .qmnedb .btn{margin-left:auto}
 .setinks{display:grid;gap:8px;margin-top:10px}
 .setinks .qmirow .hsm{min-width:96px}
+
+.qmcopynote{display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap;margin:0 16px;padding:10px 14px;border-radius:var(--corner-3);background:var(--accent-soft);font-size:var(--text-small);line-height:1.45}
+.qmcopynote p{margin:0;flex:1 1 320px}
+.qmcopynote [data-copyok]{align-self:center}

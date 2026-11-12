@@ -1,11 +1,11 @@
 {
- "version": "1.27.14",
- "build": "e5b7c907568a",
+ "version": "1.27.15",
+ "build": "07aed3665d39",
  "notes": [
-  "Points written on a paper can have their own color. In Quick mark’s Colors menu, or Settings, Marking, Mark colors: the ✗ color as before, one color of your own, or By credit, with full points in the check color, part in amber and none in the ✗ color."
+  "Copy one quiz answer as a picture: in Quick mark, press P or ⧉ Copy on an answer, then paste it into Claude to ask whether it is right. The picture shows only that answer, with the question and your answer key on top. The name, score, your mark and the file name are left off, and name covers are painted in, but the student’s handwriting and words still show."
  ],
  "files": {
-  "index.html": "6465cee53c44807fa02f2b8d1e1f109901c728e2c8eacf8e2369f002c637bfb1",
-  "planner.html": "3d60d2483d2d7949be03a1bffdfacb5e5b1da56879227dc0450498847751b215"
+  "index.html": "7ebd6a0fb64c4101b7ce07feb809e40e7784c891650b468241024940d97ce083",
+  "planner.html": "e67bf02e63920938cfd803942a20ddb6d0ea23dba1829ca0c25da3bfe00b8cf6"
  }
 }

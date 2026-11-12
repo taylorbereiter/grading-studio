@@ -524,6 +524,8 @@ function openQuiz(view) {
     const mv = e.target.closest('[data-qgo]'); if (mv) { qmGo(+mv.dataset.qgo); return; }
     const op = e.target.closest('[data-open]'); if (op) { qmClose(); return openStudent(+op.dataset.open); }
     const pk = e.target.closest('[data-peek]'); if (pk) return qmPeek(pk.closest('.qmc'));
+    const cp = e.target.closest('[data-qcopy]'); if (cp) return qmCopy(cp.closest('.qmc'));
+    if (e.target.closest('[data-copyok]')) { store.set('gs.qmCopySeen', 1); const n = $('#qmCopyNote'); if (n) n.remove(); return; }
     const ex = e.target.closest('[data-ex]'); if (ex) return exStar(ex.closest('.qmc'));
     const rs = e.target.closest('[data-reset]'); if (rs) return qmSpotSet(rs.closest('.qmc'), null);
     if (e.target.closest('[data-rest]')) return qmRest();
@@ -614,6 +616,7 @@ const qmCard = (i, q, qi) => {
   const tag = v != null && qzByPts(q) ? '<span class="qmchip">' + fmtNum(v) + ' of ' + fmtNum(pts) + '</span>' : '';
   return '<div class="qmc' + state + '" tabindex="0" data-st="' + i + '" data-q="' + q.id + '"><div class="qmch">' + head + tag +
     '<span class="qmchr">' + (qzOwn(st, q) ? '<button class="link hsm" data-reset title="Put this mark back where the question’s mark goes">Reset spot</button>' : '') +
+    '<button class="btn sm" data-qcopy title="Copy this answer as a picture, to paste into Claude or anywhere else. No name, score or mark on it (P)">⧉ Copy</button>' +
     exStarBtn(st, q) + '<button class="btn sm" data-peek title="See their whole page (Space)">⤢ Whole page</button></span></div>' +
     '<div class="qmimg" title="' + (qzByPts(q) && qzHow(q) === 'pts' ? 'Drag: line this paper up' : 'Click: wrong / right. Drag: line this paper up') + '"><span class="muted hsm">…</span></div>' +
     '<div class="qmbtns">' + btns + '<button class="qmb cm" data-qnote title="Write a comment or text on this paper (C)">Comment</button>' + (v != null ? '<button class="qmb clr" data-v="" title="Clear">Clear</button>' : '') + '</div>' + qmNoteLine(st, q) + '</div>';
@@ -679,7 +682,7 @@ function qmRender() {
     $('#qmProg').textContent = done + ' of ' + who.length + ' marked';
     $('#qmFoot').innerHTML = '<button class="btn primary" data-rest' + (done === who.length ? ' disabled' : '') + '>' + (qzByPts(q) ? 'Give the rest ' + fmtNum(full) : 'Mark the rest right') + '</button>';
     $('#qmHint').textContent = (qzByPts(q) ? 'Keys: a number for its points, H adds ½' : 'Click an answer to put an ✗ on it, click again to take it off. Keys: 1 right, 0 or X wrong') +
-      ', C comment, E example, arrows to move, Space whole page, Ctrl Z undo, [ and ] for the question. Drag a mark to move it on that paper.';
+      ', C comment, E example, P copy a picture, arrows to move, Space whole page, Ctrl Z undo, [ and ] for the question. Drag a mark to move it on that paper.';
     cards = who.map(i => [i, q, qzAt]);
     body.className = 'bb qmbody qmgrid';
   } else {
@@ -690,7 +693,7 @@ function qmRender() {
       '<span class="qmtot">' + fmtNum(quizSum(st)) + ' / ' + fmtNum(quizMax()) + (n === qs.length && percentFor(quizSum(st)) != null ? ' = ' + percentFor(quizSum(st)) + '%' : '') + '</span>';
     $('#qmProg').textContent = n + ' of ' + qs.length + ' marked';
     $('#qmFoot').innerHTML = '<button class="btn" data-open="' + qzStu + '">Open their paper</button><button class="btn primary" data-rest' + (n === qs.length ? ' disabled' : '') + '>Mark the rest right</button>';
-    $('#qmHint').textContent = 'Click an answer to put an ✗ on it, click again to take it off. Keys: ↑ ↓ to move, a number for its points, C comment, E example, Space whole page, Ctrl Z undo, [ and ] for the student.';
+    $('#qmHint').textContent = 'Click an answer to put an ✗ on it, click again to take it off. Keys: ↑ ↓ to move, a number for its points, C comment, E example, P copy a picture, Space whole page, Ctrl Z undo, [ and ] for the student.';
     cards = qs.map((q, qi) => [qzStu, q, qi]);
     body.className = 'bb qmbody qmcol';
   }
@@ -843,6 +846,70 @@ function qmPeekClose() {
   if (back && back.isConnected) back.focus({ preventScroll: true });
   return true;
 }
+/* a picture of one answer, to ask Claude (or anyone) about it */
+// Only the answer in its box: no name, score, mark or file name. Name covers are painted in the way Share with Claude paints
+// them. On top, the question, its points and her answer key, so the picture makes sense on its own. Nothing is sent anywhere.
+async function qzAnswerPic(st, q, qi) {
+  const [path, p] = quizPages(st)[q.n] || [], f = path && fileByPath(st, path);
+  if (!f) return null;
+  await workerReady;
+  const js = await qzDoc(f), page = await js.getPage(p + 1), v1 = vpRot(f, p, page, 1), k = 1600 / v1.width, vp = vpRot(f, p, page, k);
+  const pc = document.createElement('canvas'); pc.width = Math.ceil(vp.width); pc.height = Math.ceil(vp.height);
+  const pctx = pc.getContext('2d'); pctx.fillStyle = '#fff'; pctx.fillRect(0, 0, pc.width, pc.height);
+  await page.render({ canvasContext: pctx, ...vpDraw(f, p, page, k), annotationMode: pdfjsLib.AnnotationMode.ENABLE }).promise;
+  scanClip(pctx, f, p, vp.width, pc.width, pc.height);
+  const L = lightForPage(st, f, p); if (L) lightCanvas(pctx, pc.width, pc.height, L);
+  await anonPaint(pctx, st, f, p, page, vp);
+  page.cleanup();
+  const [dx, dy] = qzShift(st, q.n);
+  const x0 = clamp(q.x + dx - QZ_PAD, 0, 1), y0 = clamp(q.y + dy - QZ_PAD, 0, 1), x1 = clamp(q.x + dx + q.w + QZ_PAD, 0, 1), y1 = clamp(q.y + dy + q.h + QZ_PAD, 0, 1);
+  const sx = Math.round(x0 * pc.width), sy = Math.round(y0 * pc.height), sw = Math.max(1, Math.round((x1 - x0) * pc.width)), sh = Math.max(1, Math.round((y1 - y0) * pc.height));
+  // The words on top, wrapped to the picture's width.
+  const pts = +q.pts || 1, words = qzByPts(q) ? qzStepWords(pts) : [];
+  const lines = [['600', 'Question ' + quizLabel(q, qi) + ' · ' + (qzByPts(q) ? 'scored 0 to ' + fmtNum(pts) : fmtNum(pts) + (pts === 1 ? ' point' : ' points') + ', right or wrong')]];
+  if (q.key) lines.push(['400', 'Answer key: ' + q.key]);
+  if (words.some(Boolean)) lines.push(['400', 'Scale: ' + qzSteps(pts).map((v, i) => fmtNum(v) + (words[i] ? ' ' + words[i] : '')).join(', ')]);
+  const W = Math.max(sw, 560), pad = 16, fs = 20, lh = 28, font = w => w + ' ' + fs + 'px Inter, system-ui, sans-serif';
+  const m = document.createElement('canvas').getContext('2d'), rows = [];
+  for (const [w, t] of lines) {
+    m.font = font(w); let row = '';
+    for (const word of t.split(' ')) { const next = row ? row + ' ' + word : word; if (row && m.measureText(next).width > W - pad * 2) { rows.push([w, row]); row = word; } else row = next; }
+    rows.push([w, row]);
+  }
+  const top = pad + rows.length * lh + pad - 8;
+  const c = document.createElement('canvas'); c.width = W; c.height = top + sh + pad;
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
+  ctx.fillStyle = '#1F2933'; ctx.textBaseline = 'top';
+  rows.forEach(([w, t], i) => { ctx.font = font(w); ctx.fillText(t, pad, pad + i * lh); });
+  ctx.fillStyle = '#E4E6EA'; ctx.fillRect(0, top - 1, W, 1);
+  ctx.drawImage(pc, sx, sy, sw, sh, Math.round((W - sw) / 2), top + pad / 2, sw, sh);
+  pc.width = pc.height = 0;
+  return c;
+}
+// P or ⧉ Copy: the picture goes on the clipboard, or, where the browser can't copy pictures, saves as a file.
+async function qmCopy(el) {
+  if (!el) return;
+  const st = batch.students[+el.dataset.st], q = batch.quiz.qs.find(x => x.id === el.dataset.q), qi = batch.quiz.qs.indexOf(q);
+  if (!st || !q) return;
+  const blobP = qzAnswerPic(st, q, qi).then(c => { if (!c) throw new Error('no page'); return new Promise(res => c.toBlob(b => { c.width = c.height = 0; res(b); }, 'image/png')); });
+  const say = 'Question ' + quizLabel(q, qi);
+  let copied = false;
+  try {
+    if (!navigator.clipboard || !navigator.clipboard.write || typeof ClipboardItem === 'undefined') throw new Error('no clipboard');
+    await navigator.clipboard.write([new ClipboardItem({ 'image/png': blobP })]);   // a promise, so Safari still counts the click
+    copied = true;
+  } catch (e) { /* saved as a file below */ }
+  let blob = null;
+  if (!copied) {
+    try { blob = await blobP; } catch { return toast('This page isn’t in their scan.'); }
+    await saveBlob('Question ' + quizLabel(q, qi) + '.png', blob);
+  }
+  toast(copied ? 'Picture of ' + say + ' copied. Paste it into Claude to ask about it.' : 'This browser can’t copy pictures, so ' + say + ' was saved as a picture file.', 4000);
+  if (!store.get('gs.qmCopySeen', 0) && !$('#qmCopyNote') && $('#qmBody'))
+    $('#qmBody').insertAdjacentHTML('beforebegin', '<div class="qmcopynote" id="qmCopyNote" role="status"><p><b>What the picture shows.</b> Only this answer, with the question and your answer key on top. The student’s name, their score, your mark and the file name are left off, and any name covers are painted in. It still shows the student’s own handwriting and words.</p>' +
+      '<p>Nothing is sent anywhere. The picture stays on this computer until you paste it somewhere yourself.</p><button class="btn sm" data-copyok>Got it</button></div>');
+}
 function qmKey(e) {
   if (!$('#qmBody')) return;
   const stop = () => { e.preventDefault(); e.stopPropagation(); };
@@ -883,6 +950,7 @@ function qmKey(e) {
   if ((e.key === '1' || e.key === '0') && !scale) { stop(); return qmMark(el, e.key === '1' ? +q.pts || 1 : 0); }   // right is all its points
   if (e.key === 'x' || e.key === 'X') { stop(); return qmMark(el, 0); }
   if (e.key === 'c' || e.key === 'C') { stop(); return qmNoteOpen(el); }
+  if (e.key === 'p' || e.key === 'P') { stop(); return qmCopy(el); }
   if (e.key === 'Backspace' || e.key === 'Delete') { stop(); return qmMark(el, null, true); }
 }
 // On a picture: a click marks it wrong (or right again if it was wrong); a drag lines that paper's page up, moving every box on it.
