@@ -85,8 +85,7 @@ function pkClose() {
   pkDragEnd();
   PK.on = false; clearInterval(PK.spin); PK.el = null;
   document.removeEventListener('keydown', pkKeyOwn, true);
-  try { if (document.fullscreenElement === el) document.exitFullscreen(); } catch { }
-  el.remove();
+  if (!gsFull.drop(el)) { try { if (document.fullscreenElement === el) document.exitFullscreen(); } catch { } el.remove(); }
   if (o.onClose) o.onClose(); else if (back && back.isConnected && back.focus) try { back.focus({ preventScroll: true }); } catch { }
 }
 // fresh: a new name, or new groups. Otherwise only what is on screen is drawn again.

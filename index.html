@@ -1419,17 +1419,17 @@ small.bkxc{font-weight:500}
 .rsaved .rl{display:block;flex:1;min-width:0;overflow-wrap:anywhere}
 
 /* while a paper is open the sidebar folds to a strip of icons, so the paper gets the room */
-:is(.shell.grading,.pfold) .rail{width:60px;padding:12px 8px;align-items:center;overflow:hidden auto}
-:is(.shell.grading,.pfold) .rail .rl{display:none}
-:is(.shell.grading,.pfold) .rbrand{padding:4px 0 12px}
-:is(.shell.grading,.pfold) .rbrand .rs{display:inline}
-:is(.shell.grading,.pfold) .rnav,:is(.shell.grading,.pfold) .rfind{justify-content:center;width:40px;min-height:40px;height:40px;padding:0;margin:0 0 2px;flex:none}
-:is(.shell.grading,.pfold) .rcap{width:24px;height:0;padding:0;margin:8px 0;border-top:1px solid var(--line)}
-:is(.shell.grading,.pfold) .radd{display:none}
-:is(.shell.grading,.pfold) #railClasses{display:flex;flex-direction:column;align-items:center}
-:is(.shell.grading,.pfold) .rdot{width:10px;height:10px}
-:is(.shell.grading,.pfold) .rsaved{justify-content:center;width:40px;padding:12px 0}
-:is(.shell.grading,.pfold) .rsaved .rdot{margin:0}
+:is(.shell.grading,.pfold,.gsfull) .rail{width:60px;padding:12px 8px;align-items:center;overflow:hidden auto}
+:is(.shell.grading,.pfold,.gsfull) .rail .rl{display:none}
+:is(.shell.grading,.pfold,.gsfull) .rbrand{padding:4px 0 12px}
+:is(.shell.grading,.pfold,.gsfull) .rbrand .rs{display:inline}
+:is(.shell.grading,.pfold,.gsfull) .rnav,:is(.shell.grading,.pfold,.gsfull) .rfind{justify-content:center;width:40px;min-height:40px;height:40px;padding:0;margin:0 0 2px;flex:none}
+:is(.shell.grading,.pfold,.gsfull) .rcap{width:24px;height:0;padding:0;margin:8px 0;border-top:1px solid var(--line)}
+:is(.shell.grading,.pfold,.gsfull) .radd{display:none}
+:is(.shell.grading,.pfold,.gsfull) #railClasses{display:flex;flex-direction:column;align-items:center}
+:is(.shell.grading,.pfold,.gsfull) .rdot{width:10px;height:10px}
+:is(.shell.grading,.pfold,.gsfull) .rsaved{justify-content:center;width:40px;padding:12px 0}
+:is(.shell.grading,.pfold,.gsfull) .rsaved .rdot{margin:0}
 @media (max-width:1100px){
   .rail{width:60px;padding:12px 8px;align-items:center}
   .rail .rl{display:none}
@@ -1442,6 +1442,13 @@ small.bkxc{font-weight:500}
   .rsaved{justify-content:center;width:40px;padding:12px 0}
   .rsaved .rdot{margin:0}
 }
+/* full screen (src/fullscreen.js): the sidebar folds to icons, and while a paper is open it goes, so the paper has the room.
+   On the marking screen the button is in the top bar instead. */
+[data-gsfull] .fs-out{display:none}
+.gsfull [data-gsfull] .fs-in{display:none}
+.gsfull [data-gsfull] .fs-out{display:inline}
+.shell.grading #railFull{display:none}
+.gsfull .shell.grading .rail{display:none}
 /* ---------- Find anything ---------- */
 .finddlg{align-items:flex-start;padding-top:12vh;z-index:34}
 .fbox{width:min(640px,100%);max-height:min(560px,76vh);display:flex;flex-direction:column;background:var(--surface);border-radius:14px;box-shadow:0 4px 12px rgba(20,25,40,.12),0 24px 60px rgba(20,25,40,.28);overflow:hidden}
@@ -2449,6 +2456,23 @@ html.welcoming .shell{visibility:hidden}
 .schform .schsay{margin:0;font-size:var(--text-control)}
 .schfiles{margin:0;padding-left:1.2em;font-size:var(--text-body);max-height:160px;overflow:auto}
 @media (max-width:640px){.schbar .btn{flex:1 1 auto}}
+/* Bring a class over from Google Classroom: one box, two numbered steps. */
+.dlg .box.gcdlg{width:min(720px,100%)}
+.gcbox{display:flex;flex-direction:column;gap:var(--space-3)}
+.gcbox .gcin{margin:0;font-size:var(--text-body)}
+.gccard{display:flex;gap:var(--space-3);border:1px solid var(--line);border-radius:var(--corner-3);padding:var(--space-3) var(--space-4);background:var(--surface)}
+.gcn{flex:none;width:26px;height:26px;border-radius:var(--corner-round);background:var(--accent);color:var(--accent-fg);font-weight:700;font-size:var(--text-control);display:flex;align-items:center;justify-content:center;margin-top:1px}
+.gcbody{flex:1;min-width:0}
+.gcbody h3{margin:2px 0 6px;font-size:var(--text-lead)}
+.gcsteps{margin:0 0 10px;padding-left:1.25em;font-size:var(--text-body);line-height:1.55}
+.gcrow{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.gcrow .muted{font-size:var(--text-control);overflow-wrap:anywhere;min-width:0}
+.gcsum{margin:12px 0 8px}
+.gcfields{display:flex;gap:var(--space-3);flex-wrap:wrap;align-items:flex-end}
+.gcfields .bkpf{flex:1 1 200px}
+.gcfields .bkin,.gcfields select{width:100%}
+.gcbox .gcnote{margin:8px 0 0;font-size:var(--text-control);line-height:1.5}
+.gcbox #gcErr{margin:10px 0 0}
 /* ---------- Report comments: a class page's tab (reports.js) ---------- */
 .rptopts{display:flex;align-items:center;gap:var(--space-3) var(--space-4);flex-wrap:wrap;margin:0 0 var(--space-2)}
 .rptopts label,.rptopts .rptlab,.rpthead label{display:flex;align-items:center;gap:var(--space-2);font-size:var(--text-control);color:var(--fg-2)}
@@ -2887,6 +2911,19 @@ button.seat[data-n]:hover{border-color:var(--accent)}
 .pk-wl button[aria-pressed="true"]{background:var(--stage-paper);color:var(--stage-ink);border-color:var(--stage-paper);text-decoration:none;font-weight:500}
 .pk-wx{float:right;border:1px solid var(--stage-line);background:none;color:var(--stage-fg);border-radius:var(--corner-3);padding:var(--space-1) var(--space-3);font:inherit;font-weight:600}
 .pk-wx:hover{background:var(--stage-hover)}
+/* Screenshot (src/snip.js): the layer she drags on, the bar along the top and the box being drawn */
+.sniplay{position:fixed;inset:0;z-index:2000;cursor:crosshair;background:rgba(20,25,40,.18);outline:0;touch-action:none;user-select:none}
+.sniplay:has(.snipbox:not([hidden])){background:transparent}
+.snipbox{position:fixed;border:2px solid var(--accent);border-radius:var(--corner-1);box-shadow:0 0 0 9999px rgba(20,25,40,.28);pointer-events:none}
+.snipbar{position:fixed;top:12px;left:50%;transform:translateX(-50%);width:min(620px,calc(100vw - 32px));box-sizing:border-box;background:var(--surface);color:var(--fg);border:1px solid var(--line);border-radius:var(--corner-4);box-shadow:var(--shadow),0 8px 24px rgba(20,25,40,.14);padding:10px 12px;cursor:default;display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px}
+.sniplay.dragging .snipbar{opacity:.35;pointer-events:none}
+.snipt{display:flex;flex-direction:column;gap:2px;flex:1 1 240px;min-width:0}
+.snipt b{font-weight:600}
+.snipt span{color:var(--fg-2);font-size:var(--text-control)}
+.snipacts{display:flex;align-items:center;gap:8px;flex:none}
+.snipmk{display:flex;align-items:center;gap:6px;font-size:var(--text-control);color:var(--fg-2);cursor:pointer;margin-right:4px}
+.snipmk input{accent-color:var(--accent);margin:0}
+.snipnote{flex:1 0 100%;margin:0;color:var(--muted);font-size:var(--text-small)}
 /* a video by its link, partners, and the notes page (src/video.js) */
 .vlink .vlslot{margin:0 0 10px}
 .vlink .vlslot iframe,.vlink .vlslot video{display:block;width:100%;height:38vh;min-height:220px;border:0;border-radius:var(--corner-3);background:var(--fg)}
@@ -2987,6 +3024,7 @@ textarea.stptext{min-height:132px;margin-top:var(--space-2);font:var(--text-cont
   <span class="sp"></span>
   <a class="rnav rupd" id="railUpdate" href="#/settings/about" hidden><span class="rdot"></span><span class="rl">Update ready</span></a>
   <button class="rsaved" id="railSaved" data-wopen></button>
+  <button class="rnav" id="railFull" data-gsfull title="Full screen ( F )" aria-label="Full screen" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="fs-in" d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/><path class="fs-out" d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg><span class="rl">Full screen</span></button>
   <a class="rnav" data-nav="help" href="#/help" title="Help: short answers to common questions"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M9.7 9.6a2.4 2.4 0 1 1 3.7 2c-.9.6-1.4 1.1-1.4 2.1M12 16.8v.1"/></svg><span class="rl">Help</span></a>
   <a class="rnav" data-nav="settings" href="#/settings" title="Settings"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg><span class="rl">Settings</span></a>
 </nav>
@@ -3201,6 +3239,7 @@ textarea.stptext{min-height:132px;margin-top:var(--space-2);font:var(--text-cont
         <button class="mitem" id="keysBtn" data-fg="Tools">All keys <kbd>?</kbd></button>
       </div>
     </div>
+    <button class="icon" id="fullBtn" data-gsfull title="Full screen ( F )" aria-label="Full screen" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path class="fs-in" d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/><path class="fs-out" d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg></button>
     <button class="icon" id="closeBtn" title="Close this assignment and go back to Today" aria-label="Close this assignment and go back to Today"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
   </div>
   <div class="cols" id="cols">
@@ -4203,7 +4242,7 @@ SOFTWARE.
 <script>/* ---------------- saved-data versions: a safety copy, then any format changes, before the app starts ---------------- */
 const gsData = (() => {
   'use strict';
-  const APP_VERSION = "1.27.25";   // from package.json, the one place it's set
+  const APP_VERSION = "1.27.29";   // from package.json, the one place it's set
   const MIGRATIONS = [
   ];
   const DATA_V = Math.max(1, ...MIGRATIONS.map(s => s.to));
@@ -4550,7 +4589,7 @@ const LANG_ES = {
     'Its assignments, gradebook and students': 'Sus tareas, libro de calificaciones y estudiantes',
     'Open student work': 'Abrir trabajos de estudiantes', 'The ZIP or PDFs': 'El ZIP o los PDF', 'A ZIP, PDFs, Word files or photos': 'Un ZIP, PDF, archivos de Word o fotos',
     'Open a folder of papers': 'Abrir una carpeta de trabajos', 'Split a scan of everyone’s papers': 'Dividir un escaneo con los trabajos de todos', 'Match files to a roster': 'Emparejar archivos con una lista',
-    'Its name and roster': 'Su nombre y su lista', 'Made-up students and papers': 'Estudiantes y trabajos inventados',
+    'Its name and roster': 'Su nombre y su lista', 'Bring a class over from Google Classroom': 'Traer una clase desde Google Classroom', 'Its roster, assignments and grades, from two downloads': 'Su lista, sus tareas y sus notas, con dos descargas', 'Made-up students and papers': 'Estudiantes y trabajos inventados',
     'Start a new school year': 'Empezar un nuevo curso escolar', 'Same classes, empty class lists; this year saved to a file': 'Las mismas clases, listas vacías; este curso guardado en un archivo', 'Open an archived year': 'Abrir un curso archivado', 'Bring back a year saved to a file': 'Recuperar un curso guardado en un archivo',
     'Take my work with me': 'Llevarme mi trabajo', 'A take-home file for another computer': 'Un archivo para llevar a otro ordenador', 'Bring work in': 'Traer trabajo', 'From a take-home file': 'Desde un archivo para llevar',
     'Remove from this computer': 'Quitar de este ordenador', 'Clears student work from this browser': 'Borra de este navegador los trabajos de los estudiantes',
@@ -4562,10 +4601,12 @@ const LANG_ES = {
     'Word papers': 'Trabajos de Word', 'Kept as Word files. They can be converted to PDF pages': 'Se conservan como archivos de Word. Se pueden convertir en páginas PDF', 'Converted to PDF pages as each assignment opens': 'Se convierten en páginas PDF al abrir cada tarea',
     'Tablet and pencil': 'Tableta y lápiz', 'What a finger does on the paper, and pencil pressure': 'Qué hace un dedo sobre la página, y la presión del lápiz',
     'Name covers': 'Tapar nombres', 'You cover names yourself in Check the covers': 'Tú tapas los nombres en Revisar lo tapado', 'You cover names, and typed names are found too': 'Tú tapas los nombres, y además se buscan los nombres escritos a máquina',
+    'Tools': 'Herramientas', 'Screenshot': 'Captura de pantalla', 'Drag over part of the screen to copy a picture of it': 'Arrastra sobre una parte de la pantalla para copiar una imagen de ella',
     'All keys': 'Todas las teclas', 'Every keyboard shortcut': 'Todos los atajos de teclado',
     'Classes and rosters': 'Clases y listas', 'Terms and weights': 'Periodos y pesos', 'Your terms and how each type counts': 'Tus periodos y cuánto cuenta cada tipo',
     'Grading scale and rubrics': 'Escala de calificación y rúbricas', 'Your saved scales and rubrics': 'Tus escalas y rúbricas guardadas',
     'Marking': 'Corrección', 'Mark key, mark colors, Word papers, tablet and pencil': 'Clave de marcas, colores de las marcas, trabajos de Word, tableta y lápiz',
+    'Full screen': 'Pantalla completa', 'Leave full screen': 'Salir de pantalla completa', 'Full screen ( F )': 'Pantalla completa ( F )', 'Leave full screen ( F or Esc )': 'Salir de pantalla completa ( F o Esc )', 'The page fills the screen. F or Esc to leave': 'La página ocupa toda la pantalla. F o Esc para salir',
     'Mark colors': 'Colores de las marcas', 'Colors for ✗, checks and points': 'Colores para ✗, marcas de correcto y puntos',
     'Timetable and calendar': 'Horario y calendario', 'Class times and days off, in the Planner': 'Horas de clase y días sin clase, en el Planificador',
     'Working with AI': 'Trabajar con IA', 'Optional. What an AI assistant can and can’t see': 'Opcional. Lo que un asistente de IA puede ver y lo que no',
@@ -4654,6 +4695,9 @@ const LANG_ES = {
     'find-anything': { q: '¿Qué es Buscar?', words: 'buscar encontrar paleta ctrl k atajo',
       a: ['Un solo cuadro que llega a cada estudiante, tarea, herramienta, ajuste y respuesta de ayuda. Ábrelo desde lo alto de la barra lateral o pulsa **Ctrl K** (**⌘K** en un Mac).',
         'Escribe unas letras de lo que buscas, muévete con las flechas y pulsa Intro. Cada fila hace lo mismo que su botón.'] },
+    'full-screen': { q: '¿Puede la aplicación ocupar toda la pantalla?', words: 'pantalla completa maximizar más espacio concentrarse ocultar barra lateral',
+      a: ['Sí. Pulsa **F**, o **Pantalla completa** cerca del final de la barra lateral. Con un trabajo abierto, el botón está en la barra de arriba, junto a ✕. Las barras del navegador desaparecen y la barra lateral se pliega a iconos. En la pantalla de corrección la barra lateral también desaparece, para que el trabajo tenga el espacio.',
+        'Pulsa **F** otra vez, el mismo botón o **Esc** para salir. Nada se cierra ni se pierde al entrar o salir. En el trabajo formativo, F es para los comentarios, así que allí usa el botón. El Planner funciona igual.'] },
     'add-class': { q: '¿Cómo añado una clase y su lista?', words: 'lista estudiantes alumnos nombres nueva clase',
       a: ['1. Pulsa **Añadir una clase** en la barra lateral y ponle un nombre.', '2. Pega los nombres de los estudiantes, uno por línea. Se conservan en el orden en que los pegas.', '3. Abre la pestaña **Students** de la clase para añadir un identificador, un correo o una nota a cada uno.',
         'Con una lista, al abrir los trabajos de esa clase aparece cada estudiante, también quien no entregó nada.'] },
@@ -4700,6 +4744,9 @@ const LANG_ES = {
     'quick-mark': { q: '¿Cómo corrijo rápido un examen en papel?', words: 'examen prueba preguntas recuadros bien mal puntos test copiar imagen captura claude',
       a: ['Abre **Quick mark** en Setup. Dibuja una vez un recuadro alrededor de cada pregunta, en el escaneo de cualquier estudiante.', 'Luego corrige una pregunta para toda la clase, o el examen entero de un estudiante. Cada pregunta puede mostrar ✗ en las respuestas incorrectas, ✓ y ✗, puntos o una escala con tus propias palabras.',
         'El total pasa a la nota del estudiante. ¿No estás seguro de una respuesta? Pulsa **P** o **⧉ Copy** sobre ella para copiar una imagen solo de esa respuesta, con la pregunta y tu respuesta correcta arriba, y pégala en un asistente de IA para preguntar. El nombre, la nota y tu marca no aparecen, pero la imagen sigue mostrando la letra y las palabras del estudiante.'] },
+    'screenshot': { q: '¿Cómo hago una captura de pantalla?', words: 'captura pantalla recorte imagen copiar portapapeles área zona',
+      a: ['Pulsa **S** en un trabajo, **Alt S** (⌥S en un Mac) en cualquier parte de la app, o el botón de captura al pie de las herramientas de corrección. Arrastra sobre lo que quieras, haz clic en una página para la página entera, o pulsa Intro para todo lo que hay en pantalla. La imagen va al portapapeles, lista para pegar.',
+        'En un trabajo, la página se dibuja de nuevo desde el archivo: los recuadros que tapan nombres se pintan, y el nombre del estudiante y el nombre del archivo sobre el trabajo no aparecen. Desmarca **With my marks** para la página sin tus marcas. Todo lo demás, como la lista de estudiantes, sale tal como se ve en pantalla. No se envía nada a ningún sitio.'] },
     'mark-colors': { q: '¿Puedo cambiar el color de ✗, las marcas de correcto y los puntos?', go: 'Abrir Ajustes, Corrección', words: 'color tinta rojo verde amarillo ámbar puntos parcial crédito completo',
       a: ['Sí. En Ajustes, Corrección, **Mark colors**, o en el menú **Colors** de Quick mark. ✗ usa el color de tu pluma y las marcas de correcto tienen el suyo.',
         'Los puntos escritos en un trabajo, como 1/2, van en el color de ✗ salvo que elijas otro. **By credit** escribe los puntos completos en el color de correcto, los parciales en ámbar y ninguno en el color de ✗: verde, ámbar y rojo si dejas esos.',
@@ -4767,6 +4814,11 @@ const LANG_ES = {
     'import-scores': { q: '¿Puedo traer las notas de mi libro de calificaciones anterior?', words: 'importar hoja de cálculo csv excel xlsx subir notas anteriores',
       a: ['Sí. En el libro de calificaciones de la clase pulsa **Import…** y elige un archivo CSV o Excel, o pega las celdas de tu hoja de cálculo. Una fila por estudiante y una columna por tarea.',
         'Antes de guardar nada ves cada columna con su tipo, su fecha y sobre cuánto es, qué filas coinciden con tu lista y cualquier nota que ya esté en el libro. Las notas que ya están se quedan, salvo que elijas las del archivo.'] },
+    'google-classroom': { q: '¿Puedo traer una clase desde Google Classroom?', go: 'Abrir Ajustes, Clases', words: 'google classroom drive importar traer pasar cambiar csv notas lista estudiantes entregas carpeta zip conectar iniciar sesión',
+      a: ['Sí, con dos descargas y sin iniciar sesión. En Ajustes, **Classes and rosters**, pulsa **From Google Classroom…**.',
+        'Primero el archivo de notas: en Classroom, abre la página Trabajo de los alumnos de cualquier tarea, haz clic en el engranaje y elige Descargar todas las calificaciones como CSV. Trae a los estudiantes, cada tarea con sus puntos y su fecha, y las notas. Revisas las notas antes de que se guarde nada en el libro de calificaciones.',
+        'Para los trabajos, abre la carpeta Classroom en Google Drive, luego la clase y luego la carpeta de la tarea, y descárgala. Suelta ese ZIP en Today. Los archivos con el nombre «Nombre del estudiante - título» se reúnen bajo cada estudiante; un archivo que un estudiante subió con su propio nombre de archivo se abre como una entrada aparte para que la asignes tú.',
+        'Los dos archivos se leen en este navegador y no se envía nada a ningún sitio. Desde aquí no se pueden enviar las notas de vuelta a Google Classroom: la pestaña Grades las muestra para copiarlas.'] },
     'terms': { q: '¿Cómo configuro los periodos y cuánto cuenta cada tipo?', go: 'Abrir Ajustes, Periodos', words: 'semestre trimestre pesos porcentaje sumativa formativa ponderación',
       a: ['En Ajustes, **Terms and weights** están tus periodos y sus fechas, y qué parte de la nota del periodo aporta cada tipo de tarea. El trabajo formativo nunca cuenta para la nota.', 'Una tarea cuenta para el periodo en el que cae su fecha de entrega.'] },
     'one-student': { q: '¿Cómo veo todo sobre un estudiante?', words: 'perfil individual familia reunión tutoría progreso gráfico',
@@ -4971,7 +5023,7 @@ const LANG_ZH = {
     'Its assignments, gradebook and students': '它的作業、成績冊與學生',
     'Open student work': '開啟學生作業', 'The ZIP or PDFs': 'ZIP 或 PDF 檔', 'A ZIP, PDFs, Word files or photos': 'ZIP、PDF、Word 檔或照片',
     'Open a folder of papers': '開啟作業資料夾', 'Split a scan of everyone’s papers': '分割全班作業的掃描檔', 'Match files to a roster': '將檔案與名單配對',
-    'Its name and roster': '名稱與名單', 'Made-up students and papers': '虛構的學生與作業',
+    'Its name and roster': '名稱與名單', 'Bring a class over from Google Classroom': '從 Google Classroom 帶入班級', 'Its roster, assignments and grades, from two downloads': '名單、作業和成績，只要下載兩個檔案', 'Made-up students and papers': '虛構的學生與作業',
     'Start a new school year': '開始新的學年', 'Same classes, empty class lists; this year saved to a file': '同樣的班級、空白名單；這一學年存成檔案', 'Open an archived year': '開啟封存的學年', 'Bring back a year saved to a file': '找回存成檔案的學年',
     'Take my work with me': '帶走我的工作成果', 'A take-home file for another computer': '給另一台電腦用的攜帶檔', 'Bring work in': '帶入工作成果', 'From a take-home file': '從攜帶檔',
     'Remove from this computer': '從這台電腦移除', 'Clears student work from this browser': '清除這個瀏覽器裡的學生作業',
@@ -4983,10 +5035,12 @@ const LANG_ZH = {
     'Word papers': 'Word 作業', 'Kept as Word files. They can be converted to PDF pages': '保留為 Word 檔。可以轉換成 PDF 頁面', 'Converted to PDF pages as each assignment opens': '每份作業開啟時轉換成 PDF 頁面',
     'Tablet and pencil': '平板與觸控筆', 'What a finger does on the paper, and pencil pressure': '手指在頁面上的作用，以及筆的壓力',
     'Name covers': '遮蓋姓名', 'You cover names yourself in Check the covers': '你在「檢查遮蓋」中自己遮蓋姓名', 'You cover names, and typed names are found too': '你自己遮蓋姓名，也會自動找出打字的姓名',
+    'Tools': '工具', 'Screenshot': '截圖', 'Drag over part of the screen to copy a picture of it': '拖曳框住畫面的一部分，複製成圖片',
     'All keys': '所有快速鍵', 'Every keyboard shortcut': '所有鍵盤快速鍵',
     'Classes and rosters': '班級與名單', 'Terms and weights': '學期與比重', 'Your terms and how each type counts': '你的學期，以及各類作業所占的比重',
     'Grading scale and rubrics': '評分等第與評分規準', 'Your saved scales and rubrics': '你儲存的評分等第與評分規準',
     'Marking': '批改', 'Mark key, mark colors, Word papers, tablet and pencil': '批改符號表、批改顏色、Word 作業、平板與觸控筆',
+    'Full screen': '全螢幕', 'Leave full screen': '離開全螢幕', 'Full screen ( F )': '全螢幕（F）', 'Leave full screen ( F or Esc )': '離開全螢幕（F 或 Esc）', 'The page fills the screen. F or Esc to leave': '頁面佔滿整個螢幕。按 F 或 Esc 離開',
     'Mark colors': '批改顏色', 'Colors for ✗, checks and points': '✗、勾號與分數的顏色',
     'Timetable and calendar': '課表與行事曆', 'Class times and days off, in the Planner': '上課時間與放假日，在備課頁面',
     'Working with AI': '搭配 AI 使用', 'Optional. What an AI assistant can and can’t see': '可選用。AI 助理看得到和看不到的內容',
@@ -5075,6 +5129,9 @@ const LANG_ZH = {
     'find-anything': { q: '「搜尋」是什麼？', words: '搜尋 尋找 指令 ctrl k 快速鍵 find',
       a: ['一個可以找到每位學生、每份作業、每個工具、每項設定和每則說明的輸入框。從側邊欄最上方開啟，或按 **Ctrl K**（Mac 是 **⌘K**）。',
         '輸入幾個字，用方向鍵移動，再按 Enter。每一列的作用和它的按鈕相同。'] },
+    'full-screen': { q: '應用程式可以佔滿整個螢幕嗎？', words: '全螢幕 最大化 更大 專心 隱藏 側邊欄 full screen',
+      a: ['可以。按 **F**，或按側邊欄下方的 **全螢幕**。開啟作業時，這個按鈕在上方列的 ✕ 旁邊。瀏覽器的工具列會隱藏，側邊欄會收合成圖示。在批改畫面中側邊欄也會隱藏，讓作業有最大的空間。',
+        '再按一次 **F**、同一個按鈕或 **Esc** 即可離開。進入或離開時，不會關閉或遺失任何內容。形成性評量中 F 用於回饋，請在那裡改用按鈕。Planner 也一樣。'] },
     'add-class': { q: '怎麼新增班級和名單？', words: '名單 學生 姓名 新班級 roster',
       a: ['1. 按側邊欄的**新增班級**，並為它命名。', '2. 貼上學生姓名，一行一位。順序會和你貼上的一樣。', '3. 開啟班級的 **Students** 分頁，可以為每位學生加上學號、電子郵件或備註。',
         '有了名單，開啟那個班級的作業時會列出每位學生，包括沒有繳交的人。'] },
@@ -5121,6 +5178,9 @@ const LANG_ZH = {
     'quick-mark': { q: '怎麼快速批改紙本小考？', words: '小考 測驗 考試 題目 框 對 錯 分數 quiz 複製 圖片 截圖 claude',
       a: ['在 Setup 開啟 **Quick mark**。在任何一位學生的掃描檔上，為每一題畫一次框。', '接著可以一次批改全班的同一題，或一位學生的整份考卷。每一題可以在錯的答案上顯示 ✗、顯示 ✓ 和 ✗、給分，或使用你自訂文字的量尺。',
         '總分會成為學生的分數。不確定某個答案？在它上面按 **P** 或 **⧉ Copy**，就會複製只有這個答案的圖片，上方附有題目和你的標準答案，可以貼到 AI 助理詢問。圖片不含姓名、分數和你的批改記號，但仍會顯示學生的筆跡和文字。'] },
+    'screenshot': { q: '怎麼截圖？', words: '截圖 螢幕 擷取 圖片 複製 剪貼簿 範圍 區域',
+      a: ['在作業上按 **S**，在應用程式任何地方按 **Alt S**（Mac 上是 ⌥S），或按批改工具最下方的截圖按鈕。拖曳框住想要的部分，點一頁可截整頁，按 Enter 可截整個畫面。圖片會放到剪貼簿，可以直接貼上。',
+        '在作業上，頁面會從檔案重新繪製：遮蓋姓名的框會塗上，作業上方的學生姓名和檔名不會出現。取消勾選 **With my marks** 可得到沒有你批改記號的頁面。其他部分，例如學生名單，會照畫面上的樣子出現。不會傳送到任何地方。'] },
     'mark-colors': { q: '可以更改 ✗、勾號和分數的顏色嗎？', go: '開啟設定、批改', words: '顏色 墨水 紅 綠 黃 琥珀 分數 部分 得分 滿分',
       a: ['可以。在設定、批改的 **Mark colors**，或 Quick mark 的 **Colors** 選單。✗ 使用筆的顏色，勾號有自己的顏色。',
         '寫在作業上的分數，例如 1/2，除非另外選擇，否則使用 ✗ 的顏色。**By credit** 會把滿分寫成勾號的顏色，部分得分寫成琥珀色，零分寫成 ✗ 的顏色：保留預設就是綠、琥珀、紅。',
@@ -5188,6 +5248,11 @@ const LANG_ZH = {
     'import-scores': { q: '可以匯入舊成績冊的分數嗎？', words: '匯入 試算表 舊成績 上傳 csv excel xlsx',
       a: ['可以。在班級的成績冊按 **Import…**，然後選擇 CSV 或 Excel 檔案，或貼上試算表中的儲存格。每位學生一列，每份作業一欄。',
         '儲存之前，你會看到每一欄的類型、日期和滿分，哪些列對應到你的班級名單，以及成績冊中已經有的分數。已經有的分數會保留，除非你選擇使用檔案中的分數。'] },
+    'google-classroom': { q: '可以把 Google Classroom 的班級帶過來嗎？', go: '開啟設定、班級', words: 'google classroom drive 匯入 帶入 轉移 csv 成績 名單 學生 繳交 資料夾 zip 連結 登入',
+      a: ['可以，只要下載兩個檔案，不需要登入。在設定的 **Classes and rosters** 按 **From Google Classroom…**。',
+        '先選擇成績檔：在 Classroom 開啟任一份作業的「學生作業」頁面，按右上角的齒輪，選擇「將所有成績下載為 CSV 檔」。它會帶入學生、每份作業的滿分和日期，以及分數。在成績冊儲存任何東西之前，你可以先檢查分數。',
+        '至於學生的作業檔案，請在 Google 雲端硬碟開啟 Classroom 資料夾，再開啟班級和該作業的資料夾，然後下載。把這個 ZIP 拖到 Today。檔名為「學生姓名 - 標題」的檔案會歸到各個學生名下；學生以自己的檔名上傳的檔案會單獨列出，由你來對應。',
+        '兩個檔案都只在這個瀏覽器中讀取，不會傳送到任何地方。這裡無法把分數傳回 Google Classroom：Grades 分頁會列出分數供你複製。'] },
     'terms': { q: '怎麼設定學期和各類作業的比重？', go: '開啟設定、學期', words: '學期 季 比重 百分比 總結性 形成性 加權',
       a: ['在設定的 **Terms and weights** 裡是你的學期和日期，以及每種作業類型占學期成績的比例。形成性作業不計入成績。', '作業計入繳交日所在的學期。'] },
     'one-student': { q: '怎麼查看一位學生的所有資料？', words: '個人檔案 個別 家長 會談 導師 進步 圖表',
@@ -5349,6 +5414,10 @@ const HELP = [
     a: ['One box that reaches every student, assignment, tool, setting and help answer. Open it from the top of the sidebar, or press **Ctrl K** (**⌘K** on a Mac).',
       'Type a few letters of what you want, move with the arrow keys and press Enter. Each row does the same thing as the button for it.'],
     words: 'search command palette ctrl k shortcut' },
+  { id: 'full-screen', sec: 'start', q: 'Can the app fill the whole screen?',
+    a: ['Yes. Press **F**, or **Full screen** near the bottom of the sidebar. While a paper is open the button is in the top bar, beside ✕. The browser’s bars go away and the sidebar folds to icons. On the marking screen the sidebar goes away too, so the paper gets the room.',
+      'Press **F** again, the same button, or **Esc** to leave. Nothing is closed or lost on the way in or out. On formative work F is for feedback, so use the button there. The Planner works the same way.'],
+    words: 'fullscreen maximize maximise bigger room focus distraction hide sidebar' },
   { id: 'add-class', sec: 'start', q: 'How do I add a class and its roster?',
     a: ['1. Press **Add a class** in the sidebar and give it a name.', '2. Paste the student names, one on a line. Students are kept in the order you paste them.', '3. Open the class’s **Students** tab to add an ID, an email or a note for each one.',
       'With a roster, every student is listed when you open papers for that class, including anyone who turned nothing in.'],
@@ -5410,6 +5479,10 @@ const HELP = [
     a: ['Open **Quick mark** under Setup. Draw a box around each question once, on any student’s scan.', 'Then mark one question for the whole class, or one student’s whole quiz. Each question can show ✗ on wrong answers, ✓ and ✗, points, or a scale with your own words.',
       'The total goes into the student’s score. Not sure about an answer? Press **P** or **⧉ Copy** on it to copy a picture of just that answer, with the question and your answer key on top, to paste into an AI assistant. The name, score and your mark are left off, but the picture still shows the student’s handwriting and words.'],
     words: 'quiz test questions boxes right wrong points multiple copy picture screenshot ai assistant claude chatgpt' },
+  { id: 'screenshot', sec: 'mark', q: 'How do I take a screenshot?',
+    a: ['Press **S** on a paper, **Alt S** (⌥S on a Mac) anywhere in the app, or the screenshot button at the foot of the marking tools. Drag over what you want, click a page for the whole page, or press Enter for everything on screen. The picture goes on the clipboard, ready to paste.',
+      'On a paper, the page is drawn fresh from the file: name covers are painted in, and the student’s name and file name above the paper are left off. Untick **With my marks** for the page without your marks. Anything else, like the student list, shows as it is on screen. Nothing is sent anywhere.'],
+    words: 'screenshot snip capture picture image copy clipboard grab area region' },
   { id: 'mark-colors', sec: 'mark', q: 'Can I change the color of ✗, checks and points?',
     a: ['Yes. In Settings, Marking, **Mark colors**, or the **Colors** menu in Quick mark. ✗ uses your pen’s color and checks have their own.',
       'Points written on a paper, like 1/2, are in the ✗ color unless you pick another. **By credit** writes full points in the check color, part in amber and none in the ✗ color: green, amber and red if you keep those.',
@@ -5503,6 +5576,12 @@ const HELP = [
     a: ['Yes. In the class’s gradebook press **Import…**, then choose a CSV or Excel file, or paste the cells from your spreadsheet. One row per student, one column per assignment.',
       'Before anything is saved you see each column with its type, date and what it is out of, which rows matched your roster, and any score that is already in the gradebook. Scores already there stay unless you choose the file’s.'],
     words: 'import csv excel xlsx spreadsheet sheets upload old gradebook switch mid-year past scores' },
+  { id: 'google-classroom', sec: 'class', q: 'Can I bring a class over from Google Classroom?',
+    a: ['Yes, with two downloads and no sign-in. In Settings, **Classes and rosters**, press **From Google Classroom…**.',
+      'First the grades file: in Classroom, open any assignment’s Student work page, click the gear and choose Download all grades as CSV. It brings the students, every assignment with its points and date, and the scores. You check the scores before anything is saved in the gradebook.',
+      'For the papers, open the Classroom folder in Google Drive, then the class, then the assignment’s folder, and download it. Drop that ZIP on Today. Files named “Student name - title” are put together under each student. A file a student uploaded under its own name opens as its own entry for you to match.',
+      'Both files are read in this browser and nothing is sent anywhere. Scores can’t be sent back into Google Classroom from here: the Grades tab lists them to copy across.'],
+    go: ['Open Settings, Classes', '#/settings/classes'], words: 'google classroom drive import bring move switch transfer csv grades roster students submissions folder zip connect sign in' },
   { id: 'terms', sec: 'class', q: 'How do I set terms and how much each type counts?',
     a: ['Settings, **Terms and weights** has your terms and their dates, and what share of the term grade each type of assignment carries. Formative work never counts toward the grade.', 'An assignment counts toward the term its due date falls in.'],
     go: ['Open Settings, Terms', '#/settings/terms'], words: 'semester quarter weights percent summative formative weighting' },
@@ -5687,8 +5766,7 @@ function pkClose() {
   pkDragEnd();
   PK.on = false; clearInterval(PK.spin); PK.el = null;
   document.removeEventListener('keydown', pkKeyOwn, true);
-  try { if (document.fullscreenElement === el) document.exitFullscreen(); } catch { }
-  el.remove();
+  if (!gsFull.drop(el)) { try { if (document.fullscreenElement === el) document.exitFullscreen(); } catch { } el.remove(); }
   if (o.onClose) o.onClose(); else if (back && back.isConnected && back.focus) try { back.focus({ preventScroll: true }); } catch { }
 }
 function pkRun(fresh) {
@@ -6244,6 +6322,13 @@ function groupRaw(raw) {
   return map;
 }
 const SRC_CANVAS = /^([^_\/A-Z\s]*[^_\/A-Z\s\d][^_\/A-Z\s]*)_(?:LATE_|late_)?(\d{3,})_(\d{3,})_[^\/]+$/, SRC_MOODLE = /^([^\/]+?)_(\d+)_assignsubmission_[a-z]+_(?:\/.+|[^\/]*)$/i;
+const SRC_GCLASS = /^([^\/]*[^\/\s\d][^\/]*?) - ([^\/]+?)(?:\.[^.\/]+)?$/;
+function srcClassroom(list) {
+  const hits = list.map(r => [r, SRC_GCLASS.exec(r.path)]).filter(x => x[1] && !/\d{3,}/.test(x[1][1]) && x[1][1].trim().split(/\s+/).length <= 5);
+  const whos = new Set(hits.map(x => nameFold(x[1][1].trim()))), titles = new Set(hits.map(x => nameFold(x[1][2].replace(/\s*\(\d+\)$/, '').trim())));
+  if (hits.length < 2 || whos.size < 2 || titles.size * 2 > whos.size) return null;
+  return new Map(hits.map(([r, m]) => [r.path, m[1].trim()]));
+}
 let srcWho = new Map();   // path -> student, for the download being opened or open
 const plainStudent = path => { const parts = path.split('/').filter(Boolean); return parts.length > 1 ? parts[0] : parts[0].replace(/\.[^.]+$/, ''); };
 const studentOf = path => srcWho.get(path) || plainStudent(path);
@@ -6251,9 +6336,11 @@ async function srcRead(raw) {
   srcWho = new Map();
   const list = raw.filter(r => !houseFile(r.path) && !/^Grade sheet - [^/]*\.pdf$/i.test(r.path));
   const rx = list.length >= 2 && [SRC_CANVAS, SRC_MOODLE].find(x => list.every(r => x.test(r.path)));
-  if (!rx) return;
+  const gcl = rx ? null : srcClassroom(list);
+  if (!rx && !gcl) return;
   const id = batchIdOf(raw);   // as it would have opened before: with work saved that way, it stays that way
   if (store.get(id, null) || keptMeta.has(id) || await kget('work', id)) return;
+  if (gcl) { srcWho = gcl; return; }
   const ids = new Map();   // two students whose names read the same are told apart by their number
   for (const r of list) { const m = rx.exec(r.path), n = m[1].trim(); if (!ids.has(n)) ids.set(n, new Set()); ids.get(n).add(m[2]); }
   if (ids.size < 2) return;   // one name for every file is a naming habit (IMG_2026_1110_…), not a class
@@ -7658,6 +7745,7 @@ const IC = {
   erase: '<path d="M8 20h12"/><path d="M4 15l9-9 6 6-7 7H8z"/>',
   undo: '<path d="M9 7L4 12l5 5"/><path d="M4 12h11a5 5 0 0 1 0 10h-3"/>',
   redo: '<path d="M15 7l5 5-5 5"/><path d="M20 12H9a5 5 0 0 0 0 10h3"/>',
+  snip: '<path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3"/><circle cx="12" cy="12" r="3"/>',
   minus: '<path d="M5 12h14"/>', plus: '<path d="M5 12h14M12 5v14"/>',
 };
 const svg = p => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + p + '</svg>';
@@ -7673,7 +7761,8 @@ function renderTools() {
   $('#tools').innerHTML = TOOLS.map(([k, l, key]) => '<button class="tool' + (once && once.k === k ? ' once' : '') + '" data-tool="' + k + '" aria-pressed="' + ((once ? once.prev : tool) === k) + '" title="' + l + ' (' + key + ')">' + svg(IC[k]) + '<span class="lb">' + l + '</span></button>').join('') +
     (opts ? '<span class="sep"></span><span class="topts">' + opts + '</span>' : '') + '<span class="sep"></span>' +
     '<span class="tpair"><button class="icon" id="undoBtn" title="Undo (' + keyLabel('⌘Z') + ')" aria-label="Undo" ' + (undoStack.length ? '' : 'disabled') + '>' + svg(IC.undo) + '</button>' +
-    '<button class="icon" id="redoBtn" title="Redo (' + keyLabel('⇧⌘Z') + ')" aria-label="Redo" ' + (redoStack.length ? '' : 'disabled') + '>' + svg(IC.redo) + '</button></span>';
+    '<button class="icon" id="redoBtn" title="Redo (' + keyLabel('⇧⌘Z') + ')" aria-label="Redo" ' + (redoStack.length ? '' : 'disabled') + '>' + svg(IC.redo) + '</button></span>' +
+    '<span class="sep"></span><button class="icon" id="snipBtn" title="Screenshot (S): copy a picture of part of the screen" aria-label="Screenshot">' + svg(IC.snip) + '</button>';
   $('#zoomPill').innerHTML = '<span class="zoom"><button class="icon" data-z="-1" aria-label="Zoom out" title="Zoom out (' + keyLabel('⌘−') + ')">' + svg(IC.minus) + '</button><button class="zlab" data-z0 title="' + keyLabel('Back to 100% (⌘0). Pinch or ⌘-scroll on the paper to zoom.') + '">' + Math.round(zoom * 100) + '%</button><button class="icon" data-z="1" aria-label="Zoom in" title="Zoom in (' + keyLabel('⌘+') + ')">' + svg(IC.plus) + '</button></span>';
   for (const pg of pages) pg.canvas.style.cursor = tool === 'select' ? 'default' : tool === 'text' ? 'text' : 'crosshair';
 }
@@ -7686,6 +7775,7 @@ $('#tools').addEventListener('click', e => {
   const w = e.target.closest('[data-w]'); if (w) { penW = +w.dataset.w; store.set('gs.penW', penW); renderTools(); return; }
   if (e.target.closest('#undoBtn')) { undo(); return; }
   if (e.target.closest('#redoBtn')) { redo(); return; }
+  if (e.target.closest('#snipBtn')) { snipStart(); return; }
 });
 $('#zoomPill').addEventListener('click', e => {
   const z = e.target.closest('[data-z]');
@@ -8012,9 +8102,9 @@ function openKeys() {
     '<h4>Marking</h4>' + row('V', 'Select') + row('P', 'Pen (hold Shift for a straight line)') + row('H', 'Highlight, snapping to typed lines. Press H again for freehand (Shift for straight)') + row('O', 'Circle') + row('T', 'Text') + row('C', 'Comment') + row('K', 'Check mark') + row('E', 'Eraser') +
     row('⌘Z', 'Undo') + row('⇧⌘Z', 'Redo (⌘Y works too)') +
     '<h4>A picked mark (Select tool)</h4>' + row('← → ↑ ↓', 'Nudge it (Shift for bigger steps)') + row('⌘C ⌘V', 'Copy it, then paste on the page you’re looking at, even on another student’s paper') + row('⌘D', 'Make a copy of it') + row('+ −', 'Make it bigger or smaller (or drag the square at its corner)') + row('Delete', 'Remove it') + row('Esc', 'Let go of it (the arrows go back to moving between students)') +
-    '<h4>The paper</h4>' + row('⌘+ ⌘−', 'Zoom in / out (or pinch, or ⌘-scroll)') + row('⌘0', 'Back to 100%') + row('[ ]', 'Keep the student list open / fold away the score panel') +
+    '<h4>The paper</h4>' + row('⌘+ ⌘−', 'Zoom in / out (or pinch, or ⌘-scroll)') + row('⌘0', 'Back to 100%') + row('[ ]', 'Keep the student list open / fold away the score panel') + row('S', 'Screenshot: drag over part of the screen to copy a picture of it, or click a page for all of it') + row('F', 'Full screen, and back (Esc leaves too). On formative work F is for feedback; use the button beside ✕ instead') +
     'Turn a page: point at it and use ⟲ ⟳ in its top corner, or “Turn all pages” under the file’s ⋯. In Arrange pages, pick pages and press R.'.replace(/^/, '<h4>Turning pages</h4><span style="grid-column:1/-1">') + '</span>' +
-    '<h4>Other</h4>' + row('=', 'Calculator') + row('Shift =', 'Answer, in the calculator (= on its own adds, Enter answers too)') + row('Space', 'Play / pause a recording') + row('J L', 'Back / ahead 5 seconds') + row('?', 'This list') +
+    '<h4>Other</h4>' + row('=', 'Calculator') + row('Shift =', 'Answer, in the calculator (= on its own adds, Enter answers too)') + row('⌥S', 'Screenshot, from anywhere in the app') + row('Space', 'Play / pause a recording') + row('J L', 'Back / ahead 5 seconds') + row('?', 'This list') +
     '</div></div><div class="bf"><span class="muted gsVer" style="margin-right:auto;font-size:13px">' + esc(versionLabel()) + '</span><button class="btn primary" data-close>Close</button></div>', true);
   $('#dlgBox').onclick = e => { if (e.target.closest('[data-close]')) closeDlg(); };
 }
@@ -10775,12 +10865,13 @@ function editClass(ci) {
     '<div class="field"><label for="cMb">' + esc(sysLink()) + ' link <span class="muted" style="font-weight:400">(optional)</span></label><input type="url" id="cMb" value="' + esc(mbOf(c)) + '" placeholder="Paste this class’s ' + (sysName() ? esc(sysName()) + ' page address' : 'page address in your school’s system') + '"></div>' +
     '<div class="field"><label for="cNames">Students, one per line, in the order you want' + (sysName() ? ' (' + esc(sysName()) + ' order works well)' : '') + '</label><textarea class="big" id="cNames" placeholder="Paste from a spreadsheet' + (sysName() ? ' or ' + esc(sysName()) : '') + ', or upload a file. Student ID and email columns are kept as each student’s details.">' + esc(c.names.join('\n')) + '</textarea></div>' +
     '<button class="btn sm" data-up>Upload a list (.csv or .txt)…</button><input type="file" id="cFile" accept=".csv,.txt,text/csv,text/plain" hidden>' +
-    '<p class="muted" style="font-size:13px">Kept in this browser.</p></div>' +
+    '<p class="muted" style="font-size:13px">Kept in this browser.' + (ci < 0 ? ' <button class="link" data-gcopen>Coming from Google Classroom? Bring the class over…</button>' : '') + '</p></div>' +
     '<div class="bf">' + (ci >= 0 ? '<button class="btn" data-del style="margin-right:auto">Delete</button>' : '') + '<button class="btn" data-cancel>Cancel</button><button class="btn primary" data-ok>Save</button></div>', true);
   $('#cFile').onchange = async e => { const f = e.target.files[0]; if (!f) return; const rows = parseRosterRows(await f.text()); $('#cNames').value = rows.map(r => r.name).join('\n'); upRows = rows; e.target.value = ''; };
   $('#dlgBox').onclick = async e => {
     if (e.target.closest('[data-up]')) return $('#cFile').click();
     if (e.target.closest('[data-cancel]')) return closeDlg();
+    if (e.target.closest('[data-gcopen]')) return gcOpen();
     if (e.target.closest('[data-del]')) { if (!await askDlg('Delete the ' + c.name + ' class? Its assignments move to “No class”.', { ok: 'Delete', danger: true })) return; const moved = c.units.slice(), wasIds = moved.map(u => u.items.map(it => it.classId)); for (const u of c.units) { for (const it of u.items) it.classId = ''; lib.loose.units.push(u); } lib.classes.splice(ci, 1); saveLib(); closeDlg(); renderLib(); if (!batch && routeNow().v !== 'class') go(lib.loose.units.some(u => u.items.length) ? classHash(lib.loose) : '#/', true);
       toastDo('Deleted the ' + c.name + ' class', 'Undo', () => { if (lib.classes.includes(c)) return; lib.loose.units = lib.loose.units.filter(u => !moved.includes(u)); moved.forEach((u, k) => u.items.forEach((it, j) => { it.classId = wasIds[k][j] != null ? wasIds[k][j] : c.id; })); lib.classes.splice(Math.min(ci, lib.classes.length), 0, c); saveLib(); renderLib(); if (window.railRender) railRender(); });
       return; }
@@ -13012,6 +13103,7 @@ document.addEventListener('keydown', e => {
   if (e.key.toLowerCase() === 'h' && tool === 'hl') { setHlMode(hlMode === 'free' ? 'auto' : 'free', true); return; }
   if (map[e.key.toLowerCase()]) { setTool(map[e.key.toLowerCase()]); return; }
   if (e.key.toLowerCase() === 'n') { nextUnscored(); return; }
+  if (e.key.toLowerCase() === 's' && !e.shiftKey) { e.preventDefault(); snipStart(); return; }   // a screenshot (src/snip.js)
   if (e.key.toLowerCase() === 'f' && !e.metaKey && !e.ctrlKey && !e.altKey && fmNow()) { e.preventDefault(); fbToggle(e.shiftKey); return; }
   if (e.key === '=' && !$('#calcPanel')) { e.preventDefault(); openCalc(); return; }
   if ($('#calcPanel') && e.key !== '/' && !(e.key === 'x' || e.key === 'X')) { const k = calcKeyOf(e); if (k && k !== 'Escape' && (k !== '=' || e.code === 'Equal' || e.code === 'NumpadEqual')) { e.preventDefault(); $('#calcPanel').typeIn(k); return; } }
@@ -13055,7 +13147,7 @@ for (const el of document.querySelectorAll('.gsVer')) el.textContent = versionLa
 if (gsData.info.note) { const el = $('#bootNote'); el.textContent = gsData.info.note; el.hidden = false; toast(gsData.info.note, 15000); }
 
 window.__gs_pickMany = pickMany;
-window.__gs = { aiName, aiSay, aiTag, aiLink, DEFAULT_SETUP, rowTop, rowSteps, rowsMax, setupMax, setupOver, rowScaleOf, pastScore, removeFile, bringBack, replaceFile, stickerText, startScorePlace, stopScorePlace, saveTrouble, batchIdOf, wordScore, wordScoresAll, restoreBackup, fileSeq, moveFile, openMoveFile, calcEval, openCalc, pageLit, setPageLit, lightMenuDo, lightChips, pageOwnL, setPageOwnL, lightForPage, ensureCounts, addRefs, refs: () => refFiles, matchToRoster, guessAmong, expandPicked, lightOpts, isRubricPage, openAnon, setAnon, anonOrder, anonOn, openLight, lightFor, lightAuto, openSplit, sp: () => SP, bringIn, sortGuess, openWord, wordBytes, reopenKept, forgetKept, kept: () => keptMeta, addFiles, removeAdded, nextUnscored, openDisplay, trimToInk, intake, parseGrade, scanFile, scanAll, state: () => ({ batch, cur, setup, pages, zoom, lib }), SCALE12, SCALE_FIVES, RUBRIC_STEPS, percentWith, ownGrade, roundPct, fmtNum, fmtPct, saveNow, undo, redo, gsData, gradeOf, percentFor, flattenDoc, exportPlan, nameOut, layoutOf, docIn, openStudent, setTool };
+window.__gs = { aiName, aiSay, aiTag, aiLink, DEFAULT_SETUP, rowTop, rowSteps, rowsMax, setupMax, setupOver, rowScaleOf, pastScore, removeFile, bringBack, replaceFile, stickerText, startScorePlace, stopScorePlace, saveTrouble, batchIdOf, wordScore, wordScoresAll, restoreBackup, fileSeq, moveFile, openMoveFile, calcEval, openCalc, pageLit, setPageLit, lightMenuDo, lightChips, pageOwnL, setPageOwnL, lightForPage, ensureCounts, addRefs, refs: () => refFiles, matchToRoster, guessAmong, expandPicked, lightOpts, isRubricPage, openAnon, setAnon, anonOrder, anonOn, openLight, lightFor, lightAuto, openSplit, sp: () => SP, bringIn, sortGuess, openWord, wordBytes, reopenKept, forgetKept, kept: () => keptMeta, addFiles, removeAdded, nextUnscored, openDisplay, trimToInk, intake, parseGrade, scanFile, scanAll, state: () => ({ batch, cur, setup, pages, zoom, lib }), SCALE12, SCALE_FIVES, RUBRIC_STEPS, percentWith, ownGrade, roundPct, fmtNum, fmtPct, saveNow, undo, redo, gsData, gradeOf, percentFor, flattenDoc, exportPlan, nameOut, layoutOf, docIn, openStudent, setTool, redrawAll };
 
 /* ---------------- names: finding a student's name in text, in any alphabet, for the Claude ZIP and anonymous grading ---------------- */
 const NAME_PLAIN = new Set(('al am an art as at august autumn ban bay be best bill bin black brown by can case chase chin dawn day de dean do don dung da ed faith far frank gay go grace gray green grey ha hang he hope ho hung if in is it ivy jade joy june king la lane le little long love major man mark may me min my new no nice on or page pan park pat pearl pen penny price rich rose ruby sandy sang short sing small so son song star stone su sue summer sun sung tan tang ten tin to tu up us van violet von we white will win wing won wood wu ye young april').split(' '));
@@ -16492,7 +16584,7 @@ function bkiDate(s) {
 const BKI_SKIP = /(^|\b)(id|student\s*(id|no|number|#)|e-?mail|homeroom|advis[eo]r|section|period|gender|grade level|year level|dob|birth)(\b|$)|^#$|^no\.?$/i;
 const BKI_SUM = /(total|average|avg|overall|final grade|term grade|semester|quarter|grade to date|current grade|^grade$|^%$|percent)/i;
 const BKI_FIRST = /^(first|given|preferred)(\s*name)?$/i, BKI_LAST = /^(last|sur|family)(\s*name)?$|^surname$/i, BKI_NAME = /(name|student|pupil|learner)/i;
-const BKI_MAXROW = /^(points?\s*possible|possible|max(imum)?(\s*(points|score))?|out\s*of|total\s*points|pts\s*possible|worth)$/i, BKI_DUEROW = /^(due(\s*date)?|date(\s*due)?|assigned)$/i;
+const BKI_MAXROW = /^(points?(\s*possible)?|possible|max(imum)?(\s*(points|score))?|out\s*of|total\s*points|pts\s*possible|worth)$/i, BKI_DUEROW = /^(due(\s*date)?|date(\s*due)?|assigned)$/i;
 const BKI_AVGROW = /^(class\s*)?(average|avg|mean|median|high|low|count)$/i;
 function bkiRead(rows) {
   if (!rows.length) return null;
@@ -17097,7 +17189,7 @@ function isMac() { return /mac|iphone|ipad/i.test(navigator.platform || navigato
 function modKey() { return isMac() ? '⌘' : 'Ctrl'; }
 function keyLabel(s) {
   if (isMac()) return s;
-  return s.replace(/⇧⌘/g, 'Ctrl+Shift+').replace(/⌘([+−])/g, 'Ctrl $1').replace(/⌘(?=-)/g, 'Ctrl').replace(/⌘/g, 'Ctrl+');
+  return s.replace(/⌥/g, 'Alt+').replace(/⇧⌘/g, 'Ctrl+Shift+').replace(/⌘([+−])/g, 'Ctrl $1').replace(/⌘(?=-)/g, 'Ctrl').replace(/⌘/g, 'Ctrl+');
 }
 
 const FOCUSABLE = 'a[href],button,input,select,textarea,summary,audio[controls],video[controls],[tabindex]:not([tabindex="-1"])';
@@ -21147,19 +21239,11 @@ async function qmCopy(el) {
   if (!el) return;
   const st = batch.students[+el.dataset.st], q = batch.quiz.qs.find(x => x.id === el.dataset.q), qi = batch.quiz.qs.indexOf(q);
   if (!st || !q) return;
-  const blobP = qzAnswerPic(st, q, qi).then(c => { if (!c) throw new Error('no page'); return new Promise(res => c.toBlob(b => { c.width = c.height = 0; res(b); }, 'image/png')); });
+  const blobP = qzAnswerPic(st, q, qi).then(c => { if (!c) throw new Error('no page'); return canvasPng(c); });
   const say = 'Question ' + quizLabel(q, qi);
-  let copied = false;
-  try {
-    if (!navigator.clipboard || !navigator.clipboard.write || typeof ClipboardItem === 'undefined') throw new Error('no clipboard');
-    await navigator.clipboard.write([new ClipboardItem({ 'image/png': blobP })]);   // a promise, so Safari still counts the click
-    copied = true;
-  } catch (e) { /* saved as a file below */ }
-  let blob = null;
-  if (!copied) {
-    try { blob = await blobP; } catch { return toast('This page isn’t in their scan.'); }
-    await saveBlob('Question ' + quizLabel(q, qi) + '.png', blob);
-  }
+  const how = await copyPicture(blobP, say + '.png');   // the clipboard, or a file where the browser can't copy pictures (src/snip.js)
+  if (how === 'none') return toast('This page isn’t in their scan.');
+  const copied = how === 'copied';
   toast(copied ? 'Picture of ' + say + ' copied. Paste it into ' + aiSay() + ' to ask about it.' : 'This browser can’t copy pictures, so ' + say + ' was saved as a picture file.', 4000);
   if (!store.get('gs.qmCopySeen', 0) && !$('#qmCopyNote') && $('#qmBody'))
     $('#qmBody').insertAdjacentHTML('beforebegin', '<div class="qmcopynote" id="qmCopyNote" role="status"><p><b>What the picture shows.</b> Only this answer, with the question and your answer key on top. The student’s name, their score, your mark and the file name are left off, and any name covers are painted in. It still shows the student’s own handwriting and words.</p>' +
@@ -23549,7 +23633,7 @@ function seatShow(c) {
   el.id = 'seatShow'; el.className = 'seatshow'; el.tabIndex = -1; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-label', 'Seating chart for ' + c.name);
   el.innerHTML = '<h2>' + esc(c.name) + '</h2><div class="seatroom" style="--sw:' + s.w + ';--sh:' + s.h + '">' + seatGrid(c, s, 'show', false) + '</div><button class="seatshowx" data-x>Close (Esc)</button>';
   document.body.appendChild(el); el.focus();
-  const shut = () => { document.removeEventListener('keydown', key, true); document.removeEventListener('fullscreenchange', full); try { if (document.fullscreenElement === el) document.exitFullscreen(); } catch { } el.remove(); if (back && back.isConnected) back.focus(); };
+  const shut = () => { document.removeEventListener('keydown', key, true); document.removeEventListener('fullscreenchange', full); if (!gsFull.drop(el)) { try { if (document.fullscreenElement === el) document.exitFullscreen(); } catch { } el.remove(); } if (back && back.isConnected) back.focus(); };
   const key = e => { e.stopPropagation(); if (e.key === 'Escape') { e.preventDefault(); shut(); } };
   let was = false; const full = () => { const on = document.fullscreenElement === el; if (was && !on) shut(); was = on; };   // Esc in full screen leaves full screen: that closes it too
   document.addEventListener('keydown', key, true); document.addEventListener('fullscreenchange', full);
@@ -25723,6 +25807,7 @@ function exShowClose() {
   const el = $('#exShow'); if (!el) return;
   if (exShowKeys) { document.removeEventListener('keydown', exShowKeys, true); exShowKeys = null; }
   document.removeEventListener('fullscreenchange', el._fs);
+  if (gsFull.drop(el)) return;   // the whole page in full screen under it stays so (src/fullscreen.js)
   el.remove();
   if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
 }
@@ -25862,6 +25947,163 @@ function exPageRender() {
 exReady.then(exRailSay);
 
 Object.assign(window.__gs, { exList: () => exList, exReady: () => exReady, exStar, openUseExample, openExamples, exShow, exSheet, exPdfOf, exPng, exDownload, exForgetWork, exUse: () => EXU, exItems, exAll, exFolderSync: () => exFolderSync(), exMergePlan, exPageRender, exPageF, exDeleteTest: exDelete });
+
+/* ---------------- Screenshot: drag over part of the screen and a picture of it goes on the clipboard ---------------- */
+
+async function copyPicture(blobP, name) {
+  try {
+    if (!navigator.clipboard || !navigator.clipboard.write || typeof ClipboardItem === 'undefined') throw new Error('no clipboard');
+    await navigator.clipboard.write([new ClipboardItem({ 'image/png': blobP })]);
+    return 'copied';
+  } catch (e) { /* saved as a file below */ }
+  let blob = null;
+  try { blob = await blobP; } catch { return 'none'; }
+  if (!blob) return 'none';
+  await saveBlob(name, blob);
+  return 'saved';
+}
+const canvasPng = c => new Promise((res, rej) => c.toBlob(b => { c.width = c.height = 0; b ? res(b) : rej(new Error('no picture')); }, 'image/png'));
+
+let snipOn = null;
+const snipPaper = () => !!(batch && pages.length && $('#paper') && $('#paper').offsetParent && $('#dlg').hidden);
+const snipMarks = () => !!store.get('gs.snipMarks', 1);
+function snipStart() {
+  if (snipOn || $('#findDlg')) return;
+  commitEditors();
+  const paper = snipPaper();
+  const el = document.createElement('div');
+  el.id = 'snipLayer'; el.className = 'sniplay'; el.tabIndex = -1;
+  el.innerHTML = '<div class="snipbar" role="dialog" aria-label="Screenshot"><div class="snipt"><b>Screenshot</b><span>Drag over what you want to copy' + (paper ? ', or click a page for all of it' : '') + '.</span></div>' +
+    '<div class="snipacts">' + (paper ? '<label class="snipmk"><input type="checkbox" id="snipMk"' + (snipMarks() ? ' checked' : '') + '> With my marks</label>' : '') +
+    '<button class="btn sm" data-snipall title="Everything on screen (Enter)">Whole screen</button><button class="btn sm" data-snipx title="Esc">Cancel</button></div>' +
+    '<p class="snipnote">' + (paper ? 'On the paper, name covers are painted in and the student’s name and file name are left off. ' : '') + 'Anything else shows as it is on screen.</p></div><div class="snipbox" hidden></div>';
+  document.body.appendChild(el);
+  snipOn = el; el.focus({ preventScroll: true });
+  const box = el.querySelector('.snipbox');
+  let d = null;
+  el.addEventListener('pointerdown', e => {
+    if (e.button !== 0 || e.target.closest('.snipbar')) return;
+    e.preventDefault(); el.setPointerCapture(e.pointerId);
+    d = { x: e.clientX, y: e.clientY, id: e.pointerId };
+    el.classList.add('dragging');
+  });
+  el.addEventListener('pointermove', e => {
+    if (!d || e.pointerId !== d.id) return;
+    const r = snipRect(d, e);
+    if (r.w < 4 && r.h < 4) return;
+    box.hidden = false; Object.assign(box.style, { left: r.x + 'px', top: r.y + 'px', width: r.w + 'px', height: r.h + 'px' });
+  });
+  el.addEventListener('pointerup', e => {
+    if (!d || e.pointerId !== d.id) return;
+    const r = snipRect(d, e); d = null; el.classList.remove('dragging');
+    if (r.w >= 6 || r.h >= 6) return snipTake(r);
+    const pg = paper && pages.find(q => { const b = q.canvas.getBoundingClientRect(); return e.clientX >= b.left && e.clientX <= b.right && e.clientY >= b.top && e.clientY <= b.bottom; });
+    if (pg) return snipTake(null, pg);
+    box.hidden = true;
+    toast(paper ? 'Drag over an area, or click a page.' : 'Drag over an area to copy it.');
+  });
+  el.addEventListener('pointercancel', () => { d = null; box.hidden = true; el.classList.remove('dragging'); });
+  el.addEventListener('click', e => {
+    if (e.target.closest('[data-snipx]')) return snipStop();
+    if (e.target.closest('[data-snipall]')) return snipTake({ x: 0, y: 0, w: innerWidth, h: innerHeight });
+  });
+  el.addEventListener('change', e => { if (e.target.id === 'snipMk') { if (e.target.checked) store.del('gs.snipMarks'); else store.set('gs.snipMarks', 0); } });
+  el.addEventListener('keydown', snipKey);
+}
+function snipKey(e) {
+  e.stopPropagation();   // nothing behind gets a key while this is up
+  if (e.key === 'Escape') { e.preventDefault(); snipStop(); }
+  else if (e.key === 'Enter' && !e.target.closest('button')) { e.preventDefault(); snipTake({ x: 0, y: 0, w: innerWidth, h: innerHeight }); }
+}
+const snipRect = (a, e) => {
+  const x = clamp(Math.min(a.x, e.clientX), 0, innerWidth), y = clamp(Math.min(a.y, e.clientY), 0, innerHeight);
+  return { x, y, w: clamp(Math.max(a.x, e.clientX), 0, innerWidth) - x, h: clamp(Math.max(a.y, e.clientY), 0, innerHeight) - y };
+};
+function snipStop() {
+  if (!snipOn) return;
+  snipOn.remove(); snipOn = null;
+}
+async function snipTake(R, pg) {
+  const marks = snipPaper() ? snipMarks() : true;
+  snipStop();
+  const blobP = (R ? snipArea(R, marks) : snipWhole(pg, marks)).then(canvasPng);
+  const how = await copyPicture(blobP, 'Screenshot.png');
+  if (how === 'none') return toast('That picture couldn’t be made. Try a smaller area.');
+  toast(how === 'copied' ? 'Picture copied. Paste it wherever you need it.' : 'This browser can’t copy pictures, so it was saved as Screenshot.png.', 4000);
+}
+async function snipPage(pg, k, marks) {
+  const st = batch.students[cur], f = pg.file, p = pg.idx, page = pg.page, W = pg.W, H = pg.H, side = pg.side, rx = anonRx(st);
+  const c = document.createElement('canvas'); c.width = Math.ceil((W + side) * k); c.height = Math.ceil(H * k);
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
+  ctx.fillStyle = '#F6F7F9'; ctx.fillRect(Math.round(W * k), 0, c.width, c.height);
+  await page.render({ canvasContext: ctx, ...vpDraw(f, p, page, k), annotationMode: pdfjsLib.AnnotationMode.ENABLE }).promise;
+  const L = lightForPage(st, f, p); if (L) lightCanvas(ctx, Math.ceil(W * k), c.height, L);
+  scanClip(ctx, f, p, W * k, Math.ceil(W * k), c.height);
+  ctx.setTransform(k, 0, 0, k, 0, 0);
+  if (marks) drawMarks(ctx, scrubMarks(pg.marks().concat(pg.extra || []), rx), W, H, side, null);
+  ctx.fillStyle = '#111';
+  for (const r of await anonCovers(st, pg)) ctx.fillRect(r.x, r.y, r.w, r.h);   // after the marks, so a mark can't show a name either
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  return c;
+}
+async function snipWhole(pg, marks) {
+  const k = clamp(1700 / pg.W, 1, 4), c = await snipPage(pg, k, marks);
+  const notes = marks && pg.marks().concat(pg.extra || []).some(m => m.t === 'note');
+  if (notes) return c;
+  const o = document.createElement('canvas'); o.width = Math.ceil(pg.W * k); o.height = c.height;
+  o.getContext('2d').drawImage(c, 0, 0); c.width = c.height = 0;
+  return o;
+}
+async function snipArea(R, marks) {
+  const k = clamp(window.devicePixelRatio || 1, 2, 3);
+  let out = null;
+  try {
+    out = await html2canvas(document.body, { x: R.x + scrollX, y: R.y + scrollY, width: R.w, height: R.h, scale: k, backgroundColor: getComputedStyle(document.body).backgroundColor || '#ffffff', logging: false, useCORS: true,
+      ignoreElements: el => el.id === 'snipLayer' || (el.classList && el.classList.contains('toast')), onclone: snipClean });
+  } catch (e) { console.error(e); }
+  if (!out) { out = document.createElement('canvas'); out.width = Math.ceil(R.w * k); out.height = Math.ceil(R.h * k); const x = out.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, out.width, out.height); }
+  if (!snipPaper()) return out;
+  const P = $('#paper').getBoundingClientRect(), ctx = out.getContext('2d');
+  ctx.setTransform(1, 0, 0, 1, 0, 0);   // html2canvas leaves its own scale on the canvas
+  const vis = { l: Math.max(R.x, P.left), t: Math.max(R.y, P.top), r: Math.min(R.x + R.w, P.left + $('#paper').clientWidth), b: Math.min(R.y + R.h, P.top + $('#paper').clientHeight) };
+  for (const pg of pages) {
+    const b = pg.canvas.getBoundingClientRect();
+    if (b.right <= vis.l || b.left >= vis.r || b.bottom <= vis.t || b.top >= vis.b || !pg.s) continue;
+    const c = await snipPage(pg, pg.s * k, marks);
+    ctx.save();
+    ctx.beginPath(); ctx.rect((vis.l - R.x) * k, (vis.t - R.y) * k, (vis.r - vis.l) * k, (vis.b - vis.t) * k); ctx.clip();
+    ctx.drawImage(c, (b.left - R.x) * k, (b.top - R.y) * k, b.width * k, b.height * k);
+    ctx.restore();
+    c.width = c.height = 0;
+  }
+  return out;
+}
+function snipClean(doc) {
+  const st = batch && batch.students[cur];
+  if (st && snipPaper()) {
+    for (const el of doc.querySelectorAll('#paper .who, #paper .lchip, #paper .rchip')) el.style.visibility = 'hidden';
+    const rf = fileRx(st), rx = anonRx(st);
+    for (const el of doc.querySelectorAll('#paper .fhead > span:first-child, #paper .refd > summary, #paper .nofile b, #paper .mhead b')) el.textContent = scrub(el.textContent, rf);
+    if (nameFindOn()) for (const el of doc.querySelectorAll('#paper .dpage p, #paper .dpage td, #paper .dpage li')) { rx.lastIndex = 0; if (rx.test(el.textContent)) el.classList.add('anonhide'); }
+  }
+  const win = doc.defaultView, odd = /\b(?:color|oklab|oklch|lab|lch)\(/;
+  if (!win) return;
+  for (const el of doc.body.querySelectorAll('*')) {
+    const cs = win.getComputedStyle(el);
+    for (const p of SNIP_COLOR_PROPS) { const v = cs[p]; if (v && odd.test(v)) el.style[p] = snipRgb(v); }
+  }
+}
+const SNIP_COLOR_PROPS = ['color', 'backgroundColor', 'backgroundImage', 'borderTopColor', 'borderRightColor', 'borderBottomColor', 'borderLeftColor', 'outlineColor', 'boxShadow', 'textDecorationColor', 'textShadow', 'fill', 'stroke'];
+const snipRgb = v => v.replace(/\bcolor\(srgb ([\d.e-]+) ([\d.e-]+) ([\d.e-]+)(?: \/ ([\d.e-]+))?\)/g, (m, r, g, b, a) => 'rgba(' + [r, g, b].map(n => Math.round(clamp(+n, 0, 1) * 255)).join(', ') + ', ' + (a == null ? 1 : +a) + ')')
+  .replace(/\b(?:color|oklab|oklch|lab|lch)\([^)]*\)/g, 'rgba(0, 0, 0, 0)');
+document.addEventListener('keydown', e => {
+  if (!e.altKey || e.ctrlKey || e.metaKey || e.code !== 'KeyS' || snipOn) return;
+  const a = document.activeElement;
+  if (a && (/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName) || a.isContentEditable)) return;
+  e.preventDefault(); e.stopPropagation(); snipStart();
+}, true);
+Object.assign(window.__gs || (window.__gs = {}), { snipStart, snipStop, copyPicture });
 
 /* ---------------- tablets: a finger that moves the page, a pencil that draws, and a palm that does nothing (Stage 6) ----------------
    A page's canvas takes every pointer itself (touch-action: none), which is right for a mouse and a pencil but leaves a finger
@@ -26550,7 +26792,7 @@ function setRender() {
   if (r.sec === 'classes') {
     const row = (c, ci) => '<div class="setrow"><span class="rdot" style="background:' + classColor(c) + '"></span><span class="nt"><b>' + esc(c.name) + '</b><span class="ns">' + (c.names.length ? c.names.length + (c.names.length === 1 ? ' student' : ' students') : 'No roster yet') + ' · ' + (mbOf(c) ? esc(sysLink()) + ' link saved' : 'No ' + esc(sysLink()) + ' link') + '</span></span>' +
       '<a class="btn sm" href="' + classHash(c) + '">Open</a><button class="btn sm" data-setcls="' + ci + '">Name and roster</button><button class="btn sm" data-setmb="' + ci + '">' + esc(sysLink()) + ' link</button></div>';
-    put('#setClasses', '<div class="lhead"><h2>Classes and rosters</h2><span class="muted">A class has its roster, its units and its ' + (sysName() ? esc(sysName()) + ' page' : 'link to your school’s system') + '.</span><span class="sp"></span><button class="btn sm primary" data-setadd>Add a class</button></div>' +
+    put('#setClasses', '<div class="lhead"><h2>Classes and rosters</h2><span class="muted">A class has its roster, its units and its ' + (sysName() ? esc(sysName()) + ' page' : 'link to your school’s system') + '.</span><span class="sp"></span><button class="btn sm" data-setgc title="The roster, the assignments and the grades, from two downloads">From Google Classroom…</button><button class="btn sm primary" data-setadd>Add a class</button></div>' +
       (lib.classes.length ? '<div class="setrows">' + lib.classes.map(row).join('') + '</div>' : '<p class="muted setp">No classes yet. A class holds a roster, so papers match to students and the gradebook has rows.</p>'));
   }
   if (r.sec === 'terms') {
@@ -26586,6 +26828,7 @@ async function setBankCount() {
 }
 $('#setPane').addEventListener('click', async e => {
   if (e.target.closest('[data-setadd]')) return editClass(-1);
+  if (e.target.closest('[data-setgc]')) return gcOpen();
   const c = e.target.closest('[data-setcls]'); if (c) return editClass(+c.dataset.setcls);
   const m = e.target.closest('[data-setmb]'); if (m) { await askMb(+m.dataset.setmb); return setRender(); }
   if (e.target.closest('[data-setterms]')) { const k = lib.classes.find(c => c.names.length); if (!k) return; await openBook(k.id); if ($('#bkBody')) bkSetupView(); }
@@ -26766,7 +27009,7 @@ $('#setHistory').addEventListener('click', e => {
 });
 
 /* updates she controls, and installing as an app */
-const WHATS_NEW = {"1.27.25":["IB classes. Each class has a Grading button: points and percent, IB MYP or IB DP. The welcome and Settings offer IB MYP criteria (0 to 8) and IB DP 1 to 7 as two separate choices.","An MYP class is marked against the criteria a task assesses, each 0 to 8, with no percent. Its gradebook shows every level a student earned, you choose the level that fits best for each criterion, and the total becomes a final grade of 1 to 7. Levels are never averaged.","Criterion names and the grade boundaries are yours to change. A DP class shows the 1 to 7 its percent earns on boundaries you type in."],"1.27.24":["My setup, in Settings: copy a prompt into your AI assistant, and it writes your setup as one block of text: classes and when they meet, the calendar, terms, what a grade is made of, how you grade, IB criteria and boundaries, rubrics, saved comments and learning goals.","Paste the block back and press Check it. You see what would change, untick anything you don’t want, and can undo it afterwards. Anything about students is left out and said so.","Copy my setup gives your own setup as the same kind of text, for a colleague to start from. The welcome has a line that leads here."],"1.27.23":["Take my work with me now carries your Planner too: lessons, units, timetable and their files. Bring work in takes it in. A Planner already in use only receives the lessons and files it doesn’t have, so nothing there is replaced.","If Grading Studio ever moves to a new web address, the old address tells you and shows the three steps for taking your work along. Help has an answer for it."],"1.27.22":["Attendance has a choice for a student who is away when you don’t know why yet: Absent, reason unknown. Change it to Absent, excused when you hear the reason. It is still four choices, and days you saved before keep their marks. Look back lists the absences that still have no reason."],"1.27.21":["Comments are easier to work with. Change a comment’s color at any time, even while typing it: its box has a Color row, and a Highlight row when it is on highlighted words. Text boxes and Quick mark comments have colors too.","Drag a new comment’s line up or down before you type a word, and press Enter to finish a comment or text box. Shift Enter starts a new line."],"1.27.20":["Feedback-only work no longer says 0 of 20 scored. A formative activity counts the students whose feedback is complete, on its card, in Find, Today, To do, the Grades box and the grade sheet, and says Ready to return once everyone has feedback."],"1.27.19":["Presentations and videos. On an assignment’s card, Add papers… now has No papers: presentations or videos…, which gives every student on the roster a notes page to write on while you watch. Pick lined, your rubric’s rows, two columns or blank.","On a student’s page, + Add has A video…: paste a link from Google Drive, YouTube or anywhere else, and tick the partners in it. One set of notes and one grade covers the group. Only the link is kept, so the video stays where it is.","Play here shows the video above the notes page; Open in its own window puts it beside the app. + Add also has A notes page… for one more page at any time.","Clips: under a video, + Clip saves a part worth showing, as a start time, an end time and a title. Show to the class plays it full screen with the title and without the student’s name, and Clips to show the class under Setup plays them one after another."],"1.27.18":["The app no longer assumes your AI assistant is Claude. Settings, Working with AI lets you pick Claude, ChatGPT, Gemini, Copilot, another name, or none, and buttons and hints use that name. If you already used the app, yours stays Claude.","Planner, Timetable has a Slides section: the agenda on slide 2 and keeping text between 28 and 36 pt are both on, and each can be turned off.","The week shows Saturday, or Sunday in front of Monday, when a class meets then. Short dates follow your computer's day and month order."],"1.27.17":["Answer notes for quizzes: type each question's answer in Quiz boxes, and it goes on the returned papers in a gold note labelled Answer, by each question a student lost points on. In Quiz boxes, Answer notes can be set to every question or off."],"1.27.16":["The grade sheet shows the score you gave each paper in Grading Studio, the same number as the score panel, with extra credit and the retake that counts. Grades found typed on the papers only show for papers with no score yet, or when you tick Also show grades found on the papers. A score stamp already on a paper now changes when the score does."],"1.27.15":["Copy one quiz answer as a picture: in Quick mark, press P or ⧉ Copy on an answer, then paste it into Claude to ask whether it is right. The picture shows only that answer, with the question and your answer key on top. The name, score, your mark and the file name are left off, and name covers are painted in, but the student’s handwriting and words still show."],"1.27.14":["Points written on a paper can have their own color. In Quick mark’s Colors menu, or Settings, Marking, Mark colors: the ✗ color as before, one color of your own, or By credit, with full points in the check color, part in amber and none in the ✗ color."],"1.27.13":["Share lesson file, under More in a lesson: one small file with the slides, notes, pictures, materials and finished PowerPoint. Open it with Import a lesson on another computer, or give it to another teacher.","Which classes and days a lesson is on, taught notes and comments for Claude stay behind, and opening one never replaces a lesson you have."],"1.27.12":["A to-do list. To do in the sidebar holds your own list beside what the app noticed from your work: papers to mark, papers to hand back, a class with no lesson planned, missing work to chase. Those go by themselves when the work is done, and each kind can be switched off.","Type a to-do the way you would say it, like “Call Bram’s parents friday”, and it picks out the day, the class and the student. Press N anywhere outside a paper to add one.","A to-do can have a day, a class, a student or assignment it goes with, a repeat and a note. Today shows a short card of what is overdue or due today.","Week, at the top right of To do, shows your week: each line on its day, under the class that meets then. Type in a day to add one, or drag a line to another day. Anything not done moves to today on its own."],"1.27.11":["Groups in Present mode: shuffling no longer moves the slides or ends the lesson, and each shuffle keeps last time's groups apart.","Change groups by hand: drag a name to another group, or click a name and then a group. Make my own starts with empty groups, and Undo or Ctrl Z takes back a move or a shuffle.","The Present timer keeps running after you finish or leave full screen, in the corner of the Planner, and comes back on the slides when you present again."],"1.27.10":["Finding names on its own is now off unless you turn it on, in Settings, Marking, Name covers. Only the boxes you draw in Check the covers cover anything, and the check before anonymous grading lists every paper."],"1.27.9":["In the Planner's Timetable, Use my school’s template… picks your own PowerPoint template for slide downloads. Use the plain one goes back to the white one built in.","Save my setup file keeps your classes, meeting times, days off and slide template in one file to load on another computer."],"1.27.8":["Anchor papers: while you mark a summative, click High, Mid or Low under the score. The Return tab lists the three and exports them in one ZIP, each named for the assignment and its level, like “River essay - Summative High.pdf”, with student names covered."],"1.27.7":["Keep strong work as an example: press ☆ Example on an answer in Quick mark (or E), or pick Use as an example in the ⋯ beside a student’s name for a whole paper or part of a page. Names are covered, and your marks and the score stay off unless you switch them on. It is always optional.","The Examples tab on an assignment, and Examples in the sidebar for every class, have Show to the class, Copy picture, Download and Download as a sheet.","Examples go to your linked folder and into the take-home file with the rest of your work."],"1.27.6":["Returned files are named for the student, the assignment and what they are, like “Ana Lee - River essay - Graded.pdf”, or Feedback when there is no score. They still go in each student’s own folder.","To keep the names students turned in, untick Name each file by student and assignment under Options on the Return tab."],"1.27.5":["The gradebook can import your old scores: press Import… and choose a CSV or Excel file, or paste the cells. Each column becomes an assignment, matched to your roster.","You see everything before it is saved, and a score already in the gradebook stays unless you choose the file’s."],"1.27.4":["School is a new page in the sidebar for the things about your school you look up again and again: the handbook, the calendar, the bell schedule, portals, forms, who to call.","Add a link, a file (a copy is kept with your work) or a note. Name your own groups, and star the ones you open most to keep them along the top.","Drop files on the page or paste a web address. Find anything lists every resource. They are kept in your folder and take-home file, and stay when you start a new school year."],"1.27.3":["The class timer in Present takes minutes and seconds: type them in, or pick 0:30 and the other quick times. The menu remembers the last time you typed.","While it runs, the timer's menu adds or takes away 10 seconds or a minute, pauses, and restarts from the time you set. + and − add or take away a minute without opening the menu.","Tick Show it big to put the countdown in the middle of the screen, large enough for the back of the room."],"1.27.2":["In the gradebook, in-class assessments are now on the left and summatives on the right: the columns, the averages beside the term grade, and wherever you choose a type.","The order is yours to change. In Term setup, the arrows beside each type move it, and the gradebook's columns follow from left to right.","You can make your own assignment types. In Term setup, rename a type or press + Add a type (Homework, Projects, Quizzes), and give each its share of the grade. Your own setup stays as it is until you change it."],"1.27.1":["Undo now takes back a score as well as a mark: press Ctrl Z (⌘Z on a Mac) after a slip on a slider, a number key, or Missing, Excused or Late. Redo puts it back.","Deleting a unit, an assignment or a class shows Undo for a few seconds, and Undo puts it back where it was.","“Picked up where you left off” shows once, when you open an assignment, and no longer on Today or other pages. The note about what opened leaves by itself when you move to the next student, if every file opened.","The Next button stays in one place from student to student, and the Grade heading on a class’s Students tab is drawn properly.","Find anything answers to more everyday words: export, hand back, backup, undo, shortcuts, csv."],"1.27.0":["Start a new school year, in Settings, Saving and carrying. Your classes, units and assignment cards carry on, each card with its rubric and Quick mark boxes, with empty class lists and dates a year later.","This year goes into one protected file first, and the file is checked before anything is cleared. Open an archived year brings a year back from its file."],"1.26.2":["Rubric rows can be scored on your own scale. They start at 0 to 4 with half points, as before; when you set up an assignment you can pick any top from 1 to 10 and turn half points off.","Settings, Grading: choose the row scale new assignments start with. Assignments you already have keep theirs."],"1.26.1":["Activities: See, think, wonder now says it comes from Project Zero at the Harvard Graduate School of Education."],"1.26.0":["Seating: a new tab on each class. Pick how the room is set up, drag students to desks, and Shuffle gives everyone a new seat. A student can be kept in their seat.","Pick a name shows one student at random, and nobody twice until everyone has had a turn. Make groups deals the class into groups of any size.","While presenting a lesson, P picks a name and G makes groups. Who’s here leaves out anyone who is away today."],"1.25.0":["Attendance. Each class has an Attendance tab: everyone starts as present, so a day is one press for each student who is late, excused or absent, with a note if you want one.","Look back shows every saved day in one table with each student’s totals, and a student’s own page lists the days they missed.","Copy a day, or download the table as a spreadsheet, for your school’s system. Today has a line for it under each class.","If you don’t take attendance here, turn it off in Settings, Classes and rosters."],"1.24.0":["Retakes: a second try at the same assignment keeps the first try's score, comment and paper. Start one from the ⋯ beside Missing, Excused and Late on a paper.","You choose which try counts, for all your classes: the highest (to begin with), the latest, or the average. It is in the retake box and in the gradebook's Term setup.","A score typed into the gradebook takes a retake too: type both, like 7 > 10."],"1.23.0":["Scores by learning goal, if you want them. Keep your own list of goals (a skill, or a standard from your school) in Settings, Grading, or add one wherever you tag.","Tag rubric rows in Rubric setup and quiz questions in Quiz boxes. An assignment scored with just a total can carry one goal for the whole score.","Each class page gets a Goals tab: the class average on each goal with the lowest first, every student by every goal, and where each number came from. A student's own page shows their goals beside the class average.","Nothing changes until you add a first goal, and tagging never changes a score or a grade."],"1.22.0":["Progress sheets for parent meetings: one printed page per student with the term grade, every score, a chart of how they moved, missing work, each term's grade, the report comment and lines for notes. Find it on a class's Students list, or Progress sheet on one student's page.","Choose the term and tick what goes on it; Print opens the print window, where you can pick a printer or Save as PDF. It is made on your computer and nothing is sent anywhere."],"1.21.0":["Each class has a Missing work tab: every paper you marked Missing, by student or by assignment, for the term you pick.","Email reminder opens an email in your own mail app, addressed to the student and listing what they owe, for you to read and send. Email all writes one email to everyone who owes an assignment, with the addresses in Bcc. Grading Studio sends nothing itself.","Each reminder you open is noted beside the work, and Email wording… changes what every reminder says."],"1.20.0":["The app can speak Traditional Chinese (繁體中文). Choose it in Settings, Display, App language, or at the top of the welcome.","Like Spanish, it covers the first screens so far: the sidebar, Today, the welcome, Find anything, Help, and the feedback page students get with a returned paper. The other screens are still in English."],"1.19.0":["The app can speak Spanish. Choose it in Settings, Display, App language, or at the top of the welcome.","Spanish covers the first screens so far: the sidebar, Today, the welcome, Find anything, Help, and the feedback page students get with a returned paper. The other screens are still in English.","Names you typed (classes, students, assignments, rubric rows) are never translated."],"1.18.0":["On a tablet, a pencil draws and the pen's line is wider where you press harder. Once you have used a pencil, one finger moves the page, two fingers pinch to zoom, and a hand resting on the screen does nothing.","Settings, Marking has a new Tablet and pencil section: choose what a finger does on the paper, or turn off the wider line.","On a touch screen the tools, the student rows and the score buttons are larger."],"1.17.0":["Report comments: a new tab on each class's page drafts a comment for every student from your own gradebook, rubric scores and the comments you wrote on their papers. Edit each one, tick it done, then copy or download them all.","The drafts are put together on your computer from sentences you can change under Wording. Nothing about a student is sent anywhere."],"1.16.0":["Help is in the sidebar: short answers to the questions teachers ask most, from opening a set of papers to moving your work to another computer.","Find anything answers questions too. Type a few words, like “late paper” or “backup”, and the answer is in the list."],"1.15.0":["A picture dragged onto a slide that has text now sits beside the text, in a new Text + picture layout.","Drag several pictures in at once and each gets its own slide. Let a picture go on any slide in the list on the left to put it there.","New Full picture layout: the picture fills the whole slide."],"1.14.0":["Extra credit: points or a percent on one paper, and extra credit entries in the gradebook that add to the term grade or the in-class average.","The gradebook shows each type's average (summative, in-class) right beside the term grade, kept in view as you scroll. Averages only shows just those columns, and Whole year splits each term the same way.","Leave out… lets you untick students to see the class averages without them. Their own grades don't change, and nothing is saved."],"1.13.0":["Present a lesson from the Planner, or from Today when its class is on now or next: its slides fill the screen, and the arrow keys or a clicker move through them.","While presenting, A shows the agenda to tick off, T starts a timer the class can see, N shows your notes and B blanks the screen.","The bar shows how many minutes the class has left, from your timetable.","After a lesson is taught, one line says where the class got to. It shows on the lesson and on the week, and presenting again picks up there."],"1.12.0":["A returned paper starts with a feedback page: the score, each rubric row with the level given and what that level means, your comment, and every comment on the paper with its page number.","It is on unless you turn it off under Options on the Return tab. Your own pages are not changed, and bringing an export back in opens only those."],"1.11.0":["The Planner’s sections are in the sidebar: Calendar, Units, Past lessons, Activities and Rubrics. The row of tabs across the top is gone.","A lesson has a lighter top: its name, its classes, its status and Download. Copy for Claude, Versions, the upload and the links are under More.","Comments shows above a lesson once it has one."],"1.7.0":["Home is now Today: the classes you teach today with the lesson planned for each, the papers waiting to be marked, and the papers ready to hand back.","What the class needs next: after a set of papers is scored, Today shows the weakest rubric row and how many students to sit down with.","A class page is quieter. Click anywhere on an assignment’s row to open it; the only blue button is the one that adds an assignment.","Forget, and the other ways to open papers, moved into the ⋯ menu on each row."],"1.6.0":["A new browser opens on three questions (your classes, how you grade, where work is kept) and starts with nothing of anyone else’s in it.","A sample class of made-up students, with papers to mark, for trying things out. Remove it from Home when you’re done.","The app uses the name of your own school system. Choose it, and how you usually grade, in Settings.","Letter grades or IB 1 to 7 can show beside the percent, with boundaries you set.","Canvas and Moodle downloads are grouped by student. The Planner works without a setup file, and downloads lessons as PowerPoint with a plain built-in template."],"1.5.0":["The sidebar says “Not backed up”, in amber, until a folder holds a second copy of your work. Home asks for that folder once.","Go back in time, in Settings: any assignment as it was on an earlier day, restored on its own, with Undo.","Grading Studio can be installed as an app, and it opens with no internet.","A newer version now waits until you click Update now, so nothing changes in the middle of marking."]};
+const WHATS_NEW = {"1.27.29":["IB MYP tasks: the Grades tab shows each criterion’s level with no total or percent, and Copy all levels copies them. Insights leaves out the percent tiles, and text shared with an assistant says the rows are levels, not points to add up. Help has two new answers, for IB MYP and IB DP."],"1.27.28":["Coming from Google Classroom? Settings, Classes and rosters has a new button, From Google Classroom…. Choose the grades file you download from Classroom and it makes the class with its students, then shows every assignment and score for you to check before they go into the gradebook. A folder of student work downloaded from Google Drive now opens with each student’s files together. Nothing is sent anywhere and there is no sign-in. Help has an answer for it."],"1.27.27":["Screenshot: press S on a paper, Alt S (⌥S on a Mac) anywhere, or the button at the foot of the marking tools. Drag over what you want, click a page for the whole page, or press Enter for the whole screen, and the picture is copied, ready to paste. On a paper, name covers stay painted in and the student’s name and file name are left off; With my marks chooses whether your marks come too."],"1.27.26":["Full screen: press F, or Full screen near the bottom of the sidebar (beside ✕ while a paper is open). The browser’s bars go away and the sidebar folds to icons, or goes while you mark, so the paper gets the room. F again, the same button or Esc leaves, and nothing is closed or lost. On formative work F is for feedback, so use the button there."],"1.27.25":["IB classes. Each class has a Grading button: points and percent, IB MYP or IB DP. The welcome and Settings offer IB MYP criteria (0 to 8) and IB DP 1 to 7 as two separate choices.","An MYP class is marked against the criteria a task assesses, each 0 to 8, with no percent. Its gradebook shows every level a student earned, you choose the level that fits best for each criterion, and the total becomes a final grade of 1 to 7. Levels are never averaged.","Criterion names and the grade boundaries are yours to change. A DP class shows the 1 to 7 its percent earns on boundaries you type in."],"1.27.24":["My setup, in Settings: copy a prompt into your AI assistant, and it writes your setup as one block of text: classes and when they meet, the calendar, terms, what a grade is made of, how you grade, IB criteria and boundaries, rubrics, saved comments and learning goals.","Paste the block back and press Check it. You see what would change, untick anything you don’t want, and can undo it afterwards. Anything about students is left out and said so.","Copy my setup gives your own setup as the same kind of text, for a colleague to start from. The welcome has a line that leads here."],"1.27.23":["Take my work with me now carries your Planner too: lessons, units, timetable and their files. Bring work in takes it in. A Planner already in use only receives the lessons and files it doesn’t have, so nothing there is replaced.","If Grading Studio ever moves to a new web address, the old address tells you and shows the three steps for taking your work along. Help has an answer for it."],"1.27.22":["Attendance has a choice for a student who is away when you don’t know why yet: Absent, reason unknown. Change it to Absent, excused when you hear the reason. It is still four choices, and days you saved before keep their marks. Look back lists the absences that still have no reason."],"1.27.21":["Comments are easier to work with. Change a comment’s color at any time, even while typing it: its box has a Color row, and a Highlight row when it is on highlighted words. Text boxes and Quick mark comments have colors too.","Drag a new comment’s line up or down before you type a word, and press Enter to finish a comment or text box. Shift Enter starts a new line."],"1.27.20":["Feedback-only work no longer says 0 of 20 scored. A formative activity counts the students whose feedback is complete, on its card, in Find, Today, To do, the Grades box and the grade sheet, and says Ready to return once everyone has feedback."],"1.27.19":["Presentations and videos. On an assignment’s card, Add papers… now has No papers: presentations or videos…, which gives every student on the roster a notes page to write on while you watch. Pick lined, your rubric’s rows, two columns or blank.","On a student’s page, + Add has A video…: paste a link from Google Drive, YouTube or anywhere else, and tick the partners in it. One set of notes and one grade covers the group. Only the link is kept, so the video stays where it is.","Play here shows the video above the notes page; Open in its own window puts it beside the app. + Add also has A notes page… for one more page at any time.","Clips: under a video, + Clip saves a part worth showing, as a start time, an end time and a title. Show to the class plays it full screen with the title and without the student’s name, and Clips to show the class under Setup plays them one after another."],"1.27.18":["The app no longer assumes your AI assistant is Claude. Settings, Working with AI lets you pick Claude, ChatGPT, Gemini, Copilot, another name, or none, and buttons and hints use that name. If you already used the app, yours stays Claude.","Planner, Timetable has a Slides section: the agenda on slide 2 and keeping text between 28 and 36 pt are both on, and each can be turned off.","The week shows Saturday, or Sunday in front of Monday, when a class meets then. Short dates follow your computer's day and month order."],"1.27.17":["Answer notes for quizzes: type each question's answer in Quiz boxes, and it goes on the returned papers in a gold note labelled Answer, by each question a student lost points on. In Quiz boxes, Answer notes can be set to every question or off."],"1.27.16":["The grade sheet shows the score you gave each paper in Grading Studio, the same number as the score panel, with extra credit and the retake that counts. Grades found typed on the papers only show for papers with no score yet, or when you tick Also show grades found on the papers. A score stamp already on a paper now changes when the score does."],"1.27.15":["Copy one quiz answer as a picture: in Quick mark, press P or ⧉ Copy on an answer, then paste it into Claude to ask whether it is right. The picture shows only that answer, with the question and your answer key on top. The name, score, your mark and the file name are left off, and name covers are painted in, but the student’s handwriting and words still show."],"1.27.14":["Points written on a paper can have their own color. In Quick mark’s Colors menu, or Settings, Marking, Mark colors: the ✗ color as before, one color of your own, or By credit, with full points in the check color, part in amber and none in the ✗ color."],"1.27.13":["Share lesson file, under More in a lesson: one small file with the slides, notes, pictures, materials and finished PowerPoint. Open it with Import a lesson on another computer, or give it to another teacher.","Which classes and days a lesson is on, taught notes and comments for Claude stay behind, and opening one never replaces a lesson you have."],"1.27.12":["A to-do list. To do in the sidebar holds your own list beside what the app noticed from your work: papers to mark, papers to hand back, a class with no lesson planned, missing work to chase. Those go by themselves when the work is done, and each kind can be switched off.","Type a to-do the way you would say it, like “Call Bram’s parents friday”, and it picks out the day, the class and the student. Press N anywhere outside a paper to add one.","A to-do can have a day, a class, a student or assignment it goes with, a repeat and a note. Today shows a short card of what is overdue or due today.","Week, at the top right of To do, shows your week: each line on its day, under the class that meets then. Type in a day to add one, or drag a line to another day. Anything not done moves to today on its own."],"1.27.11":["Groups in Present mode: shuffling no longer moves the slides or ends the lesson, and each shuffle keeps last time's groups apart.","Change groups by hand: drag a name to another group, or click a name and then a group. Make my own starts with empty groups, and Undo or Ctrl Z takes back a move or a shuffle.","The Present timer keeps running after you finish or leave full screen, in the corner of the Planner, and comes back on the slides when you present again."],"1.27.10":["Finding names on its own is now off unless you turn it on, in Settings, Marking, Name covers. Only the boxes you draw in Check the covers cover anything, and the check before anonymous grading lists every paper."],"1.27.9":["In the Planner's Timetable, Use my school’s template… picks your own PowerPoint template for slide downloads. Use the plain one goes back to the white one built in.","Save my setup file keeps your classes, meeting times, days off and slide template in one file to load on another computer."],"1.27.8":["Anchor papers: while you mark a summative, click High, Mid or Low under the score. The Return tab lists the three and exports them in one ZIP, each named for the assignment and its level, like “River essay - Summative High.pdf”, with student names covered."],"1.27.7":["Keep strong work as an example: press ☆ Example on an answer in Quick mark (or E), or pick Use as an example in the ⋯ beside a student’s name for a whole paper or part of a page. Names are covered, and your marks and the score stay off unless you switch them on. It is always optional.","The Examples tab on an assignment, and Examples in the sidebar for every class, have Show to the class, Copy picture, Download and Download as a sheet.","Examples go to your linked folder and into the take-home file with the rest of your work."],"1.27.6":["Returned files are named for the student, the assignment and what they are, like “Ana Lee - River essay - Graded.pdf”, or Feedback when there is no score. They still go in each student’s own folder.","To keep the names students turned in, untick Name each file by student and assignment under Options on the Return tab."],"1.27.5":["The gradebook can import your old scores: press Import… and choose a CSV or Excel file, or paste the cells. Each column becomes an assignment, matched to your roster.","You see everything before it is saved, and a score already in the gradebook stays unless you choose the file’s."],"1.27.4":["School is a new page in the sidebar for the things about your school you look up again and again: the handbook, the calendar, the bell schedule, portals, forms, who to call.","Add a link, a file (a copy is kept with your work) or a note. Name your own groups, and star the ones you open most to keep them along the top.","Drop files on the page or paste a web address. Find anything lists every resource. They are kept in your folder and take-home file, and stay when you start a new school year."],"1.27.3":["The class timer in Present takes minutes and seconds: type them in, or pick 0:30 and the other quick times. The menu remembers the last time you typed.","While it runs, the timer's menu adds or takes away 10 seconds or a minute, pauses, and restarts from the time you set. + and − add or take away a minute without opening the menu.","Tick Show it big to put the countdown in the middle of the screen, large enough for the back of the room."],"1.27.2":["In the gradebook, in-class assessments are now on the left and summatives on the right: the columns, the averages beside the term grade, and wherever you choose a type.","The order is yours to change. In Term setup, the arrows beside each type move it, and the gradebook's columns follow from left to right.","You can make your own assignment types. In Term setup, rename a type or press + Add a type (Homework, Projects, Quizzes), and give each its share of the grade. Your own setup stays as it is until you change it."],"1.27.1":["Undo now takes back a score as well as a mark: press Ctrl Z (⌘Z on a Mac) after a slip on a slider, a number key, or Missing, Excused or Late. Redo puts it back.","Deleting a unit, an assignment or a class shows Undo for a few seconds, and Undo puts it back where it was.","“Picked up where you left off” shows once, when you open an assignment, and no longer on Today or other pages. The note about what opened leaves by itself when you move to the next student, if every file opened.","The Next button stays in one place from student to student, and the Grade heading on a class’s Students tab is drawn properly.","Find anything answers to more everyday words: export, hand back, backup, undo, shortcuts, csv."],"1.27.0":["Start a new school year, in Settings, Saving and carrying. Your classes, units and assignment cards carry on, each card with its rubric and Quick mark boxes, with empty class lists and dates a year later.","This year goes into one protected file first, and the file is checked before anything is cleared. Open an archived year brings a year back from its file."],"1.26.2":["Rubric rows can be scored on your own scale. They start at 0 to 4 with half points, as before; when you set up an assignment you can pick any top from 1 to 10 and turn half points off.","Settings, Grading: choose the row scale new assignments start with. Assignments you already have keep theirs."],"1.26.1":["Activities: See, think, wonder now says it comes from Project Zero at the Harvard Graduate School of Education."],"1.26.0":["Seating: a new tab on each class. Pick how the room is set up, drag students to desks, and Shuffle gives everyone a new seat. A student can be kept in their seat.","Pick a name shows one student at random, and nobody twice until everyone has had a turn. Make groups deals the class into groups of any size.","While presenting a lesson, P picks a name and G makes groups. Who’s here leaves out anyone who is away today."],"1.25.0":["Attendance. Each class has an Attendance tab: everyone starts as present, so a day is one press for each student who is late, excused or absent, with a note if you want one.","Look back shows every saved day in one table with each student’s totals, and a student’s own page lists the days they missed.","Copy a day, or download the table as a spreadsheet, for your school’s system. Today has a line for it under each class.","If you don’t take attendance here, turn it off in Settings, Classes and rosters."],"1.24.0":["Retakes: a second try at the same assignment keeps the first try's score, comment and paper. Start one from the ⋯ beside Missing, Excused and Late on a paper.","You choose which try counts, for all your classes: the highest (to begin with), the latest, or the average. It is in the retake box and in the gradebook's Term setup.","A score typed into the gradebook takes a retake too: type both, like 7 > 10."],"1.23.0":["Scores by learning goal, if you want them. Keep your own list of goals (a skill, or a standard from your school) in Settings, Grading, or add one wherever you tag.","Tag rubric rows in Rubric setup and quiz questions in Quiz boxes. An assignment scored with just a total can carry one goal for the whole score.","Each class page gets a Goals tab: the class average on each goal with the lowest first, every student by every goal, and where each number came from. A student's own page shows their goals beside the class average.","Nothing changes until you add a first goal, and tagging never changes a score or a grade."],"1.22.0":["Progress sheets for parent meetings: one printed page per student with the term grade, every score, a chart of how they moved, missing work, each term's grade, the report comment and lines for notes. Find it on a class's Students list, or Progress sheet on one student's page.","Choose the term and tick what goes on it; Print opens the print window, where you can pick a printer or Save as PDF. It is made on your computer and nothing is sent anywhere."],"1.21.0":["Each class has a Missing work tab: every paper you marked Missing, by student or by assignment, for the term you pick.","Email reminder opens an email in your own mail app, addressed to the student and listing what they owe, for you to read and send. Email all writes one email to everyone who owes an assignment, with the addresses in Bcc. Grading Studio sends nothing itself.","Each reminder you open is noted beside the work, and Email wording… changes what every reminder says."],"1.20.0":["The app can speak Traditional Chinese (繁體中文). Choose it in Settings, Display, App language, or at the top of the welcome.","Like Spanish, it covers the first screens so far: the sidebar, Today, the welcome, Find anything, Help, and the feedback page students get with a returned paper. The other screens are still in English."],"1.19.0":["The app can speak Spanish. Choose it in Settings, Display, App language, or at the top of the welcome.","Spanish covers the first screens so far: the sidebar, Today, the welcome, Find anything, Help, and the feedback page students get with a returned paper. The other screens are still in English.","Names you typed (classes, students, assignments, rubric rows) are never translated."],"1.18.0":["On a tablet, a pencil draws and the pen's line is wider where you press harder. Once you have used a pencil, one finger moves the page, two fingers pinch to zoom, and a hand resting on the screen does nothing.","Settings, Marking has a new Tablet and pencil section: choose what a finger does on the paper, or turn off the wider line.","On a touch screen the tools, the student rows and the score buttons are larger."],"1.17.0":["Report comments: a new tab on each class's page drafts a comment for every student from your own gradebook, rubric scores and the comments you wrote on their papers. Edit each one, tick it done, then copy or download them all.","The drafts are put together on your computer from sentences you can change under Wording. Nothing about a student is sent anywhere."],"1.16.0":["Help is in the sidebar: short answers to the questions teachers ask most, from opening a set of papers to moving your work to another computer.","Find anything answers questions too. Type a few words, like “late paper” or “backup”, and the answer is in the list."],"1.15.0":["A picture dragged onto a slide that has text now sits beside the text, in a new Text + picture layout.","Drag several pictures in at once and each gets its own slide. Let a picture go on any slide in the list on the left to put it there.","New Full picture layout: the picture fills the whole slide."],"1.14.0":["Extra credit: points or a percent on one paper, and extra credit entries in the gradebook that add to the term grade or the in-class average.","The gradebook shows each type's average (summative, in-class) right beside the term grade, kept in view as you scroll. Averages only shows just those columns, and Whole year splits each term the same way.","Leave out… lets you untick students to see the class averages without them. Their own grades don't change, and nothing is saved."],"1.13.0":["Present a lesson from the Planner, or from Today when its class is on now or next: its slides fill the screen, and the arrow keys or a clicker move through them.","While presenting, A shows the agenda to tick off, T starts a timer the class can see, N shows your notes and B blanks the screen.","The bar shows how many minutes the class has left, from your timetable.","After a lesson is taught, one line says where the class got to. It shows on the lesson and on the week, and presenting again picks up there."],"1.12.0":["A returned paper starts with a feedback page: the score, each rubric row with the level given and what that level means, your comment, and every comment on the paper with its page number.","It is on unless you turn it off under Options on the Return tab. Your own pages are not changed, and bringing an export back in opens only those."],"1.11.0":["The Planner’s sections are in the sidebar: Calendar, Units, Past lessons, Activities and Rubrics. The row of tabs across the top is gone.","A lesson has a lighter top: its name, its classes, its status and Download. Copy for Claude, Versions, the upload and the links are under More.","Comments shows above a lesson once it has one."],"1.7.0":["Home is now Today: the classes you teach today with the lesson planned for each, the papers waiting to be marked, and the papers ready to hand back.","What the class needs next: after a set of papers is scored, Today shows the weakest rubric row and how many students to sit down with.","A class page is quieter. Click anywhere on an assignment’s row to open it; the only blue button is the one that adds an assignment.","Forget, and the other ways to open papers, moved into the ⋯ menu on each row."],"1.6.0":["A new browser opens on three questions (your classes, how you grade, where work is kept) and starts with nothing of anyone else’s in it.","A sample class of made-up students, with papers to mark, for trying things out. Remove it from Home when you’re done.","The app uses the name of your own school system. Choose it, and how you usually grade, in Settings.","Letter grades or IB 1 to 7 can show beside the percent, with boundaries you set.","Canvas and Moodle downloads are grouped by student. The Planner works without a setup file, and downloads lessons as PowerPoint with a plain built-in template."],"1.5.0":["The sidebar says “Not backed up”, in amber, until a folder holds a second copy of your work. Home asks for that folder once.","Go back in time, in Settings: any assignment as it was on an earlier day, restored on its own, with Undo.","Grading Studio can be installed as an app, and it opens with no internet.","A newer version now waits until you click Update now, so nothing changes in the middle of marking."]};
 const upd = { on: false, st: null, mine: '', checking: false, said: '', install: null, installed: false, err: '' };
 const updCan = () => 'serviceWorker' in navigator && (location.protocol === 'https:' || /[?&]sw=1(&|$)/.test(location.search)) && !/Grading Studio\.html$/i.test(decodeURIComponent(location.pathname));
 const updSend = async msg => { const reg = await navigator.serviceWorker.ready; if (reg.active) reg.active.postMessage(msg); };
@@ -28346,6 +28589,112 @@ const SCH_KIND_SAY = { link: 'Link', file: 'File', note: 'Note' };
 const schFindRows = () => schSort(schLive()).map(i => { const k = schKindOf(i); return { group: 'School resources', label: i.name, sub: SCH_KIND_SAY[k] + (i.group ? ' · ' + i.group : k === 'link' ? ' · ' + schHost(i.url) : ''), key: '', words: [i.url, i.note, i.file && i.file.name].filter(Boolean).join(' '), run: () => schOpen(i.id) }; });
 Object.assign(window.__gs, { schNow, schHashes, schUrl, schoolMerge, schHave: async () => { await schReady; return [...schHave].sort(); } });
 
+/* ---------------- Google Classroom: bring a class over with two downloads, and no sign-in ----------------
+   1. The grades file ("Download all grades as CSV" on any assignment's Student work page, or the Google Sheet saved as Excel):
+      one row per student and one column per assignment. It gives the roster, each assignment with its points and date, and
+      every score. The class is made here; the scores then go through the gradebook's own import (bookimport.js), so the teacher
+      sees them before anything is saved.
+   2. The assignment's folder from Google Drive (Classroom / the class / the assignment), downloaded as a ZIP and opened like any
+      download. open.js puts files named "Student name - title" together under each student.
+   Both files are read in this browser. Nothing is sent anywhere, and nothing is asked of Google. */
+
+let gc = null;
+function gcNameOf(file) {
+  return String(file || '').replace(/\.[a-z0-9]+$/i, '').replace(/[_]+/g, ' ').replace(/\s*\(\d+\)\s*$/, '')
+    .replace(/\s*[-–]?\s*\d{4}-\d{1,2}-\d{1,2}.*$/, '').replace(/\s*[-–]?\s*\b(all\s+)?grades?\b\s*$/i, '').replace(/\s+/g, ' ').trim();
+}
+function gcRead(rows) {
+  const d = bkiRead(rows || []);
+  if (!d || d.err || !d.students.length) return null;
+  const head = rows[0] || [], ei = head.findIndex(h => /e-?mail/i.test(h)), seen = new Set(), students = [];
+  for (const s of d.students) {
+    const k = normName(s.name); if (!k || seen.has(k)) continue;
+    seen.add(k);
+    const email = ei >= 0 && EMAIL_RX.test(s.cells[ei] || '') ? s.cells[ei] : '';
+    students.push({ name: s.name, email });
+  }
+  return { rows, students, cols: d.cols.length };
+}
+function gcOpen() {
+  gc = { data: null, file: '' };
+  openDlg('<div class="bh"><h2>Bring a class over from Google Classroom</h2><button class="icon" data-gcclose aria-label="Close" style="margin-left:auto">✕</button></div>' +
+    '<div class="bb gcbox"><p class="gcin">Two downloads bring a class over. Both are read in this browser: nothing is sent anywhere, and there is no sign-in.</p>' +
+    '<section class="gccard"><span class="gcn" aria-hidden="true">1</span><div class="gcbody"><h3>Students, assignments and grades</h3>' +
+      '<ol class="gcsteps"><li>In Google Classroom, open the class, then any assignment’s <b>Student work</b> page.</li><li>Click the gear at the top right and choose <b>Download all grades as CSV</b>.</li><li>Choose that file here.</li></ol>' +
+      '<div class="gcrow"><button class="btn primary" data-gcfile>Choose the grades file…</button><span class="muted" id="gcSay">A CSV, or the grades sheet saved as Excel (.xlsx).</span><input type="file" id="gcFile" accept=".csv,.tsv,.txt,.xlsx,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" hidden></div>' +
+      '<p class="bkierr" id="gcErr" role="alert" hidden></p><div id="gcFound" hidden></div></div></section>' +
+    '<section class="gccard"><span class="gcn" aria-hidden="true">2</span><div class="gcbody"><h3>Student work to mark</h3>' +
+      '<ol class="gcsteps"><li>In Google Drive, open the <b>Classroom</b> folder, then the class, then the assignment’s folder.</li><li>Download the folder. Drive makes a ZIP, and Google Docs come as Word files.</li><li>Drop the ZIP on Today, or choose it here.</li></ol>' +
+      '<div class="gcrow"><button class="btn" data-gczip>Choose the ZIP…</button></div>' +
+      '<p class="muted gcnote">Files named “Student name - title” are put together under each student. A file a student uploaded under its own name opens as its own entry, for you to match.</p></div></section>' +
+    '<p class="muted gcnote">Scores can’t be sent back into Google Classroom from here. The Grades tab of an assignment lists every score to copy across.</p></div>' +
+    '<div class="bf"><button class="btn" data-gcclose>Close</button><button class="btn primary" data-gcgo disabled>Make the class</button></div>');
+  $('#dlgBox').classList.add('gcdlg');
+}
+function gcErr(msg) { const e = $('#gcErr'); if (!e) return; e.hidden = !msg; e.textContent = msg || ''; }
+async function gcTake(f) {
+  if (!f || !gc) return;
+  let rows = null;
+  try {
+    const buf = new Uint8Array(await f.arrayBuffer());
+    if (buf[0] === 0xd0 && buf[1] === 0xcf) return gcErr('That is an old Excel file (.xls). Save it as .xlsx or CSV and choose that.');
+    rows = buf[0] === 0x50 && buf[1] === 0x4b ? bkiXlsx(buf) : bkiParse(new TextDecoder().decode(buf));
+  } catch (e) { console.error(e); return gcErr('That file couldn’t be read.'); }
+  const d = gcRead(rows);
+  if (!d) return gcErr('No students were found in that file. It needs one row per student, with their names in the first columns.');
+  gcErr(''); gc.data = d; gc.file = f.name;
+  const guess = gcNameOf(f.name), keys = d.students.map(s => s.name);
+  const hit = lib.classes.find(c => guess && normName(c.name) === normName(guess)) || lib.classes.find(c => c.names.length && rosterPairs(c.names, keys).size >= Math.max(2, keys.length / 2));
+  gc.to = hit ? hit.id : ''; gc.name = guess;
+  gcDraw();
+}
+function gcNew(c) { const d = gc.data, took = new Set(rosterPairs(c.names, d.students.map(s => s.name)).values()); return d.students.filter(s => !took.has(s.name)); }
+function gcDraw() {
+  const d = gc.data, box = $('#gcFound'); if (!d || !box) return;
+  const c = gc.to ? classById(gc.to) : null, add = c ? gcNew(c) : d.students;
+  $('#gcSay').textContent = gc.file;
+  box.hidden = false;
+  box.innerHTML = '<p class="gcsum">Found <b>' + people(d.students.length, 'student') + '</b>' + (d.cols ? ' and <b>' + people(d.cols, 'assignment') + '</b> with scores' : '. No columns of scores were found, so only the roster comes in') + '.</p>' +
+    '<div class="gcfields"><label class="bkpf">Put them in<select class="btn sm" id="gcTo"><option value="">A new class</option>' + lib.classes.map(k => '<option value="' + esc(k.id) + '"' + (k === c ? ' selected' : '') + '>' + esc(k.name) + '</option>').join('') + '</select></label>' +
+    (c ? '' : '<label class="bkpf">Class name<input type="text" class="bkin" id="gcName" value="' + esc(gc.name) + '" placeholder="e.g. Period 2 Biology"></label>') + '</div>' +
+    '<p class="muted gcnote">' + (c ? (add.length ? people(add.length, 'student') + ' not on its roster yet will be added: ' + esc(add.map(s => s.name).join(', ')) + '.' : 'Everyone in the file is already on its roster.') : 'The roster is in the file’s order. You can reorder or rename it later on the class’s page.') +
+    (d.cols ? ' Next you see every assignment and score, and nothing is saved in the gradebook until you press Import there.' : '') + '</p>';
+  const go = $('[data-gcgo]'); go.disabled = false; go.textContent = c ? (d.cols ? 'Check the scores' : add.length ? 'Add ' + people(add.length, 'student') : 'Done') : d.cols ? 'Make the class and check the scores' : 'Make the class';
+}
+async function gcSave() {
+  const d = gc.data; if (!d) return;
+  let c = gc.to ? classById(gc.to) : null;
+  if (!c) {
+    const name = ($('#gcName').value || '').trim(); if (!name) { $('#gcName').focus(); return toast('Give the class a name'); }
+    c = { id: uid(), name, names: [], units: [] }; lib.classes.push(c);
+  }
+  const was = c.names.slice(), add = gcNew(c);
+  c.names = c.names.concat(add.map(s => s.name));
+  const pairs = rosterPairs(c.names, d.students.map(s => s.name)), by = new Map([...pairs].map(([n, k]) => [k, n]));
+  keepInfo(c, was, d.students.filter(s => s.email && by.has(s.name)).map(s => ({ name: by.get(s.name), email: s.email })));
+  saveLib(); closeDlg(); renderLib(); if (window.railRender) railRender();
+  const rows = d.rows, cols = d.cols; gc = null;
+  if (!batch) go(classHash(c));
+  if (!cols) return toast((was.length ? 'Added ' + people(add.length, 'student') + ' to ' : 'Made ') + c.name);
+  await openBook(c.id);
+  if (!$('#bkBody')) return;
+  bkImportView(); bkiTake(rows);
+}
+$('#dlgBox').addEventListener('click', e => {
+  if (!gc || !$('#dlgBox').classList.contains('gcdlg')) return;
+  if (e.target.closest('[data-gcclose]')) { gc = null; return closeDlg(); }
+  if (e.target.closest('[data-gcfile]')) return $('#gcFile').click();
+  if (e.target.closest('[data-gczip]')) { gc = null; closeDlg(); if (!batch) go('#/'); return $('#pickFiles').click(); }
+  if (e.target.closest('[data-gcgo]')) return gcSave();
+});
+$('#dlgBox').addEventListener('change', e => {
+  if (!gc || !$('#dlgBox').classList.contains('gcdlg')) return;
+  const t = e.target;
+  if (t.id === 'gcFile') { gcTake(t.files && t.files[0]); t.value = ''; return; }
+  if (t.id === 'gcTo') { const n = $('#gcName'); if (n) gc.name = n.value; gc.to = t.value; return gcDraw(); }
+});
+Object.assign(window.__gs, { gcOpen, gcRead, gcNameOf });
+
 /* ---------------- the frame: the sidebar, Home's "Needs a look", and Find anything (11/9) ---------------- */
 var shellReady, screenWas = '';
 
@@ -28471,6 +28820,7 @@ function findRows() {
     add('Do', 'Split a scan of everyone’s papers', '', press('#pickScan'));
     add('Do', 'Match files to a roster', '', press('#pickMatch'));
     add('Do', 'Add a class', 'Its name and roster', press('#addClass'));
+    add('Do', 'Bring a class over from Google Classroom', 'Its roster, assignments and grades, from two downloads', () => gcOpen(), '', 'import google classroom drive csv grades roster move switch transfer');
     add('Do', 'Try it with a sample class', 'Made-up students and papers', press('#sample'));
     add('Settings', 'Take my work with me', 'A take-home file for another computer', press('#takeBtn'), '', 'backup back up export carry home laptop transfer');
     add('Settings', 'Bring work in', 'From a take-home file', press('#restoreBtn'), '', 'import restore backup load');
@@ -28485,12 +28835,14 @@ function findRows() {
   add('Settings', 'Updates and installing', 'This version, what’s new, install as an app', () => go(setHash('about')), '', 'about update offline download app');
   add('Settings', document.documentElement.dataset.theme === 'dark' ? 'Light mode' : 'Dark mode', 'Display', press('.themeBtn'), '', 'theme night colours colors appearance');
   add('Settings', 'Text size and zoom', 'Display', () => openDisplay(), '', 'font bigger smaller larger magnify');
+  if (gsFull.can()) add('Settings', gsFull.on() ? 'Leave full screen' : 'Full screen', 'The page fills the screen. F or Esc to leave', () => gsFull.toggle(), 'F', 'fullscreen maximize maximise bigger room focus distraction');
   add('Settings', 'App language', 'English, Spanish or Traditional Chinese', () => go('#/settings/display'));
   add('Settings', 'Word papers', wordPdfAlways() ? 'Converted to PDF pages as each assignment opens' : 'Kept as Word files. They can be converted to PDF pages', () => go('#/settings/marking'));
   add('Settings', 'Mark colors', 'Colors for ✗, checks and points', () => go('#/settings/marking'));
   add('Settings', 'Name covers', nameFindOn() ? 'You cover names, and typed names are found too' : 'You cover names yourself in Check the covers', () => go('#/settings/marking'), undefined, 'anonymous redact hide names find names');
   add('Settings', 'Tablet and pencil', 'What a finger does on the paper, and pencil pressure', () => go('#/settings/marking'));
   add('Settings', 'All keys', 'Every keyboard shortcut', () => openKeys(), '?', 'shortcuts hotkeys keyboard');
+  add('Tools', 'Screenshot', 'Drag over part of the screen to copy a picture of it', () => snipStart(), batch && pages.length ? 'S' : '⌥S', 'screenshot snip capture picture image copy clipboard grab');
   for (const [k, t, sub] of SET_SECS) if (k !== 'saving' && k !== 'display' && k !== 'keys' && k !== 'history' && k !== 'about') add('Settings', t, sub, () => go(setHash(k)));
   if (plan) add('Go to', 'This week in the Planner', 'Today’s classes and the lessons planned for them', () => { location.href = planUrl('#week'); });
   out.push(...schFindRows(), ...helpFindRows());
@@ -28589,6 +28941,52 @@ function moveAsk() {
 moveCard();
 Promise.resolve(keptFirst).then(() => setTimeout(() => { if (keptMeta.size || ((lib && lib.classes) || []).length) moveAsk(); }, 1200));
 Object.assign(window.__gs, { movingTo, moveTest: to => { MOVE = { address: location.href, movingTo: to }; try { localStorage.removeItem('gsc.moveSeen'); } catch {} moveCard(); moveAsk(); } });
+
+/* ---------------- Full screen (11/12): the whole page fills the screen, on both pages and every screen ----------------
+   The Full screen button (in the sidebar, and in the top bar while a paper is open), F, or Find anything puts the page in the browser's
+   full screen. F again, the button, or Esc leaves it. Only the look changes: no screen is closed and nothing is saved or lost on the way
+   in or out. While it is on, the sidebar folds to icons, and while a paper is open it goes away so the paper gets the room.
+   Nothing is stored: a browser lets a page go full screen only when she asks, so it can't come back by itself on the next visit.
+   Present, the seating chart, the name picker and the Examples show put their own stage in full screen on top of this; when they end,
+   the page is back in full screen as it was. */
+const gsFull = {
+  on: () => document.fullscreenElement === document.documentElement,
+  can: () => !!(document.fullscreenEnabled && document.documentElement.requestFullscreen),
+  async toggle() {
+    try {
+      if (gsFull.on()) await document.exitFullscreen();
+      else if (!document.fullscreenElement) await document.documentElement.requestFullscreen({ navigationUI: 'hide' });
+    } catch { }
+  },
+  paint() {
+    const root = document.documentElement, fe = document.fullscreenElement;
+    if (!fe) root.classList.remove('gsfull'); else if (fe === root) root.classList.add('gsfull');
+    const on = root.classList.contains('gsfull'), can = gsFull.can();
+    for (const b of document.querySelectorAll('[data-gsfull]')) {
+      b.hidden = !can;
+      const say = on ? 'Leave full screen' : 'Full screen', tip = on ? 'Leave full screen ( F or Esc )' : 'Full screen ( F )';
+      if (b.title !== tip) { b.title = tip; b.setAttribute('aria-label', say); }
+      b.setAttribute('aria-pressed', on ? 'true' : 'false');
+      const l = b.querySelector('.rl'); if (l && l.dataset.en !== say) { l.dataset.en = say; l.textContent = say; }
+    }
+  },
+  drop(el) {
+    if (document.fullscreenElement !== el || !document.documentElement.classList.contains('gsfull')) return false;
+    const go = () => el.remove(); document.exitFullscreen().then(go, go); return true;
+  },
+};
+document.addEventListener('fullscreenchange', () => gsFull.paint());
+document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-gsfull]'); if (b) { e.preventDefault(); gsFull.toggle(); } });
+document.addEventListener('keydown', e => {
+  if (e.defaultPrevented || e.repeat || e.metaKey || e.ctrlKey || e.altKey || e.shiftKey || (e.key !== 'f' && e.key !== 'F')) return;
+  const a = document.activeElement;
+  if (a && (/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName) || a.isContentEditable)) return;
+  if (document.fullscreenElement && !gsFull.on()) return;   // a stage of its own is showing
+  if (!gsFull.can()) return;
+  e.preventDefault(); gsFull.toggle();
+});
+gsFull.paint();
+window.__gsFull = gsFull;
 
 });</script>
 

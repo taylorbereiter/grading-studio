@@ -136,6 +136,7 @@ function findRows() {
     add('Do', 'Split a scan of everyone’s papers', '', press('#pickScan'));
     add('Do', 'Match files to a roster', '', press('#pickMatch'));
     add('Do', 'Add a class', 'Its name and roster', press('#addClass'));
+    add('Do', 'Bring a class over from Google Classroom', 'Its roster, assignments and grades, from two downloads', () => gcOpen(), '', 'import google classroom drive csv grades roster move switch transfer');
     add('Do', 'Try it with a sample class', 'Made-up students and papers', press('#sample'));
     add('Settings', 'Take my work with me', 'A take-home file for another computer', press('#takeBtn'), '', 'backup back up export carry home laptop transfer');
     add('Settings', 'Bring work in', 'From a take-home file', press('#restoreBtn'), '', 'import restore backup load');
@@ -150,12 +151,14 @@ function findRows() {
   add('Settings', 'Updates and installing', 'This version, what’s new, install as an app', () => go(setHash('about')), '', 'about update offline download app');
   add('Settings', document.documentElement.dataset.theme === 'dark' ? 'Light mode' : 'Dark mode', 'Display', press('.themeBtn'), '', 'theme night colours colors appearance');
   add('Settings', 'Text size and zoom', 'Display', () => openDisplay(), '', 'font bigger smaller larger magnify');
+  if (gsFull.can()) add('Settings', gsFull.on() ? 'Leave full screen' : 'Full screen', 'The page fills the screen. F or Esc to leave', () => gsFull.toggle(), 'F', 'fullscreen maximize maximise bigger room focus distraction');
   add('Settings', 'App language', 'English, Spanish or Traditional Chinese', () => go('#/settings/display'));
   add('Settings', 'Word papers', wordPdfAlways() ? 'Converted to PDF pages as each assignment opens' : 'Kept as Word files. They can be converted to PDF pages', () => go('#/settings/marking'));
   add('Settings', 'Mark colors', 'Colors for ✗, checks and points', () => go('#/settings/marking'));
   add('Settings', 'Name covers', nameFindOn() ? 'You cover names, and typed names are found too' : 'You cover names yourself in Check the covers', () => go('#/settings/marking'), undefined, 'anonymous redact hide names find names');
   add('Settings', 'Tablet and pencil', 'What a finger does on the paper, and pencil pressure', () => go('#/settings/marking'));
   add('Settings', 'All keys', 'Every keyboard shortcut', () => openKeys(), '?', 'shortcuts hotkeys keyboard');
+  add('Tools', 'Screenshot', 'Drag over part of the screen to copy a picture of it', () => snipStart(), batch && pages.length ? 'S' : '⌥S', 'screenshot snip capture picture image copy clipboard grab');
   for (const [k, t, sub] of SET_SECS) if (k !== 'saving' && k !== 'display' && k !== 'keys' && k !== 'history' && k !== 'about') add('Settings', t, sub, () => go(setHash(k)));
   if (plan) add('Go to', 'This week in the Planner', 'Today’s classes and the lessons planned for them', () => { location.href = planUrl('#week'); });
   out.push(...schFindRows(), ...helpFindRows());

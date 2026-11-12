@@ -1,13 +1,11 @@
 {
- "version": "1.27.25",
- "build": "38034d9c149d",
+ "version": "1.27.29",
+ "build": "5fc4289e8536",
  "notes": [
-  "IB classes. Each class has a Grading button: points and percent, IB MYP or IB DP. The welcome and Settings offer IB MYP criteria (0 to 8) and IB DP 1 to 7 as two separate choices.",
-  "An MYP class is marked against the criteria a task assesses, each 0 to 8, with no percent. Its gradebook shows every level a student earned, you choose the level that fits best for each criterion, and the total becomes a final grade of 1 to 7. Levels are never averaged.",
-  "Criterion names and the grade boundaries are yours to change. A DP class shows the 1 to 7 its percent earns on boundaries you type in."
+  "IB MYP tasks: the Grades tab shows each criterion’s level with no total or percent, and Copy all levels copies them. Insights leaves out the percent tiles, and text shared with an assistant says the rows are levels, not points to add up. Help has two new answers, for IB MYP and IB DP."
  ],
  "files": {
-  "index.html": "068a13eb572ea5f9304a29a9fe7c5f1279cdedd2b5cd0107bf924acbd7cd5306",
-  "planner.html": "223564a53b1f66827d74d8e86fa1aa9d283e90290f26feeeea918f4339c98078"
+  "index.html": "461699f83ebfef340506dce0998af683ad47ec50be77387d9525c8fe5eb45ca1",
+  "planner.html": "627c5478f9a2bbbd279b6e955fda4f1054e420488d2f0a5d4279fdae246e3f6c"
  }
 }

@@ -597,17 +597,17 @@ body.has-side .lsn{margin-right:var(--sidew,420px)}
 .rsaved .rl{display:block;flex:1;min-width:0;overflow-wrap:anywhere}
 
 /* while a paper is open the sidebar folds to a strip of icons, so the paper gets the room */
-:is(.shell.grading,.pfold) .rail{width:60px;padding:12px 8px;align-items:center;overflow:hidden auto}
-:is(.shell.grading,.pfold) .rail .rl{display:none}
-:is(.shell.grading,.pfold) .rbrand{padding:4px 0 12px}
-:is(.shell.grading,.pfold) .rbrand .rs{display:inline}
-:is(.shell.grading,.pfold) .rnav,:is(.shell.grading,.pfold) .rfind{justify-content:center;width:40px;min-height:40px;height:40px;padding:0;margin:0 0 2px;flex:none}
-:is(.shell.grading,.pfold) .rcap{width:24px;height:0;padding:0;margin:8px 0;border-top:1px solid var(--line)}
-:is(.shell.grading,.pfold) .radd{display:none}
-:is(.shell.grading,.pfold) #railClasses{display:flex;flex-direction:column;align-items:center}
-:is(.shell.grading,.pfold) .rdot{width:10px;height:10px}
-:is(.shell.grading,.pfold) .rsaved{justify-content:center;width:40px;padding:12px 0}
-:is(.shell.grading,.pfold) .rsaved .rdot{margin:0}
+:is(.shell.grading,.pfold,.gsfull) .rail{width:60px;padding:12px 8px;align-items:center;overflow:hidden auto}
+:is(.shell.grading,.pfold,.gsfull) .rail .rl{display:none}
+:is(.shell.grading,.pfold,.gsfull) .rbrand{padding:4px 0 12px}
+:is(.shell.grading,.pfold,.gsfull) .rbrand .rs{display:inline}
+:is(.shell.grading,.pfold,.gsfull) .rnav,:is(.shell.grading,.pfold,.gsfull) .rfind{justify-content:center;width:40px;min-height:40px;height:40px;padding:0;margin:0 0 2px;flex:none}
+:is(.shell.grading,.pfold,.gsfull) .rcap{width:24px;height:0;padding:0;margin:8px 0;border-top:1px solid var(--line)}
+:is(.shell.grading,.pfold,.gsfull) .radd{display:none}
+:is(.shell.grading,.pfold,.gsfull) #railClasses{display:flex;flex-direction:column;align-items:center}
+:is(.shell.grading,.pfold,.gsfull) .rdot{width:10px;height:10px}
+:is(.shell.grading,.pfold,.gsfull) .rsaved{justify-content:center;width:40px;padding:12px 0}
+:is(.shell.grading,.pfold,.gsfull) .rsaved .rdot{margin:0}
 @media (max-width:1100px){
   .rail{width:60px;padding:12px 8px;align-items:center}
   .rail .rl{display:none}
@@ -620,6 +620,13 @@ body.has-side .lsn{margin-right:var(--sidew,420px)}
   .rsaved{justify-content:center;width:40px;padding:12px 0}
   .rsaved .rdot{margin:0}
 }
+/* full screen (src/fullscreen.js): the sidebar folds to icons, and while a paper is open it goes, so the paper has the room.
+   On the marking screen the button is in the top bar instead. */
+[data-gsfull] .fs-out{display:none}
+.gsfull [data-gsfull] .fs-in{display:none}
+.gsfull [data-gsfull] .fs-out{display:inline}
+.shell.grading #railFull{display:none}
+.gsfull .shell.grading .rail{display:none}
 /* ---------- Find anything ---------- */
 .finddlg{align-items:flex-start;padding-top:12vh;z-index:34}
 .fbox{width:min(640px,100%);max-height:min(560px,76vh);display:flex;flex-direction:column;background:var(--surface);border-radius:14px;box-shadow:0 4px 12px rgba(20,25,40,.12),0 24px 60px rgba(20,25,40,.28);overflow:hidden}
@@ -807,7 +814,7 @@ body.has-side .lsn{margin-right:var(--sidew,420px)}
 /* The sidebar stays put at the left edge; the Planner's own screen scrolls beside it. It folds to icons while a lesson, a unit or a document is open. */
 .rail{position:fixed;left:0;top:0;bottom:0;z-index:6}
 .lsn{margin-left:232px}
-.pfold .lsn{margin-left:60px}
+.pfold .lsn,.gsfull .lsn{margin-left:60px}
 @media (max-width:1100px){.lsn{margin-left:60px}}
 .rail .rtt{color:var(--muted)}
 .pl-tabs.cal{margin:0 6px 0 0}
@@ -833,6 +840,7 @@ body.has-side .lsn{margin-right:var(--sidew,420px)}
   <button class="rnav rtt" id="railTimetable" title="Your classes, when they meet, and the school calendar"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/></svg><span class="rl">Timetable</span></button>
   <span class="sp"></span>
   <button class="rsaved" id="railSaved"></button>
+  <button class="rnav" id="railFull" data-gsfull title="Full screen ( F )" aria-label="Full screen" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="fs-in" d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/><path class="fs-out" d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg><span class="rl">Full screen</span></button>
   <a class="rnav" data-gs="#/help" href="./#/help" title="Help: short answers to common questions"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M9.7 9.6a2.4 2.4 0 1 1 3.7 2c-.9.6-1.4 1.1-1.4 2.1M12 16.8v.1"/></svg><span class="rl">Help</span></a>
   <a class="rnav" data-gs="#/settings" href="./#/settings" title="Settings"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg><span class="rl">Settings</span></a>
 </nav>
@@ -5204,8 +5212,7 @@ function pkClose() {
   pkDragEnd();
   PK.on = false; clearInterval(PK.spin); PK.el = null;
   document.removeEventListener('keydown', pkKeyOwn, true);
-  try { if (document.fullscreenElement === el) document.exitFullscreen(); } catch { }
-  el.remove();
+  if (!gsFull.drop(el)) { try { if (document.fullscreenElement === el) document.exitFullscreen(); } catch { } el.remove(); }
   if (o.onClose) o.onClose(); else if (back && back.isConnected && back.focus) try { back.focus({ preventScroll: true }); } catch { }
 }
 function pkRun(fresh) {
@@ -5577,7 +5584,7 @@ async function presentStart(l, o) {
   prFit();
   try { PR.lock = await navigator.wakeLock.request('screen'); } catch { }
   prHint(back && !(o.at > 0) ? 'Picking up at slide ' + back.slide + ', where ' + (back.classId ? className(back.classId) : 'the class') + ' stopped on ' + shortDate(back.date) + '. Home goes to slide 1.'
-    : (document.fullscreenElement ? '' : 'F for full screen · ') + '→ next · A agenda · T timer · P pick a name · Esc to finish', back && !(o.at > 0) ? 7000 : 4500);
+    : (document.fullscreenElement === el ? '' : 'F for full screen · ') + '→ next · A agenda · T timer · P pick a name · Esc to finish', back && !(o.at > 0) ? 7000 : 4500);
 }
 function presentArrive(rest) {
   const [id, classId] = rest.split('/'), l = L.lessons.find(x => x.id === id); if (!l) return;
@@ -5607,7 +5614,7 @@ function prPaint() {
   PR.el.style.setProperty('--nb', PR.notes ? nt.offsetHeight + 'px' : '0px');   // the bar sits above the notes
   for (const [p, on] of [['agenda', PR.agenda], ['notes', PR.notes], ['blank', PR.blank]]) PR.el.querySelector('[data-p="' + p + '"]').setAttribute('aria-pressed', String(!!on));
   PR.el.querySelector('[data-p="timer"]').setAttribute('aria-expanded', String(!!PR.menu));
-  PR.el.querySelector('[data-p="full"] .lb').textContent = document.fullscreenElement ? 'Leave full screen' : 'Full screen';
+  PR.el.querySelector('[data-p="full"] .lb').textContent = document.fullscreenElement === PR.el ? 'Leave full screen' : 'Full screen';
   $('#prSay').textContent = PR.blank ? 'The screen is blank' : PR.ended ? 'End of the lesson' : 'Slide ' + (PR.i + 1) + ' of ' + n + (prSlideName(s) ? ': ' + prSlideName(s) : '');
   prAgenda(); prFit();
 }
@@ -5649,7 +5656,7 @@ function prToggle(k) {
   prPaint();
 }
 async function prFullToggle() {
-  try { if (document.fullscreenElement) { PR.keep = true; await document.exitFullscreen(); } else await PR.el.requestFullscreen(); } catch { }
+  try { if (document.fullscreenElement === PR.el) { PR.keep = true; await document.exitFullscreen(); } else await PR.el.requestFullscreen(); } catch { }
 }
 function prFull() {
   if (!PR.on) return;
@@ -5894,8 +5901,10 @@ async function presentEnd() {
   document.removeEventListener('keydown', prKey, true); document.removeEventListener('fullscreenchange', prFull); window.removeEventListener('resize', prFit);
   const lock = PR.lock, full = document.fullscreenElement === el;
   PR.lock = PR.el = null;   // the timer, and its sound, go on (prFloat)
-  el.remove();   // a full-screen stage taken off the page leaves full screen by itself
-  try { if (full && document.fullscreenElement) await document.exitFullscreen(); } catch { }
+  if (!gsFull.drop(el)) {   // with the whole Planner in full screen under it, back to that (src/fullscreen.js)
+    el.remove();   // a full-screen stage taken off the page leaves full screen by itself
+    try { if (full && document.fullscreenElement) await document.exitFullscreen(); } catch { }
+  }
   try { if (lock) await lock.release(); } catch { }
   prFloat();
   if (L.view === 'edit' && L.open === l) { L.cur = Math.min(i, l.slides.length - 1); renderEditor(); }
@@ -6055,7 +6064,7 @@ const LANG_ES = {
     'Its assignments, gradebook and students': 'Sus tareas, libro de calificaciones y estudiantes',
     'Open student work': 'Abrir trabajos de estudiantes', 'The ZIP or PDFs': 'El ZIP o los PDF', 'A ZIP, PDFs, Word files or photos': 'Un ZIP, PDF, archivos de Word o fotos',
     'Open a folder of papers': 'Abrir una carpeta de trabajos', 'Split a scan of everyone’s papers': 'Dividir un escaneo con los trabajos de todos', 'Match files to a roster': 'Emparejar archivos con una lista',
-    'Its name and roster': 'Su nombre y su lista', 'Made-up students and papers': 'Estudiantes y trabajos inventados',
+    'Its name and roster': 'Su nombre y su lista', 'Bring a class over from Google Classroom': 'Traer una clase desde Google Classroom', 'Its roster, assignments and grades, from two downloads': 'Su lista, sus tareas y sus notas, con dos descargas', 'Made-up students and papers': 'Estudiantes y trabajos inventados',
     'Start a new school year': 'Empezar un nuevo curso escolar', 'Same classes, empty class lists; this year saved to a file': 'Las mismas clases, listas vacías; este curso guardado en un archivo', 'Open an archived year': 'Abrir un curso archivado', 'Bring back a year saved to a file': 'Recuperar un curso guardado en un archivo',
     'Take my work with me': 'Llevarme mi trabajo', 'A take-home file for another computer': 'Un archivo para llevar a otro ordenador', 'Bring work in': 'Traer trabajo', 'From a take-home file': 'Desde un archivo para llevar',
     'Remove from this computer': 'Quitar de este ordenador', 'Clears student work from this browser': 'Borra de este navegador los trabajos de los estudiantes',
@@ -6067,10 +6076,12 @@ const LANG_ES = {
     'Word papers': 'Trabajos de Word', 'Kept as Word files. They can be converted to PDF pages': 'Se conservan como archivos de Word. Se pueden convertir en páginas PDF', 'Converted to PDF pages as each assignment opens': 'Se convierten en páginas PDF al abrir cada tarea',
     'Tablet and pencil': 'Tableta y lápiz', 'What a finger does on the paper, and pencil pressure': 'Qué hace un dedo sobre la página, y la presión del lápiz',
     'Name covers': 'Tapar nombres', 'You cover names yourself in Check the covers': 'Tú tapas los nombres en Revisar lo tapado', 'You cover names, and typed names are found too': 'Tú tapas los nombres, y además se buscan los nombres escritos a máquina',
+    'Tools': 'Herramientas', 'Screenshot': 'Captura de pantalla', 'Drag over part of the screen to copy a picture of it': 'Arrastra sobre una parte de la pantalla para copiar una imagen de ella',
     'All keys': 'Todas las teclas', 'Every keyboard shortcut': 'Todos los atajos de teclado',
     'Classes and rosters': 'Clases y listas', 'Terms and weights': 'Periodos y pesos', 'Your terms and how each type counts': 'Tus periodos y cuánto cuenta cada tipo',
     'Grading scale and rubrics': 'Escala de calificación y rúbricas', 'Your saved scales and rubrics': 'Tus escalas y rúbricas guardadas',
     'Marking': 'Corrección', 'Mark key, mark colors, Word papers, tablet and pencil': 'Clave de marcas, colores de las marcas, trabajos de Word, tableta y lápiz',
+    'Full screen': 'Pantalla completa', 'Leave full screen': 'Salir de pantalla completa', 'Full screen ( F )': 'Pantalla completa ( F )', 'Leave full screen ( F or Esc )': 'Salir de pantalla completa ( F o Esc )', 'The page fills the screen. F or Esc to leave': 'La página ocupa toda la pantalla. F o Esc para salir',
     'Mark colors': 'Colores de las marcas', 'Colors for ✗, checks and points': 'Colores para ✗, marcas de correcto y puntos',
     'Timetable and calendar': 'Horario y calendario', 'Class times and days off, in the Planner': 'Horas de clase y días sin clase, en el Planificador',
     'Working with AI': 'Trabajar con IA', 'Optional. What an AI assistant can and can’t see': 'Opcional. Lo que un asistente de IA puede ver y lo que no',
@@ -6159,6 +6170,9 @@ const LANG_ES = {
     'find-anything': { q: '¿Qué es Buscar?', words: 'buscar encontrar paleta ctrl k atajo',
       a: ['Un solo cuadro que llega a cada estudiante, tarea, herramienta, ajuste y respuesta de ayuda. Ábrelo desde lo alto de la barra lateral o pulsa **Ctrl K** (**⌘K** en un Mac).',
         'Escribe unas letras de lo que buscas, muévete con las flechas y pulsa Intro. Cada fila hace lo mismo que su botón.'] },
+    'full-screen': { q: '¿Puede la aplicación ocupar toda la pantalla?', words: 'pantalla completa maximizar más espacio concentrarse ocultar barra lateral',
+      a: ['Sí. Pulsa **F**, o **Pantalla completa** cerca del final de la barra lateral. Con un trabajo abierto, el botón está en la barra de arriba, junto a ✕. Las barras del navegador desaparecen y la barra lateral se pliega a iconos. En la pantalla de corrección la barra lateral también desaparece, para que el trabajo tenga el espacio.',
+        'Pulsa **F** otra vez, el mismo botón o **Esc** para salir. Nada se cierra ni se pierde al entrar o salir. En el trabajo formativo, F es para los comentarios, así que allí usa el botón. El Planner funciona igual.'] },
     'add-class': { q: '¿Cómo añado una clase y su lista?', words: 'lista estudiantes alumnos nombres nueva clase',
       a: ['1. Pulsa **Añadir una clase** en la barra lateral y ponle un nombre.', '2. Pega los nombres de los estudiantes, uno por línea. Se conservan en el orden en que los pegas.', '3. Abre la pestaña **Students** de la clase para añadir un identificador, un correo o una nota a cada uno.',
         'Con una lista, al abrir los trabajos de esa clase aparece cada estudiante, también quien no entregó nada.'] },
@@ -6205,6 +6219,9 @@ const LANG_ES = {
     'quick-mark': { q: '¿Cómo corrijo rápido un examen en papel?', words: 'examen prueba preguntas recuadros bien mal puntos test copiar imagen captura claude',
       a: ['Abre **Quick mark** en Setup. Dibuja una vez un recuadro alrededor de cada pregunta, en el escaneo de cualquier estudiante.', 'Luego corrige una pregunta para toda la clase, o el examen entero de un estudiante. Cada pregunta puede mostrar ✗ en las respuestas incorrectas, ✓ y ✗, puntos o una escala con tus propias palabras.',
         'El total pasa a la nota del estudiante. ¿No estás seguro de una respuesta? Pulsa **P** o **⧉ Copy** sobre ella para copiar una imagen solo de esa respuesta, con la pregunta y tu respuesta correcta arriba, y pégala en un asistente de IA para preguntar. El nombre, la nota y tu marca no aparecen, pero la imagen sigue mostrando la letra y las palabras del estudiante.'] },
+    'screenshot': { q: '¿Cómo hago una captura de pantalla?', words: 'captura pantalla recorte imagen copiar portapapeles área zona',
+      a: ['Pulsa **S** en un trabajo, **Alt S** (⌥S en un Mac) en cualquier parte de la app, o el botón de captura al pie de las herramientas de corrección. Arrastra sobre lo que quieras, haz clic en una página para la página entera, o pulsa Intro para todo lo que hay en pantalla. La imagen va al portapapeles, lista para pegar.',
+        'En un trabajo, la página se dibuja de nuevo desde el archivo: los recuadros que tapan nombres se pintan, y el nombre del estudiante y el nombre del archivo sobre el trabajo no aparecen. Desmarca **With my marks** para la página sin tus marcas. Todo lo demás, como la lista de estudiantes, sale tal como se ve en pantalla. No se envía nada a ningún sitio.'] },
     'mark-colors': { q: '¿Puedo cambiar el color de ✗, las marcas de correcto y los puntos?', go: 'Abrir Ajustes, Corrección', words: 'color tinta rojo verde amarillo ámbar puntos parcial crédito completo',
       a: ['Sí. En Ajustes, Corrección, **Mark colors**, o en el menú **Colors** de Quick mark. ✗ usa el color de tu pluma y las marcas de correcto tienen el suyo.',
         'Los puntos escritos en un trabajo, como 1/2, van en el color de ✗ salvo que elijas otro. **By credit** escribe los puntos completos en el color de correcto, los parciales en ámbar y ninguno en el color de ✗: verde, ámbar y rojo si dejas esos.',
@@ -6272,6 +6289,11 @@ const LANG_ES = {
     'import-scores': { q: '¿Puedo traer las notas de mi libro de calificaciones anterior?', words: 'importar hoja de cálculo csv excel xlsx subir notas anteriores',
       a: ['Sí. En el libro de calificaciones de la clase pulsa **Import…** y elige un archivo CSV o Excel, o pega las celdas de tu hoja de cálculo. Una fila por estudiante y una columna por tarea.',
         'Antes de guardar nada ves cada columna con su tipo, su fecha y sobre cuánto es, qué filas coinciden con tu lista y cualquier nota que ya esté en el libro. Las notas que ya están se quedan, salvo que elijas las del archivo.'] },
+    'google-classroom': { q: '¿Puedo traer una clase desde Google Classroom?', go: 'Abrir Ajustes, Clases', words: 'google classroom drive importar traer pasar cambiar csv notas lista estudiantes entregas carpeta zip conectar iniciar sesión',
+      a: ['Sí, con dos descargas y sin iniciar sesión. En Ajustes, **Classes and rosters**, pulsa **From Google Classroom…**.',
+        'Primero el archivo de notas: en Classroom, abre la página Trabajo de los alumnos de cualquier tarea, haz clic en el engranaje y elige Descargar todas las calificaciones como CSV. Trae a los estudiantes, cada tarea con sus puntos y su fecha, y las notas. Revisas las notas antes de que se guarde nada en el libro de calificaciones.',
+        'Para los trabajos, abre la carpeta Classroom en Google Drive, luego la clase y luego la carpeta de la tarea, y descárgala. Suelta ese ZIP en Today. Los archivos con el nombre «Nombre del estudiante - título» se reúnen bajo cada estudiante; un archivo que un estudiante subió con su propio nombre de archivo se abre como una entrada aparte para que la asignes tú.',
+        'Los dos archivos se leen en este navegador y no se envía nada a ningún sitio. Desde aquí no se pueden enviar las notas de vuelta a Google Classroom: la pestaña Grades las muestra para copiarlas.'] },
     'terms': { q: '¿Cómo configuro los periodos y cuánto cuenta cada tipo?', go: 'Abrir Ajustes, Periodos', words: 'semestre trimestre pesos porcentaje sumativa formativa ponderación',
       a: ['En Ajustes, **Terms and weights** están tus periodos y sus fechas, y qué parte de la nota del periodo aporta cada tipo de tarea. El trabajo formativo nunca cuenta para la nota.', 'Una tarea cuenta para el periodo en el que cae su fecha de entrega.'] },
     'one-student': { q: '¿Cómo veo todo sobre un estudiante?', words: 'perfil individual familia reunión tutoría progreso gráfico',
@@ -6476,7 +6498,7 @@ const LANG_ZH = {
     'Its assignments, gradebook and students': '它的作業、成績冊與學生',
     'Open student work': '開啟學生作業', 'The ZIP or PDFs': 'ZIP 或 PDF 檔', 'A ZIP, PDFs, Word files or photos': 'ZIP、PDF、Word 檔或照片',
     'Open a folder of papers': '開啟作業資料夾', 'Split a scan of everyone’s papers': '分割全班作業的掃描檔', 'Match files to a roster': '將檔案與名單配對',
-    'Its name and roster': '名稱與名單', 'Made-up students and papers': '虛構的學生與作業',
+    'Its name and roster': '名稱與名單', 'Bring a class over from Google Classroom': '從 Google Classroom 帶入班級', 'Its roster, assignments and grades, from two downloads': '名單、作業和成績，只要下載兩個檔案', 'Made-up students and papers': '虛構的學生與作業',
     'Start a new school year': '開始新的學年', 'Same classes, empty class lists; this year saved to a file': '同樣的班級、空白名單；這一學年存成檔案', 'Open an archived year': '開啟封存的學年', 'Bring back a year saved to a file': '找回存成檔案的學年',
     'Take my work with me': '帶走我的工作成果', 'A take-home file for another computer': '給另一台電腦用的攜帶檔', 'Bring work in': '帶入工作成果', 'From a take-home file': '從攜帶檔',
     'Remove from this computer': '從這台電腦移除', 'Clears student work from this browser': '清除這個瀏覽器裡的學生作業',
@@ -6488,10 +6510,12 @@ const LANG_ZH = {
     'Word papers': 'Word 作業', 'Kept as Word files. They can be converted to PDF pages': '保留為 Word 檔。可以轉換成 PDF 頁面', 'Converted to PDF pages as each assignment opens': '每份作業開啟時轉換成 PDF 頁面',
     'Tablet and pencil': '平板與觸控筆', 'What a finger does on the paper, and pencil pressure': '手指在頁面上的作用，以及筆的壓力',
     'Name covers': '遮蓋姓名', 'You cover names yourself in Check the covers': '你在「檢查遮蓋」中自己遮蓋姓名', 'You cover names, and typed names are found too': '你自己遮蓋姓名，也會自動找出打字的姓名',
+    'Tools': '工具', 'Screenshot': '截圖', 'Drag over part of the screen to copy a picture of it': '拖曳框住畫面的一部分，複製成圖片',
     'All keys': '所有快速鍵', 'Every keyboard shortcut': '所有鍵盤快速鍵',
     'Classes and rosters': '班級與名單', 'Terms and weights': '學期與比重', 'Your terms and how each type counts': '你的學期，以及各類作業所占的比重',
     'Grading scale and rubrics': '評分等第與評分規準', 'Your saved scales and rubrics': '你儲存的評分等第與評分規準',
     'Marking': '批改', 'Mark key, mark colors, Word papers, tablet and pencil': '批改符號表、批改顏色、Word 作業、平板與觸控筆',
+    'Full screen': '全螢幕', 'Leave full screen': '離開全螢幕', 'Full screen ( F )': '全螢幕（F）', 'Leave full screen ( F or Esc )': '離開全螢幕（F 或 Esc）', 'The page fills the screen. F or Esc to leave': '頁面佔滿整個螢幕。按 F 或 Esc 離開',
     'Mark colors': '批改顏色', 'Colors for ✗, checks and points': '✗、勾號與分數的顏色',
     'Timetable and calendar': '課表與行事曆', 'Class times and days off, in the Planner': '上課時間與放假日，在備課頁面',
     'Working with AI': '搭配 AI 使用', 'Optional. What an AI assistant can and can’t see': '可選用。AI 助理看得到和看不到的內容',
@@ -6580,6 +6604,9 @@ const LANG_ZH = {
     'find-anything': { q: '「搜尋」是什麼？', words: '搜尋 尋找 指令 ctrl k 快速鍵 find',
       a: ['一個可以找到每位學生、每份作業、每個工具、每項設定和每則說明的輸入框。從側邊欄最上方開啟，或按 **Ctrl K**（Mac 是 **⌘K**）。',
         '輸入幾個字，用方向鍵移動，再按 Enter。每一列的作用和它的按鈕相同。'] },
+    'full-screen': { q: '應用程式可以佔滿整個螢幕嗎？', words: '全螢幕 最大化 更大 專心 隱藏 側邊欄 full screen',
+      a: ['可以。按 **F**，或按側邊欄下方的 **全螢幕**。開啟作業時，這個按鈕在上方列的 ✕ 旁邊。瀏覽器的工具列會隱藏，側邊欄會收合成圖示。在批改畫面中側邊欄也會隱藏，讓作業有最大的空間。',
+        '再按一次 **F**、同一個按鈕或 **Esc** 即可離開。進入或離開時，不會關閉或遺失任何內容。形成性評量中 F 用於回饋，請在那裡改用按鈕。Planner 也一樣。'] },
     'add-class': { q: '怎麼新增班級和名單？', words: '名單 學生 姓名 新班級 roster',
       a: ['1. 按側邊欄的**新增班級**，並為它命名。', '2. 貼上學生姓名，一行一位。順序會和你貼上的一樣。', '3. 開啟班級的 **Students** 分頁，可以為每位學生加上學號、電子郵件或備註。',
         '有了名單，開啟那個班級的作業時會列出每位學生，包括沒有繳交的人。'] },
@@ -6626,6 +6653,9 @@ const LANG_ZH = {
     'quick-mark': { q: '怎麼快速批改紙本小考？', words: '小考 測驗 考試 題目 框 對 錯 分數 quiz 複製 圖片 截圖 claude',
       a: ['在 Setup 開啟 **Quick mark**。在任何一位學生的掃描檔上，為每一題畫一次框。', '接著可以一次批改全班的同一題，或一位學生的整份考卷。每一題可以在錯的答案上顯示 ✗、顯示 ✓ 和 ✗、給分，或使用你自訂文字的量尺。',
         '總分會成為學生的分數。不確定某個答案？在它上面按 **P** 或 **⧉ Copy**，就會複製只有這個答案的圖片，上方附有題目和你的標準答案，可以貼到 AI 助理詢問。圖片不含姓名、分數和你的批改記號，但仍會顯示學生的筆跡和文字。'] },
+    'screenshot': { q: '怎麼截圖？', words: '截圖 螢幕 擷取 圖片 複製 剪貼簿 範圍 區域',
+      a: ['在作業上按 **S**，在應用程式任何地方按 **Alt S**（Mac 上是 ⌥S），或按批改工具最下方的截圖按鈕。拖曳框住想要的部分，點一頁可截整頁，按 Enter 可截整個畫面。圖片會放到剪貼簿，可以直接貼上。',
+        '在作業上，頁面會從檔案重新繪製：遮蓋姓名的框會塗上，作業上方的學生姓名和檔名不會出現。取消勾選 **With my marks** 可得到沒有你批改記號的頁面。其他部分，例如學生名單，會照畫面上的樣子出現。不會傳送到任何地方。'] },
     'mark-colors': { q: '可以更改 ✗、勾號和分數的顏色嗎？', go: '開啟設定、批改', words: '顏色 墨水 紅 綠 黃 琥珀 分數 部分 得分 滿分',
       a: ['可以。在設定、批改的 **Mark colors**，或 Quick mark 的 **Colors** 選單。✗ 使用筆的顏色，勾號有自己的顏色。',
         '寫在作業上的分數，例如 1/2，除非另外選擇，否則使用 ✗ 的顏色。**By credit** 會把滿分寫成勾號的顏色，部分得分寫成琥珀色，零分寫成 ✗ 的顏色：保留預設就是綠、琥珀、紅。',
@@ -6693,6 +6723,11 @@ const LANG_ZH = {
     'import-scores': { q: '可以匯入舊成績冊的分數嗎？', words: '匯入 試算表 舊成績 上傳 csv excel xlsx',
       a: ['可以。在班級的成績冊按 **Import…**，然後選擇 CSV 或 Excel 檔案，或貼上試算表中的儲存格。每位學生一列，每份作業一欄。',
         '儲存之前，你會看到每一欄的類型、日期和滿分，哪些列對應到你的班級名單，以及成績冊中已經有的分數。已經有的分數會保留，除非你選擇使用檔案中的分數。'] },
+    'google-classroom': { q: '可以把 Google Classroom 的班級帶過來嗎？', go: '開啟設定、班級', words: 'google classroom drive 匯入 帶入 轉移 csv 成績 名單 學生 繳交 資料夾 zip 連結 登入',
+      a: ['可以，只要下載兩個檔案，不需要登入。在設定的 **Classes and rosters** 按 **From Google Classroom…**。',
+        '先選擇成績檔：在 Classroom 開啟任一份作業的「學生作業」頁面，按右上角的齒輪，選擇「將所有成績下載為 CSV 檔」。它會帶入學生、每份作業的滿分和日期，以及分數。在成績冊儲存任何東西之前，你可以先檢查分數。',
+        '至於學生的作業檔案，請在 Google 雲端硬碟開啟 Classroom 資料夾，再開啟班級和該作業的資料夾，然後下載。把這個 ZIP 拖到 Today。檔名為「學生姓名 - 標題」的檔案會歸到各個學生名下；學生以自己的檔名上傳的檔案會單獨列出，由你來對應。',
+        '兩個檔案都只在這個瀏覽器中讀取，不會傳送到任何地方。這裡無法把分數傳回 Google Classroom：Grades 分頁會列出分數供你複製。'] },
     'terms': { q: '怎麼設定學期和各類作業的比重？', go: '開啟設定、學期', words: '學期 季 比重 百分比 總結性 形成性 加權',
       a: ['在設定的 **Terms and weights** 裡是你的學期和日期，以及每種作業類型占學期成績的比例。形成性作業不計入成績。', '作業計入繳交日所在的學期。'] },
     'one-student': { q: '怎麼查看一位學生的所有資料？', words: '個人檔案 個別 家長 會談 導師 進步 圖表',
@@ -6854,6 +6889,10 @@ const HELP = [
     a: ['One box that reaches every student, assignment, tool, setting and help answer. Open it from the top of the sidebar, or press **Ctrl K** (**⌘K** on a Mac).',
       'Type a few letters of what you want, move with the arrow keys and press Enter. Each row does the same thing as the button for it.'],
     words: 'search command palette ctrl k shortcut' },
+  { id: 'full-screen', sec: 'start', q: 'Can the app fill the whole screen?',
+    a: ['Yes. Press **F**, or **Full screen** near the bottom of the sidebar. While a paper is open the button is in the top bar, beside ✕. The browser’s bars go away and the sidebar folds to icons. On the marking screen the sidebar goes away too, so the paper gets the room.',
+      'Press **F** again, the same button, or **Esc** to leave. Nothing is closed or lost on the way in or out. On formative work F is for feedback, so use the button there. The Planner works the same way.'],
+    words: 'fullscreen maximize maximise bigger room focus distraction hide sidebar' },
   { id: 'add-class', sec: 'start', q: 'How do I add a class and its roster?',
     a: ['1. Press **Add a class** in the sidebar and give it a name.', '2. Paste the student names, one on a line. Students are kept in the order you paste them.', '3. Open the class’s **Students** tab to add an ID, an email or a note for each one.',
       'With a roster, every student is listed when you open papers for that class, including anyone who turned nothing in.'],
@@ -6915,6 +6954,10 @@ const HELP = [
     a: ['Open **Quick mark** under Setup. Draw a box around each question once, on any student’s scan.', 'Then mark one question for the whole class, or one student’s whole quiz. Each question can show ✗ on wrong answers, ✓ and ✗, points, or a scale with your own words.',
       'The total goes into the student’s score. Not sure about an answer? Press **P** or **⧉ Copy** on it to copy a picture of just that answer, with the question and your answer key on top, to paste into an AI assistant. The name, score and your mark are left off, but the picture still shows the student’s handwriting and words.'],
     words: 'quiz test questions boxes right wrong points multiple copy picture screenshot ai assistant claude chatgpt' },
+  { id: 'screenshot', sec: 'mark', q: 'How do I take a screenshot?',
+    a: ['Press **S** on a paper, **Alt S** (⌥S on a Mac) anywhere in the app, or the screenshot button at the foot of the marking tools. Drag over what you want, click a page for the whole page, or press Enter for everything on screen. The picture goes on the clipboard, ready to paste.',
+      'On a paper, the page is drawn fresh from the file: name covers are painted in, and the student’s name and file name above the paper are left off. Untick **With my marks** for the page without your marks. Anything else, like the student list, shows as it is on screen. Nothing is sent anywhere.'],
+    words: 'screenshot snip capture picture image copy clipboard grab area region' },
   { id: 'mark-colors', sec: 'mark', q: 'Can I change the color of ✗, checks and points?',
     a: ['Yes. In Settings, Marking, **Mark colors**, or the **Colors** menu in Quick mark. ✗ uses your pen’s color and checks have their own.',
       'Points written on a paper, like 1/2, are in the ✗ color unless you pick another. **By credit** writes full points in the check color, part in amber and none in the ✗ color: green, amber and red if you keep those.',
@@ -7008,6 +7051,12 @@ const HELP = [
     a: ['Yes. In the class’s gradebook press **Import…**, then choose a CSV or Excel file, or paste the cells from your spreadsheet. One row per student, one column per assignment.',
       'Before anything is saved you see each column with its type, date and what it is out of, which rows matched your roster, and any score that is already in the gradebook. Scores already there stay unless you choose the file’s.'],
     words: 'import csv excel xlsx spreadsheet sheets upload old gradebook switch mid-year past scores' },
+  { id: 'google-classroom', sec: 'class', q: 'Can I bring a class over from Google Classroom?',
+    a: ['Yes, with two downloads and no sign-in. In Settings, **Classes and rosters**, press **From Google Classroom…**.',
+      'First the grades file: in Classroom, open any assignment’s Student work page, click the gear and choose Download all grades as CSV. It brings the students, every assignment with its points and date, and the scores. You check the scores before anything is saved in the gradebook.',
+      'For the papers, open the Classroom folder in Google Drive, then the class, then the assignment’s folder, and download it. Drop that ZIP on Today. Files named “Student name - title” are put together under each student. A file a student uploaded under its own name opens as its own entry for you to match.',
+      'Both files are read in this browser and nothing is sent anywhere. Scores can’t be sent back into Google Classroom from here: the Grades tab lists them to copy across.'],
+    go: ['Open Settings, Classes', '#/settings/classes'], words: 'google classroom drive import bring move switch transfer csv grades roster students submissions folder zip connect sign in' },
   { id: 'terms', sec: 'class', q: 'How do I set terms and how much each type counts?',
     a: ['Settings, **Terms and weights** has your terms and their dates, and what share of the term grade each type of assignment carries. Formative work never counts toward the grade.', 'An assignment counts toward the term its due date falls in.'],
     go: ['Open Settings, Terms', '#/settings/terms'], words: 'semester quarter weights percent summative formative weighting' },
@@ -7191,6 +7240,7 @@ function findRows() {
   if ('showDirectoryPicker' in window) add('Do', L.dir && L.dirOk ? 'Look in the Planner folder' : L.dir ? 'Reconnect the Planner folder' : 'Link the Planner folder', L.dir && L.dirOk ? 'For lessons added or changed there' : 'A second copy of your lessons, in a folder of their own', () => L.dir && L.dirOk ? folderRead(true) : L.dir ? folderReconnect(true) : folderLink());
   add('Do', 'Side panel', 'Books, video, ' + (plCur() || 'the unit') + ', the notebook and the ' + plAiTag() + ' box', () => panelToggle());
   add('Do', document.documentElement.dataset.theme === 'dark' ? 'Light mode' : 'Dark mode', 'Display', () => setTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'));
+  if (gsFull.can()) add('Do', gsFull.on() ? 'Leave full screen' : 'Full screen', 'The page fills the screen. F or Esc to leave', () => gsFull.toggle());
   for (const t of HELP) out.push({ group: 'Help', label: t.q, sub: helpGist(t), words: t.words || '', run: () => leaveTo(gsUrl('#/help/' + t.id)) });
   return out;
 }
@@ -7666,6 +7716,52 @@ async function unitsFolderRead() {
 
 window.__planner = { readTemplate, openTimetable, bankPut, normRubric, slideHtml, LOOKS, TEACH, TEACH_SAMPLE, versions: versionsOf, ytIds: us => us.map(u => [ytId(u), ytStart(u)]), openLessonForTest: (l, i) => { openLesson(l); goSlide(i || 0); }, L, applySetup, folderReadme, plWeekOffs, renderLessons, setPicture, folderWriteAll, folderRead, buildPptx, shareBuild, shareOpen, matAdd, normLesson, deckStart, normUnit, unitPut, unitAt, addUnitFiles, notGradingFolder, unitsFolderRead, semesterMondays, openUnit, docxOf, findAll, copyLesson, packImport, createLesson, lessonText, lessonForFile, pptxToSlides, finUpload, versionsOf, SP, lessonZip, variantsOf, lessonEntries, dlWeek };
 openLessons();
+
+/* ---------------- Full screen (11/12): the whole page fills the screen, on both pages and every screen ----------------
+   The Full screen button (in the sidebar, and in the top bar while a paper is open), F, or Find anything puts the page in the browser's
+   full screen. F again, the button, or Esc leaves it. Only the look changes: no screen is closed and nothing is saved or lost on the way
+   in or out. While it is on, the sidebar folds to icons, and while a paper is open it goes away so the paper gets the room.
+   Nothing is stored: a browser lets a page go full screen only when she asks, so it can't come back by itself on the next visit.
+   Present, the seating chart, the name picker and the Examples show put their own stage in full screen on top of this; when they end,
+   the page is back in full screen as it was. */
+const gsFull = {
+  on: () => document.fullscreenElement === document.documentElement,
+  can: () => !!(document.fullscreenEnabled && document.documentElement.requestFullscreen),
+  async toggle() {
+    try {
+      if (gsFull.on()) await document.exitFullscreen();
+      else if (!document.fullscreenElement) await document.documentElement.requestFullscreen({ navigationUI: 'hide' });
+    } catch { }
+  },
+  paint() {
+    const root = document.documentElement, fe = document.fullscreenElement;
+    if (!fe) root.classList.remove('gsfull'); else if (fe === root) root.classList.add('gsfull');
+    const on = root.classList.contains('gsfull'), can = gsFull.can();
+    for (const b of document.querySelectorAll('[data-gsfull]')) {
+      b.hidden = !can;
+      const say = on ? 'Leave full screen' : 'Full screen', tip = on ? 'Leave full screen ( F or Esc )' : 'Full screen ( F )';
+      if (b.title !== tip) { b.title = tip; b.setAttribute('aria-label', say); }
+      b.setAttribute('aria-pressed', on ? 'true' : 'false');
+      const l = b.querySelector('.rl'); if (l && l.dataset.en !== say) { l.dataset.en = say; l.textContent = say; }
+    }
+  },
+  drop(el) {
+    if (document.fullscreenElement !== el || !document.documentElement.classList.contains('gsfull')) return false;
+    const go = () => el.remove(); document.exitFullscreen().then(go, go); return true;
+  },
+};
+document.addEventListener('fullscreenchange', () => gsFull.paint());
+document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-gsfull]'); if (b) { e.preventDefault(); gsFull.toggle(); } });
+document.addEventListener('keydown', e => {
+  if (e.defaultPrevented || e.repeat || e.metaKey || e.ctrlKey || e.altKey || e.shiftKey || (e.key !== 'f' && e.key !== 'F')) return;
+  const a = document.activeElement;
+  if (a && (/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName) || a.isContentEditable)) return;
+  if (document.fullscreenElement && !gsFull.on()) return;   // a stage of its own is showing
+  if (!gsFull.can()) return;
+  e.preventDefault(); gsFull.toggle();
+});
+gsFull.paint();
+window.__gsFull = gsFull;
 
 })();
 </script>

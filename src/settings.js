@@ -18,7 +18,7 @@ function setRender() {
   if (r.sec === 'classes') {
     const row = (c, ci) => '<div class="setrow"><span class="rdot" style="background:' + classColor(c) + '"></span><span class="nt"><b>' + esc(c.name) + '</b><span class="ns">' + (c.names.length ? c.names.length + (c.names.length === 1 ? ' student' : ' students') : 'No roster yet') + ' · ' + (mbOf(c) ? esc(sysLink()) + ' link saved' : 'No ' + esc(sysLink()) + ' link') + '</span></span>' +
       '<a class="btn sm" href="' + classHash(c) + '">Open</a><button class="btn sm" data-setcls="' + ci + '">Name and roster</button><button class="btn sm" data-setmb="' + ci + '">' + esc(sysLink()) + ' link</button></div>';
-    put('#setClasses', '<div class="lhead"><h2>Classes and rosters</h2><span class="muted">A class has its roster, its units and its ' + (sysName() ? esc(sysName()) + ' page' : 'link to your school’s system') + '.</span><span class="sp"></span><button class="btn sm primary" data-setadd>Add a class</button></div>' +
+    put('#setClasses', '<div class="lhead"><h2>Classes and rosters</h2><span class="muted">A class has its roster, its units and its ' + (sysName() ? esc(sysName()) + ' page' : 'link to your school’s system') + '.</span><span class="sp"></span><button class="btn sm" data-setgc title="The roster, the assignments and the grades, from two downloads">From Google Classroom…</button><button class="btn sm primary" data-setadd>Add a class</button></div>' +
       (lib.classes.length ? '<div class="setrows">' + lib.classes.map(row).join('') + '</div>' : '<p class="muted setp">No classes yet. A class holds a roster, so papers match to students and the gradebook has rows.</p>'));
   }
   if (r.sec === 'terms') {
@@ -55,6 +55,7 @@ async function setBankCount() {
 }
 $('#setPane').addEventListener('click', async e => {
   if (e.target.closest('[data-setadd]')) return editClass(-1);
+  if (e.target.closest('[data-setgc]')) return gcOpen();
   const c = e.target.closest('[data-setcls]'); if (c) return editClass(+c.dataset.setcls);
   const m = e.target.closest('[data-setmb]'); if (m) { await askMb(+m.dataset.setmb); return setRender(); }
   if (e.target.closest('[data-setterms]')) { const k = lib.classes.find(c => c.names.length); if (!k) return; await openBook(k.id); if ($('#bkBody')) bkSetupView(); }

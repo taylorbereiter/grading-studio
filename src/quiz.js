@@ -934,19 +934,11 @@ async function qmCopy(el) {
   if (!el) return;
   const st = batch.students[+el.dataset.st], q = batch.quiz.qs.find(x => x.id === el.dataset.q), qi = batch.quiz.qs.indexOf(q);
   if (!st || !q) return;
-  const blobP = qzAnswerPic(st, q, qi).then(c => { if (!c) throw new Error('no page'); return new Promise(res => c.toBlob(b => { c.width = c.height = 0; res(b); }, 'image/png')); });
+  const blobP = qzAnswerPic(st, q, qi).then(c => { if (!c) throw new Error('no page'); return canvasPng(c); });
   const say = 'Question ' + quizLabel(q, qi);
-  let copied = false;
-  try {
-    if (!navigator.clipboard || !navigator.clipboard.write || typeof ClipboardItem === 'undefined') throw new Error('no clipboard');
-    await navigator.clipboard.write([new ClipboardItem({ 'image/png': blobP })]);   // a promise, so Safari still counts the click
-    copied = true;
-  } catch (e) { /* saved as a file below */ }
-  let blob = null;
-  if (!copied) {
-    try { blob = await blobP; } catch { return toast('This page isn’t in their scan.'); }
-    await saveBlob('Question ' + quizLabel(q, qi) + '.png', blob);
-  }
+  const how = await copyPicture(blobP, say + '.png');   // the clipboard, or a file where the browser can't copy pictures (src/snip.js)
+  if (how === 'none') return toast('This page isn’t in their scan.');
+  const copied = how === 'copied';
   toast(copied ? 'Picture of ' + say + ' copied. Paste it into ' + aiSay() + ' to ask about it.' : 'This browser can’t copy pictures, so ' + say + ' was saved as a picture file.', 4000);
   if (!store.get('gs.qmCopySeen', 0) && !$('#qmCopyNote') && $('#qmBody'))
     $('#qmBody').insertAdjacentHTML('beforebegin', '<div class="qmcopynote" id="qmCopyNote" role="status"><p><b>What the picture shows.</b> Only this answer, with the question and your answer key on top. The student’s name, their score, your mark and the file name are left off, and any name covers are painted in. It still shows the student’s own handwriting and words.</p>' +
