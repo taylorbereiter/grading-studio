@@ -27,6 +27,17 @@ function ptHomeSay(k) {
 const LANG_PT = {
   name: 'Português (Brasil)', locale: 'pt-BR',
   words: {
+    /* a class page: its header, its tab row and the Assignments tab */
+    'Class setup': 'Configurar a turma', 'Gradebook': 'Diário de notas', 'Seating': 'Lugares', 'Missing work': 'Trabalhos pendentes', 'Charts': 'Gráficos', 'Goals': 'Objetivos', 'Report comments': 'Comentários de boletim', '+ Assignment': '+ Atividade',
+    '+ Unit': '+ Unidade', 'In-class': 'Em aula', 'Summative': 'Somativa', 'Typed in': 'Notas digitadas', 'Scores typed in': 'Notas digitadas à mão', 'papers not kept': 'trabalhos não guardados', 'Ready to return': 'Pronto para devolver',
+    'Returned': 'Devolvido', 'Giving feedback': 'Dando comentários', 'Scoring': 'Dando notas', 'Not started': 'Não iniciado', 'Add papers…': 'Adicionar trabalhos…', 'Scores typed in: open the gradebook': 'Notas digitadas à mão: abra o diário de notas',
+    'Add this assignment’s papers': 'Adicionar os trabalhos desta atividade', 'Edit': 'Editar', 'Name, type, due date, unit, rubric': 'Nome, tipo, data de entrega, unidade, rubrica', 'Mark this one’s papers here as well': 'Corrija aqui também os trabalhos desta atividade',
+    'Open other papers…': 'Abrir outros trabalhos…', 'A newer download, or a different set of files': 'Um download mais recente, ou outro conjunto de arquivos', 'Drag to move this unit': 'Arraste para mover esta unidade', 'Unit plan ↗': 'Plano da unidade ↗',
+    'Rename': 'Renomear', 'Delete unit': 'Excluir unidade', 'The other pages of this class': 'As outras páginas desta turma', 'The pin keeps a page in the tab row.': 'O alfinete mantém uma página na fileira de abas.', 'Edit roster': 'Editar a lista',
+    'Add roster': 'Adicionar a lista', 'Names, and the name of the class': 'Os nomes, e o nome da turma', 'Move up in the sidebar': 'Subir na barra lateral', 'Move down in the sidebar': 'Descer na barra lateral', 'Assignments with no roster. Drag them onto a class in the sidebar, or use Edit to pick a class.': 'Atividades sem lista. Arraste-as para uma turma na barra lateral, ou use Editar para escolher uma turma.',
+    'No units yet. Click + Unit.': 'Ainda não há unidades. Clique em + Unidade.', 'Drag an assignment or a unit to move it. Drop': 'Arraste uma atividade ou uma unidade para movê-la. Solte', 'on an assignment to open it there.': 'sobre uma atividade para abri-lo ali.',
+    'a ZIP': 'um ZIP', 'No papers yet': 'Ainda sem trabalhos', 'Grading': 'Avaliação', 'Points and percent, or IB criteria': 'Pontos e porcentagem, ou critérios do IB', 'This class is graded with IB MYP criteria': 'Esta turma é avaliada com os critérios do IB MYP',
+    'This class is graded as an IB DP class': 'Esta turma é avaliada como uma turma do IB DP', 'Link to a unit plan…': 'Vincular a um plano de unidade…', 'Change the unit plan link': 'Alterar o link do plano de unidade', 'drop the same ZIP to keep going': 'solte o mesmo ZIP para continuar',
     /* the Settings pages */
     'On paper, or not said': 'No papel, ou não informado', 'None, or not said': 'Nenhum, ou não informado', 'Another one…': 'Outro…', 'draws, until you use a pencil; from then on it moves the page': 'desenha, até você usar uma caneta; a partir daí move a página', 'always moves the page': 'sempre move a página', 'always draws': 'sempre desenha', 'Add goals': 'Adicionar objetivos', 'Edit goals': 'Editar objetivos', 'Tag rubric rows in Rubric setup and quiz questions in Quiz boxes. Each class page then has a Goals tab.': 'Marque linhas de rubrica em Rubric setup e questões de quiz em Quiz boxes. Cada página de turma passa a ter uma aba Goals.',
     'Find names on their own': 'Encontrar nomes automaticamente', 'Yours, kept on this computer.': 'Seu, guardado neste computador.', 'Saving and carrying': 'Salvar e levar', 'Folder, take-home file, earlier days, new school year': 'Pasta, arquivo para levar, dias anteriores, novo ano letivo',
@@ -213,6 +224,12 @@ const LANG_PT = {
     'Missing': 'Não entregue', 'Excused': 'Dispensado', 'Late': 'Atrasado',
   },
   rules: [
+    /* a class page */
+    [/^(\d+) students? on the roster$/, m => (m[1] === '1' ? '{n} aluno na lista' : '{n} alunos na lista').replace('{n}', m[1])], [/^(\d+) assignments?$/, m => (m[1] === '1' ? '{n} atividade' : '{n} atividades').replace('{n}', m[1])], [/^Due (.+)$/, 'Entrega: $1'],
+    [/^Keep (.+) in the tab row$/, m => 'Manter {x} na fileira de abas'.replace('{x}', (LANG_PT.words[m[1]] || m[1]))], [/^Take (.+) out of the tab row$/, m => 'Tirar {x} da fileira de abas'.replace('{x}', (LANG_PT.words[m[1]] || m[1]))],
+    [/^More for (.+)$/, 'Mais para $1'], [/^Open in (.+) ↗$/, 'Abrir em $1 ↗'],
+    [/^Change the (.+) link$/, m => 'Alterar o link: {x}'.replace('{x}', (m[1] === 'Class page' ? 'página da turma' : m[1]))], [/^Link to (.+)…$/, m => 'Vincular a {x}…'.replace('{x}', m[1])], [/^Add the (.+) link…$/, m => 'Adicionar o link: {x}…'.replace('{x}', (m[1] === 'Class page' ? 'página da turma' : m[1]))],
+    [/^(\d+) of (\d+) feedback complete$/, '$1 de $2 com comentários completos'], [/^a (.+) ZIP$/, 'um ZIP do $1'], [/^Opened (.+)$/, 'Aberto: $1'], [/^(\d+) feedback complete$/, '$1 com comentários completos'], [/^(\d+) scored$/, '$1 com nota'],
     /* the Settings pages */
     [/^(.{3,16}) to (.{3,16})$/, m => /\d/.test(m[1]) && /\d/.test(m[2]) ? m[1] + ' – ' + m[2] : null],   // a term's dates, as the browser writes them in this language
     [/^new entries add to (.+), one point for one percentage point\. (Grades stay at 100% at most\.|A grade can go over 100%\.)$/, m => 'as novas entradas somam-se a {w}, um ponto para cada ponto percentual.'.replace('{w}', m[1] === 'the term grade' ? 'a nota do período' : m[1].replace(/^the /, '')) + ' ' + (m[2][0] === 'G' ? 'As notas ficam em 100% no máximo.' : 'Uma nota pode passar de 100%.')],

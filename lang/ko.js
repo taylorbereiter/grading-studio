@@ -26,6 +26,15 @@ function koHomeSay(k) {
 const LANG_KO = {
   name: '한국어', locale: 'ko',
   words: {
+    /* a class page: its header, its tab row and the Assignments tab */
+    'Class setup': '학급 설정', 'Gradebook': '성적부', 'Seating': '자리 배치', 'Missing work': '미제출 과제', 'Charts': '차트', 'Goals': '학습 목표', 'Report comments': '성적표 의견', '+ Assignment': '+ 과제', '+ Unit': '+ 단원', 'In-class': '수업 중', 'Summative': '총괄',
+    'Typed in': '직접 입력', 'Scores typed in': '점수 직접 입력됨', 'papers not kept': '제출물이 보관되지 않음', 'Ready to return': '돌려줄 수 있음', 'Returned': '돌려줌', 'Giving feedback': '피드백 중', 'Scoring': '채점 중', 'Not started': '시작 안 함', 'Add papers…': '제출물 추가…',
+    'Scores typed in: open the gradebook': '점수 직접 입력됨: 성적부 열기', 'Add this assignment’s papers': '이 과제의 제출물 추가', 'Edit': '편집', 'Name, type, due date, unit, rubric': '이름, 유형, 마감일, 단원, 루브릭', 'Mark this one’s papers here as well': '이 과제의 제출물도 여기서 채점하기',
+    'Open other papers…': '다른 제출물 열기…', 'A newer download, or a different set of files': '더 최근의 다운로드 또는 다른 파일 묶음', 'Drag to move this unit': '끌어서 이 단원 옮기기', 'Unit plan ↗': '단원 계획 ↗', 'Rename': '이름 바꾸기', 'Delete unit': '단원 삭제', 'The other pages of this class': '이 학급의 다른 페이지',
+    'The pin keeps a page in the tab row.': '핀을 꽂은 페이지는 탭 줄에 남습니다.', 'Edit roster': '명단 편집', 'Add roster': '명단 추가', 'Names, and the name of the class': '이름들과 학급 이름', 'Move up in the sidebar': '사이드바에서 위로', 'Move down in the sidebar': '사이드바에서 아래로',
+    'Assignments with no roster. Drag them onto a class in the sidebar, or use Edit to pick a class.': '명단이 없는 과제입니다. 사이드바의 학급으로 끌어다 놓거나, 편집에서 학급을 고르세요.', 'No units yet. Click + Unit.': '아직 단원이 없습니다. + 단원을 누르세요.', 'Drag an assignment or a unit to move it. Drop': '과제나 단원을 끌어서 옮길 수 있습니다. 과제 위에',
+    'on an assignment to open it there.': '을(를) 놓으면 거기서 열립니다.', 'a ZIP': 'ZIP', 'No papers yet': '아직 제출물 없음', 'Grading': '평가 방식', 'Points and percent, or IB criteria': '점수와 백분율, 또는 IB 평가 기준', 'This class is graded with IB MYP criteria': '이 학급은 IB MYP 평가 기준으로 평가합니다',
+    'This class is graded as an IB DP class': '이 학급은 IB DP 학급으로 평가합니다', 'Link to a unit plan…': '단원 계획에 연결…', 'Change the unit plan link': '단원 계획 링크 바꾸기', 'drop the same ZIP to keep going': '같은 ZIP을 놓으면 이어서 할 수 있습니다',
     /* the Settings pages */
     'On paper, or not said': '종이로, 또는 지정 안 함', 'None, or not said': '없음, 또는 지정 안 함', 'Another one…': '다른 도우미…', 'draws, until you use a pencil; from then on it moves the page': '펜을 쓰기 전까지는 그리고, 그 뒤로는 페이지를 움직임', 'always moves the page': '항상 페이지를 움직임', 'always draws': '항상 그림', 'Add goals': '목표 추가', 'Edit goals': '목표 편집', 'Tag rubric rows in Rubric setup and quiz questions in Quiz boxes. Each class page then has a Goals tab.': '루브릭 줄은 Rubric setup에서, 퀴즈 문항은 Quiz boxes에서 목표를 붙이세요. 그러면 학급 페이지마다 Goals 탭이 생깁니다.',
     'Find names on their own': '이름 자동으로 찾기', 'Yours, kept on this computer.': '선생님의 데이터이며, 이 컴퓨터에 저장됩니다.', 'Saving and carrying': '저장과 휴대', 'Folder, take-home file, earlier days, new school year': '폴더, 휴대용 파일, 이전 날짜, 새 학년도', 'Classes and timetable': '학급과 시간표',
@@ -204,6 +213,12 @@ const LANG_KO = {
     'Missing': '미제출', 'Excused': '면제', 'Late': '지각 제출',
   },
   rules: [
+    /* a class page */
+    [/^(\d+) students? on the roster$/, m => (m[1] === '1' ? '명단에 학생 {n}명' : '명단에 학생 {n}명').replace('{n}', m[1])], [/^(\d+) assignments?$/, m => (m[1] === '1' ? '과제 {n}개' : '과제 {n}개').replace('{n}', m[1])], [/^Due (.+)$/, '마감: $1'],
+    [/^Keep (.+) in the tab row$/, m => '{x} 탭 줄에 두기'.replace('{x}', (LANG_KO.words[m[1]] || m[1]))], [/^Take (.+) out of the tab row$/, m => '{x} 탭 줄에서 빼기'.replace('{x}', (LANG_KO.words[m[1]] || m[1]))],
+    [/^More for (.+)$/, '$1 더 보기'], [/^Open in (.+) ↗$/, '$1에서 열기 ↗'],
+    [/^Change the (.+) link$/, m => '{x} 링크 바꾸기'.replace('{x}', (m[1] === 'Class page' ? '학급 페이지' : m[1]))], [/^Link to (.+)…$/, m => '{x}에 연결…'.replace('{x}', m[1])], [/^Add the (.+) link…$/, m => '{x} 링크 추가…'.replace('{x}', (m[1] === 'Class page' ? '학급 페이지' : m[1]))],
+    [/^(\d+) of (\d+) feedback complete$/, '$2개 중 $1개 피드백 완료'], [/^a (.+) ZIP$/, '$1 ZIP'], [/^Opened (.+)$/, '연 날짜: $1'], [/^(\d+) feedback complete$/, '$1개 피드백 완료'], [/^(\d+) scored$/, '$1개 채점됨'],
     /* the Settings pages */
     [/^(.{3,16}) to (.{3,16})$/, m => /\d/.test(m[1]) && /\d/.test(m[2]) ? m[1] + ' – ' + m[2] : null],   // a term's dates, as the browser writes them in this language
     [/^new entries add to (.+), one point for one percentage point\. (Grades stay at 100% at most\.|A grade can go over 100%\.)$/, m => '새 추가 점수는 {w}에 더해지며, 1점이 1퍼센트포인트입니다.'.replace('{w}', m[1] === 'the term grade' ? '학기 성적' : m[1].replace(/^the /, '')) + ' ' + (m[2][0] === 'G' ? '성적은 최대 100%까지입니다.' : '성적이 100%를 넘을 수 있습니다.')],

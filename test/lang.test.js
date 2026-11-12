@@ -79,9 +79,13 @@ test('in Spanish the sidebar and Today read in Spanish, with the date written th
   assert.equal(await page.$eval('#dropTitle', e => e.textContent), 'Suelta aquí los trabajos nuevos de tus estudiantes');
   assert.equal(await page.$eval('#pickFiles', e => e.textContent), 'Elegir archivos…');
   assert.equal(await page.$eval('#findBtn', e => e.title), 'Busca un estudiante, una tarea, una herramienta o un ajuste');
+  // a class page reads in Spanish, with the class, its units and its assignments under the names she gave them
+  await page.click('#railClasses a'); await page.waitForFunction(() => location.hash.startsWith('#/class')); await page.waitForSelector('#vClass .card');
+  const cls = await text(page, '#vClass');
+  for (const w of ['Grade 9 English', 'Libro de calificaciones', '6 estudiantes en la lista', 'Unit 1: Stories', 'Narrative essay', '+ Tarea', '+ Unidad']) assert.ok(cls.includes(w), w + ' is on the class page');
   // a screen that is not translated yet is simply still in English, and works
-  await page.click('#railClasses a'); await page.waitForFunction(() => location.hash.startsWith('#/class'));
-  assert.match(await text(page, '#vClass'), /Gradebook/);
+  await page.click('#vClass .ctab[data-ctab="gradebook"]'); await page.waitForSelector('#classPanel table');
+  assert.match(await text(page, '#classPanel'), /Class average/);
   assert.deepEqual(page.errors, []);
   await close();
 });
@@ -111,6 +115,9 @@ test('the sentences Today builds come out as Spanish sentences', async () => {
     'You have 1 saved rubric and 2 saved grading scales. They are kept in the rubric bank, sorted by unit, and hold only a rubric’s wording and a scale’s percents.': 'Tienes 1 rúbrica guardada y 2 escalas de calificación guardadas. Se guardan en el banco de rúbricas, ordenadas por unidad, y solo contienen el texto de una rúbrica y los porcentajes de una escala.',
     'new entries add to the term grade, one point for one percentage point. Grades stay at 100% at most.': 'las entradas nuevas se suman a la nota del periodo, un punto por cada punto porcentual. Las notas llegan como máximo al 100%.',
     'No Canvas link': 'Sin enlace de Canvas', 'A class has its roster, its units and its Canvas page.': 'Una clase tiene su lista, sus unidades y su página de Canvas.',
+    // a class page
+    '6 students on the roster': '6 estudiantes en la lista', '1 assignment': '1 tarea', 'Due Sep 19': 'Entrega: Sep 19', 'Keep Missing work in the tab row': 'Mantener Trabajos sin entregar en la fila de pestañas',
+    '6 of 6 scored · papers not kept': '6 de 6 con nota · trabajos no guardados', 'a Canvas ZIP': 'un ZIP de Canvas', 'Add the Class page link…': 'Añadir el enlace de la página de la clase…',
     // what the app doesn't know is left exactly as it is
     'Aria Testwell': 'Aria Testwell', 'Narrative essay · Unit 1': 'Narrative essay · Unit 1', '  Today  ': '  Hoy  ',
   };
@@ -149,6 +156,12 @@ test('every word on the covered screens is in each language file (run in English
     await page.keyboard.press('Escape');
     await goTo(page, '#/help'); await page.waitForSelector('#hlpList .hlpq'); await miss(page, 'Help', own);
     await page.type('#hlpIn', 'zzzz'); await pause(200); await miss(page, 'Help, nothing found', own);
+    // a class page: its header, its tab row with the More menu open, and the Assignments tab with a card's and a unit's menu open
+    await goTo(page, await page.$eval('#railClasses a', a => a.getAttribute('href'))); await page.waitForSelector('#vClass .card'); await miss(page, 'class page, Assignments', own);
+    await page.click('#ctMore'); await pause(200); await miss(page, 'class page, More', own); await page.keyboard.press('Escape');
+    await page.click('#clsSetup'); await pause(200); await miss(page, 'class page, Class setup', own); await page.keyboard.press('Escape');
+    await page.click('#vClass .card .kdots'); await pause(200); await miss(page, 'class page, an assignment’s menu', own); await page.keyboard.press('Escape');
+    await page.click('#vClass .uhead .kdots'); await pause(200); await miss(page, 'class page, a unit’s menu', own); await page.keyboard.press('Escape');
     // every page of Settings
     for (const k of ['saving', 'classes', 'terms', 'marking', 'setup', 'display', 'about']) { await goTo(page, '#/settings/' + k); await pause(500); await miss(page, 'Settings, ' + k, own); }
     await goTo(page, '#/'); await openZip(page, zip); await score(page, [3]); await settle(page);

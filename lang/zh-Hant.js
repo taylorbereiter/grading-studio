@@ -26,6 +26,15 @@ function zhHomeSay(k) {
 const LANG_ZH = {
   name: '繁體中文', locale: 'zh-Hant',
   words: {
+    /* a class page: its header, its tab row and the Assignments tab */
+    'Class setup': '班級設定', 'Gradebook': '成績冊', 'Seating': '座位', 'Missing work': '缺交作業', 'Charts': '圖表', 'Goals': '學習目標', 'Report comments': '成績單評語', '+ Assignment': '+ 作業', '+ Unit': '+ 單元', 'In-class': '課堂', 'Summative': '總結性', 'Typed in': '手動輸入',
+    'Scores typed in': '分數已手動輸入', 'papers not kept': '學生檔案未保留', 'Ready to return': '可以發還', 'Returned': '已發還', 'Giving feedback': '回饋進行中', 'Scoring': '評分進行中', 'Not started': '尚未開始', 'Add papers…': '加入學生作業…', 'Scores typed in: open the gradebook': '分數已手動輸入：開啟成績冊',
+    'Add this assignment’s papers': '加入這份作業的學生檔案', 'Edit': '編輯', 'Name, type, due date, unit, rubric': '名稱、類型、繳交期限、單元、評分規準', 'Mark this one’s papers here as well': '也在這裡批改這份作業的學生檔案', 'Open other papers…': '開啟其他學生檔案…', 'A newer download, or a different set of files': '較新的下載檔，或另一組檔案',
+    'Drag to move this unit': '拖曳以移動這個單元', 'Unit plan ↗': '單元計畫 ↗', 'Rename': '重新命名', 'Delete unit': '刪除單元', 'The other pages of this class': '這個班級的其他頁面', 'The pin keeps a page in the tab row.': '釘選的頁面會留在分頁列。', 'Edit roster': '編輯名單', 'Add roster': '新增名單',
+    'Names, and the name of the class': '學生姓名和班級名稱', 'Move up in the sidebar': '在側邊欄上移', 'Move down in the sidebar': '在側邊欄下移', 'Assignments with no roster. Drag them onto a class in the sidebar, or use Edit to pick a class.': '沒有名單的作業。把它們拖到側邊欄的班級上，或用「編輯」選擇班級。',
+    'No units yet. Click + Unit.': '還沒有單元。請按「+ 單元」。', 'Drag an assignment or a unit to move it. Drop': '拖曳作業或單元可以移動。把', 'on an assignment to open it there.': '放到作業上，就會在那裡開啟。', 'a ZIP': 'ZIP 檔', 'No papers yet': '還沒有學生檔案', 'Grading': '評分方式',
+    'Points and percent, or IB criteria': '分數和百分比，或 IB 評分規準', 'This class is graded with IB MYP criteria': '這個班級使用 IB MYP 評分規準評分', 'This class is graded as an IB DP class': '這個班級以 IB DP 班級評分', 'Link to a unit plan…': '連結到單元計畫…', 'Change the unit plan link': '變更單元計畫的連結',
+    'drop the same ZIP to keep going': '放入同一個 ZIP 就能繼續',
     /* the Settings pages */
     'On paper, or not said': '紙本，或未指定', 'None, or not said': '沒有，或未指定', 'Another one…': '其他…', 'draws, until you use a pencil; from then on it moves the page': '會畫線，直到你用過觸控筆；之後改為移動頁面', 'always moves the page': '一律移動頁面', 'always draws': '一律畫線', 'Add goals': '新增目標', 'Edit goals': '編輯目標', 'Tag rubric rows in Rubric setup and quiz questions in Quiz boxes. Each class page then has a Goals tab.': '在 Rubric setup 為評分規準的列標上目標，在 Quiz boxes 為小考題目標上目標。之後每個班級頁面都會有 Goals 分頁。',
     'Find names on their own': '自動尋找姓名', 'Yours, kept on this computer.': '屬於你，存在這台電腦上。', 'Saving and carrying': '儲存與攜帶', 'Folder, take-home file, earlier days, new school year': '資料夾、攜帶檔、先前的日子、新學年', 'Classes and timetable': '班級與課表', 'Rosters, class times, days off, links': '名單、上課時間、放假日、連結',
@@ -37,7 +46,7 @@ const LANG_ZH = {
     'This year:': '本學年：', '(from your term dates)': '（依你的學期日期）', 'Clears student work from this browser when you are finished here. A linked folder and Planner work are not touched.': '在這裡的工作結束後，從這個瀏覽器清除學生作業。已連結的資料夾和備課內容不受影響。', 'One assignment, or everything, as it was on an earlier day.': '一份作業或全部內容，回到先前某一天的樣子。',
     'A copy of each day you work is kept in the folder you choose, so there is always an earlier day to go back to. No folder is chosen yet, so those copies have not started.': '你工作的每一天都會在你選擇的資料夾裡留下一份副本，所以隨時都有先前的日子可以回去。目前還沒選擇資料夾，所以還沒開始保留副本。',
     'The roster, the assignments and the grades, from two downloads': '名單、作業和成績，來自兩個下載檔', 'Where students hand in work': '學生繳交作業的地方', 'From Google Classroom…': '從 Google Classroom…', 'Name and roster': '名稱與名單', 'Only for the words on screen. Nothing is connected to it.': '只用於畫面上的文字，不會連線到它。',
-    'Attendance': '點名', 'Each class has an Attendance tab, and Today has a line for it under each class.': '每個班級都有 Attendance 分頁，今天頁面的每個班級下方也有一行點名。', 'Take attendance in Grading Studio': '在 Grading Studio 點名', 'When each class meets, the semester’s dates and the days off. It lives in the Planner.': '每個班級的上課時間、學期日期和放假日。它存放在備課裡。',
+    'Attendance': '出缺席', 'Each class has an Attendance tab, and Today has a line for it under each class.': '每個班級都有 Attendance 分頁，今天頁面的每個班級下方也有一行點名。', 'Take attendance in Grading Studio': '在 Grading Studio 點名', 'When each class meets, the semester’s dates and the days off. It lives in the Planner.': '每個班級的上課時間、學期日期和放假日。它存放在備課裡。',
     'Set up the timetable': '設定課表', 'No timetable in this browser yet. Once the Planner knows when your classes meet, Today shows the day’s classes and the lesson planned for each.': '這個瀏覽器還沒有課表。備課知道各班上課時間後，今天頁面就會顯示當天的課和每堂課規劃的課程。', 'How you usually grade': '你平常的評分方式',
     'For all your classes. An assignment counts toward the term its due date falls in.': '適用於所有班級。作業會計入繳交期限所在的學期。', 'Term setup': '學期設定', 'How each type counts:': '各類型的計算方式：', 'When a type has nothing in it yet, the other types are used.': '某個類型還沒有內容時，會以其他類型計算。',
     'Extra credit:': '加分：', 'What a new assignment starts with. Any assignment can be scored another way, in its Rubric setup.': '新作業一開始的設定。任何作業都可以在它的 Rubric setup 裡改用其他方式評分。', 'Not chosen: a new assignment starts as it always has here, with three rubric rows and the 12-point scale (12 = 100, 11 = 95, 10 = 91…). Choosing one changes only assignments you make from then on.': '尚未選擇：新作業會照這裡一向的方式開始，使用三列評分規準和 12 分等第（12 = 100、11 = 95、10 = 91…）。選擇後只會改變之後建立的作業。',
@@ -60,7 +69,7 @@ const LANG_ZH = {
     'Papers, names, scores and comments stay in this browser and in your own linked folder.': '作業、姓名、分數和評語都留在這個瀏覽器和你自己連結的資料夾裡。', 'Light mode is the usual look. Text size and zoom apply while you grade.': '淺色模式是平常的外觀。文字大小和縮放會在批改時套用。', 'Keys': '按鍵',
     'Every keyboard shortcut for marking and scoring.': '批改和評分的所有鍵盤快速鍵。', 'Show all keys': '顯示所有按鍵', 'This copy gets the newest version each time the page is loaded.': '這份副本每次載入頁面時都會取得最新版本。', 'New in this version': '這個版本的新功能', 'Install as an app': '安裝成應用程式',
     'Its own window and its own icon. No installer, nothing for school IT to approve.': '有自己的視窗和圖示。不需要安裝程式，也不需要學校資訊單位核准。', 'Installing works from the web address in Chrome or Edge, not from a copy saved on this computer.': '安裝要從 Chrome 或 Edge 的網址進行，無法從存在這台電腦上的副本安裝。',
-    'No dates yet': '尚未設定日期', 'No terms yet: the gradebook treats the whole year as one.': '尚未設定學期：成績簿把整個學年當成一個學期。', 'A type with nothing in it yet counts as 0.': '還沒有內容的類型以 0 計算。', 'A class has its roster, its units and its link to your school’s system.': '班級有自己的名單、單元和連到學校系統的連結。',
+    'No dates yet': '尚未設定日期', 'No terms yet: the gradebook treats the whole year as one.': '尚未設定學期：成績冊把整個學年當成一個學期。', 'A type with nothing in it yet counts as 0.': '還沒有內容的類型以 0 計算。', 'A class has its roster, its units and its link to your school’s system.': '班級有自己的名單、單元和連到學校系統的連結。',
     /* the to-do list: the sidebar, the card on Today, Find anything */
     'To do': '待辦事項', 'To do: your own list, with what the app noticed from your work': '待辦事項：你自己的清單，加上系統從你的工作中發現的事', 'Add a to-do': '新增待辦事項', 'Add a to-do…': '新增待辦事項…',
     'To do, by week': '待辦事項（週檢視）', 'Your list laid out on the days of the week, under the classes that meet': '把清單排在一週的每一天，列在當天的課底下',
@@ -205,6 +214,12 @@ const LANG_ZH = {
     'Missing': '缺交', 'Excused': '免交', 'Late': '遲交', 'Retake': '重做', 'Answer': '答案', 'First try': '第一次', 'counts as': '採計',
   },
   rules: [
+    /* a class page */
+    [/^(\d+) students? on the roster$/, m => (m[1] === '1' ? '名單上有 {n} 位學生' : '名單上有 {n} 位學生').replace('{n}', m[1])], [/^(\d+) assignments?$/, m => (m[1] === '1' ? '{n} 份作業' : '{n} 份作業').replace('{n}', m[1])], [/^Due (.+)$/, '期限：$1'],
+    [/^Keep (.+) in the tab row$/, m => '把「{x}」留在分頁列'.replace('{x}', (LANG_ZH.words[m[1]] || m[1]))], [/^Take (.+) out of the tab row$/, m => '把「{x}」移出分頁列'.replace('{x}', (LANG_ZH.words[m[1]] || m[1]))],
+    [/^More for (.+)$/, '$1 的更多操作'], [/^Open in (.+) ↗$/, '在 $1 開啟 ↗'],
+    [/^Change the (.+) link$/, m => '變更{x}的連結'.replace('{x}', (m[1] === 'Class page' ? '班級頁面' : m[1]))], [/^Link to (.+)…$/, m => '連結到{x}…'.replace('{x}', m[1])], [/^Add the (.+) link…$/, m => '新增{x}的連結…'.replace('{x}', (m[1] === 'Class page' ? '班級頁面' : m[1]))],
+    [/^(\d+) of (\d+) feedback complete$/, '$2 份中 $1 份回饋完成'], [/^a (.+) ZIP$/, '$1 的 ZIP 檔'], [/^Opened (.+)$/, '開啟日期：$1'], [/^(\d+) feedback complete$/, '$1 份回饋完成'], [/^(\d+) scored$/, '$1 份已評分'],
     /* the Settings pages */
     [/^(.{3,16}) to (.{3,16})$/, m => /\d/.test(m[1]) && /\d/.test(m[2]) ? m[1] + ' – ' + m[2] : null],   // a term's dates, as the browser writes them in this language
     [/^new entries add to (.+), one point for one percentage point\. (Grades stay at 100% at most\.|A grade can go over 100%\.)$/, m => '新的加分會加到{w}，一分等於一個百分點。'.replace('{w}', m[1] === 'the term grade' ? '學期成績' : m[1].replace(/^the /, '')) + ' ' + (m[2][0] === 'G' ? '成績最高為 100%。' : '成績可以超過 100%。')],

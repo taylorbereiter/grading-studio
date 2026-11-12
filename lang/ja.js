@@ -26,6 +26,15 @@ function jaHomeSay(k) {
 const LANG_JA = {
   name: '日本語', locale: 'ja',
   words: {
+    /* a class page: its header, its tab row and the Assignments tab */
+    'Class setup': 'クラスの設定', 'Gradebook': '成績簿', 'Seating': '座席', 'Missing work': '未提出の課題', 'Charts': 'グラフ', 'Goals': '学習目標', 'Report comments': '通知表の所見', '+ Assignment': '+ 課題', '+ Unit': '+ 単元', 'In-class': '授業内', 'Summative': '総括的', 'Typed in': '入力済み',
+    'Scores typed in': '点数を入力済み', 'papers not kept': '提出物は保存されていません', 'Ready to return': '返却できます', 'Returned': '返却済み', 'Giving feedback': 'フィードバック中', 'Scoring': '採点中', 'Not started': '未着手', 'Add papers…': '提出物を追加…', 'Scores typed in: open the gradebook': '点数を入力済み：成績簿を開く',
+    'Add this assignment’s papers': 'この課題の提出物を追加', 'Edit': '編集', 'Name, type, due date, unit, rubric': '名前、種類、締め切り、単元、ルーブリック', 'Mark this one’s papers here as well': 'この課題の提出物もここで採点する', 'Open other papers…': '別の提出物を開く…', 'A newer download, or a different set of files': '新しいダウンロード、または別のファイル一式',
+    'Drag to move this unit': 'ドラッグしてこの単元を移動', 'Unit plan ↗': '単元計画 ↗', 'Rename': '名前を変更', 'Delete unit': '単元を削除', 'The other pages of this class': 'このクラスのほかのページ', 'The pin keeps a page in the tab row.': 'ピンを付けたページはタブの行に残ります。', 'Edit roster': '名簿を編集',
+    'Add roster': '名簿を追加', 'Names, and the name of the class': '名前と、クラスの名前', 'Move up in the sidebar': 'サイドバーで上へ', 'Move down in the sidebar': 'サイドバーで下へ', 'Assignments with no roster. Drag them onto a class in the sidebar, or use Edit to pick a class.': '名簿のない課題です。サイドバーのクラスにドラッグするか、編集からクラスを選んでください。',
+    'No units yet. Click + Unit.': 'まだ単元がありません。「+ 単元」をクリックしてください。', 'Drag an assignment or a unit to move it. Drop': '課題や単元はドラッグして移動できます。課題の上に', 'on an assignment to open it there.': 'をドロップすると、そこで開きます。', 'a ZIP': 'ZIP', 'No papers yet': 'まだ提出物がありません',
+    'Grading': '評価方法', 'Points and percent, or IB criteria': '点数とパーセント、または IB の評価規準', 'This class is graded with IB MYP criteria': 'このクラスは IB MYP の評価規準で評価します', 'This class is graded as an IB DP class': 'このクラスは IB DP のクラスとして評価します', 'Link to a unit plan…': '単元計画にリンク…',
+    'Change the unit plan link': '単元計画のリンクを変更', 'drop the same ZIP to keep going': '同じ ZIP をドロップすると続けられます',
     /* the Settings pages */
     'On paper, or not said': '紙で、または未指定', 'None, or not said': 'なし、または未指定', 'Another one…': 'その他…', 'draws, until you use a pencil; from then on it moves the page': 'ペンを使うまでは描き、使ったあとはページを動かす', 'always moves the page': '常にページを動かす', 'always draws': '常に描く', 'Add goals': '目標を追加', 'Edit goals': '目標を編集', 'Tag rubric rows in Rubric setup and quiz questions in Quiz boxes. Each class page then has a Goals tab.': 'ルーブリックの行には Rubric setup で、小テストの問題には Quiz boxes で目標を付けます。すると各クラスのページに Goals タブができます。',
     'Find names on their own': '名前を自動で探す', 'Yours, kept on this computer.': 'あなたのデータは、このパソコンに保存されています。', 'Saving and carrying': '保存と持ち出し', 'Folder, take-home file, earlier days, new school year': 'フォルダ、持ち出しファイル、以前の日、新年度', 'Classes and timetable': 'クラスと時間割',
@@ -201,6 +210,12 @@ const LANG_JA = {
     'Missing': '未提出', 'Excused': '免除', 'Late': '遅れて提出',
   },
   rules: [
+    /* a class page */
+    [/^(\d+) students? on the roster$/, m => (m[1] === '1' ? '名簿に生徒 {n} 人' : '名簿に生徒 {n} 人').replace('{n}', m[1])], [/^(\d+) assignments?$/, m => (m[1] === '1' ? '課題 {n} 件' : '課題 {n} 件').replace('{n}', m[1])], [/^Due (.+)$/, '締め切り：$1'],
+    [/^Keep (.+) in the tab row$/, m => '{x}をタブの行に残す'.replace('{x}', (LANG_JA.words[m[1]] || m[1]))], [/^Take (.+) out of the tab row$/, m => '{x}をタブの行から外す'.replace('{x}', (LANG_JA.words[m[1]] || m[1]))],
+    [/^More for (.+)$/, '$1 のその他の操作'], [/^Open in (.+) ↗$/, '$1 で開く ↗'],
+    [/^Change the (.+) link$/, m => '{x}のリンクを変更'.replace('{x}', (m[1] === 'Class page' ? 'クラスページ' : m[1]))], [/^Link to (.+)…$/, m => '{x}にリンク…'.replace('{x}', m[1])], [/^Add the (.+) link…$/, m => '{x}のリンクを追加…'.replace('{x}', (m[1] === 'Class page' ? 'クラスページ' : m[1]))],
+    [/^(\d+) of (\d+) feedback complete$/, '$2 件中 $1 件フィードバック完了'], [/^a (.+) ZIP$/, '$1 の ZIP'], [/^Opened (.+)$/, '開いた日：$1'], [/^(\d+) feedback complete$/, '$1 件フィードバック完了'], [/^(\d+) scored$/, '$1 件採点済み'],
     /* the Settings pages */
     [/^(.{3,16}) to (.{3,16})$/, m => /\d/.test(m[1]) && /\d/.test(m[2]) ? m[1] + ' – ' + m[2] : null],   // a term's dates, as the browser writes them in this language
     [/^new entries add to (.+), one point for one percentage point\. (Grades stay at 100% at most\.|A grade can go over 100%\.)$/, m => '新しい加点は{w}に加算され、1 点が 1 パーセントポイントです。'.replace('{w}', m[1] === 'the term grade' ? '学期の成績' : m[1].replace(/^the /, '')) + ' ' + (m[2][0] === 'G' ? '成績は最大 100% までです。' : '成績は 100% を超えることがあります。')],
