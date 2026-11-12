@@ -2435,6 +2435,7 @@ async function applySetup(j) {
   const setup = { classes: j.classes.map(c => ({ id: String(c.id), name: String(c.name || c.id), course: String(c.course || ''), color: /^#[0-9a-f]{6}$/i.test(c.color) ? c.color : '#1F6FB2', ...((u => u ? { mb: u } : {})(mbUrl(c.mb) || mbUrl(old(c.id).mb))), meets: (c.meets || []).map(m => ({ dow: +m.dow, start: String(m.start || ''), end: String(m.end || ''), label: String(m.label || '') })) })),
     daysOff: (j.daysOff || []).map(d => ({ date: String(d.date), label: String(d.label || 'No school') })), events: (j.events || []).map(e => ({ date: String(e.date), to: e.to ? String(e.to) : '', label: String(e.label || '') })),
     template: typeof j.template === 'string' ? j.template : (L.setup && L.setup.template) || '',
+    tplName: String(typeof j.template === 'string' ? (j.template ? j.tplName || 'Your template' : '') : (L.setup && L.setup.tplName) || '').slice(0, 120),
     semStart: /^\d{4}-\d\d-\d\d$/.test(j.semStart) ? ymd(mondayOf(parseYmd(j.semStart))) : '', semEnd: /^\d{4}-\d\d-\d\d$/.test(j.semEnd) ? ymd(mondayOf(parseYmd(j.semEnd))) : '',
     claudeUrl: /^https:\/\/claude\.ai\//.test(j.claudeUrl) ? String(j.claudeUrl) : '', profile: String(j.profile || '').slice(0, 80) };
   if (typeof j.sys === 'string' || typeof j.unitPlans === 'string' || (j.plain && !L.words)) { L.words = { sys: String(j.sys || '').slice(0, 40), unit: String(j.unitPlans || '').slice(0, 40) }; await kvSet('words', L.words); }
@@ -2450,18 +2451,49 @@ async function applySetup(j) {
   toast((setup.profile ? setup.profile + ' loaded: ' : 'Timetable loaded: ') + setup.classes.length + (setup.classes.length === 1 ? ' class' : ' classes') + (nu ? ', ' + nu + ' units' : '') + (setup.template ? ', your slide template' : ''), 5000);
   renderLessons();
 }
+async function readTemplate(file) {
+  if (!file) return null;
+  const say = m => { toast(m, 6000); return null; };
+  if (!/\.(pptx|potx)$/i.test(file.name)) return say('Pick a PowerPoint file (.pptx or .potx)');
+  if (file.size > 40 * 1024 * 1024) return say('That template is over 40 MB. Save a copy without its slides and pick that one.');
+  const u8 = new Uint8Array(await file.arrayBuffer());
+  let z; try { z = fflate.unzipSync(u8); } catch { return say('That file can’t be opened as a PowerPoint'); }
+  if (!z['ppt/presentation.xml']) return say('That file can’t be opened as a PowerPoint');
+  const lay = tplLayouts(z);
+  if (!lay.title || !lay.content) return say('That template needs a “Title Slide” and a “Title and Content” layout, which is where the slides go. PowerPoint’s own templates have both.');
+  let b = ''; for (let i = 0; i < u8.length; i += 0x8000) b += String.fromCharCode.apply(null, u8.subarray(i, i + 0x8000));
+  return { b64: btoa(b), name: file.name.replace(/\.(pptx|potx)$/i, '').slice(0, 120) };
+}
+function setupFileOf(d) {
+  return { kind: 'grading-studio-lessons-setup', version: 1, ...(L.setup && L.setup.profile ? { profile: L.setup.profile } : {}),
+    semStart: d.semStart || '', semEnd: d.semEnd || '', classes: d.classes, daysOff: d.daysOff, events: d.events, ...(d.claudeUrl ? { claudeUrl: d.claudeUrl } : {}),
+    ...(L.words ? { sys: L.words.sys || '', unitPlans: L.words.unit || '' } : {}), ...(L.defLook ? { look: L.defLook } : {}),
+    template: d.template || '', ...(d.template ? { tplName: d.tplName || '' } : {}) };
+}
 function openTimetable() {
   const s = L.setup || { classes: [], daysOff: [], events: [], template: '' };
   const draft = JSON.parse(JSON.stringify({ classes: s.classes, daysOff: s.daysOff, events: s.events, semStart: s.semStart || '', semEnd: s.semEnd || '', claudeUrl: s.claudeUrl || '' }));
+  draft.template = s.template || ''; draft.tplName = draft.template ? s.tplName || 'Your template' : '';
   const meetRow = (ci, mi, m) => '<div class="ls-mrow"><select data-m="dow" data-ci="' + ci + '" data-mi="' + mi + '" class="btn sm">' + [1, 2, 3, 4, 5, 6].map(d => '<option value="' + d + '"' + (+m.dow === d ? ' selected' : '') + '>' + LDAYS_LONG[d] + '</option>').join('') + '</select><input type="time" data-m="start" data-ci="' + ci + '" data-mi="' + mi + '" value="' + esc(m.start) + '" class="btn sm"> to <input type="time" data-m="end" data-ci="' + ci + '" data-mi="' + mi + '" value="' + esc(m.end) + '" class="btn sm"><input data-m="label" data-ci="' + ci + '" data-mi="' + mi + '" value="' + esc(m.label) + '" placeholder="Periods" class="btn sm" style="width:90px"><button class="btn sm ghost" data-delm="' + ci + '|' + mi + '">×</button></div>';
   const draw = () => {
     $('#ttBody').innerHTML = draft.classes.map((c, ci) => '<div class="ls-tc"><div class="ls-mrow"><input data-c="name" data-ci="' + ci + '" value="' + esc(c.name) + '" placeholder="Class name, like Period 2 Biology" class="btn sm" style="width:170px"><input data-c="course" data-ci="' + ci + '" value="' + esc(c.course) + '" placeholder="Course, like Biology" class="btn sm" style="width:130px" title="Classes with the same course share one deck"><input type="color" data-c="color" data-ci="' + ci + '" value="' + esc(c.color || '#1F6FB2') + '" aria-label="Color"><input data-c="mb" data-ci="' + ci + '" value="' + esc(mbOf(c)) + '" placeholder="' + esc(plSysLink()) + ' link (optional)" class="btn sm" style="width:220px;cursor:text"><span class="sp"></span><button class="btn sm ghost" data-delc="' + ci + '">Remove class</button></div>' +
       c.meets.map((m, mi) => meetRow(ci, mi, m)).join('') + '<button class="btn sm ghost" data-addm="' + ci + '">+ Meeting</button></div>').join('') +
       '<button class="btn sm" data-addc>+ Class</button><h3 style="margin:18px 0 6px;font-size:15px">Semester</h3><div class="ls-mrow"><label>First week <input type="date" id="ttS" class="btn sm" value="' + esc(draft.semStart) + '"></label><label>Last week <input type="date" id="ttE" class="btn sm" value="' + esc(draft.semEnd) + '"></label></div>' +
       '<h3 style="margin:18px 0 6px;font-size:15px">Days off</h3><textarea id="ttOff" rows="4" style="width:100%" placeholder="One per line: 2026-12-25 Christmas">' + esc(draft.daysOff.map(d => d.date + ' ' + d.label).join('\n')) + '</textarea>' +
-      '<h3 style="margin:14px 0 6px;font-size:15px">Dates to show (not days off)</h3><textarea id="ttEv" rows="4" style="width:100%" placeholder="One per line: 2026-11-09 to 2026-11-13 Midterms">' + esc(draft.events.map(e => e.date + (e.to ? ' to ' + e.to : '') + ' ' + e.label).join('\n')) + '</textarea>' ;
+      '<h3 style="margin:14px 0 6px;font-size:15px">Dates to show (not days off)</h3><textarea id="ttEv" rows="4" style="width:100%" placeholder="One per line: 2026-11-09 to 2026-11-13 Midterms">' + esc(draft.events.map(e => e.date + (e.to ? ' to ' + e.to : '') + ' ' + e.label).join('\n')) + '</textarea>' +
+      '<h3 style="margin:18px 0 6px;font-size:15px">Slide template</h3><div class="ls-mrow" id="ttTpl"><span class="' + (draft.template ? '' : 'muted') + '">' +
+      (draft.template ? 'Your own: ' + esc(draft.tplName) : 'The plain one built in: white, 16:9.') + '</span><button class="btn sm" data-tpl>' + (draft.template ? 'Pick another…' : 'Use my school’s template…') + '</button>' +
+      (draft.template ? '<button class="btn sm ghost" data-tplplain>Use the plain one</button>' : '') + '</div>' +
+      '<p class="muted" style="margin:4px 0 0;font-size:13px">A PowerPoint file (.pptx or .potx) with a Title Slide and a Title and Content layout. Downloads keep its masters and layouts.</p>';
   };
-  openDlg('<div class="bh"><h2>Timetable</h2><button class="btn sm" data-load>Load a setup file…</button></div><div class="bb" id="ttBody"></div><div class="bf"><button class="btn" data-x>Cancel</button><button class="btn primary" data-ok>Save</button></div>');
+  const collect = () => {
+    const lines = id => $(id).value.split('\n').map(x => x.trim()).filter(Boolean);
+    draft.daysOff = lines('#ttOff').map(x => { const m = /^(\d{4}-\d\d-\d\d)\s*(.*)$/.exec(x); return m && { date: m[1], label: m[2] || 'No school' }; }).filter(Boolean);
+    draft.events = lines('#ttEv').map(x => { const m = /^(\d{4}-\d\d-\d\d)(?:\s+to\s+(\d{4}-\d\d-\d\d))?\s*(.*)$/.exec(x); return m && { date: m[1], to: m[2] || '', label: m[3] }; }).filter(Boolean);
+    draft.semStart = $('#ttS').value; draft.semEnd = $('#ttE').value;
+  };
+  const classesOut = () => draft.classes.filter(c => c.name.trim()).map(c => { const o = { ...c, id: c.id || lid() }, u = mbUrl(c.mb); if (u) o.mb = u; else delete o.mb; return o; });
+  openDlg('<div class="bh"><h2>Timetable</h2><span class="ls-mrow" style="margin:0"><button class="btn sm" data-saveprof title="Everything here, your slide template included, in one file for another computer">Save my setup file</button><button class="btn sm" data-load>Load a setup file…</button></span></div><div class="bb" id="ttBody"></div><div class="bf"><button class="btn" data-x>Cancel</button><button class="btn primary" data-ok>Save</button></div>');
   draw();
   const box = $('#dlgBox');
   box.oninput = e => { const t = e.target, ci = +t.dataset.ci; if (t.dataset.c) draft.classes[ci][t.dataset.c] = t.value; if (t.dataset.m) draft.classes[ci].meets[+t.dataset.mi][t.dataset.m] = t.dataset.m === 'dow' ? +t.value : t.value; };
@@ -2469,18 +2501,27 @@ function openTimetable() {
   box.onclick = async e => {
     if (e.target.closest('[data-x]')) return closeDlg();
     if (e.target.closest('[data-load]')) { closeDlg(); return loadSetupFile(); }
+    if (e.target.closest('[data-tplplain]')) { collect(); draft.template = ''; draft.tplName = ''; return draw(); }
+    if (e.target.closest('[data-tpl]')) {
+      collect();
+      const i = document.createElement('input'); i.type = 'file'; i.accept = '.pptx,.potx,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/vnd.openxmlformats-officedocument.presentationml.template';
+      i.onchange = async () => { const t = await readTemplate(i.files[0]); if (!t || $('#ttTpl') == null) return; collect(); draft.template = t.b64; draft.tplName = t.name; draw(); };
+      return i.click();
+    }
+    if (e.target.closest('[data-saveprof]')) {
+      collect();
+      await saveBlob('Planner setup.json', new Blob([JSON.stringify(setupFileOf({ ...draft, classes: classesOut() }), null, 1)], { type: 'application/json' }));
+      return toast('Saved as “Planner setup.json”. Load it with Load a setup file… on another computer.', 5000);
+    }
     if (e.target.closest('[data-addc]')) { draft.classes.push({ id: lid(), name: '', course: '', color: '#1F6FB2', meets: [] }); return draw(); }
     const am = e.target.closest('[data-addm]'); if (am) { draft.classes[+am.dataset.addm].meets.push({ dow: 2, start: '08:30', end: '10:05', label: '' }); return draw(); }
     const dm = e.target.closest('[data-delm]'); if (dm) { const [ci, mi] = dm.dataset.delm.split('|').map(Number); draft.classes[ci].meets.splice(mi, 1); return draw(); }
     const dc = e.target.closest('[data-delc]'); if (dc) { draft.classes.splice(+dc.dataset.delc, 1); return draw(); }
     if (!e.target.closest('[data-ok]')) return;
-    const lines = id => $(id).value.split('\n').map(x => x.trim()).filter(Boolean);
-    draft.daysOff = lines('#ttOff').map(x => { const m = /^(\d{4}-\d\d-\d\d)\s*(.*)$/.exec(x); return m && { date: m[1], label: m[2] || 'No school' }; }).filter(Boolean);
-    draft.events = lines('#ttEv').map(x => { const m = /^(\d{4}-\d\d-\d\d)(?:\s+to\s+(\d{4}-\d\d-\d\d))?\s*(.*)$/.exec(x); return m && { date: m[1], to: m[2] || '', label: m[3] }; }).filter(Boolean);
-    draft.classes = draft.classes.filter(c => c.name.trim()).map(c => ({ ...c, id: c.id || lid() }));
-    for (const c of draft.classes) { const u = mbUrl(c.mb); if (u) c.mb = u; else delete c.mb; mbRemember(c.name, u); }
-    draft.semStart = $('#ttS').value; draft.semEnd = $('#ttE').value; 
-    closeDlg(); await applySetup({ ...draft, template: s.template, ...(L.setup ? {} : { plain: true }) });
+    collect();
+    draft.classes = classesOut();
+    for (const c of draft.classes) mbRemember(c.name, c.mb);
+    closeDlg(); await applySetup({ ...draft, ...(L.setup ? {} : { plain: true }) });
   };
 }
 
@@ -2751,7 +2792,7 @@ async function folderWrite(l) {
 async function folderRemove(l) { if (L.dir && L.dirOk && l._file) { try { await L.dir.removeEntry(l._file); } catch { } } }
 async function folderWriteSchedule() {
   if (!L.dir || !L.dirOk || !L.setup) return;
-  const { template, ...tt } = L.setup;
+  const { template, tplName, ...tt } = L.setup;
   await writeFile(L.dir, 'timetable.json', JSON.stringify(tt, null, 2));
 }
 async function folderWriteAll() {
@@ -5929,12 +5970,12 @@ const LANG_ES = {
     'planner': { q: '¿Qué es el Planificador?', words: 'lecciones unidades calendario diapositivas planificar powerpoint',
       a: ['El Planificador guarda tus unidades y lecciones: un calendario por semana o por semestre, un editor de diapositivas que crea archivos de PowerPoint, un banco de actividades y un banco de rúbricas.', 'Es una página aparte, a la que se llega desde la barra lateral. Nunca lee los trabajos ni las notas.'] },
     'timetable': { q: '¿Cómo configuro mi horario?', words: 'horario periodos clases horas calendario festivos',
-      a: ['En el Planificador, pulsa **Horario** en la barra lateral. Escribe tus clases, cuándo se reúne cada una y los días en que el centro está cerrado.', 'Desde entonces Hoy muestra las clases que das cada día con la lección planificada para cada una.'] },
+      a: ['En el Planificador, pulsa **Horario** en la barra lateral. Escribe tus clases, cuándo se reúne cada una y los días en que el centro está cerrado. **Save my setup file**, arriba, guarda todo, incluida tu plantilla de diapositivas, en un archivo que puedes cargar en otro ordenador.', 'Desde entonces Hoy muestra las clases que das cada día con la lección planificada para cada una.'] },
     'present': { q: '¿Cómo presento una lección a la clase?', words: 'presentación pantalla completa proyector enseñar temporizador agenda mando',
       a: ['Abre la lección en el Planificador y pulsa **Present**. Sus diapositivas llenan la pantalla; las flechas o un mando las pasan. En Hoy, la clase que toca ahora o a continuación tiene su propio botón **Presentar**.',
         'Mientras presentas: **A** muestra la agenda, **T** inicia un temporizador que la clase puede ver, **P** elige a un estudiante al azar, **G** hace grupos, **N** muestra tus notas, **B** deja la pantalla en blanco y **Esc** termina.', 'El temporizador acepta minutos y segundos. Mientras corre, su menú suma o quita 10 segundos o un minuto, lo pausa y lo reinicia; **+** y **−** suman o quitan un minuto. Marca **Show it big** para poner la cuenta atrás en el centro de la pantalla, para el fondo del aula.', 'Después, una línea anota hasta dónde llegó la clase, y al presentar de nuevo se retoma desde ahí.'] },
     'pptx': { q: '¿Puedo obtener mis diapositivas como archivo de PowerPoint?', words: 'powerpoint pptx exportar diapositivas keynote google slides descargar',
-      a: ['Sí. Abre la lección y pulsa **Download .pptx**. El archivo se abre en PowerPoint, Keynote y Google Slides.'] },
+      a: ['Sí. Abre la lección y pulsa **Download .pptx**. El archivo se abre en PowerPoint, Keynote y Google Slides.', 'Las diapositivas usan una plantilla blanca sencilla, salvo que le des la tuya: en **Horario**, pulsa **Use my school’s template…** y elige un archivo de PowerPoint con un diseño Title Slide y otro Title and Content.'] },
     'privacy': { q: '¿Salen de mi ordenador los trabajos de los estudiantes?', words: 'privado protección de datos rgpd nube servidor seguro',
       a: ['No. Los trabajos, los nombres, las notas y los comentarios se quedan en este navegador y en la carpeta que elijas. La aplicación no tiene servidor ni cuentas, y funciona sin internet.',
         'Lo único que sale son los archivos que tú exportas.'] },
@@ -6304,12 +6345,12 @@ const LANG_ZH = {
     'planner': { q: '「備課」是什麼？', words: '課程 單元 行事曆 投影片 備課 powerpoint planner',
       a: ['備課頁面存放你的單元和課程：可按週或按學期查看的行事曆、可以製作 PowerPoint 檔的投影片編輯器、活動庫和評分規準庫。', '它是獨立的頁面，從側邊欄進入。它不會讀取學生作業或成績。'] },
     'timetable': { q: '怎麼設定課表？', words: '課表 節次 班級 時間 行事曆 假日 timetable',
-      a: ['在備課頁面按側邊欄的**課表**。輸入你的班級、每個班級上課的時間，以及學校放假的日子。', '之後今天頁面會顯示你每天要上的班級，以及為每個班級準備的課程。'] },
+      a: ['在備課頁面按側邊欄的**課表**。輸入你的班級、每個班級上課的時間，以及學校放假的日子。上方的 **Save my setup file** 會把這些連同你的投影片範本存成一個檔案，可以在另一台電腦載入。', '之後今天頁面會顯示你每天要上的班級，以及為每個班級準備的課程。'] },
     'present': { q: '怎麼向全班播放一堂課？', words: '簡報 全螢幕 投影機 上課 計時器 流程 遙控器 present',
       a: ['在備課頁面開啟課程，按 **Present**。投影片會填滿螢幕，用方向鍵或簡報遙控器換頁。在今天頁面，正在上或下一堂要上的班級有自己的**播放**按鈕。',
         '播放時：**A** 顯示流程，**T** 啟動全班看得到的計時器，**P** 隨機抽一位學生，**G** 分組，**N** 顯示你的備註，**B** 讓螢幕變空白，**Esc** 結束。', '計時器可以設定分鐘和秒數。計時中，選單可以增加或減少 10 秒或一分鐘、暫停和重新開始；按 **+** 或 **−** 增減一分鐘。勾選 **Show it big** 會把倒數放在螢幕中央，教室後面也看得清楚。', '結束後會有一行記錄這個班級上到哪裡，下次播放時會從那裡繼續。'] },
     'pptx': { q: '可以把投影片存成 PowerPoint 檔嗎？', words: 'powerpoint pptx 匯出 投影片 keynote google slides 下載',
-      a: ['可以。開啟課程，按 **Download .pptx**。檔案可以用 PowerPoint、Keynote 和 Google 簡報開啟。'] },
+      a: ['可以。開啟課程，按 **Download .pptx**。檔案可以用 PowerPoint、Keynote 和 Google 簡報開啟。', '投影片預設使用簡單的白色範本。要用你自己的範本：在**課表**按 **Use my school’s template…**，選一個有 Title Slide 和 Title and Content 版面配置的 PowerPoint 檔。'] },
     'privacy': { q: '學生作業會離開我的電腦嗎？', words: '隱私 資料保護 個資 雲端 伺服器 安全 privacy',
       a: ['不會。作業、姓名、分數和評語都留在這個瀏覽器和你選擇的資料夾裡。這個程式沒有伺服器，也沒有帳號，沒有網路也能使用。',
         '唯一會離開的，是你自己匯出的檔案。'] },
@@ -6596,15 +6637,15 @@ const HELP = [
     a: ['The Planner holds your units and lessons: a calendar by week or semester, a slide editor that makes PowerPoint files, an activity bank and a rubric bank.', 'It is a separate page, reached from the sidebar. It never reads grading work.'],
     words: 'lessons units calendar slides plan powerpoint' },
   { id: 'timetable', sec: 'plan', where: 'p', q: 'How do I set up my timetable?',
-    a: ['In the Planner, press **Timetable** in the sidebar. Type in your classes, when each one meets, and the days school is closed.', 'Today then shows the classes you teach each day with the lesson planned for each.'],
+    a: ['In the Planner, press **Timetable** in the sidebar. Type in your classes, when each one meets, and the days school is closed. **Save my setup file** at the top keeps all of it, your slide template included, in one file you can load on another computer.', 'Today then shows the classes you teach each day with the lesson planned for each.'],
     words: 'schedule periods classes times calendar holidays' },
   { id: 'present', sec: 'plan', where: 'p', q: 'How do I present a lesson to the class?',
     a: ['Open the lesson in the Planner and press **Present**. Its slides fill the screen; the arrow keys or a clicker move through them. On Today, the class that is on now or next has its own **Present** button.',
       'While presenting: **A** shows the agenda, **T** starts a timer the class can see, **P** picks a student at random, **G** makes groups, **N** shows your notes, **B** blanks the screen and **Esc** finishes.', 'The timer takes minutes and seconds. While it runs, its menu adds or takes away 10 seconds or a minute, pauses, and restarts; **+** and **−** add or take away a minute. Tick **Show it big** to put the countdown in the middle of the screen for the back of the room.', 'Afterwards one line notes where the class got to, and presenting again picks up there.'],
     words: 'slideshow full screen projector teach timer countdown seconds agenda clicker' },
   { id: 'pptx', sec: 'plan', where: 'p', q: 'Can I get my slides as a PowerPoint file?',
-    a: ['Yes. Open the lesson and press **Download .pptx**. The file opens in PowerPoint, Keynote and Google Slides.'],
-    words: 'powerpoint pptx export slides keynote google slides download' },
+    a: ['Yes. Open the lesson and press **Download .pptx**. The file opens in PowerPoint, Keynote and Google Slides.', 'Slides use a plain white template unless you give it your own: in **Timetable**, press **Use my school’s template…** and pick a PowerPoint file with a Title Slide and a Title and Content layout.'],
+    words: 'powerpoint pptx template school master export slides keynote google slides download' },
 
   { id: 'privacy', sec: 'private', q: 'Does student work leave my computer?',
     a: ['No. Papers, names, scores and comments stay in this browser and in the folder you choose. The app has no server and no accounts, and it works with the internet off.',
@@ -7172,7 +7213,7 @@ async function unitsFolderRead() {
   return out;
 }
 
-window.__planner = { bankPut, normRubric, slideHtml, LOOKS, TEACH, TEACH_SAMPLE, versions: versionsOf, ytIds: us => us.map(u => [ytId(u), ytStart(u)]), openLessonForTest: (l, i) => { openLesson(l); goSlide(i || 0); }, L, applySetup, renderLessons, setPicture, folderWriteAll, folderRead, buildPptx, normLesson, deckStart, normUnit, unitPut, unitAt, addUnitFiles, notGradingFolder, unitsFolderRead, semesterMondays, openUnit, docxOf, findAll, copyLesson, packImport, createLesson, lessonText, lessonForFile, pptxToSlides, finUpload, versionsOf, SP, lessonZip, variantsOf, lessonEntries, dlWeek };
+window.__planner = { readTemplate, openTimetable, bankPut, normRubric, slideHtml, LOOKS, TEACH, TEACH_SAMPLE, versions: versionsOf, ytIds: us => us.map(u => [ytId(u), ytStart(u)]), openLessonForTest: (l, i) => { openLesson(l); goSlide(i || 0); }, L, applySetup, renderLessons, setPicture, folderWriteAll, folderRead, buildPptx, normLesson, deckStart, normUnit, unitPut, unitAt, addUnitFiles, notGradingFolder, unitsFolderRead, semesterMondays, openUnit, docxOf, findAll, copyLesson, packImport, createLesson, lessonText, lessonForFile, pptxToSlides, finUpload, versionsOf, SP, lessonZip, variantsOf, lessonEntries, dlWeek };
 openLessons();
 
 })();
