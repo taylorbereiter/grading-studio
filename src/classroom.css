@@ -1,0 +1,17 @@
+/* Bring a class over from Google Classroom: one box, two numbered steps. */
+.dlg .box.gcdlg{width:min(720px,100%)}
+.gcbox{display:flex;flex-direction:column;gap:var(--space-3)}
+.gcbox .gcin{margin:0;font-size:var(--text-body)}
+.gccard{display:flex;gap:var(--space-3);border:1px solid var(--line);border-radius:var(--corner-3);padding:var(--space-3) var(--space-4);background:var(--surface)}
+.gcn{flex:none;width:26px;height:26px;border-radius:var(--corner-round);background:var(--accent);color:var(--accent-fg);font-weight:700;font-size:var(--text-control);display:flex;align-items:center;justify-content:center;margin-top:1px}
+.gcbody{flex:1;min-width:0}
+.gcbody h3{margin:2px 0 6px;font-size:var(--text-lead)}
+.gcsteps{margin:0 0 10px;padding-left:1.25em;font-size:var(--text-body);line-height:1.55}
+.gcrow{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.gcrow .muted{font-size:var(--text-control);overflow-wrap:anywhere;min-width:0}
+.gcsum{margin:12px 0 8px}
+.gcfields{display:flex;gap:var(--space-3);flex-wrap:wrap;align-items:flex-end}
+.gcfields .bkpf{flex:1 1 200px}
+.gcfields .bkin,.gcfields select{width:100%}
+.gcbox .gcnote{margin:8px 0 0;font-size:var(--text-control);line-height:1.5}
+.gcbox #gcErr{margin:10px 0 0}
