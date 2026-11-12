@@ -1,14 +1,11 @@
 {
- "version": "1.27.19",
- "build": "110d3d4d0bc6",
+ "version": "1.27.20",
+ "build": "f87649654fc8",
  "notes": [
-  "Presentations and videos. On an assignment’s card, Add papers… now has No papers: presentations or videos…, which gives every student on the roster a notes page to write on while you watch. Pick lined, your rubric’s rows, two columns or blank.",
-  "On a student’s page, + Add has A video…: paste a link from Google Drive, YouTube or anywhere else, and tick the partners in it. One set of notes and one grade covers the group. Only the link is kept, so the video stays where it is.",
-  "Play here shows the video above the notes page; Open in its own window puts it beside the app. + Add also has A notes page… for one more page at any time.",
-  "Clips: under a video, + Clip saves a part worth showing, as a start time, an end time and a title. Show to the class plays it full screen with the title and without the student’s name, and Clips to show the class under Setup plays them one after another."
+  "Feedback-only work no longer says 0 of 20 scored. A formative activity counts the students whose feedback is complete, on its card, in Find, Today, To do, the Grades box and the grade sheet, and says Ready to return once everyone has feedback."
  ],
  "files": {
-  "index.html": "02a49b6541f41104cf367bf34a2e69669041f03446f295b0012c3b4e1250a885",
+  "index.html": "0bd88f5934a458055e1762a1e0d776831666c5d7724a78c852c6272f78caa0a1",
   "planner.html": "5b7c193698dfd27caaeca51332183a16656903b387027639fceb145b5e383167"
  }
 }

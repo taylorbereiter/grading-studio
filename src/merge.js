@@ -381,14 +381,16 @@ function mergeEdits(aEd = {}, bEd = {}, work, rows, prefer) {
 // How a saved download's scores stand, counted the way the Grades list counts them. Missing and excused have no number, and a partial isn't finished.
 function workCounts(work) {
   const su = work.setup || {}, s = work.s || {}, read = work.read || {}, blank = v => v == null || v === '';
-  const out = { scored: 0, partial: 0, off: 0 };
+  const out = { scored: 0, partial: 0, off: 0, fb: 0 };   // fb: Feedback complete switched on, what a formative activity counts in place of scores
   for (const k of new Set([...Object.keys(s), ...Object.keys(read)])) {
     const g = (s[k] && s[k].g) || {}, r = g.rubric || [], rows = su.criteria ? su.criteria.map((_, i) => r[i]) : r, on = rows.filter(v => v != null).length;
+    if (g.status !== 'missing' && g.status !== 'excused' && g.fb) out.fb++;
     if (g.status === 'missing' || g.status === 'excused') out.off++;
     else if (su.mode === 'points' ? !blank(g.points) && !isNaN(+g.points) : on === rows.length && on) out.scored++;
     else if (su.mode !== 'points' && on) out.partial++;
     else if ((!blank(g.sheet) && !isNaN(+g.sheet)) || read[k]) out.scored++;
   }
+  if (!out.fb) delete out.fb;   // kept only when there is some, so work with no Feedback complete is stored as before
   if (work.returned) out.ret = work.returned.t;   // the marked files went back to the students
   return out;
 }
@@ -398,6 +400,7 @@ function metaFor(ma, mb, work, id) {
   if (!m.name) m.name = 'A download';   // work from before the list of downloads was kept says nothing about its name
   if (work) {
     m.t = work.t || m.t;
+    delete m.fb;
     Object.assign(m, workCounts(work));
     if (!work.returned) delete m.ret;
     m.n = Math.max(m.n || 0, Object.keys(work.s || {}).length);

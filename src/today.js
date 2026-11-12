@@ -77,15 +77,15 @@ const keptName = m => m.papers ? '<button class="kname" data-kopen="' + esc(m.id
 function markRow(m, prim) {
   const st = keptState(m), w = keptWhere(m), fm = w.it && w.it.type === 'fm', began = st.done || m.partial;
   const sub = [w.cls ? w.cls.name : '', w.it && w.it.due ? 'due ' + bkDay(w.it.due) : 'last worked on ' + fmtDay(m.t), m.papers ? '' : 'papers not kept, drop the download again'].filter(Boolean).join(' · ');
-  const say = fm ? 'Formative · feedback only' : began ? st.done + ' of ' + st.of + ' scored' + keptMore(m) : st.of + (st.of === 1 ? ' paper' : ' papers') + ', not started' + (m.off ? ' · ' + m.off + ' missing or excused' : '');
+  const say = fm ? 'Formative · feedback only' + (st.done ? ' · ' + keptSay(m, st) : st.of ? ' · ' + people(st.of, 'paper') + ', not started' : '') : began ? st.done + ' of ' + st.of + ' scored' + keptMore(m) : st.of + (st.of === 1 ? ' paper' : ' papers') + ', not started' + (m.off ? ' · ' + m.off + ' missing or excused' : '');
   return '<div class="krow"><div class="kn">' + keptName(m) + '<span class="ks">' + esc(sub) + '</span></div>' +
-    '<div class="kp">' + (fm ? '' : stateBar(st)) + '<span class="kl">' + esc(say) + '</span></div>' +
+    '<div class="kp">' + stateBar(st) + '<span class="kl">' + esc(say) + '</span></div>' +
     (m.papers ? '<button class="btn sm' + (prim ? ' primary' : '') + '" data-kopen="' + esc(m.id) + '">' + (began || fm ? 'Continue' : 'Start') + '</button>' : '<span></span>') + keptDots(m) + '</div>';
 }
 function oldRow(m) {
   const st = keptState(m), w = keptWhere(m), stale = m.newer && keptMeta.has(m.newer);
   const sub = [w.cls ? w.cls.name : '', stale ? 'an older copy: your work went on in a newer one' : m.ret ? 'returned ' + fmtDay(m.ret) : 'last worked on ' + fmtDay(m.t),
-    st.of ? st.done + ' of ' + st.of + ' scored' + keptMore(m) : '', m.papers ? '' : 'papers not kept, drop the download again'].filter(Boolean).join(' · ');
+    st.of ? keptSay(m, st) : '', m.papers ? '' : 'papers not kept, drop the download again'].filter(Boolean).join(' · ');
   return '<div class="krow old"><div class="kn">' + keptName(m) + '<span class="ks">' + esc(sub) + '</span></div>' + keptDots(m) + '</div>';
 }
 // What a finished set of papers says about the class: the average of each paper's percent, and each rubric row's average. Read from the
@@ -118,7 +118,7 @@ function backHtml(list, prim) {
   if (!list.length) return '';
   return '<h2 class="tcap">Ready to hand back</h2><div class="tcard">' + list.map(m => {
     const st = keptState(m), w = keptWhere(m), s = statOf(m);
-    const sub = [w.cls ? w.cls.name : '', (st.of === 1 ? 'the one paper' : 'all ' + st.of) + ' scored', s && s.avg != null ? 'average ' + s.avg + '%' : '', m.papers ? '' : 'papers not kept, drop the download again'].filter(Boolean).join(' · ');
+    const sub = [w.cls ? w.cls.name : '', (st.of === 1 ? 'the one paper' : 'all ' + st.of) + ' ' + st.word, s && s.avg != null ? 'average ' + s.avg + '%' : '', m.papers ? '' : 'papers not kept, drop the download again'].filter(Boolean).join(' · ');
     return '<div class="krow back"><div class="kn">' + keptName(m) + '<span class="ks">' + esc(sub) + '</span></div>' + keptDots(m) + (m.papers ? '<div class="kact"><a class="btn sm' + (prim && m === list.find(x => x.papers) ? ' primary' : '') + '" href="' + batchHash(m.id, 'return') + '" data-kret="' + esc(m.id) + '">Return papers</a></div>' : '') + '</div>';
   }).join('') + '</div>';
 }
