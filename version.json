@@ -1,6 +1,6 @@
 {
  "version": "1.27.18",
- "build": "78920ea9e62b",
+ "build": "397644d4e0bd",
  "notes": [
   "The app no longer assumes your AI assistant is Claude. Settings, Working with AI lets you pick Claude, ChatGPT, Gemini, Copilot, another name, or none, and buttons and hints use that name. If you already used the app, yours stays Claude.",
   "Planner, Timetable has a Slides section: the agenda on slide 2 and keeping text between 28 and 36 pt are both on, and each can be turned off.",
@@ -8,6 +8,6 @@
  ],
  "files": {
   "index.html": "3703b50212dcc79959cfce6f893cf4b494bda4ddf8ce2bd0e5657c890bd5ff7e",
-  "planner.html": "bf906268b9e51e0784175fdb04823bf157b52a9d2a9151c849393aa58227b6fe"
+  "planner.html": "3a7d14118d2b71771257ab6b9b91a72264fc1414671eec022eb28a14c27582c6"
  }
 }
