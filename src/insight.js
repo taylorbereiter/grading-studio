@@ -66,16 +66,20 @@ function paperReads() {
 }
 // A saved score, worked out by the rubric and scale that download had, in the order the app uses: her own score, then one typed on the Grade sheet, then one read off the paper. Nothing in it depends on what's open now.
 function pastScore(su, g) {
-  const s = { ...DEFAULT_SETUP, ...su }, rub = s.mode === 'rubric';
+  const s = setupOver(su), rub = s.mode === 'rubric';
   if (g.status === 'missing' || g.status === 'excused') return { total: null, pct: null, status: g.status, rows: [] };
   const r = g.rubric || [];
-  let max = rub ? s.criteria.length * 4 : +s.outOf || 0, total = null, partial = false, paper = false;
+  let max = setupMax(s), total = null, partial = false, paper = false;
   if (rub) { const v = s.criteria.map((_, i) => r[i]); if (v.some(x => x != null)) { total = v.reduce((a, x) => a + (x || 0), 0); partial = v.some(x => x == null); } }
   else if (g.points !== '' && g.points != null && !isNaN(+g.points)) total = +g.points;
   if (total == null && hasSheet(g) && !isNaN(+g.sheet)) { total = +g.sheet; paper = true; }
   let pct = percentWith(total, max, s.scale);
-  if (total == null && g.read) { const d = g.read; paper = true; total = d.score; if (d.outOf != null) max = d.outOf; pct = d.pct != null ? d.pct : percentWith(total, max, s.scale); }
-  return addXc({ total, max, pct, partial, paper, status: g.status || '', rows: rub ? s.criteria.map((c, i) => [c, r[i]]).filter(x => x[1] != null) : [] }, g.xc, max, g.xcU);
+  if (total == null && g.read && !(g.tries && g.tries.length)) { const d = g.read; paper = true; total = d.score; if (d.outOf != null) max = d.outOf; pct = d.pct != null ? d.pct : percentWith(total, max, s.scale); }
+  const one = addXc({ total, max, pct, partial, paper, status: g.status || '', rows: rub ? s.criteria.map((c, i) => rowTop(s, i) === ROW_TOP ? [c, r[i]] : [c, r[i], rowTop(s, i)]).filter(x => x[1] != null) : [] }, g.xc, max, g.xcU);
+  if (!g.tries || !g.tries.length) return one;
+  const out = withTries(one, g.tries, max, one.total != null && !partial);   // a retake: the try that counts by the teacher's rule (start.js)
+  if (out.outOf != null) { out.max = out.outOf; delete out.outOf; }
+  return out;
 }
 // The class a saved download belongs to: its assignment card's, else what it saved, else the roster naming at least half its students (the rule the app itself opens with).
 function pastClass(d, m) {
@@ -249,18 +253,18 @@ function consData() {
 }
 // Each rubric row on its own, in the order that row was scored. Several rows mean several chances to see something by chance, so the bar is higher per row.
 function rowDrifts() {
-  const max = 4, cut = 0.05 / setup.criteria.length;
+  const cut = 0.05 / setup.criteria.length;
   return setup.criteria.map((name, r) => {
     const pts = [];
     for (const st of batch.students) { const v = st.grade.rubric[r], t = st.grade.atR && st.grade.atR[r]; if (!noScore(st) && !st.grade.outAvg && v != null && t) pts.push({ v, t }); }
     const { out } = dropBatched(pts.sort((a, b) => a.t - b.t));
-    return { name, read: driftRead(out.map(p => p.v), max, cut) };
+    return { name, top: rowTop(setup, r), read: driftRead(out.map(p => p.v), rowTop(setup, r), cut) };
   });
 }
 function rowSay(rows) {
   if (setup.mode !== 'rubric' || rows.length < 2) return '';
   if (!rows.some(x => x.read.n >= DRIFT_SURE)) return '<p class="muted hsm">Rubric rows aren’t read one by one with fewer than ' + DRIFT_SURE + ' papers: each row is too noisy on its own.</p>';
-  return '<ul class="crows">' + rows.map(({ name, read: r }) => '<li><b>' + esc(name) + ':</b> ' + (r.n < DRIFT_SURE ? 'too few papers with a time' : r.level === 'none' ? 'no clear change' : 'later papers ' + (r.gap < 0 ? 'lower' : 'higher') + ', by about ' + roughGap(r, 4)) + '</li>').join('') + '</ul>';
+  return '<ul class="crows">' + rows.map(({ name, top, read: r }) => '<li><b>' + esc(name) + ':</b> ' + (r.n < DRIFT_SURE ? 'too few papers with a time' : r.level === 'none' ? 'no clear change' : 'later papers ' + (r.gap < 0 ? 'lower' : 'higher') + ', by about ' + roughGap(r, top || ROW_TOP)) + '</li>').join('') + '</ul>';
 }
 const ordinal = n => { const t = n % 100, u = n % 10; return n + (t > 10 && t < 14 ? 'th' : u === 1 ? 'st' : u === 2 ? 'nd' : u === 3 ? 'rd' : 'th'); };
 const whenLabel = t => new Date(t).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
@@ -481,4 +485,4 @@ function bringBackNotes(fb, byCode) {
 }
 document.addEventListener('click', e => { const b = e.target.closest('[data-bbmore]'); if (b) copy('Please continue with feedback for these codes, in the same format: ' + b.dataset.bbmore, 'Copied. Paste it into Claude.'); });
 
-Object.assign(window.__gs, { nameFit, nameNear, rosterPairs, pastScore, histFind, histFill, driftRead, driftSay, dropBatched, consData, openCons, openSame, coverList, coverOk, coverLine, coverFirst, checkCovers, SHARE_ASK, nameFreeText, paperReads });
+Object.assign(window.__gs, { nameFit, nameNear, rosterPairs, pastScore, tryGrade, retakeStart, retakeOff, tryOfFile, retakeRule, histFind, histFill, driftRead, driftSay, dropBatched, consData, openCons, openSame, coverList, coverOk, coverLine, coverFirst, checkCovers, SHARE_ASK, nameFreeText, paperReads });

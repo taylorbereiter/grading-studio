@@ -41,7 +41,18 @@ async function seed(page, opts) {
   }, opts || {});
 }
 const state = page => page.evaluate(() => { const p = window.__present.PR; return { on: p.on, i: p.i, far: p.far, ended: p.ended, blank: p.blank, agenda: p.agenda, notes: p.notes, ticks: [...(p.ticks || [])], slot: p.slot }; });
-const present = async page => { await page.$eval('[data-pr="present"]', b => b.click()); await until(page, s => !!document.querySelector(s), '#present'); };
+// Waits until the stage has finished starting (it may still be going full screen), so the keys that follow land on it.
+const present = async page => { await page.$eval('[data-pr="present"]', b => b.click()); await until(page, () => { const h = document.querySelector('#present #prHint'); return !!(h && h.textContent); }); };
+// Ticks an agenda item and waits until the stage has it ticked; a click lost to a slow runner is made again.
+const tick = async (page, i) => {
+  for (let n = 0; n < 5; n++) {
+    await until(page, k => !!document.querySelector('#prAgenda [data-ag="' + k + '"]'), i);
+    if (await page.evaluate(k => window.__present.PR.ticks.has(k), i)) return;
+    await page.$eval('#prAgenda [data-ag="' + i + '"]', b => b.click());
+    try { await until(page, k => window.__present.PR.ticks.has(k) && document.querySelector('#prAgenda [data-ag="' + k + '"]').getAttribute('aria-pressed') === 'true', i); return; } catch { }
+  }
+  throw new Error('agenda item ' + i + ' would not tick');
+};
 
 test('Present shows the lesson on the whole screen, and the keys run it', async () => {
   const a = await open();
@@ -163,11 +174,45 @@ test('a timer the class can see counts down, pauses, and says when the time is u
     await page.keyboard.press('ArrowRight'); await wait(1300);
     assert.equal(await page.$eval('#prChip', c => c.textContent), held);
     assert.equal((await state(page)).i, 1);
-    // the menu now runs the timer: one more minute, then stop
+    // the menu now runs the timer: one more minute, ten seconds less, + and − by the minute, back to the start, then stop
     await page.keyboard.press('t');
-    await page.$eval('#prMenu [data-p="tadd"]', b => b.click());
-    assert.match(await page.$eval('#prChip', c => c.textContent), /^(6:00|5:59|5:58)Paused$/);
+    assert.match(await page.$eval('#prMenu h3', h => h.textContent), /started at 5:00/);
+    await page.$eval('#prMenu [data-ta="60"]', b => b.click());
+    const sec = () => page.$eval('#prChip', c => { const m = c.textContent.match(/^(\d+):(\d\d)/); return +m[1] * 60 + +m[2]; });
+    const t0 = await sec();
+    assert.ok(t0 >= 358 && t0 <= 360, 'one minute more: ' + t0);
+    await page.$eval('#prMenu [data-ta="-10"]', b => b.click());
+    assert.equal(await sec(), t0 - 10);
+    await page.keyboard.press('-');
+    assert.equal(await sec(), t0 - 70);
+    await page.keyboard.press('+');
+    assert.equal(await sec(), t0 - 10);
+    assert.match(await page.$eval('#prChip', c => c.textContent), /Paused$/, 'still paused after the changes');
+    await page.$eval('#prMenu [data-p="trestart"]', b => b.click());
+    assert.match(await page.$eval('#prChip', c => c.textContent), /^(5:00|4:59)$/, 'restart goes back to 5:00, running');
+    // big in the middle of the screen, and the choice is kept
+    await page.$eval('#prBigC', c => c.click());
+    assert.equal(await page.$eval('#prChip', c => c.classList.contains('big')), true);
+    assert.equal(await page.evaluate(() => localStorage.getItem('gsp.presentBig')), '1');
+    await page.$eval('#prBigC', c => c.click());
+    assert.equal(await page.$eval('#prChip', c => c.classList.contains('big')), false);
     await page.$eval('#prMenu [data-p="tstop"]', b => b.click());
+    // minutes and seconds typed in: 1 min 45 sec, and the menu remembers it next time
+    assert.equal(await page.$eval('#prMenu [data-ts]', b => b.textContent), '0:30');
+    await page.$eval('#prOwn', i => { i.value = '1'; }); await page.$eval('#prOwnS', i => { i.value = '45'; });
+    await page.$eval('#prMenu [data-p="town"]', b => b.click());
+    assert.match(await page.$eval('#prChip', c => c.textContent), /^(1:45|1:44)$/);
+    assert.equal(await page.evaluate(() => localStorage.getItem('gsp.presentOwn')), '105');
+    await page.keyboard.press('t');
+    await page.$eval('#prMenu [data-p="tstop"]', b => b.click());
+    assert.deepEqual(await page.$eval('#prOwn', i => i.value), '1');
+    assert.deepEqual(await page.$eval('#prOwnS', i => i.value), '45');
+    // taking away more than is left ends it
+    await page.$eval('#prMenu [data-ts]', b => b.click());
+    await page.keyboard.press('-');
+    await until(page, () => /Time’s up/.test(document.querySelector('#prChip').textContent));
+    await page.$eval('#prChip', c => c.click());
+    await page.keyboard.press('t');
     assert.equal(await page.$eval('#prChip', c => c.hidden), true);
     await page.keyboard.press('Escape');   // closes the menu, not the lesson
     assert.equal((await state(page)).on, true);
@@ -199,14 +244,18 @@ test('after a lesson is taught, one line says where the class got to, and it sta
     await page.keyboard.press('a'); await page.keyboard.press('ArrowRight'); await page.keyboard.press('ArrowRight'); await page.keyboard.press('ArrowLeft');
     // a look of a few seconds asks nothing
     await page.keyboard.press('Escape');
-    await until(page, () => !document.querySelector('#present'));
+    await until(page, () => !document.querySelector('#present') && !document.fullscreenElement && !window.__present.PR.on);
     assert.equal(await page.$eval('#dlg', d => d.hidden), true);
     // a lesson that ran: the question comes with the furthest slide already picked
     await page.evaluate(() => window.__planner.openLessonForTest(window.__planner.L.open, 0));
     await present(page);
     for (let i = 0; i < 3; i++) await page.keyboard.press('ArrowRight');
-    await page.keyboard.press('ArrowLeft'); await page.keyboard.press('a');
-    await page.$eval('#prAgenda [data-ag="0"]', b => b.click()); await page.$eval('#prAgenda [data-ag="1"]', b => b.click());
+    await page.keyboard.press('ArrowLeft');
+    await until(page, () => window.__present.PR.i === 2 && window.__present.PR.far === 3);
+    await page.keyboard.press('a');
+    await until(page, () => window.__present.PR.agenda);
+    await tick(page, 0); await tick(page, 1);
+    assert.deepEqual(await page.evaluate(() => [...window.__present.PR.ticks].sort()), [0, 1], 'two agenda items ticked before finishing');
     await page.evaluate(() => { window.__present.PR.began -= 10 * 60 * 1000; });
     await page.keyboard.press('Escape');
     await until(page, s => !!document.querySelector(s), '#tgN');
@@ -294,6 +343,63 @@ test('planner.html#present/<lesson>/<class> opens the lesson presenting, for the
     await page.keyboard.press('Escape');
     await until(page, () => !document.querySelector('#present'));
     assert.equal(await page.evaluate(id => window.__planner.L.open && window.__planner.L.open.id === id, id), true, 'finishing lands in the lesson');
+    assert.deepEqual(a.errors, []);
+  } finally { await a.done(); }
+});
+
+test('while presenting, P picks a student from the class being taught and G deals groups; the names are shown and never kept', async () => {
+  const a = await open();
+  try {
+    const { page } = a, A1 = ['Aria Testwell', 'Bram Sample', 'Cleo Fixture', 'Dov Madeup'], A2 = ['Nia Elsewhere', 'Omar Stand-in'];
+    const { id } = await seed(page);
+    // no rosters yet (the grading page has no class with students): P says so and the slides stay
+    await page.$eval('.ls-go[data-id="' + id + '"], [data-pr="present"]', b => b.click());
+    await until(page, s => !!document.querySelector(s), '#present');
+    assert.ok(await page.$('#present [data-p="pick"]') && await page.$('#present [data-p="groups"]'), 'the bar has Pick a name and Groups');
+    await page.keyboard.press('p');
+    assert.match(await page.$eval('#prHint', h => h.textContent), /No rosters yet/);
+    assert.equal(await page.$('#pkStage'), null);
+    // the grading page's copy of the rosters. Its class is "Course A1"; the timetable's is "Course A-1": the same class.
+    await page.evaluate((A1, A2) => { localStorage.setItem('gs.rolls', JSON.stringify([['Course A2', A2], ['Course A1', A1]])); window.__pick.PK.fast = true; }, A1, A2);
+    await page.keyboard.press('p'); await until(page, s => !!document.querySelector(s), '#pkName.done');
+    assert.equal((await state(page)).slot.classId, 'A1');
+    assert.equal(await page.$eval('#pkClass', s => s.options[s.selectedIndex].textContent), 'Course A1');
+    const got = [await page.$eval('#pkName', e => e.textContent)];
+    for (let i = 0; i < 3; i++) { await page.keyboard.press('Space'); got.push(await page.$eval('#pkName', e => e.textContent)); }
+    assert.deepEqual(got.slice().sort(), A1.slice().sort(), 'four picks, the four students of the class being taught');
+    assert.equal((await state(page)).i, 0, 'Space picked again; the slide did not move');
+    // groups, in pairs
+    await page.keyboard.press('g'); await until(page, s => !!document.querySelector(s), '#pkGroups');
+    await page.keyboard.press('2');
+    const groups = await page.$$eval('.pk-g', g => g.map(x => [...x.querySelectorAll('div')].map(d => d.textContent)));
+    assert.deepEqual(groups.map(g => g.length), [2, 2]); assert.deepEqual(groups.flat().sort(), A1.slice().sort());
+    // a click on it is not a click on the slide
+    await page.$eval('.pk-g', g => g.click());
+    assert.equal((await state(page)).i, 0);
+    // the other class can be chosen
+    await page.select('#pkClass', '0');
+    assert.deepEqual((await page.$$eval('.pk-g div', d => d.map(x => x.textContent))).sort(), A2.slice().sort());
+    // Escape closes it and the lesson is still on; the keys are the slides' again
+    await page.keyboard.press('Escape');
+    assert.equal(await page.$('#pkStage'), null);
+    assert.equal((await state(page)).on, true);
+    await page.keyboard.press('ArrowRight');
+    assert.equal((await state(page)).i, 1);
+    // opened from the bar, and finishing the lesson closes it too
+    await page.$eval('#present [data-p="groups"]', b => b.click()); await until(page, s => !!document.querySelector(s), '#pkGroups');
+    await page.evaluate(() => window.__present.end());
+    await until(page, () => !document.querySelector('#present'));
+    assert.equal(await page.$('#pkStage'), null);
+    // no student's name is in the lesson, or anywhere in the Planner's own storage
+    const kept = await page.evaluate(async () => {
+      const P = window.__planner, db = await new Promise((ok, no) => { const r = indexedDB.open('gs-lessons'); r.onsuccess = () => ok(r.result); r.onerror = () => no(r.error); });
+      let all = JSON.stringify(P.L.lessons);
+      for (const s of [...db.objectStoreNames]) all += JSON.stringify(await new Promise((ok, no) => { const r = db.transaction(s).objectStore(s).getAll(); r.onsuccess = () => ok(r.result); r.onerror = () => no(r.error); }));
+      db.close();
+      for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k !== 'gs.rolls') all += localStorage.getItem(k); }
+      return all;
+    });
+    for (const n of [...A1, ...A2]) assert.ok(!kept.includes(n) && !kept.includes(n.split(' ')[1]), n + ' is not kept by the Planner');
     assert.deepEqual(a.errors, []);
   } finally { await a.done(); }
 });

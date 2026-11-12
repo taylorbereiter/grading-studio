@@ -1,7 +1,56 @@
 {
-  "1.24.0": [
+  "1.27.5": [
     "The gradebook can import your old scores: press Import… and choose a CSV or Excel file, or paste the cells. Each column becomes an assignment, matched to your roster.",
     "You see everything before it is saved, and a score already in the gradebook stays unless you choose the file’s."
+  ],
+  "1.27.4": [
+    "School is a new page in the sidebar for the things about your school you look up again and again: the handbook, the calendar, the bell schedule, portals, forms, who to call.",
+    "Add a link, a file (a copy is kept with your work) or a note. Name your own groups, and star the ones you open most to keep them along the top.",
+    "Drop files on the page or paste a web address. Find anything lists every resource. They are kept in your folder and take-home file, and stay when you start a new school year."
+  ],
+  "1.27.3": [
+    "The class timer in Present takes minutes and seconds: type them in, or pick 0:30 and the other quick times. The menu remembers the last time you typed.",
+    "While it runs, the timer's menu adds or takes away 10 seconds or a minute, pauses, and restarts from the time you set. + and − add or take away a minute without opening the menu.",
+    "Tick Show it big to put the countdown in the middle of the screen, large enough for the back of the room."
+  ],
+  "1.27.2": [
+    "In the gradebook, in-class assessments are now on the left and summatives on the right: the columns, the averages beside the term grade, and wherever you choose a type.",
+    "The order is yours to change. In Term setup, the arrows beside each type move it, and the gradebook's columns follow from left to right.",
+    "You can make your own assignment types. In Term setup, rename a type or press + Add a type (Homework, Projects, Quizzes), and give each its share of the grade. Your own setup stays as it is until you change it."
+  ],
+  "1.27.1": [
+    "Undo now takes back a score as well as a mark: press Ctrl Z (⌘Z on a Mac) after a slip on a slider, a number key, or Missing, Excused or Late. Redo puts it back.",
+    "Deleting a unit, an assignment or a class shows Undo for a few seconds, and Undo puts it back where it was.",
+    "“Picked up where you left off” shows once, when you open an assignment, and no longer on Today or other pages. The note about what opened leaves by itself when you move to the next student, if every file opened.",
+    "The Next button stays in one place from student to student, and the Grade heading on a class’s Students tab is drawn properly.",
+    "Find anything answers to more everyday words: export, hand back, backup, undo, shortcuts, csv."
+  ],
+  "1.27.0": [
+    "Start a new school year, in Settings, Saving and carrying. Your classes, units and assignment cards carry on, each card with its rubric and Quick mark boxes, with empty class lists and dates a year later.",
+    "This year goes into one protected file first, and the file is checked before anything is cleared. Open an archived year brings a year back from its file."
+  ],
+  "1.26.2": [
+    "Rubric rows can be scored on your own scale. They start at 0 to 4 with half points, as before; when you set up an assignment you can pick any top from 1 to 10 and turn half points off.",
+    "Settings, Grading: choose the row scale new assignments start with. Assignments you already have keep theirs."
+  ],
+  "1.26.1": [
+    "Activities: See, think, wonder now says it comes from Project Zero at the Harvard Graduate School of Education."
+  ],
+  "1.26.0": [
+    "Seating: a new tab on each class. Pick how the room is set up, drag students to desks, and Shuffle gives everyone a new seat. A student can be kept in their seat.",
+    "Pick a name shows one student at random, and nobody twice until everyone has had a turn. Make groups deals the class into groups of any size.",
+    "While presenting a lesson, P picks a name and G makes groups. Who’s here leaves out anyone who is away today."
+  ],
+  "1.25.0": [
+    "Attendance. Each class has an Attendance tab: everyone starts as present, so a day is one press for each student who is late, excused or absent, with a note if you want one.",
+    "Look back shows every saved day in one table with each student’s totals, and a student’s own page lists the days they missed.",
+    "Copy a day, or download the table as a spreadsheet, for your school’s system. Today has a line for it under each class.",
+    "If you don’t take attendance here, turn it off in Settings, Classes and rosters."
+  ],
+  "1.24.0": [
+    "Retakes: a second try at the same assignment keeps the first try's score, comment and paper. Start one from the ⋯ beside Missing, Excused and Late on a paper.",
+    "You choose which try counts, for all your classes: the highest (to begin with), the latest, or the average. It is in the retake box and in the gradebook's Term setup.",
+    "A score typed into the gradebook takes a retake too: type both, like 7 > 10."
   ],
   "1.23.0": [
     "Scores by learning goal, if you want them. Keep your own list of goals (a skill, or a standard from your school) in Settings, Grading, or add one wherever you tag.",

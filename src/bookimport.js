@@ -133,12 +133,21 @@ function bkiRead(rows) {
     if (!max) { if (pcts >= good.filter(c => c.v != null).length || top > 20) { pct = true; how = pcts ? 'cells' : 'guess'; } else if (top > 0) { max = Math.ceil(top); how = 'guess'; } else { pct = true; how = 'guess'; } }
     const name = h.replace(/\s*(?:\(\s*\d+(?:\.\d+)?\s*(?:pts?|points?|marks?)?\s*\)|\/\s*\d+(?:\.\d+)?|out of\s*\d+(?:\.\d+)?)\s*$/i, '').trim() || h;
     const due = bkiDate(dueRow ? dueRow[i] : '') || bkiDate(h);
-    cols.push({ i, head: h, name, max, pct, how, due, on: !BKI_SUM.test(h), type: /\b(test|exam|essay|summative|project|final|unit\s*assessment|lab report)\b/i.test(h) ? 'sum' : 'ic',
+    cols.push({ i, head: h, name, max, pct, how, due, on: !BKI_SUM.test(h), type: bkiGuess(h),
       bad: filled.length - good.length });
   });
   return { students: body.map(r => ({ name: nameOf(r), cells: r })), cols };
 }
 
+// A type for a column from its heading, among the teacher's own types: one whose name is in the heading, else a test-like heading is a
+// summative and anything else in-class, when those types are on the list, else the first type that takes a score.
+function bkiGuess(h) {
+  const cats = bkCats(), low = h.toLowerCase(), named = cats.find(([t, l, s]) => t !== 'fm' && [l, s].some(x => x && x.length > 2 && low.includes(x.toLowerCase())));
+  if (named) return named[0];
+  if (/\b(test|exam|essay|summative|project|final|unit\s*assessment|lab report)\b/i.test(h) && bkIsType('sum')) return 'sum';
+  if (bkIsType('ic')) return 'ic';
+  const sc = cats.find(([t]) => t !== 'fm'); return (sc || cats[0] || ['ic'])[0];
+}
 /* ---------- the screen ---------- */
 let bki = null;
 function bkImportView() {
@@ -214,7 +223,7 @@ function bkiDraw() {
   const units = c.units, plan = bkiPlan(), clashes = plan.reduce((a, p) => a + p.clash.length, 0);
   const matched = d.students.map((s, i) => bkiWho(s, i)).filter(Boolean), unmatched = d.students.map((s, i) => [s, i]).filter(([s, i]) => !bkiWho(s, i));
   const taken = new Set(matched), absent = c.names.filter(n => !taken.has(n));
-  const typeSel = col => '<select class="btn sm" data-bkitype="' + col.i + '" aria-label="Type">' + BK_TYPES.map(([t, , s]) => '<option value="' + t + '"' + (col.type === t ? ' selected' : '') + '>' + s + '</option>').join('') + '</select>';
+  const typeSel = col => '<select class="btn sm" data-bkitype="' + col.i + '" aria-label="Type">' + bkCats().map(([t, , s]) => '<option value="' + t + '"' + (col.type === t ? ' selected' : '') + '>' + s + '</option>').join('') + '</select>';
   const scale = col => {
     const f = bkiFixed(col);
     if (f !== undefined) return '<span class="muted">' + (f ? 'Points out of ' + fmtNum(f) : 'Percent') + ', as it is now</span>';

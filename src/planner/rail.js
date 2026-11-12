@@ -68,6 +68,7 @@ function findRows() {
   add('Go to', 'Past lessons', 'Old decks and their handouts, to use again', () => toView('library'));
   add('Go to', 'Activities', 'The activity bank', () => toView('activities'));
   add('Go to', 'Rubrics', 'Saved rubrics and grading scales', () => toView('bank'));
+  add('Go to', 'School resources', 'Links, files and notes about your school, on the grading page', () => leaveTo(gsUrl('#/school')));
   add('Go to', 'Settings', 'Saving, classes, display and keys, on the grading page', () => leaveTo(gsUrl('#/settings')));
   add('Go to', 'Help', 'Short answers to common questions', () => leaveTo(gsUrl('#/help')));
   for (const c of (L.setup && L.setup.classes) || []) add('Classes', c.name, 'Its assignments, gradebook and students', () => leaveTo(classUrl(c)));

@@ -164,3 +164,23 @@ test('a file with no names says so, and Cancel saves nothing', async () => {
   assert.equal((await items(page)).length, 2);
   noErrors(page); await close();
 });
+
+test('the type of each column is one of the teacher’s own gradebook types', async () => {
+  const s = seed(), lib0 = JSON.parse(s.ls['gs.lib']);
+  lib0.book.cats = [{ id: 'sum' }, { id: 'hw', name: 'Homework', k: 2 }, { id: 'fm' }];
+  lib0.book.w = { sum: 60, hw: 40, fm: 0 };
+  s.ls['gs.lib'] = JSON.stringify(lib0);
+  const { page, close } = await openApp(browser, { seed: s });
+  await openImport(page);
+  await paste(page, 'Name\tHomework 3\tQuiz 2\tUnit test\nAria Testwell\t8\t17\t30\n');
+  await page.waitForSelector('.bkitab');
+  assert.deepEqual(await page.$$eval('[data-bkitype="1"] option', o => o.map(x => x.value + ':' + x.textContent)), ['sum:Summative', 'hw:Homework', 'fm:Formative']);
+  assert.deepEqual(await page.$$eval('[data-bkitype]', s => s.map(x => x.value)), ['hw', 'sum', 'sum'], 'named after a type, else the first one that takes a score');
+  await page.select('[data-bkitype="2"]', 'hw');
+  await page.click('[data-bkisave]');
+  await page.waitForSelector('#bkTab');
+  const its = await items(page);
+  assert.equal(its.find(x => x.name === 'Quiz 2').type, 'hw');
+  assert.equal(its.find(x => x.name === 'Homework 3').type, 'hw');
+  noErrors(page); await close();
+});
