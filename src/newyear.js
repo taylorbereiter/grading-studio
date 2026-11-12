@@ -157,7 +157,7 @@ async function nyArchive(year, pass, say) {
   say('Saving ' + year + ' to a file…', 0, total);
   try {
     const size = await takeWrite(sink, pass, n => say('Saving ' + year + ' to a file… ' + fmtSize(n) + (total ? ' of about ' + fmtSize(total) : ''), n, total), null,
-      { info: { kind: 'year', year }, extra: async frame => { want.plan = await nyPlanFrames(frame); } });
+      { info: { kind: 'year', year }, onPlan: n => { want.plan = n; } });
     const file = await sink.file();
     say('Checking the file…', 0, file.size);
     const got = await nyCheck(file, pass, want, n => say('Checking the file… ' + fmtSize(Math.min(n, file.size)) + ' of ' + fmtSize(file.size), n, file.size));

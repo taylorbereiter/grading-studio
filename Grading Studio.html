@@ -2914,7 +2914,7 @@ button.seat[data-n]:hover{border-color:var(--accent)}
         </section>
         <section class="lib setsec" id="setTake" data-sec="saving">
           <div class="lhead"><h2>Take your work with you</h2><span class="sp"></span><button class="btn sm" id="restoreBtn">Bring work in…</button><button class="btn sm primary" id="takeBtn">Take my work with me</button></div>
-          <p class="muted setp">A take-home file carries all your grading work to another computer and back, protected by a passphrase. The Planner’s lessons are not in it.</p>
+          <p class="muted setp">A take-home file carries all your grading work and your Planner to another computer and back, protected by a passphrase.</p>
           <p class="muted" id="backupInfo" style="margin:0;font-size:13px"></p><input type="file" id="restoreIn" accept=".gswork,.zip,application/zip" hidden>
           <div id="safetyList" hidden></div>
         </section>
@@ -4612,7 +4612,10 @@ const LANG_ES = {
         'En Safari y Firefox, que no pueden guardar en una carpeta, crea de vez en cuando un archivo para llevar.'] },
     'other-computer': { q: '¿Cómo llevo mi trabajo a otro ordenador?', go: 'Abrir Ajustes, Guardado', words: 'casa portátil transferir llevar sincronizar segundo ordenador usb',
       a: ['1. En Ajustes, **Saving and carrying**, pulsa **Take my work with me**. Crea un archivo protegido con una frase de contraseña que tú eliges.', '2. Lleva el archivo al otro ordenador.', '3. Allí, pulsa **Bring work in**. Muestra lo que va a cambiar antes de cambiar nada.',
-        'El viaje de vuelta funciona igual. Si el mismo estudiante cambió en los dos sitios, ves las dos versiones y eliges.'] },
+        'El viaje de vuelta funciona igual. Si el mismo estudiante cambió en los dos sitios, ves las dos versiones y eliges. Tu Planificador va también. Un Planificador que ya está en uso solo recibe las lecciones y los archivos que no tiene.'] },
+    'new-address': { q: 'Grading Studio cambió de dirección web. ¿Dónde está mi trabajo?', go: 'Abrir Ajustes, Guardado', words: 'cambió dirección enlace url sitio vacío desaparecido nuevo dominio',
+      a: ['Tu navegador guarda tu trabajo para la dirección que abriste, así que una dirección nueva empieza vacía. No se ha perdido nada: sigue en la dirección anterior.',
+        '1. Abre la dirección anterior. En Ajustes, **Saving and carrying**, pulsa **Take my work with me** y guarda el archivo. Contiene tu trabajo de corrección y tu Planificador.', '2. Abre la dirección nueva.', '3. Allí, en Ajustes, **Saving and carrying**, pulsa **Bring work in** y elige el archivo.'] },
     'new-year': { q: '¿Cómo empiezo un nuevo curso escolar?', go: 'Abrir Ajustes, Guardado', words: 'nuevo curso año escolar archivar empezar de cero septiembre lista vacía',
       a: ['1. En Ajustes, **Saving and carrying**, pulsa **Start a new year**.', '2. Revisa los nombres de los dos cursos y lo que se conserva, elige una frase de contraseña y pulsa **Save the file and start the new year**. Este curso se guarda en un archivo protegido, y el archivo se vuelve a leer y se comprueba antes de borrar nada.',
         'Tus clases, unidades y tarjetas de tareas se quedan, cada tarjeta con su rúbrica y sus casillas de Quick mark, y las fechas avanzan un año. Las listas de clase, los trabajos, las notas y los comentarios salen de este navegador y quedan en el archivo. El Planner avanza sus unidades un año la próxima vez que lo abras.',
@@ -5010,7 +5013,10 @@ const LANG_ZH = {
         'Safari 和 Firefox 無法存到資料夾，請不時製作攜帶檔。'] },
     'other-computer': { q: '怎麼把工作成果帶到另一台電腦？', go: '開啟設定、儲存', words: '家裡 筆電 轉移 帶走 同步 第二台電腦 usb',
       a: ['1. 在設定的 **Saving and carrying** 按 **Take my work with me**。它會建立一個用你自訂的密語保護的檔案。', '2. 把檔案帶到另一台電腦。', '3. 在那裡按 **Bring work in**。它會在更改任何東西之前，先顯示將會改變的內容。',
-        '帶回來的方式也一樣。如果同一位學生在兩邊都有更改，你會看到兩個版本，再由你選擇。'] },
+        '帶回來的方式也一樣。如果同一位學生在兩邊都有更改，你會看到兩個版本，再由你選擇。備課內容也會一起帶走。已經在使用的備課區只會接收它沒有的課程和檔案。'] },
+    'new-address': { q: 'Grading Studio 換了新網址，我的工作成果在哪裡？', go: '開啟設定、儲存', words: '搬家 網址 連結 網站 空白 不見 新網域',
+      a: ['你的工作成果是由瀏覽器依照你開啟的網址保存的，所以新網址一開始是空的。資料沒有遺失，仍然在舊網址。',
+        '1. 開啟舊網址。在設定的 **Saving and carrying** 按 **Take my work with me**，並儲存檔案。它包含你的批改工作和備課內容。', '2. 開啟新網址。', '3. 在那裡的設定 **Saving and carrying** 按 **Bring work in**，並選擇該檔案。'] },
     'new-year': { q: '怎麼開始新的學年？', go: '開啟設定、儲存', words: '新學年 下學年 封存 重新開始 九月 名單 清空',
       a: ['1. 在設定的 **Saving and carrying** 按 **Start a new year**。', '2. 確認兩個學年的名稱和要帶過去的內容，選一個密語，再按 **Save the file and start the new year**。這一學年會存成一個受保護的檔案，而且在清除任何東西之前，會先把檔案讀回來檢查。',
         '你的班級、單元和作業卡片都會保留，每張卡片連同它的評分規準和 Quick mark 框，日期也會往後移一年。班級名單、作業、分數和評語會離開這個瀏覽器，存在檔案裡。下次打開 Planner 時，它會把單元往後移一年。',
@@ -5312,8 +5318,12 @@ const HELP = [
     go: ['Open Settings, Saving', '#/settings'], words: 'save backup folder storage lost cleared safe' },
   { id: 'other-computer', sec: 'safe', q: 'How do I move my work to another computer?',
     a: ['1. In Settings, **Saving and carrying**, press **Take my work with me**. It makes one file protected by a passphrase you choose.', '2. Carry the file to the other computer.', '3. There, press **Bring work in**. It shows what will change before anything does.',
-      'The trip back works the same way. If the same student changed in both places, you see both versions and choose.'],
+      'The trip back works the same way. If the same student changed in both places, you see both versions and choose. Your Planner goes too. A Planner already in use only takes the lessons and files it does not have.'],
     go: ['Open Settings, Saving', '#/settings'], words: 'home laptop transfer take-home sync second computer usb' },
+  { id: 'new-address', sec: 'safe', q: 'Grading Studio moved to a new web address. Where is my work?',
+    a: ['Your work is kept by your browser for the address you opened, so a new address starts empty. Nothing is lost: it is still at the old address.',
+      '1. Open the old address. In Settings, **Saving and carrying**, press **Take my work with me** and save the file. It holds your grading work and your Planner.', '2. Open the new address.', '3. There, in Settings, **Saving and carrying**, press **Bring work in** and choose the file.'],
+    go: ['Open Settings, Saving', '#/settings'], words: 'moved address link url website empty gone missing new site domain' },
   { id: 'new-year', sec: 'safe', q: 'How do I start a new school year?',
     a: ['1. In Settings, **Saving and carrying**, press **Start a new year**.', '2. Check the two years’ names and what carries over, choose a passphrase and press **Save the file and start the new year**. This year goes into one protected file, and the file is read back and checked before anything is cleared.',
       'Your classes, units and assignment cards stay, each card with its rubric and Quick mark boxes, and dates move on a year. Class lists, papers, scores and comments leave this browser for the file. The Planner moves its units on a year the next time you open it.',
@@ -19461,6 +19471,9 @@ async function takeWrite(sink, pass, onp, stop, more) {
   await schReady;   // the files of the school resources (school.js)
   for (const f of schRefs()) { const data = await schBytes(f.hash); if (data) await frame({ k: 'school', hash: f.hash }, data); }
   await exTakeFrames(frame);
+  const planN = await nyPlanFrames(frame);
+  await frame({ k: 'planls', ls: planLs() });
+  if (more && more.onPlan) more.onPlan(planN);
   if (more && more.extra) await more.extra(frame);
   await frame({ k: 'end' });
   await seal(true);
@@ -19537,7 +19550,8 @@ async function takeScan(rd, onp) {
       else if (f.k === 'ex') { if (f.rec && f.rec.id) B.ex[f.rec.id] = f.rec; }
       else if (f.k === 'expix') B.exAt[f.id + '|' + f.i] = { off: pos, n };
       else if (f.k === 'school') B.school[f.hash] = { off: pos, n };
-      else if (f.k === 'plan') (B.plan ||= []).push({ f, off: pos, n });   // the Planner's records, in a year's archive
+      else if (f.k === 'plan') (B.plan ||= []).push({ f, off: pos, n });   // the Planner's records
+      else if (f.k === 'planls') B.planLs = f.ls || {};
       else if (f.k === 'end') ended = true;
       await skipTo(pos + n);
       pos += n;
@@ -19565,6 +19579,7 @@ const takeSource = (rd, B) => ({
     return out;
   },
   async school(hash) { const s = B.school && B.school[hash]; return s ? rd.read(s.off, s.n) : null; },
+  async plan(r) { return r.n ? rd.read(r.off, r.n) : new Uint8Array(0); },
 });
 const TAKE_SAY = {
   notours: 'That isn’t a Grading Studio take-home file.',
@@ -19579,7 +19594,7 @@ const papersLacking = () => [...keptMeta.values()].filter(m => !m.papers).map(m 
 function openTake() {
   if (batch) saveNow();
   openDlg('<div class="bh"><h2>Take my work with me</h2><button class="icon" data-close aria-label="Close">✕</button></div><div class="bb" id="takeBox">' +
-    '<p style="margin-top:0">Makes one protected file with everything you need to grade on another computer: student files, marks, scores, comments, rosters, rubrics, readings, Word edits, added files and strong examples. Planner work stays here.</p>' +
+    '<p style="margin-top:0">Makes one protected file with everything you need to grade on another computer: student files, marks, scores, comments, rosters, rubrics, readings, Word edits, added files and strong examples. Your Planner goes too: lessons, units, timetable and their files.</p>' +
     '<p class="muted" style="font-size:14px">Choose a passphrase of a few words. If you forget it, nobody can open this file, you included, but your work here isn’t affected. Keep the file somewhere private all the same.</p>' +
     passFields() + '<label class="tkf">Again, to be sure<input type="password" id="takeP2" autocomplete="off"></label><p class="tkerr" id="takeErr" role="alert" hidden></p></div>' +
     '<div class="bf"><button class="btn" data-close>Cancel</button><button class="btn primary" id="takeGo">Make the file</button></div>', true);
@@ -19607,7 +19622,7 @@ function openTake() {
       const size = await takeWrite(sink, p1, n => { const b = $('#takeBar'), m = $('#takeMsg'); if (b && total) { b.max = total; b.value = Math.min(n, total); } if (m) m.textContent = 'Packing your work… ' + fmtSize(n) + (total ? ' of about ' + fmtSize(total) : ''); }, () => stopped);
       store.set('gs.lastBackup', Date.now()); renderBackup();
       const lacking = papersLacking();
-      end('Done: <b>' + esc(sink.name) + '</b> (' + fmtSize(size) + '). Open Grading Studio on the other computer and use <b>Bring work in</b>. The same goes for the trip back.' + (lacking.length ? '<br><br><b>Its papers aren’t in the file for: ' + esc(lacking.join(', ')) + '.</b> Only the marks and scores went. You’ll need those downloads on the other computer.' : ''), 'Done');
+      end('Done: <b>' + esc(sink.name) + '</b> (' + fmtSize(size) + '). ' + (movingTo() ? 'Now open the new address, <b>' + esc(movingTo()) + '</b>, and use <b>Bring work in</b> in Settings.' : 'Open Grading Studio on the other computer and use <b>Bring work in</b>. The same goes for the trip back.') + (lacking.length ? '<br><br><b>Its papers aren’t in the file for: ' + esc(lacking.join(', ')) + '.</b> Only the marks and scores went. You’ll need those downloads on the other computer.' : ''), 'Done');
     } catch (er) {
       try { await sink.abort(); } catch {}
       if (er && er.name === 'AbortError') return closeDlg();
@@ -19748,7 +19763,7 @@ async function bringPlan(B) {
 }
 const askSig = a => a.gone ? '!' + a.id + '|' + (a.work && a.work.t) : a.id + '|' + a.key + '|' + recHash(a.a);
 async function bringPreview(B, src, label, sub, again) {
-  const { plan, libm, lsSet } = await bringPlan(B), rows = plan.rows, lines = [], asks = [...plan.asks, ...libm.asks], shown = new Set(asks.map(askSig)), ex = await exBringPlan(B);
+  const { plan, libm, lsSet } = await bringPlan(B), rows = plan.rows, lines = [], asks = [...plan.asks, ...libm.asks], shown = new Set(asks.map(askSig)), ex = await exBringPlan(B), pl = await planBringPlan(B);
   const nw = rows.filter(r => r.kind === 'new'), mg = rows.filter(r => r.kind === 'merge'), gn = rows.filter(r => r.kind === 'gone');
   const li = t => '<li>' + t + '</li>';
   if (nw.length) lines.push('<p><b>' + nw.length + ' new ' + (nw.length === 1 ? 'download' : 'downloads') + '</b></p><ul>' + nw.map(r => li(esc(r.name) + ' <span class="muted">· ' + (r.meta && r.meta.n || Object.keys((r.work && r.work.s) || {}).length) + ' ' + ((r.meta && r.meta.n || Object.keys((r.work && r.work.s) || {}).length) === 1 ? 'student' : 'students') + (r.work ? ', ' + r.meta.scored + ' scored' : '') + (B.papers && B.papers[r.id] ? ', ' + fmtSize(B.papers[r.id].size) : '') + '</span>')).join('') + '</ul>');
@@ -19769,7 +19784,9 @@ async function bringPreview(B, src, label, sub, again) {
   const lsReal = Object.keys(lsSet).filter(k => k !== 'gs.rubricsGone' && /^gs\.(bank|setup|rubrics|school|rp\.|rd\.)/.test(k));
   if (lsReal.length) lines.push('<p><b>Also</b></p><ul>' + (lsSet['gs.bank'] ? li('Saved comments from the other computer are added to yours') : '') + (lsSet['gs.school'] ? li('School resources added or changed on the other computer') : '') + (lsReal.some(k => k !== 'gs.bank' && k !== 'gs.school') ? li('Rubrics or settings you don’t have here yet') : '') + '</ul>');
   if (ex.add || ex.change || ex.drop) lines.push('<p><b>Examples</b></p><ul id="bringEx">' + (ex.add ? li(ex.add + (ex.add === 1 ? ' new example' : ' new examples')) : '') + (ex.change ? li(ex.change + (ex.change === 1 ? ' example was changed' : ' examples were changed') + ' there') : '') + (ex.drop ? li(ex.drop + (ex.drop === 1 ? ' example was deleted there, so it goes here too' : ' examples were deleted there, so they go here too')) : '') + '</ul>');
-  const nothing = !ex.list.length && !nw.length && !gn.some(r => r.onA) && !libm.notes.length && !lsReal.length && !asks.length && !mg.some(r => r.extra || r.setIn.length || r.rows.some(x => x.pick === 'b'));
+  if (pl.n) lines.push('<p><b>Planner</b></p><ul id="bringPlanner">' + (pl.empty ? li('Your Planner comes in' + (pl.lessons ? ': ' + pl.lessons + (pl.lessons === 1 ? ' lesson' : ' lessons') + ', with its units, timetable and files' : ', with its units, timetable and files') + '. Link its folder again in the Planner if you use one.')
+    : (pl.lessons ? li(pl.lessons + (pl.lessons === 1 ? ' lesson' : ' lessons') + ' you don’t have here') : '') + (pl.other ? li(pl.other + (pl.other === 1 ? ' file or setting' : ' files or settings') + ' the Planner here doesn’t have') : '') + li('<span class="muted">Lessons, units and the timetable already in the Planner here stay as they are.</span>')) + '</ul>');
+  const nothing = !pl.n && !ex.list.length && !nw.length && !gn.some(r => r.onA) && !libm.notes.length && !lsReal.length && !asks.length && !mg.some(r => r.extra || r.setIn.length || r.rows.some(x => x.pick === 'b'));
   const sameN = rows.filter(r => r.kind === 'same' || r.kind === 'onlyA').length;
   const need = rows.filter(r => r.kind === 'new').reduce((a, r) => a + ((B.papers && B.papers[r.id] && B.papers[r.id].size) || 0), 0);
   let room = '';
@@ -19826,6 +19843,7 @@ async function bringApply(B0, src, shown, answers) {
       if (r.edits) for (const p of r.edits.fromB) { const rec = await src.edit(r.id, p); if (rec) await kdo('edits', 'readwrite', o => o.put(rec, r.id + '|' + p)); }
     }
     await schBring(src, B);
+    await planTake(B0, src);
     if (libm.toA) { lib = migrateLib(libm.lib); if (!setLibFrom(lib)) throw browserFull(); }
     for (const [k, v] of Object.entries(lsSet)) if (!lsPut(k, v)) throw browserFull();
   } catch (e) {
@@ -19843,6 +19861,45 @@ async function bringApply(B0, src, shown, answers) {
   const v = B.info && B.info.dataV;
   if (!v) store.del('gs.dataV'); else if (v < gsData.version()) store.set('gs.dataV', v);
   return true;
+}
+
+/* the Planner's records, from a file */
+const PLAN_LS_SKIP = /^gsp\.presentTimer$/;
+function planLs() {
+  const o = {};
+  try { for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k && k.startsWith('gsp.') && !PLAN_LS_SKIP.test(k)) o[k] = localStorage.getItem(k); } } catch {}
+  return o;
+}
+async function planBringPlan(B) {
+  const none = { n: 0, lessons: 0, other: 0, empty: false, list: [] };
+  if (!B.plan || !B.plan.length || (B.info && B.info.kind === 'year')) return none;
+  const have = { lessons: new Set(), kv: new Set() }; let units = 0;
+  const db = await planDb(false);
+  if (db) {
+    try {
+      for (const s of ['lessons', 'kv']) for (const k of await idbP(db.transaction(s).objectStore(s).getAllKeys())) have[s].add(k);
+      if (have.kv.has('units')) { const u = await idbP(db.transaction('kv').objectStore('kv').get('units')); units = Array.isArray(u) ? u.length : 0; }
+    } catch (e) { console.error(e); } finally { db.close(); }
+  }
+  const empty = !have.lessons.size && !have.kv.has('setup') && !units;
+  const list = B.plan.filter(r => (r.f.s === 'lessons' || r.f.s === 'kv') && (empty || !have[r.f.s].has(r.f.key)));
+  const lessons = list.filter(r => r.f.s === 'lessons').length;
+  return { n: list.length, lessons, other: list.length - lessons, empty, list };
+}
+async function planTake(B, src) {
+  if (!src.plan) return 0;
+  const pl = await planBringPlan(B); if (!pl.n) return 0;
+  const db = await planDb(true); if (!db) throw new Error('The Planner’s store could not be opened');
+  try {
+    for (const r of pl.list) {   // one record at a time: a Planner can hold big files
+      const f = r.f; let v = f.v;
+      if ('blob' in f) { const bytes = await src.plan(r); v = f.fname ? new File([bytes], f.fname, { type: f.blob || '' }) : new Blob([bytes], { type: f.blob || '' }); }
+      await new Promise((res, rej) => { const tx = db.transaction(f.s, 'readwrite'); if (f.s === 'lessons') tx.objectStore(f.s).put(v); else tx.objectStore(f.s).put(v, f.key); tx.oncomplete = res; tx.onerror = tx.onabort = () => rej(tx.error); });
+    }
+  } finally { db.close(); }
+  for (const [k, v] of Object.entries(B.planLs || {})) { try { if (k.startsWith('gsp.') && !PLAN_LS_SKIP.test(k) && (pl.empty || localStorage.getItem(k) == null)) localStorage.setItem(k, v); } catch {} }
+  try { const ch = new BroadcastChannel('gs-plan-in'); ch.postMessage('in'); ch.close(); } catch {}   // a Planner open in another tab starts again from what is stored now
+  return pl.n;
 }
 
 /* old backup ZIPs */
@@ -19904,7 +19961,7 @@ async function removeHere() {
 }
 $('#takeBtn').onclick = openTake;
 $('#removeBtn').onclick = removeHere;
-Object.assign(window.__gs, { saveLib, reloadKept: loadKept, applyRubricPage, folderTroubleTest: folderTrouble, bank: () => bank, takeWrite, takeOpen, takeScan, bringFile, openTake, removeHere, takeUse: h => { takeSinkFor = h; }, carryLs, localState });
+Object.assign(window.__gs, { saveLib, reloadKept: loadKept, applyRubricPage, folderTroubleTest: folderTrouble, bank: () => bank, takeWrite, takeOpen, takeScan, bringFile, openTake, removeHere, takeUse: h => { takeSinkFor = h; }, carryLs, localState, planBringPlan });
 
 /* ---------------- Quick mark: a paper quiz marked one question at a time, across the class ---------------- */
 const QZ_PAD = 0.012;   // a little room around each box, since scans sit a bit differently
@@ -25819,7 +25876,7 @@ async function nyArchive(year, pass, say) {
   say('Saving ' + year + ' to a file…', 0, total);
   try {
     const size = await takeWrite(sink, pass, n => say('Saving ' + year + ' to a file… ' + fmtSize(n) + (total ? ' of about ' + fmtSize(total) : ''), n, total), null,
-      { info: { kind: 'year', year }, extra: async frame => { want.plan = await nyPlanFrames(frame); } });
+      { info: { kind: 'year', year }, onPlan: n => { want.plan = n; } });
     const file = await sink.file();
     say('Checking the file…', 0, file.size);
     const got = await nyCheck(file, pass, want, n => say('Checking the file… ' + fmtSize(Math.min(n, file.size)) + ' of ' + fmtSize(file.size), n, file.size));
@@ -26800,6 +26857,37 @@ shellReady = true;
 railSavedRender(); renderNeeds(); safeAskRender(); updRender();
 applyRoute();
 Object.assign(window.__gs, { go, routeNow, applyRoute, openFind, findRows, findMatch, keptState, classLeft });
+
+/* ---------------- this address is moving: a notice, and the way across ---------------- */
+let MOVE = null;
+const moveOrigin = t => { try { const u = new URL(t); return /^https?:$/.test(u.protocol) ? u.origin : ''; } catch { return ''; } };
+function movingTo() {
+  const from = moveOrigin(MOVE && MOVE.address), to = moveOrigin(MOVE && MOVE.movingTo);
+  return to && from && from !== to && location.origin === from ? MOVE.movingTo : '';
+}
+const moveDay = () => new Date().toDateString();
+function moveCard() {
+  const old = $('#setMoving'); if (old) old.remove();
+  const to = movingTo(); if (!to) return;
+  const el = document.createElement('section');
+  el.className = 'lib setsec'; el.id = 'setMoving'; el.dataset.sec = 'saving'; el.hidden = $('#setSaving').hidden;
+  el.innerHTML = '<div class="lhead"><h2>Grading Studio is moving to a new address</h2><span class="sp"></span><button class="btn sm primary" data-movetake>Take my work with me</button></div>' + moveSteps(to);
+  el.onclick = e => { if (e.target.closest('[data-movetake]')) openTake(); };
+  $('#setSaving').before(el);
+}
+const moveSteps = to => '<p class="setp" style="margin-top:0">The new address is <a href="' + esc(to) + '" target="_blank" rel="noopener"><b>' + esc(to) + '</b></a>. Work saved in this browser stays at this address. It does not move by itself.</p>' +
+  '<ol class="setp" style="padding-left:20px"><li>Press <b>Take my work with me</b> and save the file. It holds your grading work and your Planner.</li><li>Open the new address.</li><li>There, in Settings, <b>Saving and carrying</b>, press <b>Bring work in</b> and choose the file.</li></ol>' +
+  '<p class="muted setp">Please do this soon: this address will stop working. A linked folder can be linked again at the new address too.</p>';
+function moveAsk() {
+  const to = movingTo(); if (!to || !$('#dlg').hidden || !$('#welcome').hidden) return;
+  try { if (localStorage.getItem('gsc.moveSeen') === moveDay()) return; localStorage.setItem('gsc.moveSeen', moveDay()); } catch {}
+  openDlg('<div class="bh"><h2>Grading Studio is moving to a new address</h2><button class="icon" data-close aria-label="Close">✕</button></div><div class="bb" id="moveBox">' + moveSteps(to) + '</div>' +
+    '<div class="bf"><button class="btn" data-close>Later</button><a class="btn" href="' + esc(to) + '" target="_blank" rel="noopener">Open the new address</a><button class="btn primary" data-movetake>Take my work with me</button></div>', true);
+  $('#dlgBox').onclick = e => { if (e.target.closest('[data-close]')) return closeDlg(); if (e.target.closest('[data-movetake]')) { closeDlg(); go('#/settings'); openTake(); } };
+}
+moveCard();
+Promise.resolve(keptFirst).then(() => setTimeout(() => { if (keptMeta.size || ((lib && lib.classes) || []).length) moveAsk(); }, 1200));
+Object.assign(window.__gs, { movingTo, moveTest: to => { MOVE = { address: location.href, movingTo: to }; try { localStorage.removeItem('gsc.moveSeen'); } catch {} moveCard(); moveAsk(); } });
 
 });</script>
 
