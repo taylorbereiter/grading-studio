@@ -24,7 +24,7 @@ Mark student papers, score them, plan lessons and hand work back, in your browse
 | From | What to drop on Today |
 |---|---|
 | ManageBac | The ZIP of submissions, or the unzipped folder: one folder per student. |
-| Google Classroom | The assignment's Drive folder, downloaded: one file per student. |
+| Google Classroom | The assignment's Drive folder, downloaded as a ZIP. Files named "Student name - title" are put together under each student. |
 | Canvas | "Download submissions": the app groups each student's files by the name Canvas puts at the start of each file name. |
 | Moodle | "Download all submissions", as folders or as loose files: either way each student's files are put together. |
 | Microsoft Teams, Schoology, anything else | A ZIP or folder with one folder (or one file) per student. |
@@ -45,6 +45,7 @@ The sidebar says **Not backed up** until you choose a folder. Once you do, every
 
 ## More
 
+- **Coming from Google Classroom**: Settings, Classes and rosters, **From Google Classroom…** brings a class over with two downloads and no sign-in. The grades file ("Download all grades as CSV" in Classroom) makes the class with its roster and takes every assignment and score through the gradebook's import, where they are checked before anything is saved. The assignment's folder from Google Drive brings the papers. Both are read in the browser (src/classroom.js). Scores can't be sent back into Classroom: Google only lets an app grade assignments that the same app created.
 - **To do** in the sidebar is a to-do list: the teacher's own to-dos (with a day, a class, a student or assignment, a repeat and a note) beside lines the app works out from saved work, such as papers to mark, papers to hand back, a class with no lesson planned and missing work to chase. Those are never stored and go when the work is done. A Week view (`#/todo/week`) lays the same lines out by day under the classes that meet, and a drag moves a line to another day. Today shows a short card of what is overdue or due today. The list is saved with the grading work (src/todo.js), never in the Planner's folder.
 - **School** in the sidebar is a page for the links, files and notes about your school: the handbook, the calendar, the portals, who to call. They are kept with your work (`gs.school`, and the files in their own store), so they reach the folder and the take-home file too. The code is src/school.js.
 - **Help** in the app's sidebar has short answers to common questions, and **Find anything** lists them too.

@@ -136,6 +136,7 @@ function findRows() {
     add('Do', 'Split a scan of everyone’s papers', '', press('#pickScan'));
     add('Do', 'Match files to a roster', '', press('#pickMatch'));
     add('Do', 'Add a class', 'Its name and roster', press('#addClass'));
+    add('Do', 'Bring a class over from Google Classroom', 'Its roster, assignments and grades, from two downloads', () => gcOpen(), '', 'import google classroom drive csv grades roster move switch transfer');
     add('Do', 'Try it with a sample class', 'Made-up students and papers', press('#sample'));
     add('Settings', 'Take my work with me', 'A take-home file for another computer', press('#takeBtn'), '', 'backup back up export carry home laptop transfer');
     add('Settings', 'Bring work in', 'From a take-home file', press('#restoreBtn'), '', 'import restore backup load');
