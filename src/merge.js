@@ -57,7 +57,7 @@ function decideRec(a, b, ta, tb) {
 const BLANK_REC = () => ({ f: {}, g: { rubric: [], points: '', comment: '' }, h: {} });
 // Settings of the download itself rather than of a student. Each goes on its own, stamped in w.pv = { setting: v } the way a student's record is, so a change to one is never undone by a change to another.
 // w.sv is all of them together, and an old copy has only that, or nothing.
-const WORK_SET = ['carry', 'setup', 'cls', 'share', 'drive', 'light', 'lightOpt', 'lightPg', 'lightPgL', 'anon', 'moved', 'removed', 'refSkip', 'quiz', 'groups', 'returned', 'goal'];
+const WORK_SET = ['carry', 'setup', 'cls', 'share', 'drive', 'light', 'lightOpt', 'lightPg', 'lightPgL', 'anon', 'moved', 'removed', 'refSkip', 'quiz', 'groups', 'returned', 'goal', 'clips'];
 const setOf = w => { const o = {}; if (w) for (const k of WORK_SET) if (w[k] !== undefined) o[k] = w[k]; return o; };
 const setV = w => w && w.sv ? w.sv : (h => h ? { ['~' + h]: 1 } : {})(hashOf(setOf(w)));
 const partV = (w, k) => (w.pv && w.pv[k]) || (h => h ? { ['~' + h]: 1 } : {})(hashOf(w[k]));
@@ -381,14 +381,16 @@ function mergeEdits(aEd = {}, bEd = {}, work, rows, prefer) {
 // How a saved download's scores stand, counted the way the Grades list counts them. Missing and excused have no number, and a partial isn't finished.
 function workCounts(work) {
   const su = work.setup || {}, s = work.s || {}, read = work.read || {}, blank = v => v == null || v === '';
-  const out = { scored: 0, partial: 0, off: 0 };
+  const out = { scored: 0, partial: 0, off: 0, fb: 0 };   // fb: Feedback complete switched on, what a formative activity counts in place of scores
   for (const k of new Set([...Object.keys(s), ...Object.keys(read)])) {
     const g = (s[k] && s[k].g) || {}, r = g.rubric || [], rows = su.criteria ? su.criteria.map((_, i) => r[i]) : r, on = rows.filter(v => v != null).length;
+    if (g.status !== 'missing' && g.status !== 'excused' && g.fb) out.fb++;
     if (g.status === 'missing' || g.status === 'excused') out.off++;
     else if (su.mode === 'points' ? !blank(g.points) && !isNaN(+g.points) : on === rows.length && on) out.scored++;
     else if (su.mode !== 'points' && on) out.partial++;
     else if ((!blank(g.sheet) && !isNaN(+g.sheet)) || read[k]) out.scored++;
   }
+  if (!out.fb) delete out.fb;   // kept only when there is some, so work with no Feedback complete is stored as before
   if (work.returned) out.ret = work.returned.t;   // the marked files went back to the students
   return out;
 }
@@ -398,6 +400,7 @@ function metaFor(ma, mb, work, id) {
   if (!m.name) m.name = 'A download';   // work from before the list of downloads was kept says nothing about its name
   if (work) {
     m.t = work.t || m.t;
+    delete m.fb;
     Object.assign(m, workCounts(work));
     if (!work.returned) delete m.ret;
     m.n = Math.max(m.n || 0, Object.keys(work.s || {}).length);
@@ -596,7 +599,12 @@ function mergeLib(a0, b0, o = {}) {
       for (const k of new Set([...Object.keys(xa), ...Object.keys(ya)])) out[k] = !xa[k] ? ya[k] : !ya[k] ? xa[k] : (ya[k].t || 0) > (xa[k].t || 0) ? ya[k] : xa[k];
       e.fields.att = e.node.att = out;
     }
-    const other = m.both.filter(k => k !== 'names' && k !== 'info' && k !== 'att');
+    if (x.type === 'c' && m.both.includes('lv')) {   // an MYP class's term levels: student by student within each term, the one saved later
+      const xl = x.fields.lv || {}, yl = y.fields.lv || {}, out = {};
+      for (const t of new Set([...Object.keys(xl), ...Object.keys(yl)])) { const a = xl[t] || {}, b = yl[t] || {}; out[t] = {}; for (const n of new Set([...Object.keys(a), ...Object.keys(b)])) out[t][n] = !a[n] ? b[n] : !b[n] ? a[n] : (b[n].t || 0) > (a[n].t || 0) ? b[n] : a[n]; }
+      e.fields.lv = e.node.lv = out;
+    }
+    const other = m.both.filter(k => k !== 'names' && k !== 'info' && k !== 'att' && k !== 'lv');
     if (other.length) notes.push({ kind: 'both', type: x.type, name: e.fields.name, rubric: other.includes('setup') });
     else if (m.fromY.some(k => k !== 'names')) notes.push({ kind: 'changed', type: x.type, name: e.fields.name });
     kept.set(id, e);
@@ -612,6 +620,7 @@ function mergeLib(a0, b0, o = {}) {
   libGoals(lib, a, b);
   const hasWork = l => ((l && l.classes) || []).some(c => (c.names || []).length || (c.units || []).some(u => u && (u.items || []).length));
   if (a.me && !b.me && hasWork(b) && !hasWork(a)) delete lib.me;
+  { const t = todoMerge(a.todo, b.todo); if (t) lib.todo = t; else delete lib.todo; }
   const by = t => [...kept.values()].filter(e => e.type === t);
   const shell = e => { const n = { ...e.node }; delete n.units; delete n.items; return n; };
   const units = new Map(), classes = new Map();
@@ -635,6 +644,21 @@ function mergeLib(a0, b0, o = {}) {
   if (Object.keys(gone).length) lib.gone = gone; else delete lib.gone;
   const same = (p, q) => JSON.stringify(canon(p)) === JSON.stringify(canon(q));
   return { lib, notes, asks, cards, mapA, mapB, toA: !same(lib, a0), toB: !same(lib, b0) };
+}
+// The to-do list (todo.js), line by line: whichever copy changed a line last has it, and a deleted line stays deleted. A line only
+// one copy has is kept. The switches for what the app adds go with whichever copy set them last.
+function todoMerge(a, b) {
+  if (!a || !b) return a || b || null;
+  const by = new Map(), order = [];
+  for (const it of [...(Array.isArray(a.items) ? a.items : []), ...(Array.isArray(b.items) ? b.items : [])]) {
+    if (!it || !it.id) continue;
+    const had = by.get(it.id); if (!had) order.push(it.id);
+    if (!had || (it.t || 0) > (had.t || 0)) by.set(it.id, it);
+  }
+  const auto = { ...(b.auto || {}) };
+  for (const [k, v] of Object.entries(a.auto || {})) if (!auto[k] || (v.t || 0) >= (auto[k].t || 0)) auto[k] = v;
+  const offB = (b.offT || 0) > (a.offT || 0);
+  return { ...b, ...a, items: order.map(id => by.get(id)), auto, off: (offB ? b.off : a.off) || {}, offT: Math.max(a.offT || 0, b.offT || 0) };
 }
 function mergeFields(x, y, win, dev, now, said) {
   const fx = nodeParts(x), fy = nodeParts(y), parts = {}, fv = {}, both = [], fromY = [];

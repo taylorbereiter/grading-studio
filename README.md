@@ -7,7 +7,7 @@ Mark student papers, score them, plan lessons and hand work back, in your browse
 ## What it does
 
 - **Mark** PDFs, Word files, photos and scans with a pen, highlighter, text, margin comments, check marks and proofreading marks.
-- **Score** with rubric rows (0 to 4, half points too), plain points or a percent. Letter grades or IB 1 to 7 can be worked out from the percent, with boundaries you set.
+- **Score** with rubric rows (0 to 4, half points too), plain points or a percent. Letter grades or an IB DP 1 to 7 can be worked out from the percent, with boundaries you set. An IB MYP class is marked against its criteria, 0 to 8, with a best-fit level per criterion and a final grade of 1 to 7.
 - **See the class**: a Grades list to copy from, a gradebook with terms and weights, and charts for each class and each student.
 - **Hand work back**: one click makes the marked files, in the same student folders they came in.
 - **Plan and teach**: the Planner keeps units, lessons and slides beside your timetable. Present a lesson full screen, with its agenda and a timer for the class, and note where the class got to. Lessons also download as PowerPoint files.
@@ -24,7 +24,7 @@ Mark student papers, score them, plan lessons and hand work back, in your browse
 | From | What to drop on Today |
 |---|---|
 | ManageBac | The ZIP of submissions, or the unzipped folder: one folder per student. |
-| Google Classroom | The assignment's Drive folder, downloaded: one file per student. |
+| Google Classroom | The assignment's Drive folder, downloaded as a ZIP. Files named "Student name - title" are put together under each student. |
 | Canvas | "Download submissions": the app groups each student's files by the name Canvas puts at the start of each file name. |
 | Moodle | "Download all submissions", as folders or as loose files: either way each student's files are put together. |
 | Microsoft Teams, Schoology, anything else | A ZIP or folder with one folder (or one file) per student. |
@@ -45,6 +45,8 @@ The sidebar says **Not backed up** until you choose a folder. Once you do, every
 
 ## More
 
+- **Coming from Google Classroom**: Settings, Classes and rosters, **From Google Classroom…** brings a class over with two downloads and no sign-in. The grades file ("Download all grades as CSV" in Classroom) makes the class with its roster and takes every assignment and score through the gradebook's import, where they are checked before anything is saved. The assignment's folder from Google Drive brings the papers. Both are read in the browser (src/classroom.js). Scores can't be sent back into Classroom: Google only lets an app grade assignments that the same app created.
+- **To do** in the sidebar is a to-do list: the teacher's own to-dos (with a day, a class, a student or assignment, a repeat and a note) beside lines the app works out from saved work, such as papers to mark, papers to hand back, a class with no lesson planned and missing work to chase. Those are never stored and go when the work is done. A Week view (`#/todo/week`) lays the same lines out by day under the classes that meet, and a drag moves a line to another day. Today shows a short card of what is overdue or due today. The list is saved with the grading work (src/todo.js), never in the Planner's folder.
 - **School** in the sidebar is a page for the links, files and notes about your school: the handbook, the calendar, the portals, who to call. They are kept with your work (`gs.school`, and the files in their own store), so they reach the folder and the take-home file too. The code is src/school.js.
 - **Help** in the app's sidebar has short answers to common questions, and **Find anything** lists them too.
 - **Learning goals** (optional): keep your own list of goals or standards, tag rubric rows and quiz questions with them, and each class page gets a Goals tab that shows the class and every student by goal, lowest first.
@@ -76,7 +78,15 @@ MIT. Use it, change it and share it, free of charge; see [LICENSE](LICENSE). The
 - **`GS_BIG=1 node --test test/takehome-big.test.js`** sends over 600 MB of made-up papers through a take-home file and back, checking the tab keeps responding. It takes minutes and about 2 GB of disk, so `npm test` skips it.
 - **`npm run preview`** builds, then serves the app at http://localhost:4173, so you can try a change in a real browser before it reaches your grading link. Press Ctrl+C to stop.
 
-**Why the preview isn't on github.io.** Browsers keep saved work per address, and every page under `taylorbereiter.github.io` is the same address, even in another folder or repo. A preview there would open your real saved student work, and a bad change could damage it. `localhost:4173` is a different address, so it starts empty and keeps its own saved work. Use the sample papers or made-up files there, and your real work stays on the real link.
+**Why the preview isn't on the live address.** Browsers keep saved work per address, and every page under one host (the one in `site.json`) is the same address, even in another folder or repo. A preview there would open your real saved student work, and a bad change could damage it. `localhost:4173` is a different address, so it starts empty and keeps its own saved work. Use the sample papers or made-up files there, and your real work stays on the real link.
+
+**The web address.** `site.json` is the one place that names where this copy is served (`address`). The app itself has no address written into it, so a fork served somewhere else needs only that line and the link at the top of this file changed. Saved work belongs to the address it was made at, so moving a copy that people already use takes three steps:
+
+1. Put the new address in `movingTo` and publish. Everyone who opens the old address is told about the move once a day and in Settings, with the way across: **Take my work with me** makes one file holding their grading work and their Planner.
+2. Make your own file, then switch the hosting. The old address usually stops working at that moment, so nobody can make their file after it.
+3. Set `address` to the new one, empty `movingTo`, and publish. At the new address, **Bring work in** takes the file in. Help has "Grading Studio moved to a new web address".
+
+Google Drive sign-in is tied to the address as well: add the new one to the Google client's authorised origins.
 
 **Version number.** Set it in `package.json`, and nowhere else. It shows at the bottom of Today and Settings, and in the Keys list (press ?).
 

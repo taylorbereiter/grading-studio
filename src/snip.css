@@ -1,0 +1,13 @@
+/* Screenshot (src/snip.js): the layer she drags on, the bar along the top and the box being drawn */
+.sniplay{position:fixed;inset:0;z-index:2000;cursor:crosshair;background:rgba(20,25,40,.18);outline:0;touch-action:none;user-select:none}
+.sniplay:has(.snipbox:not([hidden])){background:transparent}
+.snipbox{position:fixed;border:2px solid var(--accent);border-radius:var(--corner-1);box-shadow:0 0 0 9999px rgba(20,25,40,.28);pointer-events:none}
+.snipbar{position:fixed;top:12px;left:50%;transform:translateX(-50%);width:min(620px,calc(100vw - 32px));box-sizing:border-box;background:var(--surface);color:var(--fg);border:1px solid var(--line);border-radius:var(--corner-4);box-shadow:var(--shadow),0 8px 24px rgba(20,25,40,.14);padding:10px 12px;cursor:default;display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px}
+.sniplay.dragging .snipbar{opacity:.35;pointer-events:none}
+.snipt{display:flex;flex-direction:column;gap:2px;flex:1 1 240px;min-width:0}
+.snipt b{font-weight:600}
+.snipt span{color:var(--fg-2);font-size:var(--text-control)}
+.snipacts{display:flex;align-items:center;gap:8px;flex:none}
+.snipmk{display:flex;align-items:center;gap:6px;font-size:var(--text-control);color:var(--fg-2);cursor:pointer;margin-right:4px}
+.snipmk input{accent-color:var(--accent);margin:0}
+.snipnote{flex:1 0 100%;margin:0;color:var(--muted);font-size:var(--text-small)}

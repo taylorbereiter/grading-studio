@@ -81,7 +81,7 @@ async function notebookHtml() {
     '<div class="nb-ask" id="nbAsk" hidden><input class="btn sm" id="nbAskIn"><button class="btn sm primary" data-nb="askok">Add</button><button class="btn sm ghost" data-nb="askx" aria-label="Cancel">×</button></div>' +
     '<div class="nb-page" id="nbPage" contenteditable="true" spellcheck="true" data-ph="Thoughts for this lesson as they come: what to try, what to change, links, videos, pictures…">' + nbClean(html) + '</div>' +
     '<input type="file" id="nbPicIn" accept="image/*" hidden>' +
-    '<div class="sp-bar"><span class="muted sp-small">Saved as you type' + (ref.t === 'lesson' ? ', with this lesson' : ref.t === 'unit' ? ', with this unit' : ' on this computer') + '.</span><span class="sp"></span><button class="btn sm ghost" data-sa="nbbox">+ Claude box</button></div></div>';
+    '<div class="sp-bar"><span class="muted sp-small">Saved as you type' + (ref.t === 'lesson' ? ', with this lesson' : ref.t === 'unit' ? ', with this unit' : ' on this computer') + '.</span><span class="sp"></span><button class="btn sm ghost" data-sa="nbbox">+ ' + plAiTag() + ' box</button></div></div>';
 }
 function notebookWire() {
   const el = $('#nbPage'); if (!el) return;

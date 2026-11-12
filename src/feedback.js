@@ -21,7 +21,7 @@ function fbData(st, d) {
     const numbered = all.filter(n => n.hl).sort((a, b) => a.ay - b.ay || a.ax - b.ax);   // the numbers the page itself shows
     for (const n of [...all].sort((a, b) => a.ay - b.ay || a.ax - b.ax)) notes.push({ n: numbered.indexOf(n) + 1, text: n.text.trim(), color: n.color, page: k });
   });
-  const comment = ((old ? old.comment : st.grade.comment) || '').trim(), scored = g.total != null && !g.partial;
+  const comment = ((old ? old.comment : st.grade.comment) || '').trim(), scored = g.total != null && !g.partial && !ibSetup();   // an MYP task goes back with its levels, no total
   const trySay = old ? tr(tryName(tn)) : cnt ? tr('Retake') + (cnt.tryNow && cnt.pct !== g.pct ? ' · ' + tr('counts as') + ' ' + fmtPct(cnt.pct) : '') : '';
   if (!scored && !rows.length && !comment && !notes.length) return null;
   const rn = rosterNames(), who = rn.get(st) || st.key;   // the paper goes back to its student, so it carries their name even while she marks with names hidden

@@ -199,7 +199,7 @@ function wNotesPaint(w, page, aside) {
 function wNotePop(host, near, text, isNew, done) {
   for (const p of host.querySelectorAll('.pop')) p.remove();
   const pop = document.createElement('div'); pop.className = 'pop wpop';
-  pop.innerHTML = '<div class="lbl">' + (isNew ? 'New comment' : 'Comment') + '</div><textarea placeholder="Type a comment…"></textarea>' +
+  pop.innerHTML = '<div class="lbl">' + (isNew ? 'New comment' : 'Comment') + '</div><textarea placeholder="Type a comment… Enter to finish, Shift Enter for a new line"></textarea>' +
     '<div class="lbl" data-bank>My saved comments</div><div class="chips"></div>' +
     '<div class="row"><button class="btn sm" data-a="star" title="Keep this comment so you can reuse it">☆ Save for reuse</button><span class="sp"></span>' +
     (isNew ? '' : '<button class="btn sm" data-a="del">Delete</button>') + '<button class="btn sm primary" data-a="ok">Done</button></div>';
@@ -221,7 +221,7 @@ function wNotePop(host, near, text, isNew, done) {
   pop.addEventListener('keydown', e => {
     e.stopPropagation();
     if (e.key === 'Escape') { e.preventDefault(); close(null); }
-    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); close(ta.value.trim()); }
+    if (e.key === 'Enter' && !e.shiftKey && !e.isComposing && e.keyCode !== 229) { e.preventDefault(); close(ta.value.trim()); }   // Enter finishes, Shift Enter is a new line, as on a PDF paper
   });
   pop.addEventListener('click', e => {
     e.stopPropagation();

@@ -9,7 +9,7 @@ function groupNames(list) { return wordsJoin(list.map(s => shownName(s, batch.st
 function groupFileOf(g, st) { const p = g.p && g.p[st.key]; return p ? st.files.find(f => f.path === p) || null : null; }
 
 // The grade fields a group shares. Answers about what's written on each paper (reads) stay each student's own.
-const GROUP_SKIP = new Set(['reads', 'sent']);   // a partner's paper exported on its own isn't the others'
+const GROUP_SKIP = new Set(['reads', 'sent', 'anchor']);   // a partner's paper exported on its own isn't the others'
 function groupGradeCopy(to, from) {
   const a = to.grade, b = from.grade;
   for (const k of Object.keys(a)) if (!GROUP_SKIP.has(k) && !(k in b)) delete a[k];
@@ -157,7 +157,7 @@ function openShareFile(st, path) {
     const b = e.target.closest('[data-shto]'); if (!b || b.disabled) return;
     const to = batch.students[+b.dataset.shto]; b.disabled = true;
     if (!copyOf(to)) await addFiles(to, [{ path: f.name, file: new File([f.data], f.name), from: st.key }], true);
-    if (once) groupAdd(st, f, to, copyOf(to));
+    if (once) { groupAdd(st, f, to, copyOf(to)); for (const lf of st.files.filter(x => x.kind === 'link')) await partnerCopy(st, lf, to); }   // the group's video goes with it
     saveSoon(); renderList();
     toast((once ? 'In the group: ' : 'Shared with ') + shownName(to, +b.dataset.shto)); draw(); $('#mvFind').focus();
   };

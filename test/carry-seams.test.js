@@ -454,7 +454,7 @@ test('Claude codes made on both computers: a reply matches with either one, and 
   const H = await codes(home.page);
   assert.notDeepEqual(L, H);
   await homeToLaptop(lap, home);
-  assert.match(await lap.page.$eval('#bringBox', e => e.innerText), /both are kept: [^\n]*Claude codes/);
+  assert.match(await lap.page.$eval('#bringBox', e => e.innerText), /both are kept: [^\n]*share codes/);
   await bringIt(lap.page);
   await openKept(lap.page, 'Tide essay');
   const reply = async (text, match) => {

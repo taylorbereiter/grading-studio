@@ -4,7 +4,7 @@ const xAll = () => !!store.get('gs.xall', false);
 const xEdit = () => store.get('gs.xedit', true) !== false;   // "Keep marks editable"   // "Also include files with no marks"
 // Word files you edited or scored, any file you added; with "include everything", every file.
 // A student's copy of her own Word rubric goes back once she has highlighted or typed in it, and stays out while it's still blank.
-const rawOut = f => !viewable(f) && !!f.data && (f.virtual ? f.kind === 'docx' && (!!f.edited || !!(wordScore(f) && f.wscore.total != null)) : xAll() || !!f.edited || !!f.added || !!(wordScore(f) && f.wscore.total != null));
+const rawOut = f => !viewable(f) && !!f.data && f.kind !== 'link' && (f.virtual ? f.kind === 'docx' && (!!f.edited || !!(wordScore(f) && f.wscore.total != null)) : xAll() || !!f.edited || !!f.added || !!(wordScore(f) && f.wscore.total != null));
 // A PDF standing in for the student's own Word paper (wordpdf.js, or her own Replace with the same name) is still their paper, not a file she added.
 function madeFromWord(f) {
   if (!f || !f.added || !batch || !batch.removed || !/\.pdf$/i.test(f.name)) return false;
@@ -68,6 +68,7 @@ function nameOut(items) {
 // Builds one returned file from its pages (possibly from several turned-in files), baking in every mark.
 // fb: the feedback page goes in front (src/feedback.js), when there is anything for it to say.
 async function flattenDoc(st, d, dpi, edit, key, fb) {
+  syncScoreStamps(st);   // a score stamp goes out saying the score as it is now
   await workerReady;
   const srcs = new Map();
   const src = async path => {

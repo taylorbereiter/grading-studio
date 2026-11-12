@@ -5,7 +5,7 @@ function modKey() { return isMac() ? '⌘' : 'Ctrl'; }
 // Labels are written the Mac way (⌘Z, ⇧⌘Z, ⌘-scroll); this turns them into this computer's.
 function keyLabel(s) {
   if (isMac()) return s;
-  return s.replace(/⇧⌘/g, 'Ctrl+Shift+').replace(/⌘([+−])/g, 'Ctrl $1').replace(/⌘(?=-)/g, 'Ctrl').replace(/⌘/g, 'Ctrl+');
+  return s.replace(/⌥/g, 'Alt+').replace(/⇧⌘/g, 'Ctrl+Shift+').replace(/⌘([+−])/g, 'Ctrl $1').replace(/⌘(?=-)/g, 'Ctrl').replace(/⌘/g, 'Ctrl+');
 }
 
 const FOCUSABLE = 'a[href],button,input,select,textarea,summary,audio[controls],video[controls],[tabindex]:not([tabindex="-1"])';

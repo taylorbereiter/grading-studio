@@ -45,3 +45,4 @@ function setTheme(t) {
   for (const b of document.querySelectorAll('.themeBtn')) b.textContent = t === 'dark' ? 'Light mode' : 'Dark mode';
 }
 document.addEventListener('click', e => { if (e.target.closest('.themeBtn')) setTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'); });
+try { window.__planIn = new BroadcastChannel('gs-plan-in'); window.__planIn.onmessage = () => location.reload(); } catch { }   // Bring work in (the grading page) put Planner records in: start again from what is stored

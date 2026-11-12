@@ -9,6 +9,9 @@
 // 'scale' a point scale from 0 to its points, like a short answer: 0 understanding not shown, 1 partial, 2 full. A question
 // with no kind is a scale when it is worth more than 1 point or marked in points, as it was before there was a choice.
 // words are what 0, the middle and the top of a scale mean, shown on the scale's buttons. spot is a mark moved on one student's paper only.
+// key is the question's right answer, as she typed it. ans says where it goes on the papers, as a gold comment labelled Answer
+// (an answer note, tagged qza: id): 'miss' by each question a student lost points on, 'all' by every question, 'off' nowhere.
+// A quiz saved before answer notes has none and gets none until she saves its boxes again.
 // A student's marks are st.grade.q = { id: points }. Each one also goes on the paper by its box (marks tagged qz: id),
 // and the sum is their points score, partial until every question is marked.
 const QZ_PAD = 0.012;   // a little room around each box, since scans sit a bit differently
@@ -186,10 +189,34 @@ async function qzPaper(st, q, v) {
       measureCtx.font = '14px ' + FONT;
       const tw = measureCtx.measureText(look.text).width, bx = (q.x + qzShift(st, q.n)[0]) * sz.W;
       const x = s.margin ? (s.right ? cx - 11 : Math.max(2, bx - tw - 6)) : cx - tw / 2;   // in the margin it sits beside the box, like before
-      list.push({ t: 'text', color, x: r1(Math.max(2, x)), y: r1(Math.max(2, cy - 8)), size: 14, text: look.text, qz: q.id });
+      list.push({ t: 'text', color: ptsColor(v, +q.pts || 1), x: r1(Math.max(2, x)), y: r1(Math.max(2, cy - 8)), size: 14, text: look.text, qz: q.id });
     }
   }
+  await qzAns(st, q, v, list);
   if (!list.length) delete f.marks[p];
+}
+/* answer notes: the right answer, in gold, by the question on a returned paper */
+const QZ_ANS = { miss: 'Where points were lost', all: 'Every question', off: 'Off' };
+const qzAnsMode = () => (batch.quiz && QZ_ANS[batch.quiz.ans]) ? batch.quiz.ans : 'off';
+const qzAnsText = q => tr('Answer') + ': ' + String(q.key || '').trim();
+// Whether this question, marked v, gets its answer on the paper.
+function qzAnsWant(q, v) {
+  const mode = qzAnsMode();
+  if (v == null || mode === 'off' || !String(q.key || '').trim()) return false;
+  return mode === 'all' || v < (+q.pts || 1);
+}
+// Puts the answer note by the question on this page's marks, or takes it off. One she moved stays where she put it.
+async function qzAns(st, q, v, list) {
+  const i = list.findIndex(m => m.qza === q.id), old = i >= 0 ? list[i] : null;
+  if (!qzAnsWant(q, v)) { if (old) list.splice(i, 1); return; }
+  if (old) { old.text = qzAnsText(q); old.color = QZ_GOLD; return; }
+  const sz = await qzPageSize(st, q.n); if (!sz) return;
+  const [dx, dy] = qzShift(st, q.n);
+  list.push({ t: 'note', color: QZ_GOLD, ax: r1(clamp((q.x + q.w + dx) * sz.W, 4, sz.W - 4)), ay: r1(clamp((q.y + q.h / 2 + dy) * sz.H + 6, 4, sz.H - 4)), text: qzAnsText(q), qza: q.id });
+}
+function qzAnsOf(st, q) {
+  const [path, p] = quizPages(st)[q.n] || [], f = path && fileByPath(st, path), l = f && f.marks[p];
+  return (l && l.find(m => m.qza === q.id)) || null;
 }
 // The total, as a score sticker in the spot she picked, once every question is marked. The grade sheet reads it off the paper.
 async function qzTotal(st) {
@@ -199,7 +226,7 @@ async function qzTotal(st) {
   const [path, p] = quizPages(st)[t.n] || [], f = path && fileByPath(st, path), sz = await qzPageSize(st, t.n);
   if (!f || !sz) return;
   const [dx, dy] = qzShift(st, t.n);
-  (f.marks[p] ||= []).push({ t: 'stamp', k: 'score', text: stickerText(quizSum(st)), x: r1((t.x + dx) * sz.W), y: r1((t.y + dy) * sz.H), size: 52, color: COLORS[inkColor] || COLORS.red, qz: 'total' });
+  (f.marks[p] ||= []).push({ t: 'stamp', k: 'score', text: stickerText(quizSum(st)), x: r1((t.x + dx) * sz.W), y: r1((t.y + dy) * sz.H), size: 52, color: totalInk(), qz: 'total' });
 }
 // After boxes move or a student's page is lined up again, the marks already given move with them.
 async function qzRedoPaper(st) {
@@ -214,7 +241,7 @@ function qzDropGone(keep) {
     const m = st.grade.q; if (!m) continue;
     let hit = false;
     for (const id of Object.keys(m)) if (!keep.has(id)) { delete m[id]; hit = true; }
-    for (const f of st.files) for (const l of Object.values(f.marks || {})) for (let i = l.length - 1; i >= 0; i--) if (l[i].qz && l[i].qz !== 'total' && !keep.has(l[i].qz)) { l.splice(i, 1); hit = true; }
+    for (const f of st.files) for (const l of Object.values(f.marks || {})) for (let i = l.length - 1; i >= 0; i--) if ((l[i].qz && l[i].qz !== 'total' && !keep.has(l[i].qz)) || (l[i].qza && !keep.has(l[i].qza))) { l.splice(i, 1); hit = true; }
     if (hit) quizScore(st);
   }
 }
@@ -239,6 +266,7 @@ function openQuizBoxes(back) {
   if (!who.length) return toast('No scanned papers to draw boxes on');
   const Q = batch.quiz ? JSON.parse(JSON.stringify(batch.quiz)) : { qs: [], how: 'x', side: 'left', total: null, shift: {} };
   Q.how ||= 'x';
+  Q.ans ||= 'miss';   // answer notes go where points were lost, unless she picks otherwise
   Q.words = JSON.parse(JSON.stringify(qzWordsAll()));
   let si = who[0], selId = null, picking = false, spotPick = false;
   if (Q.qs.length) { const was = who.find(i => batch.students[i].key === Q.from); if (was != null) si = was; }
@@ -246,10 +274,12 @@ function openQuizBoxes(back) {
     who.map(i => '<option value="' + i + '">' + esc(shownName(batch.students[i], i)) + '</option>').join('') + '</select></label>' +
     '<button class="icon" data-close aria-label="Close">✕</button></div>' +
     '<div class="bb qbwrap"><div class="qbpages" id="qbPages" tabindex="-1"><p class="muted">Drawing the pages…</p></div><div class="qbside">' +
-    '<p class="hsm" style="margin-top:0">Drag a box around each question, in order. Boxes can overlap. Drag a box’s number to move it. Click a box to resize it from a corner or set where its mark goes. Then give each one its points, how it’s scored (right or wrong, or a scale like 0 to 2 for a short answer) and the right answer if it has one.</p>' +
+    '<p class="hsm" style="margin-top:0">Drag a box around each question, in order. Boxes can overlap. Drag a box’s number to move it. Click a box to resize it from a corner or set where its mark goes. Then give each one its points, how it’s scored (right or wrong, or a scale like 0 to 2 for a short answer) and the right answer if it has one. The answer can go on the returned papers in a gold note.</p>' +
     '<div id="qbList"></div><div id="qbWords"></div><div id="qbSpot"></div>' +
     '<div class="qbopt"><div class="chk" style="cursor:default;flex-wrap:wrap">New boxes mark with <span class="seg" id="qbHow">' + Object.entries(QZ_HOW).map(([k, t]) => '<button data-how="' + k + '">' + t + '</button>').join('') + '</span></div>' +
     '<div class="chk" style="cursor:default;flex-wrap:wrap">Marks go <span class="seg" id="qbSide"><button data-side="left">Left of each box</button><button data-side="right">Right</button></span><span class="muted hsm">unless you picked a spot</span></div>' +
+    '<div class="chk" style="cursor:default;flex-wrap:wrap">Answer notes <span class="seg" id="qbAns">' + Object.entries(QZ_ANS).map(([k, t]) => '<button data-ans="' + k + '">' + t + '</button>').join('') + '</span>' +
+    '<span class="qbanssay"><span class="qzgold">' + esc(tr('Answer')) + '</span><span class="muted hsm" id="qbAnsSay"></span></span></div>' +
     '<div class="chk" style="cursor:default;flex-wrap:wrap">Total <button class="btn sm" id="qbTotal"></button><span class="muted hsm" id="qbTotalSay"></span></div>' +
     '<p class="muted hsm" style="margin:0">Keys for the picked box: arrows move it, Shift + arrows resize it, Ctrl D copies it just below, Delete takes it out.</p></div>' +
     '</div></div>' +
@@ -263,6 +293,8 @@ function openQuizBoxes(back) {
   const sideSay = () => {
     for (const b of $('#qbSide').children) b.setAttribute('aria-pressed', String(b.dataset.side === (Q.side || 'left')));
     for (const b of $('#qbHow').children) b.setAttribute('aria-pressed', String(b.dataset.how === Q.how));
+    for (const b of $('#qbAns').children) b.setAttribute('aria-pressed', String(b.dataset.ans === Q.ans));
+    $('#qbAnsSay').textContent = Q.ans === 'off' ? 'The answers you type stay with you while you mark.' : Q.ans === 'all' ? 'A gold note with the answer goes by every question that has one, on every paper.' : 'A gold note with the answer goes by each question a student lost points on.';
   };
   const totalSay = () => {
     $('#qbTotal').textContent = picking ? 'Click on the page…' : Q.total ? 'Move it' : 'Pick a spot';
@@ -293,7 +325,7 @@ function openQuizBoxes(back) {
       '<td><input class="qpts" type="number" min="0.5" step="0.5" value="' + esc(String(q.pts)) + '" aria-label="Points"></td>' +
       '<td><select class="qkind" aria-label="Scored">' + qzKindOpts(q) + '</select></td>' +
       '<td><select class="qhow" aria-label="How to mark">' + qzHowOpts(q) + '</select></td>' +
-      '<td><input class="qkey" value="' + esc(q.key || '') + '" placeholder="optional" aria-label="Right answer" maxlength="40"></td>' +
+      '<td><input class="qkey" value="' + esc(q.key || '') + '" placeholder="optional" aria-label="Right answer" maxlength="160"></td>' +
       '<td><button class="icon" data-del="' + q.id + '" aria-label="Take out this box" title="Take out">✕</button></td></tr>' +
       (goalList().length ? '<tr class="qgrow' + (q.id === selId ? ' on' : '') + '" data-q="' + q.id + '"><td colspan="6"><label>Goal ' + goalPick('data-qgoal', q.goal || '', 'Learning goal for question ' + quizLabel(q, i)) + '</label></td></tr>' : '')).join('') + '</tbody></table>' +
       '<p class="hsm goalline"><button class="link" data-qgoals>' + (goalList().length ? 'Edit goals…' : 'Tag questions with learning goals…') + '</button></p>'
@@ -435,6 +467,7 @@ function openQuizBoxes(back) {
     const dl = e.target.closest('[data-del]'); if (dl) { Q.qs = Q.qs.filter(q => q.id !== dl.dataset.del); if (selId === dl.dataset.del) selId = null; list(); overlays(); return; }
     const sd = e.target.closest('[data-side]'); if (sd) { Q.side = sd.dataset.side; sideSay(); overlays(); return; }
     const hw = e.target.closest('[data-how]'); if (hw) { Q.how = hw.dataset.how; sideSay(); return; }
+    const an = e.target.closest('[data-ans]'); if (an) { Q.ans = an.dataset.ans; sideSay(); return; }
     if (e.target.closest('[data-spot]')) { spotPick = !spotPick; picking = false; totalSay(); spotSay(); return; }
     if (e.target.closest('[data-margin]')) { const q = qOf(selId); if (q) { delete q.mx; delete q.my; } spotSay(); overlays(); return; }
     if (e.target.closest('#qbTotal')) { picking = !picking; spotPick = false; totalSay(); spotSay(); return; }
@@ -500,7 +533,7 @@ function openQuiz(view) {
     '<span id="qmNav" class="qmnav"></span><span class="muted hsm" id="qmProg"></span>' +
     '<span class="qmopts"><span class="muted hsm">Size</span><span class="seg" id="qmSize">' + QZ_SIZES.map(s => '<button data-size="' + s + '" title="' + (s === 'F' ? 'One answer per row' : 'Answer size ' + s) + '">' + QZ_SIZE_SAY[s] + '</button>').join('') + '</span>' +
     '<span class="seg" id="qmOnly"><button data-only="0">All</button><button data-only="1">Not marked</button></span>' +
-    '<span class="qmink"><button class="btn sm" id="qmInkBtn" data-inkmenu aria-haspopup="true" aria-expanded="false" title="Colors for the marks">Colors <i class="qmdot x"></i><i class="qmdot ok"></i></button>' +
+    '<span class="qmink"><button class="btn sm" id="qmInkBtn" data-inkmenu aria-haspopup="true" aria-expanded="false" title="Colors for the marks">Colors <i class="qmdot x"></i><i class="qmdot ok"></i><i class="qmdot pts"></i></button>' +
     '<span class="qminkpop" id="qmInkPop" hidden></span></span></span>' +
     '<button class="btn sm" data-boxes>Boxes</button><button class="icon" data-close aria-label="Close">✕</button></div>' +
     '<div class="bb qmbody" id="qmBody"></div>' +
@@ -514,6 +547,7 @@ function openQuiz(view) {
     if (e.target.closest('[data-close]')) return qmClose();
     const ik = e.target.closest('[data-qink]'); if (ik) { inkColor = ik.dataset.qink; store.set('gs.ink', inkColor); renderTools(); return qmInkSet(); }
     const ic = e.target.closest('[data-qchk]'); if (ic) { setCheckInk(ic.dataset.qchk); renderTools(); return qmInkSet(); }
+    const ip = e.target.closest('[data-qpts]'); if (ip) { setPtsInk(ip.dataset.qpts); return qmInkSet(); }
     if (e.target.closest('[data-inkmenu]')) return qmInkMenu();
     if (!e.target.closest('#qmInkPop')) qmInkMenu(false);
     if (e.target.closest('[data-boxes]')) return openQuizBoxes(() => openQuiz());
@@ -523,10 +557,14 @@ function openQuiz(view) {
     const mv = e.target.closest('[data-qgo]'); if (mv) { qmGo(+mv.dataset.qgo); return; }
     const op = e.target.closest('[data-open]'); if (op) { qmClose(); return openStudent(+op.dataset.open); }
     const pk = e.target.closest('[data-peek]'); if (pk) return qmPeek(pk.closest('.qmc'));
+    const cp = e.target.closest('[data-qcopy]'); if (cp) return qmCopy(cp.closest('.qmc'));
+    if (e.target.closest('[data-copyok]')) { store.set('gs.qmCopySeen', 1); const n = $('#qmCopyNote'); if (n) n.remove(); return; }
     const ex = e.target.closest('[data-ex]'); if (ex) return exStar(ex.closest('.qmc'));
     const rs = e.target.closest('[data-reset]'); if (rs) return qmSpotSet(rs.closest('.qmc'), null);
     if (e.target.closest('[data-rest]')) return qmRest();
     const as = e.target.closest('.qmned [data-as]'); if (as) { for (const b of as.parentNode.children) b.setAttribute('aria-pressed', String(b === as)); as.closest('.qmned').querySelector('textarea').focus(); return; }
+    const nc = e.target.closest('.qmned [data-qnc]');
+    if (nc) { const ed = nc.closest('.qmned'), v = COLORS[nc.dataset.qnc]; ed.dataset.col = v; ed.querySelector('textarea').style.color = v; for (const b of ed.querySelectorAll('[data-qnc]')) b.setAttribute('aria-pressed', String(b === nc)); ed.querySelector('textarea').focus(); return; }
     if (e.target.closest('[data-nsave]')) return qmNoteDone(e.target.closest('.qmc'), true);
     if (e.target.closest('.qmned')) return;
     const qn = e.target.closest('[data-qnote]'); if (qn) return qmNoteOpen(qn.closest('.qmc'));
@@ -547,13 +585,25 @@ function qmClose() {
   closeDlg(); qzClose();
   if (batch && pages.length) openStudent(cur);   // the open paper shows the new marks
 }
-// Colors: one for ✗ and points (the same ink as her pen), one for ✓. Marks already given on this quiz change with them.
+// Colors: one for ✗ (the same ink as her pen), one for ✓, and one for points: the ✗ color, one of her own, or by credit
+// (green, amber, red). Marks already given on this quiz change with them.
 function qmInkSay() {
   const body = $('#qmBody'), btn = $('#qmInkBtn');
-  for (const el of [body, btn]) if (el) { el.style.setProperty('--qm-x', COLORS[inkColor] || COLORS.red); el.style.setProperty('--qm-ok', CHECK_INK); }
+  for (const el of [body, btn]) if (el) { el.style.setProperty('--qm-x', COLORS[inkColor] || COLORS.red); el.style.setProperty('--qm-ok', CHECK_INK); el.style.setProperty('--qm-pts', ptsInk === 'credit' ? 'conic-gradient(' + CHECK_INK + ' 0 33%, ' + PTS_AMBER + ' 0 66%, ' + (COLORS[inkColor] || COLORS.red) + ' 0)' : ptsColor()); }
+  if (body) for (const el of body.querySelectorAll('.qmmk[data-pv]')) el.style.color = ptsColor(+el.dataset.pv, +el.dataset.pt);
   const pop = $('#qmInkPop'); if (!pop || pop.hidden) return;
-  const row = (attr, on, say) => '<div class="qmirow"><span class="hsm">' + say + '</span>' + Object.entries(COLORS).map(([k, v]) => '<button class="sw" data-' + attr + '="' + k + '" style="background:' + v + '" aria-pressed="' + (k === on) + '" title="' + k + '" aria-label="' + say + ' ' + k + '"></button>').join('') + '</div>';
-  pop.innerHTML = row('qink', inkColor, '✗ and points') + row('qchk', checkInk, '✓ right') + '<p class="muted hsm">Marks already given change too.</p>';
+  pop.innerHTML = inkRows('q') + '<p class="muted hsm">Marks already given change too.</p>';
+}
+// The three rows of colors, in Quick mark's Colors menu (p 'q') and in Settings, Marking (p 's').
+function inkRows(p) {
+  const sw = (attr, k, v, on, say) => '<button class="sw" data-' + p + attr + '="' + k + '" style="background:' + v + '" aria-pressed="' + on + '" title="' + k + '" aria-label="' + say + ' ' + k + '"></button>';
+  const row = (attr, on, say) => '<div class="qmirow"><span class="hsm">' + say + '</span>' + Object.entries(COLORS).map(([k, v]) => sw(attr, k, v, k === on, say)).join('') + '</div>';
+  const x = COLORS[inkColor] || COLORS.red;
+  return row('ink', inkColor, '✗ wrong') + row('chk', checkInk, '✓ right') +
+    '<div class="qmirow qmipts"><span class="hsm">Points</span><button class="chip" data-' + p + 'pts="" aria-pressed="' + (ptsInk === '') + '" title="Points in the ✗ color">Same as ✗</button>' +
+    Object.entries(COLORS).map(([k, v]) => sw('pts', k, v, k === ptsInk, 'Points')).join('') + '</div>' +
+    '<div class="qmirow qmipts"><span class="hsm"></span><button class="chip" data-' + p + 'pts="credit" aria-pressed="' + (ptsInk === 'credit') + '" title="Full points in the ✓ color, part in amber, none in the ✗ color">By credit <i class="qmcr" style="background:' + CHECK_INK + '"></i><i class="qmcr" style="background:' + PTS_AMBER + '"></i><i class="qmcr" style="background:' + x + '"></i></button></div>' +
+    (ptsInk === 'credit' ? '<p class="muted hsm">Full: 2/2 · part: 1/2 · none: 0/2. Totals and score stamps stay in the ✗ color.</p>' : '');
 }
 function qmInkMenu(open) {
   const pop = $('#qmInkPop'), btn = $('#qmInkBtn'); if (!pop) return;
@@ -564,9 +614,14 @@ function qmInkMenu(open) {
 function qmInkSet() {
   for (const st of batch.students) for (const f of st.files || []) for (const list of Object.values(f.marks || {})) for (const m of list) {
     if (!m.qz && !m.qzn) continue;
-    m.color = m.t === 'check' ? CHECK_INK : COLORS[inkColor] || COLORS.red;
+    m.color = m.t === 'check' ? CHECK_INK : m.qz === 'total' ? totalInk() : m.t === 'text' && m.qz ? qzMarkInk(m.qz, st) : COLORS[inkColor] || COLORS.red;
   }
   saveSoon(); qmInkSay();
+}
+// The color of a question's points mark on one student's paper, from the points they were given.
+function qzMarkInk(id, st) {
+  const q = batch.quiz.qs.find(x => x.id === id), v = quizMarks(st)[id];
+  return q && v != null ? ptsColor(v, +q.pts || 1) : ptsColor();
 }
 function qmSizeSay() {
   const s = qzSizeNow(), body = $('#qmBody');
@@ -576,6 +631,7 @@ function qmSizeSay() {
 // The mark as it will look on the paper, drawn over the answer at its spot. With nothing to show, a faint circle marks the spot.
 function qmMarkEl(q, v) {
   const look = qzLook(q, v);
+  if (look && look.k === 'text') return '<span class="qmmk txt" data-pv="' + v + '" data-pt="' + (+q.pts || 1) + '" style="color:' + ptsColor(v, +q.pts || 1) + '" title="Drag to move this mark on this paper only">' + esc(look.text) + '</span>';
   if (!look) return '<span class="qmmk pin" title="Where the mark goes on this paper. Drag to move it on this paper only."></span>';
   return '<span class="qmmk' + (look.k === 'text' ? ' txt' : look.k === 'check' ? ' ok' : '') + '" title="Drag to move this mark on this paper only">' + (look.k === 'check' ? '✓' : look.k === 'x' ? '✗' : esc(look.text)) + '</span>';
 }
@@ -591,13 +647,14 @@ const qmCard = (i, q, qi) => {
       '<button class="qmb half" data-half aria-pressed="' + half + '" title="Add or take off half a point (H)">+½</button>';
   }
   const head = qzView === 'q' ? '<button class="link" data-open="' + i + '" title="Open their paper">' + esc(shownName(st, i)) + '</button>'
-    : '<b>' + esc(quizLabel(q, qi)) + '</b>' + (q.key ? '<span class="qmkey">' + esc(q.key) + '</span>' : '') + '<span class="muted">' + fmtNum(pts) + (pts === 1 ? ' pt' : ' pts') + '</span>';
+    : '<b>' + esc(quizLabel(q, qi)) + '</b>' + (q.key ? '<span class="qmkey" title="' + esc(qmKeySay()) + '">' + esc(q.key) + '</span>' : '') + '<span class="muted">' + fmtNum(pts) + (pts === 1 ? ' pt' : ' pts') + '</span>';
   const tag = v != null && qzByPts(q) ? '<span class="qmchip">' + fmtNum(v) + ' of ' + fmtNum(pts) + '</span>' : '';
   return '<div class="qmc' + state + '" tabindex="0" data-st="' + i + '" data-q="' + q.id + '"><div class="qmch">' + head + tag +
     '<span class="qmchr">' + (qzOwn(st, q) ? '<button class="link hsm" data-reset title="Put this mark back where the question’s mark goes">Reset spot</button>' : '') +
+    '<button class="btn sm" data-qcopy title="Copy this answer as a picture, to paste into ' + esc(aiSay()) + ' or anywhere else. No name, score or mark on it (P)">⧉ Copy</button>' +
     exStarBtn(st, q) + '<button class="btn sm" data-peek title="See their whole page (Space)">⤢ Whole page</button></span></div>' +
     '<div class="qmimg" title="' + (qzByPts(q) && qzHow(q) === 'pts' ? 'Drag: line this paper up' : 'Click: wrong / right. Drag: line this paper up') + '"><span class="muted hsm">…</span></div>' +
-    '<div class="qmbtns">' + btns + '<button class="qmb cm" data-qnote title="Write a comment or text on this paper (C)">Comment</button>' + (v != null ? '<button class="qmb clr" data-v="" title="Clear">Clear</button>' : '') + '</div>' + qmNoteLine(st, q) + '</div>';
+    '<div class="qmbtns">' + btns + '<button class="qmb cm" data-qnote title="Write a comment or text on this paper (C)">Comment</button>' + (v != null ? '<button class="qmb clr" data-v="" title="Clear">Clear</button>' : '') + '</div>' + qmNoteLine(st, q) + qmAnsLine(st, q) + '</div>';
 };
 // Her own words for this question on this paper: a comment in the margin with a line to the answer, or text on the page under it.
 // Tagged qzn (not qz), so marking the question again leaves them alone.
@@ -605,25 +662,29 @@ function qzNoteOf(st, q) {
   const [path, p] = quizPages(st)[q.n] || [], f = path && fileByPath(st, path), l = f && f.marks[p];
   return (l && l.find(m => m.qzn === q.id)) || null;
 }
+// The answer note this paper carries for this question, if it gets one.
+const qmAnsLine = (st, q) => { const m = qzAnsOf(st, q); return m ? '<div class="qmans" title="Goes on their paper in gold. Change where answers go in Boxes."><span class="qzgold">' + esc(tr('Answer')) + '</span>' + esc(String(q.key).trim()) + '</div>' : ''; };
 const qmNoteLine = (st, q) => { const m = qzNoteOf(st, q); return m ? '<button class="qmnote" data-qnote title="Click to change it">' + (m.t === 'note' ? 'Comment: ' : 'Text: ') + esc(m.text) + '</button>' : ''; };
 function qmNoteOpen(el) {
   if (!el || el.querySelector('.qmned')) return;
   const st = batch.students[+el.dataset.st], q = batch.quiz.qs.find(x => x.id === el.dataset.q), m = qzNoteOf(st, q);
   const as = m ? (m.t === 'note' ? 'note' : 'text') : store.get('gs.qmNoteAs', 'note');
   const ln = el.querySelector('.qmnote'); if (ln) ln.hidden = true;
-  el.insertAdjacentHTML('beforeend', '<div class="qmned"><textarea rows="2" placeholder="Type what to write on their paper…" aria-label="Comment">' + esc(m ? m.text : '') + '</textarea>' +
+  const col = (m && m.color) || COLORS[inkColor] || COLORS.red;   // its color can change while she types, before it is saved
+  el.insertAdjacentHTML('beforeend', '<div class="qmned" data-col="' + col + '"><textarea rows="2" placeholder="Type what to write on their paper…" aria-label="Comment" style="color:' + col + '">' + esc(m ? m.text : '') + '</textarea>' +
+    '<div class="qmnedc"><span class="muted hsm">Color</span>' + Object.entries(COLORS).map(([k, v]) => '<button type="button" class="sw" data-qnc="' + k + '" style="background:' + v + '" aria-pressed="' + (v === col) + '" title="' + k + '" aria-label="Comment in ' + k + '"></button>').join('') + '</div>' +
     '<div class="qmnedb"><span class="seg sm"><button data-as="note" aria-pressed="' + (as === 'note') + '" title="In the margin, with a line to the answer">Margin comment</button><button data-as="text" aria-pressed="' + (as === 'text') + '" title="Written on the page under the answer">Text on page</button></span>' +
     '<span class="muted hsm">Enter to save, Esc to cancel</span><button class="btn sm primary" data-nsave>Save</button></div></div>');
   const ta = el.querySelector('.qmned textarea'); ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length);
 }
 function qmNoteDone(el, save) {
   const ed = el && el.querySelector('.qmned'); if (!ed) return;
-  const text = ed.querySelector('textarea').value.trim(), as = ed.querySelector('[data-as][aria-pressed="true"]').dataset.as;
+  const text = ed.querySelector('textarea').value.trim(), as = ed.querySelector('[data-as][aria-pressed="true"]').dataset.as, col = ed.dataset.col;
   ed.remove();
-  if (save) qzNoteSet(batch.students[+el.dataset.st], batch.quiz.qs.find(x => x.id === el.dataset.q), text, as).then(() => { if (el.isConnected) { qmRefresh(el); el.focus({ preventScroll: true }); } });
+  if (save) qzNoteSet(batch.students[+el.dataset.st], batch.quiz.qs.find(x => x.id === el.dataset.q), text, as, col).then(() => { if (el.isConnected) { qmRefresh(el); el.focus({ preventScroll: true }); } });
   else { const ln = el.querySelector('.qmnote'); if (ln) ln.hidden = false; el.focus({ preventScroll: true }); }
 }
-async function qzNoteSet(st, q, text, as) {
+async function qzNoteSet(st, q, text, as, col) {
   const [path, p] = quizPages(st)[q.n] || [], f = path && fileByPath(st, path);
   if (!f) return;
   const list = (f.marks[p] ||= []), i = list.findIndex(m => m.qzn === q.id), old = i >= 0 ? list[i] : null;
@@ -631,7 +692,7 @@ async function qzNoteSet(st, q, text, as) {
   if (text) {
     const sz = await qzPageSize(st, q.n); if (!sz) return;
     store.set('gs.qmNoteAs', as);
-    const [dx, dy] = qzShift(st, q.n), W = sz.W, H = sz.H, color = COLORS[inkColor] || COLORS.red;
+    const [dx, dy] = qzShift(st, q.n), W = sz.W, H = sz.H, color = col || COLORS[inkColor] || COLORS.red;
     let m;
     if (as === 'note') m = old && old.t === 'note' ? { ...old, text, color } : { t: 'note', color, ax: r1(clamp((q.x + q.w + dx) * W, 4, W - 4)), ay: r1(clamp((q.y + q.h / 2 + dy) * H, 4, H - 4)), text, qzn: q.id };
     else {
@@ -643,6 +704,7 @@ async function qzNoteSet(st, q, text, as) {
   if (!list.length) delete f.marks[p];
   saveSoon(); renderList();
 }
+const qmKeySay = () => 'The right answer. ' + (qzAnsMode() === 'off' ? 'Answer notes are off; turn them on in Boxes.' : qzAnsMode() === 'all' ? 'It goes on every paper in a gold note.' : 'It goes in a gold note on papers that lost points here.');
 const qmQ = q => (qzByPts(q) ? 'Scale 0 to ' + fmtNum(+q.pts || 1) : fmtNum(+q.pts || 1) + ((+q.pts || 1) === 1 ? ' point' : ' points') + ', right or wrong') + ' · ' + (QZ_HOW[q.how] || QZ_HOW.cx);
 let qmTok = 0;
 function qmRender() {
@@ -656,11 +718,11 @@ function qmRender() {
     $('#qmNav').innerHTML = '<button class="btn sm" data-qgo="-1" aria-label="Earlier question"' + (qzAt ? '' : ' disabled') + '>‹</button><select id="qmPick" class="btn sm" aria-label="Question">' +
       qs.map((x, i) => '<option value="' + i + '"' + (i === qzAt ? ' selected' : '') + '>Question ' + esc(quizLabel(x, i)) + '</option>').join('') + '</select>' +
       '<button class="btn sm" data-qgo="1" aria-label="Next question"' + (qzAt < qs.length - 1 ? '' : ' disabled') + '>›</button>' +
-      (q.key ? '<span class="qmkey big" title="The right answer">' + esc(q.key) + '</span>' : '') + '<span class="muted hsm">' + qmQ(q) + '</span>';
+      (q.key ? '<span class="qmkey big" title="' + esc(qmKeySay()) + '">' + esc(q.key) + '</span>' : '') + '<span class="muted hsm">' + qmQ(q) + '</span>';
     $('#qmProg').textContent = done + ' of ' + who.length + ' marked';
     $('#qmFoot').innerHTML = '<button class="btn primary" data-rest' + (done === who.length ? ' disabled' : '') + '>' + (qzByPts(q) ? 'Give the rest ' + fmtNum(full) : 'Mark the rest right') + '</button>';
     $('#qmHint').textContent = (qzByPts(q) ? 'Keys: a number for its points, H adds ½' : 'Click an answer to put an ✗ on it, click again to take it off. Keys: 1 right, 0 or X wrong') +
-      ', C comment, E example, arrows to move, Space whole page, Ctrl Z undo, [ and ] for the question. Drag a mark to move it on that paper.';
+      ', C comment, E example, P copy a picture, arrows to move, Space whole page, Ctrl Z undo, [ and ] for the question. Drag a mark to move it on that paper.';
     cards = who.map(i => [i, q, qzAt]);
     body.className = 'bb qmbody qmgrid';
   } else {
@@ -671,7 +733,7 @@ function qmRender() {
       '<span class="qmtot">' + fmtNum(quizSum(st)) + ' / ' + fmtNum(quizMax()) + (n === qs.length && percentFor(quizSum(st)) != null ? ' = ' + percentFor(quizSum(st)) + '%' : '') + '</span>';
     $('#qmProg').textContent = n + ' of ' + qs.length + ' marked';
     $('#qmFoot').innerHTML = '<button class="btn" data-open="' + qzStu + '">Open their paper</button><button class="btn primary" data-rest' + (n === qs.length ? ' disabled' : '') + '>Mark the rest right</button>';
-    $('#qmHint').textContent = 'Click an answer to put an ✗ on it, click again to take it off. Keys: ↑ ↓ to move, a number for its points, C comment, E example, Space whole page, Ctrl Z undo, [ and ] for the student.';
+    $('#qmHint').textContent = 'Click an answer to put an ✗ on it, click again to take it off. Keys: ↑ ↓ to move, a number for its points, C comment, E example, P copy a picture, Space whole page, Ctrl Z undo, [ and ] for the student.';
     cards = qs.map((q, qi) => [qzStu, q, qi]);
     body.className = 'bb qmbody qmcol';
   }
@@ -723,6 +785,8 @@ function qmRefresh(el) {
   el.querySelector('.qmbtns').replaceWith(fresh.querySelector('.qmbtns'));
   const nl = el.querySelector('.qmnote'), fl = fresh.querySelector('.qmnote');
   if (!el.querySelector('.qmned')) { if (nl) nl.remove(); if (fl) el.querySelector('.qmbtns').after(fl); }
+  const al = el.querySelector('.qmans'), fa = fresh.querySelector('.qmans');
+  if (al) al.remove(); if (fa) el.append(fa);
   qmMarkShow(el);
   const who = quizWho(), qs = batch.quiz.qs;
   if (qzView === 'q') {
@@ -824,13 +888,69 @@ function qmPeekClose() {
   if (back && back.isConnected) back.focus({ preventScroll: true });
   return true;
 }
+/* a picture of one answer, to ask Claude (or anyone) about it */
+// Only the answer in its box: no name, score, mark or file name. Name covers are painted in the way Share with Claude paints
+// them. On top, the question, its points and her answer key, so the picture makes sense on its own. Nothing is sent anywhere.
+async function qzAnswerPic(st, q, qi) {
+  const [path, p] = quizPages(st)[q.n] || [], f = path && fileByPath(st, path);
+  if (!f) return null;
+  await workerReady;
+  const js = await qzDoc(f), page = await js.getPage(p + 1), v1 = vpRot(f, p, page, 1), k = 1600 / v1.width, vp = vpRot(f, p, page, k);
+  const pc = document.createElement('canvas'); pc.width = Math.ceil(vp.width); pc.height = Math.ceil(vp.height);
+  const pctx = pc.getContext('2d'); pctx.fillStyle = '#fff'; pctx.fillRect(0, 0, pc.width, pc.height);
+  await page.render({ canvasContext: pctx, ...vpDraw(f, p, page, k), annotationMode: pdfjsLib.AnnotationMode.ENABLE }).promise;
+  scanClip(pctx, f, p, vp.width, pc.width, pc.height);
+  const L = lightForPage(st, f, p); if (L) lightCanvas(pctx, pc.width, pc.height, L);
+  await anonPaint(pctx, st, f, p, page, vp);
+  page.cleanup();
+  const [dx, dy] = qzShift(st, q.n);
+  const x0 = clamp(q.x + dx - QZ_PAD, 0, 1), y0 = clamp(q.y + dy - QZ_PAD, 0, 1), x1 = clamp(q.x + dx + q.w + QZ_PAD, 0, 1), y1 = clamp(q.y + dy + q.h + QZ_PAD, 0, 1);
+  const sx = Math.round(x0 * pc.width), sy = Math.round(y0 * pc.height), sw = Math.max(1, Math.round((x1 - x0) * pc.width)), sh = Math.max(1, Math.round((y1 - y0) * pc.height));
+  // The words on top, wrapped to the picture's width.
+  const pts = +q.pts || 1, words = qzByPts(q) ? qzStepWords(pts) : [];
+  const lines = [['600', 'Question ' + quizLabel(q, qi) + ' · ' + (qzByPts(q) ? 'scored 0 to ' + fmtNum(pts) : fmtNum(pts) + (pts === 1 ? ' point' : ' points') + ', right or wrong')]];
+  if (q.key) lines.push(['400', 'Answer key: ' + q.key]);
+  if (words.some(Boolean)) lines.push(['400', 'Scale: ' + qzSteps(pts).map((v, i) => fmtNum(v) + (words[i] ? ' ' + words[i] : '')).join(', ')]);
+  const W = Math.max(sw, 560), pad = 16, fs = 20, lh = 28, font = w => w + ' ' + fs + 'px Inter, system-ui, sans-serif';
+  const m = document.createElement('canvas').getContext('2d'), rows = [];
+  for (const [w, t] of lines) {
+    m.font = font(w); let row = '';
+    for (const word of t.split(' ')) { const next = row ? row + ' ' + word : word; if (row && m.measureText(next).width > W - pad * 2) { rows.push([w, row]); row = word; } else row = next; }
+    rows.push([w, row]);
+  }
+  const top = pad + rows.length * lh + pad - 8;
+  const c = document.createElement('canvas'); c.width = W; c.height = top + sh + pad;
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
+  ctx.fillStyle = '#1F2933'; ctx.textBaseline = 'top';
+  rows.forEach(([w, t], i) => { ctx.font = font(w); ctx.fillText(t, pad, pad + i * lh); });
+  ctx.fillStyle = '#E4E6EA'; ctx.fillRect(0, top - 1, W, 1);
+  ctx.drawImage(pc, sx, sy, sw, sh, Math.round((W - sw) / 2), top + pad / 2, sw, sh);
+  pc.width = pc.height = 0;
+  return c;
+}
+// P or ⧉ Copy: the picture goes on the clipboard, or, where the browser can't copy pictures, saves as a file.
+async function qmCopy(el) {
+  if (!el) return;
+  const st = batch.students[+el.dataset.st], q = batch.quiz.qs.find(x => x.id === el.dataset.q), qi = batch.quiz.qs.indexOf(q);
+  if (!st || !q) return;
+  const blobP = qzAnswerPic(st, q, qi).then(c => { if (!c) throw new Error('no page'); return canvasPng(c); });
+  const say = 'Question ' + quizLabel(q, qi);
+  const how = await copyPicture(blobP, say + '.png');   // the clipboard, or a file where the browser can't copy pictures (src/snip.js)
+  if (how === 'none') return toast('This page isn’t in their scan.');
+  const copied = how === 'copied';
+  toast(copied ? 'Picture of ' + say + ' copied. Paste it into ' + aiSay() + ' to ask about it.' : 'This browser can’t copy pictures, so ' + say + ' was saved as a picture file.', 4000);
+  if (!store.get('gs.qmCopySeen', 0) && !$('#qmCopyNote') && $('#qmBody'))
+    $('#qmBody').insertAdjacentHTML('beforebegin', '<div class="qmcopynote" id="qmCopyNote" role="status"><p><b>What the picture shows.</b> Only this answer, with the question and your answer key on top. The student’s name, their score, your mark and the file name are left off, and any name covers are painted in. It still shows the student’s own handwriting and words.</p>' +
+      '<p>Nothing is sent anywhere. The picture stays on this computer until you paste it somewhere yourself.</p><button class="btn sm" data-copyok>Got it</button></div>');
+}
 function qmKey(e) {
   if (!$('#qmBody')) return;
   const stop = () => { e.preventDefault(); e.stopPropagation(); };
   if ($('#qmPeek')) { if (e.key === 'Escape' || e.key === ' ') { stop(); qmPeekClose(); } return; }
   if (e.target.closest('.qmned')) {   // typing a comment: Enter saves, Shift Enter is a new line, Esc leaves it as it was
     if (e.key === 'Escape') { stop(); qmNoteDone(e.target.closest('.qmc'), false); }
-    else if (e.key === 'Enter' && !e.shiftKey) { stop(); qmNoteDone(e.target.closest('.qmc'), true); }
+    else if (e.key === 'Enter' && !e.shiftKey && !e.isComposing && e.keyCode !== 229) { stop(); qmNoteDone(e.target.closest('.qmc'), true); }
     else e.stopPropagation();
     return;
   }
@@ -864,6 +984,7 @@ function qmKey(e) {
   if ((e.key === '1' || e.key === '0') && !scale) { stop(); return qmMark(el, e.key === '1' ? +q.pts || 1 : 0); }   // right is all its points
   if (e.key === 'x' || e.key === 'X') { stop(); return qmMark(el, 0); }
   if (e.key === 'c' || e.key === 'C') { stop(); return qmNoteOpen(el); }
+  if (e.key === 'p' || e.key === 'P') { stop(); return qmCopy(el); }
   if (e.key === 'Backspace' || e.key === 'Delete') { stop(); return qmMark(el, null, true); }
 }
 // On a picture: a click marks it wrong (or right again if it was wrong); a drag lines that paper's page up, moving every box on it.
@@ -919,4 +1040,4 @@ function quizBtn() {
 }
 $('#quizBtn').onclick = () => openQuiz();
 $('#quizTop').onclick = () => openQuiz();
-Object.assign(window.__gs, { openQuiz, openQuizBoxes, quizSet, quizSum, quizCount, quizPart, quizMax, quizOn, qzCrop, qzRect, qzSpot, quizBtn });
+Object.assign(window.__gs, { qzAnsOf, openQuiz, openQuizBoxes, quizSet, quizSum, quizCount, quizPart, quizMax, quizOn, qzCrop, qzRect, qzSpot, quizBtn });

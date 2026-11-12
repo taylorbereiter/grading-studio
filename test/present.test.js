@@ -403,3 +403,141 @@ test('while presenting, P picks a student from the class being taught and G deal
     assert.deepEqual(a.errors, []);
   } finally { await a.done(); }
 });
+
+test('shuffling the groups again and again, on the last slide, keeps the lesson on and the slide where it was', async () => {
+  const a = await open();
+  try {
+    const { page } = a, A1 = ['Aria Testwell', 'Bram Sample', 'Cleo Fixture', 'Dov Madeup', 'Esme Pretend', 'Finn Notreal', 'Gus Imagined', 'Hana Placeholder'];
+    await seed(page);
+    await page.evaluate(A1 => { localStorage.setItem('gs.rolls', JSON.stringify([['Course A1', A1]])); window.__pick.PK.fast = true; }, A1);
+    await present(page);
+    await page.keyboard.press('End');
+    assert.equal((await state(page)).i, 4);
+    await page.$eval('#present [data-p="groups"]', b => b.click()); await until(page, () => !!document.querySelector('#pkGroups'));
+    // the buttons are drawn again on every click: none of these clicks may reach the slides behind
+    let last = '';
+    for (let i = 0; i < 8; i++) {
+      await page.$eval('#pkBar [data-pk="again"]', b => b.click());
+      const now = (await page.$$eval('.pk-g', g => g.map(x => [...x.querySelectorAll('.pk-s')].map(d => d.textContent).sort().join('+')).sort().join(' | ')));
+      assert.notEqual(now, last, 'shuffle ' + (i + 1) + ' gives new groups'); last = now;
+      const s = await state(page);
+      assert.deepEqual([s.on, s.i, s.ended], [true, 4, false], 'shuffle ' + (i + 1) + ' left the lesson alone');
+    }
+    for (const n of ['2', '3']) await page.$eval('#pkBar [data-pkn="' + n + '"]', b => b.click());
+    await page.$eval('#pkBar [data-pkby="count"]', b => b.click());
+    assert.deepEqual(await page.evaluate(() => [window.__present.PR.on, window.__present.PR.i, !!document.querySelector('#pkStage')]), [true, 4, true]);
+    // a shuffle keeps last time's groups apart as far as it can: four in pairs can always be dealt with no pair the same
+    const apart = await page.evaluate(() => { const P = window.__pick, names = ['a', 'b', 'c', 'd']; let prev = P.groups(names, 'size', 2), same = 0; for (let i = 0; i < 30; i++) { const g = P.groups(names, 'size', 2, prev); if (g.some(x => prev.some(y => x.slice().sort().join() === y.slice().sort().join()))) same++; prev = g; } return same; });
+    assert.equal(apart, 0);
+    assert.deepEqual(a.errors, []);
+  } finally { await a.done(); }
+});
+
+test('groups can be changed by hand: drag a name, click to move or swap, make my own, and Ctrl Z takes it back', async () => {
+  const a = await open();
+  try {
+    const { page } = a, A1 = ['Aria Testwell', 'Bram Sample', 'Cleo Fixture', 'Dov Madeup', 'Esme Pretend', 'Finn Notreal'];
+    await seed(page);
+    await page.evaluate(A1 => { localStorage.setItem('gs.rolls', JSON.stringify([['Course A1', A1]])); window.__pick.PK.fast = true; }, A1);
+    await present(page);
+    await page.keyboard.press('g'); await until(page, () => !!document.querySelector('#pkGroups'));
+    await page.keyboard.press('3');
+    const groups = () => page.$$eval('.pk-g', g => g.map(x => [...x.querySelectorAll('.pk-s')].map(d => d.textContent)));
+    const g0 = await groups();
+    assert.deepEqual(g0.map(g => g.length), [3, 3]);
+    // drag the first name of group 1 onto group 2
+    const who = g0[0][0], from = await page.$('.pk-g[data-pkg="0"] .pk-s'), to = await page.$('.pk-g[data-pkg="1"]');
+    const f = await from.boundingBox(), t = await to.boundingBox();
+    await page.mouse.move(f.x + f.width / 2, f.y + f.height / 2); await page.mouse.down();
+    await page.mouse.move(f.x + 40, f.y + 20, { steps: 4 });
+    assert.ok(await page.$('.pk-ghost'), 'the name follows the pointer');
+    await page.mouse.move(t.x + t.width / 2, t.y + t.height - 8, { steps: 6 });
+    assert.ok(await page.$('.pk-g[data-pkg="1"].pk-over'), 'the group under it lights up');
+    await page.mouse.up();
+    const g1 = await groups();
+    assert.deepEqual(g1.map(g => g.length), [2, 4]); assert.ok(g1[1].includes(who));
+    assert.equal(await page.$('.pk-ghost'), null);
+    assert.deepEqual([(await state(page)).on, (await state(page)).i], [true, 0], 'the drag did not move the slide');
+    // click a name, then a name in the other group: they swap
+    const x = g1[0][0], y = g1[1][0];
+    await page.$eval('.pk-g[data-pkg="0"] .pk-s', d => d.click());
+    assert.ok(await page.$('.pk-g[data-pkg="0"] .pk-s.sel'));
+    await page.$eval('.pk-g[data-pkg="1"] .pk-s', d => d.click());
+    const g2 = await groups();
+    assert.ok(g2[0].includes(y) && g2[1].includes(x) && !g2[0].includes(x), 'swapped');
+    // click a name, then a group: it moves there
+    await page.$eval('.pk-g[data-pkg="1"] .pk-s', d => d.click());
+    await page.$eval('.pk-g[data-pkg="0"] h3', d => d.click());
+    assert.deepEqual((await groups()).map(g => g.length), [3, 3]);
+    // Ctrl Z, three times: back to the groups as they were dealt
+    for (let i = 0; i < 3; i++) { await page.keyboard.down('Control'); await page.keyboard.press('z'); await page.keyboard.up('Control'); }
+    assert.deepEqual(await groups(), g0);
+    // a shuffle can be undone too
+    await page.$eval('#pkBar [data-pk="again"]', b => b.click());
+    await page.$eval('#pkBar [data-pk="undo"]', b => b.click());
+    assert.deepEqual(await groups(), g0);
+    // make my own: every group empty, everyone waiting above; + Group adds one; an empty one can go
+    await page.$eval('#pkBar [data-pk="hand"]', b => b.click());
+    assert.deepEqual((await groups()).map(g => g.length), [0, 0]);
+    assert.deepEqual((await page.$$eval('.pk-pool .pk-s', d => d.map(x => x.textContent))), A1);
+    await page.$eval('#pkBar [data-pk="addg"]', b => b.click());
+    assert.equal((await groups()).length, 3);
+    await page.$eval('.pk-g[data-pkg="2"] [data-pkgx]', b => b.click());
+    assert.equal((await groups()).length, 2);
+    await page.$eval('.pk-pool .pk-s', d => d.click()); await page.$eval('.pk-g[data-pkg="1"]', d => d.click());
+    assert.deepEqual((await groups()).map(g => g.length), [0, 1]);
+    // someone away leaves their group; back again, they wait to be put in one; the groups made by hand stay
+    await page.keyboard.press('w');
+    await page.$eval('[data-pkw="0"]', b => b.click());
+    assert.deepEqual((await groups()).map(g => g.length), [0, 0]);
+    await page.$eval('[data-pkw="0"]', b => b.click());
+    assert.equal(await page.$eval('.pk-pool .pk-s:last-child', d => d.textContent), A1[0]);
+    // Escape closes Who's here, then the groups; the lesson is still on
+    await page.keyboard.press('Escape'); await page.keyboard.press('Escape');
+    assert.equal(await page.$('#pkStage'), null);
+    assert.equal((await state(page)).on, true);
+    // opened again before the page is closed, the groups are as they were left
+    await page.keyboard.press('g'); await until(page, () => !!document.querySelector('#pkGroups'));
+    assert.equal(await page.$$eval('.pk-pool .pk-s', d => d.length), 6);
+    assert.deepEqual(a.errors, []);
+  } finally { await a.done(); }
+});
+
+test('the timer keeps going after presenting ends, in the corner of the Planner, and comes back on the slides', async () => {
+  const a = await open();
+  try {
+    const { page } = a;
+    await seed(page, { noSlot: true });
+    await present(page);
+    await page.keyboard.press('t'); await page.keyboard.press('5');
+    await page.evaluate(() => window.__present.end());
+    await until(page, () => !document.querySelector('#present'));
+    await until(page, () => !!document.querySelector('#prFloat'));
+    assert.match(await page.$eval('#prFloat .prf-t', b => b.textContent), /^(5:00|4:5\d)$/);
+    const kept = await page.evaluate(() => JSON.parse(localStorage.getItem('gsp.presentTimer')));
+    assert.deepEqual(Object.keys(kept).sort(), ['done', 'end', 'left', 'paused', 'total'], 'only times are kept');
+    // pause it from the corner
+    await page.$eval('#prFloat .prf-t', b => b.click());
+    assert.match(await page.$eval('#prFloat', f => f.textContent), /Paused/);
+    const held = await page.$eval('#prFloat .prf-t', b => b.textContent);
+    // a refresh keeps it
+    await page.reload({ waitUntil: 'load' });
+    await page.waitForFunction(() => window.__planner && document.querySelector('#lessons .ls-top'));
+    await until(page, () => !!document.querySelector('#prFloat'));
+    assert.equal(await page.$eval('#prFloat .prf-t', b => b.textContent), held);
+    // presenting again: the same timer on the slides, and the corner box is gone
+    await page.evaluate(() => window.__planner.openLessonForTest(window.__planner.L.lessons[0], 0));
+    await present(page);
+    assert.equal(await page.$('#prFloat'), null);
+    assert.equal(await page.$eval('#prChip', c => c.hidden ? '' : c.textContent), held);
+    await page.$eval('#prChip', c => c.click());   // going on
+    await page.keyboard.press('Escape');
+    await until(page, () => !document.querySelector('#present'));
+    await until(page, () => !!document.querySelector('#prFloat') && !/Paused/.test(document.querySelector('#prFloat').textContent));
+    // × stops it, and nothing is left behind
+    await page.$eval('#prFloat .prf-x', b => b.click());
+    assert.equal(await page.$('#prFloat'), null);
+    assert.equal(await page.evaluate(() => localStorage.getItem('gsp.presentTimer')), null);
+    assert.deepEqual(a.errors, []);
+  } finally { await a.done(); }
+});

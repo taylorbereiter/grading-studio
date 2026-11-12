@@ -1,13 +1,12 @@
 {
- "version": "1.27.7",
- "build": "7c2486b75350",
+ "version": "1.27.30",
+ "build": "2666e73f59f6",
  "notes": [
-  "Keep strong work as an example: press ☆ Example on an answer in Quick mark (or E), or pick Use as an example in the ⋯ beside a student’s name for a whole paper or part of a page. Names are covered, and your marks and the score stay off unless you switch them on. It is always optional.",
-  "The Examples tab on an assignment, and Examples in the sidebar for every class, have Show to the class, Copy picture, Download and Download as a sheet.",
-  "Examples go to your linked folder and into the take-home file with the rest of your work."
+  "A lesson in the Planner has a Links box for the web pages you open while teaching it. Paste an address, or pick one from School resources.",
+  "A School resource can be for one class. Its links then show on every lesson for that class, and in Present under Links (the L key)."
  ],
  "files": {
-  "index.html": "a39d76ddf3e402a4e216d6262137f9aadc65991745eaf7a6896932eae5ab1136",
-  "planner.html": "7c3f7c96b36512fd816609b846544423f1e2b13fe494dd0372dbd99161da62c2"
+  "index.html": "d426b88215703511e4fac68802eba8357a2e60c9539fad856683366cb104b00d",
+  "planner.html": "a836c3c9d9ef95729f86c00f24dee77ec91f2bd059ae4054393113871e8971e6"
  }
 }

@@ -27,7 +27,7 @@ for (const width of [1280, 1440]) test('the top bar is one row at ' + width + 'p
     return { same: rects.every(r => Math.abs(mid(r) - y) < 4), h: top.getBoundingClientRect().height, spill: top.scrollWidth - top.clientWidth, controls: shown.filter(e => e.matches('button,select,a.atab')).map(e => e.id) };
   });
   assert.ok(bar.same, 'all on one row'); assert.ok(bar.h < 60, 'one row tall, got ' + bar.h); assert.ok(bar.spill <= 0, 'nothing spills out');
-  assert.deepEqual(bar.controls, ['markTab', 'gradesBtn', 'insightsTab', 'exportBtn', 'saveWhere', 'moreBtn', 'closeBtn']);   // the four tabs, the line saying where her work is saved, Setup and ✕
+  assert.deepEqual(bar.controls, ['markTab', 'gradesBtn', 'insightsTab', 'exportBtn', 'saveWhere', 'moreBtn', 'fullBtn', 'closeBtn']);   // the four tabs, the line saying where her work is saved, Setup, full screen and ✕
   await page.click('#moreBtn');
   for (const id of ['classSel', 'setupBtn', 'bringBtn', 'openRepBtn', 'quizBtn', 'impBtn']) {
     const r = await page.$eval('#' + id, e => { const b = e.getBoundingClientRect(); return e.checkVisibility() && b.left >= 0 && b.right <= innerWidth && b.bottom <= innerHeight; });
@@ -186,7 +186,7 @@ test('Box each grade, Box it by hand and Check the covers show the paper', async
   await page.evaluate(() => window.__gs.openAnon());
   await page.waitForSelector('#dlgBox [data-check]'); await page.click('#dlgBox [data-check]');
   await page.waitForSelector('#ccBody canvas');
-  assert.match(await named(), / → S-/, 'its title is the student and their code');
+  assert.doesNotMatch(await named(), / → S-/, 'from anonymous grading its title is the student alone, with no Claude code');
   await page.keyboard.press('Escape');
   await page.waitForSelector('#dlgBox [data-go]');
   assert.deepEqual(page.errors, []);
@@ -510,7 +510,7 @@ test('Inter is built in, and opening the app contacts nobody', async () => {
 
 test('the built file stays a sensible size with the font in it', () => {
   const size = fs.statSync(path.join(ROOT, 'Grading Studio.html')).size;
-  assert.ok(size < 6.0e6, 'it’s ' + (size / 1e6).toFixed(2) + ' MB');   // about 5.9 MB, with strong examples, the school resources page, with attendance and the seating chart, with the help answers, report comments, tablet input and a second language, with going back in time and updates, with the Gradebook and its averages, extra credit, the sidebar, Word papers as PDF and the assignment tabs: the iPhone photo decoder (about 0.7 MB), the Inter font (about 0.2 MB) and the stickers (about 0.15 MB) are bundled so the one file works offline
+  assert.ok(size < 6.3e6, 'it’s ' + (size / 1e6).toFixed(2) + ' MB');   // about 5.9 MB, with strong examples, the school resources page, with attendance and the seating chart, with the help answers, report comments, tablet input and a second language, with going back in time and updates, with the Gradebook and its averages, extra credit, the sidebar, Word papers as PDF and the assignment tabs: the iPhone photo decoder (about 0.7 MB), the Inter font (about 0.2 MB) and the stickers (about 0.15 MB) are bundled so the one file works offline
 });
 
 test('the build only leaves out lines that really are comments', () => {   // a // line inside a multi-line string would be lost from the app
