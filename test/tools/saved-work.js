@@ -130,7 +130,7 @@ async function walk(ctx, place, { A, L }) {
     return { name: b.name, students: b.students.map(s => ({ key: s.key, grade: s.grade, status: s.status || '', files: s.files.map(f => ({ path: f.path, bytes: f.data ? f.data.byteLength || f.data.length : 0, marks: f.marks, rot: f.rot, added: !!f.added })) })) };
   });
   for (const t of ['/grades', '/grades/sheet', '/insights', '/insights/consistency', '/return']) await at('#/a/' + A + t, '#dlg.aspage');
-  seen.grades = await (async () => { await at('#/a/' + A + '/grades', '#dlg.aspage'); return page.$eval('#dlg', e => e.innerText.replace(/[ \t]+/g, ' ').trim()); })();
+  seen.grades = await (async () => { await at('#/a/' + A + '/grades', '#dlg.aspage'); return page.$eval('#dlg', e => e.innerText.replace(/\s+/g, ' ').trim()); })();   // every word and number in order; where a line breaks is the layout's (a row to check became a table row again, 1.27.34)
   for (const k of ['saving', 'classes', 'terms', 'grading', 'marking', 'timetable', 'display', 'claude', 'keys']) await at('#/settings/' + k);
   await at('#/', '#railClasses a');
   await savedAll(page); await sleep(500);
