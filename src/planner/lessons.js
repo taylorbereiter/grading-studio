@@ -479,7 +479,9 @@ let lSaveT;
 function lessonChanged(rethumb) {
   const el = $('#lsSaved'); if (el) el.textContent = 'Saving…';
   if (rethumb !== false) refreshThumb(L.cur);
-  clearTimeout(lSaveT); lSaveT = setTimeout(async () => { await lPut(L.open); const e = $('#lsSaved'); if (e) e.textContent = '✓ Saved'; }, 400);
+  // The lesson is the one being edited now: if the editor is closed or another lesson opened in the 400 ms, this one is still saved, never a null one.
+  const l = L.open; if (!l) return;
+  clearTimeout(lSaveT); lSaveT = setTimeout(async () => { await lPut(l); const e = $('#lsSaved'); if (e) e.textContent = '✓ Saved'; }, 400);
 }
 
 // In-place editing: a text box laid exactly over the slide text.

@@ -2019,7 +2019,8 @@ let lSaveT;
 function lessonChanged(rethumb) {
   const el = $('#lsSaved'); if (el) el.textContent = 'Saving…';
   if (rethumb !== false) refreshThumb(L.cur);
-  clearTimeout(lSaveT); lSaveT = setTimeout(async () => { await lPut(L.open); const e = $('#lsSaved'); if (e) e.textContent = '✓ Saved'; }, 400);
+  const l = L.open; if (!l) return;
+  clearTimeout(lSaveT); lSaveT = setTimeout(async () => { await lPut(l); const e = $('#lsSaved'); if (e) e.textContent = '✓ Saved'; }, 400);
 }
 
 let lEditing = null;
@@ -6262,7 +6263,8 @@ const LANG_ES = {
     'one-student': { q: '¿Cómo veo todo sobre un estudiante?', words: 'perfil individual familia reunión tutoría progreso gráfico',
       a: ['Abre la clase, elige **Students** y haz clic en un nombre. La página del estudiante tiene cada nota, la nota del periodo y cómo va evolucionando.', 'La pestaña **Charts** de la clase muestra los mismos números de todos a la vez.'] },
     'attendance': { q: '¿Puedo pasar lista en la aplicación?', go: 'Abrir Ajustes, Clases', words: 'asistencia lista presente ausente falta tarde retraso justificada registro',
-      a: ['Sí. Abre una clase y elige **Attendance**. Todos empiezan como presentes, así que pulsa **Late**, **Excused** o **Absent** solo para quien no lo esté, o **Everyone is here** si están todos. Cada pulsación se guarda, con una nota si la quieres.',
+      a: ['Sí. Abre una clase y elige **Attendance**. Todos empiezan como presentes, así que pulsa **Late** o **Absent, reason unknown** solo para quien no lo esté, o **Everyone is here** si están todos. Cada pulsación se guarda, con una nota si la quieres.',
+        'Cuando sepas que una falta está justificada, abre ese día y pulsa **Absent, excused**. **Look back** muestra las faltas que aún no tienen motivo.',
         '**Look back** muestra cada día guardado en una tabla, con los totales de cada estudiante. **Copy this day** y **Download as a spreadsheet** lo sacan para el sistema de tu centro.',
         'La asistencia se queda en este navegador y en tu carpeta, como el resto de tu trabajo. Si no la usas, desactívala en Ajustes, **Classes and rosters**.'] },
     'learning-goals': { q: '¿Puedo ver las notas por objetivo de aprendizaje o estándar?', go: 'Abrir Ajustes, Calificación', words: 'estándares estándar destrezas objetivos resultados dominio repasar etiquetar competencia',
@@ -6666,7 +6668,8 @@ const LANG_ZH = {
     'one-student': { q: '怎麼查看一位學生的所有資料？', words: '個人檔案 個別 家長 會談 導師 進步 圖表',
       a: ['開啟班級，選擇 **Students**，再按學生的名字。學生頁面有每一項分數、學期成績和變化趨勢。', '班級的 **Charts** 分頁會同時顯示所有人的相同數據。'] },
     'attendance': { q: '可以在這裡點名嗎？', go: '開啟設定、班級', words: '點名 出席 出缺席 缺席 遲到 請假 曠課 紀錄 attendance',
-      a: ['可以。開啟一個班級，選擇 **Attendance**。每個人一開始都是出席，所以只要替沒到的人按 **Late**、**Excused** 或 **Absent**；如果全員到齊，就按 **Everyone is here**。每按一次都會儲存，也可以加上備註。',
+      a: ['可以。開啟一個班級，選擇 **Attendance**。每個人一開始都是出席，所以只要替沒到的人按 **Late** 或 **Absent, reason unknown**；如果全員到齊，就按 **Everyone is here**。每按一次都會儲存，也可以加上備註。',
+        '知道某次缺席是請假之後，打開那一天，按 **Absent, excused**。**Look back** 會列出還不知道原因的缺席。',
         '**Look back** 會用一張表顯示每個已儲存的日期，以及每位學生的總計。**Copy this day** 和 **Download as a spreadsheet** 可以把資料帶到學校的系統。',
         '出缺席紀錄和你其他的工作一樣，只留在這個瀏覽器和你的資料夾裡。如果用不到，可以在設定的 **Classes and rosters** 關閉。'] },
     'learning-goals': { q: '可以依學習目標或能力指標查看分數嗎？', go: '開啟設定的評分', words: '指標 標準 能力 目標 學習表現 精熟 重教 標記 素養',
@@ -6970,10 +6973,11 @@ const HELP = [
     a: ['Open the class, choose **Students** and click a name. The student’s page has every score, the term grade, and how they are moving.', 'The class’s **Charts** tab shows the same numbers for everyone at once.'],
     words: 'profile individual parent meeting conference progress chart' },
   { id: 'attendance', sec: 'class', q: 'Can I take attendance in the app?',
-    a: ['Yes. Open a class and choose **Attendance**. Everyone starts as present, so press **Late**, **Excused** or **Absent** only for a student who isn’t, or **Everyone is here** if they all are. Each press is saved, with a note if you want one.',
+    a: ['Yes. Open a class and choose **Attendance**. Everyone starts as present, so press **Late** or **Absent, reason unknown** only for a student who isn’t, or **Everyone is here** if they all are. Each press is saved, with a note if you want one.',
+      'When you learn an absence is excused, open that day and press **Absent, excused**. **Look back** lists the absences that still have no reason.',
       '**Look back** shows every saved day in one table, with each student’s totals. **Copy this day** and **Download as a spreadsheet** take it out for your school’s system.',
       'Attendance stays in this browser and your folder, like the rest of your work. If you don’t use it, turn it off in Settings, **Classes and rosters**.'],
-    go: ['Open Settings, Classes', '#/settings/classes'], words: 'attendance register roll call present absent absence late tardy excused' },
+    go: ['Open Settings, Classes', '#/settings/classes'], words: 'attendance register roll call present absent absence late tardy excused unexcused unknown reason' },
   { id: 'learning-goals', sec: 'class', q: 'Can I see scores by learning goal or standard?',
     a: ['Yes, and it is optional. In Settings, Grading, **Learning goals** holds your own list: a skill like “Uses evidence”, or a standard from your school.',
       '1. In an assignment, choose Setup, then **Rubric setup**, and pick a goal beside each row. For a paper quiz, pick a goal under each question in **Quiz boxes**.', '2. Open the class and choose **Goals**: the class average on each goal with the lowest first, every student by every goal, and where each number came from.',

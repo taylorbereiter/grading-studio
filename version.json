@@ -1,12 +1,11 @@
 {
- "version": "1.27.21",
- "build": "38551280be93",
+ "version": "1.27.22",
+ "build": "106bef3dfdf3",
  "notes": [
-  "Comments are easier to work with. Change a comment’s color at any time, even while typing it: its box has a Color row, and a Highlight row when it is on highlighted words. Text boxes and Quick mark comments have colors too.",
-  "Drag a new comment’s line up or down before you type a word, and press Enter to finish a comment or text box. Shift Enter starts a new line."
+  "Attendance has a choice for a student who is away when you don’t know why yet: Absent, reason unknown. Change it to Absent, excused when you hear the reason. It is still four choices, and days you saved before keep their marks. Look back lists the absences that still have no reason."
  ],
  "files": {
-  "index.html": "de33cef5c10348f0ec6dda49bad2e288389cbd08a268bb2d3692337145b53053",
-  "planner.html": "9e82c731b161cb9ce91e8cb4704f3b85e4da94a494f0b823f357836a417b354f"
+  "index.html": "0cecd5bbdf72306702ac22fb69a92b4fb78f2cc8e9982fa384c7da2d172b2b50",
+  "planner.html": "87cddf1df8ef2d14f9e0cce4939b15c418d7c992715423672b93360c60e62f69"
  }
 }
