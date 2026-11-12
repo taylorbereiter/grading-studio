@@ -188,7 +188,7 @@ function troubleOf(f) {
     if (f.badIs === 'locked') return { why: 'This PDF is locked with a password.', next: 'Ask the student for a copy with no password. If you know the password, open it in Chrome, print it, choose Save as PDF, and ' + dropIt + '.' };
     return { why: 'This PDF is damaged, or it didn’t finish uploading.', next: 'Download it and try opening it on your computer. If it opens, print it to a new PDF and ' + dropIt + '. If not, ' + askLow };
   }
-  if (f.kind === 'text') return null;
+  if (f.kind === 'text' || f.kind === 'link') return null;
   if (f.kind === 'docx') {
     const bad = wordBad(f); if (!bad) return null;
     if (bad === 'page') return WEB_PAGE;
@@ -278,7 +278,7 @@ function openingFacts() {
   });
   // The very same file from two students. Pictures are made into new pages as they open, so only other files can be compared. A handout most of the class turned in isn't odd.
   const bySize = new Map();
-  batch.students.forEach((st, i) => { for (const f of st.files) if (!f.virtual && f.kind !== 'img' && f.size) { if (!bySize.has(f.size)) bySize.set(f.size, []); bySize.get(f.size).push({ st, i, f }); } });
+  batch.students.forEach((st, i) => { for (const f of st.files) if (!f.virtual && f.kind !== 'img' && f.kind !== 'link' && f.size && !isNotes(f.data)) { if (!bySize.has(f.size)) bySize.set(f.size, []); bySize.get(f.size).push({ st, i, f }); } });
   for (const list of bySize.values()) {
     const groups = [];
     for (const o of list) { const g = groups.find(q => sameBytes(q[0].f.data, o.f.data)); if (g) g.push(o); else groups.push([o]); }
@@ -327,6 +327,7 @@ async function openRep() {
   };
 }
 // Runs by itself after a download opens, and says something only if there's something new to say. What she's seen is kept as hashes, so no file names stay behind if she forgets the download.
+let repAt = 0, repAll = false;   // the student she was on when the bar came up, and whether every file opened: then going to another student counts as having seen it
 let repSaw = null;   // reading the report by way of More counts as seeing it, the same as the bar's own buttons
 async function openingReport() {
   repSaw = null;
@@ -339,7 +340,7 @@ async function openingReport() {
   const saw = () => { const all = store.get('gs.openSeen', {}); all[b.id] = [...new Set(seen.concat(keys))]; store.set('gs.openSeen', all); show(false); repSaw = null; };
   bar.innerHTML = '<span style="flex:1">' + esc(repHead(x)) + '</span><button class="btn sm" data-rep>See the list</button><button class="icon" data-repx aria-label="Close this message" title="Close this message">✕</button>';
   show(true);
-  repSaw = saw;
+  repSaw = saw; repAt = cur; repAll = !x.cant.length && !x.zip;
   bar.querySelector('[data-rep]').onclick = () => { saw(); openRep(); };
   bar.querySelector('[data-repx]').onclick = saw;
 }

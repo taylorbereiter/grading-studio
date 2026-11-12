@@ -11,7 +11,9 @@ function variantsOf(l) {
 }
 function variantBar(l) {
   const vs = variantsOf(l);
-  return '<div class="pl-var"><span class="muted">' + (vs.length > 1 ? 'Versions of this lesson:' : 'This lesson:') + '</span>' +
+  // A lesson with one version has no bar: making an alternative is in More.
+  if (vs.length < 2) return '';
+  return '<div class="pl-var"><span class="muted">Versions of this lesson:</span>' +
     vs.map(v => v.id === l.id
       ? '<span class="pl-vt on">' + esc(varName(v)) + '<button class="pl-vr" data-a="varname" title="Rename this version" aria-label="Rename">✎</button></span>'
       : '<button class="pl-vt" data-var="' + v.id + '" title="' + esc(v.slots.length ? v.slots.map(s => className(s.classId) + ' ' + shortDate(s.date)).join(', ') : 'Not on a class') + '">' + esc(varName(v)) + '</button>').join('') +

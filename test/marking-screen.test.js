@@ -72,13 +72,13 @@ test('the dock fits a short window', async () => {
 });
 
 /* ---------------- the small menus ---------------- */
-test('+ Add is one menu: a file, pasted text, or pages from a scan', async () => {
+test('+ Add is one menu: a file, pasted text, a video, a notes page, or pages from a scan', async () => {
   const { page, close } = await standard();
   for (const s of ['#addFileBtn', '#pasteTextBtn', '#addScanBtn']) assert.equal(await shown(page, s), false, s + ' waits in the menu');
-  assert.deepEqual(await page.evaluate(() => window.__gs.findRows().filter(r => r.group === 'This paper').map(r => r.label)), ['Add a file…', 'Add pasted text…', 'Add pages from a scan…', 'Arrange pages'], 'Find anything reaches them too');
+  assert.deepEqual(await page.evaluate(() => window.__gs.findRows().filter(r => r.group === 'This paper').map(r => r.label)), ['Add a file…', 'Add pasted text…', 'Add a video…', 'Add a notes page…', 'Add pages from a scan…', 'Arrange pages'], 'Find anything reaches them too');
   await page.click('#addMenuBtn');
   assert.equal(await page.$eval('#addMenuBtn', b => b.getAttribute('aria-expanded')), 'true');
-  assert.deepEqual(await texts(page, '#addMenuBtn + .km .mitem'), ['A file…', 'Pasted text…', 'From a scan…']);
+  assert.deepEqual(await texts(page, '#addMenuBtn + .km .mitem'), ['A file…', 'Pasted text…', 'A video…', 'A notes page…', 'From a scan…']);
   assert.equal(await page.evaluate(() => document.activeElement.id), 'addFileBtn', 'the first choice has the keyboard');
   await page.keyboard.press('ArrowDown');
   assert.equal(await page.evaluate(() => document.activeElement.id), 'pasteTextBtn');
@@ -139,7 +139,7 @@ test('a Word file keeps Comment, Edit and Convert to PDF in sight, with Download
 test('the ⋯ beside the student’s name has Arrange pages, Lighting and the Calculator', async () => {
   const { page, close } = await standard();
   await page.click('#whoMore');
-  assert.deepEqual(await texts(page, '#whoMore + .km .mitem'), ['Arrange pages', 'Lighting', 'Calculator']);
+  assert.deepEqual(await texts(page, '#whoMore + .km .mitem'), ['Arrange pages', 'Use as an example', 'Lighting', 'Calculator']);
   await page.click('#whoMore + .km [data-whodo="calc"]');
   await page.waitForSelector('#calcPanel', { timeout: 5000 });
   await close();

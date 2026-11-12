@@ -77,7 +77,7 @@ test('an extra credit entry gives points to some or all students, adds them to t
   await openBook(page);
   // Before: (80+80)/2, (70+70)/2, (100+100)/2, (60+60)/2.
   assert.deepEqual(await termCol(page), ['Aria Testwell 80.00%', 'Bram Sample 70.00%', 'Cleo Fixture 100.00%', 'Dov Madeup 60.00%', 'Class average 77.50%']);
-  await page.click('[data-bkaddxc]');
+  await pick(page, '[data-bkaddxc]');
   await page.waitForSelector('#bkAdd');
   assert.equal(await page.$eval('[data-bkatype="xc"]', b => b.getAttribute('aria-pressed')), 'true');
   assert.equal(await page.$eval('.bkso', e => e.closest('.bkpf').hidden), true, 'no "out of" for extra credit');
@@ -91,7 +91,7 @@ test('an extra credit entry gives points to some or all students, adds them to t
   assert.match(await page.$eval('#bkaRows tr:nth-child(4)', e => e.textContent), /\+3% on the term grade/);
   await page.click('[data-bkasave]');
   await page.waitForSelector('#bkTab');
-  assert.deepEqual(await page.$$eval('#bkTab tr.bkg th', t => t.map(x => x.textContent).filter(Boolean)), ['Summative · 50%', 'In-class · 50%', 'Extra credit · points on top', 'Term 1']);
+  assert.deepEqual(await page.$$eval('#bkTab tr.bkg th', t => t.map(x => x.textContent).filter(Boolean)), ['In-class · 50%', 'Summative · 50%', 'Extra credit · points on top', 'Term 1']);
   // Cleo stays at 100% (kept there by default); Bram had none.
   const col = await termCol(page);
   assert.match(col[0], /^Aria Testwell 82\.00%/); assert.match(col[1], /^Bram Sample 70\.00%$/); assert.match(col[2], /^Cleo Fixture 100\.00%/); assert.match(col[3], /^Dov Madeup 63\.00%/);
@@ -112,7 +112,7 @@ test('an extra credit entry gives points to some or all students, adds them to t
 test('extra credit can go on the in-class average instead, and a teacher can let grades go over 100%', async () => {
   const { page, close } = await openApp(browser, { seed: seed({ xcTo: 'ic', xcCap: false }) });
   await openBook(page);
-  await page.click('[data-bkaddxc]');
+  await pick(page, '[data-bkaddxc]');
   await page.waitForSelector('#bkAdd');
   assert.equal(await page.$eval('[data-bkaxcto="ic"]', b => b.getAttribute('aria-pressed')), 'true', 'the teacher’s own default');
   await page.type('#bkaName', 'Quiz game');
@@ -123,9 +123,9 @@ test('extra credit can go on the in-class average instead, and a teacher can let
   // In-class 80 + 4 = 84, counted at 50%: Aria (80 + 84) / 2 = 82. Cleo (100 + 104) / 2 = 102, allowed over 100.
   const col = await termCol(page);
   assert.match(col[0], /^Aria Testwell 82\.00%/); assert.match(col[2], /^Cleo Fixture 102\.00%/);
-  assert.match(await page.$eval('#bkTab tbody tr:first-child td.bkterm', t => t.dataset.tn), /In-class 50%: 84\.00% · Extra credit \+4 on the in-class average/);
+  assert.match(await page.$eval('#bkTab tbody tr:first-child td.bkterm', t => t.dataset.tn), /In-class 50%: 84\.00% · .*Extra credit \+4 on the in-class average/);
   // Term setup shows and saves the choices.
-  await page.click('[data-bksetup]');
+  await pick(page, '[data-bksetup]');
   await page.waitForSelector('#bkSetup');
   assert.equal(await page.$eval('[data-bkxccap="over"]', b => b.getAttribute('aria-pressed')), 'true');
   await page.click('[data-bkxccap="cap"]'); await page.click('[data-bkxcto="term"]');

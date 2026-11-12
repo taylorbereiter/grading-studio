@@ -1,13 +1,13 @@
 {
- "version": "1.22.0",
- "build": "bfb5ec74d045",
+ "version": "1.28.0",
+ "build": "d4602b00bbde",
  "notes": [
   "Six more app languages: Simplified Chinese (简体中文), French, German, Portuguese, Japanese and Korean, beside Traditional Chinese and Spanish. Choose one in Settings, Display, App language.",
   "Each covers the same first screens: the sidebar, Today, the welcome, Find anything, Help and the feedback page students get. The other screens are still in English.",
   "None of the translations has been checked by a fluent speaker yet, so a line may read oddly."
  ],
  "files": {
-  "index.html": "4118fe0b1a182069405c106563c9e56a95dca2aef7410a36cbbba2e8ea8dd254",
-  "planner.html": "b061db1011cb937a62a80afa5ae6fd2de8718c23064aa110df8245930967a500"
+  "index.html": "dc2848ad376431eef76a716a82417f53bf94d96da3112be801cb0bd137394443",
+  "planner.html": "19239c7deecd17a41f94fc58e6797ad664a5d359a5f56a24ce14d07e4f68855b"
  }
 }

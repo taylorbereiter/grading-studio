@@ -14,7 +14,8 @@ function finishedHtml(l) {
   const f = l.final, old = l.finals || [];
   return '<div class="pl-fin" id="plFin"><div class="pl-fin-h"><h3>Finished PowerPoint</h3><span class="muted sp-small">' +
     (f ? 'The deck you’ll teach from. Uploading a new one replaces it; the old one is kept below.' : 'Upload the deck when it’s done. Its slides replace the ones here, and this version is kept under Versions.') +
-    '</span><span class="sp"></span><button class="btn sm' + (f ? ' ghost' : ' primary') + '" data-a="finup">' + (f ? 'Upload a newer one…' : 'Upload finished .pptx…') + '</button><button class="btn sm ghost" data-a="finall" title="The PowerPoint and every file in Materials, in one .zip">↓ Download all (.zip)</button><button class="btn sm ghost" data-a="finzip" title="A .zip with the finished PowerPoint and the lesson’s handouts and files">Upload lesson .zip…</button><input type="file" id="finIn" accept=".pptx,.zip,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/zip" hidden></div>' +
+    // One upload button: the file box takes a finished .pptx or a lesson .zip. Present is the lesson's one blue button.
+    '</span><span class="sp"></span><button class="btn sm" data-a="finup" title="A finished .pptx, or a lesson .zip with the PowerPoint and its handouts">' + (f ? 'Upload a newer one…' : 'Upload .pptx or .zip…') + '</button><input type="file" id="finIn" accept=".pptx,.zip,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/zip" hidden></div>' +
     (f ? '<div class="pl-files"><div class="pl-file"><span class="pl-ft">PPT</span><span class="pl-fn"><b>' + esc(f.name) + '</b><span>' + finSize(f.size) + ' · uploaded ' + finWhen(f.at) + (finFresh(l) ? '' : ' · slides changed here since') + '</span></span>' +
       '<button class="btn sm" data-a="findl" data-id="' + f.id + '">Download</button></div></div>' : '') +
     (old.length ? '<details class="pl-fin-old"><summary>Older finished decks (' + old.length + ')</summary><div class="pl-files">' + old.map(o => '<div class="pl-file"><span class="pl-ft">PPT</span><span class="pl-fn"><b>' + esc(o.name) + '</b><span>' + finSize(o.size) + ' · uploaded ' + finWhen(o.at) + '</span></span>' +
@@ -224,7 +225,7 @@ async function pptxToSlides(u8) {
       const ph = kid(kid(sp, PX.p, 'nvPr'), PX.p, 'ph'); if (!ph || (ph.getAttribute('type') && ph.getAttribute('type') !== 'body')) continue;
       notes = kids(sp, PX.a, 'p').map(p => kids(p, PX.a, 't').map(t => t.textContent).join('')).join('\n').trim();
     }
-    const big = sizes.filter(s => s >= 20), size = big.length ? SIZES.reduce((a, b) => Math.abs(b - Math.min(...big)) < Math.abs(a - Math.min(...big)) ? b : a) : 28;
+    const big = sizes.filter(s => s >= 20), size = big.length ? deckSizes().reduce((a, b) => Math.abs(b - Math.min(...big)) < Math.abs(a - Math.min(...big)) ? b : a) : 28;
     title = title.replace(/[\u200b\ufeff]/g, '').trim();
     const s = { title, body: numberLines(body).join('\n'), notes, size };
     if (ctr || (i === 0 && !pic && body.length <= 2)) { s.layout = 'title'; s.body = body.join('\n').replace(/^[•\t ]+|^\d+\. /gm, ''); }
@@ -260,7 +261,7 @@ async function dlLessonZip(l) {
 }
 // Every lesson on the calendar this week, a folder per class and day.
 async function dlWeek() {
-  const mon = parseYmd(L.weekOf), days = [0, 1, 2, 3, 4].map(i => ymd(addDays(mon, i)));
+  const mon = parseYmd(L.weekOf), days = plWeekOffs().map(i => ymd(addDays(mon, i)));
   const all = {}; let n = 0;
   toast('Getting the week’s lessons ready…', 60000);
   for (const d of days) for (const { c } of meetingsOn(d)) for (const l of lessonsAt(c.id, d)) {

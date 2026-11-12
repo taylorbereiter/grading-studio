@@ -5,7 +5,15 @@
    and the Planner never opens anything of grading's. A rubric or scale names its unit as
    { id, course, title }, so it still sorts if that unit isn't here. They also go to the Planner folder,
    under Rubrics/, for Claude. Tabs tell each other about changes on the 'gs-bank' channel. */
-const B_LEVELS = [4, 3, 2, 1, 0];
+// A row's scale, as in grading (src/app/start.js): 0 to its top. x.top is every row's top, x.tops[i] one row's own, x.half === false
+// means whole numbers only. A rubric with none of them is 0 to 4 with half points, as every rubric was before this was a choice.
+const B_TOP = 4, B_TOP_MAX = 10;
+const bTopOk = v => { v = Math.round(+v); return v >= 1 && v <= B_TOP_MAX ? v : 0; };
+const bTop = (x, i) => (i != null && Array.isArray(x.tops) && bTopOk(x.tops[i])) || bTopOk(x.top) || B_TOP;
+const bMax = x => x.criteria.reduce((a, _, i) => a + bTop(x, i), 0);
+const bLevels = (x, i) => { const out = []; for (let v = bTop(x, i); v >= 0; v--) out.push(v); return out; };
+const bOneTop = x => x.criteria.every((_, i) => bTop(x, i) === bTop(x, 0)) ? bTop(x, 0) : 0;
+function bRowScale(x) { const o = {}; if (bTopOk(x.top) && bTopOk(x.top) !== B_TOP) o.top = bTopOk(x.top); if (Array.isArray(x.tops) && x.tops.some(bTopOk)) o.tops = x.tops.map(v => bTopOk(v) || null); if (x.half === false) o.half = false; return o; }
 const B_SCALE12 = { 12: 100, 11: 95, 10: 91, 9: 86, 8: 82, 7: 77, 6: 73, 5: 68, 4: 64, 3: 60 };
 let bankChan = null; try { bankChan = new BroadcastChannel('gs-bank'); } catch { }
 const tidyBank = b => ({ rubrics: Array.isArray(b && b.rubrics) ? b.rubrics : [], scales: Array.isArray(b && b.scales) ? b.scales : [], gone: (b && b.gone && typeof b.gone === 'object') ? b.gone : {} });
@@ -36,10 +44,11 @@ function normRubric(x) {
   const criteria = (Array.isArray(x.criteria) ? x.criteria : []).map(c => String(c == null ? '' : c).trim()).slice(0, 12).map((c, i) => c || 'Criterion ' + (i + 1));
   let levels;
   if (Array.isArray(x.levels)) {
-    levels = criteria.map((_, i) => { const r = x.levels[i] || {}, o = {}; for (const v of B_LEVELS) { const t = String(r[v] == null ? '' : r[v]).trim(); if (t) o[v] = t; } return o; });
+    levels = criteria.map((_, i) => { const r = x.levels[i] || {}, o = {}; for (const v of bLevels({ ...x, criteria }, i)) { const t = String(r[v] == null ? '' : r[v]).trim(); if (t) o[v] = t; } return o; });
     if (!levels.some(r => Object.keys(r).length)) levels = undefined;
   }
-  const r = { id: typeof x.id === 'string' && x.id ? x.id : lid(), name: String(x.name || '').trim() || 'Rubric', criteria: criteria.length ? criteria : ['Criterion 1'], levels, scale: normScale(x.scale), at: +x.at || Date.now() };
+  const r = { id: typeof x.id === 'string' && x.id ? x.id : lid(), name: String(x.name || '').trim() || 'Rubric', criteria: criteria.length ? criteria : ['Criterion 1'], levels, scale: normScale(x.scale), ...bRowScale(x), at: +x.at || Date.now() };
+  if (r.tops) r.tops = r.criteria.map((_, i) => r.tops[i] || null);
   const u = normRef(x.unit); if (u) r.unit = u;
   return r;
 }
@@ -95,7 +104,7 @@ function refFromKey(key, was) {
 /* ---------- the Bank tab ---------- */
 function bankCard(kind, x) {
   const about = kind === 'scales' ? 'Grading scale · top score ' + scaleTop(x.scale)
-    : x.criteria.length + (x.criteria.length === 1 ? ' row' : ' rows') + ' · out of ' + x.criteria.length * 4 + (x.levels ? ' · what each score means' : '') + (x.scale ? ' · with a scale' : '');
+    : x.criteria.length + (x.criteria.length === 1 ? ' row' : ' rows') + ' · out of ' + bMax(x) + (x.levels ? ' · what each score means' : '') + (x.scale ? ' · with a scale' : '');
   return '<button class="ls-card pl-bcard' + (kind === 'scales' ? ' scale' : '') + '" draggable="true" data-a="bopen" data-bk="' + kind + '" data-bid="' + esc(x.id) + '"><b>' + esc(x.name) + '</b><span>' + esc(about) + '</span></button>';
 }
 function bankGroups() {
@@ -169,15 +178,15 @@ function bankEdRender() {
     '<label class="pl-fl">Name<input class="btn sm" data-bf="name" value="' + esc(x.name) + '" placeholder="' + (rub ? 'Like Book cover formative' : 'Like Out of 12, steps of 5') + '"></label>' +
     '<label class="pl-fl">Unit<select class="btn sm" data-bf="unit">' + unitOptions(bEd.unitKey) + '</select></label>';
   if (rub) {
-    h += '<div class="pl-fl"><b>Rows</b> <span class="muted">Each row is scored 4 to 1, with 0 there if you need it. Out of ' + x.criteria.length * 4 + '.</span></div>';
+    h += '<div class="pl-fl"><b>Rows</b> <span class="muted">Each row is scored 0 to <select class="btn sm" data-bf="rowtop" aria-label="The highest score on a row">' + (bOneTop(x) ? '' : '<option value="" selected>each its own</option>') + Array.from({ length: B_TOP_MAX }, (_, k) => '<option' + (k + 1 === bOneTop(x) ? ' selected' : '') + '>' + (k + 1) + '</option>').join('') + '</select> <label style="display:inline-flex;gap:5px;align-items:center"><input type="checkbox" data-bf="rowhalf"' + (x.half === false ? '' : ' checked') + '> Half points</label> Out of ' + bMax(x) + '.</span></div>';
     x.criteria.forEach((c, i) => {
-      const lv = x.levels[i] || {}, n = B_LEVELS.filter(v => String(lv[v] || '').trim()).length;
+      const lv = x.levels[i] || {}, n = bLevels(x, i).filter(v => String(lv[v] || '').trim()).length;
       h += '<div class="pl-brow"><div class="pl-brh"><b>' + (i + 1) + '</b><input class="btn sm" data-bc="' + i + '" value="' + esc(c) + '" aria-label="Row ' + (i + 1) + ' name"><button class="btn sm ghost" data-a="browdel" data-i="' + i + '"' + (x.criteria.length < 2 ? ' disabled' : '') + ' aria-label="Take out row ' + (i + 1) + '">×</button></div>' +
         '<details' + (n ? '' : '') + '><summary>What each score means' + (n ? ' (' + n + ' written)' : '') + '</summary>' +
-        B_LEVELS.map(v => '<label class="pl-blv"><b>' + v + '</b><textarea rows="2" data-bl="' + i + '" data-bv="' + v + '" placeholder="' + (v === 0 ? 'Optional' : '') + '" aria-label="What ' + v + ' means on row ' + (i + 1) + '">' + esc(lv[v] || '') + '</textarea></label>').join('') + '</details></div>';
+        bLevels(x, i).map(v => '<label class="pl-blv"><b>' + v + '</b><textarea rows="2" data-bl="' + i + '" data-bv="' + v + '" placeholder="' + (v === 0 ? 'Optional' : '') + '" aria-label="What ' + v + ' means on row ' + (i + 1) + '">' + esc(lv[v] || '') + '</textarea></label>').join('') + '</details></div>';
     });
     h += '<button class="btn sm" data-a="browadd"' + (x.criteria.length >= 12 ? ' disabled' : '') + '>+ Add a row</button>';
-    const top = x.criteria.length * 4;
+    const top = bMax(x);
     h += '<div class="pl-fl" style="margin-top:14px"><b>Grading scale</b> ' + presetsHtml(top, x.scale) + '</div>' + scaleRowsHtml(x.scale, top);
   } else {
     const top = scaleTop(x.scale);
@@ -207,22 +216,24 @@ function bankEdInput(e) {
 function bankEdChange(e) {
   const t = e.target, x = bEd.item;
   if (t.dataset.bf === 'unit') bEd.unitKey = t.value;
+  else if (t.dataset.bf === 'rowtop') { const to = bTopOk(t.value), was = bMax(x); if (to) { delete x.tops; if (to === B_TOP) delete x.top; else x.top = to; x.scale = rescale(x.scale, was, bMax(x)); } bankEdRender(); }
+  else if (t.dataset.bf === 'rowhalf') { if (t.checked) delete x.half; else x.half = false; bankEdRender(); }
   else if (t.dataset.bf === 'top') {
     const top = Math.max(1, Math.min(40, Math.round(+t.value) || 1)), was = scaleTop(x.scale);
     if (top !== was) x.scale = rescale(x.scale, was, top) || presetScale('plain', top);
     bankEdRender();
   } else if (t.dataset.bsaved != null && t.value) {
-    const top = bEd.kind === 'rubrics' ? x.criteria.length * 4 : scaleTop(x.scale);
+    const top = bEd.kind === 'rubrics' ? bMax(x) : scaleTop(x.scale);
     x.scale = presetScale(null, top, t.value); bankEdRender();
   }
 }
 async function bankEdClick(e) {
   const t = e.target.closest('[data-a],[data-bpre]'); if (!t) return;
   const { kind, item: x } = bEd;
-  if (t.dataset.bpre) { const top = kind === 'rubrics' ? x.criteria.length * 4 : scaleTop(x.scale); x.scale = presetScale(t.dataset.bpre, top) || (kind === 'scales' ? x.scale : null); return bankEdRender(); }
+  if (t.dataset.bpre) { const top = kind === 'rubrics' ? bMax(x) : scaleTop(x.scale); x.scale = presetScale(t.dataset.bpre, top) || (kind === 'scales' ? x.scale : null); return bankEdRender(); }
   const a = t.dataset.a;
-  if (a === 'browadd') { x.criteria.push('Criterion ' + (x.criteria.length + 1)); x.levels.push({}); x.scale = rescale(x.scale, (x.criteria.length - 1) * 4, x.criteria.length * 4); return bankEdRender(); }
-  if (a === 'browdel') { const i = +t.dataset.i; x.criteria.splice(i, 1); x.levels.splice(i, 1); x.scale = rescale(x.scale, (x.criteria.length + 1) * 4, x.criteria.length * 4); return bankEdRender(); }
+  if (a === 'browadd') { const was = bMax(x); x.criteria.push('Criterion ' + (x.criteria.length + 1)); x.levels.push({}); if (Array.isArray(x.tops)) x.tops.push(null); x.scale = rescale(x.scale, was, bMax(x)); return bankEdRender(); }
+  if (a === 'browdel') { const i = +t.dataset.i, was = bMax(x); x.criteria.splice(i, 1); x.levels.splice(i, 1); if (Array.isArray(x.tops)) x.tops.splice(i, 1); x.scale = rescale(x.scale, was, bMax(x)); return bankEdRender(); }
   if (a === 'bcancel') { bEd = null; return closeDlg(); }
   if (a === 'bsave') return bankEdSave();
   if (a === 'bdup') { const c = JSON.parse(JSON.stringify(x)); c.id = lid(); c.name = x.name + ' (copy)'; bEd = { kind, item: c, isNew: true, unitKey: bEd.unitKey }; return bankEdRender(); }
@@ -346,7 +357,7 @@ async function bankFolderRead() {
     const ref = j.unit ? (unitRef(L.units.find(u => u.course === String(j.unit.course || '') && u.title.trim().toLowerCase() === String(j.unit.title || '').trim().toLowerCase())) || normRef(j.unit)) : null;
     const item = kind === 'rubrics' ? normRubric({ ...j, id: old ? old.id : j.id, unit: ref }) : normBankScale({ ...j, id: old ? old.id : j.id, unit: ref });
     const dupe = list.find(x => x.id !== item.id && x.name.toLowerCase() === item.name.toLowerCase());
-    if (dupe) item.name += ' (from Claude)';
+    if (dupe) item.name += ' (from ' + plAi() + ')';
     item.at = Date.now();
     await bankUpdate(b => { const l = b[kind], i = l.findIndex(x => x.id === item.id); if (i >= 0) l[i] = item; else l.push(item); l.sort((x, y) => bankNatural(x.name, y.name)); delete b.gone[item.id]; });
     files[item.id] = { file: name, mod: f.lastModified, text: '' }; await kvSet('bankFiles', files);
@@ -366,6 +377,7 @@ Rubric: {
   "id": "…", "name": "Book cover formative",
   "unit": { "course": "<course from timetable.json>", "title": "<a unit's title from Units/>" },   // optional
   "criteria": ["Row 1 name", "Row 2 name", "Row 3 name"],        // each row is scored 4 to 1 (0 if needed), so 3 rows = out of 12
+  "top": 8, "half": false,                                       // optional: a row's highest score when it isn't 4 (1 to 10), and false for whole numbers only
   "levels": [ { "4": "What a 4 looks like on row 1", "3": "…", "2": "…", "1": "…" }, { … }, { … } ],   // optional; "0" too if wanted
   "scale": { "12": 100, "11": 95, "10": 90, … }                  // optional: total points -> percent; null = plain share of points
 }

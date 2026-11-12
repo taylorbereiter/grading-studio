@@ -125,6 +125,14 @@ body{padding-bottom:var(--savebar,0px)}.app{height:calc(100vh - var(--savebar,0p
 .chip button{border:0;background:none;color:var(--faint);padding:0 4px;font-size:var(--text-body);line-height:1}
 .pop .row{display:flex;gap:6px;align-items:center}
 .pop .row .sp{flex:1}
+.pop .ncol{gap:6px}
+.pop .ncol .lbl{min-width:62px}
+.pop .nsw{width:18px;height:18px;border-radius:var(--corner-round);border:0;padding:0;flex:none;cursor:pointer;box-shadow:inset 0 0 0 1px rgba(0,0,0,.12)}
+.pop .nsw.sq{border-radius:var(--corner-1)}
+.pop .nsw[aria-pressed=true]{box-shadow:0 0 0 2px var(--surface),0 0 0 4px var(--accent)}
+.pg .edbar .edsw{width:16px;height:16px;padding:0;margin:0 2px;border-radius:var(--corner-round);background:var(--c);box-shadow:inset 0 0 0 1px rgba(255,255,255,.35)}
+.pg .edbar .edsw:hover{background:var(--c);opacity:.85}
+.pg .edbar .edsw.on{background:var(--c);box-shadow:0 0 0 2px var(--stage-ink),0 0 0 4px var(--stage-paper)}
 .pop .lbl{font-size:var(--text-small);color:var(--faint);font-weight:600}
 
 .grade{border-left:1px solid var(--line);background:var(--surface);overflow:auto;padding:16px;display:flex;flex-direction:column;gap:12px;zoom:var(--uz)}
@@ -143,7 +151,7 @@ body{padding-bottom:var(--savebar,0px)}.app{height:calc(100vh - var(--savebar,0p
 .srange.unset::-moz-range-thumb{background:var(--surface);border-color:var(--line-strong);box-shadow:none}
 .srange:focus-visible{outline:none}.srange:focus-visible::-webkit-slider-thumb{outline:2px solid var(--accent);outline-offset:2px}
 .sticks{position:relative;height:24px}
-.scores.slide .sticks button{position:absolute;top:0;left:calc(var(--th) / 2 + var(--k) * (100% - var(--th)) / 7);transform:translateX(-50%);min-width:26px;padding:2px 3px;border:0;background:none;border-radius:5px;font-size:12.5px}
+.scores.slide .sticks button{position:absolute;top:0;left:calc(var(--th) / 2 + var(--k) * (100% - var(--th)) / var(--n, 7));transform:translateX(-50%);min-width:26px;padding:2px 3px;border:0;background:none;border-radius:5px;font-size:12.5px}
 .scores.slide .sticks button.half{font-size:11.5px}
 .scores.slide .sticks button:hover{background:var(--surface-2)}
 .scores.slide .sticks button[aria-pressed=true]{background:none;box-shadow:none;color:var(--accent);font-weight:700}
@@ -512,13 +520,17 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
   <a class="rbrand" href="#/" aria-label="Grading Studio, Today"><span class="rl">Grading <i>Studio</i></span><span class="rs" aria-hidden="true">G<i>S</i></span></a>
   <button class="rfind" id="findBtn" aria-haspopup="dialog" title="Find a student, an assignment, a tool or a setting"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5"/></svg><span class="rl">Find anything</span><kbd class="rl" id="findKey">Ctrl K</kbd></button>
   <a class="rnav" data-nav="home" href="#/" title="Today: what you teach, what is waiting to be marked, what is ready to hand back"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.6"/><path d="M12 3v2.2M12 18.8V21M3 12h2.2M18.8 12H21M5.6 5.6l1.6 1.6M16.8 16.8l1.6 1.6M5.6 18.4l1.6-1.6M16.8 7.2l1.6-1.6"/></svg><span class="rl">Today</span></a>
+  <a class="rnav" data-nav="todo" href="#/todo" title="To do: your own list, with what the app noticed from your work"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span class="rl rname">To do</span><span class="rl rcnt" id="railTodo"></span></a>
   <a class="rnav" id="lessonsBtn" href="planner.html" title="Plan units and lessons. The Planner is a separate page and never sees grading work."><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M8 3v4M16 3v4"/></svg><span class="rl">Planner</span></a>
+  <a class="rnav" data-nav="examples" id="railExamples" href="#/examples" hidden title="Strong work from every class, with no names on it"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4l2.4 5 5.4.6-4 3.7 1.1 5.3L12 16l-4.9 2.6 1.1-5.3-4-3.7 5.4-.6z"/></svg><span class="rl">Examples</span></a>
+  <a class="rnav" data-nav="school" href="#/school" title="School resources: links, files and notes about your school"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 20.5h17M5.5 20.5v-9M18.5 20.5v-9M3.5 11.5L12 5l8.5 6.5M10 20.5v-5h4v5M12 5V3h3"/></svg><span class="rl">School</span></a>
   <div class="rcap"><span class="rl">Classes</span></div>
   <div id="railClasses"></div>
   <button class="rnav radd" id="addClass" title="Add a class"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span class="rl">Add a class</span></button>
   <span class="sp"></span>
   <a class="rnav rupd" id="railUpdate" href="#/settings/about" hidden><span class="rdot"></span><span class="rl">Update ready</span></a>
   <button class="rsaved" id="railSaved" data-wopen></button>
+  <button class="rnav" id="railFull" data-gsfull title="Full screen ( F )" aria-label="Full screen" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="fs-in" d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/><path class="fs-out" d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg><span class="rl">Full screen</span></button>
   <a class="rnav" data-nav="help" href="#/help" title="Help: short answers to common questions"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M9.7 9.6a2.4 2.4 0 1 1 3.7 2c-.9.6-1.4 1.1-1.4 2.1M12 16.8v.1"/></svg><span class="rl">Help</span></a>
   <a class="rnav" data-nav="settings" href="#/settings" title="Settings"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg><span class="rl">Settings</span></a>
 </nav>
@@ -561,14 +573,42 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
           <button class="link" id="keptAll" hidden></button>
         </section>
       </div>
-      <aside class="hside" id="hside" hidden><section class="tsec" id="handBack" hidden></section><section class="tsec" id="needNext" hidden></section><div id="needs" hidden></div></aside>
+      <aside class="hside" id="hside"><section class="tsec" id="todoCard"><div class="thd"><h2 class="tcap">To do</h2><a class="link" href="#/todo">Open To do</a></div><div class="tcard"><form class="tdadd" id="tdCardAdd" autocomplete="off"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><input type="text" id="tdCardIn" maxlength="300" placeholder="Add a to-do…" aria-label="Add a to-do"></form><div id="tdCardList"></div></div></section><section class="tsec" id="handBack" hidden></section><section class="tsec" id="needNext" hidden></section><div id="needs" hidden></div></aside>
     </div>
     <p class="foot">Your marks, scores, units and rosters are kept in this browser, so you can close the tab and come back to pick up where you left off. <button class="link" id="sample">Try it with a sample class</button></p>
     <p class="foot gsVer"></p>
   </section>
   <section class="view" id="vClass" hidden>
     <div id="classes"></div>
-    <p class="muted vhint" id="classHint">Drag an assignment to another unit, or onto a class in the sidebar. Drag a unit’s name to move the unit. Drop <span class="sysZip">a ManageBac ZIP</span> on an assignment to open it there.</p>
+    <p class="muted vhint" id="classHint">Drag an assignment or a unit to move it. Drop <span class="sysZip">a ManageBac ZIP</span> on an assignment to open it there.</p>
+  </section>
+  <section class="view" id="vTodo" hidden>
+    <header class="vhead"><h1>To do</h1><span class="muted" id="tdSay"></span><span class="sp"></span><button class="btn sm" id="tdDoneBtn" hidden></button><div class="pseg" id="tdView" role="group" aria-label="View"><button data-tdview="" aria-pressed="true">List</button><button data-tdview="week" aria-pressed="false">Week</button></div></header>
+    <div class="tdchips" id="tdChips" role="group" aria-label="Show"></div>
+    <div id="tdWeek" hidden></div>
+    <div class="tdgrid">
+      <div class="tcard tdmainc">
+        <form class="tdadd" id="tdAdd" autocomplete="off"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><input type="text" id="tdIn" maxlength="300" placeholder="Add a to-do, like “Print handouts tomorrow”" aria-label="Add a to-do"><kbd title="Press N anywhere outside a paper to add a to-do">N</kbd></form>
+        <div class="tdund" id="tdUnd" hidden></div>
+        <div id="tdList"></div>
+      </div>
+      <aside id="tdSide"></aside>
+    </div>
+    <p class="foot">Your list is saved with your grading work, in this browser and your folder. It never goes in the Planner’s folder.</p>
+  </section>
+  <section class="view" id="vExamples" hidden>
+    <header class="vhead"><h1>Examples</h1><span class="muted">Strong work from every class, with no names on it.</span></header>
+    <div id="exPage"></div>
+  </section>
+  <section class="view" id="vSchool" hidden>
+    <header class="vhead"><h1>School resources</h1><span class="muted">Links, files and notes about your school, kept with your work on this computer.</span></header>
+    <div class="schbar">
+      <button class="btn primary" data-schadd="link">Add a link</button><button class="btn" data-schadd="file">Add files…</button><button class="btn" data-schadd="note">Add a note</button>
+      <span class="sp"></span>
+      <div class="hlpfind" id="schFind" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5"/></svg><input type="search" id="schQ" autocomplete="off" spellcheck="false" placeholder="Search your school resources" aria-label="Search your school resources"></div>
+    </div>
+    <div id="schList"></div>
+    <input type="file" id="schIn" multiple hidden>
   </section>
   <section class="view" id="vHelp" hidden>
     <header class="vhead"><h1>Help</h1><span class="muted">Short answers. They are part of the app, so they work with no internet.</span></header>
@@ -588,27 +628,42 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
         </section>
         <section class="lib setsec" id="setTake" data-sec="saving">
           <div class="lhead"><h2>Take your work with you</h2><span class="sp"></span><button class="btn sm" id="restoreBtn">Bring work in…</button><button class="btn sm primary" id="takeBtn">Take my work with me</button></div>
-          <p class="muted setp">A take-home file carries all your grading work to another computer and back, protected by a passphrase. The Planner’s lessons are not in it.</p>
+          <p class="muted setp">A take-home file carries all your grading work and your Planner to another computer and back, protected by a passphrase.</p>
           <p class="muted" id="backupInfo" style="margin:0;font-size:13px"></p><input type="file" id="restoreIn" accept=".gswork,.zip,application/zip" hidden>
           <div id="safetyList" hidden></div>
+        </section>
+        <section class="lib setsec" id="setYear" data-sec="saving">
+          <div class="lhead"><h2>School year</h2><span class="sp"></span><button class="btn sm" id="yearOpenBtn">Open an archived year…</button><button class="btn sm primary" id="yearBtn">Start a new year…</button></div>
+          <p class="muted setp">Starts a fresh year with the same classes, units, rubrics and quizzes and empty class lists. This year goes into one protected file first, and it is checked before anything is cleared.</p>
+          <p id="yearLine" style="margin:0;font-size:13px"></p><input type="file" id="yearIn" accept=".gswork" hidden>
         </section>
         <section class="lib setsec" id="setRemove" data-sec="saving">
           <div class="lhead"><h2>Remove from this computer</h2><span class="sp"></span><button class="btn sm" id="removeBtn">Remove from this computer</button></div>
           <p class="muted setp">Clears student work from this browser when you are finished here. A linked folder and Planner work are not touched.</p>
         </section>
         <section class="lib setsec" id="setHistory" data-sec="history" hidden></section>
+        <section class="lib setsec" id="setSetupIn" data-sec="setup" hidden></section>
+        <section class="lib setsec" id="setSetupOut" data-sec="setup" hidden></section>
         <section class="lib setsec" id="setAbout" data-sec="about" hidden></section>
         <section class="lib setsec" id="setInstall" data-sec="about" hidden></section>
         <section class="lib setsec" id="setClasses" data-sec="classes" hidden></section>
         <section class="lib setsec" id="setSys" data-sec="classes" hidden></section>
+        <section class="lib setsec" id="setAtt" data-sec="classes" hidden></section>
         <section class="lib setsec" id="setTerms" data-sec="terms" hidden></section>
         <section class="lib setsec" id="setWay" data-sec="grading" hidden></section>
         <section class="lib setsec" id="setGrading" data-sec="grading" hidden></section>
         <section class="lib setsec" id="setMarking" data-sec="marking" hidden>
           <div class="lhead"><h2>Mark key</h2><span class="muted">What each proofreading mark means, for the key on returned papers.</span><span class="sp"></span><button class="btn sm" id="setMkey">Mark key</button></div>
         </section>
+        <section class="lib setsec" id="setInks" data-sec="marking" hidden>
+          <div class="lhead"><h2>Mark colors</h2><span class="muted">The color of ✗ and the pen, of checks, and of points written on a paper. They apply to new marks; Quick mark’s Colors menu changes a quiz’s marks too.</span></div>
+          <div class="setinks" id="setInkRows"></div>
+        </section>
         <section class="lib setsec" id="setPapers" data-sec="marking" hidden>
           <div class="lhead"><h2>Word papers</h2><span class="muted">Mark them as they are, or turn each one into PDF pages you can mark anywhere. The Word file is always kept.</span><span class="sp"></span><span class="seg" id="setWordPdf"><button data-v="0" aria-pressed="true">Keep as Word</button><button data-v="1" aria-pressed="false">Convert to PDF pages</button></span></div>
+        </section>
+        <section class="lib setsec" id="setNames" data-sec="marking" hidden>
+          <div class="lhead"><h2>Name covers</h2><span class="muted">You cover names yourself in Check the covers. Finding them on its own can cover words that aren’t names.</span><span class="sp"></span><span class="seg" id="setNameFind" aria-label="Find names on their own"><button data-v="0" aria-pressed="true">Cover names myself</button><button data-v="1" aria-pressed="false">Also find typed names</button></span></div>
         </section>
         <section class="lib setsec" id="setTouch" data-sec="marking" hidden>
           <div class="lhead"><h2>Tablet and pencil</h2><span class="muted">For a touch screen. A mouse and a trackpad work as they always have.</span></div>
@@ -625,9 +680,10 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
           <p class="muted setp">A language other than English covers the first screens so far: the sidebar, Today, the welcome, Help and the feedback page students get. The other screens are still in English. The translations have not yet been checked by fluent speakers, so a line may read oddly.</p>
         </section>
         <section class="lib setsec" id="setClaude" data-sec="claude" hidden>
-          <div class="lhead"><h2>Working with Claude</h2><span class="muted">Optional. Nothing reaches Claude unless you give it a file yourself.</span></div>
-          <p class="setp"><b>Share with Claude</b> is under Setup when an assignment is open. It makes a file for you to give to Claude yourself: the papers with names covered, or your marks only. Each student is a random code, and the key to the codes stays in this browser.</p>
-          <p class="setp"><b>The Planner folder</b> holds lessons only. If you let Claude work in a folder on your computer, make it that one: grading work never goes in it, and the Planner refuses a folder that holds grading files.</p>
+          <div class="lhead"><h2>Working with AI</h2><span class="muted">Optional. Nothing reaches an AI assistant unless you give it a file yourself.</span></div>
+          <div id="setAi"></div>
+          <p class="setp"><b>Share with <span class="aiWord">your AI assistant</span></b> is under Setup when an assignment is open. It makes a file for you to give to <span class="aiWord">your AI assistant</span> yourself: the papers with names covered, or your marks only. Each student is a random code, and the key to the codes stays in this browser.</p>
+          <p class="setp"><b>The Planner folder</b> holds lessons only. If you let <span class="aiWord">your AI assistant</span> work in a folder on your computer, make it that one: grading work never goes in it, and the Planner refuses a folder that holds grading files.</p>
           <p class="muted setp">Papers, names, scores and comments stay in this browser and in your own linked folder.</p>
         </section>
         <section class="lib setsec" id="setKeys" data-sec="keys" hidden>
@@ -649,6 +705,7 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
       <a class="atab" id="markTab" data-atab="" href="#/">Mark</a>
       <a class="atab" id="gradesBtn" data-atab="grades" href="#/" title="Every score and comment, beside the grade written on each paper">Grades</a>
       <a class="atab" id="insightsTab" data-atab="insights" href="#/" title="How the class did, row by row, and whether your scoring stayed even">Insights</a>
+      <a class="atab" id="examplesTab" data-atab="examples" href="#/" hidden title="Strong work from this assignment, with no names on it">Examples <span class="atn" hidden></span></a>
       <a class="atab" id="exportBtn" data-atab="return" href="#/" title="Check the class, then get the marked files to give back">Return</a>
     </nav>
     <span class="sp"></span>
@@ -664,6 +721,7 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
           <button class="mitem" id="bringBtn" title="Late work, or many files at once; each goes to its student by the name in the file name">Bring in files</button>
           <button class="mitem" id="openRepBtn" title="What opened from this download, what didn’t, who has nothing, and anything odd">What opened</button>
           <button class="mitem" id="trAllBtn" hidden title="Make a transcript for every recording in this assignment">Transcripts</button>
+          <button class="mitem" id="clipsBtn" hidden title="The parts of videos you saved, one after another, with their labels and no names">Clips to show the class</button>
           <button class="mitem" id="quizBtn" title="For a scanned paper quiz: box each question once, then mark the same question for everyone at once">Quick mark (paper quiz)</button>
           <button class="mitem" id="impBtn" title="Comments and marks made in Kami, Acrobat or Preview, made into your own so you can change them">Marks from other apps</button>
           <span class="mlink" id="topAtlas"></span>
@@ -673,8 +731,8 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
       <!-- What the More menu used to hold now lives on a tab or in Settings. Each button stays here, out of sight, so Find anything and the keys press the same thing they always did. -->
       <div id="toolStash" hidden>
         <button class="mitem" id="sheetBtn" data-fg="This assignment" title="A picture of every grade written on the papers">Grades on the papers</button>
-        <button class="mitem" id="shareBtn" data-fg="This assignment" title="Papers with names covered, by code">Share with Claude</button>
-        <button class="mitem" id="backBtn" data-fg="This assignment" title="Put Claude’s feedback with the right students">Bring back from Claude</button>
+        <button class="mitem" id="shareBtn" data-fg="This assignment" title="Papers with names covered, by code">Share with your AI assistant</button>
+        <button class="mitem" id="backBtn" data-fg="This assignment" title="Put its feedback with the right students">Bring back from your AI assistant</button>
         <button class="mitem" id="bookBtn" data-fg="This assignment" title="Every assignment for this class, by term, with term grades and charts">Gradebook</button>
         <button class="mitem" id="overviewBtn" data-fg="This assignment" title="The spread of scores, the hardest rubric rows, and who isn’t finished">Class overview</button>
         <button class="mitem" id="consBtn" data-fg="This assignment" title="Same-score papers side by side, and whether you got harder or softer as you went">Consistency check</button>
@@ -687,6 +745,7 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
         <button class="mitem" id="keysBtn" data-fg="Tools">All keys <kbd>?</kbd></button>
       </div>
     </div>
+    <button class="icon" id="fullBtn" data-gsfull title="Full screen ( F )" aria-label="Full screen" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path class="fs-in" d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/><path class="fs-out" d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg></button>
     <button class="icon" id="closeBtn" title="Close this assignment and go back to Today" aria-label="Close this assignment and go back to Today"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
   </div>
   <div class="cols" id="cols">

@@ -3,7 +3,7 @@
 const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const { launch } = require('./helpers/chrome');
-const { openApp, appReady, goTo, classPage, idbRead } = require('./helpers/app');
+const { openApp, appReady, goTo, classPage, idbRead, pick } = require('./helpers/app');
 
 let browser;
 before(async () => { browser = await launch(); });
@@ -43,13 +43,13 @@ function seed() {
 const hash = page => page.evaluate(() => location.hash);
 const until = (page, h) => page.waitForFunction(h => location.hash === h, {}, h);
 const lib = page => page.evaluate(() => window.__gs.state().lib);
-const tab = async (page, k, sel) => { await page.click('[data-ctab="' + k + '"]'); await page.waitForSelector(sel); };
+const tab = async (page, k, sel) => { await pick(page, '[data-ctab="' + k + '"]'); await page.waitForSelector(sel); };
 const heatNames = page => page.$$eval('#bkHeat tbody tr:not(.chfoot) .chn', xs => xs.map(x => x.textContent));
 
 test('each tab of a class has its own address, and Refresh, Back and Forward follow', async () => {
   const { page, close } = await openApp(browser, { seed: seed() });
   await classPage(page, 'c1');
-  assert.deepEqual(await page.$$eval('.ctabs .ctab', xs => xs.map(x => x.textContent)), ['Assignments', 'Gradebook', 'Students', 'Missing work', 'Charts', 'Report comments']);
+  assert.deepEqual(await page.$$eval('.ctabs > .ctab, .ctabs .ctrow a', xs => xs.map(x => x.textContent)), ['Assignments', 'Gradebook', 'Students', 'Attendance', 'Seating', 'Missing work', 'Charts', 'Report comments']);
   assert.equal(await page.$eval('.ctab.on', a => a.textContent), 'Assignments');
   assert.ok(await page.$('.board .card'), 'the units and assignments are the first tab');
   await tab(page, 'gradebook', '#bkTab');
@@ -250,7 +250,7 @@ test('going around a class’s tabs changes nothing that’s saved', async () =>
   await classPage(page, 'c1');
   const a = await snap();
   await tab(page, 'gradebook', '#bkTab');
-  await page.click('[data-bkshow="pts"]'); await page.click('[data-bkterm="*"]'); await page.click('[data-bkterm="t1"]');
+  await pick(page, '[data-bkshow="pts"]'); await page.click('[data-bkterm="*"]'); await page.click('[data-bkterm="t1"]');
   await tab(page, 'charts', '#bkHeat');
   await page.click('#bkHeat [data-chsort="i3"]'); await page.click('#bkHeat [data-chsort="grade"]');
   await tab(page, 'students', '#peopleTbl table');

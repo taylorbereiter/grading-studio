@@ -52,7 +52,7 @@ function closeDlg() {
 $('#dlg').addEventListener('pointerdown', e => { if (e.target.id === 'dlg' && !dlgPage) { if (SP) splitLeave(); else leaveDlg(); } });
 // From any screen or box straight to a paper. A box over a tab's screen would otherwise fall back to that screen when it closes.
 function toPaper(i, path) { closeDlg(); if (batch && routeNow().tab) go(batchHash(batch.id)); return openStudent(i, path); }
-const TAB_DRAW = { grades: () => openGrades(), 'grades/sheet': () => openSheet(false), insights: () => openOverview(), 'insights/consistency': () => openCons(), return: () => openExport() };
+const TAB_DRAW = { grades: () => openGrades(), 'grades/sheet': () => openSheet(false), insights: () => openOverview(), 'insights/consistency': () => openCons(), examples: () => openExamples(), return: () => openExport() };
 // The screen for where the address says she is in the open assignment.
 function tabShow(r) {
   const key = r.tab ? r.tab + (r.sub ? '/' + r.sub : '') : '';
@@ -61,11 +61,22 @@ function tabShow(r) {
   if (dlgPage !== key && (dlgPage || $('#dlg').hidden)) TAB_DRAW[key]();   // a box over the screen stays; closing it draws the screen
 }
 
+// Under the rows in Rubric setup: how every row is scored. 0 to 4 with half points unless the teacher says otherwise.
+function rowScaleHtml(d) {
+  const t = rowsTop(d);
+  let o = t ? '' : '<option value="" selected>each its own</option>';
+  for (let k = 1; k <= ROW_TOP_MAX; k++) o += '<option value="' + k + '"' + (k === t ? ' selected' : '') + '>' + k + '</option>';
+  return '<div class="rowscale"><label for="rowTopSel">Each row is scored 0 to</label><select id="rowTopSel" class="btn sm">' + o + '</select>' +
+    '<label class="rowhalf"><input type="checkbox" id="rowHalfIn"' + (rowHalf(d) ? ' checked' : '') + '> Half points</label>' +
+    '<span class="muted">Out of ' + rowsMax(d) + ' in all.</span></div>';
+}
+// A draft's total: a rubric's rows on their own scales, or the whole number of points.
+const draftMax = d => d.mode === 'rubric' ? rowsMax(d) : Math.round(+d.outOf || 0);
 function openSetup() {
   let draft = JSON.parse(JSON.stringify(setup));
   let newPage = undefined;   // undefined: unchanged, null: removed, {bytes,name}: new upload
   const scaleRows = () => {
-    const max = draft.mode === 'rubric' ? draft.criteria.length * 4 : Math.round(+draft.outOf || 0);
+    const max = draftMax(draft);
     if (!draft.scale) return '<p class="muted" style="font-size:13px;margin:4px 0 0">No scale: percent is the plain share of points.</p>';
     if (max > 40) return '<p class="muted" style="font-size:13px">A scale needs a total of 40 or less.</p>';
     let h = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:6px 10px;margin-top:6px">';
@@ -73,16 +84,17 @@ function openSetup() {
     return h + '</div><p class="muted" style="font-size:12.5px;margin:6px 0 0">Leave a row blank if you never use it. Half points land between two rows.</p>';
   };
   const body = () => {
-    let h = '<div class="field"><label>How do you score this one?</label><span class="seg"><button data-m="points" aria-pressed="' + (draft.mode === 'points') + '">Just the total</button><button data-m="rubric" aria-pressed="' + (draft.mode === 'rubric') + '">Rubric rows, 0 to 4</button></span>' +
+    let h = '<div class="field"><label>How do you score this one?</label><span class="seg"><button data-m="points" aria-pressed="' + (draft.mode === 'points') + '">Just the total</button><button data-m="rubric" aria-pressed="' + (draft.mode === 'rubric') + '">Rubric rows</button></span>' +
       '<span class="muted" style="font-size:12.5px;margin-top:4px">Grading right on your own rubric? Use Just the total: one score box, and the Grades tab and percents still work.</span></div>';
     h += rubricLibHtml(draft);
     if (draft.mode === 'rubric') {
-      h += '<div class="field"><label>Rubric rows</label>' + draft.criteria.map((c, i) => '<div class="critrow"><input type="text" data-ci="' + i + '" value="' + esc(c) + '">' + (draft.criteria.length > 1 ? '<button class="btn sm" data-rm="' + i + '" aria-label="Remove row">×</button>' : '') + '</div>' + levelsEditHtml(draft, i)).join('') +
-        (draft.criteria.length < 6 ? '<div><button class="btn sm" data-add>+ Add a row</button></div>' : '') + '</div>';
+      h += '<div class="field"><label>Rubric rows</label>' + draft.criteria.map((c, i) => '<div class="critrow"><input type="text" data-ci="' + i + '" value="' + esc(c) + '">' + goalRowHtml(draft, i) + (draft.criteria.length > 1 ? '<button class="btn sm" data-rm="' + i + '" aria-label="Remove row">×</button>' : '') + '</div>' + levelsEditHtml(draft, i)).join('') +
+        (draft.criteria.length < 6 ? '<div><button class="btn sm" data-add>+ Add a row</button></div>' : '') + rowScaleHtml(draft) + '</div>';
     } else {
       h += '<div class="field"><label for="outOf">Out of</label><input type="number" id="outOf" min="1" step="0.5" value="' + esc(draft.outOf) + '" style="width:120px"></div>';
     }
-    h += '<div class="field"><label>Grading scale</label><span style="display:flex;gap:6px;flex-wrap:wrap">' + (me().scale12 ? '<button class="btn sm" data-preset="usual">12 = 100, 11 = 95, 10 = 91…</button>' : '') + '<button class="btn sm" data-preset="fives">Steps of 5 (9 = 85%)</button><button class="btn sm" data-preset="none">No scale</button>' + scaleBankHtml(draft, draft.mode === 'rubric' ? draft.criteria.length * 4 : Math.round(+draft.outOf || 0)) + '</span>' + scaleRows() + '</div>';
+    h += goalsSetupHtml(draft);
+    h += '<div class="field"><label>Grading scale</label><span style="display:flex;gap:6px;flex-wrap:wrap">' + (me().scale12 ? '<button class="btn sm" data-preset="usual">12 = 100, 11 = 95, 10 = 91…</button>' : '') + '<button class="btn sm" data-preset="fives">Steps of 5 (9 = 85%)</button><button class="btn sm" data-preset="none">No scale</button>' + scaleBankHtml(draft, draftMax(draft)) + '</span>' + scaleRows() + '</div>';
     const rp = newPage === undefined ? draft.rubricPage : newPage;
     h += '<div class="field"><label>Your rubric, for every student</label><span class="muted" style="font-size:13px">Bring in your rubric once and every student gets their own copy to grade on. A Word rubric (.docx or .docm) stays a Word file: type in it, check its boxes and shade its cells. A PDF or picture is added as a page you can mark up. Each copy goes back with that student’s work.</span>' +
       '<span style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:4px"><button class="btn sm" data-rpup>' + (rp ? 'Replace…' : 'Bring in my rubric…') + '</button>' +
@@ -101,6 +113,8 @@ function openSetup() {
     if (e.target.dataset.sk != null && draft.scale) { const v = e.target.value; if (v === '') delete draft.scale[e.target.dataset.sk]; else draft.scale[e.target.dataset.sk] = +v; }
   }, live);
   box.addEventListener('change', async e => {
+    if (e.target.id === 'rowTopSel') { const t = topOk(e.target.value); if (t) { delete draft.tops; if (t === ROW_TOP) delete draft.top; else draft.top = t; levelEditOpen.clear(); } return re(); }
+    if (e.target.id === 'rowHalfIn') { if (e.target.checked) delete draft.half; else draft.half = false; return re(); }
     if (e.target.id !== 'rpIn' || !e.target.files[0]) return;
     const f = e.target.files[0], bytes = new Uint8Array(await f.arrayBuffer());
     try {
@@ -114,17 +128,17 @@ function openSetup() {
         await PDFLib.PDFDocument.load(pdf, { ignoreEncryption: true });
         newPage = { bytes: pdf, name: f.name };
       }
-      if (draft.mode === 'rubric' && draft.criteria.every((c, i) => c === 'Criterion ' + (i + 1))) { draft.outOf = draft.criteria.length * 4; draft.mode = 'points'; }   // her rubric replaces the generic rows
+      if (draft.mode === 'rubric' && draft.criteria.every((c, i) => c === 'Criterion ' + (i + 1))) { draft.outOf = rowsMax(draft); draft.mode = 'points'; }   // her rubric replaces the generic rows
       re();
     } catch { toast('That file couldn’t be opened as a Word file, PDF or picture'); }
   }, live);
   box.addEventListener('click', async e => {
     const m = e.target.closest('[data-m]'); if (m) { draft.mode = m.dataset.m; return re(); }
     const rm = e.target.closest('[data-rm]'); if (rm) { draft.criteria.splice(+rm.dataset.rm, 1); levelsRowGone(draft, +rm.dataset.rm); return re(); }
-    if (e.target.closest('[data-add]')) { draft.criteria.push('Criterion ' + (draft.criteria.length + 1)); rubDlg.from.push(null); return re(); }
+    if (e.target.closest('[data-add]')) { draft.criteria.push('Criterion ' + (draft.criteria.length + 1)); if (Array.isArray(draft.tops)) draft.tops.push(null); if (Array.isArray(draft.ib)) draft.ib.push(null); rubDlg.from.push(null); return re(); }
     const pr = e.target.closest('[data-preset]');
     if (pr) {
-      const max = draft.mode === 'rubric' ? draft.criteria.length * 4 : Math.round(+draft.outOf || 0);
+      const max = draftMax(draft);
       if (pr.dataset.preset === 'none') draft.scale = null;
       else if (max === 12) draft.scale = { ...(pr.dataset.preset === 'usual' ? SCALE12 : SCALE_FIVES) };
       else { draft.scale = {}; for (let k = max; k >= 0; k--) draft.scale[k] = Math.round((pr.dataset.preset === 'fives' ? 100 - (max - k) * 5 : k / max * 100) * 10) / 10; }
@@ -140,6 +154,9 @@ function openSetup() {
       if (note && !await askDlg(note, { ok: 'Save', cancel: 'Go back' })) return;
       draft.criteria = draft.criteria.map((c, i) => c.trim() || 'Criterion ' + (i + 1));
       draft.levels = tidyLevels(draft);
+      { const rs = rowScaleOf(draft); for (const k of ['top', 'tops', 'half']) delete draft[k]; if (draft.mode === 'rubric') Object.assign(draft, rs); }   // only a scale that isn't 0 to 4 with halves is written down
+      draft.goals = goalsTidy(draft);
+      if (batch && rubDlg.goalAll !== (batch.goal || '')) { if (rubDlg.goalAll) batch.goal = rubDlg.goalAll; else delete batch.goal; }
       if (newPage === null) { if (draft.rubricPage) store.del('gs.rp.' + draft.rubricPage.id); draft.rubricPage = null; }
       else if (newPage) {
         const id = uid();
@@ -202,13 +219,13 @@ function gradeRows() {
 }
 function openGrades() {
   if (rereadsPending()) { rereadsDone().then(openGrades); return; }   // a grade she just typed or changed counts here
-  const rub = setup.mode === 'rubric', c = batchClass(), banded = !!(meGrade() || {}).bands;   // a teacher who grades in letters or 1 to 7 gets that grade in its own column
+  const rub = setup.mode === 'rubric', c = batchClass(), ib = ibSetup(), banded = !ib && !!(meGrade() || {}).bands;   // an MYP task (ib.js) shows its levels and a status, with no total, percent or grade column;   // a teacher who grades in letters or 1 to 7 gets that grade in its own column
   const rows = gradeRows().map(({ st, i, missing, off }, k) => {
-    if (missing) return '<tr><td class="n">' + (k + 1) + '</td><td class="nm" style="cursor:default">' + esc(missing) + (c ? ' ' + whoBtn('data-wc="' + esc(c.id) + '" data-wn="' + esc(missing) + '"', missing) : '') + ' <span class="muted" style="font-weight:400">(no folder: nothing turned in)</span></td>' + (rub ? setup.criteria.map(() => '<td></td>').join('') : '') + '<td></td><td></td>' + (banded ? '<td></td>' : '') + '<td></td><td></td></tr>';
+    if (missing) return '<tr><td class="n">' + (k + 1) + '</td><td class="nm" style="cursor:default">' + esc(missing) + (c ? ' ' + whoBtn('data-wc="' + esc(c.id) + '" data-wn="' + esc(missing) + '"', missing) : '') + ' <span class="muted" style="font-weight:400">(no folder: nothing turned in)</span></td>' + (rub ? setup.criteria.map(() => '<td></td>').join('') : '') + '<td></td>' + (ib ? '' : '<td></td>') + (banded ? '<td></td>' : '') + '<td></td><td></td></tr>';
     const g = gradeOf(st);
     const cells = rub ? setup.criteria.map((_, q) => '<td class="c" data-copy="' + fmtNum(rowShown(st, q)) + '">' + fmtNum(rowShown(st, q)) + '</td>').join('') : '';
     return '<tr class="go" data-i="' + i + '"><td class="n">' + (k + 1) + '</td><td class="nm">' + esc(st.key) + (anonOn() ? '' : ' ' + whoBtn('data-wi="' + i + '"', st.key)) + (st.files.length ? '' : ' <span class="muted" style="font-weight:400">(nothing turned in)</span>') + (off ? ' <span class="pill" style="font-size:11px;padding:2px 7px;border-radius:999px;background:var(--warn-soft);color:var(--warn)">not on roster</span>' : '') + '</td>' + cells +
-      '<td class="c' + (g.partial ? ' part" data-partial="1' : '') + '" data-copy="' + esc(cellCopy(g, 'total')) + '">' + totalText(g) + statusPills(g) + (g.total == null && g.pct == null && ((st.doubts && st.doubts.length) || manyReads(st)) ? ' <span class="stag" title="Confirm it on the Grade sheet">to confirm</span>' : '') + (g.paper ? ' <span class="muted" style="font-weight:400;font-size:12px" title="Read from the paper">(paper)</span>' : '') + '</td><td class="c' + (g.partial ? ' part" data-partial="1' : '') + '" data-copy="' + esc(cellCopy(g, 'pct')) + '">' + fmtPct(g.pct) + '</td>' + (banded ? '<td class="c" data-copy="' + esc(bandOf(g.pct)) + '">' + esc(bandOf(g.pct)) + '</td>' : '') +
+      '<td class="c' + (g.partial ? ' part" data-partial="1' : '') + '" data-copy="' + esc(ib ? '' : cellCopy(g, 'total')) + '">' + (ib ? '' : totalText(g)) + statusPills(g) + (g.total == null && g.pct == null && ((st.doubts && st.doubts.length) || manyReads(st)) ? ' <span class="stag" title="Confirm it on the Grade sheet">to confirm</span>' : '') + (g.paper ? ' <span class="muted" style="font-weight:400;font-size:12px" title="Read from the paper">(paper)</span>' : '') + '</td>' + (ib ? '' : '<td class="c' + (g.partial ? ' part" data-partial="1' : '') + '" data-copy="' + esc(cellCopy(g, 'pct')) + '">' + fmtPct(g.pct) + '</td>') + (banded ? '<td class="c" data-copy="' + esc(bandOf(g.pct)) + '">' + esc(bandOf(g.pct)) + '</td>' : '') +
       '<td class="op" data-op="' + i + '"></td><td class="cm" data-copy="' + esc(st.grade.comment) + '">' + esc(st.grade.comment) + '</td></tr>';
   }).join('');
   tabNext('grades');
@@ -216,8 +233,8 @@ function openGrades() {
     (c ? '<span class="seg" style="margin-left:8px"><button data-ord="folder" aria-pressed="' + (gradesOrder === 'folder') + '">Folder order</button><button data-ord="roster" aria-pressed="' + (gradesOrder === 'roster') + '">' + esc(c.name) + ' roster order</button></span>' : '') +
     '<span class="sp"></span>' + tabSeg('grades', '', GRADE_VIEWS) + '<button class="icon" data-close aria-label="Close">✕</button></div>' +
     '<div class="bb" id="glBody"><div id="glChk" hidden></div><p class="muted" style="margin:0 0 10px;font-size:14px">Click any score or comment to copy it, then paste it into ' + esc(sysOr('your gradebook')) + '. Click a name to open that paper.' + (c ? '' : ' Pick a roster under Setup to see this list in roster order.') + '</p>' +
-    '<table class="gl" id="glTable"><thead><tr><th>#</th><th>Student</th>' + (rub ? setup.criteria.map(x => '<th>' + esc(x) + '</th>').join('') : '') + '<th>Total /' + maxPoints() + '</th><th>%</th>' + (banded ? '<th>Grade</th>' : '') + '<th title="The grade written on the paper itself, read from the file">On the paper</th><th>Comment</th></tr></thead><tbody>' + rows + '</tbody></table></div>' +
-    '<div class="bf">' + mbLink(c, 'btn') + '<span style="margin-right:auto"></span><button class="btn" data-cp="total">Copy all totals</button><button class="btn" data-cp="pct">Copy all percents</button><button class="btn" data-cp="tsv">Copy as a table</button><button class="btn" data-glpdf title="A crop of each grade written on a paper, one row per file">Grade sheet (PDF)</button><button class="btn primary" data-csv>Download spreadsheet (CSV)</button></div>');
+    '<table class="gl" id="glTable"><thead><tr><th>#</th><th>Student</th>' + (rub ? setup.criteria.map(x => '<th>' + esc(x) + '</th>').join('') : '') + (ib ? '<th>Status</th>' : '<th>Total /' + maxPoints() + '</th><th>%</th>') + (banded ? '<th>Grade</th>' : '') + '<th title="The grade written on the paper itself, read from the file">On the paper</th><th>Comment</th></tr></thead><tbody>' + rows + '</tbody></table></div>' +
+    '<div class="bf">' + mbLink(c, 'btn') + '<span style="margin-right:auto"></span>' + (ib ? '<button class="btn" data-cp="lv">Copy all levels</button>' : '<button class="btn" data-cp="total">Copy all totals</button><button class="btn" data-cp="pct">Copy all percents</button>') + '<button class="btn" data-cp="tsv">Copy as a table</button><button class="btn" data-glpdf title="A crop of each grade written on a paper, one row per file">Grade sheet (PDF)</button><button class="btn primary" data-csv>Download spreadsheet (CSV)</button></div>');
   const box = $('#dlgBox');
   glPaper();
   box.onclick = async e => {
@@ -234,7 +251,7 @@ function openGrades() {
     if (cp) {
       const k = cp.dataset.cp, R = gradeRows();
       if (!await okPartial(R.filter(r => !r.missing).map(r => r.st))) return;
-      const lines = R.map(r => { if (r.missing) return k === 'tsv' ? tsvLine([String(R.indexOf(r) + 1), r.missing]) : ''; return k === 'tsv' ? tsvLine(tableRow(r.st, R.indexOf(r))) : scoreText(gradeOf(r.st), k); });
+      const lines = R.map(r => { if (r.missing) return k === 'tsv' ? tsvLine([String(R.indexOf(r) + 1), r.missing]) : ''; return k === 'tsv' ? tsvLine(tableRow(r.st, R.indexOf(r))) : k === 'lv' ? setup.criteria.map((_, q) => fmtNum(rowShown(r.st, q))).join('\t') : scoreText(gradeOf(r.st), k); });
       if (k === 'tsv') lines.unshift(tsvLine(tableHead()));
       copy(lines.join('\n'), 'Copied ' + R.length + ' rows in ' + (gradesOrder === 'folder' ? 'folder order' : listOrder()));
     }
@@ -247,10 +264,10 @@ function openGrades() {
 }
 // The two views of the Grades tab: her scores for each student, and the grade written on each paper, cropped from its file.
 const GRADE_VIEWS = [['', 'Scores and comments'], ['sheet', 'Grade sheet']];
-function tableHead() { return ['#', 'Student'].concat(setup.mode === 'rubric' ? setup.criteria : [], ['Total / ' + maxPoints(), 'Percent', 'Status', 'Comment']); }
+function tableHead() { return ['#', 'Student'].concat(setup.mode === 'rubric' ? setup.criteria : [], ibSetup() ? [] : ['Total / ' + maxPoints(), 'Percent'], ['Status', 'Comment']); }
 function tableRow(st, pos) {
   const g = gradeOf(st), i = pos != null ? pos : batch.students.indexOf(st);
-  return [String(i + 1), st.key].concat(setup.mode === 'rubric' ? setup.criteria.map((_, k) => fmtNum(rowShown(st, k))) : [], [cellOut(g, 'total'), cellOut(g, 'pct'), statusText(st), st.grade.comment.replace(/\s*\n\s*/g, ' ')]);
+  return [String(i + 1), st.key].concat(setup.mode === 'rubric' ? setup.criteria.map((_, k) => fmtNum(rowShown(st, k))) : [], ibSetup() ? [] : [cellOut(g, 'total'), cellOut(g, 'pct')], [statusText(st), st.grade.comment.replace(/\s*\n\s*/g, ' ')]);
 }
 async function copy(text, msg) {
   try { await navigator.clipboard.writeText(text); }

@@ -58,6 +58,34 @@ async function unitDelete(u) {
 }
 const fileBlob = id => kvGet('file:' + id);
 
+/* ---------- a new school year, started on the grading page (src/newyear.js) ---------- */
+// It leaves gsp.newYear = { id, from } in this browser, and the Planner moves on once, the next time it opens: units and the
+// semester 52 weeks later (a Monday stays a Monday), the old year's days off and events gone, and every lesson that was on a
+// class goes to Past lessons under the old year's name, with no dates and no taught notes. Nothing is deleted. The old year
+// as it was is in the file the grading page made. kv 'yearsDone' remembers which moves are done.
+async function yearMoveOn() {
+  let ask = null; try { ask = JSON.parse(localStorage.getItem('gsp.newYear') || 'null'); } catch { }
+  if (!ask || typeof ask.id !== 'string') return;
+  const done = (await kvGet('yearsDone')) || [];
+  if (done.includes(ask.id)) return;
+  const later = s => /^\d{4}-\d\d-\d\d$/.test(s || '') ? ymd(addDays(parseYmd(s), 364)) : s, from = String(ask.from || 'Last year').slice(0, 120);
+  let moved = 0;
+  for (const l of L.lessons.slice()) {
+    if (!l.slots.length && !(l.taught || []).length) continue;
+    if (l.slots.length && !l.library) l.library = from;
+    l.slots = []; delete l.taught; moved++;
+    await lPut(l);
+  }
+  for (const u of L.units) { u.start = later(u.start); await unitPut(u, true); }
+  if (L.setup) {
+    L.setup = { ...L.setup, semStart: later(L.setup.semStart), semEnd: later(L.setup.semEnd), daysOff: [], events: [] };
+    await kvSet('setup', L.setup); await folderWriteSchedule();
+  }
+  await kvSet('yearsDone', [...done, ask.id]);
+  renderLessons(); railRender();
+  toast('A new school year: units and the semester moved on a year' + (moved ? ', and ' + moved + (moved === 1 ? ' lesson is' : ' lessons are') + ' in Past lessons under “' + from + '”' : '') + '.', 8000);
+}
+
 /* ---------- courses, weeks, which unit a week is in ---------- */
 function courses() {
   const out = [];
@@ -89,12 +117,12 @@ function semesterMondays() {
   return out;
 }
 const schoolWeek = monday => { const s = L.setup && L.setup.semStart; if (!s) return 0; const n = Math.round((parseYmd(monday) - parseYmd(s)) / 864e5 / 7) + 1; return n >= 1 ? n : 0; };
-const weekDays = monday => [0, 1, 2, 3, 4].map(i => ymd(addDays(parseYmd(monday), i)));
+const weekDays = monday => plWeekOffs().map(i => ymd(addDays(parseYmd(monday), i)));
 function weekMeetings(course, monday) {
   const ids = new Set(((courses().find(c => c.course === course) || {}).classes || []).map(c => c.id));
   return weekDays(monday).flatMap(d => meetingsOn(d).filter(m => ids.has(m.c.id)));
 }
-const rangeLabel = monday => { const a = parseYmd(monday), b = addDays(a, 4); return (a.getMonth() + 1) + '/' + a.getDate() + '–' + (b.getMonth() !== a.getMonth() ? (b.getMonth() + 1) + '/' : '') + b.getDate(); };
+const rangeLabel = monday => { const o = plWeekOffs(), a = addDays(parseYmd(monday), o[0]), b = addDays(parseYmd(monday), o[o.length - 1]); return a.getMonth() !== b.getMonth() || plMd(a) !== (a.getMonth() + 1) + '/' + a.getDate() ? plMd(a) + '–' + plMd(b) : plMd(a) + '–' + b.getDate(); };
 
 /* ---------- semester view: every week down, each course across ---------- */
 function renderSemester() {
@@ -171,7 +199,7 @@ function renderUnit() {
     '<label class="pl-atl">' + (plCur() ? esc(plCur()) + ' page' : 'Unit plan link') + ' <input class="btn sm" data-uf="atlas" placeholder="Paste ' + (plCur() ? 'the unit’s ' + esc(plCur()) + ' link' : 'a link to the unit plan') + '" value="' + esc(u.atlas) + '">' + (u.atlas ? '<a class="btn sm" href="' + esc(u.atlas) + '" target="_blank" rel="noopener">Open</a>' : '') + '</label></section>';
   // Atlas screenshots
   h += '<section class="pl-card"><div class="lhead"><h2>' + (plCur() ? 'From ' + esc(plCur()) : 'From your unit plan') + '</h2><span class="sp"></span><button class="btn sm" data-a="addshot">Add screenshot…</button><button class="btn sm" data-a="pasteweeks">Type or paste the weeks…</button>' +
-    '<button class="btn sm primary" data-a="askweeks"' + (atlas.length ? '' : ' disabled title="Add a screenshot first"') + '>Ask Claude to fill the weeks</button></div>' +
+    '<button class="btn sm primary" data-a="askweeks"' + (atlas.length ? '' : ' disabled title="Add a screenshot first"') + '>Ask ' + plAi() + ' to fill the weeks</button></div>' +
     '<div class="pl-drop" id="plShotDrop" tabindex="0">' + (atlas.length ? '<div class="pl-shots">' + atlas.map(f => '<figure class="pl-shot"><button class="pl-shotimg" data-a="viewfile" data-fid="' + f.id + '" aria-label="Look at ' + esc(f.name) + '"><img data-fimg="' + f.id + '" alt=""></button><figcaption>' + esc(f.name) + '<button class="btn sm ghost" data-a="rmfile" data-fid="' + f.id + '">Remove</button></figcaption></figure>').join('') + '</div>' : '') +
     '<p class="muted">' + (atlas.length ? 'Paste or drop more screenshots here.' : 'Take a screenshot of the unit ' + (plCur() ? 'in ' + esc(plCur()) : 'plan, wherever your school keeps it') + ', then paste it here (Ctrl+V or ⌘V) or drop the picture in.') + '</p></div></section>';
   // weeks
@@ -194,9 +222,9 @@ function renderUnit() {
   // files
   h += '<section class="pl-card" data-owner="unit|' + esc(u.id) + '"><div class="lhead"><h2>Summative and unit files</h2><span class="sp"></span><button class="btn sm" data-ma="newdoc">+ New document</button><button class="btn sm" data-a="addfile">Add files…</button></div>' +
     '<div class="pl-drop" id="plFileDrop">' + (other.length ? '<div class="pl-files">' + other.map(f => '<div class="pl-file"><span class="pl-ft">' + (f.kind === 'doc' ? 'DOC' : esc((f.name.split('.').pop() || '').slice(0, 4).toUpperCase())) + '</span><div class="pl-fn"><b>' + esc(f.name) + '</b><span>' + (f.kind === 'doc' ? 'Document' : (f.kind === 'summative' ? 'Summative' : 'Unit file') + ' · ' + kb(f.size)) + '</span></div>' +
-      (f.kind === 'doc' ? '<button class="btn sm ghost" data-ma="claude" data-id="' + f.id + '" title="Put this in the Claude box">+ Claude box</button>' : '<select class="btn sm" data-fkind="' + f.id + '" aria-label="Kind"><option value="summative"' + (f.kind === 'summative' ? ' selected' : '') + '>Summative</option><option value="other"' + (f.kind === 'other' ? ' selected' : '') + '>Unit file</option></select>') +
+      (f.kind === 'doc' ? '<button class="btn sm ghost" data-ma="claude" data-id="' + f.id + '" title="Put this in the ' + plAiTag() + ' box">+ ' + plAiTag() + ' box</button>' : '<select class="btn sm" data-fkind="' + f.id + '" aria-label="Kind"><option value="summative"' + (f.kind === 'summative' ? ' selected' : '') + '>Summative</option><option value="other"' + (f.kind === 'other' ? ' selected' : '') + '>Unit file</option></select>') +
       '<button class="btn sm" data-a="viewfile" data-fid="' + f.id + '">Open</button><button class="btn sm ghost" data-a="dlfile" data-fid="' + f.id + '">Download</button><button class="btn sm ghost" data-a="rmfile" data-fid="' + f.id + '">Remove</button></div>').join('') + '</div>' : '') +
-    '<p class="muted">Drop task sheets, rubrics or exemplars here. Planning files only: never student work. They go to the Planner folder, where Claude can read them.</p></div></section>';
+    '<p class="muted">Drop task sheets, rubrics or exemplars here. Planning files only: never student work. They go to the Planner folder, where ' + plAi() + ' can read them.</p></div></section>';
   h += unitLessonsSection(u);
   h += bankUnitSection(u);
   h += '</div><input type="file" id="plFileIn" multiple hidden><input type="file" id="plShotIn" accept="image/*" multiple hidden>';
@@ -249,7 +277,7 @@ function askWeeks(u) {
   const msg = 'Please fill in the weeks of my ' + u.course + ' unit "' + u.title + '" from its ' + (plCur() || 'unit plan') + ' screenshots. ' + where +
     'It starts the week of ' + shortDate(u.start) + ' and has ' + u.weeks.length + ' weeks. Read the screenshots and write each week\'s focus (and standards, if shown) into "weeks" in the unit file, one entry per week, in order. Keep my notes. Then tell me what you filled in and anything you weren\'t sure of.' +
     (where ? '' : '\n\n(My Planner folder isn\'t linked yet, so I\'ll attach the screenshots.)');
-  copyText(msg).then(() => { toast(where ? 'Message copied. Paste it into Claude.' : 'Message copied. Link the Planner folder so Claude can read the screenshots, or attach them.', 6000); });
+  copyText(msg).then(() => { toast(where ? 'Message copied. Paste it into ' + plAi() + '.' : 'Message copied. Link the Planner folder so ' + plAi() + ' can read the screenshots, or attach them.', 6000); });
 }
 function pasteWeeksDlg(u) {
   openDlg('<div class="bh"><h2>Weeks of ' + esc(u.title) + '</h2></div><div class="bb"><p class="muted" style="margin-top:0">One line per week: what that week is about. You can copy the week list straight out of ' + (plCur() ? esc(plCur()) : 'your unit plan') + '. Lines starting with “Week 3:” or similar are fine.</p>' +
@@ -384,5 +412,5 @@ async function unitsFolderRead() {
   return out;
 }
 
-window.__planner = { bankPut, normRubric, slideHtml, LOOKS, TEACH, TEACH_SAMPLE, versions: versionsOf, ytIds: us => us.map(u => [ytId(u), ytStart(u)]), openLessonForTest: (l, i) => { openLesson(l); goSlide(i || 0); }, L, applySetup, renderLessons, setPicture, folderWriteAll, folderRead, buildPptx, normLesson, deckStart, normUnit, unitPut, unitAt, addUnitFiles, notGradingFolder, unitsFolderRead, semesterMondays, openUnit, docxOf, findAll, copyLesson, packImport, createLesson, lessonText, lessonForFile, pptxToSlides, finUpload, versionsOf, SP, lessonZip, variantsOf, lessonEntries, dlWeek };
+window.__planner = { ACTIVITIES, VIDEOS, actVideo, readTemplate, openTimetable, bankPut, normRubric, slideHtml, LOOKS, TEACH, TEACH_SAMPLE, versions: versionsOf, ytIds: us => us.map(u => [ytId(u), ytStart(u)]), openLessonForTest: (l, i) => { openLesson(l); goSlide(i || 0); }, L, applySetup, folderReadme, plWeekOffs, renderLessons, setPicture, folderWriteAll, folderRead, buildPptx, shareBuild, shareOpen, matAdd, normLesson, deckStart, normUnit, unitPut, unitAt, addUnitFiles, notGradingFolder, unitsFolderRead, semesterMondays, openUnit, docxOf, findAll, copyLesson, packImport, createLesson, lessonText, lessonForFile, pptxToSlides, finUpload, versionsOf, SP, lessonZip, variantsOf, lessonEntries, dlWeek };
 openLessons();

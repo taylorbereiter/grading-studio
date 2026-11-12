@@ -202,7 +202,7 @@ async function syncPull() {
     if (changed) {
       const l = store.get('gs.lib', null); if (l) lib = migrateLib(l);
       bank = store.get('gs.bank', bank);
-      if (!batch) { const s = store.get('gs.setup', null); if (s) setup = { ...DEFAULT_SETUP, ...s }; }
+      if (!batch) { const s = store.get('gs.setup', null); if (s) setup = setupOver(s); }
       renderLib(); if (batch) renderClassSel();
     }
     syncBusy = false;

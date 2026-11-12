@@ -116,6 +116,7 @@ async function carryInto(e, list) {
     const nk = keyOf.get(nfc(key));
     if (!nk) { carry.goneStudents.push(key); continue; }
     const x = { ...o, f: mapPaths(o.f, c.map) || {}, h: mapPaths(o.h, c.map), tr: mapPaths(o.tr, c.map), r: mapPaths(o.r, c.map), sk: mapPaths(o.sk, c.map), inc: mapPaths(o.inc, c.map) };
+    if (o.g && o.g.tries) x.g = { ...o.g, tries: o.g.tries.map(t => t.files ? { ...t, files: t.files.map(q => c.map[q] || q) } : t) };   // an earlier try's papers keep their label under their new names
     // A hand-made page order can't know about pages that came or went, so a student whose files changed goes back to the plain order. Marks stay on their pages.
     if (o.L || o.o) {
       if (touched(key)) { delete x.L; delete x.o; if (o.L) carry.layouts.push(nk); }
@@ -132,7 +133,8 @@ async function carryInto(e, list) {
   // What she said about a page holds on the very same page, and a changed or new file's pages get their own look.
   const scan = c.unchecked || !d.scan ? undefined : mapPaths(d.scan, Object.fromEntries(Object.entries(c.map).filter(([, to]) => !c.flags[to])));
   const groups = d.groups && d.groups.map(g => ({ k: g.k.map(k => keyOf.get(nfc(k)) || k), p: Object.fromEntries(Object.entries(g.p || {}).map(([k, p]) => [keyOf.get(nfc(k)) || k, c.map[p] || p])) }));
-  batch.keptWork = { ...d, t: Date.now(), s, moved, removed, carry, scan, share, groups, lightPg: mapLit(d.lightPg, c.map), lightPgL: mapLit(d.lightPgL, c.map) };
+  const clips = d.clips && d.clips.map(x => (x.p ? { ...x, p: c.map[x.p] || x.p } : x));   // a clip on a video file follows the file to its new name
+  batch.keptWork = { ...d, t: Date.now(), s, moved, removed, carry, scan, share, groups, clips, lightPg: mapLit(d.lightPg, c.map), lightPgL: mapLit(d.lightPgL, c.map) };
   batch.carry = carry;
   await carryExtras(from, carry);
   // The list of downloads says which one is the older copy.

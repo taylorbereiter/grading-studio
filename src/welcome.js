@@ -9,6 +9,8 @@ function sysWords() {
   put('#dropSay', 'A ZIP from ' + (s || 'your school’s system') + ', a folder, a scan of the whole class, or photos.');
   put('.sysWord', s || 'your gradebook');
   put('.sysZip', s ? 'a ' + s + ' ZIP' : 'a ZIP');
+  put('.aiWord', aiSay());
+  put('#shareBtn', 'Share with ' + aiSay()); put('#backBtn', 'Bring back from ' + aiSay());   // the whole label, since Find anything lists these buttons by their words
 }
 
 /* the welcome */
@@ -61,7 +63,7 @@ function wlRender() {
     '<div class="wlbody">' + body + '</div>' +
     '<div class="wlact">' + (wl.step ? '<button class="btn" data-wlback>Back</button>' : '') + '<button class="btn primary" data-wlnext>' + (last ? 'Start' : 'Continue') + '</button>' +
     (hasSample() ? '' : '<button class="link" data-wlsample>Look around with a sample class first</button>') + '</div>' +
-    (wl.step === 0 && !lib.classes.length ? '<p class="wlfoot">Already use Grading Studio on another computer? <button class="link" data-wlbring>Bring your work in</button></p>' : '') +
+    (wl.step === 0 && !lib.classes.length ? '<p class="wlfoot">Already use Grading Studio on another computer? <button class="link" data-wlbring>Bring your work in</button></p><p class="wlfoot wlfoot2">Have an AI assistant that knows how you teach? <button class="link" data-wlai>Let it set this up</button></p>' : '') +
     '</div><div class="wlr">' +
     [['lock', 'Private', 'Student work never leaves this computer. No account, nothing uploaded.'],
       ['drop', 'Works with what you have', 'Google Classroom, ManageBac, Canvas, Teams, a folder of files, or a scan of the whole class.'],
@@ -81,7 +83,7 @@ function wlSave() {
   const seen = new Set(lib.classes.map(c => normName(c.name)));
   for (const raw of wl.classes.slice(wl.had)) {
     const name = raw.trim().replace(/\s+/g, ' '); if (!name || seen.has(normName(name))) continue;
-    seen.add(normName(name)); lib.classes.push({ id: uid(), name, names: [], units: [] });
+    seen.add(normName(name)); lib.classes.push({ id: uid(), name, names: [], units: [], ...(wl.way === 'myp' ? { way: 'myp' } : {}) });   // a teacher who grades with MYP criteria starts with MYP classes (ib.js)
   }
   const way = gradeWay(wl.way) || GRADE_WAYS[0];
   // Work that came in while she was being asked (her own folder, from another computer) keeps the words and defaults it had there.
@@ -108,6 +110,7 @@ $('#welcome').addEventListener('click', async e => {
   if (e.target.closest('[data-wlnext]')) return wlNext();
   if (e.target.closest('[data-wlfolder]')) { wl.busy = true; try { await folderPick(); } finally { wl.busy = false; } if (wl.on) wlRender(); return; }
   if (e.target.closest('[data-wlsample]')) { wlRead(); wlClose(); return sampleClass(); }
+  if (e.target.closest('[data-wlai]')) { wlClose(); return go('#/settings/setup'); }
   if (e.target.closest('[data-wlbring]')) { wlClose(); go('#/settings'); toast('Choose your Grading Studio folder, or bring in a take-home file. Your classes and work come with it.', 8000); }
 });
 $('#welcome').addEventListener('input', e => {
@@ -211,10 +214,18 @@ function meSetRender(sec) {
       '<p class="setp merow"><select id="meSys" aria-label="Where students hand in work"><option value="">On paper, or not said</option>' + SYS_LIST.map(x => '<option' + (x === s ? ' selected' : '') + '>' + esc(x) + '</option>').join('') +
       '<option value="other"' + (s && !known ? ' selected' : '') + '>Somewhere else…</option></select>' + (s && !known ? '<input type="text" id="meSysOther" maxlength="40" value="' + esc(s) + '" aria-label="Its name">' : '') + '</p>');
   }
+  if (sec === 'claude') {
+    const a = aiName(), known = AI_LIST.some(x => x[0] === a);
+    put('#setAi', '<p class="setp merow"><label for="meAi"><b>Your AI assistant</b></label> <select id="meAi"><option value="">None, or not said</option>' + AI_LIST.map(x => '<option' + (x[0] === a ? ' selected' : '') + '>' + x[0] + '</option>').join('') +
+      '<option value="other"' + (a && !known ? ' selected' : '') + '>Another one…</option></select>' + (a && !known ? '<input type="text" id="meAiOther" maxlength="30" value="' + esc(a) + '" aria-label="Its name">' : '') +
+      ' <span class="muted">Only for the words on screen and the names of the files you make for it. Nothing is connected to it.</span></p>');
+  }
   if (sec === 'grading') {
     const g = meGrade(), way = g ? g.way : '';
     put('#setWay', '<div class="lhead"><h2>How you usually grade</h2><span class="muted">What a new assignment starts with. Any assignment can be scored another way, in its Rubric setup.</span></div>' +
       '<div class="meways" role="radiogroup" aria-label="How you usually grade">' + GRADE_WAYS.map(([k, t, s]) => '<button class="wlway' + (way === k ? ' on' : '') + '" role="radio" aria-checked="' + (way === k) + '" data-meway="' + k + '"><b>' + t + '</b><span>' + s + '</span></button>').join('') + '</div>' +
+      (g && g.way === 'rubric' ? '<div class="rowscale merowscale"><label for="meRowTop">Each rubric row is scored 0 to</label><select id="meRowTop" class="btn sm">' + Array.from({ length: ROW_TOP_MAX }, (_, k) => '<option' + (k + 1 === (rowsTop(g.setup) || ROW_TOP) ? ' selected' : '') + '>' + (k + 1) + '</option>').join('') + '</select>' +
+        '<label class="rowhalf"><input type="checkbox" id="meRowHalf"' + (rowHalf(g.setup) ? ' checked' : '') + '> Half points</label><span class="muted">For new assignments. Any rubric can use another scale, in its Rubric setup.</span></div>' : '') +
       (g ? '' : '<p class="muted setp">Not chosen: a new assignment starts as it always has here, with three rubric rows and the 12-point scale (12 = 100, 11 = 95, 10 = 91…). Choosing one changes only assignments you make from then on.</p>') +
       (g && g.bands ? '<div class="mebands"><p class="setp"><b>' + (g.way === 'ib7' ? 'Grade boundaries' : 'Where each letter starts') + '</b> <span class="muted">The lowest percent that earns each grade. Shown beside the percent while you score and on the Grades tab.</span></p>' +
         '<div class="mebrow">' + g.bands.map((b, i) => '<label><input type="text" class="mebl" data-mebl="' + i + '" maxlength="12" value="' + esc(b[1]) + '" aria-label="Grade ' + (i + 1) + '"><span>from</span><input type="number" min="0" max="100" step="1" data-mebp="' + i + '" value="' + b[0] + '" aria-label="Lowest percent for ' + esc(b[1]) + '"' + (i === g.bands.length - 1 ? ' disabled' : '') + '><span>%</span></label>').join('') + '</div></div>' : ''));
@@ -223,7 +234,18 @@ function meSetRender(sec) {
 $('#setPane').addEventListener('change', e => {
   const t = e.target;
   if (t.id === 'meSys') { if (t.value === 'other') { meSet({ sys: 'My school’s system' }); sysWords(); setRender(); const o = $('#meSysOther'); if (o) { o.focus(); o.select(); } return; } meSet({ sys: t.value }); sysWords(); return setRender(); }
+  if (t.id === 'meAi') { if (t.value === 'other') { meSet({ ai: 'My assistant' }); sysWords(); setRender(); const o = $('#meAiOther'); if (o) { o.focus(); o.select(); } return; } meSet({ ai: t.value }); sysWords(); return setRender(); }
+  if (t.id === 'meAiOther') { meSet({ ai: t.value.trim().slice(0, 30) }); sysWords(); return setRender(); }
   if (t.id === 'meSysOther') { meSet({ sys: t.value.trim().slice(0, 40) }); sysWords(); return setRender(); }
+  if (t.id === 'meRowTop' || t.id === 'meRowHalf') {   // the teacher's usual row scale: only new assignments start with it
+    const g = meGrade(); if (!g) return;
+    const su = { ...g.setup }; for (const k of ['top', 'tops', 'half']) delete su[k];
+    Object.assign(su, rowScaleOf({ top: $('#meRowTop').value, half: $('#meRowHalf').checked }));
+    store.set('gs.setup', JSON.parse(JSON.stringify(su)));   // the next new assignment starts from this, not from the last one saved
+    meSet({ grade: { ...me().grade, setup: su } });
+    if (!batch) setup = { ...DEFAULT_SETUP };
+    setRender(); return toast('New rubrics score each row ' + rowsSay(su) + '.');
+  }
   if (t.dataset.mebl != null || t.dataset.mebp != null) {
     const g = meGrade(); if (!g || !g.bands) return;
     const bands = g.bands.map((b, i) => { const l = $('[data-mebl="' + i + '"]'), p = $('[data-mebp="' + i + '"]'); return [i === g.bands.length - 1 ? 0 : Math.max(0, Math.min(100, Math.round(+p.value) || 0)), (l.value.trim() || b[1]).slice(0, 12)]; });

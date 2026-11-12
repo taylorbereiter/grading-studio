@@ -13,6 +13,7 @@
   --accent:#1A67A8; --accent-hover:#15568C; --accent-fg:#FFFFFF; --accent-soft:#E6F0F9;
   /* colour: saying how things stand. Each has a soft background to sit on. */
   --warn:#8A5A0E; --warn-soft:#FBF0D9; --ok:#17704A; --ok-soft:#DFF3E9; --bad:#B4321F; --bad-soft:#FCE7E3; --warn-fg:#FFFFFF;
+  --gold:#8A6500; --gold-soft:#FBF3D6; --gold-line:#C08C00; --gold-fg:#FFFFFF;
   --paper-chip:#FFFFFF;
   --shadow:0 1px 2px rgba(20,25,40,.06),0 4px 14px rgba(20,25,40,.06);
   /* type */
@@ -31,15 +32,16 @@
   --stage:#0B0D12; --stage-fg:#F3F4F7; --stage-muted:#A9B0C0; --stage-bar:#1B1F29; --stage-line:#3A4150; --stage-hover:#2C3342;
   --stage-blue:#1A67A8; --stage-blue-2:#15568C; --stage-blue-soft:#E6F0F9; --stage-paper:#FFFFFF; --stage-ink:#1E2024; --stage-ink-2:#5C616A;
   /* colour: charts and the gradebook (types of assignment, the five steps of a heat map, up and down, the dot plot) */
-  --bk-sum:#164E80; --bk-ic:#6FA3D2; --bk-fm:#8A919E; --ch1:#8FB5DC; --ch2:#5F96CB; --ch3:#3478B7; --ch4:#1A5D9A; --ch5:#0F3F6C; --ch-lo:#0D2740; --ch-hi:#FFFFFF; --ch-up:#1A67A8; --ch-down:#B4610F; --ch-band:#DCE7F3; --dot:var(--accent); --ov-bar:#1A67A8; --ov-mute:#8A919E;
+  --bk-sum:#164E80; --bk-ic:#6FA3D2; --bk-fm:#8A919E; --bk-k1:#0F7C82; --bk-k2:#6A55B0; --bk-k3:#A8590F; --bk-k4:#8A3F7D; --bk-k5:#4B5563; --ch1:#8FB5DC; --ch2:#5F96CB; --ch3:#3478B7; --ch4:#1A5D9A; --ch5:#0F3F6C; --ch-lo:#0D2740; --ch-hi:#FFFFFF; --ch-up:#1A67A8; --ch-down:#B4610F; --ch-band:#DCE7F3; --dot:var(--accent); --ov-bar:#1A67A8; --ov-mute:#8A919E;
 }
 :root[data-theme="dark"]{
   --bg:#0F1117; --surface:#171A22; --surface-2:#1E222C; --hover:#272C38; --track:#343A47; --line:#2A2F3B; --line-strong:#454C5B;
   --fg:#E7E9EF; --fg-2:#CDD2DE; --muted:#A9B0C0; --faint:#8E95A6;
   --accent:#5AA6E6; --accent-hover:#7DB9EC; --accent-fg:#0C1520; --accent-soft:#16283A;
   --warn:#E8B451; --warn-soft:#352A14; --ok:#4FC690; --ok-soft:#15302A; --bad:#FF7A64; --bad-soft:#3A1E1A; --warn-fg:#1C1405;
+  --gold:#E8C35A; --gold-soft:#33290F; --gold-line:#B8901E; --gold-fg:#1C1405;
   --paper-chip:#1E222C;
   --shadow:0 1px 2px rgba(0,0,0,.3),0 4px 14px rgba(0,0,0,.25);
-  --bk-sum:#7FB2E0; --bk-ic:#3F78AE; --bk-fm:#6B7280; --ch1:#3A6590; --ch2:#4A80B5; --ch3:#5E9AD1; --ch4:#84B5E2; --ch5:#B3D3F0; --ch-lo:#FFFFFF; --ch-hi:#0B1F33; --ch-up:#4A93D6; --ch-down:#C98230; --ch-band:#22324A; --dot:#4A9ADF; --ov-bar:#4793D4; --ov-mute:#6B7280;
+  --bk-sum:#7FB2E0; --bk-ic:#3F78AE; --bk-fm:#6B7280; --bk-k1:#4FC1C7; --bk-k2:#A99BE6; --bk-k3:#E0A052; --bk-k4:#D18BC5; --bk-k5:#A5ADBA; --ch1:#3A6590; --ch2:#4A80B5; --ch3:#5E9AD1; --ch4:#84B5E2; --ch5:#B3D3F0; --ch-lo:#FFFFFF; --ch-hi:#0B1F33; --ch-up:#4A93D6; --ch-down:#C98230; --ch-band:#22324A; --dot:#4A9ADF; --ov-bar:#4793D4; --ov-mute:#6B7280;
   color-scheme:dark;
 }

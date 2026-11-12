@@ -101,17 +101,18 @@ async function marksFileText(onStep) {
     byStudent.push({ st, ...r });
     onStep && onStep(++n, who.length);
   }
-  out.push('# Marks for Claude: ' + one(nameFreeText(batch.name)), '');
+  out.push('# Marks for ' + aiSay() + ': ' + one(nameFreeText(batch.name)), '');
   out.push(plural(who.length, 'student') + ', each named by a random code (S-XXXX). Names in the teacher’s text became [name].');
-  out.push(rubric ? 'Rubric: ' + plural(crit.length, 'row') + ', scored 0 to 4 (half points allowed from 1 up), out of ' + maxPoints() + '.' : 'Scored in points, out of ' + maxPoints() + '.');
+  out.push(rubric ? 'Rubric: ' + plural(crit.length, 'row') + ', scored ' + (rowsTop(setup) ? '0 to ' + rowsTop(setup) : setup.criteria.map((_, i) => '0 to ' + rowTop(setup, i)).join(', ')) + (rowHalf(setup) ? ' (half points allowed from 1 up)' : ' (whole numbers only)') + ', out of ' + maxPoints() + '.' : 'Scored in points, out of ' + maxPoints() + '.');
   if (o.scores && rubric) {
-    const lv = crit.map((c, i) => { const w = [4, 3, 2, 1, 0].map(v => { const t = (setup.levels && setup.levels[i] && setup.levels[i][v]) || ''; return t ? '  - ' + v + ': ' + one(nameFreeText(t)) : ''; }).filter(Boolean); return w.length ? ['- ' + one(nameFreeText(c)), ...w].join('\n') : ''; }).filter(Boolean);
+    const lv = crit.map((c, i) => { const w = rowLevels(setup, i).map(v => { const t = (setup.levels && setup.levels[i] && setup.levels[i][v]) || ''; return t ? '  - ' + v + ': ' + one(nameFreeText(t)) : ''; }).filter(Boolean); return w.length ? ['- ' + one(nameFreeText(c)), ...w].join('\n') : ''; }).filter(Boolean);
     if (lv.length) out.push('', '## What each score means', ...lv);
   }
   out.push('', '## Class at a glance');
   if (o.scores) {
     const sc = who.map(gradeOf).filter(g => g.total != null && !g.partial && !g.out && g.outOf == null);
-    if (sc.length) out.push('Average ' + fmtNum(sc.reduce((a, g) => a + g.total, 0) / sc.length) + ' / ' + maxPoints() + ' (' + Math.round(sc.reduce((a, g) => a + (g.pct || 0), 0) / sc.length) + '%), from ' + plural(sc.length, 'finished score') + '.');
+    if (ibSetup()) out.push('This is an IB MYP task: each row is a criterion and its score is a level from 0 to 8. Levels are not added up or averaged, so ignore the total column, and there is no percent.');   // ib.js
+    else if (sc.length) out.push('Average ' + fmtNum(sc.reduce((a, g) => a + g.total, 0) / sc.length) + ' / ' + maxPoints() + ' (' + Math.round(sc.reduce((a, g) => a + (g.pct || 0), 0) / sc.length) + '%), from ' + plural(sc.length, 'finished score') + '.');
     if (rubric && crit.length) {
       const avg = crit.map((c, i) => { const v = who.map(st => rowShown(st, i)).filter(x => x != null); return v.length ? [c, v.reduce((a, b) => a + b, 0) / v.length] : null; }).filter(Boolean);
       if (avg.length) out.push('Row averages: ' + avg.map(([c, v]) => one(nameFreeText(c)) + ' ' + fmtNum(Math.round(v * 10) / 10)).join(', ') + '.');
@@ -130,6 +131,7 @@ async function marksFileText(onStep) {
     if (o.scores) {
       if (rubric && crit.length && !noScore(st)) out.push('Scores: ' + crit.map((c, i) => one(nameFreeText(c)) + ' ' + (rowShown(st, i) == null ? '(not scored)' : fmtNum(rowShown(st, i)))).join(', '));
       const s = statusText(st);
+      if (ibSetup()) { if (s) out.push(s); } else
       out.push(g.total != null || g.pct != null ? 'Total ' + cellOut(g, 'total') + ' / ' + maxPoints() + ', ' + cellOut(g, 'pct') + '%' + (s ? ', ' + s : '') : s || 'Not scored yet');
     }
     if (o.comments && one(st.grade.comment)) out.push('Comment: ' + one(scrub(st.grade.comment, rx)));
@@ -145,7 +147,7 @@ async function makeMarksFile(onStep) {
   await workerReady;
   if (!scanned || scanP) await scanAll();   // a grade typed on the paper counts as a score
   const r = await marksFileText(onStep);
-  saveBlob('Marks for Claude - ' + one(nameFreeText(batch.name)).replace(/[\\/:*?"<>|]/g, '-') + '.md', new Blob([r.text], { type: 'text/markdown' }));
+  saveBlob('Marks for ' + aiSay() + ' - ' + one(nameFreeText(batch.name)).replace(/[\\/:*?"<>|]/g, '-') + '.md', new Blob([r.text], { type: 'text/markdown' }));
   const sh = shareState();
   sh.marksMade = Date.now(); sh.sent = [...new Set((sh.sent || []).concat(r.codes))];
   saveSoon();
@@ -159,9 +161,9 @@ function marksPane() {
   return '<p style="margin-top:0">One file for spotting patterns across the class, with <b>no names in it</b>. ' + (ex ? plural(who.length, 'student gets', 'students get') + ' a random code, like <b>' + esc(codeOf(ex)) + '</b>, the same one as in the ZIP. ' : '') + 'Names in your comments become [name]. The list of who is who stays only in this browser. No papers go, so there are no covers to check.</p>' +
     MARKS_OPTS.map(([k, t, s]) => '<label class="mkopt"><input type="checkbox" data-mkopt="' + k + '"' + (o[k] ? ' checked' : '') + '><span>' + t + '<small>' + s + '</small></span></label>').join('') +
     (empty ? '<div class="bbmiss" id="mkOut" style="margin:10px 0 12px">Left out: ' + plural(empty, 'student') + ' with no marks, score or comment yet. The file says how many.</div>' : '') +
-    '<ol class="shsteps" style="margin-top:12px"><li><b>Download the marks file.</b> <span id="mkMade">' + (sh.marksMade ? 'Made ' + esc(whenLabel(sh.marksMade)) + '.' : 'It stays on your computer until you give it to Claude.') + '</span></li>' +
-    '<li><b>Give it to Claude,</b> with this message. Change it however you like.<textarea id="mkAsk" rows="4" aria-label="What to say to Claude"></textarea><div class="shrow"><button class="btn sm" data-mkcopy>Copy the message</button><button class="btn sm" data-shopen>Open Claude ↗</button></div></li>' +
-    '<li><b>Bring the reply back,</b> if Claude wrote feedback for students. <button class="btn sm" data-shback>Bring back from Claude</button></li></ol>' +
+    '<ol class="shsteps" style="margin-top:12px"><li><b>Download the marks file.</b> <span id="mkMade">' + (sh.marksMade ? 'Made ' + esc(whenLabel(sh.marksMade)) + '.' : 'It stays on your computer until you give it to ' + aiSay() + '.') + '</span></li>' +
+    '<li><b>Give it to ' + aiSay() + ',</b> with this message. Change it however you like.<textarea id="mkAsk" rows="4" aria-label="What to say to ' + aiSay() + '"></textarea><div class="shrow"><button class="btn sm" data-mkcopy>Copy the message</button>' + (aiLink() ? '<button class="btn sm" data-shopen>Open ' + aiSay() + ' ↗</button>' : '') + '</div></li>' +
+    '<li><b>Bring the reply back,</b> if ' + aiSay() + ' wrote feedback for students. <button class="btn sm" data-shback>Bring back from ' + aiSay() + '</button></li></ol>' +
     '<div class="prog" id="mkProg" hidden><i></i></div><p class="muted" id="mkStatus" style="font-size:13px;margin:0"></p>';
 }
 function marksPaneWire() {
@@ -185,7 +187,7 @@ function shareKind(k) {
 function marksClick(e) {
   const k = e.target.closest('[data-kind]');
   if (k) { shareKind(k.dataset.kind); return true; }
-  if (e.target.closest('[data-mkcopy]')) { copy(nameFreeText($('#mkAsk').value), 'Copied. Paste it into Claude along with the marks file.'); return true; }
+  if (e.target.closest('[data-mkcopy]')) { copy(nameFreeText($('#mkAsk').value), 'Copied. Paste it into ' + aiSay() + ' along with the marks file.'); return true; }
   if (e.target.closest('[data-marksdl]')) { marksDownload(e.target.closest('[data-marksdl]')); return true; }
   return false;
 }
@@ -193,7 +195,7 @@ async function marksDownload(btn) {
   const bar = $('#mkProg'); btn.disabled = true; bar.hidden = false;
   try {
     const r = await makeMarksFile((n, t) => { bar.firstChild.style.width = (100 * n / t) + '%'; $('#mkStatus').textContent = 'Reading the marks ' + n + ' of ' + t + '…'; });
-    $('#mkStatus').textContent = 'Done: ' + plural(r.codes.length, 'student') + '. Give the file to Claude with the message.';
+    $('#mkStatus').textContent = 'Done: ' + plural(r.codes.length, 'student') + '. Give the file to ' + aiSay() + ' with the message.';
     $('#mkMade').textContent = 'Made ' + whenLabel(shareState().marksMade) + '.';
   } catch (er) { console.error(er); $('#mkStatus').textContent = 'Something went wrong: ' + (er.message || er); }
   bar.hidden = true; btn.disabled = false;

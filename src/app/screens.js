@@ -1,20 +1,25 @@
 /* ---------------- where she is: every screen has its own address, the part after # ---------------- */
-// #/help is Help, with /<answer> for one answer. #/ is Home, #/class/<id> a class (- for "No class") with /gradebook, /students, /students/<place on the roster>, /missing, /charts and /reports under it, #/settings Settings,
-// #/a/<download> an open assignment (its papers), with /grades, /grades/sheet, /insights, /insights/consistency and /return under it.
+// #/help is Help, with /<answer> for one answer. #/todo is the to-do list, with /week for it laid out on the week. #/school is School resources, #/examples every example. #/ is Home, #/class/<id> a class (- for "No class") with /gradebook, /students, /students/<place on the roster>, /attendance (with /<day> or /all), /seating, /missing, /charts and /reports under it, #/settings Settings,
+// #/a/<download> an open assignment (its papers), with /grades, /grades/sheet, /insights, /insights/consistency, /examples and /return under it.
 // Back, Forward and Refresh follow it. Nothing here is saved: the address only says which screen to show.
 const routeOf = hash => {
   let p; try { p = decodeURIComponent(String(hash || '').replace(/^#\/?/, '')).split('/'); } catch { p = ['']; }
   if (p[0] === 'class' && p[1]) {
     const c = p[1] === '-' ? lib.loose : classById(p[1]);
     if (c) {
-      const tab = c !== lib.loose && c.names.length && CLASS_TABS.some(t => t[0] && t[0] === p[2]) ? p[2] : '';
+      const tab = c !== lib.loose && c.names.length && classTabs().some(t => t[0] && t[0] === p[2]) ? p[2] : '';
       // one student: by place on the roster, never by name, since an address stays in the browser's history
       const stu = tab === 'students' && /^\d+$/.test(p[3] || '') && +p[3] >= 1 && +p[3] <= c.names.length ? +p[3] - 1 : null;
-      return { v: 'class', c, tab, stu };
+      // attendance: a day (YYYY-MM-DD), 'all' for looking back, or nothing for today
+      const att = tab !== 'attendance' ? null : p[3] === 'all' ? 'all' : attDayOk(p[3]) ? p[3] : '';
+      return { v: 'class', c, tab, stu, att };
     }
   }
   // from the Planner's sidebar, which knows a class only by the name on its timetable (spaces, dashes and capitals don’t count: “Course A 2” there is “CourseA2” here)
   if (p[0] === 'class-named' && p[1]) { const nk = s => String(s || '').toLowerCase().replace(/[^a-z0-9]/g, ''), k = nk(p.slice(1).join('/')), c = k && lib.classes.find(c => nk(c.name) === k); return c ? { v: 'class', c, tab: '', stu: null, named: true } : { v: 'home', noClass: p.slice(1).join('/').slice(0, 60) }; }
+  if (p[0] === 'todo') return { v: 'todo', week: p[1] === 'week' };
+  if (p[0] === 'examples') return { v: 'examples' };
+  if (p[0] === 'school') return { v: 'school' };
   if (p[0] === 'help') return { v: 'help', topic: HELP.some(t => t.id === p[1]) ? p[1] : '' };
   if (p[0] === 'settings') return { v: 'settings', sec: SET_SECS.some(x => x[0] === p[1]) ? p[1] : 'saving' };
   if (p[0] === 'a' && p[1]) {
@@ -25,13 +30,18 @@ const routeOf = hash => {
 };
 const routeNow = () => routeOf(location.hash);
 // Settings is one page per subject: #/settings is the first, #/settings/<key> the others.
-const SET_SECS = [['saving', 'Saving and carrying', 'Folder, take-home file, safety copies'], ['history', 'Go back in time', 'Your work as it was on an earlier day'], ['classes', 'Classes and rosters', 'Names, students, ' + (sysName() ? sysName() + ' links' : 'class links')], ['terms', 'Terms and weights', 'Your terms and how each type counts'],
-  ['grading', 'Grading scale and rubrics', 'Your saved scales and rubrics'], ['marking', 'Marking', 'Mark key, Word papers, tablet and pencil'], ['timetable', 'Timetable and calendar', 'Class times and days off, in the Planner'],
-  ['display', 'Display', 'Text size, zoom, dark mode'], ['claude', 'Working with Claude', 'Optional. What Claude can and can’t see'], ['keys', 'Keys', 'Every shortcut'], ['about', 'About and updates', 'Version, what’s new, install as an app']];
-const CLASS_TABS = [['', 'Assignments'], ['gradebook', 'Gradebook'], ['students', 'Students'], ['missing', 'Missing work'], ['charts', 'Charts'], ['reports', 'Report comments']];
+const SET_SECS = [['saving', 'Saving and carrying', 'Folder, take-home file, new school year'], ['history', 'Go back in time', 'Your work as it was on an earlier day'], ['setup', 'My setup', 'Bring it in from an AI assistant, or copy it out'], ['classes', 'Classes and rosters', 'Names, students, ' + (sysName() ? sysName() + ' links' : 'class links')], ['terms', 'Terms and weights', 'Your terms and how each type counts'],
+  ['grading', 'Grading scale and rubrics', 'Your saved scales and rubrics'], ['marking', 'Marking', 'Mark key, mark colors, Word papers, tablet and pencil'], ['timetable', 'Timetable and calendar', 'Class times and days off, in the Planner'],
+  ['display', 'Display', 'Text size, zoom, dark mode'], ['claude', 'Working with AI', 'Optional. What an AI assistant can and can’t see'], ['keys', 'Keys', 'Every shortcut'], ['about', 'About and updates', 'Version, what’s new, install as an app']];
+const CLASS_TABS = [['', 'Assignments'], ['gradebook', 'Gradebook'], ['students', 'Students'], ['attendance', 'Attendance'], ['seating', 'Seating'], ['missing', 'Missing work'], ['charts', 'Charts'], ['goals', 'Goals'], ['reports', 'Report comments']];   // Goals shows only once the teacher has a learning goal (goals.js)
+// Assignments, Gradebook and Students are always in the tab row. The rest sit under More, and a teacher keeps the ones they use beside them (lib.me.tabs).
+const TABS_FIRST = ['', 'gradebook', 'students'];
+const tabsKept = () => (Array.isArray(me().tabs) ? me().tabs : []).filter(k => CLASS_TABS.some(t => t[0] === k) && !TABS_FIRST.includes(k));
+function tabKeep(k) { const now = tabsKept(), on = !now.includes(k), l = (CLASS_TABS.find(t => t[0] === k) || [])[1]; if (!l) return; meSet({ tabs: on ? [...now, k] : now.filter(x => x !== k) }); renderLib(); toast(on ? l + ' stays in the tab row' : l + ' is under More'); }
+const classTabs = () => CLASS_TABS.filter(t => t[0] !== 'attendance' || attOn());   // attendance is the teacher's to turn off
 const classHash = (c, tab, stu) => '#/class/' + (c === lib.loose || !c.id ? '-' : encodeURIComponent(c.id)) + (tab ? '/' + tab + (stu != null ? '/' + (stu + 1) : '') : '');
 // An open assignment has four screens: the papers (Mark), Grades, Insights and Return. Grades and Insights each have a second view.
-const A_TABS = [['', 'Mark'], ['grades', 'Grades'], ['insights', 'Insights'], ['return', 'Return']], A_SUBS = { grades: ['sheet'], insights: ['consistency'] };
+const A_TABS = [['', 'Mark'], ['grades', 'Grades'], ['insights', 'Insights'], ['examples', 'Examples'], ['return', 'Return']], A_SUBS = { grades: ['sheet'], insights: ['consistency'] };
 const batchHash = (id, tab) => '#/a/' + encodeURIComponent(String(id).replace(/^gs\.b\./, '')) + (tab ? '/' + tab : '');
 // When the app reloads itself (work was put back or brought in), it starts again from Home, where that work is listed.
 // A note for the page that loads next, in this tab only, says so; it's read once, here, and gone.
@@ -88,21 +98,26 @@ function showScreen(r) {
   if (grading && !$('#welcome').hidden) wlClose();   // papers opened past the welcome (dropped on the page): the questions wait on Home's card instead
   $('#shell').classList.toggle('grading', grading);
   $('#app').hidden = !grading; $('#start').hidden = grading;
-  for (const [id, v] of [['vHome', 'home'], ['vClass', 'class'], ['vSettings', 'settings'], ['vHelp', 'help'], ['vOpening', 'opening']]) $('#' + id).hidden = grading || r.v !== v;
+  for (const [id, v] of [['vHome', 'home'], ['vClass', 'class'], ['vSettings', 'settings'], ['vHelp', 'help'], ['vTodo', 'todo'], ['vSchool', 'school'], ['vExamples', 'examples'], ['vOpening', 'opening']]) $('#' + id).hidden = grading || r.v !== v;
   if (r.v !== 'class') classLeave();
   const key = grading ? 'a' : r.v + (r.c ? ':' + r.c.id + ':' + r.tab + (r.stu != null ? ':one' : '') : '');   // moving from one student to the next keeps her place on the page
   if (!grading && key !== screenKey) $('#shellMain').scrollTop = 0;
   screenKey = key;
   railRender();
+  if (!grading && r.v === 'examples') exPageRender();
   if (grading) tabShow(r); else if (dlgPage) dlgShut();
 }
 // How far along a kept download is, in the same words everywhere: on Home, on a class page and in the sidebar's counts.
+// A formative activity (feedback only) counts the students whose feedback is complete, never scores.
 function keptState(m) {
-  const of = Math.max(0, (m.n || 0) - (m.off || 0)), done = Math.min(of, m.scored || 0), left = of - done;
-  return { of, done, left, pct: of ? Math.round(done / of * 100) : 0, label: !of ? '' : !left ? (m.ret ? 'Returned' : 'Ready to return') : done || m.partial ? 'Scoring' : 'Not started', cls: !of ? '' : !left ? (m.ret ? 'ret' : 'ok') : done || m.partial ? 'on' : '' };
+  const it = typeof cardOfKept === 'function' ? cardOfKept(m.id) : null, fm = !!it && it.type === 'fm';
+  const of = Math.max(0, (m.n || 0) - (m.off || 0)), done = Math.min(of, (fm ? m.fb : m.scored) || 0), left = of - done, began = done || (!fm && m.partial);
+  return { of, done, left, fm, word: fm ? 'feedback complete' : 'scored', pct: of ? Math.round(done / of * 100) : 0, label: !of ? '' : !left ? (m.ret ? 'Returned' : 'Ready to return') : began ? (fm ? 'Giving feedback' : 'Scoring') : 'Not started', cls: !of ? '' : !left ? (m.ret ? 'ret' : 'ok') : began ? 'on' : '' };
 }
+// "12 of 20 scored", or "12 of 20 feedback complete" on a formative activity.
+const keptSay = (m, st = keptState(m)) => st.done + ' of ' + st.of + ' ' + st.word + (st.fm ? (m.off ? ' · ' + m.off + ' missing or excused' : '') : keptMore(m));
 const stateChip = st => st.label ? '<span class="schip ' + st.cls + '">' + st.label + '</span>' : '';
-const stateBar = st => st.of ? '<span class="sbar" role="img" aria-label="' + st.done + ' of ' + st.of + ' scored"><i style="width:' + st.pct + '%"></i></span>' : '';
+const stateBar = st => st.of ? '<span class="sbar" role="img" aria-label="' + st.done + ' of ' + st.of + ' ' + st.word + '"><i style="width:' + st.pct + '%"></i></span>' : '';
 function renderLib() {
   renderKept();
   const card = it => {
@@ -112,27 +127,41 @@ function renderLib() {
       '<div class="cdue">' + (it.due ? 'Due ' + bkDay(it.due) : '') + '</div>' +
       '<div class="cstate">' + (st ? stateBar(st) : '') + '<div class="m">' + esc(it.typed && !it.batchId ? 'Scores typed in' : batchSummary(it)) + '</div>' + (st ? stateChip(st) : '') + '</div>' +
       '<div class="row">' + (m && m.papers ? '<button class="btn sm" data-kopen="' + esc(it.batchId) + '" data-kasg="' + it.id + '">Open</button>'
-        : typedOnly ? '' : '<button class="btn sm" data-open-asg="' + it.id + '">Add papers…</button>') + '<button class="btn sm ghost" data-edit-asg="' + it.id + '">Edit</button>' +
-        (m && m.papers || typedOnly ? kmWrap('⋯', 'class="icon kdots" aria-label="More for ' + esc(it.name) + '" title="More"', '<button class="mitem" data-open-asg="' + it.id + '">' + (typedOnly ? 'Add papers…<small>Mark this one’s papers here as well</small>' : 'Open other papers…<small>A newer download, or a different set of files</small>') + '</button>', 'right') : '') + '</div></div>';
+        : typedOnly ? '' : '<button class="btn sm" data-open-asg="' + it.id + '">Add papers…</button>') +
+        kmWrap('⋯', 'class="icon kdots" aria-label="More for ' + esc(it.name) + '" title="More"', '<button class="mitem" data-edit-asg="' + it.id + '">Edit<small>Name, type, due date, unit, rubric</small></button>' +
+          (m && m.papers || typedOnly ? '<button class="mitem" data-open-asg="' + it.id + '">' + (typedOnly ? 'Add papers…<small>Mark this one’s papers here as well</small>' : 'Open other papers…<small>A newer download, or a different set of files</small>') + '</button>' : ''), 'right') + '</div></div>';
   };
   const unit = u => '<div class="unit" draggable="true" data-unit="' + u.id + '">' +
     '<div class="uhead" title="Drag to move this unit"><span class="nm">' + esc(u.name) + '</span><span class="ucount">' + u.items.length + (u.items.length === 1 ? ' assignment' : ' assignments') + '</span><span class="sp"></span>' +
-    '<span class="atl">' + (u.atlas ? '<a href="' + esc(u.atlas) + '" target="_blank" rel="noopener noreferrer" title="' + esc(u.atlas) + '">' + (unitLinkName() ? 'Open in ' + esc(unitLinkName()) : 'Unit plan') + ' ↗</a><button class="link" data-uatlas="' + u.id + '">Change</button>'
-      : '<button class="link" data-uatlas="' + u.id + '">+ Link to ' + esc(unitLinkName() || 'a unit plan') + '</button>') + '</span>' +
-    '<button class="icon" data-urename="' + u.id + '" title="Rename unit" aria-label="Rename unit">✎</button>' +
-    '<button class="icon" data-udel="' + u.id + '" title="Delete unit" aria-label="Delete unit">✕</button></div>' +
+    (u.atlas ? '<span class="atl"><a href="' + esc(u.atlas) + '" target="_blank" rel="noopener noreferrer" title="' + esc(u.atlas) + '">' + (unitLinkName() ? 'Open in ' + esc(unitLinkName()) : 'Unit plan') + ' ↗</a></span>' : '') +
+    kmWrap('⋯', 'class="icon kdots" aria-label="More for ' + esc(u.name) + '" title="More"',
+      '<button class="mitem" data-urename="' + u.id + '">Rename</button>' +
+      '<button class="mitem" data-uatlas="' + u.id + '">' + (u.atlas ? 'Change the ' + esc(unitLinkName() || 'unit plan') + ' link' : 'Link to ' + esc(unitLinkName() || 'a unit plan') + '…') + '</button>' +
+      '<hr><button class="mitem" data-udel="' + u.id + '">Delete unit</button>', 'right') + '</div>' +
     '<div class="cards">' + u.items.map(card).join('') + '</div>' +
     '<button class="addcard" data-additem="' + u.id + '">+ Assignment</button></div>';
   const r = routeNow(), c = r.v === 'class' ? r.c : null, tab = c ? r.tab : '';
-  const tabs = (c, ci) => ci < 0 || !c.names.length ? '' : '<nav class="ctabs" aria-label="' + esc(c.name) + '">' + CLASS_TABS.map(([k, l]) => { const on = tab === k;
-    return '<a class="ctab' + (on ? ' on' : '') + '" href="' + classHash(c, k) + '" data-ctab="' + k + '"' + (k === 'gradebook' ? ' data-book="' + esc(c.id) + '"' : k === 'students' ? ' data-people="' + ci + '"' : '') + (on ? ' aria-current="page"' : '') + '>' + l + '</a>'; }).join('') + '</nav>';
-  const block = (c, ci) => '<div class="cls" data-cls="' + esc(c.id) + '"><div class="clshead"><h1>' + esc(ci < 0 ? 'No class' : c.name) + '</h1>' +
+  const tabs = (c, ci) => { if (ci < 0 || !c.names.length) return '';
+    const all = classTabs().filter(t => t[0] !== 'goals' || tab === 'goals' || goalList().length), kept = tabsKept(), more = all.filter(t => !TABS_FIRST.includes(t[0]));
+    const link = ([k, l]) => { const on = tab === k;
+      return '<a class="ctab' + (on ? ' on' : '') + '" href="' + classHash(c, k) + '" data-ctab="' + k + '"' + (k === 'gradebook' ? ' data-book="' + esc(c.id) + '"' : k === 'students' ? ' data-people="' + ci + '"' : '') + (on ? ' aria-current="page"' : '') + '>' + l + '</a>'; };
+    const pin = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 17v5M9 3h6l-1 6 3 3v2H7v-2l3-3z"/></svg>';
+    return '<nav class="ctabs" aria-label="' + esc(c.name) + '">' + all.filter(t => TABS_FIRST.includes(t[0]) || kept.includes(t[0]) || t[0] === tab).map(link).join('') +
+      (more.length ? kmWrap('More <span aria-hidden="true">▾</span>', 'class="ctmore" id="ctMore" title="The other pages of this class"', more.map(([k, l]) => { const on = kept.includes(k);
+        return '<div class="ctrow"><a class="mitem' + (tab === k ? ' on' : '') + '" href="' + classHash(c, k) + '" data-ctab="' + k + '">' + l + '</a><button class="icon ctpin" data-ctpin="' + k + '" aria-pressed="' + on + '" title="' + (on ? 'Take ' + l + ' out of the tab row' : 'Keep ' + l + ' in the tab row') + '" aria-label="' + (on ? 'Take ' + l + ' out of the tab row' : 'Keep ' + l + ' in the tab row') + '">' + pin + '</button></div>'; }).join('') +
+        '<p class="kmsay">The pin keeps a page in the tab row.</p>') : '') + '</nav>'; };
+  // one button for what is set once: the school link, how the class is graded, the roster, its place in the sidebar
+  const setup = (c, ci) => kmWrap('Class setup', 'class="btn sm" id="clsSetup"',
+    '<button class="mitem" data-edit-class="' + ci + '">' + (c.names.length ? 'Edit roster' : 'Add roster') + '<small>Names, and the name of the class</small></button>' +
+    ibClassItem(c, ci) +
+    '<button class="mitem" data-mbset="' + ci + '">' + (mbOf(c) ? 'Change the ' + esc(sysLink()) + ' link' : 'Add the ' + esc(sysLink()) + ' link…') + '</button>' +
+    '<hr><button class="mitem" data-cmove="' + ci + ':-1"' + (ci ? '' : ' disabled') + '>Move up in the sidebar</button><button class="mitem" data-cmove="' + ci + ':1"' + (ci < lib.classes.length - 1 ? '' : ' disabled') + '>Move down in the sidebar</button>', 'right');
+  const block = (c, ci) => '<div class="cls" data-cls="' + esc(c.id) + '"><div class="clshead"><h1>' + esc(ci < 0 ? 'No class' : c.name) + '</h1>' + (ci < 0 ? '' : ibPill(c)) +
     (ci < 0 ? '<span class="muted">Assignments with no roster. Drag them onto a class in the sidebar, or use Edit to pick a class.</span><span class="sp"></span>' :
-      '<span class="muted">' + (c.names.length ? c.names.length + ' students on the roster' : 'No roster yet') + '</span><span class="sp"></span>' + mbClassBtns(c, ci) + '<button class="btn sm" data-edit-class="' + ci + '">' + (c.names.length ? 'Edit roster' : 'Add roster') + '</button>' +
-      '<button class="icon" data-cmove="' + ci + ':-1" title="Move this class up in the sidebar" aria-label="Move this class up in the sidebar"' + (ci ? '' : ' disabled') + '>↑</button><button class="icon" data-cmove="' + ci + ':1" title="Move this class down in the sidebar" aria-label="Move this class down in the sidebar"' + (ci < lib.classes.length - 1 ? '' : ' disabled') + '>↓</button>') + '</div>' + tabs(c, ci) +
+      '<span class="muted">' + (c.names.length ? c.names.length + ' students on the roster' : 'No roster yet') + '</span><span class="sp"></span>' + (mbOf(c) ? mbLink(c) : '') + (c.names.length ? '' : '<button class="btn sm primary" data-edit-class="' + ci + '">Add roster</button>') + setup(c, ci)) + '</div>' + tabs(c, ci) +
     (tab ? '<div class="cpanel" id="classPanel" data-sig="' + rosterSig(c) + '"></div>'
-      : '<div class="ctools"><span class="sp"></span><button class="btn sm" data-addunit="' + esc(c.id) + '">+ Unit</button><button class="btn sm primary" data-newasg="' + esc(c.id) + '">+ Assignment</button></div>' +
-        '<div class="board">' + (c.units.map(unit).join('') || '<div class="empty-note">No units yet. Click + Unit.</div>') + '</div>') + '</div>';
+      : '<div class="ctools"><span class="sp"></span><button class="btn sm' + (ci >= 0 && !c.names.length ? '' : ' primary') + '" data-newasg="' + esc(c.id) + '">+ Assignment</button></div>' +
+        '<div class="board">' + (c.units.map(unit).join('') || '<div class="empty-note">No units yet. Click + Unit.</div>') + '<button class="addunit" data-addunit="' + esc(c.id) + '">+ Unit</button></div>') + '</div>';
   // One class at a time: the one whose page she's on. The Gradebook, Students and Charts tabs draw themselves into the panel (classpage.js),
   // and keep what's in it while nothing around it has changed, so a list she's part-way through isn't redrawn under her.
   const box = $('#classes'), h = c ? block(c, c === lib.loose ? -1 : lib.classes.indexOf(c)) : '';
@@ -241,13 +270,18 @@ $('#start').addEventListener('click', async e => {
   }
   if (b.dataset.addunit != null) { const c = holderById(b.dataset.addunit); const name = await askTextDlg('Unit name', 'Unit ' + (c.units.length + 1), { ok: 'Add unit' }); if (name && name.trim()) { c.units.push({ id: uid(), name: name.trim(), items: [] }); saveLib(); renderLib(); } return; }
   if (b.dataset.newasg != null) return editAssignment(null, null, b.dataset.newasg);
+  if (b.dataset.ctpin != null) return tabKeep(b.dataset.ctpin);
   if (b.dataset.cmove) { const [ci, d] = b.dataset.cmove.split(':').map(Number), j = ci + d; if (j >= 0 && j < lib.classes.length) { [lib.classes[ci], lib.classes[j]] = [lib.classes[j], lib.classes[ci]]; saveLib(); renderLib(); const again = $('#classes [data-cmove="' + j + ':' + d + '"]'); if (again && !again.disabled) again.focus(); } return; }
   if (b.dataset.urename != null) { const f = findUnit(b.dataset.urename); if (!f) return; const name = await askTextDlg('Unit name', f.u.name, { ok: 'Rename' }); if (name && name.trim()) { f.u.name = name.trim(); saveLib(); renderLib(); } return; }
   if (b.dataset.uatlas != null) return askAtlas(b.dataset.uatlas);
   if (b.dataset.udel != null) {
     const f = findUnit(b.dataset.udel); if (!f) return; const u = f.u;
     if (u.items.length && !await askDlg('Delete “' + u.name + '” and its ' + u.items.length + ' assignment' + (u.items.length === 1 ? '' : 's') + '? Saved marks for those downloads stay in this browser.', { ok: 'Delete', danger: true })) return;
-    f.c.units.splice(f.c.units.indexOf(u), 1); saveLib(); renderLib(); return;
+    const at = f.c.units.indexOf(u), n = u.items.length;
+    f.c.units.splice(at, 1); saveLib(); renderLib();
+    // A delete can be taken back for a few seconds: the unit goes back where it was, assignments and all.
+    toastDo('Deleted “' + u.name + '”' + (n ? ' and its ' + n + (n === 1 ? ' assignment' : ' assignments') : ''), 'Undo', () => { if (!holders().includes(f.c) || f.c.units.includes(u)) return; f.c.units.splice(Math.min(at, f.c.units.length), 0, u); saveLib(); renderLib(); });
+    return;
   }
   if (b.dataset.additem != null) return editAssignment(null, b.dataset.additem);
   if (b.dataset.editAsg) return editAssignment(b.dataset.editAsg);
@@ -259,8 +293,8 @@ $('#start').addEventListener('click', async e => {
   if (b.dataset.openAsg) {
     asgTarget = findItem(b.dataset.openAsg).it;
     openDlg('<div class="bh"><h2>Open “' + esc(asgTarget.name) + '”</h2></div><div class="bb"><p style="margin-top:0">' + (sysName() ? 'Where is the ' + esc(sysName()) + ' download?' : 'Where are the papers?') + ' You can also drop the ZIP or the folder straight onto this assignment’s card.</p></div>' +
-      '<div class="bf"><button class="btn" data-cancel>Cancel</button><button class="btn" data-pc>The ZIP or files…</button><button class="btn" data-dir>A whole folder…</button><button class="btn" data-scan>A scan of everyone’s papers…</button><button class="btn" data-match>Files to match to a roster…</button>' + (gcid() ? '<button class="btn primary" data-dv>From Google Drive…</button>' : '') + '</div>', true);
-    $('#dlgBox').onclick = ev => { if (ev.target.closest('[data-cancel]')) return closeDlg(); if (ev.target.closest('[data-pc]')) { closeDlg(); $('#asgIn').click(); } if (ev.target.closest('[data-dir]')) { closeDlg(); pickDir('#asgDirIn'); } if (ev.target.closest('[data-scan]')) { closeDlg(); scanFor = asgTarget; $('#scanIn').click(); } if (ev.target.closest('[data-match]')) { const a = asgTarget; askFilesOrFolder('Match files to a roster', 'Each file is matched to a student by the name in its file name or folder name, and you can fix any match.', list => matchToRoster(list, a)); } if (ev.target.closest('[data-dv]')) { closeDlg(); openFromDrive(asgTarget); } };
+      '<div class="bf"><button class="btn" data-cancel>Cancel</button><button class="btn" data-pc>The ZIP or files…</button><button class="btn" data-dir>A whole folder…</button><button class="btn" data-scan>A scan of everyone’s papers…</button><button class="btn" data-match>Files to match to a roster…</button><button class="btn" data-nopaper title="For presentations, speeches and videos: a notes page for each student instead of a paper">No papers: presentations or videos…</button>' + (gcid() ? '<button class="btn primary" data-dv>From Google Drive…</button>' : '') + '</div>', true);
+    $('#dlgBox').onclick = ev => { if (ev.target.closest('[data-cancel]')) return closeDlg(); if (ev.target.closest('[data-nopaper]')) { closeDlg(); return openStartNotes(asgTarget); } if (ev.target.closest('[data-pc]')) { closeDlg(); $('#asgIn').click(); } if (ev.target.closest('[data-dir]')) { closeDlg(); pickDir('#asgDirIn'); } if (ev.target.closest('[data-scan]')) { closeDlg(); scanFor = asgTarget; $('#scanIn').click(); } if (ev.target.closest('[data-match]')) { const a = asgTarget; askFilesOrFolder('Match files to a roster', 'Each file is matched to a student by the name in its file name or folder name, and you can fix any match.', list => matchToRoster(list, a)); } if (ev.target.closest('[data-dv]')) { closeDlg(); openFromDrive(asgTarget); } };
     return;
   }
   if (b.dataset.editClass != null) return editClass(+b.dataset.editClass);
@@ -301,7 +335,7 @@ function editAssignment(id, unitId, clsId) {
     '<div class="field"><label for="aName">Name</label><input type="text" id="aName" value="' + esc(it.name) + '" placeholder="e.g. Ch 3 Analysis Paragraph"></div>' +
     classPick +
     '<div class="field"><label for="aUnit">Unit</label><select id="aUnit" class="btn" style="justify-content:flex-start"></select><p class="muted" id="aUnitNote" style="font-size:13px;margin:6px 0 0" hidden></p></div>' +
-    '<div class="field"><label>Type</label><div class="pseg" role="group" id="aType">' + BK_TYPES.map(([t, l]) => '<button type="button" data-atype="' + t + '" aria-pressed="' + (it.type === t) + '">' + l.replace(' assessment', '').replace(' activity', '') + '</button>').join('') + '</div><p class="muted" style="font-size:12.5px;margin:4px 0 0">Summatives and in-class assessments count toward the term grade in the Gradebook. Formative activities are feedback only.</p></div>' +
+    '<div class="field"><label>Type</label><div class="pseg" role="group" id="aType">' + bkCats().map(([t, , s]) => '<button type="button" data-atype="' + esc(t) + '" aria-pressed="' + (it.type === t) + '">' + esc(s) + '</button>').join('') + '</div><p class="muted" style="font-size:12.5px;margin:4px 0 0">' + esc(bkCountSay()) + '</p></div>' +
     '<div class="field"><label for="aDue">Due</label><input type="date" id="aDue" class="btn" value="' + esc(it.due || '') + '"></div>' +
     '<p class="muted" style="font-size:13px;margin:0">The rubric is set the first time you open a download for it, with Rubric setup, and it’s remembered for this assignment.' + (f ? '' : ' Copies in other classes get the same rubric.') + '</p></div>' +
     '<div class="bf">' + (f ? '<button class="btn" data-del style="margin-right:auto">Delete</button>' : '') + '<button class="btn" data-cancel>Cancel</button><button class="btn primary" data-ok>Save</button></div>', true);
@@ -330,7 +364,7 @@ function editAssignment(id, unitId, clsId) {
     if (e.target.closest('[data-cancel]')) return closeDlg();
     const tb = e.target.closest('[data-atype]');
     if (tb) { const on = tb.getAttribute('aria-pressed') !== 'true'; for (const x of document.querySelectorAll('[data-atype]')) x.setAttribute('aria-pressed', String(on && x === tb)); return; }
-    if (e.target.closest('[data-del]')) { if (!await askDlg('Delete “' + it.name + '”?', { ok: 'Delete', danger: true })) return; f.u.items.splice(f.u.items.indexOf(it), 1); saveLib(); closeDlg(); return renderLib(); }
+    if (e.target.closest('[data-del]')) { if (!await askDlg('Delete “' + it.name + '”?', { ok: 'Delete', danger: true })) return; const at = f.u.items.indexOf(it); f.u.items.splice(at, 1); saveLib(); closeDlg(); renderLib(); toastDo('Deleted “' + it.name + '”', 'Undo', () => { if (!holders().some(c => c.units.includes(f.u)) || f.u.items.includes(it)) return; f.u.items.splice(Math.min(at, f.u.items.length), 0, it); saveLib(); renderLib(); }); return; }
     if (e.target.closest('[data-ok]')) {
       const name = $('#aName').value.trim(); if (!name) { $('#aName').focus(); return; }
       const ty = document.querySelector('[data-atype][aria-pressed="true"]'), due = $('#aDue').value;
@@ -392,7 +426,6 @@ function mbRemember(name, url) { try { const m = mbMap(), k = mbNorm(name); if (
 const mbOf = c => (c && (mbUrl(c.mb) || mbUrl(mbMap()[mbNorm(c.name)]))) || '';
 const mbLink = (c, cls) => mbOf(c) ? '<a class="' + (cls || 'btn sm') + ' mb-go" href="' + esc(mbOf(c)) + '" target="_blank" rel="noopener" title="Open ' + esc(c.name) + (sysName() ? ' on ' + esc(sysName()) : '’s class page') + '">' + esc(sysLink()) + ' ↗</a>' : '';
 // On the class itself: the link, or a button to add one. ✎ changes it.
-const mbClassBtns = (c, ci) => mbOf(c) ? mbLink(c) + '<button class="icon" data-mbset="' + ci + '" title="Change the ' + esc(sysLink()) + ' link" aria-label="Change the ' + esc(sysLink()) + ' link">✎</button>' : '<button class="btn sm ghost mb-add" data-mbset="' + ci + '">+ ' + esc(sysLink()) + ' link</button>';
 async function askMb(ci) {
   const c = lib.classes[ci]; if (!c) return;
   const v = await askTextDlg('Paste the ' + (sysName() ? sysName() + ' page' : 'web address of the class page') + ' for ' + c.name + ' (leave empty to remove it)', mbOf(c), { ok: 'Save' });
@@ -409,19 +442,23 @@ function editClass(ci) {
     '<div class="field"><label for="cMb">' + esc(sysLink()) + ' link <span class="muted" style="font-weight:400">(optional)</span></label><input type="url" id="cMb" value="' + esc(mbOf(c)) + '" placeholder="Paste this class’s ' + (sysName() ? esc(sysName()) + ' page address' : 'page address in your school’s system') + '"></div>' +
     '<div class="field"><label for="cNames">Students, one per line, in the order you want' + (sysName() ? ' (' + esc(sysName()) + ' order works well)' : '') + '</label><textarea class="big" id="cNames" placeholder="Paste from a spreadsheet' + (sysName() ? ' or ' + esc(sysName()) : '') + ', or upload a file. Student ID and email columns are kept as each student’s details.">' + esc(c.names.join('\n')) + '</textarea></div>' +
     '<button class="btn sm" data-up>Upload a list (.csv or .txt)…</button><input type="file" id="cFile" accept=".csv,.txt,text/csv,text/plain" hidden>' +
-    '<p class="muted" style="font-size:13px">Kept in this browser.</p></div>' +
+    '<p class="muted" style="font-size:13px">Kept in this browser.' + (ci < 0 ? ' <button class="link" data-gcopen>Coming from Google Classroom? Bring the class over…</button>' : '') + '</p></div>' +
     '<div class="bf">' + (ci >= 0 ? '<button class="btn" data-del style="margin-right:auto">Delete</button>' : '') + '<button class="btn" data-cancel>Cancel</button><button class="btn primary" data-ok>Save</button></div>', true);
   $('#cFile').onchange = async e => { const f = e.target.files[0]; if (!f) return; const rows = parseRosterRows(await f.text()); $('#cNames').value = rows.map(r => r.name).join('\n'); upRows = rows; e.target.value = ''; };
   $('#dlgBox').onclick = async e => {
     if (e.target.closest('[data-up]')) return $('#cFile').click();
     if (e.target.closest('[data-cancel]')) return closeDlg();
-    if (e.target.closest('[data-del]')) { if (!await askDlg('Delete the ' + c.name + ' class? Its assignments move to “No class”.', { ok: 'Delete', danger: true })) return; for (const u of c.units) { for (const it of u.items) it.classId = ''; lib.loose.units.push(u); } lib.classes.splice(ci, 1); saveLib(); closeDlg(); renderLib(); if (!batch && routeNow().v !== 'class') go(lib.loose.units.some(u => u.items.length) ? classHash(lib.loose) : '#/', true); return; }
+    if (e.target.closest('[data-gcopen]')) return gcOpen();
+    if (e.target.closest('[data-del]')) { if (!await askDlg('Delete the ' + c.name + ' class? Its assignments move to “No class”.', { ok: 'Delete', danger: true })) return; const moved = c.units.slice(), wasIds = moved.map(u => u.items.map(it => it.classId)); for (const u of c.units) { for (const it of u.items) it.classId = ''; lib.loose.units.push(u); } lib.classes.splice(ci, 1); saveLib(); closeDlg(); renderLib(); if (!batch && routeNow().v !== 'class') go(lib.loose.units.some(u => u.items.length) ? classHash(lib.loose) : '#/', true);
+      // Undo puts the class back in its place, with its roster, gradebook and units; its assignments leave “No class” again.
+      toastDo('Deleted the ' + c.name + ' class', 'Undo', () => { if (lib.classes.includes(c)) return; lib.loose.units = lib.loose.units.filter(u => !moved.includes(u)); moved.forEach((u, k) => u.items.forEach((it, j) => { it.classId = wasIds[k][j] != null ? wasIds[k][j] : c.id; })); lib.classes.splice(Math.min(ci, lib.classes.length), 0, c); saveLib(); renderLib(); if (window.railRender) railRender(); });
+      return; }
     if (e.target.closest('[data-ok]')) {
       const name = $('#cName').value.trim(); if (!name) { $('#cName').focus(); return; }
       const mb = mbUrl($('#cMb').value); if ($('#cMb').value.trim() && !mb) { toast('That ' + sysLink() + ' link isn’t a web address'); $('#cMb').focus(); return; }
-      c.name = name; const rows = parseRosterRows($('#cNames').value).map(r => ({ ...(upRows.find(u => u.name === r.name) || {}), ...r, id: r.id || (upRows.find(u => u.name === r.name) || {}).id || '', email: r.email || (upRows.find(u => u.name === r.name) || {}).email || '' })), was = c.names; c.names = rows.map(r => r.name); keepInfo(c, was, rows);
+      c.name = name; const rows = parseRosterRows($('#cNames').value).map(r => ({ ...(upRows.find(u => u.name === r.name) || {}), ...r, id: r.id || (upRows.find(u => u.name === r.name) || {}).id || '', email: r.email || (upRows.find(u => u.name === r.name) || {}).email || '' })), was = c.names, wasInfo = c.info; c.names = rows.map(r => r.name); keepInfo(c, was, rows); keepAtt(c, was, wasInfo);
       if (mb) c.mb = mb; else delete c.mb; mbRemember(name, mb);
-      if (ci < 0) lib.classes.push(c);
+      if (ci < 0) { Object.assign(c, classNewWay()); lib.classes.push(c); }
       saveLib(); closeDlg(); renderLib();
       if (ci < 0 && !batch) go(classHash(c));
     }

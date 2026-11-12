@@ -1,0 +1,57 @@
+/* ---------- School resources: links, files and notes on a page of their own (school.js) ---------- */
+#vSchool{max-width:900px}
+#vSchool.over{outline:2px dashed var(--accent);outline-offset:var(--space-2);border-radius:var(--corner-5)}
+.schbar{display:flex;align-items:center;gap:var(--space-2);flex-wrap:wrap;margin:0 0 var(--space-5)}
+.schbar .hlpfind{flex:0 1 300px;margin:0}
+.schbar .hlpfind input{height:36px;font-size:var(--text-body);border-radius:var(--corner-3)}
+.schbar .sp{flex:1}
+.schnone{background:var(--surface);border:1px solid var(--line);border-radius:var(--corner-5);padding:var(--space-5);max-width:66ch}
+.schnone h2{margin:0 0 var(--space-2);font-size:var(--text-title)}
+.schnone p{margin:0 0 var(--space-2);font-size:var(--text-lead);line-height:1.55;color:var(--fg-2)}
+.schnone p.muted{margin:0;font-size:var(--text-body);color:var(--muted)}
+.schnohit{padding:var(--space-5) var(--space-1)}
+.schpins{display:flex;flex-wrap:wrap;gap:var(--space-2);margin:0 0 var(--space-5)}
+.schchip{display:inline-flex;align-items:center;gap:var(--space-2);min-height:36px;max-width:100%;padding:var(--space-1) var(--space-3) var(--space-1) var(--space-1);border:1px solid var(--line-strong);border-radius:var(--corner-pill);background:var(--surface);color:var(--fg);font:inherit;font-size:var(--text-body);font-weight:500;text-decoration:none;cursor:pointer}
+.schchip:hover{background:var(--hover)}
+.schchip:focus-visible,.schopen:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.schchip span:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.schchip .schic{width:26px;height:26px;border-radius:var(--corner-round)}
+.schchip .schic svg{width:15px;height:15px}
+.schsec{margin:0 0 var(--space-5)}
+.schhead{display:flex;align-items:center;gap:var(--space-2);margin:0 0 var(--space-2) var(--space-1);min-height:28px}
+.schhead h2{margin:0;font-size:var(--text-caption);font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.schhead .schn{font-size:var(--text-caption);font-weight:600;color:var(--faint);font-variant-numeric:tabular-nums}
+.schhead .sp{flex:1}
+.schhead .kdots{opacity:.7}
+.schcard{background:var(--surface);border:1px solid var(--line);border-radius:var(--corner-5)}
+.schrow{display:flex;align-items:center;gap:var(--space-1);padding:0 var(--space-2) 0 0}
+.schrow+.schrow{border-top:1px solid var(--line)}
+.schopen{flex:1;min-width:0;display:flex;align-items:flex-start;gap:var(--space-3);padding:var(--space-3) var(--space-2) var(--space-3) var(--space-4);border:0;border-radius:var(--corner-5);background:none;color:var(--fg);font:inherit;text-align:left;text-decoration:none;cursor:pointer}
+.schopen:hover b{color:var(--accent)}
+.schic{flex:none;display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:var(--corner-3);background:var(--accent-soft);color:var(--accent)}
+.schic.note{background:var(--surface-2);color:var(--fg-2)}
+.schic svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.schtx{display:flex;flex-direction:column;min-width:0;gap:2px}
+.schtx b{font-size:var(--text-lead);font-weight:600;overflow-wrap:anywhere}
+.schsub{font-size:var(--text-control);color:var(--muted);overflow-wrap:anywhere}
+.schnote{font-size:var(--text-body);line-height:1.5;color:var(--fg-2);white-space:pre-wrap;overflow-wrap:anywhere;max-width:66ch}
+.schpin{flex:none;color:var(--faint)}
+.schpin svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linejoin:round}
+.schpin:hover{color:var(--accent)}
+.schpin[aria-pressed=true]{color:var(--accent)}
+.schpin[aria-pressed=true] svg{fill:currentColor}
+.schrow .kdots{flex:none;border-color:transparent}
+.schfor{display:flex;flex-wrap:wrap;gap:var(--space-2);margin:0 0 var(--space-4)}
+.schforb{border:1px solid var(--line-strong);border-radius:var(--corner-pill);padding:var(--space-1) var(--space-3);background:var(--surface);color:var(--fg-2);font:inherit;font-size:var(--text-control);font-weight:500;cursor:pointer}
+.schforb:hover{background:var(--hover)}
+.schforb[aria-pressed=true]{border-color:var(--accent);background:var(--accent-soft);color:var(--accent);font-weight:600}
+.schforb:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.schcls{display:flex;flex-wrap:wrap;gap:var(--space-2)}
+.schform .schcls+.schsay{margin-top:var(--space-1)}
+.schfoot{margin:0 var(--space-1);font-size:var(--text-control)}
+.schform .field input[type=text],.schform .field textarea{width:100%;border:1px solid var(--line-strong);border-radius:var(--corner-2);padding:var(--space-2) var(--space-3);background:var(--surface);color:var(--fg);font:inherit;font-size:var(--text-body)}
+.schform .field textarea{resize:vertical;line-height:1.5}
+.schform .field label .muted{font-weight:400}
+.schform .schsay{margin:0;font-size:var(--text-control)}
+.schfiles{margin:0;padding-left:1.2em;font-size:var(--text-body);max-height:160px;overflow:auto}
+@media (max-width:640px){.schbar .btn{flex:1 1 auto}}

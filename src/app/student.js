@@ -15,6 +15,7 @@ async function openStudent(i, filePath) {
   const moved = cur !== Math.max(0, Math.min(batch.students.length - 1, i));
   cur = Math.max(0, Math.min(batch.students.length - 1, i));
   if (moved || rowOnOf !== batch.students[cur]) rowStart();
+  if (moved && repSaw && repAll && cur !== repAt) repSaw();
   selected = null;
   if ($('#lightPanel')) $('#lightPanel').refresh();
   const token = ++openToken;
@@ -30,9 +31,12 @@ async function openStudent(i, filePath) {
     kmWrap('<span aria-hidden="true">+</span> Add', 'id="addMenuBtn" class="btn sm" title="Add late or forgotten work to this student. You can also drop files on the paper or on a name."',
       '<button class="mitem" id="addFileBtn">A file…<small>A late or forgotten paper</small></button>' +
       '<button class="mitem" id="pasteTextBtn">Pasted text…<small>Work sent in an email or a message</small></button>' +
+      '<button class="mitem" id="addVideoBtn">A video…<small>A link to a recording, and who is in it</small></button>' +
+      '<button class="mitem" id="addNotesBtn">A notes page…<small>To write on while you watch or listen</small></button>' +
       '<button class="mitem" id="addScanBtn">From a scan…<small>A stack of pages scanned as one PDF</small></button>') +
     kmWrap('⋯', 'id="whoMore" class="btn sm kdots" aria-label="More for this paper" title="More for this paper"',
       (st.files.some(viewable) || fileSeq(st).length > 1 ? '<button class="mitem" id="arrangeBtn">Arrange pages<small>Combine files, reorder or take pages out</small></button>' : '') +
+      (st.files.some(f => !f.virtual && !f.rubric && (viewable(f) || f.kind === 'docx')) ? '<button class="mitem" data-whodo="example">Use as an example<small>A strong paper or part of a page, with names covered</small></button>' : '') +
       '<button class="mitem" data-whodo="light">Lighting<small>Make a pale or too-bright scan easier to read</small></button>' +
       '<button class="mitem" data-whodo="calc">Calculator <kbd>=</kbd></button>', 'right') + '</div>' + groupBand(st);
   paper.scrollTop = 0;
@@ -41,13 +45,16 @@ async function openStudent(i, filePath) {
   const sheetOff = () => { const g = $('#sheet0'); if (g) g.remove(); };
   if (!st.files.length) {
     paper.insertAdjacentHTML('beforeend', '<div class="nofile"><b>Nothing turned in yet.</b> Add their paper here, or drop the file on the page or on their name. You can still give a score without one.' +
-      '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button class="btn sm primary" id="gapFile">Add their file…</button><button class="btn sm" id="gapPaste">Paste text…</button>' + (st.gap || batch.students.some(x => x.files.length) ? '<button class="btn sm" id="gapScan">From a scan…</button>' : '') + '</div></div>');
+      '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button class="btn sm primary" id="gapFile">Add their file…</button><button class="btn sm" id="gapPaste">Paste text…</button><button class="btn sm" id="gapVideo">A video…</button><button class="btn sm" id="gapNotes">A notes page…</button>' + (st.gap || batch.students.some(x => x.files.length) ? '<button class="btn sm" id="gapScan">From a scan…</button>' : '') + '</div></div>');
     $('#gapFile').onclick = () => pickAdd(st);
     $('#gapPaste').onclick = () => openPasteText(st);
+    $('#gapVideo').onclick = () => openAddVideo(st);
+    $('#gapNotes').onclick = () => openAddNotes(st);
     const gs = $('#gapScan'); if (gs) gs.onclick = () => { scanInto = true; scanFor = null; $('#scanIn').click(); };
   }
-  curMedia = null;
-  for (const f of st.files.filter(f => f.kind === 'media')) { if (f.added || carryTag(f)) paper.insertAdjacentHTML('beforeend', '<div class="fhead"><span style="color:var(--fg)">' + esc(f.name) + '</span>' + (f.added ? addTag(f) : '') + carryTag(f) + '<span style="flex:1"></span>' + fileMenu(fileLinks(f)) + '</div>'); paper.appendChild(mediaCard(st, f)); }
+  curMedia = null; clipsBtn();
+  for (const f of st.files.filter(f => f.kind === 'link')) { paper.insertAdjacentHTML('beforeend', '<div class="fhead"><span style="color:var(--fg)">' + esc(linkTitle(f)) + '</span><span>Video link</span>' + tryTag(st, f) + (f.added ? addTag(f) : '') + carryTag(f) + '<span style="flex:1"></span>' + fileMenu(moveLink(f) + removeLink(f)) + '</div>'); paper.appendChild(linkCard(st, f)); }
+  for (const f of st.files.filter(f => f.kind === 'media')) { if (f.added || carryTag(f) || tryTag(st, f)) paper.insertAdjacentHTML('beforeend', '<div class="fhead"><span style="color:var(--fg)">' + esc(f.name) + '</span>' + tryTag(st, f) + (f.added ? addTag(f) : '') + carryTag(f) + '<span style="flex:1"></span>' + fileMenu(fileLinks(f)) + '</div>'); paper.appendChild(mediaCard(st, f)); }
   const rd = refDoc();
   if (rd) { const det = document.createElement('details'); det.className = 'refd'; det.open = store.get('gs.rdOpen', true); det.innerHTML = '<summary>Your document: ' + esc(rd.name) + '</summary>'; det.ontoggle = () => store.set('gs.rdOpen', det.open); paper.appendChild(det); docxCard(rd, rd.name).then(c => { c.querySelector('.fhead').remove(); det.appendChild(c); }); }
   for (const r of refsFor(st)) { const hold = document.createElement('div'); paper.appendChild(hold); refCard(r, st).then(c => { if (token === openToken) hold.replaceWith(c); }); }
@@ -67,7 +74,7 @@ async function openStudent(i, filePath) {
     }
   }
   if (token !== openToken) return;
-  const seq = fileSeq(st), oneFile = seq.length === 1 && !!seq[0].d && !st.files.some(f => f.kind === 'media');
+  const seq = fileSeq(st), oneFile = seq.length === 1 && !!seq[0].d && !st.files.some(f => f.kind === 'media' || f.kind === 'link');
   if (!oneFile) sheetOff();
   for (const it of seq) {
     if (it.f) {   // a Word, text or other file, as one card
@@ -75,7 +82,7 @@ async function openStudent(i, filePath) {
       if (token !== openToken) return;
       const fh = c.querySelector('.fhead');
       if (fh && !f.virtual && !f.rubric) {   // Download joins Group work, Move to, Replace and Remove under the file's ⋯
-        fh.insertAdjacentHTML('beforeend', carryTag(f) + fileMenu(moveLink(f) + fileLinks(f)));
+        fh.insertAdjacentHTML('beforeend', tryTag(st, f) + carryTag(f) + fileMenu(moveLink(f) + fileLinks(f)));
         const dl = fh.querySelector('[data-wdl], [data-odl]'); if (dl) { dl.className = 'link'; fh.querySelector('.km').prepend(dl); }
       }
       paper.appendChild(c);
@@ -85,7 +92,7 @@ async function openStudent(i, filePath) {
     const d = it.d, di = it.di, on = docIn(st, d), auto = docAuto(st, d), af = d.file && fileByPath(st, d.file);
     const one = af && !af.virtual && d.pages.every(([q]) => q === af.path || (fileByPath(st, q) || {}).virtual);   // her rubric page added on the end doesn't make it two files
     const head = document.createElement('div'); head.className = 'fhead';
-    head.innerHTML = '<span style="color:var(--fg)">' + esc(d.name) + '</span><span>' + d.pages.length + (d.pages.length === 1 ? ' page' : ' pages') + '</span>' + (af && af.added ? addTag(af) : '') + carryTag(batch.carry && d.pages.map(([q]) => fileByPath(st, q)).find(f => f && !f.virtual && batch.carry.flags[f.path])) +
+    head.innerHTML = '<span style="color:var(--fg)">' + esc(d.name) + '</span><span>' + d.pages.length + (d.pages.length === 1 ? ' page' : ' pages') + '</span>' + tryTag(st, af || fileByPath(st, (d.pages[0] || [])[0])) + (af && af.added ? addTag(af) : '') + carryTag(batch.carry && d.pages.map(([q]) => fileByPath(st, q)).find(f => f && !f.virtual && batch.carry.flags[f.path])) +
       (on ? '' : '<span class="pill warn" style="font-size:12px;padding:2px 8px;border-radius:999px;background:var(--warn-soft);color:var(--warn)">' + (auto ? 'No marks, left out' : 'Left out') + '</span>') +
       '<span style="flex:1"></span>' + (on ? '' : '<button class="link" style="font-size:13px" data-inout="' + di + '">Bring back</button>') +
       fileMenu((on || auto ? '<button class="link" data-rotdoc="' + di + '" title="Turn every page of this file a quarter turn to the right">⟳ Turn all pages</button>' : '') + (one ? moveLink(af) + replaceLink(af) : '') + (on ? '<button class="link" data-inout="' + di + '" title="Keep this file off the screen and out of what goes back. Bring back undoes it.">Leave out</button>' : '') + (one ? removeLink(af) : ''));
@@ -153,8 +160,10 @@ $('#paper').addEventListener('click', e => {
   const mvf = e.target.closest('[data-mvfile]'); if (mvf) return openMoveFile(batch.students[cur], mvf.dataset.mvfile);
   if (e.target.closest('#addFileBtn')) return pickAdd(batch.students[cur]);
   if (e.target.closest('#pasteTextBtn')) return openPasteText(batch.students[cur]);
+  if (e.target.closest('#addVideoBtn')) return openAddVideo(batch.students[cur]);
+  if (e.target.closest('#addNotesBtn')) return openAddNotes(batch.students[cur]);
   if (e.target.closest('#addScanBtn')) { scanInto = true; scanFor = null; return $('#scanIn').click(); }
-  const wd = e.target.closest('[data-whodo]'); if (wd) return wd.dataset.whodo === 'light' ? openLight() : openCalc();
+  const wd = e.target.closest('[data-whodo]'); if (wd) return wd.dataset.whodo === 'light' ? openLight() : wd.dataset.whodo === 'example' ? openUseExample(cur) : openCalc();
   const ra = e.target.closest('[data-rmfile]');
   if (ra) {   // two clicks, so a stray click can't throw a file away
     if (!ra.dataset.armed) { ra.dataset.armed = '1'; ra.textContent = 'Click again to remove'; ra.style.color = 'var(--warn)'; setTimeout(() => { if (ra.isConnected) { delete ra.dataset.armed; ra.textContent = 'Remove'; ra.style.color = ''; } }, 4000); return; }

@@ -8,6 +8,10 @@
 .bknote{margin:12px 18px 0;padding:8px 12px;border:1px solid var(--line-strong);border-radius:var(--corner-4);background:var(--surface-2);font-size:13.5px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .bkpad{padding:16px 18px}
 .bkcap{margin:8px 18px 16px;font-size:12.5px}
+.bkhow{margin:6px 0 4px}
+.bkhow summary{margin:0 18px;padding:4px 0;font-size:var(--text-small);color:var(--muted);cursor:pointer;width:max-content}
+.bkhow summary:hover{color:var(--accent)}
+.bkhow .bkcap{margin-top:4px}
 .bkpill{display:inline-block;font-size:var(--text-caption);font-weight:600;border-radius:var(--corner-pill);padding:1px 8px;white-space:nowrap;vertical-align:1px}
 .bkpill.sum{background:var(--bk-sum);color:#fff}
 .bkpill.ic{background:var(--accent-soft);color:var(--accent);border:1px solid color-mix(in srgb,var(--accent) 30%,transparent)}
@@ -130,3 +134,38 @@ small.bkxc{font-weight:500}
 .bkpick{vertical-align:-2px;margin:0 4px 0 0;accent-color:var(--accent)}
 .bkleftn{display:block;font-weight:400;color:var(--muted);font-size:var(--text-caption)}
 .bkleftn .linkbtn{border:0;background:none;padding:0;font:inherit;color:var(--accent);cursor:pointer;text-decoration:underline}
+/* a teacher's own types: one of five colours each, and their rows in Term setup */
+.k1{--kc:var(--bk-k1)}.k2{--kc:var(--bk-k2)}.k3{--kc:var(--bk-k3)}.k4{--kc:var(--bk-k4)}.k5{--kc:var(--bk-k5)}
+.bkpill.kc{background:var(--surface);color:var(--kc);border:1px solid var(--kc)}
+.bktab tr.bkg th.kc{color:var(--kc)}
+.bkleg i.kc{background:var(--kc);height:10px;width:10px;border-radius:var(--corner-round)}
+.bkdot.kc,.bkiqr.kc{fill:var(--kc)}
+.bkcmpt i.kc,.bkdotk.kc,.chdot.kc{background:var(--kc)}
+.bkcrow{grid-template-columns:auto auto minmax(0,1fr) auto 28px}
+.bkmv{display:inline-flex;gap:2px}.bkmv .icon{width:26px;height:26px}.bkmv .icon:disabled,.bkcrow [data-cdel]:disabled{opacity:.35;cursor:default}
+.bkcnm{display:flex;flex-direction:column;gap:2px;min-width:0}.bkcnm .bkin{width:100%;max-width:280px}.bkcnm small{font-size:var(--text-caption)}
+.bkcadd{margin-top:8px;font-size:var(--text-small);color:var(--muted)}
+.bktypeseg,#aType{flex-wrap:wrap;max-width:100%}
+/* Import scores from a spreadsheet (bookimport.js) */
+.bkiv{max-width:1100px}
+.bkimeta{margin:calc(-1 * var(--space-1)) 0 var(--space-3);font-size:var(--text-control)}
+.bkidrop{display:flex;align-items:center;gap:var(--space-3);flex-wrap:wrap;padding:var(--space-4);border:1px dashed var(--line-strong);border-radius:var(--corner-4);margin-bottom:var(--space-2)}
+.bkierr{color:var(--fg);background:var(--surface-2);border:1px solid var(--line-strong);border-radius:var(--corner-3);padding:var(--space-2) var(--space-3);font-size:var(--text-control)}
+.bkisum{margin:0 0 var(--space-3);font-size:var(--text-body)}
+.bkiwrap{overflow-x:auto;margin-bottom:var(--space-3)}
+.bkitab{width:100%}
+.bkitab td{vertical-align:top}
+.bkitab .bkiname{width:100%;min-width:150px}
+.bkitab .bksc{width:64px;text-align:right;padding:3px 6px}
+.bkiscale{white-space:nowrap}
+.bkioff td:not(:first-child){opacity:.55}
+.bkiwhy{display:block;font-size:var(--text-small);margin-top:2px}
+.bkito{font-weight:600}
+.bkirow{display:flex;gap:var(--space-4);flex-wrap:wrap;align-items:flex-end}
+.bkiinl{display:flex;gap:var(--space-2);align-items:center}
+.bkiwho{width:auto;margin-top:var(--space-2)}
+.bkidet{margin-top:var(--space-2);font-size:var(--text-control)}
+.bkidet ul{margin:var(--space-1) 0 0;padding-left:var(--space-5);columns:2}
+.bkiclash{margin:var(--space-3) 0 0;flex-direction:column;align-items:flex-start}
+.bkiv .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.bkiv h4.ovh3{margin-top:var(--space-5)}
