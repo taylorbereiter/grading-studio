@@ -93,3 +93,15 @@
 .pl-tgd select,.pl-tgd input{justify-content:flex-start;text-align:left;width:100%}
 .pl-tgd input{cursor:text}
 .pl-tgd .who{margin:0 0 var(--space-3);font-weight:600}
+
+/* the timer after presenting: a small box in the corner of the Planner (prFloat in src/planner/present.js) */
+.prf{position:fixed;right:var(--space-5);bottom:var(--space-5);z-index:55;display:flex;align-items:stretch;background:var(--surface);color:var(--accent);border:1px solid var(--line);border-radius:var(--corner-4);box-shadow:var(--shadow);overflow:hidden}
+.prf button{border:0;background:none;color:inherit;font:inherit}
+.prf-t{padding:var(--space-2) var(--space-4);font:700 var(--text-title)/1.1 var(--f-display);font-variant-numeric:tabular-nums;text-align:left}
+.prf-t small{display:block;font:600 var(--text-caption)/1.3 var(--f-body);color:var(--muted)}
+.prf-x{padding:0 var(--space-3);border-left:1px solid var(--line);color:var(--muted);font-size:var(--text-lead)}
+.prf button:hover{background:var(--hover)}
+.prf.paused{color:var(--fg)}
+.prf.done{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.prf.done .prf-x{color:var(--accent-fg);border-color:var(--accent-hover)}
+.prf.done button:hover{background:var(--accent-hover)}

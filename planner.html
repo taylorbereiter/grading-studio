@@ -730,6 +730,18 @@ body.has-side .lsn{margin-right:var(--sidew,420px)}
 .pl-tgd select,.pl-tgd input{justify-content:flex-start;text-align:left;width:100%}
 .pl-tgd input{cursor:text}
 .pl-tgd .who{margin:0 0 var(--space-3);font-weight:600}
+
+/* the timer after presenting: a small box in the corner of the Planner (prFloat in src/planner/present.js) */
+.prf{position:fixed;right:var(--space-5);bottom:var(--space-5);z-index:55;display:flex;align-items:stretch;background:var(--surface);color:var(--accent);border:1px solid var(--line);border-radius:var(--corner-4);box-shadow:var(--shadow);overflow:hidden}
+.prf button{border:0;background:none;color:inherit;font:inherit}
+.prf-t{padding:var(--space-2) var(--space-4);font:700 var(--text-title)/1.1 var(--f-display);font-variant-numeric:tabular-nums;text-align:left}
+.prf-t small{display:block;font:600 var(--text-caption)/1.3 var(--f-body);color:var(--muted)}
+.prf-x{padding:0 var(--space-3);border-left:1px solid var(--line);color:var(--muted);font-size:var(--text-lead)}
+.prf button:hover{background:var(--hover)}
+.prf.paused{color:var(--fg)}
+.prf.done{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.prf.done .prf-x{color:var(--accent-fg);border-color:var(--accent-hover)}
+.prf.done button:hover{background:var(--accent-hover)}
 /* ---------- Pick a name, make groups: what the class reads (src/pickshare.js), built into both pages ----------
    The same stage as a presented lesson: dark around, a light card for the words, sized by the height of the screen. */
 .pk{position:fixed;inset:0;z-index:70;background:var(--stage);color:var(--stage-fg);display:flex;flex-direction:column;outline:none;user-select:none;-webkit-user-select:none}
@@ -742,7 +754,25 @@ body.has-side .lsn{margin-right:var(--sidew,420px)}
 .pk-groups{flex:1;min-height:0;width:100%;display:grid;grid-template-columns:repeat(var(--cols),minmax(0,1fr));gap:1.6vh;align-content:center;font-size:var(--fs)}
 .pk-g{background:var(--stage-paper);color:var(--stage-ink);border-radius:var(--corner-5);padding:.7em 1em .8em;text-align:left;line-height:1.3;font-weight:500;overflow:hidden}
 .pk-g h3{margin:0 0 .25em;font-size:.72em;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--stage-blue)}
-.pk-g div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pk-g{position:relative;min-height:4.2em}
+/* a name in a group can be dragged to another, or clicked and then put where the next click says */
+.pk-s{margin:0 -.3em;padding:0 .3em;border-radius:var(--corner-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:grab;touch-action:none}
+.pk-s:hover{background:var(--stage-blue-soft)}
+.pk-s.sel{background:var(--stage-blue);color:var(--stage-paper)}
+.pk-s.pk-from{opacity:.3}
+.pk-ghost{position:fixed;left:0;top:0;z-index:5;margin:0;width:max-content;padding:.1em .6em;pointer-events:none;background:var(--stage-paper);color:var(--stage-ink);font-weight:600;box-shadow:var(--shadow);cursor:grabbing}
+.pk-dragging,.pk-dragging *{cursor:grabbing}
+.pk-g.pk-over,.pk-pool.pk-over{box-shadow:0 0 0 .6vh var(--stage-blue)}
+.pk-empty{margin:0;font-size:.8em;color:var(--stage-ink-2)}
+.pk-gx{position:absolute;top:.3em;right:.4em;border:0;background:none;color:var(--stage-ink-2);font:inherit;font-size:.8em;line-height:1;padding:.2em .4em;border-radius:var(--corner-2)}
+.pk-gx:hover{background:var(--stage-blue-soft)}
+/* students not in a group yet, when the groups are made by hand */
+.pk-pool{width:100%;flex:none;background:var(--stage-bar);border:1px dashed var(--stage-line);border-radius:var(--corner-5);padding:.5em 1em;text-align:left;font-size:calc(var(--fs) * .8)}
+.pk-pool h3{margin:0 0 .3em;font-size:.72em;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--stage-muted)}
+.pk-pl{display:flex;flex-wrap:wrap;gap:.3em .5em}
+.pk-pool .pk-s{margin:0;padding:.1em .6em;background:var(--stage-paper);color:var(--stage-ink);font-weight:500}
+.pk-pool .pk-s.sel{background:var(--stage-blue);color:var(--stage-paper)}
+.pk-pool .pk-empty{color:var(--stage-muted)}
 
 /* the bar: for the teacher */
 .pk-bar{flex:none;align-self:center;display:flex;align-items:center;flex-wrap:wrap;justify-content:center;gap:var(--space-1);margin:var(--space-4);padding:var(--space-1) var(--space-2);max-width:calc(100vw - var(--space-5));
@@ -4948,7 +4978,13 @@ document.addEventListener('keydown', e => {
    The Planner never opens grading's work. So that it can call on a student, the grading page keeps each class's roster
    in one small record of its own (gs.rolls: [[class name, [names]], …]) in this browser. The Planner reads it here and
    only shows it: a name is never put in a lesson, the Planner's own storage or the Planner folder.
-   Nothing here is saved. Who has had a turn and who is away today are remembered until the page is closed. */
+   Nothing here is saved. Who has had a turn, who is away today and the groups (shuffled or made by hand) are remembered
+   until the page is closed.
+   Groups can be changed by hand: drag a name to another group, or click one name and then a group (or a name in another
+   group, to swap them). "Make my own" starts with every group empty. Ctrl Z or Undo takes back a move or a shuffle.
+   The stage keeps its clicks to itself. A button it draws again is gone from the page by the time the click would reach
+   the page behind, so the page behind could not tell it was the stage's (in Present mode that clicked the slides on,
+   and at the end of the lesson finished it). */
 const PK = { on: false, fast: false, mem: new Map() };
 const PK_ROLLS = 'gs.rolls';
 const pkNorm = s => String(s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -4969,10 +5005,15 @@ function pkCount(len, by, n) {
   const up = Math.ceil(len / n), least = Math.floor(len / up);
   return least >= Math.max(2, n - 1) || up === 1 ? up : Math.max(1, Math.floor(len / n));
 }
-function pkGroups(names, by, n) {
-  const k = pkCount(names.length, by, n), out = Array.from({ length: k }, () => []);
-  pkShuffle(names).forEach((nm, i) => out[i % k].push(nm));
-  return out;
+function pkGroups(names, by, n, prev) {
+  const k = pkCount(names.length, by, n);
+  const deal = () => { const out = Array.from({ length: k }, () => []); pkShuffle(names).forEach((nm, i) => out[i % k].push(nm)); return out; };
+  if (k < 2 || !Array.isArray(prev) || !prev.length) return deal();
+  const was = new Map(); prev.forEach((g, i) => g.forEach(nm => was.set(nm, i)));
+  const again = gs => { let s = 0; for (const g of gs) for (let a = 0; a < g.length; a++) for (let b = a + 1; b < g.length; b++) if (was.has(g[a]) && was.get(g[a]) === was.get(g[b])) s++; return s; };
+  let best = null, least = Infinity;
+  for (let t = 0; t < 60 && least > 0; t++) { const g = deal(), s = again(g); if (s < least) { best = g; least = s; } }
+  return best;
 }
 function pkRolls() {
   try {
@@ -4983,7 +5024,7 @@ function pkRolls() {
 const pkEsc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 function pkMem(cls) {
   const k = pkNorm(cls.name) + '|' + cls.names.length;
-  if (!PK.mem.has(k)) PK.mem.set(k, { away: new Set(), bag: [], turns: 0, last: '', by: 'size', n: 4, groups: null });
+  if (!PK.mem.has(k)) PK.mem.set(k, { away: new Set(), bag: [], turns: 0, last: '', by: 'size', n: 4, groups: null, pool: [], hand: false, undo: [], sel: null });
   return PK.mem.get(k);
 }
 const pkHere = () => { const m = pkMem(PK.cls); return PK.cls.names.filter(n => !m.away.has(n)); };
@@ -4997,13 +5038,15 @@ function pkOpen(o) {
   el.innerHTML = '<div class="pk-main" id="pkMain"></div><aside class="pk-who" id="pkWho" aria-label="Who is here" hidden></aside><div class="pk-bar" id="pkBar" role="toolbar"></div><div class="pk-say" id="pkSay" aria-live="polite"></div>';
   o.host.appendChild(el);
   el.addEventListener('click', pkClick);
+  el.addEventListener('pointerdown', pkDown);
   el.addEventListener('change', e => { if (e.target.id === 'pkClass') { PK.cls = PK.o.classes[+e.target.value] || PK.cls; PK.who = false; pkRun(true); } });
   if (!o.keys) document.addEventListener('keydown', pkKeyOwn, true);
-  pkRun(true); el.focus();
+  pkRun(!(PK.mode === 'groups' && pkMem(PK.cls).groups)); el.focus();
 }
 function pkClose() {
   if (!PK.on) return;
   const { el, back, o } = PK;
+  pkDragEnd();
   PK.on = false; clearInterval(PK.spin); PK.el = null;
   document.removeEventListener('keydown', pkKeyOwn, true);
   try { if (document.fullscreenElement === el) document.exitFullscreen(); } catch { }
@@ -5014,7 +5057,10 @@ function pkRun(fresh) {
   const m = pkMem(PK.cls), here = pkHere();
   PK.el.setAttribute('aria-label', PK.mode === 'pick' ? 'Pick a name' : 'Groups');
   if (PK.mode === 'pick') { if (fresh) pkNext(); else pkName(m.last, true); }
-  else { if (fresh || !m.groups) m.groups = pkGroups(here, m.by, m.n); pkDrawGroups(); }
+  else {
+    if (fresh || !m.groups) { if (m.groups) pkSnap(m); m.groups = pkGroups(here, m.by, m.n, m.groups); m.pool = []; m.hand = false; m.sel = null; }
+    pkDrawGroups();
+  }
   pkBar(); pkWho();
 }
 function pkNext() {
@@ -5039,12 +5085,15 @@ function pkName(name, done) {
   if (done) PK.el.querySelector('#pkSay').textContent = nice ? nice : 'Nobody to pick';
 }
 function pkDrawGroups() {
-  const m = pkMem(PK.cls), g = m.groups || [], main = PK.el.querySelector('#pkMain');
+  const m = pkMem(PK.cls), g = m.groups || [], pool = m.hand ? m.pool : [], main = PK.el.querySelector('#pkMain');
   const rows = Math.max(1, Math.round(Math.sqrt(g.length / 1.6))), cols = Math.max(1, Math.ceil(g.length / rows)), most = Math.max(1, ...g.map(x => x.length));
-  const long = Math.max(8, ...g.flat().map(n => [...pkNice(n)].length)), fs = Math.max(1.5, Math.min(4.6, 70 / (rows * (most + 1.9)) / 1.3)), fw = Math.max(.8, (90 / cols - 3) / (long * .6));
+  const high = m.hand ? 54 : 70, long = Math.max(8, ...g.flat().concat(pool).map(n => [...pkNice(n)].length)), fs = Math.max(1.5, Math.min(4.6, high / (rows * (most + 1.9)) / 1.3)), fw = Math.max(.8, (90 / cols - 3) / (long * .6));
+  const nm = n => '<div class="pk-s' + (m.sel === n ? ' sel' : '') + '" data-pks="' + pkEsc(n) + '">' + pkEsc(pkNice(n)) + '</div>';
   main.className = 'pk-main groups';
-  main.innerHTML = '<div class="pk-cls">' + pkEsc(PK.cls.name) + '</div>' + (g.length
-    ? '<div class="pk-groups" id="pkGroups" style="--cols:' + cols + ';--fs:min(' + fs.toFixed(2) + 'vh,' + fw.toFixed(2) + 'vw)">' + g.map((x, i) => '<section class="pk-g"><h3>Group ' + (i + 1) + '</h3>' + x.map(n => '<div>' + pkEsc(pkNice(n)) + '</div>').join('') + '</section>').join('') + '</div>'
+  main.innerHTML = '<div class="pk-cls">' + pkEsc(PK.cls.name) + '</div>' + (g.length || pool.length
+    ? (m.hand ? '<div class="pk-pool" data-pkg="-1" style="--fs:min(' + fs.toFixed(2) + 'vh,' + fw.toFixed(2) + 'vw)"><h3>Not in a group yet</h3><div class="pk-pl">' + (pool.length ? pool.map(nm).join('') : '<p class="pk-empty">Everyone is in a group.</p>') + '</div></div>' : '') +
+      '<div class="pk-groups" id="pkGroups" style="--cols:' + cols + ';--fs:min(' + fs.toFixed(2) + 'vh,' + fw.toFixed(2) + 'vw)">' + g.map((x, i) => '<section class="pk-g" data-pkg="' + i + '"><h3>Group ' + (i + 1) + '</h3>' +
+        (x.length ? x.map(nm).join('') : '<p class="pk-empty">Drag names here</p><button class="pk-gx" data-pkgx="' + i + '" title="Remove this group" aria-label="Remove group ' + (i + 1) + '">×</button>') + '</section>').join('') + '</div>'
     : '<div class="pk-sub">Nobody is marked as here. “Who’s here” puts students back.</div>');
   PK.el.querySelector('#pkSay').textContent = g.length + (g.length === 1 ? ' group' : ' groups');
 }
@@ -5057,7 +5106,8 @@ function pkBar() {
     (pick ? b('again', 'Pick again', 'Space', ' class="pk-go"') + b('reset', 'Start over', '')
       : '<span class="pk-seg" role="group" aria-label="How to group"><button data-pkby="size" aria-pressed="' + (m.by === 'size') + '">Groups of</button><button data-pkby="count" aria-pressed="' + (m.by === 'count') + '">Number of groups</button></span>' +
         '<span class="pk-seg" role="group" aria-label="' + (m.by === 'size' ? 'Students in a group' : 'Groups') + '">' + [2, 3, 4, 5, 6, 7, 8].map(n => '<button data-pkn="' + n + '" aria-pressed="' + (m.n === n) + '">' + n + '</button>').join('') + '</span>' +
-        b('again', 'Shuffle again', 'Space', ' class="pk-go"') + b('copy', 'Copy', '')) +
+        b('again', 'Shuffle again', 'Space', ' class="pk-go"') + b('hand', 'Make my own', '') + b('addg', '+ Group', '') +
+        (m.undo.length ? b('undo', 'Undo', 'Ctrl Z') : '') + b('copy', 'Copy', '')) +
     '<span class="pk-sep"></span>' + b('who', 'Who’s here' + (away ? ' · ' + away + ' away' : ''), 'W', ' aria-pressed="' + PK.who + '"') +
     (o.full ? b('full', 'Full screen', 'F') : '') + '<button data-pk="close" class="pk-end" title="Close (Esc)">Close</button>';
 }
@@ -5075,30 +5125,58 @@ function pkDo(k) {
   if (k === 'again') return pkRun(true);
   if (k === 'reset') { m.bag = []; m.turns = 0; m.last = ''; return pkRun(true); }
   if (k === 'who') { PK.who = !PK.who; pkBar(); return pkWho(); }
+  if (k === 'undo') return pkUndo();
+  if (k === 'hand') {   // every group empty, everyone waiting to be put in one
+    const here = pkHere(); pkSnap(m);
+    m.groups = Array.from({ length: m.groups && m.groups.length ? m.groups.length : Math.max(1, pkCount(here.length, m.by, m.n)) }, () => []);
+    m.pool = here; m.hand = true; m.sel = null; pkDrawGroups(); return pkBar();
+  }
+  if (k === 'addg') { pkSnap(m); if (!m.groups) m.groups = []; m.groups.push([]); m.hand = true; pkDrawGroups(); return pkBar(); }
   if (k === 'full') { try { if (document.fullscreenElement) document.exitFullscreen(); else PK.el.requestFullscreen(); } catch { } return; }
   if (k === 'copy') {
-    const text = (m.groups || []).map((g, i) => 'Group ' + (i + 1) + ': ' + g.map(pkNice).join(', ')).join('\n');
+    const text = (m.groups || []).map((g, i) => g.length ? 'Group ' + (i + 1) + ': ' + g.map(pkNice).join(', ') : '').filter(Boolean).join('\n');
     const said = ok => { const s = PK.el && PK.el.querySelector('[data-pk="copy"]'); if (s) { s.textContent = ok ? 'Copied' : 'Could not copy'; setTimeout(() => { if (s.isConnected) s.textContent = 'Copy'; }, 1600); } };
     try { navigator.clipboard.writeText(text).then(() => said(true), () => said(false)); } catch { said(false); }
   }
 }
 function pkClick(e) {
+  e.stopPropagation();   // the stage's clicks are its own (see the top of this file)
+  if (!PK.on || PK.dragged) return;
   const t = e.target, m = pkMem(PK.cls);
   if (e.detail && t.closest('#pkBar button')) PK.el.focus();   // a button pressed with the mouse gives the keys back, so Space still picks again
   const w = t.closest('[data-pkw]');
-  if (w) { const n = PK.cls.names[+w.dataset.pkw]; if (m.away.has(n)) m.away.delete(n); else m.away.add(n); m.groups = null; w.setAttribute('aria-pressed', String(!m.away.has(n))); pkBar(); if (PK.mode === 'groups') pkRun(true); return; }
+  if (w) {
+    const n = PK.cls.names[+w.dataset.pkw]; if (m.away.has(n)) m.away.delete(n); else m.away.add(n);
+    w.setAttribute('aria-pressed', String(!m.away.has(n)));
+    if (m.hand && m.groups) { if (m.away.has(n)) pkTake(m, n); else if (!pkWhere(m, n)) m.pool.push(n); if (m.sel === n) m.sel = null; pkBar(); if (PK.mode === 'groups') pkDrawGroups(); return; }
+    m.groups = null; pkBar(); if (PK.mode === 'groups') pkRun(true); return;
+  }
+  if (PK.mode === 'groups') {
+    const gx = t.closest('[data-pkgx]');
+    if (gx) { const i = +gx.dataset.pkgx; if (m.groups && m.groups[i] && !m.groups[i].length) { pkSnap(m); m.groups.splice(i, 1); m.hand = true; pkDrawGroups(); pkBar(); } return; }
+    const s = t.closest('[data-pks]'), g = t.closest('[data-pkg]');
+    if (s) {
+      const n = s.dataset.pks, a = pkWhere(m, n), b = m.sel ? pkWhere(m, m.sel) : null;
+      if (m.sel && m.sel !== n && b && a && a.g !== b.g) return pkSwap(m, m.sel, n);   // a name in another group: the two change places
+      m.sel = m.sel === n ? null : n; return pkDrawGroups();
+    }
+    if (g && m.sel) return pkMove(m, m.sel, +g.dataset.pkg, null);
+    if (m.sel) { m.sel = null; return pkDrawGroups(); }
+  }
   const by = t.closest('[data-pkby]'); if (by) { m.by = by.dataset.pkby; return pkRun(true); }
   const n = t.closest('[data-pkn]'); if (n) { m.n = +n.dataset.pkn; return pkRun(true); }
   const b = t.closest('[data-pk]'); if (b) return pkDo(b.dataset.pk);
 }
 function pkKey(e) {
-  if (!PK.on || e.metaKey || e.ctrlKey || e.altKey) return false;
+  if (!PK.on) return false;
   const k = e.key, c = k.toLowerCase(), m = pkMem(PK.cls);
+  if ((e.metaKey || e.ctrlKey) && !e.altKey && !e.shiftKey && c === 'z') { e.preventDefault(); if (PK.mode === 'groups') pkUndo(); return true; }
+  if (e.metaKey || e.ctrlKey || e.altKey) return false;
   if (k === 'Tab') return false;
   if (e.target && e.target.id === 'pkClass' && k !== 'Escape') return false;
   if ((k === ' ' || k === 'Enter') && e.target && e.target.closest && e.target.closest('#pkStage button')) return false;   // the button in hand does its own thing
   e.preventDefault();
-  if (k === 'Escape') { if (PK.who) pkDo('who'); else pkClose(); return true; }
+  if (k === 'Escape') { if (PK.drag) pkDragEnd(); else if (PK.who) pkDo('who'); else if (m.sel && PK.mode === 'groups') { m.sel = null; pkDrawGroups(); } else pkClose(); return true; }
   if (k === ' ' || k === 'Enter') pkDo('again');
   else if (c === 'p') pkDo('pick');
   else if (c === 'g') pkDo('groups');
@@ -5107,8 +5185,88 @@ function pkKey(e) {
   else if (PK.mode === 'groups' && /^[2-8]$/.test(k)) { m.n = +k; pkRun(true); }
   return true;
 }
+
+/* ---------- groups by hand ---------- */
+function pkWhere(m, n) {
+  for (let g = 0; g < (m.groups || []).length; g++) { const i = m.groups[g].indexOf(n); if (i >= 0) return { g, i }; }
+  const i = (m.pool || []).indexOf(n); return i >= 0 ? { g: -1, i } : null;
+}
+const pkList = (m, g) => g < 0 ? m.pool : m.groups[g];
+function pkTake(m, n) { const w = pkWhere(m, n); if (w) pkList(m, w.g).splice(w.i, 1); return w; }
+function pkSnap(m) {
+  m.undo.push({ groups: m.groups ? m.groups.map(g => g.slice()) : null, pool: (m.pool || []).slice(), hand: m.hand });
+  if (m.undo.length > 40) m.undo.shift();
+}
+function pkUndo() {
+  const m = pkMem(PK.cls), u = m.undo.pop(); if (!u) return;
+  const ok = n => !m.away.has(n) && PK.cls.names.includes(n);
+  m.groups = u.groups ? u.groups.map(g => g.filter(ok)) : null; m.pool = u.pool.filter(ok); m.hand = u.hand; m.sel = null;
+  pkDrawGroups(); pkBar(); PK.el.querySelector('#pkSay').textContent = 'Undone';
+}
+const pkGName = g => g < 0 ? 'Not in a group yet' : 'Group ' + (g + 1);
+function pkMove(m, n, g, before) {
+  const from = pkWhere(m, n); if (!from || !(g < 0 ? m.hand : m.groups && m.groups[g])) return;
+  if (from.g === g && !before) { m.sel = null; return pkDrawGroups(); }
+  pkSnap(m); pkTake(m, n);
+  const to = pkList(m, g), at = before ? to.indexOf(before) : -1;
+  if (at >= 0) to.splice(at, 0, n); else to.push(n);
+  m.hand = true; m.sel = null; pkDrawGroups(); pkBar();
+  PK.el.querySelector('#pkSay').textContent = pkNice(n) + ' to ' + pkGName(g);
+}
+function pkSwap(m, a, b) {
+  const x = pkWhere(m, a), y = pkWhere(m, b); if (!x || !y) return;
+  pkSnap(m); pkList(m, x.g)[x.i] = b; pkList(m, y.g)[y.i] = a;
+  m.hand = true; m.sel = null; pkDrawGroups(); pkBar();
+  PK.el.querySelector('#pkSay').textContent = pkNice(a) + ' and ' + pkNice(b) + ' changed places';
+}
+function pkDown(e) {
+  const s = e.target.closest && e.target.closest('[data-pks]');
+  if (!s || PK.mode !== 'groups' || PK.drag || (e.button != null && e.button > 0)) return;
+  PK.drag = { name: s.dataset.pks, el: s, x: e.clientX, y: e.clientY, id: e.pointerId, on: false };
+  document.addEventListener('pointermove', pkDragMove, true);
+  document.addEventListener('pointerup', pkDragUp, true);
+  document.addEventListener('pointercancel', pkDragEnd, true);
+}
+function pkOver(e) {
+  const D = PK.drag, t = document.elementFromPoint(e.clientX, e.clientY);
+  const g = t && t.closest && t.closest('#pkStage [data-pkg]'); if (!g) return null;
+  const s = t.closest('[data-pks]');
+  return { g: +g.dataset.pkg, box: g, before: s && s.dataset.pks !== D.name ? s.dataset.pks : null };
+}
+function pkDragMove(e) {
+  const D = PK.drag; if (!D || e.pointerId !== D.id) return;
+  if (!D.on) {
+    if (Math.hypot(e.clientX - D.x, e.clientY - D.y) < 6) return;
+    if (!D.el.isConnected) return pkDragEnd();
+    const r = D.el.getBoundingClientRect(); D.on = true; D.dx = D.x - r.left; D.dy = D.y - r.top;
+    D.ghost = D.el.cloneNode(true); D.ghost.className = 'pk-s pk-ghost'; D.ghost.removeAttribute('data-pks');
+    D.ghost.style.fontSize = getComputedStyle(D.el).fontSize;
+    PK.el.appendChild(D.ghost); D.el.classList.add('pk-from'); PK.el.classList.add('pk-dragging');
+  }
+  e.preventDefault();
+  D.ghost.style.transform = 'translate(' + (e.clientX - D.dx) + 'px,' + (e.clientY - D.dy) + 'px)';
+  const o = pkOver(e), box = o && o.box;
+  if (D.box !== box) { if (D.box) D.box.classList.remove('pk-over'); if (box) box.classList.add('pk-over'); D.box = box; }
+}
+function pkDragUp(e) {
+  const D = PK.drag; if (!D || e.pointerId !== D.id) return;
+  const o = D.on ? pkOver(e) : null, was = D.on;
+  pkDragEnd();
+  if (!was) return;
+  PK.dragged = true; setTimeout(() => { PK.dragged = false; }, 0);
+  if (o && PK.on) pkMove(pkMem(PK.cls), D.name, o.g, o.before);
+}
+function pkDragEnd() {
+  const D = PK.drag; if (!D) return;
+  PK.drag = null;
+  document.removeEventListener('pointermove', pkDragMove, true);
+  document.removeEventListener('pointerup', pkDragUp, true);
+  document.removeEventListener('pointercancel', pkDragEnd, true);
+  if (D.ghost) D.ghost.remove(); if (D.box) D.box.classList.remove('pk-over');
+  if (D.el) D.el.classList.remove('pk-from'); if (PK.el) PK.el.classList.remove('pk-dragging');
+}
 function pkKeyOwn(e) { if (!PK.on) return; e.stopPropagation(); pkKey(e); }
-window.__pick = { PK, open: pkOpen, close: pkClose, groups: pkGroups, count: pkCount, short: pkShort, nice: pkNice, rolls: pkRolls };
+window.__pick = { PK, mem: () => pkMem(PK.cls), open: pkOpen, close: pkClose, groups: pkGroups, count: pkCount, short: pkShort, nice: pkNice, rolls: pkRolls };
 
 /* ================= Present: teach from the lesson =================
    The lesson's slides fill the screen. One key away: the agenda (tick items off as the class goes), a countdown the
@@ -5117,6 +5275,9 @@ window.__pick = { PK, open: pkOpen, close: pkClose, groups: pkGroups, count: pkC
    keeps for this; the names are shown and never kept here.
    Afterwards one line says where the class got to. It is kept on the lesson as "taught", so it goes to the Planner
    folder with the lesson and shows on the week.
+   The timer outlives the stage: finishing, or leaving full screen by accident, leaves it running in a small box in the
+   corner of the Planner, and presenting again shows it on the slides once more. It is kept in this browser (gsp.presentTimer)
+   so a refresh does not lose it either.
    This reads the lesson and the timetable and nothing else. Its buttons carry data-pr and are handled here. */
 const PR = { on: false, askMs: 2 * 60 * 1000 };   // askMs: presenting for at least this long asks where the class got to
 const PR_I = {
@@ -5234,7 +5395,7 @@ async function presentStart(l, o) {
   const slot = o.slot && l.slots.some(s => prSameSlot(s, o.slot)) ? o.slot : prSlotNow(l);
   const back = prResume(l, slot), i = o.at > 0 ? Math.min(o.at, l.slides.length - 1) : back ? back.slide - 1 : 0;
   const ag = l.slides.find(s => s.layout === 'agenda');
-  Object.assign(PR, { on: true, l, i, far: i, slot, began: Date.now(), ended: false, blank: false, notes: false, agenda: false, menu: false, ticks: new Set(), timer: null, num: '', keep: false, video: false, full: false, back: document.activeElement,
+  Object.assign(PR, { on: true, l, i, far: i, slot, began: Date.now(), ended: false, blank: false, notes: false, agenda: false, menu: false, ticks: new Set(), num: '', keep: false, video: false, full: false, back: document.activeElement,
     items: ag ? rtParse(ag.body).filter(x => x.text.trim()) : null, agTitle: ag ? plainTitle(ag.title) || 'Agenda' : '' });
   const el = PR.el = document.createElement('div');
   el.id = 'present'; el.className = 'pr'; el.tabIndex = -1; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-label', 'Presenting ' + l.title);
@@ -5256,7 +5417,7 @@ async function presentStart(l, o) {
   el.addEventListener('click', prClick);
   el.addEventListener('pointermove', prWake);
   PR.tickT = setInterval(prTick, 250);
-  prShow(); prTick(); prWake(); el.focus();
+  prFloat(); prShow(); prTick(); prWake(); el.focus();
   if (!o.window) try { await el.requestFullscreen(); } catch { }
   prFit();
   try { PR.lock = await navigator.wakeLock.request('screen'); } catch { }
@@ -5365,9 +5526,10 @@ function prPick(mode) {
 /* ---------- the timer ---------- */
 const prSound = () => { try { return localStorage.getItem('gsp.presentSound') !== '0'; } catch { return true; } };
 function prChime() {
-  if (!prSound() || !PR.ac) return;
+  if (!prSound()) return;
   try {
-    const C = PR.ac, t0 = C.currentTime;
+    const C = PR.ac = PR.ac || new (window.AudioContext || window.webkitAudioContext)(); if (C.state === 'suspended') C.resume();
+    const t0 = C.currentTime;
     [[0, 660], [.4, 660], [.8, 880]].forEach(([d, f]) => {
       const o = C.createOscillator(), g = C.createGain(); o.type = 'sine'; o.frequency.value = f;
       g.gain.setValueAtTime(0.0001, t0 + d); g.gain.exponentialRampToValueAtTime(.3, t0 + d + .03); g.gain.exponentialRampToValueAtTime(.0001, t0 + d + .35);
@@ -5379,25 +5541,64 @@ function prTimerStart(sec) {
   sec = Math.max(1, Math.min(180 * 60, Math.round(sec)));
   PR.timer = { end: Date.now() + sec * 1000, left: sec, total: sec, paused: false, done: false };
   try { PR.ac = PR.ac || new (window.AudioContext || window.webkitAudioContext)(); } catch { }
-  prMenu(false); prTick();
+  prTimerSave(); if (PR.on) prMenu(false); prTick();
 }
 function prTimerPause() {
   const t = PR.timer; if (!t || t.done) return;
   if (t.paused) { t.end = Date.now() + t.left * 1000; t.paused = false; } else { t.left = Math.max(0, Math.ceil((t.end - Date.now()) / 1000)); t.paused = true; }
-  prTick(); if (PR.menu) prMenu(true);
+  prTimerSave(); prTick(); if (PR.on && PR.menu) prMenu(true);
 }
 function prTimerAdd(sec) {
   const t = PR.timer; if (!t || t.done) return sec > 0 ? prTimerStart(sec) : undefined;
   if (t.paused) t.left = Math.max(0, Math.min(180 * 60, t.left + sec));
   else { const left = Math.max(0, Math.ceil((t.end - Date.now()) / 1000)); t.end = Date.now() + Math.max(0, Math.min(180 * 60, left + sec)) * 1000; }
   if (t.paused && !t.left) { t.paused = false; t.end = Date.now(); }
-  prTick(); if (PR.menu && t.done) prMenu(true);
+  prTimerSave(); prTick(); if (PR.on && PR.menu && t.done) prMenu(true);
 }
 function prTimerRestart() {
   const t = PR.timer; if (!t) return;
   prTimerStart(t.total); prMenu(true);
 }
-function prTimerStop() { PR.timer = null; prTick(); if (PR.menu) prMenu(true); }
+function prTimerStop() { PR.timer = null; prTimerSave(); prTick(); if (PR.on && PR.menu) prMenu(true); }
+const PR_TKEY = 'gsp.presentTimer';
+function prTimerSave() {
+  try { if (PR.timer && !PR.timer.done) localStorage.setItem(PR_TKEY, JSON.stringify(PR.timer)); else localStorage.removeItem(PR_TKEY); } catch { }
+}
+function prTimerLoad() {
+  let t = null; try { t = JSON.parse(localStorage.getItem(PR_TKEY) || 'null'); } catch { }
+  const num = v => typeof v === 'number' && isFinite(v);
+  if (!t || typeof t !== 'object' || !num(t.end) || !num(t.left) || !num(t.total) || t.done) return;
+  if (!t.paused && t.end < Date.now() - 60 * 1000) { try { localStorage.removeItem(PR_TKEY); } catch { } return; }
+  PR.timer = { end: t.end, left: Math.max(0, Math.round(t.left)), total: Math.max(1, Math.round(t.total)), paused: !!t.paused, done: false };
+}
+function prTimerStep() {
+  const t = PR.timer; if (!t || t.paused || t.done) return t;
+  t.left = Math.max(0, Math.ceil((t.end - Date.now()) / 1000));
+  if (!t.left) { t.done = true; prTimerSave(); prChime(); if (PR.on && PR.menu) prMenu(true); }
+  return t;
+}
+function prFloat() {
+  let f = document.getElementById('prFloat');
+  const t = PR.on ? null : prTimerStep();
+  if (!t) { if (f) f.remove(); return; }
+  if (!f) {
+    f = document.createElement('div'); f.id = 'prFloat'; f.className = 'prf'; f.setAttribute('role', 'timer');
+    f.innerHTML = '<button class="prf-t" data-prf="go"></button><button class="prf-x" data-prf="x" title="Stop the timer" aria-label="Stop the timer">×</button>';
+    document.body.appendChild(f);
+  }
+  const txt = t.done ? 'Time’s up' : mmss(t.left) + (t.paused ? '<small>Paused</small>' : ''), b = f.querySelector('.prf-t');
+  if (b.dataset.h !== txt) { b.dataset.h = txt; b.innerHTML = txt; }
+  f.className = 'prf' + (t.done ? ' done' : t.paused ? ' paused' : '');
+  b.setAttribute('aria-label', t.done ? 'Time’s up. Click to clear' : mmss(t.left) + ' left on the timer. Click to ' + (t.paused ? 'go on' : 'pause'));
+  b.title = t.done ? 'Clear' : t.paused ? 'Go on' : 'Pause';
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest && e.target.closest('[data-prf]'); if (!b || PR.on) return;
+  if (b.dataset.prf === 'x' || (PR.timer && PR.timer.done)) prTimerStop(); else prTimerPause();
+  prFloat();
+});
+prTimerLoad();
+setInterval(() => { if (!PR.on && (PR.timer || document.getElementById('prFloat'))) prFloat(); }, 250);
 function prOwnSec() {
   const m = Math.max(0, +($('#prOwn') || {}).value || 0), s = Math.max(0, +($('#prOwnS') || {}).value || 0);
   return Math.round(m * 60 + s);
@@ -5419,9 +5620,8 @@ function prTick() {
   const clock = prClock(), tm = $('#prTime'), ac = $('#prAClock');
   if (tm && tm.textContent !== clock) tm.textContent = clock;
   if (ac && ac.textContent !== clock) ac.textContent = clock;
-  const t = PR.timer, chip = $('#prChip');
+  const t = prTimerStep(), chip = $('#prChip');
   if (!t) { if (!chip.hidden) chip.hidden = true; return; }
-  if (!t.paused && !t.done) { t.left = Math.max(0, Math.ceil((t.end - Date.now()) / 1000)); if (!t.left) { t.done = true; prChime(); if (PR.menu) prMenu(true); } }
   const txt = t.done ? 'Time’s up' : mmss(t.left) + (t.paused ? '<small>Paused</small>' : '');
   if (chip.dataset.h !== txt) { chip.dataset.h = txt; chip.innerHTML = txt; }
   chip.hidden = false; chip.className = 'pr-chip' + (prBig() ? ' big' : '') + (t.done ? ' done' : t.paused ? ' paused' : '');
@@ -5452,7 +5652,7 @@ function prMenu(open) {
 function prClick(e) {
   prWake();
   const t = e.target;
-  if (t.closest('#pkStage')) return;   // the name picker looks after its own
+  if (PK.on && (t.closest('#pkStage') || !t.isConnected)) return;   // the name picker looks after its own (and a button it has just drawn again is off the page)
   if (e.detail && t.closest('#prBar,#prChip')) PR.el.focus();
   if (t.closest('#prMenu')) {
     const b = t.closest('button'); if (!b) return;
@@ -5537,12 +5737,12 @@ async function presentEnd() {
   PR.on = false; pkClose();
   clearInterval(PR.tickT); clearTimeout(PR.idleT); clearTimeout(prHintT); clearTimeout(PR.numT);
   document.removeEventListener('keydown', prKey, true); document.removeEventListener('fullscreenchange', prFull); window.removeEventListener('resize', prFit);
-  const lock = PR.lock, ac = PR.ac, full = document.fullscreenElement === el;
-  PR.lock = PR.ac = PR.timer = PR.el = null;
+  const lock = PR.lock, full = document.fullscreenElement === el;
+  PR.lock = PR.el = null;   // the timer, and its sound, go on (prFloat)
   el.remove();   // a full-screen stage taken off the page leaves full screen by itself
   try { if (full && document.fullscreenElement) await document.exitFullscreen(); } catch { }
   try { if (lock) await lock.release(); } catch { }
-  try { if (ac) ac.close(); } catch { }
+  prFloat();
   if (L.view === 'edit' && L.open === l) { L.cur = Math.min(i, l.slides.length - 1); renderEditor(); }
   if (back && back.isConnected && back.focus) try { back.focus({ preventScroll: true }); } catch { }
   const top = (items || []).filter(x => x.lvl === 0).length, done = (items || []).filter((x, k) => x.lvl === 0 && ticks.has(k)).length;
@@ -5896,7 +6096,7 @@ const LANG_ES = {
     'seating': { q: '¿Puedo hacer un plano de asientos, grupos o elegir a un estudiante al azar?', words: 'asiento asientos pupitre mesa plano sitio barajar azar sorteo nombre grupos equipos parejas',
       a: ['Sí. Abre una clase y elige **Seating**. Elige cómo está colocada el aula y arrastra a cada estudiante a un pupitre. Si sueltas a un estudiante sobre otro, se cambian el sitio.',
         '**Shuffle** da a todos un sitio nuevo, con Deshacer. Haz clic en un estudiante y elige **Keep in this seat** para quien no deba moverse. El menú **⋯** organiza los pupitres, muestra el plano a la clase y lo imprime.',
-        '**Pick a name** muestra a un estudiante al azar, y a nadie dos veces hasta que todos hayan tenido su turno. **Make groups** reparte la clase en grupos del tamaño que quieras. **Who’s here** deja fuera a quien falte hoy.',
+        '**Pick a name** muestra a un estudiante al azar, y a nadie dos veces hasta que todos hayan tenido su turno. **Make groups** reparte la clase en grupos; arrastra un nombre para moverlo o haz clic en dos nombres para cambiarlos. **Make my own** empieza con los grupos vacíos. **Who’s here** deja fuera a quien falte hoy. Ctrl Z deshace un cambio o una mezcla.',
         'Mientras presentas una lección en el Planificador, pulsa **P** para elegir un nombre y **G** para hacer grupos. Los nombres solo se muestran: nunca se guardan en una lección ni en la carpeta del Planificador.'] },
     'missing-work': { q: '¿Cómo recuerdo a los estudiantes los trabajos sin entregar?', words: 'tarde atrasado sin entregar debe recordar correo recordatorio familias',
       a: ['Abre una clase y elige **Missing work**. Muestra cada trabajo que marcaste como Missing, por estudiante o por tarea, del periodo que elijas.',
@@ -5928,7 +6128,7 @@ const LANG_ES = {
       a: ['En el Planificador, pulsa **Horario** en la barra lateral. Escribe tus clases, cuándo se reúne cada una y los días en que el centro está cerrado.', 'Desde entonces Hoy muestra las clases que das cada día con la lección planificada para cada una.'] },
     'present': { q: '¿Cómo presento una lección a la clase?', words: 'presentación pantalla completa proyector enseñar temporizador agenda mando',
       a: ['Abre la lección en el Planificador y pulsa **Present**. Sus diapositivas llenan la pantalla; las flechas o un mando las pasan. En Hoy, la clase que toca ahora o a continuación tiene su propio botón **Presentar**.',
-        'Mientras presentas: **A** muestra la agenda, **T** inicia un temporizador que la clase puede ver, **P** elige a un estudiante al azar, **G** hace grupos, **N** muestra tus notas, **B** deja la pantalla en blanco y **Esc** termina.', 'El temporizador acepta minutos y segundos. Mientras corre, su menú suma o quita 10 segundos o un minuto, lo pausa y lo reinicia; **+** y **−** suman o quitan un minuto. Marca **Show it big** para poner la cuenta atrás en el centro de la pantalla, para el fondo del aula.', 'Después, una línea anota hasta dónde llegó la clase, y al presentar de nuevo se retoma desde ahí.'] },
+        'Mientras presentas: **A** muestra la agenda, **T** inicia un temporizador que la clase puede ver, **P** elige a un estudiante al azar, **G** hace grupos, **N** muestra tus notas, **B** deja la pantalla en blanco y **Esc** termina.', 'El temporizador acepta minutos y segundos. Mientras corre, su menú suma o quita 10 segundos o un minuto, lo pausa y lo reinicia; **+** y **−** suman o quitan un minuto. Marca **Show it big** para poner la cuenta atrás en el centro de la pantalla, para el fondo del aula.', 'El temporizador sigue al terminar o al salir de la pantalla completa: espera en una esquina del Planificador. Después, una línea anota hasta dónde llegó la clase, y al presentar de nuevo se retoma desde ahí.'] },
     'pptx': { q: '¿Puedo obtener mis diapositivas como archivo de PowerPoint?', words: 'powerpoint pptx exportar diapositivas keynote google slides descargar',
       a: ['Sí. Abre la lección y pulsa **Download .pptx**. El archivo se abre en PowerPoint, Keynote y Google Slides.'] },
     'privacy': { q: '¿Salen de mi ordenador los trabajos de los estudiantes?', words: 'privado protección de datos rgpd nube servidor seguro',
@@ -6267,7 +6467,7 @@ const LANG_ZH = {
     'seating': { q: '可以排座位表、分組，或隨機抽一位學生嗎？', words: '座位 座位表 桌子 排座位 洗牌 隨機 抽籤 點名 分組 小組 兩人一組 seating',
       a: ['可以。開啟一個班級，選擇 **Seating**。先選教室的排法，再把每位學生拖到一張桌子上。把一位學生放到另一位身上，兩人就會交換座位。',
         '**Shuffle** 會讓每個人換到新座位，可以復原。按一下學生再選 **Keep in this seat**，這位學生就不會被移動。**⋯** 選單可以調整桌子、把座位表秀給全班看，或列印出來。',
-        '**Pick a name** 會隨機顯示一位學生，在每個人都輪過之前不會重複。**Make groups** 會把全班分成任意人數的小組。**Who’s here** 可以排除今天沒來的學生。',
+        '**Pick a name** 會隨機顯示一位學生，在每個人都輪過之前不會重複。**Make groups** 會把全班分成小組；把名字拖到別組就能移動，先後按兩個名字就能交換。**Make my own** 會從空的小組開始。**Who’s here** 可以排除今天沒來的學生。Ctrl Z 可以復原一次移動或重新分組。',
         '在備課頁面播放課程時，按 **P** 抽一位學生，按 **G** 分組。名字只會顯示在畫面上，不會存進課程或備課的資料夾。'] },
     'missing-work': { q: '怎麼提醒學生缺交的作業？', words: '遲交 逾期 沒交 欠交 催繳 電子郵件 提醒 家長 missing',
       a: ['開啟班級，選擇 **Missing work**。這裡會依學生或依作業，列出你在所選學期標記為 Missing 的每份作業。',
@@ -6299,7 +6499,7 @@ const LANG_ZH = {
       a: ['在備課頁面按側邊欄的**課表**。輸入你的班級、每個班級上課的時間，以及學校放假的日子。', '之後今天頁面會顯示你每天要上的班級，以及為每個班級準備的課程。'] },
     'present': { q: '怎麼向全班播放一堂課？', words: '簡報 全螢幕 投影機 上課 計時器 流程 遙控器 present',
       a: ['在備課頁面開啟課程，按 **Present**。投影片會填滿螢幕，用方向鍵或簡報遙控器換頁。在今天頁面，正在上或下一堂要上的班級有自己的**播放**按鈕。',
-        '播放時：**A** 顯示流程，**T** 啟動全班看得到的計時器，**P** 隨機抽一位學生，**G** 分組，**N** 顯示你的備註，**B** 讓螢幕變空白，**Esc** 結束。', '計時器可以設定分鐘和秒數。計時中，選單可以增加或減少 10 秒或一分鐘、暫停和重新開始；按 **+** 或 **−** 增減一分鐘。勾選 **Show it big** 會把倒數放在螢幕中央，教室後面也看得清楚。', '結束後會有一行記錄這個班級上到哪裡，下次播放時會從那裡繼續。'] },
+        '播放時：**A** 顯示流程，**T** 啟動全班看得到的計時器，**P** 隨機抽一位學生，**G** 分組，**N** 顯示你的備註，**B** 讓螢幕變空白，**Esc** 結束。', '計時器可以設定分鐘和秒數。計時中，選單可以增加或減少 10 秒或一分鐘、暫停和重新開始；按 **+** 或 **−** 增減一分鐘。勾選 **Show it big** 會把倒數放在螢幕中央，教室後面也看得清楚。', '結束播放或離開全螢幕後，計時器會繼續倒數，停在備課頁面的角落。結束後會有一行記錄這個班級上到哪裡，下次播放時會從那裡繼續。'] },
     'pptx': { q: '可以把投影片存成 PowerPoint 檔嗎？', words: 'powerpoint pptx 匯出 投影片 keynote google slides 下載',
       a: ['可以。開啟課程，按 **Download .pptx**。檔案可以用 PowerPoint、Keynote 和 Google 簡報開啟。'] },
     'privacy': { q: '學生作業會離開我的電腦嗎？', words: '隱私 資料保護 個資 雲端 伺服器 安全 privacy',
@@ -6542,7 +6742,7 @@ const HELP = [
   { id: 'seating', sec: 'class', q: 'Can I make a seating chart, groups, or pick a student at random?',
     a: ['Yes. Open a class and choose **Seating**. Pick how the room is set up, then drag each student to a desk. Dropping one student on another swaps them.',
       '**Shuffle** gives everyone a new seat, with Undo. Click a student and choose **Keep in this seat** for anyone who should not move. The **⋯** menu arranges the desks, shows the chart to the class and prints it.',
-      '**Pick a name** shows one student at random, and nobody twice until everyone has had a turn. **Make groups** deals the class into groups of any size. **Who’s here** leaves out anyone who is away today.',
+      '**Pick a name** shows one student at random, and nobody twice until everyone has had a turn. **Make groups** deals the class into groups; drag a name to move it, or click two names to swap them. **Make my own** starts every group empty. **Who’s here** leaves out anyone away today. Ctrl Z takes back a move or a shuffle.',
       'While presenting a lesson in the Planner, press **P** to pick a name and **G** for groups. The names are only shown: they are never put in a lesson or in the Planner folder.'],
     words: 'seat seats desk desks seating plan chart shuffle random picker name cold call groups teams pairs partners wheel' },
   { id: 'missing-work', sec: 'class', q: 'How do I remind students about missing work?',
@@ -6587,7 +6787,7 @@ const HELP = [
     words: 'schedule periods classes times calendar holidays' },
   { id: 'present', sec: 'plan', where: 'p', q: 'How do I present a lesson to the class?',
     a: ['Open the lesson in the Planner and press **Present**. Its slides fill the screen; the arrow keys or a clicker move through them. On Today, the class that is on now or next has its own **Present** button.',
-      'While presenting: **A** shows the agenda, **T** starts a timer the class can see, **P** picks a student at random, **G** makes groups, **N** shows your notes, **B** blanks the screen and **Esc** finishes.', 'The timer takes minutes and seconds. While it runs, its menu adds or takes away 10 seconds or a minute, pauses, and restarts; **+** and **−** add or take away a minute. Tick **Show it big** to put the countdown in the middle of the screen for the back of the room.', 'Afterwards one line notes where the class got to, and presenting again picks up there.'],
+      'While presenting: **A** shows the agenda, **T** starts a timer the class can see, **P** picks a student at random, **G** makes groups, **N** shows your notes, **B** blanks the screen and **Esc** finishes.', 'The timer takes minutes and seconds. While it runs, its menu adds or takes away 10 seconds or a minute, pauses, and restarts; **+** and **−** add or take away a minute. Tick **Show it big** to put the countdown in the middle of the screen for the back of the room.', 'The timer keeps going after you finish or leave full screen: it waits in the corner of the Planner. Afterwards one line notes where the class got to, and presenting again picks up there.'],
     words: 'slideshow full screen projector teach timer countdown seconds agenda clicker' },
   { id: 'pptx', sec: 'plan', where: 'p', q: 'Can I get my slides as a PowerPoint file?',
     a: ['Yes. Open the lesson and press **Download .pptx**. The file opens in PowerPoint, Keynote and Google Slides.'],
