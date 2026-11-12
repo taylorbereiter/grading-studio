@@ -1,11 +1,12 @@
 {
- "version": "1.27.22",
- "build": "106bef3dfdf3",
+ "version": "1.27.23",
+ "build": "59a8d8679cf3",
  "notes": [
-  "Attendance has a choice for a student who is away when you don’t know why yet: Absent, reason unknown. Change it to Absent, excused when you hear the reason. It is still four choices, and days you saved before keep their marks. Look back lists the absences that still have no reason."
+  "Take my work with me now carries your Planner too: lessons, units, timetable and their files. Bring work in takes it in. A Planner already in use only receives the lessons and files it doesn’t have, so nothing there is replaced.",
+  "If Grading Studio ever moves to a new web address, the old address tells you and shows the three steps for taking your work along. Help has an answer for it."
  ],
  "files": {
-  "index.html": "0cecd5bbdf72306702ac22fb69a92b4fb78f2cc8e9982fa384c7da2d172b2b50",
-  "planner.html": "87cddf1df8ef2d14f9e0cce4939b15c418d7c992715423672b93360c60e62f69"
+  "index.html": "8a0363d70f63c4f8b292e2f67c46e359b15e288bb27c1a815332ff18364b9778",
+  "planner.html": "3db0887c9b7a93ca2a93b77a4fab85c4dc90e87933ff04b5365504c03baf8f8e"
  }
 }

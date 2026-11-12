@@ -953,6 +953,7 @@ function setTheme(t) {
   for (const b of document.querySelectorAll('.themeBtn')) b.textContent = t === 'dark' ? 'Light mode' : 'Dark mode';
 }
 document.addEventListener('click', e => { if (e.target.closest('.themeBtn')) setTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'); });
+try { window.__planIn = new BroadcastChannel('gs-plan-in'); window.__planIn.onmessage = () => location.reload(); } catch { }   // Bring work in (the grading page) put Planner records in: start again from what is stored
 
 /* ================= The bank: rubrics and grading scales, sorted by course and unit =================
    The bank is the Planner's own: kv 'bank' in the Planner database = { rubrics, scales, gone: { id: time } }.
@@ -6297,7 +6298,10 @@ const LANG_ES = {
         'En Safari y Firefox, que no pueden guardar en una carpeta, crea de vez en cuando un archivo para llevar.'] },
     'other-computer': { q: '¿Cómo llevo mi trabajo a otro ordenador?', go: 'Abrir Ajustes, Guardado', words: 'casa portátil transferir llevar sincronizar segundo ordenador usb',
       a: ['1. En Ajustes, **Saving and carrying**, pulsa **Take my work with me**. Crea un archivo protegido con una frase de contraseña que tú eliges.', '2. Lleva el archivo al otro ordenador.', '3. Allí, pulsa **Bring work in**. Muestra lo que va a cambiar antes de cambiar nada.',
-        'El viaje de vuelta funciona igual. Si el mismo estudiante cambió en los dos sitios, ves las dos versiones y eliges.'] },
+        'El viaje de vuelta funciona igual. Si el mismo estudiante cambió en los dos sitios, ves las dos versiones y eliges. Tu Planificador va también. Un Planificador que ya está en uso solo recibe las lecciones y los archivos que no tiene.'] },
+    'new-address': { q: 'Grading Studio cambió de dirección web. ¿Dónde está mi trabajo?', go: 'Abrir Ajustes, Guardado', words: 'cambió dirección enlace url sitio vacío desaparecido nuevo dominio',
+      a: ['Tu navegador guarda tu trabajo para la dirección que abriste, así que una dirección nueva empieza vacía. No se ha perdido nada: sigue en la dirección anterior.',
+        '1. Abre la dirección anterior. En Ajustes, **Saving and carrying**, pulsa **Take my work with me** y guarda el archivo. Contiene tu trabajo de corrección y tu Planificador.', '2. Abre la dirección nueva.', '3. Allí, en Ajustes, **Saving and carrying**, pulsa **Bring work in** y elige el archivo.'] },
     'new-year': { q: '¿Cómo empiezo un nuevo curso escolar?', go: 'Abrir Ajustes, Guardado', words: 'nuevo curso año escolar archivar empezar de cero septiembre lista vacía',
       a: ['1. En Ajustes, **Saving and carrying**, pulsa **Start a new year**.', '2. Revisa los nombres de los dos cursos y lo que se conserva, elige una frase de contraseña y pulsa **Save the file and start the new year**. Este curso se guarda en un archivo protegido, y el archivo se vuelve a leer y se comprueba antes de borrar nada.',
         'Tus clases, unidades y tarjetas de tareas se quedan, cada tarjeta con su rúbrica y sus casillas de Quick mark, y las fechas avanzan un año. Las listas de clase, los trabajos, las notas y los comentarios salen de este navegador y quedan en el archivo. El Planner avanza sus unidades un año la próxima vez que lo abras.',
@@ -6702,7 +6706,10 @@ const LANG_ZH = {
         'Safari 和 Firefox 無法存到資料夾，請不時製作攜帶檔。'] },
     'other-computer': { q: '怎麼把工作成果帶到另一台電腦？', go: '開啟設定、儲存', words: '家裡 筆電 轉移 帶走 同步 第二台電腦 usb',
       a: ['1. 在設定的 **Saving and carrying** 按 **Take my work with me**。它會建立一個用你自訂的密語保護的檔案。', '2. 把檔案帶到另一台電腦。', '3. 在那裡按 **Bring work in**。它會在更改任何東西之前，先顯示將會改變的內容。',
-        '帶回來的方式也一樣。如果同一位學生在兩邊都有更改，你會看到兩個版本，再由你選擇。'] },
+        '帶回來的方式也一樣。如果同一位學生在兩邊都有更改，你會看到兩個版本，再由你選擇。備課內容也會一起帶走。已經在使用的備課區只會接收它沒有的課程和檔案。'] },
+    'new-address': { q: 'Grading Studio 換了新網址，我的工作成果在哪裡？', go: '開啟設定、儲存', words: '搬家 網址 連結 網站 空白 不見 新網域',
+      a: ['你的工作成果是由瀏覽器依照你開啟的網址保存的，所以新網址一開始是空的。資料沒有遺失，仍然在舊網址。',
+        '1. 開啟舊網址。在設定的 **Saving and carrying** 按 **Take my work with me**，並儲存檔案。它包含你的批改工作和備課內容。', '2. 開啟新網址。', '3. 在那裡的設定 **Saving and carrying** 按 **Bring work in**，並選擇該檔案。'] },
     'new-year': { q: '怎麼開始新的學年？', go: '開啟設定、儲存', words: '新學年 下學年 封存 重新開始 九月 名單 清空',
       a: ['1. 在設定的 **Saving and carrying** 按 **Start a new year**。', '2. 確認兩個學年的名稱和要帶過去的內容，選一個密語，再按 **Save the file and start the new year**。這一學年會存成一個受保護的檔案，而且在清除任何東西之前，會先把檔案讀回來檢查。',
         '你的班級、單元和作業卡片都會保留，每張卡片連同它的評分規準和 Quick mark 框，日期也會往後移一年。班級名單、作業、分數和評語會離開這個瀏覽器，存在檔案裡。下次打開 Planner 時，它會把單元往後移一年。',
@@ -7011,8 +7018,12 @@ const HELP = [
     go: ['Open Settings, Saving', '#/settings'], words: 'save backup folder storage lost cleared safe' },
   { id: 'other-computer', sec: 'safe', q: 'How do I move my work to another computer?',
     a: ['1. In Settings, **Saving and carrying**, press **Take my work with me**. It makes one file protected by a passphrase you choose.', '2. Carry the file to the other computer.', '3. There, press **Bring work in**. It shows what will change before anything does.',
-      'The trip back works the same way. If the same student changed in both places, you see both versions and choose.'],
+      'The trip back works the same way. If the same student changed in both places, you see both versions and choose. Your Planner goes too. A Planner already in use only takes the lessons and files it does not have.'],
     go: ['Open Settings, Saving', '#/settings'], words: 'home laptop transfer take-home sync second computer usb' },
+  { id: 'new-address', sec: 'safe', q: 'Grading Studio moved to a new web address. Where is my work?',
+    a: ['Your work is kept by your browser for the address you opened, so a new address starts empty. Nothing is lost: it is still at the old address.',
+      '1. Open the old address. In Settings, **Saving and carrying**, press **Take my work with me** and save the file. It holds your grading work and your Planner.', '2. Open the new address.', '3. There, in Settings, **Saving and carrying**, press **Bring work in** and choose the file.'],
+    go: ['Open Settings, Saving', '#/settings'], words: 'moved address link url website empty gone missing new site domain' },
   { id: 'new-year', sec: 'safe', q: 'How do I start a new school year?',
     a: ['1. In Settings, **Saving and carrying**, press **Start a new year**.', '2. Check the two years’ names and what carries over, choose a passphrase and press **Save the file and start the new year**. This year goes into one protected file, and the file is read back and checked before anything is cleared.',
       'Your classes, units and assignment cards stay, each card with its rubric and Quick mark boxes, and dates move on a year. Class lists, papers, scores and comments leave this browser for the file. The Planner moves its units on a year the next time you open it.',
