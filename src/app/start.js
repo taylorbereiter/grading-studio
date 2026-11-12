@@ -188,6 +188,18 @@ const COLORS = { red: '#D7263D', blue: '#1F5FD1', green: '#1E8A4C', purple: '#7B
 let checkInk = COLORS[store.get('gs.checkInk', 'green')] ? store.get('gs.checkInk', 'green') : 'green';
 let CHECK_INK = COLORS[checkInk];
 function setCheckInk(k) { if (!COLORS[k]) return; checkInk = k; CHECK_INK = COLORS[k]; store.set('gs.checkInk', k); }
+// Points written on a paper ("1/2" in Quick mark, the total, a score stamp). By default they are in the pen's ink, as they always were.
+// A teacher can pick one color for them, or 'credit': full points in the ✓ color, none in the ✗ color, part in amber.
+// The amber is darker than a yellow so it reads on white paper and in print (4.7 to 1 on white, between the red and the green).
+const PTS_AMBER = '#A86400';
+let ptsInk = (k => k === 'credit' || COLORS[k] ? k : '')(store.get('gs.ptsInk', ''));
+function setPtsInk(k) { ptsInk = k === 'credit' || COLORS[k] ? k : ''; if (ptsInk) store.set('gs.ptsInk', ptsInk); else store.del('gs.ptsInk'); }
+// The color of v points out of top. A total or a score stamp is a sum, not one answer, so with 'credit' it stays in the pen's ink.
+function ptsColor(v, top) {
+  if (ptsInk === 'credit' && v != null && top != null) return +v <= 0 ? COLORS[inkColor] || COLORS.red : +v >= +top ? CHECK_INK : PTS_AMBER;
+  return COLORS[ptsInk] || COLORS[inkColor] || COLORS.red;
+}
+const totalInk = () => ptsColor();
 const HL = { yellow: '#FFE45C', green: '#B4F0A8', pink: '#FFB8D6', blue: '#B0E0FF' };
 let inkColor = store.get('gs.ink', 'red'), hlColor = store.get('gs.hl', 'yellow'), penW = store.get('gs.penW', 2);
 const DISP0 = { ui: 1, tsize: 14, fit: 'width', dfs: 15, dlh: 1.45, trim: true };

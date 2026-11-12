@@ -147,7 +147,7 @@ function startScorePlace(text) {
   const move = e => {
     const pg = pages.find(q => q.canvas === e.target);
     if (!pg) { gh.hidden = true; return; }
-    const m = { t: 'stamp', k: 'score', x: 0, y: 0, size: newStampSize('score'), color: COLORS[inkColor], text }, b = stampBox(m), dpr = window.devicePixelRatio || 1, k = pg.s;
+    const m = { t: 'stamp', k: 'score', x: 0, y: 0, size: newStampSize('score'), color: totalInk(), text }, b = stampBox(m), dpr = window.devicePixelRatio || 1, k = pg.s;
     gh.width = Math.ceil(b.w * k * dpr) + 2; gh.height = Math.ceil(b.h * k * dpr) + 2;
     gh.style.width = gh.width / dpr + 'px'; gh.style.height = gh.height / dpr + 'px';
     gh.style.left = (e.clientX - gh.width / dpr / 2) + 'px'; gh.style.top = (e.clientY - gh.height / dpr / 2) + 'px';
@@ -162,7 +162,7 @@ function startScorePlace(text) {
 function stopScorePlace() { if (scorePlacing) { scorePlacing.stop(); scorePlacing = null; } }
 function placeScore(pg, x, y) {
   const text = scorePlacing.text; stopScorePlace();
-  const m = { t: 'stamp', k: 'score', x: r1(x), y: r1(y), size: newStampSize('score'), color: COLORS[inkColor], text };
+  const m = { t: 'stamp', k: 'score', x: r1(x), y: r1(y), size: newStampSize('score'), color: totalInk(), text };
   const bb = stampBox(m);   // keep it on the page
   m.x = r1(m.x + Math.max(0, -bb.x) - Math.max(0, bb.x + bb.w - pg.W)); m.y = r1(m.y + Math.max(0, -bb.y) - Math.max(0, bb.y + bb.h - pg.H));
   snap(pg); pg.marks().push(m); selected = { page: pg, mark: m, fresh: true }; changed(pg); redrawAll();

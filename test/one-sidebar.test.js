@@ -377,7 +377,7 @@ test('Settings is one page per subject, each with its own address', async () => 
   await goTo(page, '#/settings/grading'); assert.deepEqual(await shown(), ['setWay', 'setGrading']);
   await page.waitForFunction(() => /0 saved rubrics and 0 saved grading scales/.test(document.querySelector('#setGrading').textContent));
   assert.equal(await page.$eval('#setGrading a.btn', a => a.getAttribute('href')), 'planner.html#rubrics');
-  await goTo(page, '#/settings/marking'); assert.deepEqual(await shown(), ['setMarking', 'setPapers', 'setNames', 'setTouch']);
+  await goTo(page, '#/settings/marking'); assert.deepEqual(await shown(), ['setMarking', 'setInks', 'setPapers', 'setNames', 'setTouch']);
   await goTo(page, '#/settings/timetable'); assert.deepEqual(await shown(), ['setTimetable']);
   await page.waitForFunction(() => /No timetable in this browser yet/.test(document.querySelector('#setTimetable').textContent));
   assert.equal(await page.$eval('#setTimetable a.btn', a => a.textContent), 'Set up the timetable');

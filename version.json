@@ -1,12 +1,11 @@
 {
- "version": "1.27.13",
- "build": "7949e44be928",
+ "version": "1.27.14",
+ "build": "e5b7c907568a",
  "notes": [
-  "Share lesson file, under More in a lesson: one small file with the slides, notes, pictures, materials and finished PowerPoint. Open it with Import a lesson on another computer, or give it to another teacher.",
-  "Which classes and days a lesson is on, taught notes and comments for Claude stay behind, and opening one never replaces a lesson you have."
+  "Points written on a paper can have their own color. In Quick mark’s Colors menu, or Settings, Marking, Mark colors: the ✗ color as before, one color of your own, or By credit, with full points in the check color, part in amber and none in the ✗ color."
  ],
  "files": {
-  "index.html": "323b783ab712f82350ba66fc5fc74afd1ed1d9b40b831176618e65d8f73aacae",
-  "planner.html": "c9eaa35242b13c99694f69848b04e1026550db4a7e4a6478534df64cf9b63598"
+  "index.html": "6465cee53c44807fa02f2b8d1e1f109901c728e2c8eacf8e2369f002c637bfb1",
+  "planner.html": "3d60d2483d2d7949be03a1bffdfacb5e5b1da56879227dc0450498847751b215"
  }
 }

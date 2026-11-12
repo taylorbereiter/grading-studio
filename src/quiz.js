@@ -186,7 +186,7 @@ async function qzPaper(st, q, v) {
       measureCtx.font = '14px ' + FONT;
       const tw = measureCtx.measureText(look.text).width, bx = (q.x + qzShift(st, q.n)[0]) * sz.W;
       const x = s.margin ? (s.right ? cx - 11 : Math.max(2, bx - tw - 6)) : cx - tw / 2;   // in the margin it sits beside the box, like before
-      list.push({ t: 'text', color, x: r1(Math.max(2, x)), y: r1(Math.max(2, cy - 8)), size: 14, text: look.text, qz: q.id });
+      list.push({ t: 'text', color: ptsColor(v, +q.pts || 1), x: r1(Math.max(2, x)), y: r1(Math.max(2, cy - 8)), size: 14, text: look.text, qz: q.id });
     }
   }
   if (!list.length) delete f.marks[p];
@@ -199,7 +199,7 @@ async function qzTotal(st) {
   const [path, p] = quizPages(st)[t.n] || [], f = path && fileByPath(st, path), sz = await qzPageSize(st, t.n);
   if (!f || !sz) return;
   const [dx, dy] = qzShift(st, t.n);
-  (f.marks[p] ||= []).push({ t: 'stamp', k: 'score', text: stickerText(quizSum(st)), x: r1((t.x + dx) * sz.W), y: r1((t.y + dy) * sz.H), size: 52, color: COLORS[inkColor] || COLORS.red, qz: 'total' });
+  (f.marks[p] ||= []).push({ t: 'stamp', k: 'score', text: stickerText(quizSum(st)), x: r1((t.x + dx) * sz.W), y: r1((t.y + dy) * sz.H), size: 52, color: totalInk(), qz: 'total' });
 }
 // After boxes move or a student's page is lined up again, the marks already given move with them.
 async function qzRedoPaper(st) {
@@ -500,7 +500,7 @@ function openQuiz(view) {
     '<span id="qmNav" class="qmnav"></span><span class="muted hsm" id="qmProg"></span>' +
     '<span class="qmopts"><span class="muted hsm">Size</span><span class="seg" id="qmSize">' + QZ_SIZES.map(s => '<button data-size="' + s + '" title="' + (s === 'F' ? 'One answer per row' : 'Answer size ' + s) + '">' + QZ_SIZE_SAY[s] + '</button>').join('') + '</span>' +
     '<span class="seg" id="qmOnly"><button data-only="0">All</button><button data-only="1">Not marked</button></span>' +
-    '<span class="qmink"><button class="btn sm" id="qmInkBtn" data-inkmenu aria-haspopup="true" aria-expanded="false" title="Colors for the marks">Colors <i class="qmdot x"></i><i class="qmdot ok"></i></button>' +
+    '<span class="qmink"><button class="btn sm" id="qmInkBtn" data-inkmenu aria-haspopup="true" aria-expanded="false" title="Colors for the marks">Colors <i class="qmdot x"></i><i class="qmdot ok"></i><i class="qmdot pts"></i></button>' +
     '<span class="qminkpop" id="qmInkPop" hidden></span></span></span>' +
     '<button class="btn sm" data-boxes>Boxes</button><button class="icon" data-close aria-label="Close">✕</button></div>' +
     '<div class="bb qmbody" id="qmBody"></div>' +
@@ -514,6 +514,7 @@ function openQuiz(view) {
     if (e.target.closest('[data-close]')) return qmClose();
     const ik = e.target.closest('[data-qink]'); if (ik) { inkColor = ik.dataset.qink; store.set('gs.ink', inkColor); renderTools(); return qmInkSet(); }
     const ic = e.target.closest('[data-qchk]'); if (ic) { setCheckInk(ic.dataset.qchk); renderTools(); return qmInkSet(); }
+    const ip = e.target.closest('[data-qpts]'); if (ip) { setPtsInk(ip.dataset.qpts); return qmInkSet(); }
     if (e.target.closest('[data-inkmenu]')) return qmInkMenu();
     if (!e.target.closest('#qmInkPop')) qmInkMenu(false);
     if (e.target.closest('[data-boxes]')) return openQuizBoxes(() => openQuiz());
@@ -547,13 +548,25 @@ function qmClose() {
   closeDlg(); qzClose();
   if (batch && pages.length) openStudent(cur);   // the open paper shows the new marks
 }
-// Colors: one for ✗ and points (the same ink as her pen), one for ✓. Marks already given on this quiz change with them.
+// Colors: one for ✗ (the same ink as her pen), one for ✓, and one for points: the ✗ color, one of her own, or by credit
+// (green, amber, red). Marks already given on this quiz change with them.
 function qmInkSay() {
   const body = $('#qmBody'), btn = $('#qmInkBtn');
-  for (const el of [body, btn]) if (el) { el.style.setProperty('--qm-x', COLORS[inkColor] || COLORS.red); el.style.setProperty('--qm-ok', CHECK_INK); }
+  for (const el of [body, btn]) if (el) { el.style.setProperty('--qm-x', COLORS[inkColor] || COLORS.red); el.style.setProperty('--qm-ok', CHECK_INK); el.style.setProperty('--qm-pts', ptsInk === 'credit' ? 'conic-gradient(' + CHECK_INK + ' 0 33%, ' + PTS_AMBER + ' 0 66%, ' + (COLORS[inkColor] || COLORS.red) + ' 0)' : ptsColor()); }
+  if (body) for (const el of body.querySelectorAll('.qmmk[data-pv]')) el.style.color = ptsColor(+el.dataset.pv, +el.dataset.pt);
   const pop = $('#qmInkPop'); if (!pop || pop.hidden) return;
-  const row = (attr, on, say) => '<div class="qmirow"><span class="hsm">' + say + '</span>' + Object.entries(COLORS).map(([k, v]) => '<button class="sw" data-' + attr + '="' + k + '" style="background:' + v + '" aria-pressed="' + (k === on) + '" title="' + k + '" aria-label="' + say + ' ' + k + '"></button>').join('') + '</div>';
-  pop.innerHTML = row('qink', inkColor, '✗ and points') + row('qchk', checkInk, '✓ right') + '<p class="muted hsm">Marks already given change too.</p>';
+  pop.innerHTML = inkRows('q') + '<p class="muted hsm">Marks already given change too.</p>';
+}
+// The three rows of colors, in Quick mark's Colors menu (p 'q') and in Settings, Marking (p 's').
+function inkRows(p) {
+  const sw = (attr, k, v, on, say) => '<button class="sw" data-' + p + attr + '="' + k + '" style="background:' + v + '" aria-pressed="' + on + '" title="' + k + '" aria-label="' + say + ' ' + k + '"></button>';
+  const row = (attr, on, say) => '<div class="qmirow"><span class="hsm">' + say + '</span>' + Object.entries(COLORS).map(([k, v]) => sw(attr, k, v, k === on, say)).join('') + '</div>';
+  const x = COLORS[inkColor] || COLORS.red;
+  return row('ink', inkColor, '✗ wrong') + row('chk', checkInk, '✓ right') +
+    '<div class="qmirow qmipts"><span class="hsm">Points</span><button class="chip" data-' + p + 'pts="" aria-pressed="' + (ptsInk === '') + '" title="Points in the ✗ color">Same as ✗</button>' +
+    Object.entries(COLORS).map(([k, v]) => sw('pts', k, v, k === ptsInk, 'Points')).join('') + '</div>' +
+    '<div class="qmirow qmipts"><span class="hsm"></span><button class="chip" data-' + p + 'pts="credit" aria-pressed="' + (ptsInk === 'credit') + '" title="Full points in the ✓ color, part in amber, none in the ✗ color">By credit <i class="qmcr" style="background:' + CHECK_INK + '"></i><i class="qmcr" style="background:' + PTS_AMBER + '"></i><i class="qmcr" style="background:' + x + '"></i></button></div>' +
+    (ptsInk === 'credit' ? '<p class="muted hsm">Full: 2/2 · part: 1/2 · none: 0/2. Totals and score stamps stay in the ✗ color.</p>' : '');
 }
 function qmInkMenu(open) {
   const pop = $('#qmInkPop'), btn = $('#qmInkBtn'); if (!pop) return;
@@ -564,9 +577,14 @@ function qmInkMenu(open) {
 function qmInkSet() {
   for (const st of batch.students) for (const f of st.files || []) for (const list of Object.values(f.marks || {})) for (const m of list) {
     if (!m.qz && !m.qzn) continue;
-    m.color = m.t === 'check' ? CHECK_INK : COLORS[inkColor] || COLORS.red;
+    m.color = m.t === 'check' ? CHECK_INK : m.qz === 'total' ? totalInk() : m.t === 'text' && m.qz ? qzMarkInk(m.qz, st) : COLORS[inkColor] || COLORS.red;
   }
   saveSoon(); qmInkSay();
+}
+// The color of a question's points mark on one student's paper, from the points they were given.
+function qzMarkInk(id, st) {
+  const q = batch.quiz.qs.find(x => x.id === id), v = quizMarks(st)[id];
+  return q && v != null ? ptsColor(v, +q.pts || 1) : ptsColor();
 }
 function qmSizeSay() {
   const s = qzSizeNow(), body = $('#qmBody');
@@ -576,6 +594,7 @@ function qmSizeSay() {
 // The mark as it will look on the paper, drawn over the answer at its spot. With nothing to show, a faint circle marks the spot.
 function qmMarkEl(q, v) {
   const look = qzLook(q, v);
+  if (look && look.k === 'text') return '<span class="qmmk txt" data-pv="' + v + '" data-pt="' + (+q.pts || 1) + '" style="color:' + ptsColor(v, +q.pts || 1) + '" title="Drag to move this mark on this paper only">' + esc(look.text) + '</span>';
   if (!look) return '<span class="qmmk pin" title="Where the mark goes on this paper. Drag to move it on this paper only."></span>';
   return '<span class="qmmk' + (look.k === 'text' ? ' txt' : look.k === 'check' ? ' ok' : '') + '" title="Drag to move this mark on this paper only">' + (look.k === 'check' ? '✓' : look.k === 'x' ? '✗' : esc(look.text)) + '</span>';
 }
