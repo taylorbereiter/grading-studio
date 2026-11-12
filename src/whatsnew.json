@@ -1,4 +1,8 @@
 {
+  "1.27.6": [
+    "Returned files are named for the student, the assignment and what they are, like “Ana Lee - River essay - Graded.pdf”, or Feedback when there is no score. They still go in each student’s own folder.",
+    "To keep the names students turned in, untick Name each file by student and assignment under Options on the Return tab."
+  ],
   "1.27.5": [
     "The gradebook can import your old scores: press Import… and choose a CSV or Excel file, or paste the cells. Each column becomes an assignment, matched to your roster.",
     "You see everything before it is saved, and a score already in the gradebook stays unless you choose the file’s."

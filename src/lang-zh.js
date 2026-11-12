@@ -154,6 +154,8 @@ const LANG_ZH = {
     /* the feedback page in a returned paper */
     'How it was scored': '評分方式', 'From your teacher': '老師的話', 'Comment on your paper': '作業上的評語', 'Comments on your paper': '作業上的評語',
     'Your marked paper starts on the next page.': '批改後的作業從下一頁開始。', 'Your feedback continues on the next page.': '回饋接續在下一頁。',
+    /* returned file names: Student - Assignment - Graded.pdf */
+    'Graded': '已評分', 'Feedback': '回饋', 'Student name': '學生姓名',
     'Missing': '缺交', 'Excused': '免交', 'Late': '遲交', 'Retake': '重做', 'First try': '第一次', 'counts as': '採計',
   },
   rules: [
@@ -285,7 +287,7 @@ const LANG_ZH = {
     'past-work': { q: '批改時可以看學生以前的作業嗎？', words: '紀錄 以前 先前 進步 比較 history',
       a: ['可以。評分面板中 Next 下方的 **Past work** 會在目前的作業旁，顯示這位學生在其他作業的分數和你的評語。', '學生是依班級名單來配對的。'] },
     'return': { q: '怎麼發還批改好的作業？', words: '匯出 下載 發還 交回 zip 傳送 學生 export',
-      a: ['1. 開啟作業的 **Return** 分頁。它會先顯示還缺什麼：尚未評分的作業、沒有作業的學生。', '2. 按藍色按鈕。程式會建立一個 ZIP，裡面是每位學生批改後的檔案，放在和原本相同的資料夾裡。', '3. 把這個 ZIP 或裡面的檔案上傳到學校系統。',
+      a: ['1. 開啟作業的 **Return** 分頁。它會先顯示還缺什麼：尚未評分的作業、沒有作業的學生。', '2. 按藍色按鈕。程式會建立一個 ZIP，裡面是每位學生批改後的檔案，放在和原本相同的資料夾裡，檔名像「Ana Lee - River essay - 已評分.pdf」（沒有分數時是「回饋」）。', '3. 把這個 ZIP 或裡面的檔案上傳到學校系統。',
         '如果要立刻發還一份作業，請用 Previous 和 Next 下方的 **Export … paper now** 按鈕。'] },
     'feedback-page': { q: '發還的作業裡的回饋頁是什麼？', words: '封面 摘要 第一頁 學生 看到 報告 回饋',
       a: ['每份發還的作業開頭都有一頁給學生看的內容：分數、評分規準每個項目你給的等級和它的意義、你的評語，以及作業上每則評語和所在頁碼。',
