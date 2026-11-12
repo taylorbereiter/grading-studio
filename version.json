@@ -1,12 +1,12 @@
 {
  "version": "1.27.5",
- "build": "4246119b18ca",
+ "build": "9353652451e7",
  "notes": [
   "The gradebook can import your old scores: press Import… and choose a CSV or Excel file, or paste the cells. Each column becomes an assignment, matched to your roster.",
   "You see everything before it is saved, and a score already in the gradebook stays unless you choose the file’s."
  ],
  "files": {
-  "index.html": "c665b63da1d9fd5e666b9820973c60866a27faa00034eec4a6763dce30a11c81",
+  "index.html": "534bfa75adf2eef3805d2a59146b54b5baa7739eac902fe4b1678a9999dce031",
   "planner.html": "f1ef9198314a09006b1361fd77cd0c2081226ca8d428474813aa5a8bea6dc7f8"
  }
 }

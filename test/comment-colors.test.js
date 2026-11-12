@@ -63,6 +63,25 @@ test('a comment already made can be put in another color; Escape keeps the old o
   await close();
 });
 
+test('a new comment can change color while it is being typed', async () => {
+  const { page, close } = await openApp(browser);
+  await open(page);
+  await setTool(page, 'note');
+  await clickAt(page, 0, 300, 140);
+  await page.waitForSelector('.pop [data-nc]');
+  await page.keyboard.type('Good start');
+  await page.click('.pop [data-nc="blue"]');
+  assert.equal(await page.evaluate(() => document.activeElement.tagName), 'TEXTAREA', 'she can keep typing');
+  await page.keyboard.type(', now add a quote.');
+  await page.click('.pop [data-a="ok"]');
+  const m = (await marks(page))[0];
+  assert.equal(m.color, '#1F5FD1'); assert.equal(m.text, 'Good start, now add a quote.');
+  await page.evaluate(() => window.__gs.undo());
+  assert.equal((await marks(page)).length, 0, 'one undo takes the new comment away');
+  assert.deepEqual(page.errors, []);
+  await close();
+});
+
 test('a comment on highlighted words can change its highlight too', async () => {
   const { page, close } = await openApp(browser);
   await open(page);
