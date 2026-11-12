@@ -80,7 +80,11 @@ test('both built copies hold the same app, and the Pages copy stays out of searc
   const a = fs.readFileSync(BUILT, 'utf8'), b = fs.readFileSync(path.join(ROOT, 'Grading Studio.html'), 'utf8');
   // the Pages copy also names what lets it be installed: the install card, the icon and the window's colour
   const hosted = '<meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF">';
-  assert.equal(a.replace(hosted, ''), b);
+  // and it fetches its language instead of carrying them all: one short script that asks for the chosen one, and an empty LANG_PACKED
+  const loader = /<script>try\{var gsLangV=\{.*?\}catch\(e\)\{\}<\/script>/, packed = /const LANG_PACKED = \{[^\n]*\};/;
+  assert.ok(loader.test(a) && !loader.test(b), 'only the Pages copy fetches a language');
+  assert.ok(a.includes('const LANG_PACKED = {};') && !b.includes('const LANG_PACKED = {};'), 'only the double-click copy carries the languages');
+  assert.equal(a.replace(hosted, '').replace(loader, '').replace(packed, ''), b.replace(packed, ''));
   assert.ok(!b.includes('manifest.webmanifest'), 'the double-click copy has no address to install from');
   assert.ok(a.includes('<meta name="robots" content="noindex">'));
   assert.ok(!a.includes('@@APP@@') && !a.includes('@@VERSION@@'), 'every slot in the page got filled');

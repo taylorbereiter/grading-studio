@@ -6187,11 +6187,16 @@ const LANG_PACKED = {"zh-Hant":"zH1pc1zXde13/4oblxOREEmJcvLsR5ejkiUPepEcPUupVCLL
    file still leaves in English on the screens it covers. */
 const LANG_OPEN = {};
 function langPack(k) {
+  if (!Object.prototype.hasOwnProperty.call(LANG_NAMES, k)) return null;
+  if (window.__gsLangs && window.__gsLangs[k]) return window.__gsLangs[k];
   if (!Object.prototype.hasOwnProperty.call(LANG_PACKED, k)) return null;
   if (!LANG_OPEN[k]) { try { const b = atob(LANG_PACKED[k]), u = new Uint8Array(b.length); for (let i = 0; i < b.length; i++) u[i] = b.charCodeAt(i); LANG_OPEN[k] = new Function(fflate.strFromU8(fflate.inflateSync(u)))(); } catch (e) { console.error(e); return null; } }
   return LANG_OPEN[k];
 }
-const LANG_WANT = (() => { try { const v = JSON.parse(localStorage.getItem('gs.lang')); return typeof v === 'string' && Object.prototype.hasOwnProperty.call(LANG_PACKED, v) ? v : 'en'; } catch { return 'en'; } })();
+const langLoad = k => langPack(k) || !Object.prototype.hasOwnProperty.call(LANG_NAMES, k) ? Promise.resolve(!!langPack(k)) : new Promise(done => {
+  const s = document.createElement('script'); s.src = 'lang/' + k + '.js' + (window.gsLangV && window.gsLangV[k] ? '?' + window.gsLangV[k] : ''); s.onload = () => done(!!langPack(k)); s.onerror = () => done(false); document.head.appendChild(s);
+});
+const LANG_WANT = (() => { try { const v = JSON.parse(localStorage.getItem('gs.lang')); return typeof v === 'string' && Object.prototype.hasOwnProperty.call(LANG_NAMES, v) ? v : 'en'; } catch { return 'en'; } })();
 const LANG_PACK = LANG_WANT === 'en' ? null : langPack(LANG_WANT);
 const LANG = LANG_PACK ? LANG_WANT : 'en';
 const LANG_LOCALE = LANG_PACK ? LANG_PACK.locale : undefined;
@@ -6231,13 +6236,13 @@ if (LANG_PACK) {
     }
   }).observe(document.documentElement, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: LANG_ATTRS });
 }
-const langPick = id => '<select id="' + id + '" class="btn sm wllang" aria-label="Language">' + [['en', 'English'], ...Object.entries(LANG_NAMES)].map(([k, n]) => '<option value="' + k + '"' + (k === LANG ? ' selected' : '') + '>' + n + '</option>').join('') + '</select>';
+const langPick = id => '<select id="' + id + '" class="btn sm wllang" aria-label="Language">' + [['en', 'English'], ...Object.entries(LANG_NAMES)].map(([k, n]) => '<option value="' + k + '"' + (k === LANG_WANT ? ' selected' : '') + '>' + n + '</option>').join('') + '</select>';
 document.addEventListener('change', e => {
   const el = e.target; if (!el || (el.id !== 'setLangPick' && el.id !== 'wlLang')) return;
   try { if (el.value === 'en') localStorage.removeItem('gs.lang'); else localStorage.setItem('gs.lang', JSON.stringify(el.value)); } catch {}
   location.reload();
 });
-window.__gsLang = { lang: LANG, packs: Object.keys(LANG_NAMES), tr: (s, k) => trWith(s, langPack(k)), missing(k) {
+window.__gsLang = { lang: LANG, want: LANG_WANT, packs: Object.keys(LANG_NAMES), load: langLoad, tr: (s, k) => trWith(s, langPack(k)), missing(k) {
   const P = langPack(k), out = new Set(), see = s => { const t = (s || '').trim(); if (!t || !/[A-Za-z]{2}/.test(t)) return; if (trPiece(t, P) != null) return; for (const p of t.split(' · ')) { const q = p.trim(); if (q && /[A-Za-z]{2}/.test(q) && trPiece(q, P) == null) out.add(q); } };
   for (const r of document.querySelectorAll(LANG_ROOTS)) {
     if (!r.checkVisibility()) continue;

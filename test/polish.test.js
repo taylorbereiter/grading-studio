@@ -509,7 +509,10 @@ test('Inter is built in, and opening the app contacts nobody', async () => {
 });
 
 test('the built file stays a sensible size with the font in it', () => {
-  const size = fs.statSync(path.join(ROOT, 'Grading Studio.html')).size;
+  // The page at the web address, which is what a teacher's browser fetches. It carries no languages: each is its own file in lang/,
+  // fetched only when chosen. The double-click copy is the same page with every language inside, and nothing else may make it bigger.
+  const size = fs.statSync(path.join(ROOT, 'index.html')).size, one = fs.statSync(path.join(ROOT, 'Grading Studio.html')).size, langs = fs.readdirSync(path.join(ROOT, 'lang')).length;
+  assert.ok(one - size < langs * 45e3, 'the double-click copy is ' + ((one - size) / 1e3).toFixed(0) + ' KB bigger than the page, for ' + langs + ' languages');
   assert.ok(size < 6.5e6, 'it’s ' + (size / 1e6).toFixed(2) + ' MB');   // about 5.9 MB, with strong examples, the school resources page, with attendance and the seating chart, with the help answers, report comments, tablet input and a second language, with going back in time and updates, with the Gradebook and its averages, extra credit, the sidebar, Word papers as PDF and the assignment tabs: the iPhone photo decoder (about 0.7 MB), the Inter font (about 0.2 MB) and the stickers (about 0.15 MB) are bundled so the one file works offline
 });
 

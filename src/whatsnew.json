@@ -1,4 +1,7 @@
 {
+  "1.28.1": [
+    "The app opens a little faster at its web address: it now fetches only the language you chose instead of carrying all of them. Your language is kept for use without internet, and the take-home file still has every language inside."
+  ],
   "1.28.0": [
     "Six more app languages: Simplified Chinese (简体中文), French, German, Portuguese, Japanese and Korean, beside Traditional Chinese and Spanish. Choose one in Settings, Display, App language.",
     "Each covers the same first screens: the sidebar, Today, the welcome, Find anything, Help and the feedback page students get. The other screens are still in English.",

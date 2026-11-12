@@ -1,13 +1,21 @@
 {
- "version": "1.28.0",
- "build": "8dfc65de8789",
+ "version": "1.28.1",
+ "build": "a61723db4c98",
  "notes": [
-  "Six more app languages: Simplified Chinese (简体中文), French, German, Portuguese, Japanese and Korean, beside Traditional Chinese and Spanish. Choose one in Settings, Display, App language.",
-  "Each covers the same first screens: the sidebar, Today, the welcome, Find anything, Help and the feedback page students get. The other screens are still in English.",
-  "None of the translations has been checked by a fluent speaker yet, so a line may read oddly."
+  "The app opens a little faster at its web address: it now fetches only the language you chose instead of carrying all of them. Your language is kept for use without internet, and the take-home file still has every language inside."
  ],
  "files": {
-  "index.html": "430f8fd84ad2dfc21c8bd0d20daec8ff206aff2ba76ac36e5d2ef0b28bf8a61b",
-  "planner.html": "a686c38cd06d0a504a36361657cbc27b2823ee98f146f822725f6f2f4f7f7408"
+  "index.html": "983508f9c0b6883666f78a62203a482ae84a886e7f82d5a22efee395140d0f33",
+  "planner.html": "92253569eba5ecca9b931b15ff834cd12dced8550cecd882156f7cc9c35d7210"
+ },
+ "langs": {
+  "lang/zh-Hant.js": "a091cb2858af9f5b5a0537e6cf795c5754491790de94330a2b40b1a1900aa69c",
+  "lang/zh-Hans.js": "4a4fb00b06b307aae54fee5d259188ff04338b2e149b874b89d5798ea423d395",
+  "lang/es.js": "3c624c507cb4e62edcad3ec47976a1b8f087ecf91c7ae57faa66f8d46346a4d4",
+  "lang/fr.js": "022715b8878fd137161fa8c9bcd19430c7060da298c7eb8f1123adf89c94a73a",
+  "lang/de.js": "fac43cad8bcc326b5b47b8e72507cb9c8b2b0f2543df7740337c46523113a02c",
+  "lang/pt-BR.js": "33aedd3b0d8b2e909b0bf39131619a2c9026391558c0f986fe28d2160be893ee",
+  "lang/ja.js": "a705120c5b1b89cfb21d393cc0252cdb06d316fca3cc4c1ab160e43977cd9d5f",
+  "lang/ko.js": "0cfd49e606ed2fdd588c7aed8c3e6e160a46fe7014dbddf3b9fafc78249276a1"
  }
 }

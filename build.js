@@ -34,19 +34,31 @@ rep('/*@@HEICLICENSE@@*/', 'libheif-js ' + require('./' + nm + 'libheif-js/packa
 // Lines that are only a comment stay in src/ but don't ship, to keep the one file from growing. A test in polish.test.js checks each one really is a comment.
 // The stickers in the right-click menu: small pictures in src/stickers, built in so nothing is fetched.
 const stickerSrc = JSON.stringify(Object.fromEntries(fs.readdirSync('src/stickers').filter(f => f.endsWith('.webp')).sort().map(f => [f.slice(0, -5), 'data:image/webp;base64,' + fs.readFileSync('src/stickers/' + f).toString('base64')])));
-// The languages (src/lang.js says how they are used). Each is one file, src/lang-<file>.js, that ends up as one line of the page:
-// its source, squeezed and written as text, so that twenty languages cost the page little and only the one in use is ever unpacked.
+// The languages (src/lang.js says how they are used). Each is one file, src/lang-<file>.js.
+// The pages at the web address carry none of them: the build writes each one out as lang/<code>.js, and a page fetches the one
+// the teacher chose and no other, so twenty languages cost a teacher who uses one of them one small file.
+// The double-click copies have nowhere to fetch from, so they carry every language inside, squeezed and written as text (LANG_PACKED),
+// and unpack the one in use.
 // To add a language, add its file and a line here: the code a browser knows it by, the file, the name of the object the file makes.
 const LANGS = [['zh-Hant', 'zh', 'LANG_ZH'], ['zh-Hans', 'zh-hans', 'LANG_ZHS'], ['es', 'es', 'LANG_ES'], ['fr', 'fr', 'LANG_FR'], ['de', 'de', 'LANG_DE'], ['pt-BR', 'pt', 'LANG_PT'], ['ja', 'ja', 'LANG_JA'], ['ko', 'ko', 'LANG_KO']];
-const langSrc = (() => {
-  const fflate = require('fflate'), names = {}, packed = {};
+const langFiles = {}, langNames = {}, langPacked = {};
+{
+  const fflate = require('fflate');
   for (const [code, file, obj] of LANGS) {
     const src = fs.readFileSync('src/lang-' + file + '.js', 'utf8') + '\nreturn ' + obj + ';';
-    names[code] = new Function(src)().name;
-    packed[code] = Buffer.from(fflate.deflateSync(Buffer.from(src, 'utf8'), { level: 9 })).toString('base64');
+    langNames[code] = new Function(src)().name;
+    langPacked[code] = Buffer.from(fflate.deflateSync(Buffer.from(src, 'utf8'), { level: 9 })).toString('base64');
+    langFiles['lang/' + code + '.js'] = '(window.__gsLangs = window.__gsLangs || {})[' + JSON.stringify(code) + '] = (function () {\n' + src.replace(/^[ \t]*\/\/.*\r?\n/gm, '') + '\n})();\n';
   }
-  return 'const LANG_NAMES = ' + JSON.stringify(names) + ';\nconst LANG_PACKED = ' + JSON.stringify(packed) + ';';
-})();
+}
+const LANG_INSIDE = 'const LANG_PACKED = ' + JSON.stringify(langPacked) + ';', LANG_FETCHED = 'const LANG_PACKED = {};';
+const langSrc = 'const LANG_NAMES = ' + JSON.stringify(langNames) + ';\n' + LANG_INSIDE;
+// In a page at the web address, before anything else runs: fetch the chosen language's file. It is a plain script beside the page,
+// so the browser waits for it, and the offline copy (src/sw.js) keeps it with the pages.
+const hosted = page => { if (page.split(LANG_INSIDE).length !== 2) throw new Error('the languages are not in the page once'); return page.replace(LANG_INSIDE, () => LANG_FETCHED); };
+// Each file is asked for with a stamp of its contents (lang/es.js?1a2b3c4d), so a page never gets the file of another version from a browser's own cache.
+const langStamp = Object.fromEntries(LANGS.map(([code]) => [code, require('crypto').createHash('sha256').update(langFiles['lang/' + code + '.js']).digest('hex').slice(0, 8)]));
+const LANG_LOADER = '<script>try{var gsLangV=' + JSON.stringify(langStamp) + ',gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write(\'<script src="lang/\'+gsL+\'.js?\'+gsLangV[gsL]+\'"><\\/script>\')}catch(e){}</script>';
 rep('/*@@APP@@*/', (fs.readFileSync('src/migrate.js', 'utf8') + '\ngsData.boot(function () {\n' + ['@langs', 'lang', 'helpdata', 'pickshare', APP, 'names', 'marking', 'stamps', 'grades', 'saving', 'carryover', 'exportreport', 'feedback', 'rubrics', 'book', 'bookimport', 'intake', 'polish', 'insight', 'people', 'scans', 'merge', 'folder', 'takehome', 'quiz', 'imported', 'marksout', 'pastetext', 'groups', 'video', 'anchors', 'wordnotes', 'wordpdf', 'classpage', 'seating', 'attend', 'goals', 'ib', 'reports', 'missing', 'sheet', 'tabs', 'markscreen', 'examples', 'snip', 'touch', 'today', 'todo', 'settings', 'safe', 'newyear', 'welcome', 'setupin', 'help', 'school', 'classroom', 'shell', 'moving', 'fullscreen'].map(n => n === APP ? appSrc : n === '@langs' ? langSrc : fs.readFileSync('src/' + n + '.js', 'utf8')).join('\n') + '\n});').replace(/^[ \t]*\/\/.*\r?\n/gm, '').replace('/*@@STICKERS@@*/{}', () => stickerSrc));
 rep("'/*@@GCID@@*/'", JSON.stringify(process.env.GCID || ''));
 // Where this copy lives and where it is moving to (site.json), only while a move is on. Otherwise the app has no address written into it.
@@ -59,8 +71,11 @@ const fullHtml = '<!doctype html>\n<html lang="en"><head><meta charset="utf-8"><
 fs.writeFileSync('Grading Studio.html', fullHtml);
 fs.writeFileSync('out/Grading Studio.html', fullHtml);
 // The pages at the web address can be installed as an app: they name the install card and the icon. The double-click copies don't, having no address to install from.
-const HOSTED = '<meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"></head>';
-fs.writeFileSync('index.html', fullHtml.replace('</head>', HOSTED));
+const HOSTED = '<meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF">' + LANG_LOADER + '</head>';
+fs.writeFileSync('index.html', hosted(fullHtml).replace('</head>', HOSTED));
+fs.mkdirSync('lang', { recursive: true });
+for (const f of fs.readdirSync('lang')) if (!langFiles['lang/' + f]) fs.unlinkSync('lang/' + f);
+for (const [f, src] of Object.entries(langFiles)) fs.writeFileSync(f, src);
 fs.writeFileSync('out/artifact.html', h.split('�').join('\\uFFFD'));
 console.log((h.length / 1e6).toFixed(2) + 'MB');
 // The Planner: its own page, built only from src/planner. No grading code goes into it.
@@ -79,7 +94,7 @@ console.log((h.length / 1e6).toFixed(2) + 'MB');
   prep('/*@@WORKER@@*/', fs.readFileSync(nm + 'pdfjs-dist/build/pdf.worker.min.js', 'utf8'));
   prep('/*@@PLANNER@@*/', ('(() => {\n' + ['base', 'bank', 'review', 'lessons', 'plain', 'looks', 'rich', 'activities', 'materials', 'links', 'finished', 'share', 'variants', 'extras', 'library', 'panel', 'notebook', '../pickshare', 'present', '@langs', '../lang', '../helpdata', 'rail', 'units', '../fullscreen'].map(n => n === '@langs' ? langSrc : fs.readFileSync('src/planner/' + n + '.js', 'utf8')).join('\n') + '\n})();').replace(/^[ \t]*\/\/.*\r?\n/gm, ''));
   const page = '<!doctype html>\n<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"></head><body>\n' + p + '\n</body></html>';
-  fs.writeFileSync('planner.html', page.replace('<meta name="robots" content="noindex"></head>', HOSTED));
+  fs.writeFileSync('planner.html', hosted(page).replace('<meta name="robots" content="noindex"></head>', HOSTED));
   fs.writeFileSync('Planner.html', page);
   console.log('Planner ' + (p.length / 1e6).toFixed(2) + 'MB');
 }
@@ -87,8 +102,8 @@ console.log((h.length / 1e6).toFixed(2) + 'MB');
 // so the same source always gives the same name, and a kept copy can be checked against it.
 {
   const sha = f => require('crypto').createHash('sha256').update(fs.readFileSync(f)).digest('hex');
-  const files = { 'index.html': sha('index.html'), 'planner.html': sha('planner.html') };
-  fs.writeFileSync('version.json', JSON.stringify({ version: VERSION, build: require('crypto').createHash('sha256').update(files['index.html'] + files['planner.html']).digest('hex').slice(0, 12), notes: whatsNew[VERSION] || [], files }, null, 1) + '\n');
+  const files = { 'index.html': sha('index.html'), 'planner.html': sha('planner.html') }, langs = Object.fromEntries(Object.keys(langFiles).map(f => [f, sha(f)]));
+  fs.writeFileSync('version.json', JSON.stringify({ version: VERSION, build: require('crypto').createHash('sha256').update(files['index.html'] + files['planner.html'] + Object.values(langs).join('')).digest('hex').slice(0, 12), notes: whatsNew[VERSION] || [], files, langs }, null, 1) + '\n');
   fs.writeFileSync('sw.js', fs.readFileSync('src/sw.js', 'utf8'));
   fs.writeFileSync('manifest.webmanifest', JSON.stringify({
     name: 'Grading Studio', short_name: 'Grading Studio', description: 'Mark papers, plan lessons and hand work back. Everything stays on this computer.',

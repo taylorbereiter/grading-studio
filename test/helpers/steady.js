@@ -64,6 +64,11 @@ const STEADY = `(() => {
 function serveBuild(pages, port) {
   const srv = http.createServer((req, res) => {
     const p = req.url.split('?')[0], body = p === '/' || p === '/index.html' ? pages.index : p === '/planner.html' ? pages.planner : p === '/blank' ? '<!doctype html><title>blank</title>' : null;
+    // A page set to another language asks for that language's file (lang/<code>.js): the one of the same build as the page.
+    if (body == null && /^\/lang\/[A-Za-z-]+\.js$/.test(p)) {
+      const js = pages.lang ? pages.lang(p.slice(1)) : fs.existsSync(path.join(ROOT, p)) ? fs.readFileSync(path.join(ROOT, p), 'utf8') : null;
+      if (js != null) { res.writeHead(200, { 'Content-Type': 'text/javascript; charset=utf-8', 'Cache-Control': 'no-store' }); return res.end(js); }
+    }
     if (body == null) { res.writeHead(404); return res.end(); }
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' });
     res.end(body);
@@ -91,7 +96,7 @@ const tryGit = (...a) => { try { return git(...a); } catch { return null; } };
 // The two built pages as a commit has them, or null when that commit can't be read.
 function pagesAt(ref) {
   const index = tryGit('show', ref + ':index.html'), planner = tryGit('show', ref + ':planner.html');
-  return index && planner ? { index: String(index), planner: String(planner) } : null;
+  return index && planner ? { index: String(index), planner: String(planner), lang: f => { const js = tryGit('show', ref + ':' + f); return js == null ? null : String(js); } } : null;
 }
 // The names a change lists in a file like test/screens-changed.txt. The list only counts when the file isn't the same as the
 // earlier commit's, so one left over from an earlier change allows nothing.
