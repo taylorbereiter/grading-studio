@@ -111,7 +111,8 @@ async function marksFileText(onStep) {
   out.push('', '## Class at a glance');
   if (o.scores) {
     const sc = who.map(gradeOf).filter(g => g.total != null && !g.partial && !g.out && g.outOf == null);
-    if (sc.length) out.push('Average ' + fmtNum(sc.reduce((a, g) => a + g.total, 0) / sc.length) + ' / ' + maxPoints() + ' (' + Math.round(sc.reduce((a, g) => a + (g.pct || 0), 0) / sc.length) + '%), from ' + plural(sc.length, 'finished score') + '.');
+    if (ibSetup()) out.push('This is an IB MYP task: each row is a criterion and its score is a level from 0 to 8. Levels are not added up or averaged, so ignore the total column, and there is no percent.');   // ib.js
+    else if (sc.length) out.push('Average ' + fmtNum(sc.reduce((a, g) => a + g.total, 0) / sc.length) + ' / ' + maxPoints() + ' (' + Math.round(sc.reduce((a, g) => a + (g.pct || 0), 0) / sc.length) + '%), from ' + plural(sc.length, 'finished score') + '.');
     if (rubric && crit.length) {
       const avg = crit.map((c, i) => { const v = who.map(st => rowShown(st, i)).filter(x => x != null); return v.length ? [c, v.reduce((a, b) => a + b, 0) / v.length] : null; }).filter(Boolean);
       if (avg.length) out.push('Row averages: ' + avg.map(([c, v]) => one(nameFreeText(c)) + ' ' + fmtNum(Math.round(v * 10) / 10)).join(', ') + '.');
@@ -130,6 +131,7 @@ async function marksFileText(onStep) {
     if (o.scores) {
       if (rubric && crit.length && !noScore(st)) out.push('Scores: ' + crit.map((c, i) => one(nameFreeText(c)) + ' ' + (rowShown(st, i) == null ? '(not scored)' : fmtNum(rowShown(st, i)))).join(', '));
       const s = statusText(st);
+      if (ibSetup()) { if (s) out.push(s); } else
       out.push(g.total != null || g.pct != null ? 'Total ' + cellOut(g, 'total') + ' / ' + maxPoints() + ', ' + cellOut(g, 'pct') + '%' + (s ? ', ' + s : '') : s || 'Not scored yet');
     }
     if (o.comments && one(st.grade.comment)) out.push('Comment: ' + one(scrub(st.grade.comment, rx)));

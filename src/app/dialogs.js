@@ -219,13 +219,13 @@ function gradeRows() {
 }
 function openGrades() {
   if (rereadsPending()) { rereadsDone().then(openGrades); return; }   // a grade she just typed or changed counts here
-  const rub = setup.mode === 'rubric', c = batchClass(), banded = !!(meGrade() || {}).bands;   // a teacher who grades in letters or 1 to 7 gets that grade in its own column
+  const rub = setup.mode === 'rubric', c = batchClass(), ib = ibSetup(), banded = !ib && !!(meGrade() || {}).bands;   // an MYP task (ib.js) shows its levels and a status, with no total, percent or grade column;   // a teacher who grades in letters or 1 to 7 gets that grade in its own column
   const rows = gradeRows().map(({ st, i, missing, off }, k) => {
-    if (missing) return '<tr><td class="n">' + (k + 1) + '</td><td class="nm" style="cursor:default">' + esc(missing) + (c ? ' ' + whoBtn('data-wc="' + esc(c.id) + '" data-wn="' + esc(missing) + '"', missing) : '') + ' <span class="muted" style="font-weight:400">(no folder: nothing turned in)</span></td>' + (rub ? setup.criteria.map(() => '<td></td>').join('') : '') + '<td></td><td></td>' + (banded ? '<td></td>' : '') + '<td></td><td></td></tr>';
+    if (missing) return '<tr><td class="n">' + (k + 1) + '</td><td class="nm" style="cursor:default">' + esc(missing) + (c ? ' ' + whoBtn('data-wc="' + esc(c.id) + '" data-wn="' + esc(missing) + '"', missing) : '') + ' <span class="muted" style="font-weight:400">(no folder: nothing turned in)</span></td>' + (rub ? setup.criteria.map(() => '<td></td>').join('') : '') + '<td></td>' + (ib ? '' : '<td></td>') + (banded ? '<td></td>' : '') + '<td></td><td></td></tr>';
     const g = gradeOf(st);
     const cells = rub ? setup.criteria.map((_, q) => '<td class="c" data-copy="' + fmtNum(rowShown(st, q)) + '">' + fmtNum(rowShown(st, q)) + '</td>').join('') : '';
     return '<tr class="go" data-i="' + i + '"><td class="n">' + (k + 1) + '</td><td class="nm">' + esc(st.key) + (anonOn() ? '' : ' ' + whoBtn('data-wi="' + i + '"', st.key)) + (st.files.length ? '' : ' <span class="muted" style="font-weight:400">(nothing turned in)</span>') + (off ? ' <span class="pill" style="font-size:11px;padding:2px 7px;border-radius:999px;background:var(--warn-soft);color:var(--warn)">not on roster</span>' : '') + '</td>' + cells +
-      '<td class="c' + (g.partial ? ' part" data-partial="1' : '') + '" data-copy="' + esc(cellCopy(g, 'total')) + '">' + totalText(g) + statusPills(g) + (g.total == null && g.pct == null && ((st.doubts && st.doubts.length) || manyReads(st)) ? ' <span class="stag" title="Confirm it on the Grade sheet">to confirm</span>' : '') + (g.paper ? ' <span class="muted" style="font-weight:400;font-size:12px" title="Read from the paper">(paper)</span>' : '') + '</td><td class="c' + (g.partial ? ' part" data-partial="1' : '') + '" data-copy="' + esc(cellCopy(g, 'pct')) + '">' + fmtPct(g.pct) + '</td>' + (banded ? '<td class="c" data-copy="' + esc(bandOf(g.pct)) + '">' + esc(bandOf(g.pct)) + '</td>' : '') +
+      '<td class="c' + (g.partial ? ' part" data-partial="1' : '') + '" data-copy="' + esc(ib ? '' : cellCopy(g, 'total')) + '">' + (ib ? '' : totalText(g)) + statusPills(g) + (g.total == null && g.pct == null && ((st.doubts && st.doubts.length) || manyReads(st)) ? ' <span class="stag" title="Confirm it on the Grade sheet">to confirm</span>' : '') + (g.paper ? ' <span class="muted" style="font-weight:400;font-size:12px" title="Read from the paper">(paper)</span>' : '') + '</td>' + (ib ? '' : '<td class="c' + (g.partial ? ' part" data-partial="1' : '') + '" data-copy="' + esc(cellCopy(g, 'pct')) + '">' + fmtPct(g.pct) + '</td>') + (banded ? '<td class="c" data-copy="' + esc(bandOf(g.pct)) + '">' + esc(bandOf(g.pct)) + '</td>' : '') +
       '<td class="op" data-op="' + i + '"></td><td class="cm" data-copy="' + esc(st.grade.comment) + '">' + esc(st.grade.comment) + '</td></tr>';
   }).join('');
   tabNext('grades');
@@ -233,8 +233,8 @@ function openGrades() {
     (c ? '<span class="seg" style="margin-left:8px"><button data-ord="folder" aria-pressed="' + (gradesOrder === 'folder') + '">Folder order</button><button data-ord="roster" aria-pressed="' + (gradesOrder === 'roster') + '">' + esc(c.name) + ' roster order</button></span>' : '') +
     '<span class="sp"></span>' + tabSeg('grades', '', GRADE_VIEWS) + '<button class="icon" data-close aria-label="Close">✕</button></div>' +
     '<div class="bb" id="glBody"><div id="glChk" hidden></div><p class="muted" style="margin:0 0 10px;font-size:14px">Click any score or comment to copy it, then paste it into ' + esc(sysOr('your gradebook')) + '. Click a name to open that paper.' + (c ? '' : ' Pick a roster under Setup to see this list in roster order.') + '</p>' +
-    '<table class="gl" id="glTable"><thead><tr><th>#</th><th>Student</th>' + (rub ? setup.criteria.map(x => '<th>' + esc(x) + '</th>').join('') : '') + '<th>Total /' + maxPoints() + '</th><th>%</th>' + (banded ? '<th>Grade</th>' : '') + '<th title="The grade written on the paper itself, read from the file">On the paper</th><th>Comment</th></tr></thead><tbody>' + rows + '</tbody></table></div>' +
-    '<div class="bf">' + mbLink(c, 'btn') + '<span style="margin-right:auto"></span><button class="btn" data-cp="total">Copy all totals</button><button class="btn" data-cp="pct">Copy all percents</button><button class="btn" data-cp="tsv">Copy as a table</button><button class="btn" data-glpdf title="A crop of each grade written on a paper, one row per file">Grade sheet (PDF)</button><button class="btn primary" data-csv>Download spreadsheet (CSV)</button></div>');
+    '<table class="gl" id="glTable"><thead><tr><th>#</th><th>Student</th>' + (rub ? setup.criteria.map(x => '<th>' + esc(x) + '</th>').join('') : '') + (ib ? '<th>Status</th>' : '<th>Total /' + maxPoints() + '</th><th>%</th>') + (banded ? '<th>Grade</th>' : '') + '<th title="The grade written on the paper itself, read from the file">On the paper</th><th>Comment</th></tr></thead><tbody>' + rows + '</tbody></table></div>' +
+    '<div class="bf">' + mbLink(c, 'btn') + '<span style="margin-right:auto"></span>' + (ib ? '<button class="btn" data-cp="lv">Copy all levels</button>' : '<button class="btn" data-cp="total">Copy all totals</button><button class="btn" data-cp="pct">Copy all percents</button>') + '<button class="btn" data-cp="tsv">Copy as a table</button><button class="btn" data-glpdf title="A crop of each grade written on a paper, one row per file">Grade sheet (PDF)</button><button class="btn primary" data-csv>Download spreadsheet (CSV)</button></div>');
   const box = $('#dlgBox');
   glPaper();
   box.onclick = async e => {
@@ -251,7 +251,7 @@ function openGrades() {
     if (cp) {
       const k = cp.dataset.cp, R = gradeRows();
       if (!await okPartial(R.filter(r => !r.missing).map(r => r.st))) return;
-      const lines = R.map(r => { if (r.missing) return k === 'tsv' ? tsvLine([String(R.indexOf(r) + 1), r.missing]) : ''; return k === 'tsv' ? tsvLine(tableRow(r.st, R.indexOf(r))) : scoreText(gradeOf(r.st), k); });
+      const lines = R.map(r => { if (r.missing) return k === 'tsv' ? tsvLine([String(R.indexOf(r) + 1), r.missing]) : ''; return k === 'tsv' ? tsvLine(tableRow(r.st, R.indexOf(r))) : k === 'lv' ? setup.criteria.map((_, q) => fmtNum(rowShown(r.st, q))).join('\t') : scoreText(gradeOf(r.st), k); });
       if (k === 'tsv') lines.unshift(tsvLine(tableHead()));
       copy(lines.join('\n'), 'Copied ' + R.length + ' rows in ' + (gradesOrder === 'folder' ? 'folder order' : listOrder()));
     }
@@ -264,10 +264,10 @@ function openGrades() {
 }
 // The two views of the Grades tab: her scores for each student, and the grade written on each paper, cropped from its file.
 const GRADE_VIEWS = [['', 'Scores and comments'], ['sheet', 'Grade sheet']];
-function tableHead() { return ['#', 'Student'].concat(setup.mode === 'rubric' ? setup.criteria : [], ['Total / ' + maxPoints(), 'Percent', 'Status', 'Comment']); }
+function tableHead() { return ['#', 'Student'].concat(setup.mode === 'rubric' ? setup.criteria : [], ibSetup() ? [] : ['Total / ' + maxPoints(), 'Percent'], ['Status', 'Comment']); }
 function tableRow(st, pos) {
   const g = gradeOf(st), i = pos != null ? pos : batch.students.indexOf(st);
-  return [String(i + 1), st.key].concat(setup.mode === 'rubric' ? setup.criteria.map((_, k) => fmtNum(rowShown(st, k))) : [], [cellOut(g, 'total'), cellOut(g, 'pct'), statusText(st), st.grade.comment.replace(/\s*\n\s*/g, ' ')]);
+  return [String(i + 1), st.key].concat(setup.mode === 'rubric' ? setup.criteria.map((_, k) => fmtNum(rowShown(st, k))) : [], ibSetup() ? [] : [cellOut(g, 'total'), cellOut(g, 'pct')], [statusText(st), st.grade.comment.replace(/\s*\n\s*/g, ' ')]);
 }
 async function copy(text, msg) {
   try { await navigator.clipboard.writeText(text); }
