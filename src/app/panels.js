@@ -103,7 +103,7 @@ function renderList() {
     const fm = fmNow(), sv = noScore(st) ? ['–', 'none'] : fm ? (st.grade.fb ? ['✓', 'ok'] : hasMarks(st) || (st.grade.comment || '').trim() ? ['', 'dot'] : st.files.length ? ['', 'ring'] : ['–', 'none'])
       : val != null ? [ibSetup() ? ibListSay(st) : fmtNum(g.total != null ? g.total : g.pct) + (g.total == null ? '%' : ''), g.paper || g.out ? 'quiet' : g.done ? '' : 'part'] : manyReads(st) || (st.doubts && st.doubts.length) ? ['?', 'part'] : hasMarks(st) ? ['', 'dot'] : st.files.length ? ['', 'ring'] : ['–', 'none'];
     return '<button class="stu' + (i === cur ? ' on' : '') + (st.files.length ? '' : ' empty') + (sv[1] ? ' sv-' + sv[1] : '') + (g.status === 'late' ? ' is-late' : '') + '" data-i="' + i + '" data-sv="' + sv[0] + '"' + (i === cur ? ' aria-current="true"' : '') + '><span class="num">' + (pos + 1) + '</span><span class="nm" title="' + esc(full) + '">' + esc(nm) + '</span>' + (anonOn() ? '' : whoBtn('data-wi="' + i + '"', st.key)) +
-      '<span class="tail">' + (st.files.length || noScore(st) ? '' : '<span class="muted" style="font-size:11px">no paper</span>') + (g.status === 'late' ? '<span class="stag" title="You marked this student late">late</span>' : '') + (g.out ? '<span class="stag out" title="Left out of the average">left out</span>' : '') + (g.tries ? '<span class="stag retk" title="' + esc(triesSay(g)) + '">retake</span>' : '') + (nAdd ? '<span class="add" title="' + nAdd + (nAdd === 1 ? ' file' : ' files') + ' added by you">+' + nAdd + '</span>' : '') + (re ? '<span class="add" title="A page needs a rescan">⚑</span>' : '') + (groupOf(st) ? '<span class="add grp" title="Group work: marked and graded once with ' + esc(groupNames(groupMates(st))) + '">group</span>' : grp ? '<span class="add grp" title="Group work: shares pages or a file with another student">shared</span>' : '') + carryPill(st) + sent + right + '</span></button>';
+      '<span class="tail">' + (st.files.length || noScore(st) ? '' : '<span class="muted" style="font-size:11px">no paper</span>') + (g.status === 'late' ? '<span class="stag" title="You marked this student late">late</span>' : '') + (g.out ? '<span class="stag out" title="Left out of the average">left out</span>' : '') + (g.tries ? '<span class="stag retk" title="' + esc(triesSay(g)) + '">retake</span>' : '') + (nAdd ? '<span class="add" title="' + nAdd + (nAdd === 1 ? ' file' : ' files') + ' added by you">+' + nAdd + '</span>' : '') + (re ? '<span class="add" title="A page needs a rescan">⚑</span>' : '') + (groupOf(st) ? '<span class="add grp" title="Group work: marked and graded once with ' + esc(groupNames(groupMates(st))) + '">group</span>' : grp ? '<span class="add grp" title="Group work: shares pages or a file with another student">shared</span>' : '') + carryPill(st) + anchorTag(st) + sent + right + '</span></button>';
   }).join('');
   if (listFilter !== 'all' && !q && !order.some(i => lfMatch(batch.students[i]))) $('#stuList').insertAdjacentHTML('beforeend', '<div class="muted lfnone">No one else here. <button class="link" data-lf="all">Show everyone</button></div>');
   listToCur();
@@ -175,9 +175,10 @@ function renderGrade() {
     h += ibPanelAsk() + '<h3>Score <button class="link" id="editRubric">Edit</button></h3>' +
       '<div class="pts"><input type="number" step="0.5" min="0" id="ptsIn" value="' + esc(g.points) + '" aria-label="Points"><span class="muted">out of ' + esc(setup.outOf) + '</span></div>';
   }
-  h += '<div class="total">' + totalHtml(st) + '</div>' + statusHtml(st);
+  h += '<div class="total">' + totalHtml(st) + '</div>' + statusHtml(st) + anchorHtml(st);
   h += cmtHtml(g) + histSlot(st) + '<div class="gfoot"><div class="hint keysrow">' + (setup.mode === 'rubric' ? '<span><kbd>1</kbd>–<kbd>' + Math.min(9, Math.max(...setup.criteria.map((_, i) => rowTop(setup, i)))) + '</kbd> score</span>' + (rowHalf(setup) ? '<span><kbd>.</kbd> half</span>' : '') : '<span>Type the score</span>') + '<button class="link" data-keys title="Every key">All keys <kbd>?</kbd></button></div>' + navHtml(st) + '</div>';
   $('#grade').innerHTML = h;
+  if (syncScoreStamps(st)) { for (const pg of pages) draw(pg); saveSoon(); }
 }
 // The comment that goes back with the score, with her saved comments one click away.
 const cmtHtml = g => '<div class="cmt"><textarea id="cmtIn" aria-label="Comment for ' + esc(sysOr('the student')) + '" placeholder="Comment for ' + esc(sysOr('the student')) + ' (optional). It shows on the Grades tab so you can copy it.">' + esc(g.comment) + '</textarea>' + cmtChips() + '</div>';
@@ -227,6 +228,21 @@ function scoreStampText(gr) {
   const max = gr.outOf != null ? gr.outOf : maxPoints();
   return fmtNum(gr.total) + (max ? '/' + fmtNum(max) : '') + (gr.pct != null ? ' = ' + gr.pct + '%' : '');
 }
+// Every score stamp on a paper says the score the app holds for that student, so the stamp, the score panel, the grade sheet
+// and the export all show one number. A stamp placed earlier changes when the score does (more points, extra credit, a retake).
+// Stamps on an earlier try's paper keep that try's words. With no score in the app, a stamp keeps what it says. True when one changed.
+function syncScoreStamps(st) {
+  if (!st || noScore(st)) return false;
+  const gr = gradeOf(st);
+  if (gr.total == null || gr.paper) return false;   // a score read off the paper itself isn't the app's own
+  const text = scoreStampText(gr);
+  let changed = false;
+  for (const f of st.files) {
+    if (!f.marks || tryOfFile(st, f)) continue;
+    for (const l of Object.values(f.marks)) for (const m of l || []) if (m.t === 'stamp' && m.k === 'score' && m.text !== text) { m.text = text; changed = true; }
+  }
+  return changed;
+}
 // The score on the paper: read from typed text, or typed by her on the Grade sheet from the picture.
 function paperScore(st) {
   if (st.found && st.found.found && st.found.score != null) return st.found.score;
@@ -238,12 +254,14 @@ $('#grade').addEventListener('click', e => {
   const b = e.target.closest('.scores button');
   if (b) {
     const st = batch.students[cur], i = +b.closest('.scores').dataset.c, v = +b.dataset.v;
+    gradeSnap(st);
     st.grade.rubric[i] = st.grade.rubric[i] === v ? null : v;
     scoreTouched(st, i); rowOn = lvAt = i; rowKeyed = -1;
     renderGrade(); renderList(); saveSoon(); return;
   }
   const rn = e.target.closest('.crit .cn'); if (rn) return rowPick(+rn.parentNode.dataset.row);
-  const sb = e.target.closest('[data-status]'); if (sb) return setStatus(batch.students[cur], sb.dataset.status);
+  const sb = e.target.closest('[data-status]'); if (sb) { gradeSnap(batch.students[cur]); return setStatus(batch.students[cur], sb.dataset.status); }
+  const ab = e.target.closest('[data-anchor]'); if (ab) return setAnchor(batch.students[cur], ab.dataset.anchor);
   if (e.target.closest('#outAvg, [data-outoff]')) return setOutAvg(batch.students[cur]);
   if (e.target.closest('[data-gxc]')) { kmClose(); return xcStart(batch.students[cur]); }
   { const u = e.target.closest('[data-xcu]'); if (u) return xcUnitSet(batch.students[cur], u.dataset.xcu); }
@@ -268,6 +286,7 @@ $('#grade').addEventListener('click', e => {
 function slideTo(r, v) {
   const st = batch.students[cur], i = +r.closest('.scores').dataset.c;
   if (st.grade.rubric[i] === v && !r.classList.contains('unset')) return;
+  if (!slideSnap) { gradeSnap(st); slideSnap = true; }   // one step for a whole drag, however many scores it passed over
   st.grade.rubric[i] = v; scoreTouched(st, i);
   r.classList.remove('unset'); r.setAttribute('aria-valuetext', fmtNum(v) + ' out of ' + rowTop(setup, i)); r.style.setProperty('--k', r.value);
   const crit = r.closest('.crit'), em = crit.querySelector('.cn em'); if (em) em.innerHTML = critScore(v, i);
@@ -278,8 +297,8 @@ function slideTo(r, v) {
   renderList(); saveSoon();
 }
 // After the mouse, focus leaves the slider so ← → go on moving between students. After the keyboard, it stays.
-let slidePtr = false;
-function slideDone(r) { const i = r.closest('.scores').dataset.c, kb = !slidePtr; slidePtr = false; renderGrade(); const again = $('#grade .scores[data-c="' + i + '"] .srange'); if (again && kb) again.focus({ preventScroll: true }); }
+let slidePtr = false, slideSnap = false;
+function slideDone(r) { slideSnap = false; const i = r.closest('.scores').dataset.c, kb = !slidePtr; slidePtr = false; renderGrade(); const again = $('#grade .scores[data-c="' + i + '"] .srange'); if (again && kb) again.focus({ preventScroll: true }); }
 $('#grade').addEventListener('pointerdown', e => { if (e.target.closest && e.target.closest('.srange')) slidePtr = true; });
 $('#grade').addEventListener('input', e => { if (e.target.classList.contains('srange')) slideTo(e.target, rowSteps(setup, +e.target.closest('.scores').dataset.c)[+e.target.value]); });
 $('#grade').addEventListener('change', e => { if (e.target.classList.contains('srange')) slideDone(e.target); });
@@ -293,6 +312,7 @@ $('#grade').addEventListener('keydown', e => {
   if (!e.target.classList || !e.target.classList.contains('srange') || (e.key !== 'Delete' && e.key !== 'Backspace')) return;
   e.preventDefault(); e.stopPropagation();
   const st = batch.students[cur], i = +e.target.closest('.scores').dataset.c; if (st.grade.rubric[i] == null) return;
+  gradeSnap(st);
   st.grade.rubric[i] = null; scoreTouched(st, i); renderList(); saveSoon(); slideDone(e.target);
 });
 // Tab into a row's slider, and that row is the one in hand.
@@ -329,6 +349,7 @@ function scoreKey(e, onRange) {
     e.preventDefault();
     if (i < 0) { toast('Every row has a score. To change one, press Tab or click the row first.'); return true; }
     if (+e.key > rowTop(setup, i)) { toast('This row goes up to ' + rowTop(setup, i) + '.'); return true; }
+    gradeSnap(st);
     st.grade.rubric[i] = +e.key; scoreTouched(st, i);
     rowKeyed = i; rowOn = lvAt = Math.min(i + 1, n - 1);
     redraw(rowOn); return true;
@@ -338,16 +359,20 @@ function scoreKey(e, onRange) {
     const to = v % 1 ? Math.floor(v) : v + 0.5;
     e.preventDefault();
     if (!rowSteps(setup, rowKeyed).includes(to)) { toast('There’s no ' + fmtNum(to) + ' on this scale.'); return true; }
+    gradeSnap(st);
     st.grade.rubric[rowKeyed] = to; scoreTouched(st, rowKeyed);
     redraw(rowOn); return true;
   }
   return false;
 }
+let ptsSnapFor = null;
+$('#grade').addEventListener('focusout', e => { if (e.target.id === 'ptsIn') ptsSnapFor = null; });
 $('#grade').addEventListener('input', e => {
   const st = batch.students[cur];
   if (e.target.id === 'cmtIn') { st.grade.comment = e.target.value; touchGrade(st); saveSoon(); }
   if (e.target.id === 'xcIn') xcSet(st, e.target.value);
   if (e.target.id === 'ptsIn') {
+    if (ptsSnapFor !== e.target) { gradeSnap(st); ptsSnapFor = e.target; }   // one step for a visit to the box, not one a keystroke
     st.grade.points = e.target.value; const was = st.grade.status; scoreTouched(st); saveSoon(); renderList();
     if (was !== st.grade.status) { $('#gstat').outerHTML = statusHtml(st); }
     $('#grade .total').innerHTML = totalHtml(st);

@@ -24,6 +24,19 @@ function touchGrade(st, rowIndex) {
   if (rowIndex !== 'points' && g.at && g.points !== '' && g.points != null && !(g.atR && g.atR.points)) (g.atR ||= {}).points = g.at;   // a points score from before these times were kept: when it last changed is the last we know of
   g.at = t;
   if (rowIndex != null) (g.atR ||= {})[rowIndex] = t;
+  stampSoon(st);
+}
+// Any change to a score: once it has settled, the score stamps on that student's paper say the new score (syncScoreStamps, panels.js).
+const stampWait = new Set();
+function stampSoon(st) {
+  if (stampWait.has(st)) return;
+  stampWait.add(st);
+  setTimeout(() => {
+    stampWait.delete(st);
+    if (!batch || !batch.students.includes(st) || !syncScoreStamps(st)) return;
+    if (st === batch.students[cur]) for (const pg of pages) draw(pg);
+    saveSoon();
+  }, 0);
 }
 // She gave a real score, so a student marked missing or excused isn't any more.
 function liftStatus(st) {

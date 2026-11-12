@@ -78,6 +78,8 @@ function ibEvidence(list) {
   if (!ev.length) return { n: 0, hint: null, last: null, high: null };
   return { n: ev.length, hint: ev[ev.length - 1].v, last: ev[ev.length - 1].v, high: Math.max(...ev.map(e => e.v)) };
 }
+// A new class starts the way its teacher grades: MYP for a teacher who said so in the welcome or Settings, else points and percent.
+function classNewWay() { const g = meGrade(); return g && g.way === 'myp' ? { way: 'myp' } : {}; }
 function ibPill(c) { const w = classWay(c); return w ? '<span class="ibpill" title="' + (w === 'myp' ? 'This class is graded with IB MYP criteria' : 'This class is graded as an IB DP class') + '">' + (w === 'myp' ? 'MYP' : 'DP') + '</span>' : ''; }
 function ibClassBtn(c, ci) { return '<button class="btn sm" data-ib-class="' + ci + '">Grading</button>'; }
 
@@ -411,4 +413,4 @@ async function ibTaskSave() {
   toast('This task assesses ' + crit.map(x => x.k).join(', '));
 }
 document.addEventListener('click', e => { if (e.target.closest('#ibTaskSet')) ibTaskDlg(); });
-Object.assign(window.__gs, { classWay, ibCrit, ibBounds, ibBoundsFor, ibGradeOf, ibTerm, ibEvidence, ibLevel, ibDlg, IB_GROUPS, ibCols, ibMid, ibSetup, ibTaskDlg, ibk: () => ibk });
+Object.assign(window.__gs, { classWay, ibCrit, ibBounds, ibBoundsFor, ibGradeOf, ibTerm, ibEvidence, ibLevel, ibDlg, IB_GROUPS, ibCols, ibMid, ibSetup, ibTaskDlg, classNewWay, GRADE_WAYS, ibk: () => ibk });

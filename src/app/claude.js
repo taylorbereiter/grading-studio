@@ -66,9 +66,10 @@ function labelCovers(items, cover) {
 }
 // opts, for the check and the ZIP: { common, own, parts } from shareOpts. With it, what comes right after a Name label is always covered, and a lone word that's
 // only a classmate's name by its letters (typed small, or on many papers of the class, like a word from the task) isn't.
+// Off unless she turns on finding names in Settings (11/11: it covered too many words that weren't names), so only her own boxes cover.
 async function autoCovers(page, vp, rx, xf, opts) {
   const out = [];
-  if (!rx) return out;
+  if (!rx || !nameFindOn()) return out;
   const tc = await page.getTextContent();
   const cover = (it, from, n, tall) => {
     const tx = pdfjsLib.Util.transform(vp.transform, it.transform), fh = Math.hypot(tx[2], tx[3]) || 10, run = Math.hypot(tx[0], tx[1]) || 1;
@@ -147,15 +148,17 @@ function keptCovers(cs, path, p, W, H) {
 }
 const scrubMarks = (marks, rx) => marks.map(m => m.text != null ? { ...m, text: scrub(m.text, rx) } : m);
 // Renders one page the way Claude will see it: her marks (names scrubbed from her text) and black covers.
-async function sharePage(st, f, js, p, scale, rx, opts) {
+// look, for a strong example: { bare: leave her marks off, light: with the page's lighting }.
+async function sharePage(st, f, js, p, scale, rx, opts, look) {
   const page = await js.getPage(p + 1);
   const vp = vpRot(f, p, page, 1), W = vp.width, H = vp.height;
-  const marks = scrubMarks((f.marks[p] || []).concat((f.kami && f.kami[p] && f.kami[p].notes) || []), rx);
+  const marks = look && look.bare ? [] : scrubMarks((f.marks[p] || []).concat((f.kami && f.kami[p] && f.kami[p].notes) || []), rx);
   const side = marks.some(m => m.t === 'note') ? sideFor(W) : 0;
   const c = document.createElement('canvas');
   c.width = Math.ceil((W + side) * scale); c.height = Math.ceil(H * scale);
   const ctx = c.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
   await page.render({ canvasContext: ctx, ...vpDraw(f, p, page, scale), annotationMode: pdfjsLib.AnnotationMode.ENABLE }).promise;
+  if (look && look.light) { const L = lightForPage(st, f, p); if (L) lightCanvas(ctx, Math.ceil(W * scale), c.height, L); }
   scanClip(ctx, f, p, W * scale, c.width, c.height);
   ctx.setTransform(scale, 0, 0, scale, 0, 0);
   drawMarks(ctx, marks, W, H, side, null);
@@ -165,7 +168,7 @@ async function sharePage(st, f, js, p, scale, rx, opts) {
   page.cleanup();
   return { c, W, H, side, covers, gone: auto.gone };
 }
-const shareDocs = st => layoutOf(st).filter(d => docIn(st, d)).map(d => ({ ...d, pages: d.pages.filter(([path]) => { const f = fileByPath(st, path); return f && !f.virtual && viewable(f); }) })).filter(d => d.pages.length);
+const shareDocs = (st, all) => layoutOf(st).filter(d => all || docIn(st, d)).map(d => ({ ...d, pages: d.pages.filter(([path]) => { const f = fileByPath(st, path); return f && !f.virtual && viewable(f); }) })).filter(d => d.pages.length);
 
 function openShare() {
   saveNow(); commitEditors(); shareState(); saveSoon();
@@ -174,8 +177,8 @@ function openShare() {
     '<div id="shPapers"><p style="margin-top:0">This makes a ZIP you can give to Claude with <b>no names in it</b><span id="shPromise">' + esc(namePromise()) + '</span>. <span id="shWho"></span> The list of who is who stays only in this browser.</p>' +
     '<details class="cclist" style="margin:0 0 12px"><summary>What goes in it</summary><ul style="list-style:disc;margin:6px 0 0;padding-left:20px;line-height:1.55;max-height:none">' +
     '<li>Every page becomes a picture, so no hidden text or file details go with it.</li>' +
-    '<li>Names are covered in black wherever they’re typed on the page' + (batchClass() ? ' (folder names and your roster names)' : ' (from the folder names)') + ', and in any Kami box that has a name.</li>' +
-    '<li>Email addresses and long ID numbers typed on the page are covered too.</li>' +
+    (nameFindOn() ? '<li>Names are covered in black wherever they’re typed on the page' + (batchClass() ? ' (folder names and your roster names)' : ' (from the folder names)') + ', and in any Kami box that has a name.</li>' +
+    '<li>Email addresses and long ID numbers typed on the page are covered too.</li>' : '<li>Names are covered where you box them in Check the covers.</li>') +
     '<li>Your scores, rubric and comments go too, with names swapped for [name].</li>' +
     '<li><b>Only PDFs and pictures go in.</b> A Word file stays out until it’s PDF pages: Convert to PDF on the Word paper’s bar makes them.</li></ul></details>' +
     '<div id="shSteps"></div>' +
@@ -201,10 +204,11 @@ function openShare() {
 }
 
 // Paper by paper: every page with its covers; drag to add a cover, click one of yours to remove it.
-async function checkCovers(start, onDone) {
+// all: every paper, for anonymous grading. Without it, the papers that go in the ZIP for Claude.
+async function checkCovers(start, onDone, all) {
   await ensureCounts();
   await classCommon();
-  const list = coverList();
+  const list = coverList(all);
   if (!list.length) return toast('No papers to share');
   let pos = Math.min(start || 0, list.length - 1), token = 0, last = null, drawn = 0;
   let find = '', only = 'all', undo = [];
@@ -214,7 +218,7 @@ async function checkCovers(start, onDone) {
     '<span class="seg ccseg"><button data-ccf="all"></button><button data-ccf="todo"></button><button data-ccf="flag"></button></span></div>' +
     '<ul class="ccrows" id="ccRows"></ul><div class="ccalldone" id="ccAllDone" hidden>✓ Every paper is checked.</div></aside>' +
     '<div class="bb" id="ccBody"></div></div>' +
-    '<div class="bf" style="justify-content:space-between"><span class="muted" style="font-size:13px;align-self:center;max-width:46%">Drag a box over a name it missed. Click any black box that isn’t a name to take it off, and click a dashed one to put it back. ' + keyLabel('⌘Z') + ' takes back the last change.</span><span style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end"><button class="btn" data-every hidden>Use my last box on every paper</button><button class="btn" data-back>◀ Back</button><button class="btn primary" data-next>Next ▶</button></span></div>');
+    '<div class="bf" style="justify-content:space-between"><span class="muted" style="font-size:13px;align-self:center;max-width:46%">Drag over a name to cover it. Click a box to take it off. ' + keyLabel('⌘Z') + ' undoes.</span><span style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end"><button class="btn" data-every hidden>Use my last box on every paper</button><button class="btn" data-back>◀ Back</button><button class="btn primary" data-next>Next ▶</button></span></div>');
   const box = $('#dlgBox');
   box.classList.add('ccbox');
   const finish = () => { if (eachKeys) document.removeEventListener('keydown', eachKeys, true); eachKeys = null; saveSoon(); (onDone || openShare)(); };
@@ -241,9 +245,10 @@ async function checkCovers(start, onDone) {
   }
   // Her own boxes on a paper.
   const boxCount = d => d.pages.reduce((n, [path, p]) => n + ((shareState().boxes[boxKey(path, p)] || []).length), 0);
-  const codeLine = x => codeOf(x.st) + (x.k ? '-' + (x.k + 1) : '');
+  // The code a paper goes to Claude under. Anonymous grading has no use for it.
+  const codeLine = x => all ? '' : codeOf(x.st) + (x.k ? '-' + (x.k + 1) : '');
   // The papers that show in the list, with what she typed and the Not checked filter.
-  const flagOf = x => coverOk(x.st, x.d) ? '' : nameFlag(x.st, x.d).replace(/, check this one$/, '');
+  const flagOf = x => coverOk(x.st, x.d) ? '' : nameFlag(x.st, x.d);
   const shown = () => {
     const q = find.trim().toLowerCase();
     return list.map((x, i) => i).filter(i => (only === 'all' || (only === 'todo' ? !coverOk(list[i].st, list[i].d) : !!flagOf(list[i]))) && (!q || (coverName(list[i].st, list[i].k) + ' ' + codeLine(list[i])).toLowerCase().includes(q)));
@@ -270,7 +275,7 @@ async function checkCovers(start, onDone) {
   }
   async function show() {
     const my = ++token, { st, d, k } = list[pos], rx = coverRx(st);
-    $('#ccTitle').textContent = coverName(st, 0) + ' → ' + codeOf(st) + (k ? '-' + (k + 1) : '');
+    $('#ccTitle').textContent = all ? coverName(st, k) : coverName(st, 0) + ' → ' + codeOf(st) + (k ? '-' + (k + 1) : '');
     head(); rows();
     $('#ccCount').textContent = 'paper ' + (pos + 1) + ' of ' + list.length;
     box.querySelector('[data-back]').disabled = pos === 0;
@@ -326,8 +331,11 @@ async function checkCovers(start, onDone) {
         body.appendChild(c);
         if (pg0) pg0.cleanup();
       }
-      if (my === token) drawn = my;
-    } finally { for (const v of js.values()) v.destroy(); }
+    } catch (er) {
+      // A page that won't draw mustn't hold up the rest: she's told, and can still move on.
+      console.error(er);
+      if (my === token) body.insertAdjacentHTML('beforeend', '<p class="muted" style="text-align:center">This page couldn’t be shown.</p>');
+    } finally { if (my === token) drawn = my; for (const v of js.values()) v.destroy(); }
   }
   // Up and down go through the list as it's shown, filtered or not.
   const step = dd => { const vis = shown(); if (!vis.length) return; const at = vis.indexOf(pos); const to = at < 0 ? vis.find(i => dd > 0 ? i > pos : i < pos) : vis[at + dd]; if (to == null || to === pos) return; pos = to; show(); };

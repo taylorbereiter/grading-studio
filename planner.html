@@ -134,7 +134,7 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
   --stage:#0B0D12; --stage-fg:#F3F4F7; --stage-muted:#A9B0C0; --stage-bar:#1B1F29; --stage-line:#3A4150; --stage-hover:#2C3342;
   --stage-blue:#1A67A8; --stage-blue-2:#15568C; --stage-blue-soft:#E6F0F9; --stage-paper:#FFFFFF; --stage-ink:#1E2024; --stage-ink-2:#5C616A;
   /* colour: charts and the gradebook (types of assignment, the five steps of a heat map, up and down, the dot plot) */
-  --bk-sum:#164E80; --bk-ic:#6FA3D2; --bk-fm:#8A919E; --ch1:#8FB5DC; --ch2:#5F96CB; --ch3:#3478B7; --ch4:#1A5D9A; --ch5:#0F3F6C; --ch-lo:#0D2740; --ch-hi:#FFFFFF; --ch-up:#1A67A8; --ch-down:#B4610F; --ch-band:#DCE7F3; --dot:var(--accent); --ov-bar:#1A67A8; --ov-mute:#8A919E;
+  --bk-sum:#164E80; --bk-ic:#6FA3D2; --bk-fm:#8A919E; --bk-k1:#0F7C82; --bk-k2:#6A55B0; --bk-k3:#A8590F; --bk-k4:#8A3F7D; --bk-k5:#4B5563; --ch1:#8FB5DC; --ch2:#5F96CB; --ch3:#3478B7; --ch4:#1A5D9A; --ch5:#0F3F6C; --ch-lo:#0D2740; --ch-hi:#FFFFFF; --ch-up:#1A67A8; --ch-down:#B4610F; --ch-band:#DCE7F3; --dot:var(--accent); --ov-bar:#1A67A8; --ov-mute:#8A919E;
 }
 :root[data-theme="dark"]{
   --bg:#0F1117; --surface:#171A22; --surface-2:#1E222C; --hover:#272C38; --track:#343A47; --line:#2A2F3B; --line-strong:#454C5B;
@@ -143,7 +143,7 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
   --warn:#E8B451; --warn-soft:#352A14; --ok:#4FC690; --ok-soft:#15302A; --bad:#FF7A64; --bad-soft:#3A1E1A; --warn-fg:#1C1405;
   --paper-chip:#1E222C;
   --shadow:0 1px 2px rgba(0,0,0,.3),0 4px 14px rgba(0,0,0,.25);
-  --bk-sum:#7FB2E0; --bk-ic:#3F78AE; --bk-fm:#6B7280; --ch1:#3A6590; --ch2:#4A80B5; --ch3:#5E9AD1; --ch4:#84B5E2; --ch5:#B3D3F0; --ch-lo:#FFFFFF; --ch-hi:#0B1F33; --ch-up:#4A93D6; --ch-down:#C98230; --ch-band:#22324A; --dot:#4A9ADF; --ov-bar:#4793D4; --ov-mute:#6B7280;
+  --bk-sum:#7FB2E0; --bk-ic:#3F78AE; --bk-fm:#6B7280; --bk-k1:#4FC1C7; --bk-k2:#A99BE6; --bk-k3:#E0A052; --bk-k4:#D18BC5; --bk-k5:#A5ADBA; --ch1:#3A6590; --ch2:#4A80B5; --ch3:#5E9AD1; --ch4:#84B5E2; --ch5:#B3D3F0; --ch-lo:#FFFFFF; --ch-hi:#0B1F33; --ch-up:#4A93D6; --ch-down:#C98230; --ch-band:#22324A; --dot:#4A9ADF; --ov-bar:#4793D4; --ov-mute:#6B7280;
   color-scheme:dark;
 }
 
@@ -670,13 +670,15 @@ body.has-side .lsn{margin-right:var(--sidew,420px)}
 .pr-menu{position:absolute;left:50%;bottom:calc(var(--nb,0px) + var(--space-4) + 56px);transform:translateX(-50%);z-index:6;width:min(340px,calc(100vw - var(--space-5)));padding:var(--space-3);
   background:var(--stage-bar);border:1px solid var(--stage-line);border-radius:var(--corner-5);box-shadow:var(--shadow);font-size:var(--text-control)}
 .pr-menu h3{margin:0 0 var(--space-2);font-size:var(--text-control);font-weight:600;color:var(--stage-muted)}
-.pr-mins{display:grid;grid-template-columns:repeat(6,1fr);gap:var(--space-1)}
+.pr-mins{display:grid;grid-template-columns:1.4fr repeat(6,1fr);gap:var(--space-1)}
+.pr-adj{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--space-1);margin-bottom:var(--space-2)}
 .pr-menu button{border:1px solid var(--stage-line);background:none;color:var(--stage-fg);border-radius:var(--corner-3);padding:var(--space-2);font-weight:600}
 .pr-menu button:hover{background:var(--stage-hover)}
 .pr-own{display:flex;gap:var(--space-2);align-items:center;margin-top:var(--space-3);color:var(--stage-muted)}
-.pr-own input[type=number]{width:64px;border:1px solid var(--stage-line);background:var(--stage);color:var(--stage-fg);border-radius:var(--corner-3);padding:var(--space-2)}
+.pr-own label{display:flex;gap:var(--space-1);align-items:center}
+.pr-own input[type=number]{width:60px;border:1px solid var(--stage-line);background:var(--stage);color:var(--stage-fg);border-radius:var(--corner-3);padding:var(--space-2)}
 .pr-own .sp{flex:1}
-.pr-run{display:flex;gap:var(--space-2);flex-wrap:wrap}
+.pr-run{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--space-1)}
 .pr-snd{display:flex;gap:var(--space-2);align-items:center;margin-top:var(--space-3);color:var(--stage-muted)}
 
 /* the countdown the class watches */
@@ -685,7 +687,12 @@ body.has-side .lsn{margin-right:var(--sidew,420px)}
 .pr-chip.done{background:var(--stage-paper);color:var(--stage-blue);animation:prPulse 1s ease-in-out 6}
 .pr-chip small{display:block;font:600 1.9vh/1.3 var(--f-body);letter-spacing:0;opacity:.85}
 @keyframes prPulse{50%{transform:scale(1.06)}}
-@media (prefers-reduced-motion:reduce){.pr-chip.done{animation:none}.pr-bar{transition:none}}
+/* big: in the middle of the screen, for the back of the room */
+.pr-chip.big{top:50%;right:auto;left:50%;transform:translate(-50%,-50%);padding:3vh 6vh;font-size:32vh;border-radius:var(--corner-5)}
+.pr-chip.big small{font-size:4vh}
+.pr-chip.big.done{font-size:20vh;animation:prPulseBig 1s ease-in-out 6}
+@keyframes prPulseBig{50%{transform:translate(-50%,-50%) scale(1.04)}}
+@media (prefers-reduced-motion:reduce){.pr-chip.done,.pr-chip.big.done{animation:none}.pr-bar{transition:none}}
 
 /* the agenda: a light panel over the left of the slide */
 .pr-agenda{position:absolute;left:0;top:0;bottom:0;z-index:4;width:min(52vw,100vh);background:var(--stage-paper);color:var(--stage-ink);padding:5vh 4vh 96px;overflow:auto;box-shadow:0 0 6vh rgba(0,0,0,.45);display:flex;flex-direction:column;gap:1.2vh}
@@ -723,6 +730,18 @@ body.has-side .lsn{margin-right:var(--sidew,420px)}
 .pl-tgd select,.pl-tgd input{justify-content:flex-start;text-align:left;width:100%}
 .pl-tgd input{cursor:text}
 .pl-tgd .who{margin:0 0 var(--space-3);font-weight:600}
+
+/* the timer after presenting: a small box in the corner of the Planner (prFloat in src/planner/present.js) */
+.prf{position:fixed;right:var(--space-5);bottom:var(--space-5);z-index:55;display:flex;align-items:stretch;background:var(--surface);color:var(--accent);border:1px solid var(--line);border-radius:var(--corner-4);box-shadow:var(--shadow);overflow:hidden}
+.prf button{border:0;background:none;color:inherit;font:inherit}
+.prf-t{padding:var(--space-2) var(--space-4);font:700 var(--text-title)/1.1 var(--f-display);font-variant-numeric:tabular-nums;text-align:left}
+.prf-t small{display:block;font:600 var(--text-caption)/1.3 var(--f-body);color:var(--muted)}
+.prf-x{padding:0 var(--space-3);border-left:1px solid var(--line);color:var(--muted);font-size:var(--text-lead)}
+.prf button:hover{background:var(--hover)}
+.prf.paused{color:var(--fg)}
+.prf.done{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.prf.done .prf-x{color:var(--accent-fg);border-color:var(--accent-hover)}
+.prf.done button:hover{background:var(--accent-hover)}
 /* ---------- Pick a name, make groups: what the class reads (src/pickshare.js), built into both pages ----------
    The same stage as a presented lesson: dark around, a light card for the words, sized by the height of the screen. */
 .pk{position:fixed;inset:0;z-index:70;background:var(--stage);color:var(--stage-fg);display:flex;flex-direction:column;outline:none;user-select:none;-webkit-user-select:none}
@@ -735,7 +754,25 @@ body.has-side .lsn{margin-right:var(--sidew,420px)}
 .pk-groups{flex:1;min-height:0;width:100%;display:grid;grid-template-columns:repeat(var(--cols),minmax(0,1fr));gap:1.6vh;align-content:center;font-size:var(--fs)}
 .pk-g{background:var(--stage-paper);color:var(--stage-ink);border-radius:var(--corner-5);padding:.7em 1em .8em;text-align:left;line-height:1.3;font-weight:500;overflow:hidden}
 .pk-g h3{margin:0 0 .25em;font-size:.72em;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--stage-blue)}
-.pk-g div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pk-g{position:relative;min-height:4.2em}
+/* a name in a group can be dragged to another, or clicked and then put where the next click says */
+.pk-s{margin:0 -.3em;padding:0 .3em;border-radius:var(--corner-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:grab;touch-action:none}
+.pk-s:hover{background:var(--stage-blue-soft)}
+.pk-s.sel{background:var(--stage-blue);color:var(--stage-paper)}
+.pk-s.pk-from{opacity:.3}
+.pk-ghost{position:fixed;left:0;top:0;z-index:5;margin:0;width:max-content;padding:.1em .6em;pointer-events:none;background:var(--stage-paper);color:var(--stage-ink);font-weight:600;box-shadow:var(--shadow);cursor:grabbing}
+.pk-dragging,.pk-dragging *{cursor:grabbing}
+.pk-g.pk-over,.pk-pool.pk-over{box-shadow:0 0 0 .6vh var(--stage-blue)}
+.pk-empty{margin:0;font-size:.8em;color:var(--stage-ink-2)}
+.pk-gx{position:absolute;top:.3em;right:.4em;border:0;background:none;color:var(--stage-ink-2);font:inherit;font-size:.8em;line-height:1;padding:.2em .4em;border-radius:var(--corner-2)}
+.pk-gx:hover{background:var(--stage-blue-soft)}
+/* students not in a group yet, when the groups are made by hand */
+.pk-pool{width:100%;flex:none;background:var(--stage-bar);border:1px dashed var(--stage-line);border-radius:var(--corner-5);padding:.5em 1em;text-align:left;font-size:calc(var(--fs) * .8)}
+.pk-pool h3{margin:0 0 .3em;font-size:.72em;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--stage-muted)}
+.pk-pl{display:flex;flex-wrap:wrap;gap:.3em .5em}
+.pk-pool .pk-s{margin:0;padding:.1em .6em;background:var(--stage-paper);color:var(--stage-ink);font-weight:500}
+.pk-pool .pk-s.sel{background:var(--stage-blue);color:var(--stage-paper)}
+.pk-pool .pk-empty{color:var(--stage-muted)}
 
 /* the bar: for the teacher */
 .pk-bar{flex:none;align-self:center;display:flex;align-items:center;flex-wrap:wrap;justify-content:center;gap:var(--space-1);margin:var(--space-4);padding:var(--space-1) var(--space-2);max-width:calc(100vw - var(--space-5));
@@ -781,6 +818,8 @@ body.has-side .lsn{margin-right:var(--sidew,420px)}
   <a class="rbrand" data-gs="#/" href="./#/" aria-label="Grading Studio, Today"><span class="rl">Grading <i>Studio</i></span><span class="rs" aria-hidden="true">G<i>S</i></span></a>
   <button class="rfind" id="findBtn" aria-haspopup="dialog" title="Find a lesson, a unit, a class or a setting"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5"/></svg><span class="rl">Find anything</span><kbd class="rl" id="findKey">Ctrl K</kbd></button>
   <a class="rnav" data-gs="#/" href="./#/" title="Today: what you teach, what is waiting to be marked, what is ready to hand back"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.6"/><path d="M12 3v2.2M12 18.8V21M3 12h2.2M18.8 12H21M5.6 5.6l1.6 1.6M16.8 16.8l1.6 1.6M5.6 18.4l1.6-1.6M16.8 7.2l1.6-1.6"/></svg><span class="rl">Today</span></a>
+  <a class="rnav" data-gs="#/todo" href="./#/todo" title="To do: your own list, with what the app noticed from your work"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span class="rl">To do</span></a>
+  <a class="rnav" data-gs="#/school" href="./#/school" title="School resources: links, files and notes about your school"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 20.5h17M5.5 20.5v-9M18.5 20.5v-9M3.5 11.5L12 5l8.5 6.5M10 20.5v-5h4v5M12 5V3h3"/></svg><span class="rl">School</span></a>
   <div class="rcap"><span class="rl">Planner</span></div>
   <a class="rnav on" id="railPlanner" data-v="cal" href="#week" aria-current="page" title="Calendar: your lessons by week, or the whole semester"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M8 3v4M16 3v4"/></svg><span class="rl">Calendar</span></a>
   <button class="rnav" data-v="units" title="Units: each unit, its weeks and its files"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4l8 4-8 4-8-4 8-4zM4 12l8 4 8-4M4 16l8 4 8-4"/></svg><span class="rl">Units</span></button>
@@ -1832,6 +1871,7 @@ async function openLessons() {
   renderLessons();
   arriveAt();
   await folderReconnect(false);
+  await yearMoveOn();
 }
 function renderLessons() {
   if (L.view === 'doc' && L.doc) return renderDoc();
@@ -2073,7 +2113,7 @@ async function onLessonsClick(e) {
   if (!l) return;
   if (a === 'pptx') { editorCommit(); return finOrMake(l); }
   if (a === 'ask') { editorCommit(); return askClaude(l); }
-  if (a === 'mexport' || a === 'mcopyto' || a === 'mcopy' || a === 'mdelete') return moreDo(a, t, l);
+  if (a === 'mshare' || a === 'mexport' || a === 'mcopyto' || a === 'mcopy' || a === 'mdelete') return moreDo(a, t, l);
   if (a === 'addslot') return addSlotDlg();
   if (a === 'pic') return pickPicture();
   if (a === 'addslide') return addSlideDlg();
@@ -2130,6 +2170,8 @@ async function onLessonDrop(e) {
   const got = {}; for (const k of ['text/html', 'text/uri-list', 'text/plain']) got[k] = e.dataTransfer.getData(k);
   const dt = { getData: k => got[k] || '', files: [...(e.dataTransfer.files || [])] };
   const zf = [...(e.dataTransfer.files || [])].find(f => /\.zip$/i.test(f.name));
+  const sf = [...(e.dataTransfer.files || [])].find(isShareFile);
+  if (sf) return shareOpen(sf);
   if (await finishedDrop(e)) return;
   if (zf && !(e.target.closest && e.target.closest('[data-owner]'))) return packImport(zf);
   if (e.target.closest && e.target.closest('.pl-ask') && L.open) { const fs = [...(e.dataTransfer.files || [])].filter(f => /^image\//.test(f.type)); if (fs.length) return addCtxShots(fs); }
@@ -2331,7 +2373,8 @@ function moreHtml(l) {
     it('finzip', 'Upload lesson .zip', 'The finished PowerPoint and its files, as one .zip') + '<hr>' +
     (titleSlideOf(l) ? it('tlink', linked ? 'Name matches the title slide ✓' : 'Match the name to the title slide', linked ? 'Click to let them be different' : 'They are different now', linked ? 'on' : '') : '') +
     (a ? '<a class="mi" role="menuitem" href="' + esc(a.url) + '" target="_blank" rel="noopener">Open ' + link + ' ↗<small>' + (a.own ? 'This lesson’s own page' : 'The page of ' + esc(a.unit)) + '</small></a>' + it('atlas', 'Change the ' + link + ' link') : it('atlas', '+ ' + link + ' link')) + '<hr>' +
-    it('mexport', 'Save lesson file…', 'A .lesson.json of just this lesson, for Claude. Bring Claude’s version back with Import') +
+    it('mshare', 'Share lesson file…', 'Opens as this lesson on another computer or for another teacher. Classes and taught notes stay here') +
+    it('mexport', 'Save lesson file for Claude…', 'A .lesson.json of just this lesson, for Claude. Bring Claude’s version back with Import') +
     it('mcopyto', 'Copy to another class or day…', 'A separate copy with its own slides and materials') +
     it('mcopy', 'Copy lesson as text', 'The slides and notes as plain text') +
     it('mdelete', 'Delete this lesson') + '</div></span>';
@@ -2356,6 +2399,7 @@ async function moreDo(a, t, l) {
     await lDelete(l); L.open = null; L.view = L.backTo || 'week'; renderLessons(); return toast('Lesson deleted');
   }
   moreClose();
+  if (a === 'mshare') return shareSave(l);
   if (a === 'mexport') return saveBlob(fileBase(l) + '.lesson.json', new Blob([JSON.stringify(lessonForFile(l, null), null, 2)], { type: 'application/json' }));
   if (a === 'mcopyto') return copyLessonDlg(l);
   if (a === 'mcopy') { await copyText(lessonText(l)); return toast('Copied'); }
@@ -2391,11 +2435,11 @@ async function askClaude(l) {
 
 /* ---------- import ---------- */
 function importLesson() {
-  openDlg('<div class="bh"><h2>Import a lesson</h2></div><div class="bb"><p class="muted" style="margin-top:0">Choose a .lesson.json file (from Claude or another computer), or a lesson pack (.zip) of past lessons with their files. You can also paste a lesson below. A lesson with the same id replaces the one here; a pack leaves lessons you already have alone.</p>' +
-    '<button class="btn" id="imF">Choose a file…</button><input type="file" id="imIn" accept=".json,application/json,.zip,application/zip" hidden><textarea id="imT" rows="8" style="width:100%;margin-top:10px" placeholder="Or paste the lesson here"></textarea></div>' +
+  openDlg('<div class="bh"><h2>Import a lesson</h2></div><div class="bb"><p class="muted" style="margin-top:0">Choose a lesson file (.gslesson, from another computer or another teacher), a .lesson.json from Claude, or a lesson pack (.zip) of past lessons with their files. You can also paste a lesson below. A .lesson.json with the same id replaces the one here; a lesson file or a pack never replaces a lesson you have.</p>' +
+    '<button class="btn" id="imF">Choose a file…</button><input type="file" id="imIn" accept=".gslesson,.json,application/json,.zip,application/zip" hidden><textarea id="imT" rows="8" style="width:100%;margin-top:10px" placeholder="Or paste the lesson here"></textarea></div>' +
     '<div class="bf"><button class="btn" data-x>Cancel</button><button class="btn primary" data-ok>Import pasted text</button></div>', true);
   $('#imF').onclick = () => $('#imIn').click();
-  $('#imIn').onchange = async () => { const f = $('#imIn').files[0]; if (!f) return; closeDlg(); if (/\.zip$/i.test(f.name)) return packImport(f); importLessonText(await f.text(), f.name); };
+  $('#imIn').onchange = async () => { const f = $('#imIn').files[0]; if (!f) return; closeDlg(); if (isShareFile(f)) return shareOpen(f); if (/\.zip$/i.test(f.name)) return packImport(f); importLessonText(await f.text(), f.name); };
   $('#dlgBox').onclick = e => { if (e.target.closest('[data-x]')) return closeDlg(); if (e.target.closest('[data-ok]')) { const v = $('#imT').value; closeDlg(); importLessonText(v, ''); } };
 }
 async function importLessonText(text, name) {
@@ -2426,6 +2470,7 @@ async function applySetup(j) {
   const setup = { classes: j.classes.map(c => ({ id: String(c.id), name: String(c.name || c.id), course: String(c.course || ''), color: /^#[0-9a-f]{6}$/i.test(c.color) ? c.color : '#1F6FB2', ...((u => u ? { mb: u } : {})(mbUrl(c.mb) || mbUrl(old(c.id).mb))), meets: (c.meets || []).map(m => ({ dow: +m.dow, start: String(m.start || ''), end: String(m.end || ''), label: String(m.label || '') })) })),
     daysOff: (j.daysOff || []).map(d => ({ date: String(d.date), label: String(d.label || 'No school') })), events: (j.events || []).map(e => ({ date: String(e.date), to: e.to ? String(e.to) : '', label: String(e.label || '') })),
     template: typeof j.template === 'string' ? j.template : (L.setup && L.setup.template) || '',
+    tplName: String(typeof j.template === 'string' ? (j.template ? j.tplName || 'Your template' : '') : (L.setup && L.setup.tplName) || '').slice(0, 120),
     semStart: /^\d{4}-\d\d-\d\d$/.test(j.semStart) ? ymd(mondayOf(parseYmd(j.semStart))) : '', semEnd: /^\d{4}-\d\d-\d\d$/.test(j.semEnd) ? ymd(mondayOf(parseYmd(j.semEnd))) : '',
     claudeUrl: /^https:\/\/claude\.ai\//.test(j.claudeUrl) ? String(j.claudeUrl) : '', profile: String(j.profile || '').slice(0, 80) };
   if (typeof j.sys === 'string' || typeof j.unitPlans === 'string' || (j.plain && !L.words)) { L.words = { sys: String(j.sys || '').slice(0, 40), unit: String(j.unitPlans || '').slice(0, 40) }; await kvSet('words', L.words); }
@@ -2441,18 +2486,49 @@ async function applySetup(j) {
   toast((setup.profile ? setup.profile + ' loaded: ' : 'Timetable loaded: ') + setup.classes.length + (setup.classes.length === 1 ? ' class' : ' classes') + (nu ? ', ' + nu + ' units' : '') + (setup.template ? ', your slide template' : ''), 5000);
   renderLessons();
 }
+async function readTemplate(file) {
+  if (!file) return null;
+  const say = m => { toast(m, 6000); return null; };
+  if (!/\.(pptx|potx)$/i.test(file.name)) return say('Pick a PowerPoint file (.pptx or .potx)');
+  if (file.size > 40 * 1024 * 1024) return say('That template is over 40 MB. Save a copy without its slides and pick that one.');
+  const u8 = new Uint8Array(await file.arrayBuffer());
+  let z; try { z = fflate.unzipSync(u8); } catch { return say('That file can’t be opened as a PowerPoint'); }
+  if (!z['ppt/presentation.xml']) return say('That file can’t be opened as a PowerPoint');
+  const lay = tplLayouts(z);
+  if (!lay.title || !lay.content) return say('That template needs a “Title Slide” and a “Title and Content” layout, which is where the slides go. PowerPoint’s own templates have both.');
+  let b = ''; for (let i = 0; i < u8.length; i += 0x8000) b += String.fromCharCode.apply(null, u8.subarray(i, i + 0x8000));
+  return { b64: btoa(b), name: file.name.replace(/\.(pptx|potx)$/i, '').slice(0, 120) };
+}
+function setupFileOf(d) {
+  return { kind: 'grading-studio-lessons-setup', version: 1, ...(L.setup && L.setup.profile ? { profile: L.setup.profile } : {}),
+    semStart: d.semStart || '', semEnd: d.semEnd || '', classes: d.classes, daysOff: d.daysOff, events: d.events, ...(d.claudeUrl ? { claudeUrl: d.claudeUrl } : {}),
+    ...(L.words ? { sys: L.words.sys || '', unitPlans: L.words.unit || '' } : {}), ...(L.defLook ? { look: L.defLook } : {}),
+    template: d.template || '', ...(d.template ? { tplName: d.tplName || '' } : {}) };
+}
 function openTimetable() {
   const s = L.setup || { classes: [], daysOff: [], events: [], template: '' };
   const draft = JSON.parse(JSON.stringify({ classes: s.classes, daysOff: s.daysOff, events: s.events, semStart: s.semStart || '', semEnd: s.semEnd || '', claudeUrl: s.claudeUrl || '' }));
+  draft.template = s.template || ''; draft.tplName = draft.template ? s.tplName || 'Your template' : '';
   const meetRow = (ci, mi, m) => '<div class="ls-mrow"><select data-m="dow" data-ci="' + ci + '" data-mi="' + mi + '" class="btn sm">' + [1, 2, 3, 4, 5, 6].map(d => '<option value="' + d + '"' + (+m.dow === d ? ' selected' : '') + '>' + LDAYS_LONG[d] + '</option>').join('') + '</select><input type="time" data-m="start" data-ci="' + ci + '" data-mi="' + mi + '" value="' + esc(m.start) + '" class="btn sm"> to <input type="time" data-m="end" data-ci="' + ci + '" data-mi="' + mi + '" value="' + esc(m.end) + '" class="btn sm"><input data-m="label" data-ci="' + ci + '" data-mi="' + mi + '" value="' + esc(m.label) + '" placeholder="Periods" class="btn sm" style="width:90px"><button class="btn sm ghost" data-delm="' + ci + '|' + mi + '">×</button></div>';
   const draw = () => {
     $('#ttBody').innerHTML = draft.classes.map((c, ci) => '<div class="ls-tc"><div class="ls-mrow"><input data-c="name" data-ci="' + ci + '" value="' + esc(c.name) + '" placeholder="Class name, like Period 2 Biology" class="btn sm" style="width:170px"><input data-c="course" data-ci="' + ci + '" value="' + esc(c.course) + '" placeholder="Course, like Biology" class="btn sm" style="width:130px" title="Classes with the same course share one deck"><input type="color" data-c="color" data-ci="' + ci + '" value="' + esc(c.color || '#1F6FB2') + '" aria-label="Color"><input data-c="mb" data-ci="' + ci + '" value="' + esc(mbOf(c)) + '" placeholder="' + esc(plSysLink()) + ' link (optional)" class="btn sm" style="width:220px;cursor:text"><span class="sp"></span><button class="btn sm ghost" data-delc="' + ci + '">Remove class</button></div>' +
       c.meets.map((m, mi) => meetRow(ci, mi, m)).join('') + '<button class="btn sm ghost" data-addm="' + ci + '">+ Meeting</button></div>').join('') +
       '<button class="btn sm" data-addc>+ Class</button><h3 style="margin:18px 0 6px;font-size:15px">Semester</h3><div class="ls-mrow"><label>First week <input type="date" id="ttS" class="btn sm" value="' + esc(draft.semStart) + '"></label><label>Last week <input type="date" id="ttE" class="btn sm" value="' + esc(draft.semEnd) + '"></label></div>' +
       '<h3 style="margin:18px 0 6px;font-size:15px">Days off</h3><textarea id="ttOff" rows="4" style="width:100%" placeholder="One per line: 2026-12-25 Christmas">' + esc(draft.daysOff.map(d => d.date + ' ' + d.label).join('\n')) + '</textarea>' +
-      '<h3 style="margin:14px 0 6px;font-size:15px">Dates to show (not days off)</h3><textarea id="ttEv" rows="4" style="width:100%" placeholder="One per line: 2026-11-09 to 2026-11-13 Midterms">' + esc(draft.events.map(e => e.date + (e.to ? ' to ' + e.to : '') + ' ' + e.label).join('\n')) + '</textarea>' ;
+      '<h3 style="margin:14px 0 6px;font-size:15px">Dates to show (not days off)</h3><textarea id="ttEv" rows="4" style="width:100%" placeholder="One per line: 2026-11-09 to 2026-11-13 Midterms">' + esc(draft.events.map(e => e.date + (e.to ? ' to ' + e.to : '') + ' ' + e.label).join('\n')) + '</textarea>' +
+      '<h3 style="margin:18px 0 6px;font-size:15px">Slide template</h3><div class="ls-mrow" id="ttTpl"><span class="' + (draft.template ? '' : 'muted') + '">' +
+      (draft.template ? 'Your own: ' + esc(draft.tplName) : 'The plain one built in: white, 16:9.') + '</span><button class="btn sm" data-tpl>' + (draft.template ? 'Pick another…' : 'Use my school’s template…') + '</button>' +
+      (draft.template ? '<button class="btn sm ghost" data-tplplain>Use the plain one</button>' : '') + '</div>' +
+      '<p class="muted" style="margin:4px 0 0;font-size:13px">A PowerPoint file (.pptx or .potx) with a Title Slide and a Title and Content layout. Downloads keep its masters and layouts.</p>';
   };
-  openDlg('<div class="bh"><h2>Timetable</h2><button class="btn sm" data-load>Load a setup file…</button></div><div class="bb" id="ttBody"></div><div class="bf"><button class="btn" data-x>Cancel</button><button class="btn primary" data-ok>Save</button></div>');
+  const collect = () => {
+    const lines = id => $(id).value.split('\n').map(x => x.trim()).filter(Boolean);
+    draft.daysOff = lines('#ttOff').map(x => { const m = /^(\d{4}-\d\d-\d\d)\s*(.*)$/.exec(x); return m && { date: m[1], label: m[2] || 'No school' }; }).filter(Boolean);
+    draft.events = lines('#ttEv').map(x => { const m = /^(\d{4}-\d\d-\d\d)(?:\s+to\s+(\d{4}-\d\d-\d\d))?\s*(.*)$/.exec(x); return m && { date: m[1], to: m[2] || '', label: m[3] }; }).filter(Boolean);
+    draft.semStart = $('#ttS').value; draft.semEnd = $('#ttE').value;
+  };
+  const classesOut = () => draft.classes.filter(c => c.name.trim()).map(c => { const o = { ...c, id: c.id || lid() }, u = mbUrl(c.mb); if (u) o.mb = u; else delete o.mb; return o; });
+  openDlg('<div class="bh"><h2>Timetable</h2><span class="ls-mrow" style="margin:0"><button class="btn sm" data-saveprof title="Everything here, your slide template included, in one file for another computer">Save my setup file</button><button class="btn sm" data-load>Load a setup file…</button></span></div><div class="bb" id="ttBody"></div><div class="bf"><button class="btn" data-x>Cancel</button><button class="btn primary" data-ok>Save</button></div>');
   draw();
   const box = $('#dlgBox');
   box.oninput = e => { const t = e.target, ci = +t.dataset.ci; if (t.dataset.c) draft.classes[ci][t.dataset.c] = t.value; if (t.dataset.m) draft.classes[ci].meets[+t.dataset.mi][t.dataset.m] = t.dataset.m === 'dow' ? +t.value : t.value; };
@@ -2460,18 +2536,27 @@ function openTimetable() {
   box.onclick = async e => {
     if (e.target.closest('[data-x]')) return closeDlg();
     if (e.target.closest('[data-load]')) { closeDlg(); return loadSetupFile(); }
+    if (e.target.closest('[data-tplplain]')) { collect(); draft.template = ''; draft.tplName = ''; return draw(); }
+    if (e.target.closest('[data-tpl]')) {
+      collect();
+      const i = document.createElement('input'); i.type = 'file'; i.accept = '.pptx,.potx,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/vnd.openxmlformats-officedocument.presentationml.template';
+      i.onchange = async () => { const t = await readTemplate(i.files[0]); if (!t || $('#ttTpl') == null) return; collect(); draft.template = t.b64; draft.tplName = t.name; draw(); };
+      return i.click();
+    }
+    if (e.target.closest('[data-saveprof]')) {
+      collect();
+      await saveBlob('Planner setup.json', new Blob([JSON.stringify(setupFileOf({ ...draft, classes: classesOut() }), null, 1)], { type: 'application/json' }));
+      return toast('Saved as “Planner setup.json”. Load it with Load a setup file… on another computer.', 5000);
+    }
     if (e.target.closest('[data-addc]')) { draft.classes.push({ id: lid(), name: '', course: '', color: '#1F6FB2', meets: [] }); return draw(); }
     const am = e.target.closest('[data-addm]'); if (am) { draft.classes[+am.dataset.addm].meets.push({ dow: 2, start: '08:30', end: '10:05', label: '' }); return draw(); }
     const dm = e.target.closest('[data-delm]'); if (dm) { const [ci, mi] = dm.dataset.delm.split('|').map(Number); draft.classes[ci].meets.splice(mi, 1); return draw(); }
     const dc = e.target.closest('[data-delc]'); if (dc) { draft.classes.splice(+dc.dataset.delc, 1); return draw(); }
     if (!e.target.closest('[data-ok]')) return;
-    const lines = id => $(id).value.split('\n').map(x => x.trim()).filter(Boolean);
-    draft.daysOff = lines('#ttOff').map(x => { const m = /^(\d{4}-\d\d-\d\d)\s*(.*)$/.exec(x); return m && { date: m[1], label: m[2] || 'No school' }; }).filter(Boolean);
-    draft.events = lines('#ttEv').map(x => { const m = /^(\d{4}-\d\d-\d\d)(?:\s+to\s+(\d{4}-\d\d-\d\d))?\s*(.*)$/.exec(x); return m && { date: m[1], to: m[2] || '', label: m[3] }; }).filter(Boolean);
-    draft.classes = draft.classes.filter(c => c.name.trim()).map(c => ({ ...c, id: c.id || lid() }));
-    for (const c of draft.classes) { const u = mbUrl(c.mb); if (u) c.mb = u; else delete c.mb; mbRemember(c.name, u); }
-    draft.semStart = $('#ttS').value; draft.semEnd = $('#ttE').value; 
-    closeDlg(); await applySetup({ ...draft, template: s.template, ...(L.setup ? {} : { plain: true }) });
+    collect();
+    draft.classes = classesOut();
+    for (const c of draft.classes) mbRemember(c.name, c.mb);
+    closeDlg(); await applySetup({ ...draft, ...(L.setup ? {} : { plain: true }) });
   };
 }
 
@@ -2742,7 +2827,7 @@ async function folderWrite(l) {
 async function folderRemove(l) { if (L.dir && L.dirOk && l._file) { try { await L.dir.removeEntry(l._file); } catch { } } }
 async function folderWriteSchedule() {
   if (!L.dir || !L.dirOk || !L.setup) return;
-  const { template, ...tt } = L.setup;
+  const { template, tplName, ...tt } = L.setup;
   await writeFile(L.dir, 'timetable.json', JSON.stringify(tt, null, 2));
 }
 async function folderWriteAll() {
@@ -4077,6 +4162,91 @@ async function dlCard(id) {
   return downloadPptx(l);
 }
 
+/* ================= Planner: a lesson file to share =================
+   One small file (Title.gslesson) that opens again as the same lesson in any Grading Studio: on another
+   computer, in another browser, or for another teacher. It is a .zip inside:
+     gslesson.json   { kind: 'grading-studio-lesson', version: 1, lesson: {...},
+                       files: [{ name, kind: 'doc'|'other', type, path }], final: { name, path } | null }
+     images/…        the slide pictures ("img.src" in the lesson points here)
+     files/…         the lesson's materials (a document made here is its HTML, so it stays editable)
+     final/…         the finished PowerPoint, if one was uploaded (it can't be made again from the slides)
+     README.txt      a line for anyone who opens it by hand
+   What stays behind: which classes and days it is on, taught notes, comments and asks for Claude, screenshots
+   for Claude, earlier versions and finished decks. A lesson holds no student data, and a shared file keeps it so.
+   Opening one never replaces a lesson: if the same lesson is already here, it comes in as a separate copy. */
+const SHARE_EXT = '.gslesson';
+const SHARE_KIND = 'grading-studio-lesson';
+const isShareFile = f => !!f && /\.gslesson$/i.test(f.name || '');
+const shareName = l => (plainTitle(l.title) || 'Lesson').replace(/[\\/:*?"<>|\u0000-\u001f]+/g, '-').replace(/\s+/g, ' ').trim().slice(0, 90) || 'Lesson';
+function shareLesson(l) {
+  const c = JSON.parse(JSON.stringify(l));
+  for (const k of ['_file', '_mod', 'pending', 'slots', 'taught', 'talk', 'claudeNote', 'status', 'unit', 'library', 'variantOf', 'variant', 'files', 'final', 'finals']) delete c[k];
+  c.slides = c.slides.map(s => { const { ask, talk, ctx, ...keep } = s; return keep; });
+  return c;
+}
+async function shareBuild(l) {
+  const te = new TextEncoder(), z = {}, used = new Set();
+  const put = (dir, name, u8) => {
+    let n = safeName(name), k = 2; while (used.has((dir + n).toLowerCase())) n = safeName(name).replace(/(\.\w+)?$/, m => ' (' + (k++) + ')' + m);
+    used.add((dir + n).toLowerCase()); z[dir + n] = [u8, { level: 0 }]; return dir + n;
+  };
+  const imgs = new Map(), data = lessonForFile(shareLesson(l), imgs);
+  for (const [path, src] of imgs) z[path] = [b64ToU8(src.slice(src.indexOf(',') + 1)), { level: 0 }];
+  const files = [];
+  for (const f of l.files || []) {
+    const b = await fileBlob(f.id); if (!b) continue;
+    files.push({ name: f.name, kind: f.kind === 'doc' ? 'doc' : 'other', type: b.type || f.type || '', path: put('files/', f.name, new Uint8Array(await b.arrayBuffer())) });
+  }
+  let final = null;
+  if (l.final) { const b = await fileBlob(l.final.id); if (b) final = { name: l.final.name, path: put('final/', l.final.name, new Uint8Array(await b.arrayBuffer())) }; }
+  z['gslesson.json'] = te.encode(JSON.stringify({ kind: SHARE_KIND, version: 1, made: new Date().toISOString().slice(0, 10), lesson: data, files, final }, null, 2));
+  z['README.txt'] = te.encode('A lesson from Grading Studio.\r\nOpen it in the Planner: Import a lesson, then choose this file (or drop it on the Planner).\r\n');
+  return fflate.zipSync(z);
+}
+async function shareSave(l) {
+  if (!l) return;
+  editorCommit();
+  let u8; try { u8 = await shareBuild(l); } catch (e) { console.error(e); return toast('The lesson file couldn’t be made'); }
+  const name = shareName(l) + SHARE_EXT;
+  saveBlob(name, new Blob([u8], { type: 'application/octet-stream' }));
+  toast('Saved “' + name + '” (' + finSize(u8.length) + '). Open it in any Grading Studio with Import a lesson.', 6000);
+}
+
+const u8ToB64 = u8 => { let s = ''; for (let i = 0; i < u8.length; i += 0x8000) s += String.fromCharCode.apply(null, u8.subarray(i, i + 0x8000)); return btoa(s); };
+async function shareOpen(file) {
+  let z, j;
+  try { z = fflate.unzipSync(new Uint8Array(await file.arrayBuffer())); } catch { return toast('That lesson file couldn’t be opened'); }
+  try { j = JSON.parse(fflate.strFromU8(z['gslesson.json'])); } catch { return toast('That isn’t a lesson file'); }
+  if (!j || j.kind !== SHARE_KIND || !j.lesson || !Array.isArray(j.lesson.slides)) return toast('That isn’t a lesson file');
+  if (+j.version > 1) toast('That lesson file is from a newer Grading Studio. Some of it may not come in.', 5000);
+  const pic = src => { const m = /^images\/[^/]+\.(png|jpe?g)$/i.exec(src || ''); const d = m && z[src]; return d ? 'data:image/' + (/png/i.test(m[1]) ? 'png' : 'jpeg') + ';base64,' + u8ToB64(d) : src; };
+  const x = shareLesson(normLesson({ ...j.lesson, slides: (j.lesson.slides || []).map(s => s && typeof s === 'object' ? { ...s, img: s.img && typeof s.img === 'object' ? { ...s.img, src: pic(s.img.src) } : undefined } : s) }));
+  const l = normLesson(x); l.slides.forEach(s => { if (s.img && !imgSrc(s.img.src)) delete s.img; });
+  const copy = L.lessons.some(o => o.id === l.id);
+  if (copy) { l.id = lid(); l.slides.forEach(s => { s.id = lid(); }); }
+  l.created = l.updated = Date.now();
+  l.files = [];
+  let big = 0;
+  for (const f of Array.isArray(j.files) ? j.files : []) {
+    const d = f && z[f.path]; if (!d) continue;
+    if (d.length > MAX_FILE) { big++; continue; }
+    const id = lid(), kind = f.kind === 'doc' ? 'doc' : 'other', b = new Blob([d], { type: kind === 'doc' ? DOC_TYPE : String(f.type || '') || mimeOf(String(f.name || '')) });
+    await kvSet('file:' + id, b);
+    l.files.push({ id, name: uniqueName(l, String(f.name || 'File')), kind, type: b.type, size: b.size, added: Date.now() });
+  }
+  if (!l.files.length) delete l.files;
+  const fd = j.final && z[j.final.path];
+  if (fd && fd.length <= MAX_FILE) {
+    const id = lid(); await kvSet('file:' + id, new Blob([fd], { type: MIME.pptx }));
+    l.final = { id, name: String(j.final.name || shareName(l) + '.pptx'), size: fd.length, at: Date.now(), sig: finSig(l) };
+  }
+  L.lessons.push(l); await lPut(l);
+  const n = (l.files || []).length;
+  toast('Opened “' + l.title + '”: ' + l.slides.length + ' slide' + (l.slides.length === 1 ? '' : 's') + (n ? ', ' + n + ' material' + (n === 1 ? '' : 's') : '') + (l.final ? ', the finished PowerPoint' : '') + '. It is under Not on the timetable until you put it on a day.' +
+    (copy ? ' You already had this lesson, so this is a separate copy.' : '') + (big ? ' Too big to keep (over 40 MB): ' + big + ' file' + (big === 1 ? '' : 's') + '.' : ''), 8000);
+  openLesson(l);
+}
+
 /* ================= Planner: alternative versions of a lesson =================
    A variant is its own lesson, made as a copy of the one you're on (slides, notes, comments, materials and
    finished deck), with "variantOf" (the first lesson's id) and "variant" (its name, like "Shorter Friday").
@@ -4939,7 +5109,13 @@ document.addEventListener('keydown', e => {
    The Planner never opens grading's work. So that it can call on a student, the grading page keeps each class's roster
    in one small record of its own (gs.rolls: [[class name, [names]], …]) in this browser. The Planner reads it here and
    only shows it: a name is never put in a lesson, the Planner's own storage or the Planner folder.
-   Nothing here is saved. Who has had a turn and who is away today are remembered until the page is closed. */
+   Nothing here is saved. Who has had a turn, who is away today and the groups (shuffled or made by hand) are remembered
+   until the page is closed.
+   Groups can be changed by hand: drag a name to another group, or click one name and then a group (or a name in another
+   group, to swap them). "Make my own" starts with every group empty. Ctrl Z or Undo takes back a move or a shuffle.
+   The stage keeps its clicks to itself. A button it draws again is gone from the page by the time the click would reach
+   the page behind, so the page behind could not tell it was the stage's (in Present mode that clicked the slides on,
+   and at the end of the lesson finished it). */
 const PK = { on: false, fast: false, mem: new Map() };
 const PK_ROLLS = 'gs.rolls';
 const pkNorm = s => String(s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -4960,10 +5136,15 @@ function pkCount(len, by, n) {
   const up = Math.ceil(len / n), least = Math.floor(len / up);
   return least >= Math.max(2, n - 1) || up === 1 ? up : Math.max(1, Math.floor(len / n));
 }
-function pkGroups(names, by, n) {
-  const k = pkCount(names.length, by, n), out = Array.from({ length: k }, () => []);
-  pkShuffle(names).forEach((nm, i) => out[i % k].push(nm));
-  return out;
+function pkGroups(names, by, n, prev) {
+  const k = pkCount(names.length, by, n);
+  const deal = () => { const out = Array.from({ length: k }, () => []); pkShuffle(names).forEach((nm, i) => out[i % k].push(nm)); return out; };
+  if (k < 2 || !Array.isArray(prev) || !prev.length) return deal();
+  const was = new Map(); prev.forEach((g, i) => g.forEach(nm => was.set(nm, i)));
+  const again = gs => { let s = 0; for (const g of gs) for (let a = 0; a < g.length; a++) for (let b = a + 1; b < g.length; b++) if (was.has(g[a]) && was.get(g[a]) === was.get(g[b])) s++; return s; };
+  let best = null, least = Infinity;
+  for (let t = 0; t < 60 && least > 0; t++) { const g = deal(), s = again(g); if (s < least) { best = g; least = s; } }
+  return best;
 }
 function pkRolls() {
   try {
@@ -4974,7 +5155,7 @@ function pkRolls() {
 const pkEsc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 function pkMem(cls) {
   const k = pkNorm(cls.name) + '|' + cls.names.length;
-  if (!PK.mem.has(k)) PK.mem.set(k, { away: new Set(), bag: [], turns: 0, last: '', by: 'size', n: 4, groups: null });
+  if (!PK.mem.has(k)) PK.mem.set(k, { away: new Set(), bag: [], turns: 0, last: '', by: 'size', n: 4, groups: null, pool: [], hand: false, undo: [], sel: null });
   return PK.mem.get(k);
 }
 const pkHere = () => { const m = pkMem(PK.cls); return PK.cls.names.filter(n => !m.away.has(n)); };
@@ -4988,13 +5169,15 @@ function pkOpen(o) {
   el.innerHTML = '<div class="pk-main" id="pkMain"></div><aside class="pk-who" id="pkWho" aria-label="Who is here" hidden></aside><div class="pk-bar" id="pkBar" role="toolbar"></div><div class="pk-say" id="pkSay" aria-live="polite"></div>';
   o.host.appendChild(el);
   el.addEventListener('click', pkClick);
+  el.addEventListener('pointerdown', pkDown);
   el.addEventListener('change', e => { if (e.target.id === 'pkClass') { PK.cls = PK.o.classes[+e.target.value] || PK.cls; PK.who = false; pkRun(true); } });
   if (!o.keys) document.addEventListener('keydown', pkKeyOwn, true);
-  pkRun(true); el.focus();
+  pkRun(!(PK.mode === 'groups' && pkMem(PK.cls).groups)); el.focus();
 }
 function pkClose() {
   if (!PK.on) return;
   const { el, back, o } = PK;
+  pkDragEnd();
   PK.on = false; clearInterval(PK.spin); PK.el = null;
   document.removeEventListener('keydown', pkKeyOwn, true);
   try { if (document.fullscreenElement === el) document.exitFullscreen(); } catch { }
@@ -5005,7 +5188,10 @@ function pkRun(fresh) {
   const m = pkMem(PK.cls), here = pkHere();
   PK.el.setAttribute('aria-label', PK.mode === 'pick' ? 'Pick a name' : 'Groups');
   if (PK.mode === 'pick') { if (fresh) pkNext(); else pkName(m.last, true); }
-  else { if (fresh || !m.groups) m.groups = pkGroups(here, m.by, m.n); pkDrawGroups(); }
+  else {
+    if (fresh || !m.groups) { if (m.groups) pkSnap(m); m.groups = pkGroups(here, m.by, m.n, m.groups); m.pool = []; m.hand = false; m.sel = null; }
+    pkDrawGroups();
+  }
   pkBar(); pkWho();
 }
 function pkNext() {
@@ -5030,12 +5216,15 @@ function pkName(name, done) {
   if (done) PK.el.querySelector('#pkSay').textContent = nice ? nice : 'Nobody to pick';
 }
 function pkDrawGroups() {
-  const m = pkMem(PK.cls), g = m.groups || [], main = PK.el.querySelector('#pkMain');
+  const m = pkMem(PK.cls), g = m.groups || [], pool = m.hand ? m.pool : [], main = PK.el.querySelector('#pkMain');
   const rows = Math.max(1, Math.round(Math.sqrt(g.length / 1.6))), cols = Math.max(1, Math.ceil(g.length / rows)), most = Math.max(1, ...g.map(x => x.length));
-  const long = Math.max(8, ...g.flat().map(n => [...pkNice(n)].length)), fs = Math.max(1.5, Math.min(4.6, 70 / (rows * (most + 1.9)) / 1.3)), fw = Math.max(.8, (90 / cols - 3) / (long * .6));
+  const high = m.hand ? 54 : 70, long = Math.max(8, ...g.flat().concat(pool).map(n => [...pkNice(n)].length)), fs = Math.max(1.5, Math.min(4.6, high / (rows * (most + 1.9)) / 1.3)), fw = Math.max(.8, (90 / cols - 3) / (long * .6));
+  const nm = n => '<div class="pk-s' + (m.sel === n ? ' sel' : '') + '" data-pks="' + pkEsc(n) + '">' + pkEsc(pkNice(n)) + '</div>';
   main.className = 'pk-main groups';
-  main.innerHTML = '<div class="pk-cls">' + pkEsc(PK.cls.name) + '</div>' + (g.length
-    ? '<div class="pk-groups" id="pkGroups" style="--cols:' + cols + ';--fs:min(' + fs.toFixed(2) + 'vh,' + fw.toFixed(2) + 'vw)">' + g.map((x, i) => '<section class="pk-g"><h3>Group ' + (i + 1) + '</h3>' + x.map(n => '<div>' + pkEsc(pkNice(n)) + '</div>').join('') + '</section>').join('') + '</div>'
+  main.innerHTML = '<div class="pk-cls">' + pkEsc(PK.cls.name) + '</div>' + (g.length || pool.length
+    ? (m.hand ? '<div class="pk-pool" data-pkg="-1" style="--fs:min(' + fs.toFixed(2) + 'vh,' + fw.toFixed(2) + 'vw)"><h3>Not in a group yet</h3><div class="pk-pl">' + (pool.length ? pool.map(nm).join('') : '<p class="pk-empty">Everyone is in a group.</p>') + '</div></div>' : '') +
+      '<div class="pk-groups" id="pkGroups" style="--cols:' + cols + ';--fs:min(' + fs.toFixed(2) + 'vh,' + fw.toFixed(2) + 'vw)">' + g.map((x, i) => '<section class="pk-g" data-pkg="' + i + '"><h3>Group ' + (i + 1) + '</h3>' +
+        (x.length ? x.map(nm).join('') : '<p class="pk-empty">Drag names here</p><button class="pk-gx" data-pkgx="' + i + '" title="Remove this group" aria-label="Remove group ' + (i + 1) + '">×</button>') + '</section>').join('') + '</div>'
     : '<div class="pk-sub">Nobody is marked as here. “Who’s here” puts students back.</div>');
   PK.el.querySelector('#pkSay').textContent = g.length + (g.length === 1 ? ' group' : ' groups');
 }
@@ -5048,7 +5237,8 @@ function pkBar() {
     (pick ? b('again', 'Pick again', 'Space', ' class="pk-go"') + b('reset', 'Start over', '')
       : '<span class="pk-seg" role="group" aria-label="How to group"><button data-pkby="size" aria-pressed="' + (m.by === 'size') + '">Groups of</button><button data-pkby="count" aria-pressed="' + (m.by === 'count') + '">Number of groups</button></span>' +
         '<span class="pk-seg" role="group" aria-label="' + (m.by === 'size' ? 'Students in a group' : 'Groups') + '">' + [2, 3, 4, 5, 6, 7, 8].map(n => '<button data-pkn="' + n + '" aria-pressed="' + (m.n === n) + '">' + n + '</button>').join('') + '</span>' +
-        b('again', 'Shuffle again', 'Space', ' class="pk-go"') + b('copy', 'Copy', '')) +
+        b('again', 'Shuffle again', 'Space', ' class="pk-go"') + b('hand', 'Make my own', '') + b('addg', '+ Group', '') +
+        (m.undo.length ? b('undo', 'Undo', 'Ctrl Z') : '') + b('copy', 'Copy', '')) +
     '<span class="pk-sep"></span>' + b('who', 'Who’s here' + (away ? ' · ' + away + ' away' : ''), 'W', ' aria-pressed="' + PK.who + '"') +
     (o.full ? b('full', 'Full screen', 'F') : '') + '<button data-pk="close" class="pk-end" title="Close (Esc)">Close</button>';
 }
@@ -5066,30 +5256,58 @@ function pkDo(k) {
   if (k === 'again') return pkRun(true);
   if (k === 'reset') { m.bag = []; m.turns = 0; m.last = ''; return pkRun(true); }
   if (k === 'who') { PK.who = !PK.who; pkBar(); return pkWho(); }
+  if (k === 'undo') return pkUndo();
+  if (k === 'hand') {   // every group empty, everyone waiting to be put in one
+    const here = pkHere(); pkSnap(m);
+    m.groups = Array.from({ length: m.groups && m.groups.length ? m.groups.length : Math.max(1, pkCount(here.length, m.by, m.n)) }, () => []);
+    m.pool = here; m.hand = true; m.sel = null; pkDrawGroups(); return pkBar();
+  }
+  if (k === 'addg') { pkSnap(m); if (!m.groups) m.groups = []; m.groups.push([]); m.hand = true; pkDrawGroups(); return pkBar(); }
   if (k === 'full') { try { if (document.fullscreenElement) document.exitFullscreen(); else PK.el.requestFullscreen(); } catch { } return; }
   if (k === 'copy') {
-    const text = (m.groups || []).map((g, i) => 'Group ' + (i + 1) + ': ' + g.map(pkNice).join(', ')).join('\n');
+    const text = (m.groups || []).map((g, i) => g.length ? 'Group ' + (i + 1) + ': ' + g.map(pkNice).join(', ') : '').filter(Boolean).join('\n');
     const said = ok => { const s = PK.el && PK.el.querySelector('[data-pk="copy"]'); if (s) { s.textContent = ok ? 'Copied' : 'Could not copy'; setTimeout(() => { if (s.isConnected) s.textContent = 'Copy'; }, 1600); } };
     try { navigator.clipboard.writeText(text).then(() => said(true), () => said(false)); } catch { said(false); }
   }
 }
 function pkClick(e) {
+  e.stopPropagation();   // the stage's clicks are its own (see the top of this file)
+  if (!PK.on || PK.dragged) return;
   const t = e.target, m = pkMem(PK.cls);
   if (e.detail && t.closest('#pkBar button')) PK.el.focus();   // a button pressed with the mouse gives the keys back, so Space still picks again
   const w = t.closest('[data-pkw]');
-  if (w) { const n = PK.cls.names[+w.dataset.pkw]; if (m.away.has(n)) m.away.delete(n); else m.away.add(n); m.groups = null; w.setAttribute('aria-pressed', String(!m.away.has(n))); pkBar(); if (PK.mode === 'groups') pkRun(true); return; }
+  if (w) {
+    const n = PK.cls.names[+w.dataset.pkw]; if (m.away.has(n)) m.away.delete(n); else m.away.add(n);
+    w.setAttribute('aria-pressed', String(!m.away.has(n)));
+    if (m.hand && m.groups) { if (m.away.has(n)) pkTake(m, n); else if (!pkWhere(m, n)) m.pool.push(n); if (m.sel === n) m.sel = null; pkBar(); if (PK.mode === 'groups') pkDrawGroups(); return; }
+    m.groups = null; pkBar(); if (PK.mode === 'groups') pkRun(true); return;
+  }
+  if (PK.mode === 'groups') {
+    const gx = t.closest('[data-pkgx]');
+    if (gx) { const i = +gx.dataset.pkgx; if (m.groups && m.groups[i] && !m.groups[i].length) { pkSnap(m); m.groups.splice(i, 1); m.hand = true; pkDrawGroups(); pkBar(); } return; }
+    const s = t.closest('[data-pks]'), g = t.closest('[data-pkg]');
+    if (s) {
+      const n = s.dataset.pks, a = pkWhere(m, n), b = m.sel ? pkWhere(m, m.sel) : null;
+      if (m.sel && m.sel !== n && b && a && a.g !== b.g) return pkSwap(m, m.sel, n);   // a name in another group: the two change places
+      m.sel = m.sel === n ? null : n; return pkDrawGroups();
+    }
+    if (g && m.sel) return pkMove(m, m.sel, +g.dataset.pkg, null);
+    if (m.sel) { m.sel = null; return pkDrawGroups(); }
+  }
   const by = t.closest('[data-pkby]'); if (by) { m.by = by.dataset.pkby; return pkRun(true); }
   const n = t.closest('[data-pkn]'); if (n) { m.n = +n.dataset.pkn; return pkRun(true); }
   const b = t.closest('[data-pk]'); if (b) return pkDo(b.dataset.pk);
 }
 function pkKey(e) {
-  if (!PK.on || e.metaKey || e.ctrlKey || e.altKey) return false;
+  if (!PK.on) return false;
   const k = e.key, c = k.toLowerCase(), m = pkMem(PK.cls);
+  if ((e.metaKey || e.ctrlKey) && !e.altKey && !e.shiftKey && c === 'z') { e.preventDefault(); if (PK.mode === 'groups') pkUndo(); return true; }
+  if (e.metaKey || e.ctrlKey || e.altKey) return false;
   if (k === 'Tab') return false;
   if (e.target && e.target.id === 'pkClass' && k !== 'Escape') return false;
   if ((k === ' ' || k === 'Enter') && e.target && e.target.closest && e.target.closest('#pkStage button')) return false;   // the button in hand does its own thing
   e.preventDefault();
-  if (k === 'Escape') { if (PK.who) pkDo('who'); else pkClose(); return true; }
+  if (k === 'Escape') { if (PK.drag) pkDragEnd(); else if (PK.who) pkDo('who'); else if (m.sel && PK.mode === 'groups') { m.sel = null; pkDrawGroups(); } else pkClose(); return true; }
   if (k === ' ' || k === 'Enter') pkDo('again');
   else if (c === 'p') pkDo('pick');
   else if (c === 'g') pkDo('groups');
@@ -5098,8 +5316,88 @@ function pkKey(e) {
   else if (PK.mode === 'groups' && /^[2-8]$/.test(k)) { m.n = +k; pkRun(true); }
   return true;
 }
+
+/* ---------- groups by hand ---------- */
+function pkWhere(m, n) {
+  for (let g = 0; g < (m.groups || []).length; g++) { const i = m.groups[g].indexOf(n); if (i >= 0) return { g, i }; }
+  const i = (m.pool || []).indexOf(n); return i >= 0 ? { g: -1, i } : null;
+}
+const pkList = (m, g) => g < 0 ? m.pool : m.groups[g];
+function pkTake(m, n) { const w = pkWhere(m, n); if (w) pkList(m, w.g).splice(w.i, 1); return w; }
+function pkSnap(m) {
+  m.undo.push({ groups: m.groups ? m.groups.map(g => g.slice()) : null, pool: (m.pool || []).slice(), hand: m.hand });
+  if (m.undo.length > 40) m.undo.shift();
+}
+function pkUndo() {
+  const m = pkMem(PK.cls), u = m.undo.pop(); if (!u) return;
+  const ok = n => !m.away.has(n) && PK.cls.names.includes(n);
+  m.groups = u.groups ? u.groups.map(g => g.filter(ok)) : null; m.pool = u.pool.filter(ok); m.hand = u.hand; m.sel = null;
+  pkDrawGroups(); pkBar(); PK.el.querySelector('#pkSay').textContent = 'Undone';
+}
+const pkGName = g => g < 0 ? 'Not in a group yet' : 'Group ' + (g + 1);
+function pkMove(m, n, g, before) {
+  const from = pkWhere(m, n); if (!from || !(g < 0 ? m.hand : m.groups && m.groups[g])) return;
+  if (from.g === g && !before) { m.sel = null; return pkDrawGroups(); }
+  pkSnap(m); pkTake(m, n);
+  const to = pkList(m, g), at = before ? to.indexOf(before) : -1;
+  if (at >= 0) to.splice(at, 0, n); else to.push(n);
+  m.hand = true; m.sel = null; pkDrawGroups(); pkBar();
+  PK.el.querySelector('#pkSay').textContent = pkNice(n) + ' to ' + pkGName(g);
+}
+function pkSwap(m, a, b) {
+  const x = pkWhere(m, a), y = pkWhere(m, b); if (!x || !y) return;
+  pkSnap(m); pkList(m, x.g)[x.i] = b; pkList(m, y.g)[y.i] = a;
+  m.hand = true; m.sel = null; pkDrawGroups(); pkBar();
+  PK.el.querySelector('#pkSay').textContent = pkNice(a) + ' and ' + pkNice(b) + ' changed places';
+}
+function pkDown(e) {
+  const s = e.target.closest && e.target.closest('[data-pks]');
+  if (!s || PK.mode !== 'groups' || PK.drag || (e.button != null && e.button > 0)) return;
+  PK.drag = { name: s.dataset.pks, el: s, x: e.clientX, y: e.clientY, id: e.pointerId, on: false };
+  document.addEventListener('pointermove', pkDragMove, true);
+  document.addEventListener('pointerup', pkDragUp, true);
+  document.addEventListener('pointercancel', pkDragEnd, true);
+}
+function pkOver(e) {
+  const D = PK.drag, t = document.elementFromPoint(e.clientX, e.clientY);
+  const g = t && t.closest && t.closest('#pkStage [data-pkg]'); if (!g) return null;
+  const s = t.closest('[data-pks]');
+  return { g: +g.dataset.pkg, box: g, before: s && s.dataset.pks !== D.name ? s.dataset.pks : null };
+}
+function pkDragMove(e) {
+  const D = PK.drag; if (!D || e.pointerId !== D.id) return;
+  if (!D.on) {
+    if (Math.hypot(e.clientX - D.x, e.clientY - D.y) < 6) return;
+    if (!D.el.isConnected) return pkDragEnd();
+    const r = D.el.getBoundingClientRect(); D.on = true; D.dx = D.x - r.left; D.dy = D.y - r.top;
+    D.ghost = D.el.cloneNode(true); D.ghost.className = 'pk-s pk-ghost'; D.ghost.removeAttribute('data-pks');
+    D.ghost.style.fontSize = getComputedStyle(D.el).fontSize;
+    PK.el.appendChild(D.ghost); D.el.classList.add('pk-from'); PK.el.classList.add('pk-dragging');
+  }
+  e.preventDefault();
+  D.ghost.style.transform = 'translate(' + (e.clientX - D.dx) + 'px,' + (e.clientY - D.dy) + 'px)';
+  const o = pkOver(e), box = o && o.box;
+  if (D.box !== box) { if (D.box) D.box.classList.remove('pk-over'); if (box) box.classList.add('pk-over'); D.box = box; }
+}
+function pkDragUp(e) {
+  const D = PK.drag; if (!D || e.pointerId !== D.id) return;
+  const o = D.on ? pkOver(e) : null, was = D.on;
+  pkDragEnd();
+  if (!was) return;
+  PK.dragged = true; setTimeout(() => { PK.dragged = false; }, 0);
+  if (o && PK.on) pkMove(pkMem(PK.cls), D.name, o.g, o.before);
+}
+function pkDragEnd() {
+  const D = PK.drag; if (!D) return;
+  PK.drag = null;
+  document.removeEventListener('pointermove', pkDragMove, true);
+  document.removeEventListener('pointerup', pkDragUp, true);
+  document.removeEventListener('pointercancel', pkDragEnd, true);
+  if (D.ghost) D.ghost.remove(); if (D.box) D.box.classList.remove('pk-over');
+  if (D.el) D.el.classList.remove('pk-from'); if (PK.el) PK.el.classList.remove('pk-dragging');
+}
 function pkKeyOwn(e) { if (!PK.on) return; e.stopPropagation(); pkKey(e); }
-window.__pick = { PK, open: pkOpen, close: pkClose, groups: pkGroups, count: pkCount, short: pkShort, nice: pkNice, rolls: pkRolls };
+window.__pick = { PK, mem: () => pkMem(PK.cls), open: pkOpen, close: pkClose, groups: pkGroups, count: pkCount, short: pkShort, nice: pkNice, rolls: pkRolls };
 
 /* ================= Present: teach from the lesson =================
    The lesson's slides fill the screen. One key away: the agenda (tick items off as the class goes), a countdown the
@@ -5108,6 +5406,9 @@ window.__pick = { PK, open: pkOpen, close: pkClose, groups: pkGroups, count: pkC
    keeps for this; the names are shown and never kept here.
    Afterwards one line says where the class got to. It is kept on the lesson as "taught", so it goes to the Planner
    folder with the lesson and shows on the week.
+   The timer outlives the stage: finishing, or leaving full screen by accident, leaves it running in a small box in the
+   corner of the Planner, and presenting again shows it on the slides once more. It is kept in this browser (gsp.presentTimer)
+   so a refresh does not lose it either.
    This reads the lesson and the timetable and nothing else. Its buttons carry data-pr and are handled here. */
 const PR = { on: false, askMs: 2 * 60 * 1000 };   // askMs: presenting for at least this long asks where the class got to
 const PR_I = {
@@ -5225,7 +5526,7 @@ async function presentStart(l, o) {
   const slot = o.slot && l.slots.some(s => prSameSlot(s, o.slot)) ? o.slot : prSlotNow(l);
   const back = prResume(l, slot), i = o.at > 0 ? Math.min(o.at, l.slides.length - 1) : back ? back.slide - 1 : 0;
   const ag = l.slides.find(s => s.layout === 'agenda');
-  Object.assign(PR, { on: true, l, i, far: i, slot, began: Date.now(), ended: false, blank: false, notes: false, agenda: false, menu: false, ticks: new Set(), timer: null, num: '', keep: false, video: false, full: false, back: document.activeElement,
+  Object.assign(PR, { on: true, l, i, far: i, slot, began: Date.now(), ended: false, blank: false, notes: false, agenda: false, menu: false, ticks: new Set(), num: '', keep: false, video: false, full: false, back: document.activeElement,
     items: ag ? rtParse(ag.body).filter(x => x.text.trim()) : null, agTitle: ag ? plainTitle(ag.title) || 'Agenda' : '' });
   const el = PR.el = document.createElement('div');
   el.id = 'present'; el.className = 'pr'; el.tabIndex = -1; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-label', 'Presenting ' + l.title);
@@ -5247,7 +5548,7 @@ async function presentStart(l, o) {
   el.addEventListener('click', prClick);
   el.addEventListener('pointermove', prWake);
   PR.tickT = setInterval(prTick, 250);
-  prShow(); prTick(); prWake(); el.focus();
+  prFloat(); prShow(); prTick(); prWake(); el.focus();
   if (!o.window) try { await el.requestFullscreen(); } catch { }
   prFit();
   try { PR.lock = await navigator.wakeLock.request('screen'); } catch { }
@@ -5356,9 +5657,10 @@ function prPick(mode) {
 /* ---------- the timer ---------- */
 const prSound = () => { try { return localStorage.getItem('gsp.presentSound') !== '0'; } catch { return true; } };
 function prChime() {
-  if (!prSound() || !PR.ac) return;
+  if (!prSound()) return;
   try {
-    const C = PR.ac, t0 = C.currentTime;
+    const C = PR.ac = PR.ac || new (window.AudioContext || window.webkitAudioContext)(); if (C.state === 'suspended') C.resume();
+    const t0 = C.currentTime;
     [[0, 660], [.4, 660], [.8, 880]].forEach(([d, f]) => {
       const o = C.createOscillator(), g = C.createGain(); o.type = 'sine'; o.frequency.value = f;
       g.gain.setValueAtTime(0.0001, t0 + d); g.gain.exponentialRampToValueAtTime(.3, t0 + d + .03); g.gain.exponentialRampToValueAtTime(.0001, t0 + d + .35);
@@ -5368,33 +5670,92 @@ function prChime() {
 }
 function prTimerStart(sec) {
   sec = Math.max(1, Math.min(180 * 60, Math.round(sec)));
-  PR.timer = { end: Date.now() + sec * 1000, left: sec, paused: false, done: false };
+  PR.timer = { end: Date.now() + sec * 1000, left: sec, total: sec, paused: false, done: false };
   try { PR.ac = PR.ac || new (window.AudioContext || window.webkitAudioContext)(); } catch { }
-  prMenu(false); prTick();
+  prTimerSave(); if (PR.on) prMenu(false); prTick();
 }
 function prTimerPause() {
   const t = PR.timer; if (!t || t.done) return;
   if (t.paused) { t.end = Date.now() + t.left * 1000; t.paused = false; } else { t.left = Math.max(0, Math.ceil((t.end - Date.now()) / 1000)); t.paused = true; }
-  prTick(); if (PR.menu) prMenu(true);
+  prTimerSave(); prTick(); if (PR.on && PR.menu) prMenu(true);
 }
 function prTimerAdd(sec) {
-  const t = PR.timer; if (!t) return prTimerStart(sec);
-  if (t.done) return prTimerStart(sec);
-  if (t.paused) t.left += sec; else t.end += sec * 1000;
-  prTick();
+  const t = PR.timer; if (!t || t.done) return sec > 0 ? prTimerStart(sec) : undefined;
+  if (t.paused) t.left = Math.max(0, Math.min(180 * 60, t.left + sec));
+  else { const left = Math.max(0, Math.ceil((t.end - Date.now()) / 1000)); t.end = Date.now() + Math.max(0, Math.min(180 * 60, left + sec)) * 1000; }
+  if (t.paused && !t.left) { t.paused = false; t.end = Date.now(); }
+  prTimerSave(); prTick(); if (PR.on && PR.menu && t.done) prMenu(true);
 }
-function prTimerStop() { PR.timer = null; prTick(); if (PR.menu) prMenu(true); }
+function prTimerRestart() {
+  const t = PR.timer; if (!t) return;
+  prTimerStart(t.total); prMenu(true);
+}
+function prTimerStop() { PR.timer = null; prTimerSave(); prTick(); if (PR.on && PR.menu) prMenu(true); }
+const PR_TKEY = 'gsp.presentTimer';
+function prTimerSave() {
+  try { if (PR.timer && !PR.timer.done) localStorage.setItem(PR_TKEY, JSON.stringify(PR.timer)); else localStorage.removeItem(PR_TKEY); } catch { }
+}
+function prTimerLoad() {
+  let t = null; try { t = JSON.parse(localStorage.getItem(PR_TKEY) || 'null'); } catch { }
+  const num = v => typeof v === 'number' && isFinite(v);
+  if (!t || typeof t !== 'object' || !num(t.end) || !num(t.left) || !num(t.total) || t.done) return;
+  if (!t.paused && t.end < Date.now() - 60 * 1000) { try { localStorage.removeItem(PR_TKEY); } catch { } return; }
+  PR.timer = { end: t.end, left: Math.max(0, Math.round(t.left)), total: Math.max(1, Math.round(t.total)), paused: !!t.paused, done: false };
+}
+function prTimerStep() {
+  const t = PR.timer; if (!t || t.paused || t.done) return t;
+  t.left = Math.max(0, Math.ceil((t.end - Date.now()) / 1000));
+  if (!t.left) { t.done = true; prTimerSave(); prChime(); if (PR.on && PR.menu) prMenu(true); }
+  return t;
+}
+function prFloat() {
+  let f = document.getElementById('prFloat');
+  const t = PR.on ? null : prTimerStep();
+  if (!t) { if (f) f.remove(); return; }
+  if (!f) {
+    f = document.createElement('div'); f.id = 'prFloat'; f.className = 'prf'; f.setAttribute('role', 'timer');
+    f.innerHTML = '<button class="prf-t" data-prf="go"></button><button class="prf-x" data-prf="x" title="Stop the timer" aria-label="Stop the timer">×</button>';
+    document.body.appendChild(f);
+  }
+  const txt = t.done ? 'Time’s up' : mmss(t.left) + (t.paused ? '<small>Paused</small>' : ''), b = f.querySelector('.prf-t');
+  if (b.dataset.h !== txt) { b.dataset.h = txt; b.innerHTML = txt; }
+  f.className = 'prf' + (t.done ? ' done' : t.paused ? ' paused' : '');
+  b.setAttribute('aria-label', t.done ? 'Time’s up. Click to clear' : mmss(t.left) + ' left on the timer. Click to ' + (t.paused ? 'go on' : 'pause'));
+  b.title = t.done ? 'Clear' : t.paused ? 'Go on' : 'Pause';
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest && e.target.closest('[data-prf]'); if (!b || PR.on) return;
+  if (b.dataset.prf === 'x' || (PR.timer && PR.timer.done)) prTimerStop(); else prTimerPause();
+  prFloat();
+});
+prTimerLoad();
+setInterval(() => { if (!PR.on && (PR.timer || document.getElementById('prFloat'))) prFloat(); }, 250);
+function prOwnSec() {
+  const m = Math.max(0, +($('#prOwn') || {}).value || 0), s = Math.max(0, +($('#prOwnS') || {}).value || 0);
+  return Math.round(m * 60 + s);
+}
+function prOwnStart() {
+  const sec = prOwnSec();
+  if (!(sec > 0)) return $('#prOwn').focus();
+  try { localStorage.setItem('gsp.presentOwn', String(sec)); } catch { }
+  prTimerStart(sec);
+}
+const prOwnLast = () => { try { return +localStorage.getItem('gsp.presentOwn') || 0; } catch { return 0; } };
+const prBig = () => { try { return localStorage.getItem('gsp.presentBig') === '1'; } catch { return false; } };
+function prBigToggle() {
+  try { localStorage.setItem('gsp.presentBig', prBig() ? '0' : '1'); } catch { }
+  prTick(); if (PR.menu) prMenu(true);
+}
 function prTick() {
   if (!PR.on) return;
   const clock = prClock(), tm = $('#prTime'), ac = $('#prAClock');
   if (tm && tm.textContent !== clock) tm.textContent = clock;
   if (ac && ac.textContent !== clock) ac.textContent = clock;
-  const t = PR.timer, chip = $('#prChip');
+  const t = prTimerStep(), chip = $('#prChip');
   if (!t) { if (!chip.hidden) chip.hidden = true; return; }
-  if (!t.paused && !t.done) { t.left = Math.max(0, Math.ceil((t.end - Date.now()) / 1000)); if (!t.left) { t.done = true; prChime(); if (PR.menu) prMenu(true); } }
   const txt = t.done ? 'Time’s up' : mmss(t.left) + (t.paused ? '<small>Paused</small>' : '');
   if (chip.dataset.h !== txt) { chip.dataset.h = txt; chip.innerHTML = txt; }
-  chip.hidden = false; chip.className = 'pr-chip' + (t.done ? ' done' : t.paused ? ' paused' : '');
+  chip.hidden = false; chip.className = 'pr-chip' + (prBig() ? ' big' : '') + (t.done ? ' done' : t.paused ? ' paused' : '');
   chip.setAttribute('aria-label', t.done ? 'Time’s up. Click to clear' : mmss(t.left) + ' left. Click to ' + (t.paused ? 'go on' : 'pause'));
 }
 function prMenu(open) {
@@ -5403,11 +5764,18 @@ function prMenu(open) {
   PR.el.querySelector('[data-p="timer"]').setAttribute('aria-expanded', String(PR.menu));
   if (!PR.menu) return prWake();
   const t = PR.timer, run = t && !t.done;
-  m.innerHTML = '<h3>' + (run ? 'Timer' : 'Start a timer the class can see') + '</h3>' +
-    (run ? '<div class="pr-run"><button data-p="tpause">' + (t.paused ? 'Go on' : 'Pause') + '</button><button data-p="tadd">+1 min</button><button data-p="tstop">Stop</button></div>'
-      : '<div class="pr-mins">' + [1, 2, 3, 5, 10, 15].map(n => '<button data-tm="' + n + '" aria-label="' + n + ' minute' + (n === 1 ? '' : 's') + '">' + n + '</button>').join('') + '</div>' +
-        '<div class="pr-own"><label for="prOwn">Minutes</label><input type="number" id="prOwn" min="1" max="180" step="1" inputmode="numeric"><span class="sp"></span><button data-p="town">Start</button></div>') +
+  const last = prOwnLast(), lm = last ? Math.floor(last / 60) : '', ls = last ? last % 60 : '';
+  m.innerHTML = '<h3>' + (run ? 'Timer · started at ' + mmss(t.total) : 'Start a timer the class can see') + '</h3>' +
+    (run ? '<div class="pr-adj" role="group" aria-label="Change the time">' +
+        '<button data-ta="-60" aria-label="One minute less">−1 min</button><button data-ta="-10" aria-label="Ten seconds less">−10 s</button>' +
+        '<button data-ta="10" aria-label="Ten seconds more">+10 s</button><button data-ta="60" aria-label="One minute more">+1 min</button></div>' +
+        '<div class="pr-run"><button data-p="tpause">' + (t.paused ? 'Go on' : 'Pause') + '</button><button data-p="trestart" title="Back to ' + mmss(t.total) + '">Restart</button><button data-p="tstop">Stop</button></div>'
+      : '<div class="pr-mins"><button data-ts="30" aria-label="30 seconds">0:30</button>' + [1, 2, 3, 5, 10, 15].map(n => '<button data-tm="' + n + '" aria-label="' + n + ' minute' + (n === 1 ? '' : 's') + '">' + n + '</button>').join('') + '</div>' +
+        '<div class="pr-own"><label><input type="number" id="prOwn" min="0" max="180" step="1" inputmode="numeric" value="' + lm + '" aria-label="Minutes"> min</label>' +
+        '<label><input type="number" id="prOwnS" min="0" max="59" step="5" inputmode="numeric" value="' + ls + '" aria-label="Seconds"> sec</label><span class="sp"></span><button data-p="town">Start</button></div>') +
+    '<label class="pr-snd"><input type="checkbox" id="prBigC"' + (prBig() ? ' checked' : '') + '> Show it big in the middle of the screen</label>' +
     '<label class="pr-snd"><input type="checkbox" id="prSnd"' + (prSound() ? ' checked' : '') + '> A sound when the time is up</label>';
+  m.querySelector('#prBigC').onchange = () => prBigToggle();
   m.querySelector('#prSnd').onchange = e => { try { localStorage.setItem('gsp.presentSound', e.target.checked ? '1' : '0'); } catch { } };
 }
 
@@ -5415,14 +5783,16 @@ function prMenu(open) {
 function prClick(e) {
   prWake();
   const t = e.target;
-  if (t.closest('#pkStage')) return;   // the name picker looks after its own
+  if (PK.on && (t.closest('#pkStage') || !t.isConnected)) return;   // the name picker looks after its own (and a button it has just drawn again is off the page)
   if (e.detail && t.closest('#prBar,#prChip')) PR.el.focus();
   if (t.closest('#prMenu')) {
     const b = t.closest('button'); if (!b) return;
     if (b.dataset.tm) return prTimerStart(+b.dataset.tm * 60);
-    if (b.dataset.p === 'town') { const v = +$('#prOwn').value; return v > 0 ? prTimerStart(v * 60) : $('#prOwn').focus(); }
+    if (b.dataset.ts) return prTimerStart(+b.dataset.ts);
+    if (b.dataset.ta) return prTimerAdd(+b.dataset.ta);
+    if (b.dataset.p === 'town') return prOwnStart();
     if (b.dataset.p === 'tpause') return prTimerPause();
-    if (b.dataset.p === 'tadd') return prTimerAdd(60);
+    if (b.dataset.p === 'trestart') return prTimerRestart();
     if (b.dataset.p === 'tstop') return prTimerStop();
     return;
   }
@@ -5459,14 +5829,15 @@ function prKey(e) {
   e.stopPropagation();   // nothing behind the stage gets a key
   if (PK.on) { pkKey(e); return; }
   if (e.metaKey || e.ctrlKey || e.altKey) return;
-  const k = e.key, own = e.target && e.target.id === 'prOwn';
-  if (own) { if (k === 'Enter') { e.preventDefault(); const v = +e.target.value; if (v > 0) prTimerStart(v * 60); } else if (k === 'Escape') { e.preventDefault(); prMenu(false); PR.el.focus(); } return; }
+  const k = e.key, own = e.target && (e.target.id === 'prOwn' || e.target.id === 'prOwnS');
+  if (own) { if (k === 'Enter') { e.preventDefault(); prOwnStart(); } else if (k === 'Escape') { e.preventDefault(); prMenu(false); PR.el.focus(); } return; }
   if (k === 'Tab') return prWake();
   if ((k === ' ' || k === 'Enter') && e.target && e.target.closest && e.target.closest('#present button,#present input')) return;   // the button in hand does its own thing
   const stop = () => e.preventDefault();
   if (PR.menu) {
     stop();
     if (/^[1-9]$/.test(k)) return prTimerStart(+k * 60);
+    if (PR.timer && !PR.timer.done && (k === '+' || k === '=' || k === '-')) return prTimerAdd(k === '-' ? -60 : 60);
     if (k === 'Escape' || k.toLowerCase() === 't') return prMenu(false);
     return;
   }
@@ -5484,6 +5855,7 @@ function prKey(e) {
   if (c === 'n') { stop(); return prToggle('notes'); }
   if (c === 'b' || k === '.') { stop(); return prToggle('blank'); }
   if (c === 't') { stop(); return prMenu(true); }
+  if (PR.timer && !PR.timer.done && (k === '+' || k === '=' || k === '-')) { stop(); return prTimerAdd(k === '-' ? -60 : 60); }
   if (c === 'f') { stop(); return prFullToggle(); }
   if (c === 'p') { stop(); return prPick('pick'); }
   if (c === 'g') { stop(); return prPick('groups'); }
@@ -5496,12 +5868,12 @@ async function presentEnd() {
   PR.on = false; pkClose();
   clearInterval(PR.tickT); clearTimeout(PR.idleT); clearTimeout(prHintT); clearTimeout(PR.numT);
   document.removeEventListener('keydown', prKey, true); document.removeEventListener('fullscreenchange', prFull); window.removeEventListener('resize', prFit);
-  const lock = PR.lock, ac = PR.ac, full = document.fullscreenElement === el;
-  PR.lock = PR.ac = PR.timer = PR.el = null;
+  const lock = PR.lock, full = document.fullscreenElement === el;
+  PR.lock = PR.el = null;   // the timer, and its sound, go on (prFloat)
   el.remove();   // a full-screen stage taken off the page leaves full screen by itself
   try { if (full && document.fullscreenElement) await document.exitFullscreen(); } catch { }
   try { if (lock) await lock.release(); } catch { }
-  try { if (ac) ac.close(); } catch { }
+  prFloat();
   if (L.view === 'edit' && L.open === l) { L.cur = Math.min(i, l.slides.length - 1); renderEditor(); }
   if (back && back.isConnected && back.focus) try { back.focus({ preventScroll: true }); } catch { }
   const top = (items || []).filter(x => x.lvl === 0).length, done = (items || []).filter((x, k) => x.lvl === 0 && ticks.has(k)).length;
@@ -5556,8 +5928,16 @@ function esHomeSay(k) {
 const LANG_ES = {
   name: 'Español', locale: 'es',
   words: {
+    /* the to-do list: the sidebar, the card on Today, Find anything */
+    'To do': 'Pendientes', 'To do: your own list, with what the app noticed from your work': 'Pendientes: tu propia lista, con lo que la aplicación ha visto en tu trabajo', 'Add a to-do': 'Añadir un pendiente', 'Add a to-do…': 'Añadir un pendiente…',
+    'To do, by week': 'Pendientes, por semana', 'Your list laid out on the days of the week, under the classes that meet': 'Tu lista repartida en los días de la semana, bajo las clases de cada día',
+    'Open To do': 'Abrir Pendientes', 'Nothing on your list for today.': 'Nada en tu lista para hoy.', 'See everything': 'Ver todo', 'Done': 'Hecho', 'Tomorrow': 'Mañana', 'Note': 'Nota', 'Open it in To do': 'Abrirlo en Pendientes',
+    'Every school day': 'Cada día de clase', 'Every week': 'Cada semana', 'Each time this class meets': 'Cada vez que hay esta clase',
+    'Your own list, with what the app noticed from your work': 'Tu propia lista, con lo que la aplicación ha visto en tu trabajo', 'Type it the way you would say it': 'Escríbelo como lo dirías', 'Your own list, on the grading page': 'Tu propia lista, en la página de corrección',
     /* the sidebar, on both pages */
-    'Main': 'Principal', 'Grading Studio, Today': 'Grading Studio, Hoy', 'Find anything': 'Buscar', 'Today': 'Hoy', 'Planner': 'Planificador', 'Classes': 'Clases', 'Add a class': 'Añadir una clase',
+    'Main': 'Principal', 'Grading Studio, Today': 'Grading Studio, Hoy', 'Find anything': 'Buscar', 'Today': 'Hoy', 'Planner': 'Planificador', 'Classes': 'Clases', 'Add a class': 'Añadir una clase', 'Examples': 'Ejemplos', 'Strong work from every class, with no names on it': 'Trabajos destacados de todas las clases, sin nombres',
+    'School': 'Centro', 'School resources': 'Recursos del centro', 'School resources: links, files and notes about your school': 'Recursos del centro: enlaces, archivos y notas sobre tu centro',
+    'Links, files and notes about your school': 'Enlaces, archivos y notas sobre tu centro', 'Links, files and notes about your school, on the grading page': 'Enlaces, archivos y notas sobre tu centro, en la página de calificación', 'Link': 'Enlace', 'File': 'Archivo', 'Note': 'Nota',
     'Help': 'Ayuda', 'Settings': 'Ajustes', 'Update ready': 'Actualización lista', 'No class': 'Sin clase', 'App language': 'Idioma de la aplicación', 'English, Spanish or Traditional Chinese': 'Inglés, español o chino tradicional',
     'Find a student, an assignment, a tool or a setting': 'Busca un estudiante, una tarea, una herramienta o un ajuste',
     'Find a lesson, a unit, a class or a setting': 'Busca una lección, una unidad, una clase o un ajuste',
@@ -5624,7 +6004,8 @@ const LANG_ES = {
     'Points': 'Puntos', 'Type a total, like 17 out of 20. Each assignment has its own “out of”.': 'Escribe un total, como 17 de 20. Cada tarea tiene su propio máximo.',
     'Percent': 'Porcentaje', 'Type a percent for each paper.': 'Escribe un porcentaje para cada trabajo.',
     'Letter grades': 'Letras', 'A to F, worked out from the percent. You set where each letter starts.': 'De la A a la F, a partir del porcentaje. Tú decides dónde empieza cada letra.',
-    'IB 1 to 7': 'IB del 1 al 7', '1 to 7, worked out from the percent. You set the boundaries for your subject.': 'Del 1 al 7, a partir del porcentaje. Tú fijas los límites de tu asignatura.',
+    'IB DP 1 to 7': 'IB DP del 1 al 7', 'A final grade of 1 to 7, worked out from the percent, as in the Diploma. You set the boundaries for your subject.': 'Una nota final del 1 al 7, a partir del porcentaje, como en el Diploma. Tú fijas los límites de tu asignatura.',
+    'IB MYP criteria': 'Criterios del PAI (IB MYP)', 'Each criterion is marked 0 to 8. You choose the level that fits best, and the total becomes a final grade of 1 to 7.': 'Cada criterio se califica de 0 a 8. Tú eliges el nivel que mejor encaja, y el total se convierte en una nota final del 1 al 7.',
     'This is only what a new assignment starts with. Any assignment can be scored another way.': 'Esto es solo el punto de partida de una tarea nueva. Cualquier tarea se puede puntuar de otra manera.',
     'Where should your work be kept?': '¿Dónde quieres guardar tu trabajo?',
     'Your classes, papers, marks and scores are kept in this browser. Choose a folder on this computer and every save goes there too, with a copy of each day to go back to. Nothing is uploaded.': 'Tus clases, trabajos, marcas y notas se guardan en este navegador. Elige una carpeta de este ordenador y todo se guardará también allí, con una copia de cada día a la que puedes volver. No se sube nada.',
@@ -5650,6 +6031,7 @@ const LANG_ES = {
     'Open student work': 'Abrir trabajos de estudiantes', 'The ZIP or PDFs': 'El ZIP o los PDF', 'A ZIP, PDFs, Word files or photos': 'Un ZIP, PDF, archivos de Word o fotos',
     'Open a folder of papers': 'Abrir una carpeta de trabajos', 'Split a scan of everyone’s papers': 'Dividir un escaneo con los trabajos de todos', 'Match files to a roster': 'Emparejar archivos con una lista',
     'Its name and roster': 'Su nombre y su lista', 'Made-up students and papers': 'Estudiantes y trabajos inventados',
+    'Start a new school year': 'Empezar un nuevo curso escolar', 'Same classes, empty class lists; this year saved to a file': 'Las mismas clases, listas vacías; este curso guardado en un archivo', 'Open an archived year': 'Abrir un curso archivado', 'Bring back a year saved to a file': 'Recuperar un curso guardado en un archivo',
     'Take my work with me': 'Llevarme mi trabajo', 'A take-home file for another computer': 'Un archivo para llevar a otro ordenador', 'Bring work in': 'Traer trabajo', 'From a take-home file': 'Desde un archivo para llevar',
     'Remove from this computer': 'Quitar de este ordenador', 'Clears student work from this browser': 'Borra de este navegador los trabajos de los estudiantes',
     'Where my work is saved': 'Dónde se guarda mi trabajo', 'This browser, and a folder you choose': 'Este navegador y una carpeta que tú eliges',
@@ -5659,10 +6041,12 @@ const LANG_ES = {
     'Dark mode': 'Modo oscuro', 'Light mode': 'Modo claro', 'Display': 'Pantalla', 'Text size and zoom': 'Tamaño del texto y zoom',
     'Word papers': 'Trabajos de Word', 'Kept as Word files. They can be converted to PDF pages': 'Se conservan como archivos de Word. Se pueden convertir en páginas PDF', 'Converted to PDF pages as each assignment opens': 'Se convierten en páginas PDF al abrir cada tarea',
     'Tablet and pencil': 'Tableta y lápiz', 'What a finger does on the paper, and pencil pressure': 'Qué hace un dedo sobre la página, y la presión del lápiz',
+    'Name covers': 'Tapar nombres', 'You cover names yourself in Check the covers': 'Tú tapas los nombres en Revisar lo tapado', 'You cover names, and typed names are found too': 'Tú tapas los nombres, y además se buscan los nombres escritos a máquina',
     'All keys': 'Todas las teclas', 'Every keyboard shortcut': 'Todos los atajos de teclado',
     'Classes and rosters': 'Clases y listas', 'Terms and weights': 'Periodos y pesos', 'Your terms and how each type counts': 'Tus periodos y cuánto cuenta cada tipo',
     'Grading scale and rubrics': 'Escala de calificación y rúbricas', 'Your saved scales and rubrics': 'Tus escalas y rúbricas guardadas',
-    'Marking': 'Corrección', 'Mark key, Word papers, tablet and pencil': 'Clave de marcas, trabajos de Word, tableta y lápiz',
+    'Marking': 'Corrección', 'Mark key, mark colors, Word papers, tablet and pencil': 'Clave de marcas, colores de las marcas, trabajos de Word, tableta y lápiz',
+    'Mark colors': 'Colores de las marcas', 'Colors for ✗, checks and points': 'Colores para ✗, marcas de correcto y puntos',
     'Timetable and calendar': 'Horario y calendario', 'Class times and days off, in the Planner': 'Horas de clase y días sin clase, en el Planificador',
     'Working with Claude': 'Trabajar con Claude', 'Optional. What Claude can and can’t see': 'Opcional. Lo que Claude puede ver y lo que no',
     'This week in the Planner': 'Esta semana en el Planificador', 'Today’s classes and the lessons planned for them': 'Las clases de hoy y las lecciones planificadas para ellas',
@@ -5680,9 +6064,12 @@ const LANG_ES = {
     /* the feedback page in a returned paper */
     'How it was scored': 'Cómo se puntuó', 'From your teacher': 'De tu docente', 'Comment on your paper': 'Comentario en tu trabajo', 'Comments on your paper': 'Comentarios en tu trabajo',
     'Your marked paper starts on the next page.': 'Tu trabajo corregido empieza en la página siguiente.', 'Your feedback continues on the next page.': 'Tus comentarios continúan en la página siguiente.',
+    /* returned file names: Student - Assignment - Graded.pdf */
+    'Graded': 'Corregido', 'Feedback': 'Comentarios', 'Student name': 'Nombre del estudiante',
     'Missing': 'No entregado', 'Excused': 'Justificado', 'Late': 'Con retraso', 'Retake': 'Nuevo intento', 'First try': 'Primer intento', 'counts as': 'cuenta como',
   },
   rules: [
+    [/^(\d+) more on your list$/, m => m[1] + ' más en tu lista'], [/^(\d+) to do$/, m => m[1] + (m[1] === '1' ? ' pendiente' : ' pendientes')],
     [/^(?:No classes today\.|\w+ class(?:es)? today\.|\w+ sets? of papers (?:to mark|ready to hand back)|[Nn]othing waiting to be marked\.)/, m => esHomeSay(m.input)],
     [/^Grading Studio version (.+)$/, 'Grading Studio, versión $1'],
     [/^Step (\d) of 3$/, 'Paso $1 de 3'],
@@ -5749,6 +6136,18 @@ const LANG_ES = {
     'add-class': { q: '¿Cómo añado una clase y su lista?', words: 'lista estudiantes alumnos nombres nueva clase',
       a: ['1. Pulsa **Añadir una clase** en la barra lateral y ponle un nombre.', '2. Pega los nombres de los estudiantes, uno por línea. Se conservan en el orden en que los pegas.', '3. Abre la pestaña **Students** de la clase para añadir un identificador, un correo o una nota a cada uno.',
         'Con una lista, al abrir los trabajos de esa clase aparece cada estudiante, también quien no entregó nada.'] },
+    'todo': { q: '¿Cómo funciona la lista de pendientes?', go: 'Abrir Pendientes', words: 'pendientes tareas lista recordatorio recordar todo to-do',
+      a: ['**Pendientes**, en la barra lateral, es una sola lista. Tus propios pendientes llevan un círculo continuo. Las líneas con un círculo discontinuo son cosas que la aplicación ha visto en tu trabajo guardado: trabajos por corregir, trabajos por devolver, una clase sin lección planificada, trabajos sin entregar que reclamar.',
+        'Escribe un pendiente como lo dirías y pulsa Intro. Por ahora los días se leen en inglés: un día al final (“tomorrow”, “friday”, “nov 20”), el nombre de una clase o el de un estudiante se reconocen solos, y un clic en lo reconocido lo quita. Pulsa **N** en cualquier lugar fuera de un trabajo para añadir uno.',
+        'Haz clic en una línea para darle un día, una clase, algo con lo que va, una repetición o una nota. Las líneas de la aplicación se van solas cuando el trabajo está hecho. Puedes mover una a otro día, ocultarla o desactivar todo un tipo.',
+        '**Hoy** muestra una tarjeta corta con tus pendientes atrasados o de hoy. La lista se guarda con tu trabajo de corrección, nunca en la carpeta del Planificador.'] },
+    'todo-week': { q: '¿Puedo ver mis pendientes por semana?', go: 'Abrir la semana', words: 'pendientes semana semanal calendario días arrastrar mover',
+      a: ['Sí. En **Pendientes**, elige **Week** arriba a la derecha. Las mismas líneas aparecen en los días que les corresponden, cada una bajo la clase que se reúne ese día, con una columna Later para el resto.',
+        'Escribe en un día para añadir un pendiente para ese día y arrastra una línea a otro día. Lo que no se hace en su día pasa solo a hoy, e indica de qué día era.'] },
+    'school-resources': { q: '¿Dónde puedo guardar los enlaces y archivos de mi centro?', go: 'Abrir Recursos del centro', words: 'manual calendario normas portal marcador enlace archivo documento recursos centro colegio escuela horario formularios',
+      a: ['En **School** (Centro), en la barra lateral. Guarda el manual, el calendario, el horario, los portales en los que inicias sesión, los formularios y notas como a quién llamar. Ponlos en grupos con el nombre que quieras y pulsa la estrella de los que más abres para tenerlos arriba.',
+        '**Add a link** cuando el centro lo tiene en línea, porque un enlace se mantiene al día solo. **Add files…** guarda una copia del archivo con tu trabajo, hasta 50 MB cada uno. También puedes soltar archivos en la página o pegar una dirección web.',
+        'Todo se guarda con el resto de tu trabajo: en este navegador, en tu carpeta y en el archivo para llevar. Buscar encuentra cada uno por su nombre.'] },
     'language': { q: '¿Puedo usar la aplicación en otro idioma?', go: 'Abrir Ajustes, Pantalla', words: 'español inglés chino idioma lengua traducir traducción',
       a: ['Sí: español o chino tradicional. Elígelo en Ajustes, Display, **Idioma de la aplicación**, o en lo alto de la bienvenida. La página se vuelve a dibujar en el idioma que elijas.',
         'Por ahora, un idioma distinto del inglés cubre la barra lateral, Hoy, la bienvenida, Buscar, la Ayuda y la página de comentarios que reciben los estudiantes con un trabajo devuelto. Las demás pantallas siguen en inglés.',
@@ -5777,9 +6176,13 @@ const LANG_ES = {
         'Para dibujar sobre él con el bolígrafo y el resaltador, usa **Convert to PDF** en la barra del archivo. El archivo de Word se conserva. En Ajustes, Corrección puedes convertir cada trabajo de Word al abrirlo.'] },
     'audio': { q: '¿Puedo calificar grabaciones y vídeo?', words: 'audio mp3 mp4 vídeo oral exposición presentación transcripción',
       a: ['Sí. Una grabación se reproduce en lo alto del trabajo del estudiante, con saltos de 10 segundos y velocidad de 1× a 2×. **+ Time to comment** añade el momento, como [2:15], a tu comentario.', 'La barra espaciadora reproduce y pausa. J y L retroceden y avanzan 5 segundos.'] },
-    'quick-mark': { q: '¿Cómo corrijo rápido un examen en papel?', words: 'examen prueba preguntas recuadros bien mal puntos test',
+    'quick-mark': { q: '¿Cómo corrijo rápido un examen en papel?', words: 'examen prueba preguntas recuadros bien mal puntos test copiar imagen captura claude',
       a: ['Abre **Quick mark** en Setup. Dibuja una vez un recuadro alrededor de cada pregunta, en el escaneo de cualquier estudiante.', 'Luego corrige una pregunta para toda la clase, o el examen entero de un estudiante. Cada pregunta puede mostrar ✗ en las respuestas incorrectas, ✓ y ✗, puntos o una escala con tus propias palabras.',
-        'El total pasa a la nota del estudiante.'] },
+        'El total pasa a la nota del estudiante. ¿No estás seguro de una respuesta? Pulsa **P** o **⧉ Copy** sobre ella para copiar una imagen solo de esa respuesta, con la pregunta y tu respuesta correcta arriba, y pégala en Claude para preguntar. El nombre, la nota y tu marca no aparecen, pero la imagen sigue mostrando la letra y las palabras del estudiante.'] },
+    'mark-colors': { q: '¿Puedo cambiar el color de ✗, las marcas de correcto y los puntos?', go: 'Abrir Ajustes, Corrección', words: 'color tinta rojo verde amarillo ámbar puntos parcial crédito completo',
+      a: ['Sí. En Ajustes, Corrección, **Mark colors**, o en el menú **Colors** de Quick mark. ✗ usa el color de tu pluma y las marcas de correcto tienen el suyo.',
+        'Los puntos escritos en un trabajo, como 1/2, van en el color de ✗ salvo que elijas otro. **By credit** escribe los puntos completos en el color de correcto, los parciales en ámbar y ninguno en el color de ✗: verde, ámbar y rojo si dejas esos.',
+        'Los totales y los sellos de nota van en el color de puntos que elijas, o en el color de ✗ con By credit. En Quick mark, las marcas ya puestas en el examen cambian a los nuevos colores.'] },
     'late-work': { q: 'Un estudiante entregó tarde. ¿Cómo añado su trabajo?', words: 'tarde retraso falta añadir archivo reenviar nueva entrega',
       a: ['Con la tarea abierta, pulsa **+ Add** encima de la página y elige **A file…**, o suelta el archivo sobre el nombre del estudiante.', 'Para varios archivos tardíos a la vez, usa **Bring in files** en Setup. Lo que ya está aquí se deja fuera, así que solo quedan por colocar los archivos nuevos. Marca **Late** junto a quien quieras señalar como entrega tardía.'] },
     'group-work': { q: 'Varios estudiantes hicieron un trabajo juntos. ¿Lo corrijo para cada uno?', words: 'compañeros parejas grupo póster compartido juntos equipo',
@@ -5797,7 +6200,7 @@ const LANG_ES = {
         'El mismo cuadro cambia la tarea a puntos simples y fija la escala de calificación que convierte un total en un porcentaje.', '**Save to the bank…** guarda una rúbrica para usarla en otra tarea.',
         'Cada fila se puntúa de 0 a 4 con medios puntos, salvo que indiques otra cosa. Debajo de las filas, elige otra nota máxima (de 1 a 10) o desactiva los medios puntos. Tu escala habitual para las rúbricas nuevas está en Ajustes, Calificación.'] },
     'grading-way': { q: 'Mi centro califica con letras, porcentajes o del 1 al 7. ¿Puedo configurarlo?', go: 'Abrir Ajustes, Calificación', words: 'letras A B C porcentaje IB 7 límites bandas escala',
-      a: ['Sí. En Ajustes, **Grading scale and rubrics** está tu forma de calificar: filas de rúbrica, puntos, porcentaje, letras o IB del 1 al 7, con los límites de cada letra o nivel.', 'Es tu punto de partida para las tareas nuevas. Cada tarea se puede configurar a su manera en Rubric setup.'] },
+      a: ['Sí. En Ajustes, **Grading scale and rubrics** está tu forma de calificar: filas de rúbrica, puntos, porcentaje, letras, criterios del PAI (0 a 8) o IB DP del 1 al 7, con los límites de cada letra o nivel.', 'Es tu punto de partida para las tareas nuevas. Cada tarea se puede configurar a su manera en Rubric setup.'] },
     'status': { q: '¿Cómo marco un trabajo como no entregado, justificado o con retraso?', words: 'ausente sin trabajo exento tarde estado falta',
       a: ['Bajo el total del estudiante en el panel de notas, elige **Missing**, **Excused** o **Late**. El ⋯ de al lado tiene **Leave out of the average**.', 'Los trabajos no entregados y justificados no esperan nota, así que no cuentan como pendientes de corregir.'] },
     'extra-credit': { q: '¿Cómo doy puntos extra?', words: 'bonus puntos extra adicional',
@@ -5807,8 +6210,12 @@ const LANG_ES = {
     'past-work': { q: '¿Puedo ver trabajos anteriores de un estudiante mientras corrijo?', words: 'historial anterior previo progreso comparar',
       a: ['Sí. **Past work**, bajo Next en el panel de notas, muestra las notas del estudiante y tus comentarios de otras tareas junto al trabajo en pantalla.', 'Los estudiantes se emparejan mediante la lista de la clase.'] },
     'return': { q: '¿Cómo devuelvo los trabajos corregidos?', words: 'exportar descargar devolver entregar zip enviar estudiantes',
-      a: ['1. Abre la pestaña **Return** de la tarea. Primero muestra lo que falta: notas sin poner, estudiantes sin trabajo.', '2. Pulsa el botón azul. La aplicación crea un ZIP con el archivo corregido de cada estudiante en las mismas carpetas en que llegaron.', '3. Sube ese ZIP, o los archivos que contiene, al sistema de tu centro.',
+      a: ['1. Abre la pestaña **Return** de la tarea. Primero muestra lo que falta: notas sin poner, estudiantes sin trabajo.', '2. Pulsa el botón azul. La aplicación crea un ZIP con el archivo corregido de cada estudiante en las mismas carpetas en que llegaron, con un nombre como «Ana Lee - River essay - Corregido.pdf» (Comentarios cuando no hay nota).', '3. Sube ese ZIP, o los archivos que contiene, al sistema de tu centro.',
         'Para devolver un solo trabajo enseguida, usa el botón **Export … paper now** bajo Previous y Next.'] },
+    'anchor-papers': { q: '¿Cómo elijo y exporto los trabajos de referencia (anchor papers)?', words: 'referencia ejemplo alto medio bajo moderación estándar muestra anchor',
+      a: ['Los trabajos de referencia son el trabajo alto, el medio y el bajo que tu centro guarda de una evaluación sumativa. Mientras corriges, haz clic en **High**, **Mid** o **Low** debajo de la nota. Cada nivel pertenece a un solo trabajo, así que elegir otro lo mueve.',
+        'La pestaña **Return** muestra los tres. **Export anchor papers** los descarga en un ZIP, cada uno con el nombre de la tarea y su nivel, como “Ensayo - Summative High.pdf”.',
+        'Los nombres de los estudiantes se tapan igual que para Claude: los nombres escritos a máquina y tus propios recuadros quedan en negro. Un nombre escrito a mano necesita un recuadro, así que usa antes **Check the covers** en la tarjeta. Desmarca **Cover student names** para exportarlos tal como están.'] },
     'feedback-page': { q: '¿Qué es la página de comentarios de un trabajo devuelto?', words: 'portada resumen primera página estudiante ve informe',
       a: ['Cada trabajo devuelto empieza con una página para el estudiante: la nota, cada fila de la rúbrica con el nivel que diste y lo que significa, tu comentario y cada comentario del trabajo con su número de página.',
         'Está activada salvo que la desactives en **Options**, en la pestaña Return. Tus propias páginas no cambian. Con la aplicación en español, esa página sale en español.'] },
@@ -5820,6 +6227,9 @@ const LANG_ES = {
     'gradebook': { q: '¿Dónde está el libro de calificaciones?', words: 'notas tabla periodo media global libro',
       a: ['Abre una clase desde la barra lateral y elige su pestaña **Gradebook**. Tiene todas las tareas de la clase en una tabla, agrupadas por tipo, con una media por tipo y una nota del periodo.',
         '**+ Add scores** permite escribir notas de trabajos que no se corrigieron aquí.'] },
+    'import-scores': { q: '¿Puedo traer las notas de mi libro de calificaciones anterior?', words: 'importar hoja de cálculo csv excel xlsx subir notas anteriores',
+      a: ['Sí. En el libro de calificaciones de la clase pulsa **Import…** y elige un archivo CSV o Excel, o pega las celdas de tu hoja de cálculo. Una fila por estudiante y una columna por tarea.',
+        'Antes de guardar nada ves cada columna con su tipo, su fecha y sobre cuánto es, qué filas coinciden con tu lista y cualquier nota que ya esté en el libro. Las notas que ya están se quedan, salvo que elijas las del archivo.'] },
     'terms': { q: '¿Cómo configuro los periodos y cuánto cuenta cada tipo?', go: 'Abrir Ajustes, Periodos', words: 'semestre trimestre pesos porcentaje sumativa formativa ponderación',
       a: ['En Ajustes, **Terms and weights** están tus periodos y sus fechas, y qué parte de la nota del periodo aporta cada tipo de tarea. El trabajo formativo nunca cuenta para la nota.', 'Una tarea cuenta para el periodo en el que cae su fecha de entrega.'] },
     'one-student': { q: '¿Cómo veo todo sobre un estudiante?', words: 'perfil individual familia reunión tutoría progreso gráfico',
@@ -5836,10 +6246,14 @@ const LANG_ES = {
       a: ['Sí. Abre una clase y elige **Report comments**. Cada estudiante tiene un borrador hecho a partir de la nota del periodo, las filas de rúbrica más fuerte y más floja, los trabajos sin entregar y cómo han evolucionado las notas.',
         'Cambia lo que quieras, trae lo que escribiste en sus trabajos con **Add** y pulsa **Done, next student**. **Copy all** copia todos los comentarios para tu sistema de informes.',
         'Ninguna IA escribe los borradores y no se envía nada a ningún sitio. **Wording…** te deja reescribir las frases con las que se construyen. Por ahora los borradores se escriben en inglés.'] },
+    types: { q: '¿Puedo crear mis propios tipos de tarea o cambiar su orden?', go: 'Abrir Ajustes, Periodos', words: 'categoría categorías propio orden izquierda derecha deberes proyecto examen renombrar pesos columnas',
+      a: ['Sí. Abre **Term setup** desde el libro de calificaciones de una clase o desde Ajustes, **Terms and weights**. En **Types, and what a grade is made of** puedes cambiar el nombre de un tipo, añadir los tuyos con **+ Add a type** (deberes, proyectos, pruebas) y dar a cada uno su parte de la nota.',
+        'Las flechas junto a cada tipo fijan el orden. Es el orden de las columnas del libro de calificaciones, de izquierda a derecha, y de las opciones allí donde eliges un tipo.',
+        'Un tipo se puede quitar cuando ya no tiene ninguna tarea. Formative sigue siendo solo comentarios: una ✓ en lugar de una nota.'] },
     'seating': { q: '¿Puedo hacer un plano de asientos, grupos o elegir a un estudiante al azar?', words: 'asiento asientos pupitre mesa plano sitio barajar azar sorteo nombre grupos equipos parejas',
       a: ['Sí. Abre una clase y elige **Seating**. Elige cómo está colocada el aula y arrastra a cada estudiante a un pupitre. Si sueltas a un estudiante sobre otro, se cambian el sitio.',
         '**Shuffle** da a todos un sitio nuevo, con Deshacer. Haz clic en un estudiante y elige **Keep in this seat** para quien no deba moverse. El menú **⋯** organiza los pupitres, muestra el plano a la clase y lo imprime.',
-        '**Pick a name** muestra a un estudiante al azar, y a nadie dos veces hasta que todos hayan tenido su turno. **Make groups** reparte la clase en grupos del tamaño que quieras. **Who’s here** deja fuera a quien falte hoy.',
+        '**Pick a name** muestra a un estudiante al azar, y a nadie dos veces hasta que todos hayan tenido su turno. **Make groups** reparte la clase en grupos; arrastra un nombre para moverlo o haz clic en dos nombres para cambiarlos. **Make my own** empieza con los grupos vacíos. **Who’s here** deja fuera a quien falte hoy. Ctrl Z deshace un cambio o una mezcla.',
         'Mientras presentas una lección en el Planificador, pulsa **P** para elegir un nombre y **G** para hacer grupos. Los nombres solo se muestran: nunca se guardan en una lección ni en la carpeta del Planificador.'] },
     'missing-work': { q: '¿Cómo recuerdo a los estudiantes los trabajos sin entregar?', words: 'tarde atrasado sin entregar debe recordar correo recordatorio familias',
       a: ['Abre una clase y elige **Missing work**. Muestra cada trabajo que marcaste como Missing, por estudiante o por tarea, del periodo que elijas.',
@@ -5855,8 +6269,12 @@ const LANG_ES = {
     'other-computer': { q: '¿Cómo llevo mi trabajo a otro ordenador?', go: 'Abrir Ajustes, Guardado', words: 'casa portátil transferir llevar sincronizar segundo ordenador usb',
       a: ['1. En Ajustes, **Saving and carrying**, pulsa **Take my work with me**. Crea un archivo protegido con una frase de contraseña que tú eliges.', '2. Lleva el archivo al otro ordenador.', '3. Allí, pulsa **Bring work in**. Muestra lo que va a cambiar antes de cambiar nada.',
         'El viaje de vuelta funciona igual. Si el mismo estudiante cambió en los dos sitios, ves las dos versiones y eliges.'] },
+    'new-year': { q: '¿Cómo empiezo un nuevo curso escolar?', go: 'Abrir Ajustes, Guardado', words: 'nuevo curso año escolar archivar empezar de cero septiembre lista vacía',
+      a: ['1. En Ajustes, **Saving and carrying**, pulsa **Start a new year**.', '2. Revisa los nombres de los dos cursos y lo que se conserva, elige una frase de contraseña y pulsa **Save the file and start the new year**. Este curso se guarda en un archivo protegido, y el archivo se vuelve a leer y se comprueba antes de borrar nada.',
+        'Tus clases, unidades y tarjetas de tareas se quedan, cada tarjeta con su rúbrica y sus casillas de Quick mark, y las fechas avanzan un año. Las listas de clase, los trabajos, las notas y los comentarios salen de este navegador y quedan en el archivo. El Planner avanza sus unidades un año la próxima vez que lo abras.',
+        'Para volver a ver un curso anterior, pulsa **Open an archived year** y elige su archivo. El curso en el que estás se guarda antes en su propio archivo, así que puedes volver.'] },
     'go-back': { q: 'Me equivoqué. ¿Puedo volver a como estaba todo?', go: 'Abrir Volver atrás en el tiempo', words: 'deshacer restaurar historial perdido borrado recuperar copia',
-      a: ['Deshacer (Ctrl Z, o ⌘Z) retrocede por las marcas de la página.', 'Para algo mayor, en Ajustes, **Go back in time** muestra tu trabajo tal como estaba en días anteriores. **Look** compara entonces y ahora. **Restore this assignment** devuelve una tarea a ese día y deja el resto como está.'] },
+      a: ['Deshacer (Ctrl Z, o ⌘Z) retrocede, paso a paso, por las marcas de la página y las calificaciones que diste.', 'Al eliminar una unidad, una tarea o una clase aparece **Undo** durante unos segundos.', 'Para algo mayor, en Ajustes, **Go back in time** muestra tu trabajo tal como estaba en días anteriores. **Look** compara entonces y ahora. **Restore this assignment** devuelve una tarea a ese día y deja el resto como está.'] },
     'offline': { q: '¿Funciona sin internet?', go: 'Abrir Acerca de y actualizaciones', words: 'sin conexión wifi instalar aplicación avión',
       a: ['Sí. Tras la primera visita la aplicación se queda en el ordenador y se abre sin conexión. Tu trabajo nunca la necesitó.', 'En Ajustes, **About and updates** puedes instalarla como una aplicación con su propia ventana e icono.'] },
     'updates': { q: '¿Cómo funcionan las actualizaciones?', go: 'Abrir Acerca de y actualizaciones', words: 'versión nueva actualizar novedades cambios',
@@ -5864,12 +6282,14 @@ const LANG_ES = {
     'planner': { q: '¿Qué es el Planificador?', words: 'lecciones unidades calendario diapositivas planificar powerpoint',
       a: ['El Planificador guarda tus unidades y lecciones: un calendario por semana o por semestre, un editor de diapositivas que crea archivos de PowerPoint, un banco de actividades y un banco de rúbricas.', 'Es una página aparte, a la que se llega desde la barra lateral. Nunca lee los trabajos ni las notas.'] },
     'timetable': { q: '¿Cómo configuro mi horario?', words: 'horario periodos clases horas calendario festivos',
-      a: ['En el Planificador, pulsa **Horario** en la barra lateral. Escribe tus clases, cuándo se reúne cada una y los días en que el centro está cerrado.', 'Desde entonces Hoy muestra las clases que das cada día con la lección planificada para cada una.'] },
+      a: ['En el Planificador, pulsa **Horario** en la barra lateral. Escribe tus clases, cuándo se reúne cada una y los días en que el centro está cerrado. **Save my setup file**, arriba, guarda todo, incluida tu plantilla de diapositivas, en un archivo que puedes cargar en otro ordenador.', 'Desde entonces Hoy muestra las clases que das cada día con la lección planificada para cada una.'] },
     'present': { q: '¿Cómo presento una lección a la clase?', words: 'presentación pantalla completa proyector enseñar temporizador agenda mando',
       a: ['Abre la lección en el Planificador y pulsa **Present**. Sus diapositivas llenan la pantalla; las flechas o un mando las pasan. En Hoy, la clase que toca ahora o a continuación tiene su propio botón **Presentar**.',
-        'Mientras presentas: **A** muestra la agenda, **T** inicia un temporizador que la clase puede ver, **P** elige a un estudiante al azar, **G** hace grupos, **N** muestra tus notas, **B** deja la pantalla en blanco y **Esc** termina.', 'Después, una línea anota hasta dónde llegó la clase, y al presentar de nuevo se retoma desde ahí.'] },
+        'Mientras presentas: **A** muestra la agenda, **T** inicia un temporizador que la clase puede ver, **P** elige a un estudiante al azar, **G** hace grupos, **N** muestra tus notas, **B** deja la pantalla en blanco y **Esc** termina.', 'El temporizador acepta minutos y segundos. Mientras corre, su menú suma o quita 10 segundos o un minuto, lo pausa y lo reinicia; **+** y **−** suman o quitan un minuto. Marca **Show it big** para poner la cuenta atrás en el centro de la pantalla, para el fondo del aula.', 'El temporizador sigue al terminar o al salir de la pantalla completa: espera en una esquina del Planificador. Después, una línea anota hasta dónde llegó la clase, y al presentar de nuevo se retoma desde ahí.'] },
     'pptx': { q: '¿Puedo obtener mis diapositivas como archivo de PowerPoint?', words: 'powerpoint pptx exportar diapositivas keynote google slides descargar',
-      a: ['Sí. Abre la lección y pulsa **Download .pptx**. El archivo se abre en PowerPoint, Keynote y Google Slides.'] },
+      a: ['Sí. Abre la lección y pulsa **Download .pptx**. El archivo se abre en PowerPoint, Keynote y Google Slides.', 'Las diapositivas usan una plantilla blanca sencilla, salvo que le des la tuya: en **Horario**, pulsa **Use my school’s template…** y elige un archivo de PowerPoint con un diseño Title Slide y otro Title and Content.'] },
+    'sharelesson': { q: '¿Cómo paso una lección a otro ordenador o se la doy a otro docente?', words: 'compartir enviar mover pasar copiar otro ordenador docente colega gslesson archivo importar',
+      a: ['Abre la lección y elige **More ▾ → Share lesson file…**. Obtienes un archivo pequeño con las diapositivas, las notas, las imágenes, los materiales y el PowerPoint terminado si lo hay.', 'En el otro ordenador, pulsa **Import a lesson** en el Planner y elige el archivo, o suéltalo en el Planner. Las clases y los días en que estaba, las notas de lo enseñado y los comentarios para Claude se quedan aquí.'] },
     'privacy': { q: '¿Salen de mi ordenador los trabajos de los estudiantes?', words: 'privado protección de datos rgpd nube servidor seguro',
       a: ['No. Los trabajos, los nombres, las notas y los comentarios se quedan en este navegador y en la carpeta que elijas. La aplicación no tiene servidor ni cuentas, y funciona sin internet.',
         'Lo único que sale son los archivos que tú exportas.'] },
@@ -5907,8 +6327,16 @@ function zhHomeSay(k) {
 const LANG_ZH = {
   name: '繁體中文', locale: 'zh-Hant',
   words: {
+    /* the to-do list: the sidebar, the card on Today, Find anything */
+    'To do': '待辦事項', 'To do: your own list, with what the app noticed from your work': '待辦事項：你自己的清單，加上系統從你的工作中發現的事', 'Add a to-do': '新增待辦事項', 'Add a to-do…': '新增待辦事項…',
+    'To do, by week': '待辦事項（週檢視）', 'Your list laid out on the days of the week, under the classes that meet': '把清單排在一週的每一天，列在當天的課底下',
+    'Open To do': '開啟待辦事項', 'Nothing on your list for today.': '今天清單上沒有事項。', 'See everything': '查看全部', 'Done': '已完成', 'Tomorrow': '明天', 'Note': '備註', 'Open it in To do': '在待辦事項中開啟',
+    'Every school day': '每個上課日', 'Every week': '每週', 'Each time this class meets': '每次這個班上課時',
+    'Your own list, with what the app noticed from your work': '你自己的清單，加上系統從你的工作中發現的事', 'Type it the way you would say it': '照你平常說的方式輸入', 'Your own list, on the grading page': '你自己的清單，在批改頁面',
     /* the sidebar, on both pages */
-    'Main': '主選單', 'Grading Studio, Today': 'Grading Studio，今天', 'Find anything': '搜尋', 'Today': '今天', 'Planner': '備課', 'Classes': '班級', 'Add a class': '新增班級',
+    'Main': '主選單', 'Grading Studio, Today': 'Grading Studio，今天', 'Find anything': '搜尋', 'Today': '今天', 'Planner': '備課', 'Classes': '班級', 'Add a class': '新增班級', 'Examples': '範例', 'Strong work from every class, with no names on it': '各班的優秀作品，不顯示姓名',
+    'School': '學校', 'School resources': '學校資源', 'School resources: links, files and notes about your school': '學校資源：學校的連結、檔案與筆記',
+    'Links, files and notes about your school': '學校的連結、檔案與筆記', 'Links, files and notes about your school, on the grading page': '學校的連結、檔案與筆記，在批改頁面', 'Link': '連結', 'File': '檔案', 'Note': '筆記',
     'Help': '說明', 'Settings': '設定', 'Update ready': '有新版本', 'No class': '未指定班級', 'App language': '介面語言', 'English, Spanish or Traditional Chinese': '英文、西班牙文或繁體中文',
     'Find a student, an assignment, a tool or a setting': '搜尋學生、作業、工具或設定',
     'Find a lesson, a unit, a class or a setting': '搜尋課程、單元、班級或設定',
@@ -5975,7 +6403,8 @@ const LANG_ZH = {
     'Points': '分數', 'Type a total, like 17 out of 20. Each assignment has its own “out of”.': '輸入總分，例如滿分 20 得 17。每份作業有自己的滿分。',
     'Percent': '百分比', 'Type a percent for each paper.': '為每份作業輸入百分比。',
     'Letter grades': '等第', 'A to F, worked out from the percent. You set where each letter starts.': 'A 到 F，依百分比換算。每個等第的起點由你設定。',
-    'IB 1 to 7': 'IB 1 到 7', '1 to 7, worked out from the percent. You set the boundaries for your subject.': '1 到 7，依百分比換算。各級的分界由你依科目設定。',
+    'IB DP 1 to 7': 'IB DP 1 到 7', 'A final grade of 1 to 7, worked out from the percent, as in the Diploma. You set the boundaries for your subject.': '最終成績 1 到 7，依百分比換算，如同 DP。各級的分界由你依科目設定。',
+    'IB MYP criteria': 'IB MYP 評量標準', 'Each criterion is marked 0 to 8. You choose the level that fits best, and the total becomes a final grade of 1 to 7.': '每項標準評 0 到 8。由你選出最符合的等級，總分再換算成 1 到 7 的最終成績。',
     'This is only what a new assignment starts with. Any assignment can be scored another way.': '這只是新作業的預設方式。任何作業都可以改用其他方式評分。',
     'Where should your work be kept?': '工作成果要存在哪裡？',
     'Your classes, papers, marks and scores are kept in this browser. Choose a folder on this computer and every save goes there too, with a copy of each day to go back to. Nothing is uploaded.': '你的班級、作業、批註和分數都存在這個瀏覽器。選擇這台電腦上的資料夾，之後每次儲存也會存到那裡，並保留每天的副本，方便回復。不會上傳任何資料。',
@@ -6001,6 +6430,7 @@ const LANG_ZH = {
     'Open student work': '開啟學生作業', 'The ZIP or PDFs': 'ZIP 或 PDF 檔', 'A ZIP, PDFs, Word files or photos': 'ZIP、PDF、Word 檔或照片',
     'Open a folder of papers': '開啟作業資料夾', 'Split a scan of everyone’s papers': '分割全班作業的掃描檔', 'Match files to a roster': '將檔案與名單配對',
     'Its name and roster': '名稱與名單', 'Made-up students and papers': '虛構的學生與作業',
+    'Start a new school year': '開始新的學年', 'Same classes, empty class lists; this year saved to a file': '同樣的班級、空白名單；這一學年存成檔案', 'Open an archived year': '開啟封存的學年', 'Bring back a year saved to a file': '找回存成檔案的學年',
     'Take my work with me': '帶走我的工作成果', 'A take-home file for another computer': '給另一台電腦用的攜帶檔', 'Bring work in': '帶入工作成果', 'From a take-home file': '從攜帶檔',
     'Remove from this computer': '從這台電腦移除', 'Clears student work from this browser': '清除這個瀏覽器裡的學生作業',
     'Where my work is saved': '我的工作成果存在哪裡', 'This browser, and a folder you choose': '這個瀏覽器，以及你選擇的資料夾',
@@ -6010,10 +6440,12 @@ const LANG_ZH = {
     'Dark mode': '深色模式', 'Light mode': '淺色模式', 'Display': '顯示', 'Text size and zoom': '文字大小與縮放',
     'Word papers': 'Word 作業', 'Kept as Word files. They can be converted to PDF pages': '保留為 Word 檔。可以轉換成 PDF 頁面', 'Converted to PDF pages as each assignment opens': '每份作業開啟時轉換成 PDF 頁面',
     'Tablet and pencil': '平板與觸控筆', 'What a finger does on the paper, and pencil pressure': '手指在頁面上的作用，以及筆的壓力',
+    'Name covers': '遮蓋姓名', 'You cover names yourself in Check the covers': '你在「檢查遮蓋」中自己遮蓋姓名', 'You cover names, and typed names are found too': '你自己遮蓋姓名，也會自動找出打字的姓名',
     'All keys': '所有快速鍵', 'Every keyboard shortcut': '所有鍵盤快速鍵',
     'Classes and rosters': '班級與名單', 'Terms and weights': '學期與比重', 'Your terms and how each type counts': '你的學期，以及各類作業所占的比重',
     'Grading scale and rubrics': '評分等第與評分規準', 'Your saved scales and rubrics': '你儲存的評分等第與評分規準',
-    'Marking': '批改', 'Mark key, Word papers, tablet and pencil': '批改符號表、Word 作業、平板與觸控筆',
+    'Marking': '批改', 'Mark key, mark colors, Word papers, tablet and pencil': '批改符號表、批改顏色、Word 作業、平板與觸控筆',
+    'Mark colors': '批改顏色', 'Colors for ✗, checks and points': '✗、勾號與分數的顏色',
     'Timetable and calendar': '課表與行事曆', 'Class times and days off, in the Planner': '上課時間與放假日，在備課頁面',
     'Working with Claude': '搭配 Claude 使用', 'Optional. What Claude can and can’t see': '可選用。Claude 看得到和看不到的內容',
     'This week in the Planner': '備課頁面的本週', 'Today’s classes and the lessons planned for them': '今天的班級與為它們準備的課程',
@@ -6031,9 +6463,12 @@ const LANG_ZH = {
     /* the feedback page in a returned paper */
     'How it was scored': '評分方式', 'From your teacher': '老師的話', 'Comment on your paper': '作業上的評語', 'Comments on your paper': '作業上的評語',
     'Your marked paper starts on the next page.': '批改後的作業從下一頁開始。', 'Your feedback continues on the next page.': '回饋接續在下一頁。',
+    /* returned file names: Student - Assignment - Graded.pdf */
+    'Graded': '已評分', 'Feedback': '回饋', 'Student name': '學生姓名',
     'Missing': '缺交', 'Excused': '免交', 'Late': '遲交', 'Retake': '重做', 'First try': '第一次', 'counts as': '採計',
   },
   rules: [
+    [/^(\d+) more on your list$/, '清單上還有 $1 項'], [/^(\d+) to do$/, '$1 項待辦'],
     [/^(?:No classes today\.|\w+ class(?:es)? today\.|\w+ sets? of papers (?:to mark|ready to hand back)|[Nn]othing waiting to be marked\.)/, m => zhHomeSay(m.input)],
     [/^Grading Studio version (.+)$/, 'Grading Studio 版本 $1'],
     [/^Step (\d) of 3$/, '第 $1 步，共 3 步'],
@@ -6100,6 +6535,18 @@ const LANG_ZH = {
     'add-class': { q: '怎麼新增班級和名單？', words: '名單 學生 姓名 新班級 roster',
       a: ['1. 按側邊欄的**新增班級**，並為它命名。', '2. 貼上學生姓名，一行一位。順序會和你貼上的一樣。', '3. 開啟班級的 **Students** 分頁，可以為每位學生加上學號、電子郵件或備註。',
         '有了名單，開啟那個班級的作業時會列出每位學生，包括沒有繳交的人。'] },
+    'todo': { q: '待辦事項清單怎麼用？', go: '開啟待辦事項', words: '待辦 事項 清單 提醒 記得 工作 todo to-do task',
+      a: ['側邊欄的**待辦事項**是一份清單。你自己的事項是實線圓圈。虛線圓圈的是系統從你存好的工作中發現的事：要批改的作業、可以發還的作業、還沒備課的班級、需要催繳的缺交作業。',
+        '照你平常說的方式輸入，然後按 Enter。日期目前用英文辨識：句尾的日期（“tomorrow”、“friday”、“nov 20”）、班級名稱或學生姓名會自動辨識出來，點一下辨識到的項目就能取消。在作業畫面以外的任何地方按 **N** 就能新增。',
+        '點一下事項，可以設定日期、班級、相關的對象、重複或備註。系統加入的事項在工作完成後會自己消失。你可以把它移到另一天、隱藏，或關掉整個類別。',
+        '**今天**會顯示一張小卡，列出你逾期或今天到期的事項。清單和你的批改工作存在一起，絕不會放進備課的資料夾。'] },
+    'todo-week': { q: '可以按週查看待辦事項嗎？', go: '開啟本週', words: '待辦 事項 週 每週 行事曆 日期 拖曳 移動 week',
+      a: ['可以。在**待辦事項**頁面右上角選 **Week**。同樣的事項會排在各自的日期，放在當天上課的班級底下，其餘的在 Later 欄。',
+        '在某一天輸入就能新增那天的事項，也可以把事項拖到另一天。當天沒完成的會自動移到今天，並標出原本是哪一天。'] },
+    'school-resources': { q: '學校的連結和檔案可以放在哪裡？', go: '開啟學校資源', words: '手冊 行事曆 規定 政策 入口網站 書籤 連結 檔案 文件 資源 學校 作息表 表單 handbook calendar link file',
+      a: ['在側邊欄的**School**（學校）。把教師手冊、行事曆、作息表、常登入的入口網站、表單，以及「該找誰」這類筆記都放在這裡。可以自己命名分組，常開的項目按星號就會排在最上面。',
+        '學校已經放在網路上的內容，用 **Add a link**，連結會自己保持最新。**Add files…** 會把檔案的副本和你的工作存在一起，每個檔案最多 50 MB。也可以把檔案拖到頁面上，或貼上網址。',
+        '所有內容都和你其他的工作一起儲存：在這個瀏覽器、你的資料夾，以及帶著走的檔案裡。用搜尋輸入名稱就能找到每一項。'] },
     'language': { q: '介面可以換成其他語言嗎？', go: '開啟設定、顯示', words: '中文 繁體 西班牙文 英文 語言 翻譯 chinese language',
       a: ['可以。目前有繁體中文和西班牙文。在設定、Display 的**介面語言**選擇，或在歡迎畫面最上方選擇。頁面會用你選的語言重新顯示。',
         '英文以外的語言目前涵蓋側邊欄、今天、歡迎畫面、搜尋、說明，以及學生隨發還作業收到的回饋頁。其他畫面仍是英文。',
@@ -6128,9 +6575,13 @@ const LANG_ZH = {
         '如果要用筆和螢光筆在上面畫，請用檔案列上的 **Convert to PDF**。Word 檔會保留。在設定、批改中，可以設定每份 Word 作業開啟時自動轉換。'] },
     'audio': { q: '可以評錄音和影片嗎？', words: '錄音 音訊 mp3 mp4 影片 口說 報告 逐字稿 audio video',
       a: ['可以。錄音會在學生作業的上方播放，可以前後跳 10 秒，速度從 1× 到 2×。**+ Time to comment** 會把時間點（例如 [2:15]）加到你的評語裡。', '空白鍵可以播放和暫停。J 和 L 分別後退和前進 5 秒。'] },
-    'quick-mark': { q: '怎麼快速批改紙本小考？', words: '小考 測驗 考試 題目 框 對 錯 分數 quiz',
+    'quick-mark': { q: '怎麼快速批改紙本小考？', words: '小考 測驗 考試 題目 框 對 錯 分數 quiz 複製 圖片 截圖 claude',
       a: ['在 Setup 開啟 **Quick mark**。在任何一位學生的掃描檔上，為每一題畫一次框。', '接著可以一次批改全班的同一題，或一位學生的整份考卷。每一題可以在錯的答案上顯示 ✗、顯示 ✓ 和 ✗、給分，或使用你自訂文字的量尺。',
-        '總分會成為學生的分數。'] },
+        '總分會成為學生的分數。不確定某個答案？在它上面按 **P** 或 **⧉ Copy**，就會複製只有這個答案的圖片，上方附有題目和你的標準答案，可以貼到 Claude 詢問。圖片不含姓名、分數和你的批改記號，但仍會顯示學生的筆跡和文字。'] },
+    'mark-colors': { q: '可以更改 ✗、勾號和分數的顏色嗎？', go: '開啟設定、批改', words: '顏色 墨水 紅 綠 黃 琥珀 分數 部分 得分 滿分',
+      a: ['可以。在設定、批改的 **Mark colors**，或 Quick mark 的 **Colors** 選單。✗ 使用筆的顏色，勾號有自己的顏色。',
+        '寫在作業上的分數，例如 1/2，除非另外選擇，否則使用 ✗ 的顏色。**By credit** 會把滿分寫成勾號的顏色，部分得分寫成琥珀色，零分寫成 ✗ 的顏色：保留預設就是綠、琥珀、紅。',
+        '總分和分數印章使用你選的分數顏色；選 By credit 時使用 ✗ 的顏色。在 Quick mark 中，這份小考已經給的批改會換成新的顏色。'] },
     'late-work': { q: '有學生遲交，怎麼加入他的作業？', words: '遲交 補交 缺交 新增 檔案 重新繳交',
       a: ['開啟那份作業後，按頁面上方的 **+ Add**，選擇 **A file…**，或把檔案拖到學生的名字上。', '如果一次有好幾個遲交的檔案，請用 Setup 裡的 **Bring in files**。已經在這裡的檔案會被略過，所以只需要處理新的檔案。要標示為遲交的人，請勾選旁邊的 **Late**。'] },
     'group-work': { q: '幾位學生一起完成一份作業，需要每個人都批改一次嗎？', words: '同伴 兩人 小組 海報 共同 一起 團隊 group',
@@ -6148,7 +6599,7 @@ const LANG_ZH = {
         '同一個視窗也可以把作業改成單純給分，並設定把總分換算成百分比的評分等第。', '**Save to the bank…** 會把評分規準存起來，供其他作業使用。',
         '每個項目預設評 0 到 4 分，可以給半分。在項目下方可以改成其他最高分（1 到 10），或關閉半分。新評分規準的慣用分數範圍在設定的「評分」裡。'] },
     'grading-way': { q: '我的學校用等第、百分比或 1 到 7 評分，可以設定嗎？', go: '開啟設定、評分', words: '等第 A B C 百分比 IB 7 分界 級距 量尺',
-      a: ['可以。在設定的 **Grading scale and rubrics** 裡是你的評分方式：評分規準項目、分數、百分比、等第或 IB 1 到 7，以及每個等第或級別的分界。', '這是新作業的預設方式。每份作業都可以在 Rubric setup 裡另外設定。'] },
+      a: ['可以。在設定的 **Grading scale and rubrics** 裡是你的評分方式：評分規準項目、分數、百分比、等第、IB MYP 評量標準（0 到 8）或 IB DP 1 到 7，以及每個等第或級別的分界。', '這是新作業的預設方式。每份作業都可以在 Rubric setup 裡另外設定。'] },
     'status': { q: '怎麼把作業標示為缺交、免交或遲交？', words: '缺席 沒交 免除 遲交 狀態 缺交',
       a: ['在評分面板中學生總分的下方，選擇 **Missing**、**Excused** 或 **Late**。旁邊的 ⋯ 裡有 **Leave out of the average**。', '缺交和免交的作業不需要分數，所以不會算在待批改裡。'] },
     'extra-credit': { q: '怎麼給加分？', words: '加分 額外分數 bonus extra credit',
@@ -6158,8 +6609,12 @@ const LANG_ZH = {
     'past-work': { q: '批改時可以看學生以前的作業嗎？', words: '紀錄 以前 先前 進步 比較 history',
       a: ['可以。評分面板中 Next 下方的 **Past work** 會在目前的作業旁，顯示這位學生在其他作業的分數和你的評語。', '學生是依班級名單來配對的。'] },
     'return': { q: '怎麼發還批改好的作業？', words: '匯出 下載 發還 交回 zip 傳送 學生 export',
-      a: ['1. 開啟作業的 **Return** 分頁。它會先顯示還缺什麼：尚未評分的作業、沒有作業的學生。', '2. 按藍色按鈕。程式會建立一個 ZIP，裡面是每位學生批改後的檔案，放在和原本相同的資料夾裡。', '3. 把這個 ZIP 或裡面的檔案上傳到學校系統。',
+      a: ['1. 開啟作業的 **Return** 分頁。它會先顯示還缺什麼：尚未評分的作業、沒有作業的學生。', '2. 按藍色按鈕。程式會建立一個 ZIP，裡面是每位學生批改後的檔案，放在和原本相同的資料夾裡，檔名像「Ana Lee - River essay - 已評分.pdf」（沒有分數時是「回饋」）。', '3. 把這個 ZIP 或裡面的檔案上傳到學校系統。',
         '如果要立刻發還一份作業，請用 Previous 和 Next 下方的 **Export … paper now** 按鈕。'] },
+    'anchor-papers': { q: '怎麼選出並匯出範例作業（anchor papers）？', words: '範例 高 中 低 標準 樣本 評分 一致 anchor',
+      a: ['範例作業是學校從一次總結性評量中保留的高、中、低三份作業。批改時，在分數下方按 **High**、**Mid** 或 **Low**。每個等級只屬於一份作業，選了另一份就會移過去。',
+        '**Return** 分頁會列出這三份。**Export anchor papers** 會把它們放進一個 ZIP 下載，每個檔案以作業名稱和等級命名，例如「作文 - Summative High.pdf」。',
+        '學生姓名的遮蓋方式和給 Claude 的一樣：打字的姓名和你自己畫的遮蓋框會塗黑。手寫的姓名需要一個框，所以請先用卡片上的 **Check the covers**。取消勾選 **Cover student names** 就會照原樣匯出。'] },
     'feedback-page': { q: '發還的作業裡的回饋頁是什麼？', words: '封面 摘要 第一頁 學生 看到 報告 回饋',
       a: ['每份發還的作業開頭都有一頁給學生看的內容：分數、評分規準每個項目你給的等級和它的意義、你的評語，以及作業上每則評語和所在頁碼。',
         '這個功能預設開啟，可以在 Return 分頁的 **Options** 裡關閉。你自己的頁面不會改變。介面設為中文時，這一頁也會是中文。'] },
@@ -6171,6 +6626,9 @@ const LANG_ZH = {
     'gradebook': { q: '成績冊在哪裡？', words: '成績 表格 學期 平均 總成績 成績冊 gradebook',
       a: ['從側邊欄開啟一個班級，選擇它的 **Gradebook** 分頁。它用一個表格列出班級的所有作業，依類型分組，並顯示各類型的平均和學期成績。',
         '**+ Add scores** 可以輸入不是在這裡批改的作業分數。'] },
+    'import-scores': { q: '可以匯入舊成績冊的分數嗎？', words: '匯入 試算表 舊成績 上傳 csv excel xlsx',
+      a: ['可以。在班級的成績冊按 **Import…**，然後選擇 CSV 或 Excel 檔案，或貼上試算表中的儲存格。每位學生一列，每份作業一欄。',
+        '儲存之前，你會看到每一欄的類型、日期和滿分，哪些列對應到你的班級名單，以及成績冊中已經有的分數。已經有的分數會保留，除非你選擇使用檔案中的分數。'] },
     'terms': { q: '怎麼設定學期和各類作業的比重？', go: '開啟設定、學期', words: '學期 季 比重 百分比 總結性 形成性 加權',
       a: ['在設定的 **Terms and weights** 裡是你的學期和日期，以及每種作業類型占學期成績的比例。形成性作業不計入成績。', '作業計入繳交日所在的學期。'] },
     'one-student': { q: '怎麼查看一位學生的所有資料？', words: '個人檔案 個別 家長 會談 導師 進步 圖表',
@@ -6187,10 +6645,14 @@ const LANG_ZH = {
       a: ['可以。開啟一個班級，選擇 **Report comments**。每位學生都有一份草稿，內容來自學期成績、評分規準中最強和最弱的項目、缺交的作業，以及分數的變化。',
         '可以任意修改，用 **Add** 帶入你在作業上寫過的內容，然後按 **Done, next student**。**Copy all** 會複製所有評語，方便貼到成績單系統。',
         '草稿不是由 AI 寫的，也不會傳送到任何地方。**Wording…** 可以改寫用來組成草稿的句子。目前草稿是用英文寫的。'] },
+    types: { q: '可以自訂作業類型，或改變它們的順序嗎？', go: '開啟設定、學期', words: '類別 分類 自訂 順序 左 右 回家作業 專題 小考 改名 比重 欄位 category',
+      a: ['可以。從班級的成績冊或「設定」的 **Terms and weights** 開啟 **Term setup**。在 **Types, and what a grade is made of** 底下，可以替類型改名、用 **+ Add a type** 新增自己的類型（回家作業、專題、小考），並設定每一種佔成績的比重。',
+        '每個類型旁的箭頭用來排順序。這就是成績冊欄位由左到右的順序，也是選擇類型時選項的順序。',
+        '類型裡沒有任何作業時才能移除。Formative 仍然只給回饋：顯示 ✓，沒有分數。'] },
     'seating': { q: '可以排座位表、分組，或隨機抽一位學生嗎？', words: '座位 座位表 桌子 排座位 洗牌 隨機 抽籤 點名 分組 小組 兩人一組 seating',
       a: ['可以。開啟一個班級，選擇 **Seating**。先選教室的排法，再把每位學生拖到一張桌子上。把一位學生放到另一位身上，兩人就會交換座位。',
         '**Shuffle** 會讓每個人換到新座位，可以復原。按一下學生再選 **Keep in this seat**，這位學生就不會被移動。**⋯** 選單可以調整桌子、把座位表秀給全班看，或列印出來。',
-        '**Pick a name** 會隨機顯示一位學生，在每個人都輪過之前不會重複。**Make groups** 會把全班分成任意人數的小組。**Who’s here** 可以排除今天沒來的學生。',
+        '**Pick a name** 會隨機顯示一位學生，在每個人都輪過之前不會重複。**Make groups** 會把全班分成小組；把名字拖到別組就能移動，先後按兩個名字就能交換。**Make my own** 會從空的小組開始。**Who’s here** 可以排除今天沒來的學生。Ctrl Z 可以復原一次移動或重新分組。',
         '在備課頁面播放課程時，按 **P** 抽一位學生，按 **G** 分組。名字只會顯示在畫面上，不會存進課程或備課的資料夾。'] },
     'missing-work': { q: '怎麼提醒學生缺交的作業？', words: '遲交 逾期 沒交 欠交 催繳 電子郵件 提醒 家長 missing',
       a: ['開啟班級，選擇 **Missing work**。這裡會依學生或依作業，列出你在所選學期標記為 Missing 的每份作業。',
@@ -6206,8 +6668,12 @@ const LANG_ZH = {
     'other-computer': { q: '怎麼把工作成果帶到另一台電腦？', go: '開啟設定、儲存', words: '家裡 筆電 轉移 帶走 同步 第二台電腦 usb',
       a: ['1. 在設定的 **Saving and carrying** 按 **Take my work with me**。它會建立一個用你自訂的密語保護的檔案。', '2. 把檔案帶到另一台電腦。', '3. 在那裡按 **Bring work in**。它會在更改任何東西之前，先顯示將會改變的內容。',
         '帶回來的方式也一樣。如果同一位學生在兩邊都有更改，你會看到兩個版本，再由你選擇。'] },
+    'new-year': { q: '怎麼開始新的學年？', go: '開啟設定、儲存', words: '新學年 下學年 封存 重新開始 九月 名單 清空',
+      a: ['1. 在設定的 **Saving and carrying** 按 **Start a new year**。', '2. 確認兩個學年的名稱和要帶過去的內容，選一個密語，再按 **Save the file and start the new year**。這一學年會存成一個受保護的檔案，而且在清除任何東西之前，會先把檔案讀回來檢查。',
+        '你的班級、單元和作業卡片都會保留，每張卡片連同它的評分規準和 Quick mark 框，日期也會往後移一年。班級名單、作業、分數和評語會離開這個瀏覽器，存在檔案裡。下次打開 Planner 時，它會把單元往後移一年。',
+        '想再看以前的學年，按 **Open an archived year** 並選擇它的檔案。你目前的學年會先存成自己的檔案，所以可以再換回來。'] },
     'go-back': { q: '我弄錯了，可以回到之前的狀態嗎？', go: '開啟回到先前的狀態', words: '復原 還原 紀錄 遺失 刪除 救回 備份 undo',
-      a: ['復原（Ctrl Z 或 ⌘Z）會一步步退回頁面上的批註。', '更大的問題，可以在設定的 **Go back in time** 查看你的工作成果在前幾天的樣子。**Look** 會比較當時和現在。**Restore this assignment** 會把一份作業回復到那一天，其他的保持不變。'] },
+      a: ['復原（Ctrl Z 或 ⌘Z）會一步步退回頁面上的批註和你給的分數。', '刪除單元、作業或班級時，**Undo** 會出現幾秒鐘。', '更大的問題，可以在設定的 **Go back in time** 查看你的工作成果在前幾天的樣子。**Look** 會比較當時和現在。**Restore this assignment** 會把一份作業回復到那一天，其他的保持不變。'] },
     'offline': { q: '沒有網路也能用嗎？', go: '開啟關於與更新', words: '離線 wifi 安裝 應用程式 飛機 offline',
       a: ['可以。第一次造訪之後，程式會留在電腦裡，沒有連線也能開啟。你的工作成果本來就不需要網路。', '在設定的 **About and updates**，可以把它安裝成有自己視窗和圖示的應用程式。'] },
     'updates': { q: '更新是怎麼運作的？', go: '開啟關於與更新', words: '版本 新版 更新 新功能 變更 update',
@@ -6215,12 +6681,14 @@ const LANG_ZH = {
     'planner': { q: '「備課」是什麼？', words: '課程 單元 行事曆 投影片 備課 powerpoint planner',
       a: ['備課頁面存放你的單元和課程：可按週或按學期查看的行事曆、可以製作 PowerPoint 檔的投影片編輯器、活動庫和評分規準庫。', '它是獨立的頁面，從側邊欄進入。它不會讀取學生作業或成績。'] },
     'timetable': { q: '怎麼設定課表？', words: '課表 節次 班級 時間 行事曆 假日 timetable',
-      a: ['在備課頁面按側邊欄的**課表**。輸入你的班級、每個班級上課的時間，以及學校放假的日子。', '之後今天頁面會顯示你每天要上的班級，以及為每個班級準備的課程。'] },
+      a: ['在備課頁面按側邊欄的**課表**。輸入你的班級、每個班級上課的時間，以及學校放假的日子。上方的 **Save my setup file** 會把這些連同你的投影片範本存成一個檔案，可以在另一台電腦載入。', '之後今天頁面會顯示你每天要上的班級，以及為每個班級準備的課程。'] },
     'present': { q: '怎麼向全班播放一堂課？', words: '簡報 全螢幕 投影機 上課 計時器 流程 遙控器 present',
       a: ['在備課頁面開啟課程，按 **Present**。投影片會填滿螢幕，用方向鍵或簡報遙控器換頁。在今天頁面，正在上或下一堂要上的班級有自己的**播放**按鈕。',
-        '播放時：**A** 顯示流程，**T** 啟動全班看得到的計時器，**P** 隨機抽一位學生，**G** 分組，**N** 顯示你的備註，**B** 讓螢幕變空白，**Esc** 結束。', '結束後會有一行記錄這個班級上到哪裡，下次播放時會從那裡繼續。'] },
+        '播放時：**A** 顯示流程，**T** 啟動全班看得到的計時器，**P** 隨機抽一位學生，**G** 分組，**N** 顯示你的備註，**B** 讓螢幕變空白，**Esc** 結束。', '計時器可以設定分鐘和秒數。計時中，選單可以增加或減少 10 秒或一分鐘、暫停和重新開始；按 **+** 或 **−** 增減一分鐘。勾選 **Show it big** 會把倒數放在螢幕中央，教室後面也看得清楚。', '結束播放或離開全螢幕後，計時器會繼續倒數，停在備課頁面的角落。結束後會有一行記錄這個班級上到哪裡，下次播放時會從那裡繼續。'] },
     'pptx': { q: '可以把投影片存成 PowerPoint 檔嗎？', words: 'powerpoint pptx 匯出 投影片 keynote google slides 下載',
-      a: ['可以。開啟課程，按 **Download .pptx**。檔案可以用 PowerPoint、Keynote 和 Google 簡報開啟。'] },
+      a: ['可以。開啟課程，按 **Download .pptx**。檔案可以用 PowerPoint、Keynote 和 Google 簡報開啟。', '投影片預設使用簡單的白色範本。要用你自己的範本：在**課表**按 **Use my school’s template…**，選一個有 Title Slide 和 Title and Content 版面配置的 PowerPoint 檔。'] },
+    'sharelesson': { q: '怎麼把課程搬到另一台電腦，或分享給其他老師？', words: '分享 傳送 搬移 轉移 複製 另一台電腦 老師 同事 gslesson 檔案 匯入',
+      a: ['開啟課程，選 **More ▾ → Share lesson file…**。會得到一個小檔案，裡面有投影片、備註、圖片、教材，以及已上傳的完成版 PowerPoint。', '在另一台電腦上，於 Planner 按 **Import a lesson** 再選這個檔案，或直接把檔案拖到 Planner 上。原本排在哪些班級和日期、上課紀錄，以及給 Claude 的留言都不會帶走。'] },
     'privacy': { q: '學生作業會離開我的電腦嗎？', words: '隱私 資料保護 個資 雲端 伺服器 安全 privacy',
       a: ['不會。作業、姓名、分數和評語都留在這個瀏覽器和你選擇的資料夾裡。這個程式沒有伺服器，也沒有帳號，沒有網路也能使用。',
         '唯一會離開的，是你自己匯出的檔案。'] },
@@ -6322,6 +6790,21 @@ const HELP = [
     a: ['1. Press **Add a class** in the sidebar and give it a name.', '2. Paste the student names, one on a line. Students are kept in the order you paste them.', '3. Open the class’s **Students** tab to add an ID, an email or a note for each one.',
       'With a roster, every student is listed when you open papers for that class, including anyone who turned nothing in.'],
     words: 'roster students names list new class' },
+  { id: 'todo', sec: 'start', q: 'How does the to-do list work?',
+    a: ['**To do** in the sidebar is one list. Your own to-dos have a solid circle. Lines with a dashed circle are things the app noticed from your saved work: papers to mark, papers to hand back, a class with no lesson planned, missing work to chase.',
+      'Type a to-do the way you would say it and press Enter. A day at the end (“tomorrow”, “friday”, “nov 20”), a class name or a student’s name is picked out for you, and a click on what was understood takes it off. Press **N** anywhere outside a paper to add one.',
+      'Click a line to give it a day, a class, something it goes with, a repeat or a note. The app’s own lines go by themselves when the work is done. You can move one to another day, hide it, or switch a whole kind off.',
+      '**Today** shows a short card of your own to-dos that are overdue or due today. The list is saved with your grading work, never in the Planner’s folder.'],
+    go: ['Open To do', '#/todo'], words: 'todo task tasks list reminder remember checklist due' },
+  { id: 'todo-week', sec: 'start', q: 'Can I see my to-dos by week?',
+    a: ['Yes. On **To do**, choose **Week** at the top right. The same lines sit on the days they are for, each under the class that meets that day, with a Later column for the rest.',
+      'Type in a day to add a to-do for it, and drag a line to another day. Anything not done by its day moves to today on its own, and says which day it was for.'],
+    go: ['Open the week', '#/todo/week'], words: 'todo task week weekly calendar days plan drag move' },
+  { id: 'school-resources', sec: 'start', q: 'Where can I keep my school’s links and files?',
+    a: ['On **School** in the sidebar. Keep the handbook, the calendar, the bell schedule, the portals you sign in to, forms, and notes like who to call. Put them in groups you name, and press the star on the ones you open most to keep them at the top.',
+      '**Add a link** when the school keeps it online, since a link stays up to date by itself. **Add files…** keeps a copy of a file with your work, up to 50 MB each. You can also drop files on the page or paste a web address.',
+      'Everything is saved with the rest of your work: in this browser, in your folder and in a take-home file. Find anything finds each one by its name.'],
+    go: ['Open School resources', '#/school'], words: 'handbook calendar policy policies portal bookmark link file document resources staff bell schedule forms' },
   { id: 'language', sec: 'start', q: 'Can I use the app in another language?',
     a: ['Yes: Traditional Chinese or Spanish. Choose one in Settings, Display, **App language**, or at the top of the welcome. The page is drawn again in the language you pick.',
       'So far a language other than English covers the sidebar, Today, the welcome, Find anything, Help and the feedback page students get in a returned paper. The other screens are still in English.',
@@ -6362,8 +6845,13 @@ const HELP = [
     words: 'audio mp3 mp4 video speaking oral presentation transcript' },
   { id: 'quick-mark', sec: 'mark', q: 'How do I mark a paper quiz quickly?',
     a: ['Open **Quick mark** under Setup. Draw a box around each question once, on any student’s scan.', 'Then mark one question for the whole class, or one student’s whole quiz. Each question can show ✗ on wrong answers, ✓ and ✗, points, or a scale with your own words.',
-      'The total goes into the student’s score.'],
-    words: 'quiz test questions boxes right wrong points multiple' },
+      'The total goes into the student’s score. Not sure about an answer? Press **P** or **⧉ Copy** on it to copy a picture of just that answer, with the question and your answer key on top, and paste it into Claude to ask. The name, score and your mark are left off, but the picture still shows the student’s handwriting and words.'],
+    words: 'quiz test questions boxes right wrong points multiple copy picture screenshot claude' },
+  { id: 'mark-colors', sec: 'mark', q: 'Can I change the color of ✗, checks and points?',
+    a: ['Yes. In Settings, Marking, **Mark colors**, or the **Colors** menu in Quick mark. ✗ uses your pen’s color and checks have their own.',
+      'Points written on a paper, like 1/2, are in the ✗ color unless you pick another. **By credit** writes full points in the check color, part in amber and none in the ✗ color: green, amber and red if you keep those.',
+      'Totals and score stamps are in the points color you pick, or in the ✗ color with By credit. In Quick mark, marks already given on the quiz change to the new colors.'],
+    go: ['Open Settings, Marking', '#/settings/marking'], words: 'color colour ink red green yellow amber points partial credit full' },
   { id: 'late-work', sec: 'mark', q: 'A student handed in late. How do I add their paper?',
     a: ['With the assignment open, press **+ Add** above the paper and choose **A file…**, or drop the file on the student’s name.', 'For several late files at once, use **Bring in files** under Setup. Anything already here is left out, so only the new files are left to place. Tick **Late** beside anyone you want marked late.'],
     words: 'late missing add file resubmit new submission' },
@@ -6388,7 +6876,7 @@ const HELP = [
       'A row is scored 0 to 4 with half points unless you say otherwise. Under the rows, choose another top score (1 to 10) or turn half points off. Your usual scale for new rubrics is in Settings, Grading.'],
     words: 'criteria rows levels descriptors points percent scale edit bank reuse top highest 0 to 8 0 to 5 half points whole numbers' },
   { id: 'grading-way', sec: 'score', q: 'My school grades with letters, percent or 1 to 7. Can I set that?',
-    a: ['Yes. Settings, **Grading scale and rubrics** has how you grade: rubric rows, points, percent, letter grades or IB 1 to 7, with the boundaries for each letter or level.', 'It is your default for new assignments. Each assignment can still be set its own way in Rubric setup.'],
+    a: ['Yes. Settings, **Grading scale and rubrics** has how you grade: rubric rows, points, percent, letter grades, IB MYP criteria (0 to 8) or IB DP 1 to 7, with the boundaries for each letter or level.', 'It is your default for new assignments. Each assignment can still be set its own way in Rubric setup.'],
     go: ['Open Settings, Grading', '#/settings/grading'], words: 'letters A B C percent IB 7 boundaries bands default scale' },
   { id: 'status', sec: 'score', q: 'How do I mark a paper missing, excused or late?',
     a: ['Under the student’s total in the score panel, pick **Missing**, **Excused** or **Late**. The ⋯ beside them has **Leave out of the average**.', 'Missing and excused papers have no score to wait for, so they don’t count as left to mark.'],
@@ -6404,9 +6892,14 @@ const HELP = [
     words: 'history previous earlier progress compare' },
 
   { id: 'return', sec: 'back', q: 'How do I hand marked papers back?',
-    a: ['1. Open the assignment’s **Return** tab. It first lists anything unfinished: scores not given, students with no paper.', '2. Press the blue button. The app makes a ZIP with each student’s marked file in the same folders they came in.', '3. Upload that ZIP, or the files in it, to your school’s system.',
+    a: ['1. Open the assignment’s **Return** tab. It first lists anything unfinished: scores not given, students with no paper.', '2. Press the blue button. The app makes a ZIP with each student’s marked file in the same folders they came in, named like “Ana Lee - River essay - Graded.pdf” (Feedback when there is no score).', '3. Upload that ZIP, or the files in it, to your school’s system.',
       'To hand back one paper straight away, use the **Export … paper now** button under Previous and Next.'],
     words: 'export download return give back zip send students flatten' },
+  { id: 'anchor-papers', sec: 'back', q: 'How do I pick and export anchor papers?',
+    a: ['Anchor papers are the high, middle and low paper your school keeps from a summative. While you mark, click **High**, **Mid** or **Low** under the score. Each level belongs to one paper, so picking another paper moves it.',
+      'The **Return** tab lists the three. **Export anchor papers** downloads them in one ZIP, each named for the assignment and its level, like “Persuasive essay - Summative High.pdf”.',
+      'Student names are covered the same way as for Claude: typed names and your own cover boxes are blacked out. A handwritten name needs a box, so use **Check the covers** on the card first. Untick **Cover student names** to export them as they are.'],
+    words: 'anchor exemplar high mid middle low moderation standard sample papers' },
   { id: 'feedback-page', sec: 'back', q: 'What is the feedback page on a returned paper?',
     a: ['Each returned paper starts with a page for the student: the score, each rubric row with the level you gave and what it means, your comment, and every comment on the paper with its page number.',
       'It is on unless you turn it off under **Options** on the Return tab. Your own pages are not changed.'],
@@ -6423,9 +6916,18 @@ const HELP = [
     a: ['Open a class from the sidebar and choose its **Gradebook** tab. It has every assignment for the class in one table, grouped by type, with an average for each type and a term grade.',
       '**+ Add scores** types in scores for work that was not marked here.'],
     words: 'grades table term average overall marks book' },
+  { id: 'import-scores', sec: 'class', q: 'Can I bring in scores from my old gradebook?',
+    a: ['Yes. In the class’s gradebook press **Import…**, then choose a CSV or Excel file, or paste the cells from your spreadsheet. One row per student, one column per assignment.',
+      'Before anything is saved you see each column with its type, date and what it is out of, which rows matched your roster, and any score that is already in the gradebook. Scores already there stay unless you choose the file’s.'],
+    words: 'import csv excel xlsx spreadsheet sheets upload old gradebook switch mid-year past scores' },
   { id: 'terms', sec: 'class', q: 'How do I set terms and how much each type counts?',
     a: ['Settings, **Terms and weights** has your terms and their dates, and what share of the term grade each type of assignment carries. Formative work never counts toward the grade.', 'An assignment counts toward the term its due date falls in.'],
     go: ['Open Settings, Terms', '#/settings/terms'], words: 'semester quarter weights percent summative formative weighting' },
+  { id: 'types', sec: 'class', q: 'Can I make my own assignment types, or change their order?',
+    a: ['Yes. Open **Term setup** from a class’s gradebook or from Settings, **Terms and weights**. Under **Types, and what a grade is made of** you can rename a type, add your own with **+ Add a type** (Homework, Projects, Quizzes), and give each its share of the grade.',
+      'The arrows beside each type set the order. That is the order of the gradebook’s columns from left to right, and of the choices wherever you pick a type.',
+      'A type can be removed once no assignment is in it. Formative stays feedback only: a ✓ in place of a score.'],
+    go: ['Open Settings, Terms', '#/settings/terms'], words: 'category categories custom reorder order left right homework quiz project rename weights columns in-class summative' },
   { id: 'one-student', sec: 'class', q: 'How do I see everything about one student?',
     a: ['Open the class, choose **Students** and click a name. The student’s page has every score, the term grade, and how they are moving.', 'The class’s **Charts** tab shows the same numbers for everyone at once.'],
     words: 'profile individual parent meeting conference progress chart' },
@@ -6447,7 +6949,7 @@ const HELP = [
   { id: 'seating', sec: 'class', q: 'Can I make a seating chart, groups, or pick a student at random?',
     a: ['Yes. Open a class and choose **Seating**. Pick how the room is set up, then drag each student to a desk. Dropping one student on another swaps them.',
       '**Shuffle** gives everyone a new seat, with Undo. Click a student and choose **Keep in this seat** for anyone who should not move. The **⋯** menu arranges the desks, shows the chart to the class and prints it.',
-      '**Pick a name** shows one student at random, and nobody twice until everyone has had a turn. **Make groups** deals the class into groups of any size. **Who’s here** leaves out anyone who is away today.',
+      '**Pick a name** shows one student at random, and nobody twice until everyone has had a turn. **Make groups** deals the class into groups; drag a name to move it, or click two names to swap them. **Make my own** starts every group empty. **Who’s here** leaves out anyone away today. Ctrl Z takes back a move or a shuffle.',
       'While presenting a lesson in the Planner, press **P** to pick a name and **G** for groups. The names are only shown: they are never put in a lesson or in the Planner folder.'],
     words: 'seat seats desk desks seating plan chart shuffle random picker name cold call groups teams pairs partners wheel' },
   { id: 'missing-work', sec: 'class', q: 'How do I remind students about missing work?',
@@ -6469,8 +6971,13 @@ const HELP = [
     a: ['1. In Settings, **Saving and carrying**, press **Take my work with me**. It makes one file protected by a passphrase you choose.', '2. Carry the file to the other computer.', '3. There, press **Bring work in**. It shows what will change before anything does.',
       'The trip back works the same way. If the same student changed in both places, you see both versions and choose.'],
     go: ['Open Settings, Saving', '#/settings'], words: 'home laptop transfer take-home sync second computer usb' },
+  { id: 'new-year', sec: 'safe', q: 'How do I start a new school year?',
+    a: ['1. In Settings, **Saving and carrying**, press **Start a new year**.', '2. Check the two years’ names and what carries over, choose a passphrase and press **Save the file and start the new year**. This year goes into one protected file, and the file is read back and checked before anything is cleared.',
+      'Your classes, units and assignment cards stay, each card with its rubric and Quick mark boxes, and dates move on a year. Class lists, papers, scores and comments leave this browser for the file. The Planner moves its units on a year the next time you open it.',
+      'To look at an old year again, press **Open an archived year** and choose its file. The year you are in is saved to its own file first, so you can switch back.'],
+    go: ['Open Settings, Saving', '#/settings'], words: 'new year next year school year archive rollover reset fresh start august september roster empty' },
   { id: 'go-back', sec: 'safe', q: 'I made a mistake. Can I go back to how things were?',
-    a: ['Undo (Ctrl Z, or ⌘Z) steps back through marks on the paper.', 'For anything bigger, Settings, **Go back in time** lists your work as it was on earlier days. **Look** compares then and now. **Restore this assignment** takes one assignment back and leaves the rest alone.'],
+    a: ['Undo (Ctrl Z, or ⌘Z) steps back through the marks on the paper and the scores you gave, one at a time.', 'Deleting a unit, an assignment or a class shows **Undo** for a few seconds.', 'For anything bigger, Settings, **Go back in time** lists your work as it was on earlier days. **Look** compares then and now. **Restore this assignment** takes one assignment back and leaves the rest alone.'],
     go: ['Open Go back in time', '#/settings/history'], words: 'undo restore history lost deleted recover snapshot' },
   { id: 'offline', sec: 'safe', q: 'Does it work without the internet?',
     a: ['Yes. After the first visit the app is kept on the computer and opens with no connection. Your work never needed one.', 'Settings, **About and updates** can install it as an app with its own window and icon.'],
@@ -6483,15 +6990,19 @@ const HELP = [
     a: ['The Planner holds your units and lessons: a calendar by week or semester, a slide editor that makes PowerPoint files, an activity bank and a rubric bank.', 'It is a separate page, reached from the sidebar. It never reads grading work.'],
     words: 'lessons units calendar slides plan powerpoint' },
   { id: 'timetable', sec: 'plan', where: 'p', q: 'How do I set up my timetable?',
-    a: ['In the Planner, press **Timetable** in the sidebar. Type in your classes, when each one meets, and the days school is closed.', 'Today then shows the classes you teach each day with the lesson planned for each.'],
+    a: ['In the Planner, press **Timetable** in the sidebar. Type in your classes, when each one meets, and the days school is closed. **Save my setup file** at the top keeps all of it, your slide template included, in one file you can load on another computer.', 'Today then shows the classes you teach each day with the lesson planned for each.'],
     words: 'schedule periods classes times calendar holidays' },
   { id: 'present', sec: 'plan', where: 'p', q: 'How do I present a lesson to the class?',
     a: ['Open the lesson in the Planner and press **Present**. Its slides fill the screen; the arrow keys or a clicker move through them. On Today, the class that is on now or next has its own **Present** button.',
-      'While presenting: **A** shows the agenda, **T** starts a timer the class can see, **P** picks a student at random, **G** makes groups, **N** shows your notes, **B** blanks the screen and **Esc** finishes.', 'Afterwards one line notes where the class got to, and presenting again picks up there.'],
-    words: 'slideshow full screen projector teach timer agenda clicker' },
+      'While presenting: **A** shows the agenda, **T** starts a timer the class can see, **P** picks a student at random, **G** makes groups, **N** shows your notes, **B** blanks the screen and **Esc** finishes.', 'The timer takes minutes and seconds. While it runs, its menu adds or takes away 10 seconds or a minute, pauses, and restarts; **+** and **−** add or take away a minute. Tick **Show it big** to put the countdown in the middle of the screen for the back of the room.', 'The timer keeps going after you finish or leave full screen: it waits in the corner of the Planner. Afterwards one line notes where the class got to, and presenting again picks up there.'],
+    words: 'slideshow full screen projector teach timer countdown seconds agenda clicker' },
   { id: 'pptx', sec: 'plan', where: 'p', q: 'Can I get my slides as a PowerPoint file?',
-    a: ['Yes. Open the lesson and press **Download .pptx**. The file opens in PowerPoint, Keynote and Google Slides.'],
-    words: 'powerpoint pptx export slides keynote google slides download' },
+    a: ['Yes. Open the lesson and press **Download .pptx**. The file opens in PowerPoint, Keynote and Google Slides.', 'Slides use a plain white template unless you give it your own: in **Timetable**, press **Use my school’s template…** and pick a PowerPoint file with a Title Slide and a Title and Content layout.'],
+    words: 'powerpoint pptx template school master export slides keynote google slides download' },
+  { id: 'sharelesson', sec: 'plan', where: 'p', q: 'How do I move a lesson to another computer or give it to another teacher?',
+    a: ['Open the lesson and choose **More ▾ → Share lesson file…**. You get one small file with the slides, notes, pictures, materials and the finished PowerPoint if there is one.',
+      'On the other computer, press **Import a lesson** in the Planner and choose the file, or drop it on the Planner. Which classes and days it was on, taught notes and comments for Claude stay behind.'],
+    words: 'share send move transfer copy another computer teacher colleague gslesson file import' },
 
   { id: 'privacy', sec: 'private', q: 'Does student work leave my computer?',
     a: ['No. Papers, names, scores and comments stay in this browser and in the folder you choose. The app has no server and no accounts, and it works with the internet off.',
@@ -6573,7 +7084,9 @@ function findRows() {
   add('Go to', 'Past lessons', 'Old decks and their handouts, to use again', () => toView('library'));
   add('Go to', 'Activities', 'The activity bank', () => toView('activities'));
   add('Go to', 'Rubrics', 'Saved rubrics and grading scales', () => toView('bank'));
+  add('Go to', 'School resources', 'Links, files and notes about your school, on the grading page', () => leaveTo(gsUrl('#/school')));
   add('Go to', 'Settings', 'Saving, classes, display and keys, on the grading page', () => leaveTo(gsUrl('#/settings')));
+  add('Go to', 'To do', 'Your own list, on the grading page', () => leaveTo(gsUrl('#/todo')));
   add('Go to', 'Help', 'Short answers to common questions', () => leaveTo(gsUrl('#/help')));
   for (const c of (L.setup && L.setup.classes) || []) add('Classes', c.name, 'Its assignments, gradebook and students', () => leaveTo(classUrl(c)));
   const when = l => l.slots.length ? l.slots.map(s => className(s.classId) + ' ' + shortDate(s.date)).join(', ') : l.library ? 'A past lesson' : 'Not on a class';
@@ -6713,6 +7226,30 @@ async function unitDelete(u) {
   if (L.dir && L.dirOk && u._file) { try { const d = await L.dir.getDirectoryHandle('Units'); await d.removeEntry(u._file); await d.removeEntry(u._file.replace(/\.unit\.json$/, ' files'), { recursive: true }); } catch { } }
 }
 const fileBlob = id => kvGet('file:' + id);
+
+/* ---------- a new school year, started on the grading page (src/newyear.js) ---------- */
+async function yearMoveOn() {
+  let ask = null; try { ask = JSON.parse(localStorage.getItem('gsp.newYear') || 'null'); } catch { }
+  if (!ask || typeof ask.id !== 'string') return;
+  const done = (await kvGet('yearsDone')) || [];
+  if (done.includes(ask.id)) return;
+  const later = s => /^\d{4}-\d\d-\d\d$/.test(s || '') ? ymd(addDays(parseYmd(s), 364)) : s, from = String(ask.from || 'Last year').slice(0, 120);
+  let moved = 0;
+  for (const l of L.lessons.slice()) {
+    if (!l.slots.length && !(l.taught || []).length) continue;
+    if (l.slots.length && !l.library) l.library = from;
+    l.slots = []; delete l.taught; moved++;
+    await lPut(l);
+  }
+  for (const u of L.units) { u.start = later(u.start); await unitPut(u, true); }
+  if (L.setup) {
+    L.setup = { ...L.setup, semStart: later(L.setup.semStart), semEnd: later(L.setup.semEnd), daysOff: [], events: [] };
+    await kvSet('setup', L.setup); await folderWriteSchedule();
+  }
+  await kvSet('yearsDone', [...done, ask.id]);
+  renderLessons(); railRender();
+  toast('A new school year: units and the semester moved on a year' + (moved ? ', and ' + moved + (moved === 1 ? ' lesson is' : ' lessons are') + ' in Past lessons under “' + from + '”' : '') + '.', 8000);
+}
 
 /* ---------- courses, weeks, which unit a week is in ---------- */
 function courses() {
@@ -7034,7 +7571,7 @@ async function unitsFolderRead() {
   return out;
 }
 
-window.__planner = { bankPut, normRubric, slideHtml, LOOKS, TEACH, TEACH_SAMPLE, versions: versionsOf, ytIds: us => us.map(u => [ytId(u), ytStart(u)]), openLessonForTest: (l, i) => { openLesson(l); goSlide(i || 0); }, L, applySetup, renderLessons, setPicture, folderWriteAll, folderRead, buildPptx, normLesson, deckStart, normUnit, unitPut, unitAt, addUnitFiles, notGradingFolder, unitsFolderRead, semesterMondays, openUnit, docxOf, findAll, copyLesson, packImport, createLesson, lessonText, lessonForFile, pptxToSlides, finUpload, versionsOf, SP, lessonZip, variantsOf, lessonEntries, dlWeek };
+window.__planner = { readTemplate, openTimetable, bankPut, normRubric, slideHtml, LOOKS, TEACH, TEACH_SAMPLE, versions: versionsOf, ytIds: us => us.map(u => [ytId(u), ytStart(u)]), openLessonForTest: (l, i) => { openLesson(l); goSlide(i || 0); }, L, applySetup, renderLessons, setPicture, folderWriteAll, folderRead, buildPptx, shareBuild, shareOpen, matAdd, normLesson, deckStart, normUnit, unitPut, unitAt, addUnitFiles, notGradingFolder, unitsFolderRead, semesterMondays, openUnit, docxOf, findAll, copyLesson, packImport, createLesson, lessonText, lessonForFile, pptxToSlides, finUpload, versionsOf, SP, lessonZip, variantsOf, lessonEntries, dlWeek };
 openLessons();
 
 })();

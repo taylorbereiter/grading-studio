@@ -1,4 +1,4 @@
-# Seating and the name picker. The grading page now keeps a copy of each class's roster for the Planner's
-# name picker (src/pickshare.js). It is made again from the classes every time the page opens, so nothing is lost
-# when an older build leaves it alone.
-localStorage:gs.rolls
+# First polish fixes. The bar that says what opened now counts as seen once she moves to another student (when every
+# file opened), so gs.openSeen is written then, in the form it always had, and not only when she presses the bar's
+# buttons. No work is in it: it holds hashes of what the bar has already said.
+localStorage:gs.openSeen

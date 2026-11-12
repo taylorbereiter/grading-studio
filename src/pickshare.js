@@ -4,7 +4,13 @@
    The Planner never opens grading's work. So that it can call on a student, the grading page keeps each class's roster
    in one small record of its own (gs.rolls: [[class name, [names]], …]) in this browser. The Planner reads it here and
    only shows it: a name is never put in a lesson, the Planner's own storage or the Planner folder.
-   Nothing here is saved. Who has had a turn and who is away today are remembered until the page is closed. */
+   Nothing here is saved. Who has had a turn, who is away today and the groups (shuffled or made by hand) are remembered
+   until the page is closed.
+   Groups can be changed by hand: drag a name to another group, or click one name and then a group (or a name in another
+   group, to swap them). "Make my own" starts with every group empty. Ctrl Z or Undo takes back a move or a shuffle.
+   The stage keeps its clicks to itself. A button it draws again is gone from the page by the time the click would reach
+   the page behind, so the page behind could not tell it was the stage's (in Present mode that clicked the slides on,
+   and at the end of the lesson finished it). */
 const PK = { on: false, fast: false, mem: new Map() };
 const PK_ROLLS = 'gs.rolls';
 const pkNorm = s => String(s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -28,11 +34,17 @@ function pkCount(len, by, n) {
   const up = Math.ceil(len / n), least = Math.floor(len / up);
   return least >= Math.max(2, n - 1) || up === 1 ? up : Math.max(1, Math.floor(len / n));
 }
-// The names dealt into groups as evenly as they go.
-function pkGroups(names, by, n) {
-  const k = pkCount(names.length, by, n), out = Array.from({ length: k }, () => []);
-  pkShuffle(names).forEach((nm, i) => out[i % k].push(nm));
-  return out;
+// The names dealt into groups as evenly as they go. With the groups dealt last time (prev), the deal that puts the fewest
+// of the same students together again, so shuffling again gives groups that are plainly new.
+function pkGroups(names, by, n, prev) {
+  const k = pkCount(names.length, by, n);
+  const deal = () => { const out = Array.from({ length: k }, () => []); pkShuffle(names).forEach((nm, i) => out[i % k].push(nm)); return out; };
+  if (k < 2 || !Array.isArray(prev) || !prev.length) return deal();
+  const was = new Map(); prev.forEach((g, i) => g.forEach(nm => was.set(nm, i)));
+  const again = gs => { let s = 0; for (const g of gs) for (let a = 0; a < g.length; a++) for (let b = a + 1; b < g.length; b++) if (was.has(g[a]) && was.get(g[a]) === was.get(g[b])) s++; return s; };
+  let best = null, least = Infinity;
+  for (let t = 0; t < 60 && least > 0; t++) { const g = deal(), s = again(g); if (s < least) { best = g; least = s; } }
+  return best;
 }
 // Every class's roster, as the grading page last left it.
 function pkRolls() {
@@ -45,7 +57,9 @@ const pkEsc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt
 // What is remembered for a class until the page is closed: who is away, who has had a turn, the groups as last dealt.
 function pkMem(cls) {
   const k = pkNorm(cls.name) + '|' + cls.names.length;
-  if (!PK.mem.has(k)) PK.mem.set(k, { away: new Set(), bag: [], turns: 0, last: '', by: 'size', n: 4, groups: null });
+  // groups: the groups on screen; pool: students in no group yet (groups made by hand); hand: the groups were changed by hand;
+  // undo: what the groups were before each move or shuffle; sel: a name clicked, to go where the next click says.
+  if (!PK.mem.has(k)) PK.mem.set(k, { away: new Set(), bag: [], turns: 0, last: '', by: 'size', n: 4, groups: null, pool: [], hand: false, undo: [], sel: null });
   return PK.mem.get(k);
 }
 const pkHere = () => { const m = pkMem(PK.cls); return PK.cls.names.filter(n => !m.away.has(n)); };
@@ -59,13 +73,16 @@ function pkOpen(o) {
   el.innerHTML = '<div class="pk-main" id="pkMain"></div><aside class="pk-who" id="pkWho" aria-label="Who is here" hidden></aside><div class="pk-bar" id="pkBar" role="toolbar"></div><div class="pk-say" id="pkSay" aria-live="polite"></div>';
   o.host.appendChild(el);
   el.addEventListener('click', pkClick);
+  el.addEventListener('pointerdown', pkDown);
   el.addEventListener('change', e => { if (e.target.id === 'pkClass') { PK.cls = PK.o.classes[+e.target.value] || PK.cls; PK.who = false; pkRun(true); } });
   if (!o.keys) document.addEventListener('keydown', pkKeyOwn, true);
-  pkRun(true); el.focus();
+  // groups already made for this class (dealt or by hand) are shown again as they were left; Shuffle again deals new ones
+  pkRun(!(PK.mode === 'groups' && pkMem(PK.cls).groups)); el.focus();
 }
 function pkClose() {
   if (!PK.on) return;
   const { el, back, o } = PK;
+  pkDragEnd();
   PK.on = false; clearInterval(PK.spin); PK.el = null;
   document.removeEventListener('keydown', pkKeyOwn, true);
   try { if (document.fullscreenElement === el) document.exitFullscreen(); } catch { }
@@ -77,7 +94,10 @@ function pkRun(fresh) {
   const m = pkMem(PK.cls), here = pkHere();
   PK.el.setAttribute('aria-label', PK.mode === 'pick' ? 'Pick a name' : 'Groups');
   if (PK.mode === 'pick') { if (fresh) pkNext(); else pkName(m.last, true); }
-  else { if (fresh || !m.groups) m.groups = pkGroups(here, m.by, m.n); pkDrawGroups(); }
+  else {
+    if (fresh || !m.groups) { if (m.groups) pkSnap(m); m.groups = pkGroups(here, m.by, m.n, m.groups); m.pool = []; m.hand = false; m.sel = null; }
+    pkDrawGroups();
+  }
   pkBar(); pkWho();
 }
 // The next name: nobody twice until everyone here has had a turn.
@@ -104,13 +124,17 @@ function pkName(name, done) {
   if (done) PK.el.querySelector('#pkSay').textContent = nice ? nice : 'Nobody to pick';
 }
 function pkDrawGroups() {
-  const m = pkMem(PK.cls), g = m.groups || [], main = PK.el.querySelector('#pkMain');
+  const m = pkMem(PK.cls), g = m.groups || [], pool = m.hand ? m.pool : [], main = PK.el.querySelector('#pkMain');
   const rows = Math.max(1, Math.round(Math.sqrt(g.length / 1.6))), cols = Math.max(1, Math.ceil(g.length / rows)), most = Math.max(1, ...g.map(x => x.length));
-  // as big as fits: by the height of the screen for the lines, by its width for the longest name
-  const long = Math.max(8, ...g.flat().map(n => [...pkNice(n)].length)), fs = Math.max(1.5, Math.min(4.6, 70 / (rows * (most + 1.9)) / 1.3)), fw = Math.max(.8, (90 / cols - 3) / (long * .6));
+  // as big as fits: by the height of the screen for the lines, by its width for the longest name (less height when the
+  // students not in a group yet are shown above)
+  const high = m.hand ? 54 : 70, long = Math.max(8, ...g.flat().concat(pool).map(n => [...pkNice(n)].length)), fs = Math.max(1.5, Math.min(4.6, high / (rows * (most + 1.9)) / 1.3)), fw = Math.max(.8, (90 / cols - 3) / (long * .6));
+  const nm = n => '<div class="pk-s' + (m.sel === n ? ' sel' : '') + '" data-pks="' + pkEsc(n) + '">' + pkEsc(pkNice(n)) + '</div>';
   main.className = 'pk-main groups';
-  main.innerHTML = '<div class="pk-cls">' + pkEsc(PK.cls.name) + '</div>' + (g.length
-    ? '<div class="pk-groups" id="pkGroups" style="--cols:' + cols + ';--fs:min(' + fs.toFixed(2) + 'vh,' + fw.toFixed(2) + 'vw)">' + g.map((x, i) => '<section class="pk-g"><h3>Group ' + (i + 1) + '</h3>' + x.map(n => '<div>' + pkEsc(pkNice(n)) + '</div>').join('') + '</section>').join('') + '</div>'
+  main.innerHTML = '<div class="pk-cls">' + pkEsc(PK.cls.name) + '</div>' + (g.length || pool.length
+    ? (m.hand ? '<div class="pk-pool" data-pkg="-1" style="--fs:min(' + fs.toFixed(2) + 'vh,' + fw.toFixed(2) + 'vw)"><h3>Not in a group yet</h3><div class="pk-pl">' + (pool.length ? pool.map(nm).join('') : '<p class="pk-empty">Everyone is in a group.</p>') + '</div></div>' : '') +
+      '<div class="pk-groups" id="pkGroups" style="--cols:' + cols + ';--fs:min(' + fs.toFixed(2) + 'vh,' + fw.toFixed(2) + 'vw)">' + g.map((x, i) => '<section class="pk-g" data-pkg="' + i + '"><h3>Group ' + (i + 1) + '</h3>' +
+        (x.length ? x.map(nm).join('') : '<p class="pk-empty">Drag names here</p><button class="pk-gx" data-pkgx="' + i + '" title="Remove this group" aria-label="Remove group ' + (i + 1) + '">×</button>') + '</section>').join('') + '</div>'
     : '<div class="pk-sub">Nobody is marked as here. “Who’s here” puts students back.</div>');
   PK.el.querySelector('#pkSay').textContent = g.length + (g.length === 1 ? ' group' : ' groups');
 }
@@ -123,7 +147,8 @@ function pkBar() {
     (pick ? b('again', 'Pick again', 'Space', ' class="pk-go"') + b('reset', 'Start over', '')
       : '<span class="pk-seg" role="group" aria-label="How to group"><button data-pkby="size" aria-pressed="' + (m.by === 'size') + '">Groups of</button><button data-pkby="count" aria-pressed="' + (m.by === 'count') + '">Number of groups</button></span>' +
         '<span class="pk-seg" role="group" aria-label="' + (m.by === 'size' ? 'Students in a group' : 'Groups') + '">' + [2, 3, 4, 5, 6, 7, 8].map(n => '<button data-pkn="' + n + '" aria-pressed="' + (m.n === n) + '">' + n + '</button>').join('') + '</span>' +
-        b('again', 'Shuffle again', 'Space', ' class="pk-go"') + b('copy', 'Copy', '')) +
+        b('again', 'Shuffle again', 'Space', ' class="pk-go"') + b('hand', 'Make my own', '') + b('addg', '+ Group', '') +
+        (m.undo.length ? b('undo', 'Undo', 'Ctrl Z') : '') + b('copy', 'Copy', '')) +
     '<span class="pk-sep"></span>' + b('who', 'Who’s here' + (away ? ' · ' + away + ' away' : ''), 'W', ' aria-pressed="' + PK.who + '"') +
     (o.full ? b('full', 'Full screen', 'F') : '') + '<button data-pk="close" class="pk-end" title="Close (Esc)">Close</button>';
 }
@@ -141,31 +166,60 @@ function pkDo(k) {
   if (k === 'again') return pkRun(true);
   if (k === 'reset') { m.bag = []; m.turns = 0; m.last = ''; return pkRun(true); }
   if (k === 'who') { PK.who = !PK.who; pkBar(); return pkWho(); }
+  if (k === 'undo') return pkUndo();
+  if (k === 'hand') {   // every group empty, everyone waiting to be put in one
+    const here = pkHere(); pkSnap(m);
+    m.groups = Array.from({ length: m.groups && m.groups.length ? m.groups.length : Math.max(1, pkCount(here.length, m.by, m.n)) }, () => []);
+    m.pool = here; m.hand = true; m.sel = null; pkDrawGroups(); return pkBar();
+  }
+  if (k === 'addg') { pkSnap(m); if (!m.groups) m.groups = []; m.groups.push([]); m.hand = true; pkDrawGroups(); return pkBar(); }
   if (k === 'full') { try { if (document.fullscreenElement) document.exitFullscreen(); else PK.el.requestFullscreen(); } catch { } return; }
   if (k === 'copy') {
-    const text = (m.groups || []).map((g, i) => 'Group ' + (i + 1) + ': ' + g.map(pkNice).join(', ')).join('\n');
+    const text = (m.groups || []).map((g, i) => g.length ? 'Group ' + (i + 1) + ': ' + g.map(pkNice).join(', ') : '').filter(Boolean).join('\n');
     const said = ok => { const s = PK.el && PK.el.querySelector('[data-pk="copy"]'); if (s) { s.textContent = ok ? 'Copied' : 'Could not copy'; setTimeout(() => { if (s.isConnected) s.textContent = 'Copy'; }, 1600); } };
     try { navigator.clipboard.writeText(text).then(() => said(true), () => said(false)); } catch { said(false); }
   }
 }
 function pkClick(e) {
+  e.stopPropagation();   // the stage's clicks are its own (see the top of this file)
+  if (!PK.on || PK.dragged) return;
   const t = e.target, m = pkMem(PK.cls);
   if (e.detail && t.closest('#pkBar button')) PK.el.focus();   // a button pressed with the mouse gives the keys back, so Space still picks again
   const w = t.closest('[data-pkw]');
-  if (w) { const n = PK.cls.names[+w.dataset.pkw]; if (m.away.has(n)) m.away.delete(n); else m.away.add(n); m.groups = null; w.setAttribute('aria-pressed', String(!m.away.has(n))); pkBar(); if (PK.mode === 'groups') pkRun(true); return; }
+  if (w) {
+    const n = PK.cls.names[+w.dataset.pkw]; if (m.away.has(n)) m.away.delete(n); else m.away.add(n);
+    w.setAttribute('aria-pressed', String(!m.away.has(n)));
+    // groups made by hand stay: someone away leaves their group, someone back waits to be put in one
+    if (m.hand && m.groups) { if (m.away.has(n)) pkTake(m, n); else if (!pkWhere(m, n)) m.pool.push(n); if (m.sel === n) m.sel = null; pkBar(); if (PK.mode === 'groups') pkDrawGroups(); return; }
+    m.groups = null; pkBar(); if (PK.mode === 'groups') pkRun(true); return;
+  }
+  if (PK.mode === 'groups') {
+    const gx = t.closest('[data-pkgx]');
+    if (gx) { const i = +gx.dataset.pkgx; if (m.groups && m.groups[i] && !m.groups[i].length) { pkSnap(m); m.groups.splice(i, 1); m.hand = true; pkDrawGroups(); pkBar(); } return; }
+    const s = t.closest('[data-pks]'), g = t.closest('[data-pkg]');
+    if (s) {
+      const n = s.dataset.pks, a = pkWhere(m, n), b = m.sel ? pkWhere(m, m.sel) : null;
+      if (m.sel && m.sel !== n && b && a && a.g !== b.g) return pkSwap(m, m.sel, n);   // a name in another group: the two change places
+      m.sel = m.sel === n ? null : n; return pkDrawGroups();
+    }
+    if (g && m.sel) return pkMove(m, m.sel, +g.dataset.pkg, null);
+    if (m.sel) { m.sel = null; return pkDrawGroups(); }
+  }
   const by = t.closest('[data-pkby]'); if (by) { m.by = by.dataset.pkby; return pkRun(true); }
   const n = t.closest('[data-pkn]'); if (n) { m.n = +n.dataset.pkn; return pkRun(true); }
   const b = t.closest('[data-pk]'); if (b) return pkDo(b.dataset.pk);
 }
 // The keys while this is open. True when the key was taken.
 function pkKey(e) {
-  if (!PK.on || e.metaKey || e.ctrlKey || e.altKey) return false;
+  if (!PK.on) return false;
   const k = e.key, c = k.toLowerCase(), m = pkMem(PK.cls);
+  if ((e.metaKey || e.ctrlKey) && !e.altKey && !e.shiftKey && c === 'z') { e.preventDefault(); if (PK.mode === 'groups') pkUndo(); return true; }
+  if (e.metaKey || e.ctrlKey || e.altKey) return false;
   if (k === 'Tab') return false;
   if (e.target && e.target.id === 'pkClass' && k !== 'Escape') return false;
   if ((k === ' ' || k === 'Enter') && e.target && e.target.closest && e.target.closest('#pkStage button')) return false;   // the button in hand does its own thing
   e.preventDefault();
-  if (k === 'Escape') { if (PK.who) pkDo('who'); else pkClose(); return true; }
+  if (k === 'Escape') { if (PK.drag) pkDragEnd(); else if (PK.who) pkDo('who'); else if (m.sel && PK.mode === 'groups') { m.sel = null; pkDrawGroups(); } else pkClose(); return true; }
   if (k === ' ' || k === 'Enter') pkDo('again');
   else if (c === 'p') pkDo('pick');
   else if (c === 'g') pkDo('groups');
@@ -174,5 +228,91 @@ function pkKey(e) {
   else if (PK.mode === 'groups' && /^[2-8]$/.test(k)) { m.n = +k; pkRun(true); }
   return true;
 }
+
+/* ---------- groups by hand ---------- */
+// Where a student is: { g: group number, or -1 for not in a group yet, i: place in it }, or null.
+function pkWhere(m, n) {
+  for (let g = 0; g < (m.groups || []).length; g++) { const i = m.groups[g].indexOf(n); if (i >= 0) return { g, i }; }
+  const i = (m.pool || []).indexOf(n); return i >= 0 ? { g: -1, i } : null;
+}
+const pkList = (m, g) => g < 0 ? m.pool : m.groups[g];
+function pkTake(m, n) { const w = pkWhere(m, n); if (w) pkList(m, w.g).splice(w.i, 1); return w; }
+// Before each change, what the groups were, for Undo.
+function pkSnap(m) {
+  m.undo.push({ groups: m.groups ? m.groups.map(g => g.slice()) : null, pool: (m.pool || []).slice(), hand: m.hand });
+  if (m.undo.length > 40) m.undo.shift();
+}
+function pkUndo() {
+  const m = pkMem(PK.cls), u = m.undo.pop(); if (!u) return;
+  // anyone marked away since stays out
+  const ok = n => !m.away.has(n) && PK.cls.names.includes(n);
+  m.groups = u.groups ? u.groups.map(g => g.filter(ok)) : null; m.pool = u.pool.filter(ok); m.hand = u.hand; m.sel = null;
+  pkDrawGroups(); pkBar(); PK.el.querySelector('#pkSay').textContent = 'Undone';
+}
+const pkGName = g => g < 0 ? 'Not in a group yet' : 'Group ' + (g + 1);
+// n to group g (-1: not in a group yet), in front of the name before, or at the end.
+function pkMove(m, n, g, before) {
+  const from = pkWhere(m, n); if (!from || !(g < 0 ? m.hand : m.groups && m.groups[g])) return;
+  if (from.g === g && !before) { m.sel = null; return pkDrawGroups(); }
+  pkSnap(m); pkTake(m, n);
+  const to = pkList(m, g), at = before ? to.indexOf(before) : -1;
+  if (at >= 0) to.splice(at, 0, n); else to.push(n);
+  m.hand = true; m.sel = null; pkDrawGroups(); pkBar();
+  PK.el.querySelector('#pkSay').textContent = pkNice(n) + ' to ' + pkGName(g);
+}
+function pkSwap(m, a, b) {
+  const x = pkWhere(m, a), y = pkWhere(m, b); if (!x || !y) return;
+  pkSnap(m); pkList(m, x.g)[x.i] = b; pkList(m, y.g)[y.i] = a;
+  m.hand = true; m.sel = null; pkDrawGroups(); pkBar();
+  PK.el.querySelector('#pkSay').textContent = pkNice(a) + ' and ' + pkNice(b) + ' changed places';
+}
+// Dragging a name: it follows the pointer, and the group under it lights up. Let go over a group to put the name there.
+function pkDown(e) {
+  const s = e.target.closest && e.target.closest('[data-pks]');
+  if (!s || PK.mode !== 'groups' || PK.drag || (e.button != null && e.button > 0)) return;
+  PK.drag = { name: s.dataset.pks, el: s, x: e.clientX, y: e.clientY, id: e.pointerId, on: false };
+  document.addEventListener('pointermove', pkDragMove, true);
+  document.addEventListener('pointerup', pkDragUp, true);
+  document.addEventListener('pointercancel', pkDragEnd, true);
+}
+function pkOver(e) {
+  const D = PK.drag, t = document.elementFromPoint(e.clientX, e.clientY);
+  const g = t && t.closest && t.closest('#pkStage [data-pkg]'); if (!g) return null;
+  const s = t.closest('[data-pks]');
+  return { g: +g.dataset.pkg, box: g, before: s && s.dataset.pks !== D.name ? s.dataset.pks : null };
+}
+function pkDragMove(e) {
+  const D = PK.drag; if (!D || e.pointerId !== D.id) return;
+  if (!D.on) {
+    if (Math.hypot(e.clientX - D.x, e.clientY - D.y) < 6) return;
+    if (!D.el.isConnected) return pkDragEnd();
+    const r = D.el.getBoundingClientRect(); D.on = true; D.dx = D.x - r.left; D.dy = D.y - r.top;
+    D.ghost = D.el.cloneNode(true); D.ghost.className = 'pk-s pk-ghost'; D.ghost.removeAttribute('data-pks');
+    D.ghost.style.fontSize = getComputedStyle(D.el).fontSize;
+    PK.el.appendChild(D.ghost); D.el.classList.add('pk-from'); PK.el.classList.add('pk-dragging');
+  }
+  e.preventDefault();
+  D.ghost.style.transform = 'translate(' + (e.clientX - D.dx) + 'px,' + (e.clientY - D.dy) + 'px)';
+  const o = pkOver(e), box = o && o.box;
+  if (D.box !== box) { if (D.box) D.box.classList.remove('pk-over'); if (box) box.classList.add('pk-over'); D.box = box; }
+}
+function pkDragUp(e) {
+  const D = PK.drag; if (!D || e.pointerId !== D.id) return;
+  const o = D.on ? pkOver(e) : null, was = D.on;
+  pkDragEnd();
+  if (!was) return;
+  // the click that follows letting go is not a click on a name or a group
+  PK.dragged = true; setTimeout(() => { PK.dragged = false; }, 0);
+  if (o && PK.on) pkMove(pkMem(PK.cls), D.name, o.g, o.before);
+}
+function pkDragEnd() {
+  const D = PK.drag; if (!D) return;
+  PK.drag = null;
+  document.removeEventListener('pointermove', pkDragMove, true);
+  document.removeEventListener('pointerup', pkDragUp, true);
+  document.removeEventListener('pointercancel', pkDragEnd, true);
+  if (D.ghost) D.ghost.remove(); if (D.box) D.box.classList.remove('pk-over');
+  if (D.el) D.el.classList.remove('pk-from'); if (PK.el) PK.el.classList.remove('pk-dragging');
+}
 function pkKeyOwn(e) { if (!PK.on) return; e.stopPropagation(); pkKey(e); }
-window.__pick = { PK, open: pkOpen, close: pkClose, groups: pkGroups, count: pkCount, short: pkShort, nice: pkNice, rolls: pkRolls };
+window.__pick = { PK, mem: () => pkMem(PK.cls), open: pkOpen, close: pkClose, groups: pkGroups, count: pkCount, short: pkShort, nice: pkNice, rolls: pkRolls };

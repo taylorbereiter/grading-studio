@@ -6,6 +6,7 @@
 //   tombstones.json        forgotten downloads, so they stay forgotten
 //   files/<sha256>.dat     papers, late files, readings and Word edits. Bytes are written once, however many downloads share them
 //   downloads/<id>/        info.json (which files, and the row for the list) and work.json (marks, scores, comments)
+//   examples/<id>.json     one strong example and the names of its pictures in files/ (examples.js)
 //   snapshots/             dated copies of everything but the bytes, as gzipped JSON, to go back to
 // A half-written file can't be the only copy: JSON goes to name.new first and then to name, and the .new is removed last. Whichever parses is whole, and .new is the newer one
 // if it's still there. Browsers put a whole file in place only when it's closed, and a bad bytes file is caught by its size and hash when it's read back.
@@ -45,7 +46,7 @@ function folderPapers(b) { if (tombs()[b.id]) saveSoon(); else if (fld.state !==
 function folderSaved(b, data) { if (fld.state === 'none') return; fld.work.set(b.id, data); folderKick(); }
 let setLibFrom, libNews;   // setLibFrom replaces the whole library, a merge having already stamped it, and says if it fit. libNews: another tab changed it.
 {
-  const raw = store.set.bind(store), rawDel = store.del.bind(store), LIB_RX = /^gs\.(lib|setup|bank|tomb|carryNo|rubrics|rubricsGone|histSame|rp\..+|rd\..+)$/;
+  const raw = store.set.bind(store), rawDel = store.del.bind(store), LIB_RX = /^gs\.(lib|setup|bank|tomb|carryNo|rubrics|rubricsGone|histSame|school|rp\..+|rd\..+)$/;
   let prev = libPrev(store.get('gs.lib', null)), libSeen = lsRaw('gs.lib');
   const mark = k => { if (LIB_RX.test(k) && fld.state !== 'none') { fld.lib = true; folderKick(); } };
   const roomy = (k, v) => { let ok = raw(k, v); while (!ok && !k.startsWith('gs.b.') && freeQuick()) ok = raw(k, v); return ok; };   // a roster matters more than a quick copy with its full copy kept
@@ -337,6 +338,7 @@ async function folderGoBack(name) {
   for (const [id, m] of Object.entries(s.meta || {})) put('grading-studio-keep/meta', id, m);
   for (const [id, list] of Object.entries(s.edits || {})) for (const [p, r] of Object.entries(list)) put('grading-studio-keep/edits', id + '|' + p, { t: r.t, data: await getBlob(r.data), orig: r.orig ? await getBlob(r.orig) : null });
   for (const [id, list] of Object.entries(s.added || {})) for (const [k, r] of Object.entries(list)) { const { hash, size, ...x } = r; put('grading-studio-added/files', id + '|' + k, { ...x, data: await getBlob({ hash, size }) }); }
+  await exKeepFor(rec);
   batch = null;
   await gsData.putBackData(rec);
   carryAfterPutBack();
@@ -354,9 +356,11 @@ async function folderRemove(id) {
     const i = await readJson(h, 'info.json'); if (!i) continue;
     (i.papers || []).forEach(mark); markAll(i.added, i.edits);
   }
+  for (const h of schHashes(lsRaw('gs.school'))) used.add(h);   // school resources keep their files here too (school.js)
   const dir = await fld.root.getDirectoryHandle('snapshots', { create: true });
   for (const { name } of await snapList()) {
     let s; try { s = await gzRead(dir, name); } catch { continue; }
+    for (const h of schHashes((s.ls || {})['gs.school'], s.t)) used.add(h);
     if (s.work && s.work[id] || s.meta && s.meta[id] || s.added && s.added[id] || s.edits && s.edits[id] || Object.keys(s.ls || {}).some(k => k.includes(id))) {
       for (const part of [s.work, s.meta, s.added, s.edits]) if (part) delete part[id];
       for (const k of Object.keys(s.ls || {})) if (k.includes(id)) delete s.ls[k];
@@ -364,6 +368,7 @@ async function folderRemove(id) {
     }
     for (const x of Object.keys(s.added || {})) markAll(s.added[x], s.edits && s.edits[x]);
   }
+  for (const h of await exFolderHashes()) used.add(h);   // examples' pictures live in files/ too
   const files = await fld.root.getDirectoryHandle('files', { create: true }), drop = [];
   for await (const [n] of files.entries()) if (!used.has(n.replace(/\.dat$/, ''))) drop.push(n);
   for (const n of drop) await files.removeEntry(n).catch(() => {});
@@ -386,7 +391,7 @@ async function folderRun() {
       try { await pushDownload(id, data); }
       catch (e) { if (!fld.work.has(id)) fld.work.set(id, data); throw e; }
     }
-    if (fld.lib) { fld.lib = false; try { await pushLibrary(); } catch (e) { fld.lib = true; throw e; } }
+    if (fld.lib) { fld.lib = false; try { await pushLibrary(); await schFolderSync(); } catch (e) { fld.lib = true; throw e; } }
     await dailySnapshot();
     fld.at = Date.now(); setWhere(fld.asks.length ? 'decide' : 'ok');
   } catch (e) { await folderTrouble(e); }
@@ -475,6 +480,8 @@ async function reconcileNow() {
   const set = prefer ? {} : mergeLs(carryLs(), B.ls || {}, k => Object.keys(tomb).some(id => k.includes(id)));   // going back: the folder takes what's here, and nothing newer comes back
   for (const [k, v] of Object.entries(set)) lsPut(k, v);
   await pushLibrary();
+  await schFolderSync();   // the files of the school resources, either way
+  try { await exFolderSync(true); } catch (e) { console.error(e); }   // examples merge on their own, by id, and never hold up the rest
   fld.lib = false; fld.answers = {};
   try { localStorage.removeItem('gsc.win'); } catch {}
   await dailySnapshot();
@@ -553,7 +560,7 @@ function renderWhere() {
     const h = s.act ? '<span class="wtext' + (s.cls ? ' ' + s.cls : '') + '">' + esc(s.text) + '.</span> <button class="btn sm primary" data-wact>' + s.act + '</button>' : '';
     if (first.dataset.h !== h) { first.dataset.h = h; first.innerHTML = h; first.hidden = !h; }
   }
-  if (top) { top.textContent = s.text; top.title = s.tip; top.className = 'savewhere link' + (s.cls ? ' ' + s.cls : ''); }
+  if (top) { const cut = /^Not backed up\. /.exec(s.text); top.textContent = cut ? 'Not backed up' : s.text; if (cut) { const more = document.createElement('span'); more.className = 'sw-more'; more.textContent = s.text.slice(13); top.append(more); } top.title = s.tip; top.className = 'savewhere link' + (s.cls ? ' ' + s.cls : ''); }
   if (line) {
     const h = '<span class="wtext' + (s.cls ? ' ' + s.cls : '') + '">' + (fld.state === 'none' && fld.booted ? 'Your work is saved only in this browser, and is not backed up' : 'Your work is saved: ' + esc(s.text.charAt(0).toLowerCase() + s.text.slice(1))) + '.</span> ' +
       (s.act ? '<button class="btn sm primary" data-wact>' + s.act + '</button> ' : '') +
@@ -561,7 +568,7 @@ function renderWhere() {
       (fld.state !== 'none' && fld.root ? ' <a class="btn sm" href="#/settings/history">Go back in time…</a>' : '');
     if (line.dataset.h !== h) { line.dataset.h = h; line.innerHTML = h; }   // a button shouldn't vanish under her click just because a save went by
   }
-  railSavedRender(); renderNeeds(); safeAskRender();
+  railSavedRender(); renderNeeds(); safeAskRender(); schRender();
 }
 function whereAct() { if (fld.state === 'decide') openFolderAsks(); else folderResume(true); }
 document.addEventListener('click', e => {

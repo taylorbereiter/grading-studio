@@ -269,3 +269,15 @@ test('a task of an MYP class is marked on the paper against the criteria it asse
   assert.deepEqual(cols.find(x => /Forces/.test(x[0])).slice(1), [['C', 'D'], { C: 7, D: 5 }]);
   await close();
 });
+
+test('the welcome names MYP criteria (0 to 8) apart from the DP 1 to 7, and an MYP teacher’s new classes are MYP classes', async () => {
+  const { page, close } = await openApp(browser, { seed: seed() });
+  const ways = await page.evaluate(() => window.__gs.GRADE_WAYS.map(w => [w[0], w[1], w[2]]));
+  const myp = ways.find(w => w[0] === 'myp'), dp = ways.find(w => w[0] === 'ib7');
+  assert.equal(myp[1], 'IB MYP criteria'); assert.match(myp[2], /0 to 8.*1 to 7/);
+  assert.equal(dp[1], 'IB DP 1 to 7');
+  assert.equal(ways.some(w => w[1] === 'IB 1 to 7'), false);
+  assert.deepEqual(await page.evaluate(() => { const g = window.__gs, l = g.state().lib; l.me = { ...(l.me || {}), grade: { way: 'myp' } }; return g.classNewWay(); }), { way: 'myp' });
+  assert.deepEqual(await page.evaluate(() => { const g = window.__gs, l = g.state().lib; l.me.grade = { way: 'rubric' }; return g.classNewWay(); }), {});
+  await close();
+});

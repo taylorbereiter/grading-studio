@@ -104,6 +104,10 @@
 .qmink{position:relative;display:inline-flex}
 .qmdot{display:inline-block;width:9px;height:9px;border-radius:var(--corner-round);margin-left:4px;background:var(--qm-x)}
 .qmdot.ok{margin-left:2px;background:var(--qm-ok)}
+.qmdot.pts{margin-left:2px;background:var(--qm-pts,var(--qm-x))}
+.qmipts .chip{font-size:var(--text-small);padding:2px 8px;border-radius:var(--corner-round);border:1px solid var(--line);background:var(--surface);cursor:pointer;display:inline-flex;align-items:center;gap:3px;white-space:nowrap}
+.qmipts .chip[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.qmcr{display:inline-block;width:8px;height:8px;border-radius:var(--corner-round)}
 .qminkpop{position:absolute;right:0;top:calc(100% + 6px);z-index:30;background:var(--surface);border:1px solid var(--line);border-radius:var(--corner-2);box-shadow:0 8px 24px rgba(20,30,50,.14);padding:10px 12px;display:grid;gap:8px;min-width:250px}
 .qminkpop[hidden]{display:none}
 .qminkpop p{margin:0}
@@ -119,3 +123,9 @@
 .qmned textarea{width:100%;box-sizing:border-box;font:inherit;font-size:var(--text-body);padding:6px 8px;border:1px solid var(--line-strong);border-radius:var(--corner-2,8px);background:var(--surface);color:var(--fg);resize:vertical}
 .qmnedb{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .qmnedb .btn{margin-left:auto}
+.setinks{display:grid;gap:8px;margin-top:10px}
+.setinks .qmirow .hsm{min-width:96px}
+
+.qmcopynote{display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap;margin:0 16px;padding:10px 14px;border-radius:var(--corner-3);background:var(--accent-soft);font-size:var(--text-small);line-height:1.45}
+.qmcopynote p{margin:0;flex:1 1 320px}
+.qmcopynote [data-copyok]{align-self:center}

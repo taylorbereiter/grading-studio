@@ -42,6 +42,8 @@ const SCREENS = [
   { name: 'home', where: 'g', hash: '#/', ready: '#railClasses a' },
   { name: 'home-find', where: 'g', hash: '#/', ready: '#railClasses a', then: page => page.evaluate(() => window.__gs.openFind()) },
   { name: 'help', where: 'g', hash: '#/help/return', ready: '#hlp-return.on' },
+  { name: 'todo', where: 'g', hash: '#/todo', ready: '#tdSide .tdkinds' },
+  { name: 'school', where: 'g', hash: '#/school', ready: '#vSchool:not([hidden]) .schnone' },
   { name: 'home-spanish', where: 'g', hash: '#/', ready: '#railClasses a', then: async page => { await page.evaluate(() => { localStorage.setItem('gs.lang', '"es"'); }); await page.reload(); await page.waitForSelector('#railClasses a'); await page.evaluate(() => { localStorage.removeItem('gs.lang'); }); } },
   { name: 'home-chinese', where: 'g', hash: '#/', ready: '#railClasses a', then: async page => { await page.evaluate(() => { localStorage.setItem('gs.lang', '"zh-Hant"'); }); await page.reload(); await page.waitForSelector('#railClasses a'); await page.evaluate(() => { localStorage.removeItem('gs.lang'); }); } },
   { name: 'class-assignments', where: 'g', hash: '#/class/c1', ready: '#vClass:not([hidden]) .cls' },

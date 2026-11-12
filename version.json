@@ -1,12 +1,11 @@
 {
- "version": "1.26.2",
- "build": "155b8a1f70dc",
+ "version": "1.27.16",
+ "build": "5b919fa7f854",
  "notes": [
-  "Rubric rows can be scored on your own scale. They start at 0 to 4 with half points, as before; when you set up an assignment you can pick any top from 1 to 10 and turn half points off.",
-  "Settings, Grading: choose the row scale new assignments start with. Assignments you already have keep theirs."
+  "The grade sheet shows the score you gave each paper in Grading Studio, the same number as the score panel, with extra credit and the retake that counts. Grades found typed on the papers only show for papers with no score yet, or when you tick Also show grades found on the papers. A score stamp already on a paper now changes when the score does."
  ],
  "files": {
-  "index.html": "a363fdf87095882ecc8b80cdae94d3d89072f13c8dfcb47f59c4b9eb3815ab3e",
-  "planner.html": "ec22e76fc32a3dfd387a1c1e75a98b4795ba11e99261499a84a2bb23c1d3728c"
+  "index.html": "64d9cb0732aadc3b82030cc7489f32a36f598c9f54486bd433a763dc683d1845",
+  "planner.html": "4879e64469a2b28337179811f534bb779a44d6f7ec47ba9331aebc792ffe4615"
  }
 }

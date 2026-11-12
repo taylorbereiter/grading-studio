@@ -81,7 +81,7 @@ function wlSave() {
   const seen = new Set(lib.classes.map(c => normName(c.name)));
   for (const raw of wl.classes.slice(wl.had)) {
     const name = raw.trim().replace(/\s+/g, ' '); if (!name || seen.has(normName(name))) continue;
-    seen.add(normName(name)); lib.classes.push({ id: uid(), name, names: [], units: [] });
+    seen.add(normName(name)); lib.classes.push({ id: uid(), name, names: [], units: [], ...(wl.way === 'myp' ? { way: 'myp' } : {}) });   // a teacher who grades with MYP criteria starts with MYP classes (ib.js)
   }
   const way = gradeWay(wl.way) || GRADE_WAYS[0];
   // Work that came in while she was being asked (her own folder, from another computer) keeps the words and defaults it had there.
