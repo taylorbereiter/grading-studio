@@ -1176,8 +1176,12 @@ test('comments on the whole lesson: a box in the editor, kept on the lesson, sha
     // a right-click comment on the lesson's card in the week lands in the same place
     await page.evaluate(() => { const P = window.__planner; P.L.open = null; P.L.view = 'week'; P.renderLessons(); });
     await page.waitForSelector('[data-open="wl"]');
-    const card = await page.$('[data-open="wl"]'), bx = await card.boundingBox();
-    await page.mouse.click(bx.x + 10, bx.y + 10, { button: 'right' });
+    // The week can still be settling into place when the card is measured, so a right-click that misses it is made again.
+    for (let i = 0; i < 5 && !(await page.$('.pl-ctx [data-cx="note"]')); i++) {
+      const bx = await (await page.$('[data-open="wl"]')).boundingBox();
+      await page.mouse.click(bx.x + 10, bx.y + 10, { button: 'right' });
+      await page.waitForSelector('.pl-ctx [data-cx="note"]', { timeout: 3000 }).catch(() => page.keyboard.press('Escape'));
+    }
     await page.waitForSelector('.pl-ctx [data-cx="note"]'); await page.click('.pl-ctx [data-cx="note"]');
     await page.waitForSelector('#plNoteT'); await page.type('#plNoteT', 'Add a short video'); await page.click('[data-nok]');
     await page.waitForFunction(() => (window.__planner.L.lessons.find(l => l.id === 'wl').talk || []).length === 4);

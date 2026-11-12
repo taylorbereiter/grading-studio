@@ -212,6 +212,7 @@ function triesSay(g) {
 }
 function gradesSummary() {
   const all = batch.students, on = all.filter(s => !noScore(s)), nOff = all.length - on.length, nPart = on.filter(s => gradeOf(s).partial).length;
+  if (typeof fmNow === 'function' && fmNow()) return on.filter(s => s.grade.fb).length + ' of ' + on.length + ' feedback complete' + (nOff ? ' · ' + nOff + ' missing or excused' : '');
   return on.filter(s => gradeOf(s).done).length + ' of ' + on.length + ' scored' + (nPart ? ' · ' + nPart + ' partial' : '') + (nOff ? ' · ' + nOff + ' missing or excused' : '');
 }
 // Every warning before a copy asks here.

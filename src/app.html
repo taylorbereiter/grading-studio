@@ -125,6 +125,14 @@ body{padding-bottom:var(--savebar,0px)}.app{height:calc(100vh - var(--savebar,0p
 .chip button{border:0;background:none;color:var(--faint);padding:0 4px;font-size:var(--text-body);line-height:1}
 .pop .row{display:flex;gap:6px;align-items:center}
 .pop .row .sp{flex:1}
+.pop .ncol{gap:6px}
+.pop .ncol .lbl{min-width:62px}
+.pop .nsw{width:18px;height:18px;border-radius:var(--corner-round);border:0;padding:0;flex:none;cursor:pointer;box-shadow:inset 0 0 0 1px rgba(0,0,0,.12)}
+.pop .nsw.sq{border-radius:var(--corner-1)}
+.pop .nsw[aria-pressed=true]{box-shadow:0 0 0 2px var(--surface),0 0 0 4px var(--accent)}
+.pg .edbar .edsw{width:16px;height:16px;padding:0;margin:0 2px;border-radius:var(--corner-round);background:var(--c);box-shadow:inset 0 0 0 1px rgba(255,255,255,.35)}
+.pg .edbar .edsw:hover{background:var(--c);opacity:.85}
+.pg .edbar .edsw.on{background:var(--c);box-shadow:0 0 0 2px var(--stage-ink),0 0 0 4px var(--stage-paper)}
 .pop .lbl{font-size:var(--text-small);color:var(--faint);font-weight:600}
 
 .grade{border-left:1px solid var(--line);background:var(--surface);overflow:auto;padding:16px;display:flex;flex-direction:column;gap:12px;zoom:var(--uz)}
@@ -522,6 +530,7 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
   <span class="sp"></span>
   <a class="rnav rupd" id="railUpdate" href="#/settings/about" hidden><span class="rdot"></span><span class="rl">Update ready</span></a>
   <button class="rsaved" id="railSaved" data-wopen></button>
+  <button class="rnav" id="railFull" data-gsfull title="Full screen ( F )" aria-label="Full screen" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="fs-in" d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/><path class="fs-out" d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg><span class="rl">Full screen</span></button>
   <a class="rnav" data-nav="help" href="#/help" title="Help: short answers to common questions"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M9.7 9.6a2.4 2.4 0 1 1 3.7 2c-.9.6-1.4 1.1-1.4 2.1M12 16.8v.1"/></svg><span class="rl">Help</span></a>
   <a class="rnav" data-nav="settings" href="#/settings" title="Settings"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg><span class="rl">Settings</span></a>
 </nav>
@@ -619,7 +628,7 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
         </section>
         <section class="lib setsec" id="setTake" data-sec="saving">
           <div class="lhead"><h2>Take your work with you</h2><span class="sp"></span><button class="btn sm" id="restoreBtn">Bring work in…</button><button class="btn sm primary" id="takeBtn">Take my work with me</button></div>
-          <p class="muted setp">A take-home file carries all your grading work to another computer and back, protected by a passphrase. The Planner’s lessons are not in it.</p>
+          <p class="muted setp">A take-home file carries all your grading work and your Planner to another computer and back, protected by a passphrase.</p>
           <p class="muted" id="backupInfo" style="margin:0;font-size:13px"></p><input type="file" id="restoreIn" accept=".gswork,.zip,application/zip" hidden>
           <div id="safetyList" hidden></div>
         </section>
@@ -633,6 +642,8 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
           <p class="muted setp">Clears student work from this browser when you are finished here. A linked folder and Planner work are not touched.</p>
         </section>
         <section class="lib setsec" id="setHistory" data-sec="history" hidden></section>
+        <section class="lib setsec" id="setSetupIn" data-sec="setup" hidden></section>
+        <section class="lib setsec" id="setSetupOut" data-sec="setup" hidden></section>
         <section class="lib setsec" id="setAbout" data-sec="about" hidden></section>
         <section class="lib setsec" id="setInstall" data-sec="about" hidden></section>
         <section class="lib setsec" id="setClasses" data-sec="classes" hidden></section>
@@ -669,9 +680,10 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
           <p class="muted setp">A language other than English covers the first screens so far: the sidebar, Today, the welcome, Help and the feedback page students get. The other screens are still in English.</p>
         </section>
         <section class="lib setsec" id="setClaude" data-sec="claude" hidden>
-          <div class="lhead"><h2>Working with Claude</h2><span class="muted">Optional. Nothing reaches Claude unless you give it a file yourself.</span></div>
-          <p class="setp"><b>Share with Claude</b> is under Setup when an assignment is open. It makes a file for you to give to Claude yourself: the papers with names covered, or your marks only. Each student is a random code, and the key to the codes stays in this browser.</p>
-          <p class="setp"><b>The Planner folder</b> holds lessons only. If you let Claude work in a folder on your computer, make it that one: grading work never goes in it, and the Planner refuses a folder that holds grading files.</p>
+          <div class="lhead"><h2>Working with AI</h2><span class="muted">Optional. Nothing reaches an AI assistant unless you give it a file yourself.</span></div>
+          <div id="setAi"></div>
+          <p class="setp"><b>Share with <span class="aiWord">your AI assistant</span></b> is under Setup when an assignment is open. It makes a file for you to give to <span class="aiWord">your AI assistant</span> yourself: the papers with names covered, or your marks only. Each student is a random code, and the key to the codes stays in this browser.</p>
+          <p class="setp"><b>The Planner folder</b> holds lessons only. If you let <span class="aiWord">your AI assistant</span> work in a folder on your computer, make it that one: grading work never goes in it, and the Planner refuses a folder that holds grading files.</p>
           <p class="muted setp">Papers, names, scores and comments stay in this browser and in your own linked folder.</p>
         </section>
         <section class="lib setsec" id="setKeys" data-sec="keys" hidden>
@@ -709,6 +721,7 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
           <button class="mitem" id="bringBtn" title="Late work, or many files at once; each goes to its student by the name in the file name">Bring in files</button>
           <button class="mitem" id="openRepBtn" title="What opened from this download, what didn’t, who has nothing, and anything odd">What opened</button>
           <button class="mitem" id="trAllBtn" hidden title="Make a transcript for every recording in this assignment">Transcripts</button>
+          <button class="mitem" id="clipsBtn" hidden title="The parts of videos you saved, one after another, with their labels and no names">Clips to show the class</button>
           <button class="mitem" id="quizBtn" title="For a scanned paper quiz: box each question once, then mark the same question for everyone at once">Quick mark (paper quiz)</button>
           <button class="mitem" id="impBtn" title="Comments and marks made in Kami, Acrobat or Preview, made into your own so you can change them">Marks from other apps</button>
           <span class="mlink" id="topAtlas"></span>
@@ -718,8 +731,8 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
       <!-- What the More menu used to hold now lives on a tab or in Settings. Each button stays here, out of sight, so Find anything and the keys press the same thing they always did. -->
       <div id="toolStash" hidden>
         <button class="mitem" id="sheetBtn" data-fg="This assignment" title="A picture of every grade written on the papers">Grades on the papers</button>
-        <button class="mitem" id="shareBtn" data-fg="This assignment" title="Papers with names covered, by code">Share with Claude</button>
-        <button class="mitem" id="backBtn" data-fg="This assignment" title="Put Claude’s feedback with the right students">Bring back from Claude</button>
+        <button class="mitem" id="shareBtn" data-fg="This assignment" title="Papers with names covered, by code">Share with your AI assistant</button>
+        <button class="mitem" id="backBtn" data-fg="This assignment" title="Put its feedback with the right students">Bring back from your AI assistant</button>
         <button class="mitem" id="bookBtn" data-fg="This assignment" title="Every assignment for this class, by term, with term grades and charts">Gradebook</button>
         <button class="mitem" id="overviewBtn" data-fg="This assignment" title="The spread of scores, the hardest rubric rows, and who isn’t finished">Class overview</button>
         <button class="mitem" id="consBtn" data-fg="This assignment" title="Same-score papers side by side, and whether you got harder or softer as you went">Consistency check</button>
@@ -732,6 +745,7 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
         <button class="mitem" id="keysBtn" data-fg="Tools">All keys <kbd>?</kbd></button>
       </div>
     </div>
+    <button class="icon" id="fullBtn" data-gsfull title="Full screen ( F )" aria-label="Full screen" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path class="fs-in" d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/><path class="fs-out" d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg></button>
     <button class="icon" id="closeBtn" title="Close this assignment and go back to Today" aria-label="Close this assignment and go back to Today"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
   </div>
   <div class="cols" id="cols">

@@ -36,9 +36,9 @@ async function laptop() {
 test('everything goes to another computer: papers, marks, scores, comments, rosters, rubrics, readings, Word edits and added files', async () => {
   const a = await openApp(browser, { seed: L.seed() });
   await a.page.waitForFunction(() => window.__gs.kept().size === 2);
-  await a.page.evaluate(async () => {   // Lessons stay out, and a lesson named something unmistakable shows it
+  await a.page.evaluate(async () => {   // a Planner lesson, which travels in the file too
     const db = await new Promise((res, rej) => { const r = indexedDB.open('gs-lessons', 1); r.onupgradeneeded = () => { r.result.createObjectStore('lessons', { keyPath: 'id' }); r.result.createObjectStore('kv'); }; r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
-    await new Promise(res => { const tx = db.transaction('lessons', 'readwrite'); tx.objectStore('lessons').put({ id: 'l1', title: 'A LESSON THAT STAYS HOME' }); tx.oncomplete = res; }); db.close();
+    await new Promise(res => { const tx = db.transaction('lessons', 'readwrite'); tx.objectStore('lessons').put({ id: 'l1', title: 'A made-up lesson' }); tx.oncomplete = res; }); db.close();
   });
   await openKept(a.page, 'River essay');
   await a.page.evaluate(() => window.__gs.scanAll());
@@ -67,7 +67,7 @@ test('everything goes to another computer: papers, marks, scores, comments, rost
   const lib = await b.page.evaluate(() => { const c = window.__gs.state().lib.classes.find(x => x.names.length); return { names: c.names, item: c.units[0].items[0].name, bank: JSON.parse(localStorage.getItem('gs.bank')) }; });
   assert.deepEqual(lib.names, L.expected.roster); assert.ok(lib.item); assert.deepEqual(lib.bank, ['Check your citations.']);
   assert.equal(await b.page.evaluate(() => window.__gs.state().lib.classes.filter(c => /12EL-1/.test(c.name)).length), 1, 'no doubled classes');
-  assert.equal(await b.page.evaluate(async () => (await indexedDB.databases()).some(d => d.name === 'gs-lessons') ? (await new Promise(res => { const r = indexedDB.open('gs-lessons'); r.onsuccess = () => { const db = r.result; if (!db.objectStoreNames.contains('lessons')) return res(0); const q = db.transaction('lessons').objectStore('lessons').count(); q.onsuccess = () => { db.close(); res(q.result); }; }; })) : 0), 0, 'Lessons stayed home');
+  assert.equal(await b.page.evaluate(async () => (await indexedDB.databases()).some(d => d.name === 'gs-lessons') ? (await new Promise(res => { const r = indexedDB.open('gs-lessons'); r.onsuccess = () => { const db = r.result; if (!db.objectStoreNames.contains('lessons')) return res(0); const q = db.transaction('lessons').objectStore('lessons').count(); q.onsuccess = () => { db.close(); res(q.result); }; }; })) : 0), 1, 'the Planner’s lesson came along (test/moving.test.js has the rest)');
   assert.deepEqual(b.page.errors, []);
   await b.close();
 });

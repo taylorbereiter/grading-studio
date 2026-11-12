@@ -591,6 +591,7 @@ function exShowClose() {
   const el = $('#exShow'); if (!el) return;
   if (exShowKeys) { document.removeEventListener('keydown', exShowKeys, true); exShowKeys = null; }
   document.removeEventListener('fullscreenchange', el._fs);
+  if (gsFull.drop(el)) return;   // the whole page in full screen under it stays so (src/fullscreen.js)
   el.remove();
   if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
 }

@@ -157,7 +157,7 @@ function openShareFile(st, path) {
     const b = e.target.closest('[data-shto]'); if (!b || b.disabled) return;
     const to = batch.students[+b.dataset.shto]; b.disabled = true;
     if (!copyOf(to)) await addFiles(to, [{ path: f.name, file: new File([f.data], f.name), from: st.key }], true);
-    if (once) groupAdd(st, f, to, copyOf(to));
+    if (once) { groupAdd(st, f, to, copyOf(to)); for (const lf of st.files.filter(x => x.kind === 'link')) await partnerCopy(st, lf, to); }   // the group's video goes with it
     saveSoon(); renderList();
     toast((once ? 'In the group: ' : 'Shared with ') + shownName(to, +b.dataset.shto)); draw(); $('#mvFind').focus();
   };
