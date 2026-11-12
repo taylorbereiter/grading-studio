@@ -27,7 +27,7 @@ for (const width of [1280, 1440]) test('the top bar is one row at ' + width + 'p
     return { same: rects.every(r => Math.abs(mid(r) - y) < 4), h: top.getBoundingClientRect().height, spill: top.scrollWidth - top.clientWidth, controls: shown.filter(e => e.matches('button,select,a.atab')).map(e => e.id) };
   });
   assert.ok(bar.same, 'all on one row'); assert.ok(bar.h < 60, 'one row tall, got ' + bar.h); assert.ok(bar.spill <= 0, 'nothing spills out');
-  assert.deepEqual(bar.controls, ['markTab', 'gradesBtn', 'insightsTab', 'exportBtn', 'saveWhere', 'moreBtn', 'closeBtn']);   // the four tabs, the line saying where her work is saved, Setup and ✕
+  assert.deepEqual(bar.controls, ['markTab', 'gradesBtn', 'insightsTab', 'exportBtn', 'saveWhere', 'moreBtn', 'fullBtn', 'closeBtn']);   // the four tabs, the line saying where her work is saved, Setup, full screen and ✕
   await page.click('#moreBtn');
   for (const id of ['classSel', 'setupBtn', 'bringBtn', 'openRepBtn', 'quizBtn', 'impBtn']) {
     const r = await page.$eval('#' + id, e => { const b = e.getBoundingClientRect(); return e.checkVisibility() && b.left >= 0 && b.right <= innerWidth && b.bottom <= innerHeight; });

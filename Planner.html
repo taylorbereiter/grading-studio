@@ -595,17 +595,17 @@ body.has-side .lsn{margin-right:var(--sidew,420px)}
 .rsaved .rl{display:block;flex:1;min-width:0;overflow-wrap:anywhere}
 
 /* while a paper is open the sidebar folds to a strip of icons, so the paper gets the room */
-:is(.shell.grading,.pfold) .rail{width:60px;padding:12px 8px;align-items:center;overflow:hidden auto}
-:is(.shell.grading,.pfold) .rail .rl{display:none}
-:is(.shell.grading,.pfold) .rbrand{padding:4px 0 12px}
-:is(.shell.grading,.pfold) .rbrand .rs{display:inline}
-:is(.shell.grading,.pfold) .rnav,:is(.shell.grading,.pfold) .rfind{justify-content:center;width:40px;min-height:40px;height:40px;padding:0;margin:0 0 2px;flex:none}
-:is(.shell.grading,.pfold) .rcap{width:24px;height:0;padding:0;margin:8px 0;border-top:1px solid var(--line)}
-:is(.shell.grading,.pfold) .radd{display:none}
-:is(.shell.grading,.pfold) #railClasses{display:flex;flex-direction:column;align-items:center}
-:is(.shell.grading,.pfold) .rdot{width:10px;height:10px}
-:is(.shell.grading,.pfold) .rsaved{justify-content:center;width:40px;padding:12px 0}
-:is(.shell.grading,.pfold) .rsaved .rdot{margin:0}
+:is(.shell.grading,.pfold,.gsfull) .rail{width:60px;padding:12px 8px;align-items:center;overflow:hidden auto}
+:is(.shell.grading,.pfold,.gsfull) .rail .rl{display:none}
+:is(.shell.grading,.pfold,.gsfull) .rbrand{padding:4px 0 12px}
+:is(.shell.grading,.pfold,.gsfull) .rbrand .rs{display:inline}
+:is(.shell.grading,.pfold,.gsfull) .rnav,:is(.shell.grading,.pfold,.gsfull) .rfind{justify-content:center;width:40px;min-height:40px;height:40px;padding:0;margin:0 0 2px;flex:none}
+:is(.shell.grading,.pfold,.gsfull) .rcap{width:24px;height:0;padding:0;margin:8px 0;border-top:1px solid var(--line)}
+:is(.shell.grading,.pfold,.gsfull) .radd{display:none}
+:is(.shell.grading,.pfold,.gsfull) #railClasses{display:flex;flex-direction:column;align-items:center}
+:is(.shell.grading,.pfold,.gsfull) .rdot{width:10px;height:10px}
+:is(.shell.grading,.pfold,.gsfull) .rsaved{justify-content:center;width:40px;padding:12px 0}
+:is(.shell.grading,.pfold,.gsfull) .rsaved .rdot{margin:0}
 @media (max-width:1100px){
   .rail{width:60px;padding:12px 8px;align-items:center}
   .rail .rl{display:none}
@@ -618,6 +618,13 @@ body.has-side .lsn{margin-right:var(--sidew,420px)}
   .rsaved{justify-content:center;width:40px;padding:12px 0}
   .rsaved .rdot{margin:0}
 }
+/* full screen (src/fullscreen.js): the sidebar folds to icons, and while a paper is open it goes, so the paper has the room.
+   On the marking screen the button is in the top bar instead. */
+[data-gsfull] .fs-out{display:none}
+.gsfull [data-gsfull] .fs-in{display:none}
+.gsfull [data-gsfull] .fs-out{display:inline}
+.shell.grading #railFull{display:none}
+.gsfull .shell.grading .rail{display:none}
 /* ---------- Find anything ---------- */
 .finddlg{align-items:flex-start;padding-top:12vh;z-index:34}
 .fbox{width:min(640px,100%);max-height:min(560px,76vh);display:flex;flex-direction:column;background:var(--surface);border-radius:14px;box-shadow:0 4px 12px rgba(20,25,40,.12),0 24px 60px rgba(20,25,40,.28);overflow:hidden}
@@ -805,7 +812,7 @@ body.has-side .lsn{margin-right:var(--sidew,420px)}
 /* The sidebar stays put at the left edge; the Planner's own screen scrolls beside it. It folds to icons while a lesson, a unit or a document is open. */
 .rail{position:fixed;left:0;top:0;bottom:0;z-index:6}
 .lsn{margin-left:232px}
-.pfold .lsn{margin-left:60px}
+.pfold .lsn,.gsfull .lsn{margin-left:60px}
 @media (max-width:1100px){.lsn{margin-left:60px}}
 .rail .rtt{color:var(--muted)}
 .pl-tabs.cal{margin:0 6px 0 0}
@@ -831,6 +838,7 @@ body.has-side .lsn{margin-right:var(--sidew,420px)}
   <button class="rnav rtt" id="railTimetable" title="Your classes, when they meet, and the school calendar"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/></svg><span class="rl">Timetable</span></button>
   <span class="sp"></span>
   <button class="rsaved" id="railSaved"></button>
+  <button class="rnav" id="railFull" data-gsfull title="Full screen ( F )" aria-label="Full screen" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="fs-in" d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/><path class="fs-out" d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg><span class="rl">Full screen</span></button>
   <a class="rnav" data-gs="#/help" href="./#/help" title="Help: short answers to common questions"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M9.7 9.6a2.4 2.4 0 1 1 3.7 2c-.9.6-1.4 1.1-1.4 2.1M12 16.8v.1"/></svg><span class="rl">Help</span></a>
   <a class="rnav" data-gs="#/settings" href="./#/settings" title="Settings"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg><span class="rl">Settings</span></a>
 </nav>
@@ -5180,8 +5188,7 @@ function pkClose() {
   pkDragEnd();
   PK.on = false; clearInterval(PK.spin); PK.el = null;
   document.removeEventListener('keydown', pkKeyOwn, true);
-  try { if (document.fullscreenElement === el) document.exitFullscreen(); } catch { }
-  el.remove();
+  if (!gsFull.drop(el)) { try { if (document.fullscreenElement === el) document.exitFullscreen(); } catch { } el.remove(); }
   if (o.onClose) o.onClose(); else if (back && back.isConnected && back.focus) try { back.focus({ preventScroll: true }); } catch { }
 }
 function pkRun(fresh) {
@@ -5553,7 +5560,7 @@ async function presentStart(l, o) {
   prFit();
   try { PR.lock = await navigator.wakeLock.request('screen'); } catch { }
   prHint(back && !(o.at > 0) ? 'Picking up at slide ' + back.slide + ', where ' + (back.classId ? className(back.classId) : 'the class') + ' stopped on ' + shortDate(back.date) + '. Home goes to slide 1.'
-    : (document.fullscreenElement ? '' : 'F for full screen · ') + '→ next · A agenda · T timer · P pick a name · Esc to finish', back && !(o.at > 0) ? 7000 : 4500);
+    : (document.fullscreenElement === el ? '' : 'F for full screen · ') + '→ next · A agenda · T timer · P pick a name · Esc to finish', back && !(o.at > 0) ? 7000 : 4500);
 }
 function presentArrive(rest) {
   const [id, classId] = rest.split('/'), l = L.lessons.find(x => x.id === id); if (!l) return;
@@ -5583,7 +5590,7 @@ function prPaint() {
   PR.el.style.setProperty('--nb', PR.notes ? nt.offsetHeight + 'px' : '0px');   // the bar sits above the notes
   for (const [p, on] of [['agenda', PR.agenda], ['notes', PR.notes], ['blank', PR.blank]]) PR.el.querySelector('[data-p="' + p + '"]').setAttribute('aria-pressed', String(!!on));
   PR.el.querySelector('[data-p="timer"]').setAttribute('aria-expanded', String(!!PR.menu));
-  PR.el.querySelector('[data-p="full"] .lb').textContent = document.fullscreenElement ? 'Leave full screen' : 'Full screen';
+  PR.el.querySelector('[data-p="full"] .lb').textContent = document.fullscreenElement === PR.el ? 'Leave full screen' : 'Full screen';
   $('#prSay').textContent = PR.blank ? 'The screen is blank' : PR.ended ? 'End of the lesson' : 'Slide ' + (PR.i + 1) + ' of ' + n + (prSlideName(s) ? ': ' + prSlideName(s) : '');
   prAgenda(); prFit();
 }
@@ -5625,7 +5632,7 @@ function prToggle(k) {
   prPaint();
 }
 async function prFullToggle() {
-  try { if (document.fullscreenElement) { PR.keep = true; await document.exitFullscreen(); } else await PR.el.requestFullscreen(); } catch { }
+  try { if (document.fullscreenElement === PR.el) { PR.keep = true; await document.exitFullscreen(); } else await PR.el.requestFullscreen(); } catch { }
 }
 function prFull() {
   if (!PR.on) return;
@@ -5870,8 +5877,10 @@ async function presentEnd() {
   document.removeEventListener('keydown', prKey, true); document.removeEventListener('fullscreenchange', prFull); window.removeEventListener('resize', prFit);
   const lock = PR.lock, full = document.fullscreenElement === el;
   PR.lock = PR.el = null;   // the timer, and its sound, go on (prFloat)
-  el.remove();   // a full-screen stage taken off the page leaves full screen by itself
-  try { if (full && document.fullscreenElement) await document.exitFullscreen(); } catch { }
+  if (!gsFull.drop(el)) {   // with the whole Planner in full screen under it, back to that (src/fullscreen.js)
+    el.remove();   // a full-screen stage taken off the page leaves full screen by itself
+    try { if (full && document.fullscreenElement) await document.exitFullscreen(); } catch { }
+  }
   try { if (lock) await lock.release(); } catch { }
   prFloat();
   if (L.view === 'edit' && L.open === l) { L.cur = Math.min(i, l.slides.length - 1); renderEditor(); }
@@ -6045,6 +6054,7 @@ const LANG_ES = {
     'Classes and rosters': 'Clases y listas', 'Terms and weights': 'Periodos y pesos', 'Your terms and how each type counts': 'Tus periodos y cuánto cuenta cada tipo',
     'Grading scale and rubrics': 'Escala de calificación y rúbricas', 'Your saved scales and rubrics': 'Tus escalas y rúbricas guardadas',
     'Marking': 'Corrección', 'Mark key, mark colors, Word papers, tablet and pencil': 'Clave de marcas, colores de las marcas, trabajos de Word, tableta y lápiz',
+    'Full screen': 'Pantalla completa', 'Leave full screen': 'Salir de pantalla completa', 'Full screen ( F )': 'Pantalla completa ( F )', 'Leave full screen ( F or Esc )': 'Salir de pantalla completa ( F o Esc )', 'The page fills the screen. F or Esc to leave': 'La página ocupa toda la pantalla. F o Esc para salir',
     'Mark colors': 'Colores de las marcas', 'Colors for ✗, checks and points': 'Colores para ✗, marcas de correcto y puntos',
     'Timetable and calendar': 'Horario y calendario', 'Class times and days off, in the Planner': 'Horas de clase y días sin clase, en el Planificador',
     'Working with Claude': 'Trabajar con Claude', 'Optional. What Claude can and can’t see': 'Opcional. Lo que Claude puede ver y lo que no',
@@ -6132,6 +6142,9 @@ const LANG_ES = {
     'find-anything': { q: '¿Qué es Buscar?', words: 'buscar encontrar paleta ctrl k atajo',
       a: ['Un solo cuadro que llega a cada estudiante, tarea, herramienta, ajuste y respuesta de ayuda. Ábrelo desde lo alto de la barra lateral o pulsa **Ctrl K** (**⌘K** en un Mac).',
         'Escribe unas letras de lo que buscas, muévete con las flechas y pulsa Intro. Cada fila hace lo mismo que su botón.'] },
+    'full-screen': { q: '¿Puede la aplicación ocupar toda la pantalla?', words: 'pantalla completa maximizar más espacio concentrarse ocultar barra lateral',
+      a: ['Sí. Pulsa **F**, o **Pantalla completa** cerca del final de la barra lateral. Con un trabajo abierto, el botón está en la barra de arriba, junto a ✕. Las barras del navegador desaparecen y la barra lateral se pliega a iconos. En la pantalla de corrección la barra lateral también desaparece, para que el trabajo tenga el espacio.',
+        'Pulsa **F** otra vez, el mismo botón o **Esc** para salir. Nada se cierra ni se pierde al entrar o salir. En el trabajo formativo, F es para los comentarios, así que allí usa el botón. El Planner funciona igual.'] },
     'add-class': { q: '¿Cómo añado una clase y su lista?', words: 'lista estudiantes alumnos nombres nueva clase',
       a: ['1. Pulsa **Añadir una clase** en la barra lateral y ponle un nombre.', '2. Pega los nombres de los estudiantes, uno por línea. Se conservan en el orden en que los pegas.', '3. Abre la pestaña **Students** de la clase para añadir un identificador, un correo o una nota a cada uno.',
         'Con una lista, al abrir los trabajos de esa clase aparece cada estudiante, también quien no entregó nada.'] },
@@ -6443,6 +6456,7 @@ const LANG_ZH = {
     'Classes and rosters': '班級與名單', 'Terms and weights': '學期與比重', 'Your terms and how each type counts': '你的學期，以及各類作業所占的比重',
     'Grading scale and rubrics': '評分等第與評分規準', 'Your saved scales and rubrics': '你儲存的評分等第與評分規準',
     'Marking': '批改', 'Mark key, mark colors, Word papers, tablet and pencil': '批改符號表、批改顏色、Word 作業、平板與觸控筆',
+    'Full screen': '全螢幕', 'Leave full screen': '離開全螢幕', 'Full screen ( F )': '全螢幕（F）', 'Leave full screen ( F or Esc )': '離開全螢幕（F 或 Esc）', 'The page fills the screen. F or Esc to leave': '頁面佔滿整個螢幕。按 F 或 Esc 離開',
     'Mark colors': '批改顏色', 'Colors for ✗, checks and points': '✗、勾號與分數的顏色',
     'Timetable and calendar': '課表與行事曆', 'Class times and days off, in the Planner': '上課時間與放假日，在備課頁面',
     'Working with Claude': '搭配 Claude 使用', 'Optional. What Claude can and can’t see': '可選用。Claude 看得到和看不到的內容',
@@ -6530,6 +6544,9 @@ const LANG_ZH = {
     'find-anything': { q: '「搜尋」是什麼？', words: '搜尋 尋找 指令 ctrl k 快速鍵 find',
       a: ['一個可以找到每位學生、每份作業、每個工具、每項設定和每則說明的輸入框。從側邊欄最上方開啟，或按 **Ctrl K**（Mac 是 **⌘K**）。',
         '輸入幾個字，用方向鍵移動，再按 Enter。每一列的作用和它的按鈕相同。'] },
+    'full-screen': { q: '應用程式可以佔滿整個螢幕嗎？', words: '全螢幕 最大化 更大 專心 隱藏 側邊欄 full screen',
+      a: ['可以。按 **F**，或按側邊欄下方的 **全螢幕**。開啟作業時，這個按鈕在上方列的 ✕ 旁邊。瀏覽器的工具列會隱藏，側邊欄會收合成圖示。在批改畫面中側邊欄也會隱藏，讓作業有最大的空間。',
+        '再按一次 **F**、同一個按鈕或 **Esc** 即可離開。進入或離開時，不會關閉或遺失任何內容。形成性評量中 F 用於回饋，請在那裡改用按鈕。Planner 也一樣。'] },
     'add-class': { q: '怎麼新增班級和名單？', words: '名單 學生 姓名 新班級 roster',
       a: ['1. 按側邊欄的**新增班級**，並為它命名。', '2. 貼上學生姓名，一行一位。順序會和你貼上的一樣。', '3. 開啟班級的 **Students** 分頁，可以為每位學生加上學號、電子郵件或備註。',
         '有了名單，開啟那個班級的作業時會列出每位學生，包括沒有繳交的人。'] },
@@ -6784,6 +6801,10 @@ const HELP = [
     a: ['One box that reaches every student, assignment, tool, setting and help answer. Open it from the top of the sidebar, or press **Ctrl K** (**⌘K** on a Mac).',
       'Type a few letters of what you want, move with the arrow keys and press Enter. Each row does the same thing as the button for it.'],
     words: 'search command palette ctrl k shortcut' },
+  { id: 'full-screen', sec: 'start', q: 'Can the app fill the whole screen?',
+    a: ['Yes. Press **F**, or **Full screen** near the bottom of the sidebar. While a paper is open the button is in the top bar, beside ✕. The browser’s bars go away and the sidebar folds to icons. On the marking screen the sidebar goes away too, so the paper gets the room.',
+      'Press **F** again, the same button, or **Esc** to leave. Nothing is closed or lost on the way in or out. On formative work F is for feedback, so use the button there. The Planner works the same way.'],
+    words: 'fullscreen maximize maximise bigger room focus distraction hide sidebar' },
   { id: 'add-class', sec: 'start', q: 'How do I add a class and its roster?',
     a: ['1. Press **Add a class** in the sidebar and give it a name.', '2. Paste the student names, one on a line. Students are kept in the order you paste them.', '3. Open the class’s **Students** tab to add an ID, an email or a note for each one.',
       'With a roster, every student is listed when you open papers for that class, including anyone who turned nothing in.'],
@@ -7096,6 +7117,7 @@ function findRows() {
   if ('showDirectoryPicker' in window) add('Do', L.dir && L.dirOk ? 'Look in the Planner folder' : L.dir ? 'Reconnect the Planner folder' : 'Link the Planner folder', L.dir && L.dirOk ? 'For lessons added or changed there' : 'A second copy of your lessons, in a folder of their own', () => L.dir && L.dirOk ? folderRead(true) : L.dir ? folderReconnect(true) : folderLink());
   add('Do', 'Side panel', 'Books, video, ' + (plCur() || 'the unit') + ', the notebook and the Claude box', () => panelToggle());
   add('Do', document.documentElement.dataset.theme === 'dark' ? 'Light mode' : 'Dark mode', 'Display', () => setTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'));
+  if (gsFull.can()) add('Do', gsFull.on() ? 'Leave full screen' : 'Full screen', 'The page fills the screen. F or Esc to leave', () => gsFull.toggle());
   for (const t of HELP) out.push({ group: 'Help', label: t.q, sub: helpGist(t), words: t.words || '', run: () => leaveTo(gsUrl('#/help/' + t.id)) });
   return out;
 }
@@ -7571,6 +7593,52 @@ async function unitsFolderRead() {
 
 window.__planner = { readTemplate, openTimetable, bankPut, normRubric, slideHtml, LOOKS, TEACH, TEACH_SAMPLE, versions: versionsOf, ytIds: us => us.map(u => [ytId(u), ytStart(u)]), openLessonForTest: (l, i) => { openLesson(l); goSlide(i || 0); }, L, applySetup, renderLessons, setPicture, folderWriteAll, folderRead, buildPptx, shareBuild, shareOpen, matAdd, normLesson, deckStart, normUnit, unitPut, unitAt, addUnitFiles, notGradingFolder, unitsFolderRead, semesterMondays, openUnit, docxOf, findAll, copyLesson, packImport, createLesson, lessonText, lessonForFile, pptxToSlides, finUpload, versionsOf, SP, lessonZip, variantsOf, lessonEntries, dlWeek };
 openLessons();
+
+/* ---------------- Full screen (11/12): the whole page fills the screen, on both pages and every screen ----------------
+   The Full screen button (in the sidebar, and in the top bar while a paper is open), F, or Find anything puts the page in the browser's
+   full screen. F again, the button, or Esc leaves it. Only the look changes: no screen is closed and nothing is saved or lost on the way
+   in or out. While it is on, the sidebar folds to icons, and while a paper is open it goes away so the paper gets the room.
+   Nothing is stored: a browser lets a page go full screen only when she asks, so it can't come back by itself on the next visit.
+   Present, the seating chart, the name picker and the Examples show put their own stage in full screen on top of this; when they end,
+   the page is back in full screen as it was. */
+const gsFull = {
+  on: () => document.fullscreenElement === document.documentElement,
+  can: () => !!(document.fullscreenEnabled && document.documentElement.requestFullscreen),
+  async toggle() {
+    try {
+      if (gsFull.on()) await document.exitFullscreen();
+      else if (!document.fullscreenElement) await document.documentElement.requestFullscreen({ navigationUI: 'hide' });
+    } catch { }
+  },
+  paint() {
+    const root = document.documentElement, fe = document.fullscreenElement;
+    if (!fe) root.classList.remove('gsfull'); else if (fe === root) root.classList.add('gsfull');
+    const on = root.classList.contains('gsfull'), can = gsFull.can();
+    for (const b of document.querySelectorAll('[data-gsfull]')) {
+      b.hidden = !can;
+      const say = on ? 'Leave full screen' : 'Full screen', tip = on ? 'Leave full screen ( F or Esc )' : 'Full screen ( F )';
+      if (b.title !== tip) { b.title = tip; b.setAttribute('aria-label', say); }
+      b.setAttribute('aria-pressed', on ? 'true' : 'false');
+      const l = b.querySelector('.rl'); if (l && l.dataset.en !== say) { l.dataset.en = say; l.textContent = say; }
+    }
+  },
+  drop(el) {
+    if (document.fullscreenElement !== el || !document.documentElement.classList.contains('gsfull')) return false;
+    const go = () => el.remove(); document.exitFullscreen().then(go, go); return true;
+  },
+};
+document.addEventListener('fullscreenchange', () => gsFull.paint());
+document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-gsfull]'); if (b) { e.preventDefault(); gsFull.toggle(); } });
+document.addEventListener('keydown', e => {
+  if (e.defaultPrevented || e.repeat || e.metaKey || e.ctrlKey || e.altKey || e.shiftKey || (e.key !== 'f' && e.key !== 'F')) return;
+  const a = document.activeElement;
+  if (a && (/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName) || a.isContentEditable)) return;
+  if (document.fullscreenElement && !gsFull.on()) return;   // a stage of its own is showing
+  if (!gsFull.can()) return;
+  e.preventDefault(); gsFull.toggle();
+});
+gsFull.paint();
+window.__gsFull = gsFull;
 
 })();
 </script>

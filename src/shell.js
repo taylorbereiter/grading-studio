@@ -150,6 +150,7 @@ function findRows() {
   add('Settings', 'Updates and installing', 'This version, what’s new, install as an app', () => go(setHash('about')), '', 'about update offline download app');
   add('Settings', document.documentElement.dataset.theme === 'dark' ? 'Light mode' : 'Dark mode', 'Display', press('.themeBtn'), '', 'theme night colours colors appearance');
   add('Settings', 'Text size and zoom', 'Display', () => openDisplay(), '', 'font bigger smaller larger magnify');
+  if (gsFull.can()) add('Settings', gsFull.on() ? 'Leave full screen' : 'Full screen', 'The page fills the screen. F or Esc to leave', () => gsFull.toggle(), 'F', 'fullscreen maximize maximise bigger room focus distraction');
   add('Settings', 'App language', 'English, Spanish or Traditional Chinese', () => go('#/settings/display'));
   add('Settings', 'Word papers', wordPdfAlways() ? 'Converted to PDF pages as each assignment opens' : 'Kept as Word files. They can be converted to PDF pages', () => go('#/settings/marking'));
   add('Settings', 'Mark colors', 'Colors for ✗, checks and points', () => go('#/settings/marking'));

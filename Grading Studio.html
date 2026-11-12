@@ -1403,17 +1403,17 @@ small.bkxc{font-weight:500}
 .rsaved .rl{display:block;flex:1;min-width:0;overflow-wrap:anywhere}
 
 /* while a paper is open the sidebar folds to a strip of icons, so the paper gets the room */
-:is(.shell.grading,.pfold) .rail{width:60px;padding:12px 8px;align-items:center;overflow:hidden auto}
-:is(.shell.grading,.pfold) .rail .rl{display:none}
-:is(.shell.grading,.pfold) .rbrand{padding:4px 0 12px}
-:is(.shell.grading,.pfold) .rbrand .rs{display:inline}
-:is(.shell.grading,.pfold) .rnav,:is(.shell.grading,.pfold) .rfind{justify-content:center;width:40px;min-height:40px;height:40px;padding:0;margin:0 0 2px;flex:none}
-:is(.shell.grading,.pfold) .rcap{width:24px;height:0;padding:0;margin:8px 0;border-top:1px solid var(--line)}
-:is(.shell.grading,.pfold) .radd{display:none}
-:is(.shell.grading,.pfold) #railClasses{display:flex;flex-direction:column;align-items:center}
-:is(.shell.grading,.pfold) .rdot{width:10px;height:10px}
-:is(.shell.grading,.pfold) .rsaved{justify-content:center;width:40px;padding:12px 0}
-:is(.shell.grading,.pfold) .rsaved .rdot{margin:0}
+:is(.shell.grading,.pfold,.gsfull) .rail{width:60px;padding:12px 8px;align-items:center;overflow:hidden auto}
+:is(.shell.grading,.pfold,.gsfull) .rail .rl{display:none}
+:is(.shell.grading,.pfold,.gsfull) .rbrand{padding:4px 0 12px}
+:is(.shell.grading,.pfold,.gsfull) .rbrand .rs{display:inline}
+:is(.shell.grading,.pfold,.gsfull) .rnav,:is(.shell.grading,.pfold,.gsfull) .rfind{justify-content:center;width:40px;min-height:40px;height:40px;padding:0;margin:0 0 2px;flex:none}
+:is(.shell.grading,.pfold,.gsfull) .rcap{width:24px;height:0;padding:0;margin:8px 0;border-top:1px solid var(--line)}
+:is(.shell.grading,.pfold,.gsfull) .radd{display:none}
+:is(.shell.grading,.pfold,.gsfull) #railClasses{display:flex;flex-direction:column;align-items:center}
+:is(.shell.grading,.pfold,.gsfull) .rdot{width:10px;height:10px}
+:is(.shell.grading,.pfold,.gsfull) .rsaved{justify-content:center;width:40px;padding:12px 0}
+:is(.shell.grading,.pfold,.gsfull) .rsaved .rdot{margin:0}
 @media (max-width:1100px){
   .rail{width:60px;padding:12px 8px;align-items:center}
   .rail .rl{display:none}
@@ -1426,6 +1426,13 @@ small.bkxc{font-weight:500}
   .rsaved{justify-content:center;width:40px;padding:12px 0}
   .rsaved .rdot{margin:0}
 }
+/* full screen (src/fullscreen.js): the sidebar folds to icons, and while a paper is open it goes, so the paper has the room.
+   On the marking screen the button is in the top bar instead. */
+[data-gsfull] .fs-out{display:none}
+.gsfull [data-gsfull] .fs-in{display:none}
+.gsfull [data-gsfull] .fs-out{display:inline}
+.shell.grading #railFull{display:none}
+.gsfull .shell.grading .rail{display:none}
 /* ---------- Find anything ---------- */
 .finddlg{align-items:flex-start;padding-top:12vh;z-index:34}
 .fbox{width:min(640px,100%);max-height:min(560px,76vh);display:flex;flex-direction:column;background:var(--surface);border-radius:14px;box-shadow:0 4px 12px rgba(20,25,40,.12),0 24px 60px rgba(20,25,40,.28);overflow:hidden}
@@ -2812,6 +2819,7 @@ button.seat[data-n]:hover{border-color:var(--accent)}
   <span class="sp"></span>
   <a class="rnav rupd" id="railUpdate" href="#/settings/about" hidden><span class="rdot"></span><span class="rl">Update ready</span></a>
   <button class="rsaved" id="railSaved" data-wopen></button>
+  <button class="rnav" id="railFull" data-gsfull title="Full screen ( F )" aria-label="Full screen" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="fs-in" d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/><path class="fs-out" d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg><span class="rl">Full screen</span></button>
   <a class="rnav" data-nav="help" href="#/help" title="Help: short answers to common questions"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M9.7 9.6a2.4 2.4 0 1 1 3.7 2c-.9.6-1.4 1.1-1.4 2.1M12 16.8v.1"/></svg><span class="rl">Help</span></a>
   <a class="rnav" data-nav="settings" href="#/settings" title="Settings"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg><span class="rl">Settings</span></a>
 </nav>
@@ -3022,6 +3030,7 @@ button.seat[data-n]:hover{border-color:var(--accent)}
         <button class="mitem" id="keysBtn" data-fg="Tools">All keys <kbd>?</kbd></button>
       </div>
     </div>
+    <button class="icon" id="fullBtn" data-gsfull title="Full screen ( F )" aria-label="Full screen" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path class="fs-in" d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/><path class="fs-out" d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg></button>
     <button class="icon" id="closeBtn" title="Close this assignment and go back to Today" aria-label="Close this assignment and go back to Today"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
   </div>
   <div class="cols" id="cols">
@@ -4385,6 +4394,7 @@ const LANG_ES = {
     'Classes and rosters': 'Clases y listas', 'Terms and weights': 'Periodos y pesos', 'Your terms and how each type counts': 'Tus periodos y cuánto cuenta cada tipo',
     'Grading scale and rubrics': 'Escala de calificación y rúbricas', 'Your saved scales and rubrics': 'Tus escalas y rúbricas guardadas',
     'Marking': 'Corrección', 'Mark key, mark colors, Word papers, tablet and pencil': 'Clave de marcas, colores de las marcas, trabajos de Word, tableta y lápiz',
+    'Full screen': 'Pantalla completa', 'Leave full screen': 'Salir de pantalla completa', 'Full screen ( F )': 'Pantalla completa ( F )', 'Leave full screen ( F or Esc )': 'Salir de pantalla completa ( F o Esc )', 'The page fills the screen. F or Esc to leave': 'La página ocupa toda la pantalla. F o Esc para salir',
     'Mark colors': 'Colores de las marcas', 'Colors for ✗, checks and points': 'Colores para ✗, marcas de correcto y puntos',
     'Timetable and calendar': 'Horario y calendario', 'Class times and days off, in the Planner': 'Horas de clase y días sin clase, en el Planificador',
     'Working with Claude': 'Trabajar con Claude', 'Optional. What Claude can and can’t see': 'Opcional. Lo que Claude puede ver y lo que no',
@@ -4472,6 +4482,9 @@ const LANG_ES = {
     'find-anything': { q: '¿Qué es Buscar?', words: 'buscar encontrar paleta ctrl k atajo',
       a: ['Un solo cuadro que llega a cada estudiante, tarea, herramienta, ajuste y respuesta de ayuda. Ábrelo desde lo alto de la barra lateral o pulsa **Ctrl K** (**⌘K** en un Mac).',
         'Escribe unas letras de lo que buscas, muévete con las flechas y pulsa Intro. Cada fila hace lo mismo que su botón.'] },
+    'full-screen': { q: '¿Puede la aplicación ocupar toda la pantalla?', words: 'pantalla completa maximizar más espacio concentrarse ocultar barra lateral',
+      a: ['Sí. Pulsa **F**, o **Pantalla completa** cerca del final de la barra lateral. Con un trabajo abierto, el botón está en la barra de arriba, junto a ✕. Las barras del navegador desaparecen y la barra lateral se pliega a iconos. En la pantalla de corrección la barra lateral también desaparece, para que el trabajo tenga el espacio.',
+        'Pulsa **F** otra vez, el mismo botón o **Esc** para salir. Nada se cierra ni se pierde al entrar o salir. En el trabajo formativo, F es para los comentarios, así que allí usa el botón. El Planner funciona igual.'] },
     'add-class': { q: '¿Cómo añado una clase y su lista?', words: 'lista estudiantes alumnos nombres nueva clase',
       a: ['1. Pulsa **Añadir una clase** en la barra lateral y ponle un nombre.', '2. Pega los nombres de los estudiantes, uno por línea. Se conservan en el orden en que los pegas.', '3. Abre la pestaña **Students** de la clase para añadir un identificador, un correo o una nota a cada uno.',
         'Con una lista, al abrir los trabajos de esa clase aparece cada estudiante, también quien no entregó nada.'] },
@@ -4783,6 +4796,7 @@ const LANG_ZH = {
     'Classes and rosters': '班級與名單', 'Terms and weights': '學期與比重', 'Your terms and how each type counts': '你的學期，以及各類作業所占的比重',
     'Grading scale and rubrics': '評分等第與評分規準', 'Your saved scales and rubrics': '你儲存的評分等第與評分規準',
     'Marking': '批改', 'Mark key, mark colors, Word papers, tablet and pencil': '批改符號表、批改顏色、Word 作業、平板與觸控筆',
+    'Full screen': '全螢幕', 'Leave full screen': '離開全螢幕', 'Full screen ( F )': '全螢幕（F）', 'Leave full screen ( F or Esc )': '離開全螢幕（F 或 Esc）', 'The page fills the screen. F or Esc to leave': '頁面佔滿整個螢幕。按 F 或 Esc 離開',
     'Mark colors': '批改顏色', 'Colors for ✗, checks and points': '✗、勾號與分數的顏色',
     'Timetable and calendar': '課表與行事曆', 'Class times and days off, in the Planner': '上課時間與放假日，在備課頁面',
     'Working with Claude': '搭配 Claude 使用', 'Optional. What Claude can and can’t see': '可選用。Claude 看得到和看不到的內容',
@@ -4870,6 +4884,9 @@ const LANG_ZH = {
     'find-anything': { q: '「搜尋」是什麼？', words: '搜尋 尋找 指令 ctrl k 快速鍵 find',
       a: ['一個可以找到每位學生、每份作業、每個工具、每項設定和每則說明的輸入框。從側邊欄最上方開啟，或按 **Ctrl K**（Mac 是 **⌘K**）。',
         '輸入幾個字，用方向鍵移動，再按 Enter。每一列的作用和它的按鈕相同。'] },
+    'full-screen': { q: '應用程式可以佔滿整個螢幕嗎？', words: '全螢幕 最大化 更大 專心 隱藏 側邊欄 full screen',
+      a: ['可以。按 **F**，或按側邊欄下方的 **全螢幕**。開啟作業時，這個按鈕在上方列的 ✕ 旁邊。瀏覽器的工具列會隱藏，側邊欄會收合成圖示。在批改畫面中側邊欄也會隱藏，讓作業有最大的空間。',
+        '再按一次 **F**、同一個按鈕或 **Esc** 即可離開。進入或離開時，不會關閉或遺失任何內容。形成性評量中 F 用於回饋，請在那裡改用按鈕。Planner 也一樣。'] },
     'add-class': { q: '怎麼新增班級和名單？', words: '名單 學生 姓名 新班級 roster',
       a: ['1. 按側邊欄的**新增班級**，並為它命名。', '2. 貼上學生姓名，一行一位。順序會和你貼上的一樣。', '3. 開啟班級的 **Students** 分頁，可以為每位學生加上學號、電子郵件或備註。',
         '有了名單，開啟那個班級的作業時會列出每位學生，包括沒有繳交的人。'] },
@@ -5124,6 +5141,10 @@ const HELP = [
     a: ['One box that reaches every student, assignment, tool, setting and help answer. Open it from the top of the sidebar, or press **Ctrl K** (**⌘K** on a Mac).',
       'Type a few letters of what you want, move with the arrow keys and press Enter. Each row does the same thing as the button for it.'],
     words: 'search command palette ctrl k shortcut' },
+  { id: 'full-screen', sec: 'start', q: 'Can the app fill the whole screen?',
+    a: ['Yes. Press **F**, or **Full screen** near the bottom of the sidebar. While a paper is open the button is in the top bar, beside ✕. The browser’s bars go away and the sidebar folds to icons. On the marking screen the sidebar goes away too, so the paper gets the room.',
+      'Press **F** again, the same button, or **Esc** to leave. Nothing is closed or lost on the way in or out. On formative work F is for feedback, so use the button there. The Planner works the same way.'],
+    words: 'fullscreen maximize maximise bigger room focus distraction hide sidebar' },
   { id: 'add-class', sec: 'start', q: 'How do I add a class and its roster?',
     a: ['1. Press **Add a class** in the sidebar and give it a name.', '2. Paste the student names, one on a line. Students are kept in the order you paste them.', '3. Open the class’s **Students** tab to add an ID, an email or a note for each one.',
       'With a roster, every student is listed when you open papers for that class, including anyone who turned nothing in.'],
@@ -5437,8 +5458,7 @@ function pkClose() {
   pkDragEnd();
   PK.on = false; clearInterval(PK.spin); PK.el = null;
   document.removeEventListener('keydown', pkKeyOwn, true);
-  try { if (document.fullscreenElement === el) document.exitFullscreen(); } catch { }
-  el.remove();
+  if (!gsFull.drop(el)) { try { if (document.fullscreenElement === el) document.exitFullscreen(); } catch { } el.remove(); }
   if (o.onClose) o.onClose(); else if (back && back.isConnected && back.focus) try { back.focus({ preventScroll: true }); } catch { }
 }
 function pkRun(fresh) {
@@ -7721,7 +7741,7 @@ function openKeys() {
     '<h4>Marking</h4>' + row('V', 'Select') + row('P', 'Pen (hold Shift for a straight line)') + row('H', 'Highlight, snapping to typed lines. Press H again for freehand (Shift for straight)') + row('O', 'Circle') + row('T', 'Text') + row('C', 'Comment') + row('K', 'Check mark') + row('E', 'Eraser') +
     row('⌘Z', 'Undo') + row('⇧⌘Z', 'Redo (⌘Y works too)') +
     '<h4>A picked mark (Select tool)</h4>' + row('← → ↑ ↓', 'Nudge it (Shift for bigger steps)') + row('⌘C ⌘V', 'Copy it, then paste on the page you’re looking at, even on another student’s paper') + row('⌘D', 'Make a copy of it') + row('+ −', 'Make it bigger or smaller (or drag the square at its corner)') + row('Delete', 'Remove it') + row('Esc', 'Let go of it (the arrows go back to moving between students)') +
-    '<h4>The paper</h4>' + row('⌘+ ⌘−', 'Zoom in / out (or pinch, or ⌘-scroll)') + row('⌘0', 'Back to 100%') + row('[ ]', 'Keep the student list open / fold away the score panel') +
+    '<h4>The paper</h4>' + row('⌘+ ⌘−', 'Zoom in / out (or pinch, or ⌘-scroll)') + row('⌘0', 'Back to 100%') + row('[ ]', 'Keep the student list open / fold away the score panel') + row('F', 'Full screen, and back (Esc leaves too). On formative work F is for feedback; use the button beside ✕ instead') +
     'Turn a page: point at it and use ⟲ ⟳ in its top corner, or “Turn all pages” under the file’s ⋯. In Arrange pages, pick pages and press R.'.replace(/^/, '<h4>Turning pages</h4><span style="grid-column:1/-1">') + '</span>' +
     '<h4>Other</h4>' + row('=', 'Calculator') + row('Shift =', 'Answer, in the calculator (= on its own adds, Enter answers too)') + row('Space', 'Play / pause a recording') + row('J L', 'Back / ahead 5 seconds') + row('?', 'This list') +
     '</div></div><div class="bf"><span class="muted gsVer" style="margin-right:auto;font-size:13px">' + esc(versionLabel()) + '</span><button class="btn primary" data-close>Close</button></div>', true);
@@ -22737,7 +22757,7 @@ function seatShow(c) {
   el.id = 'seatShow'; el.className = 'seatshow'; el.tabIndex = -1; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-label', 'Seating chart for ' + c.name);
   el.innerHTML = '<h2>' + esc(c.name) + '</h2><div class="seatroom" style="--sw:' + s.w + ';--sh:' + s.h + '">' + seatGrid(c, s, 'show', false) + '</div><button class="seatshowx" data-x>Close (Esc)</button>';
   document.body.appendChild(el); el.focus();
-  const shut = () => { document.removeEventListener('keydown', key, true); document.removeEventListener('fullscreenchange', full); try { if (document.fullscreenElement === el) document.exitFullscreen(); } catch { } el.remove(); if (back && back.isConnected) back.focus(); };
+  const shut = () => { document.removeEventListener('keydown', key, true); document.removeEventListener('fullscreenchange', full); if (!gsFull.drop(el)) { try { if (document.fullscreenElement === el) document.exitFullscreen(); } catch { } el.remove(); } if (back && back.isConnected) back.focus(); };
   const key = e => { e.stopPropagation(); if (e.key === 'Escape') { e.preventDefault(); shut(); } };
   let was = false; const full = () => { const on = document.fullscreenElement === el; if (was && !on) shut(); was = on; };   // Esc in full screen leaves full screen: that closes it too
   document.addEventListener('keydown', key, true); document.addEventListener('fullscreenchange', full);
@@ -24527,6 +24547,7 @@ function exShowClose() {
   const el = $('#exShow'); if (!el) return;
   if (exShowKeys) { document.removeEventListener('keydown', exShowKeys, true); exShowKeys = null; }
   document.removeEventListener('fullscreenchange', el._fs);
+  if (gsFull.drop(el)) return;   // the whole page in full screen under it stays so (src/fullscreen.js)
   el.remove();
   if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
 }
@@ -26683,6 +26704,7 @@ function findRows() {
   add('Settings', 'Updates and installing', 'This version, what’s new, install as an app', () => go(setHash('about')), '', 'about update offline download app');
   add('Settings', document.documentElement.dataset.theme === 'dark' ? 'Light mode' : 'Dark mode', 'Display', press('.themeBtn'), '', 'theme night colours colors appearance');
   add('Settings', 'Text size and zoom', 'Display', () => openDisplay(), '', 'font bigger smaller larger magnify');
+  if (gsFull.can()) add('Settings', gsFull.on() ? 'Leave full screen' : 'Full screen', 'The page fills the screen. F or Esc to leave', () => gsFull.toggle(), 'F', 'fullscreen maximize maximise bigger room focus distraction');
   add('Settings', 'App language', 'English, Spanish or Traditional Chinese', () => go('#/settings/display'));
   add('Settings', 'Word papers', wordPdfAlways() ? 'Converted to PDF pages as each assignment opens' : 'Kept as Word files. They can be converted to PDF pages', () => go('#/settings/marking'));
   add('Settings', 'Mark colors', 'Colors for ✗, checks and points', () => go('#/settings/marking'));
@@ -26756,6 +26778,52 @@ shellReady = true;
 railSavedRender(); renderNeeds(); safeAskRender(); updRender();
 applyRoute();
 Object.assign(window.__gs, { go, routeNow, applyRoute, openFind, findRows, findMatch, keptState, classLeft });
+
+/* ---------------- Full screen (11/12): the whole page fills the screen, on both pages and every screen ----------------
+   The Full screen button (in the sidebar, and in the top bar while a paper is open), F, or Find anything puts the page in the browser's
+   full screen. F again, the button, or Esc leaves it. Only the look changes: no screen is closed and nothing is saved or lost on the way
+   in or out. While it is on, the sidebar folds to icons, and while a paper is open it goes away so the paper gets the room.
+   Nothing is stored: a browser lets a page go full screen only when she asks, so it can't come back by itself on the next visit.
+   Present, the seating chart, the name picker and the Examples show put their own stage in full screen on top of this; when they end,
+   the page is back in full screen as it was. */
+const gsFull = {
+  on: () => document.fullscreenElement === document.documentElement,
+  can: () => !!(document.fullscreenEnabled && document.documentElement.requestFullscreen),
+  async toggle() {
+    try {
+      if (gsFull.on()) await document.exitFullscreen();
+      else if (!document.fullscreenElement) await document.documentElement.requestFullscreen({ navigationUI: 'hide' });
+    } catch { }
+  },
+  paint() {
+    const root = document.documentElement, fe = document.fullscreenElement;
+    if (!fe) root.classList.remove('gsfull'); else if (fe === root) root.classList.add('gsfull');
+    const on = root.classList.contains('gsfull'), can = gsFull.can();
+    for (const b of document.querySelectorAll('[data-gsfull]')) {
+      b.hidden = !can;
+      const say = on ? 'Leave full screen' : 'Full screen', tip = on ? 'Leave full screen ( F or Esc )' : 'Full screen ( F )';
+      if (b.title !== tip) { b.title = tip; b.setAttribute('aria-label', say); }
+      b.setAttribute('aria-pressed', on ? 'true' : 'false');
+      const l = b.querySelector('.rl'); if (l && l.dataset.en !== say) { l.dataset.en = say; l.textContent = say; }
+    }
+  },
+  drop(el) {
+    if (document.fullscreenElement !== el || !document.documentElement.classList.contains('gsfull')) return false;
+    const go = () => el.remove(); document.exitFullscreen().then(go, go); return true;
+  },
+};
+document.addEventListener('fullscreenchange', () => gsFull.paint());
+document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-gsfull]'); if (b) { e.preventDefault(); gsFull.toggle(); } });
+document.addEventListener('keydown', e => {
+  if (e.defaultPrevented || e.repeat || e.metaKey || e.ctrlKey || e.altKey || e.shiftKey || (e.key !== 'f' && e.key !== 'F')) return;
+  const a = document.activeElement;
+  if (a && (/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName) || a.isContentEditable)) return;
+  if (document.fullscreenElement && !gsFull.on()) return;   // a stage of its own is showing
+  if (!gsFull.can()) return;
+  e.preventDefault(); gsFull.toggle();
+});
+gsFull.paint();
+window.__gsFull = gsFull;
 
 });</script>
 
