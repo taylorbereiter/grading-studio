@@ -57,8 +57,8 @@ function nyAbout(v, names, depth = 0) {
 const nyStrip = (o, names, keep) => { for (const k of Object.keys(o)) if (!keep.includes(k) && nyAbout(o[k], names)) delete o[k]; return o; };
 
 // Kept on a class but belonging to one year, so they never carry, even when a day has no student in it: attendance (attend.js),
-// and the levels set for each student of an MYP class (ib.js). How the class is graded, its criteria and its boundaries carry.
-const NY_YEAR_ONLY = ['att', 'lv'];
+// the levels set for each student of an MYP class and the grades predicted in a DP class (ib.js). How the class is graded, its criteria and its boundaries carry.
+const NY_YEAR_ONLY = ['att', 'lv', 'pred'];
 /* the new year's library */
 // o: { roster: keep the class lists, dates: move dates on a year, from, to: the two years' names, file }. works: { download id: work }.
 function nyLib(old, works, o) {

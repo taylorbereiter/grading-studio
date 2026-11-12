@@ -183,7 +183,7 @@ function rptMarks(c) {
 }
 function rptGo(i) { rptKeep(true); rpt.stu = i; bkDraw(); const ta = $('#rptText'); if (ta) ta.focus({ preventScroll: true }); const on = $('#rpt .rptrow.on'); if (on) on.scrollIntoView({ block: 'nearest' }); }
 function rptAll(c) {
-  const conf = bkConf(), all = bkClassCols(c, bk.cols), cols = bk.term === '*' ? all : all.filter(x => x.termId === bk.term), rc = rptConf();
+  const conf = ibConf(c, bkConf()), all = bkClassCols(c, bk.cols), cols = bk.term === '*' ? all : all.filter(x => x.termId === bk.term), rc = rptConf();
   return c.names.map(n => [n, rptText(c, cols, conf, n, rc)]);
 }
 // The term bar's buttons while this tab is on (bkDraw puts them there).
@@ -208,7 +208,7 @@ function rptClick(e) {
   }
   if (d.rptundone != null) { rptPut(c, n, { done: false }); return bkDraw(); }
   if (d.rptadd != null) {
-    const conf = bkConf(), all = bkClassCols(c, bk.cols), cols = bk.term === '*' ? all : all.filter(x => x.termId === bk.term), s = rptFacts(c, cols, conf, n).said[+d.rptadd]; if (!s) return;
+    const conf = ibConf(c, bkConf()), all = bkClassCols(c, bk.cols), cols = bk.term === '*' ? all : all.filter(x => x.termId === bk.term), s = rptFacts(c, cols, conf, n).said[+d.rptadd]; if (!s) return;
     ta.value = (ta.value.trim() ? ta.value.trim() + ' ' : '') + s.text; rptTyped(ta); rptKeep(true); $('#rptCount').innerHTML = rptCount(ta.value, rptConf()); return ta.focus();
   }
   if (d.rptcopyall != null) { rptKeep(true); return navigator.clipboard.writeText(rptAll(c).map(r => tsvLine(r)).join('\n')).then(() => toast('Copied ' + people(c.names.length, 'comment') + ', each with its student’s name. Paste them into a spreadsheet.', 6000), () => toast('Copying didn’t work in this browser.')); }
