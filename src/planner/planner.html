@@ -306,6 +306,19 @@
 .pl-mats{margin:14px 0 4px;border:1px solid var(--line);border-radius:var(--corner-5);padding:10px 12px;background:var(--surface)}
 .pl-mats-h{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px}.pl-mats-h h3{margin:0;font-size:15px}
 .pl-mats .pl-file{padding:5px 8px}.pl-mats .pl-ft{width:32px;height:32px}
+/* links on a lesson, and the class's lasting links under them (links.js) */
+.pl-links .pl-ft svg,.pl-lkpick .pl-ft svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.pl-link a.pl-fn{text-decoration:none;color:inherit}.pl-link a.pl-fn:hover b{color:var(--accent);text-decoration:underline}
+.pl-lkh{display:flex;align-items:center;gap:var(--space-2);margin:var(--space-3) 0 var(--space-2);font-size:var(--text-control);color:var(--fg-2)}
+.pl-lkh a,.pl-lktip a{color:var(--accent);font-size:var(--text-small)}.pl-lktip a{font-size:inherit}
+.pl-lktip{margin:var(--space-2) 0 0}
+.pl-lkdlg{display:flex;flex-direction:column;gap:var(--space-3)}.pl-lkdlg .ls-f input{justify-content:flex-start;cursor:text}
+.pl-lkdlg h3{margin:var(--space-2) 0 0;font-size:var(--text-body)}
+.pl-lkpicks{display:flex;flex-direction:column;gap:var(--space-1);max-height:260px;overflow:auto}
+.pl-lkpick{display:flex;align-items:center;gap:var(--space-2);width:100%;text-align:left;border:1px solid var(--line);border-radius:var(--corner-3);padding:var(--space-1) var(--space-2);background:var(--surface);color:inherit;font:inherit;cursor:pointer}
+.pl-lkpick:hover:not(:disabled){border-color:var(--accent);background:var(--accent-soft)}.pl-lkpick:disabled{cursor:default}
+.pl-lkpick .pl-ft{width:28px;height:28px}
+.pl-lkadd{flex:none;font-size:var(--text-small);font-weight:600;color:var(--accent)}.pl-lkpick:disabled .pl-lkadd{color:var(--ok)}
 .pl-dochead{position:sticky;top:0;z-index:5;background:var(--surface)}
 .pl-doctools{display:flex;flex-wrap:wrap;gap:3px;align-items:center;padding:6px 14px;border-bottom:1px solid var(--line);background:var(--surface)}
 .pl-dsep{width:1px;height:20px;background:var(--line);margin:0 4px}
