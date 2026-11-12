@@ -1238,7 +1238,8 @@ never are, and nothing here should point to a student.
   are in the folder next to it with the same name plus " files".
 - \`activities.json\`: the teacher's own activities, a list of { "name", "what", "kind" (talk, read, write,
   words, move, check), "parts" (warmup, activity, review), "group", "how": [steps for the teacher],
-  "slide": [steps for students] }. Add or edit entries here; the built-in bank isn't in this file.
+  "slide": [steps for students], "video" (optional: a web address of a video showing it in a classroom) }.
+  Add or edit entries here; the built-in bank isn't in this file.
 
 ## Lesson shape
 {
