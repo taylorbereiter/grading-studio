@@ -324,6 +324,7 @@ async function openLessons() {
   renderLessons();
   arriveAt();
   await folderReconnect(false);
+  await yearMoveOn();
 }
 function renderLessons() {
   if (L.view === 'doc' && L.doc) return renderDoc();
@@ -946,6 +947,7 @@ async function applySetup(j) {
   const setup = { classes: j.classes.map(c => ({ id: String(c.id), name: String(c.name || c.id), course: String(c.course || ''), color: /^#[0-9a-f]{6}$/i.test(c.color) ? c.color : '#1F6FB2', ...((u => u ? { mb: u } : {})(mbUrl(c.mb) || mbUrl(old(c.id).mb))), meets: (c.meets || []).map(m => ({ dow: +m.dow, start: String(m.start || ''), end: String(m.end || ''), label: String(m.label || '') })) })),
     daysOff: (j.daysOff || []).map(d => ({ date: String(d.date), label: String(d.label || 'No school') })), events: (j.events || []).map(e => ({ date: String(e.date), to: e.to ? String(e.to) : '', label: String(e.label || '') })),
     template: typeof j.template === 'string' ? j.template : (L.setup && L.setup.template) || '',
+    tplName: String(typeof j.template === 'string' ? (j.template ? j.tplName || 'Your template' : '') : (L.setup && L.setup.tplName) || '').slice(0, 120),
     semStart: /^\d{4}-\d\d-\d\d$/.test(j.semStart) ? ymd(mondayOf(parseYmd(j.semStart))) : '', semEnd: /^\d{4}-\d\d-\d\d$/.test(j.semEnd) ? ymd(mondayOf(parseYmd(j.semEnd))) : '',
     claudeUrl: /^https:\/\/claude\.ai\//.test(j.claudeUrl) ? String(j.claudeUrl) : '', profile: String(j.profile || '').slice(0, 80) };
   // A setup file can name the school's systems; one typed in for the first time here starts with plain words (j.plain).
@@ -963,18 +965,54 @@ async function applySetup(j) {
   toast((setup.profile ? setup.profile + ' loaded: ' : 'Timetable loaded: ') + setup.classes.length + (setup.classes.length === 1 ? ' class' : ' classes') + (nu ? ', ' + nu + ' units' : '') + (setup.template ? ', your slide template' : ''), 5000);
   renderLessons();
 }
+// A teacher's own PowerPoint template, picked in Timetable. It has to have the layouts a download fills (Title Slide and
+// Title and Content); one without them is refused with a plain reason. Returns { b64, name } or null.
+async function readTemplate(file) {
+  if (!file) return null;
+  const say = m => { toast(m, 6000); return null; };
+  if (!/\.(pptx|potx)$/i.test(file.name)) return say('Pick a PowerPoint file (.pptx or .potx)');
+  if (file.size > 40 * 1024 * 1024) return say('That template is over 40 MB. Save a copy without its slides and pick that one.');
+  const u8 = new Uint8Array(await file.arrayBuffer());
+  let z; try { z = fflate.unzipSync(u8); } catch { return say('That file can’t be opened as a PowerPoint'); }
+  if (!z['ppt/presentation.xml']) return say('That file can’t be opened as a PowerPoint');
+  const lay = tplLayouts(z);
+  if (!lay.title || !lay.content) return say('That template needs a “Title Slide” and a “Title and Content” layout, which is where the slides go. PowerPoint’s own templates have both.');
+  let b = ''; for (let i = 0; i < u8.length; i += 0x8000) b += String.fromCharCode.apply(null, u8.subarray(i, i + 0x8000));
+  return { b64: btoa(b), name: file.name.replace(/\.(pptx|potx)$/i, '').slice(0, 120) };
+}
+// Everything a teacher typed into the Planner's setup, as one file to load on another computer or hand to a colleague as a start.
+// Units and lessons aren't in it: they go with the Planner folder.
+function setupFileOf(d) {
+  return { kind: 'grading-studio-lessons-setup', version: 1, ...(L.setup && L.setup.profile ? { profile: L.setup.profile } : {}),
+    semStart: d.semStart || '', semEnd: d.semEnd || '', classes: d.classes, daysOff: d.daysOff, events: d.events, ...(d.claudeUrl ? { claudeUrl: d.claudeUrl } : {}),
+    ...(L.words ? { sys: L.words.sys || '', unitPlans: L.words.unit || '' } : {}), ...(L.defLook ? { look: L.defLook } : {}),
+    template: d.template || '', ...(d.template ? { tplName: d.tplName || '' } : {}) };
+}
 function openTimetable() {
   const s = L.setup || { classes: [], daysOff: [], events: [], template: '' };
   const draft = JSON.parse(JSON.stringify({ classes: s.classes, daysOff: s.daysOff, events: s.events, semStart: s.semStart || '', semEnd: s.semEnd || '', claudeUrl: s.claudeUrl || '' }));
+  draft.template = s.template || ''; draft.tplName = draft.template ? s.tplName || 'Your template' : '';
   const meetRow = (ci, mi, m) => '<div class="ls-mrow"><select data-m="dow" data-ci="' + ci + '" data-mi="' + mi + '" class="btn sm">' + [1, 2, 3, 4, 5, 6].map(d => '<option value="' + d + '"' + (+m.dow === d ? ' selected' : '') + '>' + LDAYS_LONG[d] + '</option>').join('') + '</select><input type="time" data-m="start" data-ci="' + ci + '" data-mi="' + mi + '" value="' + esc(m.start) + '" class="btn sm"> to <input type="time" data-m="end" data-ci="' + ci + '" data-mi="' + mi + '" value="' + esc(m.end) + '" class="btn sm"><input data-m="label" data-ci="' + ci + '" data-mi="' + mi + '" value="' + esc(m.label) + '" placeholder="Periods" class="btn sm" style="width:90px"><button class="btn sm ghost" data-delm="' + ci + '|' + mi + '">×</button></div>';
   const draw = () => {
     $('#ttBody').innerHTML = draft.classes.map((c, ci) => '<div class="ls-tc"><div class="ls-mrow"><input data-c="name" data-ci="' + ci + '" value="' + esc(c.name) + '" placeholder="Class name, like Period 2 Biology" class="btn sm" style="width:170px"><input data-c="course" data-ci="' + ci + '" value="' + esc(c.course) + '" placeholder="Course, like Biology" class="btn sm" style="width:130px" title="Classes with the same course share one deck"><input type="color" data-c="color" data-ci="' + ci + '" value="' + esc(c.color || '#1F6FB2') + '" aria-label="Color"><input data-c="mb" data-ci="' + ci + '" value="' + esc(mbOf(c)) + '" placeholder="' + esc(plSysLink()) + ' link (optional)" class="btn sm" style="width:220px;cursor:text"><span class="sp"></span><button class="btn sm ghost" data-delc="' + ci + '">Remove class</button></div>' +
       c.meets.map((m, mi) => meetRow(ci, mi, m)).join('') + '<button class="btn sm ghost" data-addm="' + ci + '">+ Meeting</button></div>').join('') +
       '<button class="btn sm" data-addc>+ Class</button><h3 style="margin:18px 0 6px;font-size:15px">Semester</h3><div class="ls-mrow"><label>First week <input type="date" id="ttS" class="btn sm" value="' + esc(draft.semStart) + '"></label><label>Last week <input type="date" id="ttE" class="btn sm" value="' + esc(draft.semEnd) + '"></label></div>' +
       '<h3 style="margin:18px 0 6px;font-size:15px">Days off</h3><textarea id="ttOff" rows="4" style="width:100%" placeholder="One per line: 2026-12-25 Christmas">' + esc(draft.daysOff.map(d => d.date + ' ' + d.label).join('\n')) + '</textarea>' +
-      '<h3 style="margin:14px 0 6px;font-size:15px">Dates to show (not days off)</h3><textarea id="ttEv" rows="4" style="width:100%" placeholder="One per line: 2026-11-09 to 2026-11-13 Midterms">' + esc(draft.events.map(e => e.date + (e.to ? ' to ' + e.to : '') + ' ' + e.label).join('\n')) + '</textarea>' ;
+      '<h3 style="margin:14px 0 6px;font-size:15px">Dates to show (not days off)</h3><textarea id="ttEv" rows="4" style="width:100%" placeholder="One per line: 2026-11-09 to 2026-11-13 Midterms">' + esc(draft.events.map(e => e.date + (e.to ? ' to ' + e.to : '') + ' ' + e.label).join('\n')) + '</textarea>' +
+      '<h3 style="margin:18px 0 6px;font-size:15px">Slide template</h3><div class="ls-mrow" id="ttTpl"><span class="' + (draft.template ? '' : 'muted') + '">' +
+      (draft.template ? 'Your own: ' + esc(draft.tplName) : 'The plain one built in: white, 16:9.') + '</span><button class="btn sm" data-tpl>' + (draft.template ? 'Pick another…' : 'Use my school’s template…') + '</button>' +
+      (draft.template ? '<button class="btn sm ghost" data-tplplain>Use the plain one</button>' : '') + '</div>' +
+      '<p class="muted" style="margin:4px 0 0;font-size:13px">A PowerPoint file (.pptx or .potx) with a Title Slide and a Title and Content layout. Downloads keep its masters and layouts.</p>';
   };
-  openDlg('<div class="bh"><h2>Timetable</h2><button class="btn sm" data-load>Load a setup file…</button></div><div class="bb" id="ttBody"></div><div class="bf"><button class="btn" data-x>Cancel</button><button class="btn primary" data-ok>Save</button></div>');
+  // What's typed in the boxes, read into the draft (for Save and for Save my setup file).
+  const collect = () => {
+    const lines = id => $(id).value.split('\n').map(x => x.trim()).filter(Boolean);
+    draft.daysOff = lines('#ttOff').map(x => { const m = /^(\d{4}-\d\d-\d\d)\s*(.*)$/.exec(x); return m && { date: m[1], label: m[2] || 'No school' }; }).filter(Boolean);
+    draft.events = lines('#ttEv').map(x => { const m = /^(\d{4}-\d\d-\d\d)(?:\s+to\s+(\d{4}-\d\d-\d\d))?\s*(.*)$/.exec(x); return m && { date: m[1], to: m[2] || '', label: m[3] }; }).filter(Boolean);
+    draft.semStart = $('#ttS').value; draft.semEnd = $('#ttE').value;
+  };
+  const classesOut = () => draft.classes.filter(c => c.name.trim()).map(c => { const o = { ...c, id: c.id || lid() }, u = mbUrl(c.mb); if (u) o.mb = u; else delete o.mb; return o; });
+  openDlg('<div class="bh"><h2>Timetable</h2><span class="ls-mrow" style="margin:0"><button class="btn sm" data-saveprof title="Everything here, your slide template included, in one file for another computer">Save my setup file</button><button class="btn sm" data-load>Load a setup file…</button></span></div><div class="bb" id="ttBody"></div><div class="bf"><button class="btn" data-x>Cancel</button><button class="btn primary" data-ok>Save</button></div>');
   draw();
   const box = $('#dlgBox');
   box.oninput = e => { const t = e.target, ci = +t.dataset.ci; if (t.dataset.c) draft.classes[ci][t.dataset.c] = t.value; if (t.dataset.m) draft.classes[ci].meets[+t.dataset.mi][t.dataset.m] = t.dataset.m === 'dow' ? +t.value : t.value; };
@@ -982,18 +1020,27 @@ function openTimetable() {
   box.onclick = async e => {
     if (e.target.closest('[data-x]')) return closeDlg();
     if (e.target.closest('[data-load]')) { closeDlg(); return loadSetupFile(); }
+    if (e.target.closest('[data-tplplain]')) { collect(); draft.template = ''; draft.tplName = ''; return draw(); }
+    if (e.target.closest('[data-tpl]')) {
+      collect();
+      const i = document.createElement('input'); i.type = 'file'; i.accept = '.pptx,.potx,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/vnd.openxmlformats-officedocument.presentationml.template';
+      i.onchange = async () => { const t = await readTemplate(i.files[0]); if (!t || $('#ttTpl') == null) return; collect(); draft.template = t.b64; draft.tplName = t.name; draw(); };
+      return i.click();
+    }
+    if (e.target.closest('[data-saveprof]')) {
+      collect();
+      await saveBlob('Planner setup.json', new Blob([JSON.stringify(setupFileOf({ ...draft, classes: classesOut() }), null, 1)], { type: 'application/json' }));
+      return toast('Saved as “Planner setup.json”. Load it with Load a setup file… on another computer.', 5000);
+    }
     if (e.target.closest('[data-addc]')) { draft.classes.push({ id: lid(), name: '', course: '', color: '#1F6FB2', meets: [] }); return draw(); }
     const am = e.target.closest('[data-addm]'); if (am) { draft.classes[+am.dataset.addm].meets.push({ dow: 2, start: '08:30', end: '10:05', label: '' }); return draw(); }
     const dm = e.target.closest('[data-delm]'); if (dm) { const [ci, mi] = dm.dataset.delm.split('|').map(Number); draft.classes[ci].meets.splice(mi, 1); return draw(); }
     const dc = e.target.closest('[data-delc]'); if (dc) { draft.classes.splice(+dc.dataset.delc, 1); return draw(); }
     if (!e.target.closest('[data-ok]')) return;
-    const lines = id => $(id).value.split('\n').map(x => x.trim()).filter(Boolean);
-    draft.daysOff = lines('#ttOff').map(x => { const m = /^(\d{4}-\d\d-\d\d)\s*(.*)$/.exec(x); return m && { date: m[1], label: m[2] || 'No school' }; }).filter(Boolean);
-    draft.events = lines('#ttEv').map(x => { const m = /^(\d{4}-\d\d-\d\d)(?:\s+to\s+(\d{4}-\d\d-\d\d))?\s*(.*)$/.exec(x); return m && { date: m[1], to: m[2] || '', label: m[3] }; }).filter(Boolean);
-    draft.classes = draft.classes.filter(c => c.name.trim()).map(c => ({ ...c, id: c.id || lid() }));
-    for (const c of draft.classes) { const u = mbUrl(c.mb); if (u) c.mb = u; else delete c.mb; mbRemember(c.name, u); }
-    draft.semStart = $('#ttS').value; draft.semEnd = $('#ttE').value; 
-    closeDlg(); await applySetup({ ...draft, template: s.template, ...(L.setup ? {} : { plain: true }) });
+    collect();
+    draft.classes = classesOut();
+    for (const c of draft.classes) mbRemember(c.name, c.mb);
+    closeDlg(); await applySetup({ ...draft, ...(L.setup ? {} : { plain: true }) });
   };
 }
 
@@ -1270,7 +1317,7 @@ async function folderWrite(l) {
 async function folderRemove(l) { if (L.dir && L.dirOk && l._file) { try { await L.dir.removeEntry(l._file); } catch { } } }
 async function folderWriteSchedule() {
   if (!L.dir || !L.dirOk || !L.setup) return;
-  const { template, ...tt } = L.setup;
+  const { template, tplName, ...tt } = L.setup;
   await writeFile(L.dir, 'timetable.json', JSON.stringify(tt, null, 2));
 }
 async function folderWriteAll() {

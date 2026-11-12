@@ -169,11 +169,22 @@ const NOT_LATIN = /(?![\p{Script=Latin}\p{Script=Common}\p{Script=Inherited}])\p
 const namesLost = () => namesNow().all.some(n => NOT_LATIN.test(n));
 // What the automatic cover can't promise for this class, said plainly in the boxes that rely on it.
 function nameWarnings() {
+  if (!nameFindOn()) return '';
   const out = [], says = w => isLatin(w) ? nameFold(w) : w, words = [...new Set(namesNow().all.flatMap(rawWords).filter(w => isLatin(w) ? (NAME_PLAIN.has(nameFold(w)) && !NAME_MOSTLY.has(nameFold(w))) || shortBare(w) : plainForms(w).length).map(says))];
   if (namesLost()) out.push('A name typed in another alphabet, like Hindi, Thai, Arabic, Chinese, Burmese, Khmer or a similar one, can’t always be read off the page, so it may not be covered, on that student’s paper or on a classmate’s. In the check, look for them and drag a box over each one.');
   if (words.length) out.push('Some names here are everyday words too' + (anonOn() ? '' : ' (' + words.slice(0, 4).map(w => esc(w[0].toUpperCase() + w.slice(1))).join(', ') + (words.length > 4 ? '…' : '') + ')') + '. A classmate’s name that looks just like the word, as it does at the start of a sentence, stays as typed. Look for it on the papers and in your comments.');
   return out.length ? '<div class="bbmiss" id="nameWarn" style="margin-bottom:12px"><b>Worth a look:</b><ul style="list-style:disc;margin:4px 0 0;padding-left:20px">' + out.map(x => '<li>' + x + '</li>').join('') + '</ul></div>' : '';
 }
+/* ---------------- finding names on its own: off unless she turns it on (11/11) ---------------- */
+// It covered too many words that weren't names, so by default only the boxes she draws in Check the covers cover anything.
+const nameFindOn = () => !!store.get('gs.nameFind', false);
+function nameFindShow() { for (const b of document.querySelectorAll('#setNameFind button')) b.setAttribute('aria-pressed', String((b.dataset.v === '1') === nameFindOn())); }
+$('#setNameFind').addEventListener('click', e => {
+  const b = e.target.closest('button[data-v]'); if (!b) return;
+  if (b.dataset.v === '1') store.set('gs.nameFind', true); else store.del('gs.nameFind');
+  nameFindShow();
+});
+nameFindShow();
 /* ---------------- the safety net: a paper says so when its own student's name can't be found on it, or can't be trusted when it is ---------------- */
 // What proves a student's name is on the page: not My or Will alone, which any page can say.
 function sureRx(st) {
@@ -241,8 +252,9 @@ function shareOpts(st) {
 let nameLook = null;
 // Goes through every paper not looked at yet. What it finds is kept until the students, the roster or the paper change.
 function findNames() {
+  if (!nameFindOn()) return Promise.resolve();
   return nameLook ||= (async () => {
-    const b = batch, left = () => batch === b ? coverList().filter(x => !namesNow().found.has(paperKey(x.st, x.d))) : [];
+    const b = batch, left = () => batch === b ? coverList(true).filter(x => !namesNow().found.has(paperKey(x.st, x.d))) : [];
     try {
       await ensureCounts();
       // Over again if the papers changed while it looked.
@@ -256,15 +268,16 @@ function findNames() {
     finally { nameLook = null; }
   })();
 }
-const namesLooking = () => stillCounting() || coverList().some(x => !namesNow().found.has(paperKey(x.st, x.d)));
+const namesLooking = () => nameFindOn() && (stillCounting() || coverList(true).some(x => !namesNow().found.has(paperKey(x.st, x.d))));
 // What to say about this paper, if anything.
 function nameFlag(st, d) {
+  if (!nameFindOn()) return '';
   const r = namesNow().found.get(paperKey(st, d));
-  if (r === 'none') return 'Name not found, check this one';
-  return r === 'found' && ownNames(st).flat().some(w => NOT_LATIN.test(w)) ? 'Name in another alphabet, check this one' : '';
+  if (r === 'none') return 'Name not found';
+  return r === 'found' && ownNames(st).flat().some(w => NOT_LATIN.test(w)) ? 'Name in another alphabet' : '';
 }
 // A paper she has checked herself is done with.
-const nameFlagged = () => coverList().map((x, i) => ({ ...x, i, say: nameFlag(x.st, x.d) })).filter(x => x.say && !coverOk(x.st, x.d));
+const nameFlagged = all => coverList(all).map((x, i) => ({ ...x, i, say: nameFlag(x.st, x.d) })).filter(x => x.say && !coverOk(x.st, x.d));
 // Word and text papers can't be boxed in Check the covers, and only their lines with a name on them are covered, so the most that can be done is say which ones don't have the student's name.
 function wordNoName(st, f) {
   if (f.virtual || !f.data || (f.kind !== 'docx' && f.kind !== 'text')) return false;
@@ -274,19 +287,21 @@ function wordNoName(st, f) {
   return !rx || t.search(rx) < 0;
 }
 function wordFlagsHtml() {
-  const list = batch.students.flatMap((st, i) => st.files.filter(f => wordNoName(st, f)).map(f => ({ st, i, f }))), one = list.length === 1;
+  // With finding names off, nothing on a Word paper is covered, so every one is listed.
+  const off = !nameFindOn(), list = batch.students.flatMap((st, i) => st.files.filter(f => off ? !f.virtual && f.kind === 'docx' : wordNoName(st, f)).map(f => ({ st, i, f }))), one = list.length === 1;
   if (!list.length) return '';
-  return '<div class="bbmiss" id="wordFlags" style="margin-bottom:12px"><b>Look at ' + (one ? 'this Word or text paper' : 'these ' + list.length + ' Word or text papers') + ' before you start:</b> the student’s name wasn’t found in ' + (one ? 'it' : 'them') + ', so a nickname or initials would still show while you grade. These can’t be boxed in Check the covers. To cover a name on one, save it as a PDF and add that instead.<ul class="ccflag">' + list.map(x => '<li><button class="link" data-wp="' + x.i + '">' + esc(x.st.key) + '</button> ' + esc(x.f.name) + '</li>').join('') + '</ul></div>';
+  return '<div class="bbmiss" id="wordFlags" style="margin-bottom:12px"><b>' + (off ? (one ? 'This Word paper shows' : 'These Word papers show') + ' names.' : (one ? 'This paper' : 'These papers') + ' may show a name.') + '</b> Turn ' + (one ? 'it' : 'them') + ' into PDF pages to cover ' + (off ? 'them' : 'it') + '.<ul class="ccflag">' + list.map(x => '<li><button class="link" data-wp="' + x.i + '">' + esc(x.st.key) + '</button> ' + esc(x.f.name) + '</li>').join('') + '</ul></div>';
 }
+// The papers the name search doubts, as a short list to open in the check. before: 'before you start' in anonymous grading, which checks every paper.
 function nameFlagsHtml(before) {
-  const word = before === 'before you start' ? wordFlagsHtml() : '';
-  if (namesLooking()) return '<p class="muted" style="margin:0 0 12px;font-size:13px">Looking for each student’s name on their paper…</p>' + word;
-  const list = nameFlagged(), one = list.length === 1;
-  return word + (list.length ? '<div class="bbmiss" style="margin-bottom:12px"><b>Check ' + (one ? 'this paper' : 'these ' + list.length + ' papers') + ' ' + before + ':</b> the automatic cover can’t be trusted on ' + (one ? 'it' : 'them') + '. Open ' + (one ? 'it' : 'each one') + ' in Check the covers and drag a box over any name you see.<ul class="ccflag">' + list.map(x => '<li><button class="link" data-cc="' + x.i + '">' + esc(coverName(x.st, x.k)) + '</button> ' + esc(x.say) + '</li>').join('') + '</ul></div>' : '');
+  const anon = before === 'before you start', word = anon ? wordFlagsHtml() : '';
+  if (namesLooking()) return '<p class="muted" style="margin:0 0 12px;font-size:13px">Looking for names…</p>' + word;
+  const list = nameFlagged(anon);
+  return word + (list.length ? '<div class="bbmiss" style="margin-bottom:12px"><b>Check ' + (list.length === 1 ? 'this one' : 'these') + ' first:</b><ul class="ccflag">' + list.map(x => '<li><button class="link" data-cc="' + x.i + '">' + esc(coverName(x.st, x.k)) + '</button> ' + esc(x.say) + '</li>').join('') + '</ul></div>' : '');
 }
 // A name in another alphabet can be on any paper she hasn't looked at.
-const namesInDoubt = () => namesLost() && coverList().some(x => !coverOk(x.st, x.d));
-const namePromise = () => namesInDoubt() ? ', once you’ve boxed the ones it can’t read (see below)' : namesLooking() || nameFlagged().length ? ', once you’ve checked the papers listed below' : '';
+const namesInDoubt = () => nameFindOn() && namesLost() && coverList().some(x => !coverOk(x.st, x.d));
+const namePromise = () => !nameFindOn() ? (coverList().every(x => coverOk(x.st, x.d)) ? '' : ', once you’ve boxed the names in Check the covers') : namesInDoubt() ? ', once you’ve boxed the ones it can’t read (see below)' : namesLooking() || nameFlagged().length ? ', once you’ve checked the papers listed below' : '';
 function nameFlagsShow() {
   const el = $('#nameFlags'); if (!el) return;
   el.innerHTML = nameFlagsHtml(el.dataset.before);
@@ -295,4 +310,4 @@ function nameFlagsShow() {
 }
 // A file's name as it can be shown right now.
 const fileShown = (st, name) => anonOn() && st ? scrub(name, fileRx(st)) : name;
-Object.assign(window.__gs, { coverRx, fileRx, classRx, autoCovers, classCommon, shareOpts, labelCovers, nameFlagged, namesLooking, findNames, wordNoName });
+Object.assign(window.__gs, { nameFindOn, coverRx, fileRx, classRx, autoCovers, classCommon, shareOpts, labelCovers, nameFlagged, namesLooking, findNames, wordNoName });

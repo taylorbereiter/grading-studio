@@ -1,14 +1,12 @@
 {
- "version": "1.23.0",
- "build": "1fae4a742686",
+ "version": "1.27.13",
+ "build": "4dc6f6351ddb",
  "notes": [
-  "Scores by learning goal, if you want them. Keep your own list of goals (a skill, or a standard from your school) in Settings, Grading, or add one wherever you tag.",
-  "Tag rubric rows in Rubric setup and quiz questions in Quiz boxes. An assignment scored with just a total can carry one goal for the whole score.",
-  "Each class page gets a Goals tab: the class average on each goal with the lowest first, every student by every goal, and where each number came from. A student's own page shows their goals beside the class average.",
-  "Nothing changes until you add a first goal, and tagging never changes a score or a grade."
+  "Share lesson file, under More in a lesson: one small file with the slides, notes, pictures, materials and finished PowerPoint. Open it with Import a lesson on another computer, or give it to another teacher.",
+  "Which classes and days a lesson is on, taught notes and comments for Claude stay behind, and opening one never replaces a lesson you have."
  ],
  "files": {
-  "index.html": "7df8a44ea58a93cd7eeadb33e1541242b7232e1c2d9bc3f89ccea868613afbd0",
-  "planner.html": "9d99bc1e9093f53416ed8cf905fbf2ece51698cba273ec97bbbe69b36f6f32b4"
+  "index.html": "470c15845036d16012fa2a0482db780a5c0be7921438708c09f719b2e4a4f110",
+  "planner.html": "c0fecc29a4d414b3906b6145cf01ce3a3950d539c903cdefc5abff22c7ab18b2"
  }
 }

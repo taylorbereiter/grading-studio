@@ -31,6 +31,40 @@ function exportPlan(keepFolders) {
   for (const o of out) { let p = o.path, k = 2; while (used.has(p.toLowerCase())) p = o.path.replace(/(\.[^./]+)?$/, ' (' + k++ + ')$1'); used.add(p.toLowerCase()); o.path = p; }
   return out;
 }
+// Each returned file is named for its student, the assignment, and what it is: "Ana Lee - River essay - Graded.pdf", or
+// "- Feedback" when there is no score (a formative, or a paper with comments only). Folders stay as they came in, so each file still
+// lands in its student's folder. A student with two files of the same kind keeps the turned-in name on the end to tell them apart.
+// Turned off (gs.xnames false), files keep the names they were turned in with, as before.
+const xNames = () => store.get('gs.xnames', true) !== false;
+const fileSafe = s => String(s || '').replace(/[\\/:*?"<>|\r\n\t]+/g, ' ').replace(/\s+/g, ' ').trim().replace(/[. ]+$/, '');
+const asgName = () => { const a = batch.assignment, f = a && findItem(a.id); return (f && f.it && f.it.name) || (a && a.name) || batch.name; };
+// Graded: a score in the panel, a grade on the paper itself (typed or boxed by hand), or a scored Word rubric.
+function outWord(st) {
+  if (fmNow()) return tr('Feedback');
+  const g = gradeOf(st);
+  const scored = (g.total != null && !g.partial) || st.files.some(f => (f.scan && f.scan.found && f.scan.found.length) || !!f.hand || (!!f.wscore && f.wscore.total != null));
+  return scored ? tr('Graded') : tr('Feedback');
+}
+function outStem(st, rn) { return [(rn || rosterNames()).get(st) || st.key, asgName(), outWord(st)].map(fileSafe).filter(Boolean).join(' - '); }
+function nameOut(items) {
+  if (!xNames() || !items.length) return items;
+  const rn = rosterNames(), by = new Map(), ext = p => (p.match(/\.[^./]+$/) || [''])[0];
+  for (const o of items) { if (!by.has(o.st)) by.set(o.st, []); by.get(o.st).push(o); }
+  for (const [st, list] of by) {
+    const stem = outStem(st, rn);
+    const named = list.map(o => {
+      const dir = o.path.includes('/') ? o.path.slice(0, o.path.lastIndexOf('/') + 1) : '', e = ext(o.path);
+      let base = o.path.slice(dir.length, o.path.length - e.length);
+      if (base.startsWith(st.key + ' - ')) base = base.slice(st.key.length + 3);   // "Student - " that a loose export put in front
+      const twin = list.filter(x => ext(x.path).toLowerCase() === e.toLowerCase()).length > 1;
+      return dir + stem + (twin && !base.startsWith(stem) ? ' - ' + fileSafe(base) : '') + e;
+    });
+    list.forEach((o, i) => { o.path = named[i]; });
+  }
+  const used = new Set();
+  for (const o of items) { let p = o.path, k = 2; while (used.has(p.toLowerCase())) p = o.path.replace(/(\.[^./]+)?$/, ' (' + k++ + ')$1'); used.add(p.toLowerCase()); o.path = p; }
+  return items;
+}
 // Builds one returned file from its pages (possibly from several turned-in files), baking in every mark.
 // fb: the feedback page goes in front (src/feedback.js), when there is anything for it to say.
 async function flattenDoc(st, d, dpi, edit, key, fb) {
@@ -134,6 +168,7 @@ async function openExport() {
         '<div class="prog" hidden><i></i></div><p class="muted" id="xStatus" style="font-size:13px"></p>' +
         '<details class="xopts" id="xOpts"' + (optsOpen ? ' open' : '') + '><summary>Options: <span id="xOptsSay"></span></summary>' +
           '<label class="chk"><input type="checkbox" id="xKeep" checked> Keep student folders</label>' +
+          '<label class="chk"><input type="checkbox" id="xNames"' + (xNames() ? ' checked' : '') + '> Name each file by student and assignment</label><p class="xhint" id="xNamesSay"></p>' +
           '<label class="chk"><input type="checkbox" id="xSheet" checked> Add the grade sheet (a crop of each typed grade, in ' + listOrder() + ')</label>' +
           '<label class="chk"><input type="checkbox" id="xEdit"' + (xEdit() ? ' checked' : '') + '> Keep marks editable</label><p class="xhint">Bring a file back in later and change its marks. Files are about twice as big.</p>' +
           '<label class="chk"><input type="checkbox" id="xKey"' + (keyOn() ? ' checked' : '') + '> Add a key to the marks used on each paper</label><p class="xhint">' + (!nKey ? 'No file has proofreading marks yet. ' : nKey === plan.length ? (nKey === 1 ? 'The file gets one. ' : 'All ' + nKey + ' files get one. ') : nKey + ' of the ' + plan.length + ' files ' + (nKey === 1 ? 'gets' : 'get') + ' one. ') + '<button class="link" data-mkey>Change what they mean…</button></p>' +
@@ -150,6 +185,7 @@ async function openExport() {
     const el = $('#xOptsSay'); if (!el) return;
     const on = [];
     if ($('#xKeep').checked) on.push('student folders');
+    if ($('#xNames').checked) on.push('files named by student');
     if ($('#xSheet').checked) on.push('grade sheet');
     if ($('#xEdit').checked) on.push('marks stay editable');
     if ($('#xKey').checked) on.push('mark key');
@@ -158,9 +194,16 @@ async function openExport() {
     if (dpi > 150) on.push('extra sharp');
     el.textContent = on.length ? on.join(', ') : 'none';
   };
-  optsSay();
+  // An example name from the first file on the list, so she sees what students will get.
+  const namesSay = () => {
+    const el = $('#xNamesSay'); if (!el) return;
+    const o = plan[0]; if (!o) { el.textContent = ''; return; }
+    const one = anonOn() ? [tr('Student name'), asgName(), outWord(o.st)].map(fileSafe).join(' - ') + '.pdf' : nameOut([{ ...o }])[0].path.split('/').pop();   // names hidden while she marks: no name here either
+    el.textContent = xNames() ? 'Like “' + one + '”. Graded when it has a score, Feedback when it doesn’t.' : 'Files keep the names they were turned in with.';
+  };
+  optsSay(); namesSay();
   const xo = $('#xOpts'); if (xo) xo.ontoggle = () => store.set('gs.xopts', xo.open);
-  box.onchange = e => { optsSay(); if (e.target.id === 'xEdit') store.set('gs.xedit', e.target.checked); if (e.target.id === 'xKey') setKey(v => { v.on = e.target.checked; }); if (e.target.id === 'xFb') store.set('gs.xfb', e.target.checked); if (e.target.id === 'xAll') { store.set('gs.xall', e.target.checked); renderTools(); openExport(); } };
+  box.onchange = e => { optsSay(); if (e.target.id === 'xEdit') store.set('gs.xedit', e.target.checked); if (e.target.id === 'xKey') setKey(v => { v.on = e.target.checked; }); if (e.target.id === 'xFb') store.set('gs.xfb', e.target.checked); if (e.target.id === 'xNames') { store.set('gs.xnames', e.target.checked); namesSay(); } if (e.target.id === 'xAll') { store.set('gs.xall', e.target.checked); renderTools(); openExport(); } };
   box.onclick = async e => {
     if (e.target.closest('[data-close]')) return closeDlg();
     const ck = e.target.closest('[data-chk]'); if (ck) { return toPaper(+ck.dataset.chk, ck.dataset.file || undefined); }
@@ -201,7 +244,7 @@ async function openExport() {
       // Grades are read and cropped first, from the files as they are now; then everything is flattened.
       say('Reading the grades…');
       await scanAll((n, t) => { bar.firstChild.style.width = (30 * n / t) + '%'; });
-      items = exportPlan(keep);
+      items = nameOut(exportPlan(keep));
       if (withSheet) {
         const name = ('Grade sheet - ' + batch.name + '.pdf').replace(/[\\/:*?"<>|]+/g, '-');
         await putOut(name, buildSheetPdf);
@@ -241,7 +284,7 @@ function sentWhen(t) {
   return d.toDateString() === now.toDateString() ? hm : d.toLocaleDateString([], { day: 'numeric', month: 'short' }) + ', ' + hm;
 }
 function oneOutHtml(st) {
-  if (!st.files.length) return '';
+  if (!st.files.length) return '<div class="oneout" aria-hidden="true"><span class="link oneout-gap">&nbsp;</span></div>';   // the same height with nothing to export, so Previous and Next stay where they were
   const nm = anonOn() ? 'this' : esc(st.key) + '’s', g = st.grade;
   return '<div class="oneout"><button class="link" id="oneOutBtn" title="Download just this student’s marked file, ready to upload. Uses the options on the Return tab.">Export ' + nm + ' paper now</button>' +
     '<p class="oneout-say' + (g.sent ? ' ok' : '') + '" id="oneOutSay">' + (g.sent ? '✓ Exported at ' + esc(sentWhen(g.sent)) + '. Export again after any change.' : '') + '</p></div>';
@@ -251,7 +294,7 @@ async function exportOne(st) {
   const btn = $('#oneOutBtn'), say = t => { const el = $('#oneOutSay'); if (el) { el.className = 'oneout-say'; el.textContent = t; } };
   saveNow(); commitEditors(); wordScoresAll();
   if (batch.lineBusy) await batch.lineRun;
-  const b0 = batch, mine = () => exportPlan(false).filter(o => o.st === st);
+  const b0 = batch, mine = () => nameOut(exportPlan(false).filter(o => o.st === st));
   let items = mine();
   if (!items.length && (!scanned || scanP)) { say('Reading the paper first…'); await scanAll(); if (batch !== b0) return; items = mine(); }   // a typed grade alone counts as a mark
   const who = anonOn() ? 'this paper' : st.key + '’s paper';
@@ -263,17 +306,17 @@ async function exportOne(st) {
     for (let i = 0; i < items.length; i++) {
       say(items.length > 1 ? 'Baking in marks ' + (i + 1) + ' of ' + items.length + '…' : 'Baking in marks…');
       const o = items[i];
-      const base = o.path.split('/').pop(), name = base.includes(st.key) ? base : st.key + ' - ' + base;   // her own download names each file for its student
+      const base = o.path.split('/').pop(), name = xNames() || base.includes(st.key) ? base : st.key + ' - ' + base;   // her own download names each file for its student
       try { files[name] = o.raw ? o.f.data : await flattenDoc(st, o.d, 150, xEdit(), keyOn(), fbOn() && !fbGiven && (fbGiven = true)); }
       catch (er) { console.error(o.path, er); failed.push({ path: o.path, st, why: exportWhy(er, false) }); }
     }
     const names = Object.keys(files);
     if (!names.length) throw new Error('the file couldn’t be made');
     if (names.length === 1) await saveBlob(names[0], new Blob([files[names[0]]], { type: /\.pdf$/i.test(names[0]) ? 'application/pdf' : 'application/octet-stream' }));
-    else { const z = {}; for (const n of names) z[n] = [files[n], { level: 0 }]; await saveBlob(st.key + ' - ' + batch.name + '.zip', new Blob([fflate.zipSync(z)], { type: 'application/zip' })); }
+    else { const z = {}; for (const n of names) z[n] = [files[n], { level: 0 }]; await saveBlob((xNames() ? outStem(st) : st.key + ' - ' + batch.name) + '.zip', new Blob([fflate.zipSync(z)], { type: 'application/zip' })); }
     if (batch !== b0) return;
     st.grade.sent = Date.now(); saveSoon();
-    toast(names.length === 1 ? 'Saved “' + names[0] + '”.' : 'Saved ' + names.length + ' files for ' + (anonOn() ? 'this student' : st.key) + ' in one ZIP.', 5000);
+    toast(anonOn() ? (names.length === 1 ? 'Saved this student’s file.' : 'Saved ' + names.length + ' files for this student in one ZIP.') : names.length === 1 ? 'Saved “' + names[0] + '”.' : 'Saved ' + names.length + ' files for ' + (anonOn() ? 'this student' : st.key) + ' in one ZIP.', 5000);
     if (failed.length) sayDlg(failed.length + (failed.length === 1 ? ' file couldn’t' : ' files couldn’t') + ' be made: ' + failed.map(f => f.path.split('/').pop() + ' (' + f.why + ')').join(', ') + '. The rest downloaded.');
   } catch (er) { console.error(er); toast('Something went wrong: ' + (er.message || er), 6000); }
   finally { xBusy = false; }

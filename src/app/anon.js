@@ -52,6 +52,7 @@ function anonScrub() {
   for (const el of document.querySelectorAll('#paper .fhead > span:first-child, #paper .refd > summary, #paper .nofile b, #paper .mhead b')) {
     rf.lastIndex = 0; if (rf.test(el.textContent)) el.textContent = scrub(el.textContent, rf);
   }
+  if (!nameFindOn()) return;   // lines with a name are only found when finding names is on
   for (const el of document.querySelectorAll('#paper .dpage p, #paper .dpage td, #paper .dpage li, #paper .dpage')) {
     if (el.classList.contains('anonhide') || (el.classList.contains('dpage') && el.querySelector('p,td,li'))) continue;
     rx.lastIndex = 0; if (rx.test(el.textContent)) el.classList.add('anonhide');
@@ -70,19 +71,16 @@ function openAnon() {
   if (anonOn()) return setAnon(false);
   const seen = batch.anon && batch.anon.order && batch.anon.order.length;
   openDlg('<div class="bh"><h2>Anonymous grading</h2><button class="icon" data-cancel aria-label="Close">✕</button></div><div class="bb">' +
-    '<p style="margin-top:0">Papers show up as <b>Paper 1, Paper 2…</b> in a random order, with names covered. Every mark and score still goes to the right student, and you can switch back any time.</p>' +
-    '<ol style="margin:0 0 12px;padding-left:20px;line-height:1.6">' +
-    '<li><b>Get everything in order first:</b> late files, split scans, your rubric.</li>' +
-    '<li><b>Cover the names.</b> Typed names (from the folder names' + (batchClass() ? ' and your roster' : '') + ') are covered on their own. For handwritten names, check the covers: drag a box over the name once, then use it on every paper. <span id="anCover">' + esc(coverLine()) + '</span>' + nameWarnings() + '<div id="nameFlags" data-before="before you start" style="margin-top:8px">' + nameFlagsHtml('before you start') + '</div></li>' +
-    '<li><b>Start.</b> ' + (seen ? 'It keeps the same random order as last time, or you can shuffle a new one.' : 'The order is shuffled once and kept, so you can stop and come back.') + '</li></ol>' +
-    '<p class="muted" style="font-size:13px;margin:0">The Grades tab, the grade sheet and returned files still use names, since that’s where you copy grades out.</p></div>' +
+    '<p style="margin-top:0">Papers show as <b>Paper 1, Paper 2…</b> in a random order. Scores still go to the right student.</p>' +
+    '<p><b>Cover the names first.</b> In Check the covers, drag a box over a name, then use it on every paper. <span id="anCover">' + esc(coverLine(true)) + '</span></p>' +
+    nameWarnings() + '<div id="nameFlags" data-before="before you start">' + nameFlagsHtml('before you start') + '</div></div>' +
     '<div class="bf"><button class="btn" data-check style="margin-right:auto">Check the covers…</button>' + (seen ? '<button class="btn" data-shuf>Shuffle a new order and start</button>' : '') + '<button class="btn primary" data-go>Start anonymous grading</button></div>', true);
-  ensureCounts().then(() => { const el = $('#anCover'); if (el) el.textContent = coverLine(); findNames(); });
+  ensureCounts().then(() => { const el = $('#anCover'); if (el) el.textContent = coverLine(true); findNames(); });
   $('#dlgBox').onclick = e => {
     if (e.target.closest('[data-cancel]')) return closeDlg();
-    const cc = e.target.closest('[data-cc]'); if (cc) return checkCovers(+cc.dataset.cc, openAnon);
+    const cc = e.target.closest('[data-cc]'); if (cc) return checkCovers(+cc.dataset.cc, openAnon, true);
     const wp = e.target.closest('[data-wp]'); if (wp) { return toPaper(+wp.dataset.wp); }
-    if (e.target.closest('[data-check]')) return ensureCounts().then(() => checkCovers(coverFirst(), openAnon));
+    if (e.target.closest('[data-check]')) return ensureCounts().then(() => checkCovers(coverFirst(true), openAnon, true));
     if (e.target.closest('[data-shuf]')) { anonShuffle(); closeDlg(); return setAnon(true); }
     if (e.target.closest('[data-go]')) { closeDlg(); return setAnon(true); }
   };

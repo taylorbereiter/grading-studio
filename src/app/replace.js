@@ -126,7 +126,8 @@ function toastDo(msg, label, fn) {
   t.append(' ', b);
 }
 function refound(st) {
-  const all = st.files.filter(f => f.kind !== 'docx' && fileIn(st, f)).flatMap(f => (f.scan && f.scan.found) || []).concat(st.files.flatMap(f => wordFound(f, st)));
+  const fs = st.files.filter(f => !tryOfFile(st, f));   // a grade written on an earlier try's paper belongs to that try
+  const all = fs.filter(f => f.kind !== 'docx' && fileIn(st, f)).flatMap(f => (f.scan && f.scan.found) || []).concat(fs.flatMap(f => wordFound(f, st)));
   // Doubtful readings wait for her OK and don't count until then, and while one is waiting nothing beside it stands either. The same words she's already said yes to, written twice on a page, are one answer.
   const r = splitReads(st, all), rd = st.grade.reads || {}, ok = r.ok.filter(g => !r.mine.includes(g)).filter((g, n, a) => rd[readKey(g)] !== 1 || a.findIndex(o => readKey(o) === readKey(g)) === n);
   st.foundCount = ok.length; st.doubts = r.ask; st.foundAll = ok;

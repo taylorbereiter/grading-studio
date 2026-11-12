@@ -1259,3 +1259,65 @@ test('a lesson’s top bar is light: its name, its classes, status, Download and
     assert.deepEqual(errors, []);
   } finally { await a.done(); }
 });
+
+test('Timetable: my school’s slide template picked from a file, and everything saved as one setup file', async () => {
+  const a = await open();
+  try {
+    const { page, errors } = a;
+    const tpl = fs.readFileSync(path.join(__dirname, 'fixtures', 'lesson-template.b64'), 'utf8').trim();
+    await page.evaluate(async s => { await window.__planner.applySetup(s); }, SETUP);
+    assert.equal(await page.evaluate(() => window.__planner.L.setup.template), '', 'starts on the plain template');
+    await page.evaluate(() => window.__planner.openTimetable());
+    await page.waitForSelector('#ttTpl');
+    assert.match(await page.$eval('#ttTpl', d => d.textContent), /plain one built in/);
+    // a file that isn't a PowerPoint, then one with no Title Slide layout, are refused with a reason
+    const refused = await page.evaluate(async b64 => {
+      const P = window.__planner, u8 = Uint8Array.from(atob(b64), c => c.charCodeAt(0)), out = [];
+      out.push(await P.readTemplate(new File(['not a deck'], 'notes.txt')));
+      out.push(await P.readTemplate(new File(['not a zip'], 'broken.pptx')));
+      const z = fflate.unzipSync(u8);
+      for (const k of Object.keys(z)) if (/^ppt\/slideLayouts\/slideLayout\d+\.xml$/.test(k)) z[k] = new TextEncoder().encode(new TextDecoder().decode(z[k]).replace(/<p:cSld name="[^"]*"/, '<p:cSld name="Other"'));
+      out.push(await P.readTemplate(new File([fflate.zipSync(z)], 'odd.pptx')));
+      const ok = await P.readTemplate(new File([u8], 'School deck.potx'));
+      return { out, ok: ok && { name: ok.name, same: ok.b64 === b64 } };
+    }, tpl);
+    assert.deepEqual(refused.out, [null, null, null]);
+    assert.deepEqual(refused.ok, { name: 'School deck', same: true });
+    // picked through the button: the dialog shows it, and Save keeps it with what was typed
+    const tmp = path.join(require('os').tmpdir(), 'gs-school-template.pptx');
+    fs.writeFileSync(tmp, Buffer.from(tpl, 'base64'));
+    await page.$eval('#ttOff', t => { t.value = '2026-12-25 Winter break'; });
+    const [chooser] = await Promise.all([page.waitForFileChooser(), page.click('[data-tpl]')]);
+    await chooser.accept([tmp]);
+    await page.waitForFunction(() => /Your own: gs-school-template/.test(document.querySelector('#ttTpl').textContent));
+    assert.equal(await page.$eval('#ttOff', t => t.value), '2026-12-25 Winter break', 'what was typed stays');
+    // Save my setup file: one JSON with the classes, dates and template
+    const saved = await page.evaluate(async () => {
+      let blob = null; const was = HTMLAnchorElement.prototype.click;
+      HTMLAnchorElement.prototype.click = function () { blob = { name: this.download, href: this.href }; };
+      document.querySelector('[data-saveprof]').click();
+      await new Promise(r => setTimeout(r, 200)); HTMLAnchorElement.prototype.click = was;
+      return { name: blob.name, json: JSON.parse(await (await fetch(blob.href)).text()) };
+    });
+    assert.equal(saved.name, 'Planner setup.json');
+    assert.equal(saved.json.kind, 'grading-studio-lessons-setup');
+    assert.deepEqual(saved.json.classes.map(c => c.name), ['Course A-1', 'Course A-2', 'Course B-1']);
+    assert.deepEqual(saved.json.daysOff, [{ date: '2026-12-25', label: 'Winter break' }]);
+    assert.equal(saved.json.template, tpl); assert.equal(saved.json.tplName, 'gs-school-template');
+    await page.click('[data-ok]');
+    await page.waitForFunction(() => window.__planner.L.setup.template !== '');
+    assert.equal(await page.evaluate(() => window.__planner.L.setup.tplName), 'gs-school-template');
+    // the saved file loads back on a fresh setup, template and all; Use the plain one goes back
+    await page.evaluate(async j => { await window.__planner.applySetup({ ...j, template: '' }); }, saved.json);
+    assert.equal(await page.evaluate(() => window.__planner.L.setup.tplName), '');
+    await page.evaluate(async j => { await window.__planner.applySetup(j); }, saved.json);
+    assert.equal(await page.evaluate(() => window.__planner.L.setup.tplName), 'gs-school-template');
+    await page.evaluate(() => window.__planner.openTimetable());
+    await page.waitForSelector('[data-tplplain]'); await page.click('[data-tplplain]');
+    assert.match(await page.$eval('#ttTpl', d => d.textContent), /plain one built in/);
+    await page.click('[data-ok]');
+    await page.waitForFunction(() => window.__planner.L.setup.template === '');
+    fs.unlinkSync(tmp);
+    assert.deepEqual(errors, []);
+  } finally { await a.done(); }
+});
