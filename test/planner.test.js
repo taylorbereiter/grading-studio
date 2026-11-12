@@ -1296,7 +1296,8 @@ test('under the slide: what belongs to this slide, then what belongs to the whol
     await page.setViewport({ width: 800, height: 900 });
     await page.waitForFunction(() => getComputedStyle(document.querySelector('.ls-this')).gridTemplateColumns.split(' ').length === 1);
     assert.equal(await cols('.ls-whole'), 1);
-    assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'no sideways scroll');
+    // the slide is fitted to the new width when the window's resize event arrives, which can be after the columns restack
+    await page.waitForFunction(() => document.documentElement.scrollWidth <= innerWidth, { timeout: 10000 }).catch(() => assert.fail('no sideways scroll'));
     await page.setViewport({ width: 1500, height: 950 });
     // another slide: its own notes, the same lesson parts
     await page.click('#lsThumbs [data-go="0"]');
