@@ -56,7 +56,7 @@ const lib = page => page.evaluate(() => window.__gs.state().lib);
 test('the table groups a term’s assignments by type, averages each type, and weights them into a term grade', async () => {
   const { page, close } = await openApp(browser, { seed: seed() });
   await openBook(page);
-  assert.deepEqual(await page.$$eval('#bkTab tr.bkg th', t => t.map(x => x.textContent).filter(Boolean)), ['Summative · 50%', 'In-class · 50%', 'Formative · feedback only', 'No type yet']);
+  assert.deepEqual(await page.$$eval('#bkTab tr.bkg th', t => t.map(x => x.textContent).filter(Boolean)), ['In-class · 50%', 'Summative · 50%', 'Formative · feedback only', 'No type yet', 'Term 1']);
   // (80+90)/2 and (90+80)/2; (70+70)/2 and (75+70)/2; (95+100)/2 and (100+90)/2; Dov: missing and excused leave 60 and 60.
   assert.deepEqual(await termCol(page), ['Aria Testwell 85.00%', 'Bram Sample 71.25%', 'Cleo Fixture 96.25%', 'Dov Madeup 60.00%', 'Class average 78.13%']);
   const row = await page.$$eval('#bkTab tbody tr:nth-child(4) td', t => t.map(x => x.textContent.trim()));
@@ -64,7 +64,7 @@ test('the table groups a term’s assignments by type, averages each type, and w
   // Formative: never a score. Comments with Feedback complete not switched on yet are "started".
   assert.equal(await page.$$eval('#bkTab tbody .bkfb', f => f.length), 0);
   assert.equal(await page.$$eval('#bkTab tbody .bkstart', f => f.length), 2);
-  assert.match(await page.$eval('#bkTab tbody tr td.bkterm', t => t.dataset.tn), /Summative 50%: 85.00% · In-class 50%: 85.00%/);
+  assert.match(await page.$eval('#bkTab tbody tr td.bkterm', t => t.dataset.tn), /In-class 50%: 85.00% · Summative 50%: 85.00%/);
   // Term 2 has the download with no card, and it has no type yet.
   await page.click('[data-bkterm="t2"]');
   await page.waitForFunction(() => /Week 10 quiz/.test(document.querySelector('#bkTab').textContent));
@@ -72,6 +72,63 @@ test('the table groups a term’s assignments by type, averages each type, and w
   await page.click('[data-bkterm="*"]');
   await page.waitForFunction(() => /Year/.test(document.querySelector('#bkTab thead').textContent));
   assert.deepEqual(await termCol(page), ['Aria Testwell 85.00%', 'Bram Sample 71.25%', 'Cleo Fixture 96.25%', 'Dov Madeup 60.00%', 'Class average 78.13%']);
+  noErrors(page); await close();
+});
+
+test('each counting type’s average sits beside the term grade, Averages only shows just those, and the whole year splits each term the same way', async () => {
+  const { page, close } = await openApp(browser, { seed: seed() });
+  await openBook(page);
+  const heads = () => page.$$eval('#bkTab thead tr:last-child th.bksum', t => t.map(x => x.firstChild.textContent));
+  assert.deepEqual(await heads(), ['In-class', 'Summative', 'Term grade']);
+  const sums = () => page.$$eval('#bkTab tbody tr', rs => rs.map(r => [...r.querySelectorAll('td.bksum')].map(x => x.textContent.trim()).join(' | ')));
+  // In-class (90+80)/2, (75+70)/2, (100+90)/2, Dov 60 (excused left out); summatives (80+90)/2, (70+70)/2, (95+100)/2, Dov 60.
+  const want = ['85.00% | 85.00% | 85.00%', '72.50% | 70.00% | 71.25%', '95.00% | 97.50% | 96.25%', '60.00% | 60.00% | 60.00%', '78.13% | 78.13% | 78.13%'];
+  assert.deepEqual(await sums(), want);
+  await page.click('[data-bkonly="1"]');
+  await page.waitForSelector('#bkTab.bkonly');
+  assert.deepEqual(await page.$$eval('#bkTab thead tr:last-child th', t => t.map(x => x.firstChild.textContent)), ['Student', 'In-class', 'Summative', 'Term grade']);
+  assert.deepEqual(await sums(), want);
+  assert.equal(await page.$('[data-bkshow]'), null, 'Percent / Points has nothing to change with no assignments shown');
+  assert.equal(await page.evaluate(() => localStorage.getItem('gs.bkOnly')), '1');
+  // A teacher whose in-class work doesn't count sees no in-class average.
+  await page.evaluate(() => { const s = window.__gs.state(); s.lib.book = { ...s.lib.book, w: { sum: 100, ic: 0, fm: 0 } }; });
+  await page.click('[data-bkterm="t2"]'); await page.click('[data-bkterm="t1"]');
+  await page.waitForFunction(() => document.querySelectorAll('#bkTab thead tr:last-child th.bksum').length === 2);
+  assert.deepEqual(await heads(), ['Summative', 'Term grade']);
+  await page.evaluate(() => { const s = window.__gs.state(); s.lib.book = { ...s.lib.book, w: { sum: 50, ic: 50, fm: 0 } }; });
+  await page.click('[data-bkonly=""]');
+  await page.waitForFunction(() => !document.querySelector('#bkTab.bkonly'));
+  await page.click('[data-bkterm="*"]');
+  await page.waitForSelector('#bkTab.bkyear');
+  assert.deepEqual(await page.$$eval('#bkTab tr.bkg th', t => t.map(x => x.textContent).filter(Boolean)), ['Term 1', 'Term 2', 'Year']);
+  const aria = await page.$$eval('#bkTab tbody tr:first-child td', t => t.map(x => x.textContent.trim()));
+  // Term 1: 85 85 85; Term 2 has only an untyped download, so nothing; the year is Term 1's.
+  assert.deepEqual(aria, ['Aria Testwell', '85.00%', '85.00%', '85.00%', '–', '–', '–', '85.00%', '85.00%', '85.00%']);
+  noErrors(page); await close();
+});
+
+test('students can be left out of the class averages for a what-if, without changing their own grades', async () => {
+  const { page, close } = await openApp(browser, { seed: seed() });
+  await openBook(page);
+  const foot = () => page.$$eval('#bkTab tr.bkfoot td.bksum', t => t.map(x => x.textContent.trim()));
+  assert.deepEqual(await foot(), ['78.13%', '78.13%', '78.13%']);
+  await page.click('[data-bkpickon]');
+  await page.waitForSelector('.bkpick');
+  await page.click('.bkpick[data-bkpick="Dov Madeup"]');
+  await page.waitForSelector('#bkTab tr.bkleft');
+  // Without Dov: summatives (85+70+97.5)/3, in-class (85+72.5+95)/3, grades (85+71.25+96.25)/3.
+  assert.deepEqual(await foot(), ['84.17%', '84.17%', '84.17%']);
+  assert.match(await page.$eval('#bkTab tr.bkfoot td.bknm', t => t.textContent), /without 1 student/);
+  assert.match(await page.$eval('#bkTab tr.bkleft', t => t.textContent), /Dov Madeup.*left out.*60\.00%/);
+  // The column average leaves Dov out too: Poetry test (90+70+100)/3.
+  assert.ok((await page.$$eval('#bkTab tr.bkfoot td', t => t.map(x => x.textContent.trim()))).includes('86.67%'));
+  await page.click('[data-bkpickon]');
+  await page.waitForFunction(() => !document.querySelector('.bkpick'));
+  await page.click('[data-bkterm="*"]'); await page.waitForSelector('#bkTab.bkyear');
+  assert.equal(await page.$eval('#bkTab tr.bkfoot td:last-child', t => t.textContent.trim()), '84.17%');
+  await page.click('[data-bkleftclear]');
+  await page.waitForFunction(() => !document.querySelector('#bkTab tr.bkleft'));
+  assert.equal(await page.$eval('#bkTab tr.bkfoot td:last-child', t => t.textContent.trim()), '78.13%');
   noErrors(page); await close();
 });
 

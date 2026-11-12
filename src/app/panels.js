@@ -18,6 +18,7 @@ function renderTools() {
   const bar = once ? once.prev : tool;   // a one-time tool keeps her own tool's bar, so the toolbar doesn't jump
   const isHl = bar === 'hl';
   const sw = isHl ? Object.entries(HL).map(([k, v]) => '<button class="sw" data-hl="' + k + '" style="background:' + v + '" aria-pressed="' + (k === hlColor) + '" title="' + k + '"></button>').join('')
+    : bar === 'check' ? Object.entries(COLORS).map(([k, v]) => '<button class="sw" data-chk="' + k + '" style="background:' + v + '" aria-pressed="' + (k === checkInk) + '" title="Checks in ' + k + '"></button>').join('')   // the check tool sets the color every check shows in
     : Object.entries(COLORS).map(([k, v]) => '<button class="sw" data-ink="' + k + '" style="background:' + v + '" aria-pressed="' + (k === inkColor) + '" title="' + k + '"></button>').join('');
   // One dock down the left edge of the paper: the tools, what the tool in hand can be set to, undo and redo, zoom.
   const opts = (bar === 'select' || bar === 'erase' ? '' : '<span class="swatches">' + sw + '</span>') +
@@ -33,6 +34,7 @@ function renderTools() {
 $('#tools').addEventListener('click', e => {
   const t = e.target.closest('[data-tool]'); if (t) { setTool(t.dataset.tool); return; }
   const i = e.target.closest('[data-ink]'); if (i) { inkColor = i.dataset.ink; store.set('gs.ink', inkColor); recolorSelected(COLORS[inkColor]); renderTools(); return; }
+  const ck = e.target.closest('[data-chk]'); if (ck) { setCheckInk(ck.dataset.chk); renderTools(); redrawAll(); return; }
   const h = e.target.closest('[data-hl]'); if (h) { hlColor = h.dataset.hl; store.set('gs.hl', hlColor); renderTools(); return; }
   if (hlBarClick(e)) return;
   const w = e.target.closest('[data-w]'); if (w) { penW = +w.dataset.w; store.set('gs.penW', penW); renderTools(); return; }
@@ -90,7 +92,7 @@ function renderList() {
     if (!lfShows(i)) return '';
     const g = gradeOf(st);
     const val = g.total != null ? g.total : g.pct != null ? g.pct + '%' : null;
-    let right = noScore(st) ? '<span class="stag" title="You marked this student ' + g.status + '. No score counts.">' + STATUS_LABEL[g.status] + '</span>' : val != null ? '<span class="sc" title="' + (g.paper ? 'Read from the paper' : g.done ? 'Scored' : 'Partly scored') + '"' + (g.paper || g.out ? ' style="color:var(--muted);font-weight:600"' : g.done ? '' : ' style="color:var(--warn)"') + '>' + fmtNum(g.total != null ? g.total : g.pct) + (g.total == null ? '%' : g.outOf != null ? '/' + fmtNum(g.outOf) : '') + (g.partial ? '<small>partial</small>' : '') + '</span>'
+    let right = noScore(st) ? '<span class="stag" title="You marked this student ' + g.status + '. No score counts.">' + STATUS_LABEL[g.status] + '</span>' : val != null ? '<span class="sc" title="' + (g.tries ? esc(triesSay(g)) : g.paper ? 'Read from the paper' : g.done ? 'Scored' : 'Partly scored') + '"' + (g.paper || g.out ? ' style="color:var(--muted);font-weight:600"' : g.done ? '' : ' style="color:var(--warn)"') + '>' + fmtNum(g.total != null ? g.total : g.pct) + (g.total == null ? '%' : g.outOf != null ? '/' + fmtNum(g.outOf) : '') + (g.partial ? '<small>partial</small>' : '') + '</span>'
       : manyReads(st) ? '<span class="sc" style="color:var(--warn)" title="More than one grade found on the paper. Check the Grade sheet.">?</span>'
       : st.doubts && st.doubts.length ? '<span class="sc" style="color:var(--warn)" title="A reading on the paper may not be a grade. Confirm it on the Grade sheet.">?</span>'
       : hasMarks(st) ? '<span class="dot" title="Marked"></span>' : '';
@@ -101,7 +103,7 @@ function renderList() {
     const fm = fmNow(), sv = noScore(st) ? ['–', 'none'] : fm ? (st.grade.fb ? ['✓', 'ok'] : hasMarks(st) || (st.grade.comment || '').trim() ? ['', 'dot'] : st.files.length ? ['', 'ring'] : ['–', 'none'])
       : val != null ? [fmtNum(g.total != null ? g.total : g.pct) + (g.total == null ? '%' : ''), g.paper || g.out ? 'quiet' : g.done ? '' : 'part'] : manyReads(st) || (st.doubts && st.doubts.length) ? ['?', 'part'] : hasMarks(st) ? ['', 'dot'] : st.files.length ? ['', 'ring'] : ['–', 'none'];
     return '<button class="stu' + (i === cur ? ' on' : '') + (st.files.length ? '' : ' empty') + (sv[1] ? ' sv-' + sv[1] : '') + (g.status === 'late' ? ' is-late' : '') + '" data-i="' + i + '" data-sv="' + sv[0] + '"' + (i === cur ? ' aria-current="true"' : '') + '><span class="num">' + (pos + 1) + '</span><span class="nm" title="' + esc(full) + '">' + esc(nm) + '</span>' + (anonOn() ? '' : whoBtn('data-wi="' + i + '"', st.key)) +
-      '<span class="tail">' + (st.files.length || noScore(st) ? '' : '<span class="muted" style="font-size:11px">no paper</span>') + (g.status === 'late' ? '<span class="stag" title="You marked this student late">late</span>' : '') + (g.out ? '<span class="stag out" title="Left out of the average">left out</span>' : '') + (nAdd ? '<span class="add" title="' + nAdd + (nAdd === 1 ? ' file' : ' files') + ' added by you">+' + nAdd + '</span>' : '') + (re ? '<span class="add" title="A page needs a rescan">⚑</span>' : '') + (groupOf(st) ? '<span class="add grp" title="Group work: marked and graded once with ' + esc(groupNames(groupMates(st))) + '">group</span>' : grp ? '<span class="add grp" title="Group work: shares pages or a file with another student">shared</span>' : '') + carryPill(st) + sent + right + '</span></button>';
+      '<span class="tail">' + (st.files.length || noScore(st) ? '' : '<span class="muted" style="font-size:11px">no paper</span>') + (g.status === 'late' ? '<span class="stag" title="You marked this student late">late</span>' : '') + (g.out ? '<span class="stag out" title="Left out of the average">left out</span>' : '') + (g.tries ? '<span class="stag retk" title="' + esc(triesSay(g)) + '">retake</span>' : '') + (nAdd ? '<span class="add" title="' + nAdd + (nAdd === 1 ? ' file' : ' files') + ' added by you">+' + nAdd + '</span>' : '') + (re ? '<span class="add" title="A page needs a rescan">⚑</span>' : '') + (groupOf(st) ? '<span class="add grp" title="Group work: marked and graded once with ' + esc(groupNames(groupMates(st))) + '">group</span>' : grp ? '<span class="add grp" title="Group work: shares pages or a file with another student">shared</span>' : '') + carryPill(st) + sent + right + '</span></button>';
   }).join('');
   if (listFilter !== 'all' && !q && !order.some(i => lfMatch(batch.students[i]))) $('#stuList').insertAdjacentHTML('beforeend', '<div class="muted lfnone">No one else here. <button class="link" data-lf="all">Show everyone</button></div>');
   listToCur();
@@ -155,7 +157,7 @@ function rowStart() {
 }
 function rowPick(i) { if (i === rowOn) return; rowOn = i; rowKeyed = -1; for (const c of document.querySelectorAll('#grade .crit')) c.classList.toggle('on', +c.dataset.row === i); lvDraw(); }
 // How far along its slider a row's score sits, for the blue part of the track.
-const critScore = v => v == null ? '' : fmtNum(v) + '<small> / 4</small>';
+const critScore = (v, i) => v == null ? '' : fmtNum(v) + '<small> / ' + rowTop(setup, i) + '</small>';
 function renderGrade() {
   const st = batch.students[cur], g = st.grade, gr = gradeOf(st);
   let h = '';
@@ -164,17 +166,17 @@ function renderGrade() {
   if (setup.mode === 'rubric') {
     if (rowOn >= setup.criteria.length) rowOn = -1;
     h += '<h3>Score <button class="link" id="editRubric">Edit rubric</button></h3><div class="crits">';
-    // Each row is one line: its name, its score, and a slider over the steps 0, 1, 1.5 … 4. The numbers under the slider show on the row in hand and under the pointer.
-    h += setup.criteria.map((c, i) => { const v = g.rubric[i], k = RUBRIC_STEPS.indexOf(v);
-      return '<div class="crit' + (i === rowOn ? ' on' : '') + '" data-row="' + i + '"><div class="cn"><span title="' + esc(c) + '">' + esc(c) + '</span><em>' + critScore(v) + '</em></div><div class="scores slide" data-c="' + i + '">' +
-        '<input type="range" class="srange' + (v == null ? ' unset' : '') + '" style="--k:' + Math.max(0, k) + '" min="0" max="' + (RUBRIC_STEPS.length - 1) + '" step="1" value="' + Math.max(0, k) + '" aria-label="Score for ' + esc(c) + '" aria-valuetext="' + (v == null ? 'Not scored' : fmtNum(v) + ' out of 4') + '">' +
-        '<div class="sticks">' + RUBRIC_STEPS.map((w, j) => '<button class="' + (w % 1 ? 'half' : '') + '" style="--k:' + j + '" data-v="' + w + '" tabindex="-1" aria-pressed="' + (v === w) + '">' + w + '</button>').join('') + '</div></div></div>'; }).join('') + '</div>' + lvBox();
+    // Each row is one line: its name, its score, and a slider over its steps (0, 1, 1.5 … 4 unless the rubric says otherwise). The numbers under the slider show on the row in hand and under the pointer.
+    h += setup.criteria.map((c, i) => { const v = g.rubric[i], steps = rowSteps(setup, i), k = steps.indexOf(v), top = rowTop(setup, i);
+      return '<div class="crit' + (i === rowOn ? ' on' : '') + '" data-row="' + i + '"><div class="cn"><span title="' + esc(c) + '">' + esc(c) + '</span><em>' + critScore(v, i) + '</em></div><div class="scores slide' + (steps.length > 9 ? ' many' : '') + '" data-c="' + i + '" style="--n:' + (steps.length - 1) + '">' +
+        '<input type="range" class="srange' + (v == null ? ' unset' : '') + '" style="--k:' + Math.max(0, k) + '" min="0" max="' + (steps.length - 1) + '" step="1" value="' + Math.max(0, k) + '" aria-label="Score for ' + esc(c) + '" aria-valuetext="' + (v == null ? 'Not scored' : fmtNum(v) + ' out of ' + top) + '">' +
+        '<div class="sticks">' + steps.map((w, j) => '<button class="' + (w % 1 ? 'half' : '') + '" style="--k:' + j + '" data-v="' + w + '" tabindex="-1" aria-pressed="' + (v === w) + '">' + w + '</button>').join('') + '</div></div></div>'; }).join('') + '</div>' + lvBox();
   } else {
     h += '<h3>Score <button class="link" id="editRubric">Edit</button></h3>' +
       '<div class="pts"><input type="number" step="0.5" min="0" id="ptsIn" value="' + esc(g.points) + '" aria-label="Points"><span class="muted">out of ' + esc(setup.outOf) + '</span></div>';
   }
   h += '<div class="total">' + totalHtml(st) + '</div>' + statusHtml(st);
-  h += cmtHtml(g) + histSlot(st) + '<div class="gfoot"><div class="hint keysrow">' + (setup.mode === 'rubric' ? '<span><kbd>1</kbd>–<kbd>4</kbd> score</span><span><kbd>.</kbd> half</span>' : '<span>Type the score</span>') + '<button class="link" data-keys title="Every key">All keys <kbd>?</kbd></button></div>' + navHtml(st) + '</div>';
+  h += cmtHtml(g) + histSlot(st) + '<div class="gfoot"><div class="hint keysrow">' + (setup.mode === 'rubric' ? '<span><kbd>1</kbd>–<kbd>' + Math.min(9, Math.max(...setup.criteria.map((_, i) => rowTop(setup, i)))) + '</kbd> score</span>' + (rowHalf(setup) ? '<span><kbd>.</kbd> half</span>' : '') : '<span>Type the score</span>') + '<button class="link" data-keys title="Every key">All keys <kbd>?</kbd></button></div>' + navHtml(st) + '</div>';
   $('#grade').innerHTML = h;
 }
 // The comment that goes back with the score, with her saved comments one click away.
@@ -205,14 +207,23 @@ function fbToggle(next) {
   if (next && navOrder().indexOf(cur) < navOrder().length - 1) stepStudent(1); else renderGrade();
 }
 function totalHtml(st) {
-  const gr = gradeOf(st), own = ownGrade(st);
+  const gr = noScore(st) ? gradeOf(st) : tryGrade(st), own = ownGrade(st);   // with a retake, the big number is the try being scored; what counts is in the retake box under it
   if (noScore(st)) return '<b>' + STATUS_LABEL[gr.status] + '</b><span style="width:100%;font-size:12.5px">No score counts. Giving a score takes this off.</span>';
   let h = '<b>' + (gr.total == null ? '–' : fmtNum(gr.total)) + '</b><span>/ ' + (gr.outOf != null ? fmtNum(gr.outOf) : maxPoints()) + '</span><span class="pc">' + (gr.pct == null ? '' : fmtPct(gr.pct) + bandSay(gr.pct)) + '</span>';
+  if (gr.total != null) h += '<button class="btn sm ghost" id="stampScore" title="Put the score on the paper: ' + esc(scoreStampText(gr)) + '">' + STAMP_ICON + 'Stamp</button>';
+  if (gr.xc) h += '<span class="xcsay" style="width:100%">' + fmtNum(gr.base) + ' earned + ' + fmtNum(gr.xc) + (gr.xcU === 'pct' ? '%' : '') + ' extra credit</span>';
   if (gr.partial) h += '<span class="sc-warn" style="width:100%">Partial: ' + partNote(st) + '. This total isn’t final.</span>';
   if (gr.paper) h += '<span style="width:100%;font-size:12.5px">From the paper (Grade sheet)</span>';
   const ps = paperScore(st);
   if (own.total != null && ps != null && Math.abs(ps - own.total) > 0.001) h += '<span class="sc-warn" style="width:100%">The paper says ' + fmtNum(ps) + '</span>';
   return h;
+}
+// The score stamp, the same one the calculator's "Score sticker" places: "12.5/15 = 83%", from the score however it was given
+// (rubric, points, Quick mark or the grade sheet), so she doesn't need the calculator to get it onto the paper.
+const STAMP_ICON = '<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><rect x="2" y="9.5" width="12" height="3.5" rx="1"/><path d="M6 9.5V7.2a2 2 0 1 1 4 0v2.3M3.5 15h9"/></svg>';
+function scoreStampText(gr) {
+  const max = gr.outOf != null ? gr.outOf : maxPoints();
+  return fmtNum(gr.total) + (max ? '/' + fmtNum(max) : '') + (gr.pct != null ? ' = ' + gr.pct + '%' : '');
 }
 // The score on the paper: read from typed text, or typed by her on the Grade sheet from the picture.
 function paperScore(st) {
@@ -225,17 +236,26 @@ $('#grade').addEventListener('click', e => {
   const b = e.target.closest('.scores button');
   if (b) {
     const st = batch.students[cur], i = +b.closest('.scores').dataset.c, v = +b.dataset.v;
+    gradeSnap(st);
     st.grade.rubric[i] = st.grade.rubric[i] === v ? null : v;
     scoreTouched(st, i); rowOn = lvAt = i; rowKeyed = -1;
     renderGrade(); renderList(); saveSoon(); return;
   }
   const rn = e.target.closest('.crit .cn'); if (rn) return rowPick(+rn.parentNode.dataset.row);
-  const sb = e.target.closest('[data-status]'); if (sb) return setStatus(batch.students[cur], sb.dataset.status);
+  const sb = e.target.closest('[data-status]'); if (sb) { gradeSnap(batch.students[cur]); return setStatus(batch.students[cur], sb.dataset.status); }
   if (e.target.closest('#outAvg, [data-outoff]')) return setOutAvg(batch.students[cur]);
+  if (e.target.closest('[data-gxc]')) { kmClose(); return xcStart(batch.students[cur]); }
+  { const u = e.target.closest('[data-xcu]'); if (u) return xcUnitSet(batch.students[cur], u.dataset.xcu); }
+  if (e.target.closest('[data-xcoff]')) return xcSet(batch.students[cur], 0, true);
+  if (e.target.closest('[data-gretake]')) { kmClose(); return retakeStart(batch.students[cur]); }
+  if (e.target.closest('[data-tryoff]')) return retakeOff(batch.students[cur]);
+  { const u = e.target.closest('[data-tryrule]'); if (u) { kmClose(); return retakeRuleSet(u.dataset.tryrule); } }
+  if (e.target.closest('[data-tryadd]')) return pickAdd(batch.students[cur]);
   if (e.target.closest('#prevBtn')) stepStudent(-1);
   if (e.target.closest('#nextBtn')) stepStudent(1);
   if (e.target.closest('#nextUn')) return nextUnscored();
   if (e.target.closest('[data-gcalc]')) return openCalc();
+  if (e.target.closest('#stampScore')) { const gr = gradeOf(batch.students[cur]); if (gr.total == null) return; if (!pages.length) return toast('Open the paper first, then stamp the score on it'); startScorePlace(scoreStampText(gr)); return; }
   if (cmtClick(e)) return;
   if (e.target.closest('#editRubric')) openSetup();
   if (e.target.closest('[data-keys]')) openKeys();
@@ -247,9 +267,10 @@ $('#grade').addEventListener('click', e => {
 function slideTo(r, v) {
   const st = batch.students[cur], i = +r.closest('.scores').dataset.c;
   if (st.grade.rubric[i] === v && !r.classList.contains('unset')) return;
+  if (!slideSnap) { gradeSnap(st); slideSnap = true; }   // one step for a whole drag, however many scores it passed over
   st.grade.rubric[i] = v; scoreTouched(st, i);
-  r.classList.remove('unset'); r.setAttribute('aria-valuetext', fmtNum(v) + ' out of 4'); r.style.setProperty('--k', r.value);
-  const crit = r.closest('.crit'), em = crit.querySelector('.cn em'); if (em) em.innerHTML = critScore(v);
+  r.classList.remove('unset'); r.setAttribute('aria-valuetext', fmtNum(v) + ' out of ' + rowTop(setup, i)); r.style.setProperty('--k', r.value);
+  const crit = r.closest('.crit'), em = crit.querySelector('.cn em'); if (em) em.innerHTML = critScore(v, i);
   for (const t of crit.querySelectorAll('.sticks button')) t.setAttribute('aria-pressed', String(+t.dataset.v === v));
   rowOn = -2; rowPick(i);   // the row in hand, and what its score means under the rows
   const tot = $('#grade .total'); if (tot) tot.innerHTML = totalHtml(st);
@@ -257,21 +278,22 @@ function slideTo(r, v) {
   renderList(); saveSoon();
 }
 // After the mouse, focus leaves the slider so ← → go on moving between students. After the keyboard, it stays.
-let slidePtr = false;
-function slideDone(r) { const i = r.closest('.scores').dataset.c, kb = !slidePtr; slidePtr = false; renderGrade(); const again = $('#grade .scores[data-c="' + i + '"] .srange'); if (again && kb) again.focus({ preventScroll: true }); }
+let slidePtr = false, slideSnap = false;
+function slideDone(r) { slideSnap = false; const i = r.closest('.scores').dataset.c, kb = !slidePtr; slidePtr = false; renderGrade(); const again = $('#grade .scores[data-c="' + i + '"] .srange'); if (again && kb) again.focus({ preventScroll: true }); }
 $('#grade').addEventListener('pointerdown', e => { if (e.target.closest && e.target.closest('.srange')) slidePtr = true; });
-$('#grade').addEventListener('input', e => { if (e.target.classList.contains('srange')) slideTo(e.target, RUBRIC_STEPS[+e.target.value]); });
+$('#grade').addEventListener('input', e => { if (e.target.classList.contains('srange')) slideTo(e.target, rowSteps(setup, +e.target.closest('.scores').dataset.c)[+e.target.value]); });
 $('#grade').addEventListener('change', e => { if (e.target.classList.contains('srange')) slideDone(e.target); });
 // A first touch on the very spot the faded slider rests on changes nothing, so it wouldn't count. This counts it.
 $('#grade').addEventListener('pointerup', e => {
   const r = e.target.closest && e.target.closest('.srange'); if (!r || !r.classList.contains('unset')) return;
-  setTimeout(() => { if (r.isConnected && r.classList.contains('unset')) { slideTo(r, RUBRIC_STEPS[+r.value]); slideDone(r); } }, 0);
+  setTimeout(() => { if (r.isConnected && r.classList.contains('unset')) { slideTo(r, rowSteps(setup, +r.closest('.scores').dataset.c)[+r.value]); slideDone(r); } }, 0);
 });
 // Delete or Backspace clears the row, the way clicking its score again does.
 $('#grade').addEventListener('keydown', e => {
   if (!e.target.classList || !e.target.classList.contains('srange') || (e.key !== 'Delete' && e.key !== 'Backspace')) return;
   e.preventDefault(); e.stopPropagation();
   const st = batch.students[cur], i = +e.target.closest('.scores').dataset.c; if (st.grade.rubric[i] == null) return;
+  gradeSnap(st);
   st.grade.rubric[i] = null; scoreTouched(st, i); renderList(); saveSoon(); slideDone(e.target);
 });
 // Tab into a row's slider, and that row is the one in hand.
@@ -302,10 +324,13 @@ function scoreKey(e, onRange) {
     if (!r) return false;
     e.preventDefault(); r.focus({ preventScroll: true }); return true;
   }
-  if (/^[0-4]$/.test(e.key)) {
+  if (/^[0-9]$/.test(e.key)) {
     const i = onRange ? +ae.closest('.scores').dataset.c : rowOn;
+    if (+e.key > Math.max(ROW_TOP, ...setup.criteria.map((_, k) => rowTop(setup, k)))) return false;   // a number no row of this rubric has: not a score
     e.preventDefault();
     if (i < 0) { toast('Every row has a score. To change one, press Tab or click the row first.'); return true; }
+    if (+e.key > rowTop(setup, i)) { toast('This row goes up to ' + rowTop(setup, i) + '.'); return true; }
+    gradeSnap(st);
     st.grade.rubric[i] = +e.key; scoreTouched(st, i);
     rowKeyed = i; rowOn = lvAt = Math.min(i + 1, n - 1);
     redraw(rowOn); return true;
@@ -314,26 +339,32 @@ function scoreKey(e, onRange) {
     const v = st.grade.rubric[rowKeyed]; if (v == null) return false;
     const to = v % 1 ? Math.floor(v) : v + 0.5;
     e.preventDefault();
-    if (!RUBRIC_STEPS.includes(to)) { toast('There’s no ' + fmtNum(to) + ' on this scale.'); return true; }
+    if (!rowSteps(setup, rowKeyed).includes(to)) { toast('There’s no ' + fmtNum(to) + ' on this scale.'); return true; }
+    gradeSnap(st);
     st.grade.rubric[rowKeyed] = to; scoreTouched(st, rowKeyed);
     redraw(rowOn); return true;
   }
   return false;
 }
+let ptsSnapFor = null;
+$('#grade').addEventListener('focusout', e => { if (e.target.id === 'ptsIn') ptsSnapFor = null; });
 $('#grade').addEventListener('input', e => {
   const st = batch.students[cur];
   if (e.target.id === 'cmtIn') { st.grade.comment = e.target.value; touchGrade(st); saveSoon(); }
+  if (e.target.id === 'xcIn') xcSet(st, e.target.value);
   if (e.target.id === 'ptsIn') {
+    if (ptsSnapFor !== e.target) { gradeSnap(st); ptsSnapFor = e.target; }   // one step for a visit to the box, not one a keystroke
     st.grade.points = e.target.value; const was = st.grade.status; scoreTouched(st); saveSoon(); renderList();
     if (was !== st.grade.status) { $('#gstat').outerHTML = statusHtml(st); }
     $('#grade .total').innerHTML = totalHtml(st);
   }
 });
 $('#grade').addEventListener('keydown', e => {   // Enter or Escape leaves the box, so the arrow keys go back to moving between students
+  if (e.target.id === 'xcIn' && (e.key === 'Enter' || e.key === 'Escape')) { e.preventDefault(); e.stopPropagation(); e.target.blur(); return; }
   if ((e.target.id === 'ptsIn' && e.key === 'Enter') || (e.target.id === 'cmtIn' && e.key === 'Escape')) { e.preventDefault(); e.target.blur(); }
   if (e.target.id === 'ptsIn' && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) { e.preventDefault(); e.stopPropagation(); stepStudent(e.key === 'ArrowDown' ? 1 : -1); }   // not half a point up or down: these keys move between students
 });
-$('#grade').addEventListener('wheel', e => { if (e.target.id === 'ptsIn') e.target.blur(); }, { passive: true });   // scrolling past the box mustn't change the score in it
+$('#grade').addEventListener('wheel', e => { if (e.target.id === 'ptsIn' || e.target.id === 'xcIn') e.target.blur(); }, { passive: true });   // scrolling past the box mustn't change the score in it
 
 /* ---------------- every key, in one list ( ? ) ---------------- */
 function openKeys() {

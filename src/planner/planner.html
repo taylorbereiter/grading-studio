@@ -25,7 +25,7 @@
 .lsn .sp{flex:1}
 .lsn .muted{color:var(--muted)}
 .ls-wk{font-weight:600;min-width:110px;text-align:center}
-.ls-fold{font-size:var(--text-control)}
+
 .ls-empty{max-width:640px;margin:60px auto;padding:28px;background:var(--surface);border:1px solid var(--line);border-radius:14px;text-align:center}
 .ls-empty h2{margin:0 0 8px;font-size:22px}.ls-empty p{color:var(--muted)}
 .ls-empty .row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:14px}
@@ -49,12 +49,19 @@
 .ls-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px}
 .ls-pick{display:flex;flex-direction:column;gap:6px}
 .ls-row{display:flex;gap:6px;align-items:center}
-.ls-more{display:flex;flex-direction:column;align-items:flex-start}.ls-more p{margin:4px 0 14px;font-size:var(--text-control)}
+.ls-morew{position:relative;display:inline-flex}
+.ls-menu{position:absolute;top:calc(100% + 4px);right:0;z-index:20;width:300px;max-height:min(72vh,560px);overflow:auto;background:var(--surface);border:1px solid var(--line-strong);border-radius:var(--corner-4);box-shadow:var(--shadow);padding:6px}
+.ls-menu[hidden]{display:none}
+.ls-menu .mi{display:block;width:100%;text-align:left;border:0;background:none;border-radius:var(--corner-2);padding:7px 10px;font:inherit;font-size:var(--text-body);font-weight:500;color:var(--fg);text-decoration:none;line-height:1.3;cursor:pointer}
+.ls-menu .mi:hover,.ls-menu .mi:focus-visible{background:var(--hover)}
+.ls-menu .mi small{display:block;font-size:var(--text-small);font-weight:400;color:var(--muted);margin-top:1px}
+.ls-menu .mi[data-sure]{color:var(--bad)}
+.ls-menu hr{border:0;border-top:1px solid var(--line);margin:6px 4px}
 .ls-f{display:flex;flex-direction:column;gap:4px;margin-bottom:10px;font-weight:500}
 .ls-tc{border:1px solid var(--line);border-radius:var(--corner-4);padding:8px;margin-bottom:8px}
 .ls-mrow{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:6px}
 .ls-title-in{font:600 16px var(--f-body);border:1px solid transparent;border-radius:7px;padding:5px 8px;background:none;min-width:180px;max-width:340px}
-.pl-tlink{font-size:12.5px;color:var(--muted)}.pl-tlink.on{color:var(--accent)}
+
 .ls-title-in:hover,.ls-title-in:focus{border-color:var(--line-strong);background:var(--surface)}
 .ls-slots{display:flex;gap:4px;flex-wrap:wrap;align-items:center}
 .ls-chip{display:inline-flex;align-items:center;gap:2px;font-size:12.5px;border-left:3px solid var(--cc);background:var(--surface-2);border-radius:var(--corner-2);padding:2px 2px 2px 7px}
@@ -117,6 +124,11 @@
 .ls-ed{cursor:text;outline:1.5px dashed transparent;outline-offset:2px;border-radius:3px}
 .ls-ed:hover,.ls-ed:focus{outline-color:rgba(31,111,178,.55)}
 .ls-pic.ls-ed{cursor:pointer}
+.ls-full{align-items:center;background:var(--lbg)}
+.ls-full img{width:100%;height:100%}
+.ls-fullsrc{left:0;top:696px;width:1280px}
+.ls-stagewrap.ls-dropping .ls-stage{outline:3px dashed var(--accent);outline-offset:4px}
+.ls-stagewrap.ls-dropping .ls-stage::after{content:"Let go to put it on this slide";position:absolute;left:50%;bottom:var(--space-3);transform:translateX(-50%);background:var(--accent);color:var(--accent-fg);font-size:var(--text-control);font-weight:600;padding:var(--space-1) var(--space-3);border-radius:var(--corner-pill);pointer-events:none}
 .ls-ph{color:#8a8580;text-transform:none}
 .ls-ta{position:absolute;border:0;outline:2px solid #1F6FB2;outline-offset:2px;background:rgba(255,255,255,.55);resize:none;font-family:Arial,Helvetica,sans-serif;color:#000;tab-size:2;-moz-tab-size:2}
 .ls-ta.ls-t{text-transform:none;line-height:1.1}.ls-ta.ls-ttl{text-transform:none;display:block;line-height:1.05}.ls-ta.ls-sub{text-transform:none}
@@ -381,26 +393,36 @@ body.has-side .lsn{margin-right:var(--sidew,420px)}
 @media (max-width:900px){.pl-row{grid-template-columns:90px repeat(var(--cols),minmax(0,1fr))}.pl-week{grid-template-columns:1fr}}
 
 /*@@RAILCSS@@*/
+/*@@PRESENTCSS@@*/
 /* The sidebar stays put at the left edge; the Planner's own screen scrolls beside it. It folds to icons while a lesson, a unit or a document is open. */
 .rail{position:fixed;left:0;top:0;bottom:0;z-index:6}
 .lsn{margin-left:232px}
 .pfold .lsn{margin-left:60px}
 @media (max-width:1100px){.lsn{margin-left:60px}}
 .rail .rtt{color:var(--muted)}
-.pl-tabs.cal{margin:0}
-.ls-brk{flex-basis:100%;height:0}
-.ls-top .title{margin-right:10px}
+.pl-tabs.cal{margin:0 6px 0 0}
+.ls-top .title{margin:0 12px 0 0}
+.ls-top.head{min-height:52px}
+/* on a narrow screen the head stays one line: Find anything in the sidebar searches inside lessons too */
+@media (max-width:1100px){.ls-top.head .pl-find{display:none}}
 </style>
 <nav class="rail" id="rail" aria-label="Main">
   <a class="rbrand" data-gs="#/" href="./#/" aria-label="Grading Studio, Today"><span class="rl">Grading <i>Studio</i></span><span class="rs" aria-hidden="true">G<i>S</i></span></a>
   <button class="rfind" id="findBtn" aria-haspopup="dialog" title="Find a lesson, a unit, a class or a setting"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5"/></svg><span class="rl">Find anything</span><kbd class="rl" id="findKey">Ctrl K</kbd></button>
   <a class="rnav" data-gs="#/" href="./#/" title="Today: what you teach, what is waiting to be marked, what is ready to hand back"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.6"/><path d="M12 3v2.2M12 18.8V21M3 12h2.2M18.8 12H21M5.6 5.6l1.6 1.6M16.8 16.8l1.6 1.6M5.6 18.4l1.6-1.6M16.8 7.2l1.6-1.6"/></svg><span class="rl">Today</span></a>
-  <a class="rnav on" id="railPlanner" href="#week" aria-current="page" title="Planner: this week"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M8 3v4M16 3v4"/></svg><span class="rl">Planner</span></a>
+  <a class="rnav" data-gs="#/school" href="./#/school" title="School resources: links, files and notes about your school"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 20.5h17M5.5 20.5v-9M18.5 20.5v-9M3.5 11.5L12 5l8.5 6.5M10 20.5v-5h4v5M12 5V3h3"/></svg><span class="rl">School</span></a>
+  <div class="rcap"><span class="rl">Planner</span></div>
+  <a class="rnav on" id="railPlanner" data-v="cal" href="#week" aria-current="page" title="Calendar: your lessons by week, or the whole semester"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M8 3v4M16 3v4"/></svg><span class="rl">Calendar</span></a>
+  <button class="rnav" data-v="units" title="Units: each unit, its weeks and its files"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4l8 4-8 4-8-4 8-4zM4 12l8 4 8-4M4 16l8 4 8-4"/></svg><span class="rl">Units</span></button>
+  <button class="rnav" data-v="library" title="Past lessons: old decks and their handouts, to use again"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16v4H4zM6 10v9h12v-9M10 14h4"/></svg><span class="rl">Past lessons</span></button>
+  <button class="rnav" data-v="activities" title="Activities: the activity bank"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 3L5 13h6l-1 8 8-10h-6l1-8z"/></svg><span class="rl">Activities</span></button>
+  <button class="rnav" data-v="bank" title="Rubrics: saved rubrics and grading scales"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="14" rx="2"/><path d="M4 10h16M4 14.5h16M10 5v14"/></svg><span class="rl">Rubrics</span></button>
   <div class="rcap"><span class="rl">Classes</span></div>
   <div id="railClasses"></div>
   <button class="rnav rtt" id="railTimetable" title="Your classes, when they meet, and the school calendar"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/></svg><span class="rl">Timetable</span></button>
   <span class="sp"></span>
   <button class="rsaved" id="railSaved"></button>
+  <a class="rnav" data-gs="#/help" href="./#/help" title="Help: short answers to common questions"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M9.7 9.6a2.4 2.4 0 1 1 3.7 2c-.9.6-1.4 1.1-1.4 2.1M12 16.8v.1"/></svg><span class="rl">Help</span></a>
   <a class="rnav" data-gs="#/settings" href="./#/settings" title="Settings"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg><span class="rl">Settings</span></a>
 </nav>
 <div id="lessons" class="lsn"></div>

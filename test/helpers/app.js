@@ -25,7 +25,7 @@ const PLATFORMS = {
 // in and the state real saved work is in: no welcome, and every word and default as it was.
 // It also has finding names on its own turned on, as every browser did before 11/11; a test of the new default passes nameFind: false.
 const USED_BEFORE = { 'gs.nameFind': 'true', 'gs.lib': JSON.stringify({ classes: ['12EL-1', '12EL-2', '11EL-2'].map((name, i) => ({ id: 'starter' + (i + 1), name, names: [], units: [] })), loose: { id: '', units: [] }, units: [], seed2627: true }), 'gs.syncT': JSON.stringify({ 'gs.lib': 1 }) };
-async function openApp(browser, { html, platform, seed, server, context, noWait, beforeLoad, newTeacher, nameFind } = {}) {
+async function openApp(browser, { html, platform, seed, server, context, noWait, beforeLoad, newTeacher, feedback, names, nameFind } = {}) {
   const usedBefore = !newTeacher && !(seed && seed.ls && seed.ls['gs.lib'] != null);
   const srv = server || await serve(html || builtHtml());
   const ctx = context || await browser.createBrowserContext();
@@ -59,6 +59,12 @@ async function openApp(browser, { html, platform, seed, server, context, noWait,
     // a second tab in a browser that already has work keeps that work
     if (usedBefore && await page.evaluate(() => localStorage.getItem('gs.lib') == null)) seed = { ...(seed || {}), ls: { ...USED_BEFORE, ...((seed && seed.ls) || {}) } };
     if (nameFind === false && seed) { seed = { ...seed, ls: { ...seed.ls } }; delete seed.ls['gs.nameFind']; }
+    // A returned paper gets a feedback page in front unless she turns that off. Tests of everything else about a returned
+    // paper count its own pages, so they start with it off; feedback: true leaves the app as a teacher finds it.
+    if (!feedback && !(seed && seed.ls && 'gs.xfb' in seed.ls)) seed = { ...(seed || {}), ls: { ...((seed && seed.ls) || {}), 'gs.xfb': 'false' } };
+    // Returned files are named "Student - Assignment - Graded.pdf" unless she turns that off. Tests of everything else about a
+    // returned file look for it by the name it was turned in with, so they start with it off; names: true leaves it as a teacher finds it.
+    if (!names && !(seed && seed.ls && 'gs.xnames' in seed.ls)) seed = { ...(seed || {}), ls: { ...((seed && seed.ls) || {}), 'gs.xnames': 'false' } };
     if (seed) await plant(page, seed);
   }
   if (beforeLoad) await beforeLoad(page);

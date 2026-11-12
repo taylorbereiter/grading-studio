@@ -31,14 +31,15 @@ function textLayout(m, W) {
 // Comment boxes in the right margin, each with a line to its spot (the look Taylor liked from Kami's flattened files).
 function layoutNotes(notes, W, H, side) {
   const M = 10, pad = 7, gap = 8, boxX = W + 12, boxW = side - 22;
-  const list = notes.map(n => ({ n, ax: n.ax, ay: n.ay })).sort((p, q) => p.ay - q.ay || p.ax - q.ax);
+  // ry is the height the line runs across the page at: its spot, unless she dragged the line up or down off the words (n.ly).
+  const list = notes.map(n => ({ n, ax: n.ax, ay: n.ay, ry: noteRunY(n, H) })).sort((p, q) => p.ry - q.ry || p.ax - q.ax);
   let fs = 10, boxes = [];
   const run = () => {
     const lh = fs * 1.3;
     measureCtx.font = fs + 'px ' + FONT;
     boxes = list.map(o => { const lines = wrapText(measureCtx, o.n.text, boxW - pad * 2); return { ...o, lines, lh, h: Math.max(1, lines.length) * lh + pad * 2 }; });
     let y = M;
-    for (const b of boxes) { b.y = Math.max(b.ay - 10, y); y = b.y + b.h + gap; }
+    for (const b of boxes) { b.y = Math.max(b.ry - 10, y); y = b.y + b.h + gap; }
     let bottom = H - M;
     for (let i = boxes.length - 1; i >= 0; i--) { if (boxes[i].y + boxes[i].h > bottom) boxes[i].y = bottom - boxes[i].h; bottom = boxes[i].y - gap; }
     return !boxes.length || boxes[0].y >= M - 0.5;
@@ -46,6 +47,14 @@ function layoutNotes(notes, W, H, side) {
   while (!run() && fs > 6) fs -= 0.5;
   for (const b of boxes) { b.x = boxX; b.w = boxW; b.y = Math.max(b.y, M / 2); b.fs = fs; b.pad = pad; }
   return boxes;
+}
+const noteRunY = (n, H) => n.ly == null ? n.ay : Math.max(0, Math.min(H, n.ly));
+// The line from a comment's spot to its box: across the page at ry, then up or down to the box in the margin.
+function noteLeader(ctx, b, W) {
+  const midY = b.y + Math.min(b.h / 2, 12);
+  ctx.beginPath(); ctx.moveTo(b.ax, b.ay);
+  if (Math.abs(b.ry - b.ay) > 0.5) ctx.lineTo(Math.min(b.ax + 6, W), b.ry);
+  ctx.lineTo(W + 4, b.ry); ctx.lineTo(b.x, midY); ctx.stroke();
 }
 function drawCheck(ctx, m) {
   const s = m.size || 22;
@@ -87,8 +96,9 @@ function drawMarks(ctx, marks, W, H, side, screen) {
   for (const m of marks) {
     if (m.t === 'pen') {
       ctx.save(); ctx.strokeStyle = m.color; ctx.lineWidth = m.w; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-      strokePath(ctx, m.pts);
-      ctx.stroke(); ctx.restore();
+      if (hasPress(m.pts)) strokeWide(ctx, m.pts, m.w);
+      else { strokePath(ctx, m.pts); ctx.stroke(); }
+      ctx.restore();
     } else if (m.t === 'text' && !(screen && screen.editing === m)) {
       const L = textLayout(m, W);
       ctx.fillStyle = m.color; ctx.font = m.size + 'px ' + FONT; ctx.textBaseline = 'top';
@@ -109,9 +119,8 @@ function drawMarks(ctx, marks, W, H, side, screen) {
     boxes = layoutNotes(notes, W, H, side);
     for (const b of boxes) {
       const [r, g, bl] = rgb(b.n.color), dk = v => Math.round(v * 0.72), col = 'rgb(' + dk(r) + ',' + dk(g) + ',' + dk(bl) + ')';
-      const midY = b.y + Math.min(b.h / 2, 12);
-      ctx.strokeStyle = col; ctx.lineWidth = 0.7;
-      ctx.beginPath(); ctx.moveTo(b.ax, b.ay); ctx.lineTo(W + 4, b.ay); ctx.lineTo(b.x, midY); ctx.stroke();
+      ctx.strokeStyle = col; ctx.lineWidth = screen && screen.line === b.n ? 1.4 : 0.7;
+      noteLeader(ctx, b, W);
       ctx.fillStyle = col; ctx.beginPath(); ctx.arc(b.ax, b.ay, 2.2, 0, Math.PI * 2); ctx.fill();
       ctx.fillStyle = '#fff'; ctx.fillRect(b.x, b.y, b.w, b.h);
       ctx.fillStyle = 'rgba(' + r + ',' + g + ',' + bl + ',0.14)'; ctx.fillRect(b.x, b.y, b.w, b.h);
@@ -137,7 +146,8 @@ function bboxOf(m, W) {
   if (m.t === 'pen') {
     let x1 = 1e9, y1 = 1e9, x2 = -1e9, y2 = -1e9;
     for (const [x, y] of m.pts) { x1 = Math.min(x1, x); y1 = Math.min(y1, y); x2 = Math.max(x2, x); y2 = Math.max(y2, y); }
-    return { x: x1 - m.w / 2, y: y1 - m.w / 2, w: x2 - x1 + m.w, h: y2 - y1 + m.w };
+    const w = m.w * (hasPress(m.pts) ? PRESS_MAX : 1);
+    return { x: x1 - w / 2, y: y1 - w / 2, w: x2 - x1 + w, h: y2 - y1 + w };
   }
   if (m.t === 'hl' || m.t === 'oval') return { x: m.x, y: m.y, w: m.w, h: m.h };
   if (m.t === 'text') { const L = textLayout(m, W); return { x: m.x, y: m.y, w: L.w, h: L.h }; }

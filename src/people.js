@@ -17,7 +17,7 @@ function infoHits(c, key) {
     const d = idDigits(i.id); return d.length >= 4 && nums.includes(d);
   });
 }
-const blankInfo = i => !i || (!i.id && !i.email && !(i.other || []).length && !(i.note || '').trim());
+const blankInfo = i => !i || (!i.id && !i.email && !(i.other || []).length && !(i.note || '').trim() && !i.call && !i.pro && !i.rep && !i.nudge);   // call, pro, rep: report comments (reports.js); nudge: reminders (missing.js)
 function setInfo(c, n, patch) {
   c.info ||= {};
   const i = { ...c.info[n], ...patch };
@@ -175,7 +175,7 @@ document.addEventListener('keydown', e => { if ((e.key === 'Enter' || e.key === 
 // A name goes to that student's own page of grades and charts; the ⓘ beside it opens their details.
 let peopleQuiet = false;
 function peoplePanel(el, c) {
-  el.innerHTML = '<div class="pplbar"><span class="muted" id="peopleSum"></span><span class="sp"></span><button class="btn sm" data-ppaste>Paste IDs and emails…</button><button class="btn sm" data-pmail>Copy all emails</button></div>' +
+  el.innerHTML = '<div class="pplbar"><span class="muted" id="peopleSum"></span><span class="sp"></span><button class="btn sm" data-ppaste>Paste IDs and emails…</button><button class="btn sm" data-pmail>Copy all emails</button><button class="btn sm" data-pssall title="One page per student to print for parent meetings">Progress sheets</button></div>' +
     '<div id="peoplePaste" hidden><p class="muted" style="margin:0 0 6px;font-size:13.5px">Paste a class list with names and a student ID or email column (from ' + (sysName() ? esc(sysName()) + ' or ' : '') + 'a spreadsheet). Each row fills in the student with the same name.</p><textarea class="big" id="peopleIn" placeholder="Name, student ID, email"></textarea>' +
     '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px"><button class="btn sm" data-pcancel>Cancel</button><button class="btn sm primary" data-pfill>Fill in</button></div></div><div id="peopleTbl"></div>' +
     '<p class="muted pplcap">Click a name for that student’s grades and charts. The ⓘ opens their details, with other spellings and a note.</p>';
@@ -208,8 +208,8 @@ function peopleSum(c) {
 function fillPeople(c) {
   const t = $('#peopleTbl'); if (!t || peopleQuiet) return;
   peopleSum(c);
-  t.innerHTML = c.names.length ? '<table class="gl ppl"><thead><tr><th>#</th><th>Name</th><th class="pg" id="peopleGh">Grade</th><th>Student ID</th><th>Email</th><th>Last year</th><th>Also called</th></tr></thead><tbody>' + c.names.map((n, k) => { const i = infoOf(c, n);
-    return '<tr><td class="n">' + (k + 1) + '</td><td class="nm"><a class="link" href="' + classHash(c, 'students', k) + '">' + esc(n) + '</a>' + whoBtn('data-wc="' + esc(c.id) + '" data-wn="' + esc(n) + '"', n) + '</td><td class="pg" data-pg="' + k + '"></td>' +
+  t.innerHTML = c.names.length ? '<table class="gl ppl"><thead><tr><th>#</th><th>Name</th><th class="pgr" id="peopleGh">Grade</th><th>Student ID</th><th>Email</th><th>Last year</th><th>Also called</th></tr></thead><tbody>' + c.names.map((n, k) => { const i = infoOf(c, n);
+    return '<tr><td class="n">' + (k + 1) + '</td><td class="nm"><a class="link" href="' + classHash(c, 'students', k) + '">' + esc(n) + '</a>' + whoBtn('data-wc="' + esc(c.id) + '" data-wn="' + esc(n) + '"', n) + '</td><td class="pgr" data-pg="' + k + '"></td>' +
       '<td><input class="pc-in" data-pp="id" data-pi="' + k + '" value="' + esc(i.id || '') + '" placeholder="Student ID" aria-label="Student ID for ' + esc(n) + '"></td>' +
       '<td><input class="pc-in" type="email" data-pp="email" data-pi="' + k + '" value="' + esc(i.email || '') + '" placeholder="Email" aria-label="Email for ' + esc(n) + '"></td>' +
       '<td><input class="pc-in" data-pp="prev" data-pi="' + k + '" value="' + esc(i.prev || '') + '" placeholder="Optional" aria-label="Last year’s level for ' + esc(n) + '"></td>' +

@@ -56,9 +56,9 @@ test('the Planner has the same sidebar: its own classes, no grading counts, and 
     const page = await planner(ctx, srv);
     await page.evaluate(async s => { await window.__planner.applySetup(s); }, setupFor(2));
     await page.waitForSelector('#railClasses a');
-    // the same rows in the same order as on the grading page, with Timetable where Add a class is
+    // the same rows in the same order as on the grading page, with the Planner's own sections where its one row is, and Timetable where Add a class is
     assert.deepEqual(await page.$$eval('#rail > *', els => els.filter(e => e.checkVisibility() && e.innerText.trim()).map(e => e.innerText.replace(/\s+/g, ' ').trim().replace(/(Ctrl K|⌘K)$/, '').trim())),
-      ['Grading Studio', 'Find anything', 'Today', 'Planner', 'CLASSES', 'Course A-1 Course A 2 Course B-1', 'Timetable', 'Not backed up This browser', 'Settings']);
+      ['Grading Studio', 'Find anything', 'Today', 'School', 'PLANNER', 'Calendar', 'Units', 'Past lessons', 'Activities', 'Rubrics', 'CLASSES', 'Course A-1 Course A 2 Course B-1', 'Timetable', 'Not backed up This browser', 'Help', 'Settings']);
     assert.equal(await page.$eval('#railPlanner', a => a.getAttribute('aria-current')), 'page');
     assert.equal(await page.$('#rail .rcnt'), null, 'no counts');
     assert.ok(!/\d+ left|to score/.test(await page.$eval('#rail', e => e.textContent + [...e.querySelectorAll('[title]')].map(x => x.title).join(' '))), 'nothing about grading in the Planner’s sidebar');
@@ -67,7 +67,11 @@ test('the Planner has the same sidebar: its own classes, no grading counts, and 
     assert.equal(await page.$('.ls-top [data-a="close"]'), null);
     assert.equal(await page.$('.ls-top .themeBtn'), null);
     assert.equal(await page.$('.ls-top [data-a="setup"]'), null);
-    assert.deepEqual(await page.$$eval('.ls-top nav .pl-tab', t => t.map(x => x.textContent)), ['Calendar', 'Units', 'Past lessons', 'Activities', 'Rubrics']);
+    // going between the Planner's sections is the sidebar's job: the page's head is its name and what the page itself does
+    assert.equal(await page.$('.ls-top nav'), null);
+    assert.equal(await page.$eval('.ls-top h1', e => e.textContent), 'Calendar');
+    assert.deepEqual(await page.$$eval('#rail [data-v]', t => t.map(x => x.textContent.trim())), ['Calendar', 'Units', 'Past lessons', 'Activities', 'Rubrics']);
+    assert.equal(await page.$('.ls-top [data-a="link"], .ls-top [data-a="sync"], .ls-top [data-a="reconnect"]'), null, 'the Planner folder is the sidebar’s Saved line');
 
     // a class goes to its page in grading, matched by name
     await Promise.all([page.waitForNavigation(), page.click('#railClasses a:nth-child(1)')]);
@@ -120,7 +124,7 @@ test('the Planner’s sidebar reads nothing of grading’s', async () => {
     await page.waitForSelector('#findDlg .frow'); await page.keyboard.press('Escape');
     const t = await page.evaluate(() => ({ ls: [...window.__touched.ls], db: [...window.__touched.db] }));
     assert.deepEqual(t.db, ['gs-lessons']);
-    for (const k of t.ls) assert.ok(k === 'gs.theme' || k === 'gs.mblinks' || k === 'gs.words' || k.startsWith('gsp.'), 'the Planner touched ' + k);
+    for (const k of t.ls) assert.ok(k === 'gs.theme' || k === 'gs.lang' || k === 'gs.mblinks' || k === 'gs.words' || k === 'gs.rolls' || k.startsWith('gsp.'), 'the Planner touched ' + k);
     assert.deepEqual(page.errors, []);
   } finally { await ctx.close(); await srv.close(); }
 });
@@ -157,20 +161,26 @@ test('the Planner’s sidebar folds while a lesson is open, and what was typed i
   } finally { await ctx.close(); await srv.close(); }
 });
 
-test('the Planner’s calendar is one tab with Semester and Week under it', async () => {
+test('the Planner’s sections are in the sidebar, and the calendar is one of them with Week and Semester beside its name', async () => {
   const srv = await serveBoth(), ctx = await browser.createBrowserContext();
   try {
     const page = await planner(ctx, srv);
     await page.evaluate(async s => { const P = window.__planner; await P.applySetup(s); P.L.view = 'week'; P.renderLessons(); }, setupFor(2));
-    const on = () => page.$$eval('.ls-top .pl-tab.on', t => t.map(x => x.textContent));
-    assert.deepEqual(await on(), ['Calendar', 'Week']);
+    const on = () => page.$$eval('#rail [data-v].on, .ls-top h1, .ls-top .pl-tab.on', t => t.map(x => x.textContent.trim()));
+    assert.deepEqual(await on(), ['Calendar', 'Calendar', 'Week']);
     await page.click('.pl-tabs.cal [data-v="semester"]'); await page.waitForSelector('.pl-row[data-wk]');
-    assert.deepEqual(await on(), ['Calendar', 'Semester']);
-    await page.click('.ls-top nav [data-v="units"]'); await page.waitForFunction(() => window.__planner.L.view === 'units');
-    assert.deepEqual(await on(), ['Units']);
+    assert.deepEqual(await on(), ['Calendar', 'Calendar', 'Semester']);
+    await page.click('#rail [data-v="units"]'); await page.waitForFunction(() => window.__planner.L.view === 'units');
+    assert.deepEqual(await on(), ['Units', 'Units']);
+    assert.equal(await page.$eval('#rail [data-v="units"]', b => b.getAttribute('aria-current')), 'page');
+    assert.equal(await page.$eval('#railPlanner', b => b.getAttribute('aria-current')), null);
     assert.equal(await page.$('.pl-tabs.cal'), null, 'Semester | Week only shows on the calendar');
-    await page.click('.ls-top nav .pl-tab');   // Calendar: the view she used last
+    await page.click('#railPlanner');   // Calendar: the view she used last
     await page.waitForFunction(() => window.__planner.L.view === 'semester');
+    for (const [v, name] of [['library', 'Past lessons'], ['activities', 'Activities'], ['bank', 'Rubrics']]) {
+      await page.click('#rail [data-v="' + v + '"]'); await page.waitForFunction((v, name) => window.__planner.L.view === v && document.querySelector('.ls-top h1').textContent === name && document.querySelector('#rail [data-v].on').dataset.v === v, {}, v, name);   // some pages read their list before they draw
+      assert.deepEqual(await on(), [name, name]);
+    }
     assert.deepEqual(page.errors, []);
   } finally { await ctx.close(); await srv.close(); }
 });
@@ -282,10 +292,13 @@ test('Today shows the day’s classes from the Planner’s timetable, and writes
     await page.reload(); await appReady(page);
     await page.waitForSelector('#today .trow');
     assert.equal(await page.$eval('#today h2', e => e.textContent), 'Teaching today');
+    // the class that is on now, or next, opens presenting; the others open the lesson
+    const hm = await page.evaluate(() => { const d = new Date(); return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'); });
+    const cur = ['10:30', '12:15', '15:00'].findIndex(e => e > hm), go = (i, t, c) => i === cur ? ['Present', 'planner.html#present/' + ids[t] + '/' + c] : ['Open', 'planner.html#lesson/' + ids[t]];
     assert.deepEqual(await page.$$eval('#today .trow', r => r.map(x => [x.querySelector('.tt').textContent, x.querySelector('b').textContent, x.querySelector('.ns').textContent, (x.querySelector('.btn') || {}).textContent, x.getAttribute('href')])), [
-      ['9:00', 'Course A 2', 'Annotating a sonnet · 3 slides · ready for you', 'Open', 'planner.html#lesson/' + ids['Annotating a sonnet']],
+      ['9:00', 'Course A 2', 'Annotating a sonnet · 3 slides · ready for you', ...go(0, 'Annotating a sonnet', 'A2')],
       ['10:45', 'Course B-1', 'No lesson planned yet', 'Plan it', 'planner.html#week'],
-      ['1:30', 'Course A-1', 'Rhetorical appeals · 3 slides · draft', 'Open', 'planner.html#lesson/' + ids['Rhetorical appeals']],
+      ['1:30', 'Course A-1', 'Rhetorical appeals · 3 slides · draft', ...go(2, 'Rhetorical appeals', 'A1')],
     ]);
     assert.deepEqual(await page.$$eval('#today .rdot', d => d.map(x => x.style.background)), ['rgb(123, 63, 196)', 'rgb(14, 124, 134)', 'rgb(31, 111, 178)']);
     assert.equal(await page.$eval('#today .tweek', a => a.getAttribute('href')), 'planner.html#week');
@@ -304,6 +317,23 @@ test('Today shows the day’s classes from the Planner’s timetable, and writes
     await Promise.all([page.waitForNavigation(), page.click('#today .trow')]);
     await plannerReady(page);
     assert.equal(await page.evaluate(() => window.__planner.L.open && window.__planner.L.open.title), 'Annotating a sonnet');
+    assert.equal(await page.evaluate(() => !!document.querySelector('#present')), cur === 0, 'the class on now or next opens presenting');
+    // where a class got to is said on its row, and a lesson taught to the end stops offering Present
+    const taught = async (slide) => {
+      await page.evaluate(async slide => {
+        const P = window.__planner, now = new Date(), d = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
+        if (document.querySelector('#present')) await window.__present.end();
+        if (!P.L.open) P.openLessonForTest(P.L.lessons.find(l => l.title === 'Annotating a sonnet'));
+        P.L.open.taught = [{ classId: 'A2', date: d, slide, of: 3, note: '', at: Date.now() }];
+        document.querySelector('[data-a="back"]').click(); await new Promise(r => setTimeout(r, 300));
+      }, slide);
+      await page.goto(srv.url); await appReady(page); await page.waitForSelector('#today .trow');
+      return page.$eval('#today .trow', x => [x.querySelector('.ns').textContent, x.querySelector('.btn').textContent]);
+    };
+    assert.deepEqual(await taught(2), ['Annotating a sonnet · 3 slides · taught to slide 2 of 3', cur === 0 ? 'Present' : 'Open']);
+    await page.goto(srv.url + 'planner.html'); await plannerReady(page);
+    assert.deepEqual(await taught(3), ['Annotating a sonnet · 3 slides · taught', 'Open']);
+    await page.goto(srv.url + 'planner.html'); await plannerReady(page);
     // a day off: said so, with no rows
     await page.evaluate(async () => { const P = window.__planner, now = new Date(), d = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0'); await P.applySetup({ ...P.L.setup, kind: 'grading-studio-lessons-setup', daysOff: [{ date: d, label: 'Founders’ day' }] }); });
     await page.goto(srv.url); await appReady(page);
@@ -319,13 +349,13 @@ test('Settings is one page per subject, each with its own address', async () => 
   const shown = () => page.$$eval('#setPane [data-sec]', els => els.filter(e => e.checkVisibility()).map(e => e.id));
   await goTo(page, '#/settings');
   assert.deepEqual(await page.$$eval('#setNav .setlink b', b => b.map(x => x.textContent)), ['Saving and carrying', 'Go back in time', 'Classes and rosters', 'Terms and weights', 'Grading scale and rubrics', 'Marking', 'Timetable and calendar', 'Display', 'Working with Claude', 'Keys', 'About and updates']);
-  assert.deepEqual(await shown(), ['setSaving', 'setTake', 'setRemove']);
-  assert.equal(await page.$eval('#setNav .setlink.on', a => a.textContent), 'Saving and carryingFolder, take-home file, safety copies');
+  assert.deepEqual(await shown(), ['setSaving', 'setTake', 'setYear', 'setRemove']);
+  assert.equal(await page.$eval('#setNav .setlink.on', a => a.textContent), 'Saving and carryingFolder, take-home file, new school year');
   assert.equal(await page.title(), 'Settings · Grading Studio');
   // classes: counts, never names
   await page.click('#setNav [data-set="classes"]');
   assert.equal(await page.evaluate(() => location.hash), '#/settings/classes');
-  assert.deepEqual(await shown(), ['setClasses', 'setSys']);
+  assert.deepEqual(await shown(), ['setClasses', 'setSys', 'setAtt']);
   assert.equal(await page.title(), 'Classes and rosters · Settings · Grading Studio');
   assert.deepEqual(await page.$$eval('#setClasses .setrow .nt', r => r.map(x => x.textContent)), ['Course A-14 students · No ManageBac link', 'CourseA21 student · No ManageBac link']);
   assert.ok(!(await page.$eval('#vSettings', e => e.textContent)).includes('Testwell'), 'no student names in Settings');
@@ -339,7 +369,7 @@ test('Settings is one page per subject, each with its own address', async () => 
   // terms and weights: what is set, and the same Term setup as the gradebook's
   await goTo(page, '#/settings/terms');
   assert.deepEqual(await shown(), ['setTerms']);
-  assert.match(await page.$eval('#setTerms', e => e.textContent), /Term 1Aug 31 to Nov 20.*Summative assessments 50% · In-class assessments 50% · Formative activities 0%/);
+  assert.match(await page.$eval('#setTerms', e => e.textContent), /Term 1Aug 31 to Nov 20.*In-class assessments 50% · Summative assessments 50% · Formative activities 0%/);
   await page.click('#setTerms [data-setterms]'); await page.waitForSelector('#bkSetup');
   assert.match(await page.$eval('#bkSetup', e => e.textContent), /Term setup.*for all your classes/);
   await closeBox(page);
@@ -347,18 +377,18 @@ test('Settings is one page per subject, each with its own address', async () => 
   await goTo(page, '#/settings/grading'); assert.deepEqual(await shown(), ['setWay', 'setGrading']);
   await page.waitForFunction(() => /0 saved rubrics and 0 saved grading scales/.test(document.querySelector('#setGrading').textContent));
   assert.equal(await page.$eval('#setGrading a.btn', a => a.getAttribute('href')), 'planner.html#rubrics');
-  await goTo(page, '#/settings/marking'); assert.deepEqual(await shown(), ['setMarking', 'setPapers', 'setNames']);
+  await goTo(page, '#/settings/marking'); assert.deepEqual(await shown(), ['setMarking', 'setPapers', 'setNames', 'setTouch']);
   await goTo(page, '#/settings/timetable'); assert.deepEqual(await shown(), ['setTimetable']);
   await page.waitForFunction(() => /No timetable in this browser yet/.test(document.querySelector('#setTimetable').textContent));
   assert.equal(await page.$eval('#setTimetable a.btn', a => a.textContent), 'Set up the timetable');
-  await goTo(page, '#/settings/display'); assert.deepEqual(await shown(), ['setDisplay']);
+  await goTo(page, '#/settings/display'); assert.deepEqual(await shown(), ['setDisplay', 'setLang']);
   await goTo(page, '#/settings/claude'); assert.deepEqual(await shown(), ['setClaude']);
   await goTo(page, '#/settings/keys'); assert.deepEqual(await shown(), ['setKeys']);
   // a refresh stays on the section; Back walks the sections; an address that names no section is the first one
   await page.reloadHere(); await appReady(page);
   assert.equal(await page.evaluate(() => location.hash), '#/settings/keys'); assert.deepEqual(await shown(), ['setKeys']);
   await page.goBack(); await page.waitForFunction(() => location.hash === '#/settings/claude'); assert.deepEqual(await shown(), ['setClaude']);
-  await goTo(page, '#/settings/nothing-here'); assert.deepEqual(await shown(), ['setSaving', 'setTake', 'setRemove']);
+  await goTo(page, '#/settings/nothing-here'); assert.deepEqual(await shown(), ['setSaving', 'setTake', 'setYear', 'setRemove']);
   // Find anything goes to a section
   const labels = await page.evaluate(() => window.__gs.findRows().filter(r => r.group === 'Settings').map(r => r.label));
   for (const want of ['Classes and rosters', 'Terms and weights', 'Grading scale and rubrics', 'Marking', 'Timetable and calendar', 'Working with Claude']) assert.ok(labels.includes(want), want);

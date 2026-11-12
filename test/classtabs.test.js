@@ -49,7 +49,7 @@ const heatNames = page => page.$$eval('#bkHeat tbody tr:not(.chfoot) .chn', xs =
 test('each tab of a class has its own address, and Refresh, Back and Forward follow', async () => {
   const { page, close } = await openApp(browser, { seed: seed() });
   await classPage(page, 'c1');
-  assert.deepEqual(await page.$$eval('.ctabs .ctab', xs => xs.map(x => x.textContent)), ['Assignments', 'Gradebook', 'Students', 'Charts']);
+  assert.deepEqual(await page.$$eval('.ctabs .ctab', xs => xs.map(x => x.textContent)), ['Assignments', 'Gradebook', 'Students', 'Attendance', 'Seating', 'Missing work', 'Charts', 'Report comments']);
   assert.equal(await page.$eval('.ctab.on', a => a.textContent), 'Assignments');
   assert.ok(await page.$('.board .card'), 'the units and assignments are the first tab');
   await tab(page, 'gradebook', '#bkTab');

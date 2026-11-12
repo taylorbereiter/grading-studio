@@ -1,12 +1,12 @@
 /* ================= The sidebar =================
    The same sidebar as on the grading page, drawn by the Planner's own code. Its classes are the ones on the Planner's
-   timetable. It shows no grading counts and reads nothing of grading's: Today, a class and Settings are plain links
+   timetable, and the Planner's own sections (Calendar, Units, Past lessons, Activities, Rubrics) are in it. It shows no grading counts and reads nothing of grading's: Today, a class and Settings are plain links
    to the grading page, which looks the class up by its name when it opens. */
 // Grading Studio sits next to this page: index.html online, "Grading Studio.html" for the double-click copy.
 const GS_PAGE = location.protocol === 'file:' || /Planner\.html$/.test(decodeURIComponent(location.pathname)) ? 'Grading Studio.html' : './';
 const gsUrl = hash => GS_PAGE + (hash || '#/');
 const classUrl = c => gsUrl('#/class-named/' + encodeURIComponent(c.name));
-// The calendar is two views, the week and the semester: the Calendar tab opens the one she used last.
+// The calendar is two views, the week and the semester: Calendar in the sidebar opens the one she used last.
 let calView = 'week';
 
 // Everything typed is saved before the screen changes or the page is left.
@@ -36,17 +36,21 @@ function railRender() {
   // A lesson, a unit or a document gets the room: the sidebar folds to icons.
   document.body.classList.toggle('pfold', L.view === 'edit' || L.view === 'doc' || L.view === 'unit');
   if (L.view === 'week' || L.view === 'semester') calView = L.view;
+  // The Planner's own sections are in the sidebar: the one on the screen is marked. A lesson or a unit marks where it was opened from.
+  const at = { week: 'cal', semester: 'cal', units: 'units', unit: 'units', library: 'library', activities: 'activities', bank: 'bank' }[L.view === 'edit' || L.view === 'doc' ? L.backTo || 'week' : L.view] || 'cal';
+  for (const x of document.querySelectorAll('#rail [data-v]')) { const on = x.dataset.v === at; x.classList.toggle('on', on); if (on) x.setAttribute('aria-current', 'page'); else x.removeAttribute('aria-current'); }
   const t = (L.view === 'edit' && L.open ? L.open.title + ' · ' : L.view === 'unit' && L.unit ? L.unit.title + ' · ' : '') + 'Planner · Grading Studio';
   if (document.title !== t) document.title = t;
 }
 $('#rail').addEventListener('click', async e => {
   const a = e.target.closest('a[href]');
   if (a) {
-    if (a.id === 'railPlanner') { e.preventDefault(); return toView('week'); }
+    if (a.id === 'railPlanner') { e.preventDefault(); return toView(L.view === 'week' || L.view === 'semester' ? L.view : calView); }
     if (e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;   // a new tab, as the browser does it
     e.preventDefault(); return leaveTo(a.href);
   }
   const b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.v) return toView(b.dataset.v);
   if (b.id === 'findBtn') return openFind();
   if (b.id === 'railTimetable') return openTimetable();
   if (b.id === 'railSaved') return L.dir && L.dirOk ? folderRead(true) : L.dir ? folderReconnect(true) : folderLink();
@@ -64,7 +68,9 @@ function findRows() {
   add('Go to', 'Past lessons', 'Old decks and their handouts, to use again', () => toView('library'));
   add('Go to', 'Activities', 'The activity bank', () => toView('activities'));
   add('Go to', 'Rubrics', 'Saved rubrics and grading scales', () => toView('bank'));
+  add('Go to', 'School resources', 'Links, files and notes about your school, on the grading page', () => leaveTo(gsUrl('#/school')));
   add('Go to', 'Settings', 'Saving, classes, display and keys, on the grading page', () => leaveTo(gsUrl('#/settings')));
+  add('Go to', 'Help', 'Short answers to common questions', () => leaveTo(gsUrl('#/help')));
   for (const c of (L.setup && L.setup.classes) || []) add('Classes', c.name, 'Its assignments, gradebook and students', () => leaveTo(classUrl(c)));
   const when = l => l.slots.length ? l.slots.map(s => className(s.classId) + ' ' + shortDate(s.date)).join(', ') : l.library ? 'A past lesson' : 'Not on a class';
   for (const l of [...L.lessons].sort((a, b) => ((b.slots[0] || {}).date || '').localeCompare((a.slots[0] || {}).date || '') || b.updated - a.updated)) add('Lessons', l.title, when(l), async () => { await settleAll(); openLesson(l); });
@@ -75,15 +81,17 @@ function findRows() {
   if ('showDirectoryPicker' in window) add('Do', L.dir && L.dirOk ? 'Look in the Planner folder' : L.dir ? 'Reconnect the Planner folder' : 'Link the Planner folder', L.dir && L.dirOk ? 'For lessons added or changed there' : 'A second copy of your lessons, in a folder of their own', () => L.dir && L.dirOk ? folderRead(true) : L.dir ? folderReconnect(true) : folderLink());
   add('Do', 'Side panel', 'Books, video, ' + (plCur() || 'the unit') + ', the notebook and the Claude box', () => panelToggle());
   add('Do', document.documentElement.dataset.theme === 'dark' ? 'Light mode' : 'Dark mode', 'Display', () => setTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'));
+  // every help answer by its question; the answers are on the grading page's Help
+  for (const t of HELP) out.push({ group: 'Help', label: t.q, sub: helpGist(t), words: t.words || '', run: () => leaveTo(gsUrl('#/help/' + t.id)) });
   return out;
 }
 // Every word typed has to be somewhere in the row. A name that starts with what she typed comes first.
 function findMatch(rows, q) {
   const words = q.toLowerCase().split(/\s+/).filter(Boolean);
-  if (!words.length) return rows.filter(r => r.group !== 'Lessons' && r.group !== 'Units');
+  if (!words.length) return rows.filter(r => r.group !== 'Lessons' && r.group !== 'Units' && r.group !== 'Help');
   const hit = [];
   for (const r of rows) {
-    const l = r.label.toLowerCase(), all = l + ' ' + r.sub.toLowerCase() + ' ' + r.group.toLowerCase();
+    const l = tr(r.label).toLowerCase(), all = l + ' ' + r.label.toLowerCase() + ' ' + r.sub.toLowerCase() + ' ' + tr(r.sub).toLowerCase() + ' ' + r.group.toLowerCase() + ' ' + tr(r.group).toLowerCase() + ' ' + (r.words || '').toLowerCase();   // in another language (lang.js) a row is found by its words in either
     if (!words.every(w => all.includes(w))) continue;
     hit.push({ r, rank: l.startsWith(words[0]) ? 0 : l.split(/[^a-z0-9]+/).some(p => p.startsWith(words[0])) ? 1 : words.every(w => l.includes(w)) ? 2 : 3 });
   }
@@ -107,7 +115,7 @@ function openFind() {
     for (const r of hits) { let g = groups.find(x => x.name === r.group); if (!g) groups.push(g = { name: r.group, rows: [] }); g.rows.push(r); }
     shown = groups.flatMap(g => g.rows); at = 0;
     let k = 0;
-    list.innerHTML = groups.map(g => '<div class="fcap">' + esc(g.name) + '</div>' + g.rows.map(r => '<button class="frow" role="option" id="fr' + k + '" data-fi="' + (k++) + '"><b>' + esc(r.label) + '</b><span>' + esc(r.sub) + '</span></button>').join('')).join('');
+    list.innerHTML = groups.map(g => '<div class="fcap">' + esc(g.name) + '</div>' + g.rows.map(r => '<button class="frow" role="option" id="fr' + k + '" data-fi="' + (k++) + '"><b' + (g.name === 'Classes' || g.name === 'Lessons' || g.name === 'Units' ? ' data-raw' : '') + '>' + esc(r.label) + '</b><span>' + esc(r.sub) + '</span></button>').join('')).join('');
     el.querySelector('#findCount').textContent = inp.value.trim() ? '' : 'Lessons, units, classes and settings';
     mark();
   };
@@ -137,7 +145,8 @@ document.addEventListener('keydown', e => {
 }, true);
 
 /* ---------- arriving from the grading page ---------- */
-// planner.html#week opens this week, #timetable the timetable, #rubrics the rubric bank, #lesson/<id> one lesson.
+// planner.html#week opens this week, #timetable the timetable, #rubrics the rubric bank, #lesson/<id> one lesson,
+// #present/<id>/<class id> one lesson, presenting.
 // The address is tidied afterwards, so a refresh doesn't do it again.
 function arriveAt() {
   let h; try { h = decodeURIComponent(location.hash.replace(/^#\/?/, '')); } catch { h = ''; }
@@ -148,4 +157,5 @@ function arriveAt() {
   else if (h === 'rubrics') list('bank');
   else if (h === 'timetable') { list('week'); openTimetable(); }
   else if (h.startsWith('lesson/')) { const l = L.lessons.find(x => x.id === h.slice(7)); L.weekOf = ymd(mondayOf(new Date())); list('week'); if (l) openLesson(l); }
+  else if (h.startsWith('present/')) { L.weekOf = ymd(mondayOf(new Date())); list('week'); presentArrive(h.slice(8)); }
 }

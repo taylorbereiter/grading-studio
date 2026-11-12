@@ -11,7 +11,7 @@ function setRender() {
   const box = $('#setNav'); if (box.dataset.h !== nav) { box.dataset.h = nav; box.innerHTML = nav; }
   for (const el of document.querySelectorAll('#setPane [data-sec]')) el.hidden = el.dataset.sec !== r.sec;
   const put = (id, h) => { const el = $(id); if (el.dataset.h !== h) { el.dataset.h = h; el.innerHTML = h; } };
-  meSetRender(r.sec);
+  meSetRender(r.sec); attSetRender(r.sec);
   if (r.sec === 'history') gbRender();
   if (r.sec === 'about') updRender();
   if (r.sec === 'classes') {
@@ -25,13 +25,14 @@ function setRender() {
     const terms = conf.terms.length ? conf.terms.map(t => '<div class="setrow"><span class="nt"><b>' + esc(t.name || 'Term') + '</b><span class="ns">' + (t.start && t.end ? bkDay(t.start) + ' to ' + bkDay(t.end) : 'No dates yet') + '</span></span></div>').join('') : '<div class="setrow"><span class="nt"><span class="ns">No terms yet: the gradebook treats the whole year as one.</span></span></div>';
     put('#setTerms', '<div class="lhead"><h2>Terms and weights</h2><span class="muted">For all your classes. An assignment counts toward the term its due date falls in.</span><span class="sp"></span><button class="btn sm primary" data-setterms' + (has ? '' : ' disabled title="Add a class with a roster first"') + '>Term setup</button></div>' +
       '<div class="setrows">' + terms + '</div>' +
-      '<p class="setp"><b>How each type counts:</b> ' + BK_TYPES.map(([t, l]) => esc(l.replace(/y$/, 'ie') + 's') + ' ' + (+conf.w[t] || 0) + '%').join(' · ') + '. ' + (conf.empty === 'zero' ? 'A type with nothing in it yet counts as 0.' : 'When a type has nothing in it yet, the other types are used.') + '</p>');
+      '<p class="setp"><b>How each type counts:</b> ' + bkCats().map(x => esc(bkPlural(x)) + ' ' + (+conf.w[x[0]] || 0) + '%').join(' · ') + '. ' + (conf.empty === 'zero' ? 'A type with nothing in it yet counts as 0.' : 'When a type has nothing in it yet, the other types are used.') + '</p>' +
+      '<p class="setp"><b>Extra credit:</b> new entries add to ' + bkXcWhere(conf.xcTo) + ', one point for one percentage point. ' + (conf.xcCap ? 'Grades stay at 100% at most.' : 'A grade can go over 100%.') + '</p>');
   }
   if (r.sec === 'grading') {
     const n = gBankSeen;
     put('#setGrading', '<div class="lhead"><h2>Grading scale and rubrics</h2><span class="muted">Saved once, picked on any assignment.</span><span class="sp"></span><a class="btn sm" href="' + esc(planUrl('#rubrics')) + '">Open the rubric bank</a></div>' +
       '<p class="setp">' + (n ? 'You have ' + n.r + (n.r === 1 ? ' saved rubric' : ' saved rubrics') + ' and ' + n.s + (n.s === 1 ? ' saved grading scale' : ' saved grading scales') + '.' : 'Looking for your saved rubrics…') + ' They are kept in the rubric bank, sorted by unit, and hold only a rubric’s wording and a scale’s percents.</p>' +
-      '<p class="muted setp">To use one, open an assignment and choose Setup, then Rubric setup. A rubric or scale you make there can be saved to the bank from the same box.</p>');
+      '<p class="muted setp">To use one, open an assignment and choose Setup, then Rubric setup. A rubric or scale you make there can be saved to the bank from the same box.</p>' + goalsSetHtml());
   }
   if (r.sec === 'timetable') {
     const p = plan, day = s => s ? new Date(s + 'T12:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : '';
@@ -59,3 +60,6 @@ $('#setPane').addEventListener('click', async e => {
 });
 // A box that was opened from here may have changed what a card says: draw again when it closes.
 new MutationObserver(() => { if ($('#dlg').hidden) setRender(); }).observe($('#dlg'), { attributes: true, attributeFilter: ['hidden'] });
+
+// Settings, Display, Language (lang.js keeps the choice and draws the page again).
+$('#setLangBox').innerHTML = langPick('setLangPick');

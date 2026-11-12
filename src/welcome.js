@@ -54,7 +54,7 @@ function wlRender() {
   }
   const last = wl.step === WL_STEPS.length - 1;
   $('#welcome').innerHTML = '<div class="wlsheet" role="dialog" aria-modal="true" aria-labelledby="wlH"><div class="wll">' +
-    '<div class="wlbrand">Grading <i>Studio</i></div>' +
+    '<div class="wlbrand"><span>Grading <i>Studio</i></span>' + langPick('wlLang') + '</div>' +
     '<h1 id="wlH">Mark papers, plan lessons,<br>hand work back.</h1>' +
     '<p class="wllead">Three quick questions and you’re marking. You can change every answer later.</p>' +
     '<div class="wlsteps" aria-label="Step ' + (wl.step + 1) + ' of 3">' + steps + '</div>' +
@@ -215,6 +215,8 @@ function meSetRender(sec) {
     const g = meGrade(), way = g ? g.way : '';
     put('#setWay', '<div class="lhead"><h2>How you usually grade</h2><span class="muted">What a new assignment starts with. Any assignment can be scored another way, in its Rubric setup.</span></div>' +
       '<div class="meways" role="radiogroup" aria-label="How you usually grade">' + GRADE_WAYS.map(([k, t, s]) => '<button class="wlway' + (way === k ? ' on' : '') + '" role="radio" aria-checked="' + (way === k) + '" data-meway="' + k + '"><b>' + t + '</b><span>' + s + '</span></button>').join('') + '</div>' +
+      (g && g.way === 'rubric' ? '<div class="rowscale merowscale"><label for="meRowTop">Each rubric row is scored 0 to</label><select id="meRowTop" class="btn sm">' + Array.from({ length: ROW_TOP_MAX }, (_, k) => '<option' + (k + 1 === (rowsTop(g.setup) || ROW_TOP) ? ' selected' : '') + '>' + (k + 1) + '</option>').join('') + '</select>' +
+        '<label class="rowhalf"><input type="checkbox" id="meRowHalf"' + (rowHalf(g.setup) ? ' checked' : '') + '> Half points</label><span class="muted">For new assignments. Any rubric can use another scale, in its Rubric setup.</span></div>' : '') +
       (g ? '' : '<p class="muted setp">Not chosen: a new assignment starts as it always has here, with three rubric rows and the 12-point scale (12 = 100, 11 = 95, 10 = 91…). Choosing one changes only assignments you make from then on.</p>') +
       (g && g.bands ? '<div class="mebands"><p class="setp"><b>' + (g.way === 'ib7' ? 'Grade boundaries' : 'Where each letter starts') + '</b> <span class="muted">The lowest percent that earns each grade. Shown beside the percent while you score and on the Grades tab.</span></p>' +
         '<div class="mebrow">' + g.bands.map((b, i) => '<label><input type="text" class="mebl" data-mebl="' + i + '" maxlength="12" value="' + esc(b[1]) + '" aria-label="Grade ' + (i + 1) + '"><span>from</span><input type="number" min="0" max="100" step="1" data-mebp="' + i + '" value="' + b[0] + '" aria-label="Lowest percent for ' + esc(b[1]) + '"' + (i === g.bands.length - 1 ? ' disabled' : '') + '><span>%</span></label>').join('') + '</div></div>' : ''));
@@ -224,6 +226,15 @@ $('#setPane').addEventListener('change', e => {
   const t = e.target;
   if (t.id === 'meSys') { if (t.value === 'other') { meSet({ sys: 'My school’s system' }); sysWords(); setRender(); const o = $('#meSysOther'); if (o) { o.focus(); o.select(); } return; } meSet({ sys: t.value }); sysWords(); return setRender(); }
   if (t.id === 'meSysOther') { meSet({ sys: t.value.trim().slice(0, 40) }); sysWords(); return setRender(); }
+  if (t.id === 'meRowTop' || t.id === 'meRowHalf') {   // the teacher's usual row scale: only new assignments start with it
+    const g = meGrade(); if (!g) return;
+    const su = { ...g.setup }; for (const k of ['top', 'tops', 'half']) delete su[k];
+    Object.assign(su, rowScaleOf({ top: $('#meRowTop').value, half: $('#meRowHalf').checked }));
+    store.set('gs.setup', JSON.parse(JSON.stringify(su)));   // the next new assignment starts from this, not from the last one saved
+    meSet({ grade: { ...me().grade, setup: su } });
+    if (!batch) setup = { ...DEFAULT_SETUP };
+    setRender(); return toast('New rubrics score each row ' + rowsSay(su) + '.');
+  }
   if (t.dataset.mebl != null || t.dataset.mebp != null) {
     const g = meGrade(); if (!g || !g.bands) return;
     const bands = g.bands.map((b, i) => { const l = $('[data-mebl="' + i + '"]'), p = $('[data-mebp="' + i + '"]'); return [i === g.bands.length - 1 ? 0 : Math.max(0, Math.min(100, Math.round(+p.value) || 0)), (l.value.trim() || b[1]).slice(0, 12)]; });

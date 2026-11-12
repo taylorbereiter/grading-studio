@@ -19,7 +19,9 @@ async function planRead() {
   plan = !classes.length ? null : {
     classes, semStart: String(setup.semStart || ''), semEnd: String(setup.semEnd || ''),
     daysOff: (Array.isArray(setup.daysOff) ? setup.daysOff : []).filter(d => d && d.date).map(d => ({ date: String(d.date), label: String(d.label || '') })),
-    lessons: (Array.isArray(lessons) ? lessons : []).filter(l => l && l.id && Array.isArray(l.slots) && l.slots.length).map(l => ({ id: String(l.id), title: String(l.title || 'Untitled lesson'), status: String(l.status || ''), done: !!l.final, n: Array.isArray(l.slides) ? l.slides.length : 0, slots: l.slots.map(s => ({ classId: String(s.classId), date: String(s.date) })) })),
+    lessons: (Array.isArray(lessons) ? lessons : []).filter(l => l && l.id && Array.isArray(l.slots) && l.slots.length).map(l => ({ id: String(l.id), title: String(l.title || 'Untitled lesson'), status: String(l.status || ''), done: !!l.final, n: Array.isArray(l.slides) ? l.slides.length : 0,
+      taught: (Array.isArray(l.taught) ? l.taught : []).filter(t => t && t.date).map(t => ({ classId: String(t.classId || ''), date: String(t.date), slide: +t.slide || 1, of: +t.of || 1 })),   // where each class got to, noted after presenting
+      slots: l.slots.map(s => ({ classId: String(s.classId), date: String(s.date) })) })),
   };
   return plan;
 }
@@ -42,13 +44,15 @@ const T_ARROW = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M1
 const numWord = n => ['No', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Eleven', 'Twelve'][n] || String(n);
 function todayHtml(prim) {
   if (!plan) return '<h2 class="tcap">Teaching today</h2><div class="tcard"><div class="trow none"><span class="nt"><b>Your timetable isn’t here yet</b><span class="ns">Add your class times in the Planner, and each day’s classes and lessons show here.</span></span><a class="btn sm" href="' + esc(planUrl('#timetable')) + '">Open the Planner</a></div></div>';
-  const t = todayRows(plan), cur = nowRow(t.rows);
+  const t = todayRows(plan), cur = nowRow(t.rows), day = isoDay(Date.now());
   const say = l => l.done ? 'finished' : l.status === 'review' ? 'ready for you' : l.status === 'claude' ? 'with Claude' : 'draft';
   const row = r => {
     const { c, m, lessons } = r, l = lessons[0], more = lessons.length > 1 ? ' · and ' + (lessons.length - 1) + ' more' : '';
-    return '<a class="trow' + (r === cur ? ' now' : '') + '" href="' + esc(planUrl(l ? '#lesson/' + encodeURIComponent(l.id) : '#week')) + '" title="' + (l ? 'Open this lesson in the Planner' : 'Plan this class in the Planner') + '"><span class="tt">' + planTime(m.start) + '</span>' +
-      '<span class="nt"><b><span class="rdot" style="background:' + c.color + '"></span>' + esc(c.name) + '</b><span class="ns">' + (l ? esc(l.title) + (l.n ? ' · ' + l.n + (l.n === 1 ? ' slide' : ' slides') : '') + ' · ' + say(l) + more : 'No lesson planned yet') + '</span></span>' +
-      '<span class="btn sm' + (prim === 'lesson' && r === cur ? ' primary' : '') + '">' + (l ? 'Open' : 'Plan it') + '</span></a>';
+    // The class on now, or next: its lesson opens presenting, unless it has been taught to the end today.
+    const got = l && l.taught.find(t => t.classId === c.id && t.date === day), end = got && got.slide >= got.of, show = !!l && r === cur && !end;
+    return '<a class="trow' + (r === cur ? ' now' : '') + '" href="' + esc(planUrl(show ? '#present/' + encodeURIComponent(l.id) + '/' + encodeURIComponent(c.id) : l ? '#lesson/' + encodeURIComponent(l.id) : '#week')) + '" title="' + (show ? 'Present this lesson, from the Planner' : l ? 'Open this lesson in the Planner' : 'Plan this class in the Planner') + '"><span class="tt">' + planTime(m.start) + '</span>' +
+      '<span class="nt"><b><span class="rdot" style="background:' + c.color + '"></span>' + esc(c.name) + '</b><span class="ns">' + (l ? esc(l.title) + (l.n ? ' · ' + l.n + (l.n === 1 ? ' slide' : ' slides') : '') + ' · ' + (got ? (end ? 'taught' : 'taught to slide ' + got.slide + ' of ' + got.of) : say(l)) + more : 'No lesson planned yet') + '</span></span>' +
+      '<span class="btn sm' + (prim === 'lesson' && r === cur ? ' primary' : '') + '">' + (show ? 'Present' : l ? 'Open' : 'Plan it') + '</span></a>' + attTodayLine(c);
   };
   return '<div class="thd"><h2 class="tcap">Teaching today</h2><a class="link tweek" href="' + esc(planUrl('#week')) + '">Open the week</a></div><div class="tcard">' +
     (t.off ? '<div class="trow none"><span class="nt"><b>No classes today</b><span class="ns">' + esc(t.off) + '</span></span></div>' : t.rows.length ? t.rows.map(row).join('') : '<div class="trow none"><span class="nt"><span class="ns">No classes on your timetable today.</span></span></div>') + '</div>';
@@ -100,14 +104,14 @@ function statOf(m) {
   return had ? had.v : null;
 }
 function workStat(d) {
-  const su = { ...DEFAULT_SETUP, ...d.setup }, pcts = [], crit = su.mode === 'rubric' ? su.criteria : [], rows = crit.map(c => ({ name: String(c), sum: 0, n: 0, low: 0 }));
+  const su = setupOver(d.setup), pcts = [], crit = su.mode === 'rubric' ? su.criteria : [], rows = crit.map((c, i) => ({ name: String(c), top: rowTop(su, i), sum: 0, n: 0, low: 0 }));
   for (const k of new Set([...Object.keys(d.s || {}), ...Object.keys(d.read || {})])) {
     const g = { ...(((d.s || {})[k] || {}).g || {}), read: (d.read || {})[k] }, p = pastScore(d.setup, g);
     if (p.status === 'missing' || p.status === 'excused' || p.partial || g.outAvg) continue;
     if (p.pct != null) pcts.push(p.pct);
-    if (!p.paper) for (const [i, row] of rows.entries()) { const v = (g.rubric || [])[i]; if (v != null) { row.sum += v; row.n++; if (v <= 2) row.low++; } }
+    if (!p.paper) for (const [i, row] of rows.entries()) { const v = (g.rubric || [])[i]; if (v != null) { row.sum += v; row.n++; if (v <= row.top / 2) row.low++; } }
   }
-  const full = rows.filter(r => r.n >= 3).map(r => ({ name: r.name, avg: r.sum / r.n, low: r.low, n: r.n }));
+  const full = rows.filter(r => r.n >= 3).map(r => ({ name: r.name, top: r.top, avg: r.sum / r.n, low: r.low, n: r.n }));
   return { avg: pcts.length ? roundPct(pcts.reduce((a, b) => a + b, 0) / pcts.length) : null, n: pcts.length, rows: full.length === rows.length && rows.length >= 2 ? full : [] };
 }
 function backHtml(list, prim) {
@@ -123,11 +127,11 @@ const NEXT_DAYS = 30;
 function nextHtml(groups) {
   const m = [...groups.back, ...groups.old].filter(m => keptState(m).of && !keptState(m).left && !(m.newer && keptMeta.has(m.newer)) && Date.now() - m.t < NEXT_DAYS * 864e5).sort((a, b) => b.t - a.t)[0];
   const s = m && statOf(m); if (!s || !s.rows.length) return '';
-  const w = keptWhere(m), low = s.rows.reduce((a, b) => b.avg < a.avg ? b : a), flat = s.rows.every(r => Math.abs(r.avg - low.avg) < 0.05);
+  const w = keptWhere(m), low = s.rows.reduce((a, b) => b.avg / b.top < a.avg / a.top ? b : a), flat = s.rows.every(r => Math.abs(r.avg / r.top - low.avg / low.top) < 0.0125);   // rows can be on different scales, so they are compared by their share of the top (0.05 of a point on 0 to 4)
   const head = (w.cls ? esc(w.cls.name) + ': ' : '') + (flat ? 'every row came out the same on ' : esc(low.name) + ' was the weakest row on ') + esc(m.name || 'the last set of papers') + '.';
-  const who = low.low ? numWord(low.low) + (low.low === 1 ? ' student' : ' students') + ' scored 2 or below on ' + esc(low.name) + '.' : 'Nobody scored 2 or below on ' + esc(low.name) + '.';
+  const who = low.low ? numWord(low.low) + (low.low === 1 ? ' student' : ' students') + ' scored ' + fmtNum(low.top / 2) + ' or below on ' + esc(low.name) + '.' : 'Nobody scored ' + fmtNum(low.top / 2) + ' or below on ' + esc(low.name) + '.';
   return '<h2 class="tcap">What the class needs next</h2><div class="tcard tneed"><p class="tbig">' + head.charAt(0).toUpperCase() + head.slice(1) + '</p>' +
-    '<div class="tbars" role="img" aria-label="' + esc(s.rows.map(r => r.name + ' ' + fmtNum(Math.round(r.avg * 10) / 10) + ' of 4').join(', ')) + '">' + s.rows.map(r => '<span class="tbn">' + esc(r.name) + '</span><span class="tbt"><i class="' + (r === low && !flat ? 'low' : '') + '" style="width:' + Math.round(r.avg / 4 * 100) + '%"></i></span><span class="tbv">' + (Math.round(r.avg * 10) / 10).toFixed(1) + '</span>').join('') + '</div>' +
+    '<div class="tbars" role="img" aria-label="' + esc(s.rows.map(r => r.name + ' ' + fmtNum(Math.round(r.avg * 10) / 10) + ' of ' + r.top).join(', ')) + '">' + s.rows.map(r => '<span class="tbn">' + esc(r.name) + '</span><span class="tbt"><i class="' + (r === low && !flat ? 'low' : '') + '" style="width:' + Math.round(r.avg / r.top * 100) + '%"></i></span><span class="tbv">' + (Math.round(r.avg * 10) / 10).toFixed(1) + '</span>').join('') + '</div>' +
     (flat ? '' : '<p class="tsay">' + who + '</p>') + (m.papers ? '<a class="tlink" href="' + batchHash(m.id, 'insights') + '">' + (low.low && !flat ? 'See who' : 'Open Insights') + T_ARROW + '</a>' : '') + '</div>';
 }
 function hsideShow() { $('#hside').hidden = $('#handBack').hidden && $('#needNext').hidden && $('#needs').hidden; }

@@ -134,11 +134,11 @@ button.pavg:hover .v{text-decoration:underline}
 .crit .cn em{flex:none;font-size:var(--text-body);font-weight:650;font-variant-numeric:tabular-nums}
 .crit .cn em small{font-size:var(--text-small);font-weight:500;color:var(--muted)}
 .crit .cn em:empty::before{content:"–";font-weight:500;color:var(--faint)}
-.scores.slide{--th:14px;--fill:calc(var(--th) / 2 + var(--k) * (100% - var(--th)) / 7);padding:0}
+.scores.slide{--th:14px;--fill:calc(var(--th) / 2 + var(--k) * (100% - var(--th)) / var(--n, 7));padding:0}
 .srange{height:16px}
-.srange::-webkit-slider-runnable-track{height:4px;border-radius:var(--corner-1);background:linear-gradient(to right,var(--accent) calc(var(--th) / 2 + var(--k) * (100% - var(--th)) / 7),var(--track) 0)}
-.srange::-moz-range-track{height:4px;border-radius:var(--corner-1);background:linear-gradient(to right,var(--accent) calc(var(--th) / 2 + var(--k) * (100% - var(--th)) / 7),var(--track) 0)}
-.crit.on .srange::-webkit-slider-runnable-track{background:linear-gradient(to right,var(--accent) calc(var(--th) / 2 + var(--k) * (100% - var(--th)) / 7),color-mix(in srgb,var(--accent) 24%,var(--surface)) 0)}
+.srange::-webkit-slider-runnable-track{height:4px;border-radius:var(--corner-1);background:linear-gradient(to right,var(--accent) calc(var(--th) / 2 + var(--k) * (100% - var(--th)) / var(--n, 7)),var(--track) 0)}
+.srange::-moz-range-track{height:4px;border-radius:var(--corner-1);background:linear-gradient(to right,var(--accent) calc(var(--th) / 2 + var(--k) * (100% - var(--th)) / var(--n, 7)),var(--track) 0)}
+.crit.on .srange::-webkit-slider-runnable-track{background:linear-gradient(to right,var(--accent) calc(var(--th) / 2 + var(--k) * (100% - var(--th)) / var(--n, 7)),color-mix(in srgb,var(--accent) 24%,var(--surface)) 0)}
 .srange.unset::-webkit-slider-runnable-track{background:var(--track)}
 .srange.unset::-moz-range-track{background:var(--track)}
 .crit.on .srange.unset::-webkit-slider-runnable-track{background:color-mix(in srgb,var(--accent) 24%,var(--surface))}
@@ -156,6 +156,8 @@ button.pavg:hover .v{text-decoration:underline}
 /* the percent beside the total had picked up the student card's box (both were called .pc) */
 .total span.pc{width:auto;max-height:none;overflow:visible;background:none;border:0;border-radius:0;box-shadow:none;font-size:var(--text-title);font-weight:650;letter-spacing:-.02em}
 .total{padding:10px 2px 0;border-top:1px solid var(--line)}
+#stampScore{align-self:center;gap:5px;padding:3px 8px;color:var(--accent)}
+#stampScore svg{flex:none}
 .cmt textarea{min-height:72px;padding:9px 11px;border-radius:var(--corner-4);font-size:var(--text-control);line-height:1.45;display:block}
 .gstat{display:flex;flex-wrap:nowrap;align-items:center;gap:6px;margin:0}
 .gstat .seg{margin-left:0;flex:1;gap:6px;border:0;border-radius:0;overflow:visible}
@@ -191,7 +193,37 @@ button.pavg:hover .v{text-decoration:underline}
 .nav .primary kbd{font:600 var(--text-caption) var(--f-body);border:1px solid color-mix(in srgb,var(--accent-fg) 55%,transparent);border-radius:var(--corner-1);padding:0 4px;margin-left:2px}
 .oneout{text-align:center;margin:0;flex-basis:100%}
 .oneout .link{font-size:var(--text-small);font-weight:500}
+.oneout-gap{visibility:hidden;pointer-events:none}
 .oneout-say{margin:3px 0 0}
 .oneout-say:empty{display:none}
 .nextun{display:block;margin:8px auto 0;font-size:var(--text-control)}
 .nextun kbd,.hint kbd{font:500 var(--text-caption) var(--f-body);border:1px solid var(--line-strong);border-bottom-width:2px;border-radius:var(--corner-1);padding:0 4px;background:var(--surface);color:var(--muted)}
+/* extra credit on one paper: its own line under the score */
+.xcnote{display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-2);margin:7px 0 0;font-size:var(--text-small);color:var(--muted)}
+.xcnote label{display:flex;align-items:center;gap:var(--space-2);color:var(--fg-2);font-weight:600}
+.xcnote input{width:64px;font:inherit;padding:3px 6px;border:1px solid var(--line-strong);border-radius:var(--corner-2);background:var(--surface);color:var(--fg)}
+.xcsay{color:var(--accent);font-size:var(--text-small)}
+.xcnote .sp{flex:1}
+.xcnote label,.xcnote>span{white-space:nowrap}.xcnote input{width:52px}
+
+/* a retake under the score: the earlier tries, which one counts, and the way out */
+.trynote{grid-template-columns:minmax(0,1fr);min-width:0;margin:9px 0 0;padding:var(--space-3);border:1px solid var(--line);border-radius:var(--corner-3);background:var(--surface-2);font-size:var(--text-small);color:var(--fg-2);display:grid;gap:5px}
+.tryhd,.tryrow,.trycount{display:flex;align-items:baseline;gap:var(--space-2);flex-wrap:wrap}
+.tryhd b{color:var(--accent)}.tryhd .sp{flex:1}.tryhd .arm{color:var(--warn);font-weight:600}
+.tryrow>span:first-child{min-width:58px;color:var(--muted)}.tryrow b{color:var(--fg)}
+.trycm{flex-basis:100%;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.trycount{flex-wrap:nowrap;justify-content:space-between;border-top:1px solid var(--line);padding-top:5px}.trycount>span:first-child{flex:1;min-width:0}.trycount b{color:var(--fg)}
+.trynote .btn{justify-self:start}
+.km .kmsay{margin:4px 10px 6px;font-size:var(--text-small);color:var(--muted);max-width:230px}
+.km .mitem[aria-pressed="true"] b{color:var(--accent)}
+.trytag{font-size:var(--text-small);font-weight:600;padding:2px 8px;border-radius:var(--corner-pill);background:var(--surface-2);color:var(--muted);border:1px solid var(--line);white-space:nowrap}
+.stag.retk{background:var(--accent-soft);color:var(--accent)}
+.tryown{color:var(--muted);font-size:var(--text-small)}
+/* a row with many steps (0 to 8 with half points, say): only the whole numbers are written under the slider */
+.scores.slide.many .sticks button.half{display:none}
+.scores.slide.many .sticks button{min-width:16px;padding:1px 0}
+/* Rubric setup: how every row is scored */
+.rowscale{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:8px;font-size:var(--text-control)}
+.rowscale label{font-weight:600;margin:0}
+.rowscale .rowhalf{display:inline-flex;align-items:center;gap:5px;font-weight:500}
+.rowscale select{padding:4px 6px}

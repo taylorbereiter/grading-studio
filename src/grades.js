@@ -4,7 +4,7 @@ const STATUS_LABEL = { missing: 'Missing', excused: 'Excused', late: 'Late' };
 function noScore(st) { const s = st.grade.status; return s === 'missing' || s === 'excused'; }
 const hasSheet = g => g.sheet != null && g.sheet !== '';
 // Anything she has put on this student besides files: a score, a comment or a status.
-const gradeHasWork = g => !!g && ((g.rubric || []).some(v => v != null) || (g.points != null && g.points !== '') || hasSheet(g) || !!g.comment || !!g.status || !!g.fb);
+const gradeHasWork = g => !!g && ((g.rubric || []).some(v => v != null) || (g.points != null && g.points !== '') || hasSheet(g) || !!g.comment || !!g.status || !!g.fb || !!+g.xc);
 // A score she gave this student, here or typed on the Grade sheet. A highlighted Word rubric doesn't write over it.
 const hasOwnScore = st => ownGrade(st).total != null || hasSheet(st.grade);
 // The same, in words: 'a score of 10', 'a comment'…
@@ -48,8 +48,102 @@ function statusHtml(st, plain) {
   return '<div id="gstat"><div class="gstat"><span class="seg" role="group" aria-label="Mark as">' + Object.keys(STATUS_LABEL).map(k => '<button data-status="' + k + '" aria-pressed="' + (on === k) + '">' + STATUS_LABEL[k] + '</button>').join('') + '</span>' +
     (plain ? '' : kmWrap('⋯', 'class="btn sm kdots" id="gMore" aria-label="More for this score" title="More for this score"',
       (noScore(st) ? '' : '<button class="outsw" id="outAvg" role="switch" aria-checked="' + out + '"><i></i><span><b>Leave out of the average</b><small>The score stays and still copies. It doesn’t count in the average or on the Insights tab.</small></span></button>') +
+      (noScore(st) ? '' : '<button class="mitem" data-gxc>Extra credit points</button>') +
+      (noScore(st) || fmNow() ? '' : '<button class="mitem" data-gretake title="A second try at this assignment. The score, comment and paper so far are kept as the ' + (st.grade.tries && st.grade.tries.length ? 'try before it' : 'first try') + '.">' + (st.grade.tries && st.grade.tries.length ? 'Another retake' : 'Start a retake') + '</button>') +
       '<button class="mitem" data-gcalc>Calculator <kbd>=</kbd></button>', 'right')) + '</div>' +
-    (out && !noScore(st) && !plain ? '<p class="outnote">Left out of the average. <button class="link" data-outoff>Count it again</button></p>' : '') + '</div>';
+    (out && !noScore(st) && !plain ? '<p class="outnote">Left out of the average. <button class="link" data-outoff>Count it again</button></p>' : '') + (plain ? '' : xcHtml(st) + tryHtml(st)) + '</div>';
+}
+/* ---------------- extra credit on one paper ---------------- */
+// st.grade.xc: points on top of the score (half points, like any score), or with st.grade.xcU 'pct' percentage points on its percent. It shows as its own line under the score so it's never mistaken
+// for what the paper earned; gradeOf adds it in (start.js addXc). xcOpen: the paper whose box is open before it has any extra credit.
+let xcOpen = null, xcUnit = store.get('gs.xcU', 'pts') === 'pct' ? 'pct' : 'pts';   // the last unit picked, on this computer, for the next paper
+// Points or %: the number stays, what it means changes.
+function xcUnitSet(st, u) {
+  xcUnit = u; store.set('gs.xcU', u);
+  if (st.grade.xc) { if (u === 'pct') st.grade.xcU = 'pct'; else delete st.grade.xcU; touchGrade(st); saveSoon(); renderList(); }
+  renderGrade();
+}
+function xcHtml(st) {
+  const v = +st.grade.xc || 0;
+  if (noScore(st) || (!v && xcOpen !== st)) return '';
+  const u = st.grade.xc ? (st.grade.xcU === 'pct' ? 'pct' : 'pts') : xcUnit;
+  return '<p class="xcnote" id="xcNote"><label>Extra credit <input type="number" id="xcIn" step="0.5" min="0" value="' + (v ? fmtNum(v) : '') + '" aria-label="Extra credit ' + (u === 'pct' ? 'percent' : 'points') + '"></label><span class="pseg sm" role="group" aria-label="Extra credit in">' + [['pts', 'points'], ['pct', '%']].map(([k, l]) => '<button data-xcu="' + k + '" aria-pressed="' + (u === k) + '">' + l + '</button>').join('') + '</span><span class="sp"></span><button class="link" data-xcoff>Remove</button></p>';
+}
+function xcStart(st) {
+  xcOpen = st; const gs = $('#gstat'); if (gs) gs.outerHTML = statusHtml(st);
+  const i = $('#xcIn'); if (i) { i.focus(); i.select(); }
+}
+function xcSet(st, raw, redraw) {
+  const v = raw === '' || raw == null || isNaN(+raw) ? 0 : Math.max(0, Math.round(+raw * 2) / 2);
+  if ((+st.grade.xc || 0) === v) { if (redraw) { if (!v) xcOpen = null; renderGrade(); } return; }
+  if (v) { if (!(+st.grade.xc > 0)) { if (xcUnit === 'pct') st.grade.xcU = 'pct'; else delete st.grade.xcU; } st.grade.xc = v; }   // a new one takes the unit showing
+  else { delete st.grade.xc; delete st.grade.xcU; if (redraw) xcOpen = null; }
+  touchGrade(st); saveSoon(); renderList();
+  if (redraw) renderGrade(); else { const t = $('#grade .total'); if (t) t.innerHTML = totalHtml(st); }
+}
+/* ---------------- retakes: a second try that keeps the first ---------------- */
+// How the tries are kept and which one counts: start.js (withTries). Here: starting one, taking it off, and what the score panel says.
+const TRY_KEEP = ['rubric', 'points', 'sheet', 'xc', 'xcU', 'q', 'qAuto', 'comment'];
+const tryName = n => n === 1 ? 'First try' : 'Try ' + n;
+// Which earlier try a file belongs to (1 is the first), or 0 for the try in hand: it was on the paper when a retake began.
+function tryOfFile(st, f) {
+  const ts = st && st.grade && st.grade.tries; if (!ts || !ts.length || !f) return 0;
+  const i = ts.findIndex(t => (t.files || []).includes(f.path));
+  return i < 0 ? 0 : i + 1;
+}
+const tryTag = (st, f) => { const n = tryOfFile(st, f); return n ? '<span class="trytag" title="This was the paper for the ' + tryName(n).toLowerCase() + '. Its marks and score are kept.">' + tryName(n) + '</span>' : ''; };
+const tryScoreText = t => (t.total != null ? fmtNum(t.total) + ' / ' + fmtNum(t.max) + ' · ' : '') + fmtPct(t.pct);
+const tryRuleSay = (rule, n) => rule === 'last' ? 'the latest try' : rule === 'avg' ? 'the average of ' + n + ' tries' : 'the highest of ' + n + ' tries';
+function retakeStart(st) {
+  const g = st.grade, r = tryGrade(st);
+  if (noScore(st) || r.pct == null || !r.done || r.partial) return toast('Give this paper a full score first. A retake keeps it and starts a new one.');
+  const was = { t: Date.now(), total: r.total, max: r.outOf != null ? r.outOf : maxPoints(), pct: r.pct };
+  if (g.status === 'late') was.late = 1;
+  for (const k of TRY_KEEP) if (g[k] != null && g[k] !== '' && !(Array.isArray(g[k]) && !g[k].length)) was[k] = JSON.parse(JSON.stringify(g[k]));
+  // The papers here now were the earlier try's. A file a newer download brought ("New in this download") is taken to be the retake itself.
+  was.files = st.files.filter(f => !tryOfFile(st, f) && !(batch.carry && batch.carry.flags[f.path] === 'new') && (!f.virtual || (f.kind === 'docx' && (f.edited || (wordScore(f) && f.wscore.total != null))))).map(f => f.path);
+  (g.tries ||= []).push(was);
+  g.rubric = []; g.points = ''; g.comment = '';
+  for (const k of ['sheet', 'xc', 'xcU', 'q', 'qAuto', 'atR']) delete g[k];
+  if (g.status === 'late') g.status = '';
+  touchGrade(st); if (st.found !== undefined) refound(st);
+  rowOnOf = null; saveSoon(); renderList(); renderGrade();
+  if (pages.length || st.files.length) openStudent(cur);   // the file bars now say which paper was the first try
+  toast(tryName(g.tries.length) + ' kept: ' + tryScoreText(was) + '. Score the retake here' + (st.files.length ? ', and add its paper with + Add.' : '.'));
+}
+// Taking the retake off puts the try before it back as the score. What the retake had is gone, so a scored one asks with a second click.
+let tryOffArm = null;
+function retakeOff(st) {
+  const g = st.grade, ts = g.tries; if (!ts || !ts.length) return;
+  const has = tryGrade(st).total != null || (g.comment || '').trim();
+  if (has && tryOffArm !== st) { tryOffArm = st; renderGrade(); return; }
+  tryOffArm = null;
+  const was = ts.pop(); if (!ts.length) delete g.tries;
+  g.rubric = []; g.points = ''; g.comment = '';
+  for (const k of ['sheet', 'xc', 'xcU', 'q', 'qAuto', 'atR']) delete g[k];
+  for (const k of TRY_KEEP) if (was[k] != null) g[k] = was[k];
+  if (was.late && !g.status) g.status = 'late';
+  touchGrade(st); if (st.found !== undefined) refound(st);
+  rowOnOf = null; saveSoon(); renderList(); renderGrade();
+  if (pages.length || st.files.length) openStudent(cur);
+  toast('Retake taken off. The score is the ' + tryName(ts.length + 1).toLowerCase() + '’s again.');
+}
+function retakeRuleSet(k) {
+  if (!RETAKE_RULES.some(r => r[0] === k)) return;
+  lib.book = { ...(lib.book || {}), retake: k }; saveLib();
+  renderList(); renderGrade();
+  toast('Retakes: ' + RETAKE_RULES.find(r => r[0] === k)[2].toLowerCase() + ', for every assignment.');
+}
+// Under the score: each earlier try, which one counts, and the way out.
+function tryHtml(st) {
+  const ts = st.grade.tries; if (!ts || !ts.length || noScore(st)) return '';
+  const gr = gradeOf(st), n = ts.length + (gr.tryNow ? 1 : 0), rule = gr.tryRule || retakeRule(), arm = tryOffArm === st;
+  if (!arm) tryOffArm = null;
+  return '<div class="trynote" id="tryNote"><div class="tryhd"><b>Retake</b><span>' + tryName(ts.length + 1).toLowerCase() + '</span><span class="sp"></span><button class="link' + (arm ? ' arm' : '') + '" data-tryoff title="Puts the ' + tryName(ts.length).toLowerCase() + ' back as the score">' + (arm ? 'Click again: the retake’s score goes' : 'Remove retake') + '</button></div>' +
+    ts.map((t, i) => '<div class="tryrow"><span>' + tryName(i + 1) + '</span><b>' + tryScoreText(t) + '</b>' + (t.late ? '<span class="stag">late</span>' : '') + (t.comment ? '<span class="trycm" title="' + esc(t.comment) + '">“' + esc(t.comment.length > 60 ? t.comment.slice(0, 60) + '…' : t.comment) + '”</span>' : '') + '</div>').join('') +
+    '<div class="trycount"><span>' + (gr.tryNow ? 'Counts: <b>' + fmtPct(gr.pct) + '</b>, ' + tryRuleSay(rule, n) : 'Until the retake has a full score, the ' + (ts.length > 1 ? 'earlier tries count' : 'first try counts') + ': <b>' + fmtPct(gr.pct) + '</b>') + '</span>' +
+    kmWrap('Change', 'class="link" id="tryRule" title="Which try counts, for every assignment"', RETAKE_RULES.map(([k, l, say]) => '<button class="mitem" data-tryrule="' + k + '" aria-pressed="' + (rule === k) + '"><b>' + l + '</b><small>' + say + '</small></button>').join('') + '<p class="kmsay">For every class and assignment. Also in the gradebook’s Term setup.</p>', 'right') + '</div>' +
+    (st.files.some(f => !tryOfFile(st, f) && !f.virtual) ? '' : '<button class="btn sm" data-tryadd>Add the retake paper…</button>') + '</div>';
 }
 // Left out of the average: for a one-off case, a placeholder 0, or a paper graded somewhere else. Nothing about the score changes.
 function setOutAvg(st) {
@@ -90,12 +184,18 @@ const cellCopy = (g, k) => g.status === 'missing' || g.status === 'excused' ? (k
 function statusText(st) {
   const g = gradeOf(st), out = [];
   if (g.status) out.push(STATUS_LABEL[g.status]);
+  if (g.tries) out.push('Retake: ' + triesSay(g).replace(/\.$/, '').replace('. Counts', '; counts'));
   if (g.out) out.push('Left out of the average');
   if (g.partial) out.push('Partial: ' + partNote(st));
   return out.join(', ');
 }
 function statusPills(g) {
-  return (g.status ? ' <span class="stag">' + STATUS_LABEL[g.status].toLowerCase() + '</span>' : '') + (g.out ? ' <span class="stag out">left out</span>' : '') + (g.partial ? ' <span class="stag">partial</span>' : '');
+  return (g.status ? ' <span class="stag">' + STATUS_LABEL[g.status].toLowerCase() + '</span>' : '') + (g.out ? ' <span class="stag out">left out</span>' : '') + (g.partial ? ' <span class="stag">partial</span>' : '') + (g.tries ? ' <span class="stag retk" title="' + esc(triesSay(g)) + '">retake</span>' : '');
+}
+// A retake in words: every try, and which counts.
+function triesSay(g) {
+  const all = g.tries.concat(g.tryNow ? [g.tryNow] : []);
+  return all.map((t, i) => (i ? (all.length === 2 ? 'retake ' : 'try ' + (i + 1) + ' ') : 'First try ') + fmtPct(t.pct)).join(', ') + (g.tryNow ? '' : ', retake not scored yet') + '. Counts: ' + (g.tryNow ? tryRuleSay(g.tryRule, all.length) : 'the ' + (g.tries.length > 1 ? 'earlier tries' : 'first try')) + '.';
 }
 function gradesSummary() {
   const all = batch.students, on = all.filter(s => !noScore(s)), nOff = all.length - on.length, nPart = on.filter(s => gradeOf(s).partial).length;

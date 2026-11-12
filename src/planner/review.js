@@ -29,7 +29,7 @@ async function versionsDlg(l) {
     const b = e.target.closest('[data-rv]'); if (!b) return;
     const v = vs[+b.dataset.rv];
     await saveVersion(l, 'Before going back to “' + v.label + '”');
-    const back = normLesson({ ...v.lesson, id: l.id, slots: l.slots, created: l.created });
+    const back = normLesson({ ...v.lesson, id: l.id, slots: l.slots, created: l.created, taught: l.taught });   // what was taught stays as it is
     // Finished decks are never lost by going back: any the older version doesn't have stay under older ones.
     const seen = new Set([back.final && back.final.id, ...(back.finals || []).map(f => f.id)]);
     const extra = [l.final, ...(l.finals || [])].filter(f => f && !seen.has(f.id));
@@ -116,6 +116,7 @@ async function undoAll(l) {
 // Called by the folder reader when a lesson file changed outside the app.
 async function claudeChanged(old, l) {
   if (!old) return;
+  if (!l.taught && old.taught) l.taught = old.taught;   // a file written without the taught notes doesn't lose them
   if (JSON.stringify(old.slides.map(slideKey)) === JSON.stringify(l.slides.map(slideKey)) && old.title === l.title) { if (old.pending) l.pending = old.pending; return; }
   await saveVersion(old, 'Before Claude’s changes');
   l.pending = old.pending || { at: Date.now(), before: JSON.parse(JSON.stringify(old.slides)), title: old.title };

@@ -67,9 +67,9 @@
 .qmhd .qmopts+[data-boxes]{margin-left:0}
 .qmch .qmchr{margin-left:auto;display:flex;align-items:center;gap:8px;flex:0 0 auto}
 .qmchip{font-size:var(--text-small);color:var(--muted);background:var(--surface-2);border-radius:var(--corner-pill);padding:1px 8px;white-space:nowrap}
-.qmmk{position:absolute;transform:translate(-50%,-50%);color:#C62B1A;font:700 26px/1 var(--f-body);cursor:grab;padding:2px 4px;border-radius:var(--corner-2);white-space:nowrap;text-shadow:0 0 3px #fff}
+.qmmk{position:absolute;transform:translate(-50%,-50%);color:var(--qm-x);font:700 26px/1 var(--f-body);cursor:grab;padding:2px 4px;border-radius:var(--corner-2);white-space:nowrap;text-shadow:0 0 3px #fff}
 .qmmk.txt{font-size:17px}
-.qmmk.ok{color:#1E8A4C}
+.qmmk.ok{color:var(--qm-ok)}
 .qmmk.ok:hover{background:rgba(30,138,76,.08)}
 .qmmk.pin{width:22px;height:22px;padding:0;box-sizing:border-box;border:1.5px dashed rgba(198,43,26,.45);border-radius:var(--corner-round);opacity:.55}
 .qmc:hover .qmmk.pin,.qmc:focus .qmmk.pin{opacity:1}
@@ -100,3 +100,22 @@
 .qbt .qkind,.qbt .qhow{max-width:112px}
 .qbt .qkey{min-width:56px}
 .qbw input{width:84px}
+
+.qmink{position:relative;display:inline-flex}
+.qmdot{display:inline-block;width:9px;height:9px;border-radius:var(--corner-round);margin-left:4px;background:var(--qm-x)}
+.qmdot.ok{margin-left:2px;background:var(--qm-ok)}
+.qminkpop{position:absolute;right:0;top:calc(100% + 6px);z-index:30;background:var(--surface);border:1px solid var(--line);border-radius:var(--corner-2);box-shadow:0 8px 24px rgba(20,30,50,.14);padding:10px 12px;display:grid;gap:8px;min-width:250px}
+.qminkpop[hidden]{display:none}
+.qminkpop p{margin:0}
+.qmirow{display:flex;align-items:center;gap:6px}
+.qmirow .hsm{min-width:86px}
+.qmirow .sw{width:20px;height:20px;border-radius:var(--corner-round);border:2px solid transparent;box-shadow:inset 0 0 0 1px rgba(0,0,0,.12);padding:0;cursor:pointer}
+.qmirow .sw[aria-pressed="true"]{border-color:var(--surface);box-shadow:0 0 0 2px var(--accent)}
+
+.qmb.cm{font-weight:500;font-size:var(--text-control);color:var(--muted);min-width:0}
+.qmnote{display:block;width:100%;text-align:left;background:var(--accent-soft);border:0;border-radius:var(--corner-2,8px);padding:5px 8px;margin-top:6px;font:inherit;font-size:var(--text-control);color:var(--fg);cursor:pointer;white-space:pre-wrap;overflow-wrap:anywhere}
+.qmnote[hidden]{display:none}
+.qmned{margin-top:6px;display:grid;gap:6px}
+.qmned textarea{width:100%;box-sizing:border-box;font:inherit;font-size:var(--text-body);padding:6px 8px;border:1px solid var(--line-strong);border-radius:var(--corner-2,8px);background:var(--surface);color:var(--fg);resize:vertical}
+.qmnedb{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.qmnedb .btn{margin-left:auto}

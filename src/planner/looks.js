@@ -45,7 +45,7 @@ const EXTRA = ['tag', 'foot', 'h1', 'h2', 'body2', 'cite', 'word', 'pos'];
 // is typed in for her (no titles, no bullets, no numbers) until she does it.
 const TEACH = {
   warmup: { size: 36 }, objectives: { size: 32 }, steps: { size: 32 }, discuss: { size: 36 }, twocol: { size: 28 },
-  passage: { size: 30 }, picprompt: { size: 28 }, vocab: { size: 32 }, exit: { size: 36 }
+  passage: { size: 30 }, picprompt: { size: 28 }, textpic: { size: 28 }, vocab: { size: 32 }, exit: { size: 36 }
 };
 const TITLE_PH = { agenda: 'Agenda', objectives: 'Today we will', warmup: 'Warm-up', steps: 'Directions', discuss: 'Let’s talk', passage: 'Close read', picprompt: 'See · Think · Wonder', vocab: 'Word of the day', exit: 'Exit ticket' };
 const BODY_PH = { agenda: 'What you’ll do today, one line each', objectives: 'Your objectives, one line each', content: 'Click to add text', text: 'Click to add text' };
@@ -63,6 +63,8 @@ const TEACH_SAMPLE = {
   text: { title: 'Plain text', body: 'A paragraph of plain text, with no bullets.' },
   passage: { title: 'Close read', body: '“A short passage from the text goes here, in quotation marks.”', cite: 'Author, Title, page', foot: 'What does this show about the speaker?' },
   picture: { title: 'Picture', img: { src: SAMPLE_PIC, w: 16, h: 10 } },
+  fullpic: { title: 'Full picture', img: { src: SAMPLE_PIC, w: 16, h: 10 } },
+  textpic: { title: 'Text + picture', body: 'What the picture shows\nWhy it matters here', img: { src: SAMPLE_PIC, w: 16, h: 10 } },
   picprompt: { title: 'See · Think · Wonder', body: 'What do you see?\nWhat do you think is happening?\nWhat do you wonder?', img: { src: SAMPLE_PIC, w: 16, h: 10 } },
   vocab: { title: 'Word of the day', word: 'ethos', pos: 'noun', body: 'Trust in the speaker: why we should believe them.', foot: '“As a doctor for 20 years, I can tell you…”' },
   video: { title: 'Video' },
@@ -93,6 +95,8 @@ function teachBoxes(s) {
       B('foot', 152, 540, 1008, 90, { sz: 28, ph: 'The question to read for' })];
     case 'picprompt': return [
       B('body', 712, 214, 448, 410, { list: 'bullet', gap: 10, ph: 'Questions, one per line' })];
+    case 'textpic': return [
+      B('body', 152, 214, 448, 410, { gap: 10, ph: 'Click to add text' })];
     case 'vocab': return [
       B('word', 152, 214, 1008, 62, { sz: 36, b: 1, ph: 'The word' }),
       B('pos', 152, 282, 1008, 46, { sz: 28, i: 1, col: 'accent', ph: 'Part of speech' }),
@@ -108,15 +112,20 @@ function teachShapes(s, look) {
   if (s.layout === 'passage') return [[152, 214, 8, 262, a]];
   return [];
 }
-const PICBOX = { x: 152, y: 214, w: 520, h: 384 };   // the picture in Picture + prompt; its source line goes under it
+// Where a layout that has text and a picture puts the picture; its source line goes under it.
+const PICBOX = { x: 152, y: 214, w: 520, h: 384 }, PICBOX_R = { x: 640, y: 214, w: 520, h: 384 };
+const picBox = s => s.layout === 'picprompt' ? PICBOX : s.layout === 'textpic' ? PICBOX_R : null;
+// The layouts that show a slide's picture. Full picture has no title on the slide: the picture is the slide.
+const hasPic = s => s.layout === 'picture' || s.layout === 'fullpic' || !!picBox(s);
+const FULLPIC = { x: 0, y: 0, w: 1280, h: 692 };
 const lineList = t => String(t || '').split('\n').map(x => x.replace(/^\s+/, '')).filter(Boolean);
 const fieldOf = (s, k) => k === 'title' ? s.title : String(s[k] || '');
 
 function teachHtml(s, edit, look) {
   let h = '';
   for (const [x, y, w, hh, fill] of teachShapes(s, look)) h += '<div class="ls-shape" style="left:' + x + 'px;top:' + y + 'px;width:' + w + 'px;height:' + hh + 'px;background:' + fill + '"></div>';
-  if (s.layout === 'picprompt') {
-    const P = PICBOX;
+  const P = picBox(s);
+  if (P) {
     h += '<div class="ls-pic' + (edit ? ' ls-ed' : '') + '" data-k="img" style="left:' + P.x + 'px;top:' + P.y + 'px;width:' + P.w + 'px;height:' + P.h + 'px">' + (s.img ? '<img src="' + esc(imgSrc(s.img.src)) + '" alt="">' : edit ? '<span class="ls-ph">Click to add a picture</span>' : '') + '</div>';
     h += '<div class="ls-src' + (edit ? ' ls-ed' : '') + '" data-k="source" style="left:' + P.x + 'px;top:' + (P.y + P.h + 6) + 'px;width:' + P.w + 'px"' + (edit ? ' tabindex="0"' : '') + '>' + (s.img && s.img.source ? esc(s.img.source) : edit && s.img ? '<span class="ls-ph">Add the source line</span>' : '') + '</div>';
   }
@@ -161,14 +170,23 @@ function teachBoxXml(id, b, s, look) {
   return '<p:sp><p:nvSpPr><p:cNvPr id="' + id + '" name="Text ' + id + '"/><p:cNvSpPr txBox="1"/><p:nvPr/></p:nvSpPr><p:spPr><a:xfrm><a:off x="' + Math.round(b.x * EX) + '" y="' + Math.round(b.y * EY) + '"/><a:ext cx="' + Math.round(b.w * EX) + '" cy="' + Math.round(b.h * EY) + '"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom><a:noFill/></p:spPr>' +
     '<p:txBody><a:bodyPr wrap="square" lIns="0" tIns="0" rIns="0" bIns="0" anchor="' + (b.anchor === 'ctr' ? 'ctr' : 't') + '"><a:noAutofit/></a:bodyPr><a:lstStyle/>' + ps + '</p:txBody></p:sp>';
 }
+// A picture fitted in a box without changing its shape, whatever the shape of the template's slide. Slide units in and out.
+function picFit(img, B, valign) {
+  const r = Math.min(B.w * EX / img.w, B.h * EY / img.h), w = img.w * r / EX, h = img.h * r / EY;
+  return { x: B.x + (B.w - w) / 2, y: valign === 'top' ? B.y : B.y + (B.h - h) / 2, w, h };
+}
+function picXml(id, f) {
+  return '<p:pic><p:nvPicPr><p:cNvPr id="' + id + '" name="Picture"/><p:cNvPicPr><a:picLocks noChangeAspect="1"/></p:cNvPicPr><p:nvPr/></p:nvPicPr><p:blipFill><a:blip r:embed="rIdImg"/><a:stretch><a:fillRect/></a:stretch></p:blipFill><p:spPr><a:xfrm><a:off x="' + Math.round(f.x * EX) + '" y="' + Math.round(f.y * EY) + '"/><a:ext cx="' + Math.round(f.w * EX) + '" cy="' + Math.round(f.h * EY) + '"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></p:spPr></p:pic>';
+}
 // Everything a teaching layout adds under the title, from shape id 10 up.
 function teachXml(s, look, media) {
   let t = '', id = 10;
   for (const sh of teachShapes(s, look)) t += shapeXml(id++, sh);
-  if (s.layout === 'picprompt' && s.img && media) {
-    const P = PICBOX, r = Math.min(P.w / s.img.w, P.h / s.img.h), w = s.img.w * r, h = s.img.h * r, x = P.x + (P.w - w) / 2;
-    t += '<p:pic><p:nvPicPr><p:cNvPr id="' + (id++) + '" name="Picture"/><p:cNvPicPr><a:picLocks noChangeAspect="1"/></p:cNvPicPr><p:nvPr/></p:nvPicPr><p:blipFill><a:blip r:embed="rIdImg"/><a:stretch><a:fillRect/></a:stretch></p:blipFill><p:spPr><a:xfrm><a:off x="' + Math.round(x * EX) + '" y="' + Math.round(P.y * EY) + '"/><a:ext cx="' + Math.round(w * EX) + '" cy="' + Math.round(h * EY) + '"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></p:spPr></p:pic>';
-    if (s.img.source) t += teachBoxXml(id++, { k: '_src', x: P.x, y: P.y + h + 6, w: P.w, h: 22, sz: 10, col: 'text', algn: 'ctr' }, { _src: s.img.source }, look);
+  const P = picBox(s);
+  if (P && s.img && media) {
+    const f = picFit(s.img, P, 'top');
+    t += picXml(id++, f);
+    if (s.img.source) t += teachBoxXml(id++, { k: '_src', x: P.x, y: f.y + f.h + 6, w: P.w, h: 22, sz: 10, col: 'text', algn: 'ctr' }, { _src: s.img.source }, look);
   }
   for (const b of teachBoxes(s)) t += teachBoxXml(id++, b, s, look);
   return t;
@@ -198,7 +216,7 @@ function lookDlg() {
   };
   $('#dlgBox').onchange = async e => { if (e.target.id === 'lkDef') { L.defLook = e.target.checked ? lookOf(l) : ''; await kvSet('deflook', L.defLook); } };
 }
-const LAYOUT_GROUPS = [['Start and end', ['title', 'agenda', 'objectives', 'warmup', 'exit']], ['Teach and practice', ['steps', 'discuss', 'content', 'twocol', 'text', 'passage', 'vocab']], ['Pictures and video', ['picture', 'picprompt', 'video']]];
+const LAYOUT_GROUPS = [['Start and end', ['title', 'agenda', 'objectives', 'warmup', 'exit']], ['Teach and practice', ['steps', 'discuss', 'content', 'twocol', 'text', 'passage', 'vocab']], ['Pictures and video', ['picture', 'fullpic', 'textpic', 'picprompt', 'video']]];
 // The layout picker: a picture of every layout in the lesson's look. 'add' puts a new slide after this one; 'change' changes this one.
 function addSlideDlg(mode) {
   const l = L.open; if (!l) return;

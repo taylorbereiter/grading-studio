@@ -114,7 +114,9 @@ async function walk(ctx, place, { A, L }) {
   seen.sidebar = await page.$$eval('#railClasses a', xs => xs.map(a => a.textContent.replace(/\s+/g, ' ').trim()));
   await at('#/class/c1', '#vClass:not([hidden]) .cls');
   await at('#/class/c1/gradebook', '#bkTab');
-  seen.gradebook = await page.$eval('#bkTab', e => e.innerText.replace(/[ \t]+/g, ' ').trim());
+  // Each student's row: their name, then every figure in the row in sorted order, so the gradebook's columns can move
+  // between builds while the scores it shows for each student still have to match exactly.
+  seen.gradebook = await page.$$eval('#bkTab tbody tr', rs => rs.map(r => { const t = [...r.children].map(c => c.innerText.replace(/\s+/g, ' ').trim()); return t[0] + ': ' + t.slice(1).sort().join(' | '); }));
   await at('#/class/c1/students', '#peopleTbl table');
   await at('#/class/c1/students/2');
   await at('#/class/c1/charts');

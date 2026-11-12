@@ -7,7 +7,7 @@ const L = { db: null, lessons: [], units: [], setup: null, view: 'semester', wee
 const LDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const LDAYS_LONG = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 const LMONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-const LAYOUTS = { title: 'Title', agenda: 'Agenda', objectives: 'Objectives', warmup: 'Warm-up', exit: 'Exit ticket', steps: 'Directions with steps', discuss: 'Discussion question', content: 'Title and text', twocol: 'Two columns', text: 'Plain text', passage: 'Passage', vocab: 'Vocabulary', picture: 'Picture', picprompt: 'Picture + questions', video: 'Video' };
+const LAYOUTS = { title: 'Title', agenda: 'Agenda', objectives: 'Objectives', warmup: 'Warm-up', exit: 'Exit ticket', steps: 'Directions with steps', discuss: 'Discussion question', content: 'Title and text', twocol: 'Two columns', text: 'Plain text', passage: 'Passage', vocab: 'Vocabulary', picture: 'Picture', fullpic: 'Full picture', textpic: 'Text + picture', picprompt: 'Picture + questions', video: 'Video' };
 const SIZES = [28, 30, 32, 34, 36];   // slide text stays between 28 and 36 pt, big enough to read from the back of the room
 const lid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
 
@@ -88,6 +88,7 @@ function normLesson(x) {
   const talk = (Array.isArray(x.talk) ? x.talk : []).filter(t => t && t.text).map(t => ({ by: t.by === 'claude' ? 'claude' : 'you', text: String(t.text), at: +t.at || 0, ...(t.done ? { done: true } : {}) }));
   if (talk.length) out.talk = talk;
   if (x.titleApart) out.titleApart = true;
+  const taught = normTaught(x.taught); if (taught.length) out.taught = taught;   // where each class got to (present.js)
   if (LOOKS[x.look]) out.look = x.look;
   if (/^https?:\/\//.test(x.atlas || '')) out.atlas = String(x.atlas);
   if (x.library) out.library = String(x.library).slice(0, 120);
@@ -137,10 +138,6 @@ function slideToTitle(l, s) {
   const t = plainTitle(s.title); if (!t) return;
   l.title = t; const i = $('#lessons [data-f="ltitle"]'); if (i && i.value !== t) i.value = t;
 }
-function titleLinkBtn(l) {
-  return titleSlideOf(l) ? '<button class="btn sm ghost pl-tlink' + (titlesLinked(l) ? ' on' : '') + '" data-a="tlink" title="' + (titlesLinked(l) ? 'The lesson name and the title slide match. Click to let them be different.' : 'The lesson name and the title slide are different. Click to match them again.') + '" aria-pressed="' + titlesLinked(l) + '">' + (titlesLinked(l) ? '🔗 Matches title slide' : 'Not matched') + '</button>' : '';
-}
-
 /* ---------- timetable ---------- */
 const classById = id => ((L.setup && L.setup.classes) || []).find(c => c.id === id);
 const className = id => { const c = classById(id); return c ? c.name : id; };
@@ -220,6 +217,12 @@ function slideInner(s, lesson, edit, look) {
     h += '<div class="ls-trule"></div>';
     const sub = s.body ? s.body : titleSubtitle(lesson);
     h += '<div class="ls-sub' + (edit ? ' ls-ed' : '') + '" data-k="body"' + (edit ? ' tabindex="0"' : '') + '>' + sub.split('\n').map(esc).join('<br>') + '</div>';
+    return h;
+  }
+  if (s.layout === 'fullpic') {   // the picture is the whole slide; the slide's name is kept for the list of slides, not shown
+    const F = FULLPIC;
+    h += '<div class="ls-pic ls-full' + (edit ? ' ls-ed' : '') + '" data-k="img" style="left:' + F.x + 'px;top:' + F.y + 'px;width:' + F.w + 'px;height:' + F.h + 'px">' + (s.img ? '<img src="' + esc(imgSrc(s.img.src)) + '" alt="">' : edit ? '<span class="ls-ph">Click to add a picture, or drag one in</span>' : '') + '</div>';
+    h += '<div class="ls-src ls-fullsrc' + (edit ? ' ls-ed' : '') + '" data-k="source"' + (edit ? ' tabindex="0"' : '') + '>' + (s.img && s.img.source ? esc(s.img.source) : edit && s.img ? '<span class="ls-ph">Add the source line for this picture</span>' : '') + '</div>';
     return h;
   }
   h += ed('title', 'ls-t', s.title, TITLE_PH[s.layout] || 'Click to add a title') + '<div class="ls-rule"></div>';
@@ -321,6 +324,7 @@ async function openLessons() {
   renderLessons();
   arriveAt();
   await folderReconnect(false);
+  await yearMoveOn();
 }
 function renderLessons() {
   if (L.view === 'doc' && L.doc) return renderDoc();
@@ -337,12 +341,6 @@ function renderLessons() {
   renderWeek();
 }
 
-function folderChip() {
-  if (!('showDirectoryPicker' in window)) return '<span class="muted ls-fold">The Planner folder needs Chrome</span>';
-  if (L.dir && L.dirOk) return '<button class="btn sm ghost" data-a="sync" title="Look for lessons Claude added or changed in your Planner folder">⟳ Planner folder: ' + esc(L.dir.name) + '</button>';
-  if (L.dir) return '<button class="btn sm" data-a="reconnect">Reconnect Planner folder</button>';
-  return '<button class="btn sm" data-a="link">Link the Planner folder…</button>';
-}
 function renderWeek() {
   const el = $('#lessons'), mon = parseYmd(L.weekOf);
   const days = [0, 1, 2, 3, 4].map(i => ymd(addDays(mon, i)));
@@ -350,7 +348,8 @@ function renderWeek() {
   let h = topBar('week', '<button class="btn sm ghost" data-a="wk" data-n="-7" aria-label="Previous week">‹</button>' +
     '<span class="ls-wk">' + LMONTHS[mon.getMonth()].slice(0, 3) + ' ' + mon.getDate() + ' – ' + (fri.getMonth() !== mon.getMonth() ? LMONTHS[fri.getMonth()].slice(0, 3) + ' ' : '') + fri.getDate() + '</span>' +
     '<button class="btn sm ghost" data-a="wk" data-n="7" aria-label="Next week">›</button><button class="btn sm ghost" data-a="today">This week</button>' +
-    '<input type="date" class="btn sm" data-a="jump" value="' + L.weekOf + '" aria-label="Go to a date">' + (L.setup ? '<button class="btn sm ghost" data-a="dlweek" title="Every lesson on the calendar this week, with its PowerPoint and materials, in one .zip">↓ Download week</button><button class="btn sm ghost" data-a="printweek">Print week</button>' : ''));
+    '<input type="date" class="btn sm" data-a="jump" value="' + L.weekOf + '" aria-label="Go to a date">',
+    L.setup ? '<button class="mi" role="menuitem" data-a="dlweek">Download week<small>Every lesson on the calendar this week, with its PowerPoint and materials, in one .zip</small></button><button class="mi" role="menuitem" data-a="printweek">Print week<small>Each day’s classes with their lessons and materials</small></button><hr>' : '');
   if (!L.setup) {
     h += '<div class="ls-empty"><h2>Tell the Planner when your classes meet</h2><p>Lessons line up with your classes once the Planner knows when they meet. Type your classes and their times in, which takes a few minutes and is done once. If you already have a setup file from another computer, load it or drop it on this page.</p>' +
       '<div class="row"><button class="btn primary" data-a="setup">Type in my classes</button><button class="btn" data-a="loadsetup">Load a setup file…</button><button class="btn" data-a="newfree">Make a lesson without a class</button></div></div>';
@@ -366,8 +365,8 @@ function renderWeek() {
       for (const { c, m } of ms) {
         const ls = lessonsAt(c.id, d);
         h += '<div class="ls-slot" style="--cc:' + esc(c.color || '#1F6FB2') + '"><div class="ls-sh"><b>' + esc(c.name) + '</b><span>' + hm(m.start) + '–' + hm(m.end) + (m.label ? ' · ' + esc(m.label) : '') + '</span>' + mbBtn(c) + '</div>';
-        for (const l of ls) h += '<div class="ls-cardw"><button class="ls-card" data-open="' + l.id + '"><b>' + esc(l.title) + '</b>' + varTag(l) + statusChip(l) + (l.final ? '<span class="pl-done" title="' + esc(l.final.name) + '">Finished ✓</span>' : '') + '<span>' + l.slides.length + ' slide' + (l.slides.length === 1 ? '' : 's') + (l.slots.length > 1 ? ' · also ' + esc(l.slots.filter(s => !(s.classId === c.id && s.date === d)).map(s => className(s.classId) + ' ' + shortDate(s.date)).join(', ')) : '') + '</span></button>' +
-          '<button class="ls-dl" data-dl="' + l.id + '" title="' + (l.final ? 'Download ' + esc(l.final.name) : 'Download a PowerPoint made from these slides') + '" aria-label="Download">↓</button></div>';
+        for (const l of ls) h += '<div class="ls-cardw"><button class="ls-card" data-open="' + l.id + '"><b>' + esc(l.title) + '</b>' + varTag(l) + statusChip(l) + (l.final ? '<span class="pl-done" title="' + esc(l.final.name) + '">Finished ✓</span>' : '') + taughtChip(l, c.id, d) + '<span>' + l.slides.length + ' slide' + (l.slides.length === 1 ? '' : 's') + (l.slots.length > 1 ? ' · also ' + esc(l.slots.filter(s => !(s.classId === c.id && s.date === d)).map(s => className(s.classId) + ' ' + shortDate(s.date)).join(', ')) : '') + '</span></button>' +
+          presentCardBtn(l, c.id, d) + '<button class="ls-dl" data-dl="' + l.id + '" title="' + (l.final ? 'Download ' + esc(l.final.name) : 'Download a PowerPoint made from these slides') + '" aria-label="Download">↓</button></div>';
         h += '<div class="ls-add"><button class="btn sm ghost" data-new="' + esc(c.id) + '|' + d + '">+ New lesson</button>' + (L.lessons.length ? '<button class="btn sm ghost" data-attach="' + esc(c.id) + '|' + d + '">Use a lesson…</button>' : '') + '</div></div>';
       }
       h += '</div>';
@@ -387,28 +386,26 @@ function renderEditor() {
   L.cur = Math.max(0, Math.min(L.cur, l.slides.length - 1));
   const s = l.slides[L.cur];
   let h = '<div class="ls-top"><button class="btn sm ghost" data-a="back">‹ ' + ({ semester: 'Semester', units: 'Units', unit: 'Unit', activities: 'Activities', library: 'Past lessons' }[L.backTo] || 'Week') + '</button>' +
-    '<input class="ls-title-in" data-f="ltitle" value="' + esc(l.title) + '" aria-label="Lesson name">' + titleLinkBtn(l) +
+    '<input class="ls-title-in" data-f="ltitle" value="' + esc(l.title) + '" aria-label="Lesson name">' +
     '<span class="ls-slots">' + l.slots.map((t, i) => '<span class="ls-chip" style="--cc:' + esc((classById(t.classId) || {}).color || '#1F6FB2') + '">' + esc(className(t.classId)) + ' · ' + shortDate(t.date) + mbBtn(classById(t.classId)) + '<button data-unslot="' + i + '" title="Take it off this class" aria-label="Remove">×</button></span>').join('') + '<button class="btn sm ghost" data-a="addslot">+ Class</button></span>' +
-    atlasChip(l) + '<span class="sp"></span>' + statusChip(l) + '<span class="savest" id="lsSaved">Saved</span>' +
-    '<button class="btn sm" data-a="send" title="Copy this lesson for Claude, to paste where you’re working with Claude">Copy for Claude</button>' +
-    commentsBtn(l) + '<button class="btn sm ghost" data-a="versions">Versions</button>' + panelBtn() +
-    '<button class="btn sm ghost" data-a="more">More ▾</button>' +
-    '<button class="btn sm" data-a="finzip" title="Upload the finished PowerPoint and its files as one .zip">↑ Upload lesson .zip</button>' +
-    '<button class="btn sm primary" data-a="pptx">Download .pptx</button></div>' + pendingBar(l) + variantBar(l);
+    '<span class="sp"></span>' + statusChip(l) + '<span class="savest" id="lsSaved">Saved</span>' +
+    // Above the slide: the lesson's name, where it is taught, its status, the download and Present. The rest is one click away, in More.
+    (lessonTalk(l) ? commentsBtn(l) : '') + panelBtn() + moreHtml(l) +
+    '<button class="btn sm" data-a="pptx">Download .pptx</button><button class="btn sm primary" data-pr="present" title="Show this lesson full screen, from this slide">' + prIcon('play') + 'Present</button></div>' + pendingBar(l) + variantBar(l);
   h += '<div class="ls-ed-cols"><nav class="ls-thumbs" id="lsThumbs">' + l.slides.map((x, i) => thumbHtml(x, l, i)).join('') +
     '<div class="ls-addslide"><button class="btn sm" data-a="addslide">+ Add slide</button></div></nav>';
   h += '<section class="ls-main"><div class="ls-tools">' +
     '<button class="btn sm" data-a="layout" title="Pick a layout for this slide">Layout: ' + esc(LAYOUTS[s.layout]) + ' ▾</button>' +
     '<button class="btn sm" data-a="look" title="Colors and background for this lesson">Look: ' + esc(LOOKS[lookOf(l)].name) + '</button>' + rtToolHtml() +
-    (s.layout !== 'title' && s.layout !== 'picture' && s.layout !== 'video' ? '<label>Text <select data-f="size" class="btn sm">' + SIZES.map(z => '<option value="' + z + '"' + (z === s.size ? ' selected' : '') + '>' + z + ' pt</option>').join('') + '</select></label>' : '') +
-    (s.layout === 'picture' || s.layout === 'picprompt' ? '<button class="btn sm" data-a="pic">' + (s.img ? 'Change picture' : 'Add picture') + '</button>' : '') +
+    (s.layout !== 'title' && s.layout !== 'picture' && s.layout !== 'fullpic' && s.layout !== 'video' ? '<label>Text <select data-f="size" class="btn sm">' + SIZES.map(z => '<option value="' + z + '"' + (z === s.size ? ' selected' : '') + '>' + z + ' pt</option>').join('') + '</select></label>' : '') +
+    (hasPic(s) ? '<button class="btn sm" data-a="pic">' + (s.img ? 'Change picture' : 'Add picture') + '</button>' : '') +
     (s.layout === 'video' ? '<button class="btn sm" data-a="vid">' + (s.video ? 'Change video' : 'Add video link') + '</button>' + (s.video ? '<a class="btn sm ghost" href="' + esc(videoLink(s.video)) + '" target="_blank" rel="noopener">Watch</a>' : '') : '') +
     '<span class="sp"></span><button class="btn sm ghost" data-a="up" title="Move earlier">↑</button><button class="btn sm ghost" data-a="down" title="Move later">↓</button><button class="btn sm ghost" data-a="dup">Duplicate</button><button class="btn sm ghost" data-a="del">Delete slide</button></div>' +
     '<div class="ls-stagewrap" id="lsWrap"><div class="ls-stage" id="lsStage"><div class="ls-slide">' + slideHtml(s, l, true) + '</div></div></div>' +
     '<div class="ls-warn" id="lsWarn" hidden></div>' +
     '<label class="ls-notes">Speaker notes<textarea data-f="notes" rows="3" placeholder="Notes for you, not shown on the slide">' + esc(s.notes) + '</textarea></label>' +
-    slideTalkHtml(s) + lessonTalkHtml(l) + finishedHtml(l) + materialsHtml(l, 'lesson') +
-    '<p class="muted ls-hint">Click any text on the slide to edit it. In bullets, start a line with Tab for a smaller point under the one above. Arrow keys move between slides when you’re not typing. Drag a picture in from another tab, or paste a picture or a YouTube link.</p>' +
+    slideTalkHtml(s) + lessonTalkHtml(l) + taughtHtml(l) + finishedHtml(l) + materialsHtml(l, 'lesson') +
+    '<p class="muted ls-hint">Click any text on the slide to edit it. In bullets, start a line with Tab for a smaller point under the one above. Arrow keys move between slides when you’re not typing. Drag a picture in from another tab or from your computer, onto the slide or onto any slide in the list, or paste a picture or a YouTube link. A picture on a slide that has text goes beside the text.</p>' +
     '</section></div><input type="file" id="lsPicIn" accept="image/*" hidden>';
   $('#lessons').innerHTML = h;
   fitStage(); checkFit(); panelContext();
@@ -422,11 +419,6 @@ function atlasOf(l) {
     if (hit && hit.u.atlas) return { url: hit.u.atlas, own: false, unit: hit.u.title };
   }
   return null;
-}
-function atlasChip(l) {
-  const a = atlasOf(l);
-  return a ? '<a class="btn sm ghost" href="' + esc(a.url) + '" target="_blank" rel="noopener" title="' + (a.own ? 'This lesson’s ' + (plCur() ? esc(plCur()) + ' page' : 'unit plan') : (plCur() ? esc(plCur()) + ' page of ' : 'Unit plan of ') + esc(a.unit)) + '">' + esc(plCurLink()) + ' ↗</a><button class="btn sm ghost" data-a="atlas" title="Change the ' + esc(plCurLink()) + ' link" aria-label="Change the ' + esc(plCurLink()) + ' link">✎</button>'
-    : '<button class="btn sm ghost" data-a="atlas">+ ' + esc(plCurLink()) + ' link</button>';
 }
 function atlasDlg(l) {
   const a = atlasOf(l);
@@ -550,6 +542,8 @@ async function onLessonsClick(e) {
   if (t && t.dataset.mbset) return mbDlg(t.dataset.mbset);
   if (t && t.dataset.dl) return dlCard(t.dataset.dl);
   if (!t) return;
+  // an item of the More menu closes the menu, then does what its button used to do
+  if (t.dataset.a && t.dataset.a !== 'more' && t.dataset.a !== 'mdelete' && t.closest('.ls-menu')) moreClose();
   if (L.view === 'edit' && (await reviewClick(t) || await finishedClick(t) || await variantsClick(t))) return;
   if (L.view === 'activities' && t.dataset.a && await activitiesClick(t)) return;
   if (t.classList.contains('ls-ed') && !t.dataset.a) return startEdit(t);
@@ -573,10 +567,11 @@ async function onLessonsClick(e) {
   if (a === 'link') return folderLink();
   if (a === 'reconnect') return folderReconnect(true);
   if (a === 'sync') { await folderRead(true); return; }
+  if (a === 'more') return moreMenu(t);
   if (!l) return;
   if (a === 'pptx') { editorCommit(); return finOrMake(l); }
   if (a === 'ask') { editorCommit(); return askClaude(l); }
-  if (a === 'more') return moreMenu(t);
+  if (a === 'mexport' || a === 'mcopyto' || a === 'mcopy' || a === 'mdelete') return moreDo(a, t, l);
   if (a === 'addslot') return addSlotDlg();
   if (a === 'pic') return pickPicture();
   if (a === 'addslide') return addSlideDlg();
@@ -630,6 +625,10 @@ function undoToast(msg, fn) {
 // Thumbnails drag to reorder.
 document.addEventListener('dragstart', e => { const th = e.target.closest && e.target.closest('#lsThumbs .ls-th'); if (!th) return; e.dataTransfer.setData('text/x-slide', th.dataset.go); e.dataTransfer.effectAllowed = 'move'; });
 async function onLessonDrop(e) {
+  dragMark(false);
+  // What was dragged is read now: the browser hands it over only while the drop is happening.
+  const got = {}; for (const k of ['text/html', 'text/uri-list', 'text/plain']) got[k] = e.dataTransfer.getData(k);
+  const dt = { getData: k => got[k] || '', files: [...(e.dataTransfer.files || [])] };
   const zf = [...(e.dataTransfer.files || [])].find(f => /\.zip$/i.test(f.name));
   if (await finishedDrop(e)) return;
   if (zf && !(e.target.closest && e.target.closest('[data-owner]'))) return packImport(zf);
@@ -645,11 +644,30 @@ async function onLessonDrop(e) {
     const i = +from, j = +th.dataset.go; if (i === j) return;
     const [s] = L.open.slides.splice(i, 1); L.open.slides.splice(j, 0, s); L.cur = j; lessonChanged(false); return renderEditor();
   }
-  const f = e.dataTransfer.files && e.dataTransfer.files[0];
-  if (!f) { if (L.open) return dropFromWeb(e.dataTransfer); return; }
+  // A picture let go on a slide in the list on the left goes on that slide.
+  const th = L.open && e.target.closest && e.target.closest('#lsThumbs .ls-th');
+  if (th) { editorCommit(); L.cur = Math.max(0, Math.min(L.open.slides.length - 1, +th.dataset.go)); }
+  const f = dt.files[0];
+  if (!f) { if (L.open) return dropFromWeb(dt); return; }
   if (/\.json$/i.test(f.name)) return importLessonText(await f.text(), f.name);
-  if (/^image\//.test(f.type) && L.open) { const s = pictureSlide(); return setPicture(f, webSource(e.dataTransfer)); }
+  const pics = dt.files.filter(x => /^image\//.test(x.type));
+  if (!pics.length || !L.open) return;
+  // Several pictures at once: the first goes where one would, and each of the rest gets a slide of its own after it.
+  for (const [i, pic] of pics.entries()) {
+    if (i) { L.open.slides.splice(L.cur + 1, 0, normSlide({ layout: 'picture' })); L.cur++; } else pictureSlide();
+    await setPicture(pic, i ? '' : webSource(dt));
+  }
+  if (pics.length > 1) toast(pics.length + ' pictures, one on each slide');
 }
+// While something is dragged over an open lesson, the slide says it can be let go there.
+function dragMark(on) { const w = $('#lsWrap'); if (w) w.classList.toggle('ls-dropping', !!on && L.view === 'edit' && !!L.open); }
+document.addEventListener('dragover', e => {
+  const t = e.dataTransfer && [...e.dataTransfer.types]; if (!t || t.includes('text/x-slide') || t.includes('text/x-bank')) return;
+  if (!(t.includes('Files') || t.includes('text/uri-list') || t.includes('text/html'))) return;
+  if (!(e.target.closest && e.target.closest('#lessons')) || (e.target.closest('.pl-ask, [data-owner]'))) return dragMark(false);
+  dragMark(true);
+}, true);
+for (const ev of ['dragleave', 'dragend', 'drop']) document.addEventListener(ev, e => { if (ev !== 'dragleave' || !e.relatedTarget) dragMark(false); }, true);
 // A picture or link dragged in from another tab. Chrome usually hands over the picture itself; when it only
 // hands over the address, the picture is fetched, which some sites don't allow.
 function webSource(dt) {
@@ -658,7 +676,8 @@ function webSource(dt) {
 }
 function pictureSlide() {   // the current slide if it can take a picture, or a new picture slide after it
   const s = L.open.slides[L.cur];
-  if (s.layout === 'picture' || s.layout === 'picprompt' || ((s.layout === 'content' || s.layout === 'text') && !s.body.trim() && !s.img)) { s.layout = 'picture'; return s; }
+  if (hasPic(s)) return s;
+  if (s.layout === 'content' || s.layout === 'text') { s.layout = s.body.trim() ? 'textpic' : 'picture'; return s; }   // text already on the slide stays, with the picture beside it
   const n = normSlide({ layout: 'picture' }); L.open.slides.splice(L.cur + 1, 0, n); L.cur++; return n;
 }
 async function dropFromWeb(dt) {
@@ -812,24 +831,48 @@ function showAllLessons() {
     closeDlg(); openLesson(L.lessons.find(x => x.id === b.dataset.pk));
   };
 }
-function moreMenu() {
-  const l = L.open;
-  openDlg('<div class="bh"><h2>' + esc(l.title) + '</h2></div><div class="bb ls-more">' +
-    '<button class="btn" data-m="export">Save lesson file (for Claude)…</button><p class="muted">A .lesson.json file with just this lesson. Give it to Claude, then bring Claude’s version back with Import.</p>' +
-    '<button class="btn" data-m="copyto">Copy to another class or day…</button><p class="muted">A separate copy with its own slides and materials.</p>' +
-    '<button class="btn" data-m="copy">Copy lesson as text</button><p class="muted">The slides and notes as plain text, to paste anywhere.</p>' +
-    '<button class="btn" data-m="delete">Delete this lesson</button></div><div class="bf"><button class="btn" data-x>Close</button></div>', true);
-  $('#dlgBox').onclick = async e => {
-    if (e.target.closest('[data-x]')) return closeDlg();
-    const m = e.target.closest('[data-m]'); if (!m) return;
-    if (m.dataset.m === 'export') { closeDlg(); return saveBlob(fileBase(l) + '.lesson.json', new Blob([JSON.stringify(lessonForFile(l, null), null, 2)], { type: 'application/json' })); }
-    if (m.dataset.m === 'copyto') { closeDlg(); return copyLessonDlg(l); }
-    if (m.dataset.m === 'copy') { await copyText(lessonText(l)); closeDlg(); return toast('Copied'); }
-    if (m.dataset.m === 'delete') {
-      if (m.dataset.sure !== '1') { m.dataset.sure = '1'; m.textContent = 'Click again to delete it for good'; return; }
-      await lDelete(l); closeDlg(); L.open = null; L.view = L.backTo || 'week'; renderLessons(); toast('Lesson deleted');
-    }
-  };
+// How many comments the lesson and its slides hold, answered ones too.
+const lessonTalk = l => l.slides.reduce((k, s) => k + (s.talk || []).length, (l.talk || []).length);
+// More: what is used now and then, in one menu beside Download.
+function moreHtml(l) {
+  const a = atlasOf(l), linked = titlesLinked(l), link = esc(plCurLink());
+  const it = (act, label, sub, cls) => '<button class="mi' + (cls ? ' ' + cls : '') + '" role="menuitem" data-a="' + act + '">' + label + (sub ? '<small>' + sub + '</small>' : '') + '</button>';
+  return '<span class="ls-morew"><button class="btn sm ghost" data-a="more" aria-haspopup="true" aria-expanded="false">More ▾</button><div class="ls-menu" role="menu" aria-label="More for this lesson" hidden>' +
+    it('send', 'Copy for Claude', 'To paste where you’re working with Claude') +
+    (lessonTalk(l) ? '' : it('comments', 'Comments', 'On the lesson and its slides')) +
+    it('versions', 'Versions', 'Earlier copies of this lesson') +
+    it('finzip', 'Upload lesson .zip', 'The finished PowerPoint and its files, as one .zip') + '<hr>' +
+    (titleSlideOf(l) ? it('tlink', linked ? 'Name matches the title slide ✓' : 'Match the name to the title slide', linked ? 'Click to let them be different' : 'They are different now', linked ? 'on' : '') : '') +
+    (a ? '<a class="mi" role="menuitem" href="' + esc(a.url) + '" target="_blank" rel="noopener">Open ' + link + ' ↗<small>' + (a.own ? 'This lesson’s own page' : 'The page of ' + esc(a.unit)) + '</small></a>' + it('atlas', 'Change the ' + link + ' link') : it('atlas', '+ ' + link + ' link')) + '<hr>' +
+    it('mexport', 'Save lesson file…', 'A .lesson.json of just this lesson, for Claude. Bring Claude’s version back with Import') +
+    it('mcopyto', 'Copy to another class or day…', 'A separate copy with its own slides and materials') +
+    it('mcopy', 'Copy lesson as text', 'The slides and notes as plain text') +
+    it('mdelete', 'Delete this lesson') + '</div></span>';
+}
+function moreClose() { const m = document.querySelector('#lessons .ls-menu'); if (!m || m.hidden) return false; m.hidden = true; m.previousElementSibling.setAttribute('aria-expanded', 'false'); return true; }
+function moreMenu(t) {
+  const m = t.nextElementSibling; if (!m.hidden) return moreClose();
+  m.hidden = false; t.setAttribute('aria-expanded', 'true'); const f = m.querySelector('.mi'); if (f) f.focus();
+}
+// A click anywhere else closes it, and so does Escape (which gives the button the focus back).
+document.addEventListener('click', e => { if (!e.target.closest('.ls-morew')) moreClose(); });
+document.addEventListener('keydown', e => {
+  const m = document.querySelector('#lessons .ls-menu'); if (!m || m.hidden) return;
+  if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); moreClose(); m.previousElementSibling.focus(); }
+  else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+    const xs = [...m.querySelectorAll('.mi')], i = xs.indexOf(document.activeElement); e.preventDefault();
+    xs[(i + (e.key === 'ArrowDown' ? 1 : -1) + xs.length) % xs.length].focus();
+  }
+}, true);
+async function moreDo(a, t, l) {
+  if (a === 'mdelete') {
+    if (t.dataset.sure !== '1') { t.dataset.sure = '1'; t.textContent = 'Click again to delete it for good'; return; }
+    await lDelete(l); L.open = null; L.view = L.backTo || 'week'; renderLessons(); return toast('Lesson deleted');
+  }
+  moreClose();
+  if (a === 'mexport') return saveBlob(fileBase(l) + '.lesson.json', new Blob([JSON.stringify(lessonForFile(l, null), null, 2)], { type: 'application/json' }));
+  if (a === 'mcopyto') return copyLessonDlg(l);
+  if (a === 'mcopy') { await copyText(lessonText(l)); return toast('Copied'); }
 }
 async function copyText(t) { try { await navigator.clipboard.writeText(t); } catch { const a = document.createElement('textarea'); a.value = t; document.body.appendChild(a); a.select(); document.execCommand('copy'); a.remove(); } }
 // A version's name next to the lesson's, when it has alternatives.
@@ -839,8 +882,9 @@ function lessonText(l) {
   let t = '# ' + l.title + (l.variantOf || l.variant ? ' (version: ' + varName(l) + ')' : '') + '\n' + (l.slots.length ? l.slots.map(s => className(s.classId) + ', ' + longDate(s.date)).join('; ') + '\n' : '');
   // Right-click comments on the whole lesson live in the Claude box; Claude needs them with the lesson too.
   for (const x of lessonNotes(l)) t += 'My comment on the whole lesson: ' + x + '\n';
+  t += taughtText(l);
   l.slides.forEach((s, i) => {
-    t += '\n## Slide ' + (i + 1) + ' (' + LAYOUTS[s.layout] + (s.layout !== 'title' && s.layout !== 'picture' ? ', ' + s.size + ' pt' : '') + ')\n' + (s.title ? 'Title: ' + s.title + '\n' : '');
+    t += '\n## Slide ' + (i + 1) + ' (' + LAYOUTS[s.layout] + (s.layout !== 'title' && s.layout !== 'picture' && s.layout !== 'fullpic' ? ', ' + s.size + ' pt' : '') + ')\n' + (s.title ? 'Title: ' + s.title + '\n' : '');
     for (const k of EXTRA) if (s[k] && k !== 'body2') t += k + ': ' + s[k] + '\n';
     if (s.body2) t += 'body2:\n' + s.body2 + '\n';
     if (s.body) t += s.body + '\n';
@@ -1004,6 +1048,14 @@ function slideXmlIn(s, lesson, media) {
         const cy = media ? Y + h + 30000 : Y, txt = media ? videoSource(s.video) : (s.video.title ? videoSource(s.video) + ': ' : '') + s.video.url, sz = media ? 1000 : 2800;
         tree += '<p:sp><p:nvSpPr><p:cNvPr id="5" name="Video link 4"/><p:cNvSpPr txBox="1"/><p:nvPr/></p:nvSpPr><p:spPr><a:xfrm><a:off x="' + X + '" y="' + cy + '"/><a:ext cx="' + W + '" cy="' + (media ? 260000 : 900000) + '"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom><a:noFill/></p:spPr><p:txBody><a:bodyPr wrap="square" lIns="0" tIns="0" rIns="0" bIns="0"><a:noAutofit/></a:bodyPr><a:lstStyle/><a:p><a:pPr algn="ctr"/><a:r><a:rPr lang="en-US" sz="' + sz + '" dirty="0">' + link + '</a:rPr><a:t>' + xe(txt) + '</a:t></a:r></a:p></p:txBody></p:sp>';
       }
+    } else if (s.layout === 'fullpic') {
+      // The picture over the whole slide, on the look's background, which also covers the title kept for the outline.
+      const F = FULLPIC, look = pxLook;
+      tree += shapeXml(8, [0, 0, 1280, 720, LOOKS[look].bg]);
+      if (s.img && media) {
+        tree += picXml(4, picFit(s.img, F));
+        if (s.img.source) tree += teachBoxXml(9, { k: '_src', x: 0, y: 696, w: 1280, h: 20, sz: 10, col: 'text', algn: 'ctr' }, { _src: s.img.source }, look);
+      }
     } else if (s.layout === 'picture') {
       if (s.img && media) {
         // Fit the picture under the title rule, centered, with the source line under it.
@@ -1030,10 +1082,10 @@ function buildPptx(lesson) {
   let ct = str('[Content_Types].xml'), prel = str('ppt/_rels/presentation.xml.rels'), pres = str('ppt/presentation.xml'), ids = '';
   const exts = new Set();
   lesson.slides.forEach((s, i) => {
-    const n = i + 1, layout = s.layout === 'title' ? lay.title : s.layout === 'picture' || s.layout === 'video' || isTeach(s) ? lay.only : lay.content;
+    const n = i + 1, layout = s.layout === 'title' ? lay.title : s.layout === 'picture' || s.layout === 'fullpic' || s.layout === 'video' || isTeach(s) ? lay.only : lay.content;
     let rels = '<Relationship Id="rId1" Type="' + REL + 'slideLayout" Target="../slideLayouts/' + layout + '"/>';
     let media = null;
-    if ((s.layout === 'picture' || s.layout === 'picprompt') && s.img && imgSrc(s.img.src)) {
+    if (hasPic(s) && s.img && imgSrc(s.img.src)) {
       const m = /^data:image\/(png|jpeg);base64,(.*)$/.exec(s.img.src);
       if (m) { const ext = m[1] === 'png' ? 'png' : 'jpeg'; exts.add(ext); media = 'lesson' + n + '.' + ext; z['ppt/media/' + media] = b64ToU8(m[2]); rels += '<Relationship Id="rIdImg" Type="' + REL + 'image" Target="../media/' + media + '"/>'; }
     }
@@ -1107,6 +1159,8 @@ never are, and nothing here should point to a student.
     { "layout": "discuss", "title": "Let’s talk", "body": "The question", "foot": "Think · Pair · Share" },
     { "layout": "twocol", "title": "…", "h1": "Left heading", "body": "Left points", "h2": "Right heading", "body2": "Right points" },
     { "layout": "passage", "title": "Close read", "body": "“The passage”", "cite": "Author, title, page", "foot": "The question" },
+    { "layout": "fullpic", "title": "Name for the list of slides (not shown)", "img": { … } },
+    { "layout": "textpic", "title": "Title", "body": "Text on the left", "img": { … } },
     { "layout": "picprompt", "title": "See · Think · Wonder", "img": { … }, "body": "Question one\\nQuestion two" },
     { "layout": "vocab", "title": "Word of the day", "word": "ethos", "pos": "noun", "body": "Meaning", "foot": "Example sentence" },
     { "layout": "exit", "title": "Exit ticket", "tag": "On a sticky note", "body": "The question" }
@@ -1124,6 +1178,9 @@ stripe, band, bigtype, framed, notebook, chalk. Leave it out to use the teacher'
   "variant" its name, like "Shorter Friday"). It is a full lesson of its own; edit only the one you were asked about.
 - "final" and "finals" (on a lesson) are the teacher's finished PowerPoint and older ones (the files stay in the app). Leave them as they are.
 - "notebook" (on a lesson or unit) is the teacher's own jotted thoughts, as simple HTML. Read it for ideas; don't edit it.
+- "taught" (on a lesson) is where each class got to when the lesson was taught: [{ "classId", "date", "slide" (the slide
+  they reached, counting from 1), "of" (how many slides there were), "note" (the teacher's line for next time) }].
+  Read it to plan what comes next; leave it as it is.
 - A slide's "ask" is what the teacher wants on that slide. Use it, and leave it as it is.
 - A slide's "ctx" is screenshots the teacher added for context (like assignment instructions), not shown on the slide:
   [{ "id", "src": "images/ctx-….png", "w", "h", "note": "what it is" }]. Open the image files and use them; leave "ctx" as it is.
@@ -1177,7 +1234,7 @@ async function folderReconnect(ask) {
     L.dirOk = p === 'granted';
   } catch { L.dirOk = false; }
   if (L.dirOk) { await folderRead(false); if (ask) await folderWriteAll(); }
-  if (L.view === 'week') renderWeek(); else { const c = document.querySelector('#lessons [data-a="reconnect"],#lessons [data-a="sync"],#lessons [data-a="link"]'); if (c) c.outerHTML = folderChip(); }
+  if (L.view === 'week') renderWeek();
   railRender();
 }
 async function writeFile(dir, name, data) { const fh = await dir.getFileHandle(name, { create: true }); const w = await fh.createWritable(); await w.write(data); await w.close(); return (await fh.getFile()).lastModified; }

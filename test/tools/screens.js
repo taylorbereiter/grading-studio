@@ -26,6 +26,10 @@ const { plant, appReady, openZip, goToStudent, score, markPage, settle, builtHtm
 const { standardFiles, zipOf } = require('../helpers/fixtures');
 const { STEADY, serveBuild, gradingSeed, PLAN_SETUP, pagesAt, makeLesson, changedList, matches } = require('../helpers/steady');
 
+// Chrome draws with several threads at once, and the order they finish in can shade the soft edge of a thin icon a little
+// differently from one picture to the next (the Help and Settings icons in the dark folded sidebar, 12 pixels). One drawing
+// thread, drawn in full each time and without the graphics card, gives the same pixels every time.
+const STEADY_DRAWING = ['--num-raster-threads=1', '--disable-partial-raster', '--disable-gpu-rasterization'];
 const SIZES = [['small', 1024, 768], ['laptop', 1366, 768], ['desktop', 1920, 1080]];
 const THEMES = ['light', 'dark'];
 const OUT = path.join(ROOT, 'out', 'screens');
@@ -33,15 +37,21 @@ const OUT = path.join(ROOT, 'out', 'screens');
 /* ---------------- the screens ---------------- */
 // where: 'g' the grading page, 'p' the Planner. hash: the address. then: anything to open on top. ready: what to wait for.
 // {A} in an address is the open assignment made below.
-const tabNamed = t => async page => { await page.waitForFunction(t => [...document.querySelectorAll('.ls-top nav .pl-tab')].some(b => b.textContent.trim() === t), {}, t); await page.evaluate(t => [...document.querySelectorAll('.ls-top nav .pl-tab')].find(b => b.textContent.trim() === t).click(), t); };
+const tabNamed = t => async page => { await page.waitForFunction(t => [...document.querySelectorAll('#rail [data-v]')].some(b => b.textContent.trim() === t), {}, t); await page.evaluate(t => [...document.querySelectorAll('#rail [data-v]')].find(b => b.textContent.trim() === t).click(), t); };
 const SCREENS = [
   { name: 'home', where: 'g', hash: '#/', ready: '#railClasses a' },
   { name: 'home-find', where: 'g', hash: '#/', ready: '#railClasses a', then: page => page.evaluate(() => window.__gs.openFind()) },
+  { name: 'help', where: 'g', hash: '#/help/return', ready: '#hlp-return.on' },
+  { name: 'school', where: 'g', hash: '#/school', ready: '#vSchool:not([hidden]) .schnone' },
+  { name: 'home-spanish', where: 'g', hash: '#/', ready: '#railClasses a', then: async page => { await page.evaluate(() => { localStorage.setItem('gs.lang', '"es"'); }); await page.reload(); await page.waitForSelector('#railClasses a'); await page.evaluate(() => { localStorage.removeItem('gs.lang'); }); } },
+  { name: 'home-chinese', where: 'g', hash: '#/', ready: '#railClasses a', then: async page => { await page.evaluate(() => { localStorage.setItem('gs.lang', '"zh-Hant"'); }); await page.reload(); await page.waitForSelector('#railClasses a'); await page.evaluate(() => { localStorage.removeItem('gs.lang'); }); } },
   { name: 'class-assignments', where: 'g', hash: '#/class/c1', ready: '#vClass:not([hidden]) .cls' },
   { name: 'class-gradebook', where: 'g', hash: '#/class/c1/gradebook', ready: '#bkTab' },
   { name: 'class-students', where: 'g', hash: '#/class/c1/students', ready: '#peopleTbl table' },
   { name: 'class-one-student', where: 'g', hash: '#/class/c1/students/2', ready: '#vClass:not([hidden])' },
   { name: 'class-charts', where: 'g', hash: '#/class/c1/charts', ready: '#vClass:not([hidden])' },
+  { name: 'class-missing', where: 'g', hash: '#/class/c1/missing', ready: '#mis' },
+  { name: 'class-reports', where: 'g', hash: '#/class/c1/reports', ready: '#rptText' },
   { name: 'mark', where: 'g', hash: '#/a/{A}', paper: true },
   { name: 'mark-add-menu', where: 'g', hash: '#/a/{A}', paper: true, then: page => page.evaluate(() => { const b = [...document.querySelectorAll('[data-km]')].find(b => /Add/.test(b.textContent)); if (b) b.click(); }) },
   { name: 'mark-setup-menu', where: 'g', hash: '#/a/{A}', paper: true, then: page => page.evaluate(() => document.querySelector('#moreBtn').click()) },
@@ -61,6 +71,8 @@ const SCREENS = [
   { name: 'planner-timetable', where: 'p', hash: '#timetable' },
   { name: 'planner-rubrics', where: 'p', hash: '#rubrics' },
   { name: 'planner-lesson', where: 'p', hash: '#lesson/{L}' },
+  // presenting: the agenda open over a slide. The bar stays up while one of its buttons has the keys, and the hint has gone by the time of the picture.
+  { name: 'planner-present', where: 'p', hash: '#present/{L}', ready: '#present', then: async page => { await page.evaluate(() => { const b = document.querySelector('#present [data-p="agenda"]'); b.focus(); b.click(); }); await sleep(5200); } },
   { name: 'planner-find', where: 'p', hash: '#week', then: page => page.evaluate(() => document.querySelector('#railFind, .rfind').click()) },
   { name: 'first-visit', where: 'g', hash: '#/', ready: '#railClasses a, #rail', fresh: true },
   { name: 'first-visit-planner', where: 'p', hash: '', fresh: true },
@@ -105,7 +117,7 @@ const quiet = (page, ms) => page.evaluate(ms => new Promise(res => {
 // The saved work every picture is taken of, made once through the app itself and left in a closed Chrome profile.
 // Each build is then pictured from its own copy of that profile, so both start from the same bytes.
 async function makeWork(pages, port, dir, want) {
-  const browser = await launch({ userDataDir: dir, keepProfile: true }), srv = await serveBuild(pages, port);
+  const browser = await launch({ userDataDir: dir, keepProfile: true, args: STEADY_DRAWING }), srv = await serveBuild(pages, port);
   try {
     const page = await newPage(browser.defaultBrowserContext());
     await page.setViewport({ width: 1366, height: 768 });
@@ -130,7 +142,7 @@ async function makeWork(pages, port, dir, want) {
 async function capture(pages, label, want, work, port) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'gs-screens-'));
   fs.cpSync(work.dir, dir, { recursive: true, filter: f => !/Singleton/.test(path.basename(f)) });
-  const browser = await launch({ userDataDir: dir }), srv = await serveBuild(pages, port), shots = {}, missed = {};
+  const browser = await launch({ userDataDir: dir, args: STEADY_DRAWING }), srv = await serveBuild(pages, port), shots = {}, missed = {};
   const ctx = browser.defaultBrowserContext(), fresh = await browser.createBrowserContext(), { A, L } = work;
   try {
     let page;

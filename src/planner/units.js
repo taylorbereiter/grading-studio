@@ -6,15 +6,18 @@
 const UNIT_COLORS = ['#1F6FB2', '#7B3FC4', '#B71E42', '#0E7C66', '#B35C00', '#3D5A80', '#8E3B8A', '#2F6B2F'];
 const MAX_FILE = 40 * 1024 * 1024;
 
-/* ---------- top bar shared by every Planner view ---------- */
-function topBar(view, extra) {
+// The head of a Planner page: its name, what the page itself can do, the search, the side panel and Import. Going between
+// the Planner's sections is the sidebar's job. The calendar's two views sit beside its name. What a page does now and
+// then (more: menu items) goes in a More menu with Import, so the head stays one line.
+const VIEW_NAMES = { week: 'Calendar', semester: 'Calendar', units: 'Units', library: 'Past lessons', activities: 'Activities', bank: 'Rubrics' };
+function topBar(view, extra, more) {
   const cal = view === 'week' || view === 'semester';
-  const tab = (v, t, on) => '<button class="pl-tab' + (on ? ' on' : '') + '" data-a="tab" data-v="' + v + '"' + (on ? ' aria-current="page"' : '') + '>' + t + '</button>';
-  // Home, the classes, the timetable and Settings are in the sidebar. The calendar's two views share one tab, with Semester | Week on the line below.
-  return '<div class="ls-top"><span class="title">Planner</span><nav class="pl-tabs" aria-label="Views">' + tab(cal ? view : calView, 'Calendar', cal) + tab('units', 'Units', view === 'units') + tab('library', 'Past lessons', view === 'library') + tab('activities', 'Activities', view === 'activities') + tab('bank', 'Rubrics', view === 'bank') + '</nav>' +
-    (cal ? '' : extra || '') + '<span class="sp"></span><input type="search" id="plFind" class="pl-find" placeholder="Search lessons…" aria-label="Search lessons, slides, documents and units">' + folderChip() +
-    panelBtn() + '<button class="btn sm ghost" data-a="import">Import…</button>' +
-    (cal ? '<span class="ls-brk"></span><span class="pl-tabs cal" role="group" aria-label="Calendar view">' + tab('semester', 'Semester', view === 'semester') + tab('week', 'Week', view === 'week') + '</span>' + (extra || '') : '') + '</div>';
+  const tab = (v, t, on) => '<button class="pl-tab' + (on ? ' on' : '') + '" data-a="tab" data-v="' + v + '" aria-pressed="' + !!on + '">' + t + '</button>';
+  return '<div class="ls-top head"><h1 class="title">' + VIEW_NAMES[view] + '</h1>' +
+    (cal ? '<span class="pl-tabs cal" role="group" aria-label="Calendar view">' + tab('week', 'Week', view === 'week') + tab('semester', 'Semester', view === 'semester') + '</span>' : '') + (extra || '') +
+    '<span class="sp"></span><input type="search" id="plFind" class="pl-find" placeholder="Search lessons…" aria-label="Search lessons, slides, documents and units">' +
+    panelBtn() + (more ? '<span class="ls-morew"><button class="btn sm ghost" data-a="more" aria-haspopup="true" aria-expanded="false">More ▾</button><div class="ls-menu" role="menu" hidden>' + more +
+      '<button class="mi" role="menuitem" data-a="import">Import…<small>A lesson file, a lesson pack, or pasted text</small></button></div></span>' : '<button class="btn sm ghost" data-a="import">Import…</button>') + '</div>';
 }
 
 // The Planner folder must never be the grading folder, or hold it: Claude reads everything in the Planner folder.
@@ -54,6 +57,34 @@ async function unitDelete(u) {
   if (L.dir && L.dirOk && u._file) { try { const d = await L.dir.getDirectoryHandle('Units'); await d.removeEntry(u._file); await d.removeEntry(u._file.replace(/\.unit\.json$/, ' files'), { recursive: true }); } catch { } }
 }
 const fileBlob = id => kvGet('file:' + id);
+
+/* ---------- a new school year, started on the grading page (src/newyear.js) ---------- */
+// It leaves gsp.newYear = { id, from } in this browser, and the Planner moves on once, the next time it opens: units and the
+// semester 52 weeks later (a Monday stays a Monday), the old year's days off and events gone, and every lesson that was on a
+// class goes to Past lessons under the old year's name, with no dates and no taught notes. Nothing is deleted. The old year
+// as it was is in the file the grading page made. kv 'yearsDone' remembers which moves are done.
+async function yearMoveOn() {
+  let ask = null; try { ask = JSON.parse(localStorage.getItem('gsp.newYear') || 'null'); } catch { }
+  if (!ask || typeof ask.id !== 'string') return;
+  const done = (await kvGet('yearsDone')) || [];
+  if (done.includes(ask.id)) return;
+  const later = s => /^\d{4}-\d\d-\d\d$/.test(s || '') ? ymd(addDays(parseYmd(s), 364)) : s, from = String(ask.from || 'Last year').slice(0, 120);
+  let moved = 0;
+  for (const l of L.lessons.slice()) {
+    if (!l.slots.length && !(l.taught || []).length) continue;
+    if (l.slots.length && !l.library) l.library = from;
+    l.slots = []; delete l.taught; moved++;
+    await lPut(l);
+  }
+  for (const u of L.units) { u.start = later(u.start); await unitPut(u, true); }
+  if (L.setup) {
+    L.setup = { ...L.setup, semStart: later(L.setup.semStart), semEnd: later(L.setup.semEnd), daysOff: [], events: [] };
+    await kvSet('setup', L.setup); await folderWriteSchedule();
+  }
+  await kvSet('yearsDone', [...done, ask.id]);
+  renderLessons(); railRender();
+  toast('A new school year: units and the semester moved on a year' + (moved ? ', and ' + moved + (moved === 1 ? ' lesson is' : ' lessons are') + ' in Past lessons under “' + from + '”' : '') + '.', 8000);
+}
 
 /* ---------- courses, weeks, which unit a week is in ---------- */
 function courses() {

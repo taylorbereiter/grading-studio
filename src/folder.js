@@ -45,7 +45,7 @@ function folderPapers(b) { if (tombs()[b.id]) saveSoon(); else if (fld.state !==
 function folderSaved(b, data) { if (fld.state === 'none') return; fld.work.set(b.id, data); folderKick(); }
 let setLibFrom, libNews;   // setLibFrom replaces the whole library, a merge having already stamped it, and says if it fit. libNews: another tab changed it.
 {
-  const raw = store.set.bind(store), rawDel = store.del.bind(store), LIB_RX = /^gs\.(lib|setup|bank|tomb|carryNo|rubrics|rubricsGone|histSame|rp\..+|rd\..+)$/;
+  const raw = store.set.bind(store), rawDel = store.del.bind(store), LIB_RX = /^gs\.(lib|setup|bank|tomb|carryNo|rubrics|rubricsGone|histSame|school|rp\..+|rd\..+)$/;
   let prev = libPrev(store.get('gs.lib', null)), libSeen = lsRaw('gs.lib');
   const mark = k => { if (LIB_RX.test(k) && fld.state !== 'none') { fld.lib = true; folderKick(); } };
   const roomy = (k, v) => { let ok = raw(k, v); while (!ok && !k.startsWith('gs.b.') && freeQuick()) ok = raw(k, v); return ok; };   // a roster matters more than a quick copy with its full copy kept
@@ -59,7 +59,7 @@ let setLibFrom, libNews;   // setLibFrom replaces the whole library, a merge hav
         let other = null; try { other = JSON.parse(now); } catch {}
         if (other) {
           const m = mergeLib(v, other, { dev: devId(), now: Date.now() });
-          v = lib = migrateLib(m.lib); prev = libPrev(v); refs();
+          v = lib = migrateLib(m.lib); prev = libPrev(v); refs(); rollsShare();
           if (batch && m.mapA[batch.classId]) batch.classId = m.mapA[batch.classId];
         }
       }
@@ -82,7 +82,7 @@ let setLibFrom, libNews;   // setLibFrom replaces the whole library, a merge hav
 }
 const browserFull = () => Object.assign(new DOMException('The small store is full', 'QuotaExceededError'), { small: true });
 // What travels with her work. Quick copies travel as work, and the rest belongs to this browser.
-const LS_LOCAL = /^gs\.(b\..+|batches|syncT|dataV|lastBackup|gcid|gEmail|tomb|refOpen\..*)$/;
+const LS_LOCAL = /^gs\.(b\..+|batches|syncT|dataV|lastBackup|gcid|gEmail|tomb|rolls|refOpen\..*)$/;   // rolls: a copy of the rosters for the Planner's name picker, made again from the classes wherever they go
 function carryLs() {
   const o = {};
   for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k && k.startsWith('gs.') && !LS_LOCAL.test(k)) o[k] = localStorage.getItem(k); }
@@ -354,9 +354,11 @@ async function folderRemove(id) {
     const i = await readJson(h, 'info.json'); if (!i) continue;
     (i.papers || []).forEach(mark); markAll(i.added, i.edits);
   }
+  for (const h of schHashes(lsRaw('gs.school'))) used.add(h);   // school resources keep their files here too (school.js)
   const dir = await fld.root.getDirectoryHandle('snapshots', { create: true });
   for (const { name } of await snapList()) {
     let s; try { s = await gzRead(dir, name); } catch { continue; }
+    for (const h of schHashes((s.ls || {})['gs.school'], s.t)) used.add(h);
     if (s.work && s.work[id] || s.meta && s.meta[id] || s.added && s.added[id] || s.edits && s.edits[id] || Object.keys(s.ls || {}).some(k => k.includes(id))) {
       for (const part of [s.work, s.meta, s.added, s.edits]) if (part) delete part[id];
       for (const k of Object.keys(s.ls || {})) if (k.includes(id)) delete s.ls[k];
@@ -386,7 +388,7 @@ async function folderRun() {
       try { await pushDownload(id, data); }
       catch (e) { if (!fld.work.has(id)) fld.work.set(id, data); throw e; }
     }
-    if (fld.lib) { fld.lib = false; try { await pushLibrary(); } catch (e) { fld.lib = true; throw e; } }
+    if (fld.lib) { fld.lib = false; try { await pushLibrary(); await schFolderSync(); } catch (e) { fld.lib = true; throw e; } }
     await dailySnapshot();
     fld.at = Date.now(); setWhere(fld.asks.length ? 'decide' : 'ok');
   } catch (e) { await folderTrouble(e); }
@@ -475,12 +477,13 @@ async function reconcileNow() {
   const set = prefer ? {} : mergeLs(carryLs(), B.ls || {}, k => Object.keys(tomb).some(id => k.includes(id)));   // going back: the folder takes what's here, and nothing newer comes back
   for (const [k, v] of Object.entries(set)) lsPut(k, v);
   await pushLibrary();
+  await schFolderSync();   // the files of the school resources, either way
   fld.lib = false; fld.answers = {};
   try { localStorage.removeItem('gsc.win'); } catch {}
   await dailySnapshot();
   fld.at = Date.now(); fld.state = 'ok';
   setWhere(fld.asks.length ? 'decide' : 'ok');
-  if (taking.length || libm.toA) { bank = store.get('gs.bank', bank); if (!batch) { const su = store.get('gs.setup', null); if (su) setup = { ...DEFAULT_SETUP, ...su }; } await loadKept(); }
+  if (taking.length || libm.toA) { bank = store.get('gs.bank', bank); if (!batch) { const su = store.get('gs.setup', null); if (su) setup = setupOver(su); } await loadKept(); }
   if (open && taking.some(r => r.id === open)) { toast('Newer work from your folder came in, so this download has been reopened.', 6000); const was = batch; await reopenKept(open, batch.assignment); if (batch === was) { closeDownload(); toast('Newer work came in from your folder, and this download is waiting for your answer. Open it when you’re ready.', 8000); } }   // not opened again (Not now): the copy on screen is out of date, and saving it would write over what just came in
   else if (!hadWork && taking.length && !B.missing.size) toast('Everything came back from your folder.', 6000);
   else if (students) toast('Newer work from your folder came in for ' + students + (students === 1 ? ' student.' : ' students.'), 6000);
@@ -553,7 +556,7 @@ function renderWhere() {
     const h = s.act ? '<span class="wtext' + (s.cls ? ' ' + s.cls : '') + '">' + esc(s.text) + '.</span> <button class="btn sm primary" data-wact>' + s.act + '</button>' : '';
     if (first.dataset.h !== h) { first.dataset.h = h; first.innerHTML = h; first.hidden = !h; }
   }
-  if (top) { top.textContent = s.text; top.title = s.tip; top.className = 'savewhere link' + (s.cls ? ' ' + s.cls : ''); }
+  if (top) { const cut = /^Not backed up\. /.exec(s.text); top.textContent = cut ? 'Not backed up' : s.text; if (cut) { const more = document.createElement('span'); more.className = 'sw-more'; more.textContent = s.text.slice(13); top.append(more); } top.title = s.tip; top.className = 'savewhere link' + (s.cls ? ' ' + s.cls : ''); }
   if (line) {
     const h = '<span class="wtext' + (s.cls ? ' ' + s.cls : '') + '">' + (fld.state === 'none' && fld.booted ? 'Your work is saved only in this browser, and is not backed up' : 'Your work is saved: ' + esc(s.text.charAt(0).toLowerCase() + s.text.slice(1))) + '.</span> ' +
       (s.act ? '<button class="btn sm primary" data-wact>' + s.act + '</button> ' : '') +
@@ -561,7 +564,7 @@ function renderWhere() {
       (fld.state !== 'none' && fld.root ? ' <a class="btn sm" href="#/settings/history">Go back in time…</a>' : '');
     if (line.dataset.h !== h) { line.dataset.h = h; line.innerHTML = h; }   // a button shouldn't vanish under her click just because a save went by
   }
-  railSavedRender(); renderNeeds(); safeAskRender();
+  railSavedRender(); renderNeeds(); safeAskRender(); schRender();
 }
 function whereAct() { if (fld.state === 'decide') openFolderAsks(); else folderResume(true); }
 document.addEventListener('click', e => {

@@ -35,7 +35,7 @@ function qzStepWords(pts, all = qzWordsAll()) {
 }
 const qzWord = (s, pts) => qzStepWords(pts)[qzSteps(pts).indexOf(s)] || '';
 // Every page of their scan, in order, including a file still waiting for its first mark (left out only until then). A file she left out herself isn't.
-const quizPages = st => layoutOf(st).filter(d => docIn(st, d) || docAuto(st, d)).flatMap(d => d.pages.filter(([path]) => { const f = fileByPath(st, path); return f && !f.virtual && viewable(f); }));
+const quizPages = st => layoutOf(st).filter(d => docIn(st, d) || docAuto(st, d)).flatMap(d => d.pages.filter(([path]) => { const f = fileByPath(st, path); return f && !f.virtual && viewable(f) && !tryOfFile(st, f); }));
 const quizMarks = st => (st.grade && st.grade.q) || {};
 function quizCount(st) { const m = quizMarks(st); return quizOn() ? batch.quiz.qs.filter(q => m[q.id] != null).length : 0; }
 // Some questions marked, not all: the score shows as partial.
@@ -294,7 +294,9 @@ function openQuizBoxes(back) {
       '<td><select class="qkind" aria-label="Scored">' + qzKindOpts(q) + '</select></td>' +
       '<td><select class="qhow" aria-label="How to mark">' + qzHowOpts(q) + '</select></td>' +
       '<td><input class="qkey" value="' + esc(q.key || '') + '" placeholder="optional" aria-label="Right answer" maxlength="40"></td>' +
-      '<td><button class="icon" data-del="' + q.id + '" aria-label="Take out this box" title="Take out">✕</button></td></tr>').join('') + '</tbody></table>'
+      '<td><button class="icon" data-del="' + q.id + '" aria-label="Take out this box" title="Take out">✕</button></td></tr>' +
+      (goalList().length ? '<tr class="qgrow' + (q.id === selId ? ' on' : '') + '" data-q="' + q.id + '"><td colspan="6"><label>Goal ' + goalPick('data-qgoal', q.goal || '', 'Learning goal for question ' + quizLabel(q, i)) + '</label></td></tr>' : '')).join('') + '</tbody></table>' +
+      '<p class="hsm goalline"><button class="link" data-qgoals>' + (goalList().length ? 'Edit goals…' : 'Tag questions with learning goals…') + '</button></p>'
       : '<p class="muted hsm">No boxes yet.</p>';
     wordsSay(); sum(); spotSay();
   };
@@ -419,10 +421,14 @@ function openQuizBoxes(back) {
     }
     if (e.target.classList.contains('qkey')) q.key = e.target.value;
     if (e.target.classList.contains('qhow')) q.how = e.target.value;
+    if (e.target.dataset.qgoal != null) {   // a learning goal for this question (goals.js); the last choice makes a new one
+      if (e.target.value === '+') { goalsDlg({ add: true }).then(r => { if (r.added) q.goal = r.added; if (pagesEl.isConnected) list(); }); return; }
+      if (e.target.value) q.goal = e.target.value; else delete q.goal;
+    }
     overlays();
   };
   if (box._qbFocus) box.removeEventListener('focusin', box._qbFocus);
-  box._qbFocus = e => { if (!pagesEl.isConnected) return; const tr = e.target.closest && e.target.closest('tr[data-q]'); if (tr && tr.dataset.q !== selId) { selId = tr.dataset.q; spotPick = false; for (const x of box.querySelectorAll('tr[data-q]')) x.classList.toggle('on', x === tr); spotSay(); overlays(); } };
+  box._qbFocus = e => { if (!pagesEl.isConnected) return; const tr = e.target.closest && e.target.closest('tr[data-q]'); if (tr && tr.dataset.q !== selId) { selId = tr.dataset.q; spotPick = false; for (const x of box.querySelectorAll('tr[data-q]')) x.classList.toggle('on', x.dataset.q === selId); spotSay(); overlays(); } };
   box.addEventListener('focusin', box._qbFocus);
   box.onclick = async e => {
     if (e.target.closest('[data-close]')) { if (back) return back(); closeDlg(); return qzClose(); }
@@ -433,6 +439,7 @@ function openQuizBoxes(back) {
     if (e.target.closest('[data-margin]')) { const q = qOf(selId); if (q) { delete q.mx; delete q.my; } spotSay(); overlays(); return; }
     if (e.target.closest('#qbTotal')) { picking = !picking; spotPick = false; totalSay(); spotSay(); return; }
     if (e.target.closest('[data-nototal]')) { Q.total = null; totalSay(); overlays(); return; }
+    if (e.target.closest('[data-qgoals]')) { goalsDlg().then(() => { if (pagesEl.isConnected) list(); }); return; }
     if (e.target.closest('[data-save]')) {
       for (const q of Q.qs) if (!(+q.pts > 0)) q.pts = 1;
       for (const t of Object.keys(Q.words)) if (Q.words[t].length !== qzSteps(+t).length) delete Q.words[t];
@@ -492,7 +499,9 @@ function openQuiz(view) {
   openDlg('<div class="bh qmhd"><h2>Quick mark</h2><span class="seg" id="qmView"><button data-view="q">By question</button><button data-view="s">By student</button></span>' +
     '<span id="qmNav" class="qmnav"></span><span class="muted hsm" id="qmProg"></span>' +
     '<span class="qmopts"><span class="muted hsm">Size</span><span class="seg" id="qmSize">' + QZ_SIZES.map(s => '<button data-size="' + s + '" title="' + (s === 'F' ? 'One answer per row' : 'Answer size ' + s) + '">' + QZ_SIZE_SAY[s] + '</button>').join('') + '</span>' +
-    '<span class="seg" id="qmOnly"><button data-only="0">All</button><button data-only="1">Not marked</button></span></span>' +
+    '<span class="seg" id="qmOnly"><button data-only="0">All</button><button data-only="1">Not marked</button></span>' +
+    '<span class="qmink"><button class="btn sm" id="qmInkBtn" data-inkmenu aria-haspopup="true" aria-expanded="false" title="Colors for the marks">Colors <i class="qmdot x"></i><i class="qmdot ok"></i></button>' +
+    '<span class="qminkpop" id="qmInkPop" hidden></span></span></span>' +
     '<button class="btn sm" data-boxes>Boxes</button><button class="icon" data-close aria-label="Close">✕</button></div>' +
     '<div class="bb qmbody" id="qmBody"></div>' +
     '<div class="bf qmfoot"><span class="muted hsm" id="qmHint" style="margin-right:auto"></span><span id="qmFoot"></span></div>');
@@ -503,6 +512,10 @@ function openQuiz(view) {
   box.onclick = e => {
     if (e.target.closest('#qmPeek')) { if (e.target.closest('[data-peekx]') || e.target.id === 'qmPeek') qmPeekClose(); return; }
     if (e.target.closest('[data-close]')) return qmClose();
+    const ik = e.target.closest('[data-qink]'); if (ik) { inkColor = ik.dataset.qink; store.set('gs.ink', inkColor); renderTools(); return qmInkSet(); }
+    const ic = e.target.closest('[data-qchk]'); if (ic) { setCheckInk(ic.dataset.qchk); renderTools(); return qmInkSet(); }
+    if (e.target.closest('[data-inkmenu]')) return qmInkMenu();
+    if (!e.target.closest('#qmInkPop')) qmInkMenu(false);
     if (e.target.closest('[data-boxes]')) return openQuizBoxes(() => openQuiz());
     const v = e.target.closest('[data-view]'); if (v) { qzView = v.dataset.view; return qmRender(); }
     const sz = e.target.closest('[data-size]'); if (sz) { store.set('gs.qmSize', sz.dataset.size); return qmSizeSay(); }
@@ -512,6 +525,10 @@ function openQuiz(view) {
     const pk = e.target.closest('[data-peek]'); if (pk) return qmPeek(pk.closest('.qmc'));
     const rs = e.target.closest('[data-reset]'); if (rs) return qmSpotSet(rs.closest('.qmc'), null);
     if (e.target.closest('[data-rest]')) return qmRest();
+    const as = e.target.closest('.qmned [data-as]'); if (as) { for (const b of as.parentNode.children) b.setAttribute('aria-pressed', String(b === as)); as.closest('.qmned').querySelector('textarea').focus(); return; }
+    if (e.target.closest('[data-nsave]')) return qmNoteDone(e.target.closest('.qmc'), true);
+    if (e.target.closest('.qmned')) return;
+    const qn = e.target.closest('[data-qnote]'); if (qn) return qmNoteOpen(qn.closest('.qmc'));
     const hf = e.target.closest('[data-half]'); if (hf) return qmHalf(hf.closest('.qmc'));
     const b = e.target.closest('[data-v]');
     if (b) { const c = b.closest('[data-st]'); return qmMark(c, b.dataset.v === '' ? null : +b.dataset.v, true); }
@@ -528,6 +545,27 @@ function qmClose() {
   if (qzKeys) { document.removeEventListener('keydown', qzKeys, true); qzKeys = null; }
   closeDlg(); qzClose();
   if (batch && pages.length) openStudent(cur);   // the open paper shows the new marks
+}
+// Colors: one for ✗ and points (the same ink as her pen), one for ✓. Marks already given on this quiz change with them.
+function qmInkSay() {
+  const body = $('#qmBody'), btn = $('#qmInkBtn');
+  for (const el of [body, btn]) if (el) { el.style.setProperty('--qm-x', COLORS[inkColor] || COLORS.red); el.style.setProperty('--qm-ok', CHECK_INK); }
+  const pop = $('#qmInkPop'); if (!pop || pop.hidden) return;
+  const row = (attr, on, say) => '<div class="qmirow"><span class="hsm">' + say + '</span>' + Object.entries(COLORS).map(([k, v]) => '<button class="sw" data-' + attr + '="' + k + '" style="background:' + v + '" aria-pressed="' + (k === on) + '" title="' + k + '" aria-label="' + say + ' ' + k + '"></button>').join('') + '</div>';
+  pop.innerHTML = row('qink', inkColor, '✗ and points') + row('qchk', checkInk, '✓ right') + '<p class="muted hsm">Marks already given change too.</p>';
+}
+function qmInkMenu(open) {
+  const pop = $('#qmInkPop'), btn = $('#qmInkBtn'); if (!pop) return;
+  const on = open == null ? pop.hidden : open;
+  if (on === !pop.hidden) return;
+  pop.hidden = !on; btn.setAttribute('aria-expanded', String(on)); qmInkSay();
+}
+function qmInkSet() {
+  for (const st of batch.students) for (const f of st.files || []) for (const list of Object.values(f.marks || {})) for (const m of list) {
+    if (!m.qz && !m.qzn) continue;
+    m.color = m.t === 'check' ? CHECK_INK : COLORS[inkColor] || COLORS.red;
+  }
+  saveSoon(); qmInkSay();
 }
 function qmSizeSay() {
   const s = qzSizeNow(), body = $('#qmBody');
@@ -558,8 +596,52 @@ const qmCard = (i, q, qi) => {
     '<span class="qmchr">' + (qzOwn(st, q) ? '<button class="link hsm" data-reset title="Put this mark back where the question’s mark goes">Reset spot</button>' : '') +
     '<button class="btn sm" data-peek title="See their whole page (Space)">⤢ Whole page</button></span></div>' +
     '<div class="qmimg" title="' + (qzByPts(q) && qzHow(q) === 'pts' ? 'Drag: line this paper up' : 'Click: wrong / right. Drag: line this paper up') + '"><span class="muted hsm">…</span></div>' +
-    '<div class="qmbtns">' + btns + (v != null ? '<button class="qmb clr" data-v="" title="Clear">Clear</button>' : '') + '</div></div>';
+    '<div class="qmbtns">' + btns + '<button class="qmb cm" data-qnote title="Write a comment or text on this paper (C)">Comment</button>' + (v != null ? '<button class="qmb clr" data-v="" title="Clear">Clear</button>' : '') + '</div>' + qmNoteLine(st, q) + '</div>';
 };
+// Her own words for this question on this paper: a comment in the margin with a line to the answer, or text on the page under it.
+// Tagged qzn (not qz), so marking the question again leaves them alone.
+function qzNoteOf(st, q) {
+  const [path, p] = quizPages(st)[q.n] || [], f = path && fileByPath(st, path), l = f && f.marks[p];
+  return (l && l.find(m => m.qzn === q.id)) || null;
+}
+const qmNoteLine = (st, q) => { const m = qzNoteOf(st, q); return m ? '<button class="qmnote" data-qnote title="Click to change it">' + (m.t === 'note' ? 'Comment: ' : 'Text: ') + esc(m.text) + '</button>' : ''; };
+function qmNoteOpen(el) {
+  if (!el || el.querySelector('.qmned')) return;
+  const st = batch.students[+el.dataset.st], q = batch.quiz.qs.find(x => x.id === el.dataset.q), m = qzNoteOf(st, q);
+  const as = m ? (m.t === 'note' ? 'note' : 'text') : store.get('gs.qmNoteAs', 'note');
+  const ln = el.querySelector('.qmnote'); if (ln) ln.hidden = true;
+  el.insertAdjacentHTML('beforeend', '<div class="qmned"><textarea rows="2" placeholder="Type what to write on their paper…" aria-label="Comment">' + esc(m ? m.text : '') + '</textarea>' +
+    '<div class="qmnedb"><span class="seg sm"><button data-as="note" aria-pressed="' + (as === 'note') + '" title="In the margin, with a line to the answer">Margin comment</button><button data-as="text" aria-pressed="' + (as === 'text') + '" title="Written on the page under the answer">Text on page</button></span>' +
+    '<span class="muted hsm">Enter to save, Esc to cancel</span><button class="btn sm primary" data-nsave>Save</button></div></div>');
+  const ta = el.querySelector('.qmned textarea'); ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length);
+}
+function qmNoteDone(el, save) {
+  const ed = el && el.querySelector('.qmned'); if (!ed) return;
+  const text = ed.querySelector('textarea').value.trim(), as = ed.querySelector('[data-as][aria-pressed="true"]').dataset.as;
+  ed.remove();
+  if (save) qzNoteSet(batch.students[+el.dataset.st], batch.quiz.qs.find(x => x.id === el.dataset.q), text, as).then(() => { if (el.isConnected) { qmRefresh(el); el.focus({ preventScroll: true }); } });
+  else { const ln = el.querySelector('.qmnote'); if (ln) ln.hidden = false; el.focus({ preventScroll: true }); }
+}
+async function qzNoteSet(st, q, text, as) {
+  const [path, p] = quizPages(st)[q.n] || [], f = path && fileByPath(st, path);
+  if (!f) return;
+  const list = (f.marks[p] ||= []), i = list.findIndex(m => m.qzn === q.id), old = i >= 0 ? list[i] : null;
+  if (i >= 0) list.splice(i, 1);
+  if (text) {
+    const sz = await qzPageSize(st, q.n); if (!sz) return;
+    store.set('gs.qmNoteAs', as);
+    const [dx, dy] = qzShift(st, q.n), W = sz.W, H = sz.H, color = COLORS[inkColor] || COLORS.red;
+    let m;
+    if (as === 'note') m = old && old.t === 'note' ? { ...old, text, color } : { t: 'note', color, ax: r1(clamp((q.x + q.w + dx) * W, 4, W - 4)), ay: r1(clamp((q.y + q.h / 2 + dy) * H, 4, H - 4)), text, qzn: q.id };
+    else {
+      m = old && old.t === 'text' ? { ...old, text, color } : { t: 'text', color, x: r1(clamp((q.x + dx) * W, 2, W - 60)), y: r1(clamp((q.y + q.h + dy) * H + 3, 2, H - 20)), size: disp.tsize, bw: r1(Math.max(120, q.w * W)), text, qzn: q.id };
+      keepOnPage(m, W, H);
+    }
+    list.push(m);
+  }
+  if (!list.length) delete f.marks[p];
+  saveSoon(); renderList();
+}
 const qmQ = q => (qzByPts(q) ? 'Scale 0 to ' + fmtNum(+q.pts || 1) : fmtNum(+q.pts || 1) + ((+q.pts || 1) === 1 ? ' point' : ' points') + ', right or wrong') + ' · ' + (QZ_HOW[q.how] || QZ_HOW.cx);
 let qmTok = 0;
 function qmRender() {
@@ -577,7 +659,7 @@ function qmRender() {
     $('#qmProg').textContent = done + ' of ' + who.length + ' marked';
     $('#qmFoot').innerHTML = '<button class="btn primary" data-rest' + (done === who.length ? ' disabled' : '') + '>' + (qzByPts(q) ? 'Give the rest ' + fmtNum(full) : 'Mark the rest right') + '</button>';
     $('#qmHint').textContent = (qzByPts(q) ? 'Keys: a number for its points, H adds ½' : 'Click an answer to put an ✗ on it, click again to take it off. Keys: 1 right, 0 or X wrong') +
-      ', arrows to move, Space whole page, Ctrl Z undo, [ and ] for the question. Drag a mark to move it on that paper.';
+      ', C comment, arrows to move, Space whole page, Ctrl Z undo, [ and ] for the question. Drag a mark to move it on that paper.';
     cards = who.map(i => [i, q, qzAt]);
     body.className = 'bb qmbody qmgrid';
   } else {
@@ -588,12 +670,12 @@ function qmRender() {
       '<span class="qmtot">' + fmtNum(quizSum(st)) + ' / ' + fmtNum(quizMax()) + (n === qs.length && percentFor(quizSum(st)) != null ? ' = ' + percentFor(quizSum(st)) + '%' : '') + '</span>';
     $('#qmProg').textContent = n + ' of ' + qs.length + ' marked';
     $('#qmFoot').innerHTML = '<button class="btn" data-open="' + qzStu + '">Open their paper</button><button class="btn primary" data-rest' + (n === qs.length ? ' disabled' : '') + '>Mark the rest right</button>';
-    $('#qmHint').textContent = 'Click an answer to put an ✗ on it, click again to take it off. Keys: ↑ ↓ to move, a number for its points, Space whole page, Ctrl Z undo, [ and ] for the student.';
+    $('#qmHint').textContent = 'Click an answer to put an ✗ on it, click again to take it off. Keys: ↑ ↓ to move, a number for its points, C comment, Space whole page, Ctrl Z undo, [ and ] for the student.';
     cards = qs.map((q, qi) => [qzStu, q, qi]);
     body.className = 'bb qmbody qmcol';
   }
   if (qzOnly) cards = cards.filter(([i, q]) => quizMarks(batch.students[i])[q.id] == null);
-  qmSizeSay();
+  qmSizeSay(); qmInkSay();
   const keep = document.activeElement && document.activeElement.closest && document.activeElement.closest('.qmc');
   const keepAt = keep ? keep.dataset.st + '|' + keep.dataset.q : null;
   body.innerHTML = cards.length ? cards.map(c => qmCard(...c)).join('') : '<p class="muted qmnone">Everything here is marked. Pick <b>All</b> to see the marked ones.</p>';
@@ -638,6 +720,8 @@ function qmRefresh(el) {
   el.className = fresh.className;
   el.querySelector('.qmch').replaceWith(fresh.querySelector('.qmch'));
   el.querySelector('.qmbtns').replaceWith(fresh.querySelector('.qmbtns'));
+  const nl = el.querySelector('.qmnote'), fl = fresh.querySelector('.qmnote');
+  if (!el.querySelector('.qmned')) { if (nl) nl.remove(); if (fl) el.querySelector('.qmbtns').after(fl); }
   qmMarkShow(el);
   const who = quizWho(), qs = batch.quiz.qs;
   if (qzView === 'q') {
@@ -743,6 +827,12 @@ function qmKey(e) {
   if (!$('#qmBody')) return;
   const stop = () => { e.preventDefault(); e.stopPropagation(); };
   if ($('#qmPeek')) { if (e.key === 'Escape' || e.key === ' ') { stop(); qmPeekClose(); } return; }
+  if (e.target.closest('.qmned')) {   // typing a comment: Enter saves, Shift Enter is a new line, Esc leaves it as it was
+    if (e.key === 'Escape') { stop(); qmNoteDone(e.target.closest('.qmc'), false); }
+    else if (e.key === 'Enter' && !e.shiftKey) { stop(); qmNoteDone(e.target.closest('.qmc'), true); }
+    else e.stopPropagation();
+    return;
+  }
   if (e.target.closest('select,input,textarea')) return;
   if ((e.ctrlKey || e.metaKey) && !e.altKey) {
     if (e.key === 'z' || e.key === 'Z') { if (!e.shiftKey) { stop(); qmUndoLast(); } return; }
@@ -771,6 +861,7 @@ function qmKey(e) {
   if (/^[0-9]$/.test(e.key) && scale) { stop(); return qmMark(el, +e.key); }
   if ((e.key === '1' || e.key === '0') && !scale) { stop(); return qmMark(el, e.key === '1' ? +q.pts || 1 : 0); }   // right is all its points
   if (e.key === 'x' || e.key === 'X') { stop(); return qmMark(el, 0); }
+  if (e.key === 'c' || e.key === 'C') { stop(); return qmNoteOpen(el); }
   if (e.key === 'Backspace' || e.key === 'Delete') { stop(); return qmMark(el, null, true); }
 }
 // On a picture: a click marks it wrong (or right again if it was wrong); a drag lines that paper's page up, moving every box on it.

@@ -13,6 +13,28 @@ function strokePath(ctx, p) {
   for (let i = 1; i < p.length - 1; i++) { const mx = (p[i][0] + p[i + 1][0]) / 2, my = (p[i][1] + p[i + 1][1]) / 2; ctx.quadraticCurveTo(p[i][0], p[i][1], mx, my); }
   if (p.length > 1) ctx.lineTo(p[p.length - 1][0], p[p.length - 1][1]);
 }
+// A pencil that tells how hard it is pressed: each point then keeps that as a third number, 0 to 1 ([x, y, p]), and the line is
+// drawn wider where she pressed. A mouse, a finger and a pencil that can't tell draw the even line they always have, with
+// points of two numbers. A build from before this draws a pressed line evenly: it reads the first two numbers and no more.
+const keepP = (n, q) => q.length > 2 ? [n[0], n[1], q[2]] : n;
+const pressOn = () => store.get('gs.press', true) !== false;
+const pressOf = e => e.pointerType === 'pen' && e.pressure > 0 ? Math.round(clamp(e.pressure, 0.05, 1) * 100) / 100 : null;
+const hasPress = p => p.some(q => q.length > 2);
+// How wide the line is at a point: the pen's own width at an even press, about a third of it at the lightest and nearly double at the hardest.
+const pressW = (w, q) => w * (0.35 + 1.3 * (q[2] == null ? 0.5 : q[2]));
+const PRESS_MAX = 1.65;
+// The same curve as strokePath, a piece at a time, each piece as wide as the press there.
+function strokeWide(ctx, p, w) {
+  if (p.length === 1) { ctx.lineWidth = pressW(w, p[0]); ctx.beginPath(); ctx.moveTo(p[0][0], p[0][1]); ctx.lineTo(p[0][0] + 0.01, p[0][1]); ctx.stroke(); return; }
+  let sx = p[0][0], sy = p[0][1];
+  for (let i = 1; i < p.length; i++) {
+    const last = i === p.length - 1, ex = last ? p[i][0] : (p[i][0] + p[i + 1][0]) / 2, ey = last ? p[i][1] : (p[i][1] + p[i + 1][1]) / 2;
+    ctx.lineWidth = (pressW(w, p[i - 1]) + pressW(w, p[i])) / 2;
+    ctx.beginPath(); ctx.moveTo(sx, sy);
+    if (last) ctx.lineTo(ex, ey); else ctx.quadraticCurveTo(p[i][0], p[i][1], ex, ey);
+    ctx.stroke(); sx = ex; sy = ey;
+  }
+}
 // Painted by drawHls. One fill or one stroke, so lines that overlap don't darken where they meet.
 function fillHl(ctx, m) {
   if (m.pts) { ctx.save(); ctx.strokeStyle = m.color; ctx.lineWidth = m.sw; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; strokePath(ctx, m.pts); ctx.stroke(); ctx.restore(); return; }
@@ -49,7 +71,7 @@ function strokeHit(p, x, y, reach) {
 }
 // Hit test for the marks whose outline isn't their box. Returns null for the rest, which go by their box.
 function hitShape(m, x, y, slop, W) {
-  if (m.t === 'pen') return strokeHit(m.pts, x, y, m.w / 2 + slop);
+  if (m.t === 'pen') return strokeHit(m.pts, x, y, m.w * (hasPress(m.pts) ? PRESS_MAX : 1) / 2 + slop);
   if (m.pts) return strokeHit(m.pts, x, y, m.sw / 2 + slop);
   if (m.rects) return m.rects.some(r => inRect(r, x, y, slop));
   if (m.t === 'text' && !(selected && selected.mark === m && !selected.fresh)) { const L = textLayout(m, W); return inRect({ x: m.x, y: m.y, w: Math.max(L.ink, 30), h: L.h }, x, y, slop); }   // the words, not the empty part of a wide box
@@ -89,7 +111,7 @@ function thinStroke(p, tol, gap) {
   out.push(p[p.length - 1]);
   return out;
 }
-const inkBegin = (m, x, y, e, s) => { const f = inkFilter(); f(x * s, y * s, e.timeStamp); return { m, f, raw: null }; };
+const inkBegin = (m, x, y, e, s) => { const f = inkFilter(); f(x * s, y * s, e.timeStamp); const pr = m.t === 'pen' && pressOn() ? pressOf(e) : null; if (pr != null) m.pts[0].push(pr); return { m, f, raw: null, press: pr != null, pr }; };
 // One pointer move, which can stand for many points of a fast stroke. at turns an event into page points.
 function inkMove(pg, g, e, at) {
   const p = g.m.pts, s = pg.s, n0 = p.length, was = g.raw, all = e.getCoalescedEvents ? e.getCoalescedEvents() : [], list = all.length ? all : [e];
@@ -97,9 +119,10 @@ function inkMove(pg, g, e, at) {
   for (const q of list) {
     const [ax, ay] = at(q), x = clamp(ax, 0, pg.W), y = clamp(ay, 0, pg.H), [fx, fy] = g.f(x * s, y * s, q.timeStamp);
     g.raw = [r1(x), r1(y)];
+    if (g.press) { const pr = pressOf(q); if (pr != null) g.pr = pr; g.raw.push(g.pr); }
     if (e.shiftKey) continue;
     const last = p[p.length - 1];
-    if (Math.hypot(fx / s - last[0], fy / s - last[1]) > step) p.push([r1(fx / s), r1(fy / s)]);
+    if (Math.hypot(fx / s - last[0], fy / s - last[1]) > step) p.push(g.press ? [r1(fx / s), r1(fy / s), g.pr] : [r1(fx / s), r1(fy / s)]);
   }
   if (e.shiftKey) {   // Shift: a straight line, level or upright when it's close
     const pt = g.raw, dx = Math.abs(pt[0] - p[0][0]), dy = Math.abs(pt[1] - p[0][1]);
@@ -110,7 +133,7 @@ function inkMove(pg, g, e, at) {
   }
   if (g.straight) { g.straight = false; draw(pg, [g.m]); return; }   // Shift let go: the straight line just drawn goes away
   // Only the end of the stroke changes, so only that part of the page is drawn again.
-  const pad = (g.m.t === 'pen' ? g.m.w : g.m.sw) / 2 + 2, near = p.slice(Math.max(0, n0 - 3)).concat(was ? [was] : [], g.raw ? [g.raw] : []);
+  const pad = (g.m.t === 'pen' ? g.m.w * (g.press ? PRESS_MAX : 1) : g.m.sw) / 2 + 2, near = p.slice(Math.max(0, n0 - 3)).concat(was ? [was] : [], g.raw ? [g.raw] : []);
   const xs = near.map(q => q[0]), ys = near.map(q => q[1]), x1 = Math.min(...xs) - pad, y1 = Math.min(...ys) - pad;
   // The line runs on to the pointer, so it never seems to lag behind the hand.
   if (g.raw) p.push(g.raw);
@@ -121,6 +144,12 @@ function inkEnd(pg, g) {
   const p = g.m.pts;
   if (g.raw && !g.straight) { const l = p[p.length - 1]; if (l[0] !== g.raw[0] || l[1] !== g.raw[1]) p.push(g.raw); }   // ends where she let go
   g.m.pts = thinStroke(p, Math.min(0.12, 0.4 / pg.s), 6);
+  if (g.press) {
+    // A press that never changed is a pencil that can't tell: the line is kept as an even one. Otherwise the press is evened out a little, so the width doesn't step.
+    const q = g.m.pts, v = q.map(a => a[2] == null ? 0.5 : a[2]);
+    if (Math.max(...v) - Math.min(...v) < 0.06) g.m.pts = q.map(a => [a[0], a[1]]);
+    else g.m.pts = q.map((a, i) => [a[0], a[1], Math.round((v[Math.max(0, i - 1)] + v[i] * 2 + v[Math.min(v.length - 1, i + 1)]) / 4 * 100) / 100]);
+  }
 }
 
 /* ---------------- the page's typed lines, for the highlighter ---------------- */
@@ -353,7 +382,26 @@ function pickToGrab(pg, hit, x, y, edit) {
 }
 const editMark = (pg, m) => { if (m.t === 'text') editText(pg, m); else if (m.t === 'note') openNote(pg, m); };
 // What the pointer can do here, shown by its shape. Empty: leave it as the tool set it.
+// The comment whose line is under the pointer. In the margin any tool can grab it; across the page only Select and Comment
+// can, so the pen still writes over a line. Not right at the spot, where dragging moves the comment itself.
+function noteLineAt(pg, x, y) {
+  const tol = Math.max(3, 5 / (pg.s || 1)), W = pg.W;
+  for (const b of pg.boxes || []) {
+    if (b.n.ro) continue;
+    if (x <= W + 4) {
+      if ((tool === 'select' || tool === 'note') && x >= b.ax + 8 && Math.abs(y - b.ry) <= tol) return b.n;
+      continue;
+    }
+    const x1 = W + 4, y1 = b.ry, x2 = b.x, y2 = b.y + Math.min(b.h / 2, 12), dx = x2 - x1, dy = y2 - y1, L = dx * dx + dy * dy;
+    const t = L ? Math.max(0, Math.min(1, ((x - x1) * dx + (y - y1) * dy) / L)) : 0;
+    if (Math.hypot(x - (x1 + t * dx), y - (y1 + t * dy)) <= tol) return b.n;
+  }
+  return null;
+}
 function hoverCursor(pg, x, y) {
+  const ln = tool !== 'erase' && !once ? noteLineAt(pg, x, y) : null;
+  if ((pg.lineOn || null) !== ln) { pg.lineOn = ln; draw(pg); }   // the line thickens under the pointer, to show it can be dragged
+  if (ln) return 'ns-resize';
   if (tool !== 'erase' && cornerAt(pg, x, y)) return 'nwse-resize';
   const grip = gripAt(pg, x, y);
   if (tool === 'select') return grip ? 'ew-resize' : hitMark(pg, x, y, 4) ? (x > pg.W ? 'pointer' : 'move') : 'default';

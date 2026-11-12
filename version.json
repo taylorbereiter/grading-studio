@@ -1,14 +1,12 @@
 {
- "version": "1.7.0",
- "build": "1720b2b15a0a",
+ "version": "1.27.6",
+ "build": "c4190cbbf853",
  "notes": [
-  "Home is now Today: the classes you teach today with the lesson planned for each, the papers waiting to be marked, and the papers ready to hand back.",
-  "What the class needs next: after a set of papers is scored, Today shows the weakest rubric row and how many students to sit down with.",
-  "A class page is quieter. Click anywhere on an assignment’s row to open it; the only blue button is the one that adds an assignment.",
-  "Forget, and the other ways to open papers, moved into the ⋯ menu on each row."
+  "Returned files are named for the student, the assignment and what they are, like “Ana Lee - River essay - Graded.pdf”, or Feedback when there is no score. They still go in each student’s own folder.",
+  "To keep the names students turned in, untick Name each file by student and assignment under Options on the Return tab."
  ],
  "files": {
-  "index.html": "b75e42ed136714475dd8bfa32d9cd135fcd25a486cf488053b99ae264d228a44",
-  "planner.html": "a3e9fd45fb63a9fcd660bd5ab4d187dc9304a5309609923faaeb9ff1a4142f5b"
+  "index.html": "bf0ac5d7183b0d4afab1a6330bb8f9025fb8e897a7487e57aaa6d0e0d430d806",
+  "planner.html": "114272ffcdc0feefae04c31c0dd71d019106670b46defd86c4d68ada37c17d1e"
  }
 }

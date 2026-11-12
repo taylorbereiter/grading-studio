@@ -26,6 +26,8 @@ async function open() {
   await page.waitForFunction(() => window.__planner && document.querySelector('#lessons .ls-top'));
   return { server, browser, page, errors, done: async () => { await browser.close(); await server.close(); } };
 }
+// What is used now and then on a lesson is in its More menu: open it, then click the item.
+async function more(page, a) { await page.click('.ls-top [data-a="more"]'); await page.waitForSelector('.ls-menu:not([hidden])'); await page.click('.ls-menu [data-a="' + a + '"]'); }
 
 test('the Planner page carries none of the grading code', () => {
   const html = PAGE();
@@ -215,7 +217,7 @@ test('working with Claude: notes and comments go out, Claude’s changes come ba
     await page.type('[data-f="ask"]', 'Make this a journal prompt');
     await page.type('[data-f="say"]', 'Shorter, please'); await page.keyboard.press('Enter');
     await page.waitForSelector('.pl-msg.me');
-    await page.click('[data-a="send"]');
+    await more(page, 'send');
     await page.waitForSelector('.pl-st.st-claude');
     let r = await page.evaluate(async () => { const P = window.__planner, l = P.L.open; return { status: l.status, vers: ((await P.versions(l)) || []).map(v => v.label), ask: l.slides[1].ask, talk: l.slides[1].talk.length }; });
     assert.deepEqual(r, { status: 'claude', vers: ['Sent to Claude'], ask: 'Make this a journal prompt', talk: 1 });
@@ -248,7 +250,7 @@ test('working with Claude: notes and comments go out, Claude’s changes come ba
     // versions: going back to the one sent to Claude
     const back = await page.evaluate(async () => { const P = window.__planner; return (await P.versions(P.L.open)).map(v => v.label); });
     assert.deepEqual(back, ['Before Claude’s changes', 'Sent to Claude']);
-    await page.click('[data-a="versions"]');
+    await more(page, 'versions');
     await page.waitForSelector('[data-rv="1"]'); await page.click('[data-rv="1"]');
     await page.waitForFunction(() => window.__planner.L.open.slides[1].title === 'Warm-up');
     // there's no Approve: the lesson is always editable
@@ -268,7 +270,7 @@ test('the activity bank: filter, add one to a lesson as a steps slide, and keep 
   try {
     const { page, errors } = a;
     await page.evaluate(async s => { await window.__planner.applySetup(s); }, SETUP);
-    await page.click('[data-a="tab"][data-v="activities"]');
+    await page.click('#rail [data-v="activities"]');
     await page.waitForSelector('.pl-act');
     const all = await page.$$eval('.pl-act', c => c.length);
     assert.ok(all >= 30, 'the bank starts with plenty of activities');
@@ -325,7 +327,7 @@ test('looks and teaching layouts: every layout in every look, edited in place, a
       }
       return out;
     });
-    assert.equal(r.n, 14 * 15); assert.deepEqual(r.bad, []);
+    assert.equal(r.n, 14 * 17); assert.deepEqual(r.bad, []);
 
     // a lesson in Sage: add a Two columns slide from the picker and type into a heading and the right side
     await page.evaluate(async () => { const P = window.__planner, l = P.normLesson({ title: 'Looks', slides: [{ layout: 'title', title: 'Looks' }] }); P.L.lessons.push(l); P.openLessonForTest(l, 0); });
@@ -373,12 +375,12 @@ test('the layout picker shows pictures, changes a slide and keeps its text; less
     await page.waitForSelector('.ls-stage');
     // the unit's Atlas link shows on the lesson; a lesson's own link wins
     assert.equal(await page.$eval('.ls-top a[href^="https://example.org"]', x => x.getAttribute('href')), 'https://example.org/unit2');
-    await page.click('[data-a="atlas"]'); await page.waitForSelector('#atU'); await page.type('#atU', 'https://example.org/lesson'); await page.click('#dlgBox [data-ok]');
+    await more(page, 'atlas'); await page.waitForSelector('#atU'); await page.type('#atU', 'https://example.org/lesson'); await page.click('#dlgBox [data-ok]');
     await page.waitForFunction(() => document.querySelector('.ls-top a[href="https://example.org/lesson"]'));
     // Layout: pictures of every layout, the current one marked
     await page.click('[data-a="layout"]');
     await page.waitForSelector('#dlgBox .pl-look.on[data-addslide="content"] .pl-lmini');
-    assert.equal(await page.$$eval('#dlgBox [data-addslide]', b => b.length), 15);
+    assert.equal(await page.$$eval('#dlgBox [data-addslide]', b => b.length), 17);
     await page.click('#dlgBox [data-addslide="discuss"]');
     await page.waitForSelector('#lsStage .ls-bx[data-k="foot"]');
     const s = await page.evaluate(() => window.__planner.L.open.slides[1]);
@@ -579,7 +581,7 @@ test('right-click a slide or a lesson to comment for Claude; search finds slides
     // print the week: both classes with their lessons and slide titles
     await page.click('[data-a="back"]');
     await page.waitForSelector('[data-a="printweek"]');
-    await page.click('[data-a="printweek"]');
+    await more(page, 'printweek');
     const pr = await page.evaluate(() => window.__printed[0]);
     assert.match(pr, /<h1>Week of November 2<\/h1>/);
     assert.match(pr, /Tue 11\/3[\s\S]*Course A-1[\s\S]*Claims[\s\S]*<li>Counterclaims<\/li>[\s\S]*Course B-1[\s\S]*Claims/);
@@ -969,7 +971,7 @@ test('Copy for Claude brings every comment: ones typed under a slide, right-clic
     assert.deepEqual(await page.evaluate(() => window.__planner.L.open.slides[1].talk.map(t => t.text)), ['Add the triangle here']);
     // typed, never pressed Add
     await page.type('[data-f="say"]', 'Make the red line bigger');
-    await page.click('[data-a="send"]');
+    await more(page, 'send');
     await page.waitForFunction(() => window.__copied);
     const t = await page.evaluate(() => window.__copied);
     assert.match(t, /My comment on the whole lesson: Keep it short, they need work time/);
@@ -1003,7 +1005,7 @@ test('a lesson .zip: the finished PowerPoint goes to Finished, every other file 
     assert.equal(r.final, 'v2.pptx'); assert.deepEqual(r.older, ['Book Cover Prep.pptx']);
     assert.deepEqual(r.files, [['Exit ticket.docx', 4], ['Triangle handout.pdf', 14]]);
     await page.waitForSelector('#plFin [data-a="finzip"]');
-    assert.ok(await page.$('.ls-top [data-a="finzip"] + [data-a="pptx"]'));   // next to Download, top right
+    assert.ok(await page.$('.ls-top .ls-menu [data-a="finzip"]'));   // in More, beside Download
     assert.match(await page.$eval('.pl-mats', d => d.textContent), /Exit ticket\.docx[\s\S]*Triangle handout\.pdf/);
     assert.deepEqual(errors, []);
   } finally { await a.done(); }
@@ -1066,7 +1068,7 @@ test('downloads from the calendar: ↓ on each card, Finished ✓, a lesson with
     await page.waitForFunction(() => window.__saved.length === 1);
     assert.equal(await page.evaluate(() => [...document.querySelectorAll('.ls-dl')].length), 2);
     // the week: a folder per class and day, each with the deck and the files
-    await page.click('[data-a="dlweek"]');
+    await more(page, 'dlweek');
     await page.waitForFunction(() => window.__saved.some(b => b.type === 'application/zip'));
     const names = await page.evaluate(async () => { const b = window.__saved.find(b => b.type === 'application/zip'); return Object.keys(fflate.unzipSync(new Uint8Array(await b.arrayBuffer()))).sort(); });
     assert.deepEqual(names, ['Thu 11-5 · Course A-1 · Poster day/11-05 Thu - Poster day.pptx', 'Tue 11-3 · Course A-1 · Book Cover Prep/Book Cover Prep FINAL.pptx', 'Tue 11-3 · Course A-1 · Book Cover Prep/Handout.pdf']);
@@ -1203,13 +1205,57 @@ test('the lesson name and the title slide match both ways, unless I set them apa
     await page.waitForFunction(() => window.__planner.L.open.title === 'Symbols and images');
     assert.equal(await page.$eval('[data-f="ltitle"]', i => i.value), 'Symbols and images');
     // set apart: they can differ, and it's remembered
-    await page.click('[data-a="tlink"]'); await page.waitForSelector('[data-a="tlink"]:not(.on)');
+    await more(page, 'tlink'); await page.waitForSelector('[data-a="tlink"]:not(.on)');
     await page.$eval('[data-f="ltitle"]', i => { i.value = ''; i.focus(); }); await page.type('[data-f="ltitle"]', 'Week 3 Tue');
     const r = await page.evaluate(() => { const P = window.__planner, l = P.L.open; return { name: l.title, slide: l.slides[0].title, apart: P.normLesson(JSON.parse(JSON.stringify(l))).titleApart }; });
     assert.deepEqual(r, { name: 'Week 3 Tue', slide: 'Symbols and images', apart: true });
     // matched again: the title slide takes the lesson name
-    await page.click('[data-a="tlink"]'); await page.waitForSelector('[data-a="tlink"].on');
+    await more(page, 'tlink'); await page.waitForSelector('[data-a="tlink"].on');
     assert.equal(await page.evaluate(() => window.__planner.L.open.slides[0].title), 'Week 3 Tue');
+    assert.deepEqual(errors, []);
+  } finally { await a.done(); }
+});
+
+test('a lesson’s top bar is light: its name, its classes, status, Download and Present, with the rest in More', async () => {
+  const a = await open();
+  try {
+    const { page, errors } = a;
+    await page.evaluate(async s => { const P = window.__planner; await P.applySetup(s); P.L.view = 'week'; P.renderLessons(); const l = P.normLesson({ title: 'Claims', slides: [{ layout: 'title', title: 'Claims' }, { layout: 'content', title: 'Counterclaims' }] }); P.L.lessons.push(l); P.openLessonForTest(l, 0); }, SETUP);
+    await page.waitForSelector('.ls-top [data-a="pptx"]');
+    const shown = () => page.$$eval('.ls-top > button, .ls-top > .ls-morew > button, .ls-top > .ls-slots > button', b => b.filter(x => x.checkVisibility()).map(x => x.textContent.trim()));
+    const top = await shown();
+    assert.deepEqual([top[0], ...top.slice(-3)], ['‹ Week', 'More ▾', 'Download .pptx', 'Present']);
+    for (const gone of ['Copy for Claude', 'Versions', '↑ Upload lesson .zip', 'Comments']) assert.ok(!top.includes(gone), gone + ' is not above the slide');
+    assert.deepEqual(await page.$$eval('.ls-top .btn.primary', b => b.map(x => x.textContent)), ['Present'], 'one blue button');
+    // More holds the rest
+    assert.ok(await page.$eval('.ls-menu', m => m.hidden));
+    await page.click('.ls-top [data-a="more"]');
+    assert.equal(await page.$eval('.ls-top [data-a="more"]', b => b.getAttribute('aria-expanded')), 'true');
+    const items = await page.$$eval('.ls-menu .mi', x => x.map(e => e.firstChild.textContent.trim()));
+    assert.deepEqual(items.slice(0, 4), ['Copy for Claude', 'Comments', 'Versions', 'Upload lesson .zip']);
+    assert.deepEqual(items.slice(-4), ['Save lesson file…', 'Copy to another class or day…', 'Copy lesson as text', 'Delete this lesson']);
+    assert.ok(items.includes('Name matches the title slide ✓'));
+    // Escape closes it, and so does a click somewhere else
+    await page.keyboard.press('Escape');
+    assert.ok(await page.$eval('.ls-menu', m => m.hidden));
+    assert.equal(await page.evaluate(() => document.activeElement.dataset.a), 'more');
+    await page.click('.ls-top [data-a="more"]'); await page.click('.ls-title-in');
+    assert.ok(await page.$eval('.ls-menu', m => m.hidden));
+    // an item does what its button did
+    await more(page, 'versions'); await page.waitForSelector('#dlgBox h2');
+    assert.ok(await page.$eval('.ls-menu', m => m.hidden));
+    await page.click('#dlgBox [data-x]');
+    // once the lesson has a comment, Comments is above the slide with its count
+    await page.evaluate(() => { const P = window.__planner; P.L.open.talk = [{ by: 'you', text: 'Shorter warm-up', at: 1 }]; P.renderLessons(); });
+    await page.waitForSelector('.ls-top > [data-a="comments"]');
+    assert.equal(await page.$eval('.ls-top > [data-a="comments"]', b => b.textContent), 'Comments (1)');
+    assert.equal(await page.$('.ls-menu [data-a="comments"]'), null);
+    // delete takes two clicks, and the first keeps the menu open
+    await more(page, 'mdelete');
+    assert.equal(await page.$eval('.ls-menu [data-a="mdelete"]', b => b.textContent), 'Click again to delete it for good');
+    assert.ok(!await page.$eval('.ls-menu', m => m.hidden));
+    await page.click('.ls-menu [data-a="mdelete"]');
+    await page.waitForFunction(() => window.__planner.L.view === 'week' && !window.__planner.L.lessons.length);
     assert.deepEqual(errors, []);
   } finally { await a.done(); }
 });
