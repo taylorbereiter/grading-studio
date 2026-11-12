@@ -460,6 +460,7 @@ test('groups can be changed by hand: drag a name, click to move or swap, make my
     assert.deepEqual([(await state(page)).on, (await state(page)).i], [true, 0], 'the drag did not move the slide');
     // click a name, then a name in the other group: they swap
     const x = g1[0][0], y = g1[1][0];
+    await until(page, () => !window.__pick.PK.dragged);   // a click straight after a drag is ignored until the page's next timer runs
     await page.$eval('.pk-g[data-pkg="0"] .pk-s', d => d.click());
     assert.ok(await page.$('.pk-g[data-pkg="0"] .pk-s.sel'));
     await page.$eval('.pk-g[data-pkg="1"] .pk-s', d => d.click());
