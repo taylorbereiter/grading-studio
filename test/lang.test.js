@@ -629,3 +629,64 @@ test('in Spanish, a class page’s boxes are in Spanish and what was typed into 
   assert.deepEqual(page.errors, []);
   await close();
 });
+
+// The marking screen: the top bar, the tools, the student list, the score panel, its menus and the Grades, Insights, Return and
+// Rubric setup screens, before anything is scored, part way and with a rubric that says what each score means. Walked in English.
+test('the marking screen and its tabs leave nothing in English', async () => {
+  const own = [];
+  const press = async k => { await page.keyboard.press(k); await pause(200); };
+  let page, close;
+  const at = async (where, f) => { await f(); await pause(400); await miss(page, 'marking, ' + where, own); };
+  const tab = id => () => page.$eval(id, b => b.click());
+  ({ page, close } = await openApp(browser, {}));
+  await openZip(page, zip);
+  await at('nothing scored', async () => {});
+  for (const [w, id] of [['Insights, nothing scored', '#insightsTab'], ['Return, nothing scored', '#exportBtn'], ['Grades, nothing scored', '#gradesBtn'], ['Mark', '#markTab']]) await at(w, tab(id));
+  await at('one row scored', () => press('3'));
+  for (const id of ['#addMenuBtn', '#whoMore', '#gMore', '#cmtMore', '#lfBtn', '#moreBtn']) { await at('menu ' + id, tab(id)); await press('Escape'); }
+  for (const [w, id] of [['Grades', '#gradesBtn'], ['Insights', '#insightsTab'], ['Return', '#exportBtn'], ['Mark again', '#markTab']]) await at(w, tab(id));
+  await at('every row scored', async () => { await press('3'); await press('2'); });
+  await at('missing', () => page.$$eval('#gstat .seg button', b => b[0].click()));
+  await at('late', () => page.$$eval('#gstat .seg button', b => b[2].click()));
+  await at('list folded', tab('#colL'));
+  await at('Grades, grade sheet', async () => { await tab('#gradesBtn')(); await pause(400); await page.$$eval('#dlgBox .vseg a', a => a[1] && a[1].click()); });
+  await at('Insights, percents', async () => { await tab('#insightsTab')(); await pause(400); await page.$$eval('#dlgBox .vseg a', a => a[1] && a[1].click()); });
+  await at('Insights, consistency', () => page.$$eval('#dlgBox .vseg a', a => a[2] && a[2].click()));
+  await at('Return, every row scored', tab('#exportBtn'));
+  await tab('#markTab')(); await pause(300);
+  await at('Rubric setup', tab('#setupBtn')); await press('Escape');
+  assert.deepEqual(page.errors, []);
+  await close();
+  // a rubric that says what each score means: pointing at a score, the whole row open, and closed again
+  const SETUP = { mode: 'rubric', criteria: ['Thesis', 'Evidence', 'Style'], levels: [{ 4: 'A clear claim.', 3: 'A claim.' }, {}, {}] };
+  ({ page, close } = await openApp(browser, { seed: { ls: { 'gs.setup': JSON.stringify(SETUP) } } }));
+  await openZip(page, zip);
+  await at('levels, nothing scored', async () => {});
+  const row0 = v => page.$eval('#grade .scores[data-c="0"] button[data-v="' + v + '"]', b => b.click());
+  await at('levels, a half point', () => row0('3.5'));
+  await at('levels, the whole row', () => page.$eval('#lvBox [data-lvopen]', b => b.click()));
+  await at('levels, closed again', () => page.$eval('#lvBox [data-lvopen]', b => b.click()));
+  await at('levels, a score with nothing written', () => row0('2'));
+  await at('levels, a row with nothing written', () => page.$eval('#grade .scores[data-c="1"] button[data-v="3"]', b => b.click()));
+  assert.deepEqual(page.errors, []);
+  await close();
+});
+
+test('in Spanish the marking screen is in Spanish, and names, rubric rows, comments and what each score means stay as typed', async () => {
+  const SETUP = { mode: 'rubric', criteria: ['Thesis', 'Evidence', 'Style'], levels: [{ 4: 'A clear claim.' }, {}, {}] };
+  const { page, close } = await openApp(browser, { seed: { ls: { 'gs.setup': JSON.stringify(SETUP), ...ES } } });
+  await openZip(page, zip);
+  assert.deepEqual(await page.$$eval('#app .atab', a => a.map(x => x.textContent.replace(/\d+$/, '').trim())), ['Corregir', 'Notas', 'Análisis', 'Ejemplos', 'Devolver']);
+  assert.equal(await text(page, '#paper .who h2'), 'Aria Testwell');
+  assert.deepEqual(await page.$$eval('#grade .cn > span', s => s.map(x => x.textContent)), ['Thesis', 'Evidence', 'Style']);
+  await page.$eval('#grade .scores[data-c="0"] button[data-v="4"]', b => b.click()); await pause(300);
+  assert.equal(await page.$eval('#lvBox .lvname', e => e.textContent), 'Thesis');
+  assert.match(await text(page, '#lvBox .lvtxt'), /A clear claim\./);
+  await page.click('#cmtIn'); await page.type('#cmtIn', 'Missing evidence'); await pause(300);
+  assert.match(await page.$eval('#cmtIn', e => e.placeholder), /^Comentario para /);
+  await page.$eval('#gradesBtn', b => b.click()); await pause(600);
+  assert.ok((await page.$$eval('#dlgBox td.cm', t => t.map(x => x.textContent))).includes('Missing evidence'), 'the comment is as typed');
+  assert.ok((await page.$$eval('#dlgBox th', t => t.map(x => x.textContent))).some(x => /Thesis/.test(x)), 'a rubric row is as typed');
+  assert.deepEqual(page.errors, []);
+  await close();
+});

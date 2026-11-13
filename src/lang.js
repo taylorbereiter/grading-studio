@@ -114,6 +114,34 @@ const LANG_FILLS = [
   ['pastepg', /^Paste this class’s (.+) page address$/], ['orderok', /^Students, one per line, in the order you want \((.+) order works well\)$/],
   ['pastefrom', /^Paste from a spreadsheet or (.+), or upload a file\. Student ID and email columns are kept as each student’s details\.$/],
   ['printn', /^Print (\d+) pages$/], ['ndrafts', /^(\d+) report comments are still drafts you haven’t looked at\.$/], ['cmidl', /^class middle (\d+)$/], ['syslink', /^([A-Z][\w .&-]{0,30}) link$/],
+  // the marking screen: the top bar, the student list, the score panel, and its Grades, Insights, Return and Rubric setup screens
+  ['mfready', /^(\d+) marked files? ready to give back$/], ['npages', /^(\d+) pages?$/], ['putsc', /^Put the score on the paper: (.+)$/],
+  ['partrows', /^Partial: (\d+) of (\d+) rows scored\. This total isn’t final\.$/], ['avgtip', /^(?=Average of (\d+) )Average of \d+ finished scores?’s percents: (.+?)\. Partial, missing, excused and left-out papers don’t count\. Click for Insights\.$/],
+  ['tocheck', /^(\d+) to check$/], ['totof', /^Total \/(\d+)$/], ['confq', /^“(.+)”\? confirm$/], ['nmpct', /^(.+), ([\d.,]+%)$/],
+  ['nmord', /^(.+), ([\d.,]+) out of (\d+), scored (\d+)(?:st|nd|rd|th)$/], ['scoredn', /^Scored (\d+)(?:st|nd|rd|th)$/],
+  ['spreadar', /^Score (.+): (\d+) students?$/, (m, F, P) => langFill(F.scorel, [0, m[1]], P) + ': ' + langFill(F.nstud, [0, m[2]], P)],
+  ['nscore', /^(\d+) scores?, (\d+) at ([\d.,]+) or less$/],
+  ['ovrar', /^(.+): ([\d.,]+) average\. (.+)$/, (m, F, P) => { const r = trPiece(m[3], P); return r == null ? null : m[1] + ': ' + langFill(F.avgis, [0, m[2]], P) + '. ' + r; }],
+  ['pprat', /^(.+): (\d+) papers? at ([\d.,]+)$/, (m, F, P) => m[1] + ': ' + langFill(F.ppat, [0, m[2], m[3]], P)], ['scoredon', /^Scored ([\d.,]+) on (.+)$/],
+  ['countedL', /^Counted: (\d+) of (\d+) students?\.(?: Left out: (.+)\.)?$/, (m, F, P) => langFill(F.countedA, [0, m[2], m[1]], P) + (m[3] ? ' ' + langFill(F.leftout, [0, m[3].split(', ').map(x => trPiece(x, P) || x).join(', ')], P) : '')],
+  ['nnot', /^(\d+) not scored yet$/], ['npartial', /^(\d+) partial$/], ['nmissing', /^(\d+) missing$/], ['nexcused', /^(\d+) excused$/], ['nleftout', /^(\d+) left out by you$/],
+  ['avgpct', /^Average ([\d.,]+%)$/], ['ptsof', /^Points, out of (\d+)\.( A half point counts with the whole number below it\.)?$/, (m, F, P) => langFill(F.ptsof, m, P) + (m[2] ? ' ' + (trPiece(m[2].trim(), P) || m[2]) : '')],
+  ['rowavg', /^Average out of (\d+|each row’s top), lowest first\. It uses every row with a score(?:, including the scored rows on (\d+) partial papers?)?\.(.*)$/, (m, F, P) => {
+    const rest = m[3].trim(), rs = rest ? rest.split(/(?<=\.) (?=[A-Z0-9])/).map(x => trPiece(x, P)) : []; if (rs.some(x => x == null)) return null;
+    return [/^\d+$/.test(m[1]) ? langFill(F.rowavg, m, P) : F.rowavgE, ...(m[2] ? [langFill(F.rowpart, [0, m[2]], P)] : []), ...rs].join(' '); }],
+  ['ovrar0', /^(.+): No scores yet\. No scores yet$/, (m, F, P) => { const r = trPiece('No scores yet', P); return r == null ? null : m[1] + ': ' + r + '. ' + r; }], ['rowsdone', /^(\d+) of (\d+) rows scored$/],
+  ['nowrit', /^Nothing written for ([\d.,]+)\.$/],
+  ['rowless', /^(\d+) scores? read from the paper ha(?:s|ve) no rows, so (?:it isn’t|they aren’t) here\.$/],
+  ['skipn', /^(\d+) students? ha(?:s|ve) nothing marked, so they’re left out\.$/],
+  ['grpn', /^(.+) \((\d+)\)$/, (m, F, P) => { const h = trPiece(m[1], P); return h == null ? null : h + ' (' + m[2] + ')'; }],
+  ['fewdrift', /^(?:Only (\d+) papers? ha(?:s|ve)|No papers have) a time to go by so far\. It takes at least (\d+) before this will say anything about getting harder or softer\. Any pattern in fewer is mostly chance\.$/, (m, F, P) => (m[1] ? langFill(F.fewdrift, m, P) : F.nodrift) + ' ' + langFill(F.driftmin, [0, m[2]], P)],
+  ['nfready', /^(\d+) files? ready$/], ['fromn', /^From (\d+) students?, in their own folders, ready to (?:upload back on (.+?)|hand back)\.(?: (\d+) students? ha(?:s|ve) nothing marked, so they’re left out\.)?$/,
+    (m, F, P) => langFill(m[2] ? F.fromsys : F.fromhb, [0, m[1], m[2]], P) + (m[3] ? ' ' + langFill(F.skipn, [0, m[3]], P) : '')],
+  ['nthings', /^(\d+) things? to look at before you return these$/], ['lvmeans', /^What (\d+(?:\.5)?) means on this row$/], ['inall', /^Out of ([\d.,]+) in all\.$/],
+  ['stepsof', /^Steps of (\d+) \((.+)\)$/], ['expnow', /^Export (.+)’s paper now$/], ['expone', /^Export (.+)’s paper$/],
+  ['askai', /^Ask (.{1,30})$/], ['backai', /^Bring back (.{1,30})’s feedback$/], ['cmtfor', /^Comment for (.+?)( \(optional\)\. It shows on the Grades tab so you can copy it\.)?$/, (m, F, P) => langFill(m[2] ? F.cmtforL : F.cmtfor, [0, m[1] === 'the student' ? (trPiece('the student', P) || m[1]) : m[1]], P)],
+  ['clickcp', /^Click any score or comment to copy it, then paste it into (.+)\. Click a name to open that paper\.( Pick a roster under Setup to see this list in roster order\.)?$/, (m, F, P) => langFill(F.clickcp, [0, m[1] === 'your gradebook' ? (trPiece('your gradebook', P) || m[1]) : m[1]], P) + (m[2] ? ' ' + (trPiece(m[2].trim(), P) || m[2]) : '')],
+  ['rosterord', /^(.+) roster order$/], ['nscored', /^(\d+) of (\d+) scored$/],
   // what a chart says of itself to a screen reader: the names in it stay, the words between them are put into the language
   ['ariaband', /^(?=.*(?:class middle \d|missing)).+ (?:\d+%|missing|–)(?:, class middle \d+%)?$/, (m, F, P) => m[0].replace(/ missing(?=, class middle |\. |$)/g, ' ' + (trPiece('missing', P) || 'missing')).replace(/, class middle (\d+%)(?=\. |$)/g, (x, v) => langFill(F.cmid, [0, v], P))],
   ['ariamove', /^.+ (?:up|down) [\d.]+$/, (m, F, P) => m[0].replace(/ (up|down) ([\d.]+)(?=, |$)/g, (x, w, v) => ' ' + langFill(w === 'up' ? F.mvup : F.mvdown, [0, v], P))],
@@ -128,7 +156,7 @@ function trPiece(k, P, ctx) {
   if (ctx && Object.prototype.hasOwnProperty.call(P.words, ctx + '|' + k)) return P.words[ctx + '|' + k];
   if (Object.prototype.hasOwnProperty.call(P.words, k)) return P.words[k];
   // On a named part of the screen the shared lines come first, so "1 late" there is a student and not a paper.
-  const fills = () => { if (P.fill) for (const [key, re, fn] of LANG_FILLS) { const m = re.exec(k); if (!m) continue; const hit = fn ? fn(m, P.fill, P) : P.fill[key] != null ? langFill(P.fill[key], m, P) : null; if (hit != null) return hit; } return null; };
+  const fills = () => { if (P.fill) for (const [key, re, fn] of LANG_FILLS) { const m = re.exec(k); if (!m) continue; let hit = null; try { hit = fn ? fn(m, P.fill, P) : P.fill[key] != null ? langFill(P.fill[key], m, P) : null; } catch { hit = null; } if (hit != null) return hit; } return null; };   // a language without a line's wording leaves it in English
   if (ctx) { const hit = fills(); if (hit != null) return hit; }
   for (const [re, to] of P.rules) { const m = re.exec(k); if (!m) continue; const hit = typeof to === 'function' ? to(m) : k.replace(re, to); if (hit != null) return hit; }
   return ctx ? null : fills();
@@ -143,8 +171,10 @@ function trWith(s, P, ctx) {
 // For words that are drawn rather than put on the page, like the feedback page in a returned paper.
 const tr = (s, ctx) => LANG_PACK && typeof s === 'string' ? trWith(s, LANG_PACK, ctx) : s;
 // The parts of the page that are put into the language, and what inside them is never touched (what a teacher typed).
-const LANG_ROOTS = '#rail, #vHome, #vHelp, #welcome, #findDlg, #setLang, #vSettings, #vClass .clshead, #vClass .ctabs, #vClass .ctools, #vClass .board, #classHint, #dlgBox[data-lg], #askDlg[data-lg], ' + ['gradebook', 'students', 'attendance', 'seating', 'missing', 'student', 'charts', 'goals', 'reports'].map(t => '#classPanel[data-tab="' + t + '"]').join(', ');
-const LANG_RAW = 'script, style, textarea, [contenteditable], [data-raw], .kname, #railClasses .rl, .wllang, .tbn, .trow:not(.none) b, .hlpa p:not(.hlpgo), .hlpa ol, kbd, .rbrand, .wlbrand, #homeDate, .aiWord, .updnotes, #vSettings .nt b, #meSys option:not([value]), #meAi option:not([value]), #wlSys option:not([value]), #vClass .clshead h1, #vClass .uhead .nm, #vClass .card .t, #classPanel .bklink, #classPanel .bkpop > b, #bkaRows td:first-child, #bkaUnit option:not([value=""]), #peopleTbl td.nm a, .attname, #attDate, .attunk a, .misw, .mishead h3, .misaddr, .seat span, .seatchip, #seatSel b, .tsvg .tlb, #aClass option:not([value=""]), #aUnit option:not([value=""])';
+const LANG_ROOTS = '#rail, #vHome, #vHelp, #welcome, #findDlg, #setLang, #vSettings, #vClass .clshead, #vClass .ctabs, #vClass .ctools, #vClass .board, #classHint, #dlgBox[data-lg], #askDlg[data-lg], ' +
+  // the marking screen: its top bar and menus, the student list, the tools, the bar above each paper and the chips beside each page, and the score panel (never a page itself)
+  '#app .top, #side, #tools, #paper .who, #paper .lchip, #paper .rchip, #grade, #zoomPill, #colL, #colR, #openRep, ' + ['gradebook', 'students', 'attendance', 'seating', 'missing', 'student', 'charts', 'goals', 'reports'].map(t => '#classPanel[data-tab="' + t + '"]').join(', ');
+const LANG_RAW = 'script, style, textarea, [contenteditable], [data-raw], .kname, #railClasses .rl, .wllang, .tbn, .trow:not(.none) b, .hlpa p:not(.hlpgo), .hlpa ol, kbd, .rbrand, .wlbrand, #homeDate, .aiWord, .updnotes, #vSettings .nt b, #meSys option:not([value]), #meAi option:not([value]), #wlSys option:not([value]), #vClass .clshead h1, #vClass .uhead .nm, #vClass .card .t, #classPanel .bklink, #classPanel .bkpop > b, #bkaRows td:first-child, #bkaUnit option:not([value=""]), #peopleTbl td.nm a, .attname, #attDate, .attunk a, .misw, .mishead h3, .misaddr, .seat span, .seatchip, #seatSel b, .tsvg .tlb, #aClass option:not([value=""]), #aUnit option:not([value=""]), #railClasses .rnav, #classSel option:not([value=""]), #crumbClass, #stuList .nm, #paper .who h2, #paper .fhead > span:first-child, #grade .cn > span';
 const LANG_ATTRS = ['title', 'aria-label', 'placeholder'];
 const langCtx = el => { const c = el.closest('[data-lc]'); return c ? c.dataset.lc : ''; };
 // What has been put into the language is not looked at again: a word in the language can be an English word too (German "Note" is "Grade", and "Note" in English is something else).

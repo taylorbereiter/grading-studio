@@ -179,7 +179,7 @@ async function openExport() {
         '</details>' +
         '<p class="xfoot">Your original files don’t change. A file you marked anywhere goes back whole, every page in order. Word rubrics you scored go back as Word files. ' + (xAll() ? 'Files with no marks go too.' : 'Files with no marks stay out.') + ' Comments go in a right-hand margin.</p>'
       : '<p style="margin-top:0">Nothing is marked yet. Mark a paper and it will show up here.</p>' + exportCheckHtml(exportCheck()) + allBox + '<div id="rtState">' + returnedHtml() + '</div>') +
-    '</div>' + returnSideHtml() + '</div><div class="bf"><button class="btn" data-close>Close</button></div>', true);
+    '</div>' + returnSideHtml() + '</div><div class="bf"><button class="btn" data-close>Close</button></div>', true, 'lg');
   const box = $('#dlgBox');
   // The Options line says what's on, so she doesn't have to open it to know.
   const optsSay = () => {

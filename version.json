@@ -1,22 +1,22 @@
 {
- "version": "1.28.6",
- "build": "2293cc7e7e11",
+ "version": "1.28.7",
+ "build": "0918744dc2e3",
  "notes": [
-  "In another language, the boxes a class page opens now read in that language too: a new or changed assignment, the roster, units, how the class is graded, Email wording and report Wording, the notes pages for work with no papers, and the progress sheets you print.",
-  "Class, unit, assignment and student names, and the sentences in the Wording boxes, stay as you typed them. The marking screen and its boxes are still in English."
+  "In another language, the marking screen now reads in that language: the top bar, the tools, the student list, the score panel and its menus, and the Grades, Insights and Return tabs and Rubric setup.",
+  "Student names, rubric rows, what each score means, your comments and the papers themselves stay as they are. Boxes opened from the marking screen, To do, School and the Planner are still in English."
  ],
  "files": {
-  "index.html": "48d627e35ed0e3e90963791f3b2c4ef3554c9c6a3c77d4c2cd6246115b49ad90",
-  "planner.html": "9672ea7ad5c5068536dfcfaf3ce75fadf2c6dafe619d5bd271c6f61f23a00c4d"
+  "index.html": "4691a924b521ca3fc469074657ba4c85b96046759ea0c37f5e8829409ab8f167",
+  "planner.html": "e64d1511365c649d56677f4dfa85ebdad17cb3a5f6955ee28fd489b094bc320b"
  },
  "langs": {
-  "lang/zh-Hant.js": "45c0d06f89f7008a4da89283a86b1609266f4f9b90822ebf3b613999b42be903",
-  "lang/zh-Hans.js": "85ad0e078d56e294896be03ee8e37bd1a0d52199194bd7d55da54566c093037e",
-  "lang/es.js": "dce8c053183d5ca6dcfe9b57199e3f259654f759a11cc5a6b2276a320b582151",
-  "lang/fr.js": "6f4ff920fbc3a1a953478273ff26e3a8e6be0d8b93aa693be06897642e863357",
-  "lang/de.js": "cecee604773aeb3c9bc8e701017a379db3db3bf11945b6180a8f8b18d25dd832",
-  "lang/pt-BR.js": "a37c5ac5ecb0bd757ebf5a1eaab38e512ddc7a1262d2d61b104cf334073dfbfe",
-  "lang/ja.js": "382d515e5fab4daaa83a530889c05e4ab0e0bb489dc196b2f596d51f6e6fea41",
-  "lang/ko.js": "cb50f96c1b0579d5d134cc93a3aa24df358e108f6fcdabd5801a2b0b1ce0dfc6"
+  "lang/zh-Hant.js": "896d3aea0d90b9433c05190c21b4c207a5ff4aed293c4fa9f3d47b5ae214d266",
+  "lang/zh-Hans.js": "78ef50044b9295d8ea8907d3f950f053949bc0043e5a4618f390c548169b7bfe",
+  "lang/es.js": "029d6d23e9c0c07943d466e3f7ac2e8dac628e03d4cbb976e048a9297b829b92",
+  "lang/fr.js": "42f46e0765e09f2cf94533ac3b136bcf14923c52e99b0914ed818918562f78be",
+  "lang/de.js": "0f8e21d4c8597ec30007dbfb9a9f4d6234170f87a727bb60a60a18b888bfedf9",
+  "lang/pt-BR.js": "dd568e5276adc4c99486ee836b1a7ca288e2a3535b053e8d4950c87eb613cea0",
+  "lang/ja.js": "447b3f1ab805b87e312115289ddf8a849954d31a4bf454da4acd2cafa786985d",
+  "lang/ko.js": "052fc2ed53f289c43178c5782d96ca2a5a5e0bfda5660ccb3f4aeeca2ffa5e6d"
  }
 }
