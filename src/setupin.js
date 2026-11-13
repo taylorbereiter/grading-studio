@@ -102,7 +102,7 @@ function stpRead(j) {
     if (typeof sc.assistantOpens === 'string') o.aiOpen = /^tab$/i.test(sc.assistantOpens.trim()) ? 'tab' : '';
     // the other assistants in the sidebar's list: a link of her own for some, and the known ones she doesn't want listed
     if (Array.isArray(sc.otherAssistants)) { o.aiUrls = {}; for (const x of sc.otherAssistants.slice(0, 12)) { const n = stpStr(stpObj(x) ? x.name : '', 30), u = stpObj(x) ? aiUrlClean(x.link) : ''; if (n && u) o.aiUrls[n] = u; } }
-    if (Array.isArray(sc.assistantsNotListed)) o.aiOff = [...new Set(sc.assistantsNotListed.map(x => stpStr(x, 30)).filter(Boolean))].slice(0, 12);
+    if (Array.isArray(sc.assistantsNotListed)) o.aiOff = [...new Set(sc.assistantsNotListed.filter(x => typeof x === 'string').map(x => stpStr(x, 30)).filter(Boolean))].slice(0, 12);
     if (Object.keys(o).length) S.school = o; }
   // how a new assignment is graded
   const g = stpObj(j.grading);

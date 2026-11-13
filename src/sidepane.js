@@ -98,6 +98,14 @@ function spTake(key, ...nodes) {
   }
 }
 function spDone() { if (spNow.shown) spPaint(); }
+// A card swapped for another once it is ready (a kept video, while it is read from the browser) keeps its place in all this.
+new MutationObserver(recs => {
+  for (const r of recs) {
+    if (r.removedNodes.length !== 1 || r.addedNodes.length !== 1) continue;
+    const was = r.removedNodes[0], now = r.addedNodes[0];
+    if (was.dataset && was.dataset.spk && !was.isConnected && now.dataset && !now.dataset.spk) { now.dataset.spk = was.dataset.spk; now.dataset.spo = was.dataset.spo; }
+  }
+}).observe($('#paper'), { childList: true, subtree: true });
 // Shows one tab. keep false: it isn't remembered as her choice.
 function spPick(key, keep) {
   const body = $('#spBody'), paper = $('#paper'), t = spNow.tabs.find(x => x.key === key); if (!body || !t) return;

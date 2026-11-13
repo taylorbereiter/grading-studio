@@ -41,6 +41,7 @@ function besideUse(name) {
   m.ai = name; if (u) m.aiUrl = u; else delete m.aiUrl;
   if (Object.keys(urls).length) m.aiUrls = urls; else delete m.aiUrls;
   lib.me = m; saveLib(); gradeDefaultApply(); sysWords();
+  if (typeof setRender === 'function') setRender();   // Settings, when it is the screen she is on
 }
 // The window's place: the right of the screen, top to bottom, a little over a third of it wide.
 function besidePlace() {

@@ -99,6 +99,7 @@ test('the video area drags bigger without going full screen, and keeps its size'
   const vid = await makeVideo(page, 'Cleo talk.webm', 1);
   await page.evaluate(async v => { const B = window.__gs.state().batch; await window.__gs.videoAdd(B.students[2], { file: v, name: 'Presentation video', kind: '', partners: [] }); }, vid);
   await page.waitForSelector('#paper .media video');
+  await page.evaluate(() => window.__gs.spClose());   // with the side pane open the bar between the panes sets the size (test/sidepane.test.js)
   await page.waitForFunction(() => document.querySelector('#paper .media video').getBoundingClientRect().height > 20);
   const g = await (await page.$('#paper .media .vgrip')).boundingBox(), h0 = await page.$eval('#paper .media video', v => v.getBoundingClientRect().height);
   await page.mouse.move(g.x + g.width / 2, g.y + g.height / 2); await page.mouse.down();
