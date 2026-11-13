@@ -236,7 +236,7 @@ async function openExport() {
     if ($('#xFb').checked) on.push('feedback page');
     if (xAll()) on.push('files with no marks too');
     if (dpi > 150) on.push('extra sharp');
-    el.textContent = on.length ? on.join(', ') : 'none';
+    el.innerHTML = on.length ? on.map(x => '<span>' + x + '</span>').join(', ') : 'none';   // one piece each, so each can be put into the app's language
   };
   // An example name from the first file on the list, so she sees what students will get.
   const namesSay = () => {

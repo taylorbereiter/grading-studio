@@ -653,6 +653,8 @@ test('the marking screen and its tabs leave nothing in English', async () => {
   await at('Insights, percents', async () => { await tab('#insightsTab')(); await pause(400); await page.$$eval('#dlgBox .vseg a', a => a[1] && a[1].click()); });
   await at('Insights, consistency', () => page.$$eval('#dlgBox .vseg a', a => a[2] && a[2].click()));
   await at('Return, every row scored', tab('#exportBtn'));
+  await at('Return, the list and the options open', () => page.$$eval('#dlgBox details', d => d.forEach(x => { x.open = true; })));
+  await at('Return, every option flipped', async () => { for (const id of await page.$$eval('#dlgBox details input[type=checkbox]', x => x.map(y => y.id))) { await page.$eval('#' + id, b => b.click()); await pause(150); } });
   await tab('#markTab')(); await pause(300);
   await at('Rubric setup', tab('#setupBtn')); await press('Escape');
   assert.deepEqual(page.errors, []);

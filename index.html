@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"3f3d2d7d","zh-Hans":"1fdc3270","es":"e62414ec","fr":"ee441279","de":"d59cefc1","pt-BR":"8a9758c8","ja":"503560e6","ko":"56f66040"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script></head><body>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"db23a412","zh-Hans":"6e7f470e","es":"1b45bce1","fr":"6c35ac3c","de":"c5237f62","pt-BR":"450149ce","ja":"92bacea6","ko":"8965c72a"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script></head><body>
 <title>Grading Studio</title>
 <script>try{document.documentElement.dataset.theme=JSON.parse(localStorage.getItem('gs.theme'))||'light'}catch(e){document.documentElement.dataset.theme='light'}</script>
 <style>
@@ -4628,6 +4628,8 @@ const LANG_FILLS = [
     return [/^\d+$/.test(m[1]) ? langFill(F.rowavg, m, P) : F.rowavgE, ...(m[2] ? [langFill(F.rowpart, [0, m[2]], P)] : []), ...rs].join(' '); }],
   ['ovrar0', /^(.+): No scores yet\. No scores yet$/, (m, F, P) => { const r = trPiece('No scores yet', P); return r == null ? null : m[1] + ': ' + r + '. ' + r; }], ['rowsdone', /^(\d+) of (\d+) rows scored$/],
   ['nowrit', /^Nothing written for ([\d.,]+)\.$/],
+  ['partw', /^Partial: (\d+) of (\d+) rows scored$/], ['partq', /^Partial: (\d+) of (\d+) questions marked in Quick mark$/], ['isgrade', /^Is “(.+)” the grade\?$/], ['nreads', /^(\d+) grades found on the paper$/],
+  ['yspaper', /^Your score is ([\d.,]+%?), the paper says (.+)$/], ['yswr', /^Your score is ([\d.,]+), the Word rubric says ([\d.,]+)$/], ['likename', /^Like “(.+)”\. Graded when it has a score, Feedback when it doesn’t\.$/],
   ['rowless', /^(\d+) scores? read from the paper ha(?:s|ve) no rows, so (?:it isn’t|they aren’t) here\.$/],
   ['skipn', /^(\d+) students? ha(?:s|ve) nothing marked, so they’re left out\.$/],
   ['grpn', /^(.+) \((\d+)\)$/, (m, F, P) => { const h = trPiece(m[1], P); return h == null ? null : h + ' (' + m[2] + ')'; }],
@@ -7907,7 +7909,7 @@ async function openExport() {
     if ($('#xFb').checked) on.push('feedback page');
     if (xAll()) on.push('files with no marks too');
     if (dpi > 150) on.push('extra sharp');
-    el.textContent = on.length ? on.join(', ') : 'none';
+    el.innerHTML = on.length ? on.map(x => '<span>' + x + '</span>').join(', ') : 'none';   // one piece each, so each can be put into the app's language
   };
   const namesSay = () => {
     const el = $('#xNamesSay'); if (!el) return;
@@ -13915,7 +13917,7 @@ function exportCheck() {
     if (!g.done) c.unfinished.push({ i, name, note: g.partial ? 'Partial: ' + partNote(st) : 'Not scored yet' });
     if (!st.files.length) c.noPaper.push({ i, name });
     const d = disagreeNote(st); if (d) c.disagree.push({ i, name, note: d });
-    for (const f of st.files) if (unmarkedFile(st, f)) c.unmarked.push({ i, name, note: f.bad ? (anonOn() ? '' : f.name + ': ') + 'it couldn’t be opened, so it won’t be in the export' : anonOn() ? '' : f.name, file: f.path });
+    for (const f of st.files) if (unmarkedFile(st, f)) c.unmarked.push({ i, name, fname: anonOn() ? '' : f.name, note: f.bad ? 'it couldn’t be opened, so it won’t be in the export' : '', file: f.path });
     if (g.total != null || g.pct != null) return;   // her own score, or one clear reading, already stands
     if (manyReads(st)) { c.doubts.push({ i, name, note: readsCount(st) + ' grades found on the paper' }); return; }
     for (const r of st.doubts || []) c.doubts.push({ i, name, note: 'Is “' + foundLabel(r) + '” the grade?' });
@@ -13925,7 +13927,7 @@ function exportCheck() {
 function exportCheckHtml(c) {
   const groups = [['Scores not finished', c.unfinished], ['No paper', c.noPaper], ['Scores that disagree with the paper', c.disagree], ['Files with no marks', c.unmarked], ['Grades to confirm', c.doubts, true]].filter(x => x[1].length);
   if (!groups.length) return '<div class="xchk ok" id="xCheck">✓ All clear: everyone is scored, scores match the papers, and every file is marked.</div>';
-  const item = (o, sheet) => '<li><button class="link" ' + (sheet && !anonOn() ? 'data-chksheet' : 'data-chk="' + o.i + '"' + (o.file ? ' data-file="' + esc(o.file) + '"' : '')) + '>' + esc(o.name) + '</button>' + (o.note ? ' <span class="muted">' + esc(o.note) + '</span>' : '') + '</li>';
+  const item = (o, sheet) => '<li><button class="link" ' + (sheet && !anonOn() ? 'data-chksheet' : 'data-chk="' + o.i + '"' + (o.file ? ' data-file="' + esc(o.file) + '"' : '')) + ' data-raw>' + esc(o.name) + '</button>' + (o.note || o.fname ? ' <span class="muted">' + (o.fname ? '<span data-raw>' + esc(o.fname) + '</span>' + (o.note ? ': ' : '') : '') + (o.note ? '<span>' + esc(o.note) + '</span>' : '') + '</span>' : '') + '</li>';   // a name and a file name stay as they are in any language
   const n = groups.reduce((a, g) => a + g[1].length, 0);
   return '<details class="xchk" id="xCheck"><summary><span><b>' + n + (n === 1 ? ' thing' : ' things') + ' to look at before you return these</b> <span class="muted">(you can still download)</span></span><span class="xshow">Show</span></summary>' +
     '<p class="muted" style="margin:6px 0 0">Click a name to go there.</p>' +

@@ -131,6 +131,8 @@ const LANG_FILLS = [
     return [/^\d+$/.test(m[1]) ? langFill(F.rowavg, m, P) : F.rowavgE, ...(m[2] ? [langFill(F.rowpart, [0, m[2]], P)] : []), ...rs].join(' '); }],
   ['ovrar0', /^(.+): No scores yet\. No scores yet$/, (m, F, P) => { const r = trPiece('No scores yet', P); return r == null ? null : m[1] + ': ' + r + '. ' + r; }], ['rowsdone', /^(\d+) of (\d+) rows scored$/],
   ['nowrit', /^Nothing written for ([\d.,]+)\.$/],
+  ['partw', /^Partial: (\d+) of (\d+) rows scored$/], ['partq', /^Partial: (\d+) of (\d+) questions marked in Quick mark$/], ['isgrade', /^Is “(.+)” the grade\?$/], ['nreads', /^(\d+) grades found on the paper$/],
+  ['yspaper', /^Your score is ([\d.,]+%?), the paper says (.+)$/], ['yswr', /^Your score is ([\d.,]+), the Word rubric says ([\d.,]+)$/], ['likename', /^Like “(.+)”\. Graded when it has a score, Feedback when it doesn’t\.$/],
   ['rowless', /^(\d+) scores? read from the paper ha(?:s|ve) no rows, so (?:it isn’t|they aren’t) here\.$/],
   ['skipn', /^(\d+) students? ha(?:s|ve) nothing marked, so they’re left out\.$/],
   ['grpn', /^(.+) \((\d+)\)$/, (m, F, P) => { const h = trPiece(m[1], P); return h == null ? null : h + ' (' + m[2] + ')'; }],

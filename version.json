@@ -1,22 +1,22 @@
 {
  "version": "1.28.11",
- "build": "c2645b7885f2",
+ "build": "8dac03c66861",
  "notes": [
   "In another language, the marking screen now reads in that language: the top bar, the tools, the student list, the score panel and its menus, and the Grades, Insights and Return tabs and Rubric setup.",
   "Student names, rubric rows, what each score means, your comments and the papers themselves stay as they are. Boxes opened from the marking screen, To do, School and the Planner are still in English."
  ],
  "files": {
-  "index.html": "061d84ae6784f7d22d464fd29f6c2cfc01512537fb70d06cec9c8287e4476cfe",
-  "planner.html": "93e8fd0d84f21c0463d6721bd4bd421869b7dbd4b885e6b14f91e8ea5f82493e"
+  "index.html": "bfed006f2fd18a9ea85c2f25cc700256a3e3b9abb16a6ab5bbcb445a5d4b8d7e",
+  "planner.html": "f1327c402c2fd450576b6ab03096e8bdb3bfb2b154adec04bfb91db55665a678"
  },
  "langs": {
-  "lang/zh-Hant.js": "3f3d2d7d34808ffed5deef4cc20ba3de41664e5b95a753021c3895c22eac1d76",
-  "lang/zh-Hans.js": "1fdc32707de228a6932bdf16d0f0b5d140a3b04dca525ffc302d6594db2159af",
-  "lang/es.js": "e62414ec6d14e193c7671f90721fba06c4ca16e91d14548138c3c05ae89f5550",
-  "lang/fr.js": "ee441279e83e86e9ad6c4471ed897929a8b739ae5a0461b92cdaab9cba923e8a",
-  "lang/de.js": "d59cefc1cca0686d3208ec4b3a6c1bcb291b4bad8b54df45ff2da0b55e893bd8",
-  "lang/pt-BR.js": "8a9758c88a0fd1bd9664d1944f6feabacc565ca0c9e1c0e1386aa49d2064b4c1",
-  "lang/ja.js": "503560e6614dc2e269864f14f1d6cf8bb6f94ee9fad68b34ff5648cce61ac469",
-  "lang/ko.js": "56f66040b7ee2048fecf7ec50ea1adbe60c60223c2cff16194f5cbf3b8ffb5b2"
+  "lang/zh-Hant.js": "db23a41209d4657f61b472e340f4366c5a36fc5feb4c96bb5cb8d94e7d5e0927",
+  "lang/zh-Hans.js": "6e7f470ef20df911000ef42067a5a0c52b87c0bb79960544ced12641dc3c13db",
+  "lang/es.js": "1b45bce1f6e91f6cba5088e132b8a9f7f14eaa0a86279a4df4cd1402ad3fc986",
+  "lang/fr.js": "6c35ac3c541ac5c3fa530bc1b50b1e4d8072b5b9a30b7263c54393849c659b9b",
+  "lang/de.js": "c5237f62d8d523f87a592e662fe642d4c69b77fee100f217562f37d4864b4b2c",
+  "lang/pt-BR.js": "450149ce4859d1def40287cc78ee2f5f719c48b219300f1655ac61b24ff36051",
+  "lang/ja.js": "92bacea687286188461a17663fdd37e5285302f6f68636dc48a812852da5cc92",
+  "lang/ko.js": "8965c72a4e67fd02b137b921ad5532d5ac0ec841d27e8dea89710706c92a24fa"
  }
 }
