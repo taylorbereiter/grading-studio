@@ -287,7 +287,8 @@ test('the week: each line on its day under the class that meets, what is late un
   assert.equal((await page.$$('#tdWeek .tdday')).length, 8);
   assert.deepEqual(await col(day(0)), ['Email the office (late)', 'Water the plants (done)', '[grade-9 english]', 'Print handouts', 'Plan today’s grade-9 english lesson']);
   assert.match(await page.$eval('#tdWeek .tdday.now .late', e => e.textContent), /^from \S+day$/);
-  assert.deepEqual(await col(''), ['Reports', 'Order the novels'], 'a line with a day comes before one with none');
+  // On a Friday the app adds its own "Plan Monday’s lesson" line to Later; the two she wrote are what is checked here.
+  assert.deepEqual((await col('')).filter(x => !/^Plan \S+’s /.test(x)), ['Reports', 'Order the novels'], 'a line with a day comes before one with none');
   // a line typed into a day is for that day; typed into Later it has no day
   await add(page, 'Call the printer', '#tdWeek [data-tdwadd="' + day(0) + '"] input');
   await add(page, 'Sort the bookshelf', '#tdWeek [data-tdwadd=""] input');

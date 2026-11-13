@@ -56,7 +56,7 @@ function attStep(c, d, dir) {
   return isoDay(new Date(new Date(d + 'T12:00:00').getTime() + dir * 864e5));
 }
 const attHash = (c, sub) => classHash(c, 'attendance') + (sub ? '/' + sub : '');
-const attLong = d => new Date(d + 'T12:00:00').toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' });
+const attLong = d => new Date(d + 'T12:00:00').toLocaleDateString(LANG_LOCALE, { weekday: 'long', month: 'long', day: 'numeric' });
 // "22 present · 1 late · 1 absent": only what there is.
 const attSay = o => ['p', 'l', 'a', 'e'].filter(k => o[k]).map(k => o[k] + ' ' + ATT_SHORT[k]).join(' · ');
 // Each absence in these days whose reason still isn't known, newest first.
@@ -74,7 +74,7 @@ function attRange() {
 function attPanel(el, c, sub) {
   attLib = lib;
   const all = sub === 'all', d = all ? '' : sub || attToday();
-  el.innerHTML = '<div class="att" id="attBody" data-attcls="' + esc(c.id) + '" data-attday="' + esc(d) + '">' +
+  el.innerHTML = '<div class="att" id="attBody" data-lc="att" data-attcls="' + esc(c.id) + '" data-attday="' + esc(d) + '">' +
     '<div class="attbar"><div class="pseg" role="group" aria-label="Attendance"><a class="attv" href="' + attHash(c) + '"' + (all ? '' : ' aria-current="page"') + '>Take attendance</a><a class="attv" href="' + attHash(c, 'all') + '"' + (all ? ' aria-current="page"' : '') + '>Look back</a></div>' +
     (all ? attBackBar(c) : attDayBar(c, d)) + '</div>' + (all ? attBack(c) : attList(c, d)) + '</div>';
 }
@@ -103,14 +103,14 @@ function attBackBar(c) {
   return (g.terms.length ? '<div class="ovtabs bkterms" role="group" aria-label="Dates">' + g.terms.map(t => '<button data-attterm="' + esc(t.id) + '" aria-selected="' + (attSt.term === t.id) + '">' + esc(t.name || 'Term') + '</button>').join('') + '<button data-attterm="*" aria-selected="' + (attSt.term === '*') + '">All dates</button></div>' : '') +
     '<span class="sp"></span><button class="btn sm" data-attcopyall title="The table below, to paste into a spreadsheet">Copy table</button><button class="btn sm" data-attcsv>Download as a spreadsheet</button>';
 }
-const attShort = d => { const t = new Date(d + 'T12:00:00'); return [t.toLocaleDateString(undefined, { weekday: 'short' }), t.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })]; };
+const attShort = d => { const t = new Date(d + 'T12:00:00'); return [t.toLocaleDateString(LANG_LOCALE, { weekday: 'short' }), t.toLocaleDateString(LANG_LOCALE, { month: 'short', day: 'numeric' })]; };
 function attBack(c) {
   const g = attRange(), days = attDays(c, g.from, g.to);
   if (!days.length) return '<p class="muted bkpad" id="attNone">No attendance saved ' + (attSt.term === '*' ? 'for this class yet' : 'in ' + esc(g.name)) + '. <a class="link" href="' + attHash(c) + '">Take today’s</a></p>';
   const cell = (n, d, shown) => { const s = attOf(c, d, n), note = attNote(c, d, n); return '<td><span class="attc s' + s + '" title="' + esc(shown + ' · ' + ATT_WORD[s] + (note ? ' · ' + note : '')) + '">' + (s === 'p' ? '' : s.toUpperCase()) + (note ? '<i></i>' : '') + '</span></td>'; };
   const num = v => '<td class="attt' + (v ? '' : ' z') + '">' + v + '</td>';
   return '<div class="attwrap"><table class="atttab" id="attTab"><thead><tr><th class="attn2">Student</th><th class="attt" title="Absent, reason unknown">Absent<small>reason unknown</small></th><th class="attt" title="Absent, excused">Absent<small>excused</small></th><th class="attt">Late</th>' +
-    days.map(d => { const [w, s] = attShort(d); return '<th class="attd"><a href="' + attHash(c, d) + '" title="Open ' + esc(attLong(d)) + '"><small>' + esc(w) + '</small>' + esc(s) + '</a></th>'; }).join('') + '</tr></thead><tbody>' +
+    days.map(d => { const [w, s] = attShort(d); return '<th class="attd"><a href="' + attHash(c, d) + '" title="Open ' + esc(attLong(d)) + '"><small data-raw>' + esc(w) + '</small><span data-raw>' + esc(s) + '</span></a></th>'; }).join('') + '</tr></thead><tbody>' +
     c.names.map((n, i) => { const shown = bkWho(n, i), o = attCount(c, n, days);
       return '<tr><th class="attn2" scope="row"><a class="bklink" href="' + classHash(c, 'students', i) + '">' + esc(shown) + '</a></th>' + num(o.a) + num(o.e) + num(o.l) + days.map(d => cell(n, d, shown)).join('') + '</tr>'; }).join('') +
     '<tr class="attfoot"><th class="attn2" scope="row">Here</th><td></td><td></td><td></td>' + days.map(d => { const o = attDayCount(c, d); return '<td>' + (o.p + o.l) + '</td>'; }).join('') + '</tr></tbody></table></div>' +
@@ -120,7 +120,7 @@ function attBack(c) {
 // Absences still marked "reason unknown": a reminder with a link to each day, so they can be changed to excused when the reason comes in.
 function attUnknownNote(c, days) {
   const u = attUnknown(c, days); if (!u.length) return '';
-  const day = d => new Date(d + 'T12:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  const day = d => new Date(d + 'T12:00:00').toLocaleDateString(LANG_LOCALE, { month: 'short', day: 'numeric' });
   return '<p class="attunk" id="attUnk"><b>' + people(u.length, 'absence') + ' still ' + (u.length === 1 ? 'has' : 'have') + ' no reason.</b> ' +
     u.slice(0, 8).map(x => '<a class="link" href="' + attHash(c, x.d) + '">' + esc(bkWho(x.n, c.names.indexOf(x.n)) + ', ' + day(x.d)) + '</a>').join(' · ') + (u.length > 8 ? ' and ' + (u.length - 8) + ' more' : '') +
     '. Open the day and press “Absent, excused” when you hear why.</p>';
