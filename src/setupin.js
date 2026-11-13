@@ -638,6 +638,7 @@ $('#setPane').addEventListener('click', async e => {
   if (d.dataset.stpcheck != null) return stpCheck($('#stpText').value);
   if (d.dataset.stpfile != null) return $('#stpFile').click();
   if (d.dataset.stpundo != null) return stpUndo();
+  if ((d.dataset.stpcopy != null || d.dataset.stpsave != null) && sampleStops('copying a setup out')) return;
   if (d.dataset.stpcopy != null) return copy(await stpExport(), 'Copied. It has no student in it.');
   if (d.dataset.stpsave != null) return saveBlob('grading-studio-setup.json', new Blob([await stpExport()], { type: 'application/json' }));
 });

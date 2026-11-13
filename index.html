@@ -1,6 +1,80 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"e61e5bc5","zh-Hans":"bf199251","es":"64dbb794","fr":"4207de01","de":"43ffb0f4","pt-BR":"59fab2a3","ja":"74aba9bd","ko":"2157a600"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script></head><body>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"10b356fc","zh-Hans":"b38a6f09","es":"d6dae13e","fr":"457219e2","de":"7dc6ef49","pt-BR":"c60f2951","ja":"e530373a","ko":"fa28b26d"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script></head><body>
 <title>Grading Studio</title>
+<script>/* ---------------- the sample: a made-up school week, kept apart from everything real ----------------
+   Runs first on both pages, before anything reads saved work. While the sample is open (gs.sampleOn in the browser's real storage),
+   every page at this address keeps its work under other names: each localStorage and sessionStorage key gets "sample:" in front,
+   and each database "sample-". The rest of the app never knows. So nothing of the sample can sit beside a teacher's own classes,
+   go into their folder, a take-home file or a new year, and leaving the sample is only taking the switch away and clearing
+   what was kept under those names. A teacher with real work can open the sample and come back to find that work untouched.
+   Two things are shared with the real side on purpose, since they are about the screen and not about work: the theme and the language.
+   What fills the sample is in src/sample-data.js, fetched only when the sample is opened (src/sample.js builds it). */
+(function () {
+  var REAL = window.localStorage, KEY = 'gs.sampleOn', LEFT = 'gs.sampleLeft', PRE = 'sample:', DBPRE = 'sample-';
+  var SHARED = { 'gs.theme': 1, 'gs.lang': 1 };
+  var DBS = ['grading-studio-keep', 'grading-studio-added', 'grading-studio-folder', 'grading-studio-examples', 'grading-studio-safety', 'grading-studio-models', 'grading-studio-school', 'gs-lessons'];
+  var on = false; try { on = REAL.getItem(KEY) === '1'; } catch (e) {}
+  var F = window.IDBFactory && IDBFactory.prototype, open0 = F && F.open, del0 = F && F.deleteDatabase, list0 = F && F.databases;
+  function wipe() {
+    try { var ks = []; for (var i = 0; i < REAL.length; i++) { var k = REAL.key(i); if (k && k.indexOf(PRE) === 0) ks.push(k); } ks.forEach(function (k) { REAL.removeItem(k); }); } catch (e) {}
+    try { var s = window.sessionStorage, ss = []; for (var j = 0; j < s.length; j++) { var q = s.key(j); if (q && q.indexOf(PRE) === 0) ss.push(q); } ss.forEach(function (q) { s.removeItem(q); }); } catch (e) {}
+    if (!del0) return;
+    var left = DBS.length, done = function () { if (!--left) try { REAL.removeItem(LEFT); } catch (e) {} };
+    DBS.forEach(function (n) { try { var r = del0.call(indexedDB, DBPRE + n); r.onsuccess = r.onerror = done; } catch (e) { done(); } });
+    if (list0) try { list0.call(indexedDB).then(function (l) { l.forEach(function (d) { if (d.name && d.name.indexOf(DBPRE) === 0 && DBS.indexOf(d.name.slice(DBPRE.length)) < 0) del0.call(indexedDB, d.name); }); }, function () {}); } catch (e) {}
+  }
+  function enter() { try { REAL.setItem(LEFT, '1'); wipe(); REAL.setItem(KEY, '1'); } catch (e) { return false; } return true; }
+  function leave() { try { REAL.removeItem(KEY); REAL.setItem(LEFT, '1'); } catch (e) {} }
+  window.addEventListener('storage', function (e) { if (e.storageArea === REAL && e.key === KEY && (e.newValue === '1') !== on) location.reload(); });
+  window.__gsSample = { on: on, enter: enter, leave: leave, wipe: wipe, dbs: DBS.slice(), again: function () { try { REAL.removeItem(PRE + 'gs.sampleBuilt'); } catch (e) {} } };
+  if (!on) { try { if (REAL.getItem(LEFT)) wipe(); } catch (e) {} return; }
+  try { if (REAL.getItem(PRE + 'gs.sampleBuilt') == null) wipe(); } catch (e) {}
+
+  /* from here on, the sample is open: every name this page stores under is changed on its way in and out */
+  function area(real) {
+    var keys = function () { var o = []; for (var i = 0; i < real.length; i++) { var k = real.key(i); if (k == null) continue; if (k.indexOf(PRE) === 0) o.push(k.slice(PRE.length)); else if (SHARED[k]) o.push(k); } return o; };
+    var name = function (k) { k = String(k); return SHARED[k] ? k : PRE + k; };
+    var api = {
+      getItem: function (k) { return real.getItem(name(k)); },
+      setItem: function (k, v) { real.setItem(name(k), v); },
+      removeItem: function (k) { real.removeItem(name(k)); },
+      clear: function () { keys().forEach(function (k) { if (!SHARED[k]) real.removeItem(PRE + k); }); },
+      key: function (i) { var k = keys()[i]; return k == null ? null : k; },
+    };
+    return new Proxy({}, {
+      get: function (t, p) { if (p === 'length') return keys().length; if (typeof p !== 'string') return undefined; if (api[p]) return api[p]; var v = real.getItem(name(p)); return v == null ? undefined : v; },
+      set: function (t, p, v) { real.setItem(name(p), String(v)); return true; },
+      deleteProperty: function (t, p) { real.removeItem(name(p)); return true; },
+      has: function (t, p) { return typeof p === 'string' && (p in api || p === 'length' || real.getItem(name(p)) != null); },
+      ownKeys: function () { return keys(); },
+      getOwnPropertyDescriptor: function (t, p) { var v = typeof p === 'string' ? real.getItem(name(p)) : null; return v == null ? undefined : { value: v, writable: true, enumerable: true, configurable: true }; },
+    });
+  }
+  var LS = area(REAL);
+  Object.defineProperty(window, 'localStorage', { get: function () { return LS; }, configurable: true });
+  try { var SS = area(window.sessionStorage); Object.defineProperty(window, 'sessionStorage', { get: function () { return SS; }, configurable: true }); } catch (e) {}
+  if (F) {
+    F.open = function (n) { var a = [].slice.call(arguments); a[0] = DBPRE + n; return open0.apply(this, a); };
+    F.deleteDatabase = function (n) { var a = [].slice.call(arguments); a[0] = DBPRE + n; return del0.apply(this, a); };
+    if (list0) F.databases = function () { return list0.call(this).then(function (l) { return l.filter(function (d) { return d.name && d.name.indexOf(DBPRE) === 0; }).map(function (d) { return { name: d.name.slice(DBPRE.length), version: d.version }; }); }); };
+  }
+  if (window.BroadcastChannel) { var BC = window.BroadcastChannel; window.BroadcastChannel = function (n) { return new BC(PRE + n); }; window.BroadcastChannel.prototype = BC.prototype; }
+  if (navigator.locks && window.LockManager) { var rq = LockManager.prototype.request; LockManager.prototype.request = function (n) { var a = [].slice.call(arguments); a[0] = PRE + n; return rq.apply(this, a); }; }
+  var add0 = window.addEventListener, rm0 = window.removeEventListener, wraps = new Map();
+  window.addEventListener = function (type, fn, opt) {
+    if (type !== 'storage' || typeof fn !== 'function') return add0.call(this, type, fn, opt);
+    var w = wraps.get(fn);
+    if (!w) wraps.set(fn, w = function (e) {
+      if (e.storageArea !== REAL) return;
+      var k = e.key; if (k != null) { if (SHARED[k]) {} else if (k.indexOf(PRE) === 0) k = k.slice(PRE.length); else return; }
+      fn.call(this, { type: 'storage', key: k, oldValue: e.oldValue, newValue: e.newValue, url: e.url, storageArea: LS, target: e.target });
+    });
+    return add0.call(this, type, w, opt);
+  };
+  window.removeEventListener = function (type, fn, opt) { return rm0.call(this, type, type === 'storage' && wraps.get(fn) || fn, opt); };
+  document.documentElement.classList.add('gs-sample');
+})();
+</script>
 <script>try{document.documentElement.dataset.theme=JSON.parse(localStorage.getItem('gs.theme'))||'light'}catch(e){document.documentElement.dataset.theme='light'}</script>
 <style>
 /*
@@ -1422,6 +1496,21 @@ small.bkxc{font-weight:500}
 .rsaved.bad b{color:var(--bad)}
 .rsaved .rl{display:block;flex:1;min-width:0;overflow-wrap:anywhere}
 
+/* the sample (src/samplemode.js): a notice at the top of the sidebar on both pages, with the way out */
+.rsample{display:flex;flex-direction:column;gap:8px;margin:0 0 10px;padding:10px;border:1px solid var(--accent);border-radius:var(--corner-3);background:var(--accent-soft);color:var(--fg-2);font-size:12.5px;line-height:1.35}
+.rsample>.rl{display:block}
+/* in the sample nothing is backed up and nothing needs to be: the line that says so for real work is put away */
+.gs-sample .rsaved,.gs-sample #safeAsk{display:none}
+.rsample b{display:block;color:var(--accent);font-weight:700;font-size:var(--text-caption);letter-spacing:.06em;text-transform:uppercase;margin-bottom:2px}
+.rsample .btn{justify-content:center;gap:6px;background:var(--surface)}
+.rsample .btn svg{width:16px;height:16px}
+#sampleCover{position:fixed;inset:0;z-index:90;display:flex;align-items:center;justify-content:center;background:var(--bg);padding:24px}
+#sampleCover .smpbox{max-width:420px;text-align:center}
+#sampleCover h2{font-family:var(--f-display);font-size:var(--text-lead);margin:16px 0 6px}
+#sampleCover p{margin:0 0 16px;color:var(--fg-2)}
+#sampleCover .smpspin{width:28px;height:28px;margin:0 auto;border-radius:50%;border:3px solid var(--line);border-top-color:var(--accent);animation:smpspin 1s linear infinite}
+@keyframes smpspin{to{transform:rotate(360deg)}}
+
 /* while a paper is open the sidebar folds to a strip of icons, so the paper gets the room */
 :is(.shell.grading,.pfold,.gsfull) .rail{width:60px;padding:12px 8px;align-items:center;overflow:hidden auto}
 :is(.shell.grading,.pfold,.gsfull) .rail .rl{display:none}
@@ -1434,6 +1523,8 @@ small.bkxc{font-weight:500}
 :is(.shell.grading,.pfold,.gsfull) .rdot{width:10px;height:10px}
 :is(.shell.grading,.pfold,.gsfull) .rsaved{justify-content:center;width:40px;padding:12px 0}
 :is(.shell.grading,.pfold,.gsfull) .rsaved .rdot{margin:0}
+:is(.shell.grading,.pfold,.gsfull) .rsample{padding:0;border:0;background:none;margin:0 0 2px}
+:is(.shell.grading,.pfold,.gsfull) .rsample .btn{width:40px;height:40px;padding:0;border-color:var(--accent);color:var(--accent)}
 @media (max-width:1100px){
   .rail{width:60px;padding:12px 8px;align-items:center}
   .rail .rl{display:none}
@@ -1445,6 +1536,8 @@ small.bkxc{font-weight:500}
   .rdot{width:10px;height:10px}
   .rsaved{justify-content:center;width:40px;padding:12px 0}
   .rsaved .rdot{margin:0}
+  .rsample{padding:0;border:0;background:none;margin:0 0 2px}
+  .rsample .btn{width:40px;height:40px;padding:0;border-color:var(--accent);color:var(--accent)}
 }
 /* full screen (src/fullscreen.js): the sidebar folds to icons, and while a paper is open it goes, so the paper has the room.
    On the marking screen the button is in the top bar instead. */
@@ -2324,6 +2417,9 @@ html.welcoming .shell{visibility:hidden}
 .mebrow label{display:inline-flex;align-items:center;gap:6px;font-size:var(--text-control);color:var(--muted)}
 .mebrow input{height:32px;border:1px solid var(--line-strong);border-radius:var(--corner-2);padding:0 var(--space-2);font:inherit;font-size:var(--text-body);background:var(--surface);color:var(--fg);width:64px}
 .mebrow input.mebl{width:56px;font-weight:600}
+
+.safeask .satry{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 14px;margin-top:var(--space-3)}
+.safeask .satry span{color:var(--muted)}
 /* ---------- strong examples: the star in Quick mark, the Use as an example box, the Examples tab, Show to the class ---------- */
 .qmex[aria-pressed=true]{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
 .qmex[aria-pressed=true]:hover{background:var(--accent-hover)}
@@ -4517,6 +4613,9 @@ const gsData = (() => {
 gsData.boot(function () {
 const LANG_NAMES = {"zh-Hant":"繁體中文","zh-Hans":"简体中文","es":"Español","fr":"Français","de":"Deutsch","pt-BR":"Português (Brasil)","ja":"日本語","ko":"한국어"};
 const LANG_PACKED = {};
+const SAMPLE_API = "fa0a5747";
+const SAMPLE_STAMP = "fa0a5747";
+const SAMPLE_PACKED = "";
 /* ---------------- languages (Stage 6): the app in a language other than English ----------------
    Built into both pages, after the language files (src/lang-*.js) and before everything else.
    The app is written in English. A language is one file: the English words and sentences it knows, each with its own, the answers
@@ -4690,8 +4789,8 @@ const HELP = [
       'The papers are kept in this browser, so the set is on Today under **To mark** the next time you open the app.'],
     go: ['Go to Today', '#/'], words: 'start begin import upload zip download submissions drop folder' },
   { id: 'try-sample', sec: 'start', q: 'Can I try it without real papers?',
-    a: ['Yes. **Try it with a sample class** makes a class of made-up students with papers to mark, score and hand back. Find it in the welcome, or type “sample” in Find anything.',
-      'A card on Today removes the sample class in one click when you are done.'],
+    a: ['Yes. **Try it with a sample class** opens two made-up classes part-way through a term, with marked papers, a gradebook, a timetable and lessons. Find it in the welcome, or type “sample” in Find anything.',
+      'The sample is kept apart from your own work. **Leave the sample** in the sidebar clears it in one click, and your own work is as you left it.'],
     words: 'demo example practice test made-up' },
   { id: 'find-anything', sec: 'start', q: 'What is Find anything?',
     a: ['One box that reaches every student, assignment, tool, setting and help answer. Open it from the top of the sidebar, or press **Ctrl K** (**⌘K** on a Mac).',
@@ -9134,6 +9233,7 @@ async function gList(q, fields) {
 }
 const FOLDER = 'application/vnd.google-apps.folder';
 async function signIn() {
+  if (sampleStops('Google Drive')) return;
   if (!gcid()) return driveSetup();
   try {
     await gToken(true);
@@ -12277,7 +12377,8 @@ $('#setKeysBtn').onclick = openKeys;
 $('#pickFiles').onclick = () => $('#fileIn').click();
 $('#pickFolder').onclick = () => pickDir('#dirIn');
 $('#pickDrive').onclick = () => openFromDrive(null);
-$('#sample').onclick = () => sampleClass();
+$('#sample').onclick = () => sampleEnter();
+if (sampleOn()) $('#sample').hidden = true;
 let scanFor = null;
 let scanInto = false;
 $('#pickScan').onclick = () => { scanFor = null; scanInto = false; $('#scanIn').click(); };
@@ -19079,6 +19180,7 @@ async function folderUse(h) {
   return folderResume(false);
 }
 async function folderPick() {
+  if (sampleStops('saving to a folder')) return;
   if (!canPickFolder()) return sayDlg('Saving to a folder needs Chrome or Edge on a computer. Your work is still kept in this browser.');
   let h;
   try { h = await window.showDirectoryPicker({ id: 'gs-work', mode: 'readwrite', startIn: 'documents' }); }
@@ -19105,6 +19207,7 @@ async function folderBoot() {
 function setWhere(s) { fld.state = s; renderWhere(); }
 const canPickFolder = () => 'showDirectoryPicker' in window;
 function whereSay() {
+  if (sampleOn()) return { safe: true, sub: 'Sample', text: 'Sample, kept only while you look around', tip: 'Nothing here is your own work. Leave the sample and it is cleared', cls: '' };
   const nm = '“' + fld.name + '”', sh = fld.name.length > 24 ? '“' + fld.name.slice(0, 22) + '…”' : nm;   // the top bar has room for only so much, and what to do has to fit
   switch (fld.state) {
     case 'ok': return { safe: true, text: 'In this browser and your ' + nm + ' folder', tip: 'Every save goes to both' + (fld.at ? '. Last saved to the folder at ' + new Date(fld.at).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' }) : ''), cls: '' };
@@ -19124,7 +19227,7 @@ function renderWhere() {
   }
   if (top) { const cut = /^Not backed up\. /.exec(s.text); top.textContent = cut ? 'Not backed up' : s.text; if (cut) { const more = document.createElement('span'); more.className = 'sw-more'; more.textContent = s.text.slice(13); top.append(more); } top.title = s.tip; top.className = 'savewhere link' + (s.cls ? ' ' + s.cls : ''); }
   if (line) {
-    const h = '<span class="wtext' + (s.cls ? ' ' + s.cls : '') + '">' + (fld.state === 'none' && fld.booted ? 'Your work is saved only in this browser, and is not backed up' : 'Your work is saved: ' + esc(s.text.charAt(0).toLowerCase() + s.text.slice(1))) + '.</span> ' +
+    const h = sampleOn() ? '<span class="wtext">This is the sample. It is kept only in this browser while you look around, and your own work is kept apart.</span>' : '<span class="wtext' + (s.cls ? ' ' + s.cls : '') + '">' + (fld.state === 'none' && fld.booted ? 'Your work is saved only in this browser, and is not backed up' : 'Your work is saved: ' + esc(s.text.charAt(0).toLowerCase() + s.text.slice(1))) + '.</span> ' +
       (s.act ? '<button class="btn sm primary" data-wact>' + s.act + '</button> ' : '') +
       (fld.state === 'none' ? (canPickFolder() ? '<button class="btn sm primary" data-wlink>Choose a folder…</button>' : '') : '<button class="btn sm" data-wopen>Folder…</button>') +
       (fld.state !== 'none' && fld.root ? ' <a class="btn sm" href="#/settings/history">Go back in time…</a>' : '');
@@ -19238,6 +19341,7 @@ async function takeWrite(sink, pass, onp, stop, more) {
 }
 let takeSinkFor = null;   // tests hand in a file handle here: the save dialog can't be driven
 async function takeSink(name) {
+  if (sampleStops('making a take-home file')) throw Object.assign(new Error('the sample'), { name: 'AbortError' });
   try {
     const fh = takeSinkFor || (window.showSaveFilePicker ? await window.showSaveFilePicker({ suggestedName: name, types: [{ description: 'Grading Studio take-home file', accept: { 'application/octet-stream': [TAKE_EXT] } }] }) : null);
     if (fh) { const w = await fh.createWritable(); return { name: fh.name, write: b => w.write(b), close: () => w.close(), abort: () => w.abort() }; }
@@ -19348,6 +19452,7 @@ const TAKE_SAY = {
 const passFields = () => '<label class="tkf">Passphrase<input type="password" id="takeP1" autocomplete="off"></label>';
 const papersLacking = () => [...keptMeta.values()].filter(m => !m.papers).map(m => m.name || 'A download');
 function openTake() {
+  if (sampleStops('making a take-home file')) return;
   if (batch) saveNow();
   openDlg('<div class="bh"><h2>Take my work with me</h2><button class="icon" data-close aria-label="Close">✕</button></div><div class="bb" id="takeBox">' +
     '<p style="margin-top:0">Makes one protected file with everything you need to grade on another computer: student files, marks, scores, comments, rosters, rubrics, readings, Word edits, added files and strong examples. Your Planner goes too: lessons, units, timetable and their files.</p>' +
@@ -26891,6 +26996,7 @@ const nyHasPlanner = async () => { const db = await planDb(false); if (!db) retu
 
 /* writing the file, and reading it back */
 async function nySink(name) {
+  if (sampleStops('keeping a file of the year')) throw Object.assign(new Error('the sample'), { name: 'AbortError' });
   try {
     const fh = takeSinkFor || (window.showSaveFilePicker ? await window.showSaveFilePicker({ suggestedName: name, types: [{ description: 'Grading Studio year', accept: { 'application/octet-stream': [NY_EXT] } }] }) : null);
     if (fh) { const w = await fh.createWritable(); return { name: fh.name, write: b => w.write(b), close: () => w.close(), abort: () => w.abort(), file: () => fh.getFile(), save: async () => {} }; }
@@ -27189,7 +27295,7 @@ function wlRender() {
     '<div class="wlsteps" aria-label="Step ' + (wl.step + 1) + ' of 3">' + steps + '</div>' +
     '<div class="wlbody">' + body + '</div>' +
     '<div class="wlact">' + (wl.step ? '<button class="btn" data-wlback>Back</button>' : '') + '<button class="btn primary" data-wlnext>' + (last ? 'Start' : 'Continue') + '</button>' +
-    (hasSample() ? '' : '<button class="link" data-wlsample>Look around with a sample class first</button>') + '</div>' +
+    '<button class="link" data-wlsample>Look around with a sample class first</button>' + '</div>' +
     (wl.step === 0 && !lib.classes.length ? '<p class="wlfoot">Already use Grading Studio on another computer? <button class="link" data-wlbring>Bring your work in</button></p><p class="wlfoot wlfoot2">Have an AI assistant that knows how you teach? <button class="link" data-wlai>Let it set this up</button></p>' : '') +
     '</div><div class="wlr">' +
     [['lock', 'Private', 'Student work never leaves this computer. No account, nothing uploaded.'],
@@ -27233,7 +27339,7 @@ $('#welcome').addEventListener('click', async e => {
   if (e.target.closest('[data-wlback]')) { wlRead(); wl.step--; return wlRender(); }
   if (e.target.closest('[data-wlnext]')) return wlNext();
   if (e.target.closest('[data-wlfolder]')) { wl.busy = true; try { await folderPick(); } finally { wl.busy = false; } if (wl.on) wlRender(); return; }
-  if (e.target.closest('[data-wlsample]')) { wlRead(); wlClose(); return sampleClass(); }
+  if (e.target.closest('[data-wlsample]')) return sampleEnter();
   if (e.target.closest('[data-wlai]')) { wlClose(); return go('#/settings/setup'); }
   if (e.target.closest('[data-wlbring]')) { wlClose(); go('#/settings'); toast('Choose your Grading Studio folder, or bring in a take-home file. Your classes and work come with it.', 8000); }
 });
@@ -27260,50 +27366,9 @@ $('#welcome').addEventListener('keydown', e => {
   }
 });
 
-/* a sample class: made-up students and papers, to try everything on */
-const SAMPLE_NAMES = ['Ada Example', 'Ben Sample', 'Cleo Madeup', 'Dov Pretend', 'Esme Notreal', 'Finn Placeholder'];
-const SAMPLE_PAPERS = [
-  ['Later starts would help students learn.', 'Teenagers need about nine hours of sleep, and most of us do not get it. When school starts at 7:45, the first lesson is spent waking up. A study of schools in Seattle found that students slept 34 minutes longer after the start moved to 8:45, and their grades in the first class of the day went up. A later start would cost nothing in lessons, because the day would simply end later. For these reasons our school should start at 8:45.'],
-  ['School should start later', 'I think school should start later because everyone is tired. My brother is always tired. Also the bus comes too early and it is dark in winter. Some people say we would get home late but I do not think that matters. Teachers would like it too. So school should start later.'],
-  ['The school day should not change.', 'Starting later sounds good, but it moves the problem instead of solving it. Students who stay up late would stay up later still. Practices, jobs and younger brothers and sisters all depend on the afternoon, and a later finish takes that time away. A survey of our own year group showed that 61 percent have something they must be at by four o’clock. The better answer is a firm bedtime, which costs nothing and changes no timetable.'],
-  null,   // one student turned nothing in
-  ['A later start: the evidence', 'There is strong evidence that a later start improves attendance. In one district, lateness to the first lesson fell by a quarter after the change. However, the evidence on grades is mixed, and the writer of our article admits this. I would start the school day later, but only by thirty minutes, and I would look at the attendance figures after one term before deciding to keep it.'],
-  ['Why 8:45 is better', 'First, sleep. Second, safety, because fewer students would walk to school in the dark. Third, breakfast. Students who eat breakfast concentrate for longer, and at the moment many of us skip it to catch the bus. Each of these reasons would be enough by itself. Together they make a clear case, and the only cost is a later finish.'],
-];
-const SAMPLE_SETUP = { mode: 'rubric', criteria: ['Claim', 'Evidence', 'Writing'], outOf: 10, scale: null,
-  levels: [{ 4: 'A clear claim that the whole paragraph argues for', 3: 'A clear claim', 2: 'A claim, but the paragraph wanders from it', 1: 'A topic, not yet a claim' },
-    { 4: 'Specific evidence, explained', 3: 'Specific evidence', 2: 'General reasons, little evidence', 1: 'Opinion only' },
-    { 4: 'Controlled sentences, no errors that distract', 3: 'Clear, a few errors', 2: 'Errors slow the reader', 1: 'Hard to follow' }] };
+/* the sample */
 const hasSample = () => lib.classes.some(c => c.sample);
 const asked = () => !lib.me || !!lib.me.hi;   // the three questions were answered here, or this browser's work is from before they existed
-async function samplePapers() {
-  const out = [];
-  for (let i = 0; i < SAMPLE_NAMES.length; i++) {
-    const p = SAMPLE_PAPERS[i]; if (!p) continue;
-    const doc = await PDFLib.PDFDocument.create(), font = await doc.embedFont(PDFLib.StandardFonts.TimesRoman), bold = await doc.embedFont(PDFLib.StandardFonts.TimesRomanBold);
-    const page = doc.addPage([612, 792]);
-    page.drawText(SAMPLE_NAMES[i], { x: 72, y: 730, size: 11, font });
-    page.drawText('Persuasive paragraph: should the school day start later?', { x: 72, y: 714, size: 11, font });
-    page.drawText(p[0], { x: 72, y: 672, size: 15, font: bold });
-    let y = 640, line = '';
-    for (const w of p[1].split(' ')) { if (font.widthOfTextAtSize(line + w, 12.5) > 468) { page.drawText(line.trim(), { x: 72, y, size: 12.5, font }); y -= 26; line = ''; } line += w + ' '; }
-    page.drawText(line.trim(), { x: 72, y, size: 12.5, font });
-    out.push({ path: SAMPLE_NAMES[i] + '/Persuasive paragraph.pdf', data: await doc.save() });
-  }
-  return out;
-}
-async function sampleClass() {
-  let c = lib.classes.find(c => c.sample);
-  if (!c) {
-    const cid = uid();
-    c = { id: cid, name: 'Sample class', sample: true, names: SAMPLE_NAMES.slice(), units: [{ id: uid(), name: 'Unit 1: Argument', items: [{ id: uid(), name: 'Persuasive paragraph', classId: cid, type: 'ic', setup: JSON.parse(JSON.stringify(SAMPLE_SETUP)) }] }] };
-    lib.classes.push(c); saveLib(); railRender();
-  }
-  const it = c.units[0] && c.units[0].items[0]; if (!it) return go(classHash(c));
-  if (it.batchId && keptMeta.has(it.batchId) && keptMeta.get(it.batchId).papers) return go(batchHash(it.batchId));
-  await intake(await samplePapers(), it.name, it);
-  sampleNoteRender();
-}
 async function sampleRemove() {
   const c = lib.classes.find(c => c.sample); if (!c) return;
   if (batch) return toast('Close the papers first.');
@@ -27313,17 +27378,31 @@ async function sampleRemove() {
   if (routeNow().v !== 'home') go('#/', true);
   toast('The sample class is gone.');
 }
+const SAMPLE_TRY = [['paper', 'A marked paper'], ['quiz', 'A quiz marked by question'], ['book', 'The gradebook'], ['charts', 'Charts'], ['missing', 'Missing work'], ['seats', 'The seating chart'], ['plan', 'This week’s lessons']];
+function sampleGo(k) {
+  const c = lib.classes[0], it = n => { for (const u of (c || {}).units || []) for (const x of u.items) if (x.sampleKey === n) return x; return null; };
+  if (k === 'plan') { location.href = $('#lessonsBtn').getAttribute('href'); return; }
+  if (!c) return;
+  const a = k === 'paper' ? it('essay') : k === 'quiz' ? it('quiz') : null;
+  if (a && a.batchId) return go(batchHash(a.batchId));
+  go(classHash(c, { book: 'gradebook', charts: 'charts', missing: 'missing', seats: 'seating' }[k] || ''));
+}
 function sampleNoteRender() {
   const el = $('#sampleNote'); if (!el || !shellReady) return;
-  const h = !hasSample() ? '' : '<span class="saic">' + WL_ICON.drop + '</span><div class="satx"><h2>You’re looking at a sample class</h2><p>Its six students and their papers are made up. Mark them, score them and export them as much as you like: nothing here is real.</p>' +
+  let h = '';
+  if (sampleOn()) h = !sampleBuilt() ? '' : '<span class="saic">' + WL_ICON.drop + '</span><div class="satx"><h2>You’re looking at the sample</h2><p>Two made-up classes, part-way through a term: marked papers, a gradebook, a timetable and lessons. Change anything you like. None of it is real, and your own work is kept apart.</p>' +
+    '<p class="satry"><span>Things to try:</span>' + SAMPLE_TRY.map(([k, t]) => '<button class="link" data-sampletry="' + k + '">' + t + '</button>').join('') + '</p>' +
+    '<p class="sarow"><button class="btn primary" data-sampleleave>Leave the sample</button></p></div>';
+  else if (hasSample()) h = '<span class="saic">' + WL_ICON.drop + '</span><div class="satx"><h2>You’re looking at a sample class</h2><p>Its six students and their papers are made up. Mark them, score them and export them as much as you like: nothing here is real.</p>' +
     '<p class="sarow">' + (asked() ? '' : '<button class="btn primary" data-wlstart>Set up my own classes</button>') + '<button class="' + (asked() ? 'btn' : 'link') + '" data-samplego>Open the sample papers</button><button class="link" data-samplerm>Remove the sample class</button></p></div>';
   el.hidden = !h; el.classList.toggle('calm', !!h);
   if (el.dataset.h !== h) { el.dataset.h = h; el.innerHTML = h; }
 }
 $('#sampleNote').addEventListener('click', e => {
   if (e.target.closest('[data-wlstart]')) return wlOpen();
-  if (e.target.closest('[data-samplego]')) return sampleClass();
+  if (e.target.closest('[data-samplego]')) { const c = lib.classes.find(c => c.sample); return c && go(classHash(c)); }
   if (e.target.closest('[data-samplerm]')) return sampleRemove();
+  const t = e.target.closest('[data-sampletry]'); if (t) return sampleGo(t.dataset.sampletry);
 });
 
 /* Settings: the same answers, to change */
@@ -27384,8 +27463,8 @@ $('#setPane').addEventListener('click', async e => {
 });
 
 sysWords();
-if (fresh && !asked() && !lib.classes.length && routeNow().v === 'home') wlOpen();
-Object.assign(window.__gs, { wlOpen, wlShown, sampleClass, sampleRemove, me, meGrade, bandOf, sysName });
+if (fresh && !asked() && !lib.classes.length && routeNow().v === 'home' && !sampleOn()) wlOpen();
+Object.assign(window.__gs, { wlOpen, wlShown, sampleRemove, me, meGrade, bandOf, sysName });
 
 /* ---------------- My setup: bring a teacher's setup in as one block of text, or copy it out ----------------
    A setup is how one teacher works, and nothing about a student: their classes and when each meets, the semester and its days off,
@@ -27998,6 +28077,7 @@ $('#setPane').addEventListener('click', async e => {
   if (d.dataset.stpcheck != null) return stpCheck($('#stpText').value);
   if (d.dataset.stpfile != null) return $('#stpFile').click();
   if (d.dataset.stpundo != null) return stpUndo();
+  if ((d.dataset.stpcopy != null || d.dataset.stpsave != null) && sampleStops('copying a setup out')) return;
   if (d.dataset.stpcopy != null) return copy(await stpExport(), 'Copied. It has no student in it.');
   if (d.dataset.stpsave != null) return saveBlob('grading-studio-setup.json', new Blob([await stpExport()], { type: 'application/json' }));
 });
@@ -28575,7 +28655,7 @@ function findRows() {
     add('Do', 'Match files to a roster', '', press('#pickMatch'));
     add('Do', 'Add a class', 'Its name and roster', press('#addClass'));
     add('Do', 'Bring a class over from Google Classroom', 'Its roster, assignments and grades, from two downloads', () => gcOpen(), '', 'import google classroom drive csv grades roster move switch transfer');
-    add('Do', 'Try it with a sample class', 'Made-up students and papers', press('#sample'));
+    if (sampleOn()) add('Do', 'Leave the sample', 'It is cleared, and your own work is as you left it', sampleLeave); else add('Do', 'Try it with a sample class', 'Made-up students and papers', press('#sample'));
     add('Settings', 'Take my work with me', 'A take-home file for another computer', press('#takeBtn'), '', 'backup back up export carry home laptop transfer');
     add('Settings', 'Bring work in', 'From a take-home file', press('#restoreBtn'), '', 'import restore backup load');
     add('Settings', 'Start a new school year', 'Same classes, empty class lists; this year saved to a file', press('#yearBtn'));
@@ -28741,6 +28821,110 @@ document.addEventListener('keydown', e => {
 });
 gsFull.paint();
 window.__gsFull = gsFull;
+
+/* ---------------- the sample: opening it, building it once, and leaving it ----------------
+   src/samplemode.js keeps the sample apart: while it is open, this page's storage is another set of names, and the teacher's own
+   work is out of reach. This file is the little that the grading page adds: the way in and out, the notice in the sidebar and on
+   Today, and the one-time build. What the sample holds (the classes, the papers and their marks, the lessons) is made by
+   src/sample-data.js, which is not in the page: it is fetched when somebody opens the sample, and a double-click copy carries it squeezed. */
+function sampleOn() { return !!(window.__gsSample && window.__gsSample.on); }
+function sampleBuilt() { return sampleOn() && store.get('gs.sampleBuilt', 0) === SAMPLE_API; }
+function sampleEnter() {
+  try { if (batch) { commitEditors(); saveNow(true); } } catch (e) { console.error(e); }
+  if (!window.__gsSample || !window.__gsSample.enter()) return toast('This browser wouldn’t open the sample. Its storage may be switched off.');
+  sampleReload();
+}
+function sampleLeave() {
+  if (!sampleOn()) return;
+  window.__gsSample.leave();
+  sampleReload();
+}
+function sampleReload() { try { history.replaceState(null, '', location.pathname + location.search + '#/'); } catch (e) {} location.reload(); }
+
+/* the builder: fetched from beside the page, or unpacked in a double-click copy */
+let sampleDataP = null;
+function sampleData() {
+  return sampleDataP ||= new Promise((res, rej) => {
+    if (window.__gsSampleData) return res(window.__gsSampleData);
+    if (SAMPLE_PACKED) { try { const b = atob(SAMPLE_PACKED), u = new Uint8Array(b.length); for (let i = 0; i < b.length; i++) u[i] = b.charCodeAt(i); return res(window.__gsSampleData = Object.assign(new Function(fflate.strFromU8(fflate.inflateSync(u)))(), { api: SAMPLE_API })); } catch (e) { return rej(e); } }
+    const s = document.createElement('script'); s.src = 'sample.js' + (SAMPLE_STAMP ? '?' + SAMPLE_STAMP : '');
+    s.onload = () => window.__gsSampleData ? res(window.__gsSampleData) : rej(new Error('sample.js held nothing')); s.onerror = () => rej(new Error('sample.js could not be fetched'));
+    document.head.appendChild(s);
+  });
+}
+function sampleCover(say) {
+  let el = $('#sampleCover');
+  if (!el) { el = document.createElement('div'); el.id = 'sampleCover'; el.setAttribute('role', 'status'); el.innerHTML = '<div class="smpbox"><div class="smpspin" aria-hidden="true"></div><h2></h2><p></p></div>'; document.body.appendChild(el); }
+  el.querySelector('h2').textContent = tr('Getting the sample ready…');
+  el.querySelector('p').textContent = tr(say || 'Two made-up classes, their papers and a week of lessons.');
+  return el;
+}
+async function sampleBuild() {
+  const cover = sampleCover();
+  try {
+    const D = await sampleData();
+    if (!D || D.api !== SAMPLE_API) throw Object.assign(new Error('sample.js is for another version'), { old: true });
+    await D.build(sampleKit(say => { cover.querySelector('p').textContent = tr(say); }));
+    if (batch) { saveNow(); closeDownload(); }
+    await sampleSettle();
+    store.set('gs.sampleBuilt', SAMPLE_API);
+    sampleReload();
+  } catch (e) {
+    console.error(e);
+    cover.querySelector('.smpspin').hidden = true;
+    cover.querySelector('h2').textContent = tr('The sample couldn’t be opened');
+    cover.querySelector('p').textContent = tr(e && e.old ? 'This copy of the app is older than the sample. Open Settings, About and updates, and update first.' : 'It needs the internet the first time. Nothing of yours was changed.');
+    const b = document.createElement('button'); b.className = 'btn primary'; b.textContent = tr('Go back'); b.onclick = sampleLeave; cover.querySelector('.smpbox').appendChild(b);
+  }
+}
+async function sampleSettle() {
+  for (let i = 0; i < 100 && (saveDue || keepWait); i++) { if (keepWait) { await keepWait.catch(() => {}); keepWait = null; } await new Promise(r => setTimeout(r, 50)); }
+  await new Promise(r => setTimeout(r, 200));
+}
+async function sampleExample(st, o) {
+  await exReady; await workerReady; await classCommon();
+  EXU = { st, i: batch.students.indexOf(st), items: [], kind: 'paper', marks: !!o.marks, score: !!o.score, row: o.row || null, part: null, docs: new Map(), shown: [], tok: 0 };
+  try {
+    EXU.items = await exuExpand(exItems(st));
+    const blobs = [], pages = [], score = EXU.score ? exScoreText(st) : '';
+    for (let k = 0; k < EXU.items.length; k++) {
+      const it = EXU.items[k], js = await exuDoc(it), v1 = vpRot(it.f, it.p, await js.getPage(it.p + 1), 1), c = (await exuCanvas(k, Math.min(4, 1600 / v1.width))).c;
+      if (score && !blobs.length) exScoreOn(c, score);
+      blobs.push(await exJpg(c)); pages.push({ w: c.width, h: c.height }); c.width = c.height = 0;
+    }
+    await exPut({ ...exBase('paper', st), why: o.why || '', row: EXU.row, letter: exNextLetter(batch.id, 'paper'), pages, marks: EXU.marks, score: !!score }, blobs);
+  } finally { EXU = null; }
+}
+function sampleKit(say) {
+  return {
+    say, uid, store, isoDay, tr,
+    get lib() { return lib; }, saveLib,
+    get batch() { return batch; }, get setup() { return setup; }, set setup(v) { setup = v; },
+    intake, saveNow, closeDownload, settle: sampleSettle, papersKept: () => Promise.resolve(keepWait).catch(() => {}), quizSet, groupSync, touchGrade, gradeOf, scoreStampText, totalInk,
+    planDb, idbP, kdo, seatRoom,
+    example: sampleExample, PDFLib, fileByPath, COLORS, HL, CHECK_INK: () => CHECK_INK, QZ_GOLD,
+  };
+}
+
+/* the notice: in the sidebar on every screen, and a card on Today */
+function sampleRailRender() {
+  const rail = $('#rail'); if (!rail || !sampleOn()) return;
+  let el = $('#railSample');
+  if (!el) { el = document.createElement('div'); el.id = 'railSample'; el.className = 'rsample'; rail.insertBefore(el, $('#findBtn')); }
+  const h = '<span class="rl"><b>Sample</b>Everything here is made up. Your own work is kept apart.</span><button class="btn sm" data-sampleleave title="Leave the sample. It is cleared, and your own work is as you left it."><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 5h4a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1h-4M10 8l-4 4 4 4M6 12h9"/></svg><span class="rl">Leave the sample</span></button>';
+  if (el.dataset.h !== h) { el.dataset.h = h; el.innerHTML = h; }
+}
+document.addEventListener('click', e => { if (e.target.closest('[data-sampleleave]')) { e.preventDefault(); sampleLeave(); } });
+function sampleStops(what) {
+  if (!sampleOn()) return false;
+  sayDlg('This is the sample, so ' + what + ' is switched off here. Leave the sample to use it with your own work.');
+  return true;
+}
+if (sampleOn()) {
+  sampleRailRender();
+  if (!sampleBuilt()) { if (store.get('gs.sampleBuilt', null) != null) { window.__gsSample.again(); location.reload(); } else setTimeout(sampleBuild, 0); }
+}
+Object.assign(window.__gs, { sampleOn, sampleEnter, sampleLeave, sampleBuilt });
 
 });</script>
 

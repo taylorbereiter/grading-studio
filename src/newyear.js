@@ -130,6 +130,7 @@ const nyHasPlanner = async () => { const db = await planDb(false); if (!db) retu
 // Straight to the disk where the browser allows it, and read back from there. Otherwise the file is put together here,
 // checked, and only then handed to the browser as a download.
 async function nySink(name) {
+  if (sampleStops('keeping a file of the year')) throw Object.assign(new Error('the sample'), { name: 'AbortError' });
   try {
     const fh = takeSinkFor || (window.showSaveFilePicker ? await window.showSaveFilePicker({ suggestedName: name, types: [{ description: 'Grading Studio year', accept: { 'application/octet-stream': [NY_EXT] } }] }) : null);
     if (fh) { const w = await fh.createWritable(); return { name: fh.name, write: b => w.write(b), close: () => w.close(), abort: () => w.abort(), file: () => fh.getFile(), save: async () => {} }; }

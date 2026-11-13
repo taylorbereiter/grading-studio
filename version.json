@@ -1,22 +1,22 @@
 {
  "version": "1.28.9",
- "build": "df189d9bcdb9",
+ "build": "6d84bc9d55a8",
  "notes": [
   "Returning marked files now gives each student one PDF: the feedback page first, then every paper they turned in, Word papers included as pages. A Word rubric you scored still goes back as a Word file.",
   "To send each paper as its own file again, untick One PDF for each student under Options on the Return tab."
  ],
  "files": {
-  "index.html": "ff8616d9371920c105ea8b641aa2b4143062318a50a8a41780f968b2cece65f7",
-  "planner.html": "e8221c0f94fa58bb3cd816ecac12dbdf42fd84ff02434cbedd58a30c017aebe8"
+  "index.html": "8e16861b37c0b4624cb892ac9fbfc58649a9540581cf7c8cb37b111c843c21f8",
+  "planner.html": "31cfd196ac3cd7072067984ec6919f5efad5ac806f4320b820b4799e947df009"
  },
  "langs": {
-  "lang/zh-Hant.js": "e61e5bc5c684cae0cd230d65e3f8184661f9063c856ec9c517d0ef332b276103",
-  "lang/zh-Hans.js": "bf199251aebad69374dd1a7a48b066cf51961ee7577dfa464fc03fce234aa84a",
-  "lang/es.js": "64dbb7940fbb5e0dfbc4cfc72c31a68cbe6717606446002b13c3462d7ae4d543",
-  "lang/fr.js": "4207de019344aa6e8e6ae5a1d6e662aee461ba99057a4a3eddc440409677d86d",
-  "lang/de.js": "43ffb0f46d5d5ec5f60aa0b67c71dab7742ae8cde6ebf4035f737a0341a16956",
-  "lang/pt-BR.js": "59fab2a3c8cd110452dca47e041e5310628ee4fdee28f76138ad161756529fc5",
-  "lang/ja.js": "74aba9bd51f7d8d8c1791528a46ce692b4e8a475816d1aa09ad6b37d46fe2e63",
-  "lang/ko.js": "2157a6003331f71d69f9d36f4cc9ced3f935d20a758ca63c88a3e934e9d0f465"
+  "lang/zh-Hant.js": "10b356fc902921ead1ab35b15a86a2ac5f583e8d65fd4bff166464272eb0ef53",
+  "lang/zh-Hans.js": "b38a6f098c5401e324acf15993a49f9981246dfe39a7dbc6d225cffa22ffd2cf",
+  "lang/es.js": "d6dae13e3c131f6a8e63797fc5082d250a9eb0fae747a896fa3955610a213d01",
+  "lang/fr.js": "457219e24e0bbf1e08d4d8043ccc2bbea5742987ba8e1d5bf60311e2252a6124",
+  "lang/de.js": "7dc6ef49d521d614f2f596512b578596229451a09901065ccfff025a7d965fa9",
+  "lang/pt-BR.js": "c60f29512632a8fdfcb20158ffa9cb6ac33479962e270b6faa991fa4dc0035db",
+  "lang/ja.js": "e530373a2ea3bf7647bd24bbc403014aa9888e4fa0b75b8c6650443dc668338e",
+  "lang/ko.js": "fa28b26d09718ad12d9c401f9aa2a35a50a4be78be0fee8f3f7769f6aeddbab0"
  }
 }

@@ -83,6 +83,7 @@ async function takeWrite(sink, pass, onp, stop, more) {
 // Straight to the disk where the browser allows it. Otherwise chunks wait as small Blobs, which the browser keeps out of the tab's memory, until the download starts.
 let takeSinkFor = null;   // tests hand in a file handle here: the save dialog can't be driven
 async function takeSink(name) {
+  if (sampleStops('making a take-home file')) throw Object.assign(new Error('the sample'), { name: 'AbortError' });
   // A school's policy can block the save dialog. Only her saying no stops here: otherwise it comes as a plain download, which still works.
   try {
     const fh = takeSinkFor || (window.showSaveFilePicker ? await window.showSaveFilePicker({ suggestedName: name, types: [{ description: 'Grading Studio take-home file', accept: { 'application/octet-stream': [TAKE_EXT] } }] }) : null);
@@ -197,6 +198,7 @@ const passFields = () => '<label class="tkf">Passphrase<input type="password" id
 // Downloads this browser has work for, but not the papers. The file can't carry what isn't here, and she needs to know before she's at the other computer.
 const papersLacking = () => [...keptMeta.values()].filter(m => !m.papers).map(m => m.name || 'A download');
 function openTake() {
+  if (sampleStops('making a take-home file')) return;
   if (batch) saveNow();
   openDlg('<div class="bh"><h2>Take my work with me</h2><button class="icon" data-close aria-label="Close">✕</button></div><div class="bb" id="takeBox">' +
     '<p style="margin-top:0">Makes one protected file with everything you need to grade on another computer: student files, marks, scores, comments, rosters, rubrics, readings, Word edits, added files and strong examples. Your Planner goes too: lessons, units, timetable and their files.</p>' +
