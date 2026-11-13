@@ -7676,9 +7676,33 @@ function exportPlan(keepFolders) {
     if (!keepFolders) path = (dir ? st.key + ' - ' : '') + path.split('/').pop();
     out.push({ st, d, path: path.replace(/[\\:*?"<>|]+/g, '-') });
   }
+  if (xOne()) oneEach(out);
   const used = new Set();
   for (const o of out) { let p = o.path, k = 2; while (used.has(p.toLowerCase())) p = o.path.replace(/(\.[^./]+)?$/, ' (' + k++ + ')$1'); used.add(p.toLowerCase()); o.path = p; }
   return out;
+}
+const xOne = () => store.get('gs.xone', true) !== false;
+const canJoin = o => !!o.d || (o.raw && wordCanPdf(o.f));
+function oneEach(out) {
+  const groups = new Map();
+  for (const o of out) {
+    if (!canJoin(o)) continue;
+    const f = o.d ? fileByPath(o.st, o.d.pages[0][0]) : o.f, tn = tryOfFile(o.st, f), k = o.st.key + '\n' + tn;
+    if (!groups.has(k)) groups.set(k, { st: o.st, tn, list: [] });
+    groups.get(k).list.push(o);
+  }
+  for (const { st, tn, list } of groups.values()) {
+    if (list.length < 2) continue;
+    const first = list.find(o => o.d) || list[0], dir = first.path.includes('/') ? first.path.slice(0, first.path.lastIndexOf('/') + 1) : '';
+    const name = fileSafe([st.key, asgName(), tn ? tr(tryName(tn)) : ''].filter(Boolean).join(' - ')) + '.pdf';
+    const d = { name, pages: list.filter(o => o.d).flatMap(o => o.d.pages), words: list.filter(o => !o.d).map(o => o.f) };
+    out.splice(out.indexOf(list[0]), 1, { st, d, one: true, path: dir + name });
+    for (const o of list.slice(1)) out.splice(out.indexOf(o), 1);
+  }
+}
+function oneLeftOver(o) {
+  const dir = o.path.includes('/') ? o.path.slice(0, o.path.lastIndexOf('/') + 1) : '', stem = o.path.slice(dir.length).replace(/\.pdf$/i, '');
+  return (o.d.left || []).map(f => ({ path: dir + stem + ' - ' + fileSafe(f.name), bytes: f.data }));
 }
 const xNames = () => store.get('gs.xnames', true) !== false;
 const fileSafe = s => String(s || '').replace(/[\\/:*?"<>|\r\n\t]+/g, ' ').replace(/\s+/g, ' ').trim().replace(/[. ]+$/, '');
@@ -7725,7 +7749,10 @@ async function flattenDoc(st, d, dpi, edit, key, fb) {
   out.setCreator('Grading Studio'); out.setProducer('Grading Studio');   // so a flattened file brought back in can say why its marks can't be changed
   try {
     const said = fb ? fbData(st, d) : null;
-    if (said) { const [p0, n0] = d.pages[0], { f: f0, js: j0 } = await src(p0), v0 = vpRot(f0, n0, await j0.getPage(n0 + 1), 1); await fbAddPages(out, said, v0.width, v0.height, dpi); }
+    if (said) {
+      if (d.pages.length) { const [p0, n0] = d.pages[0], { f: f0, js: j0 } = await src(p0), v0 = vpRot(f0, n0, await j0.getPage(n0 + 1), 1); await fbAddPages(out, said, v0.width, v0.height, dpi); }
+      else await fbAddPages(out, said, 612, 792, dpi);   // only Word papers: a Letter page
+    }
     for (const [path, p] of d.pages) {
       const { f, js, lib } = await src(path);
       const marks = (f.marks[p] || []).concat((f.kami && f.kami[p] && f.kami[p].notes) || []);
@@ -7752,8 +7779,16 @@ async function flattenDoc(st, d, dpi, edit, key, fb) {
       out.addPage([W + side, H]).drawImage(img, { x: 0, y: 0, width: W + side, height: H });
       c.width = c.height = 0; page.cleanup();
     }
+    if (d.words && d.words.length) {
+      if (typeof wordSaves !== 'undefined') await Promise.all([...wordSaves].map(s => s()));   // what was typed a moment ago is in the file first
+      d.left = [];
+      for (const f of d.words) {
+        try { const wl = await PDFLib.PDFDocument.load(await wordPagesPdf(f)); for (const cp of await out.copyPages(wl, wl.getPageIndices())) out.addPage(cp); }
+        catch (er) { console.error(f.path, er); d.left.push(f); }
+      }
+    }
     const rows = key ? keyRows(d.pages.flatMap(([path, p]) => fileByPath(st, path).marks[p] || [])) : [];
-    if (rows.length) {
+    if (rows.length && d.pages.length) {
       const [lp, lpn] = d.pages[d.pages.length - 1], { f: lf, js: ljs } = await src(lp), lv = vpRot(lf, lpn, await ljs.getPage(lpn + 1), 1);
       let W = lv.width, H = lv.height;
       if (W < 300 || H < 300 || W > 2000 || H > 2000) { W = 612; H = 792; }
@@ -7766,7 +7801,7 @@ async function flattenDoc(st, d, dpi, edit, key, fb) {
         c.width = c.height = 0;
       }
     }
-    if (edit) {   // the original pages and her own marks go along, so bringing the file back in opens it ready to change
+    if (edit && d.pages.length) {   // the original pages and her own marks go along, so bringing the file back in opens it ready to change
       const paths = [...new Set(d.pages.map(([path]) => path))];
       const info = { v: 1, pages: d.pages.map(([path, p]) => { const f = fileByPath(st, path); return [paths.indexOf(path), p, f.marks[p] || [], rotOf(f, p), skewOf(f, p)]; }) };
       for (let k = 0; k < paths.length; k++) await out.attach(await viewBytes(fileByPath(st, paths[k])), 'gs-original-' + (k + 1) + '.pdf', { mimeType: 'application/pdf', description: 'Original pages, for reopening in Grading Studio' });
@@ -7774,7 +7809,7 @@ async function flattenDoc(st, d, dpi, edit, key, fb) {
     }
   } finally { for (const v of srcs.values()) v.js.destroy(); }
   const bytes = await out.save();
-  if (!edit) return bytes;
+  if (!edit || !d.pages.length) return bytes;
   const tail = new TextEncoder().encode('\n' + GS_TAIL + '\n'), all = new Uint8Array(bytes.length + tail.length);
   all.set(bytes); all.set(tail, bytes.length); return all;
 }
@@ -7808,6 +7843,7 @@ async function openExport() {
         '<div class="prog" hidden><i></i></div><p class="muted" id="xStatus" style="font-size:13px"></p>' +
         '<details class="xopts" id="xOpts"' + (optsOpen ? ' open' : '') + '><summary>Options: <span id="xOptsSay"></span></summary>' +
           '<label class="chk"><input type="checkbox" id="xKeep" checked> Keep student folders</label>' +
+          '<label class="chk"><input type="checkbox" id="xOne"' + (xOne() ? ' checked' : '') + '> One PDF for each student</label><p class="xhint">All their papers in one file, the feedback page first. Word papers become pages too. A Word rubric you scored still goes as a Word file.</p>' +
           '<label class="chk"><input type="checkbox" id="xNames"' + (xNames() ? ' checked' : '') + '> Name each file by student and assignment</label><p class="xhint" id="xNamesSay"></p>' +
           '<label class="chk"><input type="checkbox" id="xSheet" checked> Add the grade sheet (a crop of each typed grade, in ' + listOrder() + ')</label>' +
           '<label class="chk"><input type="checkbox" id="xEdit"' + (xEdit() ? ' checked' : '') + '> Keep marks editable</label><p class="xhint">Bring a file back in later and change its marks. Files are about twice as big.</p>' +
@@ -7823,6 +7859,7 @@ async function openExport() {
   const optsSay = () => {
     const el = $('#xOptsSay'); if (!el) return;
     const on = [];
+    if ($('#xOne').checked) on.push('one PDF a student');
     if ($('#xKeep').checked) on.push('student folders');
     if ($('#xNames').checked) on.push('files named by student');
     if ($('#xSheet').checked) on.push('grade sheet');
@@ -7841,7 +7878,7 @@ async function openExport() {
   };
   optsSay(); namesSay();
   const xo = $('#xOpts'); if (xo) xo.ontoggle = () => store.set('gs.xopts', xo.open);
-  box.onchange = e => { optsSay(); if (e.target.id === 'xEdit') store.set('gs.xedit', e.target.checked); if (e.target.id === 'xKey') setKey(v => { v.on = e.target.checked; }); if (e.target.id === 'xFb') store.set('gs.xfb', e.target.checked); if (e.target.id === 'xNames') { store.set('gs.xnames', e.target.checked); namesSay(); } if (e.target.id === 'xAll') { store.set('gs.xall', e.target.checked); renderTools(); openExport(); } };
+  box.onchange = e => { optsSay(); if (e.target.id === 'xEdit') store.set('gs.xedit', e.target.checked); if (e.target.id === 'xKey') setKey(v => { v.on = e.target.checked; }); if (e.target.id === 'xFb') store.set('gs.xfb', e.target.checked); if (e.target.id === 'xNames') { store.set('gs.xnames', e.target.checked); namesSay(); } if (e.target.id === 'xAll') { store.set('gs.xall', e.target.checked); renderTools(); openExport(); } if (e.target.id === 'xOne') { store.set('gs.xone', e.target.checked); renderTools(); openExport(); } };
   box.onclick = async e => {
     if (e.target.closest('[data-close]')) return closeDlg();
     const ck = e.target.closest('[data-chk]'); if (ck) { return toPaper(+ck.dataset.chk, ck.dataset.file || undefined); }
@@ -7888,7 +7925,9 @@ async function openExport() {
       for (let i = 0; i < items.length; i++) {
         say('Baking in marks ' + (i + 1) + ' of ' + items.length + '…');
         bar.firstChild.style.width = (30 + 70 * i / items.length) + '%';
-        if (await putOut(items[i].path, () => items[i].raw ? items[i].f.data : flattenDoc(items[i].st, items[i].d, dpi, editable, withKey, withFb && !fbGiven.has(items[i].st) && !!fbGiven.add(items[i].st)), items[i].st)) nOut++;
+        const fk = items[i].one ? items[i] : items[i].st;   // one PDF a student carries its own feedback page, even a retake's earlier try
+        if (await putOut(items[i].path, () => items[i].raw ? items[i].f.data : flattenDoc(items[i].st, items[i].d, dpi, editable, withKey, withFb && !fbGiven.has(fk) && !!fbGiven.add(fk)), items[i].st)) nOut++;
+        if (items[i].one) for (const x of oneLeftOver(items[i])) if (await putOut(x.path, () => x.bytes, items[i].st)) nOut++;
       }
       await unopenable(failed);
       bar.firstChild.style.width = '100%';
@@ -7940,7 +7979,10 @@ async function exportOne(st) {
       say(items.length > 1 ? 'Baking in marks ' + (i + 1) + ' of ' + items.length + '…' : 'Baking in marks…');
       const o = items[i];
       const base = o.path.split('/').pop(), name = xNames() || base.includes(st.key) ? base : st.key + ' - ' + base;   // her own download names each file for its student
-      try { files[name] = o.raw ? o.f.data : await flattenDoc(st, o.d, 150, xEdit(), keyOn(), fbOn() && !fbGiven && (fbGiven = true)); }
+      try {
+        files[name] = o.raw ? o.f.data : await flattenDoc(st, o.d, 150, xEdit(), keyOn(), fbOn() && (o.one || !fbGiven) && (fbGiven = true));
+        if (o.one) for (const x of oneLeftOver(o)) files[x.path.split('/').pop()] = x.bytes;
+      }
       catch (er) { console.error(o.path, er); failed.push({ path: o.path, st, why: exportWhy(er, false) }); }
     }
     const names = Object.keys(files);
@@ -14291,7 +14333,7 @@ const fbOn = () => store.get('gs.xfb', true) !== false;
 const FB_INK = '#1E2024', FB_INK2 = '#3F444C', FB_MUTED = '#5C616A', FB_LINE = '#E4E6EA', FB_BLUE = '#1F6FB2', FB_SOFT = '#E6F0F8';
 
 function fbData(st, d) {
-  const tries = st.grade.tries || [], tn = tries.length ? tryOfFile(st, fileByPath(st, (d.pages[0] || [])[0])) : 0, old = tn ? tries[tn - 1] : null, cnt = tries.length && !old ? gradeOf(st) : null;
+  const tries = st.grade.tries || [], tn = tries.length ? tryOfFile(st, fileByPath(st, (d.pages[0] || [])[0]) || (d.words && d.words[0])) : 0, old = tn ? tries[tn - 1] : null, cnt = tries.length && !old ? gradeOf(st) : null;
   const g = old ? { total: old.total, pct: old.pct, outOf: old.max, status: old.late ? 'late' : '' } : tries.length ? tryGrade(st) : gradeOf(st), rub = setup.mode === 'rubric', c = batchClass();
   if (cnt && !g.status && st.grade.status === 'late') g.status = 'late';
   const rubricOf = old ? old.rubric || [] : st.grade.rubric;
@@ -27344,7 +27386,7 @@ function stpRead(j) {
   if (sl) { const d = {}; if (typeof sl.agenda === 'boolean') d.agenda = sl.agenda; if (/^any$/i.test(stpStr(sl.textSizes, 8))) d.sizes = 'any'; else if (/^(usual|28|28-36)/i.test(stpStr(sl.textSizes, 8))) d.sizes = ''; if (Object.keys(d).length) S.deck = d; }
   const mk = stpObj(j.marking);
   if (mk) {
-    const m = {}; for (const [k, to] of [['studentFileNames', 'xnames'], ['coverNamesOnAnchors', 'anchorCover'], ['findTypedNames', 'nameFind'], ['gradeSheetFromPapers', 'sheetfound']]) if (typeof mk[k] === 'boolean') m[to] = mk[k];
+    const m = {}; for (const [k, to] of [['studentFileNames', 'xnames'], ['onePdfPerStudent', 'xone'], ['coverNamesOnAnchors', 'anchorCover'], ['findTypedNames', 'nameFind'], ['gradeSheetFromPapers', 'sheetfound']]) if (typeof mk[k] === 'boolean') m[to] = mk[k];
     const pc = stpKey(mk.pointsColor); if (pc === 'pen') m.ptsInk = ''; else if (pc === 'credit' || COLORS[pc]) m.ptsInk = pc;
     if (Object.keys(m).length) S.mark = m;
   }
@@ -27473,6 +27515,7 @@ function stpDiff(S, planNow) {
   if (S.mark) {
     const m = S.mark, now = stpMarkNow(), L = [];
     if (m.xnames != null && m.xnames !== now.xnames) L.push(m.xnames ? 'Files you hand back are named for the student and the assignment' : 'Files you hand back keep the names they were turned in with');
+    if (m.xone != null && m.xone !== now.xone) L.push(m.xone ? 'Each student gets one PDF with all their papers' : 'Each paper goes back as its own file');
     if (m.anchorCover != null && m.anchorCover !== now.anchorCover) L.push(m.anchorCover ? 'Names are covered on anchor papers you export' : 'Names are not covered on anchor papers you export');
     if (m.nameFind != null && m.nameFind !== now.nameFind) L.push(m.nameFind ? 'Typed names are found and covered for you' : 'You cover names yourself');
     if (m.ptsInk != null && m.ptsInk !== now.ptsInk) L.push(m.ptsInk === 'credit' ? 'Points are colored by credit: full, part or none' : m.ptsInk ? 'Points are written in ' + m.ptsInk : 'Points are written in the pen’s color');
@@ -27483,9 +27526,10 @@ function stpDiff(S, planNow) {
   if (S.tabs && S.tabs.join() !== tabsKept().join()) add('tabs', 'Class tabs', [S.tabs.length ? 'Kept in the tab row: ' + S.tabs.map(k => CLASS_TABS.find(t => t[0] === k)[1]).join(', ') : 'Only Assignments, Gradebook and Students in the tab row'], 'The other pages stay under More.');
   return parts;
 }
-const stpMarkNow = () => ({ xnames: xNames(), anchorCover: anchorCoverOn(), nameFind: nameFindOn(), ptsInk, sheetfound: !!store.get('gs.sheetfound', false) });
+const stpMarkNow = () => ({ xnames: xNames(), xone: xOne(), anchorCover: anchorCoverOn(), nameFind: nameFindOn(), ptsInk, sheetfound: !!store.get('gs.sheetfound', false) });
 function stpMarkSet(m) {
   if (m.xnames != null) store.set('gs.xnames', m.xnames);
+  if (m.xone != null) store.set('gs.xone', m.xone);
   if (m.anchorCover != null) store.set('gs.anchorCover', m.anchorCover);
   if (m.nameFind != null) { if (m.nameFind) store.set('gs.nameFind', true); else store.del('gs.nameFind'); }
   if (m.ptsInk != null) setPtsInk(m.ptsInk);
@@ -27632,7 +27676,7 @@ async function stpExport() {
   if (goalList().length) out.goals = goalList().map(x => x.name);
   if (lib.me && typeof lib.me.att === 'boolean') out.attendance = lib.me.att;
   if (tabsKept().length) out.classTabs = tabsKept().map(k => CLASS_TABS.find(t => t[0] === k)[1]);
-  { const m = stpMarkNow(), o = { ...(m.xnames ? {} : { studentFileNames: false }), ...(m.anchorCover ? {} : { coverNamesOnAnchors: false }), ...(m.nameFind ? { findTypedNames: true } : {}), ...(m.ptsInk ? { pointsColor: m.ptsInk } : {}), ...(m.sheetfound ? { gradeSheetFromPapers: true } : {}) }; if (Object.keys(o).length) out.marking = o; }
+  { const m = stpMarkNow(), o = { ...(m.xnames ? {} : { studentFileNames: false }), ...(m.xone ? {} : { onePdfPerStudent: false }), ...(m.anchorCover ? {} : { coverNamesOnAnchors: false }), ...(m.nameFind ? { findTypedNames: true } : {}), ...(m.ptsInk ? { pointsColor: m.ptsInk } : {}), ...(m.sheetfound ? { gradeSheetFromPapers: true } : {}) }; if (Object.keys(o).length) out.marking = o; }
   return JSON.stringify(out, null, 1);
 }
 
@@ -27709,7 +27753,7 @@ Every part except the first line is optional. Leave a part out rather than leavi
   "attendance": true,
   "classTabs": ["Missing work"],
   "slides": { "agenda": true, "textSizes": "usual" },
-  "marking": { "pointsColor": "credit", "studentFileNames": true, "coverNamesOnAnchors": true, "findTypedNames": false, "gradeSheetFromPapers": false }
+  "marking": { "pointsColor": "credit", "studentFileNames": true, "onePdfPerStudent": true, "coverNamesOnAnchors": true, "findTypedNames": false, "gradeSheetFromPapers": false }
 }
 
 FIELD NOTES
@@ -27721,7 +27765,7 @@ FIELD NOTES
 - "emptyType" is "other" (when a type has nothing in it yet, the others are used) or "zero". "extraCredit.addsTo" is "term" or "inClass"; "cap" true keeps grades at 100% at most. "retakes" is "highest", "latest" or "average".
 - "classTabs" are the class pages I want kept in the tab row beside Assignments, Gradebook and Students: any of "Attendance", "Seating", "Missing work", "Charts", "Goals", "Report comments". Leave it out unless I ask.
 - "slides" is for the lesson planner: "agenda" false stops an agenda being added as slide 2, and "textSizes" is "usual" (28 to 36 pt) or "any" (18 to 44 pt). Leave it out unless I ask.
-- "marking" holds small choices; leave out any I have not asked for. "pointsColor" is "pen", "credit" (full points green, part amber, none red) or one of red, blue, green, purple, black. "studentFileNames" names each file I hand back for the student and assignment. "coverNamesOnAnchors" covers names on example papers I export. "findTypedNames" lets the app look for typed names to cover. "gradeSheetFromPapers" also shows grades the app finds written on papers.
+- "marking" holds small choices; leave out any I have not asked for. "pointsColor" is "pen", "credit" (full points green, part amber, none red) or one of red, blue, green, purple, black. "studentFileNames" names each file I hand back for the student and assignment. "onePdfPerStudent" puts all of a student's papers in one PDF (false sends each paper as its own file). "coverNamesOnAnchors" covers names on example papers I export. "findTypedNames" lets the app look for typed names to cover. "gradeSheetFromPapers" also shows grades the app finds written on papers.
 - A rubric row is a name, or a name with "levels" keyed "4" down to "0". A rubric whose rows go higher takes "rowTop" (up to 10), and "halfPoints": false when only whole points are given.
 - Use straight quotes and no comments inside the block.`;
 
