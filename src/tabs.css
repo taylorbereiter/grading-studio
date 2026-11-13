@@ -107,7 +107,7 @@ a.opchip:hover{text-decoration:underline}
 .anchlist{list-style:none;margin:0 0 10px;padding:0}
 .anchli{display:flex;align-items:baseline;gap:10px;padding:5px 0;border-top:1px solid var(--line);font-size:var(--text-control)}
 .anchli:first-child{border-top:0}
-.anchli b{width:38px;flex:none}
+.anchli b{min-width:38px;flex:none}
 .anchli .muted{margin-left:auto}
 .anchli.none .muted{margin-left:0}
 .anchcov{display:flex;align-items:center;gap:6px;font-size:var(--text-control);margin:0 0 6px}

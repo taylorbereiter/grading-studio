@@ -358,7 +358,7 @@ function exportCheck() {
     if (!g.done) c.unfinished.push({ i, name, note: g.partial ? 'Partial: ' + partNote(st) : 'Not scored yet' });
     if (!st.files.length) c.noPaper.push({ i, name });
     const d = disagreeNote(st); if (d) c.disagree.push({ i, name, note: d });
-    for (const f of st.files) if (unmarkedFile(st, f)) c.unmarked.push({ i, name, note: f.bad ? (anonOn() ? '' : f.name + ': ') + 'it couldn’t be opened, so it won’t be in the export' : anonOn() ? '' : f.name, file: f.path });
+    for (const f of st.files) if (unmarkedFile(st, f)) c.unmarked.push({ i, name, fname: anonOn() ? '' : f.name, note: f.bad ? 'it couldn’t be opened, so it won’t be in the export' : '', file: f.path });
     if (g.total != null || g.pct != null) return;   // her own score, or one clear reading, already stands
     if (manyReads(st)) { c.doubts.push({ i, name, note: readsCount(st) + ' grades found on the paper' }); return; }
     for (const r of st.doubts || []) c.doubts.push({ i, name, note: 'Is “' + foundLabel(r) + '” the grade?' });
@@ -368,7 +368,7 @@ function exportCheck() {
 function exportCheckHtml(c) {
   const groups = [['Scores not finished', c.unfinished], ['No paper', c.noPaper], ['Scores that disagree with the paper', c.disagree], ['Files with no marks', c.unmarked], ['Grades to confirm', c.doubts, true]].filter(x => x[1].length);
   if (!groups.length) return '<div class="xchk ok" id="xCheck">✓ All clear: everyone is scored, scores match the papers, and every file is marked.</div>';
-  const item = (o, sheet) => '<li><button class="link" ' + (sheet && !anonOn() ? 'data-chksheet' : 'data-chk="' + o.i + '"' + (o.file ? ' data-file="' + esc(o.file) + '"' : '')) + '>' + esc(o.name) + '</button>' + (o.note ? ' <span class="muted">' + esc(o.note) + '</span>' : '') + '</li>';
+  const item = (o, sheet) => '<li><button class="link" ' + (sheet && !anonOn() ? 'data-chksheet' : 'data-chk="' + o.i + '"' + (o.file ? ' data-file="' + esc(o.file) + '"' : '')) + ' data-raw>' + esc(o.name) + '</button>' + (o.note || o.fname ? ' <span class="muted">' + (o.fname ? '<span data-raw>' + esc(o.fname) + '</span>' + (o.note ? ': ' : '') : '') + (o.note ? '<span>' + esc(o.note) + '</span>' : '') + '</span>' : '') + '</li>';   // a name and a file name stay as they are in any language
   const n = groups.reduce((a, g) => a + g[1].length, 0);
   // One line until she opens it; the export button stays right under it.
   return '<details class="xchk" id="xCheck"><summary><span><b>' + n + (n === 1 ? ' thing' : ' things') + ' to look at before you return these</b> <span class="muted">(you can still download)</span></span><span class="xshow">Show</span></summary>' +

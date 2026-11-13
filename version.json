@@ -1,24 +1,22 @@
 {
- "version": "1.28.10",
- "build": "13b1d614165c",
+ "version": "1.28.11",
+ "build": "81a763beae17",
  "notes": [
-  "Planner slides: click any text box and the size menu in the toolbar changes that box: the title, the text, the bottom line and the rest. Biggest that fits picks the size for you.",
-  "The box you click gets a frame: drag its bar to move it or a handle to resize it, and Put back returns it to the layout. The .pptx keeps the new places and sizes.",
-  "+ Add slide adds a title and text slide straight away; the arrow beside it opens every layout. Timetable can set a different usual slide.",
-  "Words are never cut off: text that runs past its box stays visible in the editor with a warning, and when you present the box uses the room under it, then the text gets smaller until every word shows."
+  "In another language, the marking screen now reads in that language: the top bar, the tools, the student list, the score panel and its menus, and the Grades, Insights and Return tabs and Rubric setup.",
+  "Student names, rubric rows, what each score means, your comments and the papers themselves stay as they are. Boxes opened from the marking screen, To do, School and the Planner are still in English."
  ],
  "files": {
-  "index.html": "d6934f0689111bd2d92c231480186113bd937da6b978909f7895e6b3397033e5",
-  "planner.html": "b4b89f3ad5347f38605c5a0d5e2c9393a860278a57da6c275dde6b622bd49f27"
+  "index.html": "1e577eb51224418cdcf1e125dc19b4b030dba9f1d46921b352897d8c2e0c1ed5",
+  "planner.html": "f1327c402c2fd450576b6ab03096e8bdb3bfb2b154adec04bfb91db55665a678"
  },
  "langs": {
-  "lang/zh-Hant.js": "e61e5bc5c684cae0cd230d65e3f8184661f9063c856ec9c517d0ef332b276103",
-  "lang/zh-Hans.js": "bf199251aebad69374dd1a7a48b066cf51961ee7577dfa464fc03fce234aa84a",
-  "lang/es.js": "64dbb7940fbb5e0dfbc4cfc72c31a68cbe6717606446002b13c3462d7ae4d543",
-  "lang/fr.js": "4207de019344aa6e8e6ae5a1d6e662aee461ba99057a4a3eddc440409677d86d",
-  "lang/de.js": "43ffb0f46d5d5ec5f60aa0b67c71dab7742ae8cde6ebf4035f737a0341a16956",
-  "lang/pt-BR.js": "59fab2a3c8cd110452dca47e041e5310628ee4fdee28f76138ad161756529fc5",
-  "lang/ja.js": "74aba9bd51f7d8d8c1791528a46ce692b4e8a475816d1aa09ad6b37d46fe2e63",
-  "lang/ko.js": "2157a6003331f71d69f9d36f4cc9ced3f935d20a758ca63c88a3e934e9d0f465"
+  "lang/zh-Hant.js": "db23a41209d4657f61b472e340f4366c5a36fc5feb4c96bb5cb8d94e7d5e0927",
+  "lang/zh-Hans.js": "6e7f470ef20df911000ef42067a5a0c52b87c0bb79960544ced12641dc3c13db",
+  "lang/es.js": "1b45bce1f6e91f6cba5088e132b8a9f7f14eaa0a86279a4df4cd1402ad3fc986",
+  "lang/fr.js": "6c35ac3c541ac5c3fa530bc1b50b1e4d8072b5b9a30b7263c54393849c659b9b",
+  "lang/de.js": "c5237f62d8d523f87a592e662fe642d4c69b77fee100f217562f37d4864b4b2c",
+  "lang/pt-BR.js": "450149ce4859d1def40287cc78ee2f5f719c48b219300f1655ac61b24ff36051",
+  "lang/ja.js": "92bacea687286188461a17663fdd37e5285302f6f68636dc48a812852da5cc92",
+  "lang/ko.js": "8965c72a4e67fd02b137b921ad5532d5ac0ec841d27e8dea89710706c92a24fa"
  }
 }

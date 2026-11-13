@@ -359,7 +359,7 @@ function editAssignment(id, unitId, clsId) {
   fillUnits(start.u);
   if (f) $('#aClass').onchange = () => fillUnits(null);
   else { $('#aClasses').onchange = () => fillUnits(null); $('#aUnit').onchange = () => fillUnits(null); }
-  setTimeout(() => $('#aName').focus(), 0);
+  setTimeout(() => $('#aName')?.focus(), 0);   // the box can be shut before this runs
   $('#dlgBox').onclick = async e => {
     if (e.target.closest('[data-cancel]')) return closeDlg();
     const tb = e.target.closest('[data-atype]');
@@ -532,7 +532,7 @@ function rosterSort() {
   const m = rosterMatch(c.names), used = new Set(c.names.filter(n => m.has(n)).map(n => m.get(n)));
   batch.students = [...used].concat(byFolder.filter(st => !used.has(st)));
 }
-function setBatchName() { $('#batchName').textContent = batch.name + ' · ' + batch.students.length + (batch.students.length === 1 ? ' student' : ' students'); railRender(); }
+function setBatchName() { $('#batchName').innerHTML = '<span data-raw>' + esc(batch.name) + '</span> · ' + people(batch.students.length, 'student'); railRender(); }
 function batchClass() { const id = batch && (batch.classId != null ? batch.classId : batch.assignment && batch.assignment.classId); return id ? classById(id) : null; }
 function renderClassSel() {
   const sel = $('#classSel'), c = batchClass();
