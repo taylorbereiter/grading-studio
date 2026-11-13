@@ -24,7 +24,7 @@ let askQ = Promise.resolve();
 function askLayer(text, o, value) {
   const run = () => new Promise(done => {
     const back = document.activeElement, el = document.createElement('div');
-    el.className = 'dlg askdlg'; el.id = 'askDlg';
+    el.className = 'dlg askdlg'; el.id = 'askDlg'; if (o.lg) el.dataset.lg = '';   // lg: a question that is put into the app's language (lang.js)
     el.innerHTML = '<div class="box narrow" role="alertdialog" aria-modal="true" aria-labelledby="askText" tabindex="-1"><div class="bb"><p id="askText"></p>' +
       (value == null ? '' : '<input type="text" id="askIn" autocomplete="off" aria-labelledby="askText">') + '</div><div class="bf">' +
       (o.cancel === false ? '' : '<button class="btn" data-no></button>') + '<button class="btn ' + (o.danger ? 'danger' : 'primary') + '" data-ok></button></div></div>';

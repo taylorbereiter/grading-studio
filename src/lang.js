@@ -99,7 +99,21 @@ const LANG_FILLS = [
   ['midlevel', /^([A-Z]) middle level$/], ['gradeN', /^Grade (\d)$/], ['band', /^(\d) to (\d) (limited|adequate|substantial|excellent)$/], ['mid2', /^(\d) to (\d)$/], ['plusfm', /^\+ (\d+) formative$/],
   ['few', /^Criterion .+ has been assessed (?:once|in no task) this year\. Each criterion is usually assessed at least twice a year\.$/,
     (m, F, P) => { const out = []; m[0].replace(/Criterion (.+?) has been assessed (once|in no task) this year\. /g, (x, k, n) => { out.push(langFill(n === 'once' ? F.fewonce : F.fewnone, [0, k], P)); return ''; }); return out.concat(F.fewR).join(F.dot); }],
-  ['nolevels', /^No levels for (.+) in this term yet\. Use \+ Add levels to type in the levels each student earned on a task\.$/], ['predicted', /^predicted (\d)$/], ['predfor', /^Predicted grade for (.+)$/], ['totalof', /^total (\d+) of (\d+)$/],
+  ['nolevels', /^No levels for (.+) in this term yet\. Use \+ Add levels to type in the levels each student earned on a task\.$/], ['predicted', /^predicted (\d)$/], ['ibgrade', /^IB grade (\d)$/], ['predfor', /^Predicted grade for (.+)$/], ['totalof', /^total (\d+) of (\d+)$/],
+  // boxes opened from a class page: an assignment, a roster, a unit, how the class is graded, the wording boxes, the notes pages, the progress sheets
+  ['openq', /^Open “(.+)”$/], ['wheredl', /^Where is the (.+) download\? You can also drop the ZIP or the folder straight onto this assignment’s card\.$/],
+  ['dellv', /^Delete the levels typed in for “(.+)”\?$/], ['delq', /^Delete “(.+)”\?$/], ['delcls', /^Delete the (.+) class\? Its assignments move to “No class”\.$/],
+  ['delunit', /^(?=Delete “.+” and its (\d+) )Delete “(.+)” and its \d+ assignments?\? Saved marks for those downloads stay in this browser\.$/],
+  ['pasteweb', /^Paste the web address of the class page for (.+) \(leave empty to remove it\)$/], ['pasteplan', /^Paste the link to the unit plan for (.+) \(leave empty to remove it\)$/],
+  ['pastemb', /^Paste the (.+) page for (.+) \(leave empty to remove it\)$/], ['pasteul', /^Paste the (.+) link for (.+) \(leave empty to remove it\)$/],
+  ['nounit1', /^(.+) has no unit called “(.+)” yet, so one is made there\.$/], ['nounitn', /^(.+) have no unit called “(.+)” yet, so one is made there\.$/], ['addton', /^Add to (\d+) classes$/],
+  ['otherway', /^Another way (.+)’s name is written \(in a download, a folder or (.+)\)$/], ['otherway0', /^Another way (.+)’s name is written \(in a download, a folder\)$/],
+  ['nopap', /^“(.+)” with no papers$/], ['nopapsay', /^For presentations, speeches, performances and videos\. Each of the (\d+) students in (.+) gets a notes page to write on while you watch\. Mark it, score it and return it like a paper\.$/],
+  ['howgr', /^How (.+) is graded$/], ['critname', /^Name of criterion ([A-Z])$/], ['critcut', /^Remove criterion ([A-Z])$/], ['lowfor', /^Lowest for grade (\d)$/], ['lowtot', /^The lowest total of (\d+) for each grade\.$/],
+  ['notable', /^No table is published for (\d+) criteria, so these are scaled from the four-criterion one\. Check them against your school’s\.$/], ['wof', /^Weight of (.+)$/],
+  ['pastepg', /^Paste this class’s (.+) page address$/], ['orderok', /^Students, one per line, in the order you want \((.+) order works well\)$/],
+  ['pastefrom', /^Paste from a spreadsheet or (.+), or upload a file\. Student ID and email columns are kept as each student’s details\.$/],
+  ['printn', /^Print (\d+) pages$/], ['ndrafts', /^(\d+) report comments are still drafts you haven’t looked at\.$/], ['cmidl', /^class middle (\d+)$/], ['syslink', /^([A-Z][\w .&-]{0,30}) link$/],
   // what a chart says of itself to a screen reader: the names in it stay, the words between them are put into the language
   ['ariaband', /^(?=.*(?:class middle \d|missing)).+ (?:\d+%|missing|–)(?:, class middle \d+%)?$/, (m, F, P) => m[0].replace(/ missing(?=, class middle |\. |$)/g, ' ' + (trPiece('missing', P) || 'missing')).replace(/, class middle (\d+%)(?=\. |$)/g, (x, v) => langFill(F.cmid, [0, v], P))],
   ['ariamove', /^.+ (?:up|down) [\d.]+$/, (m, F, P) => m[0].replace(/ (up|down) ([\d.]+)(?=, |$)/g, (x, w, v) => ' ' + langFill(w === 'up' ? F.mvup : F.mvdown, [0, v], P))],
@@ -129,8 +143,8 @@ function trWith(s, P, ctx) {
 // For words that are drawn rather than put on the page, like the feedback page in a returned paper.
 const tr = (s, ctx) => LANG_PACK && typeof s === 'string' ? trWith(s, LANG_PACK, ctx) : s;
 // The parts of the page that are put into the language, and what inside them is never touched (what a teacher typed).
-const LANG_ROOTS = '#rail, #vHome, #vHelp, #welcome, #findDlg, #setLang, #vSettings, #vClass .clshead, #vClass .ctabs, #vClass .ctools, #vClass .board, #classHint, ' + ['gradebook', 'students', 'attendance', 'seating', 'missing', 'student', 'charts', 'goals', 'reports'].map(t => '#classPanel[data-tab="' + t + '"]').join(', ');
-const LANG_RAW = 'script, style, textarea, [contenteditable], [data-raw], .kname, #railClasses .rl, .wllang, .tbn, .trow:not(.none) b, .hlpa p:not(.hlpgo), .hlpa ol, kbd, .rbrand, .wlbrand, #homeDate, .aiWord, .updnotes, #vSettings .nt b, #meSys option:not([value]), #meAi option:not([value]), #wlSys option:not([value]), #vClass .clshead h1, #vClass .uhead .nm, #vClass .card .t, #classPanel .bklink, #classPanel .bkpop > b, #bkaRows td:first-child, #bkaUnit option:not([value=""]), #peopleTbl td.nm a, .attname, #attDate, .attunk a, .misw, .mishead h3, .misaddr, .seat span, .seatchip, #seatSel b, .tsvg .tlb';
+const LANG_ROOTS = '#rail, #vHome, #vHelp, #welcome, #findDlg, #setLang, #vSettings, #vClass .clshead, #vClass .ctabs, #vClass .ctools, #vClass .board, #classHint, #dlgBox[data-lg], #askDlg[data-lg], ' + ['gradebook', 'students', 'attendance', 'seating', 'missing', 'student', 'charts', 'goals', 'reports'].map(t => '#classPanel[data-tab="' + t + '"]').join(', ');
+const LANG_RAW = 'script, style, textarea, [contenteditable], [data-raw], .kname, #railClasses .rl, .wllang, .tbn, .trow:not(.none) b, .hlpa p:not(.hlpgo), .hlpa ol, kbd, .rbrand, .wlbrand, #homeDate, .aiWord, .updnotes, #vSettings .nt b, #meSys option:not([value]), #meAi option:not([value]), #wlSys option:not([value]), #vClass .clshead h1, #vClass .uhead .nm, #vClass .card .t, #classPanel .bklink, #classPanel .bkpop > b, #bkaRows td:first-child, #bkaUnit option:not([value=""]), #peopleTbl td.nm a, .attname, #attDate, .attunk a, .misw, .mishead h3, .misaddr, .seat span, .seatchip, #seatSel b, .tsvg .tlb, #aClass option:not([value=""]), #aUnit option:not([value=""])';
 const LANG_ATTRS = ['title', 'aria-label', 'placeholder'];
 const langCtx = el => { const c = el.closest('[data-lc]'); return c ? c.dataset.lc : ''; };
 // What has been put into the language is not looked at again: a word in the language can be an English word too (German "Note" is "Grade", and "Note" in English is something else).
@@ -169,7 +183,7 @@ document.addEventListener('change', e => {
 // For the tests and for whoever writes a language file: every piece on the covered parts of the screen as it is now that the language doesn't know.
 // Run it with the app in English.
 window.__gsLang = { lang: LANG, want: LANG_WANT, packs: Object.keys(LANG_NAMES), load: langLoad, tr: (s, k) => trWith(s, langPack(k)), missing(k) {
-  const P = langPack(k), out = new Set(), see = (s, el) => { const t = (s || '').trim(), c = langCtx(el); if (!t || !/[A-Za-z]{2}/.test(t)) return; if (trPiece(t, P, c) != null) return; for (const p of t.split(' · ')) { const q = p.trim(); if (q && /[A-Za-z]{2}/.test(q) && trPiece(q, P, c) == null) out.add(q); } };
+  const P = langPack(k), out = new Set(), see = (s, el) => { const word = s => /[A-Za-z]{2}/.test(s.replace(/\{[A-Za-z]+\}/g, '')), t = (s || '').trim(), c = langCtx(el); if (!t || !word(t)) return; if (trPiece(t, P, c) != null) return; for (const p of t.split(' · ')) { const q = p.trim(); if (q && word(q) && trPiece(q, P, c) == null) out.add(q); } };
   for (const r of document.querySelectorAll(LANG_ROOTS)) {
     if (!r.checkVisibility()) continue;
     for (const x of [r, ...r.querySelectorAll('[title], [aria-label], [placeholder]')]) if (!langRawEl(x)) for (const a of LANG_ATTRS) see(x.getAttribute(a), x);
