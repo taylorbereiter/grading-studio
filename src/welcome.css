@@ -56,6 +56,8 @@ html.welcoming .shell{visibility:hidden}
 .safeask.calm .saic{background:var(--accent-soft);color:var(--accent)}
 /* Settings: where students hand in work, and how you usually grade */
 .merow{display:flex;flex-wrap:wrap;gap:var(--space-2)}
+.merow .meurl{flex:1 1 300px;max-width:440px}
+.merow>label,.merow>.muted{align-self:center}
 .mebrow{display:flex;flex-wrap:wrap;gap:var(--space-2) var(--space-4)}
 .mebrow label{display:inline-flex;align-items:center;gap:6px;font-size:var(--text-control);color:var(--muted)}
 .mebrow input{height:32px;border:1px solid var(--line-strong);border-radius:var(--corner-2);padding:0 var(--space-2);font:inherit;font-size:var(--text-body);background:var(--surface);color:var(--fg);width:64px}

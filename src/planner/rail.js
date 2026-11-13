@@ -34,6 +34,7 @@ if (plSample() && !window.__gsSample.built) location.replace(gsUrl('#/'));
 
 function railRender() {
   sampleRailRender();
+  besidePaint();   // the teacher's AI assistant, to open beside this page (src/beside.js)
   const classes = (L.setup && L.setup.classes) || [];
   const h = classes.map(c => '<a class="rnav" href="' + esc(classUrl(c)) + '" title="' + esc(c.name) + ': its assignments, gradebook and students"><span class="rdot" style="background:' + esc(c.color || '#1F6FB2') + '"></span><span class="rl rname">' + esc(c.name) + '</span></a>').join('');
   const box = $('#railClasses'); if (box.dataset.h !== h) { box.dataset.h = h; box.innerHTML = h; }
@@ -60,6 +61,7 @@ function railRender() {
 $('#rail').addEventListener('click', async e => {
   const a = e.target.closest('a[href]');
   if (a) {
+    if (a.hasAttribute('data-beside')) return;   // the AI assistant opens beside this page (src/beside.js); the page itself stays
     if (a.id === 'railPlanner') { e.preventDefault(); return toView(L.view === 'week' || L.view === 'semester' ? L.view : calView); }
     if (e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;   // a new tab, as the browser does it
     e.preventDefault(); return leaveTo(a.href);

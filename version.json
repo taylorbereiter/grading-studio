@@ -1,23 +1,22 @@
 {
- "version": "1.28.13",
- "build": "b50e33d1523e",
+ "version": "1.28.16",
+ "build": "562ae82572ec",
  "notes": [
-  "Add a video file, not only a link: + Add, A video… keeps the file in this browser at any length while the computer has room, and partners share it. Drag the bar under a video to make it as big as you like.",
-  "Partners and videos (in Setup, and on No papers when you open an assignment) lists the whole class: pick partners and add each video in one place. + Clip now starts where the video is.",
-  "Bring in a rubric from Edit or the Open box on any assignment. Rows and what each level means are read from a Word or PDF table where they can be."
+  "Video cards have a ⟳ Turn button for a video filmed sideways. It turns a quarter turn at a time, is kept for that video, and partners sharing the link see it turned too.",
+  "A rubric copy brought in after every notes page was taken out or removed now goes on each student’s paper instead of Removed pages."
  ],
  "files": {
-  "index.html": "124ba13695e1b81c203e5d21fb2d111be0b40d88ff174cf55da161670b455680",
-  "planner.html": "577182db1cae60b8c0f6984ebe6eb30cdf9e584169a2ee0da8ac38802ad2cbeb"
+  "index.html": "5dce282a6fd483f23b04e04ef1a595162b8076f5b7521827866fb85efef564bc",
+  "planner.html": "318da973f8d33a0867d1581f50bf76f2cc63de5874482a9b07c347eae00746c3"
  },
  "langs": {
-  "lang/zh-Hant.js": "7e9b54bb9d4fca3b8e331dbba23ab835df3e9eaa36bd997125b362579b3f4e6b",
-  "lang/zh-Hans.js": "d1ad11ed0b0674850196152759512a89f3566028131b1b1ba1aceb2e18e090ce",
-  "lang/es.js": "b4555341a73a6a6c745bee874c27cc4e26b73f11973450bc3f64552210ac15e7",
-  "lang/fr.js": "2bb27d2ea9794f5b4268d45d928f5a025b015d3dbff4e21ed2e549f3c98c5cb2",
-  "lang/de.js": "ffd8f62e13f01566b58e36bd2f0603fcbedca0588a75cb1aca0831df2b129d9f",
-  "lang/pt-BR.js": "39a0147a5b1d0c210f2ea81f5e6107a7f4d5a1efc356ab7281cad231e6d12fff",
-  "lang/ja.js": "5ba169ba2614407f61c35284c4b8d3f18385543e5fbd34916faee77c5961b987",
-  "lang/ko.js": "533ceef8ab7b42e7e28fd0ff53ea32584d5fa0717eb6db2b3c51002b43e38521"
+  "lang/zh-Hant.js": "e26d1362c38e22680cdd161fba9c92b977871c364aa859922ace7e8878fcb805",
+  "lang/zh-Hans.js": "c25f4bb2d91001c38b1f3fe0395067b75d7ed7ceffc45104643aee0f85adda90",
+  "lang/es.js": "0ad35eec3f7e17e2d7bb0502f40e0fcd30258f11a4a9a9f88244de64e87204a2",
+  "lang/fr.js": "7977ec50303861f73ce7c8923f6c7fc42c5009ff6147042d5ae64ffcabfed852",
+  "lang/de.js": "43a98869196eaf966cb324f4b4559fa74fdf73493a3df484d32a47e944316e14",
+  "lang/pt-BR.js": "6e714ebcb18415b74fd88435c6213c5df4be9e4aba0a5e30a743f9422b52304d",
+  "lang/ja.js": "79beb02d4a0afe032cffa3387cdcab64ca6773847eaf83cd795755f0fd8f2dbe",
+  "lang/ko.js": "bf77813000cdb2d9c7150052f38ffe79da2684c0e89e0d99ba8297a3e49974a5"
  }
 }

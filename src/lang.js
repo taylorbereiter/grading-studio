@@ -40,6 +40,8 @@ function langFill(t, m, P) {
 }
 const LANG_ATT = { present: 'attp', late: 'attl', 'absent, reason unknown': 'atta', excused: 'atte' };
 const LANG_FILLS = [
+  // Find anything: the teacher's AI assistant, to open beside the app (src/beside.js)
+  ['besideopen', /^Open (.+) beside Grading Studio$/],
   // the Gradebook tab
   ['sdet', /^Student details for (.+)$/], ['cnt', /^Count (.+) in the class average$/], ['wout', /^without (\d+) students? ·$/],
   ['nograde', /^Nothing graded for (.+) in this term yet\. Grade a download for it, or use \+ Add scores for work you did before\.$/],

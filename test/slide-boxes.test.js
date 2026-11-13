@@ -27,6 +27,17 @@ async function open(setup) {
 }
 const lesson = (page, slides, at) => page.evaluate((slides, at) => { const P = window.__planner, l = P.normLesson({ title: 'Poems', look: 'white', fmt: 2, slides }); P.L.lessons.push(l); P.openLessonForTest(l, at); }, slides, at || 0);
 const slide = (page, i) => page.evaluate(i => JSON.parse(JSON.stringify(window.__planner.L.open.slides[i == null ? window.__planner.L.cur : i])), i);
+// A frame handle's place on screen, once the frame has stopped being redrawn (it is drawn again after each edit is saved).
+async function handle(page, sel) {
+  let last = '';
+  for (let i = 0; i < 100; i++) {
+    const b = await page.$eval(sel, e => { const r = e.getBoundingClientRect(); return r.width ? { x: r.x, y: r.y, width: r.width, height: r.height } : null; }).catch(() => null);
+    const key = JSON.stringify(b);
+    if (b && key === last && !(await page.evaluate(() => !!document.querySelector('#lsStage .ls-rted, #lsStage .ls-ta')))) return b;
+    last = key; await wait(60);
+  }
+  throw new Error('No handle ' + sel);
+}
 const pptx = (page, n) => page.evaluate(n => { const P = window.__planner, z = fflate.unzipSync(P.buildPptx(P.L.open)); return new TextDecoder().decode(z['ppt/slides/slide' + n + '.xml']); }, n);
 
 test('+ Add slide adds a Title and text slide, ▾ picks another layout, and a teacher can choose what it adds', async () => {
@@ -79,12 +90,12 @@ test('each text box has its own size, and moving or resizing a box with the mous
     await page.click('#lsStage .ls-body'); await page.waitForSelector('#lsStage .ls-frame[data-for="body"]');
     await page.click('.ls-notes textarea');   // out of the text, so the slide is drawn again
     const k = await page.$eval('#lsStage', e => e.getBoundingClientRect().width / 1280);
-    let h = await (await page.$('#lsStage .ls-frame i[data-h="s"]')).boundingBox();
+    let h = await handle(page, '#lsStage .ls-frame i[data-h="s"]');
     await page.mouse.move(h.x + h.width / 2, h.y + h.height / 2); await page.mouse.down(); await page.mouse.move(h.x + h.width / 2, h.y + h.height / 2 + 80 * k, { steps: 5 }); await page.mouse.up();
     await until(page, () => !!(window.__planner.L.open.slides[1].box || {}).body);
     let b = (await slide(page, 1)).box.body;
     assert.deepEqual([b.x, b.y, b.w], [152, 212, 1008]); assert.ok(Math.abs(b.h - 440) <= 8, 'taller by about 80: ' + b.h);
-    h = await (await page.$('#lsStage .ls-frame [data-h="move"]')).boundingBox();
+    h = await handle(page, '#lsStage .ls-frame [data-h="move"]');
     await page.mouse.move(h.x + 20, h.y + 8); await page.mouse.down(); await page.mouse.move(h.x + 20 - 100 * k, h.y + 8, { steps: 5 }); await page.mouse.up();
     await until(page, () => window.__planner.L.open.slides[1].box.body.x < 100);
     b = (await slide(page, 1)).box.body;

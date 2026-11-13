@@ -466,7 +466,7 @@ function shareStepClick(e) {
   const c = e.target.closest('[data-cc]');
   if (c) { checkCovers(+c.dataset.cc); return true; }
   if (e.target.closest('[data-shcopy]')) { const t = nameFreeText($('#shAsk').value); copy(t, 'Copied. Paste it into ' + aiSay() + ' along with the ZIP.'); return true; }
-  if (e.target.closest('[data-shopen]')) { if (aiLink()) window.open(aiLink(), '_blank', 'noopener'); return true; }
+  if (e.target.closest('[data-shopen]')) { besideOpen(); return true; }
   if (e.target.closest('[data-shback]')) { closeDlg(); openBringBack(); return true; }
   return false;
 }
