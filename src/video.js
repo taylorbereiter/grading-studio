@@ -268,14 +268,14 @@ function openAddNotes(st) {
 /* ---------- an assignment with no papers at all: a notes page for everyone on the roster ---------- */
 function openStartNotes(it) {
   const f = findItem(it.id), c = f && f.c !== lib.loose ? f.c : null, names = c ? c.names.filter(n => String(n).trim()) : [];
-  if (!names.length) return sayDlg('This needs the class’s roster, so there is a page for each student. Add the students to the class first, then come back to this assignment.');
+  if (!names.length) return sayDlg('This needs the class’s roster, so there is a page for each student. Add the students to the class first, then come back to this assignment.', { lg: 1 });
   const rows = npRows(it.setup);
   let np = npLast === 'rubric' && !rows.length ? 'lined' : npLast;
   openDlg('<div class="bh"><h2>“' + esc(it.name) + '” with no papers</h2></div>' +
     '<div class="bb vdbox"><p style="margin:0 0 4px">For presentations, speeches, performances and videos. Each of the ' + names.length + ' students in ' + esc(c.name) + ' gets a notes page to write on while you watch. Mark it, score it and return it like a paper.</p>' +
     '<p class="muted" style="margin:0 0 4px;font-size:14px">Once it is open, <b>+ Add</b> on a student’s page takes a link to their video, and that is where you say who their partners are.</p>' + npTiles(np, rows, false) +
     (rows.length ? '' : '<p class="muted" style="margin:8px 0 0;font-size:13px">Rubric rows can be picked once this assignment has a rubric.</p>') + '</div>' +
-    '<div class="bf"><button class="btn" data-cancel>Cancel</button><button class="btn primary" id="snGo">Make the pages and open</button></div>', true);
+    '<div class="bf"><button class="btn" data-cancel>Cancel</button><button class="btn primary" id="snGo">Make the pages and open</button></div>', true, 'lg');
   $('#dlgBox').onclick = async e => {
     if (e.target.closest('[data-cancel]')) return closeDlg();
     const t = e.target.closest('.nptile'); if (t && !t.disabled) { np = t.dataset.np; npPick($('#dlgBox'), np); return; }
