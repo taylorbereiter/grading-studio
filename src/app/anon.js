@@ -52,6 +52,8 @@ function anonScrub() {
   for (const el of document.querySelectorAll('#paper .fhead > span:first-child, #paper .refd > summary, #paper .nofile b, #paper .mhead b')) {
     rf.lastIndex = 0; if (rf.test(el.textContent)) el.textContent = scrub(el.textContent, rf);
   }
+  // a transcript is typed text, so a line that says the student's name is always blacked out
+  for (const el of document.querySelectorAll('#paper .trans .trl:not(.anonhide)')) { rx.lastIndex = 0; if (rx.test(el.textContent)) el.classList.add('anonhide'); }
   if (!nameFindOn()) return;   // lines with a name are only found when finding names is on
   for (const el of document.querySelectorAll('#paper .dpage p, #paper .dpage td, #paper .dpage li, #paper .dpage')) {
     if (el.classList.contains('anonhide') || (el.classList.contains('dpage') && el.querySelector('p,td,li'))) continue;

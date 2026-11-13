@@ -81,7 +81,7 @@ function linkCard(st, f) {
     (ticks ? '<button class="btn sm" data-vstamp title="Adds where the video is to your comment, like [2:15]">+ Time to comment</button>' : '') +
     '<button class="btn sm' + (play ? '' : ' primary') + '" data-vopen title="Opens the video in a window of its own, to keep beside this one">Open in its own window</button>' +
     '<button class="btn sm" data-vcopy>Copy link</button>' + (play && (play.frame || play.video) ? VROT_BTN : '') + '</div>' +
-    (play && play.frame && !ticks ? '<p class="muted vlnote vrnote"' + (vrotOf(f) ? '' : ' hidden') + '>Captions are drawn by the video’s own site, so they turn with the video and can’t be put the right way up here.</p>' : '') +
+    (play && play.frame && !ticks ? '<p class="muted vlnote vrnote"' + (vrotOf(f) ? '' : ' hidden') + '>The site’s own captions turn with the video. For captions the right way up, paste a transcript below and turn on Captions under the video.</p>' : '') +
     '<p class="muted vlnote">' + (play ? 'Only the link is kept here; the video stays where it is. If it asks you to sign in or won’t play, open it in its own window.' : 'Only the link is kept here. This site can’t play inside the page, so it opens in a window of its own.') + '</p></div>';
   // where the player is: the page's own video, or a site's player that says so (YouTube, Vimeo). null when nothing is playing here or the site doesn't say.
   const now = () => { const m = el.querySelector('.vlslot video, .vlslot audio'); if (m) return m; const fr = el.querySelector('.vlslot iframe'), t = fr && frameTime(fr); return t == null ? null : { currentTime: t }; };
@@ -104,6 +104,14 @@ function linkCard(st, f) {
     else { const m = document.createElement(play.video ? 'video' : 'audio'); m.controls = true; m.preload = 'metadata'; m.src = play.video || play.audio; slot.appendChild(m); if (play.video) vidGrip(slot, vidRot(m, f)); if (c) clipRun(m, c); }
   };
   clipStrip(el.querySelector('.mstick'), f, now, c => (play ? fill(c) : clipShow(c.id)), play && play.frame && !ticks ? 'drive' : '');
+  // a pasted transcript: a line with a time plays the video from there (a site's player starts again at that time)
+  const pan = trPanel(el, f, { make: false, seek: t => {
+    const m = el.querySelector('.vlslot video, .vlslot audio');
+    if (m) { try { m.currentTime = t; } catch {} m.play().catch(() => {}); return; }
+    if (play) { fill({ a: t }); return; }
+    toast('This site can’t play inside the page. Open it in its own window and go to ' + fmtTime(t) + '.');
+  } });
+  let seen = false, n = 0; const iv = setInterval(() => { if (!el.isConnected) { if (seen || ++n > 40) clearInterval(iv); return; } seen = true; const m = now(); if (m) pan.tick(m.currentTime, !('paused' in m) || !m.paused); }, 500);
   return el;
 }
 
@@ -220,7 +228,7 @@ function vidGrip(host, player) {
   g.onkeydown = e => { const d = e.key === 'ArrowDown' ? 40 : e.key === 'ArrowUp' ? -40 : 0; if (!d) return; e.preventDefault(); e.stopPropagation(); set(player.getBoundingClientRect().height + d, true); };
   vidHApply(store.get('gs.vidH', 0));
 }
-Object.assign(window.__gs, { vidRef, linkKey, vrotOf, vkPut, vkGet, vkSweep, frameTicking, vidHApply });
+Object.assign(window.__gs, { vidRef, linkKey, vrotOf, vkPut, vkGet, vkSweep, frameTicking, vidHApply, trParse, trLines, trText, trSet, asrStandIn });
 
 /* ---------- the notes page ---------- */
 const NP_W = 595.28, NP_H = 841.89, NP_M = 48, NP_TAIL = '%GradingStudio-notes';

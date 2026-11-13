@@ -88,3 +88,29 @@ html.vidtall #paper .mstick{position:relative;top:auto}
 .vrotbox.on{overflow:hidden;height:38vh;min-height:220px;border-radius:var(--corner-3);background:var(--fg)}
 #paper .media:not(.vlink) .vrotbox.on{height:36vh}
 html.vidsized #paper .vrotbox.on{height:var(--vid-h);min-height:0}
+/* transcripts under a player: made here or pasted (src/app/media.js) */
+.trbox{padding:10px 14px 4px}
+.trbox .trrow{display:flex;gap:var(--space-2);flex-wrap:wrap;align-items:center}
+.trbox small{font-size:var(--text-small);line-height:1.45}
+.trbox .trerr{color:var(--warn)}
+.trhead{display:flex;gap:var(--space-2);align-items:baseline;flex-wrap:wrap}
+.trhead .muted{font-size:var(--text-small)}
+.trhead .link{font-size:var(--text-small)}
+.trbox .trans{padding:6px 0 8px;max-height:34vh}
+.trbox .trl{margin:0 0 4px;padding-left:52px;position:relative}
+.trbox .trl time{position:absolute;left:0;top:0;width:44px;color:var(--muted);font-size:var(--text-small);font-variant-numeric:tabular-nums}
+.trbox .trl[data-t]{cursor:pointer}
+.trbox .trl[data-t]:hover{background:var(--accent-soft);border-radius:var(--corner-1)}
+.trbox .trl.now{background:var(--accent-soft);border-radius:var(--corner-1)}
+.trform{display:flex;flex-direction:column;gap:var(--space-2)}
+.trlab{display:flex;flex-direction:column;gap:var(--space-1);font-weight:600;font-size:var(--text-control)}
+.trta{width:100%;min-height:150px;text-align:left;cursor:text;font:inherit;font-weight:400;font-size:var(--text-body);line-height:1.5;resize:vertical;white-space:pre-wrap}
+.trask p{margin:0 0 var(--space-2);font-size:var(--text-body);line-height:1.5}
+.trmaking{display:flex;flex-direction:column;gap:var(--space-2)}
+.trmaking .trmsg{font-size:var(--text-small)}
+.trcap{display:flex;align-items:center;gap:var(--space-2);margin:8px 0 0;padding:8px 10px;background:var(--fg);color:var(--surface);border-radius:var(--corner-3)}
+.trcap .trcapt{flex:1;margin:0;text-align:center;font-size:var(--text-lead);line-height:1.4;min-height:1.4em}
+.trcap .icon{color:var(--surface);flex:none;font-size:var(--text-title)}
+.trcap .icon:disabled{opacity:.35}
+.trbox .trl.cap{box-shadow:inset 3px 0 0 var(--accent)}
+.trhead .link[aria-pressed=true]{font-weight:600;text-decoration:none}
