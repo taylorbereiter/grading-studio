@@ -71,6 +71,14 @@ function linkCard(st, f) {
     else { const m = document.createElement(play.video ? 'video' : 'audio'); m.controls = true; m.preload = 'metadata'; m.src = play.video || play.audio; slot.appendChild(m); if (play.video) vidGrip(slot, m); if (c) clipRun(m, c); }
   };
   clipStrip(el.querySelector('.mstick'), f, now, c => (play ? fill(c) : clipShow(c.id)), play && play.frame && !ticks ? 'drive' : '');
+  // a pasted transcript: a line with a time plays the video from there (a site's player starts again at that time)
+  const pan = trPanel(el, f, { make: false, seek: t => {
+    const m = el.querySelector('.vlslot video, .vlslot audio');
+    if (m) { try { m.currentTime = t; } catch {} m.play().catch(() => {}); return; }
+    if (play) { fill({ a: t }); return; }
+    toast('This site can’t play inside the page. Open it in its own window and go to ' + fmtTime(t) + '.');
+  } });
+  let seen = false, n = 0; const iv = setInterval(() => { if (!el.isConnected) { if (seen || ++n > 40) clearInterval(iv); return; } seen = true; const m = now(); if (m) pan.tick(m.currentTime, !('paused' in m) || !m.paused); }, 500);
   return el;
 }
 
@@ -187,7 +195,7 @@ function vidGrip(host, player) {
   g.onkeydown = e => { const d = e.key === 'ArrowDown' ? 40 : e.key === 'ArrowUp' ? -40 : 0; if (!d) return; e.preventDefault(); e.stopPropagation(); set(player.getBoundingClientRect().height + d, true); };
   vidHApply(store.get('gs.vidH', 0));
 }
-Object.assign(window.__gs, { vidRef, linkKey, vkPut, vkGet, vkSweep, frameTicking, vidHApply });
+Object.assign(window.__gs, { vidRef, linkKey, vkPut, vkGet, vkSweep, frameTicking, vidHApply, trParse, trLines, trText, trSet, asrStandIn });
 
 /* ---------- the notes page ---------- */
 const NP_W = 595.28, NP_H = 841.89, NP_M = 48, NP_TAIL = '%GradingStudio-notes';

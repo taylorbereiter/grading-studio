@@ -101,7 +101,7 @@ async function intake(entries, label, assignment, fromKeep) {   // entries: [{ p
   cur = 0; undoStack = []; selected = null;
   routeTok++; routeOpening = ''; go(batchHash(id), routeNow().v === 'a');   // from another open assignment (or this one's own address after a refresh): no extra step for Back
   setBatchName(); qzForget(); quizBtn();
-  $('#trAllBtn').hidden = !CAN_TRANSCRIBE || !students.some(st => st.files.some(f => f.kind === 'media'));
+  $('#trAllBtn').hidden = !CAN_TRANSCRIBE || !students.some(st => st.files.some(trMakeable));
   renderTools(); renderList(); renderTopAtlas(); openStudent(batch.restoredCur || 0);
   scanned = false; scanAll();
   { const t = routeTab; routeTab = null; if (t && t.id === id) go(batchHash(id, t.tab), true); }
