@@ -28,15 +28,17 @@ function tabNext(key) {
 }
 // The two views of a tab, as links in its heading.
 const tabSeg = (tab, on, views) => batch ? '<span class="seg vseg" role="group">' + views.map(([sub, l]) => '<a href="' + batchHash(batch.id, tab + (sub ? '/' + sub : '')) + '"' + (sub === on ? ' aria-current="page"' : '') + '>' + l + '</a>').join('') + '</span>' : '';
-function openDlg(html, narrow) {
+// lg: a box that is put into the app's language (lang.js); the others are still in English, whole.
+function openDlg(html, narrow, lg) {
   commitEditors(); dlgClear(); ovTipHide();
   const tab = dlgTab; dlgTab = '';
   dlgPage = tab; dlgPlace(tab);
   $('#dlgBox').className = 'box' + (narrow && !tab ? ' narrow' : '');
+  $('#dlgBox').toggleAttribute('data-lg', !!lg);
   $('#dlgBox').innerHTML = html; $('#dlg').hidden = false; dlgShown();
   if (shellReady) tabsRender();
 }
-function dlgShut() { ovTipHide(); dlgClear(); if (eachKeys) { document.removeEventListener('keydown', eachKeys, true); eachKeys = null; } $('#dlg').hidden = true; $('#dlgBox').innerHTML = ''; dlgPage = ''; dlgPlace(''); }
+function dlgShut() { ovTipHide(); dlgClear(); if (eachKeys) { document.removeEventListener('keydown', eachKeys, true); eachKeys = null; } $('#dlg').hidden = true; $('#dlgBox').innerHTML = ''; $('#dlgBox').removeAttribute('data-lg'); dlgPage = ''; dlgPlace(''); }
 function closeDlg() {
   const was = dlgPage;
   dlgShut(); dlgFocusBack();

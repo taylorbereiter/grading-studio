@@ -240,7 +240,7 @@ function rptWordsDlg() {
     '<p class="muted rptkeys"><b>Words that are filled in:</b> {name} · {they} {them} {their} · {is} {has} · {s} for the verb, as in “{they} work{s}” · {in} for “in English” · {grade} · {row} · {work} · {n} · {list} · {words}. A capital, as in {They}, starts a sentence.</p>' +
     '<div class="rptcuts"><b>Grades:</b> <label>highest from <input type="number" data-rptcut="0" min="0" max="100" value="' + rc.cut[0] + '">%</label><label>good from <input type="number" data-rptcut="1" min="0" max="100" value="' + rc.cut[1] + '">%</label><label>middling from <input type="number" data-rptcut="2" min="0" max="100" value="' + rc.cut[2] + '">%</label></div>' +
     RPT_SLOTS.map(([k, l]) => '<label class="rptslot"><span>' + l + '</span><textarea data-rptslot="' + k + '" rows="' + Math.max(2, ((rc.words[k] || []).length || RPT_WORDS[k].length)) + '">' + esc(((rc.words[k] || []).length ? rc.words[k] : RPT_WORDS[k]).join('\n')) + '</textarea></label>').join('') +
-    '</div><div class="bf"><button class="btn" data-rptreset>Use the built-in wording</button><span class="sp" style="flex:1"></span><button class="btn" data-close>Cancel</button><button class="btn primary" data-rptsavew>Save</button></div>', true);
+    '</div><div class="bf"><button class="btn" data-rptreset>Use the built-in wording</button><span class="sp" style="flex:1"></span><button class="btn" data-close>Cancel</button><button class="btn primary" data-rptsavew>Save</button></div>', true, 'lg');
   $('#dlgBox').onclick = e => {
     if (e.target.closest('[data-close]')) return closeDlg();
     if (e.target.closest('[data-rptreset]')) { for (const t of document.querySelectorAll('[data-rptslot]')) t.value = RPT_WORDS[t.dataset.rptslot].join('\n'); return; }

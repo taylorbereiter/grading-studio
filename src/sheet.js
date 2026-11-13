@@ -14,7 +14,7 @@ async function openSheets(clsId, who) {
   const cols = bk.cols || await bkLoad().catch(e => { console.error(e); return []; });
   const conf = ibConf(c, bkConf()), tabs = bkTabs(bkClassCols(c, cols));
   pss = { cls: c.id, who: who && c.names.includes(who) ? who : null, cols, term: tabs.some(t => t[0] === bk.term) ? bk.term : conf.terms.length ? bkTermNow(conf.terms) : '' };
-  openDlg('<div class="bh"><h2 id="pssTitle"></h2><button class="icon" data-close aria-label="Close" style="margin-left:auto">✕</button></div><div class="bb pssbody" id="pssBody"></div>');
+  openDlg('<div class="bh"><h2 id="pssTitle"></h2><button class="icon" data-close aria-label="Close" style="margin-left:auto">✕</button></div><div class="bb pssbody" id="pssBody"></div>', false, 'lg');
   $('#dlgBox').classList.add('pssbox');
   $('#dlgBox').onclick = pssClick;
   $('#dlgBox').onchange = pssChange;
@@ -63,7 +63,7 @@ function pssOne(c, all, cols, conf, n, o, rc) {
   const period = (bkTabs(all).find(t => t[0] === pss.term) || [, 'This year'])[1];
   const fm = cols.filter(x => x.type === 'fm'), miss = cols.filter(x => x.type !== 'xc' && (x.cells.get(n) || {}).st === 'missing');
   const tile = (l, v, s, main) => '<div class="psst' + (main ? ' main' : '') + '"><span>' + l + '</span><b>' + v + '</b><small>' + (s || '&nbsp;') + '</small></div>';
-  let h = '<article class="pss" data-pss="' + esc(n) + '"><div class="pssin"><header class="psshead"><div><small>Progress report</small><h3>' + esc(shown) + '</h3></div><p>' + esc(c.name) + '<br>' + esc(period) + ' · ' + esc(pssToday()) + '</p></header>' +
+  let h = '<article class="pss" data-pss="' + esc(n) + '"><div class="pssin"><header class="psshead"><div><small>Progress report</small><h3 data-raw>' + esc(shown) + '</h3></div><p><span data-raw>' + esc(c.name) + '</span><br>' + esc(period) + '<span data-raw> · ' + esc(pssToday()) + '</span></p></header>' +
     '<div class="psstiles">' + tile(pss.term === '*' || !conf.terms.length ? 'Grade' : 'Term grade', pct(r.grade) + (r.grade != null && r.soFar ? ' <small>so far</small>' : ''), [ibDpTile(c, r.grade, n, pss.term), r.xc ? 'includes +' + fmtNum(r.xc) + ' extra credit' : '', vs(cavg(''))].filter(Boolean).join(' · '), true) +
     bkCountTypes(conf).map(([t, , l]) => tile(l, pct(r.by[t]), [cols.filter(x => x.type === t && bkCounts(x.cells.get(n))).length + ' of ' + cols.filter(x => x.type === t).length + ' counted', vs(cavg(t))].filter(Boolean).join(' · '))).join('') +
     tile('Missing', String(miss.length), miss.length ? (miss.length === 1 ? 'piece of work' : 'pieces of work') : 'nothing outstanding') +
@@ -78,12 +78,12 @@ function pssOne(c, all, cols, conf, n, o, rc) {
   h += '<section class="psschart"><h4>Scores over time</h4>' + chart.replace(/ id="(bkStuLine|pssLine)"/, ' data-pssline') + (o.cls ? '' : '<div class="bkleg">' + bkLeg() + '</div>') + '</section>';
   // every assignment in the period, beside each term's numbers and the missing work
   // a long list goes across the whole page in two halves, with the term table and the missing work underneath
-  const rows = cols.filter(x => x.type !== 'xc' || x.cells.get(n)).map(col => '<tr><td>' + esc(col.name) + '</td><td>' + esc(bkLabel(col.type, true)) + '</td><td>' + esc(bkDay(col.due)) + '</td><td class="pssv">' + pssScore(col, col.cells.get(n)) + '</td></tr>'), wide = rows.length > 14;
+  const rows = cols.filter(x => x.type !== 'xc' || x.cells.get(n)).map(col => '<tr><td data-raw>' + esc(col.name) + '</td><td>' + esc(bkLabel(col.type, true)) + '</td><td>' + esc(bkDay(col.due)) + '</td><td class="pssv">' + pssScore(col, col.cells.get(n)) + '</td></tr>'), wide = rows.length > 14;
   const tab = list => '<table class="psstab"><thead><tr><th>Assignment</th><th>Type</th><th>Date</th><th class="pssv">Score</th></tr></thead><tbody>' + list.join('') + '</tbody></table>', half = Math.ceil(rows.length / 2);
   h += '<div class="pssgrid' + (wide ? ' wide' : '') + '"><section><h4>Assignments</h4>' + (!rows.length ? '<p class="muted">Nothing in this period yet.</p>' : wide ? '<div class="psshalves">' + tab(rows.slice(0, half)) + tab(rows.slice(half)) + '</div>' : tab(rows)) + '</section>' +
-    '<aside>' + pssTerms(c, all, conf, n, o) + '<section><h4>Missing work</h4>' + (miss.length ? '<ul class="psslist">' + miss.map(x => '<li>' + esc(x.name) + (x.due ? ' <small>' + esc(bkDay(x.due)) + '</small>' : '') + '</li>').join('') + '</ul>' : '<p class="pssnone">Nothing missing.</p>') + '</section></aside></div>';
+    '<aside>' + pssTerms(c, all, conf, n, o) + '<section><h4>Missing work</h4>' + (miss.length ? '<ul class="psslist">' + miss.map(x => '<li><span data-raw>' + esc(x.name) + '</span>' + (x.due ? ' <small>' + esc(bkDay(x.due)) + '</small>' : '') + '</li>').join('') + '</ul>' : '<p class="pssnone">Nothing missing.</p>') + '</section></aside></div>';
   const rep = o.rep ? pssRep(c, cols, conf, n, rc) : null;
-  if (rep && rep.text.trim()) h += '<section class="pssrep"><h4>Comment</h4><p>' + esc(rep.text) + '</p></section>';
+  if (rep && rep.text.trim()) h += '<section class="pssrep"><h4>Comment</h4><p data-raw>' + esc(rep.text) + '</p></section>';
   if (o.notes) h += '<section class="pssnotes"><h4>Notes</h4><i></i><i></i><i></i></section>';
   return { html: h + '</div></article>', draft: !!(rep && rep.draft && rep.text.trim()) };
 }

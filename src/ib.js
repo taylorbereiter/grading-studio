@@ -109,7 +109,7 @@ function ibDlg(ci) {
     dpW: Object.fromEntries(bkCats().filter(t => t[0] !== 'fm').map(t => [t[0], +((way === 'dp' && ib.w && ib.w[t[0]] != null ? ib.w : bkConf().w)[t[0]]) || 0])) };
   if (ibDraft.fresh) ibDraft.group = 'sci';
   openDlg('<div class="bh"><h2>How ' + esc(c.name) + ' is graded</h2></div><div class="bb" id="ibBody"></div>' +
-    '<div class="bf"><button class="btn" data-cancel>Cancel</button><button class="btn primary" data-ok>Save</button></div>');
+    '<div class="bf"><button class="btn" data-cancel>Cancel</button><button class="btn primary" data-ok>Save</button></div>', false, 'lg');
   ibDlgDraw();
   $('#dlgBox').onclick = ibDlgClick; $('#dlgBox').onchange = ibDlgChange; $('#dlgBox').oninput = ibDlgInput;
 }
@@ -323,24 +323,24 @@ function ibSheetOne(c, all, cols, conf, n, o, rc) {
   const lv = ibLvAt(c, pss.term, n), r = ibTerm(lv, crit, bounds), period = (bkTabs(all).find(t => t[0] === pss.term) || [, 'This year'])[1];
   const miss = icols.filter(x => (x.cells.get(n) || {}).st === 'missing'), mid = list => { const m = o.cls ? ibMid(list) : null; return m != null ? 'class middle ' + m : ''; };
   const tile = (l, v, s, main) => '<div class="psst' + (main ? ' main' : '') + '"><span>' + l + '</span><b>' + v + '</b><small>' + (s || '&nbsp;') + '</small></div>', dash = v => v != null ? v : '–';
-  let h = '<article class="pss ibpss" data-pss="' + esc(n) + '"><div class="pssin"><header class="psshead"><div><small>Progress report</small><h3>' + esc(shown) + '</h3></div><p>' + esc(c.name) + '<br>' + esc(period) + ' · ' + esc(pssToday()) + '</p></header>' +
+  let h = '<article class="pss ibpss" data-pss="' + esc(n) + '"><div class="pssin"><header class="psshead"><div><small>Progress report</small><h3 data-raw>' + esc(shown) + '</h3></div><p><span data-raw>' + esc(c.name) + '</span><br>' + esc(period) + '<span data-raw> · ' + esc(pssToday()) + '</span></p></header>' +
     '<div class="psstiles">' + tile(pss.term === '*' || !conf.terms.length ? 'Grade' : 'Term grade', dash(r.grade) + (r.grade != null ? ' <small>out of 7</small>' : ''), [r.need.length ? 'still to set: ' + esc(r.need.join(', ')) : 'total ' + r.total + ' of ' + top, mid(cls.map(x => ibTerm(ibLvAt(c, pss.term, x), crit, bounds).grade))].filter(Boolean).join(' · '), true) +
-    crit.map(x => { const v = ibLevel(lv[x.k]); return tile('<b>' + esc(x.k) + '</b> ' + esc(x.name), dash(v) + (v != null ? ' <small>of ' + IB_TOP + '</small>' : ''), [v != null ? ibBandName(v) : 'not set yet', mid(cls.map(y => ibLevel(ibLvAt(c, pss.term, y)[x.k])))].filter(Boolean).join(' · ')); }).join('') +
+    crit.map(x => { const v = ibLevel(lv[x.k]); return tile('<b>' + esc(x.k) + '</b> <span data-raw>' + esc(x.name) + '</span>', dash(v) + (v != null ? ' <small>of ' + IB_TOP + '</small>' : ''), [v != null ? ibBandName(v) : 'not set yet', mid(cls.map(y => ibLevel(ibLvAt(c, pss.term, y)[x.k])))].filter(Boolean).join(' · ')); }).join('') +
     tile('Missing', String(miss.length), miss.length ? (miss.length === 1 ? 'piece of work' : 'pieces of work') : 'nothing outstanding') + '</div>' +
     '<p class="ibpsscap">Each criterion is marked from 0 to 8 with the level that fits the student’s work best. The grade from 1 to 7 comes from the total of the levels.</p>';
   const say = (x, cell) => !cell ? '<span class="muted">Not marked</span>' : cell.st === 'missing' ? '<b class="pssmiss">Missing</b>' : cell.st === 'excused' ? 'Excused' : x.crit.filter(k => cell.lv[k] != null).map(k => esc(k) + ' <b>' + cell.lv[k] + '</b>').join(' · ') || '<span class="muted">Not marked</span>';
-  const rows = icols.map(x => '<tr><td>' + esc(x.name) + (x.fm ? ' <small>formative</small>' : '') + '</td><td>' + esc(x.crit.join(' ')) + '</td><td>' + esc(bkDay(x.due)) + '</td><td class="pssv">' + say(x, x.cells.get(n)) + '</td></tr>'), wide = rows.length > 14, half = Math.ceil(rows.length / 2);
+  const rows = icols.map(x => '<tr><td><span data-raw>' + esc(x.name) + '</span>' + (x.fm ? ' <small>formative</small>' : '') + '</td><td>' + esc(x.crit.join(' ')) + '</td><td>' + esc(bkDay(x.due)) + '</td><td class="pssv">' + say(x, x.cells.get(n)) + '</td></tr>'), wide = rows.length > 14, half = Math.ceil(rows.length / 2);
   const tab = list => '<table class="psstab"><thead><tr><th>Task</th><th>Criteria</th><th>Date</th><th class="pssv">Levels</th></tr></thead><tbody>' + list.join('') + '</tbody></table>';
   let terms = '';
   if (conf.terms.length) {
     const line = (name, t, cl) => { const l = ibLvAt(c, t, n), q = ibTerm(l, crit, bounds); return '<tr' + cl + '><td>' + esc(name) + '</td>' + crit.map(x => '<td class="pssv">' + dash(ibLevel(l[x.k])) + '</td>').join('') + '<td class="pssv">' + dash(q.total) + '</td><td class="pssv">' + (q.grade != null ? '<b>' + q.grade + '</b>' : '–') + '</td></tr>'; };
-    terms = '<section><h4>By term</h4><table class="psstab"><thead><tr><th></th>' + crit.map(x => '<th class="pssv" title="' + esc(x.name) + '">' + esc(x.k) + '</th>').join('') + '<th class="pssv">Total</th><th class="pssv">Grade</th></tr></thead><tbody>' +
+    terms = '<section><h4>By term</h4><table class="psstab"><thead><tr><th></th>' + crit.map(x => '<th class="pssv" data-rawa title="' + esc(x.name) + '">' + esc(x.k) + '</th>').join('') + '<th class="pssv">Total</th><th class="pssv">Grade</th></tr></thead><tbody>' +
       conf.terms.map(t => line(t.name, t.id, '')).join('') + (Object.keys(ibLvAt(c, '*', n)).length ? line('Year', '*', ' class="pssyr"') : '') + '</tbody></table></section>';
   }
   h += '<div class="pssgrid' + (wide ? ' wide' : '') + '"><section><h4>Tasks</h4>' + (!rows.length ? '<p class="muted">Nothing in this period yet.</p>' : wide ? '<div class="psshalves">' + tab(rows.slice(0, half)) + tab(rows.slice(half)) + '</div>' : tab(rows)) + '</section>' +
-    '<aside>' + terms + '<section><h4>Missing work</h4>' + (miss.length ? '<ul class="psslist">' + miss.map(x => '<li>' + esc(x.name) + (x.due ? ' <small>' + esc(bkDay(x.due)) + '</small>' : '') + '</li>').join('') + '</ul>' : '<p class="pssnone">Nothing missing.</p>') + '</section></aside></div>';
+    '<aside>' + terms + '<section><h4>Missing work</h4>' + (miss.length ? '<ul class="psslist">' + miss.map(x => '<li><span data-raw>' + esc(x.name) + '</span>' + (x.due ? ' <small>' + esc(bkDay(x.due)) + '</small>' : '') + '</li>').join('') + '</ul>' : '<p class="pssnone">Nothing missing.</p>') + '</section></aside></div>';
   const rep = o.rep ? pssRep(c, cols, conf, n, rc) : null;
-  if (rep && rep.text.trim()) h += '<section class="pssrep"><h4>Comment</h4><p>' + esc(rep.text) + '</p></section>';
+  if (rep && rep.text.trim()) h += '<section class="pssrep"><h4>Comment</h4><p data-raw>' + esc(rep.text) + '</p></section>';
   if (o.notes) h += '<section class="pssnotes"><h4>Notes</h4><i></i><i></i><i></i></section>';
   return { html: h + '</div></article>', draft: !!(rep && rep.text.trim() && rep.draft) };
 }
@@ -387,7 +387,7 @@ function ibAddSave(c) {
 }
 async function ibAddDel(c) {
   const a = ibk.add, it = a && a.it; if (!it) return;
-  if (!await askDlg('Delete the levels typed in for “' + it.name + '”?', { ok: 'Delete', danger: true })) return;
+  if (!await askDlg('Delete the levels typed in for “' + it.name + '”?', { lg: 1, ok: 'Delete', danger: true })) return;
   for (const u of c.units) { const i = u.items.indexOf(it); if (i >= 0) u.items.splice(i, 1); }
   bk.cols = bk.cols.filter(x => x.key !== it.id); bkSaveLib(); if (!batch) renderLib();
   ibk.view = 'table'; ibk.add = null; bkDraw();

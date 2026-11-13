@@ -268,15 +268,15 @@ $('#start').addEventListener('click', async e => {
     if (f.it.typed && !f.it.batchId && f.c !== lib.loose && f.c.names.length) return go(classHash(f.c, 'gradebook'));
     b = card.querySelector('[data-kopen], [data-open-asg]'); if (!b || b.disabled) return;
   }
-  if (b.dataset.addunit != null) { const c = holderById(b.dataset.addunit); const name = await askTextDlg('Unit name', 'Unit ' + (c.units.length + 1), { ok: 'Add unit' }); if (name && name.trim()) { c.units.push({ id: uid(), name: name.trim(), items: [] }); saveLib(); renderLib(); } return; }
+  if (b.dataset.addunit != null) { const c = holderById(b.dataset.addunit); const name = await askTextDlg('Unit name', 'Unit ' + (c.units.length + 1), { lg: 1, ok: 'Add unit' }); if (name && name.trim()) { c.units.push({ id: uid(), name: name.trim(), items: [] }); saveLib(); renderLib(); } return; }
   if (b.dataset.newasg != null) return editAssignment(null, null, b.dataset.newasg);
   if (b.dataset.ctpin != null) return tabKeep(b.dataset.ctpin);
   if (b.dataset.cmove) { const [ci, d] = b.dataset.cmove.split(':').map(Number), j = ci + d; if (j >= 0 && j < lib.classes.length) { [lib.classes[ci], lib.classes[j]] = [lib.classes[j], lib.classes[ci]]; saveLib(); renderLib(); const again = $('#classes [data-cmove="' + j + ':' + d + '"]'); if (again && !again.disabled) again.focus(); } return; }
-  if (b.dataset.urename != null) { const f = findUnit(b.dataset.urename); if (!f) return; const name = await askTextDlg('Unit name', f.u.name, { ok: 'Rename' }); if (name && name.trim()) { f.u.name = name.trim(); saveLib(); renderLib(); } return; }
+  if (b.dataset.urename != null) { const f = findUnit(b.dataset.urename); if (!f) return; const name = await askTextDlg('Unit name', f.u.name, { lg: 1, ok: 'Rename' }); if (name && name.trim()) { f.u.name = name.trim(); saveLib(); renderLib(); } return; }
   if (b.dataset.uatlas != null) return askAtlas(b.dataset.uatlas);
   if (b.dataset.udel != null) {
     const f = findUnit(b.dataset.udel); if (!f) return; const u = f.u;
-    if (u.items.length && !await askDlg('Delete “' + u.name + '” and its ' + u.items.length + ' assignment' + (u.items.length === 1 ? '' : 's') + '? Saved marks for those downloads stay in this browser.', { ok: 'Delete', danger: true })) return;
+    if (u.items.length && !await askDlg('Delete “' + u.name + '” and its ' + u.items.length + ' assignment' + (u.items.length === 1 ? '' : 's') + '? Saved marks for those downloads stay in this browser.', { lg: 1, ok: 'Delete', danger: true })) return;
     const at = f.c.units.indexOf(u), n = u.items.length;
     f.c.units.splice(at, 1); saveLib(); renderLib();
     // A delete can be taken back for a few seconds: the unit goes back where it was, assignments and all.
@@ -293,8 +293,8 @@ $('#start').addEventListener('click', async e => {
   if (b.dataset.openAsg) {
     asgTarget = findItem(b.dataset.openAsg).it;
     openDlg('<div class="bh"><h2>Open “' + esc(asgTarget.name) + '”</h2></div><div class="bb"><p style="margin-top:0">' + (sysName() ? 'Where is the ' + esc(sysName()) + ' download?' : 'Where are the papers?') + ' You can also drop the ZIP or the folder straight onto this assignment’s card.</p></div>' +
-      '<div class="bf"><button class="btn" data-cancel>Cancel</button><button class="btn" data-pc>The ZIP or files…</button><button class="btn" data-dir>A whole folder…</button><button class="btn" data-scan>A scan of everyone’s papers…</button><button class="btn" data-match>Files to match to a roster…</button><button class="btn" data-nopaper title="For presentations, speeches and videos: a notes page for each student instead of a paper">No papers: presentations or videos…</button>' + (gcid() ? '<button class="btn primary" data-dv>From Google Drive…</button>' : '') + '</div>', true);
-    $('#dlgBox').onclick = ev => { if (ev.target.closest('[data-cancel]')) return closeDlg(); if (ev.target.closest('[data-nopaper]')) { closeDlg(); return openStartNotes(asgTarget); } if (ev.target.closest('[data-pc]')) { closeDlg(); $('#asgIn').click(); } if (ev.target.closest('[data-dir]')) { closeDlg(); pickDir('#asgDirIn'); } if (ev.target.closest('[data-scan]')) { closeDlg(); scanFor = asgTarget; $('#scanIn').click(); } if (ev.target.closest('[data-match]')) { const a = asgTarget; askFilesOrFolder('Match files to a roster', 'Each file is matched to a student by the name in its file name or folder name, and you can fix any match.', list => matchToRoster(list, a)); } if (ev.target.closest('[data-dv]')) { closeDlg(); openFromDrive(asgTarget); } };
+      '<div class="bf"><button class="btn" data-cancel>Cancel</button><button class="btn" data-pc>The ZIP or files…</button><button class="btn" data-dir>A whole folder…</button><button class="btn" data-scan>A scan of everyone’s papers…</button><button class="btn" data-match>Files to match to a roster…</button><button class="btn" data-nopaper title="For presentations, speeches and videos: a notes page for each student instead of a paper">No papers: presentations or videos…</button>' + (gcid() ? '<button class="btn primary" data-dv>From Google Drive…</button>' : '') + '</div>', true, 'lg');
+    $('#dlgBox').onclick = ev => { if (ev.target.closest('[data-cancel]')) return closeDlg(); if (ev.target.closest('[data-nopaper]')) { closeDlg(); return openStartNotes(asgTarget); } if (ev.target.closest('[data-pc]')) { closeDlg(); $('#asgIn').click(); } if (ev.target.closest('[data-dir]')) { closeDlg(); pickDir('#asgDirIn'); } if (ev.target.closest('[data-scan]')) { closeDlg(); scanFor = asgTarget; $('#scanIn').click(); } if (ev.target.closest('[data-match]')) { const a = asgTarget; askFilesOrFolder('Match files to a roster', 'Each file is matched to a student by the name in its file name or folder name, and you can fix any match.', list => matchToRoster(list, a), 'lg'); } if (ev.target.closest('[data-dv]')) { closeDlg(); openFromDrive(asgTarget); } };
     return;
   }
   if (b.dataset.editClass != null) return editClass(+b.dataset.editClass);
@@ -303,7 +303,7 @@ $('#start').addEventListener('click', async e => {
 // The unit's page in the school's curriculum tool, Atlas for one (web links only); empty removes it. Shown on the unit and in the top bar while grading.
 async function askAtlas(unitId) {
   const f = findUnit(unitId); if (!f) return;
-  let v = await askTextDlg('Paste the ' + (unitLinkName() ? unitLinkName() + ' link' : 'link to the unit plan') + ' for ' + f.u.name + ' (leave empty to remove it)', f.u.atlas || '', { ok: 'Save' });
+  let v = await askTextDlg('Paste the ' + (unitLinkName() ? unitLinkName() + ' link' : 'link to the unit plan') + ' for ' + f.u.name + ' (leave empty to remove it)', f.u.atlas || '', { lg: 1, ok: 'Save' });
   if (v == null) return; v = v.trim();
   if (v && !/^https?:\/\//i.test(v)) v = 'https://' + v;
   if (v && !/^https?:\/\/[^\s]+$/i.test(v)) return toast('That doesn’t look like a web link');
@@ -330,7 +330,7 @@ function editAssignment(id, unitId, clsId) {
   const it = f ? f.it : { id: uid(), name: '', classId: start.c.id };
   const classPick = f
     ? '<div class="field"><label for="aClass">Class</label><select id="aClass" class="btn" style="justify-content:flex-start">' + lib.classes.map(c => '<option value="' + c.id + '"' + (c === start.c ? ' selected' : '') + '>' + esc(c.name) + '</option>').join('') + '<option value=""' + (start.c === lib.loose ? ' selected' : '') + '>No class</option></select></div>'
-    : '<div class="field"><label>Classes</label><div class="ctags" id="aClasses">' + holders().map(c => '<label class="ctag"><input type="checkbox" value="' + esc(c.id) + '"' + (c === start.c ? ' checked' : '') + '><span>' + esc(c === lib.loose ? 'No class' : c.name) + '</span></label>').join('') + '</div></div>';
+    : '<div class="field"><label>Classes</label><div class="ctags" id="aClasses">' + holders().map(c => '<label class="ctag"><input type="checkbox" value="' + esc(c.id) + '"' + (c === start.c ? ' checked' : '') + '><span' + (c === lib.loose ? '' : ' data-raw') + '>' + esc(c === lib.loose ? 'No class' : c.name) + '</span></label>').join('') + '</div></div>';
   openDlg('<div class="bh"><h2>' + (f ? 'Edit assignment' : 'New assignment') + '</h2></div><div class="bb">' +
     '<div class="field"><label for="aName">Name</label><input type="text" id="aName" value="' + esc(it.name) + '" placeholder="e.g. Ch 3 Analysis Paragraph"></div>' +
     classPick +
@@ -338,7 +338,7 @@ function editAssignment(id, unitId, clsId) {
     '<div class="field"><label>Type</label><div class="pseg" role="group" id="aType">' + bkCats().map(([t, , s]) => '<button type="button" data-atype="' + esc(t) + '" aria-pressed="' + (it.type === t) + '">' + esc(s) + '</button>').join('') + '</div><p class="muted" style="font-size:12.5px;margin:4px 0 0">' + esc(bkCountSay()) + '</p></div>' +
     '<div class="field"><label for="aDue">Due</label><input type="date" id="aDue" class="btn" value="' + esc(it.due || '') + '"></div>' +
     '<p class="muted" style="font-size:13px;margin:0">The rubric is set the first time you open a download for it, with Rubric setup, and it’s remembered for this assignment.' + (f ? '' : ' Copies in other classes get the same rubric.') + '</p></div>' +
-    '<div class="bf">' + (f ? '<button class="btn" data-del style="margin-right:auto">Delete</button>' : '') + '<button class="btn" data-cancel>Cancel</button><button class="btn primary" data-ok>Save</button></div>', true);
+    '<div class="bf">' + (f ? '<button class="btn" data-del style="margin-right:auto">Delete</button>' : '') + '<button class="btn" data-cancel>Cancel</button><button class="btn primary" data-ok>Save</button></div>', true, 'lg');
   const ticked = () => [...document.querySelectorAll('#aClasses input:checked')].map(x => holderById(x.value)).filter(Boolean);
   const fillUnits = keep => {
     if (f) {
@@ -364,7 +364,7 @@ function editAssignment(id, unitId, clsId) {
     if (e.target.closest('[data-cancel]')) return closeDlg();
     const tb = e.target.closest('[data-atype]');
     if (tb) { const on = tb.getAttribute('aria-pressed') !== 'true'; for (const x of document.querySelectorAll('[data-atype]')) x.setAttribute('aria-pressed', String(on && x === tb)); return; }
-    if (e.target.closest('[data-del]')) { if (!await askDlg('Delete “' + it.name + '”?', { ok: 'Delete', danger: true })) return; const at = f.u.items.indexOf(it); f.u.items.splice(at, 1); saveLib(); closeDlg(); renderLib(); toastDo('Deleted “' + it.name + '”', 'Undo', () => { if (!holders().some(c => c.units.includes(f.u)) || f.u.items.includes(it)) return; f.u.items.splice(Math.min(at, f.u.items.length), 0, it); saveLib(); renderLib(); }); return; }
+    if (e.target.closest('[data-del]')) { if (!await askDlg('Delete “' + it.name + '”?', { lg: 1, ok: 'Delete', danger: true })) return; const at = f.u.items.indexOf(it); f.u.items.splice(at, 1); saveLib(); closeDlg(); renderLib(); toastDo('Deleted “' + it.name + '”', 'Undo', () => { if (!holders().some(c => c.units.includes(f.u)) || f.u.items.includes(it)) return; f.u.items.splice(Math.min(at, f.u.items.length), 0, it); saveLib(); renderLib(); }); return; }
     if (e.target.closest('[data-ok]')) {
       const name = $('#aName').value.trim(); if (!name) { $('#aName').focus(); return; }
       const ty = document.querySelector('[data-atype][aria-pressed="true"]'), due = $('#aDue').value;
@@ -428,7 +428,7 @@ const mbLink = (c, cls) => mbOf(c) ? '<a class="' + (cls || 'btn sm') + ' mb-go"
 // On the class itself: the link, or a button to add one. ✎ changes it.
 async function askMb(ci) {
   const c = lib.classes[ci]; if (!c) return;
-  const v = await askTextDlg('Paste the ' + (sysName() ? sysName() + ' page' : 'web address of the class page') + ' for ' + c.name + ' (leave empty to remove it)', mbOf(c), { ok: 'Save' });
+  const v = await askTextDlg('Paste the ' + (sysName() ? sysName() + ' page' : 'web address of the class page') + ' for ' + c.name + ' (leave empty to remove it)', mbOf(c), { lg: 1, ok: 'Save' });
   if (v == null) return;
   const u = mbUrl(v); if (v.trim() && !u) return toast('That doesn’t look like a web link');
   if (u) c.mb = u; else delete c.mb; mbRemember(c.name, u);
@@ -443,13 +443,13 @@ function editClass(ci) {
     '<div class="field"><label for="cNames">Students, one per line, in the order you want' + (sysName() ? ' (' + esc(sysName()) + ' order works well)' : '') + '</label><textarea class="big" id="cNames" placeholder="Paste from a spreadsheet' + (sysName() ? ' or ' + esc(sysName()) : '') + ', or upload a file. Student ID and email columns are kept as each student’s details.">' + esc(c.names.join('\n')) + '</textarea></div>' +
     '<button class="btn sm" data-up>Upload a list (.csv or .txt)…</button><input type="file" id="cFile" accept=".csv,.txt,text/csv,text/plain" hidden>' +
     '<p class="muted" style="font-size:13px">Kept in this browser.' + (ci < 0 ? ' <button class="link" data-gcopen>Coming from Google Classroom? Bring the class over…</button>' : '') + '</p></div>' +
-    '<div class="bf">' + (ci >= 0 ? '<button class="btn" data-del style="margin-right:auto">Delete</button>' : '') + '<button class="btn" data-cancel>Cancel</button><button class="btn primary" data-ok>Save</button></div>', true);
+    '<div class="bf">' + (ci >= 0 ? '<button class="btn" data-del style="margin-right:auto">Delete</button>' : '') + '<button class="btn" data-cancel>Cancel</button><button class="btn primary" data-ok>Save</button></div>', true, 'lg');
   $('#cFile').onchange = async e => { const f = e.target.files[0]; if (!f) return; const rows = parseRosterRows(await f.text()); $('#cNames').value = rows.map(r => r.name).join('\n'); upRows = rows; e.target.value = ''; };
   $('#dlgBox').onclick = async e => {
     if (e.target.closest('[data-up]')) return $('#cFile').click();
     if (e.target.closest('[data-cancel]')) return closeDlg();
     if (e.target.closest('[data-gcopen]')) return gcOpen();
-    if (e.target.closest('[data-del]')) { if (!await askDlg('Delete the ' + c.name + ' class? Its assignments move to “No class”.', { ok: 'Delete', danger: true })) return; const moved = c.units.slice(), wasIds = moved.map(u => u.items.map(it => it.classId)); for (const u of c.units) { for (const it of u.items) it.classId = ''; lib.loose.units.push(u); } lib.classes.splice(ci, 1); saveLib(); closeDlg(); renderLib(); if (!batch && routeNow().v !== 'class') go(lib.loose.units.some(u => u.items.length) ? classHash(lib.loose) : '#/', true);
+    if (e.target.closest('[data-del]')) { if (!await askDlg('Delete the ' + c.name + ' class? Its assignments move to “No class”.', { lg: 1, ok: 'Delete', danger: true })) return; const moved = c.units.slice(), wasIds = moved.map(u => u.items.map(it => it.classId)); for (const u of c.units) { for (const it of u.items) it.classId = ''; lib.loose.units.push(u); } lib.classes.splice(ci, 1); saveLib(); closeDlg(); renderLib(); if (!batch && routeNow().v !== 'class') go(lib.loose.units.some(u => u.items.length) ? classHash(lib.loose) : '#/', true);
       // Undo puts the class back in its place, with its roster, gradebook and units; its assignments leave “No class” again.
       toastDo('Deleted the ' + c.name + ' class', 'Undo', () => { if (lib.classes.includes(c)) return; lib.loose.units = lib.loose.units.filter(u => !moved.includes(u)); moved.forEach((u, k) => u.items.forEach((it, j) => { it.classId = wasIds[k][j] != null ? wasIds[k][j] : c.id; })); lib.classes.splice(Math.min(ci, lib.classes.length), 0, c); saveLib(); renderLib(); if (window.railRender) railRender(); });
       return; }

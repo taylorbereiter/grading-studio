@@ -116,9 +116,9 @@ function pickMany(folder) {
   });
 }
 // Files or folder? Then hands the files on.
-function askFilesOrFolder(title, text, then) {
+function askFilesOrFolder(title, text, then, lg) {
   openDlg('<div class="bh"><h2>' + esc(title) + '</h2><button class="icon" data-cancel aria-label="Close">✕</button></div><div class="bb"><p style="margin:0">' + text + '</p></div>' +
-    '<div class="bf"><button class="btn" data-cancel>Cancel</button><button class="btn" data-pf>Files or a ZIP…</button><button class="btn primary" data-pd>A whole folder…</button></div>', true);
+    '<div class="bf"><button class="btn" data-cancel>Cancel</button><button class="btn" data-pf>Files or a ZIP…</button><button class="btn primary" data-pd>A whole folder…</button></div>', true, lg);
   $('#dlgBox').onclick = async e => {
     if (e.target.closest('[data-cancel]')) return closeDlg();
     const pf = e.target.closest('[data-pf]'), pd = e.target.closest('[data-pd]');
