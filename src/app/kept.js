@@ -203,7 +203,7 @@ async function addFiles(st, list, quiet) {
     catch { toast('This browser couldn’t keep ' + f.name + ' for next time. It’s here until you close the download.'); }
   }
   refound(st); saveSoon(); renderList(); wordScoresAll();
-  $('#trAllBtn').hidden = !CAN_TRANSCRIBE || !batch.students.some(x => x.files.some(f => f.kind === 'media'));
+  $('#trAllBtn').hidden = !CAN_TRANSCRIBE || !batch.students.some(x => x.files.some(trMakeable));
   if (quiet) return;
   const i = batch.students.indexOf(st);
   toast('Added ' + list.length + (list.length === 1 ? ' file' : ' files') + ' to ' + shownName(st, batch.students.indexOf(st)));

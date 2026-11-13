@@ -1,4 +1,9 @@
 {
+  "1.28.17": [
+    "Transcripts beside videos. Under any video, Paste a transcript takes one you have, for example from Gemini, YouTube or a caption file. A line that starts with a time plays the video from there.",
+    "Make transcript now works for video files kept in this browser too. It asks before the one-time download, runs on this computer, shows how far it is, and Cancel stops it.",
+    "Captions under the video show the line being said the right way up, even when the video is turned. For a Google Drive video, step through the lines with ‹ and ›."
+  ],
   "1.28.16": [
     "Video cards have a ⟳ Turn button for a video filmed sideways. It turns a quarter turn at a time, is kept for that video, and partners sharing the link see it turned too.",
     "A rubric copy brought in after every notes page was taken out or removed now goes on each student’s paper instead of Removed pages."

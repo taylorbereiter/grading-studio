@@ -245,34 +245,60 @@ function planChunks(x) {
   }
   return out.map(([a, b]) => { let s = 0; for (let i = a; i < b; i += 4) s += x[i] * x[i]; return { a, b, rms: Math.sqrt(s / Math.max(1, (b - a) / 4)) }; });
 }
-async function transcribeFile(f, say) {
-  say('Starting the speech engine…');
-  asrLoad = p => say('Downloading the speech engine, one time only… ' + Math.round(p * 100) + '%');
-  await asrCall({ type: 'load' }); asrLoad = null;
-  say('Reading the sound…');
-  let x; try { x = await decodeAudio(f.data); } catch { throw new Error('This browser couldn’t read the sound in this file. Try Chrome, or convert it to .mp4 or .m4a.'); }
+// Stops the speech engine at once, wherever it is (downloading, or in the middle of a piece). The next transcript starts it again.
+function asrStop() {
+  if (!asrW) return;
+  try { asrW.terminate(); } catch (e) {}
+  asrW = null; asrLoad = null;
+  for (const j of asrJobs.values()) j.rej(Object.assign(new Error('Stopped'), { name: 'AbortError' }));
+  asrJobs.clear();
+}
+// The words of a recording, with the second each starts: [[word, seconds]]. bytes: the recording itself (audio or video).
+// say(text, share done 0 to 1). stop: { on } is checked between pieces; asrStop() stops it at once.
+const asrStandIn = {};   // the tests put stand-ins here ({ call, decode }) so no speech engine is downloaded
+async function transcribe(bytes, say, stop) {
+  stop = stop || {};
+  const asrCall_ = asrStandIn.call || asrCall, decodeAudio_ = asrStandIn.decode || decodeAudio;
+  const halt = () => { if (stop.on) throw Object.assign(new Error('Stopped'), { name: 'AbortError' }); };
+  say('Starting the speech engine…', 0);
+  asrLoad = p => say('Downloading the speech engine, one time only… ' + Math.round(p * 100) + '%', 0);
+  await asrCall_({ type: 'load' }); asrLoad = null; halt();
+  store.set('gs.asrHave', 1);   // downloaded once in this browser: the next transcript doesn't ask first
+  say('Reading the sound…', 0);
+  let x; try { x = await decodeAudio_(bytes); } catch { throw new Error('This browser couldn’t read the sound in this file. Try Chrome, or convert it to .mp4 or .m4a.'); }
+  halt();
   const chunks = planChunks(x), dur = x.length / SR, words = [];
   for (let c = 0; c < chunks.length; c++) {
     const { a, b, rms } = chunks[c];
     if (rms > 0.002) {
-      const res = await asrCall({ type: 'run', audio: x.slice(a, b) });
+      const res = await asrCall_({ type: 'run', audio: x.slice(a, b) });
       for (const [w, t] of res.words) { const s = (w || '').trim(); if (!s || /^[\[(].*[\])]$/.test(s)) continue; words.push([w, +(a / SR + Math.max(0, t || 0)).toFixed(2)]); }
     }
-    say('Transcribing ' + fmtTime(b / SR) + ' of ' + fmtTime(dur) + '…');
+    halt();
+    say('Transcribing ' + fmtTime(b / SR) + ' of ' + fmtTime(dur) + '…', b / x.length);
   }
-  f.tr = { w: words };
+  return words;
+}
+// A recording's transcript, kept on the file. A video kept in this browser is read from where it is kept; its partners get the same transcript.
+async function transcribeFile(f, say, stop) {
+  const kv = f.kind === 'link' && vidRef(f.data);
+  if (f.kind === 'link' && !kv) throw new Error('Only a video file can be transcribed here. For a link, paste a transcript.');
+  const k = kv && await vkGet(kv); if (kv && !k) throw new Error('This video isn’t in this browser.');
+  const w = await transcribe(kv ? new Uint8Array(await k.blob.arrayBuffer()) : f.data, say, stop);
+  trSet(f, { w });
 }
 
 // Every recording in the download, one after another. Each transcript is saved as soon as it's done,
 // so stopping (or closing the tab) keeps the ones already made.
 let trAll = null;
 function openTranscripts() {
-  const all = batch.students.flatMap((st, i) => st.files.filter(f => f.kind === 'media').map(f => ({ st, i, f })));
+  const seen = new Set();   // partners share one kept video, so it is transcribed once
+  const all = batch.students.flatMap((st, i) => st.files.filter(trMakeable).map(f => ({ st, i, f }))).filter(x => { if (x.f.kind !== 'link') return true; const k = linkKey(x.f); if (seen.has(k)) return false; seen.add(k); return true; });
   const have = all.filter(x => x.f.tr).length;
   const render = (msg) => {
     $('#trBody').innerHTML = '<p style="margin-top:0"><b>' + all.length + (all.length === 1 ? ' recording' : ' recordings') + '</b> in this download' + (have ? ', ' + have + ' with a transcript already' : '') + '.</p>' +
       (have && !trAll ? '<label class="chk"><input type="checkbox" id="trRedo"> Make the existing ones again too</label>' : '') +
-      '<p class="muted" style="font-size:13px">Runs in this browser (nothing is uploaded). The speech engine downloads once. Keep this tab open while it works; you can keep grading in the meantime.</p>' +
+      '<p class="muted" style="font-size:13px">Runs in this browser (nothing is uploaded). The speech engine downloads once (about 150 MB). Keep this tab open while it works; you can keep grading in the meantime.</p>' +
       '<div class="prog"' + (trAll ? '' : ' hidden') + '><i style="width:' + (trAll ? trAll.pct : 0) + '%"></i></div><p id="trMsg" style="font-size:14px">' + esc(msg || '') + '</p>';
   };
   openDlg('<div class="bh"><h2>Transcripts</h2><button class="icon" data-close aria-label="Close">✕</button></div><div class="bb" id="trBody"></div>' +
