@@ -300,7 +300,7 @@ function openCons() {
     '<h3 class="chd">The same score, side by side</h3>' +
     (same.length ? '<p class="muted hsm" style="margin-top:0">Pick a score to see those papers next to each other.' + (single ? ' Scores with just one paper aren’t listed.' : '') + '</p><div class="cchips">' + same.map(([v, l]) => '<button class="btn sm" data-same="' + v + '"><b>' + sameLabel(v) + '</b>&nbsp;' + l.length + ' papers</button>').join('') + '</div>'
       : '<p class="muted hsm" style="margin-top:0">No two papers share a finished score yet.</p>') +
-    '</div>', false);
+    '</div>', false, 'lg');
   const box = $('#dlgBox'), tip = $('#consTip');
   box.onclick = e => {
     if (e.target.closest('[data-close]')) return closeDlg();

@@ -296,7 +296,7 @@ async function openSheet(rescan) {
   openDlg('<div class="bh"><h2>Grade sheet</h2><span class="muted" id="shSub"></span><span class="sp"></span>' + tabSeg('grades', 'sheet', GRADE_VIEWS) + '<button class="icon" data-close aria-label="Close">✕</button></div>' +
     '<div class="bb" id="shBody"><p class="muted">Looking for the grade on each paper…</p><div class="prog"><i></i></div></div>' +
     '<div class="bf"><button class="btn" data-each>Box each grade by hand</button><button class="btn" data-spot>' + (setup.spot ? 'Change the shared spot' : 'Same spot on every paper') + '</button>' + (setup.spot ? '<button class="btn" data-auto>Stop using the shared spot</button>' : '') +
-    '<button class="btn" data-cp>Copy all scores</button><button class="btn primary" data-pdf>Download grade sheet (PDF)</button></div>');
+    '<button class="btn" data-cp>Copy all scores</button><button class="btn primary" data-pdf>Download grade sheet (PDF)</button></div>', false, 'lg');
   const box = $('#dlgBox');
   box.onclick = async e => {
     if (e.target.closest('[data-close]')) return closeDlg();

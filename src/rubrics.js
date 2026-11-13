@@ -8,7 +8,7 @@ const rowHasLevels = i => rowLevels(setup, i).some(v => levelOf(i, v));
 // A half point sits between two levels, so it shows both.
 function levelPick(i, v) {
   if (v == null) return '';
-  const say = (v % 1 ? [Math.ceil(v), Math.floor(v)] : [v]).filter(w => levelOf(i, w)).map(w => '<b>' + w + '</b> ' + esc(levelOf(i, w)));
+  const say = (v % 1 ? [Math.ceil(v), Math.floor(v)] : [v]).filter(w => levelOf(i, w)).map(w => '<b>' + w + '</b> <span data-raw>' + esc(levelOf(i, w)) + '</span>');
   return say.length > 1 ? say.map(t => '<span class="lvh">' + t + '</span>').join(' ') : say.join('');   // two levels get a line each, so a long one can't hide the other
 }
 const levelHint = (i, v) => levelPick(i, v) || '<span class="muted">' + (v == null ? 'Point at a score to see what it means.' : 'Nothing written for ' + fmtNum(v) + '.') + '</span>';
@@ -17,7 +17,7 @@ function levelsHtml(i, v) {
   if (!rowHasLevels(i)) return '';
   if (levelsOpen.has(i)) {
     const on = v == null ? [] : [Math.ceil(v), Math.floor(v)];
-    return '<div class="lvrow"><ul class="lvall">' + rowLevels(setup, i).filter(w => levelOf(i, w)).map(w => '<li' + (on.includes(w) ? ' class="on"' : '') + '><b>' + w + '</b><span>' + esc(levelOf(i, w)) + '</span></li>').join('') + '</ul><button class="link lvbtn" data-lvopen="' + i + '" aria-expanded="true">Less</button></div>';
+    return '<div class="lvrow"><ul class="lvall">' + rowLevels(setup, i).filter(w => levelOf(i, w)).map(w => '<li' + (on.includes(w) ? ' class="on"' : '') + '><b>' + w + '</b><span data-raw>' + esc(levelOf(i, w)) + '</span></li>').join('') + '</ul><button class="link lvbtn" data-lvopen="' + i + '" aria-expanded="true">Less</button></div>';
   }
   return '<div class="lvrow" data-lvline="' + i + '"><div class="lvtxt" aria-live="polite">' + levelHint(i, v) + '</div><button class="link lvbtn" data-lvopen="' + i + '" aria-expanded="false" aria-label="See what every score means on this row">All</button></div>';
 }
@@ -31,7 +31,7 @@ function levelPreview(e, leaving) {
 let lvAt = 0;
 function lvInner(i, v) {
   if (!(i >= 0) || i >= setup.criteria.length) i = setup.criteria.findIndex((_, k) => rowHasLevels(k));
-  return '<div class="lvname">' + esc(setup.criteria[i]) + '</div>' + (rowHasLevels(i) ? levelsHtml(i, v === undefined ? batch.students[cur].grade.rubric[i] : v) : '<div class="lvrow"><div class="lvtxt"><span class="muted">Nothing written for this row yet. Edit rubric adds it.</span></div></div>');
+  return '<div class="lvname" data-raw>' + esc(setup.criteria[i]) + '</div>' + (rowHasLevels(i) ? levelsHtml(i, v === undefined ? batch.students[cur].grade.rubric[i] : v) : '<div class="lvrow"><div class="lvtxt"><span class="muted">Nothing written for this row yet. Edit rubric adds it.</span></div></div>');
 }
 const lvBox = () => setup.criteria.some((_, i) => rowHasLevels(i)) ? '<div id="lvBox">' + lvInner(rowOn >= 0 ? rowOn : lvAt) + '</div>' : '';
 function lvDraw(i, v) { const box = $('#lvBox'); if (!box || !batch) return; if (i == null) i = rowOn >= 0 ? rowOn : lvAt; else if (v === undefined) lvAt = i; box.innerHTML = lvInner(i, v); }
@@ -465,17 +465,17 @@ function rowsHtml(s) {
   return '<div class="ovrows" role="group" aria-label="Rubric rows, lowest average first">' + s.rows.map(x => {
     const sum = x.n ? people(x.n, 'score') + ', ' + x.low + ' at ' + fmtNum(x.top / 2) + ' or less' : 'No scores yet', tip = x.n ? oneDp(x.avg) + ' average' + (oneTop ? '' : ' out of ' + x.top) : 'No scores yet', w = 100 / x.top;
     return '<div class="ovr"' + (x.n ? ' tabindex="0"' : '') + ' aria-label="' + esc(x.name + ': ' + tip + '. ' + sum) + '" data-tv="' + esc(tip) + '" data-tl="' + esc(x.name) + '" data-tn="' + esc(sum) + '">' +
-      '<div class="ovrn"><span>' + esc(x.name) + '</span>' + (x.lowest ? ' <span class="stag">lowest</span>' : '') + '</div>' +
+      '<div class="ovrn"><span data-raw>' + esc(x.name) + '</span>' + (x.lowest ? ' <span class="stag">lowest</span>' : '') + '</div>' +
       '<div class="ovrt">' + Array.from({ length: x.top - 1 }, (_, t) => '<i style="left:' + (t + 1) * w + '%"></i>').join('') + (x.n ? '<div class="ovrb' + (x.lowest ? ' on' : '') + '" style="width:' + Math.min(100, x.avg * w) + '%"></div>' : '') + '<span class="ovrv" style="left:' + (x.n ? Math.min(100, x.avg * w) : 0) + '%">' + (x.n ? oneDp(x.avg) : '–') + '</span></div>' +
       '<div class="muted ovrs">' + sum + '</div></div>';
   }).join('') + '</div><div class="ovrx" aria-hidden="true"><span></span><div>' + [0, 1, 2, 3, 4].map(t => '<span style="left:' + t * 25 + '%">' + t + '</span>').join('') + '</div><span></span></div><p class="muted ovcap2">' + notes.join(' ') + '</p>';
 }
 function whoHtml(s) {
-  const item = o => '<li><button class="link" data-ovgo="' + o.i + '">' + esc(o.name) + '</button>' + (o.note ? ' <span class="muted">' + esc(o.note) + '</span>' : '') + '</li>';
+  const item = o => '<li><button class="link" data-ovgo="' + o.i + '" data-raw>' + esc(o.name) + '</button>' + (o.note ? ' <span class="muted">' + esc(o.note) + '</span>' : '') + '</li>';
   const late = s.counted.filter(x => x.late);
   const groups = [['Not scored yet', s.notScored], ['Partial: some rows scored', s.partial], ['Marked missing', s.missing], ['Excused', s.excused], ['Read from the paper, not on this scale', s.offScale], ['Your score is above the total or below 0', s.ownOff], ['Left out of the average by you', s.leftOut], ['Late, and counted', late]].filter(g => g[1].length);
   let h = groups.map(([t, list]) => '<details class="ovg" data-group="' + esc(t) + '" open><summary>' + esc(t) + ' (' + list.length + ')</summary><ul>' + list.map(item).join('') + '</ul></details>').join('');
-  if (s.rosterOnly.length) h += '<details class="ovg" data-group="On the roster" open><summary>On the roster, nothing here (' + s.rosterOnly.length + ')</summary>' + (anonOn() ? '<p class="muted" style="margin:4px 0 0">Names stay hidden during anonymous grading.</p>' : '<ul>' + s.rosterOnly.map(n => '<li>' + esc(n) + '</li>').join('') + '</ul>') + '</details>';
+  if (s.rosterOnly.length) h += '<details class="ovg" data-group="On the roster" open><summary>On the roster, nothing here (' + s.rosterOnly.length + ')</summary>' + (anonOn() ? '<p class="muted" style="margin:4px 0 0">Names stay hidden during anonymous grading.</p>' : '<ul>' + s.rosterOnly.map(n => '<li data-raw>' + esc(n) + '</li>').join('') + '</ul>') + '</details>';
   const open = s.notScored.length + s.partial.length + s.rosterOnly.length;
   return (open ? '' : '<p class="ovok">Everyone has a finished score or a mark saying why not.</p>') + h;
 }
@@ -509,7 +509,7 @@ function ovDraw() {
     '<div class="ovcharts">' + (ib ? '' : '<section id="ovSpread"><h3 class="ovh3">Score spread</h3>' + spreadHtml(s) + '</section>') + '<section id="ovRows"><h3 class="ovh3">Rows the class found hardest</h3>' + rowsHtml(s) + '</section>' + insRowsHtml() + '</div>' +
     '<div id="insMore"></div>' + trendHtml(s) + levelHtml(s) +
     '<section id="ovWho"><h3 class="ovh3">Who’s missing or unfinished</h3>' + whoHtml(s) + '</section></div>') +
-    '<div class="bf"><button class="btn primary" data-close>Close</button></div>');
+    '<div class="bf"><button class="btn primary" data-close>Close</button></div>', false, 'lg');
   if (on) pctDraw(); else insMore();
   ovWire();
 }

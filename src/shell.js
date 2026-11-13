@@ -39,7 +39,7 @@ function railRender() {
 // "Saved", and where: the same words as the top bar while grading and the line in Settings (folder.js says them).
 function railSavedRender() {
   if (!shellReady) return;
-  const el = $('#railSaved'), w = whereSay(), st = batch ? ($('#saveState').textContent || '').replace(/^[✓⚠]\s*/, '').trim() : '';
+  const el = $('#railSaved'), w = whereSay(), st = batch ? ($('#saveState').dataset.st || $('#saveState').textContent || '').replace(/^[✓⚠]\s*/, '').trim() : '';
   // "Saved" is only said when a second copy exists outside this browser. Until then it is "Not backed up", in amber.
   const bad = saveBad.size > 0, head = bad ? (/saved/i.test(st) && !/^Saved/.test(st) ? st : 'Not saved') : /^Saving/.test(st) ? 'Saving…' : w.safe ? 'Saved' : 'Not backed up';
   const h = '<span class="rdot"></span><span class="rl"><b>' + esc(head) + '</b>' + esc(w.sub || w.text) + '</span>';
@@ -74,7 +74,7 @@ document.addEventListener('click', e => {
 });
 window.addEventListener('hashchange', applyRoute);
 // The sidebar's "Saved" follows the top bar's while a paper is open.
-new MutationObserver(railSavedRender).observe($('#saveState'), { childList: true, characterData: true, subtree: true });
+new MutationObserver(railSavedRender).observe($('#saveState'), { childList: true, characterData: true, subtree: true, attributes: true, attributeFilter: ['data-st'] });   // data-st is the state in English, whatever language the words are shown in
 
 /* ---------------- Find anything (Ctrl K, or ⌘K): one box that reaches every student, assignment, tool and setting ---------------- */
 // Everything she can go to or do right now. Each row presses the same button or runs the same function as doing it by hand.

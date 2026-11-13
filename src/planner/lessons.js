@@ -11,12 +11,13 @@ const LAYOUTS = { title: 'Title', agenda: 'Agenda', objectives: 'Objectives', wa
 const SIZES = [28, 30, 32, 34, 36];   // slide text stays between 28 and 36 pt, big enough to read from the back of the room
 const SIZES_ANY = [18, 20, 24, 28, 30, 32, 34, 36, 40, 44];
 // The deck rules are the teacher's: an agenda on slide 2 and text kept to 28 to 36 pt unless the timetable says otherwise
-// (setup.deck = { agenda: false, sizes: 'any' }, each key there only when it differs).
+// (setup.deck = { agenda: false, sizes: 'any', add: 'twocol' }, each key there only when it differs; add is the layout + Add slide adds).
 const deckRule = () => (L.setup && L.setup.deck) || {};
 const deckAgenda = () => deckRule().agenda !== false;
 const deckSizes = () => deckRule().sizes === 'any' ? SIZES_ANY : SIZES;
+const deckAdd = () => LAYOUTS[deckRule().add] && deckRule().add !== 'title' ? deckRule().add : 'content';   // what + Add slide adds
 const deckSizeSay = () => { const z = deckSizes(); return z[0] + ' to ' + z[z.length - 1]; };
-function deckClean(d) { const o = {}; if (d && d.agenda === false) o.agenda = false; if (d && d.sizes === 'any') o.sizes = 'any'; return Object.keys(o).length ? o : null; }
+function deckClean(d) { const o = {}; if (d && d.agenda === false) o.agenda = false; if (d && d.sizes === 'any') o.sizes = 'any'; if (d && LAYOUTS[d.add] && d.add !== 'content' && d.add !== 'title') o.add = d.add; return Object.keys(o).length ? o : null; }
 // The school week: Monday to Friday, with Saturday after it and Sunday in front of it when a class meets then.
 const meetsOn = (dow, cs) => (cs || (L.setup && L.setup.classes) || []).some(c => (c.meets || []).some(m => +m.dow === dow));
 const plWeekOffs = () => [...(meetsOn(0) ? [-1] : []), 0, 1, 2, 3, 4, ...(meetsOn(6) ? [5] : [])];
@@ -87,7 +88,7 @@ function normSlide(s) {
   }
   if (+s.fmt !== 2) rtMigrate(out);
   out.fmt = 2;
-  return out;
+  return normBoxes(s, out);   // the teacher's own text sizes and box places (boxes.js)
 }
 function normLesson(x) {
   x = x && typeof x === 'object' ? x : {};
@@ -232,12 +233,12 @@ function slideHtml(s, lesson, edit) {
 function slideInner(s, lesson, edit, look) {
   const sz = s.size * PT, cap = t => esc(t);
   let h = '<div class="ls-bg"></div><div class="ls-fade"></div><div class="ls-wood"' + (L.tplImg ? ' style="background-image:url(' + L.tplImg + ')"' : '') + '></div>';
-  const ed = (k, cls, text, ph) => '<div class="' + cls + (edit ? ' ls-ed' : '') + '" data-k="' + k + '"' + (edit ? ' tabindex="0"' : '') + '>' + (text ? cap(text) : edit ? '<span class="ls-ph">' + ph + '</span>' : '') + '</div>';
+  const ed = (k, cls, text, ph) => '<div class="' + cls + (edit ? ' ls-ed' : '') + '" data-k="' + k + '"' + (boxStyle(s, k) ? ' style="' + boxStyle(s, k) + '"' : '') + (edit ? ' tabindex="0"' : '') + '>' + (text ? cap(text) : edit ? '<span class="ls-ph">' + ph + '</span>' : '') + '</div>';
   if (s.layout === 'title') {
     h += ed('title', 'ls-ttl', s.title, 'Click to add a title');
     h += '<div class="ls-trule"></div>';
     const sub = s.body ? s.body : titleSubtitle(lesson);
-    h += '<div class="ls-sub' + (edit ? ' ls-ed' : '') + '" data-k="body"' + (edit ? ' tabindex="0"' : '') + '>' + sub.split('\n').map(esc).join('<br>') + '</div>';
+    h += '<div class="ls-sub' + (edit ? ' ls-ed' : '') + '" data-k="sub"' + (boxStyle(s, 'sub') ? ' style="' + boxStyle(s, 'sub') + '"' : '') + (edit ? ' tabindex="0"' : '') + '>' + sub.split('\n').map(esc).join('<br>') + '</div>';
     return h;
   }
   if (s.layout === 'fullpic') {   // the picture is the whole slide; the slide's name is kept for the list of slides, not shown
@@ -260,7 +261,7 @@ function slideInner(s, lesson, edit, look) {
     return h;
   }
   const inner = s.body.trim() ? rtHtml(s.body) : edit ? '<span class="ls-ph">' + (BODY_PH[s.layout] || 'Click to add text') + '</span>' : '';
-  h += '<div class="ls-body ls-' + (s.layout === 'objectives' ? 'agenda' : s.layout) + (edit ? ' ls-ed' : '') + '" data-k="body" style="font-size:' + sz + 'px"' + (edit ? ' tabindex="0"' : '') + '>' + inner + '</div>';
+  h += '<div class="ls-body ls-' + (s.layout === 'objectives' ? 'agenda' : s.layout) + (edit ? ' ls-ed' : '') + '" data-k="body" style="' + boxStyle(s, 'body') + 'font-size:' + sz + 'px"' + (edit ? ' tabindex="0"' : '') + '>' + inner + '</div>';
   return h;
 }
 function titleSubtitle(lesson) {
@@ -414,11 +415,11 @@ function renderEditor() {
     (lessonTalk(l) ? commentsBtn(l) : '') + panelBtn() + moreHtml(l) +
     '<button class="btn sm" data-a="pptx">Download .pptx</button><button class="btn sm primary" data-pr="present" title="Show this lesson full screen, from this slide">' + prIcon('play') + 'Present</button></div>' + pendingBar(l) + variantBar(l);
   h += '<div class="ls-ed-cols"><nav class="ls-thumbs" id="lsThumbs">' + l.slides.map((x, i) => thumbHtml(x, l, i)).join('') +
-    '<div class="ls-addslide"><button class="btn sm" data-a="addslide">+ Add slide</button></div></nav>';
+    '<div class="ls-addslide"><button class="btn sm" data-a="addslide" title="Add a ' + esc(LAYOUTS[deckAdd()]) + ' slide after this one">+ Add slide</button><button class="btn sm" data-a="addpick" title="Pick another layout" aria-label="Pick another layout">▾</button></div></nav>';
   h += '<section class="ls-main"><div class="ls-tools">' +
     '<button class="btn sm" data-a="layout" title="Pick a layout for this slide">Layout: ' + esc(LAYOUTS[s.layout]) + ' ▾</button>' +
     '<button class="btn sm" data-a="look" title="Colors and background for this lesson">Look: ' + esc(LOOKS[lookOf(l)].name) + '</button>' + rtToolHtml() +
-    (s.layout !== 'title' && s.layout !== 'picture' && s.layout !== 'fullpic' && s.layout !== 'video' ? '<label>Text <select data-f="size" class="btn sm">' + deckSizes().map(z => '<option value="' + z + '"' + (z === s.size ? ' selected' : '') + '>' + z + ' pt</option>').join('') + '</select></label>' : '') +
+    '<span id="lsSize"></span>' +   // the text size of the box last clicked (boxes.js), filled in once the slide is drawn
     (hasPic(s) ? '<button class="btn sm" data-a="pic">' + (s.img ? 'Change picture' : 'Add picture') + '</button>' : '') +
     (s.layout === 'video' ? '<button class="btn sm" data-a="vid">' + (s.video ? 'Change video' : 'Add video link') + '</button>' + (s.video ? '<a class="btn sm ghost" href="' + esc(videoLink(s.video)) + '" target="_blank" rel="noopener">Watch</a>' : '') : '') +
     '<span class="sp"></span><button class="btn sm ghost" data-a="up" title="Move earlier">↑</button><button class="btn sm ghost" data-a="down" title="Move later">↓</button><button class="btn sm ghost" data-a="dup" title="Make a copy of this slide">Duplicate</button><button class="btn sm ghost" data-a="del" title="Delete this slide">Delete</button></div>' +
@@ -433,7 +434,7 @@ function renderEditor() {
     '<div class="ls-whole">' + materialsHtml(l, 'lesson') + linksHtml(l) + finishedHtml(l) + lessonTalkHtml(l) + taughtHtml(l) + '</div></div>' +
     '</section></div><input type="file" id="lsPicIn" accept="image/*" hidden>';
   $('#lessons').innerHTML = h;
-  fitStage(); checkFit(); panelContext();
+  fitStage(); checkFit(); sizeCtlRefresh(); boxFrame(); panelContext();
   const th = $('#lsThumbs .ls-th.on'); if (th) th.scrollIntoView({ block: 'nearest' });
 }
 // How to work on a slide, one click away so it isn't a paragraph under every slide.
@@ -478,14 +479,16 @@ function fitStage() {
   st.style.setProperty('--k', Math.max(0.3, k)); st.style.width = 1280 * Math.max(0.3, k) + 'px'; st.style.height = 720 * Math.max(0.3, k) + 'px';
 }
 window.addEventListener('resize', () => { if ($('#lessons') && !$('#lessons').hidden && L.view === 'edit') fitStage(); });
-// Text that runs past the slide gets a warning and a Split button, never a smaller font.
+// Text that runs past its box is never hidden: the box is marked, with a warning that offers to split the slide or find
+// the biggest size that fits. Presenting makes such text smaller so every word shows (slideFit in boxes.js).
 function checkFit() {
-  const b = $('#lsStage .ls-body'), w = $('#lsWarn'); if (!w) return;
-  const over = b && b.scrollHeight > b.clientHeight + 2;
-  const bx = [...document.querySelectorAll('#lsStage .ls-bx')].some(x => x.scrollHeight > x.clientHeight + 2);
-  w.hidden = !over && !bx;
-  if (!over && bx) w.innerHTML = 'Some text runs past its box at this size. Shorten it, or pick a smaller text size (' + deckSizes()[0] + ' pt is the smallest).';
-  if (over) w.innerHTML = 'This is more than fits at ' + L.open.slides[L.cur].size + ' pt. <button class="btn sm" data-a="split">Move the extra lines to a new slide</button>';
+  const w = $('#lsWarn'), st = $('#lsStage .ls-slide'); if (!w || !st) return;
+  const over = slideFit(st, 'edit').filter(Boolean), s = L.open.slides[L.cur];
+  w.hidden = !over.length; if (!over.length) return;
+  const k = over.includes('body') ? 'body' : over[0], split = k === 'body' && !!st.querySelector('.ls-body.ls-over');
+  w.innerHTML = (k === 'body' ? 'This is more than fits at ' + boxSize(s, k) + ' pt.' : 'The ' + esc(BOX_NAME[k] || 'text').toLowerCase() + ' runs past its box.') +
+    ' When you present, it is made smaller so no words are cut off. ' + (split ? '<button class="btn sm" data-a="split">Move the extra lines to a new slide</button> ' : '') +
+    '<button class="btn sm" data-a="fit" data-k="' + esc(k) + '">Biggest size that fits</button>';
 }
 function refreshThumb(i) {
   const t = document.querySelector('#lsThumbs [data-go="' + i + '"]'); if (!t) return;
@@ -505,22 +508,23 @@ let lEditing = null;
 function startEdit(box) {
   editorCommit();
   const s = L.open.slides[L.cur], k = box.dataset.k;
+  if (BOX_KEYS.includes(k)) L.box = k;
   if (k === 'img') return pickPicture();
   if (k === 'video') return videoDlg();
   if (RT_KEYS.includes(k) && !(s.layout === 'title' && k === 'body')) {
     const el = rtEditor(box, s[k] || '');
     box.replaceWith(el); el.focus();
     const r = document.createRange(); r.selectNodeContents(el.lastChild || el); r.collapse(false); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r);
-    lEditing = { ta: el, k, rich: true }; rtToolState();
+    lEditing = { ta: el, k, rich: true }; rtToolState(); sizeCtlRefresh(); boxFrame();
     el.addEventListener('blur', () => setTimeout(() => { if (lEditing && lEditing.ta === el && document.activeElement !== el) editorCommit(); }, 0));
     return;
   }
   const ta = document.createElement('textarea'); ta.className = 'ls-ta ' + box.className.replace('ls-ed', '');
-  ta.style.cssText = box.getAttribute('style') || '';
+  ta.style.cssText = box.getAttribute('style') || ''; ta.dataset.k = k;
   ta.value = k === 'title' ? s.title : k === 'source' ? (s.img ? s.img.source : '') : EXTRA.includes(k) ? (s[k] || '') : (s.layout === 'title' && !s.body ? titleSubtitle(L.open) : s.body);
   if ((s.layout === 'agenda' || s.layout === 'objectives') && k === 'body') ta.classList.add('ls-ta-ag');
   box.replaceWith(ta); ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length);
-  lEditing = { ta, k };
+  lEditing = { ta, k }; sizeCtlRefresh(); boxFrame();
   ta.addEventListener('blur', () => setTimeout(() => { if (lEditing && lEditing.ta === ta) editorCommit(); }, 0));
 }
 function editorCommit() {
@@ -537,7 +541,7 @@ function editorCommit() {
 }
 function renderStage() {   // redraw just the slide, so a click into the notes box keeps its focus
   const st = $('#lsStage .ls-slide'); if (!st) return renderEditor();
-  st.innerHTML = slideHtml(L.open.slides[L.cur], L.open, true); checkFit();
+  st.innerHTML = slideHtml(L.open.slides[L.cur], L.open, true); checkFit(); sizeCtlRefresh(); boxFrame();
 }
 function onLessonsKey(e) {
   if (lEditing && lEditing.rich && lEditing.ta.contains(e.target)) { if (e.key === 'Escape') { e.preventDefault(); lEditing.ta.blur(); } return; }
@@ -562,11 +566,11 @@ function onLessonsKey(e) {
     else if (e.key === 'Enter' && e.target.classList.contains('ls-ed')) { e.preventDefault(); startEdit(e.target); }
   }
 }
-function goSlide(i) { editorCommit(); if (!L.open) return; L.cur = Math.max(0, Math.min(L.open.slides.length - 1, i)); renderEditor(); }
+function goSlide(i) { editorCommit(); if (!L.open) return; if (i !== L.cur) L.box = ''; L.cur = Math.max(0, Math.min(L.open.slides.length - 1, i)); renderEditor(); }
 function newSlide(layout) {
   const first = (L.open.slots[0] || {}).date, d = first ? plMd(first) + ' ' : '';
   const s = normSlide({ layout, fmt: 2, size: (TEACH[layout] || {}).size });
-  L.open.slides.splice(L.cur + 1, 0, s); L.cur++; lessonChanged(false); renderEditor();
+  L.open.slides.splice(L.cur + 1, 0, s); L.cur++; L.box = ''; lessonChanged(false); renderEditor();
 }
 
 async function onLessonsClick(e) {
@@ -613,7 +617,10 @@ async function onLessonsClick(e) {
   if (a === 'mshare' || a === 'mexport' || a === 'mcopyto' || a === 'mcopy' || a === 'mdelete') return moreDo(a, t, l);
   if (a === 'addslot') return addSlotDlg();
   if (a === 'pic') return pickPicture();
-  if (a === 'addslide') return addSlideDlg();
+  if (a === 'addslide') { editorCommit(); return newSlide(deckAdd()); }   // the teacher's usual slide; ▾ beside it picks another
+  if (a === 'addpick') return addSlideDlg();
+  if (a === 'fit') return fitBox(t.dataset.k);
+  if (a === 'boxreset') { editorCommit(); const s = l.slides[L.cur]; if (s.box) { delete s.box[t.dataset.k]; if (!Object.keys(s.box).length) delete s.box; } lessonChanged(); return renderEditor(); }
   if (a === 'layout') return addSlideDlg('change');
   if (a === 'atlas') return atlasDlg(L.open);
   if (a === 'look') return lookDlg();
@@ -654,7 +661,7 @@ function onLessonsChange(e) {
   if (!f || !L.open) return;
   const s = L.open.slides[L.cur];
   if (f === 'layout') { s.layout = e.target.value; lessonChanged(); renderEditor(); }
-  if (f === 'size') { s.size = +e.target.value; lessonChanged(); renderEditor(); }
+  if (f === 'size') setBoxSize(e.target.dataset.k || 'body', e.target.value);
 }
 function undoToast(msg, fn) {
   toast(msg, 6000);
@@ -1046,7 +1053,8 @@ function openTimetable() {
       (draft.template ? '<button class="btn sm ghost" data-tplplain>Use the plain one</button>' : '') + '</div>' +
       '<p class="muted" style="margin:4px 0 0;font-size:13px">A PowerPoint file (.pptx or .potx) with a Title Slide and a Title and Content layout. Downloads keep its masters and layouts.</p>' +
       '<h3 style="margin:18px 0 6px;font-size:15px">Slides</h3><label class="ls-mrow"><input type="checkbox" id="ttAgenda"' + (draft.deck.agenda !== false ? ' checked' : '') + '> A new lesson starts with an agenda on slide 2</label>' +
-      '<label class="ls-mrow"><input type="checkbox" id="ttSizes"' + (draft.deck.sizes !== 'any' ? ' checked' : '') + '> Keep slide text between 28 and 36 pt, big enough to read from the back of the room</label>';
+      '<label class="ls-mrow"><input type="checkbox" id="ttSizes"' + (draft.deck.sizes !== 'any' ? ' checked' : '') + '> Keep slide text between 28 and 36 pt, big enough to read from the back of the room</label>' +
+      '<label class="ls-mrow">+ Add slide adds <select id="ttAdd" class="btn sm">' + Object.keys(LAYOUTS).filter(k => k !== 'title').map(k => '<option value="' + k + '"' + (k === (draft.deck.add || 'content') ? ' selected' : '') + '>' + esc(LAYOUTS[k]) + '</option>').join('') + '</select></label>';
   };
   // What's typed in the boxes, read into the draft (for Save and for Save my setup file).
   const collect = () => {
@@ -1054,7 +1062,7 @@ function openTimetable() {
     draft.daysOff = lines('#ttOff').map(x => { const m = /^(\d{4}-\d\d-\d\d)\s*(.*)$/.exec(x); return m && { date: m[1], label: m[2] || 'No school' }; }).filter(Boolean);
     draft.events = lines('#ttEv').map(x => { const m = /^(\d{4}-\d\d-\d\d)(?:\s+to\s+(\d{4}-\d\d-\d\d))?\s*(.*)$/.exec(x); return m && { date: m[1], to: m[2] || '', label: m[3] }; }).filter(Boolean);
     draft.semStart = $('#ttS').value; draft.semEnd = $('#ttE').value;
-    draft.deck = { ...($('#ttAgenda').checked ? {} : { agenda: false }), ...($('#ttSizes').checked ? {} : { sizes: 'any' }) };
+    draft.deck = { ...($('#ttAgenda').checked ? {} : { agenda: false }), ...($('#ttSizes').checked ? {} : { sizes: 'any' }), ...($('#ttAdd').value !== 'content' ? { add: $('#ttAdd').value } : {}) };
   };
   const classesOut = () => draft.classes.filter(c => c.name.trim()).map(c => { const o = { ...c, id: c.id || lid() }, u = mbUrl(c.mb); if (u) o.mb = u; else delete o.mb; return o; });
   openDlg('<div class="bh"><h2>Timetable</h2><span class="ls-mrow" style="margin:0"><button class="btn sm" data-saveprof title="Everything here, your slide template included, in one file for another computer">Save my setup file</button><button class="btn sm" data-load>Load a setup file…</button></span></div><div class="bb" id="ttBody"></div><div class="bf"><button class="btn" data-x>Cancel</button><button class="btn primary" data-ok>Save</button></div>');
@@ -1113,7 +1121,9 @@ function tplLayouts(z) {   // which layout file is Title Slide / Title and Conte
   return { title: out['Title Slide'], content: out['Title and Content'], only: out['Title Only'] || out['Title and Content'] };
 }
 const NS = 'xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"';
-const spPh = (id, name, ph, body, bodyPr) => '<p:sp><p:nvSpPr><p:cNvPr id="' + id + '" name="' + name + '"/><p:cNvSpPr><a:spLocks noGrp="1"/></p:cNvSpPr><p:nvPr>' + ph + '</p:nvPr></p:nvSpPr><p:spPr/><p:txBody>' + (bodyPr || '<a:bodyPr/>') + '<a:lstStyle/>' + body + '</p:txBody></p:sp>';
+// xf: a box the teacher moved or resized, in slide units; otherwise the template's layout places it.
+const xfrm = b => b ? '<p:spPr><a:xfrm><a:off x="' + Math.round(b.x * EX) + '" y="' + Math.round(b.y * EY) + '"/><a:ext cx="' + Math.round(b.w * EX) + '" cy="' + Math.round(b.h * EY) + '"/></a:xfrm></p:spPr>' : '<p:spPr/>';
+const spPh = (id, name, ph, body, bodyPr, xf) => '<p:sp><p:nvSpPr><p:cNvPr id="' + id + '" name="' + name + '"/><p:cNvSpPr><a:spLocks noGrp="1"/></p:cNvSpPr><p:nvPr>' + ph + '</p:nvPr></p:nvSpPr>' + xfrm(xf) + '<p:txBody>' + (bodyPr || '<a:bodyPr/>') + '<a:lstStyle/>' + body + '</p:txBody></p:sp>';
 // Text in the template's own colors, or in the lesson's look when it has another one.
 let pxLook = 'wood';
 const run = (t, sz, o) => pxLook !== 'wood' ? lookRun(t, sz, o || {}, pxLook) : '<a:r><a:rPr lang="en-US"' + (sz ? ' sz="' + sz * 100 + '"' : '') + (o && o.b ? ' b="1"' : '') + (o && o.i ? ' i="1"' : '') + (o && o.u ? ' u="sng"' : '') + ' dirty="0"' + (o && RT_COLORS[o.c] ? '><a:solidFill><a:srgbClr val="' + RT_COLORS[o.c].slice(1) + '"/></a:solidFill></a:rPr>' : '/>') + '<a:t>' + xe(t) + '</a:t></a:r>';
@@ -1128,12 +1138,13 @@ function slideXml(s, lesson, media) {
 }
 function slideXmlIn(s, lesson, media) {
   let tree = '';
+  const bx = k => s.box && s.box[k], fz = k => (s.fs && s.fs[k]) || 0;
   if (s.layout === 'title') {
-    tree += spPh(2, 'Title 1', '<p:ph type="ctrTitle"/>', '<a:p>' + run(s.title || lesson.title, 0, { title: 1 }) + '</a:p>');
+    tree += spPh(2, 'Title 1', '<p:ph type="ctrTitle"/>', '<a:p>' + run(s.title || lesson.title, fz('title'), { title: 1 }) + '</a:p>', null, bx('title'));
     const sub = (s.body || titleSubtitle(lesson)).split('\n');
-    tree += spPh(3, 'Subtitle 2', '<p:ph type="subTitle" idx="1"/>', sub.map(x => '<a:p>' + (x ? run(x, 0, { sub: 1 }) : '<a:endParaRPr lang="en-US"/>') + '</a:p>').join(''));
+    tree += spPh(3, 'Subtitle 2', '<p:ph type="subTitle" idx="1"/>', sub.map(x => '<a:p>' + (x ? run(x, fz('sub'), { sub: 1 }) : '<a:endParaRPr lang="en-US"/>') + '</a:p>').join(''), null, bx('sub'));
   } else {
-    tree += spPh(2, 'Title 1', '<p:ph type="title"/>', '<a:p>' + (s.title ? run(s.title, 0, { title: 1 }) : '<a:endParaRPr lang="en-US"/>') + '</a:p>');
+    tree += spPh(2, 'Title 1', '<p:ph type="title"/>', '<a:p>' + (s.title ? run(s.title, fz('title'), { title: 1 }) : '<a:endParaRPr lang="en-US"/>') + '</a:p>', null, bx('title'));
     if (isTeach(s)) tree += teachXml(s, pxLook, media);
     else if (s.layout === 'video') {
       if (s.video) {
@@ -1162,7 +1173,7 @@ function slideXmlIn(s, lesson, media) {
       }
     } else {
       const ps = s.body.trim() ? rtParasXml(s.body, { sz: s.size, lvlMar: 457200, bulMar: Math.round(.86 * s.size * 12700), numMar: Math.round(1.45 * s.size * 12700), gap: 10, buClr: buClr(), runFn: (t, f) => run(t, s.size, f) }) : '';
-      tree += spPh(3, 'Content Placeholder 2', '<p:ph idx="1"/>', ps || '<a:p><a:endParaRPr lang="en-US"/></a:p>', '<a:bodyPr><a:noAutofit/></a:bodyPr>');
+      tree += spPh(3, 'Content Placeholder 2', '<p:ph idx="1"/>', ps || '<a:p><a:endParaRPr lang="en-US"/></a:p>', '<a:bodyPr><a:noAutofit/></a:bodyPr>', bx('body'));
     }
   }
   return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<p:sld ' + NS + '><p:cSld><p:spTree><p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr><p:grpSpPr/>' + tree + '</p:spTree></p:cSld><p:clrMapOvr><a:masterClrMapping/></p:clrMapOvr></p:sld>';
@@ -1299,6 +1310,8 @@ a line starting with "• " is a bullet, "1. " (any number) is a numbered line, 
 leading tabs indent the line. **bold**, *italic*, __underline__ and {red}colored words{/} (red, orange, green, blue,
 purple, gray) work inside a line (a backslash shows a *, _ or { as is).
 No layout adds bullets or numbers by itself, so add them only where the teacher would. Keep "fmt": 2 on the lesson.
+A slide may have "fs" (the teacher's own text sizes for other boxes, like { "title": 34, "foot": 30 }) and "box" (boxes the
+teacher moved or resized, like { "body": { "x": 152, "y": 211, "w": 1008, "h": 420 } } on a 1280 x 720 slide). Keep both as they are.
 The lesson's "title" and the title slide's title are the same: change both together (unless the lesson has
 "titleApart": true). @@AGENDA@@ An empty title-slide body means the app fills in the course and dates. Bump "updated" (milliseconds) when you change a lesson.
 

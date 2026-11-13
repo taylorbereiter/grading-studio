@@ -1,6 +1,6 @@
 /* ---------------- keeping work in this browser ---------------- */
 let saveT, saveDue = false;
-function saveSoon() { groupSync(); clearTimeout(saveT); saveSeq++; saveDue = true; saveT = setTimeout(saveNow, 500); const el = $('#saveState'); if (el && batch) el.textContent = 'Saving…'; }
+function saveSoon() { groupSync(); clearTimeout(saveT); saveSeq++; saveDue = true; saveT = setTimeout(saveNow, 500); const el = $('#saveState'); if (el && batch) { el.textContent = 'Saving…'; el.dataset.st = 'Saving…'; } }
 function saveNow(leaving) {
   if (!batch || !tabLive()) return;
   clearTimeout(saveT); saveDue = false;

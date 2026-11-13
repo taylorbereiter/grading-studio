@@ -188,6 +188,7 @@ function prShow() {
   const l = PR.l, n = l.slides.length, s = l.slides[PR.i];
   PR.video = false;
   $('#prFit').innerHTML = '<div class="ls-slide">' + slideHtml(s, l, false) + '</div>';
+  slideFit($('#prFit'), 'show');   // text that runs past its box is made smaller, never cut off
   PR.outSlide = true;   // the class screen takes the new slide too
   prPaint();
 }
