@@ -1,22 +1,22 @@
 {
- "version": "1.28.18",
- "build": "efc25b34df64",
+ "version": "1.28.19",
+ "build": "9a6e31121c7d",
  "notes": [
-  "Side by side: the marking screen can keep a second pane beside the paper. Tabs choose what it shows: the student’s video, their notes page, another file, or the rubric with what each score means. A student with a video and a notes page opens this way without being asked. Press B, or Side by side above the paper.",
-  "A click on your assistant’s name in the sidebar lists the others too. Pick one and it opens and becomes the one in use, with its own link. Settings, Working with AI chooses which are listed."
+  "A Timer tab in the side pane for presentations given live: a stopwatch beside the notes page, with the asked-for length and + Time to comment. It is offered to a student who has a notes page and no video.",
+  "A YouTube or Vimeo video played in the app has buttons to skip 10 seconds and change speed, and Space, J and L work on it. Video files have a Float button that keeps the video in a small window on top. Google Drive’s player can’t be driven from here."
  ],
  "files": {
-  "index.html": "f5cf083c81f2328c040d287968a56f6e6165af01fd5b68501f5578e1002c38d2",
-  "planner.html": "322c881a56a68cbcd3ccc249179477b81d8a8789dfd9e35e91195f483df4ee9e"
+  "index.html": "7ac129217f7c891f651e58530f9b20f6a2f4021217024b9eb7657a4dd855a71b",
+  "planner.html": "6dc0cbfe085de5671e18801e8e4bac05bca28a4b29134d6c65fa81fb64f828cc"
  },
  "langs": {
-  "lang/zh-Hant.js": "334359fbc09671cdeb736102177f88efa48c314b99d77b7df5425417111268df",
-  "lang/zh-Hans.js": "c54b9e594c6200bd85106eb90b1f5eb8e33ebd5a0822379a01904b20bed9ba4e",
-  "lang/es.js": "66b180e2c4b875426cac00a2ea98d5b41bd3b70f53ea788912de541c0beab367",
-  "lang/fr.js": "7632b669c9e30df970666630f30e7fc7f66658664f933d7684903371c5d8f07a",
-  "lang/de.js": "20afdae919e8225628afd420336b1c59e68123c95d41179edee3be70d955aa0a",
-  "lang/pt-BR.js": "d8e2e6e4c9119aaa618a59ac4baf1fa3f38724283f084b41183662a88e200fd8",
-  "lang/ja.js": "5294525ab82fba2a3ffe6117b0ceafb95556841dd675fda5b1ab75aafd72660d",
-  "lang/ko.js": "c31a89f1a09e3bc4aa878c13a905e251046c73c497812eca568772fc5e52db8a"
+  "lang/zh-Hant.js": "dbcecc9957e30432923061c023a25dea49498478ab5715ece946d22794316350",
+  "lang/zh-Hans.js": "e9528f5261351549006ee1ccebe1926fc72181d56ca4b0617bfc09c2f000201c",
+  "lang/es.js": "cb2c02a354f1f275cd20744d27212de45df3ce16650a987f99bf01ab8a835830",
+  "lang/fr.js": "ed9a985eb28b373d840f85fb39ff17ce94be217a99708c0df5ce3ec5ebad5dd5",
+  "lang/de.js": "2adde21b72f1585a01114ac10a10283bc3718056ac91c82c7ed08b8f687d7fc6",
+  "lang/pt-BR.js": "646c7753ebcd9215a5f21dab84aafdeb8efb714bac936ef4124e855fd7f1660e",
+  "lang/ja.js": "e12b505e638b91f45d354110274fcdf399736429325f9edc6733c6d7ef647469",
+  "lang/ko.js": "b2a66913e4425a870c1a2caafd567570ee444b695c0f18769c3b47614f9b16e7"
  }
 }
