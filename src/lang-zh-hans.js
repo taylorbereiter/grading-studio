@@ -27,6 +27,8 @@ function zhsHomeSay(k) {
 const LANG_ZHS = {
   name: '简体中文', locale: 'zh-Hans',
   words: {
+    // the side pane on the marking screen and the list of assistants in the sidebar
+    'Side by side': '并排', 'Side by side: keep a video, the rubric or another file beside the paper ( B )': '并排：把视频、评分标准或另一个文件留在作业旁边 ( B )', 'Others you switch to': '其他会切换使用的', 'A click on your assistant’s name in the sidebar lists these too. Pick one there and it opens and becomes the one in use, with its own link.': '按一下侧边栏里助手的名称，也会列出这些。在那里选一个，它就会打开并成为使用中的助手，用的是它自己的链接。', 'Other assistants with a link of your own:': '其他有自定义链接的助手：', 'No other assistant has a link of your own': '没有其他助手有自定义链接', 'Not in the sidebar’s list of assistants:': '不列在侧边栏的助手列表中：', 'Every assistant the app knows is in the sidebar’s list': '程序认得的助手都在侧边栏的列表中', 'Side pane size': '侧边窗格大小', 'Drag to make the side pane bigger or smaller. Double-click for the usual size.': '拖动可放大或缩小侧边窗格。双击回到平常的大小。', 'Shown beside the paper': '显示在作业旁边', 'Where the side pane sits': '侧边窗格的位置', 'On the right': '在右边', 'On the left': '在左边', 'Across the top': '横跨上方', 'Close the side pane': '关闭侧边窗格', 'Close the side pane ( B )': '关闭侧边窗格 ( B )', 'Nothing is written yet for what each score means.': '还没有写下每个分数代表什么。', 'Open beside Grading Studio': '在 Grading Studio 旁边打开', 'Assistants and their links…': '助手和它们的链接…',
     // the AI assistant beside the app (src/beside.js)
     'Opens beside Grading Studio. In Chrome, right-click it and choose Open link in split view to keep both in one window.': '在 Grading Studio 旁边打开。在 Chrome 中，点击右键并选择 Open link in split view，两者就会在同一个窗口里。', 'Opens at': '打开位置', 'Empty for its usual page. A link of your own can go to your school account, a Gem, a project or a custom GPT.': '留空则打开它平常的页面。你也可以粘贴自己的链接，例如学校账号、某个 Gem、项目或自定义 GPT。', 'A click on its name opens it': '点击它的名称时打开于', 'in a window on the right of the screen': '屏幕右侧的窗口', 'in a new tab': '新标签页', 'Open it now': '现在打开', 'Side by side.': '并排使用。', 'is in the sidebar on every screen, so you can go between the two without hunting for a tab. In Chrome, right-click it there and choose': '在每个画面的侧边栏都有，你不必找标签页就能在两者之间切换。在 Chrome 中，在那里点击右键并选择', 'Open link in split view': 'Open link in split view', ': both are then in one window, with a divider you can drag.': '：两者就会在同一个窗口里，中间的分隔线可以拖动。', 'Give it an address above and it is in the sidebar on every screen.': '在上方填入网址，它就会出现在每个画面的侧边栏。', 'Grading Studio sends nothing to it. It sees only what you paste or attach.': 'Grading Studio 不会向它发送任何内容。它只能看到你粘贴或附加的内容。', 'In a new tab': '新标签页', 'In a window on the right of the screen': '屏幕右侧的窗口', 'Your AI assistant opens at': '你的 AI 助理打开于', 'Your AI assistant opens at its usual page': '你的 AI 助理打开于它平常的页面', 'Your AI assistant opens in a new tab': '你的 AI 助理在新标签页打开', 'Your AI assistant opens in a window on the right of the screen': '你的 AI 助理在屏幕右侧的窗口打开',
     // video files, partners and videos, bringing in a rubric (video.js, rubricup.js)
@@ -482,6 +484,14 @@ const LANG_ZHS = {
   },
   helpSecs: { start: '开始使用', mark: '批改作业', score: '分数与评分标准', back: '发回作业', class: '班级与成绩册', safe: '保存与安全', plan: '备课与上课', private: '隐私' },
   help: {
+    'side-pane': { q: '批改时可以并排看两样东西吗？', words: '分割 并排 两个窗格 旁边 评分标准 视频 笔记 比较 分隔线 split side',
+      a: ['可以。按作业上方的**并排**，或按 **B** 键。作业旁边会打开一个窗格，窗格上方的标签页决定显示什么：学生的视频、笔记页、学生的另一个文件，或是写明每个分数代表什么的**评分标准**。',
+        '两边各自滚动，笔在任何一边的页面上都能用。在评分标准标签页按一下方格，就给出那个分数。移进窗格的视频会继续播放。',
+        '拖动两者之间的分隔条可以改变大小；双击就恢复原状。窗格里的 **⋯** 可以把它移到左边或横跨上方，适合较窄的窗口。在文件自己的 **⋯** 里，**Show beside** 会把那个文件放进窗格。',
+        '窗格会从一位学生到下一位一直开着，直到您用 **✕** 或 **B** 关闭。有视频和笔记页的学生会自动并排打开，除非您之前在视频上关闭过窗格。'] },
+    'ai-switch': { q: '我会用不止一个 AI 助手，可以在它们之间切换吗？', go: '前往搭配 AI 使用', words: 'gemini claude chatgpt copilot 切换 更换 另一个 助手 列表 选择 switch',
+      a: ['可以。按一下侧边栏里助手的名称，其他助手会列在下面。选一个，它就会在 Grading Studio 旁边打开并成为使用中的助手，屏幕上的文字也会跟着改。',
+        '每个助手都保留自己的链接。要给某个助手自定义链接，先把它设为使用中的助手，再到**设置**的**搭配 AI 使用**填写**打开位置**。同一处的**其他会切换使用的**决定列表里列出哪些。'] },
     'ai-beside': { q: '可以让 Gemini、Claude 或 ChatGPT 开在 Grading Studio 旁边吗？', go: '前往搭配 AI 使用', words: 'gemini claude chatgpt copilot ai 助理 分屏 并排 窗口 旁边 聊天 split side',
       a: ['可以。在**设置**的**搭配 AI 使用**中选择你的助理，它的名称就会出现在每个画面侧边栏的下方，备课页面也有。点一下，助理就会在屏幕右侧的窗口打开。如果 Grading Studio 的窗口盖住了它，把窗口缩窄一点就能同时看到两者。', '在 Chrome 中有更好的做法：在侧边栏的名称上点击右键，选择 **Open link in split view**。两者就会在同一个窗口里，中间的分隔线可以拖动。无法结合得比这更紧密，因为 Gemini、Claude 和 ChatGPT 都不允许它们的页面显示在别的应用程序里。', '同一区的**打开位置**可以填入你自己的链接，例如学校账号、某个 Gem、项目或自定义 GPT。如果助理用错了账号打开，在那里切换账号，复制网址再粘贴进来。', 'Grading Studio 不会向助理发送任何内容。它只能看到你粘贴或附加的内容。内置在浏览器本身的助理（例如浏览器工具栏上的 Gemini 或 Copilot 按钮）则不同：当你就当前页面向它提问时，它可以读取该页面，包括学生姓名。'] },
     'open-work': { q: '怎么打开一批作业？', go: '前往今天', words: '开始 导入 上传 zip 下载 缴交 拖放 文件夹',
@@ -524,7 +534,7 @@ const LANG_ZHS = {
     'video': { q: '要评分的是口头报告或视频，不是纸本作业，该怎么做？', words: '视频 报告 口头报告 演讲 表演 录像 链接 云端硬盘 google drive youtube 同伴 两人 笔记 笔记页 video',
       a: ['在作业的卡片上按 **Add papers…**，选择 **No papers: presentations or videos…**。名单上的每位学生都会有一张笔记页，让你边看边写。它可以像纸本作业一样批注、评分和发回。',
         '如果有录像，打开一位学生，按 **+ Add**，选择 **A video…**。粘贴链接（Google 云端硬盘、YouTube 或其他任何地方），再勾选一起出现在视频里的组员。之后一份笔记和一个分数就适用于整组。',
-        '只会保存链接，视频本身留在原来的地方。**Play here** 会把视频显示在笔记页上方，**Open in its own window** 会把它开在程序旁边。**+ Add** 里也有 **A notes page…**，可以再加一页。',
+        '只会保存链接，视频本身留在原来的地方。有视频和笔记页的学生会以并排方式打开：视频在右边的窗格，笔记页在旁边。**Play here** 开始播放，**Open in its own window** 会把它开在程序外面。**+ Add** 里也有 **A notes page…**。',
         '想保留值得给全班看的片段，按视频下方的 **+ Clip**，填入时间和标题；之后按 **Edit** 可以修改。**Show to the class** 会全屏播放，只显示标题，不显示学生姓名。Setup 里的 **Clips to show the class** 会依序播放所有片段。'] },
     'my-setup': { q: 'AI 助理可以帮我设置这个应用程序吗？', go: '打开我的教学设置', words: '导入 ai claude chatgpt gemini 提示 设置 个人文件 同事 分享 myp dp ib',
       a: ['可以。在设置的 **我的教学设置** 里有一段提示，复制后贴到 Claude、ChatGPT 或其他助理。它会先用已经知道的你的教学信息，再询问其余部分，最后给你一段设置文本：班级与上课时间、日历、学期、评分方式、评分标准、常用评语和学习目标。',

@@ -1,23 +1,22 @@
 {
- "version": "1.28.17",
- "build": "f6217a93960b",
+ "version": "1.28.18",
+ "build": "efc25b34df64",
  "notes": [
-  "Transcripts beside videos. Under any video, Paste a transcript takes one you have, for example from Gemini, YouTube or a caption file. A line that starts with a time plays the video from there.",
-  "Make transcript now works for video files kept in this browser too. It asks before the one-time download, runs on this computer, shows how far it is, and Cancel stops it.",
-  "Captions under the video show the line being said the right way up, even when the video is turned. For a Google Drive video, step through the lines with ‹ and ›."
+  "Side by side: the marking screen can keep a second pane beside the paper. Tabs choose what it shows: the student’s video, their notes page, another file, or the rubric with what each score means. A student with a video and a notes page opens this way without being asked. Press B, or Side by side above the paper.",
+  "A click on your assistant’s name in the sidebar lists the others too. Pick one and it opens and becomes the one in use, with its own link. Settings, Working with AI chooses which are listed."
  ],
  "files": {
-  "index.html": "23333d9c472102af59b7846203976daeab834955afd49b1f02d7aaf427941d4f",
-  "planner.html": "318da973f8d33a0867d1581f50bf76f2cc63de5874482a9b07c347eae00746c3"
+  "index.html": "f5cf083c81f2328c040d287968a56f6e6165af01fd5b68501f5578e1002c38d2",
+  "planner.html": "322c881a56a68cbcd3ccc249179477b81d8a8789dfd9e35e91195f483df4ee9e"
  },
  "langs": {
-  "lang/zh-Hant.js": "e26d1362c38e22680cdd161fba9c92b977871c364aa859922ace7e8878fcb805",
-  "lang/zh-Hans.js": "c25f4bb2d91001c38b1f3fe0395067b75d7ed7ceffc45104643aee0f85adda90",
-  "lang/es.js": "0ad35eec3f7e17e2d7bb0502f40e0fcd30258f11a4a9a9f88244de64e87204a2",
-  "lang/fr.js": "7977ec50303861f73ce7c8923f6c7fc42c5009ff6147042d5ae64ffcabfed852",
-  "lang/de.js": "43a98869196eaf966cb324f4b4559fa74fdf73493a3df484d32a47e944316e14",
-  "lang/pt-BR.js": "6e714ebcb18415b74fd88435c6213c5df4be9e4aba0a5e30a743f9422b52304d",
-  "lang/ja.js": "79beb02d4a0afe032cffa3387cdcab64ca6773847eaf83cd795755f0fd8f2dbe",
-  "lang/ko.js": "bf77813000cdb2d9c7150052f38ffe79da2684c0e89e0d99ba8297a3e49974a5"
+  "lang/zh-Hant.js": "334359fbc09671cdeb736102177f88efa48c314b99d77b7df5425417111268df",
+  "lang/zh-Hans.js": "c54b9e594c6200bd85106eb90b1f5eb8e33ebd5a0822379a01904b20bed9ba4e",
+  "lang/es.js": "66b180e2c4b875426cac00a2ea98d5b41bd3b70f53ea788912de541c0beab367",
+  "lang/fr.js": "7632b669c9e30df970666630f30e7fc7f66658664f933d7684903371c5d8f07a",
+  "lang/de.js": "20afdae919e8225628afd420336b1c59e68123c95d41179edee3be70d955aa0a",
+  "lang/pt-BR.js": "d8e2e6e4c9119aaa618a59ac4baf1fa3f38724283f084b41183662a88e200fd8",
+  "lang/ja.js": "5294525ab82fba2a3ffe6117b0ceafb95556841dd675fda5b1ab75aafd72660d",
+  "lang/ko.js": "c31a89f1a09e3bc4aa878c13a905e251046c73c497812eca568772fc5e52db8a"
  }
 }

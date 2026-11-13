@@ -40,6 +40,7 @@ async function openStudent(i, filePath) {
       '<button class="mitem" data-whodo="light">Lighting<small>Make a pale or too-bright scan easier to read</small></button>' +
       '<button class="mitem" data-whodo="calc">Calculator <kbd>=</kbd></button>', 'right') + '</div>' + groupBand(st);
   paper.scrollTop = 0;
+  spReset(st);   // the side pane, and what goes in it for this student (src/sidepane.js)
   // A paper that is one file: the sheet stays where the last one was while this one is read, so nothing jumps between students.
   if (lastSheet && st.files.length === 1 && viewable(st.files[0]) && !refsFor(st).length && !refDoc()) paper.insertAdjacentHTML('beforeend', '<div class="pg" id="sheet0" style="width:' + lastSheet.w + 'px;height:' + lastSheet.h + 'px;background:linear-gradient(to right,#fff ' + lastSheet.p + 'px,#F6F7F9 0)"></div>');
   const sheetOff = () => { const g = $('#sheet0'); if (g) g.remove(); };
@@ -53,8 +54,8 @@ async function openStudent(i, filePath) {
     const gs = $('#gapScan'); if (gs) gs.onclick = () => { scanInto = true; scanFor = null; $('#scanIn').click(); };
   }
   curMedia = null; clipsBtn();
-  for (const f of st.files.filter(f => f.kind === 'link')) { paper.insertAdjacentHTML('beforeend', '<div class="fhead"><span style="color:var(--fg)">' + esc(linkTitle(f)) + '</span><span>' + (vidRef(f.data) ? 'Video file' : 'Video link') + '</span>' + tryTag(st, f) + (f.added ? addTag(f) : '') + carryTag(f) + '<span style="flex:1"></span>' + fileMenu(moveLink(f) + removeLink(f)) + '</div>'); paper.appendChild(linkCard(st, f)); }
-  for (const f of st.files.filter(f => f.kind === 'media')) { if (f.added || carryTag(f) || tryTag(st, f)) paper.insertAdjacentHTML('beforeend', '<div class="fhead"><span style="color:var(--fg)">' + esc(f.name) + '</span>' + tryTag(st, f) + (f.added ? addTag(f) : '') + carryTag(f) + '<span style="flex:1"></span>' + fileMenu(fileLinks(f)) + '</div>'); paper.appendChild(mediaCard(st, f)); }
+  for (const f of st.files.filter(f => f.kind === 'link')) { paper.insertAdjacentHTML('beforeend', '<div class="fhead"><span style="color:var(--fg)">' + esc(linkTitle(f)) + '</span><span>' + (vidRef(f.data) ? 'Video file' : 'Video link') + '</span>' + tryTag(st, f) + (f.added ? addTag(f) : '') + carryTag(f) + '<span style="flex:1"></span>' + fileMenu(moveLink(f) + removeLink(f)) + '</div>'); const lh = paper.lastElementChild, lc = linkCard(st, f); paper.appendChild(lc); spTake('file:' + f.path, lh, lc); }
+  for (const f of st.files.filter(f => f.kind === 'media')) { if (f.added || carryTag(f) || tryTag(st, f)) paper.insertAdjacentHTML('beforeend', '<div class="fhead"><span style="color:var(--fg)">' + esc(f.name) + '</span>' + tryTag(st, f) + (f.added ? addTag(f) : '') + carryTag(f) + '<span style="flex:1"></span>' + fileMenu(fileLinks(f)) + '</div>'); const mh = f.added || carryTag(f) || tryTag(st, f) ? paper.lastElementChild : null, mc = mediaCard(st, f); paper.appendChild(mc); spTake('file:' + f.path, mh, mc); }
   const rd = refDoc();
   if (rd) { const det = document.createElement('details'); det.className = 'refd'; det.open = store.get('gs.rdOpen', true); det.innerHTML = '<summary>Your document: ' + esc(rd.name) + '</summary>'; det.ontoggle = () => store.set('gs.rdOpen', det.open); paper.appendChild(det); docxCard(rd, rd.name).then(c => { c.querySelector('.fhead').remove(); det.appendChild(c); }); }
   for (const r of refsFor(st)) { const hold = document.createElement('div'); paper.appendChild(hold); refCard(r, st).then(c => { if (token === openToken) hold.replaceWith(c); }); }
@@ -85,7 +86,7 @@ async function openStudent(i, filePath) {
         fh.insertAdjacentHTML('beforeend', tryTag(st, f) + carryTag(f) + fileMenu(moveLink(f) + fileLinks(f)));
         const dl = fh.querySelector('[data-wdl], [data-odl]'); if (dl) { dl.className = 'link'; fh.querySelector('.km').prepend(dl); }
       }
-      paper.appendChild(c);
+      paper.appendChild(c); spTake('file:' + f.path, c);
       if (filePath && f.path === filePath) c.scrollIntoView({ block: 'start' });
       continue;
     }
@@ -96,7 +97,7 @@ async function openStudent(i, filePath) {
       (on ? '' : '<span class="pill warn" style="font-size:12px;padding:2px 8px;border-radius:999px;background:var(--warn-soft);color:var(--warn)">' + (auto ? 'No marks, left out' : 'Left out') + '</span>') +
       '<span style="flex:1"></span>' + (on ? '' : '<button class="link" style="font-size:13px" data-inout="' + di + '">Bring back</button>') +
       fileMenu((on || auto ? '<button class="link" data-rotdoc="' + di + '" title="Turn every page of this file a quarter turn to the right">⟳ Turn all pages</button>' : '') + (one ? moveLink(af) + replaceLink(af) : '') + (on ? '<button class="link" data-inout="' + di + '" title="Keep this file off the screen and out of what goes back. Bring back undoes it.">Leave out</button>' : '') + (one ? removeLink(af) : ''));
-    if (oneFile) whoHead(paper, head); else paper.appendChild(head);
+    if (oneFile) whoHead(paper, head); else { paper.appendChild(head); spTake(spDocKey(d), head); }
     if (!on && !auto) continue;   // left out on purpose: just the bar
     for (const [path, p] of d.pages) {
       if (token !== openToken) return;
@@ -112,7 +113,7 @@ async function openStudent(i, filePath) {
       const wrap = document.createElement('div'); wrap.className = 'pg';
       if (!on) wrap.style.opacity = '.75';
       const c = document.createElement('canvas');
-      sheetOff(); wrap.appendChild(c); paper.appendChild(wrap);
+      sheetOff(); wrap.appendChild(c); paper.appendChild(wrap); if (!oneFile) spTake(spDocKey(d), wrap);
       pg.wrap = wrap; pg.canvas = c;
       pages.push(pg);
       lightChip(pg); lightChips(); rotChip(pg, d.pages.length > 1 ? d.pages.findIndex(x => x[0] === path && x[1] === p) + 1 : 0); scanNote(pg);
@@ -126,6 +127,7 @@ async function openStudent(i, filePath) {
   sheetOff();
   goneList(st);
   renderTools();
+  spDone();
 }
 // A paper that is one file: the file's name joins the student's bar and its ⋯ joins the paper's, so the page starts a line higher.
 function whoHead(paper, head) {

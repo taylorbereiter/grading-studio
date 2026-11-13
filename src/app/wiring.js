@@ -258,6 +258,7 @@ document.addEventListener('keydown', e => {
   const map = { v: 'select', p: 'pen', h: 'hl', o: 'oval', t: 'text', c: 'note', k: 'check', e: 'erase' };
   if (e.key.toLowerCase() === 'h' && tool === 'hl') { setHlMode(hlMode === 'free' ? 'auto' : 'free', true); return; }
   if (map[e.key.toLowerCase()]) { setTool(map[e.key.toLowerCase()]); return; }
+  if (e.key.toLowerCase() === 'b') { e.preventDefault(); spToggle(); return; }   // the side pane (src/sidepane.js)
   if (e.key.toLowerCase() === 'n') { nextUnscored(); return; }
   if (e.key.toLowerCase() === 's' && !e.shiftKey) { e.preventDefault(); snipStart(); return; }   // a screenshot (src/snip.js)
   if (e.key.toLowerCase() === 'f' && !e.metaKey && !e.ctrlKey && !e.altKey && fmNow()) { e.preventDefault(); fbToggle(e.shiftKey); return; }

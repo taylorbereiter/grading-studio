@@ -232,7 +232,7 @@ function openArrange() {
 }
 
 function fitScale(pg) {
-  const P = $('#paper'), cs = getComputedStyle(P);   // the tool dock sits in the left padding
+  const P = spBodyOf(pg) || $('#paper'), cs = getComputedStyle(P);   // the tool dock sits in the left padding; a page in the side pane fits the pane
   let s = (P.clientWidth - (parseFloat(cs.paddingLeft) || 18) - (parseFloat(cs.paddingRight) || 18) - 4) / (pg.W + pg.side);
   if (disp.fit === 'page') s = Math.min(s, (P.clientHeight - 40) / pg.H);
   s = Math.min(s, 1000 / pg.W);   // on a very wide window the page stops growing at a comfortable reading size; the zoom buttons go past it
@@ -245,7 +245,7 @@ async function renderPage(pg) {
   const c = pg.canvas;
   c.width = Math.ceil((pg.W + pg.side) * s * dpr); c.height = Math.ceil(pg.H * s * dpr);
   c.style.width = (pg.W + pg.side) * s + 'px'; c.style.height = pg.H * s + 'px';
-  if (pg === pages[0]) $('#paper').style.setProperty('--pgw', c.style.width);   // the bar above lines up with the page
+  if (pg === pages.find(q => !spBodyOf(q))) $('#paper').style.setProperty('--pgw', c.style.width);   // the bar above lines up with the page
   if (pg.rchip) pg.rchip.style.left = pg.W * s + 'px';
   if (anonOn() && !pg.covers) pg.bmp = null;   // nothing shows until its name covers are ready
   if (pg === pages[0]) lastSheet = { w: (pg.W + pg.side) * s, h: pg.H * s, p: pg.W * s };
