@@ -100,32 +100,94 @@ $('#colR').onclick = () => { const p = panelsNow(); setPanels(p.L, !p.R); };
 // list over the paper's edge, and it folds again when the pointer leaves. [ or the arrow at its edge keeps it open beside the paper.
 // Only "kept open" is remembered (gs.listOpen), and only once she chooses it.
 let listOpen = !!store.get('gs.listOpen', false), peekT = null;
+/* In full screen (11/13) the list steps aside so the paper has the screen to itself. gs.fullSide, a per-teacher choice in Settings,
+   Marking (and in My setup): 'hide' (the usual) hides the student list, 'all' hides the tool dock as well, 'show' keeps both as they
+   are. A hidden list comes back when the pointer rests at the left edge of the screen for a moment, with [ , with / to find someone,
+   or with the tab at the left edge on a tablet. [ in full screen keeps it open only until full screen ends: nothing is stored, and
+   a list kept open outside full screen (gs.listOpen) still hides in it. */
+const FS_SIDES = ['hide', 'all', 'show'];
+const fsSide = () => { const v = store.get('gs.fullSide', 'hide'); return FS_SIDES.includes(v) ? v : 'hide'; };
+let fsPin = false;
+const fsAway = () => document.documentElement.classList.contains('gsfull') && fsSide() !== 'show' && innerWidth > 760;
+const listKept = () => fsAway() ? fsPin : listOpen;
 function listDraw() {
-  const c = $('#cols'), b = $('#colL'); c.classList.toggle('open', listOpen); if (listOpen) c.classList.remove('peek');
-  b.querySelector('.pa').textContent = listOpen ? '‹' : '›'; b.setAttribute('aria-pressed', String(listOpen));
-  b.title = (listOpen ? 'Fold the student list to a strip' : 'Keep the student list open') + ' ( [ )'; b.setAttribute('aria-label', listOpen ? 'Fold the student list to a strip' : 'Keep the student list open');
+  const c = $('#cols'), b = $('#colL'), kept = listKept(); c.classList.toggle('open', kept); if (kept) c.classList.remove('peek');
+  document.documentElement.dataset.fside = fsSide();
+  b.querySelector('.pa').textContent = kept ? '‹' : '›'; b.setAttribute('aria-pressed', String(kept));
+  b.title = (kept ? 'Fold the student list to a strip' : 'Keep the student list open') + ' ( [ )'; b.setAttribute('aria-label', kept ? 'Fold the student list to a strip' : 'Keep the student list open');
 }
 function setList(open) {
-  listOpen = !!open; store.set('gs.listOpen', listOpen); clearTimeout(peekT); listDraw(); listToCur();
+  if (fsAway()) fsPin = !!open; else { listOpen = !!open; store.set('gs.listOpen', listOpen); }
+  clearTimeout(peekT); listDraw(); listToCur();
   clearTimeout(resizeT); resizeT = setTimeout(() => pages.forEach(renderPage), 60);
 }
 const peekHeld = () => document.activeElement === $('#stuFind') || !!$('#side [data-km][aria-expanded=true]') || $('#side').matches(':hover') || $('#colL').matches(':hover');
 function listPeek(on, wait) {
-  clearTimeout(peekT); if (listOpen) return;
+  clearTimeout(peekT); if (listKept()) return;
   const go = () => { if (!on && peekHeld()) return; const c = $('#cols'); if (c.classList.contains('peek') === on) return; c.classList.toggle('peek', on); if (!on && document.activeElement && $('#side').contains(document.activeElement) && !document.activeElement.classList.contains('stu')) document.activeElement.blur(); listToCur(); };
   if (wait) peekT = setTimeout(go, wait); else go();
 }
 for (const el of [$('#side'), $('#colL')]) {
   el.addEventListener('mouseenter', () => listPeek(true, 160));
-  el.addEventListener('mouseleave', () => listPeek(false, 280));
+  el.addEventListener('mouseleave', () => listPeek(false, fsAway() ? 450 : 280));
 }
 $('#side').addEventListener('focusout', () => listPeek(false, 200));
 $('#side').addEventListener('dragenter', () => listPeek(true));   // a file dragged to the strip: the names open so it can be dropped on one
 // A click on the strip's own tools (find, the filter) opens the list first, so they have room.
-$('#side').addEventListener('pointerdown', e => { if (!listOpen && e.target.closest('.lbar')) listPeek(true); }, true);
+$('#side').addEventListener('pointerdown', e => { if (!listKept() && e.target.closest('.lbar')) listPeek(true); }, true);
 $('#stuFind').addEventListener('focus', () => listPeek(true));
-$('#colL').onclick = () => setList(!listOpen);
+$('#colL').onclick = () => setList(!listKept());
 listDraw();
+// The left edge in full screen. A mouse has to rest there a moment, and not while a button is held (a pen stroke or a drag that runs
+// off the paper), so the list doesn't open by accident. A finger or a pencil opens it at once, from the edge or from the tab.
+{
+  let edgeT = null;
+  const edge = $('#fsEdge');
+  edge.addEventListener('pointerenter', e => { clearTimeout(edgeT); if (e.pointerType === 'mouse' && !e.buttons) edgeT = setTimeout(() => listPeek(true), 180); });
+  edge.addEventListener('pointerleave', () => clearTimeout(edgeT));
+  edge.addEventListener('pointerdown', e => { if (e.pointerType !== 'mouse') { e.preventDefault(); listPeek(true); } });
+  $('#fsTab').addEventListener('click', () => listPeek(true));
+}
+// 'all': the tool dock shows while the pointer is near it (or a finger taps the margin it sits in) and goes again soon after.
+// The paper keeps its place either way, so nothing moves under the pen.
+{
+  let dockT = null, foldT = null;
+  const near = x => { const m = $('#cols>.main').getBoundingClientRect(); return x >= m.left && x - m.left < 24 + 44 * (parseFloat(getComputedStyle($('#cols')).getPropertyValue('--uz')) || 1) + 20; };
+  const held = () => $('#tools').matches(':hover') || !!$('#tools [data-km][aria-expanded=true]') || $('#tools').contains(document.activeElement);
+  const dock = (on, wait) => {
+    clearTimeout(dockT); const go = () => { if (!on && held()) return; $('#cols').classList.toggle('fstools', on); };
+    if (wait) dockT = setTimeout(go, wait); else go();
+  };
+  $('#cols').addEventListener('pointermove', e => {
+    if (!fsAway() || e.pointerType !== 'mouse') return;
+    // opened from the edge, the list may never have had the pointer "enter" it: moving off it folds it all the same
+    if (!$('#cols').classList.contains('peek') || e.target.closest('#side,#colL,#fsEdge')) { clearTimeout(foldT); foldT = null; }
+    else if (!foldT) foldT = setTimeout(() => { foldT = null; listPeek(false); }, 450);
+    if (fsSide() !== 'all') return;
+    const on = $('#cols').classList.contains('fstools'), n = near(e.clientX) || $('#tools').contains(e.target);
+    if (n && !on && !e.buttons) dock(true, 120); else if (!n && on) dock(false, 600); else if (n === on) clearTimeout(dockT);
+  });
+  $('#cols').addEventListener('pointerdown', e => {
+    if (!fsAway() || fsSide() !== 'all' || e.pointerType === 'mouse' || $('#tools').contains(e.target)) return;
+    dock(near(e.clientX) && !$('#cols').classList.contains('fstools'));
+  });
+  $('#cols').addEventListener('mouseleave', () => dock(false, 600));
+  window.__gsDock = dock;
+}
+// Full screen starting or ending: a list kept open "for now" folds, and the paper is drawn for its new room.
+document.addEventListener('fullscreenchange', () => setTimeout(() => {
+  fsPin = false; $('#cols').classList.remove('fstools'); listDraw();
+  clearTimeout(resizeT); resizeT = setTimeout(() => pages.forEach(renderPage), 160);
+}));
+function fullSideSet(v) {
+  if (!FS_SIDES.includes(v)) return;
+  if (v === 'hide') store.del('gs.fullSide'); else store.set('gs.fullSide', v);
+  fullSideShow(); listDraw();
+  clearTimeout(resizeT); resizeT = setTimeout(() => pages.forEach(renderPage), 60);
+}
+function fullSideShow() { const v = fsSide(); for (const b of document.querySelectorAll('#setFullSide button')) b.setAttribute('aria-pressed', String(b.dataset.v === v)); }
+$('#setFullSide').addEventListener('click', e => { const b = e.target.closest('button[data-v]'); if (b) fullSideSet(b.dataset.v); });
+fullSideShow();
 $('#lightBtn').onclick = openLight;
 $('#rescanBtn').onclick = openRescans;
 $('#calcBtn').onclick = openCalc;
@@ -178,7 +240,7 @@ document.addEventListener('keydown', e => {
   if (e.key === '?') { e.preventDefault(); openKeys(); return; }
   // A picked sticker, mark, check, circle or text box: + and − make it bigger or smaller.
   if ((e.key === '+' || e.key === '=' || e.key === '-' || e.key === '_') && selected && !(selected.fresh && selected.mark.t === 'text') && canResize(selected.mark)) { e.preventDefault(); stepSize(e.key === '+' || e.key === '=' ? 1 : -1); return; }
-  if (e.key === '/') { e.preventDefault(); $('#stuFind').focus(); return; }
+  if (e.key === '/') { e.preventDefault(); listPeek(true); $('#stuFind').focus(); return; }   // open first: a hidden list can't take focus
   // A picked mark moves with the arrow keys (Shift for bigger steps); Esc lets go of it.
   if (selected && tool === 'select' && /^Arrow/.test(e.key)) {
     e.preventDefault();
@@ -203,7 +265,7 @@ document.addEventListener('keydown', e => {
   // With the calculator open, numbers and + − × ÷ ( ) go straight into it, even after a click on the paper.
   // ( / still finds a student, and − with a picked mark still makes it smaller, above.)
   if ($('#calcPanel') && e.key !== '/' && !(e.key === 'x' || e.key === 'X')) { const k = calcKeyOf(e); if (k && k !== 'Escape' && (k !== '=' || e.code === 'Equal' || e.code === 'NumpadEqual')) { e.preventDefault(); $('#calcPanel').typeIn(k); return; } }
-  if (e.key === '[' && !e.metaKey && !e.ctrlKey) { e.preventDefault(); return setList(!listOpen); }
+  if (e.key === '[' && !e.metaKey && !e.ctrlKey) { e.preventDefault(); return setList(!listKept()); }
   if (e.key === ']' && !e.metaKey && !e.ctrlKey) { e.preventDefault(); const p = panelsNow(); return setPanels(p.L, !p.R); }
   if (e.key === 'ArrowRight' || e.key === 'ArrowDown') { e.preventDefault(); stepStudent(1); }
   if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); stepStudent(-1); }

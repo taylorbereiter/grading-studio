@@ -235,3 +235,23 @@ button.pavg:hover .v{text-decoration:underline}
 .anchseg button:hover{color:var(--fg);border-color:var(--line-strong)}
 .anchseg button[aria-pressed=true]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent);font-weight:600}
 .stu .anch{font-size:var(--text-caption);font-weight:600;color:var(--accent);border:1px solid var(--accent);border-radius:var(--corner-pill);padding:0 6px;white-space:nowrap}
+
+/* Full screen (11/13): the student list steps aside (html[data-fside] is the teacher's choice, gs.fullSide). Folded, the list slides
+   off the left edge and the paper takes its room; pointed at the edge (#fsEdge), or with [ or /, it opens over the paper as usual.
+   'all' hides the tool dock too until the pointer comes near it (.fstools); the paper keeps its place either way. */
+.fsedge,.fstab{display:none}
+@media (min-width:761px){
+  .gsfull:not([data-fside=show]) .cols:not(.open){--lw:0px}
+  .gsfull:not([data-fside=show]) .cols:not(.open)>.side{transition:transform .2s ease}
+  .gsfull:not([data-fside=show]) .cols:not(.open):not(.peek)>.side{width:64px;transform:translateX(-100%);visibility:hidden;box-shadow:none;transition:transform .2s ease,visibility 0s .2s}
+  .gsfull:not([data-fside=show]) .cols:not(.open):not(.peek) #colL{display:none}
+  .gsfull:not([data-fside=show]) .cols:not(.open):not(.peek) .fsedge{display:block;position:absolute;left:0;top:0;bottom:0;z-index:6;width:6px}
+  .gsfull[data-fside=all] .cols .tools{opacity:0;transform:translateX(-10px);pointer-events:none;transition:opacity .15s ease,transform .15s ease}
+  .gsfull[data-fside=all] .cols.fstools .tools{opacity:1;transform:none;pointer-events:auto}
+}
+/* On a tablet there is no pointing at the edge: a small tab at the left edge opens the list, and a tap on the paper folds it. */
+@media (min-width:761px) and (any-pointer:coarse){
+  .gsfull:not([data-fside=show]) .cols:not(.open):not(.peek) .fsedge{width:16px}
+  .gsfull:not([data-fside=show]) .cols:not(.open):not(.peek) .fstab{display:flex;align-items:center;justify-content:center;position:absolute;left:0;top:50%;z-index:7;width:22px;height:56px;margin-top:-28px;padding:0;border:1px solid var(--line-strong);border-left:0;border-top-right-radius:var(--corner-3);border-bottom-right-radius:var(--corner-3);background:var(--surface);color:var(--muted);font-size:var(--text-body);box-shadow:var(--shadow);cursor:pointer}
+}
+@media (prefers-reduced-motion:reduce){.gsfull .cols>.side,.gsfull .cols .tools{transition:none!important}}
