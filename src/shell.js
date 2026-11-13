@@ -39,7 +39,7 @@ function railRender() {
 // "Saved", and where: the same words as the top bar while grading and the line in Settings (folder.js says them).
 function railSavedRender() {
   if (!shellReady) return;
-  const el = $('#railSaved'), w = whereSay(), st = batch ? ($('#saveState').textContent || '').replace(/^[✓⚠]\s*/, '').trim() : '';
+  const el = $('#railSaved'), w = whereSay(), st = batch ? ($('#saveState').dataset.st || $('#saveState').textContent || '').replace(/^[✓⚠]\s*/, '').trim() : '';
   // "Saved" is only said when a second copy exists outside this browser. Until then it is "Not backed up", in amber.
   const bad = saveBad.size > 0, head = bad ? (/saved/i.test(st) && !/^Saved/.test(st) ? st : 'Not saved') : /^Saving/.test(st) ? 'Saving…' : w.safe ? 'Saved' : 'Not backed up';
   const h = '<span class="rdot"></span><span class="rl"><b>' + esc(head) + '</b>' + esc(w.sub || w.text) + '</span>';
@@ -74,7 +74,7 @@ document.addEventListener('click', e => {
 });
 window.addEventListener('hashchange', applyRoute);
 // The sidebar's "Saved" follows the top bar's while a paper is open.
-new MutationObserver(railSavedRender).observe($('#saveState'), { childList: true, characterData: true, subtree: true });
+new MutationObserver(railSavedRender).observe($('#saveState'), { childList: true, characterData: true, subtree: true, attributes: true, attributeFilter: ['data-st'] });   // data-st is the state in English, whatever language the words are shown in
 
 /* ---------------- Find anything (Ctrl K, or ⌘K): one box that reaches every student, assignment, tool and setting ---------------- */
 // Everything she can go to or do right now. Each row presses the same button or runs the same function as doing it by hand.
@@ -137,7 +137,7 @@ function findRows() {
     add('Do', 'Match files to a roster', '', press('#pickMatch'));
     add('Do', 'Add a class', 'Its name and roster', press('#addClass'));
     add('Do', 'Bring a class over from Google Classroom', 'Its roster, assignments and grades, from two downloads', () => gcOpen(), '', 'import google classroom drive csv grades roster move switch transfer');
-    add('Do', 'Try it with a sample class', 'Made-up students and papers', press('#sample'));
+    if (sampleOn()) add('Do', 'Leave the sample', 'It is cleared, and your own work is as you left it', sampleLeave); else add('Do', 'Try it with a sample class', 'Made-up students and papers', press('#sample'));
     add('Settings', 'Take my work with me', 'A take-home file for another computer', press('#takeBtn'), '', 'backup back up export carry home laptop transfer');
     add('Settings', 'Bring work in', 'From a take-home file', press('#restoreBtn'), '', 'import restore backup load');
     add('Settings', 'Start a new school year', 'Same classes, empty class lists; this year saved to a file', press('#yearBtn'));

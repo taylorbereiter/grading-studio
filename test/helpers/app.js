@@ -202,7 +202,7 @@ async function markPage(page, k = 0) {
 const MARK_BOXES = { PEN: [90, 290, 200, 50], HL: [70, 402, 300, 8], OVAL: [316, 446, 108, 68], CHECK: [188, 488, 26, 24], TEXT: [100, 558, 70, 20], BLANK: [450, 300, 100, 60] };
 // Waits until the marks are really kept, in both places the app saves them.
 async function settle(page) {
-  await page.waitForFunction(() => /Saved/.test(document.querySelector('#saveState').textContent), { timeout: 15000 });
+  await page.waitForFunction(() => /Saved/.test(document.querySelector('#saveState').dataset.st || document.querySelector('#saveState').textContent), { timeout: 15000 });
   await page.waitForFunction(async () => {
     const s = window.__gs.state(); if (!s.batch) return true;
     const ls = JSON.parse(localStorage.getItem(s.batch.id) || 'null'); if (!ls) return false;

@@ -62,7 +62,7 @@ function wlRender() {
     '<div class="wlsteps" aria-label="Step ' + (wl.step + 1) + ' of 3">' + steps + '</div>' +
     '<div class="wlbody">' + body + '</div>' +
     '<div class="wlact">' + (wl.step ? '<button class="btn" data-wlback>Back</button>' : '') + '<button class="btn primary" data-wlnext>' + (last ? 'Start' : 'Continue') + '</button>' +
-    (hasSample() ? '' : '<button class="link" data-wlsample>Look around with a sample class first</button>') + '</div>' +
+    '<button class="link" data-wlsample>Look around with a sample class first</button>' + '</div>' +
     (wl.step === 0 && !lib.classes.length ? '<p class="wlfoot">Already use Grading Studio on another computer? <button class="link" data-wlbring>Bring your work in</button></p><p class="wlfoot wlfoot2">Have an AI assistant that knows how you teach? <button class="link" data-wlai>Let it set this up</button></p>' : '') +
     '</div><div class="wlr">' +
     [['lock', 'Private', 'Student work never leaves this computer. No account, nothing uploaded.'],
@@ -109,7 +109,7 @@ $('#welcome').addEventListener('click', async e => {
   if (e.target.closest('[data-wlback]')) { wlRead(); wl.step--; return wlRender(); }
   if (e.target.closest('[data-wlnext]')) return wlNext();
   if (e.target.closest('[data-wlfolder]')) { wl.busy = true; try { await folderPick(); } finally { wl.busy = false; } if (wl.on) wlRender(); return; }
-  if (e.target.closest('[data-wlsample]')) { wlRead(); wlClose(); return sampleClass(); }
+  if (e.target.closest('[data-wlsample]')) return sampleEnter();
   if (e.target.closest('[data-wlai]')) { wlClose(); return go('#/settings/setup'); }
   if (e.target.closest('[data-wlbring]')) { wlClose(); go('#/settings'); toast('Choose your Grading Studio folder, or bring in a take-home file. Your classes and work come with it.', 8000); }
 });
@@ -137,51 +137,12 @@ $('#welcome').addEventListener('keydown', e => {
   }
 });
 
-/* a sample class: made-up students and papers, to try everything on */
-const SAMPLE_NAMES = ['Ada Example', 'Ben Sample', 'Cleo Madeup', 'Dov Pretend', 'Esme Notreal', 'Finn Placeholder'];
-const SAMPLE_PAPERS = [
-  ['Later starts would help students learn.', 'Teenagers need about nine hours of sleep, and most of us do not get it. When school starts at 7:45, the first lesson is spent waking up. A study of schools in Seattle found that students slept 34 minutes longer after the start moved to 8:45, and their grades in the first class of the day went up. A later start would cost nothing in lessons, because the day would simply end later. For these reasons our school should start at 8:45.'],
-  ['School should start later', 'I think school should start later because everyone is tired. My brother is always tired. Also the bus comes too early and it is dark in winter. Some people say we would get home late but I do not think that matters. Teachers would like it too. So school should start later.'],
-  ['The school day should not change.', 'Starting later sounds good, but it moves the problem instead of solving it. Students who stay up late would stay up later still. Practices, jobs and younger brothers and sisters all depend on the afternoon, and a later finish takes that time away. A survey of our own year group showed that 61 percent have something they must be at by four o’clock. The better answer is a firm bedtime, which costs nothing and changes no timetable.'],
-  null,   // one student turned nothing in
-  ['A later start: the evidence', 'There is strong evidence that a later start improves attendance. In one district, lateness to the first lesson fell by a quarter after the change. However, the evidence on grades is mixed, and the writer of our article admits this. I would start the school day later, but only by thirty minutes, and I would look at the attendance figures after one term before deciding to keep it.'],
-  ['Why 8:45 is better', 'First, sleep. Second, safety, because fewer students would walk to school in the dark. Third, breakfast. Students who eat breakfast concentrate for longer, and at the moment many of us skip it to catch the bus. Each of these reasons would be enough by itself. Together they make a clear case, and the only cost is a later finish.'],
-];
-const SAMPLE_SETUP = { mode: 'rubric', criteria: ['Claim', 'Evidence', 'Writing'], outOf: 10, scale: null,
-  levels: [{ 4: 'A clear claim that the whole paragraph argues for', 3: 'A clear claim', 2: 'A claim, but the paragraph wanders from it', 1: 'A topic, not yet a claim' },
-    { 4: 'Specific evidence, explained', 3: 'Specific evidence', 2: 'General reasons, little evidence', 1: 'Opinion only' },
-    { 4: 'Controlled sentences, no errors that distract', 3: 'Clear, a few errors', 2: 'Errors slow the reader', 1: 'Hard to follow' }] };
+/* the sample */
+// "Look around with a sample class first" opens the sample (src/sample.js): two made-up classes with a term of work, kept apart
+// from everything real. Until 11/13 it made one sample class beside the teacher's own classes instead. A browser that still has
+// that class keeps it, with its card on Today and the button that removes it.
 const hasSample = () => lib.classes.some(c => c.sample);
 const asked = () => !lib.me || !!lib.me.hi;   // the three questions were answered here, or this browser's work is from before they existed
-async function samplePapers() {
-  const out = [];
-  for (let i = 0; i < SAMPLE_NAMES.length; i++) {
-    const p = SAMPLE_PAPERS[i]; if (!p) continue;
-    const doc = await PDFLib.PDFDocument.create(), font = await doc.embedFont(PDFLib.StandardFonts.TimesRoman), bold = await doc.embedFont(PDFLib.StandardFonts.TimesRomanBold);
-    const page = doc.addPage([612, 792]);
-    page.drawText(SAMPLE_NAMES[i], { x: 72, y: 730, size: 11, font });
-    page.drawText('Persuasive paragraph: should the school day start later?', { x: 72, y: 714, size: 11, font });
-    page.drawText(p[0], { x: 72, y: 672, size: 15, font: bold });
-    let y = 640, line = '';
-    for (const w of p[1].split(' ')) { if (font.widthOfTextAtSize(line + w, 12.5) > 468) { page.drawText(line.trim(), { x: 72, y, size: 12.5, font }); y -= 26; line = ''; } line += w + ' '; }
-    page.drawText(line.trim(), { x: 72, y, size: 12.5, font });
-    out.push({ path: SAMPLE_NAMES[i] + '/Persuasive paragraph.pdf', data: await doc.save() });
-  }
-  return out;
-}
-// Makes the class (once) and opens its papers. Everything in it is made up, and Remove takes all of it away again.
-async function sampleClass() {
-  let c = lib.classes.find(c => c.sample);
-  if (!c) {
-    const cid = uid();
-    c = { id: cid, name: 'Sample class', sample: true, names: SAMPLE_NAMES.slice(), units: [{ id: uid(), name: 'Unit 1: Argument', items: [{ id: uid(), name: 'Persuasive paragraph', classId: cid, type: 'ic', setup: JSON.parse(JSON.stringify(SAMPLE_SETUP)) }] }] };
-    lib.classes.push(c); saveLib(); railRender();
-  }
-  const it = c.units[0] && c.units[0].items[0]; if (!it) return go(classHash(c));
-  if (it.batchId && keptMeta.has(it.batchId) && keptMeta.get(it.batchId).papers) return go(batchHash(it.batchId));
-  await intake(await samplePapers(), it.name, it);
-  sampleNoteRender();
-}
 async function sampleRemove() {
   const c = lib.classes.find(c => c.sample); if (!c) return;
   if (batch) return toast('Close the papers first.');
@@ -191,18 +152,32 @@ async function sampleRemove() {
   if (routeNow().v !== 'home') go('#/', true);
   toast('The sample class is gone.');
 }
-// On Home while the sample class is there: what it is, and the way back to her own classes.
+// On Today: in the sample, what it is, a few things to try and the way out. Outside it, only for a sample class from before.
+const SAMPLE_TRY = [['paper', 'A marked paper'], ['quiz', 'A quiz marked by question'], ['book', 'The gradebook'], ['charts', 'Charts'], ['missing', 'Missing work'], ['seats', 'The seating chart'], ['plan', 'This week’s lessons']];
+function sampleGo(k) {
+  const c = lib.classes[0], it = n => { for (const u of (c || {}).units || []) for (const x of u.items) if (x.sampleKey === n) return x; return null; };
+  if (k === 'plan') { location.href = $('#lessonsBtn').getAttribute('href'); return; }
+  if (!c) return;
+  const a = k === 'paper' ? it('essay') : k === 'quiz' ? it('quiz') : null;
+  if (a && a.batchId) return go(batchHash(a.batchId));
+  go(classHash(c, { book: 'gradebook', charts: 'charts', missing: 'missing', seats: 'seating' }[k] || ''));
+}
 function sampleNoteRender() {
   const el = $('#sampleNote'); if (!el || !shellReady) return;
-  const h = !hasSample() ? '' : '<span class="saic">' + WL_ICON.drop + '</span><div class="satx"><h2>You’re looking at a sample class</h2><p>Its six students and their papers are made up. Mark them, score them and export them as much as you like: nothing here is real.</p>' +
+  let h = '';
+  if (sampleOn()) h = !sampleBuilt() ? '' : '<span class="saic">' + WL_ICON.drop + '</span><div class="satx"><h2>You’re looking at the sample</h2><p>Two made-up classes, part-way through a term: marked papers, a gradebook, a timetable and lessons. Change anything you like. None of it is real, and your own work is kept apart.</p>' +
+    '<p class="satry"><span>Things to try:</span>' + SAMPLE_TRY.map(([k, t]) => '<button class="link" data-sampletry="' + k + '">' + t + '</button>').join('') + '</p>' +
+    '<p class="sarow"><button class="btn primary" data-sampleleave>Leave the sample</button></p></div>';
+  else if (hasSample()) h = '<span class="saic">' + WL_ICON.drop + '</span><div class="satx"><h2>You’re looking at a sample class</h2><p>Its six students and their papers are made up. Mark them, score them and export them as much as you like: nothing here is real.</p>' +
     '<p class="sarow">' + (asked() ? '' : '<button class="btn primary" data-wlstart>Set up my own classes</button>') + '<button class="' + (asked() ? 'btn' : 'link') + '" data-samplego>Open the sample papers</button><button class="link" data-samplerm>Remove the sample class</button></p></div>';
   el.hidden = !h; el.classList.toggle('calm', !!h);
   if (el.dataset.h !== h) { el.dataset.h = h; el.innerHTML = h; }
 }
 $('#sampleNote').addEventListener('click', e => {
   if (e.target.closest('[data-wlstart]')) return wlOpen();
-  if (e.target.closest('[data-samplego]')) return sampleClass();
+  if (e.target.closest('[data-samplego]')) { const c = lib.classes.find(c => c.sample); return c && go(classHash(c)); }
   if (e.target.closest('[data-samplerm]')) return sampleRemove();
+  const t = e.target.closest('[data-sampletry]'); if (t) return sampleGo(t.dataset.sampletry);
 });
 
 /* Settings: the same answers, to change */
@@ -264,5 +239,5 @@ $('#setPane').addEventListener('click', async e => {
 
 sysWords();
 // A brand-new browser is asked. One that looked at the sample class first is asked again from the card on Home.
-if (fresh && !asked() && !lib.classes.length && routeNow().v === 'home') wlOpen();
-Object.assign(window.__gs, { wlOpen, wlShown, sampleClass, sampleRemove, me, meGrade, bandOf, sysName });
+if (fresh && !asked() && !lib.classes.length && routeNow().v === 'home' && !sampleOn()) wlOpen();
+Object.assign(window.__gs, { wlOpen, wlShown, sampleRemove, me, meGrade, bandOf, sysName });

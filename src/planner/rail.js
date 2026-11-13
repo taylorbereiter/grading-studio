@@ -18,7 +18,22 @@ async function settleAll() {
 async function toView(v) { await settleAll(); L.open = null; L.unit = null; L.doc = null; L.backTo = null; L.view = v; renderLessons(); window.scrollTo(0, 0); }
 async function leaveTo(url) { await settleAll(); location.href = url; }
 
+/* ---------- the sample (src/samplemode.js): the same notice as on the grading page, and the way out ---------- */
+// While the sample is open this page's storage is the sample's own, so nothing here is the teacher's and nothing is written to a folder.
+function plSample() { return !!(window.__gsSample && window.__gsSample.on); }
+function sampleRailRender() {
+  if (!plSample()) return;
+  let el = $('#railSample');
+  if (!el) { el = document.createElement('div'); el.id = 'railSample'; el.className = 'rsample'; $('#rail').insertBefore(el, $('#findBtn')); }
+  const h = '<span class="rl"><b>Sample</b>Everything here is made up. Your own work is kept apart.</span><button class="btn sm" data-sampleleave title="Leave the sample. It is cleared, and your own work is as you left it."><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 5h4a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1h-4M10 8l-4 4 4 4M6 12h9"/></svg><span class="rl">Leave the sample</span></button>';
+  if (el.dataset.h !== h) { el.dataset.h = h; el.innerHTML = h; }
+}
+document.addEventListener('click', e => { if (e.target.closest('[data-sampleleave]')) { e.preventDefault(); window.__gsSample.leave(); location.href = gsUrl('#/'); } });
+// The sample is made by the grading page. Opened here before that, this page hands over to it.
+if (plSample() && !window.__gsSample.built) location.replace(gsUrl('#/'));
+
 function railRender() {
+  sampleRailRender();
   const classes = (L.setup && L.setup.classes) || [];
   const h = classes.map(c => '<a class="rnav" href="' + esc(classUrl(c)) + '" title="' + esc(c.name) + ': its assignments, gradebook and students"><span class="rdot" style="background:' + esc(c.color || '#1F6FB2') + '"></span><span class="rl rname">' + esc(c.name) + '</span></a>').join('');
   const box = $('#railClasses'); if (box.dataset.h !== h) { box.dataset.h = h; box.innerHTML = h; }

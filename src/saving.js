@@ -42,7 +42,7 @@ function saveResult(b, data, ls, full) {
 }
 function saveLabel(b, text, cls, tip) {
   const el = $('#saveState'); if (!el || b !== batch) return;
-  el.textContent = text; el.className = 'savest' + (cls ? ' ' + cls : '');
+  el.textContent = text; el.dataset.st = text; el.className = 'savest' + (cls ? ' ' + cls : '');
   el.title = tip || 'Your marks and scores are kept in this browser as you go';
 }
 // The red bar, on every screen, for as long as any work isn't fully saved.

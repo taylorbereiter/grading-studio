@@ -29,6 +29,21 @@
 .rsaved.bad b{color:var(--bad)}
 .rsaved .rl{display:block;flex:1;min-width:0;overflow-wrap:anywhere}
 
+/* the sample (src/samplemode.js): a notice at the top of the sidebar on both pages, with the way out */
+.rsample{display:flex;flex-direction:column;gap:8px;margin:0 0 10px;padding:10px;border:1px solid var(--accent);border-radius:var(--corner-3);background:var(--accent-soft);color:var(--fg-2);font-size:var(--text-small);line-height:1.35}
+.rsample>.rl{display:block}
+/* in the sample nothing is backed up and nothing needs to be: the line that says so for real work is put away */
+.gs-sample .rsaved,.gs-sample #safeAsk{display:none}
+.rsample b{display:block;color:var(--accent);font-weight:700;font-size:var(--text-caption);letter-spacing:.06em;text-transform:uppercase;margin-bottom:2px}
+.rsample .btn{justify-content:center;gap:6px;background:var(--surface)}
+.rsample .btn svg{width:16px;height:16px}
+#sampleCover{position:fixed;inset:0;z-index:90;display:flex;align-items:center;justify-content:center;background:var(--bg);padding:24px}
+#sampleCover .smpbox{max-width:420px;text-align:center}
+#sampleCover h2{font-family:var(--f-display);font-size:var(--text-lead);margin:16px 0 6px}
+#sampleCover p{margin:0 0 16px;color:var(--fg-2)}
+#sampleCover .smpspin{width:28px;height:28px;margin:0 auto;border-radius:var(--corner-round);border:3px solid var(--line);border-top-color:var(--accent);animation:smpspin 1s linear infinite}
+@keyframes smpspin{to{transform:rotate(360deg)}}
+
 /* while a paper is open the sidebar folds to a strip of icons, so the paper gets the room */
 :is(.shell.grading,.pfold,.gsfull) .rail{width:60px;padding:12px 8px;align-items:center;overflow:hidden auto}
 :is(.shell.grading,.pfold,.gsfull) .rail .rl{display:none}
@@ -41,6 +56,8 @@
 :is(.shell.grading,.pfold,.gsfull) .rdot{width:10px;height:10px}
 :is(.shell.grading,.pfold,.gsfull) .rsaved{justify-content:center;width:40px;padding:12px 0}
 :is(.shell.grading,.pfold,.gsfull) .rsaved .rdot{margin:0}
+:is(.shell.grading,.pfold,.gsfull) .rsample{padding:0;border:0;background:none;margin:0 0 2px}
+:is(.shell.grading,.pfold,.gsfull) .rsample .btn{width:40px;height:40px;padding:0;border-color:var(--accent);color:var(--accent)}
 @media (max-width:1100px){
   .rail{width:60px;padding:12px 8px;align-items:center}
   .rail .rl{display:none}
@@ -52,6 +69,8 @@
   .rdot{width:10px;height:10px}
   .rsaved{justify-content:center;width:40px;padding:12px 0}
   .rsaved .rdot{margin:0}
+  .rsample{padding:0;border:0;background:none;margin:0 0 2px}
+  .rsample .btn{width:40px;height:40px;padding:0;border-color:var(--accent);color:var(--accent)}
 }
 /* full screen (src/fullscreen.js): the sidebar folds to icons, and while a paper is open it goes, so the paper has the room.
    On the marking screen the button is in the top bar instead. */

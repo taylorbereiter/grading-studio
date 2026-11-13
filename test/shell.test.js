@@ -40,8 +40,8 @@ test('the app starts cleanly, and the Planner button, Dark mode and the sample p
   assert.ok(await page.evaluate(() => !window.__lessons && !document.querySelector('#lessons')), 'no Planner code in the grading page');
   await goTo(page, '#/');
   await page.click('#sample');
-  await waitPaper(page);
-  assert.ok(await page.evaluate(() => window.__gs.state().batch.students.length > 0));
+  await page.waitForFunction(() => window.__gs && window.__gs.sampleBuilt && window.__gs.sampleBuilt() && !document.querySelector('#sampleCover'), { timeout: 90000, polling: 200 });
+  assert.equal(await page.evaluate(() => window.__gs.state().lib.classes.length), 2);
   assert.deepEqual(page.errors, []);
   await close();
 });
@@ -84,7 +84,10 @@ test('both built copies hold the same app, and the Pages copy stays out of searc
   const loader = /<script>try\{var gsLangV=\{.*?\}catch\(e\)\{\}<\/script>/, packed = /const LANG_PACKED = \{[^\n]*\};/;
   assert.ok(loader.test(a) && !loader.test(b), 'only the Pages copy fetches a language');
   assert.ok(a.includes('const LANG_PACKED = {};') && !b.includes('const LANG_PACKED = {};'), 'only the double-click copy carries the languages');
-  assert.equal(a.replace(hosted, '').replace(loader, '').replace(packed, ''), b.replace(packed, ''));
+  // the same for what fills the sample: sample.js beside the Pages copy, squeezed inside the double-click copy
+  const smp = /const SAMPLE_PACKED = "[^"\n]*";/;
+  assert.ok(a.includes('const SAMPLE_PACKED = "";') && !b.includes('const SAMPLE_PACKED = "";'), 'only the double-click copy carries the sample');
+  assert.equal(a.replace(hosted, '').replace(loader, '').replace(packed, '').replace(smp, ''), b.replace(packed, '').replace(smp, ''));
   assert.ok(!b.includes('manifest.webmanifest'), 'the double-click copy has no address to install from');
   assert.ok(a.includes('<meta name="robots" content="noindex">'));
   assert.ok(!a.includes('@@APP@@') && !a.includes('@@VERSION@@'), 'every slot in the page got filled');
@@ -118,7 +121,7 @@ test('npm run preview serves the built app on localhost, and only that', async (
     assert.ok((await page.$eval('#start .gsVer', e => e.textContent)).includes('preview copy'), 'it says it’s the preview');
     assert.notEqual(new URL(page.url()).origin, new URL(require(path.join(ROOT, 'site.json')).address).origin, 'so it can’t share saved work with the real link');
     await page.click('#sample');
-    await waitPaper(page);
+    await page.waitForFunction(() => window.__gs && window.__gs.sampleBuilt && window.__gs.sampleBuilt() && !document.querySelector('#sampleCover'), { timeout: 90000, polling: 200 });   // the preview serves sample.js too
     assert.deepEqual(page.errors, []);
     await close();
   } finally { p.kid.kill(); await p.ended; }

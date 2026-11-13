@@ -39,6 +39,7 @@ async function gList(q, fields) {
 }
 const FOLDER = 'application/vnd.google-apps.folder';
 async function signIn() {
+  if (sampleStops('Google Drive')) return;
   if (!gcid()) return driveSetup();
   try {
     await gToken(true);

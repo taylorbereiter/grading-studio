@@ -160,7 +160,7 @@ button.pavg:hover .v{text-decoration:underline}
 #stampScore svg{flex:none}
 .cmt textarea{min-height:72px;padding:9px 11px;border-radius:var(--corner-4);font-size:var(--text-control);line-height:1.45;display:block}
 .gstat{display:flex;flex-wrap:nowrap;align-items:center;gap:6px;margin:0}
-.gstat .seg{margin-left:0;flex:1;gap:6px;border:0;border-radius:0;overflow:visible}
+.gstat .seg{margin-left:0;flex:1;flex-wrap:wrap;gap:6px;border:0;border-radius:0;overflow:visible}
 .gstat .seg button{flex:none;padding:4px 10px;border:1px solid var(--line);border-radius:var(--corner-pill);background:none;font-size:var(--text-small);font-weight:500}
 .gstat .seg button:hover{color:var(--fg);border-color:var(--line-strong)}
 .gstat .seg button[aria-pressed=true]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent);font-weight:600}
@@ -182,7 +182,7 @@ button.pavg:hover .v{text-decoration:underline}
 .keysrow .link{font-size:var(--text-small);font-weight:500;text-decoration:none;color:var(--muted)}
 .keysrow .link:hover{color:var(--accent)}
 .gfoot .nav{position:static;margin:0;padding:0}
-.gfoot .nav .primary{flex:1 1 0;min-width:0;white-space:nowrap;padding-left:8px;padding-right:8px}
+.gfoot .nav .primary{flex:1 1 0;min-width:0;white-space:normal;padding-left:8px;padding-right:8px}
 .gfoot .nav>:not(.btn){flex:0 0 100%}
 .rchip{white-space:nowrap}
 /* On a very wide window the page stops growing (fitScale), and it and its bar sit in the middle of the space */
@@ -228,9 +228,9 @@ button.pavg:hover .v{text-decoration:underline}
 .rowscale .rowhalf{display:inline-flex;align-items:center;gap:5px;font-weight:500}
 .rowscale select{padding:4px 6px}
 /* anchor papers (src/anchors.js): High, Mid, Low under the score, and the tag in the student list */
-.anchrow{display:flex;align-items:center;gap:8px;margin:8px 0 0}
+.anchrow{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:8px 0 0}
 .anchlab{font-size:var(--text-small);color:var(--muted);white-space:nowrap}
-.anchseg{margin-left:0;flex:1;gap:6px;border:0;overflow:visible}
+.anchseg{margin-left:0;flex:1 0 auto;gap:6px;border:0;overflow:visible}
 .anchseg button{flex:none;padding:3px 10px;border:1px solid var(--line);border-radius:var(--corner-pill);background:none;font-size:var(--text-small);font-weight:500}
 .anchseg button:hover{color:var(--fg);border-color:var(--line-strong)}
 .anchseg button[aria-pressed=true]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent);font-weight:600}

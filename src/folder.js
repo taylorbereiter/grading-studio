@@ -516,6 +516,7 @@ async function folderUse(h) {
   return folderResume(false);
 }
 async function folderPick() {
+  if (sampleStops('saving to a folder')) return;
   if (!canPickFolder()) return sayDlg('Saving to a folder needs Chrome or Edge on a computer. Your work is still kept in this browser.');
   let h;
   try { h = await window.showDirectoryPicker({ id: 'gs-work', mode: 'readwrite', startIn: 'documents' }); }
@@ -542,6 +543,7 @@ async function folderBoot() {
 function setWhere(s) { fld.state = s; renderWhere(); }
 const canPickFolder = () => 'showDirectoryPicker' in window;
 function whereSay() {
+  if (sampleOn()) return { safe: true, sub: 'Sample', text: 'Sample, kept only while you look around', tip: 'Nothing here is your own work. Leave the sample and it is cleared', cls: '' };
   const nm = '“' + fld.name + '”', sh = fld.name.length > 24 ? '“' + fld.name.slice(0, 22) + '…”' : nm;   // the top bar has room for only so much, and what to do has to fit
   switch (fld.state) {
     case 'ok': return { safe: true, text: 'In this browser and your ' + nm + ' folder', tip: 'Every save goes to both' + (fld.at ? '. Last saved to the folder at ' + new Date(fld.at).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' }) : ''), cls: '' };
@@ -562,7 +564,7 @@ function renderWhere() {
   }
   if (top) { const cut = /^Not backed up\. /.exec(s.text); top.textContent = cut ? 'Not backed up' : s.text; if (cut) { const more = document.createElement('span'); more.className = 'sw-more'; more.textContent = s.text.slice(13); top.append(more); } top.title = s.tip; top.className = 'savewhere link' + (s.cls ? ' ' + s.cls : ''); }
   if (line) {
-    const h = '<span class="wtext' + (s.cls ? ' ' + s.cls : '') + '">' + (fld.state === 'none' && fld.booted ? 'Your work is saved only in this browser, and is not backed up' : 'Your work is saved: ' + esc(s.text.charAt(0).toLowerCase() + s.text.slice(1))) + '.</span> ' +
+    const h = sampleOn() ? '<span class="wtext">This is the sample. It is kept only in this browser while you look around, and your own work is kept apart.</span>' : '<span class="wtext' + (s.cls ? ' ' + s.cls : '') + '">' + (fld.state === 'none' && fld.booted ? 'Your work is saved only in this browser, and is not backed up' : 'Your work is saved: ' + esc(s.text.charAt(0).toLowerCase() + s.text.slice(1))) + '.</span> ' +
       (s.act ? '<button class="btn sm primary" data-wact>' + s.act + '</button> ' : '') +
       (fld.state === 'none' ? (canPickFolder() ? '<button class="btn sm primary" data-wlink>Choose a folder…</button>' : '') : '<button class="btn sm" data-wopen>Folder…</button>') +
       (fld.state !== 'none' && fld.root ? ' <a class="btn sm" href="#/settings/history">Go back in time…</a>' : '');

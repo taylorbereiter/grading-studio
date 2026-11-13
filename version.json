@@ -1,24 +1,23 @@
 {
- "version": "1.28.10",
- "build": "123ebaf524da",
+ "version": "1.28.13",
+ "build": "236871795a6a",
  "notes": [
-  "Planner slides: click any text box and the size menu in the toolbar changes that box: the title, the text, the bottom line and the rest. Biggest that fits picks the size for you.",
-  "The box you click gets a frame: drag its bar to move it or a handle to resize it, and Put back returns it to the layout. The .pptx keeps the new places and sizes.",
-  "+ Add slide adds a title and text slide straight away; the arrow beside it opens every layout. Timetable can set a different usual slide.",
-  "Words are never cut off: text that runs past its box stays visible in the editor with a warning, and when you present the box uses the room under it, then the text gets smaller until every word shows."
+  "Add a video file, not only a link: + Add, A video… keeps the file in this browser at any length while the computer has room, and partners share it. Drag the bar under a video to make it as big as you like.",
+  "Partners and videos (in Setup, and on No papers when you open an assignment) lists the whole class: pick partners and add each video in one place. + Clip now starts where the video is.",
+  "Bring in a rubric from Edit or the Open box on any assignment. Rows and what each level means are read from a Word or PDF table where they can be."
  ],
  "files": {
-  "index.html": "beb1c386acb33dceeff4b2962a09ffd8c0f81c01d20e8d47ce16ad35cb97af86",
-  "planner.html": "9a4db20a0a3c5f14d32d2277fccb1459e912cc313557755513c2c6e5bb21e129"
+  "index.html": "e6cb27574b69fd5cab3dc41b56841b9ab86f163b76fe6e010c1ec5e94efe363e",
+  "planner.html": "82406e7b22e5eeaaa8bfe5bc74d63b5339aff7c816e3c7153e34230d5ac8c2fe"
  },
  "langs": {
-  "lang/zh-Hant.js": "df1fe5b1955ffe67b5ac1ed7c82601b2e5c23986a02f2639e172b152a66707e1",
-  "lang/zh-Hans.js": "e884d7394bdcfe4d8d48f9c2ddafd5d190288bebedad5e6a0d51f94ee7def214",
-  "lang/es.js": "5c2e250c2f352f7d77602994061190bd2909e0ac8abec95cd5738ca01537bd39",
-  "lang/fr.js": "7c1ec25ec21dbc7fa3b0b8add64b1da924e8b0549bc925bd5443fdc000df44ce",
-  "lang/de.js": "4e7d6fbc833f94a1df4d92dc688ee044f393c6946a6566cab2c5af67d14a9c01",
-  "lang/pt-BR.js": "1b525e92912eb0efed4a5bf48cdb1b7b8b18b1cc82a59ae22eac869d4989d417",
-  "lang/ja.js": "8c3a15187d829a6a15f7de729a04a9788174289a21f723664f37e2ec61138b32",
-  "lang/ko.js": "3b6065353cc747cfdd5273fce4f9d9aa29011cc2181bd3d410fa20d51839c433"
+  "lang/zh-Hant.js": "03deea8f12e0ea7cf38149f37712bc42bf8fac7ea15adc718e9ebe79ec8228ef",
+  "lang/zh-Hans.js": "d7329e7ef5556e0d6d65a5792dbd147b11b51eab60c9590c2011397cf18e3e5e",
+  "lang/es.js": "7b8f0db0bafb16345caefc850a29ddc937c6eb9a4b404732121f45964be3afa9",
+  "lang/fr.js": "b36a8449b6caa9ace883ef34d0266561c882e844f2fbcb76f292cd2672b12326",
+  "lang/de.js": "1bb683ff96cb97ad73b832f9635a38ee39a00391be2a527fd25d6af8eb326b43",
+  "lang/pt-BR.js": "c6d59cce3e51830c40feecdc92a1fd0026041914aab8b71e3355f756070ba48b",
+  "lang/ja.js": "a8478f13740c8c6a4b3dc620502f34c128d2ae758b4c467d3596427836448013",
+  "lang/ko.js": "e2290ab4c1a613456122c4dc58d3655b3fbb9df321d74a887128aa3032012ce7"
  }
 }

@@ -1082,6 +1082,7 @@ function openTimetable() {
     }
     if (e.target.closest('[data-saveprof]')) {
       collect();
+      if (plSample()) return toast('This is the sample, so saving a setup file is switched off here.', 6000);
       await saveBlob('Planner setup.json', new Blob([JSON.stringify(setupFileOf({ ...draft, classes: classesOut() }), null, 1)], { type: 'application/json' }));
       return toast('Saved as “Planner setup.json”. Load it with Load a setup file… on another computer.', 5000);
     }
@@ -1327,6 +1328,7 @@ week's focus (and standards, if shown) into "weeks", in order, one entry per wee
 Don't add, rename or remove files in the files folder; the teacher adds those in the app.
 ` + BANK_README;
 async function folderLink() {
+  if (plSample()) return toast('This is the sample, so linking a folder is switched off here. Leave the sample to use it with your own lessons.', 7000);
   try {
     const h = await window.showDirectoryPicker({ id: 'gs-lessons', mode: 'readwrite', startIn: 'documents' });
     const why = await notGradingFolder(h);

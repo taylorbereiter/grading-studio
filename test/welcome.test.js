@@ -120,47 +120,27 @@ test('a paper dropped past the welcome is marked as a new teacher’s, and the n
   await close();
 });
 
-test('the sample class: made-up papers to try, a way back to her own classes, and Remove takes all of it away', async () => {
+test('the sample opens from the welcome, apart from her own work (test/sample.test.js has the rest)', async () => {
   const { page, close } = await openApp(browser, { newTeacher: true });
   await page.click('#welcome [data-wlsample]');
-  await waitPaper(page);
+  await page.waitForFunction(() => window.__gs && window.__gs.sampleBuilt && window.__gs.sampleBuilt() && !document.querySelector('#sampleCover'), { timeout: 90000, polling: 200 });
+  await appReady(page);
   assert.equal(await welcomeShown(page), false);
-  const s = await page.evaluate(() => { const s = window.__gs.state(); return { n: s.batch.students.length, papers: s.batch.students.filter(x => x.files.length).length, name: s.batch.name, crit: s.setup.criteria, cls: s.lib.classes.map(c => [c.name, !!c.sample, c.names.length]) }; });
-  assert.deepEqual(s, { n: 6, papers: 5, name: 'Persuasive paragraph', crit: ['Claim', 'Evidence', 'Writing'], cls: [['Sample class', true, 6]] });
-  await noneOfHers(page, 'The sample papers');
-  await settle(page);
-  for (const tab of ['grades', 'insights', 'return']) { await page.evaluate(t => window.__gs.go(location.hash.replace(/\/(grades|insights|return).*$/, '') + '/' + t), tab); await noneOfHers(page, 'The sample class, ' + tab); }
-  await goTo(page, '#/');
-  await page.waitForSelector('#sampleNote:not([hidden]) [data-wlstart]');
-  assert.match(await page.$eval('#sampleNote', e => e.innerText), /You’re looking at a sample class[\s\S]*made up/);
-  await noneOfHers(page, 'Home with the sample class');
-  // her own classes, from the card
-  await page.click('#sampleNote [data-wlstart]');
-  assert.equal(await welcomeShown(page), true);
-  assert.equal(await page.$('#welcome [data-wlsample]'), null, 'the sample is already here');
-  await page.type('#wlC0', 'Period 1 History');
-  for (let i = 0; i < 3; i++) await page.click('#welcome [data-wlnext]');
-  assert.deepEqual((await lib(page)).classes.map(c => c.name), ['Sample class', 'Period 1 History']);
-  assert.equal(await page.$('#sampleNote [data-wlstart]'), null, 'asked once');
-  // a reload does not ask again while only the sample was there
-  await page.reload(); await appReady(page);
-  assert.equal(await welcomeShown(page), false);
-  await page.waitForSelector('#sampleNote:not([hidden]) [data-samplerm]');
-  await page.click('#sampleNote [data-samplerm]');
-  await page.waitForFunction(() => document.querySelector('#sampleNote').hidden);
-  assert.deepEqual((await lib(page)).classes.map(c => c.name), ['Period 1 History']);
-  assert.equal(await page.evaluate(() => window.__gs.kept().size), 0, 'its papers went with it');
+  assert.match(await page.$eval('#sampleNote', e => e.innerText), /You’re looking at the sample[\s\S]*made-up/);
+  await noneOfHers(page, 'Home in the sample');
   assert.deepEqual(page.errors, []);
   await close();
 });
 
-test('a new browser that only looked at the sample is asked again from the card, not at every visit', async () => {
-  const { page, close } = await openApp(browser, { newTeacher: true });
-  await page.click('#welcome [data-wlsample]');
-  await waitPaper(page); await settle(page);
-  await page.reload(); await appReady(page);
+test('a sample class made before the sample had its own place keeps its card, and Remove takes it away', async () => {
+  const L = JSON.parse(USED_BEFORE['gs.lib']); L.classes = [{ id: 'old-sample', name: 'Sample class', sample: true, names: ['Ava Stone', 'Ben Okoro'], units: [] }, { id: 'h1', name: 'Period 1 History', names: [], units: [] }]; L.me = { hi: 1 };
+  const { page, close } = await openApp(browser, { seed: { ls: { ...USED_BEFORE, 'gs.lib': JSON.stringify(L) } } });
   assert.equal(await welcomeShown(page), false);
-  await page.waitForSelector('#sampleNote:not([hidden]) [data-wlstart]');
+  await page.waitForSelector('#sampleNote:not([hidden]) [data-samplerm]');
+  assert.match(await page.$eval('#sampleNote', e => e.innerText), /You’re looking at a sample class[\s\S]*made up/);
+  await page.click('#sampleNote [data-samplerm]');
+  await page.waitForFunction(() => document.querySelector('#sampleNote').hidden);
+  assert.deepEqual((await lib(page)).classes.map(c => c.name), ['Period 1 History']);
   assert.deepEqual(page.errors, []);
   await close();
 });

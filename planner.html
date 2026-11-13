@@ -1,6 +1,80 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"df1fe5b1","zh-Hans":"e884d739","es":"5c2e250c","fr":"7c1ec25e","de":"4e7d6fbc","pt-BR":"1b525e92","ja":"8c3a1518","ko":"3b606535"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script></head><body>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"03deea8f","zh-Hans":"d7329e7e","es":"7b8f0db0","fr":"b36a8449","de":"1bb683ff","pt-BR":"c6d59cce","ja":"a8478f13","ko":"e2290ab4"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script></head><body>
 <title>Planner · Grading Studio</title>
+<script>/* ---------------- the sample: a made-up school week, kept apart from everything real ----------------
+   Runs first on both pages, before anything reads saved work. While the sample is open (gs.sampleOn in the browser's real storage),
+   every page at this address keeps its work under other names: each localStorage and sessionStorage key gets "sample:" in front,
+   and each database "sample-". The rest of the app never knows. So nothing of the sample can sit beside a teacher's own classes,
+   go into their folder, a take-home file or a new year, and leaving the sample is only taking the switch away and clearing
+   what was kept under those names. A teacher with real work can open the sample and come back to find that work untouched.
+   Two things are shared with the real side on purpose, since they are about the screen and not about work: the theme and the language.
+   What fills the sample is in src/sample-data.js, fetched only when the sample is opened (src/sample.js builds it). */
+(function () {
+  var REAL = window.localStorage, KEY = 'gs.sampleOn', LEFT = 'gs.sampleLeft', PRE = 'sample:', DBPRE = 'sample-';
+  var SHARED = { 'gs.theme': 1, 'gs.lang': 1 };
+  var DBS = ['grading-studio-keep', 'grading-studio-added', 'grading-studio-folder', 'grading-studio-examples', 'grading-studio-safety', 'grading-studio-models', 'grading-studio-school', 'grading-studio-videos', 'gs-lessons'];
+  var on = false; try { on = REAL.getItem(KEY) === '1'; } catch (e) {}
+  var F = window.IDBFactory && IDBFactory.prototype, open0 = F && F.open, del0 = F && F.deleteDatabase, list0 = F && F.databases;
+  function wipe() {
+    try { var ks = []; for (var i = 0; i < REAL.length; i++) { var k = REAL.key(i); if (k && k.indexOf(PRE) === 0) ks.push(k); } ks.forEach(function (k) { REAL.removeItem(k); }); } catch (e) {}
+    try { var s = window.sessionStorage, ss = []; for (var j = 0; j < s.length; j++) { var q = s.key(j); if (q && q.indexOf(PRE) === 0) ss.push(q); } ss.forEach(function (q) { s.removeItem(q); }); } catch (e) {}
+    if (!del0) return;
+    var left = DBS.length, done = function () { if (!--left) try { REAL.removeItem(LEFT); } catch (e) {} };
+    DBS.forEach(function (n) { try { var r = del0.call(indexedDB, DBPRE + n); r.onsuccess = r.onerror = done; } catch (e) { done(); } });
+    if (list0) try { list0.call(indexedDB).then(function (l) { l.forEach(function (d) { if (d.name && d.name.indexOf(DBPRE) === 0 && DBS.indexOf(d.name.slice(DBPRE.length)) < 0) del0.call(indexedDB, d.name); }); }, function () {}); } catch (e) {}
+  }
+  function enter() { try { REAL.setItem(LEFT, '1'); wipe(); REAL.setItem(KEY, '1'); } catch (e) { return false; } return true; }
+  function leave() { try { REAL.removeItem(KEY); REAL.setItem(LEFT, '1'); } catch (e) {} }
+  window.addEventListener('storage', function (e) { if (e.storageArea === REAL && e.key === KEY && (e.newValue === '1') !== on) location.reload(); });
+  window.__gsSample = { on: on, enter: enter, leave: leave, wipe: wipe, dbs: DBS.slice(), again: function () { try { REAL.removeItem(PRE + 'gs.sampleBuilt'); } catch (e) {} } };
+  if (!on) { try { if (REAL.getItem(LEFT)) wipe(); } catch (e) {} return; }
+  try { if (REAL.getItem(PRE + 'gs.sampleBuilt') == null) wipe(); else window.__gsSample.built = true; } catch (e) {}
+
+  /* from here on, the sample is open: every name this page stores under is changed on its way in and out */
+  function area(real) {
+    var keys = function () { var o = []; for (var i = 0; i < real.length; i++) { var k = real.key(i); if (k == null) continue; if (k.indexOf(PRE) === 0) o.push(k.slice(PRE.length)); else if (SHARED[k]) o.push(k); } return o; };
+    var name = function (k) { k = String(k); return SHARED[k] ? k : PRE + k; };
+    var api = {
+      getItem: function (k) { return real.getItem(name(k)); },
+      setItem: function (k, v) { real.setItem(name(k), v); },
+      removeItem: function (k) { real.removeItem(name(k)); },
+      clear: function () { keys().forEach(function (k) { if (!SHARED[k]) real.removeItem(PRE + k); }); },
+      key: function (i) { var k = keys()[i]; return k == null ? null : k; },
+    };
+    return new Proxy({}, {
+      get: function (t, p) { if (p === 'length') return keys().length; if (typeof p !== 'string') return undefined; if (api[p]) return api[p]; var v = real.getItem(name(p)); return v == null ? undefined : v; },
+      set: function (t, p, v) { real.setItem(name(p), String(v)); return true; },
+      deleteProperty: function (t, p) { real.removeItem(name(p)); return true; },
+      has: function (t, p) { return typeof p === 'string' && (p in api || p === 'length' || real.getItem(name(p)) != null); },
+      ownKeys: function () { return keys(); },
+      getOwnPropertyDescriptor: function (t, p) { var v = typeof p === 'string' ? real.getItem(name(p)) : null; return v == null ? undefined : { value: v, writable: true, enumerable: true, configurable: true }; },
+    });
+  }
+  var LS = area(REAL);
+  Object.defineProperty(window, 'localStorage', { get: function () { return LS; }, configurable: true });
+  try { var SS = area(window.sessionStorage); Object.defineProperty(window, 'sessionStorage', { get: function () { return SS; }, configurable: true }); } catch (e) {}
+  if (F) {
+    F.open = function (n) { var a = [].slice.call(arguments); a[0] = DBPRE + n; return open0.apply(this, a); };
+    F.deleteDatabase = function (n) { var a = [].slice.call(arguments); a[0] = DBPRE + n; return del0.apply(this, a); };
+    if (list0) F.databases = function () { return list0.call(this).then(function (l) { return l.filter(function (d) { return d.name && d.name.indexOf(DBPRE) === 0; }).map(function (d) { return { name: d.name.slice(DBPRE.length), version: d.version }; }); }); };
+  }
+  if (window.BroadcastChannel) { var BC = window.BroadcastChannel; window.BroadcastChannel = function (n) { return new BC(PRE + n); }; window.BroadcastChannel.prototype = BC.prototype; }
+  if (navigator.locks && window.LockManager) { var rq = LockManager.prototype.request; LockManager.prototype.request = function (n) { var a = [].slice.call(arguments); a[0] = PRE + n; return rq.apply(this, a); }; }
+  var add0 = window.addEventListener, rm0 = window.removeEventListener, wraps = new Map();
+  window.addEventListener = function (type, fn, opt) {
+    if (type !== 'storage' || typeof fn !== 'function') return add0.call(this, type, fn, opt);
+    var w = wraps.get(fn);
+    if (!w) wraps.set(fn, w = function (e) {
+      if (e.storageArea !== REAL) return;
+      var k = e.key; if (k != null) { if (SHARED[k]) {} else if (k.indexOf(PRE) === 0) k = k.slice(PRE.length); else return; }
+      fn.call(this, { type: 'storage', key: k, oldValue: e.oldValue, newValue: e.newValue, url: e.url, storageArea: LS, target: e.target });
+    });
+    return add0.call(this, type, w, opt);
+  };
+  window.removeEventListener = function (type, fn, opt) { return rm0.call(this, type, type === 'storage' && wraps.get(fn) || fn, opt); };
+  document.documentElement.classList.add('gs-sample');
+})();
+</script>
 <script>try{document.documentElement.dataset.theme=JSON.parse(localStorage.getItem('gs.theme'))||'light'}catch(e){document.documentElement.dataset.theme='light'}</script>
 <style>
 /*
@@ -640,6 +714,21 @@ body.has-side .lsn{margin-right:var(--sidew,420px)}
 .rsaved.bad b{color:var(--bad)}
 .rsaved .rl{display:block;flex:1;min-width:0;overflow-wrap:anywhere}
 
+/* the sample (src/samplemode.js): a notice at the top of the sidebar on both pages, with the way out */
+.rsample{display:flex;flex-direction:column;gap:8px;margin:0 0 10px;padding:10px;border:1px solid var(--accent);border-radius:var(--corner-3);background:var(--accent-soft);color:var(--fg-2);font-size:var(--text-small);line-height:1.35}
+.rsample>.rl{display:block}
+/* in the sample nothing is backed up and nothing needs to be: the line that says so for real work is put away */
+.gs-sample .rsaved,.gs-sample #safeAsk{display:none}
+.rsample b{display:block;color:var(--accent);font-weight:700;font-size:var(--text-caption);letter-spacing:.06em;text-transform:uppercase;margin-bottom:2px}
+.rsample .btn{justify-content:center;gap:6px;background:var(--surface)}
+.rsample .btn svg{width:16px;height:16px}
+#sampleCover{position:fixed;inset:0;z-index:90;display:flex;align-items:center;justify-content:center;background:var(--bg);padding:24px}
+#sampleCover .smpbox{max-width:420px;text-align:center}
+#sampleCover h2{font-family:var(--f-display);font-size:var(--text-lead);margin:16px 0 6px}
+#sampleCover p{margin:0 0 16px;color:var(--fg-2)}
+#sampleCover .smpspin{width:28px;height:28px;margin:0 auto;border-radius:var(--corner-round);border:3px solid var(--line);border-top-color:var(--accent);animation:smpspin 1s linear infinite}
+@keyframes smpspin{to{transform:rotate(360deg)}}
+
 /* while a paper is open the sidebar folds to a strip of icons, so the paper gets the room */
 :is(.shell.grading,.pfold,.gsfull) .rail{width:60px;padding:12px 8px;align-items:center;overflow:hidden auto}
 :is(.shell.grading,.pfold,.gsfull) .rail .rl{display:none}
@@ -652,6 +741,8 @@ body.has-side .lsn{margin-right:var(--sidew,420px)}
 :is(.shell.grading,.pfold,.gsfull) .rdot{width:10px;height:10px}
 :is(.shell.grading,.pfold,.gsfull) .rsaved{justify-content:center;width:40px;padding:12px 0}
 :is(.shell.grading,.pfold,.gsfull) .rsaved .rdot{margin:0}
+:is(.shell.grading,.pfold,.gsfull) .rsample{padding:0;border:0;background:none;margin:0 0 2px}
+:is(.shell.grading,.pfold,.gsfull) .rsample .btn{width:40px;height:40px;padding:0;border-color:var(--accent);color:var(--accent)}
 @media (max-width:1100px){
   .rail{width:60px;padding:12px 8px;align-items:center}
   .rail .rl{display:none}
@@ -663,6 +754,8 @@ body.has-side .lsn{margin-right:var(--sidew,420px)}
   .rdot{width:10px;height:10px}
   .rsaved{justify-content:center;width:40px;padding:12px 0}
   .rsaved .rdot{margin:0}
+  .rsample{padding:0;border:0;background:none;margin:0 0 2px}
+  .rsample .btn{width:40px;height:40px;padding:0;border-color:var(--accent);color:var(--accent)}
 }
 /* full screen (src/fullscreen.js): the sidebar folds to icons, and while a paper is open it goes, so the paper has the room.
    On the marking screen the button is in the top bar instead. */
@@ -2658,6 +2751,7 @@ function openTimetable() {
     }
     if (e.target.closest('[data-saveprof]')) {
       collect();
+      if (plSample()) return toast('This is the sample, so saving a setup file is switched off here.', 6000);
       await saveBlob('Planner setup.json', new Blob([JSON.stringify(setupFileOf({ ...draft, classes: classesOut() }), null, 1)], { type: 'application/json' }));
       return toast('Saved as “Planner setup.json”. Load it with Load a setup file… on another computer.', 5000);
     }
@@ -2897,6 +2991,7 @@ week's focus (and standards, if shown) into "weeks", in order, one entry per wee
 Don't add, rename or remove files in the files folder; the teacher adds those in the app.
 ` + BANK_README;
 async function folderLink() {
+  if (plSample()) return toast('This is the sample, so linking a folder is switched off here. Leave the sample to use it with your own lessons.', 7000);
   try {
     const h = await window.showDirectoryPicker({ id: 'gs-lessons', mode: 'readwrite', startIn: 'documents' });
     const why = await notGradingFolder(h);
@@ -6545,6 +6640,35 @@ const LANG_FILLS = [
   ['pastepg', /^Paste this class’s (.+) page address$/], ['orderok', /^Students, one per line, in the order you want \((.+) order works well\)$/],
   ['pastefrom', /^Paste from a spreadsheet or (.+), or upload a file\. Student ID and email columns are kept as each student’s details\.$/],
   ['printn', /^Print (\d+) pages$/], ['ndrafts', /^(\d+) report comments are still drafts you haven’t looked at\.$/], ['cmidl', /^class middle (\d+)$/], ['syslink', /^([A-Z][\w .&-]{0,30}) link$/],
+  ['mfready', /^(\d+) marked files? ready to give back$/], ['npages', /^(\d+) pages?$/], ['putsc', /^Put the score on the paper: (.+)$/],
+  ['partrows', /^Partial: (\d+) of (\d+) rows scored\. This total isn’t final\.$/], ['avgtip', /^(?=Average of (\d+) )Average of \d+ finished scores?’s percents: (.+?)\. Partial, missing, excused and left-out papers don’t count\. Click for Insights\.$/],
+  ['tocheck', /^(\d+) to check$/], ['totof', /^Total \/(\d+)$/], ['confq', /^“(.+)”\? confirm$/], ['nmpct', /^(.+), ([\d.,]+%)$/],
+  ['nmord', /^(.+), ([\d.,]+) out of (\d+), scored (\d+)(?:st|nd|rd|th)$/], ['scoredn', /^Scored (\d+)(?:st|nd|rd|th)$/],
+  ['spreadar', /^Score (.+): (\d+) students?$/, (m, F, P) => langFill(F.scorel, [0, m[1]], P) + ': ' + langFill(F.nstud, [0, m[2]], P)],
+  ['nscore', /^(\d+) scores?, (\d+) at ([\d.,]+) or less$/],
+  ['ovrar', /^(.+): ([\d.,]+) average\. (.+)$/, (m, F, P) => { const r = trPiece(m[3], P); return r == null ? null : m[1] + ': ' + langFill(F.avgis, [0, m[2]], P) + '. ' + r; }],
+  ['pprat', /^(.+): (\d+) papers? at ([\d.,]+)$/, (m, F, P) => m[1] + ': ' + langFill(F.ppat, [0, m[2], m[3]], P)], ['scoredon', /^Scored ([\d.,]+) on (.+)$/],
+  ['countedL', /^Counted: (\d+) of (\d+) students?\.(?: Left out: (.+)\.)?$/, (m, F, P) => langFill(F.countedA, [0, m[2], m[1]], P) + (m[3] ? ' ' + langFill(F.leftout, [0, m[3].split(', ').map(x => trPiece(x, P) || x).join(', ')], P) : '')],
+  ['nnot', /^(\d+) not scored yet$/], ['npartial', /^(\d+) partial$/], ['nmissing', /^(\d+) missing$/], ['nexcused', /^(\d+) excused$/], ['nleftout', /^(\d+) left out by you$/],
+  ['avgpct', /^Average ([\d.,]+%)$/], ['ptsof', /^Points, out of (\d+)\.( A half point counts with the whole number below it\.)?$/, (m, F, P) => langFill(F.ptsof, m, P) + (m[2] ? ' ' + (trPiece(m[2].trim(), P) || m[2]) : '')],
+  ['rowavg', /^Average out of (\d+|each row’s top), lowest first\. It uses every row with a score(?:, including the scored rows on (\d+) partial papers?)?\.(.*)$/, (m, F, P) => {
+    const rest = m[3].trim(), rs = rest ? rest.split(/(?<=\.) (?=[A-Z0-9])/).map(x => trPiece(x, P)) : []; if (rs.some(x => x == null)) return null;
+    return [/^\d+$/.test(m[1]) ? langFill(F.rowavg, m, P) : F.rowavgE, ...(m[2] ? [langFill(F.rowpart, [0, m[2]], P)] : []), ...rs].join(' '); }],
+  ['ovrar0', /^(.+): No scores yet\. No scores yet$/, (m, F, P) => { const r = trPiece('No scores yet', P); return r == null ? null : m[1] + ': ' + r + '. ' + r; }], ['rowsdone', /^(\d+) of (\d+) rows scored$/],
+  ['nowrit', /^Nothing written for ([\d.,]+)\.$/],
+  ['partw', /^Partial: (\d+) of (\d+) rows scored$/], ['partq', /^Partial: (\d+) of (\d+) questions marked in Quick mark$/], ['isgrade', /^Is “(.+)” the grade\?$/], ['nreads', /^(\d+) grades found on the paper$/],
+  ['yspaper', /^Your score is ([\d.,]+%?), the paper says (.+)$/], ['yswr', /^Your score is ([\d.,]+), the Word rubric says ([\d.,]+)$/], ['likename', /^Like “(.+)”\. Graded when it has a score, Feedback when it doesn’t\.$/],
+  ['rowless', /^(\d+) scores? read from the paper ha(?:s|ve) no rows, so (?:it isn’t|they aren’t) here\.$/],
+  ['skipn', /^(\d+) students? ha(?:s|ve) nothing marked, so they’re left out\.$/],
+  ['grpn', /^(.+) \((\d+)\)$/, (m, F, P) => { const h = trPiece(m[1], P); return h == null ? null : h + ' (' + m[2] + ')'; }],
+  ['fewdrift', /^(?:Only (\d+) papers? ha(?:s|ve)|No papers have) a time to go by so far\. It takes at least (\d+) before this will say anything about getting harder or softer\. Any pattern in fewer is mostly chance\.$/, (m, F, P) => (m[1] ? langFill(F.fewdrift, m, P) : F.nodrift) + ' ' + langFill(F.driftmin, [0, m[2]], P)],
+  ['nfready', /^(\d+) files? ready$/], ['fromn', /^From (\d+) students?, in their own folders, ready to (?:upload back on (.+?)|hand back)\.(?: (\d+) students? ha(?:s|ve) nothing marked, so they’re left out\.)?$/,
+    (m, F, P) => langFill(m[2] ? F.fromsys : F.fromhb, [0, m[1], m[2]], P) + (m[3] ? ' ' + langFill(F.skipn, [0, m[3]], P) : '')],
+  ['nthings', /^(\d+) things? to look at before you return these$/], ['lvmeans', /^What (\d+(?:\.5)?) means on this row$/], ['inall', /^Out of ([\d.,]+) in all\.$/],
+  ['stepsof', /^Steps of (\d+) \((.+)\)$/], ['expnow', /^Export (.+)’s paper now$/], ['expone', /^Export (.+)’s paper$/],
+  ['askai', /^Ask (.{1,30})$/], ['backai', /^Bring back (.{1,30})’s feedback$/], ['cmtfor', /^Comment for (.+?)( \(optional\)\. It shows on the Grades tab so you can copy it\.)?$/, (m, F, P) => langFill(m[2] ? F.cmtforL : F.cmtfor, [0, m[1] === 'the student' ? (trPiece('the student', P) || m[1]) : m[1]], P)],
+  ['clickcp', /^Click any score or comment to copy it, then paste it into (.+)\. Click a name to open that paper\.( Pick a roster under Setup to see this list in roster order\.)?$/, (m, F, P) => langFill(F.clickcp, [0, m[1] === 'your gradebook' ? (trPiece('your gradebook', P) || m[1]) : m[1]], P) + (m[2] ? ' ' + (trPiece(m[2].trim(), P) || m[2]) : '')],
+  ['rosterord', /^(.+) roster order$/], ['nscored', /^(\d+) of (\d+) scored$/],
   ['ariaband', /^(?=.*(?:class middle \d|missing)).+ (?:\d+%|missing|–)(?:, class middle \d+%)?$/, (m, F, P) => m[0].replace(/ missing(?=, class middle |\. |$)/g, ' ' + (trPiece('missing', P) || 'missing')).replace(/, class middle (\d+%)(?=\. |$)/g, (x, v) => langFill(F.cmid, [0, v], P))],
   ['ariamove', /^.+ (?:up|down) [\d.]+$/, (m, F, P) => m[0].replace(/ (up|down) ([\d.]+)(?=, |$)/g, (x, w, v) => ' ' + langFill(w === 'up' ? F.mvup : F.mvdown, [0, v], P))],
   ['ariastack', /^.+: \d+ (?:below 60|\d+ to \d+)(?:[,.] .+)?$/, (m, F, P) => m[0].replace(/(\d+) below 60(?=[,.] |$)/g, (x, n) => langFill(F.below60, [0, n], P)).replace(/(\d+) (\d+) to (\d+)(?=[,.] |$)/g, (x, n, a, b) => langFill(F.rng, [0, n, a, b], P))],
@@ -6554,7 +6678,7 @@ const LANG_FILLS = [
 function trPiece(k, P, ctx) {
   if (ctx && Object.prototype.hasOwnProperty.call(P.words, ctx + '|' + k)) return P.words[ctx + '|' + k];
   if (Object.prototype.hasOwnProperty.call(P.words, k)) return P.words[k];
-  const fills = () => { if (P.fill) for (const [key, re, fn] of LANG_FILLS) { const m = re.exec(k); if (!m) continue; const hit = fn ? fn(m, P.fill, P) : P.fill[key] != null ? langFill(P.fill[key], m, P) : null; if (hit != null) return hit; } return null; };
+  const fills = () => { if (P.fill) for (const [key, re, fn] of LANG_FILLS) { const m = re.exec(k); if (!m) continue; let hit = null; try { hit = fn ? fn(m, P.fill, P) : P.fill[key] != null ? langFill(P.fill[key], m, P) : null; } catch { hit = null; } if (hit != null) return hit; } return null; };   // a language without a line's wording leaves it in English
   if (ctx) { const hit = fills(); if (hit != null) return hit; }
   for (const [re, to] of P.rules) { const m = re.exec(k); if (!m) continue; const hit = typeof to === 'function' ? to(m) : k.replace(re, to); if (hit != null) return hit; }
   return ctx ? null : fills();
@@ -6566,8 +6690,9 @@ function trWith(s, P, ctx) {
   return hit == null ? s : s.replace(k, () => hit);
 }
 const tr = (s, ctx) => LANG_PACK && typeof s === 'string' ? trWith(s, LANG_PACK, ctx) : s;
-const LANG_ROOTS = '#rail, #vHome, #vHelp, #welcome, #findDlg, #setLang, #vSettings, #vClass .clshead, #vClass .ctabs, #vClass .ctools, #vClass .board, #classHint, #dlgBox[data-lg], #askDlg[data-lg], ' + ['gradebook', 'students', 'attendance', 'seating', 'missing', 'student', 'charts', 'goals', 'reports'].map(t => '#classPanel[data-tab="' + t + '"]').join(', ');
-const LANG_RAW = 'script, style, textarea, [contenteditable], [data-raw], .kname, #railClasses .rl, .wllang, .tbn, .trow:not(.none) b, .hlpa p:not(.hlpgo), .hlpa ol, kbd, .rbrand, .wlbrand, #homeDate, .aiWord, .updnotes, #vSettings .nt b, #meSys option:not([value]), #meAi option:not([value]), #wlSys option:not([value]), #vClass .clshead h1, #vClass .uhead .nm, #vClass .card .t, #classPanel .bklink, #classPanel .bkpop > b, #bkaRows td:first-child, #bkaUnit option:not([value=""]), #peopleTbl td.nm a, .attname, #attDate, .attunk a, .misw, .mishead h3, .misaddr, .seat span, .seatchip, #seatSel b, .tsvg .tlb, #aClass option:not([value=""]), #aUnit option:not([value=""])';
+const LANG_ROOTS = '#rail, #vHome, #vHelp, #welcome, #findDlg, #setLang, #vSettings, #vClass .clshead, #vClass .ctabs, #vClass .ctools, #vClass .board, #classHint, #dlgBox[data-lg], #askDlg[data-lg], ' +
+  '#app .top, #side, #tools, #paper .who, #paper .lchip, #paper .rchip, #grade, #zoomPill, #colL, #colR, #openRep, ' + ['gradebook', 'students', 'attendance', 'seating', 'missing', 'student', 'charts', 'goals', 'reports'].map(t => '#classPanel[data-tab="' + t + '"]').join(', ');
+const LANG_RAW = 'script, style, textarea, [contenteditable], [data-raw], .kname, #railClasses .rl, .wllang, .tbn, .trow:not(.none) b, .hlpa p:not(.hlpgo), .hlpa ol, kbd, .rbrand, .wlbrand, #homeDate, .aiWord, .updnotes, #vSettings .nt b, #meSys option:not([value]), #meAi option:not([value]), #wlSys option:not([value]), #vClass .clshead h1, #vClass .uhead .nm, #vClass .card .t, #classPanel .bklink, #classPanel .bkpop > b, #bkaRows td:first-child, #bkaUnit option:not([value=""]), #peopleTbl td.nm a, .attname, #attDate, .attunk a, .misw, .mishead h3, .misaddr, .seat span, .seatchip, #seatSel b, .tsvg .tlb, #aClass option:not([value=""]), #aUnit option:not([value=""]), #railClasses .rnav, #classSel option:not([value=""]), #crumbClass, #stuList .nm, #paper .who h2, #paper .fhead > span:first-child, #grade .cn > span';
 const LANG_ATTRS = ['title', 'aria-label', 'placeholder'];
 const langCtx = el => { const c = el.closest('[data-lc]'); return c ? c.dataset.lc : ''; };
 const LANG_DONE = new WeakMap();
@@ -6623,8 +6748,8 @@ const HELP = [
       'The papers are kept in this browser, so the set is on Today under **To mark** the next time you open the app.'],
     go: ['Go to Today', '#/'], words: 'start begin import upload zip download submissions drop folder' },
   { id: 'try-sample', sec: 'start', q: 'Can I try it without real papers?',
-    a: ['Yes. **Try it with a sample class** makes a class of made-up students with papers to mark, score and hand back. Find it in the welcome, or type “sample” in Find anything.',
-      'A card on Today removes the sample class in one click when you are done.'],
+    a: ['Yes. **Try it with a sample class** opens two made-up classes part-way through a term, with marked papers, a gradebook, a timetable and lessons. Find it in the welcome, or type “sample” in Find anything.',
+      'The sample is kept apart from your own work. **Leave the sample** in the sidebar clears it in one click, and your own work is as you left it.'],
     words: 'demo example practice test made-up' },
   { id: 'find-anything', sec: 'start', q: 'What is Find anything?',
     a: ['One box that reaches every student, assignment, tool, setting and help answer. Open it from the top of the sidebar, or press **Ctrl K** (**⌘K** on a Mac).',
@@ -6656,7 +6781,7 @@ const HELP = [
     go: ['Open School resources', '#/school'], words: 'handbook calendar policy policies portal bookmark link file document resources staff bell schedule forms class course lesson links website textbook' },
   { id: 'language', sec: 'start', q: 'Can I use the app in another language?',
     a: ['Yes. Choose one in Settings, Display, **App language**, or at the top of the welcome. The page is drawn again in the language you pick.',
-      'So far a language other than English covers the sidebar, Today, the welcome, Settings, a class page with all its tabs and most boxes it opens, Find anything, Help and the feedback page students get in a returned paper. The other screens are still in English.',
+      'So far a language other than English covers the sidebar, Today, the welcome, Settings, a class page with all its tabs and most boxes it opens, the marking screen with its Grades, Insights and Return tabs, Find anything, Help and the feedback page students get in a returned paper. The other screens are still in English.',
       'Class names, student names and anything else you typed are never translated.'],
     go: ['Open Settings, Display', '#/settings/display'], words: 'spanish español idioma language translate translation' },
   { id: 'scan-split', sec: 'start', q: 'I scanned the whole class as one file. How do I split it?',
@@ -6924,7 +7049,20 @@ async function settleAll() {
 async function toView(v) { await settleAll(); L.open = null; L.unit = null; L.doc = null; L.backTo = null; L.view = v; renderLessons(); window.scrollTo(0, 0); }
 async function leaveTo(url) { await settleAll(); location.href = url; }
 
+/* ---------- the sample (src/samplemode.js): the same notice as on the grading page, and the way out ---------- */
+function plSample() { return !!(window.__gsSample && window.__gsSample.on); }
+function sampleRailRender() {
+  if (!plSample()) return;
+  let el = $('#railSample');
+  if (!el) { el = document.createElement('div'); el.id = 'railSample'; el.className = 'rsample'; $('#rail').insertBefore(el, $('#findBtn')); }
+  const h = '<span class="rl"><b>Sample</b>Everything here is made up. Your own work is kept apart.</span><button class="btn sm" data-sampleleave title="Leave the sample. It is cleared, and your own work is as you left it."><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 5h4a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1h-4M10 8l-4 4 4 4M6 12h9"/></svg><span class="rl">Leave the sample</span></button>';
+  if (el.dataset.h !== h) { el.dataset.h = h; el.innerHTML = h; }
+}
+document.addEventListener('click', e => { if (e.target.closest('[data-sampleleave]')) { e.preventDefault(); window.__gsSample.leave(); location.href = gsUrl('#/'); } });
+if (plSample() && !window.__gsSample.built) location.replace(gsUrl('#/'));
+
 function railRender() {
+  sampleRailRender();
   const classes = (L.setup && L.setup.classes) || [];
   const h = classes.map(c => '<a class="rnav" href="' + esc(classUrl(c)) + '" title="' + esc(c.name) + ': its assignments, gradebook and students"><span class="rdot" style="background:' + esc(c.color || '#1F6FB2') + '"></span><span class="rl rname">' + esc(c.name) + '</span></a>').join('');
   const box = $('#railClasses'); if (box.dataset.h !== h) { box.dataset.h = h; box.innerHTML = h; }

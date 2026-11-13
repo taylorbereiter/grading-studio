@@ -729,9 +729,9 @@ test('the pre-export check names unfinished scores, no paper, disagreements, unm
   assert.match(c.unfinished[1].note, /Not scored yet/);
   assert.deepEqual(names(c.noPaper), ['Zed Nopaper'], 'marked missing isn’t asked about');
   assert.deepEqual(c.disagree.map(o => [o.name, o.note]), [['Cleo Fixture', 'Your score is 9, the paper says 9.5']]);
-  assert.ok(c.unmarked.some(o => o.name === 'Aria Testwell' && o.note === 'Essay.pdf'));
-  assert.ok(c.unmarked.some(o => o.name === 'Dov Madeup' && o.note === 'Essay.docx'), 'Word files count');
-  assert.ok(!c.unmarked.some(o => o.note === 'notes.txt'), 'other files can’t be marked');
+  assert.ok(c.unmarked.some(o => o.name === 'Aria Testwell' && o.fname === 'Essay.pdf'));
+  assert.ok(c.unmarked.some(o => o.name === 'Dov Madeup' && o.fname === 'Essay.docx'), 'Word files count');
+  assert.ok(!c.unmarked.some(o => o.fname === 'notes.txt'), 'other files can’t be marked');
   assert.ok(!c.unmarked.some(o => o.name === 'Yan Gone'));
   assert.ok(!c.unmarked.some(o => o.name === 'Cleo Fixture'), 'a grade on the paper counts as marked');
   assert.deepEqual(c.doubts.map(o => o.name), ['Bram Sample']);
