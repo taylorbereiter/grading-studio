@@ -206,13 +206,16 @@ async function applyRubricPage(only) {
       if (keep && await keepEdit(st, nf) && keep.path !== path) await dropEdit(st, keep);
       continue;
     }
-    if (!bytes || !n || !real.length) continue;
-    const dir = real[0].path.includes('/') ? real[0].path.slice(0, real[0].path.lastIndexOf('/') + 1) : st.key + '/';
+    if (!bytes || !n) continue;
+    // with nothing of theirs to sit in (only a video, or every page taken out), the rubric is a file of its own on the paper
+    const any = real[0] || st.files.find(f => f.path.includes('/')) || (old && old.path.includes('/') ? old : null);
+    const dir = any && any.path.includes('/') ? any.path.slice(0, any.path.lastIndexOf('/') + 1) : st.key + '/';
     const f = { path: dir + RUBRIC_NAME, name: 'Rubric page', kind: 'pdf', data: bytes, size: bytes.length, marks: old && old.path === dir + RUBRIC_NAME ? old.marks : {}, hand: old && old.hand, virtual: true, numPages: n };
     st.files.push(f);
-    if (st.layout && st.layout.length) {
+    if (st.layout) {
       const pg = [...Array(n).keys()].map(p => [f.path, p]);
-      st.layout[0].pages = setup.rubricPos === 'start' ? pg.concat(st.layout[0].pages) : st.layout[0].pages.concat(pg);
+      if (st.layout.length) st.layout[0].pages = setup.rubricPos === 'start' ? pg.concat(st.layout[0].pages) : st.layout[0].pages.concat(pg);
+      else st.layout.push({ name: f.name, file: f.path, pages: pg });
     }
   }
 }
