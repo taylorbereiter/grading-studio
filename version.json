@@ -1,23 +1,23 @@
 {
  "version": "1.28.13",
- "build": "2043ff7fc959",
+ "build": "b50e33d1523e",
  "notes": [
   "Add a video file, not only a link: + Add, A video… keeps the file in this browser at any length while the computer has room, and partners share it. Drag the bar under a video to make it as big as you like.",
   "Partners and videos (in Setup, and on No papers when you open an assignment) lists the whole class: pick partners and add each video in one place. + Clip now starts where the video is.",
   "Bring in a rubric from Edit or the Open box on any assignment. Rows and what each level means are read from a Word or PDF table where they can be."
  ],
  "files": {
-  "index.html": "69c6ce8225e97336a483c5145a561ad55ffeb9ab45b27d81964e778b9d4b5274",
-  "planner.html": "82406e7b22e5eeaaa8bfe5bc74d63b5339aff7c816e3c7153e34230d5ac8c2fe"
+  "index.html": "124ba13695e1b81c203e5d21fb2d111be0b40d88ff174cf55da161670b455680",
+  "planner.html": "577182db1cae60b8c0f6984ebe6eb30cdf9e584169a2ee0da8ac38802ad2cbeb"
  },
  "langs": {
-  "lang/zh-Hant.js": "03deea8f12e0ea7cf38149f37712bc42bf8fac7ea15adc718e9ebe79ec8228ef",
-  "lang/zh-Hans.js": "d7329e7ef5556e0d6d65a5792dbd147b11b51eab60c9590c2011397cf18e3e5e",
-  "lang/es.js": "7b8f0db0bafb16345caefc850a29ddc937c6eb9a4b404732121f45964be3afa9",
-  "lang/fr.js": "b36a8449b6caa9ace883ef34d0266561c882e844f2fbcb76f292cd2672b12326",
-  "lang/de.js": "1bb683ff96cb97ad73b832f9635a38ee39a00391be2a527fd25d6af8eb326b43",
-  "lang/pt-BR.js": "c6d59cce3e51830c40feecdc92a1fd0026041914aab8b71e3355f756070ba48b",
-  "lang/ja.js": "a8478f13740c8c6a4b3dc620502f34c128d2ae758b4c467d3596427836448013",
-  "lang/ko.js": "e2290ab4c1a613456122c4dc58d3655b3fbb9df321d74a887128aa3032012ce7"
+  "lang/zh-Hant.js": "7e9b54bb9d4fca3b8e331dbba23ab835df3e9eaa36bd997125b362579b3f4e6b",
+  "lang/zh-Hans.js": "d1ad11ed0b0674850196152759512a89f3566028131b1b1ba1aceb2e18e090ce",
+  "lang/es.js": "b4555341a73a6a6c745bee874c27cc4e26b73f11973450bc3f64552210ac15e7",
+  "lang/fr.js": "2bb27d2ea9794f5b4268d45d928f5a025b015d3dbff4e21ed2e549f3c98c5cb2",
+  "lang/de.js": "ffd8f62e13f01566b58e36bd2f0603fcbedca0588a75cb1aca0831df2b129d9f",
+  "lang/pt-BR.js": "39a0147a5b1d0c210f2ea81f5e6107a7f4d5a1efc356ab7281cad231e6d12fff",
+  "lang/ja.js": "5ba169ba2614407f61c35284c4b8d3f18385543e5fbd34916faee77c5961b987",
+  "lang/ko.js": "533ceef8ab7b42e7e28fd0ff53ea32584d5fa0717eb6db2b3c51002b43e38521"
  }
 }

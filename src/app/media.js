@@ -17,14 +17,14 @@ function mediaCard(st, f, kept) {
     (vid ? '<video controls preload="metadata" playsinline></video>' : '<audio controls preload="metadata"></audio>') +
     '<div class="mctl"><button class="btn sm" data-skip="-10">◀◀ 10s</button><button class="btn sm" data-skip="10">10s ▶▶</button>' +
     '<span class="seg">' + [1, 1.25, 1.5, 2].map(r => '<button data-rate="' + r + '" aria-pressed="' + (r === (store.get('gs.rate', 1))) + '">' + r + '×</button>').join('') + '</span>' +
-    '<button class="btn sm" data-stamp title="Adds the time to your comment, like [2:15]">+ Time to comment</button>' +
+    '<button class="btn sm" data-stamp title="Adds the time to your comment, like [2:15]">+ Time to comment</button>' + (vid ? VROT_BTN : '') +
     (CAN_TRANSCRIBE && !kept ? '<button class="btn sm" data-tr>' + (f.tr ? 'Transcript ✓' : 'Make transcript') + '</button>' : '') + '</div></div>' +
     '<div class="trans" ' + (f.tr ? '' : 'hidden') + '></div><p class="muted trstat" style="font-size:13px;margin:6px 0 0"></p>';
   const m = el.querySelector('audio,video');
   m.src = kept ? kept.url : mediaUrl(f); m.playbackRate = store.get('gs.rate', 1);
   m.onratechange = () => {};
   mediaWatch(el, m, kept ? { name: kept.name, data: kept.blob, kind: 'media', size: kept.blob.size } : f);
-  if (vid) vidGrip(el.querySelector('.mstick'), m);
+  if (vid) { vidGrip(el.querySelector('.mstick'), vidRot(m, f)); el.querySelector('[data-vrot]').onclick = () => vidTurn(st, f, el); }
   if (!curMedia) curMedia = m;
   clipStrip(el.querySelector('.mstick'), f, () => m, c => clipRun(m, c));
   const tr = el.querySelector('.trans');

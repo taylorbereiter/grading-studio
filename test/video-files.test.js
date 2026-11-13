@@ -274,3 +274,42 @@ test('a rubric copy brought in after the notes pages are taken out or removed go
   assert.deepEqual(page.errors, []);
   await close();
 });
+
+test('a video filmed sideways turns the right way up, a quarter turn at a time, kept for that video (partners share the link), and stays turned', async () => {
+  const { page, close } = await openApp(browser);
+  await noWeb(page);
+  const url = u => strToU8('[InternetShortcut]\r\nURL=' + u + '\r\n');
+  await openZip(page, zipOf({
+    'Ada Example/Outline.pdf': await makePaper({ title: 'Ada outline' }),
+    'Aria Testwell/Speech.url': url('https://www.youtube.com/watch?v=madeup12345'),
+    'Bram Sample/Speech.url': url('https://drive.google.com/file/d/madeupDriveId123/view'),
+  }), 'Speech.zip');
+  await goToStudent(page, await idx(page, 'Aria Testwell'));
+  await page.waitForSelector('#paper .vlink [data-vrot]');
+  await page.click('#paper .vlink [data-vrot]');   // turns, and opens the player
+  await page.waitForSelector('#paper .vrotbox.on iframe');
+  const look = () => page.$eval('#paper .vrotbox', b => { const f = b.firstElementChild, r = b.getBoundingClientRect(), q = f.getBoundingClientRect(); return { turn: b.dataset.turn, t: f.style.transform, bw: Math.round(r.width), bh: Math.round(r.height), fw: Math.round(q.width), fh: Math.round(q.height) }; });
+  let L = await look();
+  assert.equal(L.turn, '90'); assert.equal(L.t, 'rotate(90deg)');
+  assert.ok(Math.abs(L.fw - L.bw) <= 2 && Math.abs(L.fh - L.bh) <= 2, 'the turned player fills the box exactly: ' + JSON.stringify(L));
+  assert.equal(await page.$('#paper .vrnote'), null, 'YouTube says nothing about captions');
+  for (const want of ['180', '270', '0', '90']) { await page.click('#paper .vlink [data-vrot]'); assert.equal((await look()).turn, want); }
+  assert.deepEqual(await page.evaluate(() => window.__gs.state().batch.vrot), { 'https://www.youtube.com/watch?v=madeup12345': 90 });
+  // the size bar still drags the turned video bigger
+  const g = await (await page.$('#paper .vgrip')).boundingBox(), h0 = L.bh;
+  await page.mouse.move(g.x + g.width / 2, g.y + g.height / 2); await page.mouse.down(); await page.mouse.move(g.x + g.width / 2, g.y + 120, { steps: 4 }); await page.mouse.up();
+  await page.waitForFunction(h0 => document.querySelector('#paper .vrotbox').getBoundingClientRect().height > h0 + 60, {}, h0);
+  L = await look(); assert.ok(Math.abs(L.fw - L.bw) <= 2 && Math.abs(L.fh - L.bh) <= 2, 'still fits after resizing: ' + JSON.stringify(L));
+  // Drive draws its own captions: turned, the card says they turn with it
+  await goToStudent(page, await idx(page, 'Bram Sample'));
+  await page.waitForSelector('#paper .vlink [data-vrot]');
+  assert.equal(await page.$eval('#paper .vrnote', e => e.hidden), true);
+  await page.click('#paper .vlink [data-vrot]');
+  assert.equal(await page.$eval('#paper .vrnote', e => e.hidden), false);
+  await settle(page);
+  await page.reload(); await page.waitForSelector('#vHome [data-kopen]'); await page.click('#vHome [data-kopen]');
+  await page.waitForFunction(() => { const s = window.__gs.state(); return s.batch && s.batch.students.length === 3 && !document.querySelector('#app').hidden; }, { timeout: 60000 });
+  assert.deepEqual(await page.evaluate(() => window.__gs.vrotOf(window.__gs.state().batch.students.find(s => s.key === 'Aria Testwell').files[0])), 90, 'kept after reopening');
+  assert.deepEqual(page.errors, []);
+  await close();
+});

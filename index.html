@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"03deea8f","zh-Hans":"d7329e7e","es":"7b8f0db0","fr":"b36a8449","de":"1bb683ff","pt-BR":"c6d59cce","ja":"a8478f13","ko":"e2290ab4"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script></head><body>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"7e9b54bb","zh-Hans":"d1ad11ed","es":"b4555341","fr":"2bb27d2e","de":"ffd8f62e","pt-BR":"39a0147a","ja":"5ba169ba","ko":"533ceef8"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script></head><body>
 <title>Grading Studio</title>
 <script>/* ---------------- the sample: a made-up school week, kept apart from everything real ----------------
    Runs first on both pages, before anything reads saved work. While the sample is open (gs.sampleOn in the browser's real storage),
@@ -3174,6 +3174,11 @@ html.vidtall #paper .mstick{position:relative;top:auto}
 .pvchip[aria-pressed=true]{background:var(--accent);border-color:var(--accent);color:var(--surface)}
 .pvchip:disabled{opacity:.7;cursor:default}
 @media (max-width:640px){.pvrow{grid-template-columns:1fr}.pvpbtn{justify-self:start}}
+/* a video turned the right way up: the box keeps the player's usual size and the player turns inside it */
+.vrotbox{position:relative}
+.vrotbox.on{overflow:hidden;height:38vh;min-height:220px;border-radius:var(--corner-3);background:var(--fg)}
+#paper .media:not(.vlink) .vrotbox.on{height:36vh}
+html.vidsized #paper .vrotbox.on{height:var(--vid-h);min-height:0}
 /* Settings, My setup: the two numbered steps, and the preview of what a setup would change (src/setupin.js). */
 .stpsteps{list-style:none;counter-reset:stp;margin:var(--space-3) 0 0;padding:0;display:grid;gap:var(--space-4)}
 .stpsteps li{counter-increment:stp;display:grid;grid-template-columns:28px 1fr;gap:var(--space-3);align-items:start}
@@ -5900,6 +5905,7 @@ function saveNow(leaving) {
   clearTimeout(saveT); saveDue = false;
   if (batch.revs && tabForgot(batch)) return tabLetGo();
   const data = { t: Date.now(), carry: batch.carry, cur, ck: batch.students[cur] && batch.students[cur].key, setup, cls: batch.classId, share: batch.share, drive: batch.drive, light: batch.light, lightOpt: batch.lightOpt, lightPg: batch.lightPg, lightPgL: batch.lightPgL, anon: batch.anon, moved: batch.moved, removed: batch.removed, refSkip: batch.refSkip, quiz: batch.quiz, groups: batch.groups && batch.groups.length ? batch.groups : undefined, returned: batch.returned || undefined, read: (batch.read = paperReads()), s: {} };
+  if (batch.vrot) data.vrot = batch.vrot;   // videos turned the right way up (video.js); no key at all without one
   if (batch.clips && batch.clips.length) data.clips = batch.clips;   // parts of videos to show the class (video.js); no key at all without one
   if (batch.goal) data.goal = batch.goal;   // a learning goal for the whole score (goals.js); no key at all without one
   for (const st of batch.students) {
@@ -5972,6 +5978,7 @@ function restore() {
   if (data.returned) batch.returned = data.returned;
   batch.groups = data.groups || [];
   batch.clips = data.clips || [];
+  if (data.vrot) batch.vrot = data.vrot; else delete batch.vrot;
   groupSync();
   if (data.drive && !batch.drive) batch.drive = data.drive;
   batch.restoredCur = Math.min(data.cur || 0, batch.students.length - 1); batch.restoredKey = data.ck;
@@ -6175,7 +6182,7 @@ const fileByPath = (st, path) => st.files.find(f => f.path === path);
 function defaultLayout(st) {
   const L = st.files.filter(f => viewable(f) && !f.virtual && f.numPages).map(f => ({ name: f.name, file: f.path, pages: [...Array(f.numPages).keys()].map(p => [f.path, p]) }));
   const v = st.files.find(f => f.virtual && viewable(f));
-  if (v && L.length) { const pg = [...Array(v.numPages).keys()].map(p => [v.path, p]); L[0].pages = setup.rubricPos === 'start' ? pg.concat(L[0].pages) : L[0].pages.concat(pg); }
+  if (v && v.numPages) { const pg = [...Array(v.numPages).keys()].map(p => [v.path, p]); if (!L.length) L.push({ name: v.name, file: v.path, pages: pg }); else L[0].pages = setup.rubricPos === 'start' ? pg.concat(L[0].pages) : L[0].pages.concat(pg); }
   return L;
 }
 const layoutOf = st => st.layout || defaultLayout(st);
@@ -7759,13 +7766,15 @@ async function applyRubricPage(only) {
       if (keep && await keepEdit(st, nf) && keep.path !== path) await dropEdit(st, keep);
       continue;
     }
-    if (!bytes || !n || !real.length) continue;
-    const dir = real[0].path.includes('/') ? real[0].path.slice(0, real[0].path.lastIndexOf('/') + 1) : st.key + '/';
+    if (!bytes || !n) continue;
+    const any = real[0] || st.files.find(f => f.path.includes('/')) || (old && old.path.includes('/') ? old : null);
+    const dir = any && any.path.includes('/') ? any.path.slice(0, any.path.lastIndexOf('/') + 1) : st.key + '/';
     const f = { path: dir + RUBRIC_NAME, name: 'Rubric page', kind: 'pdf', data: bytes, size: bytes.length, marks: old && old.path === dir + RUBRIC_NAME ? old.marks : {}, hand: old && old.hand, virtual: true, numPages: n };
     st.files.push(f);
-    if (st.layout && st.layout.length) {
+    if (st.layout) {
       const pg = [...Array(n).keys()].map(p => [f.path, p]);
-      st.layout[0].pages = setup.rubricPos === 'start' ? pg.concat(st.layout[0].pages) : st.layout[0].pages.concat(pg);
+      if (st.layout.length) st.layout[0].pages = setup.rubricPos === 'start' ? pg.concat(st.layout[0].pages) : st.layout[0].pages.concat(pg);
+      else st.layout.push({ name: f.name, file: f.path, pages: pg });
     }
   }
 }
@@ -9511,14 +9520,14 @@ function mediaCard(st, f, kept) {
     (vid ? '<video controls preload="metadata" playsinline></video>' : '<audio controls preload="metadata"></audio>') +
     '<div class="mctl"><button class="btn sm" data-skip="-10">◀◀ 10s</button><button class="btn sm" data-skip="10">10s ▶▶</button>' +
     '<span class="seg">' + [1, 1.25, 1.5, 2].map(r => '<button data-rate="' + r + '" aria-pressed="' + (r === (store.get('gs.rate', 1))) + '">' + r + '×</button>').join('') + '</span>' +
-    '<button class="btn sm" data-stamp title="Adds the time to your comment, like [2:15]">+ Time to comment</button>' +
+    '<button class="btn sm" data-stamp title="Adds the time to your comment, like [2:15]">+ Time to comment</button>' + (vid ? VROT_BTN : '') +
     (CAN_TRANSCRIBE && !kept ? '<button class="btn sm" data-tr>' + (f.tr ? 'Transcript ✓' : 'Make transcript') + '</button>' : '') + '</div></div>' +
     '<div class="trans" ' + (f.tr ? '' : 'hidden') + '></div><p class="muted trstat" style="font-size:13px;margin:6px 0 0"></p>';
   const m = el.querySelector('audio,video');
   m.src = kept ? kept.url : mediaUrl(f); m.playbackRate = store.get('gs.rate', 1);
   m.onratechange = () => {};
   mediaWatch(el, m, kept ? { name: kept.name, data: kept.blob, kind: 'media', size: kept.blob.size } : f);
-  if (vid) vidGrip(el.querySelector('.mstick'), m);
+  if (vid) { vidGrip(el.querySelector('.mstick'), vidRot(m, f)); el.querySelector('[data-vrot]').onclick = () => vidTurn(st, f, el); }
   if (!curMedia) curMedia = m;
   clipStrip(el.querySelector('.mstick'), f, () => m, c => clipRun(m, c));
   const tr = el.querySelector('.trans');
@@ -14387,7 +14396,8 @@ async function carryInto(e, list) {
   const scan = c.unchecked || !d.scan ? undefined : mapPaths(d.scan, Object.fromEntries(Object.entries(c.map).filter(([, to]) => !c.flags[to])));
   const groups = d.groups && d.groups.map(g => ({ k: g.k.map(k => keyOf.get(nfc(k)) || k), p: Object.fromEntries(Object.entries(g.p || {}).map(([k, p]) => [keyOf.get(nfc(k)) || k, c.map[p] || p])) }));
   const clips = d.clips && d.clips.map(x => (x.p ? { ...x, p: c.map[x.p] || x.p } : x));   // a clip on a video file follows the file to its new name
-  batch.keptWork = { ...d, t: Date.now(), s, moved, removed, carry, scan, share, groups, clips, lightPg: mapLit(d.lightPg, c.map), lightPgL: mapLit(d.lightPgL, c.map) };
+  const vrot = d.vrot && Object.fromEntries(Object.entries(d.vrot).map(([k, v]) => [c.map[k] || k, v]));   // a video file's turn follows it to its new name
+  batch.keptWork = { ...d, t: Date.now(), s, moved, removed, carry, scan, share, groups, clips, vrot, lightPg: mapLit(d.lightPg, c.map), lightPgL: mapLit(d.lightPgL, c.map) };
   batch.carry = carry;
   await carryExtras(from, carry);
   const m = keptMeta.get(from);
@@ -18259,7 +18269,7 @@ function decideRec(a, b, ta, tb) {
   return x === y ? { pick: 'ask' } : { pick: x > y ? 'a' : 'b', by: 'date' };
 }
 const BLANK_REC = () => ({ f: {}, g: { rubric: [], points: '', comment: '' }, h: {} });
-const WORK_SET = ['carry', 'setup', 'cls', 'share', 'drive', 'light', 'lightOpt', 'lightPg', 'lightPgL', 'anon', 'moved', 'removed', 'refSkip', 'quiz', 'groups', 'returned', 'goal', 'clips'];
+const WORK_SET = ['carry', 'setup', 'cls', 'share', 'drive', 'light', 'lightOpt', 'lightPg', 'lightPgL', 'anon', 'moved', 'removed', 'refSkip', 'quiz', 'groups', 'returned', 'goal', 'clips', 'vrot'];
 const setOf = w => { const o = {}; if (w) for (const k of WORK_SET) if (w[k] !== undefined) o[k] = w[k]; return o; };
 const setV = w => w && w.sv ? w.sv : (h => h ? { ['~' + h]: 1 } : {})(hashOf(setOf(w)));
 const partV = (w, k) => (w.pv && w.pv[k]) || (h => h ? { ['~' + h]: 1 } : {})(hashOf(w[k]));
@@ -19755,7 +19765,7 @@ function sideHtml(r, t, anon, crit) {
   if (out.length === 1) out.push('<div class="muted">No score, comment or marks</div>');
   return out.join('');
 }
-const PART_SAY = { setup: 'Rubric setup', cls: 'Class', share: 'Cover boxes and share codes', drive: 'Google Drive link', light: 'Lighting', lightOpt: 'Lighting', lightPg: 'Lighting', lightPgL: 'Lighting', anon: 'Anonymous grading', moved: 'Moved files', removed: 'Removed and replaced files', refSkip: 'Which readings each student sees', quiz: 'Quick mark boxes', groups: 'Group work', clips: 'Video clips', returned: 'Returned to students', carry: 'Flags on new and changed files', scan: 'Your answers about scanned pages' };
+const PART_SAY = { setup: 'Rubric setup', cls: 'Class', share: 'Cover boxes and share codes', drive: 'Google Drive link', light: 'Lighting', lightOpt: 'Lighting', lightPg: 'Lighting', lightPgL: 'Lighting', anon: 'Anonymous grading', moved: 'Moved files', removed: 'Removed and replaced files', refSkip: 'Which readings each student sees', quiz: 'Quick mark boxes', groups: 'Group work', clips: 'Video clips', vrot: 'Videos turned the right way up', returned: 'Returned to students', carry: 'Flags on new and changed files', scan: 'Your answers about scanned pages' };
 const partNames = list => [...new Set(list.map(k => PART_SAY[k] || k))].join(', ');
 const scaleSay = su => !rubricsDiffer(su, { ...su, scale: null }) ? 'No scale: percent is the plain share of points' : !rubricsDiffer(su, { ...su, scale: SCALE12 }) ? 'The usual grading scale' : 'A grading scale of its own';
 function partSide(part, v, other, t, anon) {
@@ -21788,6 +21798,34 @@ const vidRef = data => { if (!data || !data.length || data.length > 4000) return
 const vidBytes = (id, name, size) => new TextEncoder().encode('[InternetShortcut]\r\nURL=gs-video:' + id + '\r\nName=' + String(name || '').replace(/[\r\n]+/g, ' ').slice(0, 120) + '\r\nSize=' + (size || 0) + '\r\n');
 const linkKey = f => { const v = vidRef(f.data); return v ? 'gs-video:' + v : linkOf(f.data); };
 
+/* ---------- a video filmed sideways, turned the right way up ---------- */
+const vrotKey = f => (f.kind === 'link' ? linkKey(f) : f.path);
+const vrotOf = f => (batch && batch.vrot && batch.vrot[vrotKey(f)]) || 0;
+const VROT_BTN = '<button class="btn sm" data-vrot title="Turn the video a quarter turn, for one filmed sideways" aria-label="Turn the video">⟳ Turn</button>';
+function vidRot(player, f) {
+  const box = document.createElement('div'); box.className = 'vrotbox';
+  player.replaceWith(box); box.appendChild(player);
+  const fit = () => {
+    const d = vrotOf(f), side = d === 90 || d === 270;
+    box.classList.toggle('on', !!d); box.dataset.turn = d;
+    if (!d) { player.style.cssText = ''; return; }
+    const W = box.clientWidth, H = box.clientHeight;
+    player.style.cssText = side ? 'position:absolute;width:' + H + 'px;height:' + W + 'px;left:' + (W - H) / 2 + 'px;top:' + (H - W) / 2 + 'px;max-height:none;min-height:0;transform:rotate(' + d + 'deg)'
+      : 'position:absolute;inset:0;width:100%;height:100%;max-height:none;min-height:0;transform:rotate(180deg)';
+  };
+  new ResizeObserver(fit).observe(box);
+  box.vfit = fit; fit();
+  return box;
+}
+function vidTurn(st, f, card) {
+  const k = vrotKey(f), d = (vrotOf(f) + 90) % 360;
+  batch.vrot ||= {}; if (d) batch.vrot[k] = d; else delete batch.vrot[k];
+  if (!Object.keys(batch.vrot).length) delete batch.vrot;
+  for (const b of document.querySelectorAll('#paper .vrotbox')) if (b.vfit) b.vfit();
+  const n = card && card.querySelector('.vrnote'); if (n) n.hidden = !d;
+  saveSoon();
+}
+
 function linkCard(st, f) {
   if (vidRef(f.data)) return vfileCard(st, f);
   const url = linkOf(f.data), play = linkPlayer(url), ticks = !!play && (!play.frame || frameTicks(play.frame));
@@ -21796,11 +21834,13 @@ function linkCard(st, f) {
     '<div class="mctl">' + (play ? '<button class="btn sm primary" data-vplay aria-pressed="false">▶ Play here</button>' : '') +
     (ticks ? '<button class="btn sm" data-vstamp title="Adds where the video is to your comment, like [2:15]">+ Time to comment</button>' : '') +
     '<button class="btn sm' + (play ? '' : ' primary') + '" data-vopen title="Opens the video in a window of its own, to keep beside this one">Open in its own window</button>' +
-    '<button class="btn sm" data-vcopy>Copy link</button></div>' +
+    '<button class="btn sm" data-vcopy>Copy link</button>' + (play && (play.frame || play.video) ? VROT_BTN : '') + '</div>' +
+    (play && play.frame && !ticks ? '<p class="muted vlnote vrnote"' + (vrotOf(f) ? '' : ' hidden') + '>Captions are drawn by the video’s own site, so they turn with the video and can’t be put the right way up here.</p>' : '') +
     '<p class="muted vlnote">' + (play ? 'Only the link is kept here; the video stays where it is. If it asks you to sign in or won’t play, open it in its own window.' : 'Only the link is kept here. This site can’t play inside the page, so it opens in a window of its own.') + '</p></div>';
   const now = () => { const m = el.querySelector('.vlslot video, .vlslot audio'); if (m) return m; const fr = el.querySelector('.vlslot iframe'), t = fr && frameTime(fr); return t == null ? null : { currentTime: t }; };
   el.onclick = e => {
     if (e.target.closest('[data-vopen]')) { window.open(url, '_blank', 'noopener,noreferrer,popup,width=980,height=640'); return; }
+    if (e.target.closest('[data-vrot]')) { vidTurn(st, f, el); if (el.querySelector('.vlslot').hidden) fill(); return; }
     if (e.target.closest('[data-vcopy]')) { navigator.clipboard.writeText(url).then(() => toast('Link copied'), () => toast('The link couldn’t be copied')); return; }
     if (e.target.closest('[data-vstamp]')) { const m = now(); if (!m) return toast('Press ▶ Play here first, then play the video to the moment you mean'); addStamp(st, m.currentTime); return; }
     const b = e.target.closest('[data-vplay]'); if (!b) return;
@@ -21812,8 +21852,8 @@ function linkCard(st, f) {
   const fill = c => {
     const slot = el.querySelector('.vlslot'), b = el.querySelector('[data-vplay]');
     slot.hidden = false; slot.innerHTML = ''; b.setAttribute('aria-pressed', 'true'); b.textContent = 'Close the player';
-    if (play.frame) { const fr = playerFrame(frameTicking(c ? clipFrame(play.frame, c).src : play.frame), linkTitle(f)); slot.appendChild(fr); frameClock(fr); vidGrip(slot, fr); }
-    else { const m = document.createElement(play.video ? 'video' : 'audio'); m.controls = true; m.preload = 'metadata'; m.src = play.video || play.audio; slot.appendChild(m); if (play.video) vidGrip(slot, m); if (c) clipRun(m, c); }
+    if (play.frame) { const fr = playerFrame(frameTicking(c ? clipFrame(play.frame, c).src : play.frame), linkTitle(f)); slot.appendChild(fr); frameClock(fr); vidGrip(slot, vidRot(fr, f)); }
+    else { const m = document.createElement(play.video ? 'video' : 'audio'); m.controls = true; m.preload = 'metadata'; m.src = play.video || play.audio; slot.appendChild(m); if (play.video) vidGrip(slot, vidRot(m, f)); if (c) clipRun(m, c); }
   };
   clipStrip(el.querySelector('.mstick'), f, now, c => (play ? fill(c) : clipShow(c.id)), play && play.frame && !ticks ? 'drive' : '');
   return el;
@@ -21924,7 +21964,7 @@ function vidGrip(host, player) {
   g.onkeydown = e => { const d = e.key === 'ArrowDown' ? 40 : e.key === 'ArrowUp' ? -40 : 0; if (!d) return; e.preventDefault(); e.stopPropagation(); set(player.getBoundingClientRect().height + d, true); };
   vidHApply(store.get('gs.vidH', 0));
 }
-Object.assign(window.__gs, { vidRef, linkKey, vkPut, vkGet, vkSweep, frameTicking, vidHApply });
+Object.assign(window.__gs, { vidRef, linkKey, vrotOf, vkPut, vkGet, vkSweep, frameTicking, vidHApply });
 
 /* ---------- the notes page ---------- */
 const NP_W = 595.28, NP_H = 841.89, NP_M = 48, NP_TAIL = '%GradingStudio-notes';
