@@ -81,7 +81,7 @@
 .ls-mini{width:150px;height:84.4px;overflow:hidden;border-radius:var(--corner-1);border:2px solid transparent;flex:none}
 .ls-th.on .ls-mini{border-color:var(--accent)}
 .ls-mini .ls-slide{transform:scale(calc(146/1280));transform-origin:0 0}
-.ls-addslide{display:flex;flex-direction:column;gap:4px;margin-top:10px}
+.ls-addslide{display:flex;gap:4px;margin-top:10px}.ls-addslide [data-a="addslide"]{flex:1}.ls-addslide [data-a="addpick"]{padding-left:8px;padding-right:8px}
 .ls-main{padding:12px 18px 30px;min-width:0}
 .ls-tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px;font-size:13.5px}
 .ls-tools label{display:flex;gap:6px;align-items:center}
@@ -144,6 +144,15 @@
 .ls-body .rt{margin-top:13px}.ls-body .rt.l1,.ls-body .rt.l2{margin-top:7px}
 .ls-bx .rt+.rt{margin-top:var(--gap)}
 .ls-ta.ls-bx{display:block;line-height:1.3}
+.ls-t,.ls-ttl,.ls-sub,.ls-body,.ls-bx{overflow-wrap:break-word}
+.ls-over{overflow:visible!important;outline:2px dashed #B45309!important;outline-offset:2px}
+.ls-frame{position:absolute;z-index:5;box-sizing:border-box;border:2px solid #1F6FB2;pointer-events:none}
+.ls-frame i{position:absolute;width:16px;height:16px;margin:-9px 0 0 -9px;background:#fff;border:2px solid #1F6FB2;border-radius:3px;pointer-events:auto;touch-action:none}
+.ls-frame i[data-h="nw"]{left:0;top:0;cursor:nwse-resize}.ls-frame i[data-h="n"]{left:50%;top:0;cursor:ns-resize}.ls-frame i[data-h="ne"]{left:100%;top:0;cursor:nesw-resize}.ls-frame i[data-h="e"]{left:100%;top:50%;cursor:ew-resize}
+.ls-frame i[data-h="se"]{left:100%;top:100%;cursor:nwse-resize}.ls-frame i[data-h="s"]{left:50%;top:100%;cursor:ns-resize}.ls-frame i[data-h="sw"]{left:0;top:100%;cursor:nesw-resize}.ls-frame i[data-h="w"]{left:0;top:50%;cursor:ew-resize}
+.ls-grips{position:absolute;left:-2px;bottom:100%;margin-bottom:6px;display:flex;gap:6px}.ls-frame.in .ls-grips{bottom:auto;top:6px;left:6px}
+.ls-boxback{background:#fff!important;color:#1F6FB2!important;border:2px solid #1F6FB2;cursor:pointer!important}
+.ls-grip{position:relative;padding:3px 12px;background:#1F6FB2;color:#fff;font:600 17px/1.3 Inter,Arial,sans-serif;border-radius:6px;white-space:nowrap;cursor:move;pointer-events:auto;touch-action:none;user-select:none}
 .ls-ed{cursor:text;outline:1.5px dashed transparent;outline-offset:2px;border-radius:3px}
 .ls-ed:hover,.ls-ed:focus{outline-color:rgba(31,111,178,.55)}
 .ls-pic.ls-ed{cursor:pointer}

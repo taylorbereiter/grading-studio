@@ -83,6 +83,8 @@ function stpIb(o) {
   return out;
 }
 const STP_WAYS = { rubric: 'rubric', rubricrows: 'rubric', rows: 'rubric', points: 'points', percent: 'percent', percentage: 'percent', letters: 'letters', lettergrades: 'letters', letter: 'letters', ib7: 'ib7', ib: 'ib7', ib1to7: 'ib7', myp: 'myp', mypcriteria: 'myp', ibmyp: 'myp', dp: 'ib7' };
+// The Planner's slide layouts by name, for "newSlide" (the same names as LAYOUTS in src/planner/lessons.js; the title slide is never added this way).
+const STP_LAYOUTS = { agenda: 'Agenda', objectives: 'Objectives', warmup: 'Warm-up', exit: 'Exit ticket', steps: 'Directions with steps', discuss: 'Discussion question', content: 'Title and text', twocol: 'Two columns', text: 'Plain text', passage: 'Passage', vocab: 'Vocabulary', picture: 'Picture', fullpic: 'Full picture', textpic: 'Text + picture', picprompt: 'Picture + questions', video: 'Video' };
 function stpRead(j) {
   const S = { left: [], unknown: [], notes: [] }, known = new Set(['gradingStudioSetup', 'teacher', 'about', 'school', 'programme', 'program', 'grading', 'classes', 'calendar', 'terms', 'gradebook', 'rubrics', 'comments', 'goals', 'attendance', 'classTabs', 'slides', 'marking']);
   for (const k of Object.keys(j)) {
@@ -170,9 +172,10 @@ function stpRead(j) {
   }
   S.comments = [...new Set(stpArr(j.comments, 200).map(c => stpText(c, 600)).filter(Boolean))];
   S.goals = [...new Map(stpArr(j.goals, 100).map(x => stpStr(stpObj(x) ? x.name : x, 80)).filter(Boolean).map(x => [stpKey(x), x])).values()];
-  // the Planner's rules for a deck: an agenda on slide 2, and text kept between 28 and 36 pt, each on unless turned off
+  // the Planner's rules for a deck: an agenda on slide 2, and text kept between 28 and 36 pt, each on unless turned off;
+  // and the layout + Add slide adds (Title and text unless the teacher picks another)
   const sl = stpObj(j.slides);
-  if (sl) { const d = {}; if (typeof sl.agenda === 'boolean') d.agenda = sl.agenda; if (/^any$/i.test(stpStr(sl.textSizes, 8))) d.sizes = 'any'; else if (/^(usual|28|28-36)/i.test(stpStr(sl.textSizes, 8))) d.sizes = ''; if (Object.keys(d).length) S.deck = d; }
+  if (sl) { const d = {}; if (sl.newSlide != null) { const k = stpKey(sl.newSlide).replace(/[^a-z0-9]/g, ''), hit = Object.entries(STP_LAYOUTS).find(([id, n]) => id === k || n.toLowerCase().replace(/[^a-z0-9]/g, '') === k); if (hit) d.add = hit[0]; } if (typeof sl.agenda === 'boolean') d.agenda = sl.agenda; if (/^any$/i.test(stpStr(sl.textSizes, 8))) d.sizes = 'any'; else if (/^(usual|28|28-36)/i.test(stpStr(sl.textSizes, 8))) d.sizes = ''; if (Object.keys(d).length) S.deck = d; }
   // choices about marking and handing back, each kept in this browser's own settings
   const mk = stpObj(j.marking);
   if (mk) {
@@ -220,6 +223,7 @@ function stpPlanNext(old, S, pick) {
     const d = { ...(stpObj(next.deck) || {}) };
     if (S.deck.agenda === false) d.agenda = false; else if (S.deck.agenda === true) delete d.agenda;
     if (S.deck.sizes === 'any') d.sizes = 'any'; else if (S.deck.sizes === '') delete d.sizes;
+    if (S.deck.add === 'content') delete d.add; else if (S.deck.add) d.add = S.deck.add;
     if (Object.keys(d).length) next.deck = d; else delete next.deck;
   }
   return JSON.stringify(next) === JSON.stringify(cur) ? null : next;
@@ -310,6 +314,7 @@ function stpDiff(S, planNow) {
     const now = stpObj(planNow && planNow.deck) || {}, L = [];
     if (S.deck.agenda != null && S.deck.agenda !== (now.agenda !== false)) L.push(S.deck.agenda ? 'An agenda is added on slide 2' : 'No agenda is added on slide 2');
     if (S.deck.sizes != null && (S.deck.sizes === 'any') !== (now.sizes === 'any')) L.push(S.deck.sizes === 'any' ? 'Slide text can be any size from 18 to 44 pt' : 'Slide text stays between 28 and 36 pt');
+    if (S.deck.add && S.deck.add !== (STP_LAYOUTS[now.add] ? now.add : 'content')) L.push('+ Add slide adds a ' + esc(STP_LAYOUTS[S.deck.add]) + ' slide');
     add('deck', 'Lesson slides', L, 'In the Planner, for every deck you make from now on.');
   }
   if (S.mark) {
@@ -469,7 +474,7 @@ async function stpExport() {
     return { name: n, ...(q && q.course ? { course: String(q.course) } : {}), ...ib, ...(link ? { link } : {}), ...(q && Array.isArray(q.meets) && q.meets.length ? { meets: q.meets.filter(m => day[+m.dow]).map(m => ({ day: day[+m.dow], start: String(m.start), end: String(m.end), ...(m.label ? { label: String(m.label) } : {}) })) } : {}), ...(c && c.units.length ? { units: c.units.map(u => u.name) } : {}) };
   });
   if (p && (p.semStart || (p.daysOff || []).length || (p.events || []).length)) out.calendar = { ...(p.semStart && p.semEnd ? { start: p.semStart, end: p.semEnd } : {}), ...((p.daysOff || []).length ? { daysOff: p.daysOff.map(d => ({ date: d.date, label: d.label })) } : {}), ...((p.events || []).length ? { events: p.events.map(e => ({ date: e.date, ...(e.to ? { to: e.to } : {}), label: e.label })) } : {}) };
-  if (p && stpObj(p.deck) && (p.deck.agenda === false || p.deck.sizes === 'any')) out.slides = { ...(p.deck.agenda === false ? { agenda: false } : {}), ...(p.deck.sizes === 'any' ? { textSizes: 'any' } : {}) };
+  if (p && stpObj(p.deck) && (p.deck.agenda === false || p.deck.sizes === 'any' || STP_LAYOUTS[p.deck.add])) out.slides = { ...(p.deck.agenda === false ? { agenda: false } : {}), ...(p.deck.sizes === 'any' ? { textSizes: 'any' } : {}), ...(STP_LAYOUTS[p.deck.add] && p.deck.add !== 'content' ? { newSlide: STP_LAYOUTS[p.deck.add] } : {}) };
   if (conf.terms.length) out.terms = conf.terms.map(t => ({ name: t.name || 'Term', start: t.start, end: t.end }));
   if (lib.book) out.gradebook = { weights: { summative: +conf.w.sum || 0, inClass: +conf.w.ic || 0 }, emptyType: conf.empty, extraCredit: { addsTo: conf.xcTo === 'ic' ? 'inClass' : 'term', cap: conf.xcCap }, retakes: { high: 'highest', last: 'latest', avg: 'average' }[retakeRule()],
     ...(Array.isArray(lib.book.cats) && lib.book.cats.some(x => x.name) ? { types: lib.book.cats.map(x => ({ name: x.name || stpTypeName(x.id), ...(x.id !== 'fm' ? { weight: +conf.w[x.id] || 0 } : {}) })) } : {}) };
@@ -554,7 +559,7 @@ Every part except the first line is optional. Leave a part out rather than leavi
   "goals": ["Uses evidence", "Designs a fair test"],
   "attendance": true,
   "classTabs": ["Missing work"],
-  "slides": { "agenda": true, "textSizes": "usual" },
+  "slides": { "agenda": true, "textSizes": "usual", "newSlide": "Title and text" },
   "marking": { "pointsColor": "credit", "studentFileNames": true, "coverNamesOnAnchors": true, "findTypedNames": false, "gradeSheetFromPapers": false }
 }
 
@@ -566,7 +571,7 @@ FIELD NOTES
 - "daysOff" and "events" take one day, or a first and last day with "to".
 - "emptyType" is "other" (when a type has nothing in it yet, the others are used) or "zero". "extraCredit.addsTo" is "term" or "inClass"; "cap" true keeps grades at 100% at most. "retakes" is "highest", "latest" or "average".
 - "classTabs" are the class pages I want kept in the tab row beside Assignments, Gradebook and Students: any of "Attendance", "Seating", "Missing work", "Charts", "Goals", "Report comments". Leave it out unless I ask.
-- "slides" is for the lesson planner: "agenda" false stops an agenda being added as slide 2, and "textSizes" is "usual" (28 to 36 pt) or "any" (18 to 44 pt). Leave it out unless I ask.
+- "slides" is for the lesson planner: "agenda" false stops an agenda being added as slide 2, "textSizes" is "usual" (28 to 36 pt) or "any" (18 to 44 pt), and "newSlide" is the layout the Add slide button adds: "Title and text", "Plain text", "Two columns", "Text + picture", "Picture" or another layout the planner has. Leave it out unless I ask.
 - "marking" holds small choices; leave out any I have not asked for. "pointsColor" is "pen", "credit" (full points green, part amber, none red) or one of red, blue, green, purple, black. "studentFileNames" names each file I hand back for the student and assignment. "coverNamesOnAnchors" covers names on example papers I export. "findTypedNames" lets the app look for typed names to cover. "gradeSheetFromPapers" also shows grades the app finds written on papers.
 - A rubric row is a name, or a name with "levels" keyed "4" down to "0". A rubric whose rows go higher takes "rowTop" (up to 10), and "halfPoints": false when only whole points are given.
 - Use straight quotes and no comments inside the block.`;
