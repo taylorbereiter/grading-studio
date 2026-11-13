@@ -1,22 +1,22 @@
 {
- "version": "1.28.7",
- "build": "206bd875e698",
+ "version": "1.28.8",
+ "build": "a0db55f352cf",
  "notes": [
-  "Save a screenshot as a strong example: tick “Save as a strong example” in the Screenshot bar, or press the button on the “Picture copied” note. Before it is saved you can black out anything, like a name, and add why it’s strong and tags.",
-  "The Examples page finds work again by tag or by searching what you wrote. Every card shows its tags, and you can change them from its ⋯ menu. Download as a sheet works for whatever the page is showing."
+  "On Today, every class whose lesson has slides now has a Present button, not only the class on now. Two classes sharing one lesson can each present it.",
+  "While presenting, Pop out (or W) puts the slides in a window of their own for a second screen or projector. That window shows only what the class sees, and this one keeps the bar, your notes and the timer. The keys work in either window."
  ],
  "files": {
-  "index.html": "4842079db834d82355161380169ade437304464c7a930efa02420fb742a15242",
-  "planner.html": "9672ea7ad5c5068536dfcfaf3ce75fadf2c6dafe619d5bd271c6f61f23a00c4d"
+  "index.html": "138c429f353a9e525f8b379e47f9a47496974bb32902196c392d9c810e18de0b",
+  "planner.html": "e8221c0f94fa58bb3cd816ecac12dbdf42fd84ff02434cbedd58a30c017aebe8"
  },
  "langs": {
-  "lang/zh-Hant.js": "45c0d06f89f7008a4da89283a86b1609266f4f9b90822ebf3b613999b42be903",
-  "lang/zh-Hans.js": "85ad0e078d56e294896be03ee8e37bd1a0d52199194bd7d55da54566c093037e",
-  "lang/es.js": "dce8c053183d5ca6dcfe9b57199e3f259654f759a11cc5a6b2276a320b582151",
-  "lang/fr.js": "6f4ff920fbc3a1a953478273ff26e3a8e6be0d8b93aa693be06897642e863357",
-  "lang/de.js": "cecee604773aeb3c9bc8e701017a379db3db3bf11945b6180a8f8b18d25dd832",
-  "lang/pt-BR.js": "a37c5ac5ecb0bd757ebf5a1eaab38e512ddc7a1262d2d61b104cf334073dfbfe",
-  "lang/ja.js": "382d515e5fab4daaa83a530889c05e4ab0e0bb489dc196b2f596d51f6e6fea41",
-  "lang/ko.js": "cb50f96c1b0579d5d134cc93a3aa24df358e108f6fcdabd5801a2b0b1ce0dfc6"
+  "lang/zh-Hant.js": "e61e5bc5c684cae0cd230d65e3f8184661f9063c856ec9c517d0ef332b276103",
+  "lang/zh-Hans.js": "bf199251aebad69374dd1a7a48b066cf51961ee7577dfa464fc03fce234aa84a",
+  "lang/es.js": "64dbb7940fbb5e0dfbc4cfc72c31a68cbe6717606446002b13c3462d7ae4d543",
+  "lang/fr.js": "4207de019344aa6e8e6ae5a1d6e662aee461ba99057a4a3eddc440409677d86d",
+  "lang/de.js": "43ffb0f46d5d5ec5f60aa0b67c71dab7742ae8cde6ebf4035f737a0341a16956",
+  "lang/pt-BR.js": "59fab2a3c8cd110452dca47e041e5310628ee4fdee28f76138ad161756529fc5",
+  "lang/ja.js": "74aba9bd51f7d8d8c1791528a46ce692b4e8a475816d1aa09ad6b37d46fe2e63",
+  "lang/ko.js": "2157a6003331f71d69f9d36f4cc9ced3f935d20a758ca63c88a3e934e9d0f465"
  }
 }

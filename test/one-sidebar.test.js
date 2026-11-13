@@ -292,9 +292,9 @@ test('Today shows the day’s classes from the Planner’s timetable, and writes
     await page.reload(); await appReady(page);
     await page.waitForSelector('#today .trow');
     assert.equal(await page.$eval('#today h2', e => e.textContent), 'Teaching today');
-    // the class that is on now, or next, opens presenting; the others open the lesson
+    // every class whose lesson has slides opens presenting, not only the class on now; the class on now, or next, has the blue button
     const hm = await page.evaluate(() => { const d = new Date(); return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'); });
-    const cur = ['10:30', '12:15', '15:00'].findIndex(e => e > hm), go = (i, t, c) => i === cur ? ['Present', 'planner.html#present/' + ids[t] + '/' + c] : ['Open', 'planner.html#lesson/' + ids[t]];
+    const cur = ['10:30', '12:15', '15:00'].findIndex(e => e > hm), go = (i, t, c) => ['Present', 'planner.html#present/' + ids[t] + '/' + c];
     assert.deepEqual(await page.$$eval('#today .trow', r => r.map(x => [x.querySelector('.tt').textContent, x.querySelector('b').textContent, x.querySelector('.ns').textContent, (x.querySelector('.btn') || {}).textContent, x.getAttribute('href')])), [
       ['9:00', 'Course A 2', 'Annotating a sonnet · 3 slides · ready for you', ...go(0, 'Annotating a sonnet', 'A2')],
       ['10:45', 'Course B-1', 'No lesson planned yet', 'Plan it', 'planner.html#week'],
@@ -317,7 +317,7 @@ test('Today shows the day’s classes from the Planner’s timetable, and writes
     await Promise.all([page.waitForNavigation(), page.click('#today .trow')]);
     await plannerReady(page);
     assert.equal(await page.evaluate(() => window.__planner.L.open && window.__planner.L.open.title), 'Annotating a sonnet');
-    assert.equal(await page.evaluate(() => !!document.querySelector('#present')), cur === 0, 'the class on now or next opens presenting');
+    assert.equal(await page.evaluate(() => !!document.querySelector('#present')), true, 'a lesson with slides opens presenting');
     // where a class got to is said on its row, and a lesson taught to the end stops offering Present
     const taught = async (slide) => {
       await page.evaluate(async slide => {

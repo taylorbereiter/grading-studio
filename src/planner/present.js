@@ -8,6 +8,9 @@
    The timer outlives the stage: finishing, or leaving full screen by accident, leaves it running in a small box in the
    corner of the Planner, and presenting again shows it on the slides once more. It is kept in this browser (gsp.presentTimer)
    so a refresh does not lose it either.
+   Pop out (W) puts the slides in a window of their own, to drag to a second screen or projector: that window shows only what
+   the class sees (the slide, a blank screen, the agenda, the timer, the names picked) and this one keeps the bar, the notes
+   and the timer's menu. The keys work in either window.
    This reads the lesson and the timetable and nothing else. Its buttons carry data-pr and are handled here. */
 const PR = { on: false, askMs: 2 * 60 * 1000 };   // askMs: presenting for at least this long asks where the class got to
 const PR_I = {
@@ -21,6 +24,7 @@ const PR_I = {
   check: '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
   pick: '<circle cx="12" cy="8" r="3.5"/><path d="M5 19.5c.8-3.6 3.6-5.5 7-5.5s6.2 1.9 7 5.5"/>',
   groups: '<circle cx="7" cy="8" r="2.5"/><circle cx="17" cy="8" r="2.5"/><circle cx="12" cy="16" r="2.5"/>',
+  out: '<path d="M14 4h6v6M20 4l-8 8M18 13.5v5a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 4 18.5v-11A1.5 1.5 0 0 1 5.5 6H10.5"/>',
   link: '<path d="M10.5 13.5a4 4 0 0 0 5.7 0l2.6-2.6a4 4 0 0 0-5.7-5.7l-.9.9M13.5 10.5a4 4 0 0 0-5.7 0l-2.6 2.6a4 4 0 0 0 5.7 5.7l.9-.9"/>'
 };
 const prIcon = k => '<svg viewBox="0 0 24 24" aria-hidden="true">' + PR_I[k] + '</svg>';
@@ -150,7 +154,7 @@ async function presentStart(l, o) {
     '<div class="pr-menu pr-links" id="prLinks" role="group" aria-label="Links" hidden></div>' +
     '<div class="pr-hint" id="prHint" hidden></div><div class="pr-say" id="prSay" aria-live="polite"></div>' +
     '<div class="pr-bar" id="prBar" role="toolbar" aria-label="Presenting">' + b('prev', 'prev', 'Previous slide', '←', 'ic') + '<span class="pr-count" id="prCount"></span>' + b('next', 'next', 'Next slide', '→', 'ic') + '<span class="pr-sep"></span>' +
-    b('agenda', 'agenda', 'Agenda', 'A') + b('timer', 'timer', 'Timer', 'T') + b('pick', 'pick', 'Pick a name', 'P') + b('groups', 'groups', 'Groups', 'G') + b('notes', 'notes', 'Notes', 'N') + (lkAny(l, slot) ? b('links', 'link', 'Links', 'L') : '') + b('blank', 'blank', 'Blank', 'B') + b('full', 'full', 'Full screen', 'F') +
+    b('agenda', 'agenda', 'Agenda', 'A') + b('timer', 'timer', 'Timer', 'T') + b('pick', 'pick', 'Pick a name', 'P') + b('groups', 'groups', 'Groups', 'G') + b('notes', 'notes', 'Notes', 'N') + (lkAny(l, slot) ? b('links', 'link', 'Links', 'L') : '') + b('blank', 'blank', 'Blank', 'B') + b('out', 'out', 'Pop out', 'W') + b('full', 'full', 'Full screen', 'F') +
     '<span class="pr-sep"></span><span class="pr-time" id="prTime"></span><button data-p="end" class="pr-end" title="Finish (Esc)">Finish</button></div>';
   document.body.appendChild(el);
   document.addEventListener('keydown', prKey, true);
@@ -164,7 +168,7 @@ async function presentStart(l, o) {
   prFit();
   try { PR.lock = await navigator.wakeLock.request('screen'); } catch { }
   prHint(back && !(o.at > 0) ? 'Picking up at slide ' + back.slide + ', where ' + (back.classId ? className(back.classId) : 'the class') + ' stopped on ' + shortDate(back.date) + '. Home goes to slide 1.'
-    : (document.fullscreenElement === el ? '' : 'F for full screen · ') + '→ next · A agenda · T timer · P pick a name · Esc to finish', back && !(o.at > 0) ? 7000 : 4500);
+    : (document.fullscreenElement === el ? '' : 'F for full screen · ') + '→ next · A agenda · T timer · P pick a name · W pop out · Esc to finish', back && !(o.at > 0) ? 7000 : 4500);
 }
 // planner.html#present/<lesson id>/<class id>: the lesson opens and presents, in the window (a page can't go full screen by itself).
 function presentArrive(rest) {
@@ -174,8 +178,9 @@ function presentArrive(rest) {
 }
 
 /* ---------- drawing ---------- */
-function prFit() {
-  const st = $('#prStage'), f = $('#prFit'); if (!st || !f) return;
+function prFit() { prFitIn($('#prStage'), $('#prFit')); prOutFit(); }
+function prFitIn(st, f) {
+  if (!st || !f) return;
   const k = Math.min(st.clientWidth / 1280, st.clientHeight / 720) || 1;
   f.style.setProperty('--k', k); f.style.width = 1280 * k + 'px'; f.style.height = 720 * k + 'px';
 }
@@ -183,6 +188,7 @@ function prShow() {
   const l = PR.l, n = l.slides.length, s = l.slides[PR.i];
   PR.video = false;
   $('#prFit').innerHTML = '<div class="ls-slide">' + slideHtml(s, l, false) + '</div>';
+  PR.outSlide = true;   // the class screen takes the new slide too
   prPaint();
 }
 // Everything around the slide. The slide itself is left alone, so a video on it keeps playing.
@@ -194,11 +200,12 @@ function prPaint() {
   c.innerHTML = PR.ended && !PR.blank ? '<b>End of the lesson</b><span>Click, or press Esc, to finish</span>' : '';
   const nt = $('#prNotes'); nt.hidden = !PR.notes; nt.classList.toggle('none', !s.notes.trim()); nt.textContent = s.notes.trim() || 'No speaker notes on this slide.';
   PR.el.style.setProperty('--nb', PR.notes ? nt.offsetHeight + 'px' : '0px');   // the bar sits above the notes
-  for (const [p, on] of [['agenda', PR.agenda], ['notes', PR.notes], ['blank', PR.blank]]) PR.el.querySelector('[data-p="' + p + '"]').setAttribute('aria-pressed', String(!!on));
+  for (const [p, on] of [['agenda', PR.agenda], ['notes', PR.notes], ['blank', PR.blank], ['out', !!PR.out]]) PR.el.querySelector('[data-p="' + p + '"]').setAttribute('aria-pressed', String(!!on));
   PR.el.querySelector('[data-p="timer"]').setAttribute('aria-expanded', String(!!PR.menu));
   PR.el.querySelector('[data-p="full"] .lb').textContent = document.fullscreenElement === PR.el ? 'Leave full screen' : 'Full screen';
+  PR.el.querySelector('[data-p="out"]').title = PR.out ? 'Close the class screen window (W)' : 'Show the slides in their own window, for a second screen (W)';
   $('#prSay').textContent = PR.blank ? 'The screen is blank' : PR.ended ? 'End of the lesson' : 'Slide ' + (PR.i + 1) + ' of ' + n + (prSlideName(s) ? ': ' + prSlideName(s) : '');
-  prAgenda(); prFit();
+  prAgenda(); prFit(); prOutSync();
 }
 function prAgenda() {
   const a = $('#prAgenda'); a.hidden = !PR.agenda; if (!PR.agenda) return;
@@ -212,6 +219,7 @@ function prAgenda() {
     h = '<h2>Slides</h2><p class="pr-anone">This lesson has no agenda yet. Its slides:</p>' + PR.l.slides.map((s, i) => '<button class="pr-ai' + (i === PR.i ? ' now' : '') + '" data-goto="' + i + '"><span class="tx">' + (i + 1) + '. ' + esc(prSlideName(s)) + '</span></button>').join('');
   }
   a.innerHTML = h + '<div class="pr-aclock" id="prAClock">' + esc(prClock()) + '</div>';
+  prOutSync();
 }
 let prHintT;
 function prHint(msg, ms) {
@@ -247,7 +255,7 @@ function prFull() {
   if (!PR.on) return;
   // Only a stage that was full screen can be left that way: a late event from the last time it was shown doesn't count.
   const full = document.fullscreenElement === PR.el, was = PR.full; PR.full = full;
-  if (was && !full && !PR.keep && !PR.video) return presentEnd();
+  if (was && !full && !PR.keep && !PR.video && !PR.out) return presentEnd();   // with the class screen open, this window is only the teacher's
   PR.keep = false; prPaint();
 }
 // A video slide plays in place (YouTube, on the web address); anything else opens in its own tab.
@@ -256,7 +264,10 @@ function prPlay() {
   const id = ytId(v.url);
   if (id && /^https?:$/.test(location.protocol)) {
     PR.video = true;
-    box.innerHTML = '<iframe src="https://www.youtube-nocookie.com/embed/' + id + '?autoplay=1&rel=0' + (v.start ? '&start=' + v.start : '') + '" title="' + esc(v.title || 'Video') + '" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>';
+    const f = '<iframe src="https://www.youtube-nocookie.com/embed/' + id + '?autoplay=1&rel=0' + (v.start ? '&start=' + v.start : '') + '" title="' + esc(v.title || 'Video') + '" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>';
+    // With the class screen open, the video plays there only, so the sound comes once.
+    const ob = PR.out && !PR.out.closed && PR.out.document.querySelector('.pr-fit .ls-vid');
+    if (ob) { ob.innerHTML = f; box.innerHTML = '<div class="pr-vout">Playing on the class screen</div>'; } else box.innerHTML = f;
   } else { PR.keep = true; window.open(videoLink(v), '_blank', 'noopener'); }
 }
 
@@ -376,6 +387,7 @@ function prBigToggle() {
 }
 function prTick() {
   if (!PR.on) return;
+  if (PR.out) prOutSync();
   const clock = prClock(), tm = $('#prTime'), ac = $('#prAClock');
   if (tm && tm.textContent !== clock) tm.textContent = clock;
   if (ac && ac.textContent !== clock) ac.textContent = clock;
@@ -437,6 +449,7 @@ function prClick(e) {
     if (p.p === 'links') return prLinks(!PR.links);
     if (p.p === 'pick' || p.p === 'groups') return prPick(p.p);
     if (p.p === 'full') return prFullToggle();
+    if (p.p === 'out') return prOut();
     if (p.p === 'end') return presentEnd();
     if (p.p === 'chip') return PR.timer && PR.timer.done ? prTimerStop() : prTimerPause();
     return;
@@ -496,15 +509,115 @@ function prKey(e) {
   if (c === 'l' && lkAny(PR.l, PR.slot)) { stop(); return prLinks(true); }
   if (PR.timer && !PR.timer.done && (k === '+' || k === '=' || k === '-')) { stop(); return prTimerAdd(k === '-' ? -60 : 60); }
   if (c === 'f') { stop(); return prFullToggle(); }
+  if (c === 'w') { stop(); return prOut(); }
   if (c === 'p') { stop(); return prPick('pick'); }
   if (c === 'g') { stop(); return prPick('groups'); }
 }
+
+/* ---------- the class screen: the slides in a window of their own, for a second screen ---------- */
+// The window is opened empty from this page, so it is the same site: this page writes into it and keeps it in step. It holds
+// copies only; everything is run from here, and its keys and clicks come back here.
+function prOut() {
+  if (PR.out) { prOutShut(); prHint('The class screen is closed.'); return prShow(); }
+  let w = null;
+  try { w = window.open('', 'gsClassScreen', 'popup,width=960,height=560'); } catch { }
+  if (!w) return prHint('The browser stopped the window from opening. Allow pop-ups for this page, then try again.', 7000);
+  const html = document.documentElement, d = w.document;
+  const css = [...document.querySelectorAll('style,link[rel="stylesheet"]')].map(x => x.outerHTML).join('');
+  d.open();
+  d.write('<!doctype html><html lang="' + esc(html.lang || 'en') + '"' + (html.dataset.theme ? ' data-theme="' + esc(html.dataset.theme) + '"' : '') + '><head><meta charset="utf-8"><title>' + esc(PR.l.title) + ' · class screen</title>' + css +
+    '<style>html,body{margin:0;height:100%;overflow:hidden;background:var(--stage)}</style></head><body>' +
+    '<div class="pr pr-out" id="present" tabindex="-1" aria-label="' + esc(PR.l.title) + '"><div class="pr-stage" id="prStage"><div class="pr-fit" id="prFit"></div></div>' +
+    '<aside class="pr-agenda" id="prAgenda" hidden></aside><div class="pr-chip" id="prChip" hidden></div><div class="pr-cover" id="prCover" hidden></div><div id="prPk" class="pr-pk"></div>' +
+    '<button class="pr-outfs" id="prOutFs" title="Full screen (F)">Full screen</button></div></body></html>');
+  d.close();
+  PR.out = w; PR.outSlide = true; PR.outPk = null;
+  d.addEventListener('keydown', prOutKey, true);
+  d.addEventListener('click', prOutClick);
+  d.addEventListener('pointermove', prOutWake);
+  d.addEventListener('fullscreenchange', () => { const b = d.getElementById('prOutFs'); if (b) b.hidden = !!d.fullscreenElement; prOutFit(); });
+  w.addEventListener('resize', prOutFit);
+  // This window is the teacher's now: out of full screen, with the notes showing.
+  if (document.fullscreenElement === PR.el) { PR.keep = true; document.exitFullscreen().catch(() => { PR.keep = false; }); }
+  PR.notes = true; PR.el.classList.add('out');
+  prPaint(); prOutWake(); prOutPlace(w);
+  prHint('Drag the new window to the class screen, then click Full screen there. The keys work in either window.', 8000);
+}
+// On a computer with two screens, the browser can be asked to put the window on the other one. It may ask first; a no changes nothing.
+async function prOutPlace(w) {
+  try {
+    if (!window.screen.isExtended || !window.getScreenDetails) return;
+    const sd = await window.getScreenDetails(), s = sd.screens.find(x => x !== sd.currentScreen);
+    if (!s || w.closed) return;
+    w.moveTo(s.availLeft, s.availTop); w.resizeTo(s.availWidth, s.availHeight);
+  } catch { }
+}
+function prOutShut() {
+  const w = PR.out; if (!w) return;
+  PR.out = null; PR.outPk = null;
+  try { if (!w.closed) w.close(); } catch { }
+  if (PR.el) { PR.el.classList.remove('out'); if (PR.on) prPaint(); }
+}
+function prOutFit() {
+  const w = PR.out; if (!w || w.closed) return;
+  prFitIn(w.document.getElementById('prStage'), w.document.getElementById('prFit'));
+}
+// Copies what the class sees into the window: the slide when it changes, and the blank screen, timer, agenda and names as they are.
+function prOutSync() {
+  const w = PR.out; if (!w || !PR.el) return;
+  if (w.closed) { PR.out = null; PR.el.classList.remove('out'); prHint('The class screen window was closed.'); return prShow(); }
+  const d = w.document, g = id => d.getElementById(id); if (!g('prFit')) return;
+  if (PR.outSlide) { PR.outSlide = false; g('prFit').innerHTML = $('#prFit').innerHTML; prOutFit(); }
+  for (const id of ['prCover', 'prChip', 'prAgenda']) {
+    const a = $('#' + id), b = g(id); if (!a || !b) continue;
+    if (b.hidden !== a.hidden) b.hidden = a.hidden;
+    if (b.className !== a.className) b.className = a.className;
+    if (!a.hidden && b.innerHTML !== a.innerHTML) b.innerHTML = a.innerHTML;
+  }
+  const pk = PR.el.querySelector('#pkStage'), h = pk ? pk.outerHTML : '';
+  if (PR.outPk !== h) { PR.outPk = h; g('prPk').innerHTML = h; }
+}
+let prOutIdleT;
+function prOutWake() {
+  const w = PR.out, e = w && !w.closed && w.document.getElementById('present'); if (!e) return;
+  e.classList.remove('idle'); clearTimeout(prOutIdleT);
+  prOutIdleT = setTimeout(() => e.classList.add('idle'), 2600);
+}
+function prOutFull() {
+  const d = PR.out && PR.out.document; if (!d) return;
+  try { if (d.fullscreenElement) d.exitFullscreen(); else d.getElementById('present').requestFullscreen(); } catch { }
+}
+// Keys in the class screen run the lesson as they do here; F makes that window full screen.
+function prOutKey(e) {
+  if (!PR.on) return;
+  if (!PK.on && !e.metaKey && !e.ctrlKey && !e.altKey && e.key.toLowerCase() === 'f') { e.preventDefault(); e.stopPropagation(); return prOutFull(); }
+  prKey(e);
+}
+// A click on the class screen: the agenda's buttons do what they do here; anywhere else on the slide is the next slide.
+function prOutClick(e) {
+  if (!PR.on) return;
+  prOutWake();
+  const t = e.target;
+  if (t.closest('#prOutFs')) return prOutFull();
+  if (t.closest('#prPk,#prChip')) return;
+  const a = t.closest('[data-ag],[data-goto]');
+  if (a) { const m = PR.el.querySelector(a.dataset.ag != null ? '[data-ag="' + a.dataset.ag + '"]' : '[data-goto="' + a.dataset.goto + '"]'); if (m) m.click(); return; }
+  if (t.closest('#prAgenda') || t.closest('.pr-fit a[href]')) return;
+  if (PR.menu) prMenu(false);
+  if (PR.links) prLinks(false);
+  if (PR.blank) return prToggle('blank');
+  if (PR.ended) return presentEnd();
+  if (t.closest('.pr-fit .ls-vid') && PR.l.slides[PR.i].video) { if (!PR.video) prPlay(); return; }
+  prNext();
+}
+// Leaving or reloading the Planner takes the class screen with it.
+window.addEventListener('pagehide', () => { try { if (PR.out && !PR.out.closed) PR.out.close(); } catch { } });
 
 /* ---------- finishing ---------- */
 async function presentEnd() {
   if (!PR.on) return;
   const { l, i, far, slot, began, el, back, ticks, items } = PR;
-  PR.on = false; pkClose();
+  PR.on = false; pkClose(); prOutShut();
   clearInterval(PR.tickT); clearTimeout(PR.idleT); clearTimeout(prHintT); clearTimeout(PR.numT);
   document.removeEventListener('keydown', prKey, true); document.removeEventListener('fullscreenchange', prFull); window.removeEventListener('resize', prFit);
   const lock = PR.lock, full = document.fullscreenElement === el;
@@ -538,4 +651,4 @@ document.addEventListener('click', e => {
     return undoToast('Note removed', () => { l.taught = normTaught([...(l.taught || []), t]); lPut(l); taughtRedraw(l); });
   }
 });
-window.__present = { PR, start: presentStart, end: presentEnd, timer: prTimerStart, normTaught, taughtDlg };
+window.__present = { PR, start: presentStart, end: presentEnd, timer: prTimerStart, normTaught, taughtDlg, out: prOut };
