@@ -542,3 +542,51 @@ test('the timer keeps going after presenting ends, in the corner of the Planner,
     assert.deepEqual(a.errors, []);
   } finally { await a.done(); }
 });
+
+test('Pop out shows the slides in a window of their own, kept in step, and the keys work in either window', async () => {
+  const a = await open();
+  try {
+    const { page } = a;
+    await seed(page);
+    await present(page);
+    await page.keyboard.press('w');
+    await until(page, () => { const w = window.__present.PR.out; return !!(w && w.document.querySelector('#prFit .ls-slide')); });
+    const out = () => page.evaluate(() => { const P = window.__present.PR, d = P.out && !P.out.closed ? P.out.document : null; return d && { title: d.querySelector('#prFit .ls-slide').textContent.trim().slice(0, 40), cover: !d.querySelector('#prCover').hidden, chip: d.querySelector('#prChip').hidden ? '' : d.querySelector('#prChip').textContent, bar: !!d.querySelector('#prBar'), notes: !!d.querySelector('#prNotes') }; });
+    let o = await out();
+    assert.match(o.title, /Reading a poem/);
+    assert.equal(o.bar, false, 'the class screen has no bar'); assert.equal(o.notes, false, 'and no notes');
+    const st = await page.evaluate(() => ({ on: window.__present.PR.on, notes: window.__present.PR.notes, cls: document.querySelector('#present').classList.contains('out'), pressed: document.querySelector('[data-p="out"]').getAttribute('aria-pressed') }));
+    assert.deepEqual(st, { on: true, notes: true, cls: true, pressed: 'true' }, 'this window stays presenting, with the notes');
+    // the next slide here shows there
+    await page.focus('#present'); await page.keyboard.press('ArrowRight'); await page.keyboard.press('ArrowRight');
+    await until(page, () => /Read aloud/.test(window.__present.PR.out.document.querySelector('#prFit').textContent));
+    // a blank screen and the timer show there too
+    await page.keyboard.press('b');
+    await until(page, () => !window.__present.PR.out.document.querySelector('#prCover').hidden);
+    await page.keyboard.press('b');
+    await page.evaluate(() => window.__present.timer(90));
+    await until(page, () => /1:2\d|1:30/.test(window.__present.PR.out.document.querySelector('#prChip').textContent));
+    // the agenda, pulled up here, shows there
+    await page.keyboard.press('a');
+    await until(page, () => !window.__present.PR.out.document.querySelector('#prAgenda').hidden && /Warm-up/.test(window.__present.PR.out.document.querySelector('#prAgenda').textContent));
+    await page.keyboard.press('a');
+    // a key pressed in the class screen moves the slides
+    await page.evaluate(() => window.__present.PR.out.document.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true })));
+    await until(page, () => window.__present.PR.i === 3 && /Which line stays/.test(window.__present.PR.out.document.querySelector('#prFit').textContent));
+    // a click on the class screen is the next slide
+    await page.evaluate(() => window.__present.PR.out.document.querySelector('#prStage').click());
+    await until(page, () => window.__present.PR.i === 4);
+    // closing the window leaves presenting here as it was
+    await page.evaluate(() => window.__present.PR.out.close());
+    await until(page, () => !window.__present.PR.out && !document.querySelector('#present').classList.contains('out'));
+    assert.equal(await page.evaluate(() => window.__present.PR.on), true);
+    // opened again, finishing closes it
+    await page.focus('#present'); await page.keyboard.press('w');
+    await until(page, () => !!window.__present.PR.out);
+    const w = await page.evaluateHandle(() => window.__present.PR.out);
+    await page.evaluate(() => window.__present.end());
+    await until(page, () => !window.__present.PR.on);
+    assert.equal(await page.evaluate(x => x.closed, w), true, 'finishing closes the class screen');
+    assert.deepEqual(a.errors, []);
+  } finally { await a.done(); }
+});
