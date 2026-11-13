@@ -1,22 +1,22 @@
 {
- "version": "1.28.12",
- "build": "9fea21037ee7",
+ "version": "1.28.14",
+ "build": "f71f6feec331",
  "notes": [
-  "Look around with a sample class first now opens a full sample: two made-up classes part-way through a term, with marked papers, a quiz marked by question, a gradebook, charts, missing work, attendance, seating, report comments, to-dos and two weeks of lessons.",
-  "The sample is kept apart from your own work. Leave the sample in the sidebar clears it in one click, and your own classes are exactly as you left them."
+  "Your AI assistant can sit beside Grading Studio. Name it in Settings, Working with AI (Gemini, Claude, ChatGPT, Copilot or another) and its name is in the sidebar on every screen, in the Planner too. A click opens it in a window on the right of the screen, or in a tab if you prefer.",
+  "In Chrome, right-click the name in the sidebar and choose Open link in split view to have both in one window. Opens at takes a link of your own, such as your school account or a Gem. Grading Studio sends nothing to the assistant: it sees only what you paste or attach."
  ],
  "files": {
-  "index.html": "533b6d101b7699b57384280ab642802806730b5dd49c8babf3364d819d8289b3",
-  "planner.html": "320b2f49bc33b11d8f113c2af376e766275999f495b697f4ab8c956b84047435"
+  "index.html": "8b84b142883c0f987df641f91411cbb624f07784a52a4e419bc80944eb72e37c",
+  "planner.html": "5cf17019a2167813f2482f0281c6bcd2a8c547b255e8442b1dfcc70e82d363f4"
  },
  "langs": {
-  "lang/zh-Hant.js": "5a9d697de2fb756ab5a02e554778e9af19455bfb68b4689a0c85e0de5e131bee",
-  "lang/zh-Hans.js": "f12d74495d5744f64a6d35c54880b6b7bc21a4c229dccc678608f3d22cea6987",
-  "lang/es.js": "6a07e9f057f3b8ad812f9bace5bc320f4281cf59dc26f10a00890979e7213eb3",
-  "lang/fr.js": "7f20328e2e12ed93c65a7011f58a1de224db7224c6f7fd2d29a712f07a8808c3",
-  "lang/de.js": "676f6f920e39a4456cabf9e1ba6b61782d758daca4fb8f442d273374739a454e",
-  "lang/pt-BR.js": "3805b689c57d196857ca4e76187b936a079fe3cb91334ea877a4d64ce8947200",
-  "lang/ja.js": "251fe08a3b5476271573072fb54b9d74325ff61d3930b4278c95b46f6688e1f2",
-  "lang/ko.js": "b0e24c8a5836f03f44524ad3a34527a44fa43eb0274eec2620f0b3bdad1d3c1d"
+  "lang/zh-Hant.js": "1799988c7ed17ae8b736851ab4eb7093e350e62b16b3c99b491655dd872cd5ed",
+  "lang/zh-Hans.js": "e4d0fe60a2c9ac9c023ac5af6f8c1e0f26b78315bd8f29ee70913f70dac95391",
+  "lang/es.js": "b50a06948d4e5e5996b6ee413e193859d96de677d512ad32b23f7d2d299446c7",
+  "lang/fr.js": "b64a5bfd31e7856e209ccef43cef49db67dbeb659936a1f42be3e4801196720d",
+  "lang/de.js": "f4e0d6e8b5b7f4aafe5190edb8acc68962160e4a778e2f9815cf177ed50c60a1",
+  "lang/pt-BR.js": "dda528de54bc1829fd3d404ef0219a291d066b311329ea20f51ab5ee67746c3c",
+  "lang/ja.js": "11724a554ea4fa97248d8c4351062ff765f353be25b33665032e2dc7298ecbab",
+  "lang/ko.js": "196d4c5ae7f9f2924093b1e0074d390771c65323c2c036c9e82849d9ce5c386f"
  }
 }

@@ -357,6 +357,7 @@ async function nyReplace(B, rd, was) {
     const m = B.meta[id] || { id, name: (rec && rec.label) || 'A download', n: 0, t: (B.work[id] && B.work[id].t) || Date.now() };
     await kdo('meta', 'readwrite', o => o.put({ ...m, papers: !!rec, ...(rec ? { size: rec.entries.reduce((a, e) => a + (e.data ? e.data.length : 0), 0) } : {}) }, id));
   }
+  vkSweep();   // video files no student of that year names
   const v = B.info && B.info.dataV;
   if (!v) store.del('gs.dataV'); else if (v < gsData.version()) store.set('gs.dataV', v);
 }

@@ -130,3 +130,13 @@
 .ptab tr.lo td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
 .ptab .link{text-decoration:none;font-weight:500}
 @media (max-width:700px){.dlg .box .pbody{grid-template-columns:1fr}.pctl{border-right:0;border-bottom:1px solid var(--line)}}
+/* bring in a rubric (src/rubricup.js) */
+.rubup .rusays{font-size:var(--text-control);color:var(--fg-2)}
+.rubup .rurow{display:flex;gap:var(--space-2);align-items:center;flex-wrap:wrap;margin-top:var(--space-1)}
+.rubup .rurow .muted{font-size:var(--text-small)}
+#ruGot{margin-top:var(--space-2);padding:var(--space-3);border:1px solid var(--line);border-radius:var(--corner-3);background:var(--surface-2,var(--surface));display:flex;flex-direction:column;gap:var(--space-1)}
+#ruGot[hidden]{display:none}
+.rufile,.runo{margin:0;font-size:var(--text-small)}
+.rurows{margin:0;padding-left:20px;font-size:var(--text-small);display:flex;flex-direction:column;gap:2px}
+.rurows li span{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rufound{display:inline-flex;gap:var(--space-2);align-items:center;font-size:var(--text-small);margin-top:var(--space-1)}

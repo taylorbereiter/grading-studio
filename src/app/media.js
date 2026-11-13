@@ -9,20 +9,22 @@ const fmtTime = s => { s = Math.max(0, Math.floor(s || 0)); return Math.floor(s 
 const CAN_TRANSCRIBE = window.self === window.top;   // the speech engine downloads its model; a preview frame can't
 let curMedia = null;   // the first player on screen, for the keys
 
-function mediaCard(st, f) {
+// kept: a video file kept in this browser for a student's shortcut f ({ name, url, blob }, video.js), played the same way
+function mediaCard(st, f, kept) {
   const el = document.createElement('div'); el.className = 'media';
-  const vid = VIDEO_RX.test(f.name);
-  el.innerHTML = '<div class="mstick"><div class="mhead"><b>' + esc(f.name) + '</b><span class="muted">' + (vid ? 'video' : 'audio') + '</span></div>' +
+  const vid = VIDEO_RX.test(kept ? kept.name : f.name);
+  el.innerHTML = '<div class="mstick"><div class="mhead"><b>' + esc(kept ? linkTitle(f) : f.name) + '</b><span class="muted">' + (vid ? 'video' : 'audio') + '</span></div>' +
     (vid ? '<video controls preload="metadata" playsinline></video>' : '<audio controls preload="metadata"></audio>') +
     '<div class="mctl"><button class="btn sm" data-skip="-10">◀◀ 10s</button><button class="btn sm" data-skip="10">10s ▶▶</button>' +
     '<span class="seg">' + [1, 1.25, 1.5, 2].map(r => '<button data-rate="' + r + '" aria-pressed="' + (r === (store.get('gs.rate', 1))) + '">' + r + '×</button>').join('') + '</span>' +
     '<button class="btn sm" data-stamp title="Adds the time to your comment, like [2:15]">+ Time to comment</button>' +
-    (CAN_TRANSCRIBE ? '<button class="btn sm" data-tr>' + (f.tr ? 'Transcript ✓' : 'Make transcript') + '</button>' : '') + '</div></div>' +
+    (CAN_TRANSCRIBE && !kept ? '<button class="btn sm" data-tr>' + (f.tr ? 'Transcript ✓' : 'Make transcript') + '</button>' : '') + '</div></div>' +
     '<div class="trans" ' + (f.tr ? '' : 'hidden') + '></div><p class="muted trstat" style="font-size:13px;margin:6px 0 0"></p>';
   const m = el.querySelector('audio,video');
-  m.src = mediaUrl(f); m.playbackRate = store.get('gs.rate', 1);
+  m.src = kept ? kept.url : mediaUrl(f); m.playbackRate = store.get('gs.rate', 1);
   m.onratechange = () => {};
-  mediaWatch(el, m, f);
+  mediaWatch(el, m, kept ? { name: kept.name, data: kept.blob, kind: 'media', size: kept.blob.size } : f);
+  if (vid) vidGrip(el.querySelector('.mstick'), m);
   if (!curMedia) curMedia = m;
   clipStrip(el.querySelector('.mstick'), f, () => m, c => clipRun(m, c));
   const tr = el.querySelector('.trans');

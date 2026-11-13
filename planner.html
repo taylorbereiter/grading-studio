@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"5a9d697d","zh-Hans":"f12d7449","es":"6a07e9f0","fr":"7f20328e","de":"676f6f92","pt-BR":"3805b689","ja":"251fe08a","ko":"b0e24c8a"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script></head><body>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"1799988c","zh-Hans":"e4d0fe60","es":"b50a0694","fr":"b64a5bfd","de":"f4e0d6e8","pt-BR":"dda528de","ja":"11724a55","ko":"196d4c5a"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script></head><body>
 <title>Planner · Grading Studio</title>
 <script>/* ---------------- the sample: a made-up school week, kept apart from everything real ----------------
    Runs first on both pages, before anything reads saved work. While the sample is open (gs.sampleOn in the browser's real storage),
@@ -12,7 +12,7 @@
 (function () {
   var REAL = window.localStorage, KEY = 'gs.sampleOn', LEFT = 'gs.sampleLeft', PRE = 'sample:', DBPRE = 'sample-';
   var SHARED = { 'gs.theme': 1, 'gs.lang': 1 };
-  var DBS = ['grading-studio-keep', 'grading-studio-added', 'grading-studio-folder', 'grading-studio-examples', 'grading-studio-safety', 'grading-studio-models', 'grading-studio-school', 'gs-lessons'];
+  var DBS = ['grading-studio-keep', 'grading-studio-added', 'grading-studio-folder', 'grading-studio-examples', 'grading-studio-safety', 'grading-studio-models', 'grading-studio-school', 'grading-studio-videos', 'gs-lessons'];
   var on = false; try { on = REAL.getItem(KEY) === '1'; } catch (e) {}
   var F = window.IDBFactory && IDBFactory.prototype, open0 = F && F.open, del0 = F && F.deleteDatabase, list0 = F && F.databases;
   function wipe() {
@@ -993,6 +993,7 @@ body.has-side .lsn{margin-right:var(--sidew,420px)}
   <button class="rnav rtt" id="railTimetable" title="Your classes, when they meet, and the school calendar"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/></svg><span class="rl">Timetable</span></button>
   <span class="sp"></span>
   <button class="rsaved" id="railSaved"></button>
+  <a class="rnav" id="railAi" data-beside hidden target="_blank" rel="noopener" title="Opens beside Grading Studio. In Chrome, right-click it and choose Open link in split view to keep both in one window."><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="14" rx="2"/><path d="M13.5 5v14M16 9.5h2M16 12.5h2"/></svg><span class="rl" data-raw></span></a>
   <button class="rnav" id="railFull" data-gsfull title="Full screen ( F )" aria-label="Full screen" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="fs-in" d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/><path class="fs-out" d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg><span class="rl">Full screen</span></button>
   <a class="rnav" data-gs="#/help" href="./#/help" title="Help: short answers to common questions"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M9.7 9.6a2.4 2.4 0 1 1 3.7 2c-.9.6-1.4 1.1-1.4 2.1M12 16.8v.1"/></svg><span class="rl">Help</span></a>
   <a class="rnav" data-gs="#/settings" href="./#/settings" title="Settings"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg><span class="rl">Settings</span></a>
@@ -1115,6 +1116,68 @@ function setTheme(t) {
 }
 document.addEventListener('click', e => { if (e.target.closest('.themeBtn')) setTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'); });
 try { window.__planIn = new BroadcastChannel('gs-plan-in'); window.__planIn.onmessage = () => location.reload(); } catch { }   // Bring work in (the grading page) put Planner records in: start again from what is stored
+
+/* ---------------- The assistant beside the app (11/13): Gemini, Claude, ChatGPT or another, opened next to Grading Studio ----------------
+   Built into both pages. A teacher who has named an AI assistant gets its name in the sidebar on every screen. A click opens the
+   assistant's own page in a window on the right of the screen (or in a tab, if they'd rather); because it is a real link, Chrome's
+   right-click "Open link in split view" puts it in the same window as the app, which is the closest a web page can come to one
+   screen with two panes. Gemini, Claude and ChatGPT all refuse to be shown inside another page, so it cannot be drawn in here.
+   Nothing is connected and nothing is sent: the app opens an address and that is all. The assistant sees only what the teacher
+   pastes or attaches there. Its page says nothing back to this one, so the app can't tell whether it is still open.
+   Where it opens: the assistant's usual page, or a link of the teacher's own (their school account, a Gem, a project, a custom GPT),
+   kept as lib.me.aiUrl. lib.me.aiOpen is 'tab' for a teacher who wants a tab. The Planner reads both from gs.words. */
+const AI_LIST = [['Gemini', 'https://gemini.google.com/app'], ['Claude', 'https://claude.ai/new'], ['ChatGPT', 'https://chatgpt.com/'], ['Copilot', 'https://copilot.microsoft.com/']];
+const aiUsual = name => { const a = AI_LIST.find(x => x[0].toLowerCase() === String(name || '').trim().toLowerCase()); return a ? a[1] : ''; };
+function aiUrlClean(v) {
+  const s = String(v == null ? '' : v).trim().slice(0, 400); if (!s) return '';
+  try { const u = new URL(s); return u.protocol === 'https:' && u.hostname.includes('.') ? u.href : ''; } catch { return ''; }
+}
+function besideWho() {
+  if (typeof aiName === 'function') return { name: aiName(), link: aiLink(), tab: me().aiOpen === 'tab' };
+  let w = null; try { w = JSON.parse(localStorage.getItem('gs.words') || 'null'); } catch { }
+  const name = plWords().ai;
+  return { name, link: aiUrlClean(w && w.link) || aiUsual(name), tab: !!(w && w.tab) };
+}
+function besidePlace() {
+  const s = window.screen || {}, W = s.availWidth || 1280, H = s.availHeight || 800, w = Math.round(Math.min(760, Math.max(420, W * 0.36)));
+  return { left: (s.availLeft || 0) + W - w, top: s.availTop || 0, width: w, height: H };
+}
+function besideRoom() {
+  const p = (navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || '';
+  if (/mac/i.test(p)) return 'hold the pointer over the green button at the top left of this window and choose the left half.';
+  if (/win/i.test(p)) return 'press the Windows key with the left arrow.';
+  if (/cros|chrome os/i.test(p)) return 'press Alt with the [ key.';
+  return 'drag this window’s right edge to the left.';
+}
+function besideOpen(how) {
+  const a = besideWho(); if (!a.link) return false;
+  const tab = how === 'tab' || (how !== 'side' && a.tab), at = besidePlace();
+  let w = null;
+  try { w = window.open('about:blank', '_blank', tab ? '' : 'popup,left=' + at.left + ',top=' + at.top + ',width=' + at.width + ',height=' + at.height); } catch { }
+  if (!w) { toast('The browser stopped ' + a.name + ' from opening. Allow pop-ups for this page, then try again.', 8000); return false; }
+  try { w.opener = null; } catch { }
+  try { w.location.replace(a.link); } catch { try { w.close(); } catch { } return false; }
+  if (!tab) {
+    const covers = (window.screenX || 0) + (window.outerWidth || 0) > at.left + 24;
+    toast(covers ? a.name + ' is open on the right of the screen. To see both at once, make this window narrower: ' + besideRoom() : a.name + ' is open beside Grading Studio.', covers ? 10000 : 4000);
+  }
+  return true;
+}
+function besidePaint() {
+  const a = besideWho();
+  for (const el of document.querySelectorAll('a[data-beside]')) {
+    el.hidden = !a.link;
+    if (a.link) { if (el.getAttribute('href') !== a.link) el.setAttribute('href', a.link); } else el.removeAttribute('href');
+    const l = el.querySelector('.rl'); if (l && l.textContent !== a.name) l.textContent = a.name;
+  }
+}
+document.addEventListener('click', e => {
+  const a = e.target.closest && e.target.closest('a[data-beside]'); if (!a) return;
+  if (e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+  e.preventDefault(); besideOpen();
+});
+window.addEventListener('storage', e => { if (!e.key || e.key === 'gs.words') { try { besidePaint(); } catch { } } });
+window.__gsBeside = { who: besideWho, place: besidePlace, open: besideOpen, paint: besidePaint, clean: aiUrlClean };
 
 /* ================= The bank: rubrics and grading scales, sorted by course and unit =================
    The bank is the Planner's own: kv 'bank' in the Planner database = { rubrics, scales, gone: { id: time } }.
@@ -6577,6 +6640,7 @@ function langFill(t, m, P) {
 }
 const LANG_ATT = { present: 'attp', late: 'attl', 'absent, reason unknown': 'atta', excused: 'atte' };
 const LANG_FILLS = [
+  ['besideopen', /^Open (.+) beside Grading Studio$/],
   ['sdet', /^Student details for (.+)$/], ['cnt', /^Count (.+) in the class average$/], ['wout', /^without (\d+) students? ·$/],
   ['nograde', /^Nothing graded for (.+) in this term yet\. Grade a download for it, or use \+ Add scores for work you did before\.$/],
   ['noroster', /^The gradebook lists the students on a class’s roster\. Add a roster to (.+) on its class page first\.$/],
@@ -6868,6 +6932,12 @@ const HELP = [
       'The same box switches the assignment to plain points, and sets the grading scale that turns a total into a percent.', '**Save to the bank…** keeps a rubric to use again on another assignment.',
       'A row is scored 0 to 4 with half points unless you say otherwise. Under the rows, choose another top score (1 to 10) or turn half points off. Your usual scale for new rubrics is in Settings, Grading.'],
     words: 'criteria rows levels descriptors points percent scale edit bank reuse top highest 0 to 8 0 to 5 half points whole numbers' },
+  { id: 'ai-beside', sec: 'start', q: 'Can I have Gemini, Claude or ChatGPT open beside Grading Studio?',
+    a: ['Yes. Name your assistant in **Settings**, **Working with AI**, and its name appears near the bottom of the sidebar on every screen, in the Planner too. Click it and the assistant opens in a window on the right of the screen. If the Grading Studio window covers it, make that window narrower so both show.',
+      'In Chrome there is a tidier way: right-click the name in the sidebar and choose **Open link in split view**. Both are then in one window, with a divider you can drag. They can’t be joined more closely than that, because Gemini, Claude and ChatGPT don’t let their pages be shown inside another app.',
+      '**Opens at** in the same part of Settings takes a link of your own, for example to your school account, a Gem, a project or a custom GPT. If the assistant opens in the wrong account, switch accounts there, copy the address and paste it in.',
+      'Grading Studio sends nothing to the assistant. It sees only what you paste or attach. An assistant built into the browser itself, like a Gemini or Copilot button in the browser’s own toolbar, is different: it can read the page you are on, student names included, when you ask it about that page.'],
+    go: ['Go to Working with AI', '#/settings/claude'], words: 'gemini claude chatgpt copilot ai assistant split pane side by side window beside chat hydrogen' },
   { id: 'my-setup', sec: 'start', q: 'Can an AI assistant set the app up for me?',
     a: ['Yes. Settings, **My setup** has a prompt to copy into Claude, ChatGPT or any other assistant. It uses what it already knows about your teaching, asks about the rest, and gives you one block of setup text: classes and when they meet, the calendar, terms, how you grade, rubrics, saved comments and learning goals.',
       'Paste that text into the same page and press **Check it**. You see what would change, untick anything you don’t want, and can undo it afterwards.',
@@ -7063,6 +7133,7 @@ if (plSample() && !window.__gsSample.built) location.replace(gsUrl('#/'));
 
 function railRender() {
   sampleRailRender();
+  besidePaint();   // the teacher's AI assistant, to open beside this page (src/beside.js)
   const classes = (L.setup && L.setup.classes) || [];
   const h = classes.map(c => '<a class="rnav" href="' + esc(classUrl(c)) + '" title="' + esc(c.name) + ': its assignments, gradebook and students"><span class="rdot" style="background:' + esc(c.color || '#1F6FB2') + '"></span><span class="rl rname">' + esc(c.name) + '</span></a>').join('');
   const box = $('#railClasses'); if (box.dataset.h !== h) { box.dataset.h = h; box.innerHTML = h; }
@@ -7085,6 +7156,7 @@ function railRender() {
 $('#rail').addEventListener('click', async e => {
   const a = e.target.closest('a[href]');
   if (a) {
+    if (a.hasAttribute('data-beside')) return;   // the AI assistant opens beside this page (src/beside.js); the page itself stays
     if (a.id === 'railPlanner') { e.preventDefault(); return toView(L.view === 'week' || L.view === 'semester' ? L.view : calView); }
     if (e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;   // a new tab, as the browser does it
     e.preventDefault(); return leaveTo(a.href);

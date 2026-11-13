@@ -74,9 +74,11 @@ function rowScaleHtml(d) {
 }
 // A draft's total: a rubric's rows on their own scales, or the whole number of points.
 const draftMax = d => d.mode === 'rubric' ? rowsMax(d) : Math.round(+d.outOf || 0);
-function openSetup() {
-  let draft = JSON.parse(JSON.stringify(setup));
-  let newPage = undefined;   // undefined: unchanged, null: removed, {bytes,name}: new upload
+// pre: { draft, page } to start from, as when a rubric was brought in from the assignment's card (rubricup.js)
+function openSetup(pre) {
+  let draft = JSON.parse(JSON.stringify(pre && pre.draft || setup));
+  let newPage = pre && pre.page ? pre.page : undefined;   // undefined: unchanged, null: removed, {bytes,name}: new upload
+  let found = null;   // rows read from the rubric file just brought in
   const scaleRows = () => {
     const max = draftMax(draft);
     if (!draft.scale) return '<p class="muted" style="font-size:13px;margin:4px 0 0">No scale: percent is the plain share of points.</p>';
@@ -101,7 +103,7 @@ function openSetup() {
     h += '<div class="field"><label>Your rubric, for every student</label><span class="muted" style="font-size:13px">Bring in your rubric once and every student gets their own copy to grade on. A Word rubric (.docx or .docm) stays a Word file: type in it, check its boxes and shade its cells. A PDF or picture is added as a page you can mark up. Each copy goes back with that student’s work.</span>' +
       '<span style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:4px"><button class="btn sm" data-rpup>' + (rp ? 'Replace…' : 'Bring in my rubric…') + '</button>' +
       (rp ? '<span style="font-size:13px;font-weight:600">' + esc(rp.name || 'Rubric page') + '</span><span class="seg"><button data-pos="end" aria-pressed="' + ((draft.rubricPos || 'end') === 'end') + '">After their work</button><button data-pos="start" aria-pressed="' + (draft.rubricPos === 'start') + '">Before</button></span><button class="link" data-rprm>Remove</button>' : '') +
-      '</span><input type="file" id="rpIn" hidden></div>';
+      '</span>' + (found ? '<span class="rufound"><span>Rows were found in it.</span> <button class="btn sm" data-rpuse>Use these rows</button></span>' : '') + '<input type="file" id="rpIn" hidden></div>';
     h += '<p class="muted" style="font-size:13px;margin:0">Scores you already gave stay put if you rename rows.' + (batch && batch.assignment ? ' This setup is remembered for “' + esc(batch.assignment.name) + '”.' : '') + '</p>';
     return h;
   };
@@ -123,13 +125,16 @@ function openSetup() {
       if (WORD_RX.test(f.name)) {
         openWord(bytes);
         newPage = { bytes, name: f.name };
+        try { found = ruFromWord(bytes); } catch { found = null; }
         if (!draft.rubricPos) draft.rubricPos = 'start';   // a Word rubric sits above their work unless she moves it
       } else {
         if (isImg(f.name) && !await picReads(bytes)) throw new Error('damaged');
         const pdf = isImg(f.name) ? await imageToPdf(bytes, f.name) : IMG_MORE.test(f.name) ? await anyImageToPdf(bytes) : bytes;
         await PDFLib.PDFDocument.load(pdf, { ignoreEncryption: true });
         newPage = { bytes: pdf, name: f.name };
+        found = pdf === bytes ? await ruFromPdf(bytes).catch(() => null) : null;
       }
+      if (found && !found.rows.length) found = null;
       if (draft.mode === 'rubric' && draft.criteria.every((c, i) => c === 'Criterion ' + (i + 1))) { draft.outOf = rowsMax(draft); draft.mode = 'points'; }   // her rubric replaces the generic rows
       re();
     } catch { toast('That file couldn’t be opened as a Word file, PDF or picture'); }
@@ -148,7 +153,8 @@ function openSetup() {
     }
     const pos = e.target.closest('[data-pos]'); if (pos) { draft.rubricPos = pos.dataset.pos; return re(); }
     if (e.target.closest('[data-rpup]')) return $('#rpIn').click();
-    if (e.target.closest('[data-rprm]')) { newPage = null; return re(); }
+    if (e.target.closest('[data-rprm]')) { newPage = null; found = null; return re(); }
+    if (e.target.closest('[data-rpuse]') && found) { rubricRowsInto(draft, found); levelEditOpen.clear(); if (rubDlg) rubDlg.from = draft.criteria.map((_, i) => i < rubDlg.n0 ? i : null); found = null; return re(); }
     if (e.target.closest('[data-cancel]')) return closeDlg();
     if (e.target.closest('[data-save]')) {
       if (newPage !== undefined) await Promise.all([...wordSaves].map(s => s()));   // boxes highlighted a moment ago count
