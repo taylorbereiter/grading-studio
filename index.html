@@ -10162,7 +10162,7 @@ function editAssignment(id, unitId, clsId) {
   fillUnits(start.u);
   if (f) $('#aClass').onchange = () => fillUnits(null);
   else { $('#aClasses').onchange = () => fillUnits(null); $('#aUnit').onchange = () => fillUnits(null); }
-  setTimeout(() => $('#aName').focus(), 0);
+  setTimeout(() => $('#aName')?.focus(), 0);   // the box can be shut before this runs
   $('#dlgBox').onclick = async e => {
     if (e.target.closest('[data-cancel]')) return closeDlg();
     const tb = e.target.closest('[data-atype]');
