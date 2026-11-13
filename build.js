@@ -7,6 +7,9 @@ const face = (file, range) => '@font-face{font-family:"Inter";font-style:normal;
 const fontCss = ('/*\n' + fs.readFileSync('src/fonts/OFL.txt', 'utf8') + '*/\n' +
   face('inter-latin-wght-normal.woff2', 'U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD') +
   face('inter-latin-ext-wght-normal.woff2', 'U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF'));
+// The sample is kept apart from real work by a few lines that run before anything else, on both pages (src/samplemode.js).
+const sampleMode = fs.readFileSync('src/samplemode.js', 'utf8').replace(/^[ \t]*\/\/.*\r?\n/gm, '');
+rep('/*@@SAMPLEMODE@@*/', sampleMode);
 rep('/*@@FONT@@*/', fontCss);
 const tokensCss = fs.readFileSync('src/tokens.css', 'utf8'), partsCss = fs.readFileSync('src/parts.css', 'utf8');   // the same tokens and shared parts in both pages
 rep('/*@@TOKENS@@*/', tokensCss);
@@ -51,15 +54,23 @@ const langFiles = {}, langNames = {}, langPacked = {};
     langFiles['lang/' + code + '.js'] = '(window.__gsLangs = window.__gsLangs || {})[' + JSON.stringify(code) + '] = (function () {\n' + src.replace(/^[ \t]*\/\/.*\r?\n/gm, '') + '\n})();\n';
   }
 }
+// What fills the sample (src/sample-data.js) is handled the same way: sample.js beside the pages at the web address, fetched only when
+// somebody opens the sample, and squeezed inside the double-click copy.
+const sampleSrc = fs.readFileSync('src/sample-data.js', 'utf8').replace(/^[ \t]*\/\/.*\r?\n/gm, '') + '\nreturn SAMPLE;';
+// The builder is named by a stamp of its own contents. A page only uses the builder it was made with, and a sample another one made is made again.
+const sampleStamp = require('crypto').createHash('sha256').update(sampleSrc).digest('hex').slice(0, 8);
+const sampleFile = 'window.__gsSampleData = (function () {\n' + sampleSrc + '\n})();\nwindow.__gsSampleData.api = ' + JSON.stringify(sampleStamp) + ';\n';
+const SAMPLE_INSIDE = 'const SAMPLE_PACKED = ' + JSON.stringify(Buffer.from(require('fflate').deflateSync(Buffer.from(sampleSrc, 'utf8'), { level: 9 })).toString('base64')) + ';', SAMPLE_FETCHED = 'const SAMPLE_PACKED = "";';
 const LANG_INSIDE = 'const LANG_PACKED = ' + JSON.stringify(langPacked) + ';', LANG_FETCHED = 'const LANG_PACKED = {};';
 const langSrc = 'const LANG_NAMES = ' + JSON.stringify(langNames) + ';\n' + LANG_INSIDE;
+const sampleConsts = 'const SAMPLE_API = ' + JSON.stringify(sampleStamp) + ';\nconst SAMPLE_STAMP = ' + JSON.stringify(sampleStamp) + ';\n' + SAMPLE_INSIDE;
 // In a page at the web address, before anything else runs: fetch the chosen language's file. It is a plain script beside the page,
 // so the browser waits for it, and the offline copy (src/sw.js) keeps it with the pages.
-const hosted = page => { if (page.split(LANG_INSIDE).length !== 2) throw new Error('the languages are not in the page once'); return page.replace(LANG_INSIDE, () => LANG_FETCHED); };
+const hosted = page => { if (page.split(LANG_INSIDE).length !== 2) throw new Error('the languages are not in the page once'); return page.replace(LANG_INSIDE, () => LANG_FETCHED).replace(SAMPLE_INSIDE, () => SAMPLE_FETCHED); };
 // Each file is asked for with a stamp of its contents (lang/es.js?1a2b3c4d), so a page never gets the file of another version from a browser's own cache.
 const langStamp = Object.fromEntries(LANGS.map(([code]) => [code, require('crypto').createHash('sha256').update(langFiles['lang/' + code + '.js']).digest('hex').slice(0, 8)]));
 const LANG_LOADER = '<script>try{var gsLangV=' + JSON.stringify(langStamp) + ',gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write(\'<script src="lang/\'+gsL+\'.js?\'+gsLangV[gsL]+\'"><\\/script>\')}catch(e){}</script>';
-rep('/*@@APP@@*/', (fs.readFileSync('src/migrate.js', 'utf8') + '\ngsData.boot(function () {\n' + ['@langs', 'lang', 'helpdata', 'pickshare', APP, 'names', 'marking', 'stamps', 'grades', 'saving', 'carryover', 'exportreport', 'feedback', 'rubrics', 'book', 'bookimport', 'intake', 'polish', 'insight', 'people', 'scans', 'merge', 'folder', 'takehome', 'quiz', 'imported', 'marksout', 'pastetext', 'groups', 'video', 'anchors', 'wordnotes', 'wordpdf', 'classpage', 'seating', 'attend', 'goals', 'ib', 'reports', 'missing', 'sheet', 'tabs', 'markscreen', 'examples', 'snip', 'touch', 'today', 'todo', 'settings', 'safe', 'newyear', 'welcome', 'setupin', 'help', 'school', 'classroom', 'shell', 'moving', 'fullscreen'].map(n => n === APP ? appSrc : n === '@langs' ? langSrc : fs.readFileSync('src/' + n + '.js', 'utf8')).join('\n') + '\n});').replace(/^[ \t]*\/\/.*\r?\n/gm, '').replace('/*@@STICKERS@@*/{}', () => stickerSrc));
+rep('/*@@APP@@*/', (fs.readFileSync('src/migrate.js', 'utf8') + '\ngsData.boot(function () {\n' + ['@langs', '@sample', 'lang', 'helpdata', 'pickshare', APP, 'names', 'marking', 'stamps', 'grades', 'saving', 'carryover', 'exportreport', 'feedback', 'rubrics', 'book', 'bookimport', 'intake', 'polish', 'insight', 'people', 'scans', 'merge', 'folder', 'takehome', 'quiz', 'imported', 'marksout', 'pastetext', 'groups', 'video', 'anchors', 'wordnotes', 'wordpdf', 'classpage', 'seating', 'attend', 'goals', 'ib', 'reports', 'missing', 'sheet', 'tabs', 'markscreen', 'examples', 'snip', 'touch', 'today', 'todo', 'settings', 'safe', 'newyear', 'welcome', 'setupin', 'help', 'school', 'classroom', 'shell', 'moving', 'fullscreen', 'sample'].map(n => n === APP ? appSrc : n === '@langs' ? langSrc : n === '@sample' ? sampleConsts : fs.readFileSync('src/' + n + '.js', 'utf8')).join('\n') + '\n});').replace(/^[ \t]*\/\/.*\r?\n/gm, '').replace('/*@@STICKERS@@*/{}', () => stickerSrc));
 rep("'/*@@GCID@@*/'", JSON.stringify(process.env.GCID || ''));
 // Where this copy lives and where it is moving to (site.json), only while a move is on. Otherwise the app has no address written into it.
 { const site = require('./site.json'); rep("'/*@@SITE@@*/'", JSON.stringify(site.movingTo ? { address: site.address || '', movingTo: site.movingTo } : null)); }
@@ -76,12 +87,14 @@ fs.writeFileSync('index.html', hosted(fullHtml).replace('</head>', HOSTED));
 fs.mkdirSync('lang', { recursive: true });
 for (const f of fs.readdirSync('lang')) if (!langFiles['lang/' + f]) fs.unlinkSync('lang/' + f);
 for (const [f, src] of Object.entries(langFiles)) fs.writeFileSync(f, src);
+fs.writeFileSync('sample.js', sampleFile);
 fs.writeFileSync('out/artifact.html', h.split('�').join('\\uFFFD'));
 console.log((h.length / 1e6).toFixed(2) + 'MB');
 // The Planner: its own page, built only from src/planner. No grading code goes into it.
 {
   let p = fs.readFileSync('src/planner/planner.html', 'utf8');
   const prep = (k, v) => { p = p.split(k).join(v); };
+  prep('/*@@SAMPLEMODE@@*/', sampleMode);
   prep('/*@@FONT@@*/', fontCss);
   prep('/*@@TOKENS@@*/', tokensCss);
   prep('/*@@PARTSCSS@@*/', partsCss);

@@ -60,3 +60,6 @@ html.welcoming .shell{visibility:hidden}
 .mebrow label{display:inline-flex;align-items:center;gap:6px;font-size:var(--text-control);color:var(--muted)}
 .mebrow input{height:32px;border:1px solid var(--line-strong);border-radius:var(--corner-2);padding:0 var(--space-2);font:inherit;font-size:var(--text-body);background:var(--surface);color:var(--fg);width:64px}
 .mebrow input.mebl{width:56px;font-weight:600}
+
+.safeask .satry{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 14px;margin-top:var(--space-3)}
+.safeask .satry span{color:var(--muted)}

@@ -15,7 +15,7 @@ Mark student papers, score them, plan lessons and hand work back, in your browse
 ## Start in five minutes
 
 1. Open the link. A new browser asks three questions: what you teach, how you grade, and where your work should be kept. Every answer can be changed later in Settings.
-2. Or click **Look around with a sample class first**. It makes a class of six made-up students with papers to mark, score and export. **Remove the sample class** on Today takes it away again.
+2. Or click **Look around with a sample class first**. It opens a sample: two made-up classes part-way through a term, with marked papers, a gradebook, charts, a timetable and lessons. The sample is kept apart from your own work, and **Leave the sample** clears it in one click.
 3. Download a class's submissions from your school's system and drop the ZIP on Today. A folder, loose files, or one scan of the whole class's papers work too.
 4. Mark and score. **Enter** goes to the next paper. The **Grades** tab lists every score to copy, and **Return** exports the marked files.
 

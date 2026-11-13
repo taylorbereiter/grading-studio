@@ -1,22 +1,22 @@
 {
- "version": "1.28.11",
- "build": "81a763beae17",
+ "version": "1.28.12",
+ "build": "9fea21037ee7",
  "notes": [
-  "In another language, the marking screen now reads in that language: the top bar, the tools, the student list, the score panel and its menus, and the Grades, Insights and Return tabs and Rubric setup.",
-  "Student names, rubric rows, what each score means, your comments and the papers themselves stay as they are. Boxes opened from the marking screen, To do, School and the Planner are still in English."
+  "Look around with a sample class first now opens a full sample: two made-up classes part-way through a term, with marked papers, a quiz marked by question, a gradebook, charts, missing work, attendance, seating, report comments, to-dos and two weeks of lessons.",
+  "The sample is kept apart from your own work. Leave the sample in the sidebar clears it in one click, and your own classes are exactly as you left them."
  ],
  "files": {
-  "index.html": "1e577eb51224418cdcf1e125dc19b4b030dba9f1d46921b352897d8c2e0c1ed5",
-  "planner.html": "f1327c402c2fd450576b6ab03096e8bdb3bfb2b154adec04bfb91db55665a678"
+  "index.html": "533b6d101b7699b57384280ab642802806730b5dd49c8babf3364d819d8289b3",
+  "planner.html": "320b2f49bc33b11d8f113c2af376e766275999f495b697f4ab8c956b84047435"
  },
  "langs": {
-  "lang/zh-Hant.js": "db23a41209d4657f61b472e340f4366c5a36fc5feb4c96bb5cb8d94e7d5e0927",
-  "lang/zh-Hans.js": "6e7f470ef20df911000ef42067a5a0c52b87c0bb79960544ced12641dc3c13db",
-  "lang/es.js": "1b45bce1f6e91f6cba5088e132b8a9f7f14eaa0a86279a4df4cd1402ad3fc986",
-  "lang/fr.js": "6c35ac3c541ac5c3fa530bc1b50b1e4d8072b5b9a30b7263c54393849c659b9b",
-  "lang/de.js": "c5237f62d8d523f87a592e662fe642d4c69b77fee100f217562f37d4864b4b2c",
-  "lang/pt-BR.js": "450149ce4859d1def40287cc78ee2f5f719c48b219300f1655ac61b24ff36051",
-  "lang/ja.js": "92bacea687286188461a17663fdd37e5285302f6f68636dc48a812852da5cc92",
-  "lang/ko.js": "8965c72a4e67fd02b137b921ad5532d5ac0ec841d27e8dea89710706c92a24fa"
+  "lang/zh-Hant.js": "5a9d697de2fb756ab5a02e554778e9af19455bfb68b4689a0c85e0de5e131bee",
+  "lang/zh-Hans.js": "f12d74495d5744f64a6d35c54880b6b7bc21a4c229dccc678608f3d22cea6987",
+  "lang/es.js": "6a07e9f057f3b8ad812f9bace5bc320f4281cf59dc26f10a00890979e7213eb3",
+  "lang/fr.js": "7f20328e2e12ed93c65a7011f58a1de224db7224c6f7fd2d29a712f07a8808c3",
+  "lang/de.js": "676f6f920e39a4456cabf9e1ba6b61782d758daca4fb8f442d273374739a454e",
+  "lang/pt-BR.js": "3805b689c57d196857ca4e76187b936a079fe3cb91334ea877a4d64ce8947200",
+  "lang/ja.js": "251fe08a3b5476271573072fb54b9d74325ff61d3930b4278c95b46f6688e1f2",
+  "lang/ko.js": "b0e24c8a5836f03f44524ad3a34527a44fa43eb0274eec2620f0b3bdad1d3c1d"
  }
 }
