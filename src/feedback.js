@@ -9,7 +9,7 @@ const FB_INK = '#1E2024', FB_INK2 = '#3F444C', FB_MUTED = '#5C616A', FB_LINE = '
 // What the page says for this student and this file, or null when there is nothing to say (no score, no comment, no comment on the paper).
 function fbData(st, d) {
   // A retake: each paper carries its own try's score, rows and comment. The newer one also says what counts when that isn't its own score.
-  const tries = st.grade.tries || [], tn = tries.length ? tryOfFile(st, fileByPath(st, (d.pages[0] || [])[0])) : 0, old = tn ? tries[tn - 1] : null, cnt = tries.length && !old ? gradeOf(st) : null;
+  const tries = st.grade.tries || [], tn = tries.length ? tryOfFile(st, fileByPath(st, (d.pages[0] || [])[0]) || (d.words && d.words[0])) : 0, old = tn ? tries[tn - 1] : null, cnt = tries.length && !old ? gradeOf(st) : null;
   const g = old ? { total: old.total, pct: old.pct, outOf: old.max, status: old.late ? 'late' : '' } : tries.length ? tryGrade(st) : gradeOf(st), rub = setup.mode === 'rubric', c = batchClass();
   if (cnt && !g.status && st.grade.status === 'late') g.status = 'late';
   const rubricOf = old ? old.rubric || [] : st.grade.rubric;

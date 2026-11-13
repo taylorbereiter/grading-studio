@@ -25,7 +25,7 @@ const PLATFORMS = {
 // in and the state real saved work is in: no welcome, and every word and default as it was.
 // It also has finding names on its own turned on, as every browser did before 11/11; a test of the new default passes nameFind: false.
 const USED_BEFORE = { 'gs.nameFind': 'true', 'gs.lib': JSON.stringify({ classes: ['12EL-1', '12EL-2', '11EL-2'].map((name, i) => ({ id: 'starter' + (i + 1), name, names: [], units: [] })), loose: { id: '', units: [] }, units: [], seed2627: true }), 'gs.syncT': JSON.stringify({ 'gs.lib': 1 }) };
-async function openApp(browser, { html, platform, seed, server, context, noWait, beforeLoad, newTeacher, feedback, names, nameFind } = {}) {
+async function openApp(browser, { html, platform, seed, server, context, noWait, beforeLoad, newTeacher, feedback, names, one, nameFind } = {}) {
   const usedBefore = !newTeacher && !(seed && seed.ls && seed.ls['gs.lib'] != null);
   const srv = server || await serve(html || builtHtml());
   const ctx = context || await browser.createBrowserContext();
@@ -65,6 +65,9 @@ async function openApp(browser, { html, platform, seed, server, context, noWait,
     // Returned files are named "Student - Assignment - Graded.pdf" unless she turns that off. Tests of everything else about a
     // returned file look for it by the name it was turned in with, so they start with it off; names: true leaves it as a teacher finds it.
     if (!names && !(seed && seed.ls && 'gs.xnames' in seed.ls)) seed = { ...(seed || {}), ls: { ...((seed && seed.ls) || {}), 'gs.xnames': 'false' } };
+    // Each student's papers go back as one PDF unless the teacher turns that off. Tests of everything else about a returned file look for
+    // each file on its own, so they start with it off; one: true leaves it as a teacher finds it.
+    if (!one && !(seed && seed.ls && 'gs.xone' in seed.ls)) seed = { ...(seed || {}), ls: { ...((seed && seed.ls) || {}), 'gs.xone': 'false' } };
     if (seed) await plant(page, seed);
   }
   if (beforeLoad) await beforeLoad(page);

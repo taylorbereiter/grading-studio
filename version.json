@@ -1,12 +1,14 @@
 {
- "version": "1.28.6",
- "build": "dbd8d4505671",
+ "version": "1.28.10",
+ "build": "542dbf557b81",
  "notes": [
-  "In another language, the boxes a class page opens now read in that language too: a new or changed assignment, the roster, units, how the class is graded, Email wording and report Wording, the notes pages for work with no papers, and the progress sheets you print.",
-  "Class, unit, assignment and student names, and the sentences in the Wording boxes, stay as you typed them. The marking screen and its boxes are still in English."
+  "Planner slides: click any text box and the size menu in the toolbar changes that box: the title, the text, the bottom line and the rest. Biggest that fits picks the size for you.",
+  "The box you click gets a frame: drag its bar to move it or a handle to resize it, and Put back returns it to the layout. The .pptx keeps the new places and sizes.",
+  "+ Add slide adds a title and text slide straight away; the arrow beside it opens every layout. Timetable can set a different usual slide.",
+  "Words are never cut off: text that runs past its box stays visible in the editor with a warning, and when you present the box uses the room under it, then the text gets smaller until every word shows."
  ],
  "files": {
-  "index.html": "b0bdf43b2c15787650860a9136f7be8e4de4b50301219de75cfdc12410368bd5",
+  "index.html": "d6934f0689111bd2d92c231480186113bd937da6b978909f7895e6b3397033e5",
   "planner.html": "3d5ff28e9731be76b2a887fbb2b4e9f756c42c831ecfb672419c3acecaa4b899"
  },
  "langs": {
