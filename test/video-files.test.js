@@ -241,3 +241,75 @@ test('a rubric brought in from Word or a PDF fills in its rows and what each lev
   assert.deepEqual(page.errors, []);
   await close();
 });
+
+test('a rubric copy brought in after the notes pages are taken out or removed goes on the paper, not into Removed', async () => {
+  const NAMES = ['Aria Testwell', 'Bram Sample', 'Cleo Fixture'];
+  const lib = { classes: [{ id: 'c1', name: '10 English', names: NAMES, units: [{ id: 'u1', name: 'Unit 1', items: [{ id: 'i1', name: 'Speech video', classId: 'c1', type: 'sum', setup: { mode: 'rubric', criteria: ['Voice', 'Evidence'], outOf: 8 } }] }] }], loose: { id: '', name: '', names: [], units: [] }, seed2627: true };
+  const { page, close } = await openApp(browser, { seed: { ls: { 'gs.lib': JSON.stringify(lib) } } });
+  await classPage(page, 'i1'); await page.waitForSelector('[data-open-asg="i1"]'); await page.click('[data-open-asg="i1"]');
+  await page.waitForSelector('#dlgBox [data-nopaper]'); await page.click('#dlgBox [data-nopaper]');
+  await page.waitForSelector('#snGo'); await page.click('#dlgBox .nptile[data-np="rubric"]'); await page.click('#snGo');
+  await waitPaper(page);
+  // Aria: every notes page taken out with ×. Bram: the notes file removed. Cleo: left as it is.
+  await goToStudent(page, await idx(page, 'Aria Testwell'));
+  for (let k = 0; k < 10 && await page.$('#paper [data-pgout]'); k++) {
+    const n = await page.$$eval('#paper [data-pgout]', b => b.length);
+    await page.$eval('#paper [data-pgout]', b => b.click());
+    await page.waitForFunction(n => document.querySelectorAll('#paper [data-pgout]').length < n, {}, n);
+  }
+  assert.deepEqual(await page.evaluate(() => window.__gs.state().batch.students[window.__gs.state().cur].layout), []);
+  await page.evaluate(() => { const st = window.__gs.state().batch.students.find(s => s.key === 'Bram Sample'); return window.__gs.removeFile(st, st.files[0].path, true); });
+  const pdf = Buffer.from(await rubricPdf()).toString('base64');
+  await page.evaluate(b64 => window.__gs.openSetup({ page: { bytes: Uint8Array.from(atob(b64), c => c.charCodeAt(0)), name: 'Speech rubric.pdf' } }), pdf);
+  await page.waitForSelector('#dlgBox [data-save]'); await page.click('#dlgBox [data-save]');
+  await page.waitForFunction(() => window.__gs.state().batch.students.every(s => s.files.some(f => f.virtual)));
+  const got = await page.evaluate(() => window.__gs.state().batch.students.map(st => {
+    const L = window.__gs.layoutOf(st), on = new Set(L.flatMap(d => d.pages.map(([q, p]) => q + '|' + p))), rp = st.files.find(f => f.virtual);
+    return [st.key, rp.name, [...Array(rp.numPages).keys()].every(p => on.has(rp.path + '|' + p))];
+  }));
+  assert.deepEqual(got, NAMES.map(n => [n, 'Rubric page', true]), 'everyone’s copy is on their paper');
+  await goToStudent(page, await idx(page, 'Aria Testwell'));
+  await page.waitForSelector('#paper canvas');
+  assert.doesNotMatch(await page.$eval('#paper', e => e.textContent), /your rubric page/, 'not waiting under Removed pages');
+  assert.deepEqual(page.errors, []);
+  await close();
+});
+
+test('a video filmed sideways turns the right way up, a quarter turn at a time, kept for that video (partners share the link), and stays turned', async () => {
+  const { page, close } = await openApp(browser);
+  await noWeb(page);
+  const url = u => strToU8('[InternetShortcut]\r\nURL=' + u + '\r\n');
+  await openZip(page, zipOf({
+    'Ada Example/Outline.pdf': await makePaper({ title: 'Ada outline' }),
+    'Aria Testwell/Speech.url': url('https://www.youtube.com/watch?v=madeup12345'),
+    'Bram Sample/Speech.url': url('https://drive.google.com/file/d/madeupDriveId123/view'),
+  }), 'Speech.zip');
+  await goToStudent(page, await idx(page, 'Aria Testwell'));
+  await page.waitForSelector('#paper .vlink [data-vrot]');
+  await page.click('#paper .vlink [data-vrot]');   // turns, and opens the player
+  await page.waitForSelector('#paper .vrotbox.on iframe');
+  const look = () => page.$eval('#paper .vrotbox', b => { const f = b.firstElementChild, r = b.getBoundingClientRect(), q = f.getBoundingClientRect(); return { turn: b.dataset.turn, t: f.style.transform, bw: Math.round(r.width), bh: Math.round(r.height), fw: Math.round(q.width), fh: Math.round(q.height) }; });
+  let L = await look();
+  assert.equal(L.turn, '90'); assert.equal(L.t, 'rotate(90deg)');
+  assert.ok(Math.abs(L.fw - L.bw) <= 2 && Math.abs(L.fh - L.bh) <= 2, 'the turned player fills the box exactly: ' + JSON.stringify(L));
+  assert.equal(await page.$('#paper .vrnote'), null, 'YouTube says nothing about captions');
+  for (const want of ['180', '270', '0', '90']) { await page.click('#paper .vlink [data-vrot]'); assert.equal((await look()).turn, want); }
+  assert.deepEqual(await page.evaluate(() => window.__gs.state().batch.vrot), { 'https://www.youtube.com/watch?v=madeup12345': 90 });
+  // the size bar still drags the turned video bigger
+  const g = await (await page.$('#paper .vgrip')).boundingBox(), h0 = L.bh;
+  await page.mouse.move(g.x + g.width / 2, g.y + g.height / 2); await page.mouse.down(); await page.mouse.move(g.x + g.width / 2, g.y + 120, { steps: 4 }); await page.mouse.up();
+  await page.waitForFunction(h0 => document.querySelector('#paper .vrotbox').getBoundingClientRect().height > h0 + 60, {}, h0);
+  L = await look(); assert.ok(Math.abs(L.fw - L.bw) <= 2 && Math.abs(L.fh - L.bh) <= 2, 'still fits after resizing: ' + JSON.stringify(L));
+  // Drive draws its own captions: turned, the card says they turn with it
+  await goToStudent(page, await idx(page, 'Bram Sample'));
+  await page.waitForSelector('#paper .vlink [data-vrot]');
+  assert.equal(await page.$eval('#paper .vrnote', e => e.hidden), true);
+  await page.click('#paper .vlink [data-vrot]');
+  assert.equal(await page.$eval('#paper .vrnote', e => e.hidden), false);
+  await settle(page);
+  await page.reload(); await page.waitForSelector('#vHome [data-kopen]'); await page.click('#vHome [data-kopen]');
+  await page.waitForFunction(() => { const s = window.__gs.state(); return s.batch && s.batch.students.length === 3 && !document.querySelector('#app').hidden; }, { timeout: 60000 });
+  assert.deepEqual(await page.evaluate(() => window.__gs.vrotOf(window.__gs.state().batch.students.find(s => s.key === 'Aria Testwell').files[0])), 90, 'kept after reopening');
+  assert.deepEqual(page.errors, []);
+  await close();
+});
