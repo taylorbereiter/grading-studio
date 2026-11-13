@@ -83,6 +83,11 @@ html.vidtall #paper .mstick{position:relative;top:auto}
 .pvchip[aria-pressed=true]{background:var(--accent);border-color:var(--accent);color:var(--surface)}
 .pvchip:disabled{opacity:.7;cursor:default}
 @media (max-width:640px){.pvrow{grid-template-columns:1fr}.pvpbtn{justify-self:start}}
+/* a video turned the right way up: the box keeps the player's usual size and the player turns inside it */
+.vrotbox{position:relative}
+.vrotbox.on{overflow:hidden;height:38vh;min-height:220px;border-radius:var(--corner-3);background:var(--fg)}
+#paper .media:not(.vlink) .vrotbox.on{height:36vh}
+html.vidsized #paper .vrotbox.on{height:var(--vid-h);min-height:0}
 /* transcripts under a player: made here or pasted (src/app/media.js) */
 .trbox{padding:10px 14px 4px}
 .trbox .trrow{display:flex;gap:var(--space-2);flex-wrap:wrap;align-items:center}

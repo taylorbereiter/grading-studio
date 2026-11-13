@@ -41,12 +41,12 @@ const sysDl = () => sysName() ? 'the ' + sysName() + ' download' : 'the papers';
 // The AI assistant this teacher uses, if they use one: only for the words on screen and the names of the files made for it. Nothing
 // is connected to it. A browser from before this was asked reads as Claude, which is the word the app had; a new one names none
 // and reads "your AI assistant". me().ai can be absent in a lib.me written before the question existed: that teacher had Claude's words too.
-const AI_LIST = [['Claude', 'https://claude.ai/new'], ['ChatGPT', 'https://chatgpt.com/'], ['Gemini', 'https://gemini.google.com/app'], ['Copilot', 'https://copilot.microsoft.com/']];
+// AI_LIST, the assistants the app knows an address for, is in src/beside.js, which both pages share.
 function aiName() { const m = me(), v = m.ai == null ? (m.scale12 ? 'Claude' : '') : m.ai; return String(v || '').trim().slice(0, 30); }
 function aiSay() { return aiName() || 'your AI assistant'; }   // in the middle of a sentence
 function AiSay() { return aiName() || 'Your AI assistant'; }   // at the start of one
 function aiTag() { return aiName() || 'AI'; }                  // in front of another word: "the AI codes"
-function aiLink() { const a = AI_LIST.find(x => x[0].toLowerCase() === aiName().toLowerCase()); return a ? a[1] : ''; }   // where "Open …" goes; none for an assistant the app doesn't know
+function aiLink() { return aiName() ? aiUrlClean(me().aiUrl) || aiUsual(aiName()) : ''; }   // where its name in the sidebar and "Open …" go: the teacher's own link, or its usual page; none for an assistant the app doesn't know
 // The same idea for a unit: where its plan lives. "Atlas" for a teacher who had it before.
 const unitWord = () => unitLinkName() || 'unit plan';
 // The link a unit can carry: "Atlas" for a teacher who had it before, a plain "unit plan" for everyone else.
@@ -92,7 +92,7 @@ function saveLib() { libVer++; if (!store.set('gs.lib', lib)) toast('This browse
 // it is a separate page that never opens grading's work. Only for a teacher who has said them; nothing is written otherwise.
 function wordsShare() {
   if (!lib.me) return;
-  try { const v = JSON.stringify({ sys: sysName(), unit: unitLinkName(), ai: aiName(), ...(me().scale12 ? { scale12: true } : {}) }); if (localStorage.getItem('gs.words') !== v) localStorage.setItem('gs.words', v); } catch {}
+  try { const v = JSON.stringify({ sys: sysName(), unit: unitLinkName(), ai: aiName(), ...(me().scale12 ? { scale12: true } : {}), ...(aiName() && aiUrlClean(me().aiUrl) ? { link: aiUrlClean(me().aiUrl) } : {}), ...(me().aiOpen === 'tab' ? { tab: true } : {}) }); if (localStorage.getItem('gs.words') !== v) localStorage.setItem('gs.words', v); } catch {}
 }
 const holders = () => lib.classes.concat([lib.loose]);
 const holderById = id => id ? lib.classes.find(c => c.id === id) || null : lib.loose;

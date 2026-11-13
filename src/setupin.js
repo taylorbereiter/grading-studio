@@ -96,7 +96,11 @@ function stpRead(j) {
   const prog = stpStr(j.programme != null ? j.programme : j.program, 24); if (prog) S.prog = prog;
   // the school's own words
   const sc = stpObj(j.school);
-  if (sc) { const o = {}; for (const [k, to] of [['system', 'sys'], ['unitPlans', 'unit'], ['assistant', 'ai']]) if (typeof sc[k] === 'string') o[to] = stpStr(sc[k], 40); if (Object.keys(o).length) S.school = o; }
+  if (sc) { const o = {}; for (const [k, to] of [['system', 'sys'], ['unitPlans', 'unit'], ['assistant', 'ai']]) if (typeof sc[k] === 'string') o[to] = stpStr(sc[k], 40);
+    // where the assistant opens and how (src/beside.js): an https link, and "tab" or "window"
+    if (typeof sc.assistantLink === 'string') o.aiUrl = aiUrlClean(sc.assistantLink);
+    if (typeof sc.assistantOpens === 'string') o.aiOpen = /^tab$/i.test(sc.assistantOpens.trim()) ? 'tab' : '';
+    if (Object.keys(o).length) S.school = o; }
   // how a new assignment is graded
   const g = stpObj(j.grading);
   if (g) {
@@ -181,6 +185,7 @@ function stpRead(j) {
   if (mk) {
     const m = {}; for (const [k, to] of [['studentFileNames', 'xnames'], ['onePdfPerStudent', 'xone'], ['coverNamesOnAnchors', 'anchorCover'], ['findTypedNames', 'nameFind'], ['gradeSheetFromPapers', 'sheetfound']]) if (typeof mk[k] === 'boolean') m[to] = mk[k];
     const pc = stpKey(mk.pointsColor); if (pc === 'pen') m.ptsInk = ''; else if (pc === 'credit' || COLORS[pc]) m.ptsInk = pc;
+    const fs = stpKey(mk.fullScreenSide); if (FS_SIDES.includes(fs)) m.fside = fs;
     if (Object.keys(m).length) S.mark = m;
   }
   if (typeof j.attendance === 'boolean') S.att = j.attendance; else if (j.attendance != null && stpCount(j.attendance)) S.left.push('Attendance records.');
@@ -242,6 +247,8 @@ function stpDiff(S, planNow) {
     if (s.sys != null && s.sys !== sysName()) L.push(s.sys ? 'Students hand work in on <b>' + esc(s.sys) + '</b>' + (sysName() ? ' (now ' + esc(sysName()) + ')' : '') : 'No school system named (now ' + esc(sysName()) + ')');
     if (s.unit != null && s.unit !== unitLinkName()) L.push(s.unit ? 'Unit plans are kept in <b>' + esc(s.unit) + '</b>' + (unitLinkName() ? ' (now ' + esc(unitLinkName()) + ')' : '') : 'No place named for unit plans (now ' + esc(unitLinkName()) + ')');
     if (s.ai != null && s.ai !== (m.ai || '')) L.push(s.ai ? 'Your AI assistant is <b>' + esc(s.ai) + '</b>' : 'No AI assistant named');
+    if (s.aiUrl != null && s.aiUrl !== aiUrlClean(m.aiUrl)) L.push(s.aiUrl ? 'Your AI assistant opens at <b>' + esc(s.aiUrl) + '</b>' : 'Your AI assistant opens at its usual page');
+    if (s.aiOpen != null && s.aiOpen !== (m.aiOpen === 'tab' ? 'tab' : '')) L.push(s.aiOpen ? 'Your AI assistant opens in a new tab' : 'Your AI assistant opens in a window on the right of the screen');
     if (S.prog && S.prog !== (m.prog || '')) L.push('Programme: <b>' + esc(S.prog) + '</b>');
     add('school', 'Your school', L, 'Only the words the app uses. Nothing is connected to these.');
   }
@@ -325,14 +332,16 @@ function stpDiff(S, planNow) {
     if (m.nameFind != null && m.nameFind !== now.nameFind) L.push(m.nameFind ? 'Typed names are found and covered for you' : 'You cover names yourself');
     if (m.ptsInk != null && m.ptsInk !== now.ptsInk) L.push(m.ptsInk === 'credit' ? 'Points are colored by credit: full, part or none' : m.ptsInk ? 'Points are written in ' + m.ptsInk : 'Points are written in the pen’s color');
     if (m.sheetfound != null && m.sheetfound !== now.sheetfound) L.push(m.sheetfound ? 'The grade sheet also shows grades found on the papers' : 'The grade sheet shows only the scores given in the app');
+    if (m.fside != null && m.fside !== now.fside) L.push(m.fside === 'show' ? 'In full screen the student list and the tools stay beside the paper' : m.fside === 'all' ? 'In full screen the student list and the tools hide until you point at them' : 'In full screen the student list hides until you point at the left edge');
     add('mark', 'Marking and handing back', L, 'No paper, mark or score changes.');
   }
   if (S.att != null && S.att !== attOn()) add('att', 'Attendance', [S.att ? 'Take attendance in Grading Studio' : 'Don’t take attendance in Grading Studio'], S.att ? '' : 'Days already saved are kept.');
   if (S.tabs && S.tabs.join() !== tabsKept().join()) add('tabs', 'Class tabs', [S.tabs.length ? 'Kept in the tab row: ' + S.tabs.map(k => CLASS_TABS.find(t => t[0] === k)[1]).join(', ') : 'Only Assignments, Gradebook and Students in the tab row'], 'The other pages stay under More.');
   return parts;
 }
-const stpMarkNow = () => ({ xnames: xNames(), xone: xOne(), anchorCover: anchorCoverOn(), nameFind: nameFindOn(), ptsInk, sheetfound: !!store.get('gs.sheetfound', false) });
+const stpMarkNow = () => ({ xnames: xNames(), xone: xOne(), anchorCover: anchorCoverOn(), nameFind: nameFindOn(), ptsInk, sheetfound: !!store.get('gs.sheetfound', false), fside: fsSide() });
 function stpMarkSet(m) {
+  if (m.fside != null) fullSideSet(m.fside);
   if (m.xnames != null) store.set('gs.xnames', m.xnames);
   if (m.xone != null) store.set('gs.xone', m.xone);
   if (m.anchorCover != null) store.set('gs.anchorCover', m.anchorCover);
@@ -356,7 +365,13 @@ const stpClone = v => v == null ? v : JSON.parse(JSON.stringify(v));
 async function stpApply(S, pick) {
   const U = { t: Date.now(), parts: Object.keys(pick).filter(k => pick[k]) }, now = Date.now();
   if (pick.school || pick.grading || pick.att || pick.tabs) { U.hadMe = !!lib.me; U.me = stpClone(lib.me || null); }
-  if (pick.school) meSet({ ...(S.school || {}), ...(S.prog ? { prog: S.prog } : {}) });
+  if (pick.school) {
+    const sc = { ...(S.school || {}) };
+    if (sc.ai != null && sc.ai !== (me().ai || '') && sc.aiUrl == null) sc.aiUrl = '';   // another assistant: the last one's own link doesn't go with it
+    meSet({ ...sc, ...(S.prog ? { prog: S.prog } : {}) });
+    for (const k of ['aiUrl', 'aiOpen']) if (lib.me[k] === '') delete lib.me[k];   // kept only while they say something
+    saveLib();
+  }
   if (pick.grading) {
     U.setupLs = localStorage.getItem('gs.setup');
     store.set('gs.setup', stpClone(S.grading.setup));   // the next new assignment starts from this, as when it is chosen in Settings
@@ -466,7 +481,7 @@ async function stpExport() {
   const p = await stpPlanGet(), g = meGrade(), conf = bkConf(), day = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
   const out = { gradingStudioSetup: STP_V };
   if (me().prog) out.programme = me().prog;
-  if (sysName() || unitLinkName() || me().ai) out.school = { ...(sysName() ? { system: sysName() } : {}), ...(unitLinkName() ? { unitPlans: unitLinkName() } : {}), ...(me().ai ? { assistant: String(me().ai) } : {}) };
+  if (sysName() || unitLinkName() || me().ai) out.school = { ...(sysName() ? { system: sysName() } : {}), ...(unitLinkName() ? { unitPlans: unitLinkName() } : {}), ...(me().ai ? { assistant: String(me().ai) } : {}), ...(me().ai && aiUrlClean(me().aiUrl) ? { assistantLink: aiUrlClean(me().aiUrl) } : {}), ...(me().ai && me().aiOpen === 'tab' ? { assistantOpens: 'tab' } : {}) };
   if (g) { const raw = (me().grade && me().grade.setup) || {}; out.grading = { way: g.way, score: g.setup.mode === 'rubric' ? 'rows' : 'total', ...(g.setup.mode === 'rubric' ? { criteria: g.setup.criteria } : { outOf: g.setup.outOf }), ...(raw.top ? { rowTop: raw.top } : {}), ...(typeof raw.half === 'boolean' ? { halfPoints: raw.half } : {}), ...(g.setup.scale ? { scale: g.setup.scale } : {}), ...(g.bands ? { bands: g.bands.map(b => ({ grade: b[1], from: b[0] })) } : {}) }; }
   const pc = p && Array.isArray(p.classes) ? p.classes.filter(c => c && c.name) : [], names = lib.classes.filter(c => !c.sample).map(c => c.name);
   for (const c of pc) if (!names.some(n => stpKey(n) === stpKey(c.name))) names.push(String(c.name));
@@ -485,7 +500,7 @@ async function stpExport() {
   if (goalList().length) out.goals = goalList().map(x => x.name);
   if (lib.me && typeof lib.me.att === 'boolean') out.attendance = lib.me.att;
   if (tabsKept().length) out.classTabs = tabsKept().map(k => CLASS_TABS.find(t => t[0] === k)[1]);
-  { const m = stpMarkNow(), o = { ...(m.xnames ? {} : { studentFileNames: false }), ...(m.xone ? {} : { onePdfPerStudent: false }), ...(m.anchorCover ? {} : { coverNamesOnAnchors: false }), ...(m.nameFind ? { findTypedNames: true } : {}), ...(m.ptsInk ? { pointsColor: m.ptsInk } : {}), ...(m.sheetfound ? { gradeSheetFromPapers: true } : {}) }; if (Object.keys(o).length) out.marking = o; }
+  { const m = stpMarkNow(), o = { ...(m.xnames ? {} : { studentFileNames: false }), ...(m.xone ? {} : { onePdfPerStudent: false }), ...(m.anchorCover ? {} : { coverNamesOnAnchors: false }), ...(m.nameFind ? { findTypedNames: true } : {}), ...(m.ptsInk ? { pointsColor: m.ptsInk } : {}), ...(m.sheetfound ? { gradeSheetFromPapers: true } : {}), ...(m.fside !== 'hide' ? { fullScreenSide: m.fside } : {}) }; if (Object.keys(o).length) out.marking = o; }
   return JSON.stringify(out, null, 1);
 }
 
@@ -562,19 +577,20 @@ Every part except the first line is optional. Leave a part out rather than leavi
   "attendance": true,
   "classTabs": ["Missing work"],
   "slides": { "agenda": true, "textSizes": "usual", "newSlide": "Title and text" },
-  "marking": { "pointsColor": "credit", "studentFileNames": true, "onePdfPerStudent": true, "coverNamesOnAnchors": true, "findTypedNames": false, "gradeSheetFromPapers": false }
+  "marking": { "pointsColor": "credit", "studentFileNames": true, "onePdfPerStudent": true, "coverNamesOnAnchors": true, "findTypedNames": false, "gradeSheetFromPapers": false, "fullScreenSide": "hide" }
 }
 
 FIELD NOTES
 - "way" is one of "rubric", "points", "percent", "letters", "myp", "ib7". "myp" is IB MYP criteria, each marked 0 to 8, with the 1 to 7 boundaries given on each class. "ib7" is the IB Diploma's 1 to 7 from a percent. "score" is "rows" (a rubric, each row scored) or "total" (one number, out of "outOf").
 - "bands" are the grades a percent earns, highest first, each with the lowest percent that earns it. If my boundaries are in points, give them in points and add "bandsOutOf" with the total.
 - "scale" (optional, inside "grading" or a rubric) turns a score into a percent, like { "12": 100, "11": 95, "10": 91 }.
+- "assistant" (inside "school") is the AI assistant I use, by name. "assistantLink" is an https address of my own for it to open at (my school account, a Gem, a project or a custom GPT) and "assistantOpens" is "window" (beside the app) or "tab". Leave both out unless I ask.
 - Days are "Sun" to "Sat". Times are 24-hour, like "13:05". Dates are YYYY-MM-DD.
 - "daysOff" and "events" take one day, or a first and last day with "to".
 - "emptyType" is "other" (when a type has nothing in it yet, the others are used) or "zero". "extraCredit.addsTo" is "term" or "inClass"; "cap" true keeps grades at 100% at most. "retakes" is "highest", "latest" or "average".
 - "classTabs" are the class pages I want kept in the tab row beside Assignments, Gradebook and Students: any of "Attendance", "Seating", "Missing work", "Charts", "Goals", "Report comments". Leave it out unless I ask.
 - "slides" is for the lesson planner: "agenda" false stops an agenda being added as slide 2, "textSizes" is "usual" (28 to 36 pt) or "any" (18 to 44 pt), and "newSlide" is the layout the Add slide button adds: "Title and text", "Plain text", "Two columns", "Text + picture", "Picture" or another layout the planner has. Leave it out unless I ask.
-- "marking" holds small choices; leave out any I have not asked for. "pointsColor" is "pen", "credit" (full points green, part amber, none red) or one of red, blue, green, purple, black. "studentFileNames" names each file I hand back for the student and assignment. "onePdfPerStudent" puts all of a student's papers in one PDF (false sends each paper as its own file). "coverNamesOnAnchors" covers names on example papers I export. "findTypedNames" lets the app look for typed names to cover. "gradeSheetFromPapers" also shows grades the app finds written on papers.
+- "marking" holds small choices; leave out any I have not asked for. "pointsColor" is "pen", "credit" (full points green, part amber, none red) or one of red, blue, green, purple, black. "studentFileNames" names each file I hand back for the student and assignment. "onePdfPerStudent" puts all of a student's papers in one PDF (false sends each paper as its own file). "coverNamesOnAnchors" covers names on example papers I export. "findTypedNames" lets the app look for typed names to cover. "gradeSheetFromPapers" also shows grades the app finds written on papers. "fullScreenSide" is what happens beside the paper while I mark in full screen: "hide" hides the student list until I point at the left edge, "all" hides the tools as well, "show" keeps both.
 - A rubric row is a name, or a name with "levels" keyed "4" down to "0". A rubric whose rows go higher takes "rowTop" (up to 10), and "halfPoints": false when only whole points are given.
 - Use straight quotes and no comments inside the block.`;
 

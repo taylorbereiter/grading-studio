@@ -1,23 +1,23 @@
 {
- "version": "1.28.13",
- "build": "8d5b2472963e",
+ "version": "1.28.17",
+ "build": "f6217a93960b",
  "notes": [
-  "Add a video file, not only a link: + Add, A video… keeps the file in this browser at any length while the computer has room, and partners share it. Drag the bar under a video to make it as big as you like.",
-  "Partners and videos (in Setup, and on No papers when you open an assignment) lists the whole class: pick partners and add each video in one place. + Clip now starts where the video is.",
-  "Bring in a rubric from Edit or the Open box on any assignment. Rows and what each level means are read from a Word or PDF table where they can be."
+  "Transcripts beside videos. Under any video, Paste a transcript takes one you have, for example from Gemini, YouTube or a caption file. A line that starts with a time plays the video from there.",
+  "Make transcript now works for video files kept in this browser too. It asks before the one-time download, runs on this computer, shows how far it is, and Cancel stops it.",
+  "Captions under the video show the line being said the right way up, even when the video is turned. For a Google Drive video, step through the lines with ‹ and ›."
  ],
  "files": {
-  "index.html": "ff83b08653de97c0819028fb4b9ecf29e493bc8a5bdbc2b04d46b1c270b7824c",
-  "planner.html": "82406e7b22e5eeaaa8bfe5bc74d63b5339aff7c816e3c7153e34230d5ac8c2fe"
+  "index.html": "23333d9c472102af59b7846203976daeab834955afd49b1f02d7aaf427941d4f",
+  "planner.html": "318da973f8d33a0867d1581f50bf76f2cc63de5874482a9b07c347eae00746c3"
  },
  "langs": {
-  "lang/zh-Hant.js": "03deea8f12e0ea7cf38149f37712bc42bf8fac7ea15adc718e9ebe79ec8228ef",
-  "lang/zh-Hans.js": "d7329e7ef5556e0d6d65a5792dbd147b11b51eab60c9590c2011397cf18e3e5e",
-  "lang/es.js": "7b8f0db0bafb16345caefc850a29ddc937c6eb9a4b404732121f45964be3afa9",
-  "lang/fr.js": "b36a8449b6caa9ace883ef34d0266561c882e844f2fbcb76f292cd2672b12326",
-  "lang/de.js": "1bb683ff96cb97ad73b832f9635a38ee39a00391be2a527fd25d6af8eb326b43",
-  "lang/pt-BR.js": "c6d59cce3e51830c40feecdc92a1fd0026041914aab8b71e3355f756070ba48b",
-  "lang/ja.js": "a8478f13740c8c6a4b3dc620502f34c128d2ae758b4c467d3596427836448013",
-  "lang/ko.js": "e2290ab4c1a613456122c4dc58d3655b3fbb9df321d74a887128aa3032012ce7"
+  "lang/zh-Hant.js": "e26d1362c38e22680cdd161fba9c92b977871c364aa859922ace7e8878fcb805",
+  "lang/zh-Hans.js": "c25f4bb2d91001c38b1f3fe0395067b75d7ed7ceffc45104643aee0f85adda90",
+  "lang/es.js": "0ad35eec3f7e17e2d7bb0502f40e0fcd30258f11a4a9a9f88244de64e87204a2",
+  "lang/fr.js": "7977ec50303861f73ce7c8923f6c7fc42c5009ff6147042d5ae64ffcabfed852",
+  "lang/de.js": "43a98869196eaf966cb324f4b4559fa74fdf73493a3df484d32a47e944316e14",
+  "lang/pt-BR.js": "6e714ebcb18415b74fd88435c6213c5df4be9e4aba0a5e30a743f9422b52304d",
+  "lang/ja.js": "79beb02d4a0afe032cffa3387cdcab64ca6773847eaf83cd795755f0fd8f2dbe",
+  "lang/ko.js": "bf77813000cdb2d9c7150052f38ffe79da2684c0e89e0d99ba8297a3e49974a5"
  }
 }

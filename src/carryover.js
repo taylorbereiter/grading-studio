@@ -134,7 +134,8 @@ async function carryInto(e, list) {
   const scan = c.unchecked || !d.scan ? undefined : mapPaths(d.scan, Object.fromEntries(Object.entries(c.map).filter(([, to]) => !c.flags[to])));
   const groups = d.groups && d.groups.map(g => ({ k: g.k.map(k => keyOf.get(nfc(k)) || k), p: Object.fromEntries(Object.entries(g.p || {}).map(([k, p]) => [keyOf.get(nfc(k)) || k, c.map[p] || p])) }));
   const clips = d.clips && d.clips.map(x => (x.p ? { ...x, p: c.map[x.p] || x.p } : x));   // a clip on a video file follows the file to its new name
-  batch.keptWork = { ...d, t: Date.now(), s, moved, removed, carry, scan, share, groups, clips, lightPg: mapLit(d.lightPg, c.map), lightPgL: mapLit(d.lightPgL, c.map) };
+  const vrot = d.vrot && Object.fromEntries(Object.entries(d.vrot).map(([k, v]) => [c.map[k] || k, v]));   // a video file's turn follows it to its new name
+  batch.keptWork = { ...d, t: Date.now(), s, moved, removed, carry, scan, share, groups, clips, vrot, lightPg: mapLit(d.lightPg, c.map), lightPgL: mapLit(d.lightPgL, c.map) };
   batch.carry = carry;
   await carryExtras(from, carry);
   // The list of downloads says which one is the older copy.

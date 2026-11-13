@@ -1,4 +1,21 @@
 {
+  "1.28.17": [
+    "Transcripts beside videos. Under any video, Paste a transcript takes one you have, for example from Gemini, YouTube or a caption file. A line that starts with a time plays the video from there.",
+    "Make transcript now works for video files kept in this browser too. It asks before the one-time download, runs on this computer, shows how far it is, and Cancel stops it.",
+    "Captions under the video show the line being said the right way up, even when the video is turned. For a Google Drive video, step through the lines with ‹ and ›."
+  ],
+  "1.28.16": [
+    "Video cards have a ⟳ Turn button for a video filmed sideways. It turns a quarter turn at a time, is kept for that video, and partners sharing the link see it turned too.",
+    "A rubric copy brought in after every notes page was taken out or removed now goes on each student’s paper instead of Removed pages."
+  ],
+  "1.28.15": [
+    "In full screen the student list gets out of the way while you mark. Rest the pointer at the left edge of the screen, or press [, and it comes back; on a tablet, tap the tab at the left edge.",
+    "Settings, Marking, Full screen marking can keep the list shown, or hide the tools too until the pointer comes near them."
+  ],
+  "1.28.14": [
+    "Your AI assistant can sit beside Grading Studio. Name it in Settings, Working with AI (Gemini, Claude, ChatGPT, Copilot or another) and its name is in the sidebar on every screen, in the Planner too. A click opens it in a window on the right of the screen, or in a tab if you prefer.",
+    "In Chrome, right-click the name in the sidebar and choose Open link in split view to have both in one window. Opens at takes a link of your own, such as your school account or a Gem. Grading Studio sends nothing to the assistant: it sees only what you paste or attach."
+  ],
   "1.28.13": [
     "Add a video file, not only a link: + Add, A video… keeps the file in this browser at any length while the computer has room, and partners share it. Drag the bar under a video to make it as big as you like.",
     "Partners and videos (in Setup, and on No papers when you open an assignment) lists the whole class: pick partners and add each video in one place. + Clip now starts where the video is.",

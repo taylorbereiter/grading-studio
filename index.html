@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"03deea8f","zh-Hans":"d7329e7e","es":"7b8f0db0","fr":"b36a8449","de":"1bb683ff","pt-BR":"c6d59cce","ja":"a8478f13","ko":"e2290ab4"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script></head><body>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"e26d1362","zh-Hans":"c25f4bb2","es":"0ad35eec","fr":"7977ec50","de":"43a98869","pt-BR":"6e714ebc","ja":"79beb02d","ko":"bf778130"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script></head><body>
 <title>Grading Studio</title>
 <script>/* ---------------- the sample: a made-up school week, kept apart from everything real ----------------
    Runs first on both pages, before anything reads saved work. While the sample is open (gs.sampleOn in the browser's real storage),
@@ -2338,6 +2338,26 @@ button.pavg:hover .v{text-decoration:underline}
 .anchseg button:hover{color:var(--fg);border-color:var(--line-strong)}
 .anchseg button[aria-pressed=true]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent);font-weight:600}
 .stu .anch{font-size:var(--text-caption);font-weight:600;color:var(--accent);border:1px solid var(--accent);border-radius:var(--corner-pill);padding:0 6px;white-space:nowrap}
+
+/* Full screen (11/13): the student list steps aside (html[data-fside] is the teacher's choice, gs.fullSide). Folded, the list slides
+   off the left edge and the paper takes its room; pointed at the edge (#fsEdge), or with [ or /, it opens over the paper as usual.
+   'all' hides the tool dock too until the pointer comes near it (.fstools); the paper keeps its place either way. */
+.fsedge,.fstab{display:none}
+@media (min-width:761px){
+  .gsfull:not([data-fside=show]) .cols:not(.open){--lw:0px}
+  .gsfull:not([data-fside=show]) .cols:not(.open)>.side{transition:transform .2s ease}
+  .gsfull:not([data-fside=show]) .cols:not(.open):not(.peek)>.side{width:64px;transform:translateX(-100%);visibility:hidden;box-shadow:none;transition:transform .2s ease,visibility 0s .2s}
+  .gsfull:not([data-fside=show]) .cols:not(.open):not(.peek) #colL{display:none}
+  .gsfull:not([data-fside=show]) .cols:not(.open):not(.peek) .fsedge{display:block;position:absolute;left:0;top:0;bottom:0;z-index:6;width:6px}
+  .gsfull[data-fside=all] .cols .tools{opacity:0;transform:translateX(-10px);pointer-events:none;transition:opacity .15s ease,transform .15s ease}
+  .gsfull[data-fside=all] .cols.fstools .tools{opacity:1;transform:none;pointer-events:auto}
+}
+/* On a tablet there is no pointing at the edge: a small tab at the left edge opens the list, and a tap on the paper folds it. */
+@media (min-width:761px) and (any-pointer:coarse){
+  .gsfull:not([data-fside=show]) .cols:not(.open):not(.peek) .fsedge{width:16px}
+  .gsfull:not([data-fside=show]) .cols:not(.open):not(.peek) .fstab{display:flex;align-items:center;justify-content:center;position:absolute;left:0;top:50%;z-index:7;width:22px;height:56px;margin-top:-28px;padding:0;border:1px solid var(--line-strong);border-left:0;border-top-right-radius:var(--corner-3);border-bottom-right-radius:var(--corner-3);background:var(--surface);color:var(--muted);font-size:var(--text-body);box-shadow:var(--shadow);cursor:pointer}
+}
+@media (prefers-reduced-motion:reduce){.gsfull .cols>.side,.gsfull .cols .tools{transition:none!important}}
 /* ---------- safe by default: the folder ask on Home, Go back in time, About and updates ---------- */
 .safeask{display:flex;gap:var(--space-4);align-items:flex-start;padding:18px 20px;margin:0 0 var(--space-5);background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--warn);border-radius:var(--corner-5)}
 .safeask .saic{flex:none;width:40px;height:40px;display:flex;align-items:center;justify-content:center;border-radius:var(--corner-4);background:var(--warn-soft);color:var(--warn)}
@@ -2423,6 +2443,8 @@ html.welcoming .shell{visibility:hidden}
 .safeask.calm .saic{background:var(--accent-soft);color:var(--accent)}
 /* Settings: where students hand in work, and how you usually grade */
 .merow{display:flex;flex-wrap:wrap;gap:var(--space-2)}
+.merow .meurl{flex:1 1 300px;max-width:440px}
+.merow>label,.merow>.muted{align-self:center}
 .mebrow{display:flex;flex-wrap:wrap;gap:var(--space-2) var(--space-4)}
 .mebrow label{display:inline-flex;align-items:center;gap:6px;font-size:var(--text-control);color:var(--muted)}
 .mebrow input{height:32px;border:1px solid var(--line-strong);border-radius:var(--corner-2);padding:0 var(--space-2);font:inherit;font-size:var(--text-body);background:var(--surface);color:var(--fg);width:64px}
@@ -3174,6 +3196,11 @@ html.vidtall #paper .mstick{position:relative;top:auto}
 .pvchip[aria-pressed=true]{background:var(--accent);border-color:var(--accent);color:var(--surface)}
 .pvchip:disabled{opacity:.7;cursor:default}
 @media (max-width:640px){.pvrow{grid-template-columns:1fr}.pvpbtn{justify-self:start}}
+/* a video turned the right way up: the box keeps the player's usual size and the player turns inside it */
+.vrotbox{position:relative}
+.vrotbox.on{overflow:hidden;height:38vh;min-height:220px;border-radius:var(--corner-3);background:var(--fg)}
+#paper .media:not(.vlink) .vrotbox.on{height:36vh}
+html.vidsized #paper .vrotbox.on{height:var(--vid-h);min-height:0}
 /* transcripts under a player: made here or pasted (src/app/media.js) */
 .trbox{padding:10px 14px 4px}
 .trbox .trrow{display:flex;gap:var(--space-2);flex-wrap:wrap;align-items:center}
@@ -3245,6 +3272,7 @@ textarea.stptext{min-height:132px;margin-top:var(--space-2);font:var(--text-cont
   <span class="sp"></span>
   <a class="rnav rupd" id="railUpdate" href="#/settings/about" hidden><span class="rdot"></span><span class="rl">Update ready</span></a>
   <button class="rsaved" id="railSaved" data-wopen></button>
+  <a class="rnav" id="railAi" data-beside hidden target="_blank" rel="noopener" title="Opens beside Grading Studio. In Chrome, right-click it and choose Open link in split view to keep both in one window."><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="14" rx="2"/><path d="M13.5 5v14M16 9.5h2M16 12.5h2"/></svg><span class="rl" data-raw></span></a>
   <button class="rnav" id="railFull" data-gsfull title="Full screen ( F )" aria-label="Full screen" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="fs-in" d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/><path class="fs-out" d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg><span class="rl">Full screen</span></button>
   <a class="rnav" data-nav="help" href="#/help" title="Help: short answers to common questions"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M9.7 9.6a2.4 2.4 0 1 1 3.7 2c-.9.6-1.4 1.1-1.4 2.1M12 16.8v.1"/></svg><span class="rl">Help</span></a>
   <a class="rnav" data-nav="settings" href="#/settings" title="Settings"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg><span class="rl">Settings</span></a>
@@ -3380,6 +3408,9 @@ textarea.stptext{min-height:132px;margin-top:var(--space-2);font:var(--text-cont
         <section class="lib setsec" id="setNames" data-sec="marking" hidden>
           <div class="lhead"><h2>Name covers</h2><span class="muted">You cover names yourself in Check the covers. Finding them on its own can cover words that aren’t names.</span><span class="sp"></span><span class="seg" id="setNameFind" aria-label="Find names on their own"><button data-v="0" aria-pressed="true">Cover names myself</button><button data-v="1" aria-pressed="false">Also find typed names</button></span></div>
         </section>
+        <section class="lib setsec" id="setFull" data-sec="marking" hidden>
+          <div class="lhead"><h2>Full screen marking</h2><span class="muted">What stays beside the paper while you mark in full screen. A hidden student list comes back when you move the pointer to the left edge of the screen, press [ , or tap the tab on a tablet.</span><span class="sp"></span><span class="seg" id="setFullSide" aria-label="Beside the paper in full screen"><button data-v="hide" aria-pressed="true">Hide the student list</button><button data-v="all" aria-pressed="false">Hide the list and tools</button><button data-v="show" aria-pressed="false">Show both</button></span></div>
+        </section>
         <section class="lib setsec" id="setTouch" data-sec="marking" hidden>
           <div class="lhead"><h2>Tablet and pencil</h2><span class="muted">For a touch screen. A mouse and a trackpad work as they always have.</span></div>
           <p class="setp settch"><label for="setTouchMode"><b>A finger on the paper</b></label> <select id="setTouchMode" class="btn sm"><option value="auto">draws, until you use a pencil; from then on it moves the page</option><option value="move">always moves the page</option><option value="draw">always draws</option></select></p>
@@ -3466,6 +3497,8 @@ textarea.stptext{min-height:132px;margin-top:var(--space-2);font:var(--text-cont
   </div>
   <div class="cols" id="cols">
     <button class="pbtn" id="colL" title="Keep the student list open ( [ )" aria-label="Keep the student list open" aria-pressed="false"><span class="pa">›</span></button>
+    <div class="fsedge" id="fsEdge" aria-hidden="true"></div>
+    <button class="fstab" id="fsTab" title="Show the student list ( [ )" aria-label="Show the student list"><span class="pa">›</span></button>
     <button class="pbtn" id="colR" title="Hide the score panel ( ] )" aria-label="Hide the score panel"><span class="pa">›</span><span class="pl">Score</span></button>
     <nav class="side" id="side" aria-label="Students"><div class="prog-s" id="progS"></div><div class="lbar"><label class="sfind" title="Find a student ( / )"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg><input type="search" id="stuFind" class="stufind" placeholder="Find  ( / )" aria-label="Find a student" autocomplete="off"></label><span id="lfSlot"></span></div><div id="stuList"></div><div class="hd" id="sideHd">Students, in folder order</div><div class="sfoot" id="sideFoot"></div></nav>
     <section class="main" style="position:relative">
@@ -4464,7 +4497,7 @@ SOFTWARE.
 <script>/* ---------------- saved-data versions: a safety copy, then any format changes, before the app starts ---------------- */
 const gsData = (() => {
   'use strict';
-  const APP_VERSION = "1.28.13";   // from package.json, the one place it's set
+  const APP_VERSION = "1.28.17";   // from package.json, the one place it's set
   const MIGRATIONS = [
   ];
   const DATA_V = Math.max(1, ...MIGRATIONS.map(s => s.to));
@@ -4715,6 +4748,7 @@ function langFill(t, m, P) {
 }
 const LANG_ATT = { present: 'attp', late: 'attl', 'absent, reason unknown': 'atta', excused: 'atte' };
 const LANG_FILLS = [
+  ['besideopen', /^Open (.+) beside Grading Studio$/],
   ['sdet', /^Student details for (.+)$/], ['cnt', /^Count (.+) in the class average$/], ['wout', /^without (\d+) students? ·$/],
   ['nograde', /^Nothing graded for (.+) in this term yet\. Grade a download for it, or use \+ Add scores for work you did before\.$/],
   ['noroster', /^The gradebook lists the students on a class’s roster\. Add a roster to (.+) on its class page first\.$/],
@@ -4895,8 +4929,9 @@ const HELP = [
     words: 'search command palette ctrl k shortcut' },
   { id: 'full-screen', sec: 'start', q: 'Can the app fill the whole screen?',
     a: ['Yes. Press **F**, or **Full screen** near the bottom of the sidebar. While a paper is open the button is in the top bar, beside ✕. The browser’s bars go away and the sidebar folds to icons. On the marking screen the sidebar goes away too, so the paper gets the room.',
-      'Press **F** again, the same button, or **Esc** to leave. Nothing is closed or lost on the way in or out. On formative work F is for feedback, so use the button there. The Planner works the same way.'],
-    words: 'fullscreen maximize maximise bigger room focus distraction hide sidebar' },
+      'Press **F** again, the same button, or **Esc** to leave. Nothing is closed or lost on the way in or out. On formative work F is for feedback, so use the button there. The Planner works the same way.',
+      'While a paper is open, the student list hides as well: rest the pointer at the left edge of the screen, or press **[**, and it comes back. In **Settings, Marking** you can keep it shown, or hide the tools too.'],
+    words: 'fullscreen maximize maximise bigger room focus distraction hide sidebar student list tools edge' },
   { id: 'add-class', sec: 'start', q: 'How do I add a class and its roster?',
     a: ['1. Press **Add a class** in the sidebar and give it a name.', '2. Paste the student names, one on a line. Students are kept in the order you paste them.', '3. Open the class’s **Students** tab to add an ID, an email or a note for each one.',
       'With a roster, every student is listed when you open papers for that class, including anyone who turned nothing in.'],
@@ -5006,6 +5041,12 @@ const HELP = [
       'The same box switches the assignment to plain points, and sets the grading scale that turns a total into a percent.', '**Save to the bank…** keeps a rubric to use again on another assignment.',
       'A row is scored 0 to 4 with half points unless you say otherwise. Under the rows, choose another top score (1 to 10) or turn half points off. Your usual scale for new rubrics is in Settings, Grading.'],
     words: 'criteria rows levels descriptors points percent scale edit bank reuse top highest 0 to 8 0 to 5 half points whole numbers' },
+  { id: 'ai-beside', sec: 'start', q: 'Can I have Gemini, Claude or ChatGPT open beside Grading Studio?',
+    a: ['Yes. Name your assistant in **Settings**, **Working with AI**, and its name appears near the bottom of the sidebar on every screen, in the Planner too. Click it and the assistant opens in a window on the right of the screen. If the Grading Studio window covers it, make that window narrower so both show.',
+      'In Chrome there is a tidier way: right-click the name in the sidebar and choose **Open link in split view**. Both are then in one window, with a divider you can drag. They can’t be joined more closely than that, because Gemini, Claude and ChatGPT don’t let their pages be shown inside another app.',
+      '**Opens at** in the same part of Settings takes a link of your own, for example to your school account, a Gem, a project or a custom GPT. If the assistant opens in the wrong account, switch accounts there, copy the address and paste it in.',
+      'Grading Studio sends nothing to the assistant. It sees only what you paste or attach. An assistant built into the browser itself, like a Gemini or Copilot button in the browser’s own toolbar, is different: it can read the page you are on, student names included, when you ask it about that page.'],
+    go: ['Go to Working with AI', '#/settings/claude'], words: 'gemini claude chatgpt copilot ai assistant split pane side by side window beside chat hydrogen' },
   { id: 'my-setup', sec: 'start', q: 'Can an AI assistant set the app up for me?',
     a: ['Yes. Settings, **My setup** has a prompt to copy into Claude, ChatGPT or any other assistant. It uses what it already knows about your teaching, asks about the rest, and gives you one block of setup text: classes and when they meet, the calendar, terms, how you grade, rubrics, saved comments and learning goals.',
       'Paste that text into the same page and press **Check it**. You see what would change, untick anything you don’t want, and can undo it afterwards.',
@@ -5464,6 +5505,68 @@ function pkDragEnd() {
 }
 function pkKeyOwn(e) { if (!PK.on) return; e.stopPropagation(); pkKey(e); }
 window.__pick = { PK, mem: () => pkMem(PK.cls), open: pkOpen, close: pkClose, groups: pkGroups, count: pkCount, short: pkShort, nice: pkNice, rolls: pkRolls };
+
+/* ---------------- The assistant beside the app (11/13): Gemini, Claude, ChatGPT or another, opened next to Grading Studio ----------------
+   Built into both pages. A teacher who has named an AI assistant gets its name in the sidebar on every screen. A click opens the
+   assistant's own page in a window on the right of the screen (or in a tab, if they'd rather); because it is a real link, Chrome's
+   right-click "Open link in split view" puts it in the same window as the app, which is the closest a web page can come to one
+   screen with two panes. Gemini, Claude and ChatGPT all refuse to be shown inside another page, so it cannot be drawn in here.
+   Nothing is connected and nothing is sent: the app opens an address and that is all. The assistant sees only what the teacher
+   pastes or attaches there. Its page says nothing back to this one, so the app can't tell whether it is still open.
+   Where it opens: the assistant's usual page, or a link of the teacher's own (their school account, a Gem, a project, a custom GPT),
+   kept as lib.me.aiUrl. lib.me.aiOpen is 'tab' for a teacher who wants a tab. The Planner reads both from gs.words. */
+const AI_LIST = [['Gemini', 'https://gemini.google.com/app'], ['Claude', 'https://claude.ai/new'], ['ChatGPT', 'https://chatgpt.com/'], ['Copilot', 'https://copilot.microsoft.com/']];
+const aiUsual = name => { const a = AI_LIST.find(x => x[0].toLowerCase() === String(name || '').trim().toLowerCase()); return a ? a[1] : ''; };
+function aiUrlClean(v) {
+  const s = String(v == null ? '' : v).trim().slice(0, 400); if (!s) return '';
+  try { const u = new URL(s); return u.protocol === 'https:' && u.hostname.includes('.') ? u.href : ''; } catch { return ''; }
+}
+function besideWho() {
+  if (typeof aiName === 'function') return { name: aiName(), link: aiLink(), tab: me().aiOpen === 'tab' };
+  let w = null; try { w = JSON.parse(localStorage.getItem('gs.words') || 'null'); } catch { }
+  const name = plWords().ai;
+  return { name, link: aiUrlClean(w && w.link) || aiUsual(name), tab: !!(w && w.tab) };
+}
+function besidePlace() {
+  const s = window.screen || {}, W = s.availWidth || 1280, H = s.availHeight || 800, w = Math.round(Math.min(760, Math.max(420, W * 0.36)));
+  return { left: (s.availLeft || 0) + W - w, top: s.availTop || 0, width: w, height: H };
+}
+function besideRoom() {
+  const p = (navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || '';
+  if (/mac/i.test(p)) return 'hold the pointer over the green button at the top left of this window and choose the left half.';
+  if (/win/i.test(p)) return 'press the Windows key with the left arrow.';
+  if (/cros|chrome os/i.test(p)) return 'press Alt with the [ key.';
+  return 'drag this window’s right edge to the left.';
+}
+function besideOpen(how) {
+  const a = besideWho(); if (!a.link) return false;
+  const tab = how === 'tab' || (how !== 'side' && a.tab), at = besidePlace();
+  let w = null;
+  try { w = window.open('about:blank', '_blank', tab ? '' : 'popup,left=' + at.left + ',top=' + at.top + ',width=' + at.width + ',height=' + at.height); } catch { }
+  if (!w) { toast('The browser stopped ' + a.name + ' from opening. Allow pop-ups for this page, then try again.', 8000); return false; }
+  try { w.opener = null; } catch { }
+  try { w.location.replace(a.link); } catch { try { w.close(); } catch { } return false; }
+  if (!tab) {
+    const covers = (window.screenX || 0) + (window.outerWidth || 0) > at.left + 24;
+    toast(covers ? a.name + ' is open on the right of the screen. To see both at once, make this window narrower: ' + besideRoom() : a.name + ' is open beside Grading Studio.', covers ? 10000 : 4000);
+  }
+  return true;
+}
+function besidePaint() {
+  const a = besideWho();
+  for (const el of document.querySelectorAll('a[data-beside]')) {
+    el.hidden = !a.link;
+    if (a.link) { if (el.getAttribute('href') !== a.link) el.setAttribute('href', a.link); } else el.removeAttribute('href');
+    const l = el.querySelector('.rl'); if (l && l.textContent !== a.name) l.textContent = a.name;
+  }
+}
+document.addEventListener('click', e => {
+  const a = e.target.closest && e.target.closest('a[data-beside]'); if (!a) return;
+  if (e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+  e.preventDefault(); besideOpen();
+});
+window.addEventListener('storage', e => { if (!e.key || e.key === 'gs.words') { try { besidePaint(); } catch { } } });
+window.__gsBeside = { who: besideWho, place: besidePlace, open: besideOpen, paint: besidePaint, clean: aiUrlClean };
 
 'use strict';
 /* Grading Studio: open a class's papers (a download from the school's system, a folder, scans), mark PDFs, score with a rubric, list grades in folder order,
@@ -5926,6 +6029,7 @@ function saveNow(leaving) {
   clearTimeout(saveT); saveDue = false;
   if (batch.revs && tabForgot(batch)) return tabLetGo();
   const data = { t: Date.now(), carry: batch.carry, cur, ck: batch.students[cur] && batch.students[cur].key, setup, cls: batch.classId, share: batch.share, drive: batch.drive, light: batch.light, lightOpt: batch.lightOpt, lightPg: batch.lightPg, lightPgL: batch.lightPgL, anon: batch.anon, moved: batch.moved, removed: batch.removed, refSkip: batch.refSkip, quiz: batch.quiz, groups: batch.groups && batch.groups.length ? batch.groups : undefined, returned: batch.returned || undefined, read: (batch.read = paperReads()), s: {} };
+  if (batch.vrot) data.vrot = batch.vrot;   // videos turned the right way up (video.js); no key at all without one
   if (batch.clips && batch.clips.length) data.clips = batch.clips;   // parts of videos to show the class (video.js); no key at all without one
   if (batch.goal) data.goal = batch.goal;   // a learning goal for the whole score (goals.js); no key at all without one
   for (const st of batch.students) {
@@ -5998,6 +6102,7 @@ function restore() {
   if (data.returned) batch.returned = data.returned;
   batch.groups = data.groups || [];
   batch.clips = data.clips || [];
+  if (data.vrot) batch.vrot = data.vrot; else delete batch.vrot;
   groupSync();
   if (data.drive && !batch.drive) batch.drive = data.drive;
   batch.restoredCur = Math.min(data.cur || 0, batch.students.length - 1); batch.restoredKey = data.ck;
@@ -6201,7 +6306,7 @@ const fileByPath = (st, path) => st.files.find(f => f.path === path);
 function defaultLayout(st) {
   const L = st.files.filter(f => viewable(f) && !f.virtual && f.numPages).map(f => ({ name: f.name, file: f.path, pages: [...Array(f.numPages).keys()].map(p => [f.path, p]) }));
   const v = st.files.find(f => f.virtual && viewable(f));
-  if (v && L.length) { const pg = [...Array(v.numPages).keys()].map(p => [v.path, p]); L[0].pages = setup.rubricPos === 'start' ? pg.concat(L[0].pages) : L[0].pages.concat(pg); }
+  if (v && v.numPages) { const pg = [...Array(v.numPages).keys()].map(p => [v.path, p]); if (!L.length) L.push({ name: v.name, file: v.path, pages: pg }); else L[0].pages = setup.rubricPos === 'start' ? pg.concat(L[0].pages) : L[0].pages.concat(pg); }
   return L;
 }
 const layoutOf = st => st.layout || defaultLayout(st);
@@ -7785,13 +7890,15 @@ async function applyRubricPage(only) {
       if (keep && await keepEdit(st, nf) && keep.path !== path) await dropEdit(st, keep);
       continue;
     }
-    if (!bytes || !n || !real.length) continue;
-    const dir = real[0].path.includes('/') ? real[0].path.slice(0, real[0].path.lastIndexOf('/') + 1) : st.key + '/';
+    if (!bytes || !n) continue;
+    const any = real[0] || st.files.find(f => f.path.includes('/')) || (old && old.path.includes('/') ? old : null);
+    const dir = any && any.path.includes('/') ? any.path.slice(0, any.path.lastIndexOf('/') + 1) : st.key + '/';
     const f = { path: dir + RUBRIC_NAME, name: 'Rubric page', kind: 'pdf', data: bytes, size: bytes.length, marks: old && old.path === dir + RUBRIC_NAME ? old.marks : {}, hand: old && old.hand, virtual: true, numPages: n };
     st.files.push(f);
-    if (st.layout && st.layout.length) {
+    if (st.layout) {
       const pg = [...Array(n).keys()].map(p => [f.path, p]);
-      st.layout[0].pages = setup.rubricPos === 'start' ? pg.concat(st.layout[0].pages) : st.layout[0].pages.concat(pg);
+      if (st.layout.length) st.layout[0].pages = setup.rubricPos === 'start' ? pg.concat(st.layout[0].pages) : st.layout[0].pages.concat(pg);
+      else st.layout.push({ name: f.name, file: f.path, pages: pg });
     }
   }
 }
@@ -9537,13 +9644,13 @@ function mediaCard(st, f, kept) {
     (vid ? '<video controls preload="metadata" playsinline></video>' : '<audio controls preload="metadata"></audio>') +
     '<div class="mctl"><button class="btn sm" data-skip="-10">◀◀ 10s</button><button class="btn sm" data-skip="10">10s ▶▶</button>' +
     '<span class="seg">' + [1, 1.25, 1.5, 2].map(r => '<button data-rate="' + r + '" aria-pressed="' + (r === (store.get('gs.rate', 1))) + '">' + r + '×</button>').join('') + '</span>' +
-    '<button class="btn sm" data-stamp title="Adds the time to your comment, like [2:15]">+ Time to comment</button></div></div>' +
+    '<button class="btn sm" data-stamp title="Adds the time to your comment, like [2:15]">+ Time to comment</button>' + (vid ? VROT_BTN : '') + '</div></div>' +
     '<p class="muted trstat" style="font-size:13px;margin:6px 0 0"></p>';
   const m = el.querySelector('audio,video');
   m.src = kept ? kept.url : mediaUrl(f); m.playbackRate = store.get('gs.rate', 1);
   m.onratechange = () => {};
   mediaWatch(el, m, kept ? { name: kept.name, data: kept.blob, kind: 'media', size: kept.blob.size } : f);
-  if (vid) vidGrip(el.querySelector('.mstick'), m);
+  if (vid) { vidGrip(el.querySelector('.mstick'), vidRot(m, f)); el.querySelector('[data-vrot]').onclick = () => vidTurn(st, f, el); }
   if (!curMedia) curMedia = m;
   clipStrip(el.querySelector('.mstick'), f, () => m, c => clipRun(m, c));
   const pan = trPanel(el, f, { make: CAN_TRANSCRIBE, seek: t => { m.currentTime = t; if (m.paused) m.play().catch(() => {}); } });
@@ -10084,12 +10191,11 @@ const SYS_LIST = ['Google Classroom', 'ManageBac', 'Canvas', 'Microsoft Teams', 
 const sysOr = other => sysName() || other;
 const sysLink = () => sysName() || 'Class page';   // the link each class can carry to its page in the school's system
 const sysDl = () => sysName() ? 'the ' + sysName() + ' download' : 'the papers';
-const AI_LIST = [['Claude', 'https://claude.ai/new'], ['ChatGPT', 'https://chatgpt.com/'], ['Gemini', 'https://gemini.google.com/app'], ['Copilot', 'https://copilot.microsoft.com/']];
 function aiName() { const m = me(), v = m.ai == null ? (m.scale12 ? 'Claude' : '') : m.ai; return String(v || '').trim().slice(0, 30); }
 function aiSay() { return aiName() || 'your AI assistant'; }   // in the middle of a sentence
 function AiSay() { return aiName() || 'Your AI assistant'; }   // at the start of one
 function aiTag() { return aiName() || 'AI'; }                  // in front of another word: "the AI codes"
-function aiLink() { const a = AI_LIST.find(x => x[0].toLowerCase() === aiName().toLowerCase()); return a ? a[1] : ''; }   // where "Open …" goes; none for an assistant the app doesn't know
+function aiLink() { return aiName() ? aiUrlClean(me().aiUrl) || aiUsual(aiName()) : ''; }   // where its name in the sidebar and "Open …" go: the teacher's own link, or its usual page; none for an assistant the app doesn't know
 const unitWord = () => unitLinkName() || 'unit plan';
 const unitLinkName = () => String(me().unit || '').trim();
 const GRADE_WAYS = [
@@ -10125,7 +10231,7 @@ const bandSay = pct => { const b = bandOf(pct); return b ? ' · ' + b : ''; };
 function saveLib() { libVer++; if (!store.set('gs.lib', lib)) toast('This browser is out of room to keep your units and rosters.'); wordsShare(); rollsShare(); }
 function wordsShare() {
   if (!lib.me) return;
-  try { const v = JSON.stringify({ sys: sysName(), unit: unitLinkName(), ai: aiName(), ...(me().scale12 ? { scale12: true } : {}) }); if (localStorage.getItem('gs.words') !== v) localStorage.setItem('gs.words', v); } catch {}
+  try { const v = JSON.stringify({ sys: sysName(), unit: unitLinkName(), ai: aiName(), ...(me().scale12 ? { scale12: true } : {}), ...(aiName() && aiUrlClean(me().aiUrl) ? { link: aiUrlClean(me().aiUrl) } : {}), ...(me().aiOpen === 'tab' ? { tab: true } : {}) }); if (localStorage.getItem('gs.words') !== v) localStorage.setItem('gs.words', v); } catch {}
 }
 const holders = () => lib.classes.concat([lib.loose]);
 const holderById = id => id ? lib.classes.find(c => c.id === id) || null : lib.loose;
@@ -12707,31 +12813,87 @@ $('#colR').onclick = () => { const p = panelsNow(); setPanels(p.L, !p.R); };
 
 /* ---------------- the student list: a strip beside the paper, the whole list when it's wanted ---------------- */
 let listOpen = !!store.get('gs.listOpen', false), peekT = null;
+/* In full screen (11/13) the list steps aside so the paper has the screen to itself. gs.fullSide, a per-teacher choice in Settings,
+   Marking (and in My setup): 'hide' (the usual) hides the student list, 'all' hides the tool dock as well, 'show' keeps both as they
+   are. A hidden list comes back when the pointer rests at the left edge of the screen for a moment, with [ , with / to find someone,
+   or with the tab at the left edge on a tablet. [ in full screen keeps it open only until full screen ends: nothing is stored, and
+   a list kept open outside full screen (gs.listOpen) still hides in it. */
+const FS_SIDES = ['hide', 'all', 'show'];
+const fsSide = () => { const v = store.get('gs.fullSide', 'hide'); return FS_SIDES.includes(v) ? v : 'hide'; };
+let fsPin = false;
+const fsAway = () => document.documentElement.classList.contains('gsfull') && fsSide() !== 'show' && innerWidth > 760;
+const listKept = () => fsAway() ? fsPin : listOpen;
 function listDraw() {
-  const c = $('#cols'), b = $('#colL'); c.classList.toggle('open', listOpen); if (listOpen) c.classList.remove('peek');
-  b.querySelector('.pa').textContent = listOpen ? '‹' : '›'; b.setAttribute('aria-pressed', String(listOpen));
-  b.title = (listOpen ? 'Fold the student list to a strip' : 'Keep the student list open') + ' ( [ )'; b.setAttribute('aria-label', listOpen ? 'Fold the student list to a strip' : 'Keep the student list open');
+  const c = $('#cols'), b = $('#colL'), kept = listKept(); c.classList.toggle('open', kept); if (kept) c.classList.remove('peek');
+  document.documentElement.dataset.fside = fsSide();
+  b.querySelector('.pa').textContent = kept ? '‹' : '›'; b.setAttribute('aria-pressed', String(kept));
+  b.title = (kept ? 'Fold the student list to a strip' : 'Keep the student list open') + ' ( [ )'; b.setAttribute('aria-label', kept ? 'Fold the student list to a strip' : 'Keep the student list open');
 }
 function setList(open) {
-  listOpen = !!open; store.set('gs.listOpen', listOpen); clearTimeout(peekT); listDraw(); listToCur();
+  if (fsAway()) fsPin = !!open; else { listOpen = !!open; store.set('gs.listOpen', listOpen); }
+  clearTimeout(peekT); listDraw(); listToCur();
   clearTimeout(resizeT); resizeT = setTimeout(() => pages.forEach(renderPage), 60);
 }
 const peekHeld = () => document.activeElement === $('#stuFind') || !!$('#side [data-km][aria-expanded=true]') || $('#side').matches(':hover') || $('#colL').matches(':hover');
 function listPeek(on, wait) {
-  clearTimeout(peekT); if (listOpen) return;
+  clearTimeout(peekT); if (listKept()) return;
   const go = () => { if (!on && peekHeld()) return; const c = $('#cols'); if (c.classList.contains('peek') === on) return; c.classList.toggle('peek', on); if (!on && document.activeElement && $('#side').contains(document.activeElement) && !document.activeElement.classList.contains('stu')) document.activeElement.blur(); listToCur(); };
   if (wait) peekT = setTimeout(go, wait); else go();
 }
 for (const el of [$('#side'), $('#colL')]) {
   el.addEventListener('mouseenter', () => listPeek(true, 160));
-  el.addEventListener('mouseleave', () => listPeek(false, 280));
+  el.addEventListener('mouseleave', () => listPeek(false, fsAway() ? 450 : 280));
 }
 $('#side').addEventListener('focusout', () => listPeek(false, 200));
 $('#side').addEventListener('dragenter', () => listPeek(true));   // a file dragged to the strip: the names open so it can be dropped on one
-$('#side').addEventListener('pointerdown', e => { if (!listOpen && e.target.closest('.lbar')) listPeek(true); }, true);
+$('#side').addEventListener('pointerdown', e => { if (!listKept() && e.target.closest('.lbar')) listPeek(true); }, true);
 $('#stuFind').addEventListener('focus', () => listPeek(true));
-$('#colL').onclick = () => setList(!listOpen);
+$('#colL').onclick = () => setList(!listKept());
 listDraw();
+{
+  let edgeT = null;
+  const edge = $('#fsEdge');
+  edge.addEventListener('pointerenter', e => { clearTimeout(edgeT); if (e.pointerType === 'mouse' && !e.buttons) edgeT = setTimeout(() => listPeek(true), 180); });
+  edge.addEventListener('pointerleave', () => clearTimeout(edgeT));
+  edge.addEventListener('pointerdown', e => { if (e.pointerType !== 'mouse') { e.preventDefault(); listPeek(true); } });
+  $('#fsTab').addEventListener('click', () => listPeek(true));
+}
+{
+  let dockT = null, foldT = null;
+  const near = x => { const m = $('#cols>.main').getBoundingClientRect(); return x >= m.left && x - m.left < 24 + 44 * (parseFloat(getComputedStyle($('#cols')).getPropertyValue('--uz')) || 1) + 20; };
+  const held = () => $('#tools').matches(':hover') || !!$('#tools [data-km][aria-expanded=true]') || $('#tools').contains(document.activeElement);
+  const dock = (on, wait) => {
+    clearTimeout(dockT); const go = () => { if (!on && held()) return; $('#cols').classList.toggle('fstools', on); };
+    if (wait) dockT = setTimeout(go, wait); else go();
+  };
+  $('#cols').addEventListener('pointermove', e => {
+    if (!fsAway() || e.pointerType !== 'mouse') return;
+    if (!$('#cols').classList.contains('peek') || e.target.closest('#side,#colL,#fsEdge')) { clearTimeout(foldT); foldT = null; }
+    else if (!foldT) foldT = setTimeout(() => { foldT = null; listPeek(false); }, 450);
+    if (fsSide() !== 'all') return;
+    const on = $('#cols').classList.contains('fstools'), n = near(e.clientX) || $('#tools').contains(e.target);
+    if (n && !on && !e.buttons) dock(true, 120); else if (!n && on) dock(false, 600); else if (n === on) clearTimeout(dockT);
+  });
+  $('#cols').addEventListener('pointerdown', e => {
+    if (!fsAway() || fsSide() !== 'all' || e.pointerType === 'mouse' || $('#tools').contains(e.target)) return;
+    dock(near(e.clientX) && !$('#cols').classList.contains('fstools'));
+  });
+  $('#cols').addEventListener('mouseleave', () => dock(false, 600));
+  window.__gsDock = dock;
+}
+document.addEventListener('fullscreenchange', () => setTimeout(() => {
+  fsPin = false; $('#cols').classList.remove('fstools'); listDraw();
+  clearTimeout(resizeT); resizeT = setTimeout(() => pages.forEach(renderPage), 160);
+}));
+function fullSideSet(v) {
+  if (!FS_SIDES.includes(v)) return;
+  if (v === 'hide') store.del('gs.fullSide'); else store.set('gs.fullSide', v);
+  fullSideShow(); listDraw();
+  clearTimeout(resizeT); resizeT = setTimeout(() => pages.forEach(renderPage), 60);
+}
+function fullSideShow() { const v = fsSide(); for (const b of document.querySelectorAll('#setFullSide button')) b.setAttribute('aria-pressed', String(b.dataset.v === v)); }
+$('#setFullSide').addEventListener('click', e => { const b = e.target.closest('button[data-v]'); if (b) fullSideSet(b.dataset.v); });
+fullSideShow();
 $('#lightBtn').onclick = openLight;
 $('#rescanBtn').onclick = openRescans;
 $('#calcBtn').onclick = openCalc;
@@ -12780,7 +12942,7 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Escape' && once) { e.preventDefault(); endOnce(); return; }
   if (e.key === '?') { e.preventDefault(); openKeys(); return; }
   if ((e.key === '+' || e.key === '=' || e.key === '-' || e.key === '_') && selected && !(selected.fresh && selected.mark.t === 'text') && canResize(selected.mark)) { e.preventDefault(); stepSize(e.key === '+' || e.key === '=' ? 1 : -1); return; }
-  if (e.key === '/') { e.preventDefault(); $('#stuFind').focus(); return; }
+  if (e.key === '/') { e.preventDefault(); listPeek(true); $('#stuFind').focus(); return; }   // open first: a hidden list can't take focus
   if (selected && tool === 'select' && /^Arrow/.test(e.key)) {
     e.preventDefault();
     const d = e.shiftKey ? 10 : 1, dx = e.key === 'ArrowLeft' ? -d : e.key === 'ArrowRight' ? d : 0, dy = e.key === 'ArrowUp' ? -d : e.key === 'ArrowDown' ? d : 0;
@@ -12802,7 +12964,7 @@ document.addEventListener('keydown', e => {
   if (e.key.toLowerCase() === 'f' && !e.metaKey && !e.ctrlKey && !e.altKey && fmNow()) { e.preventDefault(); fbToggle(e.shiftKey); return; }
   if (e.key === '=' && !$('#calcPanel')) { e.preventDefault(); openCalc(); return; }
   if ($('#calcPanel') && e.key !== '/' && !(e.key === 'x' || e.key === 'X')) { const k = calcKeyOf(e); if (k && k !== 'Escape' && (k !== '=' || e.code === 'Equal' || e.code === 'NumpadEqual')) { e.preventDefault(); $('#calcPanel').typeIn(k); return; } }
-  if (e.key === '[' && !e.metaKey && !e.ctrlKey) { e.preventDefault(); return setList(!listOpen); }
+  if (e.key === '[' && !e.metaKey && !e.ctrlKey) { e.preventDefault(); return setList(!listKept()); }
   if (e.key === ']' && !e.metaKey && !e.ctrlKey) { e.preventDefault(); const p = panelsNow(); return setPanels(p.L, !p.R); }
   if (e.key === 'ArrowRight' || e.key === 'ArrowDown') { e.preventDefault(); stepStudent(1); }
   if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); stepStudent(-1); }
@@ -14552,7 +14714,8 @@ async function carryInto(e, list) {
   const scan = c.unchecked || !d.scan ? undefined : mapPaths(d.scan, Object.fromEntries(Object.entries(c.map).filter(([, to]) => !c.flags[to])));
   const groups = d.groups && d.groups.map(g => ({ k: g.k.map(k => keyOf.get(nfc(k)) || k), p: Object.fromEntries(Object.entries(g.p || {}).map(([k, p]) => [keyOf.get(nfc(k)) || k, c.map[p] || p])) }));
   const clips = d.clips && d.clips.map(x => (x.p ? { ...x, p: c.map[x.p] || x.p } : x));   // a clip on a video file follows the file to its new name
-  batch.keptWork = { ...d, t: Date.now(), s, moved, removed, carry, scan, share, groups, clips, lightPg: mapLit(d.lightPg, c.map), lightPgL: mapLit(d.lightPgL, c.map) };
+  const vrot = d.vrot && Object.fromEntries(Object.entries(d.vrot).map(([k, v]) => [c.map[k] || k, v]));   // a video file's turn follows it to its new name
+  batch.keptWork = { ...d, t: Date.now(), s, moved, removed, carry, scan, share, groups, clips, vrot, lightPg: mapLit(d.lightPg, c.map), lightPgL: mapLit(d.lightPgL, c.map) };
   batch.carry = carry;
   await carryExtras(from, carry);
   const m = keptMeta.get(from);
@@ -17577,7 +17740,7 @@ function shareStepClick(e) {
   const c = e.target.closest('[data-cc]');
   if (c) { checkCovers(+c.dataset.cc); return true; }
   if (e.target.closest('[data-shcopy]')) { const t = nameFreeText($('#shAsk').value); copy(t, 'Copied. Paste it into ' + aiSay() + ' along with the ZIP.'); return true; }
-  if (e.target.closest('[data-shopen]')) { if (aiLink()) window.open(aiLink(), '_blank', 'noopener'); return true; }
+  if (e.target.closest('[data-shopen]')) { besideOpen(); return true; }
   if (e.target.closest('[data-shback]')) { closeDlg(); openBringBack(); return true; }
   return false;
 }
@@ -18424,7 +18587,7 @@ function decideRec(a, b, ta, tb) {
   return x === y ? { pick: 'ask' } : { pick: x > y ? 'a' : 'b', by: 'date' };
 }
 const BLANK_REC = () => ({ f: {}, g: { rubric: [], points: '', comment: '' }, h: {} });
-const WORK_SET = ['carry', 'setup', 'cls', 'share', 'drive', 'light', 'lightOpt', 'lightPg', 'lightPgL', 'anon', 'moved', 'removed', 'refSkip', 'quiz', 'groups', 'returned', 'goal', 'clips'];
+const WORK_SET = ['carry', 'setup', 'cls', 'share', 'drive', 'light', 'lightOpt', 'lightPg', 'lightPgL', 'anon', 'moved', 'removed', 'refSkip', 'quiz', 'groups', 'returned', 'goal', 'clips', 'vrot'];
 const setOf = w => { const o = {}; if (w) for (const k of WORK_SET) if (w[k] !== undefined) o[k] = w[k]; return o; };
 const setV = w => w && w.sv ? w.sv : (h => h ? { ['~' + h]: 1 } : {})(hashOf(setOf(w)));
 const partV = (w, k) => (w.pv && w.pv[k]) || (h => h ? { ['~' + h]: 1 } : {})(hashOf(w[k]));
@@ -19920,7 +20083,7 @@ function sideHtml(r, t, anon, crit) {
   if (out.length === 1) out.push('<div class="muted">No score, comment or marks</div>');
   return out.join('');
 }
-const PART_SAY = { setup: 'Rubric setup', cls: 'Class', share: 'Cover boxes and share codes', drive: 'Google Drive link', light: 'Lighting', lightOpt: 'Lighting', lightPg: 'Lighting', lightPgL: 'Lighting', anon: 'Anonymous grading', moved: 'Moved files', removed: 'Removed and replaced files', refSkip: 'Which readings each student sees', quiz: 'Quick mark boxes', groups: 'Group work', clips: 'Video clips', returned: 'Returned to students', carry: 'Flags on new and changed files', scan: 'Your answers about scanned pages' };
+const PART_SAY = { setup: 'Rubric setup', cls: 'Class', share: 'Cover boxes and share codes', drive: 'Google Drive link', light: 'Lighting', lightOpt: 'Lighting', lightPg: 'Lighting', lightPgL: 'Lighting', anon: 'Anonymous grading', moved: 'Moved files', removed: 'Removed and replaced files', refSkip: 'Which readings each student sees', quiz: 'Quick mark boxes', groups: 'Group work', clips: 'Video clips', vrot: 'Videos turned the right way up', returned: 'Returned to students', carry: 'Flags on new and changed files', scan: 'Your answers about scanned pages' };
 const partNames = list => [...new Set(list.map(k => PART_SAY[k] || k))].join(', ');
 const scaleSay = su => !rubricsDiffer(su, { ...su, scale: null }) ? 'No scale: percent is the plain share of points' : !rubricsDiffer(su, { ...su, scale: SCALE12 }) ? 'The usual grading scale' : 'A grading scale of its own';
 function partSide(part, v, other, t, anon) {
@@ -21953,6 +22116,34 @@ const vidRef = data => { if (!data || !data.length || data.length > 4000) return
 const vidBytes = (id, name, size) => new TextEncoder().encode('[InternetShortcut]\r\nURL=gs-video:' + id + '\r\nName=' + String(name || '').replace(/[\r\n]+/g, ' ').slice(0, 120) + '\r\nSize=' + (size || 0) + '\r\n');
 const linkKey = f => { const v = vidRef(f.data); return v ? 'gs-video:' + v : linkOf(f.data); };
 
+/* ---------- a video filmed sideways, turned the right way up ---------- */
+const vrotKey = f => (f.kind === 'link' ? linkKey(f) : f.path);
+const vrotOf = f => (batch && batch.vrot && batch.vrot[vrotKey(f)]) || 0;
+const VROT_BTN = '<button class="btn sm" data-vrot title="Turn the video a quarter turn, for one filmed sideways" aria-label="Turn the video">⟳ Turn</button>';
+function vidRot(player, f) {
+  const box = document.createElement('div'); box.className = 'vrotbox';
+  player.replaceWith(box); box.appendChild(player);
+  const fit = () => {
+    const d = vrotOf(f), side = d === 90 || d === 270;
+    box.classList.toggle('on', !!d); box.dataset.turn = d;
+    if (!d) { player.style.cssText = ''; return; }
+    const W = box.clientWidth, H = box.clientHeight;
+    player.style.cssText = side ? 'position:absolute;width:' + H + 'px;height:' + W + 'px;left:' + (W - H) / 2 + 'px;top:' + (H - W) / 2 + 'px;max-height:none;min-height:0;transform:rotate(' + d + 'deg)'
+      : 'position:absolute;inset:0;width:100%;height:100%;max-height:none;min-height:0;transform:rotate(180deg)';
+  };
+  new ResizeObserver(fit).observe(box);
+  box.vfit = fit; fit();
+  return box;
+}
+function vidTurn(st, f, card) {
+  const k = vrotKey(f), d = (vrotOf(f) + 90) % 360;
+  batch.vrot ||= {}; if (d) batch.vrot[k] = d; else delete batch.vrot[k];
+  if (!Object.keys(batch.vrot).length) delete batch.vrot;
+  for (const b of document.querySelectorAll('#paper .vrotbox')) if (b.vfit) b.vfit();
+  const n = card && card.querySelector('.vrnote'); if (n) n.hidden = !d;
+  saveSoon();
+}
+
 function linkCard(st, f) {
   if (vidRef(f.data)) return vfileCard(st, f);
   const url = linkOf(f.data), play = linkPlayer(url), ticks = !!play && (!play.frame || frameTicks(play.frame));
@@ -21961,11 +22152,13 @@ function linkCard(st, f) {
     '<div class="mctl">' + (play ? '<button class="btn sm primary" data-vplay aria-pressed="false">▶ Play here</button>' : '') +
     (ticks ? '<button class="btn sm" data-vstamp title="Adds where the video is to your comment, like [2:15]">+ Time to comment</button>' : '') +
     '<button class="btn sm' + (play ? '' : ' primary') + '" data-vopen title="Opens the video in a window of its own, to keep beside this one">Open in its own window</button>' +
-    '<button class="btn sm" data-vcopy>Copy link</button></div>' +
+    '<button class="btn sm" data-vcopy>Copy link</button>' + (play && (play.frame || play.video) ? VROT_BTN : '') + '</div>' +
+    (play && play.frame && !ticks ? '<p class="muted vlnote vrnote"' + (vrotOf(f) ? '' : ' hidden') + '>The site’s own captions turn with the video. For captions the right way up, paste a transcript below and turn on Captions under the video.</p>' : '') +
     '<p class="muted vlnote">' + (play ? 'Only the link is kept here; the video stays where it is. If it asks you to sign in or won’t play, open it in its own window.' : 'Only the link is kept here. This site can’t play inside the page, so it opens in a window of its own.') + '</p></div>';
   const now = () => { const m = el.querySelector('.vlslot video, .vlslot audio'); if (m) return m; const fr = el.querySelector('.vlslot iframe'), t = fr && frameTime(fr); return t == null ? null : { currentTime: t }; };
   el.onclick = e => {
     if (e.target.closest('[data-vopen]')) { window.open(url, '_blank', 'noopener,noreferrer,popup,width=980,height=640'); return; }
+    if (e.target.closest('[data-vrot]')) { vidTurn(st, f, el); if (el.querySelector('.vlslot').hidden) fill(); return; }
     if (e.target.closest('[data-vcopy]')) { navigator.clipboard.writeText(url).then(() => toast('Link copied'), () => toast('The link couldn’t be copied')); return; }
     if (e.target.closest('[data-vstamp]')) { const m = now(); if (!m) return toast('Press ▶ Play here first, then play the video to the moment you mean'); addStamp(st, m.currentTime); return; }
     const b = e.target.closest('[data-vplay]'); if (!b) return;
@@ -21977,8 +22170,8 @@ function linkCard(st, f) {
   const fill = c => {
     const slot = el.querySelector('.vlslot'), b = el.querySelector('[data-vplay]');
     slot.hidden = false; slot.innerHTML = ''; b.setAttribute('aria-pressed', 'true'); b.textContent = 'Close the player';
-    if (play.frame) { const fr = playerFrame(frameTicking(c ? clipFrame(play.frame, c).src : play.frame), linkTitle(f)); slot.appendChild(fr); frameClock(fr); vidGrip(slot, fr); }
-    else { const m = document.createElement(play.video ? 'video' : 'audio'); m.controls = true; m.preload = 'metadata'; m.src = play.video || play.audio; slot.appendChild(m); if (play.video) vidGrip(slot, m); if (c) clipRun(m, c); }
+    if (play.frame) { const fr = playerFrame(frameTicking(c ? clipFrame(play.frame, c).src : play.frame), linkTitle(f)); slot.appendChild(fr); frameClock(fr); vidGrip(slot, vidRot(fr, f)); }
+    else { const m = document.createElement(play.video ? 'video' : 'audio'); m.controls = true; m.preload = 'metadata'; m.src = play.video || play.audio; slot.appendChild(m); if (play.video) vidGrip(slot, vidRot(m, f)); if (c) clipRun(m, c); }
   };
   clipStrip(el.querySelector('.mstick'), f, now, c => (play ? fill(c) : clipShow(c.id)), play && play.frame && !ticks ? 'drive' : '');
   const pan = trPanel(el, f, { make: false, seek: t => {
@@ -22096,7 +22289,7 @@ function vidGrip(host, player) {
   g.onkeydown = e => { const d = e.key === 'ArrowDown' ? 40 : e.key === 'ArrowUp' ? -40 : 0; if (!d) return; e.preventDefault(); e.stopPropagation(); set(player.getBoundingClientRect().height + d, true); };
   vidHApply(store.get('gs.vidH', 0));
 }
-Object.assign(window.__gs, { vidRef, linkKey, vkPut, vkGet, vkSweep, frameTicking, vidHApply, trParse, trLines, trText, trSet, asrStandIn });
+Object.assign(window.__gs, { vidRef, linkKey, vrotOf, vkPut, vkGet, vkSweep, frameTicking, vidHApply, trParse, trLines, trText, trSet, asrStandIn });
 
 /* ---------- the notes page ---------- */
 const NP_W = 595.28, NP_H = 841.89, NP_M = 48, NP_TAIL = '%GradingStudio-notes';
@@ -25514,7 +25707,7 @@ function cmtClick(e) {
   }
   return false;
 }
-Object.assign(window.__gs, { flagsOf, lfSet, navOrder, kmClose, setList, listPeek, scoreRow: () => rowOn });
+Object.assign(window.__gs, { flagsOf, lfSet, navOrder, kmClose, setList, listPeek, fsSide, fullSideSet, listKept, scoreRow: () => rowOn });
 
 /* ---------------- strong examples: a strong answer, paper or part of a page, kept as pictures with the names blacked out (11/11) ---------------- */
 const EX_DB = 'grading-studio-examples';
@@ -26594,7 +26787,7 @@ window.addEventListener('pointercancel', tchUp, true);
   sel.onchange = () => { if (sel.value === 'auto') store.del('gs.touch'); else store.set('gs.touch', sel.value); };
   box.onchange = () => { if (box.checked) store.del('gs.press'); else store.set('gs.press', false); };
 }
-$('#paper').addEventListener('pointerdown', e => { if (e.pointerType !== 'mouse' && !listOpen) listPeek(false, 60); });
+$('#paper').addEventListener('pointerdown', e => { if (e.pointerType !== 'mouse' && !listKept()) listPeek(false, 60); });
 Object.assign(window.__gs, { touch: () => ({ penSeen, penDown, mode: tch.mode, fingers: tch.f.size, moves: fingerMoves(), set: touchMode() }), touchReset: () => { store.del('gs.penSeen'); penSeen = false; penDown = 0; penUpAt = -1e9; tch.f.clear(); tch.mode = ''; } });
 
 /* ---------------- Today: what she teaches, what is waiting to be marked, what is ready to hand back (stage 4) ---------------- */
@@ -27437,7 +27630,7 @@ $('#setHistory').addEventListener('click', e => {
 });
 
 /* updates she controls, and installing as an app */
-const WHATS_NEW = {"1.28.13":["Add a video file, not only a link: + Add, A video… keeps the file in this browser at any length while the computer has room, and partners share it. Drag the bar under a video to make it as big as you like.","Partners and videos (in Setup, and on No papers when you open an assignment) lists the whole class: pick partners and add each video in one place. + Clip now starts where the video is.","Bring in a rubric from Edit or the Open box on any assignment. Rows and what each level means are read from a Word or PDF table where they can be."],"1.28.12":["Look around with a sample class first now opens a full sample: two made-up classes part-way through a term, with marked papers, a quiz marked by question, a gradebook, charts, missing work, attendance, seating, report comments, to-dos and two weeks of lessons.","The sample is kept apart from your own work. Leave the sample in the sidebar clears it in one click, and your own classes are exactly as you left them."],"1.28.11":["In another language, the marking screen now reads in that language: the top bar, the tools, the student list, the score panel and its menus, and the Grades, Insights and Return tabs and Rubric setup.","Student names, rubric rows, what each score means, your comments and the papers themselves stay as they are. Boxes opened from the marking screen, To do, School and the Planner are still in English."],"1.28.10":["Planner slides: click any text box and the size menu in the toolbar changes that box: the title, the text, the bottom line and the rest. Biggest that fits picks the size for you.","The box you click gets a frame: drag its bar to move it or a handle to resize it, and Put back returns it to the layout. The .pptx keeps the new places and sizes.","+ Add slide adds a title and text slide straight away; the arrow beside it opens every layout. Timetable can set a different usual slide.","Words are never cut off: text that runs past its box stays visible in the editor with a warning, and when you present the box uses the room under it, then the text gets smaller until every word shows."],"1.28.9":["Returning marked files now gives each student one PDF: the feedback page first, then every paper they turned in, Word papers included as pages. A Word rubric you scored still goes back as a Word file.","To send each paper as its own file again, untick One PDF for each student under Options on the Return tab."],"1.28.8":["On Today, every class whose lesson has slides now has a Present button, not only the class on now. Two classes sharing one lesson can each present it.","While presenting, Pop out (or W) puts the slides in a window of their own for a second screen or projector. That window shows only what the class sees, and this one keeps the bar, your notes and the timer. The keys work in either window."],"1.28.7":["Save a screenshot as a strong example: tick “Save as a strong example” in the Screenshot bar, or press the button on the “Picture copied” note. Before it is saved you can black out anything, like a name, and add why it’s strong and tags.","The Examples page finds work again by tag or by searching what you wrote. Every card shows its tags, and you can change them from its ⋯ menu. Download as a sheet works for whatever the page is showing."],"1.28.6":["In another language, the boxes a class page opens now read in that language too: a new or changed assignment, the roster, units, how the class is graded, Email wording and report Wording, the notes pages for work with no papers, and the progress sheets you print.","Class, unit, assignment and student names, and the sentences in the Wording boxes, stay as you typed them. The marking screen and its boxes are still in English."],"1.28.5":["In another language, the rest of a class page now reads in that language: a student’s own page, Charts, Goals and Report comments, and the gradebook, charts and levels of a class graded with IB criteria. Pointing at a mark on a chart says it in that language too. Names, rubric rows, goals and criteria stay as you typed them.","A report comment’s draft is still written in English until you put your own sentences in Wording…. The boxes that open from these tabs are still in English.","Fixed in German: “Grade” showed as “Notiz” in a few places, and now reads “Note”."],"1.28.4":["In another language, more of a class page now reads in that language: the Gradebook, Students, Attendance, Seating and Missing work tabs, with dates written that language’s way and your own names left as you typed them.","Still in English: a student’s own page, Charts, Goals, Report comments, the gradebook of a class graded with IB criteria, and the boxes that open from these tabs."],"1.28.3":["In another language, a class page now reads in that language too: its header, its row of tabs and the Assignments tab, with your own class, unit and assignment names left as you typed them. The Gradebook and the other tabs are still in English."],"1.28.2":["Settings is now in your language too: all seven pages, in each of the eight languages. Help answers name the Settings buttons the way Settings shows them.","Boxes that open from Settings, such as Term setup and the mark key, are still in English, and so are the class and marking screens."],"1.28.1":["The app opens a little faster at its web address: it now fetches only the language you chose instead of carrying all of them. Your language is kept for use without internet, and the take-home file still has every language inside."],"1.28.0":["Six more app languages: Simplified Chinese (简体中文), French, German, Portuguese, Japanese and Korean, beside Traditional Chinese and Spanish. Choose one in Settings, Display, App language.","Each covers the same first screens: the sidebar, Today, the welcome, Find anything, Help and the feedback page students get. The other screens are still in English.","None of the translations has been checked by a fluent speaker yet, so a line may read oddly."],"1.27.36":["IB MYP classes: Quick mark now gives levels for a paper quiz. On the boxes screen each question counts for one criterion, and under Points to levels you type the lowest points that earn each level. The quiz then gives a level for each criterion, with no total and no percent."],"1.27.35":["IB DP classes: the Grading box now has Components, where each type of work (Paper 1, the internal assessment and so on) gets its own weight for that class alone. In the Gradebook, More has Predicted grades: click the 1 to 7 you predict for each student, with the grade the percent earns outlined as a hint. Predicted grades show in the gradebook and on progress sheets."],"1.27.34":["A class page is simpler. The tab row has Assignments, Gradebook, Students and More; the pin beside a page in More keeps it in the row. Roster, grading and the class link are under one Class setup button.","The gradebook has one More menu for Term setup, extra credit, import and copy. Settings has seven pages in place of twelve, and nothing has been removed.","In the Planner’s week, Use a lesson shows when you point at a class slot."],"1.27.33":["Every activity in the Planner’s Activities bank has a video button. See it in action opens a short classroom video of it from sources such as Edutopia, EL Education and Reading Rockets; where there isn’t a good one, Find a video searches YouTube for it. Your own activities can carry a video link, and the link goes into the speaker notes when you add an activity to a lesson."],"1.27.32":["IB MYP classes: report comments are drafted from the levels you set and the 1 to 7, and a progress sheet shows each criterion’s level, the total, the grade and every task’s levels, with no percent. A new year keeps a class’s criteria and boundaries and leaves the students’ levels behind. My setup now brings an MYP teacher in as IB MYP criteria."],"1.27.31":["A lesson in the Planner is tidier under the slide. This slide has your speaker notes beside one box for your AI assistant. The whole lesson has Materials, Links, Finished PowerPoint, comments and Taught as matching cards.","The tips for editing a slide are behind an Editing tips button, and Alternative version is in More until a lesson has more than one version."],"1.27.30":["A lesson in the Planner has a Links box for the web pages you open while teaching it. Paste an address, or pick one from School resources.","A School resource can be for one class. Its links then show on every lesson for that class, and in Present under Links (the L key)."],"1.27.29":["IB MYP tasks: the Grades tab shows each criterion’s level with no total or percent, and Copy all levels copies them. Insights leaves out the percent tiles, and text shared with an assistant says the rows are levels, not points to add up. Help has two new answers, for IB MYP and IB DP."],"1.27.28":["Coming from Google Classroom? Settings, Classes and rosters has a new button, From Google Classroom…. Choose the grades file you download from Classroom and it makes the class with its students, then shows every assignment and score for you to check before they go into the gradebook. A folder of student work downloaded from Google Drive now opens with each student’s files together. Nothing is sent anywhere and there is no sign-in. Help has an answer for it."],"1.27.27":["Screenshot: press S on a paper, Alt S (⌥S on a Mac) anywhere, or the button at the foot of the marking tools. Drag over what you want, click a page for the whole page, or press Enter for the whole screen, and the picture is copied, ready to paste. On a paper, name covers stay painted in and the student’s name and file name are left off; With my marks chooses whether your marks come too."],"1.27.26":["Full screen: press F, or Full screen near the bottom of the sidebar (beside ✕ while a paper is open). The browser’s bars go away and the sidebar folds to icons, or goes while you mark, so the paper gets the room. F again, the same button or Esc leaves, and nothing is closed or lost. On formative work F is for feedback, so use the button there."],"1.27.25":["IB classes. Each class has a Grading button: points and percent, IB MYP or IB DP. The welcome and Settings offer IB MYP criteria (0 to 8) and IB DP 1 to 7 as two separate choices.","An MYP class is marked against the criteria a task assesses, each 0 to 8, with no percent. Its gradebook shows every level a student earned, you choose the level that fits best for each criterion, and the total becomes a final grade of 1 to 7. Levels are never averaged.","Criterion names and the grade boundaries are yours to change. A DP class shows the 1 to 7 its percent earns on boundaries you type in."],"1.27.24":["My setup, in Settings: copy a prompt into your AI assistant, and it writes your setup as one block of text: classes and when they meet, the calendar, terms, what a grade is made of, how you grade, IB criteria and boundaries, rubrics, saved comments and learning goals.","Paste the block back and press Check it. You see what would change, untick anything you don’t want, and can undo it afterwards. Anything about students is left out and said so.","Copy my setup gives your own setup as the same kind of text, for a colleague to start from. The welcome has a line that leads here."],"1.27.23":["Take my work with me now carries your Planner too: lessons, units, timetable and their files. Bring work in takes it in. A Planner already in use only receives the lessons and files it doesn’t have, so nothing there is replaced.","If Grading Studio ever moves to a new web address, the old address tells you and shows the three steps for taking your work along. Help has an answer for it."],"1.27.22":["Attendance has a choice for a student who is away when you don’t know why yet: Absent, reason unknown. Change it to Absent, excused when you hear the reason. It is still four choices, and days you saved before keep their marks. Look back lists the absences that still have no reason."],"1.27.21":["Comments are easier to work with. Change a comment’s color at any time, even while typing it: its box has a Color row, and a Highlight row when it is on highlighted words. Text boxes and Quick mark comments have colors too.","Drag a new comment’s line up or down before you type a word, and press Enter to finish a comment or text box. Shift Enter starts a new line."],"1.27.20":["Feedback-only work no longer says 0 of 20 scored. A formative activity counts the students whose feedback is complete, on its card, in Find, Today, To do, the Grades box and the grade sheet, and says Ready to return once everyone has feedback."],"1.27.19":["Presentations and videos. On an assignment’s card, Add papers… now has No papers: presentations or videos…, which gives every student on the roster a notes page to write on while you watch. Pick lined, your rubric’s rows, two columns or blank.","On a student’s page, + Add has A video…: paste a link from Google Drive, YouTube or anywhere else, and tick the partners in it. One set of notes and one grade covers the group. Only the link is kept, so the video stays where it is.","Play here shows the video above the notes page; Open in its own window puts it beside the app. + Add also has A notes page… for one more page at any time.","Clips: under a video, + Clip saves a part worth showing, as a start time, an end time and a title. Show to the class plays it full screen with the title and without the student’s name, and Clips to show the class under Setup plays them one after another."],"1.27.18":["The app no longer assumes your AI assistant is Claude. Settings, Working with AI lets you pick Claude, ChatGPT, Gemini, Copilot, another name, or none, and buttons and hints use that name. If you already used the app, yours stays Claude.","Planner, Timetable has a Slides section: the agenda on slide 2 and keeping text between 28 and 36 pt are both on, and each can be turned off.","The week shows Saturday, or Sunday in front of Monday, when a class meets then. Short dates follow your computer's day and month order."],"1.27.17":["Answer notes for quizzes: type each question's answer in Quiz boxes, and it goes on the returned papers in a gold note labelled Answer, by each question a student lost points on. In Quiz boxes, Answer notes can be set to every question or off."],"1.27.16":["The grade sheet shows the score you gave each paper in Grading Studio, the same number as the score panel, with extra credit and the retake that counts. Grades found typed on the papers only show for papers with no score yet, or when you tick Also show grades found on the papers. A score stamp already on a paper now changes when the score does."],"1.27.15":["Copy one quiz answer as a picture: in Quick mark, press P or ⧉ Copy on an answer, then paste it into Claude to ask whether it is right. The picture shows only that answer, with the question and your answer key on top. The name, score, your mark and the file name are left off, and name covers are painted in, but the student’s handwriting and words still show."],"1.27.14":["Points written on a paper can have their own color. In Quick mark’s Colors menu, or Settings, Marking, Mark colors: the ✗ color as before, one color of your own, or By credit, with full points in the check color, part in amber and none in the ✗ color."],"1.27.13":["Share lesson file, under More in a lesson: one small file with the slides, notes, pictures, materials and finished PowerPoint. Open it with Import a lesson on another computer, or give it to another teacher.","Which classes and days a lesson is on, taught notes and comments for Claude stay behind, and opening one never replaces a lesson you have."],"1.27.12":["A to-do list. To do in the sidebar holds your own list beside what the app noticed from your work: papers to mark, papers to hand back, a class with no lesson planned, missing work to chase. Those go by themselves when the work is done, and each kind can be switched off.","Type a to-do the way you would say it, like “Call Bram’s parents friday”, and it picks out the day, the class and the student. Press N anywhere outside a paper to add one.","A to-do can have a day, a class, a student or assignment it goes with, a repeat and a note. Today shows a short card of what is overdue or due today.","Week, at the top right of To do, shows your week: each line on its day, under the class that meets then. Type in a day to add one, or drag a line to another day. Anything not done moves to today on its own."],"1.27.11":["Groups in Present mode: shuffling no longer moves the slides or ends the lesson, and each shuffle keeps last time's groups apart.","Change groups by hand: drag a name to another group, or click a name and then a group. Make my own starts with empty groups, and Undo or Ctrl Z takes back a move or a shuffle.","The Present timer keeps running after you finish or leave full screen, in the corner of the Planner, and comes back on the slides when you present again."],"1.27.10":["Finding names on its own is now off unless you turn it on, in Settings, Marking, Name covers. Only the boxes you draw in Check the covers cover anything, and the check before anonymous grading lists every paper."],"1.27.9":["In the Planner's Timetable, Use my school’s template… picks your own PowerPoint template for slide downloads. Use the plain one goes back to the white one built in.","Save my setup file keeps your classes, meeting times, days off and slide template in one file to load on another computer."],"1.27.8":["Anchor papers: while you mark a summative, click High, Mid or Low under the score. The Return tab lists the three and exports them in one ZIP, each named for the assignment and its level, like “River essay - Summative High.pdf”, with student names covered."],"1.27.7":["Keep strong work as an example: press ☆ Example on an answer in Quick mark (or E), or pick Use as an example in the ⋯ beside a student’s name for a whole paper or part of a page. Names are covered, and your marks and the score stay off unless you switch them on. It is always optional.","The Examples tab on an assignment, and Examples in the sidebar for every class, have Show to the class, Copy picture, Download and Download as a sheet.","Examples go to your linked folder and into the take-home file with the rest of your work."],"1.27.6":["Returned files are named for the student, the assignment and what they are, like “Ana Lee - River essay - Graded.pdf”, or Feedback when there is no score. They still go in each student’s own folder.","To keep the names students turned in, untick Name each file by student and assignment under Options on the Return tab."],"1.27.5":["The gradebook can import your old scores: press Import… and choose a CSV or Excel file, or paste the cells. Each column becomes an assignment, matched to your roster.","You see everything before it is saved, and a score already in the gradebook stays unless you choose the file’s."],"1.27.4":["School is a new page in the sidebar for the things about your school you look up again and again: the handbook, the calendar, the bell schedule, portals, forms, who to call.","Add a link, a file (a copy is kept with your work) or a note. Name your own groups, and star the ones you open most to keep them along the top.","Drop files on the page or paste a web address. Find anything lists every resource. They are kept in your folder and take-home file, and stay when you start a new school year."],"1.27.3":["The class timer in Present takes minutes and seconds: type them in, or pick 0:30 and the other quick times. The menu remembers the last time you typed.","While it runs, the timer's menu adds or takes away 10 seconds or a minute, pauses, and restarts from the time you set. + and − add or take away a minute without opening the menu.","Tick Show it big to put the countdown in the middle of the screen, large enough for the back of the room."],"1.27.2":["In the gradebook, in-class assessments are now on the left and summatives on the right: the columns, the averages beside the term grade, and wherever you choose a type.","The order is yours to change. In Term setup, the arrows beside each type move it, and the gradebook's columns follow from left to right.","You can make your own assignment types. In Term setup, rename a type or press + Add a type (Homework, Projects, Quizzes), and give each its share of the grade. Your own setup stays as it is until you change it."],"1.27.1":["Undo now takes back a score as well as a mark: press Ctrl Z (⌘Z on a Mac) after a slip on a slider, a number key, or Missing, Excused or Late. Redo puts it back.","Deleting a unit, an assignment or a class shows Undo for a few seconds, and Undo puts it back where it was.","“Picked up where you left off” shows once, when you open an assignment, and no longer on Today or other pages. The note about what opened leaves by itself when you move to the next student, if every file opened.","The Next button stays in one place from student to student, and the Grade heading on a class’s Students tab is drawn properly.","Find anything answers to more everyday words: export, hand back, backup, undo, shortcuts, csv."],"1.27.0":["Start a new school year, in Settings, Saving and carrying. Your classes, units and assignment cards carry on, each card with its rubric and Quick mark boxes, with empty class lists and dates a year later.","This year goes into one protected file first, and the file is checked before anything is cleared. Open an archived year brings a year back from its file."],"1.26.2":["Rubric rows can be scored on your own scale. They start at 0 to 4 with half points, as before; when you set up an assignment you can pick any top from 1 to 10 and turn half points off.","Settings, Grading: choose the row scale new assignments start with. Assignments you already have keep theirs."],"1.26.1":["Activities: See, think, wonder now says it comes from Project Zero at the Harvard Graduate School of Education."],"1.26.0":["Seating: a new tab on each class. Pick how the room is set up, drag students to desks, and Shuffle gives everyone a new seat. A student can be kept in their seat.","Pick a name shows one student at random, and nobody twice until everyone has had a turn. Make groups deals the class into groups of any size.","While presenting a lesson, P picks a name and G makes groups. Who’s here leaves out anyone who is away today."],"1.25.0":["Attendance. Each class has an Attendance tab: everyone starts as present, so a day is one press for each student who is late, excused or absent, with a note if you want one.","Look back shows every saved day in one table with each student’s totals, and a student’s own page lists the days they missed.","Copy a day, or download the table as a spreadsheet, for your school’s system. Today has a line for it under each class.","If you don’t take attendance here, turn it off in Settings, Classes and rosters."],"1.24.0":["Retakes: a second try at the same assignment keeps the first try's score, comment and paper. Start one from the ⋯ beside Missing, Excused and Late on a paper.","You choose which try counts, for all your classes: the highest (to begin with), the latest, or the average. It is in the retake box and in the gradebook's Term setup.","A score typed into the gradebook takes a retake too: type both, like 7 > 10."],"1.23.0":["Scores by learning goal, if you want them. Keep your own list of goals (a skill, or a standard from your school) in Settings, Grading, or add one wherever you tag.","Tag rubric rows in Rubric setup and quiz questions in Quiz boxes. An assignment scored with just a total can carry one goal for the whole score.","Each class page gets a Goals tab: the class average on each goal with the lowest first, every student by every goal, and where each number came from. A student's own page shows their goals beside the class average.","Nothing changes until you add a first goal, and tagging never changes a score or a grade."],"1.22.0":["Progress sheets for parent meetings: one printed page per student with the term grade, every score, a chart of how they moved, missing work, each term's grade, the report comment and lines for notes. Find it on a class's Students list, or Progress sheet on one student's page.","Choose the term and tick what goes on it; Print opens the print window, where you can pick a printer or Save as PDF. It is made on your computer and nothing is sent anywhere."],"1.21.0":["Each class has a Missing work tab: every paper you marked Missing, by student or by assignment, for the term you pick.","Email reminder opens an email in your own mail app, addressed to the student and listing what they owe, for you to read and send. Email all writes one email to everyone who owes an assignment, with the addresses in Bcc. Grading Studio sends nothing itself.","Each reminder you open is noted beside the work, and Email wording… changes what every reminder says."],"1.20.0":["The app can speak Traditional Chinese (繁體中文). Choose it in Settings, Display, App language, or at the top of the welcome.","Like Spanish, it covers the first screens so far: the sidebar, Today, the welcome, Find anything, Help, and the feedback page students get with a returned paper. The other screens are still in English."],"1.19.0":["The app can speak Spanish. Choose it in Settings, Display, App language, or at the top of the welcome.","Spanish covers the first screens so far: the sidebar, Today, the welcome, Find anything, Help, and the feedback page students get with a returned paper. The other screens are still in English.","Names you typed (classes, students, assignments, rubric rows) are never translated."],"1.18.0":["On a tablet, a pencil draws and the pen's line is wider where you press harder. Once you have used a pencil, one finger moves the page, two fingers pinch to zoom, and a hand resting on the screen does nothing.","Settings, Marking has a new Tablet and pencil section: choose what a finger does on the paper, or turn off the wider line.","On a touch screen the tools, the student rows and the score buttons are larger."],"1.17.0":["Report comments: a new tab on each class's page drafts a comment for every student from your own gradebook, rubric scores and the comments you wrote on their papers. Edit each one, tick it done, then copy or download them all.","The drafts are put together on your computer from sentences you can change under Wording. Nothing about a student is sent anywhere."],"1.16.0":["Help is in the sidebar: short answers to the questions teachers ask most, from opening a set of papers to moving your work to another computer.","Find anything answers questions too. Type a few words, like “late paper” or “backup”, and the answer is in the list."],"1.15.0":["A picture dragged onto a slide that has text now sits beside the text, in a new Text + picture layout.","Drag several pictures in at once and each gets its own slide. Let a picture go on any slide in the list on the left to put it there.","New Full picture layout: the picture fills the whole slide."],"1.14.0":["Extra credit: points or a percent on one paper, and extra credit entries in the gradebook that add to the term grade or the in-class average.","The gradebook shows each type's average (summative, in-class) right beside the term grade, kept in view as you scroll. Averages only shows just those columns, and Whole year splits each term the same way.","Leave out… lets you untick students to see the class averages without them. Their own grades don't change, and nothing is saved."],"1.13.0":["Present a lesson from the Planner, or from Today when its class is on now or next: its slides fill the screen, and the arrow keys or a clicker move through them.","While presenting, A shows the agenda to tick off, T starts a timer the class can see, N shows your notes and B blanks the screen.","The bar shows how many minutes the class has left, from your timetable.","After a lesson is taught, one line says where the class got to. It shows on the lesson and on the week, and presenting again picks up there."],"1.12.0":["A returned paper starts with a feedback page: the score, each rubric row with the level given and what that level means, your comment, and every comment on the paper with its page number.","It is on unless you turn it off under Options on the Return tab. Your own pages are not changed, and bringing an export back in opens only those."],"1.11.0":["The Planner’s sections are in the sidebar: Calendar, Units, Past lessons, Activities and Rubrics. The row of tabs across the top is gone.","A lesson has a lighter top: its name, its classes, its status and Download. Copy for Claude, Versions, the upload and the links are under More.","Comments shows above a lesson once it has one."],"1.7.0":["Home is now Today: the classes you teach today with the lesson planned for each, the papers waiting to be marked, and the papers ready to hand back.","What the class needs next: after a set of papers is scored, Today shows the weakest rubric row and how many students to sit down with.","A class page is quieter. Click anywhere on an assignment’s row to open it; the only blue button is the one that adds an assignment.","Forget, and the other ways to open papers, moved into the ⋯ menu on each row."],"1.6.0":["A new browser opens on three questions (your classes, how you grade, where work is kept) and starts with nothing of anyone else’s in it.","A sample class of made-up students, with papers to mark, for trying things out. Remove it from Home when you’re done.","The app uses the name of your own school system. Choose it, and how you usually grade, in Settings.","Letter grades or IB 1 to 7 can show beside the percent, with boundaries you set.","Canvas and Moodle downloads are grouped by student. The Planner works without a setup file, and downloads lessons as PowerPoint with a plain built-in template."],"1.5.0":["The sidebar says “Not backed up”, in amber, until a folder holds a second copy of your work. Home asks for that folder once.","Go back in time, in Settings: any assignment as it was on an earlier day, restored on its own, with Undo.","Grading Studio can be installed as an app, and it opens with no internet.","A newer version now waits until you click Update now, so nothing changes in the middle of marking."]};
+const WHATS_NEW = {"1.28.17":["Transcripts beside videos. Under any video, Paste a transcript takes one you have, for example from Gemini, YouTube or a caption file. A line that starts with a time plays the video from there.","Make transcript now works for video files kept in this browser too. It asks before the one-time download, runs on this computer, shows how far it is, and Cancel stops it.","Captions under the video show the line being said the right way up, even when the video is turned. For a Google Drive video, step through the lines with ‹ and ›."],"1.28.16":["Video cards have a ⟳ Turn button for a video filmed sideways. It turns a quarter turn at a time, is kept for that video, and partners sharing the link see it turned too.","A rubric copy brought in after every notes page was taken out or removed now goes on each student’s paper instead of Removed pages."],"1.28.15":["In full screen the student list gets out of the way while you mark. Rest the pointer at the left edge of the screen, or press [, and it comes back; on a tablet, tap the tab at the left edge.","Settings, Marking, Full screen marking can keep the list shown, or hide the tools too until the pointer comes near them."],"1.28.14":["Your AI assistant can sit beside Grading Studio. Name it in Settings, Working with AI (Gemini, Claude, ChatGPT, Copilot or another) and its name is in the sidebar on every screen, in the Planner too. A click opens it in a window on the right of the screen, or in a tab if you prefer.","In Chrome, right-click the name in the sidebar and choose Open link in split view to have both in one window. Opens at takes a link of your own, such as your school account or a Gem. Grading Studio sends nothing to the assistant: it sees only what you paste or attach."],"1.28.13":["Add a video file, not only a link: + Add, A video… keeps the file in this browser at any length while the computer has room, and partners share it. Drag the bar under a video to make it as big as you like.","Partners and videos (in Setup, and on No papers when you open an assignment) lists the whole class: pick partners and add each video in one place. + Clip now starts where the video is.","Bring in a rubric from Edit or the Open box on any assignment. Rows and what each level means are read from a Word or PDF table where they can be."],"1.28.12":["Look around with a sample class first now opens a full sample: two made-up classes part-way through a term, with marked papers, a quiz marked by question, a gradebook, charts, missing work, attendance, seating, report comments, to-dos and two weeks of lessons.","The sample is kept apart from your own work. Leave the sample in the sidebar clears it in one click, and your own classes are exactly as you left them."],"1.28.11":["In another language, the marking screen now reads in that language: the top bar, the tools, the student list, the score panel and its menus, and the Grades, Insights and Return tabs and Rubric setup.","Student names, rubric rows, what each score means, your comments and the papers themselves stay as they are. Boxes opened from the marking screen, To do, School and the Planner are still in English."],"1.28.10":["Planner slides: click any text box and the size menu in the toolbar changes that box: the title, the text, the bottom line and the rest. Biggest that fits picks the size for you.","The box you click gets a frame: drag its bar to move it or a handle to resize it, and Put back returns it to the layout. The .pptx keeps the new places and sizes.","+ Add slide adds a title and text slide straight away; the arrow beside it opens every layout. Timetable can set a different usual slide.","Words are never cut off: text that runs past its box stays visible in the editor with a warning, and when you present the box uses the room under it, then the text gets smaller until every word shows."],"1.28.9":["Returning marked files now gives each student one PDF: the feedback page first, then every paper they turned in, Word papers included as pages. A Word rubric you scored still goes back as a Word file.","To send each paper as its own file again, untick One PDF for each student under Options on the Return tab."],"1.28.8":["On Today, every class whose lesson has slides now has a Present button, not only the class on now. Two classes sharing one lesson can each present it.","While presenting, Pop out (or W) puts the slides in a window of their own for a second screen or projector. That window shows only what the class sees, and this one keeps the bar, your notes and the timer. The keys work in either window."],"1.28.7":["Save a screenshot as a strong example: tick “Save as a strong example” in the Screenshot bar, or press the button on the “Picture copied” note. Before it is saved you can black out anything, like a name, and add why it’s strong and tags.","The Examples page finds work again by tag or by searching what you wrote. Every card shows its tags, and you can change them from its ⋯ menu. Download as a sheet works for whatever the page is showing."],"1.28.6":["In another language, the boxes a class page opens now read in that language too: a new or changed assignment, the roster, units, how the class is graded, Email wording and report Wording, the notes pages for work with no papers, and the progress sheets you print.","Class, unit, assignment and student names, and the sentences in the Wording boxes, stay as you typed them. The marking screen and its boxes are still in English."],"1.28.5":["In another language, the rest of a class page now reads in that language: a student’s own page, Charts, Goals and Report comments, and the gradebook, charts and levels of a class graded with IB criteria. Pointing at a mark on a chart says it in that language too. Names, rubric rows, goals and criteria stay as you typed them.","A report comment’s draft is still written in English until you put your own sentences in Wording…. The boxes that open from these tabs are still in English.","Fixed in German: “Grade” showed as “Notiz” in a few places, and now reads “Note”."],"1.28.4":["In another language, more of a class page now reads in that language: the Gradebook, Students, Attendance, Seating and Missing work tabs, with dates written that language’s way and your own names left as you typed them.","Still in English: a student’s own page, Charts, Goals, Report comments, the gradebook of a class graded with IB criteria, and the boxes that open from these tabs."],"1.28.3":["In another language, a class page now reads in that language too: its header, its row of tabs and the Assignments tab, with your own class, unit and assignment names left as you typed them. The Gradebook and the other tabs are still in English."],"1.28.2":["Settings is now in your language too: all seven pages, in each of the eight languages. Help answers name the Settings buttons the way Settings shows them.","Boxes that open from Settings, such as Term setup and the mark key, are still in English, and so are the class and marking screens."],"1.28.1":["The app opens a little faster at its web address: it now fetches only the language you chose instead of carrying all of them. Your language is kept for use without internet, and the take-home file still has every language inside."],"1.28.0":["Six more app languages: Simplified Chinese (简体中文), French, German, Portuguese, Japanese and Korean, beside Traditional Chinese and Spanish. Choose one in Settings, Display, App language.","Each covers the same first screens: the sidebar, Today, the welcome, Find anything, Help and the feedback page students get. The other screens are still in English.","None of the translations has been checked by a fluent speaker yet, so a line may read oddly."],"1.27.36":["IB MYP classes: Quick mark now gives levels for a paper quiz. On the boxes screen each question counts for one criterion, and under Points to levels you type the lowest points that earn each level. The quiz then gives a level for each criterion, with no total and no percent."],"1.27.35":["IB DP classes: the Grading box now has Components, where each type of work (Paper 1, the internal assessment and so on) gets its own weight for that class alone. In the Gradebook, More has Predicted grades: click the 1 to 7 you predict for each student, with the grade the percent earns outlined as a hint. Predicted grades show in the gradebook and on progress sheets."],"1.27.34":["A class page is simpler. The tab row has Assignments, Gradebook, Students and More; the pin beside a page in More keeps it in the row. Roster, grading and the class link are under one Class setup button.","The gradebook has one More menu for Term setup, extra credit, import and copy. Settings has seven pages in place of twelve, and nothing has been removed.","In the Planner’s week, Use a lesson shows when you point at a class slot."],"1.27.33":["Every activity in the Planner’s Activities bank has a video button. See it in action opens a short classroom video of it from sources such as Edutopia, EL Education and Reading Rockets; where there isn’t a good one, Find a video searches YouTube for it. Your own activities can carry a video link, and the link goes into the speaker notes when you add an activity to a lesson."],"1.27.32":["IB MYP classes: report comments are drafted from the levels you set and the 1 to 7, and a progress sheet shows each criterion’s level, the total, the grade and every task’s levels, with no percent. A new year keeps a class’s criteria and boundaries and leaves the students’ levels behind. My setup now brings an MYP teacher in as IB MYP criteria."],"1.27.31":["A lesson in the Planner is tidier under the slide. This slide has your speaker notes beside one box for your AI assistant. The whole lesson has Materials, Links, Finished PowerPoint, comments and Taught as matching cards.","The tips for editing a slide are behind an Editing tips button, and Alternative version is in More until a lesson has more than one version."],"1.27.30":["A lesson in the Planner has a Links box for the web pages you open while teaching it. Paste an address, or pick one from School resources.","A School resource can be for one class. Its links then show on every lesson for that class, and in Present under Links (the L key)."],"1.27.29":["IB MYP tasks: the Grades tab shows each criterion’s level with no total or percent, and Copy all levels copies them. Insights leaves out the percent tiles, and text shared with an assistant says the rows are levels, not points to add up. Help has two new answers, for IB MYP and IB DP."],"1.27.28":["Coming from Google Classroom? Settings, Classes and rosters has a new button, From Google Classroom…. Choose the grades file you download from Classroom and it makes the class with its students, then shows every assignment and score for you to check before they go into the gradebook. A folder of student work downloaded from Google Drive now opens with each student’s files together. Nothing is sent anywhere and there is no sign-in. Help has an answer for it."],"1.27.27":["Screenshot: press S on a paper, Alt S (⌥S on a Mac) anywhere, or the button at the foot of the marking tools. Drag over what you want, click a page for the whole page, or press Enter for the whole screen, and the picture is copied, ready to paste. On a paper, name covers stay painted in and the student’s name and file name are left off; With my marks chooses whether your marks come too."],"1.27.26":["Full screen: press F, or Full screen near the bottom of the sidebar (beside ✕ while a paper is open). The browser’s bars go away and the sidebar folds to icons, or goes while you mark, so the paper gets the room. F again, the same button or Esc leaves, and nothing is closed or lost. On formative work F is for feedback, so use the button there."],"1.27.25":["IB classes. Each class has a Grading button: points and percent, IB MYP or IB DP. The welcome and Settings offer IB MYP criteria (0 to 8) and IB DP 1 to 7 as two separate choices.","An MYP class is marked against the criteria a task assesses, each 0 to 8, with no percent. Its gradebook shows every level a student earned, you choose the level that fits best for each criterion, and the total becomes a final grade of 1 to 7. Levels are never averaged.","Criterion names and the grade boundaries are yours to change. A DP class shows the 1 to 7 its percent earns on boundaries you type in."],"1.27.24":["My setup, in Settings: copy a prompt into your AI assistant, and it writes your setup as one block of text: classes and when they meet, the calendar, terms, what a grade is made of, how you grade, IB criteria and boundaries, rubrics, saved comments and learning goals.","Paste the block back and press Check it. You see what would change, untick anything you don’t want, and can undo it afterwards. Anything about students is left out and said so.","Copy my setup gives your own setup as the same kind of text, for a colleague to start from. The welcome has a line that leads here."],"1.27.23":["Take my work with me now carries your Planner too: lessons, units, timetable and their files. Bring work in takes it in. A Planner already in use only receives the lessons and files it doesn’t have, so nothing there is replaced.","If Grading Studio ever moves to a new web address, the old address tells you and shows the three steps for taking your work along. Help has an answer for it."],"1.27.22":["Attendance has a choice for a student who is away when you don’t know why yet: Absent, reason unknown. Change it to Absent, excused when you hear the reason. It is still four choices, and days you saved before keep their marks. Look back lists the absences that still have no reason."],"1.27.21":["Comments are easier to work with. Change a comment’s color at any time, even while typing it: its box has a Color row, and a Highlight row when it is on highlighted words. Text boxes and Quick mark comments have colors too.","Drag a new comment’s line up or down before you type a word, and press Enter to finish a comment or text box. Shift Enter starts a new line."],"1.27.20":["Feedback-only work no longer says 0 of 20 scored. A formative activity counts the students whose feedback is complete, on its card, in Find, Today, To do, the Grades box and the grade sheet, and says Ready to return once everyone has feedback."],"1.27.19":["Presentations and videos. On an assignment’s card, Add papers… now has No papers: presentations or videos…, which gives every student on the roster a notes page to write on while you watch. Pick lined, your rubric’s rows, two columns or blank.","On a student’s page, + Add has A video…: paste a link from Google Drive, YouTube or anywhere else, and tick the partners in it. One set of notes and one grade covers the group. Only the link is kept, so the video stays where it is.","Play here shows the video above the notes page; Open in its own window puts it beside the app. + Add also has A notes page… for one more page at any time.","Clips: under a video, + Clip saves a part worth showing, as a start time, an end time and a title. Show to the class plays it full screen with the title and without the student’s name, and Clips to show the class under Setup plays them one after another."],"1.27.18":["The app no longer assumes your AI assistant is Claude. Settings, Working with AI lets you pick Claude, ChatGPT, Gemini, Copilot, another name, or none, and buttons and hints use that name. If you already used the app, yours stays Claude.","Planner, Timetable has a Slides section: the agenda on slide 2 and keeping text between 28 and 36 pt are both on, and each can be turned off.","The week shows Saturday, or Sunday in front of Monday, when a class meets then. Short dates follow your computer's day and month order."],"1.27.17":["Answer notes for quizzes: type each question's answer in Quiz boxes, and it goes on the returned papers in a gold note labelled Answer, by each question a student lost points on. In Quiz boxes, Answer notes can be set to every question or off."],"1.27.16":["The grade sheet shows the score you gave each paper in Grading Studio, the same number as the score panel, with extra credit and the retake that counts. Grades found typed on the papers only show for papers with no score yet, or when you tick Also show grades found on the papers. A score stamp already on a paper now changes when the score does."],"1.27.15":["Copy one quiz answer as a picture: in Quick mark, press P or ⧉ Copy on an answer, then paste it into Claude to ask whether it is right. The picture shows only that answer, with the question and your answer key on top. The name, score, your mark and the file name are left off, and name covers are painted in, but the student’s handwriting and words still show."],"1.27.14":["Points written on a paper can have their own color. In Quick mark’s Colors menu, or Settings, Marking, Mark colors: the ✗ color as before, one color of your own, or By credit, with full points in the check color, part in amber and none in the ✗ color."],"1.27.13":["Share lesson file, under More in a lesson: one small file with the slides, notes, pictures, materials and finished PowerPoint. Open it with Import a lesson on another computer, or give it to another teacher.","Which classes and days a lesson is on, taught notes and comments for Claude stay behind, and opening one never replaces a lesson you have."],"1.27.12":["A to-do list. To do in the sidebar holds your own list beside what the app noticed from your work: papers to mark, papers to hand back, a class with no lesson planned, missing work to chase. Those go by themselves when the work is done, and each kind can be switched off.","Type a to-do the way you would say it, like “Call Bram’s parents friday”, and it picks out the day, the class and the student. Press N anywhere outside a paper to add one.","A to-do can have a day, a class, a student or assignment it goes with, a repeat and a note. Today shows a short card of what is overdue or due today.","Week, at the top right of To do, shows your week: each line on its day, under the class that meets then. Type in a day to add one, or drag a line to another day. Anything not done moves to today on its own."],"1.27.11":["Groups in Present mode: shuffling no longer moves the slides or ends the lesson, and each shuffle keeps last time's groups apart.","Change groups by hand: drag a name to another group, or click a name and then a group. Make my own starts with empty groups, and Undo or Ctrl Z takes back a move or a shuffle.","The Present timer keeps running after you finish or leave full screen, in the corner of the Planner, and comes back on the slides when you present again."],"1.27.10":["Finding names on its own is now off unless you turn it on, in Settings, Marking, Name covers. Only the boxes you draw in Check the covers cover anything, and the check before anonymous grading lists every paper."],"1.27.9":["In the Planner's Timetable, Use my school’s template… picks your own PowerPoint template for slide downloads. Use the plain one goes back to the white one built in.","Save my setup file keeps your classes, meeting times, days off and slide template in one file to load on another computer."],"1.27.8":["Anchor papers: while you mark a summative, click High, Mid or Low under the score. The Return tab lists the three and exports them in one ZIP, each named for the assignment and its level, like “River essay - Summative High.pdf”, with student names covered."],"1.27.7":["Keep strong work as an example: press ☆ Example on an answer in Quick mark (or E), or pick Use as an example in the ⋯ beside a student’s name for a whole paper or part of a page. Names are covered, and your marks and the score stay off unless you switch them on. It is always optional.","The Examples tab on an assignment, and Examples in the sidebar for every class, have Show to the class, Copy picture, Download and Download as a sheet.","Examples go to your linked folder and into the take-home file with the rest of your work."],"1.27.6":["Returned files are named for the student, the assignment and what they are, like “Ana Lee - River essay - Graded.pdf”, or Feedback when there is no score. They still go in each student’s own folder.","To keep the names students turned in, untick Name each file by student and assignment under Options on the Return tab."],"1.27.5":["The gradebook can import your old scores: press Import… and choose a CSV or Excel file, or paste the cells. Each column becomes an assignment, matched to your roster.","You see everything before it is saved, and a score already in the gradebook stays unless you choose the file’s."],"1.27.4":["School is a new page in the sidebar for the things about your school you look up again and again: the handbook, the calendar, the bell schedule, portals, forms, who to call.","Add a link, a file (a copy is kept with your work) or a note. Name your own groups, and star the ones you open most to keep them along the top.","Drop files on the page or paste a web address. Find anything lists every resource. They are kept in your folder and take-home file, and stay when you start a new school year."],"1.27.3":["The class timer in Present takes minutes and seconds: type them in, or pick 0:30 and the other quick times. The menu remembers the last time you typed.","While it runs, the timer's menu adds or takes away 10 seconds or a minute, pauses, and restarts from the time you set. + and − add or take away a minute without opening the menu.","Tick Show it big to put the countdown in the middle of the screen, large enough for the back of the room."],"1.27.2":["In the gradebook, in-class assessments are now on the left and summatives on the right: the columns, the averages beside the term grade, and wherever you choose a type.","The order is yours to change. In Term setup, the arrows beside each type move it, and the gradebook's columns follow from left to right.","You can make your own assignment types. In Term setup, rename a type or press + Add a type (Homework, Projects, Quizzes), and give each its share of the grade. Your own setup stays as it is until you change it."],"1.27.1":["Undo now takes back a score as well as a mark: press Ctrl Z (⌘Z on a Mac) after a slip on a slider, a number key, or Missing, Excused or Late. Redo puts it back.","Deleting a unit, an assignment or a class shows Undo for a few seconds, and Undo puts it back where it was.","“Picked up where you left off” shows once, when you open an assignment, and no longer on Today or other pages. The note about what opened leaves by itself when you move to the next student, if every file opened.","The Next button stays in one place from student to student, and the Grade heading on a class’s Students tab is drawn properly.","Find anything answers to more everyday words: export, hand back, backup, undo, shortcuts, csv."],"1.27.0":["Start a new school year, in Settings, Saving and carrying. Your classes, units and assignment cards carry on, each card with its rubric and Quick mark boxes, with empty class lists and dates a year later.","This year goes into one protected file first, and the file is checked before anything is cleared. Open an archived year brings a year back from its file."],"1.26.2":["Rubric rows can be scored on your own scale. They start at 0 to 4 with half points, as before; when you set up an assignment you can pick any top from 1 to 10 and turn half points off.","Settings, Grading: choose the row scale new assignments start with. Assignments you already have keep theirs."],"1.26.1":["Activities: See, think, wonder now says it comes from Project Zero at the Harvard Graduate School of Education."],"1.26.0":["Seating: a new tab on each class. Pick how the room is set up, drag students to desks, and Shuffle gives everyone a new seat. A student can be kept in their seat.","Pick a name shows one student at random, and nobody twice until everyone has had a turn. Make groups deals the class into groups of any size.","While presenting a lesson, P picks a name and G makes groups. Who’s here leaves out anyone who is away today."],"1.25.0":["Attendance. Each class has an Attendance tab: everyone starts as present, so a day is one press for each student who is late, excused or absent, with a note if you want one.","Look back shows every saved day in one table with each student’s totals, and a student’s own page lists the days they missed.","Copy a day, or download the table as a spreadsheet, for your school’s system. Today has a line for it under each class.","If you don’t take attendance here, turn it off in Settings, Classes and rosters."],"1.24.0":["Retakes: a second try at the same assignment keeps the first try's score, comment and paper. Start one from the ⋯ beside Missing, Excused and Late on a paper.","You choose which try counts, for all your classes: the highest (to begin with), the latest, or the average. It is in the retake box and in the gradebook's Term setup.","A score typed into the gradebook takes a retake too: type both, like 7 > 10."],"1.23.0":["Scores by learning goal, if you want them. Keep your own list of goals (a skill, or a standard from your school) in Settings, Grading, or add one wherever you tag.","Tag rubric rows in Rubric setup and quiz questions in Quiz boxes. An assignment scored with just a total can carry one goal for the whole score.","Each class page gets a Goals tab: the class average on each goal with the lowest first, every student by every goal, and where each number came from. A student's own page shows their goals beside the class average.","Nothing changes until you add a first goal, and tagging never changes a score or a grade."],"1.22.0":["Progress sheets for parent meetings: one printed page per student with the term grade, every score, a chart of how they moved, missing work, each term's grade, the report comment and lines for notes. Find it on a class's Students list, or Progress sheet on one student's page.","Choose the term and tick what goes on it; Print opens the print window, where you can pick a printer or Save as PDF. It is made on your computer and nothing is sent anywhere."],"1.21.0":["Each class has a Missing work tab: every paper you marked Missing, by student or by assignment, for the term you pick.","Email reminder opens an email in your own mail app, addressed to the student and listing what they owe, for you to read and send. Email all writes one email to everyone who owes an assignment, with the addresses in Bcc. Grading Studio sends nothing itself.","Each reminder you open is noted beside the work, and Email wording… changes what every reminder says."],"1.20.0":["The app can speak Traditional Chinese (繁體中文). Choose it in Settings, Display, App language, or at the top of the welcome.","Like Spanish, it covers the first screens so far: the sidebar, Today, the welcome, Find anything, Help, and the feedback page students get with a returned paper. The other screens are still in English."],"1.19.0":["The app can speak Spanish. Choose it in Settings, Display, App language, or at the top of the welcome.","Spanish covers the first screens so far: the sidebar, Today, the welcome, Find anything, Help, and the feedback page students get with a returned paper. The other screens are still in English.","Names you typed (classes, students, assignments, rubric rows) are never translated."],"1.18.0":["On a tablet, a pencil draws and the pen's line is wider where you press harder. Once you have used a pencil, one finger moves the page, two fingers pinch to zoom, and a hand resting on the screen does nothing.","Settings, Marking has a new Tablet and pencil section: choose what a finger does on the paper, or turn off the wider line.","On a touch screen the tools, the student rows and the score buttons are larger."],"1.17.0":["Report comments: a new tab on each class's page drafts a comment for every student from your own gradebook, rubric scores and the comments you wrote on their papers. Edit each one, tick it done, then copy or download them all.","The drafts are put together on your computer from sentences you can change under Wording. Nothing about a student is sent anywhere."],"1.16.0":["Help is in the sidebar: short answers to the questions teachers ask most, from opening a set of papers to moving your work to another computer.","Find anything answers questions too. Type a few words, like “late paper” or “backup”, and the answer is in the list."],"1.15.0":["A picture dragged onto a slide that has text now sits beside the text, in a new Text + picture layout.","Drag several pictures in at once and each gets its own slide. Let a picture go on any slide in the list on the left to put it there.","New Full picture layout: the picture fills the whole slide."],"1.14.0":["Extra credit: points or a percent on one paper, and extra credit entries in the gradebook that add to the term grade or the in-class average.","The gradebook shows each type's average (summative, in-class) right beside the term grade, kept in view as you scroll. Averages only shows just those columns, and Whole year splits each term the same way.","Leave out… lets you untick students to see the class averages without them. Their own grades don't change, and nothing is saved."],"1.13.0":["Present a lesson from the Planner, or from Today when its class is on now or next: its slides fill the screen, and the arrow keys or a clicker move through them.","While presenting, A shows the agenda to tick off, T starts a timer the class can see, N shows your notes and B blanks the screen.","The bar shows how many minutes the class has left, from your timetable.","After a lesson is taught, one line says where the class got to. It shows on the lesson and on the week, and presenting again picks up there."],"1.12.0":["A returned paper starts with a feedback page: the score, each rubric row with the level given and what that level means, your comment, and every comment on the paper with its page number.","It is on unless you turn it off under Options on the Return tab. Your own pages are not changed, and bringing an export back in opens only those."],"1.11.0":["The Planner’s sections are in the sidebar: Calendar, Units, Past lessons, Activities and Rubrics. The row of tabs across the top is gone.","A lesson has a lighter top: its name, its classes, its status and Download. Copy for Claude, Versions, the upload and the links are under More.","Comments shows above a lesson once it has one."],"1.7.0":["Home is now Today: the classes you teach today with the lesson planned for each, the papers waiting to be marked, and the papers ready to hand back.","What the class needs next: after a set of papers is scored, Today shows the weakest rubric row and how many students to sit down with.","A class page is quieter. Click anywhere on an assignment’s row to open it; the only blue button is the one that adds an assignment.","Forget, and the other ways to open papers, moved into the ⋯ menu on each row."],"1.6.0":["A new browser opens on three questions (your classes, how you grade, where work is kept) and starts with nothing of anyone else’s in it.","A sample class of made-up students, with papers to mark, for trying things out. Remove it from Home when you’re done.","The app uses the name of your own school system. Choose it, and how you usually grade, in Settings.","Letter grades or IB 1 to 7 can show beside the percent, with boundaries you set.","Canvas and Moodle downloads are grouped by student. The Planner works without a setup file, and downloads lessons as PowerPoint with a plain built-in template."],"1.5.0":["The sidebar says “Not backed up”, in amber, until a folder holds a second copy of your work. Home asks for that folder once.","Go back in time, in Settings: any assignment as it was on an earlier day, restored on its own, with Undo.","Grading Studio can be installed as an app, and it opens with no internet.","A newer version now waits until you click Update now, so nothing changes in the middle of marking."]};
 const upd = { on: false, st: null, mine: '', checking: false, said: '', install: null, installed: false, err: '' };
 const updCan = () => 'serviceWorker' in navigator && (location.protocol === 'https:' || /[?&]sw=1(&|$)/.test(location.search)) && !/Grading Studio\.html$/i.test(decodeURIComponent(location.pathname));
 const updSend = async msg => { const reg = await navigator.serviceWorker.ready; if (reg.active) reg.active.postMessage(msg); };
@@ -27864,6 +28057,7 @@ function sysWords() {
   put('.sysWord', s || 'your gradebook');
   put('.sysZip', s ? 'a ' + s + ' ZIP' : 'a ZIP');
   put('.aiWord', aiSay());
+  besidePaint();
   put('#shareBtn', 'Share with ' + aiSay()); put('#backBtn', 'Bring back from ' + aiSay());   // the whole label, since Find anything lists these buttons by their words
 }
 
@@ -28039,7 +28233,13 @@ function meSetRender(sec) {
     const a = aiName(), known = AI_LIST.some(x => x[0] === a);
     put('#setAi', '<p class="setp merow"><label for="meAi"><b>Your AI assistant</b></label> <select id="meAi"><option value="">None, or not said</option>' + AI_LIST.map(x => '<option' + (x[0] === a ? ' selected' : '') + '>' + x[0] + '</option>').join('') +
       '<option value="other"' + (a && !known ? ' selected' : '') + '>Another one…</option></select>' + (a && !known ? '<input type="text" id="meAiOther" maxlength="30" value="' + esc(a) + '" aria-label="Its name">' : '') +
-      ' <span class="muted">Only for the words on screen and the names of the files you make for it. Nothing is connected to it.</span></p>');
+      ' <span class="muted">Only for the words on screen and the names of the files you make for it. Nothing is connected to it.</span></p>' +
+      (a ? '<p class="setp merow"><label for="meAiUrl"><b>Opens at</b></label> <input type="url" id="meAiUrl" class="meurl" maxlength="400" spellcheck="false" data-rawa placeholder="' + esc(aiUsual(a) || 'https://') + '" value="' + esc(aiUrlClean(me().aiUrl)) + '">' +
+        ' <span class="muted">Empty for its usual page. A link of your own can go to your school account, a Gem, a project or a custom GPT.</span></p>' +
+        '<p class="setp merow"><label for="meAiOpen"><b>A click on its name opens it</b></label> <select id="meAiOpen"><option value="">in a window on the right of the screen</option><option value="tab"' + (me().aiOpen === 'tab' ? ' selected' : '') + '>in a new tab</option></select>' +
+        (aiLink() ? ' <button class="btn sm" data-besideopen>Open it now</button>' : '') + '</p>' +
+        '<p class="setp" id="meBeside"><b>Side by side.</b> ' + (aiLink() ? '<span class="aiWord">' + esc(a) + '</span> is in the sidebar on every screen, so you can go between the two without hunting for a tab. In Chrome, right-click it there and choose <b>Open link in split view</b>: both are then in one window, with a divider you can drag.' : 'Give it an address above and it is in the sidebar on every screen.') +
+        ' <span>Grading Studio sends nothing to it. It sees only what you paste or attach.</span></p>' : ''));
   }
   if (sec === 'grading') {
     const g = meGrade(), way = g ? g.way : '';
@@ -28052,10 +28252,19 @@ function meSetRender(sec) {
         '<div class="mebrow">' + g.bands.map((b, i) => '<label><input type="text" class="mebl" data-mebl="' + i + '" maxlength="12" value="' + esc(b[1]) + '" aria-label="Grade ' + (i + 1) + '"><span>from</span><input type="number" min="0" max="100" step="1" data-mebp="' + i + '" value="' + b[0] + '" aria-label="Lowest percent for ' + esc(b[1]) + '"' + (i === g.bands.length - 1 ? ' disabled' : '') + '><span>%</span></label>').join('') + '</div></div>' : ''));
   }
 }
+function meDrop(k, v) { const m = { ...me() }; if (v) m[k] = v; else delete m[k]; lib.me = m; saveLib(); gradeDefaultApply(); }
+function meAiSet(name) { const m = { ...me(), ai: name }; delete m.aiUrl; lib.me = m; saveLib(); gradeDefaultApply(); }
+$('#setPane').addEventListener('click', e => { if (e.target.closest('[data-besideopen]')) besideOpen(); });
 $('#setPane').addEventListener('change', e => {
   const t = e.target;
   if (t.id === 'meSys') { if (t.value === 'other') { meSet({ sys: 'My school’s system' }); sysWords(); setRender(); const o = $('#meSysOther'); if (o) { o.focus(); o.select(); } return; } meSet({ sys: t.value }); sysWords(); return setRender(); }
-  if (t.id === 'meAi') { if (t.value === 'other') { meSet({ ai: 'My assistant' }); sysWords(); setRender(); const o = $('#meAiOther'); if (o) { o.focus(); o.select(); } return; } meSet({ ai: t.value }); sysWords(); return setRender(); }
+  if (t.id === 'meAi') { if (t.value === 'other') { meAiSet('My assistant'); sysWords(); setRender(); const o = $('#meAiOther'); if (o) { o.focus(); o.select(); } return; } meAiSet(t.value); sysWords(); return setRender(); }
+  if (t.id === 'meAiUrl') {   // its own address: https only, and nothing is kept for an empty box
+    const v = aiUrlClean(t.value);
+    if (t.value.trim() && !v) { t.value = aiUrlClean(me().aiUrl); return toast('A link starts with https://'); }
+    meDrop('aiUrl', v); sysWords(); return setRender();
+  }
+  if (t.id === 'meAiOpen') { meDrop('aiOpen', t.value === 'tab' ? 'tab' : ''); sysWords(); return setRender(); }
   if (t.id === 'meAiOther') { meSet({ ai: t.value.trim().slice(0, 30) }); sysWords(); return setRender(); }
   if (t.id === 'meSysOther') { meSet({ sys: t.value.trim().slice(0, 40) }); sysWords(); return setRender(); }
   if (t.id === 'meRowTop' || t.id === 'meRowHalf') {   // the teacher's usual row scale: only new assignments start with it
@@ -28179,7 +28388,10 @@ function stpRead(j) {
   S.about = stpStr(stpObj(j.teacher) ? j.teacher.label : j.about || j.teacher, 80);
   const prog = stpStr(j.programme != null ? j.programme : j.program, 24); if (prog) S.prog = prog;
   const sc = stpObj(j.school);
-  if (sc) { const o = {}; for (const [k, to] of [['system', 'sys'], ['unitPlans', 'unit'], ['assistant', 'ai']]) if (typeof sc[k] === 'string') o[to] = stpStr(sc[k], 40); if (Object.keys(o).length) S.school = o; }
+  if (sc) { const o = {}; for (const [k, to] of [['system', 'sys'], ['unitPlans', 'unit'], ['assistant', 'ai']]) if (typeof sc[k] === 'string') o[to] = stpStr(sc[k], 40);
+    if (typeof sc.assistantLink === 'string') o.aiUrl = aiUrlClean(sc.assistantLink);
+    if (typeof sc.assistantOpens === 'string') o.aiOpen = /^tab$/i.test(sc.assistantOpens.trim()) ? 'tab' : '';
+    if (Object.keys(o).length) S.school = o; }
   const g = stpObj(j.grading);
   if (g) {
     let way = STP_WAYS[stpKey(g.way)] || (stpArr(g.criteria).length ? 'rubric' : '');
@@ -28253,6 +28465,7 @@ function stpRead(j) {
   if (mk) {
     const m = {}; for (const [k, to] of [['studentFileNames', 'xnames'], ['onePdfPerStudent', 'xone'], ['coverNamesOnAnchors', 'anchorCover'], ['findTypedNames', 'nameFind'], ['gradeSheetFromPapers', 'sheetfound']]) if (typeof mk[k] === 'boolean') m[to] = mk[k];
     const pc = stpKey(mk.pointsColor); if (pc === 'pen') m.ptsInk = ''; else if (pc === 'credit' || COLORS[pc]) m.ptsInk = pc;
+    const fs = stpKey(mk.fullScreenSide); if (FS_SIDES.includes(fs)) m.fside = fs;
     if (Object.keys(m).length) S.mark = m;
   }
   if (typeof j.attendance === 'boolean') S.att = j.attendance; else if (j.attendance != null && stpCount(j.attendance)) S.left.push('Attendance records.');
@@ -28311,6 +28524,8 @@ function stpDiff(S, planNow) {
     if (s.sys != null && s.sys !== sysName()) L.push(s.sys ? 'Students hand work in on <b>' + esc(s.sys) + '</b>' + (sysName() ? ' (now ' + esc(sysName()) + ')' : '') : 'No school system named (now ' + esc(sysName()) + ')');
     if (s.unit != null && s.unit !== unitLinkName()) L.push(s.unit ? 'Unit plans are kept in <b>' + esc(s.unit) + '</b>' + (unitLinkName() ? ' (now ' + esc(unitLinkName()) + ')' : '') : 'No place named for unit plans (now ' + esc(unitLinkName()) + ')');
     if (s.ai != null && s.ai !== (m.ai || '')) L.push(s.ai ? 'Your AI assistant is <b>' + esc(s.ai) + '</b>' : 'No AI assistant named');
+    if (s.aiUrl != null && s.aiUrl !== aiUrlClean(m.aiUrl)) L.push(s.aiUrl ? 'Your AI assistant opens at <b>' + esc(s.aiUrl) + '</b>' : 'Your AI assistant opens at its usual page');
+    if (s.aiOpen != null && s.aiOpen !== (m.aiOpen === 'tab' ? 'tab' : '')) L.push(s.aiOpen ? 'Your AI assistant opens in a new tab' : 'Your AI assistant opens in a window on the right of the screen');
     if (S.prog && S.prog !== (m.prog || '')) L.push('Programme: <b>' + esc(S.prog) + '</b>');
     add('school', 'Your school', L, 'Only the words the app uses. Nothing is connected to these.');
   }
@@ -28387,14 +28602,16 @@ function stpDiff(S, planNow) {
     if (m.nameFind != null && m.nameFind !== now.nameFind) L.push(m.nameFind ? 'Typed names are found and covered for you' : 'You cover names yourself');
     if (m.ptsInk != null && m.ptsInk !== now.ptsInk) L.push(m.ptsInk === 'credit' ? 'Points are colored by credit: full, part or none' : m.ptsInk ? 'Points are written in ' + m.ptsInk : 'Points are written in the pen’s color');
     if (m.sheetfound != null && m.sheetfound !== now.sheetfound) L.push(m.sheetfound ? 'The grade sheet also shows grades found on the papers' : 'The grade sheet shows only the scores given in the app');
+    if (m.fside != null && m.fside !== now.fside) L.push(m.fside === 'show' ? 'In full screen the student list and the tools stay beside the paper' : m.fside === 'all' ? 'In full screen the student list and the tools hide until you point at them' : 'In full screen the student list hides until you point at the left edge');
     add('mark', 'Marking and handing back', L, 'No paper, mark or score changes.');
   }
   if (S.att != null && S.att !== attOn()) add('att', 'Attendance', [S.att ? 'Take attendance in Grading Studio' : 'Don’t take attendance in Grading Studio'], S.att ? '' : 'Days already saved are kept.');
   if (S.tabs && S.tabs.join() !== tabsKept().join()) add('tabs', 'Class tabs', [S.tabs.length ? 'Kept in the tab row: ' + S.tabs.map(k => CLASS_TABS.find(t => t[0] === k)[1]).join(', ') : 'Only Assignments, Gradebook and Students in the tab row'], 'The other pages stay under More.');
   return parts;
 }
-const stpMarkNow = () => ({ xnames: xNames(), xone: xOne(), anchorCover: anchorCoverOn(), nameFind: nameFindOn(), ptsInk, sheetfound: !!store.get('gs.sheetfound', false) });
+const stpMarkNow = () => ({ xnames: xNames(), xone: xOne(), anchorCover: anchorCoverOn(), nameFind: nameFindOn(), ptsInk, sheetfound: !!store.get('gs.sheetfound', false), fside: fsSide() });
 function stpMarkSet(m) {
+  if (m.fside != null) fullSideSet(m.fside);
   if (m.xnames != null) store.set('gs.xnames', m.xnames);
   if (m.xone != null) store.set('gs.xone', m.xone);
   if (m.anchorCover != null) store.set('gs.anchorCover', m.anchorCover);
@@ -28416,7 +28633,13 @@ const stpClone = v => v == null ? v : JSON.parse(JSON.stringify(v));
 async function stpApply(S, pick) {
   const U = { t: Date.now(), parts: Object.keys(pick).filter(k => pick[k]) }, now = Date.now();
   if (pick.school || pick.grading || pick.att || pick.tabs) { U.hadMe = !!lib.me; U.me = stpClone(lib.me || null); }
-  if (pick.school) meSet({ ...(S.school || {}), ...(S.prog ? { prog: S.prog } : {}) });
+  if (pick.school) {
+    const sc = { ...(S.school || {}) };
+    if (sc.ai != null && sc.ai !== (me().ai || '') && sc.aiUrl == null) sc.aiUrl = '';   // another assistant: the last one's own link doesn't go with it
+    meSet({ ...sc, ...(S.prog ? { prog: S.prog } : {}) });
+    for (const k of ['aiUrl', 'aiOpen']) if (lib.me[k] === '') delete lib.me[k];   // kept only while they say something
+    saveLib();
+  }
   if (pick.grading) {
     U.setupLs = localStorage.getItem('gs.setup');
     store.set('gs.setup', stpClone(S.grading.setup));   // the next new assignment starts from this, as when it is chosen in Settings
@@ -28524,7 +28747,7 @@ async function stpExport() {
   const p = await stpPlanGet(), g = meGrade(), conf = bkConf(), day = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
   const out = { gradingStudioSetup: STP_V };
   if (me().prog) out.programme = me().prog;
-  if (sysName() || unitLinkName() || me().ai) out.school = { ...(sysName() ? { system: sysName() } : {}), ...(unitLinkName() ? { unitPlans: unitLinkName() } : {}), ...(me().ai ? { assistant: String(me().ai) } : {}) };
+  if (sysName() || unitLinkName() || me().ai) out.school = { ...(sysName() ? { system: sysName() } : {}), ...(unitLinkName() ? { unitPlans: unitLinkName() } : {}), ...(me().ai ? { assistant: String(me().ai) } : {}), ...(me().ai && aiUrlClean(me().aiUrl) ? { assistantLink: aiUrlClean(me().aiUrl) } : {}), ...(me().ai && me().aiOpen === 'tab' ? { assistantOpens: 'tab' } : {}) };
   if (g) { const raw = (me().grade && me().grade.setup) || {}; out.grading = { way: g.way, score: g.setup.mode === 'rubric' ? 'rows' : 'total', ...(g.setup.mode === 'rubric' ? { criteria: g.setup.criteria } : { outOf: g.setup.outOf }), ...(raw.top ? { rowTop: raw.top } : {}), ...(typeof raw.half === 'boolean' ? { halfPoints: raw.half } : {}), ...(g.setup.scale ? { scale: g.setup.scale } : {}), ...(g.bands ? { bands: g.bands.map(b => ({ grade: b[1], from: b[0] })) } : {}) }; }
   const pc = p && Array.isArray(p.classes) ? p.classes.filter(c => c && c.name) : [], names = lib.classes.filter(c => !c.sample).map(c => c.name);
   for (const c of pc) if (!names.some(n => stpKey(n) === stpKey(c.name))) names.push(String(c.name));
@@ -28543,7 +28766,7 @@ async function stpExport() {
   if (goalList().length) out.goals = goalList().map(x => x.name);
   if (lib.me && typeof lib.me.att === 'boolean') out.attendance = lib.me.att;
   if (tabsKept().length) out.classTabs = tabsKept().map(k => CLASS_TABS.find(t => t[0] === k)[1]);
-  { const m = stpMarkNow(), o = { ...(m.xnames ? {} : { studentFileNames: false }), ...(m.xone ? {} : { onePdfPerStudent: false }), ...(m.anchorCover ? {} : { coverNamesOnAnchors: false }), ...(m.nameFind ? { findTypedNames: true } : {}), ...(m.ptsInk ? { pointsColor: m.ptsInk } : {}), ...(m.sheetfound ? { gradeSheetFromPapers: true } : {}) }; if (Object.keys(o).length) out.marking = o; }
+  { const m = stpMarkNow(), o = { ...(m.xnames ? {} : { studentFileNames: false }), ...(m.xone ? {} : { onePdfPerStudent: false }), ...(m.anchorCover ? {} : { coverNamesOnAnchors: false }), ...(m.nameFind ? { findTypedNames: true } : {}), ...(m.ptsInk ? { pointsColor: m.ptsInk } : {}), ...(m.sheetfound ? { gradeSheetFromPapers: true } : {}), ...(m.fside !== 'hide' ? { fullScreenSide: m.fside } : {}) }; if (Object.keys(o).length) out.marking = o; }
   return JSON.stringify(out, null, 1);
 }
 
@@ -28620,19 +28843,20 @@ Every part except the first line is optional. Leave a part out rather than leavi
   "attendance": true,
   "classTabs": ["Missing work"],
   "slides": { "agenda": true, "textSizes": "usual", "newSlide": "Title and text" },
-  "marking": { "pointsColor": "credit", "studentFileNames": true, "onePdfPerStudent": true, "coverNamesOnAnchors": true, "findTypedNames": false, "gradeSheetFromPapers": false }
+  "marking": { "pointsColor": "credit", "studentFileNames": true, "onePdfPerStudent": true, "coverNamesOnAnchors": true, "findTypedNames": false, "gradeSheetFromPapers": false, "fullScreenSide": "hide" }
 }
 
 FIELD NOTES
 - "way" is one of "rubric", "points", "percent", "letters", "myp", "ib7". "myp" is IB MYP criteria, each marked 0 to 8, with the 1 to 7 boundaries given on each class. "ib7" is the IB Diploma's 1 to 7 from a percent. "score" is "rows" (a rubric, each row scored) or "total" (one number, out of "outOf").
 - "bands" are the grades a percent earns, highest first, each with the lowest percent that earns it. If my boundaries are in points, give them in points and add "bandsOutOf" with the total.
 - "scale" (optional, inside "grading" or a rubric) turns a score into a percent, like { "12": 100, "11": 95, "10": 91 }.
+- "assistant" (inside "school") is the AI assistant I use, by name. "assistantLink" is an https address of my own for it to open at (my school account, a Gem, a project or a custom GPT) and "assistantOpens" is "window" (beside the app) or "tab". Leave both out unless I ask.
 - Days are "Sun" to "Sat". Times are 24-hour, like "13:05". Dates are YYYY-MM-DD.
 - "daysOff" and "events" take one day, or a first and last day with "to".
 - "emptyType" is "other" (when a type has nothing in it yet, the others are used) or "zero". "extraCredit.addsTo" is "term" or "inClass"; "cap" true keeps grades at 100% at most. "retakes" is "highest", "latest" or "average".
 - "classTabs" are the class pages I want kept in the tab row beside Assignments, Gradebook and Students: any of "Attendance", "Seating", "Missing work", "Charts", "Goals", "Report comments". Leave it out unless I ask.
 - "slides" is for the lesson planner: "agenda" false stops an agenda being added as slide 2, "textSizes" is "usual" (28 to 36 pt) or "any" (18 to 44 pt), and "newSlide" is the layout the Add slide button adds: "Title and text", "Plain text", "Two columns", "Text + picture", "Picture" or another layout the planner has. Leave it out unless I ask.
-- "marking" holds small choices; leave out any I have not asked for. "pointsColor" is "pen", "credit" (full points green, part amber, none red) or one of red, blue, green, purple, black. "studentFileNames" names each file I hand back for the student and assignment. "onePdfPerStudent" puts all of a student's papers in one PDF (false sends each paper as its own file). "coverNamesOnAnchors" covers names on example papers I export. "findTypedNames" lets the app look for typed names to cover. "gradeSheetFromPapers" also shows grades the app finds written on papers.
+- "marking" holds small choices; leave out any I have not asked for. "pointsColor" is "pen", "credit" (full points green, part amber, none red) or one of red, blue, green, purple, black. "studentFileNames" names each file I hand back for the student and assignment. "onePdfPerStudent" puts all of a student's papers in one PDF (false sends each paper as its own file). "coverNamesOnAnchors" covers names on example papers I export. "findTypedNames" lets the app look for typed names to cover. "gradeSheetFromPapers" also shows grades the app finds written on papers. "fullScreenSide" is what happens beside the paper while I mark in full screen: "hide" hides the student list until I point at the left edge, "all" hides the tools as well, "show" keeps both.
 - A rubric row is a name, or a name with "levels" keyed "4" down to "0". A rubric whose rows go higher takes "rowTop" (up to 10), and "halfPoints": false when only whole points are given.
 - Use straight quotes and no comments inside the block.`;
 
@@ -29301,6 +29525,7 @@ function findRows() {
   add('Settings', 'Tablet and pencil', 'What a finger does on the paper, and pencil pressure', () => go('#/settings/marking'));
   add('Settings', 'All keys', 'Every keyboard shortcut', () => openKeys(), '?', 'shortcuts hotkeys keyboard');
   add('Tools', 'Screenshot', 'Drag over part of the screen to copy a picture of it', () => snipStart(), batch && pages.length ? 'S' : '⌥S', 'screenshot snip capture picture image copy clipboard grab');
+  if (aiLink()) add('Tools', 'Open ' + aiName() + ' beside Grading Studio', besideWho().tab ? 'In a new tab' : 'In a window on the right of the screen', () => besideOpen(), '', 'ai assistant gemini claude chatgpt copilot split pane side window chat');
   for (const [k, t, sub] of SET_SECS) if (k !== 'saving' && k !== 'display' && k !== 'keys' && k !== 'history' && k !== 'about') add('Settings', t, sub, () => go(setHash(k)));
   if (plan) add('Go to', 'This week in the Planner', 'Today’s classes and the lessons planned for them', () => { location.href = planUrl('#week'); });
   out.push(...schFindRows(), ...helpFindRows());

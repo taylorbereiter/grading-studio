@@ -10,6 +10,7 @@ function sysWords() {
   put('.sysWord', s || 'your gradebook');
   put('.sysZip', s ? 'a ' + s + ' ZIP' : 'a ZIP');
   put('.aiWord', aiSay());
+  besidePaint();
   put('#shareBtn', 'Share with ' + aiSay()); put('#backBtn', 'Bring back from ' + aiSay());   // the whole label, since Find anything lists these buttons by their words
 }
 
@@ -193,7 +194,14 @@ function meSetRender(sec) {
     const a = aiName(), known = AI_LIST.some(x => x[0] === a);
     put('#setAi', '<p class="setp merow"><label for="meAi"><b>Your AI assistant</b></label> <select id="meAi"><option value="">None, or not said</option>' + AI_LIST.map(x => '<option' + (x[0] === a ? ' selected' : '') + '>' + x[0] + '</option>').join('') +
       '<option value="other"' + (a && !known ? ' selected' : '') + '>Another one…</option></select>' + (a && !known ? '<input type="text" id="meAiOther" maxlength="30" value="' + esc(a) + '" aria-label="Its name">' : '') +
-      ' <span class="muted">Only for the words on screen and the names of the files you make for it. Nothing is connected to it.</span></p>');
+      ' <span class="muted">Only for the words on screen and the names of the files you make for it. Nothing is connected to it.</span></p>' +
+      // Where it opens, and how (src/beside.js). An assistant the app doesn't know is in the sidebar once it has an address.
+      (a ? '<p class="setp merow"><label for="meAiUrl"><b>Opens at</b></label> <input type="url" id="meAiUrl" class="meurl" maxlength="400" spellcheck="false" data-rawa placeholder="' + esc(aiUsual(a) || 'https://') + '" value="' + esc(aiUrlClean(me().aiUrl)) + '">' +
+        ' <span class="muted">Empty for its usual page. A link of your own can go to your school account, a Gem, a project or a custom GPT.</span></p>' +
+        '<p class="setp merow"><label for="meAiOpen"><b>A click on its name opens it</b></label> <select id="meAiOpen"><option value="">in a window on the right of the screen</option><option value="tab"' + (me().aiOpen === 'tab' ? ' selected' : '') + '>in a new tab</option></select>' +
+        (aiLink() ? ' <button class="btn sm" data-besideopen>Open it now</button>' : '') + '</p>' +
+        '<p class="setp" id="meBeside"><b>Side by side.</b> ' + (aiLink() ? '<span class="aiWord">' + esc(a) + '</span> is in the sidebar on every screen, so you can go between the two without hunting for a tab. In Chrome, right-click it there and choose <b>Open link in split view</b>: both are then in one window, with a divider you can drag.' : 'Give it an address above and it is in the sidebar on every screen.') +
+        ' <span>Grading Studio sends nothing to it. It sees only what you paste or attach.</span></p>' : ''));
   }
   if (sec === 'grading') {
     const g = meGrade(), way = g ? g.way : '';
@@ -206,10 +214,21 @@ function meSetRender(sec) {
         '<div class="mebrow">' + g.bands.map((b, i) => '<label><input type="text" class="mebl" data-mebl="' + i + '" maxlength="12" value="' + esc(b[1]) + '" aria-label="Grade ' + (i + 1) + '"><span>from</span><input type="number" min="0" max="100" step="1" data-mebp="' + i + '" value="' + b[0] + '" aria-label="Lowest percent for ' + esc(b[1]) + '"' + (i === g.bands.length - 1 ? ' disabled' : '') + '><span>%</span></label>').join('') + '</div></div>' : ''));
   }
 }
+// One of the teacher's own settings that is kept only while it says something: an empty one is taken out, not stored empty.
+function meDrop(k, v) { const m = { ...me() }; if (v) m[k] = v; else delete m[k]; lib.me = m; saveLib(); gradeDefaultApply(); }
+// Another assistant: a link the teacher gave the last one doesn't go with it.
+function meAiSet(name) { const m = { ...me(), ai: name }; delete m.aiUrl; lib.me = m; saveLib(); gradeDefaultApply(); }
+$('#setPane').addEventListener('click', e => { if (e.target.closest('[data-besideopen]')) besideOpen(); });
 $('#setPane').addEventListener('change', e => {
   const t = e.target;
   if (t.id === 'meSys') { if (t.value === 'other') { meSet({ sys: 'My school’s system' }); sysWords(); setRender(); const o = $('#meSysOther'); if (o) { o.focus(); o.select(); } return; } meSet({ sys: t.value }); sysWords(); return setRender(); }
-  if (t.id === 'meAi') { if (t.value === 'other') { meSet({ ai: 'My assistant' }); sysWords(); setRender(); const o = $('#meAiOther'); if (o) { o.focus(); o.select(); } return; } meSet({ ai: t.value }); sysWords(); return setRender(); }
+  if (t.id === 'meAi') { if (t.value === 'other') { meAiSet('My assistant'); sysWords(); setRender(); const o = $('#meAiOther'); if (o) { o.focus(); o.select(); } return; } meAiSet(t.value); sysWords(); return setRender(); }
+  if (t.id === 'meAiUrl') {   // its own address: https only, and nothing is kept for an empty box
+    const v = aiUrlClean(t.value);
+    if (t.value.trim() && !v) { t.value = aiUrlClean(me().aiUrl); return toast('A link starts with https://'); }
+    meDrop('aiUrl', v); sysWords(); return setRender();
+  }
+  if (t.id === 'meAiOpen') { meDrop('aiOpen', t.value === 'tab' ? 'tab' : ''); sysWords(); return setRender(); }
   if (t.id === 'meAiOther') { meSet({ ai: t.value.trim().slice(0, 30) }); sysWords(); return setRender(); }
   if (t.id === 'meSysOther') { meSet({ sys: t.value.trim().slice(0, 40) }); sysWords(); return setRender(); }
   if (t.id === 'meRowTop' || t.id === 'meRowHalf') {   // the teacher's usual row scale: only new assignments start with it

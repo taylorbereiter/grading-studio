@@ -159,6 +159,7 @@ function findRows() {
   add('Settings', 'Tablet and pencil', 'What a finger does on the paper, and pencil pressure', () => go('#/settings/marking'));
   add('Settings', 'All keys', 'Every keyboard shortcut', () => openKeys(), '?', 'shortcuts hotkeys keyboard');
   add('Tools', 'Screenshot', 'Drag over part of the screen to copy a picture of it', () => snipStart(), batch && pages.length ? 'S' : '⌥S', 'screenshot snip capture picture image copy clipboard grab');
+  if (aiLink()) add('Tools', 'Open ' + aiName() + ' beside Grading Studio', besideWho().tab ? 'In a new tab' : 'In a window on the right of the screen', () => besideOpen(), '', 'ai assistant gemini claude chatgpt copilot split pane side window chat');
   for (const [k, t, sub] of SET_SECS) if (k !== 'saving' && k !== 'display' && k !== 'keys' && k !== 'history' && k !== 'about') add('Settings', t, sub, () => go(setHash(k)));
   if (plan) add('Go to', 'This week in the Planner', 'Today’s classes and the lessons planned for them', () => { location.href = planUrl('#week'); });
   out.push(...schFindRows(), ...helpFindRows());

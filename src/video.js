@@ -40,6 +40,37 @@ const vidBytes = (id, name, size) => new TextEncoder().encode('[InternetShortcut
 // What a link or kept video is known by, the same for every partner who has it.
 const linkKey = f => { const v = vidRef(f.data); return v ? 'gs-video:' + v : linkOf(f.data); };
 
+/* ---------- a video filmed sideways, turned the right way up ---------- */
+// batch.vrot = { the link (linkKey) or a video file's path: 90 | 180 | 270 }, so partners sharing a link see it turned too. Only how it is shown here
+// changes: the video and the link stay as they are. A site's player turns as a whole, captions and buttons with it, since the page can't reach inside it.
+const vrotKey = f => (f.kind === 'link' ? linkKey(f) : f.path);
+const vrotOf = f => (batch && batch.vrot && batch.vrot[vrotKey(f)]) || 0;
+const VROT_BTN = '<button class="btn sm" data-vrot title="Turn the video a quarter turn, for one filmed sideways" aria-label="Turn the video">⟳ Turn</button>';
+// Puts the player in a box of its own and turns it inside; returns the box (the part the size bar drags).
+function vidRot(player, f) {
+  const box = document.createElement('div'); box.className = 'vrotbox';
+  player.replaceWith(box); box.appendChild(player);
+  const fit = () => {
+    const d = vrotOf(f), side = d === 90 || d === 270;
+    box.classList.toggle('on', !!d); box.dataset.turn = d;
+    if (!d) { player.style.cssText = ''; return; }
+    const W = box.clientWidth, H = box.clientHeight;
+    player.style.cssText = side ? 'position:absolute;width:' + H + 'px;height:' + W + 'px;left:' + (W - H) / 2 + 'px;top:' + (H - W) / 2 + 'px;max-height:none;min-height:0;transform:rotate(' + d + 'deg)'
+      : 'position:absolute;inset:0;width:100%;height:100%;max-height:none;min-height:0;transform:rotate(180deg)';
+  };
+  new ResizeObserver(fit).observe(box);
+  box.vfit = fit; fit();
+  return box;
+}
+function vidTurn(st, f, card) {
+  const k = vrotKey(f), d = (vrotOf(f) + 90) % 360;
+  batch.vrot ||= {}; if (d) batch.vrot[k] = d; else delete batch.vrot[k];
+  if (!Object.keys(batch.vrot).length) delete batch.vrot;
+  for (const b of document.querySelectorAll('#paper .vrotbox')) if (b.vfit) b.vfit();
+  const n = card && card.querySelector('.vrnote'); if (n) n.hidden = !d;
+  saveSoon();
+}
+
 // The card above the paper. The player stays at the top while the notes page scrolls under it.
 function linkCard(st, f) {
   if (vidRef(f.data)) return vfileCard(st, f);
@@ -49,12 +80,14 @@ function linkCard(st, f) {
     '<div class="mctl">' + (play ? '<button class="btn sm primary" data-vplay aria-pressed="false">▶ Play here</button>' : '') +
     (ticks ? '<button class="btn sm" data-vstamp title="Adds where the video is to your comment, like [2:15]">+ Time to comment</button>' : '') +
     '<button class="btn sm' + (play ? '' : ' primary') + '" data-vopen title="Opens the video in a window of its own, to keep beside this one">Open in its own window</button>' +
-    '<button class="btn sm" data-vcopy>Copy link</button></div>' +
+    '<button class="btn sm" data-vcopy>Copy link</button>' + (play && (play.frame || play.video) ? VROT_BTN : '') + '</div>' +
+    (play && play.frame && !ticks ? '<p class="muted vlnote vrnote"' + (vrotOf(f) ? '' : ' hidden') + '>The site’s own captions turn with the video. For captions the right way up, paste a transcript below and turn on Captions under the video.</p>' : '') +
     '<p class="muted vlnote">' + (play ? 'Only the link is kept here; the video stays where it is. If it asks you to sign in or won’t play, open it in its own window.' : 'Only the link is kept here. This site can’t play inside the page, so it opens in a window of its own.') + '</p></div>';
   // where the player is: the page's own video, or a site's player that says so (YouTube, Vimeo). null when nothing is playing here or the site doesn't say.
   const now = () => { const m = el.querySelector('.vlslot video, .vlslot audio'); if (m) return m; const fr = el.querySelector('.vlslot iframe'), t = fr && frameTime(fr); return t == null ? null : { currentTime: t }; };
   el.onclick = e => {
     if (e.target.closest('[data-vopen]')) { window.open(url, '_blank', 'noopener,noreferrer,popup,width=980,height=640'); return; }
+    if (e.target.closest('[data-vrot]')) { vidTurn(st, f, el); if (el.querySelector('.vlslot').hidden) fill(); return; }
     if (e.target.closest('[data-vcopy]')) { navigator.clipboard.writeText(url).then(() => toast('Link copied'), () => toast('The link couldn’t be copied')); return; }
     if (e.target.closest('[data-vstamp]')) { const m = now(); if (!m) return toast('Press ▶ Play here first, then play the video to the moment you mean'); addStamp(st, m.currentTime); return; }
     const b = e.target.closest('[data-vplay]'); if (!b) return;
@@ -67,8 +100,8 @@ function linkCard(st, f) {
   const fill = c => {
     const slot = el.querySelector('.vlslot'), b = el.querySelector('[data-vplay]');
     slot.hidden = false; slot.innerHTML = ''; b.setAttribute('aria-pressed', 'true'); b.textContent = 'Close the player';
-    if (play.frame) { const fr = playerFrame(frameTicking(c ? clipFrame(play.frame, c).src : play.frame), linkTitle(f)); slot.appendChild(fr); frameClock(fr); vidGrip(slot, fr); }
-    else { const m = document.createElement(play.video ? 'video' : 'audio'); m.controls = true; m.preload = 'metadata'; m.src = play.video || play.audio; slot.appendChild(m); if (play.video) vidGrip(slot, m); if (c) clipRun(m, c); }
+    if (play.frame) { const fr = playerFrame(frameTicking(c ? clipFrame(play.frame, c).src : play.frame), linkTitle(f)); slot.appendChild(fr); frameClock(fr); vidGrip(slot, vidRot(fr, f)); }
+    else { const m = document.createElement(play.video ? 'video' : 'audio'); m.controls = true; m.preload = 'metadata'; m.src = play.video || play.audio; slot.appendChild(m); if (play.video) vidGrip(slot, vidRot(m, f)); if (c) clipRun(m, c); }
   };
   clipStrip(el.querySelector('.mstick'), f, now, c => (play ? fill(c) : clipShow(c.id)), play && play.frame && !ticks ? 'drive' : '');
   // a pasted transcript: a line with a time plays the video from there (a site's player starts again at that time)
@@ -195,7 +228,7 @@ function vidGrip(host, player) {
   g.onkeydown = e => { const d = e.key === 'ArrowDown' ? 40 : e.key === 'ArrowUp' ? -40 : 0; if (!d) return; e.preventDefault(); e.stopPropagation(); set(player.getBoundingClientRect().height + d, true); };
   vidHApply(store.get('gs.vidH', 0));
 }
-Object.assign(window.__gs, { vidRef, linkKey, vkPut, vkGet, vkSweep, frameTicking, vidHApply, trParse, trLines, trText, trSet, asrStandIn });
+Object.assign(window.__gs, { vidRef, linkKey, vrotOf, vkPut, vkGet, vkSweep, frameTicking, vidHApply, trParse, trLines, trText, trSet, asrStandIn });
 
 /* ---------- the notes page ---------- */
 const NP_W = 595.28, NP_H = 841.89, NP_M = 48, NP_TAIL = '%GradingStudio-notes';
