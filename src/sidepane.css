@@ -63,3 +63,5 @@ html.vidsized #paper .spb .media{max-width:none}
 .splvb.on.half{box-shadow:none;border-style:dashed}
 .splvb.on b{color:var(--accent)}
 .main:is(.sp-right,.sp-top) .sph{padding-right:26px}
+/* a video turned on its side (video.css .vrotbox.on): in the pane it takes the pane's height, since it is taller than wide */
+#paper .spb .vrotbox.on,html.vidsized #paper .spb .vrotbox.on{height:max(140px,calc(100cqh - 240px));min-height:0}
