@@ -16,7 +16,7 @@ const fileByPath = (st, path) => st.files.find(f => f.path === path);
 function defaultLayout(st) {
   const L = st.files.filter(f => viewable(f) && !f.virtual && f.numPages).map(f => ({ name: f.name, file: f.path, pages: [...Array(f.numPages).keys()].map(p => [f.path, p]) }));
   const v = st.files.find(f => f.virtual && viewable(f));
-  if (v && L.length) { const pg = [...Array(v.numPages).keys()].map(p => [v.path, p]); L[0].pages = setup.rubricPos === 'start' ? pg.concat(L[0].pages) : L[0].pages.concat(pg); }
+  if (v && v.numPages) { const pg = [...Array(v.numPages).keys()].map(p => [v.path, p]); if (!L.length) L.push({ name: v.name, file: v.path, pages: pg }); else L[0].pages = setup.rubricPos === 'start' ? pg.concat(L[0].pages) : L[0].pages.concat(pg); }
   return L;
 }
 const layoutOf = st => st.layout || defaultLayout(st);

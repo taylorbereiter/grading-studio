@@ -241,3 +241,36 @@ test('a rubric brought in from Word or a PDF fills in its rows and what each lev
   assert.deepEqual(page.errors, []);
   await close();
 });
+
+test('a rubric copy brought in after the notes pages are taken out or removed goes on the paper, not into Removed', async () => {
+  const NAMES = ['Aria Testwell', 'Bram Sample', 'Cleo Fixture'];
+  const lib = { classes: [{ id: 'c1', name: '10 English', names: NAMES, units: [{ id: 'u1', name: 'Unit 1', items: [{ id: 'i1', name: 'Speech video', classId: 'c1', type: 'sum', setup: { mode: 'rubric', criteria: ['Voice', 'Evidence'], outOf: 8 } }] }] }], loose: { id: '', name: '', names: [], units: [] }, seed2627: true };
+  const { page, close } = await openApp(browser, { seed: { ls: { 'gs.lib': JSON.stringify(lib) } } });
+  await classPage(page, 'i1'); await page.waitForSelector('[data-open-asg="i1"]'); await page.click('[data-open-asg="i1"]');
+  await page.waitForSelector('#dlgBox [data-nopaper]'); await page.click('#dlgBox [data-nopaper]');
+  await page.waitForSelector('#snGo'); await page.click('#dlgBox .nptile[data-np="rubric"]'); await page.click('#snGo');
+  await waitPaper(page);
+  // Aria: every notes page taken out with ×. Bram: the notes file removed. Cleo: left as it is.
+  await goToStudent(page, await idx(page, 'Aria Testwell'));
+  for (let k = 0; k < 10 && await page.$('#paper [data-pgout]'); k++) {
+    const n = await page.$$eval('#paper [data-pgout]', b => b.length);
+    await page.$eval('#paper [data-pgout]', b => b.click());
+    await page.waitForFunction(n => document.querySelectorAll('#paper [data-pgout]').length < n, {}, n);
+  }
+  assert.deepEqual(await page.evaluate(() => window.__gs.state().batch.students[window.__gs.state().cur].layout), []);
+  await page.evaluate(() => { const st = window.__gs.state().batch.students.find(s => s.key === 'Bram Sample'); return window.__gs.removeFile(st, st.files[0].path, true); });
+  const pdf = Buffer.from(await rubricPdf()).toString('base64');
+  await page.evaluate(b64 => window.__gs.openSetup({ page: { bytes: Uint8Array.from(atob(b64), c => c.charCodeAt(0)), name: 'Speech rubric.pdf' } }), pdf);
+  await page.waitForSelector('#dlgBox [data-save]'); await page.click('#dlgBox [data-save]');
+  await page.waitForFunction(() => window.__gs.state().batch.students.every(s => s.files.some(f => f.virtual)));
+  const got = await page.evaluate(() => window.__gs.state().batch.students.map(st => {
+    const L = window.__gs.layoutOf(st), on = new Set(L.flatMap(d => d.pages.map(([q, p]) => q + '|' + p))), rp = st.files.find(f => f.virtual);
+    return [st.key, rp.name, [...Array(rp.numPages).keys()].every(p => on.has(rp.path + '|' + p))];
+  }));
+  assert.deepEqual(got, NAMES.map(n => [n, 'Rubric page', true]), 'everyone’s copy is on their paper');
+  await goToStudent(page, await idx(page, 'Aria Testwell'));
+  await page.waitForSelector('#paper canvas');
+  assert.doesNotMatch(await page.$eval('#paper', e => e.textContent), /your rubric page/, 'not waiting under Removed pages');
+  assert.deepEqual(page.errors, []);
+  await close();
+});
