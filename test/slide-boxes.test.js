@@ -77,7 +77,7 @@ test('each text box has its own size, and moving or resizing a box with the mous
     await until(page, () => (window.__planner.L.open.slides[1].fs || {}).title === 34);
     // drag the main text's bottom handle down 80 slide units, and its move bar left
     await page.click('#lsStage .ls-body'); await page.waitForSelector('#lsStage .ls-frame[data-for="body"]');
-    await page.mouse.click(5, 990);   // out of the text, so the slide is drawn again
+    await page.click('.ls-notes textarea');   // out of the text, so the slide is drawn again
     const k = await page.$eval('#lsStage', e => e.getBoundingClientRect().width / 1280);
     let h = await (await page.$('#lsStage .ls-frame i[data-h="s"]')).boundingBox();
     await page.mouse.move(h.x + h.width / 2, h.y + h.height / 2); await page.mouse.down(); await page.mouse.move(h.x + h.width / 2, h.y + h.height / 2 + 80 * k, { steps: 5 }); await page.mouse.up();
@@ -127,6 +127,12 @@ test('words are never cut off: the editor marks the box and offers a fix, and Pr
     await page.$eval('[data-pr="present"]', e => e.click()); await page.waitForSelector('#present .ls-body');
     await until(page, () => [...document.querySelectorAll('#prFit .ls-t,#prFit .ls-body')].every(e => e.scrollHeight <= e.clientHeight + 2));
     assert.ok(await page.$('#prFit .ls-body.ls-shrunk'));
+    // the class screen window shows the same fitted slide, nothing cut off there either
+    await page.keyboard.press('w');
+    await until(page, () => { const w = window.__present.PR.out; return !!(w && w.document.querySelector('#prFit .ls-body')); });
+    const both = await page.evaluate(() => { const g = d => { const e = d.querySelector('#prFit .ls-body'); return [e.style.fontSize, e.style.height, e.scrollHeight <= e.clientHeight + 2]; }; return [g(document), g(window.__present.PR.out.document)]; });
+    assert.deepEqual(both[1], both[0]); assert.equal(both[1][2], true);
+    await page.evaluate(() => window.__present.PR.out.close());
     await page.evaluate(() => window.__present.end());
     // Biggest size that fits: the smallest allowed size still doesn't fit this much, so it says so and uses 28
     await page.waitForSelector('#lsWarn [data-a="fit"]'); await page.click('#lsWarn [data-a="fit"]');

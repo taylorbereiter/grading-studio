@@ -1,22 +1,22 @@
 {
  "version": "1.28.6",
- "build": "ba5a054f4105",
+ "build": "dbd8d4505671",
  "notes": [
   "In another language, the boxes a class page opens now read in that language too: a new or changed assignment, the roster, units, how the class is graded, Email wording and report Wording, the notes pages for work with no papers, and the progress sheets you print.",
   "Class, unit, assignment and student names, and the sentences in the Wording boxes, stay as you typed them. The marking screen and its boxes are still in English."
  ],
  "files": {
-  "index.html": "2a5d0accdba0d4514d7ac321c9271ff50ef2949b056a21beb53939e31315168a",
-  "planner.html": "8fe5c4a5d9cbf93f8430b5cb400880ac6b0e0b0addac9c61fca02b8a42444527"
+  "index.html": "b0bdf43b2c15787650860a9136f7be8e4de4b50301219de75cfdc12410368bd5",
+  "planner.html": "3d5ff28e9731be76b2a887fbb2b4e9f756c42c831ecfb672419c3acecaa4b899"
  },
  "langs": {
-  "lang/zh-Hant.js": "45c0d06f89f7008a4da89283a86b1609266f4f9b90822ebf3b613999b42be903",
-  "lang/zh-Hans.js": "85ad0e078d56e294896be03ee8e37bd1a0d52199194bd7d55da54566c093037e",
-  "lang/es.js": "dce8c053183d5ca6dcfe9b57199e3f259654f759a11cc5a6b2276a320b582151",
-  "lang/fr.js": "6f4ff920fbc3a1a953478273ff26e3a8e6be0d8b93aa693be06897642e863357",
-  "lang/de.js": "cecee604773aeb3c9bc8e701017a379db3db3bf11945b6180a8f8b18d25dd832",
-  "lang/pt-BR.js": "a37c5ac5ecb0bd757ebf5a1eaab38e512ddc7a1262d2d61b104cf334073dfbfe",
-  "lang/ja.js": "382d515e5fab4daaa83a530889c05e4ab0e0bb489dc196b2f596d51f6e6fea41",
-  "lang/ko.js": "cb50f96c1b0579d5d134cc93a3aa24df358e108f6fcdabd5801a2b0b1ce0dfc6"
+  "lang/zh-Hant.js": "e61e5bc5c684cae0cd230d65e3f8184661f9063c856ec9c517d0ef332b276103",
+  "lang/zh-Hans.js": "bf199251aebad69374dd1a7a48b066cf51961ee7577dfa464fc03fce234aa84a",
+  "lang/es.js": "64dbb7940fbb5e0dfbc4cfc72c31a68cbe6717606446002b13c3462d7ae4d543",
+  "lang/fr.js": "4207de019344aa6e8e6ae5a1d6e662aee461ba99057a4a3eddc440409677d86d",
+  "lang/de.js": "43ffb0f46d5d5ec5f60aa0b67c71dab7742ae8cde6ebf4035f737a0341a16956",
+  "lang/pt-BR.js": "59fab2a3c8cd110452dca47e041e5310628ee4fdee28f76138ad161756529fc5",
+  "lang/ja.js": "74aba9bd51f7d8d8c1791528a46ce692b4e8a475816d1aa09ad6b37d46fe2e63",
+  "lang/ko.js": "2157a6003331f71d69f9d36f4cc9ced3f935d20a758ca63c88a3e934e9d0f465"
  }
 }
