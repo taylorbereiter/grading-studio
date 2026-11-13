@@ -5,9 +5,10 @@ const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs'), path = require('path'), http = require('http');
 const { launch } = require('./helpers/chrome');
-const { ROOT, builtHtml, openApp, openZip, goTo, score, settle, setTool, drag, catchDownloads, closeBox } = require('./helpers/app');
+const { ROOT, builtHtml, openApp, openZip, goTo, score, settle, setTool, drag, catchDownloads, closeBox, pick } = require('./helpers/app');
 const { standardFiles, zipOf } = require('./helpers/fixtures');
 const { gradingSeed } = require('./helpers/steady');
+const { ibSeed } = require('./helpers/ibseed');
 const { langFile } = require('./helpers/serve');
 
 let browser, zip;
@@ -96,8 +97,8 @@ test('in Spanish the sidebar and Today read in Spanish, with the date written th
   assert.equal(await text(page, '#attSum'), 'Presentes: 5 · Tarde: 1');
   assert.equal(await page.$eval('[data-attrow="0"] .attnote', x => x.placeholder), 'Una nota, si quieres');
   // a screen that is not translated yet is simply still in English, and works
-  await goTo(page, base + '/charts'); await page.waitForFunction(() => /Term grades/.test(document.querySelector('#classPanel').innerText));
-  assert.match(await text(page, '#classPanel'), /Who is moving/);
+  await goTo(page, '#/todo'); await page.waitForFunction(() => !document.querySelector('#vTodo').hidden);
+  assert.match(await text(page, '#vTodo'), /Week/);
   assert.deepEqual(page.errors, []);
   await close();
 });
@@ -147,8 +148,9 @@ test('the sentences Today builds come out as Spanish sentences', async () => {
   await close();
 });
 
+// What each language file leaves in English on the covered parts of the screen as it is now. own: what a teacher typed, which is nobody's to translate.
+const miss = async (page, where, own) => { for (const k of await page.evaluate(() => window.__gsLang.packs)) { const m = (await page.evaluate(async k => { if (!await window.__gsLang.load(k)) throw new Error('lang/' + k + '.js could not be fetched'); return window.__gsLang.missing(k); }, k)).filter(s => !own.some(o => o === s || (o instanceof RegExp && o.test(s)))); assert.deepEqual(m, [], where + ': not in the ' + k + ' language file'); } };
 test('every word on the covered screens is in each language file (run in English, the screens are walked and what is missing is listed)', async () => {
-  const miss = async (page, where, own) => { for (const k of await page.evaluate(() => window.__gsLang.packs)) { const m = (await page.evaluate(async k => { if (!await window.__gsLang.load(k)) throw new Error('lang/' + k + '.js could not be fetched'); return window.__gsLang.missing(k); }, k)).filter(s => !own.some(o => o === s || (o instanceof RegExp && o.test(s)))); assert.deepEqual(m, [], where + ': not in the ' + k + ' language file'); } };
   // a new browser: the welcome, each step and each choice, then Today as a new teacher finds it
   {
     const { page, close } = await openApp(browser, { newTeacher: true });
@@ -220,6 +222,12 @@ test('every word on the covered screens is in each language file (run in English
       await goTo(page, base + '/missing'); await page.waitForSelector('#mis'); await miss(page, 'class page, Missing work', mine);
       await at('Missing work, by assignment', () => page.click('#classPanel [data-misview="col"]'));
       await at('Missing work, whole year', () => page.click('#classPanel [data-bkterm="*"]'));
+      // a student's own page (one with work missing and a day late), Charts, Goals with none yet, and Report comments with a limit and one done
+      await page.click('#classPanel [data-bkterm]:first-child'); await pause(300);
+      for (const [t, sel] of [['students/1', '#bkStuTiles'], ['students/5', '#bkStuTiles'], ['charts', '#bkHeat'], ['goals', '#glView'], ['reports', '#rpt']]) { await goTo(page, base + '/' + t); await page.waitForSelector(sel); await pause(400); await miss(page, 'class page, ' + t, mine); }
+      await at('Report comments, a limit and one done', async () => { await page.$eval('#rptLimit', e => { e.value = 100; e.dispatchEvent(new Event('change', { bubbles: true })); }); await pause(300); await page.click('[data-rptdoit]'); await pause(300); await page.click('[data-rptstu="0"]'); });
+      await goTo(page, base + '/charts'); await page.waitForSelector('#bkHeat'); await at('Charts, whole year', () => page.click('#classPanel [data-bkterm="*"]'));
+      await page.click('#classPanel [data-bkterm]:first-child'); await pause(300);
     }
     // every page of Settings
     for (const k of ['saving', 'classes', 'terms', 'marking', 'setup', 'display', 'about']) { await goTo(page, '#/settings/' + k); await pause(500); await miss(page, 'Settings, ' + k, [...own, '{ "gradingStudioSetup": 1, … }']); }
@@ -230,6 +238,91 @@ test('every word on the covered screens is in each language file (run in English
     assert.deepEqual(page.errors, []);
     await close();
   }
+});
+
+// Learning goals on both rubrics, and two days of attendance, on the made-up class.
+function goalsSeed() {
+  const s = gradingSeed(), lib = JSON.parse(s.ls['gs.lib']);
+  lib.goals = [{ id: 'g1', name: 'Makes a clear claim', at: 1 }, { id: 'g2', name: 'Uses evidence', at: 1 }, { id: 'g3', name: 'Not used yet', at: 1 }];
+  lib.classes[0].att = { '2026-09-01': { t: 1, m: { 'Aria Testwell': 'l', 'Dov Madeup': 'a' }, n: { 'Aria Testwell': 'bus was late' } }, '2026-09-02': { t: 1, m: { 'Dov Madeup': 'e' } } };
+  const ls = { ...s.ls, 'gs.lib': JSON.stringify(lib) };
+  for (const k of ['gs.b.n1', 'gs.b.n2']) { const w = JSON.parse(ls[k]); w.setup = { ...w.setup, goals: ['g1', 'g2', null] }; ls[k] = JSON.stringify(w); }
+  return { ...s, ls };
+}
+// The made-up MYP class, and beside it a DP class with one paper typed in and one grade predicted.
+function ibBoth() {
+  const s = ibSeed(), lib = JSON.parse(s.ls['gs.lib']), c = lib.classes[1];
+  c.way = 'dp'; c.pred = { t1: { 'Aria Testwell': { g: 6, t: 1 } } };
+  c.units = [{ id: 'u9', name: 'Unit 1', items: [{ id: 'd1', name: 'Paper 1', classId: 'c2', type: 'sum', due: '2026-09-20', typed: { max: 20, s: { 'Aria Testwell': { v: 18 }, 'Bram Sample': { v: 11 }, 'Cleo Fixture': { v: null, st: 'missing' } } } }] }];
+  return { ...s, ls: { ...s.ls, 'gs.lib': JSON.stringify(lib) } };
+}
+test('a class with learning goals and attendance, an MYP class and a DP class leave nothing in English either', async () => {
+  const own = ['Grade 9 English', 'Grade 10 Literature', 'MYP 3 Sciences', /^Term \d/, /^[A-Z][a-z]{2} \d{1,2}$/];
+  {
+    const { page, close } = await openApp(browser, { seed: goalsSeed() });
+    await page.waitForSelector('#railClasses a');
+    const base = await page.$eval('#railClasses a', a => a.getAttribute('href'));
+    for (const [t, sel] of [['students/1', '#glStu'], ['students/4', '#attStu'], ['goals', '#glHeat'], ['charts', '#bkHeat']]) { await goTo(page, base + '/' + t); await page.waitForSelector(sel); await pause(400); await miss(page, 'with goals, ' + t, own); }
+    assert.deepEqual(page.errors, []);
+    await close();
+  }
+  {
+    const { page, close } = await openApp(browser, { seed: ibBoth() });
+    await page.waitForSelector('#railClasses a');
+    const [myp, dp] = await page.$$eval('#railClasses a', as => as.map(a => a.getAttribute('href')));
+    for (const [t, sel] of [['gradebook', '#ibTab'], ['students', '#peopleTbl table'], ['students/1', '#ibFit'], ['students/5', '#ibFit'], ['charts', '#ibTiles'], ['reports', '#rpt'], ['missing', '#mis']]) { await goTo(page, myp + '/' + t); await page.waitForSelector(sel); await pause(400); await miss(page, 'MYP, ' + t, own); }
+    await goTo(page, myp + '/gradebook'); await page.waitForSelector('#ibTab');
+    await page.click('#classPanel [data-ibfit]'); await page.waitForSelector('#ibFit'); await miss(page, 'MYP, best fit', own);
+    await page.click('#classPanel [data-ibback]'); await page.waitForSelector('#ibTab'); await page.click('#classPanel [data-ibadd-lv]'); await page.waitForSelector('#ibAdd'); await miss(page, 'MYP, add levels', own);
+    await page.click('#classPanel [data-ibacancel]'); await page.waitForSelector('#ibTab'); await page.click('#classPanel [data-bkterm]:nth-child(2)'); await pause(400); await miss(page, 'MYP, a term with no levels', own);
+    await page.click('#classPanel [data-bkterm]:first-child'); await pause(300);
+    for (const [t, sel] of [['gradebook', '#classPanel table'], ['students/1', '#bkStuTiles'], ['charts', '#bkTiles'], ['reports', '#rpt']]) { await goTo(page, dp + '/' + t); await page.waitForSelector(sel); await pause(400); await miss(page, 'DP, ' + t, own); }
+    await goTo(page, dp + '/gradebook'); await page.waitForSelector('#classPanel table'); await pick(page, '[data-ibpredopen]'); await page.waitForSelector('#ibPred'); await miss(page, 'DP, predicted grades', own);
+    assert.deepEqual(page.errors, []);
+    await close();
+  }
+});
+
+test('a student’s page, Charts and Report comments in Spanish: the app’s words change, and names, rubric rows, criteria and the comment itself do not', async () => {
+  const { page, close } = await openApp(browser, { seed: inSpanish(goalsSeed()) });
+  await page.waitForSelector('#railClasses a');
+  const base = await page.$eval('#railClasses a', a => a.getAttribute('href'));
+  await goTo(page, base + '/students/4'); await page.waitForSelector('#attStu');
+  assert.equal(await text(page, '#bkStuName'), 'Dov Madeup');
+  assert.match(await text(page, '#bkStuTiles'), /Nota del periodo .* promedio de la clase: [\d.]+% .* 2 de 3 cuentan .* No entregado 1 Timed paragraph/);
+  assert.match(await text(page, '#bkStrip'), /El periodo hasta ahora .* Reading check 1 En clase · 1 sept/);
+  assert.match(await page.$eval('#bkStuLine', e => e.getAttribute('aria-label')), /^Reading check 1 60%, mediana de la clase 78%\. .* Timed paragraph no entregado, mediana de la clase 80%$/);
+  assert.deepEqual(await page.$$eval('#bkStuRows .chrow > span', xs => xs.map(x => x.textContent)), ['Ideas', 'Organization', 'Language']);
+  assert.match(await text(page, '#attStu'), /Días presente: 0 de 2\. Ausentes \(motivo desconocido\): 1 · Justificad[oa]s: 1\./);
+  // pointing at a mark of a chart says it in Spanish too, with the assignment's own name left as it is
+  const tip = async sel => { await page.$eval(sel, e => e.dispatchEvent(new MouseEvent('mouseover', { bubbles: true }))); return page.$$eval('#ovTip > *', xs => xs.map(x => x.textContent)); };
+  assert.deepEqual(await tip('#bkStuLine .bkdot'), ['60%', 'Reading check 1', 'Evaluación en clase · mitad central de la clase: 63–89 %']);
+  assert.deepEqual(await tip('#bkStuRows .chrow'), ['2.5 sobre 4', 'Ideas', '2 sumativas · promedio de la clase: 3.3']);
+  await goTo(page, base + '/charts'); await page.waitForSelector('#bkMove');
+  assert.match(await page.$eval('#bkMove', e => e.getAttribute('aria-label')), /^Esme Placeholder sube 23\.3, .* Bram Sample baja 22\.3$/);
+  assert.match(await page.$eval('#bkStacks', e => e.getAttribute('aria-label')), /^Reading check 1: 1 con menos de 60, 1 de 60 a 69, /);
+  assert.equal(await page.$eval('#bkHeat th.chh button', e => e.title), 'Ordenar por Reading check 1');
+  assert.equal(await page.$eval('#bkHeat th.chg button', e => e.title), 'Ordenar por la nota');
+  assert.match(await text(page, '#bkCmp'), /^Grade 9 English [\d.]+%$/);
+  await goTo(page, base + '/reports'); await page.waitForSelector('#rptText');
+  assert.match(await page.$eval('#rptText', e => e.value), /^Aria has /, 'the draft is the teacher’s to change: it stays as it was written');
+  assert.equal(await page.$eval('#rptText', e => e.getAttribute('aria-label')), 'Comentario de informe de Aria Testwell');
+  assert.match(await text(page, '#rptFacts'), /^Nota: 91\.83% Lo más fuerte: Ideas 4 Por mejorar: Language 3$/);
+  assert.equal(await page.$eval('#rptDone', e => e.textContent), '0 de 6 hechos');
+  assert.deepEqual(page.errors, []);
+  await close();
+});
+
+test('a word of the language that is also an English word is not put into the language twice (German "Note")', async () => {
+  const s = ibSeed(), { page, close } = await openApp(browser, { seed: { ...s, ls: { ...s.ls, 'gs.lang': '"de"' } } });
+  await page.waitForSelector('#railClasses a');
+  await goTo(page, await page.$eval('#railClasses a', a => a.getAttribute('href')) + '/students/3'); await page.waitForSelector('#ibFit');
+  await pause(400);
+  assert.equal(await page.$eval('#bkStuTiles .ovl', e => e.textContent), 'Note');
+  assert.equal(await page.$eval('#bkStuTiles .ovt:nth-child(3) .ovl', e => e.textContent), 'A Knowing and understanding', 'a criterion’s name is the teacher’s');
+  assert.match(await text(page, '#ibFit'), /Stufen Term 1 · wählen Sie die Stufe, die am besten passt · 4 von 4 festgelegt A Knowing and understanding Cells lab report 8 /);
+  assert.deepEqual(page.errors, []);
+  await close();
 });
 
 test('Help is in Spanish, topic for topic, and is found by Spanish or English words', async () => {

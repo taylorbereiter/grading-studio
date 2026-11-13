@@ -177,7 +177,7 @@ function goalsView(c, cols, all) {
   const bars = order.map(x => {
     const sub = people(x.n, 'student') + ' · ' + (x.low.length ? x.low.length + ' under ' + GOAL_LOW + '%' : 'no one under ' + GOAL_LOW + '%');
     return '<div class="glbar' + (x === least ? ' lo' : '') + '" tabindex="0"' + chTip(pctAvgText(x.avg) + ' class average', x.g.name, x.low.length ? 'Under ' + GOAL_LOW + '%: ' + x.low.slice(0, 12).map(who).join(', ') + (x.low.length > 12 ? ' and ' + (x.low.length - 12) + ' more' : '') : people(x.from.length, 'assignment')) + ' aria-label="' + esc(x.g.name + ': ' + pctAvgText(x.avg) + ' class average. ' + sub) + '">' +
-      '<span class="gln" data-raw><span>' + esc(x.g.name) + '</span>' + (x === least ? ' <span class="stag">lowest</span>' : '') + '</span><div class="bkcmpt"><i style="width:' + Math.min(100, x.avg) + '%"></i><em class="glcut" style="left:' + GOAL_LOW + '%"></em></div><b>' + pctAvgText(x.avg) + '</b><small>' + sub + '</small></div>';
+      '<span class="gln"><span data-raw>' + esc(x.g.name) + '</span>' + (x === least ? ' <span class="stag">lowest</span>' : '') + '</span><div class="bkcmpt"><i style="width:' + Math.min(100, x.avg) + '%"></i><em class="glcut" style="left:' + GOAL_LOW + '%"></em></div><b>' + pctAvgText(x.avg) + '</b><small>' + sub + '</small></div>';
   }).join('');
   // every student, every goal
   const sort = bk.gsort && (bk.gsort.k === 'name' || data.some(x => x.g.id === bk.gsort.k)) ? bk.gsort : { k: 'name', dir: 1 }, sg = data.find(x => x.g.id === sort.k);
@@ -194,7 +194,7 @@ function goalsView(c, cols, all) {
     rows.map(r => '<tr><th class="chn" scope="row">' + name(r) + '</th>' + data.map(x => '<td>' + cell(x, r) + '</td>').join('') + '</tr>').join('') +
     '<tr class="chfoot"><th class="chn" scope="row">Class average</th>' + data.map(x => '<td>' + (x.avg != null ? roundPct(x.avg) + '%' : '–') + '</td>').join('') + '</tr></tbody></table></div>' +
     '<div class="bkleg chleg">' + chBandLegend().join('') + '</div>';
-  const fromRows = data.flatMap(x => x.from.map((f, k) => '<tr><td>' + (k ? '' : esc(x.g.name)) + '</td><td>' + esc(f.col.name) + (f.col.due ? ' <span class="muted">' + esc(bkDay(f.col.due)) + '</span>' : '') + '</td><td>' + esc(f.parts.join(', ')) + '</td><td>' + f.n + '</td></tr>')).join('');
+  const fromRows = data.flatMap(x => x.from.map((f, k) => '<tr data-raw><td>' + (k ? '' : esc(x.g.name)) + '</td><td>' + esc(f.col.name) + (f.col.due ? ' <span class="muted">' + esc(bkDay(f.col.due)) + '</span>' : '') + '</td><td>' + esc(f.parts.join(', ')) + '</td><td>' + f.n + '</td></tr>')).join('');
   const unused = goalList().filter(g => !data.some(x => x.g.id === g.id));
   return '<div class="bkpad" id="glView"><div class="glhead"><p class="muted">Each goal’s percent comes from the rubric rows and quiz questions you tagged with it. Every assignment counts the same.</p><span class="sp"></span>' + edit + '</div>' +
     chSec('What to reteach', '<div class="glbars" id="glBars">' + bars + '</div>', 'The class average on each goal, lowest first. The dashed line is ' + GOAL_LOW + '%.') +

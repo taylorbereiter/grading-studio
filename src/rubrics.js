@@ -700,7 +700,8 @@ function ovTip() {
 function ovTipHide() { const t = $('#ovTip'); if (t) t.hidden = true; }
 function ovTipShow(el) {
   const t = ovTip(), [v, l, n] = t.children;
-  v.textContent = el.dataset.tv; l.textContent = el.dataset.tl; n.textContent = el.dataset.tn; n.hidden = !el.dataset.tn;
+  const c = langCtx(el), say = s => langIn(el) ? tr(s, c) : s;   // in the language, where the part of the page it is on is (lang.js); the names line of a list of students is left as it is
+  v.textContent = say(el.dataset.tv); l.textContent = say(el.dataset.tl); n.textContent = el.dataset.tnraw != null ? el.dataset.tn : say(el.dataset.tn); n.hidden = !el.dataset.tn;
   t.hidden = false;
   const r = el.getBoundingClientRect(), w = t.offsetWidth, h = t.offsetHeight, x = r.left + r.width / 2 - w / 2, y = r.top - h - 6;
   t.style.left = Math.max(8, Math.min(innerWidth - w - 8, x)) + 'px';

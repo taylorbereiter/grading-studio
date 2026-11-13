@@ -150,8 +150,8 @@ function rptView(c, cols, conf) {
   rpt.stu = Math.max(0, Math.min(names.length - 1, rpt.stu));
   const n = names[rpt.stu], f = rptFacts(c, cols, conf, n), e = rptEntry(c, n), text = e.text != null ? e.text : rptDraft(c, n, f, rc, e.v), done = names.filter(x => rptEntry(c, x).done).length;
   const seg = '<div class="pseg" role="group" aria-label="Length">' + RPT_LEN.map(([k, l]) => '<button data-rptlen="' + k + '" aria-pressed="' + (rc.len === k) + '">' + l + '</button>').join('') + '</div>';
-  const list = names.map((x, i) => { const s = rptState(rptEntry(c, x)); return '<button class="rptrow' + (i === rpt.stu ? ' on' : '') + '" data-rptstu="' + i + '"' + (i === rpt.stu ? ' aria-current="true"' : '') + '><span class="rptnum">' + (i + 1) + '</span><span class="rptnm">' + esc(bkWho(x, i)) + '</span><span class="schip ' + s[0] + '">' + s[1] + '</span></button>'; }).join('');
-  const said = f.said.length ? '<section class="rptsaid"><h3 class="ovh3">What you wrote on their papers</h3>' + f.said.map((s, i) => '<div class="rptq"><div><b>' + esc(s.work) + '</b><p>' + esc(s.text) + '</p></div><button class="btn sm" data-rptadd="' + i + '" title="Add this to the end of the comment">Add</button></div>').join('') + '</section>' : '';
+  const list = names.map((x, i) => { const s = rptState(rptEntry(c, x)); return '<button class="rptrow' + (i === rpt.stu ? ' on' : '') + '" data-rptstu="' + i + '"' + (i === rpt.stu ? ' aria-current="true"' : '') + '><span class="rptnum">' + (i + 1) + '</span><span class="rptnm" data-raw>' + esc(bkWho(x, i)) + '</span><span class="schip ' + s[0] + '">' + s[1] + '</span></button>'; }).join('');
+  const said = f.said.length ? '<section class="rptsaid"><h3 class="ovh3">What you wrote on their papers</h3>' + f.said.map((s, i) => '<div class="rptq"><div data-raw><b>' + esc(s.work) + '</b><p>' + esc(s.text) + '</p></div><button class="btn sm" data-rptadd="' + i + '" title="Add this to the end of the comment">Add</button></div>').join('') + '</section>' : '';
   return '<div class="bkpad rpt" id="rpt">' +
     '<div class="rptopts"><label>Subject <input type="text" id="rptSubj" value="' + esc(rc.subj[c.id] || '') + '" placeholder="e.g. English" maxlength="60" title="How the subject is named in a comment. Leave it empty to leave the subject out."></label>' +
       '<span class="rptlab">Length ' + seg + '</span><label class="rptck"><input type="checkbox" id="rptGrade"' + (rc.grade ? ' checked' : '') + '> Say the grade</label>' +
@@ -159,7 +159,7 @@ function rptView(c, cols, conf) {
       '</div>' +
     '<p class="muted rptnote">Each draft is put together on this computer from your own scores and comments. No AI writes it, and nothing is sent anywhere. Change any of it: it is your comment.</p>' +
     '<div class="rptgrid"><nav class="rptlist" aria-label="Students"><div class="rptdone" id="rptDone">' + done + ' of ' + names.length + ' done</div>' + list + '</nav>' +
-    '<section class="rptone"><div class="rpthead"><h3 id="rptName">' + esc(bkWho(n, rpt.stu)) + '</h3><span class="muted">' + (rpt.stu + 1) + ' of ' + names.length + '</span><span class="sp"></span>' +
+    '<section class="rptone"><div class="rpthead"><h3 id="rptName" data-raw>' + esc(bkWho(n, rpt.stu)) + '</h3><span class="muted">' + (rpt.stu + 1) + ' of ' + names.length + '</span><span class="sp"></span>' +
       '<label>Called <input type="text" id="rptCall" value="' + esc(rptCall(c, n)) + '" maxlength="40" title="The name used in the comment"></label>' +
       '<label>Pronoun <select id="rptPro" class="btn sm">' + RPT_PROS.map(([k, l]) => '<option value="' + k + '"' + (rptPro(c, n) === k ? ' selected' : '') + '>' + l + '</option>').join('') + '</select></label></div>' +
       '<div class="rptfacts" id="rptFacts">' + rptFactChips(f) + '</div>' +

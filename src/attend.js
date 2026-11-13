@@ -188,9 +188,9 @@ function attStuHtml(c, n) {
   if (!attOn()) return '';
   const t = bk.term && bk.term !== '*' ? bkConf().terms.find(t => t.id === bk.term) : null, days = attDays(c, t && t.start, t && t.end);
   if (!days.length) return '';
-  const o = attCount(c, n, days), day = d => new Date(d + 'T12:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-  const line = (k, l) => { const ds = days.filter(d => attOf(c, d, n) === k); return ds.length ? '<p class="attstu"><b>' + l + '</b> ' + ds.map(d => '<a class="link" href="' + attHash(c, d) + '">' + esc(day(d)) + '</a>' + (attNote(c, d, n) ? ' (' + esc(attNote(c, d, n)) + ')' : '')).join(', ') + '</p>' : ''; };
-  return '<section id="attStu"><h3 class="ovh3">Attendance</h3><p class="bkfbline">Here ' + (o.p + o.l) + ' of ' + people(days.length, 'day') + (o.a || o.l || o.e ? ': ' + attSay({ ...o, p: 0 }) + '.' : ', never late.') + '</p>' + line('a', 'Absent, reason unknown') + line('e', 'Absent, excused') + line('l', 'Late') + '</section>';
+  const o = attCount(c, n, days), day = d => new Date(d + 'T12:00:00').toLocaleDateString(LANG_LOCALE, { month: 'short', day: 'numeric' });
+  const line = (k, l) => { const ds = days.filter(d => attOf(c, d, n) === k); return ds.length ? '<p class="attstu"><b>' + l + '</b> ' + ds.map(d => '<a class="link" data-raw href="' + attHash(c, d) + '">' + esc(day(d)) + '</a>' + (attNote(c, d, n) ? ' <span data-raw>(' + esc(attNote(c, d, n)) + ')</span>' : '')).join(', ') + '</p>' : ''; };
+  return '<section id="attStu" data-lc="att"><h3 class="ovh3">Attendance</h3><p class="bkfbline">Here ' + (o.p + o.l) + ' of ' + people(days.length, 'day') + (o.a || o.l || o.e ? ': ' + attSay({ ...o, p: 0 }) + '.' : ', never late.') + '</p>' + line('a', 'Absent, reason unknown') + line('e', 'Absent, excused') + line('l', 'Late') + '</section>';
 }
 
 /* ---------- Today: a line under each of the day's classes ---------- */
