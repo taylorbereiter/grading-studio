@@ -4,7 +4,7 @@
 .spbtn[aria-pressed=true]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
 /* held at the paper's inner corner however far the papers scroll; the pane hangs off it, in the paper's own padding */
 .spanchor{position:sticky;top:0;left:0;height:0;z-index:4;pointer-events:none}
-.sp{position:absolute;pointer-events:auto;display:flex;flex-direction:column;min-width:0;min-height:0;background:var(--bg)}
+.sp2{position:absolute;pointer-events:auto;display:flex;flex-direction:column;min-width:0;min-height:0;background:var(--bg)}
 .sph{flex:none;display:flex;align-items:center;gap:var(--space-1);min-height:42px;padding:6px 10px 4px 14px}
 .sptabs{flex:1;min-width:0;display:flex;gap:2px;overflow-x:auto;scrollbar-width:none;padding:2px}
 .sptabs::-webkit-scrollbar{display:none}
@@ -24,24 +24,24 @@
 .spb .media video,.spb .vlink .vlslot iframe,.spb .vlink .vlslot video,html.vidsized #paper .spb .media video,html.vidsized #paper .spb .vlink .vlslot iframe,html.vidsized #paper .spb .vlink .vlslot video{width:100%;height:min(calc(100cqw * 9 / 16 - 16px),max(140px,calc(100cqh - 170px)));min-height:0;max-height:none}
 html.vidsized #paper .spb .media{max-width:none}
 .spgrip{position:absolute;z-index:2;display:grid;place-items:center;touch-action:none}
-.spgrip i{border-radius:2px;background:var(--track)}
+.spgrip i{border-radius:var(--corner-1);background:var(--track)}
 .spgrip:hover i,.spgrip.on i,.spgrip:focus-visible i{background:var(--accent)}
 .spgrip:focus-visible{outline:none}
 /* on the right (the usual place) or the left: the pane takes its width out of the paper's padding */
-.main:is(.sp-right,.sp-left) .sp{top:-10px;width:var(--sp-px);height:var(--sp-h)}
+.main:is(.sp-right,.sp-left) .sp2{top:-10px;width:var(--sp-px);height:var(--sp-h)}
 .main:is(.sp-right,.sp-left) .spgrip{top:0;bottom:0;width:11px;cursor:col-resize}
 .main:is(.sp-right,.sp-left) .spgrip i{width:4px;height:44px}
 .main.sp-right .paper{padding-right:var(--sp-px)}
-.main.sp-right .sp{left:100%;border-left:1px solid var(--line)}
+.main.sp-right .sp2{left:100%;border-left:1px solid var(--line)}
 .main.sp-right .spgrip{left:-6px}
 .main.sp-right .zoompill{right:calc(var(--sp-px) + 24px)}
 .main.sp-left .paper{padding-left:calc(var(--sp-px) + 24px + 44px * var(--uz))}
-.main.sp-left .sp{right:calc(100% + 24px + 44px * var(--uz));border-right:1px solid var(--line)}
+.main.sp-left .sp2{right:calc(100% + 24px + 44px * var(--uz));border-right:1px solid var(--line)}
 .main.sp-left .spgrip{right:-6px}
 .main.sp-left .tools{left:calc(var(--sp-px) + 12px)}
 /* across the top: the pane takes its height out of the paper's top padding */
 .main.sp-top .paper{padding-top:calc(var(--sp-px) + 10px)}
-.main.sp-top .sp{top:calc(-1 * var(--sp-px) - 10px);left:calc(-24px - 44px * var(--uz));width:var(--sp-w);height:var(--sp-px);border-bottom:1px solid var(--line)}
+.main.sp-top .sp2{top:calc(-1 * var(--sp-px) - 10px);left:calc(-24px - 44px * var(--uz));width:var(--sp-w);height:var(--sp-px);border-bottom:1px solid var(--line)}
 .main.sp-top .spgrip{left:0;right:0;bottom:-6px;height:11px;cursor:row-resize}
 .main.sp-top .spgrip i{width:44px;height:4px}
 .main.sp-top .tools{top:calc(var(--sp-px) + 12px);max-height:calc(100% - var(--sp-px) - 24px)}

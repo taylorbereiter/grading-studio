@@ -54,7 +54,7 @@ function spReset(st) {
 }
 function spBuild() {
   if ($('#pane2')) return;
-  $('#paper').insertAdjacentHTML('afterbegin', '<div class="spanchor" id="spAnchor"><aside class="sp" id="pane2" aria-label="Side pane">' +
+  $('#paper').insertAdjacentHTML('afterbegin', '<div class="spanchor" id="spAnchor"><aside class="sp2" id="pane2" aria-label="Side pane">' +
     '<div class="spgrip" id="spGrip" role="separator" tabindex="0" aria-label="Side pane size" title="Drag to make the side pane bigger or smaller. Double-click for the usual size."><i></i></div>' +
     '<div class="sph"><div class="sptabs" id="spTabs" role="tablist" aria-label="Shown beside the paper"></div>' +
     kmWrap('⋯', 'class="icon kdots" id="spMore" aria-label="Where the side pane sits" title="Where the side pane sits"',
@@ -93,7 +93,7 @@ function spTake(key, ...nodes) {
     if (!n) continue;
     n.dataset.spk = key; n.dataset.spo = ++spNow.seq;
     const menu = can && (n.classList.contains('fhead') ? n : n.querySelector(':scope > .fhead')), km = menu && menu.querySelector('.km');
-    if (km && !km.querySelector('[data-spshow]')) km.insertAdjacentHTML('afterbegin', '<button class="link" data-spshow="' + esc(key) + '" title="Keeps this in a pane of its own beside the rest of the paper">Show beside</button>');
+    if (km && !km.querySelector('[data-spshow]')) (km.firstElementChild || km).insertAdjacentHTML(km.firstElementChild ? 'afterend' : 'afterbegin', '<button class="link" data-spshow="' + esc(key) + '" title="Keeps this in a pane of its own beside the rest of the paper">Show beside</button>');
     if (body) body.appendChild(n);
   }
 }

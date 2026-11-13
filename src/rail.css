@@ -105,4 +105,4 @@
 .bsrow[aria-current=true]{background:var(--accent-soft)}
 .bsrow[aria-current=true] b{font-weight:600}
 .bsrow small{margin-left:auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:var(--text-caption);color:var(--muted)}
-.bsset{margin-top:4px;border-top:1px solid var(--line);border-radius:0 0 var(--corner-2) var(--corner-2);color:var(--muted)}
+.bsset{margin-top:4px;border-top:1px solid var(--line);border-radius:var(--corner-2);color:var(--muted)}
