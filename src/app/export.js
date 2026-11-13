@@ -27,9 +27,38 @@ function exportPlan(keepFolders) {
     if (!keepFolders) path = (dir ? st.key + ' - ' : '') + path.split('/').pop();
     out.push({ st, d, path: path.replace(/[\\:*?"<>|]+/g, '-') });
   }
+  if (xOne()) oneEach(out);
   const used = new Set();
   for (const o of out) { let p = o.path, k = 2; while (used.has(p.toLowerCase())) p = o.path.replace(/(\.[^./]+)?$/, ' (' + k++ + ')$1'); used.add(p.toLowerCase()); o.path = p; }
   return out;
+}
+// One PDF a student (gs.xone, on unless the teacher turns it off): every paper of theirs, and the feedback page in front, in one file to open.
+// Their own Word papers join it as pages (drawn the way Convert to PDF draws them, with the teacher's comments). A scored Word
+// rubric and a file that isn't a paper still go beside it as they are. A retake's earlier try is its own PDF, with its own feedback page.
+// A student with a single paper gets that paper, as before.
+const xOne = () => store.get('gs.xone', true) !== false;
+const canJoin = o => !!o.d || (o.raw && wordCanPdf(o.f));
+function oneEach(out) {
+  const groups = new Map();
+  for (const o of out) {
+    if (!canJoin(o)) continue;
+    const f = o.d ? fileByPath(o.st, o.d.pages[0][0]) : o.f, tn = tryOfFile(o.st, f), k = o.st.key + '\n' + tn;
+    if (!groups.has(k)) groups.set(k, { st: o.st, tn, list: [] });
+    groups.get(k).list.push(o);
+  }
+  for (const { st, tn, list } of groups.values()) {
+    if (list.length < 2) continue;
+    const first = list.find(o => o.d) || list[0], dir = first.path.includes('/') ? first.path.slice(0, first.path.lastIndexOf('/') + 1) : '';
+    const name = fileSafe([st.key, asgName(), tn ? tr(tryName(tn)) : ''].filter(Boolean).join(' - ')) + '.pdf';
+    const d = { name, pages: list.filter(o => o.d).flatMap(o => o.d.pages), words: list.filter(o => !o.d).map(o => o.f) };
+    out.splice(out.indexOf(list[0]), 1, { st, d, one: true, path: dir + name });
+    for (const o of list.slice(1)) out.splice(out.indexOf(o), 1);
+  }
+}
+// A Word paper that couldn't be drawn into the PDF (over 60 pages, say) still goes back, as the Word file, next to it.
+function oneLeftOver(o) {
+  const dir = o.path.includes('/') ? o.path.slice(0, o.path.lastIndexOf('/') + 1) : '', stem = o.path.slice(dir.length).replace(/\.pdf$/i, '');
+  return (o.d.left || []).map(f => ({ path: dir + stem + ' - ' + fileSafe(f.name), bytes: f.data }));
 }
 // Each returned file is named for its student, the assignment, and what it is: "Ana Lee - River essay - Graded.pdf", or
 // "- Feedback" when there is no score (a formative, or a paper with comments only). Folders stay as they came in, so each file still
@@ -83,7 +112,10 @@ async function flattenDoc(st, d, dpi, edit, key, fb) {
   out.setCreator('Grading Studio'); out.setProducer('Grading Studio');   // so a flattened file brought back in can say why its marks can't be changed
   try {
     const said = fb ? fbData(st, d) : null;
-    if (said) { const [p0, n0] = d.pages[0], { f: f0, js: j0 } = await src(p0), v0 = vpRot(f0, n0, await j0.getPage(n0 + 1), 1); await fbAddPages(out, said, v0.width, v0.height, dpi); }
+    if (said) {
+      if (d.pages.length) { const [p0, n0] = d.pages[0], { f: f0, js: j0 } = await src(p0), v0 = vpRot(f0, n0, await j0.getPage(n0 + 1), 1); await fbAddPages(out, said, v0.width, v0.height, dpi); }
+      else await fbAddPages(out, said, 612, 792, dpi);   // only Word papers: a Letter page
+    }
     for (const [path, p] of d.pages) {
       const { f, js, lib } = await src(path);
       const marks = (f.marks[p] || []).concat((f.kami && f.kami[p] && f.kami[p].notes) || []);
@@ -111,10 +143,19 @@ async function flattenDoc(st, d, dpi, edit, key, fb) {
       out.addPage([W + side, H]).drawImage(img, { x: 0, y: 0, width: W + side, height: H });
       c.width = c.height = 0; page.cleanup();
     }
+    // One PDF a student: their Word papers follow, as pages. One that can't be drawn goes back as the Word file beside it (d.left).
+    if (d.words && d.words.length) {
+      if (typeof wordSaves !== 'undefined') await Promise.all([...wordSaves].map(s => s()));   // what was typed a moment ago is in the file first
+      d.left = [];
+      for (const f of d.words) {
+        try { const wl = await PDFLib.PDFDocument.load(await wordPagesPdf(f)); for (const cp of await out.copyPages(wl, wl.getPageIndices())) out.addPage(cp); }
+        catch (er) { console.error(f.path, er); d.left.push(f); }
+      }
+    }
     // The mark key: what each proofreading mark on this file means, on its own page(s) after the last one, the last page's size.
     // Reopening an editable export rebuilds from the original pages, so the key never comes back in as a page.
     const rows = key ? keyRows(d.pages.flatMap(([path, p]) => fileByPath(st, path).marks[p] || [])) : [];
-    if (rows.length) {
+    if (rows.length && d.pages.length) {
       const [lp, lpn] = d.pages[d.pages.length - 1], { f: lf, js: ljs } = await src(lp), lv = vpRot(lf, lpn, await ljs.getPage(lpn + 1), 1);
       let W = lv.width, H = lv.height;
       if (W < 300 || H < 300 || W > 2000 || H > 2000) { W = 612; H = 792; }
@@ -127,7 +168,7 @@ async function flattenDoc(st, d, dpi, edit, key, fb) {
         c.width = c.height = 0;
       }
     }
-    if (edit) {   // the original pages and her own marks go along, so bringing the file back in opens it ready to change
+    if (edit && d.pages.length) {   // the original pages and her own marks go along, so bringing the file back in opens it ready to change
       const paths = [...new Set(d.pages.map(([path]) => path))];
       const info = { v: 1, pages: d.pages.map(([path, p]) => { const f = fileByPath(st, path); return [paths.indexOf(path), p, f.marks[p] || [], rotOf(f, p), skewOf(f, p)]; }) };
       for (let k = 0; k < paths.length; k++) await out.attach(await viewBytes(fileByPath(st, paths[k])), 'gs-original-' + (k + 1) + '.pdf', { mimeType: 'application/pdf', description: 'Original pages, for reopening in Grading Studio' });
@@ -135,7 +176,7 @@ async function flattenDoc(st, d, dpi, edit, key, fb) {
     }
   } finally { for (const v of srcs.values()) v.js.destroy(); }
   const bytes = await out.save();
-  if (!edit) return bytes;
+  if (!edit || !d.pages.length) return bytes;
   const tail = new TextEncoder().encode('\n' + GS_TAIL + '\n'), all = new Uint8Array(bytes.length + tail.length);
   all.set(bytes); all.set(tail, bytes.length); return all;
 }
@@ -169,6 +210,7 @@ async function openExport() {
         '<div class="prog" hidden><i></i></div><p class="muted" id="xStatus" style="font-size:13px"></p>' +
         '<details class="xopts" id="xOpts"' + (optsOpen ? ' open' : '') + '><summary>Options: <span id="xOptsSay"></span></summary>' +
           '<label class="chk"><input type="checkbox" id="xKeep" checked> Keep student folders</label>' +
+          '<label class="chk"><input type="checkbox" id="xOne"' + (xOne() ? ' checked' : '') + '> One PDF for each student</label><p class="xhint">All their papers in one file, the feedback page first. Word papers become pages too. A Word rubric you scored still goes as a Word file.</p>' +
           '<label class="chk"><input type="checkbox" id="xNames"' + (xNames() ? ' checked' : '') + '> Name each file by student and assignment</label><p class="xhint" id="xNamesSay"></p>' +
           '<label class="chk"><input type="checkbox" id="xSheet" checked> Add the grade sheet (a crop of each typed grade, in ' + listOrder() + ')</label>' +
           '<label class="chk"><input type="checkbox" id="xEdit"' + (xEdit() ? ' checked' : '') + '> Keep marks editable</label><p class="xhint">Bring a file back in later and change its marks. Files are about twice as big.</p>' +
@@ -185,6 +227,7 @@ async function openExport() {
   const optsSay = () => {
     const el = $('#xOptsSay'); if (!el) return;
     const on = [];
+    if ($('#xOne').checked) on.push('one PDF a student');
     if ($('#xKeep').checked) on.push('student folders');
     if ($('#xNames').checked) on.push('files named by student');
     if ($('#xSheet').checked) on.push('grade sheet');
@@ -204,7 +247,7 @@ async function openExport() {
   };
   optsSay(); namesSay();
   const xo = $('#xOpts'); if (xo) xo.ontoggle = () => store.set('gs.xopts', xo.open);
-  box.onchange = e => { optsSay(); if (e.target.id === 'xEdit') store.set('gs.xedit', e.target.checked); if (e.target.id === 'xKey') setKey(v => { v.on = e.target.checked; }); if (e.target.id === 'xFb') store.set('gs.xfb', e.target.checked); if (e.target.id === 'xNames') { store.set('gs.xnames', e.target.checked); namesSay(); } if (e.target.id === 'xAll') { store.set('gs.xall', e.target.checked); renderTools(); openExport(); } };
+  box.onchange = e => { optsSay(); if (e.target.id === 'xEdit') store.set('gs.xedit', e.target.checked); if (e.target.id === 'xKey') setKey(v => { v.on = e.target.checked; }); if (e.target.id === 'xFb') store.set('gs.xfb', e.target.checked); if (e.target.id === 'xNames') { store.set('gs.xnames', e.target.checked); namesSay(); } if (e.target.id === 'xAll') { store.set('gs.xall', e.target.checked); renderTools(); openExport(); } if (e.target.id === 'xOne') { store.set('gs.xone', e.target.checked); renderTools(); openExport(); } };
   box.onclick = async e => {
     if (e.target.closest('[data-close]')) return closeDlg();
     const ck = e.target.closest('[data-chk]'); if (ck) { return toPaper(+ck.dataset.chk, ck.dataset.file || undefined); }
@@ -254,7 +297,9 @@ async function openExport() {
       for (let i = 0; i < items.length; i++) {
         say('Baking in marks ' + (i + 1) + ' of ' + items.length + '…');
         bar.firstChild.style.width = (30 + 70 * i / items.length) + '%';
-        if (await putOut(items[i].path, () => items[i].raw ? items[i].f.data : flattenDoc(items[i].st, items[i].d, dpi, editable, withKey, withFb && !fbGiven.has(items[i].st) && !!fbGiven.add(items[i].st)), items[i].st)) nOut++;
+        const fk = items[i].one ? items[i] : items[i].st;   // one PDF a student carries its own feedback page, even a retake's earlier try
+        if (await putOut(items[i].path, () => items[i].raw ? items[i].f.data : flattenDoc(items[i].st, items[i].d, dpi, editable, withKey, withFb && !fbGiven.has(fk) && !!fbGiven.add(fk)), items[i].st)) nOut++;
+        if (items[i].one) for (const x of oneLeftOver(items[i])) if (await putOut(x.path, () => x.bytes, items[i].st)) nOut++;
       }
       await unopenable(failed);
       bar.firstChild.style.width = '100%';
@@ -308,7 +353,10 @@ async function exportOne(st) {
       say(items.length > 1 ? 'Baking in marks ' + (i + 1) + ' of ' + items.length + '…' : 'Baking in marks…');
       const o = items[i];
       const base = o.path.split('/').pop(), name = xNames() || base.includes(st.key) ? base : st.key + ' - ' + base;   // her own download names each file for its student
-      try { files[name] = o.raw ? o.f.data : await flattenDoc(st, o.d, 150, xEdit(), keyOn(), fbOn() && !fbGiven && (fbGiven = true)); }
+      try {
+        files[name] = o.raw ? o.f.data : await flattenDoc(st, o.d, 150, xEdit(), keyOn(), fbOn() && (o.one || !fbGiven) && (fbGiven = true));
+        if (o.one) for (const x of oneLeftOver(o)) files[x.path.split('/').pop()] = x.bytes;
+      }
       catch (er) { console.error(o.path, er); failed.push({ path: o.path, st, why: exportWhy(er, false) }); }
     }
     const names = Object.keys(files);

@@ -29,8 +29,8 @@ const MYP = {
   comments: ['Explain how your evidence supports your claim.', 'Label the axes and give units.'],
   goals: ['Uses evidence', 'Designs a fair test'],
   attendance: false,
-  slides: { agenda: false, textSizes: 'any' },
-  marking: { pointsColor: 'credit', studentFileNames: false, coverNamesOnAnchors: false, findTypedNames: true, gradeSheetFromPapers: true },
+  slides: { agenda: false, textSizes: 'any', newSlide: 'two columns' },
+  marking: { pointsColor: 'credit', studentFileNames: false, onePdfPerStudent: false, coverNamesOnAnchors: false, findTypedNames: true, gradeSheetFromPapers: true },
 };
 const NAMES = ['Aria Testwell', 'Bram Sample', 'Cleo Fixture'];
 // A browser with work in it already: one class with students, a unit with an assignment, a term, a saved comment.
@@ -103,6 +103,7 @@ test('a new teacher’s whole setup comes in from one pasted block, after a prev
   assert.deepEqual(await ls(page, 'gs.bank'), MYP.comments);
   assert.equal((await ls(page, 'gs.setup')).mode, 'rubric', 'the next new assignment starts from it');
   assert.deepEqual([await ls(page, 'gs.xnames'), await ls(page, 'gs.anchorCover'), await ls(page, 'gs.nameFind'), await ls(page, 'gs.ptsInk'), await ls(page, 'gs.sheetfound')], [false, false, true, 'credit', true]);
+  assert.equal(await ls(page, 'gs.xone'), false, 'each paper as its own file');
   assert.equal(await page.evaluate(() => window.__gs.bandOf(76)), '', 'an MYP grade comes from levels, never from a percent');
   // the timetable and calendar are the Planner's
   const p = await plan(page);
@@ -111,7 +112,7 @@ test('a new teacher’s whole setup comes in from one pasted block, after a prev
   assert.deepEqual([p.semStart, p.semEnd], ['2026-08-17', '2027-01-11'], 'each is the Monday of its week, as the timetable keeps them');
   assert.deepEqual(p.daysOff.map(d => d.date + ' ' + d.label), ['2026-10-12 Autumn break', '2026-10-13 Autumn break', '2026-10-14 Autumn break', '2026-11-20 No school']);
   assert.deepEqual(p.events, [{ date: '2026-12-07', to: '2026-12-11', label: 'Exams' }]);
-  assert.deepEqual(p.deck, { agenda: false, sizes: 'any' });
+  assert.deepEqual(p.deck, { agenda: false, sizes: 'any', add: 'twocol' });
   // Settings says so
   await goTo(page, '#/settings/timetable'); await page.waitForFunction(() => /MYP 5 Sciences B/.test(document.querySelector('#setTimetable').textContent));
   assert.deepEqual(page.errors, []);
@@ -131,6 +132,7 @@ test('a new teacher’s whole setup comes in from one pasted block, after a prev
   assert.deepEqual(await ls(page, 'gs.rubrics'), []); assert.deepEqual(await ls(page, 'gs.bank'), []); assert.equal(await ls(page, 'gs.setup'), null);
   assert.equal(await plan(page), null);
   assert.deepEqual([await ls(page, 'gs.xnames'), await ls(page, 'gs.anchorCover'), await ls(page, 'gs.nameFind'), await ls(page, 'gs.ptsInk'), await ls(page, 'gs.sheetfound')], [true, true, null, null, false], 'the marking choices are as they were');
+  assert.equal(await ls(page, 'gs.xone'), true);
   assert.equal(await page.$('[data-stpundo]'), null);
   assert.deepEqual(page.errors, []);
   await close();
@@ -241,8 +243,8 @@ test('Copy my setup gives the same block back, with no student in it, and it set
   assert.deepEqual([j.grading.way, j.grading.bands], ['myp', undefined]);
   assert.equal(j.grading.rowTop, 8); assert.equal(j.programme, 'MYP');
   assert.deepEqual([j.classes[1].programme, j.classes[1].subjectGroup, j.classes[1].criteria[1], j.classes[1].boundaries.outOf, j.classes[1].boundaries.grades[0], j.classes[2].programme, j.classes[2].boundaries.grades[1]], ['MYP', 'sci', { letter: 'B', name: 'Inquiring and designing' }, 32, { grade: 7, from: 28 }, 'DP', { grade: 6, from: 68 }]);
-  assert.deepEqual(j.slides, { agenda: false, textSizes: 'any' });
-  assert.deepEqual(j.marking, { studentFileNames: false, coverNamesOnAnchors: false, findTypedNames: true, pointsColor: 'credit', gradeSheetFromPapers: true });
+  assert.deepEqual(j.slides, { agenda: false, textSizes: 'any', newSlide: 'Two columns' });
+  assert.deepEqual(j.marking, { studentFileNames: false, onePdfPerStudent: false, coverNamesOnAnchors: false, findTypedNames: true, pointsColor: 'credit', gradeSheetFromPapers: true });
   assert.deepEqual(j.gradebook, { weights: { summative: 70, inClass: 30 }, emptyType: 'zero', extraCredit: { addsTo: 'inClass', cap: false }, retakes: 'latest' });
   const la = await lib(a.page), pa = await plan(a.page);
   await a.close();

@@ -345,7 +345,7 @@ test('looks and teaching layouts: every layout in every look, edited in place, a
     await page.waitForSelector('.ls-stage');
     await page.click('[data-a="look"]'); await page.waitForSelector('[data-look="sage"]'); await page.click('[data-look="sage"]'); await page.click('#dlgBox [data-x]');
     assert.match(await page.$eval('[data-a="look"]', b => b.textContent), /Sage/);
-    await page.click('[data-a="addslide"]'); await page.waitForSelector('#dlgBox [data-addslide="twocol"]'); await page.click('#dlgBox [data-addslide="twocol"]');
+    await page.click('[data-a="addpick"]'); await page.waitForSelector('#dlgBox [data-addslide="twocol"]'); await page.click('#dlgBox [data-addslide="twocol"]');
     await page.waitForSelector('#lsStage .ls-bx[data-k="h1"]');
     await page.click('#lsStage .ls-bx[data-k="h1"]'); await page.keyboard.down('Control'); await page.keyboard.press('a'); await page.keyboard.up('Control'); await page.keyboard.type('Claim'); await page.keyboard.press('Enter');
     await page.waitForFunction(() => window.__planner.L.open.slides[1].h1 === 'Claim' && document.querySelector('#lsStage .ls-bx[data-k="h1"]'));
@@ -665,7 +665,7 @@ test('slide text tools: bullets, numbers, indents, bold, italic and underline ar
     assert.deepEqual(fresh, ['title|New lesson|', 'agenda|Agenda|', 'content||']);
     // an agenda slide starts empty, with gray hints
     await page.evaluate(() => window.__planner.openLessonForTest(window.__planner.L.open, 2));
-    await page.click('[data-a="addslide"]'); await page.waitForSelector('#dlgBox [data-addslide="agenda"]'); await page.click('#dlgBox [data-addslide="agenda"]');
+    await page.click('[data-a="addpick"]'); await page.waitForSelector('#dlgBox [data-addslide="agenda"]'); await page.click('#dlgBox [data-addslide="agenda"]');
     await page.waitForFunction(() => window.__planner.L.open.slides.length === 4 && window.__planner.L.cur === 3);
     const ag = await page.evaluate(() => { const s = window.__planner.L.open.slides[3]; return s.title + '|' + s.body + '|' + document.querySelector('#lsStage .ls-body').textContent + '|' + document.querySelector('#lsStage .ls-t').textContent; });
     assert.equal(ag, '||What you’ll do today, one line each|Agenda');

@@ -1,22 +1,22 @@
 {
- "version": "1.28.8",
- "build": "4b2f8a5c83d0",
+ "version": "1.28.11",
+ "build": "c2645b7885f2",
  "notes": [
   "In another language, the marking screen now reads in that language: the top bar, the tools, the student list, the score panel and its menus, and the Grades, Insights and Return tabs and Rubric setup.",
   "Student names, rubric rows, what each score means, your comments and the papers themselves stay as they are. Boxes opened from the marking screen, To do, School and the Planner are still in English."
  ],
  "files": {
-  "index.html": "bf05d18f26921c25106899b9d6d3a40e9a296bf9a238c6082bc6f23c4f18e7b2",
-  "planner.html": "e64d1511365c649d56677f4dfa85ebdad17cb3a5f6955ee28fd489b094bc320b"
+  "index.html": "061d84ae6784f7d22d464fd29f6c2cfc01512537fb70d06cec9c8287e4476cfe",
+  "planner.html": "93e8fd0d84f21c0463d6721bd4bd421869b7dbd4b885e6b14f91e8ea5f82493e"
  },
  "langs": {
-  "lang/zh-Hant.js": "896d3aea0d90b9433c05190c21b4c207a5ff4aed293c4fa9f3d47b5ae214d266",
-  "lang/zh-Hans.js": "78ef50044b9295d8ea8907d3f950f053949bc0043e5a4618f390c548169b7bfe",
-  "lang/es.js": "029d6d23e9c0c07943d466e3f7ac2e8dac628e03d4cbb976e048a9297b829b92",
-  "lang/fr.js": "42f46e0765e09f2cf94533ac3b136bcf14923c52e99b0914ed818918562f78be",
-  "lang/de.js": "0f8e21d4c8597ec30007dbfb9a9f4d6234170f87a727bb60a60a18b888bfedf9",
-  "lang/pt-BR.js": "dd568e5276adc4c99486ee836b1a7ca288e2a3535b053e8d4950c87eb613cea0",
-  "lang/ja.js": "447b3f1ab805b87e312115289ddf8a849954d31a4bf454da4acd2cafa786985d",
-  "lang/ko.js": "052fc2ed53f289c43178c5782d96ca2a5a5e0bfda5660ccb3f4aeeca2ffa5e6d"
+  "lang/zh-Hant.js": "3f3d2d7d34808ffed5deef4cc20ba3de41664e5b95a753021c3895c22eac1d76",
+  "lang/zh-Hans.js": "1fdc32707de228a6932bdf16d0f0b5d140a3b04dca525ffc302d6594db2159af",
+  "lang/es.js": "e62414ec6d14e193c7671f90721fba06c4ca16e91d14548138c3c05ae89f5550",
+  "lang/fr.js": "ee441279e83e86e9ad6c4471ed897929a8b739ae5a0461b92cdaab9cba923e8a",
+  "lang/de.js": "d59cefc1cca0686d3208ec4b3a6c1bcb291b4bad8b54df45ff2da0b55e893bd8",
+  "lang/pt-BR.js": "8a9758c88a0fd1bd9664d1944f6feabacc565ca0c9e1c0e1386aa49d2064b4c1",
+  "lang/ja.js": "503560e6614dc2e269864f14f1d6cf8bb6f94ee9fad68b34ff5648cce61ac469",
+  "lang/ko.js": "56f66040b7ee2048fecf7ec50ea1adbe60c60223c2cff16194f5cbf3b8ffb5b2"
  }
 }
