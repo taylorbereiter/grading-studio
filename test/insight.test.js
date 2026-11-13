@@ -549,8 +549,9 @@ test('the Claude steps: the message has no names, the ZIP is remembered, and a r
   assert.equal(await page.evaluate(() => window.__copied), 'Look closely at what [name] [name] does with evidence.');
   assert.match(await page.evaluate(() => window.__gs.state().batch.share.ask), /Aria Testwell/, 'what she typed stays as she typed it, in her browser');
   // Opening Claude only opens a page: nothing goes with it.
-  const opened = await page.evaluate(() => { const was = window.open, got = []; window.open = (...a) => { got.push(a); return null; }; document.querySelector('[data-shopen]').click(); window.open = was; return got; });
-  assert.deepEqual(opened, [['https://claude.ai/new', '_blank', 'noopener']]);
+  // The window is opened empty and then sent to Claude's address, with this page no longer its opener (src/beside.js).
+  const opened = await page.evaluate(() => { const was = window.open, got = []; window.open = (...a) => { const w = { opener: window, location: { replace(u) { w.went = u; } } }; got.push([a[0], a[1], /^popup,left=\d+,top=\d+,width=\d+,height=\d+$/.test(a[2]), w]); return w; }; document.querySelector('[data-shopen]').click(); window.open = was; return got.map(g => [g[0], g[1], g[2], g[3].went, g[3].opener]); });
+  assert.deepEqual(opened, [['about:blank', '_blank', true, 'https://claude.ai/new', null]]);
   const got = await dl.next(() => page.click('#dlgBox [data-make]'));
   assert.ok(unzipSync(got.bytes)['README.txt']);
   await page.waitForFunction(() => /^Made .*not checked/.test(document.querySelector('#shMade').textContent));
