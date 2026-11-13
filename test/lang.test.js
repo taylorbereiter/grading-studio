@@ -559,3 +559,73 @@ test('the double-click copy has every language inside and fetches nothing', asyn
   assert.deepEqual(page.errors, []);
   await close(); await srv.close();
 });
+
+// The boxes and questions a class page opens: each one, as a new teacher and an IB teacher meet them, is walked in English
+// and what no language file knows is listed. Then one of them in Spanish, with the names typed into it left as they are.
+test('the boxes a class page opens leave nothing in English', async () => {
+  const own = ['Grade 9 English', 'Grade 10 Literature', 'MYP 3 Sciences', /^Term \d/, /^[A-Z][a-z]{2} \d{1,2}$/];
+  const esc = async page => { await page.keyboard.press('Escape'); await pause(250); };
+  {
+    const { page, close } = await openApp(browser, { seed: gradingSeed() });
+    const base = await page.$eval('#railClasses a', a => a.getAttribute('href'));
+    const at = async (where, f) => { await f(); await pause(400); assert.ok(await page.$('#dlgBox[data-lg]:not(:empty), #askDlg[data-lg]'), where + ': the box is put into the language'); await miss(page, 'box, ' + where, own); };
+    await goTo(page, base); await page.waitForSelector('#vClass .card');
+    await at('new assignment', () => page.click('[data-newasg]'));
+    await at('new assignment, every class', async () => { for (const x of await page.$$('#aClasses input:not(:checked)')) await x.click(); }); await esc(page);
+    await at('edit assignment', async () => { await page.click('#vClass .card .kdots'); await pause(200); await page.click('[data-edit-asg]'); });
+    await at('delete an assignment', () => page.click('#dlgBox [data-del]')); await esc(page); await esc(page);
+    const unit = async sel => { await page.click('#vClass .uhead .kdots'); await pause(200); await page.click(sel); };
+    for (const [w, sel] of [['rename a unit', '[data-urename]'], ['a unit’s link', '[data-uatlas]'], ['delete a unit', '[data-udel]']]) { await at(w, () => unit(sel)); await esc(page); }
+    await at('add a unit', () => page.click('.addunit')); await esc(page);
+    await at('edit roster', async () => { await page.click('#clsSetup'); await pause(200); await page.click('[data-edit-class]'); });
+    await at('delete a class', () => page.click('#dlgBox [data-del]')); await esc(page); await esc(page);
+    await at('the class page link', async () => { await page.click('#clsSetup'); await pause(200); await page.click('[data-mbset]'); }); await esc(page);
+    await at('how the class is graded', async () => { await page.click('#clsSetup'); await pause(200); await page.click('[data-ib-class]'); });
+    for (const w of ['myp', 'dp']) await at('how the class is graded, ' + w, () => page.click('[data-ibway="' + w + '"]'));
+    await esc(page);
+    await goTo(page, base + '/missing'); await page.waitForSelector('#mis'); await at('email wording', () => page.click('[data-miswords]')); await esc(page);
+    await goTo(page, base + '/reports'); await page.waitForSelector('#rpt'); await at('report wording', () => page.click('[data-rptwords]')); await esc(page);
+    await goTo(page, base + '/students'); await page.waitForSelector('[data-pssall]'); await at('progress sheets', () => page.click('[data-pssall]')); await esc(page);
+    await goTo(page, base + '/students/1'); await page.waitForSelector('[data-pssone]'); await at('one progress sheet', () => page.click('[data-pssone]'));
+    await at('one progress sheet, every choice flipped', async () => { for (const k of await page.$$eval('[data-pssopt]', x => x.map(y => y.dataset.pssopt))) { await page.click('[data-pssopt="' + k + '"]'); await pause(150); } }); await esc(page);
+    // an assignment made with no papers yet: where they are, matching files to the roster, and notes pages instead
+    await goTo(page, base); await page.waitForSelector('#vClass .card');
+    await page.click('[data-newasg]'); await pause(300); await page.type('#aName', 'Speech'); await page.click('#dlgBox [data-ok]'); await pause(500);
+    const open = () => page.$eval('[data-open-asg]', x => x.click());
+    await at('open an assignment', open); await at('match files to a roster', () => page.click('[data-match]')); await esc(page);
+    await open(); await pause(300); await at('no papers', () => page.click('[data-nopaper]'));
+    await at('no papers, each page', async () => { for (const t of await page.$$('.nptile:not([disabled])')) { await t.click(); await pause(100); } }); await esc(page);
+    assert.deepEqual(page.errors, []);
+    await close();
+  }
+  {
+    const { page, close } = await openApp(browser, { seed: ibBoth() });
+    for (const base of await page.$$eval('#railClasses a', a => a.map(x => x.getAttribute('href')))) {
+      await goTo(page, base + '/students'); await page.waitForSelector('[data-pssall]'); await page.click('[data-pssall]'); await pause(500); await miss(page, 'IB progress sheets, ' + base, own); await esc(page);
+      await goTo(page, base); await page.waitForSelector('#clsSetup'); await page.click('#clsSetup'); await pause(200); await page.click('[data-ib-class]'); await pause(400); await miss(page, 'IB grading box, ' + base, own); await esc(page);
+    }
+    assert.deepEqual(page.errors, []);
+    await close();
+  }
+});
+
+test('in Spanish, a class page’s boxes are in Spanish and what was typed into them is not', async () => {
+  const { page, close } = await openApp(browser, { seed: inSpanish() });
+  const base = await page.$eval('#railClasses a', a => a.getAttribute('href'));
+  await goTo(page, base); await page.waitForSelector('#vClass .card');
+  await page.click('#vClass .card .kdots'); await pause(200); await page.click('[data-edit-asg]'); await pause(400);
+  assert.equal(await text(page, '#dlgBox h2'), 'Editar tarea');
+  assert.equal(await page.$eval('#aName', e => e.value), 'Reading check 1');
+  assert.ok((await page.$$eval('#aUnit option', o => o.map(x => x.textContent))).includes('Unit 1: Stories'));
+  await page.click('#dlgBox [data-del]'); await pause(400);
+  assert.equal(await text(page, '#askText'), '¿Eliminar “Reading check 1”?');
+  assert.equal(await text(page, '#askDlg [data-ok]'), 'Eliminar');
+  await page.keyboard.press('Escape'); await pause(200); await page.keyboard.press('Escape'); await pause(200);
+  await goTo(page, base + '/students'); await page.waitForSelector('[data-pssall]'); await page.click('[data-pssall]'); await pause(600);
+  assert.equal(await text(page, '#pssTitle'), 'Hojas de progreso');
+  assert.equal(await text(page, '.pss h3'), 'Aria Testwell');
+  assert.equal(await page.$eval('.psshead small', e => e.textContent), 'Informe de progreso');
+  assert.ok((await page.$$eval('.pss .psstab td[data-raw]', t => t.map(x => x.textContent))).includes('Narrative essay'));
+  assert.deepEqual(page.errors, []);
+  await close();
+});

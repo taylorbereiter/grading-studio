@@ -142,7 +142,7 @@ document.addEventListener('click', async e => {
   const dr = e.target.closest('[data-pdrop]');
   if (dr) { const o = [...(infoOf(c, n).other || [])]; o.splice(+dr.dataset.pdrop, 1); setInfo(c, n, { other: o }); saveLib(); afterInfo(c); return renderCard(); }
   if (e.target.closest('[data-padd]')) {
-    const v = await askTextDlg('Another way ' + n + '’s name is written (in a download, a folder' + (sysName() ? ' or ' + sysName() : '') + ')', '', { ok: 'Add' });
+    const v = await askTextDlg('Another way ' + n + '’s name is written (in a download, a folder' + (sysName() ? ' or ' + sysName() : '') + ')', '', { lg: 1, ok: 'Add' });
     if (v && v.trim()) { setInfo(c, n, { other: [...new Set([...(infoOf(c, n).other || []), v.trim()])] }); saveLib(); afterInfo(c); }
     return renderCard();
   }

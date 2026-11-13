@@ -158,12 +158,12 @@ function misChange(e) {
 // How every reminder is worded. An empty box goes back to the built-in words.
 function misWordsDlg() {
   const mc = misConf();
-  openDlg('<div class="bh"><h2>Email wording</h2><button class="icon" data-close aria-label="Close" style="margin-left:auto">✕</button></div><div class="bb miswords" id="misWords">' +
+  openDlg('<div class="bh"><h2>Email wording</h2><button class="icon" data-close aria-label="Close" style="margin-left:auto">✕</button></div><div class="bb miswords" id="misWords" data-lc="mail">' +
     '<p class="muted">Every reminder is written from these words. Your mail app adds your signature as usual.</p>' +
     '<p class="muted"><b>Words that are filled in:</b> {name} what the student is called · {class} the class · {list} the missing work, one on a line · {n} how many</p>' +
     '<label><span>Subject</span><input type="text" id="misSubj" maxlength="160" value="' + esc(mc.subj) + '"></label>' +
     '<label><span>Email</span><textarea id="misBody" rows="11">' + esc(mc.body) + '</textarea></label>' +
-    '</div><div class="bf"><button class="btn" data-misreset>Use the built-in wording</button><span class="sp" style="flex:1"></span><button class="btn" data-close>Cancel</button><button class="btn primary" data-missavew>Save</button></div>', true);
+    '</div><div class="bf"><button class="btn" data-misreset>Use the built-in wording</button><span class="sp" style="flex:1"></span><button class="btn" data-close>Cancel</button><button class="btn primary" data-missavew>Save</button></div>', true, 'lg');
   $('#dlgBox').onclick = e => {
     if (e.target.closest('[data-close]')) return closeDlg();
     if (e.target.closest('[data-misreset]')) { $('#misSubj').value = MIS_WORDS.subj; $('#misBody').value = MIS_WORDS.body; return; }
