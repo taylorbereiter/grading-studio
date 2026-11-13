@@ -27,6 +27,8 @@ function koHomeSay(k) {
 const LANG_KO = {
   name: '한국어', locale: 'ko',
   words: {
+    // the stopwatch tab in the side pane
+    'Timer': '타이머', 'Start': '시작', 'Pause': '일시정지', 'Carry on': '계속', 'Reset': '초기화', '+ Time to comment': '+ 시간을 코멘트에', 'Adds the time on the clock to your comment, like [2:15]': '타이머의 시간을 [2:15]처럼 코멘트에 넣습니다', 'Shorter than asked for': '요청한 것보다 짧음', 'Within the asked-for length': '요청한 길이 안', 'Longer than asked for': '요청한 것보다 김', 'Asked-for length (minutes)': '요청한 길이(분)', 'At least': '최소', 'At most': '최대',
     // the side pane on the marking screen and the list of assistants in the sidebar
     'Side by side': '나란히 보기', 'Side by side: keep a video, the rubric or another file beside the paper ( B )': '나란히 보기: 동영상, 루브릭 또는 다른 파일을 과제 옆에 둡니다 ( B )', 'Others you switch to': '바꿔 가며 쓰는 다른 어시스턴트', 'A click on your assistant’s name in the sidebar lists these too. Pick one there and it opens and becomes the one in use, with its own link.': '사이드바에서 어시스턴트 이름을 클릭해도 이 목록이 나옵니다. 거기서 하나를 고르면 자기 링크로 열리고 사용 중인 어시스턴트가 됩니다.', 'Other assistants with a link of your own:': '내 링크가 있는 다른 어시스턴트:', 'No other assistant has a link of your own': '내 링크가 있는 다른 어시스턴트가 없습니다', 'Not in the sidebar’s list of assistants:': '사이드바의 어시스턴트 목록에 넣지 않는 것:', 'Every assistant the app knows is in the sidebar’s list': '앱이 아는 어시스턴트가 모두 사이드바 목록에 있습니다', 'Side pane size': '옆 창 크기', 'Drag to make the side pane bigger or smaller. Double-click for the usual size.': '끌어서 옆 창을 크게 또는 작게 만듭니다. 두 번 클릭하면 평소 크기로 돌아갑니다.', 'Shown beside the paper': '과제 옆에 표시되는 것', 'Where the side pane sits': '옆 창의 위치', 'On the right': '오른쪽', 'On the left': '왼쪽', 'Across the top': '위쪽에 가로로', 'Close the side pane': '옆 창 닫기', 'Close the side pane ( B )': '옆 창 닫기 ( B )', 'Nothing is written yet for what each score means.': '각 점수가 무엇을 뜻하는지 아직 적혀 있지 않습니다.', 'Open beside Grading Studio': 'Grading Studio 옆에 열기', 'Assistants and their links…': '어시스턴트와 링크…',
     // the AI assistant beside the app (src/beside.js)
@@ -503,6 +505,9 @@ const LANG_KO = {
   },
   helpSecs: { start: '시작하기', mark: '제출물 채점', score: '점수와 루브릭', back: '제출물 돌려주기', class: '학급과 성적부', safe: '저장과 안전', plan: '계획과 수업', private: '개인정보 보호' },
   help: {
+    'talk-timer': { q: '직접 하는 발표의 시간을 잴 수 있나요?', words: '타이머 스톱워치 시간 길이 발표 프레젠테이션 라이브 분 속도 건너뛰기 플로트 timer',
+      a: ['네. 학생에게 메모 페이지를 추가하고(**+ Add**의 **A notes page…**), **나란히 보기**를 누른 뒤 **타이머** 탭을 고르세요. **시작**을 누르면 메모 페이지 옆에서 스톱워치가 돌아가고, **+ 시간을 코멘트에**는 그 시간을 [2:15]처럼 코멘트에 적습니다. 시계는 학생마다 따로 있습니다.',
+        '**요청한 길이**를 분으로 입력하면 발표가 짧은지, 범위 안인지, 긴지 보여 줍니다. 녹화의 경우 여기서 재생하는 YouTube나 Vimeo 동영상에는 10초 건너뛰기와 속도 버튼이 있고, **Float**는 동영상 파일을 항상 맨 위에 있는 작은 창에 띄웁니다. Google Drive 플레이어는 여기서 조작할 수 없습니다.'] },
     'side-pane': { q: '채점하면서 두 가지를 나란히 볼 수 있나요?', words: '분할 창 나란히 옆 루브릭 동영상 메모 비교 구분선 split side',
       a: ['네. 과제 위의 **나란히 보기**를 누르거나 **B** 키를 누르세요. 과제 옆에 창이 열리고, 위쪽 탭에서 무엇을 보여 줄지 고릅니다. 학생의 동영상, 메모 페이지, 학생의 다른 파일, 또는 각 점수의 뜻이 적힌 **루브릭**입니다.',
         '양쪽은 따로 스크롤되고, 펜은 어느 쪽 페이지에서나 쓸 수 있습니다. 루브릭 탭에서 칸을 클릭하면 그 점수가 매겨집니다. 창으로 옮긴 동영상은 계속 재생됩니다.',

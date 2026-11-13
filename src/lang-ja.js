@@ -27,6 +27,8 @@ function jaHomeSay(k) {
 const LANG_JA = {
   name: '日本語', locale: 'ja',
   words: {
+    // the stopwatch tab in the side pane
+    'Timer': 'タイマー', 'Start': '開始', 'Pause': '一時停止', 'Carry on': '再開', 'Reset': 'リセット', '+ Time to comment': '+ 時間をコメントへ', 'Adds the time on the clock to your comment, like [2:15]': 'タイマーの時間を [2:15] のようにコメントに追加します', 'Shorter than asked for': '指定より短い', 'Within the asked-for length': '指定の長さの範囲内', 'Longer than asked for': '指定より長い', 'Asked-for length (minutes)': '指定の長さ（分）', 'At least': '最短', 'At most': '最長',
     // the side pane on the marking screen and the list of assistants in the sidebar
     'Side by side': '並べて表示', 'Side by side: keep a video, the rubric or another file beside the paper ( B )': '並べて表示：動画、ルーブリック、ほかのファイルを提出物の横に置きます ( B )', 'Others you switch to': '切り替えて使うほかのアシスタント', 'A click on your assistant’s name in the sidebar lists these too. Pick one there and it opens and becomes the one in use, with its own link.': 'サイドバーのアシスタント名をクリックしても、これらが一覧に出ます。そこで選ぶと、そのアシスタントが自分のリンクで開き、使用中のアシスタントになります。', 'Other assistants with a link of your own:': '自分のリンクを持つほかのアシスタント:', 'No other assistant has a link of your own': '自分のリンクを持つほかのアシスタントはありません', 'Not in the sidebar’s list of assistants:': 'サイドバーのアシスタント一覧に出さないもの:', 'Every assistant the app knows is in the sidebar’s list': 'アプリが知っているアシスタントはすべてサイドバーの一覧に出ます', 'Side pane size': 'サイドペインの大きさ', 'Drag to make the side pane bigger or smaller. Double-click for the usual size.': 'ドラッグしてサイドペインを大きく、または小さくします。ダブルクリックでいつもの大きさに戻ります。', 'Shown beside the paper': '提出物の横に表示するもの', 'Where the side pane sits': 'サイドペインの位置', 'On the right': '右側', 'On the left': '左側', 'Across the top': '上に横長で', 'Close the side pane': 'サイドペインを閉じる', 'Close the side pane ( B )': 'サイドペインを閉じる ( B )', 'Nothing is written yet for what each score means.': '各スコアの意味はまだ書かれていません。', 'Open beside Grading Studio': 'Grading Studio の横に開く', 'Assistants and their links…': 'アシスタントとそのリンク…',
     // the AI assistant beside the app (src/beside.js)
@@ -494,6 +496,9 @@ const LANG_JA = {
   },
   helpSecs: { start: 'はじめに', mark: '提出物の採点', score: '点数とルーブリック', back: '提出物の返却', class: 'クラスと成績簿', safe: '保存と安全', plan: '計画と授業', private: 'プライバシー' },
   help: {
+    'talk-timer': { q: 'その場で行う発表の時間を計れますか？', words: 'タイマー ストップウォッチ 時間 長さ 発表 プレゼン ライブ 分 速度 スキップ フロート timer',
+      a: ['はい。生徒にメモページを追加し（**+ Add** の **A notes page…**）、**並べて表示**を押して**タイマー**タブを選びます。**開始**でメモページの横のストップウォッチが動き、**+ 時間をコメントへ**でその時間が [2:15] のようにコメントに入ります。時計は生徒ごとに別々です。',
+        '**指定の長さ**を分で入力すると、発表が短いか、範囲内か、長いかが表示されます。録画の場合、ここで再生する YouTube や Vimeo の動画には 10 秒スキップと速度変更のボタンがあり、**Float** は動画ファイルをいつも手前にある小さなウィンドウに表示します。Google ドライブのプレーヤーはここから操作できません。'] },
     'side-pane': { q: '採点しながら 2 つのものを並べて見られますか？', words: '分割 ペイン 並べる 横 ルーブリック 動画 メモ 比較 境目 split side',
       a: ['はい。提出物の上にある**並べて表示**を押すか、**B** キーを押します。提出物の横にペインが開き、上のタブで表示するものを選びます。生徒の動画、メモページ、その生徒のほかのファイル、または各スコアの意味が書かれた**ルーブリック**です。',
         '左右は別々にスクロールでき、どちらのページにもペンで書き込めます。ルーブリックのタブでマスをクリックすると、そのスコアが付きます。ペインに移した動画は再生が続きます。',

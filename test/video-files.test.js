@@ -314,3 +314,47 @@ test('a video filmed sideways turns the right way up, a quarter turn at a time, 
   assert.deepEqual(page.errors, []);
   await close();
 });
+
+test('a linked video whose player takes orders has skip, speed and the keys; a Drive video has none', async () => {
+  const { page, close } = await openApp(browser);
+  await noWeb(page);
+  const url = u => strToU8('[InternetShortcut]\r\nURL=' + u + '\r\n');
+  await openZip(page, zipOf({
+    'Ada Example/Outline.pdf': await makePaper({ title: 'Ada outline' }),
+    'Aria Testwell/Speech.url': url('https://www.youtube.com/watch?v=madeup12345'),
+    'Bram Sample/Speech.url': url('https://drive.google.com/file/d/madeupDriveId123/view'),
+  }), 'Speech.zip');
+  await goToStudent(page, await idx(page, 'Aria Testwell'));
+  await page.waitForSelector('#paper .vlink [data-vplay]');
+  assert.equal(await page.$eval('#paper .vlink .vdrive', e => e.hidden), true, 'no controls until the player is open');
+  await page.click('#paper .vlink [data-vplay]');
+  await page.waitForSelector('#paper .vlink iframe');
+  assert.equal(await page.$eval('#paper .vlink .vdrive', e => e.checkVisibility()), true);
+  assert.deepEqual(await page.$$eval('#paper .vlink .vdrive button', b => b.map(x => x.textContent)), ['◀◀ 10s', '10s ▶▶', '1×', '1.25×', '1.5×', '2×']);
+  // the player says where it is (stood in for here: nothing is fetched in a test), and skipping moves from there
+  const says = info => page.evaluate(info => { const fr = document.querySelector('#paper .vlink iframe'); window.dispatchEvent(new MessageEvent('message', { data: JSON.stringify({ event: 'infoDelivery', info }), origin: 'https://www.youtube-nocookie.com', source: fr.contentWindow })); }, info);
+  const stamp = async () => { await page.click('#paper .vlink [data-vstamp]'); const c = await page.evaluate(() => { const st = window.__gs.state().batch.students[window.__gs.state().cur]; const v = st.grade.comment; st.grade.comment = ''; return v; }); await page.evaluate(() => document.activeElement && document.activeElement.blur()); return c.trim(); };
+  await says({ currentTime: 100, playerState: 2 });
+  assert.equal(await stamp(), '[1:40]');
+  await page.click('#paper .vlink [data-skip="10"]');
+  assert.equal(await stamp(), '[1:50]');
+  await page.click('#paper .vlink [data-skip="-10"]'); await page.click('#paper .vlink [data-skip="-10"]');
+  assert.equal(await stamp(), '[1:30]');
+  await page.keyboard.press('l');
+  assert.equal(await stamp(), '[1:35]');
+  await page.keyboard.press('j'); await page.keyboard.press('j');
+  assert.equal(await stamp(), '[1:25]');
+  await page.click('#paper .vlink [data-rate="1.5"]');
+  assert.equal(await page.evaluate(() => JSON.parse(localStorage.getItem('gs.rate'))), 1.5);
+  assert.equal(await page.$eval('#paper .vlink [data-rate="1.5"]', b => b.getAttribute('aria-pressed')), 'true');
+  // closing the player puts the controls away
+  await page.click('#paper .vlink [data-vplay]');
+  assert.equal(await page.$eval('#paper .vlink .vdrive', e => e.hidden), true);
+  // Drive's player takes no orders, so it gets no row of them
+  await goToStudent(page, await idx(page, 'Bram Sample'));
+  await page.waitForSelector('#paper .vlink [data-vplay]');
+  assert.equal(await page.$('#paper .vlink .vdrive'), null);
+  await page.evaluate(() => localStorage.removeItem('gs.rate'));
+  assert.deepEqual(page.errors, []);
+  await close();
+});

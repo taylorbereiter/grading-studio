@@ -27,6 +27,8 @@ function zhHomeSay(k) {
 const LANG_ZH = {
   name: '繁體中文', locale: 'zh-Hant',
   words: {
+    // the stopwatch tab in the side pane
+    'Timer': '計時器', 'Start': '開始', 'Pause': '暫停', 'Carry on': '繼續', 'Reset': '歸零', '+ Time to comment': '+ 時間加到評語', 'Adds the time on the clock to your comment, like [2:15]': '把計時器上的時間加到您的評語，例如 [2:15]', 'Shorter than asked for': '比要求的短', 'Within the asked-for length': '在要求的長度內', 'Longer than asked for': '比要求的長', 'Asked-for length (minutes)': '要求的長度（分鐘）', 'At least': '最少', 'At most': '最多',
     // the side pane on the marking screen and the list of assistants in the sidebar
     'Side by side': '並排', 'Side by side: keep a video, the rubric or another file beside the paper ( B )': '並排：把影片、評分規準或另一個檔案留在作業旁邊 ( B )', 'Others you switch to': '其他會切換使用的', 'A click on your assistant’s name in the sidebar lists these too. Pick one there and it opens and becomes the one in use, with its own link.': '按一下側邊欄裡助理的名稱，也會列出這些。在那裡選一個，它就會開啟並成為使用中的助理，用的是它自己的連結。', 'Other assistants with a link of your own:': '其他有自訂連結的助理：', 'No other assistant has a link of your own': '沒有其他助理有自訂連結', 'Not in the sidebar’s list of assistants:': '不列在側邊欄的助理清單中：', 'Every assistant the app knows is in the sidebar’s list': '程式認得的助理都在側邊欄的清單中', 'Side pane size': '側邊窗格大小', 'Drag to make the side pane bigger or smaller. Double-click for the usual size.': '拖曳可放大或縮小側邊窗格。按兩下回到平常的大小。', 'Shown beside the paper': '顯示在作業旁邊', 'Where the side pane sits': '側邊窗格的位置', 'On the right': '在右邊', 'On the left': '在左邊', 'Across the top': '橫跨上方', 'Close the side pane': '關閉側邊窗格', 'Close the side pane ( B )': '關閉側邊窗格 ( B )', 'Nothing is written yet for what each score means.': '還沒有寫下每個分數代表什麼。', 'Open beside Grading Studio': '在 Grading Studio 旁邊開啟', 'Assistants and their links…': '助理和它們的連結…',
     // the AI assistant beside the app (src/beside.js)
@@ -489,6 +491,9 @@ const LANG_ZH = {
   },
   helpSecs: { start: '開始使用', mark: '批改作業', score: '分數與評分規準', back: '發還作業', class: '班級與成績冊', safe: '儲存與安全', plan: '備課與上課', private: '隱私' },
   help: {
+    'talk-timer': { q: '可以為現場報告計時嗎？', words: '計時器 碼表 時間 長度 現場 報告 簡報 分鐘 速度 快轉 浮動 timer',
+      a: ['可以。先給學生一張筆記頁（**+ Add**、**A notes page…**），按**並排**，再選**計時器**分頁。**開始**會在筆記頁旁邊跑碼表，**+ 時間加到評語**會把時間寫進您的評語，例如 [2:15]。每位學生都有自己的計時。',
+        '以分鐘填入**要求的長度**，計時器就會顯示報告是太短、剛好還是太長。若是錄影，在這裡播放的 YouTube 或 Vimeo 影片有前後跳 10 秒和調整速度的按鈕，**Float** 可讓影片檔留在一個永遠在最上層的小視窗。Google Drive 的播放器無法從這裡操控。'] },
     'side-pane': { q: '批改時可以並排看兩樣東西嗎？', words: '分割 並排 兩個窗格 旁邊 評分規準 影片 筆記 比較 分隔線 split side',
       a: ['可以。按作業上方的**並排**，或按 **B** 鍵。作業旁邊會開啟一個窗格，窗格上方的分頁決定顯示什麼：學生的影片、筆記頁、學生的另一個檔案，或是寫明每個分數代表什麼的**評分規準**。',
         '兩邊各自捲動，筆在任何一邊的頁面上都能用。在評分規準分頁按一下方格，就給出那個分數。移進窗格的影片會繼續播放。',

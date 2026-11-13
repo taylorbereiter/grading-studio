@@ -214,3 +214,65 @@ SP_TOOLS.push({ key: 'rubric', label: 'Rubric', ok: () => setup.mode === 'rubric
     .observe($('#grade'), { childList: true, subtree: true });
 }
 Object.assign(window.__gs, { spOpen, spClose, spPick, spConf, spState: () => ({ shown: spNow.shown, key: spNow.key, at: spAtNow, tabs: spNow.tabs.map(t => ({ key: t.key, kind: t.kind, label: t.label })) }) });
+
+/* ---------- a stopwatch for a presentation given live ---------- */
+// One clock for each student, kept only while the page is open, so going to another student and back doesn't lose it. The asked-for
+// length belongs to the assignment (setup.talk = [least, most] in minutes, either may be missing). Nothing about a student is stored:
+// + Time to comment writes the time into the comment, which is where a note about a moment already goes for a video.
+const spClocks = new Map();
+const spClockOf = st => { let c = spClocks.get(st.key); if (!c) spClocks.set(st.key, c = { ms: 0, at: 0 }); return c; };
+const spClockMs = c => c.ms + (c.at ? Date.now() - c.at : 0);
+const spTalk = () => { const t = Array.isArray(setup.talk) ? setup.talk : []; return [0, 1].map(i => (typeof t[i] === 'number' && t[i] > 0 ? t[i] : null)); };
+function spTalkSet(i, v) {
+  const t = spTalk(); t[i] = v > 0 && isFinite(v) ? Math.min(600, Math.round(v * 2) / 2) : null;
+  if (t[0] == null && t[1] == null) delete setup.talk; else setup.talk = t;
+  store.set('gs.setup', { ...setup, spot: undefined, rubricPage: undefined });
+  if (batch.assignment) { batch.assignment.setup = { ...setup, spot: undefined }; saveLib(); }
+  saveSoon();
+}
+let spTickIv = 0;
+function spTimerShow(host, st) {
+  const box = host.querySelector('.sptimer'); if (!box) return;
+  const c = spClockOf(st), s = spClockMs(c) / 1000, [lo, hi] = spTalk();
+  box.querySelector('.sptime').textContent = fmtTime(s);
+  const how = s < 1 || (lo == null && hi == null) ? '' : lo != null && s < lo * 60 ? 'under' : hi != null && s > hi * 60 ? 'over' : 'in';
+  box.dataset.how = how;
+  for (const p of box.querySelectorAll('[data-spthow]')) p.hidden = p.dataset.spthow !== how;
+  const go = box.querySelector('[data-sptgo]'), want = c.at ? 'Pause' : c.ms ? 'Carry on' : 'Start';
+  if (go.dataset.say !== want) { go.dataset.say = want; go.textContent = want; go.setAttribute('aria-pressed', !!c.at); }
+  box.querySelector('[data-sptreset]').disabled = !c.at && !c.ms;
+}
+function spTimerDraw(host, st) {
+  if (host.dataset.st !== st.key || !host.querySelector('.sptimer')) {
+    host.dataset.st = st.key;
+    const [lo, hi] = spTalk(), num = (i, v, say) => '<input type="number" class="sptnum" min="0" max="600" step="0.5" inputmode="decimal" data-spttalk="' + i + '" value="' + (v == null ? '' : v) + '" aria-label="' + say + '">';
+    host.innerHTML = '<div class="sptimer"><div class="sptime" role="timer">0:00</div>' +
+      '<p class="spthow" data-spthow="under" hidden>Shorter than asked for</p><p class="spthow" data-spthow="in" hidden>Within the asked-for length</p><p class="spthow" data-spthow="over" hidden>Longer than asked for</p>' +
+      '<div class="sptbtns"><button class="btn primary" data-sptgo aria-pressed="false">Start</button><button class="btn" data-sptreset>Reset</button>' +
+      '<button class="btn" data-sptnote title="Adds the time on the clock to your comment, like [2:15]">+ Time to comment</button></div>' +
+      '<p class="sptask"><span>Asked-for length (minutes)</span> ' + num(0, lo, 'At least') + ' <i aria-hidden="true">–</i> ' + num(1, hi, 'At most') + '</p></div>';
+  }
+  spTimerShow(host, st);
+  if (!spTickIv) spTickIv = setInterval(() => {
+    const h = $('#spBody > .sptool[data-tool="timer"]');
+    if (!h || !batch || !batch.students[cur]) { if (![...spClocks.values()].some(c => c.at)) { clearInterval(spTickIv); spTickIv = 0; } return; }
+    spTimerShow(h, batch.students[cur]);
+  }, 250);
+}
+SP_TOOLS.push({ key: 'timer', label: 'Timer', ok: st => st.files.some(f => !f.virtual && f.data && isNotes(f.data)) && !st.files.some(f => f.kind === 'link' || f.kind === 'media'), draw: spTimerDraw });
+$('#paper').addEventListener('click', e => {
+  const box = e.target.closest('.sptimer'); if (!box || !batch) return;
+  const st = batch.students[cur], c = spClockOf(st);
+  if (e.target.closest('[data-sptgo]')) { if (c.at) { c.ms += Date.now() - c.at; c.at = 0; } else { for (const o of spClocks.values()) if (o.at) { o.ms += Date.now() - o.at; o.at = 0; } c.at = Date.now(); } }
+  else if (e.target.closest('[data-sptreset]')) { c.ms = 0; c.at = 0; }
+  else if (e.target.closest('[data-sptnote]')) { addStamp(st, spClockMs(c) / 1000); return; }
+  else return;
+  spTimerDraw(box.parentNode, st);
+});
+$('#paper').addEventListener('change', e => {
+  const inp = e.target.closest('[data-spttalk]'); if (!inp || !batch) return;
+  spTalkSet(+inp.dataset.spttalk, parseFloat(inp.value));
+  const t = spTalk()[+inp.dataset.spttalk]; inp.value = t == null ? '' : t;
+  spTimerShow(inp.closest('.sptool'), batch.students[cur]);
+});
+Object.assign(window.__gs, { spClock: key => { const c = spClocks.get(key); return c ? { ms: spClockMs(c), on: !!c.at } : null; }, spClockSet: (key, ms) => { spClocks.set(key, { ms, at: 0 }); } });

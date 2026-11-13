@@ -17,7 +17,7 @@ function mediaCard(st, f, kept) {
     (vid ? '<video controls preload="metadata" playsinline></video>' : '<audio controls preload="metadata"></audio>') +
     '<div class="mctl"><button class="btn sm" data-skip="-10">◀◀ 10s</button><button class="btn sm" data-skip="10">10s ▶▶</button>' +
     '<span class="seg">' + [1, 1.25, 1.5, 2].map(r => '<button data-rate="' + r + '" aria-pressed="' + (r === (store.get('gs.rate', 1))) + '">' + r + '×</button>').join('') + '</span>' +
-    '<button class="btn sm" data-stamp title="Adds the time to your comment, like [2:15]">+ Time to comment</button>' + (vid ? VROT_BTN : '') + '</div></div>' +
+    '<button class="btn sm" data-stamp title="Adds the time to your comment, like [2:15]">+ Time to comment</button>' + (vid ? VROT_BTN + (document.pictureInPictureEnabled ? PIP_BTN : '') : '') + '</div></div>' +
     '<p class="muted trstat" style="font-size:13px;margin:6px 0 0"></p>';
   const m = el.querySelector('audio,video');
   m.src = kept ? kept.url : mediaUrl(f); m.playbackRate = store.get('gs.rate', 1);
@@ -34,6 +34,7 @@ function mediaCard(st, f, kept) {
     const r = e.target.closest('[data-rate]');
     if (r) { m.playbackRate = +r.dataset.rate; store.set('gs.rate', m.playbackRate); for (const b of el.querySelectorAll('[data-rate]')) b.setAttribute('aria-pressed', b === r); return; }
     if (e.target.closest('[data-stamp]')) { addStamp(st, m.currentTime); return; }
+    if (e.target.closest('[data-pip]')) { vidFloat(m); return; }
   };
   return el;
 }
