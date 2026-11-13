@@ -201,7 +201,7 @@ function meSetRender(sec) {
         '<p class="setp merow"><label for="meAiOpen"><b>A click on its name opens it</b></label> <select id="meAiOpen"><option value="">in a window on the right of the screen</option><option value="tab"' + (me().aiOpen === 'tab' ? ' selected' : '') + '>in a new tab</option></select>' +
         (aiLink() ? ' <button class="btn sm" data-besideopen>Open it now</button>' : '') + '</p>' +
         (aiLink() ? '<p class="setp merow" id="meAiList"><b>Others you switch to</b> ' + [...new Set(AI_LIST.map(x => x[0]).concat(Object.keys(me().aiUrls || {})))].filter(n => n !== a).map(n => '<label class="mecheck"><input type="checkbox" data-ailist="' + esc(n) + '"' + ((me().aiOff || []).includes(n) ? '' : ' checked') + '> <span data-raw>' + esc(n) + '</span></label>').join(' ') +
-          ' <span class="muted">A click on <span class="aiWord">' + esc(a) + '</span> in the sidebar lists these too. Pick one there and it opens and becomes the one in use, with its own link.</span></p>' : '') +
+          ' <span class="muted">A click on your assistant’s name in the sidebar lists these too. Pick one there and it opens and becomes the one in use, with its own link.</span></p>' : '') +
         '<p class="setp" id="meBeside"><b>Side by side.</b> ' + (aiLink() ? '<span class="aiWord">' + esc(a) + '</span> is in the sidebar on every screen, so you can go between the two without hunting for a tab. In Chrome, right-click it there and choose <b>Open link in split view</b>: both are then in one window, with a divider you can drag.' : 'Give it an address above and it is in the sidebar on every screen.') +
         ' <span>Grading Studio sends nothing to it. It sees only what you paste or attach.</span></p>' : ''));
   }

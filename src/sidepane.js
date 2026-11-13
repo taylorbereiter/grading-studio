@@ -201,7 +201,7 @@ $('#paper').addEventListener('click', e => {
 /* ---------- the rubric, in full: every row with what each score means, and a click gives the score ---------- */
 function spRubricDraw(host, st) {
   const g = st.grade.rubric, any = setup.criteria.some((_, i) => rowHasLevels(i));
-  host.innerHTML = '<div class="sprub">' + (any ? '' : '<p class="muted sprubnone">Nothing is written yet for what each score means. <button class="link" data-spedit>Edit rubric</button> adds it, or brings it in from a file.</p>') +
+  host.innerHTML = '<div class="sprub">' + (any ? '' : '<p class="muted sprubnone">Nothing is written yet for what each score means. <button class="link" data-spedit>Edit rubric</button></p>') +
     setup.criteria.map((c, i) => { const v = g[i], near = v == null ? [] : [Math.ceil(v), Math.floor(v)];
       return '<section class="sprow"><h4><span data-raw>' + esc(c) + '</span><em>' + critScore(v, i) + '</em></h4><div class="splv' + (rowHasLevels(i) ? '' : ' bare') + '">' +
         rowLevels(setup, i).filter(w => w > 0 || levelOf(i, w)).map(w => '<button class="splvb' + (near.includes(w) ? (v % 1 ? ' on half' : ' on') : '') + '" data-sprow="' + i + '" data-spv="' + w + '" aria-pressed="' + (v === w) + '"><b>' + w + '</b>' + (levelOf(i, w) ? '<span data-raw>' + esc(levelOf(i, w)) + '</span>' : '') + '</button>').join('') + '</div></section>'; }).join('') + '</div>';
