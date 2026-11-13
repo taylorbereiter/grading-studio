@@ -34,6 +34,7 @@ function snipStart() {
   el.id = 'snipLayer'; el.className = 'sniplay'; el.tabIndex = -1;
   el.innerHTML = '<div class="snipbar" role="dialog" aria-label="Screenshot"><div class="snipt"><b>Screenshot</b><span>Drag over what you want to copy' + (paper ? ', or click a page for all of it' : '') + '.</span></div>' +
     '<div class="snipacts">' + (paper ? '<label class="snipmk"><input type="checkbox" id="snipMk"' + (snipMarks() ? ' checked' : '') + '> With my marks</label>' : '') +
+    '<label class="snipmk snipex"><input type="checkbox" id="snipEx"> Save as a strong example</label>' +
     '<button class="btn sm" data-snipall title="Everything on screen (Enter)">Whole screen</button><button class="btn sm" data-snipx title="Esc">Cancel</button></div>' +
     '<p class="snipnote">' + (paper ? 'On the paper, name covers are painted in and the student’s name and file name are left off. ' : '') + 'Anything else shows as it is on screen.</p></div><div class="snipbox" hidden></div>';
   document.body.appendChild(el);
@@ -83,13 +84,20 @@ function snipStop() {
   snipOn.remove(); snipOn = null;
 }
 // R: the area in window points, or null with pg for that whole page.
+// With "Save as a strong example" ticked the picture goes to the Save box instead of the clipboard; otherwise it is copied and
+// the note that says so has a button to save it as an example after all.
 async function snipTake(R, pg) {
-  const marks = snipPaper() ? snipMarks() : true;
+  const marks = snipPaper() ? snipMarks() : true, ex = !!(snipOn && snipOn.querySelector('#snipEx:checked')), where = exShotWhere();
   snipStop();
   const blobP = (R ? snipArea(R, marks) : snipWhole(pg, marks)).then(canvasPng);
+  if (ex) {
+    let blob = null; try { blob = await blobP; } catch (e) { console.error(e); }
+    return blob ? exSaveShot(blob, where) : toast('That picture couldn’t be made. Try a smaller area.');
+  }
   const how = await copyPicture(blobP, 'Screenshot.png');
   if (how === 'none') return toast('That picture couldn’t be made. Try a smaller area.');
-  toast(how === 'copied' ? 'Picture copied. Paste it wherever you need it.' : 'This browser can’t copy pictures, so it was saved as Screenshot.png.', 4000);
+  const save = async () => { let b = null; try { b = await blobP; } catch {} if (b) exSaveShot(b, where); };
+  toastDo(how === 'copied' ? 'Picture copied. Paste it wherever you need it.' : 'This browser can’t copy pictures, so it was saved as Screenshot.png.', 'Save as a strong example', save);
 }
 // One page of the open paper, drawn fresh at k pixels a point, as wide as on screen (with its comment margin).
 async function snipPage(pg, k, marks) {
