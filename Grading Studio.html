@@ -2420,6 +2420,17 @@ html.welcoming .shell{visibility:hidden}
 .exgroup{margin:0 0 var(--space-7)}
 .exgh{margin:0 0 var(--space-3);font-size:var(--text-lead);font-weight:600}
 .exgh .muted{font-weight:500;font-size:var(--text-body)}
+
+/* tags, search, and a screenshot saved as an example (11/13) */
+.extags{display:flex;flex-wrap:wrap;gap:4px;margin:0}
+.extags:empty{display:none}
+.extag{border:0;border-radius:var(--corner-pill);padding:2px var(--space-2);background:var(--surface-2);color:var(--fg-2);font:inherit;font-size:var(--text-control);cursor:pointer}
+.extag:hover{background:var(--accent-soft);color:var(--accent)}
+.exfind{width:150px;max-width:100%;box-sizing:border-box;border:1px solid var(--line-strong);border-radius:var(--corner-3);padding:5px var(--space-3);font:inherit;font-size:var(--text-control);background:var(--surface);color:var(--fg)}
+.excard.shot .exthumb img{object-position:top left}
+.exknown .exrow{cursor:pointer}
+.exshotcls{max-width:100%}
+.snipex{margin-right:8px}
 /* ---------- Help: short answers on a page of their own ---------- */
 #vHelp{max-width:760px}
 .hlpfind{position:relative;margin:0 0 var(--space-5)}
@@ -24794,7 +24805,7 @@ async function exForgetWork(id) {
 }
 
 /* how an example is named: never after the student */
-const exLabel = r => r.kind === 'answer' ? 'Question ' + ((r.q && r.q.lab) || '?') : r.kind === 'paper' ? 'Example ' + (r.letter || 'A') : 'Part of a page';
+const exLabel = r => r.kind === 'answer' ? 'Question ' + ((r.q && r.q.lab) || '?') : r.kind === 'paper' ? 'Example ' + (r.letter || 'A') : r.kind === 'shot' ? 'Screenshot ' + (r.letter || '1') : 'Part of a page';
 const exFileLabel = r => r.kind === 'part' ? 'Part ' + (r.letter || 'A') : exLabel(r);
 const exTitleNow = () => nameFreeText((batch.assignment && batch.assignment.name) || batch.name || 'Assignment');
 const exFileName = (r, ext) => (nameFreeText(r.title || 'Assignment') + ' - ' + exFileLabel(r) + '.' + ext).replace(/[\\/:*?"<>|]+/g, '-');
@@ -25094,6 +25105,142 @@ async function exuSave() {
   }
 }
 
+/* tags: short words she types on an example, to find it again in the bank (11/13) */
+const EX_TAG_MAX = 8, EX_TAG_LEN = 30;
+const exTags = r => Array.isArray(r && r.tags) ? r.tags : [];
+const exAllTags = () => [...new Set(exList.flatMap(exTags))].sort(natural);
+function exTagsOf(text) {
+  const known = new Map(exAllTags().map(t => [t.toLowerCase(), t])), out = [];
+  for (let t of String(text || '').split(/[,;\n]/)) {
+    t = t.replace(/\s+/g, ' ').trim().slice(0, EX_TAG_LEN); if (!t) continue;
+    t = known.get(t.toLowerCase()) || t;
+    if (!out.some(x => x.toLowerCase() === t.toLowerCase())) out.push(t);
+  }
+  return out.slice(0, EX_TAG_MAX);
+}
+const exTagChips = r => exTags(r).map(t => '<button class="extag" data-extag="' + esc(t) + '" title="Every example tagged ' + esc(t) + '">' + esc(t) + '</button>').join('');
+function exTagsEdit(card, r) {
+  kmClose();
+  const p = card.querySelector('.extags'); if (!p || p.querySelector('input')) return;
+  p.innerHTML = '<input type="text" class="exwhyin" maxlength="200" aria-label="Tags" placeholder="Tags, with commas between">';
+  const inp = p.firstChild; inp.value = exTags(r).join(', '); inp.focus();
+  let done = false;
+  const save = async keep => {
+    if (done) return; done = true;
+    const tags = keep ? exTagsOf(inp.value) : exTags(r);
+    if (tags.join('\n') !== exTags(r).join('\n')) { try { await exPut({ ...r, tags }); } catch (e) { console.error(e); toast('That didn’t work. Try again.'); } }
+    const now = exList.find(x => x.id === r.id) || r;
+    p.innerHTML = exTagChips(now);
+    const m = card.querySelector('[data-extags].mitem'); if (m) m.textContent = exTags(now).length ? 'Change tags' : 'Add tags';
+    if (!batch && routeNow().v === 'examples') exPageRender();   // a new tag joins the filter
+  };
+  inp.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); save(true); } else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); save(false); } };
+  inp.onblur = () => save(true);
+}
+
+/* a screenshot kept as a strong example: from the Screenshot tool, of any paper or anything on screen (11/13) */
+function exShotWhere() {
+  try {
+    if (batch) { const st = snipPaper() ? batch.students[cur] : null; return { work: batch.id, asg: (batch.assignment && batch.assignment.id) || null, cls: (batchClass() || {}).id || null, title: exTitleNow(), from: st ? exFrom(st) : null, paper: !!st }; }
+    const r = routeNow();
+    return { work: null, asg: null, cls: r.v === 'class' && r.c && r.c !== lib.loose ? r.c.id : null, title: 'Screenshots', from: null, paper: false };
+  } catch (e) { console.error(e); return { work: null, asg: null, cls: null, title: 'Screenshots', from: null, paper: false }; }
+}
+const exShotKey = w => w.asg || (w.work ? 'w:' + w.work : 'loose:' + (w.cls || '-'));
+const exShotNext = w => String(1 + Math.max(0, ...exList.filter(r => r.kind === 'shot' && exAsgKey(r) === exShotKey(w)).map(r => parseInt(r.letter, 10) || 0)));
+let EXS = null;
+async function exSaveShot(blob, where) {
+  await exReady;
+  let im; try { im = await createImageBitmap(blob); } catch (e) { console.error(e); return toast('That picture couldn’t be read.'); }
+  EXS = { im, where, covers: [] };
+  const known = exAllTags();
+  const classes = lib.classes.slice().sort((a, b) => natural(a.name, b.name));
+  const place = where.work ? '<p class="exnames">From <b>' + esc(where.title) + '</b>' + (where.cls ? ' · ' + esc(exClassName(where.cls)) : '') + '</p>'
+    : '<select class="btn sm exshotcls" id="exShotCls" aria-label="Class"><option value="">No class</option>' + classes.map(c => '<option value="' + esc(c.id) + '"' + (c.id === where.cls ? ' selected' : '') + '>' + esc(c.name) + '</option>').join('') + '</select>';
+  openDlg('<div class="bh"><h2>Save as a strong example</h2><span class="sp"></span><button class="icon" data-close aria-label="Close">✕</button></div>' +
+    '<div class="bb exuse"><div class="expv one" id="exShotPv"><div class="expg"><div class="excv"><canvas class="exc"></canvas><div class="exdrag" hidden></div></div></div></div>' +
+    '<aside class="exside">' +
+      '<h3 class="exh">Names</h3><p class="exnames" id="exShotNames"></p>' +
+      '<h3 class="exh">Why it’s strong <span class="muted">(optional)</span></h3><input type="text" id="exWhy" class="exwhyin" maxlength="160" placeholder="Every claim is tied to a moment in the story." aria-label="Why it’s strong">' +
+      '<h3 class="exh">Tags <span class="muted">(optional)</span></h3><input type="text" id="exTagsIn" class="exwhyin" maxlength="200" placeholder="thesis, evidence, Unit 2" aria-label="Tags, with commas between">' +
+      (known.length ? '<div class="exrows exknown" role="group" aria-label="Tags you have used">' + known.slice(0, 12).map(t => '<button class="exrow" data-exaddtag="' + esc(t) + '">' + esc(t) + '</button>').join('') + '</div>' : '') +
+      '<h3 class="exh">Kept with</h3>' + place +
+    '</aside></div>' +
+    '<div class="bf"><span class="exlock"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg><span>Kept in this browser only, with what you blacked out gone for good. It’s called “Screenshot ' + exShotNext(where) + '”, never by name.</span></span><span class="sp"></span><button class="btn" data-close>Cancel</button><button class="btn primary" data-exsave>Save example</button></div>');
+  const box = $('#dlgBox');
+  box.classList.add('exbox');
+  dlgGone = () => { if (EXS) { try { EXS.im.close(); } catch {} EXS = null; } };
+  exsDraw(); exsNames();
+  box.onclick = e => {
+    if (e.target.closest('[data-close]')) return closeDlg();
+    const t = e.target.closest('[data-exaddtag]');
+    if (t) { const inp = $('#exTagsIn'); inp.value = exTagsOf(inp.value + ',' + t.dataset.exaddtag).join(', '); return; }
+    if (e.target.closest('[data-exsave]')) return exsSave();
+  };
+  box.onkeydown = e => { if (e.key === 'Enter' && (e.target.id === 'exWhy' || e.target.id === 'exTagsIn')) { e.preventDefault(); exsSave(); } };
+  exsBind($('#exShotPv .excv'));
+  const w = $('#exWhy'); if (w) w.focus({ preventScroll: true });
+}
+const exsNames = () => { const el = $('#exShotNames'); if (!el || !EXS) return; const n = EXS.covers.length;
+  el.innerHTML = (EXS.where.paper ? 'Name covers on the paper are already painted in. ' : '') + (n ? '<b>' + (n === 1 ? '1 area blacked out.' : n + ' areas blacked out.') + '</b> ' : '') + 'Drag over anything ' + (n || EXS.where.paper ? 'else ' : '') + 'that shows a name to black it out. Click a black box to take it off.'; };
+function exsPaint(c, W) {
+  const { im, covers } = EXS, k = W / im.width;
+  c.width = Math.round(im.width * k); c.height = Math.round(im.height * k);
+  const ctx = c.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
+  ctx.drawImage(im, 0, 0, c.width, c.height);
+  ctx.fillStyle = '#111';
+  for (const r of covers) ctx.fillRect(Math.floor(r.x * c.width), Math.floor(r.y * c.height), Math.ceil(r.w * c.width) + 1, Math.ceil(r.h * c.height) + 1);
+}
+function exsDraw() { const c = $('#exShotPv canvas'); if (c && EXS) exsPaint(c, Math.min(EXS.im.width, 1800)); }
+function exsBind(cv) {
+  if (!cv) return;
+  let d = null;
+  cv.onpointerdown = e => { if (e.button !== 0 || !EXS) return; e.preventDefault(); cv.setPointerCapture(e.pointerId); d = { r: cv.getBoundingClientRect(), x0: e.clientX, y0: e.clientY, moved: false }; };
+  cv.onpointermove = e => {
+    if (!d) return;
+    if (!d.moved && Math.hypot(e.clientX - d.x0, e.clientY - d.y0) < 5) return;
+    d.moved = true;
+    const b = cv.querySelector('.exdrag');
+    b.hidden = false;
+    Object.assign(b.style, { left: Math.min(d.x0, e.clientX) - d.r.left + 'px', top: Math.min(d.y0, e.clientY) - d.r.top + 'px', width: Math.abs(e.clientX - d.x0) + 'px', height: Math.abs(e.clientY - d.y0) + 'px' });
+  };
+  cv.onpointerup = e => {
+    if (!d || !EXS) { d = null; return; }
+    const g = d; d = null; cv.querySelector('.exdrag').hidden = true;
+    const fx = v => clamp((v - g.r.left) / (g.r.width || 1), 0, 1), fy = v => clamp((v - g.r.top) / (g.r.height || 1), 0, 1);
+    if (!g.moved) {   // a click on a black box takes it off; the smallest one under the click first
+      const x = fx(e.clientX), y = fy(e.clientY), hits = EXS.covers.map((r, i) => ({ r, i })).filter(({ r }) => x >= r.x && x <= r.x + r.w && y >= r.y && y <= r.y + r.h).sort((a, b) => a.r.w * a.r.h - b.r.w * b.r.h);
+      if (hits.length) { EXS.covers.splice(hits[0].i, 1); exsDraw(); exsNames(); }
+      return;
+    }
+    const x = fx(Math.min(g.x0, e.clientX)), y = fy(Math.min(g.y0, e.clientY)), w = fx(Math.max(g.x0, e.clientX)) - x, h = fy(Math.max(g.y0, e.clientY)) - y;
+    if (w < 0.004 || h < 0.004) return;
+    EXS.covers.push({ x, y, w, h }); exsDraw(); exsNames();
+  };
+}
+async function exsSave() {
+  if (!EXS) return;
+  const S = EXS, btn = $('#dlgBox [data-exsave]');
+  if (btn) { if (btn.disabled) return; btn.disabled = true; btn.textContent = 'Saving…'; }
+  try {
+    const c = document.createElement('canvas'); exsPaint(c, Math.min(S.im.width, 2400));
+    const size = { w: c.width, h: c.height }, jpg = await exJpg(c); c.width = c.height = 0;
+    const w = S.where, sel = $('#exShotCls'), cls = w.work ? w.cls : sel ? sel.value || null : w.cls;
+    const at = { ...w, cls };
+    const rec = { id: uid() + uid(), t: Date.now(), kind: 'shot', work: w.work, asg: w.asg, cls, title: w.title, q: null, row: null,
+      why: ($('#exWhy') ? $('#exWhy').value : '').trim().slice(0, 160), tags: exTagsOf($('#exTagsIn') ? $('#exTagsIn').value : ''),
+      letter: exShotNext(at), pages: [size], marks: true, score: false, from: w.from };
+    await exPut(rec, [jpg]);
+    closeDlg();
+    const see = () => { if (batch && rec.work === batch.id) exGo(); else go('#/examples'); };
+    exToast('Saved as Screenshot ' + rec.letter + ' in your strong examples.', [['See examples', see]]);
+  } catch (e) {
+    console.error(e);
+    if (btn && btn.isConnected) { btn.disabled = false; btn.textContent = 'Save example'; }
+    toast('The example couldn’t be kept: ' + (e.message || e), 6000);
+  }
+}
+
 /* the Examples tab: between Insights and Return, once the assignment has an example */
 function exTabSay() {
   const a = $('#examplesTab'); if (!a) return;
@@ -25115,8 +25262,9 @@ function exCard(r) {
   return '<div class="excard ' + r.kind + '" data-exid="' + esc(r.id) + '"><button class="exthumb" data-exopen title="Show to the class"><img alt="' + esc(exLabel(r)) + '" data-expic="' + esc(r.id) + '"></button>' +
     '<div class="exct"><span class="exstar" aria-hidden="true">★</span><b>' + esc(exLabel(r)) + '</b>' + (r.row ? '<span class="exrowtag">' + esc(r.row) + '</span>' : chip ? '<span class="exchip">' + esc(chip) + '</span>' : '') + '</div>' +
     '<p class="exwhy">' + (r.why ? esc(r.why) : '<button class="link exadd" data-exwhy>Add why it’s strong</button>') + '</p>' +
+    '<p class="extags">' + exTagChips(r) + '</p>' +
     '<div class="exacts">' + (r.kind !== 'paper' && exCanCopy() ? '<button class="btn sm" data-excopy>Copy picture</button>' : '') + '<button class="btn sm" data-exdl>Download</button>' +
-      kmWrap('⋯', 'class="icon kdots" aria-label="More for this example" title="More for this example"', '<button class="mitem" data-exopen>Show to the class</button><button class="mitem" data-exwhy>' + (r.why ? 'Change why it’s strong' : 'Add why it’s strong') + '</button><button class="mitem" data-exdel>Delete</button>') + '</div>' + who + '</div>';
+      kmWrap('⋯', 'class="icon kdots" aria-label="More for this example" title="More for this example"', '<button class="mitem" data-exopen>Show to the class</button><button class="mitem" data-exwhy>' + (r.why ? 'Change why it’s strong' : 'Add why it’s strong') + '</button><button class="mitem" data-extags>' + (exTags(r).length ? 'Change tags' : 'Add tags') + '</button><button class="mitem" data-exdel>Delete</button>') + '</div>' + who + '</div>';
 }
 function openExamples() {
   if (!batch) return;
@@ -25129,9 +25277,9 @@ function openExamples() {
     (list.length ? '<button class="btn" data-exsheet><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>Download as a sheet</button><button class="btn primary" data-exshow><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" aria-hidden="true"><path d="M7 5l12 7-12 7z"/></svg>Show to the class</button>' : '') +
     '<button class="icon" data-close aria-label="Close">✕</button></div>' +
     '<div class="bb exbb" id="exBody">' +
-      (!list.length ? '<div class="exempty"><p><b>No examples yet.</b></p><p class="muted">Press ☆ Example on an answer in Quick mark, or pick <b>Use as an example</b> in a paper’s ⋯ menu. Picking one is always up to you.</p></div>' : '') +
+      (!list.length ? '<div class="exempty"><p><b>No examples yet.</b></p><p class="muted">Press ☆ Example on an answer in Quick mark, pick <b>Use as an example</b> in a paper’s ⋯ menu, or take a screenshot (S) and save it as a strong example. Picking one is always up to you.</p></div>' : '') +
       (ans.length || noneCard ? '<h3 class="exsec">Answers, by question</h3><div class="exgrid">' + ans.map(exCard).join('') + noneCard + '</div>' : '') +
-      (rest.length ? '<h3 class="exsec">Whole papers and parts of pages</h3><div class="exgrid">' + rest.map(exCard).join('') + '</div>' : '') +
+      (rest.length ? '<h3 class="exsec">' + (rest.some(r => r.kind === 'shot') ? 'Whole papers, parts of pages and screenshots' : 'Whole papers and parts of pages') + '</h3><div class="exgrid">' + rest.map(exCard).join('') + '</div>' : '') +
     '</div>');
   const box = $('#dlgBox');
   box.classList.add('exbox-tab');
@@ -25150,6 +25298,9 @@ function exCardAct(e, list, after) {
   if (e.target.closest('[data-excopy]')) return exCopy(r);
   if (e.target.closest('[data-exdl]')) return exDownload(r);
   if (e.target.closest('[data-exwhy]')) return exWhyEdit(card, r);
+  if (e.target.closest('[data-extags]')) return exTagsEdit(card, r);
+  const tg = e.target.closest('[data-extag]');
+  if (tg) { if ($('#exPage') && $('#exPage').contains(tg)) { exPageF.tag = tg.dataset.extag; exPageRender(); } return; }
   const del = e.target.closest('[data-exdel]');
   if (del) {   // two clicks, so a stray click can't throw an example away
     if (!del.dataset.armed) { del.dataset.armed = '1'; del.textContent = 'Click again to delete'; del.style.color = 'var(--bad)'; setTimeout(() => { if (del.isConnected) { delete del.dataset.armed; del.textContent = 'Delete'; del.style.color = ''; } }, 4000); return; }
@@ -25209,12 +25360,12 @@ async function exDownload(r) {
   } catch (e) { console.error(e); toast('That download couldn’t be made: ' + (e.message || e), 6000); }
 }
 const exPdfText = s => String(s || '').replace(/[‘’]/g, '\'').replace(/[“”]/g, '"').replace(/[–—]/g, '-').replace(/…/g, '...').replace(/[^\x20-\x7E\xA0-\xFF]/g, '');
-async function exSheet(list) {
+async function exSheet(list, name) {
   if (!list.length) return;
   toast('Making the sheet…');
   try {
     const pdf = await PDFLib.PDFDocument.create(), F = await pdf.embedFont(PDFLib.StandardFonts.Helvetica), B = await pdf.embedFont(PDFLib.StandardFonts.HelveticaBold);
-    const title = exPdfText(list[0].title || 'Assignment'), PW = 612, PH = 792, M = 48, CW = PW - 2 * M, ink = PDFLib.rgb(0.12, 0.13, 0.15), soft = PDFLib.rgb(0.36, 0.38, 0.42), blue = PDFLib.rgb(0.1, 0.4, 0.66);
+    const title = exPdfText(name || list[0].title || 'Assignment'), PW = 612, PH = 792, M = 48, CW = PW - 2 * M, ink = PDFLib.rgb(0.12, 0.13, 0.15), soft = PDFLib.rgb(0.36, 0.38, 0.42), blue = PDFLib.rgb(0.1, 0.4, 0.66);
     pdf.setTitle(title + ' - Examples'); pdf.setAuthor(''); pdf.setCreator('Grading Studio'); pdf.setProducer('');
     let pg = null, y = 0;
     const page = () => { pg = pdf.addPage([PW, PH]); y = PH - M; };
@@ -25225,7 +25376,7 @@ async function exSheet(list) {
     pg.drawText('Strong examples, with no names on them', { x: M, y: y - 12, size: 11, font: F, color: soft }); y -= 34;
     let lastQ = null;
     for (const r of list) {
-      const head = r.kind === 'answer' ? exLabel(r) : r.kind === 'paper' ? 'Example ' + (r.letter || 'A') : 'Part of a page';
+      const head = r.kind === 'answer' || r.kind === 'shot' ? exLabel(r) : r.kind === 'paper' ? 'Example ' + (r.letter || 'A') : 'Part of a page';
       if (r.kind !== 'answer' || lastQ !== (r.q && r.q.id)) {
         if (r.kind === 'paper' && pg && y < PH - M - 80) page();
         room(40);
@@ -25241,6 +25392,7 @@ async function exSheet(list) {
         pg.drawRectangle({ x: M, y: y - h, width: w, height: h, borderColor: PDFLib.rgb(0.85, 0.86, 0.88), borderWidth: 0.6 });
         y -= h + 8;
       }
+      if (exTags(r).length) { room(14); pg.drawText(exPdfText(exTags(r).join(', ')), { x: M, y: y - 10, size: 9.5, font: F, color: soft }); y -= 14; }
       if (r.why) for (const line of wrap('* ' + exPdfText(r.why), F, 11, CW)) { room(16); pg.drawText(line, { x: M, y: y - 11, size: 11, font: F, color: blue }); y -= 15; }
       y -= 14;
     }
@@ -25386,12 +25538,14 @@ function exRailSay() {
   let here = false; try { here = !batch && routeNow().v === 'examples'; } catch {}
   a.hidden = !exList.length && !here;
 }
-const exPageF = { cls: '', asg: '', kind: '', row: '' };
-const EX_KINDS = [['answer', 'Answers'], ['paper', 'Whole papers'], ['part', 'Parts of pages']];
-const exAsgKey = r => r.asg || 'w:' + r.work;
+const exPageF = { cls: '', asg: '', kind: '', row: '', tag: '', q: '' };
+const EX_KINDS = [['answer', 'Answers'], ['paper', 'Whole papers'], ['part', 'Parts of pages'], ['shot', 'Screenshots']];
+const exAsgKey = r => r.asg || (r.work ? 'w:' + r.work : 'loose:' + (r.cls || '-'));
 const exClassName = id => { const c = id && classById(id); return c ? c.name : id ? 'A class no longer here' : 'No class'; };
 function exPageList() {
-  return exList.filter(r => (!exPageF.cls || (r.cls || '-') === exPageF.cls) && (!exPageF.asg || exAsgKey(r) === exPageF.asg) && (!exPageF.kind || r.kind === exPageF.kind) && (!exPageF.row || r.row === exPageF.row));
+  const q = exPageF.q.trim().toLowerCase();
+  return exList.filter(r => (!exPageF.cls || (r.cls || '-') === exPageF.cls) && (!exPageF.asg || exAsgKey(r) === exPageF.asg) && (!exPageF.kind || r.kind === exPageF.kind) && (!exPageF.row || r.row === exPageF.row) &&
+    (!exPageF.tag || exTags(r).includes(exPageF.tag)) && (!q || [r.title, r.why, r.row, exLabel(r), ...exTags(r)].some(x => String(x || '').toLowerCase().includes(q))));
 }
 const exPageSort = list => list.slice().sort((a, b) => (a.kind === b.kind ? 0 : a.kind === 'answer' ? -1 : b.kind === 'answer' ? 1 : a.kind === 'paper' ? -1 : 1) || (a.kind === 'answer' ? natural(String(a.q && a.q.lab), String(b.q && b.q.lab)) : 0) || a.t - b.t);
 function exPageGroups(list) {
@@ -25407,32 +25561,36 @@ function exPageRender() {
   const classes = uniq(exList.map(r => [r.cls || '-', exClassName(r.cls)])).sort((a, b) => natural(a[1], b[1]));
   const asgs = uniq(exList.filter(r => !exPageF.cls || (r.cls || '-') === exPageF.cls).map(r => [exAsgKey(r), r.title || 'Assignment'])).sort((a, b) => natural(a[1], b[1]));
   const rows = uniq(exList.filter(r => r.row).map(r => [r.row, r.row])).sort((a, b) => natural(a[1], b[1]));
-  const list = exPageList(), groups = exPageGroups(list), filtered = Object.values(exPageF).some(Boolean);
-  const one = groups.length === 1;
-  el.innerHTML = !exList.length ? '<div class="exempty"><p><b>No examples yet.</b></p><p class="muted">Press ☆ Example on an answer in Quick mark, or pick <b>Use as an example</b> in a paper’s ⋯ menu. Every example from every class shows here.</p></div>'
-    : '<div class="exbar">' + opts('cls', classes, 'Every class') + opts('asg', asgs, 'Every assignment') + opts('kind', EX_KINDS.filter(k => exList.some(r => r.kind === k[0])), 'Every kind') + (rows.length ? opts('row', rows, 'Every rubric row') : '') +
+  const tags = exAllTags().map(t => [t, t]);
+  const list = exPageList(), groups = exPageGroups(list), filtered = Object.values(exPageF).some(x => String(x).trim());
+  const typing = document.activeElement && document.activeElement.id === 'exFind', at = typing ? document.activeElement.selectionStart : 0;
+  el.innerHTML = !exList.length ? '<div class="exempty"><p><b>No examples yet.</b></p><p class="muted">Press ☆ Example on an answer in Quick mark, pick <b>Use as an example</b> in a paper’s ⋯ menu, or take a screenshot (S on a paper, ⌥S anywhere) and save it as a strong example. Every example from every class shows here.</p></div>'
+    : '<div class="exbar">' + opts('cls', classes, 'Every class') + opts('asg', asgs, 'Every assignment') + opts('kind', EX_KINDS.filter(k => exList.some(r => r.kind === k[0])), 'Every kind') + (rows.length ? opts('row', rows, 'Every rubric row') : '') + (tags.length ? opts('tag', tags, 'Every tag') : '') +
+      '<input type="search" id="exFind" class="exfind" placeholder="Search examples" aria-label="Search the examples" value="' + esc(exPageF.q) + '">' +
       (filtered ? '<button class="link" data-exfclear>Clear</button>' : '') + '<span class="sp"></span><span class="muted exn">' + list.length + (list.length === 1 ? ' example' : ' examples') + '</span>' +
-      (one ? '<button class="btn sm" data-exsheet>Download as a sheet</button>' : '') + (list.length ? '<button class="btn sm primary" data-exshow>Show to the class</button>' : '') + '</div>' +
+      (list.length ? '<button class="btn sm" data-exsheet>Download as a sheet</button>' : '') + (list.length ? '<button class="btn sm primary" data-exshow>Show to the class</button>' : '') + '</div>' +
       (!list.length ? '<p class="muted exnone2">None match. <button class="link" data-exfclear>Clear the filters</button></p>' : '') +
       groups.map(g => '<section class="exgroup"><h2 class="exgh">' + esc(g[0].title || 'Assignment') + ' <span class="muted">· ' + esc(exClassName(g[0].cls)) + ' · ' + esc(new Date(Math.max(...g.map(r => r.t))).toLocaleDateString(undefined, { month: 'short', year: 'numeric' })) + '</span></h2><div class="exgrid">' + g.map(exCard).join('') + '</div></section>').join('');
   for (const im of el.querySelectorAll('img[data-expic]')) exUrl(im.dataset.expic, 0).then(u => { if (u && im.isConnected) im.src = u; });
+  if (typing) { const f = $('#exFind'); if (f) { f.focus(); try { f.setSelectionRange(at, at); } catch {} } }
 }
 {
   const page = () => exPageGroups(exPageList()).flat();
   const el = $('#exPage');
   if (el) {
+    el.addEventListener('input', e => { if (e.target.id === 'exFind') { exPageF.q = e.target.value; exPageRender(); } });
     el.addEventListener('change', e => { const f = e.target.closest('[data-exf]'); if (!f) return; exPageF[f.dataset.exf] = f.value; if (f.dataset.exf === 'cls') exPageF.asg = ''; exPageRender(); });
     el.addEventListener('click', e => {
       if (e.target.closest('[data-exfclear]')) { for (const k of Object.keys(exPageF)) exPageF[k] = ''; return exPageRender(); }
       if (e.target.closest('[data-exshow]')) return exShow(page(), 0);
-      if (e.target.closest('[data-exsheet]')) return exSheet(page());
+      if (e.target.closest('[data-exsheet]')) { const l = page(); return exSheet(l, new Set(l.map(exAsgKey)).size > 1 ? 'Strong examples' : null); }
       exCardAct(e, page, exPageRender);
     });
   }
 }
 exReady.then(exRailSay);
 
-Object.assign(window.__gs, { exList: () => exList, exReady: () => exReady, exStar, openUseExample, openExamples, exShow, exSheet, exPdfOf, exPng, exDownload, exForgetWork, exUse: () => EXU, exItems, exAll, exFolderSync: () => exFolderSync(), exMergePlan, exPageRender, exPageF, exDeleteTest: exDelete });
+Object.assign(window.__gs, { exList: () => exList, exReady: () => exReady, exStar, openUseExample, openExamples, exShow, exSheet, exPdfOf, exPng, exDownload, exForgetWork, exUse: () => EXU, exItems, exAll, exFolderSync: () => exFolderSync(), exMergePlan, exPageRender, exPageF, exDeleteTest: exDelete, exSaveShot, exTagsOf, exShotWhere });
 
 /* ---------------- Screenshot: drag over part of the screen and a picture of it goes on the clipboard ---------------- */
 
@@ -25461,6 +25619,7 @@ function snipStart() {
   el.id = 'snipLayer'; el.className = 'sniplay'; el.tabIndex = -1;
   el.innerHTML = '<div class="snipbar" role="dialog" aria-label="Screenshot"><div class="snipt"><b>Screenshot</b><span>Drag over what you want to copy' + (paper ? ', or click a page for all of it' : '') + '.</span></div>' +
     '<div class="snipacts">' + (paper ? '<label class="snipmk"><input type="checkbox" id="snipMk"' + (snipMarks() ? ' checked' : '') + '> With my marks</label>' : '') +
+    '<label class="snipmk snipex"><input type="checkbox" id="snipEx"> Save as a strong example</label>' +
     '<button class="btn sm" data-snipall title="Everything on screen (Enter)">Whole screen</button><button class="btn sm" data-snipx title="Esc">Cancel</button></div>' +
     '<p class="snipnote">' + (paper ? 'On the paper, name covers are painted in and the student’s name and file name are left off. ' : '') + 'Anything else shows as it is on screen.</p></div><div class="snipbox" hidden></div>';
   document.body.appendChild(el);
@@ -25510,12 +25669,17 @@ function snipStop() {
   snipOn.remove(); snipOn = null;
 }
 async function snipTake(R, pg) {
-  const marks = snipPaper() ? snipMarks() : true;
+  const marks = snipPaper() ? snipMarks() : true, ex = !!(snipOn && snipOn.querySelector('#snipEx:checked')), where = exShotWhere();
   snipStop();
   const blobP = (R ? snipArea(R, marks) : snipWhole(pg, marks)).then(canvasPng);
+  if (ex) {
+    let blob = null; try { blob = await blobP; } catch (e) { console.error(e); }
+    return blob ? exSaveShot(blob, where) : toast('That picture couldn’t be made. Try a smaller area.');
+  }
   const how = await copyPicture(blobP, 'Screenshot.png');
   if (how === 'none') return toast('That picture couldn’t be made. Try a smaller area.');
-  toast(how === 'copied' ? 'Picture copied. Paste it wherever you need it.' : 'This browser can’t copy pictures, so it was saved as Screenshot.png.', 4000);
+  const save = async () => { let b = null; try { b = await blobP; } catch {} if (b) exSaveShot(b, where); };
+  toastDo(how === 'copied' ? 'Picture copied. Paste it wherever you need it.' : 'This browser can’t copy pictures, so it was saved as Screenshot.png.', 'Save as a strong example', save);
 }
 async function snipPage(pg, k, marks) {
   const st = batch.students[cur], f = pg.file, p = pg.idx, page = pg.page, W = pg.W, H = pg.H, side = pg.side, rx = anonRx(st);
