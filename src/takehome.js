@@ -575,6 +575,7 @@ async function removeHere() {
     await new Promise(res => { const r = indexedDB.deleteDatabase('grading-studio-safety'); r.onsuccess = r.onerror = r.onblocked = () => res(); });
     await schRemoveAll();
     await exRemoveAll();
+    await vkClear();   // video files kept in this browser
   } catch (e) { console.error(e); tabsOver('done'); return sayDlg('Not everything could be removed. Close any other Grading Studio tabs and try again.'); }
   for (let i = localStorage.length - 1; i >= 0; i--) { const k = localStorage.key(i); if (k && (k.startsWith('gsc.saved.') || k.startsWith('gsc.forgot.') || k.startsWith('gs.') && !LS_LOOKS.test(k))) localStorage.removeItem(k); }
   try { localStorage.removeItem('gsc.win'); } catch {}

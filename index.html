@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"5a9d697d","zh-Hans":"f12d7449","es":"6a07e9f0","fr":"7f20328e","de":"676f6f92","pt-BR":"3805b689","ja":"251fe08a","ko":"b0e24c8a"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script></head><body>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"03deea8f","zh-Hans":"d7329e7e","es":"7b8f0db0","fr":"b36a8449","de":"1bb683ff","pt-BR":"c6d59cce","ja":"a8478f13","ko":"e2290ab4"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script></head><body>
 <title>Grading Studio</title>
 <script>/* ---------------- the sample: a made-up school week, kept apart from everything real ----------------
    Runs first on both pages, before anything reads saved work. While the sample is open (gs.sampleOn in the browser's real storage),
@@ -12,7 +12,7 @@
 (function () {
   var REAL = window.localStorage, KEY = 'gs.sampleOn', LEFT = 'gs.sampleLeft', PRE = 'sample:', DBPRE = 'sample-';
   var SHARED = { 'gs.theme': 1, 'gs.lang': 1 };
-  var DBS = ['grading-studio-keep', 'grading-studio-added', 'grading-studio-folder', 'grading-studio-examples', 'grading-studio-safety', 'grading-studio-models', 'grading-studio-school', 'gs-lessons'];
+  var DBS = ['grading-studio-keep', 'grading-studio-added', 'grading-studio-folder', 'grading-studio-examples', 'grading-studio-safety', 'grading-studio-models', 'grading-studio-school', 'grading-studio-videos', 'gs-lessons'];
   var on = false; try { on = REAL.getItem(KEY) === '1'; } catch (e) {}
   var F = window.IDBFactory && IDBFactory.prototype, open0 = F && F.open, del0 = F && F.deleteDatabase, list0 = F && F.databases;
   function wipe() {
@@ -1167,6 +1167,16 @@ body:has(#openRep:not([hidden])) .toast{bottom:calc(76px + var(--savebar,0px))}
 .ptab tr.lo td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
 .ptab .link{text-decoration:none;font-weight:500}
 @media (max-width:700px){.dlg .box .pbody{grid-template-columns:1fr}.pctl{border-right:0;border-bottom:1px solid var(--line)}}
+/* bring in a rubric (src/rubricup.js) */
+.rubup .rusays{font-size:var(--text-control);color:var(--fg-2)}
+.rubup .rurow{display:flex;gap:var(--space-2);align-items:center;flex-wrap:wrap;margin-top:var(--space-1)}
+.rubup .rurow .muted{font-size:var(--text-small)}
+#ruGot{margin-top:var(--space-2);padding:var(--space-3);border:1px solid var(--line);border-radius:var(--corner-3);background:var(--surface-2,var(--surface));display:flex;flex-direction:column;gap:var(--space-1)}
+#ruGot[hidden]{display:none}
+.rufile,.runo{margin:0;font-size:var(--text-small)}
+.rurows{margin:0;padding-left:20px;font-size:var(--text-small);display:flex;flex-direction:column;gap:2px}
+.rurows li span{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rufound{display:inline-flex;gap:var(--space-2);align-items:center;font-size:var(--text-small);margin-top:var(--space-1)}
 /* ---------- gradebook ---------- */
 .dlg .box.bkbox{width:min(1400px,100%);height:calc(100vh - 32px)}
 .dlg .box .bkbody{padding:0;display:flex;flex-direction:column;min-height:0;overflow:auto;position:relative}
@@ -3134,6 +3144,36 @@ button.seat[data-n]:hover{border-color:var(--accent)}
 .clipmain iframe,.clipmain video{width:100%;height:100%;border:0;background:var(--stage)}
 .clipmain audio{width:min(900px,90vw)}
 .clipmain p{font:500 2.6vh/1.4 var(--f-body);color:var(--stage-muted)}
+.vdby{align-self:flex-start}
+.vdfile{display:flex;align-items:center;gap:var(--space-2);flex-wrap:wrap;padding:var(--space-3);border:1px dashed var(--line-strong);border-radius:var(--corner-3)}
+.vdfile #vdFileName{font-size:var(--text-small)}
+/* the bar that makes a video bigger or smaller */
+.vgrip{height:14px;margin:2px 0 2px;display:flex;align-items:center;justify-content:center;cursor:ns-resize;touch-action:none;border-radius:var(--corner-2)}
+.vgrip::before{content:"";width:48px;height:4px;border-radius:var(--corner-pill);background:var(--line-strong)}
+.vgrip:hover::before,.vgrip.on::before,.vgrip:focus-visible::before{background:var(--accent)}
+.vgripshield{position:fixed;inset:0;z-index:9999;cursor:ns-resize}
+html.vidsized #paper .media{max-width:max(900px,calc(var(--vid-h) * 16 / 9 + 30px))}
+html.vidsized #paper .media video,html.vidsized #paper .vlink .vlslot iframe,html.vidsized #paper .vlink .vlslot video{height:var(--vid-h);max-height:none;min-height:0}
+html.vidtall #paper .mstick{position:relative;top:auto}
+/* partners and videos for the whole class */
+.pvlist{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:var(--corner-3);max-height:46vh;overflow:auto}
+.pvrow{display:grid;grid-template-columns:minmax(120px,1fr) minmax(200px,2fr) auto;gap:var(--space-2);align-items:center;padding:var(--space-2) var(--space-3);border-top:1px solid var(--line)}
+.pvrow:first-child{border-top:0}
+.pvrow.on{background:var(--accent-soft)}
+.pvname{font-weight:600;font-size:var(--text-control);overflow-wrap:anywhere}
+.pvvid{display:flex;gap:var(--space-1);align-items:center;min-width:0;font-size:var(--text-small)}
+.pvvid input.pvlink{flex:1;min-width:0;text-align:left;cursor:text}
+.pvvid input.bad{border-color:var(--warn)}
+.pvhas::before{content:"✓ ";color:var(--ok,var(--accent))}
+.pvhas{color:var(--fg-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pvfile{display:inline-flex;align-items:center;gap:var(--space-1);min-width:0}
+.pvfile b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pvpbtn{justify-self:end;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pvpick{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:var(--space-1);align-items:center;padding:var(--space-1) 0}
+.pvchip{border:1px solid var(--line-strong);border-radius:var(--corner-pill);background:var(--surface);font:inherit;font-size:var(--text-small);color:var(--fg-2);padding:3px var(--space-2);cursor:pointer}
+.pvchip[aria-pressed=true]{background:var(--accent);border-color:var(--accent);color:var(--surface)}
+.pvchip:disabled{opacity:.7;cursor:default}
+@media (max-width:640px){.pvrow{grid-template-columns:1fr}.pvpbtn{justify-self:start}}
 /* Settings, My setup: the two numbered steps, and the preview of what a setup would change (src/setupin.js). */
 .stpsteps{list-style:none;counter-reset:stp;margin:var(--space-3) 0 0;padding:0;display:grid;gap:var(--space-4)}
 .stpsteps li{counter-increment:stp;display:grid;grid-template-columns:28px 1fr;gap:var(--space-3);align-items:start}
@@ -3370,6 +3410,7 @@ textarea.stptext{min-height:132px;margin-top:var(--space-2);font:var(--text-cont
           <button class="mitem" id="bringBtn" title="Late work, or many files at once; each goes to its student by the name in the file name">Bring in files</button>
           <button class="mitem" id="openRepBtn" title="What opened from this download, what didn’t, who has nothing, and anything odd">What opened</button>
           <button class="mitem" id="trAllBtn" hidden title="Make a transcript for every recording in this assignment">Transcripts</button>
+          <button class="mitem" id="partnersBtn" title="Everyone’s partners and videos in one list: who works together, and a link or video file for each">Partners and videos…</button>
           <button class="mitem" id="clipsBtn" hidden title="The parts of videos you saved, one after another, with their labels and no names">Clips to show the class</button>
           <button class="mitem" id="quizBtn" title="For a scanned paper quiz: box each question once, then mark the same question for everyone at once">Quick mark (paper quiz)</button>
           <button class="mitem" id="impBtn" title="Comments and marks made in Kami, Acrobat or Preview, made into your own so you can change them">Marks from other apps</button>
@@ -4397,7 +4438,7 @@ SOFTWARE.
 <script>/* ---------------- saved-data versions: a safety copy, then any format changes, before the app starts ---------------- */
 const gsData = (() => {
   'use strict';
-  const APP_VERSION = "1.28.12";   // from package.json, the one place it's set
+  const APP_VERSION = "1.28.13";   // from package.json, the one place it's set
   const MIGRATIONS = [
   ];
   const DATA_V = Math.max(1, ...MIGRATIONS.map(s => s.to));
@@ -5779,7 +5820,7 @@ async function spellLikeSaved(raw) {
 async function makeFile(path, data) {
   const name = path.split('/').pop();
   const magic = data && data.length > 4 && data[0] === 0x25 && data[1] === 0x50 && data[2] === 0x44 && data[3] === 0x46;   // "%PDF"
-  let kind = trueKind(isPdf(name) || magic ? 'pdf' : isImg(name) || IMG_MORE.test(name) ? 'img' : MEDIA_RX.test(name) ? 'media' : WORD_RX.test(name) ? 'docx' : TEXT_RX.test(name) ? 'text' : LINK_RX.test(name) && linkOf(data) ? 'link' : 'other', name, data);
+  let kind = trueKind(isPdf(name) || magic ? 'pdf' : isImg(name) || IMG_MORE.test(name) ? 'img' : MEDIA_RX.test(name) ? 'media' : WORD_RX.test(name) ? 'docx' : TEXT_RX.test(name) ? 'text' : LINK_RX.test(name) && (linkOf(data) || vidRef(data)) ? 'link' : 'other', name, data);
   let pdf = kind === 'pdf' ? data : null;
   if (kind === 'pdf' && gsExportLike(data)) {   // a file exported from here with its marks kept: back to the original pages and the marks
     const back = await unpackExport(data);
@@ -6288,7 +6329,7 @@ async function openStudent(i, filePath) {
     const gs = $('#gapScan'); if (gs) gs.onclick = () => { scanInto = true; scanFor = null; $('#scanIn').click(); };
   }
   curMedia = null; clipsBtn();
-  for (const f of st.files.filter(f => f.kind === 'link')) { paper.insertAdjacentHTML('beforeend', '<div class="fhead"><span style="color:var(--fg)">' + esc(linkTitle(f)) + '</span><span>Video link</span>' + tryTag(st, f) + (f.added ? addTag(f) : '') + carryTag(f) + '<span style="flex:1"></span>' + fileMenu(moveLink(f) + removeLink(f)) + '</div>'); paper.appendChild(linkCard(st, f)); }
+  for (const f of st.files.filter(f => f.kind === 'link')) { paper.insertAdjacentHTML('beforeend', '<div class="fhead"><span style="color:var(--fg)">' + esc(linkTitle(f)) + '</span><span>' + (vidRef(f.data) ? 'Video file' : 'Video link') + '</span>' + tryTag(st, f) + (f.added ? addTag(f) : '') + carryTag(f) + '<span style="flex:1"></span>' + fileMenu(moveLink(f) + removeLink(f)) + '</div>'); paper.appendChild(linkCard(st, f)); }
   for (const f of st.files.filter(f => f.kind === 'media')) { if (f.added || carryTag(f) || tryTag(st, f)) paper.insertAdjacentHTML('beforeend', '<div class="fhead"><span style="color:var(--fg)">' + esc(f.name) + '</span>' + tryTag(st, f) + (f.added ? addTag(f) : '') + carryTag(f) + '<span style="flex:1"></span>' + fileMenu(fileLinks(f)) + '</div>'); paper.appendChild(mediaCard(st, f)); }
   const rd = refDoc();
   if (rd) { const det = document.createElement('details'); det.className = 'refd'; det.open = store.get('gs.rdOpen', true); det.innerHTML = '<summary>Your document: ' + esc(rd.name) + '</summary>'; det.ontoggle = () => store.set('gs.rdOpen', det.open); paper.appendChild(det); docxCard(rd, rd.name).then(c => { c.querySelector('.fhead').remove(); det.appendChild(c); }); }
@@ -7588,9 +7629,10 @@ function rowScaleHtml(d) {
     '<span class="muted">Out of ' + rowsMax(d) + ' in all.</span></div>';
 }
 const draftMax = d => d.mode === 'rubric' ? rowsMax(d) : Math.round(+d.outOf || 0);
-function openSetup() {
-  let draft = JSON.parse(JSON.stringify(setup));
-  let newPage = undefined;   // undefined: unchanged, null: removed, {bytes,name}: new upload
+function openSetup(pre) {
+  let draft = JSON.parse(JSON.stringify(pre && pre.draft || setup));
+  let newPage = pre && pre.page ? pre.page : undefined;   // undefined: unchanged, null: removed, {bytes,name}: new upload
+  let found = null;   // rows read from the rubric file just brought in
   const scaleRows = () => {
     const max = draftMax(draft);
     if (!draft.scale) return '<p class="muted" style="font-size:13px;margin:4px 0 0">No scale: percent is the plain share of points.</p>';
@@ -7615,7 +7657,7 @@ function openSetup() {
     h += '<div class="field"><label>Your rubric, for every student</label><span class="muted" style="font-size:13px">Bring in your rubric once and every student gets their own copy to grade on. A Word rubric (.docx or .docm) stays a Word file: type in it, check its boxes and shade its cells. A PDF or picture is added as a page you can mark up. Each copy goes back with that student’s work.</span>' +
       '<span style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:4px"><button class="btn sm" data-rpup>' + (rp ? 'Replace…' : 'Bring in my rubric…') + '</button>' +
       (rp ? '<span style="font-size:13px;font-weight:600">' + esc(rp.name || 'Rubric page') + '</span><span class="seg"><button data-pos="end" aria-pressed="' + ((draft.rubricPos || 'end') === 'end') + '">After their work</button><button data-pos="start" aria-pressed="' + (draft.rubricPos === 'start') + '">Before</button></span><button class="link" data-rprm>Remove</button>' : '') +
-      '</span><input type="file" id="rpIn" hidden></div>';
+      '</span>' + (found ? '<span class="rufound"><span>Rows were found in it.</span> <button class="btn sm" data-rpuse>Use these rows</button></span>' : '') + '<input type="file" id="rpIn" hidden></div>';
     h += '<p class="muted" style="font-size:13px;margin:0">Scores you already gave stay put if you rename rows.' + (batch && batch.assignment ? ' This setup is remembered for “' + esc(batch.assignment.name) + '”.' : '') + '</p>';
     return h;
   };
@@ -7637,13 +7679,16 @@ function openSetup() {
       if (WORD_RX.test(f.name)) {
         openWord(bytes);
         newPage = { bytes, name: f.name };
+        try { found = ruFromWord(bytes); } catch { found = null; }
         if (!draft.rubricPos) draft.rubricPos = 'start';   // a Word rubric sits above their work unless she moves it
       } else {
         if (isImg(f.name) && !await picReads(bytes)) throw new Error('damaged');
         const pdf = isImg(f.name) ? await imageToPdf(bytes, f.name) : IMG_MORE.test(f.name) ? await anyImageToPdf(bytes) : bytes;
         await PDFLib.PDFDocument.load(pdf, { ignoreEncryption: true });
         newPage = { bytes: pdf, name: f.name };
+        found = pdf === bytes ? await ruFromPdf(bytes).catch(() => null) : null;
       }
+      if (found && !found.rows.length) found = null;
       if (draft.mode === 'rubric' && draft.criteria.every((c, i) => c === 'Criterion ' + (i + 1))) { draft.outOf = rowsMax(draft); draft.mode = 'points'; }   // her rubric replaces the generic rows
       re();
     } catch { toast('That file couldn’t be opened as a Word file, PDF or picture'); }
@@ -7662,7 +7707,8 @@ function openSetup() {
     }
     const pos = e.target.closest('[data-pos]'); if (pos) { draft.rubricPos = pos.dataset.pos; return re(); }
     if (e.target.closest('[data-rpup]')) return $('#rpIn').click();
-    if (e.target.closest('[data-rprm]')) { newPage = null; return re(); }
+    if (e.target.closest('[data-rprm]')) { newPage = null; found = null; return re(); }
+    if (e.target.closest('[data-rpuse]') && found) { rubricRowsInto(draft, found); levelEditOpen.clear(); if (rubDlg) rubDlg.from = draft.criteria.map((_, i) => i < rubDlg.n0 ? i : null); found = null; return re(); }
     if (e.target.closest('[data-cancel]')) return closeDlg();
     if (e.target.closest('[data-save]')) {
       if (newPage !== undefined) await Promise.all([...wordSaves].map(s => s()));   // boxes highlighted a moment ago count
@@ -9458,20 +9504,21 @@ const fmtTime = s => { s = Math.max(0, Math.floor(s || 0)); return Math.floor(s 
 const CAN_TRANSCRIBE = window.self === window.top;   // the speech engine downloads its model; a preview frame can't
 let curMedia = null;   // the first player on screen, for the keys
 
-function mediaCard(st, f) {
+function mediaCard(st, f, kept) {
   const el = document.createElement('div'); el.className = 'media';
-  const vid = VIDEO_RX.test(f.name);
-  el.innerHTML = '<div class="mstick"><div class="mhead"><b>' + esc(f.name) + '</b><span class="muted">' + (vid ? 'video' : 'audio') + '</span></div>' +
+  const vid = VIDEO_RX.test(kept ? kept.name : f.name);
+  el.innerHTML = '<div class="mstick"><div class="mhead"><b>' + esc(kept ? linkTitle(f) : f.name) + '</b><span class="muted">' + (vid ? 'video' : 'audio') + '</span></div>' +
     (vid ? '<video controls preload="metadata" playsinline></video>' : '<audio controls preload="metadata"></audio>') +
     '<div class="mctl"><button class="btn sm" data-skip="-10">◀◀ 10s</button><button class="btn sm" data-skip="10">10s ▶▶</button>' +
     '<span class="seg">' + [1, 1.25, 1.5, 2].map(r => '<button data-rate="' + r + '" aria-pressed="' + (r === (store.get('gs.rate', 1))) + '">' + r + '×</button>').join('') + '</span>' +
     '<button class="btn sm" data-stamp title="Adds the time to your comment, like [2:15]">+ Time to comment</button>' +
-    (CAN_TRANSCRIBE ? '<button class="btn sm" data-tr>' + (f.tr ? 'Transcript ✓' : 'Make transcript') + '</button>' : '') + '</div></div>' +
+    (CAN_TRANSCRIBE && !kept ? '<button class="btn sm" data-tr>' + (f.tr ? 'Transcript ✓' : 'Make transcript') + '</button>' : '') + '</div></div>' +
     '<div class="trans" ' + (f.tr ? '' : 'hidden') + '></div><p class="muted trstat" style="font-size:13px;margin:6px 0 0"></p>';
   const m = el.querySelector('audio,video');
-  m.src = mediaUrl(f); m.playbackRate = store.get('gs.rate', 1);
+  m.src = kept ? kept.url : mediaUrl(f); m.playbackRate = store.get('gs.rate', 1);
   m.onratechange = () => {};
-  mediaWatch(el, m, f);
+  mediaWatch(el, m, kept ? { name: kept.name, data: kept.blob, kind: 'media', size: kept.blob.size } : f);
+  if (vid) vidGrip(el.querySelector('.mstick'), m);
   if (!curMedia) curMedia = m;
   clipStrip(el.querySelector('.mstick'), f, () => m, c => clipRun(m, c));
   const tr = el.querySelector('.trans');
@@ -10202,8 +10249,9 @@ $('#start').addEventListener('click', async e => {
   }
   if (b.dataset.openAsg) {
     asgTarget = findItem(b.dataset.openAsg).it;
-    openDlg('<div class="bh"><h2>Open “' + esc(asgTarget.name) + '”</h2></div><div class="bb"><p style="margin-top:0">' + (sysName() ? 'Where is the ' + esc(sysName()) + ' download?' : 'Where are the papers?') + ' You can also drop the ZIP or the folder straight onto this assignment’s card.</p></div>' +
+    openDlg('<div class="bh"><h2>Open “' + esc(asgTarget.name) + '”</h2></div><div class="bb"><p style="margin-top:0">' + (sysName() ? 'Where is the ' + esc(sysName()) + ' download?' : 'Where are the papers?') + ' You can also drop the ZIP or the folder straight onto this assignment’s card.</p>' + ruHtml(asgTarget.setup, { now: 1 }) + '</div>' +
       '<div class="bf"><button class="btn" data-cancel>Cancel</button><button class="btn" data-pc>The ZIP or files…</button><button class="btn" data-dir>A whole folder…</button><button class="btn" data-scan>A scan of everyone’s papers…</button><button class="btn" data-match>Files to match to a roster…</button><button class="btn" data-nopaper title="For presentations, speeches and videos: a notes page for each student instead of a paper">No papers: presentations or videos…</button>' + (gcid() ? '<button class="btn primary" data-dv>From Google Drive…</button>' : '') + '</div>', true, 'lg');
+    ruWire($('#dlgBox'), asgTarget);
     $('#dlgBox').onclick = ev => { if (ev.target.closest('[data-cancel]')) return closeDlg(); if (ev.target.closest('[data-nopaper]')) { closeDlg(); return openStartNotes(asgTarget); } if (ev.target.closest('[data-pc]')) { closeDlg(); $('#asgIn').click(); } if (ev.target.closest('[data-dir]')) { closeDlg(); pickDir('#asgDirIn'); } if (ev.target.closest('[data-scan]')) { closeDlg(); scanFor = asgTarget; $('#scanIn').click(); } if (ev.target.closest('[data-match]')) { const a = asgTarget; askFilesOrFolder('Match files to a roster', 'Each file is matched to a student by the name in its file name or folder name, and you can fix any match.', list => matchToRoster(list, a), 'lg'); } if (ev.target.closest('[data-dv]')) { closeDlg(); openFromDrive(asgTarget); } };
     return;
   }
@@ -10241,7 +10289,7 @@ function editAssignment(id, unitId, clsId) {
     '<div class="field"><label for="aUnit">Unit</label><select id="aUnit" class="btn" style="justify-content:flex-start"></select><p class="muted" id="aUnitNote" style="font-size:13px;margin:6px 0 0" hidden></p></div>' +
     '<div class="field"><label>Type</label><div class="pseg" role="group" id="aType">' + bkCats().map(([t, , s]) => '<button type="button" data-atype="' + esc(t) + '" aria-pressed="' + (it.type === t) + '">' + esc(s) + '</button>').join('') + '</div><p class="muted" style="font-size:12.5px;margin:4px 0 0">' + esc(bkCountSay()) + '</p></div>' +
     '<div class="field"><label for="aDue">Due</label><input type="date" id="aDue" class="btn" value="' + esc(it.due || '') + '"></div>' +
-    '<p class="muted" style="font-size:13px;margin:0">The rubric is set the first time you open a download for it, with Rubric setup, and it’s remembered for this assignment.' + (f ? '' : ' Copies in other classes get the same rubric.') + '</p></div>' +
+    ruHtml(f ? it.setup : null) + '</div>' +
     '<div class="bf">' + (f ? '<button class="btn" data-del style="margin-right:auto">Delete</button>' : '') + '<button class="btn" data-cancel>Cancel</button><button class="btn primary" data-ok>Save</button></div>', true, 'lg');
   const ticked = () => [...document.querySelectorAll('#aClasses input:checked')].map(x => holderById(x.value)).filter(Boolean);
   const fillUnits = keep => {
@@ -10260,6 +10308,7 @@ function editAssignment(id, unitId, clsId) {
     const ok = $('#dlgBox [data-ok]'); ok.textContent = cs.length > 1 ? 'Add to ' + cs.length + ' classes' : 'Save'; ok.disabled = !cs.length;
   };
   fillUnits(start.u);
+  const ru = ruWire($('#dlgBox'), it);
   if (f) $('#aClass').onchange = () => fillUnits(null);
   else { $('#aClasses').onchange = () => fillUnits(null); $('#aUnit').onchange = () => fillUnits(null); }
   setTimeout(() => $('#aName')?.focus(), 0);   // the box can be shut before this runs
@@ -10284,6 +10333,7 @@ function editAssignment(id, unitId, clsId) {
           to.items.push(a);
         });
         saveLib(); closeDlg(); renderLib();
+        if (ru.got()) ruPut(it, ru.got());
         if (cs.length > 1) toast('Added to ' + cs.map(c => c === lib.loose ? 'No class' : c.name).join(', ').replace(/, ([^,]*)$/, ' and $1'));
         return;
       }
@@ -10295,6 +10345,7 @@ function editAssignment(id, unitId, clsId) {
       if (f.u !== to) f.u.items.splice(f.u.items.indexOf(it), 1);
       if (f.u !== to) to.items.push(it);
       saveLib(); closeDlg(); renderLib();
+      if (ru.got()) ruPut(it, ru.got());
       if (batch) { renderGrade(); renderList(); }   // a type changed while grading: the score panel follows
     }
   };
@@ -10459,6 +10510,7 @@ async function loadKept() {
   await keptFbCounts();
   if (!batch) renderLib();
   renderBackup();
+  setTimeout(vkSweep, 20000);
 }
 async function keptFbCounts() {
   for (const m of keptMeta.values()) {
@@ -10567,6 +10619,7 @@ async function forgetKept(id) {
   try { localStorage.removeItem(savedKey(id)); } catch {}
   const seen = store.get('gs.openSeen', {}); if (seen[id]) { delete seen[id]; store.set('gs.openSeen', seen); }
   keptMeta.delete(id); renderLib();
+  vkSweep();   // a video file kept for that download, when nothing else names it
 }
 const fmtSize = b => b > 1e9 ? (b / 1e9).toFixed(1) + ' GB' : b > 1e6 ? Math.round(b / 1e6) + ' MB' : Math.max(1, Math.round(b / 1e3)) + ' KB';
 function renderKept() { if (shellReady) homeRender(); }
@@ -10645,6 +10698,7 @@ async function removeAdded(st, path) {
   if (st.forder) st.forder = st.forder.filter(x => x !== 'f:' + path);
   refound(st); saveSoon(); renderList(); openStudent(cur);
   toast('Removed ' + fileShown(st, f.name));
+  vkSweep();
 }
 /* ---------------- remove or replace any file on a student's paper ---------------- */
 const markCount = f => Object.values(f.marks || {}).reduce((n, a) => n + a.length, 0);
@@ -10873,7 +10927,7 @@ function anonScrub() {
   for (const el of document.querySelectorAll('#paper .docx')) if (el.wordF && el.querySelector('.fhead') && !el.querySelector('.anonnote') && wordNoName(st, el.wordF)) el.querySelector('.fhead').insertAdjacentHTML('afterend', '<p class="muted anonnote" style="margin:6px 0;font-size:13px">This student’s name wasn’t found in this file, so a nickname or initials could still show here.</p>');
 }
 let anonT = 0;
-new MutationObserver(() => { if (anonOn()) { clearTimeout(anonT); anonT = setTimeout(anonScrub, 30); } }).observe($('#paper'), { childList: true, subtree: true });
+new MutationObserver(() => { if (anonOn() && !anonT) anonT = setTimeout(() => { anonT = 0; anonScrub(); }, 30); }).observe($('#paper'), { childList: true, subtree: true });
 function setAnon(on) {
   if (on && !(batch.anon && batch.anon.order && batch.anon.order.length)) anonShuffle();
   batch.anon.on = on; saveNow();
@@ -12469,6 +12523,7 @@ document.addEventListener('drop', async e => {
   addFiles(batch.students[t.i], r.list);
 });
 $('#trAllBtn').onclick = openTranscripts;
+$('#partnersBtn').onclick = () => openPartners();
 $('#clipsBtn').onclick = () => { const c = (batch.clips || [])[0]; if (c) clipShow(c.id); };
 $('#dispBtn').onclick = openDisplay;
 $('#mkeyBtn').onclick = () => openMarkKey();
@@ -15304,6 +15359,132 @@ $('#shellMain').addEventListener('scroll', ovTipHide, { passive: true });
 $('#overviewBtn').onclick = openOverview;
 
 Object.assign(window.__gs, { bankBusy: () => bankBusyN, classStats, openOverview, pctList, pctRows, pv: () => pv, pastAvg, openSetup, savedRubrics, levelOf, tidyLevels, spreadBins });
+
+/* ---------------- bring in a rubric for any assignment: its rows read from the file where they can be, and a copy for every student ---------------- */
+const RU_NUM = /^(?:(?:level|score|band|points?|pts|marks?)\s*)?(\d{1,2})(?:\s*(?:pts?|points?|marks?))?$/i;
+const ruTidy = t => String(t || '').replace(/\s+/g, ' ').trim();
+const ruCell = (t, v) => ruTidy(t).replace(new RegExp('^(?:(?:level|score|band)\\s*)?' + v + '(?:\\s*(?:pts?|points?|marks?))?\\s*[:.)–-]?\\s*', 'i'), '').slice(0, 600);
+function ruFromWord(bytes) {
+  const w = openWord(bytes), page = document.createElement('div'); page.className = 'dpage'; w.pRuns = []; renderWord(w, page);
+  const m = rubricModel(page); if (!m || m.crits.length < 1 || m.levels.length < 2) return null;
+  const rows = m.crits.slice(0, 10).map((name, i) => {
+    const levels = {};
+    for (const c of m.cells) if (c.crit === i) { const t = ruCell(c.td.textContent, c.val); if (t) levels[c.val] = t; }
+    return { name: ruTidy(name).slice(0, 80) || 'Criterion ' + (i + 1), levels };
+  });
+  return { rows, top: Math.max(...m.levels) };
+}
+async function ruFromPdf(bytes) {
+  await workerReady;
+  const d = await pdfjsLib.getDocument({ data: bytes.slice(), isEvalSupported: false }).promise;
+  let tc; try { tc = await (await d.getPage(1)).getTextContent(); } finally { d.destroy(); }
+  const items = tc.items.filter(i => i.str && i.str.trim()).map(i => ({ s: i.str.trim(), x: i.transform[4], y: i.transform[5], w: i.width || 0, h: Math.abs(i.transform[3]) || 10 }));
+  if (items.length < 6) return null;
+  const lines = [];
+  for (const it of items.sort((a, b) => b.y - a.y)) { const l = lines.find(L => Math.abs(L.y - it.y) <= 3); if (l) l.items.push(it); else lines.push({ y: it.y, items: [it] }); }
+  let head = null;
+  for (const l of lines) {
+    const nums = l.items.map(it => { const m = RU_NUM.exec(it.s); return m ? { v: +m[1], c: it.x + it.w / 2 } : null; }).filter(Boolean).sort((a, b) => a.c - b.c);
+    if (nums.length < 2 || nums.some(n => n.v > 10) || new Set(nums.map(n => n.v)).size !== nums.length) continue;
+    const down = nums.every((n, k) => !k || n.v < nums[k - 1].v), up = nums.every((n, k) => !k || n.v > nums[k - 1].v);
+    if (down || up) { head = { y: l.y, cols: nums }; break; }
+  }
+  if (!head) return null;
+  const cols = head.cols, gap = (cols[cols.length - 1].c - cols[0].c) / Math.max(1, cols.length - 1), edge = cols[0].c - gap / 2;
+  const below = items.filter(it => it.y < head.y - 2), lh = below.length ? below.map(i => i.h).sort((a, b) => a - b)[below.length >> 1] : 10;
+  const left = below.filter(it => it.x + Math.min(it.w, gap) / 2 < edge).sort((a, b) => b.y - a.y);
+  if (!left.length) return null;
+  const tops = [];
+  let last = null;
+  for (const it of left) { if (last == null || last - it.y > lh * 2.1) tops.push({ y: it.y, words: [] }); tops[tops.length - 1].words.push(it.s); last = it.y; }
+  if (tops.length > 10) return null;
+  const rows = tops.map((t, k) => {
+    const hi = t.y + lh * 0.8, lo = k + 1 < tops.length ? tops[k + 1].y + lh * 0.8 : -1e9, levels = {};
+    for (const c of cols) {
+      const words = below.filter(it => it.y <= hi && it.y > lo && it.x + it.w / 2 >= edge && Math.abs(it.x + it.w / 2 - c.c) === Math.min(...cols.map(q => Math.abs(it.x + it.w / 2 - q.c)))).sort((a, b) => b.y - a.y || a.x - b.x).map(it => it.s);
+      const txt = ruTidy(words.join(' ')).slice(0, 600); if (txt) levels[c.v] = txt;
+    }
+    return { name: ruTidy(t.words.join(' ')).slice(0, 80), levels };
+  }).filter(r => r.name && Object.keys(r.levels).length);
+  if (!rows.length) return null;
+  return { rows, top: Math.max(...cols.map(c => c.v)) };
+}
+async function rubricRead(file) {
+  const bytes = new Uint8Array(await file.arrayBuffer()), name = file.name;
+  if (WORD_RX.test(name)) { let got = null; try { got = ruFromWord(bytes); } catch (e) { console.error(e); } if (!got) openWord(bytes); return { name, word: true, page: bytes, rows: got ? got.rows : [], top: got ? got.top : 0 }; }
+  if (isImg(name) || IMG_MORE.test(name)) {
+    if (isImg(name) && !await picReads(bytes)) throw new Error('damaged');
+    return { name, word: false, page: isImg(name) ? await imageToPdf(bytes, name) : await anyImageToPdf(bytes), rows: [], top: 0 };
+  }
+  await PDFLib.PDFDocument.load(bytes, { ignoreEncryption: true });
+  let got = null; try { got = await ruFromPdf(bytes); } catch (e) { console.error(e); }
+  return { name, word: false, page: bytes, rows: got ? got.rows : [], top: got ? got.top : 0 };
+}
+function rubricRowsInto(d, r) {
+  d.mode = 'rubric'; d.criteria = r.rows.map(x => x.name);
+  const lv = r.rows.map(x => x.levels || {}); if (lv.some(o => Object.keys(o).length)) d.levels = lv; else delete d.levels;
+  for (const k of ['tops', 'top', 'ib']) delete d[k];
+  if (r.top && r.top !== ROW_TOP && topOk(r.top)) d.top = r.top;
+  return d;
+}
+function rubricKeep(r) {
+  const id = uid(); let bin = ''; for (let i = 0; i < r.page.length; i += 0x8000) bin += String.fromCharCode.apply(null, r.page.subarray(i, i + 0x8000));
+  return store.set('gs.rp.' + id, btoa(bin)) ? { id, name: r.name } : null;
+}
+function rubricSays(su) {
+  if (!su) return '<span>Not set yet</span>';
+  return (su.mode === 'rubric' ? '<span>Rubric rows:</span> <span data-raw>' + esc(su.criteria.join(' · ')) + '</span>' : '<span>Just the total, out of</span> <span data-raw>' + esc(fmtNum(+su.outOf || 0)) + '</span>') +
+    (su.rubricPage ? '<br><span>A copy for every student:</span> <span data-raw>' + esc(su.rubricPage.name || 'Rubric page.pdf') + '</span>' : '');
+}
+function ruHtml(su, o) {
+  return '<div class="field rubup" id="rubUp"><label>Rubric</label><span class="rusays" id="ruSays">' + rubricSays(su) + '</span>' +
+    '<span class="rurow"><button type="button" class="btn sm" id="ruPick">Bring in a rubric…</button><span class="muted">Word, PDF or a picture. Rows are read from a table where they can be.</span></span><div id="ruGot"' + (o && o.now ? ' data-now' : '') + ' hidden></div></div>';
+}
+function ruWire(box, it, onUse) {
+  let got = null;
+  const show = () => {
+    const g = $('#ruGot'); if (!g) return;
+    if (!got) { g.hidden = true; return; }
+    const r = got.r, n = r.rows.length;
+    g.hidden = false;
+    g.innerHTML = '<p class="rufile"><b data-raw>' + esc(r.name) + '</b></p>' +
+      (n ? '<p class="rufile">Rows found in it:</p><ol class="rurows">' + r.rows.map(x => '<li><b data-raw>' + esc(x.name) + '</b>' + (Object.keys(x.levels).length ? '<span class="muted" data-raw>' + esc(Object.entries(x.levels).sort((a, b) => b[0] - a[0]).map(([v, t]) => v + ': ' + t).join(' · ').slice(0, 160)) + '</span>' : '') + '</li>').join('') + '</ol>' +
+        '<label class="chk"><input type="checkbox" id="ruRows"' + (got.rows ? ' checked' : '') + '> Score with these rows</label>'
+        : '<p class="muted runo">No rubric table could be read from this file, so its rows aren’t filled in. You can type them in Rubric setup.</p>') +
+      '<label class="chk"><input type="checkbox" id="ruCopy"' + (got.copy ? ' checked' : '') + '> Give every student a copy to mark on</label>' +
+      (g.hasAttribute('data-now') ? '<div><button type="button" class="btn sm primary" id="ruUse">Use this rubric</button></div>' : '');
+  };
+  const live = { signal: dlgOff.signal };
+  box.addEventListener('change', e => { if (!got) return; if (e.target.id === 'ruRows') got.rows = e.target.checked; if (e.target.id === 'ruCopy') got.copy = e.target.checked; }, live);
+  box.addEventListener('click', async e => {
+    if (e.target.closest('#ruUse')) { if (!got || (!got.rows && !got.copy)) return toast('Tick what to do with it first'); const ok = ruPut(it, got); if (ok) { $('#ruSays').innerHTML = rubricSays(it.setup); got = null; show(); if (onUse) onUse(); } return; }
+    if (!e.target.closest('#ruPick')) return;
+    const inp = document.createElement('input'); inp.type = 'file'; inp.accept = '.docx,.docm,.pdf,.png,.jpg,.jpeg,.heic,.heif,.webp,image/*,application/pdf';
+    inp.onchange = async () => {
+      const f = inp.files[0]; if (!f) return;
+      try { const r = await rubricRead(f); got = { r, rows: !!r.rows.length, copy: !r.rows.length }; show(); }
+      catch (err) { console.error(err); toast('That file couldn’t be opened as a Word file, PDF or picture'); }
+    };
+    inp.click();
+  }, live);
+  return { got: () => got };
+}
+function ruPut(it, got) {
+  if (!got || (!got.rows && !got.copy)) return true;
+  const r = got.r, live = batch && batch.assignment === it;
+  const d = JSON.parse(JSON.stringify(live ? setup : setupOver(it.setup || store.get('gs.setup', null))));
+  if (got.rows) rubricRowsInto(d, r);
+  if (live) { openSetup({ draft: d, page: got.copy ? { bytes: r.page, name: r.name } : undefined }); return false; }
+  if (got.copy) {
+    const k = rubricKeep(r); if (!k) { toast('That rubric file is too big to keep. Try a smaller PDF or a screenshot.'); return false; }
+    if (d.rubricPage) store.del('gs.rp.' + d.rubricPage.id);
+    d.rubricPage = k; d.rubricPos = r.word ? 'start' : 'end';
+  }
+  delete d.spot; it.setup = d; shareRubric(it); saveLib();
+  toast('The rubric is set for “' + it.name + '”');
+  return true;
+}
+Object.assign(window.__gs, { rubricRead, rubricRowsInto, ruFromPdf });
 
 /* ---------------- gradebook: every assignment for a class, by term, with a term grade from the teacher's own weights ---------------- */
 const BK_XC = ['xc', 'Extra credit', 'Extra credit'];
@@ -19843,6 +20024,7 @@ async function removeHere() {
     await new Promise(res => { const r = indexedDB.deleteDatabase('grading-studio-safety'); r.onsuccess = r.onerror = r.onblocked = () => res(); });
     await schRemoveAll();
     await exRemoveAll();
+    await vkClear();   // video files kept in this browser
   } catch (e) { console.error(e); tabsOver('done'); return sayDlg('Not everything could be removed. Close any other Grading Studio tabs and try again.'); }
   for (let i = localStorage.length - 1; i >= 0; i--) { const k = localStorage.key(i); if (k && (k.startsWith('gsc.saved.') || k.startsWith('gsc.forgot.') || k.startsWith('gs.') && !LS_LOOKS.test(k))) localStorage.removeItem(k); }
   try { localStorage.removeItem('gsc.win'); } catch {}
@@ -21602,18 +21784,25 @@ function linkPlayer(url) {
   return null;
 }
 const linkTitle = f => f.name.replace(LINK_RX, '').replace(/ \(added \d+\)$/, '');
+const vidRef = data => { if (!data || !data.length || data.length > 4000) return ''; let s = ''; try { s = new TextDecoder().decode(data); } catch { return ''; } const m = /^\s*URL\s*=\s*gs-video:([\w-]{6,40})\s*$/mi.exec(s); return m ? m[1] : ''; };
+const vidBytes = (id, name, size) => new TextEncoder().encode('[InternetShortcut]\r\nURL=gs-video:' + id + '\r\nName=' + String(name || '').replace(/[\r\n]+/g, ' ').slice(0, 120) + '\r\nSize=' + (size || 0) + '\r\n');
+const linkKey = f => { const v = vidRef(f.data); return v ? 'gs-video:' + v : linkOf(f.data); };
 
 function linkCard(st, f) {
-  const url = linkOf(f.data), play = linkPlayer(url);
+  if (vidRef(f.data)) return vfileCard(st, f);
+  const url = linkOf(f.data), play = linkPlayer(url), ticks = !!play && (!play.frame || frameTicks(play.frame));
   const el = document.createElement('div'); el.className = 'media vlink';
   el.innerHTML = '<div class="mstick"><div class="mhead"><b>' + esc(linkTitle(f)) + '</b><span class="muted">' + esc(linkHost(url)) + '</span></div><div class="vlslot" hidden></div>' +
     '<div class="mctl">' + (play ? '<button class="btn sm primary" data-vplay aria-pressed="false">▶ Play here</button>' : '') +
+    (ticks ? '<button class="btn sm" data-vstamp title="Adds where the video is to your comment, like [2:15]">+ Time to comment</button>' : '') +
     '<button class="btn sm' + (play ? '' : ' primary') + '" data-vopen title="Opens the video in a window of its own, to keep beside this one">Open in its own window</button>' +
     '<button class="btn sm" data-vcopy>Copy link</button></div>' +
     '<p class="muted vlnote">' + (play ? 'Only the link is kept here; the video stays where it is. If it asks you to sign in or won’t play, open it in its own window.' : 'Only the link is kept here. This site can’t play inside the page, so it opens in a window of its own.') + '</p></div>';
+  const now = () => { const m = el.querySelector('.vlslot video, .vlslot audio'); if (m) return m; const fr = el.querySelector('.vlslot iframe'), t = fr && frameTime(fr); return t == null ? null : { currentTime: t }; };
   el.onclick = e => {
     if (e.target.closest('[data-vopen]')) { window.open(url, '_blank', 'noopener,noreferrer,popup,width=980,height=640'); return; }
     if (e.target.closest('[data-vcopy]')) { navigator.clipboard.writeText(url).then(() => toast('Link copied'), () => toast('The link couldn’t be copied')); return; }
+    if (e.target.closest('[data-vstamp]')) { const m = now(); if (!m) return toast('Press ▶ Play here first, then play the video to the moment you mean'); addStamp(st, m.currentTime); return; }
     const b = e.target.closest('[data-vplay]'); if (!b) return;
     const slot = el.querySelector('.vlslot'), on = slot.hidden;
     slot.hidden = !on; b.setAttribute('aria-pressed', on); b.textContent = on ? 'Close the player' : '▶ Play here';
@@ -21623,12 +21812,119 @@ function linkCard(st, f) {
   const fill = c => {
     const slot = el.querySelector('.vlslot'), b = el.querySelector('[data-vplay]');
     slot.hidden = false; slot.innerHTML = ''; b.setAttribute('aria-pressed', 'true'); b.textContent = 'Close the player';
-    if (play.frame) slot.appendChild(playerFrame(c ? clipFrame(play.frame, c).src : play.frame, linkTitle(f)));
-    else { const m = document.createElement(play.video ? 'video' : 'audio'); m.controls = true; m.preload = 'metadata'; m.src = play.video || play.audio; slot.appendChild(m); if (c) clipRun(m, c); }
+    if (play.frame) { const fr = playerFrame(frameTicking(c ? clipFrame(play.frame, c).src : play.frame), linkTitle(f)); slot.appendChild(fr); frameClock(fr); vidGrip(slot, fr); }
+    else { const m = document.createElement(play.video ? 'video' : 'audio'); m.controls = true; m.preload = 'metadata'; m.src = play.video || play.audio; slot.appendChild(m); if (play.video) vidGrip(slot, m); if (c) clipRun(m, c); }
   };
-  clipStrip(el.querySelector('.mstick'), f, () => el.querySelector('.vlslot video, .vlslot audio'), c => (play ? fill(c) : clipShow(c.id)));
+  clipStrip(el.querySelector('.mstick'), f, now, c => (play ? fill(c) : clipShow(c.id)), play && play.frame && !ticks ? 'drive' : '');
   return el;
 }
+
+/* ---------- video files kept in this browser ---------- */
+let vkDbP = null;
+const vkDb = () => vkDbP ||= new Promise((res, rej) => { const r = indexedDB.open('grading-studio-videos', 1); r.onupgradeneeded = () => r.result.createObjectStore('v'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
+async function vkDo(mode, fn) {
+  const db = await vkDb();
+  return new Promise((res, rej) => { const tx = db.transaction('v', mode), req = fn(tx.objectStore('v')); tx.oncomplete = () => res(req && req.result); tx.onerror = () => rej(tx.error); tx.onabort = () => rej(tx.error); });
+}
+const vkSeen = new Map();   // id -> { name, url, blob } or null, while this page is open
+async function vkPut(file, id) {
+  id = id || uid();
+  try { const e = navigator.storage && navigator.storage.estimate ? await navigator.storage.estimate() : null; if (e && e.quota && e.quota - (e.usage || 0) < file.size * 1.05) throw new Error('room'); } catch (err) { if (err.message === 'room') throw new Error('There isn’t room on this computer for that video (' + fmtSize(file.size) + '). Free up some space, or use a link to the video instead.'); }
+  askToKeep();
+  try { await vkDo('readwrite', o => o.put({ id, name: file.name, type: file.type || MIME[extOf(file.name)] || '', size: file.size, at: Date.now(), blob: file }, id)); }
+  catch (err) { console.error(err); throw new Error('This browser couldn’t keep that video, usually because the computer is out of room. A link to the video works at any size.'); }
+  const was = vkSeen.get(id); if (was) URL.revokeObjectURL(was.url); vkSeen.delete(id);
+  return id;
+}
+async function vkGet(id) {
+  if (vkSeen.has(id)) return vkSeen.get(id);
+  let r = null; try { r = await vkDo('readonly', o => o.get(id)); } catch (e) { console.error(e); }
+  const out = r && r.blob ? { name: r.name, size: r.size, blob: r.blob, url: URL.createObjectURL(r.blob.type ? r.blob : new Blob([r.blob], { type: r.type || MIME[extOf(r.name)] || '' })) } : null;
+  vkSeen.set(id, out); return out;
+}
+async function vkSweep() {
+  try {
+    if (!vkDbP && indexedDB.databases && !(await indexedDB.databases()).some(d => d.name === 'grading-studio-videos')) return;   // never made here: nothing to sweep, and no database made for it
+    const ids = await vkDo('readonly', o => o.getAllKeys()); if (!ids || !ids.length) return;
+    const used = new Set();
+    for (const r of (await idbDo('readonly', o => o.getAll())) || []) { const v = r && /\.url$/i.test(r.path || '') && vidRef(r.data); if (v) used.add(v); }
+    if (batch) for (const st of batch.students) for (const f of st.files.concat(st.gone || [])) { const v = f.kind === 'link' && vidRef(f.data); if (v) used.add(v); }
+    const old = Date.now() - 15 * 60e3;
+    for (const id of ids) { if (used.has(id)) continue; const r = await vkDo('readonly', o => o.get(id)); if (r && r.at > old) continue; await vkDo('readwrite', o => o.delete(id)); const was = vkSeen.get(id); if (was) URL.revokeObjectURL(was.url); vkSeen.delete(id); }
+  } catch (e) { console.error(e); }
+}
+const vkClear = () => vkDo('readwrite', o => o.clear()).catch(e => console.error(e)).then(() => { for (const v of vkSeen.values()) if (v) URL.revokeObjectURL(v.url); vkSeen.clear(); });
+const vidPick = () => new Promise(res => { const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'video/*,audio/*,' + Object.keys(MIME).map(x => '.' + x).join(','); inp.onchange = () => res(inp.files[0] || null); inp.click(); });
+function vfileCard(st, f) {
+  const id = vidRef(f.data), hold = document.createElement('div'); hold.className = 'media vfile';
+  hold.innerHTML = '<div class="mstick"><div class="mhead"><b>' + esc(linkTitle(f)) + '</b><span class="muted">Opening the video…</span></div></div>';
+  vkGet(id).then(k => {
+    if (!hold.isConnected && !hold.parentNode) return;
+    if (k) { hold.replaceWith(mediaCard(st, f, k)); return; }
+    hold.querySelector('.mhead .muted').textContent = 'video file';
+    hold.querySelector('.mstick').insertAdjacentHTML('beforeend', '<p class="vlnote">This video isn’t in this browser. A video file stays in the browser it was added in: it doesn’t go in take-home files or the linked folder.</p><div class="mctl"><button class="btn sm primary" data-vkback>Choose the video file…</button></div>');
+    hold.querySelector('[data-vkback]').onclick = async () => {
+      const file = await vidPick(); if (!file) return;
+      try { await vkPut(file, id); toast('The video is back'); openStudent(cur, f.path); } catch (err) { sayDlg(err.message); }
+    };
+  });
+  return hold;
+}
+
+/* ---------- where a site's player is ---------- */
+const frameTicks = src => /youtube-nocookie\.com\/embed\/|player\.vimeo\.com\//.test(src);
+function frameTicking(src) {
+  if (!/youtube-nocookie\.com\/embed\//.test(src)) return src;
+  return src + (src.includes('?') ? '&' : '?') + 'enablejsapi=1' + (/^https?:/.test(location.origin) ? '&origin=' + encodeURIComponent(location.origin) : '');
+}
+const clocks = new Set();
+function frameClock(fr) {
+  if (!frameTicks(fr.src)) return;
+  const k = { fr, t: null, at: 0, on: false, yt: /youtube/.test(fr.src) }, to = k.yt ? 'https://www.youtube-nocookie.com' : 'https://player.vimeo.com';
+  const ask = () => { try { const w = fr.contentWindow; if (!w) return; if (k.yt) w.postMessage(JSON.stringify({ event: 'listening', id: 1, channel: 'widget' }), to); else for (const v of ['timeupdate', 'play', 'pause', 'seeked']) w.postMessage(JSON.stringify({ method: 'addEventListener', value: v }), to); } catch {} };
+  k.ask = ask; clocks.add(k);
+  let n = 0; fr.addEventListener('load', () => { ask(); const iv = setInterval(() => { if (k.t != null || ++n > 12 || !fr.isConnected) return clearInterval(iv); ask(); }, 500); });
+}
+window.addEventListener('message', e => {
+  if (!clocks.size || !/^https:\/\/(www\.youtube-nocookie\.com|player\.vimeo\.com)$/.test(e.origin)) return;
+  for (const k of clocks) {
+    if (!k.fr.isConnected) { clocks.delete(k); continue; }
+    if (e.source !== k.fr.contentWindow) continue;
+    let d = e.data; if (typeof d === 'string') try { d = JSON.parse(d); } catch { return; }
+    if (!d || typeof d !== 'object') return;
+    const at = (t, on) => { if (typeof t === 'number' && isFinite(t)) { k.t = t; k.at = Date.now(); } if (on != null) k.on = on; };
+    if (k.yt && d.info && typeof d.info === 'object') at(d.info.currentTime, d.info.playerState != null ? d.info.playerState === 1 : null);
+    else if (!k.yt) { if (d.event === 'ready') k.ask(); else if (d.event === 'timeupdate' || d.event === 'seeked') at(d.data && d.data.seconds, d.event === 'timeupdate' ? true : null); else if (d.event === 'pause') at(d.data && d.data.seconds, false); else if (d.event === 'play') at(d.data && d.data.seconds, true); }
+    return;
+  }
+});
+function frameTime(fr) { for (const k of clocks) if (k.fr === fr) return k.t == null ? null : k.t + (k.on ? (Date.now() - k.at) / 1000 : 0); return null; }
+
+/* ---------- a video as big as she likes ---------- */
+const VID_MIN = 160;
+function vidHApply(h) {
+  const r = document.documentElement;
+  if (h) { r.style.setProperty('--vid-h', Math.round(h) + 'px'); r.classList.add('vidsized'); } else { r.style.removeProperty('--vid-h'); r.classList.remove('vidsized'); }
+  const p = $('#paper'); r.classList.toggle('vidtall', !!h && !!p && p.clientHeight > 0 && h > p.clientHeight * 0.55);   // that tall, it scrolls away with the page instead of covering the notes page
+}
+function vidGrip(host, player) {
+  const g = document.createElement('div'); g.className = 'vgrip'; g.tabIndex = 0; g.setAttribute('role', 'separator'); g.setAttribute('aria-orientation', 'horizontal');
+  g.setAttribute('aria-label', 'Video size'); g.title = 'Drag to make the video bigger or smaller. Double-click for the usual size.';
+  player.after(g);
+  const set = (h, keep) => { h = Math.max(VID_MIN, Math.min(window.innerHeight * 0.92, h)); vidHApply(h); if (keep) store.set('gs.vidH', Math.round(h)); };
+  let tapped = 0;
+  g.onpointerdown = e => {
+    e.preventDefault();
+    if (Date.now() - tapped < 400) { tapped = 0; store.del('gs.vidH'); vidHApply(0); return; }   // a double click: the usual size
+    g.setPointerCapture(e.pointerId); g.classList.add('on');
+    const y0 = e.clientY, h0 = player.getBoundingClientRect().height, sh = document.createElement('div'); sh.className = 'vgripshield'; document.body.appendChild(sh);   // a site's player would catch the pointer
+    g.onpointermove = ev => set(h0 + ev.clientY - y0);
+    g.onpointerup = g.onpointercancel = ev => { g.onpointermove = g.onpointerup = g.onpointercancel = null; g.classList.remove('on'); sh.remove(); const dy = ev.clientY - y0; if (Math.abs(dy) < 3) tapped = Date.now(); else set(h0 + dy, true); };
+  };
+  g.onkeydown = e => { const d = e.key === 'ArrowDown' ? 40 : e.key === 'ArrowUp' ? -40 : 0; if (!d) return; e.preventDefault(); e.stopPropagation(); set(player.getBoundingClientRect().height + d, true); };
+  vidHApply(store.get('gs.vidH', 0));
+}
+Object.assign(window.__gs, { vidRef, linkKey, vkPut, vkGet, vkSweep, frameTicking, vidHApply });
 
 /* ---------- the notes page ---------- */
 const NP_W = 595.28, NP_H = 841.89, NP_M = 48, NP_TAIL = '%GradingStudio-notes';
@@ -21715,7 +22011,7 @@ async function addAndFind(st, list) {
 }
 const copyFor = (st, f) => ({ path: f.name, file: new File([f.data], f.name), from: st.key });
 async function partnerCopy(st, f, to) {
-  if (f.kind === 'link') { const have = to.files.find(x => x.kind === 'link' && linkOf(x.data) === linkOf(f.data)); if (have) return have; }
+  if (f.kind === 'link') { const have = to.files.find(x => x.kind === 'link' && linkKey(x) === linkKey(f)); if (have) return have; }
   const have = to.files.find(x => x.from === st.key && x.name === f.name); if (have) return have;
   return (await addAndFind(to, [copyFor(st, f)]))[0] || null;
 }
@@ -21744,59 +22040,64 @@ function partnerList(st, picked, locked) {
 }
 
 /* ---------- Add: A video… ---------- */
-const VIDEO_BIG = 120e6;   // about what this browser can keep of one added file
-function openAddVideo(st) {
+const VID_HINT = 'Paste the link: Google Drive, YouTube or anywhere else';
+function openAddVideo(st, asFile) {
   if (!st) return;
   const who = shownName(st, batch.students.indexOf(st)), rows = npRows(setup), picked = new Set(), locked = new Set(groupMates(st));
-  let np = notesFileOf(st) ? '' : (npLast === 'rubric' && !rows.length ? 'lined' : npLast), file = null;
+  let np = notesFileOf(st) ? '' : (npLast === 'rubric' && !rows.length ? 'lined' : npLast), file = null, by = asFile ? 'file' : 'link';
   const pl = partnerList(st, picked, locked);
   openDlg('<div class="bh"><h2>Video for ' + esc(who) + '</h2><button class="icon" data-cancel aria-label="Close" style="margin-left:auto">✕</button></div>' +
-    '<div class="bb vdbox"><label class="vdlab" for="vdLink">Link to the video</label><input class="btn" id="vdLink" placeholder="Paste the link: Google Drive, YouTube or anywhere else" autocomplete="off" spellcheck="false">' +
-    '<p class="muted vdsay" id="vdSay">Only the link is kept here, so the video stays where it is and nothing slows down. <button class="link" id="vdFile">Use a video file on this computer instead…</button></p>' +
+    '<div class="bb vdbox"><span class="seg vdby" role="group" aria-label="The video"><button data-vdby="link" aria-pressed="true">A link</button><button data-vdby="file" aria-pressed="false">A video file</button></span>' +
+    '<div id="vdLinkBox"><input class="btn" id="vdLink" placeholder="' + VID_HINT + '" aria-label="Link to the video" autocomplete="off" spellcheck="false">' +
+    '<p class="muted vdsay">Only the link is kept here, so the video stays where it is and nothing slows down.</p></div>' +
+    '<div id="vdFileBox" hidden><div class="vdfile"><button class="btn" id="vdFile">Choose a video file…</button><span id="vdFileName" class="muted">or drop it here</span></div>' +
+    '<p class="muted vdsay">Kept in this browser on this computer, at any length, as long as there is room. It doesn’t go in take-home files.</p></div>' +
     '<label class="vdlab" for="vdName">Name it</label><input class="btn" id="vdName" value="Presentation video" autocomplete="off">' +
     '<div class="vdlab">Notes page<small>A page to write on while you watch. It is marked, scored and returned like a paper.</small></div>' + npTiles(np, rows, true) +
-    '<div class="vdlab">Partners<small>Tick everyone else in the video. They get the link and the notes page, and one set of marks and one grade covers the group.</small></div>' + pl.html + '</div>' +
+    '<div class="vdlab">Partners<small>Tick everyone else in the video. They get the video and the notes page, and one set of marks and one grade covers the group.</small></div>' + pl.html + '</div>' +
     '<div class="bf"><button class="btn" data-cancel>Cancel</button><button class="btn primary" id="vdAdd" disabled>Add to ' + esc(who) + '</button></div>');
-  const link = $('#vdLink'), add = $('#vdAdd'), say = $('#vdSay'), say0 = say.innerHTML;
+  const link = $('#vdLink'), add = $('#vdAdd'), box = $('#dlgBox');
   const ready = () => {
-    const v = link.value.trim(), ok = file ? true : !!linkClean(v);
-    add.disabled = !ok; link.classList.toggle('bad', !!v && !ok && !file);
+    const v = link.value.trim(), ok = by === 'file' ? !!file : !!linkClean(v);
+    add.disabled = !ok; link.classList.toggle('bad', by === 'link' && !!v && !ok);
     add.textContent = 'Add to ' + who + (picked.size ? ' and ' + picked.size + (picked.size === 1 ? ' partner' : ' partners') : '');
   };
+  const setBy = k => { by = k; for (const b of box.querySelectorAll('[data-vdby]')) b.setAttribute('aria-pressed', b.dataset.vdby === k); $('#vdLinkBox').hidden = k !== 'link'; $('#vdFileBox').hidden = k !== 'file'; ready(); if (k === 'link') link.focus(); };
+  const useFile = f => { if (!f) return; if (!MEDIA_RX.test(f.name) && !/^(video|audio)\//.test(f.type)) return toast('That isn’t a video or sound file'); file = f; $('#vdFileName').innerHTML = '<b>' + esc(f.name) + '</b> · ' + fmtSize(f.size); setBy('file'); };
   pl.draw(); link.oninput = ready; $('#vdFind').oninput = pl.draw;
-  $('#dlgBox').onclick = async e => {
+  box.ondragover = e => { if (by === 'file') e.preventDefault(); };
+  box.ondrop = e => { if (by !== 'file') return; e.preventDefault(); useFile(e.dataTransfer.files[0]); };
+  box.onclick = async e => {
     if (e.target.closest('[data-cancel]')) return closeDlg();
-    const t = e.target.closest('.nptile'); if (t && !t.disabled) { np = t.dataset.np; npPick($('#dlgBox'), np); return; }
+    const t = e.target.closest('.nptile'); if (t && !t.disabled) { np = t.dataset.np; npPick(box, np); return; }
     const row = e.target.closest('[data-vdto]'); if (row && !row.disabled) { const s = batch.students[+row.dataset.vdto]; if (picked.has(s)) picked.delete(s); else picked.add(s); pl.draw(); ready(); return; }
-    if (e.target.closest('#vdFile')) {
-      const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'video/*,audio/*';
-      inp.onchange = () => { file = inp.files[0] || null; if (!file) return; link.value = ''; link.disabled = true; link.placeholder = file.name;
-        say.innerHTML = '<b>' + esc(file.name) + '</b> (' + Math.max(1, Math.round(file.size / 1e6)) + ' MB) will be kept in this browser, on ' + esc(who) + '’s paper. Short clips only: for anything long, a link is better. Partners share the notes page and the grade. <button class="link" id="vdUnfile">Use a link instead</button>'; ready(); };
-      inp.click(); return;
-    }
-    if (e.target.closest('#vdUnfile')) { file = null; link.disabled = false; link.placeholder = 'Paste the link: Google Drive, YouTube or anywhere else'; say.innerHTML = say0; ready(); link.focus(); return; }
+    const sb = e.target.closest('[data-vdby]'); if (sb) { setBy(sb.dataset.vdby); if (sb.dataset.vdby === 'file' && !file) useFile(await vidPick()); return; }
+    if (e.target.closest('#vdFile')) { useFile(await vidPick()); return; }
     if (e.target !== add || add.disabled) return;
-    const url = file ? '' : linkClean(link.value), name = npFileName($('#vdName').value || 'Presentation video'), partners = [...picked], kind = np;
-    if (file && file.size > VIDEO_BIG && !await askDlg('This video is ' + Math.round(file.size / 1e6) + ' MB. A file that big usually can’t be kept in this browser, so it may be gone the next time you open this assignment.\n\nA link to the video works at any size.', { ok: 'Add the file anyway', cancel: 'Go back' })) return;
+    const url = by === 'file' ? '' : linkClean(link.value), name = npFileName($('#vdName').value || 'Presentation video'), partners = [...picked], kind = np;
     add.disabled = true; add.textContent = 'Adding…';
-    closeDlg();
-    try { await videoAdd(st, { url, file, name, kind, partners }); } catch (err) { console.error(err); toast('That couldn’t be added: ' + ((err && err.message) || err)); }
+    try { await videoAdd(st, { url, file: by === 'file' ? file : null, name, kind, partners }); closeDlg(); }
+    catch (err) { console.error(err); add.disabled = false; ready(); sayDlg((err && err.message) || String(err)); }
   };
-  link.focus();
+  if (asFile) setBy('file'); else link.focus();
 }
-async function videoAdd(st, o) {
-  const list = [];
-  if (o.file) list.push({ path: o.file.name, file: o.file });
-  else list.push({ path: o.name + '.url', file: new File([linkBytes(o.url)], o.name + '.url') });
+async function videoEntry(o) {
+  if (o.file) { const id = await vkPut(o.file); return { path: o.name + '.url', file: new File([vidBytes(id, o.file.name, o.file.size)], o.name + '.url') }; }
+  return { path: o.name + '.url', file: new File([linkBytes(o.url)], o.name + '.url') };
+}
+async function videoAdd(st, o, quiet) {
+  const list = [await videoEntry(o)];
   if (o.kind) { npLast = o.kind; const n = npFileName(o.name.replace(/\s*video$/i, '') + ' notes') + '.pdf'; list.push({ path: n, file: new File([await notesPdf(o.kind, batch.name, npRows(setup))], n, { type: 'application/pdf' }) }); }
   const made = await addAndFind(st, list), vid = made.find(f => f.kind === 'link' || f.kind === 'media') || made[0], page = made.find(f => f.kind === 'pdf') || notesFileOf(st);
   const all = [...new Set([...groupMates(st), ...(o.partners || [])])];
   if (all.length) await partnersJoin(st, page || vid, all, made.filter(f => f.kind !== 'media'));
+  if (quiet) return made;
   saveSoon(); renderList();
   toast('Added the video to ' + groupNames([st, ...all]));
   await openStudent(batch.students.indexOf(st), vid && vid.path);
   return made;
 }
+const groupPaper = st => st.files.find(f => !f.virtual && (viewable(f) || f.kind === 'docx')) || null;
 
 /* ---------- Add: A notes page… ---------- */
 function openAddNotes(st) {
@@ -21823,33 +22124,147 @@ function openAddNotes(st) {
   };
 }
 
-/* ---------- an assignment with no papers at all: a notes page for everyone on the roster ---------- */
+/* ---------- videos and partners for the whole class, in one list ---------- */
+function pvList(host, rows) {
+  const vid = new Map(), grp = new Map();   // k -> { url, file } ; k -> a Set shared by everyone in one new group
+  let open = null;   // the row whose partners are being picked
+  const R = k => rows.find(r => r.k === k), mine = k => grp.get(k) || new Set([k]);
+  const old = k => new Set([k, ...((R(k) || {}).mates || [])]);
+  const team = k => { const s = new Set(); for (const x of mine(k)) for (const y of old(x)) s.add(y); for (const x of [...s]) for (const y of mine(x)) s.add(y); return [...s].sort((a, b) => rows.findIndex(r => r.k === a) - rows.findIndex(r => r.k === b)); };
+  const leadOf = k => { const t = team(k); return t.find(x => R(x) && R(x).has) || t.find(x => vid.get(x) && (vid.get(x).url || vid.get(x).file)) || t[0]; };
+  const tog = (k, o) => {
+    const g = mine(k);
+    if (g.has(o)) { g.delete(o); grp.delete(o); if (g.size < 2) for (const x of g) grp.delete(x); }
+    else { const og = grp.get(o); if (og) { og.delete(o); if (og.size < 2) for (const x of og) grp.delete(x); } g.add(o); for (const x of g) grp.set(x, g); const v = vid.get(o); if (v && !vid.get(k)) { vid.set(k, v); vid.delete(o); } }
+  };
+  const label = k => (R(k) || {}).label || k;
+  const draw = () => {
+    host.innerHTML = rows.map((r, i) => {
+      const t = team(r.k), lead = leadOf(r.k), v = vid.get(r.k) || {}, others = t.filter(x => x !== r.k);
+      let what;
+      if (lead !== r.k && (R(lead).has || (vid.get(lead) && (vid.get(lead).url || vid.get(lead).file)))) what = '<span class="muted"><span>Same video as:</span> <b data-raw>' + esc(label(lead)) + '</b></span>';
+      else if (r.has) what = '<span class="pvhas" data-raw title="' + esc(r.has) + '">' + esc(r.has) + '</span>';
+      else if (v.file) what = '<span class="pvfile"><b data-raw>' + esc(v.file.name) + '</b> <span data-raw>' + fmtSize(v.file.size) + '</span><button class="icon" data-pvunfile="' + i + '" aria-label="Take the file off">✕</button></span>';
+      else what = '<input class="btn pvlink' + (v.url && !linkClean(v.url) ? ' bad' : '') + '" data-pvlink="' + i + '" value="' + esc(v.url || '') + '" placeholder="Paste a link to their video" aria-label="Link to the video" autocomplete="off" spellcheck="false"><button class="btn sm" data-pvfile="' + i + '" title="A video file on this computer">File…</button>';
+      return '<div class="pvrow' + (open === r.k ? ' on' : '') + '"><span class="pvname" data-raw>' + esc(r.label) + '</span><span class="pvvid">' + what + '</span>' +
+        '<button class="btn sm pvpbtn" data-pvp="' + i + '" aria-expanded="' + (open === r.k) + '">' + (others.length ? '<span>With:</span> <span data-raw>' + esc(others.map(label).join(', ')) + '</span>' : '+ Partners') + '</button>' +
+        (open === r.k ? '<div class="pvpick" role="group" aria-label="Partners">' + rows.filter(x => x.k !== r.k).map(x => { const lock = old(r.k).has(x.k), on = lock || t.includes(x.k);
+          return '<button class="pvchip" data-pvto="' + rows.indexOf(x) + '" aria-pressed="' + on + '"' + (lock ? ' disabled title="Already in the group"' : '') + ' data-raw>' + esc(x.label) + '</button>'; }).join('') + '<button class="link" data-pvdone>Done</button></div>' : '') + '</div>';
+    }).join('');
+  };
+  host.addEventListener('input', e => { const l = e.target.closest('[data-pvlink]'); if (!l) return; const k = rows[+l.dataset.pvlink].k; vid.set(k, { url: l.value }); l.classList.toggle('bad', !!l.value.trim() && !linkClean(l.value)); host.dispatchEvent(new Event('pvchange')); });
+  host.addEventListener('change', e => { if (e.target.closest('[data-pvlink]')) draw(); });   // the group's other rows follow once the link is in
+  host.addEventListener('click', async e => {
+    const b = e.target.closest('[data-pvp],[data-pvto],[data-pvdone],[data-pvfile],[data-pvunfile]'); if (!b) return;
+    e.stopPropagation();
+    if (b.dataset.pvp != null) { const k = rows[+b.dataset.pvp].k; open = open === k ? null : k; }
+    else if (b.dataset.pvdone != null) open = null;
+    else if (b.dataset.pvto != null && open) tog(open, rows[+b.dataset.pvto].k);
+    else if (b.dataset.pvfile != null) { const f = await vidPick(); if (!f) return; vid.set(rows[+b.dataset.pvfile].k, { file: f }); }
+    else if (b.dataset.pvunfile != null) vid.delete(rows[+b.dataset.pvunfile].k);
+    draw(); host.dispatchEvent(new Event('pvchange'));
+    if (b.dataset.pvp != null || b.dataset.pvto != null) { const again = host.querySelector(b.dataset.pvp != null ? '[data-pvp="' + b.dataset.pvp + '"]' : '[data-pvto="' + b.dataset.pvto + '"]'); if (again) again.focus(); }
+  });
+  const drop = files => {
+    const people = rows.map(r => [nameWords(r.label)]), miss = [];
+    for (const f of files) { if (!MEDIA_RX.test(f.name)) { miss.push(f.name); continue; } const g = guessAmong(f.name, people); if (g.i < 0 || rows[g.i].has) { miss.push(f.name); continue; } vid.set(leadOf(rows[g.i].k), { file: f }); }
+    draw(); host.dispatchEvent(new Event('pvchange'));
+    if (miss.length) toast((miss.length === 1 ? 'This file didn’t match a name: ' : 'These files didn’t match a name: ') + wordsJoin(miss.slice(0, 4)) + (miss.length > 4 ? '…' : '') + '. Use File… on the right row.', 8000);
+  };
+  const out = () => {
+    const done = new Set(), list = [];
+    for (const r of rows) {
+      if (done.has(r.k)) continue;
+      const t = team(r.k); t.forEach(x => done.add(x));
+      const lead = leadOf(r.k), v = R(lead).has ? null : (t.map(x => vid.get(x)).find(x => x && (x.file || linkClean(x.url || ''))) || null);
+      const fresh = t.filter(x => !old(lead).has(x));
+      if (!v && !fresh.length) continue;
+      list.push({ k: [lead, ...t.filter(x => x !== lead)], url: v && !v.file ? linkClean(v.url) : '', file: v && v.file || null });
+    }
+    return list;
+  };
+  const bad = () => rows.some(r => { const v = vid.get(r.k); return v && v.url && v.url.trim() && !linkClean(v.url); });
+  draw();
+  return { draw, drop, out, bad };
+}
+async function pvApply(groups, stOf) {
+  let n = 0;
+  for (const g of groups) {
+    const all = g.k.map(stOf).filter(Boolean); if (!all.length) continue;
+    let st = all[0];
+    if (!g.url && !g.file && !(notesFileOf(st) || groupPaper(st))) st = all.find(s => notesFileOf(s) || groupPaper(s)) || st;
+    const partners = all.filter(s => s !== st && !groupMates(st).includes(s));
+    if (g.url || g.file) await videoAdd(st, { url: g.url, file: g.file, name: 'Presentation video', kind: '', partners }, true);
+    else if (partners.length) { const gg = groupOf(st), anchor = (gg && groupFileOf(gg, st)) || notesFileOf(st) || groupPaper(st) || st.files.find(f => f.kind === 'link'); if (!anchor) continue; await partnersJoin(st, anchor, partners, st.files.filter(f => f.kind === 'link' && f !== anchor)); }
+    n++;
+  }
+  groupSync(); saveSoon(); renderList();
+  return n;
+}
+const pvHas = st => { const f = st.files.find(x => x.kind === 'link') || st.files.find(x => x.kind === 'media'); return f ? (f.kind === 'link' ? linkTitle(f) + (vidRef(f.data) ? '' : ' · ' + linkHost(linkOf(f.data))) : f.name) : ''; };
+
+/* ---------- Setup > Partners and videos… on an open assignment ---------- */
+function openPartners() {
+  if (!batch) return;
+  const anon = anonOn(), list = batch.students.map((st, i) => ({ st, i })).filter(x => x.st.files.length || !x.st.gap);
+  if (anon) list.sort((a, b) => anonPos(a.i) - anonPos(b.i));
+  const rows = list.map(({ st, i }) => ({ k: st.key, label: shownName(st, i), has: pvHas(st), mates: groupMates(st).map(s => s.key) }));
+  openDlg('<div class="bh"><h2>Partners and videos</h2><button class="icon" data-cancel aria-label="Close" style="margin-left:auto">✕</button></div>' +
+    '<div class="bb vdbox"><p class="muted" style="margin:0;font-size:14px">Pick each group’s partners: one grade covers the group, and a group with no video shares the first one’s paper and marks. Paste a link to a video, or choose a video file. You can also drop video files here, and each goes to the student named in its file name.</p><div id="pvList" class="pvlist"></div></div>' +
+    '<div class="bf"><button class="btn" data-cancel>Cancel</button><button class="btn primary" id="pvGo" disabled>Save</button></div>', false, 'lg');
+  const box = $('#dlgBox'), host = $('#pvList'), pv = pvList(host, rows), go = $('#pvGo');
+  host.addEventListener('pvchange', () => { go.disabled = !pv.out().length || pv.bad(); });
+  box.ondragover = e => e.preventDefault();
+  box.ondrop = e => { e.preventDefault(); pv.drop([...e.dataTransfer.files]); };
+  box.onclick = async e => {
+    if (e.target.closest('[data-cancel]')) return closeDlg();
+    if (e.target !== go || go.disabled) return;
+    go.disabled = true; go.textContent = 'Saving…';
+    try { const n = await pvApply(pv.out(), k => batch.students.find(s => s.key === k)); closeDlg(); toast(n === 1 ? 'Saved 1 group or video' : 'Saved ' + n + ' groups and videos'); openStudent(cur); }
+    catch (err) { console.error(err); go.disabled = false; go.textContent = 'Save'; sayDlg((err && err.message) || String(err)); }
+  };
+}
+
+/* ---------- an assignment with no papers at all: a notes page for everyone on the roster, their videos and their partners ---------- */
 function openStartNotes(it) {
   const f = findItem(it.id), c = f && f.c !== lib.loose ? f.c : null, names = c ? c.names.filter(n => String(n).trim()) : [];
   if (!names.length) return sayDlg('This needs the class’s roster, so there is a page for each student. Add the students to the class first, then come back to this assignment.', { lg: 1 });
   const rows = npRows(it.setup);
   let np = npLast === 'rubric' && !rows.length ? 'lined' : npLast;
   openDlg('<div class="bh"><h2>“' + esc(it.name) + '” with no papers</h2></div>' +
-    '<div class="bb vdbox"><p style="margin:0 0 4px">For presentations, speeches, performances and videos. Each of the ' + names.length + ' students in ' + esc(c.name) + ' gets a notes page to write on while you watch. Mark it, score it and return it like a paper.</p>' +
-    '<p class="muted" style="margin:0 0 4px;font-size:14px">Once it is open, <b>+ Add</b> on a student’s page takes a link to their video, and that is where you say who their partners are.</p>' + npTiles(np, rows, false) +
-    (rows.length ? '' : '<p class="muted" style="margin:8px 0 0;font-size:13px">Rubric rows can be picked once this assignment has a rubric.</p>') + '</div>' +
-    '<div class="bf"><button class="btn" data-cancel>Cancel</button><button class="btn primary" id="snGo">Make the pages and open</button></div>', true, 'lg');
-  $('#dlgBox').onclick = async e => {
+    '<div class="bb vdbox"><p style="margin:0 0 4px">For presentations, speeches, performances and videos. Each of the ' + names.length + ' students in ' + esc(c.name) + ' gets a notes page to write on while you watch. Mark it, score it and return it like a paper.</p>' + npTiles(np, rows, false) +
+    (rows.length ? '' : '<p class="muted" style="margin:8px 0 0;font-size:13px">Rubric rows can be picked once this assignment has a rubric.</p>') +
+    '<div class="vdlab">Videos and partners<small>Optional, and you can add them later too. Paste a link or choose a file for each video, or drop video files here and each goes to the student named in its file name. Partners share one notes page, one set of marks and one grade.</small></div><div id="pvList" class="pvlist"></div></div>' +
+    '<div class="bf"><button class="btn" data-cancel>Cancel</button><button class="btn primary" id="snGo">Make the pages and open</button></div>', false, 'lg');
+  const box = $('#dlgBox'), folder = n => String(n).replace(/[\\/:*?"<>|\u0000-\u001F]+/g, '-').trim();
+  const pv = pvList($('#pvList'), names.map(n => ({ k: folder(n), label: n, has: '', mates: [] })));
+  $('#pvList').addEventListener('pvchange', () => { $('#snGo').disabled = pv.bad(); });
+  box.ondragover = e => e.preventDefault();
+  box.ondrop = e => { e.preventDefault(); pv.drop([...e.dataTransfer.files]); };
+  box.onclick = async e => {
     if (e.target.closest('[data-cancel]')) return closeDlg();
-    const t = e.target.closest('.nptile'); if (t && !t.disabled) { np = t.dataset.np; npPick($('#dlgBox'), np); return; }
+    const t = e.target.closest('.nptile'); if (t && !t.disabled) { np = t.dataset.np; npPick(box, np); return; }
     if (e.target.id !== 'snGo') return;
     e.target.disabled = true; npLast = np;
+    const groups = pv.out();
     try {
-      const bytes = await notesPdf(np, it.name, rows), folder = n => String(n).replace(/[\\/:*?"<>|\u0000-\u001F]+/g, '-').trim();
+      const bytes = await notesPdf(np, it.name, rows);
       const make = k => names.map(n => ({ path: folder(n) + '/' + npFileName(it.name) + ' notes' + (k > 1 ? ' (' + k + ')' : '') + '.pdf', data: bytes.slice() }));
       let k = 1, list = make(k);
       while (k < 50 && (store.get(batchIdOf(list), null) || keptMeta.has(batchIdOf(list)))) list = make(++k);
+      const id = batchIdOf(list);
       closeDlg();
       await intake(list, it.name, it);
+      if (groups.length && batch && batch.id === id) {
+        const stOf = key => batch.students.find(s => s.key === key);
+        await pvApply(groups, stOf);
+        toast(groups.length === 1 ? 'Added 1 group or video' : 'Added ' + groups.length + ' groups and videos');
+        openStudent(cur);
+      }
     } catch (err) { console.error(err); closeDlg(); toast('The pages couldn’t be made: ' + ((err && err.message) || err)); }
   };
 }
-Object.assign(window.__gs, { linkOf, linkClean, linkPlayer, notesPdf, isNotes, videoAdd, openAddVideo, openAddNotes, openStartNotes });
+Object.assign(window.__gs, { linkOf, linkClean, linkPlayer, notesPdf, isNotes, videoAdd, openAddVideo, openAddNotes, openStartNotes, openPartners, pvApply });
 
 /* ---------------- clips: a part of a video worth showing the class ---------------- */
 function clipSecs(v) {
@@ -21858,9 +22273,9 @@ function clipSecs(v) {
   return v.split(':').reduce((n, x) => n * 60 + parseFloat(x), 0);
 }
 const clipSpan = c => fmtTime(c.a) + (c.b != null ? '–' + fmtTime(c.b) : '');
-const clipsOf = f => (batch.clips || []).filter(c => (f.kind === 'link' ? c.u && c.u === linkOf(f.data) : c.p === f.path));
+const clipsOf = f => (batch.clips || []).filter(c => (f.kind === 'link' ? c.u && c.u === linkKey(f) : c.p === f.path));
 function clipFile(c) {
-  for (const st of batch.students) for (const f of st.files) if (c.u ? f.kind === 'link' && linkOf(f.data) === c.u : f.path === c.p) return f;
+  for (const st of batch.students) for (const f of st.files) if (c.u ? f.kind === 'link' && linkKey(f) === c.u : f.path === c.p) return f;
   return null;
 }
 function clipFrame(src, c) {
@@ -21883,7 +22298,7 @@ function playerFrame(src, title) {
   fr.src = src; return fr;
 }
 const clipsBtn = () => { const b = $('#clipsBtn'); if (b) b.hidden = !(batch && batch.clips && batch.clips.length); };
-function clipStrip(host, f, media, play) {
+function clipStrip(host, f, media, play, hint) {
   const box = document.createElement('div'); box.className = 'clips'; host.appendChild(box);
   let form = false, edit = null;   // edit: the clip whose title and times are being changed
   const draw = () => {
@@ -21895,7 +22310,7 @@ function clipStrip(host, f, media, play) {
         '<label>to <input class="btn sm" data-cb placeholder="end" inputmode="numeric" autocomplete="off" aria-label="Where the clip ends"></label>' + (own ? '<button class="link" data-cnow="b">now</button>' : '') +
         '<input class="btn sm clipname" data-ct placeholder="What it shows, like Strong opening" maxlength="80" autocomplete="off" aria-label="What the clip shows">' +
         '<button class="btn sm primary" data-clipsave>' + (edit ? 'Save changes' : 'Save clip') + '</button><button class="btn sm" data-clipcancel>Cancel</button>' +
-        '<small class="muted">' + (own ? 'Press now at the start and at the end, or type the times.' : 'Type the times from the player, like 2:15.') + ' Nothing is cut: a clip is the two times and its label.</small></div>' : '');
+        '<small class="muted">' + (own ? 'It starts where the video is. Press now at the end, or type the times.' : hint === 'drive' ? 'Google Drive’s player doesn’t tell the page where it is, so type the times from the player, like 2:15.' : 'Play the video here and + Clip starts where it is, or type the times, like 2:15.') + ' Nothing is cut: a clip is the two times and its label.</small></div>' : '');
   };
   draw();
   box.onclick = e => {
@@ -21912,7 +22327,7 @@ function clipStrip(host, f, media, play) {
       if (isNaN(b) || (b != null && b <= a)) { q('[data-cb]').focus(); return toast('The end has to be after the start'); }
       if (edit) { edit.a = a; if (b != null) edit.b = b; else delete edit.b; edit.t = q('[data-ct]').value.trim().slice(0, 80) || edit.t; form = false; edit = null; saveSoon(); draw(); return; }
       const n = (batch.clips ||= []).length + 1;
-      batch.clips.push({ id: uid(), ...(f.kind === 'link' ? { u: linkOf(f.data) } : { p: f.path }), a, ...(b != null ? { b } : {}), t: q('[data-ct]').value.trim().slice(0, 80) || 'Clip ' + n });
+      batch.clips.push({ id: uid(), ...(f.kind === 'link' ? { u: linkKey(f) } : { p: f.path }), a, ...(b != null ? { b } : {}), t: q('[data-ct]').value.trim().slice(0, 80) || 'Clip ' + n });
       form = false; saveSoon(); clipsBtn(); draw(); return;
     }
     const d = e.target.closest('[data-clipdel]');
@@ -21934,13 +22349,16 @@ function clipShow(id) {
   document.body.appendChild(el);
   const draw = () => {
     const all = list(), c = all[at]; if (!c) return clipClose();
-    const f = clipFile(c), url = f.kind === 'link' ? linkOf(f.data) : '', pl = url ? linkPlayer(url) : { [VIDEO_RX.test(f.name) ? 'video' : 'audio']: mediaUrl(f) };
+    const f = clipFile(c), vr = f.kind === 'link' && vidRef(f.data);
+    if (vr && !vkSeen.has(vr)) { vkGet(vr).then(() => { if (clipStage && clipStage.el === el) draw(); }); return; }   // a kept video is read first
+    const kv = vr && vkSeen.get(vr), url = f.kind === 'link' && !vr ? linkOf(f.data) : '';
+    const pl = vr ? (kv ? { [VIDEO_RX.test(kv.name) ? 'video' : 'audio']: kv.url } : null) : url ? linkPlayer(url) : { [VIDEO_RX.test(f.name) ? 'video' : 'audio']: mediaUrl(f) };
     const fr = pl && pl.frame ? clipFrame(pl.frame, c) : null;
     el.innerHTML = '<div class="clipbar"><b>' + esc(c.t) + '</b><span>' + (c.b != null ? fmtTime(c.a) + ' to ' + fmtTime(c.b) : 'from ' + fmtTime(c.a)) + (fr && !fr.stops && c.b != null ? ' · stop it at ' + fmtTime(c.b) : '') + '</span><span class="sp"></span>' +
       (all.length > 1 ? '<button data-cs="prev" aria-label="The clip before"' + (at ? '' : ' disabled') + '>‹</button><span>' + (at + 1) + ' of ' + all.length + '</span><button data-cs="next" aria-label="The next clip"' + (at < all.length - 1 ? '' : ' disabled') + '>›</button>' : '') +
       '<button data-cs="again">Play again</button><button data-cs="full">Full screen</button><button data-cs="close">Close <kbd>Esc</kbd></button></div><div class="clipmain"></div>';
     const main = el.querySelector('.clipmain');
-    if (!pl) { main.innerHTML = '<p>This site can’t play inside the page. Close this and use Open in its own window.</p>'; return; }
+    if (!pl) { main.innerHTML = vr ? '<p>This video isn’t in this browser.</p>' : '<p>This site can’t play inside the page. Close this and use Open in its own window.</p>'; return; }
     if (fr) main.appendChild(playerFrame(fr.src, c.t));
     else { const m = document.createElement(pl.video ? 'video' : 'audio'); m.controls = true; m.playsInline = true; m.src = pl.video || pl.audio; main.appendChild(m); clipRun(m, c); }
   };
@@ -26847,7 +27265,7 @@ $('#setHistory').addEventListener('click', e => {
 });
 
 /* updates she controls, and installing as an app */
-const WHATS_NEW = {"1.28.12":["Look around with a sample class first now opens a full sample: two made-up classes part-way through a term, with marked papers, a quiz marked by question, a gradebook, charts, missing work, attendance, seating, report comments, to-dos and two weeks of lessons.","The sample is kept apart from your own work. Leave the sample in the sidebar clears it in one click, and your own classes are exactly as you left them."],"1.28.11":["In another language, the marking screen now reads in that language: the top bar, the tools, the student list, the score panel and its menus, and the Grades, Insights and Return tabs and Rubric setup.","Student names, rubric rows, what each score means, your comments and the papers themselves stay as they are. Boxes opened from the marking screen, To do, School and the Planner are still in English."],"1.28.10":["Planner slides: click any text box and the size menu in the toolbar changes that box: the title, the text, the bottom line and the rest. Biggest that fits picks the size for you.","The box you click gets a frame: drag its bar to move it or a handle to resize it, and Put back returns it to the layout. The .pptx keeps the new places and sizes.","+ Add slide adds a title and text slide straight away; the arrow beside it opens every layout. Timetable can set a different usual slide.","Words are never cut off: text that runs past its box stays visible in the editor with a warning, and when you present the box uses the room under it, then the text gets smaller until every word shows."],"1.28.9":["Returning marked files now gives each student one PDF: the feedback page first, then every paper they turned in, Word papers included as pages. A Word rubric you scored still goes back as a Word file.","To send each paper as its own file again, untick One PDF for each student under Options on the Return tab."],"1.28.8":["On Today, every class whose lesson has slides now has a Present button, not only the class on now. Two classes sharing one lesson can each present it.","While presenting, Pop out (or W) puts the slides in a window of their own for a second screen or projector. That window shows only what the class sees, and this one keeps the bar, your notes and the timer. The keys work in either window."],"1.28.7":["Save a screenshot as a strong example: tick “Save as a strong example” in the Screenshot bar, or press the button on the “Picture copied” note. Before it is saved you can black out anything, like a name, and add why it’s strong and tags.","The Examples page finds work again by tag or by searching what you wrote. Every card shows its tags, and you can change them from its ⋯ menu. Download as a sheet works for whatever the page is showing."],"1.28.6":["In another language, the boxes a class page opens now read in that language too: a new or changed assignment, the roster, units, how the class is graded, Email wording and report Wording, the notes pages for work with no papers, and the progress sheets you print.","Class, unit, assignment and student names, and the sentences in the Wording boxes, stay as you typed them. The marking screen and its boxes are still in English."],"1.28.5":["In another language, the rest of a class page now reads in that language: a student’s own page, Charts, Goals and Report comments, and the gradebook, charts and levels of a class graded with IB criteria. Pointing at a mark on a chart says it in that language too. Names, rubric rows, goals and criteria stay as you typed them.","A report comment’s draft is still written in English until you put your own sentences in Wording…. The boxes that open from these tabs are still in English.","Fixed in German: “Grade” showed as “Notiz” in a few places, and now reads “Note”."],"1.28.4":["In another language, more of a class page now reads in that language: the Gradebook, Students, Attendance, Seating and Missing work tabs, with dates written that language’s way and your own names left as you typed them.","Still in English: a student’s own page, Charts, Goals, Report comments, the gradebook of a class graded with IB criteria, and the boxes that open from these tabs."],"1.28.3":["In another language, a class page now reads in that language too: its header, its row of tabs and the Assignments tab, with your own class, unit and assignment names left as you typed them. The Gradebook and the other tabs are still in English."],"1.28.2":["Settings is now in your language too: all seven pages, in each of the eight languages. Help answers name the Settings buttons the way Settings shows them.","Boxes that open from Settings, such as Term setup and the mark key, are still in English, and so are the class and marking screens."],"1.28.1":["The app opens a little faster at its web address: it now fetches only the language you chose instead of carrying all of them. Your language is kept for use without internet, and the take-home file still has every language inside."],"1.28.0":["Six more app languages: Simplified Chinese (简体中文), French, German, Portuguese, Japanese and Korean, beside Traditional Chinese and Spanish. Choose one in Settings, Display, App language.","Each covers the same first screens: the sidebar, Today, the welcome, Find anything, Help and the feedback page students get. The other screens are still in English.","None of the translations has been checked by a fluent speaker yet, so a line may read oddly."],"1.27.36":["IB MYP classes: Quick mark now gives levels for a paper quiz. On the boxes screen each question counts for one criterion, and under Points to levels you type the lowest points that earn each level. The quiz then gives a level for each criterion, with no total and no percent."],"1.27.35":["IB DP classes: the Grading box now has Components, where each type of work (Paper 1, the internal assessment and so on) gets its own weight for that class alone. In the Gradebook, More has Predicted grades: click the 1 to 7 you predict for each student, with the grade the percent earns outlined as a hint. Predicted grades show in the gradebook and on progress sheets."],"1.27.34":["A class page is simpler. The tab row has Assignments, Gradebook, Students and More; the pin beside a page in More keeps it in the row. Roster, grading and the class link are under one Class setup button.","The gradebook has one More menu for Term setup, extra credit, import and copy. Settings has seven pages in place of twelve, and nothing has been removed.","In the Planner’s week, Use a lesson shows when you point at a class slot."],"1.27.33":["Every activity in the Planner’s Activities bank has a video button. See it in action opens a short classroom video of it from sources such as Edutopia, EL Education and Reading Rockets; where there isn’t a good one, Find a video searches YouTube for it. Your own activities can carry a video link, and the link goes into the speaker notes when you add an activity to a lesson."],"1.27.32":["IB MYP classes: report comments are drafted from the levels you set and the 1 to 7, and a progress sheet shows each criterion’s level, the total, the grade and every task’s levels, with no percent. A new year keeps a class’s criteria and boundaries and leaves the students’ levels behind. My setup now brings an MYP teacher in as IB MYP criteria."],"1.27.31":["A lesson in the Planner is tidier under the slide. This slide has your speaker notes beside one box for your AI assistant. The whole lesson has Materials, Links, Finished PowerPoint, comments and Taught as matching cards.","The tips for editing a slide are behind an Editing tips button, and Alternative version is in More until a lesson has more than one version."],"1.27.30":["A lesson in the Planner has a Links box for the web pages you open while teaching it. Paste an address, or pick one from School resources.","A School resource can be for one class. Its links then show on every lesson for that class, and in Present under Links (the L key)."],"1.27.29":["IB MYP tasks: the Grades tab shows each criterion’s level with no total or percent, and Copy all levels copies them. Insights leaves out the percent tiles, and text shared with an assistant says the rows are levels, not points to add up. Help has two new answers, for IB MYP and IB DP."],"1.27.28":["Coming from Google Classroom? Settings, Classes and rosters has a new button, From Google Classroom…. Choose the grades file you download from Classroom and it makes the class with its students, then shows every assignment and score for you to check before they go into the gradebook. A folder of student work downloaded from Google Drive now opens with each student’s files together. Nothing is sent anywhere and there is no sign-in. Help has an answer for it."],"1.27.27":["Screenshot: press S on a paper, Alt S (⌥S on a Mac) anywhere, or the button at the foot of the marking tools. Drag over what you want, click a page for the whole page, or press Enter for the whole screen, and the picture is copied, ready to paste. On a paper, name covers stay painted in and the student’s name and file name are left off; With my marks chooses whether your marks come too."],"1.27.26":["Full screen: press F, or Full screen near the bottom of the sidebar (beside ✕ while a paper is open). The browser’s bars go away and the sidebar folds to icons, or goes while you mark, so the paper gets the room. F again, the same button or Esc leaves, and nothing is closed or lost. On formative work F is for feedback, so use the button there."],"1.27.25":["IB classes. Each class has a Grading button: points and percent, IB MYP or IB DP. The welcome and Settings offer IB MYP criteria (0 to 8) and IB DP 1 to 7 as two separate choices.","An MYP class is marked against the criteria a task assesses, each 0 to 8, with no percent. Its gradebook shows every level a student earned, you choose the level that fits best for each criterion, and the total becomes a final grade of 1 to 7. Levels are never averaged.","Criterion names and the grade boundaries are yours to change. A DP class shows the 1 to 7 its percent earns on boundaries you type in."],"1.27.24":["My setup, in Settings: copy a prompt into your AI assistant, and it writes your setup as one block of text: classes and when they meet, the calendar, terms, what a grade is made of, how you grade, IB criteria and boundaries, rubrics, saved comments and learning goals.","Paste the block back and press Check it. You see what would change, untick anything you don’t want, and can undo it afterwards. Anything about students is left out and said so.","Copy my setup gives your own setup as the same kind of text, for a colleague to start from. The welcome has a line that leads here."],"1.27.23":["Take my work with me now carries your Planner too: lessons, units, timetable and their files. Bring work in takes it in. A Planner already in use only receives the lessons and files it doesn’t have, so nothing there is replaced.","If Grading Studio ever moves to a new web address, the old address tells you and shows the three steps for taking your work along. Help has an answer for it."],"1.27.22":["Attendance has a choice for a student who is away when you don’t know why yet: Absent, reason unknown. Change it to Absent, excused when you hear the reason. It is still four choices, and days you saved before keep their marks. Look back lists the absences that still have no reason."],"1.27.21":["Comments are easier to work with. Change a comment’s color at any time, even while typing it: its box has a Color row, and a Highlight row when it is on highlighted words. Text boxes and Quick mark comments have colors too.","Drag a new comment’s line up or down before you type a word, and press Enter to finish a comment or text box. Shift Enter starts a new line."],"1.27.20":["Feedback-only work no longer says 0 of 20 scored. A formative activity counts the students whose feedback is complete, on its card, in Find, Today, To do, the Grades box and the grade sheet, and says Ready to return once everyone has feedback."],"1.27.19":["Presentations and videos. On an assignment’s card, Add papers… now has No papers: presentations or videos…, which gives every student on the roster a notes page to write on while you watch. Pick lined, your rubric’s rows, two columns or blank.","On a student’s page, + Add has A video…: paste a link from Google Drive, YouTube or anywhere else, and tick the partners in it. One set of notes and one grade covers the group. Only the link is kept, so the video stays where it is.","Play here shows the video above the notes page; Open in its own window puts it beside the app. + Add also has A notes page… for one more page at any time.","Clips: under a video, + Clip saves a part worth showing, as a start time, an end time and a title. Show to the class plays it full screen with the title and without the student’s name, and Clips to show the class under Setup plays them one after another."],"1.27.18":["The app no longer assumes your AI assistant is Claude. Settings, Working with AI lets you pick Claude, ChatGPT, Gemini, Copilot, another name, or none, and buttons and hints use that name. If you already used the app, yours stays Claude.","Planner, Timetable has a Slides section: the agenda on slide 2 and keeping text between 28 and 36 pt are both on, and each can be turned off.","The week shows Saturday, or Sunday in front of Monday, when a class meets then. Short dates follow your computer's day and month order."],"1.27.17":["Answer notes for quizzes: type each question's answer in Quiz boxes, and it goes on the returned papers in a gold note labelled Answer, by each question a student lost points on. In Quiz boxes, Answer notes can be set to every question or off."],"1.27.16":["The grade sheet shows the score you gave each paper in Grading Studio, the same number as the score panel, with extra credit and the retake that counts. Grades found typed on the papers only show for papers with no score yet, or when you tick Also show grades found on the papers. A score stamp already on a paper now changes when the score does."],"1.27.15":["Copy one quiz answer as a picture: in Quick mark, press P or ⧉ Copy on an answer, then paste it into Claude to ask whether it is right. The picture shows only that answer, with the question and your answer key on top. The name, score, your mark and the file name are left off, and name covers are painted in, but the student’s handwriting and words still show."],"1.27.14":["Points written on a paper can have their own color. In Quick mark’s Colors menu, or Settings, Marking, Mark colors: the ✗ color as before, one color of your own, or By credit, with full points in the check color, part in amber and none in the ✗ color."],"1.27.13":["Share lesson file, under More in a lesson: one small file with the slides, notes, pictures, materials and finished PowerPoint. Open it with Import a lesson on another computer, or give it to another teacher.","Which classes and days a lesson is on, taught notes and comments for Claude stay behind, and opening one never replaces a lesson you have."],"1.27.12":["A to-do list. To do in the sidebar holds your own list beside what the app noticed from your work: papers to mark, papers to hand back, a class with no lesson planned, missing work to chase. Those go by themselves when the work is done, and each kind can be switched off.","Type a to-do the way you would say it, like “Call Bram’s parents friday”, and it picks out the day, the class and the student. Press N anywhere outside a paper to add one.","A to-do can have a day, a class, a student or assignment it goes with, a repeat and a note. Today shows a short card of what is overdue or due today.","Week, at the top right of To do, shows your week: each line on its day, under the class that meets then. Type in a day to add one, or drag a line to another day. Anything not done moves to today on its own."],"1.27.11":["Groups in Present mode: shuffling no longer moves the slides or ends the lesson, and each shuffle keeps last time's groups apart.","Change groups by hand: drag a name to another group, or click a name and then a group. Make my own starts with empty groups, and Undo or Ctrl Z takes back a move or a shuffle.","The Present timer keeps running after you finish or leave full screen, in the corner of the Planner, and comes back on the slides when you present again."],"1.27.10":["Finding names on its own is now off unless you turn it on, in Settings, Marking, Name covers. Only the boxes you draw in Check the covers cover anything, and the check before anonymous grading lists every paper."],"1.27.9":["In the Planner's Timetable, Use my school’s template… picks your own PowerPoint template for slide downloads. Use the plain one goes back to the white one built in.","Save my setup file keeps your classes, meeting times, days off and slide template in one file to load on another computer."],"1.27.8":["Anchor papers: while you mark a summative, click High, Mid or Low under the score. The Return tab lists the three and exports them in one ZIP, each named for the assignment and its level, like “River essay - Summative High.pdf”, with student names covered."],"1.27.7":["Keep strong work as an example: press ☆ Example on an answer in Quick mark (or E), or pick Use as an example in the ⋯ beside a student’s name for a whole paper or part of a page. Names are covered, and your marks and the score stay off unless you switch them on. It is always optional.","The Examples tab on an assignment, and Examples in the sidebar for every class, have Show to the class, Copy picture, Download and Download as a sheet.","Examples go to your linked folder and into the take-home file with the rest of your work."],"1.27.6":["Returned files are named for the student, the assignment and what they are, like “Ana Lee - River essay - Graded.pdf”, or Feedback when there is no score. They still go in each student’s own folder.","To keep the names students turned in, untick Name each file by student and assignment under Options on the Return tab."],"1.27.5":["The gradebook can import your old scores: press Import… and choose a CSV or Excel file, or paste the cells. Each column becomes an assignment, matched to your roster.","You see everything before it is saved, and a score already in the gradebook stays unless you choose the file’s."],"1.27.4":["School is a new page in the sidebar for the things about your school you look up again and again: the handbook, the calendar, the bell schedule, portals, forms, who to call.","Add a link, a file (a copy is kept with your work) or a note. Name your own groups, and star the ones you open most to keep them along the top.","Drop files on the page or paste a web address. Find anything lists every resource. They are kept in your folder and take-home file, and stay when you start a new school year."],"1.27.3":["The class timer in Present takes minutes and seconds: type them in, or pick 0:30 and the other quick times. The menu remembers the last time you typed.","While it runs, the timer's menu adds or takes away 10 seconds or a minute, pauses, and restarts from the time you set. + and − add or take away a minute without opening the menu.","Tick Show it big to put the countdown in the middle of the screen, large enough for the back of the room."],"1.27.2":["In the gradebook, in-class assessments are now on the left and summatives on the right: the columns, the averages beside the term grade, and wherever you choose a type.","The order is yours to change. In Term setup, the arrows beside each type move it, and the gradebook's columns follow from left to right.","You can make your own assignment types. In Term setup, rename a type or press + Add a type (Homework, Projects, Quizzes), and give each its share of the grade. Your own setup stays as it is until you change it."],"1.27.1":["Undo now takes back a score as well as a mark: press Ctrl Z (⌘Z on a Mac) after a slip on a slider, a number key, or Missing, Excused or Late. Redo puts it back.","Deleting a unit, an assignment or a class shows Undo for a few seconds, and Undo puts it back where it was.","“Picked up where you left off” shows once, when you open an assignment, and no longer on Today or other pages. The note about what opened leaves by itself when you move to the next student, if every file opened.","The Next button stays in one place from student to student, and the Grade heading on a class’s Students tab is drawn properly.","Find anything answers to more everyday words: export, hand back, backup, undo, shortcuts, csv."],"1.27.0":["Start a new school year, in Settings, Saving and carrying. Your classes, units and assignment cards carry on, each card with its rubric and Quick mark boxes, with empty class lists and dates a year later.","This year goes into one protected file first, and the file is checked before anything is cleared. Open an archived year brings a year back from its file."],"1.26.2":["Rubric rows can be scored on your own scale. They start at 0 to 4 with half points, as before; when you set up an assignment you can pick any top from 1 to 10 and turn half points off.","Settings, Grading: choose the row scale new assignments start with. Assignments you already have keep theirs."],"1.26.1":["Activities: See, think, wonder now says it comes from Project Zero at the Harvard Graduate School of Education."],"1.26.0":["Seating: a new tab on each class. Pick how the room is set up, drag students to desks, and Shuffle gives everyone a new seat. A student can be kept in their seat.","Pick a name shows one student at random, and nobody twice until everyone has had a turn. Make groups deals the class into groups of any size.","While presenting a lesson, P picks a name and G makes groups. Who’s here leaves out anyone who is away today."],"1.25.0":["Attendance. Each class has an Attendance tab: everyone starts as present, so a day is one press for each student who is late, excused or absent, with a note if you want one.","Look back shows every saved day in one table with each student’s totals, and a student’s own page lists the days they missed.","Copy a day, or download the table as a spreadsheet, for your school’s system. Today has a line for it under each class.","If you don’t take attendance here, turn it off in Settings, Classes and rosters."],"1.24.0":["Retakes: a second try at the same assignment keeps the first try's score, comment and paper. Start one from the ⋯ beside Missing, Excused and Late on a paper.","You choose which try counts, for all your classes: the highest (to begin with), the latest, or the average. It is in the retake box and in the gradebook's Term setup.","A score typed into the gradebook takes a retake too: type both, like 7 > 10."],"1.23.0":["Scores by learning goal, if you want them. Keep your own list of goals (a skill, or a standard from your school) in Settings, Grading, or add one wherever you tag.","Tag rubric rows in Rubric setup and quiz questions in Quiz boxes. An assignment scored with just a total can carry one goal for the whole score.","Each class page gets a Goals tab: the class average on each goal with the lowest first, every student by every goal, and where each number came from. A student's own page shows their goals beside the class average.","Nothing changes until you add a first goal, and tagging never changes a score or a grade."],"1.22.0":["Progress sheets for parent meetings: one printed page per student with the term grade, every score, a chart of how they moved, missing work, each term's grade, the report comment and lines for notes. Find it on a class's Students list, or Progress sheet on one student's page.","Choose the term and tick what goes on it; Print opens the print window, where you can pick a printer or Save as PDF. It is made on your computer and nothing is sent anywhere."],"1.21.0":["Each class has a Missing work tab: every paper you marked Missing, by student or by assignment, for the term you pick.","Email reminder opens an email in your own mail app, addressed to the student and listing what they owe, for you to read and send. Email all writes one email to everyone who owes an assignment, with the addresses in Bcc. Grading Studio sends nothing itself.","Each reminder you open is noted beside the work, and Email wording… changes what every reminder says."],"1.20.0":["The app can speak Traditional Chinese (繁體中文). Choose it in Settings, Display, App language, or at the top of the welcome.","Like Spanish, it covers the first screens so far: the sidebar, Today, the welcome, Find anything, Help, and the feedback page students get with a returned paper. The other screens are still in English."],"1.19.0":["The app can speak Spanish. Choose it in Settings, Display, App language, or at the top of the welcome.","Spanish covers the first screens so far: the sidebar, Today, the welcome, Find anything, Help, and the feedback page students get with a returned paper. The other screens are still in English.","Names you typed (classes, students, assignments, rubric rows) are never translated."],"1.18.0":["On a tablet, a pencil draws and the pen's line is wider where you press harder. Once you have used a pencil, one finger moves the page, two fingers pinch to zoom, and a hand resting on the screen does nothing.","Settings, Marking has a new Tablet and pencil section: choose what a finger does on the paper, or turn off the wider line.","On a touch screen the tools, the student rows and the score buttons are larger."],"1.17.0":["Report comments: a new tab on each class's page drafts a comment for every student from your own gradebook, rubric scores and the comments you wrote on their papers. Edit each one, tick it done, then copy or download them all.","The drafts are put together on your computer from sentences you can change under Wording. Nothing about a student is sent anywhere."],"1.16.0":["Help is in the sidebar: short answers to the questions teachers ask most, from opening a set of papers to moving your work to another computer.","Find anything answers questions too. Type a few words, like “late paper” or “backup”, and the answer is in the list."],"1.15.0":["A picture dragged onto a slide that has text now sits beside the text, in a new Text + picture layout.","Drag several pictures in at once and each gets its own slide. Let a picture go on any slide in the list on the left to put it there.","New Full picture layout: the picture fills the whole slide."],"1.14.0":["Extra credit: points or a percent on one paper, and extra credit entries in the gradebook that add to the term grade or the in-class average.","The gradebook shows each type's average (summative, in-class) right beside the term grade, kept in view as you scroll. Averages only shows just those columns, and Whole year splits each term the same way.","Leave out… lets you untick students to see the class averages without them. Their own grades don't change, and nothing is saved."],"1.13.0":["Present a lesson from the Planner, or from Today when its class is on now or next: its slides fill the screen, and the arrow keys or a clicker move through them.","While presenting, A shows the agenda to tick off, T starts a timer the class can see, N shows your notes and B blanks the screen.","The bar shows how many minutes the class has left, from your timetable.","After a lesson is taught, one line says where the class got to. It shows on the lesson and on the week, and presenting again picks up there."],"1.12.0":["A returned paper starts with a feedback page: the score, each rubric row with the level given and what that level means, your comment, and every comment on the paper with its page number.","It is on unless you turn it off under Options on the Return tab. Your own pages are not changed, and bringing an export back in opens only those."],"1.11.0":["The Planner’s sections are in the sidebar: Calendar, Units, Past lessons, Activities and Rubrics. The row of tabs across the top is gone.","A lesson has a lighter top: its name, its classes, its status and Download. Copy for Claude, Versions, the upload and the links are under More.","Comments shows above a lesson once it has one."],"1.7.0":["Home is now Today: the classes you teach today with the lesson planned for each, the papers waiting to be marked, and the papers ready to hand back.","What the class needs next: after a set of papers is scored, Today shows the weakest rubric row and how many students to sit down with.","A class page is quieter. Click anywhere on an assignment’s row to open it; the only blue button is the one that adds an assignment.","Forget, and the other ways to open papers, moved into the ⋯ menu on each row."],"1.6.0":["A new browser opens on three questions (your classes, how you grade, where work is kept) and starts with nothing of anyone else’s in it.","A sample class of made-up students, with papers to mark, for trying things out. Remove it from Home when you’re done.","The app uses the name of your own school system. Choose it, and how you usually grade, in Settings.","Letter grades or IB 1 to 7 can show beside the percent, with boundaries you set.","Canvas and Moodle downloads are grouped by student. The Planner works without a setup file, and downloads lessons as PowerPoint with a plain built-in template."],"1.5.0":["The sidebar says “Not backed up”, in amber, until a folder holds a second copy of your work. Home asks for that folder once.","Go back in time, in Settings: any assignment as it was on an earlier day, restored on its own, with Undo.","Grading Studio can be installed as an app, and it opens with no internet.","A newer version now waits until you click Update now, so nothing changes in the middle of marking."]};
+const WHATS_NEW = {"1.28.13":["Add a video file, not only a link: + Add, A video… keeps the file in this browser at any length while the computer has room, and partners share it. Drag the bar under a video to make it as big as you like.","Partners and videos (in Setup, and on No papers when you open an assignment) lists the whole class: pick partners and add each video in one place. + Clip now starts where the video is.","Bring in a rubric from Edit or the Open box on any assignment. Rows and what each level means are read from a Word or PDF table where they can be."],"1.28.12":["Look around with a sample class first now opens a full sample: two made-up classes part-way through a term, with marked papers, a quiz marked by question, a gradebook, charts, missing work, attendance, seating, report comments, to-dos and two weeks of lessons.","The sample is kept apart from your own work. Leave the sample in the sidebar clears it in one click, and your own classes are exactly as you left them."],"1.28.11":["In another language, the marking screen now reads in that language: the top bar, the tools, the student list, the score panel and its menus, and the Grades, Insights and Return tabs and Rubric setup.","Student names, rubric rows, what each score means, your comments and the papers themselves stay as they are. Boxes opened from the marking screen, To do, School and the Planner are still in English."],"1.28.10":["Planner slides: click any text box and the size menu in the toolbar changes that box: the title, the text, the bottom line and the rest. Biggest that fits picks the size for you.","The box you click gets a frame: drag its bar to move it or a handle to resize it, and Put back returns it to the layout. The .pptx keeps the new places and sizes.","+ Add slide adds a title and text slide straight away; the arrow beside it opens every layout. Timetable can set a different usual slide.","Words are never cut off: text that runs past its box stays visible in the editor with a warning, and when you present the box uses the room under it, then the text gets smaller until every word shows."],"1.28.9":["Returning marked files now gives each student one PDF: the feedback page first, then every paper they turned in, Word papers included as pages. A Word rubric you scored still goes back as a Word file.","To send each paper as its own file again, untick One PDF for each student under Options on the Return tab."],"1.28.8":["On Today, every class whose lesson has slides now has a Present button, not only the class on now. Two classes sharing one lesson can each present it.","While presenting, Pop out (or W) puts the slides in a window of their own for a second screen or projector. That window shows only what the class sees, and this one keeps the bar, your notes and the timer. The keys work in either window."],"1.28.7":["Save a screenshot as a strong example: tick “Save as a strong example” in the Screenshot bar, or press the button on the “Picture copied” note. Before it is saved you can black out anything, like a name, and add why it’s strong and tags.","The Examples page finds work again by tag or by searching what you wrote. Every card shows its tags, and you can change them from its ⋯ menu. Download as a sheet works for whatever the page is showing."],"1.28.6":["In another language, the boxes a class page opens now read in that language too: a new or changed assignment, the roster, units, how the class is graded, Email wording and report Wording, the notes pages for work with no papers, and the progress sheets you print.","Class, unit, assignment and student names, and the sentences in the Wording boxes, stay as you typed them. The marking screen and its boxes are still in English."],"1.28.5":["In another language, the rest of a class page now reads in that language: a student’s own page, Charts, Goals and Report comments, and the gradebook, charts and levels of a class graded with IB criteria. Pointing at a mark on a chart says it in that language too. Names, rubric rows, goals and criteria stay as you typed them.","A report comment’s draft is still written in English until you put your own sentences in Wording…. The boxes that open from these tabs are still in English.","Fixed in German: “Grade” showed as “Notiz” in a few places, and now reads “Note”."],"1.28.4":["In another language, more of a class page now reads in that language: the Gradebook, Students, Attendance, Seating and Missing work tabs, with dates written that language’s way and your own names left as you typed them.","Still in English: a student’s own page, Charts, Goals, Report comments, the gradebook of a class graded with IB criteria, and the boxes that open from these tabs."],"1.28.3":["In another language, a class page now reads in that language too: its header, its row of tabs and the Assignments tab, with your own class, unit and assignment names left as you typed them. The Gradebook and the other tabs are still in English."],"1.28.2":["Settings is now in your language too: all seven pages, in each of the eight languages. Help answers name the Settings buttons the way Settings shows them.","Boxes that open from Settings, such as Term setup and the mark key, are still in English, and so are the class and marking screens."],"1.28.1":["The app opens a little faster at its web address: it now fetches only the language you chose instead of carrying all of them. Your language is kept for use without internet, and the take-home file still has every language inside."],"1.28.0":["Six more app languages: Simplified Chinese (简体中文), French, German, Portuguese, Japanese and Korean, beside Traditional Chinese and Spanish. Choose one in Settings, Display, App language.","Each covers the same first screens: the sidebar, Today, the welcome, Find anything, Help and the feedback page students get. The other screens are still in English.","None of the translations has been checked by a fluent speaker yet, so a line may read oddly."],"1.27.36":["IB MYP classes: Quick mark now gives levels for a paper quiz. On the boxes screen each question counts for one criterion, and under Points to levels you type the lowest points that earn each level. The quiz then gives a level for each criterion, with no total and no percent."],"1.27.35":["IB DP classes: the Grading box now has Components, where each type of work (Paper 1, the internal assessment and so on) gets its own weight for that class alone. In the Gradebook, More has Predicted grades: click the 1 to 7 you predict for each student, with the grade the percent earns outlined as a hint. Predicted grades show in the gradebook and on progress sheets."],"1.27.34":["A class page is simpler. The tab row has Assignments, Gradebook, Students and More; the pin beside a page in More keeps it in the row. Roster, grading and the class link are under one Class setup button.","The gradebook has one More menu for Term setup, extra credit, import and copy. Settings has seven pages in place of twelve, and nothing has been removed.","In the Planner’s week, Use a lesson shows when you point at a class slot."],"1.27.33":["Every activity in the Planner’s Activities bank has a video button. See it in action opens a short classroom video of it from sources such as Edutopia, EL Education and Reading Rockets; where there isn’t a good one, Find a video searches YouTube for it. Your own activities can carry a video link, and the link goes into the speaker notes when you add an activity to a lesson."],"1.27.32":["IB MYP classes: report comments are drafted from the levels you set and the 1 to 7, and a progress sheet shows each criterion’s level, the total, the grade and every task’s levels, with no percent. A new year keeps a class’s criteria and boundaries and leaves the students’ levels behind. My setup now brings an MYP teacher in as IB MYP criteria."],"1.27.31":["A lesson in the Planner is tidier under the slide. This slide has your speaker notes beside one box for your AI assistant. The whole lesson has Materials, Links, Finished PowerPoint, comments and Taught as matching cards.","The tips for editing a slide are behind an Editing tips button, and Alternative version is in More until a lesson has more than one version."],"1.27.30":["A lesson in the Planner has a Links box for the web pages you open while teaching it. Paste an address, or pick one from School resources.","A School resource can be for one class. Its links then show on every lesson for that class, and in Present under Links (the L key)."],"1.27.29":["IB MYP tasks: the Grades tab shows each criterion’s level with no total or percent, and Copy all levels copies them. Insights leaves out the percent tiles, and text shared with an assistant says the rows are levels, not points to add up. Help has two new answers, for IB MYP and IB DP."],"1.27.28":["Coming from Google Classroom? Settings, Classes and rosters has a new button, From Google Classroom…. Choose the grades file you download from Classroom and it makes the class with its students, then shows every assignment and score for you to check before they go into the gradebook. A folder of student work downloaded from Google Drive now opens with each student’s files together. Nothing is sent anywhere and there is no sign-in. Help has an answer for it."],"1.27.27":["Screenshot: press S on a paper, Alt S (⌥S on a Mac) anywhere, or the button at the foot of the marking tools. Drag over what you want, click a page for the whole page, or press Enter for the whole screen, and the picture is copied, ready to paste. On a paper, name covers stay painted in and the student’s name and file name are left off; With my marks chooses whether your marks come too."],"1.27.26":["Full screen: press F, or Full screen near the bottom of the sidebar (beside ✕ while a paper is open). The browser’s bars go away and the sidebar folds to icons, or goes while you mark, so the paper gets the room. F again, the same button or Esc leaves, and nothing is closed or lost. On formative work F is for feedback, so use the button there."],"1.27.25":["IB classes. Each class has a Grading button: points and percent, IB MYP or IB DP. The welcome and Settings offer IB MYP criteria (0 to 8) and IB DP 1 to 7 as two separate choices.","An MYP class is marked against the criteria a task assesses, each 0 to 8, with no percent. Its gradebook shows every level a student earned, you choose the level that fits best for each criterion, and the total becomes a final grade of 1 to 7. Levels are never averaged.","Criterion names and the grade boundaries are yours to change. A DP class shows the 1 to 7 its percent earns on boundaries you type in."],"1.27.24":["My setup, in Settings: copy a prompt into your AI assistant, and it writes your setup as one block of text: classes and when they meet, the calendar, terms, what a grade is made of, how you grade, IB criteria and boundaries, rubrics, saved comments and learning goals.","Paste the block back and press Check it. You see what would change, untick anything you don’t want, and can undo it afterwards. Anything about students is left out and said so.","Copy my setup gives your own setup as the same kind of text, for a colleague to start from. The welcome has a line that leads here."],"1.27.23":["Take my work with me now carries your Planner too: lessons, units, timetable and their files. Bring work in takes it in. A Planner already in use only receives the lessons and files it doesn’t have, so nothing there is replaced.","If Grading Studio ever moves to a new web address, the old address tells you and shows the three steps for taking your work along. Help has an answer for it."],"1.27.22":["Attendance has a choice for a student who is away when you don’t know why yet: Absent, reason unknown. Change it to Absent, excused when you hear the reason. It is still four choices, and days you saved before keep their marks. Look back lists the absences that still have no reason."],"1.27.21":["Comments are easier to work with. Change a comment’s color at any time, even while typing it: its box has a Color row, and a Highlight row when it is on highlighted words. Text boxes and Quick mark comments have colors too.","Drag a new comment’s line up or down before you type a word, and press Enter to finish a comment or text box. Shift Enter starts a new line."],"1.27.20":["Feedback-only work no longer says 0 of 20 scored. A formative activity counts the students whose feedback is complete, on its card, in Find, Today, To do, the Grades box and the grade sheet, and says Ready to return once everyone has feedback."],"1.27.19":["Presentations and videos. On an assignment’s card, Add papers… now has No papers: presentations or videos…, which gives every student on the roster a notes page to write on while you watch. Pick lined, your rubric’s rows, two columns or blank.","On a student’s page, + Add has A video…: paste a link from Google Drive, YouTube or anywhere else, and tick the partners in it. One set of notes and one grade covers the group. Only the link is kept, so the video stays where it is.","Play here shows the video above the notes page; Open in its own window puts it beside the app. + Add also has A notes page… for one more page at any time.","Clips: under a video, + Clip saves a part worth showing, as a start time, an end time and a title. Show to the class plays it full screen with the title and without the student’s name, and Clips to show the class under Setup plays them one after another."],"1.27.18":["The app no longer assumes your AI assistant is Claude. Settings, Working with AI lets you pick Claude, ChatGPT, Gemini, Copilot, another name, or none, and buttons and hints use that name. If you already used the app, yours stays Claude.","Planner, Timetable has a Slides section: the agenda on slide 2 and keeping text between 28 and 36 pt are both on, and each can be turned off.","The week shows Saturday, or Sunday in front of Monday, when a class meets then. Short dates follow your computer's day and month order."],"1.27.17":["Answer notes for quizzes: type each question's answer in Quiz boxes, and it goes on the returned papers in a gold note labelled Answer, by each question a student lost points on. In Quiz boxes, Answer notes can be set to every question or off."],"1.27.16":["The grade sheet shows the score you gave each paper in Grading Studio, the same number as the score panel, with extra credit and the retake that counts. Grades found typed on the papers only show for papers with no score yet, or when you tick Also show grades found on the papers. A score stamp already on a paper now changes when the score does."],"1.27.15":["Copy one quiz answer as a picture: in Quick mark, press P or ⧉ Copy on an answer, then paste it into Claude to ask whether it is right. The picture shows only that answer, with the question and your answer key on top. The name, score, your mark and the file name are left off, and name covers are painted in, but the student’s handwriting and words still show."],"1.27.14":["Points written on a paper can have their own color. In Quick mark’s Colors menu, or Settings, Marking, Mark colors: the ✗ color as before, one color of your own, or By credit, with full points in the check color, part in amber and none in the ✗ color."],"1.27.13":["Share lesson file, under More in a lesson: one small file with the slides, notes, pictures, materials and finished PowerPoint. Open it with Import a lesson on another computer, or give it to another teacher.","Which classes and days a lesson is on, taught notes and comments for Claude stay behind, and opening one never replaces a lesson you have."],"1.27.12":["A to-do list. To do in the sidebar holds your own list beside what the app noticed from your work: papers to mark, papers to hand back, a class with no lesson planned, missing work to chase. Those go by themselves when the work is done, and each kind can be switched off.","Type a to-do the way you would say it, like “Call Bram’s parents friday”, and it picks out the day, the class and the student. Press N anywhere outside a paper to add one.","A to-do can have a day, a class, a student or assignment it goes with, a repeat and a note. Today shows a short card of what is overdue or due today.","Week, at the top right of To do, shows your week: each line on its day, under the class that meets then. Type in a day to add one, or drag a line to another day. Anything not done moves to today on its own."],"1.27.11":["Groups in Present mode: shuffling no longer moves the slides or ends the lesson, and each shuffle keeps last time's groups apart.","Change groups by hand: drag a name to another group, or click a name and then a group. Make my own starts with empty groups, and Undo or Ctrl Z takes back a move or a shuffle.","The Present timer keeps running after you finish or leave full screen, in the corner of the Planner, and comes back on the slides when you present again."],"1.27.10":["Finding names on its own is now off unless you turn it on, in Settings, Marking, Name covers. Only the boxes you draw in Check the covers cover anything, and the check before anonymous grading lists every paper."],"1.27.9":["In the Planner's Timetable, Use my school’s template… picks your own PowerPoint template for slide downloads. Use the plain one goes back to the white one built in.","Save my setup file keeps your classes, meeting times, days off and slide template in one file to load on another computer."],"1.27.8":["Anchor papers: while you mark a summative, click High, Mid or Low under the score. The Return tab lists the three and exports them in one ZIP, each named for the assignment and its level, like “River essay - Summative High.pdf”, with student names covered."],"1.27.7":["Keep strong work as an example: press ☆ Example on an answer in Quick mark (or E), or pick Use as an example in the ⋯ beside a student’s name for a whole paper or part of a page. Names are covered, and your marks and the score stay off unless you switch them on. It is always optional.","The Examples tab on an assignment, and Examples in the sidebar for every class, have Show to the class, Copy picture, Download and Download as a sheet.","Examples go to your linked folder and into the take-home file with the rest of your work."],"1.27.6":["Returned files are named for the student, the assignment and what they are, like “Ana Lee - River essay - Graded.pdf”, or Feedback when there is no score. They still go in each student’s own folder.","To keep the names students turned in, untick Name each file by student and assignment under Options on the Return tab."],"1.27.5":["The gradebook can import your old scores: press Import… and choose a CSV or Excel file, or paste the cells. Each column becomes an assignment, matched to your roster.","You see everything before it is saved, and a score already in the gradebook stays unless you choose the file’s."],"1.27.4":["School is a new page in the sidebar for the things about your school you look up again and again: the handbook, the calendar, the bell schedule, portals, forms, who to call.","Add a link, a file (a copy is kept with your work) or a note. Name your own groups, and star the ones you open most to keep them along the top.","Drop files on the page or paste a web address. Find anything lists every resource. They are kept in your folder and take-home file, and stay when you start a new school year."],"1.27.3":["The class timer in Present takes minutes and seconds: type them in, or pick 0:30 and the other quick times. The menu remembers the last time you typed.","While it runs, the timer's menu adds or takes away 10 seconds or a minute, pauses, and restarts from the time you set. + and − add or take away a minute without opening the menu.","Tick Show it big to put the countdown in the middle of the screen, large enough for the back of the room."],"1.27.2":["In the gradebook, in-class assessments are now on the left and summatives on the right: the columns, the averages beside the term grade, and wherever you choose a type.","The order is yours to change. In Term setup, the arrows beside each type move it, and the gradebook's columns follow from left to right.","You can make your own assignment types. In Term setup, rename a type or press + Add a type (Homework, Projects, Quizzes), and give each its share of the grade. Your own setup stays as it is until you change it."],"1.27.1":["Undo now takes back a score as well as a mark: press Ctrl Z (⌘Z on a Mac) after a slip on a slider, a number key, or Missing, Excused or Late. Redo puts it back.","Deleting a unit, an assignment or a class shows Undo for a few seconds, and Undo puts it back where it was.","“Picked up where you left off” shows once, when you open an assignment, and no longer on Today or other pages. The note about what opened leaves by itself when you move to the next student, if every file opened.","The Next button stays in one place from student to student, and the Grade heading on a class’s Students tab is drawn properly.","Find anything answers to more everyday words: export, hand back, backup, undo, shortcuts, csv."],"1.27.0":["Start a new school year, in Settings, Saving and carrying. Your classes, units and assignment cards carry on, each card with its rubric and Quick mark boxes, with empty class lists and dates a year later.","This year goes into one protected file first, and the file is checked before anything is cleared. Open an archived year brings a year back from its file."],"1.26.2":["Rubric rows can be scored on your own scale. They start at 0 to 4 with half points, as before; when you set up an assignment you can pick any top from 1 to 10 and turn half points off.","Settings, Grading: choose the row scale new assignments start with. Assignments you already have keep theirs."],"1.26.1":["Activities: See, think, wonder now says it comes from Project Zero at the Harvard Graduate School of Education."],"1.26.0":["Seating: a new tab on each class. Pick how the room is set up, drag students to desks, and Shuffle gives everyone a new seat. A student can be kept in their seat.","Pick a name shows one student at random, and nobody twice until everyone has had a turn. Make groups deals the class into groups of any size.","While presenting a lesson, P picks a name and G makes groups. Who’s here leaves out anyone who is away today."],"1.25.0":["Attendance. Each class has an Attendance tab: everyone starts as present, so a day is one press for each student who is late, excused or absent, with a note if you want one.","Look back shows every saved day in one table with each student’s totals, and a student’s own page lists the days they missed.","Copy a day, or download the table as a spreadsheet, for your school’s system. Today has a line for it under each class.","If you don’t take attendance here, turn it off in Settings, Classes and rosters."],"1.24.0":["Retakes: a second try at the same assignment keeps the first try's score, comment and paper. Start one from the ⋯ beside Missing, Excused and Late on a paper.","You choose which try counts, for all your classes: the highest (to begin with), the latest, or the average. It is in the retake box and in the gradebook's Term setup.","A score typed into the gradebook takes a retake too: type both, like 7 > 10."],"1.23.0":["Scores by learning goal, if you want them. Keep your own list of goals (a skill, or a standard from your school) in Settings, Grading, or add one wherever you tag.","Tag rubric rows in Rubric setup and quiz questions in Quiz boxes. An assignment scored with just a total can carry one goal for the whole score.","Each class page gets a Goals tab: the class average on each goal with the lowest first, every student by every goal, and where each number came from. A student's own page shows their goals beside the class average.","Nothing changes until you add a first goal, and tagging never changes a score or a grade."],"1.22.0":["Progress sheets for parent meetings: one printed page per student with the term grade, every score, a chart of how they moved, missing work, each term's grade, the report comment and lines for notes. Find it on a class's Students list, or Progress sheet on one student's page.","Choose the term and tick what goes on it; Print opens the print window, where you can pick a printer or Save as PDF. It is made on your computer and nothing is sent anywhere."],"1.21.0":["Each class has a Missing work tab: every paper you marked Missing, by student or by assignment, for the term you pick.","Email reminder opens an email in your own mail app, addressed to the student and listing what they owe, for you to read and send. Email all writes one email to everyone who owes an assignment, with the addresses in Bcc. Grading Studio sends nothing itself.","Each reminder you open is noted beside the work, and Email wording… changes what every reminder says."],"1.20.0":["The app can speak Traditional Chinese (繁體中文). Choose it in Settings, Display, App language, or at the top of the welcome.","Like Spanish, it covers the first screens so far: the sidebar, Today, the welcome, Find anything, Help, and the feedback page students get with a returned paper. The other screens are still in English."],"1.19.0":["The app can speak Spanish. Choose it in Settings, Display, App language, or at the top of the welcome.","Spanish covers the first screens so far: the sidebar, Today, the welcome, Find anything, Help, and the feedback page students get with a returned paper. The other screens are still in English.","Names you typed (classes, students, assignments, rubric rows) are never translated."],"1.18.0":["On a tablet, a pencil draws and the pen's line is wider where you press harder. Once you have used a pencil, one finger moves the page, two fingers pinch to zoom, and a hand resting on the screen does nothing.","Settings, Marking has a new Tablet and pencil section: choose what a finger does on the paper, or turn off the wider line.","On a touch screen the tools, the student rows and the score buttons are larger."],"1.17.0":["Report comments: a new tab on each class's page drafts a comment for every student from your own gradebook, rubric scores and the comments you wrote on their papers. Edit each one, tick it done, then copy or download them all.","The drafts are put together on your computer from sentences you can change under Wording. Nothing about a student is sent anywhere."],"1.16.0":["Help is in the sidebar: short answers to the questions teachers ask most, from opening a set of papers to moving your work to another computer.","Find anything answers questions too. Type a few words, like “late paper” or “backup”, and the answer is in the list."],"1.15.0":["A picture dragged onto a slide that has text now sits beside the text, in a new Text + picture layout.","Drag several pictures in at once and each gets its own slide. Let a picture go on any slide in the list on the left to put it there.","New Full picture layout: the picture fills the whole slide."],"1.14.0":["Extra credit: points or a percent on one paper, and extra credit entries in the gradebook that add to the term grade or the in-class average.","The gradebook shows each type's average (summative, in-class) right beside the term grade, kept in view as you scroll. Averages only shows just those columns, and Whole year splits each term the same way.","Leave out… lets you untick students to see the class averages without them. Their own grades don't change, and nothing is saved."],"1.13.0":["Present a lesson from the Planner, or from Today when its class is on now or next: its slides fill the screen, and the arrow keys or a clicker move through them.","While presenting, A shows the agenda to tick off, T starts a timer the class can see, N shows your notes and B blanks the screen.","The bar shows how many minutes the class has left, from your timetable.","After a lesson is taught, one line says where the class got to. It shows on the lesson and on the week, and presenting again picks up there."],"1.12.0":["A returned paper starts with a feedback page: the score, each rubric row with the level given and what that level means, your comment, and every comment on the paper with its page number.","It is on unless you turn it off under Options on the Return tab. Your own pages are not changed, and bringing an export back in opens only those."],"1.11.0":["The Planner’s sections are in the sidebar: Calendar, Units, Past lessons, Activities and Rubrics. The row of tabs across the top is gone.","A lesson has a lighter top: its name, its classes, its status and Download. Copy for Claude, Versions, the upload and the links are under More.","Comments shows above a lesson once it has one."],"1.7.0":["Home is now Today: the classes you teach today with the lesson planned for each, the papers waiting to be marked, and the papers ready to hand back.","What the class needs next: after a set of papers is scored, Today shows the weakest rubric row and how many students to sit down with.","A class page is quieter. Click anywhere on an assignment’s row to open it; the only blue button is the one that adds an assignment.","Forget, and the other ways to open papers, moved into the ⋯ menu on each row."],"1.6.0":["A new browser opens on three questions (your classes, how you grade, where work is kept) and starts with nothing of anyone else’s in it.","A sample class of made-up students, with papers to mark, for trying things out. Remove it from Home when you’re done.","The app uses the name of your own school system. Choose it, and how you usually grade, in Settings.","Letter grades or IB 1 to 7 can show beside the percent, with boundaries you set.","Canvas and Moodle downloads are grouped by student. The Planner works without a setup file, and downloads lessons as PowerPoint with a plain built-in template."],"1.5.0":["The sidebar says “Not backed up”, in amber, until a folder holds a second copy of your work. Home asks for that folder once.","Go back in time, in Settings: any assignment as it was on an earlier day, restored on its own, with Undo.","Grading Studio can be installed as an app, and it opens with no internet.","A newer version now waits until you click Update now, so nothing changes in the middle of marking."]};
 const upd = { on: false, st: null, mine: '', checking: false, said: '', install: null, installed: false, err: '' };
 const updCan = () => 'serviceWorker' in navigator && (location.protocol === 'https:' || /[?&]sw=1(&|$)/.test(location.search)) && !/Grading Studio\.html$/i.test(decodeURIComponent(location.pathname));
 const updSend = async msg => { const reg = await navigator.serviceWorker.ready; if (reg.active) reg.active.postMessage(msg); };
@@ -27248,6 +27666,7 @@ async function nyReplace(B, rd, was) {
     const m = B.meta[id] || { id, name: (rec && rec.label) || 'A download', n: 0, t: (B.work[id] && B.work[id].t) || Date.now() };
     await kdo('meta', 'readwrite', o => o.put({ ...m, papers: !!rec, ...(rec ? { size: rec.entries.reduce((a, e) => a + (e.data ? e.data.length : 0), 0) } : {}) }, id));
   }
+  vkSweep();   // video files no student of that year names
   const v = B.info && B.info.dataV;
   if (!v) store.del('gs.dataV'); else if (v < gsData.version()) store.set('gs.dataV', v);
 }

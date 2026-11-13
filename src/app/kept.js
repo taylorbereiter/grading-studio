@@ -23,6 +23,7 @@ async function loadKept() {
   await keptFbCounts();
   if (!batch) renderLib();
   renderBackup();
+  setTimeout(vkSweep, 20000);
 }
 // Work saved before formative activities counted Feedback complete has no count of it yet: worked out once from the saved work, so a feedback-only card never reads "0 of 20".
 async function keptFbCounts() {
@@ -136,6 +137,7 @@ async function forgetKept(id) {
   try { localStorage.removeItem(savedKey(id)); } catch {}
   const seen = store.get('gs.openSeen', {}); if (seen[id]) { delete seen[id]; store.set('gs.openSeen', seen); }
   keptMeta.delete(id); renderLib();
+  vkSweep();   // a video file kept for that download, when nothing else names it
 }
 const fmtSize = b => b > 1e9 ? (b / 1e9).toFixed(1) + ' GB' : b > 1e6 ? Math.round(b / 1e6) + ' MB' : Math.max(1, Math.round(b / 1e3)) + ' KB';
 // The lists of kept work are on Today (today.js draws them).
@@ -217,4 +219,5 @@ async function removeAdded(st, path) {
   if (st.forder) st.forder = st.forder.filter(x => x !== 'f:' + path);
   refound(st); saveSoon(); renderList(); openStudent(cur);
   toast('Removed ' + fileShown(st, f.name));
+  vkSweep();
 }

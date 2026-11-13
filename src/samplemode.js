@@ -10,7 +10,7 @@
   var REAL = window.localStorage, KEY = 'gs.sampleOn', LEFT = 'gs.sampleLeft', PRE = 'sample:', DBPRE = 'sample-';
   var SHARED = { 'gs.theme': 1, 'gs.lang': 1 };
   // Every database either page makes. A test reads the source and fails if one is missing here.
-  var DBS = ['grading-studio-keep', 'grading-studio-added', 'grading-studio-folder', 'grading-studio-examples', 'grading-studio-safety', 'grading-studio-models', 'grading-studio-school', 'gs-lessons'];
+  var DBS = ['grading-studio-keep', 'grading-studio-added', 'grading-studio-folder', 'grading-studio-examples', 'grading-studio-safety', 'grading-studio-models', 'grading-studio-school', 'grading-studio-videos', 'gs-lessons'];
   var on = false; try { on = REAL.getItem(KEY) === '1'; } catch (e) {}
   var F = window.IDBFactory && IDBFactory.prototype, open0 = F && F.open, del0 = F && F.deleteDatabase, list0 = F && F.databases;
   // What the sample kept, cleared. Deleting a database waits for any page that still has it open, and an open asked for after

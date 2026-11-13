@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"5a9d697d","zh-Hans":"f12d7449","es":"6a07e9f0","fr":"7f20328e","de":"676f6f92","pt-BR":"3805b689","ja":"251fe08a","ko":"b0e24c8a"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script></head><body>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"03deea8f","zh-Hans":"d7329e7e","es":"7b8f0db0","fr":"b36a8449","de":"1bb683ff","pt-BR":"c6d59cce","ja":"a8478f13","ko":"e2290ab4"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script></head><body>
 <title>Planner · Grading Studio</title>
 <script>/* ---------------- the sample: a made-up school week, kept apart from everything real ----------------
    Runs first on both pages, before anything reads saved work. While the sample is open (gs.sampleOn in the browser's real storage),
@@ -12,7 +12,7 @@
 (function () {
   var REAL = window.localStorage, KEY = 'gs.sampleOn', LEFT = 'gs.sampleLeft', PRE = 'sample:', DBPRE = 'sample-';
   var SHARED = { 'gs.theme': 1, 'gs.lang': 1 };
-  var DBS = ['grading-studio-keep', 'grading-studio-added', 'grading-studio-folder', 'grading-studio-examples', 'grading-studio-safety', 'grading-studio-models', 'grading-studio-school', 'gs-lessons'];
+  var DBS = ['grading-studio-keep', 'grading-studio-added', 'grading-studio-folder', 'grading-studio-examples', 'grading-studio-safety', 'grading-studio-models', 'grading-studio-school', 'grading-studio-videos', 'gs-lessons'];
   var on = false; try { on = REAL.getItem(KEY) === '1'; } catch (e) {}
   var F = window.IDBFactory && IDBFactory.prototype, open0 = F && F.open, del0 = F && F.deleteDatabase, list0 = F && F.databases;
   function wipe() {

@@ -1,22 +1,23 @@
 {
- "version": "1.28.12",
- "build": "9fea21037ee7",
+ "version": "1.28.13",
+ "build": "2043ff7fc959",
  "notes": [
-  "Look around with a sample class first now opens a full sample: two made-up classes part-way through a term, with marked papers, a quiz marked by question, a gradebook, charts, missing work, attendance, seating, report comments, to-dos and two weeks of lessons.",
-  "The sample is kept apart from your own work. Leave the sample in the sidebar clears it in one click, and your own classes are exactly as you left them."
+  "Add a video file, not only a link: + Add, A video… keeps the file in this browser at any length while the computer has room, and partners share it. Drag the bar under a video to make it as big as you like.",
+  "Partners and videos (in Setup, and on No papers when you open an assignment) lists the whole class: pick partners and add each video in one place. + Clip now starts where the video is.",
+  "Bring in a rubric from Edit or the Open box on any assignment. Rows and what each level means are read from a Word or PDF table where they can be."
  ],
  "files": {
-  "index.html": "533b6d101b7699b57384280ab642802806730b5dd49c8babf3364d819d8289b3",
-  "planner.html": "320b2f49bc33b11d8f113c2af376e766275999f495b697f4ab8c956b84047435"
+  "index.html": "69c6ce8225e97336a483c5145a561ad55ffeb9ab45b27d81964e778b9d4b5274",
+  "planner.html": "82406e7b22e5eeaaa8bfe5bc74d63b5339aff7c816e3c7153e34230d5ac8c2fe"
  },
  "langs": {
-  "lang/zh-Hant.js": "5a9d697de2fb756ab5a02e554778e9af19455bfb68b4689a0c85e0de5e131bee",
-  "lang/zh-Hans.js": "f12d74495d5744f64a6d35c54880b6b7bc21a4c229dccc678608f3d22cea6987",
-  "lang/es.js": "6a07e9f057f3b8ad812f9bace5bc320f4281cf59dc26f10a00890979e7213eb3",
-  "lang/fr.js": "7f20328e2e12ed93c65a7011f58a1de224db7224c6f7fd2d29a712f07a8808c3",
-  "lang/de.js": "676f6f920e39a4456cabf9e1ba6b61782d758daca4fb8f442d273374739a454e",
-  "lang/pt-BR.js": "3805b689c57d196857ca4e76187b936a079fe3cb91334ea877a4d64ce8947200",
-  "lang/ja.js": "251fe08a3b5476271573072fb54b9d74325ff61d3930b4278c95b46f6688e1f2",
-  "lang/ko.js": "b0e24c8a5836f03f44524ad3a34527a44fa43eb0274eec2620f0b3bdad1d3c1d"
+  "lang/zh-Hant.js": "03deea8f12e0ea7cf38149f37712bc42bf8fac7ea15adc718e9ebe79ec8228ef",
+  "lang/zh-Hans.js": "d7329e7ef5556e0d6d65a5792dbd147b11b51eab60c9590c2011397cf18e3e5e",
+  "lang/es.js": "7b8f0db0bafb16345caefc850a29ddc937c6eb9a4b404732121f45964be3afa9",
+  "lang/fr.js": "b36a8449b6caa9ace883ef34d0266561c882e844f2fbcb76f292cd2672b12326",
+  "lang/de.js": "1bb683ff96cb97ad73b832f9635a38ee39a00391be2a527fd25d6af8eb326b43",
+  "lang/pt-BR.js": "c6d59cce3e51830c40feecdc92a1fd0026041914aab8b71e3355f756070ba48b",
+  "lang/ja.js": "a8478f13740c8c6a4b3dc620502f34c128d2ae758b4c467d3596427836448013",
+  "lang/ko.js": "e2290ab4c1a613456122c4dc58d3655b3fbb9df321d74a887128aa3032012ce7"
  }
 }

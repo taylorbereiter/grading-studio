@@ -101,7 +101,7 @@ test('Setup holds what is set once for the assignment, and everything else is in
   const { page, close } = await riverOpen();
   await page.click('#moreBtn');
   const items = await page.$$eval('#moreMenu .mitem', a => a.filter(b => !b.hidden).map(b => b.textContent.trim()));
-  assert.deepEqual(items, ['Rubric setup', 'Bring in files', 'What opened', 'Quick mark (paper quiz)', 'Marks from other apps']);
+  assert.deepEqual(items, ['Rubric setup', 'Bring in files', 'What opened', 'Partners and videos…', 'Quick mark (paper quiz)', 'Marks from other apps']);
   assert.ok(await page.$('#moreMenu #classSel'), 'the roster is there too');
   await page.keyboard.press('Escape');
   const rows = await page.evaluate(() => window.__gs.findRows().map(r => r.group + ': ' + r.label));

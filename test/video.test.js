@@ -228,7 +228,8 @@ test('clips: two times and a label saved on a video, played from there, shown to
   assert.match(await page.$eval('#paper .clip [data-clipplay]', b => b.textContent), /Strong opening\s*2:15–2:50/);
   assert.deepEqual(page.asked, [], 'saving a clip asks nothing of the site');
   await page.click('#paper .clip [data-clipplay]');
-  assert.equal(await page.$eval('#paper .vlink iframe', f => f.getAttribute('src')), 'https://www.youtube-nocookie.com/embed/abcDEF12345?start=135&end=170&autoplay=1');
+  // the card's player is asked where it is (YouTube's own embed messages), so a new clip starts there
+  assert.match(await page.$eval('#paper .vlink iframe', f => f.getAttribute('src')), /^https:\/\/www\.youtube-nocookie\.com\/embed\/abcDEF12345\?start=135&end=170&autoplay=1&enablejsapi=1&origin=http%3A%2F%2F(127\.0\.0\.1|localhost)%3A\d+$/);
   // on the class's screen: the label and the times, never the student
   await page.click('#paper .clip [data-clipshow]');
   await page.waitForSelector('#clipStage iframe');

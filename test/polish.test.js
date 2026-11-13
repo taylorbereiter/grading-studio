@@ -52,6 +52,8 @@ test('the More menu opens things, and keys work as expected', async () => {
   await page.keyboard.press('ArrowDown');
   assert.equal(await active(page), 'openRepBtn');
   await page.keyboard.press('ArrowDown');
+  assert.equal(await active(page), 'partnersBtn');
+  await page.keyboard.press('ArrowDown');
   assert.equal(await active(page), 'quizBtn');
   const before = await page.evaluate(() => window.__gs.state().cur);
   for (const k of ['ArrowDown', 'ArrowLeft', 'ArrowRight']) await page.keyboard.press(k);
