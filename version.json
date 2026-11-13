@@ -1,12 +1,12 @@
 {
- "version": "1.28.7",
- "build": "0918744dc2e3",
+ "version": "1.28.8",
+ "build": "4b2f8a5c83d0",
  "notes": [
   "In another language, the marking screen now reads in that language: the top bar, the tools, the student list, the score panel and its menus, and the Grades, Insights and Return tabs and Rubric setup.",
   "Student names, rubric rows, what each score means, your comments and the papers themselves stay as they are. Boxes opened from the marking screen, To do, School and the Planner are still in English."
  ],
  "files": {
-  "index.html": "4691a924b521ca3fc469074657ba4c85b96046759ea0c37f5e8829409ab8f167",
+  "index.html": "bf05d18f26921c25106899b9d6d3a40e9a296bf9a238c6082bc6f23c4f18e7b2",
   "planner.html": "e64d1511365c649d56677f4dfa85ebdad17cb3a5f6955ee28fd489b094bc320b"
  },
  "langs": {
