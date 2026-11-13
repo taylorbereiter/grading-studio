@@ -1,0 +1,65 @@
+/* the side pane: a second column on the marking screen (src/sidepane.js) */
+.spbtn{display:inline-flex;align-items:center;gap:6px}
+.spbtn[aria-pressed=true] span{display:none}
+.spbtn[aria-pressed=true]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+/* held at the paper's inner corner however far the papers scroll; the pane hangs off it, in the paper's own padding */
+.spanchor{position:sticky;top:0;left:0;height:0;z-index:4;pointer-events:none}
+.sp{position:absolute;pointer-events:auto;display:flex;flex-direction:column;min-width:0;min-height:0;background:var(--bg)}
+.sph{flex:none;display:flex;align-items:center;gap:var(--space-1);min-height:42px;padding:6px 10px 4px 14px}
+.sptabs{flex:1;min-width:0;display:flex;gap:2px;overflow-x:auto;scrollbar-width:none;padding:2px}
+.sptabs::-webkit-scrollbar{display:none}
+.sptab{flex:none;max-width:22ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;border:0;background:none;font:inherit;font-size:var(--text-control);color:var(--muted);padding:5px 10px;border-radius:var(--corner-2);cursor:pointer}
+.sptab:hover{background:var(--hover);color:var(--fg)}
+.sptab[aria-selected=true]{background:var(--surface);color:var(--fg);font-weight:600;box-shadow:0 0 0 1px var(--line-strong)}
+.sph .km [aria-checked=true]{font-weight:600;color:var(--accent)}
+.spb{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain;scrollbar-width:thin;padding:2px 14px 24px;container-type:size}
+.spb>.pg,.spb>.fhead{margin-left:auto;margin-right:auto}
+.spb>.fhead{flex-wrap:wrap;row-gap:2px}
+.spb>.fhead>*{white-space:nowrap}
+.spb>.fhead:first-child{margin-top:4px}
+.spb [data-spshow]{display:none}
+.spb .media{max-width:none;margin-bottom:10px}
+.spb .mstick{position:static}
+.spb .vgrip{display:none}
+.spb .media video,.spb .vlink .vlslot iframe,.spb .vlink .vlslot video,html.vidsized #paper .spb .media video,html.vidsized #paper .spb .vlink .vlslot iframe,html.vidsized #paper .spb .vlink .vlslot video{width:100%;height:min(calc(100cqw * 9 / 16 - 16px),max(140px,calc(100cqh - 170px)));min-height:0;max-height:none}
+html.vidsized #paper .spb .media{max-width:none}
+.spgrip{position:absolute;z-index:2;display:grid;place-items:center;touch-action:none}
+.spgrip i{border-radius:2px;background:var(--track)}
+.spgrip:hover i,.spgrip.on i,.spgrip:focus-visible i{background:var(--accent)}
+.spgrip:focus-visible{outline:none}
+/* on the right (the usual place) or the left: the pane takes its width out of the paper's padding */
+.main:is(.sp-right,.sp-left) .sp{top:-10px;width:var(--sp-px);height:var(--sp-h)}
+.main:is(.sp-right,.sp-left) .spgrip{top:0;bottom:0;width:11px;cursor:col-resize}
+.main:is(.sp-right,.sp-left) .spgrip i{width:4px;height:44px}
+.main.sp-right .paper{padding-right:var(--sp-px)}
+.main.sp-right .sp{left:100%;border-left:1px solid var(--line)}
+.main.sp-right .spgrip{left:-6px}
+.main.sp-right .zoompill{right:calc(var(--sp-px) + 24px)}
+.main.sp-left .paper{padding-left:calc(var(--sp-px) + 24px + 44px * var(--uz))}
+.main.sp-left .sp{right:calc(100% + 24px + 44px * var(--uz));border-right:1px solid var(--line)}
+.main.sp-left .spgrip{right:-6px}
+.main.sp-left .tools{left:calc(var(--sp-px) + 12px)}
+/* across the top: the pane takes its height out of the paper's top padding */
+.main.sp-top .paper{padding-top:calc(var(--sp-px) + 10px)}
+.main.sp-top .sp{top:calc(-1 * var(--sp-px) - 10px);left:calc(-24px - 44px * var(--uz));width:var(--sp-w);height:var(--sp-px);border-bottom:1px solid var(--line)}
+.main.sp-top .spgrip{left:0;right:0;bottom:-6px;height:11px;cursor:row-resize}
+.main.sp-top .spgrip i{width:44px;height:4px}
+.main.sp-top .tools{top:calc(var(--sp-px) + 12px);max-height:calc(100% - var(--sp-px) - 24px)}
+/* the rubric in full */
+.sprub{display:flex;flex-direction:column;gap:var(--space-3);padding-top:4px}
+.sprubnone{margin:0;font-size:var(--text-control);line-height:1.5}
+.sprubnone .link{font-size:inherit}
+.sprow{background:var(--surface);border:1px solid var(--line);border-radius:var(--corner-4);padding:10px 10px 10px}
+.sprow h4{display:flex;align-items:baseline;gap:var(--space-2);margin:0 2px 8px;font-size:var(--text-body);font-weight:650;color:var(--fg)}
+.sprow h4 em{margin-left:auto;font-style:normal;font-weight:600;font-size:var(--text-control);color:var(--accent);font-variant-numeric:tabular-nums;white-space:nowrap}
+.splv{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:6px}
+.splv.bare{grid-template-columns:repeat(auto-fit,minmax(44px,1fr))}
+.splv.bare .splvb{align-items:center}
+.splvb{display:flex;flex-direction:column;gap:3px;text-align:left;border:1px solid var(--line);border-radius:var(--corner-2);background:var(--surface);font:inherit;font-size:var(--text-small);line-height:1.4;color:var(--fg-2);padding:6px 8px;cursor:pointer;min-width:0}
+.splvb b{font-size:var(--text-control);color:var(--fg)}
+.splvb span{overflow-wrap:anywhere}
+.splvb:hover{background:var(--hover)}
+.splvb.on{border-color:var(--accent);background:var(--accent-soft);color:var(--fg);box-shadow:inset 0 0 0 1px var(--accent)}
+.splvb.on.half{box-shadow:none;border-style:dashed}
+.splvb.on b{color:var(--accent)}
+.main:is(.sp-right,.sp-top) .sph{padding-right:26px}

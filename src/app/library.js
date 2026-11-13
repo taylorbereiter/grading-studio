@@ -92,7 +92,7 @@ function saveLib() { libVer++; if (!store.set('gs.lib', lib)) toast('This browse
 // it is a separate page that never opens grading's work. Only for a teacher who has said them; nothing is written otherwise.
 function wordsShare() {
   if (!lib.me) return;
-  try { const v = JSON.stringify({ sys: sysName(), unit: unitLinkName(), ai: aiName(), ...(me().scale12 ? { scale12: true } : {}), ...(aiName() && aiUrlClean(me().aiUrl) ? { link: aiUrlClean(me().aiUrl) } : {}), ...(me().aiOpen === 'tab' ? { tab: true } : {}) }); if (localStorage.getItem('gs.words') !== v) localStorage.setItem('gs.words', v); } catch {}
+  try { const v = JSON.stringify({ sys: sysName(), unit: unitLinkName(), ai: aiName(), ...(me().scale12 ? { scale12: true } : {}), ...(aiName() && aiUrlClean(me().aiUrl) ? { link: aiUrlClean(me().aiUrl) } : {}), ...(me().aiOpen === 'tab' ? { tab: true } : {}), ...(me().aiUrls && Object.keys(me().aiUrls).length ? { urls: me().aiUrls } : {}), ...(Array.isArray(me().aiOff) && me().aiOff.length ? { off: me().aiOff } : {}) }); if (localStorage.getItem('gs.words') !== v) localStorage.setItem('gs.words', v); } catch {}
 }
 const holders = () => lib.classes.concat([lib.loose]);
 const holderById = id => id ? lib.classes.find(c => c.id === id) || null : lib.loose;

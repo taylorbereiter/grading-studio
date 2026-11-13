@@ -19,7 +19,28 @@ function besideWho() {
   if (typeof aiName === 'function') return { name: aiName(), link: aiLink(), tab: me().aiOpen === 'tab' };
   let w = null; try { w = JSON.parse(localStorage.getItem('gs.words') || 'null'); } catch { }
   const name = plWords().ai;
-  return { name, link: aiUrlClean(w && w.link) || aiUsual(name), tab: !!(w && w.tab) };
+  return { name, link: aiUrlClean(w && w.link) || aiUsual(name), tab: !!(w && w.tab), urls: w && w.urls, off: w && w.off };
+}
+// Every assistant she can open from the sidebar, the one in use first: the ones the app knows an address for and any of her own with a
+// link, but for those she has taken off the list in Settings. A link of her own for one that isn't in use is remembered in lib.me.aiUrls,
+// and the names taken off in lib.me.aiOff (the Planner reads both from gs.words).
+function besideList() {
+  const a = besideWho(); if (!a.link) return [];
+  const m = typeof aiName === 'function' ? me() : { aiUrls: a.urls, aiOff: a.off };
+  const urls = m.aiUrls && typeof m.aiUrls === 'object' ? m.aiUrls : {}, off = Array.isArray(m.aiOff) ? m.aiOff : [];
+  const names = [...new Set(AI_LIST.map(x => x[0]).concat(Object.keys(urls)))].filter(n => n.toLowerCase() !== a.name.toLowerCase() && !off.includes(n));
+  return [{ name: a.name, link: a.link, own: a.link !== aiUsual(a.name), cur: true }].concat(names.map(n => ({ name: n, link: aiUrlClean(urls[n]) || aiUsual(n), own: !!aiUrlClean(urls[n]) })).filter(x => x.link));
+}
+// Makes another assistant the one in use (grading page only: the Planner keeps none of this itself). The link she gave the last one is
+// remembered under its name, and the new one's comes back.
+function besideUse(name) {
+  if (typeof aiName !== 'function' || name == null || name === aiName()) return;
+  const m = { ...me() }, was = aiName(), urls = { ...(m.aiUrls && typeof m.aiUrls === 'object' ? m.aiUrls : {}) };
+  if (was) { if (aiUrlClean(m.aiUrl)) urls[was] = aiUrlClean(m.aiUrl); else delete urls[was]; }
+  const u = aiUrlClean(urls[name]); delete urls[name];
+  m.ai = name; if (u) m.aiUrl = u; else delete m.aiUrl;
+  if (Object.keys(urls).length) m.aiUrls = urls; else delete m.aiUrls;
+  lib.me = m; saveLib(); gradeDefaultApply(); sysWords();
 }
 // The window's place: the right of the screen, top to bottom, a little over a third of it wide.
 function besidePlace() {
@@ -36,8 +57,8 @@ function besideRoom() {
 }
 // Opens it. how: 'tab' or 'side' to say which; otherwise the teacher's usual way. The window is opened empty and then sent to the
 // address, so this page is not left as its opener and a browser that stops pop-ups can be noticed.
-function besideOpen(how) {
-  const a = besideWho(); if (!a.link) return false;
+function besideOpen(how, pick) {
+  const a = pick || besideWho(); if (!a.link) return false;
   const tab = how === 'tab' || (how !== 'side' && a.tab), at = besidePlace();
   let w = null;
   try { w = window.open('about:blank', '_blank', tab ? '' : 'popup,left=' + at.left + ',top=' + at.top + ',width=' + at.width + ',height=' + at.height); } catch { }
@@ -61,10 +82,48 @@ function besidePaint() {
 }
 // A plain click opens it the teacher's way. A click with Ctrl, ⌘ or Shift, the middle button and the right-click menu are left to the
 // browser, so its own "new tab", "new window" and "split view" work as they do on any link.
+// With more than one assistant to choose from, the click opens a short list instead: each row is a link too, so the browser's own ways
+// work on any of them. Picking one opens it, and on the grading page makes it the assistant in use.
+function besideMenuShut(focus) { const m = document.getElementById('bsMenu'); if (!m) return; const a = m.anchor; m.remove(); if (a) { a.setAttribute('aria-expanded', 'false'); if (focus) a.focus({ preventScroll: true }); } }
+function besideMenu(a) {
+  besideMenuShut();
+  const list = besideList(), m = document.createElement('div'), esc2 = v => String(v).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const host = u => { try { return new URL(u).hostname.replace(/^www\./, ''); } catch { return ''; } };
+  m.id = 'bsMenu'; m.className = 'bsmenu'; m.setAttribute('role', 'menu'); m.setAttribute('aria-label', 'Open beside Grading Studio'); m.anchor = a;
+  m.innerHTML = '<div class="bshd">Open beside Grading Studio</div>' + list.map(x => '<a class="bsrow" role="menuitem" href="' + esc2(x.link) + '" target="_blank" rel="noopener" data-bsname="' + esc2(x.name) + '"' + (x.cur ? ' aria-current="true"' : '') + '><i aria-hidden="true">' + (x.cur ? '✓' : '') + '</i><b data-raw>' + esc2(x.name) + '</b>' + (x.own ? '<small data-raw>' + esc2(host(x.link)) + '</small>' : '') + '</a>').join('') +
+    '<a class="bsrow bsset" role="menuitem" href="' + (typeof aiName === 'function' ? '#/settings/claude' : './#/settings/claude') + '"><i aria-hidden="true"></i><span>Assistants and their links…</span></a>';
+  document.body.appendChild(m);
+  const r = a.getBoundingClientRect(), w = m.offsetWidth, h = m.offsetHeight;
+  m.style.left = Math.max(8, Math.min(window.innerWidth - w - 8, r.right + 8)) + 'px'; m.style.top = Math.max(8, Math.min(window.innerHeight - h - 8, r.bottom - h + 6)) + 'px';
+  a.setAttribute('aria-expanded', 'true');
+  const first = m.querySelector('.bsrow'); if (first) first.focus({ preventScroll: true });
+}
 document.addEventListener('click', e => {
-  const a = e.target.closest && e.target.closest('a[data-beside]'); if (!a) return;
+  const row = e.target.closest && e.target.closest('#bsMenu .bsrow');
+  if (row) {
+    if (row.classList.contains('bsset')) return besideMenuShut();
+    if (e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return besideMenuShut();
+    e.preventDefault();
+    const x = besideList().find(y => y.name === row.dataset.bsname); besideMenuShut();
+    if (!x) return;
+    besideUse(x.name);
+    besideOpen('', { ...besideWho(), name: x.name, link: x.link });
+    return;
+  }
+  const a = e.target.closest && e.target.closest('a[data-beside]');
+  if (!a) return besideMenuShut();
   if (e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-  e.preventDefault(); besideOpen();
+  e.preventDefault();
+  if (document.getElementById('bsMenu')) return besideMenuShut();
+  if (besideList().length > 1) besideMenu(a); else besideOpen();
 });
+document.addEventListener('keydown', e => {
+  const m = document.getElementById('bsMenu'); if (!m) return;
+  if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); return besideMenuShut(true); }
+  if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
+  e.preventDefault(); e.stopPropagation();
+  const rows = [...m.querySelectorAll('.bsrow')], i = rows.indexOf(document.activeElement), n = rows.length;
+  rows[(i + (e.key === 'ArrowDown' ? 1 : -1) + n) % n].focus();
+}, true);
 window.addEventListener('storage', e => { if (!e.key || e.key === 'gs.words') { try { besidePaint(); } catch { } } });
-window.__gsBeside = { who: besideWho, place: besidePlace, open: besideOpen, paint: besidePaint, clean: aiUrlClean };
+window.__gsBeside = { who: besideWho, place: besidePlace, open: besideOpen, paint: besidePaint, clean: aiUrlClean, list: besideList, use: besideUse };

@@ -65,3 +65,6 @@ html.welcoming .shell{visibility:hidden}
 
 .safeask .satry{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 14px;margin-top:var(--space-3)}
 .safeask .satry span{color:var(--muted)}
+
+.merow .mecheck{display:inline-flex;align-items:center;gap:6px;align-self:center;margin-right:var(--space-2)}
+.merow .mecheck input{width:16px;height:16px;padding:0;accent-color:var(--accent)}

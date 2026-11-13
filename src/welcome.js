@@ -200,6 +200,8 @@ function meSetRender(sec) {
         ' <span class="muted">Empty for its usual page. A link of your own can go to your school account, a Gem, a project or a custom GPT.</span></p>' +
         '<p class="setp merow"><label for="meAiOpen"><b>A click on its name opens it</b></label> <select id="meAiOpen"><option value="">in a window on the right of the screen</option><option value="tab"' + (me().aiOpen === 'tab' ? ' selected' : '') + '>in a new tab</option></select>' +
         (aiLink() ? ' <button class="btn sm" data-besideopen>Open it now</button>' : '') + '</p>' +
+        (aiLink() ? '<p class="setp merow" id="meAiList"><b>Others you switch to</b> ' + [...new Set(AI_LIST.map(x => x[0]).concat(Object.keys(me().aiUrls || {})))].filter(n => n !== a).map(n => '<label class="mecheck"><input type="checkbox" data-ailist="' + esc(n) + '"' + ((me().aiOff || []).includes(n) ? '' : ' checked') + '> <span data-raw>' + esc(n) + '</span></label>').join(' ') +
+          ' <span class="muted">A click on <span class="aiWord">' + esc(a) + '</span> in the sidebar lists these too. Pick one there and it opens and becomes the one in use, with its own link.</span></p>' : '') +
         '<p class="setp" id="meBeside"><b>Side by side.</b> ' + (aiLink() ? '<span class="aiWord">' + esc(a) + '</span> is in the sidebar on every screen, so you can go between the two without hunting for a tab. In Chrome, right-click it there and choose <b>Open link in split view</b>: both are then in one window, with a divider you can drag.' : 'Give it an address above and it is in the sidebar on every screen.') +
         ' <span>Grading Studio sends nothing to it. It sees only what you paste or attach.</span></p>' : ''));
   }
@@ -217,7 +219,7 @@ function meSetRender(sec) {
 // One of the teacher's own settings that is kept only while it says something: an empty one is taken out, not stored empty.
 function meDrop(k, v) { const m = { ...me() }; if (v) m[k] = v; else delete m[k]; lib.me = m; saveLib(); gradeDefaultApply(); }
 // Another assistant: a link the teacher gave the last one doesn't go with it.
-function meAiSet(name) { const m = { ...me(), ai: name }; delete m.aiUrl; lib.me = m; saveLib(); gradeDefaultApply(); }
+function meAiSet(name) { if (name === aiName()) { meSet({ ai: name }); return; } besideUse(name); }   // its own link is remembered under its name and comes back with it (src/beside.js)
 $('#setPane').addEventListener('click', e => { if (e.target.closest('[data-besideopen]')) besideOpen(); });
 $('#setPane').addEventListener('change', e => {
   const t = e.target;
@@ -228,6 +230,7 @@ $('#setPane').addEventListener('change', e => {
     if (t.value.trim() && !v) { t.value = aiUrlClean(me().aiUrl); return toast('A link starts with https://'); }
     meDrop('aiUrl', v); sysWords(); return setRender();
   }
+  if (t.dataset.ailist) { const off = new Set(me().aiOff || []); if (t.checked) off.delete(t.dataset.ailist); else off.add(t.dataset.ailist); meDrop('aiOff', off.size ? [...off] : null); sysWords(); return; }
   if (t.id === 'meAiOpen') { meDrop('aiOpen', t.value === 'tab' ? 'tab' : ''); sysWords(); return setRender(); }
   if (t.id === 'meAiOther') { meSet({ ai: t.value.trim().slice(0, 30) }); sysWords(); return setRender(); }
   if (t.id === 'meSysOther') { meSet({ sys: t.value.trim().slice(0, 40) }); sysWords(); return setRender(); }
