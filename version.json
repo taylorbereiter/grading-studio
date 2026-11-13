@@ -1,13 +1,13 @@
 {
  "version": "1.28.9",
- "build": "6d84bc9d55a8",
+ "build": "909c7fed8d82",
  "notes": [
   "Returning marked files now gives each student one PDF: the feedback page first, then every paper they turned in, Word papers included as pages. A Word rubric you scored still goes back as a Word file.",
   "To send each paper as its own file again, untick One PDF for each student under Options on the Return tab."
  ],
  "files": {
-  "index.html": "8e16861b37c0b4624cb892ac9fbfc58649a9540581cf7c8cb37b111c843c21f8",
-  "planner.html": "31cfd196ac3cd7072067984ec6919f5efad5ac806f4320b820b4799e947df009"
+  "index.html": "f048fe569bff6eeb35f4a032ff7642f4756a10dd36975b99cdfa78e8097a9938",
+  "planner.html": "ffdde3db5df4813964146e55d7f376b067ddbf4b2fcb366339d124499d582a61"
  },
  "langs": {
   "lang/zh-Hant.js": "10b356fc902921ead1ab35b15a86a2ac5f583e8d65fd4bff166464272eb0ef53",

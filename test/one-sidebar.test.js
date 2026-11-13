@@ -103,7 +103,9 @@ test('the Planner’s sidebar reads nothing of grading’s', async () => {
   // In the sources: the sidebar code touches no storage of its own, and the Planner page names none of grading's keys.
   const rail = fs.readFileSync(path.join(ROOT, 'src', 'planner', 'rail.js'), 'utf8');
   assert.ok(!/localStorage|indexedDB|sessionStorage/.test(rail), 'rail.js opens no storage');
-  const html = fs.readFileSync(path.join(ROOT, 'planner.html'), 'utf8');
+  // The lines that keep the sample apart (src/samplemode.js) are on both pages and name every database, only to clear the sample's own copies.
+  const whole = fs.readFileSync(path.join(ROOT, 'planner.html'), 'utf8'), html = whole.replace(/<script>\/\* -+ the sample:[\s\S]*?<\/script>/, '');
+  assert.notEqual(html, whole);
   for (const s of ['gs.lib', 'grading-studio-keep', 'grading-studio-added', 'keptMeta', 'gs.b.']) assert.ok(!html.includes(s), 'planner.html should not contain ' + s);
   // And as it runs, with grading work in the browser: every key and database it opens is the Planner's own or one of the two shared ones.
   const srv = await serveBoth(), ctx = await browser.createBrowserContext();
@@ -124,7 +126,7 @@ test('the Planner’s sidebar reads nothing of grading’s', async () => {
     await page.waitForSelector('#findDlg .frow'); await page.keyboard.press('Escape');
     const t = await page.evaluate(() => ({ ls: [...window.__touched.ls], db: [...window.__touched.db] }));
     assert.deepEqual(t.db, ['gs-lessons']);
-    for (const k of t.ls) assert.ok(k === 'gs.theme' || k === 'gs.lang' || k === 'gs.mblinks' || k === 'gs.words' || k === 'gs.rolls' || k.startsWith('gsp.'), 'the Planner touched ' + k);
+    for (const k of t.ls) assert.ok(k === 'gs.theme' || k === 'gs.lang' || k === 'gs.sampleOn' || k === 'gs.sampleLeft' || k === 'gs.mblinks' || k === 'gs.words' || k === 'gs.rolls' || k.startsWith('gsp.'), 'the Planner touched ' + k);
     assert.deepEqual(page.errors, []);
   } finally { await ctx.close(); await srv.close(); }
 });

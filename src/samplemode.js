@@ -30,7 +30,7 @@
   window.__gsSample = { on: on, enter: enter, leave: leave, wipe: wipe, dbs: DBS.slice(), again: function () { try { REAL.removeItem(PRE + 'gs.sampleBuilt'); } catch (e) {} } };
   if (!on) { try { if (REAL.getItem(LEFT)) wipe(); } catch (e) {} return; }
   // A sample that was never finished (the tab closed while it was being made) starts again from nothing.
-  try { if (REAL.getItem(PRE + 'gs.sampleBuilt') == null) wipe(); } catch (e) {}
+  try { if (REAL.getItem(PRE + 'gs.sampleBuilt') == null) wipe(); else window.__gsSample.built = true; } catch (e) {}
 
   /* from here on, the sample is open: every name this page stores under is changed on its way in and out */
   function area(real) {

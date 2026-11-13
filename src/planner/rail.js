@@ -30,7 +30,7 @@ function sampleRailRender() {
 }
 document.addEventListener('click', e => { if (e.target.closest('[data-sampleleave]')) { e.preventDefault(); window.__gsSample.leave(); location.href = gsUrl('#/'); } });
 // The sample is made by the grading page. Opened here before that, this page hands over to it.
-if (plSample()) { let ok = false; try { ok = !!JSON.parse(localStorage.getItem('gs.sampleBuilt')); } catch { } if (!ok) location.replace(gsUrl('#/')); }
+if (plSample() && !window.__gsSample.built) location.replace(gsUrl('#/'));
 
 function railRender() {
   sampleRailRender();
