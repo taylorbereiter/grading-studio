@@ -72,8 +72,12 @@ const TEACH_SAMPLE = {
 };
 const isTeach = s => !!TEACH[s.layout] && s.layout !== 'objectives';
 
-// The boxes of a teaching layout. sz in pt; col is 'text', 'accent' or 'muted'.
+// The boxes of a teaching layout, with any size or place the teacher gave a box (s.fs, s.box: boxes.js).
 function teachBoxes(s) {
+  return teachBoxesAt(s).map(b => ({ ...b, ...(s.box && s.box[b.k]), ...(b.k !== 'body' && s.fs && s.fs[b.k] ? { sz: s.fs[b.k] } : {}) }));
+}
+// The boxes as the layout has them. sz in pt; col is 'text', 'accent' or 'muted'.
+function teachBoxesAt(s) {
   const z = s.size, B = (k, x, y, w, h, o) => ({ k, x, y, w, h, sz: z, col: 'text', ...o });
   switch (s.layout) {
     case 'warmup': case 'exit': return [

@@ -1,13 +1,15 @@
 {
- "version": "1.28.9",
- "build": "df189d9bcdb9",
+ "version": "1.28.10",
+ "build": "13b1d614165c",
  "notes": [
-  "Returning marked files now gives each student one PDF: the feedback page first, then every paper they turned in, Word papers included as pages. A Word rubric you scored still goes back as a Word file.",
-  "To send each paper as its own file again, untick One PDF for each student under Options on the Return tab."
+  "Planner slides: click any text box and the size menu in the toolbar changes that box: the title, the text, the bottom line and the rest. Biggest that fits picks the size for you.",
+  "The box you click gets a frame: drag its bar to move it or a handle to resize it, and Put back returns it to the layout. The .pptx keeps the new places and sizes.",
+  "+ Add slide adds a title and text slide straight away; the arrow beside it opens every layout. Timetable can set a different usual slide.",
+  "Words are never cut off: text that runs past its box stays visible in the editor with a warning, and when you present the box uses the room under it, then the text gets smaller until every word shows."
  ],
  "files": {
-  "index.html": "ff8616d9371920c105ea8b641aa2b4143062318a50a8a41780f968b2cece65f7",
-  "planner.html": "e8221c0f94fa58bb3cd816ecac12dbdf42fd84ff02434cbedd58a30c017aebe8"
+  "index.html": "d6934f0689111bd2d92c231480186113bd937da6b978909f7895e6b3397033e5",
+  "planner.html": "b4b89f3ad5347f38605c5a0d5e2c9393a860278a57da6c275dde6b622bd49f27"
  },
  "langs": {
   "lang/zh-Hant.js": "e61e5bc5c684cae0cd230d65e3f8184661f9063c856ec9c517d0ef332b276103",

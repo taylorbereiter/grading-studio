@@ -254,7 +254,7 @@ h1 i,.top .title i{font-style:normal;font-weight:500;color:var(--accent)}
 .ls-mini{width:150px;height:84.4px;overflow:hidden;border-radius:var(--corner-1);border:2px solid transparent;flex:none}
 .ls-th.on .ls-mini{border-color:var(--accent)}
 .ls-mini .ls-slide{transform:scale(calc(146/1280));transform-origin:0 0}
-.ls-addslide{display:flex;flex-direction:column;gap:4px;margin-top:10px}
+.ls-addslide{display:flex;gap:4px;margin-top:10px}.ls-addslide [data-a="addslide"]{flex:1}.ls-addslide [data-a="addpick"]{padding-left:8px;padding-right:8px}
 .ls-main{padding:12px 18px 30px;min-width:0}
 .ls-tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px;font-size:13.5px}
 .ls-tools label{display:flex;gap:6px;align-items:center}
@@ -317,6 +317,15 @@ h1 i,.top .title i{font-style:normal;font-weight:500;color:var(--accent)}
 .ls-body .rt{margin-top:13px}.ls-body .rt.l1,.ls-body .rt.l2{margin-top:7px}
 .ls-bx .rt+.rt{margin-top:var(--gap)}
 .ls-ta.ls-bx{display:block;line-height:1.3}
+.ls-t,.ls-ttl,.ls-sub,.ls-body,.ls-bx{overflow-wrap:break-word}
+.ls-over{overflow:visible!important;outline:2px dashed var(--warn)!important;outline-offset:2px}
+.ls-frame{position:absolute;z-index:5;box-sizing:border-box;border:2px solid var(--accent);pointer-events:none}
+.ls-frame i{position:absolute;width:16px;height:16px;margin:-9px 0 0 -9px;background:var(--accent-fg);border:2px solid var(--accent);border-radius:var(--corner-1);pointer-events:auto;touch-action:none}
+.ls-frame i[data-h="nw"]{left:0;top:0;cursor:nwse-resize}.ls-frame i[data-h="n"]{left:50%;top:0;cursor:ns-resize}.ls-frame i[data-h="ne"]{left:100%;top:0;cursor:nesw-resize}.ls-frame i[data-h="e"]{left:100%;top:50%;cursor:ew-resize}
+.ls-frame i[data-h="se"]{left:100%;top:100%;cursor:nwse-resize}.ls-frame i[data-h="s"]{left:50%;top:100%;cursor:ns-resize}.ls-frame i[data-h="sw"]{left:0;top:100%;cursor:nesw-resize}.ls-frame i[data-h="w"]{left:0;top:50%;cursor:ew-resize}
+.ls-grips{position:absolute;left:-2px;bottom:100%;margin-bottom:6px;display:flex;gap:6px}.ls-frame.in .ls-grips{bottom:auto;top:6px;left:6px}
+.ls-boxback{background:var(--accent-fg)!important;color:var(--accent)!important;border:2px solid var(--accent);cursor:pointer!important}
+.ls-grip{position:relative;padding:3px 12px;background:var(--accent);color:var(--accent-fg);font-weight:600;font-size:var(--text-title);line-height:1.3;font-family:Inter,Arial,sans-serif;border-radius:var(--corner-2);white-space:nowrap;cursor:move;pointer-events:auto;touch-action:none;user-select:none}
 .ls-ed{cursor:text;outline:1.5px dashed transparent;outline-offset:2px;border-radius:3px}
 .ls-ed:hover,.ls-ed:focus{outline-color:rgba(31,111,178,.55)}
 .ls-pic.ls-ed{cursor:pointer}
@@ -1637,8 +1646,9 @@ const SIZES_ANY = [18, 20, 24, 28, 30, 32, 34, 36, 40, 44];
 const deckRule = () => (L.setup && L.setup.deck) || {};
 const deckAgenda = () => deckRule().agenda !== false;
 const deckSizes = () => deckRule().sizes === 'any' ? SIZES_ANY : SIZES;
+const deckAdd = () => LAYOUTS[deckRule().add] && deckRule().add !== 'title' ? deckRule().add : 'content';   // what + Add slide adds
 const deckSizeSay = () => { const z = deckSizes(); return z[0] + ' to ' + z[z.length - 1]; };
-function deckClean(d) { const o = {}; if (d && d.agenda === false) o.agenda = false; if (d && d.sizes === 'any') o.sizes = 'any'; return Object.keys(o).length ? o : null; }
+function deckClean(d) { const o = {}; if (d && d.agenda === false) o.agenda = false; if (d && d.sizes === 'any') o.sizes = 'any'; if (d && LAYOUTS[d.add] && d.add !== 'content' && d.add !== 'title') o.add = d.add; return Object.keys(o).length ? o : null; }
 const meetsOn = (dow, cs) => (cs || (L.setup && L.setup.classes) || []).some(c => (c.meets || []).some(m => +m.dow === dow));
 const plWeekOffs = () => [...(meetsOn(0) ? [-1] : []), 0, 1, 2, 3, 4, ...(meetsOn(6) ? [5] : [])];
 const plMd = d => { d = typeof d === 'string' ? parseYmd(d) : d; try { return d.toLocaleDateString(undefined, { month: 'numeric', day: 'numeric' }); } catch { return (d.getMonth() + 1) + '/' + d.getDate(); } };
@@ -1707,7 +1717,7 @@ function normSlide(s) {
   }
   if (+s.fmt !== 2) rtMigrate(out);
   out.fmt = 2;
-  return out;
+  return normBoxes(s, out);   // the teacher's own text sizes and box places (boxes.js)
 }
 function normLesson(x) {
   x = x && typeof x === 'object' ? x : {};
@@ -1838,12 +1848,12 @@ function slideHtml(s, lesson, edit) {
 function slideInner(s, lesson, edit, look) {
   const sz = s.size * PT, cap = t => esc(t);
   let h = '<div class="ls-bg"></div><div class="ls-fade"></div><div class="ls-wood"' + (L.tplImg ? ' style="background-image:url(' + L.tplImg + ')"' : '') + '></div>';
-  const ed = (k, cls, text, ph) => '<div class="' + cls + (edit ? ' ls-ed' : '') + '" data-k="' + k + '"' + (edit ? ' tabindex="0"' : '') + '>' + (text ? cap(text) : edit ? '<span class="ls-ph">' + ph + '</span>' : '') + '</div>';
+  const ed = (k, cls, text, ph) => '<div class="' + cls + (edit ? ' ls-ed' : '') + '" data-k="' + k + '"' + (boxStyle(s, k) ? ' style="' + boxStyle(s, k) + '"' : '') + (edit ? ' tabindex="0"' : '') + '>' + (text ? cap(text) : edit ? '<span class="ls-ph">' + ph + '</span>' : '') + '</div>';
   if (s.layout === 'title') {
     h += ed('title', 'ls-ttl', s.title, 'Click to add a title');
     h += '<div class="ls-trule"></div>';
     const sub = s.body ? s.body : titleSubtitle(lesson);
-    h += '<div class="ls-sub' + (edit ? ' ls-ed' : '') + '" data-k="body"' + (edit ? ' tabindex="0"' : '') + '>' + sub.split('\n').map(esc).join('<br>') + '</div>';
+    h += '<div class="ls-sub' + (edit ? ' ls-ed' : '') + '" data-k="sub"' + (boxStyle(s, 'sub') ? ' style="' + boxStyle(s, 'sub') + '"' : '') + (edit ? ' tabindex="0"' : '') + '>' + sub.split('\n').map(esc).join('<br>') + '</div>';
     return h;
   }
   if (s.layout === 'fullpic') {   // the picture is the whole slide; the slide's name is kept for the list of slides, not shown
@@ -1866,7 +1876,7 @@ function slideInner(s, lesson, edit, look) {
     return h;
   }
   const inner = s.body.trim() ? rtHtml(s.body) : edit ? '<span class="ls-ph">' + (BODY_PH[s.layout] || 'Click to add text') + '</span>' : '';
-  h += '<div class="ls-body ls-' + (s.layout === 'objectives' ? 'agenda' : s.layout) + (edit ? ' ls-ed' : '') + '" data-k="body" style="font-size:' + sz + 'px"' + (edit ? ' tabindex="0"' : '') + '>' + inner + '</div>';
+  h += '<div class="ls-body ls-' + (s.layout === 'objectives' ? 'agenda' : s.layout) + (edit ? ' ls-ed' : '') + '" data-k="body" style="' + boxStyle(s, 'body') + 'font-size:' + sz + 'px"' + (edit ? ' tabindex="0"' : '') + '>' + inner + '</div>';
   return h;
 }
 function titleSubtitle(lesson) {
@@ -2016,11 +2026,11 @@ function renderEditor() {
     (lessonTalk(l) ? commentsBtn(l) : '') + panelBtn() + moreHtml(l) +
     '<button class="btn sm" data-a="pptx">Download .pptx</button><button class="btn sm primary" data-pr="present" title="Show this lesson full screen, from this slide">' + prIcon('play') + 'Present</button></div>' + pendingBar(l) + variantBar(l);
   h += '<div class="ls-ed-cols"><nav class="ls-thumbs" id="lsThumbs">' + l.slides.map((x, i) => thumbHtml(x, l, i)).join('') +
-    '<div class="ls-addslide"><button class="btn sm" data-a="addslide">+ Add slide</button></div></nav>';
+    '<div class="ls-addslide"><button class="btn sm" data-a="addslide" title="Add a ' + esc(LAYOUTS[deckAdd()]) + ' slide after this one">+ Add slide</button><button class="btn sm" data-a="addpick" title="Pick another layout" aria-label="Pick another layout">▾</button></div></nav>';
   h += '<section class="ls-main"><div class="ls-tools">' +
     '<button class="btn sm" data-a="layout" title="Pick a layout for this slide">Layout: ' + esc(LAYOUTS[s.layout]) + ' ▾</button>' +
     '<button class="btn sm" data-a="look" title="Colors and background for this lesson">Look: ' + esc(LOOKS[lookOf(l)].name) + '</button>' + rtToolHtml() +
-    (s.layout !== 'title' && s.layout !== 'picture' && s.layout !== 'fullpic' && s.layout !== 'video' ? '<label>Text <select data-f="size" class="btn sm">' + deckSizes().map(z => '<option value="' + z + '"' + (z === s.size ? ' selected' : '') + '>' + z + ' pt</option>').join('') + '</select></label>' : '') +
+    '<span id="lsSize"></span>' +   // the text size of the box last clicked (boxes.js), filled in once the slide is drawn
     (hasPic(s) ? '<button class="btn sm" data-a="pic">' + (s.img ? 'Change picture' : 'Add picture') + '</button>' : '') +
     (s.layout === 'video' ? '<button class="btn sm" data-a="vid">' + (s.video ? 'Change video' : 'Add video link') + '</button>' + (s.video ? '<a class="btn sm ghost" href="' + esc(videoLink(s.video)) + '" target="_blank" rel="noopener">Watch</a>' : '') : '') +
     '<span class="sp"></span><button class="btn sm ghost" data-a="up" title="Move earlier">↑</button><button class="btn sm ghost" data-a="down" title="Move later">↓</button><button class="btn sm ghost" data-a="dup" title="Make a copy of this slide">Duplicate</button><button class="btn sm ghost" data-a="del" title="Delete this slide">Delete</button></div>' +
@@ -2033,7 +2043,7 @@ function renderEditor() {
     '<div class="ls-whole">' + materialsHtml(l, 'lesson') + linksHtml(l) + finishedHtml(l) + lessonTalkHtml(l) + taughtHtml(l) + '</div></div>' +
     '</section></div><input type="file" id="lsPicIn" accept="image/*" hidden>';
   $('#lessons').innerHTML = h;
-  fitStage(); checkFit(); panelContext();
+  fitStage(); checkFit(); sizeCtlRefresh(); boxFrame(); panelContext();
   const th = $('#lsThumbs .ls-th.on'); if (th) th.scrollIntoView({ block: 'nearest' });
 }
 function tipsDlg() {
@@ -2077,12 +2087,13 @@ function fitStage() {
 }
 window.addEventListener('resize', () => { if ($('#lessons') && !$('#lessons').hidden && L.view === 'edit') fitStage(); });
 function checkFit() {
-  const b = $('#lsStage .ls-body'), w = $('#lsWarn'); if (!w) return;
-  const over = b && b.scrollHeight > b.clientHeight + 2;
-  const bx = [...document.querySelectorAll('#lsStage .ls-bx')].some(x => x.scrollHeight > x.clientHeight + 2);
-  w.hidden = !over && !bx;
-  if (!over && bx) w.innerHTML = 'Some text runs past its box at this size. Shorten it, or pick a smaller text size (' + deckSizes()[0] + ' pt is the smallest).';
-  if (over) w.innerHTML = 'This is more than fits at ' + L.open.slides[L.cur].size + ' pt. <button class="btn sm" data-a="split">Move the extra lines to a new slide</button>';
+  const w = $('#lsWarn'), st = $('#lsStage .ls-slide'); if (!w || !st) return;
+  const over = slideFit(st, 'edit').filter(Boolean), s = L.open.slides[L.cur];
+  w.hidden = !over.length; if (!over.length) return;
+  const k = over.includes('body') ? 'body' : over[0], split = k === 'body' && !!st.querySelector('.ls-body.ls-over');
+  w.innerHTML = (k === 'body' ? 'This is more than fits at ' + boxSize(s, k) + ' pt.' : 'The ' + esc(BOX_NAME[k] || 'text').toLowerCase() + ' runs past its box.') +
+    ' When you present, it is made smaller so no words are cut off. ' + (split ? '<button class="btn sm" data-a="split">Move the extra lines to a new slide</button> ' : '') +
+    '<button class="btn sm" data-a="fit" data-k="' + esc(k) + '">Biggest size that fits</button>';
 }
 function refreshThumb(i) {
   const t = document.querySelector('#lsThumbs [data-go="' + i + '"]'); if (!t) return;
@@ -2100,22 +2111,23 @@ let lEditing = null;
 function startEdit(box) {
   editorCommit();
   const s = L.open.slides[L.cur], k = box.dataset.k;
+  if (BOX_KEYS.includes(k)) L.box = k;
   if (k === 'img') return pickPicture();
   if (k === 'video') return videoDlg();
   if (RT_KEYS.includes(k) && !(s.layout === 'title' && k === 'body')) {
     const el = rtEditor(box, s[k] || '');
     box.replaceWith(el); el.focus();
     const r = document.createRange(); r.selectNodeContents(el.lastChild || el); r.collapse(false); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r);
-    lEditing = { ta: el, k, rich: true }; rtToolState();
+    lEditing = { ta: el, k, rich: true }; rtToolState(); sizeCtlRefresh(); boxFrame();
     el.addEventListener('blur', () => setTimeout(() => { if (lEditing && lEditing.ta === el && document.activeElement !== el) editorCommit(); }, 0));
     return;
   }
   const ta = document.createElement('textarea'); ta.className = 'ls-ta ' + box.className.replace('ls-ed', '');
-  ta.style.cssText = box.getAttribute('style') || '';
+  ta.style.cssText = box.getAttribute('style') || ''; ta.dataset.k = k;
   ta.value = k === 'title' ? s.title : k === 'source' ? (s.img ? s.img.source : '') : EXTRA.includes(k) ? (s[k] || '') : (s.layout === 'title' && !s.body ? titleSubtitle(L.open) : s.body);
   if ((s.layout === 'agenda' || s.layout === 'objectives') && k === 'body') ta.classList.add('ls-ta-ag');
   box.replaceWith(ta); ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length);
-  lEditing = { ta, k };
+  lEditing = { ta, k }; sizeCtlRefresh(); boxFrame();
   ta.addEventListener('blur', () => setTimeout(() => { if (lEditing && lEditing.ta === ta) editorCommit(); }, 0));
 }
 function editorCommit() {
@@ -2132,7 +2144,7 @@ function editorCommit() {
 }
 function renderStage() {   // redraw just the slide, so a click into the notes box keeps its focus
   const st = $('#lsStage .ls-slide'); if (!st) return renderEditor();
-  st.innerHTML = slideHtml(L.open.slides[L.cur], L.open, true); checkFit();
+  st.innerHTML = slideHtml(L.open.slides[L.cur], L.open, true); checkFit(); sizeCtlRefresh(); boxFrame();
 }
 function onLessonsKey(e) {
   if (lEditing && lEditing.rich && lEditing.ta.contains(e.target)) { if (e.key === 'Escape') { e.preventDefault(); lEditing.ta.blur(); } return; }
@@ -2157,11 +2169,11 @@ function onLessonsKey(e) {
     else if (e.key === 'Enter' && e.target.classList.contains('ls-ed')) { e.preventDefault(); startEdit(e.target); }
   }
 }
-function goSlide(i) { editorCommit(); if (!L.open) return; L.cur = Math.max(0, Math.min(L.open.slides.length - 1, i)); renderEditor(); }
+function goSlide(i) { editorCommit(); if (!L.open) return; if (i !== L.cur) L.box = ''; L.cur = Math.max(0, Math.min(L.open.slides.length - 1, i)); renderEditor(); }
 function newSlide(layout) {
   const first = (L.open.slots[0] || {}).date, d = first ? plMd(first) + ' ' : '';
   const s = normSlide({ layout, fmt: 2, size: (TEACH[layout] || {}).size });
-  L.open.slides.splice(L.cur + 1, 0, s); L.cur++; lessonChanged(false); renderEditor();
+  L.open.slides.splice(L.cur + 1, 0, s); L.cur++; L.box = ''; lessonChanged(false); renderEditor();
 }
 
 async function onLessonsClick(e) {
@@ -2207,7 +2219,10 @@ async function onLessonsClick(e) {
   if (a === 'mshare' || a === 'mexport' || a === 'mcopyto' || a === 'mcopy' || a === 'mdelete') return moreDo(a, t, l);
   if (a === 'addslot') return addSlotDlg();
   if (a === 'pic') return pickPicture();
-  if (a === 'addslide') return addSlideDlg();
+  if (a === 'addslide') { editorCommit(); return newSlide(deckAdd()); }   // the teacher's usual slide; ▾ beside it picks another
+  if (a === 'addpick') return addSlideDlg();
+  if (a === 'fit') return fitBox(t.dataset.k);
+  if (a === 'boxreset') { editorCommit(); const s = l.slides[L.cur]; if (s.box) { delete s.box[t.dataset.k]; if (!Object.keys(s.box).length) delete s.box; } lessonChanged(); return renderEditor(); }
   if (a === 'layout') return addSlideDlg('change');
   if (a === 'atlas') return atlasDlg(L.open);
   if (a === 'look') return lookDlg();
@@ -2248,7 +2263,7 @@ function onLessonsChange(e) {
   if (!f || !L.open) return;
   const s = L.open.slides[L.cur];
   if (f === 'layout') { s.layout = e.target.value; lessonChanged(); renderEditor(); }
-  if (f === 'size') { s.size = +e.target.value; lessonChanged(); renderEditor(); }
+  if (f === 'size') setBoxSize(e.target.dataset.k || 'body', e.target.value);
 }
 function undoToast(msg, fn) {
   toast(msg, 6000);
@@ -2615,14 +2630,15 @@ function openTimetable() {
       (draft.template ? '<button class="btn sm ghost" data-tplplain>Use the plain one</button>' : '') + '</div>' +
       '<p class="muted" style="margin:4px 0 0;font-size:13px">A PowerPoint file (.pptx or .potx) with a Title Slide and a Title and Content layout. Downloads keep its masters and layouts.</p>' +
       '<h3 style="margin:18px 0 6px;font-size:15px">Slides</h3><label class="ls-mrow"><input type="checkbox" id="ttAgenda"' + (draft.deck.agenda !== false ? ' checked' : '') + '> A new lesson starts with an agenda on slide 2</label>' +
-      '<label class="ls-mrow"><input type="checkbox" id="ttSizes"' + (draft.deck.sizes !== 'any' ? ' checked' : '') + '> Keep slide text between 28 and 36 pt, big enough to read from the back of the room</label>';
+      '<label class="ls-mrow"><input type="checkbox" id="ttSizes"' + (draft.deck.sizes !== 'any' ? ' checked' : '') + '> Keep slide text between 28 and 36 pt, big enough to read from the back of the room</label>' +
+      '<label class="ls-mrow">+ Add slide adds <select id="ttAdd" class="btn sm">' + Object.keys(LAYOUTS).filter(k => k !== 'title').map(k => '<option value="' + k + '"' + (k === (draft.deck.add || 'content') ? ' selected' : '') + '>' + esc(LAYOUTS[k]) + '</option>').join('') + '</select></label>';
   };
   const collect = () => {
     const lines = id => $(id).value.split('\n').map(x => x.trim()).filter(Boolean);
     draft.daysOff = lines('#ttOff').map(x => { const m = /^(\d{4}-\d\d-\d\d)\s*(.*)$/.exec(x); return m && { date: m[1], label: m[2] || 'No school' }; }).filter(Boolean);
     draft.events = lines('#ttEv').map(x => { const m = /^(\d{4}-\d\d-\d\d)(?:\s+to\s+(\d{4}-\d\d-\d\d))?\s*(.*)$/.exec(x); return m && { date: m[1], to: m[2] || '', label: m[3] }; }).filter(Boolean);
     draft.semStart = $('#ttS').value; draft.semEnd = $('#ttE').value;
-    draft.deck = { ...($('#ttAgenda').checked ? {} : { agenda: false }), ...($('#ttSizes').checked ? {} : { sizes: 'any' }) };
+    draft.deck = { ...($('#ttAgenda').checked ? {} : { agenda: false }), ...($('#ttSizes').checked ? {} : { sizes: 'any' }), ...($('#ttAdd').value !== 'content' ? { add: $('#ttAdd').value } : {}) };
   };
   const classesOut = () => draft.classes.filter(c => c.name.trim()).map(c => { const o = { ...c, id: c.id || lid() }, u = mbUrl(c.mb); if (u) o.mb = u; else delete o.mb; return o; });
   openDlg('<div class="bh"><h2>Timetable</h2><span class="ls-mrow" style="margin:0"><button class="btn sm" data-saveprof title="Everything here, your slide template included, in one file for another computer">Save my setup file</button><button class="btn sm" data-load>Load a setup file…</button></span></div><div class="bb" id="ttBody"></div><div class="bf"><button class="btn" data-x>Cancel</button><button class="btn primary" data-ok>Save</button></div>');
@@ -2680,7 +2696,8 @@ function tplLayouts(z) {   // which layout file is Title Slide / Title and Conte
   return { title: out['Title Slide'], content: out['Title and Content'], only: out['Title Only'] || out['Title and Content'] };
 }
 const NS = 'xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"';
-const spPh = (id, name, ph, body, bodyPr) => '<p:sp><p:nvSpPr><p:cNvPr id="' + id + '" name="' + name + '"/><p:cNvSpPr><a:spLocks noGrp="1"/></p:cNvSpPr><p:nvPr>' + ph + '</p:nvPr></p:nvSpPr><p:spPr/><p:txBody>' + (bodyPr || '<a:bodyPr/>') + '<a:lstStyle/>' + body + '</p:txBody></p:sp>';
+const xfrm = b => b ? '<p:spPr><a:xfrm><a:off x="' + Math.round(b.x * EX) + '" y="' + Math.round(b.y * EY) + '"/><a:ext cx="' + Math.round(b.w * EX) + '" cy="' + Math.round(b.h * EY) + '"/></a:xfrm></p:spPr>' : '<p:spPr/>';
+const spPh = (id, name, ph, body, bodyPr, xf) => '<p:sp><p:nvSpPr><p:cNvPr id="' + id + '" name="' + name + '"/><p:cNvSpPr><a:spLocks noGrp="1"/></p:cNvSpPr><p:nvPr>' + ph + '</p:nvPr></p:nvSpPr>' + xfrm(xf) + '<p:txBody>' + (bodyPr || '<a:bodyPr/>') + '<a:lstStyle/>' + body + '</p:txBody></p:sp>';
 let pxLook = 'wood';
 const run = (t, sz, o) => pxLook !== 'wood' ? lookRun(t, sz, o || {}, pxLook) : '<a:r><a:rPr lang="en-US"' + (sz ? ' sz="' + sz * 100 + '"' : '') + (o && o.b ? ' b="1"' : '') + (o && o.i ? ' i="1"' : '') + (o && o.u ? ' u="sng"' : '') + ' dirty="0"' + (o && RT_COLORS[o.c] ? '><a:solidFill><a:srgbClr val="' + RT_COLORS[o.c].slice(1) + '"/></a:solidFill></a:rPr>' : '/>') + '<a:t>' + xe(t) + '</a:t></a:r>';
 const buClr = () => pxLook !== 'wood' ? '<a:buClr><a:srgbClr val="' + hex(LOOKS[pxLook].accent) + '"/></a:buClr>' : '';
@@ -2693,12 +2710,13 @@ function slideXml(s, lesson, media) {
 }
 function slideXmlIn(s, lesson, media) {
   let tree = '';
+  const bx = k => s.box && s.box[k], fz = k => (s.fs && s.fs[k]) || 0;
   if (s.layout === 'title') {
-    tree += spPh(2, 'Title 1', '<p:ph type="ctrTitle"/>', '<a:p>' + run(s.title || lesson.title, 0, { title: 1 }) + '</a:p>');
+    tree += spPh(2, 'Title 1', '<p:ph type="ctrTitle"/>', '<a:p>' + run(s.title || lesson.title, fz('title'), { title: 1 }) + '</a:p>', null, bx('title'));
     const sub = (s.body || titleSubtitle(lesson)).split('\n');
-    tree += spPh(3, 'Subtitle 2', '<p:ph type="subTitle" idx="1"/>', sub.map(x => '<a:p>' + (x ? run(x, 0, { sub: 1 }) : '<a:endParaRPr lang="en-US"/>') + '</a:p>').join(''));
+    tree += spPh(3, 'Subtitle 2', '<p:ph type="subTitle" idx="1"/>', sub.map(x => '<a:p>' + (x ? run(x, fz('sub'), { sub: 1 }) : '<a:endParaRPr lang="en-US"/>') + '</a:p>').join(''), null, bx('sub'));
   } else {
-    tree += spPh(2, 'Title 1', '<p:ph type="title"/>', '<a:p>' + (s.title ? run(s.title, 0, { title: 1 }) : '<a:endParaRPr lang="en-US"/>') + '</a:p>');
+    tree += spPh(2, 'Title 1', '<p:ph type="title"/>', '<a:p>' + (s.title ? run(s.title, fz('title'), { title: 1 }) : '<a:endParaRPr lang="en-US"/>') + '</a:p>', null, bx('title'));
     if (isTeach(s)) tree += teachXml(s, pxLook, media);
     else if (s.layout === 'video') {
       if (s.video) {
@@ -2724,7 +2742,7 @@ function slideXmlIn(s, lesson, media) {
       }
     } else {
       const ps = s.body.trim() ? rtParasXml(s.body, { sz: s.size, lvlMar: 457200, bulMar: Math.round(.86 * s.size * 12700), numMar: Math.round(1.45 * s.size * 12700), gap: 10, buClr: buClr(), runFn: (t, f) => run(t, s.size, f) }) : '';
-      tree += spPh(3, 'Content Placeholder 2', '<p:ph idx="1"/>', ps || '<a:p><a:endParaRPr lang="en-US"/></a:p>', '<a:bodyPr><a:noAutofit/></a:bodyPr>');
+      tree += spPh(3, 'Content Placeholder 2', '<p:ph idx="1"/>', ps || '<a:p><a:endParaRPr lang="en-US"/></a:p>', '<a:bodyPr><a:noAutofit/></a:bodyPr>', bx('body'));
     }
   }
   return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<p:sld ' + NS + '><p:cSld><p:spTree><p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr><p:grpSpPr/>' + tree + '</p:spTree></p:cSld><p:clrMapOvr><a:masterClrMapping/></p:clrMapOvr></p:sld>';
@@ -2861,6 +2879,8 @@ a line starting with "• " is a bullet, "1. " (any number) is a numbered line, 
 leading tabs indent the line. **bold**, *italic*, __underline__ and {red}colored words{/} (red, orange, green, blue,
 purple, gray) work inside a line (a backslash shows a *, _ or { as is).
 No layout adds bullets or numbers by itself, so add them only where the teacher would. Keep "fmt": 2 on the lesson.
+A slide may have "fs" (the teacher's own text sizes for other boxes, like { "title": 34, "foot": 30 }) and "box" (boxes the
+teacher moved or resized, like { "body": { "x": 152, "y": 211, "w": 1008, "h": 420 } } on a 1280 x 720 slide). Keep both as they are.
 The lesson's "title" and the title slide's title are the same: change both together (unless the lesson has
 "titleApart": true). @@AGENDA@@ An empty title-slide body means the app fills in the course and dates. Bump "updated" (milliseconds) when you change a lesson.
 
@@ -3117,6 +3137,9 @@ const TEACH_SAMPLE = {
 const isTeach = s => !!TEACH[s.layout] && s.layout !== 'objectives';
 
 function teachBoxes(s) {
+  return teachBoxesAt(s).map(b => ({ ...b, ...(s.box && s.box[b.k]), ...(b.k !== 'body' && s.fs && s.fs[b.k] ? { sz: s.fs[b.k] } : {}) }));
+}
+function teachBoxesAt(s) {
   const z = s.size, B = (k, x, y, w, h, o) => ({ k, x, y, w, h, sz: z, col: 'text', ...o });
   switch (s.layout) {
     case 'warmup': case 'exit': return [
@@ -3267,6 +3290,145 @@ function addSlideDlg(mode) {
     lessonChanged(); renderEditor();
   };
 }
+
+/* ================= Text boxes on a slide =================
+   Each text box on a slide can have its own text size and its own place and size on the slide.
+   - s.size is the main text's size (as before); s.fs = { title: 34, foot: 30, … } sizes the other boxes.
+   - s.box = { body: { x, y, w, h }, title: {…} } moves or resizes a box, in 1280 x 720 slide units.
+   Both are only on a slide when the teacher changed something; everything else draws as the layout says.
+   Words are never cut off: the editor marks a box whose text runs past it, and Present and the class screen
+   make that box's text smaller until it fits (the editor's warning says so, and offers to split the slide). */
+const BOX_KEYS = ['title', 'body', 'body2', 'sub', 'tag', 'foot', 'h1', 'h2', 'cite', 'word', 'pos'];
+const BOX_NAME = { title: 'Title', body: 'Text', body2: 'Right side', sub: 'Subtitle', tag: 'Label', foot: 'Bottom line', h1: 'Left heading', h2: 'Right heading', cite: 'Source', word: 'Word', pos: 'Part of speech' };
+const TTL_SIZES = [40, 44, 48, 54, 60, 66, 72];   // a title slide's title is bigger than any other text
+const BOX_MIN_W = 80, BOX_MIN_H = 36;
+function boxHome(s, k) {
+  if (s.layout === 'title') return k === 'title' ? { x: 254, y: 84, w: 907, h: 266 } : k === 'sub' ? { x: 254, y: 373, w: 907, h: 103 } : null;
+  if (k === 'title') return { x: 152, y: 84, w: 1008, h: 110 };
+  if (k === 'body') return { x: 152, y: 211, w: 1008, h: 362 };
+  return null;
+}
+function normBoxes(s, out) {
+  if (s.fs && typeof s.fs === 'object') {
+    const fs = {}; for (const k of BOX_KEYS) if (k !== 'body' && +s.fs[k] >= 10 && +s.fs[k] <= 96) fs[k] = Math.round(+s.fs[k] * 2) / 2;
+    if (Object.keys(fs).length) out.fs = fs;
+  }
+  if (s.box && typeof s.box === 'object') {
+    const bx = {};
+    for (const k of BOX_KEYS) {
+      const b = s.box[k]; if (!b || typeof b !== 'object' || ![b.x, b.y, b.w, b.h].every(v => Number.isFinite(+v))) continue;
+      const w = Math.max(BOX_MIN_W, Math.min(1280, Math.round(+b.w))), h = Math.max(BOX_MIN_H, Math.min(720, Math.round(+b.h)));
+      bx[k] = { x: Math.max(0, Math.min(1280 - w, Math.round(+b.x))), y: Math.max(0, Math.min(720 - h, Math.round(+b.y))), w, h };
+    }
+    if (Object.keys(bx).length) out.box = bx;
+  }
+  return out;
+}
+function boxSizes(s, k) { return s.layout === 'title' && k === 'title' ? TTL_SIZES : deckSizes(); }
+function boxUsual(s, k) {
+  if (k === 'body') return s.size;
+  if (s.layout === 'title') return k === 'title' ? 58.5 : 0;   // 0: the subtitle keeps the template's own size
+  if (k === 'title') return 32;
+  const b = teachBoxes({ ...s, fs: null, box: null }).find(x => x.k === k); return b ? b.sz : 0;
+}
+const boxSize = (s, k) => k === 'body' ? s.size : (s.fs && s.fs[k]) || boxUsual(s, k);
+function boxStyle(s, k) {
+  const b = s.box && s.box[k], z = k !== 'body' && s.fs && s.fs[k];
+  return (b ? 'left:' + b.x + 'px;top:' + b.y + 'px;width:' + b.w + 'px;height:' + b.h + 'px;' : '') + (z ? 'font-size:' + (z * PT).toFixed(1) + 'px;' : '');
+}
+const sizable = () => [...document.querySelectorAll('#lsStage .ls-slide [data-k]')].map(e => e.dataset.k).filter((k, i, a) => BOX_KEYS.includes(k) && a.indexOf(k) === i);
+function boxPick() {   // the box the size control is about: the one last clicked, or the slide's main text
+  const ks = sizable(); if (!ks.length) return '';
+  return ks.includes(L.box) ? L.box : ks.includes('body') ? 'body' : ks[0];
+}
+function sizeCtl() {
+  const s = L.open.slides[L.cur], k = boxPick(); if (!k) return '<span id="lsSize"></span>';
+  const z = boxSize(s, k), list = boxSizes(s, k), usual = boxUsual(s, k), own = k !== 'body' && s.fs && s.fs[k];
+  const opts = (k === 'body' ? '' : '<option value=""' + (own ? '' : ' selected') + '>Usual' + (usual && !list.includes(usual) ? '' : usual ? ' (' + usual + ' pt)' : '') + '</option>') +
+    list.map(v => '<option value="' + v + '"' + ((k === 'body' || own) && v === z ? ' selected' : '') + '>' + v + ' pt</option>').join('') + '<option value="fit">Biggest that fits</option>';
+  return '<label id="lsSize" title="Text size for the box you clicked on the slide">' + esc(BOX_NAME[k]) + ' <select data-f="size" data-k="' + k + '" class="btn sm">' + opts + '</select></label>';
+}
+function sizeCtlRefresh() { const c = $('#lsSize'); if (c) c.outerHTML = sizeCtl(); }
+function setBoxSize(k, v) {
+  const s = L.open.slides[L.cur];
+  if (v === 'fit') return fitBox(k);
+  if (k === 'body') s.size = +v;
+  else { s.fs = { ...(s.fs || {}) }; if (v) s.fs[k] = +v; else delete s.fs[k]; if (!Object.keys(s.fs).length) delete s.fs; }
+  L.box = k; lessonChanged(); renderEditor();
+}
+function fitBox(k) {
+  const s = L.open.slides[L.cur], el = $('#lsStage .ls-slide [data-k="' + k + '"]'); if (!el) return;
+  const list = boxSizes(s, k).slice().sort((a, b) => b - a), was = el.style.fontSize;
+  let pick = 0;
+  for (const v of list) { el.style.fontSize = (v * PT).toFixed(1) + 'px'; if (!boxOver(el)) { pick = v; break; } }
+  el.style.fontSize = was;
+  if (!pick) { pick = list[list.length - 1]; toast('Even at ' + pick + ' pt this doesn’t fit. Make the box bigger, shorten the text, or split the slide.', 7000); }
+  if (k === 'body') s.size = pick; else { s.fs = { ...(s.fs || {}), [k]: pick }; }
+  L.box = k; lessonChanged(); renderEditor();
+}
+const boxOver = el => el.scrollHeight > el.clientHeight + 2 || el.scrollWidth > el.clientWidth + 2;
+const FIT_SEL = '.ls-t,.ls-ttl,.ls-sub,.ls-body,.ls-bx';
+function slideFit(root, mode) {
+  const over = [];
+  if (!root) return over;
+  for (const el of root.querySelectorAll(FIT_SEL)) {
+    if (!el.offsetHeight || !boxOver(el)) continue;
+    if (mode === 'edit') { el.classList.add('ls-over'); over.push(el.dataset.k); continue; }
+    const top = el.offsetTop, l = el.offsetLeft, r = l + el.offsetWidth;
+    let floor = root.querySelector('.lk-wood') ? 640 : 700;
+    for (const o of root.querySelectorAll(FIT_SEL + ',.ls-pic,.ls-src,.ls-vid')) if (o !== el && o.offsetTop > top && o.offsetLeft < r && o.offsetLeft + o.offsetWidth > l && (o.textContent.trim() || o.querySelector('img'))) floor = Math.min(floor, o.offsetTop - 8);
+    if (floor > top + el.offsetHeight) el.style.height = (floor - top) + 'px';
+    if (!boxOver(el)) continue;
+    const base = parseFloat(getComputedStyle(el).fontSize) || 16;
+    for (let f = 0.95; f >= 0.4 && boxOver(el); f -= 0.05) el.style.fontSize = (base * f).toFixed(1) + 'px';
+    el.classList.add('ls-shrunk');
+  }
+  return over;
+}
+
+/* ---------- moving and resizing a box with the mouse ---------- */
+function boxFrame() {
+  const st = $('#lsStage .ls-slide'); if (!st) return;
+  const old = st.querySelector('.ls-frame'); if (old) old.remove();
+  const k = L.box, el = k && BOX_KEYS.includes(k) && st.querySelector('[data-k="' + k + '"]'); if (!el) return;
+  const f = document.createElement('div'); f.className = 'ls-frame'; f.dataset.for = k;
+  const moved = !!(L.open.slides[L.cur].box || {})[k];
+  f.innerHTML = '<span class="ls-grips"><b class="ls-grip" data-h="move" title="Drag to move this text box">✥ ' + esc(BOX_NAME[k]) + '</b>' + (moved ? '<b class="ls-grip ls-boxback" data-a="boxreset" data-k="' + k + '" title="Put this box back where the layout has it">↺ Put back</b>' : '') + '</span>' + ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w'].map(h => '<i data-h="' + h + '" title="Drag to resize"></i>').join('');
+  boxFramePlace(f, el); st.appendChild(f);
+}
+function boxFramePlace(f, el) { f.style.cssText = 'left:' + el.offsetLeft + 'px;top:' + el.offsetTop + 'px;width:' + el.offsetWidth + 'px;height:' + el.offsetHeight + 'px'; f.classList.toggle('in', el.offsetTop < 40); }
+let boxDrag = null;
+document.addEventListener('pointerdown', e => {
+  if (e.target.closest && e.target.closest('#lsStage .ls-boxback')) return e.preventDefault();   // the text being typed keeps the cursor
+  const h = e.target.closest && e.target.closest('#lsStage .ls-frame [data-h]'); if (!h || !L.open) return;
+  e.preventDefault(); e.stopPropagation();   // keeps the cursor in the text being typed
+  const f = h.closest('.ls-frame'), k = f.dataset.for, st = $('#lsStage'), el = st.querySelector('.ls-slide [data-k="' + k + '"]'); if (!el) return;
+  const kk = parseFloat(getComputedStyle(st).getPropertyValue('--k')) || 1;
+  boxDrag = { h: h.dataset.h, k, el, f, kk, x0: e.clientX, y0: e.clientY, b: { x: el.offsetLeft, y: el.offsetTop, w: el.offsetWidth, h: el.offsetHeight }, moved: false };
+  try { h.setPointerCapture(e.pointerId); } catch { }
+}, true);
+document.addEventListener('pointermove', e => {
+  const d = boxDrag; if (!d) return;
+  const dx = (e.clientX - d.x0) / d.kk, dy = (e.clientY - d.y0) / d.kk; if (Math.abs(dx) + Math.abs(dy) > 2) d.moved = true;
+  const snap = v => Math.round(v / 4) * 4; let { x, y, w, h } = d.b;
+  if (d.h === 'move') { x += dx; y += dy; }
+  else {
+    if (d.h.includes('e')) w += dx; if (d.h.includes('s')) h += dy;
+    if (d.h.includes('w')) { x += dx; w -= dx; } if (d.h.includes('n')) { y += dy; h -= dy; }
+    if (w < BOX_MIN_W) { if (d.h.includes('w')) x -= BOX_MIN_W - w; w = BOX_MIN_W; }
+    if (h < BOX_MIN_H) { if (d.h.includes('n')) y -= BOX_MIN_H - h; h = BOX_MIN_H; }
+  }
+  x = Math.max(0, Math.min(1280 - w, snap(x))); y = Math.max(0, Math.min(720 - h, snap(y))); w = Math.min(1280 - x, snap(w)); h = Math.min(720 - y, snap(h));
+  Object.assign(d.el.style, { left: x + 'px', top: y + 'px', width: w + 'px', height: h + 'px' });
+  d.now = { x, y, w, h }; boxFramePlace(d.f, d.el);
+}, true);
+document.addEventListener('pointerup', () => {
+  const d = boxDrag; if (!d) return; boxDrag = null;
+  if (!d.moved || !d.now || !L.open) return;
+  const s = L.open.slides[L.cur]; s.box = { ...(s.box || {}), [d.k]: d.now };
+  lessonChanged();
+  if (!lEditing) renderStage(); else { checkFit(); sizeCtlRefresh(); }
+}, true);
 
 /* ---------- slide text the teacher formats herself ---------- */
 const RT_LVL = 2, RT_KEYS = ['body', 'body2', 'foot'];
@@ -5847,6 +6009,7 @@ function prShow() {
   const l = PR.l, n = l.slides.length, s = l.slides[PR.i];
   PR.video = false;
   $('#prFit').innerHTML = '<div class="ls-slide">' + slideHtml(s, l, false) + '</div>';
+  slideFit($('#prFit'), 'show');   // text that runs past its box is made smaller, never cut off
   PR.outSlide = true;   // the class screen takes the new slide too
   prPaint();
 }
