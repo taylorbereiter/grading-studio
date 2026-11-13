@@ -27,6 +27,8 @@ function zhHomeSay(k) {
 const LANG_ZH = {
   name: '繁體中文', locale: 'zh-Hant',
   words: {
+    // the AI assistant beside the app (src/beside.js)
+    'Opens beside Grading Studio. In Chrome, right-click it and choose Open link in split view to keep both in one window.': '在 Grading Studio 旁邊開啟。在 Chrome 中，按右鍵並選擇 Open link in split view，兩者就會在同一個視窗裡。', 'Opens at': '開啟位置', 'Empty for its usual page. A link of your own can go to your school account, a Gem, a project or a custom GPT.': '留空則開啟它平常的頁面。你也可以貼上自己的連結，例如學校帳號、某個 Gem、專案或自訂 GPT。', 'A click on its name opens it': '點它的名稱時開啟於', 'in a window on the right of the screen': '螢幕右側的視窗', 'in a new tab': '新分頁', 'Open it now': '現在開啟', 'Side by side.': '並排使用。', 'is in the sidebar on every screen, so you can go between the two without hunting for a tab. In Chrome, right-click it there and choose': '在每個畫面的側邊欄都有，你不必找分頁就能在兩者之間切換。在 Chrome 中，在那裡按右鍵並選擇', 'Open link in split view': 'Open link in split view', ': both are then in one window, with a divider you can drag.': '：兩者就會在同一個視窗裡，中間的分隔線可以拖曳。', 'Give it an address above and it is in the sidebar on every screen.': '在上方填入網址，它就會出現在每個畫面的側邊欄。', 'Grading Studio sends nothing to it. It sees only what you paste or attach.': 'Grading Studio 不會傳送任何內容給它。它只看得到你貼上或附加的內容。', 'In a new tab': '新分頁', 'In a window on the right of the screen': '螢幕右側的視窗', 'Your AI assistant opens at': '你的 AI 助理開啟於', 'Your AI assistant opens at its usual page': '你的 AI 助理開啟於它平常的頁面', 'Your AI assistant opens in a new tab': '你的 AI 助理在新分頁開啟', 'Your AI assistant opens in a window on the right of the screen': '你的 AI 助理在螢幕右側的視窗開啟',
     /* the marking screen: the top bar, the tools, the student list, the score panel, and its Grades, Insights, Return and Rubric setup screens */
     'This assignment': '這份作業', 'Every score and comment, beside the grade written on each paper': '每個分數和評語,放在每份作業上寫的成績旁邊', 'How the class did, row by row, and whether your scoring stayed even': '全班逐行的表現,以及你的評分是否保持一致', 'Strong work from this assignment, with no names on it': '這份作業的優秀作品,不含姓名',
     'Check the class, then get the marked files to give back': '檢查全班,然後取得要發還的批改檔案', 'Your marks and scores are kept in this browser as you go': '你的批註和分數會在作業時保存在這個瀏覽器', 'Clearing this browser’s data would erase your work. Choose a folder and every save goes there too': '清除這個瀏覽器的資料會清掉你的工作。選一個資料夾,每次保存也會存到那裡',
@@ -445,6 +447,7 @@ const LANG_ZH = {
   // The lines with a number or a name in them that src/lang.js matches for every language (LANG_FILLS): {1} {2} are the parts found
   // in the English, {t1} is that part in this language when it is known, and a pair is one / many.
   fill: {
+    besideopen: '在 Grading Studio 旁邊開啟 {1}',
     mfready: ['{1} 個批改好的檔案可以發還', '{1} 個批改好的檔案可以發還'], npages: ['{1} 頁', '{1} 頁'], putsc: '把分數寫在作業上:{1}', partrows: '部分:{2} 列中已評 {1} 列。這個總分不是最終的。', avgtip: ['{1} 個已完成分數的百分比平均:{2}。部分評分、缺交、免交和排除的作業不計入。點一下查看分析。', '{1} 個已完成分數的百分比平均:{2}。部分評分、缺交、免交和排除的作業不計入。點一下查看分析。'],
     tocheck: '{1} 個待檢查', totof: '總分 /{1}', confq: '「{1}」?確認', nmpct: '{1},{2}', nmord: '{1},{2} / {3},第 {4} 個評分', scoredn: '第 {1} 個評分', scorel: '分數 {1}', nstud: ['{1} 位學生', '{1} 位學生'], nscore: ['{1} 個分數,{2} 個在 {3} 或以下', '{1} 個分數,{2} 個在 {3} 或以下'],
     avgis: '平均 {1}', ppat: ['{1} 份作業得 {2}', '{1} 份作業得 {2}'], scoredon: '{2}得 {1}', countedA: ['計入:{1} 位學生中的 {2} 位。', '計入:{1} 位學生中的 {2} 位。'], leftout: '排除:{1}。', nnot: '{1} 個還沒評分', npartial: '{1} 個部分評分', nmissing: '{1} 個缺交', nexcused: '{1} 個免交',
@@ -481,6 +484,8 @@ const LANG_ZH = {
   },
   helpSecs: { start: '開始使用', mark: '批改作業', score: '分數與評分規準', back: '發還作業', class: '班級與成績冊', safe: '儲存與安全', plan: '備課與上課', private: '隱私' },
   help: {
+    'ai-beside': { q: '可以讓 Gemini、Claude 或 ChatGPT 開在 Grading Studio 旁邊嗎？', go: '前往搭配 AI 使用', words: 'gemini claude chatgpt copilot ai 助理 分割畫面 並排 視窗 旁邊 聊天 split side',
+      a: ['可以。在**設定**的**搭配 AI 使用**中選擇你的助理，它的名稱就會出現在每個畫面側邊欄的下方，備課頁面也有。點一下，助理就會在螢幕右側的視窗開啟。如果 Grading Studio 的視窗蓋住了它，把視窗縮窄一點就能同時看到兩者。', '在 Chrome 中有更好的做法：在側邊欄的名稱上按右鍵，選擇 **Open link in split view**。兩者就會在同一個視窗裡，中間的分隔線可以拖曳。無法結合得比這更緊密，因為 Gemini、Claude 和 ChatGPT 都不允許它們的頁面顯示在別的應用程式裡。', '同一區的**開啟位置**可以填入你自己的連結，例如學校帳號、某個 Gem、專案或自訂 GPT。如果助理用錯了帳號開啟，在那裡切換帳號，複製網址再貼進來。', 'Grading Studio 不會傳送任何內容給助理。它只看得到你貼上或附加的內容。內建在瀏覽器本身的助理（例如瀏覽器工具列上的 Gemini 或 Copilot 按鈕）則不同：當你就目前的頁面向它提問時，它可以讀取該頁面，包括學生姓名。'] },
     'open-work': { q: '怎麼開啟一批作業？', go: '前往今天', words: '開始 匯入 上傳 zip 下載 繳交 拖放 資料夾',
       a: ['從學校系統把全班繳交的作業下載成一個 ZIP，然後拖到**今天**頁面的任何位置。資料夾、多個 PDF、Word 檔和照片也一樣可以。',
         '今天頁面的**選擇檔案…**和拖放的效果相同。旁邊的**其他方式**可以開啟資料夾、全班的掃描檔，或要與名單配對的檔案。',

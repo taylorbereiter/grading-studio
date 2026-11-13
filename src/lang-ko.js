@@ -27,6 +27,8 @@ function koHomeSay(k) {
 const LANG_KO = {
   name: '한국어', locale: 'ko',
   words: {
+    // the AI assistant beside the app (src/beside.js)
+    'Opens beside Grading Studio. In Chrome, right-click it and choose Open link in split view to keep both in one window.': 'Grading Studio 옆에 열립니다. Chrome에서는 마우스 오른쪽 버튼으로 클릭하고 Open link in split view를 선택하면 둘이 한 창에 나란히 놓입니다.', 'Opens at': '여는 주소', 'Empty for its usual page. A link of your own can go to your school account, a Gem, a project or a custom GPT.': '비워 두면 평소 페이지가 열립니다. 학교 계정, Gem, 프로젝트, 맞춤 GPT 등 내 링크를 넣을 수도 있습니다.', 'A click on its name opens it': '이름을 클릭하면 여는 곳', 'in a window on the right of the screen': '화면 오른쪽 창', 'in a new tab': '새 탭', 'Open it now': '지금 열기', 'Side by side.': '나란히 쓰기.', 'is in the sidebar on every screen, so you can go between the two without hunting for a tab. In Chrome, right-click it there and choose': '은(는) 모든 화면의 사이드바에 있어서 탭을 찾지 않고 둘 사이를 오갈 수 있습니다. Chrome에서는 거기서 마우스 오른쪽 버튼으로 클릭하고 다음을 선택하세요:', 'Open link in split view': 'Open link in split view', ': both are then in one window, with a divider you can drag.': ' 그러면 둘이 한 창에 놓이고, 가운데 구분선을 끌어 옮길 수 있습니다.', 'Give it an address above and it is in the sidebar on every screen.': '위에 주소를 넣으면 모든 화면의 사이드바에 나타납니다.', 'Grading Studio sends nothing to it. It sees only what you paste or attach.': 'Grading Studio는 아무것도 보내지 않습니다. 도우미는 선생님이 붙여 넣거나 첨부한 것만 봅니다.', 'In a new tab': '새 탭', 'In a window on the right of the screen': '화면 오른쪽 창', 'Your AI assistant opens at': '내 AI 도우미를 여는 주소:', 'Your AI assistant opens at its usual page': '내 AI 도우미가 평소 페이지에서 열립니다', 'Your AI assistant opens in a new tab': '내 AI 도우미가 새 탭에서 열립니다', 'Your AI assistant opens in a window on the right of the screen': '내 AI 도우미가 화면 오른쪽 창에서 열립니다',
     /* the marking screen: the top bar, the tools, the student list, the score panel, and its Grades, Insights, Return and Rubric setup screens */
     'This assignment': '이 과제', 'Every score and comment, beside the grade written on each paper': '모든 점수와 코멘트를 각 답안지에 적힌 성적 옆에 표시', 'How the class did, row by row, and whether your scoring stayed even': '반 전체가 행별로 어떻게 했는지, 그리고 채점이 일정했는지',
     'Strong work from this assignment, with no names on it': '이 과제의 우수 작품, 이름 없이', 'Check the class, then get the marked files to give back': '반을 확인한 다음 돌려줄 채점된 파일을 받기', 'Your marks and scores are kept in this browser as you go': '표시와 점수는 작업하는 동안 이 브라우저에 저장됩니다',
@@ -457,6 +459,7 @@ const LANG_KO = {
   // The lines with a number or a name in them that src/lang.js matches for every language (LANG_FILLS): {1} {2} are the parts found
   // in the English, {t1} is that part in this language when it is known, and a pair is one / many.
   fill: {
+    besideopen: 'Grading Studio 옆에 {1} 열기',
     mfready: ['돌려줄 채점된 파일 {1}개', '돌려줄 채점된 파일 {1}개'], npages: ['{1}페이지', '{1}페이지'], putsc: '답안지에 점수 넣기: {1}', partrows: '일부: {2}개 행 중 {1}개 채점됨. 이 합계는 최종이 아닙니다.', avgtip: ['확정된 점수 {1}개의 백분율 평균: {2}. 일부 채점, 미제출, 면제, 제외된 답안지는 포함되지 않습니다. 클릭하면 분석으로 갑니다.', '확정된 점수 {1}개의 백분율 평균: {2}. 일부 채점, 미제출, 면제, 제외된 답안지는 포함되지 않습니다. 클릭하면 분석으로 갑니다.'],
     tocheck: '확인할 것 {1}개', totof: '합계 /{1}', confq: '“{1}”? 확인', nmpct: '{1}, {2}', nmord: '{1}, {3}점 중 {2}점, {4}번째로 채점', scoredn: '{1}번째로 채점', scorel: '점수 {1}', nstud: ['학생 {1}명', '학생 {1}명'], nscore: ['점수 {1}개, {3} 이하 {2}개', '점수 {1}개, {3} 이하 {2}개'],
     avgis: '평균 {1}', ppat: ['{2}점 답안지 {1}개', '{2}점 답안지 {1}개'], scoredon: '{2}에서 {1}점', countedA: ['반영: 학생 {1}명 중 {2}명.', '반영: 학생 {1}명 중 {2}명.'], leftout: '제외: {1}.', nnot: '아직 미채점 {1}', npartial: '일부 채점 {1}', nmissing: '미제출 {1}', nexcused: '면제 {1}',
@@ -495,6 +498,8 @@ const LANG_KO = {
   },
   helpSecs: { start: '시작하기', mark: '제출물 채점', score: '점수와 루브릭', back: '제출물 돌려주기', class: '학급과 성적부', safe: '저장과 안전', plan: '계획과 수업', private: '개인정보 보호' },
   help: {
+    'ai-beside': { q: 'Gemini, Claude, ChatGPT를 Grading Studio 옆에 열어 둘 수 있나요?', go: 'AI와 작업하기로 이동', words: 'gemini claude chatgpt copilot ai 도우미 분할 화면 나란히 창 옆 채팅 split side',
+      a: ['네. **설정**의 **AI와 작업하기**에서 도우미를 고르면 그 이름이 모든 화면의 사이드바 아래쪽에 나타납니다. 수업 계획에서도 같습니다. 클릭하면 도우미가 화면 오른쪽 창에서 열립니다. Grading Studio 창이 그 창을 가리면 창을 좁혀서 둘 다 보이게 하세요.', 'Chrome에서는 더 깔끔한 방법이 있습니다. 사이드바의 이름을 마우스 오른쪽 버튼으로 클릭하고 **Open link in split view**를 선택하세요. 그러면 둘이 한 창에 놓이고, 가운데 구분선을 끌어 옮길 수 있습니다. 이보다 더 가깝게 합칠 수는 없습니다. Gemini, Claude, ChatGPT 모두 자기 페이지를 다른 앱 안에 표시하는 것을 허용하지 않기 때문입니다.', '같은 곳의 **여는 주소**에는 학교 계정, Gem, 프로젝트, 맞춤 GPT 등 내 링크를 넣을 수 있습니다. 도우미가 다른 계정으로 열리면 거기서 계정을 바꾸고 주소를 복사해 붙여 넣으세요.', 'Grading Studio는 도우미에게 아무것도 보내지 않습니다. 도우미는 선생님이 붙여 넣거나 첨부한 것만 봅니다. 브라우저 자체에 들어 있는 도우미(브라우저 도구 모음의 Gemini나 Copilot 버튼 등)는 다릅니다. 보고 있는 페이지에 대해 물으면 학생 이름을 포함해 그 페이지를 읽을 수 있습니다.'] },
     'open-work': { q: '제출물 묶음을 어떻게 여나요?', go: '오늘로 이동', words: '시작 가져오기 업로드 zip 다운로드 제출 끌어다 놓기 폴더',
       a: ['학교 시스템에서 학급의 제출물을 ZIP으로 내려받아 **오늘**의 아무 곳에나 끌어다 놓으세요. 폴더, 여러 PDF, Word 파일, 사진도 같은 방식으로 됩니다.',
         '오늘의 **파일 선택…**은 끌어다 놓는 것과 같습니다. 옆의 **다른 방법**은 폴더, 학급 전체 스캔 또는 명단과 맞출 파일을 엽니다.',
