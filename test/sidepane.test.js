@@ -227,3 +227,59 @@ test('a video keeps playing when another tab is picked, and a kept video card th
   assert.deepEqual(page.errors, []);
   await close();
 });
+
+test('Timer: a stopwatch beside the notes page for a presentation given live, with the asked-for length kept on the assignment', async () => {
+  const { page, close } = await openApp(browser);
+  await noWeb(page);
+  await page.setViewport({ width: 1440, height: 900 });
+  await openZip(page, await threeZip(), 'Speeches.zip');
+  await waitPaper(page);
+  assert.ok(!(await sp(page)).tabs.some(t => t.kind === 'timer'), 'no Timer until there is a notes page');
+  await pick(page, '#addNotesBtn'); await page.waitForSelector('#npAdd'); await page.click('#npAdd');
+  await page.waitForFunction(() => window.__gs.state().pages.some(q => /notes/i.test(q.file.name)), { timeout: 30000 });
+  await calm(page);
+  assert.ok((await sp(page)).tabs.some(t => t.kind === 'timer'));
+  assert.equal((await sp(page)).shown, false, 'a notes page alone does not open the pane');
+  await page.evaluate(() => window.__gs.spOpen('timer')); await calm(page);
+  assert.equal(await page.$eval('#pane2 .sptime', e => e.textContent), '0:00');
+  assert.equal(await page.$eval('#pane2 [data-sptgo]', e => e.textContent), 'Start');
+  assert.equal(await page.$eval('#pane2 [data-sptreset]', e => e.disabled), true);
+  // the asked-for length: 1 to 2 minutes, kept with the assignment's setup
+  await page.type('#pane2 [data-spttalk="0"]', '1'); await page.type('#pane2 [data-spttalk="1"]', '2'); await page.keyboard.press('Tab');
+  assert.deepEqual(await page.evaluate(() => window.__gs.state().setup.talk), [1, 2]);
+  // it runs, pauses and carries on
+  await page.click('#pane2 [data-sptgo]');
+  await page.waitForFunction(() => document.querySelector('#pane2 .sptime').textContent === '0:01', { timeout: 5000 });
+  assert.equal(await page.$eval('#pane2 [data-sptgo]', e => e.textContent), 'Pause');
+  assert.equal(await page.$eval('#pane2 .sptimer', e => e.dataset.how), 'under');
+  assert.equal(await page.$eval('#pane2 [data-spthow="under"]', e => e.hidden), false);
+  await page.click('#pane2 [data-sptgo]');
+  assert.equal(await page.$eval('#pane2 [data-sptgo]', e => e.textContent), 'Carry on');
+  const key = await page.evaluate(() => window.__gs.state().batch.students[0].key);
+  assert.equal(await page.evaluate(k => window.__gs.spClock(k).on, key), false);
+  // within the length, then over it (the clock is set, not waited for)
+  await page.evaluate(k => window.__gs.spClockSet(k, 95000), key); await page.click('#pane2 [data-sptgo]');
+  await page.waitForFunction(() => document.querySelector('#pane2 .sptimer').dataset.how === 'in');
+  assert.match(await page.$eval('#pane2 .sptime', e => e.textContent), /^1:3[5-7]$/);
+  await page.click('#pane2 [data-sptgo]');
+  await page.evaluate(k => window.__gs.spClockSet(k, 135000), key); await page.click('#pane2 [data-sptgo]'); await page.click('#pane2 [data-sptgo]');
+  assert.equal(await page.$eval('#pane2 .sptimer', e => e.dataset.how), 'over');
+  // + Time to comment writes the clock's time into her comment
+  await page.click('#pane2 [data-sptnote]');
+  assert.match(await page.evaluate(() => window.__gs.state().batch.students[0].grade.comment), /^\[2:1[5-6]\] $/);
+  assert.ok(await page.$('#pane2 .sptimer'), 'the timer is still there after the score panel is drawn again');
+  // another student has a clock of their own; the first one's is there on coming back; the asked-for length is the assignment's
+  await page.keyboard.press('Escape'); await page.evaluate(() => document.activeElement && document.activeElement.blur());
+  await goToStudent(page, 1); await calm(page);
+  await pick(page, '#addNotesBtn'); await page.waitForSelector('#npAdd'); await page.click('#npAdd');
+  await page.waitForFunction(() => window.__gs.spState().tabs.some(t => t.kind === 'timer'), { timeout: 30000 }); await calm(page);
+  await page.evaluate(() => window.__gs.spPick('timer')); await calm(page);
+  assert.equal(await page.$eval('#pane2 .sptime', e => e.textContent), '0:00');
+  assert.equal(await page.$eval('#pane2 [data-spttalk="1"]', e => e.value), '2');
+  await goToStudent(page, 0); await calm(page);
+  assert.match(await page.$eval('#pane2 .sptime', e => e.textContent), /^2:1[5-6]$/);
+  await page.click('#pane2 [data-sptreset]');
+  assert.equal(await page.$eval('#pane2 .sptime', e => e.textContent), '0:00');
+  assert.deepEqual(page.errors, []);
+  await close();
+});

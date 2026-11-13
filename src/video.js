@@ -77,6 +77,9 @@ function linkCard(st, f) {
   const url = linkOf(f.data), play = linkPlayer(url), ticks = !!play && (!play.frame || frameTicks(play.frame));
   const el = document.createElement('div'); el.className = 'media vlink';
   el.innerHTML = '<div class="mstick"><div class="mhead"><b>' + esc(linkTitle(f)) + '</b><span class="muted">' + esc(linkHost(url)) + '</span></div><div class="vlslot" hidden></div>' +
+    (play && ticks ? '<div class="mctl vdrive" hidden><button class="btn sm" data-skip="-10">◀◀ 10s</button><button class="btn sm" data-skip="10">10s ▶▶</button>' +
+      '<span class="seg">' + [1, 1.25, 1.5, 2].map(r => '<button data-rate="' + r + '" aria-pressed="' + (r === store.get('gs.rate', 1)) + '">' + r + '×</button>').join('') + '</span>' +
+      (play.video && document.pictureInPictureEnabled ? PIP_BTN : '') + '</div>' : '') +
     '<div class="mctl">' + (play ? '<button class="btn sm primary" data-vplay aria-pressed="false">▶ Play here</button>' : '') +
     (ticks ? '<button class="btn sm" data-vstamp title="Adds where the video is to your comment, like [2:15]">+ Time to comment</button>' : '') +
     '<button class="btn sm' + (play ? '' : ' primary') + '" data-vopen title="Opens the video in a window of its own, to keep beside this one">Open in its own window</button>' +
@@ -85,7 +88,17 @@ function linkCard(st, f) {
     '<p class="muted vlnote">' + (play ? 'Only the link is kept here; the video stays where it is. If it asks you to sign in or won’t play, open it in its own window.' : 'Only the link is kept here. This site can’t play inside the page, so it opens in a window of its own.') + '</p></div>';
   // where the player is: the page's own video, or a site's player that says so (YouTube, Vimeo). null when nothing is playing here or the site doesn't say.
   const now = () => { const m = el.querySelector('.vlslot video, .vlslot audio'); if (m) return m; const fr = el.querySelector('.vlslot iframe'), t = fr && frameTime(fr); return t == null ? null : { currentTime: t }; };
+  // the player as something to drive: the page's own video, or a site's player that takes orders (YouTube, Vimeo)
+  const drive = {
+    ok: () => el.isConnected && !!el.querySelector('.vlslot video, .vlslot audio, .vlslot iframe') && ticks,
+    skip(d) { const m = el.querySelector('.vlslot video, .vlslot audio'); if (m) { m.currentTime = Math.max(0, m.currentTime + d); return; } const fr = el.querySelector('.vlslot iframe'), t = fr && frameTime(fr); if (t != null) frameSeek(fr, Math.max(0, t + d)); },
+    rate(r) { const m = el.querySelector('.vlslot video, .vlslot audio'); if (m) m.playbackRate = r; else { const fr = el.querySelector('.vlslot iframe'); if (fr) frameRate(fr, r); } },
+    toggle() { const m = el.querySelector('.vlslot video, .vlslot audio'); if (m) { m.paused ? m.play().catch(() => {}) : m.pause(); return; } const fr = el.querySelector('.vlslot iframe'); if (fr) frameToggle(fr); },
+  };
   el.onclick = e => {
+    const sk = e.target.closest('[data-skip]'); if (sk) { drive.skip(+sk.dataset.skip); return; }
+    const rt = e.target.closest('[data-rate]'); if (rt) { store.set('gs.rate', +rt.dataset.rate); drive.rate(+rt.dataset.rate); for (const b of el.querySelectorAll('[data-rate]')) b.setAttribute('aria-pressed', b === rt); return; }
+    if (e.target.closest('[data-pip]')) { vidFloat(el.querySelector('.vlslot video')); return; }
     if (e.target.closest('[data-vopen]')) { window.open(url, '_blank', 'noopener,noreferrer,popup,width=980,height=640'); return; }
     if (e.target.closest('[data-vrot]')) { vidTurn(st, f, el); if (el.querySelector('.vlslot').hidden) fill(); return; }
     if (e.target.closest('[data-vcopy]')) { navigator.clipboard.writeText(url).then(() => toast('Link copied'), () => toast('The link couldn’t be copied')); return; }
@@ -93,7 +106,7 @@ function linkCard(st, f) {
     const b = e.target.closest('[data-vplay]'); if (!b) return;
     const slot = el.querySelector('.vlslot'), on = slot.hidden;
     slot.hidden = !on; b.setAttribute('aria-pressed', on); b.textContent = on ? 'Close the player' : '▶ Play here';
-    if (!on) { slot.innerHTML = ''; return; }
+    if (!on) { slot.innerHTML = ''; const dr = el.querySelector('.vdrive'); if (dr) dr.hidden = true; if (curPlay === drive) curPlay = null; return; }
     fill();
   };
   // c: a clip to start at, or nothing for the whole video
@@ -102,6 +115,8 @@ function linkCard(st, f) {
     slot.hidden = false; slot.innerHTML = ''; b.setAttribute('aria-pressed', 'true'); b.textContent = 'Close the player';
     if (play.frame) { const fr = playerFrame(frameTicking(c ? clipFrame(play.frame, c).src : play.frame), linkTitle(f)); slot.appendChild(fr); frameClock(fr); vidGrip(slot, vidRot(fr, f)); }
     else { const m = document.createElement(play.video ? 'video' : 'audio'); m.controls = true; m.preload = 'metadata'; m.src = play.video || play.audio; slot.appendChild(m); if (play.video) vidGrip(slot, vidRot(m, f)); if (c) clipRun(m, c); }
+    const dr = el.querySelector('.vdrive');
+    if (dr) { dr.hidden = false; if (!curPlay || !curPlay.ok()) curPlay = drive; const r = store.get('gs.rate', 1); if (r !== 1) { const m = slot.querySelector('video, audio'); if (m) m.playbackRate = r; else { const fr = slot.querySelector('iframe'); fr.addEventListener('load', () => setTimeout(() => { if (fr.isConnected) frameRate(fr, r); }, 1200)); } } }
   };
   clipStrip(el.querySelector('.mstick'), f, now, c => (play ? fill(c) : clipShow(c.id)), play && play.frame && !ticks ? 'drive' : '');
   // a pasted transcript: a line with a time plays the video from there (a site's player starts again at that time)
@@ -201,6 +216,18 @@ window.addEventListener('message', e => {
     return;
   }
 });
+// Orders to a site's player, in its own embed messages: go to a time, a speed, play or pause. Drive's player takes none.
+function frameSay(fr, yt, vimeo) {
+  for (const k of clocks) if (k.fr === fr) { try { fr.contentWindow.postMessage(JSON.stringify(k.yt ? { event: 'command', func: yt[0], args: yt[1] } : vimeo), k.yt ? 'https://www.youtube-nocookie.com' : 'https://player.vimeo.com'); } catch {} return k; }
+  return null;
+}
+function frameSeek(fr, t) { const k = frameSay(fr, ['seekTo', [t, true]], { method: 'setCurrentTime', value: t }); if (k) { k.t = t; k.at = Date.now(); } }
+const frameRate = (fr, r) => { frameSay(fr, ['setPlaybackRate', [r]], { method: 'setPlaybackRate', value: r }); };
+function frameToggle(fr) { for (const k of clocks) if (k.fr === fr) { frameSay(fr, [k.on ? 'pauseVideo' : 'playVideo', []], { method: k.on ? 'pause' : 'play' }); if (k.on) { k.t = frameTime(fr); k.at = Date.now(); } k.on = !k.on; if (k.on) k.at = Date.now(); return; } }
+// A video of the page's own in a small window that stays on top of every other (the browser's picture in picture).
+const PIP_BTN = '<button class="btn sm" data-pip title="Keeps the video in a small window on top of everything else, so the whole screen is free for the paper">Float</button>';
+function vidFloat(m) { if (!m) return; if (document.pictureInPictureElement === m) document.exitPictureInPicture().catch(() => {}); else m.requestPictureInPicture().catch(() => toast('This browser couldn’t float the video')); }
+let curPlay = null;   // a link's player that takes orders, for the keys (Space, J, L) when there is no video file on screen
 function frameTime(fr) { for (const k of clocks) if (k.fr === fr) return k.t == null ? null : k.t + (k.on ? (Date.now() - k.at) / 1000 : 0); return null; }
 
 /* ---------- a video as big as she likes ---------- */

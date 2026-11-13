@@ -65,3 +65,12 @@ html.vidsized #paper .spb .media{max-width:none}
 .main:is(.sp-right,.sp-top) .sph{padding-right:26px}
 /* a video turned on its side (video.css .vrotbox.on): in the pane it takes the pane's height, since it is taller than wide */
 #paper .spb .vrotbox.on,html.vidsized #paper .spb .vrotbox.on{height:max(140px,calc(100cqh - 240px));min-height:0}
+/* the stopwatch */
+.sptimer{display:flex;flex-direction:column;align-items:center;gap:var(--space-3);padding:var(--space-5) var(--space-3)}
+.sptime{font-size:calc(var(--text-display) * 2.25);font-weight:600;line-height:1;letter-spacing:-.02em;font-variant-numeric:tabular-nums;color:var(--fg)}
+.sptimer[data-how=in] .sptime{color:var(--accent)}
+.sptimer[data-how=over] .sptime{color:var(--warn)}
+.spthow{margin:0;font-size:var(--text-small);color:var(--muted)}
+.sptbtns{display:flex;flex-wrap:wrap;justify-content:center;gap:var(--space-2)}
+.sptask{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px;margin:var(--space-3) 0 0;font-size:var(--text-small);color:var(--muted)}
+.sptnum{width:64px;padding:4px 6px;border:1px solid var(--line);border-radius:var(--corner-2);background:var(--surface);color:var(--fg);font:inherit;font-size:var(--text-control);text-align:center}

@@ -53,7 +53,7 @@ async function openStudent(i, filePath) {
     $('#gapNotes').onclick = () => openAddNotes(st);
     const gs = $('#gapScan'); if (gs) gs.onclick = () => { scanInto = true; scanFor = null; $('#scanIn').click(); };
   }
-  curMedia = null; clipsBtn();
+  curMedia = null; curPlay = null; clipsBtn();
   for (const f of st.files.filter(f => f.kind === 'link')) { paper.insertAdjacentHTML('beforeend', '<div class="fhead"><span style="color:var(--fg)">' + esc(linkTitle(f)) + '</span><span>' + (vidRef(f.data) ? 'Video file' : 'Video link') + '</span>' + tryTag(st, f) + (f.added ? addTag(f) : '') + carryTag(f) + '<span style="flex:1"></span>' + fileMenu(moveLink(f) + removeLink(f)) + '</div>'); const lh = paper.lastElementChild, lc = linkCard(st, f); paper.appendChild(lc); spTake('file:' + f.path, lh, lc); }
   for (const f of st.files.filter(f => f.kind === 'media')) { if (f.added || carryTag(f) || tryTag(st, f)) paper.insertAdjacentHTML('beforeend', '<div class="fhead"><span style="color:var(--fg)">' + esc(f.name) + '</span>' + tryTag(st, f) + (f.added ? addTag(f) : '') + carryTag(f) + '<span style="flex:1"></span>' + fileMenu(fileLinks(f)) + '</div>'); const mh = f.added || carryTag(f) || tryTag(st, f) ? paper.lastElementChild : null, mc = mediaCard(st, f); paper.appendChild(mc); spTake('file:' + f.path, mh, mc); }
   const rd = refDoc();

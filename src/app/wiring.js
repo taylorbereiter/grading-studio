@@ -254,6 +254,10 @@ document.addEventListener('keydown', e => {
     if (e.key === ' ') { e.preventDefault(); curMedia.paused ? curMedia.play().catch(() => {}) : curMedia.pause(); return; }
     if (e.key.toLowerCase() === 'j') { curMedia.currentTime = Math.max(0, curMedia.currentTime - 5); return; }
     if (e.key.toLowerCase() === 'l') { curMedia.currentTime += 5; return; }
+  } else if (curPlay && curPlay.ok()) {   // a linked video whose player takes orders (video.js)
+    if (e.key === ' ') { e.preventDefault(); curPlay.toggle(); return; }
+    if (e.key.toLowerCase() === 'j') { curPlay.skip(-5); return; }
+    if (e.key.toLowerCase() === 'l') { curPlay.skip(5); return; }
   }
   const map = { v: 'select', p: 'pen', h: 'hl', o: 'oval', t: 'text', c: 'note', k: 'check', e: 'erase' };
   if (e.key.toLowerCase() === 'h' && tool === 'hl') { setHlMode(hlMode === 'free' ? 'auto' : 'free', true); return; }
