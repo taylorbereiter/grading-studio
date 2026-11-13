@@ -34,19 +34,29 @@ function linkPlayer(url) {
   return null;
 }
 const linkTitle = f => f.name.replace(LINK_RX, '').replace(/ \(added \d+\)$/, '');
+// A video file kept in this browser (not a web link): the student's shortcut file names it as "gs-video:<id>", and the video itself is in its own database.
+const vidRef = data => { if (!data || !data.length || data.length > 4000) return ''; let s = ''; try { s = new TextDecoder().decode(data); } catch { return ''; } const m = /^\s*URL\s*=\s*gs-video:([\w-]{6,40})\s*$/mi.exec(s); return m ? m[1] : ''; };
+const vidBytes = (id, name, size) => new TextEncoder().encode('[InternetShortcut]\r\nURL=gs-video:' + id + '\r\nName=' + String(name || '').replace(/[\r\n]+/g, ' ').slice(0, 120) + '\r\nSize=' + (size || 0) + '\r\n');
+// What a link or kept video is known by, the same for every partner who has it.
+const linkKey = f => { const v = vidRef(f.data); return v ? 'gs-video:' + v : linkOf(f.data); };
 
 // The card above the paper. The player stays at the top while the notes page scrolls under it.
 function linkCard(st, f) {
-  const url = linkOf(f.data), play = linkPlayer(url);
+  if (vidRef(f.data)) return vfileCard(st, f);
+  const url = linkOf(f.data), play = linkPlayer(url), ticks = !!play && (!play.frame || frameTicks(play.frame));
   const el = document.createElement('div'); el.className = 'media vlink';
   el.innerHTML = '<div class="mstick"><div class="mhead"><b>' + esc(linkTitle(f)) + '</b><span class="muted">' + esc(linkHost(url)) + '</span></div><div class="vlslot" hidden></div>' +
     '<div class="mctl">' + (play ? '<button class="btn sm primary" data-vplay aria-pressed="false">▶ Play here</button>' : '') +
+    (ticks ? '<button class="btn sm" data-vstamp title="Adds where the video is to your comment, like [2:15]">+ Time to comment</button>' : '') +
     '<button class="btn sm' + (play ? '' : ' primary') + '" data-vopen title="Opens the video in a window of its own, to keep beside this one">Open in its own window</button>' +
     '<button class="btn sm" data-vcopy>Copy link</button></div>' +
     '<p class="muted vlnote">' + (play ? 'Only the link is kept here; the video stays where it is. If it asks you to sign in or won’t play, open it in its own window.' : 'Only the link is kept here. This site can’t play inside the page, so it opens in a window of its own.') + '</p></div>';
+  // where the player is: the page's own video, or a site's player that says so (YouTube, Vimeo). null when nothing is playing here or the site doesn't say.
+  const now = () => { const m = el.querySelector('.vlslot video, .vlslot audio'); if (m) return m; const fr = el.querySelector('.vlslot iframe'), t = fr && frameTime(fr); return t == null ? null : { currentTime: t }; };
   el.onclick = e => {
     if (e.target.closest('[data-vopen]')) { window.open(url, '_blank', 'noopener,noreferrer,popup,width=980,height=640'); return; }
     if (e.target.closest('[data-vcopy]')) { navigator.clipboard.writeText(url).then(() => toast('Link copied'), () => toast('The link couldn’t be copied')); return; }
+    if (e.target.closest('[data-vstamp]')) { const m = now(); if (!m) return toast('Press ▶ Play here first, then play the video to the moment you mean'); addStamp(st, m.currentTime); return; }
     const b = e.target.closest('[data-vplay]'); if (!b) return;
     const slot = el.querySelector('.vlslot'), on = slot.hidden;
     slot.hidden = !on; b.setAttribute('aria-pressed', on); b.textContent = on ? 'Close the player' : '▶ Play here';
@@ -57,12 +67,127 @@ function linkCard(st, f) {
   const fill = c => {
     const slot = el.querySelector('.vlslot'), b = el.querySelector('[data-vplay]');
     slot.hidden = false; slot.innerHTML = ''; b.setAttribute('aria-pressed', 'true'); b.textContent = 'Close the player';
-    if (play.frame) slot.appendChild(playerFrame(c ? clipFrame(play.frame, c).src : play.frame, linkTitle(f)));
-    else { const m = document.createElement(play.video ? 'video' : 'audio'); m.controls = true; m.preload = 'metadata'; m.src = play.video || play.audio; slot.appendChild(m); if (c) clipRun(m, c); }
+    if (play.frame) { const fr = playerFrame(frameTicking(c ? clipFrame(play.frame, c).src : play.frame), linkTitle(f)); slot.appendChild(fr); frameClock(fr); vidGrip(slot, fr); }
+    else { const m = document.createElement(play.video ? 'video' : 'audio'); m.controls = true; m.preload = 'metadata'; m.src = play.video || play.audio; slot.appendChild(m); if (play.video) vidGrip(slot, m); if (c) clipRun(m, c); }
   };
-  clipStrip(el.querySelector('.mstick'), f, () => el.querySelector('.vlslot video, .vlslot audio'), c => (play ? fill(c) : clipShow(c.id)));
+  clipStrip(el.querySelector('.mstick'), f, now, c => (play ? fill(c) : clipShow(c.id)), play && play.frame && !ticks ? 'drive' : '');
   return el;
 }
+
+/* ---------- video files kept in this browser ---------- */
+// The video goes in a database of its own (grading-studio-videos), stored as the file itself, so a long video fits as long as the computer has room
+// and it is only read when it plays. The student gets a tiny shortcut file naming it ("gs-video:<id>"), so saving, partners, Remove and merging
+// treat it like a link. Partners share one stored copy. It never leaves this browser: not in take-home files, the linked folder or the export.
+let vkDbP = null;
+const vkDb = () => vkDbP ||= new Promise((res, rej) => { const r = indexedDB.open('grading-studio-videos', 1); r.onupgradeneeded = () => r.result.createObjectStore('v'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
+async function vkDo(mode, fn) {
+  const db = await vkDb();
+  return new Promise((res, rej) => { const tx = db.transaction('v', mode), req = fn(tx.objectStore('v')); tx.oncomplete = () => res(req && req.result); tx.onerror = () => rej(tx.error); tx.onabort = () => rej(tx.error); });
+}
+const vkSeen = new Map();   // id -> { name, url, blob } or null, while this page is open
+// Keeps a video file. id: to put a file back under the name a shortcut already has. Throws with plain words when there isn't room.
+async function vkPut(file, id) {
+  id = id || uid();
+  try { const e = navigator.storage && navigator.storage.estimate ? await navigator.storage.estimate() : null; if (e && e.quota && e.quota - (e.usage || 0) < file.size * 1.05) throw new Error('room'); } catch (err) { if (err.message === 'room') throw new Error('There isn’t room on this computer for that video (' + fmtSize(file.size) + '). Free up some space, or use a link to the video instead.'); }
+  askToKeep();
+  try { await vkDo('readwrite', o => o.put({ id, name: file.name, type: file.type || MIME[extOf(file.name)] || '', size: file.size, at: Date.now(), blob: file }, id)); }
+  catch (err) { console.error(err); throw new Error('This browser couldn’t keep that video, usually because the computer is out of room. A link to the video works at any size.'); }
+  const was = vkSeen.get(id); if (was) URL.revokeObjectURL(was.url); vkSeen.delete(id);
+  return id;
+}
+async function vkGet(id) {
+  if (vkSeen.has(id)) return vkSeen.get(id);
+  let r = null; try { r = await vkDo('readonly', o => o.get(id)); } catch (e) { console.error(e); }
+  const out = r && r.blob ? { name: r.name, size: r.size, blob: r.blob, url: URL.createObjectURL(r.blob.type ? r.blob : new Blob([r.blob], { type: r.type || MIME[extOf(r.name)] || '' })) } : null;
+  vkSeen.set(id, out); return out;
+}
+// Videos no shortcut names any more go, a while after the last one went (so one being added right now is never caught).
+async function vkSweep() {
+  try {
+    if (!vkDbP && indexedDB.databases && !(await indexedDB.databases()).some(d => d.name === 'grading-studio-videos')) return;   // never made here: nothing to sweep, and no database made for it
+    const ids = await vkDo('readonly', o => o.getAllKeys()); if (!ids || !ids.length) return;
+    const used = new Set();
+    for (const r of (await idbDo('readonly', o => o.getAll())) || []) { const v = r && /\.url$/i.test(r.path || '') && vidRef(r.data); if (v) used.add(v); }
+    if (batch) for (const st of batch.students) for (const f of st.files.concat(st.gone || [])) { const v = f.kind === 'link' && vidRef(f.data); if (v) used.add(v); }
+    const old = Date.now() - 15 * 60e3;
+    for (const id of ids) { if (used.has(id)) continue; const r = await vkDo('readonly', o => o.get(id)); if (r && r.at > old) continue; await vkDo('readwrite', o => o.delete(id)); const was = vkSeen.get(id); if (was) URL.revokeObjectURL(was.url); vkSeen.delete(id); }
+  } catch (e) { console.error(e); }
+}
+const vkClear = () => vkDo('readwrite', o => o.clear()).catch(e => console.error(e)).then(() => { for (const v of vkSeen.values()) if (v) URL.revokeObjectURL(v.url); vkSeen.clear(); });
+const vidPick = () => new Promise(res => { const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'video/*,audio/*,' + Object.keys(MIME).map(x => '.' + x).join(','); inp.onchange = () => res(inp.files[0] || null); inp.click(); });
+function vfileCard(st, f) {
+  const id = vidRef(f.data), hold = document.createElement('div'); hold.className = 'media vfile';
+  hold.innerHTML = '<div class="mstick"><div class="mhead"><b>' + esc(linkTitle(f)) + '</b><span class="muted">Opening the video…</span></div></div>';
+  vkGet(id).then(k => {
+    if (!hold.isConnected && !hold.parentNode) return;
+    if (k) { hold.replaceWith(mediaCard(st, f, k)); return; }
+    hold.querySelector('.mhead .muted').textContent = 'video file';
+    hold.querySelector('.mstick').insertAdjacentHTML('beforeend', '<p class="vlnote">This video isn’t in this browser. A video file stays in the browser it was added in: it doesn’t go in take-home files or the linked folder.</p><div class="mctl"><button class="btn sm primary" data-vkback>Choose the video file…</button></div>');
+    hold.querySelector('[data-vkback]').onclick = async () => {
+      const file = await vidPick(); if (!file) return;
+      try { await vkPut(file, id); toast('The video is back'); openStudent(cur, f.path); } catch (err) { sayDlg(err.message); }
+    };
+  });
+  return hold;
+}
+
+/* ---------- where a site's player is ---------- */
+// YouTube and Vimeo tell the page where their player is when asked (their own embed messages), so + Clip and + Time to comment can start there.
+// Google Drive's player says nothing, so its times are typed.
+const frameTicks = src => /youtube-nocookie\.com\/embed\/|player\.vimeo\.com\//.test(src);
+function frameTicking(src) {
+  if (!/youtube-nocookie\.com\/embed\//.test(src)) return src;
+  return src + (src.includes('?') ? '&' : '?') + 'enablejsapi=1' + (/^https?:/.test(location.origin) ? '&origin=' + encodeURIComponent(location.origin) : '');
+}
+const clocks = new Set();
+function frameClock(fr) {
+  if (!frameTicks(fr.src)) return;
+  const k = { fr, t: null, at: 0, on: false, yt: /youtube/.test(fr.src) }, to = k.yt ? 'https://www.youtube-nocookie.com' : 'https://player.vimeo.com';
+  const ask = () => { try { const w = fr.contentWindow; if (!w) return; if (k.yt) w.postMessage(JSON.stringify({ event: 'listening', id: 1, channel: 'widget' }), to); else for (const v of ['timeupdate', 'play', 'pause', 'seeked']) w.postMessage(JSON.stringify({ method: 'addEventListener', value: v }), to); } catch {} };
+  k.ask = ask; clocks.add(k);
+  let n = 0; fr.addEventListener('load', () => { ask(); const iv = setInterval(() => { if (k.t != null || ++n > 12 || !fr.isConnected) return clearInterval(iv); ask(); }, 500); });
+}
+window.addEventListener('message', e => {
+  if (!clocks.size || !/^https:\/\/(www\.youtube-nocookie\.com|player\.vimeo\.com)$/.test(e.origin)) return;
+  for (const k of clocks) {
+    if (!k.fr.isConnected) { clocks.delete(k); continue; }
+    if (e.source !== k.fr.contentWindow) continue;
+    let d = e.data; if (typeof d === 'string') try { d = JSON.parse(d); } catch { return; }
+    if (!d || typeof d !== 'object') return;
+    const at = (t, on) => { if (typeof t === 'number' && isFinite(t)) { k.t = t; k.at = Date.now(); } if (on != null) k.on = on; };
+    if (k.yt && d.info && typeof d.info === 'object') at(d.info.currentTime, d.info.playerState != null ? d.info.playerState === 1 : null);
+    else if (!k.yt) { if (d.event === 'ready') k.ask(); else if (d.event === 'timeupdate' || d.event === 'seeked') at(d.data && d.data.seconds, d.event === 'timeupdate' ? true : null); else if (d.event === 'pause') at(d.data && d.data.seconds, false); else if (d.event === 'play') at(d.data && d.data.seconds, true); }
+    return;
+  }
+});
+function frameTime(fr) { for (const k of clocks) if (k.fr === fr) return k.t == null ? null : k.t + (k.on ? (Date.now() - k.at) / 1000 : 0); return null; }
+
+/* ---------- a video as big as she likes ---------- */
+// The bar under a video drags it taller (and the card wider to match), without going full screen. One size for every video, kept in this browser (gs.vidH).
+const VID_MIN = 160;
+function vidHApply(h) {
+  const r = document.documentElement;
+  if (h) { r.style.setProperty('--vid-h', Math.round(h) + 'px'); r.classList.add('vidsized'); } else { r.style.removeProperty('--vid-h'); r.classList.remove('vidsized'); }
+  const p = $('#paper'); r.classList.toggle('vidtall', !!h && !!p && p.clientHeight > 0 && h > p.clientHeight * 0.55);   // that tall, it scrolls away with the page instead of covering the notes page
+}
+function vidGrip(host, player) {
+  const g = document.createElement('div'); g.className = 'vgrip'; g.tabIndex = 0; g.setAttribute('role', 'separator'); g.setAttribute('aria-orientation', 'horizontal');
+  g.setAttribute('aria-label', 'Video size'); g.title = 'Drag to make the video bigger or smaller. Double-click for the usual size.';
+  player.after(g);
+  const set = (h, keep) => { h = Math.max(VID_MIN, Math.min(window.innerHeight * 0.92, h)); vidHApply(h); if (keep) store.set('gs.vidH', Math.round(h)); };
+  let tapped = 0;
+  g.onpointerdown = e => {
+    e.preventDefault();
+    if (Date.now() - tapped < 400) { tapped = 0; store.del('gs.vidH'); vidHApply(0); return; }   // a double click: the usual size
+    g.setPointerCapture(e.pointerId); g.classList.add('on');
+    const y0 = e.clientY, h0 = player.getBoundingClientRect().height, sh = document.createElement('div'); sh.className = 'vgripshield'; document.body.appendChild(sh);   // a site's player would catch the pointer
+    g.onpointermove = ev => set(h0 + ev.clientY - y0);
+    g.onpointerup = g.onpointercancel = ev => { g.onpointermove = g.onpointerup = g.onpointercancel = null; g.classList.remove('on'); sh.remove(); const dy = ev.clientY - y0; if (Math.abs(dy) < 3) tapped = Date.now(); else set(h0 + dy, true); };
+  };
+  g.onkeydown = e => { const d = e.key === 'ArrowDown' ? 40 : e.key === 'ArrowUp' ? -40 : 0; if (!d) return; e.preventDefault(); e.stopPropagation(); set(player.getBoundingClientRect().height + d, true); };
+  vidHApply(store.get('gs.vidH', 0));
+}
+Object.assign(window.__gs, { vidRef, linkKey, vkPut, vkGet, vkSweep, frameTicking, vidHApply });
 
 /* ---------- the notes page ---------- */
 const NP_W = 595.28, NP_H = 841.89, NP_M = 48, NP_TAIL = '%GradingStudio-notes';
@@ -154,7 +279,7 @@ async function addAndFind(st, list) {
 const copyFor = (st, f) => ({ path: f.name, file: new File([f.data], f.name), from: st.key });
 // A partner's own copy of one of st's files: the one they have, or a new one.
 async function partnerCopy(st, f, to) {
-  if (f.kind === 'link') { const have = to.files.find(x => x.kind === 'link' && linkOf(x.data) === linkOf(f.data)); if (have) return have; }
+  if (f.kind === 'link') { const have = to.files.find(x => x.kind === 'link' && linkKey(x) === linkKey(f)); if (have) return have; }
   const have = to.files.find(x => x.from === st.key && x.name === f.name); if (have) return have;
   return (await addAndFind(to, [copyFor(st, f)]))[0] || null;
 }
@@ -185,60 +310,67 @@ function partnerList(st, picked, locked) {
 }
 
 /* ---------- Add: A video… ---------- */
-const VIDEO_BIG = 120e6;   // about what this browser can keep of one added file
-function openAddVideo(st) {
+const VID_HINT = 'Paste the link: Google Drive, YouTube or anywhere else';
+function openAddVideo(st, asFile) {
   if (!st) return;
   const who = shownName(st, batch.students.indexOf(st)), rows = npRows(setup), picked = new Set(), locked = new Set(groupMates(st));
-  let np = notesFileOf(st) ? '' : (npLast === 'rubric' && !rows.length ? 'lined' : npLast), file = null;
+  let np = notesFileOf(st) ? '' : (npLast === 'rubric' && !rows.length ? 'lined' : npLast), file = null, by = asFile ? 'file' : 'link';
   const pl = partnerList(st, picked, locked);
   openDlg('<div class="bh"><h2>Video for ' + esc(who) + '</h2><button class="icon" data-cancel aria-label="Close" style="margin-left:auto">✕</button></div>' +
-    '<div class="bb vdbox"><label class="vdlab" for="vdLink">Link to the video</label><input class="btn" id="vdLink" placeholder="Paste the link: Google Drive, YouTube or anywhere else" autocomplete="off" spellcheck="false">' +
-    '<p class="muted vdsay" id="vdSay">Only the link is kept here, so the video stays where it is and nothing slows down. <button class="link" id="vdFile">Use a video file on this computer instead…</button></p>' +
+    '<div class="bb vdbox"><span class="seg vdby" role="group" aria-label="The video"><button data-vdby="link" aria-pressed="true">A link</button><button data-vdby="file" aria-pressed="false">A video file</button></span>' +
+    '<div id="vdLinkBox"><input class="btn" id="vdLink" placeholder="' + VID_HINT + '" aria-label="Link to the video" autocomplete="off" spellcheck="false">' +
+    '<p class="muted vdsay">Only the link is kept here, so the video stays where it is and nothing slows down.</p></div>' +
+    '<div id="vdFileBox" hidden><div class="vdfile"><button class="btn" id="vdFile">Choose a video file…</button><span id="vdFileName" class="muted">or drop it here</span></div>' +
+    '<p class="muted vdsay">Kept in this browser on this computer, at any length, as long as there is room. It doesn’t go in take-home files.</p></div>' +
     '<label class="vdlab" for="vdName">Name it</label><input class="btn" id="vdName" value="Presentation video" autocomplete="off">' +
     '<div class="vdlab">Notes page<small>A page to write on while you watch. It is marked, scored and returned like a paper.</small></div>' + npTiles(np, rows, true) +
-    '<div class="vdlab">Partners<small>Tick everyone else in the video. They get the link and the notes page, and one set of marks and one grade covers the group.</small></div>' + pl.html + '</div>' +
+    '<div class="vdlab">Partners<small>Tick everyone else in the video. They get the video and the notes page, and one set of marks and one grade covers the group.</small></div>' + pl.html + '</div>' +
     '<div class="bf"><button class="btn" data-cancel>Cancel</button><button class="btn primary" id="vdAdd" disabled>Add to ' + esc(who) + '</button></div>');
-  const link = $('#vdLink'), add = $('#vdAdd'), say = $('#vdSay'), say0 = say.innerHTML;
+  const link = $('#vdLink'), add = $('#vdAdd'), box = $('#dlgBox');
   const ready = () => {
-    const v = link.value.trim(), ok = file ? true : !!linkClean(v);
-    add.disabled = !ok; link.classList.toggle('bad', !!v && !ok && !file);
+    const v = link.value.trim(), ok = by === 'file' ? !!file : !!linkClean(v);
+    add.disabled = !ok; link.classList.toggle('bad', by === 'link' && !!v && !ok);
     add.textContent = 'Add to ' + who + (picked.size ? ' and ' + picked.size + (picked.size === 1 ? ' partner' : ' partners') : '');
   };
+  const setBy = k => { by = k; for (const b of box.querySelectorAll('[data-vdby]')) b.setAttribute('aria-pressed', b.dataset.vdby === k); $('#vdLinkBox').hidden = k !== 'link'; $('#vdFileBox').hidden = k !== 'file'; ready(); if (k === 'link') link.focus(); };
+  const useFile = f => { if (!f) return; if (!MEDIA_RX.test(f.name) && !/^(video|audio)\//.test(f.type)) return toast('That isn’t a video or sound file'); file = f; $('#vdFileName').innerHTML = '<b>' + esc(f.name) + '</b> · ' + fmtSize(f.size); setBy('file'); };
   pl.draw(); link.oninput = ready; $('#vdFind').oninput = pl.draw;
-  $('#dlgBox').onclick = async e => {
+  box.ondragover = e => { if (by === 'file') e.preventDefault(); };
+  box.ondrop = e => { if (by !== 'file') return; e.preventDefault(); useFile(e.dataTransfer.files[0]); };
+  box.onclick = async e => {
     if (e.target.closest('[data-cancel]')) return closeDlg();
-    const t = e.target.closest('.nptile'); if (t && !t.disabled) { np = t.dataset.np; npPick($('#dlgBox'), np); return; }
+    const t = e.target.closest('.nptile'); if (t && !t.disabled) { np = t.dataset.np; npPick(box, np); return; }
     const row = e.target.closest('[data-vdto]'); if (row && !row.disabled) { const s = batch.students[+row.dataset.vdto]; if (picked.has(s)) picked.delete(s); else picked.add(s); pl.draw(); ready(); return; }
-    if (e.target.closest('#vdFile')) {
-      const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'video/*,audio/*';
-      inp.onchange = () => { file = inp.files[0] || null; if (!file) return; link.value = ''; link.disabled = true; link.placeholder = file.name;
-        say.innerHTML = '<b>' + esc(file.name) + '</b> (' + Math.max(1, Math.round(file.size / 1e6)) + ' MB) will be kept in this browser, on ' + esc(who) + '’s paper. Short clips only: for anything long, a link is better. Partners share the notes page and the grade. <button class="link" id="vdUnfile">Use a link instead</button>'; ready(); };
-      inp.click(); return;
-    }
-    if (e.target.closest('#vdUnfile')) { file = null; link.disabled = false; link.placeholder = 'Paste the link: Google Drive, YouTube or anywhere else'; say.innerHTML = say0; ready(); link.focus(); return; }
+    const sb = e.target.closest('[data-vdby]'); if (sb) { setBy(sb.dataset.vdby); if (sb.dataset.vdby === 'file' && !file) useFile(await vidPick()); return; }
+    if (e.target.closest('#vdFile')) { useFile(await vidPick()); return; }
     if (e.target !== add || add.disabled) return;
-    const url = file ? '' : linkClean(link.value), name = npFileName($('#vdName').value || 'Presentation video'), partners = [...picked], kind = np;
-    if (file && file.size > VIDEO_BIG && !await askDlg('This video is ' + Math.round(file.size / 1e6) + ' MB. A file that big usually can’t be kept in this browser, so it may be gone the next time you open this assignment.\n\nA link to the video works at any size.', { ok: 'Add the file anyway', cancel: 'Go back' })) return;
+    const url = by === 'file' ? '' : linkClean(link.value), name = npFileName($('#vdName').value || 'Presentation video'), partners = [...picked], kind = np;
     add.disabled = true; add.textContent = 'Adding…';
-    closeDlg();
-    try { await videoAdd(st, { url, file, name, kind, partners }); } catch (err) { console.error(err); toast('That couldn’t be added: ' + ((err && err.message) || err)); }
+    try { await videoAdd(st, { url, file: by === 'file' ? file : null, name, kind, partners }); closeDlg(); }
+    catch (err) { console.error(err); add.disabled = false; ready(); sayDlg((err && err.message) || String(err)); }
   };
-  link.focus();
+  if (asFile) setBy('file'); else link.focus();
 }
-// o: { url | file, name, kind: a notes page or '', partners: [students] }
-async function videoAdd(st, o) {
-  const list = [];
-  if (o.file) list.push({ path: o.file.name, file: o.file });
-  else list.push({ path: o.name + '.url', file: new File([linkBytes(o.url)], o.name + '.url') });
+// The student's shortcut for a link or a kept video file, ready for addFiles.
+async function videoEntry(o) {
+  if (o.file) { const id = await vkPut(o.file); return { path: o.name + '.url', file: new File([vidBytes(id, o.file.name, o.file.size)], o.name + '.url') }; }
+  return { path: o.name + '.url', file: new File([linkBytes(o.url)], o.name + '.url') };
+}
+// o: { url | file, name, kind: a notes page or '', partners: [students] }. quiet: no toast and the student isn't opened (many at once).
+async function videoAdd(st, o, quiet) {
+  const list = [await videoEntry(o)];
   if (o.kind) { npLast = o.kind; const n = npFileName(o.name.replace(/\s*video$/i, '') + ' notes') + '.pdf'; list.push({ path: n, file: new File([await notesPdf(o.kind, batch.name, npRows(setup))], n, { type: 'application/pdf' }) }); }
   const made = await addAndFind(st, list), vid = made.find(f => f.kind === 'link' || f.kind === 'media') || made[0], page = made.find(f => f.kind === 'pdf') || notesFileOf(st);
   const all = [...new Set([...groupMates(st), ...(o.partners || [])])];
   if (all.length) await partnersJoin(st, page || vid, all, made.filter(f => f.kind !== 'media'));
+  if (quiet) return made;
   saveSoon(); renderList();
   toast('Added the video to ' + groupNames([st, ...all]));
   await openStudent(batch.students.indexOf(st), vid && vid.path);
   return made;
 }
+// The paper a group shares when there is no notes page: the student's first paper or Word file.
+const groupPaper = st => st.files.find(f => !f.virtual && (viewable(f) || f.kind === 'docx')) || null;
 
 /* ---------- Add: A notes page… ---------- */
 function openAddNotes(st) {
@@ -265,34 +397,154 @@ function openAddNotes(st) {
   };
 }
 
-/* ---------- an assignment with no papers at all: a notes page for everyone on the roster ---------- */
+/* ---------- videos and partners for the whole class, in one list ---------- */
+// rows: [{ k, label, has: what video they have already ('' for none), mates: [k] already in their group }]. Used before the assignment is
+// opened (the roster) and after (Setup > Partners and videos…). Returns { draw(), drop(files), out() }: out() gives the groups to make,
+// [{ k: [keys, the first is the one whose video and paper the group shares], url, file }], only where something is new.
+function pvList(host, rows) {
+  const vid = new Map(), grp = new Map();   // k -> { url, file } ; k -> a Set shared by everyone in one new group
+  let open = null;   // the row whose partners are being picked
+  const R = k => rows.find(r => r.k === k), mine = k => grp.get(k) || new Set([k]);
+  const old = k => new Set([k, ...((R(k) || {}).mates || [])]);
+  const team = k => { const s = new Set(); for (const x of mine(k)) for (const y of old(x)) s.add(y); for (const x of [...s]) for (const y of mine(x)) s.add(y); return [...s].sort((a, b) => rows.findIndex(r => r.k === a) - rows.findIndex(r => r.k === b)); };
+  const leadOf = k => { const t = team(k); return t.find(x => R(x) && R(x).has) || t.find(x => vid.get(x) && (vid.get(x).url || vid.get(x).file)) || t[0]; };
+  const tog = (k, o) => {
+    const g = mine(k);
+    if (g.has(o)) { g.delete(o); grp.delete(o); if (g.size < 2) for (const x of g) grp.delete(x); }
+    else { const og = grp.get(o); if (og) { og.delete(o); if (og.size < 2) for (const x of og) grp.delete(x); } g.add(o); for (const x of g) grp.set(x, g); const v = vid.get(o); if (v && !vid.get(k)) { vid.set(k, v); vid.delete(o); } }
+  };
+  const label = k => (R(k) || {}).label || k;
+  const draw = () => {
+    host.innerHTML = rows.map((r, i) => {
+      const t = team(r.k), lead = leadOf(r.k), v = vid.get(r.k) || {}, others = t.filter(x => x !== r.k);
+      let what;
+      if (lead !== r.k && (R(lead).has || (vid.get(lead) && (vid.get(lead).url || vid.get(lead).file)))) what = '<span class="muted"><span>Same video as:</span> <b data-raw>' + esc(label(lead)) + '</b></span>';
+      else if (r.has) what = '<span class="pvhas" data-raw title="' + esc(r.has) + '">' + esc(r.has) + '</span>';
+      else if (v.file) what = '<span class="pvfile"><b data-raw>' + esc(v.file.name) + '</b> <span data-raw>' + fmtSize(v.file.size) + '</span><button class="icon" data-pvunfile="' + i + '" aria-label="Take the file off">✕</button></span>';
+      else what = '<input class="btn pvlink' + (v.url && !linkClean(v.url) ? ' bad' : '') + '" data-pvlink="' + i + '" value="' + esc(v.url || '') + '" placeholder="Paste a link to their video" aria-label="Link to the video" autocomplete="off" spellcheck="false"><button class="btn sm" data-pvfile="' + i + '" title="A video file on this computer">File…</button>';
+      return '<div class="pvrow' + (open === r.k ? ' on' : '') + '"><span class="pvname" data-raw>' + esc(r.label) + '</span><span class="pvvid">' + what + '</span>' +
+        '<button class="btn sm pvpbtn" data-pvp="' + i + '" aria-expanded="' + (open === r.k) + '">' + (others.length ? '<span>With:</span> <span data-raw>' + esc(others.map(label).join(', ')) + '</span>' : '+ Partners') + '</button>' +
+        (open === r.k ? '<div class="pvpick" role="group" aria-label="Partners">' + rows.filter(x => x.k !== r.k).map(x => { const lock = old(r.k).has(x.k), on = lock || t.includes(x.k);
+          return '<button class="pvchip" data-pvto="' + rows.indexOf(x) + '" aria-pressed="' + on + '"' + (lock ? ' disabled title="Already in the group"' : '') + ' data-raw>' + esc(x.label) + '</button>'; }).join('') + '<button class="link" data-pvdone>Done</button></div>' : '') + '</div>';
+    }).join('');
+  };
+  host.addEventListener('input', e => { const l = e.target.closest('[data-pvlink]'); if (!l) return; const k = rows[+l.dataset.pvlink].k; vid.set(k, { url: l.value }); l.classList.toggle('bad', !!l.value.trim() && !linkClean(l.value)); host.dispatchEvent(new Event('pvchange')); });
+  host.addEventListener('change', e => { if (e.target.closest('[data-pvlink]')) draw(); });   // the group's other rows follow once the link is in
+  host.addEventListener('click', async e => {
+    const b = e.target.closest('[data-pvp],[data-pvto],[data-pvdone],[data-pvfile],[data-pvunfile]'); if (!b) return;
+    e.stopPropagation();
+    if (b.dataset.pvp != null) { const k = rows[+b.dataset.pvp].k; open = open === k ? null : k; }
+    else if (b.dataset.pvdone != null) open = null;
+    else if (b.dataset.pvto != null && open) tog(open, rows[+b.dataset.pvto].k);
+    else if (b.dataset.pvfile != null) { const f = await vidPick(); if (!f) return; vid.set(rows[+b.dataset.pvfile].k, { file: f }); }
+    else if (b.dataset.pvunfile != null) vid.delete(rows[+b.dataset.pvunfile].k);
+    draw(); host.dispatchEvent(new Event('pvchange'));
+    if (b.dataset.pvp != null || b.dataset.pvto != null) { const again = host.querySelector(b.dataset.pvp != null ? '[data-pvp="' + b.dataset.pvp + '"]' : '[data-pvto="' + b.dataset.pvto + '"]'); if (again) again.focus(); }
+  });
+  // files dropped on the list: each goes to the student named in its file name
+  const drop = files => {
+    const people = rows.map(r => [nameWords(r.label)]), miss = [];
+    for (const f of files) { if (!MEDIA_RX.test(f.name)) { miss.push(f.name); continue; } const g = guessAmong(f.name, people); if (g.i < 0 || rows[g.i].has) { miss.push(f.name); continue; } vid.set(leadOf(rows[g.i].k), { file: f }); }
+    draw(); host.dispatchEvent(new Event('pvchange'));
+    if (miss.length) toast((miss.length === 1 ? 'This file didn’t match a name: ' : 'These files didn’t match a name: ') + wordsJoin(miss.slice(0, 4)) + (miss.length > 4 ? '…' : '') + '. Use File… on the right row.', 8000);
+  };
+  const out = () => {
+    const done = new Set(), list = [];
+    for (const r of rows) {
+      if (done.has(r.k)) continue;
+      const t = team(r.k); t.forEach(x => done.add(x));
+      const lead = leadOf(r.k), v = R(lead).has ? null : (t.map(x => vid.get(x)).find(x => x && (x.file || linkClean(x.url || ''))) || null);
+      const fresh = t.filter(x => !old(lead).has(x));
+      if (!v && !fresh.length) continue;
+      list.push({ k: [lead, ...t.filter(x => x !== lead)], url: v && !v.file ? linkClean(v.url) : '', file: v && v.file || null });
+    }
+    return list;
+  };
+  const bad = () => rows.some(r => { const v = vid.get(r.k); return v && v.url && v.url.trim() && !linkClean(v.url); });
+  draw();
+  return { draw, drop, out, bad };
+}
+// Puts the groups pvList gave on the open assignment. stOf(k): the student for a row.
+async function pvApply(groups, stOf) {
+  let n = 0;
+  for (const g of groups) {
+    const all = g.k.map(stOf).filter(Boolean); if (!all.length) continue;
+    // the group shares the paper of whoever has one: the one with the video first, else the first with a notes page or a paper
+    let st = all[0];
+    if (!g.url && !g.file && !(notesFileOf(st) || groupPaper(st))) st = all.find(s => notesFileOf(s) || groupPaper(s)) || st;
+    const partners = all.filter(s => s !== st && !groupMates(st).includes(s));
+    if (g.url || g.file) await videoAdd(st, { url: g.url, file: g.file, name: 'Presentation video', kind: '', partners }, true);
+    else if (partners.length) { const gg = groupOf(st), anchor = (gg && groupFileOf(gg, st)) || notesFileOf(st) || groupPaper(st) || st.files.find(f => f.kind === 'link'); if (!anchor) continue; await partnersJoin(st, anchor, partners, st.files.filter(f => f.kind === 'link' && f !== anchor)); }
+    n++;
+  }
+  groupSync(); saveSoon(); renderList();
+  return n;
+}
+const pvHas = st => { const f = st.files.find(x => x.kind === 'link') || st.files.find(x => x.kind === 'media'); return f ? (f.kind === 'link' ? linkTitle(f) + (vidRef(f.data) ? '' : ' · ' + linkHost(linkOf(f.data))) : f.name) : ''; };
+
+/* ---------- Setup > Partners and videos… on an open assignment ---------- */
+function openPartners() {
+  if (!batch) return;
+  const anon = anonOn(), list = batch.students.map((st, i) => ({ st, i })).filter(x => x.st.files.length || !x.st.gap);
+  if (anon) list.sort((a, b) => anonPos(a.i) - anonPos(b.i));
+  const rows = list.map(({ st, i }) => ({ k: st.key, label: shownName(st, i), has: pvHas(st), mates: groupMates(st).map(s => s.key) }));
+  openDlg('<div class="bh"><h2>Partners and videos</h2><button class="icon" data-cancel aria-label="Close" style="margin-left:auto">✕</button></div>' +
+    '<div class="bb vdbox"><p class="muted" style="margin:0;font-size:14px">Pick each group’s partners: one grade covers the group, and a group with no video shares the first one’s paper and marks. Paste a link to a video, or choose a video file. You can also drop video files here, and each goes to the student named in its file name.</p><div id="pvList" class="pvlist"></div></div>' +
+    '<div class="bf"><button class="btn" data-cancel>Cancel</button><button class="btn primary" id="pvGo" disabled>Save</button></div>', false, 'lg');
+  const box = $('#dlgBox'), host = $('#pvList'), pv = pvList(host, rows), go = $('#pvGo');
+  host.addEventListener('pvchange', () => { go.disabled = !pv.out().length || pv.bad(); });
+  box.ondragover = e => e.preventDefault();
+  box.ondrop = e => { e.preventDefault(); pv.drop([...e.dataTransfer.files]); };
+  box.onclick = async e => {
+    if (e.target.closest('[data-cancel]')) return closeDlg();
+    if (e.target !== go || go.disabled) return;
+    go.disabled = true; go.textContent = 'Saving…';
+    try { const n = await pvApply(pv.out(), k => batch.students.find(s => s.key === k)); closeDlg(); toast(n === 1 ? 'Saved 1 group or video' : 'Saved ' + n + ' groups and videos'); openStudent(cur); }
+    catch (err) { console.error(err); go.disabled = false; go.textContent = 'Save'; sayDlg((err && err.message) || String(err)); }
+  };
+}
+
+/* ---------- an assignment with no papers at all: a notes page for everyone on the roster, their videos and their partners ---------- */
 function openStartNotes(it) {
   const f = findItem(it.id), c = f && f.c !== lib.loose ? f.c : null, names = c ? c.names.filter(n => String(n).trim()) : [];
   if (!names.length) return sayDlg('This needs the class’s roster, so there is a page for each student. Add the students to the class first, then come back to this assignment.', { lg: 1 });
   const rows = npRows(it.setup);
   let np = npLast === 'rubric' && !rows.length ? 'lined' : npLast;
   openDlg('<div class="bh"><h2>“' + esc(it.name) + '” with no papers</h2></div>' +
-    '<div class="bb vdbox"><p style="margin:0 0 4px">For presentations, speeches, performances and videos. Each of the ' + names.length + ' students in ' + esc(c.name) + ' gets a notes page to write on while you watch. Mark it, score it and return it like a paper.</p>' +
-    '<p class="muted" style="margin:0 0 4px;font-size:14px">Once it is open, <b>+ Add</b> on a student’s page takes a link to their video, and that is where you say who their partners are.</p>' + npTiles(np, rows, false) +
-    (rows.length ? '' : '<p class="muted" style="margin:8px 0 0;font-size:13px">Rubric rows can be picked once this assignment has a rubric.</p>') + '</div>' +
-    '<div class="bf"><button class="btn" data-cancel>Cancel</button><button class="btn primary" id="snGo">Make the pages and open</button></div>', true, 'lg');
-  $('#dlgBox').onclick = async e => {
+    '<div class="bb vdbox"><p style="margin:0 0 4px">For presentations, speeches, performances and videos. Each of the ' + names.length + ' students in ' + esc(c.name) + ' gets a notes page to write on while you watch. Mark it, score it and return it like a paper.</p>' + npTiles(np, rows, false) +
+    (rows.length ? '' : '<p class="muted" style="margin:8px 0 0;font-size:13px">Rubric rows can be picked once this assignment has a rubric.</p>') +
+    '<div class="vdlab">Videos and partners<small>Optional, and you can add them later too. Paste a link or choose a file for each video, or drop video files here and each goes to the student named in its file name. Partners share one notes page, one set of marks and one grade.</small></div><div id="pvList" class="pvlist"></div></div>' +
+    '<div class="bf"><button class="btn" data-cancel>Cancel</button><button class="btn primary" id="snGo">Make the pages and open</button></div>', false, 'lg');
+  const box = $('#dlgBox'), folder = n => String(n).replace(/[\\/:*?"<>|\u0000-\u001F]+/g, '-').trim();
+  const pv = pvList($('#pvList'), names.map(n => ({ k: folder(n), label: n, has: '', mates: [] })));
+  $('#pvList').addEventListener('pvchange', () => { $('#snGo').disabled = pv.bad(); });
+  box.ondragover = e => e.preventDefault();
+  box.ondrop = e => { e.preventDefault(); pv.drop([...e.dataTransfer.files]); };
+  box.onclick = async e => {
     if (e.target.closest('[data-cancel]')) return closeDlg();
-    const t = e.target.closest('.nptile'); if (t && !t.disabled) { np = t.dataset.np; npPick($('#dlgBox'), np); return; }
+    const t = e.target.closest('.nptile'); if (t && !t.disabled) { np = t.dataset.np; npPick(box, np); return; }
     if (e.target.id !== 'snGo') return;
     e.target.disabled = true; npLast = np;
+    const groups = pv.out();
     try {
-      const bytes = await notesPdf(np, it.name, rows), folder = n => String(n).replace(/[\\/:*?"<>|\u0000-\u001F]+/g, '-').trim();
+      const bytes = await notesPdf(np, it.name, rows);
       const make = k => names.map(n => ({ path: folder(n) + '/' + npFileName(it.name) + ' notes' + (k > 1 ? ' (' + k + ')' : '') + '.pdf', data: bytes.slice() }));
       // a download is known by its names and sizes: a second one of the same name in the same class is given a name of its own, so it starts empty
       let k = 1, list = make(k);
       while (k < 50 && (store.get(batchIdOf(list), null) || keptMeta.has(batchIdOf(list)))) list = make(++k);
+      const id = batchIdOf(list);
       closeDlg();
       await intake(list, it.name, it);
+      if (groups.length && batch && batch.id === id) {
+        const stOf = key => batch.students.find(s => s.key === key);
+        await pvApply(groups, stOf);
+        toast(groups.length === 1 ? 'Added 1 group or video' : 'Added ' + groups.length + ' groups and videos');
+        openStudent(cur);
+      }
     } catch (err) { console.error(err); closeDlg(); toast('The pages couldn’t be made: ' + ((err && err.message) || err)); }
   };
 }
-Object.assign(window.__gs, { linkOf, linkClean, linkPlayer, notesPdf, isNotes, videoAdd, openAddVideo, openAddNotes, openStartNotes });
+Object.assign(window.__gs, { linkOf, linkClean, linkPlayer, notesPdf, isNotes, videoAdd, openAddVideo, openAddNotes, openStartNotes, openPartners, pvApply });
 
 /* ---------------- clips: a part of a video worth showing the class ---------------- */
 // batch.clips: [{ id, u: the link | p: the path of a video file, a: where it starts (seconds), b: where it ends (or none), t: what it shows }]
@@ -305,9 +557,9 @@ function clipSecs(v) {
   return v.split(':').reduce((n, x) => n * 60 + parseFloat(x), 0);
 }
 const clipSpan = c => fmtTime(c.a) + (c.b != null ? '–' + fmtTime(c.b) : '');
-const clipsOf = f => (batch.clips || []).filter(c => (f.kind === 'link' ? c.u && c.u === linkOf(f.data) : c.p === f.path));
+const clipsOf = f => (batch.clips || []).filter(c => (f.kind === 'link' ? c.u && c.u === linkKey(f) : c.p === f.path));
 function clipFile(c) {
-  for (const st of batch.students) for (const f of st.files) if (c.u ? f.kind === 'link' && linkOf(f.data) === c.u : f.path === c.p) return f;
+  for (const st of batch.students) for (const f of st.files) if (c.u ? f.kind === 'link' && linkKey(f) === c.u : f.path === c.p) return f;
   return null;
 }
 // A site's player started at the clip. stops: the player itself stops at the end.
@@ -334,7 +586,8 @@ function playerFrame(src, title) {
 }
 const clipsBtn = () => { const b = $('#clipsBtn'); if (b) b.hidden = !(batch && batch.clips && batch.clips.length); };
 // The row of clips under a player. media(): the video or sound on the card, when the page plays it itself. play(c): plays a clip on the card.
-function clipStrip(host, f, media, play) {
+// hint: 'drive' when the site's player can't say where it is.
+function clipStrip(host, f, media, play, hint) {
   const box = document.createElement('div'); box.className = 'clips'; host.appendChild(box);
   let form = false, edit = null;   // edit: the clip whose title and times are being changed
   const draw = () => {
@@ -346,7 +599,7 @@ function clipStrip(host, f, media, play) {
         '<label>to <input class="btn sm" data-cb placeholder="end" inputmode="numeric" autocomplete="off" aria-label="Where the clip ends"></label>' + (own ? '<button class="link" data-cnow="b">now</button>' : '') +
         '<input class="btn sm clipname" data-ct placeholder="What it shows, like Strong opening" maxlength="80" autocomplete="off" aria-label="What the clip shows">' +
         '<button class="btn sm primary" data-clipsave>' + (edit ? 'Save changes' : 'Save clip') + '</button><button class="btn sm" data-clipcancel>Cancel</button>' +
-        '<small class="muted">' + (own ? 'Press now at the start and at the end, or type the times.' : 'Type the times from the player, like 2:15.') + ' Nothing is cut: a clip is the two times and its label.</small></div>' : '');
+        '<small class="muted">' + (own ? 'It starts where the video is. Press now at the end, or type the times.' : hint === 'drive' ? 'Google Drive’s player doesn’t tell the page where it is, so type the times from the player, like 2:15.' : 'Play the video here and + Clip starts where it is, or type the times, like 2:15.') + ' Nothing is cut: a clip is the two times and its label.</small></div>' : '');
   };
   draw();
   box.onclick = e => {
@@ -363,7 +616,7 @@ function clipStrip(host, f, media, play) {
       if (isNaN(b) || (b != null && b <= a)) { q('[data-cb]').focus(); return toast('The end has to be after the start'); }
       if (edit) { edit.a = a; if (b != null) edit.b = b; else delete edit.b; edit.t = q('[data-ct]').value.trim().slice(0, 80) || edit.t; form = false; edit = null; saveSoon(); draw(); return; }
       const n = (batch.clips ||= []).length + 1;
-      batch.clips.push({ id: uid(), ...(f.kind === 'link' ? { u: linkOf(f.data) } : { p: f.path }), a, ...(b != null ? { b } : {}), t: q('[data-ct]').value.trim().slice(0, 80) || 'Clip ' + n });
+      batch.clips.push({ id: uid(), ...(f.kind === 'link' ? { u: linkKey(f) } : { p: f.path }), a, ...(b != null ? { b } : {}), t: q('[data-ct]').value.trim().slice(0, 80) || 'Clip ' + n });
       form = false; saveSoon(); clipsBtn(); draw(); return;
     }
     const d = e.target.closest('[data-clipdel]');
@@ -385,13 +638,16 @@ function clipShow(id) {
   document.body.appendChild(el);
   const draw = () => {
     const all = list(), c = all[at]; if (!c) return clipClose();
-    const f = clipFile(c), url = f.kind === 'link' ? linkOf(f.data) : '', pl = url ? linkPlayer(url) : { [VIDEO_RX.test(f.name) ? 'video' : 'audio']: mediaUrl(f) };
+    const f = clipFile(c), vr = f.kind === 'link' && vidRef(f.data);
+    if (vr && !vkSeen.has(vr)) { vkGet(vr).then(() => { if (clipStage && clipStage.el === el) draw(); }); return; }   // a kept video is read first
+    const kv = vr && vkSeen.get(vr), url = f.kind === 'link' && !vr ? linkOf(f.data) : '';
+    const pl = vr ? (kv ? { [VIDEO_RX.test(kv.name) ? 'video' : 'audio']: kv.url } : null) : url ? linkPlayer(url) : { [VIDEO_RX.test(f.name) ? 'video' : 'audio']: mediaUrl(f) };
     const fr = pl && pl.frame ? clipFrame(pl.frame, c) : null;
     el.innerHTML = '<div class="clipbar"><b>' + esc(c.t) + '</b><span>' + (c.b != null ? fmtTime(c.a) + ' to ' + fmtTime(c.b) : 'from ' + fmtTime(c.a)) + (fr && !fr.stops && c.b != null ? ' · stop it at ' + fmtTime(c.b) : '') + '</span><span class="sp"></span>' +
       (all.length > 1 ? '<button data-cs="prev" aria-label="The clip before"' + (at ? '' : ' disabled') + '>‹</button><span>' + (at + 1) + ' of ' + all.length + '</span><button data-cs="next" aria-label="The next clip"' + (at < all.length - 1 ? '' : ' disabled') + '>›</button>' : '') +
       '<button data-cs="again">Play again</button><button data-cs="full">Full screen</button><button data-cs="close">Close <kbd>Esc</kbd></button></div><div class="clipmain"></div>';
     const main = el.querySelector('.clipmain');
-    if (!pl) { main.innerHTML = '<p>This site can’t play inside the page. Close this and use Open in its own window.</p>'; return; }
+    if (!pl) { main.innerHTML = vr ? '<p>This video isn’t in this browser.</p>' : '<p>This site can’t play inside the page. Close this and use Open in its own window.</p>'; return; }
     if (fr) main.appendChild(playerFrame(fr.src, c.t));
     else { const m = document.createElement(pl.video ? 'video' : 'audio'); m.controls = true; m.playsInline = true; m.src = pl.video || pl.audio; main.appendChild(m); clipRun(m, c); }
   };

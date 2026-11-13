@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"e61e5bc5","zh-Hans":"bf199251","es":"64dbb794","fr":"4207de01","de":"43ffb0f4","pt-BR":"59fab2a3","ja":"74aba9bd","ko":"2157a600"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script></head><body>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"df1fe5b1","zh-Hans":"e884d739","es":"5c2e250c","fr":"7c1ec25e","de":"4e7d6fbc","pt-BR":"1b525e92","ja":"8c3a1518","ko":"3b606535"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script></head><body>
 <title>Grading Studio</title>
 <script>try{document.documentElement.dataset.theme=JSON.parse(localStorage.getItem('gs.theme'))||'light'}catch(e){document.documentElement.dataset.theme='light'}</script>
 <style>
@@ -1093,6 +1093,16 @@ body:has(#openRep:not([hidden])) .toast{bottom:calc(76px + var(--savebar,0px))}
 .ptab tr.lo td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
 .ptab .link{text-decoration:none;font-weight:500}
 @media (max-width:700px){.dlg .box .pbody{grid-template-columns:1fr}.pctl{border-right:0;border-bottom:1px solid var(--line)}}
+/* bring in a rubric (src/rubricup.js) */
+.rubup .rusays{font-size:var(--text-control);color:var(--fg-2)}
+.rubup .rurow{display:flex;gap:var(--space-2);align-items:center;flex-wrap:wrap;margin-top:var(--space-1)}
+.rubup .rurow .muted{font-size:var(--text-small)}
+#ruGot{margin-top:var(--space-2);padding:var(--space-3);border:1px solid var(--line);border-radius:var(--corner-3);background:var(--surface-2,var(--surface));display:flex;flex-direction:column;gap:var(--space-1)}
+#ruGot[hidden]{display:none}
+.rufile,.runo{margin:0;font-size:var(--text-small)}
+.rurows{margin:0;padding-left:20px;font-size:var(--text-small);display:flex;flex-direction:column;gap:2px}
+.rurows li span{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rufound{display:inline-flex;gap:var(--space-2);align-items:center;font-size:var(--text-small);margin-top:var(--space-1)}
 /* ---------- gradebook ---------- */
 .dlg .box.bkbox{width:min(1400px,100%);height:calc(100vh - 32px)}
 .dlg .box .bkbody{padding:0;display:flex;flex-direction:column;min-height:0;overflow:auto;position:relative}
@@ -3038,6 +3048,36 @@ button.seat[data-n]:hover{border-color:var(--accent)}
 .clipmain iframe,.clipmain video{width:100%;height:100%;border:0;background:var(--stage)}
 .clipmain audio{width:min(900px,90vw)}
 .clipmain p{font:500 2.6vh/1.4 var(--f-body);color:var(--stage-muted)}
+.vdby{align-self:flex-start}
+.vdfile{display:flex;align-items:center;gap:var(--space-2);flex-wrap:wrap;padding:var(--space-3);border:1px dashed var(--line-strong);border-radius:var(--corner-3)}
+.vdfile #vdFileName{font-size:var(--text-small)}
+/* the bar that makes a video bigger or smaller */
+.vgrip{height:14px;margin:2px 0 2px;display:flex;align-items:center;justify-content:center;cursor:ns-resize;touch-action:none;border-radius:var(--corner-2)}
+.vgrip::before{content:"";width:48px;height:4px;border-radius:var(--corner-pill);background:var(--line-strong)}
+.vgrip:hover::before,.vgrip.on::before,.vgrip:focus-visible::before{background:var(--accent)}
+.vgripshield{position:fixed;inset:0;z-index:9999;cursor:ns-resize}
+html.vidsized #paper .media{max-width:max(900px,calc(var(--vid-h) * 16 / 9 + 30px))}
+html.vidsized #paper .media video,html.vidsized #paper .vlink .vlslot iframe,html.vidsized #paper .vlink .vlslot video{height:var(--vid-h);max-height:none;min-height:0}
+html.vidtall #paper .mstick{position:relative;top:auto}
+/* partners and videos for the whole class */
+.pvlist{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:var(--corner-3);max-height:46vh;overflow:auto}
+.pvrow{display:grid;grid-template-columns:minmax(120px,1fr) minmax(200px,2fr) auto;gap:var(--space-2);align-items:center;padding:var(--space-2) var(--space-3);border-top:1px solid var(--line)}
+.pvrow:first-child{border-top:0}
+.pvrow.on{background:var(--accent-soft)}
+.pvname{font-weight:600;font-size:var(--text-control);overflow-wrap:anywhere}
+.pvvid{display:flex;gap:var(--space-1);align-items:center;min-width:0;font-size:var(--text-small)}
+.pvvid input.pvlink{flex:1;min-width:0;text-align:left;cursor:text}
+.pvvid input.bad{border-color:var(--warn)}
+.pvhas::before{content:"✓ ";color:var(--ok,var(--accent))}
+.pvhas{color:var(--fg-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pvfile{display:inline-flex;align-items:center;gap:var(--space-1);min-width:0}
+.pvfile b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pvpbtn{justify-self:end;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pvpick{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:var(--space-1);align-items:center;padding:var(--space-1) 0}
+.pvchip{border:1px solid var(--line-strong);border-radius:var(--corner-pill);background:var(--surface);font:inherit;font-size:var(--text-small);color:var(--fg-2);padding:3px var(--space-2);cursor:pointer}
+.pvchip[aria-pressed=true]{background:var(--accent);border-color:var(--accent);color:var(--surface)}
+.pvchip:disabled{opacity:.7;cursor:default}
+@media (max-width:640px){.pvrow{grid-template-columns:1fr}.pvpbtn{justify-self:start}}
 /* Settings, My setup: the two numbered steps, and the preview of what a setup would change (src/setupin.js). */
 .stpsteps{list-style:none;counter-reset:stp;margin:var(--space-3) 0 0;padding:0;display:grid;gap:var(--space-4)}
 .stpsteps li{counter-increment:stp;display:grid;grid-template-columns:28px 1fr;gap:var(--space-3);align-items:start}
@@ -3274,6 +3314,7 @@ textarea.stptext{min-height:132px;margin-top:var(--space-2);font:var(--text-cont
           <button class="mitem" id="bringBtn" title="Late work, or many files at once; each goes to its student by the name in the file name">Bring in files</button>
           <button class="mitem" id="openRepBtn" title="What opened from this download, what didn’t, who has nothing, and anything odd">What opened</button>
           <button class="mitem" id="trAllBtn" hidden title="Make a transcript for every recording in this assignment">Transcripts</button>
+          <button class="mitem" id="partnersBtn" title="Everyone’s partners and videos in one list: who works together, and a link or video file for each">Partners and videos…</button>
           <button class="mitem" id="clipsBtn" hidden title="The parts of videos you saved, one after another, with their labels and no names">Clips to show the class</button>
           <button class="mitem" id="quizBtn" title="For a scanned paper quiz: box each question once, then mark the same question for everyone at once">Quick mark (paper quiz)</button>
           <button class="mitem" id="impBtn" title="Comments and marks made in Kami, Acrobat or Preview, made into your own so you can change them">Marks from other apps</button>
@@ -5650,7 +5691,7 @@ async function spellLikeSaved(raw) {
 async function makeFile(path, data) {
   const name = path.split('/').pop();
   const magic = data && data.length > 4 && data[0] === 0x25 && data[1] === 0x50 && data[2] === 0x44 && data[3] === 0x46;   // "%PDF"
-  let kind = trueKind(isPdf(name) || magic ? 'pdf' : isImg(name) || IMG_MORE.test(name) ? 'img' : MEDIA_RX.test(name) ? 'media' : WORD_RX.test(name) ? 'docx' : TEXT_RX.test(name) ? 'text' : LINK_RX.test(name) && linkOf(data) ? 'link' : 'other', name, data);
+  let kind = trueKind(isPdf(name) || magic ? 'pdf' : isImg(name) || IMG_MORE.test(name) ? 'img' : MEDIA_RX.test(name) ? 'media' : WORD_RX.test(name) ? 'docx' : TEXT_RX.test(name) ? 'text' : LINK_RX.test(name) && (linkOf(data) || vidRef(data)) ? 'link' : 'other', name, data);
   let pdf = kind === 'pdf' ? data : null;
   if (kind === 'pdf' && gsExportLike(data)) {   // a file exported from here with its marks kept: back to the original pages and the marks
     const back = await unpackExport(data);
@@ -6159,7 +6200,7 @@ async function openStudent(i, filePath) {
     const gs = $('#gapScan'); if (gs) gs.onclick = () => { scanInto = true; scanFor = null; $('#scanIn').click(); };
   }
   curMedia = null; clipsBtn();
-  for (const f of st.files.filter(f => f.kind === 'link')) { paper.insertAdjacentHTML('beforeend', '<div class="fhead"><span style="color:var(--fg)">' + esc(linkTitle(f)) + '</span><span>Video link</span>' + tryTag(st, f) + (f.added ? addTag(f) : '') + carryTag(f) + '<span style="flex:1"></span>' + fileMenu(moveLink(f) + removeLink(f)) + '</div>'); paper.appendChild(linkCard(st, f)); }
+  for (const f of st.files.filter(f => f.kind === 'link')) { paper.insertAdjacentHTML('beforeend', '<div class="fhead"><span style="color:var(--fg)">' + esc(linkTitle(f)) + '</span><span>' + (vidRef(f.data) ? 'Video file' : 'Video link') + '</span>' + tryTag(st, f) + (f.added ? addTag(f) : '') + carryTag(f) + '<span style="flex:1"></span>' + fileMenu(moveLink(f) + removeLink(f)) + '</div>'); paper.appendChild(linkCard(st, f)); }
   for (const f of st.files.filter(f => f.kind === 'media')) { if (f.added || carryTag(f) || tryTag(st, f)) paper.insertAdjacentHTML('beforeend', '<div class="fhead"><span style="color:var(--fg)">' + esc(f.name) + '</span>' + tryTag(st, f) + (f.added ? addTag(f) : '') + carryTag(f) + '<span style="flex:1"></span>' + fileMenu(fileLinks(f)) + '</div>'); paper.appendChild(mediaCard(st, f)); }
   const rd = refDoc();
   if (rd) { const det = document.createElement('details'); det.className = 'refd'; det.open = store.get('gs.rdOpen', true); det.innerHTML = '<summary>Your document: ' + esc(rd.name) + '</summary>'; det.ontoggle = () => store.set('gs.rdOpen', det.open); paper.appendChild(det); docxCard(rd, rd.name).then(c => { c.querySelector('.fhead').remove(); det.appendChild(c); }); }
@@ -7459,9 +7500,10 @@ function rowScaleHtml(d) {
     '<span class="muted">Out of ' + rowsMax(d) + ' in all.</span></div>';
 }
 const draftMax = d => d.mode === 'rubric' ? rowsMax(d) : Math.round(+d.outOf || 0);
-function openSetup() {
-  let draft = JSON.parse(JSON.stringify(setup));
-  let newPage = undefined;   // undefined: unchanged, null: removed, {bytes,name}: new upload
+function openSetup(pre) {
+  let draft = JSON.parse(JSON.stringify(pre && pre.draft || setup));
+  let newPage = pre && pre.page ? pre.page : undefined;   // undefined: unchanged, null: removed, {bytes,name}: new upload
+  let found = null;   // rows read from the rubric file just brought in
   const scaleRows = () => {
     const max = draftMax(draft);
     if (!draft.scale) return '<p class="muted" style="font-size:13px;margin:4px 0 0">No scale: percent is the plain share of points.</p>';
@@ -7486,7 +7528,7 @@ function openSetup() {
     h += '<div class="field"><label>Your rubric, for every student</label><span class="muted" style="font-size:13px">Bring in your rubric once and every student gets their own copy to grade on. A Word rubric (.docx or .docm) stays a Word file: type in it, check its boxes and shade its cells. A PDF or picture is added as a page you can mark up. Each copy goes back with that student’s work.</span>' +
       '<span style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:4px"><button class="btn sm" data-rpup>' + (rp ? 'Replace…' : 'Bring in my rubric…') + '</button>' +
       (rp ? '<span style="font-size:13px;font-weight:600">' + esc(rp.name || 'Rubric page') + '</span><span class="seg"><button data-pos="end" aria-pressed="' + ((draft.rubricPos || 'end') === 'end') + '">After their work</button><button data-pos="start" aria-pressed="' + (draft.rubricPos === 'start') + '">Before</button></span><button class="link" data-rprm>Remove</button>' : '') +
-      '</span><input type="file" id="rpIn" hidden></div>';
+      '</span>' + (found ? '<span class="rufound"><span>Rows were found in it.</span> <button class="btn sm" data-rpuse>Use these rows</button></span>' : '') + '<input type="file" id="rpIn" hidden></div>';
     h += '<p class="muted" style="font-size:13px;margin:0">Scores you already gave stay put if you rename rows.' + (batch && batch.assignment ? ' This setup is remembered for “' + esc(batch.assignment.name) + '”.' : '') + '</p>';
     return h;
   };
@@ -7508,13 +7550,16 @@ function openSetup() {
       if (WORD_RX.test(f.name)) {
         openWord(bytes);
         newPage = { bytes, name: f.name };
+        try { found = ruFromWord(bytes); } catch { found = null; }
         if (!draft.rubricPos) draft.rubricPos = 'start';   // a Word rubric sits above their work unless she moves it
       } else {
         if (isImg(f.name) && !await picReads(bytes)) throw new Error('damaged');
         const pdf = isImg(f.name) ? await imageToPdf(bytes, f.name) : IMG_MORE.test(f.name) ? await anyImageToPdf(bytes) : bytes;
         await PDFLib.PDFDocument.load(pdf, { ignoreEncryption: true });
         newPage = { bytes: pdf, name: f.name };
+        found = pdf === bytes ? await ruFromPdf(bytes).catch(() => null) : null;
       }
+      if (found && !found.rows.length) found = null;
       if (draft.mode === 'rubric' && draft.criteria.every((c, i) => c === 'Criterion ' + (i + 1))) { draft.outOf = rowsMax(draft); draft.mode = 'points'; }   // her rubric replaces the generic rows
       re();
     } catch { toast('That file couldn’t be opened as a Word file, PDF or picture'); }
@@ -7533,7 +7578,8 @@ function openSetup() {
     }
     const pos = e.target.closest('[data-pos]'); if (pos) { draft.rubricPos = pos.dataset.pos; return re(); }
     if (e.target.closest('[data-rpup]')) return $('#rpIn').click();
-    if (e.target.closest('[data-rprm]')) { newPage = null; return re(); }
+    if (e.target.closest('[data-rprm]')) { newPage = null; found = null; return re(); }
+    if (e.target.closest('[data-rpuse]') && found) { rubricRowsInto(draft, found); levelEditOpen.clear(); if (rubDlg) rubDlg.from = draft.criteria.map((_, i) => i < rubDlg.n0 ? i : null); found = null; return re(); }
     if (e.target.closest('[data-cancel]')) return closeDlg();
     if (e.target.closest('[data-save]')) {
       if (newPage !== undefined) await Promise.all([...wordSaves].map(s => s()));   // boxes highlighted a moment ago count
@@ -9328,20 +9374,21 @@ const fmtTime = s => { s = Math.max(0, Math.floor(s || 0)); return Math.floor(s 
 const CAN_TRANSCRIBE = window.self === window.top;   // the speech engine downloads its model; a preview frame can't
 let curMedia = null;   // the first player on screen, for the keys
 
-function mediaCard(st, f) {
+function mediaCard(st, f, kept) {
   const el = document.createElement('div'); el.className = 'media';
-  const vid = VIDEO_RX.test(f.name);
-  el.innerHTML = '<div class="mstick"><div class="mhead"><b>' + esc(f.name) + '</b><span class="muted">' + (vid ? 'video' : 'audio') + '</span></div>' +
+  const vid = VIDEO_RX.test(kept ? kept.name : f.name);
+  el.innerHTML = '<div class="mstick"><div class="mhead"><b>' + esc(kept ? linkTitle(f) : f.name) + '</b><span class="muted">' + (vid ? 'video' : 'audio') + '</span></div>' +
     (vid ? '<video controls preload="metadata" playsinline></video>' : '<audio controls preload="metadata"></audio>') +
     '<div class="mctl"><button class="btn sm" data-skip="-10">◀◀ 10s</button><button class="btn sm" data-skip="10">10s ▶▶</button>' +
     '<span class="seg">' + [1, 1.25, 1.5, 2].map(r => '<button data-rate="' + r + '" aria-pressed="' + (r === (store.get('gs.rate', 1))) + '">' + r + '×</button>').join('') + '</span>' +
     '<button class="btn sm" data-stamp title="Adds the time to your comment, like [2:15]">+ Time to comment</button>' +
-    (CAN_TRANSCRIBE ? '<button class="btn sm" data-tr>' + (f.tr ? 'Transcript ✓' : 'Make transcript') + '</button>' : '') + '</div></div>' +
+    (CAN_TRANSCRIBE && !kept ? '<button class="btn sm" data-tr>' + (f.tr ? 'Transcript ✓' : 'Make transcript') + '</button>' : '') + '</div></div>' +
     '<div class="trans" ' + (f.tr ? '' : 'hidden') + '></div><p class="muted trstat" style="font-size:13px;margin:6px 0 0"></p>';
   const m = el.querySelector('audio,video');
-  m.src = mediaUrl(f); m.playbackRate = store.get('gs.rate', 1);
+  m.src = kept ? kept.url : mediaUrl(f); m.playbackRate = store.get('gs.rate', 1);
   m.onratechange = () => {};
-  mediaWatch(el, m, f);
+  mediaWatch(el, m, kept ? { name: kept.name, data: kept.blob, kind: 'media', size: kept.blob.size } : f);
+  if (vid) vidGrip(el.querySelector('.mstick'), m);
   if (!curMedia) curMedia = m;
   clipStrip(el.querySelector('.mstick'), f, () => m, c => clipRun(m, c));
   const tr = el.querySelector('.trans');
@@ -10072,8 +10119,9 @@ $('#start').addEventListener('click', async e => {
   }
   if (b.dataset.openAsg) {
     asgTarget = findItem(b.dataset.openAsg).it;
-    openDlg('<div class="bh"><h2>Open “' + esc(asgTarget.name) + '”</h2></div><div class="bb"><p style="margin-top:0">' + (sysName() ? 'Where is the ' + esc(sysName()) + ' download?' : 'Where are the papers?') + ' You can also drop the ZIP or the folder straight onto this assignment’s card.</p></div>' +
+    openDlg('<div class="bh"><h2>Open “' + esc(asgTarget.name) + '”</h2></div><div class="bb"><p style="margin-top:0">' + (sysName() ? 'Where is the ' + esc(sysName()) + ' download?' : 'Where are the papers?') + ' You can also drop the ZIP or the folder straight onto this assignment’s card.</p>' + ruHtml(asgTarget.setup, { now: 1 }) + '</div>' +
       '<div class="bf"><button class="btn" data-cancel>Cancel</button><button class="btn" data-pc>The ZIP or files…</button><button class="btn" data-dir>A whole folder…</button><button class="btn" data-scan>A scan of everyone’s papers…</button><button class="btn" data-match>Files to match to a roster…</button><button class="btn" data-nopaper title="For presentations, speeches and videos: a notes page for each student instead of a paper">No papers: presentations or videos…</button>' + (gcid() ? '<button class="btn primary" data-dv>From Google Drive…</button>' : '') + '</div>', true, 'lg');
+    ruWire($('#dlgBox'), asgTarget);
     $('#dlgBox').onclick = ev => { if (ev.target.closest('[data-cancel]')) return closeDlg(); if (ev.target.closest('[data-nopaper]')) { closeDlg(); return openStartNotes(asgTarget); } if (ev.target.closest('[data-pc]')) { closeDlg(); $('#asgIn').click(); } if (ev.target.closest('[data-dir]')) { closeDlg(); pickDir('#asgDirIn'); } if (ev.target.closest('[data-scan]')) { closeDlg(); scanFor = asgTarget; $('#scanIn').click(); } if (ev.target.closest('[data-match]')) { const a = asgTarget; askFilesOrFolder('Match files to a roster', 'Each file is matched to a student by the name in its file name or folder name, and you can fix any match.', list => matchToRoster(list, a), 'lg'); } if (ev.target.closest('[data-dv]')) { closeDlg(); openFromDrive(asgTarget); } };
     return;
   }
@@ -10111,7 +10159,7 @@ function editAssignment(id, unitId, clsId) {
     '<div class="field"><label for="aUnit">Unit</label><select id="aUnit" class="btn" style="justify-content:flex-start"></select><p class="muted" id="aUnitNote" style="font-size:13px;margin:6px 0 0" hidden></p></div>' +
     '<div class="field"><label>Type</label><div class="pseg" role="group" id="aType">' + bkCats().map(([t, , s]) => '<button type="button" data-atype="' + esc(t) + '" aria-pressed="' + (it.type === t) + '">' + esc(s) + '</button>').join('') + '</div><p class="muted" style="font-size:12.5px;margin:4px 0 0">' + esc(bkCountSay()) + '</p></div>' +
     '<div class="field"><label for="aDue">Due</label><input type="date" id="aDue" class="btn" value="' + esc(it.due || '') + '"></div>' +
-    '<p class="muted" style="font-size:13px;margin:0">The rubric is set the first time you open a download for it, with Rubric setup, and it’s remembered for this assignment.' + (f ? '' : ' Copies in other classes get the same rubric.') + '</p></div>' +
+    ruHtml(f ? it.setup : null) + '</div>' +
     '<div class="bf">' + (f ? '<button class="btn" data-del style="margin-right:auto">Delete</button>' : '') + '<button class="btn" data-cancel>Cancel</button><button class="btn primary" data-ok>Save</button></div>', true, 'lg');
   const ticked = () => [...document.querySelectorAll('#aClasses input:checked')].map(x => holderById(x.value)).filter(Boolean);
   const fillUnits = keep => {
@@ -10130,6 +10178,7 @@ function editAssignment(id, unitId, clsId) {
     const ok = $('#dlgBox [data-ok]'); ok.textContent = cs.length > 1 ? 'Add to ' + cs.length + ' classes' : 'Save'; ok.disabled = !cs.length;
   };
   fillUnits(start.u);
+  const ru = ruWire($('#dlgBox'), it);
   if (f) $('#aClass').onchange = () => fillUnits(null);
   else { $('#aClasses').onchange = () => fillUnits(null); $('#aUnit').onchange = () => fillUnits(null); }
   setTimeout(() => $('#aName').focus(), 0);
@@ -10154,6 +10203,7 @@ function editAssignment(id, unitId, clsId) {
           to.items.push(a);
         });
         saveLib(); closeDlg(); renderLib();
+        if (ru.got()) ruPut(it, ru.got());
         if (cs.length > 1) toast('Added to ' + cs.map(c => c === lib.loose ? 'No class' : c.name).join(', ').replace(/, ([^,]*)$/, ' and $1'));
         return;
       }
@@ -10165,6 +10215,7 @@ function editAssignment(id, unitId, clsId) {
       if (f.u !== to) f.u.items.splice(f.u.items.indexOf(it), 1);
       if (f.u !== to) to.items.push(it);
       saveLib(); closeDlg(); renderLib();
+      if (ru.got()) ruPut(it, ru.got());
       if (batch) { renderGrade(); renderList(); }   // a type changed while grading: the score panel follows
     }
   };
@@ -10329,6 +10380,7 @@ async function loadKept() {
   await keptFbCounts();
   if (!batch) renderLib();
   renderBackup();
+  setTimeout(vkSweep, 20000);
 }
 async function keptFbCounts() {
   for (const m of keptMeta.values()) {
@@ -10437,6 +10489,7 @@ async function forgetKept(id) {
   try { localStorage.removeItem(savedKey(id)); } catch {}
   const seen = store.get('gs.openSeen', {}); if (seen[id]) { delete seen[id]; store.set('gs.openSeen', seen); }
   keptMeta.delete(id); renderLib();
+  vkSweep();   // a video file kept for that download, when nothing else names it
 }
 const fmtSize = b => b > 1e9 ? (b / 1e9).toFixed(1) + ' GB' : b > 1e6 ? Math.round(b / 1e6) + ' MB' : Math.max(1, Math.round(b / 1e3)) + ' KB';
 function renderKept() { if (shellReady) homeRender(); }
@@ -10515,6 +10568,7 @@ async function removeAdded(st, path) {
   if (st.forder) st.forder = st.forder.filter(x => x !== 'f:' + path);
   refound(st); saveSoon(); renderList(); openStudent(cur);
   toast('Removed ' + fileShown(st, f.name));
+  vkSweep();
 }
 /* ---------------- remove or replace any file on a student's paper ---------------- */
 const markCount = f => Object.values(f.marks || {}).reduce((n, a) => n + a.length, 0);
@@ -12338,6 +12392,7 @@ document.addEventListener('drop', async e => {
   addFiles(batch.students[t.i], r.list);
 });
 $('#trAllBtn').onclick = openTranscripts;
+$('#partnersBtn').onclick = () => openPartners();
 $('#clipsBtn').onclick = () => { const c = (batch.clips || [])[0]; if (c) clipShow(c.id); };
 $('#dispBtn').onclick = openDisplay;
 $('#mkeyBtn').onclick = () => openMarkKey();
@@ -15173,6 +15228,132 @@ $('#shellMain').addEventListener('scroll', ovTipHide, { passive: true });
 $('#overviewBtn').onclick = openOverview;
 
 Object.assign(window.__gs, { bankBusy: () => bankBusyN, classStats, openOverview, pctList, pctRows, pv: () => pv, pastAvg, openSetup, savedRubrics, levelOf, tidyLevels, spreadBins });
+
+/* ---------------- bring in a rubric for any assignment: its rows read from the file where they can be, and a copy for every student ---------------- */
+const RU_NUM = /^(?:(?:level|score|band|points?|pts|marks?)\s*)?(\d{1,2})(?:\s*(?:pts?|points?|marks?))?$/i;
+const ruTidy = t => String(t || '').replace(/\s+/g, ' ').trim();
+const ruCell = (t, v) => ruTidy(t).replace(new RegExp('^(?:(?:level|score|band)\\s*)?' + v + '(?:\\s*(?:pts?|points?|marks?))?\\s*[:.)–-]?\\s*', 'i'), '').slice(0, 600);
+function ruFromWord(bytes) {
+  const w = openWord(bytes), page = document.createElement('div'); page.className = 'dpage'; w.pRuns = []; renderWord(w, page);
+  const m = rubricModel(page); if (!m || m.crits.length < 1 || m.levels.length < 2) return null;
+  const rows = m.crits.slice(0, 10).map((name, i) => {
+    const levels = {};
+    for (const c of m.cells) if (c.crit === i) { const t = ruCell(c.td.textContent, c.val); if (t) levels[c.val] = t; }
+    return { name: ruTidy(name).slice(0, 80) || 'Criterion ' + (i + 1), levels };
+  });
+  return { rows, top: Math.max(...m.levels) };
+}
+async function ruFromPdf(bytes) {
+  await workerReady;
+  const d = await pdfjsLib.getDocument({ data: bytes.slice(), isEvalSupported: false }).promise;
+  let tc; try { tc = await (await d.getPage(1)).getTextContent(); } finally { d.destroy(); }
+  const items = tc.items.filter(i => i.str && i.str.trim()).map(i => ({ s: i.str.trim(), x: i.transform[4], y: i.transform[5], w: i.width || 0, h: Math.abs(i.transform[3]) || 10 }));
+  if (items.length < 6) return null;
+  const lines = [];
+  for (const it of items.sort((a, b) => b.y - a.y)) { const l = lines.find(L => Math.abs(L.y - it.y) <= 3); if (l) l.items.push(it); else lines.push({ y: it.y, items: [it] }); }
+  let head = null;
+  for (const l of lines) {
+    const nums = l.items.map(it => { const m = RU_NUM.exec(it.s); return m ? { v: +m[1], c: it.x + it.w / 2 } : null; }).filter(Boolean).sort((a, b) => a.c - b.c);
+    if (nums.length < 2 || nums.some(n => n.v > 10) || new Set(nums.map(n => n.v)).size !== nums.length) continue;
+    const down = nums.every((n, k) => !k || n.v < nums[k - 1].v), up = nums.every((n, k) => !k || n.v > nums[k - 1].v);
+    if (down || up) { head = { y: l.y, cols: nums }; break; }
+  }
+  if (!head) return null;
+  const cols = head.cols, gap = (cols[cols.length - 1].c - cols[0].c) / Math.max(1, cols.length - 1), edge = cols[0].c - gap / 2;
+  const below = items.filter(it => it.y < head.y - 2), lh = below.length ? below.map(i => i.h).sort((a, b) => a - b)[below.length >> 1] : 10;
+  const left = below.filter(it => it.x + Math.min(it.w, gap) / 2 < edge).sort((a, b) => b.y - a.y);
+  if (!left.length) return null;
+  const tops = [];
+  let last = null;
+  for (const it of left) { if (last == null || last - it.y > lh * 2.1) tops.push({ y: it.y, words: [] }); tops[tops.length - 1].words.push(it.s); last = it.y; }
+  if (tops.length > 10) return null;
+  const rows = tops.map((t, k) => {
+    const hi = t.y + lh * 0.8, lo = k + 1 < tops.length ? tops[k + 1].y + lh * 0.8 : -1e9, levels = {};
+    for (const c of cols) {
+      const words = below.filter(it => it.y <= hi && it.y > lo && it.x + it.w / 2 >= edge && Math.abs(it.x + it.w / 2 - c.c) === Math.min(...cols.map(q => Math.abs(it.x + it.w / 2 - q.c)))).sort((a, b) => b.y - a.y || a.x - b.x).map(it => it.s);
+      const txt = ruTidy(words.join(' ')).slice(0, 600); if (txt) levels[c.v] = txt;
+    }
+    return { name: ruTidy(t.words.join(' ')).slice(0, 80), levels };
+  }).filter(r => r.name && Object.keys(r.levels).length);
+  if (!rows.length) return null;
+  return { rows, top: Math.max(...cols.map(c => c.v)) };
+}
+async function rubricRead(file) {
+  const bytes = new Uint8Array(await file.arrayBuffer()), name = file.name;
+  if (WORD_RX.test(name)) { let got = null; try { got = ruFromWord(bytes); } catch (e) { console.error(e); } if (!got) openWord(bytes); return { name, word: true, page: bytes, rows: got ? got.rows : [], top: got ? got.top : 0 }; }
+  if (isImg(name) || IMG_MORE.test(name)) {
+    if (isImg(name) && !await picReads(bytes)) throw new Error('damaged');
+    return { name, word: false, page: isImg(name) ? await imageToPdf(bytes, name) : await anyImageToPdf(bytes), rows: [], top: 0 };
+  }
+  await PDFLib.PDFDocument.load(bytes, { ignoreEncryption: true });
+  let got = null; try { got = await ruFromPdf(bytes); } catch (e) { console.error(e); }
+  return { name, word: false, page: bytes, rows: got ? got.rows : [], top: got ? got.top : 0 };
+}
+function rubricRowsInto(d, r) {
+  d.mode = 'rubric'; d.criteria = r.rows.map(x => x.name);
+  const lv = r.rows.map(x => x.levels || {}); if (lv.some(o => Object.keys(o).length)) d.levels = lv; else delete d.levels;
+  for (const k of ['tops', 'top', 'ib']) delete d[k];
+  if (r.top && r.top !== ROW_TOP && topOk(r.top)) d.top = r.top;
+  return d;
+}
+function rubricKeep(r) {
+  const id = uid(); let bin = ''; for (let i = 0; i < r.page.length; i += 0x8000) bin += String.fromCharCode.apply(null, r.page.subarray(i, i + 0x8000));
+  return store.set('gs.rp.' + id, btoa(bin)) ? { id, name: r.name } : null;
+}
+function rubricSays(su) {
+  if (!su) return '<span>Not set yet</span>';
+  return (su.mode === 'rubric' ? '<span>Rubric rows:</span> <span data-raw>' + esc(su.criteria.join(' · ')) + '</span>' : '<span>Just the total, out of</span> <span data-raw>' + esc(fmtNum(+su.outOf || 0)) + '</span>') +
+    (su.rubricPage ? '<br><span>A copy for every student:</span> <span data-raw>' + esc(su.rubricPage.name || 'Rubric page.pdf') + '</span>' : '');
+}
+function ruHtml(su, o) {
+  return '<div class="field rubup" id="rubUp"><label>Rubric</label><span class="rusays" id="ruSays">' + rubricSays(su) + '</span>' +
+    '<span class="rurow"><button type="button" class="btn sm" id="ruPick">Bring in a rubric…</button><span class="muted">Word, PDF or a picture. Rows are read from a table where they can be.</span></span><div id="ruGot"' + (o && o.now ? ' data-now' : '') + ' hidden></div></div>';
+}
+function ruWire(box, it, onUse) {
+  let got = null;
+  const show = () => {
+    const g = $('#ruGot'); if (!g) return;
+    if (!got) { g.hidden = true; return; }
+    const r = got.r, n = r.rows.length;
+    g.hidden = false;
+    g.innerHTML = '<p class="rufile"><b data-raw>' + esc(r.name) + '</b></p>' +
+      (n ? '<p class="rufile">Rows found in it:</p><ol class="rurows">' + r.rows.map(x => '<li><b data-raw>' + esc(x.name) + '</b>' + (Object.keys(x.levels).length ? '<span class="muted" data-raw>' + esc(Object.entries(x.levels).sort((a, b) => b[0] - a[0]).map(([v, t]) => v + ': ' + t).join(' · ').slice(0, 160)) + '</span>' : '') + '</li>').join('') + '</ol>' +
+        '<label class="chk"><input type="checkbox" id="ruRows"' + (got.rows ? ' checked' : '') + '> Score with these rows</label>'
+        : '<p class="muted runo">No rubric table could be read from this file, so its rows aren’t filled in. You can type them in Rubric setup.</p>') +
+      '<label class="chk"><input type="checkbox" id="ruCopy"' + (got.copy ? ' checked' : '') + '> Give every student a copy to mark on</label>' +
+      (g.hasAttribute('data-now') ? '<div><button type="button" class="btn sm primary" id="ruUse">Use this rubric</button></div>' : '');
+  };
+  const live = { signal: dlgOff.signal };
+  box.addEventListener('change', e => { if (!got) return; if (e.target.id === 'ruRows') got.rows = e.target.checked; if (e.target.id === 'ruCopy') got.copy = e.target.checked; }, live);
+  box.addEventListener('click', async e => {
+    if (e.target.closest('#ruUse')) { if (!got || (!got.rows && !got.copy)) return toast('Tick what to do with it first'); const ok = ruPut(it, got); if (ok) { $('#ruSays').innerHTML = rubricSays(it.setup); got = null; show(); if (onUse) onUse(); } return; }
+    if (!e.target.closest('#ruPick')) return;
+    const inp = document.createElement('input'); inp.type = 'file'; inp.accept = '.docx,.docm,.pdf,.png,.jpg,.jpeg,.heic,.heif,.webp,image/*,application/pdf';
+    inp.onchange = async () => {
+      const f = inp.files[0]; if (!f) return;
+      try { const r = await rubricRead(f); got = { r, rows: !!r.rows.length, copy: !r.rows.length }; show(); }
+      catch (err) { console.error(err); toast('That file couldn’t be opened as a Word file, PDF or picture'); }
+    };
+    inp.click();
+  }, live);
+  return { got: () => got };
+}
+function ruPut(it, got) {
+  if (!got || (!got.rows && !got.copy)) return true;
+  const r = got.r, live = batch && batch.assignment === it;
+  const d = JSON.parse(JSON.stringify(live ? setup : setupOver(it.setup || store.get('gs.setup', null))));
+  if (got.rows) rubricRowsInto(d, r);
+  if (live) { openSetup({ draft: d, page: got.copy ? { bytes: r.page, name: r.name } : undefined }); return false; }
+  if (got.copy) {
+    const k = rubricKeep(r); if (!k) { toast('That rubric file is too big to keep. Try a smaller PDF or a screenshot.'); return false; }
+    if (d.rubricPage) store.del('gs.rp.' + d.rubricPage.id);
+    d.rubricPage = k; d.rubricPos = r.word ? 'start' : 'end';
+  }
+  delete d.spot; it.setup = d; shareRubric(it); saveLib();
+  toast('The rubric is set for “' + it.name + '”');
+  return true;
+}
+Object.assign(window.__gs, { rubricRead, rubricRowsInto, ruFromPdf });
 
 /* ---------------- gradebook: every assignment for a class, by term, with a term grade from the teacher's own weights ---------------- */
 const BK_XC = ['xc', 'Extra credit', 'Extra credit'];
@@ -19708,6 +19889,7 @@ async function removeHere() {
     await new Promise(res => { const r = indexedDB.deleteDatabase('grading-studio-safety'); r.onsuccess = r.onerror = r.onblocked = () => res(); });
     await schRemoveAll();
     await exRemoveAll();
+    await vkClear();   // video files kept in this browser
   } catch (e) { console.error(e); tabsOver('done'); return sayDlg('Not everything could be removed. Close any other Grading Studio tabs and try again.'); }
   for (let i = localStorage.length - 1; i >= 0; i--) { const k = localStorage.key(i); if (k && (k.startsWith('gsc.saved.') || k.startsWith('gsc.forgot.') || k.startsWith('gs.') && !LS_LOOKS.test(k))) localStorage.removeItem(k); }
   try { localStorage.removeItem('gsc.win'); } catch {}
@@ -21467,18 +21649,25 @@ function linkPlayer(url) {
   return null;
 }
 const linkTitle = f => f.name.replace(LINK_RX, '').replace(/ \(added \d+\)$/, '');
+const vidRef = data => { if (!data || !data.length || data.length > 4000) return ''; let s = ''; try { s = new TextDecoder().decode(data); } catch { return ''; } const m = /^\s*URL\s*=\s*gs-video:([\w-]{6,40})\s*$/mi.exec(s); return m ? m[1] : ''; };
+const vidBytes = (id, name, size) => new TextEncoder().encode('[InternetShortcut]\r\nURL=gs-video:' + id + '\r\nName=' + String(name || '').replace(/[\r\n]+/g, ' ').slice(0, 120) + '\r\nSize=' + (size || 0) + '\r\n');
+const linkKey = f => { const v = vidRef(f.data); return v ? 'gs-video:' + v : linkOf(f.data); };
 
 function linkCard(st, f) {
-  const url = linkOf(f.data), play = linkPlayer(url);
+  if (vidRef(f.data)) return vfileCard(st, f);
+  const url = linkOf(f.data), play = linkPlayer(url), ticks = !!play && (!play.frame || frameTicks(play.frame));
   const el = document.createElement('div'); el.className = 'media vlink';
   el.innerHTML = '<div class="mstick"><div class="mhead"><b>' + esc(linkTitle(f)) + '</b><span class="muted">' + esc(linkHost(url)) + '</span></div><div class="vlslot" hidden></div>' +
     '<div class="mctl">' + (play ? '<button class="btn sm primary" data-vplay aria-pressed="false">▶ Play here</button>' : '') +
+    (ticks ? '<button class="btn sm" data-vstamp title="Adds where the video is to your comment, like [2:15]">+ Time to comment</button>' : '') +
     '<button class="btn sm' + (play ? '' : ' primary') + '" data-vopen title="Opens the video in a window of its own, to keep beside this one">Open in its own window</button>' +
     '<button class="btn sm" data-vcopy>Copy link</button></div>' +
     '<p class="muted vlnote">' + (play ? 'Only the link is kept here; the video stays where it is. If it asks you to sign in or won’t play, open it in its own window.' : 'Only the link is kept here. This site can’t play inside the page, so it opens in a window of its own.') + '</p></div>';
+  const now = () => { const m = el.querySelector('.vlslot video, .vlslot audio'); if (m) return m; const fr = el.querySelector('.vlslot iframe'), t = fr && frameTime(fr); return t == null ? null : { currentTime: t }; };
   el.onclick = e => {
     if (e.target.closest('[data-vopen]')) { window.open(url, '_blank', 'noopener,noreferrer,popup,width=980,height=640'); return; }
     if (e.target.closest('[data-vcopy]')) { navigator.clipboard.writeText(url).then(() => toast('Link copied'), () => toast('The link couldn’t be copied')); return; }
+    if (e.target.closest('[data-vstamp]')) { const m = now(); if (!m) return toast('Press ▶ Play here first, then play the video to the moment you mean'); addStamp(st, m.currentTime); return; }
     const b = e.target.closest('[data-vplay]'); if (!b) return;
     const slot = el.querySelector('.vlslot'), on = slot.hidden;
     slot.hidden = !on; b.setAttribute('aria-pressed', on); b.textContent = on ? 'Close the player' : '▶ Play here';
@@ -21488,12 +21677,119 @@ function linkCard(st, f) {
   const fill = c => {
     const slot = el.querySelector('.vlslot'), b = el.querySelector('[data-vplay]');
     slot.hidden = false; slot.innerHTML = ''; b.setAttribute('aria-pressed', 'true'); b.textContent = 'Close the player';
-    if (play.frame) slot.appendChild(playerFrame(c ? clipFrame(play.frame, c).src : play.frame, linkTitle(f)));
-    else { const m = document.createElement(play.video ? 'video' : 'audio'); m.controls = true; m.preload = 'metadata'; m.src = play.video || play.audio; slot.appendChild(m); if (c) clipRun(m, c); }
+    if (play.frame) { const fr = playerFrame(frameTicking(c ? clipFrame(play.frame, c).src : play.frame), linkTitle(f)); slot.appendChild(fr); frameClock(fr); vidGrip(slot, fr); }
+    else { const m = document.createElement(play.video ? 'video' : 'audio'); m.controls = true; m.preload = 'metadata'; m.src = play.video || play.audio; slot.appendChild(m); if (play.video) vidGrip(slot, m); if (c) clipRun(m, c); }
   };
-  clipStrip(el.querySelector('.mstick'), f, () => el.querySelector('.vlslot video, .vlslot audio'), c => (play ? fill(c) : clipShow(c.id)));
+  clipStrip(el.querySelector('.mstick'), f, now, c => (play ? fill(c) : clipShow(c.id)), play && play.frame && !ticks ? 'drive' : '');
   return el;
 }
+
+/* ---------- video files kept in this browser ---------- */
+let vkDbP = null;
+const vkDb = () => vkDbP ||= new Promise((res, rej) => { const r = indexedDB.open('grading-studio-videos', 1); r.onupgradeneeded = () => r.result.createObjectStore('v'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
+async function vkDo(mode, fn) {
+  const db = await vkDb();
+  return new Promise((res, rej) => { const tx = db.transaction('v', mode), req = fn(tx.objectStore('v')); tx.oncomplete = () => res(req && req.result); tx.onerror = () => rej(tx.error); tx.onabort = () => rej(tx.error); });
+}
+const vkSeen = new Map();   // id -> { name, url, blob } or null, while this page is open
+async function vkPut(file, id) {
+  id = id || uid();
+  try { const e = navigator.storage && navigator.storage.estimate ? await navigator.storage.estimate() : null; if (e && e.quota && e.quota - (e.usage || 0) < file.size * 1.05) throw new Error('room'); } catch (err) { if (err.message === 'room') throw new Error('There isn’t room on this computer for that video (' + fmtSize(file.size) + '). Free up some space, or use a link to the video instead.'); }
+  askToKeep();
+  try { await vkDo('readwrite', o => o.put({ id, name: file.name, type: file.type || MIME[extOf(file.name)] || '', size: file.size, at: Date.now(), blob: file }, id)); }
+  catch (err) { console.error(err); throw new Error('This browser couldn’t keep that video, usually because the computer is out of room. A link to the video works at any size.'); }
+  const was = vkSeen.get(id); if (was) URL.revokeObjectURL(was.url); vkSeen.delete(id);
+  return id;
+}
+async function vkGet(id) {
+  if (vkSeen.has(id)) return vkSeen.get(id);
+  let r = null; try { r = await vkDo('readonly', o => o.get(id)); } catch (e) { console.error(e); }
+  const out = r && r.blob ? { name: r.name, size: r.size, blob: r.blob, url: URL.createObjectURL(r.blob.type ? r.blob : new Blob([r.blob], { type: r.type || MIME[extOf(r.name)] || '' })) } : null;
+  vkSeen.set(id, out); return out;
+}
+async function vkSweep() {
+  try {
+    if (!vkDbP && indexedDB.databases && !(await indexedDB.databases()).some(d => d.name === 'grading-studio-videos')) return;   // never made here: nothing to sweep, and no database made for it
+    const ids = await vkDo('readonly', o => o.getAllKeys()); if (!ids || !ids.length) return;
+    const used = new Set();
+    for (const r of (await idbDo('readonly', o => o.getAll())) || []) { const v = r && /\.url$/i.test(r.path || '') && vidRef(r.data); if (v) used.add(v); }
+    if (batch) for (const st of batch.students) for (const f of st.files.concat(st.gone || [])) { const v = f.kind === 'link' && vidRef(f.data); if (v) used.add(v); }
+    const old = Date.now() - 15 * 60e3;
+    for (const id of ids) { if (used.has(id)) continue; const r = await vkDo('readonly', o => o.get(id)); if (r && r.at > old) continue; await vkDo('readwrite', o => o.delete(id)); const was = vkSeen.get(id); if (was) URL.revokeObjectURL(was.url); vkSeen.delete(id); }
+  } catch (e) { console.error(e); }
+}
+const vkClear = () => vkDo('readwrite', o => o.clear()).catch(e => console.error(e)).then(() => { for (const v of vkSeen.values()) if (v) URL.revokeObjectURL(v.url); vkSeen.clear(); });
+const vidPick = () => new Promise(res => { const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'video/*,audio/*,' + Object.keys(MIME).map(x => '.' + x).join(','); inp.onchange = () => res(inp.files[0] || null); inp.click(); });
+function vfileCard(st, f) {
+  const id = vidRef(f.data), hold = document.createElement('div'); hold.className = 'media vfile';
+  hold.innerHTML = '<div class="mstick"><div class="mhead"><b>' + esc(linkTitle(f)) + '</b><span class="muted">Opening the video…</span></div></div>';
+  vkGet(id).then(k => {
+    if (!hold.isConnected && !hold.parentNode) return;
+    if (k) { hold.replaceWith(mediaCard(st, f, k)); return; }
+    hold.querySelector('.mhead .muted').textContent = 'video file';
+    hold.querySelector('.mstick').insertAdjacentHTML('beforeend', '<p class="vlnote">This video isn’t in this browser. A video file stays in the browser it was added in: it doesn’t go in take-home files or the linked folder.</p><div class="mctl"><button class="btn sm primary" data-vkback>Choose the video file…</button></div>');
+    hold.querySelector('[data-vkback]').onclick = async () => {
+      const file = await vidPick(); if (!file) return;
+      try { await vkPut(file, id); toast('The video is back'); openStudent(cur, f.path); } catch (err) { sayDlg(err.message); }
+    };
+  });
+  return hold;
+}
+
+/* ---------- where a site's player is ---------- */
+const frameTicks = src => /youtube-nocookie\.com\/embed\/|player\.vimeo\.com\//.test(src);
+function frameTicking(src) {
+  if (!/youtube-nocookie\.com\/embed\//.test(src)) return src;
+  return src + (src.includes('?') ? '&' : '?') + 'enablejsapi=1' + (/^https?:/.test(location.origin) ? '&origin=' + encodeURIComponent(location.origin) : '');
+}
+const clocks = new Set();
+function frameClock(fr) {
+  if (!frameTicks(fr.src)) return;
+  const k = { fr, t: null, at: 0, on: false, yt: /youtube/.test(fr.src) }, to = k.yt ? 'https://www.youtube-nocookie.com' : 'https://player.vimeo.com';
+  const ask = () => { try { const w = fr.contentWindow; if (!w) return; if (k.yt) w.postMessage(JSON.stringify({ event: 'listening', id: 1, channel: 'widget' }), to); else for (const v of ['timeupdate', 'play', 'pause', 'seeked']) w.postMessage(JSON.stringify({ method: 'addEventListener', value: v }), to); } catch {} };
+  k.ask = ask; clocks.add(k);
+  let n = 0; fr.addEventListener('load', () => { ask(); const iv = setInterval(() => { if (k.t != null || ++n > 12 || !fr.isConnected) return clearInterval(iv); ask(); }, 500); });
+}
+window.addEventListener('message', e => {
+  if (!clocks.size || !/^https:\/\/(www\.youtube-nocookie\.com|player\.vimeo\.com)$/.test(e.origin)) return;
+  for (const k of clocks) {
+    if (!k.fr.isConnected) { clocks.delete(k); continue; }
+    if (e.source !== k.fr.contentWindow) continue;
+    let d = e.data; if (typeof d === 'string') try { d = JSON.parse(d); } catch { return; }
+    if (!d || typeof d !== 'object') return;
+    const at = (t, on) => { if (typeof t === 'number' && isFinite(t)) { k.t = t; k.at = Date.now(); } if (on != null) k.on = on; };
+    if (k.yt && d.info && typeof d.info === 'object') at(d.info.currentTime, d.info.playerState != null ? d.info.playerState === 1 : null);
+    else if (!k.yt) { if (d.event === 'ready') k.ask(); else if (d.event === 'timeupdate' || d.event === 'seeked') at(d.data && d.data.seconds, d.event === 'timeupdate' ? true : null); else if (d.event === 'pause') at(d.data && d.data.seconds, false); else if (d.event === 'play') at(d.data && d.data.seconds, true); }
+    return;
+  }
+});
+function frameTime(fr) { for (const k of clocks) if (k.fr === fr) return k.t == null ? null : k.t + (k.on ? (Date.now() - k.at) / 1000 : 0); return null; }
+
+/* ---------- a video as big as she likes ---------- */
+const VID_MIN = 160;
+function vidHApply(h) {
+  const r = document.documentElement;
+  if (h) { r.style.setProperty('--vid-h', Math.round(h) + 'px'); r.classList.add('vidsized'); } else { r.style.removeProperty('--vid-h'); r.classList.remove('vidsized'); }
+  const p = $('#paper'); r.classList.toggle('vidtall', !!h && !!p && p.clientHeight > 0 && h > p.clientHeight * 0.55);   // that tall, it scrolls away with the page instead of covering the notes page
+}
+function vidGrip(host, player) {
+  const g = document.createElement('div'); g.className = 'vgrip'; g.tabIndex = 0; g.setAttribute('role', 'separator'); g.setAttribute('aria-orientation', 'horizontal');
+  g.setAttribute('aria-label', 'Video size'); g.title = 'Drag to make the video bigger or smaller. Double-click for the usual size.';
+  player.after(g);
+  const set = (h, keep) => { h = Math.max(VID_MIN, Math.min(window.innerHeight * 0.92, h)); vidHApply(h); if (keep) store.set('gs.vidH', Math.round(h)); };
+  let tapped = 0;
+  g.onpointerdown = e => {
+    e.preventDefault();
+    if (Date.now() - tapped < 400) { tapped = 0; store.del('gs.vidH'); vidHApply(0); return; }   // a double click: the usual size
+    g.setPointerCapture(e.pointerId); g.classList.add('on');
+    const y0 = e.clientY, h0 = player.getBoundingClientRect().height, sh = document.createElement('div'); sh.className = 'vgripshield'; document.body.appendChild(sh);   // a site's player would catch the pointer
+    g.onpointermove = ev => set(h0 + ev.clientY - y0);
+    g.onpointerup = g.onpointercancel = ev => { g.onpointermove = g.onpointerup = g.onpointercancel = null; g.classList.remove('on'); sh.remove(); const dy = ev.clientY - y0; if (Math.abs(dy) < 3) tapped = Date.now(); else set(h0 + dy, true); };
+  };
+  g.onkeydown = e => { const d = e.key === 'ArrowDown' ? 40 : e.key === 'ArrowUp' ? -40 : 0; if (!d) return; e.preventDefault(); e.stopPropagation(); set(player.getBoundingClientRect().height + d, true); };
+  vidHApply(store.get('gs.vidH', 0));
+}
+Object.assign(window.__gs, { vidRef, linkKey, vkPut, vkGet, vkSweep, frameTicking, vidHApply });
 
 /* ---------- the notes page ---------- */
 const NP_W = 595.28, NP_H = 841.89, NP_M = 48, NP_TAIL = '%GradingStudio-notes';
@@ -21580,7 +21876,7 @@ async function addAndFind(st, list) {
 }
 const copyFor = (st, f) => ({ path: f.name, file: new File([f.data], f.name), from: st.key });
 async function partnerCopy(st, f, to) {
-  if (f.kind === 'link') { const have = to.files.find(x => x.kind === 'link' && linkOf(x.data) === linkOf(f.data)); if (have) return have; }
+  if (f.kind === 'link') { const have = to.files.find(x => x.kind === 'link' && linkKey(x) === linkKey(f)); if (have) return have; }
   const have = to.files.find(x => x.from === st.key && x.name === f.name); if (have) return have;
   return (await addAndFind(to, [copyFor(st, f)]))[0] || null;
 }
@@ -21609,59 +21905,64 @@ function partnerList(st, picked, locked) {
 }
 
 /* ---------- Add: A video… ---------- */
-const VIDEO_BIG = 120e6;   // about what this browser can keep of one added file
-function openAddVideo(st) {
+const VID_HINT = 'Paste the link: Google Drive, YouTube or anywhere else';
+function openAddVideo(st, asFile) {
   if (!st) return;
   const who = shownName(st, batch.students.indexOf(st)), rows = npRows(setup), picked = new Set(), locked = new Set(groupMates(st));
-  let np = notesFileOf(st) ? '' : (npLast === 'rubric' && !rows.length ? 'lined' : npLast), file = null;
+  let np = notesFileOf(st) ? '' : (npLast === 'rubric' && !rows.length ? 'lined' : npLast), file = null, by = asFile ? 'file' : 'link';
   const pl = partnerList(st, picked, locked);
   openDlg('<div class="bh"><h2>Video for ' + esc(who) + '</h2><button class="icon" data-cancel aria-label="Close" style="margin-left:auto">✕</button></div>' +
-    '<div class="bb vdbox"><label class="vdlab" for="vdLink">Link to the video</label><input class="btn" id="vdLink" placeholder="Paste the link: Google Drive, YouTube or anywhere else" autocomplete="off" spellcheck="false">' +
-    '<p class="muted vdsay" id="vdSay">Only the link is kept here, so the video stays where it is and nothing slows down. <button class="link" id="vdFile">Use a video file on this computer instead…</button></p>' +
+    '<div class="bb vdbox"><span class="seg vdby" role="group" aria-label="The video"><button data-vdby="link" aria-pressed="true">A link</button><button data-vdby="file" aria-pressed="false">A video file</button></span>' +
+    '<div id="vdLinkBox"><input class="btn" id="vdLink" placeholder="' + VID_HINT + '" aria-label="Link to the video" autocomplete="off" spellcheck="false">' +
+    '<p class="muted vdsay">Only the link is kept here, so the video stays where it is and nothing slows down.</p></div>' +
+    '<div id="vdFileBox" hidden><div class="vdfile"><button class="btn" id="vdFile">Choose a video file…</button><span id="vdFileName" class="muted">or drop it here</span></div>' +
+    '<p class="muted vdsay">Kept in this browser on this computer, at any length, as long as there is room. It doesn’t go in take-home files.</p></div>' +
     '<label class="vdlab" for="vdName">Name it</label><input class="btn" id="vdName" value="Presentation video" autocomplete="off">' +
     '<div class="vdlab">Notes page<small>A page to write on while you watch. It is marked, scored and returned like a paper.</small></div>' + npTiles(np, rows, true) +
-    '<div class="vdlab">Partners<small>Tick everyone else in the video. They get the link and the notes page, and one set of marks and one grade covers the group.</small></div>' + pl.html + '</div>' +
+    '<div class="vdlab">Partners<small>Tick everyone else in the video. They get the video and the notes page, and one set of marks and one grade covers the group.</small></div>' + pl.html + '</div>' +
     '<div class="bf"><button class="btn" data-cancel>Cancel</button><button class="btn primary" id="vdAdd" disabled>Add to ' + esc(who) + '</button></div>');
-  const link = $('#vdLink'), add = $('#vdAdd'), say = $('#vdSay'), say0 = say.innerHTML;
+  const link = $('#vdLink'), add = $('#vdAdd'), box = $('#dlgBox');
   const ready = () => {
-    const v = link.value.trim(), ok = file ? true : !!linkClean(v);
-    add.disabled = !ok; link.classList.toggle('bad', !!v && !ok && !file);
+    const v = link.value.trim(), ok = by === 'file' ? !!file : !!linkClean(v);
+    add.disabled = !ok; link.classList.toggle('bad', by === 'link' && !!v && !ok);
     add.textContent = 'Add to ' + who + (picked.size ? ' and ' + picked.size + (picked.size === 1 ? ' partner' : ' partners') : '');
   };
+  const setBy = k => { by = k; for (const b of box.querySelectorAll('[data-vdby]')) b.setAttribute('aria-pressed', b.dataset.vdby === k); $('#vdLinkBox').hidden = k !== 'link'; $('#vdFileBox').hidden = k !== 'file'; ready(); if (k === 'link') link.focus(); };
+  const useFile = f => { if (!f) return; if (!MEDIA_RX.test(f.name) && !/^(video|audio)\//.test(f.type)) return toast('That isn’t a video or sound file'); file = f; $('#vdFileName').innerHTML = '<b>' + esc(f.name) + '</b> · ' + fmtSize(f.size); setBy('file'); };
   pl.draw(); link.oninput = ready; $('#vdFind').oninput = pl.draw;
-  $('#dlgBox').onclick = async e => {
+  box.ondragover = e => { if (by === 'file') e.preventDefault(); };
+  box.ondrop = e => { if (by !== 'file') return; e.preventDefault(); useFile(e.dataTransfer.files[0]); };
+  box.onclick = async e => {
     if (e.target.closest('[data-cancel]')) return closeDlg();
-    const t = e.target.closest('.nptile'); if (t && !t.disabled) { np = t.dataset.np; npPick($('#dlgBox'), np); return; }
+    const t = e.target.closest('.nptile'); if (t && !t.disabled) { np = t.dataset.np; npPick(box, np); return; }
     const row = e.target.closest('[data-vdto]'); if (row && !row.disabled) { const s = batch.students[+row.dataset.vdto]; if (picked.has(s)) picked.delete(s); else picked.add(s); pl.draw(); ready(); return; }
-    if (e.target.closest('#vdFile')) {
-      const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'video/*,audio/*';
-      inp.onchange = () => { file = inp.files[0] || null; if (!file) return; link.value = ''; link.disabled = true; link.placeholder = file.name;
-        say.innerHTML = '<b>' + esc(file.name) + '</b> (' + Math.max(1, Math.round(file.size / 1e6)) + ' MB) will be kept in this browser, on ' + esc(who) + '’s paper. Short clips only: for anything long, a link is better. Partners share the notes page and the grade. <button class="link" id="vdUnfile">Use a link instead</button>'; ready(); };
-      inp.click(); return;
-    }
-    if (e.target.closest('#vdUnfile')) { file = null; link.disabled = false; link.placeholder = 'Paste the link: Google Drive, YouTube or anywhere else'; say.innerHTML = say0; ready(); link.focus(); return; }
+    const sb = e.target.closest('[data-vdby]'); if (sb) { setBy(sb.dataset.vdby); if (sb.dataset.vdby === 'file' && !file) useFile(await vidPick()); return; }
+    if (e.target.closest('#vdFile')) { useFile(await vidPick()); return; }
     if (e.target !== add || add.disabled) return;
-    const url = file ? '' : linkClean(link.value), name = npFileName($('#vdName').value || 'Presentation video'), partners = [...picked], kind = np;
-    if (file && file.size > VIDEO_BIG && !await askDlg('This video is ' + Math.round(file.size / 1e6) + ' MB. A file that big usually can’t be kept in this browser, so it may be gone the next time you open this assignment.\n\nA link to the video works at any size.', { ok: 'Add the file anyway', cancel: 'Go back' })) return;
+    const url = by === 'file' ? '' : linkClean(link.value), name = npFileName($('#vdName').value || 'Presentation video'), partners = [...picked], kind = np;
     add.disabled = true; add.textContent = 'Adding…';
-    closeDlg();
-    try { await videoAdd(st, { url, file, name, kind, partners }); } catch (err) { console.error(err); toast('That couldn’t be added: ' + ((err && err.message) || err)); }
+    try { await videoAdd(st, { url, file: by === 'file' ? file : null, name, kind, partners }); closeDlg(); }
+    catch (err) { console.error(err); add.disabled = false; ready(); sayDlg((err && err.message) || String(err)); }
   };
-  link.focus();
+  if (asFile) setBy('file'); else link.focus();
 }
-async function videoAdd(st, o) {
-  const list = [];
-  if (o.file) list.push({ path: o.file.name, file: o.file });
-  else list.push({ path: o.name + '.url', file: new File([linkBytes(o.url)], o.name + '.url') });
+async function videoEntry(o) {
+  if (o.file) { const id = await vkPut(o.file); return { path: o.name + '.url', file: new File([vidBytes(id, o.file.name, o.file.size)], o.name + '.url') }; }
+  return { path: o.name + '.url', file: new File([linkBytes(o.url)], o.name + '.url') };
+}
+async function videoAdd(st, o, quiet) {
+  const list = [await videoEntry(o)];
   if (o.kind) { npLast = o.kind; const n = npFileName(o.name.replace(/\s*video$/i, '') + ' notes') + '.pdf'; list.push({ path: n, file: new File([await notesPdf(o.kind, batch.name, npRows(setup))], n, { type: 'application/pdf' }) }); }
   const made = await addAndFind(st, list), vid = made.find(f => f.kind === 'link' || f.kind === 'media') || made[0], page = made.find(f => f.kind === 'pdf') || notesFileOf(st);
   const all = [...new Set([...groupMates(st), ...(o.partners || [])])];
   if (all.length) await partnersJoin(st, page || vid, all, made.filter(f => f.kind !== 'media'));
+  if (quiet) return made;
   saveSoon(); renderList();
   toast('Added the video to ' + groupNames([st, ...all]));
   await openStudent(batch.students.indexOf(st), vid && vid.path);
   return made;
 }
+const groupPaper = st => st.files.find(f => !f.virtual && (viewable(f) || f.kind === 'docx')) || null;
 
 /* ---------- Add: A notes page… ---------- */
 function openAddNotes(st) {
@@ -21688,33 +21989,147 @@ function openAddNotes(st) {
   };
 }
 
-/* ---------- an assignment with no papers at all: a notes page for everyone on the roster ---------- */
+/* ---------- videos and partners for the whole class, in one list ---------- */
+function pvList(host, rows) {
+  const vid = new Map(), grp = new Map();   // k -> { url, file } ; k -> a Set shared by everyone in one new group
+  let open = null;   // the row whose partners are being picked
+  const R = k => rows.find(r => r.k === k), mine = k => grp.get(k) || new Set([k]);
+  const old = k => new Set([k, ...((R(k) || {}).mates || [])]);
+  const team = k => { const s = new Set(); for (const x of mine(k)) for (const y of old(x)) s.add(y); for (const x of [...s]) for (const y of mine(x)) s.add(y); return [...s].sort((a, b) => rows.findIndex(r => r.k === a) - rows.findIndex(r => r.k === b)); };
+  const leadOf = k => { const t = team(k); return t.find(x => R(x) && R(x).has) || t.find(x => vid.get(x) && (vid.get(x).url || vid.get(x).file)) || t[0]; };
+  const tog = (k, o) => {
+    const g = mine(k);
+    if (g.has(o)) { g.delete(o); grp.delete(o); if (g.size < 2) for (const x of g) grp.delete(x); }
+    else { const og = grp.get(o); if (og) { og.delete(o); if (og.size < 2) for (const x of og) grp.delete(x); } g.add(o); for (const x of g) grp.set(x, g); const v = vid.get(o); if (v && !vid.get(k)) { vid.set(k, v); vid.delete(o); } }
+  };
+  const label = k => (R(k) || {}).label || k;
+  const draw = () => {
+    host.innerHTML = rows.map((r, i) => {
+      const t = team(r.k), lead = leadOf(r.k), v = vid.get(r.k) || {}, others = t.filter(x => x !== r.k);
+      let what;
+      if (lead !== r.k && (R(lead).has || (vid.get(lead) && (vid.get(lead).url || vid.get(lead).file)))) what = '<span class="muted"><span>Same video as:</span> <b data-raw>' + esc(label(lead)) + '</b></span>';
+      else if (r.has) what = '<span class="pvhas" data-raw title="' + esc(r.has) + '">' + esc(r.has) + '</span>';
+      else if (v.file) what = '<span class="pvfile"><b data-raw>' + esc(v.file.name) + '</b> <span data-raw>' + fmtSize(v.file.size) + '</span><button class="icon" data-pvunfile="' + i + '" aria-label="Take the file off">✕</button></span>';
+      else what = '<input class="btn pvlink' + (v.url && !linkClean(v.url) ? ' bad' : '') + '" data-pvlink="' + i + '" value="' + esc(v.url || '') + '" placeholder="Paste a link to their video" aria-label="Link to the video" autocomplete="off" spellcheck="false"><button class="btn sm" data-pvfile="' + i + '" title="A video file on this computer">File…</button>';
+      return '<div class="pvrow' + (open === r.k ? ' on' : '') + '"><span class="pvname" data-raw>' + esc(r.label) + '</span><span class="pvvid">' + what + '</span>' +
+        '<button class="btn sm pvpbtn" data-pvp="' + i + '" aria-expanded="' + (open === r.k) + '">' + (others.length ? '<span>With:</span> <span data-raw>' + esc(others.map(label).join(', ')) + '</span>' : '+ Partners') + '</button>' +
+        (open === r.k ? '<div class="pvpick" role="group" aria-label="Partners">' + rows.filter(x => x.k !== r.k).map(x => { const lock = old(r.k).has(x.k), on = lock || t.includes(x.k);
+          return '<button class="pvchip" data-pvto="' + rows.indexOf(x) + '" aria-pressed="' + on + '"' + (lock ? ' disabled title="Already in the group"' : '') + ' data-raw>' + esc(x.label) + '</button>'; }).join('') + '<button class="link" data-pvdone>Done</button></div>' : '') + '</div>';
+    }).join('');
+  };
+  host.addEventListener('input', e => { const l = e.target.closest('[data-pvlink]'); if (!l) return; const k = rows[+l.dataset.pvlink].k; vid.set(k, { url: l.value }); l.classList.toggle('bad', !!l.value.trim() && !linkClean(l.value)); host.dispatchEvent(new Event('pvchange')); });
+  host.addEventListener('change', e => { if (e.target.closest('[data-pvlink]')) draw(); });   // the group's other rows follow once the link is in
+  host.addEventListener('click', async e => {
+    const b = e.target.closest('[data-pvp],[data-pvto],[data-pvdone],[data-pvfile],[data-pvunfile]'); if (!b) return;
+    e.stopPropagation();
+    if (b.dataset.pvp != null) { const k = rows[+b.dataset.pvp].k; open = open === k ? null : k; }
+    else if (b.dataset.pvdone != null) open = null;
+    else if (b.dataset.pvto != null && open) tog(open, rows[+b.dataset.pvto].k);
+    else if (b.dataset.pvfile != null) { const f = await vidPick(); if (!f) return; vid.set(rows[+b.dataset.pvfile].k, { file: f }); }
+    else if (b.dataset.pvunfile != null) vid.delete(rows[+b.dataset.pvunfile].k);
+    draw(); host.dispatchEvent(new Event('pvchange'));
+    if (b.dataset.pvp != null || b.dataset.pvto != null) { const again = host.querySelector(b.dataset.pvp != null ? '[data-pvp="' + b.dataset.pvp + '"]' : '[data-pvto="' + b.dataset.pvto + '"]'); if (again) again.focus(); }
+  });
+  const drop = files => {
+    const people = rows.map(r => [nameWords(r.label)]), miss = [];
+    for (const f of files) { if (!MEDIA_RX.test(f.name)) { miss.push(f.name); continue; } const g = guessAmong(f.name, people); if (g.i < 0 || rows[g.i].has) { miss.push(f.name); continue; } vid.set(leadOf(rows[g.i].k), { file: f }); }
+    draw(); host.dispatchEvent(new Event('pvchange'));
+    if (miss.length) toast((miss.length === 1 ? 'This file didn’t match a name: ' : 'These files didn’t match a name: ') + wordsJoin(miss.slice(0, 4)) + (miss.length > 4 ? '…' : '') + '. Use File… on the right row.', 8000);
+  };
+  const out = () => {
+    const done = new Set(), list = [];
+    for (const r of rows) {
+      if (done.has(r.k)) continue;
+      const t = team(r.k); t.forEach(x => done.add(x));
+      const lead = leadOf(r.k), v = R(lead).has ? null : (t.map(x => vid.get(x)).find(x => x && (x.file || linkClean(x.url || ''))) || null);
+      const fresh = t.filter(x => !old(lead).has(x));
+      if (!v && !fresh.length) continue;
+      list.push({ k: [lead, ...t.filter(x => x !== lead)], url: v && !v.file ? linkClean(v.url) : '', file: v && v.file || null });
+    }
+    return list;
+  };
+  const bad = () => rows.some(r => { const v = vid.get(r.k); return v && v.url && v.url.trim() && !linkClean(v.url); });
+  draw();
+  return { draw, drop, out, bad };
+}
+async function pvApply(groups, stOf) {
+  let n = 0;
+  for (const g of groups) {
+    const all = g.k.map(stOf).filter(Boolean); if (!all.length) continue;
+    let st = all[0];
+    if (!g.url && !g.file && !(notesFileOf(st) || groupPaper(st))) st = all.find(s => notesFileOf(s) || groupPaper(s)) || st;
+    const partners = all.filter(s => s !== st && !groupMates(st).includes(s));
+    if (g.url || g.file) await videoAdd(st, { url: g.url, file: g.file, name: 'Presentation video', kind: '', partners }, true);
+    else if (partners.length) { const gg = groupOf(st), anchor = (gg && groupFileOf(gg, st)) || notesFileOf(st) || groupPaper(st) || st.files.find(f => f.kind === 'link'); if (!anchor) continue; await partnersJoin(st, anchor, partners, st.files.filter(f => f.kind === 'link' && f !== anchor)); }
+    n++;
+  }
+  groupSync(); saveSoon(); renderList();
+  return n;
+}
+const pvHas = st => { const f = st.files.find(x => x.kind === 'link') || st.files.find(x => x.kind === 'media'); return f ? (f.kind === 'link' ? linkTitle(f) + (vidRef(f.data) ? '' : ' · ' + linkHost(linkOf(f.data))) : f.name) : ''; };
+
+/* ---------- Setup > Partners and videos… on an open assignment ---------- */
+function openPartners() {
+  if (!batch) return;
+  const anon = anonOn(), list = batch.students.map((st, i) => ({ st, i })).filter(x => x.st.files.length || !x.st.gap);
+  if (anon) list.sort((a, b) => anonPos(a.i) - anonPos(b.i));
+  const rows = list.map(({ st, i }) => ({ k: st.key, label: shownName(st, i), has: pvHas(st), mates: groupMates(st).map(s => s.key) }));
+  openDlg('<div class="bh"><h2>Partners and videos</h2><button class="icon" data-cancel aria-label="Close" style="margin-left:auto">✕</button></div>' +
+    '<div class="bb vdbox"><p class="muted" style="margin:0;font-size:14px">Pick each group’s partners: one grade covers the group, and a group with no video shares the first one’s paper and marks. Paste a link to a video, or choose a video file. You can also drop video files here, and each goes to the student named in its file name.</p><div id="pvList" class="pvlist"></div></div>' +
+    '<div class="bf"><button class="btn" data-cancel>Cancel</button><button class="btn primary" id="pvGo" disabled>Save</button></div>', false, 'lg');
+  const box = $('#dlgBox'), host = $('#pvList'), pv = pvList(host, rows), go = $('#pvGo');
+  host.addEventListener('pvchange', () => { go.disabled = !pv.out().length || pv.bad(); });
+  box.ondragover = e => e.preventDefault();
+  box.ondrop = e => { e.preventDefault(); pv.drop([...e.dataTransfer.files]); };
+  box.onclick = async e => {
+    if (e.target.closest('[data-cancel]')) return closeDlg();
+    if (e.target !== go || go.disabled) return;
+    go.disabled = true; go.textContent = 'Saving…';
+    try { const n = await pvApply(pv.out(), k => batch.students.find(s => s.key === k)); closeDlg(); toast(n === 1 ? 'Saved 1 group or video' : 'Saved ' + n + ' groups and videos'); openStudent(cur); }
+    catch (err) { console.error(err); go.disabled = false; go.textContent = 'Save'; sayDlg((err && err.message) || String(err)); }
+  };
+}
+
+/* ---------- an assignment with no papers at all: a notes page for everyone on the roster, their videos and their partners ---------- */
 function openStartNotes(it) {
   const f = findItem(it.id), c = f && f.c !== lib.loose ? f.c : null, names = c ? c.names.filter(n => String(n).trim()) : [];
   if (!names.length) return sayDlg('This needs the class’s roster, so there is a page for each student. Add the students to the class first, then come back to this assignment.', { lg: 1 });
   const rows = npRows(it.setup);
   let np = npLast === 'rubric' && !rows.length ? 'lined' : npLast;
   openDlg('<div class="bh"><h2>“' + esc(it.name) + '” with no papers</h2></div>' +
-    '<div class="bb vdbox"><p style="margin:0 0 4px">For presentations, speeches, performances and videos. Each of the ' + names.length + ' students in ' + esc(c.name) + ' gets a notes page to write on while you watch. Mark it, score it and return it like a paper.</p>' +
-    '<p class="muted" style="margin:0 0 4px;font-size:14px">Once it is open, <b>+ Add</b> on a student’s page takes a link to their video, and that is where you say who their partners are.</p>' + npTiles(np, rows, false) +
-    (rows.length ? '' : '<p class="muted" style="margin:8px 0 0;font-size:13px">Rubric rows can be picked once this assignment has a rubric.</p>') + '</div>' +
-    '<div class="bf"><button class="btn" data-cancel>Cancel</button><button class="btn primary" id="snGo">Make the pages and open</button></div>', true, 'lg');
-  $('#dlgBox').onclick = async e => {
+    '<div class="bb vdbox"><p style="margin:0 0 4px">For presentations, speeches, performances and videos. Each of the ' + names.length + ' students in ' + esc(c.name) + ' gets a notes page to write on while you watch. Mark it, score it and return it like a paper.</p>' + npTiles(np, rows, false) +
+    (rows.length ? '' : '<p class="muted" style="margin:8px 0 0;font-size:13px">Rubric rows can be picked once this assignment has a rubric.</p>') +
+    '<div class="vdlab">Videos and partners<small>Optional, and you can add them later too. Paste a link or choose a file for each video, or drop video files here and each goes to the student named in its file name. Partners share one notes page, one set of marks and one grade.</small></div><div id="pvList" class="pvlist"></div></div>' +
+    '<div class="bf"><button class="btn" data-cancel>Cancel</button><button class="btn primary" id="snGo">Make the pages and open</button></div>', false, 'lg');
+  const box = $('#dlgBox'), folder = n => String(n).replace(/[\\/:*?"<>|\u0000-\u001F]+/g, '-').trim();
+  const pv = pvList($('#pvList'), names.map(n => ({ k: folder(n), label: n, has: '', mates: [] })));
+  $('#pvList').addEventListener('pvchange', () => { $('#snGo').disabled = pv.bad(); });
+  box.ondragover = e => e.preventDefault();
+  box.ondrop = e => { e.preventDefault(); pv.drop([...e.dataTransfer.files]); };
+  box.onclick = async e => {
     if (e.target.closest('[data-cancel]')) return closeDlg();
-    const t = e.target.closest('.nptile'); if (t && !t.disabled) { np = t.dataset.np; npPick($('#dlgBox'), np); return; }
+    const t = e.target.closest('.nptile'); if (t && !t.disabled) { np = t.dataset.np; npPick(box, np); return; }
     if (e.target.id !== 'snGo') return;
     e.target.disabled = true; npLast = np;
+    const groups = pv.out();
     try {
-      const bytes = await notesPdf(np, it.name, rows), folder = n => String(n).replace(/[\\/:*?"<>|\u0000-\u001F]+/g, '-').trim();
+      const bytes = await notesPdf(np, it.name, rows);
       const make = k => names.map(n => ({ path: folder(n) + '/' + npFileName(it.name) + ' notes' + (k > 1 ? ' (' + k + ')' : '') + '.pdf', data: bytes.slice() }));
       let k = 1, list = make(k);
       while (k < 50 && (store.get(batchIdOf(list), null) || keptMeta.has(batchIdOf(list)))) list = make(++k);
+      const id = batchIdOf(list);
       closeDlg();
       await intake(list, it.name, it);
+      if (groups.length && batch && batch.id === id) {
+        const stOf = key => batch.students.find(s => s.key === key);
+        await pvApply(groups, stOf);
+        toast(groups.length === 1 ? 'Added 1 group or video' : 'Added ' + groups.length + ' groups and videos');
+        openStudent(cur);
+      }
     } catch (err) { console.error(err); closeDlg(); toast('The pages couldn’t be made: ' + ((err && err.message) || err)); }
   };
 }
-Object.assign(window.__gs, { linkOf, linkClean, linkPlayer, notesPdf, isNotes, videoAdd, openAddVideo, openAddNotes, openStartNotes });
+Object.assign(window.__gs, { linkOf, linkClean, linkPlayer, notesPdf, isNotes, videoAdd, openAddVideo, openAddNotes, openStartNotes, openPartners, pvApply });
 
 /* ---------------- clips: a part of a video worth showing the class ---------------- */
 function clipSecs(v) {
@@ -21723,9 +22138,9 @@ function clipSecs(v) {
   return v.split(':').reduce((n, x) => n * 60 + parseFloat(x), 0);
 }
 const clipSpan = c => fmtTime(c.a) + (c.b != null ? '–' + fmtTime(c.b) : '');
-const clipsOf = f => (batch.clips || []).filter(c => (f.kind === 'link' ? c.u && c.u === linkOf(f.data) : c.p === f.path));
+const clipsOf = f => (batch.clips || []).filter(c => (f.kind === 'link' ? c.u && c.u === linkKey(f) : c.p === f.path));
 function clipFile(c) {
-  for (const st of batch.students) for (const f of st.files) if (c.u ? f.kind === 'link' && linkOf(f.data) === c.u : f.path === c.p) return f;
+  for (const st of batch.students) for (const f of st.files) if (c.u ? f.kind === 'link' && linkKey(f) === c.u : f.path === c.p) return f;
   return null;
 }
 function clipFrame(src, c) {
@@ -21748,7 +22163,7 @@ function playerFrame(src, title) {
   fr.src = src; return fr;
 }
 const clipsBtn = () => { const b = $('#clipsBtn'); if (b) b.hidden = !(batch && batch.clips && batch.clips.length); };
-function clipStrip(host, f, media, play) {
+function clipStrip(host, f, media, play, hint) {
   const box = document.createElement('div'); box.className = 'clips'; host.appendChild(box);
   let form = false, edit = null;   // edit: the clip whose title and times are being changed
   const draw = () => {
@@ -21760,7 +22175,7 @@ function clipStrip(host, f, media, play) {
         '<label>to <input class="btn sm" data-cb placeholder="end" inputmode="numeric" autocomplete="off" aria-label="Where the clip ends"></label>' + (own ? '<button class="link" data-cnow="b">now</button>' : '') +
         '<input class="btn sm clipname" data-ct placeholder="What it shows, like Strong opening" maxlength="80" autocomplete="off" aria-label="What the clip shows">' +
         '<button class="btn sm primary" data-clipsave>' + (edit ? 'Save changes' : 'Save clip') + '</button><button class="btn sm" data-clipcancel>Cancel</button>' +
-        '<small class="muted">' + (own ? 'Press now at the start and at the end, or type the times.' : 'Type the times from the player, like 2:15.') + ' Nothing is cut: a clip is the two times and its label.</small></div>' : '');
+        '<small class="muted">' + (own ? 'It starts where the video is. Press now at the end, or type the times.' : hint === 'drive' ? 'Google Drive’s player doesn’t tell the page where it is, so type the times from the player, like 2:15.' : 'Play the video here and + Clip starts where it is, or type the times, like 2:15.') + ' Nothing is cut: a clip is the two times and its label.</small></div>' : '');
   };
   draw();
   box.onclick = e => {
@@ -21777,7 +22192,7 @@ function clipStrip(host, f, media, play) {
       if (isNaN(b) || (b != null && b <= a)) { q('[data-cb]').focus(); return toast('The end has to be after the start'); }
       if (edit) { edit.a = a; if (b != null) edit.b = b; else delete edit.b; edit.t = q('[data-ct]').value.trim().slice(0, 80) || edit.t; form = false; edit = null; saveSoon(); draw(); return; }
       const n = (batch.clips ||= []).length + 1;
-      batch.clips.push({ id: uid(), ...(f.kind === 'link' ? { u: linkOf(f.data) } : { p: f.path }), a, ...(b != null ? { b } : {}), t: q('[data-ct]').value.trim().slice(0, 80) || 'Clip ' + n });
+      batch.clips.push({ id: uid(), ...(f.kind === 'link' ? { u: linkKey(f) } : { p: f.path }), a, ...(b != null ? { b } : {}), t: q('[data-ct]').value.trim().slice(0, 80) || 'Clip ' + n });
       form = false; saveSoon(); clipsBtn(); draw(); return;
     }
     const d = e.target.closest('[data-clipdel]');
@@ -21799,13 +22214,16 @@ function clipShow(id) {
   document.body.appendChild(el);
   const draw = () => {
     const all = list(), c = all[at]; if (!c) return clipClose();
-    const f = clipFile(c), url = f.kind === 'link' ? linkOf(f.data) : '', pl = url ? linkPlayer(url) : { [VIDEO_RX.test(f.name) ? 'video' : 'audio']: mediaUrl(f) };
+    const f = clipFile(c), vr = f.kind === 'link' && vidRef(f.data);
+    if (vr && !vkSeen.has(vr)) { vkGet(vr).then(() => { if (clipStage && clipStage.el === el) draw(); }); return; }   // a kept video is read first
+    const kv = vr && vkSeen.get(vr), url = f.kind === 'link' && !vr ? linkOf(f.data) : '';
+    const pl = vr ? (kv ? { [VIDEO_RX.test(kv.name) ? 'video' : 'audio']: kv.url } : null) : url ? linkPlayer(url) : { [VIDEO_RX.test(f.name) ? 'video' : 'audio']: mediaUrl(f) };
     const fr = pl && pl.frame ? clipFrame(pl.frame, c) : null;
     el.innerHTML = '<div class="clipbar"><b>' + esc(c.t) + '</b><span>' + (c.b != null ? fmtTime(c.a) + ' to ' + fmtTime(c.b) : 'from ' + fmtTime(c.a)) + (fr && !fr.stops && c.b != null ? ' · stop it at ' + fmtTime(c.b) : '') + '</span><span class="sp"></span>' +
       (all.length > 1 ? '<button data-cs="prev" aria-label="The clip before"' + (at ? '' : ' disabled') + '>‹</button><span>' + (at + 1) + ' of ' + all.length + '</span><button data-cs="next" aria-label="The next clip"' + (at < all.length - 1 ? '' : ' disabled') + '>›</button>' : '') +
       '<button data-cs="again">Play again</button><button data-cs="full">Full screen</button><button data-cs="close">Close <kbd>Esc</kbd></button></div><div class="clipmain"></div>';
     const main = el.querySelector('.clipmain');
-    if (!pl) { main.innerHTML = '<p>This site can’t play inside the page. Close this and use Open in its own window.</p>'; return; }
+    if (!pl) { main.innerHTML = vr ? '<p>This video isn’t in this browser.</p>' : '<p>This site can’t play inside the page. Close this and use Open in its own window.</p>'; return; }
     if (fr) main.appendChild(playerFrame(fr.src, c.t));
     else { const m = document.createElement(pl.video ? 'video' : 'audio'); m.controls = true; m.playsInline = true; m.src = pl.video || pl.audio; main.appendChild(m); clipRun(m, c); }
   };
@@ -27112,6 +27530,7 @@ async function nyReplace(B, rd, was) {
     const m = B.meta[id] || { id, name: (rec && rec.label) || 'A download', n: 0, t: (B.work[id] && B.work[id].t) || Date.now() };
     await kdo('meta', 'readwrite', o => o.put({ ...m, papers: !!rec, ...(rec ? { size: rec.entries.reduce((a, e) => a + (e.data ? e.data.length : 0), 0) } : {}) }, id));
   }
+  vkSweep();   // video files no student of that year names
   const v = B.info && B.info.dataV;
   if (!v) store.del('gs.dataV'); else if (v < gsData.version()) store.set('gs.dataV', v);
 }

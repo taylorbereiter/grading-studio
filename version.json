@@ -1,6 +1,6 @@
 {
  "version": "1.28.10",
- "build": "13b1d614165c",
+ "build": "123ebaf524da",
  "notes": [
   "Planner slides: click any text box and the size menu in the toolbar changes that box: the title, the text, the bottom line and the rest. Biggest that fits picks the size for you.",
   "The box you click gets a frame: drag its bar to move it or a handle to resize it, and Put back returns it to the layout. The .pptx keeps the new places and sizes.",
@@ -8,17 +8,17 @@
   "Words are never cut off: text that runs past its box stays visible in the editor with a warning, and when you present the box uses the room under it, then the text gets smaller until every word shows."
  ],
  "files": {
-  "index.html": "d6934f0689111bd2d92c231480186113bd937da6b978909f7895e6b3397033e5",
-  "planner.html": "b4b89f3ad5347f38605c5a0d5e2c9393a860278a57da6c275dde6b622bd49f27"
+  "index.html": "beb1c386acb33dceeff4b2962a09ffd8c0f81c01d20e8d47ce16ad35cb97af86",
+  "planner.html": "9a4db20a0a3c5f14d32d2277fccb1459e912cc313557755513c2c6e5bb21e129"
  },
  "langs": {
-  "lang/zh-Hant.js": "e61e5bc5c684cae0cd230d65e3f8184661f9063c856ec9c517d0ef332b276103",
-  "lang/zh-Hans.js": "bf199251aebad69374dd1a7a48b066cf51961ee7577dfa464fc03fce234aa84a",
-  "lang/es.js": "64dbb7940fbb5e0dfbc4cfc72c31a68cbe6717606446002b13c3462d7ae4d543",
-  "lang/fr.js": "4207de019344aa6e8e6ae5a1d6e662aee461ba99057a4a3eddc440409677d86d",
-  "lang/de.js": "43ffb0f46d5d5ec5f60aa0b67c71dab7742ae8cde6ebf4035f737a0341a16956",
-  "lang/pt-BR.js": "59fab2a3c8cd110452dca47e041e5310628ee4fdee28f76138ad161756529fc5",
-  "lang/ja.js": "74aba9bd51f7d8d8c1791528a46ce692b4e8a475816d1aa09ad6b37d46fe2e63",
-  "lang/ko.js": "2157a6003331f71d69f9d36f4cc9ced3f935d20a758ca63c88a3e934e9d0f465"
+  "lang/zh-Hant.js": "df1fe5b1955ffe67b5ac1ed7c82601b2e5c23986a02f2639e172b152a66707e1",
+  "lang/zh-Hans.js": "e884d7394bdcfe4d8d48f9c2ddafd5d190288bebedad5e6a0d51f94ee7def214",
+  "lang/es.js": "5c2e250c2f352f7d77602994061190bd2909e0ac8abec95cd5738ca01537bd39",
+  "lang/fr.js": "7c1ec25ec21dbc7fa3b0b8add64b1da924e8b0549bc925bd5443fdc000df44ce",
+  "lang/de.js": "4e7d6fbc833f94a1df4d92dc688ee044f393c6946a6566cab2c5af67d14a9c01",
+  "lang/pt-BR.js": "1b525e92912eb0efed4a5bf48cdb1b7b8b18b1cc82a59ae22eac869d4989d417",
+  "lang/ja.js": "8c3a15187d829a6a15f7de729a04a9788174289a21f723664f37e2ec61138b32",
+  "lang/ko.js": "3b6065353cc747cfdd5273fce4f9d9aa29011cc2181bd3d410fa20d51839c433"
  }
 }
