@@ -1,12 +1,12 @@
 {
- "version": "1.28.8",
- "build": "a0db55f352cf",
+ "version": "1.28.9",
+ "build": "df189d9bcdb9",
  "notes": [
-  "On Today, every class whose lesson has slides now has a Present button, not only the class on now. Two classes sharing one lesson can each present it.",
-  "While presenting, Pop out (or W) puts the slides in a window of their own for a second screen or projector. That window shows only what the class sees, and this one keeps the bar, your notes and the timer. The keys work in either window."
+  "Returning marked files now gives each student one PDF: the feedback page first, then every paper they turned in, Word papers included as pages. A Word rubric you scored still goes back as a Word file.",
+  "To send each paper as its own file again, untick One PDF for each student under Options on the Return tab."
  ],
  "files": {
-  "index.html": "138c429f353a9e525f8b379e47f9a47496974bb32902196c392d9c810e18de0b",
+  "index.html": "ff8616d9371920c105ea8b641aa2b4143062318a50a8a41780f968b2cece65f7",
   "planner.html": "e8221c0f94fa58bb3cd816ecac12dbdf42fd84ff02434cbedd58a30c017aebe8"
  },
  "langs": {
