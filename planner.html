@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"e26d1362","zh-Hans":"c25f4bb2","es":"0ad35eec","fr":"7977ec50","de":"43a98869","pt-BR":"6e714ebc","ja":"79beb02d","ko":"bf778130"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script></head><body>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"334359fb","zh-Hans":"c54b9e59","es":"66b180e2","fr":"7632b669","de":"20afdae9","pt-BR":"d8e2e6e4","ja":"5294525a","ko":"c31a89f1"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script></head><body>
 <title>Planner · Grading Studio</title>
 <script>/* ---------------- the sample: a made-up school week, kept apart from everything real ----------------
    Runs first on both pages, before anything reads saved work. While the sample is open (gs.sampleOn in the browser's real storage),
@@ -780,6 +780,17 @@ body.has-side .lsn{margin-right:var(--sidew,420px)}
 .fnone{padding:22px 18px;color:var(--muted)}
 .ffoot{display:flex;align-items:center;gap:14px;flex:none;height:40px;padding:0 18px;border-top:1px solid var(--line);background:var(--bg);font-size:12.5px;color:var(--muted)}
 .ffoot .sp{flex:1}
+/* the list of assistants that opens from the sidebar (src/beside.js) */
+.bsmenu{position:fixed;z-index:60;width:264px;padding:6px;background:var(--surface);border:1px solid var(--line);border-radius:var(--corner-4);box-shadow:0 2px 6px rgba(20,25,40,.12),0 14px 40px rgba(20,25,40,.18);font-size:var(--text-control)}
+.bshd{margin:6px 10px 4px;font-size:var(--text-caption);font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.bsrow{display:flex;align-items:center;gap:var(--space-2);padding:8px 10px;border-radius:var(--corner-2);color:var(--fg);text-decoration:none}
+.bsrow:hover,.bsrow:focus-visible{background:var(--hover);outline:none}
+.bsrow i{flex:none;width:14px;font-style:normal;color:var(--accent)}
+.bsrow b{font-weight:500}
+.bsrow[aria-current=true]{background:var(--accent-soft)}
+.bsrow[aria-current=true] b{font-weight:600}
+.bsrow small{margin-left:auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:var(--text-caption);color:var(--muted)}
+.bsset{margin-top:4px;border-top:1px solid var(--line);border-radius:var(--corner-2);color:var(--muted)}
 
 /* ---------- Present: the lesson on the screen the class sees ----------
    The stage is the same in light and dark: black around the slide, the slide's own colours on it, and a light panel
@@ -1136,7 +1147,24 @@ function besideWho() {
   if (typeof aiName === 'function') return { name: aiName(), link: aiLink(), tab: me().aiOpen === 'tab' };
   let w = null; try { w = JSON.parse(localStorage.getItem('gs.words') || 'null'); } catch { }
   const name = plWords().ai;
-  return { name, link: aiUrlClean(w && w.link) || aiUsual(name), tab: !!(w && w.tab) };
+  return { name, link: aiUrlClean(w && w.link) || aiUsual(name), tab: !!(w && w.tab), urls: w && w.urls, off: w && w.off };
+}
+function besideList() {
+  const a = besideWho(); if (!a.link) return [];
+  const m = typeof aiName === 'function' ? me() : { aiUrls: a.urls, aiOff: a.off };
+  const urls = m.aiUrls && typeof m.aiUrls === 'object' ? m.aiUrls : {}, off = Array.isArray(m.aiOff) ? m.aiOff : [];
+  const names = [...new Set(AI_LIST.map(x => x[0]).concat(Object.keys(urls)))].filter(n => n.toLowerCase() !== a.name.toLowerCase() && !off.includes(n));
+  return [{ name: a.name, link: a.link, own: a.link !== aiUsual(a.name), cur: true }].concat(names.map(n => ({ name: n, link: aiUrlClean(urls[n]) || aiUsual(n), own: !!aiUrlClean(urls[n]) })).filter(x => x.link));
+}
+function besideUse(name) {
+  if (typeof aiName !== 'function' || name == null || name === aiName()) return;
+  const m = { ...me() }, was = aiName(), urls = { ...(m.aiUrls && typeof m.aiUrls === 'object' ? m.aiUrls : {}) };
+  if (was) { if (aiUrlClean(m.aiUrl)) urls[was] = aiUrlClean(m.aiUrl); else delete urls[was]; }
+  const u = aiUrlClean(urls[name]); delete urls[name];
+  m.ai = name; if (u) m.aiUrl = u; else delete m.aiUrl;
+  if (Object.keys(urls).length) m.aiUrls = urls; else delete m.aiUrls;
+  lib.me = m; saveLib(); gradeDefaultApply(); sysWords();
+  if (typeof setRender === 'function') setRender();   // Settings, when it is the screen she is on
 }
 function besidePlace() {
   const s = window.screen || {}, W = s.availWidth || 1280, H = s.availHeight || 800, w = Math.round(Math.min(760, Math.max(420, W * 0.36)));
@@ -1149,8 +1177,8 @@ function besideRoom() {
   if (/cros|chrome os/i.test(p)) return 'press Alt with the [ key.';
   return 'drag this window’s right edge to the left.';
 }
-function besideOpen(how) {
-  const a = besideWho(); if (!a.link) return false;
+function besideOpen(how, pick) {
+  const a = pick || besideWho(); if (!a.link) return false;
   const tab = how === 'tab' || (how !== 'side' && a.tab), at = besidePlace();
   let w = null;
   try { w = window.open('about:blank', '_blank', tab ? '' : 'popup,left=' + at.left + ',top=' + at.top + ',width=' + at.width + ',height=' + at.height); } catch { }
@@ -1171,13 +1199,49 @@ function besidePaint() {
     const l = el.querySelector('.rl'); if (l && l.textContent !== a.name) l.textContent = a.name;
   }
 }
+function besideMenuShut(focus) { const m = document.getElementById('bsMenu'); if (!m) return; const a = m.anchor; m.remove(); if (a) { a.setAttribute('aria-expanded', 'false'); if (focus) a.focus({ preventScroll: true }); } }
+function besideMenu(a) {
+  besideMenuShut();
+  const list = besideList(), m = document.createElement('div'), esc2 = v => String(v).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const host = u => { try { return new URL(u).hostname.replace(/^www\./, ''); } catch { return ''; } };
+  m.id = 'bsMenu'; m.className = 'bsmenu'; m.setAttribute('role', 'menu'); m.setAttribute('aria-label', 'Open beside Grading Studio'); m.anchor = a;
+  m.innerHTML = '<div class="bshd">Open beside Grading Studio</div>' + list.map(x => '<a class="bsrow" role="menuitem" href="' + esc2(x.link) + '" target="_blank" rel="noopener" data-bsname="' + esc2(x.name) + '"' + (x.cur ? ' aria-current="true"' : '') + '><i aria-hidden="true">' + (x.cur ? '✓' : '') + '</i><b data-raw>' + esc2(x.name) + '</b>' + (x.own ? '<small data-raw>' + esc2(host(x.link)) + '</small>' : '') + '</a>').join('') +
+    '<a class="bsrow bsset" role="menuitem" href="' + (typeof aiName === 'function' ? '#/settings/claude' : './#/settings/claude') + '"><i aria-hidden="true"></i><span>Assistants and their links…</span></a>';
+  document.body.appendChild(m);
+  const r = a.getBoundingClientRect(), w = m.offsetWidth, h = m.offsetHeight;
+  m.style.left = Math.max(8, Math.min(window.innerWidth - w - 8, r.right + 8)) + 'px'; m.style.top = Math.max(8, Math.min(window.innerHeight - h - 8, r.bottom - h + 6)) + 'px';
+  a.setAttribute('aria-expanded', 'true');
+  const first = m.querySelector('.bsrow'); if (first) first.focus({ preventScroll: true });
+}
 document.addEventListener('click', e => {
-  const a = e.target.closest && e.target.closest('a[data-beside]'); if (!a) return;
+  const row = e.target.closest && e.target.closest('#bsMenu .bsrow');
+  if (row) {
+    if (row.classList.contains('bsset')) return besideMenuShut();
+    if (e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return besideMenuShut();
+    e.preventDefault();
+    const x = besideList().find(y => y.name === row.dataset.bsname); besideMenuShut();
+    if (!x) return;
+    besideUse(x.name);
+    besideOpen('', { ...besideWho(), name: x.name, link: x.link });
+    return;
+  }
+  const a = e.target.closest && e.target.closest('a[data-beside]');
+  if (!a) return besideMenuShut();
   if (e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-  e.preventDefault(); besideOpen();
+  e.preventDefault();
+  if (document.getElementById('bsMenu')) return besideMenuShut();
+  if (besideList().length > 1) besideMenu(a); else besideOpen();
 });
+document.addEventListener('keydown', e => {
+  const m = document.getElementById('bsMenu'); if (!m) return;
+  if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); return besideMenuShut(true); }
+  if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
+  e.preventDefault(); e.stopPropagation();
+  const rows = [...m.querySelectorAll('.bsrow')], i = rows.indexOf(document.activeElement), n = rows.length;
+  rows[(i + (e.key === 'ArrowDown' ? 1 : -1) + n) % n].focus();
+}, true);
 window.addEventListener('storage', e => { if (!e.key || e.key === 'gs.words') { try { besidePaint(); } catch { } } });
-window.__gsBeside = { who: besideWho, place: besidePlace, open: besideOpen, paint: besidePaint, clean: aiUrlClean };
+window.__gsBeside = { who: besideWho, place: besidePlace, open: besideOpen, paint: besidePaint, clean: aiUrlClean, list: besideList, use: besideUse };
 
 /* ================= The bank: rubrics and grading scales, sorted by course and unit =================
    The bank is the Planner's own: kv 'bank' in the Planner database = { rubrics, scales, gone: { id: time } }.
@@ -6755,7 +6819,7 @@ function trWith(s, P, ctx) {
 }
 const tr = (s, ctx) => LANG_PACK && typeof s === 'string' ? trWith(s, LANG_PACK, ctx) : s;
 const LANG_ROOTS = '#rail, #vHome, #vHelp, #welcome, #findDlg, #setLang, #vSettings, #vClass .clshead, #vClass .ctabs, #vClass .ctools, #vClass .board, #classHint, #dlgBox[data-lg], #askDlg[data-lg], ' +
-  '#app .top, #side, #tools, #paper .who, #paper .lchip, #paper .rchip, #grade, #zoomPill, #colL, #colR, #openRep, ' + ['gradebook', 'students', 'attendance', 'seating', 'missing', 'student', 'charts', 'goals', 'reports'].map(t => '#classPanel[data-tab="' + t + '"]').join(', ');
+  '#app .top, #side, #tools, #paper .who, #pane2 .sph, #spGrip, #pane2 .sptool, #bsMenu, #paper .lchip, #paper .rchip, #grade, #zoomPill, #colL, #colR, #openRep, ' + ['gradebook', 'students', 'attendance', 'seating', 'missing', 'student', 'charts', 'goals', 'reports'].map(t => '#classPanel[data-tab="' + t + '"]').join(', ');
 const LANG_RAW = 'script, style, textarea, [contenteditable], [data-raw], .kname, #railClasses .rl, .wllang, .tbn, .trow:not(.none) b, .hlpa p:not(.hlpgo), .hlpa ol, kbd, .rbrand, .wlbrand, #homeDate, .aiWord, .updnotes, #vSettings .nt b, #meSys option:not([value]), #meAi option:not([value]), #wlSys option:not([value]), #vClass .clshead h1, #vClass .uhead .nm, #vClass .card .t, #classPanel .bklink, #classPanel .bkpop > b, #bkaRows td:first-child, #bkaUnit option:not([value=""]), #peopleTbl td.nm a, .attname, #attDate, .attunk a, .misw, .mishead h3, .misaddr, .seat span, .seatchip, #seatSel b, .tsvg .tlb, #aClass option:not([value=""]), #aUnit option:not([value=""]), #railClasses .rnav, #classSel option:not([value=""]), #crumbClass, #stuList .nm, #paper .who h2, #paper .fhead > span:first-child, #grade .cn > span';
 const LANG_ATTRS = ['title', 'aria-label', 'placeholder'];
 const langCtx = el => { const c = el.closest('[data-lc]'); return c ? c.dataset.lc : ''; };
@@ -6913,7 +6977,7 @@ const HELP = [
   { id: 'video', sec: 'mark', q: 'How do I grade a presentation or a video instead of a paper?',
     a: ['On the assignment’s card press **Add papers…** and choose **No papers: presentations or videos…**. Every student on the roster gets a notes page to write on while you watch. It is marked, scored and returned like a paper.',
       'For a recording, open a student, press **+ Add** and choose **A video…**. Paste the link (Google Drive, YouTube or anywhere else) and tick the partners who are in it. One set of notes and one grade then covers the group.',
-      'Only the link is kept, so the video stays where it is. **Play here** shows it above the notes page, and **Open in its own window** puts it beside the app. **+ Add** also has **A notes page…** for one more page.',
+      'Only the link is kept, so the video stays where it is. A student with a video and a notes page opens side by side: the video in a pane on the right, the notes page beside it. **Play here** starts it, and **Open in its own window** puts it outside the app. **+ Add** also has **A notes page…**.',
       'To keep a part worth showing the class, press **+ Clip** under the video and give its times and a title; **Edit** changes them later. **Show to the class** plays it full screen with the title and without the student’s name. **Clips to show the class** under Setup plays them all in turn.'],
     words: 'clip clips excerpt highlight moment example show class video presentation speech performance oral recording link google drive youtube partners pairs notes page blank lined watch' },
   { id: 'tablet', sec: 'mark', q: 'Can I mark on a tablet with a pencil?',
@@ -6933,12 +6997,21 @@ const HELP = [
       'The same box switches the assignment to plain points, and sets the grading scale that turns a total into a percent.', '**Save to the bank…** keeps a rubric to use again on another assignment.',
       'A row is scored 0 to 4 with half points unless you say otherwise. Under the rows, choose another top score (1 to 10) or turn half points off. Your usual scale for new rubrics is in Settings, Grading.'],
     words: 'criteria rows levels descriptors points percent scale edit bank reuse top highest 0 to 8 0 to 5 half points whole numbers' },
+  { id: 'side-pane', sec: 'mark', q: 'Can I see two things side by side while I mark?', words: 'split pane side by side two panes beside rubric video notes compare divider',
+    a: ['Yes. Press **Side by side** above the paper, or the **B** key. A pane opens beside the paper, and the tabs at its top choose what it shows: the student’s video, their notes page, another of their files, or the **Rubric** with what every score means.',
+      'Each side scrolls on its own, and the pen works on a page in either one. Click a box in the Rubric tab to give that score. A video moved into the pane keeps playing.',
+      'Drag the bar between the two to change their sizes; a double-click puts it back. **⋯** in the pane moves it to the left or across the top, which suits a narrow window. Under a file’s own **⋯**, **Show beside** puts that file in the pane.',
+      'The pane stays open from student to student until you close it with **✕** or **B**. A student who has a video and a notes page opens side by side without being asked, unless you closed the pane on a video before.'] },
   { id: 'ai-beside', sec: 'start', q: 'Can I have Gemini, Claude or ChatGPT open beside Grading Studio?',
     a: ['Yes. Name your assistant in **Settings**, **Working with AI**, and its name appears near the bottom of the sidebar on every screen, in the Planner too. Click it and the assistant opens in a window on the right of the screen. If the Grading Studio window covers it, make that window narrower so both show.',
       'In Chrome there is a tidier way: right-click the name in the sidebar and choose **Open link in split view**. Both are then in one window, with a divider you can drag. They can’t be joined more closely than that, because Gemini, Claude and ChatGPT don’t let their pages be shown inside another app.',
       '**Opens at** in the same part of Settings takes a link of your own, for example to your school account, a Gem, a project or a custom GPT. If the assistant opens in the wrong account, switch accounts there, copy the address and paste it in.',
       'Grading Studio sends nothing to the assistant. It sees only what you paste or attach. An assistant built into the browser itself, like a Gemini or Copilot button in the browser’s own toolbar, is different: it can read the page you are on, student names included, when you ask it about that page.'],
     go: ['Go to Working with AI', '#/settings/claude'], words: 'gemini claude chatgpt copilot ai assistant split pane side by side window beside chat hydrogen' },
+  { id: 'ai-switch', sec: 'start', q: 'I use more than one AI assistant. Can I switch between them?',
+    a: ['Yes. Click your assistant’s name in the sidebar and the others are listed under it. Pick one and it opens beside Grading Studio and becomes the assistant in use, so the words on screen follow it.',
+      'Each one keeps its own link. To give one a link of your own, make it the assistant in use and fill in **Opens at** in **Settings**, **Working with AI**. **Others you switch to**, in the same place, chooses which are listed.'],
+    go: ['Go to Working with AI', '#/settings/claude'], words: 'gemini claude chatgpt copilot switch change another assistant list choose' },
   { id: 'my-setup', sec: 'start', q: 'Can an AI assistant set the app up for me?',
     a: ['Yes. Settings, **My setup** has a prompt to copy into Claude, ChatGPT or any other assistant. It uses what it already knows about your teaching, asks about the rest, and gives you one block of setup text: classes and when they meet, the calendar, terms, how you grade, rubrics, saved comments and learning goals.',
       'Paste that text into the same page and press **Check it**. You see what would change, untick anything you don’t want, and can undo it afterwards.',
