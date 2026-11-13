@@ -667,6 +667,9 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
         <section class="lib setsec" id="setNames" data-sec="marking" hidden>
           <div class="lhead"><h2>Name covers</h2><span class="muted">You cover names yourself in Check the covers. Finding them on its own can cover words that aren’t names.</span><span class="sp"></span><span class="seg" id="setNameFind" aria-label="Find names on their own"><button data-v="0" aria-pressed="true">Cover names myself</button><button data-v="1" aria-pressed="false">Also find typed names</button></span></div>
         </section>
+        <section class="lib setsec" id="setFull" data-sec="marking" hidden>
+          <div class="lhead"><h2>Full screen marking</h2><span class="muted">What stays beside the paper while you mark in full screen. A hidden student list comes back when you move the pointer to the left edge of the screen, press [ , or tap the tab on a tablet.</span><span class="sp"></span><span class="seg" id="setFullSide" aria-label="Beside the paper in full screen"><button data-v="hide" aria-pressed="true">Hide the student list</button><button data-v="all" aria-pressed="false">Hide the list and tools</button><button data-v="show" aria-pressed="false">Show both</button></span></div>
+        </section>
         <section class="lib setsec" id="setTouch" data-sec="marking" hidden>
           <div class="lhead"><h2>Tablet and pencil</h2><span class="muted">For a touch screen. A mouse and a trackpad work as they always have.</span></div>
           <p class="setp settch"><label for="setTouchMode"><b>A finger on the paper</b></label> <select id="setTouchMode" class="btn sm"><option value="auto">draws, until you use a pencil; from then on it moves the page</option><option value="move">always moves the page</option><option value="draw">always draws</option></select></p>
@@ -753,6 +756,8 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
   </div>
   <div class="cols" id="cols">
     <button class="pbtn" id="colL" title="Keep the student list open ( [ )" aria-label="Keep the student list open" aria-pressed="false"><span class="pa">›</span></button>
+    <div class="fsedge" id="fsEdge" aria-hidden="true"></div>
+    <button class="fstab" id="fsTab" title="Show the student list ( [ )" aria-label="Show the student list"><span class="pa">›</span></button>
     <button class="pbtn" id="colR" title="Hide the score panel ( ] )" aria-label="Hide the score panel"><span class="pa">›</span><span class="pl">Score</span></button>
     <nav class="side" id="side" aria-label="Students"><div class="prog-s" id="progS"></div><div class="lbar"><label class="sfind" title="Find a student ( / )"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg><input type="search" id="stuFind" class="stufind" placeholder="Find  ( / )" aria-label="Find a student" autocomplete="off"></label><span id="lfSlot"></span></div><div id="stuList"></div><div class="hd" id="sideHd">Students, in folder order</div><div class="sfoot" id="sideFoot"></div></nav>
     <section class="main" style="position:relative">

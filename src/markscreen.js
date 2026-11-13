@@ -125,4 +125,4 @@ function cmtClick(e) {
   }
   return false;
 }
-Object.assign(window.__gs, { flagsOf, lfSet, navOrder, kmClose, setList, listPeek, scoreRow: () => rowOn });
+Object.assign(window.__gs, { flagsOf, lfSet, navOrder, kmClose, setList, listPeek, fsSide, fullSideSet, listKept, scoreRow: () => rowOn });
