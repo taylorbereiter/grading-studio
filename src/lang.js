@@ -69,6 +69,44 @@ const LANG_FILLS = [
   // the Seating tab
   ['pick', /^Pick the closest one\. There is a desk for each of the (\d+) students, and any desk can be moved or taken away afterwards\.$/],
   ['seated', /^(\d+) of (\d+) seated$/], ['needed', /^(\d+) more desks? needed$/], ['desk', /^Desk, (.+)\. Click to take it away$/],
+  ['why', /^(.{1,40}) (\d+)%: ([\d.,]+%|none, counts as 0|none yet, left out)$/], ['xcwhy', /^Extra credit \+([\d.,]+) on the (.+)$/],   // pointing at a grade
+  // a student's own page
+  ['clsavgT', /^Class average ([\d.,]+%?)$/], ['clsavg', /^class average ([\d.,]+%?)$/], ['clsn', /^class ([\d.,]+%?)$/], ['counted', /^(\d+) of (\d+) counted$/],
+  ['incxc', /^includes \+([\d.,]+) extra credit$/], ['plusxc', /^\+([\d.,]+) extra credit$/], ['plusx', /^\+([\d.,]+) extra$/],
+  ['rowsof', /^Their average on each rubric row across the summatives, out of (\d+)\. The dashed line is the class average\.$/], ['fmfb', /^(\d+) of (\d+) formative activities have feedback\.$/],
+  ['here', /^Here (\d+) of (\d+) days?(?:: (.+)\.|, never late\.)$/, (m, F, P) => m[3] ? langFill(F.hereC, [0, m[1], m[2], m[3].split(' · ').map(p => trPiece(p, P, 'att') || p).join(' · ')], P) : langFill(F.hereN, m, P)],
+  // the Charts tab
+  ['sortby', /^Sort by (.+)$/], ['across', /^across (\d+) students?$/], ['nleft', /^(\d+) left out$/],
+  ['rowscls', /^The class average on each rubric row, out of (\d+), wherever the same row name comes back\. The lowest row is in blue\.$/],
+  ['vs', /^(.{1,40}) against (.{1,40})$/], ['strongon', /^Stronger on (.{1,40})$/], ['dotcap', /^One dot per student\. On the line, the two match\. Below it, a student does better on (.+) than on (.+)\.$/],
+  ['both', /^This shows once students have both a score in (.+) and one in (.+)\.$/], ['pts', /^([+−][\d.]+) points$/], ['last3', /^Last three ([\d.,]+%), earlier ([\d.,]+%)$/],
+  ['outof', /^([\d.,]+) out of (\d+)$/], ['npap', /^(\d+) papers?$/], ['nsc', /^(\d+) scores?$/], ['nsum', /^(\d+) summatives?$/], ['ntask', /^(\d+) tasks?$/],
+  ['midhalf', /^class middle half (\d+)–(\d+)%$/], ['midp', /^Middle ([\d.,]+)%$/], ['lowhigh', /^Lowest ([\d.,]+)%, highest ([\d.,]+)%, middle half ([\d.,]+)–([\d.,]+)%$/], ['sums', /^Summatives ([\d.,]+%)$/],
+  // the Goals tab
+  ['clsavgG', /^([\d.,]+%) class average$/], ['under', /^(\d+) under (\d+)%$/], ['nounder', /^no one under (\d+)%$/],
+  ['underwho', /^Under (\d+)%: (.+?)( and \d+ more)?$/, (m, F, P) => langFill(F.underwho, m, P) + (m[3] ? ' ' + (trPiece(m[3].trim(), P) || m[3].trim()) : '')],
+  ['glcap', /^The class average on each goal, lowest first\. The dashed line is (\d+)%\.$/], ['nohere', /^No scores here yet: (.+)\.$/], ['gpaper', /^([^·]+) (\d+%) \(([\d.,]+) of ([\d.,]+)\)$/],
+  ['glaria', /^(.+): ([\d.,]+%) class average\. (.+)$/, (m, F, P) => m[1] + ': ' + langFill(F.clsavgG, [0, m[2]], P) + F.dot + trWith(m[3], P)],
+  // the Report comments tab
+  ['rptfor', /^Report comment for (.+)$/], ['rdone', /^(\d+) of (\d+) done$/], ['gradep', /^Grade ([\d.,]+%)( so far)?$/, (m, F, P) => langFill(F.gradep, m, P) + (m[2] ? ' ' + (trPiece('so far', P) || 'so far') : '')],
+  ['strongest', /^Strongest: (.+) ([\d.,]+)$/], ['towork', /^To work on: (.+) ([\d.,]+)$/], ['l3', /^Last three scores (up|down) (\d+)$/, (m, F, P) => langFill(m[1] === 'up' ? F.l3up : F.l3down, [0, m[2]], P)],
+  ['missn', /^Missing (\d+)$/], ['nchars', /^(\d+) characters$/], ['ofchars', /^(\d+) of (\d+) characters$/], ['overchars', /^(\d+) of (\d+) characters, (\d+) over$/],
+  // a class graded the IB way (ib.js)
+  ['lvfor', /^([A-Z]) for (.+): (\d|not set|no evidence)$/], ['lvfor2', /^([A-Z]) for (.+)$/], ['ofn', /^of (\d+)$/], ['ofset', /^(\d+) of (\d+) set$/], ['critset', /^(\d+) of (\d+) criteria set$/],
+  ['levelfor', /^Level for (.+)$/], ['recent', /^Most recent (\d), highest (\d)$/], ['recentis', /^Most recent is (\d)\. Not set yet\.$/], ['recentns', /^most recent (\d), not set$/], ['stillset', /^still to set: (.+)$/],
+  ['hint', /^(?:Still to set: (.+)\. |(This total is below the lowest boundary\.) )?The outlined number is only a hint from the most recent work\. Nothing is set until you click, and clicking a set level again clears it\.$/,
+    (m, F, P) => (m[1] ? langFill(F.still, m, P) + F.sp : m[2] ? F.below + F.sp : '') + F.hintR],
+  ['midlevel', /^([A-Z]) middle level$/], ['gradeN', /^Grade (\d)$/], ['band', /^(\d) to (\d) (limited|adequate|substantial|excellent)$/], ['mid2', /^(\d) to (\d)$/], ['plusfm', /^\+ (\d+) formative$/],
+  ['few', /^Criterion .+ has been assessed (?:once|in no task) this year\. Each criterion is usually assessed at least twice a year\.$/,
+    (m, F, P) => { const out = []; m[0].replace(/Criterion (.+?) has been assessed (once|in no task) this year\. /g, (x, k, n) => { out.push(langFill(n === 'once' ? F.fewonce : F.fewnone, [0, k], P)); return ''; }); return out.concat(F.fewR).join(F.dot); }],
+  ['nolevels', /^No levels for (.+) in this term yet\. Use \+ Add levels to type in the levels each student earned on a task\.$/], ['predicted', /^predicted (\d)$/], ['predfor', /^Predicted grade for (.+)$/], ['totalof', /^total (\d+) of (\d+)$/],
+  // what a chart says of itself to a screen reader: the names in it stay, the words between them are put into the language
+  ['ariaband', /^(?=.*(?:class middle \d|missing)).+ (?:\d+%|missing|–)(?:, class middle \d+%)?$/, (m, F, P) => m[0].replace(/ missing(?=, class middle |\. |$)/g, ' ' + (trPiece('missing', P) || 'missing')).replace(/, class middle (\d+%)(?=\. |$)/g, (x, v) => langFill(F.cmid, [0, v], P))],
+  ['ariamove', /^.+ (?:up|down) [\d.]+$/, (m, F, P) => m[0].replace(/ (up|down) ([\d.]+)(?=, |$)/g, (x, w, v) => ' ' + langFill(w === 'up' ? F.mvup : F.mvdown, [0, v], P))],
+  ['ariastack', /^.+: \d+ (?:below 60|\d+ to \d+)(?:[,.] .+)?$/, (m, F, P) => m[0].replace(/(\d+) below 60(?=[,.] |$)/g, (x, n) => langFill(F.below60, [0, n], P)).replace(/(\d+) (\d+) to (\d+)(?=[,.] |$)/g, (x, n, a, b) => langFill(F.rng, [0, n, a, b], P))],
+  ['ariascat', /^.+: summatives [\d.,]+%, in-class [\d.,]+%$/, (m, F, P) => m[0].replace(/: summatives ([\d.,]+%), in-class ([\d.,]+%)(?=\. |$)/g, (x, a, b) => ': ' + langFill(F.scat, [0, a, b], P))],
+  // a name the language knows with a percent after it ("In-class 82%")
+  ['lblpct', /^(.{1,40}) ([\d.,]+%)$/, (m, F, P) => { const h = trPiece(m[1], P); return h == null ? null : h + ' ' + m[2]; }],
 ];
 // One piece of English in a language, or null when the language doesn't know it. A word that means two things ("Late" for a paper
 // and for a student) has its second meaning under the name of the part of the screen it is on (data-lc), as "att|Late".
@@ -91,14 +129,17 @@ function trWith(s, P, ctx) {
 // For words that are drawn rather than put on the page, like the feedback page in a returned paper.
 const tr = (s, ctx) => LANG_PACK && typeof s === 'string' ? trWith(s, LANG_PACK, ctx) : s;
 // The parts of the page that are put into the language, and what inside them is never touched (what a teacher typed).
-const LANG_ROOTS = '#rail, #vHome, #vHelp, #welcome, #findDlg, #setLang, #vSettings, #vClass .clshead, #vClass .ctabs, #vClass .ctools, #vClass .board, #classHint, ' + ['gradebook', 'students', 'attendance', 'seating', 'missing'].map(t => '#classPanel[data-tab="' + t + '"]').join(', ');
-const LANG_RAW = 'script, style, textarea, [contenteditable], [data-raw], .kname, #railClasses .rl, .wllang, .tbn, .trow:not(.none) b, .hlpa p:not(.hlpgo), .hlpa ol, kbd, .rbrand, .wlbrand, #homeDate, .aiWord, .updnotes, #vSettings .nt b, #meSys option:not([value]), #meAi option:not([value]), #wlSys option:not([value]), #vClass .clshead h1, #vClass .uhead .nm, #vClass .card .t, #classPanel .bklink, #classPanel .bkpop > b, #bkaRows td:first-child, #bkaUnit option:not([value=""]), #peopleTbl td.nm a, .attname, #attDate, .attunk a, .misw, .mishead h3, .misaddr, .seat span, .seatchip, #seatSel b';
+const LANG_ROOTS = '#rail, #vHome, #vHelp, #welcome, #findDlg, #setLang, #vSettings, #vClass .clshead, #vClass .ctabs, #vClass .ctools, #vClass .board, #classHint, ' + ['gradebook', 'students', 'attendance', 'seating', 'missing', 'student', 'charts', 'goals', 'reports'].map(t => '#classPanel[data-tab="' + t + '"]').join(', ');
+const LANG_RAW = 'script, style, textarea, [contenteditable], [data-raw], .kname, #railClasses .rl, .wllang, .tbn, .trow:not(.none) b, .hlpa p:not(.hlpgo), .hlpa ol, kbd, .rbrand, .wlbrand, #homeDate, .aiWord, .updnotes, #vSettings .nt b, #meSys option:not([value]), #meAi option:not([value]), #wlSys option:not([value]), #vClass .clshead h1, #vClass .uhead .nm, #vClass .card .t, #classPanel .bklink, #classPanel .bkpop > b, #bkaRows td:first-child, #bkaUnit option:not([value=""]), #peopleTbl td.nm a, .attname, #attDate, .attunk a, .misw, .mishead h3, .misaddr, .seat span, .seatchip, #seatSel b, .tsvg .tlb';
 const LANG_ATTRS = ['title', 'aria-label', 'placeholder'];
 const langCtx = el => { const c = el.closest('[data-lc]'); return c ? c.dataset.lc : ''; };
-const langText = n => { const p = n.parentElement; if (!p || p.closest(LANG_RAW)) return; const v = tr(n.nodeValue, langCtx(p)); if (v !== n.nodeValue) n.nodeValue = v; };
+// What has been put into the language is not looked at again: a word in the language can be an English word too (German "Note" is "Grade", and "Note" in English is something else).
+const LANG_DONE = new WeakMap();
+const langText = n => { const p = n.parentElement; if (!p || LANG_DONE.get(n) === n.nodeValue || p.closest(LANG_RAW)) return; const v = tr(n.nodeValue, langCtx(p)); if (v !== n.nodeValue) { LANG_DONE.set(n, v); n.nodeValue = v; } };
 // What she types in a box is hers; the grey words in it before she types are the app's.
-const langRawEl = el => { const r = el.closest(LANG_RAW); return !!r && !(r === el && el.tagName === 'TEXTAREA' && !el.parentElement.closest(LANG_RAW)); };
-const langAttrs = el => { if (langRawEl(el)) return; for (const a of LANG_ATTRS) if (el.hasAttribute(a)) { const was = el.getAttribute(a), v = tr(was, langCtx(el)); if (v !== was) el.setAttribute(a, v); } };
+// data-rawa: this one's own title or label is hers (a criterion's name), though the words inside it are the app's.
+const langRawEl = el => { if (el.hasAttribute('data-rawa')) return true; const r = el.closest(LANG_RAW); return !!r && !(r === el && el.tagName === 'TEXTAREA' && !el.parentElement.closest(LANG_RAW)); };
+const langAttrs = el => { if (langRawEl(el)) return; const done = LANG_DONE.get(el) || {}; for (const a of LANG_ATTRS) if (el.hasAttribute(a)) { const was = el.getAttribute(a); if (done[a] === was) continue; const v = tr(was, langCtx(el)); if (v !== was) { done[a] = v; LANG_DONE.set(el, done); el.setAttribute(a, v); } } };
 function langEl(el) {
   langAttrs(el); for (const x of el.querySelectorAll('[title], [aria-label], [placeholder]')) langAttrs(x);
   const w = document.createTreeWalker(el, NodeFilter.SHOW_TEXT); for (let n; (n = w.nextNode());) langText(n);

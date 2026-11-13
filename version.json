@@ -1,22 +1,23 @@
 {
- "version": "1.28.4",
- "build": "34e4fc6ef3a9",
+ "version": "1.28.5",
+ "build": "a901d2a45256",
  "notes": [
-  "In another language, more of a class page now reads in that language: the Gradebook, Students, Attendance, Seating and Missing work tabs, with dates written that language’s way and your own names left as you typed them.",
-  "Still in English: a student’s own page, Charts, Goals, Report comments, the gradebook of a class graded with IB criteria, and the boxes that open from these tabs."
+  "In another language, the rest of a class page now reads in that language: a student’s own page, Charts, Goals and Report comments, and the gradebook, charts and levels of a class graded with IB criteria. Pointing at a mark on a chart says it in that language too. Names, rubric rows, goals and criteria stay as you typed them.",
+  "A report comment’s draft is still written in English until you put your own sentences in Wording…. The boxes that open from these tabs are still in English.",
+  "Fixed in German: “Grade” showed as “Notiz” in a few places, and now reads “Note”."
  ],
  "files": {
-  "index.html": "7114daee4f03eccc5b575dee81092ed7a73c3c0be2e80ce57867a135972b4ba5",
-  "planner.html": "4be4369924cbf1631cd1725b9e55437eb270505da6f9a79800968039c0427a06"
+  "index.html": "848d2be9a8b16bd7309950d9ed3923c262fb82722e9c6887ad3e973e3ae684e4",
+  "planner.html": "19d3fce52da6c9d93c3776a275b2b8483a48c992175cb3d8748f803ddfb3310b"
  },
  "langs": {
-  "lang/zh-Hant.js": "84df816bda86e40b6d76295c8f264c91c89e20b738b44acac41b1fda701718e0",
-  "lang/zh-Hans.js": "63077d966afc62a01ff9b02b020cad109163f11a4972514ecd35a9cea4d90c80",
-  "lang/es.js": "e84d3e8f4e6a38317f2e66575a6d973f6840fe5c6f5368228e6055b77fc1123d",
-  "lang/fr.js": "730dd8f51f6a27c0b37e916b11f4d4a740b72944a1c13ef13e6bb38f0eb496b7",
-  "lang/de.js": "8bc3df1833ea6a24aaa8f1a02f963f08dc2ccd3b06dca2b967384fae8a282c69",
-  "lang/pt-BR.js": "5988ebd37143ff0467a8f1044d9cbdf7726476c0262c41ecb53c1751dad11178",
-  "lang/ja.js": "3c91652b008dbc83216295c50ff7da79cebdb4403dbd77118e2c77c9be18b1b7",
-  "lang/ko.js": "785fc6c6bb9773678d72fbc71b949bf1b9a439696e04f7e9a77dde2c2cd7dbba"
+  "lang/zh-Hant.js": "e9bce610a87f87b6583b6d1f5d9cef76792c26d9ce9e55a5457bad9158830eb8",
+  "lang/zh-Hans.js": "2682c70af10c24fad915b7f47aad25fadae3618ca8adc78d479cffb69eafa299",
+  "lang/es.js": "6082ce938704c4591c3dcff730c7e42859c7726f648b38c862048a8dbc4ce7d6",
+  "lang/fr.js": "f5992644127f3d56a4afed5e52f64ec00daae78928052cb7a90d679ed78fb917",
+  "lang/de.js": "0630e395f692e47b238b4ef3f81a3659609a55dd15e29f296735dfaa431a7674",
+  "lang/pt-BR.js": "c8372bac428c90e698a8ccc030f47c2127095d5a16b57109574977706b1293e2",
+  "lang/ja.js": "efd58567ee1a135845f9c8dec85fd6e3095fb6cd638145cc4e591b1fefb4aa9c",
+  "lang/ko.js": "e05e478266c33102b7cb009971ea7dd1a1ee3b41edac16d5ded185ea0fa1338b"
  }
 }

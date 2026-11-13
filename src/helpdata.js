@@ -45,7 +45,7 @@ const HELP = [
     go: ['Open School resources', '#/school'], words: 'handbook calendar policy policies portal bookmark link file document resources staff bell schedule forms class course lesson links website textbook' },
   { id: 'language', sec: 'start', q: 'Can I use the app in another language?',
     a: ['Yes. Choose one in Settings, Display, **App language**, or at the top of the welcome. The page is drawn again in the language you pick.',
-      'So far a language other than English covers the sidebar, Today, the welcome, Settings, most of a class page (Assignments, Gradebook, Students, Attendance, Seating and Missing work), Find anything, Help and the feedback page students get in a returned paper. The other screens are still in English.',
+      'So far a language other than English covers the sidebar, Today, the welcome, Settings, a class page with all its tabs, Find anything, Help and the feedback page students get in a returned paper. The other screens are still in English.',
       'Class names, student names and anything else you typed are never translated.'],
     go: ['Open Settings, Display', '#/settings/display'], words: 'spanish español idioma language translate translation' },
   { id: 'scan-split', sec: 'start', q: 'I scanned the whole class as one file. How do I split it?',

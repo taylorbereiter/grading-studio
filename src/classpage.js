@@ -86,7 +86,7 @@ function bkHeat(c, all, conf) {
   const avg = col => { if (col.type === 'fm') return c.names.filter(n => (col.cells.get(n) || {}).fb).length + '/' + c.names.length; const ps = c.names.map(n => col.cells.get(n)).filter(bkCounts).map(x => x.pct); return ps.length ? roundPct(bkMean(ps)) + '%' : '–'; };
   const gs = rows.map(x => x.r.grade).filter(v => v != null), gname = bk.term === '*' ? 'Grade' : (bkTabs(cols).find(t => t[0] === bk.term) || [, 'Grade'])[1];
   return '<section class="chheat" id="bkHeat"><h3 class="ovh3">Every student, every assignment</h3><div class="chwrap"><table class="chtab"><thead><tr>' + head('name', 'Student', 'chn', 'roster order') +
-    cols.map(col => head(col.key, '<i class="chdot ' + (bkCls(col.type) || 'no') + '"></i><span>' + esc(col.name) + '</span><small>' + esc(bkDay(col.due)) + '</small>', 'chh', col.name)).join('') + head('grade', esc(gname), 'chg', 'grade') + '</tr></thead><tbody>' +
+    cols.map(col => head(col.key, '<i class="chdot ' + (bkCls(col.type) || 'no') + '"></i><span data-raw>' + esc(col.name) + '</span><small>' + esc(bkDay(col.due)) + '</small>', 'chh', col.name)).join('') + head('grade', esc(gname), 'chg', 'grade') + '</tr></thead><tbody>' +
     rows.map(row => '<tr><th class="chn" scope="row">' + name(row) + '</th>' + cols.map(col => '<td>' + chCell(col, col.cells.get(row.n), row.shown) + '</td>').join('') + '<td class="chg">' + (row.r.grade != null ? pctAvgText(row.r.grade) : '–') + '</td></tr>').join('') +
     '<tr class="chfoot"><th class="chn" scope="row">Class average</th>' + cols.map(col => '<td>' + avg(col) + '</td>').join('') + '<td class="chg">' + (gs.length ? pctAvgText(bkMean(gs)) : '–') + '</td></tr></tbody></table></div>' +
     '<div class="bkleg chleg">' + chBandLegend().join('') + '<span><i class="chsw miss"></i>Missing</span><span><i class="chsw fm">✓</i>Feedback given (formative)</span>' + bkLeg('chdot') + '</div>' +
@@ -188,7 +188,7 @@ function bkRubricRows(c, cols) {
   for (let i = 1; i < labs.length; i++) if (labs[i].y - labs[i - 1].y < 15) labs[i].y = labs[i - 1].y + 15;
   const over = labs.length ? labs[labs.length - 1].y - (H - B + 6) : 0; if (over > 0) for (const l of labs) l.y -= over;
   for (const l of labs) s += '<text x="' + (W - R + 14) + '" y="' + (l.y + 4) + '" class="tlb' + (l.x === low ? ' me' : '') + '">' + esc(chCut(l.x.name, Math.max(6, Math.floor((R - 44) / 6.6)))) + ' ' + fmtNum(Math.round(l.x.last * 10) / 10) + '</text>';
-  return '<svg class="tsvg" id="bkRows" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' + esc(series.map(x => x.name + ': ' + x.pts.map((v, i) => v != null ? per[i].col.name + ' ' + fmtNum(Math.round(v * 10) / 10) : '').filter(Boolean).join(', ')).join('. ')) + '">' + s + '</svg>';
+  return '<svg class="tsvg" id="bkRows" viewBox="0 0 ' + W + ' ' + H + '" role="img" data-rawa aria-label="' + esc(series.map(x => x.name + ': ' + x.pts.map((v, i) => v != null ? per[i].col.name + ' ' + fmtNum(Math.round(v * 10) / 10) : '').filter(Boolean).join(', ')).join('. ')) + '">' + s + '</svg>';
 }
 
 /* ---------- summatives against in-class work: one dot per student ---------- */
@@ -225,7 +225,7 @@ function bkStrip(c, all, n) {
     else if (cell && cell.st === 'excused') { cls = 'exc'; txt = 'Excused'; }
     else if (col.type === 'fm') { cls = 'fm'; txt = cell && cell.fb ? '✓ Feedback given' : cell && cell.started ? 'Started' : 'No feedback yet'; }
     else if (cell && cell.pct != null) { cls = bkCounts(cell) ? 'b' + chBand(cell.pct) : 'nc'; txt = cell.pct + '%' + (cell.partial ? ' · partial' : cell.out ? ' · left out' : cell.st === 'late' ? ' · late' : ''); }
-    return '<div class="chsi"><span class="chc ' + cls + '"' + (cell && cell.total != null ? ' title="' + esc(fmtNum(cell.total) + ' / ' + fmtNum(cell.max)) + '"' : '') + '>' + txt + '</span><b>' + esc(col.name) + '</b><small>' + esc(bkLabel(col.type, true)) + (col.due ? ' · ' + esc(bkDay(col.due)) : '') + '</small></div>';
+    return '<div class="chsi"><span class="chc ' + cls + '"' + (cell && cell.total != null ? ' title="' + esc(fmtNum(cell.total) + ' / ' + fmtNum(cell.max)) + '"' : '') + '>' + txt + '</span><b data-raw>' + esc(col.name) + '</b><small>' + esc(bkLabel(col.type, true)) + (col.due ? ' · ' + esc(bkDay(col.due)) : '') + '</small></div>';
   }).join('') + '</div><div class="bkleg chleg">' + chBandLegend().join('') + '<span><i class="chsw miss"></i>Missing</span><span><i class="chsw fm"></i>Formative</span></div></section>';
 }
 // The student's scores as a line over the class's middle half, so it's clear when a score is unusual and when the assignment was just hard.
@@ -255,7 +255,7 @@ function bkBandLine(c, sc, n, shown) {
     if (i % fit.dates === 0) s += '<text x="' + X(i) + '" y="' + (H - 4) + '" text-anchor="middle" class="ttk">' + esc(bkDay(x.col.due)) + '</text>';
   });
   return '<svg class="tsvg" id="bkStuLine" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' + esc(cols.map((x, i) => x.col.name + ' ' + (x.me != null ? x.me + '%' : x.miss ? 'missing' : '–') + (q[i] ? ', class middle ' + roundPct(q[i][1]) + '%' : '')).join('. ')) + '">' + s + '</svg>' +
-    '<div class="bkleg"><span><i class="me"></i>' + esc(shown) + '</span>' + bkLeg() + '<span><i class="chsw band"></i>Middle half of the class</span><span><i class="mute"></i>Class middle score</span></div>';
+    '<div class="bkleg"><span data-raw><i class="me"></i>' + esc(shown) + '</span>' + bkLeg() + '<span><i class="chsw band"></i>Middle half of the class</span><span><i class="mute"></i>Class middle score</span></div>';
 }
 // This student's average on each rubric row across the summatives, with the class average as a tick.
 function bkStuRows(c, cols, n) {
@@ -264,7 +264,7 @@ function bkStuRows(c, cols, n) {
   if (!mine.size) return '<p class="muted" id="bkStuRows">This shows once a summative of theirs has been scored with a rubric.</p>';
   const one = v => fmtNum(Math.round(v * 10) / 10), T = chRowTop(chSums(cols));
   return '<div id="bkStuRows">' + [...mine].map(([k, e]) => { const v = bkMean(e.v), cv = cls.has(k) ? bkMean(cls.get(k).v) : null;
-    return '<div class="bkcmp chrow"' + chTip(one(v) + ' out of ' + T, e.name, people(e.v.length, 'summative') + (cv != null ? ' · class average ' + one(cv) : '')) + ' tabindex="0"><span title="' + esc(e.name) + '">' + esc(e.name) + '</span><div class="bkcmpt"><i style="width:' + Math.min(100, v / T * 100) + '%"></i>' + (cv != null ? '<em style="left:' + Math.min(100, cv / T * 100) + '%"></em>' : '') + '</div><b>' + one(v) + '</b><small>' + (cv != null ? 'class ' + one(cv) : '') + '</small></div>'; }).join('') + '</div>';
+    return '<div class="bkcmp chrow"' + chTip(one(v) + ' out of ' + T, e.name, people(e.v.length, 'summative') + (cv != null ? ' · class average ' + one(cv) : '')) + ' tabindex="0"><span title="' + esc(e.name) + '" data-raw>' + esc(e.name) + '</span><div class="bkcmpt"><i style="width:' + Math.min(100, v / T * 100) + '%"></i>' + (cv != null ? '<em style="left:' + Math.min(100, cv / T * 100) + '%"></em>' : '') + '</div><b>' + one(v) + '</b><small>' + (cv != null ? 'class ' + one(cv) : '') + '</small></div>'; }).join('') + '</div>';
 }
 // A window that changes size: the charts are drawn again at their new width, unless she's part-way through something in the gradebook.
 let chResize = 0;
