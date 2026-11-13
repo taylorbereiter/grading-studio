@@ -48,8 +48,9 @@ function todayHtml(prim) {
   const say = l => l.done ? 'finished' : l.status === 'review' ? 'ready for you' : l.status === 'claude' ? 'with ' + aiSay() : 'draft';
   const row = r => {
     const { c, m, lessons } = r, l = lessons[0], more = lessons.length > 1 ? ' · and ' + (lessons.length - 1) + ' more' : '';
-    // The class on now, or next: its lesson opens presenting, unless it has been taught to the end today.
-    const got = l && l.taught.find(t => t.classId === c.id && t.date === day), end = got && got.slide >= got.of, show = !!l && r === cur && !end;
+    // Any class whose lesson has slides opens presenting (one lesson shared by two classes presents for each), unless that class has been
+    // taught it to the end today. The class on now, or next, has the blue button.
+    const got = l && l.taught.find(t => t.classId === c.id && t.date === day), end = got && got.slide >= got.of, show = !!l && l.n > 0 && !end;
     return '<a class="trow' + (r === cur ? ' now' : '') + '" href="' + esc(planUrl(show ? '#present/' + encodeURIComponent(l.id) + '/' + encodeURIComponent(c.id) : l ? '#lesson/' + encodeURIComponent(l.id) : '#week')) + '" title="' + (show ? 'Present this lesson, from the Planner' : l ? 'Open this lesson in the Planner' : 'Plan this class in the Planner') + '"><span class="tt">' + planTime(m.start) + '</span>' +
       '<span class="nt"><b><span class="rdot" style="background:' + c.color + '"></span>' + esc(c.name) + '</b><span class="ns">' + (l ? esc(l.title) + (l.n ? ' · ' + l.n + (l.n === 1 ? ' slide' : ' slides') : '') + ' · ' + (got ? (end ? 'taught' : 'taught to slide ' + got.slide + ' of ' + got.of) : say(l)) + more : 'No lesson planned yet') + todoClassNote(c) + '</span></span>' +
       '<span class="btn sm' + (prim === 'lesson' && r === cur ? ' primary' : '') + '">' + (show ? 'Present' : l ? 'Open' : 'Plan it') + '</span></a>' + attTodayLine(c);
