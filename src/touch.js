@@ -77,5 +77,5 @@ window.addEventListener('pointercancel', tchUp, true);
   box.onchange = () => { if (box.checked) store.del('gs.press'); else store.set('gs.press', false); };
 }
 // With a finger or a pencil there is no pointing at the student strip to open it and no moving away to fold it: a tap on the paper folds it.
-$('#paper').addEventListener('pointerdown', e => { if (e.pointerType !== 'mouse' && !listOpen) listPeek(false, 60); });
+$('#paper').addEventListener('pointerdown', e => { if (e.pointerType !== 'mouse' && !listKept()) listPeek(false, 60); });
 Object.assign(window.__gs, { touch: () => ({ penSeen, penDown, mode: tch.mode, fingers: tch.f.size, moves: fingerMoves(), set: touchMode() }), touchReset: () => { store.del('gs.penSeen'); penSeen = false; penDown = 0; penUpAt = -1e9; tch.f.clear(); tch.mode = ''; } });

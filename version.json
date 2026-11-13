@@ -1,22 +1,22 @@
 {
- "version": "1.28.14",
- "build": "f71f6feec331",
+ "version": "1.28.15",
+ "build": "b193cb457b20",
  "notes": [
-  "Your AI assistant can sit beside Grading Studio. Name it in Settings, Working with AI (Gemini, Claude, ChatGPT, Copilot or another) and its name is in the sidebar on every screen, in the Planner too. A click opens it in a window on the right of the screen, or in a tab if you prefer.",
-  "In Chrome, right-click the name in the sidebar and choose Open link in split view to have both in one window. Opens at takes a link of your own, such as your school account or a Gem. Grading Studio sends nothing to the assistant: it sees only what you paste or attach."
+  "In full screen the student list gets out of the way while you mark. Rest the pointer at the left edge of the screen, or press [, and it comes back; on a tablet, tap the tab at the left edge.",
+  "Settings, Marking, Full screen marking can keep the list shown, or hide the tools too until the pointer comes near them."
  ],
  "files": {
-  "index.html": "8b84b142883c0f987df641f91411cbb624f07784a52a4e419bc80944eb72e37c",
-  "planner.html": "5cf17019a2167813f2482f0281c6bcd2a8c547b255e8442b1dfcc70e82d363f4"
+  "index.html": "ea11cde61395991dee8003ef60d0555d92f64d106457c17930efaf557d0ac70f",
+  "planner.html": "debcdaebe9cca5b7ff341541c6608ff43f3249e90dd9131f42ad544a13874755"
  },
  "langs": {
-  "lang/zh-Hant.js": "1799988c7ed17ae8b736851ab4eb7093e350e62b16b3c99b491655dd872cd5ed",
-  "lang/zh-Hans.js": "e4d0fe60a2c9ac9c023ac5af6f8c1e0f26b78315bd8f29ee70913f70dac95391",
-  "lang/es.js": "b50a06948d4e5e5996b6ee413e193859d96de677d512ad32b23f7d2d299446c7",
-  "lang/fr.js": "b64a5bfd31e7856e209ccef43cef49db67dbeb659936a1f42be3e4801196720d",
-  "lang/de.js": "f4e0d6e8b5b7f4aafe5190edb8acc68962160e4a778e2f9815cf177ed50c60a1",
-  "lang/pt-BR.js": "dda528de54bc1829fd3d404ef0219a291d066b311329ea20f51ab5ee67746c3c",
-  "lang/ja.js": "11724a554ea4fa97248d8c4351062ff765f353be25b33665032e2dc7298ecbab",
-  "lang/ko.js": "196d4c5ae7f9f2924093b1e0074d390771c65323c2c036c9e82849d9ce5c386f"
+  "lang/zh-Hant.js": "8b3226ec2c9c6834212a30faf66a4093568f9adcf075009e8f56ca19a86eb702",
+  "lang/zh-Hans.js": "e51a70066d65da93b6236fd6c13947dc4d32ccbc6d04c35c32f9e3c8966a2233",
+  "lang/es.js": "e6b39047c5d8c007ac2d8549e608f295fa45654b065af8e3f70d6158513bf812",
+  "lang/fr.js": "8e65eb786791aa0c218b7c83af55f7bafe1b9f6a12678a29fa89b92c582559ae",
+  "lang/de.js": "746f4ef4321308de0bfe9364eec1b202cc4f1566d65b67633a51bf25bdee8087",
+  "lang/pt-BR.js": "4af0a20181f8f7bd6726d58116eb99107914cb270002c6b07439fd9c9d2bde78",
+  "lang/ja.js": "682bb1018c7110ac714e632cec67939155700bcc5504569cdd1fcf7e95ed3bd5",
+  "lang/ko.js": "5a5fbc527b0834355b2173b885803c67880c951fedbbac7bc04983755f239d26"
  }
 }
