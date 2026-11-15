@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"1f22c535","zh-Hans":"edbac187","es":"9a8d6166","fr":"ce34ffc3","de":"30ef0446","pt-BR":"e39fc5f8","ja":"1d39ce5c","ko":"9fcd368e"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script><script>(function () {
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"99e0aef1","zh-Hans":"23825ad2","es":"8084cd2a","fr":"274e8000","de":"e02b0921","pt-BR":"e690043a","ja":"0b31e474","ko":"1c18c6af"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script><script>(function () {
   try {
     var HOME = ["https://taylorbereiter.github.io/grading-studio/"], NS = 'gradingstudio-app-v1', AT = 'https://abacus.jasoncameron.dev/hit/' + NS + '/';
     if (navigator.webdriver || !HOME.some(function (a) { return a && location.href.indexOf(a) === 0; })) return;
@@ -3227,6 +3227,76 @@ textarea.tdtitle:focus{border-color:var(--accent);outline:0}
 .prog-s .ptk{margin:-4px 0 var(--space-2)}
 .prog-s .ptk:empty{display:none}
 @media (min-width:761px){.cols:not(.open):not(.peek) .ptk{display:none}}
+/* ---------- Planning your grading (src/gradeplan.js). Every value is a token. ---------- */
+/* the top of the Focus card: a free period going on now, and where she left off */
+.fcnote{display:flex;flex-direction:column;gap:var(--space-2);padding:var(--space-3);border-radius:var(--corner-3);background:var(--accent-soft)}
+.fcnote .fcnh{display:flex;align-items:center;flex-wrap:wrap;gap:var(--space-2);font-size:var(--text-small);font-weight:600;color:var(--accent)}
+.fcnote .fcnh svg{flex:none;width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
+.fcnote .fcnh span + span{font-weight:500}
+.fcnote p{margin:0;font-size:var(--text-control);color:var(--fg)}
+.fcnote p span{color:var(--muted)}
+.fcback{display:flex;align-items:center;gap:var(--space-3);padding:var(--space-3);border:1px solid var(--line);border-radius:var(--corner-3)}
+.fcback .t{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.fcback .t b{font-size:var(--text-small);font-weight:600;color:var(--fg-2)}
+.fcback .t > span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:var(--text-control);color:var(--fg)}
+.fcback .t i{font-style:normal;font-size:var(--text-small);color:var(--muted)}
+.fcshort{display:flex;align-items:center;gap:var(--space-2);font-size:var(--text-small);color:var(--fg-2)}
+/* a free period in Today's list of classes */
+.trow.gpfree .nt b{font-weight:500;color:var(--fg-2)}
+/* the look back at the week */
+.lbk{padding:var(--space-4) var(--space-5)}
+.lbk h2{margin:0;font-size:var(--text-body);font-weight:600}
+.lbk .lbks{margin:2px 0 var(--space-3);font-size:var(--text-small);color:var(--muted)}
+.lbkg{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:var(--space-3)}
+.lbkg div{display:flex;flex-direction:column;gap:2px;min-width:0}
+.lbkg span{font-size:var(--text-small)}
+.lbkg div > span{font-weight:600;color:var(--fg-2)}
+.lbkg b{font-size:var(--text-heading);font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums;color:var(--fg)}
+.lbkg b span{font-size:inherit}
+.lbkg i{font-style:normal;font-size:var(--text-small);color:var(--muted)}
+.lbkw{margin:var(--space-3) 0 0;padding:var(--space-3) 0 0;border-top:1px solid var(--line);font-size:var(--text-control);color:var(--fg-2)}
+.lbkw b{font-weight:600;color:var(--fg)}
+.lbkw ul{margin:var(--space-1) 0 0;padding:0 0 0 var(--space-4)}
+.lbkw li{margin:2px 0}
+.lbkw .m{color:var(--muted)}
+.lbkf{display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-3);margin:var(--space-3) 0 0}
+/* the grading due each day in To do's week */
+.tdest{display:flex;flex-direction:column;gap:2px;margin:0 0 var(--space-2);padding:var(--space-2);border-radius:var(--corner-2);background:var(--surface-2);font-size:var(--text-small);color:var(--fg-2)}
+.tdest b{font-weight:600;color:var(--fg)}
+.tdest.heavy{background:var(--accent-soft)}
+.tdwsum{margin-left:auto;font-size:var(--text-small);color:var(--fg-2)}
+.tdwbar .tdwsum b{margin:0;font-weight:600;color:var(--fg)}
+/* under the date in an assignment's box */
+.duehint{margin:var(--space-1) 0 0;font-size:var(--text-small);color:var(--muted)}
+.duehint:empty{display:none}
+.duehint b{font-weight:600;color:var(--fg-2)}
+.gpnote{margin-top:calc(-1 * var(--space-2))}
+/* quiet while focusing: the counts in the sidebar and in To do wait until the session ends */
+body.fcquiet #rail .rcnt:not(.fcrun), body.fcquiet .tdgrp span, body.fcquiet #tdSay{visibility:hidden}
+/* a goal for each session (src/focus.js) */
+.fcsgpick .fcsgrow{display:flex;align-items:center;flex-wrap:wrap;gap:var(--space-2)}
+.fcsgpick .seg button{padding:5px 10px;font-size:var(--text-small)}
+.fcsgn{display:inline-flex;gap:var(--space-1)}
+.fcsgn .icon{width:28px;height:28px;border:1px solid var(--line-strong);border-radius:var(--corner-3);background:var(--surface);color:var(--fg);font-size:var(--text-control)}
+.fcsgn .icon:disabled{opacity:.4}
+.fcsgx{width:100%;min-width:0;height:32px;padding:0 var(--space-2);border:1px solid var(--line-strong);border-radius:var(--corner-3);background:var(--surface);color:var(--fg);font:inherit;font-size:var(--text-control)}
+.fcsgx:focus{outline:2px solid var(--accent);outline-offset:1px}
+.fcsgc{margin:var(--space-1) 0 0;font-size:var(--text-small);color:var(--muted)}
+.fcsgc .link{font-size:inherit}
+.fcsg{display:flex;align-items:center;flex-wrap:wrap;gap:var(--space-2);font-size:var(--text-control);color:var(--muted)}
+.fcsg .fcl{margin:0 auto 0 0;font-size:inherit;font-weight:400;color:inherit}
+.fcsg.met > span:not(.fcl):not(.fcmet){color:var(--fg)}
+.fcsgr{margin:0;font-size:var(--text-control);color:var(--fg)}
+.fcsgr p{margin:0 0 var(--space-1)}
+.fcsgr .fcl{display:inline;margin:0;font-size:inherit;font-weight:400;color:var(--muted)}
+.fcsgr.met{display:flex;align-items:center;gap:var(--space-2);color:var(--ok);font-weight:600}
+.fcsgnext .fcl{display:inline;margin:0;font-size:inherit;font-weight:400;color:var(--muted)}
+.fcby{display:flex;align-items:center;flex-wrap:wrap;gap:var(--space-2);margin-top:var(--space-2);font-size:var(--text-small);color:var(--fg-2)}
+.fcby label{display:inline-flex;align-items:center;gap:var(--space-2)}
+.fcby input{height:28px;padding:0 var(--space-1);border:1px solid var(--line-strong);border-radius:var(--corner-3);background:var(--surface);color:var(--fg);font:inherit;font-size:var(--text-small)}
+.fcby > span{color:var(--muted)}
+.fcdays{flex-wrap:wrap}
+.fcdays label{display:inline-flex;align-items:center;gap:var(--space-1)}
 /* ---------- progress sheets (sheet.js): the box that shows them, and the pages as they print ---------- */
 .dlg .box.pssbox{width:min(1000px,100%);height:calc(100vh - 32px)}
 .pssbody{display:flex;flex-direction:column;gap:var(--space-2);overflow:auto;background:var(--surface-2)}
@@ -3622,6 +3692,7 @@ textarea.stptext{min-height:132px;margin-top:var(--space-2);font:var(--text-cont
       <div class="hmain">
         <section class="safeask" id="sampleNote" hidden></section>
         <section class="safeask" id="safeAsk" hidden></section>
+        <section class="tsec" id="lbCard" hidden></section>
         <section class="tsec" id="today" hidden></section>
         <section class="tsec today" id="toMark" hidden>
           <h2 class="tcap">To mark</h2>
@@ -3759,6 +3830,7 @@ textarea.stptext{min-height:132px;margin-top:var(--space-2);font:var(--text-cont
         <section class="lib setsec" id="setFocus" data-sec="focus" hidden></section>
         <section class="lib setsec" id="setGoal" data-sec="focus" hidden></section>
         <section class="lib setsec" id="setTrack" data-sec="focus" hidden></section>
+        <section class="lib setsec" id="setPlan" data-sec="focus" hidden></section>
         <section class="lib setsec" id="setDisplay" data-sec="display" hidden>
           <div class="lhead"><h2>Display</h2><span class="muted">Light mode is the usual look. Text size and zoom apply while you grade.</span><span class="sp"></span><button class="btn sm themeBtn">Dark mode</button><button class="btn sm" id="setDisp">Text size and zoom</button></div>
         </section>
@@ -4839,7 +4911,7 @@ SOFTWARE.
 <script>/* ---------------- saved-data versions: a safety copy, then any format changes, before the app starts ---------------- */
 const gsData = (() => {
   'use strict';
-  const APP_VERSION = "1.28.26";   // from package.json, the one place it's set
+  const APP_VERSION = "1.28.27";   // from package.json, the one place it's set
   const MIGRATIONS = [
   ];
   const DATA_V = Math.max(1, ...MIGRATIONS.map(s => s.to));
@@ -5090,13 +5162,15 @@ function langFill(t, m, P) {
 }
 const LANG_ATT = { present: 'attp', late: 'attl', 'absent, reason unknown': 'atta', excused: 'atte' };
 const LANG_FILLS = [
-  ['fcof', /^(?:(Focus|Today): )?(\d+) of (\d+) (papers|minutes)( today)?$/, (m, F, P) => { const x = langFill(m[4] === 'papers' ? F.fcofp : F.fcofm, [0, m[2], m[3]], P); return m[1] === 'Focus' ? langFill(F.fcrail, [0, x], P) : m[1] === 'Today' ? langFill(F.fctodayof, [0, x], P) : x; }],
-  ['fctime', /^(Focus|Paused|Break|Just one paper): (\d+:\d\d)( left)?$/, (m, F, P) => langFill(F[{ Focus: 'fctf', Paused: 'fctp', Break: 'fctb', 'Just one paper': 'fcto' }[m[1]]], [0, m[2]], P)],
+  ['fcof', /^(?:(Focus|Today|This week): )?(\d+) of (\d+) (papers|minutes)( today| this week)?$/, (m, F, P) => { const x = langFill(m[4] === 'papers' ? F.fcofp : F.fcofm, [0, m[2], m[3]], P); return m[1] === 'Focus' ? langFill(m[5] === ' this week' ? F.fcrailw : F.fcrail, [0, x], P) : m[1] === 'Today' ? langFill(F.fctodayof, [0, x], P) : m[1] === 'This week' ? langFill(F.fcwkof, [0, x], P) : x; }],
+  ['fctime', /^(Focus|Paused|Break|Just one paper|Just 3 papers): (\d+:\d\d)( left)?$/, (m, F, P) => langFill(F[{ Focus: 'fctf', Paused: 'fctp', Break: 'fctb', 'Just one paper': 'fcto', 'Just 3 papers': 'fct3' }[m[1]]], [0, m[2]], P)],
   ['fcleft', /^(\d+) papers? left$/], ['fcstart', /^Start (\d+) minutes$/], ['fcpace', /^about (\d+) minutes? at your pace$/], ['fcmin', /^(\d+) minutes?$/], ['fcpapers', /^(\d+) papers?$/],
   ['fcaway', /^You were away for (\d+) minutes?, and the clock kept going\.$/], ['fcdone', /^(\d+) minutes? done$/], ['fcbrk', /^Take a (\d+)-minute break$/], ['fcmore', /^(\d+) more minutes$/],
   ['fckeep', /^Keep going for (\d+) minutes$/], ['fcfin', /^You finished (\d+) papers?\.$/], ['fcsum', /^Today: (\d+) papers? in (\d+) minutes? of focus\.$/], ['fcsum0', /^Today: (\d+) papers?\.$/],
   ['fcweek', /^This week: (\d+) papers?\.$/], ['fctoday', /^Today: (\d+) papers?$/], ['fcdn', /^(\d+) done$/],
+  ['gpsessn', /^Session (\d+)$/], ['gpsess', /^(\d+) sessions? today\.$/], ['gpaday', /^(\d+) papers? a day$/], ['tkweeks', /^(\d+) weeks? reached the goal$/],
   ['tkpace', /^about (\d+) minutes? a paper$/], ['tkso', /^(\S.*) so far$/], ['tklessons', /^(\d+) lessons?$/], ['tkdays', /^(\d+) days? reached the goal$/],
+  ['gpfor', /^Grade for (\d+) minutes$/], ['gpleft', /^about (.+) left$/], ['gpsets', /^(\d+) sets?$/], ['gpdays', /^(\d+) days?$/],
   ['tkcount', /^Time counts while the marking screen or the Planner is in front and you have done something there in the last (\d+) minutes?\.$/],
   ['besideopen', /^Open (.+) beside Grading Studio$/],
   ['sdet', /^Student details for (.+)$/], ['cnt', /^Count (.+) in the class average$/], ['wout', /^without (\d+) students? ·$/],
@@ -5304,6 +5378,14 @@ const HELP = [
     a: ['Yes, in the **Time tracker**: open it from the Focus card on Today, or find it with Find anything. Grading time counts while the marking screen is open and in front; planning time counts while the Planner is, except while you present a lesson. Time stops counting after a few minutes with nothing pressed, typed or scrolled.',
       'The tracker shows a week, a month or three months: the totals, a bar for each day, grading by assignment and planning by lesson. Use **Add time** for work done away from the app. **Download as a spreadsheet** saves every day as a CSV file. In **Settings, Focus and goals** you can switch counting off or change how soon it stops.'],
     go: ['Open the time tracker', '#/time'], words: 'time tracker hours minutes how long spent log track record grading planning workload csv spreadsheet' },
+  { id: 'plan-grading', sec: 'start', q: 'Can the app tell me how long my grading will take?',
+    a: ['Yes, once you have finished a few papers with the time tracker on. Each set then shows about how long its papers will take at your pace: on the Focus card, on the assignment’s card, in the week in To do, and under the date when you set when work is due.',
+      'The Focus card also offers a free period between your classes, picks up the set you were last on at the paper you left, and can start small with **Just 3 papers**. On the day you choose, Today shows a look back at the week. Each can be switched off in **Settings, Focus and goals**.'],
+    go: ['Open Settings, Focus and goals', '#/settings/focus'], words: 'estimate how long pace grading load pile up due dates free period gap pick up where left off shortest small steps weekly look back friday review quiet do not disturb' },
+  { id: 'session-goals', sec: 'start', q: 'Can I set a goal for each focus session?',
+    a: ['Yes. Before you start, pick one under **Goal for this session**: a few papers, the whole set, the to-do, or a few words of your own. The app suggests one from your pace, and the timer shows how far along you are.',
+      'When the session ends, you see if you reached it. A goal you didn’t reach goes into your next session on the same work, so a set can take a few sittings with breaks in between. **Don’t carry it over** lets it go.'],
+    go: ['Open Settings, Focus and goals', '#/settings/focus'], words: 'session goal each session target carry over next session sittings break cycle weekly goal week days finish by deadline papers a day' },
   { id: 'school-resources', sec: 'start', q: 'Where can I keep my school’s links and files?',
     a: ['On **School** in the sidebar. Keep the handbook, the calendar, the bell schedule, the portals you sign in to, forms, and notes like who to call. Put them in groups you name, and press the star on the ones you open most to keep them at the top.',
       '**Add a link** when the school keeps it online, since a link stays up to date by itself. **Add files…** keeps a copy of a file with your work, up to 50 MB each. You can also drop files on the page or paste a web address.',
@@ -7927,6 +8009,7 @@ function renderProg() {
 function nextUnscored() {
   const N = batch.students.length, o = anonOn() ? anonOrder() : batch.students.map((_, i) => i), p = o.indexOf(cur);
   const fm = fmNow(), left = st => fm ? !st.grade.fb && !noScore(st) : !gradeOf(st).done;
+  const short = gpShortNext(left); if (short >= 0) return openStudent(short);   // a focus session with shortest papers first (src/gradeplan.js)
   for (let k = 1; k <= N; k++) { const i = o[(p + k) % N]; if (left(batch.students[i])) return openStudent(i); }
   toast(fm ? 'Feedback is complete for everyone' : 'Everyone has a score');
 }
@@ -10910,7 +10993,7 @@ function renderLib() {
     return '<div class="card" draggable="true" data-card="' + it.id + '" title="' + (m && m.papers ? 'Open the papers' : it.typed && !it.batchId ? 'Scores typed in: open the gradebook' : 'Add this assignment’s papers') + '"><div class="cmain"><div class="t">' + esc(it.name) + '</div>' +
       (it.type || it.typed ? '<div class="bkpills">' + bkPill(it.type) + (it.typed ? '<span class="bkpill typed">Typed in</span>' : '') + '</div>' : '') + '</div>' +
       '<div class="cdue">' + (it.due ? 'Due ' + bkDay(it.due) : '') + '</div>' +
-      '<div class="cstate">' + (st ? stateBar(st) : '') + '<div class="m">' + esc(it.typed && !it.batchId ? 'Scores typed in' : batchSummary(it)) + '</div>' + (tkAsg(it.id) && tkAsg(it.id).s >= 60 ? '<div class="m">' + tkAsgHtml(it.id) + '</div>' : '') + (st ? stateChip(st) : '') + '</div>' +
+      '<div class="cstate">' + (st ? stateBar(st) : '') + '<div class="m">' + esc(it.typed && !it.batchId ? 'Scores typed in' : batchSummary(it)) + '</div>' + (h => h ? '<div class="m">' + h + '</div>' : '')(tkAsgHtml(it.id)) + (st ? stateChip(st) : '') + '</div>' +
       '<div class="row">' + (m && m.papers ? '<button class="btn sm" data-kopen="' + esc(it.batchId) + '" data-kasg="' + it.id + '">Open</button>'
         : typedOnly ? '' : '<button class="btn sm" data-open-asg="' + it.id + '">Add papers…</button>') +
         kmWrap('⋯', 'class="icon kdots" aria-label="More for ' + esc(it.name) + '" title="More"', '<button class="mitem" data-edit-asg="' + it.id + '">Edit<small>Name, type, due date, unit, rubric</small></button>' +
@@ -11108,7 +11191,7 @@ function editAssignment(id, unitId, clsId) {
     classPick +
     '<div class="field"><label for="aUnit">Unit</label><select id="aUnit" class="btn" style="justify-content:flex-start"></select><p class="muted" id="aUnitNote" style="font-size:13px;margin:6px 0 0" hidden></p></div>' +
     '<div class="field"><label>Type</label><div class="pseg" role="group" id="aType">' + bkCats().map(([t, , s]) => '<button type="button" data-atype="' + esc(t) + '" aria-pressed="' + (it.type === t) + '">' + esc(s) + '</button>').join('') + '</div><p class="muted" style="font-size:12.5px;margin:4px 0 0">' + esc(bkCountSay()) + '</p></div>' +
-    '<div class="field"><label for="aDue">Due</label><input type="date" id="aDue" class="btn" value="' + esc(it.due || '') + '"></div>' +
+    '<div class="field"><label for="aDue">Due</label><input type="date" id="aDue" class="btn" value="' + esc(it.due || '') + '"><p class="duehint" id="aDueSay">' + gpDueHint(it.due, f ? it.id : '') + '</p></div>' +
     ruHtml(f ? it.setup : null) + '</div>' +
     '<div class="bf">' + (f ? '<button class="btn" data-del style="margin-right:auto">Delete</button>' : '') + '<button class="btn" data-cancel>Cancel</button><button class="btn primary" data-ok>Save</button></div>', true, 'lg');
   const ticked = () => [...document.querySelectorAll('#aClasses input:checked')].map(x => holderById(x.value)).filter(Boolean);
@@ -11128,6 +11211,7 @@ function editAssignment(id, unitId, clsId) {
     const ok = $('#dlgBox [data-ok]'); ok.textContent = cs.length > 1 ? 'Add to ' + cs.length + ' classes' : 'Save'; ok.disabled = !cs.length;
   };
   fillUnits(start.u);
+  $('#aDue').oninput = () => { $('#aDueSay').innerHTML = gpDueHint($('#aDue').value, f ? it.id : ''); };   // what else is due that week (src/gradeplan.js)
   const ru = ruWire($('#dlgBox'), it);
   if (f) $('#aClass').onchange = () => fillUnits(null);
   else { $('#aClasses').onchange = () => fillUnits(null); $('#aUnit').onchange = () => fillUnits(null); }
@@ -27781,7 +27865,7 @@ function todayHtml(prim) {
       '<span class="btn sm' + (prim === 'lesson' && r === cur ? ' primary' : '') + '">' + (show ? 'Present' : l ? 'Open' : 'Plan it') + '</span></a>' + attTodayLine(c);
   };
   return '<div class="thd"><h2 class="tcap">Teaching today</h2><a class="link tweek" href="' + esc(planUrl('#week')) + '">Open the week</a></div><div class="tcard">' +
-    (t.off ? '<div class="trow none"><span class="nt"><b>No classes today</b><span class="ns">' + esc(t.off) + '</span></span></div>' : t.rows.length ? t.rows.map(row).join('') : '<div class="trow none"><span class="nt"><span class="ns">No classes on your timetable today.</span></span></div>') + '</div>';
+    (t.off ? '<div class="trow none"><span class="nt"><b>No classes today</b><span class="ns">' + esc(t.off) + '</span></span></div>' : t.rows.length ? t.rows.map((r, i) => row(r) + gpFreeRow(t.rows, i)).join('') : '<div class="trow none"><span class="nt"><span class="ns">No classes on your timetable today.</span></span></div>') + '</div>';
 }
 
 /* to mark, ready to hand back, earlier work: the work kept in this browser, sorted by where it stands */
@@ -27868,6 +27952,7 @@ function homeRender() {
   const asking = !!$('#safeAsk .btn.primary, #sampleNote .btn.primary');
   const prim = asking ? '' : cur && cur.lessons.length ? 'lesson' : g.mark.some(m => m.papers) ? 'mark' : g.back.some(m => m.papers) ? 'back' : 'drop';
   const firstMark = g.mark.find(m => m.papers);
+  put($('#lbCard'), gpLookHtml());
   put($('#today'), todayHtml(prim));
   put($('#toMark'), g.mark.map(m => markRow(m, prim === 'mark' && m === firstMark)).join(''));
   put($('#handBack'), backHtml(g.back, prim === 'back'));
@@ -27888,7 +27973,7 @@ $('#handBack').addEventListener('click', e => { const a = e.target.closest('a[da
 let planBusy = null;
 function planRefresh() {
   if (planBusy) return planBusy;
-  return planBusy = planRead().catch(() => { plan = null; }).then(() => { planBusy = null; homeRender(); if (shellReady) { setRender(); todoRender(); } });   // the To do count in the sidebar follows the timetable too
+  return planBusy = planRead().catch(() => { plan = null; }).then(() => { planBusy = null; homeRender(); fcRender(); if (shellReady) { setRender(); todoRender(); } });   // the To do count in the sidebar and the Focus card's free period follow the timetable too
 }
 document.addEventListener('visibilitychange', () => { if (!document.hidden && !batch) planRefresh(); });
 window.addEventListener('pageshow', e => { if (e.persisted) planRefresh(); });
@@ -28156,7 +28241,7 @@ function tdWRow(r) {
 }
 function tdWeekHtml(rows, today) {
   const mon = tdAdd(today, -((tdAt(today).getDay() + 6) % 7) + 7 * tdS.week), days = [0, 1, 2, 3, 4, 5, 6].map(i => tdAdd(mon, i)), end = days[6], cur = today >= mon && today <= end;
-  const by = new Map(days.map(d => [d, []])), later = [];
+  const by = new Map(days.map(d => [d, []])), later = [], due = gpWeek(mon, end);   // the grading due each day, at her pace (src/gradeplan.js)
   for (const r of rows) {
     if (r.done) { const dd = isoDay(r.done); if (by.has(dd)) by.get(dd).push(r); continue; }
     if (!r.d || r.d > end) later.push(r);
@@ -28172,13 +28257,13 @@ function tdWeekHtml(rows, today) {
     const under = new Map(meets.map(m => [m.c.id, []])), any = [];
     for (const r of list) { const p = tdPid(r); (under.has(p) ? under.get(p) : any).push(r); }
     const name = day === today ? 'Today' : tdAt(day).toLocaleDateString(LANG_LOCALE, { weekday: 'short' });
-    return '<section class="tdday' + (day === today ? ' now' : day < today ? ' past' : '') + '" data-tdday="' + day + '"><h3><b' + (day === today ? '' : ' data-raw') + '>' + esc(name) + '</b><span data-raw>' + esc(day === today ? tdDayLong(day) : bkDay(day)) + '</span></h3>' +
+    return '<section class="tdday' + (day === today ? ' now' : day < today ? ' past' : '') + '" data-tdday="' + day + '"><h3><b' + (day === today ? '' : ' data-raw') + '>' + esc(name) + '</b><span data-raw>' + esc(day === today ? tdDayLong(day) : bkDay(day)) + '</span></h3>' + due.day(day) +
       (t.off ? '<p class="tdoff" data-raw>' + esc(t.off) + '</p>' : '') + (any.length && meets.length ? '<div class="tdany">Any time</div>' : '') + any.map(tdWRow).join('') +
       meets.map(m => '<div class="tdcl" data-raw>' + tdDot(null, m.c.color) + '<b>' + esc(m.c.name) + '</b><span>' + esc(planTime(m.m.start)) + '</span></div>' + under.get(m.c.id).map(tdWRow).join('')).join('') + add(day, name) + '</section>';
   };
   const say = tdAt(mon).toLocaleDateString(LANG_LOCALE, { month: 'long', day: 'numeric' });
   return '<div class="tdwbar"><button class="btn sm" data-tdwk="-1" aria-label="The week before" title="The week before">‹</button><b>Week of <span data-raw>' + esc(say) + '</span></b><button class="btn sm" data-tdwk="1" aria-label="The week after" title="The week after">›</button>' +
-    (tdS.week ? '<button class="btn sm" data-tdwk="0">This week</button>' : '') + '<span class="muted">Anything not done moves to today on its own. Drag a line to another day.</span></div>' +
+    (tdS.week ? '<button class="btn sm" data-tdwk="0">This week</button>' : '') + (due.bar || '<span class="muted">Anything not done moves to today on its own. Drag a line to another day.</span>') + '</div>' +
     '<div class="tdwk">' + days.map(col).join('') + '<section class="tdday tdlater" data-tdday=""><h3><b>Later</b><span>no day, or after this week</span></h3>' + later.sort(tdSort).map(r => tdWRow(r)).join('') + add('', 'later') + '</section></div>';
 }
 function tdSideHtml(rows, today) {
@@ -28393,13 +28478,18 @@ Object.assign(window.__gs, { todoShowPerson, todoForPerson, todoRead, todoAdd, t
                    { day, base: { <download id>: papers done when the day began }, days: { 'YYYY-MM-DD': { p: papers, s: seconds focused,
                      sm: seconds focused on papers, pa: { <assignment id>: papers }, g: seconds grading, a: { <assignment id>: seconds } } },
                      pace: [[seconds, papers], …] the last sessions that finished a paper, last: the work picked last,
-                     add: [{ id, d: day, k: 'g' | 'l', s: seconds, x: a few words }] time added by hand (src/tracker.js) }
+                     add: [{ id, d: day, k: 'g' | 'l', s: seconds, x: a few words }] time added by hand (src/tracker.js),
+                     carry: a session goal not reached, by: { <download id>: the day to finish it by } }
+                   A day also keeps n: the sessions of a minute or more. The goal can be { k, n, per: 'week' } or for some days { days: [1, 3] }.
+                   A session's own goal (sg on gs.focusRun) is a few papers, the whole set, the to-do, or a few words she typed.
                    Ids and numbers only: no name, no title, nothing a student wrote. Days are kept for 400 days.
      gs.focusRun   the session going on in this browser, so a refresh keeps it. It stays in this browser (LS_LOCAL).
    A paper counts toward the day when its score is finished, or its feedback complete on a formative activity, wherever that is
    done: the count is how far each download has come since the day began (keptState), so marking in Quick mark counts too. */
 var FC_ON = false;   // set at the end of this file; keepWork (src/app/kept.js) may run before it
 const FC_LENS = [5, 10, 15, 20, 25, 30, 45, 60], FC_BRKS = [3, 5, 10, 15], FC_AWAY = 180e3, FC_DAY = 864e5, FC_KEEP = 400, TK_IDLES = [2, 5, 10, 15];
+const FC_DOWS = [1, 2, 3, 4, 5, 6, 0];
+const fcGoalMax = (k, per) => (k === 'min' ? 600 : 500) * (per === 'week' ? 7 : 1);
 const FC_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="7.5"/><path d="M12 9.5V13l2.3 1.6M10 3h4"/></svg>';
 const FC_PLAY = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z"/></svg>';
 const FC_TICK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
@@ -28410,17 +28500,25 @@ function fcConf() {
   const f = me().focus || {}, g = f.goal || null;
   return { len: FC_LENS.includes(+f.len) ? +f.len : 10, brk: FC_BRKS.includes(+f.brk) ? +f.brk : 5, sound: f.sound !== false, title: f.title !== false,
     track: f.track !== false, idle: TK_IDLES.includes(+f.idle) ? +f.idle : 5,
-    goal: g && (g.k === 'papers' || g.k === 'min') && +g.n > 0 ? { k: g.k, n: Math.min(g.k === 'min' ? 600 : 500, Math.round(+g.n)) } : null };
+    free: f.free !== false, wk: f.wk === false ? false : [0, 1, 2, 3, 4, 5, 6].includes(f.wk) ? f.wk : 5, quiet: f.quiet === true, short: f.short === true,   // src/gradeplan.js
+    sg: f.sg !== false,   // a goal suggested for each session
+    goal: g && (g.k === 'papers' || g.k === 'min') && +g.n > 0 ? { k: g.k, n: Math.min(fcGoalMax(g.k, g.per), Math.round(+g.n)), per: g.per === 'week' ? 'week' : 'day',
+      days: g.per !== 'week' && Array.isArray(g.days) && g.days.some(d => FC_DOWS.includes(d)) ? FC_DOWS.filter(d => g.days.includes(d)) : null } : null };
 }
 function fcConfSet(part) {
   const c = { ...fcConf(), ...part }, o = {};
   if (c.len !== 10) o.len = c.len;
   if (c.brk !== 5) o.brk = c.brk;
-  if (c.goal) o.goal = { k: c.goal.k, n: c.goal.n };
+  if (c.goal) o.goal = { k: c.goal.k, n: c.goal.n, ...(c.goal.per === 'week' ? { per: 'week' } : {}), ...(c.goal.days && c.goal.days.length < 7 ? { days: c.goal.days } : {}) };
+  if (!c.sg) o.sg = false;
   if (!c.sound) o.sound = false;
   if (!c.title) o.title = false;
   if (!c.track) o.track = false;
   if (c.idle !== 5) o.idle = c.idle;
+  if (!c.free) o.free = false;
+  if (c.wk !== 5) o.wk = c.wk;
+  if (c.quiet) o.quiet = true;
+  if (c.short) o.short = true;
   meDrop('focus', Object.keys(o).length ? o : null);
   if (typeof tkShare === 'function') tkShare();
   fcRender();
@@ -28431,7 +28529,10 @@ function fcLog() {
   const L = store.get('gs.focus', null) || {};
   return { day: typeof L.day === 'string' ? L.day : '', base: L.base && typeof L.base === 'object' ? L.base : {}, days: L.days && typeof L.days === 'object' ? L.days : {},
     pace: Array.isArray(L.pace) ? L.pace.filter(x => Array.isArray(x) && x[0] > 0 && x[1] > 0) : [], last: typeof L.last === 'string' ? L.last : '',
-    add: Array.isArray(L.add) ? L.add.filter(x => x && typeof x.d === 'string' && (x.k === 'g' || x.k === 'l') && x.s > 0) : [] };
+    add: Array.isArray(L.add) ? L.add.filter(x => x && typeof x.d === 'string' && (x.k === 'g' || x.k === 'l') && x.s > 0) : [],
+    ...(typeof L.lbHid === 'string' ? { lbHid: L.lbHid } : {}),   // the week whose look-back was put away (src/gradeplan.js)
+    ...(L.carry && typeof L.carry.w === 'string' && L.carry.t > 0 ? { carry: L.carry } : {}),
+    ...(L.by && typeof L.by === 'object' ? { by: L.by } : {}) };   // { <download>: 'YYYY-MM-DD' }: the day a set is to be finished by
 }
 const fcLogSet = L => store.set('gs.focus', L);
 const fcToday = () => isoDay(Date.now());
@@ -28452,6 +28553,8 @@ function fcSeen(id) {
   const p = fcPapersOf(L), d = L.days[today] || {}, pa = fcPapersBy(L);
   if ((d.p || 0) !== p || JSON.stringify(d.pa || {}) !== JSON.stringify(pa)) { L.days[today] = { ...d, p, pa }; if (!p) delete L.days[today].pa; ch = true; }
   for (const k of Object.keys(L.days)) if (Date.now() - new Date(k + 'T12:00:00') > FC_KEEP * FC_DAY) { delete L.days[k]; ch = true; }
+  if (L.by) for (const k of Object.keys(L.by)) if (!keptMeta.has(k) || !(L.by[k] >= today)) { delete L.by[k]; ch = true; }
+  if (L.carry && Date.now() - L.carry.t > 3 * FC_DAY) { delete L.carry; ch = true; }
   const old = L.add.length; L.add = L.add.filter(x => Date.now() - new Date(x.d + 'T12:00:00') <= FC_KEEP * FC_DAY); if (L.add.length !== old) ch = true;
   if (ch) fcLogSet(L);
 }
@@ -28462,7 +28565,13 @@ function fcWeekPapers() {
   const mon = isoDay(d); return Object.entries(L.days).filter(([k]) => k >= mon && k <= today).reduce((a, [, v]) => a + (v.p || 0), 0);
 }
 function fcPace() { const p = fcLog().pace, s = p.reduce((a, x) => a + x[0], 0), n = p.reduce((a, x) => a + x[1], 0); return n >= 3 ? s / n : 0; }
-const fcGoalNow = c => c.goal ? (c.goal.k === 'papers' ? fcPapersToday() : Math.floor(fcSecsToday() / 60)) : 0;
+function fcWeekMins() {
+  const L = fcLog(), today = fcToday(), d = new Date(today + 'T12:00:00'); d.setDate(d.getDate() - (d.getDay() + 6) % 7);
+  const mon = isoDay(d); return Math.floor((Object.entries(L.days).filter(([k]) => k >= mon && k < today).reduce((a, [, v]) => a + (v.s || 0), 0) + fcSecsToday()) / 60);
+}
+const fcWeekPapersNow = () => { const L = fcLog(), t = (L.days[fcToday()] || {}).p || 0; return fcWeekPapers() - t + fcPapersToday(); };
+const fcGoalNow = c => !c.goal ? 0 : c.goal.per === 'week' ? (c.goal.k === 'papers' ? fcWeekPapersNow() : fcWeekMins()) : (c.goal.k === 'papers' ? fcPapersToday() : Math.floor(fcSecsToday() / 60));
+const fcGoalDay = (c, day) => !c.goal || c.goal.per === 'week' || !c.goal.days || c.goal.days.includes(new Date((day || fcToday()) + 'T12:00:00').getDay());
 
 /* ---------- the session ---------- */
 const fcRun = () => { const r = store.get('gs.focusRun', null); return r && r.st ? r : null; };
@@ -28470,6 +28579,7 @@ const fcRunSet = r => { if (r) store.set('gs.focusRun', r); else store.del('gs.f
 const fcElapsed = r => Math.max(0, Math.round(((r.st === 'paused' ? r.pz : Date.now()) - r.at) / 1000));
 const fcLeft = r => r.st === 'brk' ? Math.max(0, Math.round((r.brkAt + r.brkLen * 1000 - Date.now()) / 1000)) : Math.max(0, r.len - fcElapsed(r));
 const fcGot = r => r.got != null ? r.got : Math.max(0, fcPapersToday() - (r.p0 || 0));
+const fcN = r => r.one ? Math.max(1, +r.one || 1) : 0;   // papers a "Just one paper" or "Just 3 papers" session is for
 const fcClock = s => Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
 
 function fcWorks() {
@@ -28512,11 +28622,92 @@ function fcChime() {
   } catch {}
 }
 
-function fcStart(len, key, one) {
+/* ---------- a goal for each session ----------
+   Set in a press before the session starts, kept in view while it runs, and looked at when it ends. A goal not reached goes into the
+   next session on the same work (for three days), so a set can be worked through over several sittings. Without a goal picked by hand,
+   one is suggested: what was carried over, or as many papers as the session usually holds at her pace (Settings can switch that off). */
+const FC_CARRY = 12 * 3600e3;
+function fcSgSuggest(w, len) {
+  const cy = fcLog().carry, key = w ? w.key : '';
+  if (cy && cy.w === key && Date.now() - cy.t < FC_CARRY) {
+    if (cy.k === 'papers' && w && w.mark && w.left) return { k: 'papers', n: Math.max(1, Math.min(+cy.n || 1, w.left)), c: 1 };
+    if (cy.k === 'set' && w && w.mark && w.left) return { k: 'set', c: 1 };
+    if (cy.k === 'td' && w && !w.mark && !w.done) return { k: 'td', c: 1 };
+    if (cy.k === 'note' && !w && cy.x) return { k: 'note', x: String(cy.x).slice(0, 80), c: 1 };
+  }
+  if (!fcConf().sg || !w) return null;
+  if (!w.mark) return w.done ? null : { k: 'td' };
+  if (!w.left) return null;
+  const it = cardOfKept(w.id), pace = gpReady ? gpPaces()(it ? it.id : '') : fcPace();
+  if (!pace) return null;
+  const n = Math.max(1, Math.round(len * 60 / pace));
+  return n >= w.left ? { k: 'set' } : { k: 'papers', n };
+}
+const fcSgNow = (w, len) => fcS.sg !== undefined && fcS.sgw === (w ? w.key : '') ? fcS.sg : fcSgSuggest(w, len);
+function fcSgN(g, w, len) {
+  if (g && g.k === 'papers') return g.n;
+  const s = len ? fcSgSuggest(w, len) : null;
+  return Math.min(w && w.left || 1, s && s.k === 'papers' ? s.n : 3);
+}
+function fcSgMet(r, w) {
+  const g = r.sg; if (!g) return false;
+  if (r.sgMet != null) return r.sgMet;
+  return g.k === 'papers' ? fcGot(r) >= g.n : g.k === 'set' ? !!w && !!w.mark && !w.left : g.k === 'td' ? !!w && !!w.done : false;
+}
+function fcSgText(g, r, w) {
+  if (g.k === 'papers') return r && !fcSgMet(r, w) ? fcGot(r) + ' of ' + g.n + ' papers' : people(g.n, 'paper');
+  return g.k === 'set' ? 'Finish the set' : g.k === 'td' ? 'Finish this to-do' : '';
+}
+const fcSgSpan = (g, r, w) => g.k === 'note' ? '<span data-raw>' + esc(g.x) + '</span>' : '<span>' + esc(fcSgText(g, r, w)) + '</span>';
+function fcSgPick(w, len) {
+  if (w && (w.mark ? !w.left : w.done)) return '';
+  const g = fcSgNow(w, len), k = g ? g.k : '';
+  const b = (v, label) => '<button data-fcsg="' + v + '" aria-pressed="' + (k === v) + '">' + label + '</button>';
+  let h;
+  if (w && w.mark) {
+    const n = fcSgN(g, w, len);
+    h = '<span class="seg" role="group" aria-label="Goal for this session">' + b('', 'No goal') + b('papers', people(n, 'paper')) + (w.left > 1 ? b('set', 'Finish the set') : '') + '</span>' +
+      (k === 'papers' ? '<span class="fcsgn"><button class="icon" data-fcsgn="-1" aria-label="Fewer papers"' + (n <= 1 ? ' disabled' : '') + '>−</button><button class="icon" data-fcsgn="1" aria-label="More papers"' + (n >= w.left ? ' disabled' : '') + '>+</button></span>' : '');
+  } else if (w) h = '<span class="seg" role="group" aria-label="Goal for this session">' + b('', 'No goal') + b('td', 'Finish this to-do') + '</span>';
+  else h = '<input type="text" class="fcsgx" data-fcsgx maxlength="80" placeholder="What do you want to get done?" aria-label="Goal for this session" value="' + esc(g && g.k === 'note' ? g.x : '') + '">';
+  return '<div class="fcsgpick"><span class="fcl">Goal for this session</span><div class="fcsgrow">' + h + '</div>' + (g && g.c ? '<p class="fcsgc">Carried over from your last session</p>' : '') + '</div>';
+}
+function fcSgLine(r, w) {
+  const g = r.sg; if (!g) return '';
+  const met = fcSgMet(r, w);
+  return '<div class="fcsg' + (met ? ' met' : '') + '"><span class="fcl">Session goal</span>' + fcSgSpan(g, r, w) + (met ? '<span class="fcmet">' + FC_TICK + '<span>Reached</span></span>' : '') + '</div>';
+}
+function fcSgReview(r, w) {
+  const g = r.sg; if (!g) return '';
+  if (fcSgMet(r, w)) return '<p class="fcsgr met"><span class="fcok">' + FC_TICK + '</span><span>Session goal reached</span></p>';
+  const cy = fcLog().carry, carried = !!cy && cy.w === (r.w || '');
+  const what = g.k === 'set' ? (w && w.left ? '<span>' + esc(people(w.left, 'paper') + ' left') + '</span>' : '') : fcSgSpan(g, r, w);
+  return '<div class="fcsgr"><p><span class="fcl">Session goal</span> ' + what + '</p>' +
+    (carried ? '<p class="fcsgc"><span>' + (g.k === 'papers' || g.k === 'set' ? 'The rest goes into your next session.' : 'It goes into your next session.') + '</span> <button class="link" data-fccarryno>Don’t carry it over</button></p>' : '') +
+    (g.k === 'td' && w && !w.done ? '<button class="btn sm" data-fcsgdone>Mark it done</button>' : g.k === 'note' ? '<button class="btn sm" data-fcsgdone>I got it done</button>' : '') + '</div>';
+}
+function fcDaysTo(by) {
+  const c = fcConf(), days = c.goal && c.goal.days ? c.goal.days : [1, 2, 3, 4, 5], today = fcToday(), d = new Date(today + 'T12:00:00'); let n = 0;
+  for (let i = 0; i < 400 && isoDay(d) <= by; i++, d.setDate(d.getDate() + 1)) if (isoDay(d) === today || days.includes(d.getDay())) n++;
+  return Math.max(1, n);
+}
+function fcByHtml(w) {
+  if (!w || !w.mark || !w.left) return '';
+  const today = fcToday(), by = (fcLog().by || {})[w.id] || '';
+  return '<div class="fcby"><label><span>Finish by</span> <input type="date" data-fcby min="' + today + '" value="' + esc(by >= today ? by : '') + '"></label>' +
+    (by >= today ? '<span>' + esc(people(Math.ceil(w.left / fcDaysTo(by)), 'paper') + ' a day') + '</span>' : '') + '</div>';
+}
+
+function fcStart(len, key, one, sg) {
   fcAudioWake();
-  const L = fcLog(); L.last = key || ''; fcLogSet(L);
   const was = fcRun(); if (was && (was.st === 'run' || was.st === 'paused')) fcRecord(was);
-  fcRunSet({ st: 'run', len: Math.round(len * 60), at: Date.now(), w: key || '', one: !!one, p0: fcPapersToday(), fold: false });
+  const L = fcLog(), w = fcWork(key);
+  if (sg === undefined) sg = one ? null : fcSgNow(w, len);
+  L.last = key || ''; if (L.carry && L.carry.w === (key || '')) delete L.carry; fcLogSet(L);
+  fcS.sg = undefined; fcS.sgw = null;
+  const no = ((fcLog().days[fcToday()] || {}).n || 0) + 1;
+  fcRunSet({ st: 'run', len: Math.round(len * 60), at: Date.now(), w: key || '', one: one ? Math.max(1, +one || 1) : 0, p0: fcPapersToday(), fold: false, no,
+    ...(sg ? { sg: sg.k === 'papers' ? { k: 'papers', n: sg.n } : sg.k === 'note' ? { k: 'note', x: sg.x } : { k: sg.k } } : {}) });
   fcGoTo(false);
 }
 function fcGoTo(next) {
@@ -28533,10 +28724,14 @@ function fcLeftHere(i) { const st = batch && batch.students[i]; if (!st) return 
 function fcRecord(r) {
   if (r.secs != null) return r;
   const secs = Math.min(r.one ? 4 * 3600 : r.len, fcElapsed(r)), got = fcGot(r), L = fcLog(), today = fcToday(), d = L.days[today] || {};
-  L.days[today] = { ...d, s: (d.s || 0) + secs, ...(/^mark:/.test(r.w || '') ? { sm: (d.sm || 0) + secs } : {}) };
+  L.days[today] = { ...d, s: (d.s || 0) + secs, ...(/^mark:/.test(r.w || '') ? { sm: (d.sm || 0) + secs } : {}), ...(secs >= 60 ? { n: (d.n || 0) + 1 } : {}) };
   if (got > 0 && secs >= 30) L.pace = [...L.pace, [secs, got]].slice(-20);
+  Object.assign(r, { secs, got });
+  const g = r.sg, w = g ? fcWork(r.w) : null;
+  if (g && !fcSgMet(r, w) && (g.k === 'note' || (w && (w.mark ? w.left : !w.done)))) L.carry = { w: r.w || '', t: Date.now(), k: g.k, ...(g.k === 'papers' ? { n: Math.max(1, g.n - got) } : g.k === 'note' ? { x: g.x } : {}) };
+  else if (L.carry && L.carry.w === (r.w || '')) delete L.carry;
   fcLogSet(L);
-  return Object.assign(r, { secs, got });
+  return r;
 }
 function fcUp(r) { fcRecord(r); r.st = 'up'; r.fold = false; fcRunSet(r); fcChime(); }
 function fcPause() { const r = fcRun(); if (!r || r.st !== 'run') return; r.st = 'paused'; r.pz = Date.now(); fcRunSet(r); }
@@ -28557,7 +28752,7 @@ function fcTickOn() {
 function fcTick() {
   const r = fcRun(); if (!r) return fcTickOn();
   if (r.st === 'run') {
-    if (r.one ? fcGot(r) >= 1 : fcLeft(r) <= 0) return fcUp(r);
+    if (r.one ? fcGot(r) >= fcN(r) : fcLeft(r) <= 0) return fcUp(r);
   } else if (r.st === 'brk' && fcLeft(r) <= 0) { r.st = 'brkup'; r.fold = false; fcRunSet(r); fcChime(); return; }
   fcClockDraw(); fcTitle();
 }
@@ -28583,6 +28778,7 @@ const fcFrac = r => r.st === 'brk' ? fcLeft(r) / (r.brkLen || 1) : r.one ? 1 : f
 const fcUnit = k => k === 'min' ? 'minutes' : 'papers';
 const FC_DOTS = 30;
 function fcGoalHtml(c, card) {
+  if (c.goal && !fcGoalDay(c)) { const p = fcPapersToday(); return '<div class="fcnogoal"><span>' + (p ? 'Today: ' + people(p, 'paper') : 'No goal today') + '</span><a class="link" href="#/settings/focus">Goal days</a></div>'; }
   if (!c.goal) {
     const p = fcPapersToday();
     return '<div class="fcnogoal"><span>' + (p ? 'Today: ' + people(p, 'paper') : 'No daily goal yet') + '</span><a class="link" href="#/settings/focus">' + (p ? 'Set a goal' : 'Set one') + '</a></div>';
@@ -28593,12 +28789,13 @@ function fcGoalHtml(c, card) {
   const pop = card ? '' : fcS.popAt != null && fcS.popAt < had ? had - 1 : -1;
   fcS.popAt = card ? fcS.popAt : had;
   let viz;
-  if (total <= FC_DOTS) {
+  if (total <= FC_DOTS && c.goal.per !== 'week') {
     const half = Math.ceil(total / 2);
     viz = '<span class="fcdots' + (mins ? ' blk' : '') + '" aria-hidden="true">' + Array.from({ length: total }, (_, i) => '<i class="' + [i < was ? 'fon' : i < had ? 'fnow' : '', i === half && total >= 6 ? 'fhalf' : '', i === pop ? 'fpop' : ''].filter(Boolean).join(' ') + '"></i>').join('') + '</span>';
   } else viz = '<span class="fcbar" aria-hidden="true"><i style="width:' + Math.min(100, Math.round(n / c.goal.n * 100)) + '%"></i><b style="left:50%"></b></span>';
   const extra = met && n > c.goal.n ? ' +' + (n - c.goal.n) : '';
-  return '<div class="fcgoal' + (met ? ' met' : '') + '" role="img" aria-label="Today: ' + n + ' of ' + c.goal.n + ' ' + fcUnit(c.goal.k) + '"><div class="fcgh"><b>Today</b><span class="fcnum">' +
+  const wk = c.goal.per === 'week';
+  return '<div class="fcgoal' + (met ? ' met' : '') + '" role="img" aria-label="' + (wk ? 'This week' : 'Today') + ': ' + n + ' of ' + c.goal.n + ' ' + fcUnit(c.goal.k) + '"><div class="fcgh"><b>' + (wk ? 'This week' : 'Today') + '</b><span class="fcnum">' +
     (met ? '<span class="fcmet">' + FC_TICK + '<span>Goal reached</span></span>' + (extra ? '<span data-raw>' + extra + '</span>' : '') : '<span>' + n + ' of ' + c.goal.n + ' ' + fcUnit(c.goal.k) + '</span>') + '</span></div>' + viz + '</div>';
 }
 function fcWeekHtml(c) {
@@ -28606,39 +28803,45 @@ function fcWeekHtml(c) {
   const days = Array.from({ length: 7 }, (_, i) => { const d = new Date(d0); d.setDate(d0.getDate() + i); const k = isoDay(d), v = L.days[k] || {}; return { k, d, v: c.goal && c.goal.k === 'min' ? Math.floor((v.s || 0) / 60) + (k === today ? Math.floor(fcSecsToday() / 60) - Math.floor((v.s || 0) / 60) : 0) : (k === today ? fcPapersToday() : v.p || 0) }; })
     .filter((x, i) => i < 5 || x.v > 0 || x.k === today);
   if (!days.some(x => x.v > 0)) return '';
-  const goal = c.goal ? c.goal.n : 0, top = Math.max(goal * 1.25, ...days.map(x => x.v), 1);
+  const goal = c.goal && c.goal.per !== 'week' ? c.goal.n : 0, top = Math.max(goal * 1.25, ...days.map(x => x.v), 1);
   return '<div class="fcweek"><span class="fcl">This week</span><div class="fcwk' + (goal ? ' hasg' : '') + '" style="--g:' + Math.round(goal / top * 100) + '%" role="img" data-raw aria-label="' + esc(days.map(x => x.d.toLocaleDateString(LANG_LOCALE, { weekday: 'short' }) + ' ' + x.v).join(', ')) + '">' +
-    days.map(x => '<span class="fcwd' + (x.k === today ? ' now' : '') + (x.k > today ? ' later' : '') + (goal && x.v >= goal ? ' met' : '') + '"><span class="fcwc">' + (goal && x.v >= goal ? FC_TICK : '') + '</span><span class="fcwb"><i style="height:' + Math.round(x.v / top * 100) + '%"></i></span><span class="fcwl" data-raw>' + esc(x.d.toLocaleDateString(LANG_LOCALE, { weekday: 'narrow' })) + '</span></span>').join('') + '</div></div>';
+    days.map(x => '<span class="fcwd' + (x.k === today ? ' now' : '') + (x.k > today ? ' later' : '') + (goal && x.v >= goal && fcGoalDay(c, x.k) ? ' met' : '') + '"><span class="fcwc">' + (goal && x.v >= goal && fcGoalDay(c, x.k) ? FC_TICK : '') + '</span><span class="fcwb"><i style="height:' + Math.round(x.v / top * 100) + '%"></i></span><span class="fcwl" data-raw>' + esc(x.d.toLocaleDateString(LANG_LOCALE, { weekday: 'narrow' })) + '</span></span>').join('') + '</div></div>';
 }
 function fcWorkSay(w) {
   if (!w) return 'A session with nothing set: the timer only.';
   if (!w.mark) return 'A to-do';
   if (!w.left) return w.fm ? 'Feedback is complete for everyone' : 'Everyone has a score';
-  const pace = fcPace();
+  const it = cardOfKept(w.id), pace = gpReady ? gpPaces()(it ? it.id : '') : fcPace();
   return [people(w.left, 'paper') + ' left', pace ? 'about ' + people(Math.max(1, Math.round(w.left * pace / 60)), 'minute') + ' at your pace' : ''].filter(Boolean).join(' · ');
 }
 function fcStartHtml(card) {
   const c = fcConf(), works = fcWorks(), key = fcPicked(works), w = works.find(x => x.key === key) || null, len = fcS.len || c.len;
   const opt = x => '<option value="' + esc(x.key) + '"' + (x.key === key ? ' selected' : '') + ' data-raw>' + esc(x.name + (x.cls ? ' · ' + x.cls : '')) + '</option>';
   const marks = works.filter(x => x.mark), tds = works.filter(x => !x.mark);
-  return '<div class="fcbody">' + fcGoalHtml(c, true) + (card ? fcWeekHtml(c) + tkTodayHtml() : '') + '<div class="fcline"></div>' +
+  return '<div class="fcbody">' + gpTopHtml(w) + fcGoalHtml(c, true) + (card ? fcWeekHtml(c) + tkTodayHtml() : '') + '<div class="fcline"></div>' +
     '<div><label class="fcl">Work on</label><select class="fcwork" data-fcwork aria-label="Work on">' + marks.map(opt).join('') +
     (marks.length && tds.length ? '<option disabled data-raw>──────────</option>' : '') + tds.map(opt).join('') + '<option value=""' + (key === '' ? ' selected' : '') + '>' + esc(tr('Nothing in particular')) + '</option></select>' +
-    '<p class="fcsay">' + esc(fcWorkSay(w)) + '</p></div>' +
-    '<div class="fcgo"><button class="btn' + (card ? '' : ' primary') + '" data-fcstart="' + len + '">' + FC_PLAY + '<span>Start ' + len + ' minutes</span></button>' + (w && w.mark && w.left ? '<button class="btn" data-fcone>Just one paper</button>' : '') + '</div>' +
+    '<p class="fcsay">' + esc(fcWorkSay(w)) + '</p>' + fcByHtml(w) + '</div>' + fcSgPick(w, len) +
+    '<div class="fcgo"><button class="btn' + (card ? '' : ' primary') + '" data-fcstart="' + len + '">' + FC_PLAY + '<span>Start ' + len + ' minutes</span></button>' + (w && w.mark && w.left ? '<button class="btn" data-fcone>Just one paper</button>' : '') + (w && w.mark && w.left >= 3 ? '<button class="btn" data-fcone="3">Just 3 papers</button>' : '') + '</div>' +
+    (w && w.mark && w.left > 1 ? '<label class="fcshort"><input type="checkbox" data-fcshort' + (c.short ? ' checked' : '') + '> Shortest papers first</label>' : '') +
     '<div class="fclens" role="group" aria-label="How long"><span>Or</span>' + [5, 10, 15, 25].concat(FC_LENS.includes(len) && ![5, 10, 15, 25].includes(len) ? [len] : []).sort((a, b) => a - b).map(n => '<button data-fclen="' + n + '" aria-pressed="' + (n === len) + '">' + n + '</button>').join('') + '<span>minutes</span></div></div>';
 }
 function fcCardRender() {
   const box = $('#fcCardBody'); if (!box) return;
   const r = fcRun(), on = r && r.st !== 'done';
+  if (box.contains(document.activeElement) && document.activeElement.matches('[data-fcsgx], [data-fcby]')) return;   // not under her typing
   const h = on ? '<div class="fcbody">' + fcGoalHtml(fcConf(), true) + fcWeekHtml(fcConf()) + '<div class="fcline"></div><div class="fcnogoal"><span>' + (r.st === 'brk' || r.st === 'brkup' ? 'You are on a break' : 'A session is on') + '</span><button class="btn sm" data-fcshow>Show the timer</button></div></div>' : fcStartHtml(true);
   if (box.dataset.h !== h) { box.dataset.h = h; box.innerHTML = h; }
 }
 const fcHead = (cap, fold) => '<div class="fchead"><h2 class="tcap">' + cap + '</h2><span class="sp"></span>' + (fold ? '<button class="icon" data-fcfold title="Fold it away" aria-label="Fold it away">–</button>' : '<button class="icon" data-fcclose title="Close" aria-label="Close">✕</button>') + '</div>';
 function fcWhatHtml(r, w) {
-  const sub = [w && w.cls ? '<span data-raw>' + esc(w.cls) + '</span>' : '', r.one ? 'Just one paper' : w && w.mark ? (w.left ? people(w.left, 'paper') + ' left' : w.fm ? 'Feedback is complete for everyone' : 'Everyone has a score') : w ? 'A to-do' : 'The timer only'].filter(Boolean);
+  const sub = [w && w.cls ? '<span data-raw>' + esc(w.cls) + '</span>' : '', r.one ? (fcN(r) > 1 ? 'Just 3 papers' : 'Just one paper') : w && w.mark ? (w.left ? people(w.left, 'paper') + ' left' : w.fm ? 'Feedback is complete for everyone' : 'Everyone has a score') : w ? 'A to-do' : 'The timer only'].filter(Boolean);
   return '<div class="fcwhat"><b data-raw>' + esc(w ? w.name : tr('Focus')) + '</b><span>' + sub.map(x => x.startsWith('<') ? x : '<span>' + esc(x) + '</span>').join(' · ') + '</span>' +
     (w && w.mark && w.left && r.st !== 'brk' ? '<button class="btn sm primary" data-fcnext>Next paper →</button>' : '') + '</div>';
+}
+function fcSgNext(w, len) {
+  const g = fcSgNow(w, len); if (!g) return '';
+  return '<p class="fcp fcsgnext"><span class="fcl">Session goal</span> ' + fcSgSpan(g, null, w) + (g.c ? ' <span class="muted">(carried over)</span>' : '') + '</p>';
 }
 function fcPanelHtml(r) {
   const c = fcConf(), w = r ? fcWork(r.w) : null;
@@ -28652,27 +28855,28 @@ function fcPanelHtml(r) {
       '<div class="fcacts"><button class="btn sm primary" data-fcaway="keep">Keep going</button><button class="btn sm" data-fcaway="again">Start the clock again</button></div></div>';
     const got = fcGot(r);
     return fcHead(r.st === 'paused' ? 'Paused' : 'Focusing', true) + '<div class="fcrunv"><div class="fctop"><div class="fcclock' + (r.st === 'paused' ? ' paused' : '') + '"><span class="fcpr"></span><span class="fctime fct"></span></div>' + fcWhatHtml(r, w) + '</div>' +
-      '<div class="fcstats"><div class="fcstat"><span>This session</span><span>' + people(got, 'paper') + '</span></div>' + fcGoalHtml(c) + '</div>' +
+      '<div class="fcstats"><div class="fcstat"><span>' + (r.no > 1 ? 'Session ' + r.no : 'This session') + '</span><span>' + people(got, 'paper') + '</span></div>' + fcSgLine(r, w) + fcGoalHtml(c) + '</div>' +
       '<div class="fcacts">' + (r.st === 'paused' ? '<button class="btn sm primary" data-fcresume>Carry on</button>' : '<button class="btn sm" data-fcpause>Pause</button>') + (r.one ? '' : '<button class="btn sm" data-fcmore="5">+5 minutes</button>') + '<span class="sp"></span><button class="btn sm ghost" data-fcstop>End</button></div></div>';
   }
   if (r.st === 'up') {
     const got = r.got || 0;
-    return fcHead('Focus') + '<div class="fcrunv"><p class="fcbig ok"><span class="fcok">' + FC_TICK + '</span><span>' + (r.one ? 'One paper done' : people(Math.round(r.len / 60), 'minute') + ' done') + '</span></p>' +
+    return fcHead('Focus') + '<div class="fcrunv"><p class="fcbig ok"><span class="fcok">' + FC_TICK + '</span><span>' + (r.one ? (fcN(r) > 1 ? '3 papers done' : 'One paper done') : people(Math.round(r.len / 60), 'minute') + ' done') + '</span></p>' +
       (w && !w.mark && !got ? '' : '<p class="fcp">' + (got ? esc('You finished ' + people(got, 'paper') + '.') : 'Nothing was finished in this one.') + '</p>') +
-      '<div class="fcstats">' + fcGoalHtml(c) + '</div>' +
-      (r.one ? '<div class="fcacts">' + (w && w.left ? '<button class="btn primary" data-fcone>One more paper</button>' : '') + '<button class="btn" data-fcstart="' + c.len + '">' + 'Keep going for ' + c.len + ' minutes' + '</button></div>'
+      fcSgReview(r, w) + '<div class="fcstats">' + fcGoalHtml(c) + '</div>' +
+      (r.one ? '<div class="fcacts">' + (w && w.left ? (fcN(r) > 1 && w.left >= 3 ? '<button class="btn primary" data-fcone="3">3 more papers</button>' : '<button class="btn primary" data-fcone>One more paper</button>') : '') + '<button class="btn" data-fcstart="' + c.len + '">' + 'Keep going for ' + c.len + ' minutes' + '</button></div>'
         : '<div class="fcacts"><button class="btn primary" data-fcbreak>Take a ' + c.brk + '-minute break</button><button class="btn" data-fcstart="' + Math.round(r.len / 60) + '" data-fcagain>' + Math.round(r.len / 60) + ' more minutes</button></div>') +
       '<div class="fcacts"><button class="btn sm ghost" data-fcstop>Stop for now</button></div></div>';
   }
   if (r.st === 'brk') return fcHead('Break', true) + '<div class="fcrunv"><div class="fctop"><div class="fcclock brk"><span class="fcpr"></span><span class="fctime fct"></span></div>' +
-    '<div class="fcwhat"><b>' + (w ? 'After the break' : 'A break') + '</b>' + (w ? '<span data-raw>' + esc(w.name) + '</span>' : '') + '</div></div>' +
+    '<div class="fcwhat"><b>' + (w ? 'After the break' : 'A break') + '</b>' + (w ? '<span data-raw>' + esc(w.name) + '</span>' : '') + '</div></div>' + fcSgNext(w, c.len) +
     '<div class="fcbrkbox">Stand up, get some water, look at something far away. A chime says when the break is over.</div>' +
     '<div class="fcacts"><button class="btn sm primary" data-fcstart="' + c.len + '" data-fcagain>Back to work now</button><span class="sp"></span><button class="btn sm ghost" data-fcstop>Stop for now</button></div></div>';
-  if (r.st === 'brkup') return fcHead('Focus') + '<div class="fcrunv"><p class="fcbig">Break’s over</p>' + (w ? '<p class="fcp"><span class="fcl">Next</span><b data-raw>' + esc(w.name) + '</b></p>' : '') +
-    '<div class="fcacts"><button class="btn primary" data-fcstart="' + c.len + '" data-fcagain>' + FC_PLAY + '<span>Start ' + c.len + ' minutes</span></button><button class="btn sm ghost" data-fcstop>Stop for now</button></div></div>';
-  const p = fcPapersToday(), mins = Math.round(fcSecsToday() / 60), wk = fcWeekPapers(), met = c.goal && fcGoalNow(c) >= c.goal.n, tdOpen = w && !w.mark && !w.done;
-  return fcHead('Focus') + '<div class="fcrunv">' + (met ? '<p class="fcbig ok"><span class="fcok">' + FC_TICK + '</span><span>Today’s goal reached</span></p>' : '<p class="fcbig">Done for now</p>') +
-    '<p class="fcp"><span>' + esc(mins ? 'Today: ' + people(p, 'paper') + ' in ' + people(mins, 'minute') + ' of focus.' : 'Today: ' + people(p, 'paper') + '.') + '</span>' + (wk > p ? ' <span>' + esc('This week: ' + people(wk, 'paper') + '.') + '</span>' : '') + '</p>' +
+  if (r.st === 'brkup') return fcHead('Focus') + '<div class="fcrunv"><p class="fcbig">Break’s over</p>' + (w ? '<p class="fcp"><span class="fcl">Next</span><b data-raw>' + esc(w.name) + '</b></p>' : '') + fcSgNext(w, c.len) +
+    '<div class="fcacts"><button class="btn primary" data-fcstart="' + c.len + '" data-fcagain>' + FC_PLAY + '<span>Start ' + c.len + ' minutes</span></button><button class="btn sm" data-fcother>Something else</button><span class="sp"></span><button class="btn sm ghost" data-fcstop>Stop for now</button></div></div>';
+  const p = fcPapersToday(), mins = Math.round(fcSecsToday() / 60), wk = fcWeekPapers(), met = c.goal && fcGoalNow(c) >= c.goal.n, tdOpen = w && !w.mark && !w.done, ns = (fcLog().days[fcToday()] || {}).n || 0;
+  return fcHead('Focus') + '<div class="fcrunv">' + (met ? '<p class="fcbig ok"><span class="fcok">' + FC_TICK + '</span><span>' + (c.goal.per === 'week' ? 'This week’s goal reached' : 'Today’s goal reached') + '</span></p>' : '<p class="fcbig">Done for now</p>') +
+    '<p class="fcp"><span>' + esc(mins ? 'Today: ' + people(p, 'paper') + ' in ' + people(mins, 'minute') + ' of focus.' : 'Today: ' + people(p, 'paper') + '.') + '</span>' + (wk > p ? ' <span>' + esc('This week: ' + people(wk, 'paper') + '.') + '</span>' : '') + (ns > 1 ? ' <span>' + esc(people(ns, 'session') + ' today.') + '</span>' : '') + '</p>' +
+    (tdOpen ? '' : fcSgReview(r, w)) +
     (c.goal ? '<div class="fcstats">' + fcGoalHtml(c) + fcWeekHtml(c) + '</div>' : '') +
     (tdOpen ? '<p class="fcp muted"><span>Is this to-do done?</span> <b data-raw>' + esc(w.name) + '</b></p><div class="fcacts"><button class="btn sm primary" data-fctick>Mark it done</button><button class="btn sm" data-fcclose>Not yet</button></div>' : '<div class="fcacts"><button class="btn sm" data-fcclose>Close</button></div>') + '</div>';
 }
@@ -28694,7 +28898,7 @@ function fcClockDraw() {
   if (!want) { if (ring) ring.remove(); }
   else if (!ring) ico.insertAdjacentHTML('beforeend', fcRing(15, 2, frac, 'fcring'));
   else { const o = ring.querySelector('.on'), cc = +o.getAttribute('stroke-dasharray'); o.setAttribute('stroke-dashoffset', (cc * (1 - Math.max(0, Math.min(1, frac)))).toFixed(2)); }
-  rb.title = on ? (r.st === 'brk' ? 'Break: ' : r.st === 'paused' ? 'Paused: ' : r.one ? 'Just one paper: ' : 'Focus: ') + s + (r.one || r.st === 'paused' ? '' : ' left') : c.goal ? 'Focus: ' + gn + ' of ' + c.goal.n + ' ' + fcUnit(c.goal.k) + ' today' : 'Focus: a timer for grading, and your daily goal';
+  rb.title = on ? (r.st === 'brk' ? 'Break: ' : r.st === 'paused' ? 'Paused: ' : r.one ? (fcN(r) > 1 ? 'Just 3 papers: ' : 'Just one paper: ') : 'Focus: ') + s + (r.one || r.st === 'paused' ? '' : ' left') : c.goal ? 'Focus: ' + gn + ' of ' + c.goal.n + ' ' + fcUnit(c.goal.k) + (c.goal.per === 'week' ? ' this week' : ' today') : 'Focus: a timer for grading, and your daily goal';
 }
 function fcPanelRender() {
   const el = $('#fcPanel'); if (!el) return;
@@ -28704,6 +28908,7 @@ function fcPanelRender() {
     const rail = $('#rail'), rr = rail && rail.offsetParent !== null ? rail.getBoundingClientRect().right : 0;
     el.style.setProperty('--fc-left', Math.max(0, Math.round(rr)) + 16 + 'px');
     const h = fcPanelHtml(r), fold = !!r && r.fold && (r.st === 'run' || r.st === 'paused' || r.st === 'brk');
+    if (el.contains(document.activeElement) && document.activeElement.matches('[data-fcsgx], [data-fcby]') && !r) return fcClockDraw();
     el.classList.toggle('fold', fold);
     if (el.dataset.h !== h) { el.dataset.h = h; el.innerHTML = h; }
   } else if (el.dataset.h) { el.dataset.h = ''; el.innerHTML = ''; }
@@ -28711,18 +28916,18 @@ function fcPanelRender() {
 }
 function fcRender() {
   if (!FC_ON || !shellReady) return;
-  fcCardRender(); fcPanelRender(); fcTitle();
+  fcCardRender(); fcPanelRender(); fcTitle(); gpQuiet();
 }
 
 /* ---------- presses ---------- */
 document.addEventListener('click', e => {
-  const t = e.target.closest('[data-fcstart], [data-fcone], [data-fclen], [data-fcnext], [data-fcpause], [data-fcresume], [data-fcmore], [data-fcstop], [data-fcbreak], [data-fcfold], [data-fcunfold], [data-fcclose], [data-fcshow], [data-fcaway], [data-fctick], #railFocus');
+  const t = e.target.closest('[data-fcstart], [data-fcone], [data-fclen], [data-fcnext], [data-fcpause], [data-fcresume], [data-fcmore], [data-fcstop], [data-fcbreak], [data-fcfold], [data-fcunfold], [data-fcclose], [data-fcshow], [data-fcaway], [data-fctick], [data-fcsg], [data-fcsgn], [data-fcsgdone], [data-fccarryno], [data-fcother], #railFocus');
   if (!t) return;
   const d = t.dataset, box = t.closest('.fcbody, #fcPanel'), sel = box && box.querySelector('[data-fcwork]');
   const pick = () => sel ? sel.value : fcRun() ? fcRun().w : fcPicked(fcWorks());
   if (t.id === 'railFocus') { e.preventDefault(); const r = fcRun(); if (r) { r.fold = !r.fold && (r.st === 'run' || r.st === 'paused' || r.st === 'brk'); fcRunSet(r); } else { fcS.open = !fcS.open; fcRender(); } return; }
   if (d.fcstart != null) return fcStart(+d.fcstart, d.fcagain != null && fcRun() ? fcRun().w : pick(), false);
-  if (d.fcone != null) return fcStart(fcConf().len, d.fcone !== undefined && fcRun() && fcRun().st === 'up' ? fcRun().w : pick(), true);
+  if (d.fcone != null) return fcStart(fcConf().len, fcRun() && fcRun().st === 'up' ? fcRun().w : pick(), +d.fcone || 1);
   if (d.fclen != null) { fcS.len = +d.fclen; return fcRender(); }
   if (d.fcnext != null) return fcGoTo(true);
   if (d.fcpause != null) return fcPause();
@@ -28734,10 +28939,36 @@ document.addEventListener('click', e => {
   if (d.fcaway) { const r = fcRun(); if (!r) return; delete r.away; if (d.fcaway === 'again') { r.at = Date.now(); r.st = 'run'; delete r.pz; } return fcRunSet(r); }
   if (d.fctick != null) { const r = fcRun(), w = r && fcWork(r.w); if (w && !w.mark && !w.done) todoTick(w.id); fcS.open = false; return fcRunSet(null); }
   if (d.fcclose != null) return fcClose();
+  if (d.fcsg != null || d.fcsgn != null) {
+    const key = pick(), w = fcWork(key), len = fcS.len || fcConf().len, g = fcSgNow(w, len);
+    fcS.sgw = key || '';
+    if (d.fcsgn != null) fcS.sg = { k: 'papers', n: Math.max(1, Math.min(w && w.left || 1, fcSgN(g, w, len) + +d.fcsgn)) };
+    else fcS.sg = d.fcsg === 'papers' ? { k: 'papers', n: fcSgN(g, w, len) } : d.fcsg === 'set' || d.fcsg === 'td' ? { k: d.fcsg } : null;
+    return fcRender();
+  }
+  if (d.fcsgdone != null) {
+    const r = fcRun(); if (!r || !r.sg) return;
+    const w = fcWork(r.w); if (r.sg.k === 'td' && w && !w.mark && !w.done) todoTick(w.id);
+    r.sgMet = true; const L = fcLog(); if (L.carry && L.carry.w === (r.w || '')) { delete L.carry; fcLogSet(L); }
+    return fcRunSet(r);
+  }
+  if (d.fccarryno != null) { const L = fcLog(); delete L.carry; fcLogSet(L); return fcRender(); }
+  if (d.fcother != null) { const r = fcRun(); fcS.open = true; if (r) fcS.pick = r.w; return fcRunSet(null); }
 });
 document.addEventListener('change', e => {
+  const b = e.target.closest('[data-fcby]');
+  if (b) {
+    const box = b.closest('.fcbody, #fcPanel'), sel = box && box.querySelector('[data-fcwork]'), w = sel && fcWork(sel.value); if (!w || !w.mark) return;
+    const L = fcLog(), by = { ...(L.by || {}) }; if (/^\d{4}-\d\d-\d\d$/.test(b.value) && b.value >= fcToday()) by[w.id] = b.value; else delete by[w.id];
+    if (Object.keys(by).length) L.by = by; else delete L.by;
+    fcLogSet(L); b.blur(); return fcRender();
+  }
   const s = e.target.closest('[data-fcwork]'); if (!s) return;
-  fcS.pick = s.value; const L = fcLog(); L.last = s.value; fcLogSet(L); fcRender();
+  fcS.pick = s.value; fcS.sg = undefined; const L = fcLog(); L.last = s.value; fcLogSet(L); fcRender();
+});
+document.addEventListener('input', e => {
+  const x = e.target.closest('[data-fcsgx]'); if (!x) return;
+  const v = x.value.trim().slice(0, 80); fcS.sgw = ''; fcS.sg = v ? { k: 'note', x: v } : null;
 });
 document.addEventListener('keydown', e => {
   if (e.key !== 'Escape' || !$('#fcPanel') || $('#fcPanel').hidden || !e.target.closest || !(e.target.closest('#fcPanel') || e.target === document.body)) return;
@@ -28755,12 +28986,15 @@ function fcSetRender(sec) {
   put('#setFocus', '<div class="lhead"><h2>Focus timer</h2><span class="muted">A timer for grading in short sessions, with breaks in between. Start it from Focus in the sidebar or the card on Today.</span></div>' +
     '<p class="setp fcset"><label for="fcLen"><b>A session lasts</b></label>' + sel('fcLen', FC_LENS, c.len, 'A session lasts') + '<label for="fcBrk"><b>A break lasts</b></label>' + sel('fcBrk', FC_BRKS, c.brk, 'A break lasts') + '</p>' +
     '<p class="setp"><label><input type="checkbox" id="fcSound"' + (c.sound ? ' checked' : '') + '> A soft chime when a session or a break ends</label></p>' +
-    '<p class="setp"><label><input type="checkbox" id="fcTitle"' + (c.title ? ' checked' : '') + '> The time left in the browser tab’s name, so you can see it from another tab</label></p>');
+    '<p class="setp"><label><input type="checkbox" id="fcTitle"' + (c.title ? ' checked' : '') + '> The time left in the browser tab’s name, so you can see it from another tab</label></p>' +
+    '<p class="setp"><label><input type="checkbox" id="fcSg"' + (c.sg ? ' checked' : '') + '> Suggest a goal for each session, from your pace</label></p>');
   const k = c.goal ? c.goal.k : '';
-  put('#setGoal', '<div class="lhead"><h2>Daily goal</h2><span class="muted">How much you want to grade in a day. Today and the timer show how far along you are. Nothing happens on a day you don’t get there.</span></div>' +
-    '<p class="setp fcset"><span class="seg" id="fcGoalK" role="group" aria-label="Daily goal">' + [['', 'No goal'], ['papers', 'Papers'], ['min', 'Minutes']].map(([v, l]) => '<button data-v="' + v + '" aria-pressed="' + (k === v) + '">' + l + '</button>').join('') + '</span>' +
-    (c.goal ? '<input type="number" id="fcGoalN" min="1" max="' + (k === 'min' ? 600 : 500) + '" step="1" value="' + c.goal.n + '" aria-label="' + (k === 'min' ? 'Minutes a day' : 'Papers a day') + '"><span class="muted">' + (k === 'min' ? 'minutes of focus a day' : 'papers a day') + '</span>' : '') + '</p>' +
-    '<p class="muted setp">A paper counts when its score is finished, or its feedback is complete on a formative activity, wherever you do it. Minutes count while a session runs.</p>');
+  put('#setGoal', '<div class="lhead"><h2>Grading goal</h2><span class="muted">How much you want to grade in a day or a week. Today and the timer show how far along you are. Nothing happens on a day you don’t get there.</span></div>' +
+    '<p class="setp fcset"><span class="seg" id="fcGoalK" role="group" aria-label="Grading goal">' + [['', 'No goal'], ['papers', 'Papers'], ['min', 'Minutes']].map(([v, l]) => '<button data-v="' + v + '" aria-pressed="' + (k === v) + '">' + l + '</button>').join('') + '</span>' +
+    (c.goal ? '<input type="number" id="fcGoalN" min="1" max="' + fcGoalMax(k, c.goal.per) + '" step="1" value="' + c.goal.n + '" aria-label="' + (k === 'min' ? 'Minutes' : 'Papers') + '"><span class="muted">' + (k === 'min' ? 'minutes of focus' : 'papers') + '</span>' +
+      '<select id="fcGoalPer" class="btn sm" aria-label="How often"><option value="day"' + (c.goal.per === 'day' ? ' selected' : '') + '>a day</option><option value="week"' + (c.goal.per === 'week' ? ' selected' : '') + '>a week</option></select>' : '') + '</p>' +
+    (c.goal && c.goal.per === 'day' ? '<p class="setp fcset fcdays"><span class="muted">On these days</span>' + FC_DOWS.map(d => '<label><input type="checkbox" data-fcgday="' + d + '"' + (!c.goal.days || c.goal.days.includes(d) ? ' checked' : '') + '> <span data-raw>' + esc(new Date(2026, 10, 15 + d).toLocaleDateString(LANG_LOCALE, { weekday: 'short' })) + '</span></label>').join('') + '</p>' : '') +
+    '<p class="muted setp"><span>A paper counts when its score is finished, or its feedback is complete on a formative activity, wherever you do it. Minutes count while a session runs.</span> <span>A week starts on Monday.</span></p>');
 }
 $('#setPane').addEventListener('change', e => {
   const t = e.target;
@@ -28768,12 +29002,15 @@ $('#setPane').addEventListener('change', e => {
   if (t.id === 'fcBrk') { fcConfSet({ brk: +t.value }); return setRender(); }
   if (t.id === 'fcSound') { fcConfSet({ sound: t.checked }); if (t.checked) { fcAudioWake(); fcChime(); } return setRender(); }
   if (t.id === 'fcTitle') { fcConfSet({ title: t.checked }); return setRender(); }
-  if (t.id === 'fcGoalN') { const g = fcConf().goal; if (!g) return; const n = Math.round(+t.value); if (n > 0) fcConfSet({ goal: { k: g.k, n } }); return setRender(); }
+  if (t.id === 'fcGoalN') { const g = fcConf().goal; if (!g) return; const n = Math.round(+t.value); if (n > 0) fcConfSet({ goal: { ...g, n } }); return setRender(); }
+  if (t.id === 'fcGoalPer') { const g = fcConf().goal; if (!g) return; const week = t.value === 'week'; fcConfSet({ goal: { ...g, per: t.value, n: week ? g.n * (g.days ? g.days.length : 5) : Math.max(1, Math.round(g.n / 5)), days: null } }); return setRender(); }
+  if (t.dataset.fcgday != null) { const g = fcConf().goal; if (!g) return; const on = [...document.querySelectorAll('[data-fcgday]')].filter(x => x.checked).map(x => +x.dataset.fcgday); if (!on.length) { t.checked = true; return; } fcConfSet({ goal: { ...g, days: on.length === 7 ? null : on } }); return setRender(); }
+  if (t.id === 'fcSg') { fcConfSet({ sg: t.checked }); return setRender(); }
 });
 $('#setPane').addEventListener('click', e => {
   const b = e.target.closest('#fcGoalK [data-v]'); if (!b) return;
   const v = b.dataset.v, g = fcConf().goal;
-  fcConfSet({ goal: v ? { k: v, n: g && g.k === v ? g.n : v === 'min' ? 60 : 10 } : null });
+  fcConfSet({ goal: v ? { k: v, n: g && g.k === v ? g.n : v === 'min' ? 60 : 10, per: g ? g.per : 'day', days: g ? g.days : null } : null });
   setRender();
   const n = $('#fcGoalN'); if (n) { n.focus(); n.select(); }
 });
@@ -28905,15 +29142,19 @@ function tkPageRender() {
     '<button class="icon" data-tkoff="1" title="Later" aria-label="Later"' + (tkS.off >= 0 ? ' disabled' : '') + '>' + TK_NEXT + '</button>' + (tkS.off ? '<button class="btn sm" data-tknow>Back to now</button>' : '') + '<span class="sp"></span>' + seg + '</div>';
   const lessons = Object.keys(t.la).filter(k => k && t.la[k] >= 60).length;
   const pacePer = t.p && t.g ? Math.max(1, Math.round(t.g / 60 / t.p)) : 0;
-  const school = per.days.filter(k => k <= today);
-  const met = c.goal ? school.filter(k => { const d = L.days[k] || {}; return c.goal.k === 'papers' ? (d.p || 0) >= c.goal.n : Math.floor((d.s || 0) / 60) >= c.goal.n; }).length : 0;
+  const school = per.days.filter(k => k <= today && fcGoalDay(c, k)), wkg = !!c.goal && c.goal.per === 'week';
+  const got = ks => ks.reduce((a, k) => { const d = L.days[k] || {}; return a + (c.goal.k === 'papers' ? d.p || 0 : (d.s || 0) / 60); }, 0);
+  const weeks = wkg ? [...new Set(per.days.filter(k => k <= today).map(k => { const d = new Date(k + 'T12:00:00'); d.setDate(d.getDate() - (d.getDay() + 6) % 7); return isoDay(d); }))] : [];
+  const met = !c.goal ? 0 : wkg ? weeks.filter(m => got(Array.from({ length: 7 }, (_, i) => { const d = new Date(m + 'T12:00:00'); d.setDate(d.getDate() + i); return isoDay(d); })) >= c.goal.n).length
+    : school.filter(k => got([k]) >= c.goal.n).length;
   const busy = t.list.filter(d => d.g + d.l > 0).sort((a, b) => b.g + b.l - (a.g + a.l))[0];
   const tile = (key, label, v, sub, sub2) => '<div class="tktile"><span class="tkl">' + (key ? '<i class="tkkey ' + key + '"></i>' : '') + '<span>' + label + '</span></span><span class="tkv">' + v + '</span>' + (sub ? '<span class="tks">' + sub + '</span>' : '') + (sub2 ? '<span class="tks">' + sub2 + '</span>' : '') + '</div>';
   const tiles = '<div class="tktiles">' +
     tile('g', 'Grading time', tkD(t.g), t.p ? '<span>' + esc(people(t.p, 'paper')) + '</span>' + (pacePer ? ' · <span>' + esc('about ' + people(pacePer, 'minute') + ' a paper') + '</span>' : '') : '', '<span>' + esc(word) + ':</span> ' + tkD(pt.g)) +
     tile('l', 'Planning time', tkD(t.l), lessons ? '<span>' + esc(people(lessons, 'lesson')) + '</span>' : '', '<span>' + esc(word) + ':</span> ' + tkD(pt.l)) +
     tile('f', 'In focus sessions', tkD(t.s), '<span>Time on the focus timer</span>') +
-    (c.goal ? tile('', 'Daily goal', '<span data-raw>' + met + ' / ' + school.length + '</span>', '<span>' + esc(people(met, 'day') + ' reached the goal') + '</span>')
+    (c.goal ? (wkg ? tile('', 'Weekly goal', '<span data-raw>' + met + ' / ' + weeks.length + '</span>', '<span>' + esc(people(met, 'week') + ' reached the goal') + '</span>')
+      : tile('', 'Daily goal', '<span data-raw>' + met + ' / ' + school.length + '</span>', '<span>' + esc(people(met, 'day') + ' reached the goal') + '</span>'))
       : tile('', 'Busiest day', busy ? '<span data-raw>' + esc(tkDate(busy.k, { weekday: 'short', month: 'short', day: 'numeric' })) + '</span>' : '–', busy ? tkD(busy.g + busy.l) : '')) + '</div>';
   const bars = per.groups.map(g => { const ds = g.map(k => tkDay(k, L, P)); return { k: g[0], last: g[g.length - 1], g: ds.reduce((s, d) => s + d.g, 0), l: ds.reduce((s, d) => s + d.l, 0) }; });
   const top = Math.max(3600, ...bars.map(b => Math.max(b.g, b.l)));
@@ -28989,9 +29230,13 @@ function tkAsg(id) {
   return { s: s + (tkPend.a[id] || 0), p };
 }
 function tkAsgHtml(id) {
-  const t = tkAsg(id); if (!t || t.s < 60 || !fcConf().track && !t.s) return '';
-  const per = t.p ? Math.max(1, Math.round(t.s / 60 / t.p)) : 0;
-  return '<span class="tkc" title="' + esc(tr('Time spent grading this assignment, from the time tracker')) + '">' + TK_CLOCK + '<span>' + esc(tkDur(t.s) + ' so far') + '</span>' + (per ? '<span>·</span><span>' + esc('about ' + people(per, 'minute') + ' a paper') + '</span>' : '') + '</span>';
+  const t = tkAsg(id); if (!t) return '';
+  const per = t.p ? Math.max(1, Math.round(t.s / 60 / t.p)) : 0, left = gpLeft(id), bits = [];
+  if (t.s >= 60) bits.push(tkDur(t.s) + ' so far');
+  if (t.s >= 60 && per) bits.push('about ' + people(per, 'minute') + ' a paper');
+  if (left >= 60) bits.push('about ' + tkDur(left) + ' left');
+  if (!bits.length) return '';
+  return '<span class="tkc" title="' + esc(tr('Time spent grading this assignment, from the time tracker')) + '">' + TK_CLOCK + bits.map(x => '<span>' + esc(x) + '</span>').join('<span>·</span>') + '</span>';
 }
 
 /* ---------- the line on Today's Focus card ---------- */
@@ -29020,6 +29265,198 @@ tkOn();
 Object.assign(window.__gs, { tkCsvText, tkFlush, tkTick, tkDay: k => tkDay(k, fcLog(), tkPlan()), tkPeriod, tkAddTime, tkDur, tkPend: () => tkPend, tkActive: () => { tkLast = Date.now(); }, tkHold: () => { clearInterval(tkTimer); tkTimer = 0; } });   // tkHold: tests move the clock themselves
 tkReady = true;
 
+/* ---------- Planning your grading: how long the papers will take, free periods, picking up where she left off, small starts, a look
+   back at the week, and quiet while focusing. Built on the focus timer (src/focus.js) and the time tracker (src/tracker.js).
+   Settings are in lib.me.focus with the timer's: free (false: no free periods), wk (the day of the look-back, 0 Sunday to 6 Saturday,
+   or false), quiet (true: counts hidden during a session), short (true: shortest papers first). The only thing stored here is
+   gs.focus.lbHid, the Monday of the week whose look-back was put away. No names: assignment names, class names and times only. */
+var gpReady = false;
+const GP_FREE = 20, GP_DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+/* ---------- the teacher's pace ---------- */
+let gpMemo = null;
+function gpMemoOf(k, f) { if (!gpMemo) { gpMemo = {}; queueMicrotask(() => { gpMemo = null; }); } return k in gpMemo ? gpMemo[k] : (gpMemo[k] = f()); }
+function gpPaces() {
+  return gpMemoOf('pace', () => {
+    const L = fcLog(), by = new Map(); let os = 0, op = 0;
+    for (const d of Object.values(L.days)) {
+      if (!d || !d.pa) continue;
+      for (const [k, n] of Object.entries(d.pa)) { const t = (d.a || {})[k] || 0; if (!k || !(n > 0) || !(t > 0)) continue; os += t; op += n; const b = by.get(k) || [0, 0]; b[0] += t; b[1] += n; by.set(k, b); }
+    }
+    const all = op >= 3 ? os / op : fcPace();
+    return id => { const b = by.get(id); return b && b[1] >= 3 ? b[0] / b[1] : all; };
+  });
+}
+function gpKept() {
+  return gpMemoOf('kept', () => {
+    const by = new Map();
+    for (const m of keptMeta.values()) { if (!m || (m.newer && keptMeta.has(m.newer))) continue; const it = cardOfKept(m.id); if (it && (!by.has(it.id) || by.get(it.id).t < m.t)) by.set(it.id, m); }
+    return by;
+  });
+}
+function gpLeft(id) {
+  if (!gpReady || !id) return 0;
+  const m = gpKept().get(id); if (!m || m.ret) return 0;
+  return keptState(m).left * gpPaces()(id);
+}
+function gpDue(from, to, except) {
+  const by = gpKept(), pace = gpPaces(), today = fcToday(), out = [];
+  for (const c of lib.classes) for (const u of c.units || []) for (const it of u.items || []) {
+    if (!it.due || it.due < from || it.due > to || it.id === except || it.typed || it.type === 'xc') continue;
+    const m = by.get(it.id); let left = 0;
+    if (m) { if (m.ret) continue; left = keptState(m).left; } else if (it.due >= today && !it.batchId) left = (c.names || []).length;
+    if (left > 0) out.push({ it, c, left, secs: left * pace(it.id), inn: !!m });
+  }
+  return out.sort((a, b) => a.it.due.localeCompare(b.it.due));
+}
+const gpSum = list => list.reduce((a, x) => ({ n: a.n + 1, p: a.p + x.left, s: a.s + x.secs }), { n: 0, p: 0, s: 0 });
+const gpSay = e => e.s >= 60 ? '<span>about</span> <span data-raw>' + esc(tkDur(e.s)) + '</span>' : '<span>' + esc(people(e.p, 'paper')) + '</span>';
+const gpMon = day => { const d = new Date(day + 'T12:00:00'); d.setDate(d.getDate() - (d.getDay() + 6) % 7); return isoDay(d.getTime()); };
+const gpAdd = (day, n) => { const d = new Date(day + 'T12:00:00'); d.setDate(d.getDate() + n); return isoDay(d.getTime()); };
+
+function gpDueHint(day, except) {
+  if (!gpReady || !/^\d{4}-\d\d-\d\d$/.test(day || '')) return '';
+  const mon = gpMon(day), e = gpSum(gpDue(mon, gpAdd(mon, 6), except));
+  if (!e.n) return '<span>Nothing else to grade is due that week.</span>';
+  return '<span>Also due that week</span>: <b><span>' + esc(people(e.n, 'set')) + '</span>, ' + gpSay(e) + '</b>';
+}
+
+/* ---------- the week in To do ---------- */
+function gpWeek(mon, end) {
+  const list = gpReady ? gpDue(mon, end) : [], by = new Map();
+  for (const x of list) { if (!by.has(x.it.due)) by.set(x.it.due, []); by.get(x.it.due).push(x); }
+  const top = [...by.entries()].map(([d, l]) => [d, gpSum(l)]).sort((a, b) => b[1].s - a[1].s || b[1].p - a[1].p)[0];
+  const e = gpSum(list);
+  return {
+    bar: e.n ? '<span class="tdwsum">Grading due this week: <b>' + esc(people(e.n, 'set')) + ', ' + gpSay(e) + '</b>' + (e.s >= 60 ? ' <span>at your pace</span>' : '') + (by.size > 1 && top ? ' · <span>Most on</span> <span data-raw>' + esc(new Date(top[0] + 'T12:00:00').toLocaleDateString(LANG_LOCALE, { weekday: 'long' })) + '</span>' : '') + '</span>' : '',
+    day: d => { const l = by.get(d); if (!l) return ''; const s = gpSum(l); return '<div class="tdest' + (s.s >= 3 * 3600 ? ' heavy' : '') + '">' + l.map(x => '<span>Due: <b data-raw>' + esc(x.it.name) + '</b></span><span><span data-raw>' + esc(x.c.name) + '</span> · ' + esc(people(x.left, 'paper')) + (x.inn ? ' left' : '') + (x.secs >= 60 ? ' · ' + gpSay({ s: x.secs, p: x.left }) : '') + '</span>').join('') + '</div>'; },
+  };
+}
+
+/* ---------- free periods ---------- */
+const gpMins = t => { const m = /^(\d{1,2}):(\d\d)$/.exec(t || ''); return m ? +m[1] * 60 + +m[2] : null; };
+function gpGaps(rows) {
+  const out = [];
+  for (let i = 0; i + 1 < rows.length; i++) { const a = gpMins(rows[i].m.end), b = gpMins(rows[i + 1].m.start); if (a != null && b != null && b - a >= GP_FREE) out.push({ i, a, b, from: rows[i].m.end, to: rows[i + 1].m.start }); }
+  return out;
+}
+function gpFreeNow() {
+  if (!gpReady || !fcConf().free || typeof plan === 'undefined' || !plan) return null;
+  const t = todayRows(plan); if (t.off) return null;
+  const d = new Date(), now = d.getHours() * 60 + d.getMinutes();
+  return gpGaps(t.rows).find(g => now >= g.a && now < g.b - 5) || null;
+}
+function gpFreeRow(rows, i) {
+  if (!gpReady || !fcConf().free) return '';
+  const g = gpGaps(rows).find(x => x.i === i); if (!g) return '';
+  return '<div class="trow gpfree"><span class="tt"></span><span class="nt"><b>Free period</b><span class="ns" data-raw>' + esc(planTime(g.from) + ' – ' + planTime(g.to)) + '</span></span></div>';
+}
+
+/* ---------- the top of the Focus card: a free period, and where she left off ---------- */
+const GP_CLOCK = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="7.5"/><path d="M12 9.5V13l2.3 1.6"/></svg>';
+function gpTopHtml(w) {
+  if (!gpReady) return '';
+  let h = '';
+  const f = gpFreeNow();
+  if (f) {
+    const d = new Date(), left = f.b - (d.getHours() * 60 + d.getMinutes()), n = Math.max(5, Math.min(60, Math.floor((left - 5) / 5) * 5));
+    h += '<div class="fcnote"><div class="fcnh">' + GP_CLOCK + '<span>Free period now</span><span data-raw>' + esc(planTime(f.from) + ' – ' + planTime(f.to)) + '</span></div>' +
+      (w ? '<p><b data-raw>' + esc(w.name) + '</b>' + (w.mark ? ' · <span>' + esc(fcWorkSay(w)) + '</span>' : '') + '</p>' : '') +
+      '<div class="fcgo"><button class="btn" data-fcstart="' + n + '">' + FC_PLAY + '<span>' + esc('Grade for ' + n + ' minutes') + '</span></button></div></div>';
+  }
+  const m = homeGroups().mark.filter(x => x.papers && keptState(x).left && (keptState(x).done || x.partial)).sort((a, b) => b.t - a.t)[0];
+  if (m && Date.now() - m.t > 20 * 60e3 && Date.now() - m.t < 7 * 864e5 && !(batch && batch.id === m.id && !$('#app').hidden)) {
+    const wh = keptWhere(m), when = new Date(m.t), day = isoDay(m.t) === fcToday() ? when.toLocaleTimeString(LANG_LOCALE, { hour: 'numeric', minute: '2-digit' }) : when.toLocaleDateString(LANG_LOCALE, { weekday: 'long' }) + ' ' + when.toLocaleTimeString(LANG_LOCALE, { hour: 'numeric', minute: '2-digit' });
+    h += '<div class="fcback"><div class="t"><b>Pick up where you left off</b><span data-raw>' + esc(m.name || 'Student work') + '</span><i><span>' + esc(people(keptState(m).left, 'paper') + ' left') + '</span> · <span data-raw>' + esc([wh.cls ? wh.cls.name : '', day].filter(Boolean).join(' · ')) + '</span></i></div>' +
+      '<button class="btn sm" data-gppick="' + esc(m.id) + '" title="' + esc(tr('Opens the paper you were on and starts the timer')) + '">Pick up</button></div>';
+  }
+  return h;
+}
+
+/* ---------- shortest papers first ---------- */
+const gpLens = new WeakMap();
+function gpPages(f) {
+  if (f.numPages) return f.numPages;
+  const d = f.data, size = f.size || (d ? d.length : 0);
+  if (f.kind === 'pdf' && d && d.length) { try { const m = new TextDecoder('latin1').decode(d.length > 8e6 ? d.subarray(0, 8e6) : d).match(/\/Type\s*\/Page(?![a-zA-Z])/g); if (m && m.length) return m.length; } catch {} }
+  return Math.max(1, Math.round(size / (f.kind === 'pdf' ? 6e4 : 4e3)));
+}
+function gpLen(st) { let n = 0; for (const f of st.files || []) { if (f.virtual) continue; let v = gpLens.get(f); if (v == null) { v = gpPages(f); gpLens.set(f, v); } n += v; } return n; }
+function gpShortNext(left) {
+  if (!gpReady || !batch || !fcConf().short) return -1;
+  const r = fcRun(); if (!r || (r.st !== 'run' && r.st !== 'paused') || r.w !== 'mark:' + batch.id) return -1;
+  let best = -1, bl = Infinity;
+  batch.students.forEach((st, i) => { if (i === cur || !left(st)) return; const l = gpLen(st) || 1e9; if (l < bl) { bl = l; best = i; } });   // a student with no paper in comes last
+  return best;
+}
+
+/* ---------- the look back at the week, on Today ---------- */
+function gpLookHtml() {
+  if (!gpReady) return '';
+  const c = fcConf(); if (c.wk === false) return '';
+  const today = fcToday(), mon = gpMon(today), dow = new Date().getDay(), L = fcLog();
+  if ((dow + 6) % 7 < (c.wk + 6) % 7 || L.lbHid === mon) return '';
+  const days = []; for (let k = mon; k <= today; k = gpAdd(k, 1)) days.push(k);
+  const t = tkSum(days, L, tkPlan()), lessons = Object.keys(t.la).filter(Boolean).length, papers = t.p, gday = t.list.filter(d => d.g >= 60).length;
+  const back = [...keptMeta.values()].filter(m => m && m.ret && isoDay(m.ret) >= mon && !(m.newer && keptMeta.has(m.newer)));
+  const wait = homeGroups().mark.filter(m => keptState(m).left).slice(0, 4), pace = gpPaces();
+  const next = gpSum(gpDue(gpAdd(mon, 7), gpAdd(mon, 13)));
+  const tile = (label, v, sub) => '<div><span>' + label + '</span><b>' + v + '</b><i>' + sub + '</i></div>';
+  const range = new Date(mon + 'T12:00:00').toLocaleDateString(LANG_LOCALE, { weekday: 'long', month: 'short', day: 'numeric' }) + ' – ' + new Date().toLocaleDateString(LANG_LOCALE, { weekday: 'long', month: 'short', day: 'numeric' });
+  return '<div class="thd"><h2 class="tcap">Your week</h2><a class="link" href="#/time">Time tracker</a></div><div class="tcard lbk">' +
+    '<h2>A look back at the week</h2><p class="lbks" data-raw>' + esc(range) + '</p><div class="lbkg">' +
+    tile('Grading time', tkD(t.g), gday ? '<span>' + esc(people(gday, 'day')) + '</span>' : '') +
+    tile('Planning time', tkD(t.l), lessons ? '<span>' + esc(people(lessons, 'lesson')) + '</span>' : '') +
+    tile('Papers marked', '<span data-raw>' + papers + '</span>', '') +
+    tile('Handed back', '<span>' + esc(people(back.length, 'set')) + '</span>', back.length ? '<span data-raw>' + esc(back.slice(0, 3).map(m => m.name || 'Student work').join(', ')) + '</span>' : '') + '</div>' +
+    (wait.length ? '<div class="lbkw"><b>Still waiting</b><ul>' + wait.map(m => { const st = keptState(m), it = cardOfKept(m.id), wh = keptWhere(m); return '<li><span data-raw>' + esc((m.name || 'Student work') + (wh.cls ? ', ' + wh.cls.name : '')) + '</span> <span class="m">· <span>' + esc(people(st.left, 'paper') + ' left') + '</span>' + (it && pace(it.id) ? ' · ' + gpSay({ s: st.left * pace(it.id), p: st.left }) : '') + '</span></li>'; }).join('') + '</ul></div>' : '') +
+    (next.n ? '<div class="lbkw"><b>Due next week</b> <span class="m">· <span>' + esc(people(next.n, 'set')) + '</span>, ' + gpSay(next) + '</span></div>' : '') +
+    '<div class="lbkf"><button class="btn sm" data-gplbhide>Put it away for this week</button><a class="link" href="#/settings/focus">Change the day</a></div></div>';
+}
+
+/* ---------- quiet while focusing ---------- */
+function gpQuiet() {
+  if (!gpReady) return;
+  const r = fcRun(), on = fcConf().quiet && !!r && (r.st === 'run' || r.st === 'paused');
+  if (document.body.classList.contains('fcquiet') !== on) document.body.classList.toggle('fcquiet', on);
+}
+
+/* ---------- Settings, Focus and goals: planning your grading ---------- */
+function gpSetRender(sec) {
+  if (sec !== 'focus' || !gpReady) return;
+  const el = $('#setPlan'); if (!el) return;
+  const c = fcConf(), ck = (id, on, label) => '<p class="setp"><label><input type="checkbox" id="' + id + '"' + (on ? ' checked' : '') + '> ' + label + '</label></p>';
+  const h = '<div class="lhead"><h2>Planning your grading</h2><span class="muted">How long the papers will take at your pace, and a few ways to start. Each can be switched off.</span></div>' +
+    ck('gpFree', c.free, 'Offer free periods for grading') + '<p class="muted setp gpnote">When a gap of 20 minutes or more between two of your classes starts, the Focus card on Today offers it, with the next papers ready.</p>' +
+    '<p class="setp fcset"><label><input type="checkbox" id="gpWk"' + (c.wk !== false ? ' checked' : '') + '> A look back at the week, from</label><select id="gpWkDay" class="btn sm" aria-label="The day of the look back"' + (c.wk === false ? ' disabled' : '') + '>' +
+    [1, 2, 3, 4, 5, 6, 0].map(d => '<option value="' + d + '"' + (d === (c.wk === false ? 5 : c.wk) ? ' selected' : '') + '>' + GP_DAYS[d] + '</option>').join('') + '</select></p>' +
+    ck('gpQuiet', c.quiet, 'Quiet while focusing: hide the counts in the sidebar and in To do during a session') +
+    ck('gpShort', c.short, 'Shortest papers first in a focus session');
+  if (el.dataset.h !== h) { el.dataset.h = h; el.innerHTML = h; }
+}
+$('#setPane').addEventListener('change', e => {
+  const t = e.target;
+  if (t.id === 'gpFree') fcConfSet({ free: t.checked });
+  else if (t.id === 'gpWk') fcConfSet({ wk: t.checked ? +$('#gpWkDay').value : false });
+  else if (t.id === 'gpWkDay') fcConfSet({ wk: +t.value });
+  else if (t.id === 'gpQuiet') fcConfSet({ quiet: t.checked });
+  else if (t.id === 'gpShort') fcConfSet({ short: t.checked });
+  else return;
+  gpSetRender('focus'); homeRender();
+});
+
+/* ---------- presses ---------- */
+document.addEventListener('click', e => {
+  const t = e.target.closest('[data-gppick], [data-gplbhide]'); if (!t) return;
+  if (t.dataset.gppick) { fcS.pick = 'mark:' + t.dataset.gppick; return fcStart(fcConf().len, fcS.pick, false); }
+  const L = fcLog(); L.lbHid = gpMon(fcToday()); fcLogSet(L); homeRender();
+});
+document.addEventListener('change', e => { if (e.target.matches('[data-fcshort]')) fcConfSet({ short: e.target.checked }); });
+setInterval(() => { if (shellReady && !document.hidden) fcRender(); }, 60e3);
+
+window.__gs = Object.assign(window.__gs || {}, { gpPaces: () => gpPaces(), gpDue, gpLeft, gpFreeNow, gpGaps, gpLen, gpShortNext, gpLookHtml, gpDueHint });
+gpReady = true;
+
 /* ---------------- Settings: one page per subject, each with its own address (#/settings/<key>) ---------------- */
 const SET_GROUPS = [['saving', 'Saving and carrying', 'Folder, take-home file, earlier days, new school year', ['saving', 'history']],
   ['classes', 'Classes and timetable', 'Rosters, class times, days off, links', ['classes', 'timetable']],
@@ -29041,7 +29478,7 @@ function setRender() {
   const box = $('#setNav'); if (box.dataset.h !== nav) { box.dataset.h = nav; box.innerHTML = nav; }
   for (const el of document.querySelectorAll('#setPane [data-sec]')) el.hidden = !on(el.dataset.sec);
   const put = (id, h) => { const el = $(id); if (el.dataset.h !== h) { el.dataset.h = h; el.innerHTML = h; } };
-  for (const k of grp[3]) { meSetRender(k); attSetRender(k); stpSetRender(k); fcSetRender(k); tkSetRender(k); }
+  for (const k of grp[3]) { meSetRender(k); attSetRender(k); stpSetRender(k); fcSetRender(k); tkSetRender(k); gpSetRender(k); }
   if (on('marking')) setInksSay();
   if (on('history')) gbRender();
   if (on('about')) updRender();
@@ -29267,7 +29704,7 @@ $('#setHistory').addEventListener('click', e => {
 });
 
 /* updates she controls, and installing as an app */
-const WHATS_NEW = {"1.28.26":["The School page has a People card: optional spots for your principal, vice principal, department head or subject group coordinator, curriculum coordinator and dean of academic affairs, each with a name and email. Change the spots to your school’s own roles.","A to-do can name people from the School page. Type “ask the principal” or a last name and they are picked out; open the to-do to add someone or write to them by email, and filter your list by person."],"1.28.25":["A comment box opened near the bottom of a page no longer slips behind the next page. All of it stays on top, so saved comments, colors and Done can be clicked."],"1.28.24":["Quiz answer notes show their question (Q1, Q3) at both ends of their line, on screen and in exported files. With the pointer on a note, its line and its question light up.","Quiz boxes has Answer lines start: right of each box, under it, or by the mark. Each question has a gold pin you can drag to move its line on every paper, and on one paper you can drag a note’s pill with any tool but the eraser."],"1.28.23":["Undo for more of your work. On the marking screen, Ctrl Z (Cmd Z on a Mac) now also takes back lighting, a video's turn, a page taken out, a file removed, the rescan flag, anchor papers and Arrange pages. A short note says what came back, and Shift Ctrl Z or Ctrl Y does it again.","Everywhere else, Ctrl Z takes back your last change to classes, units, assignments, rosters, gradebook scores, to-dos and settings, deletes included. Inside a text box it still undoes your typing first. In the Planner, Ctrl Z works in the slide editor, and deleting a lesson has Undo."],"1.28.22":["A time tracker for grading and planning, kept apart. Grading time counts while the marking screen is in front and you are working in it; planning time counts the same way in the Planner, but not while you present. Open it from the Focus card on Today or with Find anything: a week, a month or three months, by assignment and by lesson. Each assignment shows its own time on its card and on the marking screen, with about how long a paper takes, and each lesson shows its planning time in the Planner.","Add time by hand for work away from the app, like marking on paper, and download every day as a spreadsheet. Settings, Focus and goals can switch the counting off or change how soon it stops."],"1.28.21":["Once a day, the app at its web address adds one to a public count of how many browsers opened it, so its maker can see whether anyone uses it. Nothing about you, your students or your work goes with it. Help, Privacy says the same."],"1.28.20":["Focus: a timer for grading in short sessions. Start it from the card on Today or from Focus in the sidebar, on a set of papers or one of your to-dos, and the next paper with nothing finished opens. A small panel keeps the time, folds to a pill, and offers a break when the time is up. To do has Focus on this.","A daily goal in papers or minutes, set in Settings, Focus and goals. Dots, a ring in the sidebar and this week’s bars fill in as you go, and turn green when you get there. A paper counts when its score is finished or its feedback is complete."],"1.28.19":["A Timer tab in the side pane for presentations given live: a stopwatch beside the notes page, with the asked-for length and + Time to comment. It is offered to a student who has a notes page and no video.","A YouTube or Vimeo video played in the app has buttons to skip 10 seconds and change speed, and Space, J and L work on it. Video files have a Float button that keeps the video in a small window on top. Google Drive’s player can’t be driven from here."],"1.28.18":["Side by side: the marking screen can keep a second pane beside the paper. Tabs choose what it shows: the student’s video, their notes page, another file, or the rubric with what each score means. A student with a video and a notes page opens this way without being asked. Press B, or Side by side above the paper.","A click on your assistant’s name in the sidebar lists the others too. Pick one and it opens and becomes the one in use, with its own link. Settings, Working with AI chooses which are listed."],"1.28.17":["Transcripts beside videos. Under any video, Paste a transcript takes one you have, for example from Gemini, YouTube or a caption file. A line that starts with a time plays the video from there.","Make transcript now works for video files kept in this browser too. It asks before the one-time download, runs on this computer, shows how far it is, and Cancel stops it.","Captions under the video show the line being said the right way up, even when the video is turned. For a Google Drive video, step through the lines with ‹ and ›."],"1.28.16":["Video cards have a ⟳ Turn button for a video filmed sideways. It turns a quarter turn at a time, is kept for that video, and partners sharing the link see it turned too.","A rubric copy brought in after every notes page was taken out or removed now goes on each student’s paper instead of Removed pages."],"1.28.15":["In full screen the student list gets out of the way while you mark. Rest the pointer at the left edge of the screen, or press [, and it comes back; on a tablet, tap the tab at the left edge.","Settings, Marking, Full screen marking can keep the list shown, or hide the tools too until the pointer comes near them."],"1.28.14":["Your AI assistant can sit beside Grading Studio. Name it in Settings, Working with AI (Gemini, Claude, ChatGPT, Copilot or another) and its name is in the sidebar on every screen, in the Planner too. A click opens it in a window on the right of the screen, or in a tab if you prefer.","In Chrome, right-click the name in the sidebar and choose Open link in split view to have both in one window. Opens at takes a link of your own, such as your school account or a Gem. Grading Studio sends nothing to the assistant: it sees only what you paste or attach."],"1.28.13":["Add a video file, not only a link: + Add, A video… keeps the file in this browser at any length while the computer has room, and partners share it. Drag the bar under a video to make it as big as you like.","Partners and videos (in Setup, and on No papers when you open an assignment) lists the whole class: pick partners and add each video in one place. + Clip now starts where the video is.","Bring in a rubric from Edit or the Open box on any assignment. Rows and what each level means are read from a Word or PDF table where they can be."],"1.28.12":["Look around with a sample class first now opens a full sample: two made-up classes part-way through a term, with marked papers, a quiz marked by question, a gradebook, charts, missing work, attendance, seating, report comments, to-dos and two weeks of lessons.","The sample is kept apart from your own work. Leave the sample in the sidebar clears it in one click, and your own classes are exactly as you left them."],"1.28.11":["In another language, the marking screen now reads in that language: the top bar, the tools, the student list, the score panel and its menus, and the Grades, Insights and Return tabs and Rubric setup.","Student names, rubric rows, what each score means, your comments and the papers themselves stay as they are. Boxes opened from the marking screen, To do, School and the Planner are still in English."],"1.28.10":["Planner slides: click any text box and the size menu in the toolbar changes that box: the title, the text, the bottom line and the rest. Biggest that fits picks the size for you.","The box you click gets a frame: drag its bar to move it or a handle to resize it, and Put back returns it to the layout. The .pptx keeps the new places and sizes.","+ Add slide adds a title and text slide straight away; the arrow beside it opens every layout. Timetable can set a different usual slide.","Words are never cut off: text that runs past its box stays visible in the editor with a warning, and when you present the box uses the room under it, then the text gets smaller until every word shows."],"1.28.9":["Returning marked files now gives each student one PDF: the feedback page first, then every paper they turned in, Word papers included as pages. A Word rubric you scored still goes back as a Word file.","To send each paper as its own file again, untick One PDF for each student under Options on the Return tab."],"1.28.8":["On Today, every class whose lesson has slides now has a Present button, not only the class on now. Two classes sharing one lesson can each present it.","While presenting, Pop out (or W) puts the slides in a window of their own for a second screen or projector. That window shows only what the class sees, and this one keeps the bar, your notes and the timer. The keys work in either window."],"1.28.7":["Save a screenshot as a strong example: tick “Save as a strong example” in the Screenshot bar, or press the button on the “Picture copied” note. Before it is saved you can black out anything, like a name, and add why it’s strong and tags.","The Examples page finds work again by tag or by searching what you wrote. Every card shows its tags, and you can change them from its ⋯ menu. Download as a sheet works for whatever the page is showing."],"1.28.6":["In another language, the boxes a class page opens now read in that language too: a new or changed assignment, the roster, units, how the class is graded, Email wording and report Wording, the notes pages for work with no papers, and the progress sheets you print.","Class, unit, assignment and student names, and the sentences in the Wording boxes, stay as you typed them. The marking screen and its boxes are still in English."],"1.28.5":["In another language, the rest of a class page now reads in that language: a student’s own page, Charts, Goals and Report comments, and the gradebook, charts and levels of a class graded with IB criteria. Pointing at a mark on a chart says it in that language too. Names, rubric rows, goals and criteria stay as you typed them.","A report comment’s draft is still written in English until you put your own sentences in Wording…. The boxes that open from these tabs are still in English.","Fixed in German: “Grade” showed as “Notiz” in a few places, and now reads “Note”."],"1.28.4":["In another language, more of a class page now reads in that language: the Gradebook, Students, Attendance, Seating and Missing work tabs, with dates written that language’s way and your own names left as you typed them.","Still in English: a student’s own page, Charts, Goals, Report comments, the gradebook of a class graded with IB criteria, and the boxes that open from these tabs."],"1.28.3":["In another language, a class page now reads in that language too: its header, its row of tabs and the Assignments tab, with your own class, unit and assignment names left as you typed them. The Gradebook and the other tabs are still in English."],"1.28.2":["Settings is now in your language too: all seven pages, in each of the eight languages. Help answers name the Settings buttons the way Settings shows them.","Boxes that open from Settings, such as Term setup and the mark key, are still in English, and so are the class and marking screens."],"1.28.1":["The app opens a little faster at its web address: it now fetches only the language you chose instead of carrying all of them. Your language is kept for use without internet, and the take-home file still has every language inside."],"1.28.0":["Six more app languages: Simplified Chinese (简体中文), French, German, Portuguese, Japanese and Korean, beside Traditional Chinese and Spanish. Choose one in Settings, Display, App language.","Each covers the same first screens: the sidebar, Today, the welcome, Find anything, Help and the feedback page students get. The other screens are still in English.","None of the translations has been checked by a fluent speaker yet, so a line may read oddly."],"1.27.36":["IB MYP classes: Quick mark now gives levels for a paper quiz. On the boxes screen each question counts for one criterion, and under Points to levels you type the lowest points that earn each level. The quiz then gives a level for each criterion, with no total and no percent."],"1.27.35":["IB DP classes: the Grading box now has Components, where each type of work (Paper 1, the internal assessment and so on) gets its own weight for that class alone. In the Gradebook, More has Predicted grades: click the 1 to 7 you predict for each student, with the grade the percent earns outlined as a hint. Predicted grades show in the gradebook and on progress sheets."],"1.27.34":["A class page is simpler. The tab row has Assignments, Gradebook, Students and More; the pin beside a page in More keeps it in the row. Roster, grading and the class link are under one Class setup button.","The gradebook has one More menu for Term setup, extra credit, import and copy. Settings has seven pages in place of twelve, and nothing has been removed.","In the Planner’s week, Use a lesson shows when you point at a class slot."],"1.27.33":["Every activity in the Planner’s Activities bank has a video button. See it in action opens a short classroom video of it from sources such as Edutopia, EL Education and Reading Rockets; where there isn’t a good one, Find a video searches YouTube for it. Your own activities can carry a video link, and the link goes into the speaker notes when you add an activity to a lesson."],"1.27.32":["IB MYP classes: report comments are drafted from the levels you set and the 1 to 7, and a progress sheet shows each criterion’s level, the total, the grade and every task’s levels, with no percent. A new year keeps a class’s criteria and boundaries and leaves the students’ levels behind. My setup now brings an MYP teacher in as IB MYP criteria."],"1.27.31":["A lesson in the Planner is tidier under the slide. This slide has your speaker notes beside one box for your AI assistant. The whole lesson has Materials, Links, Finished PowerPoint, comments and Taught as matching cards.","The tips for editing a slide are behind an Editing tips button, and Alternative version is in More until a lesson has more than one version."],"1.27.30":["A lesson in the Planner has a Links box for the web pages you open while teaching it. Paste an address, or pick one from School resources.","A School resource can be for one class. Its links then show on every lesson for that class, and in Present under Links (the L key)."],"1.27.29":["IB MYP tasks: the Grades tab shows each criterion’s level with no total or percent, and Copy all levels copies them. Insights leaves out the percent tiles, and text shared with an assistant says the rows are levels, not points to add up. Help has two new answers, for IB MYP and IB DP."],"1.27.28":["Coming from Google Classroom? Settings, Classes and rosters has a new button, From Google Classroom…. Choose the grades file you download from Classroom and it makes the class with its students, then shows every assignment and score for you to check before they go into the gradebook. A folder of student work downloaded from Google Drive now opens with each student’s files together. Nothing is sent anywhere and there is no sign-in. Help has an answer for it."],"1.27.27":["Screenshot: press S on a paper, Alt S (⌥S on a Mac) anywhere, or the button at the foot of the marking tools. Drag over what you want, click a page for the whole page, or press Enter for the whole screen, and the picture is copied, ready to paste. On a paper, name covers stay painted in and the student’s name and file name are left off; With my marks chooses whether your marks come too."],"1.27.26":["Full screen: press F, or Full screen near the bottom of the sidebar (beside ✕ while a paper is open). The browser’s bars go away and the sidebar folds to icons, or goes while you mark, so the paper gets the room. F again, the same button or Esc leaves, and nothing is closed or lost. On formative work F is for feedback, so use the button there."],"1.27.25":["IB classes. Each class has a Grading button: points and percent, IB MYP or IB DP. The welcome and Settings offer IB MYP criteria (0 to 8) and IB DP 1 to 7 as two separate choices.","An MYP class is marked against the criteria a task assesses, each 0 to 8, with no percent. Its gradebook shows every level a student earned, you choose the level that fits best for each criterion, and the total becomes a final grade of 1 to 7. Levels are never averaged.","Criterion names and the grade boundaries are yours to change. A DP class shows the 1 to 7 its percent earns on boundaries you type in."],"1.27.24":["My setup, in Settings: copy a prompt into your AI assistant, and it writes your setup as one block of text: classes and when they meet, the calendar, terms, what a grade is made of, how you grade, IB criteria and boundaries, rubrics, saved comments and learning goals.","Paste the block back and press Check it. You see what would change, untick anything you don’t want, and can undo it afterwards. Anything about students is left out and said so.","Copy my setup gives your own setup as the same kind of text, for a colleague to start from. The welcome has a line that leads here."],"1.27.23":["Take my work with me now carries your Planner too: lessons, units, timetable and their files. Bring work in takes it in. A Planner already in use only receives the lessons and files it doesn’t have, so nothing there is replaced.","If Grading Studio ever moves to a new web address, the old address tells you and shows the three steps for taking your work along. Help has an answer for it."],"1.27.22":["Attendance has a choice for a student who is away when you don’t know why yet: Absent, reason unknown. Change it to Absent, excused when you hear the reason. It is still four choices, and days you saved before keep their marks. Look back lists the absences that still have no reason."],"1.27.21":["Comments are easier to work with. Change a comment’s color at any time, even while typing it: its box has a Color row, and a Highlight row when it is on highlighted words. Text boxes and Quick mark comments have colors too.","Drag a new comment’s line up or down before you type a word, and press Enter to finish a comment or text box. Shift Enter starts a new line."],"1.27.20":["Feedback-only work no longer says 0 of 20 scored. A formative activity counts the students whose feedback is complete, on its card, in Find, Today, To do, the Grades box and the grade sheet, and says Ready to return once everyone has feedback."],"1.27.19":["Presentations and videos. On an assignment’s card, Add papers… now has No papers: presentations or videos…, which gives every student on the roster a notes page to write on while you watch. Pick lined, your rubric’s rows, two columns or blank.","On a student’s page, + Add has A video…: paste a link from Google Drive, YouTube or anywhere else, and tick the partners in it. One set of notes and one grade covers the group. Only the link is kept, so the video stays where it is.","Play here shows the video above the notes page; Open in its own window puts it beside the app. + Add also has A notes page… for one more page at any time.","Clips: under a video, + Clip saves a part worth showing, as a start time, an end time and a title. Show to the class plays it full screen with the title and without the student’s name, and Clips to show the class under Setup plays them one after another."],"1.27.18":["The app no longer assumes your AI assistant is Claude. Settings, Working with AI lets you pick Claude, ChatGPT, Gemini, Copilot, another name, or none, and buttons and hints use that name. If you already used the app, yours stays Claude.","Planner, Timetable has a Slides section: the agenda on slide 2 and keeping text between 28 and 36 pt are both on, and each can be turned off.","The week shows Saturday, or Sunday in front of Monday, when a class meets then. Short dates follow your computer's day and month order."],"1.27.17":["Answer notes for quizzes: type each question's answer in Quiz boxes, and it goes on the returned papers in a gold note labelled Answer, by each question a student lost points on. In Quiz boxes, Answer notes can be set to every question or off."],"1.27.16":["The grade sheet shows the score you gave each paper in Grading Studio, the same number as the score panel, with extra credit and the retake that counts. Grades found typed on the papers only show for papers with no score yet, or when you tick Also show grades found on the papers. A score stamp already on a paper now changes when the score does."],"1.27.15":["Copy one quiz answer as a picture: in Quick mark, press P or ⧉ Copy on an answer, then paste it into Claude to ask whether it is right. The picture shows only that answer, with the question and your answer key on top. The name, score, your mark and the file name are left off, and name covers are painted in, but the student’s handwriting and words still show."],"1.27.14":["Points written on a paper can have their own color. In Quick mark’s Colors menu, or Settings, Marking, Mark colors: the ✗ color as before, one color of your own, or By credit, with full points in the check color, part in amber and none in the ✗ color."],"1.27.13":["Share lesson file, under More in a lesson: one small file with the slides, notes, pictures, materials and finished PowerPoint. Open it with Import a lesson on another computer, or give it to another teacher.","Which classes and days a lesson is on, taught notes and comments for Claude stay behind, and opening one never replaces a lesson you have."],"1.27.12":["A to-do list. To do in the sidebar holds your own list beside what the app noticed from your work: papers to mark, papers to hand back, a class with no lesson planned, missing work to chase. Those go by themselves when the work is done, and each kind can be switched off.","Type a to-do the way you would say it, like “Call Bram’s parents friday”, and it picks out the day, the class and the student. Press N anywhere outside a paper to add one.","A to-do can have a day, a class, a student or assignment it goes with, a repeat and a note. Today shows a short card of what is overdue or due today.","Week, at the top right of To do, shows your week: each line on its day, under the class that meets then. Type in a day to add one, or drag a line to another day. Anything not done moves to today on its own."],"1.27.11":["Groups in Present mode: shuffling no longer moves the slides or ends the lesson, and each shuffle keeps last time's groups apart.","Change groups by hand: drag a name to another group, or click a name and then a group. Make my own starts with empty groups, and Undo or Ctrl Z takes back a move or a shuffle.","The Present timer keeps running after you finish or leave full screen, in the corner of the Planner, and comes back on the slides when you present again."],"1.27.10":["Finding names on its own is now off unless you turn it on, in Settings, Marking, Name covers. Only the boxes you draw in Check the covers cover anything, and the check before anonymous grading lists every paper."],"1.27.9":["In the Planner's Timetable, Use my school’s template… picks your own PowerPoint template for slide downloads. Use the plain one goes back to the white one built in.","Save my setup file keeps your classes, meeting times, days off and slide template in one file to load on another computer."],"1.27.8":["Anchor papers: while you mark a summative, click High, Mid or Low under the score. The Return tab lists the three and exports them in one ZIP, each named for the assignment and its level, like “River essay - Summative High.pdf”, with student names covered."],"1.27.7":["Keep strong work as an example: press ☆ Example on an answer in Quick mark (or E), or pick Use as an example in the ⋯ beside a student’s name for a whole paper or part of a page. Names are covered, and your marks and the score stay off unless you switch them on. It is always optional.","The Examples tab on an assignment, and Examples in the sidebar for every class, have Show to the class, Copy picture, Download and Download as a sheet.","Examples go to your linked folder and into the take-home file with the rest of your work."],"1.27.6":["Returned files are named for the student, the assignment and what they are, like “Ana Lee - River essay - Graded.pdf”, or Feedback when there is no score. They still go in each student’s own folder.","To keep the names students turned in, untick Name each file by student and assignment under Options on the Return tab."],"1.27.5":["The gradebook can import your old scores: press Import… and choose a CSV or Excel file, or paste the cells. Each column becomes an assignment, matched to your roster.","You see everything before it is saved, and a score already in the gradebook stays unless you choose the file’s."],"1.27.4":["School is a new page in the sidebar for the things about your school you look up again and again: the handbook, the calendar, the bell schedule, portals, forms, who to call.","Add a link, a file (a copy is kept with your work) or a note. Name your own groups, and star the ones you open most to keep them along the top.","Drop files on the page or paste a web address. Find anything lists every resource. They are kept in your folder and take-home file, and stay when you start a new school year."],"1.27.3":["The class timer in Present takes minutes and seconds: type them in, or pick 0:30 and the other quick times. The menu remembers the last time you typed.","While it runs, the timer's menu adds or takes away 10 seconds or a minute, pauses, and restarts from the time you set. + and − add or take away a minute without opening the menu.","Tick Show it big to put the countdown in the middle of the screen, large enough for the back of the room."],"1.27.2":["In the gradebook, in-class assessments are now on the left and summatives on the right: the columns, the averages beside the term grade, and wherever you choose a type.","The order is yours to change. In Term setup, the arrows beside each type move it, and the gradebook's columns follow from left to right.","You can make your own assignment types. In Term setup, rename a type or press + Add a type (Homework, Projects, Quizzes), and give each its share of the grade. Your own setup stays as it is until you change it."],"1.27.1":["Undo now takes back a score as well as a mark: press Ctrl Z (⌘Z on a Mac) after a slip on a slider, a number key, or Missing, Excused or Late. Redo puts it back.","Deleting a unit, an assignment or a class shows Undo for a few seconds, and Undo puts it back where it was.","“Picked up where you left off” shows once, when you open an assignment, and no longer on Today or other pages. The note about what opened leaves by itself when you move to the next student, if every file opened.","The Next button stays in one place from student to student, and the Grade heading on a class’s Students tab is drawn properly.","Find anything answers to more everyday words: export, hand back, backup, undo, shortcuts, csv."],"1.27.0":["Start a new school year, in Settings, Saving and carrying. Your classes, units and assignment cards carry on, each card with its rubric and Quick mark boxes, with empty class lists and dates a year later.","This year goes into one protected file first, and the file is checked before anything is cleared. Open an archived year brings a year back from its file."],"1.26.2":["Rubric rows can be scored on your own scale. They start at 0 to 4 with half points, as before; when you set up an assignment you can pick any top from 1 to 10 and turn half points off.","Settings, Grading: choose the row scale new assignments start with. Assignments you already have keep theirs."],"1.26.1":["Activities: See, think, wonder now says it comes from Project Zero at the Harvard Graduate School of Education."],"1.26.0":["Seating: a new tab on each class. Pick how the room is set up, drag students to desks, and Shuffle gives everyone a new seat. A student can be kept in their seat.","Pick a name shows one student at random, and nobody twice until everyone has had a turn. Make groups deals the class into groups of any size.","While presenting a lesson, P picks a name and G makes groups. Who’s here leaves out anyone who is away today."],"1.25.0":["Attendance. Each class has an Attendance tab: everyone starts as present, so a day is one press for each student who is late, excused or absent, with a note if you want one.","Look back shows every saved day in one table with each student’s totals, and a student’s own page lists the days they missed.","Copy a day, or download the table as a spreadsheet, for your school’s system. Today has a line for it under each class.","If you don’t take attendance here, turn it off in Settings, Classes and rosters."],"1.24.0":["Retakes: a second try at the same assignment keeps the first try's score, comment and paper. Start one from the ⋯ beside Missing, Excused and Late on a paper.","You choose which try counts, for all your classes: the highest (to begin with), the latest, or the average. It is in the retake box and in the gradebook's Term setup.","A score typed into the gradebook takes a retake too: type both, like 7 > 10."],"1.23.0":["Scores by learning goal, if you want them. Keep your own list of goals (a skill, or a standard from your school) in Settings, Grading, or add one wherever you tag.","Tag rubric rows in Rubric setup and quiz questions in Quiz boxes. An assignment scored with just a total can carry one goal for the whole score.","Each class page gets a Goals tab: the class average on each goal with the lowest first, every student by every goal, and where each number came from. A student's own page shows their goals beside the class average.","Nothing changes until you add a first goal, and tagging never changes a score or a grade."],"1.22.0":["Progress sheets for parent meetings: one printed page per student with the term grade, every score, a chart of how they moved, missing work, each term's grade, the report comment and lines for notes. Find it on a class's Students list, or Progress sheet on one student's page.","Choose the term and tick what goes on it; Print opens the print window, where you can pick a printer or Save as PDF. It is made on your computer and nothing is sent anywhere."],"1.21.0":["Each class has a Missing work tab: every paper you marked Missing, by student or by assignment, for the term you pick.","Email reminder opens an email in your own mail app, addressed to the student and listing what they owe, for you to read and send. Email all writes one email to everyone who owes an assignment, with the addresses in Bcc. Grading Studio sends nothing itself.","Each reminder you open is noted beside the work, and Email wording… changes what every reminder says."],"1.20.0":["The app can speak Traditional Chinese (繁體中文). Choose it in Settings, Display, App language, or at the top of the welcome.","Like Spanish, it covers the first screens so far: the sidebar, Today, the welcome, Find anything, Help, and the feedback page students get with a returned paper. The other screens are still in English."],"1.19.0":["The app can speak Spanish. Choose it in Settings, Display, App language, or at the top of the welcome.","Spanish covers the first screens so far: the sidebar, Today, the welcome, Find anything, Help, and the feedback page students get with a returned paper. The other screens are still in English.","Names you typed (classes, students, assignments, rubric rows) are never translated."],"1.18.0":["On a tablet, a pencil draws and the pen's line is wider where you press harder. Once you have used a pencil, one finger moves the page, two fingers pinch to zoom, and a hand resting on the screen does nothing.","Settings, Marking has a new Tablet and pencil section: choose what a finger does on the paper, or turn off the wider line.","On a touch screen the tools, the student rows and the score buttons are larger."],"1.17.0":["Report comments: a new tab on each class's page drafts a comment for every student from your own gradebook, rubric scores and the comments you wrote on their papers. Edit each one, tick it done, then copy or download them all.","The drafts are put together on your computer from sentences you can change under Wording. Nothing about a student is sent anywhere."],"1.16.0":["Help is in the sidebar: short answers to the questions teachers ask most, from opening a set of papers to moving your work to another computer.","Find anything answers questions too. Type a few words, like “late paper” or “backup”, and the answer is in the list."],"1.15.0":["A picture dragged onto a slide that has text now sits beside the text, in a new Text + picture layout.","Drag several pictures in at once and each gets its own slide. Let a picture go on any slide in the list on the left to put it there.","New Full picture layout: the picture fills the whole slide."],"1.14.0":["Extra credit: points or a percent on one paper, and extra credit entries in the gradebook that add to the term grade or the in-class average.","The gradebook shows each type's average (summative, in-class) right beside the term grade, kept in view as you scroll. Averages only shows just those columns, and Whole year splits each term the same way.","Leave out… lets you untick students to see the class averages without them. Their own grades don't change, and nothing is saved."],"1.13.0":["Present a lesson from the Planner, or from Today when its class is on now or next: its slides fill the screen, and the arrow keys or a clicker move through them.","While presenting, A shows the agenda to tick off, T starts a timer the class can see, N shows your notes and B blanks the screen.","The bar shows how many minutes the class has left, from your timetable.","After a lesson is taught, one line says where the class got to. It shows on the lesson and on the week, and presenting again picks up there."],"1.12.0":["A returned paper starts with a feedback page: the score, each rubric row with the level given and what that level means, your comment, and every comment on the paper with its page number.","It is on unless you turn it off under Options on the Return tab. Your own pages are not changed, and bringing an export back in opens only those."],"1.11.0":["The Planner’s sections are in the sidebar: Calendar, Units, Past lessons, Activities and Rubrics. The row of tabs across the top is gone.","A lesson has a lighter top: its name, its classes, its status and Download. Copy for Claude, Versions, the upload and the links are under More.","Comments shows above a lesson once it has one."],"1.7.0":["Home is now Today: the classes you teach today with the lesson planned for each, the papers waiting to be marked, and the papers ready to hand back.","What the class needs next: after a set of papers is scored, Today shows the weakest rubric row and how many students to sit down with.","A class page is quieter. Click anywhere on an assignment’s row to open it; the only blue button is the one that adds an assignment.","Forget, and the other ways to open papers, moved into the ⋯ menu on each row."],"1.6.0":["A new browser opens on three questions (your classes, how you grade, where work is kept) and starts with nothing of anyone else’s in it.","A sample class of made-up students, with papers to mark, for trying things out. Remove it from Home when you’re done.","The app uses the name of your own school system. Choose it, and how you usually grade, in Settings.","Letter grades or IB 1 to 7 can show beside the percent, with boundaries you set.","Canvas and Moodle downloads are grouped by student. The Planner works without a setup file, and downloads lessons as PowerPoint with a plain built-in template."],"1.5.0":["The sidebar says “Not backed up”, in amber, until a folder holds a second copy of your work. Home asks for that folder once.","Go back in time, in Settings: any assignment as it was on an earlier day, restored on its own, with Undo.","Grading Studio can be installed as an app, and it opens with no internet.","A newer version now waits until you click Update now, so nothing changes in the middle of marking."]};
+const WHATS_NEW = {"1.28.27":["Planning your grading. Each set shows about how long its papers will take at your own pace: on the Focus card, on the assignment’s card, in the week in To do, and under the date when you set when work is due. The Focus card also offers a free period between your classes, picks up the set you were last on, and can start small with Just 3 papers or the shortest papers first.","A goal for each focus session: a few papers, the whole set, a to-do or a few words of your own, suggested from your pace. The timer shows how far along you are, the end of the session says whether you got there, and what is left goes into your next session on the same work. Today also counts your sessions.","Your grading goal can be for a day or a week, and a daily goal for some days only. A set can have a day to finish it by, with the papers a day that takes. On the day you choose, Today shows a look back at the week. Settings, Focus and goals switches each of these on or off."],"1.28.26":["The School page has a People card: optional spots for your principal, vice principal, department head or subject group coordinator, curriculum coordinator and dean of academic affairs, each with a name and email. Change the spots to your school’s own roles.","A to-do can name people from the School page. Type “ask the principal” or a last name and they are picked out; open the to-do to add someone or write to them by email, and filter your list by person."],"1.28.25":["A comment box opened near the bottom of a page no longer slips behind the next page. All of it stays on top, so saved comments, colors and Done can be clicked."],"1.28.24":["Quiz answer notes show their question (Q1, Q3) at both ends of their line, on screen and in exported files. With the pointer on a note, its line and its question light up.","Quiz boxes has Answer lines start: right of each box, under it, or by the mark. Each question has a gold pin you can drag to move its line on every paper, and on one paper you can drag a note’s pill with any tool but the eraser."],"1.28.23":["Undo for more of your work. On the marking screen, Ctrl Z (Cmd Z on a Mac) now also takes back lighting, a video's turn, a page taken out, a file removed, the rescan flag, anchor papers and Arrange pages. A short note says what came back, and Shift Ctrl Z or Ctrl Y does it again.","Everywhere else, Ctrl Z takes back your last change to classes, units, assignments, rosters, gradebook scores, to-dos and settings, deletes included. Inside a text box it still undoes your typing first. In the Planner, Ctrl Z works in the slide editor, and deleting a lesson has Undo."],"1.28.22":["A time tracker for grading and planning, kept apart. Grading time counts while the marking screen is in front and you are working in it; planning time counts the same way in the Planner, but not while you present. Open it from the Focus card on Today or with Find anything: a week, a month or three months, by assignment and by lesson. Each assignment shows its own time on its card and on the marking screen, with about how long a paper takes, and each lesson shows its planning time in the Planner.","Add time by hand for work away from the app, like marking on paper, and download every day as a spreadsheet. Settings, Focus and goals can switch the counting off or change how soon it stops."],"1.28.21":["Once a day, the app at its web address adds one to a public count of how many browsers opened it, so its maker can see whether anyone uses it. Nothing about you, your students or your work goes with it. Help, Privacy says the same."],"1.28.20":["Focus: a timer for grading in short sessions. Start it from the card on Today or from Focus in the sidebar, on a set of papers or one of your to-dos, and the next paper with nothing finished opens. A small panel keeps the time, folds to a pill, and offers a break when the time is up. To do has Focus on this.","A daily goal in papers or minutes, set in Settings, Focus and goals. Dots, a ring in the sidebar and this week’s bars fill in as you go, and turn green when you get there. A paper counts when its score is finished or its feedback is complete."],"1.28.19":["A Timer tab in the side pane for presentations given live: a stopwatch beside the notes page, with the asked-for length and + Time to comment. It is offered to a student who has a notes page and no video.","A YouTube or Vimeo video played in the app has buttons to skip 10 seconds and change speed, and Space, J and L work on it. Video files have a Float button that keeps the video in a small window on top. Google Drive’s player can’t be driven from here."],"1.28.18":["Side by side: the marking screen can keep a second pane beside the paper. Tabs choose what it shows: the student’s video, their notes page, another file, or the rubric with what each score means. A student with a video and a notes page opens this way without being asked. Press B, or Side by side above the paper.","A click on your assistant’s name in the sidebar lists the others too. Pick one and it opens and becomes the one in use, with its own link. Settings, Working with AI chooses which are listed."],"1.28.17":["Transcripts beside videos. Under any video, Paste a transcript takes one you have, for example from Gemini, YouTube or a caption file. A line that starts with a time plays the video from there.","Make transcript now works for video files kept in this browser too. It asks before the one-time download, runs on this computer, shows how far it is, and Cancel stops it.","Captions under the video show the line being said the right way up, even when the video is turned. For a Google Drive video, step through the lines with ‹ and ›."],"1.28.16":["Video cards have a ⟳ Turn button for a video filmed sideways. It turns a quarter turn at a time, is kept for that video, and partners sharing the link see it turned too.","A rubric copy brought in after every notes page was taken out or removed now goes on each student’s paper instead of Removed pages."],"1.28.15":["In full screen the student list gets out of the way while you mark. Rest the pointer at the left edge of the screen, or press [, and it comes back; on a tablet, tap the tab at the left edge.","Settings, Marking, Full screen marking can keep the list shown, or hide the tools too until the pointer comes near them."],"1.28.14":["Your AI assistant can sit beside Grading Studio. Name it in Settings, Working with AI (Gemini, Claude, ChatGPT, Copilot or another) and its name is in the sidebar on every screen, in the Planner too. A click opens it in a window on the right of the screen, or in a tab if you prefer.","In Chrome, right-click the name in the sidebar and choose Open link in split view to have both in one window. Opens at takes a link of your own, such as your school account or a Gem. Grading Studio sends nothing to the assistant: it sees only what you paste or attach."],"1.28.13":["Add a video file, not only a link: + Add, A video… keeps the file in this browser at any length while the computer has room, and partners share it. Drag the bar under a video to make it as big as you like.","Partners and videos (in Setup, and on No papers when you open an assignment) lists the whole class: pick partners and add each video in one place. + Clip now starts where the video is.","Bring in a rubric from Edit or the Open box on any assignment. Rows and what each level means are read from a Word or PDF table where they can be."],"1.28.12":["Look around with a sample class first now opens a full sample: two made-up classes part-way through a term, with marked papers, a quiz marked by question, a gradebook, charts, missing work, attendance, seating, report comments, to-dos and two weeks of lessons.","The sample is kept apart from your own work. Leave the sample in the sidebar clears it in one click, and your own classes are exactly as you left them."],"1.28.11":["In another language, the marking screen now reads in that language: the top bar, the tools, the student list, the score panel and its menus, and the Grades, Insights and Return tabs and Rubric setup.","Student names, rubric rows, what each score means, your comments and the papers themselves stay as they are. Boxes opened from the marking screen, To do, School and the Planner are still in English."],"1.28.10":["Planner slides: click any text box and the size menu in the toolbar changes that box: the title, the text, the bottom line and the rest. Biggest that fits picks the size for you.","The box you click gets a frame: drag its bar to move it or a handle to resize it, and Put back returns it to the layout. The .pptx keeps the new places and sizes.","+ Add slide adds a title and text slide straight away; the arrow beside it opens every layout. Timetable can set a different usual slide.","Words are never cut off: text that runs past its box stays visible in the editor with a warning, and when you present the box uses the room under it, then the text gets smaller until every word shows."],"1.28.9":["Returning marked files now gives each student one PDF: the feedback page first, then every paper they turned in, Word papers included as pages. A Word rubric you scored still goes back as a Word file.","To send each paper as its own file again, untick One PDF for each student under Options on the Return tab."],"1.28.8":["On Today, every class whose lesson has slides now has a Present button, not only the class on now. Two classes sharing one lesson can each present it.","While presenting, Pop out (or W) puts the slides in a window of their own for a second screen or projector. That window shows only what the class sees, and this one keeps the bar, your notes and the timer. The keys work in either window."],"1.28.7":["Save a screenshot as a strong example: tick “Save as a strong example” in the Screenshot bar, or press the button on the “Picture copied” note. Before it is saved you can black out anything, like a name, and add why it’s strong and tags.","The Examples page finds work again by tag or by searching what you wrote. Every card shows its tags, and you can change them from its ⋯ menu. Download as a sheet works for whatever the page is showing."],"1.28.6":["In another language, the boxes a class page opens now read in that language too: a new or changed assignment, the roster, units, how the class is graded, Email wording and report Wording, the notes pages for work with no papers, and the progress sheets you print.","Class, unit, assignment and student names, and the sentences in the Wording boxes, stay as you typed them. The marking screen and its boxes are still in English."],"1.28.5":["In another language, the rest of a class page now reads in that language: a student’s own page, Charts, Goals and Report comments, and the gradebook, charts and levels of a class graded with IB criteria. Pointing at a mark on a chart says it in that language too. Names, rubric rows, goals and criteria stay as you typed them.","A report comment’s draft is still written in English until you put your own sentences in Wording…. The boxes that open from these tabs are still in English.","Fixed in German: “Grade” showed as “Notiz” in a few places, and now reads “Note”."],"1.28.4":["In another language, more of a class page now reads in that language: the Gradebook, Students, Attendance, Seating and Missing work tabs, with dates written that language’s way and your own names left as you typed them.","Still in English: a student’s own page, Charts, Goals, Report comments, the gradebook of a class graded with IB criteria, and the boxes that open from these tabs."],"1.28.3":["In another language, a class page now reads in that language too: its header, its row of tabs and the Assignments tab, with your own class, unit and assignment names left as you typed them. The Gradebook and the other tabs are still in English."],"1.28.2":["Settings is now in your language too: all seven pages, in each of the eight languages. Help answers name the Settings buttons the way Settings shows them.","Boxes that open from Settings, such as Term setup and the mark key, are still in English, and so are the class and marking screens."],"1.28.1":["The app opens a little faster at its web address: it now fetches only the language you chose instead of carrying all of them. Your language is kept for use without internet, and the take-home file still has every language inside."],"1.28.0":["Six more app languages: Simplified Chinese (简体中文), French, German, Portuguese, Japanese and Korean, beside Traditional Chinese and Spanish. Choose one in Settings, Display, App language.","Each covers the same first screens: the sidebar, Today, the welcome, Find anything, Help and the feedback page students get. The other screens are still in English.","None of the translations has been checked by a fluent speaker yet, so a line may read oddly."],"1.27.36":["IB MYP classes: Quick mark now gives levels for a paper quiz. On the boxes screen each question counts for one criterion, and under Points to levels you type the lowest points that earn each level. The quiz then gives a level for each criterion, with no total and no percent."],"1.27.35":["IB DP classes: the Grading box now has Components, where each type of work (Paper 1, the internal assessment and so on) gets its own weight for that class alone. In the Gradebook, More has Predicted grades: click the 1 to 7 you predict for each student, with the grade the percent earns outlined as a hint. Predicted grades show in the gradebook and on progress sheets."],"1.27.34":["A class page is simpler. The tab row has Assignments, Gradebook, Students and More; the pin beside a page in More keeps it in the row. Roster, grading and the class link are under one Class setup button.","The gradebook has one More menu for Term setup, extra credit, import and copy. Settings has seven pages in place of twelve, and nothing has been removed.","In the Planner’s week, Use a lesson shows when you point at a class slot."],"1.27.33":["Every activity in the Planner’s Activities bank has a video button. See it in action opens a short classroom video of it from sources such as Edutopia, EL Education and Reading Rockets; where there isn’t a good one, Find a video searches YouTube for it. Your own activities can carry a video link, and the link goes into the speaker notes when you add an activity to a lesson."],"1.27.32":["IB MYP classes: report comments are drafted from the levels you set and the 1 to 7, and a progress sheet shows each criterion’s level, the total, the grade and every task’s levels, with no percent. A new year keeps a class’s criteria and boundaries and leaves the students’ levels behind. My setup now brings an MYP teacher in as IB MYP criteria."],"1.27.31":["A lesson in the Planner is tidier under the slide. This slide has your speaker notes beside one box for your AI assistant. The whole lesson has Materials, Links, Finished PowerPoint, comments and Taught as matching cards.","The tips for editing a slide are behind an Editing tips button, and Alternative version is in More until a lesson has more than one version."],"1.27.30":["A lesson in the Planner has a Links box for the web pages you open while teaching it. Paste an address, or pick one from School resources.","A School resource can be for one class. Its links then show on every lesson for that class, and in Present under Links (the L key)."],"1.27.29":["IB MYP tasks: the Grades tab shows each criterion’s level with no total or percent, and Copy all levels copies them. Insights leaves out the percent tiles, and text shared with an assistant says the rows are levels, not points to add up. Help has two new answers, for IB MYP and IB DP."],"1.27.28":["Coming from Google Classroom? Settings, Classes and rosters has a new button, From Google Classroom…. Choose the grades file you download from Classroom and it makes the class with its students, then shows every assignment and score for you to check before they go into the gradebook. A folder of student work downloaded from Google Drive now opens with each student’s files together. Nothing is sent anywhere and there is no sign-in. Help has an answer for it."],"1.27.27":["Screenshot: press S on a paper, Alt S (⌥S on a Mac) anywhere, or the button at the foot of the marking tools. Drag over what you want, click a page for the whole page, or press Enter for the whole screen, and the picture is copied, ready to paste. On a paper, name covers stay painted in and the student’s name and file name are left off; With my marks chooses whether your marks come too."],"1.27.26":["Full screen: press F, or Full screen near the bottom of the sidebar (beside ✕ while a paper is open). The browser’s bars go away and the sidebar folds to icons, or goes while you mark, so the paper gets the room. F again, the same button or Esc leaves, and nothing is closed or lost. On formative work F is for feedback, so use the button there."],"1.27.25":["IB classes. Each class has a Grading button: points and percent, IB MYP or IB DP. The welcome and Settings offer IB MYP criteria (0 to 8) and IB DP 1 to 7 as two separate choices.","An MYP class is marked against the criteria a task assesses, each 0 to 8, with no percent. Its gradebook shows every level a student earned, you choose the level that fits best for each criterion, and the total becomes a final grade of 1 to 7. Levels are never averaged.","Criterion names and the grade boundaries are yours to change. A DP class shows the 1 to 7 its percent earns on boundaries you type in."],"1.27.24":["My setup, in Settings: copy a prompt into your AI assistant, and it writes your setup as one block of text: classes and when they meet, the calendar, terms, what a grade is made of, how you grade, IB criteria and boundaries, rubrics, saved comments and learning goals.","Paste the block back and press Check it. You see what would change, untick anything you don’t want, and can undo it afterwards. Anything about students is left out and said so.","Copy my setup gives your own setup as the same kind of text, for a colleague to start from. The welcome has a line that leads here."],"1.27.23":["Take my work with me now carries your Planner too: lessons, units, timetable and their files. Bring work in takes it in. A Planner already in use only receives the lessons and files it doesn’t have, so nothing there is replaced.","If Grading Studio ever moves to a new web address, the old address tells you and shows the three steps for taking your work along. Help has an answer for it."],"1.27.22":["Attendance has a choice for a student who is away when you don’t know why yet: Absent, reason unknown. Change it to Absent, excused when you hear the reason. It is still four choices, and days you saved before keep their marks. Look back lists the absences that still have no reason."],"1.27.21":["Comments are easier to work with. Change a comment’s color at any time, even while typing it: its box has a Color row, and a Highlight row when it is on highlighted words. Text boxes and Quick mark comments have colors too.","Drag a new comment’s line up or down before you type a word, and press Enter to finish a comment or text box. Shift Enter starts a new line."],"1.27.20":["Feedback-only work no longer says 0 of 20 scored. A formative activity counts the students whose feedback is complete, on its card, in Find, Today, To do, the Grades box and the grade sheet, and says Ready to return once everyone has feedback."],"1.27.19":["Presentations and videos. On an assignment’s card, Add papers… now has No papers: presentations or videos…, which gives every student on the roster a notes page to write on while you watch. Pick lined, your rubric’s rows, two columns or blank.","On a student’s page, + Add has A video…: paste a link from Google Drive, YouTube or anywhere else, and tick the partners in it. One set of notes and one grade covers the group. Only the link is kept, so the video stays where it is.","Play here shows the video above the notes page; Open in its own window puts it beside the app. + Add also has A notes page… for one more page at any time.","Clips: under a video, + Clip saves a part worth showing, as a start time, an end time and a title. Show to the class plays it full screen with the title and without the student’s name, and Clips to show the class under Setup plays them one after another."],"1.27.18":["The app no longer assumes your AI assistant is Claude. Settings, Working with AI lets you pick Claude, ChatGPT, Gemini, Copilot, another name, or none, and buttons and hints use that name. If you already used the app, yours stays Claude.","Planner, Timetable has a Slides section: the agenda on slide 2 and keeping text between 28 and 36 pt are both on, and each can be turned off.","The week shows Saturday, or Sunday in front of Monday, when a class meets then. Short dates follow your computer's day and month order."],"1.27.17":["Answer notes for quizzes: type each question's answer in Quiz boxes, and it goes on the returned papers in a gold note labelled Answer, by each question a student lost points on. In Quiz boxes, Answer notes can be set to every question or off."],"1.27.16":["The grade sheet shows the score you gave each paper in Grading Studio, the same number as the score panel, with extra credit and the retake that counts. Grades found typed on the papers only show for papers with no score yet, or when you tick Also show grades found on the papers. A score stamp already on a paper now changes when the score does."],"1.27.15":["Copy one quiz answer as a picture: in Quick mark, press P or ⧉ Copy on an answer, then paste it into Claude to ask whether it is right. The picture shows only that answer, with the question and your answer key on top. The name, score, your mark and the file name are left off, and name covers are painted in, but the student’s handwriting and words still show."],"1.27.14":["Points written on a paper can have their own color. In Quick mark’s Colors menu, or Settings, Marking, Mark colors: the ✗ color as before, one color of your own, or By credit, with full points in the check color, part in amber and none in the ✗ color."],"1.27.13":["Share lesson file, under More in a lesson: one small file with the slides, notes, pictures, materials and finished PowerPoint. Open it with Import a lesson on another computer, or give it to another teacher.","Which classes and days a lesson is on, taught notes and comments for Claude stay behind, and opening one never replaces a lesson you have."],"1.27.12":["A to-do list. To do in the sidebar holds your own list beside what the app noticed from your work: papers to mark, papers to hand back, a class with no lesson planned, missing work to chase. Those go by themselves when the work is done, and each kind can be switched off.","Type a to-do the way you would say it, like “Call Bram’s parents friday”, and it picks out the day, the class and the student. Press N anywhere outside a paper to add one.","A to-do can have a day, a class, a student or assignment it goes with, a repeat and a note. Today shows a short card of what is overdue or due today.","Week, at the top right of To do, shows your week: each line on its day, under the class that meets then. Type in a day to add one, or drag a line to another day. Anything not done moves to today on its own."],"1.27.11":["Groups in Present mode: shuffling no longer moves the slides or ends the lesson, and each shuffle keeps last time's groups apart.","Change groups by hand: drag a name to another group, or click a name and then a group. Make my own starts with empty groups, and Undo or Ctrl Z takes back a move or a shuffle.","The Present timer keeps running after you finish or leave full screen, in the corner of the Planner, and comes back on the slides when you present again."],"1.27.10":["Finding names on its own is now off unless you turn it on, in Settings, Marking, Name covers. Only the boxes you draw in Check the covers cover anything, and the check before anonymous grading lists every paper."],"1.27.9":["In the Planner's Timetable, Use my school’s template… picks your own PowerPoint template for slide downloads. Use the plain one goes back to the white one built in.","Save my setup file keeps your classes, meeting times, days off and slide template in one file to load on another computer."],"1.27.8":["Anchor papers: while you mark a summative, click High, Mid or Low under the score. The Return tab lists the three and exports them in one ZIP, each named for the assignment and its level, like “River essay - Summative High.pdf”, with student names covered."],"1.27.7":["Keep strong work as an example: press ☆ Example on an answer in Quick mark (or E), or pick Use as an example in the ⋯ beside a student’s name for a whole paper or part of a page. Names are covered, and your marks and the score stay off unless you switch them on. It is always optional.","The Examples tab on an assignment, and Examples in the sidebar for every class, have Show to the class, Copy picture, Download and Download as a sheet.","Examples go to your linked folder and into the take-home file with the rest of your work."],"1.27.6":["Returned files are named for the student, the assignment and what they are, like “Ana Lee - River essay - Graded.pdf”, or Feedback when there is no score. They still go in each student’s own folder.","To keep the names students turned in, untick Name each file by student and assignment under Options on the Return tab."],"1.27.5":["The gradebook can import your old scores: press Import… and choose a CSV or Excel file, or paste the cells. Each column becomes an assignment, matched to your roster.","You see everything before it is saved, and a score already in the gradebook stays unless you choose the file’s."],"1.27.4":["School is a new page in the sidebar for the things about your school you look up again and again: the handbook, the calendar, the bell schedule, portals, forms, who to call.","Add a link, a file (a copy is kept with your work) or a note. Name your own groups, and star the ones you open most to keep them along the top.","Drop files on the page or paste a web address. Find anything lists every resource. They are kept in your folder and take-home file, and stay when you start a new school year."],"1.27.3":["The class timer in Present takes minutes and seconds: type them in, or pick 0:30 and the other quick times. The menu remembers the last time you typed.","While it runs, the timer's menu adds or takes away 10 seconds or a minute, pauses, and restarts from the time you set. + and − add or take away a minute without opening the menu.","Tick Show it big to put the countdown in the middle of the screen, large enough for the back of the room."],"1.27.2":["In the gradebook, in-class assessments are now on the left and summatives on the right: the columns, the averages beside the term grade, and wherever you choose a type.","The order is yours to change. In Term setup, the arrows beside each type move it, and the gradebook's columns follow from left to right.","You can make your own assignment types. In Term setup, rename a type or press + Add a type (Homework, Projects, Quizzes), and give each its share of the grade. Your own setup stays as it is until you change it."],"1.27.1":["Undo now takes back a score as well as a mark: press Ctrl Z (⌘Z on a Mac) after a slip on a slider, a number key, or Missing, Excused or Late. Redo puts it back.","Deleting a unit, an assignment or a class shows Undo for a few seconds, and Undo puts it back where it was.","“Picked up where you left off” shows once, when you open an assignment, and no longer on Today or other pages. The note about what opened leaves by itself when you move to the next student, if every file opened.","The Next button stays in one place from student to student, and the Grade heading on a class’s Students tab is drawn properly.","Find anything answers to more everyday words: export, hand back, backup, undo, shortcuts, csv."],"1.27.0":["Start a new school year, in Settings, Saving and carrying. Your classes, units and assignment cards carry on, each card with its rubric and Quick mark boxes, with empty class lists and dates a year later.","This year goes into one protected file first, and the file is checked before anything is cleared. Open an archived year brings a year back from its file."],"1.26.2":["Rubric rows can be scored on your own scale. They start at 0 to 4 with half points, as before; when you set up an assignment you can pick any top from 1 to 10 and turn half points off.","Settings, Grading: choose the row scale new assignments start with. Assignments you already have keep theirs."],"1.26.1":["Activities: See, think, wonder now says it comes from Project Zero at the Harvard Graduate School of Education."],"1.26.0":["Seating: a new tab on each class. Pick how the room is set up, drag students to desks, and Shuffle gives everyone a new seat. A student can be kept in their seat.","Pick a name shows one student at random, and nobody twice until everyone has had a turn. Make groups deals the class into groups of any size.","While presenting a lesson, P picks a name and G makes groups. Who’s here leaves out anyone who is away today."],"1.25.0":["Attendance. Each class has an Attendance tab: everyone starts as present, so a day is one press for each student who is late, excused or absent, with a note if you want one.","Look back shows every saved day in one table with each student’s totals, and a student’s own page lists the days they missed.","Copy a day, or download the table as a spreadsheet, for your school’s system. Today has a line for it under each class.","If you don’t take attendance here, turn it off in Settings, Classes and rosters."],"1.24.0":["Retakes: a second try at the same assignment keeps the first try's score, comment and paper. Start one from the ⋯ beside Missing, Excused and Late on a paper.","You choose which try counts, for all your classes: the highest (to begin with), the latest, or the average. It is in the retake box and in the gradebook's Term setup.","A score typed into the gradebook takes a retake too: type both, like 7 > 10."],"1.23.0":["Scores by learning goal, if you want them. Keep your own list of goals (a skill, or a standard from your school) in Settings, Grading, or add one wherever you tag.","Tag rubric rows in Rubric setup and quiz questions in Quiz boxes. An assignment scored with just a total can carry one goal for the whole score.","Each class page gets a Goals tab: the class average on each goal with the lowest first, every student by every goal, and where each number came from. A student's own page shows their goals beside the class average.","Nothing changes until you add a first goal, and tagging never changes a score or a grade."],"1.22.0":["Progress sheets for parent meetings: one printed page per student with the term grade, every score, a chart of how they moved, missing work, each term's grade, the report comment and lines for notes. Find it on a class's Students list, or Progress sheet on one student's page.","Choose the term and tick what goes on it; Print opens the print window, where you can pick a printer or Save as PDF. It is made on your computer and nothing is sent anywhere."],"1.21.0":["Each class has a Missing work tab: every paper you marked Missing, by student or by assignment, for the term you pick.","Email reminder opens an email in your own mail app, addressed to the student and listing what they owe, for you to read and send. Email all writes one email to everyone who owes an assignment, with the addresses in Bcc. Grading Studio sends nothing itself.","Each reminder you open is noted beside the work, and Email wording… changes what every reminder says."],"1.20.0":["The app can speak Traditional Chinese (繁體中文). Choose it in Settings, Display, App language, or at the top of the welcome.","Like Spanish, it covers the first screens so far: the sidebar, Today, the welcome, Find anything, Help, and the feedback page students get with a returned paper. The other screens are still in English."],"1.19.0":["The app can speak Spanish. Choose it in Settings, Display, App language, or at the top of the welcome.","Spanish covers the first screens so far: the sidebar, Today, the welcome, Find anything, Help, and the feedback page students get with a returned paper. The other screens are still in English.","Names you typed (classes, students, assignments, rubric rows) are never translated."],"1.18.0":["On a tablet, a pencil draws and the pen's line is wider where you press harder. Once you have used a pencil, one finger moves the page, two fingers pinch to zoom, and a hand resting on the screen does nothing.","Settings, Marking has a new Tablet and pencil section: choose what a finger does on the paper, or turn off the wider line.","On a touch screen the tools, the student rows and the score buttons are larger."],"1.17.0":["Report comments: a new tab on each class's page drafts a comment for every student from your own gradebook, rubric scores and the comments you wrote on their papers. Edit each one, tick it done, then copy or download them all.","The drafts are put together on your computer from sentences you can change under Wording. Nothing about a student is sent anywhere."],"1.16.0":["Help is in the sidebar: short answers to the questions teachers ask most, from opening a set of papers to moving your work to another computer.","Find anything answers questions too. Type a few words, like “late paper” or “backup”, and the answer is in the list."],"1.15.0":["A picture dragged onto a slide that has text now sits beside the text, in a new Text + picture layout.","Drag several pictures in at once and each gets its own slide. Let a picture go on any slide in the list on the left to put it there.","New Full picture layout: the picture fills the whole slide."],"1.14.0":["Extra credit: points or a percent on one paper, and extra credit entries in the gradebook that add to the term grade or the in-class average.","The gradebook shows each type's average (summative, in-class) right beside the term grade, kept in view as you scroll. Averages only shows just those columns, and Whole year splits each term the same way.","Leave out… lets you untick students to see the class averages without them. Their own grades don't change, and nothing is saved."],"1.13.0":["Present a lesson from the Planner, or from Today when its class is on now or next: its slides fill the screen, and the arrow keys or a clicker move through them.","While presenting, A shows the agenda to tick off, T starts a timer the class can see, N shows your notes and B blanks the screen.","The bar shows how many minutes the class has left, from your timetable.","After a lesson is taught, one line says where the class got to. It shows on the lesson and on the week, and presenting again picks up there."],"1.12.0":["A returned paper starts with a feedback page: the score, each rubric row with the level given and what that level means, your comment, and every comment on the paper with its page number.","It is on unless you turn it off under Options on the Return tab. Your own pages are not changed, and bringing an export back in opens only those."],"1.11.0":["The Planner’s sections are in the sidebar: Calendar, Units, Past lessons, Activities and Rubrics. The row of tabs across the top is gone.","A lesson has a lighter top: its name, its classes, its status and Download. Copy for Claude, Versions, the upload and the links are under More.","Comments shows above a lesson once it has one."],"1.7.0":["Home is now Today: the classes you teach today with the lesson planned for each, the papers waiting to be marked, and the papers ready to hand back.","What the class needs next: after a set of papers is scored, Today shows the weakest rubric row and how many students to sit down with.","A class page is quieter. Click anywhere on an assignment’s row to open it; the only blue button is the one that adds an assignment.","Forget, and the other ways to open papers, moved into the ⋯ menu on each row."],"1.6.0":["A new browser opens on three questions (your classes, how you grade, where work is kept) and starts with nothing of anyone else’s in it.","A sample class of made-up students, with papers to mark, for trying things out. Remove it from Home when you’re done.","The app uses the name of your own school system. Choose it, and how you usually grade, in Settings.","Letter grades or IB 1 to 7 can show beside the percent, with boundaries you set.","Canvas and Moodle downloads are grouped by student. The Planner works without a setup file, and downloads lessons as PowerPoint with a plain built-in template."],"1.5.0":["The sidebar says “Not backed up”, in amber, until a folder holds a second copy of your work. Home asks for that folder once.","Go back in time, in Settings: any assignment as it was on an earlier day, restored on its own, with Undo.","Grading Studio can be installed as an app, and it opens with no internet.","A newer version now waits until you click Update now, so nothing changes in the middle of marking."]};
 const upd = { on: false, st: null, mine: '', checking: false, said: '', install: null, installed: false, err: '' };
 const updCan = () => 'serviceWorker' in navigator && (location.protocol === 'https:' || /[?&]sw=1(&|$)/.test(location.search)) && !/Grading Studio\.html$/i.test(decodeURIComponent(location.pathname));
 const updSend = async msg => { const reg = await navigator.serviceWorker.ready; if (reg.active) reg.active.postMessage(msg); };
@@ -30118,11 +30555,22 @@ function stpRead(j) {
     if (FC_LENS.includes(n(fo.sessionMinutes))) f.len = n(fo.sessionMinutes);
     if (FC_BRKS.includes(n(fo.breakMinutes))) f.brk = n(fo.breakMinutes);
     if (fo.dailyGoal === null || fo.dailyGoal === false) f.goal = null;
-    else { const g = stpObj(fo.dailyGoal); if (g && n(g.papers) > 0) f.goal = { k: 'papers', n: Math.min(500, n(g.papers)) }; else if (g && n(g.minutes) > 0) f.goal = { k: 'min', n: Math.min(600, n(g.minutes)) }; }
+    else {
+      const g = stpObj(fo.dailyGoal), wk = g && stpKey(g.per) === 'week', m = wk ? 7 : 1;
+      if (g && n(g.papers) > 0) f.goal = { k: 'papers', n: Math.min(500 * m, n(g.papers)) }; else if (g && n(g.minutes) > 0) f.goal = { k: 'min', n: Math.min(600 * m, n(g.minutes)) };
+      if (f.goal && wk) f.goal.per = 'week';
+      else if (f.goal) { const ds = stpArr(g.days, 7).map(x => GP_DAYS.findIndex(d => stpKey(d) === stpKey(x))).filter(i => i >= 0); if (ds.length && ds.length < 7) f.goal.days = FC_DOWS.filter(d => ds.includes(d)); }
+    }
+    if (typeof fo.sessionGoals === 'boolean') f.sg = fo.sessionGoals;
     if (typeof fo.chime === 'boolean') f.sound = fo.chime;
     if (typeof fo.timeInTab === 'boolean') f.title = fo.timeInTab;
     if (typeof fo.countTime === 'boolean') f.track = fo.countTime;
     if (TK_IDLES.includes(n(fo.stopCountingAfterMinutes))) f.idle = n(fo.stopCountingAfterMinutes);
+    if (typeof fo.freePeriods === 'boolean') f.free = fo.freePeriods;
+    if (fo.weeklyLookBack === false || fo.weeklyLookBack === null) f.wk = false;
+    else if (typeof fo.weeklyLookBack === 'string' && GP_DAYS.some(d => d.toLowerCase() === fo.weeklyLookBack.trim().toLowerCase())) f.wk = GP_DAYS.findIndex(d => d.toLowerCase() === fo.weeklyLookBack.trim().toLowerCase());
+    if (typeof fo.quietWhileFocusing === 'boolean') f.quiet = fo.quietWhileFocusing;
+    if (typeof fo.shortestFirst === 'boolean') f.short = fo.shortestFirst;
     if (Object.keys(f).length) S.focus = f;
   }
   if (typeof j.attendance === 'boolean') S.att = j.attendance; else if (j.attendance != null && stpCount(j.attendance)) S.left.push('Attendance records.');
@@ -30271,11 +30719,17 @@ function stpDiff(S, planNow) {
     const c = fcConf(), f = S.focus, L = [];
     if (f.len != null && f.len !== c.len) L.push('A focus session lasts ' + f.len + ' minutes');
     if (f.brk != null && f.brk !== c.brk) L.push('A break lasts ' + f.brk + ' minutes');
-    if ('goal' in f && JSON.stringify(f.goal) !== JSON.stringify(c.goal)) L.push(f.goal ? 'Daily goal: ' + people(f.goal.n, f.goal.k === 'min' ? 'minute' : 'paper') : 'No daily goal');
+    const gk = g => g ? JSON.stringify([g.k, g.n, g.per || 'day', g.days || null]) : '';
+    if ('goal' in f && gk(f.goal) !== gk(c.goal)) L.push(f.goal ? (f.goal.per === 'week' ? 'Weekly goal: ' : 'Daily goal: ') + people(f.goal.n, f.goal.k === 'min' ? 'minute' : 'paper') + (f.goal.days ? ' on ' + f.goal.days.map(d => GP_DAYS[d]).join(', ') : '') : 'No daily goal');
+    if (f.sg != null && f.sg !== c.sg) L.push(f.sg ? 'A goal is suggested for each session' : 'No goal is suggested for sessions');
     if (f.sound != null && f.sound !== c.sound) L.push(f.sound ? 'A soft chime when a session or a break ends' : 'No chime when a session ends');
     if (f.title != null && f.title !== c.title) L.push(f.title ? 'The time left shows in the browser tab’s name' : 'The time left stays out of the browser tab’s name');
     if (f.track != null && f.track !== c.track) L.push(f.track ? 'Grading and planning time are counted' : 'Grading and planning time are not counted');
     if (f.idle != null && f.idle !== c.idle) L.push('Time stops counting after ' + people(f.idle, 'minute') + ' with nothing done');
+    if (f.free != null && f.free !== c.free) L.push(f.free ? 'Free periods are offered for grading' : 'Free periods are not offered for grading');
+    if ('wk' in f && f.wk !== c.wk) L.push(f.wk === false ? 'No look back at the week' : 'A look back at the week from ' + GP_DAYS[f.wk]);
+    if (f.quiet != null && f.quiet !== c.quiet) L.push(f.quiet ? 'Counts are hidden during a focus session' : 'Counts stay on during a focus session');
+    if (f.short != null && f.short !== c.short) L.push(f.short ? 'Shortest papers first in a focus session' : 'Papers in their usual order in a focus session');
     if (L.length) add('focus', 'Focus timer and daily goal', L, '');
   }
   if (S.att != null && S.att !== attOn()) add('att', 'Attendance', [S.att ? 'Take attendance in Grading Studio' : 'Don’t take attendance in Grading Studio'], S.att ? '' : 'Days already saved are kept.');
@@ -30462,7 +30916,7 @@ async function stpExport() {
   if (bank.length) out.comments = bank.slice(0, 200);
   if (goalList().length) out.goals = goalList().map(x => x.name);
   if (lib.me && typeof lib.me.att === 'boolean') out.attendance = lib.me.att;
-  if (lib.me && lib.me.focus) { const c = fcConf(); out.focus = { sessionMinutes: c.len, breakMinutes: c.brk, dailyGoal: c.goal ? { [c.goal.k === 'min' ? 'minutes' : 'papers']: c.goal.n } : null, chime: c.sound, timeInTab: c.title, countTime: c.track, stopCountingAfterMinutes: c.idle }; }
+  if (lib.me && lib.me.focus) { const c = fcConf(); out.focus = { sessionMinutes: c.len, breakMinutes: c.brk, dailyGoal: c.goal ? { [c.goal.k === 'min' ? 'minutes' : 'papers']: c.goal.n, ...(c.goal.per === 'week' ? { per: 'week' } : {}), ...(c.goal.days ? { days: c.goal.days.map(d => GP_DAYS[d].toLowerCase()) } : {}) } : null, sessionGoals: c.sg, chime: c.sound, timeInTab: c.title, countTime: c.track, stopCountingAfterMinutes: c.idle, freePeriods: c.free, weeklyLookBack: c.wk === false ? false : GP_DAYS[c.wk].toLowerCase(), quietWhileFocusing: c.quiet, shortestFirst: c.short }; }
   if (tabsKept().length) out.classTabs = tabsKept().map(k => CLASS_TABS.find(t => t[0] === k)[1]);
   { const m = stpMarkNow(), o = { ...(m.xnames ? {} : { studentFileNames: false }), ...(m.xone ? {} : { onePdfPerStudent: false }), ...(m.anchorCover ? {} : { coverNamesOnAnchors: false }), ...(m.nameFind ? { findTypedNames: true } : {}), ...(m.ptsInk ? { pointsColor: m.ptsInk } : {}), ...(m.sheetfound ? { gradeSheetFromPapers: true } : {}), ...(m.fside !== 'hide' ? { fullScreenSide: m.fside } : {}) }; if (Object.keys(o).length) out.marking = o; }
   return JSON.stringify(out, null, 1);
@@ -30539,7 +30993,7 @@ Every part except the first line is optional. Leave a part out rather than leavi
   "comments": ["Explain how your evidence supports your claim."],
   "goals": ["Uses evidence", "Designs a fair test"],
   "attendance": true,
-  "focus": { "sessionMinutes": 10, "breakMinutes": 5, "dailyGoal": { "papers": 10 }, "chime": true, "timeInTab": true, "countTime": true, "stopCountingAfterMinutes": 5 },
+  "focus": { "sessionMinutes": 10, "breakMinutes": 5, "dailyGoal": { "papers": 10 }, "sessionGoals": true, "chime": true, "timeInTab": true, "countTime": true, "stopCountingAfterMinutes": 5, "freePeriods": true, "weeklyLookBack": "friday", "quietWhileFocusing": false, "shortestFirst": false },
   "classTabs": ["Missing work"],
   "slides": { "agenda": true, "textSizes": "usual", "newSlide": "Title and text" },
   "marking": { "pointsColor": "credit", "studentFileNames": true, "onePdfPerStudent": true, "coverNamesOnAnchors": true, "findTypedNames": false, "gradeSheetFromPapers": false, "fullScreenSide": "hide" }
@@ -30556,7 +31010,7 @@ FIELD NOTES
 - "emptyType" is "other" (when a type has nothing in it yet, the others are used) or "zero". "extraCredit.addsTo" is "term" or "inClass"; "cap" true keeps grades at 100% at most. "retakes" is "highest", "latest" or "average".
 - "classTabs" are the class pages I want kept in the tab row beside Assignments, Gradebook and Students: any of "Attendance", "Seating", "Missing work", "Charts", "Goals", "Report comments". Leave it out unless I ask.
 - "slides" is for the lesson planner: "agenda" false stops an agenda being added as slide 2, "textSizes" is "usual" (28 to 36 pt) or "any" (18 to 44 pt), and "newSlide" is the layout the Add slide button adds: "Title and text", "Plain text", "Two columns", "Text + picture", "Picture" or another layout the planner has. Leave it out unless I ask.
-- "focus" is the work timer for grading: "sessionMinutes" is one of 5, 10, 15, 20, 25, 30, 45, 60 and "breakMinutes" one of 3, 5, 10, 15. "dailyGoal" is how much I want to grade in a day, as { "papers": 10 } or { "minutes": 60 }, or null for none. "chime" false turns off the sound at the end of a session, and "timeInTab" false keeps the time left out of the browser tab's name. "countTime" false stops the app counting how long I spend grading and planning, and "stopCountingAfterMinutes" (2, 5, 10 or 15) is how long with nothing pressed or typed before it stops counting. Leave it out if I have not said.
+- "focus" is the work timer for grading: "sessionMinutes" is one of 5, 10, 15, 20, 25, 30, 45, 60 and "breakMinutes" one of 3, 5, 10, 15. "dailyGoal" is how much I want to grade in a day, as { "papers": 10 } or { "minutes": 60 }, or null for none; add "per": "week" for a goal for the whole week, or "days": ["monday", "wednesday"] for a daily goal on some days only. "sessionGoals" false stops the app suggesting a goal for each session. "chime" false turns off the sound at the end of a session, and "timeInTab" false keeps the time left out of the browser tab's name. "countTime" false stops the app counting how long I spend grading and planning, and "stopCountingAfterMinutes" (2, 5, 10 or 15) is how long with nothing pressed or typed before it stops counting. "freePeriods" false stops the app offering the gaps between my classes for grading. "weeklyLookBack" is the day a look back at my week shows on Today ("friday" and so on), or false for none. "quietWhileFocusing" true hides counts during a focus session, and "shortestFirst" true takes the shortest papers first. Leave it out if I have not said.
 - "marking" holds small choices; leave out any I have not asked for. "pointsColor" is "pen", "credit" (full points green, part amber, none red) or one of red, blue, green, purple, black. "studentFileNames" names each file I hand back for the student and assignment. "onePdfPerStudent" puts all of a student's papers in one PDF (false sends each paper as its own file). "coverNamesOnAnchors" covers names on example papers I export. "findTypedNames" lets the app look for typed names to cover. "gradeSheetFromPapers" also shows grades the app finds written on papers. "fullScreenSide" is what happens beside the paper while I mark in full screen: "hide" hides the student list until I point at the left edge, "all" hides the tools as well, "show" keeps both.
 - A rubric row is a name, or a name with "levels" keyed "4" down to "0". A rubric whose rows go higher takes "rowTop" (up to 10), and "halfPoints": false when only whole points are given.
 - Use straight quotes and no comments inside the block.`;

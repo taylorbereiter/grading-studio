@@ -132,15 +132,20 @@ function tkPageRender() {
   // the tiles: grading and planning side by side, never added together
   const lessons = Object.keys(t.la).filter(k => k && t.la[k] >= 60).length;
   const pacePer = t.p && t.g ? Math.max(1, Math.round(t.g / 60 / t.p)) : 0;
-  const school = per.days.filter(k => k <= today);
-  const met = c.goal ? school.filter(k => { const d = L.days[k] || {}; return c.goal.k === 'papers' ? (d.p || 0) >= c.goal.n : Math.floor((d.s || 0) / 60) >= c.goal.n; }).length : 0;
+  // a daily goal: the days it was for that reached it; a weekly goal: the weeks (from Monday) that reached it
+  const school = per.days.filter(k => k <= today && fcGoalDay(c, k)), wkg = !!c.goal && c.goal.per === 'week';
+  const got = ks => ks.reduce((a, k) => { const d = L.days[k] || {}; return a + (c.goal.k === 'papers' ? d.p || 0 : (d.s || 0) / 60); }, 0);
+  const weeks = wkg ? [...new Set(per.days.filter(k => k <= today).map(k => { const d = new Date(k + 'T12:00:00'); d.setDate(d.getDate() - (d.getDay() + 6) % 7); return isoDay(d); }))] : [];
+  const met = !c.goal ? 0 : wkg ? weeks.filter(m => got(Array.from({ length: 7 }, (_, i) => { const d = new Date(m + 'T12:00:00'); d.setDate(d.getDate() + i); return isoDay(d); })) >= c.goal.n).length
+    : school.filter(k => got([k]) >= c.goal.n).length;
   const busy = t.list.filter(d => d.g + d.l > 0).sort((a, b) => b.g + b.l - (a.g + a.l))[0];
   const tile = (key, label, v, sub, sub2) => '<div class="tktile"><span class="tkl">' + (key ? '<i class="tkkey ' + key + '"></i>' : '') + '<span>' + label + '</span></span><span class="tkv">' + v + '</span>' + (sub ? '<span class="tks">' + sub + '</span>' : '') + (sub2 ? '<span class="tks">' + sub2 + '</span>' : '') + '</div>';
   const tiles = '<div class="tktiles">' +
     tile('g', 'Grading time', tkD(t.g), t.p ? '<span>' + esc(people(t.p, 'paper')) + '</span>' + (pacePer ? ' · <span>' + esc('about ' + people(pacePer, 'minute') + ' a paper') + '</span>' : '') : '', '<span>' + esc(word) + ':</span> ' + tkD(pt.g)) +
     tile('l', 'Planning time', tkD(t.l), lessons ? '<span>' + esc(people(lessons, 'lesson')) + '</span>' : '', '<span>' + esc(word) + ':</span> ' + tkD(pt.l)) +
     tile('f', 'In focus sessions', tkD(t.s), '<span>Time on the focus timer</span>') +
-    (c.goal ? tile('', 'Daily goal', '<span data-raw>' + met + ' / ' + school.length + '</span>', '<span>' + esc(people(met, 'day') + ' reached the goal') + '</span>')
+    (c.goal ? (wkg ? tile('', 'Weekly goal', '<span data-raw>' + met + ' / ' + weeks.length + '</span>', '<span>' + esc(people(met, 'week') + ' reached the goal') + '</span>')
+      : tile('', 'Daily goal', '<span data-raw>' + met + ' / ' + school.length + '</span>', '<span>' + esc(people(met, 'day') + ' reached the goal') + '</span>'))
       : tile('', 'Busiest day', busy ? '<span data-raw>' + esc(tkDate(busy.k, { weekday: 'short', month: 'short', day: 'numeric' })) + '</span>' : '–', busy ? tkD(busy.g + busy.l) : '')) + '</div>';
   // day by day: two bars, grading and planning
   const bars = per.groups.map(g => { const ds = g.map(k => tkDay(k, L, P)); return { k: g[0], last: g[g.length - 1], g: ds.reduce((s, d) => s + d.g, 0), l: ds.reduce((s, d) => s + d.l, 0) }; });
@@ -221,10 +226,15 @@ function tkAsg(id) {
 }
 // "1 hr 5 min so far · about 4 minutes a paper": the time counted on this assignment since the tracker began, and how long a
 // paper took, from the papers finished on the days it was counted.
+// And, while papers are left, about how long they will take at her pace (src/gradeplan.js).
 function tkAsgHtml(id) {
-  const t = tkAsg(id); if (!t || t.s < 60 || !fcConf().track && !t.s) return '';
-  const per = t.p ? Math.max(1, Math.round(t.s / 60 / t.p)) : 0;
-  return '<span class="tkc" title="' + esc(tr('Time spent grading this assignment, from the time tracker')) + '">' + TK_CLOCK + '<span>' + esc(tkDur(t.s) + ' so far') + '</span>' + (per ? '<span>·</span><span>' + esc('about ' + people(per, 'minute') + ' a paper') + '</span>' : '') + '</span>';
+  const t = tkAsg(id); if (!t) return '';
+  const per = t.p ? Math.max(1, Math.round(t.s / 60 / t.p)) : 0, left = gpLeft(id), bits = [];
+  if (t.s >= 60) bits.push(tkDur(t.s) + ' so far');
+  if (t.s >= 60 && per) bits.push('about ' + people(per, 'minute') + ' a paper');
+  if (left >= 60) bits.push('about ' + tkDur(left) + ' left');
+  if (!bits.length) return '';
+  return '<span class="tkc" title="' + esc(tr('Time spent grading this assignment, from the time tracker')) + '">' + TK_CLOCK + bits.map(x => '<span>' + esc(x) + '</span>').join('<span>·</span>') + '</span>';
 }
 
 /* ---------- the line on Today's Focus card ---------- */
