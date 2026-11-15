@@ -1,21 +1,22 @@
 {
- "version": "1.28.21",
- "build": "0975e2aa3da6",
+ "version": "1.28.22",
+ "build": "32ad10725e18",
  "notes": [
-  "Once a day, the app at its web address adds one to a public count of how many browsers opened it, so its maker can see whether anyone uses it. Nothing about you, your students or your work goes with it. Help, Privacy says the same."
+  "A time tracker for grading and planning, kept apart. Grading time counts while the marking screen is in front and you are working in it; planning time counts the same way in the Planner, but not while you present. Open it from the Focus card on Today or with Find anything: a week, a month or three months, by assignment and by lesson. Each assignment shows its own time on its card and on the marking screen, with about how long a paper takes, and each lesson shows its planning time in the Planner.",
+  "Add time by hand for work away from the app, like marking on paper, and download every day as a spreadsheet. Settings, Focus and goals can switch the counting off or change how soon it stops."
  ],
  "files": {
-  "index.html": "8aa8fccc76ffa691562088d87ed798a6cb2c566a6891fbf3f30507feecdeb4ae",
-  "planner.html": "75d092b8a28b170995c81464c574bba378847bd3f1eb81f4b273a555020a1995"
+  "index.html": "4f15bc12ca21a58e19fd365a7af9e749d0aafe4de7393223b8e75eb51bb811f3",
+  "planner.html": "e6444247e967d8e5aa4a1f7699e744fb10501314a44da5e17a7af69f0b643463"
  },
  "langs": {
-  "lang/zh-Hant.js": "6284fe8f86a87a6f474979372744af559f3abd36a54e63f25f2d6aa4883c2c60",
-  "lang/zh-Hans.js": "d66426a524da633e26c7e7e68262092378459e1dd5b9956daecf02b8c909337b",
-  "lang/es.js": "4a4a8bdfcad8c54643fa1ff90a1f79f7d1ef191c45fe25362a88f78f3b0c4127",
-  "lang/fr.js": "9e1a7d91e3e485d197ac52813deb0a6a52f7502afc03a85db75729e98a81daf5",
-  "lang/de.js": "72195239e7dd2cbee04fff4023523f9d591d88968f2df3da13fe1acbbfcd6853",
-  "lang/pt-BR.js": "0ec58f51f4d3c8281551fffb86d9899508acfb144f8dab0b338eac74497c3a26",
-  "lang/ja.js": "096c0c4848a39a2507c7a645b0faddaa80e4b2a2535c84686fec09eb15d3c77a",
-  "lang/ko.js": "8b34514909e36dfbd031d22cb30d67c63e5f63b1ef0472c31054ffabea28c6bf"
+  "lang/zh-Hant.js": "241b64c7293f2f6e266f7c89a6d61a79786166b79d6df3906303990ab681f5ed",
+  "lang/zh-Hans.js": "0de3cf9dee06fe0ede588e40c8fea657badc5e83e113e4557a7009ab851199fd",
+  "lang/es.js": "649de9f6bafbba6233dfae3f223e6431e47c497f4dc8f4bfcb17a8676676875a",
+  "lang/fr.js": "61fb415b9ab41e6331d57cb51e984a52397e220639e72c3a356dd419a2549955",
+  "lang/de.js": "c6c9d2a70cbc9498cc23d3f4c13141f728c865ed7a81610feca80fc91bb23a87",
+  "lang/pt-BR.js": "5186b2ea8237bf5d50d729332d03db7c8a0a2a1734c7c63a37b040c5360a11d1",
+  "lang/ja.js": "40f47f41c11e5eb4327cb2aaed677d6cc288395e5b6baeb7db8d2eaac72c8584",
+  "lang/ko.js": "dd6449a0ee98c85de176f95607c4d6db8f3bdbf61a7eca56a8bb035e3641e599"
  }
 }
