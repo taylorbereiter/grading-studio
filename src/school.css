@@ -55,3 +55,19 @@
 .schform .schsay{margin:0;font-size:var(--text-control)}
 .schfiles{margin:0;padding-left:1.2em;font-size:var(--text-body);max-height:160px;overflow:auto}
 @media (max-width:640px){.schbar .btn{flex:1 1 auto}}
+
+/* people: spots for the roles at the school, filled in or not */
+.schppl .schhead .btn{margin-left:var(--space-1)}
+.schprow{display:flex;align-items:center;gap:var(--space-2);min-height:48px;padding:0 var(--space-2) 0 var(--space-4)}
+.schprow+.schprow{border-top:1px solid var(--line)}
+.schrole{flex:0 0 220px;font-size:var(--text-small);font-weight:500;color:var(--muted);overflow-wrap:anywhere}
+.schpname{flex:1;display:flex;flex-direction:column;align-items:flex-start;gap:1px;min-width:0;padding:var(--space-2) 0;border:0;background:none;color:var(--fg);font:inherit;text-align:left;cursor:pointer}
+.schpname:hover b{color:var(--accent)}
+.schpname b{font-weight:600}
+.schpadd{justify-self:start;padding:var(--space-1) var(--space-2);margin-left:calc(-1 * var(--space-2));border:0;border-radius:var(--corner-2);background:none;color:var(--faint);font:inherit;font-size:var(--text-control);cursor:pointer}
+.schpadd:hover{background:var(--hover);color:var(--accent)}
+.schptd{font-size:var(--text-small);font-weight:500;color:var(--accent);text-decoration:none;white-space:nowrap;padding:var(--space-1) var(--space-2);border-radius:var(--corner-pill);background:var(--accent-soft)}
+.schpmail svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.schpnone{margin:0;padding:var(--space-4)}
+.schppl .schsay{margin:var(--space-2) var(--space-1) 0;font-size:var(--text-small)}
+@media (max-width:640px){.schprow{flex-wrap:wrap}.schprow .schrole{flex-basis:100%;padding-top:var(--space-2)}}

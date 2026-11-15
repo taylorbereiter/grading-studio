@@ -716,6 +716,16 @@ function schoolMerge(x, y) {
   for (const i of Y.items) { const o = by.get(i.id); if (!o || (i.at || 0) > (o.at || 0)) { by.set(i.id, i); toA = true; } }
   const out = { items: [...by.values()], order: X.order, ot: X.ot };
   if (Y.ot > X.ot) { out.order = Y.order; out.ot = Y.ot; toA = true; }
+  // the people (principal, coordinators...) an item at a time like the rest, and the list of spots as a whole, the later one kept
+  const px = x && Array.isArray(x.people) ? x.people.filter(p => p && p.id) : [], py = y && Array.isArray(y.people) ? y.people.filter(p => p && p.id) : [];
+  if (px.length || py.length) {
+    const pb = new Map(px.map(p => [p.id, p]));
+    for (const p of py) { const o = pb.get(p.id); if (!o || (p.at || 0) > (o.at || 0)) { pb.set(p.id, p); toA = true; } }
+    out.people = [...pb.values()];
+  }
+  const rx = x && x.roles && Array.isArray(x.roles.list) ? x.roles : null, ry = y && y.roles && Array.isArray(y.roles.list) ? y.roles : null;
+  if (rx) out.roles = rx;
+  if (ry && (!rx || (ry.at || 0) > (rx.at || 0))) { out.roles = ry; toA = true; }
   return { out, toA };
 }
 // Other saved things: comments saved for reuse are pooled, and anything else she hasn't got here comes in. Nothing she has here is replaced, unless she replaced it there later.

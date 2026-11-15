@@ -64,7 +64,10 @@
 .qbbox>span{cursor:move}
 .qbpin{position:absolute;z-index:4;width:22px;height:22px;transform:translate(-50%,-50%);border:1.5px dashed #8fb3d6;border-radius:var(--corner-round);display:flex;align-items:center;justify-content:center;color:#6f97bd;font-weight:700;font-size:var(--text-small);background:rgba(255,255,255,.85);cursor:grab}
 .qbpin.on{border-color:var(--bad);color:var(--bad);width:26px;height:26px;font-size:var(--text-body)}
+.qbapin{position:absolute;z-index:5;min-width:22px;height:18px;padding:0 5px;transform:translate(-50%,-50%);border-radius:var(--corner-pill);display:flex;align-items:center;justify-content:center;background:var(--gold-line);color:var(--gold-fg);font-weight:700;font-size:var(--text-caption);box-shadow:0 0 0 2px var(--surface);cursor:grab;opacity:.75}
+.qbapin.on{opacity:1;box-shadow:0 0 0 2px var(--surface),0 0 0 4px var(--gold-line)}
 .qbspot{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 10px;border-radius:var(--corner-3);background:var(--accent-soft)}
+.qbspot+.qbspot{margin-top:6px}
 .qbt .qhow{width:auto;max-width:130px;padding:5px 4px;border:1px solid var(--line-strong);border-radius:var(--corner-2);font:inherit;background:var(--surface);color:var(--fg)}
 .qmopts{display:inline-flex;align-items:center;gap:8px;margin-left:auto;flex-wrap:wrap}
 .qmhd .qmopts+[data-boxes]{margin-left:0}

@@ -60,7 +60,7 @@ let setLibFrom, libNews;   // setLibFrom replaces the whole library, a merge hav
         let other = null; try { other = JSON.parse(now); } catch {}
         if (other) {
           const m = mergeLib(v, other, { dev: devId(), now: Date.now() });
-          v = lib = migrateLib(m.lib); prev = libPrev(v); refs(); rollsShare();
+          v = lib = migrateLib(m.lib); prev = libPrev(v); refs(); rollsShare(); libUndoForget();
           if (batch && m.mapA[batch.classId]) batch.classId = m.mapA[batch.classId];
         }
       }
@@ -77,7 +77,7 @@ let setLibFrom, libNews;   // setLibFrom replaces the whole library, a merge hav
     if (!now || now === libSeen || !$('#dlg').hidden || (shellReady && classPanelBusy())) return;
     let other = null; try { other = JSON.parse(now); } catch {}
     if (!other) return;
-    lib = migrateLib(other); prev = libPrev(lib); libSeen = now; refs();
+    lib = migrateLib(other); prev = libPrev(lib); libSeen = now; refs(); libUndoForget();
     if (batch) renderTopAtlas(); else renderLib();
   };
 }
@@ -475,7 +475,7 @@ async function reconcileNow() {
     students += (row.rows || []).filter(x => x.pick === 'b').length;
   }
   fld.prog = '';
-  if (libm.toA) { lib = migrateLib(libm.lib); if (!setLibFrom(lib)) throw browserFull(); if (batch && batch.assignment) { const f = findItem(batch.assignment.id); if (f) batch.assignment = f.it; } }
+  if (libm.toA) { lib = migrateLib(libm.lib); libUndoForget(); if (!setLibFrom(lib)) throw browserFull(); if (batch && batch.assignment) { const f = findItem(batch.assignment.id); if (f) batch.assignment = f.it; } }
   const tomb = { ...plan.tomb }; store.set('gs.tomb', tomb);
   const set = prefer ? {} : mergeLs(carryLs(), B.ls || {}, k => Object.keys(tomb).some(id => k.includes(id)));   // going back: the folder takes what's here, and nothing newer comes back
   for (const [k, v] of Object.entries(set)) lsPut(k, v);

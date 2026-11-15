@@ -311,3 +311,29 @@ test('a DP class’s own component weights come in by the names of the gradebook
   assert.equal(r.after, null, 'undo takes the class it made away again');
   await close();
 });
+
+test('people at the school and the spots for them come in, show in the preview, go out again, and are undone', async () => {
+  const setup = { gradingStudioSetup: 1, school: { staffRoles: ['Principal', 'MYP coordinator', 'Head of sciences'], staff: [{ role: 'Principal', name: 'Dr. Made Up', email: 'principal@school.example' }, { role: 'MYP coordinator', name: 'Ms. Pretend', email: 'not an email' }, { name: '' }] } };
+  const { page, close } = await openApp(browser, { seed: { ls: { ...used().ls, 'gs.school': JSON.stringify({ items: [], order: [], ot: 0, people: [{ id: 'sp0', at: 5, role: 'Vice principal', name: 'Mr. Already Here' }] }) } } });
+  await check(page, setup); await page.waitForSelector('#stpGo');
+  const prev = await text(page, '#dlgBox');
+  assert.match(prev, /Spots for people on the School page: Principal, MYP coordinator, Head of sciences/);
+  assert.match(prev, /People on the School page: Dr\. Made Up \(Principal\), Ms\. Pretend \(MYP coordinator\)/);
+  await page.click('#stpGo');
+  await page.waitForFunction(() => document.querySelector('#dlg').hidden && localStorage.getItem('gs.setupUndo'));
+  const s = await ls(page, 'gs.school');
+  assert.deepEqual(s.roles.list, ['Principal', 'MYP coordinator', 'Head of sciences']);
+  assert.deepEqual(s.people.filter(p => !p.gone).map(p => [p.role, p.name, p.email || '']), [['Vice principal', 'Mr. Already Here', ''], ['Principal', 'Dr. Made Up', 'principal@school.example'], ['MYP coordinator', 'Ms. Pretend', '']], 'a bad email address is left out; nobody already there is taken away');
+  await open(page); await copies(page);
+  await page.click('[data-stpcopy]'); await page.waitForFunction(() => window.__copied);
+  const j = JSON.parse(await page.evaluate(() => window.__copied));
+  assert.deepEqual(j.school.staffRoles, ['Principal', 'MYP coordinator', 'Head of sciences']);
+  assert.deepEqual(j.school.staff.map(p => p.name), ['Mr. Already Here', 'Dr. Made Up', 'Ms. Pretend']);
+  await page.click('[data-stpundo]');
+  await page.waitForFunction(() => !localStorage.getItem('gs.setupUndo'));
+  const u = await ls(page, 'gs.school');
+  assert.deepEqual(u.people.filter(p => !p.gone).map(p => p.name), ['Mr. Already Here']);
+  assert.deepEqual(await page.evaluate(() => window.__gs.schNow().roles ? window.__gs.schNow().roles.list : null), await page.evaluate(() => window.__gs.SCH_ROLES));
+  assert.deepEqual(page.errors, []);
+  await close();
+});

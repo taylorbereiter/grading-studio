@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"0b061a15","zh-Hans":"2b1afd0d","es":"83bb6ec1","fr":"ddea6692","de":"1422709a","pt-BR":"3f9fab8c","ja":"c2901d64","ko":"97b682ec"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script><script>(function () {
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"72344c41","zh-Hans":"c32de0e1","es":"4cf73c26","fr":"1b9fc1e6","de":"249d3011","pt-BR":"e1c937cf","ja":"c96bcbb3","ko":"d542dc26"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script><script>(function () {
   try {
     var HOME = ["https://taylorbereiter.github.io/grading-studio/"], NS = 'gradingstudio-app-v1', AT = 'https://abacus.jasoncameron.dev/hit/' + NS + '/';
     if (navigator.webdriver || !HOME.some(function (a) { return a && location.href.indexOf(a) === 0; })) return;
@@ -2252,6 +2252,7 @@ function renderWeek() {
 /* ---------- editor ---------- */
 function renderEditor() {
   const l = L.open; if (!l) return renderWeek();
+  luSee();
   if (boxNotesToSlides(l)) lessonChanged(false);
   L.cur = Math.max(0, Math.min(L.cur, l.slides.length - 1));
   const s = l.slides[L.cur];
@@ -2337,6 +2338,7 @@ function refreshThumb(i) {
 }
 let lSaveT;
 function lessonChanged(rethumb) {
+  luTrack();
   const el = $('#lsSaved'); if (el) el.textContent = 'Saving…';
   if (rethumb !== false) refreshThumb(L.cur);
   const l = L.open; if (!l) return;
@@ -2501,6 +2503,41 @@ function onLessonsChange(e) {
   if (f === 'layout') { s.layout = e.target.value; lessonChanged(); renderEditor(); }
   if (f === 'size') setBoxSize(e.target.dataset.k || 'body', e.target.value);
 }
+/* ---------- undo in the slide editor ---------- */
+const LU = { obj: null, base: null, undo: [], redo: [], t: 0, quiet: false };
+const luSig = l => JSON.stringify(l, (k, v) => k === 'updated' ? undefined : v);
+function luSee() { if (LU.obj !== L.open) { LU.obj = L.open; LU.base = L.open ? luSig(L.open) : null; LU.undo = []; LU.redo = []; } }
+function luTrack() {
+  if (LU.obj !== L.open || LU.base == null) return luSee();
+  const now = luSig(L.open); if (now === LU.base) return;
+  if (!LU.quiet) {
+    const t = Date.now();
+    if (!(LU.undo.length && !LU.redo.length && t - LU.t < 1000)) { LU.undo.push(LU.base); if (LU.undo.length > 100) LU.undo.shift(); }
+    LU.t = t; LU.redo = [];
+  }
+  LU.base = now;
+}
+function luStep(from, to, said) {
+  editorCommit();   // words still being typed count as the last change
+  const u = from.pop(), l = L.open;
+  if (!u || !l || LU.obj !== l) { toast(said === 'Undone' ? 'Nothing to undo' : 'Nothing to redo'); return; }
+  to.push(LU.base);
+  const o = JSON.parse(u), kept = l.updated;
+  for (const k of Object.keys(l)) delete l[k];
+  Object.assign(l, o); if (kept) l.updated = kept;
+  LU.base = u; LU.t = 0;
+  LU.quiet = true; try { lessonChanged(false); } finally { LU.quiet = false; }
+  renderEditor(); toast(said);
+}
+document.addEventListener('keydown', e => {
+  if (L.view !== 'edit' || !L.open || !(e.metaKey || e.ctrlKey) || e.altKey || e.defaultPrevented) return;
+  const k = e.key.toLowerCase(); if (k !== 'z' && k !== 'y') return;
+  if (!$('#dlg').hidden || $('#present')) return;
+  const a = document.activeElement;
+  if (a && (a.isContentEditable || a.tagName === 'TEXTAREA' || (a.tagName === 'INPUT' && !/^(checkbox|radio|range|button|submit|color|file)$/.test(a.type)))) return;
+  e.preventDefault();
+  if (k === 'y' || e.shiftKey) luStep(LU.redo, LU.undo, 'Redone'); else luStep(LU.undo, LU.redo, 'Undone');
+});
 function undoToast(msg, fn) {
   toast(msg, 6000);
   const t = $('.toast'); if (!t) return;
@@ -2740,7 +2777,9 @@ document.addEventListener('keydown', e => {
 async function moreDo(a, t, l) {
   if (a === 'mdelete') {
     if (t.dataset.sure !== '1') { t.dataset.sure = '1'; t.textContent = 'Click again to delete it for good'; return; }
-    await lDelete(l); L.open = null; L.view = L.backTo || 'week'; renderLessons(); return toast('Lesson deleted');
+    const copy = JSON.parse(JSON.stringify(l));
+    await lDelete(l); L.open = null; L.view = L.backTo || 'week'; renderLessons();
+    return undoToast('Lesson deleted', async () => { if (L.lessons.some(x => x.id === copy.id)) return; await lPut(copy); renderLessons(); toast('Lesson back'); });
   }
   moreClose();
   if (a === 'mshare') return shareSave(l);
@@ -6923,7 +6962,7 @@ const HELP = [
   { id: 'todo', sec: 'start', q: 'How does the to-do list work?',
     a: ['**To do** in the sidebar is one list. Your own to-dos have a solid circle. Lines with a dashed circle are things the app noticed from your saved work: papers to mark, papers to hand back, a class with no lesson planned, missing work to chase.',
       'Type a to-do the way you would say it and press Enter. A day at the end (“tomorrow”, “friday”, “nov 20”), a class name or a student’s name is picked out for you, and a click on what was understood takes it off. Press **N** anywhere outside a paper to add one.',
-      'Click a line to give it a day, a class, something it goes with, a repeat or a note. The app’s own lines go by themselves when the work is done. You can move one to another day, hide it, or switch a whole kind off.',
+      'Click a line to give it a day, a class, something it goes with, a repeat or a note. The app’s own lines go by themselves when the work is done. You can move one to another day, hide it, or switch a whole kind off. **People** names someone from your School page, with an Email link when their address is saved.',
       '**Today** shows a short card of your own to-dos that are overdue or due today. The list is saved with your grading work, never in the Planner’s folder.'],
     go: ['Open To do', '#/todo'], words: 'todo task tasks list reminder remember checklist due' },
   { id: 'todo-week', sec: 'start', q: 'Can I see my to-dos by week?',
@@ -6951,8 +6990,8 @@ const HELP = [
     a: ['On **School** in the sidebar. Keep the handbook, the calendar, the bell schedule, the portals you sign in to, forms, and notes like who to call. Put them in groups you name, and press the star on the ones you open most to keep them at the top.',
       '**Add a link** when the school keeps it online, since a link stays up to date by itself. **Add files…** keeps a copy of a file with your work, up to 50 MB each. You can also drop files on the page or paste a web address.',
       'Tick a class under **For a class** when a link, file or note belongs to one class. The page can then show one class at a time, and a link for a class shows on every lesson for that class in the Planner, under **Links** and in **Present**, all year. A lesson’s own links go in that same **Links** box, typed or picked from here.',
-      'Everything is saved with the rest of your work: in this browser, in your folder and in a take-home file. Find anything finds each one by its name.'],
-    go: ['Open School resources', '#/school'], words: 'handbook calendar policy policies portal bookmark link file document resources staff bell schedule forms class course lesson links website textbook' },
+      'Everything is saved with the rest of your work: in this browser, in your folder and in a take-home file. Find anything finds each one by its name. **People** at the top has a spot for each role, like your principal. Fill in the ones you need, or use **Change the spots…** for your school’s own roles.'],
+    go: ['Open School resources', '#/school'], words: 'handbook calendar policy policies portal bookmark link file document resources staff people principal coordinator email bell schedule forms class course lesson links website textbook' },
   { id: 'language', sec: 'start', q: 'Can I use the app in another language?',
     a: ['Yes. Choose one in Settings, Display, **App language**, or at the top of the welcome. The page is drawn again in the language you pick.',
       'So far a language other than English covers the sidebar, Today, the welcome, Settings, a class page with all its tabs and most boxes it opens, the marking screen with its Grades, Insights and Return tabs, Find anything, Help and the feedback page students get in a returned paper. The other screens are still in English.',
