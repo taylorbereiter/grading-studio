@@ -82,7 +82,11 @@ const fullHtml = '<!doctype html>\n<html lang="en"><head><meta charset="utf-8"><
 fs.writeFileSync('Grading Studio.html', fullHtml);
 fs.writeFileSync('out/Grading Studio.html', fullHtml);
 // The pages at the web address can be installed as an app: they name the install card and the icon. The double-click copies don't, having no address to install from.
-const HOSTED = '<meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF">' + LANG_LOADER + '</head>';
+// The pages at the web address also add one to a daily count of browsers that open them (src/visits.js): only at the addresses in site.json.
+const VISITS = (() => { const site = require('./site.json'), src = fs.readFileSync('src/visits.js', 'utf8').replace(/\/\*[\s\S]*?\*\/\s*/, '');
+  if (src.split("'/*@@HOME@@*/'").length !== 2) throw new Error('src/visits.js: the address is not in it once');
+  return '<script>' + src.replace("'/*@@HOME@@*/'", () => JSON.stringify([site.address, site.movingTo].filter(Boolean))).trim() + '</script>'; })();
+const HOSTED = '<meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF">' + LANG_LOADER + VISITS + '</head>';
 fs.writeFileSync('index.html', hosted(fullHtml).replace('</head>', HOSTED));
 fs.mkdirSync('lang', { recursive: true });
 for (const f of fs.readdirSync('lang')) if (!langFiles['lang/' + f]) fs.unlinkSync('lang/' + f);
