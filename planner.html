@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"dbcecc99","zh-Hans":"e9528f52","es":"cb2c02a3","fr":"ed9a985e","de":"2adde21b","pt-BR":"646c7753","ja":"e12b505e","ko":"b2a66913"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script></head><body>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"4626236c","zh-Hans":"cfb79ac0","es":"4c85c752","fr":"f86fdc38","de":"55f14f15","pt-BR":"b53ee0a7","ja":"5adbbf0c","ko":"c437a117"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script></head><body>
 <title>Planner · Grading Studio</title>
 <script>/* ---------------- the sample: a made-up school week, kept apart from everything real ----------------
    Runs first on both pages, before anything reads saved work. While the sample is open (gs.sampleOn in the browser's real storage),
@@ -2803,7 +2803,9 @@ async function applySetup(j) {
     claudeUrl: /^https:\/\/claude\.ai\//.test(j.claudeUrl) ? String(j.claudeUrl) : '', profile: String(j.profile || '').slice(0, 80) };
   const deck = deckClean(j.deck); if (deck) setup.deck = deck;
   if (typeof j.sys === 'string' || typeof j.unitPlans === 'string' || (j.plain && !L.words)) { L.words = { sys: String(j.sys || '').slice(0, 40), unit: String(j.unitPlans || '').slice(0, 40) }; await kvSet('words', L.words); }
+  const thisWk = ymd(mondayOf(new Date())), wasThis = L.weekOf === thisWk;
   L.setup = setup; await kvSet('setup', setup); await tplPreview();
+  if (wasThis) L.weekOf = ymd(mondayOf(new Date()));
   folderWriteSchedule();
   let nu = 0;
   for (const x of Array.isArray(j.units) ? j.units : []) {
@@ -6704,6 +6706,12 @@ function langFill(t, m, P) {
 }
 const LANG_ATT = { present: 'attp', late: 'attl', 'absent, reason unknown': 'atta', excused: 'atte' };
 const LANG_FILLS = [
+  ['fcof', /^(?:(Focus|Today): )?(\d+) of (\d+) (papers|minutes)( today)?$/, (m, F, P) => { const x = langFill(m[4] === 'papers' ? F.fcofp : F.fcofm, [0, m[2], m[3]], P); return m[1] === 'Focus' ? langFill(F.fcrail, [0, x], P) : m[1] === 'Today' ? langFill(F.fctodayof, [0, x], P) : x; }],
+  ['fctime', /^(Focus|Paused|Break|Just one paper): (\d+:\d\d)( left)?$/, (m, F, P) => langFill(F[{ Focus: 'fctf', Paused: 'fctp', Break: 'fctb', 'Just one paper': 'fcto' }[m[1]]], [0, m[2]], P)],
+  ['fcleft', /^(\d+) papers? left$/], ['fcstart', /^Start (\d+) minutes$/], ['fcpace', /^about (\d+) minutes? at your pace$/], ['fcmin', /^(\d+) minutes?$/], ['fcpapers', /^(\d+) papers?$/],
+  ['fcaway', /^You were away for (\d+) minutes?, and the clock kept going\.$/], ['fcdone', /^(\d+) minutes? done$/], ['fcbrk', /^Take a (\d+)-minute break$/], ['fcmore', /^(\d+) more minutes$/],
+  ['fckeep', /^Keep going for (\d+) minutes$/], ['fcfin', /^You finished (\d+) papers?\.$/], ['fcsum', /^Today: (\d+) papers? in (\d+) minutes? of focus\.$/], ['fcsum0', /^Today: (\d+) papers?\.$/],
+  ['fcweek', /^This week: (\d+) papers?\.$/], ['fctoday', /^Today: (\d+) papers?$/], ['fcdn', /^(\d+) done$/],
   ['besideopen', /^Open (.+) beside Grading Studio$/],
   ['sdet', /^Student details for (.+)$/], ['cnt', /^Count (.+) in the class average$/], ['wout', /^without (\d+) students? ·$/],
   ['nograde', /^Nothing graded for (.+) in this term yet\. Grade a download for it, or use \+ Add scores for work you did before\.$/],
@@ -6818,7 +6826,7 @@ function trWith(s, P, ctx) {
   return hit == null ? s : s.replace(k, () => hit);
 }
 const tr = (s, ctx) => LANG_PACK && typeof s === 'string' ? trWith(s, LANG_PACK, ctx) : s;
-const LANG_ROOTS = '#rail, #vHome, #vHelp, #welcome, #findDlg, #setLang, #vSettings, #vClass .clshead, #vClass .ctabs, #vClass .ctools, #vClass .board, #classHint, #dlgBox[data-lg], #askDlg[data-lg], ' +
+const LANG_ROOTS = '#rail, #fcPanel, #vHome, #vHelp, #welcome, #findDlg, #setLang, #vSettings, #vClass .clshead, #vClass .ctabs, #vClass .ctools, #vClass .board, #classHint, #dlgBox[data-lg], #askDlg[data-lg], ' +
   '#app .top, #side, #tools, #paper .who, #pane2 .sph, #spGrip, #pane2 .sptool, #bsMenu, #paper .lchip, #paper .rchip, #grade, #zoomPill, #colL, #colR, #openRep, ' + ['gradebook', 'students', 'attendance', 'seating', 'missing', 'student', 'charts', 'goals', 'reports'].map(t => '#classPanel[data-tab="' + t + '"]').join(', ');
 const LANG_RAW = 'script, style, textarea, [contenteditable], [data-raw], .kname, #railClasses .rl, .wllang, .tbn, .trow:not(.none) b, .hlpa p:not(.hlpgo), .hlpa ol, kbd, .rbrand, .wlbrand, #homeDate, .aiWord, .updnotes, #vSettings .nt b, #meSys option:not([value]), #meAi option:not([value]), #wlSys option:not([value]), #vClass .clshead h1, #vClass .uhead .nm, #vClass .card .t, #classPanel .bklink, #classPanel .bkpop > b, #bkaRows td:first-child, #bkaUnit option:not([value=""]), #peopleTbl td.nm a, .attname, #attDate, .attunk a, .misw, .mishead h3, .misaddr, .seat span, .seatchip, #seatSel b, .tsvg .tlb, #aClass option:not([value=""]), #aUnit option:not([value=""]), #railClasses .rnav, #classSel option:not([value=""]), #crumbClass, #stuList .nm, #paper .who h2, #paper .fhead > span:first-child, #grade .cn > span';
 const LANG_ATTRS = ['title', 'aria-label', 'placeholder'];
@@ -6902,6 +6910,10 @@ const HELP = [
     a: ['Yes. On **To do**, choose **Week** at the top right. The same lines sit on the days they are for, each under the class that meets that day, with a Later column for the rest.',
       'Type in a day to add a to-do for it, and drag a line to another day. Anything not done by its day moves to today on its own, and says which day it was for.'],
     go: ['Open the week', '#/todo/week'], words: 'todo task week weekly calendar days plan drag move' },
+  { id: 'focus', sec: 'start', q: 'Is there a timer for grading in short sessions?',
+    a: ['Yes. **Focus** in the sidebar, or the Focus card on Today, starts a session in one press. Pick what to work on: a set of papers waiting to be marked, or one of your to-dos. A set of papers opens at the next paper with no score. When the time is up, a soft chime plays and you can take a break, keep going, or stop.',
+      'Set a daily goal in papers or minutes in **Settings, Focus and goals**. A paper counts when its score is finished, wherever you do it. Today, the timer and the sidebar show how far along you are, and turn green when you get there. The length of a session and a break, and the chime, are set there too.'],
+    go: ['Open Settings, Focus and goals', '#/settings/focus'], words: 'focus timer pomodoro session break goal daily papers minutes concentrate procrastinate start motivation adhd' },
   { id: 'school-resources', sec: 'start', q: 'Where can I keep my school’s links and files?',
     a: ['On **School** in the sidebar. Keep the handbook, the calendar, the bell schedule, the portals you sign in to, forms, and notes like who to call. Put them in groups you name, and press the star on the ones you open most to keep them at the top.',
       '**Add a link** when the school keeps it online, since a link stays up to date by itself. **Add files…** keeps a copy of a file with your work, up to 50 MB each. You can also drop files on the page or paste a web address.',

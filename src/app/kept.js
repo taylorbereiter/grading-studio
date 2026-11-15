@@ -17,10 +17,11 @@ async function kdo(name, mode, fn) {
   return new Promise((res, rej) => { const tx = db.transaction(name, mode), req = fn(tx.objectStore(name)); tx.oncomplete = () => res(req && req.result); tx.onerror = () => rej(tx.error); tx.onabort = () => rej(tx.error); });
 }
 const kget = (name, k) => kdo(name, 'readonly', o => o.get(k)).catch(() => null);
-let keptMeta = new Map();
+let keptMeta = new Map(), keptRead = false;   // keptRead: the list has been read from the browser, so a download missing from it is really gone
 async function loadKept() {
-  try { const all = await kdo('meta', 'readonly', o => o.getAll()); keepOk = true; keptMeta = new Map((all || []).map(m => [m.id, m])); } catch { keptMeta = new Map(); }
+  try { const all = await kdo('meta', 'readonly', o => o.getAll()); keepOk = true; keptMeta = new Map((all || []).map(m => [m.id, m])); keptRead = true; } catch { keptMeta = new Map(); }
   await keptFbCounts();
+  if (typeof fcRender === 'function') fcRender();
   if (!batch) renderLib();
   renderBackup();
   setTimeout(vkSweep, 20000);
@@ -102,9 +103,11 @@ async function keepPapers(b, label, list, again) {
 let keepT = null;
 function keepWork(b, data) {
   const m = { ...(keptMeta.get(b.id) || { id: b.id, name: b.name }), n: b.students.length, t: data.t };
+  if (typeof fcSeen === 'function') fcSeen(b.id);   // the day's count of finished papers starts from where this download stood (src/focus.js)
   delete m.fb; Object.assign(m, workCounts(data));   // fb is there only while some feedback is complete
   if (!data.returned) delete m.ret;
   keptMeta.set(b.id, m);
+  if (typeof fcRender === 'function') fcRender();
   return kdo('work', 'readwrite', o => o.put(data, b.id)).then(() => kdo('meta', 'readwrite', o => o.put(m, b.id))).then(() => { keepOk = true; return true; })
     .catch(e => { keepOk = false; console.error(e); if (e && e.name === 'InvalidStateError') keepDbP = null; keepDb().catch(() => { keepDbP = null; }); return false; });   // so Try again reopens a store that went away
 }

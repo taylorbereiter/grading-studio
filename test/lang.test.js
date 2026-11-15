@@ -230,7 +230,7 @@ test('every word on the covered screens is in each language file (run in English
       await page.click('#classPanel [data-bkterm]:first-child'); await pause(300);
     }
     // every page of Settings
-    for (const k of ['saving', 'classes', 'terms', 'marking', 'setup', 'display', 'about']) { await goTo(page, '#/settings/' + k); await pause(500); await miss(page, 'Settings, ' + k, [...own, '{ "gradingStudioSetup": 1, … }']); }
+    for (const k of ['saving', 'classes', 'terms', 'marking', 'focus', 'setup', 'display', 'about']) { await goTo(page, '#/settings/' + k); await pause(500); await miss(page, 'Settings, ' + k, [...own, '{ "gradingStudioSetup": 1, … }']); }
     await goTo(page, '#/'); await openZip(page, zip); await score(page, [3]); await settle(page);
     await page.click('#closeBtn'); await page.waitForSelector('#toMark .krow');
     await miss(page, 'Today, with papers to mark', own);
@@ -238,6 +238,43 @@ test('every word on the covered screens is in each language file (run in English
     assert.deepEqual(page.errors, []);
     await close();
   }
+});
+
+// The focus timer (src/focus.js): the card on Today, Focus in the sidebar, its Settings, and the panel in each state a session goes through.
+test('the focus timer, its card on Today and its Settings leave nothing in English', async () => {
+  const { page, close } = await openApp(browser, { seed: gradingSeed() });
+  const own = ['Grade 9 English', 'Grade 10 Literature', 'Poetry analysis', 'Narrative essay', 'Download', /^(Aria|Bram|Cleo|Dov|Esme|Finn|Gus|Hana) /, /^Unit \d/,
+    // the marking screen behind the panel has its own walk above; these lines are left to it
+    'Past work', /^\d+ earlier$/, /^last \d+%$/, /^Link .+ to its ManageBac page$/, 'Close this message', /files opened/, 'See the list'];
+  await openZip(page, zip); await score(page, [4, 3, 3]); await settle(page);
+  await page.click('#closeBtn'); await page.waitForSelector('#fcCard [data-fcstart]');
+  await miss(page, 'Today, the Focus card with no goal', own);
+  const at = async (where, f) => { await f(); await pause(400); await miss(page, where, own); };
+  await goTo(page, '#/settings/focus'); await page.waitForSelector('#fcGoalK');
+  await at('Settings, Focus, a goal in minutes', () => page.click('#fcGoalK [data-v="min"]'));
+  await at('Settings, Focus, a goal in papers', () => page.click('#fcGoalK [data-v="papers"]'));
+  await goTo(page, '#/'); await page.waitForSelector('#fcCard .fcdots'); await miss(page, 'Today, the Focus card with a goal', own);
+  await at('the panel, opened from the sidebar', () => page.click('#railFocus'));
+  await at('a session on a set of papers', async () => { await page.click('#fcPanel [data-fcstart]'); await page.waitForSelector('#fcPanel .fcclock'); });
+  const run = f => page.evaluate(f => { const G = window.__gs, r = G.fcRun(); new Function('r', f)(r); G.fcRunSet(r); G.fcTick(); }, f);
+  await at('paused', () => page.click('#fcPanel [data-fcpause]'));
+  await at('carrying on, folded', async () => { await page.click('#fcPanel [data-fcresume]'); await page.click('#fcPanel [data-fcfold]'); });
+  await at('back from another tab', () => run('r.fold = false; r.away = 6;'));
+  await at('the time is up', async () => { await page.click('#fcPanel [data-fcaway="keep"]'); await run('r.at -= r.len * 1000 + 2000;'); });
+  await at('a break', () => page.click('#fcPanel [data-fcbreak]'));
+  await at('the break is over', () => run('r.brkAt -= r.brkLen * 1000 + 2000;'));
+  await at('done for now', () => page.click('#fcPanel [data-fcstop]'));
+  await page.click('#fcPanel [data-fcclose]');
+  await at('just one paper', async () => { await goTo(page, '#/'); await page.waitForSelector('#fcCard [data-fcone]'); await page.click('#fcCard [data-fcone]'); await page.waitForSelector('#fcPanel .fcclock'); });
+  await at('one paper done', () => run('r.got = 1; r.st = "run";'));
+  await page.click('#fcPanel [data-fcstop]'); await page.click('#fcPanel [data-fcclose]');
+  // a to-do as the work, with nothing set, and the goal reached
+  await goTo(page, '#/'); await page.waitForSelector('#fcCard [data-fcwork]');
+  await at('Today, the Focus card on nothing in particular', () => page.select('#fcCard [data-fcwork]', ''));
+  await at('Settings, Focus, a goal already reached', async () => { await goTo(page, '#/settings/focus'); await page.waitForSelector('#fcGoalN'); await page.$eval('#fcGoalN', e => { e.value = 1; e.dispatchEvent(new Event('change', { bubbles: true })); }); });
+  await at('Today, the goal reached', async () => { await goTo(page, '#/'); await page.waitForSelector('#fcCard .fcmet'); });
+  assert.deepEqual(page.errors, []);
+  await close();
 });
 
 // Learning goals on both rubrics, and two days of attendance, on the made-up class.

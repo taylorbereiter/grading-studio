@@ -1,4 +1,4 @@
-# First polish fixes. The bar that says what opened now counts as seen once she moves to another student (when every
-# file opened), so gs.openSeen is written then, in the form it always had, and not only when she presses the bar's
-# buttons. No work is in it: it holds hashes of what the bar has already said.
-localStorage:gs.openSeen
+# The focus timer and daily goal. On opening, the app writes gs.focus: the day, and for each kept download how many papers
+# were finished when the day began, so papers finished later that day can be counted toward the goal. It holds download ids
+# and counts only, no names and no work, and older pages ignore it.
+localStorage:gs.focus
