@@ -126,7 +126,7 @@ function renderLib() {
     return '<div class="card" draggable="true" data-card="' + it.id + '" title="' + (m && m.papers ? 'Open the papers' : it.typed && !it.batchId ? 'Scores typed in: open the gradebook' : 'Add this assignment’s papers') + '"><div class="cmain"><div class="t">' + esc(it.name) + '</div>' +
       (it.type || it.typed ? '<div class="bkpills">' + bkPill(it.type) + (it.typed ? '<span class="bkpill typed">Typed in</span>' : '') + '</div>' : '') + '</div>' +
       '<div class="cdue">' + (it.due ? 'Due ' + bkDay(it.due) : '') + '</div>' +
-      '<div class="cstate">' + (st ? stateBar(st) : '') + '<div class="m">' + esc(it.typed && !it.batchId ? 'Scores typed in' : batchSummary(it)) + '</div>' + (tkAsg(it.id) && tkAsg(it.id).s >= 60 ? '<div class="m">' + tkAsgHtml(it.id) + '</div>' : '') + (st ? stateChip(st) : '') + '</div>' +
+      '<div class="cstate">' + (st ? stateBar(st) : '') + '<div class="m">' + esc(it.typed && !it.batchId ? 'Scores typed in' : batchSummary(it)) + '</div>' + (h => h ? '<div class="m">' + h + '</div>' : '')(tkAsgHtml(it.id)) + (st ? stateChip(st) : '') + '</div>' +
       '<div class="row">' + (m && m.papers ? '<button class="btn sm" data-kopen="' + esc(it.batchId) + '" data-kasg="' + it.id + '">Open</button>'
         : typedOnly ? '' : '<button class="btn sm" data-open-asg="' + it.id + '">Add papers…</button>') +
         kmWrap('⋯', 'class="icon kdots" aria-label="More for ' + esc(it.name) + '" title="More"', '<button class="mitem" data-edit-asg="' + it.id + '">Edit<small>Name, type, due date, unit, rubric</small></button>' +
@@ -338,7 +338,7 @@ function editAssignment(id, unitId, clsId) {
     classPick +
     '<div class="field"><label for="aUnit">Unit</label><select id="aUnit" class="btn" style="justify-content:flex-start"></select><p class="muted" id="aUnitNote" style="font-size:13px;margin:6px 0 0" hidden></p></div>' +
     '<div class="field"><label>Type</label><div class="pseg" role="group" id="aType">' + bkCats().map(([t, , s]) => '<button type="button" data-atype="' + esc(t) + '" aria-pressed="' + (it.type === t) + '">' + esc(s) + '</button>').join('') + '</div><p class="muted" style="font-size:12.5px;margin:4px 0 0">' + esc(bkCountSay()) + '</p></div>' +
-    '<div class="field"><label for="aDue">Due</label><input type="date" id="aDue" class="btn" value="' + esc(it.due || '') + '"></div>' +
+    '<div class="field"><label for="aDue">Due</label><input type="date" id="aDue" class="btn" value="' + esc(it.due || '') + '"><p class="duehint" id="aDueSay">' + gpDueHint(it.due, f ? it.id : '') + '</p></div>' +
     ruHtml(f ? it.setup : null) + '</div>' +
     '<div class="bf">' + (f ? '<button class="btn" data-del style="margin-right:auto">Delete</button>' : '') + '<button class="btn" data-cancel>Cancel</button><button class="btn primary" data-ok>Save</button></div>', true, 'lg');
   const ticked = () => [...document.querySelectorAll('#aClasses input:checked')].map(x => holderById(x.value)).filter(Boolean);
@@ -359,6 +359,7 @@ function editAssignment(id, unitId, clsId) {
     const ok = $('#dlgBox [data-ok]'); ok.textContent = cs.length > 1 ? 'Add to ' + cs.length + ' classes' : 'Save'; ok.disabled = !cs.length;
   };
   fillUnits(start.u);
+  $('#aDue').oninput = () => { $('#aDueSay').innerHTML = gpDueHint($('#aDue').value, f ? it.id : ''); };   // what else is due that week (src/gradeplan.js)
   const ru = ruWire($('#dlgBox'), it);
   if (f) $('#aClass').onchange = () => fillUnits(null);
   else { $('#aClasses').onchange = () => fillUnits(null); $('#aUnit').onchange = () => fillUnits(null); }
