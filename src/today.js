@@ -169,7 +169,7 @@ $('#handBack').addEventListener('click', e => { const a = e.target.closest('a[da
 let planBusy = null;
 function planRefresh() {
   if (planBusy) return planBusy;
-  return planBusy = planRead().catch(() => { plan = null; }).then(() => { planBusy = null; homeRender(); if (shellReady) setRender(); });
+  return planBusy = planRead().catch(() => { plan = null; }).then(() => { planBusy = null; homeRender(); if (shellReady) { setRender(); todoRender(); } });   // the To do count in the sidebar follows the timetable too
 }
 document.addEventListener('visibilitychange', () => { if (!document.hidden && !batch) planRefresh(); });
 window.addEventListener('pageshow', e => { if (e.persisted) planRefresh(); });

@@ -8,14 +8,16 @@
      lib.me.focus  the teacher's own settings, only those that differ from the usual: { len: minutes, brk: minutes,
                    goal: { k: 'papers' | 'min', n }, sound: false, title: false }. It goes wherever lib goes, and My setup carries it.
      gs.focus      this teacher's log, in this browser (it travels with the folder and the take-home file like other gs. keys):
-                   { day, base: { <download id>: papers done when the day began }, days: { 'YYYY-MM-DD': { p: papers, s: seconds focused } },
-                     pace: [[seconds, papers], …] the last sessions that finished a paper, last: the work picked last }
-                   Ids and numbers only: no name, no title, nothing a student wrote.
+                   { day, base: { <download id>: papers done when the day began }, days: { 'YYYY-MM-DD': { p: papers, s: seconds focused,
+                     sm: seconds focused on papers, pa: { <assignment id>: papers }, g: seconds grading, a: { <assignment id>: seconds } } },
+                     pace: [[seconds, papers], …] the last sessions that finished a paper, last: the work picked last,
+                     add: [{ id, d: day, k: 'g' | 'l', s: seconds, x: a few words }] time added by hand (src/tracker.js) }
+                   Ids and numbers only: no name, no title, nothing a student wrote. Days are kept for 400 days.
      gs.focusRun   the session going on in this browser, so a refresh keeps it. It stays in this browser (LS_LOCAL).
    A paper counts toward the day when its score is finished, or its feedback complete on a formative activity, wherever that is
    done: the count is how far each download has come since the day began (keptState), so marking in Quick mark counts too. */
 var FC_ON = false;   // set at the end of this file; keepWork (src/app/kept.js) may run before it
-const FC_LENS = [5, 10, 15, 20, 25, 30, 45, 60], FC_BRKS = [3, 5, 10, 15], FC_AWAY = 180e3, FC_DAY = 864e5;
+const FC_LENS = [5, 10, 15, 20, 25, 30, 45, 60], FC_BRKS = [3, 5, 10, 15], FC_AWAY = 180e3, FC_DAY = 864e5, FC_KEEP = 400, TK_IDLES = [2, 5, 10, 15];
 const FC_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="7.5"/><path d="M12 9.5V13l2.3 1.6M10 3h4"/></svg>';
 const FC_PLAY = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z"/></svg>';
 const FC_TICK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
@@ -25,6 +27,7 @@ let fcS = { len: 0, open: false, pick: null };   // for this visit only: a lengt
 function fcConf() {
   const f = me().focus || {}, g = f.goal || null;
   return { len: FC_LENS.includes(+f.len) ? +f.len : 10, brk: FC_BRKS.includes(+f.brk) ? +f.brk : 5, sound: f.sound !== false, title: f.title !== false,
+    track: f.track !== false, idle: TK_IDLES.includes(+f.idle) ? +f.idle : 5,
     goal: g && (g.k === 'papers' || g.k === 'min') && +g.n > 0 ? { k: g.k, n: Math.min(g.k === 'min' ? 600 : 500, Math.round(+g.n)) } : null };
 }
 // Only what differs from the usual is kept; nothing at all for a teacher who changed nothing.
@@ -35,7 +38,10 @@ function fcConfSet(part) {
   if (c.goal) o.goal = { k: c.goal.k, n: c.goal.n };
   if (!c.sound) o.sound = false;
   if (!c.title) o.title = false;
+  if (!c.track) o.track = false;
+  if (c.idle !== 5) o.idle = c.idle;
   meDrop('focus', Object.keys(o).length ? o : null);
+  if (typeof tkShare === 'function') tkShare();
   fcRender();
 }
 
@@ -43,13 +49,20 @@ function fcConfSet(part) {
 function fcLog() {
   const L = store.get('gs.focus', null) || {};
   return { day: typeof L.day === 'string' ? L.day : '', base: L.base && typeof L.base === 'object' ? L.base : {}, days: L.days && typeof L.days === 'object' ? L.days : {},
-    pace: Array.isArray(L.pace) ? L.pace.filter(x => Array.isArray(x) && x[0] > 0 && x[1] > 0) : [], last: typeof L.last === 'string' ? L.last : '' };
+    pace: Array.isArray(L.pace) ? L.pace.filter(x => Array.isArray(x) && x[0] > 0 && x[1] > 0) : [], last: typeof L.last === 'string' ? L.last : '',
+    add: Array.isArray(L.add) ? L.add.filter(x => x && typeof x.d === 'string' && (x.k === 'g' || x.k === 'l') && x.s > 0) : [] };
 }
 const fcLogSet = L => store.set('gs.focus', L);
 const fcToday = () => isoDay(Date.now());
 const fcDone = m => keptState(m).done;
 // Papers finished today: how far each download has come since the day began, never below nothing.
 function fcPapersOf(L) { let n = 0; for (const m of keptMeta.values()) if (m && m.id in L.base) n += Math.max(0, fcDone(m) - L.base[m.id]); return n; }
+// The same, by assignment (an id from the classes, or '' for papers that aren't filed under one), for the tracker.
+function fcPapersBy(L) {
+  const o = {};
+  for (const m of keptMeta.values()) if (m && m.id in L.base) { const n = Math.max(0, fcDone(m) - L.base[m.id]); if (!n) continue; const it = cardOfKept(m.id), k = it ? it.id : ''; o[k] = (o[k] || 0) + n; }
+  return o;
+}
 // Called before a download's count changes (keepWork) and whenever the card or panel is drawn: a new day starts from where each
 // download stands, a download seen for the first time starts from where it is, and today's total is written down for the week.
 // id: a download about to be saved (keepWork). One not known yet is new: it starts from nothing, or from where the older copy it
@@ -62,9 +75,10 @@ function fcSeen(id) {
   if (id && !keptMeta.has(id) && !(id in L.base)) { const old = [...keptMeta.values()].find(m => m && m.newer === id); L.base[id] = old ? fcDone(old) : 0; ch = true; }
   for (const m of keptMeta.values()) if (m && m.id && !(m.id in L.base)) { L.base[m.id] = fcDone(m); ch = true; }
   for (const k of Object.keys(L.base)) if (k !== id && !keptMeta.has(k)) { delete L.base[k]; ch = true; }
-  const p = fcPapersOf(L), d = L.days[today] || {};
-  if ((d.p || 0) !== p) { L.days[today] = { ...d, p }; ch = true; }
-  for (const k of Object.keys(L.days)) if (Date.now() - new Date(k + 'T12:00:00') > 60 * FC_DAY) { delete L.days[k]; ch = true; }
+  const p = fcPapersOf(L), d = L.days[today] || {}, pa = fcPapersBy(L);
+  if ((d.p || 0) !== p || JSON.stringify(d.pa || {}) !== JSON.stringify(pa)) { L.days[today] = { ...d, p, pa }; if (!p) delete L.days[today].pa; ch = true; }
+  for (const k of Object.keys(L.days)) if (Date.now() - new Date(k + 'T12:00:00') > FC_KEEP * FC_DAY) { delete L.days[k]; ch = true; }
+  const old = L.add.length; L.add = L.add.filter(x => Date.now() - new Date(x.d + 'T12:00:00') <= FC_KEEP * FC_DAY); if (L.add.length !== old) ch = true;
   if (ch) fcLogSet(L);
 }
 const fcPapersToday = () => { fcSeen(); return fcPapersOf(fcLog()); };
@@ -155,7 +169,7 @@ function fcLeftHere(i) { const st = batch && batch.students[i]; if (!st) return 
 function fcRecord(r) {
   if (r.secs != null) return r;
   const secs = Math.min(r.one ? 4 * 3600 : r.len, fcElapsed(r)), got = fcGot(r), L = fcLog(), today = fcToday(), d = L.days[today] || {};
-  L.days[today] = { ...d, s: (d.s || 0) + secs };
+  L.days[today] = { ...d, s: (d.s || 0) + secs, ...(/^mark:/.test(r.w || '') ? { sm: (d.sm || 0) + secs } : {}) };
   if (got > 0 && secs >= 30) L.pace = [...L.pace, [secs, got]].slice(-20);
   fcLogSet(L);
   return Object.assign(r, { secs, got });
@@ -254,7 +268,7 @@ function fcStartHtml(card) {
   const c = fcConf(), works = fcWorks(), key = fcPicked(works), w = works.find(x => x.key === key) || null, len = fcS.len || c.len;
   const opt = x => '<option value="' + esc(x.key) + '"' + (x.key === key ? ' selected' : '') + ' data-raw>' + esc(x.name + (x.cls ? ' · ' + x.cls : '')) + '</option>';
   const marks = works.filter(x => x.mark), tds = works.filter(x => !x.mark);
-  return '<div class="fcbody">' + fcGoalHtml(c, true) + (card ? fcWeekHtml(c) : '') + '<div class="fcline"></div>' +
+  return '<div class="fcbody">' + fcGoalHtml(c, true) + (card ? fcWeekHtml(c) + tkTodayHtml() : '') + '<div class="fcline"></div>' +
     '<div><label class="fcl">Work on</label><select class="fcwork" data-fcwork aria-label="Work on">' + marks.map(opt).join('') +
     (marks.length && tds.length ? '<option disabled data-raw>──────────</option>' : '') + tds.map(opt).join('') + '<option value=""' + (key === '' ? ' selected' : '') + '>' + esc(tr('Nothing in particular')) + '</option></select>' +
     '<p class="fcsay">' + esc(fcWorkSay(w)) + '</p></div>' +

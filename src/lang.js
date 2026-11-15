@@ -47,6 +47,9 @@ const LANG_FILLS = [
   ['fcaway', /^You were away for (\d+) minutes?, and the clock kept going\.$/], ['fcdone', /^(\d+) minutes? done$/], ['fcbrk', /^Take a (\d+)-minute break$/], ['fcmore', /^(\d+) more minutes$/],
   ['fckeep', /^Keep going for (\d+) minutes$/], ['fcfin', /^You finished (\d+) papers?\.$/], ['fcsum', /^Today: (\d+) papers? in (\d+) minutes? of focus\.$/], ['fcsum0', /^Today: (\d+) papers?\.$/],
   ['fcweek', /^This week: (\d+) papers?\.$/], ['fctoday', /^Today: (\d+) papers?$/], ['fcdn', /^(\d+) done$/],
+  // the time tracker (src/tracker.js)
+  ['tkpace', /^about (\d+) minutes? a paper$/], ['tkso', /^(\S.*) so far$/], ['tklessons', /^(\d+) lessons?$/], ['tkdays', /^(\d+) days? reached the goal$/],
+  ['tkcount', /^Time counts while the marking screen or the Planner is in front and you have done something there in the last (\d+) minutes?\.$/],
   // Find anything: the teacher's AI assistant, to open beside the app (src/beside.js)
   ['besideopen', /^Open (.+) beside Grading Studio$/],
   // the Gradebook tab
@@ -182,7 +185,7 @@ function trWith(s, P, ctx) {
 // For words that are drawn rather than put on the page, like the feedback page in a returned paper.
 const tr = (s, ctx) => LANG_PACK && typeof s === 'string' ? trWith(s, LANG_PACK, ctx) : s;
 // The parts of the page that are put into the language, and what inside them is never touched (what a teacher typed).
-const LANG_ROOTS = '#rail, #fcPanel, #vHome, #vHelp, #welcome, #findDlg, #setLang, #vSettings, #vClass .clshead, #vClass .ctabs, #vClass .ctools, #vClass .board, #classHint, #dlgBox[data-lg], #askDlg[data-lg], ' +
+const LANG_ROOTS = '#rail, #fcPanel, #vTime, #vHome, #vHelp, #welcome, #findDlg, #setLang, #vSettings, #vClass .clshead, #vClass .ctabs, #vClass .ctools, #vClass .board, #classHint, #dlgBox[data-lg], #askDlg[data-lg], ' +
   // the marking screen: its top bar and menus, the student list, the tools, the bar above each paper and the chips beside each page, and the score panel (never a page itself)
   '#app .top, #side, #tools, #paper .who, #pane2 .sph, #spGrip, #pane2 .sptool, #bsMenu, #paper .lchip, #paper .rchip, #grade, #zoomPill, #colL, #colR, #openRep, ' + ['gradebook', 'students', 'attendance', 'seating', 'missing', 'student', 'charts', 'goals', 'reports'].map(t => '#classPanel[data-tab="' + t + '"]').join(', ');
 const LANG_RAW = 'script, style, textarea, [contenteditable], [data-raw], .kname, #railClasses .rl, .wllang, .tbn, .trow:not(.none) b, .hlpa p:not(.hlpgo), .hlpa ol, kbd, .rbrand, .wlbrand, #homeDate, .aiWord, .updnotes, #vSettings .nt b, #meSys option:not([value]), #meAi option:not([value]), #wlSys option:not([value]), #vClass .clshead h1, #vClass .uhead .nm, #vClass .card .t, #classPanel .bklink, #classPanel .bkpop > b, #bkaRows td:first-child, #bkaUnit option:not([value=""]), #peopleTbl td.nm a, .attname, #attDate, .attunk a, .misw, .mishead h3, .misaddr, .seat span, .seatchip, #seatSel b, .tsvg .tlb, #aClass option:not([value=""]), #aUnit option:not([value=""]), #railClasses .rnav, #classSel option:not([value=""]), #crumbClass, #stuList .nm, #paper .who h2, #paper .fhead > span:first-child, #grade .cn > span';

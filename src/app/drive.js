@@ -201,7 +201,7 @@ async function syncPull() {
     }
     try { localStorage.setItem('gs.syncT', JSON.stringify(local)); } catch {}
     if (changed) {
-      const l = store.get('gs.lib', null); if (l) lib = migrateLib(l);
+      const l = store.get('gs.lib', null); if (l) { lib = migrateLib(l); libUndoForget(); }
       bank = store.get('gs.bank', bank);
       if (!batch) { const s = store.get('gs.setup', null); if (s) setup = setupOver(s); }
       renderLib(); if (batch) renderClassSel();

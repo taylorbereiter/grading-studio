@@ -87,7 +87,10 @@ test('both built copies hold the same app, and the Pages copy stays out of searc
   // the same for what fills the sample: sample.js beside the Pages copy, squeezed inside the double-click copy
   const smp = /const SAMPLE_PACKED = "[^"\n]*";/;
   assert.ok(a.includes('const SAMPLE_PACKED = "";') && !b.includes('const SAMPLE_PACKED = "";'), 'only the double-click copy carries the sample');
-  assert.equal(a.replace(hosted, '').replace(loader, '').replace(packed, '').replace(smp, ''), b.replace(packed, '').replace(smp, ''));
+  // and it adds one to the daily count of browsers that open it (src/visits.js), which the double-click copy never does
+  const visits = /<script>\(function \(\) \{\s*try \{\s*var HOME = [\s\S]*?\}\)\(\);<\/script>/;
+  assert.ok(visits.test(a) && !visits.test(b), 'only the Pages copy counts visits');
+  assert.equal(a.replace(hosted, '').replace(loader, '').replace(visits, '').replace(packed, '').replace(smp, ''), b.replace(packed, '').replace(smp, ''));
   assert.ok(!b.includes('manifest.webmanifest'), 'the double-click copy has no address to install from');
   assert.ok(a.includes('<meta name="robots" content="noindex">'));
   assert.ok(!a.includes('@@APP@@') && !a.includes('@@VERSION@@'), 'every slot in the page got filled');
