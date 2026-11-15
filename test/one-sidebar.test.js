@@ -320,7 +320,7 @@ test('Today shows the day’s classes from the Planner’s timetable, and writes
     await plannerReady(page);
     assert.equal(await page.evaluate(() => window.__planner.L.open && window.__planner.L.open.title), 'Annotating a sonnet');
     assert.equal(await page.evaluate(() => !!document.querySelector('#present')), true, 'a lesson with slides opens presenting');
-    // where a class got to is said on its row, and a lesson taught to the end stops offering Present
+    // where a class got to is said on its row, part way still offers Present at any time of day, and a lesson taught to the end stops offering it
     const taught = async (slide) => {
       await page.evaluate(async slide => {
         const P = window.__planner, now = new Date(), d = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
@@ -332,7 +332,7 @@ test('Today shows the day’s classes from the Planner’s timetable, and writes
       await page.goto(srv.url); await appReady(page); await page.waitForSelector('#today .trow');
       return page.$eval('#today .trow', x => [x.querySelector('.ns').textContent, x.querySelector('.btn').textContent]);
     };
-    assert.deepEqual(await taught(2), ['Annotating a sonnet · 3 slides · taught to slide 2 of 3', cur === 0 ? 'Present' : 'Open']);
+    assert.deepEqual(await taught(2), ['Annotating a sonnet · 3 slides · taught to slide 2 of 3', 'Present']);
     await page.goto(srv.url + 'planner.html'); await plannerReady(page);
     assert.deepEqual(await taught(3), ['Annotating a sonnet · 3 slides · taught', 'Open']);
     await page.goto(srv.url + 'planner.html'); await plannerReady(page);
